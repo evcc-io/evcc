@@ -243,8 +243,6 @@ func TestApplyVehicleDefaults(t *testing.T) {
 		assert.Equal(t, *conf.Mode, lp.Mode)
 		assert.Equal(t, *conf.MinCurrent, lp.MinCurrent)
 		assert.Equal(t, *conf.MaxCurrent, lp.MaxCurrent)
-		assert.Equal(t, *conf.MinSoc, lp.Soc.min)
-		assert.Equal(t, *conf.TargetSoc, lp.Soc.target)
 	}
 
 	// onIdentified config

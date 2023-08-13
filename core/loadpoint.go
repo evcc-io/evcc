@@ -551,12 +551,6 @@ func (lp *Loadpoint) applyAction(actionCfg api.ActionConfig) {
 	if max := actionCfg.MaxCurrent; max != nil && *max <= *lp.onDisconnect.MaxCurrent {
 		lp.SetMaxCurrent(*max)
 	}
-	if actionCfg.MinSoc != nil {
-		lp.SetMinSoc(*actionCfg.MinSoc)
-	}
-	if actionCfg.TargetSoc != nil {
-		lp.SetTargetSoc(*actionCfg.TargetSoc)
-	}
 	if actionCfg.Priority != nil {
 		lp.SetPriority(*actionCfg.Priority)
 	}

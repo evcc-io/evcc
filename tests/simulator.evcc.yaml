@@ -1,0 +1,99 @@
+interval: 0.25s
+
+site:
+  title: evcc Simulator
+  meters:
+    grid: grid
+    pvs:
+      - pv
+    batteries:
+      - battery
+
+meters:
+  - name: grid
+    type: custom
+    power:
+      source: http
+      uri: http://localhost:7072/api/state
+      jq: .site.grid.power
+  - name: pv
+    type: custom
+    power:
+      source: http
+      uri: http://localhost:7072/api/state
+      jq: .site.pv.power
+  - name: battery
+    type: custom
+    power:
+      source: http
+      uri: http://localhost:7072/api/state
+      jq: .site.battery.power
+    soc:
+      source: http
+      uri: http://localhost:7072/api/state
+      jq: .site.battery.soc
+  - name: lp0meter
+    type: custom
+    power:
+      source: http
+      uri: http://localhost:7072/api/state
+      jq: .loadpoints[0].power
+    energy:
+      source: http
+      uri: http://localhost:7072/api/state
+      jq: .loadpoints[0].energy
+
+loadpoints:
+  - title: Carport
+    charger: charger
+    meter: lp0meter
+    mode: pv
+    soc:
+      estimate: false
+    vehicle: golf
+    resetOnDisconnect: true
+
+chargers:
+  - name: charger
+    type: custom
+    enable:
+      source: js
+      script: |
+        false
+    enabled:
+      source: http
+      uri: http://localhost:7072/api/state
+      jq: .loadpoints[0].enabled
+    status:
+      source: http
+      uri: http://localhost:7072/api/state
+      jq: .loadpoints[0].status
+    maxcurrent:
+      source: js
+      script: |
+        16
+
+vehicles:
+  - name: golf
+    title: blauer e-Golf
+    type: custom
+    soc:
+      source: http
+      uri: http://localhost:7072/api/state
+      jq: .vehicles[0].soc
+    range:
+      source: http
+      uri: http://localhost:7072/api/state
+      jq: .vehicles[0].range
+    capacity: 20
+  - name: honda
+    type: template
+    template: offline
+    title: grüner Honda e
+    capacity: 28.5
+
+tariffs:
+  currency: EUR
+  grid:
+    type: fixed
+    price: 0.40
