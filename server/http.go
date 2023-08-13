@@ -104,6 +104,7 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, cache *util.Cache) {
 		"updatedevice":   {[]string{"PUT", "OPTIONS"}, "/config/devices/{class:[a-z]+}/{id:[0-9.]+}", updateDeviceHandler},
 		"deletedevice":   {[]string{"DELETE", "OPTIONS"}, "/config/devices/{class:[a-z]+}/{id:[0-9.]+}", deleteDeviceHandler},
 		"test":           {[]string{"POST", "OPTIONS"}, "/config/test/{class:[a-z]+}", testHandler},
+		"testdevice":     {[]string{"POST", "OPTIONS"}, "/config/test/{class:[a-z]+}/{id:[0-9.]+}", testHandler},
 		"buffersoc":      {[]string{"POST", "OPTIONS"}, "/buffersoc/{value:[0-9.]+}", floatHandler(site.SetBufferSoc, site.GetBufferSoc)},
 		"bufferstartsoc": {[]string{"POST", "OPTIONS"}, "/bufferstartsoc/{value:[0-9.]+}", floatHandler(site.SetBufferStartSoc, site.GetBufferStartSoc)},
 		"prioritysoc":    {[]string{"POST", "OPTIONS"}, "/prioritysoc/{value:[0-9.]+}", floatHandler(site.SetPrioritySoc, site.GetPrioritySoc)},
