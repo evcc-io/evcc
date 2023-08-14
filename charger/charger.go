@@ -22,7 +22,7 @@ func init() {
 	registry.Add(api.Custom, NewConfigurableFromConfig)
 }
 
-// go:generate go run ../cmd/tools/decorate.go -f decorateCustom -b *Charger -r api.Charger -t "api.ChargerEx,MaxCurrentMillis,func(float64) error" -t "api.Identifier,Identify,func() (string, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.Resurrector,WakeUp,func() error"
+// go:generate go run ../cmd/tools/decorate.go -f decorateCustom -b *Charger -r api.Charger -t "api.ChargerEx,MaxCurrentMillis,func(float64) error" -t "api.Identifier,Identify,func() (string, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.Resurrector,WakeUp,func() error" -t "api.Battery,Soc,func() (float64, error)"
 
 // NewConfigurableFromConfig creates a new configurable charger
 func NewConfigurableFromConfig(other map[string]interface{}) (api.Charger, error) {
@@ -32,6 +32,7 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Charger, error
 		MaxCurrentMillis                    *provider.Config
 		Identify, Phases1p3p                *provider.Config
 		Wakeup                              *provider.Config
+		Soc                                 *provider.Config
 		Tos                                 bool
 	}
 
@@ -113,7 +114,16 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Charger, error
 		}
 	}
 
-	return decorateCustom(c, maxcurrentmillis, identify, phases1p3p, wakeup), nil
+	// decorate soc
+	var soc func() (float64, error)
+	if cc.Soc != nil {
+		soc, err = provider.NewFloatGetterFromConfig(*cc.Soc)
+		if err != nil {
+			return nil, fmt.Errorf("soc: %w", err)
+		}
+	}
+
+	return decorateCustom(c, maxcurrentmillis, identify, phases1p3p, wakeup, soc), nil
 }
 
 // NewConfigurable creates a new charger
