@@ -251,6 +251,15 @@ func (p *HTTP) IntSetter(param string) func(int64) error {
 	}
 }
 
+var _ SetFloatProvider = (*HTTP)(nil)
+
+// FloatSetter sends int request
+func (p *HTTP) FloatSetter(param string) func(float64) error {
+	return func(val float64) error {
+		return p.set(param, val)
+	}
+}
+
 var _ SetStringProvider = (*HTTP)(nil)
 
 // StringSetter sends string request
