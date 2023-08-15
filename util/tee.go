@@ -1,43 +1,49 @@
 package util
 
-import "reflect"
+import (
+	"reflect"
+	"sync"
+)
 
-// TeeAttacher allows to attach a listener to a tee
+// TeeAttacher allows attaching a listener to a tee
 type TeeAttacher interface {
 	Attach() <-chan Param
 }
 
-// Tee distributed parameters to subscribers
+// Tee distributes parameters to subscribers
 type Tee struct {
 	recv []chan<- Param
+	mu   sync.Mutex // Mutex to protect recv slice
 }
 
 // Attach creates a new receiver channel and attaches it to the tee
 func (t *Tee) Attach() <-chan Param {
-	// TODO find better approach to prevent deadlocks
-	// this will buffer the receiver channel to prevent deadlocks when consumers use mutex-protected loadpoint api
-	out := make(chan Param, 16)
+	out := make(chan Param, 16) // Use a buffered channel to prevent blocking
 	t.add(out)
 	return out
 }
 
 // add attaches a receiver channel to the tee
 func (t *Tee) add(out chan<- Param) {
+	t.mu.Lock()
+	defer t.mu.Unlock()
 	t.recv = append(t.recv, out)
 }
 
 // Run starts parameter distribution
 func (t *Tee) Run(in <-chan Param) {
 	for msg := range in {
-		for _, recv := range t.recv {
-			// dereference pointers (https://github.com/evcc-io/evcc/issues/7895)
-			if val := reflect.ValueOf(msg.Val); val.Kind() == reflect.Ptr {
-				if ptr := reflect.Indirect(val); ptr.IsValid() {
-					msg.Val = ptr.Addr().Elem().Interface()
-				}
+		// Convert the parameter once instead of per receiver iteration
+		if val := reflect.ValueOf(msg.Val); val.Kind() == reflect.Ptr {
+			if ptr := reflect.Indirect(val); ptr.IsValid() {
+				msg.Val = ptr.Addr().Elem().Interface()
 			}
+		}
 
+		t.mu.Lock()
+		for _, recv := range t.recv {
 			recv <- msg
 		}
+		t.mu.Unlock()
 	}
 }
