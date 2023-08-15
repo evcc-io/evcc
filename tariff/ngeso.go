@@ -2,11 +2,11 @@ package tariff
 
 import (
 	"errors"
-	"github.com/cenkalti/backoff"
 	"net/http"
 	"sync"
 	"time"
 
+	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/tariff/ngeso"
 	"github.com/evcc-io/evcc/util"
