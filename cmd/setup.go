@@ -161,8 +161,7 @@ func configureInflux(conf server.InfluxConfig, site site.API, in <-chan util.Par
 func configureMQTT(conf mqttConfig) error {
 	log := util.NewLogger("mqtt")
 
-	var err error
-	if mqtt.Instance, err = mqtt.RegisteredClient(log, conf.Broker, conf.User, conf.Password, conf.ClientID, 1, conf.Insecure, func(options *paho.ClientOptions) {
+	instance, err := mqtt.RegisteredClient(log, conf.Broker, conf.User, conf.Password, conf.ClientID, 1, conf.Insecure, func(options *paho.ClientOptions) {
 		topic := fmt.Sprintf("%s/status", strings.Trim(conf.Topic, "/"))
 		options.SetWill(topic, "offline", 1, true)
 
@@ -171,10 +170,12 @@ func configureMQTT(conf mqttConfig) error {
 			oc(client)                                       // original handler
 			_ = mqtt.Instance.Publish(topic, true, "online") // alive
 		})
-	}); err != nil {
+	})
+	if err != nil {
 		return fmt.Errorf("failed configuring mqtt: %w", err)
 	}
 
+	mqtt.Instance = instance
 	return nil
 }
 
