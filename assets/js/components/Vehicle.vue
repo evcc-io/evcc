@@ -18,8 +18,8 @@
 			<LabelAndValue
 				v-if="socBasedCharging"
 				class="flex-grow-1"
-				:label="$t('main.vehicle.vehicleSoc')"
-				:value="vehicleSoc ? `${Math.round(vehicleSoc)}%` : '--'"
+				:label="vehicleSocTitle"
+				:value="formattedSoc"
 				:extraValue="range ? `${fmtNumber(range, 0)} ${rangeUnit}` : null"
 				align="start"
 			/>
@@ -32,6 +32,7 @@
 				align="start"
 			/>
 			<ChargingPlan
+				v-if="!heating"
 				class="flex-grow-1 target-charge"
 				v-bind="chargingPlan"
 				:disabled="chargingPlanDisabled"
@@ -44,6 +45,7 @@
 				class="flex-grow-1 text-end"
 				:target-soc="displayTargetSoc"
 				:range-per-soc="rangePerSoc"
+				:heating="heating"
 				@target-soc-updated="targetSocUpdated"
 			/>
 			<TargetEnergySelect
@@ -87,6 +89,7 @@ export default {
 		id: [String, Number],
 		connected: Boolean,
 		integratedDevice: Boolean,
+		heating: Boolean,
 		vehiclePresent: Boolean,
 		vehicleSoc: Number,
 		vehicleTargetSoc: Number,
@@ -146,6 +149,22 @@ export default {
 		},
 		chargingPlan: function () {
 			return this.collectProps(ChargingPlan);
+		},
+		formattedSoc: function () {
+			if (!this.vehicleSoc) {
+				return "--";
+			}
+			if (this.heating) {
+				// todo: add celsius/fahrenheit option to ui
+				return this.fmtNumber(this.vehicleSoc, 1, "celsius");
+			}
+			return `${Math.round(this.vehicleSoc)}%`;
+		},
+		vehicleSocTitle: function () {
+			if (this.heating) {
+				return this.$t("main.vehicle.temp");
+			}
+			return this.$t("main.vehicle.vehicleSoc");
 		},
 		range: function () {
 			return distanceValue(this.vehicleRange);

@@ -232,6 +232,8 @@ fallbackName = "Fahrzeug"
 moreActions = "Weitere Aktionen"
 none = "Kein Fahrzeug"
 targetSoc = "Ladeziel"
+temp = "Temp."
+tempLimit = "Zieltemp."
 unknown = "Gastfahrzeug"
 vehicleSoc = "Ladestand"
 

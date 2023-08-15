@@ -232,6 +232,8 @@ fallbackName = "Vehicle"
 moreActions = "More actions"
 none = "No vehicle"
 targetSoc = "Limit"
+temp = "Temp."
+tempLimit = "Temp. limit"
 unknown = "Guest vehicle"
 vehicleSoc = "Charge"
 

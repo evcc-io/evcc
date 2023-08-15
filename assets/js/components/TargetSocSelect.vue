@@ -1,10 +1,5 @@
 <template>
-	<LabelAndValue
-		class="flex-grow-1"
-		:label="$t('main.vehicle.targetSoc')"
-		align="end"
-		data-testid="target-soc"
-	>
+	<LabelAndValue class="flex-grow-1" :label="title" align="end" data-testid="target-soc">
 		<h3 class="value m-0 d-block d-sm-flex align-items-baseline justify-content-end">
 			<label class="position-relative">
 				<select :value="targetSoc" class="custom-select" @change="change">
@@ -37,6 +32,7 @@ export default {
 	props: {
 		targetSoc: Number,
 		rangePerSoc: Number,
+		heating: Boolean,
 	},
 	emits: ["target-soc-updated"],
 
@@ -53,6 +49,11 @@ export default {
 			}
 			return result;
 		},
+		title: function () {
+			return this.heating
+				? this.$t("main.vehicle.tempLimit")
+				: this.$t("main.vehicle.targetSoc");
+		},
 		estimatedTargetRange: function () {
 			return this.estimatedRange(this.targetSoc);
 		},
@@ -68,7 +69,8 @@ export default {
 			return null;
 		},
 		formatSoc: function (value) {
-			return `${Math.round(value)}%`;
+			// todo: add fahrenheit support
+			return this.heating ? this.fmtNumber(value, 1, "celsius") : `${Math.round(value)}%`;
 		},
 		formatKm: function (value) {
 			return `${this.fmtNumber(value, 0)} ${distanceUnit()}`;
