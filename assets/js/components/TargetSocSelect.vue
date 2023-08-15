@@ -51,7 +51,7 @@ export default {
 		},
 		title: function () {
 			return this.heating
-				? this.$t("main.vehicle.maxTemp")
+				? this.$t("main.vehicle.tempLimit")
 				: this.$t("main.vehicle.targetSoc");
 		},
 		estimatedTargetRange: function () {
