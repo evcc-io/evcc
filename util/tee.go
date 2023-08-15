@@ -1,43 +1,86 @@
 package util
 
-import "reflect"
+import (
+	"reflect"
+	"sync"
+)
 
-// TeeAttacher allows to attach a listener to a tee
+// TeeAttacher allows attaching a listener to a tee
 type TeeAttacher interface {
 	Attach() <-chan Param
 }
 
-// Tee distributed parameters to subscribers
+// Tee distributes parameters to subscribers
 type Tee struct {
-	recv []chan<- Param
+	recv     []chan<- Param
+	attachCh chan chan<- Param // Channel for attaching new receivers
+	detachCh chan chan<- Param // Channel for detaching receivers
+	wg       sync.WaitGroup     // WaitGroup for graceful shutdown
+	lock     sync.Mutex        // Mutex for safe concurrent access
 }
 
 // Attach creates a new receiver channel and attaches it to the tee
 func (t *Tee) Attach() <-chan Param {
-	// TODO find better approach to prevent deadlocks
-	// this will buffer the receiver channel to prevent deadlocks when consumers use mutex-protected loadpoint api
 	out := make(chan Param, 16)
-	t.add(out)
+	t.attachCh <- out
 	return out
-}
-
-// add attaches a receiver channel to the tee
-func (t *Tee) add(out chan<- Param) {
-	t.recv = append(t.recv, out)
 }
 
 // Run starts parameter distribution
 func (t *Tee) Run(in <-chan Param) {
-	for msg := range in {
-		for _, recv := range t.recv {
-			// dereference pointers (https://github.com/evcc-io/evcc/issues/7895)
-			if val := reflect.ValueOf(msg.Val); val.Kind() == reflect.Ptr {
-				if ptr := reflect.Indirect(val); ptr.IsValid() {
-					msg.Val = ptr.Addr().Elem().Interface()
+	for {
+		select {
+		case recv := <-t.attachCh:
+			t.lock.Lock()
+			t.add(recv)
+			t.lock.Unlock()
+		case recv := <-t.detachCh:
+			t.lock.Lock()
+			t.remove(recv)
+			t.lock.Unlock()
+		case msg, ok := <-in:
+			if !ok {
+				// Input channel closed, terminate distribution
+				t.lock.Lock()
+				for _, recv := range t.recv {
+					close(recv)
 				}
+				t.lock.Unlock()
+				t.wg.Done()
+				return
 			}
 
-			recv <- msg
+			t.lock.Lock()
+			for _, recv := range t.recv {
+				// dereference pointers
+				if val := reflect.ValueOf(msg.Val); val.Kind() == reflect.Ptr {
+					if ptr := reflect.Indirect(val); ptr.IsValid() {
+						msg.Val = ptr.Interface()
+					}
+				}
+
+				recv <- msg
+			}
+			t.lock.Unlock()
 		}
 	}
+}
+
+func (t *Tee) add(out chan<- Param) {
+	t.recv = append(t.recv, out)
+}
+
+func (t *Tee) remove(out chan<- Param) {
+	for i, recv := range t.recv {
+		if recv == out {
+			close(recv)
+			t.recv = append(t.recv[:i], t.recv[i+1:]...)
+			break
+		}
+	}
+}
+
+// Param represents a parameter
+type Param struct {
+	Val interface{}
 }
