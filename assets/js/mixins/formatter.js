@@ -51,9 +51,11 @@ export default {
     fmtKWh: function (watt, kw = true, withUnit = true, digits) {
       return this.fmtKw(watt, kw, withUnit, digits) + (withUnit ? "h" : "");
     },
-    fmtNumber: function (number, decimals) {
+    fmtNumber: function (number, decimals, unit) {
+      const style = unit ? "unit" : "decimal";
       return new Intl.NumberFormat(this.$i18n.locale, {
-        style: "decimal",
+        style,
+        unit,
         minimumFractionDigits: decimals,
         maximumFractionDigits: decimals,
       }).format(number);

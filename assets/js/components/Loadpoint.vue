@@ -210,6 +210,7 @@ export default {
 
 		// charger
 		chargerFeatureIntegratedDevice: Boolean,
+		chargerFeatureHeating: Boolean,
 		chargerIcon: String,
 
 		// vehicle
@@ -277,6 +278,9 @@ export default {
 	computed: {
 		integratedDevice: function () {
 			return this.chargerFeatureIntegratedDevice;
+		},
+		heating: function () {
+			return this.chargerFeatureHeating;
 		},
 		phasesProps: function () {
 			return this.collectProps(Phases);
