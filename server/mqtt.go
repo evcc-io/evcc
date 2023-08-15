@@ -209,10 +209,6 @@ func (m *MQTT) listenSetters(topic string, site site.API, lp loadpoint.API) {
 
 // Run starts the MQTT publisher for the MQTT API
 func (m *MQTT) Run(site site.API, in <-chan util.Param) {
-	// alive
-	topic := fmt.Sprintf("%s/status", m.root)
-	m.publish(topic, true, "online")
-
 	// site setters
 	m.Handler.ListenSetter(m.root+"/site/prioritySoc", func(payload string) error {
 		val, err := parseFloat(payload)
@@ -255,7 +251,7 @@ func (m *MQTT) Run(site site.API, in <-chan util.Param) {
 	})
 
 	// number of loadpoints
-	topic = fmt.Sprintf("%s/loadpoints", m.root)
+	topic := fmt.Sprintf("%s/loadpoints", m.root)
 	m.publish(topic, true, len(site.Loadpoints()))
 
 	// loadpoint setters
