@@ -13,9 +13,9 @@ params:
   - name: usage
     choice: ["grid", "pv", "battery"]
     allinone: true
-  - name: host
-  - name: port
-    default: 502
+  - name: modbus
+    choice: ["tcpip"]
+    id: 2
   - name: capacity
     advanced: true
 render: |
@@ -23,47 +23,80 @@ render: |
   {{- if eq .usage "pv" }}
   power:
     source: modbus
-    uri: {{ .host }}:{{ .port }} # Port 502
-    id: 2
+    {{- include "modbus" . | indent 2 }}
     register:
-      address: 30775 # PV, W
+      address: 30775 # Aktuelle PV-Einspeisewirkleistung über alle Außenleiter, W
       type: holding
       decode: int32nan
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 30513 # Total eingespeiste Energie auf allen Außenleitern, Wh
+      type: holding
+      decode: uint64nan
+    scale: 0.001
   {{- end }}
   {{- if eq .usage "grid" }}
   power:
     source: modbus
-    uri: {{ .host }}:{{ .port }} # Port 502
-    id: 2
+    {{- include "modbus" . | indent 2 }}
     register:
       address: 31249 # Grid, W
       type: holding
       decode: int32nan
     scale: -1
+  currents:
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 31535 # Anlagenstrom Phase L1 am PCC, mA
+      type: holding
+      decode: int32nan
+    scale: -0.001
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 31537 # Anlagenstrom Phase L2 am PCC, mA
+      type: holding
+      decode: int32nan
+    scale: -0.001
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 31539 # Anlagenstrom Phase L3 am PCC, mA
+      type: holding
+      decode: int32nan
+    scale: -0.001
   {{- end }}
   {{- if eq .usage "battery" }}
   power:
     source: calc
     add:
     - source: modbus
-      uri: {{ .host }}:{{ .port }} # Port 502
-      id: 2
+      {{- include "modbus" . | indent 4 }}
       register:
-        address: 31393 # Battery charge, W
+        address: 31393 # Momentane Batterieladung, W
         type: holding
         decode: uint32nan
       scale: -1
     - source: modbus
-      uri: {{ .host }}:{{ .port }} # Port 502
-      id: 2
+      {{- include "modbus" . | indent 4 }}
       register:
-        address: 31395 # Battery dis-charge, W
+        address: 31395 # Momentane Batterieentladung, W
         type: holding
         decode: uint32nan
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 31401 # Batterieentladung, Wh
+      type: holding
+      decode: uint64nan
+    scale: 0.001
   soc:
     source: modbus
-    uri: {{ .host }}:{{ .port }} # Port 502
-    id: 2
+    {{- include "modbus" . | indent 2 }}
     register:
       address: 30845 # Battery Soc, %
       type: holding
