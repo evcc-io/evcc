@@ -168,8 +168,8 @@ func configureMQTT(conf mqttConfig) error {
 
 		oc := options.OnConnect
 		options.SetOnConnectHandler(func(client paho.Client) {
-			oc(client)                                   // original handler
-			mqtt.Instance.Publish(topic, true, "online") // alive
+			oc(client)                                       // original handler
+			_ = mqtt.Instance.Publish(topic, true, "online") // alive
 		})
 	}); err != nil {
 		return fmt.Errorf("failed configuring mqtt: %w", err)
