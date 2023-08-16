@@ -659,7 +659,7 @@ func (site *Site) greenShare(powerFrom float64, powerTo float64) float64 {
 	greenPower := math.Max(0, site.pvPower) + math.Max(0, site.batteryPower)
 	greenPowerAvailable := math.Max(0, greenPower-powerFrom)
 
-	power :=  powerTo-powerFrom
+	power := powerTo - powerFrom
 	share := math.Min(greenPowerAvailable, power) / power
 
 	if math.IsNaN(share) {
