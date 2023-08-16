@@ -352,7 +352,7 @@ export default {
 					unit: "h:mm",
 					total: this.chargeDuration,
 					value: (session) => session.chargeDuration,
-					format: (value) => this.fmtDuration(value, false, "h"),
+					format: (value) => this.fmtDurationNs(value, false, "h"),
 				},
 				{
 					name: "avgPower",
@@ -360,7 +360,7 @@ export default {
 					total: this.avgPower,
 					value: (session) => {
 						if (session.chargedEnergy && session.chargeDuration) {
-							return session.chargedEnergy / (session.chargeDuration / 3600);
+							return session.chargedEnergy / this.nsToHours(session.chargeDuration);
 						}
 						return null;
 					},
@@ -442,18 +442,18 @@ export default {
 			return this.filteredSessions.reduce((total, s) => total + s.price, 0);
 		},
 		avgPower() {
-			const { energy, duration } = this.filteredSessions
+			const { energy, hours } = this.filteredSessions
 				.filter((s) => s.chargedEnergy && s.chargeDuration)
 				.reduce(
 					(total, s) => {
 						total.energy += s.chargedEnergy;
-						total.duration += s.chargeDuration;
+						total.hours += this.nsToHours(s.chargeDuration);
 						return total;
 					},
-					{ energy: 0, duration: 0 }
+					{ energy: 0, hours: 0 }
 				);
-			if (energy && duration) {
-				return energy / (duration / 3600);
+			if (energy && hours) {
+				return energy / hours;
 			}
 			return null;
 		},
@@ -590,6 +590,9 @@ export default {
 		this.loadSessions();
 	},
 	methods: {
+		nsToHours(ns) {
+			return ns / 1e9 / 3600;
+		},
 		filterByLoadpoint(session) {
 			return !this.loadpointFilter || session.loadpoint === this.loadpointFilter;
 		},

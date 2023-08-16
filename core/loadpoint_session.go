@@ -73,8 +73,7 @@ func (lp *Loadpoint) stopSession() {
 	s.PricePerKWh = lp.sessionEnergy.PricePerKWh()
 	s.Co2PerKWh = lp.sessionEnergy.Co2PerKWh()
 	s.ChargedEnergy = lp.sessionEnergy.TotalWh() / 1e3
-	chargedSeconds := lp.chargeDuration.Seconds()
-	s.ChargeDuration = &chargedSeconds
+	s.ChargeDuration = &lp.chargeDuration
 
 	lp.db.Persist(s)
 }

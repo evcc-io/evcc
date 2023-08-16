@@ -73,6 +73,9 @@ export default {
     fmtNumberToLocale(val, pad = 0) {
       return val.toLocaleString(this.$i18n.locale).padStart(pad, "0");
     },
+    fmtDurationNs(duration = 0, withUnit = true, minUnit = "s") {
+      return this.fmtDuration(duration / 1e9, withUnit, minUnit);
+    },
     fmtDuration: function (duration = 0, withUnit = true, minUnit = "s") {
       if (duration <= 0) {
         return "—";
