@@ -108,11 +108,9 @@
 							icon="home"
 							:power="homePower"
 							:powerInKw="powerInKw"
-							:details="detailsValue(tariffEffectivePrice, tariffEffectiveCo2)"
+							:details="detailsValue(tariffPriceHome, tariffCo2Home)"
 							:detailsFmt="detailsFmt"
-							:detailsTooltip="
-								detailsTooltip(tariffEffectivePrice, tariffEffectiveCo2)
-							"
+							:detailsTooltip="detailsTooltip(tariffPriceHome, tariffCo2Home)"
 						/>
 						<EnergyflowEntry
 							:name="
@@ -126,12 +124,12 @@
 							:powerInKw="powerInKw"
 							:details="
 								activeLoadpointsCount
-									? detailsValue(tariffEffectivePrice, tariffEffectiveCo2)
+									? detailsValue(tariffPriceLoadpoints, tariffCo2Loadpoints)
 									: undefined
 							"
 							:detailsFmt="detailsFmt"
 							:detailsTooltip="
-								detailsTooltip(tariffEffectivePrice, tariffEffectiveCo2)
+								detailsTooltip(tariffPriceLoadpoints, tariffCo2Loadpoints)
 							"
 						/>
 						<EnergyflowEntry
@@ -203,9 +201,11 @@ export default {
 		vehicleIcons: { type: Array },
 		tariffGrid: { type: Number },
 		tariffFeedIn: { type: Number },
-		tariffEffectivePrice: { type: Number },
 		tariffCo2: { type: Number },
-		tariffEffectiveCo2: { type: Number },
+		tariffPriceHome: { type: Number },
+		tariffCo2Home: { type: Number },
+		tariffPriceLoadpoints: { type: Number },
+		tariffCo2Loadpoints: { type: Number },
 		smartCostLimit: { type: Number },
 		smartCostType: { type: String },
 		currency: { type: String },
