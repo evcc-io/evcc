@@ -13,7 +13,12 @@
 		<span :id="id + '_unit'" class="input-group-text">{{ unit }}</span>
 	</div>
 	<div v-else-if="icons" :id="id" class="d-flex flex-wrap">
-		<div v-for="{ key } in selectOptions" :key="key" class="me-2 mb-2">
+		<div
+			v-for="{ key } in selectOptions"
+			v-show="key === value || selectMode"
+			:key="key"
+			class="me-2 mb-2"
+		>
 			<input
 				:id="`icon_${key}`"
 				v-model="value"
@@ -23,6 +28,7 @@
 				autocomplete="off"
 				:required="required"
 				:value="key"
+				@click="toggleSelectMode"
 			/>
 			<label class="btn btn-outline-secondary" :for="`icon_${key}`" :aria-label="key">
 				<VehicleIcon :name="key" />
@@ -35,7 +41,6 @@
 			{{ name }}
 		</option>
 	</select>
-
 	<textarea
 		v-else-if="textarea"
 		:id="id"
@@ -73,6 +78,9 @@ export default {
 		modelValue: [String, Number, Boolean, Object],
 	},
 	emits: ["update:modelValue"],
+	data: () => {
+		return { selectMode: false };
+	},
 	computed: {
 		type() {
 			return this.masked ? "password" : "text";
@@ -105,6 +113,13 @@ export default {
 			set(value) {
 				this.$emit("update:modelValue", value);
 			},
+		},
+	},
+	methods: {
+		toggleSelectMode() {
+			this.$nextTick(() => {
+				this.selectMode = !this.selectMode;
+			});
 		},
 	},
 };

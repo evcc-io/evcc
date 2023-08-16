@@ -127,7 +127,7 @@
 									type="submit"
 									class="btn btn-primary me-3"
 									:disabled="testRunning"
-									@click="isNew ? create() : update()"
+									@click.prevent="isNew ? create() : update()"
 								>
 									{{
 										testUnknown
@@ -145,7 +145,11 @@
 							</div>
 
 							<div v-if="isDeletable" class="text-center mt-4">
-								<button class="btn btn-link text-danger" @click="remove">
+								<button
+									type="button"
+									class="btn btn-link text-danger"
+									@click.prevent="remove"
+								>
 									{{ $t("config.vehicle.delete") }}
 								</button>
 							</div>
@@ -240,6 +244,7 @@ export default {
 		isModalVisible(visible) {
 			if (visible) {
 				this.reset();
+				this.templateName = "offline";
 				this.resetTest();
 				this.loadProducts();
 				if (this.id !== undefined) {
@@ -321,7 +326,11 @@ export default {
 			if (!this.$refs.form.reportValidity()) return false;
 			this.testState = TEST_RUNNING;
 			try {
-				await api.post("config/test/vehicle", this.apiData);
+				let url = "config/test/vehicle";
+				if (!this.isNew) {
+					url += `/${this.id}`;
+				}
+				await api.post(url, this.apiData);
 				this.testState = TEST_SUCCESS;
 				this.testResult = null;
 				return true;
@@ -336,11 +345,12 @@ export default {
 			if (this.testUnknown) {
 				const success = await this.test();
 				if (!success) return;
-				await sleep(500);
+				await sleep(250);
 			}
 			try {
 				await api.post("config/devices/vehicle", this.apiData);
 				this.$emit("vehicle-changed");
+				this.modalInvisible();
 			} catch (e) {
 				console.error(e);
 				alert("create failed");
@@ -350,11 +360,12 @@ export default {
 			if (this.testUnknown) {
 				const success = await this.test();
 				if (!success) return;
-				await sleep(500);
+				await sleep(250);
 			}
 			try {
 				await api.put(`config/devices/vehicle/${this.id}`, this.apiData);
 				this.$emit("vehicle-changed");
+				this.modalInvisible();
 			} catch (e) {
 				console.error(e);
 				alert("update failed");
@@ -364,6 +375,7 @@ export default {
 			try {
 				await api.delete(`config/devices/vehicle/${this.id}`);
 				this.$emit("vehicle-changed");
+				this.modalInvisible();
 			} catch (e) {
 				console.error(e);
 				alert("delete failed");
