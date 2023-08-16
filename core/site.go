@@ -656,26 +656,17 @@ func (site *Site) sitePower(totalChargePower, flexiblePower float64) (float64, b
 //   - the current green share, calculated for the part of the consumption between powerFrom and powerTo
 //     the consumtion below powerFrom will get the green power first
 func (site *Site) greenShare(powerFrom float64, powerTo float64) float64 {
-	batteryDischarge := math.Max(0, site.batteryPower)
-	batteryCharge := -math.Min(0, site.batteryPower)
-	greenPower := site.pvPower + site.gridPower - batteryCharge
-	pvConsumption := math.Min(site.pvPower, greenPower)
+	greenPower := math.Max(0, site.pvPower) + math.Max(0, site.batteryPower)
+	greenPowerAvailable := math.Max(0, greenPower-powerFrom)
 
-	selfConsumption := math.Max(0, batteryDischarge+pvConsumption+batteryCharge-powerFrom)
-	gridImport := math.Max(0, site.gridPower-powerFrom)
-
-	var share float64
-	if powerTo == 0 {
-		share = selfConsumption/gridImport + selfConsumption
-	} else {
-		share = math.Min(selfConsumption, powerTo-powerFrom) / math.Min(gridImport+selfConsumption, powerTo-powerFrom)
-	}
+	power :=  powerTo-powerFrom
+	share := math.Min(greenPowerAvailable, power) / power
 
 	if math.IsNaN(share) {
-		if greenPower > powerFrom {
-			return 1
+		if greenPowerAvailable > 0 {
+			share = 1
 		} else {
-			return 0
+			share = 0
 		}
 	}
 
@@ -774,7 +765,7 @@ func (site *Site) update(lp Updater) {
 		site.publish("homePower", homePower)
 
 		greenShareHome := site.greenShare(0, homePower)
-		greenShareLoadpoints := site.greenShare(homePower, 0)
+		greenShareLoadpoints := site.greenShare(homePower, homePower+totalChargePower)
 
 		lp.Update(sitePower, autoCharge, batteryBuffered, batteryStart, greenShareLoadpoints, site.effectivePrice(greenShareLoadpoints), site.effectiveCo2(greenShareLoadpoints))
 
