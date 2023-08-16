@@ -281,8 +281,7 @@ export default {
 		},
 		async loadConfiguration() {
 			try {
-				const vehicles = (await api.get("config/devices/vehicle")).data.result;
-				const vehicle = vehicles.find((v) => v.id === this.id);
+				const vehicle = (await api.get(`config/devices/vehicle/${this.id}`)).data.result;
 				this.values = vehicle.config;
 				this.applyDefaultsFromTemplate();
 				this.templateName = this.values.template;
