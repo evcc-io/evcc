@@ -72,6 +72,26 @@ func (t *Sessions) writeHeader(ctx context.Context, ww *csv.Writer) error {
 	return ww.Write(row)
 }
 
+func formatValue(mp *message.Printer, value any, digits int) string {
+	if rv := reflect.ValueOf(value); rv.Kind() == reflect.Pointer && rv.IsNil() {
+		return ""
+	}
+
+	switch v := value.(type) {
+	case float64:
+		return mp.Sprint(number.Decimal(v, number.NoSeparator(), number.MaxFractionDigits(digits)))
+	case *float64:
+		return mp.Sprint(number.Decimal(*v, number.NoSeparator(), number.MaxFractionDigits(digits)))
+	case time.Time:
+		if v.IsZero() {
+			return ""
+		}
+		return v.Local().Format("2006-01-02 15:04:05")
+	default:
+		return fmt.Sprintf("%v", value)
+	}
+}
+
 func (t *Sessions) writeRow(ww *csv.Writer, mp *message.Printer, r Session) error {
 	var row []string
 	for _, f := range structs.Fields(r) {
@@ -84,20 +104,7 @@ func (t *Sessions) writeRow(ww *csv.Writer, mp *message.Printer, r Session) erro
 			digits = 0
 		}
 
-		var val string
-
-		if rv := reflect.ValueOf(f.Value()); !(rv.Kind() == reflect.Pointer && rv.IsNil()) {
-			switch v := f.Value().(type) {
-			case float64, *float64:
-				val = mp.Sprint(number.Decimal(v, number.NoSeparator(), number.MaxFractionDigits(digits)))
-			case time.Time:
-				if !v.IsZero() {
-					val = v.Local().Format("2006-01-02 15:04:05")
-				}
-			default:
-				val = fmt.Sprintf("%v", f.Value())
-			}
-		}
+		val := formatValue(mp, f.Value(), digits)
 
 		row = append(row, val)
 	}
