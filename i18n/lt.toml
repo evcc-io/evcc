@@ -241,6 +241,8 @@ none = "Nėra automobilio"
 targetSoc = "Limitas"
 unknown = "Nežinomas automobilis"
 vehicleSoc = "Baterija"
+temp = "Temp."
+tempLimit = "Temp. limitas"
 
 [main.vehicleSoc]
 charging = "vyksta įkrovimas"
@@ -309,6 +311,8 @@ solar = "Saulės"
 title = "Įkrovimo Sesijos"
 total = "Viso"
 vehicle = "Automobilis"
+chargeDuration = "Trukmė"
+avgPower = "⌀ Galia"
 
 [sessions.csv]
 chargedenergy = "Energija (kWh)"
