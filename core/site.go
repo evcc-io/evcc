@@ -717,16 +717,16 @@ func (s *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints float
 		s.publishDelta("tariffCo2", co2)
 	}
 	if price := s.effectivePrice(greenShareHome); price != nil {
-		s.publish("tariffEffectivePriceHome", price)
+		s.publish("tariffPriceHome", price)
 	}
 	if co2 := s.effectiveCo2(greenShareHome); co2 != nil {
-		s.publish("tariffEffectiveCo2Home", co2)
+		s.publish("tariffCo2Home", co2)
 	}
 	if price := s.effectivePrice(greenShareLoadpoints); price != nil {
-		s.publish("tariffEffectivePriceLoadpoints", price)
+		s.publish("tariffPriceLoadpoints", price)
 	}
 	if co2 := s.effectiveCo2(greenShareLoadpoints); co2 != nil {
-		s.publish("tariffEffectiveCo2Loadpoints", co2)
+		s.publish("tariffCo2Loadpoints", co2)
 	}
 }
 
