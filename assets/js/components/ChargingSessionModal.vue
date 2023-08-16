@@ -63,16 +63,15 @@
 									</td>
 								</tr>
 								<tr>
-									<th>
+									<th class="align-baseline">
 										{{ $t("sessions.energy") }}
 									</th>
 									<td>
-										{{
-											fmtKWh(
-												session.chargedEnergy * 1e3,
-												session.chargedEnergy >= 1
-											)
-										}}
+										{{ fmtKWh(chargedEnergy, chargedEnergy >= 1e3) }}
+										<div v-if="session.chargeDuration">
+											{{ fmtDurationNs(session.chargeDuration) }}
+											(~{{ fmtKw(avgPower) }})
+										</div>
 									</td>
 								</tr>
 								<tr v-if="session.solarPercentage != null">
@@ -81,9 +80,7 @@
 									</th>
 									<td>
 										{{ fmtNumber(session.solarPercentage, 1) }}% ({{
-											fmtKWh(
-												session.chargedEnergy * 10 * session.solarPercentage
-											)
+											fmtKWh(solarEnergy, solarEnergy >= 1e3)
 										}})
 									</td>
 								</tr>
@@ -195,6 +192,18 @@ export default {
 		vehicles: [Object],
 	},
 	emits: ["session-changed"],
+	computed: {
+		chargedEnergy: function () {
+			return this.session.chargedEnergy * 1e3;
+		},
+		avgPower: function () {
+			const hours = this.session.chargeDuration / 1e9 / 3600;
+			return this.chargedEnergy / hours;
+		},
+		solarEnergy: function () {
+			return this.chargedEnergy * (this.session.solarPercentage / 100);
+		},
+	},
 	methods: {
 		openSessionDetailsModal() {
 			const modal = Modal.getOrCreateInstance(document.getElementById("sessionDetailsModal"));

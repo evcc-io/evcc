@@ -82,7 +82,7 @@ describe("timer", () => {
         pvRemainingInterpolated: 90,
       },
       "pvEnable",
-      { remaining: "1:30m" }
+      { remaining: "1:30\u202Fm" }
     );
   });
   test("don't show pv enable timer if value is zero", () => {
@@ -104,7 +104,7 @@ describe("timer", () => {
         pvRemainingInterpolated: 90,
       },
       "pvDisable",
-      { remaining: "1:30m" }
+      { remaining: "1:30\u202Fm" }
     );
   });
   test("show phase enable timer if it exists", () => {
@@ -116,7 +116,7 @@ describe("timer", () => {
         phaseRemainingInterpolated: 90,
       },
       "scale1p",
-      { remaining: "1:30m" }
+      { remaining: "1:30\u202Fm" }
     );
   });
   test("show phase disable timer if it exists", () => {
@@ -128,7 +128,7 @@ describe("timer", () => {
         phaseRemainingInterpolated: 90,
       },
       "scale3p",
-      { remaining: "1:30m" }
+      { remaining: "1:30\u202Fm" }
     );
   });
   test("show guard timer if it exists", () => {
@@ -139,7 +139,7 @@ describe("timer", () => {
         guardRemainingInterpolated: 90,
       },
       "guard",
-      { remaining: "1:30m" }
+      { remaining: "1:30\u202Fm" }
     );
   });
   test("don't show guard timer if another timer exists", () => {
@@ -153,7 +153,7 @@ describe("timer", () => {
         guardRemainingInterpolated: 90,
       },
       "pvDisable",
-      { remaining: "30s" }
+      { remaining: "30\u202Fs" }
     );
   });
   test("show guard timer if charging and no other timer exists", () => {
@@ -165,7 +165,7 @@ describe("timer", () => {
         guardRemainingInterpolated: 90,
       },
       "guard",
-      { remaining: "1:30m" }
+      { remaining: "1:30\u202Fm" }
     );
   });
 });
