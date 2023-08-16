@@ -239,6 +239,8 @@ fallbackName = "Automobilis"
 moreActions = "Daugiau veiksmų"
 none = "Nėra automobilio"
 targetSoc = "Limitas"
+temp = "Temp."
+tempLimit = "Temp. limitas"
 unknown = "Nežinomas automobilis"
 vehicleSoc = "Baterija"
 
@@ -294,7 +296,9 @@ started = "Pradėta"
 title = "Įkrovimo sesija"
 
 [sessions]
+avgPower = "⌀ Galia"
 avgPrice = "⌀ Kaina"
+chargeDuration = "Trukmė"
 co2 = "⌀ CO₂"
 csvMonth = "Atsisiųsti {month} CSV"
 csvTotal = "Atsisiųsti visą CSV"

@@ -239,6 +239,8 @@ fallbackName = "Vehículo"
 moreActions = "Más acciones"
 none = "Ningún vehículo"
 targetSoc = "Objetivo de carga"
+temp = "T.ª"
+tempLimit = "Temperatura límite"
 unknown = "Vehículo invitado"
 vehicleSoc = "Nivel de carga"
 
@@ -294,7 +296,9 @@ started = "Comenzó"
 title = "Cargando la sesión"
 
 [sessions]
+avgPower = "⌀ Potencia"
 avgPrice = "Precio ⌀"
+chargeDuration = "Duración"
 co2 = "CO₂ ⌀"
 csvMonth = "Descargar el {month} CSV"
 csvTotal = "Descargar todos los CSV"
