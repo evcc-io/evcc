@@ -241,6 +241,8 @@ none = "Ningún vehículo"
 targetSoc = "Objetivo de carga"
 unknown = "Vehículo invitado"
 vehicleSoc = "Nivel de carga"
+temp = "T.ª"
+tempLimit = "Temperatura límite"
 
 [main.vehicleSoc]
 charging = "cargando"
@@ -309,6 +311,8 @@ solar = "Solar"
 title = "Sesiones de carga"
 total = "Total"
 vehicle = "Vehículo"
+avgPower = "⌀ Potencia"
+chargeDuration = "Duración"
 
 [sessions.csv]
 chargedenergy = "Energía (kWh)"
