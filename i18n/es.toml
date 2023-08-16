@@ -239,10 +239,10 @@ fallbackName = "Vehículo"
 moreActions = "Más acciones"
 none = "Ningún vehículo"
 targetSoc = "Objetivo de carga"
-unknown = "Vehículo invitado"
-vehicleSoc = "Nivel de carga"
 temp = "T.ª"
 tempLimit = "Temperatura límite"
+unknown = "Vehículo invitado"
+vehicleSoc = "Nivel de carga"
 
 [main.vehicleSoc]
 charging = "cargando"
@@ -296,7 +296,9 @@ started = "Comenzó"
 title = "Cargando la sesión"
 
 [sessions]
+avgPower = "⌀ Potencia"
 avgPrice = "Precio ⌀"
+chargeDuration = "Duración"
 co2 = "CO₂ ⌀"
 csvMonth = "Descargar el {month} CSV"
 csvTotal = "Descargar todos los CSV"
@@ -311,8 +313,6 @@ solar = "Solar"
 title = "Sesiones de carga"
 total = "Total"
 vehicle = "Vehículo"
-avgPower = "⌀ Potencia"
-chargeDuration = "Duración"
 
 [sessions.csv]
 chargedenergy = "Energía (kWh)"
