@@ -664,10 +664,11 @@ func (site *Site) greenShare(powerFrom float64, powerTo float64) float64 {
 	selfConsumption := math.Max(0, batteryDischarge+pvConsumption+batteryCharge-powerFrom)
 	gridImport := math.Max(0, site.gridPower-powerFrom)
 
+	var share float64
 	if powerTo == 0 {
-		share :=selfConsumption / gridImport+selfConsumption
+		share = selfConsumption / gridImport+selfConsumption
 	} else {
-		share := math.Min(selfConsumption, powerTo-powerFrom) / math.Min(gridImport+selfConsumption, powerTo-powerFrom)
+		share = math.Min(selfConsumption, powerTo-powerFrom) / math.Min(gridImport+selfConsumption, powerTo-powerFrom)
 	}
 
 	if math.IsNaN(share) {
