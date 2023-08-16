@@ -656,11 +656,8 @@ func (lp *Loadpoint) syncCharger() error {
 					lp.log.WARN.Printf("charger logic error: current mismatch (got %.3gA, expected %.3gA)", current, lp.chargeCurrent)
 				}
 
-				if charger, ok := lp.charger.(api.ChargerEx); ok {
-					return charger.MaxCurrentMillis(lp.chargeCurrent)
-				}
-
-				return lp.charger.MaxCurrent(int64(lp.chargeCurrent))
+				lp.chargeCurrent = current
+				lp.bus.Publish(evChargeCurrent, lp.chargeCurrent)
 			}
 		}
 
