@@ -83,32 +83,86 @@ func productsHandler(w http.ResponseWriter, r *http.Request) {
 	jsonResult(w, res)
 }
 
+func deviceConfigMap[T any](class templates.Class, dev config.Device[T]) (map[string]any, error) {
+	conf := dev.Config()
+
+	dc := map[string]any{
+		"name": conf.Name,
+		"type": conf.Type,
+	}
+
+	if configurable, ok := dev.(config.ConfigurableDevice[T]); ok {
+		// from database
+		params, err := sanitizeMasked(class, conf.Other)
+		if err != nil {
+			return nil, err
+		}
+
+		dc["id"] = configurable.ID()
+		dc["config"] = params
+	} else if title := conf.Other["title"]; title != nil {
+		// from yaml- add title only
+		if s, ok := title.(string); ok {
+			dc["config"] = map[string]any{"title": s}
+		}
+	}
+
+	return dc, nil
+}
+
+func deviceConfig[T any](class templates.Class, id int, h config.Handler[T]) (map[string]any, error) {
+	dev, err := h.ByName(config.NameForID(id))
+	if err != nil {
+		return nil, err
+	}
+
+	return deviceConfigMap(class, dev)
+}
+
+// deviceHandler returns a device configuration by class
+func deviceHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+
+	class, err := templates.ClassString(vars["class"])
+	if err != nil {
+		jsonError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	id, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		jsonError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	var res map[string]any
+
+	switch class {
+	case templates.Meter:
+		res, err = deviceConfig(class, id, config.Meters())
+
+	case templates.Charger:
+		res, err = deviceConfig(class, id, config.Chargers())
+
+	case templates.Vehicle:
+		res, err = deviceConfig(class, id, config.Vehicles())
+	}
+
+	if err != nil {
+		jsonError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	jsonResult(w, res)
+}
+
 func devicesConfig[T any](class templates.Class, h config.Handler[T]) ([]map[string]any, error) {
 	var res []map[string]any
 
-	// omit name from config
 	for _, dev := range h.Devices() {
-		conf := dev.Config()
-
-		dc := map[string]any{
-			"name": conf.Name,
-			"type": conf.Type,
-		}
-
-		if configurable, ok := dev.(config.ConfigurableDevice[T]); ok {
-			// from database
-			params, err := sanitizeMasked(class, conf.Other)
-			if err != nil {
-				return nil, err
-			}
-
-			dc["id"] = configurable.ID()
-			dc["config"] = params
-		} else if title := conf.Other["title"]; title != nil {
-			// from yaml- add title only
-			if s, ok := title.(string); ok {
-				dc["config"] = map[string]any{"title": s}
-			}
+		dc, err := deviceConfigMap(class, dev)
+		if err != nil {
+			return nil, err
 		}
 
 		res = append(res, dc)
@@ -117,7 +171,7 @@ func devicesConfig[T any](class templates.Class, h config.Handler[T]) ([]map[str
 	return res, nil
 }
 
-// devicesHandler tests a configuration by class
+// devicesHandler returns a device configurations by class
 func devicesHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 
