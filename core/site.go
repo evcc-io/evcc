@@ -652,22 +652,26 @@ func (site *Site) sitePower(totalChargePower, flexiblePower float64) (float64, b
 	return sitePower, batteryBuffered, batteryStart, nil
 }
 
-// greenShareMarginal returns
-//   - the current green share, ignoring part of the consumption while assuming that this
-//     part will get the green power first
-func (site *Site) greenShareMarginal(baselinePower float64) float64 {
+// greenShare returns
+//   - the current green share, calculated for the consumption between powerFrom and powerTo
+//     the consumtion below powerFrom will get the green power first
+func (site *Site) greenShare(powerFrom float64, powerTo float64) float64 {
 	batteryDischarge := math.Max(0, site.batteryPower)
 	batteryCharge := -math.Min(0, site.batteryPower)
 	greenPower := site.pvPower + site.gridPower - batteryCharge
 	pvConsumption := math.Min(site.pvPower, greenPower)
 
-	gridImport := math.Max(0, site.gridPower-baselinePower)
-	selfConsumption := math.Max(0, batteryDischarge+pvConsumption+batteryCharge-baselinePower)
+	selfConsumption := math.Max(0, batteryDischarge+pvConsumption+batteryCharge-powerFrom)
+	gridImport := math.Max(0, site.gridPower-powerFrom)
 
-	share := selfConsumption / (gridImport + selfConsumption)
+	if powerTo = 0 {
+		share :=selfConsumption / gridImport+selfConsumption
+	} else {
+		share := math.Min(selfConsumption, powerTo-powerFrom) / math.Min(gridImport+selfConsumption, powerTo-powerFrom)
+	}
 
 	if math.IsNaN(share) {
-		if greenPower > baselinePower {
+		if greenPower > powerFrom {
 			return 1
 		} else {
 			return 0
@@ -675,10 +679,6 @@ func (site *Site) greenShareMarginal(baselinePower float64) float64 {
 	}
 
 	return share
-}
-
-func (site *Site) greenShare() float64 {
-	return site.greenShareMarginal(0)
 }
 
 // effectivePrice calculates the real energy price based on self-produced and grid-imported energy.
@@ -703,10 +703,9 @@ func (s *Site) effectiveCo2(greenShare float64) *float64 {
 	return nil
 }
 
-func (s *Site) publishTariffs(greenShareLoadpoints float64) {
-	greenShare := s.greenShare()
-
-	s.publish("greenShare", greenShare)
+func (s *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints float64) {
+	s.publish("greenShareHome", greenShareHome)
+	s.publish("greenShareLoadpoints", greenShareLoadpoints)
 
 	if gridPrice, err := s.tariffs.CurrentGridPrice(); err == nil {
 		s.publishDelta("tariffGrid", gridPrice)
@@ -717,11 +716,11 @@ func (s *Site) publishTariffs(greenShareLoadpoints float64) {
 	if co2, err := s.tariffs.CurrentCo2(); err == nil {
 		s.publishDelta("tariffCo2", co2)
 	}
-	if price := s.effectivePrice(greenShare); price != nil {
-		s.publish("tariffEffectivePrice", price)
+	if price := s.effectivePrice(greenShareHome); price != nil {
+		s.publish("tariffEffectivePriceHome", price)
 	}
-	if co2 := s.effectiveCo2(greenShare); co2 != nil {
-		s.publish("tariffEffectiveCo2", co2)
+	if co2 := s.effectiveCo2(greenShareHome); co2 != nil {
+		s.publish("tariffEffectiveCo2Home", co2)
 	}
 	if price := s.effectivePrice(greenShareLoadpoints); price != nil {
 		s.publish("tariffEffectivePriceLoadpoints", price)
@@ -773,19 +772,19 @@ func (site *Site) update(lp Updater) {
 		homePower = math.Max(homePower, 0)
 		site.publish("homePower", homePower)
 
-		greenShare := site.greenShare()
-		greenShareLoadpoints := site.greenShareMarginal(homePower)
+		greenShareHome := site.greenShare(0, homePower)
+		greenShareLoadpoints := site.greenShare(homePower, 0)
 
 		lp.Update(sitePower, autoCharge, batteryBuffered, batteryStart, greenShareLoadpoints, site.effectivePrice(greenShareLoadpoints), site.effectiveCo2(greenShareLoadpoints))
 
 		site.Health.Update()
 
-		site.publishTariffs(greenShareLoadpoints)
+		site.publishTariffs(greenShareHome, greenShareLoadpoints)
 
 		// TODO: use energy instead of current power for better results
-		deltaCharged := site.savings.Update(site, greenShare, totalChargePower)
+		deltaCharged := site.savings.Update(site, greenShareLoadpoints, totalChargePower)
 		if telemetry.Enabled() && totalChargePower > standbyPower {
-			go telemetry.UpdateChargeProgress(site.log, totalChargePower, deltaCharged, greenShare)
+			go telemetry.UpdateChargeProgress(site.log, totalChargePower, deltaCharged, greenShareLoadpoints)
 		}
 	} else {
 		site.log.ERROR.Println(err)
