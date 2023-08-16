@@ -654,7 +654,7 @@ func (site *Site) sitePower(totalChargePower, flexiblePower float64) (float64, b
 
 // greenShare returns
 //   - the current green share, calculated for the part of the consumption between powerFrom and powerTo
-//     the consumtion below powerFrom will get the green power first
+//     the consumption below powerFrom will get the available green power first
 func (site *Site) greenShare(powerFrom float64, powerTo float64) float64 {
 	greenPower := math.Max(0, site.pvPower) + math.Max(0, site.batteryPower)
 	greenPowerAvailable := math.Max(0, greenPower-powerFrom)
