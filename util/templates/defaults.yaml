@@ -326,9 +326,6 @@ presets:
       - name: ip
   switchsocket:
     params:
-      - name: icon
-        default: generic
-        advanced: true
       - name: standbypower
         default: 15
       - name: integrateddevice
@@ -337,6 +334,8 @@ presets:
         description:
           de: Integriertes Gerät (keine Fahrzeugverbindung)
           en: Integrated device (no vehicle connection)
+      - name: icon
+        advanced: true
   ocpp:
     params:
       - name: stationid
