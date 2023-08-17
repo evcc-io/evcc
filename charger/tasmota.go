@@ -1,9 +1,6 @@
 package charger
 
 import (
-	"errors"
-	"fmt"
-	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -73,45 +70,7 @@ func (c *Tasmota) Enabled() (bool, error) {
 
 // Enable implements the api.Charger interface
 func (c *Tasmota) Enable(enable bool) error {
-	var res tasmota.PowerResponse
-
-	cmd := fmt.Sprintf("Power%d off", c.channel)
-	if enable {
-		cmd = fmt.Sprintf("Power%d on", c.channel)
-	}
-
-	if err := c.conn.ExecCmd(cmd, &res); err != nil {
-		return err
-	}
-
-	var on bool
-	switch c.channel {
-	case 2:
-		on = strings.ToUpper(res.Power2) == "ON"
-	case 3:
-		on = strings.ToUpper(res.Power3) == "ON"
-	case 4:
-		on = strings.ToUpper(res.Power4) == "ON"
-	case 5:
-		on = strings.ToUpper(res.Power5) == "ON"
-	case 6:
-		on = strings.ToUpper(res.Power6) == "ON"
-	case 7:
-		on = strings.ToUpper(res.Power7) == "ON"
-	case 8:
-		on = strings.ToUpper(res.Power8) == "ON"
-	default:
-		on = strings.ToUpper(res.Power) == "ON" || strings.ToUpper(res.Power1) == "ON"
-	}
-
-	switch {
-	case enable && !on:
-		return errors.New("switchOn failed")
-	case !enable && on:
-		return errors.New("switchOff failed")
-	default:
-		return nil
-	}
+	return c.conn.Enable(enable)
 }
 
 var _ api.MeterEnergy = (*Tasmota)(nil)

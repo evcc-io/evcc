@@ -109,6 +109,57 @@ func (c *Connection) ChannelExists(channel int) error {
 	return nil
 }
 
+// Enable implements the api.Charger interface
+func (c *Connection) Enable(enable bool) error {
+	cmd := fmt.Sprintf("Power%d off", c.channel)
+	if enable {
+		cmd = fmt.Sprintf("Power%d on", c.channel)
+	}
+
+	parameters := url.Values{
+		"user":     []string{c.user},
+		"password": []string{c.password},
+		"cmnd":     []string{cmd},
+	}
+
+	var res PowerResponse
+	if err := c.GetJSON(fmt.Sprintf("%s/cm?%s", c.uri, parameters.Encode()), &res); err != nil {
+		return err
+	}
+
+	var on bool
+	switch c.channel {
+	case 2:
+		on = strings.ToUpper(res.Power2) == "ON"
+	case 3:
+		on = strings.ToUpper(res.Power3) == "ON"
+	case 4:
+		on = strings.ToUpper(res.Power4) == "ON"
+	case 5:
+		on = strings.ToUpper(res.Power5) == "ON"
+	case 6:
+		on = strings.ToUpper(res.Power6) == "ON"
+	case 7:
+		on = strings.ToUpper(res.Power7) == "ON"
+	case 8:
+		on = strings.ToUpper(res.Power8) == "ON"
+	default:
+		on = strings.ToUpper(res.Power) == "ON" || strings.ToUpper(res.Power1) == "ON"
+	}
+
+	c.statusSNSCache.Reset()
+	c.statusSTSCache.Reset()
+
+	switch {
+	case enable && !on:
+		return errors.New("switchOn failed")
+	case !enable && on:
+		return errors.New("switchOff failed")
+	default:
+		return nil
+	}
+}
+
 // Enabled implements the api.Charger interface
 func (c *Connection) Enabled() (bool, error) {
 	res, err := c.statusSTSCache.Get()
