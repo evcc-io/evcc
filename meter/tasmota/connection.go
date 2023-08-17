@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"net/url"
 	"strings"
+	"time"
 
+	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
@@ -16,10 +18,11 @@ type Connection struct {
 	*request.Helper
 	uri, user, password string
 	channel             int
+	statusSNSCache      provider.Cacheable[StatusSNSResponse]
 }
 
 // NewConnection creates a Tasmota connection
-func NewConnection(uri, user, password string, channel int) (*Connection, error) {
+func NewConnection(uri, user, password string, channel int, cache time.Duration) (*Connection, error) {
 	if uri == "" {
 		return nil, errors.New("missing uri")
 	}
@@ -34,6 +37,17 @@ func NewConnection(uri, user, password string, channel int) (*Connection, error)
 	}
 
 	c.Client.Transport = request.NewTripper(log, transport.Insecure())
+
+	c.statusSNSCache = provider.ResettableCached(func() (StatusSNSResponse, error) {
+		parameters := url.Values{
+			"user":     []string{user},
+			"password": []string{password},
+			"cmnd":     []string{"Status 8"},
+		}
+		var res StatusSNSResponse
+		err := c.GetJSON(fmt.Sprintf("%s/cm?%s", uri, parameters.Encode()), &res)
+		return res, err
+	}, cache)
 
 	return c, nil
 }
@@ -50,31 +64,28 @@ func (d *Connection) ExecCmd(cmd string, res interface{}) error {
 }
 
 // CurrentPower implements the api.Meter interface
-func (d *Connection) CurrentPower() (float64, error) {
-	var res StatusSNSResponse
-	if err := d.ExecCmd("Status 8", &res); err != nil {
+func (c *Connection) CurrentPower() (float64, error) {
+	res, err := c.statusSNSCache.Get()
+	if err != nil {
 		return 0, err
 	}
-	return res.StatusSNS.Energy.Power.Channel(d.channel)
+	return res.StatusSNS.Energy.Power.Channel(c.channel)
 }
 
 // TotalEnergy implements the api.MeterEnergy interface
-func (d *Connection) TotalEnergy() (float64, error) {
-	var res StatusSNSResponse
-	err := d.ExecCmd("Status 8", &res)
+func (c *Connection) TotalEnergy() (float64, error) {
+	res, err := c.statusSNSCache.Get()
 	return res.StatusSNS.Energy.Total, err
 }
 
 // SmlPower provides the sml sensor power
-func (d *Connection) SmlPower() (float64, error) {
-	var res StatusSNSResponse
-	err := d.ExecCmd("Status 8", &res)
+func (c *Connection) SmlPower() (float64, error) {
+	res, err := c.statusSNSCache.Get()
 	return float64(res.StatusSNS.SML.PowerCurr), err
 }
 
 // SmlTotalEnergy provides the sml sensor total import energy
-func (d *Connection) SmlTotalEnergy() (float64, error) {
-	var res StatusSNSResponse
-	err := d.ExecCmd("Status 8", &res)
+func (c *Connection) SmlTotalEnergy() (float64, error) {
+	res, err := c.statusSNSCache.Get()
 	return res.StatusSNS.SML.TotalIn, err
 }
