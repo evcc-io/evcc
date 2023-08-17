@@ -12,13 +12,15 @@ type TeeAttacher interface {
 
 // Tee distributes parameters to subscribers
 type Tee struct {
+	mu   sync.Mutex
 	recv []chan<- Param
-	mu   sync.Mutex // Mutex to protect recv slice
 }
 
 // Attach creates a new receiver channel and attaches it to the tee
 func (t *Tee) Attach() <-chan Param {
-	out := make(chan Param, 16) // Use a buffered channel to prevent blocking
+	// TODO find better approach to prevent deadlocks
+	// this will buffer the receiver channel to prevent deadlocks when consumers use mutex-protected loadpoint api
+	out := make(chan Param, 16)
 	t.add(out)
 	return out
 }
@@ -33,7 +35,6 @@ func (t *Tee) add(out chan<- Param) {
 // Run starts parameter distribution
 func (t *Tee) Run(in <-chan Param) {
 	for msg := range in {
-		// Convert the parameter once instead of per receiver iteration
 		if val := reflect.ValueOf(msg.Val); val.Kind() == reflect.Ptr {
 			if ptr := reflect.Indirect(val); ptr.IsValid() {
 				msg.Val = ptr.Addr().Elem().Interface()
