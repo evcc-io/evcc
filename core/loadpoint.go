@@ -555,12 +555,6 @@ func (lp *Loadpoint) applyAction(actionCfg api.ActionConfig) {
 	if max := actionCfg.MaxCurrent; max != nil && *max <= *lp.onDisconnect.MaxCurrent {
 		lp.SetMaxCurrent(*max)
 	}
-	if actionCfg.MinSoc != nil {
-		lp.SetMinSoc(*actionCfg.MinSoc)
-	}
-	if actionCfg.TargetSoc != nil {
-		lp.SetTargetSoc(*actionCfg.TargetSoc)
-	}
 	if actionCfg.Priority != nil {
 		lp.SetPriority(*actionCfg.Priority)
 	}
@@ -593,7 +587,7 @@ func (lp *Loadpoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	lp.publishTimer(guardTimer, 0, timerInactive)
 
 	// charger features
-	for _, f := range []api.Feature{api.IntegratedDevice} {
+	for _, f := range []api.Feature{api.IntegratedDevice, api.Heating} {
 		lp.publishChargerFeature(f)
 	}
 
@@ -646,8 +640,25 @@ func (lp *Loadpoint) syncCharger() error {
 		lp.publish("enabled", lp.enabled)
 	}()
 
-	// in sync
+	// status in sync
 	if enabled == lp.enabled {
+		// sync max current
+		if charger, ok := lp.charger.(api.CurrentGetter); ok && enabled {
+			current, err := charger.GetMaxCurrent()
+			if err != nil {
+				return err
+			}
+
+			if lp.chargeCurrent != current {
+				if lp.guardGracePeriodElapsed() {
+					lp.log.WARN.Printf("charger logic error: current mismatch (got %.3gA, expected %.3gA)", current, lp.chargeCurrent)
+				}
+
+				lp.chargeCurrent = current
+				lp.bus.Publish(evChargeCurrent, lp.chargeCurrent)
+			}
+		}
+
 		return nil
 	}
 
@@ -664,24 +675,6 @@ func (lp *Loadpoint) syncCharger() error {
 			lp.log.WARN.Println("charger logic error: disabled but charging")
 		}
 		return nil
-	}
-
-	if charger, ok := lp.charger.(api.CurrentGetter); ok {
-		current, err := charger.GetMaxCurrent()
-		if err != nil {
-			return err
-		}
-
-		if enabled && lp.chargeCurrent != current {
-			if lp.guardGracePeriodElapsed() {
-				lp.log.WARN.Printf("charger logic error: current mismatch (got %.3gA, expected %.3gA)", current, lp.chargeCurrent)
-			}
-
-			if charger, ok := lp.charger.(api.ChargerEx); ok {
-				return charger.MaxCurrentMillis(lp.chargeCurrent)
-			}
-			return lp.charger.MaxCurrent(int64(lp.chargeCurrent))
-		}
 	}
 
 	return nil

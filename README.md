@@ -73,6 +73,21 @@ make ui build
 npm run playwright
 ```
 
+#### Simulating device state
+
+Since we dont want to run tests agains real devices or cloud services we've build a simple simulator that lets you emulated meters, vehicles and loadpoints. The simulators web interface runs on http://localhost:7072.
+
+```
+npm run simulator
+```
+
+Run an evcc instance that uses simulator data. This configuration runs with a very high refresh interval to seed up testing.
+
+```
+make ui build
+./evcc --config tests/simulator.evcc.yaml
+```
+
 ### Code formatting
 
 We use linters (golangci-lint, Prettier) to keep a coherent source code formatting. It's recommended to use the format-on-save feature of your editor. For VSCode use the [Go](https://marketplace.visualstudio.com/items?itemName=golang.Go), [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) and [Veture](https://marketplace.visualstudio.com/items?itemName=octref.vetur) extension. You can manually reformat your code by running:

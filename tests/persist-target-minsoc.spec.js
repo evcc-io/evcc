@@ -1,8 +1,25 @@
 const { test, expect } = require("@playwright/test");
 const { start, stop, restart } = require("./evcc");
+const { startSimulator, stopSimulator, SIMULATOR_URL } = require("./simulator");
 
-const CONFIG_CONNECTED = "persist-target-minsoc-connected.evcc.yaml";
-const CONFIG_DISCONNECTED = "persist-target-minsoc-disconnected.evcc.yaml";
+const CONFIG = "simulator.evcc.yaml";
+
+test.beforeAll(async () => {
+  await startSimulator();
+});
+test.afterAll(async () => {
+  await stopSimulator();
+});
+
+test.beforeEach(async ({ page }) => {
+  await start(CONFIG);
+
+  await page.goto(SIMULATOR_URL);
+  await page.getByLabel("Grid Power").fill("500");
+  await page.getByTestId("vehicle0").getByLabel("SoC").fill("20");
+  await page.getByTestId("loadpoint0").getByText("B (connected)").click();
+  await page.getByRole("button", { name: "Apply changes" }).click();
+});
 
 test.afterEach(async () => {
   await stop();
@@ -10,39 +27,66 @@ test.afterEach(async () => {
 
 test.describe("targetSoc", async () => {
   test("survives a restart", async ({ page }) => {
-    await start(CONFIG_CONNECTED);
     await page.goto("/");
 
     await expect(page.getByTestId("target-soc-value")).toHaveText("100%");
     await page.getByTestId("target-soc").getByRole("combobox").selectOption("50%");
     await expect(page.getByTestId("target-soc-value")).toHaveText("50%");
 
-    await restart(CONFIG_CONNECTED);
+    await restart(CONFIG);
     await page.reload();
 
     await expect(page.getByTestId("target-soc-value")).toHaveText("50%");
   });
 
   test("can be set even if vehicle isn't connected yet", async ({ page }) => {
-    await start(CONFIG_DISCONNECTED);
-    await page.goto("/");
+    await page.goto(SIMULATOR_URL);
+    await page.getByTestId("loadpoint0").getByText("A (disconnected)").click();
+    await page.getByRole("button", { name: "Apply changes" }).click();
 
+    await page.goto("/");
     await expect(page.getByTestId("vehicle-title")).toContainText("blauer e-Golf");
     await expect(page.getByTestId("vehicle-status")).toHaveText("Disconnected.");
     await expect(page.getByTestId("target-soc-value")).toHaveText("100%");
     await page.getByTestId("target-soc").getByRole("combobox").selectOption("50%");
     await expect(page.getByTestId("target-soc-value")).toHaveText("50%");
 
-    await restart(CONFIG_CONNECTED);
-    await page.reload();
+    await page.goto(SIMULATOR_URL);
+    await page.getByTestId("loadpoint0").getByText("B (connected)").click();
+    await page.getByRole("button", { name: "Apply changes" }).click();
 
+    await page.goto("/");
+    await expect(page.getByTestId("target-soc-value")).toHaveText("50%");
+  });
+
+  test("target soc should be preserved when vehicle gets disconnected", async ({ page }) => {
+    await page.goto("/");
+    await expect(page.getByTestId("target-soc-value")).toHaveText("100%");
+    await page.getByTestId("target-soc").getByRole("combobox").selectOption("50%");
+    await expect(page.getByTestId("target-soc-value")).toHaveText("50%");
+
+    // disconnect
+    await page.goto(SIMULATOR_URL);
+    await page.getByTestId("loadpoint0").getByText("A (disconnected)").click();
+    await page.getByRole("button", { name: "Apply changes" }).click();
+
+    await page.goto("/");
+    await expect(page.getByTestId("vehicle-status")).toHaveText("Disconnected.");
+    await expect(page.getByTestId("target-soc-value")).toHaveText("50%");
+
+    // connect
+    await page.goto(SIMULATOR_URL);
+    await page.getByTestId("loadpoint0").getByText("B (connected)").click();
+    await page.getByRole("button", { name: "Apply changes" }).click();
+
+    await page.goto("/");
+    await expect(page.getByTestId("vehicle-status")).toHaveText("Connected.");
     await expect(page.getByTestId("target-soc-value")).toHaveText("50%");
   });
 });
 
 test.describe("targetEnergy", async () => {
   test("survives a restart", async ({ page }) => {
-    await start(CONFIG_CONNECTED);
     await page.goto("/");
 
     await page.getByRole("button", { name: "blauer e-Golf" }).click();
@@ -52,7 +96,7 @@ test.describe("targetEnergy", async () => {
     await page.getByTestId("target-energy").getByRole("combobox").selectOption("10 kWh (+35%)");
     await expect(page.getByTestId("target-energy-value")).toHaveText("10 kWh");
 
-    await restart(CONFIG_CONNECTED);
+    await restart(CONFIG);
     await page.reload();
 
     await page.getByRole("button", { name: "blauer e-Golf" }).click();
@@ -64,7 +108,6 @@ test.describe("targetEnergy", async () => {
 
 test.describe("minSoc", async () => {
   test("survives a restart", async ({ page }) => {
-    await start(CONFIG_CONNECTED);
     await page.goto("/");
 
     await page.getByTestId("charging-plan").getByRole("button", { name: "none" }).click();
@@ -74,7 +117,7 @@ test.describe("minSoc", async () => {
     await page.getByRole("combobox", { name: "Min. charge %" }).selectOption("20%");
     await expect(page.getByText("charged to 20% in solar mode")).toBeVisible();
 
-    await restart(CONFIG_CONNECTED);
+    await restart(CONFIG);
     await page.reload();
 
     await page.getByTestId("charging-plan").getByRole("button", { name: "none" }).click();
@@ -83,7 +126,6 @@ test.describe("minSoc", async () => {
   });
 
   test("show minsoc instead of plan when minsoc is active", async ({ page }) => {
-    await start(CONFIG_CONNECTED);
     await page.goto("/");
 
     await expect(page.getByTestId("charging-plan")).toContainText("Plan");
@@ -103,7 +145,6 @@ test.describe("minSoc", async () => {
   });
 
   test("disabled for offline vehicles", async ({ page }) => {
-    await start(CONFIG_CONNECTED);
     await page.goto("/");
 
     // switch to offline vehicle
@@ -116,7 +157,6 @@ test.describe("minSoc", async () => {
   });
 
   test("disabled for guest vehicles", async ({ page }) => {
-    await start(CONFIG_CONNECTED);
     await page.goto("/");
 
     // switch to offline vehicle
@@ -131,7 +171,6 @@ test.describe("minSoc", async () => {
 
 test.describe("targetTime", async () => {
   test("survives a restart", async ({ page }) => {
-    await start(CONFIG_CONNECTED);
     await page.goto("/");
 
     await page.getByTestId("target-soc").getByRole("combobox").selectOption("90%");
@@ -145,7 +184,7 @@ test.describe("targetTime", async () => {
       "tomorrow 9:30 AM"
     );
 
-    await restart(CONFIG_CONNECTED);
+    await restart(CONFIG);
     await page.reload();
 
     await expect(page.getByTestId("vehicle-status")).toContainText("Target charging starts at");

@@ -42,7 +42,7 @@ export default {
 	},
 	computed: {
 		planDuration() {
-			return this.fmtShortDuration(this.duration, true);
+			return this.fmtDuration(this.duration);
 		},
 		isCo2() {
 			return this.smartCostType === CO2_TYPE;

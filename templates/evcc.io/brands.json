@@ -75,6 +75,7 @@
  ],
  "Meters": [
   "ABB",
+  "Acrel",
   "Alpha ESS",
   "AVM",
   "Bernecker Engineering",
@@ -134,6 +135,7 @@
   "Zuidwijk"
  ],
  "PVBattery": [
+  "Acrel",
   "Alpha ESS",
   "AVM",
   "Bosswerk",

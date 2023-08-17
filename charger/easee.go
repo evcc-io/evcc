@@ -54,6 +54,7 @@ type Easee struct {
 	chargerEnabled        bool
 	smartCharging         bool
 	opMode                int
+	reasonForNoCurrent    int
 	phaseMode             int
 	currentPower, sessionEnergy, totalEnergy,
 	currentL1, currentL2, currentL3 float64
@@ -315,6 +316,8 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 		c.dynamicChargerCurrent = value.(float64)
 	case easee.CHARGER_OP_MODE:
 		c.opMode = value.(int)
+	case easee.REASON_FOR_NO_CURRENT:
+		c.reasonForNoCurrent = value.(int)
 	}
 
 	select {
@@ -377,11 +380,13 @@ func (c *Easee) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (c *Easee) Enabled() (bool, error) {
-	enabled := c.inEnabledOpMode()
-
 	c.mux.Lock()
 	defer c.mux.Unlock()
-	return enabled && c.dynamicChargerCurrent > 0, nil
+
+	disabled := c.opMode == easee.ModeDisconnected ||
+		c.opMode == easee.ModeCompleted ||
+		(c.opMode == easee.ModeAwaitingStart && c.reasonForNoCurrent == 52)
+	return !disabled && c.dynamicChargerCurrent > 0, nil
 }
 
 // Enable implements the api.Charger interface
@@ -438,12 +443,20 @@ func (c *Easee) Enable(enable bool) error {
 	return nil
 }
 
-func (c *Easee) inEnabledOpMode() bool {
+func (c *Easee) inExpectedOpMode(enable bool) bool {
 	c.mux.Lock()
 	defer c.mux.Unlock()
-	return c.opMode == easee.ModeCharging ||
-		c.opMode == easee.ModeCompleted ||
-		c.opMode == easee.ModeReadyToCharge
+
+	//start/resume
+	if enable {
+		return c.opMode == easee.ModeCharging ||
+			c.opMode == easee.ModeCompleted ||
+			c.opMode == easee.ModeAwaitingStart ||
+			c.opMode == easee.ModeReadyToCharge
+	}
+
+	//paused/stopped
+	return c.opMode == easee.ModeAwaitingStart || c.opMode == easee.ModeAwaitingAuthentication
 }
 
 // posts JSON to the Easee API endpoint and waits for the async response
@@ -506,7 +519,7 @@ func (c *Easee) waitForTickResponse(expectedTick int64) error {
 // wait for opMode become expected op mode
 func (c *Easee) waitForChargerEnabledState(expEnabled bool) error {
 	// check any updates received meanwhile
-	if expEnabled == c.inEnabledOpMode() {
+	if c.inExpectedOpMode(expEnabled) {
 		return nil
 	}
 
@@ -517,11 +530,11 @@ func (c *Easee) waitForChargerEnabledState(expEnabled bool) error {
 			if obs.ID != easee.CHARGER_OP_MODE {
 				continue
 			}
-			if expEnabled == c.inEnabledOpMode() {
+			if c.inExpectedOpMode(expEnabled) {
 				return nil
 			}
 		case <-timer.C: // time is up, bail after one final check
-			if expEnabled == c.inEnabledOpMode() {
+			if c.inExpectedOpMode(expEnabled) {
 				return nil
 			}
 			return api.ErrTimeout

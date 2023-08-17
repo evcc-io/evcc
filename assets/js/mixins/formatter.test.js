@@ -68,3 +68,35 @@ describe("pricePerKWhUnit", () => {
     expect(fmt.pricePerKWhUnit("CHF")).eq("rp/kWh");
   });
 });
+
+describe("fmtDuration", () => {
+  test("should format zero duration", () => {
+    expect(fmt.fmtDuration(0)).eq("—");
+    expect(fmt.fmtDuration(-100)).eq("—");
+  });
+  test("should format seconds", () => {
+    expect(fmt.fmtDuration(1)).eq("1\u202Fs");
+    expect(fmt.fmtDuration(59)).eq("59\u202Fs");
+    expect(fmt.fmtDuration(59, false)).eq("59");
+    expect(fmt.fmtDuration(59, true, "m")).eq("0:59\u202Fm");
+    expect(fmt.fmtDuration(59, true, "h")).eq("0:00\u202Fh");
+  });
+  test("should format minutes", () => {
+    expect(fmt.fmtDuration(60)).eq("1:00\u202Fm");
+    expect(fmt.fmtDuration(150)).eq("2:30\u202Fm");
+    expect(fmt.fmtDuration(150, false)).eq("2:30");
+    expect(fmt.fmtDuration(150, true, "h")).eq("0:02\u202Fh");
+  });
+  test("should format hours", () => {
+    expect(fmt.fmtDuration(60 * 60)).eq("1:00\u202Fh");
+    expect(fmt.fmtDuration(60 * 60 * 2.5)).eq("2:30\u202Fh");
+    expect(fmt.fmtDuration(60 * 60 * 2.5, false)).eq("2:30");
+  });
+  test("should format internationalized", () => {
+    config.global.mocks["$i18n"].locale = "ar-EG";
+    expect(fmt.fmtDuration(30, false)).eq("٣٠");
+    expect(fmt.fmtDuration(90, false)).eq("١:٣٠");
+    expect(fmt.fmtDuration(60 * 100, false)).eq("١:٤٠");
+    config.global.mocks["$i18n"].locale = "de-DE";
+  });
+});

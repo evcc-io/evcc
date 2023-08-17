@@ -6,7 +6,7 @@
 			:class="disabled ? 'opacity-25' : 'opacity-100'"
 			data-testid="charging-plan"
 		>
-			<h3 class="value m-0 d-block d-sm-flex align-items-baseline justify-content-center">
+			<h3 class="value m-0 d-block align-items-baseline justify-content-center">
 				<button
 					class="value-button p-0"
 					:class="enabled ? 'evcc-default-text' : 'text-gray'"

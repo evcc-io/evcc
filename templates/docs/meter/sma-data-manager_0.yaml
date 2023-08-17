@@ -9,38 +9,62 @@ render:
       type: template
       template: sma-data-manager
       usage: grid
-      host: 192.0.2.2 # IP-Adresse oder Hostname
-      port: 502 # Port (Optional)
+
+      # Modbus TCP
+      modbus: tcpip
+      id: 2
+      host: 192.0.2.2 # Hostname
+      port: 502 # Port
     advanced: |
       type: template
       template: sma-data-manager
       usage: grid
-      host: 192.0.2.2 # IP-Adresse oder Hostname
-      port: 502 # Port (Optional)
+
+      # Modbus TCP
+      modbus: tcpip
+      id: 2
+      host: 192.0.2.2 # Hostname
+      port: 502 # Port
   - usage: pv
     default: |
       type: template
       template: sma-data-manager
       usage: pv
-      host: 192.0.2.2 # IP-Adresse oder Hostname
-      port: 502 # Port (Optional)
+
+      # Modbus TCP
+      modbus: tcpip
+      id: 2
+      host: 192.0.2.2 # Hostname
+      port: 502 # Port
     advanced: |
       type: template
       template: sma-data-manager
       usage: pv
-      host: 192.0.2.2 # IP-Adresse oder Hostname
-      port: 502 # Port (Optional)
+
+      # Modbus TCP
+      modbus: tcpip
+      id: 2
+      host: 192.0.2.2 # Hostname
+      port: 502 # Port
   - usage: battery
     default: |
       type: template
       template: sma-data-manager
       usage: battery
-      host: 192.0.2.2 # IP-Adresse oder Hostname
-      port: 502 # Port (Optional)
+
+      # Modbus TCP
+      modbus: tcpip
+      id: 2
+      host: 192.0.2.2 # Hostname
+      port: 502 # Port
     advanced: |
       type: template
       template: sma-data-manager
       usage: battery
-      host: 192.0.2.2 # IP-Adresse oder Hostname
-      port: 502 # Port (Optional)
+
+      # Modbus TCP
+      modbus: tcpip
+      id: 2
+      host: 192.0.2.2 # Hostname
+      port: 502 # Port
       capacity: 50 # Akkukapazität in kWh (Optional)
