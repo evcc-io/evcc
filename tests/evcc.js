@@ -42,6 +42,7 @@ async function _start(config) {
   console.log("starting evcc", { config });
   const instance = exec(`EVCC_DATABASE_DSN=${DB_PATH} ${BINARY} --config tests/${config}`);
   instance.stdout.pipe(process.stdout);
+  instance.stderr.pipe(process.stderr);
   instance.on("exit", (code) => {
     if (code !== 0) {
       throw new Error("evcc terminated", code);
