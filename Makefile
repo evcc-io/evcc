@@ -35,7 +35,7 @@ clean::
 	rm -rf dist/
 
 install::
-	go install $$(go list -f '{{join .Imports " "}}' tools.go)
+	go install $$(go list -e -f '{{join .Imports " "}}' tools.go)
 
 install-ui::
 	npm ci

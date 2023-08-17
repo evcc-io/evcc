@@ -411,7 +411,7 @@ func (site *Site) updateMeters() error {
 
 			if err == nil {
 				// ignore negative values which represent self-consumption
-				site.pvPower += math.Max(0, power)
+				site.pvPower += max(0, power)
 				if power < -500 {
 					site.log.WARN.Printf("pv %d power: %.0fW is negative - check configuration if sign is correct", i+1, power)
 				}
@@ -654,12 +654,12 @@ func (site *Site) sitePower(totalChargePower, flexiblePower float64) (float64, b
 }
 
 func (site *Site) greenShare() float64 {
-	batteryDischarge := math.Max(0, site.batteryPower)
-	batteryCharge := -math.Min(0, site.batteryPower)
-	pvConsumption := math.Min(site.pvPower, site.pvPower+site.gridPower-batteryCharge)
+	batteryDischarge := max(0, site.batteryPower)
+	batteryCharge := -min(0, site.batteryPower)
+	pvConsumption := min(site.pvPower, site.pvPower+site.gridPower-batteryCharge)
 
-	gridImport := math.Max(0, site.gridPower)
-	selfConsumption := math.Max(0, batteryDischarge+pvConsumption+batteryCharge)
+	gridImport := max(0, site.gridPower)
+	selfConsumption := max(0, batteryDischarge+pvConsumption+batteryCharge)
 
 	share := selfConsumption / (gridImport + selfConsumption)
 
@@ -754,8 +754,8 @@ func (site *Site) update(lp Updater) {
 		lp.Update(sitePower, autoCharge, batteryBuffered, batteryStart, greenShare, site.effectivePrice(greenShare), site.effectiveCo2(greenShare))
 
 		// ignore negative pvPower values as that means it is not an energy source but consumption
-		homePower := site.gridPower + math.Max(0, site.pvPower) + site.batteryPower - totalChargePower
-		homePower = math.Max(homePower, 0)
+		homePower := site.gridPower + max(0, site.pvPower) + site.batteryPower - totalChargePower
+		homePower = max(homePower, 0)
 		site.publish("homePower", homePower)
 
 		site.Health.Update()

@@ -1,8 +1,6 @@
 package core
 
 import (
-	"math"
-
 	"github.com/evcc-io/evcc/api"
 )
 
@@ -57,16 +55,6 @@ func (lp *Loadpoint) getMeasuredPhases() int {
 
 // assume 3p for switchable charger during startup
 const unknownPhases = 3
-
-func min(i ...int) int {
-	v := math.MaxInt
-	for _, i := range i {
-		if i < v {
-			v = i
-		}
-	}
-	return v
-}
 
 func expect(phases int) int {
 	if phases > 0 {

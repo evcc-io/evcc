@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"slices"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -11,7 +12,6 @@ import (
 	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/provider/mqtt"
 	"github.com/evcc-io/evcc/util"
-	"golang.org/x/exp/slices"
 )
 
 // Warp2 is the Warp charger v2 firmware implementation

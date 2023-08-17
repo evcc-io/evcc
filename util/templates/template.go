@@ -4,12 +4,12 @@ import (
 	"bytes"
 	_ "embed"
 	"fmt"
+	"slices"
 	"strings"
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
 	"github.com/evcc-io/evcc/util"
-	"golang.org/x/exp/slices"
 )
 
 // Template describes is a proxy device for use with cli and automated testing

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -14,7 +15,6 @@ import (
 	"github.com/evcc-io/evcc/util/templates"
 	"github.com/evcc-io/evcc/vehicle"
 	"github.com/gorilla/mux"
-	"golang.org/x/exp/slices"
 )
 
 const (
@@ -76,8 +76,8 @@ func productsHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	slices.SortFunc(res, func(a, b product) bool {
-		return strings.ToLower(a.Name) < strings.ToLower(b.Name)
+	slices.SortFunc(res, func(a, b product) int {
+		return strings.Compare(strings.ToLower(a.Name), strings.ToLower(b.Name))
 	})
 
 	jsonResult(w, res)

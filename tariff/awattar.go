@@ -2,6 +2,7 @@ package tariff
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -11,7 +12,6 @@ import (
 	"github.com/evcc-io/evcc/tariff/awattar"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
-	"golang.org/x/exp/slices"
 )
 
 type Awattar struct {

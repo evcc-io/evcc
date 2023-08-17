@@ -3,6 +3,7 @@ package tariff
 import (
 	"errors"
 	"fmt"
+	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -12,7 +13,6 @@ import (
 	"github.com/evcc-io/evcc/tariff/energinet"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
-	"golang.org/x/exp/slices"
 )
 
 type Energinet struct {

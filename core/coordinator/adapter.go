@@ -1,9 +1,10 @@
 package coordinator
 
 import (
+	"slices"
+
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
-	"golang.org/x/exp/slices"
 )
 
 type adapter struct {

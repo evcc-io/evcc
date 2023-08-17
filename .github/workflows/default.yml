@@ -1,5 +1,8 @@
 name: Default
 
+env:
+  GO_VERSION: ^1.21
+
 on:
   push:
     branches:
@@ -18,7 +21,7 @@ jobs:
       # - uses: actions/setup-go@v4
       - uses: erezrokah/setup-go@feat/add_cache_prefix
         with:
-          go-version: ^1.20
+          go-version: ${{ env.GO_VERSION }}
           cache-key-prefix: clean-cache-
         id: go
 
@@ -46,7 +49,7 @@ jobs:
 
       - uses: erezrokah/setup-go@feat/add_cache_prefix
         with:
-          go-version: ^1.20
+          go-version: ${{ env.GO_VERSION }}
           cache-key-prefix: build-cache-
         id: go
 
@@ -70,7 +73,7 @@ jobs:
       # - uses: actions/setup-go@v4
       - uses: erezrokah/setup-go@feat/add_cache_prefix
         with:
-          go-version: ^1.20
+          go-version: ${{ env.GO_VERSION }}
           cache-key-prefix: test-cache-
         id: go
 
@@ -86,7 +89,7 @@ jobs:
 
       - uses: actions/setup-go@v4
         with:
-          go-version: ^1.20
+          go-version: ${{ env.GO_VERSION }}
           cache: false # avoid cache thrashing
         id: go
 
@@ -142,7 +145,7 @@ jobs:
 
       - uses: erezrokah/setup-go@feat/add_cache_prefix
         with:
-          go-version: ^1.20
+          go-version: ${{ env.GO_VERSION }}
           cache-key-prefix: integration-cache-
         id: go
 

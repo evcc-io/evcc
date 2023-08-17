@@ -3,7 +3,6 @@ package core
 import (
 	"errors"
 	"fmt"
-	"math"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -316,7 +315,7 @@ func (lp *Loadpoint) GetChargePowerFlexibility() float64 {
 	}
 
 	// MinPV mode
-	return math.Max(0, lp.GetChargePower()-lp.GetMinPower())
+	return max(0, lp.GetChargePower()-lp.GetMinPower())
 }
 
 // GetMinCurrent returns the min loadpoint current

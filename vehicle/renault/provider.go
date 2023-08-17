@@ -2,6 +2,7 @@ package renault
 
 import (
 	"net/http"
+	"slices"
 	"strings"
 	"time"
 
@@ -9,7 +10,6 @@ import (
 	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/vehicle/renault/kamereon"
-	"golang.org/x/exp/slices"
 )
 
 // Provider is an api.Vehicle implementation for PSA cars

@@ -1,5 +1,8 @@
 name: Nightly Build
 
+env:
+  GO_VERSION: ^1.21
+
 on:
   schedule: # runs on the default branch: master
     - cron: "0 2 * * *" # run at 2 AM UTC
@@ -81,7 +84,7 @@ jobs:
 
       - uses: actions/setup-go@v4
         with:
-          go-version: ^1.20
+          go-version: ${{ env.GO_VERSION }}
         id: go
 
       - name: Install Cloudsmith CLI

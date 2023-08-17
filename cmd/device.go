@@ -1,13 +1,14 @@
 package cmd
 
 import (
+	"cmp"
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/templates"
 	"github.com/spf13/cobra"
-	"golang.org/x/exp/slices"
 )
 
 // deviceCmd represents the device debug command
@@ -49,8 +50,8 @@ func runDevice(cmd *cobra.Command, args []string) {
 			fmt.Printf("%d. %s\n", d.ID, d.Type)
 
 			details := d.Details
-			slices.SortFunc(details, func(i, j config.ConfigDetail) bool {
-				return i.Key < j.Key
+			slices.SortFunc(details, func(i, j config.ConfigDetail) int {
+				return cmp.Compare(i.Key, j.Key)
 			})
 
 			for _, d := range details {
