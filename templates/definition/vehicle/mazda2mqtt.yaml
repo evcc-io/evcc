@@ -9,6 +9,9 @@ requirements:
     de: Voraussetzung ist ein konfigurierter MQTT Broker und eine mazda2mqtt Installation https://github.com/C64Axel/mazda2mqtt.
 params:
   - name: title
+  - name: icon
+    default: car
+    advanced: true
   - name: vin
     required: true
     help:
@@ -16,9 +19,6 @@ params:
       en: Required
   - name: capacity
   - name: phases
-    advanced: true
-  - name: icon
-    default: car
     advanced: true
   - name: timeout
     default: 720h

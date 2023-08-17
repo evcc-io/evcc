@@ -19,13 +19,18 @@ requirements:
       - [Tesla Auth (macOS, Linux)](https://github.com/adriankumpf/tesla_auth)
 params:
   - name: title
+  - name: icon
+    default: car
+    advanced: true
   - name: accessToken
     required: true
+    mask: true
     help:
       en: "See https://docs.evcc.io/docs/devices/vehicles#tesla"
       de: "Siehe https://docs.evcc.io/docs/devices/vehicles#tesla"
   - name: refreshToken
     required: true
+    mask: true
     help:
       en: "See https://docs.evcc.io/docs/devices/vehicles#tesla"
       de: "Siehe https://docs.evcc.io/docs/devices/vehicles#tesla"
@@ -33,9 +38,6 @@ params:
     example: W...
   - name: capacity
   - name: phases
-    advanced: true
-  - name: icon
-    default: car
     advanced: true
   - preset: vehicle-identify
 render: |

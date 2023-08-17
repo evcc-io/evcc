@@ -226,7 +226,7 @@ func (p *Param) IsAdvanced() bool {
 	return p.Advanced != nil && *p.Advanced
 }
 
-func (p *Param) IsMask() bool {
+func (p *Param) IsMasked() bool {
 	return p.Mask != nil && *p.Mask
 }
 

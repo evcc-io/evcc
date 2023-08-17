@@ -1,19 +1,24 @@
 package cmd
 
 import (
+	"context"
 	"errors"
 	"fmt"
+	"net"
+	"net/http"
 	"strconv"
 	"strings"
 	"time"
 
 	paho "github.com/eclipse/paho.mqtt.golang"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/charger"
 	"github.com/evcc-io/evcc/charger/eebus"
 	"github.com/evcc-io/evcc/cmd/shutdown"
 	"github.com/evcc-io/evcc/core"
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/hems"
+	"github.com/evcc-io/evcc/meter"
 	"github.com/evcc-io/evcc/provider/golang"
 	"github.com/evcc-io/evcc/provider/javascript"
 	"github.com/evcc-io/evcc/provider/mqtt"
@@ -21,24 +26,130 @@ import (
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/server/db"
 	"github.com/evcc-io/evcc/server/db/settings"
+	"github.com/evcc-io/evcc/server/oauth2redirect"
 	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/locale"
 	"github.com/evcc-io/evcc/util/machine"
+	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/pipe"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/sponsor"
+	"github.com/evcc-io/evcc/util/templates"
+	"github.com/evcc-io/evcc/vehicle"
+	"github.com/evcc-io/evcc/vehicle/wrapper"
+	"github.com/gorilla/handlers"
+	"github.com/gorilla/mux"
 	"github.com/libp2p/zeroconf/v2"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"golang.org/x/exp/maps"
-	"golang.org/x/exp/slices"
+	"golang.org/x/sync/errgroup"
 	"golang.org/x/text/currency"
 )
 
-var cp = new(ConfigProvider)
+var conf = globalConfig{
+	Interval: 10 * time.Second,
+	Log:      "info",
+	Network: networkConfig{
+		Schema: "http",
+		Host:   "evcc.local",
+		Port:   7070,
+	},
+	Mqtt: mqttConfig{
+		Topic: "evcc",
+	},
+	Database: dbConfig{
+		Type: "sqlite",
+		Dsn:  "~/.evcc/evcc.db",
+	},
+}
 
-func loadConfigFile(conf *config) error {
+type globalConfig struct {
+	URI          interface{} // TODO deprecated
+	Network      networkConfig
+	Log          string
+	SponsorToken string
+	Plant        string // telemetry plant id
+	Telemetry    bool
+	Metrics      bool
+	Profile      bool
+	Levels       map[string]string
+	Interval     time.Duration
+	Database     dbConfig
+	Mqtt         mqttConfig
+	ModbusProxy  []proxyConfig
+	Javascript   []javascriptConfig
+	Go           []goConfig
+	Influx       server.InfluxConfig
+	EEBus        map[string]interface{}
+	HEMS         config.Typed
+	Messaging    messagingConfig
+	Meters       []config.Named
+	Chargers     []config.Named
+	Vehicles     []config.Named
+	Tariffs      tariffConfig
+	Site         map[string]interface{}
+	Loadpoints   []map[string]interface{}
+}
+
+type mqttConfig struct {
+	mqtt.Config `mapstructure:",squash"`
+	Topic       string
+}
+
+type javascriptConfig struct {
+	VM     string
+	Script string
+}
+
+type goConfig struct {
+	VM     string
+	Script string
+}
+
+type proxyConfig struct {
+	Port            int
+	ReadOnly        bool
+	modbus.Settings `mapstructure:",squash"`
+}
+
+type dbConfig struct {
+	Type string
+	Dsn  string
+}
+
+type messagingConfig struct {
+	Events   map[string]push.EventTemplateConfig
+	Services []config.Typed
+}
+
+type tariffConfig struct {
+	Currency string
+	Grid     config.Typed
+	FeedIn   config.Typed
+	Co2      config.Typed
+	Planner  config.Typed
+}
+
+type networkConfig struct {
+	Schema string
+	Host   string
+	Port   int
+}
+
+func (c networkConfig) HostPort() string {
+	if c.Schema == "http" && c.Port == 80 || c.Schema == "https" && c.Port == 443 {
+		return c.Host
+	}
+	return net.JoinHostPort(c.Host, strconv.Itoa(c.Port))
+}
+
+func (c networkConfig) URI() string {
+	return fmt.Sprintf("%s://%s", c.Schema, c.HostPort())
+}
+
+func loadConfigFile(conf *globalConfig) error {
 	err := viper.ReadInConfig()
 
 	if cfgFile = viper.ConfigFileUsed(); cfgFile == "" {
@@ -61,7 +172,149 @@ func loadConfigFile(conf *config) error {
 	return err
 }
 
-func configureEnvironment(cmd *cobra.Command, conf config) (err error) {
+func configureMeters(static []config.Named) error {
+	for i, cc := range static {
+		if cc.Name == "" {
+			return fmt.Errorf("cannot create meter %d: missing name", i+1)
+		}
+
+		instance, err := meter.NewFromConfig(cc.Type, cc.Other)
+		if err != nil {
+			return fmt.Errorf("cannot create meter '%s': %w", cc.Name, err)
+		}
+
+		if err := config.Meters().Add(config.NewStaticDevice(cc, instance)); err != nil {
+			return err
+		}
+	}
+
+	// append devices from database
+	configurable, err := config.ConfigurationsByClass(templates.Meter)
+	if err != nil {
+		return err
+	}
+
+	for _, conf := range configurable {
+		cc := conf.Named()
+
+		instance, err := meter.NewFromConfig(cc.Type, cc.Other)
+		if err != nil {
+			return fmt.Errorf("cannot create meter '%s': %w", cc.Name, err)
+		}
+
+		if err := config.Meters().Add(config.NewConfigurableDevice(conf, instance)); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func configureChargers(static []config.Named) error {
+	g, _ := errgroup.WithContext(context.Background())
+
+	for i, cc := range static {
+		if cc.Name == "" {
+			return fmt.Errorf("cannot create charger %d: missing name", i+1)
+		}
+
+		cc := cc
+		g.Go(func() error {
+			instance, err := charger.NewFromConfig(cc.Type, cc.Other)
+			if err != nil {
+				return fmt.Errorf("cannot create charger '%s': %w", cc.Name, err)
+			}
+
+			return config.Chargers().Add(config.NewStaticDevice(cc, instance))
+		})
+	}
+
+	// append devices from database
+	configurable, err := config.ConfigurationsByClass(templates.Charger)
+	if err != nil {
+		return err
+	}
+
+	for _, conf := range configurable {
+		conf := conf
+		g.Go(func() error {
+			cc := conf.Named()
+			instance, err := charger.NewFromConfig(cc.Type, cc.Other)
+			if err != nil {
+				return fmt.Errorf("cannot create charger '%s': %w", cc.Name, err)
+			}
+
+			return config.Chargers().Add(config.NewConfigurableDevice(conf, instance))
+		})
+	}
+
+	return g.Wait()
+}
+
+func vehicleInstance(cc config.Named) (api.Vehicle, error) {
+	instance, err := vehicle.NewFromConfig(cc.Type, cc.Other)
+	if err != nil {
+		var ce *util.ConfigError
+		if errors.As(err, &ce) {
+			return nil, fmt.Errorf("cannot create vehicle '%s': %w", cc.Name, err)
+		}
+
+		// wrap non-config vehicle errors to prevent fatals
+		log.ERROR.Printf("creating vehicle %s failed: %v", cc.Name, err)
+		instance = wrapper.New(cc.Name, cc.Other, err)
+	}
+
+	// ensure vehicle config has title
+	if instance.Title() == "" {
+		//lint:ignore SA1019 as Title is safe on ascii
+		instance.SetTitle(strings.Title(cc.Name))
+	}
+
+	return instance, nil
+}
+
+func configureVehicles(static []config.Named) error {
+	g, _ := errgroup.WithContext(context.Background())
+
+	for i, cc := range static {
+		if cc.Name == "" {
+			return fmt.Errorf("cannot create vehicle %d: missing name", i+1)
+		}
+
+		cc := cc
+		g.Go(func() error {
+			instance, err := vehicleInstance(cc)
+			if err != nil {
+				return fmt.Errorf("cannot create vehicle '%s': %w", cc.Name, err)
+			}
+
+			return config.Vehicles().Add(config.NewStaticDevice(cc, instance))
+		})
+	}
+
+	// append devices from database
+	configurable, err := config.ConfigurationsByClass(templates.Vehicle)
+	if err != nil {
+		return err
+	}
+
+	for _, conf := range configurable {
+		conf := conf
+		g.Go(func() error {
+			cc := conf.Named()
+			instance, err := vehicleInstance(cc)
+			if err != nil {
+				return fmt.Errorf("cannot create vehicle '%s': %w", cc.Name, err)
+			}
+
+			return config.Vehicles().Add(config.NewConfigurableDevice(conf, instance))
+		})
+	}
+
+	return g.Wait()
+}
+
+func configureEnvironment(cmd *cobra.Command, conf globalConfig) (err error) {
 	// full http request log
 	if cmd.Flags().Lookup(flagHeaders).Changed {
 		request.LogHeaders = true
@@ -105,6 +358,11 @@ func configureEnvironment(cmd *cobra.Command, conf config) (err error) {
 	// setup EEBus server
 	if err == nil && conf.EEBus != nil {
 		err = configureEEBus(conf.EEBus)
+	}
+
+	// setup config database
+	if err == nil {
+		err = config.Init(db.Instance)
 	}
 
 	return
@@ -200,7 +458,7 @@ func configureGo(conf []goConfig) error {
 }
 
 // setup HEMS
-func configureHEMS(conf typedConfig, site *core.Site, httpd *server.HTTPd) error {
+func configureHEMS(conf config.Typed, site *core.Site, httpd *server.HTTPd) error {
 	hems, err := hems.NewFromConfig(conf.Type, conf.Other, site, httpd)
 	if err != nil {
 		return fmt.Errorf("failed configuring hems: %w", err)
@@ -308,12 +566,22 @@ func configureTariffs(conf tariffConfig) (tariff.Tariffs, error) {
 	return *tariffs, nil
 }
 
-func configureSiteAndLoadpoints(conf config) (*core.Site, error) {
-	if err := cp.configure(conf); err != nil {
+func configureDevices(conf globalConfig) error {
+	if err := configureMeters(conf.Meters); err != nil {
+		return err
+	}
+	if err := configureChargers(conf.Chargers); err != nil {
+		return err
+	}
+	return configureVehicles(conf.Vehicles)
+}
+
+func configureSiteAndLoadpoints(conf globalConfig) (*core.Site, error) {
+	if err := configureDevices(conf); err != nil {
 		return nil, err
 	}
 
-	loadpoints, err := configureLoadpoints(conf, cp)
+	loadpoints, err := configureLoadpoints(conf)
 	if err != nil {
 		return nil, fmt.Errorf("failed configuring loadpoints: %w", err)
 	}
@@ -323,20 +591,11 @@ func configureSiteAndLoadpoints(conf config) (*core.Site, error) {
 		return nil, err
 	}
 
-	// list of vehicles ordered by name
-	keys := maps.Keys(cp.vehicles)
-	slices.Sort(keys)
-
-	vehicles := make([]api.Vehicle, 0, len(cp.vehicles))
-	for _, k := range keys {
-		vehicles = append(vehicles, cp.vehicles[k])
-	}
-
-	return configureSite(conf.Site, cp, loadpoints, vehicles, tariffs)
+	return configureSite(conf.Site, loadpoints, config.Instances(config.Vehicles().Devices()), tariffs)
 }
 
-func configureSite(conf map[string]interface{}, cp *ConfigProvider, loadpoints []*core.Loadpoint, vehicles []api.Vehicle, tariffs tariff.Tariffs) (*core.Site, error) {
-	site, err := core.NewSiteFromConfig(log, cp, conf, loadpoints, vehicles, tariffs)
+func configureSite(conf map[string]interface{}, loadpoints []*core.Loadpoint, vehicles []api.Vehicle, tariffs tariff.Tariffs) (*core.Site, error) {
+	site, err := core.NewSiteFromConfig(log, conf, loadpoints, vehicles, tariffs)
 	if err != nil {
 		return nil, fmt.Errorf("failed configuring site: %w", err)
 	}
@@ -344,7 +603,7 @@ func configureSite(conf map[string]interface{}, cp *ConfigProvider, loadpoints [
 	return site, nil
 }
 
-func configureLoadpoints(conf config, cp *ConfigProvider) (loadpoints []*core.Loadpoint, err error) {
+func configureLoadpoints(conf globalConfig) (loadpoints []*core.Loadpoint, err error) {
 	lpInterfaces, ok := viper.AllSettings()["loadpoints"].([]interface{})
 	if !ok || len(lpInterfaces) == 0 {
 		return nil, errors.New("missing loadpoints")
@@ -357,7 +616,7 @@ func configureLoadpoints(conf config, cp *ConfigProvider) (loadpoints []*core.Lo
 		}
 
 		log := util.NewLogger("lp-" + strconv.Itoa(id+1))
-		lp, err := core.NewLoadpointFromConfig(log, cp, lpc)
+		lp, err := core.NewLoadpointFromConfig(log, lpc)
 		if err != nil {
 			return nil, fmt.Errorf("failed configuring loadpoint: %w", err)
 		}
@@ -366,4 +625,50 @@ func configureLoadpoints(conf config, cp *ConfigProvider) (loadpoints []*core.Lo
 	}
 
 	return loadpoints, nil
+}
+
+// configureAuth handles routing for devices. For now only api.AuthProvider related routes
+func configureAuth(conf networkConfig, vehicles []api.Vehicle, router *mux.Router, paramC chan<- util.Param) {
+	auth := router.PathPrefix("/oauth").Subrouter()
+	auth.Use(handlers.CompressHandler)
+	auth.Use(handlers.CORS(
+		handlers.AllowedHeaders([]string{"Content-Type"}),
+	))
+
+	// wire the handler
+	oauth2redirect.SetupRouter(auth)
+
+	// initialize
+	authCollection := util.NewAuthCollection(paramC)
+
+	baseURI := conf.URI()
+	baseAuthURI := fmt.Sprintf("%s/oauth", baseURI)
+
+	var id int
+	for _, v := range vehicles {
+		if provider, ok := v.(api.AuthProvider); ok {
+			id += 1
+
+			basePath := fmt.Sprintf("vehicles/%d", id)
+			callbackURI := fmt.Sprintf("%s/%s/callback", baseAuthURI, basePath)
+
+			// register vehicle
+			ap := authCollection.Register(fmt.Sprintf("oauth/%s", basePath), v.Title())
+
+			provider.SetCallbackParams(baseURI, callbackURI, ap.Handler())
+
+			auth.
+				Methods(http.MethodPost).
+				Path(fmt.Sprintf("/%s/login", basePath)).
+				HandlerFunc(provider.LoginHandler())
+			auth.
+				Methods(http.MethodPost).
+				Path(fmt.Sprintf("/%s/logout", basePath)).
+				HandlerFunc(provider.LogoutHandler())
+
+			log.INFO.Printf("ensure the oauth client redirect/callback is configured for %s: %s", v.Title(), callbackURI)
+		}
+	}
+
+	authCollection.Publish()
 }

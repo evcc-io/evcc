@@ -18,6 +18,39 @@ low = "when somewhat full"
 medium = "when half full"
 never = "only with enough surplus"
 
+[config]
+
+[config.form]
+example = "Example"
+optional = "optional"
+
+[config.main]
+addVehicle = "Add vehicle"
+edit = "edit"
+title = "Configuration"
+vehicles = "My Vehicles"
+
+[config.validation]
+failed = "failed"
+label = "Status"
+running = "validating…"
+success = "successfull"
+unknown = "unknown"
+validate = "validate"
+
+[config.vehicle]
+cancel = "Cancel"
+delete = "Delete vehicle"
+generic = "Other integrations"
+offline = "Generic vehicle"
+online = "Vehicles with online API"
+save = "Save"
+scooter = "Scooter"
+template = "Manufacturer"
+titleAdd = "Add Vehicle"
+titleEdit = "Edit Vehicle"
+validateSave = "Validate & save"
+
 [footer]
 
 [footer.community]
@@ -362,8 +395,3 @@ lineError = "Error in {0}."
 lineErrorLink = "line {0}"
 restartButton = "Restart"
 title = "Startup Error"
-
-[vehicleSettings]
-cancel = "Cancel"
-template = "Manufacturer"
-test = "Test"

@@ -28,7 +28,7 @@ type loadpoint struct {
 	ResetOnDisconnect string
 }
 
-type config struct {
+type globalConfig struct {
 	Meters     []device
 	Chargers   []device
 	Vehicles   []device
@@ -48,7 +48,7 @@ type config struct {
 }
 
 type Configure struct {
-	config config
+	config globalConfig
 }
 
 // AddDevice adds a device reference of a specific category to the configuration

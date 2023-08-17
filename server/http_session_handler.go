@@ -10,8 +10,8 @@ import (
 	"strings"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/core/db"
-	dbserver "github.com/evcc-io/evcc/server/db"
+	"github.com/evcc-io/evcc/core/session"
+	"github.com/evcc-io/evcc/server/db"
 	"github.com/evcc-io/evcc/util/locale"
 	"github.com/gorilla/mux"
 	"golang.org/x/text/language"
@@ -30,13 +30,13 @@ func csvResult(ctx context.Context, w http.ResponseWriter, res any, filename str
 
 // sessionHandler returns the list of charging sessions
 func sessionHandler(w http.ResponseWriter, r *http.Request) {
-	if dbserver.Instance == nil {
+	if db.Instance == nil {
 		jsonError(w, http.StatusBadRequest, errors.New("database offline"))
 		return
 	}
 
 	var (
-		res  db.Sessions
+		res  session.Sessions
 		cond []string
 		args []any
 	)
@@ -59,7 +59,7 @@ func sessionHandler(w http.ResponseWriter, r *http.Request) {
 
 	// TODO support other databases than Sqlite
 	query := strings.Join(append([]string{"charged_kwh>=0.05"}, cond...), " AND ")
-	if txn := dbserver.Instance.Where(query, args...).Order("created DESC").Find(&res); txn.Error != nil {
+	if txn := db.Instance.Where(query, args...).Order("created DESC").Find(&res); txn.Error != nil {
 		jsonError(w, http.StatusInternalServerError, txn.Error)
 		return
 	}
@@ -92,17 +92,17 @@ func sessionHandler(w http.ResponseWriter, r *http.Request) {
 
 // deleteSessionHandler removes session in sessions table with given id
 func deleteSessionHandler(w http.ResponseWriter, r *http.Request) {
-	if dbserver.Instance == nil {
+	if db.Instance == nil {
 		jsonError(w, http.StatusBadRequest, errors.New("database offline"))
 		return
 	}
 
-	var res db.Sessions
+	var res session.Sessions
 
 	vars := mux.Vars(r)
 	id := vars["id"]
 
-	if txn := dbserver.Instance.Table("sessions").Delete(&res, id); txn.Error != nil {
+	if txn := db.Instance.Table("sessions").Delete(&res, id); txn.Error != nil {
 		jsonError(w, http.StatusBadRequest, txn.Error)
 		return
 	}
@@ -112,7 +112,7 @@ func deleteSessionHandler(w http.ResponseWriter, r *http.Request) {
 
 // updateSessionHandler updates the data of an existing session
 func updateSessionHandler(w http.ResponseWriter, r *http.Request) {
-	if dbserver.Instance == nil {
+	if db.Instance == nil {
 		jsonError(w, http.StatusBadRequest, errors.New("database offline"))
 		return
 	}
@@ -126,7 +126,7 @@ func updateSessionHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if txn := dbserver.Instance.Table("sessions").Where("id = ?", id).Updates(&session); txn.Error != nil {
+	if txn := db.Instance.Table("sessions").Where("id = ?", id).Updates(&session); txn.Error != nil {
 		jsonError(w, http.StatusBadRequest, txn.Error)
 		return
 	}

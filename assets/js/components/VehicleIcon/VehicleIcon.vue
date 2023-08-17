@@ -47,7 +47,7 @@ export default {
 			return [...new Set(this.names || [this.name])];
 		},
 		count: function () {
-			return this.names.length;
+			return this.names?.length || 0;
 		},
 		single: function () {
 			return this.uniqueNames.length == 1;

@@ -1,24 +1,23 @@
 package cmd
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/util/config"
 	"github.com/spf13/cobra"
-	"golang.org/x/exp/maps"
 )
 
 // vehicleCmd represents the vehicle command
 var vehicleCmd = &cobra.Command{
 	Use:   "vehicle [name]",
 	Short: "Query configured vehicles",
+	Args:  cobra.MaximumNArgs(1),
 	Run:   runVehicle,
 }
 
 func init() {
 	rootCmd.AddCommand(vehicleCmd)
-	vehicleCmd.PersistentFlags().StringP(flagName, "n", "", fmt.Sprintf(flagNameDescription, "vehicle"))
 	vehicleCmd.Flags().BoolP(flagStart, "a", false, flagStartDescription)
 	vehicleCmd.Flags().BoolP(flagStop, "o", false, flagStopDescription)
 	vehicleCmd.Flags().BoolP(flagWakeup, "w", false, flagWakeupDescription)
@@ -38,34 +37,18 @@ func runVehicle(cmd *cobra.Command, args []string) {
 	}
 
 	// select single vehicle
-	if err := selectByName(cmd, &conf.Vehicles); err != nil {
+	if err := selectByName(args, &conf.Vehicles); err != nil {
 		fatal(err)
 	}
 
-	if err := cp.configureVehicles(conf); err != nil {
+	if err := configureVehicles(conf.Vehicles); err != nil {
 		fatal(err)
 	}
 
-	vehicles := cp.vehicles
-	if len(args) == 1 {
-		name := args[0]
-		vehicle, err := cp.Vehicle(name)
-		if err != nil {
-			log.FATAL.Fatal(err)
-		}
-
-		vehicles = map[string]api.Vehicle{name: vehicle}
-	}
-
-	// check single vehicle for error
-	if len(vehicles) == 1 {
-		if err, ok := maps.Values(vehicles)[0].(error); ok {
-			fatal(err)
-		}
-	}
+	vehicles := config.Vehicles().Devices()
 
 	var flagUsed bool
-	for _, v := range vehicles {
+	for _, v := range config.Instances(vehicles) {
 		if cmd.Flags().Lookup(flagWakeup).Changed {
 			flagUsed = true
 
@@ -107,8 +90,10 @@ func runVehicle(cmd *cobra.Command, args []string) {
 		d := dumper{len: len(vehicles)}
 		flag := cmd.Flags().Lookup(flagDiagnose).Changed
 
-		for name, v := range vehicles {
-			d.DumpWithHeader(name, v)
+		for _, dev := range vehicles {
+			v := dev.Instance()
+
+			d.DumpWithHeader(dev.Config().Name, v)
 			if flag {
 				d.DumpDiagnosis(v)
 			}

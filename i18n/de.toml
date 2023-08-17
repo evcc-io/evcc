@@ -18,6 +18,40 @@ low = "wenn etwas voll"
 medium = "wenn halbvoll"
 never = "nur mit genug PV-Überschuss"
 
+[config]
+
+[config.form]
+example = "Beispiel"
+optional = "optional"
+
+[config.main]
+addVehicle = "Fahrzeug hinzufügen"
+edit = "bearbeiten"
+title = "Konfiguration"
+vehicles = "Meine Fahrzeuge"
+
+[config.validation]
+failed = "fehlgeschlagen"
+label = "Status"
+running = "prüfe…"
+save = "Speichern"
+success = "erfolgreich"
+unknown = "unbekannt"
+validate = "prüfen"
+validateSave = "Prüfen & speichern"
+
+[config.vehicle]
+cancel = "Abbrechen"
+delete = "Fahrzeug löschen"
+generic = "Weitere Integrationen"
+offline = "Generisches Fahrzeug"
+online = "Fahrzeuge mit Schnittstelle"
+scooter = "Scooter"
+template = "Hersteller"
+titleAdd = "Fahrzeug hinzufügen"
+titleEdit = "Fahrzeug bearbeiten"
+update = "Prüfen & speichern"
+
 [footer]
 
 [footer.community]
@@ -362,8 +396,3 @@ lineError = "In {0} wurde ein Fehler gefunden."
 lineErrorLink = "Zeile {0}"
 restartButton = "Neu starten"
 title = "Fehler beim Starten"
-
-[vehicleSettings]
-cancel = "Abbrechen"
-template = "Hersteller"
-test = "Test"

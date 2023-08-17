@@ -1,11 +1,11 @@
 package cmd
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/util/config"
 	"github.com/spf13/cobra"
 )
 
@@ -13,6 +13,7 @@ import (
 var chargerCmd = &cobra.Command{
 	Use:   "charger [name]",
 	Short: "Query configured chargers",
+	Args:  cobra.MaximumNArgs(1),
 	Run:   runCharger,
 }
 
@@ -20,7 +21,6 @@ const noCurrent = -1
 
 func init() {
 	rootCmd.AddCommand(chargerCmd)
-	chargerCmd.PersistentFlags().StringP(flagName, "n", "", fmt.Sprintf(flagNameDescription, "charger"))
 	chargerCmd.Flags().IntP(flagCurrent, "i", noCurrent, flagCurrentDescription)
 	//lint:ignore SA1019 as Title is safe on ascii
 	chargerCmd.Flags().BoolP(flagEnable, "e", false, strings.Title(flagEnable))
@@ -44,22 +44,12 @@ func runCharger(cmd *cobra.Command, args []string) {
 	}
 
 	// select single charger
-	if err := selectByName(cmd, &conf.Chargers); err != nil {
+	if err := selectByName(args, &conf.Chargers); err != nil {
 		log.FATAL.Fatal(err)
 	}
 
-	if err := cp.configureChargers(conf); err != nil {
+	if err := configureChargers(conf.Chargers); err != nil {
 		log.FATAL.Fatal(err)
-	}
-
-	chargers := cp.chargers
-	if len(args) == 1 {
-		name := args[0]
-		charger, err := cp.Charger(name)
-		if err != nil {
-			log.FATAL.Fatal(err)
-		}
-		chargers = map[string]api.Charger{name: charger}
 	}
 
 	current := int64(noCurrent)
@@ -80,8 +70,10 @@ func runCharger(cmd *cobra.Command, args []string) {
 		}
 	}
 
+	chargers := config.Chargers().Devices()
+
 	var flagUsed bool
-	for _, v := range chargers {
+	for _, v := range config.Instances(chargers) {
 		if current != noCurrent {
 			flagUsed = true
 
@@ -135,8 +127,10 @@ func runCharger(cmd *cobra.Command, args []string) {
 		d := dumper{len: len(chargers)}
 		flag := cmd.Flags().Lookup(flagDiagnose).Changed
 
-		for name, v := range chargers {
-			d.DumpWithHeader(name, v)
+		for _, dev := range chargers {
+			v := dev.Instance()
+
+			d.DumpWithHeader(dev.Config().Name, v)
 			if flag {
 				d.DumpDiagnosis(v)
 			}

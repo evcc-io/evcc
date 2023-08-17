@@ -651,15 +651,6 @@ export default {
 	position: relative;
 	top: -3px;
 }
-.custom-select {
-	left: 0;
-	top: 0;
-	bottom: 0;
-	right: 0;
-	position: absolute;
-	opacity: 0;
-	-webkit-appearance: menulist-button;
-}
 .table {
 	border-collapse: separate;
 	border-spacing: 0;

@@ -97,7 +97,6 @@ func loadTemplates(class Class) {
 
 		return nil
 	})
-
 	if err != nil {
 		panic(err)
 	}

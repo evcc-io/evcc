@@ -470,7 +470,7 @@ func (c *CmdConfigure) processInputConfig(param templates.Param) string {
 		help:         help,
 		valueType:    param.Type,
 		validValues:  param.ValidValues,
-		mask:         param.IsMask(),
+		mask:         param.IsMasked(),
 		required:     param.IsRequired(),
 	})
 

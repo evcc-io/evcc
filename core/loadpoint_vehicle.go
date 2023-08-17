@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/core/db"
+	"github.com/evcc-io/evcc/core/session"
 	"github.com/evcc-io/evcc/core/soc"
 	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/server/db/settings"
@@ -170,7 +170,7 @@ func (lp *Loadpoint) setActiveVehicle(vehicle api.Vehicle) {
 	lp.publish(phasesActive, lp.activePhases())
 	lp.unpublishVehicle()
 
-	lp.updateSession(func(session *db.Session) {
+	lp.updateSession(func(session *session.Session) {
 		var title string
 		if vehicle != nil {
 			title = vehicle.Title()
@@ -347,7 +347,7 @@ func (lp *Loadpoint) vehicleOdometer() {
 			lp.publish(vehicleOdometer, odo)
 
 			// update session once odometer is read
-			lp.updateSession(func(session *db.Session) {
+			lp.updateSession(func(session *session.Session) {
 				session.Odometer = &odo
 			})
 		} else if !errors.Is(err, api.ErrNotAvailable) {

@@ -1,9 +1,7 @@
 package cmd
 
 import (
-	"fmt"
-
-	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/util/config"
 	"github.com/spf13/cobra"
 )
 
@@ -11,12 +9,12 @@ import (
 var meterCmd = &cobra.Command{
 	Use:   "meter [name]",
 	Short: "Query configured meters",
+	Args:  cobra.MaximumNArgs(1),
 	Run:   runMeter,
 }
 
 func init() {
 	rootCmd.AddCommand(meterCmd)
-	meterCmd.PersistentFlags().StringP(flagName, "n", "", fmt.Sprintf(flagNameDescription, "meter"))
 }
 
 func runMeter(cmd *cobra.Command, args []string) {
@@ -31,27 +29,21 @@ func runMeter(cmd *cobra.Command, args []string) {
 	}
 
 	// select single meter
-	if err := selectByName(cmd, &conf.Meters); err != nil {
+	if err := selectByName(args, &conf.Meters); err != nil {
 		log.FATAL.Fatal(err)
 	}
 
-	if err := cp.configureMeters(conf); err != nil {
+	if err := configureMeters(conf.Meters); err != nil {
 		log.FATAL.Fatal(err)
 	}
 
-	meters := cp.meters
-	if len(args) == 1 {
-		name := args[0]
-		meter, err := cp.Meter(name)
-		if err != nil {
-			log.FATAL.Fatal(err)
-		}
-		meters = map[string]api.Meter{name: meter}
-	}
+	meters := config.Meters().Devices()
 
 	d := dumper{len: len(meters)}
-	for name, v := range meters {
-		d.DumpWithHeader(name, v)
+	for _, dev := range meters {
+		v := dev.Instance()
+
+		d.DumpWithHeader(dev.Config().Name, v)
 	}
 
 	// wait for shutdown

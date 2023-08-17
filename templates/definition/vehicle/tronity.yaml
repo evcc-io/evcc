@@ -7,6 +7,9 @@ requirements:
   evcc: ["sponsorship"]
 params:
   - name: title
+  - name: icon
+    default: car
+    advanced: true
   - name: clientid
     description:
       generic: Tronity API Client ID
@@ -26,9 +29,6 @@ params:
   - name: capacity
     default: 10
   - name: phases
-    advanced: true
-  - name: icon
-    default: car
     advanced: true
   - preset: vehicle-identify
 render: |
