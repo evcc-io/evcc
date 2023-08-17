@@ -88,6 +88,7 @@ test.describe("vehicles", async () => {
     await page.getByRole("button", { name: "Add vehicle" }).click();
     await page.getByLabel("Manufacturer").selectOption("Generic vehicle");
     await page.getByLabel("Title").fill("Yellow Van");
+    await page.getByLabel("car").click();
     await page.getByLabel("van").check();
     await page.getByRole("button", { name: "Validate & save" }).click();
 
