@@ -64,17 +64,6 @@ func NewConnection(uri, user, password string, channel int, cache time.Duration)
 	return c, nil
 }
 
-// ExecCmd executes an api command and provides the response
-func (d *Connection) ExecCmd(cmd string, res interface{}) error {
-	parameters := url.Values{
-		"user":     []string{d.user},
-		"password": []string{d.password},
-		"cmnd":     []string{cmd},
-	}
-
-	return d.GetJSON(fmt.Sprintf("%s/cm?%s", d.uri, parameters.Encode()), res)
-}
-
 // channelExists checks the existence of the configured relay channel interface
 func (c *Connection) ChannelExists(channel int) error {
 	res, err := c.statusSTSCache.Get()
