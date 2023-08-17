@@ -13,7 +13,7 @@ type DB struct {
 }
 
 type Database interface {
-	NewSession(startEnergy float64) *Session
+	New(startEnergy float64) *Session
 	Persist(session interface{})
 }
 
@@ -30,8 +30,8 @@ func NewStore(name string, db *gorm.DB) (*DB, error) {
 	return sessiondb, err
 }
 
-// NewSession creates a charging session
-func (s *DB) NewSession(meter float64) *Session {
+// New creates a charging session
+func (s *DB) New(meter float64) *Session {
 	t := Session{
 		Loadpoint: s.name,
 	}

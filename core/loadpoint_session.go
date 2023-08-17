@@ -30,7 +30,7 @@ func (lp *Loadpoint) createSession() {
 		return
 	}
 
-	lp.session = lp.db.NewSession(lp.chargeMeterTotal())
+	lp.session = lp.db.New(lp.chargeMeterTotal())
 
 	if vehicle := lp.GetVehicle(); vehicle != nil {
 		lp.session.Vehicle = vehicle.Title()
