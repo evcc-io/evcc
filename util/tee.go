@@ -1,14 +1,18 @@
 package util
 
-import "reflect"
+import (
+	"reflect"
+	"sync"
+)
 
-// TeeAttacher allows to attach a listener to a tee
+// TeeAttacher allows attaching a listener to a tee
 type TeeAttacher interface {
 	Attach() <-chan Param
 }
 
-// Tee distributed parameters to subscribers
+// Tee distributes parameters to subscribers
 type Tee struct {
+	mu   sync.Mutex
 	recv []chan<- Param
 }
 
@@ -23,21 +27,24 @@ func (t *Tee) Attach() <-chan Param {
 
 // add attaches a receiver channel to the tee
 func (t *Tee) add(out chan<- Param) {
+	t.mu.Lock()
+	defer t.mu.Unlock()
 	t.recv = append(t.recv, out)
 }
 
 // Run starts parameter distribution
 func (t *Tee) Run(in <-chan Param) {
 	for msg := range in {
-		for _, recv := range t.recv {
-			// dereference pointers (https://github.com/evcc-io/evcc/issues/7895)
-			if val := reflect.ValueOf(msg.Val); val.Kind() == reflect.Ptr {
-				if ptr := reflect.Indirect(val); ptr.IsValid() {
-					msg.Val = ptr.Addr().Elem().Interface()
-				}
+		if val := reflect.ValueOf(msg.Val); val.Kind() == reflect.Ptr {
+			if ptr := reflect.Indirect(val); ptr.IsValid() {
+				msg.Val = ptr.Addr().Elem().Interface()
 			}
+		}
 
+		t.mu.Lock()
+		for _, recv := range t.recv {
 			recv <- msg
 		}
+		t.mu.Unlock()
 	}
 }
