@@ -599,9 +599,6 @@ export default {
 	position: relative;
 	top: -3px;
 }
-.container {
-	max-width: 700px;
-}
 .table {
 	border-collapse: separate;
 	border-spacing: 0;
