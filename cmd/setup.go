@@ -1,13 +1,16 @@
 package cmd
 
 import (
+	"cmp"
 	"context"
 	"errors"
 	"fmt"
 	"net"
 	"net/http"
+	"slices"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	paho "github.com/eclipse/paho.mqtt.golang"
@@ -298,6 +301,10 @@ func configureVehicles(static []config.Named) error {
 		return err
 	}
 
+	// stable-sort vehicles by id
+	var mu sync.Mutex
+	devs := make([]config.ConfigurableDevice[api.Vehicle], 0, len(configurable))
+
 	for _, conf := range configurable {
 		conf := conf
 		g.Go(func() error {
@@ -307,11 +314,29 @@ func configureVehicles(static []config.Named) error {
 				return fmt.Errorf("cannot create vehicle '%s': %w", cc.Name, err)
 			}
 
-			return config.Vehicles().Add(config.NewConfigurableDevice(conf, instance))
+			mu.Lock()
+			defer mu.Unlock()
+			devs = append(devs, config.NewConfigurableDevice(conf, instance))
+
+			return nil
 		})
 	}
 
-	return g.Wait()
+	if err := g.Wait(); err != nil {
+		return err
+	}
+
+	slices.SortFunc(devs, func(i, j config.ConfigurableDevice[api.Vehicle]) int {
+		return cmp.Compare(i.ID(), j.ID())
+	})
+
+	for _, dev := range devs {
+		if err := config.Vehicles().Add(dev); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func configureEnvironment(cmd *cobra.Command, conf globalConfig) (err error) {
