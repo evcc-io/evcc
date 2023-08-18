@@ -165,12 +165,13 @@ var _ api.MeterEnergy = (*Schneider)(nil)
 
 // TotalEnergy implements the api.MeterEnergy interface
 func (wb *Schneider) TotalEnergy() (float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(schneiderRegEnergy, 2)
+	b, err := wb.conn.ReadHoldingRegisters(schneiderRegEnergy, 4)
 	if err != nil {
 		return 0, err
 	}
 
-	return float64(encoding.Float32LswFirst(b)), nil
+	// return float64(encoding.Uint64LswFirst(b)) / 1000, nil
+	return float64(uint64(b[6])<<56|uint64(b[7])<<48|uint64(b[4])<<40|uint64(b[5])<<32|uint64(b[2])<<24|uint64(b[3])<<16|uint64(b[0])<<8|uint64(b[1])) / 1000, nil
 }
 
 var _ api.PhaseCurrents = (*Schneider)(nil)
