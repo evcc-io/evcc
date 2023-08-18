@@ -109,7 +109,7 @@ func (wb *Schneider) Status() (api.ChargeStatus, error) {
 	s := binary.BigEndian.Uint16(b)
 
 	switch s {
-	case 2, 6:
+	case 1, 2, 6:
 		return api.StatusA, nil
 	case 3, 4, 5, 7:
 		return api.StatusB, nil
@@ -122,10 +122,12 @@ func (wb *Schneider) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *Schneider) Enabled() (bool, error) {
-	b, err := wb.conn.ReadHoldingRegisters(schneiderRegSetPoint, 1)
+	b, err := wb.conn.ReadHoldingRegisters(schneiderRegSetCommand, 1)
 	if err != nil {
 		return false, err
 	}
+
+	fmt.Println(binary.BigEndian.Uint16(b))
 
 	return binary.BigEndian.Uint16(b) > 0, nil
 }
