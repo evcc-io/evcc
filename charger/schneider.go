@@ -127,9 +127,9 @@ func (wb *Schneider) Status() (api.ChargeStatus, error) {
 	s := binary.BigEndian.Uint16(b)
 
 	switch s {
-	case 0, 2, 6:
+	case 0, 1, 2, 6:
 		return api.StatusA, nil
-	case 1, 3, 4, 5, 7:
+	case 3, 4, 5, 7:
 		return api.StatusB, nil
 	case 8, 9:
 		return api.StatusC, nil
