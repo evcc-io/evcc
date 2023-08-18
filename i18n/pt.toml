@@ -383,3 +383,35 @@ title = "Erro ao iniciar"
 cancel = "Cancelar"
 template = "Fabricante"
 test = "Teste"
+
+
+[config.vehicle]
+titleAdd = "Adicionar Veículo"
+delete = "Excluir veículo"
+save = "guardar"
+scooter = "Lambreta"
+cancel = "Cancelar"
+generic = "Outras integrações"
+template = "Fabricante"
+offline = "Veículo genérico"
+titleEdit = "Editar veículo"
+validateSave = "Validar e guardar"
+online = "Veículos com API online"
+
+[config.form]
+example = "Exemplo"
+optional = "opcional"
+
+[config.main]
+title = "Configuração"
+vehicles = "Meus Veículos"
+addVehicle = "Adicionar veículo"
+edit = "editar"
+
+[config.validation]
+failed = "fracassado"
+label = "Status"
+running = "validando..."
+success = "sucedido"
+validate = "validar"
+unknown = "desconhecido"
