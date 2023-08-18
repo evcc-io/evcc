@@ -38,14 +38,18 @@ type Schneider struct {
 
 const (
 	schneiderRegEvState       = 1
+	schneiderRegOcppStatus    = 150
+	schneiderRegEvPresence    = 1150
 	schneiderRegCurrents      = 2999
 	schneiderRegVoltages      = 3027
 	schneiderRegPower         = 3059
 	schneiderRegEnergy        = 3203
 	schneiderRegLifebit       = 4000
 	schneiderRegSetCommand    = 4001
+	schneiderRegCommandStatus = 4002
 	schneiderRegSetPoint      = 4004
 	schneiderRegChargingTime  = 4007
+	schneiderRegLastStopCause = 4011
 	schneiderRegSessionEnergy = 4012
 )
 
@@ -236,4 +240,34 @@ func (wb *Schneider) Voltages() (float64, float64, float64, error) {
 	}
 
 	return res[0], res[1], res[2], nil
+}
+
+var _ api.Diagnosis = (*Schneider)(nil)
+
+// Diagnose implements the api.Diagnosis interface
+func (wb *Schneider) Diagnose() {
+	if b, err := wb.conn.ReadHoldingRegisters(schneiderRegEvState, 1); err == nil {
+		fmt.Printf("evState:\t%d\n", binary.BigEndian.Uint16(b))
+	}
+	if b, err := wb.conn.ReadHoldingRegisters(schneiderRegOcppStatus, 1); err == nil {
+		fmt.Printf("OCPP Status:\t%d\n", binary.BigEndian.Uint16(b))
+	}
+	if b, err := wb.conn.ReadHoldingRegisters(schneiderRegEvPresence, 1); err == nil {
+		fmt.Printf("evPresence:\t%d\n", binary.BigEndian.Uint16(b))
+	}
+	if b, err := wb.conn.ReadHoldingRegisters(schneiderRegLifebit, 1); err == nil {
+		fmt.Printf("Lifebit:\t%d\n", binary.BigEndian.Uint16(b))
+	}
+	if b, err := wb.conn.ReadHoldingRegisters(schneiderRegSetCommand, 1); err == nil {
+		fmt.Printf("Set command:\t%d\n", binary.BigEndian.Uint16(b))
+	}
+	if b, err := wb.conn.ReadHoldingRegisters(schneiderRegCommandStatus, 1); err == nil {
+		fmt.Printf("Command status:\t%d\n", binary.BigEndian.Uint32(b))
+	}
+	if b, err := wb.conn.ReadHoldingRegisters(schneiderRegSetPoint, 1); err == nil {
+		fmt.Printf("Set Point:\t%d\n", binary.BigEndian.Uint16(b))
+	}
+	if b, err := wb.conn.ReadHoldingRegisters(schneiderRegLastStopCause, 1); err == nil {
+		fmt.Printf("Last stop cause:\t%d\n", binary.BigEndian.Uint16(b))
+	}
 }
