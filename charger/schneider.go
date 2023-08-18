@@ -2,7 +2,7 @@ package charger
 
 // LICENSE
 
-// Copyright (c) 2019-2023 andig
+// Copyright (c) 2019-2023 andig, premultiply
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -18,7 +18,6 @@ package charger
 // SOFTWARE.
 
 import (
-	"encoding/binary"
 	"fmt"
 	"time"
 
@@ -106,7 +105,7 @@ func NewSchneider(uri string, id uint8, timeout time.Duration) (api.Charger, err
 	if err != nil {
 		return nil, fmt.Errorf("heartbeat timeout: %w", err)
 	}
-	if u := binary.BigEndian.Uint16(b); u != 2 {
+	if u := encoding.Uint16(b); u != 2 {
 		go wb.heartbeat(time.Duration(2) * time.Second)
 	}
 
@@ -128,7 +127,7 @@ func (wb *Schneider) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	s := binary.BigEndian.Uint16(b)
+	s := encoding.Uint16(b)
 
 	switch s {
 	case 0, 1, 2, 6:
@@ -149,7 +148,7 @@ func (wb *Schneider) Enabled() (bool, error) {
 		return false, err
 	}
 
-	return binary.BigEndian.Uint16(b) != 99, nil
+	return encoding.Uint16(b) != 99, nil
 }
 
 // Enable implements the api.Charger interface
@@ -182,7 +181,7 @@ func (wb *Schneider) GetMaxCurrent() (float64, error) {
 		return 0, err
 	}
 
-	return float64(binary.BigEndian.Uint16(b)), nil
+	return float64(encoding.Uint16(b)), nil
 }
 
 // CurrentPower implements the api.Meter interface
@@ -247,27 +246,27 @@ var _ api.Diagnosis = (*Schneider)(nil)
 // Diagnose implements the api.Diagnosis interface
 func (wb *Schneider) Diagnose() {
 	if b, err := wb.conn.ReadHoldingRegisters(schneiderRegEvState, 1); err == nil {
-		fmt.Printf("\tevState:\t\t%d\n", binary.BigEndian.Uint16(b))
+		fmt.Printf("\tevState:\t\t%d\n", encoding.Uint16(b))
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(schneiderRegOcppStatus, 1); err == nil {
-		fmt.Printf("\tOCPP Status:\t\t%d\n", binary.BigEndian.Uint16(b))
+		fmt.Printf("\tOCPP Status:\t\t%d\n", encoding.Uint16(b))
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(schneiderRegEvPresence, 1); err == nil {
-		fmt.Printf("\tevPresence:\t\t%d\n", binary.BigEndian.Uint16(b))
+		fmt.Printf("\tevPresence:\t\t%d\n", encoding.Uint16(b))
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(schneiderRegLifebit, 1); err == nil {
-		fmt.Printf("\tLifebit:\t\t%d\n", binary.BigEndian.Uint16(b))
+		fmt.Printf("\tLifebit:\t\t%d\n", encoding.Uint16(b))
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(schneiderRegSetCommand, 1); err == nil {
-		fmt.Printf("\tSet command:\t\t%d\n", binary.BigEndian.Uint16(b))
+		fmt.Printf("\tSet command:\t\t%d\n", encoding.Uint16(b))
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(schneiderRegCommandStatus, 2); err == nil {
-		fmt.Printf("\tCommand status:\t\t%d\n", binary.BigEndian.Uint32(b))
+		fmt.Printf("\tCommand status:\t\t%d\n", encoding.Uint32(b))
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(schneiderRegSetPoint, 1); err == nil {
-		fmt.Printf("\tSet Point:\t\t%d\n", binary.BigEndian.Uint16(b))
+		fmt.Printf("\tSet Point:\t\t%d\n", encoding.Uint16(b))
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(schneiderRegLastStopCause, 1); err == nil {
-		fmt.Printf("\tLast stop cause:\t%d\n", binary.BigEndian.Uint16(b))
+		fmt.Printf("\tLast stop cause:\t%d\n", encoding.Uint16(b))
 	}
 }
