@@ -382,3 +382,35 @@ title = "Klaida startuojant"
 cancel = "Atšaukti"
 template = "Gamintojas"
 test = "Testuoti"
+
+
+[config.main]
+title = "Konfigūracija"
+vehicles = "Mano automobiliai"
+addVehicle = "Pridėti automobilį"
+edit = "redaguoti"
+
+[config.validation]
+label = "Statusas"
+running = "tikrinama…"
+unknown = "nežinomas"
+validate = "tikrinti"
+success = "sėkmingai"
+failed = "nepavyko"
+
+[config.vehicle]
+cancel = "Atšaukti"
+delete = "Ištrinti automobilį"
+generic = "Kitos integracijos"
+offline = "Tipinis automobilis"
+template = "Gamintojas"
+online = "Automobiliai su internetiniu API"
+save = "Išsaugoti"
+scooter = "Motoroleris"
+titleAdd = "Pridėti Automobilį"
+validateSave = "Patikrinti ir išsaugoti"
+titleEdit = "Koreguoti Automobilį"
+
+[config.form]
+example = "Pavyzdys"
+optional = "pasirinktinai"
