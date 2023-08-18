@@ -54,6 +54,7 @@ type Easee struct {
 	chargerEnabled        bool
 	smartCharging         bool
 	opMode                int
+	reasonForNoCurrent    int
 	phaseMode             int
 	currentPower, sessionEnergy, totalEnergy,
 	currentL1, currentL2, currentL3 float64
@@ -315,6 +316,8 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 		c.dynamicChargerCurrent = value.(float64)
 	case easee.CHARGER_OP_MODE:
 		c.opMode = value.(int)
+	case easee.REASON_FOR_NO_CURRENT:
+		c.reasonForNoCurrent = value.(int)
 	}
 
 	select {
@@ -380,12 +383,10 @@ func (c *Easee) Enabled() (bool, error) {
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
-	enabled := c.opMode == easee.ModeCharging ||
-		c.opMode == easee.ModeAwaitingStart ||
+	disabled := c.opMode == easee.ModeDisconnected ||
 		c.opMode == easee.ModeCompleted ||
-		c.opMode == easee.ModeReadyToCharge
-
-	return enabled && c.dynamicChargerCurrent > 0, nil
+		(c.opMode == easee.ModeAwaitingStart && c.reasonForNoCurrent == 52)
+	return !disabled && c.dynamicChargerCurrent > 0, nil
 }
 
 // Enable implements the api.Charger interface
@@ -413,21 +414,23 @@ func (c *Easee) Enable(enable bool) error {
 
 	// resume/stop charger
 	action := easee.ChargePause
-	targetCurrent := 0.0
+	var expectedEnabledState bool
+	var targetCurrent float64
 	if enable {
 		action = easee.ChargeResume
+		expectedEnabledState = true
 		targetCurrent = 32
 	}
 
 	uri := fmt.Sprintf("%s/chargers/%s/commands/%s", easee.API, c.charger, action)
-	noop, err := c.postJSONAndWait(uri, nil)
+	_, err := c.postJSONAndWait(uri, nil)
 	if err != nil {
 		return err
 	}
-	if noop {
-		return c.confirmChargerCurrent(targetCurrent)
-	}
 
+	if err := c.waitForChargerEnabledState(expectedEnabledState); err != nil {
+		return err
+	}
 	if err := c.waitForDynamicChargerCurrent(targetCurrent); err != nil {
 		return err
 	}
@@ -440,14 +443,20 @@ func (c *Easee) Enable(enable bool) error {
 	return nil
 }
 
-// ensures that
-func (c *Easee) confirmChargerCurrent(cur float64) error {
+func (c *Easee) inExpectedOpMode(enable bool) bool {
 	c.mux.Lock()
 	defer c.mux.Unlock()
-	if c.dynamicChargerCurrent != cur {
-		return api.ErrMustRetry
+
+	//start/resume
+	if enable {
+		return c.opMode == easee.ModeCharging ||
+			c.opMode == easee.ModeCompleted ||
+			c.opMode == easee.ModeAwaitingStart ||
+			c.opMode == easee.ModeReadyToCharge
 	}
-	return nil
+
+	//paused/stopped
+	return c.opMode == easee.ModeAwaitingStart || c.opMode == easee.ModeAwaitingAuthentication
 }
 
 // posts JSON to the Easee API endpoint and waits for the async response
@@ -507,7 +516,33 @@ func (c *Easee) waitForTickResponse(expectedTick int64) error {
 	}
 }
 
-// wait for up to 3s for current become targetCurrent
+// wait for opMode become expected op mode
+func (c *Easee) waitForChargerEnabledState(expEnabled bool) error {
+	// check any updates received meanwhile
+	if c.inExpectedOpMode(expEnabled) {
+		return nil
+	}
+
+	timer := time.NewTimer(10 * time.Second)
+	for {
+		select {
+		case obs := <-c.obsC:
+			if obs.ID != easee.CHARGER_OP_MODE {
+				continue
+			}
+			if c.inExpectedOpMode(expEnabled) {
+				return nil
+			}
+		case <-timer.C: // time is up, bail after one final check
+			if c.inExpectedOpMode(expEnabled) {
+				return nil
+			}
+			return api.ErrTimeout
+		}
+	}
+}
+
+// wait for current become targetCurrent
 func (c *Easee) waitForDynamicChargerCurrent(targetCurrent float64) error {
 	// check any updates received meanwhile
 	c.mux.Lock()
@@ -555,12 +590,10 @@ func (c *Easee) MaxCurrent(current int64) error {
 		return err
 	}
 
-	if noop {
-		return c.confirmChargerCurrent(float64(current))
-	}
-
-	if err := c.waitForDynamicChargerCurrent(float64(current)); err != nil {
-		return err
+	if !noop {
+		if err := c.waitForDynamicChargerCurrent(float64(current)); err != nil {
+			return err
+		}
 	}
 
 	c.mux.Lock()
@@ -568,6 +601,15 @@ func (c *Easee) MaxCurrent(current int64) error {
 	c.current = cur
 
 	return nil
+}
+
+var _ api.CurrentGetter = (*Easee)(nil)
+
+// GetMaxCurrent implements the api.CurrentGetter interface
+func (c *Easee) GetMaxCurrent() (float64, error) {
+	c.mux.Lock()
+	defer c.mux.Unlock()
+	return c.dynamicChargerCurrent, nil
 }
 
 var _ api.PhaseSwitcher = (*Easee)(nil)

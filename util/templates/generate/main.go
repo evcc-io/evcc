@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"slices"
 	"sort"
 	"strings"
 
 	"github.com/evcc-io/evcc/util/templates"
-	"golang.org/x/exp/slices"
 )
 
 const (

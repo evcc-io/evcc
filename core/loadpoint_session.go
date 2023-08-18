@@ -2,7 +2,7 @@ package core
 
 import (
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/core/db"
+	"github.com/evcc-io/evcc/core/session"
 )
 
 func (lp *Loadpoint) chargeMeterTotal() float64 {
@@ -30,7 +30,7 @@ func (lp *Loadpoint) createSession() {
 		return
 	}
 
-	lp.session = lp.db.Session(lp.chargeMeterTotal())
+	lp.session = lp.db.New(lp.chargeMeterTotal())
 
 	if vehicle := lp.GetVehicle(); vehicle != nil {
 		lp.session.Vehicle = vehicle.Title()
@@ -73,11 +73,12 @@ func (lp *Loadpoint) stopSession() {
 	s.PricePerKWh = lp.sessionEnergy.PricePerKWh()
 	s.Co2PerKWh = lp.sessionEnergy.Co2PerKWh()
 	s.ChargedEnergy = lp.sessionEnergy.TotalWh() / 1e3
+	s.ChargeDuration = &lp.chargeDuration
 
 	lp.db.Persist(s)
 }
 
-type sessionOption func(*db.Session)
+type sessionOption func(*session.Session)
 
 // updateSession updates any parameter of a charging session and persists the session.
 func (lp *Loadpoint) updateSession(opts ...sessionOption) {

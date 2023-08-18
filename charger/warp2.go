@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"slices"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -11,7 +12,6 @@ import (
 	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/provider/mqtt"
 	"github.com/evcc-io/evcc/util"
-	"golang.org/x/exp/slices"
 )
 
 // Warp2 is the Warp charger v2 firmware implementation
@@ -198,25 +198,21 @@ func (wb *Warp2) Status() (api.ChargeStatus, error) {
 	return res, err
 }
 
-// setCurrentMA sets the current in mA
-func (wb *Warp2) setCurrentMA(current int64) error {
-	err := wb.maxcurrentS(current)
-	if err == nil {
-		wb.current = current
-	}
-	return err
-}
-
 // MaxCurrent implements the api.Charger interface
 func (wb *Warp2) MaxCurrent(current int64) error {
-	return wb.setCurrentMA(1000 * current)
+	return wb.MaxCurrentMillis(float64(current))
 }
 
 var _ api.ChargerEx = (*Warp2)(nil)
 
 // MaxCurrentMillis implements the api.ChargerEx interface
 func (wb *Warp2) MaxCurrentMillis(current float64) error {
-	return wb.setCurrentMA(int64(1000 * current))
+	curr := int64(current * 1e3)
+	err := wb.maxcurrentS(curr)
+	if err == nil {
+		wb.current = curr
+	}
+	return err
 }
 
 // CurrentPower implements the api.Meter interface

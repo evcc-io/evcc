@@ -11,15 +11,16 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/cmd/shutdown"
 	"github.com/evcc-io/evcc/core/coordinator"
-	"github.com/evcc-io/evcc/core/db"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/planner"
 	"github.com/evcc-io/evcc/core/prioritizer"
+	"github.com/evcc-io/evcc/core/session"
 	"github.com/evcc-io/evcc/push"
-	serverdb "github.com/evcc-io/evcc/server/db"
+	"github.com/evcc-io/evcc/server/db"
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/telemetry"
 )
 
@@ -100,7 +101,6 @@ type MetersConfig struct {
 // NewSiteFromConfig creates a new site
 func NewSiteFromConfig(
 	log *util.Logger,
-	cp configProvider,
 	other map[string]interface{},
 	loadpoints []*Loadpoint,
 	vehicles []api.Vehicle,
@@ -134,9 +134,9 @@ func NewSiteFromConfig(
 		lp.coordinator = coordinator.NewAdapter(lp, site.coordinator)
 		lp.planner = planner.New(lp.log, tariff)
 
-		if serverdb.Instance != nil {
+		if db.Instance != nil {
 			var err error
-			if lp.db, err = db.New(lp.Title()); err != nil {
+			if lp.db, err = session.NewStore(lp.Title(), db.Instance); err != nil {
 				return nil, err
 			}
 
@@ -147,19 +147,20 @@ func NewSiteFromConfig(
 
 	// grid meter
 	if site.Meters.GridMeterRef != "" {
-		var err error
-		if site.gridMeter, err = cp.Meter(site.Meters.GridMeterRef); err != nil {
+		dev, err := config.Meters().ByName(site.Meters.GridMeterRef)
+		if err != nil {
 			return nil, err
 		}
+		site.gridMeter = dev.Instance()
 	}
 
 	// multiple pv
 	for _, ref := range append(site.Meters.PVMetersRef, site.Meters.PVMetersRef_...) {
-		pv, err := cp.Meter(ref)
+		dev, err := config.Meters().ByName(ref)
 		if err != nil {
 			return nil, err
 		}
-		site.pvMeters = append(site.pvMeters, pv)
+		site.pvMeters = append(site.pvMeters, dev.Instance())
 	}
 
 	// TODO deprecated
@@ -169,11 +170,11 @@ func NewSiteFromConfig(
 
 	// multiple batteries
 	for _, ref := range append(site.Meters.BatteryMetersRef, site.Meters.BatteryMetersRef_...) {
-		battery, err := cp.Meter(ref)
+		dev, err := config.Meters().ByName(ref)
 		if err != nil {
 			return nil, err
 		}
-		site.batteryMeters = append(site.batteryMeters, battery)
+		site.batteryMeters = append(site.batteryMeters, dev.Instance())
 	}
 
 	// TODO deprecated
@@ -187,11 +188,11 @@ func NewSiteFromConfig(
 
 	// auxiliary meters
 	for _, ref := range site.Meters.AuxMetersRef {
-		meter, err := cp.Meter(ref)
+		dev, err := config.Meters().ByName(ref)
 		if err != nil {
 			return nil, err
 		}
-		site.auxMeters = append(site.auxMeters, meter)
+		site.auxMeters = append(site.auxMeters, dev.Instance())
 	}
 
 	// configure meter from references
@@ -410,7 +411,7 @@ func (site *Site) updateMeters() error {
 
 			if err == nil {
 				// ignore negative values which represent self-consumption
-				site.pvPower += math.Max(0, power)
+				site.pvPower += max(0, power)
 				if power < -500 {
 					site.log.WARN.Printf("pv %d power: %.0fW is negative - check configuration if sign is correct", i+1, power)
 				}
@@ -760,8 +761,8 @@ func (site *Site) update(lp Updater) {
 	if sitePower, batteryBuffered, batteryStart, err := site.sitePower(totalChargePower, flexiblePower); err == nil {
 
 		// ignore negative pvPower values as that means it is not an energy source but consumption
-		homePower := site.gridPower + math.Max(0, site.pvPower) + site.batteryPower - totalChargePower
-		homePower = math.Max(homePower, 0)
+		homePower := site.gridPower + max(0, site.pvPower) + site.batteryPower - totalChargePower
+		homePower = max(homePower, 0)
 		site.publish("homePower", homePower)
 
 		greenShareHome := site.greenShare(0, homePower)

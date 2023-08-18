@@ -3,10 +3,9 @@ package fixed
 import (
 	"errors"
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
-
-	"golang.org/x/exp/slices"
 )
 
 //go:generate enumer -type Day

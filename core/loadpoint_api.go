@@ -3,7 +3,6 @@ package core
 import (
 	"errors"
 	"fmt"
-	"math"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -94,6 +93,7 @@ func (lp *Loadpoint) SetTargetEnergy(energy float64) {
 	if lp.targetEnergy != energy {
 		lp.setTargetEnergy(energy)
 		lp.requestUpdate()
+		lp.persistVehicleSettings()
 	}
 }
 
@@ -141,6 +141,7 @@ func (lp *Loadpoint) SetTargetSoc(soc int) {
 	if lp.Soc.target != soc {
 		lp.setTargetSoc(soc)
 		lp.requestUpdate()
+		lp.persistVehicleSettings()
 	}
 }
 
@@ -168,6 +169,7 @@ func (lp *Loadpoint) SetMinSoc(soc int) {
 	if lp.Soc.min != soc {
 		lp.setMinSoc(soc)
 		lp.requestUpdate()
+		lp.persistVehicleSettings()
 	}
 }
 
@@ -219,6 +221,7 @@ func (lp *Loadpoint) SetTargetTime(finishAt time.Time) error {
 	lp.Lock()
 	defer lp.Unlock()
 	lp.setTargetTime(finishAt)
+	lp.persistVehicleSettings()
 
 	return nil
 }
@@ -312,7 +315,7 @@ func (lp *Loadpoint) GetChargePowerFlexibility() float64 {
 	}
 
 	// MinPV mode
-	return math.Max(0, lp.GetChargePower()-lp.GetMinPower())
+	return max(0, lp.GetChargePower()-lp.GetMinPower())
 }
 
 // GetMinCurrent returns the min loadpoint current

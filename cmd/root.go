@@ -18,6 +18,7 @@ import (
 	"github.com/evcc-io/evcc/server/modbus"
 	"github.com/evcc-io/evcc/server/updater"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/pipe"
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/evcc-io/evcc/util/telemetry"
@@ -187,7 +188,6 @@ func runRoot(cmd *cobra.Command, args []string) {
 	// setup site and loadpoints
 	var site *core.Site
 	if err == nil {
-		cp.TrackVisitors() // track duplicate usage
 		site, err = configureSiteAndLoadpoints(conf)
 	}
 
@@ -276,7 +276,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 		}
 
 		// allow web access for vehicles
-		cp.webControl(conf.Network, httpd.Router(), valueChan)
+		configureAuth(conf.Network, config.Instances(config.Vehicles().Devices()), httpd.Router(), valueChan)
 
 		go func() {
 			site.Run(stopC, conf.Interval)

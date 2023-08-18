@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -18,7 +19,6 @@ import (
 	"github.com/evcc-io/evcc/util/templates"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 	"golang.org/x/exp/maps"
-	"golang.org/x/exp/slices"
 	"golang.org/x/text/language"
 )
 
@@ -201,7 +201,7 @@ func (c *CmdConfigure) flowNewConfigFile() {
 	filename := DefaultConfigFilename
 
 	for {
-		file, err := os.OpenFile(filename, os.O_WRONLY, 0666)
+		file, err := os.OpenFile(filename, os.O_WRONLY, 0o666)
 		if errors.Is(err, os.ErrNotExist) {
 			break
 		}

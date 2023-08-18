@@ -17,7 +17,7 @@ params:
     example: 765765348
     advanced: true
     help:
-      de: Die Kennung eines RFID Tags um den Lademodus zu starten, selbst wenn die Wallbox gesperrt ist.
+      de: Die Kennung eines RFID-Tags um den Lademodus zu starten, selbst wenn die Wallbox gesperrt ist.
       en: A RFID tag ID to enable charging even when the wallbox is locked.
   - name: serial
     advanced: true

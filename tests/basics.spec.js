@@ -20,7 +20,7 @@ test.describe("main screen", async () => {
   test("visualization", async ({ page }) => {
     const locator = page.getByTestId("visualization");
     await expect(locator).toBeVisible();
-    await expect(locator).toContainText("1,000 W");
+    await expect(locator).toContainText("1.0 kW");
   });
 
   test("one loadpoint", async ({ page }) => {

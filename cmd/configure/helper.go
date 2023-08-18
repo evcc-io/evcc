@@ -2,6 +2,7 @@ package configure
 
 import (
 	"fmt"
+	"slices"
 	"sort"
 	"strings"
 
@@ -10,7 +11,6 @@ import (
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/evcc-io/evcc/util/templates"
 	stripmd "github.com/writeas/go-strip-markdown/v2"
-	"golang.org/x/exp/slices"
 	"gopkg.in/yaml.v3"
 )
 
@@ -470,7 +470,7 @@ func (c *CmdConfigure) processInputConfig(param templates.Param) string {
 		help:         help,
 		valueType:    param.Type,
 		validValues:  param.ValidValues,
-		mask:         param.IsMask(),
+		mask:         param.IsMasked(),
 		required:     param.IsRequired(),
 	})
 

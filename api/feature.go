@@ -16,4 +16,5 @@ const (
 	Offline
 	CoarseCurrent
 	IntegratedDevice
+	Heating
 )

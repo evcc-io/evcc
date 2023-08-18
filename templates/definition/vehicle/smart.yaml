@@ -6,8 +6,6 @@ products:
 params:
   - preset: vehicle-base
   - preset: vehicle-identify
-  - name: capacity
-    default: 17.6
 render: |
   type: smart
   {{ include "vehicle-base" . }}

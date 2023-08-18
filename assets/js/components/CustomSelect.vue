@@ -2,10 +2,10 @@
 	<label class="position-relative d-block">
 		<select :value="selected" class="custom-select" @change="change">
 			<option
-				v-for="{ name, value, count } in options"
+				v-for="{ name, value, count, disabled } in options"
 				:key="value"
 				:value="value"
-				:disabled="count === 0"
+				:disabled="count === 0 || disabled"
 			>
 				{{ text(name, count) }}
 			</option>

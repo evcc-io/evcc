@@ -43,7 +43,7 @@ You'll find everything you need in our [documentation](https://docs.evcc.io/) (G
 
 ## Contribute
 
-To build evcc from source, [Go][1] 1.20 and [Node][2] 18 are required.
+To build evcc from source, [Go][1] 1.21 and [Node][2] 18 are required.
 
 Build and run go backend. The UI becomes available at http://127.0.0.1:7070/
 
@@ -71,6 +71,21 @@ We use Playwright for end-to-end integration tests. They start a local evcc inst
 ```sh
 make ui build
 npm run playwright
+```
+
+#### Simulating device state
+
+Since we dont want to run tests agains real devices or cloud services we've build a simple simulator that lets you emulated meters, vehicles and loadpoints. The simulators web interface runs on http://localhost:7072.
+
+```
+npm run simulator
+```
+
+Run an evcc instance that uses simulator data. This configuration runs with a very high refresh interval to seed up testing.
+
+```
+make ui build
+./evcc --config tests/simulator.evcc.yaml
 ```
 
 ### Code formatting

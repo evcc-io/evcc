@@ -1,7 +1,7 @@
 package fixed
 
 import (
-	"golang.org/x/exp/slices"
+	"slices"
 )
 
 type Zone struct {

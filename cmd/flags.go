@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/evcc-io/evcc/util/config"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -10,9 +11,6 @@ import (
 const (
 	flagHeaders            = "log-headers"
 	flagHeadersDescription = "Log headers"
-
-	flagName            = "name"
-	flagNameDescription = "Select %s by name"
 
 	flagCurrent            = "current"
 	flagCurrentDescription = "Set maximum current"
@@ -57,17 +55,16 @@ func bindP(cmd *cobra.Command, key string, flagName ...string) {
 	}
 }
 
-func selectByName(cmd *cobra.Command, conf *[]qualifiedConfig) error {
-	flag := cmd.Flags().Lookup(flagName)
-	if !flag.Changed {
+func selectByName(args []string, conf *[]config.Named) error {
+	if len(args) != 1 {
 		return nil
 	}
 
-	name := flag.Value.String()
+	name := args[0]
 
-	for _, cfg := range *conf {
-		if cfg.Name == name {
-			*conf = []qualifiedConfig{cfg}
+	for _, c := range *conf {
+		if c.Name == name {
+			*conf = []config.Named{c}
 			return nil
 		}
 	}

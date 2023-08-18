@@ -2,10 +2,10 @@ package easee
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/philippseith/signalr"
-	"golang.org/x/exp/slices"
 )
 
 // Logger is a simple logger interface

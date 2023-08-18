@@ -1,13 +1,13 @@
 package planner
 
 import (
+	"slices"
 	"testing"
 	"time"
 
 	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
 	"github.com/stretchr/testify/assert"
-	"golang.org/x/exp/slices"
 )
 
 func testRates(clock clock.Clock) api.Rates {
@@ -25,8 +25,8 @@ func testRates(clock clock.Clock) api.Rates {
 			Start: clock.Now().Add(time.Hour),
 		},
 	}
-
 }
+
 func TestRatesSortByTime(t *testing.T) {
 	clock := clock.NewMock()
 

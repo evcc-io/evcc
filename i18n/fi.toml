@@ -166,7 +166,7 @@ label = "Maksimivirta"
 label = "Minimivirta"
 
 [main.loadpointSettings.minSoc]
-description = "Hätätapauksia varten. Ajoneuvo ladataan nopeasti kaikella saatavilla olevalla aurinkoenergialla {0}% tämän jälkeen vain auringosta saatavalla muun kulutuksen jälkeen jäävällä ylijäämäenergialla."
+description = "Ajoneuvo ladataan nopeasti {0}% asti huolimatta aurinkoenergian ylijäämästä, tämän jälkeen vain ylijäämäenergialla. Tämä on hyödyllinen takaamaan minimi toimintamatka myös pimeinä päivinä."
 label = "Min. lataustaso %"
 
 [main.loadpointSettings.phasesConfigured]
@@ -196,12 +196,14 @@ descriptionEnergy = "Mihin mennessä {targetEnergy} tulisi ladata autoon?"
 descriptionSoc = "Milloin ajoneuvon tulee olla ladattu {targetSoc}%?"
 inactiveLabel = "Tavoiteaika"
 modalTitle = "Aseta tavoiteaika"
+onlyInPvMode = "Lataussuunnitelma toimii ainoastaan aurinkoenergiatilassa."
 planDuration = "Latausaika"
 planPeriodLabel = "Jakso"
 planPeriodValue = "{start} - {end}"
 planUnknown = "ei vielä tiedossa"
 priceLimit = "{price} hintaraja"
 setTargetTime = "ei mitään"
+targetEnergyRequired = "Sinun on myös asetettava energia määrälle raja"
 targetIsInThePast = "Valitse aika tulevaisuudessa"
 targetIsTooFarInTheFuture = "Muokkaamme suunnitelmaa heti kun tiedämme enemmän tulevaisuudesta."
 title = "Tavoiteaika"
@@ -283,14 +285,18 @@ title = "Latausistunto"
 [sessions]
 avgPrice = "⌀ Hinta"
 co2 = "⌀ CO₂"
-date = "Valmis"
+csvMonth = "Lataa {month} CSV"
+csvTotal = "Lataa kaikki CSV"
+date = "Aloita"
 downloadCsv = "Lataa CSV muodossa"
 energy = "Ladattu"
 loadpoint = "Latauspiste"
+noData = "Ei lataustapahtumia tässä kuussa."
 price = "Σ Hinta"
 reallyDelete = "Haluatko varmasti poistaa tämän istunnon?"
 solar = "Aurinkoenergia"
 title = "Lataustapahtumat"
+total = "Kokonais"
 vehicle = "Ajoneuvo"
 
 [sessions.csv]
@@ -303,6 +309,11 @@ meterstart = "Mittarin alku (kWh)"
 meterstop = "Mittarin loppu (kWh)"
 odometer = "Ajokilometrit (km)"
 vehicle = "Ajoneuvo"
+
+[sessions.filter]
+allLoadpoints = "kaikki latauspisteet"
+allVehicles = "kaikki ajoneuvot"
+filter = "Suodatin"
 
 [settings]
 title = "Asetukset"

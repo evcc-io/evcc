@@ -1,4 +1,4 @@
-package db
+package session
 
 import (
 	"context"
@@ -20,20 +20,21 @@ import (
 
 // Session is a single charging session
 type Session struct {
-	ID              uint      `json:"id" csv:"-" gorm:"primarykey"`
-	Created         time.Time `json:"created"`
-	Finished        time.Time `json:"finished"`
-	Loadpoint       string    `json:"loadpoint"`
-	Identifier      string    `json:"identifier"`
-	Vehicle         string    `json:"vehicle"`
-	Odometer        *float64  `json:"odometer" format:"int"`
-	MeterStart      *float64  `json:"meterStart" csv:"Meter Start (kWh)" gorm:"column:meter_start_kwh"`
-	MeterStop       *float64  `json:"meterStop" csv:"Meter Stop (kWh)" gorm:"column:meter_end_kwh"`
-	ChargedEnergy   float64   `json:"chargedEnergy" csv:"Charged Energy (kWh)" gorm:"column:charged_kwh"`
-	SolarPercentage *float64  `json:"solarPercentage" csv:"Solar (%)" gorm:"column:solar_percentage"`
-	Price           *float64  `json:"price" csv:"Price" gorm:"column:price"`
-	PricePerKWh     *float64  `json:"pricePerKWh" csv:"Price/kWh" gorm:"column:price_per_kwh"`
-	Co2PerKWh       *float64  `json:"co2PerKWh" csv:"CO2/kWh (gCO2eq)" gorm:"column:co2_per_kwh"`
+	ID              uint           `json:"id" csv:"-" gorm:"primarykey"`
+	Created         time.Time      `json:"created"`
+	Finished        time.Time      `json:"finished"`
+	Loadpoint       string         `json:"loadpoint"`
+	Identifier      string         `json:"identifier"`
+	Vehicle         string         `json:"vehicle"`
+	Odometer        *float64       `json:"odometer" format:"int"`
+	MeterStart      *float64       `json:"meterStart" csv:"Meter Start (kWh)" gorm:"column:meter_start_kwh"`
+	MeterStop       *float64       `json:"meterStop" csv:"Meter Stop (kWh)" gorm:"column:meter_end_kwh"`
+	ChargedEnergy   float64        `json:"chargedEnergy" csv:"Charged Energy (kWh)" gorm:"column:charged_kwh"`
+	ChargeDuration  *time.Duration `json:"chargeDuration" csv:"Charge Duration" gorm:"column:charge_duration"`
+	SolarPercentage *float64       `json:"solarPercentage" csv:"Solar (%)" gorm:"column:solar_percentage"`
+	Price           *float64       `json:"price" csv:"Price" gorm:"column:price"`
+	PricePerKWh     *float64       `json:"pricePerKWh" csv:"Price/kWh" gorm:"column:price_per_kwh"`
+	Co2PerKWh       *float64       `json:"co2PerKWh" csv:"CO2/kWh (gCO2eq)" gorm:"column:co2_per_kwh"`
 }
 
 // Sessions is a list of sessions
@@ -57,7 +58,6 @@ func (t *Sessions) writeHeader(ctx context.Context, ww *csv.Writer) error {
 		caption, err := localizer.Localize(&locale.Config{
 			MessageID: "sessions.csv." + strings.ToLower(f.Name()),
 		})
-
 		if err != nil {
 			if csv != "" {
 				caption = csv
@@ -72,6 +72,26 @@ func (t *Sessions) writeHeader(ctx context.Context, ww *csv.Writer) error {
 	return ww.Write(row)
 }
 
+func formatValue(mp *message.Printer, value any, digits int) string {
+	if rv := reflect.ValueOf(value); rv.Kind() == reflect.Pointer && rv.IsNil() {
+		return ""
+	}
+
+	switch v := value.(type) {
+	case float64:
+		return mp.Sprint(number.Decimal(v, number.NoSeparator(), number.MaxFractionDigits(digits)))
+	case *float64:
+		return mp.Sprint(number.Decimal(*v, number.NoSeparator(), number.MaxFractionDigits(digits)))
+	case time.Time:
+		if v.IsZero() {
+			return ""
+		}
+		return v.Local().Format("2006-01-02 15:04:05")
+	default:
+		return fmt.Sprintf("%v", value)
+	}
+}
+
 func (t *Sessions) writeRow(ww *csv.Writer, mp *message.Printer, r Session) error {
 	var row []string
 	for _, f := range structs.Fields(r) {
@@ -79,29 +99,12 @@ func (t *Sessions) writeRow(ww *csv.Writer, mp *message.Printer, r Session) erro
 			continue
 		}
 
-		var val string
 		digits := 3
 		if format := f.Tag("format"); format == "int" {
 			digits = 0
 		}
 
-		switch v := f.Value().(type) {
-		case float64:
-			val = mp.Sprint(number.Decimal(v, number.NoSeparator(), number.MaxFractionDigits(digits)))
-		case time.Time:
-			if !v.IsZero() {
-				val = v.Local().Format("2006-01-02 15:04:05")
-			}
-		default:
-			if rv := reflect.ValueOf(v); rv.Kind() == reflect.Ptr {
-				if pv := reflect.Indirect(rv); pv.CanFloat() && !rv.IsNil() {
-					val = mp.Sprint(number.Decimal(pv.Float(), number.NoSeparator(), number.MaxFractionDigits(digits)))
-				}
-				break
-			}
-
-			val = fmt.Sprintf("%v", f.Value())
-		}
+		val := formatValue(mp, f.Value(), digits)
 
 		row = append(row, val)
 	}

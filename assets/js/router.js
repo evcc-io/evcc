@@ -2,6 +2,7 @@ import { createRouter, createWebHashHistory } from "vue-router";
 
 import Main from "./views/Main.vue";
 import ChargingSessions from "./views/ChargingSessions.vue";
+import Config from "./views/Config.vue";
 import { ensureCurrentLocaleMessages } from "./i18n";
 
 export default function setupRouter(i18n) {
@@ -9,6 +10,7 @@ export default function setupRouter(i18n) {
     history: createWebHashHistory(),
     routes: [
       { path: "/", component: Main, props: true },
+      { path: "/config", component: Config, props: true },
       {
         path: "/sessions",
         component: ChargingSessions,
