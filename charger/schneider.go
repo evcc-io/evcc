@@ -133,9 +133,7 @@ func (wb *Schneider) Status() (api.ChargeStatus, error) {
 	case 0, 1, 2, 6:
 		return api.StatusA, nil
 	case 3, 4, 5, 7:
-	case 3, 4, 5, 7:
 		return api.StatusB, nil
-	case 8, 9:
 	case 8, 9:
 		return api.StatusC, nil
 	default:
@@ -145,7 +143,7 @@ func (wb *Schneider) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *Schneider) Enabled() (bool, error) {
-	b, err := wb.conn.ReadHoldingRegisters(schneiderRegSetCommand, 1)
+	b, err := wb.conn.ReadHoldingRegisters(schneiderRegSetPoint, 1)
 	if err != nil {
 		return false, err
 	}
@@ -221,7 +219,6 @@ func (wb *Schneider) Currents() (float64, float64, float64, error) {
 	var res []float64
 	for i := 0; i < 3; i++ {
 		res = append(res, float64(encoding.Float32LswFirst(b[4*i:])))
-		res = append(res, float64(encoding.Float32LswFirst(b[4*i:])))
 	}
 
 	return res[0], res[1], res[2], nil
@@ -238,7 +235,6 @@ func (wb *Schneider) Voltages() (float64, float64, float64, error) {
 
 	var res []float64
 	for i := 0; i < 3; i++ {
-		res = append(res, float64(encoding.Float32LswFirst(b[4*i:])))
 		res = append(res, float64(encoding.Float32LswFirst(b[4*i:])))
 	}
 
