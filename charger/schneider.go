@@ -220,7 +220,6 @@ func (wb *Schneider) Voltages() (float64, float64, float64, error) {
 
 	var res []float64
 	for i := 0; i < 3; i++ {
-		fmt.Println(binary.BigEndian.Uint32(b[4*i:]))
 		res = append(res, float64(encoding.Float32LswFirst(b[4*i:])))
 	}
 
