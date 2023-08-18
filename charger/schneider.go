@@ -261,7 +261,7 @@ func (wb *Schneider) Diagnose() {
 	if b, err := wb.conn.ReadHoldingRegisters(schneiderRegSetCommand, 1); err == nil {
 		fmt.Printf("Set command:\t%d\n", binary.BigEndian.Uint16(b))
 	}
-	if b, err := wb.conn.ReadHoldingRegisters(schneiderRegCommandStatus, 1); err == nil {
+	if b, err := wb.conn.ReadHoldingRegisters(schneiderRegCommandStatus, 2); err == nil {
 		fmt.Printf("Command status:\t%d\n", binary.BigEndian.Uint32(b))
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(schneiderRegSetPoint, 1); err == nil {
