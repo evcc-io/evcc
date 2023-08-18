@@ -158,7 +158,7 @@ func (wb *Schneider) CurrentPower() (float64, error) {
 		return 0, err
 	}
 
-	return float64(encoding.Float32LswFirst(b)), nil
+	return float64(encoding.Float32LswFirst(b)) * 1000, nil
 }
 
 var _ api.MeterEnergy = (*Schneider)(nil)
