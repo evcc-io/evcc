@@ -213,6 +213,8 @@ title = "Mål-tid"
 today = "i dag"
 tomorrow = "i morgen"
 update = "Oppdater"
+onlyInPvMode = "Ladeplan fungerer kun i solcellemodus."
+targetEnergyRequired = "Du må også sette en energigrense."
 
 [main.targetChargePlan]
 chargeDuration = "Ladetid"
@@ -235,6 +237,8 @@ none = "Ingen kjøretøy"
 targetSoc = "Grense"
 unknown = "Gjestekjøretøy"
 vehicleSoc = "Lade"
+temp = "Temp."
+tempLimit = "Temp.-grense"
 
 [main.vehicleSoc]
 charging = "lader"
@@ -301,6 +305,8 @@ solar = "Solenergi"
 title = "Ladeøkter"
 total = "Totalt"
 vehicle = "Kjøretøy"
+avgPower = "⌀-effekt"
+chargeDuration = "Varighet"
 
 [sessions.csv]
 chargedenergy = "Energi (kWh)"
@@ -364,3 +370,35 @@ title = "Oppstartsfeil"
 cancel = "Avbryt"
 template = "Fabrikant"
 test = "Test"
+
+
+[config.vehicle]
+validateSave = "Bekreft og lagre"
+delete = "Slett kjøretøy"
+cancel = "Avbryt"
+generic = "Andre integreringer"
+offline = "Generisk kjøretøy"
+online = "Kjøretøy med nettbasert API"
+save = "Lagre"
+scooter = "Scooter"
+template = "Fabrikat"
+titleEdit = "Rediger kjøretøy"
+titleAdd = "Legg til kjøretøy"
+
+[config.form]
+example = "Eksempel"
+optional = "valgfritt"
+
+[config.validation]
+failed = "mislykket"
+label = "Status"
+unknown = "ukjent"
+running = "bekrefter …"
+success = "vellykket"
+validate = "bekreft"
+
+[config.main]
+addVehicle = "Legg til kjøretøy"
+edit = "rediger"
+title = "Oppsett"
+vehicles = "Mine kjøretøy"
