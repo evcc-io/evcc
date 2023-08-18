@@ -68,12 +68,12 @@ func NewSchneiderFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	return NewSchneider(cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.ID, cc.Timeout)
+	return NewSchneider(cc.URI, cc.ID, cc.Timeout)
 }
 
 // NewSchneider creates Schneider charger
-func NewSchneider(uri, device, comset string, baudrate int, slaveID uint8, timeout time.Duration) (api.Charger, error) {
-	conn, err := modbus.NewConnection(uri, device, comset, baudrate, modbus.Tcp, slaveID)
+func NewSchneider(uri string, id uint8, timeout time.Duration) (api.Charger, error) {
+	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, id)
 	if err != nil {
 		return nil, err
 	}
