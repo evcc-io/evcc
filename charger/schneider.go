@@ -169,6 +169,18 @@ func (wb *Schneider) MaxCurrent(current int64) error {
 	return err
 }
 
+var _ api.CurrentGetter = (*Schneider)(nil)
+
+// GetMaxCurrent implements the api.CurrentGetter interface
+func (wb *Schneider) GetMaxCurrent() (float64, error) {
+	b, err := wb.conn.ReadHoldingRegisters(schneiderRegSetPoint, 1)
+	if err != nil {
+		return 0, err
+	}
+
+	return float64(binary.BigEndian.Uint16(b)), nil
+}
+
 // CurrentPower implements the api.Meter interface
 func (wb *Schneider) CurrentPower() (float64, error) {
 	b, err := wb.conn.ReadHoldingRegisters(schneiderRegPower, 2)
