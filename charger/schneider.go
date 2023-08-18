@@ -247,27 +247,27 @@ var _ api.Diagnosis = (*Schneider)(nil)
 // Diagnose implements the api.Diagnosis interface
 func (wb *Schneider) Diagnose() {
 	if b, err := wb.conn.ReadHoldingRegisters(schneiderRegEvState, 1); err == nil {
-		fmt.Printf("evState:\t%d\n", binary.BigEndian.Uint16(b))
+		fmt.Printf("\tevState:\t\t%d\n", binary.BigEndian.Uint16(b))
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(schneiderRegOcppStatus, 1); err == nil {
-		fmt.Printf("OCPP Status:\t%d\n", binary.BigEndian.Uint16(b))
+		fmt.Printf("\tOCPP Status:\t\t%d\n", binary.BigEndian.Uint16(b))
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(schneiderRegEvPresence, 1); err == nil {
-		fmt.Printf("evPresence:\t%d\n", binary.BigEndian.Uint16(b))
+		fmt.Printf("\tevPresence:\t\t%d\n", binary.BigEndian.Uint16(b))
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(schneiderRegLifebit, 1); err == nil {
-		fmt.Printf("Lifebit:\t%d\n", binary.BigEndian.Uint16(b))
+		fmt.Printf("\tLifebit:\t\t%d\n", binary.BigEndian.Uint16(b))
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(schneiderRegSetCommand, 1); err == nil {
-		fmt.Printf("Set command:\t%d\n", binary.BigEndian.Uint16(b))
+		fmt.Printf("\tSet command:\t\t%d\n", binary.BigEndian.Uint16(b))
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(schneiderRegCommandStatus, 2); err == nil {
-		fmt.Printf("Command status:\t%d\n", binary.BigEndian.Uint32(b))
+		fmt.Printf("\tCommand status:\t\t%d\n", binary.BigEndian.Uint32(b))
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(schneiderRegSetPoint, 1); err == nil {
-		fmt.Printf("Set Point:\t%d\n", binary.BigEndian.Uint16(b))
+		fmt.Printf("\tSet Point:\t\t%d\n", binary.BigEndian.Uint16(b))
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(schneiderRegLastStopCause, 1); err == nil {
-		fmt.Printf("Last stop cause:\t%d\n", binary.BigEndian.Uint16(b))
+		fmt.Printf("\tLast stop cause:\t%d\n", binary.BigEndian.Uint16(b))
 	}
 }
