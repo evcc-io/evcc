@@ -31,6 +31,7 @@ import (
 
 // Schneider charger implementation
 type Schneider struct {
+	log  *util.Logger
 	conn *modbus.Connection
 	curr uint16
 }
@@ -41,6 +42,7 @@ const (
 	schneiderRegVoltages      = 3027
 	schneiderRegPower         = 3059
 	schneiderRegEnergy        = 3203
+	schneiderRegLifebit       = 4000
 	schneiderRegSetCommand    = 4001
 	schneiderRegSetPoint      = 4004
 	schneiderRegChargingTime  = 4007
@@ -90,11 +92,29 @@ func NewSchneider(uri string, id uint8, timeout time.Duration) (api.Charger, err
 	conn.Logger(log.TRACE)
 
 	wb := &Schneider{
+		log:  log,
 		conn: conn,
 		curr: 6,
 	}
 
+	// heartbeat
+	b, err := wb.conn.ReadHoldingRegisters(schneiderRegLifebit, 1)
+	if err != nil {
+		return nil, fmt.Errorf("heartbeat timeout: %w", err)
+	}
+	if u := binary.BigEndian.Uint16(b); u != 2 {
+		go wb.heartbeat(time.Duration(2) * time.Second)
+	}
+
 	return wb, nil
+}
+
+func (wb *Schneider) heartbeat(timeout time.Duration) {
+	for range time.Tick(timeout) {
+		if _, err := wb.conn.WriteSingleRegister(schneiderRegLifebit, 1); err != nil {
+			wb.log.ERROR.Println("heartbeat:", err)
+		}
+	}
 }
 
 // Status implements the api.Charger interface
