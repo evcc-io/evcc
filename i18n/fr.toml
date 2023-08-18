@@ -218,6 +218,7 @@ title = "Temps visé"
 today = "aujourd'hui"
 tomorrow = "demain"
 update = "Mettre à jour"
+onlyInPvMode = "La planification de charge ne fonctionne qu'en mode solaire."
 
 [main.targetChargePlan]
 chargeDuration = "Durée de charge"
@@ -306,6 +307,7 @@ solar = "Solaire"
 title = "Sessions de charge"
 total = "Total"
 vehicle = "Véhicule"
+avgPower = "Puissance ⌀"
 
 [sessions.csv]
 chargedenergy = "Énergie (kWh)"
