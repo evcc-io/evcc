@@ -111,9 +111,9 @@ func (wb *Schneider) Status() (api.ChargeStatus, error) {
 	switch s {
 	case 2, 6:
 		return api.StatusA, nil
-	case 3, 4, 7:
+	case 3, 4, 5, 7:
 		return api.StatusB, nil
-	case 8:
+	case 8, 9:
 		return api.StatusC, nil
 	default:
 		return api.StatusNone, fmt.Errorf("invalid status: %d", s)
