@@ -20,13 +20,13 @@ package charger
 import (
 	"encoding/binary"
 	"fmt"
-	"math"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/sponsor"
+	"github.com/volkszaehler/mbmd/encoding"
 )
 
 // Schneider charger implementation
@@ -158,7 +158,7 @@ func (wb *Schneider) CurrentPower() (float64, error) {
 		return 0, err
 	}
 
-	return float64(math.Float32frombits(binary.BigEndian.Uint32(b))), nil
+	return float64(encoding.Float32LswFirst(b)), nil
 }
 
 var _ api.MeterEnergy = (*Schneider)(nil)
@@ -170,7 +170,19 @@ func (wb *Schneider) TotalEnergy() (float64, error) {
 		return 0, err
 	}
 
-	return float64(math.Float32frombits(binary.BigEndian.Uint32(b))), nil
+	return float64(encoding.Float32LswFirst(b)), nil
+}
+
+var _ api.ChargeRater = (*Schneider)(nil)
+
+// ChargedEnergy implements the api.MeterEnergy interface
+func (wb *Schneider) ChargedEnergy() (float64, error) {
+	b, err := wb.conn.ReadHoldingRegisters(schneiderRegSessionEnergy, 2)
+	if err != nil {
+		return 0, err
+	}
+
+	return float64(encoding.Float32LswFirst(b)), nil
 }
 
 var _ api.PhaseCurrents = (*Schneider)(nil)
@@ -184,7 +196,7 @@ func (wb *Schneider) Currents() (float64, float64, float64, error) {
 
 	var res []float64
 	for i := 0; i < 3; i++ {
-		res = append(res, float64(math.Float32frombits(binary.BigEndian.Uint32(b[4*i:]))))
+		res = append(res, float64(encoding.Float32LswFirst(b[4*i:])))
 	}
 
 	return res[0], res[1], res[2], nil
@@ -201,8 +213,7 @@ func (wb *Schneider) Voltages() (float64, float64, float64, error) {
 
 	var res []float64
 	for i := 0; i < 3; i++ {
-		fmt.Println(binary.BigEndian.Uint32(b[4*i:]))
-		res = append(res, float64(math.Float32frombits(binary.BigEndian.Uint32(b[4*i:]))))
+		res = append(res, float64(encoding.Float32LswFirst(b[4*i:])))
 	}
 
 	return res[0], res[1], res[2], nil
