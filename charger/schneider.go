@@ -125,12 +125,12 @@ func (wb *Schneider) Enabled() (bool, error) {
 		return false, err
 	}
 
-	return binary.BigEndian.Uint16(b) > 0, nil
+	return binary.BigEndian.Uint16(b) != 99, nil
 }
 
 // Enable implements the api.Charger interface
 func (wb *Schneider) Enable(enable bool) error {
-	var u uint16
+	var u uint16 = 99
 	if enable {
 		u = wb.curr
 	}
