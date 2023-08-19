@@ -36,20 +36,21 @@ type Schneider struct {
 }
 
 const (
-	schneiderRegEvState       = 1
-	schneiderRegOcppStatus    = 150
-	schneiderRegEvPresence    = 1150
-	schneiderRegCurrents      = 2999
-	schneiderRegVoltages      = 3027
-	schneiderRegPower         = 3059
-	schneiderRegEnergy        = 3203
-	schneiderRegLifebit       = 4000
-	schneiderRegSetCommand    = 4001
-	schneiderRegCommandStatus = 4002
-	schneiderRegSetPoint      = 4004
-	schneiderRegChargingTime  = 4007
-	schneiderRegLastStopCause = 4011
-	schneiderRegSessionEnergy = 4012
+	schneiderRegEvState             = 1
+	schneiderRegOcppStatus          = 150
+	schneiderRegEvPresence          = 1150
+	schneiderRegCurrents            = 2999
+	schneiderRegVoltages            = 3027
+	schneiderRegPower               = 3059
+	schneiderRegEnergy              = 3203
+	schneiderRegLifebit             = 4000
+	schneiderRegSetCommand          = 4001
+	schneiderRegCommandStatus       = 4002
+	schneiderRegSetPoint            = 4004
+	schneiderRegChargingTime        = 4007
+	schneiderRegSessionChargingTime = 4009
+	schneiderRegLastStopCause       = 4011
+	schneiderRegSessionEnergy       = 4012
 
 	schneiderDisabled = uint16(99)
 )
@@ -201,7 +202,7 @@ func (wb *Schneider) TotalEnergy() (float64, error) {
 
 var _ api.ChargeRater = (*Schneider)(nil)
 
-// ChargedEnergy implements the api.MeterEnergy interface
+// ChargedEnergy implements the api.ChargeRater interface
 func (wb *Schneider) ChargedEnergy() (float64, error) {
 	b, err := wb.conn.ReadHoldingRegisters(schneiderRegSessionEnergy, 2)
 	if err != nil {
@@ -243,6 +244,18 @@ func (wb *Schneider) Voltages() (float64, float64, float64, error) {
 	}
 
 	return res[0], res[1], res[2], nil
+}
+
+var _ api.ChargeTimer = (*Schneider)(nil)
+
+// ChargingTime implements the api.ChargeTimer interface
+func (wb *Schneider) ChargingTime() (time.Duration, error) {
+	b, err := wb.conn.ReadHoldingRegisters(schneiderRegSessionChargingTime, 2)
+	if err != nil {
+		return 0, err
+	}
+
+	return time.Duration(encoding.Uint16(b)) * time.Second, nil
 }
 
 var _ api.Diagnosis = (*Schneider)(nil)
