@@ -105,8 +105,7 @@ func NewKebaFromConfig(other map[string]interface{}) (api.Charger, error) {
 
 	// phases
 	var phases func(int) error
-	b, err = wb.conn.ReadHoldingRegisters(kebaRegPhaseSource, 2)
-	if err == nil {
+	if b, err := wb.conn.ReadHoldingRegisters(kebaRegPhaseSource, 2); err == nil {
 		if source := binary.BigEndian.Uint32(b); source == 3 {
 			phases = wb.phases1p3p
 		}
