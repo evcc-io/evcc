@@ -62,31 +62,22 @@ func init() {
 
 // NewSchneiderFromConfig creates a Schneider charger from generic config
 func NewSchneiderFromConfig(other map[string]interface{}) (api.Charger, error) {
-	cc := struct {
-		modbus.Settings `mapstructure:",squash"`
-		Timeout         time.Duration
-	}{
-		Settings: modbus.Settings{
-			ID: 255,
-		},
+	cc := modbus.TcpSettings{
+		ID: 255,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewSchneider(cc.URI, cc.ID, cc.Timeout)
+	return NewSchneider(cc.URI, cc.ID)
 }
 
 // NewSchneider creates Schneider charger
-func NewSchneider(uri string, id uint8, timeout time.Duration) (api.Charger, error) {
+func NewSchneider(uri string, id uint8) (api.Charger, error) {
 	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, id)
 	if err != nil {
 		return nil, err
-	}
-
-	if timeout > 0 {
-		conn.Timeout(timeout)
 	}
 
 	if !sponsor.IsAuthorized() {
