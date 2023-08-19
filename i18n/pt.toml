@@ -18,6 +18,39 @@ low = "quando um pouco cheio"
 medium = "quando meio cheio"
 never = "apenas com excesso suficiente"
 
+[config]
+
+[config.form]
+example = "Exemplo"
+optional = "opcional"
+
+[config.main]
+addVehicle = "Adicionar veículo"
+edit = "editar"
+title = "Configuração"
+vehicles = "Meus Veículos"
+
+[config.validation]
+failed = "fracassado"
+label = "Status"
+running = "validando..."
+success = "sucedido"
+unknown = "desconhecido"
+validate = "validar"
+
+[config.vehicle]
+cancel = "Cancelar"
+delete = "Excluir veículo"
+generic = "Outras integrações"
+offline = "Veículo genérico"
+online = "Veículos com API online"
+save = "guardar"
+scooter = "Lambreta"
+template = "Fabricante"
+titleAdd = "Adicionar Veículo"
+titleEdit = "Editar veículo"
+validateSave = "Validar e guardar"
+
 [footer]
 
 [footer.community]
@@ -383,35 +416,3 @@ title = "Erro ao iniciar"
 cancel = "Cancelar"
 template = "Fabricante"
 test = "Teste"
-
-
-[config.vehicle]
-titleAdd = "Adicionar Veículo"
-delete = "Excluir veículo"
-save = "guardar"
-scooter = "Lambreta"
-cancel = "Cancelar"
-generic = "Outras integrações"
-template = "Fabricante"
-offline = "Veículo genérico"
-titleEdit = "Editar veículo"
-validateSave = "Validar e guardar"
-online = "Veículos com API online"
-
-[config.form]
-example = "Exemplo"
-optional = "opcional"
-
-[config.main]
-title = "Configuração"
-vehicles = "Meus Veículos"
-addVehicle = "Adicionar veículo"
-edit = "editar"
-
-[config.validation]
-failed = "fracassado"
-label = "Status"
-running = "validando..."
-success = "sucedido"
-validate = "validar"
-unknown = "desconhecido"
