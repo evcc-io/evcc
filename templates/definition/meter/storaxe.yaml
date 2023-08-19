@@ -22,7 +22,7 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 115 # EnergyExportedAC_high
+      address: 115 # EnergyExportedAC
       type: holding
       decode: uint32
   currents:
