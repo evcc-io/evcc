@@ -18,6 +18,39 @@ low = "når det er noe fullt"
 medium = "når det er halvfullt"
 never = "bare med nok PV-overskudd"
 
+[config]
+
+[config.form]
+example = "Eksempel"
+optional = "valgfritt"
+
+[config.main]
+addVehicle = "Legg til kjøretøy"
+edit = "rediger"
+title = "Oppsett"
+vehicles = "Mine kjøretøy"
+
+[config.validation]
+failed = "mislykket"
+label = "Status"
+running = "bekrefter …"
+success = "vellykket"
+unknown = "ukjent"
+validate = "bekreft"
+
+[config.vehicle]
+cancel = "Avbryt"
+delete = "Slett kjøretøy"
+generic = "Andre integreringer"
+offline = "Generisk kjøretøy"
+online = "Kjøretøy med nettbasert API"
+save = "Lagre"
+scooter = "Scooter"
+template = "Fabrikat"
+titleAdd = "Legg til kjøretøy"
+titleEdit = "Rediger kjøretøy"
+validateSave = "Bekreft og lagre"
+
 [footer]
 
 [footer.community]
@@ -201,12 +234,14 @@ descriptionEnergy = "Når skal {targetEnergy} være på kjøretøyet?"
 descriptionSoc = "Når skal kjøretøyet lades til {targetSoc}%?"
 inactiveLabel = "Stopptidspunkt"
 modalTitle = "Sett mål-tid"
+onlyInPvMode = "Ladeplan fungerer kun i solcellemodus."
 planDuration = "Ladetid"
 planPeriodLabel = "Periode"
 planPeriodValue = "{start} til {end}"
 planUnknown = "ikke kjent enda"
 priceLimit = "prisgrense på {price}"
 setTargetTime = "ingen"
+targetEnergyRequired = "Du må også sette en energigrense."
 targetIsInThePast = "Velg et tidspunkt i fremtiden, Marty."
 targetIsTooFarInTheFuture = "Planen vil bli justert så snart mer info tilkommer."
 title = "Mål-tid"
@@ -233,6 +268,8 @@ fallbackName = "Kjøretøy"
 moreActions = "Flere handlinger"
 none = "Ingen kjøretøy"
 targetSoc = "Grense"
+temp = "Temp."
+tempLimit = "Temp.-grense"
 unknown = "Gjestekjøretøy"
 vehicleSoc = "Lade"
 
@@ -286,7 +323,9 @@ started = "Startet"
 title = "Ladeøkt"
 
 [sessions]
+avgPower = "⌀-effekt"
 avgPrice = "⌀-pris"
+chargeDuration = "Varighet"
 co2 = "⌀-CO₂"
 csvMonth = "Last ned (måned) CSV"
 csvTotal = "Last ned total CSV"

@@ -204,6 +204,7 @@ descriptionEnergy = "Jusqu'à quand le véhicule doit-il être chargé à {targe
 descriptionSoc = "Quand le véhicule doit-il être chargé à {targetSoc}%?"
 inactiveLabel = "Temps visé"
 modalTitle = "Définir l'heure cible"
+onlyInPvMode = "La planification de charge ne fonctionne qu'en mode solaire."
 planDuration = "Durée de charge"
 planPeriodLabel = "Période"
 planPeriodValue = "{start} à {end}"
@@ -291,6 +292,7 @@ started = "Début"
 title = "Session de charge"
 
 [sessions]
+avgPower = "Puissance ⌀"
 avgPrice = "Prix ⌀"
 co2 = "CO₂ ⌀"
 csvMonth = "Télécharger CSV {month}"
