@@ -10,6 +10,6 @@ render:
 
       # Modbus TCP
       modbus: tcpip
-      id: 1
+      id: 2
       host: 192.0.2.2 # Hostname
       port: 502 # Port

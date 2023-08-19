@@ -8,6 +8,7 @@ params:
     choice: ["battery"]
   - name: modbus
     choice: ["tcpip"]
+    id: 2
 render: |
   type: custom
   power:
