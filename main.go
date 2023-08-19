@@ -9,6 +9,7 @@ import (
 	"github.com/evcc-io/evcc/cmd"
 	"github.com/evcc-io/evcc/server/assets"
 	_ "github.com/evcc-io/evcc/util/goversion" // require minimum go version
+	_ "golang.org/x/crypto/x509roots/fallback" // fallback certificates
 )
 
 var (
