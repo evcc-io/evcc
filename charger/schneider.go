@@ -50,6 +50,8 @@ const (
 	schneiderRegChargingTime  = 4007
 	schneiderRegLastStopCause = 4011
 	schneiderRegSessionEnergy = 4012
+
+	schneiderDisabled = uint16(99)
 )
 
 func init() {
@@ -106,7 +108,7 @@ func NewSchneider(uri string, id uint8, timeout time.Duration) (api.Charger, err
 		return nil, fmt.Errorf("heartbeat timeout: %w", err)
 	}
 	if u := encoding.Uint16(b); u != 2 {
-		go wb.heartbeat(time.Duration(2) * time.Second)
+		go wb.heartbeat(2 * time.Second)
 	}
 
 	return wb, nil
@@ -148,12 +150,12 @@ func (wb *Schneider) Enabled() (bool, error) {
 		return false, err
 	}
 
-	return encoding.Uint16(b) != 99, nil
+	return encoding.Uint16(b) != schneiderDisabled, nil
 }
 
 // Enable implements the api.Charger interface
 func (wb *Schneider) Enable(enable bool) error {
-	var u uint16 = 99
+	u := schneiderDisabled
 	if enable {
 		u = wb.curr
 	}
@@ -191,7 +193,7 @@ func (wb *Schneider) CurrentPower() (float64, error) {
 		return 0, err
 	}
 
-	return float64(encoding.Float32LswFirst(b)) * 1000, nil
+	return float64(encoding.Float32LswFirst(b)) * 1e3, nil
 }
 
 var _ api.MeterEnergy = (*Schneider)(nil)
@@ -203,8 +205,19 @@ func (wb *Schneider) TotalEnergy() (float64, error) {
 		return 0, err
 	}
 
-	// return float64(encoding.Uint64LswFirst(b)) / 1000, nil
-	return float64(uint64(b[6])<<56|uint64(b[7])<<48|uint64(b[4])<<40|uint64(b[5])<<32|uint64(b[2])<<24|uint64(b[3])<<16|uint64(b[0])<<8|uint64(b[1])) / 1000, nil
+	return float64(encoding.Uint64LswFirst(b)) / 1e3, nil
+}
+
+var _ api.ChargeRater = (*Schneider)(nil)
+
+// ChargedEnergy implements the api.MeterEnergy interface
+func (wb *Schneider) ChargedEnergy() (float64, error) {
+	b, err := wb.conn.ReadHoldingRegisters(schneiderRegSessionEnergy, 2)
+	if err != nil {
+		return 0, err
+	}
+
+	return float64(encoding.Float32LswFirst(b)), nil
 }
 
 var _ api.PhaseCurrents = (*Schneider)(nil)
