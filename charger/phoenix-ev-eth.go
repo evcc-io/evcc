@@ -24,7 +24,6 @@ package charger
 // * Set DIP switch 10 to ON
 
 import (
-	"encoding/binary"
 	"fmt"
 	"time"
 
@@ -33,7 +32,6 @@ import (
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/volkszaehler/mbmd/encoding"
-	"github.com/volkszaehler/mbmd/meters/rs485"
 )
 
 type PhoenixEVEth struct {
@@ -109,7 +107,7 @@ func NewPhoenixEVEth(uri string) (api.Charger, error) {
 	)
 
 	// check presence of meter by voltage on l1
-	if b, err := wb.conn.ReadInputRegisters(phxRegVoltages, 2); err == nil && binary.BigEndian.Uint32(b) > 0 {
+	if b, err := wb.conn.ReadInputRegisters(phxRegVoltages, 2); err == nil && encoding.Uint32LswFirst(b) > 0 {
 		currentPower = wb.currentPower
 		totalEnergy = wb.totalEnergy
 		currents = wb.currents
@@ -122,7 +120,7 @@ func NewPhoenixEVEth(uri string) (api.Charger, error) {
 	}
 
 	// check presence of extended Wallbe firmware
-	if b, err := wb.conn.ReadHoldingRegisters(phxRegMaxCurrent, 1); err == nil && binary.BigEndian.Uint16(b) >= 60 {
+	if b, err := wb.conn.ReadHoldingRegisters(phxRegMaxCurrent, 1); err == nil && encoding.Uint16(b) >= 60 {
 		wb.isWallbe = true
 		maxCurrentMillis = wb.maxCurrentMillis
 	}
@@ -195,7 +193,7 @@ func (wb *PhoenixEVEth) ChargingTime() (time.Duration, error) {
 		return 0, err
 	}
 
-	secs := rs485.RTUUint32ToFloat64Swapped(b)
+	secs := encoding.Uint32LswFirst(b)
 	return time.Duration(secs) * time.Second, nil
 }
 
@@ -206,7 +204,7 @@ func (wb *PhoenixEVEth) currentPower() (float64, error) {
 		return 0, err
 	}
 
-	return rs485.RTUInt32ToFloat64Swapped(b), nil
+	return float64(encoding.Int32LswFirst(b)), nil
 }
 
 // totalEnergy implements the api.MeterEnergy interface
@@ -217,8 +215,7 @@ func (wb *PhoenixEVEth) totalEnergy() (float64, error) {
 			return 0, err
 		}
 
-		res := rs485.RTUUint32ToFloat64Swapped(b) // RTUUint64ToFloat64Swapped
-		return res / 1e3, nil
+		return float64(encoding.Uint64LswFirst(b)) / 1e3, nil
 	}
 
 	b, err := wb.conn.ReadHoldingRegisters(phxRegEnergyWh, 2)
@@ -226,9 +223,7 @@ func (wb *PhoenixEVEth) totalEnergy() (float64, error) {
 		return 0, err
 	}
 
-	res := rs485.RTUUint32ToFloat64Swapped(b) / 1e3
-
-	return res, nil
+	return float64(encoding.Uint32LswFirst(b)) / 1e3, nil
 }
 
 // currents implements the api.PhaseCurrents interface
@@ -250,7 +245,7 @@ func (wb *PhoenixEVEth) getPhases(reg uint16) (float64, float64, float64, error)
 
 	var res [3]float64
 	for i := 0; i < 3; i++ {
-		res[i] = rs485.RTUInt32ToFloat64Swapped(b[2*i:])
+		res[i] = float64(encoding.Int32LswFirst(b[2*i:]))
 	}
 
 	return res[0], res[1], res[2], nil
