@@ -127,12 +127,20 @@ func (site *Site) GetVehicles() []api.Vehicle {
 
 func hasDemand(lp loadpoint.API) bool {
 	// connected?
-	if status := lp.GetStatus(); status != api.StatusB && status != api.StatusC {
+	status := lp.GetStatus()
+	if status != api.StatusB && status != api.StatusC {
+		return false
+	}
+
+	mode := lp.GetMode()
+
+	// finished?
+	if status != api.StatusC && (mode == api.ModeMinPV || mode == api.ModeNow) {
 		return false
 	}
 
 	// disabled?
-	return lp.GetMode() != api.ModeOff
+	return mode != api.ModeOff
 }
 
 func (site *Site) maxChargePower() float64 {
