@@ -1,9 +1,11 @@
 package tariff
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/util/config"
 	"golang.org/x/text/currency"
 )
 
@@ -14,20 +16,66 @@ const (
 	Planner    = "planner"
 )
 
+type Config struct {
+	Currency   string
+	Grid       config.Typed
+	FeedIn     config.Typed
+	Co2        config.Typed
+	Generation config.Typed
+	Planner    config.Typed
+}
+
 type Tariffs struct {
 	Currency                               currency.Unit
 	Grid, FeedIn, Co2, Generation, Planner api.Tariff
 }
 
-func NewTariffs(currency currency.Unit, grid, feedin, co2, generation, planner api.Tariff) *Tariffs {
+func configure(res *api.Tariff, cc config.Typed) error {
+	if cc.Type != "" {
+		t, err := NewFromConfig(cc.Type, cc.Other)
+		if err != nil {
+			return fmt.Errorf("%s: %w", cc.Type, err)
+		}
+		*res = t
+	}
+	return nil
+}
+
+func New(cc Config) (*Tariffs, error) {
+	var grid, feedin, co2, generation, planner api.Tariff
+
+	currencyCode := currency.EUR
+	if cc.Currency != "" {
+		var err error
+		if currencyCode, err = currency.ParseISO(cc.Currency); err != nil {
+			return nil, fmt.Errorf("currency code: %w", err)
+		}
+	}
+
+	if err := configure(&grid, cc.Grid); err != nil {
+		return nil, err
+	}
+	if err := configure(&feedin, cc.FeedIn); err != nil {
+		return nil, err
+	}
+	if err := configure(&co2, cc.Co2); err != nil {
+		return nil, err
+	}
+	if err := configure(&generation, cc.Generation); err != nil {
+		return nil, err
+	}
+	if err := configure(&planner, cc.Planner); err != nil {
+		return nil, err
+	}
+
 	return &Tariffs{
-		Currency:   currency,
+		Currency:   currencyCode,
 		Grid:       grid,
 		FeedIn:     feedin,
 		Co2:        co2,
 		Generation: generation,
 		Planner:    planner,
-	}
+	}, nil
 }
 
 // Get returns the respective tariff if configured or nil

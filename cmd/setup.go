@@ -48,7 +48,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"golang.org/x/sync/errgroup"
-	"golang.org/x/text/currency"
 )
 
 var conf = globalConfig{
@@ -91,7 +90,7 @@ type globalConfig struct {
 	Meters       []config.Named
 	Chargers     []config.Named
 	Vehicles     []config.Named
-	Tariffs      tariffConfig
+	Tariffs      tariff.Config
 	Site         map[string]interface{}
 	Loadpoints   []map[string]interface{}
 }
@@ -125,15 +124,6 @@ type dbConfig struct {
 type messagingConfig struct {
 	Events   map[string]push.EventTemplateConfig
 	Services []config.Typed
-}
-
-type tariffConfig struct {
-	Currency   string
-	Grid       config.Typed
-	FeedIn     config.Typed
-	Co2        config.Typed
-	Generation config.Typed
-	Planner    config.Typed
 }
 
 type networkConfig struct {
@@ -561,65 +551,6 @@ func configureMessengers(conf messagingConfig, valueChan chan util.Param, cache 
 	return messageChan, nil
 }
 
-func configureTariffs(conf tariffConfig) (*tariff.Tariffs, error) {
-	var (
-		grid, feedin, co2, generation, planner api.Tariff
-		err                                    error
-	)
-
-	currencyCode := currency.EUR
-	if conf.Currency != "" {
-		currencyCode, err = currency.ParseISO(conf.Currency)
-		if err != nil {
-			return nil, fmt.Errorf("currency code: %w", err)
-		}
-	}
-
-	if conf.Grid.Type != "" {
-		grid, err = tariff.NewFromConfig(conf.Grid.Type, conf.Grid.Other)
-		if err != nil {
-			grid = nil
-			log.ERROR.Printf("failed configuring grid tariff: %v", err)
-		}
-	}
-
-	if conf.FeedIn.Type != "" {
-		feedin, err = tariff.NewFromConfig(conf.FeedIn.Type, conf.FeedIn.Other)
-		if err != nil {
-			feedin = nil
-			log.ERROR.Printf("failed configuring feed-in tariff: %v", err)
-		}
-	}
-
-	if conf.Co2.Type != "" {
-		co2, err = tariff.NewFromConfig(conf.Co2.Type, conf.Co2.Other)
-		if err != nil {
-			co2 = nil
-			log.ERROR.Printf("failed configuring co2 tariff: %v", err)
-		}
-	}
-
-	if conf.Generation.Type != "" {
-		generation, err = tariff.NewFromConfig(conf.Generation.Type, conf.Generation.Other)
-		if err != nil {
-			co2 = nil
-			log.ERROR.Printf("failed configuring co2 tariff: %v", err)
-		}
-	}
-
-	if conf.Planner.Type != "" {
-		planner, err = tariff.NewFromConfig(conf.Planner.Type, conf.Planner.Other)
-		if err != nil {
-			planner = nil
-			log.ERROR.Printf("failed configuring planner tariff: %v", err)
-		} else if planner.Type() == api.TariffTypeCo2 {
-			log.WARN.Printf("tariff configuration changed, use co2 instead of planner for co2 tariff")
-		}
-	}
-
-	return tariff.NewTariffs(currencyCode, grid, feedin, co2, generation, planner), nil
-}
-
 func configureDevices(conf globalConfig) error {
 	if err := configureMeters(conf.Meters); err != nil {
 		return err
@@ -640,7 +571,7 @@ func configureSiteAndLoadpoints(conf globalConfig) (*core.Site, error) {
 		return nil, fmt.Errorf("failed configuring loadpoints: %w", err)
 	}
 
-	tariffs, err := configureTariffs(conf.Tariffs)
+	tariffs, err := tariff.New(conf.Tariffs)
 	if err != nil {
 		return nil, err
 	}
