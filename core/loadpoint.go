@@ -667,6 +667,7 @@ func (lp *Loadpoint) syncCharger() error {
 		if lp.guardGracePeriodElapsed() && lp.phaseSwitchCompleted() && (enabled || lp.connected()) {
 			lp.log.WARN.Printf("charger out of sync: expected %vd, got %vd", status[lp.enabled], status[enabled])
 		}
+		lp.elapseGuard()
 		return nil
 	}
 
@@ -674,6 +675,7 @@ func (lp *Loadpoint) syncCharger() error {
 		if lp.guardGracePeriodElapsed() {
 			lp.log.WARN.Println("charger logic error: disabled but charging")
 		}
+		lp.elapseGuard()
 		return nil
 	}
 
