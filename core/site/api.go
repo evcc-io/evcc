@@ -40,7 +40,7 @@ type API interface {
 	//
 
 	// GetTariff returns the respective tariff
-	GetTariff(string) api.Tariff
+	GetTariff(string, bool) api.Tariff
 	GetSmartCostLimit() float64
 	SetSmartCostLimit(float64) error
 }

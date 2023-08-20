@@ -19,7 +19,7 @@ type Solcast struct {
 	*request.Helper
 	mux     sync.Mutex
 	log     *util.Logger
-	siteID  string
+	sites   []string
 	data    api.Rates
 	updated time.Time
 }
@@ -32,27 +32,33 @@ func init() {
 
 func NewSolcastFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	var cc struct {
-		SiteID string
-		Token  string
+		Site  []string
+		Token string
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	if cc.SiteID == "" {
+	if len(cc.Site) == 0 {
 		return nil, errors.New("missing site id")
+	}
+	if len(cc.Site) > 1 {
+		return nil, errors.New("multiple sites not supported (yet)")
 	}
 
 	if cc.Token == "" {
 		return nil, errors.New("missing token")
 	}
 
-	log := util.NewLogger("solcast").Redact(cc.SiteID, cc.Token)
+	log := util.NewLogger("solcast").Redact(cc.Token)
+	for _, id := range cc.Site {
+		log = log.Redact(id)
+	}
 
 	t := &Solcast{
 		log:    log,
-		siteID: cc.SiteID,
+		sites:  cc.Site,
 		Helper: request.NewHelper(log),
 	}
 
@@ -69,13 +75,17 @@ func (t *Solcast) run(done chan error) {
 	var once sync.Once
 	bo := newBackoff()
 
-	uri := fmt.Sprintf("https://api.solcast.com.au/rooftop_sites/%s/forecasts?format=json", t.siteID)
-
 	for ; true; <-time.Tick(time.Hour) {
 		var res solcast.Forecasts
 
 		if err := backoff.Retry(func() error {
-			return t.GetJSON(uri, &res)
+			for _, site := range t.sites {
+				uri := fmt.Sprintf("https://api.solcast.com.au/rooftop_sites/%s/forecasts?format=json", site)
+				if err := t.GetJSON(uri, &res); err != nil {
+					return err
+				}
+			}
+			return nil
 		}, bo); err != nil {
 			once.Do(func() { done <- err })
 

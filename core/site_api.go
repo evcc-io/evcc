@@ -6,6 +6,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/server/db/settings"
+	"github.com/evcc-io/evcc/tariff"
 )
 
 var _ site.API = (*Site)(nil)
@@ -124,8 +125,24 @@ func (site *Site) GetVehicles() []api.Vehicle {
 }
 
 // GetTariff returns the respective tariff if configured or nil
-func (site *Site) GetTariff(tariff string) api.Tariff {
+func (site *Site) GetTariff(name string, adjusted bool) api.Tariff {
 	site.Lock()
 	defer site.Unlock()
-	return site.tariffs.Get(tariff)
+
+	t := site.tariffs.Get(name)
+	if t == nil {
+		return nil
+	}
+
+	if adjusted {
+		gen := site.tariffs.Get(tariff.Generation)
+		if gen == nil {
+			return nil
+		}
+
+		// merge generation power
+		return tariff.NewAdjusted(t, gen, 11e3)
+	}
+
+	return t
 }
