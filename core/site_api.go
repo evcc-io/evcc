@@ -149,7 +149,9 @@ func (site *Site) GetTariff(name string, adjusted bool) api.Tariff {
 		}
 
 		// merge generation power
-		return tariff.NewAdjusted(t, gen, site.maxChargePower())
+		if t.Type() == api.TariffTypeCo2 {
+			return tariff.NewAdjusted(t, gen, site.maxChargePower())
+		}
 	}
 
 	return t
