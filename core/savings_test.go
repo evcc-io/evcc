@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/benbjohnson/clock"
+	"github.com/evcc-io/evcc/tariff"
 )
 
 func assertEnergy(t *testing.T, s *Savings, total, self, percentage float64) {
@@ -45,6 +46,7 @@ func TestSavingsWithDifferentTimespans(t *testing.T) {
 	clck := clock.NewMock()
 	s := &Savings{
 		clock:   clck,
+		tariffs: new(tariff.Tariffs),
 		started: clck.Now(),
 		updated: clck.Now(),
 	}
@@ -172,6 +174,7 @@ func TestEffectiveEnergyPriceAndSavingsAmount(t *testing.T) {
 
 		s := &Savings{
 			clock:   clck,
+			tariffs: new(tariff.Tariffs),
 			started: clck.Now(),
 			updated: clck.Now(),
 		}
