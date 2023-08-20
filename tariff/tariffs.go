@@ -30,11 +30,11 @@ type Tariffs struct {
 	Grid, FeedIn, Co2, Generation, Planner api.Tariff
 }
 
-func configure(res *api.Tariff, cc config.Typed) error {
+func configure(name string, res *api.Tariff, cc config.Typed) error {
 	if cc.Type != "" {
 		t, err := NewFromConfig(cc.Type, cc.Other)
 		if err != nil {
-			return fmt.Errorf("%s: %w", cc.Type, err)
+			return fmt.Errorf("%s: %w", name, err)
 		}
 		*res = t
 	}
@@ -42,40 +42,34 @@ func configure(res *api.Tariff, cc config.Typed) error {
 }
 
 func New(cc Config) (*Tariffs, error) {
-	var grid, feedin, co2, generation, planner api.Tariff
+	res := &Tariffs{
+		Currency: currency.EUR,
+	}
 
-	currencyCode := currency.EUR
 	if cc.Currency != "" {
 		var err error
-		if currencyCode, err = currency.ParseISO(cc.Currency); err != nil {
+		if res.Currency, err = currency.ParseISO(cc.Currency); err != nil {
 			return nil, fmt.Errorf("currency code: %w", err)
 		}
 	}
 
-	if err := configure(&grid, cc.Grid); err != nil {
+	if err := configure("grid", &res.Grid, cc.Grid); err != nil {
 		return nil, err
 	}
-	if err := configure(&feedin, cc.FeedIn); err != nil {
+	if err := configure("feedin", &res.FeedIn, cc.FeedIn); err != nil {
 		return nil, err
 	}
-	if err := configure(&co2, cc.Co2); err != nil {
+	if err := configure("co2", &res.Co2, cc.Co2); err != nil {
 		return nil, err
 	}
-	if err := configure(&generation, cc.Generation); err != nil {
+	if err := configure("generation", &res.Generation, cc.Generation); err != nil {
 		return nil, err
 	}
-	if err := configure(&planner, cc.Planner); err != nil {
+	if err := configure("planner", &res.Planner, cc.Planner); err != nil {
 		return nil, err
 	}
 
-	return &Tariffs{
-		Currency:   currencyCode,
-		Grid:       grid,
-		FeedIn:     feedin,
-		Co2:        co2,
-		Generation: generation,
-		Planner:    planner,
-	}, nil
+	return res, nil
 }
 
 // Get returns the respective tariff if configured or nil
