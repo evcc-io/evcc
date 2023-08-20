@@ -124,6 +124,14 @@ func (site *Site) GetVehicles() []api.Vehicle {
 	return site.coordinator.GetVehicles()
 }
 
+func (site *Site) maxChargePower() float64 {
+	var res float64
+	for _, lp := range site.loadpoints {
+		res += lp.GetMaxPower()
+	}
+	return res
+}
+
 // GetTariff returns the respective tariff if configured or nil
 func (site *Site) GetTariff(name string, adjusted bool) api.Tariff {
 	site.Lock()
@@ -141,7 +149,7 @@ func (site *Site) GetTariff(name string, adjusted bool) api.Tariff {
 		}
 
 		// merge generation power
-		return tariff.NewAdjusted(t, gen, 11e3)
+		return tariff.NewAdjusted(t, gen, site.maxChargePower())
 	}
 
 	return t
