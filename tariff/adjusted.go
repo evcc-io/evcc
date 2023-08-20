@@ -14,11 +14,13 @@ func NewAdjusted(t, g api.Tariff, maxPower float64) api.Tariff {
 }
 
 func (t *adjusted) Rates() (api.Rates, error) {
+	// t tariff is base cost
 	trs, err := t.t.Rates()
 	if err != nil {
 		return nil, err
 	}
 
+	// g tariff is generation
 	grs, err := t.g.Rates()
 	if err != nil {
 		return nil, err
@@ -27,15 +29,13 @@ func (t *adjusted) Rates() (api.Rates, error) {
 	res := make(api.Rates, 0, len(trs))
 
 	for _, tr := range trs {
-		gr, err := grs.Current(tr.Start)
-		if err != nil {
-			continue
-		}
-
-		if gr.Price >= t.maxPower {
-			tr.Price = 0
-		} else {
-			tr.Price *= 1 - (gr.Price / t.maxPower)
+		if gr, err := grs.Current(tr.Start); err == nil {
+			// adjust price
+			if gr.Price >= t.maxPower {
+				tr.Price = 0
+			} else {
+				tr.Price *= 1 - (gr.Price / t.maxPower)
+			}
 		}
 
 		res = append(res, tr)
