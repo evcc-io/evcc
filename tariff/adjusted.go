@@ -34,6 +34,7 @@ func (t *adjusted) Rates() (api.Rates, error) {
 			if gr.Price >= t.maxPower {
 				tr.Price = 0
 			} else {
+				// fmt.Printf("%.1f * 1-(%.1f/%.1f)\n", tr.Price, gr.Price, t.maxPower)
 				tr.Price *= 1 - (gr.Price / t.maxPower)
 			}
 		}

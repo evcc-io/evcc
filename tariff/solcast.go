@@ -104,7 +104,7 @@ func (t *Solcast) run(done chan error) {
 			rate := api.Rate{
 				Start: r.PeriodEnd.Add(-r.Period.Duration()).Local(),
 				End:   r.PeriodEnd.Local(),
-				Price: r.PvEstimate,
+				Price: r.PvEstimate * 1e3,
 			}
 
 			t.data = append(t.data, rate)
