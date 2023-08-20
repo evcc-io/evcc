@@ -7,11 +7,11 @@ import (
 	"strings"
 )
 
-const _TariffTypeName = "pricestaticpricedynamicco2"
+const _TariffTypeName = "pricestaticpricedynamicco2generation"
 
-var _TariffTypeIndex = [...]uint8{0, 11, 23, 26}
+var _TariffTypeIndex = [...]uint8{0, 11, 23, 26, 36}
 
-const _TariffTypeLowerName = "pricestaticpricedynamicco2"
+const _TariffTypeLowerName = "pricestaticpricedynamicco2generation"
 
 func (i TariffType) String() string {
 	i -= 1
@@ -28,9 +28,10 @@ func _TariffTypeNoOp() {
 	_ = x[TariffTypePriceStatic-(1)]
 	_ = x[TariffTypePriceDynamic-(2)]
 	_ = x[TariffTypeCo2-(3)]
+	_ = x[TariffTypeGeneration-(4)]
 }
 
-var _TariffTypeValues = []TariffType{TariffTypePriceStatic, TariffTypePriceDynamic, TariffTypeCo2}
+var _TariffTypeValues = []TariffType{TariffTypePriceStatic, TariffTypePriceDynamic, TariffTypeCo2, TariffTypeGeneration}
 
 var _TariffTypeNameToValueMap = map[string]TariffType{
 	_TariffTypeName[0:11]:       TariffTypePriceStatic,
@@ -39,12 +40,15 @@ var _TariffTypeNameToValueMap = map[string]TariffType{
 	_TariffTypeLowerName[11:23]: TariffTypePriceDynamic,
 	_TariffTypeName[23:26]:      TariffTypeCo2,
 	_TariffTypeLowerName[23:26]: TariffTypeCo2,
+	_TariffTypeName[26:36]:      TariffTypeGeneration,
+	_TariffTypeLowerName[26:36]: TariffTypeGeneration,
 }
 
 var _TariffTypeNames = []string{
 	_TariffTypeName[0:11],
 	_TariffTypeName[11:23],
 	_TariffTypeName[23:26],
+	_TariffTypeName[26:36],
 }
 
 // TariffTypeString retrieves an enum value from the enum constants string name.

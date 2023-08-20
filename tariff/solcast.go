@@ -92,7 +92,7 @@ func (t *Solcast) run(done chan error) {
 
 		for _, r := range res.Forecasts {
 			rate := api.Rate{
-				Start: r.PeriodEnd.Add(-30 * time.Minute).Local(),
+				Start: r.PeriodEnd.Add(-r.Period.Duration()).Local(),
 				End:   r.PeriodEnd.Local(),
 				Price: r.PvEstimate,
 			}
