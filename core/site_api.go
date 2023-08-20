@@ -173,10 +173,8 @@ func (site *Site) GetTariff(name string, adjusted bool) api.Tariff {
 			feedin = site.tariffs.Get(tariff.Feedin)
 		}
 
-		// merge generation power
-		if t.Type() == api.TariffTypeCo2 {
-			return tariff.NewAdjusted(t, gen, feedin, site.maxChargePower())
-		}
+		// merge generation forecast
+		return tariff.NewAdjusted(t, gen, feedin, site.maxChargePower())
 	}
 
 	return t

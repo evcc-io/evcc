@@ -26,16 +26,35 @@ func (t *adjusted) Rates() (api.Rates, error) {
 		return nil, err
 	}
 
+	// f tariff is feedin
+	var frs api.Rates
+	if t.Type() != api.TariffTypeCo2 && t.f != nil {
+		if frs, err = t.g.Rates(); err != nil {
+			return nil, err
+		}
+	}
+
 	res := make(api.Rates, 0, len(trs))
 
 	for _, tr := range trs {
 		if gr, err := grs.Current(tr.Start); err == nil {
-			// adjust price
-			if gr.Price >= t.maxPower {
-				tr.Price = 0
-			} else {
+			// coverage is the fraction of maxPower that is covered by generation, capped at 100%
+			coverage := min(gr.Price/t.maxPower, 1)
+
+			switch {
+			case t.Type() == api.TariffTypeCo2:
 				// fmt.Printf("%.1f * 1-(%.1f/%.1f)\n", tr.Price, gr.Price, t.maxPower)
-				tr.Price *= 1 - (gr.Price / t.maxPower)
+				tr.Price *= 1 - coverage
+
+			case frs != nil:
+				// adjust price to feedin tariff (entgangene Einspeisung)
+				fr, err := frs.Current(tr.Start)
+
+				if err == nil {
+					tr.Price = tr.Price*(1-coverage) + fr.Price*coverage
+				} else {
+					tr.Price *= 1 - coverage
+				}
 			}
 		}
 
