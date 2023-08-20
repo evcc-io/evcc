@@ -48,7 +48,7 @@ func NewSolcastFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		return nil, errors.New("missing token")
 	}
 
-	log := util.NewLogger("solcast").Redact(cc.SiteID)
+	log := util.NewLogger("solcast").Redact(cc.SiteID, cc.Token)
 
 	t := &Solcast{
 		log:    log,
