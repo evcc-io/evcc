@@ -313,14 +313,14 @@ func TestPvScalePhasesTimer(t *testing.T) {
 		}},
 
 		// switch down from 3p/3p configured/active
-		{"3/3->1, enough power", 3, 3, 1 * Voltage * maxA, 3, false, nil},
-		{"3/3->1, kickoff", 3, 3, 1 * Voltage * maxA, 3, false, func(lp *Loadpoint) {
+		{"3/3->1, enough power", 3, 3, 0.1, 3, false, nil},
+		{"3/3->1, kickoff", 3, 3, 0.1, 3, false, func(lp *Loadpoint) {
 			lp.phaseTimer = time.Time{}
 		}},
-		{"3/3->1, timer running", 3, 3, 1 * Voltage * maxA, 3, false, func(lp *Loadpoint) {
+		{"3/3->1, timer running", 3, 3, 0.1, 3, false, func(lp *Loadpoint) {
 			lp.phaseTimer = lp.clock.Now()
 		}},
-		{"3/3->1, timer elapsed", 3, 3, 1 * Voltage * maxA, 1, true, func(lp *Loadpoint) {
+		{"3/3->1, timer elapsed", 3, 3, 0.1, 1, true, func(lp *Loadpoint) {
 			lp.phaseTimer = lp.clock.Now().Add(-dt)
 		}},
 
