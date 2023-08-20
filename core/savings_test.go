@@ -35,12 +35,12 @@ func compareWithTolerane(a, b float64) bool {
 	return diff < tolerance
 }
 
-type StubPublisher struct{}
+type stubPublisher struct{}
 
-func (p StubPublisher) publish(key string, val interface{}) {}
+func (p stubPublisher) publish(key string, val interface{}) {}
 
 func TestSavingsWithDifferentTimespans(t *testing.T) {
-	p := StubPublisher{}
+	p := stubPublisher{}
 
 	clck := clock.NewMock()
 	s := &Savings{
@@ -59,25 +59,29 @@ func TestSavingsWithDifferentTimespans(t *testing.T) {
 		steps                   []tcStep
 		total, self, percentage float64
 	}{
-		{"10 second not charging, full grid",
+		{
+			"10 second not charging, full grid",
 			[]tcStep{
 				{10 * time.Second, 0, 0},
 			},
 			0, 0, 0, // 0Wh
 		},
-		{"10 second 11kW charging, full grid",
+		{
+			"10 second 11kW charging, full grid",
 			[]tcStep{
 				{10 * time.Second, 0, 11000},
 			},
 			0.030556, 0, 0, // 30,555Wh
 		},
-		{"10 second 11kW charging, full grid",
+		{
+			"10 second 11kW charging, full grid",
 			[]tcStep{
 				{10 * time.Second, 0, 11000},
 			},
 			0.061111, 0, 0, // 61,111Wh
 		},
-		{"5x 2 second 11kW charging, full grid",
+		{
+			"5x 2 second 11kW charging, full grid",
 			[]tcStep{
 				{2 * time.Second, 0, 11000},
 				{2 * time.Second, 0, 11000},
@@ -87,13 +91,15 @@ func TestSavingsWithDifferentTimespans(t *testing.T) {
 			},
 			0.092, 0, 0, // 91,666Wh
 		},
-		{"30 min 11kW charging, full grid",
+		{
+			"30 min 11kW charging, full grid",
 			[]tcStep{
 				{30 * time.Minute, 0, 11000},
 			},
 			5.592, 0, 0, // 5561,111Wh
 		},
-		{"4 hours 11kW charging, full pv",
+		{
+			"4 hours 11kW charging, full pv",
 			[]tcStep{
 				{4 * time.Hour, 1, 11000},
 			},
@@ -116,7 +122,7 @@ func TestSavingsWithDifferentTimespans(t *testing.T) {
 }
 
 func TestEffectiveEnergyPriceAndSavingsAmount(t *testing.T) {
-	p := StubPublisher{}
+	p := stubPublisher{}
 
 	clck := clock.NewMock()
 
@@ -130,26 +136,30 @@ func TestEffectiveEnergyPriceAndSavingsAmount(t *testing.T) {
 		steps                         []tcStep
 		effectivePrice, savingsAmount float64
 	}{
-		{"1 hour, 10kW, full grid",
+		{
+			"1 hour, 10kW, full grid",
 			[]tcStep{
 				{time.Hour, 0, 10000},
 			},
 			0.3, 0,
 		},
-		{"1 hour, 10kW, full pv",
+		{
+			"1 hour, 10kW, full pv",
 			[]tcStep{
 				{time.Hour, 1, 10000},
 			},
 			0.08, 2.2,
 		},
-		{"1 hour, 10kW, full battery",
+		{
+			"1 hour, 10kW, full battery",
 			[]tcStep{
 				{time.Hour, 1, 10000},
 			},
 			0.08, 2.2,
 		},
 
-		{"1 hour, 10kW, half grid, half pv",
+		{
+			"1 hour, 10kW, half grid, half pv",
 			[]tcStep{
 				{time.Hour, 0.5, 10000},
 			},
