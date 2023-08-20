@@ -52,7 +52,7 @@ const (
 	schneiderRegLastStopCause       = 4011
 	schneiderRegSessionEnergy       = 4012
 
-	schneiderDisabled = uint16(99)
+	schneiderDisabled = uint16(0)
 )
 
 func init() {
