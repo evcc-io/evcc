@@ -9,8 +9,8 @@ import (
 )
 
 const (
-	DefaultGridPrice   = 0.30
-	DefaultFeedInPrice = 0.08
+	defaultGridPrice   = 0.30
+	defaultFeedInPrice = 0.08
 )
 
 // publisher gives access to the site's publish function
@@ -97,7 +97,7 @@ func (s *Savings) SavingsAmount() float64 {
 func (s *Savings) currentGridPrice() float64 {
 	price, err := s.tariffs.CurrentGridPrice()
 	if err != nil {
-		price = DefaultGridPrice
+		price = defaultGridPrice
 	}
 	return price
 }
@@ -105,7 +105,7 @@ func (s *Savings) currentGridPrice() float64 {
 func (s *Savings) currentFeedInPrice() float64 {
 	price, err := s.tariffs.CurrentFeedInPrice()
 	if err != nil {
-		price = DefaultFeedInPrice
+		price = defaultFeedInPrice
 	}
 	return price
 }
