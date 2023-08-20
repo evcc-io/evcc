@@ -132,9 +132,8 @@ func hasDemand(lp loadpoint.API) bool {
 		return false
 	}
 
-	mode := lp.GetMode()
-
 	// finished?
+	mode := lp.GetMode()
 	if status != api.StatusC && (mode == api.ModeMinPV || mode == api.ModeNow) {
 		return false
 	}
