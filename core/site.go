@@ -677,6 +677,9 @@ func (site *Site) greenShare(powerFrom float64, powerTo float64) float64 {
 
 // effectivePrice calculates the real energy price based on self-produced and grid-imported energy.
 func (s *Site) effectivePrice(greenShare float64) *float64 {
+	if s.tariffs == nil {
+		return nil
+	}
 	if grid, err := s.tariffs.CurrentGridPrice(); err == nil {
 		feedin, err := s.tariffs.CurrentFeedInPrice()
 		if err != nil {
@@ -690,6 +693,9 @@ func (s *Site) effectivePrice(greenShare float64) *float64 {
 
 // effectiveCo2 calculates the amount of emitted co2 based on self-produced and grid-imported energy.
 func (s *Site) effectiveCo2(greenShare float64) *float64 {
+	if s.tariffs == nil {
+		return nil
+	}
 	if co2, err := s.tariffs.CurrentCo2(); err == nil {
 		effCo2 := co2 * (1 - greenShare)
 		return &effCo2
@@ -700,6 +706,10 @@ func (s *Site) effectiveCo2(greenShare float64) *float64 {
 func (s *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints float64) {
 	s.publish("greenShareHome", greenShareHome)
 	s.publish("greenShareLoadpoints", greenShareLoadpoints)
+
+	if s.tariffs == nil {
+		return
+	}
 
 	if gridPrice, err := s.tariffs.CurrentGridPrice(); err == nil {
 		s.publishDelta("tariffGrid", gridPrice)
