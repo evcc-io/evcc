@@ -606,7 +606,6 @@ func configureTariffs(conf tariffConfig) (*tariff.Tariffs, error) {
 			log.ERROR.Printf("failed configuring co2 tariff: %v", err)
 		}
 	}
-	_ = generation
 
 	if conf.Planner.Type != "" {
 		planner, err = tariff.NewFromConfig(conf.Planner.Type, conf.Planner.Other)
@@ -618,7 +617,7 @@ func configureTariffs(conf tariffConfig) (*tariff.Tariffs, error) {
 		}
 	}
 
-	return tariff.NewTariffs(currencyCode, grid, feedin, co2, planner), nil
+	return tariff.NewTariffs(currencyCode, grid, feedin, co2, generation, planner), nil
 }
 
 func configureDevices(conf globalConfig) error {

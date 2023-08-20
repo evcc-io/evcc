@@ -10,12 +10,6 @@ import (
 
 var _ site.API = (*Site)(nil)
 
-const (
-	GridTariff    = "grid"
-	FeedinTariff  = "feedin"
-	PlannerTariff = "planner"
-)
-
 // GetPrioritySoc returns the PrioritySoc
 func (site *Site) GetPrioritySoc() float64 {
 	site.Lock()
@@ -133,34 +127,5 @@ func (site *Site) GetVehicles() []api.Vehicle {
 func (site *Site) GetTariff(tariff string) api.Tariff {
 	site.Lock()
 	defer site.Unlock()
-
-	switch tariff {
-	case GridTariff:
-		return site.tariffs.Grid
-
-	case FeedinTariff:
-		return site.tariffs.FeedIn
-
-	case PlannerTariff:
-		switch {
-		case site.tariffs.Planner != nil:
-			// prio 0: manually set planner tariff
-			return site.tariffs.Planner
-
-		case site.tariffs.Grid != nil && site.tariffs.Grid.Type() == api.TariffTypePriceDynamic:
-			// prio 1: dynamic grid tariff
-			return site.tariffs.Grid
-
-		case site.tariffs.Co2 != nil:
-			// prio 2: co2 tariff
-			return site.tariffs.Co2
-
-		default:
-			// prio 3: static grid tariff
-			return site.tariffs.Grid
-		}
-
-	default:
-		return nil
-	}
+	return site.tariffs.Get(tariff)
 }

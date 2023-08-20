@@ -7,18 +7,62 @@ import (
 	"golang.org/x/text/currency"
 )
 
+const (
+	Grid       = "grid"
+	Feedin     = "feedin"
+	Generation = "generation"
+	Planner    = "planner"
+)
+
 type Tariffs struct {
-	Currency                   currency.Unit
-	Grid, FeedIn, Co2, Planner api.Tariff
+	Currency                               currency.Unit
+	Grid, FeedIn, Co2, Generation, Planner api.Tariff
 }
 
-func NewTariffs(currency currency.Unit, grid, feedin, co2 api.Tariff, planner api.Tariff) *Tariffs {
+func NewTariffs(currency currency.Unit, grid, feedin, co2, generation, planner api.Tariff) *Tariffs {
 	return &Tariffs{
-		Currency: currency,
-		Grid:     grid,
-		FeedIn:   feedin,
-		Co2:      co2,
-		Planner:  planner,
+		Currency:   currency,
+		Grid:       grid,
+		FeedIn:     feedin,
+		Co2:        co2,
+		Generation: generation,
+		Planner:    planner,
+	}
+}
+
+// Get returns the respective tariff if configured or nil
+func (t *Tariffs) Get(tariff string) api.Tariff {
+	switch tariff {
+	case Grid:
+		return t.Grid
+
+	case Feedin:
+		return t.FeedIn
+
+	case Generation:
+		return t.Generation
+
+	case Planner:
+		switch {
+		case t.Planner != nil:
+			// prio 0: manually set planner tariff
+			return t.Planner
+
+		case t.Grid != nil && t.Grid.Type() == api.TariffTypePriceDynamic:
+			// prio 1: dynamic grid tariff
+			return t.Grid
+
+		case t.Co2 != nil:
+			// prio 2: co2 tariff
+			return t.Co2
+
+		default:
+			// prio 3: static grid tariff
+			return t.Grid
+		}
+
+	default:
+		return nil
 	}
 }
 
