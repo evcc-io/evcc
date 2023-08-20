@@ -1022,7 +1022,7 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64) bo
 
 	var waiting bool
 	activePhases := lp.activePhases()
-	availablePower := -sitePower + lp.chargePower
+	availablePower := lp.chargePower - sitePower
 
 	// scale down phases
 	if targetCurrent := powerToCurrent(availablePower, activePhases); sitePower > 0 && targetCurrent < minCurrent && activePhases > 1 && lp.ConfiguredPhases < 3 {
