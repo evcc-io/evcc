@@ -28,7 +28,7 @@ func (t *adjusted) Rates() (api.Rates, error) {
 
 	// f tariff is feedin
 	var frs api.Rates
-	if t.Type() != api.TariffTypeCo2 && t.f != nil {
+	if t.f != nil {
 		if frs, err = t.g.Rates(); err != nil {
 			return nil, err
 		}
@@ -42,8 +42,8 @@ func (t *adjusted) Rates() (api.Rates, error) {
 			coverage := min(gr.Price/t.maxPower, 1)
 
 			switch {
-			case t.Type() == api.TariffTypeCo2:
-				// fmt.Printf("%.1f * 1-(%.1f/%.1f)\n", tr.Price, gr.Price, t.maxPower)
+			case frs == nil:
+				// adjust co2
 				tr.Price *= 1 - coverage
 
 			case frs != nil:
