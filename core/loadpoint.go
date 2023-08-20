@@ -675,6 +675,7 @@ func (lp *Loadpoint) syncCharger() error {
 		if lp.guardGracePeriodElapsed() {
 			lp.log.WARN.Println("charger logic error: disabled but charging")
 		}
+		lp.elapseGuard()
 		return nil
 	}
 
