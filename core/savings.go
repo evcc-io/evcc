@@ -95,20 +95,14 @@ func (s *Savings) SavingsAmount() float64 {
 }
 
 func (s *Savings) currentGridPrice() float64 {
-	if s.tariffs == nil {
-		return DefaultGridPrice
-	}
 	price, err := s.tariffs.CurrentGridPrice()
 	if err != nil {
-		return DefaultGridPrice
+		price = DefaultGridPrice
 	}
 	return price
 }
 
 func (s *Savings) currentFeedInPrice() float64 {
-	if s.tariffs == nil {
-		return DefaultFeedInPrice
-	}
 	price, err := s.tariffs.CurrentFeedInPrice()
 	if err != nil {
 		price = DefaultFeedInPrice
