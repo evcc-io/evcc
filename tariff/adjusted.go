@@ -5,12 +5,12 @@ import (
 )
 
 type adjusted struct {
-	t, g     api.Tariff
+	t, g, f  api.Tariff
 	maxPower float64
 }
 
-func NewAdjusted(t, g api.Tariff, maxPower float64) api.Tariff {
-	return &adjusted{t, g, maxPower}
+func NewAdjusted(t, g, f api.Tariff, maxPower float64) api.Tariff {
+	return &adjusted{t, g, f, maxPower}
 }
 
 func (t *adjusted) Rates() (api.Rates, error) {

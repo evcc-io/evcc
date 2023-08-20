@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/tariff"
@@ -124,10 +125,22 @@ func (site *Site) GetVehicles() []api.Vehicle {
 	return site.coordinator.GetVehicles()
 }
 
+func hasDemand(lp loadpoint.API) bool {
+	// connected?
+	if status := lp.GetStatus(); status != api.StatusB && status != api.StatusC {
+		return false
+	}
+
+	// disabled?
+	return lp.GetMode() != api.ModeOff
+}
+
 func (site *Site) maxChargePower() float64 {
 	var res float64
 	for _, lp := range site.loadpoints {
-		res += lp.GetMaxPower()
+		if hasDemand(lp) {
+			res += lp.GetMaxPower()
+		}
 	}
 	return res
 }
@@ -148,9 +161,14 @@ func (site *Site) GetTariff(name string, adjusted bool) api.Tariff {
 			return nil
 		}
 
+		var feedin api.Tariff
+		if t.Type() != api.TariffTypeCo2 {
+			feedin = site.tariffs.Get(tariff.Feedin)
+		}
+
 		// merge generation power
 		if t.Type() == api.TariffTypeCo2 {
-			return tariff.NewAdjusted(t, gen, site.maxChargePower())
+			return tariff.NewAdjusted(t, gen, feedin, site.maxChargePower())
 		}
 	}
 
