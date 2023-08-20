@@ -128,11 +128,12 @@ type messagingConfig struct {
 }
 
 type tariffConfig struct {
-	Currency string
-	Grid     config.Typed
-	FeedIn   config.Typed
-	Co2      config.Typed
-	Planner  config.Typed
+	Currency   string
+	Grid       config.Typed
+	FeedIn     config.Typed
+	Co2        config.Typed
+	Generation config.Typed
+	Planner    config.Typed
 }
 
 type networkConfig struct {
@@ -560,13 +561,18 @@ func configureMessengers(conf messagingConfig, valueChan chan util.Param, cache 
 	return messageChan, nil
 }
 
-func configureTariffs(conf tariffConfig) (tariff.Tariffs, error) {
-	var grid, feedin, co2, planner api.Tariff
-	var currencyCode currency.Unit = currency.EUR
-	var err error
+func configureTariffs(conf tariffConfig) (*tariff.Tariffs, error) {
+	var (
+		grid, feedin, co2, generation, planner api.Tariff
+		err                                    error
+	)
 
+	currencyCode := currency.EUR
 	if conf.Currency != "" {
-		currencyCode = currency.MustParseISO(conf.Currency)
+		currencyCode, err = currency.ParseISO(conf.Currency)
+		if err != nil {
+			return nil, fmt.Errorf("currency code: %w", err)
+		}
 	}
 
 	if conf.Grid.Type != "" {
@@ -593,6 +599,15 @@ func configureTariffs(conf tariffConfig) (tariff.Tariffs, error) {
 		}
 	}
 
+	if conf.Generation.Type != "" {
+		generation, err = tariff.NewFromConfig(conf.Generation.Type, conf.Generation.Other)
+		if err != nil {
+			co2 = nil
+			log.ERROR.Printf("failed configuring co2 tariff: %v", err)
+		}
+	}
+	_ = generation
+
 	if conf.Planner.Type != "" {
 		planner, err = tariff.NewFromConfig(conf.Planner.Type, conf.Planner.Other)
 		if err != nil {
@@ -603,9 +618,7 @@ func configureTariffs(conf tariffConfig) (tariff.Tariffs, error) {
 		}
 	}
 
-	tariffs := tariff.NewTariffs(currencyCode, grid, feedin, co2, planner)
-
-	return *tariffs, nil
+	return tariff.NewTariffs(currencyCode, grid, feedin, co2, planner), nil
 }
 
 func configureDevices(conf globalConfig) error {
@@ -636,7 +649,7 @@ func configureSiteAndLoadpoints(conf globalConfig) (*core.Site, error) {
 	return configureSite(conf.Site, loadpoints, config.Instances(config.Vehicles().Devices()), tariffs)
 }
 
-func configureSite(conf map[string]interface{}, loadpoints []*core.Loadpoint, vehicles []api.Vehicle, tariffs tariff.Tariffs) (*core.Site, error) {
+func configureSite(conf map[string]interface{}, loadpoints []*core.Loadpoint, vehicles []api.Vehicle, tariffs *tariff.Tariffs) (*core.Site, error) {
 	site, err := core.NewSiteFromConfig(log, conf, loadpoints, vehicles, tariffs)
 	if err != nil {
 		return nil, fmt.Errorf("failed configuring site: %w", err)

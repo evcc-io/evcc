@@ -9,4 +9,5 @@ const (
 	TariffTypePriceStatic
 	TariffTypePriceDynamic
 	TariffTypeCo2
+	TariffTypeGeneration
 )

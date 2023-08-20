@@ -21,7 +21,7 @@ type publisher interface {
 // Site is the main configuration container. A site can host multiple loadpoints.
 type Savings struct {
 	clock                  clock.Clock
-	tariffs                tariff.Tariffs
+	tariffs                *tariff.Tariffs
 	started                time.Time // Boot time
 	updated                time.Time // Time of last charged value update
 	gridCharged            float64   // Grid energy charged since startup (kWh)
@@ -32,7 +32,7 @@ type Savings struct {
 	hasPublished           bool      // Has initial publish happened?
 }
 
-func NewSavings(tariffs tariff.Tariffs) *Savings {
+func NewSavings(tariffs *tariff.Tariffs) *Savings {
 	clock := clock.New()
 	savings := &Savings{
 		clock:   clock,

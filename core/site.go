@@ -74,7 +74,7 @@ type Site struct {
 	batteryMeters []api.Meter // Battery charging meters
 	auxMeters     []api.Meter // Auxiliary meters
 
-	tariffs     tariff.Tariffs           // Tariff
+	tariffs     *tariff.Tariffs          // Tariff
 	loadpoints  []*Loadpoint             // Loadpoints
 	coordinator *coordinator.Coordinator // Vehicles
 	prioritizer *prioritizer.Prioritizer // Power budgets
@@ -105,7 +105,7 @@ func NewSiteFromConfig(
 	other map[string]interface{},
 	loadpoints []*Loadpoint,
 	vehicles []api.Vehicle,
-	tariffs tariff.Tariffs,
+	tariffs *tariff.Tariffs,
 ) (*Site, error) {
 	site := NewSite()
 	if err := util.DecodeOther(other, site); err != nil {
