@@ -99,11 +99,11 @@ func NewSchneider(uri string, id uint8) (api.Charger, error) {
 		return nil, fmt.Errorf("current limit: %w", err)
 	}
 	if u := encoding.Uint16(b); u > wb.curr {
-		wb.curr = curr
+		wb.curr = u
 	}
 
 	// heartbeat
-	b, err := wb.conn.ReadHoldingRegisters(schneiderRegLifebit, 1)
+	b, err = wb.conn.ReadHoldingRegisters(schneiderRegLifebit, 1)
 	if err != nil {
 		return nil, fmt.Errorf("heartbeat timeout: %w", err)
 	}
