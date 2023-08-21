@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/evse"
@@ -26,14 +25,14 @@ func init() {
 	registry.Add("evsewifi", NewEVSEWifiFromConfig)
 }
 
-// go:generate go run ../cmd/tools/decorate.go -f decorateEVSE -b *EVSEWifi -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.ChargerEx,MaxCurrentMillis,func(current float64) error" -t "api.Identifier,Identify,func() (string, error)"
+// go:generate go run ../cmd/tools/decorate.go -f decorateEVSE -b *EVSEWifi -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.ChargerEx,MaxCurrentMillis,func(current float64) error" -t "api.Identifier,Identify,func() (string, error)"
 
 // NewEVSEWifiFromConfig creates a EVSEWifi charger from generic config
 func NewEVSEWifiFromConfig(other map[string]interface{}) (api.Charger, error) {
 	var cc struct {
 		URI   string
 		Meter struct {
-			Power, Energy, Currents bool
+			Power, Energy, Currents, Voltages bool
 		}
 	}
 
@@ -57,9 +56,10 @@ func NewEVSEWifiFromConfig(other map[string]interface{}) (api.Charger, error) {
 	}
 
 	if params.UseMeter {
-		cc.Meter.Energy = true
+		cc.Meter.Power = true
 		cc.Meter.Energy = true
 		cc.Meter.Currents = true
+		cc.Meter.Voltages = true
 	}
 
 	if params.ActualCurrentMA != nil {
@@ -68,7 +68,7 @@ func NewEVSEWifiFromConfig(other map[string]interface{}) (api.Charger, error) {
 
 	// decorate Charger with Meter
 	var currentPower func() (float64, error)
-	if cc.Meter.Energy {
+	if cc.Meter.Power {
 		currentPower = wb.currentPower
 	}
 
@@ -84,6 +84,12 @@ func NewEVSEWifiFromConfig(other map[string]interface{}) (api.Charger, error) {
 		currents = wb.currents
 	}
 
+	// decorate Charger with PhaseVoltages
+	var voltages func() (float64, float64, float64, error)
+	if cc.Meter.Voltages {
+		voltages = wb.voltages
+	}
+
 	// decorate Charger with MaxCurrentEx
 	var maxCurrentEx func(float64) error
 	if wb.hires {
@@ -97,7 +103,7 @@ func NewEVSEWifiFromConfig(other map[string]interface{}) (api.Charger, error) {
 		identify = wb.identify
 	}
 
-	return decorateEVSE(wb, currentPower, totalEnergy, currents, maxCurrentEx, identify), nil
+	return decorateEVSE(wb, currentPower, totalEnergy, currents, voltages, maxCurrentEx, identify), nil
 }
 
 // NewEVSEWifi creates EVSEWifi charger
@@ -200,14 +206,6 @@ func (wb *EVSEWifi) maxCurrentEx(current float64) error {
 	return wb.get(uri)
 }
 
-var _ api.ChargeTimer = (*EVSEWifi)(nil)
-
-// ChargingTime implements the api.ChargeTimer interface
-func (wb *EVSEWifi) ChargingTime() (time.Duration, error) {
-	params, err := wb.getParameters()
-	return time.Duration(params.Duration) * time.Millisecond, err
-}
-
 // CurrentPower implements the api.Meter interface
 func (wb *EVSEWifi) currentPower() (float64, error) {
 	params, err := wb.getParameters()
@@ -226,6 +224,12 @@ func (wb *EVSEWifi) currents() (float64, float64, float64, error) {
 	return params.CurrentP1, params.CurrentP2, params.CurrentP3, err
 }
 
+// Voltages implements the api.PhaseCurrentss interface
+func (wb *EVSEWifi) voltages() (float64, float64, float64, error) {
+	params, err := wb.getParameters()
+	return params.VoltageP1, params.VoltageP2, params.VoltageP3, err
+}
+
 // Identify implements the api.Identifier interface
 func (wb *EVSEWifi) identify() (string, error) {
 	params, err := wb.getParameters()
@@ -236,12 +240,6 @@ func (wb *EVSEWifi) identify() (string, error) {
 	// we can rely on RFIDUID != nil here since identify() is only exposed if the EVSE API supports that property
 	return *params.RFIDUID, nil
 }
-
-// // ChargedEnergy implements the ChargeRater interface
-// func (wb *EVSEWifi) ChargedEnergy() (float64, error) {
-// 	params, err := wb.getParameters()
-// 	return params.Energy, err
-// }
 
 var _ api.Resurrector = (*EVSEWifi)(nil)
 
