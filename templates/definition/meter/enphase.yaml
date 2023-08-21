@@ -3,6 +3,10 @@ products:
   - brand: Enphase
     description:
       generic: IQ Envoy
+requirements:
+  description:
+    de: 'Als Batteriespeicher werden seitens der Enphase-API derzeit nur die Batterien vom Typ "AC Battery" unterstützt.'
+    en: 'Only batteries of type "AC Battery" are currently supported by Enphase-API.'
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -19,7 +23,7 @@ render: |
   {{- if eq .usage "grid" }}
   power:
     source: http
-    uri: http://{{ .host }}/ivp/livedata/status
+    uri: http://{{ .host }}/production.json
     method: GET
     {{- if .token }}
     auth:
@@ -27,13 +31,13 @@ render: |
       password: {{ .token }}
     insecure: true
     {{- end }}
-    jq: .meters.grid.agg_p_mw
+    jq: .consumption[] | select(.measurementType == "net-consumption").wNow
     scale: 0.001
   {{- end }}
   {{- if eq .usage "pv" }}
   power:
     source: http
-    uri: http://{{ .host }}/ivp/livedata/status
+    uri: http://{{ .host }}/production.json
     method: GET
     {{- if .token }}
     auth:
@@ -41,7 +45,7 @@ render: |
       password: {{ .token }}
     insecure: true
     {{- end }}
-    jq: .meters.pv.agg_p_mw
+    jq: .production[] | select(.measurementType == "production").wNow
     scale: 0.001
   energy:
     source: http
@@ -59,7 +63,7 @@ render: |
   {{- if eq .usage "battery" }}
   power:
     source: http
-    uri: http://{{ .host }}/ivp/livedata/status
+    uri: http://{{ .host }}/production.json
     method: GET
     {{- if .token }}
     auth:
@@ -67,11 +71,11 @@ render: |
       password: {{ .token }}
     insecure: true
     {{- end }}
-    jq: .meters.storage.agg_p_mw
+    jq: .storage[] | .wNow
     scale: 0.001
   soc:
     source: http
-    uri: http://{{ .host }}/ivp/livedata/status
+    uri: http://{{ .host }}/ivp/ensemble/inventory
     method: GET
     {{- if .token }}
     auth:
@@ -79,7 +83,7 @@ render: |
       password: {{ .token }}
     insecure: true
     {{- end }}
-    jq: .meters.soc
+    jq: .[].devices | map(.percentFull) | add / length
   {{- if .capacity }}
   capacity: {{ .capacity }} # kWh
   {{- end }}

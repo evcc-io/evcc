@@ -1,6 +1,8 @@
 product:
   brand: Enphase
   description: IQ Envoy
+description: |
+  Als Batteriespeicher werden seitens der Enphase-API derzeit nur die Batterien vom Typ "AC Battery" unterstützt.
 render:
   - usage: grid
     default: |
