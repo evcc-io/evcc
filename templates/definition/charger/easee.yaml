@@ -23,9 +23,12 @@ params:
     example: EH______
   - name: timeout
     default: 10s
+  - name: authorize
+    default: false
 render: |
   type: easee
   user: {{ .user }}
   password: {{ .password }}
   charger: {{ .charger }}
   timeout: {{ .timeout }}
+  authorize: {{ .authorize }}
