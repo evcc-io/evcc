@@ -57,7 +57,7 @@ func NewEVSEWifiFromConfig(other map[string]interface{}) (api.Charger, error) {
 	}
 
 	if params.UseMeter {
-		cc.Meter.Energy = true
+		cc.Meter.Power = true
 		cc.Meter.Energy = true
 		cc.Meter.Currents = true
 	}
