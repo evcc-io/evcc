@@ -53,6 +53,7 @@ type Easee struct {
 	current               float64
 	chargerEnabled        bool
 	smartCharging         bool
+	authorize             bool
 	opMode                int
 	reasonForNoCurrent    int
 	phaseMode             int
@@ -72,10 +73,11 @@ func init() {
 // NewEaseeFromConfig creates a go-e charger from generic config
 func NewEaseeFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
-		User     string
-		Password string
-		Charger  string
-		Timeout  time.Duration
+		User      string
+		Password  string
+		Charger   string
+		Timeout   time.Duration
+		authorize bool
 	}{
 		Timeout: request.Timeout,
 	}
@@ -88,11 +90,11 @@ func NewEaseeFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, api.ErrMissingCredentials
 	}
 
-	return NewEasee(cc.User, cc.Password, cc.Charger, cc.Timeout)
+	return NewEasee(cc.User, cc.Password, cc.Charger, cc.Timeout, cc.authorize)
 }
 
 // NewEasee creates Easee charger
-func NewEasee(user, password, charger string, timeout time.Duration) (*Easee, error) {
+func NewEasee(user, password, charger string, timeout time.Duration, authorize bool) (*Easee, error) {
 	log := util.NewLogger("easee").Redact(user, password)
 
 	if !sponsor.IsAuthorized() {
@@ -100,14 +102,15 @@ func NewEasee(user, password, charger string, timeout time.Duration) (*Easee, er
 	}
 
 	c := &Easee{
-		Helper:  request.NewHelper(log),
-		charger: charger,
-		log:     log,
-		current: 6, // default current
-		done:    make(chan struct{}),
-		cmdC:    make(chan easee.SignalRCommandResponse),
-		obsC:    make(chan easee.Observation),
-		obsTime: make(map[easee.ObservationID]time.Time),
+		Helper:    request.NewHelper(log),
+		charger:   charger,
+		authorize: authorize,
+		log:       log,
+		current:   6, // default current
+		done:      make(chan struct{}),
+		cmdC:      make(chan easee.SignalRCommandResponse),
+		obsC:      make(chan easee.Observation),
+		obsTime:   make(map[easee.ObservationID]time.Time),
 	}
 
 	c.Client.Timeout = timeout
@@ -407,8 +410,8 @@ func (c *Easee) Enable(enable bool) error {
 		}
 	}
 
-	// do not send pause/resume if disconnected or unauthenticated
-	if c.opMode == easee.ModeDisconnected || (c.opMode == easee.ModeAwaitingAuthentication && !enable) {
+	// do not send pause/resume if disconnected or unauthenticated without automatic authorization
+	if c.opMode == easee.ModeDisconnected || (c.opMode == easee.ModeAwaitingAuthentication && (!enable || !c.authorize)) {
 		return nil
 	}
 
@@ -418,7 +421,7 @@ func (c *Easee) Enable(enable bool) error {
 	var targetCurrent float64
 	if enable {
 		action = easee.ChargeResume
-		if c.opMode == easee.ModeAwaitingAuthentication {
+		if c.opMode == easee.ModeAwaitingAuthentication && c.authorize {
 			action = easee.ChargeStart
 		}
 		expectedEnabledState = true
