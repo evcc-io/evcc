@@ -5,7 +5,7 @@ products:
       generic: IQ Envoy
 requirements:
   description:
-    de: "Als Speicher werden seitens der Enphase-API derzeit nur die Batterien vom Typ \"AC Battery\" unterstützt."
+    de: "Als Batteriespeicher werden seitens der Enphase-API derzeit nur die Batterien vom Typ \"AC Battery\" unterstützt."
     en: "Only batteries of type \"AC Battery\" are currently supported by Enphase-API."
 params:
   - name: usage
