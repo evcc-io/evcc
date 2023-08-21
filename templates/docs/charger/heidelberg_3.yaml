@@ -1,0 +1,24 @@
+product:
+  brand: Amperfied
+  description: Wallbox Energy Control
+capabilities: ["mA"]
+requirements: ["sponsorship"]
+description: |
+  Bitte das Handbuch zur Verkabelung und Konfiguration genau lesen. Alle Boxen müssen für die externe Steuerung auf Follower-Modus konfiguriert sein (DIP S5/4 OFF). Jede Box braucht eine individuelle Modbus-ID (DIP S4). Auf korrekte RS485-Verkabelung inkl. Busterminierung (DIP S6/2) achten.
+render:
+  - default: |
+      type: template
+      template: heidelberg
+
+      # RS485 via adapter (Modbus RTU)
+      modbus: rs485serial
+      id: 1
+      device: /dev/ttyUSB0 # USB-RS485 Adapter Adresse
+      baudrate: 19200 # Prüfe die Geräteeinstellungen, typische Werte sind 9600, 19200, 38400, 57600, 115200
+      comset: "8E1" # Kommunikationsparameter für den Adapter
+
+      # RS485 via TCP/IP (Modbus RTU)
+      modbus: rs485tcpip
+      id: 1
+      host: 192.0.2.2 # Hostname
+      port: 502 # Port
