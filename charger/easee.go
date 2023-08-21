@@ -77,7 +77,7 @@ func NewEaseeFromConfig(other map[string]interface{}) (api.Charger, error) {
 		Password  string
 		Charger   string
 		Timeout   time.Duration
-		authorize bool
+		Authorize bool
 	}{
 		Timeout: request.Timeout,
 	}
@@ -90,7 +90,7 @@ func NewEaseeFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, api.ErrMissingCredentials
 	}
 
-	return NewEasee(cc.User, cc.Password, cc.Charger, cc.Timeout, cc.authorize)
+	return NewEasee(cc.User, cc.Password, cc.Charger, cc.Timeout, cc.Authorize)
 }
 
 // NewEasee creates Easee charger
