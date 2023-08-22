@@ -8,6 +8,12 @@ params:
     choice: ["grid", "pv", "battery"]
     allinone: true
   - name: host
+  - name: protocol
+    type: choice
+    validvalues:
+      - http
+      - https
+    default: http
   - name: capacity
     advanced: true
 render: |
@@ -16,7 +22,7 @@ render: |
     source: http
     unpack: hex
     decode: float32
-    uri: https://{{ .host }}/lala.cgi
+    uri: {{ .protocol }}://{{ .host }}/lala.cgi
     insecure: true
     method: POST
     headers:
@@ -38,7 +44,7 @@ render: |
     source: http
     unpack: hex
     decode: float32
-    uri: https://{{ .host }}/lala.cgi
+    uri: {{ .protocol }}://{{ .host }}/lala.cgi
     insecure: true
     method: POST
     headers:
@@ -59,7 +65,7 @@ render: |
   {{- if eq .usage "battery" }}
   soc:
     source: http
-    uri: https://{{ .host }}/lala.cgi
+    uri: {{ .protocol }}://{{ .host }}/lala.cgi
     insecure: true
     method: POST
     headers:

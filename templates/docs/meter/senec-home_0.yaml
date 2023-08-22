@@ -1,0 +1,44 @@
+product:
+  brand: SENEC
+  description: .Home
+render:
+  - usage: grid
+    default: |
+      type: template
+      template: senec-home
+      usage: grid
+      host: 192.0.2.2 # IP-Adresse oder Hostname
+      protocol: http # Optional
+    advanced: |
+      type: template
+      template: senec-home
+      usage: grid
+      host: 192.0.2.2 # IP-Adresse oder Hostname
+      protocol: http # Optional
+  - usage: pv
+    default: |
+      type: template
+      template: senec-home
+      usage: pv
+      host: 192.0.2.2 # IP-Adresse oder Hostname
+      protocol: http # Optional
+    advanced: |
+      type: template
+      template: senec-home
+      usage: pv
+      host: 192.0.2.2 # IP-Adresse oder Hostname
+      protocol: http # Optional
+  - usage: battery
+    default: |
+      type: template
+      template: senec-home
+      usage: battery
+      host: 192.0.2.2 # IP-Adresse oder Hostname
+      protocol: http # Optional
+    advanced: |
+      type: template
+      template: senec-home
+      usage: battery
+      host: 192.0.2.2 # IP-Adresse oder Hostname
+      protocol: http # Optional
+      capacity: 50 # Akkukapazität in kWh (Optional)
