@@ -21,6 +21,7 @@ func TestEvseWifi(t *testing.T) {
 			"power":    true,
 			"energy":   true,
 			"currents": true,
+			"voltages": true,
 		},
 	})
 
@@ -36,8 +37,8 @@ func TestEvseWifi(t *testing.T) {
 		t.Error("missing api.PhaseCurrents")
 	}
 
-	if _, ok := wb.(api.ChargeTimer); !ok {
-		t.Error("missing ChargeTimer api")
+	if _, ok := wb.(api.PhaseVoltages); !ok {
+		t.Error("missing api.PhaseVoltages")
 	}
 }
 
