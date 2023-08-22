@@ -7,3 +7,7 @@ params:
 render: |
   type: evsewifi
   uri: http://{{ .host }}
+  meter:
+    power: true
+    energy: true
+    currents: true
