@@ -9,6 +9,12 @@ params:
     allinone: true
   - name: host
   - name: capacity
+  - name: schema
+    type: choice
+    validvalues:
+      - http
+      - https
+    default: http
     advanced: true
 render: |
   type: custom
@@ -16,10 +22,11 @@ render: |
     source: http
     unpack: hex
     decode: float32
-    uri: http://{{ .host }}/lala.cgi
+    uri: {{ .schema }}://{{ .host }}/lala.cgi
     method: POST
     headers:
     - content-type: application/json
+    insecure: true
   {{- if eq .usage "grid" }}
     body: '{"ENERGY":{"GUI_GRID_POW":""}}'
     jq: .ENERGY.GUI_GRID_POW | sub("fl_"; "")
@@ -34,10 +41,11 @@ render: |
     scale: -1
   soc:
     source: http
-    uri: http://{{ .host }}/lala.cgi
+    uri: {{ .schema }}://{{ .host }}/lala.cgi
     method: POST
     headers:
     - content-type: application/json
+    insecure: true
     body: '{"ENERGY":{"GUI_BAT_DATA_FUEL_CHARGE":""}}'
     jq: .ENERGY.GUI_BAT_DATA_FUEL_CHARGE | sub("fl_"; "")
     unpack: hex
