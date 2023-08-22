@@ -159,10 +159,10 @@ tariffs:
     type: fixed
     price: 0.294 # EUR/kWh
     zones:
-      - days: Mo-Fr
+      - days: Mon-Fri
         hours: 2-5
         price: 0.2 # EUR/kWh
-      - days: Sa,So
+      - days: Sat,Sun
         price: 0.15 # EUR/kWh
 
     # or variable tariffs
