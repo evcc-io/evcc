@@ -1,0 +1,18 @@
+template: amperfied
+products:
+  - brand: Amperfied
+    description:
+      generic: Wallbox connect.home
+  - brand: Amperfied
+    description:
+      generic: Wallbox connect.business
+capabilities: ["mA", "rfid"]
+requirements:
+  evcc: ["sponsorship"]
+params:
+  - name: modbus
+    choice: ["tcpip"]
+    id: 255
+render: |
+  type: heidelberg
+  {{- include "modbus" . }}

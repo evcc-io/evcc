@@ -12,12 +12,6 @@ products:
   - brand: Amperfied
     description:
       generic: Wallbox Energy Control
-  - brand: Amperfied
-    description:
-      generic: Wallbox connect.home
-  - brand: Amperfied
-    description:
-      generic: Wallbox connect.business
 capabilities: ["mA"]
 requirements:
   description:
