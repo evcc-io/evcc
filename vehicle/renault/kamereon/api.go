@@ -14,6 +14,11 @@ import (
 	"github.com/evcc-io/evcc/vehicle/renault/keys"
 )
 
+const (
+	ActionStart = "start"
+	ActionStop  = "stop"
+)
+
 type API struct {
 	*request.Helper
 	keys     keys.ConfigServer
@@ -112,6 +117,26 @@ func (v *API) WakeUp(accountID string, vin string) (Response, error) {
 			"type": "ChargePauseResume",
 			"attributes": map[string]interface{}{
 				"action": "resume",
+			},
+		},
+	}
+
+	return v.request(uri, request.MarshalJSON(data))
+}
+
+func (v *API) Position(accountID string, vin string) (Response, error) {
+	uri := fmt.Sprintf("%s/commerce/v1/accounts/%s/kamereon/kca/car-adapter/v1/cars/%s/location", v.keys.Target, accountID, vin)
+	return v.request(uri, nil)
+}
+
+func (v *API) Action(accountID, action string, vin string) (Response, error) {
+	uri := fmt.Sprintf("%s/commerce/v1/accounts/%s/kamereon/kca/car-adapter/v1/cars/%s/actions/charging-start", v.keys.Target, accountID, vin)
+
+	data := map[string]interface{}{
+		"data": map[string]interface{}{
+			"type": "ChargingStart",
+			"attributes": map[string]interface{}{
+				"action": action,
 			},
 		},
 	}
