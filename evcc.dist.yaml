@@ -208,7 +208,7 @@ tariffs:
   generation:
     # PV generation forecast in Watt
     # type: solcast
-    # siteid: <id>
+    # site: <id>
     # token: <api token>
 
     # type: ngeso # National Grid Electricity System Operator data (United Kingdom only) https://carbonintensity.org.uk/
