@@ -33,3 +33,7 @@ export const i18n = axios.create({
     Accept: "application/toml",
   },
 });
+
+export function allowErrors(status) {
+  return status >= 200 && status < 500;
+}

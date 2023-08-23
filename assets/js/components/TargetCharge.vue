@@ -41,7 +41,7 @@
 					/>
 				</div>
 			</div>
-			<p class="mb-0">
+			<p class="my-2">
 				<span v-if="timeInThePast" class="d-block text-danger mb-1">
 					{{ $t("main.targetCharge.targetIsInThePast") }}
 				</span>
@@ -61,9 +61,27 @@
 				<span v-if="['off', 'now'].includes(mode)" class="d-block text-secondary mb-1">
 					{{ $t("main.targetCharge.onlyInPvMode") }}
 				</span>
-				&nbsp;
 			</p>
+			<div
+				v-if="$hiddenFeatures && !generationAvailable"
+				class="d-flex justify-content-end my-2"
+			>
+				<div class="form-check form-switch my-1">
+					<input
+						:id="`generationAdjusted${id}`"
+						v-model="generationAdjusted"
+						class="form-check-input"
+						type="checkbox"
+						role="switch"
+					/>
+					<div class="form-check-label">
+						<label :for="`generationAdjusted${id}`"> use solar forecast 🧪</label>
+					</div>
+				</div>
+			</div>
+
 			<TargetChargePlan v-if="targetChargePlanProps" v-bind="targetChargePlanProps" />
+
 			<div class="d-flex justify-content-between mt-3">
 				<button
 					type="button"
@@ -124,6 +142,8 @@ export default {
 			tariff: {},
 			activeTab: "time",
 			loading: false,
+			generationAvailable: false,
+			generationAdjusted: false,
 		};
 	},
 	computed: {
@@ -204,10 +224,14 @@ export default {
 		targetEnergy() {
 			this.updatePlan();
 		},
+		generationAdjusted() {
+			this.updatePlan();
+		},
 	},
-	mounted() {
+	async mounted() {
 		this.initInputFields();
-		this.updatePlan();
+		await this.checkGenerationAvailable();
+		await this.updatePlan();
 	},
 	methods: {
 		updatePlan: async function () {
@@ -221,21 +245,35 @@ export default {
 					this.loading = true;
 					this.plan = (
 						await api.get(`loadpoints/${this.id}/target/plan`, {
-							params: { targetTime: this.selectedTargetTime },
+							params: {
+								targetTime: this.selectedTargetTime,
+								adjusted: this.generationAdjusted,
+							},
 						})
 					).data.result;
 
-					const tariffRes = await api.get(`tariff/planner`, {
-						validateStatus: function (status) {
-							return status >= 200 && status < 500;
-						},
-					});
+					const tariffRes = await api.get(
+						`tariff/planner`,
+						{ params: { adjusted: this.generationAdjusted } },
+						{ validateStatus: api.allowErrors }
+					);
 					this.tariff = tariffRes.status === 404 ? { rates: [] } : tariffRes.data.result;
 				} catch (e) {
 					console.error(e);
 				} finally {
 					this.loading = false;
 				}
+			}
+		},
+		checkGenerationAvailable() {
+			if (!this.$hiddenFeatures) {
+				return;
+			}
+			try {
+				const res = api.get(`tariff/generation`, { validateStatus: api.allowErrors });
+				this.generationAvailable = res.status === 200;
+			} catch (e) {
+				console.error(e);
 			}
 		},
 		defaultDate: function () {
