@@ -32,7 +32,7 @@ func main() {
 
 func generateDocs(lang string) {
 	for _, class := range []templates.Class{templates.Meter, templates.Charger, templates.Vehicle} {
-		path := fmt.Sprintf("%s/%s/%s", docsPath, lang, class)
+		path := fmt.Sprintf("%s/%s/%s", docsPath, lang, strings.ToLower(class.String()))
 		_, err := os.Stat(path)
 		if os.IsNotExist(err) {
 			if err := os.MkdirAll(path, 0o755); err != nil {
