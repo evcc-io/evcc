@@ -208,6 +208,8 @@ title = "Ciljni čas"
 today = "danes"
 tomorrow = "jutri"
 update = "Posodobitev"
+targetEnergyRequired = "Postaviti morate tudi mejo energije."
+onlyInPvMode = "Načrt polnjenja deluje samo v solarnem načinu."
 
 [main.targetChargePlan]
 chargeDuration = "Čas polnjenja"
@@ -230,6 +232,8 @@ none = "Ni vozila"
 targetSoc = "Omejitev"
 unknown = "Neznano vozilo"
 vehicleSoc = "Napolnjeno"
+temp = "Temp."
+tempLimit = "Temp. limit"
 
 [main.vehicleSoc]
 charging = "polnjenje"
@@ -283,7 +287,7 @@ title = "Seja polnjenja"
 [sessions]
 avgPrice = "⌀ Cena"
 co2 = "⌀ CO₂"
-date = "Končano"
+date = "Začni"
 downloadCsv = "Prenesi kot CSV"
 energy = "Napolnjeno"
 loadpoint = "Polnilno mesto"
@@ -292,6 +296,12 @@ reallyDelete = "Ali res želite izbrisati to sejo?"
 solar = "Sončna energija"
 title = "Seje polnjenja"
 vehicle = "Vozilo"
+csvMonth = "Prenesi {month} CSV"
+csvTotal = "Prenesi celoten CSV"
+noData = "Ta mesec ni bilo sej polnjenja."
+total = "Skupaj"
+avgPower = "⌀ Moč"
+chargeDuration = "Trajanje"
 
 [sessions.csv]
 chargedenergy = "Energija (kWh)"
@@ -356,3 +366,40 @@ title = "Napaka pri zagonu"
 cancel = "Prekliči"
 template = "Proizvajalec"
 test = "Test"
+
+
+[config.form]
+example = "Primer"
+optional = "neobvezno"
+
+[config.validation]
+failed = "Napaka"
+success = "uspešno"
+label = "Status"
+running = "preverjanje..."
+unknown = "neznano"
+validate = "preveri"
+
+[config.main]
+vehicles = "Moja vozila"
+addVehicle = "Dodaj vozilo"
+edit = "uredi"
+title = "Konfiguracija"
+
+[config.vehicle]
+cancel = "Prekliči"
+delete = "Izbriši vozilo"
+generic = "Druge integracije"
+offline = "Generično vozilo"
+online = "Vozila s spletnim API-jem"
+titleAdd = "Dodaj vozilo"
+save = "Shrani"
+template = "Proizvajalec"
+scooter = "Skuter"
+titleEdit = "Uredi vozilo"
+validateSave = "Preveri in shrani"
+
+[sessions.filter]
+allLoadpoints = "vsa polnilna mesta"
+allVehicles = "vsa vozila"
+filter = "Filter"
