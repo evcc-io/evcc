@@ -29,7 +29,7 @@ func (t *adjusted) Rates() (api.Rates, error) {
 	// f tariff is feedin
 	var frs api.Rates
 	if t.f != nil {
-		if frs, err = t.g.Rates(); err != nil {
+		if frs, err = t.f.Rates(); err != nil {
 			return nil, err
 		}
 	}
