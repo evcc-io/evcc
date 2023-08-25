@@ -12,6 +12,7 @@ func TestPhoenixEVEthDecorators(t *testing.T) {
 			"power":    true,
 			"energy":   true,
 			"currents": true,
+			"voltages": true,
 		},
 	})
 	if err != nil {
@@ -28,6 +29,10 @@ func TestPhoenixEVEthDecorators(t *testing.T) {
 
 	if _, ok := wb.(api.PhaseCurrents); !ok {
 		t.Error("missing PhaseCurrents api")
+	}
+
+	if _, ok := wb.(api.PhaseVoltages); !ok {
+		t.Error("missing PhaseVoltages api")
 	}
 
 	if _, ok := wb.(api.ChargeTimer); !ok {
