@@ -1117,9 +1117,7 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batter
 
 	// switch phases up/down
 	if _, ok := lp.charger.(api.PhaseSwitcher); ok {
-		if lp.pvScalePhases(sitePower, minCurrent, maxCurrent) {
-			return minCurrent
-		}
+		_ = lp.pvScalePhases(sitePower, minCurrent, maxCurrent)
 	}
 
 	// calculate target charge current from delta power and actual current
