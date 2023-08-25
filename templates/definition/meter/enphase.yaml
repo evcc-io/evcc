@@ -23,7 +23,7 @@ render: |
   {{- if eq .usage "grid" }}
   power:
     source: http
-    uri: http://{{ .host }}/production.json
+    uri: https://{{ .host }}/production.json
     method: GET
     {{- if .token }}
     auth:
@@ -32,12 +32,11 @@ render: |
     insecure: true
     {{- end }}
     jq: .consumption[] | select(.measurementType == "net-consumption").wNow
-    scale: 0.001
   {{- end }}
   {{- if eq .usage "pv" }}
   power:
     source: http
-    uri: http://{{ .host }}/production.json
+    uri: https://{{ .host }}/production.json
     method: GET
     {{- if .token }}
     auth:
@@ -46,10 +45,9 @@ render: |
     insecure: true
     {{- end }}
     jq: .production[] | select(.measurementType == "production").wNow
-    scale: 0.001
   energy:
     source: http
-    uri: http://{{ .host }}/production.json
+    uri: https://{{ .host }}/production.json
     method: GET
     {{- if .token }}
     auth:
@@ -63,7 +61,7 @@ render: |
   {{- if eq .usage "battery" }}
   power:
     source: http
-    uri: http://{{ .host }}/production.json
+    uri: https://{{ .host }}/production.json
     method: GET
     {{- if .token }}
     auth:
@@ -72,10 +70,9 @@ render: |
     insecure: true
     {{- end }}
     jq: .storage[] | .wNow
-    scale: 0.001
   soc:
     source: http
-    uri: http://{{ .host }}/ivp/ensemble/inventory
+    uri: https://{{ .host }}/ivp/ensemble/inventory
     method: GET
     {{- if .token }}
     auth:
