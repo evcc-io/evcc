@@ -234,6 +234,8 @@ none = "Без транспортного засобу"
 targetSoc = "Ліміт"
 unknown = "Гостьовий транспортний засіб"
 vehicleSoc = "Заряд"
+temp = "Темп."
+tempLimit = "Ліміт темп."
 
 [main.vehicleSoc]
 charging = "зарядка"
@@ -302,6 +304,8 @@ solar = "Сонячна"
 title = "Сеанси зарядки"
 total = "Всього"
 vehicle = "Транспортний засіб"
+avgPower = "⌀ потужність"
+chargeDuration = "Тривалість"
 
 [sessions.csv]
 chargedenergy = "Енергія (кВт/год)"
@@ -371,3 +375,35 @@ title = "Помилка запуску"
 cancel = "Скасувати"
 template = "Виробник"
 test = "Тест"
+
+
+[config.main]
+addVehicle = "Додати транспорт"
+edit = "редагувати"
+title = "Конфігурація"
+vehicles = "Мій транспорт"
+
+[config.form]
+example = "Наприклад"
+optional = "необов'язково"
+
+[config.validation]
+failed = "не вдалося"
+label = "Статус"
+running = "перевірка..."
+success = "успіх"
+unknown = "невідомо"
+validate = "перевірити"
+
+[config.vehicle]
+cancel = "Скасувати"
+delete = "Видалити транспорт"
+generic = "Інші інтеграції"
+offline = "Загальний транспорт"
+online = "Транспорт з онлайн API"
+save = "Зберегти"
+scooter = "Скутер"
+template = "Виробник"
+titleAdd = "Додати Транспорт"
+titleEdit = "Редагувати Транспорт"
+validateSave = "Перевірити та зберегти"
