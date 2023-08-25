@@ -24,9 +24,12 @@ func TestEvseWifi(t *testing.T) {
 			"voltages": true,
 		},
 	})
-
 	if err != nil {
 		t.Error(err)
+	}
+
+	if _, ok := wb.(api.Meter); !ok {
+		t.Error("missing api.Meter")
 	}
 
 	if _, ok := wb.(api.MeterEnergy); !ok {
@@ -51,7 +54,6 @@ func TestEvseWifiEx(t *testing.T) {
 	wb, err := NewEVSEWifiFromConfig(map[string]interface{}{
 		"uri": ts.URL,
 	})
-
 	if err != nil {
 		t.Error(err)
 	}
