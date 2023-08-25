@@ -4,6 +4,7 @@ import (
 	"slices"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/soc"
 )
 
 // chargerHasFeature checks availability of charger feature
@@ -27,7 +28,7 @@ func (lp *Loadpoint) publishChargerFeature(f api.Feature) {
 // chargerSoc returns charger soc if available
 func (lp *Loadpoint) chargerSoc() (float64, error) {
 	if c, ok := lp.charger.(api.Battery); ok {
-		return c.Soc()
+		return soc.Guard(c.Soc())
 	}
 	return 0, api.ErrNotAvailable
 }
