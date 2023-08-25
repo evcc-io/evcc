@@ -107,7 +107,7 @@ func (s *Estimator) Soc(chargedEnergy float64) (float64, error) {
 	var fetchedSoc *float64
 
 	if charger, ok := s.charger.(api.Battery); ok {
-		f, err := charger.Soc()
+		f, err := Guard(charger.Soc())
 
 		// if the charger does or could provide Soc, we always use it instead of using the vehicle API
 		if err == nil || !errors.Is(err, api.ErrNotAvailable) {
@@ -128,7 +128,7 @@ func (s *Estimator) Soc(chargedEnergy float64) (float64, error) {
 	}
 
 	if fetchedSoc == nil {
-		f, err := s.vehicle.Soc()
+		f, err := Guard(s.vehicle.Soc())
 		if err != nil {
 			// required for online APIs with refreshkey
 			if errors.Is(err, api.ErrMustRetry) {
