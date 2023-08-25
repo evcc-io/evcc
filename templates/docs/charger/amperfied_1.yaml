@@ -1,0 +1,15 @@
+product:
+  brand: Amperfied
+  description: Wallbox connect.business
+capabilities: ["mA", "rfid"]
+requirements: ["sponsorship"]
+render:
+  - default: |
+      type: template
+      template: amperfied
+
+      # Modbus TCP
+      modbus: tcpip
+      id: 255
+      host: 192.0.2.2 # Hostname
+      port: 502 # Port
