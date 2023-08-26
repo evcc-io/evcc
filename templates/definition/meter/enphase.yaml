@@ -23,7 +23,7 @@ render: |
   {{- if eq .usage "grid" }}
   power:
     source: http
-    uri: https://{{ .host }}/production.json
+    uri: http://{{ .host }}/production.json
     method: GET
     {{- if .token }}
     auth:
@@ -36,7 +36,7 @@ render: |
   {{- if eq .usage "pv" }}
   power:
     source: http
-    uri: https://{{ .host }}/production.json
+    uri: http://{{ .host }}/production.json
     method: GET
     {{- if .token }}
     auth:
@@ -47,7 +47,7 @@ render: |
     jq: .production[] | select(.measurementType == "production").wNow
   energy:
     source: http
-    uri: https://{{ .host }}/production.json
+    uri: http://{{ .host }}/production.json
     method: GET
     {{- if .token }}
     auth:
@@ -61,7 +61,7 @@ render: |
   {{- if eq .usage "battery" }}
   power:
     source: http
-    uri: https://{{ .host }}/production.json
+    uri: http://{{ .host }}/production.json
     method: GET
     {{- if .token }}
     auth:
@@ -72,7 +72,7 @@ render: |
     jq: .storage[] | .wNow
   soc:
     source: http
-    uri: https://{{ .host }}/ivp/ensemble/inventory
+    uri: http://{{ .host }}/ivp/ensemble/inventory
     method: GET
     {{- if .token }}
     auth:
