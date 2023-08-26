@@ -418,6 +418,9 @@ func (c *Easee) Enable(enable bool) error {
 
 	// resume/stop charger
 	action := easee.ChargePause
+	if c.authorize {
+		action = easee.ChargeStop
+	}
 	var expectedEnabledState bool
 	var targetCurrent float64
 	if enable {
