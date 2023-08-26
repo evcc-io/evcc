@@ -167,6 +167,7 @@ var _ api.ChargerEx = (*Mennekes)(nil)
 // MaxCurrentMillis implements the api.ChargerEx interface
 func (wb *Mennekes) MaxCurrentMillis(current float64) error {
 	b := make([]byte, 4)
+	// TODO: Write in LSW first order
 	binary.BigEndian.PutUint32(b, math.Float32bits(float32(current)))
 
 	_, err := wb.conn.WriteMultipleRegisters(mennekesRegChargingCurrentEM, 2, b)
@@ -180,7 +181,7 @@ func (wb *Mennekes) CurrentPower() (float64, error) {
 		return 0, err
 	}
 
-	return float64(encoding.Float32(b)) * 1e3, nil
+	return float64(encoding.Float32LswFirst(b)) * 1e3, nil
 }
 
 var _ api.MeterEnergy = (*Mennekes)(nil)
@@ -206,7 +207,7 @@ func (wb *Mennekes) Currents() (float64, float64, float64, error) {
 
 	var res []float64
 	for i := 0; i < 3; i++ {
-		res = append(res, float64(encoding.Float32(b[4*i:])))
+		res = append(res, float64(encoding.Float32LswFirst(b[4*i:])))
 	}
 
 	return res[0], res[1], res[2], nil
@@ -223,7 +224,7 @@ func (wb *Mennekes) Voltages() (float64, float64, float64, error) {
 
 	var res []float64
 	for i := 0; i < 3; i++ {
-		res = append(res, float64(encoding.Float32(b[4*i:])))
+		res = append(res, float64(encoding.Float32LswFirst(b[4*i:])))
 	}
 
 	return res[0], res[1], res[2], nil
@@ -238,7 +239,7 @@ func (wb *Mennekes) ChargedEnergy() (float64, error) {
 		return 0, err
 	}
 
-	return float64(encoding.Float32(b)), err
+	return float64(encoding.Float32LswFirst(b)), err
 }
 
 var _ api.ChargeTimer = (*Mennekes)(nil)
