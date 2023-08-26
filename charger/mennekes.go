@@ -56,6 +56,10 @@ const (
 	mennekesRegRequestedPhases      = 0x0D04 // uint16
 	mennekesRegChargingReleaseEM    = 0x0D05 // uint16
 	mennekesRegChargedEnergyTotal   = 0x1000 // float32
+
+	mennekesAllowed           = 1
+	mennekesHeartbeatInterval = 10
+	mennekesHeartbeatToken    = 0x55AA
 )
 
 func init() {
@@ -79,14 +83,18 @@ func NewMennekesFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	return NewMennekes(cc.URI, cc.Device, cc.Comset, cc.Baudrate, modbus.ProtocolFromRTU(cc.RTU), cc.ID)
+	return NewMennekes(cc.URI, cc.Device, cc.Comset, cc.Baudrate, modbus.ProtocolFromRTU(cc.RTU), cc.ID, cc.Timeout)
 }
 
 // NewMennekes creates Mennekes charger
-func NewMennekes(uri, device, comset string, baudrate int, proto modbus.Protocol, slaveID uint8) (api.Charger, error) {
+func NewMennekes(uri, device, comset string, baudrate int, proto modbus.Protocol, slaveID uint8, timeout time.Duration) (api.Charger, error) {
 	conn, err := modbus.NewConnection(uri, device, comset, baudrate, proto, slaveID)
 	if err != nil {
 		return nil, err
+	}
+
+	if timeout > 0 {
+		conn.Timeout(timeout)
 	}
 
 	if !sponsor.IsAuthorized() {
@@ -102,14 +110,14 @@ func NewMennekes(uri, device, comset string, baudrate int, proto modbus.Protocol
 	}
 
 	// failsafe
-	go wb.heartbeat(time.Duration(10) * time.Second)
+	go wb.heartbeat(time.Duration(mennekesHeartbeatInterval) * time.Second)
 
 	return wb, err
 }
 
 func (wb *Mennekes) heartbeat(timeout time.Duration) {
 	for range time.Tick(timeout) {
-		if _, err := wb.conn.WriteSingleRegister(mennekesRegHeartbeat, 0x55AA); err != nil {
+		if _, err := wb.conn.WriteSingleRegister(mennekesRegHeartbeat, mennekesHeartbeatToken); err != nil {
 			wb.log.ERROR.Println("heartbeat:", err)
 		}
 	}
@@ -144,7 +152,7 @@ func (wb *Mennekes) Enabled() (bool, error) {
 		return false, err
 	}
 	u := encoding.Uint16(b)
-	return u == 1, nil
+	return u == mennekesAllowed, nil
 }
 
 // Enable implements the api.Charger interface
