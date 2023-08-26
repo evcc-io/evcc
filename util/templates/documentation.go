@@ -98,11 +98,10 @@ func (t *Template) RenderDocumentation(product Product, lang string) ([]byte, er
 	}
 
 	tmpl, err := FuncMap(template.New("yaml")).Funcs(funcMap).Parse(documentationTmpl)
-	if err == nil {
-		err = tmpl.Execute(out, data)
-	} else {
+	if err != nil {
 		panic(err)
 	}
+	err = tmpl.Execute(out, data)
 
 	return []byte(trimLines(out.String())), err
 }

@@ -20,7 +20,6 @@ const (
 //go:generate go run main.go
 
 func main() {
-
 	for _, lang := range []string{"de", "en"} {
 		generateDocs(lang)
 	}
