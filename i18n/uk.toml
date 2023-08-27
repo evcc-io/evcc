@@ -18,6 +18,39 @@ low = "коли трохи повний"
 medium = "коли наполовину повна"
 never = "тільки з достатнім надлишком"
 
+[config]
+
+[config.form]
+example = "Наприклад"
+optional = "необов'язково"
+
+[config.main]
+addVehicle = "Додати транспорт"
+edit = "редагувати"
+title = "Конфігурація"
+vehicles = "Мій транспорт"
+
+[config.validation]
+failed = "не вдалося"
+label = "Статус"
+running = "перевірка..."
+success = "успіх"
+unknown = "невідомо"
+validate = "перевірити"
+
+[config.vehicle]
+cancel = "Скасувати"
+delete = "Видалити транспорт"
+generic = "Інші інтеграції"
+offline = "Загальний транспорт"
+online = "Транспорт з онлайн API"
+save = "Зберегти"
+scooter = "Скутер"
+template = "Виробник"
+titleAdd = "Додати Транспорт"
+titleEdit = "Редагувати Транспорт"
+validateSave = "Перевірити та зберегти"
+
 [footer]
 
 [footer.community]
@@ -232,6 +265,8 @@ fallbackName = "Транспортний засіб"
 moreActions = "Більше дій"
 none = "Без транспортного засобу"
 targetSoc = "Ліміт"
+temp = "Темп."
+tempLimit = "Ліміт темп."
 unknown = "Гостьовий транспортний засіб"
 vehicleSoc = "Заряд"
 
@@ -287,7 +322,9 @@ started = "Розпочато"
 title = "Сеанс зарядки"
 
 [sessions]
+avgPower = "⌀ потужність"
 avgPrice = "⌀ Ціна"
+chargeDuration = "Тривалість"
 co2 = "⌀ CO₂"
 csvMonth = "Завантажити {month} CSV"
 csvTotal = "Завантажити повний CSV"
