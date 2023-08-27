@@ -18,6 +18,39 @@ low = "quando um pouco cheio"
 medium = "quando meio cheio"
 never = "apenas com excesso suficiente"
 
+[config]
+
+[config.form]
+example = "Exemplo"
+optional = "opcional"
+
+[config.main]
+addVehicle = "Adicionar veículo"
+edit = "editar"
+title = "Configuração"
+vehicles = "Meus Veículos"
+
+[config.validation]
+failed = "fracassado"
+label = "Status"
+running = "validando..."
+success = "sucedido"
+unknown = "desconhecido"
+validate = "validar"
+
+[config.vehicle]
+cancel = "Cancelar"
+delete = "Excluir veículo"
+generic = "Outras integrações"
+offline = "Veículo genérico"
+online = "Veículos com API online"
+save = "guardar"
+scooter = "Lambreta"
+template = "Fabricante"
+titleAdd = "Adicionar Veículo"
+titleEdit = "Editar veículo"
+validateSave = "Validar e guardar"
+
 [footer]
 
 [footer.community]

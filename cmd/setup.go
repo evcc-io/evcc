@@ -450,8 +450,8 @@ func configureMQTT(conf mqttConfig) error {
 
 		oc := options.OnConnect
 		options.SetOnConnectHandler(func(client paho.Client) {
-			oc(client)                                       // original handler
-			_ = mqtt.Instance.Publish(topic, true, "online") // alive
+			oc(client)                                   // original handler
+			_ = client.Publish(topic, 1, true, "online") // alive - not logged
 		})
 	})
 	if err != nil {

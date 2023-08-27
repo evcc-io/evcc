@@ -18,6 +18,8 @@ type Provider struct {
 	cockpitG func() (kamereon.Response, error)
 	hvacG    func() (kamereon.Response, error)
 	wakeup   func() (kamereon.Response, error)
+	position func() (kamereon.Response, error)
+	action   func(action string) (kamereon.Response, error)
 }
 
 // NewProvider creates a vehicle api provider
@@ -34,6 +36,12 @@ func NewProvider(api *kamereon.API, accountID, vin string, cache time.Duration) 
 		}, cache),
 		wakeup: func() (kamereon.Response, error) {
 			return api.WakeUp(accountID, vin)
+		},
+		position: func() (kamereon.Response, error) {
+			return api.Position(accountID, vin)
+		},
+		action: func(action string) (kamereon.Response, error) {
+			return api.Action(accountID, action, vin)
 		},
 	}
 	return impl
@@ -145,5 +153,31 @@ var _ api.Resurrector = (*Provider)(nil)
 // WakeUp implements the api.Resurrector interface
 func (v *Provider) WakeUp() error {
 	_, err := v.wakeup()
+	return err
+}
+
+var _ api.VehiclePosition = (*Provider)(nil)
+
+// Position implements the api.VehiclePosition interface
+func (v *Provider) Position() (float64, float64, error) {
+	res, err := v.position()
+	if err == nil {
+		return res.Data.Attributes.Latitude, res.Data.Attributes.Longitude, nil
+	}
+
+	return 0, 0, err
+}
+
+var _ api.VehicleChargeController = (*Provider)(nil)
+
+// StartCharge implements the api.VehicleChargeController interface
+func (v *Provider) StartCharge() error {
+	_, err := v.action(kamereon.ActionStart)
+	return err
+}
+
+// StopCharge implements the api.VehicleChargeController interface
+func (v *Provider) StopCharge() error {
+	_, err := v.action(kamereon.ActionStart)
 	return err
 }

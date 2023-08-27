@@ -212,7 +212,11 @@ var _ api.VehicleChargeController = (*Tesla)(nil)
 
 // StartCharge implements the api.VehicleChargeController interface
 func (v *Tesla) StartCharge() error {
-	return v.apiError(v.vehicle.StartCharging())
+	err := v.apiError(v.vehicle.StartCharging())
+	if err != nil && err.Error() == "is_charging" {
+		return nil
+	}
+	return err
 }
 
 // StopCharge implements the api.VehicleChargeController interface

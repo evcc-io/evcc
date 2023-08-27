@@ -11,8 +11,8 @@ RUN npm ci
 
 # build ui
 COPY Makefile .
-COPY .*.js .
-COPY *.js .
+COPY .*.js ./
+COPY *.js ./
 COPY assets assets
 COPY i18n i18n
 

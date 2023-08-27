@@ -1,3 +1,4 @@
+<!-- eslint-disable vue/no-v-html -->
 <template>
 	<div class="mb-3">
 		<label :for="id">
@@ -11,12 +12,14 @@
 		</div>
 		<div class="form-text">
 			<div v-if="example">{{ $t("config.form.example") }}: {{ example }}</div>
-			<div v-if="help" v-linkify:options="{ target: '_blank' }">{{ help }}</div>
+			<div v-if="help" v-html="helpHtml"></div>
 		</div>
 	</div>
 </template>
 
 <script>
+import linkify from "../../utils/linkify";
+
 export default {
 	name: "FormRow",
 	props: {
@@ -26,6 +29,11 @@ export default {
 		optional: Boolean,
 		smallValue: Boolean,
 		example: String,
+	},
+	computed: {
+		helpHtml() {
+			return linkify(this.help);
+		},
 	},
 };
 </script>

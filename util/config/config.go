@@ -71,7 +71,7 @@ func (d *Config) Update(conf map[string]any) error {
 
 		d.Details = detailsFromMap(conf)
 
-		return tx.Save(&d.Details).Error
+		return tx.Save(&d).Error
 	})
 }
 
@@ -102,7 +102,16 @@ func Init(instance *gorm.DB) error {
 		}
 	}
 
-	return db.AutoMigrate(new(Config), new(ConfigDetail))
+	err := db.AutoMigrate(new(Config), new(ConfigDetail))
+
+	if err == nil && db.Migrator().HasConstraint(new(ConfigDetail), "fk_devices_details") {
+		err = db.Migrator().DropConstraint(new(ConfigDetail), "fk_devices_details")
+	}
+	if err == nil && db.Migrator().HasColumn(new(ConfigDetail), "device_id") {
+		err = db.Migrator().DropColumn(new(ConfigDetail), "device_id")
+	}
+
+	return err
 }
 
 // NameForID returns a unique config name for the given id
@@ -116,18 +125,14 @@ func ConfigurationsByClass(class templates.Class) ([]Config, error) {
 	tx := db.Where(&Config{Class: class}).Preload("Details").Order("id").Find(&devices)
 
 	// remove devices without details
-	for i := 0; i < len(devices); {
-		if len(devices[i].Details) > 0 {
-			i++
-			continue
+	res := make([]Config, 0, len(devices))
+	for _, dev := range devices {
+		if len(dev.Details) > 0 {
+			res = append(res, dev)
 		}
-
-		// delete device
-		copy(devices[i:], devices[i+1:])
-		devices = devices[: len(devices)-1 : len(devices)-1]
 	}
 
-	return devices, tx.Error
+	return res, tx.Error
 }
 
 // ConfigByID returns device by id from the database

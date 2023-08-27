@@ -18,6 +18,39 @@ low = "kai nevisai pilnas"
 medium = "kai puspilnis"
 never = "tik su pakankamu pertekliumi"
 
+[config]
+
+[config.form]
+example = "Pavyzdys"
+optional = "pasirinktinai"
+
+[config.main]
+addVehicle = "Pridėti automobilį"
+edit = "redaguoti"
+title = "Konfigūracija"
+vehicles = "Mano automobiliai"
+
+[config.validation]
+failed = "nepavyko"
+label = "Statusas"
+running = "tikrinama…"
+success = "sėkmingai"
+unknown = "nežinomas"
+validate = "tikrinti"
+
+[config.vehicle]
+cancel = "Atšaukti"
+delete = "Ištrinti automobilį"
+generic = "Kitos integracijos"
+offline = "Tipinis automobilis"
+online = "Automobiliai su internetiniu API"
+save = "Išsaugoti"
+scooter = "Motoroleris"
+template = "Gamintojas"
+titleAdd = "Pridėti Automobilį"
+titleEdit = "Koreguoti Automobilį"
+validateSave = "Patikrinti ir išsaugoti"
+
 [footer]
 
 [footer.community]

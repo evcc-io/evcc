@@ -15,6 +15,7 @@ import (
 	"github.com/evcc-io/evcc/core/planner"
 	"github.com/evcc-io/evcc/core/prioritizer"
 	"github.com/evcc-io/evcc/core/session"
+	"github.com/evcc-io/evcc/core/soc"
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/server/db"
 	"github.com/evcc-io/evcc/server/db/settings"
@@ -483,7 +484,7 @@ func (site *Site) updateMeters() error {
 
 			// battery soc and capacity
 			var capacity float64
-			soc, err := meter.(api.Battery).Soc()
+			soc, err := soc.Guard(meter.(api.Battery).Soc())
 
 			if err == nil {
 				// weigh soc by capacity and accumulate total capacity
