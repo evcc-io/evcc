@@ -39,10 +39,10 @@ func TestGreenShare(t *testing.T) {
 	}{
 		{"half grid, half pv",
 			2500, 2500, 0, 1000, 4000,
-			0.5, 1, 1500/4000},
+			0.5, 1, 1500 / 4000},
 		{"half grid, half pv, no lp",
 			2500, 2500, 0, 5000, 0,
-			0.5, 1, 0},
+			0.5, 0.5, 0},
 		{"full pv",
 			0, 5000, 0, 1000, 4000,
 			1, 1, 1},
@@ -51,7 +51,7 @@ func TestGreenShare(t *testing.T) {
 			0, 0, 0},
 		{"half grid, half battery",
 			2500, 0, 2500, 1000, 4000,
-			0.5, 1, 1500/4000},
+			0.5, 1, 1500 / 4000},
 		{"full pv, pv export",
 			-5000, 10000, 0, 1000, 4000,
 			1, 1, 1},
@@ -77,15 +77,15 @@ func TestGreenShare(t *testing.T) {
 
 		greenShareTotal := s.greenShare(0, tc.home+tc.lp)
 		if greenShareTotal != tc.greenShareTotal {
-			t.Errorf("greenShareTotal wanted %.f, got %.f", tc.greenShareTotal, greenShareTotal)
+			t.Errorf("greenShareTotal wanted %.2f, got %.2f", tc.greenShareTotal, greenShareTotal)
 		}
 		greenShareHome := s.greenShare(0, tc.home)
 		if greenShareHome != tc.greenShareHome {
-			t.Errorf("greenShareHome wanted %.f, got %.f", tc.greenShareHome, greenShareHome)
+			t.Errorf("greenShareHome wanted %.2f, got %.2f", tc.greenShareHome, greenShareHome)
 		}
 		greenShareLoadpoints := s.greenShare(tc.home, tc.home+tc.lp)
 		if greenShareLoadpoints != tc.greenShareLoadpoints {
-			t.Errorf("greenShareLoadpoints wanted %.f, got %.f", tc.greenShareLoadpoints, greenShareLoadpoints)
+			t.Errorf("greenShareLoadpoints wanted %.2f, got %.2f", tc.greenShareLoadpoints, greenShareLoadpoints)
 		}
 	}
 }
