@@ -69,7 +69,7 @@ func TestGreenShare(t *testing.T) {
 			batteryPower: tc.battery,
 		}
 
-		share := s.greenShare(0, 0) // todo: replace with actual tests
+		share := s.greenShare(0, tc.grid + tc.pv + tc.battery) // todo: replace with better tests
 		if share != tc.share {
 			t.Errorf("greenShare wanted %.f, got %.f", tc.share, share)
 		}
