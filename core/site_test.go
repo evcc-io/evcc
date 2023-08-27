@@ -33,9 +33,9 @@ func TestSitePower(t *testing.T) {
 
 func TestGreenShare(t *testing.T) {
 	tc := []struct {
-		title                          string
-		grid, pv, battery, home, lp    float64
-		shareTotal, shareHome, shareLp float64
+		title                                                 string
+		grid, pv, battery, home, lp                           float64
+		greenShareTotal, greenShareHome, greenShareLoadpoints float64
 	}{
 		{"half grid, half pv",
 			2500, 2500, 0, 1000, 4000,
@@ -75,9 +75,17 @@ func TestGreenShare(t *testing.T) {
 			batteryPower: tc.battery,
 		}
 
-		share := s.greenShare(0, tc.grid+tc.pv+tc.battery) // todo: replace with better tests
-		if share != tc.share {
-			t.Errorf("greenShare wanted %.f, got %.f", tc.share, share)
+		greenShareTotal := s.greenShare(0, tc.home+tc.lp)
+		if greenShareTotal != tc.greenShareTotal {
+			t.Errorf("greenShareTotal wanted %.f, got %.f", tc.greenShareTotal, greenShareTotal)
+		}
+		greenShareHome := s.greenShare(0, tc.home)
+		if greenShareHome != tc.greenShareHome {
+			t.Errorf("greenShareHome wanted %.f, got %.f", tc.greenShareHome, greenShareHome)
+		}
+		greenShareLoadpoints := s.greenShare(tc.home, tc.home+tc.lp)
+		if greenShareLoadpoints != tc.greenShareLoadpoints {
+			t.Errorf("greenShareLoadpoints wanted %.f, got %.f", tc.greenShareLoadpoints, greenShareLoadpoints)
 		}
 	}
 }
