@@ -441,13 +441,16 @@ func (c *Easee) Enable(enable bool) error {
 	if err := c.waitForChargerEnabledState(expectedEnabledState); err != nil {
 		return err
 	}
-	if err := c.waitForDynamicChargerCurrent(targetCurrent); err != nil {
-		return err
-	}
 
-	if enable {
-		// reset currents after enable, as easee automatically resets to maxA
-		return c.MaxCurrent(int64(c.current))
+	if !c.authorize { // authenticating charger does not mingle with DCC, no need for waiting
+		if err := c.waitForDynamicChargerCurrent(targetCurrent); err != nil {
+			return err
+		}
+
+		if enable {
+			// reset currents after enable, as easee automatically resets to maxA
+			return c.MaxCurrent(int64(c.current))
+		}
 	}
 
 	return nil
