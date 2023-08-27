@@ -3,7 +3,7 @@ covers: ["fox-ess-rs485", "fox-ess-ethernet"]
 products:
   - brand: FoxESS
     description:
-      generic: H1 Series Hybrid Inverter 
+      generic: H1 Series Hybrid Inverter
 params:
   - name: usage
     choice: ["pv", "battery"]
