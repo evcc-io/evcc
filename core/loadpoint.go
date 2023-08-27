@@ -1025,7 +1025,7 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64) bo
 	availablePower := lp.chargePower - sitePower
 
 	// scale down phases
-	if targetCurrent := powerToCurrent(availablePower, activePhases); sitePower > 0 && targetCurrent < minCurrent && activePhases > 1 && lp.ConfiguredPhases < 3 {
+	if targetCurrent := powerToCurrent(availablePower, activePhases); targetCurrent < minCurrent && activePhases > 1 && lp.ConfiguredPhases < 3 {
 		lp.log.DEBUG.Printf("available power %.0fW < %.0fW min %dp threshold", availablePower, float64(activePhases)*Voltage*minCurrent, activePhases)
 
 		if lp.phaseTimer.IsZero() {
