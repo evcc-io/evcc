@@ -33,31 +33,37 @@ func TestSitePower(t *testing.T) {
 
 func TestGreenShare(t *testing.T) {
 	tc := []struct {
-		title             string
-		grid, pv, battery float64
-		share             float64
+		title                          string
+		grid, pv, battery, home, lp    float64
+		shareTotal, shareHome, shareLp float64
 	}{
 		{"half grid, half pv",
-			2500, 2500, 0,
-			0.5},
+			2500, 2500, 0, 1000, 4000,
+			0.5, 1, 1500/4000},
+		{"half grid, half pv, no lp",
+			2500, 2500, 0, 5000, 0,
+			0.5, 1, 0},
 		{"full pv",
-			0, 5000, 0,
-			1},
+			0, 5000, 0, 1000, 4000,
+			1, 1, 1},
 		{"full grid",
-			5000, 0, 0,
-			0},
+			5000, 0, 0, 1000, 4000,
+			0, 0, 0},
 		{"half grid, half battery",
-			2500, 0, 2500,
-			0.5},
+			2500, 0, 2500, 1000, 4000,
+			0.5, 1, 1500/4000},
 		{"full pv, pv export",
-			-5000, 10000, 0,
-			1},
+			-5000, 10000, 0, 1000, 4000,
+			1, 1, 1},
+		{"full pv, pv export, no lp",
+			-5000, 10000, 0, 5000, 0,
+			1, 1, 1},
 		{"full pv, pv export, battery charge",
-			-2500, 10000, -2500,
-			1},
+			-2500, 10000, -2500, 1000, 4000,
+			1, 1, 1},
 		{"double charge speed, full grid",
-			10000, 0, 0,
-			0},
+			10000, 0, 0, 1000, 4000,
+			0, 0, 0},
 	}
 
 	for _, tc := range tc {
