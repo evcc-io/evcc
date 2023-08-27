@@ -2,12 +2,13 @@ template: fox-ess-h3
 products:
   - brand: FoxESS
     description:
-      generic: H3 via Ethernet
+      generic: H3 Series Hybrid Inverter
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
   - name: modbus
-    choice: ["tcpip"]
+    choice: ["rs485", "tcpip"]
+    id: 247
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -50,14 +51,12 @@ render: |
     add:
     - source: modbus
       {{- include "modbus" . | indent 4 }}
-      # register details
       register:
         address: 31002 # PV1
         type: holding
         decode: int16
     - source: modbus
       {{- include "modbus" . | indent 4 }}
-      # register details
       register:
         address: 31005 # PV2
         type: holding
@@ -67,7 +66,6 @@ render: |
   power:
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    # register details
     register:
       address: 31036 # Battery Charge/Discharge
       type: holding
@@ -75,7 +73,6 @@ render: |
   soc:
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    # register details
     register:
       address: 31038 # Soc
       type: holding
