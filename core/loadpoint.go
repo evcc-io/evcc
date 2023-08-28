@@ -641,7 +641,7 @@ func (lp *Loadpoint) syncCharger() error {
 	}()
 
 	// status in sync
-	if enabled == lp.enabled {
+	if enabled && lp.enabled {
 		// sync max current
 		if charger, ok := lp.charger.(api.CurrentGetter); ok && enabled {
 			current, err := charger.GetMaxCurrent()
@@ -675,6 +675,7 @@ func (lp *Loadpoint) syncCharger() error {
 		if lp.guardGracePeriodElapsed() {
 			lp.log.WARN.Println("charger logic error: disabled but charging")
 		}
+		enabled = true //defer sets it on lp
 		lp.elapseGuard()
 		return nil
 	}
