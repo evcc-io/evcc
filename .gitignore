@@ -13,6 +13,7 @@ __debug_bin
 !package*.json
 !evcc.dist.yaml
 !tests/**/*.evcc.yaml
+/templates/docs
 evcc
 evcc.exe
 evcc_*
