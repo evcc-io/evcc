@@ -8,7 +8,10 @@ params:
     choice: ["grid", "pv", "battery"]
     allinone: true
   - name: host
-  - name: protocol
+  - name: schema
+    description:
+      de: Schema
+      en: Schema
     type: choice
     validvalues:
       - http
@@ -22,7 +25,7 @@ render: |
     source: http
     unpack: hex
     decode: float32
-    uri: {{ .protocol }}://{{ .host }}/lala.cgi
+    uri: {{ .schema }}://{{ .host }}/lala.cgi
     insecure: true
     method: POST
     headers:
@@ -44,7 +47,7 @@ render: |
     source: http
     unpack: hex
     decode: float32
-    uri: {{ .protocol }}://{{ .host }}/lala.cgi
+    uri: {{ .schema }}://{{ .host }}/lala.cgi
     insecure: true
     method: POST
     headers:
@@ -65,7 +68,7 @@ render: |
   {{- if eq .usage "battery" }}
   soc:
     source: http
-    uri: {{ .protocol }}://{{ .host }}/lala.cgi
+    uri: {{ .schema }}://{{ .host }}/lala.cgi
     insecure: true
     method: POST
     headers:
