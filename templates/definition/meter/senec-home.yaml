@@ -49,7 +49,7 @@ render: |
     jq: .ENERGY.GUI_BAT_DATA_POWER | sub("fl_"; "")
     scale: -1
   {{- end }}
-  {{- if .live_stats }}
+  {{- if ne .live_stats "false" }}
   energy:
     source: http
     unpack: hex
