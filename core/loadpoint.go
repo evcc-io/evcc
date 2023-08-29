@@ -640,8 +640,17 @@ func (lp *Loadpoint) syncCharger() error {
 		lp.publish("enabled", lp.enabled)
 	}()
 
+	if !enabled && lp.charging() {
+		if lp.guardGracePeriodElapsed() {
+			lp.log.WARN.Println("charger logic error: disabled but charging")
+		}
+		enabled = true // treat as enabled when charging
+		lp.elapseGuard()
+		return nil
+	}
+
 	// status in sync
-	if enabled && lp.enabled {
+	if enabled == lp.enabled {
 		// sync max current
 		if charger, ok := lp.charger.(api.CurrentGetter); ok && enabled {
 			current, err := charger.GetMaxCurrent()
@@ -667,15 +676,6 @@ func (lp *Loadpoint) syncCharger() error {
 		if lp.guardGracePeriodElapsed() && lp.phaseSwitchCompleted() && (enabled || lp.connected()) {
 			lp.log.WARN.Printf("charger out of sync: expected %vd, got %vd", status[lp.enabled], status[enabled])
 		}
-		lp.elapseGuard()
-		return nil
-	}
-
-	if !enabled && lp.charging() {
-		if lp.guardGracePeriodElapsed() {
-			lp.log.WARN.Println("charger logic error: disabled but charging")
-		}
-		enabled = true // treat as enabled when charging
 		lp.elapseGuard()
 		return nil
 	}
