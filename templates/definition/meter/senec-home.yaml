@@ -17,6 +17,12 @@ params:
       - http
       - https
     default: http
+  - name: live_stats
+    description:
+      de: Unterstützt Live Energy Statistiken (ab Senec V3)
+      en: Supports Live Energy Statistics (Senec V3 and up)
+    type: bool
+    default: false
   - name: capacity
     advanced: true
 render: |
@@ -43,6 +49,7 @@ render: |
     jq: .ENERGY.GUI_BAT_DATA_POWER | sub("fl_"; "")
     scale: -1
   {{- end }}
+  {{- if .live_stats }}
   energy:
     source: http
     unpack: hex
@@ -65,6 +72,7 @@ render: |
     jq: .STATISTIC.LIVE_BAT_DISCHARGE | sub("fl_"; "")
   {{- end }}
     scale: 0.001
+  {{- end }}
   {{- if eq .usage "battery" }}
   soc:
     source: http
