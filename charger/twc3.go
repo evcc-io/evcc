@@ -30,31 +30,31 @@ func init() {
 
 // Vitals is the /api/1/vitals response
 type Vitals struct {
-	ContactorClosed   bool    `json:"contactor_closed"`    //false
-	VehicleConnected  bool    `json:"vehicle_connected"`   //false
-	SessionS          int64   `json:"session_s"`           //0
-	GridV             float64 `json:"grid_v"`              //230.1
-	GridHz            float64 `json:"grid_hz"`             //49.928
-	VehicleCurrentA   float64 `json:"vehicle_current_a"`   //0.1
-	CurrentAA         float64 `json:"currentA_a"`          //0.0
-	CurrentBA         float64 `json:"currentB_a"`          //0.1
-	CurrentCA         float64 `json:"currentC_a"`          //0.0
-	CurrentNA         float64 `json:"currentN_a"`          //0.0
-	VoltageAV         float64 `json:"voltageA_v"`          //0.0
-	VoltageBV         float64 `json:"voltageB_v"`          //0.0
-	VoltageCV         float64 `json:"voltageC_v"`          //0.0
-	RelayCoilV        float64 `json:"relay_coil_v"`        //11.8
-	PcbaTempC         float64 `json:"pcba_temp_c"`         //19.2
-	HandleTempC       float64 `json:"handle_temp_c"`       //15.3
-	McuTempC          float64 `json:"mcu_temp_c"`          //25.1
-	UptimeS           int     `json:"uptime_s"`            //831580
+	ContactorClosed   bool    `json:"contactor_closed"`    // false
+	VehicleConnected  bool    `json:"vehicle_connected"`   // false
+	SessionS          int64   `json:"session_s"`           // 0
+	GridV             float64 `json:"grid_v"`              // 230.1
+	GridHz            float64 `json:"grid_hz"`             // 49.928
+	VehicleCurrentA   float64 `json:"vehicle_current_a"`   // 0.1
+	CurrentAA         float64 `json:"currentA_a"`          // 0.0
+	CurrentBA         float64 `json:"currentB_a"`          // 0.1
+	CurrentCA         float64 `json:"currentC_a"`          // 0.0
+	CurrentNA         float64 `json:"currentN_a"`          // 0.0
+	VoltageAV         float64 `json:"voltageA_v"`          // 0.0
+	VoltageBV         float64 `json:"voltageB_v"`          // 0.0
+	VoltageCV         float64 `json:"voltageC_v"`          // 0.0
+	RelayCoilV        float64 `json:"relay_coil_v"`        // 11.8
+	PcbaTempC         float64 `json:"pcba_temp_c"`         // 19.2
+	HandleTempC       float64 `json:"handle_temp_c"`       // 15.3
+	McuTempC          float64 `json:"mcu_temp_c"`          // 25.1
+	UptimeS           int     `json:"uptime_s"`            // 831580
 	InputThermopileUv float64 `json:"input_thermopile_uv"` //-233
-	ProxV             float64 `json:"prox_v"`              //0.0
-	PilotHighV        float64 `json:"pilot_high_v"`        //11.9
-	PilotLowV         float64 `json:"pilot_low_v"`         //11.9
-	SessionEnergyWh   float64 `json:"session_energy_wh"`   //22864.699
-	ConfigStatus      int     `json:"config_status"`       //5
-	EvseState         int     `json:"evse_state"`          //1
+	ProxV             float64 `json:"prox_v"`              // 0.0
+	PilotHighV        float64 `json:"pilot_high_v"`        // 11.9
+	PilotLowV         float64 `json:"pilot_low_v"`         // 11.9
+	SessionEnergyWh   float64 `json:"session_energy_wh"`   // 22864.699
+	ConfigStatus      int     `json:"config_status"`       // 5
+	EvseState         int     `json:"evse_state"`          // 1
 	CurrentAlerts     []any   `json:"current_alerts"`      //[]
 }
 
@@ -91,6 +91,19 @@ func NewTwc3FromConfig(other map[string]interface{}) (api.Charger, error) {
 
 // Enabled implements the api.Charger interface
 func (c *Twc3) Enabled() (bool, error) {
+	if c.enabled {
+		return c.enabled, nil
+	}
+
+	status, err := c.Status()
+	if err != nil {
+		return c.enabled, err
+	}
+
+	if status == api.StatusC {
+		c.enabled = true
+	}
+
 	return c.enabled, nil
 }
 
