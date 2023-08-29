@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
@@ -35,12 +36,17 @@ func (t *Token) AsOAuth2Token() *oauth2.Token {
 // tokenSource is an oauth2.TokenSource
 type tokenSource struct {
 	*request.Helper
+	bo backoff.BackOff
 }
 
 // TokenSource creates an Easee token source
 func TokenSource(log *util.Logger, user, password string) (oauth2.TokenSource, error) {
+	bo := backoff.NewExponentialBackOff()
+	bo.MaxElapsedTime = time.Minute
+
 	c := &tokenSource{
 		Helper: request.NewHelper(log),
+		bo:     bo,
 	}
 
 	data := struct {
@@ -68,7 +74,15 @@ func TokenSource(log *util.Logger, user, password string) (oauth2.TokenSource, e
 	return ts, nil
 }
 
-func (c *tokenSource) RefreshToken(oauthToken *oauth2.Token) (*oauth2.Token, error) {
+func (c *tokenSource) RefreshToken(oauthToken *oauth2.Token) (tok *oauth2.Token, err error) {
+	defer func() {
+		if err != nil {
+			time.Sleep(c.bo.NextBackOff())
+		} else {
+			c.bo.Reset()
+		}
+	}()
+
 	data := struct {
 		AccessToken  string `json:"accessToken"`
 		RefreshToken string `json:"refreshToken"`
