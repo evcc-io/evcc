@@ -47,19 +47,17 @@ type CarbonForecastRequest interface {
 type CarbonForecastNationalRequest struct{}
 
 func (r *CarbonForecastNationalRequest) URI() (string, error) {
-	currentTs := time.Now().UTC()
-	t := currentTs.Format(time.RFC3339)
-	return fmt.Sprintf(ForecastNationalURI, t), nil
+	return fmt.Sprintf(ForecastNationalURI, time.Now().UTC().Format(time.RFC3339)), nil
 }
 
-func (r *CarbonForecastNationalRequest) DoRequest(client *request.Helper) (res CarbonForecastResponse, err error) {
+func (r *CarbonForecastNationalRequest) DoRequest(client *request.Helper) (CarbonForecastResponse, error) {
 	uri, err := r.URI()
 	if err != nil {
-		return
+		return nil, err
 	}
-	res = &NationalIntensityResult{}
-	err = client.GetJSON(uri, &res)
-	return
+	var res NationalIntensityResult
+	err = client.GetJSON(uri, res)
+	return res, err
 }
 
 type CarbonForecastRegionalRequest struct {
@@ -68,25 +66,27 @@ type CarbonForecastRegionalRequest struct {
 }
 
 func (r *CarbonForecastRegionalRequest) URI() (string, error) {
-	currentTs := time.Now().UTC()
-	t := currentTs.Format(time.RFC3339)
+	currentTs := time.Now().UTC().Format(time.RFC3339)
+	// Prefer postcode to Region ID
+	if r.postcode != "" {
+		return fmt.Sprintf(ForecastRegionalByPostcodeURI, currentTs, r.postcode), nil
+	}
 	if r.regionid != "" {
-		return fmt.Sprintf(ForecastRegionalByIdURI, t, r.regionid), nil
-	} else if r.postcode != "" {
-		return fmt.Sprintf(ForecastRegionalByPostcodeURI, t, r.postcode), nil
+		return fmt.Sprintf(ForecastRegionalByIdURI, currentTs, r.regionid), nil
 	}
 
+	// One of the region identifiers must be supplied, if neither are then just return an error
 	return "", ErrRegionalRequestInvalidFormat
 }
 
-func (r *CarbonForecastRegionalRequest) DoRequest(client *request.Helper) (res CarbonForecastResponse, err error) {
+func (r *CarbonForecastRegionalRequest) DoRequest(client *request.Helper) (CarbonForecastResponse, error) {
 	uri, err := r.URI()
 	if err != nil {
-		return
+		return nil, err
 	}
-	res = &RegionalIntensityResult{}
+	res := &RegionalIntensityResult{}
 	err = client.GetJSON(uri, &res)
-	return
+	return res, err
 }
 
 type CarbonForecastResponse interface {

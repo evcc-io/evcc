@@ -40,7 +40,7 @@ func NewNgesoFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	}
 
 	if cc.Region != "" && cc.Postcode != "" {
-		return nil, errors.New("region and postcode cannot be defined simultaneously - pick one")
+		return nil, errors.New("cannot define region and postcode simultaneously")
 	}
 
 	t := &Ngeso{
@@ -79,18 +79,15 @@ func (t *Ngeso) run(done chan error) {
 	for ; true; <-time.Tick(time.Hour) {
 		var carbonResponse ngeso.CarbonForecastResponse
 		if err := backoff.Retry(func() error {
-			var wErr error
-			carbonResponse, wErr = tReq.DoRequest(client)
-			if wErr != nil {
+			var err error
+			carbonResponse, err = tReq.DoRequest(client)
+
+			var statusError *request.StatusError
+			if errors.As(err, &statusError) && statusError.HasStatus(http.StatusBadRequest) {
 				// Catch cases where we're sending completely incorrect data (usually the result of a bad region).
-				switch e := wErr.(type) {
-				case request.StatusError:
-					if e.StatusCode() == http.StatusBadRequest {
-						return backoff.Permanent(wErr)
-					}
-				}
+				return backoff.Permanent(err)
 			}
-			return wErr
+			return err
 		}, bo); err != nil {
 			once.Do(func() { done <- err })
 
