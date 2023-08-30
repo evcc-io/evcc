@@ -640,6 +640,15 @@ func (lp *Loadpoint) syncCharger() error {
 		lp.publish("enabled", lp.enabled)
 	}()
 
+	if !enabled && lp.charging() {
+		if lp.guardGracePeriodElapsed() {
+			lp.log.WARN.Println("charger logic error: disabled but charging")
+		}
+		enabled = true // treat as enabled when charging
+		lp.elapseGuard()
+		return nil
+	}
+
 	// status in sync
 	if enabled == lp.enabled {
 		// sync max current
@@ -666,14 +675,6 @@ func (lp *Loadpoint) syncCharger() error {
 		// ignore disabled state if vehicle was disconnected ^(lp.enabled && ^lp.connected)
 		if lp.guardGracePeriodElapsed() && lp.phaseSwitchCompleted() && (enabled || lp.connected()) {
 			lp.log.WARN.Printf("charger out of sync: expected %vd, got %vd", status[lp.enabled], status[enabled])
-		}
-		lp.elapseGuard()
-		return nil
-	}
-
-	if !enabled && lp.charging() {
-		if lp.guardGracePeriodElapsed() {
-			lp.log.WARN.Println("charger logic error: disabled but charging")
 		}
 		lp.elapseGuard()
 		return nil
@@ -1005,7 +1006,7 @@ func (lp *Loadpoint) fastCharging() error {
 }
 
 // pvScalePhases switches phases if necessary and returns if switch occurred
-func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64) bool {
+func (lp *Loadpoint) pvScalePhases(availablePower, minCurrent, maxCurrent float64) bool {
 	phases := lp.GetPhases()
 
 	// observed phase state inconsistency
@@ -1022,10 +1023,9 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64) bo
 
 	var waiting bool
 	activePhases := lp.activePhases()
-	availablePower := lp.chargePower - sitePower
 
 	// scale down phases
-	if targetCurrent := powerToCurrent(availablePower, activePhases); sitePower > 0 && targetCurrent < minCurrent && activePhases > 1 && lp.ConfiguredPhases < 3 {
+	if targetCurrent := powerToCurrent(availablePower, activePhases); targetCurrent < minCurrent && activePhases > 1 && lp.ConfiguredPhases < 3 {
 		lp.log.DEBUG.Printf("available power %.0fW < %.0fW min %dp threshold", availablePower, float64(activePhases)*Voltage*minCurrent, activePhases)
 
 		if lp.phaseTimer.IsZero() {
@@ -1117,7 +1117,8 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batter
 
 	// switch phases up/down
 	if _, ok := lp.charger.(api.PhaseSwitcher); ok {
-		_ = lp.pvScalePhases(sitePower, minCurrent, maxCurrent)
+		availablePower := -sitePower + lp.chargePower
+		_ = lp.pvScalePhases(availablePower, minCurrent, maxCurrent)
 	}
 
 	// calculate target charge current from delta power and actual current

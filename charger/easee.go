@@ -523,7 +523,7 @@ func (c *Easee) waitForChargerEnabledState(expEnabled bool) error {
 		return nil
 	}
 
-	timer := time.NewTimer(10 * time.Second)
+	timer := time.NewTimer(c.Client.Timeout)
 	for {
 		select {
 		case obs := <-c.obsC:
@@ -552,7 +552,7 @@ func (c *Easee) waitForDynamicChargerCurrent(targetCurrent float64) error {
 	}
 	c.mux.Unlock()
 
-	timer := time.NewTimer(10 * time.Second)
+	timer := time.NewTimer(c.Client.Timeout)
 	for {
 		select {
 		case obs := <-c.obsC:

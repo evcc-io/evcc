@@ -23,7 +23,7 @@ const (
 	OAuthURI = "https://identity.porsche.com"
 	ClientID = "UYsK00My6bCqJdbQhTQ0PbWmcSdIAMig"
 
-	maxTokenLifetime = time.Hour
+	maxTokenLifetime = 24 * time.Hour // avoid token refresh for the time being, as refresh currently always fails
 )
 
 // https://identity.porsche.com/.well-known/openid-configuration

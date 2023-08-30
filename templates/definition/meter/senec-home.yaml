@@ -8,6 +8,15 @@ params:
     choice: ["grid", "pv", "battery"]
     allinone: true
   - name: host
+  - name: schema
+    description:
+      de: Schema
+      en: Schema
+    type: choice
+    validvalues:
+      - http
+      - https
+    default: http
   - name: capacity
     advanced: true
 render: |
@@ -16,7 +25,8 @@ render: |
     source: http
     unpack: hex
     decode: float32
-    uri: http://{{ .host }}/lala.cgi
+    uri: {{ .schema }}://{{ .host }}/lala.cgi
+    insecure: true
     method: POST
     headers:
     - content-type: application/json
@@ -32,9 +42,34 @@ render: |
     body: '{"ENERGY":{"GUI_BAT_DATA_POWER":""}}'
     jq: .ENERGY.GUI_BAT_DATA_POWER | sub("fl_"; "")
     scale: -1
+  {{- end }}
+  energy:
+    source: http
+    unpack: hex
+    decode: float32
+    uri: {{ .schema }}://{{ .host }}/lala.cgi
+    insecure: true
+    method: POST
+    headers:
+    - content-type: application/json
+  {{- if eq .usage "grid" }}
+    body: '{"STATISTIC":{"LIVE_GRID_IMPORT":""}}'
+    jq: .STATISTIC.LIVE_GRID_IMPORT | sub("fl_"; "")
+  {{- end }}
+  {{- if eq .usage "pv" }}
+    body: '{"STATISTIC":{"LIVE_PV_GEN":""}}'
+    jq: .STATISTIC.LIVE_PV_GEN | sub("fl_"; "")
+  {{- end }}
+  {{- if eq .usage "battery" }}
+    body: '{"STATISTIC":{"LIVE_BAT_DISCHARGE":""}}'
+    jq: .STATISTIC.LIVE_BAT_DISCHARGE | sub("fl_"; "")
+  {{- end }}
+    scale: 0.001
+  {{- if eq .usage "battery" }}
   soc:
     source: http
-    uri: http://{{ .host }}/lala.cgi
+    uri: {{ .schema }}://{{ .host }}/lala.cgi
+    insecure: true
     method: POST
     headers:
     - content-type: application/json

@@ -274,6 +274,11 @@ func (c *EEBus) Enabled() (bool, error) {
 		return c.expectedEnableUnpluggedState, nil
 	}
 
+	// if the EV is charging
+	if state == api.StatusC {
+		return true, nil
+	}
+
 	limits, err := c.emobility.EVLoadControlObligationLimits()
 	if err != nil {
 		// there are no overload protection limits available, e.g. because the data was not received yet

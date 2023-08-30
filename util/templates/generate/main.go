@@ -13,7 +13,6 @@ import (
 )
 
 const (
-	language    = "de"
 	docsPath    = "../../../templates/docs"
 	websitePath = "../../../templates/evcc.io"
 )
@@ -21,8 +20,18 @@ const (
 //go:generate go run main.go
 
 func main() {
+	for _, lang := range []string{"de", "en"} {
+		generateDocs(lang)
+	}
+
+	if err := generateBrandJSON(); err != nil {
+		panic(err)
+	}
+}
+
+func generateDocs(lang string) {
 	for _, class := range []templates.Class{templates.Meter, templates.Charger, templates.Vehicle} {
-		path := fmt.Sprintf("%s/%s", docsPath, class)
+		path := fmt.Sprintf("%s/%s/%s", docsPath, lang, strings.ToLower(class.String()))
 		_, err := os.Stat(path)
 		if os.IsNotExist(err) {
 			if err := os.MkdirAll(path, 0o755); err != nil {
@@ -33,31 +42,27 @@ func main() {
 			fmt.Printf("Could not clear directory for %s: %s\n", class, err)
 		}
 
-		if err := generateClass(class); err != nil {
+		if err := generateClass(class, lang); err != nil {
 			panic(err)
 		}
 	}
-
-	if err := generateBrandJSON(); err != nil {
-		panic(err)
-	}
 }
 
-func generateClass(class templates.Class) error {
+func generateClass(class templates.Class, lang string) error {
 	for _, tmpl := range templates.ByClass(class) {
 		if err := tmpl.Validate(); err != nil {
 			return err
 		}
 
 		for index, product := range tmpl.Products {
-			fmt.Println(tmpl.Template + ": " + product.Title(language))
+			fmt.Println(tmpl.Template + ": " + product.Title(lang))
 
-			b, err := tmpl.RenderDocumentation(product, "de")
+			b, err := tmpl.RenderDocumentation(product, lang)
 			if err != nil {
 				return err
 			}
 
-			filename := fmt.Sprintf("%s/%s/%s_%d.yaml", docsPath, strings.ToLower(class.String()), tmpl.Template, index)
+			filename := fmt.Sprintf("%s/%s/%s/%s_%d.yaml", docsPath, lang, strings.ToLower(class.String()), tmpl.Template, index)
 			if err := os.WriteFile(filename, b, 0o644); err != nil {
 				return err
 			}
