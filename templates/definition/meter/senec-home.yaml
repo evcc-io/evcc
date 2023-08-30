@@ -11,9 +11,9 @@ params:
   - name: schema
     type: choice
     validvalues:
-      - http
       - https
-    default: http
+      - http
+    default: https
   - name: capacity
     advanced: true
 render: |
