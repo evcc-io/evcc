@@ -3,7 +3,9 @@
 package ngeso
 
 import (
+	"errors"
 	"fmt"
+	"github.com/evcc-io/evcc/util/request"
 	"time"
 )
 
@@ -22,35 +24,101 @@ const ForecastRegionalByIdURI = BaseURI + "regional/intensity/%s/fw48h/regionid/
 // Replace the first %s with the RFC3339 timestamp to fetch from, and the second with the appropriate postcode.
 const ForecastRegionalByPostcodeURI = BaseURI + "regional/intensity/%s/fw48h/postcode/%s"
 
-// ConstructForecastNationalAPI returns a validly formatted, fully qualified URI to the national forecast.
-func ConstructForecastNationalAPI() string {
-	currentTs := time.Now().UTC()
-	t := currentTs.Format(time.RFC3339)
-	return fmt.Sprintf(ForecastNationalURI, t)
+// ConstructNationalForecastRequest returns a request object to be used when calling the national API.
+func ConstructNationalForecastRequest() *CarbonForecastNationalRequest {
+	return &CarbonForecastNationalRequest{}
 }
 
-// ConstructForecastRegionalByIdAPI returns a validly formatted, fully qualified URI to the forecast valid for the given region.
-func ConstructForecastRegionalByIdAPI(r string) string {
-	currentTs := time.Now().UTC()
-	t := currentTs.Format(time.RFC3339)
-	return fmt.Sprintf(ForecastRegionalByIdURI, t, r)
+// ConstructRegionalForecastByIDRequest returns a validly formatted, fully qualified URI to the forecast valid for the given region.
+func ConstructRegionalForecastByIDRequest(r string) *CarbonForecastRegionalRequest {
+	return &CarbonForecastRegionalRequest{regionid: r}
 }
 
-// ConstructForecastRegionalByPostcodeAPI returns a validly formatted, fully qualified URI to the forecast valid for the given postcode.
-func ConstructForecastRegionalByPostcodeAPI(p string) string {
-	currentTs := time.Now().UTC()
-	t := currentTs.Format(time.RFC3339)
-	return fmt.Sprintf(ForecastRegionalByPostcodeURI, t, p)
+// ConstructRegionalForecastByPostcodeRequest returns a validly formatted, fully qualified URI to the forecast valid for the given postcode.
+func ConstructRegionalForecastByPostcodeRequest(p string) *CarbonForecastRegionalRequest {
+	return &CarbonForecastRegionalRequest{postcode: p}
 }
 
+type CarbonForecastRequest interface {
+	URI() (string, error)
+	DoRequest(helper *request.Helper) (CarbonForecastResponse, error)
+}
+
+type CarbonForecastNationalRequest struct{}
+
+func (r CarbonForecastNationalRequest) URI() (string, error) {
+	currentTs := time.Now().UTC()
+	t := currentTs.Format(time.RFC3339)
+	return fmt.Sprintf(ForecastNationalURI, t), nil
+}
+
+func (r *CarbonForecastNationalRequest) DoRequest(client *request.Helper) (res CarbonForecastResponse, err error) {
+	uri, err := r.URI()
+	if err != nil {
+		return
+	}
+	res = &NationalIntensityResult{}
+	err = client.GetJSON(uri, &res)
+	return
+}
+
+type CarbonForecastRegionalRequest struct {
+	regionid string
+	postcode string
+}
+
+func (r *CarbonForecastRegionalRequest) URI() (string, error) {
+	currentTs := time.Now().UTC()
+	t := currentTs.Format(time.RFC3339)
+	if r.regionid != "" {
+		return fmt.Sprintf(ForecastRegionalByIdURI, t, r.regionid), nil
+	} else if r.postcode != "" {
+		return fmt.Sprintf(ForecastRegionalByPostcodeURI, t, r.postcode), nil
+	}
+
+	return "", ErrRegionalRequestInvalidFormat
+}
+
+func (r *CarbonForecastRegionalRequest) DoRequest(client *request.Helper) (res CarbonForecastResponse, err error) {
+	uri, err := r.URI()
+	if err != nil {
+		return
+	}
+	res = &RegionalIntensityResult{}
+	err = client.GetJSON(uri, &res)
+	return
+}
+
+type CarbonForecastResponse interface {
+	Results() []CarbonIntensityForecastEntry
+}
+
+// RegionalIntensityResult is returned by Regional requests. It wraps all data inside a data element.
+// Because that makes sense, and makes all of this SO much easier. /s
 type RegionalIntensityResult struct {
-	RegionId  int            `json:"regionid"`
-	DNORegion string         `json:"dnoregion"`
-	ShortName string         `json:"shortname"`
-	Results   IntensityRates `json:"data"`
+	Data RegionalIntensityResultData `json:"data"`
 }
-type IntensityRates struct {
-	Results []CarbonIntensityForecastEntry `json:"data"`
+
+func (r RegionalIntensityResult) Results() []CarbonIntensityForecastEntry {
+	return r.Data.Rates
+}
+
+// RegionalIntensityResultData is returned by Regional requests. It includes a bit of extra data.
+type RegionalIntensityResultData struct {
+	RegionId  int                            `json:"regionid"`
+	DNORegion string                         `json:"dnoregion"`
+	ShortName string                         `json:"shortname"`
+	Rates     []CarbonIntensityForecastEntry `json:"data"`
+}
+
+// NationalIntensityResult is returned either as a sub-element of a Regional request, or as the main result of a National request.
+type NationalIntensityResult struct {
+	Rates []CarbonIntensityForecastEntry `json:"data"`
+}
+
+// Results is a helper / interface function to return the current rate data.
+func (r NationalIntensityResult) Results() []CarbonIntensityForecastEntry {
+	return r.Rates
 }
 
 type CarbonIntensityForecastEntry struct {
@@ -67,3 +135,5 @@ type CarbonIntensity struct {
 	// A human-readable representation of the level of emissions (e.g "low", "moderate")
 	Index string `json:"index"`
 }
+
+var ErrRegionalRequestInvalidFormat error = errors.New("regional request object missing region")

@@ -62,39 +62,25 @@ func (t *Ngeso) run(done chan error) {
 	bo := newBackoff()
 
 	// Use national results by default.
-	tUri := ngeso.ConstructForecastNationalAPI()
-	var apiDecodeAsRegional bool
+	var tReq ngeso.CarbonForecastRequest
+	tReq = ngeso.ConstructNationalForecastRequest()
 
 	// If a region is available, use that.
 	// These should never be set simultaneously (see NewNgesoFromConfig), but in the rare case that they are,
 	// use the postcode as the preferred method.
-	// Regional responses are subtly different, so we set a flag to let the loop know to decode them as such. FIXME?
 	if t.regionId != "" {
-		tUri = ngeso.ConstructForecastRegionalByIdAPI(t.regionId)
-		apiDecodeAsRegional = true
+		tReq = ngeso.ConstructRegionalForecastByIDRequest(t.regionId)
 	}
 	if t.regionPostcode != "" {
-		tUri = ngeso.ConstructForecastRegionalByPostcodeAPI(t.regionPostcode)
-		apiDecodeAsRegional = true
+		tReq = ngeso.ConstructRegionalForecastByPostcodeRequest(t.regionPostcode)
 	}
 
 	// Data updated by ESO every half hour, but we only need data every hour to stay current.
 	for ; true; <-time.Tick(time.Hour) {
-		// FIXME Eww, this is a sloppy way of handling this. Maybe we should move abstraction of this to the ngeso package?
-		var rgnlWrapper ngeso.RegionalIntensityResult
-		var res ngeso.IntensityRates
-
+		var carbonResponse ngeso.CarbonForecastResponse
 		if err := backoff.Retry(func() error {
 			var wErr error
-			// (vomits internally)
-			if apiDecodeAsRegional {
-				wErr = client.GetJSON(tUri, &rgnlWrapper)
-				if wErr == nil {
-					res = rgnlWrapper.Results
-				}
-			} else {
-				wErr = client.GetJSON(tUri, &res)
-			}
+			carbonResponse, wErr = tReq.DoRequest(client)
 			if wErr != nil {
 				// Catch cases where we're sending completely incorrect data (usually the result of a bad region).
 				switch e := wErr.(type) {
@@ -117,8 +103,8 @@ func (t *Ngeso) run(done chan error) {
 		t.mux.Lock()
 		t.updated = time.Now()
 
-		t.data = make(api.Rates, 0, len(res.Results))
-		for _, r := range res.Results {
+		t.data = make(api.Rates, 0, len(carbonResponse.Results()))
+		for _, r := range carbonResponse.Results() {
 			ar := api.Rate{
 				Start: r.ValidityStart.Time,
 				End:   r.ValidityEnd.Time,
