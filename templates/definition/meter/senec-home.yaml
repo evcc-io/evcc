@@ -52,7 +52,7 @@ render: |
     jq: .ENERGY.GUI_BAT_DATA_POWER | sub("fl_"; "")
     scale: -1
   {{- end }}
-  {{- if ne .version "v2" }}
+  {{- if eq .version "v3" }}
   energy:
     source: http
     unpack: hex
