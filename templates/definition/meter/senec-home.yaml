@@ -25,7 +25,6 @@ params:
     validvalues:
       - v2
       - v3
-      - v4
     default: v2
   - name: capacity
     advanced: true
