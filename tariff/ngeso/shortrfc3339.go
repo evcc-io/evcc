@@ -1,7 +1,6 @@
 package ngeso
 
 import (
-	"fmt"
 	"strings"
 	"time"
 )
@@ -28,7 +27,7 @@ func (ct *shortRFC3339Timestamp) MarshalJSON() ([]byte, error) {
 	if ct.Time.IsZero() {
 		return []byte("null"), nil
 	}
-	return []byte(fmt.Sprintf("%s", ct.Time.Format(s3339Layout))), nil
+	return []byte(ct.Time.Format(s3339Layout)), nil
 }
 
 func (ct *shortRFC3339Timestamp) IsSet() bool {

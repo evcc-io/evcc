@@ -46,7 +46,7 @@ type CarbonForecastRequest interface {
 
 type CarbonForecastNationalRequest struct{}
 
-func (r CarbonForecastNationalRequest) URI() (string, error) {
+func (r *CarbonForecastNationalRequest) URI() (string, error) {
 	currentTs := time.Now().UTC()
 	t := currentTs.Format(time.RFC3339)
 	return fmt.Sprintf(ForecastNationalURI, t), nil
@@ -136,4 +136,4 @@ type CarbonIntensity struct {
 	Index string `json:"index"`
 }
 
-var ErrRegionalRequestInvalidFormat error = errors.New("regional request object missing region")
+var ErrRegionalRequestInvalidFormat = errors.New("regional request object missing region")
