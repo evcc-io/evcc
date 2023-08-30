@@ -9,9 +9,6 @@ params:
     allinone: true
   - name: host
   - name: schema
-    description:
-      de: Schema
-      en: Schema
     type: choice
     validvalues:
       - http
