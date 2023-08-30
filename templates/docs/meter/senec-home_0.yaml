@@ -9,14 +9,14 @@ render:
       usage: grid
       host: 192.0.2.2 # IP-Adresse oder Hostname
       schema: http # Optional
-      live_stats: false # Optional
+      version: v2 # Optional
     advanced: |
       type: template
       template: senec-home
       usage: grid
       host: 192.0.2.2 # IP-Adresse oder Hostname
       schema: http # Optional
-      live_stats: false # Optional
+      version: v2 # Optional
   - usage: pv
     default: |
       type: template
@@ -24,14 +24,14 @@ render:
       usage: pv
       host: 192.0.2.2 # IP-Adresse oder Hostname
       schema: http # Optional
-      live_stats: false # Optional
+      version: v2 # Optional
     advanced: |
       type: template
       template: senec-home
       usage: pv
       host: 192.0.2.2 # IP-Adresse oder Hostname
       schema: http # Optional
-      live_stats: false # Optional
+      version: v2 # Optional
   - usage: battery
     default: |
       type: template
@@ -39,12 +39,12 @@ render:
       usage: battery
       host: 192.0.2.2 # IP-Adresse oder Hostname
       schema: http # Optional
-      live_stats: false # Optional
+      version: v2 # Optional
     advanced: |
       type: template
       template: senec-home
       usage: battery
       host: 192.0.2.2 # IP-Adresse oder Hostname
       schema: http # Optional
-      live_stats: false # Optional
+      version: v2 # Optional
       capacity: 50 # Akkukapazität in kWh (Optional)

@@ -17,12 +17,16 @@ params:
       - http
       - https
     default: http
-  - name: live_stats
+  - name: version
     description:
-      de: Unterstützt Live Energy Statistiken (ab Senec V3)
-      en: Supports Live Energy Statistics (Senec V3 and up)
-    type: bool
-    default: false
+      de: Senic.Home Version
+      en: Senic.Home Version
+    type: choice
+    validvalues:
+      - v2
+      - v3
+      - v4
+    default: v2
   - name: capacity
     advanced: true
 render: |
@@ -49,7 +53,7 @@ render: |
     jq: .ENERGY.GUI_BAT_DATA_POWER | sub("fl_"; "")
     scale: -1
   {{- end }}
-  {{- if ne .live_stats "false" }}
+  {{- if ne .version "v2" }}
   energy:
     source: http
     unpack: hex
