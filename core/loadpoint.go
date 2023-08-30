@@ -635,6 +635,11 @@ func (lp *Loadpoint) syncCharger() error {
 		return err
 	}
 
+	defer func() {
+		lp.enabled = enabled
+		lp.publish("enabled", lp.enabled)
+	}()
+
 	if !enabled && lp.charging() {
 		if lp.guardGracePeriodElapsed() {
 			lp.log.WARN.Println("charger logic error: disabled but charging")
@@ -642,11 +647,6 @@ func (lp *Loadpoint) syncCharger() error {
 		}
 		return nil
 	}
-
-	defer func() {
-		lp.enabled = enabled
-		lp.publish("enabled", lp.enabled)
-	}()
 
 	// status in sync
 	if enabled == lp.enabled {
