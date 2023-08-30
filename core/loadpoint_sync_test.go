@@ -15,12 +15,13 @@ func TestSyncCharger(t *testing.T) {
 	tc := []struct {
 		status                      api.ChargeStatus
 		expected, actual, corrected bool
+		enableCalls                 int
 	}{
-		{api.StatusA, false, false, false},
-		{api.StatusC, false, false, true}, // disabled but charging
-		{api.StatusA, false, true, true},
-		{api.StatusA, true, false, false},
-		{api.StatusA, true, true, true},
+		{api.StatusA, false, false, false, 0},
+		{api.StatusC, false, false, true, 1}, // disabled but charging
+		{api.StatusA, false, true, true, 0},
+		{api.StatusA, true, false, false, 0},
+		{api.StatusA, true, true, true, 0},
 	}
 
 	ctrl := gomock.NewController(t)
@@ -30,6 +31,7 @@ func TestSyncCharger(t *testing.T) {
 
 		charger := mock.NewMockCharger(ctrl)
 		charger.EXPECT().Enabled().Return(tc.actual, nil).AnyTimes()
+		charger.EXPECT().Enable(gomock.Any()).Times(tc.enableCalls)
 
 		lp := &Loadpoint{
 			log:     util.NewLogger("foo"),
