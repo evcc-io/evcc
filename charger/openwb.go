@@ -177,7 +177,14 @@ func (m *OpenWB) Enable(enable bool) error {
 }
 
 func (m *OpenWB) Enabled() (bool, error) {
-	return m.enabled, nil
+	enabled := m.enabled
+	if (!enabled) {
+		status, err := m.Status()
+		if (err == nil) && (status == api.StatusC) {
+			enabled = true
+		}
+	}
+	return enabled, nil
 }
 
 func (m *OpenWB) Status() (api.ChargeStatus, error) {
@@ -185,11 +192,7 @@ func (m *OpenWB) Status() (api.ChargeStatus, error) {
 	if err != nil {
 		return api.StatusNone, err
 	}
-	cs, err2 := api.ChargeStatusString(status)
-	if cs == api.StatusC {
-		m.enabled = true // if we are charging we are enabled
-	}
-	return cs, err2
+	return api.ChargeStatusString(status)
 }
 
 func (m *OpenWB) MaxCurrent(current int64) error {
