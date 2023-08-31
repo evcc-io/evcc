@@ -1,0 +1,13 @@
+product:
+  brand: ESL
+  description: Walli LIGHT
+capabilities: ["mA", "rfid"]
+requirements: ["sponsorship"]
+description: |
+  DIP Schalter 10 des Controllers muss auf 'ON' gestellt sein. Eine aktuelle Controller-Firmware wird empfohlen.
+render:
+  - default: |
+      type: template
+      template: phoenix-ev-eth
+      host: 192.0.2.2 # IP-Adresse oder Hostname
+      port: 502 # Port # Optional
