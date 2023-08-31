@@ -185,7 +185,11 @@ func (m *OpenWB) Status() (api.ChargeStatus, error) {
 	if err != nil {
 		return api.StatusNone, err
 	}
-	return api.ChargeStatusString(status)
+	cs := api.ChargeStatusString(status)
+	if (cs == api.StatusC) {
+		m.enabled = true // if we are charging we are enabled
+	}
+	return cs
 }
 
 func (m *OpenWB) MaxCurrent(current int64) error {
