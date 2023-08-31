@@ -91,20 +91,12 @@ func NewTwc3FromConfig(other map[string]interface{}) (api.Charger, error) {
 
 // Enabled implements the api.Charger interface
 func (c *Twc3) Enabled() (bool, error) {
-	if c.enabled {
-		return c.enabled, nil
+	enabled, err := verifyEnabled(c, c.enabled)
+	if err == nil {
+		c.enabled = enabled
 	}
 
-	status, err := c.Status()
-	if err != nil {
-		return c.enabled, err
-	}
-
-	if status == api.StatusC {
-		c.enabled = true
-	}
-
-	return c.enabled, nil
+	return enabled, err
 }
 
 // Enable implements the api.Charger interface
