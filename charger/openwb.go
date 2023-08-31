@@ -178,7 +178,7 @@ func (m *OpenWB) Enable(enable bool) error {
 
 func (m *OpenWB) Enabled() (bool, error) {
 	enabled := m.enabled
-	if (!enabled) {
+	if !enabled {
 		status, err := m.Status()
 		if (err == nil) && (status == api.StatusC) {
 			enabled = true
