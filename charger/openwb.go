@@ -186,7 +186,7 @@ func (m *OpenWB) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 	cs, err2 := api.ChargeStatusString(status)
-	if (cs == api.StatusC) {
+	if cs == api.StatusC {
 		m.enabled = true // if we are charging we are enabled
 	}
 	return cs, err2
