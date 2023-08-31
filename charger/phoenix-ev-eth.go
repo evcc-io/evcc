@@ -25,7 +25,6 @@ package charger
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -182,19 +181,6 @@ func (wb *PhoenixEVEth) maxCurrentMillis(current float64) error {
 	_, err := wb.conn.WriteSingleRegister(phxRegMaxCurrent, u)
 
 	return err
-}
-
-var _ api.ChargeTimer = (*PhoenixEVEth)(nil)
-
-// ChargingTime implements the api.ChargeTimer interface
-func (wb *PhoenixEVEth) ChargingTime() (time.Duration, error) {
-	b, err := wb.conn.ReadInputRegisters(phxRegChargeTime, 2)
-	if err != nil {
-		return 0, err
-	}
-
-	secs := encoding.Uint32LswFirst(b)
-	return time.Duration(secs) * time.Second, nil
 }
 
 // currentPower implements the api.Meter interface
