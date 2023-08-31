@@ -82,10 +82,10 @@ func (t *Ngeso) run(done chan error) {
 			var err error
 			carbonResponse, err = tReq.DoRequest(client)
 
-			var statusError *request.StatusError
-			if errors.As(err, &statusError) && statusError.HasStatus(http.StatusBadRequest) {
+			// Consider whether errors.As would be more appropriate if this needs to start dealing with wrapped errors.
+			if se, ok := err.(request.StatusError); ok && se.HasStatus(http.StatusBadRequest) {
 				// Catch cases where we're sending completely incorrect data (usually the result of a bad region).
-				return backoff.Permanent(err)
+				return backoff.Permanent(se)
 			}
 			return err
 		}, bo); err != nil {
