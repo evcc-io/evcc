@@ -161,6 +161,7 @@ func NewEasee(user, password, charger string, timeout time.Duration) (*Easee, er
 	client, err := signalr.NewClient(context.Background(),
 		signalr.WithConnector(c.connect(ts)),
 		signalr.WithReceiver(c),
+		signalr.WithBackoff(c.backOffFactory()),
 		signalr.Logger(easee.SignalrLogger(c.log.TRACE), false),
 	)
 
@@ -202,6 +203,14 @@ func (c *Easee) chargerSite(charger string) (easee.Site, error) {
 	uri := fmt.Sprintf("%s/chargers/%s/site", easee.API, charger)
 	err := c.GetJSON(uri, &res)
 	return res, err
+}
+
+func (c *Easee) backOffFactory() func() backoff.BackOff {
+	return func() backoff.BackOff {
+		bo := backoff.NewExponentialBackOff()
+		bo.MaxElapsedTime = 0
+		return bo
+	}
 }
 
 // connect creates an HTTP connection to the signalR hub
