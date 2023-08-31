@@ -11,7 +11,7 @@ import (
 	"github.com/evcc-io/evcc/tariff/ngeso"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
-	"golang.org/x/exp/slices"
+	"slices"
 )
 
 type Ngeso struct {
