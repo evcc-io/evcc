@@ -8,7 +8,7 @@ import (
 
 func newBackoff() backoff.BackOff {
 	bo := backoff.NewExponentialBackOff()
-	bo.InitialInterval = 5 * time.Second
-	bo.MaxElapsedTime = time.Minute
+	bo.InitialInterval = time.Second
+	bo.MaxInterval = time.Minute
 	return bo
 }

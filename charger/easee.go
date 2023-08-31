@@ -207,7 +207,7 @@ func (c *Easee) chargerSite(charger string) (easee.Site, error) {
 // connect creates an HTTP connection to the signalR hub
 func (c *Easee) connect(ts oauth2.TokenSource) func() (signalr.Connection, error) {
 	bo := backoff.NewExponentialBackOff()
-	bo.MaxElapsedTime = time.Minute
+	bo.MaxInterval = time.Minute
 
 	return func() (conn signalr.Connection, err error) {
 		defer func() {
@@ -447,7 +447,7 @@ func (c *Easee) inExpectedOpMode(enable bool) bool {
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
-	//start/resume
+	// start/resume
 	if enable {
 		return c.opMode == easee.ModeCharging ||
 			c.opMode == easee.ModeCompleted ||
@@ -455,7 +455,7 @@ func (c *Easee) inExpectedOpMode(enable bool) bool {
 			c.opMode == easee.ModeReadyToCharge
 	}
 
-	//paused/stopped
+	// paused/stopped
 	return c.opMode == easee.ModeAwaitingStart || c.opMode == easee.ModeAwaitingAuthentication
 }
 
