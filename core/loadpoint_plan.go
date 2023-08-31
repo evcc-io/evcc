@@ -47,7 +47,7 @@ func (lp *Loadpoint) planRequiredDuration(maxPower float64) time.Duration {
 // Results:
 // - required total charging duration
 // - actual charging plan as rate table
-func (lp *Loadpoint) GetPlan(targetTime time.Time, maxPower float64) (time.Duration, api.Rates, error) {
+func (lp *Loadpoint) GetPlan(targetTime time.Time, maxPower float64, adjusted bool) (time.Duration, api.Rates, error) {
 	if lp.planner == nil || targetTime.IsZero() {
 		return 0, nil, nil
 	}
@@ -58,7 +58,7 @@ func (lp *Loadpoint) GetPlan(targetTime time.Time, maxPower float64) (time.Durat
 	}
 
 	requiredDuration := lp.planRequiredDuration(maxPower)
-	plan, err := lp.planner.Plan(requiredDuration, targetTime)
+	plan, err := lp.planner.Plan(requiredDuration, targetTime, adjusted)
 
 	// sort plan by time
 	slices.SortStableFunc(plan, planner.SortByTime)
@@ -74,7 +74,7 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 
 	maxPower := lp.GetMaxPower()
 
-	requiredDuration, plan, err := lp.GetPlan(lp.GetTargetTime(), maxPower)
+	requiredDuration, plan, err := lp.GetPlan(lp.GetTargetTime(), maxPower, false)
 	if err != nil {
 		lp.log.ERROR.Println("planner:", err)
 		return false

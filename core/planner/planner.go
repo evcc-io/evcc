@@ -82,7 +82,7 @@ func (t *Planner) plan(rates api.Rates, requiredDuration time.Duration, targetTi
 }
 
 // Plan creates a lowest-cost charging plan, considering edge conditions
-func (t *Planner) Plan(requiredDuration time.Duration, targetTime time.Time) (api.Rates, error) {
+func (t *Planner) Plan(requiredDuration time.Duration, targetTime time.Time, adjusted bool) (api.Rates, error) {
 	if t == nil || requiredDuration <= 0 {
 		return nil, nil
 	}

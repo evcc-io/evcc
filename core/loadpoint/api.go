@@ -60,7 +60,7 @@ type API interface {
 	// SetTargetSoc sets the charge target soc
 	SetTargetSoc(int)
 	// GetPlan creates a charging plan
-	GetPlan(targetTime time.Time, maxPower float64) (time.Duration, api.Rates, error)
+	GetPlan(targetTime time.Time, maxPower float64, adjusted bool) (time.Duration, api.Rates, error)
 	// GetEnableThreshold gets the loadpoint enable threshold
 	GetEnableThreshold() float64
 	// SetEnableThreshold sets loadpoint enable threshold

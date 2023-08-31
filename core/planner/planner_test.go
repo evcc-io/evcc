@@ -133,11 +133,11 @@ func TestNilTariff(t *testing.T) {
 		clock: clock,
 	}
 
-	plan, err := p.Plan(time.Hour, clock.Now().Add(30*time.Minute))
+	plan, err := p.Plan(time.Hour, clock.Now().Add(30*time.Minute), false)
 	assert.NoError(t, err)
 	assert.True(t, !SlotAt(clock.Now(), plan).IsEmpty(), "should start past start time")
 
-	plan, err = p.Plan(time.Hour, clock.Now().Add(-30*time.Minute))
+	plan, err = p.Plan(time.Hour, clock.Now().Add(-30*time.Minute), false)
 	assert.NoError(t, err)
 	assert.False(t, !SlotAt(clock.Now(), plan).IsEmpty(), "should not start past target time")
 }
@@ -155,11 +155,11 @@ func TestFlatTariffTargetInThePast(t *testing.T) {
 		tariff: trf,
 	}
 
-	plan, err := p.Plan(time.Hour, clock.Now().Add(30*time.Minute))
+	plan, err := p.Plan(time.Hour, clock.Now().Add(30*time.Minute), false)
 	assert.NoError(t, err)
 	assert.True(t, !SlotAt(clock.Now(), plan).IsEmpty(), "should start past start time")
 
-	plan, err = p.Plan(time.Hour, clock.Now().Add(-30*time.Minute))
+	plan, err = p.Plan(time.Hour, clock.Now().Add(-30*time.Minute), false)
 	assert.NoError(t, err)
 	assert.False(t, !SlotAt(clock.Now(), plan).IsEmpty(), "should not start past target time")
 }
@@ -181,13 +181,13 @@ func TestFlatTariffLongSlots(t *testing.T) {
 	// that slots are not longer than 1 hour and with that context this is not a problem
 
 	// expect 00:00-01:00 UTC
-	plan, err := p.Plan(time.Hour, clock.Now().Add(2*time.Hour))
+	plan, err := p.Plan(time.Hour, clock.Now().Add(2*time.Hour), false)
 	assert.NoError(t, err)
 	assert.Equal(t, api.Rate{Start: clock.Now(), End: clock.Now().Add(time.Hour)}, SlotAt(clock.Now(), plan))
 	assert.Equal(t, api.Rate{}, SlotAt(clock.Now().Add(time.Hour), plan))
 
 	// expect 00:00-01:00 UTC
-	plan, err = p.Plan(time.Hour, clock.Now().Add(time.Hour))
+	plan, err = p.Plan(time.Hour, clock.Now().Add(time.Hour), false)
 	assert.NoError(t, err)
 	assert.Equal(t, api.Rate{Start: clock.Now(), End: clock.Now().Add(time.Hour)}, SlotAt(clock.Now(), plan))
 }
@@ -205,11 +205,12 @@ func TestTargetAfterKnownPrices(t *testing.T) {
 		tariff: trf,
 	}
 
-	plan, err := p.Plan(40*time.Minute, clock.Now().Add(2*time.Hour)) // charge efficiency does not allow to test with 1h
+	// charge efficiency does not allow to test with 1,false
+	plan, err := p.Plan(40*time.Minute, clock.Now().Add(2*time.Hour), false)
 	assert.NoError(t, err)
 	assert.False(t, !SlotAt(clock.Now(), plan).IsEmpty(), "should not start if car can be charged completely after known prices ")
 
-	plan, err = p.Plan(2*time.Hour, clock.Now().Add(2*time.Hour))
+	plan, err = p.Plan(2*time.Hour, clock.Now().Add(2*time.Hour), false)
 	assert.NoError(t, err)
 	assert.True(t, !SlotAt(clock.Now(), plan).IsEmpty(), "should start if car can not be charged completely after known prices ")
 }
@@ -227,11 +228,11 @@ func TestChargeAfterTargetTime(t *testing.T) {
 		tariff: trf,
 	}
 
-	plan, err := p.Plan(time.Hour, clock.Now())
+	plan, err := p.Plan(time.Hour, clock.Now(), false)
 	assert.NoError(t, err)
 	assert.False(t, !SlotAt(clock.Now(), plan).IsEmpty(), "should not start past target time")
 
-	plan, err = p.Plan(time.Hour, clock.Now().Add(-time.Hour))
+	plan, err = p.Plan(time.Hour, clock.Now().Add(-time.Hour), false)
 	assert.NoError(t, err)
 	assert.False(t, !SlotAt(clock.Now(), plan).IsEmpty(), "should not start past target time")
 }
