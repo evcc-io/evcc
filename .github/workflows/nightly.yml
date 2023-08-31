@@ -4,6 +4,8 @@ env:
   GO_VERSION: ^1.21
 
 on:
+  schedule: # runs on the default branch: master
+    - cron: "0 2 * * *" # run at 2 AM UTC
   workflow_dispatch:
 
 jobs:
