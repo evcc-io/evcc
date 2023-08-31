@@ -206,6 +206,11 @@ tariffs:
     # token: <token>
     # zone: DE
 
+    # type: ngeso # National Grid Electricity System Operator data (United Kingdom only) https://carbonintensity.org.uk/
+    # provides national data if both region and postcode are omitted - do not supply both at the same time!
+    # region: 1 # optional, coarser than using a postcode - see https://api.carbonintensity.org.uk/ for full list
+    # postcode: SW1A1AA # optional
+
 # mqtt message broker
 mqtt:
   # broker: localhost:1883
