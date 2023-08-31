@@ -1,6 +1,6 @@
 template: phoenix-charx
 products:
-  - brand: Phoenix
+  - brand: Phoenix Contact
     description:
       generic: CHARX
   - brand: LadeFoxx
