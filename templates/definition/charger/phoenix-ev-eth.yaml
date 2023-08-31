@@ -20,9 +20,9 @@ requirements:
     de: DIP Schalter 10 des Controllers muss auf 'ON' gestellt sein. Eine aktuelle Controller-Firmware wird empfohlen.
   evcc: ["sponsorship"]
 params:
-  - name: host
-  - name: port
-    default: 502
+  - name: modbus
+    choice: ["tcpip"]
+    id: 255
 render: |
   type: phoenix-ev-eth
-  uri: {{ .host }}:{{ .port }}
+  {{- include "modbus" . }}
