@@ -65,22 +65,20 @@ func init() {
 
 // NewPhoenixEVEthFromConfig creates a PhoenixEVEth charger from generic config
 func NewPhoenixEVEthFromConfig(other map[string]interface{}) (api.Charger, error) {
-	cc := struct {
-		URI string
-	}{
-		URI: "192.168.0.8:502",
+	cc := modbus.TcpSettings{
+		ID: 255,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewPhoenixEVEth(cc.URI)
+	return NewPhoenixEVEth(cc.URI, cc.ID)
 }
 
 // NewPhoenixEVEth creates a PhoenixEVEth charger
-func NewPhoenixEVEth(uri string) (api.Charger, error) {
-	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, 255)
+func NewPhoenixEVEth(uri string, slaveID uint8) (api.Charger, error) {
+	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, slaveID)
 	if err != nil {
 		return nil, err
 	}
