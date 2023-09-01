@@ -453,7 +453,6 @@ func TestDisableAndEnableAtTargetSoc(t *testing.T) {
 
 	t.Log("soc has fallen below target - soc update timer expired")
 	clock.Add(pollInterval)
-	time.Sleep(45 * time.Second) // wait until soc update fuction runs
 	vehicle.EXPECT().Soc().Return(85.0, nil)
 	charger.EXPECT().Status().Return(api.StatusB, nil)
 	charger.EXPECT().Enabled().Return(lp.enabled, nil)
