@@ -19,8 +19,8 @@ params:
     default: http
   - name: version
     description:
-      de: Senic.Home Version
-      en: Senic.Home Version
+      de: Senec.Home Version
+      en: Senec.Home Version
     type: choice
     validvalues:
       - v2
