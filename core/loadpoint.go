@@ -424,7 +424,7 @@ func (lp *Loadpoint) evChargeStopHandler() {
 	}
 
 	// soc update reset
-	time.AfterFunc(30*time.Second, func() { 
+	time.AfterFunc(30*time.Second, func() {
 		provider.ResetCached()
 		lp.socUpdated = time.Time{}
 	})
