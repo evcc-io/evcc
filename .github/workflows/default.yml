@@ -63,6 +63,12 @@ jobs:
       - name: Build
         run: make build
 
+      - name: Upload
+        uses: actions/upload-artifact@v3
+        with:
+          name: evcc
+          path: ./evcc
+
   test:
     name: Test
     runs-on: ubuntu-latest
