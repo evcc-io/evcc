@@ -245,6 +245,20 @@ func (site *Site) restoreSettings() {
 	if v, err := settings.Float("site.smartCostLimit"); err == nil {
 		site.SmartCostLimit = v
 	}
+
+	site.restoreSettings()
+}
+
+// restoreVehicleSettings restores vehicle settings from database
+func restoreVehicleSettings(site *Site) {
+	for idx, v := range site.coordinator.GetVehicles() {
+		if soc, err := settings.Int(fmt.Sprintf("vehicle.%d.defaultTargetSoc", idx)); err == nil {
+			v.SetDefaultTargetSoc(int(soc))
+		}
+		if soc, err := settings.Int(fmt.Sprintf("vehicle.%d.minSoc", idx)); err == nil {
+			v.SetMinSoc(int(soc))
+		}
+	}
 }
 
 func meterCapabilities(name string, meter interface{}) string {

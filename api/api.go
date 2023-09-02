@@ -184,6 +184,10 @@ type Vehicle interface {
 	IconDescriber
 	Title() string
 	SetTitle(string)
+	DefaultTargetSoc() int
+	SetDefaultTargetSoc(int)
+	MinSoc() int
+	SetMinSoc(int)
 	Phases() int
 	Identifiers() []string
 	OnIdentified() ActionConfig

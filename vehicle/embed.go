@@ -5,13 +5,15 @@ import (
 )
 
 type embed struct {
-	Title_       string           `mapstructure:"title"`
-	Icon_        string           `mapstructure:"icon"`
-	Capacity_    float64          `mapstructure:"capacity"`
-	Phases_      int              `mapstructure:"phases"`
-	Identifiers_ []string         `mapstructure:"identifiers"`
-	Features_    []api.Feature    `mapstructure:"features"`
-	OnIdentify   api.ActionConfig `mapstructure:"onIdentify"`
+	Title_            string           `mapstructure:"title"`
+	Icon_             string           `mapstructure:"icon"`
+	Capacity_         float64          `mapstructure:"capacity"`
+	Phases_           int              `mapstructure:"phases"`
+	DefaultTargetSoc_ int              `mapstructure:"targetSoc"`
+	MinSoc_           int              `mapstructure:"minSoc"`
+	Identifiers_      []string         `mapstructure:"identifiers"`
+	Features_         []api.Feature    `mapstructure:"features"`
+	OnIdentify        api.ActionConfig `mapstructure:"onIdentify"`
 }
 
 // Title implements the api.Vehicle interface
@@ -32,6 +34,26 @@ func (v *embed) Capacity() float64 {
 // Phases returns the phases used by the vehicle
 func (v *embed) Phases() int {
 	return v.Phases_
+}
+
+// DefaultTargetSoc implements the api.Vehicle interface
+func (v *embed) DefaultTargetSoc() int {
+	return v.DefaultTargetSoc_
+}
+
+// SetDefaultTargetSoc implements the api.Vehicle interface
+func (v *embed) SetDefaultTargetSoc(soc int) {
+	v.DefaultTargetSoc_ = soc
+}
+
+// MinSoc implements the api.Vehicle interface
+func (v *embed) MinSoc() int {
+	return v.MinSoc_
+}
+
+// SetMinSoc implements the api.Vehicle interface
+func (v *embed) SetMinSoc(soc int) {
+	v.MinSoc_ = soc
 }
 
 // Identifiers implements the api.Identifier interface

@@ -73,8 +73,6 @@ type SocConfig struct {
 	Estimate *bool      `mapstructure:"estimate"`
 	Min_     int        `mapstructure:"min"`    // TODO deprecated
 	Target_  int        `mapstructure:"target"` // TODO deprecated
-	min      int        // Default minimum Soc, guarded by mutex
-	target   int        // Default target Soc, guarded by mutex
 }
 
 // Poll modes
@@ -118,6 +116,7 @@ type Loadpoint struct {
 	VehiclesRef_      []string `mapstructure:"vehicles"` // TODO deprecated
 	MeterRef          string   `mapstructure:"meter"`    // Charge meter reference
 	Soc               SocConfig
+	sessionTargetSoc  int // target soc for current session, will be resetted on disconnect
 	Enable, Disable   ThresholdConfig
 	ResetOnDisconnect bool `mapstructure:"resetOnDisconnect"`
 	onDisconnect      api.ActionConfig
@@ -291,8 +290,6 @@ func NewLoadpoint(log *util.Logger) *Loadpoint {
 				Interval: pollInterval,
 				Mode:     pollCharging,
 			},
-			min:    0,   // %
-			target: 100, // %
 		},
 		Enable:        ThresholdConfig{Delay: time.Minute, Threshold: 0},     // t, W
 		Disable:       ThresholdConfig{Delay: 3 * time.Minute, Threshold: 0}, // t, W
@@ -317,8 +314,6 @@ func (lp *Loadpoint) collectDefaults() {
 		*actionCfg.Mode = lp.GetMode()
 		*actionCfg.MinCurrent = lp.GetMinCurrent()
 		*actionCfg.MaxCurrent = lp.GetMaxCurrent()
-		*actionCfg.MinSoc = lp.GetMinSoc()
-		*actionCfg.TargetSoc = lp.GetTargetSoc()
 		*actionCfg.Priority = lp.GetPriority()
 	} else {
 		lp.log.ERROR.Printf("error allocating action config: %v", err)
@@ -503,6 +498,9 @@ func (lp *Loadpoint) evVehicleDisconnectHandler() {
 	if lp.defaultVehicle != nil {
 		lp.applyAction(lp.defaultVehicle.OnIdentified())
 	}
+
+	// reset session target soc
+	lp.sessionTargetSoc = 0
 
 	// soc update reset
 	lp.socUpdated = time.Time{}
@@ -796,25 +794,26 @@ func (lp *Loadpoint) targetEnergyReached() bool {
 // targetSocReached checks if target is configured and reached.
 // If vehicle is not configured this will always return false
 func (lp *Loadpoint) targetSocReached() bool {
+	targetSoc := lp.GetTargetSoc()
 	return lp.vehicle != nil &&
-		lp.Soc.target > 0 &&
-		lp.Soc.target < 100 &&
-		lp.vehicleSoc >= float64(lp.Soc.target)
+		targetSoc > 0 &&
+		targetSoc < 100 &&
+		lp.vehicleSoc >= float64(targetSoc)
 }
 
 // minSocNotReached checks if minimum is configured and not reached.
 // If vehicle is not configured this will always return false
 func (lp *Loadpoint) minSocNotReached() bool {
 	vehicle := lp.GetVehicle()
-	if vehicle == nil || lp.Soc.min == 0 {
+	if vehicle == nil || lp.GetMinSoc() == 0 {
 		return false
 	}
 
 	if lp.vehicleSoc != 0 {
-		return lp.vehicleSoc < float64(lp.Soc.min)
+		return lp.vehicleSoc < float64(lp.GetMinSoc())
 	}
 
-	minEnergy := vehicle.Capacity() * float64(lp.Soc.min) / 100 / soc.ChargeEfficiency
+	minEnergy := vehicle.Capacity() * float64(lp.GetMinSoc()) / 100 / soc.ChargeEfficiency
 	return minEnergy > 0 && lp.getChargedEnergy() < minEnergy
 }
 
@@ -1388,8 +1387,8 @@ func (lp *Loadpoint) publishSocAndRange() {
 
 		// use minimum of vehicle and loadpoint
 		socLimit := targetSoc
-		if lp.Soc.target < socLimit {
-			socLimit = lp.Soc.target
+		if lp.GetTargetSoc() < socLimit {
+			socLimit = lp.GetTargetSoc()
 		}
 
 		var d time.Duration
@@ -1546,7 +1545,7 @@ func (lp *Loadpoint) Update(sitePower float64, autoCharge, batteryBuffered, batt
 		err = lp.disableUnlessClimater()
 
 	case lp.targetSocReached():
-		lp.log.DEBUG.Printf("targetSoc reached: %.1f%% > %d%%", lp.vehicleSoc, lp.Soc.target)
+		lp.log.DEBUG.Printf("targetSoc reached: %.1f%% > %d%%", lp.vehicleSoc, lp.GetTargetSoc())
 		err = lp.disableUnlessClimater()
 
 	case lp.remoteControlled(loadpoint.RemoteHardDisable):
@@ -1595,7 +1594,7 @@ func (lp *Loadpoint) Update(sitePower float64, autoCharge, batteryBuffered, batt
 
 	// Wake-up checks
 	if lp.enabled && lp.status == api.StatusB &&
-		int(lp.vehicleSoc) < lp.Soc.target && lp.wakeUpTimer.Expired() {
+		int(lp.vehicleSoc) < lp.GetTargetSoc() && lp.wakeUpTimer.Expired() {
 		lp.wakeUpVehicle()
 	}
 

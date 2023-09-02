@@ -121,16 +121,16 @@ func (lp *Loadpoint) SetPriority(prio int) {
 func (lp *Loadpoint) GetTargetSoc() int {
 	lp.Lock()
 	defer lp.Unlock()
-	return lp.Soc.target
+	if lp.sessionTargetSoc != 0 {
+		return lp.sessionTargetSoc
+	}
+	if lp.vehicle != nil && lp.vehicle.DefaultTargetSoc() != 0 {
+		return lp.vehicle.DefaultTargetSoc()
+	}
+	return 100 // default
 }
 
-// setTargetSoc sets loadpoint charge target soc (no mutex)
-func (lp *Loadpoint) setTargetSoc(soc int) {
-	lp.Soc.target = soc
-	lp.publish(targetSoc, soc)
-}
-
-// SetTargetSoc sets loadpoint charge target soc
+// SetTargetSoc sets loadpoint target soc for current session
 func (lp *Loadpoint) SetTargetSoc(soc int) {
 	lp.Lock()
 	defer lp.Unlock()
@@ -138,36 +138,53 @@ func (lp *Loadpoint) SetTargetSoc(soc int) {
 	lp.log.DEBUG.Println("set target soc:", soc)
 
 	// apply immediately
-	if lp.Soc.target != soc {
-		lp.setTargetSoc(soc)
+	if soc != lp.sessionTargetSoc {
+		lp.sessionTargetSoc = soc
+		lp.publish(targetSoc, soc)
 		lp.requestUpdate()
-		lp.persistVehicleSettings()
 	}
 }
 
-// GetMinSoc returns loadpoint charge minimum soc
+// GetDefaultTargetSoc returns loadpoint charge target soc
+func (lp *Loadpoint) GetDefaultTargetSoc() int {
+	lp.Lock()
+	defer lp.Unlock()
+	if lp.vehicle != nil {
+		return lp.vehicle.DefaultTargetSoc()
+	}
+	return 0
+}
+
+// SetDefaultTargetSoc sets default target soc for current vehicle
+func (lp *Loadpoint) SetDefaultTargetSoc(soc int) {
+	lp.Lock()
+	defer lp.Unlock()
+	if lp.vehicle != nil {
+		lp.vehicle.SetDefaultTargetSoc(soc)
+	} else {
+		lp.log.WARN.Println("cannot set default target soc without vehicle")
+	}
+}
+
+// GetMinSoc returns minimum soc of current vehicle
 func (lp *Loadpoint) GetMinSoc() int {
 	lp.Lock()
 	defer lp.Unlock()
-	return lp.Soc.min
+	if lp.vehicle != nil {
+		return lp.vehicle.MinSoc()
+	}
+	return 0
 }
 
-// setMinSoc sets loadpoint charge min soc (no mutex)
-func (lp *Loadpoint) setMinSoc(soc int) {
-	lp.Soc.min = soc
-	lp.publish(minSoc, soc)
-}
-
-// SetMinSoc sets loadpoint charge minimum soc
+// SetMinSoc sets minimum soc for current vehicle
 func (lp *Loadpoint) SetMinSoc(soc int) {
 	lp.Lock()
 	defer lp.Unlock()
 
-	lp.log.DEBUG.Println("set min soc:", soc)
-
-	// apply immediately
-	if lp.Soc.min != soc {
-		lp.setMinSoc(soc)
+	if lp.vehicle != nil && soc != lp.vehicle.MinSoc() {
+		lp.log.DEBUG.Println("set min soc:", soc)
+		lp.vehicle.SetMinSoc(soc)
+		lp.publish(minSoc, soc)
 		lp.requestUpdate()
 		lp.persistVehicleSettings()
 	}

@@ -135,6 +135,7 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, cache *util.Cache) {
 			"phases":           {[]string{"POST", "OPTIONS"}, "/phases/{value:[0-9]+}", phasesHandler(lp)},
 			"targetenergy":     {[]string{"POST", "OPTIONS"}, "/target/energy/{value:[0-9.]+}", floatHandler(pass(lp.SetTargetEnergy), lp.GetTargetEnergy)},
 			"targetsoc":        {[]string{"POST", "OPTIONS"}, "/target/soc/{value:[0-9]+}", intHandler(pass(lp.SetTargetSoc), lp.GetTargetSoc)},
+			"defaulttargetsoc": {[]string{"POST", "OPTIONS"}, "/target/defaultsoc/{value:[0-9]+}", intHandler(pass(lp.SetDefaultTargetSoc), lp.GetDefaultTargetSoc)},
 			"targettime":       {[]string{"POST", "OPTIONS"}, "/target/time/{time:[0-9TZ:.-]+}", targetTimeHandler(lp)},
 			"targettime2":      {[]string{"DELETE", "OPTIONS"}, "/target/time", targetTimeRemoveHandler(lp)},
 			"plan":             {[]string{"GET"}, "/target/plan", planHandler(lp)},

@@ -34,7 +34,7 @@ func (lp *Loadpoint) planRequiredDuration(maxPower float64) time.Duration {
 	}
 
 	// TODO vehicle soc limit
-	targetSoc := lp.Soc.target
+	targetSoc := lp.GetTargetSoc()
 	if targetSoc == 0 {
 		targetSoc = 100
 	}

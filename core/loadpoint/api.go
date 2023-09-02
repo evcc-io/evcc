@@ -59,6 +59,10 @@ type API interface {
 	GetTargetSoc() int
 	// SetTargetSoc sets the charge target soc
 	SetTargetSoc(int)
+	// GetDefaultTargetSoc returns the vehicles default target soc
+	GetDefaultTargetSoc() int
+	// SetDefaultTargetSoc sets the vehicles default target soc
+	SetDefaultTargetSoc(int)
 	// GetPlan creates a charging plan
 	GetPlan(targetTime time.Time, maxPower float64) (time.Duration, api.Rates, error)
 	// GetEnableThreshold gets the loadpoint enable threshold
