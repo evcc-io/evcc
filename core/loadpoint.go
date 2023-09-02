@@ -317,8 +317,6 @@ func (lp *Loadpoint) collectDefaults() {
 		*actionCfg.Mode = lp.GetMode()
 		*actionCfg.MinCurrent = lp.GetMinCurrent()
 		*actionCfg.MaxCurrent = lp.GetMaxCurrent()
-		*actionCfg.MinSoc = lp.GetMinSoc()
-		*actionCfg.TargetSoc = lp.GetTargetSoc()
 		*actionCfg.Priority = lp.GetPriority()
 	} else {
 		lp.log.ERROR.Printf("error allocating action config: %v", err)
@@ -551,6 +549,12 @@ func (lp *Loadpoint) applyAction(actionCfg api.ActionConfig) {
 	}
 	if min := actionCfg.MinCurrent; min != nil && *min >= *lp.onDisconnect.MinCurrent {
 		lp.SetMinCurrent(*min)
+	}
+	if actionCfg.MinSoc != nil {
+		lp.SetMinSoc(*actionCfg.MinSoc)
+	}
+	if actionCfg.TargetSoc != nil {
+		lp.SetTargetSoc(*actionCfg.TargetSoc)
 	}
 	if max := actionCfg.MaxCurrent; max != nil && *max <= *lp.onDisconnect.MaxCurrent {
 		lp.SetMaxCurrent(*max)
