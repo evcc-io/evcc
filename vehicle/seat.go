@@ -55,11 +55,7 @@ func NewSeatFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, err
 	}
 
-	ts, err := service.MbbTokenSource(log, trs, seat.AuthClientID)
-	if err != nil {
-		return nil, err
-	}
-
+	ts := service.MbbTokenSource(log, trs, seat.AuthClientID)
 	api := vw.NewAPI(log, ts, seat.Brand, seat.Country)
 	api.Client.Timeout = cc.Timeout
 

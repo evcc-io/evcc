@@ -10,10 +10,10 @@ import (
 
 // MbbTokenSource creates a refreshing token source for use with the MBB api.
 // Once the MBB token expires, it is recreated from the token exchanger (either TokenRefreshService or IDK)
-func MbbTokenSource(log *util.Logger, trs vag.TokenSource, clientID string) (vag.TokenSource, error) {
+func MbbTokenSource(log *util.Logger, trs vag.TokenSource, clientID string) vag.TokenSource {
 	mbb := mbb.New(log, clientID)
 
-	mts := vag.MetaTokenSource(func() (*vag.Token, error) {
+	return vag.MetaTokenSource(func() (*vag.Token, error) {
 		// get TRS token from refreshing TRS token source
 		itoken, err := trs.TokenEx()
 		if err != nil {
@@ -30,6 +30,4 @@ func MbbTokenSource(log *util.Logger, trs vag.TokenSource, clientID string) (vag
 
 		// produce tokens from refresh MBB token source
 	}, mbb.TokenSource)
-
-	return mts, nil
 }

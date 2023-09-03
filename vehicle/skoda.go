@@ -71,11 +71,7 @@ func NewSkodaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	if err == nil {
-		ts, err := service.MbbTokenSource(log, trs, skoda.AuthClientID)
-		if err != nil {
-			return nil, err
-		}
-
+		ts := service.MbbTokenSource(log, trs, skoda.AuthClientID)
 		api := vw.NewAPI(log, ts, skoda.Brand, skoda.Country)
 		api.Client.Timeout = cc.Timeout
 
