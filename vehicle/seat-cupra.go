@@ -8,7 +8,6 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
-	"github.com/evcc-io/evcc/vehicle/seat"
 	"github.com/evcc-io/evcc/vehicle/seat/cupra"
 	"github.com/evcc-io/evcc/vehicle/vag/service"
 	"github.com/evcc-io/evcc/vehicle/vag/vwidentity"
@@ -51,7 +50,7 @@ func NewCupraFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 	log := util.NewLogger("cupra").Redact(cc.User, cc.Password, cc.VIN)
 
-	ts, err := service.TokenRefreshServiceTokenSource(log, seat.TRSParams, seat.AuthParams, cc.User, cc.Password)
+	ts, err := service.TokenRefreshServiceTokenSource(log, cupra.TRSParams, cupra.AuthParams, cc.User, cc.Password)
 	if err != nil {
 		return nil, err
 	}
