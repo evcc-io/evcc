@@ -334,7 +334,7 @@ func configureVehicles(static []config.Named) error {
 	}
 
 	slices.SortFunc(devs1, func(i, j config.Device[api.Vehicle]) int {
-		return cmp.Compare(i.Config().Name, j.Config().Name)
+		return cmp.Compare(strings.ToLower(i.Config().Name), strings.ToLower(j.Config().Name))
 	})
 
 	for _, dev := range devs1 {
