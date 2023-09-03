@@ -9,6 +9,7 @@ import (
 	"github.com/evcc-io/evcc/vehicle/skoda"
 	"github.com/evcc-io/evcc/vehicle/vag/service"
 	"github.com/evcc-io/evcc/vehicle/vag/tokenrefreshservice"
+	"github.com/evcc-io/evcc/vehicle/vw"
 )
 
 // https://github.com/trocotronic/weconnect
@@ -17,7 +18,7 @@ import (
 // Skoda is an api.Vehicle implementation for Skoda cars
 type Skoda struct {
 	*embed
-	*skoda.Provider // provides the api implementations
+	*vw.Provider // provides the api implementations
 }
 
 func init() {
@@ -50,17 +51,15 @@ func NewSkodaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 	log := util.NewLogger("skoda").Redact(cc.User, cc.Password, cc.VIN)
 
-	trs := tokenrefreshservice.New(log, skoda.TRSParams)
-	ts, err := service.MbbTokenSource(log, trs, skoda.AuthClientID, skoda.AuthParams, cc.User, cc.Password)
+	// use Skoda api to resolve list of vehicles
+	ts, err := service.TokenRefreshServiceTokenSource(log, skoda.TRSParams, skoda.AuthParams, cc.User, cc.Password)
 	if err != nil {
 		return nil, err
 	}
 
-	// api := vw.NewAPI(log, ts, skoda.Brand, skoda.Country)
 	api := skoda.NewAPI(log, ts)
 	api.Client.Timeout = cc.Timeout
 
-	// cc.VIN, err = ensureVehicle(cc.VIN, api.Vehicles)
 	vehicle, err := ensureVehicleEx(
 		cc.VIN, api.Vehicles,
 		func(v skoda.Vehicle) string {
@@ -68,13 +67,23 @@ func NewSkodaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		},
 	)
 
-	// if err == nil {
-	// 	if err = api.HomeRegion(cc.VIN); err == nil {
-	// 		v.Provider = vw.NewProvider(api, cc.VIN, cc.Cache)
-	// 	}
-	// }
 	if err == nil {
-		v.Provider = skoda.NewProvider(api, vehicle.VIN, cc.Cache)
+		v.fromVehicle(vehicle.Name, float64(vehicle.Specification.Battery.CapacityInKWh))
+	}
+
+	if err == nil {
+		trs := tokenrefreshservice.New(log, skoda.TRSParams)
+		ts, err := service.MbbTokenSource(log, trs, skoda.AuthClientID, skoda.AuthParams, cc.User, cc.Password)
+		if err != nil {
+			return nil, err
+		}
+
+		api := vw.NewAPI(log, ts, skoda.Brand, skoda.Country)
+		api.Client.Timeout = cc.Timeout
+
+		if err = api.HomeRegion(vehicle.VIN); err == nil {
+			v.Provider = vw.NewProvider(api, vehicle.VIN, cc.Cache)
+		}
 	}
 
 	return v, err
