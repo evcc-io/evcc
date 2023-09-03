@@ -321,9 +321,8 @@ func (lp *Loadpoint) collectDefaults() {
 	} else {
 		lp.log.ERROR.Printf("error allocating action config: %v", err)
 	}
-	// do not reapply deprecated lp config values
+	// deprecated: do not reapply deprecated lp.targetSoc, use vehicle.targetSoc instead
 	actionCfg.TargetSoc = nil
-	actionCfg.MinSoc = nil
 }
 
 // requestUpdate requests site to update this loadpoint
@@ -552,9 +551,6 @@ func (lp *Loadpoint) applyAction(actionCfg api.ActionConfig) {
 	}
 	if min := actionCfg.MinCurrent; min != nil && *min >= *lp.onDisconnect.MinCurrent {
 		lp.SetMinCurrent(*min)
-	}
-	if actionCfg.MinSoc != nil {
-		lp.SetMinSoc(*actionCfg.MinSoc)
 	}
 	if actionCfg.TargetSoc != nil {
 		lp.SetTargetSoc(*actionCfg.TargetSoc)
