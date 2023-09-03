@@ -8,7 +8,6 @@ import (
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/vehicle/skoda"
 	"github.com/evcc-io/evcc/vehicle/vag/service"
-	"github.com/evcc-io/evcc/vehicle/vag/tokenrefreshservice"
 	"github.com/evcc-io/evcc/vehicle/vw"
 )
 
@@ -52,12 +51,12 @@ func NewSkodaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	log := util.NewLogger("skoda").Redact(cc.User, cc.Password, cc.VIN)
 
 	// use Skoda api to resolve list of vehicles
-	ts, err := service.TokenRefreshServiceTokenSource(log, skoda.TRSParams, skoda.AuthParams, cc.User, cc.Password)
+	trs, err := service.TokenRefreshServiceTokenSource(log, skoda.TRSParams, skoda.AuthParams, cc.User, cc.Password)
 	if err != nil {
 		return nil, err
 	}
 
-	api := skoda.NewAPI(log, ts)
+	api := skoda.NewAPI(log, trs)
 	api.Client.Timeout = cc.Timeout
 
 	vehicle, err := ensureVehicleEx(
@@ -72,12 +71,7 @@ func NewSkodaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	if err == nil {
-		trs := tokenrefreshservice.New(log, skoda.TRSParams)
-		ts, err := service.MbbTokenSource(log, trs, skoda.AuthClientID, skoda.AuthParams, cc.User, cc.Password)
-		if err != nil {
-			return nil, err
-		}
-
+		ts := service.MbbTokenSource(log, trs, skoda.AuthClientID)
 		api := vw.NewAPI(log, ts, skoda.Brand, skoda.Country)
 		api.Client.Timeout = cc.Timeout
 
