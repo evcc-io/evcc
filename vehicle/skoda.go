@@ -8,6 +8,7 @@ import (
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/vehicle/skoda"
 	"github.com/evcc-io/evcc/vehicle/vag/service"
+	"github.com/evcc-io/evcc/vehicle/vag/tokenrefreshservice"
 	"github.com/evcc-io/evcc/vehicle/vw"
 )
 
@@ -71,7 +72,8 @@ func NewSkodaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	if err == nil {
-		ts, err := service.MbbTokenSource(log, skoda.TRSParams, skoda.AuthClientID, skoda.AuthParams, cc.User, cc.Password)
+		trs := tokenrefreshservice.New(log, skoda.TRSParams)
+		ts, err := service.MbbTokenSource(log, trs, skoda.AuthClientID, skoda.AuthParams, cc.User, cc.Password)
 		if err != nil {
 			return nil, err
 		}
