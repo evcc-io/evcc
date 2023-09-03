@@ -9,7 +9,6 @@ import (
 	"github.com/evcc-io/evcc/vehicle/skoda"
 	"github.com/evcc-io/evcc/vehicle/vag/service"
 	"github.com/evcc-io/evcc/vehicle/vag/tokenrefreshservice"
-	"github.com/evcc-io/evcc/vehicle/vw"
 )
 
 // https://github.com/trocotronic/weconnect
@@ -18,7 +17,7 @@ import (
 // Skoda is an api.Vehicle implementation for Skoda cars
 type Skoda struct {
 	*embed
-	*vw.Provider // provides the api implementations
+	*skoda.Provider // provides the api implementations
 }
 
 func init() {
@@ -57,15 +56,25 @@ func NewSkodaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, err
 	}
 
-	api := vw.NewAPI(log, ts, skoda.Brand, skoda.Country)
+	// api := vw.NewAPI(log, ts, skoda.Brand, skoda.Country)
+	api := skoda.NewAPI(log, ts)
 	api.Client.Timeout = cc.Timeout
 
-	cc.VIN, err = ensureVehicle(cc.VIN, api.Vehicles)
+	// cc.VIN, err = ensureVehicle(cc.VIN, api.Vehicles)
+	vehicle, err := ensureVehicleEx(
+		cc.VIN, api.Vehicles,
+		func(v skoda.Vehicle) string {
+			return v.VIN
+		},
+	)
 
+	// if err == nil {
+	// 	if err = api.HomeRegion(cc.VIN); err == nil {
+	// 		v.Provider = vw.NewProvider(api, cc.VIN, cc.Cache)
+	// 	}
+	// }
 	if err == nil {
-		if err = api.HomeRegion(cc.VIN); err == nil {
-			v.Provider = vw.NewProvider(api, cc.VIN, cc.Cache)
-		}
+		v.Provider = skoda.NewProvider(api, vehicle.VIN, cc.Cache)
 	}
 
 	return v, err
