@@ -227,7 +227,6 @@ func TestApplyVehicleDefaults(t *testing.T) {
 			Mode:       &mode,
 			MinCurrent: &minCurrent,
 			MaxCurrent: &maxCurrent,
-			MinSoc_:    nil,
 			TargetSoc:  targetSoc,
 		}
 	}
