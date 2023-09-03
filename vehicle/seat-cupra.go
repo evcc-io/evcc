@@ -10,7 +10,7 @@ import (
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/vehicle/seat"
 	"github.com/evcc-io/evcc/vehicle/seat/cupra"
-	"github.com/evcc-io/evcc/vehicle/vag/tokenrefreshservice"
+	"github.com/evcc-io/evcc/vehicle/vag/service"
 	"github.com/evcc-io/evcc/vehicle/vag/vwidentity"
 	"golang.org/x/oauth2"
 )
@@ -51,19 +51,10 @@ func NewCupraFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 	log := util.NewLogger("cupra").Redact(cc.User, cc.Password, cc.VIN)
 
-	// get initial VW identity id_token
-	q, err := vwidentity.Login(log, seat.AuthParams, cc.User, cc.Password)
+	ts, err := service.TokenRefreshServiceTokenSource(log, seat.TRSParams, seat.AuthParams, cc.User, cc.Password)
 	if err != nil {
 		return nil, err
 	}
-
-	trs := tokenrefreshservice.New(log, seat.TRSParams)
-	token, err := trs.Exchange(q)
-	if err != nil {
-		return nil, err
-	}
-
-	ts := trs.TokenSource(token)
 
 	// get OIDC user information
 	ctx := context.WithValue(context.Background(), oauth2.HTTPClient, request.NewClient(log))
