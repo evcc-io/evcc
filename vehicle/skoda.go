@@ -51,20 +51,38 @@ func NewSkodaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 	log := util.NewLogger("skoda").Redact(cc.User, cc.Password, cc.VIN)
 
-	trs := tokenrefreshservice.New(log, skoda.TRSParams)
-	ts, err := service.MbbTokenSource(log, trs, skoda.AuthClientID, skoda.AuthParams, cc.User, cc.Password)
+	// use Skoda api to resolve list of vehicles
+	ts, err := service.TokenRefreshServiceTokenSource(log, skoda.TRSParams, skoda.AuthParams, cc.User, cc.Password)
 	if err != nil {
 		return nil, err
 	}
 
-	api := vw.NewAPI(log, ts, skoda.Brand, skoda.Country)
+	api := skoda.NewAPI(log, ts)
 	api.Client.Timeout = cc.Timeout
 
-	cc.VIN, err = ensureVehicle(cc.VIN, api.Vehicles)
+	vehicle, err := ensureVehicleEx(
+		cc.VIN, api.Vehicles,
+		func(v skoda.Vehicle) string {
+			return v.VIN
+		},
+	)
 
 	if err == nil {
-		if err = api.HomeRegion(cc.VIN); err == nil {
-			v.Provider = vw.NewProvider(api, cc.VIN, cc.Cache)
+		v.fromVehicle(vehicle.Name, float64(vehicle.Specification.Battery.CapacityInKWh))
+	}
+
+	if err == nil {
+		trs := tokenrefreshservice.New(log, skoda.TRSParams)
+		ts, err := service.MbbTokenSource(log, trs, skoda.AuthClientID, skoda.AuthParams, cc.User, cc.Password)
+		if err != nil {
+			return nil, err
+		}
+
+		api := vw.NewAPI(log, ts, skoda.Brand, skoda.Country)
+		api.Client.Timeout = cc.Timeout
+
+		if err = api.HomeRegion(vehicle.VIN); err == nil {
+			v.Provider = vw.NewProvider(api, vehicle.VIN, cc.Cache)
 		}
 	}
 
