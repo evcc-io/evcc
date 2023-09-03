@@ -1,14 +1,19 @@
 package vehicle
 
 import (
+	"context"
+	"fmt"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/vehicle/seat"
+	"github.com/evcc-io/evcc/vehicle/seat/cupra"
 	"github.com/evcc-io/evcc/vehicle/vag/service"
+	"github.com/evcc-io/evcc/vehicle/vag/vwidentity"
 	"github.com/evcc-io/evcc/vehicle/vw"
+	"golang.org/x/oauth2"
 )
 
 // https://github.com/trocotronic/weconnect
@@ -55,15 +60,35 @@ func NewSeatFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, err
 	}
 
-	ts := service.MbbTokenSource(log, trs, seat.AuthClientID)
-	api := vw.NewAPI(log, ts, seat.Brand, seat.Country)
-	api.Client.Timeout = cc.Timeout
+	// get OIDC user information
+	ctx := context.WithValue(context.Background(), oauth2.HTTPClient, request.NewClient(log))
+	ui, err := vwidentity.Config.NewProvider(ctx).UserInfo(ctx, trs)
+	if err != nil {
+		return nil, fmt.Errorf("failed getting user information: %w", err)
+	}
 
-	cc.VIN, err = ensureVehicle(cc.VIN, api.Vehicles)
+	api := cupra.NewAPI(log, trs)
+
+	vehicle, err := ensureVehicleEx(
+		cc.VIN, func() ([]cupra.Vehicle, error) {
+			return api.Vehicles(ui.Subject)
+		},
+		func(v cupra.Vehicle) string {
+			return v.VIN
+		},
+	)
 
 	if err == nil {
+		v.fromVehicle(vehicle.VehicleNickname, 0)
+	}
+
+	if err == nil {
+		ts := service.MbbTokenSource(log, trs, seat.AuthClientID)
+		api := vw.NewAPI(log, ts, seat.Brand, seat.Country)
+		api.Client.Timeout = cc.Timeout
+
 		if err = api.HomeRegion(cc.VIN); err == nil {
-			v.Provider = vw.NewProvider(api, cc.VIN, cc.Cache)
+			v.Provider = vw.NewProvider(api, vehicle.VIN, cc.Cache)
 		}
 	}
 
