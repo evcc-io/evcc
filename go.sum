@@ -764,6 +764,8 @@ github.com/lunixbochs/struc v0.0.0-20200707160740-784aaebc1d40/go.mod h1:vy1vK6w
 github.com/lyft/protoc-gen-validate v0.0.13/go.mod h1:XbGvPuh87YZc5TdIa2/I4pLk0QoUACkjt2znoq26NVQ=
 github.com/mabunixda/wattpilot v1.5.0 h1:+0dINGlqdEhS/hUnkPaJGBMvUwg9LOjbON60vIpYwaE=
 github.com/mabunixda/wattpilot v1.5.0/go.mod h1:NK48nAFsHsP70SwcVfH9OaYBND0UON9i3YrScrWRloA=
+github.com/mabunixda/wattpilot v1.6.0 h1:GTx0Ld0srXX+yfHCyfL7FUJ4NMlpAcuIDik3se+nax4=
+github.com/mabunixda/wattpilot v1.6.0/go.mod h1:NK48nAFsHsP70SwcVfH9OaYBND0UON9i3YrScrWRloA=
 github.com/magiconair/properties v1.8.6/go.mod h1:y3VJvCyxH9uVvJTWEGAELF3aiYNyPKd5NZ3oSwXrF60=
 github.com/magiconair/properties v1.8.7 h1:IeQXZAiQcpL9mgcAe1Nu6cX9LLw6ExEHKjN0VQdvPDY=
 github.com/magiconair/properties v1.8.7/go.mod h1:Dhd985XPs7jluiymwWYZ0G4Z61jb3vdS329zhj2hYo0=
