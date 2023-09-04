@@ -2,8 +2,8 @@ template: cfos
 products:
   - brand: cFos
     description:
-      generic: PowerBrain
-capabilities: ["mA", "rfid"]
+      generic: Power Brain (no 1p3p), Power Brain Solar
+capabilities: ["mA", "rfid", "1p3p"]
 requirements:
   description:
     de: Der Zähler- falls vorhanden- muss separat als Ladezähler konfiguriert werden.
