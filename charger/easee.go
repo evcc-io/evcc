@@ -411,8 +411,11 @@ func (c *Easee) Enable(enable bool) error {
 		}
 	}
 
+	c.mux.Lock()
+	opMode := c.opMode
+	c.mux.Unlock()
 	// do not send pause/resume if disconnected or unauthenticated without automatic authorization
-	if c.opMode == easee.ModeDisconnected || (c.opMode == easee.ModeAwaitingAuthentication && (!enable || !c.authorize)) {
+	if opMode == easee.ModeDisconnected || (opMode == easee.ModeAwaitingAuthentication && !(enable && c.authorize)) {
 		return nil
 	}
 
@@ -425,7 +428,7 @@ func (c *Easee) Enable(enable bool) error {
 	var targetCurrent float64
 	if enable {
 		action = easee.ChargeResume
-		if c.opMode == easee.ModeAwaitingAuthentication && c.authorize {
+		if opMode == easee.ModeAwaitingAuthentication && c.authorize {
 			action = easee.ChargeStart
 		}
 		expectedEnabledState = true
@@ -442,15 +445,17 @@ func (c *Easee) Enable(enable bool) error {
 		return err
 	}
 
-	if !c.authorize { // authenticating charger does not mingle with DCC, no need for waiting
-		if err := c.waitForDynamicChargerCurrent(targetCurrent); err != nil {
-			return err
-		}
+	if c.authorize { // authenticating charger does not mingle with DCC, no need for below operations
+		return nil
+	}
 
-		if enable {
-			// reset currents after enable, as easee automatically resets to maxA
-			return c.MaxCurrent(int64(c.current))
-		}
+	if err := c.waitForDynamicChargerCurrent(targetCurrent); err != nil {
+		return err
+	}
+
+	if enable {
+		// reset currents after enable, as easee automatically resets to maxA
+		return c.MaxCurrent(int64(c.current))
 	}
 
 	return nil
