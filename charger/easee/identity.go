@@ -53,7 +53,7 @@ func TokenSource(log *util.Logger, user, password string) (oauth2.TokenSource, e
 	}
 
 	oauthToken := token.AsOAuth2Token()
-	ts := oauth2.ReuseTokenSourceWithExpiry(oauthToken, oauth.RefreshTokenSource(oauthToken, c), 15*time.Minute)
+	ts := oauth2.ReuseTokenSource(oauthToken, oauth.RefreshTokenSource(oauthToken, c))
 
 	return ts, nil
 }
