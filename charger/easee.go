@@ -397,6 +397,7 @@ func (c *Easee) Enabled() (bool, error) {
 func (c *Easee) Enable(enable bool) error {
 	c.mux.Lock()
 	enablingRequired := enable && !c.chargerEnabled
+	opMode := c.opMode
 	c.mux.Unlock()
 
 	// enable charger once if it's switched off
@@ -411,9 +412,6 @@ func (c *Easee) Enable(enable bool) error {
 		}
 	}
 
-	c.mux.Lock()
-	opMode := c.opMode
-	c.mux.Unlock()
 	// do not send pause/resume if disconnected or unauthenticated without automatic authorization
 	if opMode == easee.ModeDisconnected || (opMode == easee.ModeAwaitingAuthentication && !(enable && c.authorize)) {
 		return nil
