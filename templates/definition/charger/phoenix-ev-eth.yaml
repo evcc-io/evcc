@@ -1,5 +1,4 @@
 template: phoenix-ev-eth
-covers: ["wallbe", "wallbe-meter"]
 products:
   - brand: Phoenix Contact
     description:
