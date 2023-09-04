@@ -324,3 +324,17 @@ title = "Startfel"
 cancel = "Avbryt"
 template = "Tillverkare"
 test = "Test"
+
+
+[batterySettings]
+batteryLevel = "Batterinivå"
+capacity = "{energy} av {total}"
+
+[config.form]
+example = "Exempel"
+optional = "valfri"
+
+[config.vehicle]
+cancel = "Avbryt"
+delete = "Radera fordon"
+save = "Spara"
