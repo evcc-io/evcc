@@ -35,30 +35,19 @@ func (t *Token) AsOAuth2Token() *oauth2.Token {
 // tokenSource is an oauth2.TokenSource
 type tokenSource struct {
 	*request.Helper
+	user, password string
 }
 
 // TokenSource creates an Easee token source
 func TokenSource(log *util.Logger, user, password string) (oauth2.TokenSource, error) {
 	c := &tokenSource{
-		Helper: request.NewHelper(log),
+		Helper:   request.NewHelper(log),
+		user:     user,
+		password: password,
 	}
 
-	data := struct {
-		Username string `json:"userName"`
-		Password string `json:"password"`
-	}{
-		Username: user,
-		Password: password,
-	}
-
-	uri := fmt.Sprintf("%s/%s", API, "accounts/login")
-	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
+	token, err := c.authenticate()
 	if err != nil {
-		return nil, err
-	}
-
-	var token Token
-	if err := c.DoJSON(req, &token); err != nil {
 		return nil, err
 	}
 
@@ -66,6 +55,30 @@ func TokenSource(log *util.Logger, user, password string) (oauth2.TokenSource, e
 	ts := oauth2.ReuseTokenSourceWithExpiry(oauthToken, oauth.RefreshTokenSource(oauthToken, c), 15*time.Minute)
 
 	return ts, nil
+}
+
+func (c *tokenSource) authenticate() (Token, error) {
+	data := struct {
+		Username string `json:"userName"`
+		Password string `json:"password"`
+	}{
+		Username: c.user,
+		Password: c.password,
+	}
+
+	var token Token
+
+	uri := fmt.Sprintf("%s/%s", API, "accounts/login")
+	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
+	if err != nil {
+		return token, err
+	}
+
+	if err := c.DoJSON(req, &token); err != nil {
+		return token, err
+	}
+
+	return token, nil
 }
 
 func (c *tokenSource) RefreshToken(oauthToken *oauth2.Token) (*oauth2.Token, error) {
@@ -85,7 +98,11 @@ func (c *tokenSource) RefreshToken(oauthToken *oauth2.Token) (*oauth2.Token, err
 
 	var token Token
 	if err := c.DoJSON(req, &token); err != nil {
-		return oauthToken, err
+		//try re-auth
+		token, err = c.authenticate()
+		if err != nil {
+			return oauthToken, err
+		}
 	}
 
 	return token.AsOAuth2Token(), nil
