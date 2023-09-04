@@ -126,7 +126,7 @@
 										@change="changeMaxCurrent"
 									>
 										<option
-											v-for="{ value, name } in currentOptions(true, 16)"
+											v-for="{ value, name } in maxCurrentOptions"
 											:key="value"
 											:value="value"
 										>
@@ -152,7 +152,7 @@
 										@change="changeMinCurrent"
 									>
 										<option
-											v-for="{ value, name } in currentOptions(false, 6)"
+											v-for="{ value, name } in minCurrentOptions"
 											:key="value"
 											:value="value"
 										>
@@ -183,12 +183,22 @@ import formatter from "../mixins/formatter";
 
 const V = 230;
 
+const range = (start, stop, step = -1) =>
+	Array.from({ length: (stop - start) / step + 1 }, (_, i) => start + i * step);
+
+const insertSorted = (arr, num) => {
+	const uniqueSet = new Set(arr);
+	uniqueSet.add(num);
+	return [...uniqueSet].sort((a, b) => b - a);
+};
+
 export default {
 	name: "LoadpointSettingsModal",
 	mixins: [formatter],
 	props: {
 		id: [String, Number],
 		phasesConfigured: Number,
+		phasesActive: Number,
 		minSoc: Number,
 		maxCurrent: Number,
 		minCurrent: Number,
@@ -216,7 +226,13 @@ export default {
 			return this.fmtKw(this.minCurrent * V * 3);
 		},
 		maxPower: function () {
-			return this.phasesConfigured === 1 ? this.maxPower1p : this.maxPower3p;
+			if (this.phasesConfigured === 3) {
+				return this.maxPower3p;
+			}
+			if (this.phasesConfigured === 1) {
+				return this.maxPower1p;
+			}
+			return this.fmtKw(this.maxCurrent * V * this.phasesActive);
 		},
 		minPower: function () {
 			return this.phasesConfigured === 3 ? this.minPower3p : this.minPower1p;
@@ -226,6 +242,18 @@ export default {
 		},
 		showCurrentSettings: function () {
 			return this.$hiddenFeatures();
+		},
+		minCurrentOptions: function () {
+			const opt1 = [...range(Math.floor(this.maxCurrent), 1), 0.5, 0.25, 0.125];
+			// ensure that current value is always included
+			const opt2 = insertSorted(opt1, this.minCurrent);
+			return opt2.map((value) => this.currentOption(value, value === 6));
+		},
+		maxCurrentOptions: function () {
+			const opt1 = range(32, Math.ceil(this.minCurrent));
+			// ensure that current value is always included
+			const opt2 = insertSorted(opt1, this.maxCurrent);
+			return opt2.map((value) => this.currentOption(value, value === 16));
 		},
 	},
 	watch: {
@@ -255,18 +283,12 @@ export default {
 		changePhasesConfigured: function () {
 			this.$emit("phasesconfigured-updated", this.selectedPhases);
 		},
-		currentOptions: function (max, defaultCurrent = 16) {
-			const result = [];
-			const toValue = max ? 32 : this.maxCurrent;
-			const fromValue = max ? this.minCurrent : 1;
-			for (let value = toValue; value >= fromValue; value--) {
-				let name = `${value} A`;
-				if (value === defaultCurrent) {
-					name += ` (${this.$t("main.loadpointSettings.default")})`;
-				}
-				result.push({ value, name });
+		currentOption: function (value, isDefault) {
+			let name = `${this.fmtNumber(value)} A`;
+			if (isDefault) {
+				name += ` (${this.$t("main.loadpointSettings.default")})`;
 			}
-			return result;
+			return { value, name };
 		},
 	},
 };

@@ -238,9 +238,9 @@ export default {
 		// other information
 		phases: Number,
 		phasesConfigured: Number,
+		phasesActive: Number,
 		minCurrent: Number,
 		maxCurrent: Number,
-		phasesActive: Number,
 		chargeCurrent: Number,
 		connectedDuration: Number,
 		chargeCurrents: Array,
