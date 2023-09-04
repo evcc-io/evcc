@@ -401,7 +401,7 @@ mi = "mylios"
 
 [startupError]
 configFile = "Naudojamas konfiguracijos failas:"
-configuration = "Konfigūracija"
+configuration = "Konfiguracija"
 description = "Patikrinkite konfigūracijos failą. Jei klaidos žinutė jums nepadėjo, atsakymų ieškokite mūsų {0}."
 discussions = "GitHub Diskusijose"
 fixAndRestart = "Pabandykite Ištaisyti klaidą ir perkrauti serverį."
