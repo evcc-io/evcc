@@ -18,6 +18,39 @@ low = "kiedy nieco pełny"
 medium = "kiedy w połowie pełny"
 never = "tylko z wystarczającą nadwyżką"
 
+[config]
+
+[config.form]
+example = "Przykład"
+optional = "opcjonalny"
+
+[config.main]
+addVehicle = "Dodaj pojazd"
+edit = "edytować"
+title = "Konfiguracja"
+vehicles = "Moje pojazdy"
+
+[config.validation]
+failed = "nie udało się"
+label = "Status"
+running = "weryfikacja…"
+success = "udany"
+unknown = "nieznany"
+validate = "zweryfikować"
+
+[config.vehicle]
+cancel = "Anulować"
+delete = "Usuń samochód"
+generic = "Inne integracje"
+offline = "Samochód ogólny"
+online = "Pojazdy z API online"
+save = "Zapisz"
+scooter = "Skuter"
+template = "Producent"
+titleAdd = "Dodaj samochód"
+titleEdit = "Edytuj pojazd"
+validateSave = "Sprawdź i zapisz"
+
 [footer]
 
 [footer.community]
@@ -366,7 +399,7 @@ mi = "mile"
 
 [startupError]
 configFile = "Używany plik konfiguracyjny:"
-configuration = "Konfiguracja"
+configuration = "Konfig"
 description = "Sprawdź swój plik konfiguracyjny. Jeśli komunikat o błędzie nie pomoże, zapoznaj się z naszym {0}."
 discussions = "Dyskusje GitHub"
 fixAndRestart = "Proszę rozwiązać problem i zrestartować serwer."
