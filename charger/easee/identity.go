@@ -46,19 +46,12 @@ func TokenSource(log *util.Logger, user, password string) (oauth2.TokenSource, e
 		password: password,
 	}
 
-	var token Token
-	err := c.authenticate(&token)
-	if err != nil {
-		return nil, err
-	}
+	token, err := c.authenticate()
 
-	oauthToken := token.AsOAuth2Token()
-	ts := oauth2.ReuseTokenSource(oauthToken, oauth.RefreshTokenSource(oauthToken, c))
-
-	return ts, nil
+	return oauth.RefreshTokenSource(token.AsOAuth2Token(), c), err
 }
 
-func (c *tokenSource) authenticate(token *Token) error {
+func (c *tokenSource) authenticate() (*Token, error) {
 	data := struct {
 		Username string `json:"userName"`
 		Password string `json:"password"`
@@ -70,14 +63,15 @@ func (c *tokenSource) authenticate(token *Token) error {
 	uri := fmt.Sprintf("%s/%s", API, "accounts/login")
 	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
+	var token Token
 	if err := c.DoJSON(req, &token); err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return &token, nil
 }
 
 func (c *tokenSource) RefreshToken(oauthToken *oauth2.Token) (*oauth2.Token, error) {
@@ -92,15 +86,14 @@ func (c *tokenSource) RefreshToken(oauthToken *oauth2.Token) (*oauth2.Token, err
 	uri := fmt.Sprintf("%s/%s", API, "accounts/refresh_token")
 	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
 	if err != nil {
-		return oauthToken, err
+		return nil, err
 	}
 
-	var token Token
+	var token *Token
 	if err := c.DoJSON(req, &token); err != nil {
-		//try re-auth
-		err = c.authenticate(&token)
-		if err != nil {
-			return oauthToken, err
+		// re-login
+		if token, err = c.authenticate(); err != nil {
+			return nil, err
 		}
 	}
 
