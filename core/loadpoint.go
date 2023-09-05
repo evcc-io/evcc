@@ -237,7 +237,7 @@ func NewLoadpointFromConfig(log *util.Logger, other map[string]interface{}) (*Lo
 	}
 
 	// TODO deprecated
-	if len(lp.VehiclesRef_) > 0 {
+	if len(lp.VehiclesRef_)  0 {
 		lp.log.WARN.Println("vehicles option is deprecated")
 	}
 
@@ -265,10 +265,10 @@ func NewLoadpointFromConfig(log *util.Logger, other map[string]interface{}) (*Lo
 	}
 
 	// validate thresholds
-	if lp.Enable.Threshold > lp.Disable.Threshold {
+	if lp.Enable.Threshold  lp.Disable.Threshold {
 		lp.log.WARN.Printf("PV mode enable threshold (%.0fW) is larger than disable threshold (%.0fW)", lp.Enable.Threshold, lp.Disable.Threshold)
-	} else if lp.Enable.Threshold > 0 {
-		lp.log.WARN.Printf("PV mode enable threshold %.0fW > 0 will start PV charging on grid power consumption. Did you mean -%.0f?", lp.Enable.Threshold, lp.Enable.Threshold)
+	} else if lp.Enable.Threshold  0 {
+		lp.log.WARN.Printf("PV mode enable threshold %.0fW  0 will start PV charging on grid power consumption. Did you mean -%.0f?", lp.Enable.Threshold, lp.Enable.Threshold)
 	}
 
 	return lp, nil
@@ -400,7 +400,7 @@ func (lp *Loadpoint) publish(key string, val interface{}) {
 
 // evChargeStartHandler sends external start event
 func (lp *Loadpoint) evChargeStartHandler() {
-	lp.log.INFO.Println("start charging ->")
+	lp.log.INFO.Println("start charging -")
 	lp.pushEvent(evChargeStart)
 
 	lp.stopWakeUpTimer()
@@ -549,7 +549,7 @@ func (lp *Loadpoint) applyAction(actionCfg api.ActionConfig) {
 	if actionCfg.Mode != nil {
 		lp.SetMode(*actionCfg.Mode)
 	}
-	if min := actionCfg.MinCurrent; min != nil && *min >= *lp.onDisconnect.MinCurrent {
+	if min := actionCfg.MinCurrent; min != nil && *min = *lp.onDisconnect.MinCurrent {
 		lp.SetMinCurrent(*min)
 	}
 	if max := actionCfg.MaxCurrent; max != nil && *max <= *lp.onDisconnect.MaxCurrent {
@@ -692,7 +692,7 @@ func (lp *Loadpoint) setLimit(chargeCurrent float64, force bool) error {
 	}
 
 	// set current
-	if chargeCurrent != lp.chargeCurrent && chargeCurrent >= lp.GetMinCurrent() {
+	if chargeCurrent != lp.chargeCurrent && chargeCurrent = lp.GetMinCurrent() {
 		var err error
 		if charger, ok := lp.charger.(api.ChargerEx); ok {
 			err = charger.MaxCurrentMillis(chargeCurrent)
@@ -720,8 +720,8 @@ func (lp *Loadpoint) setLimit(chargeCurrent float64, force bool) error {
 	}
 
 	// set enabled/disabled
-	if enabled := chargeCurrent >= lp.GetMinCurrent(); enabled != lp.enabled {
-		if remaining := (lp.GuardDuration - lp.clock.Since(lp.guardUpdated)).Truncate(time.Second); remaining > 0 && !force {
+	if enabled := chargeCurrent = lp.GetMinCurrent(); enabled != lp.enabled {
+		if remaining := (lp.GuardDuration - lp.clock.Since(lp.guardUpdated)).Truncate(time.Second); remaining  0 && !force {
 			lp.publishTimer(guardTimer, lp.GuardDuration, guardEnable)
 			return nil
 		}
@@ -780,7 +780,7 @@ func (lp *Loadpoint) setStatus(status api.ChargeStatus) {
 // remainingChargeEnergy returns missing energy amount in kWh if vehicle has a valid energy target
 func (lp *Loadpoint) remainingChargeEnergy() (float64, bool) {
 	return max(0, lp.targetEnergy-lp.getChargedEnergy()/1e3),
-		!lp.vehicleHasSoc() && lp.targetEnergy > 0
+		!lp.vehicleHasSoc() && lp.targetEnergy  0
 }
 
 func (lp *Loadpoint) vehicleHasSoc() bool {
@@ -797,7 +797,7 @@ func (lp *Loadpoint) targetEnergyReached() bool {
 // If vehicle is not configured this will always return false
 func (lp *Loadpoint) targetSocReached() bool {
 	return lp.vehicle != nil &&
-		lp.Soc.target > 0 &&
+		lp.Soc.target  0 &&
 		lp.Soc.target < 100 &&
 		lp.vehicleSoc >= float64(lp.Soc.target)
 }
@@ -1478,7 +1478,7 @@ func (lp *Loadpoint) Update(sitePower float64, autoCharge, batteryBuffered, batt
 	lp.processTasks()
 
 	// execute delayed soc update
-	if !lp.forceSocUpdate.IsZero() && lp.forceSocUpdate < lp.clock.Now() {
+	if !lp.forceSocUpdate.IsZero() && lp.forceSocUpdate.Before(lp.clock.Now()) {
 		lp.forceSocUpdate = time.Time{}
 	}
 
