@@ -133,6 +133,7 @@ type Loadpoint struct {
 	chargeCurrent       float64   // Charger current limit
 	guardUpdated        time.Time // Charger enabled/disabled timestamp
 	socUpdated          time.Time // Soc updated timestamp (poll: connected)
+	forceSocUpdate      time.Time // Forced Soc update timestamp (poll: connected)
 	vehicleDetect       time.Time // Vehicle connected timestamp
 	phasesSwitched      time.Time // Phase switch timestamp
 	vehicleDetectTicker *clock.Ticker
@@ -423,11 +424,8 @@ func (lp *Loadpoint) evChargeStopHandler() {
 		lp.startWakeUpTimer()
 	}
 
-	// soc update reset
-	time.AfterFunc(30*time.Second, func() {
-		provider.ResetCached()
-		lp.socUpdated = time.Time{}
-	})
+	// schedule soc update reset
+	lp.forceSocUpdate = lp.clock.Now().Add(30*time.Second)
 
 	// reset pv enable/disable timer
 	// https://github.com/evcc-io/evcc/issues/2289
@@ -1478,6 +1476,11 @@ func (lp *Loadpoint) phaseSwitchCompleted() bool {
 // Update is the main control function. It reevaluates meters and charger state
 func (lp *Loadpoint) Update(sitePower float64, autoCharge, batteryBuffered, batteryStart bool, greenShare float64, effPrice, effCo2 *float64) {
 	lp.processTasks()
+
+	// execute delayed soc update
+	if !lp.forceSocUpdate.IsZero() && lp.forceSocUpdate < lp.clock.Now() {
+		lp.forceSocUpdate = time.Time{}
+	}
 
 	// read and publish meters first- charge power has already been updated by the site
 	lp.updateChargeVoltages()
