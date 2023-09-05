@@ -34,7 +34,7 @@ vehicles = "My Vehicles"
 failed = "failed"
 label = "Status"
 running = "validating…"
-success = "successfull"
+success = "successful"
 unknown = "unknown"
 validate = "validate"
 

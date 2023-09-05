@@ -18,10 +18,8 @@ func TestMerge(t *testing.T) {
 
 	now := ModeNow
 	two := 2
-	three := 3
 	new := ActionConfig{
 		Mode:     &now,
-		MinSoc:   &three,
 		Priority: &two,
 	}
 
@@ -38,7 +36,6 @@ func TestMerge(t *testing.T) {
 	assert.Equal(t, dst, ActionConfig{
 		Mode:       &now,
 		MinCurrent: &six,
-		MinSoc:     &three,
 		Priority:   &two,
 	}, "new wrong")
 }
