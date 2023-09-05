@@ -3,7 +3,6 @@ package charger
 import (
 	"encoding/binary"
 	"fmt"
-	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -163,20 +162,6 @@ func (wb *Wallbe) maxCurrentMillis(current float64) error {
 	_, err := wb.conn.WriteSingleRegister(wbRegMaxCurrent, u)
 
 	return err
-}
-
-var _ api.ChargeTimer = (*Wallbe)(nil)
-
-// ChargingTime implements the api.ChargeTimer interface
-func (wb *Wallbe) ChargingTime() (time.Duration, error) {
-	b, err := wb.conn.ReadInputRegisters(wbRegChargeTime, 2)
-	if err != nil {
-		return 0, err
-	}
-
-	// 2 words, least significant word first
-	secs := uint64(b[1]) | uint64(b[0])<<8 | uint64(b[3])<<16 | uint64(b[2])<<24
-	return time.Duration(secs) * time.Second, nil
 }
 
 // currentPower implements the api.Meter interface

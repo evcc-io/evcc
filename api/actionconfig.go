@@ -15,7 +15,7 @@ type ActionConfig struct {
 	Mode       *ChargeMode `mapstructure:"mode,omitempty"`       // Charge Mode
 	MinCurrent *float64    `mapstructure:"minCurrent,omitempty"` // Minimum Current
 	MaxCurrent *float64    `mapstructure:"maxCurrent,omitempty"` // Maximum Current
-	MinSoc     *int        `mapstructure:"minSoc,omitempty"`     // Minimum Soc
+	MinSoc_    *int        `mapstructure:"minSoc,omitempty"`     // Minimum Soc (deprecated)
 	TargetSoc  *int        `mapstructure:"targetSoc,omitempty"`  // Target Soc
 	Priority   *int        `mapstructure:"priority,omitempty"`   // Priority
 }

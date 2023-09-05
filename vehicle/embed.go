@@ -15,6 +15,16 @@ type embed struct {
 }
 
 // Title implements the api.Vehicle interface
+func (v *embed) fromVehicle(title string, capacity float64) {
+	if v.Title_ == "" {
+		v.Title_ = title
+	}
+	if v.Capacity_ == 0 {
+		v.Capacity_ = capacity
+	}
+}
+
+// Title implements the api.Vehicle interface
 func (v *embed) Title() string {
 	return v.Title_
 }

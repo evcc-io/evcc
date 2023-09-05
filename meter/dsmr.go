@@ -139,9 +139,8 @@ func NewDsmr(uri, energy string, timeout time.Duration) (api.Meter, error) {
 // based on https://github.com/basvdlei/gotsmart/blob/master/gotsmart.go
 func (m *Dsmr) run(conn net.Conn, done chan struct{}) {
 	log := util.NewLogger("dsmr")
-	backoff := backoff.NewExponentialBackOff()
-	backoff.InitialInterval = time.Second
-	backoff.MaxInterval = 5 * time.Minute
+	bo := backoff.NewExponentialBackOff()
+	bo.MaxInterval = 5 * time.Minute
 
 	handle := func(op string, err error) {
 		log.ERROR.Printf("%s: %v", op, err)
@@ -161,7 +160,7 @@ func (m *Dsmr) run(conn net.Conn, done chan struct{}) {
 			conn, err = m.connect()
 			if err != nil {
 				handle("connect", err)
-				time.Sleep(backoff.NextBackOff().Truncate(time.Second))
+				time.Sleep(bo.NextBackOff().Truncate(time.Second))
 				continue
 			}
 
@@ -169,7 +168,7 @@ func (m *Dsmr) run(conn net.Conn, done chan struct{}) {
 		}
 
 		if b, err := reader.Peek(1); err == nil {
-			backoff.Reset()
+			bo.Reset()
 
 			if string(b) != "/" {
 				log.DEBUG.Printf("ignoring garbage character: %c\n", b)
@@ -178,7 +177,7 @@ func (m *Dsmr) run(conn net.Conn, done chan struct{}) {
 			}
 		} else {
 			handle("peek", err)
-			time.Sleep(backoff.NextBackOff().Truncate(time.Second))
+			time.Sleep(bo.NextBackOff().Truncate(time.Second))
 			continue
 		}
 

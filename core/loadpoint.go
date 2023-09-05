@@ -317,12 +317,13 @@ func (lp *Loadpoint) collectDefaults() {
 		*actionCfg.Mode = lp.GetMode()
 		*actionCfg.MinCurrent = lp.GetMinCurrent()
 		*actionCfg.MaxCurrent = lp.GetMaxCurrent()
-		*actionCfg.MinSoc = lp.GetMinSoc()
-		*actionCfg.TargetSoc = lp.GetTargetSoc()
 		*actionCfg.Priority = lp.GetPriority()
 	} else {
 		lp.log.ERROR.Printf("error allocating action config: %v", err)
 	}
+	// deprecated: do not reapply deprecated lp config values
+	actionCfg.TargetSoc = nil
+	actionCfg.MinSoc_ = nil
 }
 
 // requestUpdate requests site to update this loadpoint
@@ -552,6 +553,9 @@ func (lp *Loadpoint) applyAction(actionCfg api.ActionConfig) {
 	if min := actionCfg.MinCurrent; min != nil && *min >= *lp.onDisconnect.MinCurrent {
 		lp.SetMinCurrent(*min)
 	}
+	if actionCfg.TargetSoc != nil {
+		lp.SetTargetSoc(*actionCfg.TargetSoc)
+	}
 	if max := actionCfg.MaxCurrent; max != nil && *max <= *lp.onDisconnect.MaxCurrent {
 		lp.SetMaxCurrent(*max)
 	}
@@ -646,6 +650,7 @@ func (lp *Loadpoint) syncCharger() error {
 		}
 		enabled = true // treat as enabled when charging
 		lp.elapseGuard()
+		lp.elapsePVTimer()
 		return nil
 	}
 

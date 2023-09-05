@@ -148,7 +148,6 @@ func TestDefaultVehicle(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
 	mode := api.ModePV
-	minsoc := 20
 	targetsoc := 80
 
 	dflt := mock.NewMockVehicle(ctrl)
@@ -158,7 +157,6 @@ func TestDefaultVehicle(t *testing.T) {
 	dflt.EXPECT().Phases().AnyTimes()
 	dflt.EXPECT().OnIdentified().Return(api.ActionConfig{
 		Mode:      &mode,
-		MinSoc:    &minsoc,
 		TargetSoc: &targetsoc,
 	}).AnyTimes()
 
@@ -175,13 +173,10 @@ func TestDefaultVehicle(t *testing.T) {
 	// ondisconnect
 	off := api.ModeOff
 	zero := 0
-	hundred := 100
 	onDisconnect := api.ActionConfig{
 		Mode:       &off,
 		MinCurrent: &lp.MinCurrent,
 		MaxCurrent: &lp.MaxCurrent,
-		MinSoc:     &zero,
-		TargetSoc:  &hundred,
 		Priority:   &zero,
 	}
 
@@ -227,13 +222,12 @@ func TestDefaultVehicle(t *testing.T) {
 func TestApplyVehicleDefaults(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
-	newConfig := func(mode api.ChargeMode, minCurrent, maxCurrent float64, minSoc, targetSoc int) api.ActionConfig {
+	newConfig := func(mode api.ChargeMode, minCurrent, maxCurrent float64, targetSoc *int) api.ActionConfig {
 		return api.ActionConfig{
 			Mode:       &mode,
 			MinCurrent: &minCurrent,
 			MaxCurrent: &maxCurrent,
-			MinSoc:     &minSoc,
-			TargetSoc:  &targetSoc,
+			TargetSoc:  targetSoc,
 		}
 	}
 
@@ -244,10 +238,11 @@ func TestApplyVehicleDefaults(t *testing.T) {
 	}
 
 	// onIdentified config
-	oi := newConfig(api.ModePV, 7, 15, 1, 99)
+	targetSoc := 99
+	oi := newConfig(api.ModePV, 7, 15, &targetSoc)
 
 	// onDefault config
-	od := newConfig(api.ModeOff, 6, 16, 2, 98)
+	od := newConfig(api.ModeOff, 6, 16, nil)
 
 	vehicle := mock.NewMockVehicle(ctrl)
 	vehicle.EXPECT().Title().Return("it's me").AnyTimes()
@@ -266,7 +261,7 @@ func TestApplyVehicleDefaults(t *testing.T) {
 	lp.ResetOnDisconnect = true
 
 	// check loadpoint default currents can't be violated
-	lp.applyAction(newConfig(*od.Mode, 5, 17, *od.MinSoc, *od.TargetSoc))
+	lp.applyAction(newConfig(*od.Mode, 5, 17, od.TargetSoc))
 	assertConfig(lp, od)
 
 	// vehicle identified

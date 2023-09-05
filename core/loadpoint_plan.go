@@ -1,6 +1,7 @@
 package core
 
 import (
+	"fmt"
 	"slices"
 	"time"
 
@@ -87,9 +88,14 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 	planStart := planner.Start(plan)
 	lp.publish(planProjectedStart, planStart)
 
-	lp.log.DEBUG.Printf("planned %v until %v at %.0fW: total plan duration: %v, avg cost: %.3f",
-		requiredDuration.Round(time.Second), lp.targetTime.Round(time.Second).Local(), maxPower,
-		planner.Duration(plan).Round(time.Second), planner.AverageCost(plan))
+	var requiredString string
+	if req := requiredDuration.Round(time.Second); req > planner.Duration(plan).Round(time.Second) {
+		requiredString = fmt.Sprintf(" (required: %v)", req)
+	}
+
+	lp.log.DEBUG.Printf("plan: charge %v%s starting at %v until %v (power: %.0fW, avg cost: %.3f)",
+		planner.Duration(plan).Round(time.Second), requiredString, planStart.Round(time.Second).Local(), lp.targetTime.Round(time.Second).Local(),
+		maxPower, planner.AverageCost(plan))
 
 	// log plan
 	for _, slot := range plan {
@@ -102,7 +108,7 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 	if active {
 		// ignore short plans if not already active
 		if slotRemaining := lp.clock.Until(activeSlot.End); !lp.planActive && slotRemaining < smallSlotDuration && !planner.SlotHasSuccessor(activeSlot, plan) {
-			lp.log.DEBUG.Printf("plan slot too short- ignoring remaining %v", slotRemaining.Round(time.Second))
+			lp.log.DEBUG.Printf("plan: slot too short- ignoring remaining %v", slotRemaining.Round(time.Second))
 			return false
 		}
 
@@ -115,17 +121,17 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 		case lp.clock.Now().After(lp.targetTime) && !lp.targetTime.IsZero():
 			// if the plan did not (entirely) work, we may still be charging beyond plan end- in that case, continue charging
 			// TODO check when schedule is implemented
-			lp.log.DEBUG.Println("continuing after target time")
+			lp.log.DEBUG.Println("plan: continuing after target time")
 			return true
 		case lp.clock.Now().Before(lp.planSlotEnd) && !lp.planSlotEnd.IsZero():
 			// don't stop an already running slot if goal was not met
-			lp.log.DEBUG.Println("continuing until end of slot")
+			lp.log.DEBUG.Println("plan: continuing until end of slot")
 			return true
 		case requiredDuration < smallGapDuration:
-			lp.log.DEBUG.Printf("continuing for remaining %v", requiredDuration.Round(time.Second))
+			lp.log.DEBUG.Printf("plan: continuing for remaining %v", requiredDuration.Round(time.Second))
 			return true
 		case lp.clock.Until(planStart) < smallGapDuration:
-			lp.log.DEBUG.Printf("plan will re-start shortly, continuing for remaining %v", lp.clock.Until(planStart).Round(time.Second))
+			lp.log.DEBUG.Printf("plan: will re-start shortly, continuing for remaining %v", lp.clock.Until(planStart).Round(time.Second))
 			return true
 		}
 	}

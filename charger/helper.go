@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"fmt"
 	"strings"
+
+	"github.com/evcc-io/evcc/api"
 )
 
 // ensureCharger extracts VIN from list of VINs returned from `list` function
@@ -51,4 +53,16 @@ func ensureChargerWithFeature[Charger, Feature any](
 // bytesAsString normalises a string by stripping leading 0x00 and trimming white space
 func bytesAsString(b []byte) string {
 	return strings.TrimSpace(string(bytes.TrimLeft(b, "\x00")))
+}
+
+// verifyEnabled validates the enabled state against the charger status
+func verifyEnabled(c api.Charger, enabled bool) (bool, error) {
+	if enabled {
+		return true, nil
+	}
+
+	status, err := c.Status()
+
+	// always treat charging as enabled
+	return status == api.StatusC, err
 }
