@@ -1479,7 +1479,9 @@ func (lp *Loadpoint) Update(sitePower float64, autoCharge, batteryBuffered, batt
 
 	// execute delayed soc update
 	if !lp.forceSocUpdate.IsZero() && lp.forceSocUpdate.Before(lp.clock.Now()) {
+		lp.socUpdated = time.Time{}
 		lp.forceSocUpdate = time.Time{}
+		provider.ResetCached()
 	}
 
 	// read and publish meters first- charge power has already been updated by the site
