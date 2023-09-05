@@ -67,11 +67,9 @@ func (c *tokenSource) authenticate() (*Token, error) {
 	}
 
 	var token Token
-	if err := c.DoJSON(req, &token); err != nil {
-		return nil, err
-	}
+	err = c.DoJSON(req, &token)
 
-	return &token, nil
+	return &token, err
 }
 
 func (c *tokenSource) RefreshToken(oauthToken *oauth2.Token) (*oauth2.Token, error) {
