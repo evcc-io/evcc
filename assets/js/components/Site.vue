@@ -103,23 +103,13 @@ export default {
 		energyflow: function () {
 			return this.collectProps(Energyflow);
 		},
-		activeLoadpoints: function () {
-			return this.loadpoints.filter((lp) => lp.charging);
-		},
-		activeLoadpointsCount: function () {
-			return this.activeLoadpoints.length;
-		},
-		vehicleIcons: function () {
-			if (this.activeLoadpointsCount) {
-				return this.activeLoadpoints.map((lp) => lp.chargerIcon || lp.vehicleIcon || "car");
-			}
-			return ["car"];
-		},
-		loadpointsPower: function () {
-			return this.loadpoints.reduce((sum, lp) => {
-				sum += lp.chargePower || 0;
-				return sum;
-			}, 0);
+		loadpointsCompact: function () {
+			return this.loadpoints.map((lp) => {
+				const icon = lp.chargerIcon || lp.vehicleIcon || "car";
+				const charging = lp.charging;
+				const power = lp.chargePower || 0;
+				return { icon, charging, power };
+			});
 		},
 		topNavigation: function () {
 			const vehicleLogins = this.auth ? this.auth.vehicles : {};

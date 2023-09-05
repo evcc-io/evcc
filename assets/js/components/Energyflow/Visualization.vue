@@ -64,8 +64,12 @@
 				<LabelBar v-bind="labelBarProps('bottom', 'homePower')">
 					<shopicon-regular-home></shopicon-regular-home>
 				</LabelBar>
-				<LabelBar v-bind="labelBarProps('bottom', 'loadpoints')">
-					<VehicleIcon :names="vehicleIcons" />
+				<LabelBar
+					v-for="(lp, index) in loadpoints"
+					:key="index"
+					v-bind="labelBarProps('bottom', 'loadpoints', lp.power)"
+				>
+					<VehicleIcon :names="[lp.icon]" />
 				</LabelBar>
 				<LabelBar v-bind="labelBarProps('bottom', 'batteryCharge')">
 					<BatteryIcon :soc="batterySoc" />
@@ -96,14 +100,13 @@ export default {
 		gridImport: { type: Number, default: 0 },
 		selfConsumption: { type: Number, default: 0 },
 		pvExport: { type: Number, default: 0 },
-		loadpoints: { type: Number, default: 0 },
+		loadpoints: { type: Array, default: () => [] },
 		batteryCharge: { type: Number, default: 0 },
 		batteryDischarge: { type: Number, default: 0 },
 		pvProduction: { type: Number, default: 0 },
 		homePower: { type: Number, default: 0 },
 		batterySoc: { type: Number, default: 0 },
 		powerInKw: { type: Boolean, default: false },
-		vehicleIcons: { type: Array },
 	},
 	data: function () {
 		return { width: 0 };
@@ -170,8 +173,8 @@ export default {
 		updateElementWidth() {
 			this.width = this.$refs.site_progress.getBoundingClientRect().width;
 		},
-		labelBarProps(position, name) {
-			const value = this[name];
+		labelBarProps(position, name, val) {
+			const value = val === undefined ? this[name] : val;
 			const minWidth = 40;
 			return {
 				value,
