@@ -425,7 +425,7 @@ func (lp *Loadpoint) evChargeStopHandler() {
 	}
 
 	// schedule soc update reset
-	lp.forceSocUpdate = lp.clock.Now().Add(30*time.Second)
+	lp.forceSocUpdate = lp.clock.Now().Add(30 * time.Second)
 
 	// reset pv enable/disable timer
 	// https://github.com/evcc-io/evcc/issues/2289
