@@ -17,8 +17,3 @@ var AuthParams = url.Values{
 	"redirect_uri":  {"seatconnect://identity-kit/login"},
 	"scope":         {"openid profile"}, // address phone email birthdate nationalIdentifier cars mbb dealers badge nationality
 }
-
-// TokenRefreshService parameters
-var TRSParams = url.Values{
-	"brand": {"seat"},
-}

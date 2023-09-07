@@ -8,12 +8,10 @@ import (
 	"golang.org/x/oauth2"
 )
 
-const (
-	// BaseURL is the API base url
-	BaseURL = "https://mal-3a.prd.eu.dp.vwg-connect.com/api"
-)
+// BaseURL is the API base url
+const BaseURL = "https://mal-3a.prd.eu.dp.vwg-connect.com/api"
 
-// API is an api.Vehicle implementation for Seat Cupra cars
+// API provides list of vehicles for Seat cars
 type API struct {
 	*request.Helper
 }
@@ -32,19 +30,24 @@ func NewAPI(log *util.Logger, ts oauth2.TokenSource) *API {
 	return v
 }
 
-type Vehicle struct {
-	VIN string
-}
-
 // Vehicles implements the /vehicles response
-func (v *API) Vehicles(userID string) ([]Vehicle, error) {
+func (v *API) Vehicles(userID string) ([]string, error) {
 	var res struct {
-		Vehicles []Vehicle
+		UserVehicles struct {
+			UserId  string
+			Vehicle []struct {
+				Content string
+			}
+		}
 	}
 
 	uri := fmt.Sprintf("%s/usermanagement/users/v2/users/%s/vehicles", BaseURL, userID)
 	err := v.GetJSON(uri, &res)
 
-	// return res.Vehicles, err
-	return nil, err
+	var vehicles []string
+	for _, v := range res.UserVehicles.Vehicle {
+		vehicles = append(vehicles, v.Content)
+	}
+
+	return vehicles, err
 }
