@@ -35,3 +35,24 @@ test.describe("main screen", async () => {
     await expect(page.getByRole("heading", { name: "Guest vehicle" })).toBeVisible();
   });
 });
+
+test.describe("session info", async () => {
+  test("default", async ({ page }) => {
+    await expect(page.getByTestId("sessionInfoLabel").first()).toContainText("Duration");
+  });
+  test("change value", async ({ page }) => {
+    // by select
+    await page.getByTestId("sessionInfoSelect").first().selectOption({ label: "Solar" });
+    await expect(page.getByTestId("sessionInfoLabel").first()).toContainText("Solar");
+    // by click on value
+    await page.getByTestId("sessionInfoValue").first().click();
+    await expect(page.getByTestId("sessionInfoLabel").first()).toContainText("Duration");
+  });
+  test("keep selection on reload", async ({ page }) => {
+    await expect(page.getByTestId("sessionInfoLabel").first()).toContainText("Duration");
+    await page.getByTestId("sessionInfoSelect").first().selectOption({ label: "Solar" });
+    await expect(page.getByTestId("sessionInfoLabel").first()).toContainText("Solar");
+    await page.reload();
+    await expect(page.getByTestId("sessionInfoLabel").first()).toContainText("Solar");
+  });
+});
