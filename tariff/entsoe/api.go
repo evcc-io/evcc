@@ -46,24 +46,20 @@ func ConstructDayAheadPricesRequest(domain DomainType, duration time.Duration) D
 func (r *DayAheadPricesRequest) DoRequest(client *request.Helper) (PublicationMarketDocument, error) {
 	var res PublicationMarketDocument
 
-	// TODO This feels a bit silly, could we simplify this somehow?
 	// Currently opting to use GET request to keep it relatively simple, but POST is an option.
 	// Would have to figure out building the XML requests in a sane, structured way though.
-	uri, err := url.Parse(BaseURI)
-	if err != nil {
-		return res, err
-	}
 
-	params := uri.Query()
+	var params url.Values
 	params.Add("DocumentType", string(ProcessTypeDayAhead))
 	params.Add("In_Domain", r.domain)
 	params.Add("Out_Domain", r.domain)
 	params.Add("PeriodStart", r.periodStart.Format(numericDateFormat))
 	params.Add("PeriodEnd", r.periodEnd.Format(numericDateFormat))
 
-	uri.RawQuery = params.Encode()
+	// Feels like we might be duplicating the wheel here, but this is nice and simple (and fast)
+	uri := fmt.Sprintf("%s?%s", BaseURI, params.Encode())
 
-	err = client.GetXML(uri.String(), &res)
+	err := client.GetXML(uri, &res)
 	return res, err
 }
 
