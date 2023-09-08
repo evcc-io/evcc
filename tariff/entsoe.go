@@ -2,17 +2,17 @@ package tariff
 
 import (
 	"errors"
-	"github.com/evcc-io/evcc/tariff/entsoe"
-	"github.com/evcc-io/evcc/util/transport"
 	"net/http"
+	"slices"
 	"sync"
 	"time"
 
 	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/tariff/entsoe"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
-	"slices"
+	"github.com/evcc-io/evcc/util/transport"
 )
 
 type Entsoe struct {

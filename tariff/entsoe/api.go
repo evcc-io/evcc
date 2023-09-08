@@ -5,12 +5,13 @@ package entsoe
 import (
 	"errors"
 	"fmt"
-	"github.com/evcc-io/evcc/util/request"
-	"github.com/evcc-io/evcc/util/shortrfc3339"
 	"net/url"
 	"sort"
 	"strconv"
 	"time"
+
+	"github.com/evcc-io/evcc/util/request"
+	"github.com/evcc-io/evcc/util/shortrfc3339"
 )
 
 // BaseURI is the root path that the API is accessed from.
