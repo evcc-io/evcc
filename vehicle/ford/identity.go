@@ -64,10 +64,8 @@ func (v *Identity) login() (*oauth.Token, error) {
 	cv := oauth2.GenerateVerifier()
 
 	state := lo.RandomString(16, lo.AlphanumericCharset)
-	uri := OAuth2Config.AuthCodeURL(state,
+	uri := OAuth2Config.AuthCodeURL(state, oauth2.S256ChallengeOption(cv),
 		oauth2.SetAuthURLParam("max_age", "3600"),
-		oauth2.SetAuthURLParam("code_challenge", oauth2.S256ChallengeFromVerifier(cv)),
-		oauth2.SetAuthURLParam("code_challenge_method", "S256"),
 	)
 
 	v.Jar, _ = cookiejar.New(nil)
@@ -139,9 +137,7 @@ func (v *Identity) login() (*oauth.Token, error) {
 		return nil, errors.New("could not obtain auth code- check user and password")
 	}
 
-	tok, err := OAuth2Config.Exchange(ctx, code,
-		oauth2.SetAuthURLParam("code_verifier", cv),
-	)
+	tok, err := OAuth2Config.Exchange(ctx, code, oauth2.VerifierOption(cv))
 
 	// exchange code for api token
 	var token oauth.Token

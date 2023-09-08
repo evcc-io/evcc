@@ -59,11 +59,9 @@ func (v *Identity) login() (*oauth2.Token, error) {
 	cv := oauth2.GenerateVerifier()
 
 	state := lo.RandomString(16, lo.AlphanumericCharset)
-	uri := OAuth2Config.AuthCodeURL(state,
+	uri := OAuth2Config.AuthCodeURL(state, oauth2.S256ChallengeOption(cv),
 		oauth2.SetAuthURLParam("audience", ApiURI),
 		oauth2.SetAuthURLParam("ui_locales", "de-DE"),
-		oauth2.SetAuthURLParam("code_challenge", oauth2.S256ChallengeFromVerifier(cv)),
-		oauth2.SetAuthURLParam("code_challenge_method", "S256"),
 	)
 
 	v.Client.Jar, _ = cookiejar.New(nil)
@@ -148,16 +146,7 @@ func (v *Identity) login() (*oauth2.Token, error) {
 	ctx, cancel := context.WithTimeout(cctx, request.Timeout)
 	defer cancel()
 
-	return OAuth2Config.Exchange(ctx, code,
-		oauth2.SetAuthURLParam("code_verifier", cv),
-	)
-}
-
-func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
-	ctx := context.WithValue(context.Background(), oauth2.HTTPClient, v.Client)
-	ts := oauth2.ReuseTokenSource(token, OAuth2Config.TokenSource(ctx, token))
-
-	token, err := ts.Token()
+	token, err := oc.Exchange(ctx, code, oauth2.VerifierOption(cv))
 	if err != nil {
 		token, err = v.login()
 	}
