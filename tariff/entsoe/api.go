@@ -3,9 +3,10 @@
 package entsoe
 
 import (
+	"errors"
+	"fmt"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/shortrfc3339"
-	"github.com/pkg/errors"
 	"net/url"
 	"sort"
 	"strconv"
@@ -81,9 +82,7 @@ func GetTsPriceData(ts *[]TimeSeries) (data []RateData, err error) {
 			return data, err
 		}
 		// Just append the array for the time being, sort comes later.
-		for _, v := range tsData {
-			data = append(data, v)
-		}
+		data = append(data, tsData...)
 	}
 
 	// Now sort all entries by timestamp.
@@ -98,7 +97,7 @@ func GetTsPriceData(ts *[]TimeSeries) (data []RateData, err error) {
 func ExtractTsPriceData(timeseries *TimeSeries) (data []RateData, err error) {
 	tStart, err := time.Parse(shortrfc3339.Layout, timeseries.Period.TimeInterval.Start)
 	if err != nil {
-		return nil, errors.Wrap(err, "problem parsing start timestamp")
+		return nil, fmt.Errorf("problem parsing start timestamp: %w", err)
 	}
 
 	// make array of slots so that we can put things in the right places
@@ -111,7 +110,7 @@ func ExtractTsPriceData(timeseries *TimeSeries) (data []RateData, err error) {
 	// tPriceMeasureUnit := timeseries.PriceMeasureUnitName
 	// Brief check just to make sure we're about to decode the data as expected.
 	if timeseries.PriceMeasureUnitName != "MWH" {
-		return nil, errors.Wrap(ErrInvalidData, "price data not in expected unit")
+		return nil, fmt.Errorf("%w: price data not in expected unit", ErrInvalidData)
 	}
 
 	tPointer := tStart
