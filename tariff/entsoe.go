@@ -17,6 +17,7 @@ import (
 
 type Entsoe struct {
 	*request.Helper
+	*embed
 	mux     sync.Mutex
 	log     *util.Logger
 	apikey  string
@@ -33,6 +34,7 @@ func init() {
 
 func NewEntsoeFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	var cc struct {
+		embed         `mapstructure:",squash"`
 		Securitytoken string
 		Domain        string
 	}
@@ -55,6 +57,7 @@ func NewEntsoeFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	t := &Entsoe{
 		log:    log,
 		Helper: request.NewHelper(log),
+		embed:  &cc.embed,
 		apikey: cc.Securitytoken,
 		domain: cc.Domain,
 	}
