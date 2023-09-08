@@ -83,8 +83,8 @@ func NewRCT(uri, usage string, cache time.Duration, capacity func() float64) (ap
 	}
 
 	bo := backoff.NewExponentialBackOff()
-	bo.MaxElapsedTime = time.Second
 	bo.InitialInterval = 10 * time.Millisecond
+	bo.MaxInterval = time.Second
 
 	m := &RCT{
 		usage: strings.ToLower(usage),

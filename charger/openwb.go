@@ -177,7 +177,12 @@ func (m *OpenWB) Enable(enable bool) error {
 }
 
 func (m *OpenWB) Enabled() (bool, error) {
-	return m.enabled, nil
+	enabled, err := verifyEnabled(m, m.enabled)
+	if err == nil {
+		m.enabled = enabled
+	}
+
+	return enabled, err
 }
 
 func (m *OpenWB) Status() (api.ChargeStatus, error) {
