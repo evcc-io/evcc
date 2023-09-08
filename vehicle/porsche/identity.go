@@ -13,7 +13,6 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
-	cv "github.com/nirasan/go-oauth-pkce-code-verifier"
 	"github.com/samber/lo"
 	"golang.org/x/oauth2"
 )
@@ -57,16 +56,13 @@ func NewIdentity(log *util.Logger, user, password string) (oauth2.TokenSource, e
 }
 
 func (v *Identity) login() (*oauth2.Token, error) {
-	cv, err := cv.CreateCodeVerifier()
-	if err != nil {
-		return nil, err
-	}
+	cv := oauth2.GenerateVerifier()
 
 	state := lo.RandomString(16, lo.AlphanumericCharset)
 	uri := OAuth2Config.AuthCodeURL(state,
 		oauth2.SetAuthURLParam("audience", ApiURI),
 		oauth2.SetAuthURLParam("ui_locales", "de-DE"),
-		oauth2.SetAuthURLParam("code_challenge", cv.CodeChallengeS256()),
+		oauth2.SetAuthURLParam("code_challenge", oauth2.S256ChallengeFromVerifier(cv)),
 		oauth2.SetAuthURLParam("code_challenge_method", "S256"),
 	)
 
@@ -153,7 +149,7 @@ func (v *Identity) login() (*oauth2.Token, error) {
 	defer cancel()
 
 	return OAuth2Config.Exchange(ctx, code,
-		oauth2.SetAuthURLParam("code_verifier", cv.CodeChallengePlain()),
+		oauth2.SetAuthURLParam("code_verifier", cv),
 	)
 }
 
