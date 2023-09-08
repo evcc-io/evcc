@@ -113,6 +113,7 @@ func (t *Entsoe) run(done chan error) {
 		if err != nil {
 			once.Do(func() { done <- err })
 			t.log.ERROR.Println(err)
+			continue
 		}
 
 		once.Do(func() { close(done) })
