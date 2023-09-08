@@ -52,16 +52,12 @@ func (v *Identity) Login(user, password string) error {
 		})
 	}
 
-	cv := oauth2.GenerateVerifier()
-
-	uri := v.oc.AuthCodeURL(state(), oauth2.AccessTypeOffline,
-		oauth2.SetAuthURLParam("code_challenge", oauth2.S256ChallengeFromVerifier(cv)),
-		oauth2.SetAuthURLParam("code_challenge_method", "S256"),
-	)
-
 	var param request.InterceptResult
 	v.Client.CheckRedirect, param = request.InterceptRedirect("resume", false)
 
+	cv := oauth2.GenerateVerifier()
+
+	uri := v.oc.AuthCodeURL(state(), oauth2.AccessTypeOffline, oauth2.S256ChallengeOption(cv))
 	if _, err := v.Get(uri); err != nil {
 		return err
 	}
@@ -135,9 +131,7 @@ func (v *Identity) Login(user, password string) error {
 			request.Timeout)
 		defer cancel()
 
-		token, err = v.oc.Exchange(ctx, code,
-			oauth2.SetAuthURLParam("code_verifier", cv),
-		)
+		token, err = v.oc.Exchange(ctx, code, oauth2.VerifierOption(cv))
 	}
 
 	if err == nil {
