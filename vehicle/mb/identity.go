@@ -62,9 +62,13 @@ func (v *Identity) Login(user, password string) error {
 	var param request.InterceptResult
 	v.Client.CheckRedirect, param = request.InterceptRedirect("resume", false)
 
-	var resume string
-	if _, err := v.Get(uri); err == nil {
-		resume, err = param()
+	if _, err := v.Get(uri); err != nil {
+		return err
+	}
+
+	resume, err := param()
+	if err != nil {
+		return err
 	}
 
 	v.Client.CheckRedirect = nil
