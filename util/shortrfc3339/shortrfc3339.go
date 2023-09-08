@@ -30,7 +30,3 @@ func (ct *ShortRFC3339Timestamp) MarshalJSON() ([]byte, error) {
 	}
 	return []byte(ct.Time.Format(Layout)), nil
 }
-
-func (ct *ShortRFC3339Timestamp) IsSet() bool {
-	return !ct.IsZero()
-}
