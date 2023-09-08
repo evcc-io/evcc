@@ -3,6 +3,7 @@ package vehicle
 import (
 	"context"
 	"errors"
+	"slices"
 	"time"
 
 	"github.com/bogosj/tesla"
@@ -213,7 +214,7 @@ var _ api.VehicleChargeController = (*Tesla)(nil)
 // StartCharge implements the api.VehicleChargeController interface
 func (v *Tesla) StartCharge() error {
 	err := v.apiError(v.vehicle.StartCharging())
-	if err != nil && err.Error() == "is_charging" {
+	if err != nil && slices.Contains([]string{"completed", "is_charging"}, err.Error()) {
 		return nil
 	}
 	return err
