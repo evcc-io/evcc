@@ -1,6 +1,9 @@
 package entsoe
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 var zones = map[string][]string{
 	"10Y1001A1001A016": {"CTA|NIE", "MBA|SEM(SONI)", "SCA|NIE"},
@@ -141,13 +144,17 @@ const (
 
 func Area(typ AreaType, name string) (string, error) {
 	combined := fmt.Sprintf("%s|%s", typ, name)
+
+	// allows matching country codes
+	suffix := fmt.Sprintf(" (%s)", name)
+
 	for code, names := range zones {
 		if code == name {
 			return code, nil
 		}
 
 		for _, n := range names {
-			if n == name || n == combined {
+			if n == name || n == combined || strings.HasSuffix(n, suffix) {
 				return code, nil
 			}
 		}
