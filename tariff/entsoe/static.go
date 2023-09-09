@@ -32,6 +32,29 @@ type AttributeInstanceComponent struct {
 	AttributeValue string   `xml:"attributeValue"`
 }
 
+type AcknowledgementMarketDocument struct {
+	XMLName                     xml.Name `xml:"Acknowledgement_MarketDocument"`
+	Xmlns                       string   `xml:"xmlns,attr"`
+	MRID                        string   `xml:"mRID"`           // abbbeef260884cb9b43858124...
+	RevisionNumber              string   `xml:"revisionNumber"` // 1, 1, 1, 1, 1, 1, 1, 1, 1...
+	Type                        string   `xml:"type"`           // A44, A25, A25, A09, A11, ...
+	SenderMarketParticipantMRID struct {
+		Text         string `xml:",chardata"` // 10X1001A1001A450, 10X1001...
+		CodingScheme string `xml:"codingScheme,attr"`
+	} `xml:"sender_MarketParticipant.mRID"`
+	SenderMarketParticipantMarketRoleType string `xml:"sender_MarketParticipant.marketRole.type"` // A32, A32, A32, A32, A32, ...
+	ReceiverMarketParticipantMRID         struct {
+		Text         string `xml:",chardata"` // 10X1001A1001A450, 10X1001...
+		CodingScheme string `xml:"codingScheme,attr"`
+	} `xml:"receiver_MarketParticipant.mRID"`
+	ReceiverMarketParticipantMarketRoleType string `xml:"receiver_MarketParticipant.marketRole.type"` // A33, A33, A33, A33, A33, ...
+	CreatedDateTime                         string `xml:"createdDateTime"`                            // 2020-09-12T00:13:15Z, 202...
+	Reason                                  struct {
+		Code int    `xml:"code"`
+		Text string `xml:"text"`
+	} `xml:"Reason"`
+}
+
 type PublicationMarketDocument struct {
 	XMLName                     xml.Name `xml:"Publication_MarketDocument"`
 	Text                        string   `xml:",chardata"`

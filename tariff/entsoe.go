@@ -99,6 +99,10 @@ func (t *Entsoe) run(done chan error) {
 				return backoff.Permanent(se)
 			}
 
+			if tr.Type != string(entsoe.ProcessTypeDayAhead) {
+				return backoff.Permanent(errors.New("invalid response"))
+			}
+
 			return err
 		}, bo); err != nil {
 			once.Do(func() { done <- err })
