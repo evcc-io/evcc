@@ -1484,6 +1484,7 @@ func (lp *Loadpoint) phaseSwitchCompleted() bool {
 func (lp *Loadpoint) Update(sitePower float64, autoCharge, batteryBuffered, batteryStart bool, greenShare float64, effPrice, effCo2 *float64) {
 	lp.processTasks()
 
+	// TODO remove
 	lp.log.ERROR.Println("foo")
 
 	// read and publish meters first- charge power has already been updated by the site

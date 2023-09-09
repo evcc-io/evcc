@@ -36,6 +36,15 @@ type Logger struct {
 
 // NewLogger creates a logger with the given log area and adds it to the registry
 func NewLogger(area string) *Logger {
+	return newLogger(area, 0)
+}
+
+// NewLoggerWithLoadpoint creates a logger with reference to at loadpoint
+func NewLoggerWithLoadpoint(area string, lp int) *Logger {
+	return newLogger(area, lp)
+}
+
+func newLogger(area string, lp int) *Logger {
 	loggersMux.Lock()
 	defer loggersMux.Unlock()
 
@@ -55,6 +64,7 @@ func NewLogger(area string) *Logger {
 	logger := &Logger{
 		Notepad:  notepad,
 		Redactor: redactor,
+		lp:       lp,
 	}
 
 	// capture loggers created after uiChan is initialized
@@ -65,13 +75,6 @@ func NewLogger(area string) *Logger {
 	loggers[area] = logger
 
 	return logger
-}
-
-// WithLoadpoint is a workaround to roundtrip loadpoint id to ui via log messages
-// TODO replace with contexts or better
-func (l *Logger) WithLoadpoint(lp int) *Logger {
-	l.lp = lp
-	return l
 }
 
 // Redact adds items for redaction
