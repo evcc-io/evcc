@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"strings"
 	"sync"
 	"time"
 
@@ -233,6 +234,18 @@ func (site *Site) Loadpoints() []loadpoint.API {
 }
 
 func (site *Site) restoreSettings() {
+	if v, err := settings.String("site.title"); err == nil {
+		site.Title = v
+	}
+	if v, err := settings.String("site.grid"); err == nil {
+		site.Meters.GridMeterRef = v
+	}
+	if v, err := settings.String("site.pv"); err == nil {
+		site.Meters.PVMetersRef = strings.Split(v, ",")
+	}
+	if v, err := settings.String("site.battery"); err == nil {
+		site.Meters.BatteryMetersRef = strings.Split(v, ",")
+	}
 	if v, err := settings.Float("site.bufferSoc"); err == nil {
 		site.BufferSoc = v
 	}

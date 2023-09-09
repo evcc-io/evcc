@@ -10,6 +10,18 @@ type API interface {
 	Healthy() bool
 	Loadpoints() []loadpoint.API
 
+	// Meta
+	GetTitle() string
+	SetTitle(string)
+
+	// Config
+	GetGridMeterRef() string
+	SetGridMeterRef(meter string)
+	GetPVMeterRef() []string
+	SetPVMeterRef(meter []string)
+	GetBatteryMeterRef() []string
+	SetBatteryMeterRef(meter []string)
+
 	//
 	// battery
 	//

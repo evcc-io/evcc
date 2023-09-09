@@ -22,7 +22,7 @@ import (
 var ignoreState = []string{"releaseNotes"} // excessive size
 
 func indexHandler() http.HandlerFunc {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html; charset=UTF-8")
 
 		indexTemplate, err := fs.ReadFile(assets.Web, "index.html")
@@ -44,7 +44,7 @@ func indexHandler() http.HandlerFunc {
 		}); err != nil {
 			log.ERROR.Println("httpd: failed to render main page:", err.Error())
 		}
-	})
+	}
 }
 
 // jsonHandler is a middleware that decorates responses with JSON and CORS headers
