@@ -160,7 +160,7 @@ type LinkedTemplate struct {
 // Param is a proxy template parameter
 // Params can be defined:
 // 1. in the template: uses entries in 4. for default properties and values, can be overwritten here
-// 2. in defaults.yaml presets: can ne referenced in 1 and some values set here can be overwritten in 1. See OverwriteProperties method
+// 2. in defaults.yaml presets: can be referenced in 1 and some values set here can be overwritten in 1. See OverwriteProperties method
 // 3. in defaults.yaml modbus section: are referenced in 1 by a `name:modbus` param entry. Some values here can be overwritten in 1.
 // 4. in defaults.yaml param section: defaults for some params
 // Generelle Reihenfolge der Werte (außer Description, Default, Type):
