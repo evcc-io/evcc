@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	cfosRegPhases       = 8087 // Holding
+	cfosRegRelaySelect  = 8087 // Holding
 	cfosRegStatus       = 8092 // Holding
 	cfosRegMaxCurrent   = 8093 // Holding
 	cfosRegEnable       = 8094 // Holding
@@ -142,7 +142,10 @@ func (wb *CfosPowerBrain) MaxCurrentMillis(current float64) error {
 
 // phases1p3p implements the api.PhaseSwitcher interface
 func (wb *CfosPowerBrain) phases1p3p(phases int) error {
-	_, err := wb.conn.WriteSingleRegister(cfosRegPhases, uint16(phases))
+	if phases == 3 {
+		phases = 0
+	}
+	_, err := wb.conn.WriteSingleRegister(cfosRegRelaySelect, uint16(phases))
 	return err
 }
 
