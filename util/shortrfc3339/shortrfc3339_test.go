@@ -11,7 +11,7 @@ var (
 
 func TestMarshalling(t *testing.T) {
 	// Firstly, test that we can unmarshal into a struct.
-	ct := ShortRFC3339Timestamp{}
+	ct := Timestamp{}
 	if err := ct.UnmarshalJSON(tTsBytes); err != nil {
 		t.Fatal(err)
 	}
