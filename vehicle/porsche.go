@@ -39,9 +39,7 @@ func NewPorscheFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	log := util.NewLogger("porsche").Redact(cc.User, cc.Password, cc.VIN)
-	identity := porsche.NewIdentity(log)
-
-	ts, err := identity.Login(porsche.OAuth2Config, cc.User, cc.Password)
+	ts, err := porsche.NewIdentity(log, cc.User, cc.Password)
 	if err != nil {
 		return nil, fmt.Errorf("login failed: %w", err)
 	}
