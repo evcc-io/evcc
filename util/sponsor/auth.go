@@ -17,8 +17,14 @@ var (
 	ExpiresAt      time.Time
 )
 
+const unavailable = "sponsorship unavailable"
+
 func IsAuthorized() bool {
 	return len(Subject) > 0
+}
+
+func IsAuthorizedForApi() bool {
+	return IsAuthorized() && Subject != unavailable
 }
 
 // check and set sponsorship token
@@ -43,7 +49,7 @@ func ConfigureSponsorship(token string) error {
 
 	if err != nil {
 		if s, ok := status.FromError(err); ok && s.Code() != codes.Unknown {
-			Subject = "sponsorship unavailable"
+			Subject = unavailable
 			err = nil
 		} else {
 			err = fmt.Errorf("sponsortoken: %w", err)
