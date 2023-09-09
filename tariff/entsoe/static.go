@@ -15,56 +15,6 @@ const (
 	ProcessTypeDayAhead ProcessType = "A44"
 )
 
-type DomainType = string
-
-const (
-	DomainAL           DomainType = "10YAL-KESH-----5"
-	DomainAT           DomainType = "10YAT-APG------L"
-	DomainBA           DomainType = "10YBA-JPCC-----D"
-	DomainBE           DomainType = "10YBE----------2"
-	DomainBG           DomainType = "10YCA-BULGARIA-R"
-	DomainBY           DomainType = "10Y1001A1001A51S"
-	DomainCH           DomainType = "10YCH-SWISSGRIDZ"
-	DomainCZ           DomainType = "10YCZ-CEPS-----N"
-	DomainDE           DomainType = "10Y1001A1001A83F"
-	DomainDE50Hertz    DomainType = "10YDE-VE-------2"
-	DomainDEAmprion    DomainType = "10YDE-RWENET---I"
-	DomainDETenneT     DomainType = "10YDE-EON------1"
-	DomainDETransnetBW DomainType = "10YDE-ENBW-----N"
-	DomainDK           DomainType = "10Y1001A1001A65H"
-	DomainEE           DomainType = "10Y1001A1001A39I"
-	DomainES           DomainType = "10YES-REE------0"
-	DomainFI           DomainType = "10YFI-1--------U"
-	DomainFR           DomainType = "10YFR-RTE------C"
-	DomainGB           DomainType = "10YGB----------A"
-	DomainGBNIR        DomainType = "10Y1001A1001A016"
-	DomainGR           DomainType = "10YGR-HTSO-----Y"
-	DomainHR           DomainType = "10YHR-HEP------M"
-	DomainHU           DomainType = "10YHU-MAVIR----U"
-	DomainIE           DomainType = "10YIE-1001A00010"
-	DomainIT           DomainType = "10YIT-GRTN-----B"
-	DomainLT           DomainType = "10YLT-1001A0008Q"
-	DomainLU           DomainType = "10YLU-CEGEDEL-NQ"
-	DomainLV           DomainType = "10YLV-1001A00074"
-	DomainME           DomainType = "10YCS-CG-TSO---S"
-	DomainMK           DomainType = "10YMK-MEPSO----8"
-	DomainMT           DomainType = "10Y1001A1001A93C"
-	DomainNL           DomainType = "10YNL----------L"
-	DomainNO           DomainType = "10YNO-0--------C"
-	DomainPL           DomainType = "10YPL-AREA-----S"
-	DomainPT           DomainType = "10YPT-REN------W"
-	DomainRO           DomainType = "10YRO-TEL------P"
-	DomainRS           DomainType = "10YCS-SERBIATSOV"
-	DomainRU           DomainType = "10Y1001A1001A49F"
-	DomainRUKGD        DomainType = "10Y1001A1001A50U"
-	DomainSE           DomainType = "10YSE-1--------K"
-	DomainSI           DomainType = "10YSI-ELES-----O"
-	DomainSK           DomainType = "10YSK-SEPS-----K"
-	DomainTR           DomainType = "10YTR-TEIAS----W"
-	DomainUA           DomainType = "10YUA-WEPS-----0"
-	DomainDEATLU       DomainType = "10Y1001A1001A63L"
-)
-
 type ResolutionType string
 
 const (

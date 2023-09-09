@@ -23,14 +23,14 @@ var ErrInvalidData = errors.New("invalid data received")
 
 // DayAheadPricesRequest represents a helper struct for requesting 4.2.10 Day Ahead Prices [12.1.D]
 type DayAheadPricesRequest struct {
-	domain      DomainType
+	domain      string
 	periodStart time.Time
 	periodEnd   time.Time
 }
 
 // ConstructDayAheadPricesRequest constructs a new DayAheadPricesRequest.
 // Domain and duration validity is not checked, that's on you.
-func ConstructDayAheadPricesRequest(domain DomainType, duration time.Duration) DayAheadPricesRequest {
+func ConstructDayAheadPricesRequest(domain string, duration time.Duration) DayAheadPricesRequest {
 	// Round to the hour.
 	now := time.Now().Truncate(time.Hour)
 	return DayAheadPricesRequest{

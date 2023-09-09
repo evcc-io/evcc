@@ -47,10 +47,10 @@ func NewEntsoeFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		return nil, errors.New("securitytoken must be defined")
 	}
 
-	// Domains must always be 16 characters.
-	// if len(cc.Domain) != 16 {
-	// 	return nil, errors.New("domain must be defined, or invalid domain")
-	// }
+	domain, err := entsoe.Area(entsoe.TypeBZN, cc.Domain)
+	if err != nil {
+		return nil, err
+	}
 
 	log := util.NewLogger("entsoe").Redact(cc.Securitytoken)
 
@@ -59,7 +59,7 @@ func NewEntsoeFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		Helper: request.NewHelper(log),
 		embed:  &cc.embed,
 		apikey: cc.Securitytoken,
-		domain: cc.Domain,
+		domain: domain,
 	}
 
 	// Wrap the client with a decorator that adds the security token to each request.
@@ -72,7 +72,7 @@ func NewEntsoeFromConfig(other map[string]interface{}) (api.Tariff, error) {
 
 	done := make(chan error)
 	go t.run(done)
-	err := <-done
+	err = <-done
 
 	return t, err
 }
@@ -83,7 +83,7 @@ func (t *Entsoe) run(done chan error) {
 	bo := newBackoff()
 
 	// Request the next 24 hours of data.
-	tReq := entsoe.ConstructDayAheadPricesRequest(entsoe.DomainType(t.domain), time.Hour*24)
+	tReq := entsoe.ConstructDayAheadPricesRequest(t.domain, time.Hour*24)
 
 	// Data updated by ESO every half hour, but we only need data every hour to stay current.
 	for ; true; <-time.Tick(time.Hour) {
