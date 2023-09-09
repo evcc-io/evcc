@@ -31,6 +31,7 @@ var LogAreaPadding = 6
 type Logger struct {
 	*jww.Notepad
 	*Redactor
+	lp int
 }
 
 // NewLogger creates a logger with the given log area and adds it to the registry
@@ -64,6 +65,13 @@ func NewLogger(area string) *Logger {
 	loggers[area] = logger
 
 	return logger
+}
+
+// WithLoadpoint is a workaround to roundtrip loadpoint id to ui via log messages
+// TODO replace with contexts or better
+func (l *Logger) WithLoadpoint(lp int) *Logger {
+	l.lp = lp
+	return l
 }
 
 // Redact adds items for redaction
@@ -130,17 +138,23 @@ var uiChan chan<- Param
 type uiWriter struct {
 	re    *regexp.Regexp
 	level string
+	lp    int
 }
 
 func (w *uiWriter) Write(p []byte) (n int, err error) {
 	// trim level and timestamp
 	s := string(w.re.ReplaceAll(p, []byte{}))
 
-	uiChan <- Param{
+	param := Param{
 		Key: w.level,
 		Val: strings.Trim(strconv.Quote(strings.TrimSpace(s)), "\""),
 	}
 
+	if w.lp > 0 {
+		param.Loadpoint = &w.lp
+	}
+
+	uiChan <- param
 	return 0, nil
 }
 
@@ -159,18 +173,19 @@ func CaptureLogs(c chan<- Param) {
 }
 
 func captureLogger(l *Logger) {
-	captureLogLevel("warn", l.Notepad.WARN)
-	captureLogLevel("error", l.Notepad.ERROR)
-	captureLogLevel("error", l.Notepad.FATAL)
+	captureLogLevel("warn", l.lp, l.Notepad.WARN)
+	captureLogLevel("error", l.lp, l.Notepad.ERROR)
+	captureLogLevel("error", l.lp, l.Notepad.FATAL)
 }
 
-func captureLogLevel(level string, l *log.Logger) {
+func captureLogLevel(level string, lp int, l *log.Logger) {
 	re, err := regexp.Compile(`^\[[a-zA-Z0-9-]+\s*\] \w+ .{19} `)
 	if err != nil {
 		panic(err)
 	}
 
 	ui := uiWriter{
+		lp:    lp,
 		re:    re,
 		level: level,
 	}
