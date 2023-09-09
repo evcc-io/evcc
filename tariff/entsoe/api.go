@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/util/request"
-	"github.com/evcc-io/evcc/util/shortrfc3339"
 )
 
 // BaseURI is the root path that the API is accessed from.
@@ -92,15 +91,8 @@ func GetTsPriceData(ts *[]TimeSeries) (data []RateData, err error) {
 }
 
 // ExtractTsPriceData massages the given TimeSeries data set to provide RateData entries with associated start and end timestamps.
-func ExtractTsPriceData(timeseries *TimeSeries) (data []RateData, err error) {
-	tStart, err := time.Parse(shortrfc3339.Layout, timeseries.Period.TimeInterval.Start)
-	if err != nil {
-		return nil, fmt.Errorf("problem parsing start timestamp: %w", err)
-	}
-
-	// make array of slots so that we can put things in the right places
-	dataLength := len(timeseries.Period.Point)
-	data = make([]RateData, dataLength)
+func ExtractTsPriceData(timeseries *TimeSeries) ([]RateData, error) {
+	data := make([]RateData, 0, len(timeseries.Period.Point))
 
 	tResolution := timeseries.Period.Resolution
 
@@ -111,16 +103,17 @@ func ExtractTsPriceData(timeseries *TimeSeries) (data []RateData, err error) {
 		return nil, fmt.Errorf("%w: price data not in expected unit", ErrInvalidData)
 	}
 
-	tPointer := tStart
+	tPointer := timeseries.Period.TimeInterval.Start.Time
 	for _, point := range timeseries.Period.Point {
-		d := RateData{}
-		d.Value, err = strconv.ParseFloat(point.PriceAmount, 32)
-		// Price/MWH to Price/kWH
-		d.Value = d.Value / 100
+		val, err := strconv.ParseFloat(point.PriceAmount, 32)
 		if err != nil {
 			return data, err
 		}
-		d.ValidityStart = tPointer
+
+		d := RateData{
+			Value:         val / 100, // Price/MWH to Price/kWH
+			ValidityStart: tPointer,
+		}
 
 		// Nudge pointer on as required by defined data resolution
 		switch tResolution {
@@ -139,13 +132,8 @@ func ExtractTsPriceData(timeseries *TimeSeries) (data []RateData, err error) {
 		}
 		d.ValidityEnd = tPointer
 
-		// Insert into data array (with OOB check)
-		pntr := point.Position - 1
-		if !(pntr >= 0 && dataLength > pntr) {
-			return nil, ErrInvalidData
-		}
-		data[pntr] = d
-
+		data = append(data, d)
 	}
+
 	return data, nil
 }

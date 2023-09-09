@@ -5,9 +5,10 @@ package ngeso
 import (
 	"errors"
 	"fmt"
+	"time"
+
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/shortrfc3339"
-	"time"
 )
 
 // BaseURI is the root path that the API is accessed from.
@@ -123,9 +124,9 @@ func (r NationalIntensityResult) Results() []CarbonIntensityForecastEntry {
 }
 
 type CarbonIntensityForecastEntry struct {
-	ValidityStart shortrfc3339.ShortRFC3339Timestamp `json:"from"`
-	ValidityEnd   shortrfc3339.ShortRFC3339Timestamp `json:"to"`
-	Intensity     CarbonIntensity                    `json:"intensity"`
+	ValidityStart shortrfc3339.Timestamp `json:"from"`
+	ValidityEnd   shortrfc3339.Timestamp `json:"to"`
+	Intensity     CarbonIntensity        `json:"intensity"`
 }
 
 type CarbonIntensity struct {

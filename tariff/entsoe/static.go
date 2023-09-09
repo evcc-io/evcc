@@ -1,6 +1,10 @@
 package entsoe
 
-import "encoding/xml"
+import (
+	"encoding/xml"
+
+	"github.com/evcc-io/evcc/util/shortrfc3339"
+)
 
 // This file contains static declarations of structs and constants.
 // Heavily derived from https://github.com/energy-forecast/go-entsoe (MIT license), many thanks!
@@ -97,9 +101,9 @@ type PublicationMarketDocument struct {
 	ReceiverMarketParticipantMarketRoleType string `xml:"receiver_MarketParticipant.marketRole.type"` // A33, A33, A33, A33, A33, ...
 	CreatedDateTime                         string `xml:"createdDateTime"`                            // 2020-09-12T00:13:15Z, 202...
 	PeriodTimeInterval                      struct {
-		Text  string `xml:",chardata"`
-		Start string `xml:"start"` // 2015-12-31T23:00Z, 2015-1...
-		End   string `xml:"end"`   // 2016-12-31T23:00Z, 2016-1...
+		Text  string                 `xml:",chardata"`
+		Start shortrfc3339.Timestamp `xml:"start"` // 2015-12-31T23:00Z, 2015-1...
+		End   shortrfc3339.Timestamp `xml:"end"`   // 2016-12-31T23:00Z, 2016-1...
 	} `xml:"period.timeInterval"`
 	TimeSeries []TimeSeries `xml:"TimeSeries"`
 }
@@ -130,9 +134,9 @@ type TimeSeries struct {
 type TimeSeriesPeriod struct {
 	Text         string `xml:",chardata"`
 	TimeInterval struct {
-		Text  string `xml:",chardata"`
-		Start string `xml:"start"` // 2015-12-31T23:00Z, 2016-0...
-		End   string `xml:"end"`   // 2016-01-01T23:00Z, 2016-0...
+		Text  string                 `xml:",chardata"`
+		Start shortrfc3339.Timestamp `xml:"start"` // 2015-12-31T23:00Z, 2016-0...
+		End   shortrfc3339.Timestamp `xml:"end"`   // 2016-01-01T23:00Z, 2016-0...
 	} `xml:"timeInterval"`
 	Resolution ResolutionType `xml:"resolution"` // PT60M, PT60M, PT60M, PT60...
 	Point      []struct {

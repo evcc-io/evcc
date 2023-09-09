@@ -48,9 +48,9 @@ func NewEntsoeFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	}
 
 	// Domains must always be 16 characters.
-	if len(cc.Domain) != 16 {
-		return nil, errors.New("domain must be defined, or invalid domain")
-	}
+	// if len(cc.Domain) != 16 {
+	// 	return nil, errors.New("domain must be defined, or invalid domain")
+	// }
 
 	log := util.NewLogger("entsoe").Redact(cc.Securitytoken)
 
@@ -97,6 +97,7 @@ func (t *Entsoe) run(done chan error) {
 				// Catch cases where we're sending completely incorrect data (usually the result of a bad region).
 				return backoff.Permanent(se)
 			}
+
 			return err
 		}, bo); err != nil {
 			once.Do(func() { done <- err })
