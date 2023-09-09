@@ -49,12 +49,13 @@ func (r *DayAheadPricesRequest) DoRequest(client *request.Helper) (PublicationMa
 	// Currently opting to use GET request to keep it relatively simple, but POST is an option.
 	// Would have to figure out building the XML requests in a sane, structured way though.
 
-	var params url.Values
-	params.Add("DocumentType", string(ProcessTypeDayAhead))
-	params.Add("In_Domain", r.domain)
-	params.Add("Out_Domain", r.domain)
-	params.Add("PeriodStart", r.periodStart.Format(numericDateFormat))
-	params.Add("PeriodEnd", r.periodEnd.Format(numericDateFormat))
+	params := url.Values{
+		"DocumentType": {string(ProcessTypeDayAhead)},
+		"In_Domain":    {r.domain},
+		"Out_Domain":   {r.domain},
+		"PeriodStart":  {r.periodStart.Format(numericDateFormat)},
+		"PeriodEnd":    {r.periodEnd.Format(numericDateFormat)},
+	}
 
 	// Feels like we might be duplicating the wheel here, but this is nice and simple (and fast)
 	uri := fmt.Sprintf("%s?%s", BaseURI, params.Encode())
