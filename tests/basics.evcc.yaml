@@ -1,3 +1,5 @@
+interval: 0.1s
+
 site:
   title: Hello World
   meters:
@@ -10,10 +12,18 @@ meters:
       source: js
       script: |
         1000
+  - name: charger_meter
+    type: custom
+    power:
+      source: js
+      script: |
+        500
 
 loadpoints:
   - title: Carport
     charger: charger
+    meter: charger_meter
+    mode: now
 
 chargers:
   - name: charger
@@ -24,11 +34,12 @@ chargers:
     enabled:
       source: js
       script: |
-        false
+        true
     status:
       source: js
       script: |
-        "B"
+        "C"
     maxcurrent:
       source: js
-      script:
+      script: |
+        16
