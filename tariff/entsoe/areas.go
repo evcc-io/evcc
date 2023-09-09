@@ -129,17 +129,17 @@ var zones = map[string][]string{
 type AreaType string
 
 const (
-	TypeBZN AreaType = "Bidding Zone"
-	TypeBZA AreaType = "Bidding Zone Aggregation"
-	TypeCTA AreaType = "Control Area"
-	TypeMBA AreaType = "Market Balance Area"
-	TypeIBA AreaType = "Imbalance Area"
-	TypeIPA AreaType = "Imbalance Price Area"
-	TypeLFA AreaType = "Load Frequency Control Area"
-	TypeLFB AreaType = "Load Frequency Control Block"
-	TypeREG AreaType = "Region"
-	TypeSCA AreaType = "Scheduling Area"
-	TypeSNA AreaType = "Synchronous Area"
+	BZN AreaType = "Bidding Zone"
+	BZA AreaType = "Bidding Zone Aggregation"
+	CTA AreaType = "Control Area"
+	MBA AreaType = "Market Balance Area"
+	IBA AreaType = "Imbalance Area"
+	IPA AreaType = "Imbalance Price Area"
+	LFA AreaType = "Load Frequency Control Area"
+	LFB AreaType = "Load Frequency Control Block"
+	REG AreaType = "Region"
+	SCA AreaType = "Scheduling Area"
+	SNA AreaType = "Synchronous Area"
 )
 
 func Area(typ AreaType, name string) (string, error) {

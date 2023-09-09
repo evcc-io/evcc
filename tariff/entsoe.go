@@ -47,7 +47,7 @@ func NewEntsoeFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		return nil, errors.New("securitytoken must be defined")
 	}
 
-	domain, err := entsoe.Area(entsoe.TypeBZN, cc.Domain)
+	domain, err := entsoe.Area(entsoe.BZN, cc.Domain)
 	if err != nil {
 		return nil, err
 	}
