@@ -21,7 +21,7 @@ type Entsoe struct {
 	*embed
 	mux     sync.Mutex
 	log     *util.Logger
-	apikey  string
+	token   string
 	domain  string
 	data    api.Rates
 	updated time.Time
@@ -59,7 +59,7 @@ func NewEntsoeFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		log:    log,
 		Helper: request.NewHelper(log),
 		embed:  &cc.embed,
-		apikey: cc.Securitytoken,
+		token:  cc.Securitytoken,
 		domain: domain,
 	}
 
