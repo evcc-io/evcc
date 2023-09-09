@@ -83,7 +83,9 @@ render: |
       type: input
       decode: uint16
   {{- if .capacity }}
-  capacity: {{ .capacity }} # kWh
+  capacity:
+    source: const
+    value: {{ .capacity }} # kWh
   {{- end }}
   energy:
     source: modbus

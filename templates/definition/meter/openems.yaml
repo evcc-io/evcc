@@ -41,6 +41,8 @@ render: |
       password: {{ .password }}
     jq: .value
   {{- if .capacity }}
-  capacity: {{ .capacity }} # kWh
+  capacity:
+    source: const
+    value: {{ .capacity }} # kWh
   {{- end }}
   {{- end }}

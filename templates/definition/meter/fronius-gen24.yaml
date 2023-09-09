@@ -76,6 +76,8 @@ render: |
     model: sunspec
     value: ChargeState
   {{- if .capacity }}
-  capacity: {{ .capacity }} # kWh
+  capacity:
+    source: const
+    value: {{ .capacity }} # kWh
   {{- end }}
   {{- end }}
