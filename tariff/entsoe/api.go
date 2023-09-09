@@ -7,9 +7,9 @@ import (
 	"fmt"
 	"net/url"
 	"sort"
-	"strconv"
 	"time"
 
+	"github.com/dylanmei/iso8601"
 	"github.com/evcc-io/evcc/util/request"
 )
 
@@ -94,7 +94,10 @@ func GetTsPriceData(ts *[]TimeSeries) (data []RateData, err error) {
 func ExtractTsPriceData(timeseries *TimeSeries) ([]RateData, error) {
 	data := make([]RateData, 0, len(timeseries.Period.Point))
 
-	tResolution := timeseries.Period.Resolution
+	duration, err := iso8601.ParseDuration(string(timeseries.Period.Resolution))
+	if err != nil {
+		return nil, err
+	}
 
 	// tCurrencyUnit := timeseries.CurrencyUnitName
 	// tPriceMeasureUnit := timeseries.PriceMeasureUnitName
@@ -105,30 +108,23 @@ func ExtractTsPriceData(timeseries *TimeSeries) ([]RateData, error) {
 
 	tPointer := timeseries.Period.TimeInterval.Start.Time
 	for _, point := range timeseries.Period.Point {
-		val, err := strconv.ParseFloat(point.PriceAmount, 32)
-		if err != nil {
-			return data, err
-		}
-
 		d := RateData{
-			Value:         val / 100, // Price/MWH to Price/kWH
+			Value:         point.PriceAmount / 100, // Price/MWH to Price/kWH
 			ValidityStart: tPointer,
 		}
 
 		// Nudge pointer on as required by defined data resolution
-		switch tResolution {
-		case ResolutionQuarterHour:
-			tPointer = tPointer.Add(time.Minute * 15)
-		case ResolutionHalfHour:
-			tPointer = tPointer.Add(time.Minute * 30)
-		case ResolutionHour:
-			tPointer = tPointer.Add(time.Hour)
+		switch timeseries.Period.Resolution {
+		case ResolutionQuarterHour, ResolutionHalfHour, ResolutionHour:
+			tPointer = tPointer.Add(duration)
 		case ResolutionDay:
 			tPointer = tPointer.AddDate(0, 0, 1)
 		case ResolutionWeek:
 			tPointer = tPointer.AddDate(0, 0, 7)
 		case ResolutionYear:
 			tPointer = tPointer.AddDate(0, 1, 0)
+		default:
+			return nil, fmt.Errorf("invalid resolution: %v", timeseries.Period.Resolution)
 		}
 		d.ValidityEnd = tPointer
 
