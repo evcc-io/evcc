@@ -966,11 +966,13 @@ func (lp *Loadpoint) scalePhasesRequired() bool {
 
 // scalePhasesIfAvailable scales if api.PhaseSwitcher is available
 func (lp *Loadpoint) scalePhasesIfAvailable(phases int) error {
+	want := phases
 	if lp.ConfiguredPhases != 0 {
 		phases = lp.ConfiguredPhases
 	}
 
 	if _, ok := lp.charger.(api.PhaseSwitcher); ok {
+		lp.log.DEBUG.Printf("!! scalePhasesIfAvailable: %dp -> %dp", want, phases)
 		return lp.scalePhases(phases)
 	}
 
@@ -985,6 +987,7 @@ func (lp *Loadpoint) scalePhases(phases int) error {
 		panic("charger does not implement api.PhaseSwitcher")
 	}
 
+	lp.log.DEBUG.Printf("!! scalePhases: GetPhases %dp <> phases %dp", lp.GetPhases(), phases)
 	if lp.GetPhases() != phases {
 		// switch phases
 		if err := cp.Phases1p3p(phases); err != nil {
