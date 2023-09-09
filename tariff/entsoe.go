@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 	"slices"
+	"strings"
 	"sync"
 	"time"
 
@@ -47,7 +48,7 @@ func NewEntsoeFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		return nil, errors.New("securitytoken must be defined")
 	}
 
-	domain, err := entsoe.Area(entsoe.BZN, cc.Domain)
+	domain, err := entsoe.Area(entsoe.BZN, strings.ToUpper(cc.Domain))
 	if err != nil {
 		return nil, err
 	}
