@@ -61,6 +61,8 @@ render: |
       type: holding
       decode: uint32nan
   {{- if .capacity }}
-  capacity: {{ .capacity }} # kWh
+  capacity:
+    source: const
+    value: {{ .capacity }} # kWh
   {{- end }}
   {{- end }}

@@ -50,6 +50,8 @@ render: |
     uri: http://{{ .host }}/rest/kiwigrid/wizard/devices # EnergyManager
     jq: .result.items[] | select(.deviceModel[].deviceClass == "com.kiwigrid.devices.location.Location" ) | .tagValues.WorkReleased.value / 1000
   {{- if .capacity }}
-  capacity: {{ .capacity }} # kWh
+  capacity:
+    source: const
+    value: {{ .capacity }} # kWh
   {{- end }}
   {{- end }}

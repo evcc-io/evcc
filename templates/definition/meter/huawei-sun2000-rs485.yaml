@@ -117,6 +117,8 @@ render: |
       decode: uint32
     scale: 0.01
   {{- if .capacity }}
-  capacity: {{ .capacity }} # kWh
+  capacity:
+    source: const
+    value: {{ .capacity }} # kWh
   {{- end }}
   {{- end }}

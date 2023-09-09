@@ -53,6 +53,8 @@ render: |
     unpack: hex
     decode: float32
   {{- if .capacity }}
-  capacity: {{ .capacity }} # kWh
+  capacity:
+    source: const
+    value: {{ .capacity }} # kWh
   {{- end }}
   {{- end }}

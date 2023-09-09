@@ -49,6 +49,8 @@ render: |
     uri: http://{{ .host }}:{{ .port }}/rest/devices/battery
     jq: .M30 # SOC relative to usable capacity (.M05 # display SOC)
   {{- if .capacity }}
-  capacity: {{ .capacity }} # kWh
+  capacity:
+    source: const
+    value: {{ .capacity }} # kWh
   {{- end }}
   {{- end }}

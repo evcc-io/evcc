@@ -40,6 +40,8 @@ render: |
     #   | ----------------------------- Bat SOC% --------- |
     jq: (.dxsEntries[] | select(.dxsId==33556229) | .value )
   {{- if .capacity }}
-  capacity: {{ .capacity }} # kWh
+  capacity:
+    source: const
+    value: {{ .capacity }} # kWh
   {{- end }}
   {{- end -}}

@@ -98,6 +98,8 @@ render: |
       decode: int16
     scale: 0.1
   {{- if .capacity }}
-  capacity: {{ .capacity }} # kWh
+  capacity:
+    source: const
+    value: {{ .capacity }} # kWh
   {{- end }}
   {{- end }}

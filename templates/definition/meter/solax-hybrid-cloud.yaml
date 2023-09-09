@@ -71,6 +71,8 @@ render: |
     jq: .result.soc  # Solax API inverter.DC.battery.energy.SOC
     cache: 2m30s
   {{- if .capacity }}
-  capacity: {{ .capacity }} # kWh
+  capacity:
+    source: const
+    value: {{ .capacity }} # kWh
   {{- end }}
   {{- end }}
