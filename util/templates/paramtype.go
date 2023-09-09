@@ -10,7 +10,7 @@ func (c *ParamType) UnmarshalText(text []byte) error {
 	return err
 }
 
-//go:generate enumer -type ParamType -trimprefix Type
+//go:generate go run github.com/dmarkham/enumer@v1.5.8 -type ParamType -trimprefix Type
 const (
 	TypeString ParamType = iota // default type string
 	TypeBool

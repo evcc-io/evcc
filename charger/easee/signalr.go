@@ -62,7 +62,7 @@ const (
 // https://www.notion.so/Charger-template-c6a20ff7cfea41e2b5f80b00afb34af5
 type ObservationID int
 
-//go:generate enumer -type ObservationID
+//go:generate go run github.com/dmarkham/enumer@v1.5.8 -type ObservationID
 const (
 	SELF_TEST_RESULT                                   ObservationID = 1   // PASSED or error codes [String]
 	SELF_TEST_DETAILS                                  ObservationID = 2   // JSON with details from self-test [String]

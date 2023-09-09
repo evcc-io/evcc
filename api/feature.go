@@ -10,7 +10,7 @@ func (f *Feature) UnmarshalText(text []byte) error {
 	return err
 }
 
-//go:generate enumer -type Feature
+//go:generate go run github.com/dmarkham/enumer@v1.5.8 -type Feature
 const (
 	_ Feature = iota
 	Offline
