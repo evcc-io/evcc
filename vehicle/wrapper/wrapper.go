@@ -71,8 +71,8 @@ func (v *Wrapper) Icon() string {
 }
 
 // Capacity implements the api.Vehicle interface
-func (v *Wrapper) Capacity() float64 {
-	return v.capacity
+func (v *Wrapper) Capacity() (float64, error) {
+	return v.capacity, nil
 }
 
 // Phases implements the api.Vehicle interface

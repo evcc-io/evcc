@@ -49,7 +49,7 @@ func init() {
 	registry.Add("lgess", NewLgEssFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateLgEss -b *LgEss -r api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Battery,Soc,func() (float64, error)" -t "api.BatteryCapacity,Capacity,func() float64"
+//go:generate go run ../cmd/tools/decorate.go -f decorateLgEss -b *LgEss -r api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Battery,Soc,func() (float64, error)" -t "api.BatteryCapacity,Capacity,func() (float64, error)"
 
 // NewLgEssFromConfig creates an LgEss Meter from generic config
 func NewLgEssFromConfig(other map[string]interface{}) (api.Meter, error) {
@@ -73,7 +73,7 @@ func NewLgEssFromConfig(other map[string]interface{}) (api.Meter, error) {
 }
 
 // NewLgEss creates an LgEss Meter
-func NewLgEss(uri, usage, password string, cache time.Duration, capacity func() float64) (api.Meter, error) {
+func NewLgEss(uri, usage, password string, cache time.Duration, capacity func() (float64, error)) (api.Meter, error) {
 	lp, err := lgpcs.GetInstance(uri, password, cache)
 	if err != nil {
 		return nil, err

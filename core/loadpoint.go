@@ -817,8 +817,12 @@ func (lp *Loadpoint) minSocNotReached() bool {
 	if lp.vehicleSoc != 0 {
 		return lp.vehicleSoc < float64(lp.Soc.min)
 	}
+	capacity, capacityErr := vehicle.Capacity()
+	if capacityErr != nil {
+		return false
+	}
 
-	minEnergy := vehicle.Capacity() * float64(lp.Soc.min) / 100 / soc.ChargeEfficiency
+	minEnergy := capacity * float64(lp.Soc.min) / 100 / soc.ChargeEfficiency
 	return minEnergy > 0 && lp.getChargedEnergy() < minEnergy
 }
 

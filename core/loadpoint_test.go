@@ -387,7 +387,7 @@ func TestDisableAndEnableAtTargetSoc(t *testing.T) {
 	vehicle := mock.NewMockVehicle(ctrl)
 
 	// wrap vehicle with estimator
-	vehicle.EXPECT().Capacity().Return(float64(10))
+	vehicle.EXPECT().Capacity().Return(float64(10), nil)
 	vehicle.EXPECT().Phases().Return(0).AnyTimes()
 	socEstimator := soc.NewEstimator(util.NewLogger("foo"), charger, vehicle, false)
 
@@ -778,7 +778,7 @@ func TestMinSoc(t *testing.T) {
 
 		if v := tc.vehicle; v != nil {
 			lp.vehicle = tc.vehicle // avoid assigning nil to interface
-			v.EXPECT().Capacity().Return(10.0).MaxTimes(1)
+			v.EXPECT().Capacity().Return(10., nil).MaxTimes(1)
 		}
 
 		assert.Equal(t, tc.res, lp.minSocNotReached(), tc)

@@ -149,7 +149,12 @@ func (lp *Loadpoint) setActiveVehicle(vehicle api.Vehicle) {
 		lp.publish(vehiclePresent, true)
 		lp.publish(vehicleTitle, vehicle.Title())
 		lp.publish(vehicleIcon, vehicle.Icon())
-		lp.publish(vehicleCapacity, vehicle.Capacity())
+		capacity, capacityErr := vehicle.Capacity()
+		if capacityErr == nil {
+			lp.publish(vehicleCapacity, capacity)
+		} else {
+			lp.publish(vehicleCapacity, int64(0))
+		}
 		lp.restoreVehicleSettings()
 
 		lp.applyAction(vehicle.OnIdentified())

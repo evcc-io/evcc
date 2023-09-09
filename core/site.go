@@ -484,15 +484,19 @@ func (site *Site) updateMeters() error {
 
 			// battery soc and capacity
 			var capacity float64
-			soc, err := soc.Guard(meter.(api.Battery).Soc())
+			soc, socErr := soc.Guard(meter.(api.Battery).Soc())
 
-			if err == nil {
+			if socErr == nil {
 				// weigh soc by capacity and accumulate total capacity
 				weighedSoc := soc
 				if m, ok := meter.(api.BatteryCapacity); ok {
-					capacity = m.Capacity()
-					totalCapacity += capacity
-					weighedSoc *= capacity
+					capacity, capacityErr := m.Capacity()
+					if capacityErr == nil {
+						totalCapacity += capacity
+						weighedSoc *= capacity
+					} else {
+						site.log.ERROR.Printf("battery %d capacity: %v", i+1, capacityErr)
+					}
 				}
 
 				site.batterySoc += weighedSoc
@@ -500,7 +504,7 @@ func (site *Site) updateMeters() error {
 					site.log.DEBUG.Printf("battery %d soc: %.0f%%", i+1, soc)
 				}
 			} else {
-				site.log.ERROR.Printf("battery %d soc: %v", i+1, err)
+				site.log.ERROR.Printf("battery %d soc: %v", i+1, socErr)
 			}
 
 			mm[i] = batteryMeasurement{

@@ -24,7 +24,7 @@ func init() {
 	registry.Add("sma", NewSMAFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateSMA -b *SMA -r api.Meter -t "api.Battery,Soc,func() (float64, error)" -t "api.BatteryCapacity,Capacity,func() float64"
+//go:generate go run ../cmd/tools/decorate.go -f decorateSMA -b *SMA -r api.Meter -t "api.Battery,Soc,func() (float64, error)" -t "api.BatteryCapacity,Capacity,func() (float64, error)"
 
 // NewSMAFromConfig creates an SMA meter from generic config
 func NewSMAFromConfig(other map[string]interface{}) (api.Meter, error) {
@@ -46,7 +46,7 @@ func NewSMAFromConfig(other map[string]interface{}) (api.Meter, error) {
 }
 
 // NewSMA creates an SMA meter
-func NewSMA(uri, password, iface string, serial uint32, scale float64, capacity func() float64) (api.Meter, error) {
+func NewSMA(uri, password, iface string, serial uint32, scale float64, capacity func() (float64, error)) (api.Meter, error) {
 	sm := &SMA{
 		uri:   uri,
 		scale: scale,

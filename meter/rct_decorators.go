@@ -6,7 +6,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateRCT(base *RCT, meterEnergy func() (float64, error), battery func() (float64, error), batteryCapacity func() float64) api.Meter {
+func decorateRCT(base *RCT, meterEnergy func() (float64, error), battery func() (float64, error), batteryCapacity func() (float64, error)) api.Meter {
 	switch {
 	case battery == nil && batteryCapacity == nil && meterEnergy == nil:
 		return base
@@ -121,10 +121,10 @@ func (impl *decorateRCTBatteryImpl) Soc() (float64, error) {
 }
 
 type decorateRCTBatteryCapacityImpl struct {
-	batteryCapacity func() float64
+	batteryCapacity func() (float64, error)
 }
 
-func (impl *decorateRCTBatteryCapacityImpl) Capacity() float64 {
+func (impl *decorateRCTBatteryCapacityImpl) Capacity() (float64, error) {
 	return impl.batteryCapacity()
 }
 

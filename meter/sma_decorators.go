@@ -6,7 +6,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateSMA(base *SMA, battery func() (float64, error), batteryCapacity func() float64) api.Meter {
+func decorateSMA(base *SMA, battery func() (float64, error), batteryCapacity func() (float64, error)) api.Meter {
 	switch {
 	case battery == nil && batteryCapacity == nil:
 		return base
@@ -61,9 +61,9 @@ func (impl *decorateSMABatteryImpl) Soc() (float64, error) {
 }
 
 type decorateSMABatteryCapacityImpl struct {
-	batteryCapacity func() float64
+	batteryCapacity func() (float64, error)
 }
 
-func (impl *decorateSMABatteryCapacityImpl) Capacity() float64 {
+func (impl *decorateSMABatteryCapacityImpl) Capacity() (float64, error) {
 	return impl.batteryCapacity()
 }

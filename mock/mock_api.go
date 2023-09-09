@@ -305,11 +305,12 @@ func (m *MockVehicle) EXPECT() *MockVehicleMockRecorder {
 }
 
 // Capacity mocks base method.
-func (m *MockVehicle) Capacity() float64 {
+func (m *MockVehicle) Capacity() (float64, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Capacity")
 	ret0, _ := ret[0].(float64)
-	return ret0
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // Capacity indicates an expected call of Capacity.

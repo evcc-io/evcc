@@ -7,11 +7,11 @@ type capacity struct {
 // var _ api.BatteryCapacity = (*capacity)(nil)
 
 // Decorator returns the capacity decorator if capacity is specified or nil otherwise
-func (m *capacity) Decorator() func() float64 {
+func (m *capacity) Decorator() func() (float64, error) {
 	if m.Capacity == 0 {
 		return nil
 	}
-	return func() float64 {
-		return m.Capacity
+	return func() (float64, error) {
+		return m.Capacity, nil
 	}
 }

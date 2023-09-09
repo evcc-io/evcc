@@ -35,8 +35,8 @@ func (v *embed) SetTitle(title string) {
 }
 
 // Capacity implements the api.Vehicle interface
-func (v *embed) Capacity() float64 {
-	return v.Capacity_
+func (v *embed) Capacity() (float64, error) {
+	return v.Capacity_, nil
 }
 
 // Phases returns the phases used by the vehicle
