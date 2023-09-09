@@ -130,8 +130,7 @@ func (t *Entsoe) run(done chan error) {
 			ar := api.Rate{
 				Start: r.ValidityStart,
 				End:   r.ValidityEnd,
-				// Use the forecasted rate, as the actual rate is only available for historical data
-				Price: r.Value,
+				Price: t.totalPrice(r.Value),
 			}
 			t.data = append(t.data, ar)
 		}
