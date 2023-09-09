@@ -39,7 +39,6 @@ var (
 
 // Identity is the Porsche Identity client
 type Identity struct {
-	log *util.Logger
 	*request.Helper
 	user, password string
 }
@@ -47,7 +46,6 @@ type Identity struct {
 // NewIdentity creates Porsche identity
 func NewIdentity(log *util.Logger, user, password string) (oauth2.TokenSource, error) {
 	v := &Identity{
-		log:      log,
 		Helper:   request.NewHelper(log),
 		user:     user,
 		password: password,
