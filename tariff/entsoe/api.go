@@ -72,22 +72,27 @@ type RateData struct {
 
 // GetTsPriceData accepts a set of TimeSeries data entries, and
 // returns a sorted array of RateData based on the timestamp of each data entry.
-func GetTsPriceData(ts *[]TimeSeries) (data []RateData, err error) {
-	for _, v := range *ts {
-		tsData, err := ExtractTsPriceData(&v)
-		if err != nil {
-			return data, err
+func GetTsPriceData(ts []TimeSeries, resolution ResolutionType) ([]RateData, error) {
+	for _, v := range ts {
+		if v.Period.Resolution != resolution {
+			continue
 		}
-		// Just append the array for the time being, sort comes later.
-		data = append(data, tsData...)
+
+		data, err := ExtractTsPriceData(&v)
+		if err != nil {
+			return nil, err
+		}
+
+		// Now sort all entries by timestamp.
+		// Not sure if this is entirely necessary for evcc's use, could consider removing this if it becomes a performance issue.
+		sort.Slice(data, func(i, j int) bool {
+			return data[i].ValidityStart.Before(data[j].ValidityStart)
+		})
+
+		return data, nil
 	}
 
-	// Now sort all entries by timestamp.
-	// Not sure if this is entirely necessary for evcc's use, could consider removing this if it becomes a performance issue.
-	sort.Slice(data, func(i, j int) bool {
-		return data[i].ValidityStart.Unix() < data[j].ValidityStart.Unix()
-	})
-	return data, nil
+	return nil, fmt.Errorf("no data for resolution: %v", resolution)
 }
 
 // ExtractTsPriceData massages the given TimeSeries data set to provide RateData entries with associated start and end timestamps.

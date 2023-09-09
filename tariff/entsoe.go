@@ -112,8 +112,8 @@ func (t *Entsoe) run(done chan error) {
 			continue
 		}
 
-		// Just extract the first set of data (?)
-		tsdata, err := entsoe.GetTsPriceData(&tr.TimeSeries)
+		// extract desired series
+		tsdata, err := entsoe.GetTsPriceData(tr.TimeSeries, entsoe.ResolutionHour)
 		if err != nil {
 			once.Do(func() { done <- err })
 			t.log.ERROR.Println(err)
