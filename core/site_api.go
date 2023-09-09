@@ -42,13 +42,13 @@ func (site *Site) GetGridMeterRef() string {
 }
 
 // SetGridMeterRef sets the GridMeterRef
-func (site *Site) SetGridMeterRef(meter string) {
+func (site *Site) SetGridMeterRef(ref string) {
 	site.Lock()
 	defer site.Unlock()
 
-	site.Meters.GridMeterRef = meter
+	site.Meters.GridMeterRef = ref
 	// site.publish("siteGridMeterRef", meter)
-	settings.SetString("site.grid", meter)
+	settings.SetString("site.grid", ref)
 }
 
 // GetPVMeterRef returns the PvMeterRef
@@ -59,13 +59,13 @@ func (site *Site) GetPVMeterRef() []string {
 }
 
 // SetPVMeterRef sets the PvMeterRef
-func (site *Site) SetPVMeterRef(meter []string) {
+func (site *Site) SetPVMeterRef(ref []string) {
 	site.Lock()
 	defer site.Unlock()
 
-	site.Meters.PVMetersRef = meter
+	site.Meters.PVMetersRef = ref
 	// site.publish("siteGridMeterRef", meter)
-	settings.SetString("site.pv", strings.Join(meter, ","))
+	settings.SetString("site.pv", strings.Join(ref, ","))
 }
 
 // GetBatteryMeterRef returns the BatteryMeterRef
@@ -76,13 +76,13 @@ func (site *Site) GetBatteryMeterRef() []string {
 }
 
 // SetBatteryMeterRef sets the BatteryMeterRef
-func (site *Site) SetBatteryMeterRef(meter []string) {
+func (site *Site) SetBatteryMeterRef(ref []string) {
 	site.Lock()
 	defer site.Unlock()
 
-	site.Meters.BatteryMetersRef = meter
+	site.Meters.BatteryMetersRef = ref
 	// site.publish("siteGridMeterRef", meter)
-	settings.SetString("site.battery", strings.Join(meter, ","))
+	settings.SetString("site.battery", strings.Join(ref, ","))
 }
 
 // GetPrioritySoc returns the PrioritySoc

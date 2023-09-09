@@ -16,11 +16,11 @@ type API interface {
 
 	// Config
 	GetGridMeterRef() string
-	SetGridMeterRef(meter string)
+	SetGridMeterRef(string)
 	GetPVMeterRef() []string
-	SetPVMeterRef(meter []string)
+	SetPVMeterRef([]string)
 	GetBatteryMeterRef() []string
-	SetBatteryMeterRef(meter []string)
+	SetBatteryMeterRef([]string)
 
 	//
 	// battery
