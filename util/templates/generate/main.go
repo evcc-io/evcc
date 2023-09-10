@@ -30,7 +30,7 @@ func main() {
 }
 
 func generateDocs(lang string) {
-	for _, class := range []templates.Class{templates.Meter, templates.Charger, templates.Vehicle} {
+	for _, class := range []templates.Class{templates.Meter, templates.Charger, templates.Vehicle, templates.Tariff} {
 		path := fmt.Sprintf("%s/%s/%s", docsPath, lang, strings.ToLower(class.String()))
 		_, err := os.Stat(path)
 		if os.IsNotExist(err) {
