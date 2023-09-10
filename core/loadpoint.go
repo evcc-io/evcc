@@ -798,10 +798,14 @@ func (lp *Loadpoint) targetEnergyReached() bool {
 }
 
 // targetSocReached checks if target is configured and reached.
-// If vehicle is not configured this will always return false
+// If vehicle is not configured this will always return false unless the
+// charger is capable of and has provided an soc value.
 func (lp *Loadpoint) targetSocReached() bool {
-	return lp.vehicle != nil &&
-		lp.Soc.target > 0 &&
+	if _, ok := lp.charger.(api.Battery); lp.GetVehicle() == nil && !ok {
+		return false
+	}
+
+	return lp.Soc.target > 0 &&
 		lp.Soc.target < 100 &&
 		lp.vehicleSoc >= float64(lp.Soc.target)
 }
