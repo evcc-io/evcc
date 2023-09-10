@@ -1,5 +1,8 @@
 run:
   go: "1.21"
+linters:
+  enable:
+    - forcetypeassert
 issues:
   exclude:
     - .regActualCurrent. is unused
@@ -8,5 +11,3 @@ linters-settings:
   staticcheck:
     checks:
       - "-SA1019"
-  errcheck:
-    check-type-assertions: true
