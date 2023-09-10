@@ -12,12 +12,15 @@ import (
 func siteHandler(site site.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		res := struct {
-			Title string `json:"title"`
-			// Grid    *string
-			// PV      *[]string
-			// Battery *[]string
+			Title   string   `json:"title"`
+			Grid    string   `json:"grid"`
+			PV      []string `json:"pv"`
+			Battery []string `json:"battery"`
 		}{
-			Title: site.GetTitle(),
+			Title:   site.GetTitle(),
+			Grid:    site.GetGridMeterRef(),
+			PV:      site.GetPVMeterRef(),
+			Battery: site.GetBatteryMeterRef(),
 		}
 
 		jsonResult(w, res)
