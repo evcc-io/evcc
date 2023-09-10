@@ -4,6 +4,7 @@ linters:
   enable:
     - forcetypeassert
 issues:
+  max-same-issues: 0
   exclude:
     - .regActualCurrent. is unused
     - "`routeLogger` is unused"
