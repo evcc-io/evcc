@@ -58,7 +58,7 @@ lint-ui::
 test-ui::
 	npm test
 
-toml:
+toml::
 	go run packaging/toml.go
 
 test::
@@ -74,7 +74,7 @@ build::
 	@echo Version: $(VERSION) $(SHA) $(BUILD_DATE)
 	CGO_ENABLED=0 go build -v $(BUILD_TAGS) $(BUILD_ARGS)
 
-snapshot:
+snapshot::
 	goreleaser --snapshot --skip-publish --clean
 
 release::

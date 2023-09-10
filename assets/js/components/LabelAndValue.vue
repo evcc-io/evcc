@@ -1,13 +1,17 @@
 <template>
 	<div class="root">
-		<div class="mb-2 label" :class="labelClass">{{ label }}</div>
+		<div class="mb-2 label" :class="labelClass">
+			<slot name="label">{{ label }}</slot>
+		</div>
 		<slot>
 			<h3 class="value m-0 d-block d-sm-flex align-items-baseline" :class="valueClass">
-				<AnimatedNumber v-if="valueFmt" :to="value" :format="valueFmt" />
-				<span v-else>{{ value }}</span>
-				<div v-if="extraValue" class="extraValue ms-0 ms-sm-1 text-nowrap">
-					{{ extraValue }}
-				</div>
+				<slot name="value">
+					<AnimatedNumber v-if="valueFmt" :to="value" :format="valueFmt" />
+					<span v-else>{{ value }}</span>
+					<div v-if="extraValue" class="extraValue ms-0 ms-sm-1 text-nowrap">
+						{{ extraValue }}
+					</div>
+				</slot>
 			</h3>
 		</slot>
 	</div>

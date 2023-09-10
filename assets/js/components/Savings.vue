@@ -4,10 +4,10 @@
 			class="btn btn-link pe-0 text-decoration-none evcc-default-text text-nowrap d-flex align-items-end"
 			@click="openModal"
 		>
-			<span class="d-inline d-sm-none">{{
+			<span class="d-inline d-sm-none text-decoration-underline">{{
 				$t("footer.savings.footerShort", { percent })
 			}}</span
-			><span class="d-none d-sm-inline">{{
+			><span class="d-none d-sm-inline text-decoration-underline">{{
 				$t("footer.savings.footerLong", { percent })
 			}}</span>
 			<shopicon-regular-sun class="ms-2 text-evcc"></shopicon-regular-sun>
