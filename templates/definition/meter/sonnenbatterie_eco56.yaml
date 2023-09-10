@@ -9,8 +9,6 @@ params:
   - name: host
   - name: port
     default: 7979
-  - name: capacity
-    advanced: true
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -48,9 +46,10 @@ render: |
     source: http
     uri: http://{{ .host }}:{{ .port }}/rest/devices/battery
     jq: .M30 # SOC relative to usable capacity (.M05 # display SOC)
-  {{- if .capacity }}
   capacity:
-    source: const
-    value: {{ .capacity }} # kWh
-  {{- end }}
+    source: http
+    uri: http://{{ .host }}:{{ .port }}/rest/devices/battery
+    # S01 gross capacity in 100Wh e.g 82 for 8.2kWh
+    # S08 minimum SOC
+    jq: (.S01/10)*(1-(.S08/100))
   {{- end }}
