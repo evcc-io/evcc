@@ -146,7 +146,7 @@ export default {
 	},
 	methods: {
 		widthTotal: function (power) {
-			if (this.totalAdjusted === 0) return "0%";
+			if (this.totalAdjusted === 0 || power === 0) return "0";
 			return (100 / this.totalAdjusted) * power + "%";
 		},
 		fmtBarValue: function (watt) {

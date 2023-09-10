@@ -115,7 +115,12 @@ import Energyflow from "./Energyflow.vue";
 				:pvPower="0"
 				:gridPower="6500"
 				:homePower="1000"
-				:loadpointsCompact="[{ power: 5500, icon: 'car', charging: true }]"
+				:loadpointsCompact="[
+					{ power: 5500, icon: 'car', charging: true },
+					{ power: 0, icon: 'car', charging: false },
+					{ power: 0, icon: 'car', charging: false },
+					{ power: 0, icon: 'car', charging: false },
+				]"
 				:batteryPower="0"
 				:batterySoc="0"
 				siteTitle="Home"
