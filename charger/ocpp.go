@@ -29,6 +29,7 @@ type OCPP struct {
 	meterValuesSample string
 	timeout           time.Duration
 	phaseSwitching    bool
+	chargingRateUnit  types.ChargingRateUnitType
 }
 
 const defaultIdTag = "evcc"
@@ -49,11 +50,13 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 		Timeout          time.Duration
 		BootNotification *bool
 		GetConfiguration *bool
+		ChargingRateUnit string
 	}{
-		Connector:      1,
-		IdTag:          defaultIdTag,
-		ConnectTimeout: ocppConnectTimeout,
-		Timeout:        ocppTimeout,
+		Connector:        1,
+		IdTag:            defaultIdTag,
+		ConnectTimeout:   ocppConnectTimeout,
+		Timeout:          ocppTimeout,
+		ChargingRateUnit: "A",
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -66,7 +69,7 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 	c, err := NewOCPP(cc.StationId, cc.Connector, cc.IdTag,
 		cc.MeterValues, cc.MeterInterval,
 		boot, noConfig,
-		cc.ConnectTimeout, cc.Timeout)
+		cc.ConnectTimeout, cc.Timeout, cc.ChargingRateUnit)
 	if err != nil {
 		return c, err
 	}
@@ -103,6 +106,7 @@ func NewOCPP(id string, connector int, idtag string,
 	meterValues string, meterInterval time.Duration,
 	boot, noConfig bool,
 	connectTimeout, timeout time.Duration,
+	chargingRateUnit string,
 ) (*OCPP, error) {
 	unit := "ocpp"
 	if id != "" {
@@ -146,8 +150,15 @@ func NewOCPP(id string, connector int, idtag string,
 		ocpp.KeyMeterValuesSampledData,
 		ocpp.KeyMeterValueSampleInterval,
 		ocpp.KeyConnectorSwitch3to1PhaseSupported,
+		ocpp.KeyChargingScheduleAllowedChargingRateUnit,
 	}
 	_ = keys
+
+	if chargingRateUnit == "W" {
+		c.chargingRateUnit = types.ChargingRateUnitWatts
+	} else {
+		c.chargingRateUnit = types.ChargingRateUnitAmperes
+	}
 
 	// noConfig mode disables GetConfiguration
 	if noConfig {
@@ -203,6 +214,13 @@ func NewOCPP(id string, connector int, idtag string,
 						if c.idtag == defaultIdTag {
 							c.idtag = *opt.Value
 							c.log.DEBUG.Printf("overriding default `idTag` with Alfen-specific value: %s", c.idtag)
+						}
+
+					case ocpp.KeyChargingScheduleAllowedChargingRateUnit:
+						if *opt.Value == "W" {
+							c.chargingRateUnit = types.ChargingRateUnitWatts
+						} else {
+							c.chargingRateUnit = types.ChargingRateUnitAmperes
 						}
 					}
 
@@ -309,7 +327,7 @@ func (c *OCPP) Enable(enable bool) error {
 			rc <- err
 		}, c.idtag, func(request *core.RemoteStartTransactionRequest) {
 			request.ConnectorId = &c.connector
-			request.ChargingProfile = getTxChargingProfile(c.current, c.phases)
+			request.ChargingProfile = getTxChargingProfile(c.current, c.phases, c.chargingRateUnit)
 		})
 	} else {
 		var txn int
@@ -356,7 +374,7 @@ func (c *OCPP) updatePeriod(current float64, phases int) error {
 
 	current = math.Trunc(10*current) / 10
 
-	err := c.setChargingProfile(c.connector, getTxChargingProfile(current, phases))
+	err := c.setChargingProfile(c.connector, getTxChargingProfile(current, phases, c.chargingRateUnit))
 	if err != nil {
 		err = fmt.Errorf("set charging profile: %w", err)
 	}
@@ -364,8 +382,22 @@ func (c *OCPP) updatePeriod(current float64, phases int) error {
 	return err
 }
 
-func getTxChargingProfile(current float64, phases int) *types.ChargingProfile {
-	period := types.NewChargingSchedulePeriod(0, current)
+func getTxChargingProfile(current float64, phases int, unit types.ChargingRateUnitType) *types.ChargingProfile {
+	var value float64
+	if unit == types.ChargingRateUnitWatts {
+		const voltage = 230.0
+		var fPhases float64
+		if phases == 0 {
+			fPhases = 3.0
+		} else {
+			fPhases = float64(phases)
+		}
+		value = math.Trunc(current*fPhases*voltage*10.0) / 10
+	} else {
+		value = current
+	}
+
+	period := types.NewChargingSchedulePeriod(0, value)
 
 	// TODO add phases support
 	// if phases != 0 {
@@ -378,7 +410,7 @@ func getTxChargingProfile(current float64, phases int) *types.ChargingProfile {
 		ChargingProfilePurpose: types.ChargingProfilePurposeTxProfile,
 		ChargingProfileKind:    types.ChargingProfileKindRelative,
 		ChargingSchedule: &types.ChargingSchedule{
-			ChargingRateUnit:       types.ChargingRateUnitAmperes,
+			ChargingRateUnit:       unit,
 			ChargingSchedulePeriod: []types.ChargingSchedulePeriod{period},
 		},
 	}

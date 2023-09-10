@@ -95,7 +95,7 @@ func (suite *ocppTestSuite) TestConnect() {
 	suite.True(suite.cp.IsConnected())
 
 	// start cp server
-	c, err := NewOCPP("test", ocppTestConnector, "", "", 0, false, false, ocppTestConnectTimeout, ocppTestTimeout)
+	c, err := NewOCPP("test", ocppTestConnector, "", "", 0, false, false, ocppTestConnectTimeout, ocppTestTimeout, "A")
 	suite.NoError(err)
 
 	if err != nil {
