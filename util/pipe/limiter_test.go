@@ -10,7 +10,10 @@ import (
 )
 
 func TestLimiter(t *testing.T) {
-	l := NewLimiter(time.Hour).(*Limiter)
+	l, ok := NewLimiter(time.Hour).(*Limiter)
+	if !ok {
+		t.Fatal("failed type cast")
+	}
 	clck := clock.NewMock()
 	l.clock = clck
 
@@ -53,7 +56,10 @@ func TestLimiter(t *testing.T) {
 }
 
 func TestDeduplicator(t *testing.T) {
-	l := NewDeduplicator(time.Hour, "filtered").(*Deduplicator)
+	l, ok := NewDeduplicator(time.Hour, "filtered").(*Deduplicator)
+	if !ok {
+		t.Fatal("failed type cast")
+	}
 	clck := clock.NewMock()
 	l.clock = clck
 

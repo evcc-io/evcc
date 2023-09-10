@@ -30,9 +30,12 @@ type ModbusResult struct {
 }
 
 func (r *ModbusResult) Configuration(handler TaskHandler, res Result) map[string]interface{} {
-	port := handler.(*ModbusHandler).Port
+	modbusHandler, ok := handler.(*ModbusHandler)
+	if !ok {
+		return nil
+	}
 	cc := map[string]interface{}{
-		"uri":   net.JoinHostPort(res.ResultDetails.IP, strconv.Itoa(port)),
+		"uri":   net.JoinHostPort(res.ResultDetails.IP, strconv.Itoa(modbusHandler.Port)),
 		"model": "sunspec",
 		"id":    r.SlaveID,
 	}

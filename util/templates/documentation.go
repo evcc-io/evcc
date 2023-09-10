@@ -3,6 +3,7 @@ package templates
 import (
 	"bytes"
 	_ "embed"
+	"errors"
 	"fmt"
 	"text/template"
 
@@ -27,7 +28,11 @@ func (t *Template) RenderDocumentation(product Product, lang string) ([]byte, er
 
 			switch p.Type {
 			case TypeStringList:
-				for _, e := range v.([]string) {
+				stringList, ok := v.([]string)
+				if !ok {
+					return nil, errors.New("could not convert to []string")
+				}
+				for _, e := range stringList {
 					t.Params[index].Values = append(p.Values, yamlQuote(e))
 				}
 			default:

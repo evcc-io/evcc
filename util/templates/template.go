@@ -3,6 +3,7 @@ package templates
 import (
 	"bytes"
 	_ "embed"
+	"errors"
 	"fmt"
 	"slices"
 	"strings"
@@ -222,7 +223,11 @@ func (t *Template) RenderProxyWithValues(values map[string]interface{}, lang str
 
 			switch p.Type {
 			case TypeStringList:
-				for _, e := range v.([]string) {
+				stringList, ok := v.([]string)
+				if !ok {
+					return nil, errors.New("could not convert to []string")
+				}
+				for _, e := range stringList {
 					t.Params[index].Values = append(p.Values, yamlQuote(e))
 				}
 			default:
@@ -308,7 +313,9 @@ func (t *Template) RenderResult(renderMode string, other map[string]interface{})
 			for _, v := range typed {
 				list = append(list, yamlQuote(fmt.Sprintf("%v", v)))
 			}
-			if res[out] == nil || len(res[out].([]interface{})) == 0 {
+
+			interfaceSlice, ok := res[out].([]interface{})
+			if res[out] == nil || (ok && len(interfaceSlice) == 0) {
 				res[out] = list
 			}
 
@@ -317,12 +324,14 @@ func (t *Template) RenderResult(renderMode string, other map[string]interface{})
 			for _, v := range typed {
 				list = append(list, yamlQuote(v))
 			}
-			if res[out] == nil || len(res[out].([]string)) == 0 {
+			stringSlice, ok := res[out].([]string)
+			if res[out] == nil || (ok && len(stringSlice) == 0) {
 				res[out] = list
 			}
 
 		default:
-			if res[out] == nil || res[out].(string) == "" {
+			stringRes, ok := res[out].(string)
+			if res[out] == nil || (ok && stringRes == "") {
 				// prevent rendering nil interfaces as "<nil>" string
 				var s string
 				if val != nil {

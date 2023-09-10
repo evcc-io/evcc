@@ -44,7 +44,7 @@ var _ api.CsvWriter = (*Sessions)(nil)
 
 func (t *Sessions) writeHeader(ctx context.Context, ww *csv.Writer) error {
 	localizer := locale.Localizer
-	if val := ctx.Value(locale.Locale).(string); val != "" {
+	if val, ok := ctx.Value(locale.Locale).(string); ok && val != "" {
 		localizer = i18n.NewLocalizer(locale.Bundle, val, locale.Language)
 	}
 

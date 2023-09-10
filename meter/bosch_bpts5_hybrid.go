@@ -72,14 +72,18 @@ func NewBoschBpts5Hybrid(uri, usage string, cache time.Duration) (api.Meter, err
 	log := util.NewLogger("bosch-bpt")
 
 	instance, exists := bosch.Instances.LoadOrStore(uri, bosch.NewLocal(log, uri, cache))
+	boschApi, ok := instance.(*bosch.API)
+	if !ok {
+		return nil, errors.New("could not convert to bosch.API")
+	}
 	if !exists {
-		if err := instance.(*bosch.API).Login(); err != nil {
+		if err := boschApi.Login(); err != nil {
 			return nil, err
 		}
 	}
 
 	m := &BoschBpts5Hybrid{
-		api:   instance.(*bosch.API),
+		api:   boschApi,
 		usage: strings.ToLower(usage),
 	}
 

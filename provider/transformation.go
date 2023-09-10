@@ -81,7 +81,11 @@ func configureOutputs(outConfig []transformationConfig) ([]outputTransformation,
 			}
 
 			f = func(v any) error {
-				return ff(v.(bool))
+				boolVal, ok := v.(bool)
+				if !ok {
+					return fmt.Errorf("could not convert %v to book", v)
+				}
+				return ff(boolVal)
 			}
 
 		case "int":
@@ -91,7 +95,11 @@ func configureOutputs(outConfig []transformationConfig) ([]outputTransformation,
 			}
 
 			f = func(v any) error {
-				return ff(v.(int64))
+				intVal, ok := v.(int64)
+				if !ok {
+					return fmt.Errorf("could not convert %v to int64", v)
+				}
+				return ff(intVal)
 			}
 
 		case "float":
@@ -101,7 +109,11 @@ func configureOutputs(outConfig []transformationConfig) ([]outputTransformation,
 			}
 
 			f = func(v any) error {
-				return ff(v.(float64))
+				floatVal, ok := v.(float64)
+				if !ok {
+					return fmt.Errorf("could not convert %v to float64", v)
+				}
+				return ff(floatVal)
 			}
 
 		case "string":
@@ -111,7 +123,11 @@ func configureOutputs(outConfig []transformationConfig) ([]outputTransformation,
 			}
 
 			f = func(v any) error {
-				return ff(v.(string))
+				stringVal, ok := v.(string)
+				if !ok {
+					return fmt.Errorf("could not convert %v to string", v)
+				}
+				return ff(stringVal)
 			}
 
 		default:

@@ -285,29 +285,65 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 	case easee.USER_IDTOKEN:
 		c.rfid = res.Value
 	case easee.IS_ENABLED:
-		c.chargerEnabled = value.(bool)
+		boolVal, ok := value.(bool)
+		if ok {
+			c.chargerEnabled = boolVal
+		}
 	case easee.SMART_CHARGING:
-		c.smartCharging = value.(bool)
+		boolVal, ok := value.(bool)
+		if ok {
+			c.smartCharging = boolVal
+		}
 	case easee.TOTAL_POWER:
-		c.currentPower = 1e3 * value.(float64)
+		floatVal, ok := value.(float64)
+		if ok {
+			c.currentPower = 1e3 * floatVal
+		}
 	case easee.SESSION_ENERGY:
-		c.sessionEnergy = value.(float64)
+		floatVal, ok := value.(float64)
+		if ok {
+			c.sessionEnergy = floatVal
+		}
 	case easee.LIFETIME_ENERGY:
-		c.totalEnergy = value.(float64)
+		floatVal, ok := value.(float64)
+		if ok {
+			c.totalEnergy = floatVal
+		}
 	case easee.IN_CURRENT_T3:
-		c.currentL1 = value.(float64)
+		floatVal, ok := value.(float64)
+		if ok {
+			c.currentL1 = floatVal
+		}
 	case easee.IN_CURRENT_T4:
-		c.currentL2 = value.(float64)
+		floatVal, ok := value.(float64)
+		if ok {
+			c.currentL2 = floatVal
+		}
 	case easee.IN_CURRENT_T5:
-		c.currentL3 = value.(float64)
+		floatVal, ok := value.(float64)
+		if ok {
+			c.currentL3 = floatVal
+		}
 	case easee.PHASE_MODE:
-		c.phaseMode = value.(int)
+		intVal, ok := value.(int)
+		if ok {
+			c.phaseMode = intVal
+		}
 	case easee.DYNAMIC_CHARGER_CURRENT:
-		c.dynamicChargerCurrent = value.(float64)
+		floatVal, ok := value.(float64)
+		if ok {
+			c.dynamicChargerCurrent = floatVal
+		}
 	case easee.CHARGER_OP_MODE:
-		c.opMode = value.(int)
+		intVal, ok := value.(int)
+		if ok {
+			c.opMode = intVal
+		}
 	case easee.REASON_FOR_NO_CURRENT:
-		c.reasonForNoCurrent = value.(int)
+		intVal, ok := value.(int)
+		if ok {
+			c.reasonForNoCurrent = intVal
+		}
 	}
 
 	select {
@@ -566,7 +602,11 @@ func (c *Easee) waitForDynamicChargerCurrent(targetCurrent float64) error {
 			if err != nil {
 				continue
 			}
-			if value.(float64) == targetCurrent {
+			floatVal, ok := value.(float64)
+			if !ok {
+				continue
+			}
+			if floatVal == targetCurrent {
 				return nil
 			}
 		case <-timer.C: // time is up, bail after one final check

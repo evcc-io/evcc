@@ -28,7 +28,11 @@ func (t *Template) ModbusParams(modbusType string, values map[string]interface{}
 		return
 	}
 
-	modbusParams := ConfigDefaults.Modbus.Types[values[ParamModbus].(string)].Params
+	stringVal, ok := values[ParamModbus].(string)
+	if !ok {
+		return
+	}
+	modbusParams := ConfigDefaults.Modbus.Types[stringVal].Params
 
 	// add the modbus params at the beginning
 	t.Params = append(modbusParams, t.Params...)

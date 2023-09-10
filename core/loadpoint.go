@@ -542,7 +542,11 @@ func (lp *Loadpoint) evChargeCurrentWrappedMeterHandler(current float64) {
 	}
 
 	// handler only called if charge meter was replaced by dummy
-	lp.chargeMeter.(*wrapper.ChargeMeter).SetPower(power)
+	wrapper, ok := lp.chargeMeter.(*wrapper.ChargeMeter)
+	if !ok {
+		panic("could not convert type to wrapper.ChargeMeter")
+	}
+	wrapper.SetPower(power)
 }
 
 // applyAction executes the action

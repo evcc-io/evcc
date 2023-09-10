@@ -60,7 +60,11 @@ func (c *Wattpilot) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	switch car.(float64) {
+	floatVal, ok := car.(float64)
+	if !ok {
+		return "", errors.New("car value is not a float64")
+	}
+	switch floatVal {
 	case 1.0:
 		return api.StatusA, nil
 	case 2.0, 5.0:
@@ -78,7 +82,11 @@ func (c *Wattpilot) Enabled() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	return resp.(bool), nil
+	boolVal, ok := resp.(bool)
+	if !ok {
+		return false, errors.New("alw value is not a bool")
+	}
+	return boolVal, nil
 }
 
 // Enable implements the api.Charger interface
@@ -111,7 +119,11 @@ func (c *Wattpilot) ChargedEnergy() (float64, error) {
 	if err != nil {
 		return 0, err
 	}
-	return resp.(float64) / 1e3, err
+	floatVal, ok := resp.(float64)
+	if !ok {
+		return 0, errors.New("wh value is not a float64")
+	}
+	return floatVal / 1e3, err
 }
 
 var _ api.PhaseCurrents = (*Wattpilot)(nil)

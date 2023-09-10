@@ -122,7 +122,10 @@ func runDump(cmd *cobra.Command, args []string) {
 	}
 
 	for id, lpI := range site.Loadpoints() {
-		lp := lpI.(*core.Loadpoint)
+		lp, ok := lpI.(*core.Loadpoint)
+		if !ok {
+			continue
+		}
 
 		d.Header(fmt.Sprintf("loadpoint %d", id+1), "=")
 		fmt.Println("")

@@ -78,12 +78,19 @@ func NewHTTPd(addr string, hub *SocketHub) *HTTPd {
 
 // Router returns the main router
 func (s *HTTPd) Router() *mux.Router {
-	return s.Handler.(*mux.Router)
+	router, ok := s.Handler.(*mux.Router)
+	if !ok {
+		panic("handler can not be cast to Router")
+	}
+	return router
 }
 
 // RegisterSiteHandlers connects the http handlers to the site
 func (s *HTTPd) RegisterSiteHandlers(site site.API, cache *util.Cache) {
-	router := s.Server.Handler.(*mux.Router)
+	router, ok := s.Server.Handler.(*mux.Router)
+	if !ok {
+		panic("handler can not be cast to Router")
+	}
 
 	// api
 	api := router.PathPrefix("/api").Subrouter()
@@ -154,7 +161,10 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, cache *util.Cache) {
 
 // RegisterShutdownHandler connects the http handlers to the site
 func (s *HTTPd) RegisterShutdownHandler(callback func()) {
-	router := s.Server.Handler.(*mux.Router)
+	router, ok := s.Server.Handler.(*mux.Router)
+	if !ok {
+		panic("handler can not be cast to Router")
+	}
 
 	// api
 	api := router.PathPrefix("/api").Subrouter()

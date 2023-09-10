@@ -176,7 +176,10 @@ func (c *CmdConfigure) askValue(q question) string {
 	}
 
 	validate := func(val interface{}) error {
-		value := val.(string)
+		value, ok := val.(string)
+		if !ok {
+			return errors.New(c.localizedString("ValueError_Invalid"))
+		}
 		if q.invalidValues != nil && slices.Contains(q.invalidValues, value) {
 			return errors.New(c.localizedString("ValueError_Used"))
 		}

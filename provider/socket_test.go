@@ -46,7 +46,11 @@ func TestSocketProvider(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	g := p.(IntProvider).IntGetter()
+	intProvider, ok := p.(IntProvider)
+	if !ok {
+		t.Fatal("could not convert to IntProvider")
+	}
+	g := intProvider.IntGetter()
 	i, err := g()
 	require.NoError(t, err)
 	require.Equal(t, int64(1), i)

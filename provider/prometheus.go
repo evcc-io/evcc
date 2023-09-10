@@ -2,6 +2,7 @@ package provider
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"math"
 	"time"
@@ -97,7 +98,10 @@ func (p *Prometheus) FloatGetter() func() (float64, error) {
 			return 0, fmt.Errorf("query returned value of type %q, expected %q, consider wrapping query in scalar()", res.Type().String(), model.ValScalar.String())
 		}
 
-		scalarVal := res.(*model.Scalar)
+		scalarVal, ok := res.(*model.Scalar)
+		if !ok {
+			return 0, errors.New("value can not be converted to Scalar")
+		}
 		return float64(scalarVal.Value), nil
 	}
 }

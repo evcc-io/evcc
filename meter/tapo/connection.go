@@ -402,8 +402,12 @@ func GenerateRSAKeys() (*rsa.PrivateKey, *rsa.PublicKey, error) {
 	if err != nil {
 		return nil, nil, err
 	}
+	rsaKey, ok := key.Public().(*rsa.PublicKey)
+	if !ok {
+		return nil, nil, errors.New("could not convert to rsa.PublicKey")
+	}
 
-	return key, key.Public().(*rsa.PublicKey), nil
+	return key, rsaKey, nil
 }
 
 func base64Decode(base64String string) (string, error) {

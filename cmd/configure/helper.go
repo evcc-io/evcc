@@ -41,8 +41,9 @@ func (c *CmdConfigure) processDeviceValues(values map[string]interface{}, templa
 		if strings.ToLower(item) != "title" {
 			continue
 		}
-		if len(value.(string)) > 0 {
-			device.Title = value.(string)
+		title, ok := value.(string)
+		if ok && len(title) > 0 {
+			device.Title = title
 		}
 	}
 

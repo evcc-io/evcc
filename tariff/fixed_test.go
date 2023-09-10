@@ -48,7 +48,10 @@ func TestFixedSplitZones(t *testing.T) {
 	})
 	assert.NoError(t, err)
 
-	tf := at.(*Fixed)
+	tf, ok := at.(*Fixed)
+	if !ok {
+		t.Fatal("failed type cast")
+	}
 	tf.clock = clock.NewMock()
 
 	var expect api.Rates
