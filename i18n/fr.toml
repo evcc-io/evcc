@@ -241,6 +241,8 @@ none = "Pas de véhicule"
 targetSoc = "Limite"
 unknown = "Véhicule invité"
 vehicleSoc = "Charge"
+temp = "Temp."
+tempLimit = "Temp. limite"
 
 [main.vehicleSoc]
 charging = "en charge"
@@ -308,6 +310,7 @@ solar = "Solaire"
 title = "Sessions de charge"
 total = "Total"
 vehicle = "Véhicule"
+chargeDuration = "Durée"
 
 [sessions.csv]
 chargedenergy = "Énergie (kWh)"
@@ -371,3 +374,32 @@ title = "Erreur au démarrage"
 cancel = "Annuler"
 template = "Fabricant"
 test = "Test"
+
+
+[config.validation]
+success = "succès"
+running = "en cours de validation..."
+failed = "échec"
+label = "Statut"
+unknown = "inconnu"
+validate = "valider"
+
+[config.form]
+example = "Exemple"
+optional = "optionnel"
+
+[config.main]
+vehicles = "Mes véhicules"
+edit = "éditer"
+title = "Configuration"
+
+[config.vehicle]
+save = "Enregistrer"
+titleEdit = "Editer le véhicule"
+validateSave = "Valider & enregistrer"
+template = "Fabricant"
+generic = "Autres intégrations"
+cancel = "Annuler"
+offline = "Véhicule générique"
+online = "Véhicules avec API en ligne"
+scooter = "Trottinette"
