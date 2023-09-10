@@ -68,7 +68,6 @@
 								<TelemetrySettings :sponsor="sponsor" class="mt-1 mb-0" />
 							</FormRow>
 							<FormRow
-								v-if="isNightly"
 								id="hiddenFeaturesEnabled"
 								:label="`${$t('settings.hiddenFeatures.label')} 🧪`"
 							>
@@ -130,9 +129,6 @@ export default {
 			// sort by name
 			locales.sort((a, b) => (a.name < b.name ? -1 : 1));
 			return locales;
-		},
-		isNightly: () => {
-			return !!window?.evcc?.commit;
 		},
 	},
 	watch: {
