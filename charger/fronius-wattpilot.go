@@ -83,7 +83,7 @@ func (c *Wattpilot) Enabled() (bool, error) {
 
 // Enable implements the api.Charger interface
 func (c *Wattpilot) Enable(enable bool) error {
-	var forceState int
+	forceState := 0 // neutral; 2 = on
 	if !enable {
 		forceState = 1 // off
 	}
