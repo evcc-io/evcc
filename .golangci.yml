@@ -8,3 +8,5 @@ linters-settings:
   staticcheck:
     checks:
       - "-SA1019"
+  errcheck:
+    check-type-assertions: true
