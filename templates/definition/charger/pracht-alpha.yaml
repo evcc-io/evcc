@@ -13,8 +13,10 @@ params:
     id: 1
   - name: connector
   - name: timeout
+  - name: currentworkaround
 render: |
   type: pracht-alpha
   {{- include "modbus" . }}
   connector: {{ .connector }}
   timeout: {{ .timeout }}
+  currentworkaround: {{ .currentworkaround }}
