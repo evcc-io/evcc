@@ -173,7 +173,7 @@ func (wb *PrachtAlpha) setTotalCurrent(current uint16) error {
 	return err
 }
 
-func (wb *PrachtAlpha) setStationCurrent(current uint16) error {
+func (wb *PrachtAlpha) setConnectorCurrent(current uint16) error {
 	reg := wb.register(prachtConnCurrent)
 	_, err := wb.conn.WriteSingleRegister(reg, current)
 
@@ -184,13 +184,13 @@ func (wb *PrachtAlpha) setCurrent(current uint16) error {
 	var err error
 
 	// order of calls is important, since it is not possible to
-	// increase station current > total current (it will be revoked)
+	// increase connector current > total current (it will be revoked)
 	err = wb.setTotalCurrent(current)
 	if err != nil {
 		return err
 	}
 
-	err = wb.setStationCurrent(current)
+	err = wb.setConnectorCurrent(current)
 
 	return err
 }
