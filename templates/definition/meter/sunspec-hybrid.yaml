@@ -103,7 +103,7 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     model: sunspec
-    value: DCEnergyS2 # mppt 4 (discharge)
+    value: DCEnergyS4 # mppt 4 (discharge)
   soc:
     source: modbus
     {{- include "modbus" . | indent 2 }}
