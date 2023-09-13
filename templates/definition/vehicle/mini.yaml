@@ -10,7 +10,6 @@ params:
     description:
       de: Region
       en: Region
-    type: stringlist
     values:
       - NA
       - EU
