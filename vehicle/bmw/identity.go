@@ -18,18 +18,19 @@ import (
 )
 
 const (
-	AuthURI     = "https://customer.bmwgroup.com/gcdm/oauth"
 	RedirectURI = "com.bmw.connected://oauth"
 )
 
 type Identity struct {
 	*request.Helper
+	region string
 }
 
 // NewIdentity creates BMW identity
-func NewIdentity(log *util.Logger) *Identity {
+func NewIdentity(log *util.Logger, region string) *Identity {
 	v := &Identity{
 		Helper: request.NewHelper(log),
+		region: strings.ToUpper(region),
 	}
 
 	return v
@@ -52,10 +53,10 @@ func (v *Identity) Login(user, password string) (oauth2.TokenSource, error) {
 	}
 
 	data := url.Values{
-		"client_id":             {"31c357a0-7a1d-4590-aa99-33b97244d048"},
+		"client_id":             {regions[v.region].ClientID},
 		"response_type":         {"code"},
 		"redirect_uri":          {RedirectURI},
-		"state":                 {"cwU-gIE27j67poy2UcL3KQ"},
+		"state":                 {regions[v.region].State},
 		"scope":                 {"openid profile email offline_access smacc vehicle_data perseus dlm svds cesim vsapi remote_services fupo authenticate_user"},
 		"nonce":                 {"login_nonce"},
 		"code_challenge_method": {"S256"},
@@ -65,7 +66,7 @@ func (v *Identity) Login(user, password string) (oauth2.TokenSource, error) {
 		"grant_type":            {"authorization_code"},
 	}
 
-	uri := fmt.Sprintf("%s/authenticate", AuthURI)
+	uri := fmt.Sprintf("%s/oauth/authenticate", regions[v.region].AuthURI)
 	req, err := request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), request.URLEncoding)
 	if err != nil {
 		return nil, err
@@ -133,10 +134,10 @@ func (v *Identity) Login(user, password string) (oauth2.TokenSource, error) {
 }
 
 func (v *Identity) retrieveToken(data url.Values) (*oauth2.Token, error) {
-	uri := fmt.Sprintf("%s/token", AuthURI)
+	uri := fmt.Sprintf("%s/oauth/token", regions[v.region].AuthURI)
 	req, err := request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), map[string]string{
 		"Content-Type":  request.FormContent,
-		"Authorization": "Basic MzFjMzU3YTAtN2ExZC00NTkwLWFhOTktMzNiOTcyNDRkMDQ4OmMwZTMzOTNkLTcwYTItNGY2Zi05ZDNjLTg1MzBhZjY0ZDU1Mg==",
+		"Authorization": regions[v.region].Authorization,
 	})
 
 	var tok oauth.Token

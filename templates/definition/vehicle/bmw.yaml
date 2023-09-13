@@ -6,7 +6,18 @@ params:
   - preset: vehicle-identify
   - name: vin
     example: WBMW...
+  - name: region
+    description:
+      de: Region
+      en: Region
+    values:
+      - NA
+      - EU
+    default: EU
 render: |
   type: bmw
   {{ include "vehicle-base" . }}
   {{ include "vehicle-identify" . }}
+  {{- if ne .region "EU" }}
+  region: {{ .region }}
+  {{- end }}
