@@ -29,7 +29,7 @@ render: |
     register:
       address: 37113 # Grid import export power
       type: holding
-      decode: int32
+      decode: int32nan
     scale: -1
   energy:
     source: modbus
@@ -39,7 +39,7 @@ render: |
     register:
       address: 37121 # Active energy import from the grid
       type: holding
-      decode: uint32
+      decode: uint32nan
     scale: 0.01
   currents:
   - source: modbus
@@ -49,7 +49,7 @@ render: |
     register:
       address: 37107 # Huawei phase A grid current
       type: holding
-      decode: int32
+      decode: int32nan
     scale: -0.01
   - source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -58,7 +58,7 @@ render: |
     register:
       address: 37109 # Huawei phase B grid current
       type: holding
-      decode: int32
+      decode: int32nan
     scale: -0.01
   - source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -67,7 +67,7 @@ render: |
     register:
       address: 37111 # Huawei phase C grid current
       type: holding
-      decode: int32
+      decode: int32nan
     scale: -0.01
   {{- end }}
   {{- if eq .usage "pv" }}
@@ -80,7 +80,7 @@ render: |
     register:
       address: 32064 # Input power DC (if no battery in your system - for more precise readings use 32080 # Active generation power AC)
       type: holding
-      decode: int32
+      decode: int32nan
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -89,7 +89,7 @@ render: |
     register:
       address: 32106 # Accumulated energy yield
       type: holding
-      decode: uint32
+      decode: uint32nan
     scale: 0.01
   {{- end }}
   {{- if eq .usage "battery" }}
@@ -137,7 +137,7 @@ render: |
       address: 37755 # [Energy storage unit 2] Total discharge
       {{- end }}
       type: holding
-      decode: uint32
+      decode: uint32nan
     scale: 0.01
   {{- if .capacity }}
   capacity: {{ .capacity }} # kWh
