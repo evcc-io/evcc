@@ -374,7 +374,6 @@ func (c *Easee) Enabled() (bool, error) {
 	defer c.mux.Unlock()
 
 	disabled := c.opMode == easee.ModeDisconnected ||
-		c.opMode == easee.ModeCompleted ||
 		c.opMode == easee.ModeAwaitingAuthentication ||
 		(c.opMode == easee.ModeAwaitingStart && c.reasonForNoCurrent == 52)
 	return !disabled && c.dynamicChargerCurrent > 0, nil
