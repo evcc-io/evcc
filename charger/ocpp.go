@@ -399,10 +399,10 @@ func getTxChargingProfile(current float64, phases int, unit types.ChargingRateUn
 
 	period := types.NewChargingSchedulePeriod(0, value)
 
-	// TODO add phases support
-	// if phases != 0 {
-	// 	period.NumberPhases = &phases
-	// }
+	// OCPP will assume 3 phases if not specified
+	if phases != 0 {
+		period.NumberPhases = &phases
+	}
 
 	return &types.ChargingProfile{
 		ChargingProfileId:      1,
