@@ -8,7 +8,7 @@ requirements:
   evcc: ["sponsorship"]
 params:
   - name: modbus
-    choice: ["tcpip"]
+    choice: ["tcp"]
     id: 255
   - name: connector
     default: 1
