@@ -8,7 +8,7 @@ products:
       generic: EvLoad/ Mikro 2.0
 params:
   - name: modbus
-    choice: ["tcpip"]
+    choice: ["tcp"]
     id: 255
   - name: connector
 render: |
