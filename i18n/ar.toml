@@ -17,6 +17,30 @@ low = "عندما تكون ممتلئة إلى حد ما"
 medium = "عندما نصف ممتلئ"
 never = "فقط مع فائض كافٍ"
 
+[config]
+
+[config.form]
+example = "مثال"
+optional = "اختياري"
+
+[config.main]
+addVehicle = "اضف عربة"
+edit = "عدّل"
+title = "الإعدادات"
+vehicles = "عرباتي"
+
+[config.validation]
+failed = "أخفق"
+label = "الحالة"
+running = "التحقق من صحة..."
+success = "ناجح"
+unknown = "غير معروف"
+validate = "تحقق من الصحة"
+
+[config.vehicle]
+cancel = "الغاء"
+delete = "احذف عربة"
+
 [footer]
 
 [footer.community]
