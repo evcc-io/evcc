@@ -18,6 +18,36 @@ low = "quand partiellement pleine"
 medium = "quand à moitié pleine"
 never = "seulement quand surplus suffisant"
 
+[config]
+
+[config.form]
+example = "Exemple"
+optional = "optionnel"
+
+[config.main]
+edit = "éditer"
+title = "Configuration"
+vehicles = "Mes véhicules"
+
+[config.validation]
+failed = "échec"
+label = "Statut"
+running = "en cours de validation..."
+success = "succès"
+unknown = "inconnu"
+validate = "valider"
+
+[config.vehicle]
+cancel = "Annuler"
+generic = "Autres intégrations"
+offline = "Véhicule générique"
+online = "Véhicules avec API en ligne"
+save = "Enregistrer"
+scooter = "Trottinette"
+template = "Fabricant"
+titleEdit = "Editer le véhicule"
+validateSave = "Valider & enregistrer"
+
 [footer]
 
 [footer.community]
@@ -239,10 +269,10 @@ fallbackName = "Véhicule"
 moreActions = "Plus d'actions"
 none = "Pas de véhicule"
 targetSoc = "Limite"
-unknown = "Véhicule invité"
-vehicleSoc = "Charge"
 temp = "Temp."
 tempLimit = "Temp. limite"
+unknown = "Véhicule invité"
+vehicleSoc = "Charge"
 
 [main.vehicleSoc]
 charging = "en charge"
@@ -296,6 +326,7 @@ title = "Session de charge"
 [sessions]
 avgPower = "Puissance ⌀"
 avgPrice = "Prix ⌀"
+chargeDuration = "Durée"
 co2 = "CO₂ ⌀"
 csvMonth = "Télécharger CSV {month}"
 csvTotal = "Télécharger CSV total"
@@ -310,7 +341,6 @@ solar = "Solaire"
 title = "Sessions de charge"
 total = "Total"
 vehicle = "Véhicule"
-chargeDuration = "Durée"
 
 [sessions.csv]
 chargedenergy = "Énergie (kWh)"
@@ -374,32 +404,3 @@ title = "Erreur au démarrage"
 cancel = "Annuler"
 template = "Fabricant"
 test = "Test"
-
-
-[config.validation]
-success = "succès"
-running = "en cours de validation..."
-failed = "échec"
-label = "Statut"
-unknown = "inconnu"
-validate = "valider"
-
-[config.form]
-example = "Exemple"
-optional = "optionnel"
-
-[config.main]
-vehicles = "Mes véhicules"
-edit = "éditer"
-title = "Configuration"
-
-[config.vehicle]
-save = "Enregistrer"
-titleEdit = "Editer le véhicule"
-validateSave = "Valider & enregistrer"
-template = "Fabricant"
-generic = "Autres intégrations"
-cancel = "Annuler"
-offline = "Véhicule générique"
-online = "Véhicules avec API en ligne"
-scooter = "Trottinette"
