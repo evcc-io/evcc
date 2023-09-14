@@ -1,20 +1,15 @@
 template: phoenix-em-eth
 products:
-  - brand: Phoenix
+  - brand: Phoenix Contact
     description:
       generic: EM-CP-PP-ETH (Modbus TCP)
-requirements:
-  description:
-    en: The Wallbe must be connected using Ethernet and the DIP switch 10 must be set to 'ON'.
-    de: Die Wallbox muss über ein Netzwerkkabel angebunden sein und im Gerät muss der DIP Schalter 10 auf 'ON' gestellt sein.
-  uri: https://docs.evcc.io/docs/devices/chargers#phoenix-contact
 params:
-  - name: host
-  - name: port
-    default: 502
+  - name: modbus
+    choice: ["tcpip"]
+    id: 255
 render: |
   type: phoenix-em-eth
-  uri: {{ .host }}:{{ .port }}
+  {{- include "modbus" . }}
   meter: # only if a charge meter is connected to the controller
     power: true
     energy: true

@@ -1,82 +1,90 @@
 package charger
 
+// LICENSE
+
+// Copyright (c) 2023 premultiply
+
+// This module is NOT covered by the MIT license. All rights reserved.
+
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+
+// Supports all chargers based on Phoenix Contact "EV-ETH" controller series
+// EV-CC-AC1-M3-CBC-RCM-ETH, EV-CC-AC1-M3-CBC-RCM-ETH-3G, EV-CC-AC1-M3-RCM-ETH-XP, EV-CC-AC1-M3-RCM-ETH-3G-XP
+// with OEM firmware from Phoenix Contact and modified firmware versions (Wallbe).
+// All features should be autodetected.
+// * Set DIP switch 10 to ON
+
 import (
 	"fmt"
-	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
-	"github.com/volkszaehler/mbmd/meters/rs485"
+	"github.com/evcc-io/evcc/util/sponsor"
+	"github.com/volkszaehler/mbmd/encoding"
 )
+
+type PhoenixEVEth struct {
+	conn     *modbus.Connection
+	isWallbe bool
+}
 
 const (
-	phxEVEthRegStatus     = 100 // Input
-	phxEVEthRegChargeTime = 102 // Input
-	phxEVEthRegMaxCurrent = 528 // Holding
-	phxEVEthRegEnable     = 400 // Coil
-
-	phxEVEthRegPower  = 120 // power reading
-	phxEVEthRegEnergy = 904 // energy reading, 128 for fw <= 1.11
+	phxRegStatus          = 100  // Input
+	phxRegChargeTime      = 102  // Input
+	phxRegFirmware        = 105  // Input
+	phxRegVoltages        = 108  // Input
+	phxRegCurrents        = 114  // Input
+	phxRegPower           = 120  // Input
+	phxRegEnergy          = 128  // Input
+	phxRegChargedEnergy   = 132  // Input
+	phxRegFirmwareWallbe  = 149  // Input
+	phxRegEnable          = 400  // Coil
+	phxRegCardEnabled     = 419  // Coil
+	phxRegMaxCurrent      = 528  // Holding
+	phxRegCardUID         = 606  // Holding
+	phxRegEnergyWh        = 904  // Holding, 32bit, Wh (2), Wallbe: 16bit (1)
+	phxRegEnergyWallbe    = 2980 // Holding, 64bit, Wh (4)
+	phxRegChargedEnergyEx = 3376 // Holding, 64bit, Wh (4)
 )
-
-var phxEVEthRegCurrents = []uint16{114, 116, 118} // current readings
-
-// PhoenixEVEth is an api.Charger implementation for Phoenix EV-***-ETH controller models
-// EV-CC-AC1-M3-CBC-RCM-ETH, EV-CC-AC1-M3-CBC-RCM-ETH-3G, EV-CC-AC1-M3-RCM-ETH-XP, EV-CC-AC1-M3-RCM-ETH-3G-XP
-// It uses Modbus TCP to communicate with the controller at modbus client id 255.
-type PhoenixEVEth struct {
-	conn *modbus.Connection
-}
 
 func init() {
 	registry.Add("phoenix-ev-eth", NewPhoenixEVEthFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decoratePhoenixEVEth -b *PhoenixEVEth -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)"
+// go:generate go run ../cmd/tools/decorate.go -f decoratePhoenixEVEth -b *PhoenixEVEth -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.ChargerEx,MaxCurrentMillis,func(current float64) error" -t "api.Identifier,Identify,func() (string, error)"
 
-// NewPhoenixEVEthFromConfig creates a Phoenix charger from generic config
+// NewPhoenixEVEthFromConfig creates a PhoenixEVEth charger from generic config
 func NewPhoenixEVEthFromConfig(other map[string]interface{}) (api.Charger, error) {
-	cc := struct {
-		URI   string
-		ID    uint8
-		Meter struct {
-			Power, Energy, Currents bool
-		}
-	}{
-		URI: "192.168.0.8:502", // default
-		ID:  255,               // default
+	cc := modbus.TcpSettings{
+		ID: 255,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	wb, err := NewPhoenixEVEth(cc.URI, cc.ID)
-
-	var currentPower func() (float64, error)
-	if cc.Meter.Power {
-		currentPower = wb.currentPower
-	}
-
-	var totalEnergy func() (float64, error)
-	if cc.Meter.Energy {
-		totalEnergy = wb.totalEnergy
-	}
-
-	var currents func() (float64, float64, float64, error)
-	if cc.Meter.Currents {
-		currents = wb.currents
-	}
-
-	return decoratePhoenixEVEth(wb, currentPower, totalEnergy, currents), err
+	return NewPhoenixEVEth(cc.URI, cc.ID)
 }
 
-// NewPhoenixEVEth creates a Phoenix charger
-func NewPhoenixEVEth(uri string, id uint8) (*PhoenixEVEth, error) {
-	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, id)
+// NewPhoenixEVEth creates a PhoenixEVEth charger
+func NewPhoenixEVEth(uri string, slaveID uint8) (api.Charger, error) {
+	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, slaveID)
 	if err != nil {
 		return nil, err
+	}
+
+	if !sponsor.IsAuthorized() {
+		return nil, api.ErrSponsorRequired
 	}
 
 	log := util.NewLogger("ev-eth")
@@ -86,12 +94,40 @@ func NewPhoenixEVEth(uri string, id uint8) (*PhoenixEVEth, error) {
 		conn: conn,
 	}
 
-	return wb, nil
+	var (
+		currentPower     func() (float64, error)
+		totalEnergy      func() (float64, error)
+		currents         func() (float64, float64, float64, error)
+		voltages         func() (float64, float64, float64, error)
+		maxCurrentMillis func(float64) error
+		identify         func() (string, error)
+	)
+
+	// check presence of meter by voltage on l1
+	if b, err := wb.conn.ReadInputRegisters(phxRegVoltages, 2); err == nil && encoding.Uint32LswFirst(b) > 0 {
+		currentPower = wb.currentPower
+		totalEnergy = wb.totalEnergy
+		currents = wb.currents
+		voltages = wb.voltages
+	}
+
+	// check card reader enabled
+	if b, err := wb.conn.ReadCoils(phxRegCardEnabled, 1); err == nil && b[0] == 1 {
+		identify = wb.identify
+	}
+
+	// check presence of extended Wallbe firmware
+	if b, err := wb.conn.ReadHoldingRegisters(phxRegMaxCurrent, 1); err == nil && encoding.Uint16(b) >= 60 {
+		wb.isWallbe = true
+		maxCurrentMillis = wb.maxCurrentMillis
+	}
+
+	return decoratePhoenixEVEth(wb, currentPower, totalEnergy, currents, voltages, maxCurrentMillis, identify), err
 }
 
 // Status implements the api.Charger interface
 func (wb *PhoenixEVEth) Status() (api.ChargeStatus, error) {
-	b, err := wb.conn.ReadInputRegisters(phxEVEthRegStatus, 1)
+	b, err := wb.conn.ReadInputRegisters(phxRegStatus, 1)
 	if err != nil {
 		return api.StatusNone, err
 	}
@@ -101,7 +137,7 @@ func (wb *PhoenixEVEth) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *PhoenixEVEth) Enabled() (bool, error) {
-	b, err := wb.conn.ReadCoils(phxEVEthRegEnable, 1)
+	b, err := wb.conn.ReadCoils(phxRegEnable, 1)
 	if err != nil {
 		return false, err
 	}
@@ -116,7 +152,7 @@ func (wb *PhoenixEVEth) Enable(enable bool) error {
 		u = modbus.CoilOn
 	}
 
-	_, err := wb.conn.WriteSingleCoil(phxEVEthRegEnable, u)
+	_, err := wb.conn.WriteSingleCoil(phxRegEnable, u)
 
 	return err
 }
@@ -127,56 +163,99 @@ func (wb *PhoenixEVEth) MaxCurrent(current int64) error {
 		return fmt.Errorf("invalid current %d", current)
 	}
 
-	_, err := wb.conn.WriteSingleRegister(phxEVEthRegMaxCurrent, uint16(current))
+	u := uint16(current)
+	_, err := wb.conn.WriteSingleRegister(phxRegMaxCurrent, u)
 
 	return err
 }
 
-var _ api.ChargeTimer = (*PhoenixEVEth)(nil)
-
-// ChargingTime implements the api.ChargeTimer interface
-func (wb *PhoenixEVEth) ChargingTime() (time.Duration, error) {
-	b, err := wb.conn.ReadInputRegisters(phxEVEthRegChargeTime, 2)
-	if err != nil {
-		return 0, err
+// maxCurrentMillis implements the api.ChargerEx interface (Wallbe Firmware only)
+func (wb *PhoenixEVEth) maxCurrentMillis(current float64) error {
+	if current < 6 {
+		return fmt.Errorf("invalid current %.5g", current)
 	}
 
-	// 2 words, least significant word first
-	secs := uint64(b[3])<<16 | uint64(b[2])<<24 | uint64(b[1]) | uint64(b[0])<<8
-	return time.Duration(secs) * time.Second, nil
+	u := uint16(current * 10) // 0.1A Steps
+	_, err := wb.conn.WriteSingleRegister(phxRegMaxCurrent, u)
+
+	return err
 }
 
-// CurrentPower implements the api.Meter interface
+// currentPower implements the api.Meter interface
 func (wb *PhoenixEVEth) currentPower() (float64, error) {
-	b, err := wb.conn.ReadInputRegisters(phxEVEthRegPower, 2)
+	b, err := wb.conn.ReadInputRegisters(phxRegPower, 2)
 	if err != nil {
 		return 0, err
 	}
 
-	return rs485.RTUUint32ToFloat64Swapped(b), err
+	return float64(encoding.Int32LswFirst(b)), nil
 }
 
 // totalEnergy implements the api.MeterEnergy interface
 func (wb *PhoenixEVEth) totalEnergy() (float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(phxEVEthRegEnergy, 2)
+	if wb.isWallbe {
+		b, err := wb.conn.ReadHoldingRegisters(phxRegEnergyWallbe, 4)
+		if err != nil {
+			return 0, err
+		}
+
+		return float64(encoding.Uint64LswFirst(b)) / 1e3, nil
+	}
+
+	b, err := wb.conn.ReadHoldingRegisters(phxRegEnergyWh, 2)
 	if err != nil {
 		return 0, err
 	}
 
-	return rs485.RTUUint32ToFloat64Swapped(b) / 1000, err
+	return float64(encoding.Uint32LswFirst(b)) / 1e3, nil
 }
 
 // currents implements the api.PhaseCurrents interface
 func (wb *PhoenixEVEth) currents() (float64, float64, float64, error) {
-	var currents []float64
-	for _, regCurrent := range phxEVEthRegCurrents {
-		b, err := wb.conn.ReadInputRegisters(regCurrent, 2)
-		if err != nil {
-			return 0, 0, 0, err
-		}
+	return wb.getPhases(phxRegCurrents)
+}
 
-		currents = append(currents, rs485.RTUUint32ToFloat64Swapped(b))
+// voltages implements the api.PhaseVoltages interface
+func (wb *PhoenixEVEth) voltages() (float64, float64, float64, error) {
+	return wb.getPhases(phxRegVoltages)
+}
+
+// getPhases returns 3 sequential phase values
+func (wb *PhoenixEVEth) getPhases(reg uint16) (float64, float64, float64, error) {
+	b, err := wb.conn.ReadInputRegisters(reg, 6)
+	if err != nil {
+		return 0, 0, 0, err
 	}
 
-	return currents[0], currents[1], currents[2], nil
+	var res [3]float64
+	for i := 0; i < 3; i++ {
+		res[i] = float64(encoding.Int32LswFirst(b[2*i:]))
+	}
+
+	return res[0], res[1], res[2], nil
+}
+
+// identify implements the api.Identifier interface
+func (wb *PhoenixEVEth) identify() (string, error) {
+	b, err := wb.conn.ReadHoldingRegisters(phxRegCardUID, 16)
+	if err != nil {
+		return "", err
+	}
+
+	return bytesAsString(b), nil
+}
+
+var _ api.Diagnosis = (*PhoenixEVEth)(nil)
+
+// Diagnose implements the api.Diagnosis interface
+func (wb *PhoenixEVEth) Diagnose() {
+	if wb.isWallbe {
+		if b, err := wb.conn.ReadInputRegisters(phxRegFirmwareWallbe, 6); err == nil {
+			fmt.Printf("\tFirmware (Wallbe):\t%s\n", encoding.StringLsbFirst(b))
+		}
+	} else {
+		if b, err := wb.conn.ReadInputRegisters(phxRegFirmware, 2); err == nil {
+			fmt.Printf("\tFirmware (Phoenix):\t%s\n", encoding.StringLsbFirst(b))
+		}
+	}
 }
