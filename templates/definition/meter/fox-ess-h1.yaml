@@ -9,6 +9,7 @@ params:
     choice: ["pv", "battery"]
   - name: modbus
     choice: ["tcp"]
+    id: 247
 render: |
   type: custom
   {{- if eq .usage "pv" }}
