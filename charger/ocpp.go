@@ -325,7 +325,11 @@ func (c *OCPP) Enable(enable bool) (err error) {
 		// if no transaction is running, we're already disabled or an unknown transaction is running
 		if txn == 0 {
 			// we cannot tell if a transaction is really running, so we check the status
-			if status, err := c.Status(); err != nil || status == api.StatusC {
+			status, err := c.Status()
+			if err != nil {
+				return err
+			}
+			if status == api.StatusC {
 				return errors.New("cannot disable: unknown transaction running")
 			}
 
