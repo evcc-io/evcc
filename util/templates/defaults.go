@@ -16,7 +16,7 @@ type configDefaults struct {
 		Params []Param
 	}
 	Modbus struct { // Details about possible ModbusInterfaces and ModbusConnectionTypes
-		Interfaces map[string][]string // Information about physical modbus interface types (rs485, tcpip)
+		Interfaces map[string][]string // Information about modbus protocol types (rtu, tcp or ascii)
 		Types      map[string]struct { // Details about different ways to connect to a ModbusInterface and its defaults
 			Description TextLanguage
 			Params      []Param
