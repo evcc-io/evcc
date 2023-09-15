@@ -96,7 +96,7 @@ func (v *API) RefreshRequest(vin string) (string, error) {
 		CommandId string
 	}
 
-	uri := fmt.Sprintf("%s/api/vehicles/v2/%s/status", ApiURI, vin)
+	uri := fmt.Sprintf("%s/api/vehicles/v5/%s/status", ApiURI, vin)
 	req, err := http.NewRequest(http.MethodPut, uri, nil)
 	if err == nil {
 		err = v.DoJSON(req, &resp)
