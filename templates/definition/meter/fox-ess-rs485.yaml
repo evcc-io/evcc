@@ -8,6 +8,7 @@ params:
     choice: ["grid", "pv", "battery"]
   - name: modbus
     choice: ["rtu"]
+    id: 247
 render: |
   type: custom
   {{- if eq .usage "grid" }}
