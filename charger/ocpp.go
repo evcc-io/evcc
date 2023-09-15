@@ -322,7 +322,7 @@ func (c *OCPP) Enable(enable bool) (err error) {
 			request.ChargingProfile = getTxChargingProfile(c.current, c.phases)
 		})
 	} else {
-		// if no transaction is running, we're already disabled or an unknown transaction is running
+		// if no transaction is running, the vehicle may have stopped it (which is ok) or an unknown transaction is running
 		if txn == 0 {
 			// we cannot tell if a transaction is really running, so we check the status
 			status, err := c.Status()
