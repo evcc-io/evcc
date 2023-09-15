@@ -798,10 +798,14 @@ func (lp *Loadpoint) targetEnergyReached() bool {
 }
 
 // targetSocReached checks if target is configured and reached.
-// If vehicle is not configured this will always return false
+// If vehicle is not configured this will always return false unless the
+// charger is capable of and has provided an soc value.
 func (lp *Loadpoint) targetSocReached() bool {
-	return lp.vehicle != nil &&
-		lp.Soc.target > 0 &&
+	if _, ok := lp.charger.(api.Battery); lp.GetVehicle() == nil && !ok {
+		return false
+	}
+
+	return lp.Soc.target > 0 &&
 		lp.Soc.target < 100 &&
 		lp.vehicleSoc >= float64(lp.Soc.target)
 }
@@ -966,11 +970,13 @@ func (lp *Loadpoint) scalePhasesRequired() bool {
 
 // scalePhasesIfAvailable scales if api.PhaseSwitcher is available
 func (lp *Loadpoint) scalePhasesIfAvailable(phases int) error {
+	want := phases
 	if lp.ConfiguredPhases != 0 {
 		phases = lp.ConfiguredPhases
 	}
 
 	if _, ok := lp.charger.(api.PhaseSwitcher); ok {
+		lp.log.DEBUG.Printf("!! scalePhasesIfAvailable: %dp -> %dp", want, phases)
 		return lp.scalePhases(phases)
 	}
 
@@ -985,6 +991,7 @@ func (lp *Loadpoint) scalePhases(phases int) error {
 		panic("charger does not implement api.PhaseSwitcher")
 	}
 
+	lp.log.DEBUG.Printf("!! scalePhases: GetPhases %dp <> phases %dp", lp.GetPhases(), phases)
 	if lp.GetPhases() != phases {
 		// switch phases
 		if err := cp.Phases1p3p(phases); err != nil {

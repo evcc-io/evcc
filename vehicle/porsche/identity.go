@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
-	"time"
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/evcc-io/evcc/util"
@@ -22,8 +21,6 @@ import (
 const (
 	OAuthURI = "https://identity.porsche.com"
 	ClientID = "UYsK00My6bCqJdbQhTQ0PbWmcSdIAMig"
-
-	maxTokenLifetime = 24 * time.Hour // avoid token refresh for the time being, as refresh currently always fails
 )
 
 // https://identity.porsche.com/.well-known/openid-configuration
@@ -42,21 +39,24 @@ var (
 
 // Identity is the Porsche Identity client
 type Identity struct {
-	log *util.Logger
 	*request.Helper
+	user, password string
 }
 
 // NewIdentity creates Porsche identity
-func NewIdentity(log *util.Logger) *Identity {
+func NewIdentity(log *util.Logger, user, password string) (oauth2.TokenSource, error) {
 	v := &Identity{
-		log:    log,
-		Helper: request.NewHelper(log),
+		Helper:   request.NewHelper(log),
+		user:     user,
+		password: password,
 	}
 
-	return v
+	token, err := v.login()
+
+	return oauth.RefreshTokenSource(token, v), err
 }
 
-func (v *Identity) Login(oc *oauth2.Config, user, password string) (oauth2.TokenSource, error) {
+func (v *Identity) login() (*oauth2.Token, error) {
 	cv, err := cv.CreateCodeVerifier()
 	if err != nil {
 		return nil, err
@@ -99,9 +99,9 @@ func (v *Identity) Login(oc *oauth2.Config, user, password string) (oauth2.Token
 	} {
 		query.Set(k, v)
 	}
-	query.Set("client_id", oc.ClientID)
-	query.Set("username", user)
-	query.Set("password", password)
+	query.Set("client_id", OAuth2Config.ClientID)
+	query.Set("username", v.user)
+	query.Set("password", v.password)
 
 	uri = fmt.Sprintf("%s/usernamepassword/login", OAuthURI)
 	resp, err = v.PostForm(uri, query)
@@ -152,15 +152,19 @@ func (v *Identity) Login(oc *oauth2.Config, user, password string) (oauth2.Token
 	ctx, cancel := context.WithTimeout(cctx, request.Timeout)
 	defer cancel()
 
-	token, err := oc.Exchange(ctx, code,
+	return OAuth2Config.Exchange(ctx, code,
 		oauth2.SetAuthURLParam("code_verifier", cv.CodeChallengePlain()),
 	)
+}
+
+func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
+	ctx := context.WithValue(context.Background(), oauth2.HTTPClient, v.Client)
+	ts := oauth2.ReuseTokenSource(token, OAuth2Config.TokenSource(ctx, token))
+
+	token, err := ts.Token()
 	if err != nil {
-		return nil, err
+		token, err = v.login()
 	}
 
-	ts := oauth2.ReuseTokenSourceWithExpiry(token, oc.TokenSource(cctx, token), 15*time.Minute)
-	go oauth.Refresh(v.log, token, ts, maxTokenLifetime)
-
-	return ts, err
+	return token, err
 }

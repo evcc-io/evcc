@@ -30,7 +30,7 @@ var (
 
 func Enabled() bool {
 	enabled, _ := settings.Bool(enabledSetting)
-	return enabled && sponsor.IsAuthorized() && instanceID != ""
+	return enabled && sponsor.IsAuthorizedForApi() && instanceID != ""
 }
 
 func Enable(enable bool) error {

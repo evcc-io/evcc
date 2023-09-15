@@ -2,12 +2,16 @@ template: cfos
 products:
   - brand: cFos
     description:
-      generic: PowerBrain
-capabilities: ["mA", "rfid"]
+      generic: Power Brain, Power Brain Solar
+capabilities: ["mA", "rfid", "1p3p"]
 requirements:
   description:
-    de: Der Zähler- falls vorhanden- muss separat als Ladezähler konfiguriert werden.
-    en: The meter- if present- must be configured separately as charge meter.
+    de: |
+      Der Zähler- falls vorhanden- muss separat als Ladezähler konfiguriert werden.
+      Phasenumschaltung bietet nur die Solar-Variante und muss vom Anwender freigeschaltet werden.
+    en: |
+      The meter- if present- must be configured separately as charge meter.
+      Phase switching is only available with the Solar variant and must be enabled by the user.
   evcc: ["sponsorship"]
 params:
   - name: host
