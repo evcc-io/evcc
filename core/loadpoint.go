@@ -788,7 +788,7 @@ func (lp *Loadpoint) remainingChargeEnergy() (float64, bool) {
 }
 
 func (lp *Loadpoint) vehicleHasSoc() bool {
-	return lp.vehicle != nil && !lp.vehicleHasFeature(api.Offline)
+	return lp.GetVehicle() != nil && !lp.vehicleHasFeature(api.Offline)
 }
 
 // targetEnergyReached checks if target is configured and reached
