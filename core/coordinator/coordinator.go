@@ -4,6 +4,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/config"
 )
 
 // Coordinator coordinates vehicle access between loadpoints
@@ -14,12 +15,19 @@ type Coordinator struct {
 }
 
 // New creates a coordinator for a set of vehicles
-func New(log *util.Logger, vehicles []api.Vehicle) *Coordinator {
+func New(log *util.Logger) *Coordinator {
+	vehicles := config.Instances(config.Vehicles().Devices())
+
 	return &Coordinator{
 		log:      log,
 		vehicles: vehicles,
 		tracked:  make(map[api.Vehicle]loadpoint.API),
 	}
+}
+
+// SetVehicles sets the list of vehicles, mainly for testing
+func (c *Coordinator) SetVehicles(vehicles []api.Vehicle) {
+	c.vehicles = vehicles
 }
 
 // GetVehicles returns the list of all vehicles
