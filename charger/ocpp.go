@@ -24,6 +24,7 @@ type OCPP struct {
 	cp                *ocpp.CP
 	connector         int
 	idtag             string
+	enabled           bool
 	phases            int
 	current           float64
 	meterValuesSample string
@@ -291,16 +292,25 @@ func (c *OCPP) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (c *OCPP) Enabled() (bool, error) {
-	txn, err := c.cp.TransactionID()
-	return txn > 0, err
+	return c.enabled, nil
 }
 
 // Enable implements the api.Charger interface
-func (c *OCPP) Enable(enable bool) error {
-	var err error
+func (c *OCPP) Enable(enable bool) (err error) {
 	rc := make(chan error, 1)
+	txn, err := c.cp.TransactionID()
+
+	defer func() {
+		if err == nil {
+			c.enabled = enable
+		}
+	}()
 
 	if enable {
+		if txn > 0 {
+			return errors.New("cannot enable: transaction already running")
+		}
+
 		err = ocpp.Instance().RemoteStartTransaction(c.cp.ID(), func(resp *core.RemoteStartTransactionConfirmation, err error) {
 			if err == nil && resp != nil && resp.Status != types.RemoteStartStopStatusAccepted {
 				err = errors.New(string(resp.Status))
@@ -312,14 +322,18 @@ func (c *OCPP) Enable(enable bool) error {
 			request.ChargingProfile = getTxChargingProfile(c.current, c.phases)
 		})
 	} else {
-		var txn int
-		txn, err = c.cp.TransactionID()
-		if err != nil {
-			return err
-		}
-
+		// if no transaction is running, the vehicle may have stopped it (which is ok) or an unknown transaction is running
 		if txn == 0 {
-			return errors.New("unknown transaction running, cannot disable")
+			// we cannot tell if a transaction is really running, so we check the status
+			status, err := c.Status()
+			if err != nil {
+				return err
+			}
+			if status == api.StatusC {
+				return errors.New("cannot disable: unknown transaction running")
+			}
+
+			return nil
 		}
 
 		err = ocpp.Instance().RemoteStopTransaction(c.cp.ID(), func(resp *core.RemoteStopTransactionConfirmation, err error) {
