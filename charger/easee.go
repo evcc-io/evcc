@@ -403,30 +403,27 @@ func (c *Easee) Enable(enable bool) (err error) {
 	if c.authorize {
 		action = easee.ChargeStop
 	}
-	var expectedEnabledState bool
 	var targetCurrent float64
 	if enable {
 		action = easee.ChargeResume
 		if opMode == easee.ModeAwaitingAuthentication && c.authorize {
 			action = easee.ChargeStart
 		}
-		expectedEnabledState = true
 		targetCurrent = 32
 	}
 
 	defer func() {
 		if err == nil {
-			c.enabled = expectedEnabledState
+			c.enabled = enable
 		}
 	}()
 
 	uri := fmt.Sprintf("%s/chargers/%s/commands/%s", easee.API, c.charger, action)
-	_, err = c.postJSONAndWait(uri, nil)
-	if err != nil {
+	if _, err := c.postJSONAndWait(uri, nil); err != nil {
 		return err
 	}
 
-	if err := c.waitForChargerEnabledState(expectedEnabledState); err != nil {
+	if err := c.waitForChargerEnabledState(enable); err != nil {
 		return err
 	}
 
