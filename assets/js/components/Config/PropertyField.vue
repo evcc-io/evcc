@@ -4,6 +4,7 @@
 			:id="id"
 			v-model="value"
 			:type="inputType"
+			:step="step"
 			:placeholder="placeholder"
 			:required="required"
 			aria-label="unit"
@@ -59,6 +60,7 @@
 		class="form-control"
 		:class="short ? 'w-50' : ''"
 		:type="inputType"
+		:step="step"
 		:placeholder="placeholder"
 		:required="required"
 	/>
@@ -96,6 +98,12 @@ export default {
 		},
 		short() {
 			return ["Number", "Float", "Duration"].includes(this.type);
+		},
+		step() {
+			if (this.type === "Float") {
+				return "any";
+			}
+			return null;
 		},
 		unit() {
 			if (this.property === "capacity") {
@@ -136,3 +144,14 @@ export default {
 	},
 };
 </script>
+
+<style>
+input[type="number"] {
+	appearance: textfield;
+}
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+	-webkit-appearance: none;
+	margin: 0;
+}
+</style>
