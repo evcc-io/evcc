@@ -354,9 +354,14 @@ func (c *OCPP) updatePeriod(current float64, phases int) error {
 		return err
 	}
 
+	txn, err := c.cp.TransactionID()
+	if err != nil {
+		return err
+	}
+
 	current = math.Trunc(10*current) / 10
 
-	err := c.setChargingProfile(c.connector, getTxChargingProfile(current, phases))
+	err = c.setChargingProfile(c.connector, getTxChargingProfileForUpdate(current, phases, txn))
 	if err != nil {
 		err = fmt.Errorf("set charging profile: %w", err)
 	}
@@ -374,6 +379,27 @@ func getTxChargingProfile(current float64, phases int) *types.ChargingProfile {
 
 	return &types.ChargingProfile{
 		ChargingProfileId:      1,
+		StackLevel:             0,
+		ChargingProfilePurpose: types.ChargingProfilePurposeTxProfile,
+		ChargingProfileKind:    types.ChargingProfileKindRelative,
+		ChargingSchedule: &types.ChargingSchedule{
+			ChargingRateUnit:       types.ChargingRateUnitAmperes,
+			ChargingSchedulePeriod: []types.ChargingSchedulePeriod{period},
+		},
+	}
+}
+
+func getTxChargingProfileForUpdate(current float64, phases int, transactionId int) *types.ChargingProfile {
+	period := types.NewChargingSchedulePeriod(0, current)
+
+	// TODO add phases support
+	// if phases != 0 {
+	// 	period.NumberPhases = &phases
+	// }
+
+	return &types.ChargingProfile{
+		ChargingProfileId:      1,
+		TransactionId:          transactionId,
 		StackLevel:             0,
 		ChargingProfilePurpose: types.ChargingProfilePurposeTxProfile,
 		ChargingProfileKind:    types.ChargingProfileKindRelative,
