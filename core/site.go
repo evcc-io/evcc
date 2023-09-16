@@ -114,7 +114,11 @@ func NewSiteFromConfig(
 	Voltage = site.Voltage
 	site.loadpoints = loadpoints
 	site.tariffs = tariffs
+
 	site.coordinator = coordinator.New(log)
+	site.coordinator.SetVehicles(config.Instances(config.Vehicles().Devices()))
+	config.Vehicles().Subscribe(site.updateVehicles)
+
 	site.prioritizer = prioritizer.New(log)
 	site.savings = NewSavings(tariffs)
 
