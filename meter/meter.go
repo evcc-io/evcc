@@ -18,9 +18,9 @@ func init() {
 // NewConfigurableFromConfig creates api.Meter from config
 func NewConfigurableFromConfig(other map[string]interface{}) (api.Meter, error) {
 	var cc struct {
-		capacity `mapstructure:",squash"`
 		Power    provider.Config
 		Energy   *provider.Config  // optional
+		Capacity *provider.Config  // optional
 		Soc      *provider.Config  // optional
 		Currents []provider.Config // optional
 		Voltages []provider.Config // optional
@@ -74,7 +74,21 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Meter, error) 
 		}
 	}
 
-	res := m.Decorate(totalEnergyG, currentsG, voltagesG, powersG, batterySocG, cc.capacity.Decorator())
+	// decorate capacity
+	var capacityStruct capacity
+	if cc.Capacity != nil {
+		capacityG, floatGetterErr := provider.NewFloatGetterFromConfig(*cc.Capacity)
+		if floatGetterErr != nil {
+			return nil, fmt.Errorf("error parsing capacity structure: %w", floatGetterErr)
+		}
+		readCapacity, capacityErr := capacityG()
+		if capacityErr != nil {
+			return nil, fmt.Errorf("error retrieving capacity: %w", capacityErr)
+		}
+		capacityStruct.Capacity = readCapacity
+	}
+
+	res := m.Decorate(totalEnergyG, currentsG, voltagesG, powersG, batterySocG, capacityStruct.Decorator())
 
 	return res, nil
 }
