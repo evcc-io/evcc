@@ -178,7 +178,7 @@ export default {
 		},
 		costLimitText: function () {
 			if (this.isCo2) {
-				this.$t("main.targetCharge.co2Limit", {
+				return this.$t("main.targetCharge.co2Limit", {
 					co2: this.fmtCo2Short(this.smartCostLimit),
 				});
 			}
