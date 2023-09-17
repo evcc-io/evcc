@@ -648,7 +648,10 @@ func (lp *Loadpoint) syncCharger() error {
 		if lp.guardGracePeriodElapsed() {
 			lp.log.WARN.Println("charger logic error: disabled but charging")
 		}
-		enabled = true // treat as enabled when charging
+		enabled = true                                  // treat as enabled when charging
+		if err := lp.charger.Enable(true); err != nil { //also enable charger to correct internal state
+			return err
+		}
 		lp.elapseGuard()
 		lp.elapsePVTimer()
 		return nil
@@ -788,7 +791,7 @@ func (lp *Loadpoint) remainingChargeEnergy() (float64, bool) {
 }
 
 func (lp *Loadpoint) vehicleHasSoc() bool {
-	return lp.vehicle != nil && !lp.vehicleHasFeature(api.Offline)
+	return lp.GetVehicle() != nil && !lp.vehicleHasFeature(api.Offline)
 }
 
 // targetEnergyReached checks if target is configured and reached

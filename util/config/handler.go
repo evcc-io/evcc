@@ -8,7 +8,21 @@ import (
 
 type handler[T any] struct {
 	mu      sync.Mutex
+	topic   string
 	devices []Device[T]
+}
+
+type Operation string
+
+const (
+	OpAdd    Operation = "add"
+	OpDelete Operation = "del"
+)
+
+func (cp *handler[T]) Subscribe(fn func(Operation, Device[T])) {
+	if err := bus.Subscribe(cp.topic, fn); err != nil {
+		panic(err)
+	}
 }
 
 // Devices returns the handlers devices
@@ -35,6 +49,7 @@ func (cp *handler[T]) Add(dev Device[T]) error {
 	defer cp.mu.Unlock()
 
 	cp.devices = append(cp.devices, dev)
+	bus.Publish(cp.topic, OpAdd, dev)
 
 	return nil
 }
@@ -47,6 +62,7 @@ func (cp *handler[T]) Delete(name string) error {
 	for i, dev := range cp.devices {
 		if name == dev.Config().Name {
 			cp.devices = append(cp.devices[:i], cp.devices[i+1:]...)
+			bus.Publish(cp.topic, OpDelete, dev)
 			return nil
 		}
 	}

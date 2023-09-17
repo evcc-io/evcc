@@ -183,6 +183,10 @@ import formatter from "../mixins/formatter";
 
 const V = 230;
 
+const PHASES_AUTO = 0;
+const PHASES_1 = 1;
+const PHASES_3 = 3;
+
 const range = (start, stop, step = -1) =>
 	Array.from({ length: (stop - start) / step + 1 }, (_, i) => start + i * step);
 
@@ -226,19 +230,31 @@ export default {
 			return this.fmtKw(this.minCurrent * V * 3);
 		},
 		maxPower: function () {
-			if (this.phasesConfigured === 3) {
-				return this.maxPower3p;
+			switch (this.phasesConfigured) {
+				case PHASES_AUTO:
+					return this.maxPower3p;
+				case PHASES_3:
+					return this.maxPower3p;
+				case PHASES_1:
+					return this.maxPower1p;
+				default:
+					return this.fmtKw(this.maxCurrent * V * this.phasesActive);
 			}
-			if (this.phasesConfigured === 1) {
-				return this.maxPower1p;
-			}
-			return this.fmtKw(this.maxCurrent * V * this.phasesActive);
 		},
 		minPower: function () {
-			return this.phasesConfigured === 3 ? this.minPower3p : this.minPower1p;
+			switch (this.phasesConfigured) {
+				case PHASES_AUTO:
+					return this.minPower1p;
+				case PHASES_3:
+					return this.minPower3p;
+				case PHASES_1:
+					return this.minPower1p;
+				default:
+					return this.fmtKw(this.minCurrent * V * this.phasesActive);
+			}
 		},
 		showConfigurablePhases: function () {
-			return [0, 1, 3].includes(this.phasesConfigured);
+			return [PHASES_AUTO, PHASES_3, PHASES_1].includes(this.phasesConfigured);
 		},
 		showCurrentSettings: function () {
 			return this.$hiddenFeatures();

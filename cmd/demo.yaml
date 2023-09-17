@@ -257,6 +257,6 @@ tariffs:
   feedin:
     type: fixed
     price: 0.08 # EUR/kWh
-  planner:
+  co2:
     type: grünstromindex
     zip: 12349
