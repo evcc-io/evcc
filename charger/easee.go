@@ -54,6 +54,7 @@ type Easee struct {
 	chargerEnabled        bool
 	smartCharging         bool
 	authorize             bool
+	enabled               bool
 	opMode                int
 	reasonForNoCurrent    int
 	phaseMode             int
@@ -370,18 +371,11 @@ func (c *Easee) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (c *Easee) Enabled() (bool, error) {
-	c.mux.Lock()
-	defer c.mux.Unlock()
-
-	disabled := c.opMode == easee.ModeDisconnected ||
-		c.opMode == easee.ModeCompleted ||
-		c.opMode == easee.ModeAwaitingAuthentication ||
-		(c.opMode == easee.ModeAwaitingStart && c.reasonForNoCurrent == 52)
-	return !disabled && c.dynamicChargerCurrent > 0, nil
+	return c.enabled, nil
 }
 
 // Enable implements the api.Charger interface
-func (c *Easee) Enable(enable bool) error {
+func (c *Easee) Enable(enable bool) (err error) {
 	c.mux.Lock()
 	enablingRequired := enable && !c.chargerEnabled
 	opMode := c.opMode
@@ -409,24 +403,27 @@ func (c *Easee) Enable(enable bool) error {
 	if c.authorize {
 		action = easee.ChargeStop
 	}
-	var expectedEnabledState bool
 	var targetCurrent float64
 	if enable {
 		action = easee.ChargeResume
 		if opMode == easee.ModeAwaitingAuthentication && c.authorize {
 			action = easee.ChargeStart
 		}
-		expectedEnabledState = true
 		targetCurrent = 32
 	}
 
+	defer func() {
+		if err == nil {
+			c.enabled = enable
+		}
+	}()
+
 	uri := fmt.Sprintf("%s/chargers/%s/commands/%s", easee.API, c.charger, action)
-	_, err := c.postJSONAndWait(uri, nil)
-	if err != nil {
+	if _, err := c.postJSONAndWait(uri, nil); err != nil {
 		return err
 	}
 
-	if err := c.waitForChargerEnabledState(expectedEnabledState); err != nil {
+	if err := c.waitForChargerEnabledState(enable); err != nil {
 		return err
 	}
 
