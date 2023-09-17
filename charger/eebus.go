@@ -33,6 +33,10 @@ type EEBus struct {
 	expectedEnableUnpluggedState bool
 	current                      float64
 
+	// connection tracking for api.CurrentGetter
+	evConnected  bool
+	currentLimit float64
+
 	lastIsChargingCheck  time.Time
 	lastIsChargingResult bool
 
@@ -231,7 +235,13 @@ func (c *EEBus) updateState() (api.ChargeStatus, error) {
 
 	if !c.emobility.EVConnected() {
 		c.expectedEnableUnpluggedState = false
+		c.evConnected = false
 		return api.StatusA, nil
+	}
+
+	if !c.evConnected {
+		c.evConnected = true
+		c.currentLimit = -1
 	}
 
 	currentState, err := c.emobility.EVCurrentChargeState()
@@ -349,7 +359,11 @@ func (c *EEBus) writeCurrentLimitData(currents []float64) error {
 
 	// Set overload protection limits and self consumption limits to identical values,
 	// so if the EV supports self consumption it will be used automatically.
-	return c.emobility.EVWriteLoadControlLimits(currents, currents)
+	if err = c.emobility.EVWriteLoadControlLimits(currents, currents); err == nil {
+		c.currentLimit = currents[0]
+	}
+
+	return err
 }
 
 // MaxCurrent implements the api.Charger interface
@@ -372,6 +386,13 @@ func (c *EEBus) MaxCurrentMillis(current float64) error {
 	c.current = current
 
 	return nil
+}
+
+var _ api.CurrentGetter = (*Easee)(nil)
+
+// GetMaxCurrent implements the api.CurrentGetter interface
+func (c *EEBus) GetMaxCurrent() (float64, error) {
+	return c.currentLimit, nil
 }
 
 // CurrentPower implements the api.Meter interface
