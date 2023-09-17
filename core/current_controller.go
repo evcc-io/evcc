@@ -5,15 +5,15 @@ import (
 	"github.com/evcc-io/evcc/util"
 )
 
-type currentLimiter struct {
+type currentAdapter struct {
+	api.CurrentController
 	log                    *util.Logger
-	charger                api.CurrentLimiter
 	minCurrent, maxCurrent float64
 }
 
-var _ api.PowerLimiter = (*currentLimiter)(nil)
+var _ api.PowerLimiter = (*currentAdapter)(nil)
 
-// currentLimiter implements the api.PowerLimiter interface
-func (c *currentLimiter) MaxPower(power float64) (float64, error) {
+// currentAdapter implements the api.PowerLimiter interface
+func (c *currentAdapter) MaxPower(power float64) (float64, error) {
 	return 0, api.ErrNotAvailable
 }

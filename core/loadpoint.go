@@ -141,7 +141,7 @@ type Loadpoint struct {
 	charger          api.Charger
 	chargeTimer      api.ChargeTimer
 	chargeRater      api.ChargeRater
-	chargeController api.PowerLimiter // Power controller (proxy for CurrentController)
+	powerLimiter     api.PowerLimiter // Power controller (proxy for CurrentController)
 	chargedAtStartup float64          // session energy at startup
 
 	chargeMeter    api.Meter   // Charger usage meter
@@ -340,15 +340,15 @@ func (lp *Loadpoint) configureChargerType(charger api.Charger) {
 	var integrated bool
 
 	switch c := charger.(type) {
-	case api.CurrentLimiter:
-		lp.chargeController = &currentLimiter{
-			log:        lp.log,
-			charger:    c,
-			minCurrent: lp.MinCurrent,
-			maxCurrent: lp.MaxCurrent,
-		}
 	case api.PowerController:
-		lp.chargeController = c
+		lp.powerLimiter = c
+	case api.CurrentController:
+		lp.powerLimiter = &currentAdapter{
+			CurrentController: c,
+			log:               lp.log,
+			minCurrent:        lp.MinCurrent,
+			maxCurrent:        lp.MaxCurrent,
+		}
 	default:
 		// TODO leave empty
 		panic("charger does not implement api.(Power|Current)Controller")
@@ -808,8 +808,8 @@ func (lp *Loadpoint) setPowerLimit(powerLimit float64, force bool) error {
 	minPower := lp.GetMinPower()
 
 	// set power if controllable
-	if lp.chargeController != nil && powerLimit != lp.maxPower && powerLimit >= minPower {
-		actualPowerLimit, err := lp.chargeController.MaxPower(powerLimit)
+	if lp.powerLimiter != nil && powerLimit != lp.maxPower && powerLimit >= minPower {
+		actualPowerLimit, err := lp.powerLimiter.MaxPower(powerLimit)
 		if err != nil {
 			v := lp.GetVehicle()
 			if vv, ok := v.(api.Resurrector); ok && errors.Is(err, api.ErrAsleep) {
