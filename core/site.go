@@ -105,7 +105,6 @@ func NewSiteFromConfig(
 	log *util.Logger,
 	other map[string]interface{},
 	loadpoints []*Loadpoint,
-	vehicles []api.Vehicle,
 	tariffs tariff.Tariffs,
 ) (*Site, error) {
 	site := NewSite()
@@ -116,7 +115,10 @@ func NewSiteFromConfig(
 	Voltage = site.Voltage
 	site.loadpoints = loadpoints
 	site.tariffs = tariffs
-	site.coordinator = coordinator.New(log, vehicles)
+
+	site.coordinator = coordinator.New(log, config.Instances(config.Vehicles().Devices()))
+	config.Vehicles().Subscribe(site.updateVehicles)
+
 	site.prioritizer = prioritizer.New(log)
 	site.savings = NewSavings(tariffs)
 

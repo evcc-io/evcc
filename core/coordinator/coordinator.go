@@ -1,6 +1,8 @@
 package coordinator
 
 import (
+	"sync"
+
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/util"
@@ -8,6 +10,7 @@ import (
 
 // Coordinator coordinates vehicle access between loadpoints
 type Coordinator struct {
+	mu       sync.Mutex
 	log      *util.Logger
 	vehicles []api.Vehicle
 	tracked  map[api.Vehicle]loadpoint.API
@@ -24,10 +27,46 @@ func New(log *util.Logger, vehicles []api.Vehicle) *Coordinator {
 
 // GetVehicles returns the list of all vehicles
 func (c *Coordinator) GetVehicles() []api.Vehicle {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
 	return c.vehicles
 }
 
+func (c *Coordinator) Add(vehicle api.Vehicle) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	c.vehicles = append(c.vehicles, vehicle)
+}
+
+func (c *Coordinator) Delete(vehicle api.Vehicle) {
+	c.mu.Lock()
+
+	for i, v := range c.vehicles {
+		if v == vehicle {
+			c.vehicles = append(c.vehicles[:i], c.vehicles[i+1:]...)
+
+			if o, ok := c.tracked[vehicle]; ok {
+				// defer call to SetVehicle to avoid deadlock on c.mu
+				defer func(o loadpoint.API) {
+					o.SetVehicle(nil)
+				}(o)
+			}
+			delete(c.tracked, vehicle)
+
+			break
+		}
+	}
+
+	// unlock before deferred SetVehicle executes a this will round-trip back here
+	c.mu.Unlock()
+}
+
 func (c *Coordinator) acquire(owner loadpoint.API, vehicle api.Vehicle) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
 	if o, ok := c.tracked[vehicle]; ok && o != owner {
 		o.SetVehicle(nil)
 	}
@@ -35,6 +74,9 @@ func (c *Coordinator) acquire(owner loadpoint.API, vehicle api.Vehicle) {
 }
 
 func (c *Coordinator) release(vehicle api.Vehicle) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
 	delete(c.tracked, vehicle)
 }
 
@@ -42,6 +84,9 @@ func (c *Coordinator) release(vehicle api.Vehicle) {
 // associated to another loadpoint and have a status api that allows for detection
 func (c *Coordinator) availableDetectibleVehicles(owner loadpoint.API) []api.Vehicle {
 	var res []api.Vehicle
+
+	c.mu.Lock()
+	defer c.mu.Unlock()
 
 	for _, vv := range c.vehicles {
 		// status api available
@@ -59,6 +104,10 @@ func (c *Coordinator) availableDetectibleVehicles(owner loadpoint.API) []api.Veh
 // identifyVehicleByStatus finds active vehicle by charge state
 func (c *Coordinator) identifyVehicleByStatus(available []api.Vehicle) api.Vehicle {
 	var res api.Vehicle
+
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
 	for _, vehicle := range available {
 		if vs, ok := vehicle.(api.ChargeState); ok {
 			status, err := vs.Status()
