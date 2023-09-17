@@ -5,7 +5,7 @@ products:
       generic: Wallbox (via ModbusTCP)
 requirements:
   description:
-    de: Für die Nutzung mit evcc muss die Wallbox mit einer aktuellen Firmware mit Modbus-Unterstützung betrieben werden. Bitte mit dem Hersteller abklären. Weiterhin muss in den Wallbox Einstellungen "Nachladen" (Smart) bzw. "RSDA" (Touch) aktiviert sein
+    de: Die Wallbox muss über eine aktuelle Firmware mit Modbus-Unterstützung verfügen. In den Einstellungen muss "Nachladen" (Smart) bzw. "RSDA" (Touch) aktiviert sein
     en: For use with evcc, the wallbox must be operated with a recent firmware including Modbus support. Please contact vendor. Furthermore, “Nachladen (reloading)” (Smart) or “RSDA” (Touch) must be activated in the wallbox settings
 params:
   - name: host
