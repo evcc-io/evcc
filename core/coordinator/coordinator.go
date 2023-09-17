@@ -17,19 +17,12 @@ type Coordinator struct {
 }
 
 // New creates a coordinator for a set of vehicles
-func New(log *util.Logger) *Coordinator {
+func New(log *util.Logger, vehicles []api.Vehicle) *Coordinator {
 	return &Coordinator{
-		log:     log,
-		tracked: make(map[api.Vehicle]loadpoint.API),
+		log:      log,
+		vehicles: vehicles,
+		tracked:  make(map[api.Vehicle]loadpoint.API),
 	}
-}
-
-// SetVehicles sets the list of vehicles, mainly for testing
-func (c *Coordinator) SetVehicles(vehicles []api.Vehicle) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	c.vehicles = vehicles
 }
 
 // GetVehicles returns the list of all vehicles

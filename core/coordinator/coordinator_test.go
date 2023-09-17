@@ -45,8 +45,7 @@ func TestVehicleDetectByStatus(t *testing.T) {
 
 	var lp loadpoint.API
 
-	c := New(log)
-	c.SetVehicles(vehicles)
+	c := New(log, vehicles)
 
 	for _, tc := range tc {
 		t.Logf("%+v", tc)

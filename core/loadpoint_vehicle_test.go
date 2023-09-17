@@ -132,8 +132,7 @@ func TestVehicleDetectByID(t *testing.T) {
 			log: util.NewLogger("foo"),
 		}
 
-		c := coordinator.New(util.NewLogger("foo"))
-		c.SetVehicles([]api.Vehicle{v1, v2})
+		c := coordinator.New(util.NewLogger("foo"), []api.Vehicle{v1, v2})
 
 		lp.coordinator = coordinator.NewAdapter(lp, c)
 
@@ -286,8 +285,7 @@ func TestApplyVehicleDefaults(t *testing.T) {
 	}
 
 	lp.charger = charger
-	c := coordinator.New(util.NewLogger("foo"))
-	c.SetVehicles([]api.Vehicle{vehicle})
+	c := coordinator.New(util.NewLogger("foo"), []api.Vehicle{vehicle})
 
 	lp.coordinator = coordinator.NewAdapter(lp, c)
 
@@ -346,8 +344,7 @@ func TestReconnectVehicle(t *testing.T) {
 				Mode:          api.ModeNow,
 			}
 
-			c := coordinator.New(util.NewLogger("foo"))
-			c.SetVehicles([]api.Vehicle{vehicle})
+			c := coordinator.New(util.NewLogger("foo"), []api.Vehicle{vehicle})
 
 			lp.coordinator = coordinator.NewAdapter(lp, c)
 
