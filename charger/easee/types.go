@@ -10,6 +10,8 @@ const (
 	ChargeResume = "resume_charging"
 )
 
+const PollLifetimeEnergy = "poll_lifetimeenergy"
+
 // charge mode definition
 const (
 	ModeOffline                int = 0
