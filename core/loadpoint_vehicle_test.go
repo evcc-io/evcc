@@ -132,9 +132,7 @@ func TestVehicleDetectByID(t *testing.T) {
 			log: util.NewLogger("foo"),
 		}
 
-		c := coordinator.New(util.NewLogger("foo"), []api.Vehicle{v1, v2})
-
-		lp.coordinator = coordinator.NewAdapter(lp, c)
+		lp.coordinator = coordinator.NewAdapter(lp, coordinator.New(util.NewLogger("foo"), []api.Vehicle{vehicle}))
 
 		if tc.prepare != nil {
 			tc.prepare(tc)
@@ -285,9 +283,7 @@ func TestApplyVehicleDefaults(t *testing.T) {
 	}
 
 	lp.charger = charger
-	c := coordinator.New(util.NewLogger("foo"), []api.Vehicle{vehicle})
-
-	lp.coordinator = coordinator.NewAdapter(lp, c)
+	lp.coordinator = coordinator.NewAdapter(lp, coordinator.New(util.NewLogger("foo"), []api.Vehicle{vehicle}))
 
 	const id = "don't call me stacey"
 	charger.MockIdentifier.EXPECT().Identify().Return(id, nil)
@@ -344,9 +340,7 @@ func TestReconnectVehicle(t *testing.T) {
 				Mode:          api.ModeNow,
 			}
 
-			c := coordinator.New(util.NewLogger("foo"), []api.Vehicle{vehicle})
-
-			lp.coordinator = coordinator.NewAdapter(lp, c)
+			lp.coordinator = coordinator.NewAdapter(lp, coordinator.New(util.NewLogger("foo"), []api.Vehicle{vehicle}))
 
 			attachListeners(t, lp)
 

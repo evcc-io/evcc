@@ -44,7 +44,6 @@ func TestVehicleDetectByStatus(t *testing.T) {
 	v2.MockVehicle.EXPECT().Identifiers().Return([]string{"it's me"}).AnyTimes()
 
 	var lp loadpoint.API
-
 	c := New(log, vehicles)
 
 	for _, tc := range tc {
