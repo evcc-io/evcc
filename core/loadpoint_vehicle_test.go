@@ -132,7 +132,7 @@ func TestVehicleDetectByID(t *testing.T) {
 			log: util.NewLogger("foo"),
 		}
 
-		lp.coordinator = coordinator.NewAdapter(lp, coordinator.New(util.NewLogger("foo"), []api.Vehicle{vehicle}))
+		lp.coordinator = coordinator.NewAdapter(lp, coordinator.New(util.NewLogger("foo"), []api.Vehicle{v1, v2}))
 
 		if tc.prepare != nil {
 			tc.prepare(tc)
