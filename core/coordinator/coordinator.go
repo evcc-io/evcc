@@ -42,20 +42,25 @@ func (c *Coordinator) Add(vehicle api.Vehicle) {
 
 func (c *Coordinator) Delete(vehicle api.Vehicle) {
 	c.mu.Lock()
-	defer c.mu.Unlock()
 
 	for i, v := range c.vehicles {
 		if v == vehicle {
 			c.vehicles = append(c.vehicles[:i], c.vehicles[i+1:]...)
 
 			if o, ok := c.tracked[vehicle]; ok {
-				o.SetVehicle(nil)
+				// defer call to SetVehicle to avoid deadlock on c.mu
+				defer func(o loadpoint.API) {
+					o.SetVehicle(nil)
+				}(o)
 			}
 			delete(c.tracked, vehicle)
 
 			break
 		}
 	}
+
+	// unlock before deferred SetVehicle executes a this will round-trip back here
+	c.mu.Unlock()
 }
 
 func (c *Coordinator) acquire(owner loadpoint.API, vehicle api.Vehicle) {
