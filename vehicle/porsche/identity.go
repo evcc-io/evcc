@@ -142,15 +142,22 @@ func (v *Identity) login() (*oauth2.Token, error) {
 		return nil, err
 	}
 
+	cctx := context.WithValue(context.Background(), oauth2.HTTPClient, v.Client)
+	ctx, cancel := context.WithTimeout(cctx, request.Timeout)
+	defer cancel()
+
+	return OAuth2Config.Exchange(ctx, code, oauth2.VerifierOption(cv))
+}
+
+func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 	ctx := context.WithValue(context.Background(), oauth2.HTTPClient, v.Client)
 
-	token, err := oc.Exchange(ctx, code, oauth2.VerifierOption(cv))
+	ts := oauth2.ReuseTokenSource(token, OAuth2Config.TokenSource(ctx, token))
+
+	token, err := ts.Token()
 	if err != nil {
 		token, err = v.login()
 	}
 
-	ts := oauth2.ReuseTokenSourceWithExpiry(token, oc.TokenSource(ctx, token), 15*time.Minute)
-	go oauth.Refresh(v.log, token, ts, maxTokenLifetime)
-
-	return ts, err
+	return token, err
 }
