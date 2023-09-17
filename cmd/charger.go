@@ -26,8 +26,7 @@ func init() {
 	chargerCmd.Flags().BoolP(flagEnable, "e", false, strings.Title(flagEnable))
 	//lint:ignore SA1019 as Title is safe on ascii
 	chargerCmd.Flags().BoolP(flagDisable, "d", false, strings.Title(flagDisable))
-	//lint:ignore SA1019 as Title is safe on ascii
-	chargerCmd.Flags().Bool(flagDiagnose, false, strings.Title(flagDiagnose))
+	chargerCmd.Flags().Bool(flagDiagnose, false, flagDiagnoseDescription)
 	chargerCmd.Flags().BoolP(flagWakeup, "w", false, flagWakeupDescription)
 	chargerCmd.Flags().IntP(flagPhases, "p", 0, flagPhasesDescription)
 }
