@@ -151,7 +151,6 @@ func (v *Identity) login() (*oauth2.Token, error) {
 
 func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 	ctx := context.WithValue(context.Background(), oauth2.HTTPClient, v.Client)
-
 	ts := oauth2.ReuseTokenSource(token, OAuth2Config.TokenSource(ctx, token))
 
 	token, err := ts.Token()
