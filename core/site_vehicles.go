@@ -14,7 +14,7 @@ func vehicleTitles(vehicles []api.Vehicle) []string {
 }
 
 // updateVehicles adds or removes a vehicle asynchronously
-func (site *Site) updateVehicles(op string, dev config.Device[api.Vehicle]) {
+func (site *Site) updateVehicles(op config.Operation, dev config.Device[api.Vehicle]) {
 	vehicle := dev.Instance()
 
 	switch op {

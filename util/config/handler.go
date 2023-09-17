@@ -12,18 +12,14 @@ type handler[T any] struct {
 	devices []Device[T]
 }
 
+type Operation string
+
 const (
-	OpAdd    = "add"
-	OpDelete = "del"
+	OpAdd    Operation = "add"
+	OpDelete Operation = "del"
 )
 
-func (cp *handler[T]) Subscribe(fn func(string, Device[T])) {
-	// if err := bus.Subscribe(cp.topic+":add", fn); err != nil {
-	// 	return err
-	// }
-	// if err := bus.Subscribe(cp.topic+":delete", fn); err != nil {
-	// 	return err
-	// }
+func (cp *handler[T]) Subscribe(fn func(Operation, Device[T])) {
 	if err := bus.Subscribe(cp.topic, fn); err != nil {
 		panic(err)
 	}

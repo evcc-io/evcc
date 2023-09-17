@@ -18,7 +18,7 @@ var instance = struct {
 }
 
 type Handler[T any] interface {
-	Subscribe(fn func(string, Device[T]))
+	Subscribe(fn func(Operation, Device[T]))
 	Devices() []Device[T]
 	Add(dev Device[T]) error
 	Delete(name string) error
