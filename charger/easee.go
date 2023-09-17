@@ -43,21 +43,21 @@ import (
 // Easee charger implementation
 type Easee struct {
 	*request.Helper
-	charger               string
-	site, circuit         int
-	updated               time.Time
-	log                   *util.Logger
-	mux                   sync.Mutex
-	done                  chan struct{}
-	dynamicChargerCurrent float64
-	current               float64
-	chargerEnabled        bool
-	smartCharging         bool
-	authorize             bool
-	enabled               bool
-	opMode                int
-	reasonForNoCurrent    int
-	phaseMode             int
+	charger                      string
+	site, circuit                int
+	updated                      time.Time
+	lastEnergyPollTriggered      time.Time
+	log                          *util.Logger
+	mux                          sync.Mutex
+	done                         chan struct{}
+	dynamicChargerCurrent        float64
+	current                      float64
+	chargerEnabled               bool
+	smartCharging                bool
+	authorize                    bool
+	opMode                       int
+	reasonForNoCurrent           int
+	phaseMode                    int
 	currentPower, sessionEnergy, totalEnergy,
 	currentL1, currentL2, currentL3 float64
 	rfid    string
@@ -280,6 +280,50 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 		// received observation is outdated, ignoring
 		return
 	}
+
+	switch res.ID {
+		case easee.CHARGER_OP_MODE:
+			//for every op mode change, if last energy updated was triggered more than 3 minutes ago, request new update
+	  		if c.lastEnergyPollTriggered.Before(time.Now().Add(-3 * time.Minute)) {
+				uri := fmt.Sprintf("%s/chargers/%s/commands/%s", easee.API, c.charger, easee.PollLifetimeEnergy)
+				c.Post(uri, request.JSONContent, request.MarshalJSON(nil))  //do not wait for success, fire&forget
+				c.lastEnergyPollTriggered = time.Now();
+				//TODO: wait for async update of LIFETIME_ENERGY?
+	  		}
+	    
+			//OpMode changed from "no car" to some other state 
+			//Assume car connected if easee is not offline (mode 0) or still disconnected (mode 1)
+			//Looks like a new charging session is about to start, so reset internal value of SESSION_ENERGY to 0,
+			//and observation timestamp to "now". This should be done in a proper way by the api, but it's not.
+			if 1 == c.opMode && value.(int) >= 2 {
+				c.log.TRACE.Printf("XXXX ProductUpdate: Car connected. Reset internal value of SESSION_ENERGY to 0");
+				c.sessionEnergy = 0;
+				loc, _ := time.LoadLocation("UTC")
+				c.obsTime[easee.SESSION_ENERGY] = time.Now().In(loc);
+			}
+
+		case easee.SESSION_ENERGY:
+			/* should not be necessary any longer as
+			/   - internal value and timestamp were resetted to 0 and "now" after connecting a car
+			/   - Further updates with values originating from the last charging session with old(er) timestamp are
+   			/	  filtered above this switch
+			/ expiresAt := time.Now().In(loc).Add(-5 * time.Minute)
+			/ if res.Timestamp.Before(expiresAt) && 0 == c.sessionEnergy {
+			/  // received SESSION_ENERGY value too old after 1st start_charging of a session
+			/  c.log.TRACE.Printf("XXXX ProductUpdate too old after charger start");
+			/  return
+			/}
+			*/
+   
+	    	//but this is still needed. SESSION_ENERGY must not be set to 0 by Productupdates, they occur erratic
+		    //Reset to 0 is therefore done some lines above
+	    	if prevTime, ok := c.obsTime[res.ID]; ok && prevTime.Equal(res.Timestamp) && 0 == value.(float64) {
+	      		// received SESSION_ENERGY value 0 after valid value in the same second, e.g. after stop_charging
+	      		c.log.TRACE.Printf("XXXX  ProductUpdate SESSION_ENERGY of duplicate timestamp to 0 invalid, ignore");
+	      		return
+	    	}
+	}
+	
 	c.obsTime[res.ID] = res.Timestamp
 
 	switch res.ID {
