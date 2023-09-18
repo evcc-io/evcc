@@ -55,6 +55,7 @@ type Easee struct {
 	chargerEnabled               bool
 	smartCharging                bool
 	authorize                    bool
+	enabled						 bool
 	opMode                       int
 	reasonForNoCurrent           int
 	phaseMode                    int
