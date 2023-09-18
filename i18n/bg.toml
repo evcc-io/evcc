@@ -1,6 +1,6 @@
 [batterySettings]
 batteryLevel = "Батерия %"
-capacity = "{energy} от{total}"
+capacity = "{energy} от {total}"
 legendBottomName = "приоритизиране на дом"
 legendBottomSubline = "не се използва за зареждане"
 legendMiddleName = "приоритизиране на кола"
@@ -21,15 +21,16 @@ never = "само при наличие на излишък"
 [footer]
 
 [footer.community]
-greenEnergySub1 = "заредено с помощтта на evcc"
+greenEnergySub1 = "заредено с помощта на evcc"
 greenEnergySub2 = "от октомври 2022"
 greenShare = "дял на соларна енергия"
-greenShareSub1 = "мощност доставена от"
+greenShareSub1 = "мощност предоставена от"
 greenShareSub2 = "енергия от слънцето и батерията"
 power = "Мощност на зареждане"
 powerSub1 = "{activeClients} от {totalClients} участници"
 powerSub2 = "зарежда..."
 tabTitle = "Общност"
+greenEnergy = "Слънчева енергия"
 
 [footer.savings]
 footerLong = "{percent}% енергия от слънцето"
@@ -42,3 +43,70 @@ priceFeedIn = "{feedInPrice} feed-in"
 priceGrid = "{gridPrice} мрежа"
 priceTitle = "Цена"
 savingsComparedToGrid = "сравнено с мрежата"
+tabTitle = "Моите данни"
+savingsTitle = "Спестявате"
+since = "от {since}"
+savingsTotalEnergy = "{total} kWh заредени"
+
+
+[config.validation]
+validate = "провери"
+label = "Състояние"
+unknown = "неизвестен"
+running = "проверка..."
+success = "успешна проверка"
+failed = "неуспешен"
+
+[footer.telemetry]
+optInSponsorship = "Изисква спонсорство."
+optIn = "Искам да споделям моите данни."
+optInMoreDetailsLink = "тук"
+optInMoreDetails = "Повече информация {0}."
+
+[footer.version]
+modalTitle = "Налична е нова версия"
+modalNoReleaseNotes = "Няма бележки за версията. Повече информация за новата версия:"
+modalUpdateStatusStart = "Инсталацията започна:"
+modalDownload = "Свали"
+modalUpdate = "Инсталирай"
+modalUpdateStarted = "Стартирай новата версия на evcc..."
+availableLong = "налична е нова версия"
+modalInstalledVersion = "Инсталирана версия"
+modalUpdateNow = "Инсталирай сега"
+modalCancel = "Откажи"
+
+[config.vehicle]
+cancel = "Отмени"
+titleEdit = "Редактирай Автомобил"
+delete = "Изтрий автомобил"
+titleAdd = "Добави Автомобил"
+online = "Автомобил с онлайн свързаност"
+save = "Запази"
+template = "Производител"
+offline = "Автомобил без свързаност"
+validateSave = "Провери и Запази"
+scooter = "Скутер"
+generic = "Други интеграции"
+
+[footer.sponsor]
+titleNoSponsor = "Подкрепете ни"
+thanks = "Благодарим Ви, {sponsor}! С ваша помощ продължаваме да развиваме evcc."
+confetti = "Готови ли сте за конфети?"
+sticker = "... или evcc стикери?"
+confettiPromise = "Получавате стикери и дигитални конфети"
+titleSponsor = "Вие сте спонсор"
+supportUs = "Нашата мисия е да направим слънчевата енергия масова. Подкрепете evcc със сума по ваша преценка."
+becomeSponsor = "Станете Спонсор"
+
+[gridSettings]
+activeHours = "{charging} от {total}"
+
+[config.main]
+vehicles = "Моите Автомобили"
+edit = "редактирай"
+title = "Конфигурация"
+addVehicle = "Добави автомобил"
+
+[config.form]
+optional = "незадължителен"
+example = "Пример"
