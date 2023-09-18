@@ -186,7 +186,7 @@ func NewSiteFromConfig(
 	}
 
 	if len(site.batteryMeters) > 0 && site.ResidualPower <= 0 {
-		site.log.WARN.Println("battery configured but residualPower is missing (add residualPower: 100 to site)")
+		site.log.WARN.Println("battery configured but residualPower is missing or <= 0 (add residualPower: 100 to site), see https://https://docs.evcc.io/docs/reference/configuration/site#residualpower")
 	}
 
 	// auxiliary meters
