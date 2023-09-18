@@ -48,7 +48,7 @@ scooter = "Scooter"
 template = "Fabricant"
 titleEdit = "Modifier le véhicule"
 validateSave = "Valider & enregistrer"
-delete = "Supprimer le véhicule"
+delete = "Supprimer un véhicule"
 titleAdd = "Ajouter un véhicule"
 
 [footer]
@@ -347,7 +347,7 @@ vehicle = "Véhicule"
 
 [sessions.csv]
 chargedenergy = "Énergie (kWh)"
-created = "Début"
+created = "Créé"
 finished = "Fin"
 identifier = "Identifiant"
 loadpoint = "Point de chargement"
