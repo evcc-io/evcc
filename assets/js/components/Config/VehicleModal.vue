@@ -122,10 +122,26 @@
 								</div>
 							</div>
 
-							<div v-if="templateName" class="my-4">
+							<div v-if="templateName" class="my-4 d-flex justify-content-between">
+								<button
+									v-if="isDeletable"
+									type="button"
+									class="btn btn-link text-danger"
+									@click.prevent="remove"
+								>
+									{{ $t("config.vehicle.delete") }}
+								</button>
+								<button
+									v-else
+									type="button"
+									class="btn btn-link text-muted"
+									data-bs-dismiss="modal"
+								>
+									{{ $t("config.vehicle.cancel") }}
+								</button>
 								<button
 									type="submit"
-									class="btn btn-primary me-3"
+									class="btn btn-primary"
 									:disabled="testRunning"
 									@click.prevent="isNew ? create() : update()"
 								>
@@ -134,23 +150,6 @@
 											? $t("config.vehicle.validateSave")
 											: $t("config.vehicle.save")
 									}}
-								</button>
-								<button
-									type="button"
-									class="btn btn-link text-muted"
-									data-bs-dismiss="modal"
-								>
-									{{ $t("config.vehicle.cancel") }}
-								</button>
-							</div>
-
-							<div v-if="isDeletable" class="text-center mt-4">
-								<button
-									type="button"
-									class="btn btn-link text-danger"
-									@click.prevent="remove"
-								>
-									{{ $t("config.vehicle.delete") }}
 								</button>
 							</div>
 						</form>

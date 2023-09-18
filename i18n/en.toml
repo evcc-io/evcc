@@ -27,6 +27,7 @@ optional = "optional"
 [config.main]
 addVehicle = "Add vehicle"
 edit = "edit"
+unconfigured = "not configured"
 title = "Configuration"
 vehicles = "My Vehicles"
 

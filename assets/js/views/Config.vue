@@ -7,13 +7,65 @@
 			what your doing. Otherwise you might have to reset or manually repair you database.
 		</div>
 
+		<h2 class="my-4">Home: <span>Zuhause</span></h2>
+		<ul class="p-0 config-list mb-5">
+			<DeviceCard
+				name="Grid meter"
+				unconfigured
+				data-testid="grid"
+				:tags="['1.220W']"
+				@edit="editGridMeter"
+			>
+				<template #icon>
+					<shopicon-regular-powersupply></shopicon-regular-powersupply>
+				</template>
+			</DeviceCard>
+			<DeviceCard name="PV system" unconfigured data-testid="grid" @edit="editGridMeter">
+				<template #icon>
+					<shopicon-regular-sun></shopicon-regular-sun>
+				</template>
+			</DeviceCard>
+			<DeviceCard
+				name="Battery system"
+				unconfigured
+				data-testid="grid"
+				:tags="['220W', '55%']"
+				@edit="editGridMeter"
+			>
+				<template #icon>
+					<shopicon-regular-batterythreequarters></shopicon-regular-batterythreequarters>
+				</template>
+			</DeviceCard>
+			<AddDeviceButton @add="todo" />
+		</ul>
+
+		<h2 class="my-4">Tariff</h2>
+
+		<ul class="p-0 config-list mb-5">
+			<DeviceCard name="Grid" editable data-testid="grid" @edit="editGridMeter">
+				<template #icon>
+					<shopicon-regular-powersupply></shopicon-regular-powersupply>
+				</template>
+			</DeviceCard>
+			<DeviceCard name="Feed-in" editable data-testid="grid" @edit="editGridMeter">
+				<template #icon>
+					<shopicon-regular-sun></shopicon-regular-sun>
+				</template>
+			</DeviceCard>
+			<DeviceCard name="CO₂ estimate" editable data-testid="grid" @edit="editGridMeter">
+				<template #icon>
+					<shopicon-regular-eco1></shopicon-regular-eco1>
+				</template>
+			</DeviceCard>
+			<AddDeviceButton @add="todo" />
+		</ul>
+
 		<h2 class="my-4">Vehicles</h2>
 		<div>
-			<ul class="p-0 config-list">
+			<ul class="p-0 config-list mb-5">
 				<DeviceCard
 					v-for="vehicle in vehicles"
 					:key="vehicle.id"
-					:vehicle="vehicle"
 					:name="vehicle.config?.title || vehicle.name"
 					:editable="vehicle.id >= 0"
 					data-testid="vehicle"
@@ -23,10 +75,12 @@
 						<VehicleIcon :name="vehicle.config?.icon" />
 					</template>
 				</DeviceCard>
+				<AddDeviceButton
+					data-testid="add-vehicle"
+					:title="$t('config.main.addVehicle')"
+					@click="addVehicle"
+				/>
 			</ul>
-			<button class="btn btn-outline-secondary" @click="addVehicle">
-				{{ $t("config.main.addVehicle") }}
-			</button>
 			<VehicleModal :id="vehicleId" @vehicle-changed="vehicleChanged" />
 		</div>
 		<hr class="my-5" />
@@ -35,16 +89,18 @@
 
 <script>
 import TopHeader from "../components/TopHeader.vue";
-import "@h2d2/shopicons/es/bold/arrowback";
+import "@h2d2/shopicons/es/regular/sun";
+import "@h2d2/shopicons/es/regular/batterythreequarters";
 import Modal from "bootstrap/js/dist/modal";
 import api from "../api";
 import VehicleIcon from "../components/VehicleIcon";
 import VehicleModal from "../components/Config/VehicleModal.vue";
 import DeviceCard from "../components/Config/DeviceCard.vue";
+import AddDeviceButton from "../components/Config/AddDeviceButton.vue";
 
 export default {
 	name: "Config",
-	components: { TopHeader, VehicleIcon, VehicleModal, DeviceCard },
+	components: { TopHeader, VehicleIcon, VehicleModal, DeviceCard, AddDeviceButton },
 	data() {
 		return {
 			vehicles: [],

@@ -1,6 +1,6 @@
 <!-- eslint-disable vue/no-v-html -->
 <template>
-	<div class="mb-3">
+	<div class="mb-4">
 		<label :for="id">
 			<div class="form-label">
 				{{ label }}

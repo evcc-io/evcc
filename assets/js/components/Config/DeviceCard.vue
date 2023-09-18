@@ -5,7 +5,18 @@
 				<slot name="icon" />
 			</div>
 			<span class="flex-grow-1 text-nowrap text-truncate">{{ name }}</span>
-			<button v-if="editable" class="btn btn-sm btn-link text-gray" @click="$emit('edit')">
+			<button
+				v-if="unconfigured"
+				class="btn btn-sm btn-link text-gray"
+				@click="$emit('configure')"
+			>
+				{{ $t("config.main.unconfigured") }}
+			</button>
+			<button
+				v-else-if="editable"
+				class="btn btn-sm btn-link text-gray"
+				@click="$emit('edit')"
+			>
 				{{ $t("config.main.edit") }}
 			</button>
 			<span v-else class="text-gray opacity-50 px-2 py-1" disabled>yaml</span>
@@ -28,9 +39,10 @@ export default {
 	props: {
 		name: String,
 		editable: Boolean,
+		unconfigured: Boolean,
 		tags: Array,
 	},
-	emits: ["edit"],
+	emits: ["edit", "configure"],
 };
 </script>
 

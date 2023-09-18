@@ -23,16 +23,17 @@
 				:id="`icon_${key}`"
 				v-model="value"
 				type="radio"
-				class="btn-check"
+				:class="selectMode ? 'btn-check' : 'd-none'"
 				:name="property"
-				autocomplete="off"
-				:required="required"
 				:value="key"
 				@click="toggleSelectMode"
 			/>
 			<label class="btn btn-outline-secondary" :for="`icon_${key}`" :aria-label="key">
 				<VehicleIcon :name="key" />
 			</label>
+		</div>
+		<div v-if="!selectMode" class="me-2 mb-2 d-flex align-items-end">
+			<a class="text-muted" href="#" @click.prevent="toggleSelectMode">change</a>
 		</div>
 	</div>
 	<select v-else-if="select" :id="id" v-model="value" class="form-select">
