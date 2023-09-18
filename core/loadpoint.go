@@ -639,7 +639,7 @@ func (lp *Loadpoint) syncCharger() error {
 		return err
 	}
 
-	if (lp.guardGracePeriodElapsed()) {
+	if lp.guardGracePeriodElapsed() {
 		defer func() {
 			lp.enabled = enabled
 			lp.publish("enabled", lp.enabled)
