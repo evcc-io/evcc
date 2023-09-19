@@ -1,14 +1,15 @@
 template: fox-ess-h1
-covers: ["fox-ess-ethernet"]
+covers: ["fox-ess-rs485", "fox-ess-ethernet"]
 products:
   - brand: FoxESS
     description:
-      generic: H1 via Ethernet
+      generic: H1 Series Hybrid Inverter
 params:
   - name: usage
     choice: ["pv", "battery"]
   - name: modbus
-    choice: ["tcpip"]
+    choice: ["rs485", "tcpip"]
+    id: 247
 render: |
   type: custom
   {{- if eq .usage "pv" }}
@@ -17,34 +18,50 @@ render: |
     add:
     - source: modbus
       {{- include "modbus" . | indent 4 }}
-      # register details
       register:
+        {{- if or (eq .modbus "tcpip") .tcpip }}
         address: 31002 # PV1
         type: holding
+        {{- else }}
+        address: 11002 # PV1
+        type: input
+        {{- end }}
         decode: int16
     - source: modbus
       {{- include "modbus" . | indent 4 }}
-      # register details
       register:
+        {{- if or (eq .modbus "tcpip") .tcpip }}
         address: 31005 # PV2
         type: holding
+        {{- else }}
+        address: 11005 # PV2
+        type: input
+        {{- end }}
         decode: int16
   {{- end }}
   {{- if eq .usage "battery" }}
   power:
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    # register details
     register:
-      address: 31022 # Battery Charge/Discharge
+      {{- if or (eq .modbus "tcpip") .tcpip }}
+      address: 31022 # Battery charge/discharge
       type: holding
+      {{- else }}
+      address: 11008 # Battery charge/discharge
+      type: input
+      {{- end }}
       decode: int16
   soc:
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    # register details
     register:
+      {{- if or (eq .modbus "tcpip") .tcpip }}
       address: 31024 # Soc
       type: holding
+      {{- else }}
+      address: 11036 # Soc
+      type: input
+      {{- end }}
       decode: int16
   {{- end }}

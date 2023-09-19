@@ -31,6 +31,10 @@ func TestSyncCharger(t *testing.T) {
 		charger := mock.NewMockCharger(ctrl)
 		charger.EXPECT().Enabled().Return(tc.actual, nil).AnyTimes()
 
+		if tc.status == api.StatusC {
+			charger.EXPECT().Enable(tc.corrected).Times(1)
+		}
+
 		lp := &Loadpoint{
 			log:     util.NewLogger("foo"),
 			clock:   clock.New(),

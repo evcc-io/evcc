@@ -104,7 +104,6 @@ func NewSiteFromConfig(
 	log *util.Logger,
 	other map[string]interface{},
 	loadpoints []*Loadpoint,
-	vehicles []api.Vehicle,
 	tariffs tariff.Tariffs,
 ) (*Site, error) {
 	site := NewSite()
@@ -115,7 +114,10 @@ func NewSiteFromConfig(
 	Voltage = site.Voltage
 	site.loadpoints = loadpoints
 	site.tariffs = tariffs
-	site.coordinator = coordinator.New(log, vehicles)
+
+	site.coordinator = coordinator.New(log, config.Instances(config.Vehicles().Devices()))
+	config.Vehicles().Subscribe(site.updateVehicles)
+
 	site.prioritizer = prioritizer.New(log)
 	site.savings = NewSavings(tariffs)
 
@@ -184,7 +186,7 @@ func NewSiteFromConfig(
 	}
 
 	if len(site.batteryMeters) > 0 && site.ResidualPower <= 0 {
-		site.log.WARN.Println("battery configured but residualPower is missing (add residualPower: 100 to site)")
+		site.log.WARN.Println("battery configured but residualPower is missing or <= 0 (add residualPower: 100 to site), see https://https://docs.evcc.io/docs/reference/configuration/site#residualpower")
 	}
 
 	// auxiliary meters

@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"strings"
-
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/spf13/cobra"
@@ -21,8 +19,8 @@ func init() {
 	vehicleCmd.Flags().BoolP(flagStart, "a", false, flagStartDescription)
 	vehicleCmd.Flags().BoolP(flagStop, "o", false, flagStopDescription)
 	vehicleCmd.Flags().BoolP(flagWakeup, "w", false, flagWakeupDescription)
-	//lint:ignore SA1019 as Title is safe on ascii
-	vehicleCmd.Flags().Bool(flagDiagnose, false, strings.Title(flagDiagnose))
+	vehicleCmd.Flags().Bool(flagDiagnose, false, flagDiagnoseDescription)
+	vehicleCmd.Flags().Bool(flagCloud, false, flagCloudDescription)
 }
 
 func runVehicle(cmd *cobra.Command, args []string) {
@@ -39,6 +37,13 @@ func runVehicle(cmd *cobra.Command, args []string) {
 	// select single vehicle
 	if err := selectByName(args, &conf.Vehicles); err != nil {
 		fatal(err)
+	}
+
+	// use cloud
+	if cmd.Flags().Lookup(flagCloud).Changed {
+		for _, conf := range conf.Vehicles {
+			conf.Other["cloud"] = "true"
+		}
 	}
 
 	if err := configureVehicles(conf.Vehicles); err != nil {
