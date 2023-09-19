@@ -1,7 +1,8 @@
 <template>
 	<li class="root">
 		<button class="d-flex align-items-center justify-content-center p-3" @click="$emit('add')">
-			<shopicon-regular-plus size="m"></shopicon-regular-plus>
+			<shopicon-regular-plus class="me-1"></shopicon-regular-plus>
+			{{ title }}
 		</button>
 	</li>
 </template>
@@ -11,6 +12,9 @@ import "@h2d2/shopicons/es/regular/plus";
 
 export default {
 	name: "AddDeviceButton",
+	props: {
+		title: String,
+	},
 	emits: ["add"],
 };
 </script>

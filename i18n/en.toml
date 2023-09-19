@@ -26,6 +26,7 @@ optional = "optional"
 
 [config.main]
 addVehicle = "Add vehicle"
+addPvBattery = "Add solar or battery"
 edit = "edit"
 unconfigured = "not configured"
 title = "Configuration"

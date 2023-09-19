@@ -1,7 +1,7 @@
 <template>
 	<Teleport to="body">
 		<div
-			id="vehicleModal"
+			id="meterModal"
 			ref="modal"
 			class="modal fade text-dark"
 			data-bs-backdrop="true"
@@ -13,7 +13,7 @@
 				<div class="modal-content">
 					<div class="modal-header">
 						<h5 class="modal-title">
-							{{ $t(`config.vehicle.${isNew ? "titleAdd" : "titleEdit"}`) }}
+							{{ modalTitle }}
 						</h5>
 						<button
 							type="button"
@@ -24,50 +24,26 @@
 					</div>
 					<div class="modal-body">
 						<form ref="form" class="container mx-0 px-0">
-							<FormRow id="vehicleTemplate" :label="$t('config.vehicle.template')">
+							<FormRow id="meterTemplate" :label="$t('config.meter.template')">
 								<select
-									id="vehicleTemplate"
+									id="meterTemplate"
 									v-model="templateName"
 									:disabled="!isNew"
 									class="form-select w-100"
 									@change="templateChanged"
 								>
-									<option value="offline">
-										{{ $t("config.vehicle.offline") }}
+									<option
+										v-for="option in templateOptions"
+										:key="option.name"
+										:value="option.template"
+									>
+										{{ option.name }}
 									</option>
-									<option disabled>----------</option>
-									<optgroup :label="$t('config.vehicle.online')">
-										<option
-											v-for="option in templateOptions.online"
-											:key="option.name"
-											:value="option.template"
-										>
-											{{ option.name }}
-										</option>
-									</optgroup>
-									<optgroup :label="$t('config.vehicle.scooter')">
-										<option
-											v-for="option in templateOptions.scooter"
-											:key="option.name"
-											:value="option.template"
-										>
-											{{ option.name }}
-										</option>
-									</optgroup>
-									<optgroup :label="$t('config.vehicle.generic')">
-										<option
-											v-for="option in templateOptions.generic"
-											:key="option.name"
-											:value="option.template"
-										>
-											{{ option.name }}
-										</option>
-									</optgroup>
 								</select>
 							</FormRow>
 							<FormRow
 								v-for="param in templateParams"
-								:id="`vehicleParam${param.Name}`"
+								:id="`meterParam${param.Name}`"
 								:key="param.Name"
 								:optional="!param.Required"
 								:label="param.Description || `[${param.Name}]`"
@@ -76,7 +52,7 @@
 								:example="param.Example"
 							>
 								<PropertyField
-									:id="`vehicleParam${param.Name}`"
+									:id="`meterParam${param.Name}`"
 									v-model="values[param.Name]"
 									:masked="param.Mask"
 									:property="param.Name"
@@ -87,11 +63,10 @@
 							</FormRow>
 
 							<TestResult
-								v-if="templateName"
+								v-if="testResult"
 								:success="testSuccess"
 								:failed="testFailed"
 								:unknown="testUnknown"
-								:running="testRunning"
 								:result="testResult"
 								@test="testManually"
 							/>
@@ -103,7 +78,7 @@
 									class="btn btn-link text-danger"
 									@click.prevent="remove"
 								>
-									{{ $t("config.vehicle.delete") }}
+									{{ $t("config.meter.delete") }}
 								</button>
 								<button
 									v-else
@@ -111,7 +86,7 @@
 									class="btn btn-link text-muted"
 									data-bs-dismiss="modal"
 								>
-									{{ $t("config.vehicle.cancel") }}
+									{{ $t("config.meter.cancel") }}
 								</button>
 								<button
 									type="submit"
@@ -121,8 +96,8 @@
 								>
 									{{
 										testUnknown
-											? $t("config.vehicle.validateSave")
-											: $t("config.vehicle.save")
+											? $t("config.meter.validateSave")
+											: $t("config.meter.save")
 									}}
 								</button>
 							</div>
@@ -148,13 +123,14 @@ function sleep(ms) {
 }
 
 export default {
-	name: "VehicleModal",
+	name: "MeterModal",
 	components: { FormRow, PropertyField, TestResult },
 	mixins: [test],
 	props: {
 		id: Number,
+		type: String,
 	},
-	emits: ["vehicle-changed"],
+	emits: ["meter-changed"],
 	data() {
 		return {
 			isModalVisible: false,
@@ -166,12 +142,18 @@ export default {
 		};
 	},
 	computed: {
+		modalTitle() {
+			if (this.isNew) {
+				if (this.type) {
+					return this.$t(`config.${this.type}.titleAdd`);
+				} else {
+					return this.$t("config.pvOrBattery.titleAdd");
+				}
+			}
+			return this.$t(`config.${this.type}.titleEdit`);
+		},
 		templateOptions() {
-			return {
-				online: this.products.filter((p) => !p.group && p.template !== "offline"),
-				generic: this.products.filter((p) => p.group === "generic"),
-				scooter: this.products.filter((p) => p.group === "scooter"),
-			};
+			return this.products;
 		},
 		templateParams() {
 			const params = this.template?.Params || [];
@@ -234,8 +216,8 @@ export default {
 		},
 		async loadConfiguration() {
 			try {
-				const vehicle = (await api.get(`config/devices/vehicle/${this.id}`)).data.result;
-				this.values = vehicle.config;
+				const meter = (await api.get(`config/devices/meter/${this.id}`)).data.result;
+				this.values = meter.config;
 				this.applyDefaultsFromTemplate();
 				this.templateName = this.values.template;
 			} catch (e) {
@@ -244,7 +226,7 @@ export default {
 		},
 		async loadProducts() {
 			try {
-				this.products = (await api.get("config/products/vehicle")).data.result;
+				this.products = (await api.get("config/products/meter")).data.result;
 			} catch (e) {
 				console.error(e);
 			}
@@ -257,7 +239,7 @@ export default {
 						name: this.templateName,
 					},
 				};
-				this.template = (await api.get("config/templates/vehicle", opts)).data.result;
+				this.template = (await api.get("config/templates/meter", opts)).data.result;
 				this.applyDefaultsFromTemplate();
 			} catch (e) {
 				console.error(e);
@@ -276,13 +258,13 @@ export default {
 		},
 		async create() {
 			if (this.testUnknown) {
-				const success = await this.test(this.testVehicle);
+				const success = await this.test(this.testMeter);
 				if (!success) return;
 				await sleep(250);
 			}
 			try {
-				await api.post("config/devices/vehicle", this.apiData);
-				this.$emit("vehicle-changed");
+				await api.post("config/devices/meter", this.apiData);
+				this.$emit("meter-changed");
 				this.modalInvisible();
 			} catch (e) {
 				console.error(e);
@@ -290,10 +272,10 @@ export default {
 			}
 		},
 		async testManually() {
-			await this.test(this.testVehicle);
+			await this.test(this.testMeter);
 		},
-		async testVehicle() {
-			let url = "config/test/vehicle";
+		async testMeter() {
+			let url = "config/test/meter";
 			if (!this.isNew) {
 				url += `/${this.id}`;
 			}
@@ -301,13 +283,13 @@ export default {
 		},
 		async update() {
 			if (this.testUnknown) {
-				const success = await this.test(this.testVehicle);
+				const success = await this.test(this.testMeter);
 				if (!success) return;
 				await sleep(250);
 			}
 			try {
-				await api.put(`config/devices/vehicle/${this.id}`, this.apiData);
-				this.$emit("vehicle-changed");
+				await api.put(`config/devices/meter/${this.id}`, this.apiData);
+				this.$emit("meter-changed");
 				this.modalInvisible();
 			} catch (e) {
 				console.error(e);
@@ -316,8 +298,8 @@ export default {
 		},
 		async remove() {
 			try {
-				await api.delete(`config/devices/vehicle/${this.id}`);
-				this.$emit("vehicle-changed");
+				await api.delete(`config/devices/meter/${this.id}`);
+				this.$emit("meter-changed");
 				this.modalInvisible();
 			} catch (e) {
 				console.error(e);

@@ -11,53 +11,64 @@
 		<ul class="p-0 config-list mb-5">
 			<DeviceCard
 				name="Grid meter"
-				unconfigured
+				:unconfigured="!gridMeter"
+				:editable="gridMeter?.id"
 				data-testid="grid"
-				:tags="['1.220W']"
-				@edit="editGridMeter"
+				:tags="['-1.220 W', '3A 17A 11A', '72.128 kWh']"
+				@configure="addMeter('grid')"
+				@edit="editMeter(gridMeter.id, 'grid')"
 			>
 				<template #icon>
 					<shopicon-regular-powersupply></shopicon-regular-powersupply>
 				</template>
 			</DeviceCard>
-			<DeviceCard name="PV system" unconfigured data-testid="grid" @edit="editGridMeter">
+			<DeviceCard
+				v-for="meter in pvMeters"
+				:key="meter.id"
+				name="Solar"
+				:editable="meter.id"
+				data-testid="grid"
+				:tags="['7.222 W']"
+				@edit="editMeter(meter.id, 'pv')"
+			>
 				<template #icon>
 					<shopicon-regular-sun></shopicon-regular-sun>
 				</template>
 			</DeviceCard>
 			<DeviceCard
-				name="Battery system"
-				unconfigured
+				v-for="meter in batteryMeters"
+				:key="meter.id"
+				name="Battery storage"
+				:editable="meter.id"
 				data-testid="grid"
-				:tags="['220W', '55%']"
-				@edit="editGridMeter"
+				:tags="['220 W', '55%']"
+				@edit="editMeter(meter.id, 'battery')"
 			>
 				<template #icon>
 					<shopicon-regular-batterythreequarters></shopicon-regular-batterythreequarters>
 				</template>
 			</DeviceCard>
-			<AddDeviceButton @add="todo" />
+			<AddDeviceButton :title="$t('config.main.addPvBattery')" @add="addMeter" />
 		</ul>
 
 		<h2 class="my-4">Tariff</h2>
 
 		<ul class="p-0 config-list mb-5">
-			<DeviceCard name="Grid" editable data-testid="grid" @edit="editGridMeter">
+			<DeviceCard name="Grid" editable data-testid="grid" @edit="todo">
 				<template #icon>
 					<shopicon-regular-powersupply></shopicon-regular-powersupply>
 				</template>
 			</DeviceCard>
-			<DeviceCard name="Feed-in" editable data-testid="grid" @edit="editGridMeter">
+			<DeviceCard name="Feed-in" unconfigured data-testid="grid" @edit="todo">
 				<template #icon>
 					<shopicon-regular-sun></shopicon-regular-sun>
 				</template>
 			</DeviceCard>
-			<DeviceCard name="CO₂ estimate" editable data-testid="grid" @edit="editGridMeter">
+			<DeviceCard name="CO₂ estimate" unconfigured data-testid="grid" @edit="todo">
 				<template #icon>
 					<shopicon-regular-eco1></shopicon-regular-eco1>
 				</template>
 			</DeviceCard>
-			<AddDeviceButton @add="todo" />
 		</ul>
 
 		<h2 class="my-4">Vehicles</h2>
@@ -81,9 +92,10 @@
 					@click="addVehicle"
 				/>
 			</ul>
-			<VehicleModal :id="vehicleId" @vehicle-changed="vehicleChanged" />
 		</div>
 		<hr class="my-5" />
+		<VehicleModal :id="selectedVehicleId" @vehicle-changed="vehicleChanged" />
+		<MeterModal :id="selectedMeterId" :type="selectedMeterType" @meter-changed="meterChanged" />
 	</div>
 </template>
 
@@ -97,56 +109,94 @@ import VehicleIcon from "../components/VehicleIcon";
 import VehicleModal from "../components/Config/VehicleModal.vue";
 import DeviceCard from "../components/Config/DeviceCard.vue";
 import AddDeviceButton from "../components/Config/AddDeviceButton.vue";
+import MeterModal from "../components/Config/MeterModal.vue";
 
 export default {
 	name: "Config",
-	components: { TopHeader, VehicleIcon, VehicleModal, DeviceCard, AddDeviceButton },
+	components: { TopHeader, VehicleIcon, VehicleModal, DeviceCard, AddDeviceButton, MeterModal },
 	data() {
 		return {
 			vehicles: [],
-			loadpoints: [],
-			pvs: [],
-			batteries: [],
-			grid: null,
-			vehicleId: undefined,
+			meters: [],
+			selectedVehicleId: undefined,
+			selectedMeterId: undefined,
+			selectedMeterType: undefined,
+			site: undefined,
 		};
+	},
+	computed: {
+		siteTitle() {
+			return this.site?.title;
+		},
+		gridMeter() {
+			const id = this.site?.grid;
+			return this.getMetersByIds([id])[0];
+		},
+		pvMeters() {
+			const ids = this.site?.pv;
+			return this.getMetersByIds(ids);
+		},
+		batteryMeters() {
+			const ids = this.site?.battery;
+			return this.getMetersByIds(ids);
+		},
 	},
 	mounted() {
 		this.loadVehicles();
-		this.loadLoadpoints();
 		this.loadMeters();
+		this.loadSite();
 	},
 	methods: {
 		async loadVehicles() {
 			const response = await api.get("/config/devices/vehicle");
 			this.vehicles = response.data?.result;
 		},
-		async loadLoadpoints() {
-			// TODO: add GET loadpoints API
-			const response = await api.get("/config/devices/charger");
-			this.loadpoints = response.data?.result;
-		},
 		async loadMeters() {
-			// TODO: split this into separate endpoints for pv, battery, grid
 			const response = await api.get("/config/devices/meter");
-			const meters = response.data?.result || [];
-			this.pvs = meters;
-			this.batteries = meters;
-			this.grid = meters[0];
+			this.meters = response.data?.result || [];
+		},
+		async loadSite() {
+			const response = await api.get("/config/site");
+			this.site = response.data?.result;
+		},
+		getMetersByIds(ids) {
+			if (!ids) {
+				return [];
+			}
+			return this.meters.filter((m) => ids.includes(m.id) || ids.includes(m.name));
 		},
 		vehicleModal() {
 			return Modal.getOrCreateInstance(document.getElementById("vehicleModal"));
 		},
+		meterModal() {
+			return Modal.getOrCreateInstance(document.getElementById("meterModal"));
+		},
+		editMeter(id, type) {
+			this.selectedMeterId = id;
+			this.selectedMeterType = type;
+			this.$nextTick(() => this.meterModal().show());
+		},
+		addMeter(type) {
+			this.selectedMeterId = undefined;
+			this.selectedMeterType = type;
+			this.$nextTick(() => this.meterModal().show());
+		},
+		meterChanged() {
+			this.selectedMeterId = undefined;
+			this.selectedMeterType = undefined;
+			this.meterModal().hide();
+			this.loadMeters();
+		},
 		editVehicle(id) {
-			this.vehicleId = id;
+			this.selectedVehicleId = id;
 			this.$nextTick(() => this.vehicleModal().show());
 		},
 		addVehicle() {
-			this.vehicleId = undefined;
+			this.selectedVehicleId = undefined;
 			this.$nextTick(() => this.vehicleModal().show());
 		},
 		vehicleChanged() {
-			this.vehicleId = undefined;
+			this.selectedVehicleId = undefined;
 			this.vehicleModal().hide();
 			this.loadVehicles();
 		},
