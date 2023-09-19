@@ -8,9 +8,8 @@ const (
 	ChargeStop   = "stop_charging"
 	ChargePause  = "pause_charging"
 	ChargeResume = "resume_charging"
+	PollLifetimeEnergy = "poll_lifetimeenergy"
 )
-
-const PollLifetimeEnergy = "poll_lifetimeenergy"
 
 // charge mode definition
 const (
