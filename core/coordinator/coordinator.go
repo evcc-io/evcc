@@ -114,13 +114,6 @@ func (c *Coordinator) identifyVehicleByStatus(available []api.Vehicle) api.Vehic
 			if err != nil {
 				c.log.ERROR.Println("vehicle status:", err)
 
-				if vr, ok := vs.(api.Resurrector); ok {
-					c.log.DEBUG.Println("wake-up vehicle")
-					if err := vr.WakeUp(); err != nil {
-						c.log.ERROR.Printf("wake-up vehicle: %v", err)
-					}
-				}
-
 				continue
 			}
 
