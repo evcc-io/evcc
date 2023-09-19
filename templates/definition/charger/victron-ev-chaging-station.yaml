@@ -26,7 +26,7 @@ render: |
         type: int64
         config:
           source: modbus
-          {{- include "modbus" . | indent 5 }}
+          {{- include "modbus" . | indent 2 }}
           register: 3824
           type: holding
           decode: uin16
