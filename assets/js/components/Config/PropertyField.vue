@@ -49,10 +49,6 @@
 		v-model="value"
 		class="form-control"
 		:type="inputType"
-<<<<<<< HEAD
-=======
-		:step="step"
->>>>>>> 101a77db (better fields)
 		:placeholder="placeholder"
 		:required="required"
 		rows="4"
