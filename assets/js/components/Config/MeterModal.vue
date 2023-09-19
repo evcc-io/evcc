@@ -56,6 +56,7 @@
 									v-model="values[param.Name]"
 									:masked="param.Mask"
 									:property="param.Name"
+									:type="param.Type"
 									class="me-2"
 									:required="param.Required"
 									:validValues="param.ValidValues"
@@ -63,10 +64,11 @@
 							</FormRow>
 
 							<TestResult
-								v-if="testResult"
+								v-if="templateName"
 								:success="testSuccess"
 								:failed="testFailed"
 								:unknown="testUnknown"
+								:running="testRunning"
 								:result="testResult"
 								@test="testManually"
 							/>
@@ -116,7 +118,7 @@ import TestResult from "./TestResult.vue";
 import api from "../../api";
 import test from "./mixins/test";
 
-const initialValues = { type: "template", icon: "car" };
+const initialValues = { type: "template" };
 
 function sleep(ms) {
 	return new Promise((resolve) => setTimeout(resolve, ms));
@@ -157,14 +159,15 @@ export default {
 		},
 		templateParams() {
 			const params = this.template?.Params || [];
-			const filteredParams = params.filter((p) => !p.Advanced || p.Name === "icon");
-			const adjustedParams = filteredParams.map((p) => {
-				if (p.Name === "title" || p.Name === "icon") {
-					p.Required = true;
-				}
-				return p;
-			});
-			return adjustedParams;
+			return (
+				params
+					// deprecated fields
+					.filter((p) => !p.Deprecated)
+					// remove usage option
+					.filter((p) => p.Name !== "usage")
+					// capacity only for battery meters
+					.filter((p) => this.type === "battery" || p.Name !== "capacity")
+			);
 		},
 		apiData() {
 			return {
@@ -183,7 +186,6 @@ export default {
 		isModalVisible(visible) {
 			if (visible) {
 				this.reset();
-				this.templateName = "offline";
 				this.resetTest();
 				this.loadProducts();
 				if (this.id !== undefined) {
@@ -226,7 +228,12 @@ export default {
 		},
 		async loadProducts() {
 			try {
-				this.products = (await api.get("config/products/meter")).data.result;
+				const opts = {
+					params: {
+						usage: this.type,
+					},
+				};
+				this.products = (await api.get("config/products/meter", opts)).data.result;
 			} catch (e) {
 				console.error(e);
 			}

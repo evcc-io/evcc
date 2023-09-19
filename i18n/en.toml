@@ -20,17 +20,38 @@ never = "only with enough surplus"
 
 [config]
 
+[config.battery]
+delete = "Delete battery"
+titleAdd = "Add Battery Meter"
+titleEdit = "Edit Battery Meter"
+
 [config.form]
 example = "Example"
 optional = "optional"
 
+[config.grid]
+delete = "Delete grid"
+titleAdd = "Add Grid Meter"
+titleEdit = "Edit Grid Meter"
+
 [config.main]
-addVehicle = "Add vehicle"
 addPvBattery = "Add solar or battery"
+addVehicle = "Add vehicle"
 edit = "edit"
-unconfigured = "not configured"
 title = "Configuration"
+unconfigured = "not configured"
 vehicles = "My Vehicles"
+
+[config.meter]
+cancel = "Cancel"
+save = "Save"
+template = "Manufacturer"
+validateSave = "Validate & save"
+
+[config.pv]
+delete = "Delete solar"
+titleAdd = "Add Solar Meter"
+titleEdit = "Edit Solar Meter"
 
 [config.validation]
 failed = "failed"

@@ -80,6 +80,7 @@
 									v-model="values[param.Name]"
 									:masked="param.Mask"
 									:property="param.Name"
+									:type="param.Type"
 									class="me-2"
 									:required="param.Required"
 									:validValues="param.ValidValues"

@@ -1,9 +1,9 @@
 <template>
-	<div v-if="unit" class="input-group w-100">
+	<div v-if="unit" class="input-group" :class="short ? 'w-50' : ''">
 		<input
 			:id="id"
 			v-model="value"
-			:type="type"
+			:type="inputType"
 			:placeholder="placeholder"
 			:required="required"
 			aria-label="unit"
@@ -47,7 +47,7 @@
 		:id="id"
 		v-model="value"
 		class="form-control"
-		:type="type"
+		:type="inputType"
 		:placeholder="placeholder"
 		:required="required"
 		rows="4"
@@ -57,7 +57,8 @@
 		:id="id"
 		v-model="value"
 		class="form-control"
-		:type="type"
+		:class="short ? 'w-50' : ''"
+		:type="inputType"
 		:placeholder="placeholder"
 		:required="required"
 	/>
@@ -74,6 +75,7 @@ export default {
 		property: String,
 		masked: Boolean,
 		placeholder: String,
+		type: String,
 		required: Boolean,
 		validValues: { type: Array, default: () => [] },
 		modelValue: [String, Number, Boolean, Object],
@@ -83,8 +85,17 @@ export default {
 		return { selectMode: false };
 	},
 	computed: {
-		type() {
-			return this.masked ? "password" : "text";
+		inputType() {
+			if (this.masked) {
+				return "password";
+			}
+			if (["Number", "Float"].includes(this.type)) {
+				return "number";
+			}
+			return "text";
+		},
+		short() {
+			return ["Number", "Float", "Duration"].includes(this.type);
 		},
 		unit() {
 			if (this.property === "capacity") {

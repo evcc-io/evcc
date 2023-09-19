@@ -64,15 +64,29 @@ func productsHandler(w http.ResponseWriter, r *http.Request) {
 
 	tmpl := templates.ByClass(class)
 	lang := r.URL.Query().Get("lang")
+	usage := r.URL.Query().Get("usage")
 
 	res := make(products, 0)
 	for _, t := range tmpl {
-		for _, p := range t.Products {
-			res = append(res, product{
-				Name:     p.Title(lang),
-				Template: t.TemplateDefinition.Template,
-				Group:    t.Group,
-			})
+		// if usage filter is specified, only include templates with matching usage
+		includeUsage := usage == ""
+		if !includeUsage {
+			for _, u := range t.Usages() {
+				if u == usage {
+					includeUsage = true
+					break
+				}
+			}
+		}
+
+		if includeUsage {
+			for _, p := range t.Products {
+				res = append(res, product{
+					Name:     p.Title(lang),
+					Template: t.TemplateDefinition.Template,
+					Group:    t.Group,
+				})
+			}
 		}
 	}
 
