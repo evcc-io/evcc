@@ -39,5 +39,11 @@ func (a *adapter) Release(v api.Vehicle) {
 
 func (a *adapter) IdentifyVehicleByStatus() api.Vehicle {
 	available := a.c.availableDetectibleVehicles(a.lp)
-	return a.c.identifyVehicleByStatus(available)
+	vehicle := a.c.identifyVehicleByStatus(available)
+	if vehicle == nil {
+		// No matching vehicle found.
+		// Make sure all detectible vehicles are awake
+		a.c.wakeupVehicles(available)
+	}
+	return vehicle
 }

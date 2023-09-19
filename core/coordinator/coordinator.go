@@ -113,6 +113,14 @@ func (c *Coordinator) identifyVehicleByStatus(available []api.Vehicle) api.Vehic
 			status, err := vs.Status()
 			if err != nil {
 				c.log.ERROR.Println("vehicle status:", err)
+
+				if vr, ok := vs.(api.Resurrector); ok {
+					c.log.DEBUG.Println("wake-up vehicle")
+					if err := vr.WakeUp(); err != nil {
+						c.log.ERROR.Printf("wake-up vehicle: %v", err)
+					}
+				}
+
 				continue
 			}
 
@@ -131,4 +139,15 @@ func (c *Coordinator) identifyVehicleByStatus(available []api.Vehicle) api.Vehic
 	}
 
 	return res
+}
+
+func (c *Coordinator) wakeupVehicles(available []api.Vehicle) {
+	for _, vehicle := range available {
+		if vr, ok := vehicle.(api.Resurrector); ok {
+			c.log.DEBUG.Println("wake-up vehicle")
+			if err := vr.WakeUp(); err != nil {
+				c.log.ERROR.Printf("wake-up vehicle: %v", err)
+			}
+		}
+	}
 }
