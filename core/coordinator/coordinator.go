@@ -113,7 +113,6 @@ func (c *Coordinator) identifyVehicleByStatus(available []api.Vehicle) api.Vehic
 			status, err := vs.Status()
 			if err != nil {
 				c.log.ERROR.Println("vehicle status:", err)
-
 				continue
 			}
 
