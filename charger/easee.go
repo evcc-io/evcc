@@ -304,7 +304,6 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 		}
 		c.sessionEnergy = value.(float64)
 	case easee.LIFETIME_ENERGY:
-		//new charging session detected by change of CHARGER_OP_MODE. Remember start lifetime energy
 		c.totalEnergy = value.(float64)
 		if -1 == c.sessionStartLifetimeEnergy { //first update of LIFETIME_ENERGY after session start
 			c.sessionStartLifetimeEnergy = c.totalEnergy;
@@ -321,8 +320,7 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 	case easee.DYNAMIC_CHARGER_CURRENT:
 		c.dynamicChargerCurrent = value.(float64)
 	case easee.CHARGER_OP_MODE:
-		//for relevant op mode changes, if last energy updated was triggered more than 3 minutes ago, request new update
-		//leaving op mode 1 and 3, or reaching op mode 1 and 7 
+		//for relevant op mode changes, leaving op mode 1 and 3, or reaching op mode 1 and 7, request new update ofLIFETIME_ENERGY
 		if !(c.opMode == value.(int)) &&  //only if op mode actually changed AND
 			(easee.ModeDisconnected == c.opMode || easee.ModeCharging == c.opMode || //from these op modes
 			 easee.ModeDisconnected == value.(int) || easee.ModeAwaitingAuthentication == value.(int)) { //or to these op modes
@@ -342,7 +340,7 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 			loc, _ := time.LoadLocation("UTC")
 			c.obsTime[easee.SESSION_ENERGY] = time.Now().In(loc)
 		}
-		//OpMode change TO charging. Start ticker for periodic requests to update LIFETIME_ENERGY
+		//OpMode changed TO charging. Start ticker for periodic requests to update LIFETIME_ENERGY
 		if easee.ModeCharging == value.(int) && easee.ModeCharging != c.opMode {
 			go func() {
 				for {
@@ -747,7 +745,7 @@ func (c *Easee) CurrentPower() (float64, error) {
 var _ api.ChargeRater = (*Easee)(nil)
 
 func (c *Easee) RequestLifetimeEnergyUpdate() (err error) {
-	if c.lastEnergyPollTriggered.Before(time.Now().Add(-3 * time.Minute)) {   //max once in 3 minutes
+	if c.lastEnergyPollTriggered.Before(time.Now().Add(-3 * time.Minute)) {   //api rate limit, max once in 3 minutes
 		uri := fmt.Sprintf("%s/chargers/%s/commands/%s", easee.API, c.charger, easee.PollLifetimeEnergy)
 		if _, err := c.Post(uri, request.JSONContent, request.MarshalJSON(nil)); err != nil {
 			c.log.WARN.Printf("Failed to trigger an update of LIFETIME_ENERGY: %v", err)
