@@ -7,7 +7,7 @@
 				<small v-if="optional">{{ $t("config.form.optional") }}</small>
 			</div>
 		</label>
-		<div :class="smallValue ? 'w-50' : 'w-100'">
+		<div class="w-100">
 			<slot />
 		</div>
 		<div class="form-text">
@@ -27,7 +27,6 @@ export default {
 		label: String,
 		help: String,
 		optional: Boolean,
-		smallValue: Boolean,
 		example: String,
 	},
 	computed: {

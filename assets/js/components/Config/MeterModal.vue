@@ -48,7 +48,6 @@
 								:optional="!param.Required"
 								:label="param.Description || `[${param.Name}]`"
 								:help="param.Description === param.Help ? undefined : param.Help"
-								:small-value="['capacity'].includes(param.Name)"
 								:example="param.Example"
 							>
 								<PropertyField
@@ -130,9 +129,10 @@ export default {
 	mixins: [test],
 	props: {
 		id: Number,
+		name: String,
 		type: String,
 	},
-	emits: ["meter-changed"],
+	emits: ["added", "updated", "removed"],
 	data() {
 		return {
 			isModalVisible: false,
@@ -270,8 +270,10 @@ export default {
 				await sleep(250);
 			}
 			try {
-				await api.post("config/devices/meter", this.apiData);
-				this.$emit("meter-changed");
+				const response = await api.post("config/devices/meter", this.apiData);
+				const { name } = response.data.result;
+				this.$emit("added", this.type, name);
+				this.$emit("updated");
 				this.modalInvisible();
 			} catch (e) {
 				console.error(e);
@@ -296,7 +298,7 @@ export default {
 			}
 			try {
 				await api.put(`config/devices/meter/${this.id}`, this.apiData);
-				this.$emit("meter-changed");
+				this.$emit("updated");
 				this.modalInvisible();
 			} catch (e) {
 				console.error(e);
@@ -306,7 +308,8 @@ export default {
 		async remove() {
 			try {
 				await api.delete(`config/devices/meter/${this.id}`);
-				this.$emit("meter-changed");
+				this.$emit("removed", this.type, this.name);
+				this.$emit("updated");
 				this.modalInvisible();
 			} catch (e) {
 				console.error(e);

@@ -72,7 +72,6 @@
 								:optional="!param.Required"
 								:label="param.Description || `[${param.Name}]`"
 								:help="param.Description === param.Help ? undefined : param.Help"
-								:small-value="['capacity'].includes(param.Name)"
 								:example="param.Example"
 							>
 								<PropertyField

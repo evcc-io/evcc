@@ -12,7 +12,7 @@
 			<DeviceCard
 				name="Grid meter"
 				:unconfigured="!gridMeter"
-				:editable="gridMeter?.id"
+				:editable="!!gridMeter?.id"
 				data-testid="grid"
 				:tags="['-1.220 W', '3A 17A 11A', '72.128 kWh']"
 				@configure="addMeter('grid')"
@@ -95,7 +95,14 @@
 		</div>
 		<hr class="my-5" />
 		<VehicleModal :id="selectedVehicleId" @vehicle-changed="vehicleChanged" />
-		<MeterModal :id="selectedMeterId" :type="selectedMeterType" @meter-changed="meterChanged" />
+		<MeterModal
+			:id="selectedMeterId"
+			:name="selectedMeterName"
+			:type="selectedMeterType"
+			@added="addMeterToSite"
+			@updated="meterChanged"
+			@removed="removeMeterFromSite"
+		/>
 	</div>
 </template>
 
@@ -121,7 +128,7 @@ export default {
 			selectedVehicleId: undefined,
 			selectedMeterId: undefined,
 			selectedMeterType: undefined,
-			site: undefined,
+			site: { grid: "", pv: [], battery: [] },
 		};
 	},
 	computed: {
@@ -129,16 +136,19 @@ export default {
 			return this.site?.title;
 		},
 		gridMeter() {
-			const id = this.site?.grid;
-			return this.getMetersByIds([id])[0];
+			const name = this.site?.grid;
+			return this.getMetersByNames([name])[0];
 		},
 		pvMeters() {
-			const ids = this.site?.pv;
-			return this.getMetersByIds(ids);
+			const names = this.site?.pv;
+			return this.getMetersByNames(names);
 		},
 		batteryMeters() {
-			const ids = this.site?.battery;
-			return this.getMetersByIds(ids);
+			const names = this.site?.battery;
+			return this.getMetersByNames(names);
+		},
+		selectedMeterName() {
+			return this.getMeterById(this.selectedMeterId)?.name;
 		},
 	},
 	mounted() {
@@ -159,11 +169,17 @@ export default {
 			const response = await api.get("/config/site");
 			this.site = response.data?.result;
 		},
-		getMetersByIds(ids) {
-			if (!ids) {
+		getMetersByNames(names) {
+			if (!names || !this.meters) {
 				return [];
 			}
-			return this.meters.filter((m) => ids.includes(m.id) || ids.includes(m.name));
+			return this.meters.filter((m) => names.includes(m.name));
+		},
+		getMeterById(id) {
+			if (!id || !this.meters) {
+				return undefined;
+			}
+			return this.meters.find((m) => m.id === id);
 		},
 		vehicleModal() {
 			return Modal.getOrCreateInstance(document.getElementById("vehicleModal"));
@@ -181,11 +197,11 @@ export default {
 			this.selectedMeterType = type;
 			this.$nextTick(() => this.meterModal().show());
 		},
-		meterChanged() {
+		async meterChanged() {
 			this.selectedMeterId = undefined;
 			this.selectedMeterType = undefined;
+			await this.loadMeters();
 			this.meterModal().hide();
-			this.loadMeters();
 		},
 		editVehicle(id) {
 			this.selectedVehicleId = id;
@@ -199,6 +215,27 @@ export default {
 			this.selectedVehicleId = undefined;
 			this.vehicleModal().hide();
 			this.loadVehicles();
+		},
+		addMeterToSite(type, name) {
+			if (type === "grid") {
+				this.site.grid = name;
+			} else {
+				this.site[type].push(name);
+			}
+			this.saveSite(type);
+		},
+		removeMeterFromSite(type, name) {
+			if (type === "grid") {
+				this.site.grid = "";
+			} else {
+				this.site[type] = this.site[type].filter((i) => i !== name);
+			}
+			this.saveSite(type);
+		},
+		async saveSite(key) {
+			const body = key ? { [key]: this.site[key] } : this.site;
+			await api.put("/config/site", body);
+			this.loadSite();
 		},
 		todo() {
 			alert("not implemented yet");

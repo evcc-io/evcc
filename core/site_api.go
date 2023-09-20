@@ -49,6 +49,7 @@ func (site *Site) SetGridMeterRef(ref string) {
 	site.Meters.GridMeterRef = ref
 	// site.publish("siteGridMeterRef", meter)
 	settings.SetString("site.grid", ref)
+	settings.Persist()
 }
 
 // GetPVMeterRef returns the PvMeterRef
@@ -66,6 +67,7 @@ func (site *Site) SetPVMeterRef(ref []string) {
 	site.Meters.PVMetersRef = ref
 	// site.publish("siteGridMeterRef", meter)
 	settings.SetString("site.pv", strings.Join(ref, ","))
+	settings.Persist()
 }
 
 // GetBatteryMeterRef returns the BatteryMeterRef
@@ -83,6 +85,7 @@ func (site *Site) SetBatteryMeterRef(ref []string) {
 	site.Meters.BatteryMetersRef = ref
 	// site.publish("siteGridMeterRef", meter)
 	settings.SetString("site.battery", strings.Join(ref, ","))
+	settings.Persist()
 }
 
 // GetPrioritySoc returns the PrioritySoc

@@ -60,7 +60,7 @@ func updateSiteHandler(site site.API) http.HandlerFunc {
 		}
 
 		if payload.Grid != nil {
-			if !validateRefs(w, []string{*payload.Grid}) {
+			if *payload.Grid != "" && !validateRefs(w, []string{*payload.Grid}) {
 				return
 			}
 

@@ -266,9 +266,11 @@ func newDeviceHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	res := struct {
-		ID int `json:"id"`
+		ID   int    `json:"id"`
+		Name string `json:"name"`
 	}{
-		ID: conf.ID,
+		ID:   conf.ID,
+		Name: config.NameForID(conf.ID),
 	}
 
 	jsonResult(w, res)
