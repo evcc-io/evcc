@@ -80,7 +80,7 @@
 										role="switch"
 									/>
 									<div class="form-check-label">
-										<label for="telemetryEnabled">
+										<label for="hiddenFeaturesEnabled">
 											{{ $t("settings.hiddenFeatures.value") }}
 										</label>
 									</div>
