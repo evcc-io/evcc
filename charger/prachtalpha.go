@@ -154,7 +154,7 @@ func (wb *PrachtAlpha) Enabled() (bool, error) {
 
 // Enable implements the api.Charger interface
 func (wb *PrachtAlpha) Enable(enable bool) error {
-	var curr uint16
+	var curr uint16 = 1
 	if enable {
 		curr = wb.curr
 	}
