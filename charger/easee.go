@@ -316,9 +316,10 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 	case easee.CHARGER_OP_MODE:
 		//for relevant op mode changes, if last energy updated was triggered more than 3 minutes ago, request new update
 		//leaving op mode 1 and 3 or reaching op mode 1 and 7 
-		if (c.lastEnergyPollTriggered.Before(time.Now().Add(-3 * time.Minute))) &&
-			((easee.ModeDisconnected == c.opMode || easee.ModeCharging == c.opMode) ||
-			(easee.ModeDisconnected == value.(int) || easee.ModeAwaitingAuthentication == value.(int))) {
+		if (c.lastEnergyPollTriggered.Before(time.Now().Add(-3 * time.Minute))) &&  //max once in 3 minutes
+			(!(c.opMode == value.(int))) &&  //and only if op mode actually changed
+			((easee.ModeDisconnected == c.opMode || easee.ModeCharging == c.opMode) || //from these
+			(easee.ModeDisconnected == value.(int) || easee.ModeAwaitingAuthentication == value.(int))) { //or to these op modes
 			c.log.TRACE.Printf("Trigger update of LIFETIME_ENERGY, CHARGER_OP_MODE changed from %v to %v", c.opMode, value.(int));
 			uri := fmt.Sprintf("%s/chargers/%s/commands/%s", easee.API, c.charger, easee.PollLifetimeEnergy)
 			if _, err := c.Post(uri, request.JSONContent, request.MarshalJSON(nil)); err != nil {  //do not wait for success, fire&forget
