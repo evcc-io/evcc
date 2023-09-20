@@ -59,13 +59,15 @@ type Easee struct {
 	opMode                       int
 	reasonForNoCurrent           int
 	phaseMode                    int
-	currentPower, sessionEnergy, totalEnergy,
+	currentPower, sessionEnergy, totalEnergy, sessionStartLifetimeEnergy,
 	currentL1, currentL2, currentL3 float64
 	rfid    string
 	lp      loadpoint.API
 	cmdC    chan easee.SignalRCommandResponse
 	obsC    chan easee.Observation
 	obsTime map[easee.ObservationID]time.Time
+	ticker		*time.Ticker
+	stopTicker	chan bool
 }
 
 func init() {
@@ -302,7 +304,12 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 		}
 		c.sessionEnergy = value.(float64)
 	case easee.LIFETIME_ENERGY:
+		//new charging session detected by change of CHARGER_OP_MODE. Remember start lifetime energy
 		c.totalEnergy = value.(float64)
+		if -1 == c.sessionStartLifetimeEnergy { //first update of LIFETIME_ENERGY after session start
+			c.sessionStartLifetimeEnergy = c.totalEnergy;
+			c.log.TRACE.Printf("ProductUpdate LIFETIME_ENERGY at session start. Remember value %v", c.sessionStartLifetimeEnergy);
+		}
 	case easee.IN_CURRENT_T3:
 		c.currentL1 = value.(float64)
 	case easee.IN_CURRENT_T4:
@@ -315,30 +322,51 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 		c.dynamicChargerCurrent = value.(float64)
 	case easee.CHARGER_OP_MODE:
 		//for relevant op mode changes, if last energy updated was triggered more than 3 minutes ago, request new update
-		//leaving op mode 1 and 3 or reaching op mode 1 and 7 
-		if (c.lastEnergyPollTriggered.Before(time.Now().Add(-3 * time.Minute))) &&  //max once in 3 minutes
-			(!(c.opMode == value.(int))) &&  //and only if op mode actually changed
-			((easee.ModeDisconnected == c.opMode || easee.ModeCharging == c.opMode) || //from these
-			(easee.ModeDisconnected == value.(int) || easee.ModeAwaitingAuthentication == value.(int))) { //or to these op modes
+		//leaving op mode 1 and 3, or reaching op mode 1 and 7 
+		if !(c.opMode == value.(int)) &&  //only if op mode actually changed AND
+			(easee.ModeDisconnected == c.opMode || easee.ModeCharging == c.opMode || //from these op modes
+			 easee.ModeDisconnected == value.(int) || easee.ModeAwaitingAuthentication == value.(int)) { //or to these op modes
 			c.log.TRACE.Printf("Trigger update of LIFETIME_ENERGY, CHARGER_OP_MODE changed from %v to %v", c.opMode, value.(int));
-			uri := fmt.Sprintf("%s/chargers/%s/commands/%s", easee.API, c.charger, easee.PollLifetimeEnergy)
-			if _, err := c.Post(uri, request.JSONContent, request.MarshalJSON(nil)); err != nil {  //do not wait for success, fire&forget
-				c.log.WARN.Printf("Failed to trigger an update of LIFETIME_ENERGY: %v", err)
-			}
-			c.lastEnergyPollTriggered = time.Now();
-			//TODO: wait for async update of LIFETIME_ENERGY?
+			c.RequestLifetimeEnergyUpdate()
 		}
 
 		//OpMode changed from "no car" to some other state 
 		//Assume car connected if easee is not offline (mode 0) or still disconnected (mode 1)
 		//Looks like a new charging session is about to start, so reset internal value of SESSION_ENERGY to 0,
 		//and observation timestamp to "now". This should be done in a proper way by the api, but it's not.
-		if easee.ModeDisconnected == c.opMode && value.(int) >= easee.ModeAwaitingStart {
+		if easee.ModeDisconnected == c.opMode && easee.ModeAwaitingStart <= value.(int) {
 			c.log.TRACE.Printf("ProductUpdate: Car connected. Reset internal value of SESSION_ENERGY to 0");
 			c.sessionEnergy = 0;
+			//use -1. Using 0 could not distinguish between reset after session and newly started evcc
+			c.sessionStartLifetimeEnergy = -1;
 			loc, _ := time.LoadLocation("UTC")
-			c.obsTime[easee.SESSION_ENERGY] = time.Now().In(loc);
+			c.obsTime[easee.SESSION_ENERGY] = time.Now().In(loc)
 		}
+		//OpMode change TO charging. Start ticker for periodic requests to update LIFETIME_ENERGY
+		if easee.ModeCharging == value.(int) && easee.ModeCharging != c.opMode {
+			go func() {
+				for {
+					select {
+						case <-c.stopTicker:
+							c.log.TRACE.Printf("End periodic requests")
+							return
+						case t := <-c.ticker.C:
+							c.log.TRACE.Printf("Request periodic update at time %v", t)
+							c.RequestLifetimeEnergyUpdate()
+					}
+				}
+			}()
+			c.ticker = time.NewTicker(5 * time.Minute)
+		}
+		//OpMode changed FROM charging - stop ticker
+		if easee.ModeCharging == c.opMode && easee.ModeCharging != value.(int) {
+			c.stopTicker <- true
+			c.ticker.Stop();
+		}
+		//OpMode changed fom something to "no car"
+		//if easee.ModeDisconnected == value.(int) && easee.ModeAwaitingStart <= c.opMode {
+		//	c.log.TRACE.Printf("ProductUpdate: Car disconnected")
+		//}
 		c.opMode = value.(int)
 	case easee.REASON_FOR_NO_CURRENT:
 		c.reasonForNoCurrent = value.(int)
@@ -718,12 +746,36 @@ func (c *Easee) CurrentPower() (float64, error) {
 
 var _ api.ChargeRater = (*Easee)(nil)
 
+func (c *Easee) RequestLifetimeEnergyUpdate() (err error) {
+	if c.lastEnergyPollTriggered.Before(time.Now().Add(-3 * time.Minute)) {   //max once in 3 minutes
+		uri := fmt.Sprintf("%s/chargers/%s/commands/%s", easee.API, c.charger, easee.PollLifetimeEnergy)
+		if _, err := c.Post(uri, request.JSONContent, request.MarshalJSON(nil)); err != nil {
+			c.log.WARN.Printf("Failed to trigger an update of LIFETIME_ENERGY: %v", err)
+		}
+		c.lastEnergyPollTriggered = time.Now()
+	}
+	return err
+}
+
+
 // ChargedEnergy implements the api.ChargeRater interface
 func (c *Easee) ChargedEnergy() (float64, error) {
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
-	return c.sessionEnergy, nil
+	//return either the self calced session energy (current LIFETIME_ENERGY minus remembered start value), or the ready to use SESSION_ENERGY value. 
+	//Each value could be lower than the other, depending on order and receive timestamp of the product update.
+	//We want to return the higher value.
+	maxValue := c.sessionEnergy;
+	if c.sessionStartLifetimeEnergy > 0 { //value could be -1, if no LIFETIME_ENERGY update was received yet
+		calcedEnergy := c.totalEnergy - c.sessionStartLifetimeEnergy; //we could use math.Max, but for now we want the trace output
+		if maxValue < calcedEnergy {
+			c.log.TRACE.Printf("Replacing SESSION_ENERGY %v by greater calced session energy %v", maxValue, calcedEnergy);
+			maxValue = calcedEnergy;
+		}
+	}
+
+	return maxValue, nil
 }
 
 var _ api.PhaseCurrents = (*Easee)(nil)
