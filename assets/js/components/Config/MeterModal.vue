@@ -23,7 +23,18 @@
 						></button>
 					</div>
 					<div class="modal-body">
-						<form ref="form" class="container mx-0 px-0">
+						<div v-if="!meterType">
+							<AddDeviceButton
+								title="Add solar meter"
+								class="mb-4"
+								@click="selectType('pv')"
+							/>
+							<AddDeviceButton
+								title="Add battery meter"
+								@click="selectType('battery')"
+							/>
+						</div>
+						<form v-else ref="form" class="container mx-0 px-0">
 							<FormRow id="meterTemplate" :label="$t('config.meter.template')">
 								<select
 									id="meterTemplate"
@@ -95,6 +106,12 @@
 									:disabled="testRunning"
 									@click.prevent="isNew ? create() : update()"
 								>
+									<span
+										v-if="saving"
+										class="spinner-border spinner-border-sm"
+										role="status"
+										aria-hidden="true"
+									></span>
 									{{
 										testUnknown
 											? $t("config.meter.validateSave")
@@ -116,6 +133,7 @@ import PropertyField from "./PropertyField.vue";
 import TestResult from "./TestResult.vue";
 import api from "../../api";
 import test from "./mixins/test";
+import AddDeviceButton from "./AddDeviceButton.vue";
 
 const initialValues = { type: "template" };
 
@@ -125,7 +143,7 @@ function sleep(ms) {
 
 export default {
 	name: "MeterModal",
-	components: { FormRow, PropertyField, TestResult },
+	components: { FormRow, PropertyField, TestResult, AddDeviceButton },
 	mixins: [test],
 	props: {
 		id: Number,
@@ -140,19 +158,24 @@ export default {
 			products: [],
 			templateName: null,
 			template: null,
+			saving: false,
+			selectedType: null,
 			values: { ...initialValues },
 		};
 	},
 	computed: {
 		modalTitle() {
 			if (this.isNew) {
-				if (this.type) {
-					return this.$t(`config.${this.type}.titleAdd`);
+				if (this.meterType) {
+					return this.$t(`config.${this.meterType}.titleAdd`);
 				} else {
-					return this.$t("config.pvOrBattery.titleAdd");
+					return this.$t("config.meter.titleChoice");
 				}
 			}
-			return this.$t(`config.${this.type}.titleEdit`);
+			return this.$t(`config.${this.meterType}.titleEdit`);
+		},
+		meterType() {
+			return this.type || this.selectedType;
 		},
 		templateOptions() {
 			return this.products;
@@ -166,13 +189,14 @@ export default {
 					// remove usage option
 					.filter((p) => p.Name !== "usage")
 					// capacity only for battery meters
-					.filter((p) => this.type === "battery" || p.Name !== "capacity")
+					.filter((p) => this.meterType === "battery" || p.Name !== "capacity")
 			);
 		},
 		apiData() {
 			return {
 				template: this.templateName,
 				...this.values,
+				usage: this.meterType,
 			};
 		},
 		isNew() {
@@ -185,6 +209,7 @@ export default {
 	watch: {
 		isModalVisible(visible) {
 			if (visible) {
+				this.selectedType = null;
 				this.reset();
 				this.resetTest();
 				this.loadProducts();
@@ -192,6 +217,9 @@ export default {
 					this.loadConfiguration();
 				}
 			}
+		},
+		meterType() {
+			this.loadProducts();
 		},
 		templateName() {
 			this.loadTemplate();
@@ -227,10 +255,13 @@ export default {
 			}
 		},
 		async loadProducts() {
+			if (!this.isModalVisible || !this.meterType) {
+				return;
+			}
 			try {
 				const opts = {
 					params: {
-						usage: this.type,
+						usage: this.meterType,
 					},
 				};
 				this.products = (await api.get("config/products/meter", opts)).data.result;
@@ -267,18 +298,20 @@ export default {
 			if (this.testUnknown) {
 				const success = await this.test(this.testMeter);
 				if (!success) return;
-				await sleep(250);
+				await sleep(100);
 			}
+			this.saving = true;
 			try {
 				const response = await api.post("config/devices/meter", this.apiData);
 				const { name } = response.data.result;
-				this.$emit("added", this.type, name);
+				this.$emit("added", this.meterType, name);
 				this.$emit("updated");
 				this.modalInvisible();
 			} catch (e) {
 				console.error(e);
 				alert("create failed");
 			}
+			this.saving = false;
 		},
 		async testManually() {
 			await this.test(this.testMeter);
@@ -296,6 +329,7 @@ export default {
 				if (!success) return;
 				await sleep(250);
 			}
+			this.saving = true;
 			try {
 				await api.put(`config/devices/meter/${this.id}`, this.apiData);
 				this.$emit("updated");
@@ -304,11 +338,12 @@ export default {
 				console.error(e);
 				alert("update failed");
 			}
+			this.saving = false;
 		},
 		async remove() {
 			try {
 				await api.delete(`config/devices/meter/${this.id}`);
-				this.$emit("removed", this.type, this.name);
+				this.$emit("removed", this.meterType, this.name);
 				this.$emit("updated");
 				this.modalInvisible();
 			} catch (e) {
@@ -321,6 +356,9 @@ export default {
 		},
 		modalInvisible() {
 			this.isModalVisible = false;
+		},
+		selectType(type) {
+			this.selectedType = type;
 		},
 	},
 };

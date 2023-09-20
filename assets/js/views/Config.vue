@@ -10,7 +10,7 @@
 		<h2 class="my-4">Home: <span>Zuhause</span></h2>
 		<ul class="p-0 config-list mb-5">
 			<DeviceCard
-				name="Grid meter"
+				:name="gridMeter?.config?.template || 'Grid meter'"
 				:unconfigured="!gridMeter"
 				:editable="!!gridMeter?.id"
 				data-testid="grid"
@@ -24,9 +24,9 @@
 			</DeviceCard>
 			<DeviceCard
 				v-for="meter in pvMeters"
-				:key="meter.id"
-				name="Solar"
-				:editable="meter.id"
+				:key="!!meter.name"
+				:name="meter.config?.template || 'Solar system'"
+				:editable="!!meter.id"
 				data-testid="grid"
 				:tags="['7.222 W']"
 				@edit="editMeter(meter.id, 'pv')"
@@ -37,9 +37,9 @@
 			</DeviceCard>
 			<DeviceCard
 				v-for="meter in batteryMeters"
-				:key="meter.id"
-				name="Battery storage"
-				:editable="meter.id"
+				:key="meter.name"
+				:name="meter.config?.template || 'Battery storage'"
+				:editable="!!meter.id"
 				data-testid="grid"
 				:tags="['220 W', '55%']"
 				@edit="editMeter(meter.id, 'battery')"

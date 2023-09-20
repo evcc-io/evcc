@@ -119,6 +119,12 @@
 									:disabled="testRunning"
 									@click.prevent="isNew ? create() : update()"
 								>
+									<span
+										v-if="saving"
+										class="spinner-border spinner-border-sm"
+										role="status"
+										aria-hidden="true"
+									></span>
 									{{
 										testUnknown
 											? $t("config.vehicle.validateSave")
@@ -160,6 +166,7 @@ export default {
 			isModalVisible: false,
 			templates: [],
 			products: [],
+			saving: false,
 			templateName: null,
 			template: null,
 			values: { ...initialValues },
@@ -280,6 +287,7 @@ export default {
 				if (!success) return;
 				await sleep(250);
 			}
+			this.saving = true;
 			try {
 				await api.post("config/devices/vehicle", this.apiData);
 				this.$emit("vehicle-changed");
@@ -288,6 +296,7 @@ export default {
 				console.error(e);
 				alert("create failed");
 			}
+			this.saving = false;
 		},
 		async testManually() {
 			await this.test(this.testVehicle);
@@ -305,6 +314,7 @@ export default {
 				if (!success) return;
 				await sleep(250);
 			}
+			this.saving = true;
 			try {
 				await api.put(`config/devices/vehicle/${this.id}`, this.apiData);
 				this.$emit("vehicle-changed");
@@ -313,6 +323,7 @@ export default {
 				console.error(e);
 				alert("update failed");
 			}
+			this.saving = false;
 		},
 		async remove() {
 			try {

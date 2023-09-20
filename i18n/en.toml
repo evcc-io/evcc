@@ -21,7 +21,6 @@ never = "only with enough surplus"
 [config]
 
 [config.battery]
-delete = "Delete battery"
 titleAdd = "Add Battery Meter"
 titleEdit = "Edit Battery Meter"
 
@@ -30,7 +29,6 @@ example = "Example"
 optional = "optional"
 
 [config.grid]
-delete = "Delete grid"
 titleAdd = "Add Grid Meter"
 titleEdit = "Edit Grid Meter"
 
@@ -44,12 +42,13 @@ vehicles = "My Vehicles"
 
 [config.meter]
 cancel = "Cancel"
+delete = "Delete"
 save = "Save"
 template = "Manufacturer"
+titleChoice = "What Do You Want To Add?"
 validateSave = "Validate & save"
 
 [config.pv]
-delete = "Delete solar"
 titleAdd = "Add Solar Meter"
 titleEdit = "Edit Solar Meter"
 

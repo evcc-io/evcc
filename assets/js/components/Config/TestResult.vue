@@ -16,7 +16,13 @@
 				<strong v-if="success">{{ $t("config.validation.success") }}</strong>
 				<strong v-if="failed">{{ $t("config.validation.failed") }}</strong>
 			</div>
-			<a href="#" class="alert-link" @click.prevent="$emit('test')">
+			<span
+				v-if="running"
+				class="spinner-border spinner-border-sm"
+				role="status"
+				aria-hidden="true"
+			></span>
+			<a v-else href="#" class="alert-link" @click.prevent="$emit('test')">
 				{{ $t("config.validation.validate") }}
 			</a>
 		</div>
