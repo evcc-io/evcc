@@ -309,7 +309,7 @@ func (c *OCPP) Enable(enable bool) error {
 			rc <- err
 		}, c.idtag, func(request *core.RemoteStartTransactionRequest) {
 			request.ConnectorId = &c.connector
-			request.ChargingProfile = getTxChargingProfile(c.current, c.phases)
+			request.ChargingProfile = getTxChargingProfile(c.current, c.phases, 0)
 		})
 	} else {
 		var txn int
@@ -361,7 +361,7 @@ func (c *OCPP) updatePeriod(current float64, phases int) error {
 
 	current = math.Trunc(10*current) / 10
 
-	err = c.setChargingProfile(c.connector, getTxChargingProfileForUpdate(current, phases, txn))
+	err = c.setChargingProfile(c.connector, getTxChargingProfile(current, phases, txn))
 	if err != nil {
 		err = fmt.Errorf("set charging profile: %w", err)
 	}
@@ -369,27 +369,7 @@ func (c *OCPP) updatePeriod(current float64, phases int) error {
 	return err
 }
 
-func getTxChargingProfile(current float64, phases int) *types.ChargingProfile {
-	period := types.NewChargingSchedulePeriod(0, current)
-
-	// TODO add phases support
-	// if phases != 0 {
-	// 	period.NumberPhases = &phases
-	// }
-
-	return &types.ChargingProfile{
-		ChargingProfileId:      1,
-		StackLevel:             0,
-		ChargingProfilePurpose: types.ChargingProfilePurposeTxProfile,
-		ChargingProfileKind:    types.ChargingProfileKindRelative,
-		ChargingSchedule: &types.ChargingSchedule{
-			ChargingRateUnit:       types.ChargingRateUnitAmperes,
-			ChargingSchedulePeriod: []types.ChargingSchedulePeriod{period},
-		},
-	}
-}
-
-func getTxChargingProfileForUpdate(current float64, phases int, transactionId int) *types.ChargingProfile {
+func getTxChargingProfile(current float64, phases, transactionId int) *types.ChargingProfile {
 	period := types.NewChargingSchedulePeriod(0, current)
 
 	// TODO add phases support
