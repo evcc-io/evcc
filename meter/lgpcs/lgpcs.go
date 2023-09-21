@@ -17,10 +17,15 @@ import (
 )
 
 // URIs
-const (
-	LoginURI = "/v1/login"
-	MeterURI = "/v1/user/essinfo/home"
-)
+var LoginURI = "/v1/login"
+const MeterURI = "/v1/user/essinfo/home"
+
+// SetLoginURI sets the LoginURI based on usermode
+func SetLoginURI(usermode bool) {
+	if usermode {
+		LoginURI = "/v1/user/setting/login"
+	}
+}
 
 type MeterResponse struct {
 	Statistics EssData
