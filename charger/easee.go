@@ -342,6 +342,8 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 		}
 		//OpMode changed TO charging. Start ticker for periodic requests to update LIFETIME_ENERGY
 		if easee.ModeCharging == value.(int) && easee.ModeCharging != c.opMode {
+			c.ticker = time.NewTicker(5 * time.Minute)
+			c.stopTicker = make(chan bool)
 			go func() {
 				for {
 					select {
@@ -354,16 +356,16 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 					}
 				}
 			}()
-			c.ticker = time.NewTicker(5 * time.Minute)
 		}
 		//OpMode changed FROM charging - stop ticker
 		if easee.ModeCharging == c.opMode && easee.ModeCharging != value.(int) {
-			c.stopTicker <- true
 			c.ticker.Stop();
+			c.stopTicker <- true
 		}
 		//OpMode changed fom something to "no car"
 		//if easee.ModeDisconnected == value.(int) && easee.ModeAwaitingStart <= c.opMode {
 		//	c.log.TRACE.Printf("ProductUpdate: Car disconnected")
+		//	maybe needed later
 		//}
 		c.opMode = value.(int)
 	case easee.REASON_FOR_NO_CURRENT:
