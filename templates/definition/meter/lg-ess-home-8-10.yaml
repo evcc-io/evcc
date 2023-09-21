@@ -35,7 +35,11 @@ render: |
   usage: {{ .usage }}
   # uri and password are only required once if multiple lgess usages are defined
   uri: https://{{ .host }}
+  {{- if .userpass }}
+  password: {{ .userpass }}
+  {{- else }}
   password: {{ .registration }}
+  {{- end}}
   {{- if .capacity }}
   capacity: {{ .capacity }} # kWh
   {{- end }}
