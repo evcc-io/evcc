@@ -319,7 +319,7 @@ func (c *OCPP) Enable(enable bool) (err error) {
 			rc <- err
 		}, c.idtag, func(request *core.RemoteStartTransactionRequest) {
 			request.ConnectorId = &c.connector
-			request.ChargingProfile = getTxChargingProfile(c.current, c.phases)
+			request.ChargingProfile = getTxChargingProfile(c.current, c.phases, 0)
 		})
 	} else {
 		// if no transaction is running, the vehicle may have stopped it (which is ok) or an unknown transaction is running
@@ -368,9 +368,14 @@ func (c *OCPP) updatePeriod(current float64, phases int) error {
 		return err
 	}
 
+	txn, err := c.cp.TransactionID()
+	if err != nil {
+		return err
+	}
+
 	current = math.Trunc(10*current) / 10
 
-	err := c.setChargingProfile(c.connector, getTxChargingProfile(current, phases))
+	err = c.setChargingProfile(c.connector, getTxChargingProfile(current, phases, txn))
 	if err != nil {
 		err = fmt.Errorf("set charging profile: %w", err)
 	}
@@ -378,7 +383,7 @@ func (c *OCPP) updatePeriod(current float64, phases int) error {
 	return err
 }
 
-func getTxChargingProfile(current float64, phases int) *types.ChargingProfile {
+func getTxChargingProfile(current float64, phases, transactionId int) *types.ChargingProfile {
 	period := types.NewChargingSchedulePeriod(0, current)
 
 	// TODO add phases support
@@ -388,6 +393,7 @@ func getTxChargingProfile(current float64, phases int) *types.ChargingProfile {
 
 	return &types.ChargingProfile{
 		ChargingProfileId:      1,
+		TransactionId:          transactionId,
 		StackLevel:             0,
 		ChargingProfilePurpose: types.ChargingProfilePurposeTxProfile,
 		ChargingProfileKind:    types.ChargingProfileKindRelative,
