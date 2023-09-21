@@ -39,3 +39,8 @@ render: |
   {{- if .capacity }}
   capacity: {{ .capacity }} # kWh
   {{- end }}
+  {{- if .userpass }}
+  usermode: true
+  {{- else }}
+  usermode: false
+  {{- end}}
