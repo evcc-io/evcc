@@ -8,8 +8,22 @@ params:
     choice: ["grid", "pv", "battery"]
     allinone: true
   - name: host
-  - name: registration
+  - name: userpass
+   {{- if .registration }}
+    required: false
+   {{- else }}
     required: true
+   {{- end}}
+    example: "aBc..."
+    help:
+      en: Userpassword of the LG ESS HOME inverter. More https://github.com/Morluktom/ioBroker.lg-ess-home/tree/master#getting-the-password
+      de: Userpasswort des LG ESS HOME Wechselrichters. Für mehr https://github.com/Morluktom/ioBroker.lg-ess-home/tree/master#getting-the-password
+  - name: registration
+   {{- if .userpass }}
+    required: false
+   {{- else }}
+    required: true
+   {{- end}}
     example: "DE200..."
     help:
       en: Registration number of the LG ESS HOME inverter.
