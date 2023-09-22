@@ -331,9 +331,15 @@ presets:
       - name: integrateddevice
         type: bool
         advanced: true
-        description:
+        help:
           de: Integriertes Gerät (keine Fahrzeugverbindung)
           en: Integrated device (no vehicle connection)
+      - name: heating
+        type: bool
+        advanced: true
+        help:
+          de: Wärmeerzeuger (°C anstatt %)
+          en: Heating device (°C instead of %)
       - name: icon
         advanced: true
   ocpp:
