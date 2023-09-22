@@ -229,7 +229,7 @@ func (wb *PhoenixEVEth) getPhases(reg uint16) (float64, float64, float64, error)
 
 	var res [3]float64
 	for i := 0; i < 3; i++ {
-		res[i] = float64(encoding.Int32LswFirst(b[2*i:]))
+		res[i] = float64(encoding.Int32LswFirst(b[4*i:]))
 	}
 
 	return res[0], res[1], res[2], nil
