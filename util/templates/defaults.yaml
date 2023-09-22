@@ -320,6 +320,14 @@ presets:
   vehicle-language:
     params:
       - name: language
+  tariff-base:
+    params:
+      - name: costs
+        type: number
+        advanced: true
+      - name: tax
+        type: number
+        advanced: true
   eebus:
     params:
       - name: ski
