@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math"
+	"reflect"
 	"strings"
 	"time"
 
@@ -39,8 +40,33 @@ func encode(v interface{}) (string, error) {
 	return s, nil
 }
 
+func encodeSlice(v interface{}) (string, error) {
+	rv := reflect.ValueOf(v)
+	res := make([]string, rv.Len())
+
+	for i := 0; i < rv.Len(); i++ {
+		var err error
+		if res[i], err = encode(rv.Index(i).Interface()); err != nil {
+			return "", err
+		}
+	}
+
+	return fmt.Sprintf("[%s]", strings.Join(res, ",")), nil
+}
+
 func kv(p util.Param) string {
-	val, err := encode(p.Val)
+	var (
+		val string
+		err error
+	)
+
+	// unwrap slices
+	if p.Val != nil && reflect.TypeOf(p.Val).Kind() == reflect.Slice {
+		val, err = encodeSlice(p.Val)
+	} else {
+		val, err = encode(p.Val)
+	}
+
 	if err != nil {
 		panic(err)
 	}

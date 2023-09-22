@@ -31,3 +31,20 @@ func TestEncode(t *testing.T) {
 		assert.Equal(t, tc.out, out)
 	}
 }
+
+func TestEncodeSlice(t *testing.T) {
+	tc := []struct {
+		in  interface{}
+		out string
+	}{
+		{[]string{"a", "b"}, `["a","b"]`},
+		{[2]int64{1, 2}, `[1,2]`},
+		{[]float64{1, math.NaN()}, `[1,null]`},
+	}
+
+	for _, tc := range tc {
+		out, err := encodeSlice(tc.in)
+		assert.NoError(t, err)
+		assert.Equal(t, tc.out, out)
+	}
+}
