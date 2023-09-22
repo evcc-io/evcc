@@ -154,11 +154,7 @@ func NewOCPP(id string, connector int, idtag string,
 	}
 	_ = keys
 
-	if chargingRateUnit == "W" {
-		c.chargingRateUnit = types.ChargingRateUnitWatts
-	} else {
-		c.chargingRateUnit = types.ChargingRateUnitAmperes
-	}
+	c.chargingRateUnit = types.ChargingRateUnitType(chargingRateUnit)
 
 	// noConfig mode disables GetConfiguration
 	if noConfig {
@@ -219,8 +215,6 @@ func NewOCPP(id string, connector int, idtag string,
 					case ocpp.KeyChargingScheduleAllowedChargingRateUnit:
 						if *opt.Value == "W" {
 							c.chargingRateUnit = types.ChargingRateUnitWatts
-						} else {
-							c.chargingRateUnit = types.ChargingRateUnitAmperes
 						}
 					}
 
