@@ -50,3 +50,4 @@ render: |
       address: 3825 # Strom max
       type: writeholding
       decode: uint16
+
