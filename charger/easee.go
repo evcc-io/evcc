@@ -381,7 +381,6 @@ func (c *Easee) Enable(enable bool) (err error) {
 	opMode := c.opMode
 	c.mux.Unlock()
 
-	//unless we return an error, always update internal state
 	defer func() {
 		if err == nil {
 			c.enabled = enable
