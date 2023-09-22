@@ -83,6 +83,7 @@ type Site struct {
 	// cached state
 	gridPower    float64 // Grid power
 	pvPower      float64 // PV power
+	homePower    float64 // Home power
 	batteryPower float64 // Battery charge power
 	batterySoc   float64 // Battery soc
 
@@ -765,8 +766,14 @@ func (site *Site) update(lp Updater) {
 
 		// ignore negative pvPower values as that means it is not an energy source but consumption
 		homePower := site.gridPower + max(0, site.pvPower) + site.batteryPower - totalChargePower
-		homePower = max(homePower, 0)
-		site.publish("homePower", homePower)
+		if homePower > 0 {
+			// use new value
+			site.homePower = homePower
+		} else {
+			// use cached value
+			homePower = site.homePower
+		}
+		site.publish("homePower", site.homePower)
 
 		greenShareHome := site.greenShare(0, homePower)
 		greenShareLoadpoints := site.greenShare(homePower, homePower+totalChargePower)
