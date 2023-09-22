@@ -297,12 +297,10 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 	case easee.TOTAL_POWER:
 		c.currentPower = 1e3 * value.(float64)
 	case easee.SESSION_ENERGY:
-		//SESSION_ENERGY must not be set to 0 by Productupdates, they occur erratic
-		//Reset to 0 is done in case CHARGER_OP_MODE
-		if 0 == value.(float64) {
-			return
+		//SESSION_ENERGY must not be set to 0 by Productupdates, they occur erratic. Reset to 0 is done in case CHARGER_OP_MODE
+		if 0 != value.(float64) {
+			c.sessionEnergy = value.(float64)
 		}
-		c.sessionEnergy = value.(float64)
 	case easee.LIFETIME_ENERGY:
 		c.totalEnergy = value.(float64)
 		if easee.NEED_SESSION_START_ENERGY == c.sessionStartLifetimeEnergy {
