@@ -1,7 +1,7 @@
 template: victron-ev-charging-station
 products:
   - brand: Victron
-    description:          
+    description:
       en: Victron EV charging station. Charger has to be in manual mode and modbus hs to be configured so that ID=100
       de: Victron EV charging station. Der charger muss im mode "Manual" sein, modbus ID muss 100 sein.
 params:
@@ -11,7 +11,7 @@ render: |
   type: custom
   status:
     source: go
-    script: |       
+    script: |
       switch RawValue {
         case 0: WallboxStatus = "A"
         case 1: WallboxStatus = "B"
@@ -19,7 +19,7 @@ render: |
         case 8,9,10,11,12,13,14 WallboxStatus =  "E"
         default: WallboxStatus = "F"
       }
-      WallboxStatus 
+      WallboxStatus
     in:
       - name: RawValue
         type: int64
@@ -50,3 +50,4 @@ render: |
       address: 3825 # Strom max
       type: writeholding
       decode: uint16
+
