@@ -24,8 +24,8 @@ type CP struct {
 	clock clock.Clock // mockable time
 	log   *util.Logger
 
-	id        string
-	connector int
+	id string
+	// connector int
 
 	connectC, statusC chan struct{}
 	connected         bool
@@ -42,10 +42,10 @@ type CP struct {
 
 func NewChargePoint(log *util.Logger, id string, connector int, timeout time.Duration) *CP {
 	return &CP{
-		clock:        clock.New(),
-		log:          log,
-		id:           id,
-		connector:    connector,
+		clock: clock.New(),
+		log:   log,
+		id:    id,
+		// connector:    connector,
 		connectC:     make(chan struct{}),
 		statusC:      make(chan struct{}),
 		measurements: make(map[string]types.SampledValue),
