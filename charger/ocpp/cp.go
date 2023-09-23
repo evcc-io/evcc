@@ -40,7 +40,8 @@ type CP struct {
 	txnId    int
 }
 
-func NewChargePoint(log *util.Logger, id string, connector int, timeout time.Duration) *CP {
+// func NewChargePoint(log *util.Logger, id string, connector int, timeout time.Duration) *CP {
+func NewChargePoint(log *util.Logger, id string, timeout time.Duration) *CP {
 	return &CP{
 		clock: clock.New(),
 		log:   log,
@@ -75,9 +76,9 @@ func (cp *CP) RegisterID(id string) {
 	cp.id = id
 }
 
-func (cp *CP) Connector() int {
-	return cp.connector
-}
+// func (cp *CP) Connector() int {
+// 	return cp.connector
+// }
 
 func (cp *CP) connect(connect bool) {
 	cp.mu.Lock()

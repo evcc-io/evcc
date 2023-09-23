@@ -1,7 +1,17 @@
 package ocpp
 
-type Connector struct{}
+import "github.com/evcc-io/evcc/util"
 
-func NewConnector() *Connector {
-	return &Connector{}
+type Connector struct {
+	log *util.Logger
+	*CP
+	connector int
+}
+
+func NewConnector(log *util.Logger, cp *CP, connector int) *Connector {
+	return &Connector{
+		log:       log,
+		CP:        cp,
+		connector: connector,
+	}
 }

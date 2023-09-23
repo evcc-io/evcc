@@ -55,8 +55,12 @@ func (cs *CS) chargepointByID(id string) (*CP, error) {
 	return cp, nil
 }
 
+<<<<<<< HEAD
 // NewChargePoint implements ocpp16.ChargePointConnectionHandler
 func (cs *CS) NewChargePoint(chargePoint ocpp16.ChargePointConnection) {
+=======
+func (cs *CS) NewChargePointHandler(chargePoint ocpp16.ChargePointConnection) {
+>>>>>>> 97d76265b (wip)
 	cs.mu.Lock()
 	defer cs.mu.Unlock()
 
