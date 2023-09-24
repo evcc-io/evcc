@@ -11,10 +11,12 @@ var instance = struct {
 	meters   *handler[api.Meter]
 	chargers *handler[api.Charger]
 	vehicles *handler[api.Vehicle]
+	tariffs  *handler[api.Tariff]
 }{
 	meters:   &handler[api.Meter]{topic: "meter"},
 	chargers: &handler[api.Charger]{topic: "charger"},
 	vehicles: &handler[api.Vehicle]{topic: "vehicle"},
+	tariffs:  &handler[api.Tariff]{topic: "tariff"},
 }
 
 type Handler[T any] interface {
@@ -35,6 +37,10 @@ func Chargers() Handler[api.Charger] {
 
 func Vehicles() Handler[api.Vehicle] {
 	return instance.vehicles
+}
+
+func Tariffs() Handler[api.Tariff] {
+	return instance.tariffs
 }
 
 // Instances returns the instances of the given devices
