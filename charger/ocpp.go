@@ -319,7 +319,7 @@ func (c *OCPP) Enable(enable bool) (err error) {
 			rc <- err
 		}, c.idtag, func(request *core.RemoteStartTransactionRequest) {
 			request.ConnectorId = &c.connector
-			request.ChargingProfile = getTxChargingProfile(c.current, c.phases, 0)
+			request.ChargingProfile = c.getTxChargingProfile(c.current, 0)
 		})
 	} else {
 		// if no transaction is running, the vehicle may have stopped it (which is ok) or an unknown transaction is running
@@ -361,8 +361,8 @@ func (c *OCPP) setChargingProfile(connectorId int, profile *types.ChargingProfil
 	return c.wait(err, rc)
 }
 
-// updatePeriod sets a single charging schedule period with given current and phases
-func (c *OCPP) updatePeriod(current float64, phases int) error {
+// updatePeriod sets a single charging schedule period with given current
+func (c *OCPP) updatePeriod(current float64) error {
 	// current period can only be updated if transaction is active
 	if enabled, err := c.Enabled(); err != nil || !enabled {
 		return err
@@ -375,7 +375,7 @@ func (c *OCPP) updatePeriod(current float64, phases int) error {
 
 	current = math.Trunc(10*current) / 10
 
-	err = c.setChargingProfile(c.connector, getTxChargingProfile(current, phases, txn))
+	err = c.setChargingProfile(c.connector, c.getTxChargingProfile(current, txn))
 	if err != nil {
 		err = fmt.Errorf("set charging profile: %w", err)
 	}
@@ -383,12 +383,12 @@ func (c *OCPP) updatePeriod(current float64, phases int) error {
 	return err
 }
 
-func getTxChargingProfile(current float64, phases, transactionId int) *types.ChargingProfile {
+func (c *OCPP) getTxChargingProfile(current float64, transactionId int) *types.ChargingProfile {
 	period := types.NewChargingSchedulePeriod(0, current)
 
 	// TODO add phases support
-	// if phases != 0 {
-	// 	period.NumberPhases = &phases
+	// if c.phases != 0 {
+	// 	period.NumberPhases = &c.phases
 	// }
 
 	return &types.ChargingProfile{
@@ -413,7 +413,7 @@ var _ api.ChargerEx = (*OCPP)(nil)
 
 // MaxCurrentMillis implements the api.ChargerEx interface
 func (c *OCPP) MaxCurrentMillis(current float64) error {
-	err := c.updatePeriod(current, c.phases)
+	err := c.updatePeriod(current)
 	if err == nil {
 		c.current = current
 	}
@@ -442,7 +442,7 @@ func (c *OCPP) phases1p3p(phases int) error {
 	// NOTE: this will currently _never_ do anything since
 	// loadpoint disabled the charger before switching so
 	// updatePeriod will short-circuit
-	return c.updatePeriod(c.current, c.phases)
+	return c.updatePeriod(c.current)
 }
 
 // // Identify implements the api.Identifier interface
