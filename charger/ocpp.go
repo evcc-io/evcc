@@ -11,6 +11,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/ocpp"
+	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/util"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/smartcharging"
@@ -30,6 +31,8 @@ type OCPP struct {
 	meterValuesSample string
 	timeout           time.Duration
 	phaseSwitching    bool
+	chargingRateUnit  types.ChargingRateUnitType
+	lp                loadpoint.API
 }
 
 const defaultIdTag = "evcc"
@@ -50,11 +53,13 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 		Timeout          time.Duration
 		BootNotification *bool
 		GetConfiguration *bool
+		ChargingRateUnit string
 	}{
-		Connector:      1,
-		IdTag:          defaultIdTag,
-		ConnectTimeout: ocppConnectTimeout,
-		Timeout:        ocppTimeout,
+		Connector:        1,
+		IdTag:            defaultIdTag,
+		ConnectTimeout:   ocppConnectTimeout,
+		Timeout:          ocppTimeout,
+		ChargingRateUnit: "A",
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -67,7 +72,7 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 	c, err := NewOCPP(cc.StationId, cc.Connector, cc.IdTag,
 		cc.MeterValues, cc.MeterInterval,
 		boot, noConfig,
-		cc.ConnectTimeout, cc.Timeout)
+		cc.ConnectTimeout, cc.Timeout, cc.ChargingRateUnit)
 	if err != nil {
 		return c, err
 	}
@@ -104,6 +109,7 @@ func NewOCPP(id string, connector int, idtag string,
 	meterValues string, meterInterval time.Duration,
 	boot, noConfig bool,
 	connectTimeout, timeout time.Duration,
+	chargingRateUnit string,
 ) (*OCPP, error) {
 	unit := "ocpp"
 	if id != "" {
@@ -147,8 +153,11 @@ func NewOCPP(id string, connector int, idtag string,
 		ocpp.KeyMeterValuesSampledData,
 		ocpp.KeyMeterValueSampleInterval,
 		ocpp.KeyConnectorSwitch3to1PhaseSupported,
+		ocpp.KeyChargingScheduleAllowedChargingRateUnit,
 	}
 	_ = keys
+
+	c.chargingRateUnit = types.ChargingRateUnitType(chargingRateUnit)
 
 	// noConfig mode disables GetConfiguration
 	if noConfig {
@@ -204,6 +213,11 @@ func NewOCPP(id string, connector int, idtag string,
 						if c.idtag == defaultIdTag {
 							c.idtag = *opt.Value
 							c.log.DEBUG.Printf("overriding default `idTag` with Alfen-specific value: %s", c.idtag)
+						}
+
+					case ocpp.KeyChargingScheduleAllowedChargingRateUnit:
+						if *opt.Value == "W" {
+							c.chargingRateUnit = types.ChargingRateUnitWatts
 						}
 					}
 
@@ -384,12 +398,25 @@ func (c *OCPP) updatePeriod(current float64) error {
 }
 
 func (c *OCPP) getTxChargingProfile(current float64, transactionId int) *types.ChargingProfile {
-	period := types.NewChargingSchedulePeriod(0, current)
+	var phases = c.phases
+	var value float64
+	if c.chargingRateUnit == types.ChargingRateUnitWatts {
+		voltage := 230.0
+		// Get number of currently active phases from Loadpoint
+		phases = c.lp.GetPhases()
+		if phases == 0 {
+			phases = 3
+		}
+		value = math.Trunc(current * float64(phases) * voltage)
+	} else {
+		if phases == 0 {
+			phases = 3
+		}
+		value = current
+	}
 
-	// TODO add phases support
-	// if c.phases != 0 {
-	// 	period.NumberPhases = &c.phases
-	// }
+	period := types.NewChargingSchedulePeriod(0, value)
+	period.NumberPhases = &phases
 
 	return &types.ChargingProfile{
 		ChargingProfileId:      1,
@@ -398,7 +425,7 @@ func (c *OCPP) getTxChargingProfile(current float64, transactionId int) *types.C
 		ChargingProfilePurpose: types.ChargingProfilePurposeTxProfile,
 		ChargingProfileKind:    types.ChargingProfileKindRelative,
 		ChargingSchedule: &types.ChargingSchedule{
-			ChargingRateUnit:       types.ChargingRateUnitAmperes,
+			ChargingRateUnit:       c.chargingRateUnit,
 			ChargingSchedulePeriod: []types.ChargingSchedulePeriod{period},
 		},
 	}
@@ -450,3 +477,8 @@ func (c *OCPP) phases1p3p(phases int) error {
 // func (c *OCPP) Identify() (string, error) {
 // 	return "", errors.New("not implemented")
 // }
+
+// LoadpointControl implements loadpoint.Controller
+func (c *OCPP) LoadpointControl(lp loadpoint.API) {
+	c.lp = lp
+}
