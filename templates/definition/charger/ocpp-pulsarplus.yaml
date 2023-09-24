@@ -15,7 +15,7 @@ requirements:
     en: |
       Setup Guide: https://support.wallbox.com/en/knowledge-base/ocpp-activation-and-setup-guide/
       * Switch on “Enable OCPP” (myWallbox app) or enable the “OCPP WebSocket connection” switch (myWallbox Portal)
-      * Additionally switch on the “Improved charger control” (Profile -> Experimental functions) (myWallbox app) 
+      * Enable “Improved charger control” (Profile -> Experimental functions) (myWallbox app) 
       * URL: ws://[evcc-adresse]:8887/ (local network connection)
       * Charge Point Identity: Custom value (e.g. serial number of charger) which is reused in configuration as *stationid*
       * Password: leave empty
