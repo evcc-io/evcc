@@ -43,12 +43,6 @@ func (cs *CS) errorHandler(errC <-chan error) {
 	}
 }
 
-// remoteByID returns a connected remote charge point identified by id.
-func (cs *CS) remoteByID(id string) bool {
-	_, ok := cs.cps[id]
-	return ok
-}
-
 // chargepointByID returns a configured charge point identified by id.
 func (cs *CS) chargepointByID(id string) (*CP, error) {
 	cp, ok := cs.cps[id]
@@ -66,19 +60,22 @@ func (cs *CS) NewChargePoint(chargePoint ocpp16.ChargePointConnection) {
 	cs.mu.Lock()
 	defer cs.mu.Unlock()
 
-	if cs.remoteByID(chargePoint.ID()) {
+	// check for configured charge point
+	cp, ok := cs.cps[chargePoint.ID()]
+	if ok {
 		cs.log.DEBUG.Printf("charge point connected: %s", chargePoint.ID())
 
 		// trigger initial connection if charge point is already setup
-		if cp, _ := cs.chargepointByID(chargePoint.ID()); cp != nil {
+		if cp != nil {
 			cp.connect(true)
 		}
 
 		return
 	}
 
-	// check for anonymous charge point
-	if cp, err := cs.chargepointByID(""); err == nil {
+	// check for configured anonymous charge point
+	cp, ok = cs.cps[""]
+	if ok && cp != nil {
 		cs.log.INFO.Printf("charge point connected, registering: %s", chargePoint.ID())
 
 		// update id
