@@ -66,28 +66,7 @@ func (cs *CS) NewChargePoint(chargePoint ocpp16.ChargePointConnection) {
 	cs.mu.Lock()
 	defer cs.mu.Unlock()
 
-	if !cs.remoteByID(chargePoint.ID()) {
-		// check for anonymous chargepoint
-		if cp, err := cs.chargepointByID(""); err == nil {
-			cs.log.INFO.Printf("charge point connected, registering: %s", chargePoint.ID())
-
-			// update id
-			cp.RegisterID(chargePoint.ID())
-
-			cs.cps[chargePoint.ID()] = cp
-			delete(cs.cps, "")
-
-			cp.connect(true)
-
-			return
-		}
-
-		cs.log.WARN.Printf("charge point connected, unknown: %s", chargePoint.ID())
-
-		// register unknown chargepoint
-		// when chargepoint setup is complete, it will eventually be associated with the connected id
-		cs.cps[chargePoint.ID()] = nil
-	} else {
+	if cs.remoteByID(chargePoint.ID()) {
 		cs.log.DEBUG.Printf("charge point connected: %s", chargePoint.ID())
 
 		// trigger initial connection if chargepoint is already setup
@@ -95,6 +74,27 @@ func (cs *CS) NewChargePoint(chargePoint ocpp16.ChargePointConnection) {
 			cp.connect(true)
 		}
 	}
+
+	// check for anonymous chargepoint
+	if cp, err := cs.chargepointByID(""); err == nil {
+		cs.log.INFO.Printf("charge point connected, registering: %s", chargePoint.ID())
+
+		// update id
+		cp.RegisterID(chargePoint.ID())
+
+		cs.cps[chargePoint.ID()] = cp
+		delete(cs.cps, "")
+
+		cp.connect(true)
+
+		return
+	}
+
+	cs.log.WARN.Printf("charge point connected, unknown: %s", chargePoint.ID())
+
+	// register unknown chargepoint
+	// when chargepoint setup is complete, it will eventually be associated with the connected id
+	cs.cps[chargePoint.ID()] = nil
 }
 
 // ChargePointDisconnected implements ocpp16.ChargePointConnectionHandler
@@ -102,16 +102,9 @@ func (cs *CS) ChargePointDisconnected(chargePoint ocpp16.ChargePointConnection) 
 	cs.mu.Lock()
 	defer cs.mu.Unlock()
 
-	if cp, err := cs.chargepointByID(chargePoint.ID()); err != nil {
-		cs.log.ERROR.Printf("chargepoint disconnected: %v", err)
-	} else {
-		cs.log.DEBUG.Printf("chargepoint disconnected: %s", chargePoint.ID())
+	cs.log.DEBUG.Printf("charge point disconnected: %s", chargePoint.ID())
 
-		if cp == nil {
-			// remove unknown chargepoint
-			delete(cs.cps, chargePoint.ID())
-		} else {
-			cp.connect(false)
-		}
+	if cp, err := cs.chargepointByID(chargePoint.ID()); err != nil {
+		cp.connect(false)
 	}
 }
