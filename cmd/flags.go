@@ -18,9 +18,14 @@ const (
 	flagPhases            = "phases"
 	flagPhasesDescription = "Set usable phases (1 or 3)"
 
-	flagEnable   = "enable"
-	flagDisable  = "disable"
-	flagDiagnose = "diagnose"
+	flagCloud            = "cloud"
+	flagCloudDescription = "Use cloud service (requires sponsor token)"
+
+	flagEnable  = "enable"
+	flagDisable = "disable"
+
+	flagDiagnose            = "diagnose"
+	flagDiagnoseDescription = "Diagnose"
 
 	flagWakeup            = "wakeup"
 	flagWakeupDescription = "Wake up"

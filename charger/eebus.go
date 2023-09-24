@@ -33,6 +33,10 @@ type EEBus struct {
 	expectedEnableUnpluggedState bool
 	current                      float64
 
+	// connection tracking for api.CurrentGetter
+	evConnected  bool
+	currentLimit float64
+
 	lastIsChargingCheck  time.Time
 	lastIsChargingResult bool
 
@@ -231,7 +235,13 @@ func (c *EEBus) updateState() (api.ChargeStatus, error) {
 
 	if !c.emobility.EVConnected() {
 		c.expectedEnableUnpluggedState = false
+		c.evConnected = false
 		return api.StatusA, nil
+	}
+
+	if !c.evConnected {
+		c.evConnected = true
+		c.currentLimit = -1
 	}
 
 	currentState, err := c.emobility.EVCurrentChargeState()
@@ -330,12 +340,12 @@ func (c *EEBus) writeCurrentLimitData(currents []float64) error {
 		return err
 	}
 
-	// Only send currents smaller 6A if the communication standard is known
-	// otherwise this could cause ISO15118 capable OBCs to stick with IEC61851 when plugging
-	// the charge cable in. Or even worse show an error and the cable needs the unplugged,
+	// Only send currents smaller than 6A if the communication standard is known.
+	// Otherwise this could cause ISO15118 capable OBCs to stick with IEC61851 when plugging
+	// the charge cable in. Or even worse show an error and the cable then needs to be unplugged,
 	// wait for the car to go into sleep and plug it back in.
-	// So if are currentls smaller 6A with unknown communication standard change them to 6A
-	// keep in mind, that still will confuse evcc as it thinks charging is stopped, but it isn't yet
+	// So if there are currents smaller than 6A with unknown communication standard change them to 6A.
+	// Keep in mind that this will still confuse evcc as it thinks charging is stopped, but it hasn't yet.
 	if comStandard == emobility.EVCommunicationStandardTypeUnknown {
 		minLimits, _, _, err := c.emobility.EVCurrentLimits()
 		if err == nil {
@@ -347,9 +357,13 @@ func (c *EEBus) writeCurrentLimitData(currents []float64) error {
 		}
 	}
 
-	// set overload protection limits and self consumption limits to identical values
-	// so if the EV supports self consumption it will be used automatically
-	return c.emobility.EVWriteLoadControlLimits(currents, currents)
+	// Set overload protection limits and self consumption limits to identical values,
+	// so if the EV supports self consumption it will be used automatically.
+	if err = c.emobility.EVWriteLoadControlLimits(currents, currents); err == nil {
+		c.currentLimit = currents[0]
+	}
+
+	return err
 }
 
 // MaxCurrent implements the api.Charger interface
@@ -372,6 +386,13 @@ func (c *EEBus) MaxCurrentMillis(current float64) error {
 	c.current = current
 
 	return nil
+}
+
+var _ api.CurrentGetter = (*Easee)(nil)
+
+// GetMaxCurrent implements the api.CurrentGetter interface
+func (c *EEBus) GetMaxCurrent() (float64, error) {
+	return c.currentLimit, nil
 }
 
 // CurrentPower implements the api.Meter interface

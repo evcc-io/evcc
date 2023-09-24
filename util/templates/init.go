@@ -32,9 +32,9 @@ func init() {
 
 	baseTmpl = template.Must(template.ParseFS(includeFS, "includes/*.tpl"))
 
-	loadTemplates(Charger)
-	loadTemplates(Meter)
-	loadTemplates(Vehicle)
+	for _, class := range ClassValues() {
+		loadTemplates(class)
+	}
 }
 
 func FromBytes(b []byte) (Template, error) {

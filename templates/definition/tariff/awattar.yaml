@@ -1,0 +1,10 @@
+template: awattar
+products:
+  - brand: Awattar
+params:
+  - preset: tariff-base
+  - name: region
+render: |
+  type: awattar
+  {{ include "tariff-base" . }}
+  region: {{ .region }}

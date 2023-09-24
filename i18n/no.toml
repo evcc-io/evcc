@@ -355,7 +355,7 @@ vehicle = "Kjøretøy"
 [sessions.filter]
 allLoadpoints = "alle ladepunkter"
 allVehicles = "alle kjøretøy"
-filter = "filter"
+filter = "Filter"
 
 [settings]
 title = "Innstillinger"

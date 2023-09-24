@@ -179,3 +179,13 @@ func (wb *PhoenixEMEth) currents() (float64, float64, float64, error) {
 
 	return currents[0], currents[1], currents[2], nil
 }
+
+// GetMaxCurrent implements the api.CurrentGetter interface
+func (wb PhoenixEMEth) GetMaxCurrent() (float64, error) {
+	b, err := wb.conn.ReadHoldingRegisters(phxEMEthRegMaxCurrent, 1)
+	if err != nil {
+		return 0, err
+	}
+
+	return rs485.RTUUint16ToFloat64(b), err
+}

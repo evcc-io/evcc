@@ -83,7 +83,7 @@ func NewFixedFromConfig(other map[string]interface{}) (api.Tariff, error) {
 func (t *Fixed) Rates() (api.Rates, error) {
 	var res api.Rates
 
-	start := carbon.FromStdTime(t.clock.Now().Local()).StartOfDay()
+	start := carbon.CreateFromStdTime(t.clock.Now().Local()).StartOfDay()
 	for i := 0; i < 7; i++ {
 		dow := fixed.Day((start.DayOfWeek() + i) % 7)
 
