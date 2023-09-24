@@ -16,17 +16,17 @@ type CS struct {
 	cps map[string]*CP
 }
 
-// Register registers a chargepoint with the central system.
-// The chargepoint identified by id may already be connected in which case initial connection is triggered.
+// Register registers a charge point with the central system.
+// The charge point identified by id may already be connected in which case initial connection is triggered.
 func (cs *CS) Register(id string, cp *CP) error {
 	cs.mu.Lock()
 	defer cs.mu.Unlock()
 
 	if _, ok := cs.cps[id]; ok && id == "" {
-		return errors.New("cannot have >1 chargepoint with empty station id")
+		return errors.New("cannot have >1 charge point with empty station id")
 	}
 
-	// trigger unknown chargepoint connected
+	// trigger unknown charge point connected
 	if unknown, ok := cs.cps[id]; ok && unknown == nil {
 		cp.connect(true)
 	}
@@ -43,13 +43,13 @@ func (cs *CS) errorHandler(errC <-chan error) {
 	}
 }
 
-// remoteByID returns a connected remote chargepoint identified by id.
+// remoteByID returns a connected remote charge point identified by id.
 func (cs *CS) remoteByID(id string) bool {
 	_, ok := cs.cps[id]
 	return ok
 }
 
-// chargepointByID returns a configured chargepoint identified by id.
+// chargepointByID returns a configured charge point identified by id.
 func (cs *CS) chargepointByID(id string) (*CP, error) {
 	cp, ok := cs.cps[id]
 	if !ok {
@@ -69,13 +69,13 @@ func (cs *CS) NewChargePoint(chargePoint ocpp16.ChargePointConnection) {
 	if cs.remoteByID(chargePoint.ID()) {
 		cs.log.DEBUG.Printf("charge point connected: %s", chargePoint.ID())
 
-		// trigger initial connection if chargepoint is already setup
+		// trigger initial connection if charge point is already setup
 		if cp, _ := cs.chargepointByID(chargePoint.ID()); cp != nil {
 			cp.connect(true)
 		}
 	}
 
-	// check for anonymous chargepoint
+	// check for anonymous charge point
 	if cp, err := cs.chargepointByID(""); err == nil {
 		cs.log.INFO.Printf("charge point connected, registering: %s", chargePoint.ID())
 
@@ -92,8 +92,8 @@ func (cs *CS) NewChargePoint(chargePoint ocpp16.ChargePointConnection) {
 
 	cs.log.WARN.Printf("charge point connected, unknown: %s", chargePoint.ID())
 
-	// register unknown chargepoint
-	// when chargepoint setup is complete, it will eventually be associated with the connected id
+	// register unknown charge point
+	// when charge point setup is complete, it will eventually be associated with the connected id
 	cs.cps[chargePoint.ID()] = nil
 }
 
