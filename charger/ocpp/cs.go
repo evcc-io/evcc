@@ -43,22 +43,33 @@ func (cs *CS) errorHandler(errC <-chan error) {
 	}
 }
 
+// remoteByID returns a connected remote chargepoint identified by id.
+func (cs *CS) remoteByID(id string) bool {
+	_, ok := cs.cps[id]
+	return ok
+}
+
+// chargepointByID returns a configured chargepoint identified by id.
 func (cs *CS) chargepointByID(id string) (*CP, error) {
 	cp, ok := cs.cps[id]
 	if !ok {
 		return nil, fmt.Errorf("unknown charge point: %s", id)
 	}
+	if cp == nil {
+		return nil, fmt.Errorf("charge point not configured: %s", id)
+	}
 	return cp, nil
 }
 
+// NewChargePoint implements ocpp16.ChargePointConnectionHandler
 func (cs *CS) NewChargePoint(chargePoint ocpp16.ChargePointConnection) {
 	cs.mu.Lock()
 	defer cs.mu.Unlock()
 
-	if cp, err := cs.chargepointByID(chargePoint.ID()); err != nil {
+	if !cs.remoteByID(chargePoint.ID()) {
 		// check for anonymous chargepoint
 		if cp, err := cs.chargepointByID(""); err == nil {
-			cs.log.INFO.Printf("chargepoint connected, registering: %s", chargePoint.ID())
+			cs.log.INFO.Printf("charge point connected, registering: %s", chargePoint.ID())
 
 			// update id
 			cp.RegisterID(chargePoint.ID())
@@ -71,21 +82,22 @@ func (cs *CS) NewChargePoint(chargePoint ocpp16.ChargePointConnection) {
 			return
 		}
 
-		cs.log.WARN.Printf("chargepoint connected, unknown: %s", chargePoint.ID())
+		cs.log.WARN.Printf("charge point connected, unknown: %s", chargePoint.ID())
 
 		// register unknown chargepoint
 		// when chargepoint setup is complete, it will eventually be associated with the connected id
 		cs.cps[chargePoint.ID()] = nil
 	} else {
-		cs.log.DEBUG.Printf("chargepoint connected: %s", chargePoint.ID())
+		cs.log.DEBUG.Printf("charge point connected: %s", chargePoint.ID())
 
 		// trigger initial connection if chargepoint is already setup
-		if cp != nil {
+		if cp, _ := cs.chargepointByID(chargePoint.ID()); cp != nil {
 			cp.connect(true)
 		}
 	}
 }
 
+// ChargePointDisconnected implements ocpp16.ChargePointConnectionHandler
 func (cs *CS) ChargePointDisconnected(chargePoint ocpp16.ChargePointConnection) {
 	cs.mu.Lock()
 	defer cs.mu.Unlock()
