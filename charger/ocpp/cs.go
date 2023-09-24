@@ -73,6 +73,8 @@ func (cs *CS) NewChargePoint(chargePoint ocpp16.ChargePointConnection) {
 		if cp, _ := cs.chargepointByID(chargePoint.ID()); cp != nil {
 			cp.connect(true)
 		}
+
+		return
 	}
 
 	// check for anonymous charge point
