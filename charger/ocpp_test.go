@@ -126,6 +126,7 @@ func (suite *ocppTestSuite) TestConnect() {
 	suite.NoError(cp2.Start(ocppTestUrl))
 	suite.True(cp2.IsConnected())
 
+	// error on unconfigured 2nd charge point
 	_, err = cp2.BootNotification("demo", "evcc")
-	suite.NoError(err)
+	suite.Error(err)
 }
