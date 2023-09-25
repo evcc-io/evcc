@@ -22,7 +22,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"math"
 	"net/http"
 	"os"
 	"strings"
@@ -67,7 +66,6 @@ type Easee struct {
 	cmdC       chan easee.SignalRCommandResponse
 	obsC       chan easee.Observation
 	obsTime    map[easee.ObservationID]time.Time
-	ticker     *time.Ticker
 	stopTicker chan struct{}
 }
 
@@ -329,14 +327,14 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 
 		// OpMode changed TO charging. Start ticker for periodic requests to update LIFETIME_ENERGY
 		if c.opMode != easee.ModeCharging && value.(int) == easee.ModeCharging {
-			c.ticker = time.NewTicker(5 * time.Minute)
 			c.stopTicker = make(chan struct{})
 			go func() {
+				ticker := time.NewTicker(5 * time.Minute)
 				for {
 					select {
 					case <-c.stopTicker:
 						return
-					case <-c.ticker.C:
+					case <-ticker.C:
 						c.requestLifetimeEnergyUpdate()
 					}
 				}
@@ -345,7 +343,6 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 
 		// OpMode changed FROM charging to something else - stop ticker
 		if c.opMode == easee.ModeCharging && value.(int) != easee.ModeCharging {
-			c.ticker.Stop()
 			c.stopTicker <- struct{}{}
 		}
 
@@ -756,7 +753,7 @@ func (c *Easee) ChargedEnergy() (float64, error) {
 	// or the SESSION_ENERGY value by the API. Each value could be lower than the other, depending on
 	// order and receive timestamp of the product update. We want to return the higher (and newer) value.
 	if c.sessionStartLifetimeEnergy > 0 {
-		return math.Max(c.sessionEnergy, c.totalEnergy-c.sessionStartLifetimeEnergy), nil
+		return max(c.sessionEnergy, c.totalEnergy-c.sessionStartLifetimeEnergy), nil
 	}
 	return c.sessionEnergy, nil
 }
