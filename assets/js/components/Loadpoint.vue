@@ -9,7 +9,7 @@
 						class="me-2 flex-shrink-0"
 					/>
 					<div class="text-truncate">
-						{{ title || $t("main.loadpoint.fallbackName") }}
+						{{ loadpointTitle }}
 					</div>
 				</h3>
 				<LoadpointSettingsButton
@@ -198,6 +198,8 @@ export default {
 		tariffGrid: Number,
 		tariffCo2: Number,
 		currency: String,
+		error: String,
+		warn: String,
 	},
 	data() {
 		return {
@@ -210,6 +212,9 @@ export default {
 		};
 	},
 	computed: {
+		loadpointTitle: function () {
+			return this.title || this.$t("main.loadpoint.fallbackName");
+		},
 		integratedDevice: function () {
 			return this.chargerFeatureIntegratedDevice;
 		},
@@ -254,6 +259,12 @@ export default {
 		chargeRemainingDuration() {
 			this.chargeRemainingDurationInterpolated = this.chargeRemainingDuration;
 		},
+		error() {
+			window.app.error(this.message(this.error));
+		},
+		warn() {
+			window.app.warn(this.message(this.warn));
+		},
 	},
 	mounted() {
 		this.tickerHandler = setInterval(this.tick, 1000);
@@ -262,6 +273,9 @@ export default {
 		clearInterval(this.tickerHandler);
 	},
 	methods: {
+		message(msg) {
+			return { message: `${this.loadpointTitle}: ${msg}` };
+		},
 		tick() {
 			if (this.phaseRemainingInterpolated > 0) {
 				this.phaseRemainingInterpolated--;

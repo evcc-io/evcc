@@ -1486,6 +1486,7 @@ func (lp *Loadpoint) Update(sitePower float64, autoCharge, batteryBuffered, batt
 
 	// TODO remove
 	lp.log.ERROR.Println("foo")
+	lp.log.WARN.Println("bar bar")
 
 	// read and publish meters first- charge power has already been updated by the site
 	lp.updateChargeVoltages()
