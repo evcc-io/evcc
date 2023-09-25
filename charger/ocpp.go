@@ -409,14 +409,14 @@ func (c *OCPP) getTxChargingProfile(current float64, transactionId int) *types.C
 		}
 		value = math.Trunc(current * float64(phases) * voltage)
 	} else {
-		if phases == 0 {
-			phases = 3
-		}
+		// if phases == 0 {
+		// 	phases = 3
+		// }
 		value = current
 	}
 
 	period := types.NewChargingSchedulePeriod(0, value)
-	period.NumberPhases = &phases
+	// period.NumberPhases = &phases
 
 	return &types.ChargingProfile{
 		ChargingProfileId:      1,
