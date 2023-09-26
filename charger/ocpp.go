@@ -398,25 +398,21 @@ func (c *OCPP) updatePeriod(current float64) error {
 }
 
 func (c *OCPP) getTxChargingProfile(current float64, transactionId int) *types.ChargingProfile {
-	var phases = c.phases
-	var value float64
+	var period types.ChargingSchedulePeriod
 	if c.chargingRateUnit == types.ChargingRateUnitWatts {
 		voltage := 230.0
+		phases := 0
 		// Get number of currently active phases from Loadpoint
-		phases = c.lp.GetPhases()
+		if c.lp != nil {
+			phases = c.lp.GetPhases()
+		}
 		if phases == 0 {
 			phases = 3
 		}
-		value = math.Trunc(current * float64(phases) * voltage)
+		period = types.NewChargingSchedulePeriod(0, math.Trunc(current*float64(phases)*voltage))
 	} else {
-		// if phases == 0 {
-		// 	phases = 3
-		// }
-		value = current
+		period = types.NewChargingSchedulePeriod(0, current)
 	}
-
-	period := types.NewChargingSchedulePeriod(0, value)
-	// period.NumberPhases = &phases
 
 	return &types.ChargingProfile{
 		ChargingProfileId:      1,
