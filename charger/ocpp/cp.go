@@ -15,25 +15,6 @@ import (
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/types"
 )
 
-const (
-	// Core profile keys
-	KeyNumberOfConnectors = "NumberOfConnectors"
-
-	// Meter profile keys
-	KeyMeterValuesSampledData   = "MeterValuesSampledData"
-	KeyMeterValueSampleInterval = "MeterValueSampleInterval"
-
-	// Smart Charging profile keys
-	KeyChargeProfileMaxStackLevel              = "ChargeProfileMaxStackLevel"
-	KeyChargingScheduleAllowedChargingRateUnit = "ChargingScheduleAllowedChargingRateUnit"
-	KeyChargingScheduleMaxPeriods              = "ChargingScheduleMaxPeriods"
-	KeyConnectorSwitch3to1PhaseSupported       = "ConnectorSwitch3to1PhaseSupported"
-	KeyMaxChargingProfilesInstalled            = "MaxChargingProfilesInstalled"
-
-	// Alfen specific keys
-	KeyAlfenPlugAndChargeIdentifier = "PlugAndChargeIdentifier"
-)
-
 // TODO support multiple connectors
 // Since ocpp-go interfaces at charge point level, we need to manage multiple connector separately
 

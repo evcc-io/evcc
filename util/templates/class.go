@@ -8,4 +8,5 @@ const (
 	Charger
 	Meter
 	Vehicle
+	Tariff
 )

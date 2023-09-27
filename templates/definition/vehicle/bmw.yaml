@@ -10,10 +10,11 @@ params:
     description:
       de: Region
       en: Region
-    values:
-      - NA
-      - EU
+    # values:
+    #   - NA
+    #   - EU
     default: EU
+    advanced: true
 render: |
   type: bmw
   {{ include "vehicle-base" . }}

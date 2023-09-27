@@ -381,6 +381,12 @@ func (c *Easee) Enable(enable bool) (err error) {
 	opMode := c.opMode
 	c.mux.Unlock()
 
+	defer func() {
+		if err == nil {
+			c.enabled = enable
+		}
+	}()
+
 	// enable charger once if it's switched off
 	if enablingRequired {
 		data := easee.ChargerSettings{
@@ -411,12 +417,6 @@ func (c *Easee) Enable(enable bool) (err error) {
 		}
 		targetCurrent = 32
 	}
-
-	defer func() {
-		if err == nil {
-			c.enabled = enable
-		}
-	}()
 
 	uri := fmt.Sprintf("%s/chargers/%s/commands/%s", easee.API, c.charger, action)
 	if _, err := c.postJSONAndWait(uri, nil); err != nil {
