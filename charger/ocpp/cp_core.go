@@ -35,33 +35,33 @@ func (cp *CP) BootNotification(request *core.BootNotificationRequest) (*core.Boo
 }
 
 // timestampValid returns false if status timestamps are outdated
-func (cp *CP) timestampValid(t time.Time) bool {
+func (cp *CP) timestampValid(t time.Time, connector int) bool {
 	// reject if expired
 	if time.Since(t) > messageExpiry {
 		return false
 	}
 
 	// assume having a timestamp is better than not
-	if cp.status.Timestamp == nil {
+	if cp.connectors[connector].status.Timestamp == nil {
 		return true
 	}
 
 	// reject older values than we already have
-	return !t.Before(cp.status.Timestamp.Time)
+	return !t.Before(cp.connectors[connector].status.Timestamp.Time)
 }
 
 func (cp *CP) StatusNotification(request *core.StatusNotificationRequest) (*core.StatusNotificationConfirmation, error) {
-	if request != nil && request.ConnectorId == cp.connector {
+	if request != nil && cp.isValidConnectorID(request.ConnectorId) {
 		cp.mu.Lock()
 		defer cp.mu.Unlock()
 
-		if cp.status == nil {
-			cp.status = request
-			close(cp.statusC) // signal initial status received
-		} else if request.Timestamp == nil || cp.timestampValid(request.Timestamp.Time) {
-			cp.status = request
+		if cp.connectors[request.ConnectorId].status == nil {
+			cp.connectors[request.ConnectorId].status = request
+			close(cp.connectors[request.ConnectorId].statusC) // signal initial status received
+		} else if request.Timestamp == nil || cp.timestampValid(request.Timestamp.Time, request.ConnectorId) {
+			cp.connectors[request.ConnectorId].status = request
 		} else {
-			cp.log.TRACE.Printf("ignoring status: %s < %s", request.Timestamp.Time, cp.status.Timestamp)
+			cp.log.TRACE.Printf("ignoring status: %s < %s", request.Timestamp.Time, cp.connectors[request.ConnectorId].status.Timestamp)
 		}
 	}
 
@@ -85,16 +85,16 @@ func (cp *CP) Heartbeat(request *core.HeartbeatRequest) (*core.HeartbeatConfirma
 }
 
 func (cp *CP) MeterValues(request *core.MeterValuesRequest) (*core.MeterValuesConfirmation, error) {
-	if request != nil && request.ConnectorId == cp.connector {
+	if request != nil && cp.isValidConnectorID(request.ConnectorId) {
 		cp.mu.Lock()
 		defer cp.mu.Unlock()
 
 		for _, meterValue := range request.MeterValue {
 			// ignore old meter value requests
-			if meterValue.Timestamp.Time.After(cp.meterUpdated) {
+			if meterValue.Timestamp.Time.After(cp.connectors[request.ConnectorId].meterUpdated) {
 				for _, sample := range meterValue.SampledValue {
-					cp.measurements[getSampleKey(sample)] = sample
-					cp.meterUpdated = cp.clock.Now()
+					cp.connectors[request.ConnectorId].measurements[getSampleKey(sample)] = sample
+					cp.connectors[request.ConnectorId].meterUpdated = cp.clock.Now()
 				}
 			}
 		}
@@ -112,7 +112,7 @@ func getSampleKey(s types.SampledValue) string {
 }
 
 func (cp *CP) StartTransaction(request *core.StartTransactionRequest) (*core.StartTransactionConfirmation, error) {
-	if request == nil || request.ConnectorId != cp.connector {
+	if request == nil || !cp.isValidConnectorID(request.ConnectorId) {
 		return new(core.StartTransactionConfirmation), nil
 	}
 

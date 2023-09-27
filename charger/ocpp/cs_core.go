@@ -58,7 +58,7 @@ func (cs *CS) OnAuthorize(id string, request *core.AuthorizeRequest) (*core.Auth
 	cs.mu.Lock()
 	defer cs.mu.Unlock()
 
-	cp, err := cs.chargepointByID(id)
+	cp, err := cs.ChargepointByID(id)
 	if err != nil {
 		return nil, err
 	}
@@ -70,7 +70,7 @@ func (cs *CS) OnBootNotification(id string, request *core.BootNotificationReques
 	cs.mu.Lock()
 	defer cs.mu.Unlock()
 
-	cp, err := cs.chargepointByID(id)
+	cp, err := cs.ChargepointByID(id)
 	if err != nil {
 		return nil, err
 	}
@@ -83,7 +83,7 @@ func (cs *CS) OnDataTransfer(id string, request *core.DataTransferRequest) (*cor
 	cs.mu.Lock()
 	defer cs.mu.Unlock()
 
-	cp, err := cs.chargepointByID(id)
+	cp, err := cs.ChargepointByID(id)
 	if err != nil {
 		return nil, err
 	}
@@ -95,7 +95,7 @@ func (cs *CS) OnHeartbeat(id string, request *core.HeartbeatRequest) (*core.Hear
 	cs.mu.Lock()
 	defer cs.mu.Unlock()
 
-	cp, err := cs.chargepointByID(id)
+	cp, err := cs.ChargepointByID(id)
 	if err != nil {
 		return nil, err
 	}
@@ -107,7 +107,7 @@ func (cs *CS) OnMeterValues(id string, request *core.MeterValuesRequest) (*core.
 	cs.mu.Lock()
 	defer cs.mu.Unlock()
 
-	cp, err := cs.chargepointByID(id)
+	cp, err := cs.ChargepointByID(id)
 	if err != nil {
 		return nil, err
 	}
@@ -119,7 +119,7 @@ func (cs *CS) OnStatusNotification(id string, request *core.StatusNotificationRe
 	cs.mu.Lock()
 	defer cs.mu.Unlock()
 
-	cp, err := cs.chargepointByID(id)
+	cp, err := cs.ChargepointByID(id)
 	if err != nil {
 		return nil, err
 	}
@@ -131,7 +131,7 @@ func (cs *CS) OnStartTransaction(id string, request *core.StartTransactionReques
 	cs.mu.Lock()
 	defer cs.mu.Unlock()
 
-	cp, err := cs.chargepointByID(id)
+	cp, err := cs.ChargepointByID(id)
 	if err != nil {
 		return nil, err
 	}
@@ -143,7 +143,7 @@ func (cs *CS) OnStopTransaction(id string, request *core.StopTransactionRequest)
 	cs.mu.Lock()
 	defer cs.mu.Unlock()
 
-	cp, err := cs.chargepointByID(id)
+	cp, err := cs.ChargepointByID(id)
 	if err != nil {
 		return nil, err
 	}
@@ -155,7 +155,7 @@ func (cs *CS) OnDiagnosticsStatusNotification(id string, request *firmware.Diagn
 	cs.mu.Lock()
 	defer cs.mu.Unlock()
 
-	cp, err := cs.chargepointByID(id)
+	cp, err := cs.ChargepointByID(id)
 	if err != nil {
 		return nil, err
 	}
@@ -167,7 +167,7 @@ func (cs *CS) OnFirmwareStatusNotification(id string, request *firmware.Firmware
 	cs.mu.Lock()
 	defer cs.mu.Unlock()
 
-	cp, err := cs.chargepointByID(id)
+	cp, err := cs.ChargepointByID(id)
 	if err != nil {
 		return nil, err
 	}

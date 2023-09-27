@@ -50,7 +50,7 @@ func Instance() *CS {
 		cs.SetFirmwareManagementHandler(instance)
 
 		go instance.errorHandler(cs.Errors())
-		go cs.Start(8887, "/{ws}")
+		go cs.Start(8887, "/evcc/{ws}")
 
 		time.Sleep(time.Second)
 	})

@@ -111,9 +111,17 @@ func NewOCPP(id string, connector int, idtag string,
 	}
 	log := util.NewLogger(unit)
 
-	cp := ocpp.NewChargePoint(log, id, connector, timeout)
-	if err := ocpp.Instance().Register(id, cp); err != nil {
-		return nil, err
+	//hier muss die unterscheidung hin
+	cp, errExist := ocpp.Instance().ChargepointByID(id)
+	if errExist != nil {
+		cp = ocpp.NewChargePoint(log, id, connector, timeout)
+		cp.InitializDefaultConnector(connector)
+		if err := ocpp.Instance().Register(id, cp); err != nil {
+			return nil, err
+		}
+	} else {
+		// create only the connector in this chargepoint
+		cp.InitializDefaultConnector(connector)
 	}
 
 	c := &OCPP{
@@ -124,132 +132,135 @@ func NewOCPP(id string, connector int, idtag string,
 		timeout:   timeout,
 	}
 
-	c.log.DEBUG.Printf("waiting for chargepoint: %v", connectTimeout)
-
-	select {
-	case <-time.After(connectTimeout):
-		return nil, api.ErrTimeout
-	case <-cp.HasConnected():
-	}
-
-	// see who's there
-	if boot {
-		ocpp.Instance().TriggerMessageRequest(cp.ID(), core.BootNotificationFeatureName)
-	}
-
-	var (
-		rc                  = make(chan error, 1)
-		meterSampleInterval time.Duration
-	)
-
-	keys := []string{
-		ocpp.KeyNumberOfConnectors,
-		ocpp.KeyMeterValuesSampledData,
-		ocpp.KeyMeterValueSampleInterval,
-		ocpp.KeyConnectorSwitch3to1PhaseSupported,
-	}
-	_ = keys
-
-	// noConfig mode disables GetConfiguration
-	if noConfig {
-		c.meterValuesSample = meterValues
-		if meterInterval == 0 {
-			meterInterval = 10 * time.Second
+	// dieser Chargepoint wurde schon erstellt und abgefragt
+	if errExist != nil {
+		c.log.DEBUG.Printf("waiting for chargepoint: %v", connectTimeout)
+		select {
+		case <-time.After(connectTimeout):
+			return nil, api.ErrTimeout
+		case <-cp.HasConnected():
 		}
-	} else {
-		err := ocpp.Instance().GetConfiguration(cp.ID(), func(resp *core.GetConfigurationConfirmation, err error) {
-			if err == nil {
-				// log unsupported configuration keys
-				if len(resp.UnknownKey) > 0 {
-					c.log.ERROR.Printf("unsupported keys: %v", sort.StringSlice(resp.UnknownKey))
-				}
 
-				// sort configuration keys for printing
-				sort.Slice(resp.ConfigurationKey, func(i, j int) bool {
-					return resp.ConfigurationKey[i].Key < resp.ConfigurationKey[j].Key
-				})
+		// see who's there
+		if boot {
+			ocpp.Instance().TriggerMessageRequest(cp.ID(), core.BootNotificationFeatureName)
+		}
 
-				rw := map[bool]string{false: "r/w", true: "r/o"}
+		var (
+			rc                  = make(chan error, 1)
+			meterSampleInterval time.Duration
+		)
 
-				for _, opt := range resp.ConfigurationKey {
-					if opt.Value == nil {
-						continue
-					}
+		keys := []string{
+			ocpp.KeyNumberOfConnectors,
+			ocpp.KeyMeterValuesSampledData,
+			ocpp.KeyMeterValueSampleInterval,
+			ocpp.KeyConnectorSwitch3to1PhaseSupported,
+		}
+		_ = keys
 
-					c.log.TRACE.Printf("%s (%s): %s", opt.Key, rw[opt.Readonly], *opt.Value)
-
-					switch opt.Key {
-					case ocpp.KeyNumberOfConnectors:
-						var val int
-						if val, err = strconv.Atoi(*opt.Value); err == nil && c.connector > val {
-							err = fmt.Errorf("connector %d exceeds max available connectors: %d", c.connector, val)
-						}
-
-					case ocpp.KeyMeterValuesSampledData:
-						c.meterValuesSample = *opt.Value
-
-					case ocpp.KeyMeterValueSampleInterval:
-						var val int
-						if val, err = strconv.Atoi(*opt.Value); err == nil {
-							meterSampleInterval = time.Duration(val) * time.Second
-						}
-
-					case ocpp.KeyConnectorSwitch3to1PhaseSupported:
-						var val bool
-						if val, err = strconv.ParseBool(*opt.Value); err == nil {
-							c.phaseSwitching = val
-						}
-
-					case ocpp.KeyAlfenPlugAndChargeIdentifier:
-						if c.idtag == defaultIdTag {
-							c.idtag = *opt.Value
-							c.log.DEBUG.Printf("overriding default `idTag` with Alfen-specific value: %s", c.idtag)
-						}
-					}
-
-					if err != nil {
-						break
-					}
-				}
+		// noConfig mode disables GetConfiguration
+		if noConfig {
+			c.meterValuesSample = meterValues
+			if meterInterval == 0 {
+				meterInterval = 10 * time.Second
 			}
+		} else {
+			err := ocpp.Instance().GetConfiguration(cp.ID(), func(resp *core.GetConfigurationConfirmation, err error) {
+				if err == nil {
+					// log unsupported configuration keys
+					if len(resp.UnknownKey) > 0 {
+						c.log.ERROR.Printf("unsupported keys: %v", sort.StringSlice(resp.UnknownKey))
+					}
 
-			rc <- err
-		}, nil)
+					// sort configuration keys for printing
+					sort.Slice(resp.ConfigurationKey, func(i, j int) bool {
+						return resp.ConfigurationKey[i].Key < resp.ConfigurationKey[j].Key
+					})
 
-		if err := c.wait(err, rc); err != nil {
-			return nil, err
-		}
-	}
+					rw := map[bool]string{false: "r/w", true: "r/o"}
 
-	if meterValues != "" && meterValues != c.meterValuesSample {
-		if err := c.configure(ocpp.KeyMeterValuesSampledData, meterValues); err != nil {
-			return nil, err
-		}
+					for _, opt := range resp.ConfigurationKey {
+						if opt.Value == nil {
+							continue
+						}
 
-		// configuration activated
-		c.meterValuesSample = meterValues
-	}
+						c.log.TRACE.Printf("%s (%s): %s", opt.Key, rw[opt.Readonly], *opt.Value)
 
-	// get initial meter values and configure sample rate
-	if c.hasMeasurement(types.MeasurandPowerActiveImport) || c.hasMeasurement(types.MeasurandEnergyActiveImportRegister) {
-		ocpp.Instance().TriggerMeterValuesRequest(cp.ID(), cp.Connector())
+						switch opt.Key {
+						case ocpp.KeyNumberOfConnectors:
+							var val int
+							if val, err = strconv.Atoi(*opt.Value); err == nil && c.connector > val {
+								err = fmt.Errorf("connector %d exceeds max available connectors: %d", c.connector, val)
+							}
 
-		if meterInterval > 0 && meterInterval != meterSampleInterval {
-			if err := c.configure(ocpp.KeyMeterValueSampleInterval, strconv.Itoa(int(meterInterval.Seconds()))); err != nil {
+						case ocpp.KeyMeterValuesSampledData:
+							c.meterValuesSample = *opt.Value
+
+						case ocpp.KeyMeterValueSampleInterval:
+							var val int
+							if val, err = strconv.Atoi(*opt.Value); err == nil {
+								meterSampleInterval = time.Duration(val) * time.Second
+							}
+
+						case ocpp.KeyConnectorSwitch3to1PhaseSupported:
+							var val bool
+							if val, err = strconv.ParseBool(*opt.Value); err == nil {
+								c.phaseSwitching = val
+							}
+
+						case ocpp.KeyAlfenPlugAndChargeIdentifier:
+							if c.idtag == defaultIdTag {
+								c.idtag = *opt.Value
+								c.log.DEBUG.Printf("overriding default `idTag` with Alfen-specific value: %s", c.idtag)
+							}
+						}
+
+						if err != nil {
+							break
+						}
+					}
+				}
+
+				rc <- err
+			}, nil)
+
+			if err := c.wait(err, rc); err != nil {
 				return nil, err
 			}
 		}
 
-		// HACK: setup watchdog for meter values if not happy with config
-		if meterInterval > 0 {
-			c.log.DEBUG.Println("enabling meter watchdog")
-			go cp.WatchDog(meterInterval)
+		if meterValues != "" && meterValues != c.meterValuesSample {
+			if err := c.configure(ocpp.KeyMeterValuesSampledData, meterValues); err != nil {
+				return nil, err
+			}
+
+			// configuration activated
+			c.meterValuesSample = meterValues
 		}
+
+		// get initial meter values and configure sample rate
+		if c.hasMeasurement(types.MeasurandPowerActiveImport) || c.hasMeasurement(types.MeasurandEnergyActiveImportRegister) {
+			ocpp.Instance().TriggerMeterValuesRequest(cp.ID(), connector)
+
+			if meterInterval > 0 && meterInterval != meterSampleInterval {
+				if err := c.configure(ocpp.KeyMeterValueSampleInterval, strconv.Itoa(int(meterInterval.Seconds()))); err != nil {
+					return nil, err
+				}
+			}
+
+			// HACK: setup watchdog for meter values if not happy with config
+			if meterInterval > 0 {
+				c.log.DEBUG.Println("enabling meter watchdog")
+				go cp.WatchDog(meterInterval, connector)
+			}
+		}
+
 	}
 
 	// TODO: check for running transaction
 
-	return c, cp.Initialized()
+	return c, cp.Initialized(connector)
 }
 
 // hasMeasurement checks if meterValuesSample contains given measurement
@@ -287,7 +298,7 @@ func (c *OCPP) wait(err error, rc chan error) error {
 
 // Status implements the api.Charger interface
 func (c *OCPP) Status() (api.ChargeStatus, error) {
-	return c.cp.Status()
+	return c.cp.Status(c.connector)
 }
 
 // Enabled implements the api.Charger interface
@@ -422,17 +433,17 @@ func (c *OCPP) MaxCurrentMillis(current float64) error {
 
 // CurrentPower implements the api.Meter interface
 func (c *OCPP) currentPower() (float64, error) {
-	return c.cp.CurrentPower()
+	return c.cp.CurrentPower(c.connector)
 }
 
 // TotalEnergy implements the api.MeterTotal interface
 func (c *OCPP) totalEnergy() (float64, error) {
-	return c.cp.TotalEnergy()
+	return c.cp.TotalEnergy(c.connector)
 }
 
 // Currents implements the api.PhaseCurrents interface
 func (c *OCPP) currents() (float64, float64, float64, error) {
-	return c.cp.Currents()
+	return c.cp.Currents(c.connector)
 }
 
 // Phases1p3p implements the api.PhaseSwitcher interface
