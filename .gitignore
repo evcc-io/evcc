@@ -37,3 +37,4 @@ asset-stats.html
 /test-results/
 /playwright-report/
 /playwright/.cache/
+templates/definition/charger/ocpp.yaml

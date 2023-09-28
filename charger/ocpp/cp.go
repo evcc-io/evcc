@@ -67,7 +67,7 @@ func NewChargePoint(log *util.Logger, id string, connector int, timeout time.Dur
 	}
 }
 
-func (cp *CP) InitializDefaultConnector(connector int) {
+func (cp *CP) InitialiseDefaultConnector(connector int) {
 	cp.connectors[connector] = &ConnectorInfo{availability: core.AvailabilityTypeOperative, currentTransaction: 0, statusC: make(chan struct{}), measurements: make(map[string]types.SampledValue)}
 	/*
 		{
@@ -75,6 +75,14 @@ func (cp *CP) InitializDefaultConnector(connector int) {
 			2: {availability: core.AvailabilityTypeOperative, currentTransaction: 0, statusC: make(chan struct{}), measurements: make(map[string]types.SampledValue)},
 		}
 	*/
+}
+
+func (cp *CP) getConnectorByID(ID int) *ConnectorInfo {
+	if ID == 0 {
+		return cp.connectors[1]
+	} else {
+		return cp.connectors[ID]
+	}
 }
 
 func (cp *CP) isValidConnectorID(ID int) bool {
@@ -131,7 +139,7 @@ func (cp *CP) Initialized(connector int) error {
 	// trigger status
 	time.AfterFunc(cp.timeout/2, func() {
 		select {
-		case <-cp.connectors[connector].statusC:
+		case <-cp.getConnectorByID(connector).statusC:
 			return
 		default:
 			Instance().TriggerMessageRequest(cp.ID(), core.StatusNotificationFeatureName, func(request *remotetrigger.TriggerMessageRequest) {
@@ -142,7 +150,7 @@ func (cp *CP) Initialized(connector int) error {
 
 	// wait for status
 	select {
-	case <-cp.connectors[connector].statusC:
+	case <-cp.getConnectorByID(connector).statusC:
 		return nil
 	case <-time.After(cp.timeout):
 		return api.ErrTimeout
@@ -171,11 +179,11 @@ func (cp *CP) Status(connector int) (api.ChargeStatus, error) {
 		return res, api.ErrTimeout
 	}
 
-	if cp.connectors[connector].status.ErrorCode != core.NoError {
-		return res, fmt.Errorf("%s: %s", cp.connectors[connector].status.ErrorCode, cp.connectors[connector].status.Info)
+	if cp.getConnectorByID(connector).status.ErrorCode != core.NoError {
+		return res, fmt.Errorf("%s: %s", cp.getConnectorByID(connector).status.ErrorCode, cp.getConnectorByID(connector).status.Info)
 	}
 
-	switch cp.connectors[connector].status.Status {
+	switch cp.getConnectorByID(connector).status.Status {
 	case core.ChargePointStatusAvailable, // "Available"
 		core.ChargePointStatusUnavailable: // "Unavailable"
 		res = api.StatusA
@@ -189,9 +197,9 @@ func (cp *CP) Status(connector int) (api.ChargeStatus, error) {
 		res = api.StatusC
 	case core.ChargePointStatusReserved, // "Reserved"
 		core.ChargePointStatusFaulted: // "Faulted"
-		return api.StatusF, fmt.Errorf("chargepoint status: %s", cp.connectors[connector].status.ErrorCode)
+		return api.StatusF, fmt.Errorf("chargepoint status: %s", cp.getConnectorByID(connector).status.ErrorCode)
 	default:
-		return api.StatusNone, fmt.Errorf("invalid chargepoint status: %s", cp.connectors[connector].status.Status)
+		return api.StatusNone, fmt.Errorf("invalid chargepoint status: %s", cp.getConnectorByID(connector).status.Status)
 	}
 
 	return res, nil
@@ -202,7 +210,7 @@ func (cp *CP) Status(connector int) (api.ChargeStatus, error) {
 func (cp *CP) WatchDog(timeout time.Duration, connector int) {
 	for ; true; <-time.Tick(timeout) {
 		cp.mu.Lock()
-		update := cp.txnId != 0 && cp.clock.Since(cp.connectors[connector].meterUpdated) > timeout
+		update := cp.txnId != 0 && cp.clock.Since(cp.getConnectorByID(connector).meterUpdated) > timeout
 		cp.mu.Unlock()
 
 		if update {
@@ -212,7 +220,7 @@ func (cp *CP) WatchDog(timeout time.Duration, connector int) {
 }
 
 func (cp *CP) isTimeout(connector int) bool {
-	return cp.timeout > 0 && cp.isValidConnectorID(connector) && cp.clock.Since(cp.connectors[connector].meterUpdated) > cp.timeout
+	return cp.timeout > 0 && cp.isValidConnectorID(connector) && cp.clock.Since(cp.getConnectorByID(connector).meterUpdated) > cp.timeout
 }
 
 //var _ api.Meter = (*CP)(nil)
@@ -234,7 +242,7 @@ func (cp *CP) CurrentPower(connector int) (float64, error) {
 		return 0, nil
 	}
 
-	if m, ok := cp.connectors[connector].measurements[string(types.MeasurandPowerActiveImport)]; ok {
+	if m, ok := cp.getConnectorByID(connector).measurements[string(types.MeasurandPowerActiveImport)]; ok {
 		f, err := strconv.ParseFloat(m.Value, 64)
 		return scale(f, m.Unit), err
 	}
@@ -257,7 +265,7 @@ func (cp *CP) TotalEnergy(connector int) (float64, error) {
 		return 0, api.ErrTimeout
 	}
 
-	if m, ok := cp.connectors[connector].measurements[string(types.MeasurandEnergyActiveImportRegister)]; ok {
+	if m, ok := cp.getConnectorByID(connector).measurements[string(types.MeasurandEnergyActiveImportRegister)]; ok {
 		f, err := strconv.ParseFloat(m.Value, 64)
 		return scale(f, m.Unit) / 1e3, err
 	}
@@ -302,7 +310,7 @@ func (cp *CP) Currents(connector int) (float64, float64, float64, error) {
 	currents := make([]float64, 0, 3)
 
 	for phase := 1; phase <= 3; phase++ {
-		m, ok := cp.connectors[connector].measurements[getKeyCurrentPhase(phase)]
+		m, ok := cp.getConnectorByID(connector).measurements[getKeyCurrentPhase(phase)]
 		if !ok {
 			return 0, 0, 0, api.ErrNotAvailable
 		}

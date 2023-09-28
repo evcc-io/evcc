@@ -70,6 +70,12 @@ params:
     description:
       de: Liste der Zählerwerte
       en: List of meter values
+  - name: urlsuffix
+    advanced: true
+    type: string
+    description:
+      de: Anhang an die URL `ws://<evcc>:8887/<urlsuffix><stationid>`
+      en: Extention for the URL `ws://<evcc>:8887/<urlsuffix><stationid>`
 render: |
   {{ include "ocpp" . }}
   {{- if ne .getconfiguration "true" }}

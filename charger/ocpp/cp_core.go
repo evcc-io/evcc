@@ -42,12 +42,12 @@ func (cp *CP) timestampValid(t time.Time, connector int) bool {
 	}
 
 	// assume having a timestamp is better than not
-	if cp.connectors[connector].status.Timestamp == nil {
+	if cp.getConnectorByID(connector).status.Timestamp == nil {
 		return true
 	}
 
 	// reject older values than we already have
-	return !t.Before(cp.connectors[connector].status.Timestamp.Time)
+	return !t.Before(cp.getConnectorByID(connector).status.Timestamp.Time)
 }
 
 func (cp *CP) StatusNotification(request *core.StatusNotificationRequest) (*core.StatusNotificationConfirmation, error) {
@@ -55,13 +55,13 @@ func (cp *CP) StatusNotification(request *core.StatusNotificationRequest) (*core
 		cp.mu.Lock()
 		defer cp.mu.Unlock()
 
-		if cp.connectors[request.ConnectorId].status == nil {
-			cp.connectors[request.ConnectorId].status = request
-			close(cp.connectors[request.ConnectorId].statusC) // signal initial status received
+		if cp.getConnectorByID(request.ConnectorId).status == nil {
+			cp.getConnectorByID(request.ConnectorId).status = request
+			close(cp.getConnectorByID(request.ConnectorId).statusC) // signal initial status received
 		} else if request.Timestamp == nil || cp.timestampValid(request.Timestamp.Time, request.ConnectorId) {
-			cp.connectors[request.ConnectorId].status = request
+			cp.getConnectorByID(request.ConnectorId).status = request
 		} else {
-			cp.log.TRACE.Printf("ignoring status: %s < %s", request.Timestamp.Time, cp.connectors[request.ConnectorId].status.Timestamp)
+			cp.log.TRACE.Printf("ignoring status: %s < %s", request.Timestamp.Time, cp.getConnectorByID(request.ConnectorId).status.Timestamp)
 		}
 	}
 
@@ -91,10 +91,10 @@ func (cp *CP) MeterValues(request *core.MeterValuesRequest) (*core.MeterValuesCo
 
 		for _, meterValue := range request.MeterValue {
 			// ignore old meter value requests
-			if meterValue.Timestamp.Time.After(cp.connectors[request.ConnectorId].meterUpdated) {
+			if meterValue.Timestamp.Time.After(cp.getConnectorByID(request.ConnectorId).meterUpdated) {
 				for _, sample := range meterValue.SampledValue {
-					cp.connectors[request.ConnectorId].measurements[getSampleKey(sample)] = sample
-					cp.connectors[request.ConnectorId].meterUpdated = cp.clock.Now()
+					cp.getConnectorByID(request.ConnectorId).measurements[getSampleKey(sample)] = sample
+					cp.getConnectorByID(request.ConnectorId).meterUpdated = cp.clock.Now()
 				}
 			}
 		}

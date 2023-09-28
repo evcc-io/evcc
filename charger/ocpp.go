@@ -7,6 +7,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -20,6 +21,7 @@ import (
 
 // OCPP charger implementation
 type OCPP struct {
+	mu                sync.Mutex
 	log               *util.Logger
 	cp                *ocpp.CP
 	connector         int
@@ -109,19 +111,21 @@ func NewOCPP(id string, connector int, idtag string,
 	if id != "" {
 		unit = id
 	}
+
 	log := util.NewLogger(unit)
 
 	//hier muss die unterscheidung hin
 	cp, errExist := ocpp.Instance().ChargepointByID(id)
 	if errExist != nil {
+
 		cp = ocpp.NewChargePoint(log, id, connector, timeout)
-		cp.InitializDefaultConnector(connector)
+		cp.InitialiseDefaultConnector(connector)
 		if err := ocpp.Instance().Register(id, cp); err != nil {
 			return nil, err
 		}
 	} else {
 		// create only the connector in this chargepoint
-		cp.InitializDefaultConnector(connector)
+		cp.InitialiseDefaultConnector(connector)
 	}
 
 	c := &OCPP{
