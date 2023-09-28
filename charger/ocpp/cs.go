@@ -104,6 +104,10 @@ func (cs *CS) ChargePointDisconnected(chargePoint ocpp16.ChargePointConnection) 
 	cs.log.DEBUG.Printf("charge point disconnected: %s", chargePoint.ID())
 
 	if cp, err := cs.ChargepointByID(chargePoint.ID()); err != nil {
-		cp.connect(false)
+		if cp != nil {
+			cp.connect(false)
+		} else {
+			cs.log.DEBUG.Printf("charge point disconnected: %s Error: %s", chargePoint.ID(), err)
+		}
 	}
 }

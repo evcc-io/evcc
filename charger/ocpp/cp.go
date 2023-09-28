@@ -20,6 +20,21 @@ import (
 // TODO support multiple connectors
 // Since ocpp-go interfaces at charge point level, we need to manage multiple connector separately
 
+// TransactionInfo contains info about a transaction
+type TransactionInfo struct {
+	id          int
+	startTime   *types.DateTime
+	endTime     *types.DateTime
+	startMeter  int
+	endMeter    int
+	connectorId int
+	idTag       string
+}
+
+func (ti *TransactionInfo) hasTransactionEnded() bool {
+	return ti.endTime != nil && !ti.endTime.IsZero()
+}
+
 type ConnectorInfo struct {
 	status             *core.StatusNotificationRequest
 	availability       core.AvailabilityType
@@ -29,46 +44,57 @@ type ConnectorInfo struct {
 	measurements map[string]types.SampledValue
 	meterUpdated time.Time
 	statusC      chan struct{}
+	txnId        int
 }
 
 type CP struct {
+	clock clock.Clock // mockable time
 	mu    sync.Mutex
 	once  sync.Once
-	clock clock.Clock // mockable time
 	log   *util.Logger
 
-	id         string
-	connectors map[int]*ConnectorInfo
+	id           string
+	connectors   map[int]*ConnectorInfo
+	transactions map[int]*TransactionInfo
+
+	txnCount int // change initial value to the last known global transaction. Needs persistence
 
 	connectC  chan struct{}
 	connected bool
-	//status            *core.StatusNotificationRequest
-	timeout time.Duration
 
-	txnCount int // change initial value to the last known global transaction. Needs persistence
-	txnId    int
+	timeout time.Duration
+	//status            *core.StatusNotificationRequest
 }
 
 func NewChargePoint(log *util.Logger, id string, connector int, timeout time.Duration) *CP {
 
 	//ocpp.Instance()
 
-	connectors := make(map[int]*ConnectorInfo)
-
-	return &CP{
-		clock:      clock.New(),
-		log:        log,
-		id:         id,
-		connectors: connectors,
-		connectC:   make(chan struct{}),
+	newCP := &CP{
+		clock:        clock.New(),
+		log:          log,
+		id:           id,
+		connectors:   make(map[int]*ConnectorInfo),
+		transactions: make(map[int]*TransactionInfo),
+		connectC:     make(chan struct{}),
+		timeout:      timeout,
 
 		//measurements: make(map[string]types.SampledValue),
-		timeout: timeout,
+
 	}
+
+	//newCP.initialiseDefaultConnector(connector, timeout)
+
+	return newCP
 }
 
-func (cp *CP) InitialiseDefaultConnector(connector int) {
-	cp.connectors[connector] = &ConnectorInfo{availability: core.AvailabilityTypeOperative, currentTransaction: 0, statusC: make(chan struct{}), measurements: make(map[string]types.SampledValue)}
+func (cp *CP) initialiseDefaultConnector(connector int) {
+	cp.connectors[connector] = &ConnectorInfo{
+		availability:       core.AvailabilityTypeOperative,
+		currentTransaction: 0,
+		statusC:            make(chan struct{}),
+		measurements:       make(map[string]types.SampledValue),
+	}
 	/*
 		{
 			1: ,
@@ -77,11 +103,28 @@ func (cp *CP) InitialiseDefaultConnector(connector int) {
 	*/
 }
 
+func (cp *CP) GetConnectorByID(ID int) *ConnectorInfo {
+	return cp.getConnectorByID(ID)
+}
+
 func (cp *CP) getConnectorByID(ID int) *ConnectorInfo {
+	// erstelle automatisch connectoren wenn eine unbekannte id abgefragt wird
 	if ID == 0 {
-		return cp.connectors[1]
+
+		con, ok := cp.connectors[1]
+		if !ok {
+			cp.initialiseDefaultConnector(1)
+			con = cp.connectors[1]
+		}
+		return con
 	} else {
-		return cp.connectors[ID]
+		con, ok := cp.connectors[ID]
+		if !ok {
+			cp.initialiseDefaultConnector(ID)
+			con = cp.connectors[ID]
+		}
+
+		return con
 	}
 }
 
@@ -90,7 +133,7 @@ func (cp *CP) isValidConnectorID(ID int) bool {
 	return ok || ID == 0
 }
 
-func (cp *CP) TestClock(clock clock.Clock) {
+func (cp *CP) TestClock(clock clock.Clock, connector int) {
 	cp.clock = clock
 }
 
@@ -158,7 +201,7 @@ func (cp *CP) Initialized(connector int) error {
 }
 
 // TransactionID returns the current transaction id
-func (cp *CP) TransactionID() (int, error) {
+func (cp *CP) TransactionID(connector int) (int, error) {
 	cp.mu.Lock()
 	defer cp.mu.Unlock()
 
@@ -166,7 +209,7 @@ func (cp *CP) TransactionID() (int, error) {
 		return 0, api.ErrTimeout
 	}
 
-	return cp.txnId, nil
+	return cp.getConnectorByID(connector).txnId, nil
 }
 
 func (cp *CP) Status(connector int) (api.ChargeStatus, error) {
@@ -210,11 +253,12 @@ func (cp *CP) Status(connector int) (api.ChargeStatus, error) {
 func (cp *CP) WatchDog(timeout time.Duration, connector int) {
 	for ; true; <-time.Tick(timeout) {
 		cp.mu.Lock()
-		update := cp.txnId != 0 && cp.clock.Since(cp.getConnectorByID(connector).meterUpdated) > timeout
+		update := cp.getConnectorByID(connector).txnId != 0 && cp.clock.Since(cp.getConnectorByID(connector).meterUpdated) > timeout
 		cp.mu.Unlock()
 
 		if update {
 			Instance().TriggerMeterValuesRequest(cp.ID(), connector)
+			cp.log.TRACE.Printf("TriggerMeterValuesRequest for Id and ConnectorID: %s , %d ", cp.id, connector)
 		}
 	}
 }
@@ -235,7 +279,7 @@ func (cp *CP) CurrentPower(connector int) (float64, error) {
 
 	// zero value on timeout when not charging
 	if cp.isTimeout(connector) {
-		if cp.txnId != 0 {
+		if cp.getConnectorByID(connector).txnId != 0 {
 			return 0, api.ErrTimeout
 		}
 
@@ -261,7 +305,7 @@ func (cp *CP) TotalEnergy(connector int) (float64, error) {
 	}
 
 	// fallthrough for last value on timeout when not charging
-	if cp.txnId != 0 && cp.isTimeout(connector) {
+	if cp.getConnectorByID(connector).txnId != 0 && cp.isTimeout(connector) {
 		return 0, api.ErrTimeout
 	}
 
@@ -300,7 +344,7 @@ func (cp *CP) Currents(connector int) (float64, float64, float64, error) {
 
 	// zero value on timeout when not charging
 	if cp.isTimeout(connector) {
-		if cp.txnId != 0 {
+		if cp.getConnectorByID(connector).txnId != 0 {
 			return 0, 0, 0, api.ErrTimeout
 		}
 

@@ -128,11 +128,21 @@ func (cp *CP) StartTransaction(request *core.StartTransactionRequest) (*core.Sta
 
 	// create new transaction
 	if request != nil && time.Since(request.Timestamp.Time) < transactionExpiry { // only respect transactions in the last hour
-		cp.txnCount++
+		cp.txnCount++ // neue Transaction is berechnen
 		res.TransactionId = cp.txnCount
 	}
 
-	cp.txnId = res.TransactionId
+	transaction := &TransactionInfo{}
+	transaction.idTag = request.IdTag
+	transaction.connectorId = request.ConnectorId
+	transaction.startMeter = request.MeterStart
+	transaction.startTime = request.Timestamp
+	transaction.id = res.TransactionId
+
+	cp.getConnectorByID(request.ConnectorId).currentTransaction = transaction.id
+	cp.transactions[transaction.id] = transaction
+
+	cp.getConnectorByID(request.ConnectorId).txnId = res.TransactionId
 
 	return res, nil
 }
@@ -142,15 +152,24 @@ func (cp *CP) StopTransaction(request *core.StopTransactionRequest) (*core.StopT
 		cp.mu.Lock()
 		defer cp.mu.Unlock()
 
-		// reset transaction
-		if time.Since(request.Timestamp.Time) < transactionExpiry { // only respect transactions in the last hour
-			// log mismatching id but close transaction anyway
-			if request.TransactionId != cp.txnId {
-				cp.log.ERROR.Printf("stop transaction: invalid id %d", request.TransactionId)
-			}
+		transaction, ok := cp.transactions[request.TransactionId]
+		if ok {
+			cp.getConnectorByID(transaction.connectorId).currentTransaction = -1
+			transaction.endTime = request.Timestamp
+			transaction.endMeter = request.MeterStop
+			//TODO: bill charging period to client
 
-			cp.txnId = 0
+			// reset transaction
+			if time.Since(request.Timestamp.Time) < transactionExpiry { // only respect transactions in the last hour // Thomas Gibt es hier einen Grund?
+				// log mismatching id but close transaction anyway
+				if request.TransactionId != cp.getConnectorByID(transaction.connectorId).txnId {
+					cp.log.ERROR.Printf("stop transaction: invalid id %d", request.TransactionId)
+				}
+
+				cp.getConnectorByID(transaction.connectorId).txnId = 0
+			}
 		}
+
 	}
 
 	res := &core.StopTransactionConfirmation{

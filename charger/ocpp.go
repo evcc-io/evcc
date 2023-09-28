@@ -21,7 +21,7 @@ import (
 
 // OCPP charger implementation
 type OCPP struct {
-	mu                sync.Mutex
+	//mu                sync.Mutex
 	log               *util.Logger
 	cp                *ocpp.CP
 	connector         int
@@ -102,11 +102,18 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 // go:generate go run ../cmd/tools/decorate.go -f decorateOCPP -b *OCPP -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) error"
 
 // NewOCPP creates OCPP charger
+
+var lock sync.Mutex
+
 func NewOCPP(id string, connector int, idtag string,
 	meterValues string, meterInterval time.Duration,
 	boot, noConfig bool,
 	connectTimeout, timeout time.Duration,
 ) (*OCPP, error) {
+
+	lock.Lock()
+	defer lock.Unlock()
+
 	unit := "ocpp"
 	if id != "" {
 		unit = id
@@ -115,17 +122,21 @@ func NewOCPP(id string, connector int, idtag string,
 	log := util.NewLogger(unit)
 
 	//hier muss die unterscheidung hin
+
 	cp, errExist := ocpp.Instance().ChargepointByID(id)
 	if errExist != nil {
 
 		cp = ocpp.NewChargePoint(log, id, connector, timeout)
-		cp.InitialiseDefaultConnector(connector)
+		//
 		if err := ocpp.Instance().Register(id, cp); err != nil {
 			return nil, err
 		}
 	} else {
 		// create only the connector in this chargepoint
-		cp.InitialiseDefaultConnector(connector)
+		log.DEBUG.Printf("chargepoint: %s already exist", id)
+		// create new Connector within charpoint with same ID
+		cp.GetConnectorByID(connector)
+
 	}
 
 	c := &OCPP{
@@ -138,7 +149,7 @@ func NewOCPP(id string, connector int, idtag string,
 
 	// dieser Chargepoint wurde schon erstellt und abgefragt
 	if errExist != nil {
-		c.log.DEBUG.Printf("waiting for chargepoint: %v", connectTimeout)
+		c.log.DEBUG.Printf("waiting for chargepoint: %s for timeout: %v", id, connectTimeout)
 		select {
 		case <-time.After(connectTimeout):
 			return nil, api.ErrTimeout
@@ -313,7 +324,7 @@ func (c *OCPP) Enabled() (bool, error) {
 // Enable implements the api.Charger interface
 func (c *OCPP) Enable(enable bool) (err error) {
 	rc := make(chan error, 1)
-	txn, err := c.cp.TransactionID()
+	txn, err := c.cp.TransactionID(c.connector)
 
 	defer func() {
 		if err == nil {
@@ -382,8 +393,7 @@ func (c *OCPP) updatePeriod(current float64, phases int) error {
 	if enabled, err := c.Enabled(); err != nil || !enabled {
 		return err
 	}
-
-	txn, err := c.cp.TransactionID()
+	txn, err := c.cp.TransactionID(c.connector)
 	if err != nil {
 		return err
 	}
