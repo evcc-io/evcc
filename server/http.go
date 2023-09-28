@@ -102,6 +102,7 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, cache *util.Cache) {
 		"device":         {[]string{"GET"}, "/config/devices/{class:[a-z]+}/{id:[0-9.]+}", deviceHandler},
 		"devices":        {[]string{"GET"}, "/config/devices/{class:[a-z]+}", devicesHandler},
 		"site":           {[]string{"GET"}, "/config/site", siteHandler(site)},
+		"dirty":          {[]string{"GET"}, "/config/dirty", boolGetHandler(ConfigDirty)},
 		"updatesite":     {[]string{"PUT", "OPTIONS"}, "/config/site", updateSiteHandler(site)},
 		"newdevice":      {[]string{"POST", "OPTIONS"}, "/config/devices/{class:[a-z]+}", newDeviceHandler},
 		"updatedevice":   {[]string{"PUT", "OPTIONS"}, "/config/devices/{class:[a-z]+}/{id:[0-9.]+}", updateDeviceHandler},

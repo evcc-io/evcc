@@ -52,9 +52,6 @@ func updateSiteHandler(site site.API) http.HandlerFunc {
 			return
 		}
 
-		// TODO add dirty api
-		var dirty bool
-
 		if payload.Title != nil {
 			site.SetTitle(*payload.Title)
 		}
@@ -65,7 +62,7 @@ func updateSiteHandler(site site.API) http.HandlerFunc {
 			}
 
 			site.SetGridMeterRef(*payload.Grid)
-			dirty = true
+			setConfigDirty()
 		}
 
 		if payload.PV != nil {
@@ -74,7 +71,7 @@ func updateSiteHandler(site site.API) http.HandlerFunc {
 			}
 
 			site.SetPVMeterRef(*payload.PV)
-			dirty = true
+			setConfigDirty()
 		}
 
 		if payload.Battery != nil {
@@ -83,10 +80,10 @@ func updateSiteHandler(site site.API) http.HandlerFunc {
 			}
 
 			site.SetBatteryMeterRef(*payload.Battery)
-			dirty = true
+			setConfigDirty()
 		}
 
 		status := map[bool]int{false: http.StatusOK, true: http.StatusAccepted}
-		w.WriteHeader(status[dirty])
+		w.WriteHeader(status[ConfigDirty()])
 	}
 }

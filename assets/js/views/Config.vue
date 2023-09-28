@@ -1,13 +1,34 @@
 <template>
 	<div class="container px-4">
 		<TopHeader title="Configuration 🧪" />
+		<div
+			v-if="dirty"
+			class="alert alert-secondary d-flex justify-content-between align-items-center my-4"
+			role="alert"
+		>
+			<div><strong>Configuration changed.</strong> Please restart to see the effect.</div>
+			<button
+				type="button"
+				class="btn btn-outline-secondary btn-sm"
+				:disabled="restarting || offline"
+				@click="restart"
+			>
+				<span
+					v-if="restarting || offline"
+					class="spinner-border spinner-border-sm"
+					role="status"
+					aria-hidden="true"
+				></span>
+				<span v-else> Restart </span>
+			</button>
+		</div>
 
-		<div class="alert alert-danger mb-5" role="alert">
+		<div class="alert alert-danger my-4" role="alert">
 			<strong>Highly experimental!</strong> Only play around with this settings if you know
 			what your doing. Otherwise you might have to reset or manually repair you database.
 		</div>
 
-		<h2 class="my-4">Home: <span>Zuhause</span></h2>
+		<h2 class="my-4 mt-5">Home: <span>Zuhause</span></h2>
 		<ul class="p-0 config-list mb-5">
 			<DeviceCard
 				:name="gridMeter?.config?.template || 'Grid meter'"
@@ -121,8 +142,13 @@ import MeterModal from "../components/Config/MeterModal.vue";
 export default {
 	name: "Config",
 	components: { TopHeader, VehicleIcon, VehicleModal, DeviceCard, AddDeviceButton, MeterModal },
+	props: {
+		offline: Boolean,
+	},
 	data() {
 		return {
+			dirty: false,
+			restarting: false,
 			vehicles: [],
 			meters: [],
 			selectedVehicleId: undefined,
@@ -151,12 +177,32 @@ export default {
 			return this.getMeterById(this.selectedMeterId)?.name;
 		},
 	},
+	watch: {
+		offline() {
+			if (!this.offline) {
+				this.restarting = false;
+				this.loadAll();
+			}
+		},
+	},
 	mounted() {
-		this.loadVehicles();
-		this.loadMeters();
-		this.loadSite();
+		this.loadAll();
 	},
 	methods: {
+		async loadAll() {
+			this.loadVehicles();
+			this.loadMeters();
+			this.loadSite();
+			this.loadDirty();
+		},
+		async loadDirty() {
+			try {
+				const response = await api.get("/config/dirty");
+				this.dirty = response.data?.result;
+			} catch (e) {
+				console.error(e);
+			}
+		},
 		async loadVehicles() {
 			const response = await api.get("/config/devices/vehicle");
 			this.vehicles = response.data?.result;
@@ -201,6 +247,7 @@ export default {
 			this.selectedMeterId = undefined;
 			this.selectedMeterType = undefined;
 			await this.loadMeters();
+			this.loadDirty();
 			this.meterModal().hide();
 		},
 		editVehicle(id) {
@@ -215,6 +262,7 @@ export default {
 			this.selectedVehicleId = undefined;
 			this.vehicleModal().hide();
 			this.loadVehicles();
+			this.loadDirty();
 		},
 		addMeterToSite(type, name) {
 			if (type === "grid") {
@@ -235,10 +283,19 @@ export default {
 		async saveSite(key) {
 			const body = key ? { [key]: this.site[key] } : this.site;
 			await api.put("/config/site", body);
+			this.loadDirty();
 			this.loadSite();
 		},
 		todo() {
 			alert("not implemented yet");
+		},
+		async restart() {
+			try {
+				await api.post("shutdown");
+				this.restarting = true;
+			} catch (e) {
+				alert("Unabled to restart server.");
+			}
 		},
 	},
 };

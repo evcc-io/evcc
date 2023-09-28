@@ -2,10 +2,32 @@ package server
 
 import (
 	"errors"
+	"sync"
 
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/templates"
 )
+
+var (
+	dirty bool
+	mu    sync.Mutex
+)
+
+// ConfigDirty returns the dirty flag
+func ConfigDirty() bool {
+	mu.Lock()
+	defer mu.Unlock()
+
+	return dirty
+}
+
+// setConfigDirty sets the dirty flag indicating that a restart is required
+func setConfigDirty() {
+	mu.Lock()
+	defer mu.Unlock()
+
+	dirty = true
+}
 
 func templateForConfig(class templates.Class, conf map[string]any) (templates.Template, error) {
 	typ, ok := conf[typeTemplate].(string)

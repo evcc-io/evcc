@@ -265,6 +265,8 @@ func newDeviceHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	setConfigDirty()
+
 	res := struct {
 		ID   int    `json:"id"`
 		Name string `json:"name"`
@@ -323,6 +325,8 @@ func updateDeviceHandler(w http.ResponseWriter, r *http.Request) {
 	case templates.Vehicle:
 		err = updateDevice(id, class, req, vehicle.NewFromConfig, config.Vehicles())
 	}
+
+	setConfigDirty()
 
 	if err != nil {
 		jsonError(w, http.StatusBadRequest, err)
@@ -384,6 +388,8 @@ func deleteDeviceHandler(w http.ResponseWriter, r *http.Request) {
 	case templates.Vehicle:
 		err = deleteDevice(id, config.Vehicles())
 	}
+
+	setConfigDirty()
 
 	if err != nil {
 		jsonError(w, http.StatusBadRequest, err)
