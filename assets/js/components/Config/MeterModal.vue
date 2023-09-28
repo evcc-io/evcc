@@ -72,6 +72,14 @@
 									:validValues="param.ValidValues"
 								/>
 							</FormRow>
+							<Modbus
+								v-if="modbusOptions.length > 0"
+								v-model:modbus="values.modbus"
+								v-model:id="values.id"
+								v-model:host="values.host"
+								v-model:port="values.port"
+								:options="modbusOptions"
+							/>
 
 							<TestResult
 								v-if="templateName"
@@ -134,6 +142,7 @@ import TestResult from "./TestResult.vue";
 import api from "../../api";
 import test from "./mixins/test";
 import AddDeviceButton from "./AddDeviceButton.vue";
+import Modbus from "./Modbus.vue";
 
 const initialValues = { type: "template" };
 
@@ -143,7 +152,7 @@ function sleep(ms) {
 
 export default {
 	name: "MeterModal",
-	components: { FormRow, PropertyField, TestResult, AddDeviceButton },
+	components: { FormRow, PropertyField, Modbus, TestResult, AddDeviceButton },
 	mixins: [test],
 	props: {
 		id: Number,
@@ -188,9 +197,15 @@ export default {
 					.filter((p) => !p.Deprecated)
 					// remove usage option
 					.filter((p) => p.Name !== "usage")
+					// remove modbus, handles separately
+					.filter((p) => p.Name !== "modbus")
 					// capacity only for battery meters
 					.filter((p) => this.meterType === "battery" || p.Name !== "capacity")
 			);
+		},
+		modbusOptions() {
+			const params = this.template?.Params || [];
+			return params.find((p) => p.Name === "modbus")?.Choice || [];
 		},
 		apiData() {
 			return {
