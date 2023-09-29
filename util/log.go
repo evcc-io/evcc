@@ -150,14 +150,16 @@ func (w *uiWriter) Write(p []byte) (n int, err error) {
 
 	val := struct {
 		Message   string `json:"msg"`
+		Level     string `json:"level"`
 		Loadpoint int    `json:"lp,omitempty"`
 	}{
 		Message:   strings.Trim(strconv.Quote(strings.TrimSpace(s)), "\""),
+		Level:     w.level,
 		Loadpoint: w.lp,
 	}
 
 	param := Param{
-		Key: w.level,
+		Key: "log",
 		Val: val,
 	}
 
