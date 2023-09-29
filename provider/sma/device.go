@@ -5,8 +5,8 @@ import (
 	"sync"
 	"time"
 
+	"dario.cat/mergo"
 	"github.com/evcc-io/evcc/util"
-	"github.com/imdario/mergo"
 	"gitlab.com/bboehmke/sunny"
 )
 

@@ -4,7 +4,7 @@ import (
 	"errors"
 	"sync"
 
-	"github.com/imdario/mergo"
+	"dario.cat/mergo"
 	"golang.org/x/oauth2"
 )
 
