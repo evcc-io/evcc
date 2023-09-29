@@ -21,11 +21,11 @@ const app = createApp({
     },
   },
   methods: {
-    raise: function (msg) {
-      console[msg.type](msg);
+    log: function (msg) {
+      if (!msg.level) msg.level = "error";
       const now = new Date();
       const latestMsg = this.notifications[0];
-      if (latestMsg && latestMsg.message === msg.message) {
+      if (latestMsg && latestMsg.message === msg.message && latestMsg.lp === msg.lp) {
         latestMsg.count++;
         latestMsg.time = now;
       } else {
@@ -42,24 +42,11 @@ const app = createApp({
     clear: function () {
       this.notifications = [];
     },
-    error: function (msg) {
-      msg.type = "error";
-      this.raise(msg);
-    },
-    log: function (msg) {
-      msg.message.type = msg.message.level;
-      delete msg.message.level;
-      this.raise(msg.message);
-    },
     setOnline: function () {
       this.offline = false;
     },
     setOffline: function () {
       this.offline = true;
-    },
-    warn: function (msg) {
-      msg.type = "warn";
-      this.raise(msg);
     },
   },
   render: function () {

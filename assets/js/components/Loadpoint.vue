@@ -265,9 +265,6 @@ export default {
 		clearInterval(this.tickerHandler);
 	},
 	methods: {
-		message(msg) {
-			return { message: `${this.loadpointTitle}: ${msg}` };
-		},
 		tick() {
 			if (this.phaseRemainingInterpolated > 0) {
 				this.phaseRemainingInterpolated--;

@@ -6,7 +6,11 @@
 					{{ siteTitle || "evcc" }}
 				</h1>
 				<div class="d-flex">
-					<Notifications :notifications="notifications" class="me-2" />
+					<Notifications
+						:notifications="notifications"
+						:loadpointNames="loadpointNames"
+						class="me-2"
+					/>
 					<TopNavigation v-bind="topNavigation" />
 				</div>
 			</div>
@@ -114,6 +118,9 @@ export default {
 				return this.activeLoadpoints.map((lp) => lp.chargerIcon || lp.vehicleIcon || "car");
 			}
 			return ["car"];
+		},
+		loadpointNames: function () {
+			return this.loadpoints.map((lp) => lp.title);
 		},
 		loadpointsPower: function () {
 			return this.loadpoints.reduce((sum, lp) => {
