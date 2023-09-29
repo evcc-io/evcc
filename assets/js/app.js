@@ -1,5 +1,4 @@
 import "bootstrap/dist/css/bootstrap.min.css";
-import smoothscroll from "smoothscroll-polyfill";
 import "../css/app.css";
 import { createApp, h } from "vue";
 import { createMetaManager, plugin as metaPlugin } from "vue-meta";
@@ -9,7 +8,13 @@ import setupI18n from "./i18n";
 import featureflags from "./featureflags";
 import { watchThemeChanges } from "./theme";
 
-smoothscroll.polyfill();
+// lazy load smoothscroll polyfill. mainly for safari < 15.4
+if (!window.CSS.supports("scroll-behavior", "smooth")) {
+  console.log("no native smoothscroll support. polyfilling...");
+  import("smoothscroll-polyfill").then((module) => {
+    module.polyfill();
+  });
+}
 
 const app = createApp({
   data() {

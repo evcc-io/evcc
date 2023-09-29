@@ -6,8 +6,7 @@ products:
 group: generic
 params:
   - name: usage
-    choice: ["grid", "pv"]
-    allinone: true
+    choice: ["grid", "pv", "battery"]
   - name: modbus
     choice: ["tcpip", "rs485"]
   - name: integer
@@ -19,6 +18,8 @@ params:
       en: Verify Float/Integer setting in inverter
     advanced: true
     type: bool
+  - name: capacity
+    advanced: true
 render: |
   type: modbus
   {{- include "modbus" . }}
@@ -61,4 +62,10 @@ render: |
   model: sunspec
   power: Power
   energy: Export
+  {{- if eq .usage "battery" }}
+  soc: ChargeState
+  {{- if .capacity }}
+  capacity: {{ .capacity }} # kWh
+  {{- end }}
+  {{- end }}  
   {{- end }}

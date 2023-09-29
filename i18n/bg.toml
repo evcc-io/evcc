@@ -1,6 +1,6 @@
 [batterySettings]
 batteryLevel = "Батерия %"
-capacity = "{energy} от{total}"
+capacity = "{energy} от {total}"
 legendBottomName = "приоритизиране на дом"
 legendBottomSubline = "не се използва за зареждане"
 legendMiddleName = "приоритизиране на кола"
@@ -18,13 +18,47 @@ low = "при донякъде заредена батерия"
 medium = "при наполовина заредена батерия"
 never = "само при наличие на излишък"
 
+[config]
+
+[config.form]
+example = "Пример"
+optional = "незадължителен"
+
+[config.main]
+addVehicle = "Добави автомобил"
+edit = "редактирай"
+title = "Конфигурация"
+vehicles = "Моите Автомобили"
+
+[config.validation]
+failed = "неуспешен"
+label = "Състояние"
+running = "проверка..."
+success = "успешна проверка"
+unknown = "неизвестен"
+validate = "провери"
+
+[config.vehicle]
+cancel = "Отмени"
+delete = "Изтрий автомобил"
+generic = "Други интеграции"
+offline = "Автомобил без свързаност"
+online = "Автомобил с онлайн свързаност"
+save = "Запази"
+scooter = "Скутер"
+template = "Производител"
+titleAdd = "Добави Автомобил"
+titleEdit = "Редактирай Автомобил"
+validateSave = "Провери и Запази"
+
 [footer]
 
 [footer.community]
-greenEnergySub1 = "заредено с помощтта на evcc"
+greenEnergy = "Слънчева енергия"
+greenEnergySub1 = "заредено с помощта на evcc"
 greenEnergySub2 = "от октомври 2022"
 greenShare = "дял на соларна енергия"
-greenShareSub1 = "мощност доставена от"
+greenShareSub1 = "мощност предоставена от"
 greenShareSub2 = "енергия от слънцето и батерията"
 power = "Мощност на зареждане"
 powerSub1 = "{activeClients} от {totalClients} участници"
@@ -42,3 +76,38 @@ priceFeedIn = "{feedInPrice} feed-in"
 priceGrid = "{gridPrice} мрежа"
 priceTitle = "Цена"
 savingsComparedToGrid = "сравнено с мрежата"
+savingsTitle = "Спестявате"
+savingsTotalEnergy = "{total} kWh заредени"
+since = "от {since}"
+tabTitle = "Моите данни"
+
+[footer.sponsor]
+becomeSponsor = "Станете Спонсор"
+confetti = "Готови ли сте за конфети?"
+confettiPromise = "Получавате стикери и дигитални конфети"
+sticker = "... или evcc стикери?"
+supportUs = "Нашата мисия е да направим слънчевата енергия масова. Подкрепете evcc със сума по ваша преценка."
+thanks = "Благодарим Ви, {sponsor}! С ваша помощ продължаваме да развиваме evcc."
+titleNoSponsor = "Подкрепете ни"
+titleSponsor = "Вие сте спонсор"
+
+[footer.telemetry]
+optIn = "Искам да споделям моите данни."
+optInMoreDetails = "Повече информация {0}."
+optInMoreDetailsLink = "тук"
+optInSponsorship = "Изисква спонсорство."
+
+[footer.version]
+availableLong = "налична е нова версия"
+modalCancel = "Откажи"
+modalDownload = "Свали"
+modalInstalledVersion = "Инсталирана версия"
+modalNoReleaseNotes = "Няма бележки за версията. Повече информация за новата версия:"
+modalTitle = "Налична е нова версия"
+modalUpdate = "Инсталирай"
+modalUpdateNow = "Инсталирай сега"
+modalUpdateStarted = "Стартирай новата версия на evcc..."
+modalUpdateStatusStart = "Инсталацията започна:"
+
+[gridSettings]
+activeHours = "{charging} от {total}"

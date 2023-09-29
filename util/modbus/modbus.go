@@ -491,7 +491,7 @@ type Operation struct {
 // ParseOperation parses an MBMD measurement or SunsSpec point definition into a modbus operation
 func ParseOperation(dev meters.Device, measurement string, op *Operation) (err error) {
 	// if measurement cannot be parsed it could be SunSpec model/block/point
-	if op.MBMD.IEC61850, err = meters.MeasurementString(strings.ToLower(measurement)); err != nil {
+	if op.MBMD.IEC61850, err = meters.MeasurementString(measurement); err != nil {
 		op.SunSpec.Model, op.SunSpec.Block, op.SunSpec.Point, err = ParsePoint(measurement)
 		return err
 	}

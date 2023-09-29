@@ -1,6 +1,8 @@
 package ocpp
 
 import (
+	"fmt"
+
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/firmware"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/remotetrigger"
@@ -73,6 +75,7 @@ func (cs *CS) OnBootNotification(id string, request *core.BootNotificationReques
 		return nil, err
 	}
 
+	fmt.Println("OnBootNotification id", id)
 	return cp.BootNotification(request)
 }
 

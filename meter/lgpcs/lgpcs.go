@@ -18,8 +18,9 @@ import (
 
 // URIs
 const (
-	LoginURI = "/v1/login"
-	MeterURI = "/v1/user/essinfo/home"
+	LoginURI     = "/v1/login"
+	UserLoginURI = "/v1/user/setting/login"
+	MeterURI     = "/v1/user/essinfo/home"
 )
 
 type MeterResponse struct {
@@ -42,6 +43,7 @@ type EssData struct {
 type Com struct {
 	*request.Helper
 	uri      string // URI address of the LG ESS inverter - e.g. "https://192.168.1.28"
+	authPath string
 	password string // registration number of the LG ESS Inverter - e.g. "DE2001..."
 	authKey  string // auth_key returned during login and renewed with new login after expiration
 	dataG    func() (EssData, error)
@@ -53,7 +55,7 @@ var (
 )
 
 // GetInstance implements the singleton pattern to handle the access via the authkey to the PCS of the LG ESS HOME system
-func GetInstance(uri, password string, cache time.Duration) (*Com, error) {
+func GetInstance(uri, registration, password string, cache time.Duration) (*Com, error) {
 	uri = util.DefaultScheme(strings.TrimSuffix(uri, "/"), "https")
 
 	var err error
@@ -62,7 +64,13 @@ func GetInstance(uri, password string, cache time.Duration) (*Com, error) {
 		instance = &Com{
 			Helper:   request.NewHelper(log),
 			uri:      uri,
+			authPath: UserLoginURI,
 			password: password,
+		}
+
+		if registration != "" {
+			instance.authPath = LoginURI
+			instance.password = registration
 		}
 
 		// ignore the self signed certificate
@@ -77,6 +85,11 @@ func GetInstance(uri, password string, cache time.Duration) (*Com, error) {
 			err = instance.Login()
 		}
 	})
+
+	// check if different uris are provided
+	if password != "" && registration != "" {
+		return nil, errors.New("cannot have registration and password")
+	}
 
 	// check if different uris are provided
 	if uri != "" && instance.uri != uri {
@@ -97,7 +110,7 @@ func (m *Com) Login() error {
 		"password": m.password,
 	}
 
-	req, err := request.New(http.MethodPut, m.uri+LoginURI, request.MarshalJSON(data), request.JSONEncoding)
+	req, err := request.New(http.MethodPut, m.uri+m.authPath, request.MarshalJSON(data), request.JSONEncoding)
 	if err != nil {
 		return err
 	}

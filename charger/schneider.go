@@ -200,31 +200,26 @@ var _ api.PhaseCurrents = (*Schneider)(nil)
 
 // Currents implements the api.PhaseCurrents interface
 func (wb *Schneider) Currents() (float64, float64, float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(schneiderRegCurrents, 6)
-	if err != nil {
-		return 0, 0, 0, err
-	}
-
-	var res []float64
-	for i := 0; i < 3; i++ {
-		res = append(res, float64(encoding.Float32LswFirst(b[4*i:])))
-	}
-
-	return res[0], res[1], res[2], nil
+	return wb.getPhaseValues(schneiderRegCurrents)
 }
 
 var _ api.PhaseVoltages = (*Schneider)(nil)
 
 // Voltages implements the api.PhaseVoltages interface
 func (wb *Schneider) Voltages() (float64, float64, float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(schneiderRegVoltages, 6)
+	return wb.getPhaseValues(schneiderRegVoltages)
+}
+
+// getPhaseValues returns 3 sequential phase values
+func (wb *Schneider) getPhaseValues(reg uint16) (float64, float64, float64, error) {
+	b, err := wb.conn.ReadHoldingRegisters(reg, 6)
 	if err != nil {
 		return 0, 0, 0, err
 	}
 
-	var res []float64
+	var res [3]float64
 	for i := 0; i < 3; i++ {
-		res = append(res, float64(encoding.Float32LswFirst(b[4*i:])))
+		res[i] = float64(encoding.Float32LswFirst(b[4*i:]))
 	}
 
 	return res[0], res[1], res[2], nil
