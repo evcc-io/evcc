@@ -204,7 +204,7 @@ a:hover {
 	border-color: var(--evcc-accent3) !important;
 }
 
-.btn-group>.btn-check+.btn-outline-primary:hover,
+.btn-group > .btn-check + .btn-outline-primary:hover,
 .btn-outline-primary:active {
 	color: var(--bs-white) !important;
 	background-color: var(--evcc-accent3) !important;
