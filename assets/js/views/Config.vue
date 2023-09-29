@@ -6,7 +6,10 @@
 			class="alert alert-secondary d-flex justify-content-between align-items-center my-4"
 			role="alert"
 		>
-			<div><strong>Configuration changed.</strong> Please restart to see the effect.</div>
+			<div v-if="restarting"><strong>Restarting evcc.</strong> Please wait ...</div>
+			<div v-else>
+				<strong>Configuration changed.</strong> Please restart to see the effect.
+			</div>
 			<button
 				type="button"
 				class="btn btn-outline-secondary btn-sm"
@@ -144,6 +147,7 @@ export default {
 	components: { TopHeader, VehicleIcon, VehicleModal, DeviceCard, AddDeviceButton, MeterModal },
 	props: {
 		offline: Boolean,
+		notifications: Array,
 	},
 	data() {
 		return {

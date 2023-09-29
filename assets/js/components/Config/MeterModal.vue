@@ -78,6 +78,9 @@
 								v-model:id="values.id"
 								v-model:host="values.host"
 								v-model:port="values.port"
+								v-model:device="values.device"
+								v-model:baudrate="values.baudrate"
+								v-model:comset="values.comset"
 								:options="modbusOptions"
 							/>
 

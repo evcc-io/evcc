@@ -186,19 +186,27 @@ a:hover {
 	opacity: 0.2;
 }
 
+.btn-outline-primary {
+	--bs-btn-active-bg: var(--bs-primary);
+	--bs-btn-active-border-color: var(--bs-primary);
+}
+
 .btn-outline-primary,
 .btn-outline-primary:focus {
 	color: var(--bs-primary);
 	background-color: transparent;
 	border-color: var(--bs-primary);
 }
+
 .btn-outline-primary:hover {
 	color: var(--evcc-accent3) !important;
 	background-color: transparent !important;
 	border-color: var(--evcc-accent3) !important;
 }
+
+.btn-group>.btn-check+.btn-outline-primary:hover,
 .btn-outline-primary:active {
-	color: var(--evcc-default-text) !important;
+	color: var(--bs-white) !important;
 	background-color: var(--evcc-accent3) !important;
 	border-color: var(--evcc-accent3) !important;
 }
