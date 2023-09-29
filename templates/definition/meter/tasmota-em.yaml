@@ -1,0 +1,41 @@
+template: tasmota-em
+products:
+  - brand: Tasmota
+    description:
+      generic: 3 Phase Energy Meter
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+  - name: host
+    default: 192.0.2.2
+  - name: user
+    required: false
+    help:
+      de: Standard-User ist admin
+      en: admin is default
+  - name: password
+    required: false
+    mask: true
+render: |
+  {{- define "uri" -}}
+  http://{{ if .user }}{{ .user }}:{{ .password }}@{{ end }}{{ .host }}
+  {{- end }}
+  type: custom
+  power:
+    source: http
+    uri: {{ include "uri" . }}/cm?cmnd=Status+8
+    jq: .StatusSNS.ENERGY.Power | add
+  energy: # Energiemenge (kWh)
+    source: http
+    uri: {{ include "uri" . }}/cm?cmnd=Status+8
+    jq: .StatusSNS.ENERGY.Total
+  currents: # Stromstärke (A) pro Phase
+    - source: http
+      uri: {{ include "uri" . }}/cm?cmnd=Status+8
+      jq: .StatusSNS.ENERGY.Voltage[0]
+    - source: http
+      uri: {{ include "uri" . }}/cm?cmnd=Status+8
+      jq: .StatusSNS.ENERGY.Voltage[1]
+    - source: http
+      uri: {{ include "uri" . }}/cm?cmnd=Status+8
+      jq: .StatusSNS.ENERGY.Voltage[2]

@@ -1,5 +1,6 @@
 template: tasmota
 products:
+  - brand: Tasmota
   - description:
       generic: Tasmota
 group: switchsockets
