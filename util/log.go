@@ -148,13 +148,17 @@ func (w *uiWriter) Write(p []byte) (n int, err error) {
 	// trim level and timestamp
 	s := string(w.re.ReplaceAll(p, []byte{}))
 
-	param := Param{
-		Key: w.level,
-		Val: strings.Trim(strconv.Quote(strings.TrimSpace(s)), "\""),
+	val := struct {
+		Message   string `json:"msg"`
+		Loadpoint int    `json:"lp,omitempty"`
+	}{
+		Message:   strings.Trim(strconv.Quote(strings.TrimSpace(s)), "\""),
+		Loadpoint: w.lp,
 	}
 
-	if w.lp > 0 {
-		param.Loadpoint = &w.lp
+	param := Param{
+		Key: w.level,
+		Val: val,
 	}
 
 	uiChan <- param
