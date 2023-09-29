@@ -149,7 +149,7 @@ func (w *uiWriter) Write(p []byte) (n int, err error) {
 	s := string(w.re.ReplaceAll(p, []byte{}))
 
 	val := struct {
-		Message   string `json:"msg"`
+		Message   string `json:"message"`
 		Level     string `json:"level"`
 		Loadpoint int    `json:"lp,omitempty"`
 	}{

@@ -198,8 +198,6 @@ export default {
 		tariffGrid: Number,
 		tariffCo2: Number,
 		currency: String,
-		error: String,
-		warn: String,
 	},
 	data() {
 		return {
@@ -258,12 +256,6 @@ export default {
 		},
 		chargeRemainingDuration() {
 			this.chargeRemainingDurationInterpolated = this.chargeRemainingDuration;
-		},
-		error() {
-			window.app.error(this.message(this.error));
-		},
-		warn() {
-			window.app.warn(this.message(this.warn));
 		},
 	},
 	mounted() {

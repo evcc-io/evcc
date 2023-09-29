@@ -46,6 +46,11 @@ const app = createApp({
       msg.type = "error";
       this.raise(msg);
     },
+    log: function (msg) {
+      msg.message.type = msg.message.level;
+      delete msg.message.level;
+      this.raise(msg.message);
+    },
     setOnline: function () {
       this.offline = false;
     },
