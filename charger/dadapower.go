@@ -19,14 +19,13 @@ const (
 	dadapowerRegChargingAllowed     = 1000
 	dadapowerRegChargeCurrentLimit  = 1001
 	dadapowerRegActivePhases        = 1002
+	dadapowerRegCurrents            = 1006
 	dadapowerRegActiveEnergy        = 1009
 	dadapowerRegPlugState           = 1016
 	dadapowerRegEnergyImportSession = 1017
 	dadapowerRegEnergyImportTotal   = 1025
 	dadapowerRegIdentification      = 1040 // 20
 )
-
-var dadapowerRegCurrents = []uint16{1006, 1007, 1008}
 
 // Dadapower charger implementation
 type Dadapower struct {
@@ -91,7 +90,6 @@ func (wb *Dadapower) heartbeat() {
 // Status implements the api.Charger interface
 func (wb *Dadapower) Status() (api.ChargeStatus, error) {
 	b, err := wb.conn.ReadInputRegisters(dadapowerRegPlugState+wb.regOffset, 1)
-
 	if err != nil {
 		return api.StatusNone, err
 	}
@@ -192,17 +190,17 @@ var _ api.PhaseCurrents = (*Dadapower)(nil)
 
 // Currents implements the api.PhaseCurrents interface
 func (wb *Dadapower) Currents() (float64, float64, float64, error) {
-	var currents []float64
-	for _, regCurrent := range dadapowerRegCurrents {
-		b, err := wb.conn.ReadInputRegisters(regCurrent+wb.regOffset, 1)
-		if err != nil {
-			return 0, 0, 0, err
-		}
-
-		currents = append(currents, float64(binary.BigEndian.Uint16(b))/100)
+	b, err := wb.conn.ReadInputRegisters(dadapowerRegCurrents+wb.regOffset, 3)
+	if err != nil {
+		return 0, 0, 0, err
 	}
 
-	return currents[0], currents[1], currents[2], nil
+	var res [3]float64
+	for i := 0; i < 3; i++ {
+		res[i] = float64(binary.BigEndian.Uint16(b)) / 100
+	}
+
+	return res[0], res[1], res[2], nil
 }
 
 var _ api.PhaseSwitcher = (*Dadapower)(nil)
