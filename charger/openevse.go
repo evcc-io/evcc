@@ -19,10 +19,10 @@ import (
 // OpenEVSE charger implementation
 type OpenEVSE struct {
 	*request.Helper
-	uri         string
-	statusCache provider.Cacheable[openevse.Status]
-	current     int
-	enabled     bool
+	uri     string
+	statusG provider.Cacheable[openevse.Status]
+	current int
+	enabled bool
 }
 
 func init() {
@@ -64,15 +64,10 @@ func NewOpenEVSE(uri, user, password string, cache time.Duration) (api.Charger, 
 	}
 
 	if user != "" && password != "" {
-		c.Client.Transport = &transport.Decorator{
-			Base: c.Client.Transport,
-			Decorator: transport.DecorateHeaders(map[string]string{
-				"Authorization": basicAuth,
-			}),
-		}
+		c.Client.Transport = transport.BasicAuth(user, password, c.Client.Transport)
 	}
 
-	c.statusCache = provider.ResettableCached(func() (openevse.Status, error) {
+	c.statusG = provider.ResettableCached(func() (openevse.Status, error) {
 		var res openevse.Status
 
 		uri := fmt.Sprintf("%s/status", c.uri)
@@ -138,7 +133,7 @@ func (c *OpenEVSE) hasPhaseSwitchCapabilities() error {
 
 // Status implements the api.Charger interface
 func (c *OpenEVSE) Status() (api.ChargeStatus, error) {
-	res, err := c.statusCache.Get()
+	res, err := c.statusG.Get()
 	/*
 		0: "unknown",
 		1: "not connected",
@@ -177,7 +172,7 @@ func (c *OpenEVSE) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (c *OpenEVSE) Enabled() (bool, error) {
-	res, err := c.statusCache.Get()
+	res, err := c.statusG.Get()
 	return *res.Status == openevse.Enabled, err
 }
 
@@ -197,7 +192,7 @@ var _ api.ChargeRater = (*OpenEVSE)(nil)
 
 // ChargedEnergy implements the api.ChargeRater interface
 func (c *OpenEVSE) ChargedEnergy() (float64, error) {
-	res, err := c.statusCache.Get()
+	res, err := c.statusG.Get()
 	if err != nil {
 		return 0, err
 	}
@@ -208,7 +203,7 @@ func (c *OpenEVSE) ChargedEnergy() (float64, error) {
 var _ api.ChargeTimer = (*OpenEVSE)(nil)
 
 func (c *OpenEVSE) ChargingTime() (time.Duration, error) {
-	res, err := c.statusCache.Get()
+	res, err := c.statusG.Get()
 	if err != nil {
 		return 0, err
 	}
@@ -219,7 +214,7 @@ var _ api.MeterEnergy = (*OpenEVSE)(nil)
 
 // TotalEnergy implements the api.MeterEnergy interface
 func (c *OpenEVSE) TotalEnergy() (float64, error) {
-	res, err := c.statusCache.Get()
+	res, err := c.statusG.Get()
 	if err != nil {
 		return 0, err
 	}
@@ -230,7 +225,7 @@ func (c *OpenEVSE) TotalEnergy() (float64, error) {
 var _ api.Meter = (*OpenEVSE)(nil)
 
 func (c *OpenEVSE) CurrentPower() (float64, error) {
-	res, err := c.statusCache.Get()
+	res, err := c.statusG.Get()
 	if err != nil {
 		return 0, err
 	}
