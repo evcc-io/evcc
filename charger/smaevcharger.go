@@ -37,12 +37,12 @@ import (
 // smaevchager charger implementation
 type Smaevcharger struct {
 	*request.Helper
-	log              *util.Logger
-	uri              string // 192.168.XXX.XXX
-	cache            time.Duration
-	oldstate         float64
-	measurementCache provider.Cacheable[[]smaevcharger.Measurements]
-	parameterCache   provider.Cacheable[[]smaevcharger.Parameters]
+	log          *util.Logger
+	uri          string // 192.168.XXX.XXX
+	cache        time.Duration
+	oldstate     float64
+	measurementG provider.Cacheable[[]smaevcharger.Measurements]
+	parameterG   provider.Cacheable[[]smaevcharger.Parameters]
 }
 
 func init() {
@@ -95,8 +95,8 @@ func NewSmaevcharger(uri, user, password string, cache time.Duration) (api.Charg
 	}
 
 	// setup cached values
-	wb.measurementCache = provider.ResettableCached(wb._measurementData, wb.cache)
-	wb.parameterCache = provider.ResettableCached(wb._parameterData, wb.cache)
+	wb.measurementG = provider.ResettableCached(wb._measurementData, wb.cache)
+	wb.parameterG = provider.ResettableCached(wb._parameterData, wb.cache)
 
 	ts, err := smaevcharger.TokenSource(log, wb.uri, user, password)
 	if err != nil {
@@ -268,8 +268,8 @@ func (wb *Smaevcharger) Currents() (float64, float64, float64, error) {
 
 // reset cache
 func (wb *Smaevcharger) reset() {
-	wb.measurementCache.Reset()
-	wb.parameterCache.Reset()
+	wb.measurementG.Reset()
+	wb.parameterG.Reset()
 }
 
 func (wb *Smaevcharger) _measurementData() ([]smaevcharger.Measurements, error) {
@@ -299,7 +299,7 @@ func (wb *Smaevcharger) _parameterData() ([]smaevcharger.Parameters, error) {
 }
 
 func (wb *Smaevcharger) getMeasurement(id string) (float64, error) {
-	res, err := wb.measurementCache.Get()
+	res, err := wb.measurementG.Get()
 	if err != nil {
 		return 0, err
 	}
@@ -314,7 +314,7 @@ func (wb *Smaevcharger) getMeasurement(id string) (float64, error) {
 }
 
 func (wb *Smaevcharger) getParameter(id string) (string, error) {
-	res, err := wb.parameterCache.Get()
+	res, err := wb.parameterG.Get()
 	if err != nil {
 		return "", err
 	}

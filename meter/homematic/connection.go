@@ -29,8 +29,8 @@ type Connection struct {
 	log *util.Logger
 	*request.Helper
 	*Settings
-	meterCache  provider.Cacheable[MethodResponse]
-	switchCache provider.Cacheable[MethodResponse]
+	meterG  provider.Cacheable[MethodResponse]
+	switchG provider.Cacheable[MethodResponse]
 }
 
 // NewConnection creates a new Homematic device connection.
@@ -58,11 +58,11 @@ func NewConnection(uri, device, meterchannel, switchchannel, user, password stri
 		conn.Client.Transport = transport.BasicAuth(user, password, conn.Client.Transport)
 	}
 
-	conn.switchCache = provider.ResettableCached(func() (MethodResponse, error) {
+	conn.switchG = provider.ResettableCached(func() (MethodResponse, error) {
 		return conn.XmlCmd("getParamset", conn.SwitchChannel, Param{CCUString: "VALUES"})
 	}, conn.Cache)
 
-	conn.meterCache = provider.ResettableCached(func() (MethodResponse, error) {
+	conn.meterG = provider.ResettableCached(func() (MethodResponse, error) {
 		return conn.XmlCmd("getParamset", conn.MeterChannel, Param{CCUString: "VALUES"})
 	}, conn.Cache)
 
@@ -74,45 +74,45 @@ func (c *Connection) Enable(enable bool) error {
 	onoff := map[bool]string{true: "1", false: "0"}
 	_, err := c.XmlCmd("setValue", c.SwitchChannel, Param{CCUString: "STATE"}, Param{CCUBool: onoff[enable]})
 	if err == nil {
-		c.switchCache.Reset()
-		c.meterCache.Reset()
+		c.switchG.Reset()
+		c.meterG.Reset()
 	}
 	return err
 }
 
 // Enabled reads the homematic HMIP-PSM switchchannel state true=on/false=off
 func (c *Connection) Enabled() (bool, error) {
-	res, err := c.switchCache.Get()
+	res, err := c.switchG.Get()
 	return res.BoolValue("STATE"), err
 }
 
 // CurrentPower reads the homematic HMIP-PSM meterchannel power in W
 func (c *Connection) CurrentPower() (float64, error) {
-	res, err := c.meterCache.Get()
+	res, err := c.meterG.Get()
 	return res.FloatValue("POWER"), err
 }
 
 // TotalEnergy reads the homematic HMIP-PSM meterchannel energy in Wh
 func (c *Connection) TotalEnergy() (float64, error) {
-	res, err := c.meterCache.Get()
+	res, err := c.meterG.Get()
 	return res.FloatValue("ENERGY_COUNTER") / 1e3, err
 }
 
 // Currents reads the homematic HMIP-PSM meterchannel L1 current in A
 func (c *Connection) Currents() (float64, float64, float64, error) {
-	res, err := c.meterCache.Get()
+	res, err := c.meterG.Get()
 	return res.FloatValue("CURRENT") / 1e3, 0, 0, err
 }
 
 // GridCurrentPower reads the homematic HM-ES-TX-WM grid meterchannel power in W
 func (c *Connection) GridCurrentPower() (float64, error) {
-	res, err := c.meterCache.Get()
+	res, err := c.meterG.Get()
 	return res.FloatValue("IEC_POWER"), err
 }
 
 // GridTotalEnergy reads the homematic HM-ES-TX-WM grid meterchannel energy in kWh
 func (c *Connection) GridTotalEnergy() (float64, error) {
-	res, err := c.meterCache.Get()
+	res, err := c.meterG.Get()
 	return res.FloatValue("IEC_ENERGY_COUNTER"), err
 }
 
