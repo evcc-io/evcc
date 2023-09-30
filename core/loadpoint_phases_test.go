@@ -331,6 +331,10 @@ func TestPvScalePhasesTimer(t *testing.T) {
 		{"3/0->1, not enough power, not charging", 3, 0, 0, 1, true, func(lp *Loadpoint) {
 			lp.status = api.StatusB
 		}},
+		// switch up from 1p/0p while not yet charging
+		{"1/0->3, enough power, not charging", 1, 0, 3 * Voltage * minA, 3, true, func(lp *Loadpoint) {
+			lp.status = api.StatusB
+		}},
 
 		// error states from 1p/3p misconfig - no correction for time being (stay at 1p)
 		{"1/3->1, enough power", 1, 3, 1 * Voltage * maxA, 1, false, nil},
