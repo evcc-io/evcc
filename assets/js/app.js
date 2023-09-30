@@ -26,7 +26,7 @@ const app = createApp({
     },
   },
   methods: {
-    log: function (msg) {
+    raise: function (msg) {
       if (!msg.level) msg.level = "error";
       const now = new Date();
       const latestMsg = this.notifications[0];

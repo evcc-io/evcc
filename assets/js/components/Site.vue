@@ -8,7 +8,7 @@
 				<div class="d-flex">
 					<Notifications
 						:notifications="notifications"
-						:loadpointNames="loadpointNames"
+						:loadpointTitles="loadpointTitles"
 						class="me-2"
 					/>
 					<TopNavigation v-bind="topNavigation" />
@@ -108,7 +108,7 @@ export default {
 		energyflow: function () {
 			return this.collectProps(Energyflow);
 		},
-		loadpointNames: function () {
+		loadpointTitles: function () {
 			return this.loadpoints.map((lp) => lp.title);
 		},
 		loadpointsCompact: function () {

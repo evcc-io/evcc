@@ -85,7 +85,7 @@ export default {
 	mixins: [formatter],
 	props: {
 		notifications: Array,
-		loadpointNames: Array,
+		loadpointTitles: Array,
 	},
 	computed: {
 		iconVisible: function () {
@@ -109,7 +109,7 @@ export default {
 		message({ message, lp }) {
 			let context = "";
 			if (lp) {
-				context = `${this.loadpointNames[lp - 1] || lp}: `;
+				context = `${this.loadpointTitles[lp - 1] || lp}: `;
 			}
 			return `${context}${message}`;
 		},

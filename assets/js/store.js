@@ -27,7 +27,7 @@ const store = {
   update: function (msg) {
     Object.keys(msg).forEach(function (k) {
       if (k === "log") {
-        window.app.log(msg[k]);
+        window.app.raise(msg[k]);
       } else {
         setProperty(state, k.split("."), msg[k]);
       }
