@@ -2,7 +2,7 @@ template: tasmota-em
 products:
   - brand: Tasmota
     description:
-      generic: 3 Phase Energy Meter
+      generic: 3 Phase Energy + Charge Meter
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -30,6 +30,16 @@ render: |
     uri: {{ include "uri" . }}/cm?cmnd=Status+8
     jq: .StatusSNS.ENERGY.Total
   currents: # Stromstärke (A) pro Phase
+    - source: http
+      uri: {{ include "uri" . }}/cm?cmnd=Status+8
+      jq: .StatusSNS.ENERGY.Current[0]
+    - source: http
+      uri: {{ include "uri" . }}/cm?cmnd=Status+8
+      jq: .StatusSNS.ENERGY.Current[1]
+    - source: http
+      uri: {{ include "uri" . }}/cm?cmnd=Status+8
+      jq: .StatusSNS.ENERGY.Current[2]
+  voltages: # Spannung (V) pro Phase
     - source: http
       uri: {{ include "uri" . }}/cm?cmnd=Status+8
       jq: .StatusSNS.ENERGY.Voltage[0]
