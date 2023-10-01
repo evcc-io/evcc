@@ -31,10 +31,20 @@ var LogAreaPadding = 6
 type Logger struct {
 	*jww.Notepad
 	*Redactor
+	lp int
 }
 
 // NewLogger creates a logger with the given log area and adds it to the registry
 func NewLogger(area string) *Logger {
+	return newLogger(area, 0)
+}
+
+// NewLoggerWithLoadpoint creates a logger with reference to at loadpoint
+func NewLoggerWithLoadpoint(area string, lp int) *Logger {
+	return newLogger(area, lp)
+}
+
+func newLogger(area string, lp int) *Logger {
 	loggersMux.Lock()
 	defer loggersMux.Unlock()
 
@@ -54,6 +64,7 @@ func NewLogger(area string) *Logger {
 	logger := &Logger{
 		Notepad:  notepad,
 		Redactor: redactor,
+		lp:       lp,
 	}
 
 	// capture loggers created after uiChan is initialized
@@ -130,17 +141,29 @@ var uiChan chan<- Param
 type uiWriter struct {
 	re    *regexp.Regexp
 	level string
+	lp    int
 }
 
 func (w *uiWriter) Write(p []byte) (n int, err error) {
 	// trim level and timestamp
 	s := string(w.re.ReplaceAll(p, []byte{}))
 
-	uiChan <- Param{
-		Key: w.level,
-		Val: strings.Trim(strconv.Quote(strings.TrimSpace(s)), "\""),
+	val := struct {
+		Message   string `json:"message"`
+		Level     string `json:"level"`
+		Loadpoint int    `json:"lp,omitempty"`
+	}{
+		Message:   strings.Trim(strconv.Quote(strings.TrimSpace(s)), "\""),
+		Level:     w.level,
+		Loadpoint: w.lp,
 	}
 
+	param := Param{
+		Key: "log",
+		Val: val,
+	}
+
+	uiChan <- param
 	return 0, nil
 }
 
@@ -159,18 +182,19 @@ func CaptureLogs(c chan<- Param) {
 }
 
 func captureLogger(l *Logger) {
-	captureLogLevel("warn", l.Notepad.WARN)
-	captureLogLevel("error", l.Notepad.ERROR)
-	captureLogLevel("error", l.Notepad.FATAL)
+	captureLogLevel("warn", l.lp, l.Notepad.WARN)
+	captureLogLevel("error", l.lp, l.Notepad.ERROR)
+	captureLogLevel("error", l.lp, l.Notepad.FATAL)
 }
 
-func captureLogLevel(level string, l *log.Logger) {
+func captureLogLevel(level string, lp int, l *log.Logger) {
 	re, err := regexp.Compile(`^\[[a-zA-Z0-9-]+\s*\] \w+ .{19} `)
 	if err != nil {
 		panic(err)
 	}
 
 	ui := uiWriter{
+		lp:    lp,
 		re:    re,
 		level: level,
 	}
