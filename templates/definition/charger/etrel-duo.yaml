@@ -12,7 +12,6 @@ requirements:
 params:
   - name: connector
   - name: host
-    required: true
   - name: port
     default: 502
 render: |

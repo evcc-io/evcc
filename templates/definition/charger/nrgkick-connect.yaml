@@ -9,7 +9,6 @@ params:
     required: true
   - name: password
     required: true
-    mask: true
 render: |
   type: nrgkick-connect
   uri: http://{{ .host }}

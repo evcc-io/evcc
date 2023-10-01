@@ -13,7 +13,6 @@ params:
   - name: usage
     choice: ["grid", "pv"]
   - name: host
-    required: true
 render: |
   type: custom
   {{- if eq .usage "grid" }}
