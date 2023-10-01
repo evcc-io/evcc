@@ -7,7 +7,7 @@ params:
   - name: usage
     choice: ["grid", "pv", "charge"]
   - name: modbus
-    choice: ["rtu", "tcp"]
+    choice: ["rtu"]
     baudrate: 1200
 render: |
   type: custom
