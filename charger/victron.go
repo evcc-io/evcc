@@ -95,7 +95,7 @@ func (wb *Victron) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	return api.ChargeStatusString(string('A' + binary.BigEndian.Uint16(b)))
+	return api.ChargeStatusString(string('A' + rune(binary.BigEndian.Uint16(b))))
 }
 
 // Enabled implements the api.Charger interface
