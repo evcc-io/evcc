@@ -51,6 +51,8 @@ template = "Hersteller"
 titleAdd = "Fahrzeug hinzufügen"
 titleEdit = "Fahrzeug bearbeiten"
 update = "Prüfen & speichern"
+save = "Speichern"
+validateSave = "Prüfen & speichern"
 
 [footer]
 
