@@ -14,7 +14,7 @@ requirements:
   evcc: ["sponsorship"]
 params:
   - name: modbus
-    choice: ["rs485", "tcpip"]
+    choice: ["rs485"]
     baudrate: 57600
     comset: 8N2
     id: 50
