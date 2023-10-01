@@ -316,6 +316,10 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 	case easee.DYNAMIC_CHARGER_CURRENT:
 		c.dynamicChargerCurrent = value.(float64)
 	case easee.CHARGER_OP_MODE:
+	
+		c.mux.Lock()
+		defer c.mux.Unlock()
+	
 		// New charging session pending, reset internal value of SESSION_ENERGY to 0, and its observation timestamp to "now".
 		// This should be done in a proper way by the api, but it's not.
 		// Remember value of LIFETIME_ENERGY as start value of the charging session
@@ -327,7 +331,9 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 
 		// OpMode changed TO charging. Start ticker for periodic requests to update LIFETIME_ENERGY
 		if c.opMode != easee.ModeCharging && value.(int) == easee.ModeCharging {
-			c.stopTicker = make(chan struct{})
+			if c.stopTicker != nil {
+				c.stopTicker = make(chan struct{})
+			}
 			go func() {
 				ticker := time.NewTicker(5 * time.Minute)
 				for {
@@ -341,9 +347,11 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 			}()
 		}
 
-		// OpMode changed FROM charging to something else - stop ticker
-		if c.opMode == easee.ModeCharging && value.(int) != easee.ModeCharging {
+		// OpMode changed FROM charging to something else - stop ticker if channel exists
+		if c.opMode == easee.ModeCharging && value.(int) != easee.ModeCharging && c.stopTicker != nil {
 			c.stopTicker <- struct{}{}
+			close(c.stopTicker)
+			c.stopTicker = nil
 		}
 
 		// for relevant OpModes changes indicating a start or stop of the charging session, request new update of LIFETIME_ENERGY
@@ -730,7 +738,7 @@ func (c *Easee) CurrentPower() (float64, error) {
 }
 
 func (c *Easee) requestLifetimeEnergyUpdate() {
-	if c.lastEnergyPollTriggered.Before(time.Now().Add(-3 * time.Minute)) { //api rate limit, max once in 3 minutes
+	if time.Since(c.lastEnergyPollTriggered) > time.Minute * 3 { // api rate limit, max once in 3 minutes
 		uri := fmt.Sprintf("%s/chargers/%s/commands/%s", easee.API, c.charger, easee.PollLifetimeEnergy)
 		if _, err := c.Post(uri, request.JSONContent, request.MarshalJSON(nil)); err != nil {
 			c.log.WARN.Printf("Failed to trigger an update of LIFETIME_ENERGY: %v", err)
