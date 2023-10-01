@@ -46,12 +46,12 @@ delete = "Fahrzeug löschen"
 generic = "Weitere Integrationen"
 offline = "Generisches Fahrzeug"
 online = "Fahrzeuge mit Schnittstelle"
+save = "Speichern"
 scooter = "Scooter"
 template = "Hersteller"
 titleAdd = "Fahrzeug hinzufügen"
 titleEdit = "Fahrzeug bearbeiten"
 update = "Prüfen & speichern"
-save = "Speichern"
 validateSave = "Prüfen & speichern"
 
 [footer]

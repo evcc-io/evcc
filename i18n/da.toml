@@ -18,6 +18,37 @@ low = "en smule fyldt"
 medium = "halv fyldt"
 never = "kun med nok solar overskud"
 
+[config]
+
+[config.form]
+example = "Eksempel"
+optional = "valgfrit"
+
+[config.main]
+addVehicle = "Tilføj bil"
+edit = "rediger"
+title = "Konfiguration"
+vehicles = "Mine biler"
+
+[config.validation]
+failed = "mislykkedes"
+label = "Status"
+running = "validering"
+success = "succes"
+unknown = "ukendt"
+validate = "validerer"
+
+[config.vehicle]
+cancel = "Annuller"
+delete = "Slet bilen"
+generic = "Andre integrationer"
+offline = "Generisk bil"
+online = "Biler med online API"
+save = "Gem"
+scooter = "Scooter"
+template = "Fabrikant"
+titleAdd = "Tilføj køretøj"
+
 [footer]
 
 [footer.community]
@@ -359,33 +390,3 @@ title = "Fejl ved opstart"
 cancel = "Afbryd"
 template = "Producent"
 test = "Test"
-
-
-[config.validation]
-validate = validerer
-label = Status
-unknown = ukendt
-running = validering
-success = succes
-failed = mislykkedes
-
-[config.vehicle]
-cancel = Annuller
-delete = Slet bilen
-titleAdd = Tilføj køretøj
-online = Biler med online API
-save = Gem
-template = Fabrikant
-offline = Generisk bil
-scooter = Scooter
-generic = Andre integrationer
-
-[config.main]
-vehicles = Mine biler
-edit = rediger
-title = Konfiguration
-addVehicle = Tilføj bil
-
-[config.form]
-optional = valgfrit
-example = Eksempel
