@@ -7,7 +7,7 @@ params:
   - name: usage
     choice: ["grid", "charge"]
   - name: modbus
-    choice: ["rtu", "tcp"]
+    choice: ["rtu"]
 render: |
   type: custom
   power:

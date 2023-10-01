@@ -11,7 +11,7 @@ params:
     choice: ["grid", "pv", "battery"]
     allinone: true
   - name: modbus
-    choice: ["rtu", "tcp"]
+    choice: ["rtu"]
     baudrate: 9600
     id: 1
   - name: capacity
