@@ -3,7 +3,6 @@ products:
   - brand: Tasmota
   - description:
       generic: Tasmota 3 phase energy meter
-group: switchsockets
 params:
   - name: usage
     choice: ["pv", "battery", "charge"]

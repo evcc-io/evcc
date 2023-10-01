@@ -5,6 +5,8 @@ products:
       generic: Tasmota 1 phase meter or grid sensor 
 group: switchsockets
 params:
+  - name: usage
+    choice: ["grid", "pv", "charge"]
   - name: host
   - name: user
     required: false
@@ -27,6 +29,7 @@ render: |
   type: tasmota
   uri: http://{{ .host }}
   usage: {{ .usage }}
+  {{- if .user }}
   user: {{ .user }}
   {{- end }}
   {{- if .password }}
