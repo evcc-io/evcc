@@ -15,7 +15,6 @@ params:
     required: true
   - name: password
     required: true
-    mask: true
 render: |
   type: smaevcharger
   uri: http://{{ .host }}
