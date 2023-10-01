@@ -223,7 +223,7 @@ func (wb *Mennekes) Voltages() (float64, float64, float64, error) {
 
 // getPhaseValues returns 3 sequential phase values
 func (wb *Mennekes) getPhaseValues(reg uint16) (float64, float64, float64, error) {
-	b, err := wb.conn.ReadInputRegisters(reg, 6)
+	b, err := wb.conn.ReadHoldingRegisters(reg, 6)
 	if err != nil {
 		return 0, 0, 0, err
 	}
