@@ -3,9 +3,10 @@ products:
   - brand: Victron
     description:
       generic: EV charging station
-    help:
-      en: Charger has to be in manual mode and Modbus has to be configured for ID 100.
-      de: Wallbox muss sich im Modus "Manual" befinden und Modbus ID 100 konfiguriert sein.
+requirements:
+  description:
+    en: Charger has to be in manual mode and Modbus has to be configured for ID 100.
+    de: Wallbox muss sich im Modus "Manual" befinden und Modbus ID 100 konfiguriert sein.
 params:
   - name: modbus
     choice: ["tcpip"]
