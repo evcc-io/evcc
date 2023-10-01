@@ -10,7 +10,7 @@ requirements:
     de: Wallbox muss sich im Modus "Manual" befinden und Modbus ID 100 konfiguriert sein.
 params:
   - name: modbus
-    choice: ["tcpip"]
+    choice: ["tcp"]
     id: 100
 render: |
   type: victron
