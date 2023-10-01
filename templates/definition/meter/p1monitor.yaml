@@ -1,8 +1,8 @@
 template: p1monitor
 products:
-  - brand: P1 Monitor
+  - brand: P1Monitor
     description:
-      generic: p1monitor
+      generic: P1 Monitor
 params:
   - name: usage
     choice: ["grid"]
