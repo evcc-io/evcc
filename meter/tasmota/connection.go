@@ -18,8 +18,8 @@ type Connection struct {
 	*request.Helper
 	uri, user, password string
 	channel             int
-	statusSNSCache      provider.Cacheable[StatusSNSResponse]
-	statusSTSCache      provider.Cacheable[StatusSTSResponse]
+	statusSnsG          provider.Cacheable[StatusSNSResponse]
+	statusStsG          provider.Cacheable[StatusSTSResponse]
 }
 
 // NewConnection creates a Tasmota connection
@@ -39,7 +39,7 @@ func NewConnection(uri, user, password string, channel int, cache time.Duration)
 
 	c.Client.Transport = request.NewTripper(log, transport.Insecure())
 
-	c.statusSNSCache = provider.ResettableCached(func() (StatusSNSResponse, error) {
+	c.statusSnsG = provider.ResettableCached(func() (StatusSNSResponse, error) {
 		parameters := url.Values{
 			"user":     []string{c.user},
 			"password": []string{c.password},
@@ -50,7 +50,7 @@ func NewConnection(uri, user, password string, channel int, cache time.Duration)
 		return res, err
 	}, cache)
 
-	c.statusSTSCache = provider.ResettableCached(func() (StatusSTSResponse, error) {
+	c.statusStsG = provider.ResettableCached(func() (StatusSTSResponse, error) {
 		parameters := url.Values{
 			"user":     []string{c.user},
 			"password": []string{c.password},
@@ -66,7 +66,7 @@ func NewConnection(uri, user, password string, channel int, cache time.Duration)
 
 // channelExists checks the existence of the configured relay channel interface
 func (c *Connection) ChannelExists(channel int) error {
-	res, err := c.statusSTSCache.Get()
+	res, err := c.statusStsG.Get()
 	if err != nil {
 		return err
 	}
@@ -136,8 +136,8 @@ func (c *Connection) Enable(enable bool) error {
 		on = strings.ToUpper(res.Power) == "ON" || strings.ToUpper(res.Power1) == "ON"
 	}
 
-	c.statusSNSCache.Reset()
-	c.statusSTSCache.Reset()
+	c.statusSnsG.Reset()
+	c.statusStsG.Reset()
 
 	switch {
 	case enable && !on:
@@ -151,7 +151,7 @@ func (c *Connection) Enable(enable bool) error {
 
 // Enabled implements the api.Charger interface
 func (c *Connection) Enabled() (bool, error) {
-	res, err := c.statusSTSCache.Get()
+	res, err := c.statusStsG.Get()
 	if err != nil {
 		return false, err
 	}
@@ -178,7 +178,7 @@ func (c *Connection) Enabled() (bool, error) {
 
 // CurrentPower implements the api.Meter interface
 func (c *Connection) CurrentPower() (float64, error) {
-	res, err := c.statusSNSCache.Get()
+	res, err := c.statusSnsG.Get()
 	if err != nil {
 		return 0, err
 	}
@@ -187,18 +187,18 @@ func (c *Connection) CurrentPower() (float64, error) {
 
 // TotalEnergy implements the api.MeterEnergy interface
 func (c *Connection) TotalEnergy() (float64, error) {
-	res, err := c.statusSNSCache.Get()
+	res, err := c.statusSnsG.Get()
 	return res.StatusSNS.Energy.Total, err
 }
 
 // SmlPower provides the sml sensor power
 func (c *Connection) SmlPower() (float64, error) {
-	res, err := c.statusSNSCache.Get()
+	res, err := c.statusSnsG.Get()
 	return float64(res.StatusSNS.SML.PowerCurr), err
 }
 
 // SmlTotalEnergy provides the sml sensor total import energy
 func (c *Connection) SmlTotalEnergy() (float64, error) {
-	res, err := c.statusSNSCache.Get()
+	res, err := c.statusSnsG.Get()
 	return res.StatusSNS.SML.TotalIn, err
 }

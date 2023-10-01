@@ -209,7 +209,7 @@ params:
       en: Identification
     help:
       de: "Kann meist erst später eingetragen werden, siehe: https://docs.evcc.io/docs/guides/vehicles/#erkennung-des-fahrzeugs-an-der-wallbox"
-      en: "Mostly this can be added later, see: https://docs.evcc.io/docs/guides/vehicles/#erkennung-des-fahrzeugs-an-der-wallbox"
+      en: "Mostly this can be added later, see: https://docs.evcc.io/en/docs/guides/vehicles/#determining-which-vehicle-is-at-which-charger"
     type: stringlist
   - name: priority
     description:
@@ -320,6 +320,14 @@ presets:
   vehicle-language:
     params:
       - name: language
+  tariff-base:
+    params:
+      - name: costs
+        type: number
+        advanced: true
+      - name: tax
+        type: number
+        advanced: true
   eebus:
     params:
       - name: ski
@@ -331,9 +339,15 @@ presets:
       - name: integrateddevice
         type: bool
         advanced: true
-        description:
+        help:
           de: Integriertes Gerät (keine Fahrzeugverbindung)
           en: Integrated device (no vehicle connection)
+      - name: heating
+        type: bool
+        advanced: true
+        help:
+          de: Wärmeerzeuger (°C anstatt %)
+          en: Heating device (°C instead of %)
       - name: icon
         advanced: true
   ocpp:

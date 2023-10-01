@@ -244,14 +244,14 @@ func (wb *Keba) totalEnergy() (float64, error) {
 
 // currents implements the api.PhaseCurrents interface
 func (wb *Keba) currents() (float64, float64, float64, error) {
-	var res [3]float64
-	for i := uint16(0); i < 3; i++ {
-		b, err := wb.conn.ReadHoldingRegisters(kebaRegCurrents+2*i, 2)
-		if err != nil {
-			return 0, 0, 0, err
-		}
+	b, err := wb.conn.ReadHoldingRegisters(kebaRegCurrents, 6)
+	if err != nil {
+		return 0, 0, 0, err
+	}
 
-		res[i] = float64(binary.BigEndian.Uint32(b)) / 1e3
+	var res [3]float64
+	for i := 0; i < 3; i++ {
+		res[i] = float64(binary.BigEndian.Uint32(b[4*i:])) / 1e3
 	}
 
 	return res[0], res[1], res[2], nil

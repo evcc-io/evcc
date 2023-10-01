@@ -89,6 +89,11 @@ func (cp *CP) MeterValues(request *core.MeterValuesRequest) (*core.MeterValuesCo
 		cp.mu.Lock()
 		defer cp.mu.Unlock()
 
+		if request.TransactionId != nil && cp.txnId == 0 {
+			cp.log.DEBUG.Printf("hijacking transaction: %d", *request.TransactionId)
+			cp.txnId = *request.TransactionId
+		}
+
 		for _, meterValue := range request.MeterValue {
 			// ignore old meter value requests
 			if meterValue.Timestamp.Time.After(cp.meterUpdated) {
