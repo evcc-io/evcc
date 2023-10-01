@@ -2,7 +2,7 @@ template: tasmota
 products:
   - brand: Tasmota
     description:
-      generic: 1 phase meter or grid sensor 
+      generic: 1 phase meter or grid sensor
 group: switchsockets
 params:
   - name: usage
