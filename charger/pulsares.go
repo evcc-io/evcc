@@ -25,7 +25,6 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
-	"github.com/evcc-io/evcc/util/sponsor"
 )
 
 // Pulsares charger implementation
@@ -71,10 +70,6 @@ func NewPulsares(uri, device, comset string, baudrate int, proto modbus.Protocol
 
 	if timeout > 0 {
 		conn.Timeout(timeout)
-	}
-
-	if !sponsor.IsAuthorized() {
-		return nil, api.ErrSponsorRequired
 	}
 
 	log := util.NewLogger("pulsares")
