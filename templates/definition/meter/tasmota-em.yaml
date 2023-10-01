@@ -2,7 +2,7 @@ template: tasmota-em
 products:
   - brand: Tasmota
   - description:
-      generic: 3 phase energy meter
+      generic: 3 phase meter device with Tasmota firwmare
 params:
   - name: usage
     choice: ["pv", "battery", "charge"]
