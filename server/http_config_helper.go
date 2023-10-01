@@ -4,8 +4,17 @@ import (
 	"errors"
 	"sync"
 
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/templates"
+)
+
+const (
+	// typeTemplate is the updatable configuration type
+	typeTemplate = "template"
+
+	// masked indicates a masked config parameter value
+	masked = "***"
 )
 
 var (
@@ -92,4 +101,37 @@ func deviceInstanceFromMergedConfig[T any](id int, class templates.Class, conf m
 	instance, err := newFromConf(typeTemplate, merged)
 
 	return dev, instance, err
+}
+
+type testResult = struct {
+	Value any    `json:"value"`
+	Error string `json:"error"`
+}
+
+// testInstance tests the given instance similar to dump
+// TODO refactor together with dump
+func testInstance(instance any) map[string]testResult {
+	res := make(map[string]testResult)
+
+	if dev, ok := instance.(api.Meter); ok {
+		val, err := dev.CurrentPower()
+		res["CurrentPower"] = testResult{val, err.Error()}
+	}
+
+	if dev, ok := instance.(api.MeterEnergy); ok {
+		val, err := dev.TotalEnergy()
+		res["TotalEnergy"] = testResult{val, err.Error()}
+	}
+
+	if dev, ok := instance.(api.Battery); ok {
+		val, err := dev.Soc()
+		res["Soc"] = testResult{val, err.Error()}
+	}
+
+	if dev, ok := instance.(api.VehicleOdometer); ok {
+		val, err := dev.Odometer()
+		res["Odometer"] = testResult{val, err.Error()}
+	}
+
+	return res
 }
