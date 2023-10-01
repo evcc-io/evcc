@@ -6,6 +6,7 @@ params:
   - name: host
   - name: user
     required: false
+    default: admin
     help:
       de: Standard-User ist admin
       en: admin is default

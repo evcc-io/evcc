@@ -4,12 +4,9 @@ products:
     description:
       generic: 3 Phase Energy + Charge Meter
 params:
-  - name: usage
-    choice: ["grid", "pv", "battery", "charge"]
-  - name: host
-    default: 192.0.2.2
   - name: user
     required: false
+    default: admin
     help:
       de: Standard-User ist admin
       en: admin is default
