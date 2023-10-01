@@ -331,7 +331,7 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 
 		// OpMode changed TO charging. Start ticker for periodic requests to update LIFETIME_ENERGY
 		if c.opMode != easee.ModeCharging && value.(int) == easee.ModeCharging {
-			if c.stopTicker != nil {
+			if c.stopTicker == nil {
 				c.stopTicker = make(chan struct{})
 			}
 			go func() {
