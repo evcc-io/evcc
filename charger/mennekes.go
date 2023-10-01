@@ -277,24 +277,13 @@ var _ api.Diagnosis = (*Mennekes)(nil)
 
 // Diagnose implements the api.Diagnosis interface
 func (wb *Mennekes) Diagnose() {
-	/*
-		 	if b, err := wb.conn.ReadHoldingRegisters(mennekesRegSerial, 2); err == nil {
-				fmt.Printf("\tSerial:\t%s\n", strings.TrimLeft(strconv.Itoa(int(encoding.Uint32(b))), "0"))
-			}
-			if b, err := wb.conn.ReadHoldingRegisters(mennekesRegFirmware, 2); err == nil {
-				fmt.Printf("\tFirmware:\t%d.%d.%d\n", b[0], b[1], b[2])
-			}
-			if b, err := wb.conn.ReadHoldingRegisters(mennekesRegProduct, 2); err == nil {
-				fmt.Printf("\tProduct:\t%6d\n", encoding.Uint32(b))
-			}
-			if b, err := wb.conn.ReadHoldingRegisters(mennekesRegPhaseSource, 2); err == nil {
-				fmt.Printf("\tPhases source:\t%d\n", encoding.Uint32(b))
-			}
-			if b, err := wb.conn.ReadHoldingRegisters(mennekesRegPhaseState, 2); err == nil {
-				fmt.Printf("\tPhases state:\t%d\n", encoding.Uint32(b))
-			}
-			if b, err := wb.conn.ReadHoldingRegisters(mennekesRegFailsafeTimeout, 2); err == nil {
-				fmt.Printf("\tFailsafe timeout:\t%ds\n", encoding.Uint32(b))
-			}
-	*/
+	if b, err := wb.conn.ReadHoldingRegisters(mennekesRegModbusVersion, 1); err == nil {
+		fmt.Printf("\tModbus:\t%d\n", encoding.Uint16(b))
+	}
+	if b, err := wb.conn.ReadHoldingRegisters(mennekesRegFirmwareVersion, 8); err == nil {
+		fmt.Printf("\tFirmware:\t%s\n", encoding.StringLsbFirst(b))
+	}
+	if b, err := wb.conn.ReadHoldingRegisters(mennekesRegSerialNumber, 8); err == nil {
+		fmt.Printf("\tSerial:\t%s\n", encoding.StringLsbFirst(b))
+	}
 }
