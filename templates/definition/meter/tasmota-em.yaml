@@ -1,15 +1,18 @@
 template: tasmota-em
 products:
   - brand: Tasmota
-    description:
-      generic: 3 Phase Energy + Charge Meter
+  - description:
+      generic: Tasmota 3 phase energy meter
+group: switchsockets
 params:
+  - name: usage
+    choice: ["pv", "battery", "charge"]
+  - name: host
   - name: user
     required: false
-    default: admin
     help:
       de: Standard-User ist admin
-      en: admin is default
+      en: admin is default    
   - name: password
     required: false
     mask: true
@@ -46,3 +49,4 @@ render: |
     - source: http
       uri: {{ include "uri" . }}/cm?cmnd=Status+8
       jq: .StatusSNS.ENERGY.Voltage[2]
+

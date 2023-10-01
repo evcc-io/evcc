@@ -1,26 +1,35 @@
 template: tasmota
 products:
   - brand: Tasmota
-  - description:
-      generic: Tasmota
+    description:
+      generic: Tasmota 1 phase meter or grid sensor 
 group: switchsockets
 params:
-  - name: usage
-    choice: ["grid", "pv", "battery"]
   - name: host
-    default: 192.0.2.2
   - name: user
     required: false
-    default: admin
     help:
       de: Standard-User ist admin
-      en: admin is default
+      en: admin is default   
   - name: password
     required: false
     mask: true
+  - name: channel
+    default: 1
+    required: true
+    description:
+      de: Nummer des Messkanals
+      en: Device meter channel number
+    help:
+      de: Nummer des Messkanals (1-8), bei Geräten mit mehr als einem Meter
+      en: Device meter channel number (allowed range 1-8)
 render: |
   type: tasmota
   uri: http://{{ .host }}
   usage: {{ .usage }}
   user: {{ .user }}
+  {{- end }}
+  {{- if .password }}
   password: {{ .password }}
+  {{- end }}
+  channel: {{ .channel }}  # meter channel (allowed range: 1-8)
