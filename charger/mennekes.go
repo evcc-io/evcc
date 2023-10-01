@@ -59,7 +59,7 @@ const (
 
 	mennekesAllowed           = 1
 	mennekesHeartbeatInterval = 10
-	mennekesHeartbeatToken    = 0x55AA
+	mennekesHeartbeatToken    = 0x55AA // 21930
 )
 
 func init() {
@@ -236,6 +236,7 @@ func (wb *Mennekes) getPhaseValues(reg uint16) (float64, float64, float64, error
 	return res[0], res[1], res[2], nil
 }
 
+/*
 var _ api.ChargeRater = (*Mennekes)(nil)
 
 // ChargedEnergy implements the api.MeterEnergy interface
@@ -259,6 +260,7 @@ func (wb *Mennekes) ChargingTime() (time.Duration, error) {
 
 	return time.Duration(encoding.Uint32(b)) * time.Second, nil
 }
+*/
 
 var _ api.PhaseSwitcher = (*Mennekes)(nil)
 
