@@ -2,7 +2,7 @@ template: tasmota-em
 products:
   - brand: Tasmota
   - description:
-      generic: 3 Phase Tasmota Firmware Meter 
+      generic: 3 Phase Tasmota Firmware Meter
 params:
   - name: usage
     choice: ["pv", "battery", "charge"]
