@@ -45,13 +45,13 @@
 							<p class="d-flex align-items-baseline">
 								<shopicon-regular-exclamationtriangle
 									:class="{
-										'text-danger': msg.type === 'error',
-										'text-warning': msg.type === 'warn',
+										'text-danger': msg.level === 'error',
+										'text-warning': msg.level === 'warn',
 									}"
 									class="flex-grow-0 flex-shrink-0 d-block"
 								></shopicon-regular-exclamationtriangle>
 								<span class="flex-grow-1 px-2 py-1 text-break">
-									{{ msg.message }}
+									{{ message(msg) }}
 								</span>
 								<span v-if="msg.count > 1" class="badge rounded-pill bg-secondary">
 									{{ msg.count }}
@@ -85,13 +85,14 @@ export default {
 	mixins: [formatter],
 	props: {
 		notifications: Array,
+		loadpointTitles: Array,
 	},
 	computed: {
 		iconVisible: function () {
 			return this.notifications.length > 0;
 		},
 		iconClass: function () {
-			return this.notifications.find((m) => m.type === "error")
+			return this.notifications.find((m) => m.level === "error")
 				? "text-danger"
 				: "text-warning";
 		},
@@ -105,6 +106,13 @@ export default {
 		clearTimeout(this.interval);
 	},
 	methods: {
+		message({ message, lp }) {
+			let context = "";
+			if (lp) {
+				context = `${this.loadpointTitles[lp - 1] || lp}: `;
+			}
+			return `${context}${message}`;
+		},
 		clear: function () {
 			window.app && window.app.clear();
 		},

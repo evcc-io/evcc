@@ -1047,6 +1047,10 @@ func (lp *Loadpoint) pvScalePhases(availablePower, minCurrent, maxCurrent float6
 	if targetCurrent := powerToCurrent(availablePower, activePhases); targetCurrent < minCurrent && activePhases > 1 && lp.ConfiguredPhases < 3 {
 		lp.log.DEBUG.Printf("available power %.0fW < %.0fW min %dp threshold", availablePower, float64(activePhases)*Voltage*minCurrent, activePhases)
 
+		if !lp.charging() { // scale immediately if not charging
+			lp.phaseTimer = elapsed
+		}
+
 		if lp.phaseTimer.IsZero() {
 			lp.log.DEBUG.Printf("start phase %s timer", phaseScale1p)
 			lp.phaseTimer = lp.clock.Now()
@@ -1071,6 +1075,10 @@ func (lp *Loadpoint) pvScalePhases(availablePower, minCurrent, maxCurrent float6
 	// scale up phases
 	if targetCurrent := powerToCurrent(availablePower, maxPhases); targetCurrent >= minCurrent && scalable {
 		lp.log.DEBUG.Printf("available power %.0fW > %.0fW min %dp threshold", availablePower, 3*Voltage*minCurrent, maxPhases)
+
+		if !lp.charging() { // scale immediately if not charging
+			lp.phaseTimer = elapsed
+		}
 
 		if lp.phaseTimer.IsZero() {
 			lp.log.DEBUG.Printf("start phase %s timer", phaseScale3p)

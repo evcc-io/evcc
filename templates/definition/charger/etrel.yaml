@@ -14,7 +14,6 @@ requirements:
     en: The charger must be switched to "Power" charging mode.
 params:
   - name: host
-    required: true
   - name: port
     default: 502
 render: |
