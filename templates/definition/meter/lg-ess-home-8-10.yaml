@@ -8,11 +8,19 @@ params:
     choice: ["grid", "pv", "battery"]
     allinone: true
   - name: host
+  - name: password
+    help:
+      en: >
+        User password, see https://github.com/Morluktom/ioBroker.lg-ess-home/tree/master#getting-the-password.
+        Alteratively, use registration id for admin login.
+      de: >
+        Benutzerpasswort, siehe https://github.com/Morluktom/ioBroker.lg-ess-home/tree/master#getting-the-password.
+        Alterativ kann die Registriernummer für Administratorlogin verwendet werden.
   - name: registration
-    required: true
+    advanced: true
     example: "DE200..."
     help:
-      en: Registration number of the LG ESS HOME inverter.
+      en: Registration id of the LG ESS HOME inverter.
       de: Registriernummer des LG ESS HOME Wechselrichters.
   - name: capacity
     advanced: true
@@ -21,7 +29,12 @@ render: |
   usage: {{ .usage }}
   # uri and password are only required once if multiple lgess usages are defined
   uri: https://{{ .host }}
-  password: {{ .registration }}
+  {{- if .password }}
+  password: {{ .password }}
+  {{- end }}
+  {{- if .registration }}
+  registration: {{ .registration }}
+  {{- end }}
   {{- if .capacity }}
   capacity: {{ .capacity }} # kWh
   {{- end }}

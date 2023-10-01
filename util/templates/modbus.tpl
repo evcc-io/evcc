@@ -15,6 +15,7 @@ uri: {{ .host }}:{{ .port }}
 {{- else if or (eq .modbus "tcpip") (eq .modbus "tcp") }}
 # Modbus TCP
 uri: {{ .host }}:{{ .port }}
+rtu: false
 {{- else }}
 # configuration error - should not happen
 modbusConnectionTypeNotDefined: {{ .modbus }}

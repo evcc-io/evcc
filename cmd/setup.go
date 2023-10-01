@@ -657,7 +657,7 @@ func configureLoadpoints(conf globalConfig) (loadpoints []*core.Loadpoint, err e
 			return nil, fmt.Errorf("failed decoding loadpoint configuration: %w", err)
 		}
 
-		log := util.NewLogger("lp-" + strconv.Itoa(id+1))
+		log := util.NewLoggerWithLoadpoint("lp-"+strconv.Itoa(id+1), id+1)
 		lp, err := core.NewLoadpointFromConfig(log, lpc)
 		if err != nil {
 			return nil, fmt.Errorf("failed configuring loadpoint: %w", err)

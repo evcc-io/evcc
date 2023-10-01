@@ -38,9 +38,9 @@ var (
 	log     = util.NewLogger("main")
 	cfgFile string
 
-	ignoreEmpty  = ""                               // ignore empty keys
-	ignoreErrors = []string{"warn", "error"}        // ignore errors
-	ignoreMqtt   = []string{"auth", "releaseNotes"} // excessive size may crash certain brokers
+	ignoreEmpty = ""                               // ignore empty keys
+	ignoreLogs  = []string{"log"}                  // ignore log messages, including warn/error
+	ignoreMqtt  = []string{"auth", "releaseNotes"} // excessive size may crash certain brokers
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -137,7 +137,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 	// value cache
 	cache := util.NewCache()
-	go cache.Run(pipe.NewDropper(ignoreErrors...).Pipe(tee.Attach()))
+	go cache.Run(pipe.NewDropper(ignoreLogs...).Pipe(tee.Attach()))
 
 	// create web server
 	socketHub := server.NewSocketHub()
@@ -193,7 +193,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 	// setup database
 	if err == nil && conf.Influx.URL != "" {
-		configureInflux(conf.Influx, site, pipe.NewDropper(append(ignoreErrors, ignoreEmpty)...).Pipe(tee.Attach()))
+		configureInflux(conf.Influx, site, pipe.NewDropper(append(ignoreLogs, ignoreEmpty)...).Pipe(tee.Attach()))
 	}
 
 	// setup mqtt publisher
