@@ -48,4 +48,3 @@ render: |
     - source: http
       uri: {{ include "uri" . }}/cm?cmnd=Status+8
       jq: .StatusSNS.ENERGY.Voltage[2]
-
