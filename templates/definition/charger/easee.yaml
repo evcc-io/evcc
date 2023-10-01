@@ -14,7 +14,6 @@ params:
       en: Email address
   - name: password
     required: true
-    mask: true
     help:
       de: wie Login für Easee App oder Web Portal (https://easee.cloud)
       en: same as Easee app or the web portal (https://easee.cloud)

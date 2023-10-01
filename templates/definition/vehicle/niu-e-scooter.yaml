@@ -12,7 +12,6 @@ params:
     required: true
   - name: password
     required: true
-    mask: true
   - name: serial
     description:
       de: Scooter Seriennummer, wie in der NIU app angegeben
