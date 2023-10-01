@@ -2,7 +2,7 @@ package charger
 
 // LICENSE
 
-// Copyright (c) 2022 premultiply, andig
+// Copyright (c) 2023 andig
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
