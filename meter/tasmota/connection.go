@@ -18,12 +18,13 @@ type Connection struct {
 	*request.Helper
 	uri, user, password string
 	channel             int
+	channels            []int
 	statusSnsG          provider.Cacheable[StatusSNSResponse]
 	statusStsG          provider.Cacheable[StatusSTSResponse]
 }
 
 // NewConnection creates a Tasmota connection
-func NewConnection(uri, user, password string, channel int, cache time.Duration) (*Connection, error) {
+func NewConnection(uri, user, password string, channel int, channels []int, cache time.Duration) (*Connection, error) {
 	if uri == "" {
 		return nil, errors.New("missing uri")
 	}

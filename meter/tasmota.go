@@ -26,23 +26,25 @@ func NewTasmotaFromConfig(other map[string]interface{}) (api.Meter, error) {
 		User     string
 		Password string
 		Channel  int
+		Channels []int
 		Usage    string
 		Cache    time.Duration
 	}{
-		Channel: 1,
-		Cache:   time.Second,
+		Channel:  1,
+		Channels: []int{1},
+		Cache:    time.Second,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewTasmota(cc.URI, cc.User, cc.Password, cc.Usage, cc.Channel, cc.Cache)
+	return NewTasmota(cc.URI, cc.User, cc.Password, cc.Usage, cc.Channel, cc.Channels, cc.Cache)
 }
 
 // NewTasmota creates Tasmota meter
-func NewTasmota(uri, user, password, usage string, channel int, cache time.Duration) (*Tasmota, error) {
-	conn, err := tasmota.NewConnection(uri, user, password, channel, cache)
+func NewTasmota(uri, user, password, usage string, channel int, channels []int, cache time.Duration) (*Tasmota, error) {
+	conn, err := tasmota.NewConnection(uri, user, password, channel, channels, cache)
 	if err != nil {
 		return nil, err
 	}
