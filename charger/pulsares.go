@@ -34,9 +34,8 @@ type Pulsares struct {
 }
 
 const (
-	pulsaresRegStatus     = 31
-	pulsaresRegGetCurrent = 45
-	pulsaresRegSetCurrent = 51
+	pulsaresRegStatus  = 0x1f
+	pulsaresRegCurrent = 0x5d
 )
 
 func init() {
@@ -77,7 +76,7 @@ func NewPulsares(uri, device, comset string, baudrate int, proto modbus.Protocol
 
 	wb := &Pulsares{
 		conn: conn,
-		curr: 6,
+		curr: 6000,
 	}
 
 	// get initial state from charger
@@ -85,7 +84,7 @@ func NewPulsares(uri, device, comset string, baudrate int, proto modbus.Protocol
 	if err != nil {
 		return nil, fmt.Errorf("current limit: %w", err)
 	}
-	if curr >= 6 {
+	if curr >= 6000 {
 		wb.curr = curr
 	}
 
@@ -96,18 +95,18 @@ func (wb *Pulsares) setCurrent(current uint16) error {
 	b := make([]byte, 2)
 	binary.BigEndian.PutUint16(b, uint16(current))
 
-	_, err := wb.conn.WriteMultipleRegisters(pulsaresRegSetCurrent, 1, b)
+	_, err := wb.conn.WriteMultipleRegisters(pulsaresRegCurrent, 1, b)
 
 	return err
 }
 
 func (wb *Pulsares) getCurrent() (uint16, error) {
-	b, err := wb.conn.ReadHoldingRegisters(pulsaresRegGetCurrent, 1)
+	b, err := wb.conn.ReadHoldingRegisters(pulsaresRegCurrent, 1)
 	if err != nil {
 		return 0, err
 	}
 
-	return binary.BigEndian.Uint16(b) / 1e3, nil
+	return binary.BigEndian.Uint16(b), nil
 }
 
 // Status implements the api.Charger interface
@@ -133,7 +132,7 @@ func (wb *Pulsares) Status() (api.ChargeStatus, error) {
 func (wb *Pulsares) Enabled() (bool, error) {
 	curr, err := wb.getCurrent()
 
-	return curr >= 6, err
+	return curr >= 6000, err
 }
 
 // Enable implements the api.Charger interface
@@ -148,14 +147,18 @@ func (wb *Pulsares) Enable(enable bool) error {
 
 // MaxCurrent implements the api.Charger interface
 func (wb *Pulsares) MaxCurrent(current int64) error {
+	return wb.MaxCurrentMillis(float64(current))
+}
+
+var _ api.ChargerEx = (*Pulsares)(nil)
+
+// MaxCurrent implements the api.ChargerEx interface
+func (wb *Pulsares) MaxCurrentMillis(current float64) error {
 	if current < 6 {
-		return fmt.Errorf("invalid current %d", current)
+		return fmt.Errorf("invalid current %.1f", current)
 	}
 
-	err := wb.setCurrent(uint16(current))
-	if err == nil {
-		wb.curr = uint16(current)
-	}
+	wb.curr = uint16(current * 1e3)
 
-	return err
+	return wb.setCurrent(wb.curr)
 }
