@@ -36,7 +36,7 @@ func DayAheadPricesRequest(domain string, duration time.Duration) *http.Request 
 		"PeriodEnd":    {now.Add(duration).Format(numericDateFormat)},
 	}
 
-	uri := fmt.Sprintf("%s?%s", BaseURI, params.Encode())
+	uri := BaseURI + "?" + params.Encode()
 	req, _ := request.New(http.MethodGet, uri, nil, request.AcceptXML)
 
 	return req
