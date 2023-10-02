@@ -60,7 +60,8 @@ type Easee struct {
 	opMode                  int
 	reasonForNoCurrent      int
 	phaseMode               int
-	currentPower, sessionEnergy, totalEnergy, sessionStartLifetimeEnergy,
+	sessionStartEnergy      *float64
+	currentPower, sessionEnergy, totalEnergy,
 	currentL1, currentL2, currentL3 float64
 	rfid       string
 	lp         loadpoint.API
@@ -303,8 +304,9 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 		}
 	case easee.LIFETIME_ENERGY:
 		c.totalEnergy = value.(float64)
-		if c.sessionStartLifetimeEnergy == easee.NEED_SESSION_START_ENERGY {
-			c.sessionStartLifetimeEnergy = c.totalEnergy
+		if c.sessionStartEnergy == nil {
+			f := c.totalEnergy
+			c.sessionStartEnergy = &f
 		}
 	case easee.IN_CURRENT_T3:
 		c.currentL1 = value.(float64)
@@ -326,7 +328,7 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 		if c.opMode <= easee.ModeDisconnected && opMode >= easee.ModeAwaitingStart {
 			c.sessionEnergy = 0
 			c.obsTime[easee.SESSION_ENERGY] = time.Now()
-			c.sessionStartLifetimeEnergy = easee.NEED_SESSION_START_ENERGY
+			c.sessionStartEnergy = nil
 		}
 
 		// OpMode changed TO charging. Start ticker for periodic requests to update LIFETIME_ENERGY
@@ -760,9 +762,10 @@ func (c *Easee) ChargedEnergy() (float64, error) {
 	// return either the self calced session energy (current LIFETIME_ENERGY minus remembered start value),
 	// or the SESSION_ENERGY value by the API. Each value could be lower than the other, depending on
 	// order and receive timestamp of the product update. We want to return the higher (and newer) value.
-	if c.sessionStartLifetimeEnergy > 0 {
-		return max(c.sessionEnergy, c.totalEnergy-c.sessionStartLifetimeEnergy), nil
+	if c.sessionStartEnergy != nil {
+		return max(c.sessionEnergy, c.totalEnergy-*c.sessionStartEnergy), nil
 	}
+
 	return c.sessionEnergy, nil
 }
 

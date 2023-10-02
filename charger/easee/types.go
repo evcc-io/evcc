@@ -11,8 +11,6 @@ const (
 	PollLifetimeEnergy = "poll_lifetimeenergy"
 )
 
-const NEED_SESSION_START_ENERGY float64 = -1
-
 // charge mode definition
 const (
 	ModeOffline                int = 0
