@@ -36,6 +36,7 @@ func NewConnection(uri, user, password string, channel int, channels []int, cach
 		user:     user,
 		password: password,
 		channel:  channel,
+		channels: channels,
 	}
 
 	c.Client.Transport = request.NewTripper(log, transport.Insecure())
@@ -183,7 +184,15 @@ func (c *Connection) CurrentPower() (float64, error) {
 	if err != nil {
 		return 0, err
 	}
-	return res.StatusSNS.Energy.Power.Channel(c.channel)
+	var power float64
+	for _, channel := range c.channels {
+		channelpower, err := res.StatusSNS.Energy.Power.Channel(channel)
+		if err != nil {
+			return 0, err
+		}
+		power = power + channelpower
+	}
+	return power, nil
 }
 
 // TotalEnergy implements the api.MeterEnergy interface
