@@ -93,7 +93,7 @@ func ExtractTsPriceData(timeseries *TimeSeries) ([]RateData, error) {
 	tPointer := timeseries.Period.TimeInterval.Start.Time
 	for _, point := range timeseries.Period.Point {
 		d := RateData{
-			Value:         point.PriceAmount / 100, // Price/MWH to Price/kWH
+			Value:         point.PriceAmount / 1e3, // Price/MWh to Price/kWh
 			ValidityStart: tPointer,
 		}
 
