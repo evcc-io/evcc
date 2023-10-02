@@ -5,6 +5,7 @@ package entsoe
 import (
 	"errors"
 	"fmt"
+	"net/http"
 	"net/url"
 	"sort"
 	"time"
@@ -21,46 +22,22 @@ const numericDateFormat = "200601021504"
 
 var ErrInvalidData = errors.New("invalid data received")
 
-// DayAheadPricesRequest represents a helper struct for requesting 4.2.10 Day Ahead Prices [12.1.D]
-type DayAheadPricesRequest struct {
-	domain      string
-	periodStart time.Time
-	periodEnd   time.Time
-}
-
-// ConstructDayAheadPricesRequest constructs a new DayAheadPricesRequest.
-// Domain and duration validity is not checked, that's on you.
-func ConstructDayAheadPricesRequest(domain string, duration time.Duration) DayAheadPricesRequest {
-	// Round to the hour.
+// DayAheadPricesRequest constructs a new DayAheadPricesRequest.
+func DayAheadPricesRequest(domain string, duration time.Duration) *http.Request {
 	now := time.Now().Truncate(time.Hour)
-	return DayAheadPricesRequest{
-		domain:      domain,
-		periodStart: now,
-		periodEnd:   now.Add(duration),
-	}
-}
-
-// DoRequest requests the current Day Ahead Prices from ENTSOE.
-// The client is expected to provide a decorator to provide the security key.
-func (r *DayAheadPricesRequest) DoRequest(client *request.Helper) (PublicationMarketDocument, error) {
-	var res PublicationMarketDocument
-
-	// Currently opting to use GET request to keep it relatively simple, but POST is an option.
-	// Would have to figure out building the XML requests in a sane, structured way though.
 
 	params := url.Values{
 		"DocumentType": {string(ProcessTypeDayAhead)},
-		"In_Domain":    {r.domain},
-		"Out_Domain":   {r.domain},
-		"PeriodStart":  {r.periodStart.Format(numericDateFormat)},
-		"PeriodEnd":    {r.periodEnd.Format(numericDateFormat)},
+		"In_Domain":    {domain},
+		"Out_Domain":   {domain},
+		"PeriodStart":  {now.Format(numericDateFormat)},
+		"PeriodEnd":    {now.Add(duration).Format(numericDateFormat)},
 	}
 
-	// Feels like we might be duplicating the wheel here, but this is nice and simple (and fast)
 	uri := fmt.Sprintf("%s?%s", BaseURI, params.Encode())
+	req, _ := request.New(http.MethodGet, uri, nil, request.AcceptXML)
 
-	err := client.GetXML(uri, &res)
-	return res, err
+	return req
 }
 
 // RateData defines the per-unit Value over a period of time spanning ValidityStart and ValidityEnd.

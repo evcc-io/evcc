@@ -1,6 +1,8 @@
 package tariff
 
 import (
+	"bytes"
+	"encoding/xml"
 	"errors"
 	"net/http"
 	"slices"
@@ -83,27 +85,51 @@ func (t *Entsoe) run(done chan error) {
 
 	bo := newBackoff()
 
-	// Request the next 24 hours of data.
-	tReq := entsoe.ConstructDayAheadPricesRequest(t.domain, time.Hour*24)
-
 	// Data updated by ESO every half hour, but we only need data every hour to stay current.
 	for ; true; <-time.Tick(time.Hour) {
 		var tr entsoe.PublicationMarketDocument
+
 		if err := backoff.Retry(func() error {
-			var err error
-			tr, err = tReq.DoRequest(t.Helper)
+			// Request the next 24 hours of data.
+			data, err := t.DoBody(entsoe.DayAheadPricesRequest(t.domain, time.Hour*24))
 
 			// Consider whether errors.As would be more appropriate if this needs to start dealing with wrapped errors.
-			if se, ok := err.(request.StatusError); ok && se.HasStatus(http.StatusBadRequest) {
-				// Catch cases where we're sending completely incorrect data (usually the result of a bad region).
-				return backoff.Permanent(se)
+			if se, ok := err.(request.StatusError); ok {
+				if se.HasStatus(http.StatusBadRequest) {
+					return backoff.Permanent(se)
+				}
+
+				return se
 			}
 
-			if tr.Type != string(entsoe.ProcessTypeDayAhead) {
-				return backoff.Permanent(errors.New("invalid response"))
+			var doc entsoe.Document
+			if err := xml.NewDecoder(bytes.NewReader(data)).Decode(&doc); err != nil {
+				return err
 			}
 
-			return err
+			switch doc.XMLName.Local {
+			case entsoe.AcknowledgementMarketDocumentName:
+				var doc entsoe.AcknowledgementMarketDocument
+				if err := xml.NewDecoder(bytes.NewReader(data)).Decode(&doc); err != nil {
+					return err
+				}
+
+				return backoff.Permanent(errors.New(doc.Reason.Text))
+
+			case entsoe.PublicationMarketDocumentName:
+				if err := xml.NewDecoder(bytes.NewReader(data)).Decode(&tr); err != nil {
+					return err
+				}
+
+				if tr.Type != string(entsoe.ProcessTypeDayAhead) {
+					return backoff.Permanent(errors.New("invalid document type: " + tr.Type))
+				}
+
+				return nil
+
+			default:
+				return backoff.Permanent(errors.New("invalid document name: " + doc.XMLName.Local))
+			}
 		}, bo); err != nil {
 			once.Do(func() { done <- err })
 

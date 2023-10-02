@@ -32,6 +32,15 @@ type AttributeInstanceComponent struct {
 	AttributeValue string   `xml:"attributeValue"`
 }
 
+const (
+	AcknowledgementMarketDocumentName = "Acknowledgement_MarketDocument"
+	PublicationMarketDocumentName     = "Publication_MarketDocument"
+)
+
+type Document struct {
+	XMLName xml.Name
+}
+
 type AcknowledgementMarketDocument struct {
 	XMLName                     xml.Name `xml:"Acknowledgement_MarketDocument"`
 	Xmlns                       string   `xml:"xmlns,attr"`
