@@ -315,41 +315,43 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 		c.phaseMode = value.(int)
 	case easee.DYNAMIC_CHARGER_CURRENT:
 		c.dynamicChargerCurrent = value.(float64)
+
 	case easee.CHARGER_OP_MODE:
-	
 		c.mux.Lock()
 		defer c.mux.Unlock()
-	
+
+		opMode := value.(int)
+
 		// New charging session pending, reset internal value of SESSION_ENERGY to 0, and its observation timestamp to "now".
 		// This should be done in a proper way by the api, but it's not.
 		// Remember value of LIFETIME_ENERGY as start value of the charging session
-		if c.opMode <= easee.ModeDisconnected && value.(int) >= easee.ModeAwaitingStart {
+		if c.opMode <= easee.ModeDisconnected && opMode >= easee.ModeAwaitingStart {
 			c.sessionEnergy = 0
 			c.obsTime[easee.SESSION_ENERGY] = time.Now()
 			c.sessionStartLifetimeEnergy = easee.NEED_SESSION_START_ENERGY
 		}
 
 		// OpMode changed TO charging. Start ticker for periodic requests to update LIFETIME_ENERGY
-		if c.opMode != easee.ModeCharging && value.(int) == easee.ModeCharging {
+		if c.opMode != easee.ModeCharging && opMode == easee.ModeCharging {
 			if c.stopTicker == nil {
 				c.stopTicker = make(chan struct{})
-			}
-			go func() {
-				ticker := time.NewTicker(5 * time.Minute)
-				for {
-					select {
-					case <-c.stopTicker:
-						return
-					case <-ticker.C:
-						c.requestLifetimeEnergyUpdate()
+
+				go func() {
+					ticker := time.NewTicker(5 * time.Minute)
+					for {
+						select {
+						case <-c.stopTicker:
+							return
+						case <-ticker.C:
+							c.requestLifetimeEnergyUpdate()
+						}
 					}
-				}
-			}()
+				}()
+			}
 		}
 
 		// OpMode changed FROM charging to something else - stop ticker if channel exists
-		if c.opMode == easee.ModeCharging && value.(int) != easee.ModeCharging && c.stopTicker != nil {
-			c.stopTicker <- struct{}{}
+		if c.opMode == easee.ModeCharging && opMode != easee.ModeCharging && c.stopTicker != nil {
 			close(c.stopTicker)
 			c.stopTicker = nil
 		}
@@ -357,13 +359,14 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 		// for relevant OpModes changes indicating a start or stop of the charging session, request new update of LIFETIME_ENERGY
 		// relevant OpModes: leaving op modes 1 (car connected, charging will start uncontrolled if unauthorized)
 		// and 3 (charging stopped or pause), or reaching op mode 1 (car disconnected) and 7 (charging paused/ended by de-authenticating)
-		if c.opMode != value.(int) && // only if op mode actually changed AND
+		if c.opMode != opMode && // only if op mode actually changed AND
 			(c.opMode == easee.ModeDisconnected || c.opMode == easee.ModeCharging || // from these op modes
-				value.(int) == easee.ModeDisconnected || value.(int) == easee.ModeAwaitingAuthentication) { // or to these op modes
+				opMode == easee.ModeDisconnected || opMode == easee.ModeAwaitingAuthentication) { // or to these op modes
 			c.requestLifetimeEnergyUpdate()
 		}
 
-		c.opMode = value.(int)
+		c.opMode = opMode
+
 	case easee.REASON_FOR_NO_CURRENT:
 		c.reasonForNoCurrent = value.(int)
 	}
@@ -738,7 +741,7 @@ func (c *Easee) CurrentPower() (float64, error) {
 }
 
 func (c *Easee) requestLifetimeEnergyUpdate() {
-	if time.Since(c.lastEnergyPollTriggered) > time.Minute * 3 { // api rate limit, max once in 3 minutes
+	if time.Since(c.lastEnergyPollTriggered) > time.Minute*3 { // api rate limit, max once in 3 minutes
 		uri := fmt.Sprintf("%s/chargers/%s/commands/%s", easee.API, c.charger, easee.PollLifetimeEnergy)
 		if _, err := c.Post(uri, request.JSONContent, request.MarshalJSON(nil)); err != nil {
 			c.log.WARN.Printf("Failed to trigger an update of LIFETIME_ENERGY: %v", err)
