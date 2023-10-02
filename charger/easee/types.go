@@ -4,14 +4,14 @@ package easee
 const API = "https://api.easee.com/api"
 
 const (
-	ChargeStart			= "start_charging"
-	ChargeStop			= "stop_charging"
-	ChargePause			= "pause_charging"
-	ChargeResume 		= "resume_charging"
-	PollLifetimeEnergy	= "poll_lifetimeenergy"
+	ChargeStart        = "start_charging"
+	ChargeStop         = "stop_charging"
+	ChargePause        = "pause_charging"
+	ChargeResume       = "resume_charging"
+	PollLifetimeEnergy = "poll_lifetimeenergy"
 )
 
-const NEED_SESSION_START_ENERGY = -1
+const NEED_SESSION_START_ENERGY float64 = -1
 
 // charge mode definition
 const (
