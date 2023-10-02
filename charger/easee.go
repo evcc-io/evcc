@@ -49,6 +49,7 @@ type Easee struct {
 	lastEnergyPollTriggered time.Time
 	log                     *util.Logger
 	mux                     sync.Mutex
+	lastEnergyPollMux       sync.Mutex
 	done                    chan struct{}
 	dynamicChargerCurrent   float64
 	current                 float64
@@ -317,9 +318,6 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 		c.dynamicChargerCurrent = value.(float64)
 
 	case easee.CHARGER_OP_MODE:
-		c.mux.Lock()
-		defer c.mux.Unlock()
-
 		opMode := value.(int)
 
 		// New charging session pending, reset internal value of SESSION_ENERGY to 0, and its observation timestamp to "now".
@@ -741,6 +739,8 @@ func (c *Easee) CurrentPower() (float64, error) {
 }
 
 func (c *Easee) requestLifetimeEnergyUpdate() {
+	c.lastEnergyPollMux.Lock()
+	defer c.lastEnergyPollMux.Unlock()
 	if time.Since(c.lastEnergyPollTriggered) > time.Minute*3 { // api rate limit, max once in 3 minutes
 		uri := fmt.Sprintf("%s/chargers/%s/commands/%s", easee.API, c.charger, easee.PollLifetimeEnergy)
 		if _, err := c.Post(uri, request.JSONContent, request.MarshalJSON(nil)); err != nil {
