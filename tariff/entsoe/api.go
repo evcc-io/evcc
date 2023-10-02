@@ -14,11 +14,13 @@ import (
 	"github.com/evcc-io/evcc/util/request"
 )
 
-// BaseURI is the root path that the API is accessed from.
-const BaseURI = "https://web-api.tp.entsoe.eu/api"
+const (
+	// BaseURI is the root path that the API is accessed from.
+	BaseURI = "https://web-api.tp.entsoe.eu/api"
 
-// numericDateFormat is a time.Parse compliant formatting string for the numeric date format used by entsoe get requests.
-const numericDateFormat = "200601021504"
+	// numericDateFormat is a time.Parse compliant formatting string for the numeric date format used by entsoe get requests.
+	numericDateFormat = "200601021504"
+)
 
 var ErrInvalidData = errors.New("invalid data received")
 
