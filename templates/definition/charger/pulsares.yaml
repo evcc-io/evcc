@@ -2,7 +2,7 @@ template: pulsares
 products:
   - brand: Pulsares
     description:
-      generic: EV EasyCharge
+      generic: SimpleBox
 params:
   - name: modbus
     choice: ["rs485"]
