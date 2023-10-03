@@ -29,6 +29,26 @@ func NewConnection(uri, user, password string, channel int, channels []int, cach
 		return nil, errors.New("missing uri")
 	}
 
+	minchannel := 8
+	maxchannel := 1
+	duplicatechannels := make(map[int]bool, 0)
+	for i := 0; i < len(channels); i++ {
+		if duplicatechannels[channels[i]] {
+			return nil, errors.New("duplicates in channel list")
+		} else {
+			duplicatechannels[channels[i]] = true
+			if channels[i] < minchannel {
+				minchannel = channels[i]
+			}
+			if channels[i] > maxchannel {
+				maxchannel = channels[i]
+			}
+		}
+	}
+	if minchannel < 1 || maxchannel > 8 {
+		return nil, errors.New("only channels 1-8 allowed")
+	}
+
 	log := util.NewLogger("tasmota")
 	c := &Connection{
 		Helper:   request.NewHelper(log),
