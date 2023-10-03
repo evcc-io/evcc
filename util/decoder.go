@@ -22,15 +22,17 @@ func init() {
 	uni := ut.New(en, en)
 
 	trans, _ = uni.GetTranslator("en")
-	en_translations.RegisterDefaultTranslations(validate, trans)
+	_ = en_translations.RegisterDefaultTranslations(validate, trans)
 
 	// simplify required field error
-	validate.RegisterTranslation("required", trans, func(ut ut.Translator) error {
+	if err := validate.RegisterTranslation("required", trans, func(ut ut.Translator) error {
 		return ut.Add("required", "missing {0}", true)
 	}, func(ut ut.Translator, fe validator.FieldError) string {
 		t, _ := ut.T("required", strings.ToLower(fe.Field()))
 		return t
-	})
+	}); err != nil {
+		panic(err)
+	}
 }
 
 // DecodeOther uses mapstructure to decode into target structure. Unused keys cause errors.
