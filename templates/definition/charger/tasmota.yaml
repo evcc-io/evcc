@@ -12,15 +12,15 @@ params:
   - name: password
     required: false
     mask: true
-  - name: channel
+  - name: channels
     default: 1
     required: true
     description:
-      de: Nummer des Schaltkanals
-      en: Device relay channel number
+      de: Liste der Schaltkanäle
+      en: Relay channel number list
     help:
-      de: Nummer des Schaltkanals (1-8), bei Geräten mit mehr als einem Schalter
-      en: Device relay channel number (allowed range 1-8)
+      de: Liste der Schaltkanäle [1,2,..,8], bei Geräten mit mehr als einem Schalter
+      en: List of relay channel numbers [1,2,....,8]
   - preset: switchsocket
 render: |
   type: tasmota
@@ -31,5 +31,5 @@ render: |
   {{- if .password }}
   password: {{ .password }}
   {{- end }}
-  channel: {{ .channel }}  # relay channel (allowed range: 1-8)
+  channels: {{ .channels }}  # list of relay channels [1,2,....,8]
   {{ include "switchsocket" . }}

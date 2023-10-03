@@ -15,9 +15,19 @@ params:
   - name: password
     required: false
     mask: true
+  - name: channels
+    default: 1
+    required: true
+    description:
+      de: Liste der Meterkanäle
+      en: Meter channel number list
+    help:
+      de: Liste der Meterkanäle [1,2,..,8], bei Geräten mit mehr als einem Meter
+      en: List of meter channel numbers [1,2,....,8]
 render: |
   type: tasmota
   uri: http://{{ .host }}
   usage: {{ .usage }}
   user: {{ .user }}
   password: {{ .password }}
+  channels: {{ .channels }}  # list of meter channels [1,2,....,8]
