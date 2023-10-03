@@ -37,7 +37,7 @@ func init() {
 	registry.Add("warp-fw2", NewWarp2FromConfig) // deprecated
 }
 
-// go:generate go run ../cmd/tools/decorate.go -f decorateWarp2 -b *Warp2 -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.Identifier,Identify,func() (string, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) error"
+// go:generate go run ../cmd/tools/decorate.go -f decorateWarp2 -b *Warp2 -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.Identifier,Identify,func() (string, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) error"
 
 // NewWarpFromConfig creates a new configurable charger
 func NewWarp2FromConfig(other map[string]interface{}) (api.Charger, error) {
@@ -66,9 +66,10 @@ func NewWarp2FromConfig(other map[string]interface{}) (api.Charger, error) {
 		totalEnergy = wb.totalEnergy
 	}
 
-	var currents func() (float64, float64, float64, error)
+	var currents, voltages func() (float64, float64, float64, error)
 	if wb.hasFeature(cc.Topic, warp.FeatureMeterPhases) {
 		currents = wb.currents
+		voltages = wb.voltages
 	}
 
 	var identity func() (string, error)
@@ -83,7 +84,7 @@ func NewWarp2FromConfig(other map[string]interface{}) (api.Charger, error) {
 		}
 	}
 
-	return decorateWarp2(wb, currentPower, totalEnergy, currents, identity, phases), err
+	return decorateWarp2(wb, currentPower, totalEnergy, currents, voltages, identity, phases), err
 }
 
 // NewWarp2 creates a new configurable charger
@@ -239,24 +240,42 @@ func (wb *Warp2) totalEnergy() (float64, error) {
 	return res.EnergyAbs, err
 }
 
+func (wb *Warp2) meterValues() ([]float64, error) {
+	s, err := wb.meterDetailsG()
+	if err != nil {
+		return nil, err
+	}
+
+	var res []float64
+	if err := json.Unmarshal([]byte(s), &res); err != nil {
+		return nil, err
+	}
+
+	if len(res) <= 5 {
+		return nil, errors.New("invalid length")
+	}
+
+	return res, nil
+}
+
 // currents implements the api.MeterCurrrents interface
 func (wb *Warp2) currents() (float64, float64, float64, error) {
-	var res []float64
-
-	s, err := wb.meterDetailsG()
+	res, err := wb.meterValues()
 	if err != nil {
 		return 0, 0, 0, err
 	}
 
-	if err := json.Unmarshal([]byte(s), &res); err != nil {
+	return res[3], res[4], res[5], nil
+}
+
+// voltages implements the api.MeterVoltages interface
+func (wb *Warp2) voltages() (float64, float64, float64, error) {
+	res, err := wb.meterValues()
+	if err != nil {
 		return 0, 0, 0, err
 	}
 
-	if len(res) <= 5 {
-		return 0, 0, 0, errors.New("invalid length")
-	}
-
-	return res[3], res[4], res[5], nil
+	return res[0], res[1], res[2], nil
 }
 
 func (wb *Warp2) identify() (string, error) {
