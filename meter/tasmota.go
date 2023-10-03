@@ -76,3 +76,13 @@ func (c *Tasmota) TotalEnergy() (float64, error) {
 	}
 	return c.conn.TotalEnergy()
 }
+
+var _ api.PhaseCurrents = (*Tasmota)(nil)
+
+// Currents implements the api.PhaseCurrents interface
+func (c *Tasmota) Currents() (float64, float64, float64, error) {
+	if c.usage == "grid" {
+		return 0, 0, 0, nil
+	}
+	return c.conn.Currents()
+}
