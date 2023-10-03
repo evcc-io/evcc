@@ -13,7 +13,7 @@ func init() {
 // NewTPLinkFromConfig creates a tapo meter from generic config
 func NewTPLinkFromConfig(other map[string]interface{}) (api.Meter, error) {
 	var cc struct {
-		URI string
+		URI string `validate:"required"`
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {

@@ -74,21 +74,16 @@ func init() {
 // NewEaseeFromConfig creates a go-e charger from generic config
 func NewEaseeFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
-		User      string
-		Password  string
-		Charger   string
-		Timeout   time.Duration
-		Authorize bool
+		User, Password string `validate:"required"`
+		Charger        string
+		Timeout        time.Duration
+		Authorize      bool
 	}{
 		Timeout: request.Timeout,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
-	}
-
-	if cc.User == "" || cc.Password == "" {
-		return nil, api.ErrMissingCredentials
 	}
 
 	return NewEasee(cc.User, cc.Password, cc.Charger, cc.Timeout, cc.Authorize)

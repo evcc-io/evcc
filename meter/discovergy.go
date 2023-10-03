@@ -25,12 +25,10 @@ type Discovergy struct {
 // NewDiscovergyFromConfig creates a new configurable meter
 func NewDiscovergyFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
-		User     string
-		Password string
-		Meter    string
-		Scale    float64
-		Cache    time.Duration
-		Timeout  time.Duration
+		User, Password string `validate:"required"`
+		Meter          string
+		Scale          float64
+		Cache, Timeout time.Duration
 	}{
 		Scale:   1,
 		Cache:   time.Second,
@@ -39,10 +37,6 @@ func NewDiscovergyFromConfig(other map[string]interface{}) (api.Meter, error) {
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
-	}
-
-	if cc.User == "" || cc.Password == "" {
-		return nil, api.ErrMissingCredentials
 	}
 
 	basicAuth := transport.BasicAuthHeader(cc.User, cc.Password)

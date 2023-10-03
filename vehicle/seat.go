@@ -35,10 +35,11 @@ func init() {
 // NewSeatFromConfig creates a new vehicle
 func NewSeatFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
-		embed               `mapstructure:",squash"`
-		User, Password, VIN string
-		Cache               time.Duration
-		Timeout             time.Duration
+		embed          `mapstructure:",squash"`
+		User, Password string `validate:"required"`
+		VIN            string
+		Cache          time.Duration
+		Timeout        time.Duration
 	}{
 		Cache:   interval,
 		Timeout: request.Timeout,
@@ -46,10 +47,6 @@ func NewSeatFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
-	}
-
-	if cc.User == "" || cc.Password == "" {
-		return nil, api.ErrMissingCredentials
 	}
 
 	v := &Seat{

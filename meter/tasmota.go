@@ -22,12 +22,11 @@ func init() {
 // NewTasmotaFromConfig creates a Tasmota meter from generic config
 func NewTasmotaFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
-		URI      string
-		User     string
-		Password string
-		Channel  int
-		Usage    string
-		Cache    time.Duration
+		URI            string `validate:"required"`
+		User, Password string
+		Channel        int
+		Usage          string `validate:"required"`
+		Cache          time.Duration
 	}{
 		Channel: 1,
 		Cache:   time.Second,

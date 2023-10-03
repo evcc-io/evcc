@@ -24,7 +24,8 @@ import (
 
 // FritzDECT settings
 type Settings struct {
-	URI, AIN, User, Password string
+	URI                 string
+	AIN, User, Password string `validate:"required"`
 }
 
 // FritzDECT connection

@@ -56,7 +56,7 @@ func init() {
 // NewZaptecFromConfig creates a Zaptec Pro charger from generic config
 func NewZaptecFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
-		User, Password string
+		User, Password string `validate:"required"`
 		Id             string
 		Priority       bool
 		Cache          time.Duration
@@ -66,10 +66,6 @@ func NewZaptecFromConfig(other map[string]interface{}) (api.Charger, error) {
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
-	}
-
-	if cc.User == "" || cc.Password == "" {
-		return nil, api.ErrMissingCredentials
 	}
 
 	return NewZaptec(cc.User, cc.Password, cc.Id, cc.Priority, cc.Cache)

@@ -32,10 +32,11 @@ func NewMiniFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 // NewBMWMiniFromConfig creates a new vehicle
 func NewBMWMiniFromConfig(brand string, other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
-		embed               `mapstructure:",squash"`
-		User, Password, VIN string
-		Region              string
-		Cache               time.Duration
+		embed          `mapstructure:",squash"`
+		User, Password string `validate:"required"`
+		VIN            string
+		Region         string
+		Cache          time.Duration
 	}{
 		Region: "EU",
 		Cache:  interval,
@@ -43,10 +44,6 @@ func NewBMWMiniFromConfig(brand string, other map[string]interface{}) (api.Vehic
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
-	}
-
-	if cc.User == "" || cc.Password == "" {
-		return nil, api.ErrMissingCredentials
 	}
 
 	v := &BMW{

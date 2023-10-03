@@ -24,7 +24,7 @@ func init() {
 func NewSmartFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
 		embed          `mapstructure:",squash"`
-		User, Password string
+		User, Password string `validate:"required"`
 		VIN            string
 		Expiry         time.Duration
 		Cache          time.Duration
@@ -35,10 +35,6 @@ func NewSmartFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
-	}
-
-	if cc.User == "" || cc.Password == "" {
-		return nil, api.ErrMissingCredentials
 	}
 
 	log := util.NewLogger("smart").Redact(cc.User, cc.Password, cc.VIN)
