@@ -57,10 +57,6 @@ func NewConnection(uri, ain, user, password string) (*Connection, error) {
 		uri = "https://fritz.box"
 	}
 
-	if ain == "" {
-		return nil, errors.New("missing ain")
-	}
-
 	settings := &Settings{
 		URI:      strings.TrimRight(uri, "/"),
 		AIN:      ain,

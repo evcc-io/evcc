@@ -21,15 +21,14 @@ func init() {
 // NewCCUFromConfig creates a Homematic charger from generic config
 func NewCCUFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
-		embed         `mapstructure:",squash"`
-		URI           string
-		Device        string
-		MeterChannel  string
-		SwitchChannel string
-		User          string
-		Password      string
-		StandbyPower  float64
-		Cache         time.Duration
+		embed          `mapstructure:",squash"`
+		URI            string `validate:"required"`
+		Device         string `validate:"required"`
+		MeterChannel   string
+		SwitchChannel  string
+		User, Password string
+		StandbyPower   float64
+		Cache          time.Duration
 	}{
 		Cache: time.Second,
 	}
