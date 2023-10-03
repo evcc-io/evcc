@@ -47,7 +47,11 @@ func NewEntsoeFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	}
 
 	if cc.Securitytoken == "" {
-		return nil, errors.New("securitytoken must be defined")
+		return nil, errors.New("missing securitytoken")
+	}
+
+	if cc.Domain == "" {
+		return nil, errors.New("missing domain")
 	}
 
 	domain, err := entsoe.Area(entsoe.BZN, strings.ToUpper(cc.Domain))
