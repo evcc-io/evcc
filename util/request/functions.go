@@ -10,6 +10,7 @@ var (
 	FormContent  = "application/x-www-form-urlencoded"
 	JSONContent  = "application/json"
 	PlainContent = "text/plain"
+	XMLContent   = "application/xml"
 
 	// URLEncoding specifies application/x-www-form-urlencoded
 	URLEncoding = map[string]string{"Content-Type": FormContent}
@@ -23,6 +24,17 @@ var (
 	// AcceptJSON accepting application/json
 	AcceptJSON = map[string]string{
 		"Accept": JSONContent,
+	}
+
+	// XMLEncoding specifies application/xml
+	XMLEncoding = map[string]string{
+		"Content-Type": XMLContent,
+		"Accept":       XMLContent,
+	}
+
+	// AcceptXML accepting application/xml
+	AcceptXML = map[string]string{
+		"Accept": XMLContent,
 	}
 )
 
