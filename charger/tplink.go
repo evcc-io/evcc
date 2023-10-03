@@ -24,16 +24,12 @@ func init() {
 func NewTPLinkFromConfig(other map[string]interface{}) (api.Charger, error) {
 	var cc struct {
 		embed        `mapstructure:",squash"`
-		URI          string
+		URI          string `validate:"required"`
 		StandbyPower float64
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
-	}
-
-	if cc.URI == "" {
-		return nil, errors.New("missing uri")
 	}
 
 	return NewTPLink(cc.embed, cc.URI, cc.StandbyPower)

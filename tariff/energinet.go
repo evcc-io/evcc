@@ -1,7 +1,6 @@
 package tariff
 
 import (
-	"errors"
 	"fmt"
 	"slices"
 	"strings"
@@ -33,15 +32,11 @@ func init() {
 func NewEnerginetFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	var cc struct {
 		embed  `mapstructure:",squash"`
-		Region string
+		Region string `validate:"required"`
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
-	}
-
-	if cc.Region == "" {
-		return nil, errors.New("missing region")
 	}
 
 	t := &Energinet{

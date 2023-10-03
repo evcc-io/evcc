@@ -24,8 +24,8 @@ type Telegram struct {
 // NewTelegramFromConfig creates new pushover messenger
 func NewTelegramFromConfig(other map[string]interface{}) (Messenger, error) {
 	var cc struct {
-		Token string
-		Chats []int64
+		Token string  `validate:"required"`
+		Chats []int64 `validate:"required"`
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {

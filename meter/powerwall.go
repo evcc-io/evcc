@@ -1,7 +1,6 @@
 package meter
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -31,22 +30,15 @@ func init() {
 // NewPowerWallFromConfig creates a PowerWall Powerwall Meter from generic config
 func NewPowerWallFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
-		URI, Usage, User, Password string
-		Cache                      time.Duration
+		URI, User       string
+		Usage, Password string `validate:"required"`
+		Cache           time.Duration
 	}{
 		Cache: time.Second,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
-	}
-
-	if cc.Usage == "" {
-		return nil, errors.New("missing usage")
-	}
-
-	if cc.Password == "" {
-		return nil, errors.New("missing password")
 	}
 
 	// support default meter names

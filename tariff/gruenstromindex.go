@@ -66,7 +66,7 @@ func init() {
 
 func NewGrünStromIndexFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	var cc struct {
-		Zip string
+		Zip string `validate:"required"`
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {

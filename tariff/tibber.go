@@ -2,7 +2,6 @@ package tariff
 
 import (
 	"context"
-	"errors"
 	"slices"
 	"sync"
 	"time"
@@ -34,16 +33,12 @@ func init() {
 func NewTibberFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	var cc struct {
 		embed  `mapstructure:",squash"`
-		Token  string
+		Token  string `validate:"required"`
 		HomeID string
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
-	}
-
-	if cc.Token == "" {
-		return nil, errors.New("missing token")
 	}
 
 	log := util.NewLogger("tibber").Redact(cc.Token, cc.HomeID)

@@ -43,8 +43,8 @@ func init() {
 
 func NewElectricityMapsFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	cc := struct {
-		Uri   string
-		Token string
+		Uri   string `validate:"required"`
+		Token string `validate:"required"`
 		Zone  string
 	}{
 		Zone: "DE",

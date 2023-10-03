@@ -3,7 +3,6 @@ package meter
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"net/http"
 	"sync"
 	"time"
@@ -32,16 +31,12 @@ type Tibber struct {
 
 func NewTibberFromConfig(other map[string]interface{}) (api.Meter, error) {
 	var cc struct {
-		Token  string
+		Token  string `validate:"required"`
 		HomeID string
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
-	}
-
-	if cc.Token == "" {
-		return nil, errors.New("missing token")
 	}
 
 	log := util.NewLogger("pulse").Redact(cc.Token, cc.HomeID)
