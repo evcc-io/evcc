@@ -15,8 +15,7 @@ import (
 
 // Tasmota charger implementation
 type Tasmota struct {
-	conn    *tasmota.Connection
-	channel int
+	conn *tasmota.Connection
 	*switchSocket
 }
 
@@ -36,7 +35,6 @@ func NewTasmotaFromConfig(other map[string]interface{}) (api.Charger, error) {
 		Channels     []int
 		Cache        time.Duration
 	}{
-		Channel:  1,
 		Channels: []int{1},
 		Cache:    time.Second,
 	}
@@ -45,24 +43,29 @@ func NewTasmotaFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	return NewTasmota(cc.embed, cc.URI, cc.User, cc.Password, cc.Channel, cc.Channels, cc.StandbyPower, cc.Cache)
+	// Only for backward compatibility, for users having deprecated single channel config
+	if cc.Channel != 0 {
+		cc.Channels = []int{1}
+		cc.Channels[0] = cc.Channel
+	}
+
+	return NewTasmota(cc.embed, cc.URI, cc.User, cc.Password, cc.Channels, cc.StandbyPower, cc.Cache)
 }
 
 // NewTasmota creates Tasmota charger
-func NewTasmota(embed embed, uri, user, password string, channel int, channels []int, standbypower float64, cache time.Duration) (*Tasmota, error) {
-	conn, err := tasmota.NewConnection(uri, user, password, channel, channels, cache)
+func NewTasmota(embed embed, uri, user, password string, channels []int, standbypower float64, cache time.Duration) (*Tasmota, error) {
+	conn, err := tasmota.NewConnection(uri, user, password, channels, cache)
 	if err != nil {
 		return nil, err
 	}
 
 	c := &Tasmota{
-		conn:    conn,
-		channel: channel,
+		conn: conn,
 	}
 
 	c.switchSocket = NewSwitchSocket(&embed, c.Enabled, c.conn.CurrentPower, standbypower)
 
-	return c, c.conn.ChannelExists(channel)
+	return c, err
 }
 
 // Enabled implements the api.Charger interface
@@ -80,4 +83,11 @@ var _ api.MeterEnergy = (*Tasmota)(nil)
 // TotalEnergy implements the api.MeterEnergy interface
 func (c *Tasmota) TotalEnergy() (float64, error) {
 	return c.conn.TotalEnergy()
+}
+
+var _ api.PhaseCurrents = (*Tasmota)(nil)
+
+// Currents implements the api.PhaseCurrents interface
+func (c *Tasmota) Currents() (float64, float64, float64, error) {
+	return c.conn.Currents()
 }
