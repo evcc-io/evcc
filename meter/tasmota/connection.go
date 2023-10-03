@@ -221,6 +221,24 @@ func (c *Connection) TotalEnergy() (float64, error) {
 	return res.StatusSNS.Energy.Total, err
 }
 
+// Currents implements the api.PhaseCurrents interface
+func (c *Connection) Currents() (float64, float64, float64, error) {
+	res, err := c.statusSnsG.Get()
+	if err != nil {
+		return 0, 0, 0, err
+	}
+
+	var current = [3]float64{0, 0, 0}
+	for i := 0; i < len(c.channels) && i < 3; i++ {
+		current[i], err = res.StatusSNS.Energy.Current.Channel(c.channels[i])
+		if err != nil {
+			return 0, 0, 0, err
+		}
+	}
+
+	return current[0], current[1], current[2], err
+}
+
 // SmlPower provides the sml sensor power
 func (c *Connection) SmlPower() (float64, error) {
 	res, err := c.statusSnsG.Get()
