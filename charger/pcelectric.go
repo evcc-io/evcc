@@ -35,7 +35,7 @@ func init() {
 // NewPCElectricFromConfig creates a PCElectric charger from generic config
 func NewPCElectricFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
-		URI        string
+		URI        string `validate:"required"`
 		SlaveIndex int
 		Meter      string
 	}{

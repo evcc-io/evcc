@@ -27,13 +27,11 @@ func init() {
 // NewTasmotaFromConfig creates a Tasmota charger from generic config
 func NewTasmotaFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
-		embed        `mapstructure:",squash"`
-		URI          string
-		User         string
-		Password     string
-		StandbyPower float64
-		Channel      int
-		Cache        time.Duration
+		embed               `mapstructure:",squash"`
+		URI, User, Password string `validate:"required"`
+		StandbyPower        float64
+		Channel             int
+		Cache               time.Duration
 	}{
 		Channel: 1,
 		Cache:   time.Second,

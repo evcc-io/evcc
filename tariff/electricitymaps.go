@@ -43,9 +43,8 @@ func init() {
 
 func NewElectricityMapsFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	cc := struct {
-		Uri   string `validate:"required"`
-		Token string `validate:"required"`
-		Zone  string
+		URI, Token string `validate:"required"`
+		Zone       string
 	}{
 		Zone: "DE",
 	}
@@ -59,7 +58,7 @@ func NewElectricityMapsFromConfig(other map[string]interface{}) (api.Tariff, err
 	t := &ElectricityMaps{
 		log:    log,
 		Helper: request.NewHelper(log),
-		uri:    util.DefaultScheme(strings.TrimRight(cc.Uri, "/"), "https"),
+		uri:    util.DefaultScheme(strings.TrimRight(cc.URI, "/"), "https"),
 		zone:   strings.ToUpper(cc.Zone),
 	}
 

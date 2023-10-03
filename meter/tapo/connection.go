@@ -52,14 +52,6 @@ type Connection struct {
 // User is encoded by using MessageDigest of SHA1 which is afterwards B64 encoded.
 // Password is directly B64 encoded.
 func NewConnection(uri, user, password string) (*Connection, error) {
-	if uri == "" {
-		return nil, errors.New("missing uri")
-	}
-
-	if user == "" || password == "" {
-		return nil, fmt.Errorf("missing user or password")
-	}
-
 	for _, suffix := range []string{"/", "/app"} {
 		uri = strings.TrimSuffix(uri, suffix)
 	}

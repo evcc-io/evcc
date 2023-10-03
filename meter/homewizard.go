@@ -21,7 +21,7 @@ func init() {
 // NewHomeWizardFromConfig creates a HomeWizard meter from generic config
 func NewHomeWizardFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
-		URI   string
+		URI   string `validate:"required"`
 		Cache time.Duration
 	}{
 		Cache: time.Second,

@@ -24,10 +24,6 @@ type Connection struct {
 
 // NewConnection creates a Tasmota connection
 func NewConnection(uri, user, password string, channel int, cache time.Duration) (*Connection, error) {
-	if uri == "" {
-		return nil, errors.New("missing uri")
-	}
-
 	log := util.NewLogger("tasmota")
 	c := &Connection{
 		Helper:   request.NewHelper(log),
