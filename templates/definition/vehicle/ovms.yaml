@@ -16,7 +16,6 @@ params:
     required: true
   - name: password
     required: true
-    mask: true
   - name: vehicleid
     required: true
   - name: capacity

@@ -14,9 +14,40 @@ note = "OBS: Disse indstillinger gælder kun for solar modus. Indstillingerne æ
 
 [batterySettings.bufferStart]
 full = "næsten fuld"
-low = "en smule fyld"
-medium = "halv fuld"
-never = "kun med nok solar overskuld"
+low = "en smule fyldt"
+medium = "halv fyldt"
+never = "kun med nok solar overskud"
+
+[config]
+
+[config.form]
+example = "Eksempel"
+optional = "valgfrit"
+
+[config.main]
+addVehicle = "Tilføj bil"
+edit = "rediger"
+title = "Konfiguration"
+vehicles = "Mine biler"
+
+[config.validation]
+failed = "mislykkedes"
+label = "Status"
+running = "validering"
+success = "succes"
+unknown = "ukendt"
+validate = "validerer"
+
+[config.vehicle]
+cancel = "Annuller"
+delete = "Slet bilen"
+generic = "Andre integrationer"
+offline = "Generisk bil"
+online = "Biler med online API"
+save = "Gem"
+scooter = "Scooter"
+template = "Fabrikant"
+titleAdd = "Tilføj køretøj"
 
 [footer]
 

@@ -6,7 +6,11 @@
 					{{ siteTitle || "evcc" }}
 				</h1>
 				<div class="d-flex">
-					<Notifications :notifications="notifications" class="me-2" />
+					<Notifications
+						:notifications="notifications"
+						:loadpointTitles="loadpointTitles"
+						class="me-2"
+					/>
 					<TopNavigation v-bind="topNavigation" />
 				</div>
 			</div>
@@ -103,6 +107,9 @@ export default {
 	computed: {
 		energyflow: function () {
 			return this.collectProps(Energyflow);
+		},
+		loadpointTitles: function () {
+			return this.loadpoints.map((lp) => lp.title);
 		},
 		loadpointsCompact: function () {
 			return this.loadpoints.map((lp) => {

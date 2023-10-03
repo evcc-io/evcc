@@ -26,13 +26,13 @@ params:
     required: true
     mask: true
     help:
-      en: "See https://docs.evcc.io/docs/devices/vehicles#tesla"
+      en: "See https://docs.evcc.io/en/docs/devices/vehicles#tesla"
       de: "Siehe https://docs.evcc.io/docs/devices/vehicles#tesla"
   - name: refreshToken
     required: true
     mask: true
     help:
-      en: "See https://docs.evcc.io/docs/devices/vehicles#tesla"
+      en: "See https://docs.evcc.io/en/docs/devices/vehicles#tesla"
       de: "Siehe https://docs.evcc.io/docs/devices/vehicles#tesla"
   - name: vin
     example: W...

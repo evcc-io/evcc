@@ -192,6 +192,7 @@ func TestPvScalePhases(t *testing.T) {
 			vehicle:          vehicle,
 			ConfiguredPhases: 0, // allow switching
 			phases:           tc.physical,
+			status:           api.StatusC,
 		}
 
 		if phaseCharger != nil {
@@ -326,6 +327,15 @@ func TestPvScalePhasesTimer(t *testing.T) {
 			lp.phaseTimer = lp.clock.Now().Add(-dt)
 		}},
 
+		// switch down from 3p/0p while not yet charging
+		{"3/0->1, not enough power, not charging", 3, 0, 0, 1, true, func(lp *Loadpoint) {
+			lp.status = api.StatusB
+		}},
+		// switch up from 1p/0p while not yet charging
+		{"1/0->3, enough power, not charging", 1, 0, 3 * Voltage * minA, 3, true, func(lp *Loadpoint) {
+			lp.status = api.StatusB
+		}},
+
 		// error states from 1p/3p misconfig - no correction for time being (stay at 1p)
 		{"1/3->1, enough power", 1, 3, 1 * Voltage * maxA, 1, false, nil},
 		{"1/3->1, kickoff, correct phase setting", 1, 3, 1 * Voltage * maxA, 1, false, func(lp *Loadpoint) {
@@ -352,6 +362,7 @@ func TestPvScalePhasesTimer(t *testing.T) {
 			MaxCurrent:     maxA,
 			phases:         tc.phases,
 			measuredPhases: tc.measuredPhases,
+			status:         api.StatusC,
 			Enable: ThresholdConfig{
 				Delay: dt,
 			},

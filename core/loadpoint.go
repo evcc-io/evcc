@@ -639,22 +639,24 @@ func (lp *Loadpoint) syncCharger() error {
 		return err
 	}
 
-	defer func() {
-		lp.enabled = enabled
-		lp.publish("enabled", lp.enabled)
-	}()
+	if lp.guardGracePeriodElapsed() {
+		defer func() {
+			lp.enabled = enabled
+			lp.publish("enabled", lp.enabled)
+		}()
+	}
 
 	if !enabled && lp.charging() {
+		lp.log.WARN.Println("charger logic error: disabled but charging")
+		enabled = true // treat as enabled when charging
 		if lp.guardGracePeriodElapsed() {
-			lp.log.WARN.Println("charger logic error: disabled but charging")
+			if err := lp.charger.Enable(true); err != nil { // also enable charger to correct internal state
+				return err
+			}
+			lp.elapseGuard()
+			lp.elapsePVTimer()
+			return nil
 		}
-		enabled = true                                  // treat as enabled when charging
-		if err := lp.charger.Enable(true); err != nil { // also enable charger to correct internal state
-			return err
-		}
-		lp.elapseGuard()
-		lp.elapsePVTimer()
-		return nil
 	}
 
 	// status in sync
@@ -1045,6 +1047,10 @@ func (lp *Loadpoint) pvScalePhases(availablePower, minCurrent, maxCurrent float6
 	if targetCurrent := powerToCurrent(availablePower, activePhases); targetCurrent < minCurrent && activePhases > 1 && lp.ConfiguredPhases < 3 {
 		lp.log.DEBUG.Printf("available power %.0fW < %.0fW min %dp threshold", availablePower, float64(activePhases)*Voltage*minCurrent, activePhases)
 
+		if !lp.charging() { // scale immediately if not charging
+			lp.phaseTimer = elapsed
+		}
+
 		if lp.phaseTimer.IsZero() {
 			lp.log.DEBUG.Printf("start phase %s timer", phaseScale1p)
 			lp.phaseTimer = lp.clock.Now()
@@ -1069,6 +1075,10 @@ func (lp *Loadpoint) pvScalePhases(availablePower, minCurrent, maxCurrent float6
 	// scale up phases
 	if targetCurrent := powerToCurrent(availablePower, maxPhases); targetCurrent >= minCurrent && scalable {
 		lp.log.DEBUG.Printf("available power %.0fW > %.0fW min %dp threshold", availablePower, 3*Voltage*minCurrent, maxPhases)
+
+		if !lp.charging() { // scale immediately if not charging
+			lp.phaseTimer = elapsed
+		}
 
 		if lp.phaseTimer.IsZero() {
 			lp.log.DEBUG.Printf("start phase %s timer", phaseScale3p)

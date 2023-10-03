@@ -1,9 +1,10 @@
 package warp
 
 const (
-	FeatureMeter       = "meter"
-	FeatureMeterPhases = "meter_phases"
-	FeatureNfc         = "nfc"
+	FeatureMeter          = "meter"
+	FeatureMeterAllValues = "meter_all_values"
+	FeatureMeterPhases    = "meter_phases"
+	FeatureNfc            = "nfc"
 )
 
 // https://www.warp-charger.com/api.html#evse_state

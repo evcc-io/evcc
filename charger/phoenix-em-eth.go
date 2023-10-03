@@ -16,11 +16,10 @@ const (
 	phxEMEthRegMaxCurrent = 300 // Holding
 	phxEMEthRegEnable     = 400 // Coil
 
-	phxEMEthRegPower  = 120 // power reading
-	phxEMEthRegEnergy = 128 // energy reading
+	phxEMEthRegCurrents = 114 // currents
+	phxEMEthRegPower    = 120 // power reading
+	phxEMEthRegEnergy   = 128 // energy reading
 )
-
-var phxEMEthRegCurrents = []uint16{114, 116, 118} // current readings
 
 // PhoenixEMEth is an api.Charger implementation for Phoenix EM-CP-PP-ETH wallboxes.
 // It uses Modbus TCP to communicate with the wallbox at modbus client id 180.
@@ -168,18 +167,20 @@ func (wb *PhoenixEMEth) totalEnergy() (float64, error) {
 
 // currents implements the api.PhaseCurrents interface
 func (wb *PhoenixEMEth) currents() (float64, float64, float64, error) {
-	var currents []float64
-	for _, regCurrent := range phxEMEthRegCurrents {
-		b, err := wb.conn.ReadInputRegisters(regCurrent, 2)
-		if err != nil {
-			return 0, 0, 0, err
-		}
-
-		currents = append(currents, rs485.RTUUint32ToFloat64Swapped(b)/1000)
+	b, err := wb.conn.ReadInputRegisters(phxEMEthRegCurrents, 6)
+	if err != nil {
+		return 0, 0, 0, err
 	}
 
-	return currents[0], currents[1], currents[2], nil
+	var res [3]float64
+	for i := 0; i < 3; i++ {
+		res[i] = rs485.RTUUint32ToFloat64Swapped(b[4*i:]) / 1e3
+	}
+
+	return res[0], res[1], res[2], nil
 }
+
+var _ api.CurrentGetter = (*PhoenixEMEth)(nil)
 
 // GetMaxCurrent implements the api.CurrentGetter interface
 func (wb PhoenixEMEth) GetMaxCurrent() (float64, error) {
