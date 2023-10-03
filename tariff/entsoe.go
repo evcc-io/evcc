@@ -104,21 +104,21 @@ func (t *Entsoe) run(done chan error) {
 
 			var doc entsoe.Document
 			if err := xml.NewDecoder(bytes.NewReader(data)).Decode(&doc); err != nil {
-				return err
+				return backoff.Permanent(err)
 			}
 
 			switch doc.XMLName.Local {
 			case entsoe.AcknowledgementMarketDocumentName:
 				var doc entsoe.AcknowledgementMarketDocument
 				if err := xml.NewDecoder(bytes.NewReader(data)).Decode(&doc); err != nil {
-					return err
+					return backoff.Permanent(err)
 				}
 
 				return backoff.Permanent(errors.New(doc.Reason.Text))
 
 			case entsoe.PublicationMarketDocumentName:
 				if err := xml.NewDecoder(bytes.NewReader(data)).Decode(&tr); err != nil {
-					return err
+					return backoff.Permanent(err)
 				}
 
 				if tr.Type != string(entsoe.ProcessTypeDayAhead) {
