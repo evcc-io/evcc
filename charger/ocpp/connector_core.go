@@ -43,7 +43,7 @@ func (conn *Connector) MeterValues(request *core.MeterValuesRequest) (*core.Mete
 	conn.mu.Lock()
 	defer conn.mu.Unlock()
 
-	if request.TransactionId != nil && cp.txnId == 0 {
+	if request.TransactionId != nil && conn.txnId == 0 {
 		conn.log.DEBUG.Printf("hijacking transaction: %d", *request.TransactionId)
 		conn.txnId = *request.TransactionId
 	}
