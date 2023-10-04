@@ -33,7 +33,7 @@ type Connector struct {
 	txnId    int
 }
 
-func NewConnector(log *util.Logger, id int, cp *CP) (*Connector, error) {
+func NewConnector(log *util.Logger, id int, cp *CP, timeout time.Duration) (*Connector, error) {
 	conn := &Connector{
 		log:          log,
 		cp:           cp,
@@ -41,6 +41,7 @@ func NewConnector(log *util.Logger, id int, cp *CP) (*Connector, error) {
 		clock:        clock.New(),
 		statusC:      make(chan struct{}),
 		measurements: make(map[string]types.SampledValue),
+		timeout:      timeout,
 	}
 
 	err := cp.registerConnector(id, conn)

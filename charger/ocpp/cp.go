@@ -3,7 +3,6 @@ package ocpp
 import (
 	"fmt"
 	"sync"
-	"time"
 
 	"github.com/evcc-io/evcc/util"
 )
@@ -24,8 +23,7 @@ type CP struct {
 	connectors map[int]*Connector
 }
 
-// func NewChargePoint(log *util.Logger, id string, connector int, timeout time.Duration) *CP {
-func NewChargePoint(log *util.Logger, id string, timeout time.Duration) *CP {
+func NewChargePoint(log *util.Logger, id string) *CP {
 	return &CP{
 		log: log,
 		id:  id,

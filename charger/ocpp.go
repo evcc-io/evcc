@@ -120,7 +120,7 @@ func NewOCPP(id string, connector int, idtag string,
 
 	cp, err := ocpp.Instance().ChargepointByID(id)
 	if err != nil {
-		cp = ocpp.NewChargePoint(log, id, timeout)
+		cp = ocpp.NewChargePoint(log, id)
 
 		// should not error
 		if err := ocpp.Instance().Register(id, cp); err != nil {
@@ -128,7 +128,7 @@ func NewOCPP(id string, connector int, idtag string,
 		}
 	}
 
-	conn, err := ocpp.NewConnector(log, connector, cp)
+	conn, err := ocpp.NewConnector(log, connector, cp, timeout)
 	if err != nil {
 		return nil, err
 	}

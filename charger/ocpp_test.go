@@ -105,7 +105,7 @@ func (suite *ocppTestSuite) TestConnect() {
 	}
 
 	suite.clock.Add(ocppTestTimeout)
-	c.cp.TestClock(suite.clock)
+	c.conn.TestClock(suite.clock)
 
 	// status
 	_, err = c.Status()
