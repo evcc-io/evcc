@@ -81,7 +81,7 @@ func NewConnection(uri, user, password string, channels []int, cache time.Durati
 		return res, err
 	}, cache)
 
-	return c, c.ChannelExists()
+	return c, nil
 }
 
 // channelExists checks the existence of the configured relay channel interface
