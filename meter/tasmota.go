@@ -59,7 +59,7 @@ func NewTasmota(uri, user, password, usage string, channels []int, cache time.Du
 		usage: usage,
 	}
 
-	return c, err
+	return c, nil
 }
 
 var _ api.Meter = (*Tasmota)(nil)
