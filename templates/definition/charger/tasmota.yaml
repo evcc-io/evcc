@@ -31,5 +31,5 @@ render: |
   {{- if .password }}
   password: {{ .password }}
   {{- end }}
-  channels: {{ .channels }}  # list of relay channels [1,2,....,8]
+  channels: [ {{ .channels }} ]  # list of relay channels [1,2,....,8]
   {{ include "switchsocket" . }}
