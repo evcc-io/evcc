@@ -5,7 +5,7 @@ env:
 
 on:
   schedule: # runs on the default branch: master
-    - cron: "0 2 * * *" # run at 2 AM UTC
+#    - cron: "0 2 * * *" # run at 2 AM UTC
   workflow_dispatch:
 
 jobs:
