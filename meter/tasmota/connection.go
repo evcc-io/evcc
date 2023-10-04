@@ -181,27 +181,45 @@ func (c *Connection) Enabled() (bool, error) {
 		return false, err
 	}
 
+	var enabled bool = true
 	for _, channel := range c.channels {
 		switch channel {
 		case 2:
-			return strings.ToUpper(res.StatusSTS.Power2) == "ON", err
+			if strings.ToUpper(res.StatusSTS.Power2) != "ON" {
+				enabled = false
+			}
 		case 3:
-			return strings.ToUpper(res.StatusSTS.Power3) == "ON", err
+			if strings.ToUpper(res.StatusSTS.Power2) != "ON" {
+				enabled = false
+			}
 		case 4:
-			return strings.ToUpper(res.StatusSTS.Power4) == "ON", err
+			if strings.ToUpper(res.StatusSTS.Power2) != "ON" {
+				enabled = false
+			}
 		case 5:
-			return strings.ToUpper(res.StatusSTS.Power5) == "ON", err
+			if strings.ToUpper(res.StatusSTS.Power2) != "ON" {
+				enabled = false
+			}
 		case 6:
-			return strings.ToUpper(res.StatusSTS.Power6) == "ON", err
+			if strings.ToUpper(res.StatusSTS.Power2) != "ON" {
+				enabled = false
+			}
 		case 7:
-			return strings.ToUpper(res.StatusSTS.Power7) == "ON", err
+			if strings.ToUpper(res.StatusSTS.Power2) != "ON" {
+				enabled = false
+			}
 		case 8:
-			return strings.ToUpper(res.StatusSTS.Power8) == "ON", err
+			if strings.ToUpper(res.StatusSTS.Power2) != "ON" {
+				enabled = false
+			}
 		default:
-			return strings.ToUpper(res.StatusSTS.Power) == "ON" || strings.ToUpper(res.StatusSTS.Power1) == "ON", err
+			if strings.ToUpper(res.StatusSTS.Power) != "ON" && strings.ToUpper(res.StatusSTS.Power1) != "ON" {
+				enabled = false
+			}
 		}
 	}
-	return false, err
+
+	return enabled, nil
 }
 
 // CurrentPower implements the api.Meter interface
