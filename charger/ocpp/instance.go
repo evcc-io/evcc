@@ -45,8 +45,8 @@ func Instance() *CS {
 		ocppj.SetLogger(instance)
 
 		cs.SetCoreHandler(instance)
-		cs.SetNewChargePointHandler(instance.NewChargePointHandler)
-		cs.SetChargePointDisconnectedHandler(instance.ChargePointDisconnectedHandler)
+		cs.SetNewChargePointHandler(instance.NewChargePoint)
+		cs.SetChargePointDisconnectedHandler(instance.ChargePointDisconnected)
 		cs.SetFirmwareManagementHandler(instance)
 
 		go instance.errorHandler(cs.Errors())
