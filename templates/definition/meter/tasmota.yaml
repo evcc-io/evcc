@@ -20,11 +20,11 @@ params:
     default: 1
     required: true
     description:
-      de: Liste der Meterkanäle
-      en: Meter channel number list
+      de: Meterkanal Nummer
+      en: Meterchannel number
     help:
-      de: Liste der Meterkanäle [1,2,..,8], bei Geräten mit mehr als einem Meter
-      en: List of meter channel numbers [1,2,....,8]
+      de: Meterkanäle (1-8), bei Geräten mit mehr als einem Meter
+      en: Meterchannel numbers (1-8)
 render: |
   type: tasmota
   uri: http://{{ .host }}

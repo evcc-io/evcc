@@ -17,11 +17,11 @@ params:
     default: 1
     required: true
     description:
-      de: Liste der Schaltkanäle
-      en: Relay channel number list
+      de: Schaltkanal Nummer
+      en: Relaychannel number
     help:
-      de: Liste der Schaltkanäle [1,2,..,8], bei Geräten mit mehr als einem Schalter
-      en: List of relay channel numbers [1,2,....,8]
+      de: Schaltkanäle (1-8), bei Geräten mit mehr als einem Schalter
+      en: Relaychannel numbers (1-8)
   - preset: switchsocket
 render: |
   type: tasmota
