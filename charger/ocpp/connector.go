@@ -84,34 +84,30 @@ func (conn *Connector) WatchDog(timeout time.Duration) {
 	}
 }
 
+// Initialized waits for initial charge point status notification
 func (conn *Connector) Initialized() error {
-	// trigger status
-	time.AfterFunc(conn.timeout/2, func() {
+	for {
 		select {
 		case <-conn.statusC:
-			return
-		default:
-			conn.TriggerMessageRequest(core.StatusNotificationFeatureName)
-		}
-	})
+			return nil
 
-	// wait for status
-	select {
-	case <-conn.statusC:
-		return nil
-	case <-time.After(conn.timeout):
-		return api.ErrTimeout
+		case <-time.After(conn.timeout/2 + 1):
+			conn.TriggerMessageRequest(core.StatusNotificationFeatureName)
+
+		case <-time.After(conn.timeout):
+			return api.ErrTimeout
+		}
 	}
 }
 
 // TransactionID returns the current transaction id
 func (conn *Connector) TransactionID() (int, error) {
-	conn.mu.Lock()
-	defer conn.mu.Unlock()
-
 	if !conn.cp.Connected() {
 		return 0, api.ErrTimeout
 	}
+
+	conn.mu.Lock()
+	defer conn.mu.Unlock()
 
 	return conn.txnId, nil
 }
@@ -152,22 +148,24 @@ func (conn *Connector) Status() (api.ChargeStatus, error) {
 	return res, nil
 }
 
-func (conn *Connector) isTimeout() bool {
+// isMeterTimeout checks if meter values are outdated.
+// Must only be called while holding lock.
+func (conn *Connector) isMeterTimeout() bool {
 	return conn.timeout > 0 && conn.clock.Since(conn.meterUpdated) > conn.timeout
 }
 
 var _ api.Meter = (*Connector)(nil)
 
 func (conn *Connector) CurrentPower() (float64, error) {
-	conn.mu.Lock()
-	defer conn.mu.Unlock()
-
 	if !conn.cp.Connected() {
 		return 0, api.ErrTimeout
 	}
 
+	conn.mu.Lock()
+	defer conn.mu.Unlock()
+
 	// zero value on timeout when not charging
-	if conn.isTimeout() {
+	if conn.isMeterTimeout() {
 		if conn.txnId != 0 {
 			return 0, api.ErrTimeout
 		}
@@ -186,15 +184,15 @@ func (conn *Connector) CurrentPower() (float64, error) {
 var _ api.MeterEnergy = (*Connector)(nil)
 
 func (conn *Connector) TotalEnergy() (float64, error) {
-	conn.mu.Lock()
-	defer conn.mu.Unlock()
-
 	if !conn.cp.Connected() {
 		return 0, api.ErrTimeout
 	}
 
+	conn.mu.Lock()
+	defer conn.mu.Unlock()
+
 	// fallthrough for last value on timeout when not charging
-	if conn.txnId != 0 && conn.isTimeout() {
+	if conn.txnId != 0 && conn.isMeterTimeout() {
 		return 0, api.ErrTimeout
 	}
 
@@ -224,15 +222,15 @@ func getKeyCurrentPhase(phase int) string {
 var _ api.PhaseCurrents = (*Connector)(nil)
 
 func (conn *Connector) Currents() (float64, float64, float64, error) {
-	conn.mu.Lock()
-	defer conn.mu.Unlock()
-
 	if !conn.cp.Connected() {
 		return 0, 0, 0, api.ErrTimeout
 	}
 
+	conn.mu.Lock()
+	defer conn.mu.Unlock()
+
 	// zero value on timeout when not charging
-	if conn.isTimeout() {
+	if conn.isMeterTimeout() {
 		if conn.txnId != 0 {
 			return 0, 0, 0, api.ErrTimeout
 		}
