@@ -16,6 +16,7 @@ params:
     required: false
     mask: true
   - name: channels
+    type: StringList
     default: 1
     required: true
     description:
@@ -30,4 +31,4 @@ render: |
   usage: {{ .usage }}
   user: {{ .user }}
   password: {{ .password }}
-  channels: [ {{ .channels }} ]  # list of meter channels [1,2,....,8]
+  channels: {{ .channels }}  # list of meter channels [1,2,....,8]
