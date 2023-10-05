@@ -59,6 +59,9 @@ func FuncMap(tmpl *template.Template) *template.Template {
 		"urlEncode": func(v string) string {
 			return url.QueryEscape(v)
 		},
+		"stringsjoin": func(vl []string, sep string) string {
+			return strings.Join(vl, sep)
+		},
 	}
 
 	return tmpl.Funcs(sprig.TxtFuncMap()).Funcs(funcMap)
