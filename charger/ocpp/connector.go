@@ -86,15 +86,17 @@ func (conn *Connector) WatchDog(timeout time.Duration) {
 
 // Initialized waits for initial charge point status notification
 func (conn *Connector) Initialized() error {
+	trigger := time.After(conn.timeout / 2)
+	timeout := time.After(conn.timeout)
 	for {
 		select {
 		case <-conn.statusC:
 			return nil
 
-		case <-time.After(conn.timeout/2 + 1):
+		case <-trigger:
 			conn.TriggerMessageRequest(core.StatusNotificationFeatureName)
 
-		case <-time.After(conn.timeout):
+		case <-timeout:
 			return api.ErrTimeout
 		}
 	}
