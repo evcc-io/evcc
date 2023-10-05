@@ -32,9 +32,13 @@ type OCPP struct {
 	phaseSwitching    bool
 	chargingRateUnit  types.ChargingRateUnitType
 	lp                loadpoint.API
+	ocppPort          int
+	urlSuffix         string
 }
 
 const defaultIdTag = "evcc"
+const defaultOCPPPort = 8887
+const defaultURLSuffix = ""
 
 func init() {
 	registry.Add("ocpp", NewOCPPFromConfig)
@@ -53,12 +57,16 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 		BootNotification *bool
 		GetConfiguration *bool
 		ChargingRateUnit string
+		OCPPPort         int
+		URLSuffix        string
 	}{
 		Connector:        1,
 		IdTag:            defaultIdTag,
 		ConnectTimeout:   ocppConnectTimeout,
 		Timeout:          ocppTimeout,
 		ChargingRateUnit: "A",
+		OCPPPort:         defaultOCPPPort,
+		URLSuffix:        defaultURLSuffix,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -71,7 +79,7 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 	c, err := NewOCPP(cc.StationId, cc.Connector, cc.IdTag,
 		cc.MeterValues, cc.MeterInterval,
 		boot, noConfig,
-		cc.ConnectTimeout, cc.Timeout, cc.ChargingRateUnit)
+		cc.ConnectTimeout, cc.Timeout, cc.ChargingRateUnit, cc.OCPPPort, cc.URLSuffix)
 	if err != nil {
 		return c, err
 	}
@@ -109,6 +117,7 @@ func NewOCPP(id string, connector int, idtag string,
 	boot, noConfig bool,
 	connectTimeout, timeout time.Duration,
 	chargingRateUnit string,
+	ocppPort int, urlSuffix string,
 ) (*OCPP, error) {
 	unit := "ocpp"
 	if id != "" {
@@ -117,6 +126,9 @@ func NewOCPP(id string, connector int, idtag string,
 	unit = fmt.Sprintf("%s-%d", unit, connector)
 
 	log := util.NewLogger(unit)
+
+	// OCPP Server erstellen
+	ocpp.CreateOrGetInstance(ocppPort, urlSuffix)
 
 	cp, err := ocpp.Instance().ChargepointByID(id)
 	if err != nil {

@@ -21,7 +21,7 @@ var (
 	instance *CS
 )
 
-func Instance() *CS {
+func CreateOrGetInstance(port int, urlsuffix string) *CS {
 	once.Do(func() {
 		timeoutConfig := ws.NewServerTimeoutConfig()
 		timeoutConfig.PingWait = 90 * time.Second
@@ -50,10 +50,16 @@ func Instance() *CS {
 		cs.SetFirmwareManagementHandler(instance)
 
 		go instance.errorHandler(cs.Errors())
-		go cs.Start(8887, "/{ws}")
+		go cs.Start(port, urlsuffix+"/{ws}")
+
+		instance.log.DEBUG.Printf("Start ocpp server on  `ws://[evcc-adresse]:%d%s/`", port, urlsuffix)
 
 		time.Sleep(time.Second)
 	})
 
 	return instance
+}
+
+func Instance() *CS {
+	return CreateOrGetInstance(8887, "")
 }

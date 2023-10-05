@@ -76,6 +76,18 @@ params:
     description:
       de: Einheit, in der ChargingProfile-Werte gesetzt werden ("W" oder "A")
       en: Unit for setting ChargingProfile values ("W" or "A")
+  - name: ocppport
+    advanced: true
+    type: number
+    description:
+      en: Port for the ocpp server to listen default is 8887
+      de: Port mit dem der OCPP Server startet und auf Verbindungen wartet
+  - name: urlsuffix
+    advanced: true
+    type: string
+    description:
+      de: Erweiterung der URL hinter dem Port und vor der StationID
+      en: Extention for the URL behind the port and befor the StationID
 render: |
   {{ include "ocpp" . }}
   {{- if ne .getconfiguration "true" }}
@@ -92,4 +104,10 @@ render: |
   {{- end }}
   {{- if .chargingrateunit }}
   chargingrateunit: {{ .chargingrateunit }}
+  {{- end }}
+  {{- if .ocppport }}
+  ocppport: {{ .ocppport }}
+  {{- end }}
+  {{- if .urlsuffix }}
+  urlsuffix: {{ .urlsuffix }}
   {{- end }}
