@@ -44,12 +44,6 @@ func (cs *CS) TriggerMessageRequest(id string, requestedMessage remotetrigger.Me
 	}
 }
 
-func (cs *CS) TriggerMeterValuesRequest(id string, connector int) {
-	cs.TriggerMessageRequest(id, core.MeterValuesFeatureName, func(request *remotetrigger.TriggerMessageRequest) {
-		request.ConnectorId = &connector
-	})
-}
-
 // cp actions
 
 func (cs *CS) OnAuthorize(id string, request *core.AuthorizeRequest) (*core.AuthorizeConfirmation, error) {

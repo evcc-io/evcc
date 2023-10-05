@@ -61,6 +61,15 @@ func (conn *Connector) ID() int {
 	return conn.id
 }
 
+func (conn *Connector) TriggerMessageRequest(feature remotetrigger.MessageTrigger, f ...func(request *remotetrigger.TriggerMessageRequest)) {
+	Instance().TriggerMessageRequest(conn.cp.ID(), feature, func(request *remotetrigger.TriggerMessageRequest) {
+		request.ConnectorId = &conn.id
+		for _, f := range f {
+			f(request)
+		}
+	})
+}
+
 // WatchDog triggers meter values messages if older than timeout.
 // Must be wrapped in a goroutine.
 func (conn *Connector) WatchDog(timeout time.Duration) {
@@ -70,7 +79,7 @@ func (conn *Connector) WatchDog(timeout time.Duration) {
 		conn.mu.Unlock()
 
 		if update {
-			Instance().TriggerMeterValuesRequest(conn.cp.ID(), conn.id)
+			conn.TriggerMessageRequest(core.MeterValuesFeatureName)
 		}
 	}
 }
@@ -82,9 +91,7 @@ func (conn *Connector) Initialized() error {
 		case <-conn.statusC:
 			return
 		default:
-			Instance().TriggerMessageRequest(conn.cp.ID(), core.StatusNotificationFeatureName, func(request *remotetrigger.TriggerMessageRequest) {
-				request.ConnectorId = &conn.id
-			})
+			conn.TriggerMessageRequest(core.StatusNotificationFeatureName)
 		}
 	})
 

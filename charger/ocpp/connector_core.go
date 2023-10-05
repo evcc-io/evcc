@@ -10,7 +10,7 @@ import (
 // timestampValid returns false if status timestamps are outdated
 func (conn *Connector) timestampValid(t time.Time) bool {
 	// reject if expired
-	if time.Since(t) > messageExpiry {
+	if conn.clock.Since(t) > messageExpiry {
 		return false
 	}
 
@@ -20,7 +20,7 @@ func (conn *Connector) timestampValid(t time.Time) bool {
 	}
 
 	// reject older values than we already have
-	return !t.Before(conn.status.Timestamp.Time)
+	return t.After(conn.status.Timestamp.Time)
 }
 
 func (conn *Connector) StatusNotification(request *core.StatusNotificationRequest) (*core.StatusNotificationConfirmation, error) {
@@ -73,20 +73,26 @@ func (conn *Connector) StartTransaction(request *core.StartTransactionRequest) (
 	conn.mu.Lock()
 	defer conn.mu.Unlock()
 
+	// expired request
+	if request.Timestamp != nil && conn.clock.Since(request.Timestamp.Time) < transactionExpiry {
+		res := &core.StartTransactionConfirmation{
+			IdTagInfo: &types.IdTagInfo{
+				Status: types.AuthorizationStatusExpired,
+			},
+		}
+
+		return res, nil
+	}
+
+	conn.txnCount++
+	conn.txnId = conn.txnCount
+
 	res := &core.StartTransactionConfirmation{
 		IdTagInfo: &types.IdTagInfo{
-			Status: types.AuthorizationStatusAccepted, // accept
+			Status: types.AuthorizationStatusAccepted,
 		},
-		TransactionId: 1, // default
+		TransactionId: conn.txnId,
 	}
-
-	// create new transaction
-	if request != nil && time.Since(request.Timestamp.Time) < transactionExpiry { // only respect transactions in the last hour
-		conn.txnCount++
-		res.TransactionId = conn.txnCount
-	}
-
-	conn.txnId = res.TransactionId
 
 	return res, nil
 }
@@ -95,15 +101,18 @@ func (conn *Connector) StopTransaction(request *core.StopTransactionRequest) (*c
 	conn.mu.Lock()
 	defer conn.mu.Unlock()
 
-	// reset transaction
-	if time.Since(request.Timestamp.Time) < transactionExpiry { // only respect transactions in the last hour
-		// log mismatching id but close transaction anyway
-		if request.TransactionId != conn.txnId {
-			conn.log.ERROR.Printf("stop transaction: invalid id %d", request.TransactionId)
+	// expired request
+	if request.Timestamp != nil && conn.clock.Since(request.Timestamp.Time) > transactionExpiry {
+		res := &core.StopTransactionConfirmation{
+			IdTagInfo: &types.IdTagInfo{
+				Status: types.AuthorizationStatusExpired, // accept
+			},
 		}
 
-		conn.txnId = 0
+		return res, nil
 	}
+
+	conn.txnId = 0
 
 	res := &core.StopTransactionConfirmation{
 		IdTagInfo: &types.IdTagInfo{

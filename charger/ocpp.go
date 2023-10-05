@@ -150,7 +150,7 @@ func NewOCPP(id string, connector int, idtag string,
 
 	// see who's there
 	if boot {
-		ocpp.Instance().TriggerMessageRequest(cp.ID(), core.BootNotificationFeatureName)
+		conn.TriggerMessageRequest(core.BootNotificationFeatureName)
 	}
 
 	var (
@@ -256,7 +256,7 @@ func NewOCPP(id string, connector int, idtag string,
 
 	// get initial meter values and configure sample rate
 	if c.hasMeasurement(types.MeasurandPowerActiveImport) || c.hasMeasurement(types.MeasurandEnergyActiveImportRegister) {
-		ocpp.Instance().TriggerMeterValuesRequest(cp.ID(), conn.ID())
+		conn.TriggerMessageRequest(core.MeterValuesFeatureName)
 
 		if meterInterval > 0 && meterInterval != meterSampleInterval {
 			if err := c.configure(ocpp.KeyMeterValueSampleInterval, strconv.Itoa(int(meterInterval.Seconds()))); err != nil {

@@ -41,6 +41,14 @@ func (cp *CP) BootNotification(request *core.BootNotificationRequest) (*core.Boo
 	return res, nil
 }
 
+func (cp *CP) DiagnosticStatusNotification(request *firmware.DiagnosticsStatusNotificationRequest) (*firmware.DiagnosticsStatusNotificationConfirmation, error) {
+	return new(firmware.DiagnosticsStatusNotificationConfirmation), nil
+}
+
+func (cp *CP) FirmwareStatusNotification(request *firmware.FirmwareStatusNotificationRequest) (*firmware.FirmwareStatusNotificationConfirmation, error) {
+	return new(firmware.FirmwareStatusNotificationConfirmation), nil
+}
+
 func (cp *CP) StatusNotification(request *core.StatusNotificationRequest) (*core.StatusNotificationConfirmation, error) {
 	if request == nil {
 		return nil, ErrInvalidRequest
@@ -107,12 +115,4 @@ func (cp *CP) StopTransaction(request *core.StopTransactionRequest) (*core.StopT
 	}
 
 	return conn.StopTransaction(request)
-}
-
-func (cp *CP) DiagnosticStatusNotification(request *firmware.DiagnosticsStatusNotificationRequest) (*firmware.DiagnosticsStatusNotificationConfirmation, error) {
-	return &firmware.DiagnosticsStatusNotificationConfirmation{}, nil
-}
-
-func (cp *CP) FirmwareStatusNotification(request *firmware.FirmwareStatusNotificationRequest) (*firmware.FirmwareStatusNotificationConfirmation, error) {
-	return &firmware.FirmwareStatusNotificationConfirmation{}, nil
 }
