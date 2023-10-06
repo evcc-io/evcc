@@ -100,6 +100,12 @@ func (c *Twc3) Enable(enable bool) error {
 		return errors.New("loadpoint not initialized")
 	}
 
+	// ignore disabling when vehicle is already disconnected
+	// https://github.com/evcc-io/evcc/issues/10213
+	if status, err := c.Status(); status == api.StatusA && !enable || err != nil {
+		return err
+	}
+
 	v, ok := c.lp.GetVehicle().(api.VehicleChargeController)
 	if !ok {
 		return errors.New("vehicle not capable of start/stop")
