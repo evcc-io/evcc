@@ -100,12 +100,9 @@ func (cs *CS) NewChargePoint(chargePoint ocpp16.ChargePointConnection) {
 
 // ChargePointDisconnected implements ocpp16.ChargePointConnectionHandler
 func (cs *CS) ChargePointDisconnected(chargePoint ocpp16.ChargePointConnection) {
-	cs.mu.Lock()
-	defer cs.mu.Unlock()
-
 	cs.log.DEBUG.Printf("charge point disconnected: %s", chargePoint.ID())
 
-	if cp, err := cs.ChargepointByID(chargePoint.ID()); err != nil {
+	if cp, err := cs.ChargepointByID(chargePoint.ID()); err == nil {
 		cp.connect(false)
 	}
 }
