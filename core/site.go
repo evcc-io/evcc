@@ -177,7 +177,11 @@ func NewSiteFromConfig(
 		if err != nil {
 			return nil, err
 		}
-		site.batteryMeters = append(site.batteryMeters, dev.Instance())
+		instance := dev.Instance()
+		if _, ok := instance.(api.Battery); !ok {
+			return nil, fmt.Errorf("meter is not a battery: %s", ref)
+		}
+		site.batteryMeters = append(site.batteryMeters, instance)
 	}
 
 	// TODO deprecated
