@@ -84,3 +84,10 @@ var _ api.PhaseCurrents = (*Tasmota)(nil)
 func (c *Tasmota) Currents() (float64, float64, float64, error) {
 	return c.conn.Currents()
 }
+
+var _ api.PhaseVoltages = (*Tasmota)(nil)
+
+// Voltages implements the api.PhaseVoltages interface
+func (c *Tasmota) Voltages() (float64, float64, float64, error) {
+	return c.conn.Voltages()
+}

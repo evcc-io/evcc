@@ -263,6 +263,24 @@ func (c *Connection) Currents() (float64, float64, float64, error) {
 	return current[0], current[1], current[2], err
 }
 
+// Voltages implements the api.PhaseVoltages interface
+func (c *Connection) Voltages() (float64, float64, float64, error) {
+	res, err := c.statusSnsG.Get()
+	if err != nil {
+		return 0, 0, 0, err
+	}
+
+	var voltage = [3]float64{0, 0, 0}
+	for i := 0; i < len(c.channels) && i < 3; i++ {
+		voltage[i], err = res.StatusSNS.Energy.Voltage.Channel(c.channels[i])
+		if err != nil {
+			return 0, 0, 0, err
+		}
+	}
+
+	return voltage[0], voltage[1], voltage[2], err
+}
+
 // SmlPower provides the sml sensor power
 func (c *Connection) SmlPower() (float64, error) {
 	res, err := c.statusSnsG.Get()
