@@ -25,7 +25,6 @@ func NewTasmotaFromConfig(other map[string]interface{}) (api.Meter, error) {
 		URI      string
 		User     string
 		Password string
-		Channel  int
 		Channels []int
 		Usage    string
 		Cache    time.Duration
@@ -36,12 +35,6 @@ func NewTasmotaFromConfig(other map[string]interface{}) (api.Meter, error) {
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
-	}
-
-	// Only for backward compatibility, for users having deprecated single channel config
-	if cc.Channel != 0 {
-		cc.Channels = []int{1}
-		cc.Channels[0] = cc.Channel
 	}
 
 	return NewTasmota(cc.URI, cc.User, cc.Password, cc.Usage, cc.Channels, cc.Cache)

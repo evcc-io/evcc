@@ -31,7 +31,6 @@ func NewTasmotaFromConfig(other map[string]interface{}) (api.Charger, error) {
 		User         string
 		Password     string
 		StandbyPower float64
-		Channel      int
 		Channels     []int
 		Cache        time.Duration
 	}{
@@ -41,12 +40,6 @@ func NewTasmotaFromConfig(other map[string]interface{}) (api.Charger, error) {
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
-	}
-
-	// Only for backward compatibility, for users having deprecated single channel config
-	if cc.Channel != 0 {
-		cc.Channels = []int{1}
-		cc.Channels[0] = cc.Channel
 	}
 
 	return NewTasmota(cc.embed, cc.URI, cc.User, cc.Password, cc.Channels, cc.StandbyPower, cc.Cache)
