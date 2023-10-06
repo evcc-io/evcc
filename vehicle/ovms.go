@@ -84,12 +84,11 @@ func NewOvmsFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	v.statusG = provider.Cached(v.statusAPI, cc.Cache)
 	v.locationG = provider.Cached(v.locationAPI, cc.Cache)
 
-	var err error
-	v.Jar, err = cookiejar.New(&cookiejar.Options{
+	v.Jar, _ = cookiejar.New(&cookiejar.Options{
 		PublicSuffixList: publicsuffix.List,
 	})
 
-	return v, err
+	return v, nil
 }
 
 func (v *Ovms) loginToServer() (err error) {

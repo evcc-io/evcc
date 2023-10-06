@@ -14,7 +14,6 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
-	cv "github.com/nirasan/go-oauth-pkce-code-verifier"
 	"github.com/samber/lo"
 	"golang.org/x/oauth2"
 )
@@ -62,16 +61,11 @@ func (v *Identity) Login() error {
 
 // login authenticates with username/password to get new token
 func (v *Identity) login() (*oauth.Token, error) {
-	cv, err := cv.CreateCodeVerifier()
-	if err != nil {
-		return nil, err
-	}
+	cv := oauth2.GenerateVerifier()
 
 	state := lo.RandomString(16, lo.AlphanumericCharset)
-	uri := OAuth2Config.AuthCodeURL(state,
+	uri := OAuth2Config.AuthCodeURL(state, oauth2.S256ChallengeOption(cv),
 		oauth2.SetAuthURLParam("max_age", "3600"),
-		oauth2.SetAuthURLParam("code_challenge", cv.CodeChallengeS256()),
-		oauth2.SetAuthURLParam("code_challenge_method", "S256"),
 	)
 
 	v.Jar, _ = cookiejar.New(nil)
@@ -143,9 +137,7 @@ func (v *Identity) login() (*oauth.Token, error) {
 		return nil, errors.New("could not obtain auth code- check user and password")
 	}
 
-	tok, err := OAuth2Config.Exchange(ctx, code,
-		oauth2.SetAuthURLParam("code_verifier", cv.CodeChallengePlain()),
-	)
+	tok, err := OAuth2Config.Exchange(ctx, code, oauth2.VerifierOption(cv))
 
 	// exchange code for api token
 	var token oauth.Token
