@@ -24,7 +24,8 @@ import (
 
 // FritzDECT settings
 type Settings struct {
-	URI, AIN, User, Password string
+	URI                 string
+	AIN, User, Password string `validate:"required"`
 }
 
 // FritzDECT connection
@@ -54,10 +55,6 @@ type Energy struct {
 func NewConnection(uri, ain, user, password string) (*Connection, error) {
 	if uri == "" {
 		uri = "https://fritz.box"
-	}
-
-	if ain == "" {
-		return nil, errors.New("missing ain")
 	}
 
 	settings := &Settings{

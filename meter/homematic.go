@@ -21,14 +21,13 @@ func init() {
 // NewCCUFromConfig creates a Homematic meter from generic config
 func NewCCUFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
-		URI           string
-		Device        string
-		MeterChannel  string
-		SwitchChannel string
-		User          string
-		Password      string
-		Usage         string
-		Cache         time.Duration
+		URI            string `validate:"required"`
+		Device         string `validate:"required"`
+		MeterChannel   string
+		SwitchChannel  string
+		User, Password string
+		Usage          string `validate:"required"`
+		Cache          time.Duration
 	}{
 		Cache: time.Second,
 	}

@@ -1,7 +1,6 @@
 package shelly
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -23,10 +22,6 @@ type Connection struct {
 
 // NewConnection creates a new Shelly device connection.
 func NewConnection(uri, user, password string, channel int) (*Connection, error) {
-	if uri == "" {
-		return nil, errors.New("missing uri")
-	}
-
 	for _, suffix := range []string{"/", "/rcp", "/shelly"} {
 		uri = strings.TrimSuffix(uri, suffix)
 	}

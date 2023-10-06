@@ -13,7 +13,6 @@ package meter
 // SOFTWARE.
 
 import (
-	"errors"
 	"strings"
 	"time"
 
@@ -52,16 +51,12 @@ func init() {
 func NewBoschBpts5HybridFromConfig(other map[string]interface{}) (api.Meter, error) {
 	var cc struct {
 		URI   string
-		Usage string
+		Usage string `validate:"required"`
 		Cache time.Duration
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
-	}
-
-	if cc.Usage == "" {
-		return nil, errors.New("missing usage")
 	}
 
 	return NewBoschBpts5Hybrid(cc.URI, cc.Usage, cc.Cache)

@@ -60,7 +60,7 @@ type TqEm struct {
 // NewTqEmFromConfig creates a new configurable meter
 func NewTqEmFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
-		URI      string
+		URI      string `validate:"required"`
 		Password string
 		Cache    time.Duration
 	}{

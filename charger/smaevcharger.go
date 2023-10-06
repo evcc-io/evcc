@@ -52,10 +52,8 @@ func init() {
 // NewSmaevchargerFromConfig creates a SMA EV Charger from generic config
 func NewSmaevchargerFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
-		Uri      string
-		User     string
-		Password string
-		Cache    time.Duration
+		URI, User, Password string `validate:"required"`
+		Cache               time.Duration
 	}{
 		Cache: 5 * time.Second,
 	}
@@ -64,19 +62,11 @@ func NewSmaevchargerFromConfig(other map[string]interface{}) (api.Charger, error
 		return nil, err
 	}
 
-	if cc.Uri == "" {
-		return nil, errors.New("missing uri")
-	}
-
-	if cc.User == "" || cc.Password == "" {
-		return nil, api.ErrMissingCredentials
-	}
-
 	if cc.User == "admin" {
 		return nil, errors.New(`user "admin" not allowed, create new user`)
 	}
 
-	return NewSmaevcharger(cc.Uri, cc.User, cc.Password, cc.Cache)
+	return NewSmaevcharger(cc.URI, cc.User, cc.Password, cc.Cache)
 }
 
 // NewSmaevcharger creates an SMA EV Charger

@@ -38,20 +38,12 @@ func init() {
 func NewEntsoeFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	var cc struct {
 		embed         `mapstructure:",squash"`
-		Securitytoken string
-		Domain        string
+		Securitytoken string `validate:"required"`
+		Domain        string `validate:"required"`
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
-	}
-
-	if cc.Securitytoken == "" {
-		return nil, errors.New("missing securitytoken")
-	}
-
-	if cc.Domain == "" {
-		return nil, errors.New("missing domain")
 	}
 
 	domain, err := entsoe.Area(entsoe.BZN, strings.ToUpper(cc.Domain))

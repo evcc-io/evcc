@@ -63,10 +63,11 @@ type PSA struct {
 // newPSA creates a new vehicle
 func newPSA(log *util.Logger, brand, realm, id, secret string, other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
-		embed               `mapstructure:",squash"`
-		Credentials         ClientCredentials
-		User, Password, VIN string
-		Cache               time.Duration
+		embed          `mapstructure:",squash"`
+		Credentials    ClientCredentials
+		User, Password string `validate:"required"`
+		VIN            string
+		Cache          time.Duration
 	}{
 		Credentials: ClientCredentials{
 			ID:     id,
@@ -77,10 +78,6 @@ func newPSA(log *util.Logger, brand, realm, id, secret string, other map[string]
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
-	}
-
-	if cc.User == "" || cc.Password == "" {
-		return nil, api.ErrMissingCredentials
 	}
 
 	v := &PSA{
@@ -102,7 +99,6 @@ func newPSA(log *util.Logger, brand, realm, id, secret string, other map[string]
 			return v.VIN
 		},
 	)
-
 	if err != nil {
 		return nil, err
 	}

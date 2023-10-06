@@ -1,7 +1,6 @@
 package meter
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -55,7 +54,8 @@ func init() {
 func NewLgEssFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
 		capacity               `mapstructure:",squash"`
-		URI, Usage             string
+		URI                    string
+		Usage                  string `validate:"required"`
 		Registration, Password string
 		Cache                  time.Duration
 	}{
@@ -64,10 +64,6 @@ func NewLgEssFromConfig(other map[string]interface{}) (api.Meter, error) {
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
-	}
-
-	if cc.Usage == "" {
-		return nil, errors.New("missing usage")
 	}
 
 	return NewLgEss(cc.URI, cc.Usage, cc.Registration, cc.Password, cc.Cache, cc.capacity.Decorator())

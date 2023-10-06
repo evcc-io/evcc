@@ -1,7 +1,6 @@
 package charger
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -34,7 +33,7 @@ func init() {
 // NewOpenEVSEFromConfig creates an OpenEVSE charger from generic config
 func NewOpenEVSEFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
-		URI      string
+		URI      string `validate:"required"`
 		User     string
 		Password string
 		Cache    time.Duration
@@ -44,10 +43,6 @@ func NewOpenEVSEFromConfig(other map[string]interface{}) (api.Charger, error) {
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
-	}
-
-	if cc.URI == "" {
-		return nil, errors.New("missing uri")
 	}
 
 	return NewOpenEVSE(cc.URI, cc.User, cc.Password, cc.Cache)

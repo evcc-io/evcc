@@ -23,19 +23,16 @@ func init() {
 // NewPorscheFromConfig creates a new vehicle
 func NewPorscheFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
-		embed               `mapstructure:",squash"`
-		User, Password, VIN string
-		Cache               time.Duration
+		embed          `mapstructure:",squash"`
+		User, Password string `validate:"required"`
+		VIN            string
+		Cache          time.Duration
 	}{
 		Cache: interval,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
-	}
-
-	if cc.User == "" || cc.Password == "" {
-		return nil, api.ErrMissingCredentials
 	}
 
 	log := util.NewLogger("porsche").Redact(cc.User, cc.Password, cc.VIN)

@@ -26,8 +26,7 @@ var acceptable = []string{
 	"eebus not configured",
 	"context deadline exceeded",
 	"missing credentials",
-	"timeout",                    // ocpp
-	"must have uri and password", // Wattpilot
+	"timeout", // ocpp
 }
 
 func TestTemplates(t *testing.T) {

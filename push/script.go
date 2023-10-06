@@ -26,7 +26,7 @@ type Script struct {
 // NewScriptFromConfig creates a Script messenger. Script execution is aborted after given timeout.
 func NewScriptFromConfig(other map[string]interface{}) (Messenger, error) {
 	cc := struct {
-		CmdLine string
+		CmdLine string `validate:"required"`
 		Timeout time.Duration
 	}{
 		Timeout: request.Timeout,

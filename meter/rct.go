@@ -58,7 +58,7 @@ func init() {
 func NewRCTFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
 		capacity   `mapstructure:",squash"`
-		Uri, Usage string
+		URI, Usage string `validate:"required"`
 		Cache      time.Duration
 	}{
 		Cache: time.Second,
@@ -68,11 +68,7 @@ func NewRCTFromConfig(other map[string]interface{}) (api.Meter, error) {
 		return nil, err
 	}
 
-	if cc.Usage == "" {
-		return nil, errors.New("missing usage")
-	}
-
-	return NewRCT(cc.Uri, cc.Usage, cc.Cache, cc.capacity.Decorator())
+	return NewRCT(cc.URI, cc.Usage, cc.Cache, cc.capacity.Decorator())
 }
 
 // NewRCT creates an RCT meter

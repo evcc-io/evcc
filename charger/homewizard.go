@@ -26,7 +26,7 @@ func init() {
 func NewHomeWizardFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
 		embed        `mapstructure:",squash"`
-		URI          string
+		URI          string `validate:"required"`
 		StandbyPower float64
 		Cache        time.Duration
 	}{

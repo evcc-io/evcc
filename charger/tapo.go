@@ -19,19 +19,13 @@ func init() {
 // NewTapoFromConfig creates a Tapo charger from generic config
 func NewTapoFromConfig(other map[string]interface{}) (api.Charger, error) {
 	var cc struct {
-		embed        `mapstructure:",squash"`
-		URI          string
-		User         string
-		Password     string
-		StandbyPower float64
+		embed               `mapstructure:",squash"`
+		URI, User, Password string `validate:"required"`
+		StandbyPower        float64
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
-	}
-
-	if cc.User == "" || cc.Password == "" {
-		return nil, api.ErrMissingCredentials
 	}
 
 	return NewTapo(cc.embed, cc.URI, cc.User, cc.Password, cc.StandbyPower)

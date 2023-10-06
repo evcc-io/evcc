@@ -37,10 +37,11 @@ func init() {
 // NewRenaultDaciaFromConfig creates a new Renault/Dacia vehicle
 func NewRenaultDaciaFromConfig(brand string, other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
-		embed                       `mapstructure:",squash"`
-		User, Password, Region, VIN string
-		Cache                       time.Duration
-		Timeout                     time.Duration
+		embed          `mapstructure:",squash"`
+		User, Password string `validate:"required"`
+		Region, VIN    string
+		Cache          time.Duration
+		Timeout        time.Duration
 	}{
 		Region:  "de_DE",
 		Cache:   interval,
@@ -49,10 +50,6 @@ func NewRenaultDaciaFromConfig(brand string, other map[string]interface{}) (api.
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
-	}
-
-	if cc.User == "" || cc.Password == "" {
-		return nil, api.ErrMissingCredentials
 	}
 
 	log := util.NewLogger(brand).Redact(cc.User, cc.Password, cc.VIN)
@@ -75,7 +72,6 @@ func NewRenaultDaciaFromConfig(brand string, other map[string]interface{}) (api.
 	api.Client.Timeout = cc.Timeout
 
 	accountID, err := api.Person(identity.PersonID, brand)
-
 	if err != nil {
 		return nil, err
 	}

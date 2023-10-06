@@ -24,10 +24,11 @@ func init() {
 // NewFiatFromConfig creates a new vehicle
 func NewFiatFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
-		embed                    `mapstructure:",squash"`
-		User, Password, VIN, PIN string
-		Expiry                   time.Duration
-		Cache                    time.Duration
+		embed          `mapstructure:",squash"`
+		User, Password string `validate:"required"`
+		VIN, PIN       string
+		Expiry         time.Duration
+		Cache          time.Duration
 	}{
 		Expiry: expiry,
 		Cache:  interval,
@@ -35,10 +36,6 @@ func NewFiatFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
-	}
-
-	if cc.User == "" || cc.Password == "" {
-		return nil, api.ErrMissingCredentials
 	}
 
 	v := &Fiat{

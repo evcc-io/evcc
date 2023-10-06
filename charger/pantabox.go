@@ -22,7 +22,7 @@ func init() {
 // NewPantaboxFromConfig creates a Pantabox charger from generic config
 func NewPantaboxFromConfig(other map[string]interface{}) (api.Charger, error) {
 	var cc struct {
-		URI string
+		URI string `validate:"required"`
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {

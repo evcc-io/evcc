@@ -21,7 +21,7 @@ type Shoutrrr struct {
 // NewShoutrrrFromConfig creates new Shoutrrr messenger
 func NewShoutrrrFromConfig(other map[string]interface{}) (Messenger, error) {
 	var cc struct {
-		URI string
+		URI string `validate:"required"`
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {

@@ -24,10 +24,6 @@ type Connection struct {
 
 // NewConnection creates a homewizard connection
 func NewConnection(uri string, cache time.Duration) (*Connection, error) {
-	if uri == "" {
-		return nil, errors.New("missing uri")
-	}
-
 	log := util.NewLogger("homewizard")
 	c := &Connection{
 		Helper: request.NewHelper(log),

@@ -1,7 +1,6 @@
 package tariff
 
 import (
-	"errors"
 	"slices"
 	"sync"
 	"time"
@@ -30,19 +29,12 @@ func init() {
 
 func NewOctopusFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	var cc struct {
-		Region string
-		Tariff string
+		Region string `validate:"required"`
+		Tariff string `validate:"required"`
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
-	}
-
-	if cc.Region == "" {
-		return nil, errors.New("missing region")
-	}
-	if cc.Tariff == "" {
-		return nil, errors.New("missing tariff code")
 	}
 
 	t := &Octopus{

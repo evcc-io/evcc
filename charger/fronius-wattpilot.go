@@ -1,7 +1,6 @@
 package charger
 
 import (
-	"errors"
 	"fmt"
 	"time"
 
@@ -22,8 +21,8 @@ func init() {
 // NewWattpilotFromConfig creates a wattpilot charger from generic config
 func NewWattpilotFromConfig(other map[string]interface{}) (api.Charger, error) {
 	var cc struct {
-		URI      string
-		Password string
+		URI      string `validate:"required"`
+		Password string `validate:"required"`
 		Cache    time.Duration
 	}
 
@@ -31,17 +30,11 @@ func NewWattpilotFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	if cc.URI == "" || cc.Password == "" {
-		return nil, errors.New("must have uri and password")
-	}
-
 	return NewWattpilot(cc.URI, cc.Password, cc.Cache)
-
 }
 
 // NewWattpilot creates Wattpilot charger
 func NewWattpilot(uri, password string, cache time.Duration) (api.Charger, error) {
-
 	c := &Wattpilot{
 		api: wattpilot.New(uri, password),
 	}

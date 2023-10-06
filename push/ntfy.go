@@ -1,7 +1,6 @@
 package push
 
 import (
-	"errors"
 	"net/http"
 	"strings"
 
@@ -24,17 +23,13 @@ type Ntfy struct {
 // NewNtfyFromConfig creates new Ntfy messenger
 func NewNtfyFromConfig(other map[string]interface{}) (Messenger, error) {
 	var cc struct {
-		URI      string
+		URI      string `validate:"required"`
 		Priority string
 		Tags     string
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
-	}
-
-	if cc.URI == "" {
-		return nil, errors.New("missing uri")
 	}
 
 	log := util.NewLogger("ntfy")

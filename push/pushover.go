@@ -1,7 +1,6 @@
 package push
 
 import (
-	"errors"
 	"strings"
 
 	"github.com/evcc-io/evcc/util"
@@ -23,17 +22,13 @@ type PushOver struct {
 // NewPushOverFromConfig creates new pushover messenger
 func NewPushOverFromConfig(other map[string]interface{}) (Messenger, error) {
 	var cc struct {
-		App        string
+		App        string `validate:"required"`
 		Recipients []string
 		Devices    []string
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
-	}
-
-	if cc.App == "" {
-		return nil, errors.New("missing app name")
 	}
 
 	m := &PushOver{

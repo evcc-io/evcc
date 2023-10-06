@@ -55,7 +55,7 @@ func init() {
 // NewSaliaFromConfig creates a Salia cPH2 charger from generic config
 func NewSaliaFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
-		URI   string
+		URI   string `validate:"required"`
 		Cache time.Duration
 	}{
 		Cache: time.Second,

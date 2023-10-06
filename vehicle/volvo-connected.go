@@ -22,22 +22,18 @@ func init() {
 func NewVolvoConnectedFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
 		embed          `mapstructure:",squash"`
-		User, Password string
+		User, Password string `validate:"required"`
 		VIN            string
+		VccApiKey      string `validate:"required"`
+		Cache          time.Duration
 		// ClientID, ClientSecret string
 		// Sandbox                bool
-		VccApiKey string
-		Cache     time.Duration
 	}{
 		Cache: interval,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
-	}
-
-	if cc.User == "" || cc.Password == "" {
-		return nil, api.ErrMissingCredentials
 	}
 
 	// if cc.ClientID == "" && cc.ClientSecret == "" {
