@@ -44,6 +44,9 @@ func (cs *CS) errorHandler(errC <-chan error) {
 }
 
 func (cs *CS) ChargepointByID(id string) (*CP, error) {
+	cs.mu.Lock()
+	defer cs.mu.Unlock()
+
 	cp, ok := cs.cps[id]
 	if !ok {
 		return nil, fmt.Errorf("unknown charge point: %s", id)
