@@ -10,7 +10,7 @@ network:
   # evcc will listen on all available interfaces
   port: 7070
 
-interval: 30s # control cycle interval
+interval: 30s # control cycle interval. Interval <30s can lead to unexpected behavior, see https://docs.evcc.io/docs/reference/configuration/interval
 
 # database configuration for persisting charge sessions and settings
 # database:
