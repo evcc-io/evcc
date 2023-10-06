@@ -1,10 +1,12 @@
 package charger
 
 import (
+	"errors"
 	"testing"
 	"time"
 
 	"github.com/benbjohnson/clock"
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/ocpp"
 	ocpp16 "github.com/lorenzodonini/ocpp-go/ocpp1.6"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
@@ -122,7 +124,7 @@ func (suite *ocppTestSuite) TestConnect() {
 	// 2nd charge point - remote
 	cp2 := suite.startChargePoint("test-2", 1)
 	suite.Require().NoError(cp2.Start(ocppTestUrl))
-	suite.True(cp2.IsConnected())
+	suite.Require().True(cp2.IsConnected())
 
 	// 2nd charge point - local
 	c2, err := NewOCPP("test-2", 1, "", "", 0, false, false, ocppTestConnectTimeout, ocppTestTimeout, "A")
@@ -141,4 +143,21 @@ func (suite *ocppTestSuite) TestConnect() {
 	cp3 := suite.startChargePoint("unconfigured", 1)
 	_, err = cp3.BootNotification("model", "vendor")
 	suite.Require().Error(err)
+
+	// disconnect charge point
+	cp2.Stop()
+	suite.Require().False(cp2.IsConnected())
+
+	t := time.NewTimer(100 * time.Millisecond)
+WAIT_DISCONNECT:
+	for {
+		select {
+		case <-t.C:
+			suite.Fail("disconnect timeout")
+		case <-time.After(10 * time.Millisecond):
+			if _, err := c2.Status(); errors.Is(err, api.ErrTimeout) {
+				break WAIT_DISCONNECT
+			}
+		}
+	}
 }
