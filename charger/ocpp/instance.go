@@ -52,7 +52,12 @@ func Instance() *CS {
 		go instance.errorHandler(cs.Errors())
 		go cs.Start(8887, "/{ws}")
 
-		time.Sleep(time.Second)
+		// wait for server to start
+		for range time.Tick(10 * time.Millisecond) {
+			if dispatcher.IsRunning() {
+				break
+			}
+		}
 	})
 
 	return instance
