@@ -102,8 +102,13 @@ func (c *Twc3) Enable(enable bool) error {
 
 	// ignore disabling when vehicle is already disconnected
 	// https://github.com/evcc-io/evcc/issues/10213
-	if status, err := c.Status(); status == api.StatusA && !enable || err != nil {
+	status, err := c.Status()
+	if err != nil {
 		return err
+	}
+	if status == api.StatusA && !enable {
+		c.enabled = false
+		return nil
 	}
 
 	v, ok := c.lp.GetVehicle().(api.VehicleChargeController)
@@ -111,7 +116,6 @@ func (c *Twc3) Enable(enable bool) error {
 		return errors.New("vehicle not capable of start/stop")
 	}
 
-	var err error
 	if enable {
 		err = v.StartCharge()
 	} else {
