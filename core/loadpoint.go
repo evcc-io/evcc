@@ -317,12 +317,13 @@ func (lp *Loadpoint) collectDefaults() {
 		*actionCfg.Mode = lp.GetMode()
 		*actionCfg.MinCurrent = lp.GetMinCurrent()
 		*actionCfg.MaxCurrent = lp.GetMaxCurrent()
-		*actionCfg.MinSoc = lp.GetMinSoc()
-		*actionCfg.TargetSoc = lp.GetTargetSoc()
 		*actionCfg.Priority = lp.GetPriority()
 	} else {
 		lp.log.ERROR.Printf("error allocating action config: %v", err)
 	}
+	// deprecated: do not reapply deprecated lp config values
+	actionCfg.TargetSoc = nil
+	actionCfg.MinSoc_ = nil
 }
 
 // requestUpdate requests site to update this loadpoint
@@ -552,6 +553,9 @@ func (lp *Loadpoint) applyAction(actionCfg api.ActionConfig) {
 	if min := actionCfg.MinCurrent; min != nil && *min >= *lp.onDisconnect.MinCurrent {
 		lp.SetMinCurrent(*min)
 	}
+	if actionCfg.TargetSoc != nil {
+		lp.SetTargetSoc(*actionCfg.TargetSoc)
+	}
 	if max := actionCfg.MaxCurrent; max != nil && *max <= *lp.onDisconnect.MaxCurrent {
 		lp.SetMaxCurrent(*max)
 	}
@@ -635,10 +639,25 @@ func (lp *Loadpoint) syncCharger() error {
 		return err
 	}
 
-	defer func() {
-		lp.enabled = enabled
-		lp.publish("enabled", lp.enabled)
-	}()
+	if lp.guardGracePeriodElapsed() {
+		defer func() {
+			lp.enabled = enabled
+			lp.publish("enabled", lp.enabled)
+		}()
+	}
+
+	if !enabled && lp.charging() {
+		lp.log.WARN.Println("charger logic error: disabled but charging")
+		enabled = true // treat as enabled when charging
+		if lp.guardGracePeriodElapsed() {
+			if err := lp.charger.Enable(true); err != nil { // also enable charger to correct internal state
+				return err
+			}
+			lp.elapseGuard()
+			lp.elapsePVTimer()
+			return nil
+		}
+	}
 
 	// status in sync
 	if enabled == lp.enabled {
@@ -666,14 +685,6 @@ func (lp *Loadpoint) syncCharger() error {
 		// ignore disabled state if vehicle was disconnected ^(lp.enabled && ^lp.connected)
 		if lp.guardGracePeriodElapsed() && lp.phaseSwitchCompleted() && (enabled || lp.connected()) {
 			lp.log.WARN.Printf("charger out of sync: expected %vd, got %vd", status[lp.enabled], status[enabled])
-		}
-		lp.elapseGuard()
-		return nil
-	}
-
-	if !enabled && lp.charging() {
-		if lp.guardGracePeriodElapsed() {
-			lp.log.WARN.Println("charger logic error: disabled but charging")
 		}
 		lp.elapseGuard()
 		return nil
@@ -782,7 +793,7 @@ func (lp *Loadpoint) remainingChargeEnergy() (float64, bool) {
 }
 
 func (lp *Loadpoint) vehicleHasSoc() bool {
-	return lp.vehicle != nil && !lp.vehicleHasFeature(api.Offline)
+	return lp.GetVehicle() != nil && !lp.vehicleHasFeature(api.Offline)
 }
 
 // targetEnergyReached checks if target is configured and reached
@@ -792,10 +803,14 @@ func (lp *Loadpoint) targetEnergyReached() bool {
 }
 
 // targetSocReached checks if target is configured and reached.
-// If vehicle is not configured this will always return false
+// If vehicle is not configured this will always return false unless the
+// charger is capable of and has provided an soc value.
 func (lp *Loadpoint) targetSocReached() bool {
-	return lp.vehicle != nil &&
-		lp.Soc.target > 0 &&
+	if _, ok := lp.charger.(api.Battery); lp.GetVehicle() == nil && !ok {
+		return false
+	}
+
+	return lp.Soc.target > 0 &&
 		lp.Soc.target < 100 &&
 		lp.vehicleSoc >= float64(lp.Soc.target)
 }
@@ -960,11 +975,13 @@ func (lp *Loadpoint) scalePhasesRequired() bool {
 
 // scalePhasesIfAvailable scales if api.PhaseSwitcher is available
 func (lp *Loadpoint) scalePhasesIfAvailable(phases int) error {
+	want := phases
 	if lp.ConfiguredPhases != 0 {
 		phases = lp.ConfiguredPhases
 	}
 
 	if _, ok := lp.charger.(api.PhaseSwitcher); ok {
+		lp.log.DEBUG.Printf("!! scalePhasesIfAvailable: %dp -> %dp", want, phases)
 		return lp.scalePhases(phases)
 	}
 
@@ -979,11 +996,14 @@ func (lp *Loadpoint) scalePhases(phases int) error {
 		panic("charger does not implement api.PhaseSwitcher")
 	}
 
+	lp.log.DEBUG.Printf("!! scalePhases: GetPhases %dp <> %dp wanted", lp.GetPhases(), phases)
 	if lp.GetPhases() != phases {
 		// switch phases
 		if err := cp.Phases1p3p(phases); err != nil {
 			return fmt.Errorf("switch phases: %w", err)
 		}
+
+		lp.log.DEBUG.Printf("switched phases: %dp", phases)
 
 		// prevent premature measurement of active phases
 		lp.phasesSwitched = lp.clock.Now()
@@ -1029,6 +1049,10 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64) bo
 	if targetCurrent := powerToCurrent(availablePower, activePhases); targetCurrent < minCurrent && scalable {
 		lp.log.DEBUG.Printf("available power %.0fW < %.0fW min %dp threshold", availablePower, float64(activePhases)*Voltage*minCurrent, activePhases)
 
+		if !lp.charging() { // scale immediately if not charging
+			lp.phaseTimer = elapsed
+		}
+
 		if lp.phaseTimer.IsZero() {
 			lp.log.DEBUG.Printf("start phase %s timer", phaseScale1p)
 			lp.phaseTimer = lp.clock.Now()
@@ -1037,10 +1061,7 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64) bo
 		lp.publishTimer(phaseTimer, lp.Disable.Delay, phaseScale1p)
 
 		if elapsed := lp.clock.Since(lp.phaseTimer); elapsed >= lp.Disable.Delay {
-			lp.log.DEBUG.Printf("phase %s timer elapsed", phaseScale1p)
-			if err := lp.scalePhases(1); err == nil {
-				lp.log.DEBUG.Printf("switched phases: 1p @ %.0fW", availablePower)
-			} else {
+			if err := lp.scalePhases(1); err != nil {
 				lp.log.ERROR.Println(err)
 			}
 			return true
@@ -1057,6 +1078,10 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64) bo
 	if targetCurrent := powerToCurrent(availablePower, maxPhases); targetCurrent >= minCurrent && scalable {
 		lp.log.DEBUG.Printf("available power %.0fW > %.0fW min %dp threshold", availablePower, 3*Voltage*minCurrent, maxPhases)
 
+		if !lp.charging() { // scale immediately if not charging
+			lp.phaseTimer = elapsed
+		}
+
 		if lp.phaseTimer.IsZero() {
 			lp.log.DEBUG.Printf("start phase %s timer", phaseScale3p)
 			lp.phaseTimer = lp.clock.Now()
@@ -1065,10 +1090,7 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64) bo
 		lp.publishTimer(phaseTimer, lp.Enable.Delay, phaseScale3p)
 
 		if elapsed := lp.clock.Since(lp.phaseTimer); elapsed >= lp.Enable.Delay {
-			lp.log.DEBUG.Printf("phase %s timer elapsed", phaseScale3p)
-			if err := lp.scalePhases(3); err == nil {
-				lp.log.DEBUG.Printf("switched phases: 3p @ %.0fW", availablePower)
-			} else {
+			if err := lp.scalePhases(3); err != nil {
 				lp.log.ERROR.Println(err)
 			}
 			return true
@@ -1536,9 +1558,7 @@ func (lp *Loadpoint) Update(sitePower float64, autoCharge, batteryBuffered, batt
 		err = lp.setLimit(0, false)
 
 	case lp.scalePhasesRequired():
-		if err = lp.scalePhases(lp.ConfiguredPhases); err == nil {
-			lp.log.DEBUG.Printf("switched phases: %dp", lp.ConfiguredPhases)
-		}
+		err = lp.scalePhases(lp.ConfiguredPhases)
 
 	case lp.targetEnergyReached():
 		lp.log.DEBUG.Printf("targetEnergy reached: %.0fkWh > %0.1fkWh", lp.getChargedEnergy()/1e3, lp.targetEnergy)

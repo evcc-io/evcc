@@ -12,7 +12,7 @@ import (
 	"github.com/evcc-io/evcc/meter/tibber"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
-	"github.com/shurcooL/graphql"
+	"github.com/hasura/go-graphql-client"
 )
 
 type Tibber struct {
@@ -36,7 +36,6 @@ func NewTibberFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		embed  `mapstructure:",squash"`
 		Token  string
 		HomeID string
-		Unit   string
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {

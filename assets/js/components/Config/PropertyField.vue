@@ -3,7 +3,8 @@
 		<input
 			:id="id"
 			v-model="value"
-			:type="type"
+			type="number"
+			step="any"
 			:placeholder="placeholder"
 			:required="required"
 			aria-label="unit"
@@ -124,3 +125,14 @@ export default {
 	},
 };
 </script>
+
+<style>
+input[type="number"] {
+	appearance: textfield;
+}
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+	-webkit-appearance: none;
+	margin: 0;
+}
+</style>

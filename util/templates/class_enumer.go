@@ -7,11 +7,11 @@ import (
 	"strings"
 )
 
-const _ClassName = "ChargerMeterVehicle"
+const _ClassName = "ChargerMeterVehicleTariff"
 
-var _ClassIndex = [...]uint8{0, 7, 12, 19}
+var _ClassIndex = [...]uint8{0, 7, 12, 19, 25}
 
-const _ClassLowerName = "chargermetervehicle"
+const _ClassLowerName = "chargermetervehicletariff"
 
 func (i Class) String() string {
 	i -= 1
@@ -28,9 +28,10 @@ func _ClassNoOp() {
 	_ = x[Charger-(1)]
 	_ = x[Meter-(2)]
 	_ = x[Vehicle-(3)]
+	_ = x[Tariff-(4)]
 }
 
-var _ClassValues = []Class{Charger, Meter, Vehicle}
+var _ClassValues = []Class{Charger, Meter, Vehicle, Tariff}
 
 var _ClassNameToValueMap = map[string]Class{
 	_ClassName[0:7]:        Charger,
@@ -39,12 +40,15 @@ var _ClassNameToValueMap = map[string]Class{
 	_ClassLowerName[7:12]:  Meter,
 	_ClassName[12:19]:      Vehicle,
 	_ClassLowerName[12:19]: Vehicle,
+	_ClassName[19:25]:      Tariff,
+	_ClassLowerName[19:25]: Tariff,
 }
 
 var _ClassNames = []string{
 	_ClassName[0:7],
 	_ClassName[7:12],
 	_ClassName[12:19],
+	_ClassName[19:25],
 }
 
 // ClassString retrieves an enum value from the enum constants string name.

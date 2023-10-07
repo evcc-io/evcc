@@ -8,6 +8,12 @@ params:
     choice: ["grid", "pv", "battery"]
     allinone: true
   - name: host
+  - name: schema
+    type: choice
+    validvalues:
+      - https
+      - http
+    default: https
   - name: capacity
     advanced: true
 render: |
@@ -16,7 +22,8 @@ render: |
     source: http
     unpack: hex
     decode: float32
-    uri: http://{{ .host }}/lala.cgi
+    uri: {{ .schema }}://{{ .host }}/lala.cgi
+    insecure: true
     method: POST
     headers:
     - content-type: application/json
@@ -32,9 +39,12 @@ render: |
     body: '{"ENERGY":{"GUI_BAT_DATA_POWER":""}}'
     jq: .ENERGY.GUI_BAT_DATA_POWER | sub("fl_"; "")
     scale: -1
+  {{- end }}
+  {{- if eq .usage "battery" }}
   soc:
     source: http
-    uri: http://{{ .host }}/lala.cgi
+    uri: {{ .schema }}://{{ .host }}/lala.cgi
+    insecure: true
     method: POST
     headers:
     - content-type: application/json

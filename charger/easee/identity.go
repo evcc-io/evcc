@@ -35,20 +35,29 @@ func (t *Token) AsOAuth2Token() *oauth2.Token {
 // tokenSource is an oauth2.TokenSource
 type tokenSource struct {
 	*request.Helper
+	user, password string
 }
 
 // TokenSource creates an Easee token source
 func TokenSource(log *util.Logger, user, password string) (oauth2.TokenSource, error) {
 	c := &tokenSource{
-		Helper: request.NewHelper(log),
+		Helper:   request.NewHelper(log),
+		user:     user,
+		password: password,
 	}
 
+	token, err := c.authenticate()
+
+	return oauth.RefreshTokenSource(token.AsOAuth2Token(), c), err
+}
+
+func (c *tokenSource) authenticate() (*Token, error) {
 	data := struct {
 		Username string `json:"userName"`
 		Password string `json:"password"`
 	}{
-		Username: user,
-		Password: password,
+		Username: c.user,
+		Password: c.password,
 	}
 
 	uri := fmt.Sprintf("%s/%s", API, "accounts/login")
@@ -58,14 +67,9 @@ func TokenSource(log *util.Logger, user, password string) (oauth2.TokenSource, e
 	}
 
 	var token Token
-	if err := c.DoJSON(req, &token); err != nil {
-		return nil, err
-	}
+	err = c.DoJSON(req, &token)
 
-	oauthToken := token.AsOAuth2Token()
-	ts := oauth2.ReuseTokenSourceWithExpiry(oauthToken, oauth.RefreshTokenSource(oauthToken, c), 15*time.Minute)
-
-	return ts, nil
+	return &token, err
 }
 
 func (c *tokenSource) RefreshToken(oauthToken *oauth2.Token) (*oauth2.Token, error) {
@@ -80,12 +84,15 @@ func (c *tokenSource) RefreshToken(oauthToken *oauth2.Token) (*oauth2.Token, err
 	uri := fmt.Sprintf("%s/%s", API, "accounts/refresh_token")
 	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
 	if err != nil {
-		return oauthToken, err
+		return nil, err
 	}
 
-	var token Token
+	var token *Token
 	if err := c.DoJSON(req, &token); err != nil {
-		return oauthToken, err
+		// re-login
+		if token, err = c.authenticate(); err != nil {
+			return nil, err
+		}
 	}
 
 	return token.AsOAuth2Token(), nil

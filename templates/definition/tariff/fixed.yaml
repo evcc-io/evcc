@@ -1,0 +1,12 @@
+template: fixed
+products:
+  - brand: Standard
+params:
+  - name: price
+    type: float
+    description:
+      en: "Price per kWh"
+      de: "Preis je kWh"
+render: |
+  type: fixed
+  price: {{ .price }}

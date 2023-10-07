@@ -9,7 +9,7 @@
 				class="col-12 mb-3 mb-md-4"
 				:gridImport="gridImport"
 				:selfConsumption="selfConsumption"
-				:loadpoints="loadpointsPower"
+				:loadpoints="loadpointsCompact"
 				:pvExport="pvExport"
 				:batteryCharge="batteryCharge"
 				:batteryDischarge="batteryDischarge"
@@ -108,11 +108,9 @@
 							icon="home"
 							:power="homePower"
 							:powerInKw="powerInKw"
-							:details="detailsValue(tariffEffectivePrice, tariffEffectiveCo2)"
+							:details="detailsValue(tariffPriceHome, tariffCo2Home)"
 							:detailsFmt="detailsFmt"
-							:detailsTooltip="
-								detailsTooltip(tariffEffectivePrice, tariffEffectiveCo2)
-							"
+							:detailsTooltip="detailsTooltip(tariffPriceHome, tariffCo2Home)"
 						/>
 						<EnergyflowEntry
 							:name="
@@ -126,12 +124,12 @@
 							:powerInKw="powerInKw"
 							:details="
 								activeLoadpointsCount
-									? detailsValue(tariffEffectivePrice, tariffEffectiveCo2)
+									? detailsValue(tariffPriceLoadpoints, tariffCo2Loadpoints)
 									: undefined
 							"
 							:detailsFmt="detailsFmt"
 							:detailsTooltip="
-								detailsTooltip(tariffEffectivePrice, tariffEffectiveCo2)
+								detailsTooltip(tariffPriceLoadpoints, tariffCo2Loadpoints)
 							"
 						/>
 						<EnergyflowEntry
@@ -194,18 +192,18 @@ export default {
 		pvConfigured: Boolean,
 		pv: { type: Array },
 		pvPower: { type: Number, default: 0 },
-		loadpointsPower: { type: Number, default: 0 },
-		activeLoadpointsCount: { type: Number, default: 0 },
+		loadpointsCompact: { type: Array, default: () => [] },
 		batteryConfigured: { type: Boolean },
 		battery: { type: Array },
 		batteryPower: { type: Number, default: 0 },
 		batterySoc: { type: Number, default: 0 },
-		vehicleIcons: { type: Array },
 		tariffGrid: { type: Number },
 		tariffFeedIn: { type: Number },
-		tariffEffectivePrice: { type: Number },
 		tariffCo2: { type: Number },
-		tariffEffectiveCo2: { type: Number },
+		tariffPriceHome: { type: Number },
+		tariffCo2Home: { type: Number },
+		tariffPriceLoadpoints: { type: Number },
+		tariffCo2Loadpoints: { type: Number },
 		smartCostLimit: { type: Number },
 		smartCostType: { type: String },
 		currency: { type: String },
@@ -236,6 +234,24 @@ export default {
 			const ownPower = this.batteryDischarge + this.pvProduction;
 			const consumption = this.homePower + this.batteryCharge + this.loadpointsPower;
 			return Math.min(ownPower, consumption);
+		},
+		activeLoadpoints: function () {
+			return this.loadpointsCompact.filter((lp) => lp.charging);
+		},
+		activeLoadpointsCount: function () {
+			return this.activeLoadpoints.length;
+		},
+		vehicleIcons: function () {
+			if (this.activeLoadpointsCount > 0) {
+				return this.activeLoadpoints.map((lp) => lp.icon);
+			}
+			return ["car"];
+		},
+		loadpointsPower: function () {
+			return this.loadpointsCompact.reduce((sum, lp) => {
+				sum += lp.power || 0;
+				return sum;
+			}, 0);
 		},
 		pvExport: function () {
 			return Math.max(0, this.gridPower * -1);

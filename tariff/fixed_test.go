@@ -20,7 +20,7 @@ func TestFixed(t *testing.T) {
 
 	var expect api.Rates
 	for dow := 0; dow < 7; dow++ {
-		dayStart := carbon.FromStdTime(tf.clock.Now()).StartOfDay().AddDays(dow)
+		dayStart := carbon.CreateFromStdTime(tf.clock.Now()).StartOfDay().AddDays(dow)
 
 		for hour := 0; hour < 24; hour++ {
 			expect = append(expect, api.Rate{
@@ -53,7 +53,7 @@ func TestFixedSplitZones(t *testing.T) {
 
 	var expect api.Rates
 	for i := 0; i < 7; i++ {
-		dayStart := carbon.FromStdTime(tf.clock.Now()).StartOfDay().AddDays(i)
+		dayStart := carbon.CreateFromStdTime(tf.clock.Now()).StartOfDay().AddDays(i)
 
 		// 00:00-05:00 0.1
 		for hour := 0; hour < 5; hour++ {

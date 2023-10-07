@@ -6,26 +6,14 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/vehicle/vag"
 	"github.com/evcc-io/evcc/vehicle/vag/mbb"
-	"github.com/evcc-io/evcc/vehicle/vag/vwidentity"
 )
 
 // MbbTokenSource creates a refreshing token source for use with the MBB api.
 // Once the MBB token expires, it is recreated from the token exchanger (either TokenRefreshService or IDK)
-func MbbTokenSource(log *util.Logger, tox vag.TokenExchanger, clientID string, q url.Values, user, password string) (vag.TokenSource, error) {
-	q, err := vwidentity.Login(log, q, user, password)
-	if err != nil {
-		return nil, err
-	}
-
-	token, err := tox.Exchange(q)
-	if err != nil {
-		return nil, err
-	}
-
-	trs := tox.TokenSource(token)
+func MbbTokenSource(log *util.Logger, trs vag.TokenSource, clientID string) vag.TokenSource {
 	mbb := mbb.New(log, clientID)
 
-	mts := vag.MetaTokenSource(func() (*vag.Token, error) {
+	return vag.MetaTokenSource(func() (*vag.Token, error) {
 		// get TRS token from refreshing TRS token source
 		itoken, err := trs.TokenEx()
 		if err != nil {
@@ -42,6 +30,4 @@ func MbbTokenSource(log *util.Logger, tox vag.TokenExchanger, clientID string, q
 
 		// produce tokens from refresh MBB token source
 	}, mbb.TokenSource)
-
-	return mts, nil
 }

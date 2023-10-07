@@ -6,7 +6,11 @@
 					{{ siteTitle || "evcc" }}
 				</h1>
 				<div class="d-flex">
-					<Notifications :notifications="notifications" class="me-2" />
+					<Notifications
+						:notifications="notifications"
+						:loadpointTitles="loadpointTitles"
+						class="me-2"
+					/>
 					<TopNavigation v-bind="topNavigation" />
 				</div>
 			</div>
@@ -82,12 +86,13 @@ export default {
 		savingsSelfConsumptionPercent: Number,
 		savingsSince: String,
 		savingsTotalCharged: Number,
-		greenShare: Number,
 		tariffFeedIn: Number,
 		tariffGrid: Number,
-		tariffEffectivePrice: Number,
 		tariffCo2: Number,
-		tariffEffectiveCo2: Number,
+		tariffPriceHome: Number,
+		tariffCo2Home: Number,
+		tariffPriceLoadpoints: Number,
+		tariffCo2Loadpoints: Number,
 
 		availableVersion: String,
 		releaseNotes: String,
@@ -103,23 +108,16 @@ export default {
 		energyflow: function () {
 			return this.collectProps(Energyflow);
 		},
-		activeLoadpoints: function () {
-			return this.loadpoints.filter((lp) => lp.charging);
+		loadpointTitles: function () {
+			return this.loadpoints.map((lp) => lp.title);
 		},
-		activeLoadpointsCount: function () {
-			return this.activeLoadpoints.length;
-		},
-		vehicleIcons: function () {
-			if (this.activeLoadpointsCount) {
-				return this.activeLoadpoints.map((lp) => lp.chargerIcon || lp.vehicleIcon || "car");
-			}
-			return ["car"];
-		},
-		loadpointsPower: function () {
-			return this.loadpoints.reduce((sum, lp) => {
-				sum += lp.chargePower || 0;
-				return sum;
-			}, 0);
+		loadpointsCompact: function () {
+			return this.loadpoints.map((lp) => {
+				const icon = lp.chargerIcon || lp.vehicleIcon || "car";
+				const charging = lp.charging;
+				const power = lp.chargePower || 0;
+				return { icon, charging, power };
+			});
 		},
 		topNavigation: function () {
 			const vehicleLogins = this.auth ? this.auth.vehicles : {};

@@ -205,14 +205,14 @@ func (wb *AblEm4) TotalEnergy() (float64, error) {
 
 // getPhaseValues returns 3 sequential register values
 func (wb *AblEm4) getPhaseValues(reg uint16) (float64, float64, float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(reg, 3*2)
+	b, err := wb.conn.ReadHoldingRegisters(reg, 6)
 	if err != nil {
 		return 0, 0, 0, err
 	}
 
 	var res [3]float64
 	for i := 0; i < 3; i++ {
-		res[i] = float64(binary.BigEndian.Uint32(b[4*i:])) * 0.1
+		res[i] = float64(binary.BigEndian.Uint32(b[4*i:])) / 10
 	}
 
 	return res[0], res[1], res[2], nil

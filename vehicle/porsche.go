@@ -8,7 +8,6 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/vehicle/porsche"
-	"github.com/samber/lo"
 )
 
 // Porsche is an api.Vehicle implementation for Porsche cars
@@ -40,38 +39,35 @@ func NewPorscheFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	log := util.NewLogger("porsche").Redact(cc.User, cc.Password, cc.VIN)
-	identity := porsche.NewIdentity(log)
-
-	ts, err := identity.Login(porsche.OAuth2Config, cc.User, cc.Password)
+	ts, err := porsche.NewIdentity(log, cc.User, cc.Password)
 	if err != nil {
 		return nil, fmt.Errorf("login failed: %w", err)
 	}
 
 	api := porsche.NewAPI(log, ts)
 
-	cc.VIN, err = ensureVehicle(cc.VIN, func() ([]string, error) {
-		vehicles, err := api.Vehicles()
-		return lo.Map(vehicles, func(v porsche.Vehicle, _ int) string {
+	vehicle, err := ensureVehicleEx(
+		cc.VIN, api.Vehicles,
+		func(v porsche.Vehicle) string {
 			return v.VIN
-		}), err
-	})
-
+		},
+	)
 	if err != nil {
 		return nil, err
 	}
 
 	// check if vehicle is paired
-	if res, err := api.PairingStatus(cc.VIN); err == nil && !porsche.IsPaired(res.Status) {
+	if res, err := api.PairingStatus(vehicle.VIN); err == nil && !porsche.IsPaired(res.Status) {
 		return nil, errors.New("vehicle is not paired with the My Porsche account")
 	}
 
 	emobApi := porsche.NewEmobilityAPI(log, ts)
-	capabilities, err := emobApi.Capabilities(cc.VIN)
+	capabilities, err := emobApi.Capabilities(vehicle.VIN)
 	if err != nil {
 		return nil, err
 	}
 
-	provider := porsche.NewProvider(log, api, emobApi, cc.VIN, capabilities.CarModel, cc.Cache)
+	provider := porsche.NewProvider(log, api, emobApi, vehicle.VIN, capabilities.CarModel, cc.Cache)
 
 	v := &Porsche{
 		embed:    &cc.embed,

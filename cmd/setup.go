@@ -277,7 +277,11 @@ func vehicleInstance(cc config.Named) (api.Vehicle, error) {
 }
 
 func configureVehicles(static []config.Named) error {
+	var mu sync.Mutex
 	g, _ := errgroup.WithContext(context.Background())
+
+	// stable-sort vehicles by name
+	devs1 := make([]config.Device[api.Vehicle], 0, len(static))
 
 	for i, cc := range static {
 		if cc.Name == "" {
@@ -291,7 +295,11 @@ func configureVehicles(static []config.Named) error {
 				return fmt.Errorf("cannot create vehicle '%s': %w", cc.Name, err)
 			}
 
-			return config.Vehicles().Add(config.NewStaticDevice(cc, instance))
+			mu.Lock()
+			defer mu.Unlock()
+			devs1 = append(devs1, config.NewStaticDevice(cc, instance))
+
+			return nil
 		})
 	}
 
@@ -302,8 +310,7 @@ func configureVehicles(static []config.Named) error {
 	}
 
 	// stable-sort vehicles by id
-	var mu sync.Mutex
-	devs := make([]config.ConfigurableDevice[api.Vehicle], 0, len(configurable))
+	devs2 := make([]config.ConfigurableDevice[api.Vehicle], 0, len(configurable))
 
 	for _, conf := range configurable {
 		conf := conf
@@ -316,7 +323,7 @@ func configureVehicles(static []config.Named) error {
 
 			mu.Lock()
 			defer mu.Unlock()
-			devs = append(devs, config.NewConfigurableDevice(conf, instance))
+			devs2 = append(devs2, config.NewConfigurableDevice(conf, instance))
 
 			return nil
 		})
@@ -326,11 +333,21 @@ func configureVehicles(static []config.Named) error {
 		return err
 	}
 
-	slices.SortFunc(devs, func(i, j config.ConfigurableDevice[api.Vehicle]) int {
+	slices.SortFunc(devs1, func(i, j config.Device[api.Vehicle]) int {
+		return cmp.Compare(strings.ToLower(i.Config().Name), strings.ToLower(j.Config().Name))
+	})
+
+	for _, dev := range devs1 {
+		if err := config.Vehicles().Add(dev); err != nil {
+			return err
+		}
+	}
+
+	slices.SortFunc(devs2, func(i, j config.ConfigurableDevice[api.Vehicle]) int {
 		return cmp.Compare(i.ID(), j.ID())
 	})
 
-	for _, dev := range devs {
+	for _, dev := range devs2 {
 		if err := config.Vehicles().Add(dev); err != nil {
 			return err
 		}
@@ -616,11 +633,11 @@ func configureSiteAndLoadpoints(conf globalConfig) (*core.Site, error) {
 		return nil, err
 	}
 
-	return configureSite(conf.Site, loadpoints, config.Instances(config.Vehicles().Devices()), tariffs)
+	return configureSite(conf.Site, loadpoints, tariffs)
 }
 
-func configureSite(conf map[string]interface{}, loadpoints []*core.Loadpoint, vehicles []api.Vehicle, tariffs tariff.Tariffs) (*core.Site, error) {
-	site, err := core.NewSiteFromConfig(log, conf, loadpoints, vehicles, tariffs)
+func configureSite(conf map[string]interface{}, loadpoints []*core.Loadpoint, tariffs tariff.Tariffs) (*core.Site, error) {
+	site, err := core.NewSiteFromConfig(log, conf, loadpoints, tariffs)
 	if err != nil {
 		return nil, fmt.Errorf("failed configuring site: %w", err)
 	}
@@ -640,7 +657,7 @@ func configureLoadpoints(conf globalConfig) (loadpoints []*core.Loadpoint, err e
 			return nil, fmt.Errorf("failed decoding loadpoint configuration: %w", err)
 		}
 
-		log := util.NewLogger("lp-" + strconv.Itoa(id+1))
+		log := util.NewLoggerWithLoadpoint("lp-"+strconv.Itoa(id+1), id+1)
 		lp, err := core.NewLoadpointFromConfig(log, lpc)
 		if err != nil {
 			return nil, fmt.Errorf("failed configuring loadpoint: %w", err)

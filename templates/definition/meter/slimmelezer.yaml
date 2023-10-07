@@ -10,11 +10,10 @@ params:
   - name: usage
     choice: ["grid"]
   - name: host
-    required: true
 render: |
   type: custom
   power:
-  - source: calc
+    source: calc
     add:
     - source: http
       uri: http://{{ .host }}/sensor/power_delivered
