@@ -286,7 +286,7 @@ func TestPvScalePhasesTimer(t *testing.T) {
 			lp.phaseTimer = lp.clock.Now()
 		}},
 		{"1/1->3, timer elapsed", 1, 1, -3 * Voltage * minA, 3, true, func(lp *Loadpoint) {
-			lp.phaseTimer = lp.clock.Now().Add(-dt)
+			lp.phaseTimer = elapsed
 		}},
 
 		// omit to switch up (again) from 3p/1p configured/active
@@ -298,7 +298,7 @@ func TestPvScalePhasesTimer(t *testing.T) {
 			lp.phaseTimer = lp.clock.Now()
 		}},
 		{"3/1->3, timer elapsed", 3, 1, -3 * Voltage * minA, 3, false, func(lp *Loadpoint) {
-			lp.phaseTimer = lp.clock.Now().Add(-dt)
+			lp.phaseTimer = elapsed
 		}},
 
 		// omit to switch down from 3p/1p configured/active
@@ -310,11 +310,19 @@ func TestPvScalePhasesTimer(t *testing.T) {
 			lp.phaseTimer = lp.clock.Now()
 		}},
 		{"3/1->1, timer elapsed", 3, 1, -1 * Voltage * minA, 3, false, func(lp *Loadpoint) {
-			lp.phaseTimer = lp.clock.Now().Add(-dt)
+			lp.phaseTimer = elapsed
 		}},
 
 		// switch down from 3p/3p configured/active
-		{"3/3->1, enough power", 3, 3, 0.1, 3, false, nil},
+		{"3/3->1, enough power", 3, 3, 0, 3, false, nil},
+		{"3/3->1, enough power, timer elapsed, load point enabled", 3, 3, 0, 3, false, func(lp *Loadpoint) {
+			lp.phaseTimer = elapsed
+			lp.enabled = true
+		}},
+		{"3/3->1, enough power, timer elapsed, load point disabled", 3, 3, 0, 1, true, func(lp *Loadpoint) {
+			lp.phaseTimer = elapsed
+			lp.enabled = false
+		}},
 		{"3/3->1, kickoff", 3, 3, 0.1, 3, false, func(lp *Loadpoint) {
 			lp.phaseTimer = time.Time{}
 		}},
@@ -322,7 +330,7 @@ func TestPvScalePhasesTimer(t *testing.T) {
 			lp.phaseTimer = lp.clock.Now()
 		}},
 		{"3/3->1, timer elapsed", 3, 3, 0.1, 1, true, func(lp *Loadpoint) {
-			lp.phaseTimer = lp.clock.Now().Add(-dt)
+			lp.phaseTimer = elapsed
 		}},
 
 		// switch down from 3p/0p while not yet charging
@@ -343,7 +351,7 @@ func TestPvScalePhasesTimer(t *testing.T) {
 			lp.phaseTimer = lp.clock.Now()
 		}},
 		{"1/3->1, switch not executed", 1, 3, 0.1, 1, false, func(lp *Loadpoint) {
-			lp.phaseTimer = lp.clock.Now().Add(-dt)
+			lp.phaseTimer = elapsed
 		}},
 	}
 
