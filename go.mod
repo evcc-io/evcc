@@ -43,6 +43,7 @@ require (
 	github.com/gorilla/handlers v1.5.1
 	github.com/gorilla/mux v1.8.0
 	github.com/gregdel/pushover v1.3.0
+	github.com/gregjones/httpcache v0.0.0-20190611155906-901d90724c79
 	github.com/grid-x/modbus v0.0.0-20230713135356-d9fefd3ae5a5
 	github.com/hashicorp/go-version v1.6.0
 	github.com/hasura/go-graphql-client v0.10.0
