@@ -330,21 +330,19 @@ func TestPvScalePhasesTimer(t *testing.T) {
 			lp.status = api.StatusB
 		}},
 		// switch up from 1p/0p while not yet charging
-		{"1/0->3, enough power, not charging", 1, 0, 3 * Voltage * minA, 3, true, func(lp *Loadpoint) {
+		{"1/0->3, enough power, not charging", 1, 0, -3 * Voltage * minA, 3, true, func(lp *Loadpoint) {
 			lp.status = api.StatusB
 		}},
 
 		// error states from 1p/3p misconfiguration - no correction for time being (stay at 1p)
-//		{"1/3->1, enough power", 1, 3, -1 * Voltage * maxA, 1, false, nil},
-//		{"1/3->1, kickoff, correct phase setting", 1, 3, -1 * Voltage * maxA, 1, false, func(lp *Loadpoint) {
-		{"1/3->1, enough power", 1, 3, 1 * Voltage * maxA, 1, false, nil},
-		{"1/3->1, kickoff, correct phase setting", 1, 3, 1 * Voltage * maxA, 1, false, func(lp *Loadpoint) {
+		{"1/3->1, enough power", 1, 3, -1 * Voltage * maxA, 1, false, nil},
+		{"1/3->1, kickoff, correct phase setting", 1, 3, 0.1, 1, false, func(lp *Loadpoint) {
 			lp.phaseTimer = time.Time{}
 		}},
-		{"1/3->1, timer running, correct phase setting", 1, 3, -1 * Voltage * maxA, 1, false, func(lp *Loadpoint) {
+		{"1/3->1, timer running, correct phase setting", 1, 3, 0.1, 1, false, func(lp *Loadpoint) {
 			lp.phaseTimer = lp.clock.Now()
 		}},
-		{"1/3->1, switch not executed", 1, 3, -1 * Voltage * maxA, 1, false, func(lp *Loadpoint) {
+		{"1/3->1, switch not executed", 1, 3, 0.1, 1, false, func(lp *Loadpoint) {
 			lp.phaseTimer = lp.clock.Now().Add(-dt)
 		}},
 	}
