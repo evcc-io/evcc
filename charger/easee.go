@@ -734,6 +734,10 @@ var _ api.Meter = (*Easee)(nil)
 
 // CurrentPower implements the api.Meter interface
 func (c *Easee) CurrentPower() (float64, error) {
+	if status, err := c.Status(); err != nil || status == api.StatusA {
+		return 0, err
+	}
+
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
