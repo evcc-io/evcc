@@ -1,6 +1,7 @@
 package meter
 
 import (
+	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -18,6 +19,8 @@ type Tasmota struct {
 func init() {
 	registry.Add("tasmota", NewTasmotaFromConfig)
 }
+
+//go:generate go run ../cmd/tools/decorate.go -f decorateTasmota -b *Tasmota -r api.Meter -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)"
 
 // NewTasmotaFromConfig creates a Tasmota meter from generic config
 func NewTasmotaFromConfig(other map[string]interface{}) (api.Meter, error) {
@@ -37,11 +40,11 @@ func NewTasmotaFromConfig(other map[string]interface{}) (api.Meter, error) {
 		return nil, err
 	}
 
-	return NewTasmota(cc.URI, cc.User, cc.Password, cc.Usage, cc.Channels, cc.Cache)
+	return NewTasmota(cc.URI, cc.User, cc.Password, strings.ToLower(cc.Usage), cc.Channels, cc.Cache)
 }
 
 // NewTasmota creates Tasmota meter
-func NewTasmota(uri, user, password, usage string, channels []int, cache time.Duration) (*Tasmota, error) {
+func NewTasmota(uri, user, password, usage string, channels []int, cache time.Duration) (api.Meter, error) {
 	conn, err := tasmota.NewConnection(uri, user, password, channels, cache)
 	if err != nil {
 		return nil, err
@@ -52,7 +55,13 @@ func NewTasmota(uri, user, password, usage string, channels []int, cache time.Du
 		usage: usage,
 	}
 
-	return c, nil
+	var currents, voltages func() (float64, float64, float64, error)
+	if usage != "grid" {
+		currents = c.currents
+		voltages = c.voltages
+	}
+
+	return decorateTasmota(c, currents, voltages), nil
 }
 
 var _ api.Meter = (*Tasmota)(nil)
@@ -75,22 +84,12 @@ func (c *Tasmota) TotalEnergy() (float64, error) {
 	return c.conn.TotalEnergy()
 }
 
-var _ api.PhaseCurrents = (*Tasmota)(nil)
-
-// Currents implements the api.PhaseCurrents interface
-func (c *Tasmota) Currents() (float64, float64, float64, error) {
-	if c.usage == "grid" {
-		return 0, 0, 0, nil
-	}
+// currents implements the api.PhaseCurrents interface
+func (c *Tasmota) currents() (float64, float64, float64, error) {
 	return c.conn.Currents()
 }
 
-var _ api.PhaseVoltages = (*Tasmota)(nil)
-
-// Voltages implements the api.PhaseVoltages interface
-func (c *Tasmota) Voltages() (float64, float64, float64, error) {
-	if c.usage == "grid" {
-		return 0, 0, 0, nil
-	}
+// voltages implements the api.PhaseVoltages interface
+func (c *Tasmota) voltages() (float64, float64, float64, error) {
 	return c.conn.Voltages()
 }

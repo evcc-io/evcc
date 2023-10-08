@@ -228,7 +228,7 @@ func (c *Connection) CurrentPower() (float64, error) {
 	if err != nil {
 		return 0, err
 	}
-	var power float64 = 0
+	var power float64
 	for _, channel := range c.channels {
 		channelpower, err := res.StatusSNS.Energy.Power.Channel(channel)
 		if err != nil {
@@ -252,7 +252,7 @@ func (c *Connection) Currents() (float64, float64, float64, error) {
 		return 0, 0, 0, err
 	}
 
-	var current = [3]float64{0, 0, 0}
+	current := [3]float64{0, 0, 0}
 	for i := 0; i < len(c.channels) && i < 3; i++ {
 		current[i], err = res.StatusSNS.Energy.Current.Channel(c.channels[i])
 		if err != nil {
@@ -270,7 +270,7 @@ func (c *Connection) Voltages() (float64, float64, float64, error) {
 		return 0, 0, 0, err
 	}
 
-	var voltage = [3]float64{0, 0, 0}
+	voltage := [3]float64{0, 0, 0}
 	for i := 0; i < len(c.channels) && i < 3; i++ {
 		voltage[i], err = res.StatusSNS.Energy.Voltage.Channel(c.channels[i])
 		if err != nil {
