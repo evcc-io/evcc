@@ -515,7 +515,7 @@ func (site *Site) updateMeters() error {
 			}
 		}
 
-		site.publish("batteryCapacity", math.Round(totalCapacity))
+		site.publish("batteryCapacity", totalCapacity)
 
 		// convert weighed socs to total soc
 		if totalCapacity == 0 {
@@ -524,7 +524,7 @@ func (site *Site) updateMeters() error {
 		site.batterySoc /= totalCapacity
 
 		site.log.DEBUG.Printf("battery soc: %.0f%%", math.Round(site.batterySoc))
-		site.publish("batterySoc", math.Round(site.batterySoc))
+		site.publish("batterySoc", site.batterySoc)
 
 		site.log.DEBUG.Printf("battery power: %.0fW", site.batteryPower)
 		site.publish("batteryPower", site.batteryPower)
