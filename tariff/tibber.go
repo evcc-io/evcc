@@ -36,7 +36,6 @@ func NewTibberFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		embed  `mapstructure:",squash"`
 		Token  string
 		HomeID string
-		Unit   string
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {

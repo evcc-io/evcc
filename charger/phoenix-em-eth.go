@@ -37,14 +37,15 @@ func init() {
 // NewPhoenixEMEthFromConfig creates a Phoenix charger from generic config
 func NewPhoenixEMEthFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
-		URI   string
-		ID    uint8
-		Meter struct {
+		modbus.TcpSettings `mapstructure:",squash"`
+		Meter              struct {
 			Power, Energy, Currents bool
 		}
 	}{
-		URI: "192.168.0.8:502", // default
-		ID:  180,               // default
+		TcpSettings: modbus.TcpSettings{
+			URI: "192.168.0.8:502", // default
+			ID:  180,               // default
+		},
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {

@@ -14,7 +14,7 @@ params:
 render: |
   type: custom
   power:
-  - source: calc
+    source: calc
     add:
     - source: http
       uri: http://{{ .host }}/sensor/power_delivered

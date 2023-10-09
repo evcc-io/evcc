@@ -650,7 +650,7 @@ func configureSite(conf map[string]interface{}, loadpoints []*core.Loadpoint, ve
 	for k, _ := range circuits {
 		circuitList = append(circuitList, circuits[k])
 	}
-	site, err := core.NewSiteFromConfig(log, conf, loadpoints, vehicles, tariffs, circuitList)
+	site, err := core.NewSiteFromConfig(log, conf, loadpoints, tariffs, circuitList)
 	if err != nil {
 		return nil, fmt.Errorf("failed configuring site: %w", err)
 	}
