@@ -1,5 +1,5 @@
 <template>
-	<div class="d-block evcc-gray">{{ message }}&nbsp;</div>
+	<div class="d-block evcc-gray" data-testid="vehicle-status">{{ message }}&nbsp;</div>
 </template>
 
 <script>
@@ -89,7 +89,7 @@ export default {
 
 			if (this.pvTimerActive && !this.enabled && this.pvAction === "enable") {
 				return t("pvEnable", {
-					remaining: this.fmtShortDuration(this.pvRemainingInterpolated, true),
+					remaining: this.fmtDuration(this.pvRemainingInterpolated),
 				});
 			}
 
@@ -106,19 +106,19 @@ export default {
 
 			if (this.pvTimerActive && this.charging && this.pvAction === "disable") {
 				return t("pvDisable", {
-					remaining: this.fmtShortDuration(this.pvRemainingInterpolated, true),
+					remaining: this.fmtDuration(this.pvRemainingInterpolated),
 				});
 			}
 
 			if (this.phaseTimerActive) {
 				return t(this.phaseAction, {
-					remaining: this.fmtShortDuration(this.phaseRemainingInterpolated, true),
+					remaining: this.fmtDuration(this.phaseRemainingInterpolated),
 				});
 			}
 
 			if (this.guardTimerActive) {
 				return t("guard", {
-					remaining: this.fmtShortDuration(this.guardRemainingInterpolated, true),
+					remaining: this.fmtDuration(this.guardRemainingInterpolated),
 				});
 			}
 

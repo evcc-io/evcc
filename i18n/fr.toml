@@ -174,7 +174,7 @@ label = "Courant de charge max."
 label = "Courant de charge min."
 
 [main.loadpointSettings.minSoc]
-description = "Pour les urgences. Le véhicule est chargé en mode „Rapide” à {0} %, puis avec le surplus solaire."
+description = "Le véhicule est chargé en mode „Rapide” à {0}% en mode solaire, puis avec le surplus solaire. Utile pour s'assurer d'un minimum d'autonomie, même pour les jours plus sombres."
 label = "Recharge min. %"
 
 [main.loadpointSettings.phasesConfigured]
@@ -204,6 +204,7 @@ descriptionEnergy = "Jusqu'à quand le véhicule doit-il être chargé à {targe
 descriptionSoc = "Quand le véhicule doit-il être chargé à {targetSoc}%?"
 inactiveLabel = "Temps visé"
 modalTitle = "Définir l'heure cible"
+onlyInPvMode = "La planification de charge ne fonctionne qu'en mode solaire."
 planDuration = "Durée de charge"
 planPeriodLabel = "Période"
 planPeriodValue = "{start} à {end}"
@@ -211,6 +212,7 @@ planUnknown = "encore inconnu"
 priceLimit = "limite de prix : {price}"
 remove = "Ôter"
 setTargetTime = "aucun"
+targetEnergyRequired = "Vous devez aussi régler une limite d'énergie."
 targetIsInThePast = "Choisis une période dans le futur, Marty."
 targetIsTooFarInTheFuture = "Nous ajusterons le plan dès qu'on en saura plus sur le futur."
 title = "Temps visé"
@@ -290,6 +292,7 @@ started = "Début"
 title = "Session de charge"
 
 [sessions]
+avgPower = "Puissance ⌀"
 avgPrice = "Prix ⌀"
 co2 = "CO₂ ⌀"
 csvMonth = "Télécharger CSV {month}"
@@ -303,6 +306,7 @@ price = "Σ Prix"
 reallyDelete = "Voulez-vous vraiment supprimer cette session?"
 solar = "Solaire"
 title = "Sessions de charge"
+total = "Total"
 vehicle = "Véhicule"
 
 [sessions.csv]
@@ -319,7 +323,7 @@ vehicle = "Véhicule"
 [sessions.filter]
 allLoadpoints = "tous les points de chargement"
 allVehicles = "tous les véhicules"
-filter = "filtrer"
+filter = "Filtrer"
 
 [settings]
 title = "Réglages"

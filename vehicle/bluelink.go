@@ -30,8 +30,9 @@ func NewHyundaiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		CCSPServiceID:     "6d477c38-3ca4-4cf3-9557-2a1929a94654",
 		CCSPApplicationID: bluelink.HyundaiAppID,
 		AuthClientID:      "64621b96-0f0d-11ec-82a8-0242ac130003",
-		BrandAuthUrl:      "https://eu-account.hyundai.com/auth/realms/euhyundaiidm/protocol/openid-connect/auth?client_id=%s&scope=openid%%20profile%%20email%%20phone&response_type=code&hkid_session_reset=true&redirect_uri=%s/api/v1/user/integration/redirect/login&ui_locales=%s&state=%s:%s",
+		BrandAuthUrl:      "https://eu-account.hyundai.com/auth/realms/euhyundaiidm/protocol/openid-connect/auth?client_id=%s&scope=openid+profile+email+phone&response_type=code&hkid_session_reset=true&redirect_uri=%s/api/v1/user/integration/redirect/login&ui_locales=%s&state=%s:%s",
 		PushType:          "GCM",
+		Cfb:               "RFtoRq/vDXJmRndoZaZQyfOot7OrIqGVFj96iY2WL3yyH5Z/pUvlUhqmCxD2t+D65SQ=",
 	}
 
 	return newBluelinkFromConfig("hyundai", other, settings)
@@ -45,8 +46,9 @@ func NewKiaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		CCSPServiceID:     "fdc85c00-0a2f-4c64-bcb4-2cfb1500730a",
 		CCSPApplicationID: bluelink.KiaAppID,
 		AuthClientID:      "572e0304-5f8d-4b4c-9dd5-41aa84eed160",
-		BrandAuthUrl:      "https://eu-account.kia.com/auth/realms/eukiaidm/protocol/openid-connect/auth?client_id=%s&scope=openid%%20profile%%20email%%20phone&response_type=code&hkid_session_reset=true&redirect_uri=%s/api/v1/user/integration/redirect/login&ui_locales=%s&state=%s:%s",
+		BrandAuthUrl:      "https://eu-account.kia.com/auth/realms/eukiaidm/protocol/openid-connect/auth?client_id=%s&scope=openid+profile+email+phone&response_type=code&hkid_session_reset=true&redirect_uri=%s/api/v1/user/integration/redirect/login&ui_locales=%s&state=%s:%s",
 		PushType:          "APNS",
+		Cfb:               "wLTVxwidmH8CfJYBWSnHD6E0huk0ozdiuygB4hLkM5XCgzAL1Dk5sE36d/bx5PFMbZs=",
 	}
 
 	return newBluelinkFromConfig("kia", other, settings)
@@ -78,7 +80,7 @@ func newBluelinkFromConfig(brand string, other map[string]interface{}, settings 
 		return nil, err
 	}
 
-	api := bluelink.NewAPI(log, settings.URI, identity)
+	api := bluelink.NewAPI(log, settings.URI, identity.Request)
 
 	vehicle, err := ensureVehicleEx(
 		cc.VIN, api.Vehicles,

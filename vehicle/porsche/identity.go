@@ -12,6 +12,7 @@ import (
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
 	cv "github.com/nirasan/go-oauth-pkce-code-verifier"
 	"github.com/samber/lo"
@@ -20,28 +21,22 @@ import (
 
 const (
 	OAuthURI = "https://identity.porsche.com"
+	ClientID = "UYsK00My6bCqJdbQhTQ0PbWmcSdIAMig"
+
+	maxTokenLifetime = time.Hour
 )
 
 // https://identity.porsche.com/.well-known/openid-configuration
 var (
-	endpoint = oauth2.Endpoint{
-		AuthURL:   OAuthURI + "/authorize",
-		TokenURL:  OAuthURI + "/oauth/token",
-		AuthStyle: oauth2.AuthStyleInParams,
-	}
-
 	OAuth2Config = &oauth2.Config{
-		ClientID:    "UYsK00My6bCqJdbQhTQ0PbWmcSdIAMig",
+		ClientID:    ClientID,
 		RedirectURL: "https://my.porsche.com/",
-		Endpoint:    endpoint,
-		Scopes:      []string{"openid", "offline_access"},
-	}
-
-	EmobilityOAuth2Config = &oauth2.Config{
-		ClientID:    OAuth2Config.ClientID,
-		RedirectURL: "https://my.porsche.com/myservices/auth/auth.html",
-		Endpoint:    endpoint,
-		Scopes:      []string{"openid", "offline_access"},
+		Endpoint: oauth2.Endpoint{
+			AuthURL:   OAuthURI + "/authorize",
+			TokenURL:  OAuthURI + "/oauth/token",
+			AuthStyle: oauth2.AuthStyleInParams,
+		},
+		Scopes: []string{"openid", "offline_access"},
 	}
 )
 
@@ -49,7 +44,6 @@ var (
 type Identity struct {
 	log *util.Logger
 	*request.Helper
-	oauth2.TokenSource
 }
 
 // NewIdentity creates Porsche identity
@@ -62,10 +56,10 @@ func NewIdentity(log *util.Logger) *Identity {
 	return v
 }
 
-func (v *Identity) Login(oc *oauth2.Config, user, password string) error {
+func (v *Identity) Login(oc *oauth2.Config, user, password string) (oauth2.TokenSource, error) {
 	cv, err := cv.CreateCodeVerifier()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	state := lo.RandomString(16, lo.AlphanumericCharset)
@@ -85,13 +79,13 @@ func (v *Identity) Login(oc *oauth2.Config, user, password string) error {
 
 	resp, err := v.Client.Get(uri)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer resp.Body.Close()
 
 	u, err := url.Parse(resp.Header.Get("Location"))
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	query := u.Query()
@@ -112,7 +106,7 @@ func (v *Identity) Login(oc *oauth2.Config, user, password string) error {
 	uri = fmt.Sprintf("%s/usernamepassword/login", OAuthURI)
 	resp, err = v.PostForm(uri, query)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer resp.Body.Close()
 
@@ -121,14 +115,14 @@ func (v *Identity) Login(oc *oauth2.Config, user, password string) error {
 			Description string `json:"description"`
 		}
 		if err := json.NewDecoder(resp.Body).Decode(&res); err == nil && res.Description != "" {
-			return errors.New(res.Description)
+			return nil, errors.New(res.Description)
 		}
-		return fmt.Errorf("unexpected status %d", resp.StatusCode)
+		return nil, fmt.Errorf("unexpected status %d", resp.StatusCode)
 	}
 
 	doc, err := goquery.NewDocumentFromReader(resp.Body)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	query = make(url.Values)
@@ -145,13 +139,13 @@ func (v *Identity) Login(oc *oauth2.Config, user, password string) error {
 	uri = fmt.Sprintf("%s/login/callback", OAuthURI)
 	resp, err = v.PostForm(uri, query)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	resp.Body.Close()
 
 	code, err := param()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	cctx := context.WithValue(context.Background(), oauth2.HTTPClient, v.Client)
@@ -162,21 +156,11 @@ func (v *Identity) Login(oc *oauth2.Config, user, password string) error {
 		oauth2.SetAuthURLParam("code_verifier", cv.CodeChallengePlain()),
 	)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	ts := oc.TokenSource(cctx, token)
-	v.TokenSource = oauth2.ReuseTokenSourceWithExpiry(token, ts, 15*time.Minute)
+	ts := oauth2.ReuseTokenSourceWithExpiry(token, oc.TokenSource(cctx, token), 15*time.Minute)
+	go oauth.Refresh(v.log, token, ts, maxTokenLifetime)
 
-	go v.refresh()
-
-	return nil
-}
-
-func (v *Identity) refresh() {
-	for range time.Tick(5 * time.Minute) {
-		if _, err := v.Token(); err != nil {
-			v.log.ERROR.Printf("token refresh: %v", err)
-		}
-	}
+	return ts, err
 }

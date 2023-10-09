@@ -408,6 +408,19 @@ input::-webkit-datetime-edit {
 	--bs-tooltip-color: var(--bs-gray-deep);
 }
 
+.card {
+	--bs-card-bg: var(--evcc-background);
+}
+
+.form-control {
+	background-color: var(--evcc-box);
+	color: var(--evcc-default-text);
+}
+
+input[type="time"]::-webkit-calendar-picker-indicator {
+	display: none;
+}
+
 .table {
 	--bs-table-bg: transparent;
 }

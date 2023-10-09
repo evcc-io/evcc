@@ -1,12 +1,15 @@
 package bluelink
 
 import (
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/evcc-io/evcc/api"
@@ -37,6 +40,7 @@ type Config struct {
 	CCSPServiceID     string
 	CCSPApplicationID string
 	PushType          string
+	Cfb               string
 }
 
 // Identity implements the Kia/Hyundai bluelink identity.
@@ -61,7 +65,8 @@ func NewIdentity(log *util.Logger, config Config) *Identity {
 }
 
 func (v *Identity) getDeviceID() (string, error) {
-	stamp, err := Stamps[v.config.CCSPApplicationID].Get()
+	// stamp, err := Stamps[v.config.CCSPApplicationID].Get()
+	stamp, err := v.stamp()
 	if err != nil {
 		return "", err
 	}
@@ -359,7 +364,8 @@ func (v *Identity) Login(user, password, language string) (err error) {
 
 // Request decorates requests with authorization headers
 func (v *Identity) Request(req *http.Request) error {
-	stamp, err := Stamps[v.config.CCSPApplicationID].Get()
+	// stamp, err := Stamps[v.config.CCSPApplicationID].Get()
+	stamp, err := v.stamp()
 	if err != nil {
 		return err
 	}
@@ -381,4 +387,25 @@ func (v *Identity) Request(req *http.Request) error {
 	}
 
 	return nil
+}
+
+// stamp creates a stamp locally according to https://github.com/Hyundai-Kia-Connect/hyundai_kia_connect_api/pull/371
+func (v *Identity) stamp() (string, error) {
+	cfb, err := base64.StdEncoding.DecodeString(v.config.Cfb)
+	if err != nil {
+		return "", err
+	}
+
+	raw := v.config.CCSPApplicationID + ":" + strconv.FormatInt(time.Now().UnixMilli(), 10)
+
+	if len(cfb) != len(raw) {
+		return "", fmt.Errorf("cfb and raw length not equal")
+	}
+
+	enc := make([]byte, 0, 50)
+	for i := 0; i < len(cfb); i++ {
+		enc = append(enc, cfb[i]^raw[i])
+	}
+
+	return base64.StdEncoding.EncodeToString(enc), nil
 }

@@ -17,7 +17,7 @@ requirements:
 
       Voraussetzungen:
       * Ggf. zuvor konfigurierte OCPP-Profile (z.B. durch eine andere Backend-Anbindung) in der Wallboxkonfiguration entfernen
-      * Backend-URL (Central System) in der Wallboxkonfiguration: `ws://<evcc-IP-Adresse>:8887/` (evtl noch um `stationid` erweitern)
+      * Backend-URL (Central System) in der Wallboxkonfiguration: `ws://[evcc-adresse]:8887/` (evtl noch um `stationid` erweitern)
       * Protokoll: OCPP-J v1.6, ocpp16j, JSON, Websocket, ws:// o.ä.
       * Keine Verschlüsselung, keine Authentifizierung, kein Passwort
       * Verbindung über das lokale Netzwerk
@@ -32,7 +32,7 @@ requirements:
 
       Requirements:
       * If necessary, remove previously configured OCPP profiles (e.g. used for a different backend connection) in the charger configuration
-      * Backend URL (Central System) in the charger configuration: `ws://<evcc-IP-address>:8887/` (possibly add `stationid`)
+      * Backend URL (Central System) in the charger configuration: `ws://[evcc-adresse]:8887/` (possibly add `stationid`)
       * Protocol: OCPP-J v1.6, ocpp16j, JSON, Websocket, ws:// or similar
       * No encryption, no authentication, no password
       * Local network connection

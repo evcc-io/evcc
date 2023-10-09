@@ -3,18 +3,20 @@ package tariff
 import (
 	"context"
 	"errors"
+	"slices"
 	"sync"
 	"time"
 
+	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/meter/tibber"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/shurcooL/graphql"
-	"golang.org/x/exp/slices"
 )
 
 type Tibber struct {
+	*embed
 	mux     sync.Mutex
 	log     *util.Logger
 	homeID  string
@@ -31,6 +33,7 @@ func init() {
 
 func NewTibberFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	var cc struct {
+		embed  `mapstructure:",squash"`
 		Token  string
 		HomeID string
 		Unit   string
@@ -47,6 +50,7 @@ func NewTibberFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	log := util.NewLogger("tibber").Redact(cc.Token, cc.HomeID)
 
 	t := &Tibber{
+		embed:  &cc.embed,
 		log:    log,
 		homeID: cc.HomeID,
 		client: tibber.NewClient(log, cc.Token),
@@ -70,27 +74,28 @@ func NewTibberFromConfig(other map[string]interface{}) (api.Tariff, error) {
 
 func (t *Tibber) run(done chan error) {
 	var once sync.Once
-
-	var res struct {
-		Viewer struct {
-			Home struct {
-				ID                  string
-				TimeZone            string
-				CurrentSubscription tibber.Subscription
-			} `graphql:"home(id: $id)"`
-		}
-	}
+	bo := newBackoff()
 
 	v := map[string]interface{}{
 		"id": graphql.ID(t.homeID),
 	}
 
 	for ; true; <-time.Tick(time.Hour) {
-		ctx, cancel := context.WithTimeout(context.Background(), request.Timeout)
-		err := t.client.Query(ctx, &res, v)
-		cancel()
+		var res struct {
+			Viewer struct {
+				Home struct {
+					ID                  string
+					TimeZone            string
+					CurrentSubscription tibber.Subscription
+				} `graphql:"home(id: $id)"`
+			}
+		}
 
-		if err != nil {
+		if err := backoff.Retry(func() error {
+			ctx, cancel := context.WithTimeout(context.Background(), request.Timeout)
+			defer cancel()
+			return t.client.Query(ctx, &res, v)
+		}, bo); err != nil {
 			once.Do(func() { done <- err })
 
 			t.log.ERROR.Println(err)
@@ -113,10 +118,14 @@ func (t *Tibber) run(done chan error) {
 func (t *Tibber) rates(pi []tibber.Price) api.Rates {
 	data := make(api.Rates, 0, len(pi))
 	for _, r := range pi {
+		price := r.Total
+		if t.Charges != 0 || t.Tax != 0 {
+			price = t.totalPrice(r.Energy)
+		}
 		ar := api.Rate{
 			Start: r.StartsAt.Local(),
 			End:   r.StartsAt.Add(time.Hour).Local(),
-			Price: r.Total,
+			Price: price,
 		}
 		data = append(data, ar)
 	}
@@ -130,7 +139,7 @@ func (t *Tibber) Rates() (api.Rates, error) {
 	return slices.Clone(t.data), outdatedError(t.updated, time.Hour)
 }
 
-// Type returns the tariff type
+// Type implements the api.Tariff interface
 func (t *Tibber) Type() api.TariffType {
 	return api.TariffTypePriceDynamic
 }

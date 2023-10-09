@@ -1,27 +1,34 @@
 <template>
-	<div class="root mt-4">
-		<div class="d-flex justify-content-between align-items-baseline mb-2">
-			<label :for="formId('minsoc')" class="pt-1">
-				{{ $t("main.loadpointSettings.minSoc.label") }}
-			</label>
-			<select
-				:id="formId('minsoc')"
-				v-model.number="selectedMinSoc"
-				class="minSocSelect form-select mb-2"
-				@change="changeMinSoc"
-			>
-				<option
-					v-for="soc in [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50]"
-					:key="soc"
-					:value="soc"
+	<div class="mt-4 container">
+		<div class="row">
+			<div class="col-12 col-md-6">
+				<div
+					class="minsoc d-flex justify-content-between align-items-baseline mb-2 me-sm-4"
 				>
-					{{ soc ? `${soc}%` : "--" }}
-				</option>
-			</select>
+					<label :for="formId('minsoc')" class="pt-1">
+						{{ $t("main.loadpointSettings.minSoc.label") }}
+					</label>
+					<select
+						:id="formId('minsoc')"
+						v-model.number="selectedMinSoc"
+						class="minSocSelect form-select mb-2"
+						:disabled="!socBasedCharging"
+						@change="changeMinSoc"
+					>
+						<option
+							v-for="soc in [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50]"
+							:key="soc"
+							:value="soc"
+						>
+							{{ soc ? `${soc}%` : "--" }}
+						</option>
+					</select>
+				</div>
+			</div>
+			<small class="col-12 col-md-6 ps-md-4">
+				{{ $t("main.loadpointSettings.minSoc.description", [selectedMinSoc || "x"]) }}
+			</small>
 		</div>
-		<small>
-			{{ $t("main.loadpointSettings.minSoc.description", [selectedMinSoc || "x"]) }}
-		</small>
 	</div>
 </template>
 
@@ -32,6 +39,7 @@ export default {
 		id: [String, Number],
 		minSoc: Number,
 		vehicleName: String,
+		socBasedCharging: Boolean,
 	},
 	emits: ["minsoc-updated"],
 	data: function () {
@@ -54,7 +62,7 @@ export default {
 </script>
 
 <style scoped>
-.root {
+.minsoc {
 	max-width: 300px;
 }
 .minSocSelect {

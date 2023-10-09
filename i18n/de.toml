@@ -18,6 +18,40 @@ low = "wenn etwas voll"
 medium = "wenn halbvoll"
 never = "nur mit genug PV-Überschuss"
 
+[config]
+
+[config.form]
+example = "Beispiel"
+optional = "optional"
+
+[config.main]
+addVehicle = "Fahrzeug hinzufügen"
+edit = "bearbeiten"
+title = "Konfiguration"
+vehicles = "Meine Fahrzeuge"
+
+[config.validation]
+failed = "fehlgeschlagen"
+label = "Status"
+running = "prüfe…"
+save = "Speichern"
+success = "erfolgreich"
+unknown = "unbekannt"
+validate = "prüfen"
+validateSave = "Prüfen & speichern"
+
+[config.vehicle]
+cancel = "Abbrechen"
+delete = "Fahrzeug löschen"
+generic = "Weitere Integrationen"
+offline = "Generisches Fahrzeug"
+online = "Fahrzeuge mit Schnittstelle"
+scooter = "Scooter"
+template = "Hersteller"
+titleAdd = "Fahrzeug hinzufügen"
+titleEdit = "Fahrzeug bearbeiten"
+update = "Prüfen & speichern"
+
 [footer]
 
 [footer.community]
@@ -65,7 +99,7 @@ optInMoreDetailsLink = "hier"
 optInSponsorship = "Sponsoring erforderlich."
 
 [footer.version]
-availableLong = "Neue Version verfügbar"
+availableLong = "neue Version verfügbar"
 modalCancel = "Abbrechen"
 modalDownload = "Download"
 modalInstalledVersion = "Installierte Version"
@@ -106,7 +140,7 @@ modalTitle = "Hilfe benötigt?"
 primaryActions = "Funktioniert etwas nicht so, wie es soll? Dies sind gute Anlaufstellen, um Hilfe zu erhalten."
 restartButton = "Neu starten"
 restartDescription = "Schon versucht, das Gerät aus- und wieder einzuschalten?"
-secondaryActions = "Noch keine Lösung gefunden? Hier noch ein paar weitere Möglichkeiten."
+secondaryActions = "Noch keine Lösung gefunden? Hier sind noch ein paar weitere Möglichkeiten."
 
 [help.restart]
 cancel = "Abbrechen"
@@ -145,7 +179,7 @@ selfConsumption = "Eigenverbrauch"
 avgPrice = "⌀ Preis"
 charged = "Geladen"
 co2 = "⌀ CO₂"
-duration = "Dauer"
+duration = "Ladedauer"
 fallbackName = "Ladepunkt"
 power = "Leistung"
 price = "Σ Preis"
@@ -169,7 +203,7 @@ label = "Max. Ladestrom"
 label = "Min. Ladestrom"
 
 [main.loadpointSettings.minSoc]
-description = "Reichweite für Notfälle. Fahrzeug wird im PV-Modus „schnell“ auf {0}% geladen. Danach weiter mit PV-Überschuss."
+description = "Fahrzeug wird im PV-Modus „schnell“ auf {0}% geladen. Danach weiter mit PV-Überschuss. Nützlich, um auch an dunklen Tagen eine Mindestreichweite zu gewährleisten."
 label = "Min. Ladung %"
 
 [main.loadpointSettings.phasesConfigured]
@@ -197,13 +231,15 @@ costLimitIgnore = "Die eingestellte {limit} wird in diesem Zeitraum ignoriert."
 descriptionEnergy = "Bis wann sollen {targetEnergy} ins Fahrzeug geladen sein?"
 descriptionSoc = "Wann soll das Fahrzeug auf {targetSoc}% geladen sein?"
 inactiveLabel = "Zielzeit"
-planDuration = "Ladezeit"
+onlyInPvMode = "Ladeplanung ist nur im PV-Modus aktiv."
+planDuration = "Ladedauer"
 planPeriodLabel = "Zeitraum"
 planPeriodValue = "{start} bis {end}"
 planUnknown = "noch unbekannt"
 priceLimit = "Preisgrenze von {price}"
 remove = "Entfernen"
 setTargetTime = "keine"
+targetEnergyRequired = "Damit die Ladeplanung funktioniert muss ein Ladeziel gesetzt sein."
 targetIsInThePast = "Wähle einen Zeitpunkt in der Zukunft, Marty."
 targetIsTooFarInTheFuture = "Wir passen den Plan an, sobald wir mehr über die Zukunft wissen."
 title = "Zielzeit"
@@ -212,7 +248,7 @@ tomorrow = "morgen"
 update = "Aktualisieren"
 
 [main.targetChargePlan]
-chargeDuration = "Ladezeit"
+chargeDuration = "Ladedauer"
 co2Label = "CO₂-Emission ⌀"
 priceLabel = "Energiepreis"
 timeRange = "{day} {range} Uhr"
@@ -230,6 +266,8 @@ fallbackName = "Fahrzeug"
 moreActions = "Weitere Aktionen"
 none = "Kein Fahrzeug"
 targetSoc = "Ladeziel"
+temp = "Temp."
+tempLimit = "Zieltemp."
 unknown = "Gastfahrzeug"
 vehicleSoc = "Ladestand"
 
@@ -283,7 +321,9 @@ started = "Startzeit"
 title = "Ladevorgang"
 
 [sessions]
+avgPower = "⌀ Leistung"
 avgPrice = "⌀ Preis"
+chargeDuration = "Ladedauer"
 co2 = "⌀ CO₂"
 csvMonth = "Download {month} CSV"
 csvTotal = "Gesamte CSV herunterladen"
@@ -296,6 +336,7 @@ price = "Σ Preis"
 reallyDelete = "Möchtest du diesen Ladevorgang wirklich löschen?"
 solar = "Sonne"
 title = "Ladevorgänge"
+total = "Insgesamt"
 vehicle = "Fahrzeug"
 
 [sessions.csv]
@@ -355,8 +396,3 @@ lineError = "In {0} wurde ein Fehler gefunden."
 lineErrorLink = "Zeile {0}"
 restartButton = "Neu starten"
 title = "Fehler beim Starten"
-
-[vehicleSettings]
-cancel = "Abbrechen"
-template = "Hersteller"
-test = "Test"

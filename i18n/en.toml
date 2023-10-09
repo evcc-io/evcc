@@ -18,6 +18,39 @@ low = "when somewhat full"
 medium = "when half full"
 never = "only with enough surplus"
 
+[config]
+
+[config.form]
+example = "Example"
+optional = "optional"
+
+[config.main]
+addVehicle = "Add vehicle"
+edit = "edit"
+title = "Configuration"
+vehicles = "My Vehicles"
+
+[config.validation]
+failed = "failed"
+label = "Status"
+running = "validating…"
+success = "successfull"
+unknown = "unknown"
+validate = "validate"
+
+[config.vehicle]
+cancel = "Cancel"
+delete = "Delete vehicle"
+generic = "Other integrations"
+offline = "Generic vehicle"
+online = "Vehicles with online API"
+save = "Save"
+scooter = "Scooter"
+template = "Manufacturer"
+titleAdd = "Add Vehicle"
+titleEdit = "Edit Vehicle"
+validateSave = "Validate & save"
+
 [footer]
 
 [footer.community]
@@ -169,7 +202,7 @@ label = "Max. Current"
 label = "Min. Current"
 
 [main.loadpointSettings.minSoc]
-description = "For emergencies. The vehicle gets „fast” charged to {0}% from all available solar, and then continues with only the solar surplus."
+description = "The vehicle gets „fast” charged to {0}% in solar mode. Then continues with solar surplus. Useful to ensure a minimum range even for darker days."
 label = "Min. charge %"
 
 [main.loadpointSettings.phasesConfigured]
@@ -197,6 +230,7 @@ costLimitIgnore = "The configured {limit} will be ignored during this period."
 descriptionEnergy = "Until when should {targetEnergy} be loaded into the vehicle?"
 descriptionSoc = "When should the vehicle be charged to {targetSoc}%?"
 inactiveLabel = "Target time"
+onlyInPvMode = "Charging plan only works in solar mode."
 planDuration = "Charging time"
 planPeriodLabel = "Period"
 planPeriodValue = "{start} to {end}"
@@ -204,6 +238,7 @@ planUnknown = "not known yet"
 priceLimit = "price limit of {price}"
 remove = "Remove"
 setTargetTime = "none"
+targetEnergyRequired = "You also need to set an energy limit."
 targetIsInThePast = "Pick a time in the future, Marty."
 targetIsTooFarInTheFuture = "We will adjust the plan as soon as we know more about the future."
 title = "Target Time"
@@ -230,6 +265,8 @@ fallbackName = "Vehicle"
 moreActions = "More actions"
 none = "No vehicle"
 targetSoc = "Limit"
+temp = "Temp."
+tempLimit = "Temp. limit"
 unknown = "Guest vehicle"
 vehicleSoc = "Charge"
 
@@ -283,7 +320,9 @@ started = "Started"
 title = "Charging Session"
 
 [sessions]
+avgPower = "⌀ Power"
 avgPrice = "⌀ Price"
+chargeDuration = "Duration"
 co2 = "⌀ CO₂"
 csvMonth = "Download {month} CSV"
 csvTotal = "Download total CSV"
@@ -356,8 +395,3 @@ lineError = "Error in {0}."
 lineErrorLink = "line {0}"
 restartButton = "Restart"
 title = "Startup Error"
-
-[vehicleSettings]
-cancel = "Cancel"
-template = "Manufacturer"
-test = "Test"

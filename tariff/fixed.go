@@ -25,9 +25,8 @@ func init() {
 
 func NewFixedFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	var cc struct {
-		Currency string // TODO deprecated
-		Price    float64
-		Zones    []struct {
+		Price float64
+		Zones []struct {
 			Price       float64
 			Days, Hours string
 		}
@@ -130,7 +129,7 @@ func (t *Fixed) Rates() (api.Rates, error) {
 	return res, nil
 }
 
-// Type returns the tariff type
+// Type implements the api.Tariff interface
 func (t *Fixed) Type() api.TariffType {
 	if t.dynamic {
 		return api.TariffTypePriceDynamic

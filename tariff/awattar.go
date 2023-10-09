@@ -2,15 +2,16 @@ package tariff
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 	"sync"
 	"time"
 
+	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/tariff/awattar"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
-	"golang.org/x/exp/slices"
 )
 
 type Awattar struct {
@@ -30,19 +31,14 @@ func init() {
 
 func NewAwattarFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	cc := struct {
-		embed    `mapstructure:",squash"`
-		Currency string // TODO deprecated
-		Region   string
+		embed  `mapstructure:",squash"`
+		Region string
 	}{
 		Region: "DE",
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
-	}
-
-	if cc.Currency == "" {
-		cc.Currency = "EUR"
 	}
 
 	t := &Awattar{
@@ -60,11 +56,15 @@ func NewAwattarFromConfig(other map[string]interface{}) (api.Tariff, error) {
 
 func (t *Awattar) run(done chan error) {
 	var once sync.Once
+	bo := newBackoff()
 	client := request.NewHelper(t.log)
 
 	for ; true; <-time.Tick(time.Hour) {
 		var res awattar.Prices
-		if err := client.GetJSON(t.uri, &res); err != nil {
+
+		if err := backoff.Retry(func() error {
+			return client.GetJSON(t.uri, &res)
+		}, bo); err != nil {
 			once.Do(func() { done <- err })
 
 			t.log.ERROR.Println(err)
@@ -97,7 +97,7 @@ func (t *Awattar) Rates() (api.Rates, error) {
 	return slices.Clone(t.data), outdatedError(t.updated, time.Hour)
 }
 
-// Type returns the tariff type
+// Type implements the api.Tariff interface
 func (t *Awattar) Type() api.TariffType {
 	return api.TariffTypePriceDynamic
 }

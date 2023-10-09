@@ -11,8 +11,8 @@ RUN npm ci
 
 # build ui
 COPY Makefile .
-COPY .*.js .
-COPY *.js .
+COPY .*.js ./
+COPY *.js ./
 COPY assets assets
 COPY i18n i18n
 
@@ -20,7 +20,7 @@ RUN make ui
 
 
 # STEP 2 build executable binary
-FROM --platform=$BUILDPLATFORM golang:1.20-alpine as builder
+FROM --platform=$BUILDPLATFORM golang:1.21-alpine as builder
 
 # Install git + SSL ca certificates.
 # Git is required for fetching the dependencies.

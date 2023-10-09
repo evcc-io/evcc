@@ -4,6 +4,7 @@
   "ABL",
   "Alfen",
   "Alphatec",
+  "Amperfied",
   "Audi",
   "Bender",
   "BMW",
@@ -44,6 +45,7 @@
   "Phoenix",
   "Porsche",
   "Pracht",
+  "Schneider",
   "Schrack",
   "SENEC",
   "Siemens",
@@ -67,6 +69,7 @@
  "SmartPlugs": [
   "AVM",
   "Homematic / Homematic IP",
+  "HomeWizard",
   "myStrom",
   "Shelly",
   "Tasmota",
@@ -74,6 +77,7 @@
  ],
  "Meters": [
   "ABB",
+  "Acrel",
   "Alpha ESS",
   "AVM",
   "Bernecker Engineering",
@@ -85,6 +89,7 @@
   "E3/DC",
   "Eastron",
   "Enphase",
+  "ESPHome",
   "FENECON",
   "FoxESS",
   "Fronius",
@@ -127,9 +132,12 @@
   "VARTA",
   "Victron",
   "Volkszähler",
-  "ZCS Azzurro"
+  "Youless",
+  "ZCS Azzurro",
+  "Zuidwijk"
  ],
  "PVBattery": [
+  "Acrel",
   "Alpha ESS",
   "AVM",
   "Bosswerk",
@@ -143,6 +151,7 @@
   "GoodWe",
   "Growatt",
   "Homematic IP",
+  "HomeWizard",
   "Hoymiles",
   "Huawei",
   "IGEN Tech",
@@ -173,6 +182,7 @@
   "TP-Link",
   "VARTA",
   "Victron",
+  "Youless",
   "ZCS Azzurro"
  ],
  "Vehicles": [
@@ -186,6 +196,7 @@
   "Ford",
   "Hyundai",
   "Jaguar",
+  "Jeep",
   "Kia",
   "Land Rover",
   "Mini",

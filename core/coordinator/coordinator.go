@@ -22,6 +22,7 @@ func New(log *util.Logger, vehicles []api.Vehicle) *Coordinator {
 	}
 }
 
+// GetVehicles returns the list of all vehicles
 func (c *Coordinator) GetVehicles() []api.Vehicle {
 	return c.vehicles
 }

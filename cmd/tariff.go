@@ -6,6 +6,7 @@ import (
 	"text/tabwriter"
 
 	"github.com/evcc-io/evcc/tariff"
+	"github.com/evcc-io/evcc/util/config"
 	"github.com/spf13/cobra"
 )
 
@@ -13,12 +14,12 @@ import (
 var tariffCmd = &cobra.Command{
 	Use:   "tariff [name]",
 	Short: "Query configured tariff",
+	Args:  cobra.MaximumNArgs(1),
 	Run:   runTariff,
 }
 
 func init() {
 	rootCmd.AddCommand(tariffCmd)
-	tariffCmd.PersistentFlags().StringP(flagName, "n", "", fmt.Sprintf(flagNameDescription, "vehicle"))
 }
 
 func runTariff(cmd *cobra.Command, args []string) {
@@ -32,12 +33,16 @@ func runTariff(cmd *cobra.Command, args []string) {
 		fatal(err)
 	}
 
-	name := cmd.Flags().Lookup(flagName).Value.String()
+	var name string
+	if len(args) == 1 {
+		name = args[0]
+	}
 
-	for key, cc := range map[string]typedConfig{
-		"grid":   conf.Tariffs.Grid,
-		"feedin": conf.Tariffs.FeedIn,
-		"co2":    conf.Tariffs.Co2,
+	for key, cc := range map[string]config.Typed{
+		"grid":    conf.Tariffs.Grid,
+		"feedin":  conf.Tariffs.FeedIn,
+		"co2":     conf.Tariffs.Co2,
+		"planner": conf.Tariffs.Planner,
 	} {
 		if cc.Type == "" || (name != "" && key != name) {
 			continue

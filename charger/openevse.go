@@ -29,7 +29,7 @@ func init() {
 
 // go:generate go run ../cmd/tools/decorate.go -f decorateOpenEVSE -b "*OpenEVSE" -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error"
 
-// NewOpenEVSEFromConfig creates a go-e charger from generic config
+// NewOpenEVSEFromConfig creates an OpenEVSE charger from generic config
 func NewOpenEVSEFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
 		URI      string
@@ -180,24 +180,27 @@ func (c *OpenEVSE) Status() (api.ChargeStatus, error) {
 func (c *OpenEVSE) Enabled() (bool, error) {
 	ctx, cancel := c.requestContextWithTimeout()
 	defer cancel()
-	overrideResp, err := c.api.GetManualOverrideWithResponse(ctx)
+	overrideResp, err := c.api.GetStatusWithResponse(ctx)
 
 	if err != nil {
 		return false, err
 	}
 
 	if overrideResp.JSON200 != nil && overrideResp.JSON200.State != nil {
-		switch state := *overrideResp.JSON200.State; state {
+		status := *overrideResp.JSON200.Status
+
+		switch status {
 		case "disabled":
 			return false, nil
 		case "enabled", "active":
 			return true, nil
 		default:
-			return false, fmt.Errorf("unknown EVSE state: %s", state)
+			return false, fmt.Errorf("unknown EVSE status: %s", status)
 		}
 	}
 
-	return false, errors.New("invalid EVSE state")
+	// no override:
+	return false, fmt.Errorf("invalid EVSE status")
 }
 
 // Enable implements the api.Charger interface

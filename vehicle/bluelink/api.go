@@ -31,12 +31,8 @@ type API struct {
 	baseURI string
 }
 
-type Requester interface {
-	Request(*http.Request) error
-}
-
 // New creates a new BlueLink API
-func NewAPI(log *util.Logger, baseURI string, identity Requester) *API {
+func NewAPI(log *util.Logger, baseURI string, decorator func(*http.Request) error) *API {
 	v := &API{
 		Helper:  request.NewHelper(log),
 		baseURI: strings.TrimSuffix(baseURI, "/api/v1/spa") + "/api/v1/spa",
@@ -46,7 +42,7 @@ func NewAPI(log *util.Logger, baseURI string, identity Requester) *API {
 	v.Client.Timeout = 120 * time.Second
 
 	v.Client.Transport = &transport.Decorator{
-		Decorator: identity.Request,
+		Decorator: decorator,
 		Base:      v.Client.Transport,
 	}
 

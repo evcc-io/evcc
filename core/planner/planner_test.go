@@ -1,6 +1,7 @@
 package planner
 
 import (
+	"slices"
 	"testing"
 	"time"
 
@@ -10,7 +11,6 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
-	"golang.org/x/exp/slices"
 )
 
 func rates(prices []float64, start time.Time, slotDuration time.Duration) api.Rates {

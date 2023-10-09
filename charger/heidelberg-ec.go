@@ -21,6 +21,7 @@ package charger
 import (
 	"encoding/binary"
 	"fmt"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -30,6 +31,7 @@ import (
 
 // HeidelbergEC charger implementation
 type HeidelbergEC struct {
+	log     *util.Logger
 	conn    *modbus.Connection
 	current uint16
 	wakeup  bool
@@ -86,14 +88,34 @@ func NewHeidelbergEC(uri, device, comset string, baudrate int, proto modbus.Prot
 	conn.Logger(log.TRACE)
 
 	wb := &HeidelbergEC{
+		log:     log,
 		conn:    conn,
 		current: 60, // assume min current
 	}
 
 	// disable standby to prevent comm loss
-	err = wb.set(hecRegStandbyConfig, hecStandbyDisabled)
+	if err := wb.set(hecRegStandbyConfig, hecStandbyDisabled); err != nil {
+		return nil, err
+	}
 
-	return wb, err
+	// get failsafe timeout from charger
+	b, err := wb.conn.ReadHoldingRegisters(hecRegTimeoutConfig, 1)
+	if err != nil {
+		return nil, fmt.Errorf("failsafe timeout: %w", err)
+	}
+	if u := binary.BigEndian.Uint16(b); u > 0 {
+		go wb.heartbeat(time.Duration(u) * time.Millisecond / 2)
+	}
+
+	return wb, nil
+}
+
+func (wb *HeidelbergEC) heartbeat(timeout time.Duration) {
+	for range time.Tick(timeout) {
+		if _, err := wb.Status(); err != nil {
+			wb.log.ERROR.Println("heartbeat:", err)
+		}
+	}
 }
 
 func (wb *HeidelbergEC) set(reg, val uint16) error {

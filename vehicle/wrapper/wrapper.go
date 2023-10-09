@@ -48,6 +48,11 @@ func New(name string, other map[string]interface{}, err error) api.Vehicle {
 	return v
 }
 
+// Error returns the initialization error
+func (v *Wrapper) Error() string {
+	return v.err.Error()
+}
+
 var _ api.Vehicle = (*Wrapper)(nil)
 
 // Title implements the api.Vehicle interface

@@ -1,3 +1,19 @@
+// list of currencies where energy price should be displayed in subunits (factor 100)
+const ENERGY_PRICE_IN_SUBUNIT = {
+  AUD: "c", // Australian cent
+  BGN: "st", // Bulgarian stotinka
+  BRL: "¢", // Brazilian centavo
+  CAD: "¢", // Canadian cent
+  CHF: "rp", // Swiss Rappen
+  CNY: "f", // Chinese fen
+  EUR: "ct", // Euro cent
+  GBP: "p", // GB pence
+  ILS: "ag", // Israeli agora
+  NZD: "c", // New Zealand cent
+  PLN: "gr", // Polish grosz
+  USD: "¢", // US cent
+};
+
 export default {
   data: function () {
     return {
@@ -35,9 +51,11 @@ export default {
     fmtKWh: function (watt, kw = true, withUnit = true, digits) {
       return this.fmtKw(watt, kw, withUnit, digits) + (withUnit ? "h" : "");
     },
-    fmtNumber: function (number, decimals) {
+    fmtNumber: function (number, decimals, unit) {
+      const style = unit ? "unit" : "decimal";
       return new Intl.NumberFormat(this.$i18n.locale, {
-        style: "decimal",
+        style,
+        unit,
         minimumFractionDigits: decimals,
         maximumFractionDigits: decimals,
       }).format(number);
@@ -54,19 +72,13 @@ export default {
     fmtUnit: function (val) {
       return Math.abs(val) >= this.fmtLimit ? "k" : "";
     },
-    fmtDuration: function (d) {
-      if (d <= 0 || d == null) {
-        return "—";
-      }
-      var seconds = "0" + (d % 60);
-      var minutes = "0" + (Math.floor(d / 60) % 60);
-      var hours = "" + Math.floor(d / 3600);
-      if (hours.length < 2) {
-        hours = "0" + hours;
-      }
-      return hours + ":" + minutes.substr(-2) + ":" + seconds.substr(-2);
+    fmtNumberToLocale(val, pad = 0) {
+      return val.toLocaleString(this.$i18n.locale).padStart(pad, "0");
     },
-    fmtShortDuration: function (duration = 0, withUnit = false) {
+    fmtDurationNs(duration = 0, withUnit = true, minUnit = "s") {
+      return this.fmtDuration(duration / 1e9, withUnit, minUnit);
+    },
+    fmtDuration: function (duration = 0, withUnit = true, minUnit = "s") {
       if (duration <= 0) {
         return "—";
       }
@@ -75,31 +87,21 @@ export default {
       var minutes = Math.floor(duration / 60) % 60;
       var hours = Math.floor(duration / 3600);
       var result = "";
-      if (hours >= 1) {
-        result = hours + ":" + `${minutes}`.padStart(2, "0");
-      } else if (minutes >= 1) {
-        result = minutes + ":" + `${seconds}`.padStart(2, "0");
+      let unit = "";
+      if (hours >= 1 || minUnit === "h") {
+        result = `${this.fmtNumberToLocale(hours)}:${this.fmtNumberToLocale(minutes, 2)}`;
+        unit = "h";
+      } else if (minutes >= 1 || minUnit === "m") {
+        result = `${this.fmtNumberToLocale(minutes)}:${this.fmtNumberToLocale(seconds, 2)}`;
+        unit = "m";
       } else {
-        result = `${seconds}`;
+        result = `${this.fmtNumberToLocale(seconds)}`;
+        unit = "s";
       }
       if (withUnit) {
-        result += this.fmtShortDurationUnit(duration);
+        result += `\u202F${unit}`;
       }
       return result;
-    },
-    fmtShortDurationUnit: function (duration = 0) {
-      if (duration <= 0) {
-        return "";
-      }
-      var minutes = Math.floor(duration / 60) % 60;
-      var hours = Math.floor(duration / 3600);
-      if (hours >= 1) {
-        return "h";
-      }
-      if (minutes >= 1) {
-        return "m";
-      }
-      return "s";
     },
     fmtDayString: function (date) {
       const YY = `${date.getFullYear()}`;
@@ -201,7 +203,7 @@ export default {
       let value = amout;
       let minimumFractionDigits = 1;
       let maximumFractionDigits = 3;
-      if (["EUR", "USD"].includes(currency)) {
+      if (ENERGY_PRICE_IN_SUBUNIT[currency]) {
         value *= 100;
         minimumFractionDigits = 1;
         maximumFractionDigits = 1;
@@ -217,10 +219,7 @@ export default {
       return price;
     },
     pricePerKWhUnit: function (currency = "EUR", short = false) {
-      let unit = currency;
-      if (["EUR", "USD"].includes(currency)) {
-        unit = "ct";
-      }
+      const unit = ENERGY_PRICE_IN_SUBUNIT[currency] || currency;
       return `${unit}${short ? "" : "/kWh"}`;
     },
     fmtTimeAgo: function (elapsed) {

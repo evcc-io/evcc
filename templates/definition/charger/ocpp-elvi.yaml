@@ -5,5 +5,25 @@ products:
       generic: Elvi
 params:
   - preset: ocpp
+  - name: meter
+    type: bool
+    default: true
+    description:
+      de: Hat die Wallbox einen integrierten Zähler verbaut?
+      en: The charger has an integrated metering device installed?
+    help:
+      de: Deaktiveren wenn die Wallbox keinen integrierten Zähler verbaut hat
+      en: Deactivate if the charger has no integrated metering device installed
+  - name: meterinterval
+    advanced: true
+    type: duration
+    description:
+      de: Zählerwerte im Intervall anfordern
+      en: Interval for requesting metering values
+    default: 4s
 render: |
   {{ include "ocpp" . }}
+  {{- if ne .meter "false" }}
+  metervalues: Current.Import.L1,Current.Import.L2,Current.Import.L3,Energy.Active.Import.Register,Power.Active.Import,Voltage.L1,Voltage.L2,Voltage.L3
+  meterinterval: {{ .meterinterval }}
+  {{- end }}

@@ -18,5 +18,7 @@ type Status struct {
 	OfferedCurrent float64 `json:"offered_current"`
 	EvseSignaling  string  `json:"evse_signaling"`
 	VehicleID      string  `json:"vehicle_id"`
+	Soc            int     `json:"soc_value"`
+	SocTimestamp   int64   `json:"soc_timestamp"`
 	Serial         string
 }

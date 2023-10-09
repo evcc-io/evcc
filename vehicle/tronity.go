@@ -21,6 +21,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"slices"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -30,7 +31,6 @@ import (
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/evcc-io/evcc/vehicle/tronity"
-	"golang.org/x/exp/slices"
 	"golang.org/x/oauth2"
 )
 
@@ -117,7 +117,6 @@ func NewTronityFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 			return v.VIN
 		},
 	)
-
 	if err != nil {
 		return nil, err
 	}

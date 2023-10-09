@@ -1,5 +1,10 @@
 <template>
-	<LabelAndValue class="flex-grow-1" :label="$t('main.targetEnergy.label')" align="end">
+	<LabelAndValue
+		class="flex-grow-1"
+		:label="$t('main.targetEnergy.label')"
+		align="end"
+		data-testid="target-energy"
+	>
 		<h3 class="value m-0 d-block d-sm-flex align-items-baseline justify-content-end">
 			<label class="position-relative">
 				<select :value="targetEnergy" class="custom-select" @change="change">
@@ -15,6 +20,7 @@
 				<span
 					class="text-decoration-underline"
 					:class="{ 'text-gray fw-normal': !targetEnergy }"
+					data-testid="target-energy-value"
 				>
 					<AnimatedNumber :to="targetEnergy" :format="fmtEnergy" />
 				</span>

@@ -128,19 +128,13 @@
 				<LabelAndValue
 					v-else-if="chargeRemainingDurationInterpolated"
 					:label="$t('main.loadpoint.remaining')"
-					:value="`
-						${fmtShortDuration(chargeRemainingDurationInterpolated)}
-						${fmtShortDurationUnit(chargeRemainingDurationInterpolated, true)}
-					`"
+					:value="fmtDuration(chargeRemainingDurationInterpolated)"
 					align="end"
 				/>
 				<LabelAndValue
 					v-else
 					:label="$t('main.loadpoint.duration')"
-					:value="`
-						${fmtShortDuration(chargeDurationInterpolated)}
-						${fmtShortDurationUnit(chargeDurationInterpolated)}
-					`"
+					:value="fmtDuration(chargeDurationInterpolated)"
 					align="end"
 				/>
 			</div>
@@ -210,6 +204,7 @@ export default {
 
 		// charger
 		chargerFeatureIntegratedDevice: Boolean,
+		chargerFeatureHeating: Boolean,
 		chargerIcon: String,
 
 		// vehicle
@@ -277,6 +272,9 @@ export default {
 	computed: {
 		integratedDevice: function () {
 			return this.chargerFeatureIntegratedDevice;
+		},
+		heating: function () {
+			return this.chargerFeatureHeating;
 		},
 		phasesProps: function () {
 			return this.collectProps(Phases);

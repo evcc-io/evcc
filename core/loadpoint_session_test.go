@@ -6,7 +6,7 @@ import (
 
 	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
-	coredb "github.com/evcc-io/evcc/core/db"
+	"github.com/evcc-io/evcc/core/session"
 	"github.com/evcc-io/evcc/mock"
 	serverdb "github.com/evcc-io/evcc/server/db"
 	"github.com/evcc-io/evcc/util"
@@ -19,7 +19,7 @@ func TestSession(t *testing.T) {
 	serverdb.Instance, err = serverdb.New("sqlite", ":memory:")
 	assert.NoError(t, err)
 
-	db, err := coredb.New("foo")
+	db, err := session.NewStore("foo", serverdb.Instance)
 	assert.NoError(t, err)
 
 	clock := clock.NewMock()
@@ -51,7 +51,7 @@ func TestSession(t *testing.T) {
 	assert.NotNil(t, lp.session)
 
 	// start charging
-	lp.updateSession(func(session *coredb.Session) {
+	lp.updateSession(func(session *session.Session) {
 		if session.Created.IsZero() {
 			session.Created = lp.clock.Now()
 		}

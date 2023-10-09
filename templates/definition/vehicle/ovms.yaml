@@ -9,6 +9,9 @@ requirements:
     en: Support for all vehicles via ODB2 adapter in the vehicle. More info at [Open Vehicle Monitoring System](http://api.openvehicles.com/).
 params:
   - name: title
+  - name: icon
+    default: car
+    advanced: true
   - name: user
     required: true
   - name: password
@@ -19,9 +22,6 @@ params:
   - name: capacity
     default: 12
   - name: phases
-    advanced: true
-  - name: icon
-    default: car
     advanced: true
   - preset: vehicle-identify
 render: |

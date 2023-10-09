@@ -7,20 +7,20 @@ render:
       type: template
       template: niu-e-scooter
       title: # Wird in der Benutzeroberfläche angezeigt (Optional)
+      icon: scooter # Icon in der Benutzeroberfläche (Optional)
       user: # Benutzerkonto (bspw. E-Mail Adresse, User Id, etc.)
       password: # Passwort des Benutzerkontos (bei führenden Nullen bitte in einfache Hochkommata setzen)
       serial:
       capacity: 4 # Akkukapazität in kWh (Optional)
-      icon: scooter # Icon in der Benutzeroberfläche (Optional)
     advanced: |
       type: template
       template: niu-e-scooter
       title: # Wird in der Benutzeroberfläche angezeigt (Optional)
+      icon: scooter # Icon in der Benutzeroberfläche (Optional)
       user: # Benutzerkonto (bspw. E-Mail Adresse, User Id, etc.)
       password: # Passwort des Benutzerkontos (bei führenden Nullen bitte in einfache Hochkommata setzen)
       serial:
       capacity: 4 # Akkukapazität in kWh (Optional)
-      icon: scooter # Icon in der Benutzeroberfläche (Optional)
       mode: # Möglich sind Off, Now, MinPV und PV, oder leer wenn keiner definiert werden soll (Optional)
       minSoc: 25 # Ladung mit maximaler Geschwindigkeit bis zu dem angegeben Ladestand unabhängig PV-Erzeugung, wenn der Lademodus nicht auf 'Aus' steht (Optional)
       targetSoc: 80 # Bis zu welchem Ladestand (Soc) soll das Fahrzeug geladen werden (Optional)

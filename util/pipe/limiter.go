@@ -1,11 +1,11 @@
 package pipe
 
 import (
+	"slices"
 	"time"
 
 	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/util"
-	"golang.org/x/exp/slices"
 )
 
 // Piper is the interface that data flow plugins must implement

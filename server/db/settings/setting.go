@@ -3,12 +3,12 @@ package settings
 import (
 	"encoding/json"
 	"errors"
+	"slices"
 	"strconv"
 	"sync/atomic"
 	"time"
 
 	"github.com/evcc-io/evcc/server/db"
-	"golang.org/x/exp/slices"
 )
 
 var ErrNotFound = errors.New("not found")

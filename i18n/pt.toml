@@ -18,6 +18,39 @@ low = "quando um pouco cheio"
 medium = "quando meio cheio"
 never = "apenas com excesso suficiente"
 
+[config]
+
+[config.form]
+example = "Exemplo"
+optional = "opcional"
+
+[config.main]
+addVehicle = "Adicionar veículo"
+edit = "editar"
+title = "Configuração"
+vehicles = "Meus Veículos"
+
+[config.validation]
+failed = "fracassado"
+label = "Status"
+running = "validando..."
+success = "sucedido"
+unknown = "desconhecido"
+validate = "validar"
+
+[config.vehicle]
+cancel = "Cancelar"
+delete = "Excluir veículo"
+generic = "Outras integrações"
+offline = "Veículo genérico"
+online = "Veículos com API online"
+save = "guardar"
+scooter = "Lambreta"
+template = "Fabricante"
+titleAdd = "Adicionar Veículo"
+titleEdit = "Editar veículo"
+validateSave = "Validar e guardar"
+
 [footer]
 
 [footer.community]
@@ -174,7 +207,7 @@ label = "Corrente de carga máxima"
 label = "Corrente de carga mínima"
 
 [main.loadpointSettings.minSoc]
-description = "Para emergências. O veículo é carregado „rápido” para {0}% de toda a energia solar disponível e, em seguida, continua com apenas o excedente solar."
+description = "O veículo é carregado “rápido” até {0}% no modo solar. Em seguida, continua com excedente solar. Útil para garantir um alcance mínimo mesmo em dias mais escuros."
 label = "Mín. de carga %"
 
 [main.loadpointSettings.phasesConfigured]
@@ -204,6 +237,7 @@ descriptionEnergy = "Até quando {targetEnergy} deve ser carregado no veículo?"
 descriptionSoc = "Quando o veículo deve ser carregado até {targetSoc}%?"
 inactiveLabel = "Tempo alvo"
 modalTitle = "Definir hora-alvo"
+onlyInPvMode = "O plano de carregamento só funciona no modo solar."
 planDuration = "Tempo de carga"
 planPeriodLabel = "Período"
 planPeriodValue = "{start} até {end}"
@@ -211,6 +245,7 @@ planUnknown = "desconhecido"
 priceLimit = "limite de preço de {preço}"
 remove = "Remover"
 setTargetTime = "sem"
+targetEnergyRequired = "Você também precisa definir um limite de energia."
 targetIsInThePast = "Escolha um momento no futuro, Marty."
 targetIsTooFarInTheFuture = "Vamos ajustar o plano assim que soubermos mais sobre o futuro."
 title = "Tempo alvo"
@@ -237,6 +272,8 @@ fallbackName = "Veículo"
 moreActions = "Mais ações"
 none = "Nenhum veículo"
 targetSoc = "Alvo de carga"
+temp = "Temperatura"
+tempLimit = "Temperatura alvo"
 unknown = "Veículo convidado"
 vehicleSoc = "Nível de carga"
 
@@ -292,7 +329,9 @@ started = "Começado"
 title = "Sessão de carga"
 
 [sessions]
+avgPower = "Desempenho ⌀"
 avgPrice = "Preço ⌀"
+chargeDuration = "Duração"
 co2 = "CO₂ ⌀"
 csvMonth = "Download {month} CSV"
 csvTotal = "Download tudo CSV"

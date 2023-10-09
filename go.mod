@@ -1,12 +1,13 @@
 module github.com/evcc-io/evcc
 
-go 1.20
+go 1.21
 
 require (
 	github.com/AlecAivazis/survey/v2 v2.3.7
 	github.com/BurntSushi/toml v1.3.2
 	github.com/Masterminds/sprig/v3 v3.2.3
 	github.com/PuerkitoBio/goquery v1.8.1
+	github.com/andig/go-powerwall v0.2.1-0.20230808194509-dd70cdb6e140
 	github.com/andig/gosunspec v0.0.0-20211108155140-af2e73b86e71
 	github.com/andig/mbserver v0.0.0-20230310211055-1d29cbb5820e
 	github.com/asaskevich/EventBus v0.0.0-20200907212545-49d423059eef
@@ -24,15 +25,14 @@ require (
 	github.com/deepmap/oapi-codegen v1.13.0
 	github.com/denisbrodbeck/machineid v1.0.1
 	github.com/dmarkham/enumer v1.5.8
-	github.com/dustin/go-humanize v1.0.1
 	github.com/dylanmei/iso8601 v0.1.0
 	github.com/eclipse/paho.mqtt.golang v1.4.2
 	github.com/enbility/cemd v0.2.2
 	github.com/enbility/eebus-go v0.2.0
 	github.com/fatih/structs v1.1.0
-	github.com/foogod/go-powerwall v0.2.0
 	github.com/glebarez/sqlite v1.8.0
 	github.com/go-http-utils/etag v0.0.0-20161124023236-513ea8f21eb1
+	github.com/go-playground/validator/v10 v10.14.1
 	github.com/go-telegram-bot-api/telegram-bot-api/v5 v5.5.1
 	github.com/godbus/dbus/v5 v5.1.0
 	github.com/gokrazy/updater v0.0.0-20230215172637-813ccc7f21e2
@@ -66,7 +66,7 @@ require (
 	github.com/mergermarket/go-pkcs7 v0.0.0-20170926155232-153b18ea13c9
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/mapstructure v1.5.0
-	github.com/mlnoga/rct v0.1.2-0.20230227143934-71af1fb7dfa1
+	github.com/mlnoga/rct v0.1.2-0.20230731074838-03eacb926f99
 	github.com/muka/go-bluetooth v0.0.0-20221213043340-85dc80edc4e1
 	github.com/mxschmitt/golang-combinations v1.1.0
 	github.com/nicksnyder/go-i18n/v2 v2.2.1
@@ -89,9 +89,10 @@ require (
 	github.com/stretchr/testify v1.8.3
 	github.com/traefik/yaegi v0.15.1
 	github.com/tv42/httpunix v0.0.0-20191220191345-2ba4b9c3382c
-	github.com/volkszaehler/mbmd v0.0.0-20230619194555-eff79d92007e
+	github.com/volkszaehler/mbmd v0.0.0-20230819073623-ab54b0355354
 	github.com/writeas/go-strip-markdown/v2 v2.1.1
 	gitlab.com/bboehmke/sunny v0.15.1-0.20211022160056-2fba1c86ade6
+	golang.org/x/crypto/x509roots/fallback v0.0.0-20230804165707-b4ddeeda5bc7
 	golang.org/x/exp v0.0.0-20230522175609-2e198f4a06a1
 	golang.org/x/net v0.11.0
 	golang.org/x/oauth2 v0.9.0
@@ -117,6 +118,7 @@ require (
 	github.com/chenzhuoyu/base64x v0.0.0-20221115062448-fe3a3abad311 // indirect
 	github.com/chzyer/readline v1.5.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/fatih/color v1.15.0 // indirect
 	github.com/felixge/httpsnoop v1.0.3 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
@@ -131,7 +133,6 @@ require (
 	github.com/go-logfmt/logfmt v0.6.0 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
-	github.com/go-playground/validator/v10 v10.14.1 // indirect
 	github.com/gobwas/httphead v0.1.0 // indirect
 	github.com/gobwas/pool v0.2.1 // indirect
 	github.com/gobwas/ws v1.2.1 // indirect
@@ -207,7 +208,5 @@ require (
 	modernc.org/memory v1.6.0 // indirect
 	modernc.org/sqlite v1.23.1 // indirect
 )
-
-replace github.com/foogod/go-powerwall => github.com/andig/go-powerwall v0.2.1-0.20230525091927-777196024a18
 
 replace github.com/grid-x/modbus => github.com/evcc-io/modbus v0.0.0-20230705160100-23e1df2c01c3

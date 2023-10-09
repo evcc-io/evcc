@@ -5,22 +5,9 @@ products:
       generic: Wi-Fi P1 Meter
 params:
   - name: usage
-    choice: ["grid"]
+    choice: ["grid", "pv"]
   - name: host
     required: true
 render: |
-  type: custom
-  power:
-    source: http
-    uri: http://{{ .host }}/api/v1/data
-    method: GET
-    headers:
-      - content-type: application/json
-    jq: .active_power_w
-  energy:
-    source: http
-    uri: http://{{ .host }}/api/v1/data
-    method: GET
-    headers:
-      - content-type: application/json
-    jq: '[to_entries[] | select(.key|startswith("total_power_import_t")) | .value] | add'
+  type: homewizard
+  uri: http://{{ .host }}

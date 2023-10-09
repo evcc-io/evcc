@@ -31,7 +31,7 @@ const co2 = {
 	].map((price, i) => createRate(price, i)),
 	duration: 8695,
 	plan: [createRate(213, 4), createRate(336, 11), createRate(336, 12)],
-	unit: "gCO2eq",
+	smartCostType: "co2",
 	targetTime: createDate(14),
 };
 
@@ -39,7 +39,8 @@ const fixed = {
 	rates: [createRate(0.442, 0, 50)],
 	duration: 8695,
 	plan: [createRate(0.442, 12, 3)],
-	unit: "EUR",
+	smartCostType: "price",
+	currency: "EUR",
 	targetTime: createDate(14),
 };
 
@@ -53,7 +54,8 @@ const zoned = {
 	],
 	duration: 8695,
 	plan: [createRate(2.39, 13, 3)],
-	unit: "DKK",
+	smartCostType: "price",
+	currency: "DKK",
 	targetTime: createDate(17),
 };
 
@@ -61,8 +63,19 @@ const unknown = {
 	rates: co2.rates.slice(0, 16),
 	duration: 8695,
 	plan: [createRate(213, 4), createRate(336, 11), createRate(336, 12)],
-	unit: "gCO2eq",
+	smartCostType: "co2",
 	targetTime: createDate(14),
+};
+
+const dynamic = {
+	rates: [
+		0.12, 0.15, 0, -0.05, -0.11, -0.24, -0.08, 0.12, 0.25, 0.29, 0.22, 0.31, 0.31, 0.33,
+	].map((price, i) => createRate(price, i)),
+	duration: 8695,
+	plan: [createRate(0.23, 2, 5)],
+	smartCostType: "price",
+	currency: "EUR",
+	targetTime: createDate(13),
 };
 </script>
 
@@ -79,6 +92,9 @@ const unknown = {
 		</Variant>
 		<Variant title="unknown">
 			<TargetChargePlan v-bind="unknown" />
+		</Variant>
+		<Variant title="dynamic">
+			<TargetChargePlan v-bind="dynamic" />
 		</Variant>
 	</Story>
 </template>

@@ -171,3 +171,10 @@ func (v *Provider) StartCharge() error {
 func (v *Provider) StopCharge() error {
 	return v.action(ActionCharge, ActionChargeStop)
 }
+
+var _ api.Resurrector = (*Provider)(nil)
+
+// WakeUp implements the api.Resurrector interface
+func (v *Provider) WakeUp() error {
+	return v.StartCharge()
+}
