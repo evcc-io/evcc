@@ -124,7 +124,7 @@ func (wb *Pulsares) setCurrent(current uint16) error {
 	b := make([]byte, 2)
 	binary.BigEndian.PutUint16(b, uint16(current))
 
-	_, err := wb.conn.WriteMultipleRegisters(pulsaresRegBackup, 1, b)
+	_, err := wb.conn.WriteMultipleRegisters(pulsaresRegCurrent, 1, b)
 
 	return err
 }
