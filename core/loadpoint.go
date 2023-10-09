@@ -678,7 +678,8 @@ func (lp *Loadpoint) checkCircuitAvailableLimit(requestedCurrent float64) (float
 		// consider als this LPs actuall current, since it is included in the circuit remaining current calculation
 		chargeCurrentNew := math.Min(math.Max(lp.circuit.GetRemainingCurrent()+curLP, 0), requestedCurrent)
 
-		if chargeCurrentNew < requestedCurrent {
+		// apply a small reserve to prevent log messages
+		if chargeCurrentNew < requestedCurrent*1.01 {
 			lp.log.DEBUG.Printf("get current limitation from %.1fA to %.1fA from circuit", requestedCurrent, chargeCurrentNew)
 		}
 
@@ -689,7 +690,8 @@ func (lp *Loadpoint) checkCircuitAvailableLimit(requestedCurrent float64) (float
 		chargePowerNew := math.Min(math.Max(availablePower, 0), requestedPower)
 		lp.log.TRACE.Printf("request: %.1f, avialable: %.1f, new: %.1f, phases: %d", requestedPower, availablePower, chargePowerNew, lp.phases)
 
-		if chargePowerNew < requestedPower {
+		// apply a small reserve to prevent log messages
+		if chargePowerNew < requestedPower*1.01 {
 			// lower the current based on phases
 			chargeCurrentNew = powerToCurrent(chargePowerNew, lp.phases)
 			lp.log.DEBUG.Printf("get power limitation from %.1fW to %.1fW (%.1fA) from circuit", requestedPower, chargePowerNew, chargeCurrentNew)
@@ -703,10 +705,11 @@ func (lp *Loadpoint) checkCircuitAvailableLimit(requestedCurrent float64) (float
 			// 	}
 			// }
 		}
-		if chargeCurrentNew < requestedCurrent {
+		if chargeCurrentNew < requestedCurrent*1.01 {
 			return chargeCurrentNew, nil
 		}
 	}
+	// all ok
 	return requestedCurrent, nil
 }
 
