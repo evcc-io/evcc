@@ -20,6 +20,7 @@ package charger
 import (
 	"encoding/binary"
 	"fmt"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -28,6 +29,7 @@ import (
 
 // Pulsares charger implementation
 type Pulsares struct {
+	log  *util.Logger
 	conn *modbus.Connection
 	curr uint16
 }
@@ -35,6 +37,7 @@ type Pulsares struct {
 const (
 	pulsaresRegStatus  = 0x1f
 	pulsaresRegCurrent = 0x5d
+	pulsaresRegBackup  = 0x61
 )
 
 func init() {
@@ -82,14 +85,46 @@ func NewPulsares(uri, device, comset string, baudrate int, proto modbus.Protocol
 		wb.curr = curr
 	}
 
+	// get failsafe timeout from charger
+	b, err := wb.conn.ReadHoldingRegisters(pulsaresRegBackup, 1)
+	if err != nil {
+		return nil, fmt.Errorf("failsafe timeout: %w", err)
+	}
+
+	var t time.Duration
+	switch u := binary.BigEndian.Uint16(b); u {
+	case 2:
+		t = 2 * time.Second
+	case 3:
+		t = 5 * time.Second
+	case 4:
+		t = 10 * time.Second
+	case 5:
+		t = 30 * time.Second
+	case 6:
+		t = 60 * time.Second
+	}
+
+	if t > 0 {
+		go wb.heartbeat(t / 2)
+	}
+
 	return wb, err
+}
+
+func (wb *Pulsares) heartbeat(timeout time.Duration) {
+	for range time.Tick(timeout) {
+		if _, err := wb.conn.ReadHoldingRegisters(pulsaresRegBackup, 1); err != nil {
+			wb.log.ERROR.Println("heartbeat:", err)
+		}
+	}
 }
 
 func (wb *Pulsares) setCurrent(current uint16) error {
 	b := make([]byte, 2)
 	binary.BigEndian.PutUint16(b, uint16(current))
 
-	_, err := wb.conn.WriteMultipleRegisters(pulsaresRegCurrent, 1, b)
+	_, err := wb.conn.WriteMultipleRegisters(pulsaresRegBackup, 1, b)
 
 	return err
 }
