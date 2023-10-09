@@ -187,7 +187,10 @@ func (wb *Pulsares) MaxCurrentMillis(current float64) error {
 		return fmt.Errorf("invalid current %.1f", current)
 	}
 
-	wb.curr = uint16(current * 1e3)
+	err := wb.setCurrent(wb.curr)
+	if err == nil {
+		wb.curr = uint16(current * 1e3)
+	}
 
-	return wb.setCurrent(wb.curr)
+	return err
 }
