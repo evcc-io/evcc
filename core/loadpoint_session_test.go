@@ -96,6 +96,10 @@ func TestCloseSessionsOnStartup(t *testing.T) {
 	db, err := session.NewStore("foo", serverdb.Instance)
 	assert.NoError(t, err)
 
+	// assert empty DB is no problem
+	err = db.ClosePendingSessionsInHistory()
+	assert.NoError(t, err)
+
 	clock := clock.NewMock()
 
 	//test data, creates 6 sessions, 3rd and 6th are "unfinished"
