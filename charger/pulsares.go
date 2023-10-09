@@ -41,7 +41,7 @@ const (
 )
 
 func init() {
-	registry.Add("Pulsares", NewPulsaresFromConfig)
+	registry.Add("pulsares", NewPulsaresFromConfig)
 }
 
 // NewPulsaresFromConfig creates a Pulsares charger from generic config
