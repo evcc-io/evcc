@@ -1,9 +1,0 @@
-product:
-  brand: NRGKick
-  description: Bluetooth
-render:
-  - default: |
-      type: template
-      template: nrgkick-bluetooth
-      mac:
-      pin:

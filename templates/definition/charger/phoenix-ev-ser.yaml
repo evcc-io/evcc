@@ -1,6 +1,6 @@
 template: phoenix-ev-ser
 products:
-  - brand: Phoenix
+  - brand: Phoenix Contact
     description:
       generic: EV-SER (Modbus RTU)
 params:

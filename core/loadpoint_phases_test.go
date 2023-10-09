@@ -22,46 +22,48 @@ type testCase struct {
 	scale string
 }
 
-var phaseTests = []testCase{
-	// 1p
-	{1, 1, 0, 0, 1, 1, ""},
-	{1, 1, 0, 1, 1, 1, ""},
-	{1, 1, 1, 0, 1, 1, ""},
-	{1, 1, 2, 0, 1, 1, ""},
-	{1, 1, 3, 0, 1, 1, ""},
-	// 3p
-	{3, 3, 0, 0, unknownPhases, 3, ""},
-	{3, 3, 0, 1, 1, 1, ""},
-	{3, 3, 0, 2, 2, 2, ""},
-	{3, 3, 0, 3, 3, 3, ""},
-	{3, 3, 1, 0, 1, 1, ""},
-	{3, 3, 2, 0, 2, 2, ""},
-	{3, 3, 3, 0, 3, 3, ""},
-	// 1p3p initial
-	{0, 0, 0, 0, unknownPhases, 3, "du"},
-	{0, 0, 0, 1, 1, 3, "u"},
-	{0, 0, 0, 2, 2, 3, "du"},
-	{0, 0, 0, 3, 3, 3, "du"},
-	{0, 0, 1, 0, 1, 1, ""},
-	{0, 0, 2, 0, 2, 2, "du"},
-	{0, 0, 3, 0, 3, 3, "du"},
-	// 1p3p, 1 currently active
-	{0, 1, 0, 0, 1, 3, "u"},
-	{0, 1, 0, 1, 1, 3, "u"},
-	// {0, 1, 0, 2, 2,2,"u"}, // 2p active > 1p configured must not happen
-	// {0, 1, 0, 3, 3,3,"u"}, // 3p active > 1p configured must not happen
-	{0, 1, 1, 0, 1, 1, ""},
-	{0, 1, 2, 0, 1, 2, "u"},
-	{0, 1, 3, 0, 1, 3, "u"},
-	// 1p3p, 3 currently active
-	{0, 3, 0, 0, unknownPhases, 3, "d"},
-	{0, 3, 0, 1, 1, 1, ""},
-	{0, 3, 0, 2, 2, 2, "d"},
-	{0, 3, 0, 3, 3, 3, "d"},
-	{0, 3, 1, 0, 1, 1, ""},
-	{0, 3, 2, 0, 2, 2, "d"},
-	{0, 3, 3, 0, 3, 3, "d"},
-}
+var (
+	phaseTests = []testCase{
+		// 1p
+		{1, 1, 0, 0, 1, 1, ""},
+		{1, 1, 0, 1, 1, 1, ""},
+		{1, 1, 1, 0, 1, 1, ""},
+		{1, 1, 2, 0, 1, 1, ""},
+		{1, 1, 3, 0, 1, 1, ""},
+		// 3p
+		{3, 3, 0, 0, unknownPhases, 3, ""},
+		{3, 3, 0, 1, 1, 1, ""},
+		{3, 3, 0, 2, 2, 2, ""},
+		{3, 3, 0, 3, 3, 3, ""},
+		{3, 3, 1, 0, 1, 1, ""},
+		{3, 3, 2, 0, 2, 2, ""},
+		{3, 3, 3, 0, 3, 3, ""},
+		// 1p3p initial
+		{0, 0, 0, 0, unknownPhases, 3, "du"},
+		{0, 0, 0, 1, 1, 3, "u"},
+		{0, 0, 0, 2, 2, 3, "du"},
+		{0, 0, 0, 3, 3, 3, "du"},
+		{0, 0, 1, 0, 1, 1, ""},
+		{0, 0, 2, 0, 2, 2, "du"},
+		{0, 0, 3, 0, 3, 3, "du"},
+		// 1p3p, 1 currently active
+		{0, 1, 0, 0, 1, 3, "u"},
+		{0, 1, 0, 1, 1, 3, "u"},
+		// {0, 1, 0, 2, 2,2,"u"}, // 2p active > 1p configured must not happen
+		// {0, 1, 0, 3, 3,3,"u"}, // 3p active > 1p configured must not happen
+		{0, 1, 1, 0, 1, 1, ""},
+		{0, 1, 2, 0, 1, 2, "u"},
+		{0, 1, 3, 0, 1, 3, "u"},
+		// 1p3p, 3 currently active
+		{0, 3, 0, 0, unknownPhases, 3, "d"},
+		{0, 3, 0, 1, 1, 1, ""},
+		{0, 3, 0, 2, 2, 2, "d"},
+		{0, 3, 0, 3, 3, 3, "d"},
+		{0, 3, 1, 0, 1, 1, ""},
+		{0, 3, 2, 0, 2, 2, "d"},
+		{0, 3, 3, 0, 3, 3, "d"},
+	}
+)
 
 func TestMaxActivePhases(t *testing.T) {
 	ctrl := gomock.NewController(t)
@@ -123,7 +125,7 @@ func TestMaxActivePhases(t *testing.T) {
 	}
 }
 
-func testScale(t *testing.T, lp *Loadpoint, sitePower float64, direction string, tc testCase) {
+func testScale(t *testing.T, lp *Loadpoint, power float64, direction string, tc testCase) {
 	act := lp.activePhases()
 	max := lp.maxActivePhases()
 
@@ -134,8 +136,8 @@ func testScale(t *testing.T, lp *Loadpoint, sitePower float64, direction string,
 	if testDirection == "u" && strings.Contains(testExpectation, testDirection) {
 		// scale-up should only execute when the 1p max current is exceeded
 		// we're testing this here and remove the upscale expectation for the following test below 1p max current
-		if maxAmp := -sitePower / Voltage; maxAmp < maxA {
-			if scaled := lp.pvScalePhases(sitePower, minA, maxAmp-0.0001); !scaled {
+		if maxAmp := power / Voltage; maxAmp < maxA {
+			if scaled := lp.pvScalePhases(power, minA, maxAmp-0.0001); !scaled {
 				t.Errorf("%v act=%d max=%d missing scale %s at reduced max current %.1fA", tc, act, max, direction, maxAmp)
 			}
 
@@ -144,7 +146,7 @@ func testScale(t *testing.T, lp *Loadpoint, sitePower float64, direction string,
 		}
 	}
 
-	scaled := lp.pvScalePhases(sitePower, minA, maxA)
+	scaled := lp.pvScalePhases(power, minA, maxA)
 
 	if strings.Contains(testExpectation, testDirection) {
 		if !scaled {
@@ -229,7 +231,7 @@ func TestPvScalePhases(t *testing.T) {
 		// scaling
 		if phaseCharger != nil {
 			// scale down
-			min1p := 0.1
+			min1p := 1 * minA * Voltage
 			lp.phaseTimer = time.Time{}
 
 			plainCharger.EXPECT().Enable(false).Return(nil).MaxTimes(1)
@@ -249,7 +251,7 @@ func TestPvScalePhases(t *testing.T) {
 			plainCharger.EXPECT().Enable(false).Return(nil).MaxTimes(1)
 			phaseCharger.EXPECT().Phases1p3p(3).Return(nil).MaxTimes(1)
 
-			testScale(t, lp, -min3p, "up", tc)
+			testScale(t, lp, min3p, "up", tc)
 			ctrl.Finish()
 		}
 	}
@@ -271,68 +273,68 @@ func TestPvScalePhasesTimer(t *testing.T) {
 	tc := []struct {
 		desc                   string
 		phases, measuredPhases int
-		sitePower              float64
+		availablePower         float64
 		toPhases               int
 		res                    bool
 		prepare                func(lp *Loadpoint)
 	}{
 		// switch up from 1p/1p configured/active
 		{"1/1->3, not enough power", 1, 1, 0, 1, false, nil},
-		{"1/1->3, kickoff", 1, 1, -3 * Voltage * minA, 1, false, func(lp *Loadpoint) {
+		{"1/1->3, kickoff", 1, 1, 3 * Voltage * minA, 1, false, func(lp *Loadpoint) {
 			lp.phaseTimer = time.Time{}
 		}},
-		{"1/1->3, timer running", 1, 1, -3 * Voltage * minA, 1, false, func(lp *Loadpoint) {
+		{"1/1->3, timer running", 1, 1, 3 * Voltage * minA, 1, false, func(lp *Loadpoint) {
 			lp.phaseTimer = lp.clock.Now()
 		}},
-		{"1/1->3, timer elapsed", 1, 1, -3 * Voltage * minA, 3, true, func(lp *Loadpoint) {
+		{"1/1->3, timer elapsed", 1, 1, 3 * Voltage * minA, 3, true, func(lp *Loadpoint) {
 			lp.phaseTimer = lp.clock.Now().Add(-dt)
 		}},
 
 		// omit to switch up (again) from 3p/1p configured/active
 		{"3/1->3, not enough power", 3, 1, 0, 3, false, nil},
-		{"3/1->3, kickoff", 3, 1, -3 * Voltage * minA, 3, false, func(lp *Loadpoint) {
+		{"3/1->3, kickoff", 3, 1, 3 * Voltage * minA, 3, false, func(lp *Loadpoint) {
 			lp.phaseTimer = time.Time{}
 		}},
-		{"3/1->3, timer running", 3, 1, -3 * Voltage * minA, 3, false, func(lp *Loadpoint) {
+		{"3/1->3, timer running", 3, 1, 3 * Voltage * minA, 3, false, func(lp *Loadpoint) {
 			lp.phaseTimer = lp.clock.Now()
 		}},
-		{"3/1->3, timer elapsed", 3, 1, -3 * Voltage * minA, 3, false, func(lp *Loadpoint) {
+		{"3/1->3, timer elapsed", 3, 1, 3 * Voltage * minA, 3, false, func(lp *Loadpoint) {
 			lp.phaseTimer = lp.clock.Now().Add(-dt)
 		}},
 
 		// omit to switch down from 3p/1p configured/active
 		{"3/1->1, not enough power", 3, 1, 0, 3, false, nil},
-		{"3/1->1, kickoff", 3, 1, -1 * Voltage * minA, 3, false, func(lp *Loadpoint) {
+		{"3/1->1, kickoff", 3, 1, 1 * Voltage * minA, 3, false, func(lp *Loadpoint) {
 			lp.phaseTimer = time.Time{}
 		}},
-		{"3/1->1, timer running", 3, 1, -1 * Voltage * minA, 3, false, func(lp *Loadpoint) {
+		{"3/1->1, timer running", 3, 1, 1 * Voltage * minA, 3, false, func(lp *Loadpoint) {
 			lp.phaseTimer = lp.clock.Now()
 		}},
-		{"3/1->1, timer elapsed", 3, 1, -1 * Voltage * minA, 3, false, func(lp *Loadpoint) {
+		{"3/1->1, timer elapsed", 3, 1, 1 * Voltage * minA, 3, false, func(lp *Loadpoint) {
 			lp.phaseTimer = lp.clock.Now().Add(-dt)
 		}},
 
 		// switch down from 3p/3p configured/active
-		{"3/3->1, enough power", 3, 3, 0.1, 3, false, nil},
-		{"3/3->1, kickoff", 3, 3, 0.1, 3, false, func(lp *Loadpoint) {
+		{"3/3->1, enough power", 3, 3, 1 * Voltage * maxA, 3, false, nil},
+		{"3/3->1, kickoff", 3, 3, 1 * Voltage * maxA, 3, false, func(lp *Loadpoint) {
 			lp.phaseTimer = time.Time{}
 		}},
-		{"3/3->1, timer running", 3, 3, 0.1, 3, false, func(lp *Loadpoint) {
+		{"3/3->1, timer running", 3, 3, 1 * Voltage * maxA, 3, false, func(lp *Loadpoint) {
 			lp.phaseTimer = lp.clock.Now()
 		}},
-		{"3/3->1, timer elapsed", 3, 3, 0.1, 1, true, func(lp *Loadpoint) {
+		{"3/3->1, timer elapsed", 3, 3, 1 * Voltage * maxA, 1, true, func(lp *Loadpoint) {
 			lp.phaseTimer = lp.clock.Now().Add(-dt)
 		}},
 
-		// error states from 1p/3p misconfiguration - no correction for time being (stay at 1p)
-		{"1/3->1, enough power", 1, 3, -1 * Voltage * maxA, 1, false, nil},
-		{"1/3->1, kickoff, correct phase setting", 1, 3, -1 * Voltage * maxA, 1, false, func(lp *Loadpoint) {
+		// error states from 1p/3p misconfig - no correction for time being (stay at 1p)
+		{"1/3->1, enough power", 1, 3, 1 * Voltage * maxA, 1, false, nil},
+		{"1/3->1, kickoff, correct phase setting", 1, 3, 1 * Voltage * maxA, 1, false, func(lp *Loadpoint) {
 			lp.phaseTimer = time.Time{}
 		}},
-		{"1/3->1, timer running, correct phase setting", 1, 3, -1 * Voltage * maxA, 1, false, func(lp *Loadpoint) {
+		{"1/3->1, timer running, correct phase setting", 1, 3, 1 * Voltage * maxA, 1, false, func(lp *Loadpoint) {
 			lp.phaseTimer = lp.clock.Now()
 		}},
-		{"1/3->1, switch not executed", 1, 3, -1 * Voltage * maxA, 1, false, func(lp *Loadpoint) {
+		{"1/3->1, switch not executed", 1, 3, 1 * Voltage * maxA, 1, false, func(lp *Loadpoint) {
 			lp.phaseTimer = lp.clock.Now().Add(-dt)
 		}},
 	}
@@ -366,7 +368,7 @@ func TestPvScalePhasesTimer(t *testing.T) {
 			charger.MockPhaseSwitcher.EXPECT().Phases1p3p(tc.toPhases).Return(nil)
 		}
 
-		res := lp.pvScalePhases(tc.sitePower, minA, maxA)
+		res := lp.pvScalePhases(tc.availablePower, minA, maxA)
 
 		switch {
 		case tc.res != res:

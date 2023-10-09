@@ -1,3 +1,18 @@
+[batterySettings]
+batteryLevel = "Batterinivå"
+capacity = "{energy} av {total}"
+
+[config]
+
+[config.form]
+example = "Exempel"
+optional = "valfri"
+
+[config.vehicle]
+cancel = "Avbryt"
+delete = "Radera fordon"
+save = "Spara"
+
 [footer]
 
 [footer.community]

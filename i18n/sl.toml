@@ -18,6 +18,39 @@ low = "ko je nekoliko poln"
 medium = "ko je napol poln"
 never = "le z dovolj presežka"
 
+[config]
+
+[config.form]
+example = "Primer"
+optional = "neobvezno"
+
+[config.main]
+addVehicle = "Dodaj vozilo"
+edit = "uredi"
+title = "Konfiguracija"
+vehicles = "Moja vozila"
+
+[config.validation]
+failed = "Napaka"
+label = "Status"
+running = "preverjanje..."
+success = "uspešno"
+unknown = "neznano"
+validate = "preveri"
+
+[config.vehicle]
+cancel = "Prekliči"
+delete = "Izbriši vozilo"
+generic = "Druge integracije"
+offline = "Generično vozilo"
+online = "Vozila s spletnim API-jem"
+save = "Shrani"
+scooter = "Skuter"
+template = "Proizvajalec"
+titleAdd = "Dodaj vozilo"
+titleEdit = "Uredi vozilo"
+validateSave = "Preveri in shrani"
+
 [footer]
 
 [footer.community]
@@ -196,12 +229,14 @@ descriptionEnergy = "Do kdaj želite da se vozilo napolni za {targetEnergy}?"
 descriptionSoc = "Kdaj želite, da je vozilo napolnjeno na {targetSoc}%?"
 inactiveLabel = "Ciljni čas"
 modalTitle = "Nastavite ciljni čas"
+onlyInPvMode = "Načrt polnjenja deluje samo v solarnem načinu."
 planDuration = "Čas polnjenja"
 planPeriodLabel = "Obdobje"
 planPeriodValue = "{start} do {end}"
 planUnknown = "še ni znano"
 priceLimit = "cenovna omejitev {price}"
 setTargetTime = "brez"
+targetEnergyRequired = "Postaviti morate tudi mejo energije."
 targetIsInThePast = "Izberi čas v prihodnosti, Marty."
 targetIsTooFarInTheFuture = "Načrt bomo prilagodili takoj, ko bomo izvedeli več o novi funkcionalnosti."
 title = "Ciljni čas"
@@ -228,6 +263,8 @@ fallbackName = "Vozilo"
 moreActions = "Več dejanj"
 none = "Ni vozila"
 targetSoc = "Omejitev"
+temp = "Temp."
+tempLimit = "Temp. limit"
 unknown = "Neznano vozilo"
 vehicleSoc = "Napolnjeno"
 
@@ -281,16 +318,22 @@ started = "Začetek"
 title = "Seja polnjenja"
 
 [sessions]
+avgPower = "⌀ Moč"
 avgPrice = "⌀ Cena"
+chargeDuration = "Trajanje"
 co2 = "⌀ CO₂"
-date = "Končano"
+csvMonth = "Prenesi {month} CSV"
+csvTotal = "Prenesi celoten CSV"
+date = "Začni"
 downloadCsv = "Prenesi kot CSV"
 energy = "Napolnjeno"
 loadpoint = "Polnilno mesto"
+noData = "Ta mesec ni bilo sej polnjenja."
 price = "Σ Cena"
 reallyDelete = "Ali res želite izbrisati to sejo?"
 solar = "Sončna energija"
 title = "Seje polnjenja"
+total = "Skupaj"
 vehicle = "Vozilo"
 
 [sessions.csv]
@@ -303,6 +346,11 @@ meterstart = "Začetek merjenja (kWh)"
 meterstop = "Konec merjenja (kWh)"
 odometer = "Prevoženi kilometri (km)"
 vehicle = "Vozilo"
+
+[sessions.filter]
+allLoadpoints = "vsa polnilna mesta"
+allVehicles = "vsa vozila"
+filter = "Filter"
 
 [settings]
 title = "Nastavitve"

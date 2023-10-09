@@ -53,6 +53,7 @@ type Easee struct {
 	current               float64
 	chargerEnabled        bool
 	smartCharging         bool
+	authorize             bool
 	opMode                int
 	reasonForNoCurrent    int
 	phaseMode             int
@@ -72,10 +73,11 @@ func init() {
 // NewEaseeFromConfig creates a go-e charger from generic config
 func NewEaseeFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
-		User     string
-		Password string
-		Charger  string
-		Timeout  time.Duration
+		User      string
+		Password  string
+		Charger   string
+		Timeout   time.Duration
+		Authorize bool
 	}{
 		Timeout: request.Timeout,
 	}
@@ -88,11 +90,11 @@ func NewEaseeFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, api.ErrMissingCredentials
 	}
 
-	return NewEasee(cc.User, cc.Password, cc.Charger, cc.Timeout)
+	return NewEasee(cc.User, cc.Password, cc.Charger, cc.Timeout, cc.Authorize)
 }
 
 // NewEasee creates Easee charger
-func NewEasee(user, password, charger string, timeout time.Duration) (*Easee, error) {
+func NewEasee(user, password, charger string, timeout time.Duration, authorize bool) (*Easee, error) {
 	log := util.NewLogger("easee").Redact(user, password)
 
 	if !sponsor.IsAuthorized() {
@@ -100,14 +102,15 @@ func NewEasee(user, password, charger string, timeout time.Duration) (*Easee, er
 	}
 
 	c := &Easee{
-		Helper:  request.NewHelper(log),
-		charger: charger,
-		log:     log,
-		current: 6, // default current
-		done:    make(chan struct{}),
-		cmdC:    make(chan easee.SignalRCommandResponse),
-		obsC:    make(chan easee.Observation),
-		obsTime: make(map[easee.ObservationID]time.Time),
+		Helper:    request.NewHelper(log),
+		charger:   charger,
+		authorize: authorize,
+		log:       log,
+		current:   6, // default current
+		done:      make(chan struct{}),
+		cmdC:      make(chan easee.SignalRCommandResponse),
+		obsC:      make(chan easee.Observation),
+		obsTime:   make(map[easee.ObservationID]time.Time),
 	}
 
 	c.Client.Timeout = timeout
@@ -181,20 +184,7 @@ func NewEasee(user, password, charger string, timeout time.Duration) (*Easee, er
 		err = os.ErrDeadlineExceeded
 	}
 
-	if err == nil {
-		go c.refresh()
-	}
-
 	return c, err
-}
-
-// refresh ensures tokens are refreshed even when not charging for longer time
-func (c *Easee) refresh() {
-	for range time.Tick(5 * time.Minute) {
-		if _, err := c.Client.Transport.(*oauth2.Transport).Source.Token(); err != nil {
-			c.log.ERROR.Println("token refresh:", err)
-		}
-	}
 }
 
 func (c *Easee) chargerSite(charger string) (easee.Site, error) {
@@ -207,7 +197,7 @@ func (c *Easee) chargerSite(charger string) (easee.Site, error) {
 // connect creates an HTTP connection to the signalR hub
 func (c *Easee) connect(ts oauth2.TokenSource) func() (signalr.Connection, error) {
 	bo := backoff.NewExponentialBackOff()
-	bo.MaxElapsedTime = time.Minute
+	bo.MaxInterval = time.Minute
 
 	return func() (conn signalr.Connection, err error) {
 		defer func() {
@@ -385,6 +375,7 @@ func (c *Easee) Enabled() (bool, error) {
 
 	disabled := c.opMode == easee.ModeDisconnected ||
 		c.opMode == easee.ModeCompleted ||
+		c.opMode == easee.ModeAwaitingAuthentication ||
 		(c.opMode == easee.ModeAwaitingStart && c.reasonForNoCurrent == 52)
 	return !disabled && c.dynamicChargerCurrent > 0, nil
 }
@@ -393,6 +384,7 @@ func (c *Easee) Enabled() (bool, error) {
 func (c *Easee) Enable(enable bool) error {
 	c.mux.Lock()
 	enablingRequired := enable && !c.chargerEnabled
+	opMode := c.opMode
 	c.mux.Unlock()
 
 	// enable charger once if it's switched off
@@ -407,17 +399,23 @@ func (c *Easee) Enable(enable bool) error {
 		}
 	}
 
-	// do not send pause/resume if disconnected or unauthenticated
-	if c.opMode == easee.ModeDisconnected || c.opMode == easee.ModeAwaitingAuthentication {
+	// do not send pause/resume if disconnected or unauthenticated without automatic authorization
+	if opMode == easee.ModeDisconnected || (opMode == easee.ModeAwaitingAuthentication && !(enable && c.authorize)) {
 		return nil
 	}
 
 	// resume/stop charger
 	action := easee.ChargePause
+	if c.authorize {
+		action = easee.ChargeStop
+	}
 	var expectedEnabledState bool
 	var targetCurrent float64
 	if enable {
 		action = easee.ChargeResume
+		if opMode == easee.ModeAwaitingAuthentication && c.authorize {
+			action = easee.ChargeStart
+		}
 		expectedEnabledState = true
 		targetCurrent = 32
 	}
@@ -431,6 +429,11 @@ func (c *Easee) Enable(enable bool) error {
 	if err := c.waitForChargerEnabledState(expectedEnabledState); err != nil {
 		return err
 	}
+
+	if c.authorize { // authenticating charger does not mingle with DCC, no need for below operations
+		return nil
+	}
+
 	if err := c.waitForDynamicChargerCurrent(targetCurrent); err != nil {
 		return err
 	}
@@ -447,7 +450,7 @@ func (c *Easee) inExpectedOpMode(enable bool) bool {
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
-	//start/resume
+	// start/resume
 	if enable {
 		return c.opMode == easee.ModeCharging ||
 			c.opMode == easee.ModeCompleted ||
@@ -455,7 +458,7 @@ func (c *Easee) inExpectedOpMode(enable bool) bool {
 			c.opMode == easee.ModeReadyToCharge
 	}
 
-	//paused/stopped
+	// paused/stopped
 	return c.opMode == easee.ModeAwaitingStart || c.opMode == easee.ModeAwaitingAuthentication
 }
 
@@ -523,7 +526,7 @@ func (c *Easee) waitForChargerEnabledState(expEnabled bool) error {
 		return nil
 	}
 
-	timer := time.NewTimer(10 * time.Second)
+	timer := time.NewTimer(c.Client.Timeout)
 	for {
 		select {
 		case obs := <-c.obsC:
@@ -552,7 +555,7 @@ func (c *Easee) waitForDynamicChargerCurrent(targetCurrent float64) error {
 	}
 	c.mux.Unlock()
 
-	timer := time.NewTimer(10 * time.Second)
+	timer := time.NewTimer(c.Client.Timeout)
 	for {
 		select {
 		case obs := <-c.obsC:

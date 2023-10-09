@@ -159,10 +159,10 @@ tariffs:
     type: fixed
     price: 0.294 # EUR/kWh
     zones:
-      - days: Mo-Fr
+      - days: Mon-Fri
         hours: 2-5
         price: 0.2 # EUR/kWh
-      - days: Sa,So
+      - days: Sat,Sun
         price: 0.15 # EUR/kWh
 
     # or variable tariffs
@@ -205,6 +205,11 @@ tariffs:
     # uri: <uri>
     # token: <token>
     # zone: DE
+
+    # type: ngeso # National Grid Electricity System Operator data (United Kingdom only) https://carbonintensity.org.uk/
+    # provides national data if both region and postcode are omitted - do not supply both at the same time!
+    # region: 1 # optional, coarser than using a postcode - see https://api.carbonintensity.org.uk/ for full list
+    # postcode: SW1A1AA # optional
 
 # mqtt message broker
 mqtt:

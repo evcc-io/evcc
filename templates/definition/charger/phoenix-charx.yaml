@@ -1,17 +1,17 @@
 template: phoenix-charx
 products:
-  - brand: Phoenix
+  - brand: Phoenix Contact
     description:
       generic: CHARX
   - brand: LadeFoxx
     description:
       generic: EvLoad/ Mikro 2.0
 params:
-  - name: host
-  - name: port
-    default: 502
+  - name: modbus
+    choice: ["tcpip"]
+    id: 255
   - name: connector
 render: |
   type: phoenix-charx
-  uri: {{ .host }}:{{ .port }}
+  {{- include "modbus" . }}
   connector: {{ .connector }}

@@ -1,6 +1,7 @@
 package charger
 
 import (
+	"encoding/binary"
 	"errors"
 
 	"github.com/evcc-io/evcc/api"
@@ -10,10 +11,12 @@ import (
 )
 
 const (
-	cfosRegStatus     = 8092 // Holding
-	cfosRegMaxCurrent = 8093 // Holding
-	cfosRegEnable     = 8094 // Holding
-	cfosRegLastRfid   = 8096 // Holding
+	cfosRegRelaySelect  = 8087 // Holding
+	cfosRegStatus       = 8092 // Holding
+	cfosRegMaxCurrent   = 8093 // Holding
+	cfosRegEnable       = 8094 // Holding
+	cfosRegLastRfid     = 8096 // Holding
+	cfosRegSolarEnabled = 8113 // Holding
 )
 
 // CfosPowerBrain is an charger implementation for cFos PowerBrain wallboxes.
@@ -26,6 +29,8 @@ type CfosPowerBrain struct {
 func init() {
 	registry.Add("cfos", NewCfosPowerBrainFromConfig)
 }
+
+// go:generate go run ../cmd/tools/decorate.go -f decorateCfos -b "*CfosPowerBrain" -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error"
 
 // NewCfosPowerBrainFromConfig creates a cFos charger from generic config
 func NewCfosPowerBrainFromConfig(other map[string]interface{}) (api.Charger, error) {
@@ -41,7 +46,7 @@ func NewCfosPowerBrainFromConfig(other map[string]interface{}) (api.Charger, err
 }
 
 // NewCfosPowerBrain creates a cFos charger
-func NewCfosPowerBrain(uri string, id uint8) (*CfosPowerBrain, error) {
+func NewCfosPowerBrain(uri string, id uint8) (api.Charger, error) {
 	uri = util.DefaultPort(uri, 4701)
 
 	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, id)
@@ -64,7 +69,15 @@ func NewCfosPowerBrain(uri string, id uint8) (*CfosPowerBrain, error) {
 		conn: conn,
 	}
 
-	return wb, nil
+	// decorate phases
+	var phases1p3p func(int) error
+
+	b, err := wb.conn.ReadHoldingRegisters(cfosRegSolarEnabled, 1)
+	if err == nil && binary.BigEndian.Uint16(b) == 256 {
+		phases1p3p = wb.phases1p3p
+	}
+
+	return decorateCfos(wb, phases1p3p), nil
 }
 
 // Status implements the api.Charger interface
@@ -124,6 +137,15 @@ var _ api.ChargerEx = (*CfosPowerBrain)(nil)
 // MaxCurrentMillis implements the api.ChargerEx interface
 func (wb *CfosPowerBrain) MaxCurrentMillis(current float64) error {
 	_, err := wb.conn.WriteSingleRegister(cfosRegMaxCurrent, uint16(current*10))
+	return err
+}
+
+// phases1p3p implements the api.PhaseSwitcher interface
+func (wb *CfosPowerBrain) phases1p3p(phases int) error {
+	if phases == 3 {
+		phases = 0
+	}
+	_, err := wb.conn.WriteSingleRegister(cfosRegRelaySelect, uint16(phases))
 	return err
 }
 

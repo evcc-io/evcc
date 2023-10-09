@@ -27,5 +27,8 @@ type ListEntry struct {
 	CurrentP1       float64 `json:"currentP1"`
 	CurrentP2       float64 `json:"currentP2"`
 	CurrentP3       float64 `json:"currentP3"`
+	VoltageP1       float64 `json:"voltageP1"`
+	VoltageP2       float64 `json:"voltageP2"`
+	VoltageP3       float64 `json:"voltageP3"`
 	RFIDUID         *string `json:"RFIDUID"`
 }
