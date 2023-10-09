@@ -127,7 +127,7 @@ func TestCloseSessionsOnStartup(t *testing.T) {
 	//check fixed history
 	for _, s := range ss[:5] {
 		assert.NotEmpty(t, s.MeterStop)
-		assert.NotEmpty(t, s.ChargedEnergy)
+		assert.Equal(t, float64(10), s.ChargedEnergy)
 		t.Logf("session: %+v", s)
 	}
 
