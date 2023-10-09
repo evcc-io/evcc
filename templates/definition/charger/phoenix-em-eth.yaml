@@ -2,7 +2,7 @@ template: phoenix-em-eth
 products:
   - brand: Phoenix Contact
     description:
-      generic: EM-CP-PP-ETH (Modbus TCP)
+      generic: EM-CP-PP-ETH
 params:
   - name: modbus
     choice: ["tcpip"]
