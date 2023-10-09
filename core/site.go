@@ -139,9 +139,13 @@ func NewSiteFromConfig(
 
 		if db.Instance != nil {
 			var err error
-			if lp.db, err = session.NewStore(lp.Title(), db.Instance); err != nil {
+			var sessionDb *session.DB
+			if sessionDb, err = session.NewStore(lp.Title(), db.Instance); err != nil {
 				return nil, err
 			}
+			lp.db = sessionDb
+			//Fix any dangling history
+			sessionDb.ClosePendingSessionsInHistory()
 
 			// NOTE: this requires stopSession to respect async access
 			shutdown.Register(lp.stopSession)

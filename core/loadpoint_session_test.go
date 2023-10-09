@@ -87,3 +87,52 @@ func TestSession(t *testing.T) {
 	assert.Len(t, s, 1)
 	t.Logf("session: %+v", s)
 }
+
+func TestCloseSessionsOnStartup(t *testing.T) {
+	var err error
+	serverdb.Instance, err = serverdb.New("sqlite", ":memory:")
+	assert.NoError(t, err)
+
+	db, err := session.NewStore("foo", serverdb.Instance)
+	assert.NoError(t, err)
+
+	clock := clock.NewMock()
+
+	//test data, creates 6 sessions, 3rd and 6th are "unfinished"
+	var meterStart float64
+	for i := 1; i <= 6; i++ {
+		meterStart += 10
+		session := db.New(meterStart)
+		session.Created = clock.Now().Add(1 * time.Minute)
+		if i%3 == 0 { //create every third session as incomplete
+			db.Persist(session)
+			continue
+		}
+
+		session.Finished = clock.Now().Add(2 * time.Minute)
+		meterStop := float64(meterStart + 10)
+		session.MeterStop = &meterStop
+		session.ChargedEnergy = 10
+		db.Persist(session)
+	}
+
+	err = db.ClosePendingSessionsInHistory()
+	assert.NoError(t, err)
+
+	var ss session.Sessions
+	err = serverdb.Instance.Order("ID").Find(&ss).Error
+	assert.NoError(t, err)
+	assert.Len(t, ss, 6)
+
+	//check fixed history
+	for _, s := range ss[:5] {
+		assert.NotEmpty(t, s.MeterStop)
+		assert.NotEmpty(t, s.ChargedEnergy)
+		t.Logf("session: %+v", s)
+	}
+
+	// cannot fix the last session, which has no successor yet, ensure it was left alone
+	s := ss[5]
+	assert.Empty(t, s.MeterStop)
+	assert.Empty(t, s.ChargedEnergy)
+}

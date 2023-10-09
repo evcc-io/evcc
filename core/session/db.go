@@ -57,3 +57,31 @@ func (s *DB) Sessions() (Sessions, error) {
 	tx := s.db.Find(&res)
 	return res, tx.Error
 }
+
+func (s *DB) ClosePendingSessionsInHistory() error {
+
+	var res Sessions
+	if tx := s.db.Find(&res, map[string]interface{}{"finished": "0001-01-01 00:00:00+00:00"}); tx.Error != nil {
+		return tx.Error
+	}
+
+	for _, session := range res {
+
+		var nextSession Session
+
+		var tx *gorm.DB
+		if tx = s.db.Limit(1).Order("ID").Find(&nextSession, "ID > ?", session.ID); tx.Error != nil {
+			return tx.Error
+		}
+
+		if tx.RowsAffected == 0 {
+			return nil
+		}
+
+		session.MeterStop = nextSession.MeterStart
+		session.ChargedEnergy = *session.MeterStop - *session.MeterStart
+		s.Persist(session)
+	}
+
+	return nil
+}
