@@ -6,6 +6,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/config"
 )
 
 // the circuit instances to control the load
@@ -21,7 +22,7 @@ type Circuit struct {
 }
 
 // NewCircuitFromConfig creates a new Circuit
-func NewCircuitFromConfig(log *util.Logger, cp configProvider, other map[string]interface{}) (*Circuit, *VMeter, string, error) {
+func NewCircuitFromConfig(log *util.Logger, circuits map[string]*Circuit, vMeters map[string]*VMeter, other map[string]interface{}) (*Circuit, *VMeter, string, error) {
 	var cc struct {
 		Name       string  `mapstructure:"name"`       // unique name, used as reference in lp
 		MaxCurrent float64 `mapstructure:"maxCurrent"` // the max allowed current of this circuit
@@ -34,20 +35,20 @@ func NewCircuitFromConfig(log *util.Logger, cp configProvider, other map[string]
 		return nil, nil, "", err
 	}
 
-	var err error
+	var ok bool
 
 	if cc.Name == "" {
 		return nil, nil, "", fmt.Errorf("failed configuring circuit, need to have a name")
 	}
 
-	if c, _ := cp.Circuit(cc.Name); c != nil {
-		return nil, nil, "", fmt.Errorf("failed to create circuit, name already used: %s", cc.Name)
+	if _, ok = circuits[cc.Name]; ok {
+		return nil, nil, "", fmt.Errorf("circuit name already used: %s", cc.Name)
 	}
 
 	var parent *Circuit
 	if cc.ParentRef != "" {
-		if parent, err = cp.Circuit(cc.ParentRef); err != nil {
-			return nil, nil, "", err
+		if parent, ok = circuits[cc.ParentRef]; !ok {
+			return nil, nil, "", fmt.Errorf("parent circuit not defined: %s", cc.ParentRef)
 		}
 	}
 
@@ -55,11 +56,14 @@ func NewCircuitFromConfig(log *util.Logger, cp configProvider, other map[string]
 	var meterPhaseCurrents api.PhaseCurrents
 	var meterPower api.Meter
 
+	// check meter exists
 	if cc.MeterRef != "" {
-		var m api.Meter
-		if m, err = cp.Meter(cc.MeterRef); err != nil {
+
+		dev, err := config.Meters().ByName(cc.MeterRef)
+		if err != nil {
 			return nil, nil, "", err
 		}
+		var m api.Meter = dev.Instance()
 
 		meterPower = m
 
@@ -78,8 +82,9 @@ func NewCircuitFromConfig(log *util.Logger, cp configProvider, other map[string]
 
 	newCC := NewCircuit(log, cc.MaxCurrent, cc.MaxPower*1000, parent, meterPhaseCurrents, meterPower)
 
+	// if we have parent circuit and this one uses a vMeter, add this circuit as consumer
 	if cc.ParentRef != "" {
-		if vm := cp.VMeter(cc.ParentRef); vm != nil {
+		if vm, ok := vMeters[cc.ParentRef]; ok {
 			vm.AddConsumer(newCC)
 		}
 	}

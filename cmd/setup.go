@@ -94,6 +94,7 @@ type globalConfig struct {
 	Tariffs      tariffConfig
 	Site         map[string]interface{}
 	Loadpoints   []map[string]interface{}
+	Circuits     []map[string]interface{}
 }
 
 type mqttConfig struct {
@@ -605,10 +606,15 @@ func configureSiteAndLoadpoints(conf globalConfig) (*core.Site, error) {
 	if err := configureDevices(conf); err != nil {
 		return nil, err
 	}
-	// if err := configureCircuits(conf, cp); err != nil {
-	// 	return nil, err
-	// }
-	loadpoints, err := configureLoadpoints(conf)
+	var (
+		circuits map[string]*core.Circuit
+		vMeters  map[string]*core.VMeter
+		err      error
+	)
+	if circuits, vMeters, err = configureCircuits(conf); err != nil {
+		return nil, err
+	}
+	loadpoints, err := configureLoadpoints(conf, circuits, vMeters)
 	if err != nil {
 		return nil, fmt.Errorf("failed configuring loadpoints: %w", err)
 	}
@@ -618,12 +624,16 @@ func configureSiteAndLoadpoints(conf globalConfig) (*core.Site, error) {
 		return nil, err
 	}
 
-	return configureSite(conf.Site, loadpoints, config.Instances(config.Vehicles().Devices()), tariffs)
+	return configureSite(conf.Site, loadpoints, config.Instances(config.Vehicles().Devices()), tariffs, circuits)
 }
 
-func configureSite(conf map[string]interface{}, loadpoints []*core.Loadpoint, vehicles []api.Vehicle, tariffs tariff.Tariffs) (*core.Site, error) {
-	// TODO: circuit follow up
-	site, err := core.NewSiteFromConfig(log, conf, loadpoints, vehicles, tariffs, nil)
+func configureSite(conf map[string]interface{}, loadpoints []*core.Loadpoint, vehicles []api.Vehicle, tariffs tariff.Tariffs, circuits map[string]*core.Circuit) (*core.Site, error) {
+	// make list from values of circuit map
+	var circuitList []*core.Circuit
+	for k, _ := range circuits {
+		circuitList = append(circuitList, circuits[k])
+	}
+	site, err := core.NewSiteFromConfig(log, conf, loadpoints, vehicles, tariffs, circuitList)
 	if err != nil {
 		return nil, fmt.Errorf("failed configuring site: %w", err)
 	}
@@ -631,7 +641,7 @@ func configureSite(conf map[string]interface{}, loadpoints []*core.Loadpoint, ve
 	return site, nil
 }
 
-func configureLoadpoints(conf globalConfig) (loadpoints []*core.Loadpoint, err error) {
+func configureLoadpoints(conf globalConfig, circuits map[string]*core.Circuit, vMeters map[string]*core.VMeter) (loadpoints []*core.Loadpoint, err error) {
 	lpInterfaces, ok := viper.AllSettings()["loadpoints"].([]interface{})
 	if !ok || len(lpInterfaces) == 0 {
 		return nil, errors.New("missing loadpoints")
@@ -644,18 +654,18 @@ func configureLoadpoints(conf globalConfig) (loadpoints []*core.Loadpoint, err e
 		}
 
 		log := util.NewLogger("lp-" + strconv.Itoa(id+1))
-		lp, err := core.NewLoadpointFromConfig(log, lpc)
+		lp, err := core.NewLoadpointFromConfig(log, circuits, lpc)
 		if err != nil {
 			return nil, fmt.Errorf("failed configuring loadpoint: %w", err)
 		}
 
-		// check if loadpoint has a circui assignment. If so, check there is a vmeter for it and add as consumer
-		// TODO: Circuit Follow up
-		// if lp.CircuitRef != "" {
-		// 	if vm := cp.VMeter(lp.CircuitRef); vm != nil {
-		// 		vm.AddConsumer(lp)
-		// 	}
-		// }
+		// check if loadpoint has a circuit assignment.
+		// If so, check there is a vmeter for it and add as consumer
+		if lp.CircuitRef != "" {
+			if vm, _ := vMeters[lp.CircuitRef]; vm != nil {
+				vm.AddConsumer(lp)
+			}
+		}
 
 		loadpoints = append(loadpoints, lp)
 	}
@@ -663,29 +673,29 @@ func configureLoadpoints(conf globalConfig) (loadpoints []*core.Loadpoint, err e
 	return loadpoints, nil
 }
 
-// // configureCircuits loads circuit definition
-// func configureCircuits(conf config, cp *ConfigProvider) error {
-// 	cp.circuits = make(map[string]*core.Circuit)
-// 	cp.vMeters = make(map[string]*core.VMeter)
+// configureCircuits loads circuit definition
+func configureCircuits(conf globalConfig) (circuits map[string]*core.Circuit, vMeters map[string]*core.VMeter, err error) {
+	circuits = make(map[string]*core.Circuit)
+	vMeters = make(map[string]*core.VMeter)
 
-// 	// TODO cleanup similar to loadpoints
-// 	for id, cfg := range conf.Circuits {
+	// TODO cleanup similar to loadpoints
+	for id, cfg := range conf.Circuits {
 
-// 		log := util.NewLogger("circuit-" + strconv.Itoa(id+1))
+		log := util.NewLogger("circuit-" + strconv.Itoa(id+1))
 
-// 		circuit, vMeter, ccName, err := core.NewCircuitFromConfig(log, cp, cfg)
-// 		if circuit == nil {
-// 			return fmt.Errorf("failed configuring circuit: %w", err)
-// 		}
-// 		// save vMeter for LP access
-// 		if vMeter != nil {
-// 			cp.vMeters[ccName] = vMeter
-// 		}
+		circuit, vMeter, ccName, err := core.NewCircuitFromConfig(log, circuits, vMeters, cfg)
+		if circuit == nil {
+			return circuits, vMeters, fmt.Errorf("failed configuring circuit: %w", err)
+		}
+		// save vMeter for LP access
+		if vMeter != nil {
+			vMeters[ccName] = vMeter
+		}
 
-// 		cp.circuits[ccName] = circuit
-// 	}
-// 	return nil
-// }
+		circuits[ccName] = circuit
+	}
+	return circuits, vMeters, nil
+}
 
 // configureAuth handles routing for devices. For now only api.AuthProvider related routes
 func configureAuth(conf networkConfig, vehicles []api.Vehicle, router *mux.Router, paramC chan<- util.Param) {
