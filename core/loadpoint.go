@@ -703,6 +703,8 @@ func (lp *Loadpoint) syncCharger() error {
 
 // checkCircuitAvailableLimit determines remaining usable current using circuit limits and consumption
 func (lp *Loadpoint) checkCircuitAvailableLimit(requestedCurrent float64) (float64, error) {
+	// tolerance before throwing alerts
+	tolerance := 1.05
 	if lp.circuit != nil && requestedCurrent > 0.0 {
 
 		// circuits remaining current includes the consumption of this loadpoint, so adjust using consumer interface
@@ -716,7 +718,7 @@ func (lp *Loadpoint) checkCircuitAvailableLimit(requestedCurrent float64) (float
 		chargeCurrentNew := math.Min(math.Max(lp.circuit.GetRemainingCurrent()+curLP, 0), requestedCurrent)
 
 		// apply a small reserve to prevent log messages
-		if chargeCurrentNew < requestedCurrent*1.01 {
+		if chargeCurrentNew < requestedCurrent*tolerance {
 			lp.log.DEBUG.Printf("get current limitation from %.1fA to %.1fA from circuit", requestedCurrent, chargeCurrentNew)
 		}
 
@@ -728,7 +730,7 @@ func (lp *Loadpoint) checkCircuitAvailableLimit(requestedCurrent float64) (float
 		lp.log.TRACE.Printf("request: %.1f, avialable: %.1f, new: %.1f, phases: %d", requestedPower, availablePower, chargePowerNew, lp.phases)
 
 		// apply a small reserve to prevent log messages
-		if chargePowerNew < requestedPower*1.01 {
+		if chargePowerNew < requestedPower*tolerance {
 			// lower the current based on phases
 			chargeCurrentNew = powerToCurrent(chargePowerNew, lp.phases)
 			lp.log.DEBUG.Printf("get power limitation from %.1fW to %.1fW (%.1fA) from circuit", requestedPower, chargePowerNew, chargeCurrentNew)
@@ -742,7 +744,14 @@ func (lp *Loadpoint) checkCircuitAvailableLimit(requestedCurrent float64) (float
 			// 	}
 			// }
 		}
-		if chargeCurrentNew < requestedCurrent*1.01 {
+
+		// if we start charging, use minCurrent() first in order to ramp up
+		// if lp.chargeCurrent == 0 {
+		if lp.GetStatus() != api.StatusC && lp.GetStatus() != api.StatusD {
+			chargeCurrentNew = math.Min(lp.MinCurrent, chargeCurrentNew)
+			lp.log.DEBUG.Printf("start charging with minCurrent")
+		}
+		if chargeCurrentNew < requestedCurrent*tolerance {
 			return chargeCurrentNew, nil
 		}
 	}
@@ -758,6 +767,7 @@ func (lp *Loadpoint) setLimit(chargeCurrent float64, force bool) error {
 	if err != nil {
 		return err
 	}
+	// apply limitation
 	if maxCurAvailable < chargeCurrent {
 		chargeCurrent = maxCurAvailable
 		forceCurrentChange = true

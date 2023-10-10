@@ -647,7 +647,7 @@ func configureSiteAndLoadpoints(conf globalConfig) (*core.Site, error) {
 func configureSite(conf map[string]interface{}, loadpoints []*core.Loadpoint, vehicles []api.Vehicle, tariffs tariff.Tariffs, circuits map[string]*core.Circuit) (*core.Site, error) {
 	// make list from values of circuit map
 	var circuitList []*core.Circuit
-	for k, _ := range circuits {
+	for k := range circuits {
 		circuitList = append(circuitList, circuits[k])
 	}
 	site, err := core.NewSiteFromConfig(log, conf, loadpoints, tariffs, circuitList)
@@ -679,7 +679,7 @@ func configureLoadpoints(conf globalConfig, circuits map[string]*core.Circuit, v
 		// check if loadpoint has a circuit assignment.
 		// If so, check there is a vmeter for it and add as consumer
 		if lp.CircuitRef != "" {
-			if vm, _ := vMeters[lp.CircuitRef]; vm != nil {
+			if vm := vMeters[lp.CircuitRef]; vm != nil {
 				vm.AddConsumer(lp)
 			}
 		}
