@@ -3,6 +3,7 @@ package autonomic
 import (
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
@@ -53,11 +54,16 @@ func NewAPI(log *util.Logger, ts oauth2.TokenSource) *API {
 }
 
 // RefreshResult retrieves a refresh result using :query
-func (v *API) Status(vin string) (StatusResponse, error) {
-	var res StatusResponse
+func (v *API) Status(vin string) (MetricsResponse, error) {
+	var res MetricsResponse
 
 	uri := fmt.Sprintf("%s/vehicles/%s:query", ApiURI, vin)
-	err := v.GetJSON(uri, &res)
+	req, err := request.New(http.MethodPost, uri, strings.NewReader("{}"), request.JSONEncoding)
+	if err == nil {
+		err = v.DoJSON(req, &res)
+		// b, _ := v.DoBody(req)
+		// fmt.Println(string(b))
+	}
 
 	return res, err
 }

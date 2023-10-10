@@ -11,7 +11,7 @@ import (
 const refreshTimeout = time.Minute
 
 type Provider struct {
-	statusG     func() (autonomic.StatusResponse, error)
+	statusG     func() (autonomic.MetricsResponse, error)
 	expiry      time.Duration
 	refreshTime time.Time
 	refreshId   string
@@ -23,7 +23,7 @@ func NewProvider(api *autonomic.API, vin string, expiry, cache time.Duration) *P
 		expiry: expiry,
 	}
 
-	impl.statusG = provider.Cached(func() (autonomic.StatusResponse, error) {
+	impl.statusG = provider.Cached(func() (autonomic.MetricsResponse, error) {
 		return api.Status(vin)
 	}, cache)
 
@@ -38,24 +38,23 @@ var _ api.Battery = (*Provider)(nil)
 func (v *Provider) Soc() (float64, error) {
 	res, err := v.statusG()
 	if err == nil {
-		return 23, nil
+		return res.Metrics.XevBatteryStateOfCharge.Value, nil
 	}
-	_ = res
 
 	return 0, err
 }
 
-// var _ api.VehicleRange = (*Provider)(nil)
+var _ api.VehicleRange = (*Provider)(nil)
 
-// // Range implements the api.VehicleRange interface
-// func (v *Provider) Range() (int64, error) {
-// 	res, err := v.statusG()
-// 	if err == nil {
-// 		return int64(res.VehicleStatus.ElVehDTE.Value), nil
-// 	}
+// Range implements the api.VehicleRange interface
+func (v *Provider) Range() (int64, error) {
+	res, err := v.statusG()
+	if err == nil {
+		return int64(res.Metrics.XevBatteryRange.Value), nil
+	}
 
-// 	return 0, err
-// }
+	return 0, err
+}
 
 // var _ api.ChargeState = (*Provider)(nil)
 
@@ -76,29 +75,22 @@ func (v *Provider) Soc() (float64, error) {
 // 	return status, err
 // }
 
-// var _ api.VehicleOdometer = (*Provider)(nil)
+var _ api.VehicleOdometer = (*Provider)(nil)
 
-// // Odometer implements the api.VehicleOdometer interface
-// func (v *Provider) Odometer() (float64, error) {
-// 	res, err := v.statusG()
-// 	return res.VehicleStatus.Odometer.Value, err
-// }
+// Odometer implements the api.VehicleOdometer interface
+func (v *Provider) Odometer() (float64, error) {
+	res, err := v.statusG()
+	return res.Metrics.Odometer.Value, err
+}
 
-// var _ api.VehiclePosition = (*Provider)(nil)
+var _ api.VehiclePosition = (*Provider)(nil)
 
-// // Position implements the api.VehiclePosition interface
-// func (v *Provider) Position() (float64, float64, error) {
-// 	res, err := v.statusG()
-// 	return res.VehicleStatus.Gps.Latitude, res.VehicleStatus.Gps.Longitude, err
-// }
-
-// var _ api.VehicleFinishTimer = (*Provider)(nil)
-
-// // FinishTime implements the api.VehicleFinishTimer interface
-// func (v *Provider) FinishTime() (time.Time, error) {
-// 	res, err := v.statusG()
-// 	return res.VehicleStatus.ChargeEndTime.Value.Time, err
-// }
+// Position implements the api.VehiclePosition interface
+func (v *Provider) Position() (float64, float64, error) {
+	res, err := v.statusG()
+	loc := res.Metrics.Position.Value.Location
+	return loc.Lat, loc.Lon, err
+}
 
 // var _ api.Resurrector = (*Provider)(nil)
 
