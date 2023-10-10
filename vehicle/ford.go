@@ -7,6 +7,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/vehicle/ford"
+	"github.com/evcc-io/evcc/vehicle/ford/autonomic"
 )
 
 // https://github.com/d4v3y0rk/ffpass-module
@@ -58,9 +59,19 @@ func NewFordFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	api := ford.NewAPI(log, identity)
 
 	cc.VIN, err = ensureVehicle(cc.VIN, api.Vehicles)
+	if err != nil {
+		return nil, err
+	}
+
+	autoIdentity, err := autonomic.NewIdentity(log, identity)
+	if err != nil {
+		return nil, err
+	}
+
+	autoApi := autonomic.NewAPI(log, autoIdentity)
 
 	if err == nil {
-		v.Provider = ford.NewProvider(api, cc.VIN, cc.Expiry, cc.Cache)
+		v.Provider = ford.NewProvider(autoApi, cc.VIN, cc.Expiry, cc.Cache)
 	}
 
 	return v, err
