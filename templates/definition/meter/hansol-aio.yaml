@@ -1,0 +1,49 @@
+template: hansol-aio
+products:
+  - brand: Hansol Technics
+    description:
+      generic: AIO Series
+  - brand: Qcells
+    description:
+      generic: Q.HOME ESS-G1
+  - brand: Samsung SDI
+    description:
+      generic: AIO ESS
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+    allinone: true
+  - name: host
+  - name: capacity
+    advanced: true
+render: |
+  type: custom
+  {{- if eq .usage "grid" }}
+  power:
+    source: http
+    uri: http://{{ .host }}/R3EMSAPP_REAL.ems?file=ESSRealtimeStatus.json
+    method: GET
+    jq: .ESSRealtimeStatus.GridPw*1000
+  {{- end }}
+  {{- if eq .usage "pv" }}
+  power:
+    source: http
+    uri: http://{{ .host }}/R3EMSAPP_REAL.ems?file=ESSRealtimeStatus.json
+    method: GET
+    jq: .ESSRealtimeStatus.PvPw*1000
+  {{- end }}
+  {{- if eq .usage "battery" }}
+  power:
+    source: http
+    uri: http://{{ .host }}/R3EMSAPP_REAL.ems?file=ESSRealtimeStatus.json
+    method: GET
+    jq: .ESSRealtimeStatus.BtPw*1000
+  soc:
+    source: http
+    uri: http://{{ .host }}/R3EMSAPP_REAL.ems?file=ESSRealtimeStatus.json
+    method: GET
+    jq: .ESSRealtimeStatus.BtSoc
+  {{- if .capacity }}
+  capacity: {{ .capacity }} # kWh
+  {{- end }}
+  {{- end }}
