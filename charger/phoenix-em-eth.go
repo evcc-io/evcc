@@ -167,14 +167,14 @@ func (wb *PhoenixEMEth) voltages() (float64, float64, float64, error) {
 
 // getPhaseValues returns 3 sequential phase values
 func (wb *PhoenixEMEth) getPhaseValues(reg uint16) (float64, float64, float64, error) {
-	//Read single values. Device does not support bulk-reading of multiple registers!
+	b, err := wb.conn.ReadInputRegisters(reg, 6)
+	if err != nil {
+		return 0, 0, 0, err
+	}
+
 	var res [3]float64
 	for i := 0; i < 3; i++ {
-		b, err := wb.conn.ReadInputRegisters(reg+uint16(2*i), 2)
-		if err != nil {
-			return 0, 0, 0, err
-		}
-		res[i] = float64(encoding.Int32LswFirst(b)) / 1e3
+		res[i] = float64(encoding.Int32LswFirst(b[4*i:])) / 1e3
 	}
 
 	return res[0], res[1], res[2], nil
