@@ -31,18 +31,18 @@ func NewTasmotaFromConfig(other map[string]interface{}) (api.Charger, error) {
 		User         string
 		Password     string
 		StandbyPower float64
-		Channels     []int
+		Channel      []int
 		Cache        time.Duration
 	}{
-		Channels: []int{1},
-		Cache:    time.Second,
+		Channel: []int{1},
+		Cache:   time.Second,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewTasmota(cc.embed, cc.URI, cc.User, cc.Password, cc.Channels, cc.StandbyPower, cc.Cache)
+	return NewTasmota(cc.embed, cc.URI, cc.User, cc.Password, cc.Channel, cc.StandbyPower, cc.Cache)
 }
 
 // NewTasmota creates Tasmota charger

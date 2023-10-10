@@ -15,7 +15,7 @@ params:
   - name: password
     required: false
     mask: true
-  - name: channels
+  - name: channel
     type: stringlist
     default: 1
     required: true
@@ -31,4 +31,4 @@ render: |
   usage: {{ .usage }}
   user: {{ .user }}
   password: {{ .password }}
-  channels: [{{ stringsjoin .channels "," }}]  # list of meter channels [1,2,....,8]
+  channel: [{{ stringsjoin .channel "," }}]  # list of meter channels [1,2,....,8]
