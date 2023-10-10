@@ -58,10 +58,9 @@ func (s *DB) Sessions() (Sessions, error) {
 	return res, tx.Error
 }
 
-func (s *DB) ClosePendingSessionsInHistory() error {
-
+func (s *DB) ClosePendingSessionsInHistory(chargeMeterTotal float64) error {
 	var res Sessions
-	if tx := s.db.Find(&res, map[string]interface{}{"finished": "0001-01-01 00:00:00+00:00"}); tx.Error != nil {
+	if tx := s.db.Find(&res, map[string]interface{}{"finished": "0001-01-01 00:00:00+00:00", "Loadpoint": s.name}); tx.Error != nil {
 		return tx.Error
 	}
 
@@ -70,15 +69,17 @@ func (s *DB) ClosePendingSessionsInHistory() error {
 		var nextSession Session
 
 		var tx *gorm.DB
-		if tx = s.db.Limit(1).Order("ID").Find(&nextSession, "ID > ?", session.ID); tx.Error != nil {
+		if tx = s.db.Limit(1).Order("ID").Find(&nextSession, "ID > ? AND Loadpoint = ?", session.ID, s.name); tx.Error != nil {
 			return tx.Error
 		}
 
 		if tx.RowsAffected == 0 {
-			return nil
+			//no successor, this is the most recent session and it is open
+			session.MeterStop = &chargeMeterTotal
+		} else {
+			session.MeterStop = nextSession.MeterStart
 		}
 
-		session.MeterStop = nextSession.MeterStart
 		session.ChargedEnergy = *session.MeterStop - *session.MeterStart
 		s.Persist(session)
 	}

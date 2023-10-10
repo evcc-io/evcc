@@ -145,7 +145,7 @@ func NewSiteFromConfig(
 			}
 			lp.db = sessionDb
 			//Fix any dangling history
-			if err = sessionDb.ClosePendingSessionsInHistory(); err != nil {
+			if err = sessionDb.ClosePendingSessionsInHistory(lp.chargeMeterTotal()); err != nil {
 				return nil, err
 			}
 
