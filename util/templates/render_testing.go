@@ -56,6 +56,8 @@ func TestClass(t *testing.T, class Class, instantiate func(t *testing.T, values 
 
 			usages := tmpl.Usages()
 			if len(usages) == 0 {
+				t.Parallel()
+
 				test(t, tmpl, values, func(values map[string]interface{}) {
 					instantiate(t, values)
 				})
