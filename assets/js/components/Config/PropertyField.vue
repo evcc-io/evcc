@@ -121,6 +121,12 @@ export default {
 			return this.validValues.length > 0;
 		},
 		selectOptions() {
+			// If the valid values are already in the correct format, return them
+			if (this.validValues[0].key && this.validValues[0].name) {
+				return this.validValues;
+			}
+
+			// Otherwise, convert them to the correct format
 			return this.validValues.map((value) => ({
 				key: value,
 				name: this.$t(`config.options.${this.property}.${value}`),

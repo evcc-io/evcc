@@ -12,7 +12,7 @@
 		</div>
 		<div class="form-text">
 			<div v-if="example">{{ $t("config.form.example") }}: {{ example }}</div>
-			<div v-if="help" v-html="helpHtml"></div>
+			<div v-if="help" v-html="helpHtml" class="text-gray"></div>
 		</div>
 	</div>
 </template>

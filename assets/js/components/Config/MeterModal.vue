@@ -52,6 +52,21 @@
 									</option>
 								</select>
 							</FormRow>
+							<Modbus
+								v-if="modbus"
+								v-model:modbus="values.modbus"
+								v-model:id="values.id"
+								v-model:host="values.host"
+								v-model:port="values.port"
+								v-model:device="values.device"
+								v-model:baudrate="values.baudrate"
+								v-model:comset="values.comset"
+								:defaultId="modbus.ID"
+								:defaultComset="modbus.Comset"
+								:defaultBaudrate="modbus.Baudrate"
+								:defaultPort="modbus.Port"
+								:capabilities="modbusCapabilities"
+							/>
 							<FormRow
 								v-for="param in templateParams"
 								:id="`meterParam${param.Name}`"
@@ -72,17 +87,6 @@
 									:validValues="param.ValidValues"
 								/>
 							</FormRow>
-							<Modbus
-								v-if="modbusOptions.length > 0"
-								v-model:modbus="values.modbus"
-								v-model:id="values.id"
-								v-model:host="values.host"
-								v-model:port="values.port"
-								v-model:device="values.device"
-								v-model:baudrate="values.baudrate"
-								v-model:comset="values.comset"
-								:options="modbusOptions"
-							/>
 
 							<TestResult
 								v-if="templateName"
@@ -206,9 +210,12 @@ export default {
 					.filter((p) => this.meterType === "battery" || p.Name !== "capacity")
 			);
 		},
-		modbusOptions() {
+		modbus() {
 			const params = this.template?.Params || [];
-			return params.find((p) => p.Name === "modbus")?.Choice || [];
+			return params.find((p) => p.Name === "modbus");
+		},
+		modbusCapabilities() {
+			return this.modbus?.Choice || [];
 		},
 		apiData() {
 			return {
