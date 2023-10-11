@@ -344,7 +344,7 @@ export default {
 		async testMeter() {
 			let url = "config/test/meter";
 			if (!this.isNew) {
-				url += `/${this.id}`;
+				url += `/merge/${this.id}`;
 			}
 			await api.post(url, this.apiData);
 		},

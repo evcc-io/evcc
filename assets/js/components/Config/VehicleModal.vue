@@ -304,7 +304,7 @@ export default {
 		async testVehicle() {
 			let url = "config/test/vehicle";
 			if (!this.isNew) {
-				url += `/${this.id}`;
+				url += `/merge/${this.id}`;
 			}
 			await api.post(url, this.apiData);
 		},
