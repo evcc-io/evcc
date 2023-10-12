@@ -73,11 +73,9 @@ func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 		"refresh_token": token.RefreshToken,
 	}
 
-	req, err := request.New(http.MethodPost, OAuth2Config.Endpoint.TokenURL, request.MarshalJSON(data), map[string]string{
-		"Content-type": request.JSONContent,
-	})
-
 	var res *oauth.Token
+
+	req, err := request.New(http.MethodPost, OAuth2Config.Endpoint.TokenURL, request.MarshalJSON(data), request.JSONEncoding)
 	if err == nil {
 		err = v.DoJSON(req, &res)
 	}
