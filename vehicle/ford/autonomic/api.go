@@ -67,10 +67,10 @@ func (v *API) Status(vin string) (MetricsResponse, error) {
 }
 
 // Refresh executes the refresh command
-func (v *API) Command(vin string) (MetricsResponse, error) {
-	var res MetricsResponse
+func (v *API) Refresh(vin string) (any, error) {
+	var res map[string]any
 
-	data := map[string]interface{}{
+	data := map[string]any{
 		"properties": struct{}{},
 		"tags":       struct{}{},
 		"type":       "statusRefresh",

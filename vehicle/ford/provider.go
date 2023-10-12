@@ -10,7 +10,8 @@ import (
 )
 
 type Provider struct {
-	statusG func() (autonomic.MetricsResponse, error)
+	statusG  func() (autonomic.MetricsResponse, error)
+	refreshG func() error
 }
 
 func NewProvider(api *autonomic.API, vin string, cache time.Duration) *Provider {
@@ -18,6 +19,10 @@ func NewProvider(api *autonomic.API, vin string, cache time.Duration) *Provider 
 		statusG: provider.Cached(func() (autonomic.MetricsResponse, error) {
 			return api.Status(vin)
 		}, cache),
+		refreshG: func() error {
+			_, err := api.Refresh(vin)
+			return err
+		},
 	}
 
 	return impl
@@ -85,9 +90,9 @@ func (v *Provider) Position() (float64, float64, error) {
 	return loc.Lat, loc.Lon, err
 }
 
-// var _ api.Resurrector = (*Provider)(nil)
+var _ api.Resurrector = (*Provider)(nil)
 
-// // WakeUp implements the api.Resurrector interface
-// func (v *Provider) WakeUp() error {
-// 	return v.wakeup()
-// }
+// WakeUp implements the api.Resurrector interface
+func (v *Provider) WakeUp() error {
+	return v.refreshG()
+}
