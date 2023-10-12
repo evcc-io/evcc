@@ -1,6 +1,7 @@
 package ford
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -11,23 +12,15 @@ import (
 const refreshTimeout = time.Minute
 
 type Provider struct {
-	statusG     func() (autonomic.MetricsResponse, error)
-	expiry      time.Duration
-	refreshTime time.Time
-	refreshId   string
-	wakeup      func() error
+	statusG func() (autonomic.MetricsResponse, error)
 }
 
-func NewProvider(api *autonomic.API, vin string, expiry, cache time.Duration) *Provider {
+func NewProvider(api *autonomic.API, vin string, cache time.Duration) *Provider {
 	impl := &Provider{
-		expiry: expiry,
+		statusG: provider.Cached(func() (autonomic.MetricsResponse, error) {
+			return api.Status(vin)
+		}, cache),
 	}
-
-	impl.statusG = provider.Cached(func() (autonomic.MetricsResponse, error) {
-		return api.Status(vin)
-	}, cache)
-
-	// impl.wakeup = func() error { return api.WakeUp(vin) }
 
 	return impl
 }
@@ -56,24 +49,26 @@ func (v *Provider) Range() (int64, error) {
 	return 0, err
 }
 
-// var _ api.ChargeState = (*Provider)(nil)
+var _ api.ChargeState = (*Provider)(nil)
 
-// // Status implements the api.ChargeState interface
-// func (v *Provider) Status() (api.ChargeStatus, error) {
-// 	status := api.StatusA // disconnected
+// Status implements the api.ChargeState interface
+func (v *Provider) Status() (api.ChargeStatus, error) {
+	status := api.StatusA // disconnected
 
-// 	res, err := v.statusG()
-// 	if err == nil {
-// 		if res.VehicleStatus.PlugStatus.Value == 1 {
-// 			status = api.StatusB // connected, not charging
-// 		}
-// 		if res.VehicleStatus.ChargingStatus.Value == "ChargingAC" {
-// 			status = api.StatusC // charging
-// 		}
-// 	}
+	res, err := v.statusG()
+	if err == nil {
+		switch res.Metrics.XevPlugChargerStatus.Value {
+		case "CONNECTED":
+			status = api.StatusB // connected, not charging
+		case "CHARGING", "CHARGINGAC":
+			status = api.StatusC // charging
+		default:
+			err = fmt.Errorf("unknown charge status: %s", res.Metrics.XevPlugChargerStatus.Value)
+		}
+	}
 
-// 	return status, err
-// }
+	return status, err
+}
 
 var _ api.VehicleOdometer = (*Provider)(nil)
 

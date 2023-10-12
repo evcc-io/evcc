@@ -68,17 +68,11 @@ func (v *Identity) exchange(token *oauth2.Token) (*oauth2.Token, error) {
 }
 
 // RefreshToken implements oauth.TokenRefresher
-func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
-	data := map[string]string{
-		"refresh_token": token.RefreshToken,
+func (v *Identity) RefreshToken(_ *oauth2.Token) (*oauth2.Token, error) {
+	token, err := v.ts.Token()
+	if err != nil {
+		return nil, err
 	}
 
-	var res *oauth.Token
-
-	req, err := request.New(http.MethodPost, OAuth2Config.Endpoint.TokenURL, request.MarshalJSON(data), request.JSONEncoding)
-	if err == nil {
-		err = v.DoJSON(req, &res)
-	}
-
-	return (*oauth2.Token)(res), err
+	return v.exchange(token)
 }

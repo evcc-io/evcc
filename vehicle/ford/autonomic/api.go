@@ -53,7 +53,7 @@ func NewAPI(log *util.Logger, ts oauth2.TokenSource) *API {
 	return v
 }
 
-// RefreshResult retrieves a refresh result using :query
+// Status retrieves a metrics result using :query
 func (v *API) Status(vin string) (MetricsResponse, error) {
 	var res MetricsResponse
 
@@ -61,8 +61,26 @@ func (v *API) Status(vin string) (MetricsResponse, error) {
 	req, err := request.New(http.MethodPost, uri, strings.NewReader("{}"), request.JSONEncoding)
 	if err == nil {
 		err = v.DoJSON(req, &res)
-		// b, _ := v.DoBody(req)
-		// fmt.Println(string(b))
+	}
+
+	return res, err
+}
+
+// Refresh executes the refresh command
+func (v *API) Command(vin string) (MetricsResponse, error) {
+	var res MetricsResponse
+
+	data := map[string]interface{}{
+		"properties": struct{}{},
+		"tags":       struct{}{},
+		"type":       "statusRefresh",
+		"wakeUp":     true,
+	}
+
+	uri := fmt.Sprintf("%s/vehicles/%s/command", ApiURI, vin)
+	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
+	if err == nil {
+		err = v.DoJSON(req, &res)
 	}
 
 	return res, err
