@@ -188,6 +188,12 @@ tariffs:
     # region: dk1 # or dk2
     # charges: # optional, additional charges per kWh
     # tax: # optional, additional tax (0.1 for 10%)
+
+    # type: entsoe # Entso-E european market data
+    # domain: BZN|DE-LU # https://transparency.entsoe.eu/content/static_content/Static%20content/web%20api/Guide.html#_areas
+    # securitytoken: # api token
+    # charges: # optional, additional charges per kWh
+    # tax: # optional, additional tax (0.1 for 10%)
   feedin:
     # rate for feeding excess (pv) energy to the grid
     type: fixed
