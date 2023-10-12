@@ -825,7 +825,7 @@ func (lp *Loadpoint) minSocNotReached() bool {
 
 	if lp.vehicleSoc != 0 {
 		if lp.vehicleSoc < float64(lp.Soc.min) {
-			lp.log.DEBUG.Printf("Minimum charging: vehicleSoc %.0f%% < Minimum Soc %.0f%%", lp.vehicleSoc, lp.Soc.min)
+			lp.log.DEBUG.Printf("Minimum charging: vehicleSoc %.0f%% < Minimum Soc %.0f%%", lp.vehicleSoc, float64(lp.Soc.min))
 		}
 		return lp.vehicleSoc < float64(lp.Soc.min)
 	}
