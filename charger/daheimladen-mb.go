@@ -203,9 +203,10 @@ func (wb *DaheimLadenMB) MaxCurrent(current int64) error {
 		return fmt.Errorf("invalid current %d", current)
 	}
 
-	err := wb.setCurrent(wb.curr)
+	curr := uint16(current * 10)
+	err := wb.setCurrent(curr)
 	if err == nil {
-		wb.curr = uint16(current * 10)
+		wb.curr = curr
 	}
 
 	return err
