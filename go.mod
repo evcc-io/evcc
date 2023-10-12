@@ -92,7 +92,7 @@ require (
 	gitlab.com/bboehmke/sunny v0.15.1-0.20211022160056-2fba1c86ade6
 	golang.org/x/crypto/x509roots/fallback v0.0.0-20231005151211-e3cc52e598e3
 	golang.org/x/exp v0.0.0-20231006140011-7918f672742d
-	golang.org/x/net v0.16.0
+	golang.org/x/net v0.17.0
 	golang.org/x/oauth2 v0.13.0
 	golang.org/x/sync v0.4.0
 	golang.org/x/text v0.13.0
