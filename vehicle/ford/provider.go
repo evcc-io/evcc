@@ -9,8 +9,6 @@ import (
 	"github.com/evcc-io/evcc/vehicle/ford/autonomic"
 )
 
-const refreshTimeout = time.Minute
-
 type Provider struct {
 	statusG func() (autonomic.MetricsResponse, error)
 }
