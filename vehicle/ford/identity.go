@@ -41,7 +41,7 @@ type Identity struct {
 	oauth2.TokenSource
 }
 
-// NewIdentity creates Fiat identity
+// NewIdentity creates Ford identity
 func NewIdentity(log *util.Logger, user, password string) *Identity {
 	return &Identity{
 		Helper:   request.NewHelper(log),
