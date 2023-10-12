@@ -56,11 +56,13 @@ var _ api.ChargeState = (*Provider)(nil)
 
 // Status implements the api.ChargeState interface
 func (v *Provider) Status() (api.ChargeStatus, error) {
-	status := api.StatusA // disconnected
+	status := api.StatusNone
 
 	res, err := v.statusG()
 	if err == nil {
 		switch res.Metrics.XevPlugChargerStatus.Value {
+		case "DISCONNECTED":
+			status = api.StatusA // disconnected
 		case "CONNECTED":
 			status = api.StatusB // connected, not charging
 		case "CHARGING", "CHARGINGAC":
