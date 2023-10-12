@@ -613,7 +613,7 @@ func (site *Site) sitePower(totalChargePower, flexiblePower float64) (float64, b
 
 		// if battery is charging below prioritySoc give it priority
 		if site.batterySoc < site.PrioritySoc && batteryPower < 0 {
-			site.log.DEBUG.Printf("giving priority to battery charging at soc %.0f%% until %.0f%% reached", site.batterySoc, site.PrioritySoc)
+			site.log.DEBUG.Printf("giving priority to battery charging at soc %.0f%% until %.0f%% is reached", site.batterySoc, site.PrioritySoc)
 			batteryPower = 0
 		} else {
 			// if battery is above bufferSoc allow using it for charging
