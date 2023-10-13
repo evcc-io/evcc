@@ -207,8 +207,9 @@ describe("smart grid charging", () => {
         tariffCo2: 400,
         smartCostLimit: 500,
         smartCostType: "co2",
+        smartCostActive: true,
       },
-      "cleanEnergyCharging"
+      `cleanEnergyCharging:{"co2":"400 g","limit":"500 g"}`
     );
   });
   test("show cheap energy message", () => {
@@ -219,9 +220,10 @@ describe("smart grid charging", () => {
         charging: true,
         tariffGrid: 0.28,
         smartCostLimit: 0.29,
-        currency: "EUR",
+        currency: "CHF",
+        smartCostActive: true,
       },
-      "cheapEnergyCharging"
+      `cheapEnergyCharging:{"price":"28,0 rp","limit":"29,0 rp"}`
     );
   });
 });
