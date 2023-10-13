@@ -14,8 +14,8 @@ note = "Opgelet: Deze instellingen beïnvloeden enkel de zonnemodus. Oplaadgedra
 
 [batterySettings.bufferStart]
 full = "als bijna vol"
-low = "als beetje vol"
-medium = "als half vol"
+low = "indien beetje vol"
+medium = "indien half vol"
 never = "enkel bij voldoende overschot"
 
 [footer]
@@ -174,7 +174,7 @@ label = "Max. Stroom"
 label = "Min. Stroom"
 
 [main.loadpointSettings.minSoc]
-description = "Voor noodgevallen. Het voertuig wordt „snel” opgeladen tot {0}% van alle beschikbare zonne-energie, en gaat dan verder met alleen het zonneoverschot."
+description = "Het voertuig wordt „snel” opgeladen tot {0}% in deze modus, en gaat dan verder met alleen het zonneoverschot."
 label = "Min. lading %"
 
 [main.loadpointSettings.phasesConfigured]
@@ -217,6 +217,8 @@ title = "Doeltijd"
 today = "Vandaag"
 tomorrow = "Morgen"
 update = "Updaten"
+targetEnergyRequired = Je dient ook een energie limiet in te stellen
+onlyInPvMode = Laadplan werkt alleen in PV modus
 
 [main.targetChargePlan]
 chargeDuration = "Oplaadtijd"
@@ -239,6 +241,8 @@ none = "Geen voertuig"
 targetSoc = "Limiet"
 unknown = "Gast voertuig"
 vehicleSoc = "Lading"
+temp = Temperatuur
+tempLimit = "Temperatuur limiet"
 
 [main.vehicleSoc]
 charging = "laden"
@@ -304,6 +308,9 @@ reallyDelete = "Wilt u deze sessie echt verwijderen?"
 solar = "Zon"
 title = "Oplaadsessies"
 vehicle = "Voertuig"
+total = "Totaal"
+chargeDuration = "Duur"
+avgPower = "⌀ Vermogen"
 
 [sessions.csv]
 chargedenergy = "Energie (kWh)"
@@ -373,3 +380,35 @@ title = "Start Error"
 cancel = "Annuleer"
 template = "Fabrikant"
 test = "Test"
+
+
+[config.validation]
+validate = "valideer"
+label = "Status"
+unknown = "onbekend"
+running = "valideren..."
+success = "succesvol"
+failed = "mislukt"
+
+[config.vehicle]
+cancel = "Annuleer"
+titleEdit = "Voertuig bewerken"
+delete = "Verwijder voertuig"
+titleAdd = "Voertuig toevoegen"
+online = "Voertuig met online API"
+save = "Opslaan"
+template = "Fabrikant"
+offline = "Algemeen voertuig"
+validateSave = "Valideren & opslaan"
+scooter = "Scooter"
+generic = "Andere integraties"
+
+[config.main]
+vehicles = "Mijn voertuigen"
+edit = "Bewerken"
+title = "Configuratie"
+addVehicle = "Voertuig toevoegen"
+
+[config.form]
+optional = Optioneel
+example = "Voorbeeld"
