@@ -119,6 +119,7 @@ export default {
 		climaterActive: Boolean,
 		smartCostLimit: Number,
 		smartCostType: String,
+		smartCostActive: Boolean,
 		tariffGrid: Number,
 		tariffCo2: Number,
 		currency: String,

@@ -28,8 +28,10 @@ export default {
 		climaterActive: Boolean,
 		smartCostLimit: Number,
 		smartCostType: String,
+		smartCostActive: Boolean,
 		tariffGrid: Number,
 		tariffCo2: Number,
+		currency: String,
 	},
 	computed: {
 		phaseTimerActive() {
@@ -45,9 +47,6 @@ export default {
 		},
 		guardTimerActive() {
 			return this.guardRemainingInterpolated > 0 && this.guardAction === "enable";
-		},
-		isCo2() {
-			return this.smartCostType === CO2_TYPE;
 		},
 		message: function () {
 			const t = (key, data) => {
@@ -77,14 +76,17 @@ export default {
 				}
 			}
 
-			// clean energy
-			if (this.charging && this.isCo2 && this.tariffCo2 < this.smartCostLimit) {
-				return t("cleanEnergyCharging");
-			}
-
-			// cheap energy
-			if (this.charging && !this.isCo2 && this.tariffGrid < this.smartCostLimit) {
-				return t("cheapEnergyCharging");
+			// clean or cheap energy
+			if (this.charging && this.smartCostActive) {
+				return this.smartCostType === CO2_TYPE
+					? t("cleanEnergyCharging", {
+							co2: this.fmtCo2Short(this.tariffCo2),
+							limit: this.fmtCo2Short(this.smartCostLimit),
+					  })
+					: t("cheapEnergyCharging", {
+							price: this.fmtPricePerKWh(this.tariffGrid, this.currency, true),
+							limit: this.fmtPricePerKWh(this.smartCostLimit, this.currency, true),
+					  });
 			}
 
 			if (this.pvTimerActive && !this.enabled && this.pvAction === "enable") {
