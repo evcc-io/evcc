@@ -279,8 +279,8 @@ vehicleTarget = "Vehicle limit: {soc}%"
 
 [main.vehicleStatus]
 charging = "Charging…"
-cheapEnergyCharging = "Cheap energy available. Charging…"
-cleanEnergyCharging = "Clean energy available. Charging…"
+cheapEnergyCharging = "Charging cheap energy: {price} (limit < {limit})"
+cleanEnergyCharging = "Charging clean energy: {co2} (limit < {limit})"
 climating = "Pre-conditioning detected."
 connected = "Connected."
 disconnected = "Disconnected."
