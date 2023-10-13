@@ -245,7 +245,7 @@ func newDeviceHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func updateDevice[T any](id int, class templates.Class, conf map[string]any, newFromConf func(string, map[string]any) (T, error), h config.Handler[T]) error {
-	dev, instance, err := deviceInstanceFromMergedConfig(id, class, conf, newFromConf, h)
+	dev, instance, merged, err := deviceInstanceFromMergedConfig(id, class, conf, newFromConf, h)
 	if err != nil {
 		return err
 	}
@@ -255,7 +255,7 @@ func updateDevice[T any](id int, class templates.Class, conf map[string]any, new
 		return errors.New("not configurable")
 	}
 
-	return configurable.Update(conf, instance)
+	return configurable.Update(merged, instance)
 }
 
 // updateDeviceHandler updates database device's configuration by class
@@ -376,7 +376,7 @@ func testConfig[T any](id int, class templates.Class, conf map[string]any, newFr
 		return newFromConf(typeTemplate, conf)
 	}
 
-	_, instance, err := deviceInstanceFromMergedConfig(id, class, conf, newFromConf, h)
+	_, instance, _, err := deviceInstanceFromMergedConfig(id, class, conf, newFromConf, h)
 
 	return instance, err
 }

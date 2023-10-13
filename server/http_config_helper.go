@@ -85,22 +85,22 @@ func mergeMasked(class templates.Class, conf, old map[string]any) (map[string]an
 	return res, nil
 }
 
-func deviceInstanceFromMergedConfig[T any](id int, class templates.Class, conf map[string]any, newFromConf func(string, map[string]any) (T, error), h config.Handler[T]) (config.Device[T], T, error) {
+func deviceInstanceFromMergedConfig[T any](id int, class templates.Class, conf map[string]any, newFromConf func(string, map[string]any) (T, error), h config.Handler[T]) (config.Device[T], T, map[string]any, error) {
 	var zero T
 
 	dev, err := h.ByName(config.NameForID(id))
 	if err != nil {
-		return nil, zero, err
+		return nil, zero, nil, err
 	}
 
 	merged, err := mergeMasked(class, conf, dev.Config().Other)
 	if err != nil {
-		return nil, zero, err
+		return nil, zero, nil, err
 	}
 
 	instance, err := newFromConf(typeTemplate, merged)
 
-	return dev, instance, err
+	return dev, instance, merged, err
 }
 
 type testResult = struct {
