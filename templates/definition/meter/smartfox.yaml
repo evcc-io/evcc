@@ -1,0 +1,80 @@
+template: smartfox
+products:
+  - brand: Smartfox
+    description:
+      generic: Smartfox Reg/Reg extended/Pro/Pro 2/Pro Light/Pro Light 2/Light
+requirements:
+  description:
+    de: |
+      Kann verwendet werden, um Daten für 'grid', 'pv' und 'aux' zu erhalten. 
+      Wenn "usage" nicht definiert ist, wird die Leistung für die Warmwasserbereitung zurückgegeben (als "aux" zu verwenden).
+    en: |
+      Can be used to get 'grid', 'pv' and 'aux' data. 
+      If 'usage' is not defined, then return the power for the water heating (to be used as 'aux').
+params:
+  - name: usage
+    choice: ["grid", "pv"]
+  - name: host
+render: |
+  {{- define "uri" -}}
+  http://{{ .host }}/all
+  {{- end }}
+  type: custom
+  {{- if not .usage }}
+  power:
+    source: http
+    uri: {{ include "uri" . }}
+    jq: .power_sf
+  {{- end }}
+  {{- if eq .usage "grid" }}
+  power:
+    source: http
+    uri: {{ include "uri" . }}
+    jq: .power_io
+  energy:
+    source: http
+    uri: {{ include "uri" . }}
+    jq: .energy_in
+    scale: 0.001  
+  voltages:
+  - source: http
+    uri: {{ include "uri" . }}
+    jq: .voltages[0]
+  - source: http
+    uri: {{ include "uri" . }}
+    jq: .voltages[1]
+  - source: http
+    uri: {{ include "uri" . }}
+    jq: .voltages[2]
+  currents:
+  - source: http
+    uri: {{ include "uri" . }}
+    jq: .currents[0]
+  - source: http
+    uri: {{ include "uri" . }}
+    jq: .currents[1]
+  - source: http
+    uri: {{ include "uri" . }}
+    jq: .currents[2]
+  powers:
+  - source: http
+    uri: {{ include "uri" . }}
+    jq: .powers[0]
+  - source: http
+    uri: {{ include "uri" . }}
+    jq: .powers[1]
+  - source: http
+    uri: {{ include "uri" . }}
+    jq: .powers[2]
+  {{- end }}
+  {{- if eq .usage "pv" }}
+  power:
+    source: http
+    uri: {{ include "uri" . }}
+    jq: .PvPower[0]
+  energy:
+    source: http
+    uri: {{ include "uri" . }}
+    jq: .PvEnergy[0]
+    scale: 0.001
+  {{- end }}
