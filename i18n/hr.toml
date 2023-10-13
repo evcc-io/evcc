@@ -233,6 +233,8 @@ none = "Nijedno vozilo"
 targetSoc = "Ograničenje"
 unknown = "Vozilo gosta"
 vehicleSoc = "Napajanje"
+temp = "Temperatura"
+tempLimit = "Granica temperature"
 
 [main.vehicleSoc]
 charging = "napajanje"
@@ -299,6 +301,8 @@ solar = "Solarno"
 title = "Sesije napajanja"
 total = "Ukupno"
 vehicle = "Vozilo"
+chargeDuration = "Trajanje"
+avgPower = "⌀ snaga"
 
 [sessions.csv]
 chargedenergy = "Energija (kWh)"
@@ -368,3 +372,35 @@ title = "Pogreška pri pokretanju"
 cancel = "Odustani"
 template = "Proizvođač"
 test = "Test"
+
+
+[config.validation]
+validate = "verificiraj"
+label = "Stanje"
+unknown = "nepoznato"
+running = "verifikacija …"
+success = "uspješno"
+failed = "nauspjelo"
+
+[config.vehicle]
+cancel = "Odustani"
+titleEdit = "Uredi vozilo"
+delete = "Izbriši vozilo"
+titleAdd = "Dodaj vozilo"
+online = "Vozilo s internetskim API sučeljem"
+save = "Spremi"
+template = "Proizvođač"
+offline = "Opće vozilo"
+validateSave = "Verificiraj i spremi"
+scooter = "Skuter"
+generic = "Druge integracije"
+
+[config.main]
+vehicles = "Moja vozila"
+edit = "uredi"
+title = "Konfiguracija"
+addVehicle = "Dodaj vozilo"
+
+[config.form]
+optional = "opcionalno"
+example = "Primjer"
