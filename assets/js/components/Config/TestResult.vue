@@ -26,6 +26,10 @@
 				{{ $t("config.validation.validate") }}
 			</a>
 		</div>
+		<hr v-if="error" />
+		<div v-if="error">
+			{{ error }}
+		</div>
 		<hr v-if="result" />
 		<div v-if="result">
 			{{ result }}
@@ -41,7 +45,8 @@ export default {
 		failed: Boolean,
 		unknown: Boolean,
 		running: Boolean,
-		result: String,
+		result: Object,
+		error: String,
 	},
 	emits: ["test"],
 };

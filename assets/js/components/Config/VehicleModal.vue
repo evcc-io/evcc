@@ -93,6 +93,7 @@
 								:unknown="testUnknown"
 								:running="testRunning"
 								:result="testResult"
+								:error="testError"
 								@test="testManually"
 							/>
 
@@ -306,7 +307,7 @@ export default {
 			if (!this.isNew) {
 				url += `/merge/${this.id}`;
 			}
-			await api.post(url, this.apiData);
+			return await api.post(url, this.apiData);
 		},
 		async update() {
 			if (this.testUnknown) {
