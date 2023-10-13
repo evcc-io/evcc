@@ -758,6 +758,7 @@ func (site *Site) update(lp Updater) {
 		if err == nil {
 			limit := site.GetSmartCostLimit()
 			autoCharge = limit != 0 && rate.Price <= limit
+			site.publish("smartCostActive", autoCharge)
 		} else {
 			site.log.ERROR.Println("tariff:", err)
 		}
@@ -802,6 +803,7 @@ func (site *Site) prepare() {
 	site.publish("residualPower", site.ResidualPower)
 	site.publish("smartCostLimit", site.SmartCostLimit)
 	site.publish("smartCostType", nil)
+	site.publish("smartCostActive", false)
 	if tariff := site.GetTariff(PlannerTariff); tariff != nil {
 		site.publish("smartCostType", tariff.Type().String())
 	}
