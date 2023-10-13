@@ -1,5 +1,5 @@
 [batterySettings]
-batteryLevel = "Batteri niveau"
+batteryLevel = "Batteriniveau"
 capacity = "{energy} af {total}"
 legendBottomName = "Prioritér hjemmet"
 legendBottomSubline = "Anvendes ikke til opladning"
@@ -48,6 +48,8 @@ save = "Gem"
 scooter = "Scooter"
 template = "Fabrikant"
 titleAdd = "Tilføj køretøj"
+titleEdit = Rediger køretøj
+validateSave = Valider og gem
 
 [footer]
 
@@ -64,8 +66,8 @@ powerSub2 = "opladning ..."
 tabTitle = "Live fællesskab"
 
 [footer.savings]
-footerLong = "{percent}% Fotovoltaisk energi"
-footerShort = "{percent}% Fotovoltaisk energi"
+footerLong = "{percent}% Solenergi"
+footerShort = "{percent}% Solenergi"
 modalTitle = "Oversigt over ladeenergi"
 percentGrid = "{grid} kWh Net"
 percentSelf = "{self} kWh solenergi"
@@ -197,7 +199,7 @@ label = "Max. Nuværende"
 label = "Min. Nuværende"
 
 [main.loadpointSettings.minSoc]
-description = "Til nødstilfælde. Køretøjet bliver „hurtigt” opladet til {0} % fra al tilgængelig solenergi, og fortsætter derefter med kun solenergioverskuddet."
+description = Køretøjet bliver „hurtigt” opladet til {0} % i solar mode, og fortsætter derefter med solenergioverskuddet. Nyttig til at sikre en minimum rækkevidde selv på mørke dage
 label = "Min. opladning %"
 
 [main.loadpointSettings.phasesConfigured]
@@ -239,6 +241,8 @@ title = "Måltid"
 today = "i dag"
 tomorrow = "i morgen"
 update = "Opdatering"
+targetEnergyRequired = Du skal også indstille en energigrænse
+onlyInPvMode = Opladningsplan virker kun i solar mode
 
 [main.targetChargePlan]
 chargeDuration = "Opladningstid"
@@ -261,6 +265,8 @@ none = "Intet køretøj"
 targetSoc = "Begrænse"
 unknown = "Gæstekøretøj"
 vehicleSoc = "Oplade"
+temp = Temp
+tempLimit = Temp. grænse
 
 [main.vehicleSoc]
 charging = "opladning"
@@ -327,6 +333,8 @@ solar = "solenergi"
 title = "Opladning Sessioner"
 total = "Total"
 vehicle = "Køretøj"
+chargeDuration = Varighed
+avgPower = ⌀ Effekt
 
 [sessions.csv]
 chargedenergy = "Energi (kWh)"
