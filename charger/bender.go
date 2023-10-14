@@ -287,12 +287,12 @@ func (wb *BenderCC) currents() (float64, float64, float64, error) {
 		return 0, 0, 0, err
 	}
 
-	var curr [3]float64
+	var res [3]float64
 	for l := 0; l < 3; l++ {
-		curr[l] = float64(binary.BigEndian.Uint32(b[4*l:4*(l+1)])) / 1e3
+		res[l] = float64(binary.BigEndian.Uint32(b[4*l:4*(l+1)])) / 1e3
 	}
 
-	return curr[0], curr[1], curr[2], nil
+	return res[0], res[1], res[2], nil
 }
 
 // voltages implements the api.PhaseVoltages interface
@@ -302,12 +302,12 @@ func (wb *BenderCC) voltages() (float64, float64, float64, error) {
 		return 0, 0, 0, err
 	}
 
-	var volt [3]float64
+	var res [3]float64
 	for l := 0; l < 3; l++ {
-		volt[l] = float64(binary.BigEndian.Uint32(b[4*l : 4*(l+1)]))
+		res[l] = float64(binary.BigEndian.Uint32(b[4*l : 4*(l+1)]))
 	}
 
-	return volt[0], volt[1], volt[2], nil
+	return res[0], res[1], res[2], nil
 }
 
 // identify implements the api.Identifier interface
