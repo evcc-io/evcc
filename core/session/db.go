@@ -12,11 +12,6 @@ type DB struct {
 	name string
 }
 
-type Database interface {
-	New(startEnergy float64) *Session
-	Persist(session interface{})
-}
-
 // NewStore creates a session store
 func NewStore(name string, db *gorm.DB) (*DB, error) {
 	err := db.AutoMigrate(new(Session))
@@ -56,4 +51,32 @@ func (s *DB) Sessions() (Sessions, error) {
 	var res Sessions
 	tx := s.db.Find(&res)
 	return res, tx.Error
+}
+
+func (s *DB) ClosePendingSessionsInHistory(chargeMeterTotal float64) error {
+	var res Sessions
+	if tx := s.db.Find(&res, map[string]interface{}{"finished": "0001-01-01 00:00:00+00:00", "Loadpoint": s.name}); tx.Error != nil {
+		return tx.Error
+	}
+
+	for _, session := range res {
+		var nextSession Session
+
+		var tx *gorm.DB
+		if tx = s.db.Limit(1).Order("ID").Find(&nextSession, "ID > ? AND Loadpoint = ?", session.ID, s.name); tx.Error != nil {
+			return tx.Error
+		}
+
+		if tx.RowsAffected == 0 {
+			// no successor, this is the most recent session and it is open
+			session.MeterStop = &chargeMeterTotal
+		} else {
+			session.MeterStop = nextSession.MeterStart
+		}
+
+		session.ChargedEnergy = *session.MeterStop - *session.MeterStart
+		s.Persist(session)
+	}
+
+	return nil
 }
