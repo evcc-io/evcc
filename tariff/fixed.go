@@ -3,12 +3,13 @@ package tariff
 import (
 	"fmt"
 	"sort"
+	"time"
 
 	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/tariff/fixed"
 	"github.com/evcc-io/evcc/util"
-	"github.com/golang-module/carbon/v2"
+	"github.com/jinzhu/now"
 )
 
 type Fixed struct {
@@ -83,20 +84,20 @@ func NewFixedFromConfig(other map[string]interface{}) (api.Tariff, error) {
 func (t *Fixed) Rates() (api.Rates, error) {
 	var res api.Rates
 
-	start := carbon.CreateFromStdTime(t.clock.Now().Local()).StartOfDay()
+	start := now.With(t.clock.Now().Local()).BeginningOfDay()
 	for i := 0; i < 7; i++ {
-		dow := fixed.Day((start.DayOfWeek() + i) % 7)
+		dow := fixed.Day((int(start.Weekday()) + i) % 7)
 
 		zones := t.zones.ForDay(dow)
 		if len(zones) == 0 {
 			return nil, fmt.Errorf("no zones for weekday %d", dow)
 		}
 
-		dayStart := start.AddDays(i)
+		dayStart := start.AddDate(0, 0, i)
 		markers := zones.TimeTableMarkers()
 
 		for i, m := range markers {
-			ts := dayStart.AddMinutes(m.Minutes())
+			ts := dayStart.Add(time.Minute * time.Duration(m.Minutes()))
 
 			var zone *fixed.Zone
 			for j := len(zones) - 1; j >= 0; j-- {
@@ -111,15 +112,15 @@ func (t *Fixed) Rates() (api.Rates, error) {
 			}
 
 			// end rate at end of day or next marker
-			end := dayStart.AddDay()
+			end := dayStart.AddDate(0, 0, 1)
 			if i+1 < len(markers) {
-				end = dayStart.AddMinutes(markers[i+1].Minutes())
+				end = dayStart.Add(time.Minute * time.Duration(markers[i+1].Minutes()))
 			}
 
 			rate := api.Rate{
 				Price: zone.Price,
-				Start: ts.ToStdTime(),
-				End:   end.ToStdTime(),
+				Start: ts,
+				End:   end,
 			}
 
 			res = append(res, rate)

@@ -2,11 +2,12 @@ package tariff
 
 import (
 	"testing"
+	"time"
 
 	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/tariff/fixed"
-	"github.com/golang-module/carbon/v2"
+	"github.com/jinzhu/now"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -20,13 +21,13 @@ func TestFixed(t *testing.T) {
 
 	var expect api.Rates
 	for dow := 0; dow < 7; dow++ {
-		dayStart := carbon.CreateFromStdTime(tf.clock.Now()).StartOfDay().AddDays(dow)
+		dayStart := now.With(tf.clock.Now()).BeginningOfDay().AddDate(0, 0, dow)
 
 		for hour := 0; hour < 24; hour++ {
 			expect = append(expect, api.Rate{
 				Price: 0.3,
-				Start: dayStart.AddHours(hour).ToStdTime(),
-				End:   dayStart.AddHours(hour + 1).ToStdTime(),
+				Start: dayStart.Add(time.Hour * time.Duration(hour)),
+				End:   dayStart.Add(time.Hour * time.Duration(hour+1)),
 			})
 		}
 	}
@@ -53,37 +54,37 @@ func TestFixedSplitZones(t *testing.T) {
 
 	var expect api.Rates
 	for i := 0; i < 7; i++ {
-		dayStart := carbon.CreateFromStdTime(tf.clock.Now()).StartOfDay().AddDays(i)
+		dayStart := now.With(tf.clock.Now()).BeginningOfDay().AddDate(0, 0, i)
 
 		// 00:00-05:00 0.1
 		for hour := 0; hour < 5; hour++ {
 			expect = append(expect, api.Rate{
 				Price: 0.1,
-				Start: dayStart.AddHours(hour).ToStdTime(),
-				End:   dayStart.AddHours(hour + 1).ToStdTime(),
+				Start: dayStart.Add(time.Hour * time.Duration(hour)),
+				End:   dayStart.Add(time.Hour * time.Duration(hour+1)),
 			})
 		}
 
 		// 05:00-05:30 0.1
 		expect = append(expect, api.Rate{
 			Price: 0.1,
-			Start: dayStart.AddHours(5).ToStdTime(),
-			End:   dayStart.AddHours(5).AddMinutes(30).ToStdTime(),
+			Start: dayStart.Add(5 * time.Hour),
+			End:   dayStart.Add(5*time.Hour + 30*time.Minute),
 		})
 
 		// 05:30-06:00 0.5
 		expect = append(expect, api.Rate{
 			Price: 0.5,
-			Start: dayStart.AddHours(5).AddMinutes(30).ToStdTime(),
-			End:   dayStart.AddHours(6).ToStdTime(),
+			Start: dayStart.Add(5*time.Hour + 30*time.Minute),
+			End:   dayStart.Add(6 * time.Hour),
 		})
 
 		// 06:00-21:00 0.5
 		for hour := 6; hour < 21; hour++ {
 			expect = append(expect, api.Rate{
 				Price: 0.5,
-				Start: dayStart.AddHours(hour).ToStdTime(),
-				End:   dayStart.AddHours(hour + 1).ToStdTime(),
+				Start: dayStart.Add(time.Hour * time.Duration(hour)),
+				End:   dayStart.Add(time.Hour * time.Duration(hour+1)),
 			})
 		}
 
@@ -91,8 +92,8 @@ func TestFixedSplitZones(t *testing.T) {
 		for hour := 21; hour < 24; hour++ {
 			expect = append(expect, api.Rate{
 				Price: 0.1,
-				Start: dayStart.AddHours(hour).ToStdTime(),
-				End:   dayStart.AddHours(hour + 1).ToStdTime(),
+				Start: dayStart.Add(time.Hour * time.Duration(hour)),
+				End:   dayStart.Add(time.Hour * time.Duration(hour+1)),
 			})
 		}
 	}
