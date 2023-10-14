@@ -140,5 +140,5 @@ func (t *Tibber) Rates() (api.Rates, error) {
 
 // Type implements the api.Tariff interface
 func (t *Tibber) Type() api.TariffType {
-	return api.TariffTypePriceDynamic
+	return api.TariffTypePriceForecast
 }
