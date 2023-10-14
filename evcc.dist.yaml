@@ -10,7 +10,7 @@ network:
   # evcc will listen on all available interfaces
   port: 7070
 
-interval: 30s # control cycle interval
+interval: 30s # control cycle interval. Interval <30s can lead to unexpected behavior, see https://docs.evcc.io/docs/reference/configuration/interval
 
 # database configuration for persisting charge sessions and settings
 # database:
@@ -186,6 +186,12 @@ tariffs:
 
     # type: energinet # Energinet using the price in DKK
     # region: dk1 # or dk2
+    # charges: # optional, additional charges per kWh
+    # tax: # optional, additional tax (0.1 for 10%)
+
+    # type: entsoe # Entso-E european market data
+    # domain: BZN|DE-LU # https://transparency.entsoe.eu/content/static_content/Static%20content/web%20api/Guide.html#_areas
+    # securitytoken: # api token
     # charges: # optional, additional charges per kWh
     # tax: # optional, additional tax (0.1 for 10%)
   feedin:

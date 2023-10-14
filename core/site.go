@@ -36,15 +36,15 @@ type Updater interface {
 // meterMeasurement is used as slice element for publishing structured data
 type meterMeasurement struct {
 	Power  float64 `json:"power"`
-	Energy float64 `json:"energy"`
+	Energy float64 `json:"energy,omitempty"`
 }
 
 // batteryMeasurement is used as slice element for publishing structured data
 type batteryMeasurement struct {
 	Power    float64 `json:"power"`
-	Energy   float64 `json:"energy"`
-	Soc      float64 `json:"soc"`
-	Capacity float64 `json:"capacity"`
+	Energy   float64 `json:"energy,omitempty"`
+	Soc      float64 `json:"soc,omitempty"`
+	Capacity float64 `json:"capacity,omitempty"`
 }
 
 // Site is the main configuration container. A site can host multiple loadpoints.
@@ -489,35 +489,37 @@ func (site *Site) updateMeters() error {
 			}
 
 			// battery soc and capacity
-			var capacity float64
-			soc, err := soc.Guard(meter.(api.Battery).Soc())
+			var batSoc, capacity float64
+			if meter, ok := meter.(api.Battery); ok {
+				batSoc, err = soc.Guard(meter.Soc())
 
-			if err == nil {
-				// weigh soc by capacity and accumulate total capacity
-				weighedSoc := soc
-				if m, ok := meter.(api.BatteryCapacity); ok {
-					capacity = m.Capacity()
-					totalCapacity += capacity
-					weighedSoc *= capacity
-				}
+				if err == nil {
+					// weigh soc by capacity and accumulate total capacity
+					weighedSoc := batSoc
+					if m, ok := meter.(api.BatteryCapacity); ok {
+						capacity = m.Capacity()
+						totalCapacity += capacity
+						weighedSoc *= capacity
+					}
 
-				site.batterySoc += weighedSoc
-				if len(site.batteryMeters) > 1 {
-					site.log.DEBUG.Printf("battery %d soc: %.0f%%", i+1, soc)
+					site.batterySoc += weighedSoc
+					if len(site.batteryMeters) > 1 {
+						site.log.DEBUG.Printf("battery %d soc: %.0f%%", i+1, batSoc)
+					}
+				} else {
+					site.log.ERROR.Printf("battery %d soc: %v", i+1, err)
 				}
-			} else {
-				site.log.ERROR.Printf("battery %d soc: %v", i+1, err)
 			}
 
 			mm[i] = batteryMeasurement{
 				Power:    power,
 				Energy:   energy,
-				Soc:      soc,
+				Soc:      batSoc,
 				Capacity: capacity,
 			}
 		}
 
-		site.publish("batteryCapacity", math.Round(totalCapacity))
+		site.publish("batteryCapacity", totalCapacity)
 
 		// convert weighed socs to total soc
 		if totalCapacity == 0 {
@@ -526,7 +528,7 @@ func (site *Site) updateMeters() error {
 		site.batterySoc /= totalCapacity
 
 		site.log.DEBUG.Printf("battery soc: %.0f%%", math.Round(site.batterySoc))
-		site.publish("batterySoc", math.Round(site.batterySoc))
+		site.publish("batterySoc", site.batterySoc)
 
 		site.log.DEBUG.Printf("battery power: %.0fW", site.batteryPower)
 		site.publish("batteryPower", site.batteryPower)
@@ -760,6 +762,7 @@ func (site *Site) update(lp Updater) {
 		if err == nil {
 			limit := site.GetSmartCostLimit()
 			autoCharge = limit != 0 && rate.Price <= limit
+			site.publish("smartCostActive", autoCharge)
 		} else {
 			site.log.ERROR.Println("tariff:", err)
 		}
@@ -804,6 +807,7 @@ func (site *Site) prepare() {
 	site.publish("residualPower", site.ResidualPower)
 	site.publish("smartCostLimit", site.SmartCostLimit)
 	site.publish("smartCostType", nil)
+	site.publish("smartCostActive", false)
 	if tariff := site.GetTariff(PlannerTariff); tariff != nil {
 		site.publish("smartCostType", tariff.Type().String())
 	}

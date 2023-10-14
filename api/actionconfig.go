@@ -5,8 +5,8 @@ import (
 	"reflect"
 	"strings"
 
+	"dario.cat/mergo"
 	"github.com/fatih/structs"
-	"github.com/imdario/mergo"
 	"github.com/jinzhu/copier"
 )
 

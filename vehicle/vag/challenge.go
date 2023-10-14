@@ -3,16 +3,16 @@ package vag
 import (
 	"net/url"
 
-	cv "github.com/nirasan/go-oauth-pkce-code-verifier"
+	"golang.org/x/oauth2"
 )
 
 func ChallengeAndVerifier(q url.Values) func(url.Values) {
-	cvc, _ := cv.CreateCodeVerifier()
+	cv := oauth2.GenerateVerifier()
 
 	q.Set("code_challenge_method", "S256")
-	q.Set("code_challenge", cvc.CodeChallengeS256())
+	q.Set("code_challenge", oauth2.S256ChallengeFromVerifier(cv))
 
 	return func(q url.Values) {
-		q.Set("code_verifier", cvc.CodeChallengePlain())
+		q.Set("code_verifier", cv)
 	}
 }

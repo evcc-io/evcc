@@ -23,6 +23,7 @@
 				:vehicles="vehicles"
 				:smartCostLimit="smartCostLimit"
 				:smartCostType="smartCostType"
+				:smartCostActive="smartCostActive"
 				:tariffGrid="tariffGrid"
 				:tariffCo2="tariffCo2"
 				:currency="currency"
@@ -103,6 +104,7 @@ export default {
 		sponsorTokenExpires: Number,
 		smartCostLimit: Number,
 		smartCostType: String,
+		smartCostActive: Boolean,
 	},
 	computed: {
 		energyflow: function () {
