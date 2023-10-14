@@ -271,12 +271,12 @@ func (wb *HeidelbergEC) Currents() (float64, float64, float64, error) {
 		return 0, 0, 0, err
 	}
 
-	var curr [3]float64
+	var res [3]float64
 	for l := 0; l < 3; l++ {
-		curr[l] = float64(binary.BigEndian.Uint16(b[2*l:])) / 10
+		res[l] = float64(binary.BigEndian.Uint16(b[2*l:])) / 10
 	}
 
-	return curr[0], curr[1], curr[2], nil
+	return res[0], res[1], res[2], nil
 }
 
 var _ api.PhaseVoltages = (*HeidelbergEC)(nil)
@@ -288,12 +288,12 @@ func (wb *HeidelbergEC) Voltages() (float64, float64, float64, error) {
 		return 0, 0, 0, err
 	}
 
-	var volt [3]float64
+	var res [3]float64
 	for l := 0; l < 3; l++ {
-		volt[l] = float64(binary.BigEndian.Uint16(b[2*l:]))
+		res[l] = float64(binary.BigEndian.Uint16(b[2*l:]))
 	}
 
-	return volt[0], volt[1], volt[2], nil
+	return res[0], res[1], res[2], nil
 }
 
 var _ api.Diagnosis = (*HeidelbergEC)(nil)

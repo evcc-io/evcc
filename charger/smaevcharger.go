@@ -252,18 +252,18 @@ var _ api.PhaseCurrents = (*Smaevcharger)(nil)
 
 // Currents implements the api.PhaseCurrents interface
 func (wb *Smaevcharger) Currents() (float64, float64, float64, error) {
-	var curr []float64
+	var res [3]float64
 
-	for _, phase := range []string{"A", "B", "C"} {
+	for i, phase := range []string{"A", "B", "C"} {
 		val, err := wb.getMeasurement("Measurement.GridMs.A.phs" + phase)
 		if err != nil {
 			return 0, 0, 0, err
 		}
 
-		curr = append(curr, -val)
+		res[i] = -val
 	}
 
-	return curr[0], curr[1], curr[2], nil
+	return res[0], res[1], res[2], nil
 }
 
 // reset cache
