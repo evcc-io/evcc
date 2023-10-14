@@ -1,5 +1,6 @@
 <template>
 	<div class="text-center">
+		{{ vehicleCapacity }}
 		<LabelAndValue
 			class="root flex-grow-1"
 			:label="title"
@@ -114,6 +115,7 @@ export default {
 		smartCostType: String,
 		currency: String,
 		mode: String,
+		vehicleCapacity: Number,
 	},
 	emits: ["target-time-updated", "target-time-removed", "minsoc-updated"],
 	data: function () {

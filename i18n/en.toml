@@ -245,6 +245,8 @@ title = "Target Time"
 today = "today"
 tomorrow = "tomorrow"
 update = "Update"
+vehicleCapacityDocs = "Learn how to configure it."
+vehicleCapacityRequired = "The vehicle battery capacity is required to estimate the charging time."
 
 [main.targetChargePlan]
 chargeDuration = "Charging time"
