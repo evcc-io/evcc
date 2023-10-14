@@ -210,38 +210,33 @@ func (wb *Vestel) ChargedEnergy() (float64, error) {
 	return float64(binary.BigEndian.Uint32(b)) / 1e3, err
 }
 
-var _ api.PhaseCurrents = (*Vestel)(nil)
-
-// Currents implements the api.PhaseCurrents interface
-func (wb *Vestel) Currents() (float64, float64, float64, error) {
+// getPhaseValues returns 3 sequential register values
+func (wb *Vestel) getPhaseValues(regs []uint16, divider float64) (float64, float64, float64, error) {
 	var res [3]float64
-	for i, regCurrent := range vestelRegCurrents {
-		b, err := wb.conn.ReadInputRegisters(regCurrent, 1)
+	for i, reg := range regs {
+		b, err := wb.conn.ReadInputRegisters(reg, 1)
 		if err != nil {
 			return 0, 0, 0, err
 		}
 
-		res[i] = float64(binary.BigEndian.Uint16(b)) / 1e3
+		res[i] = float64(binary.BigEndian.Uint16(b)) / divider
 	}
 
 	return res[0], res[1], res[2], nil
+}
+
+var _ api.PhaseCurrents = (*Vestel)(nil)
+
+// Currents implements the api.PhaseCurrents interface
+func (wb *Vestel) Currents() (float64, float64, float64, error) {
+	return wb.getPhaseValues(vestelRegCurrents, 1e3)
 }
 
 var _ api.PhaseVoltages = (*Vestel)(nil)
 
 // Voltages implements the api.PhaseVoltages interface
 func (wb *Vestel) Voltages() (float64, float64, float64, error) {
-	var res [3]float64
-	for i, regVoltage := range vestelRegVoltages {
-		b, err := wb.conn.ReadInputRegisters(regVoltage, 1)
-		if err != nil {
-			return 0, 0, 0, err
-		}
-
-		res[i] = float64(binary.BigEndian.Uint16(b))
-	}
-
-	return res[0], res[1], res[2], nil
+	return wb.getPhaseValues(vestelRegVoltages, 1)
 }
 
 var _ api.Diagnosis = (*Vestel)(nil)
