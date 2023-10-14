@@ -113,24 +113,32 @@ type testResult = struct {
 func testInstance(instance any) map[string]testResult {
 	res := make(map[string]testResult)
 
+	makeResult := func(val any, err error) testResult {
+		res := testResult{Value: val}
+		if err != nil {
+			res.Error = err.Error()
+		}
+		return res
+	}
+
 	if dev, ok := instance.(api.Meter); ok {
 		val, err := dev.CurrentPower()
-		res["CurrentPower"] = testResult{val, err.Error()}
+		res["CurrentPower"] = makeResult(val, err)
 	}
 
 	if dev, ok := instance.(api.MeterEnergy); ok {
 		val, err := dev.TotalEnergy()
-		res["TotalEnergy"] = testResult{val, err.Error()}
+		res["TotalEnergy"] = makeResult(val, err)
 	}
 
 	if dev, ok := instance.(api.Battery); ok {
 		val, err := dev.Soc()
-		res["Soc"] = testResult{val, err.Error()}
+		res["Soc"] = makeResult(val, err)
 	}
 
 	if dev, ok := instance.(api.VehicleOdometer); ok {
 		val, err := dev.Odometer()
-		res["Odometer"] = testResult{val, err.Error()}
+		res["Odometer"] = makeResult(val, err)
 	}
 
 	return res
