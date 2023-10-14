@@ -1,6 +1,5 @@
 <template>
 	<div class="text-center">
-		{{ vehicleCapacity }}
 		<LabelAndValue
 			class="root flex-grow-1"
 			:label="title"
