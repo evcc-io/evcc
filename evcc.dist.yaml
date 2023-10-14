@@ -194,6 +194,13 @@ tariffs:
     # securitytoken: # api token
     # charges: # optional, additional charges per kWh
     # tax: # optional, additional tax (0.1 for 10%)
+
+    # type: custom # price from a plugin source; see https://docs.evcc.io/docs/reference/plugins
+    # price:
+    #   source: http
+    #   uri: https://example.org/price.json
+    #   jq: .price.current
+
   feedin:
     # rate for feeding excess (pv) energy to the grid
     type: fixed

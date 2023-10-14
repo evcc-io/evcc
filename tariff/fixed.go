@@ -133,7 +133,7 @@ func (t *Fixed) Rates() (api.Rates, error) {
 // Type implements the api.Tariff interface
 func (t *Fixed) Type() api.TariffType {
 	if t.dynamic {
-		return api.TariffTypePriceDynamic
+		return api.TariffTypePriceForecast
 	}
 	return api.TariffTypePriceStatic
 }

@@ -114,6 +114,7 @@ export default {
 	props: {
 		smartCostLimit: Number,
 		smartCostType: String,
+		tariffGrid: Number,
 		currency: String,
 	},
 	data: function () {
@@ -238,6 +239,11 @@ export default {
 	watch: {
 		isModalVisible(visible) {
 			if (visible) {
+				this.updateTariff();
+			}
+		},
+		tariffGrid() {
+			if (this.isModalVisible) {
 				this.updateTariff();
 			}
 		},
