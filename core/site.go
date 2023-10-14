@@ -142,6 +142,10 @@ func NewSiteFromConfig(
 			if lp.db, err = session.NewStore(lp.Title(), db.Instance); err != nil {
 				return nil, err
 			}
+			// Fix any dangling history
+			if err := lp.db.ClosePendingSessionsInHistory(lp.chargeMeterTotal()); err != nil {
+				return nil, err
+			}
 
 			// NOTE: this requires stopSession to respect async access
 			shutdown.Register(lp.stopSession)
