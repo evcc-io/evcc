@@ -12,8 +12,8 @@ requirements:
 
       Für 1P/3P-Phasenumschaltung muss die HTTP API v2 im Charger aktiviert sein.
 
-      Je nach Fahrzeug müssen in der App in der Rubrik "Auto" Einstellungen vorgenommen werden.
-    
+      Bei manchen Fahrzeugen müssen noch in der App bei den Auto-Einstellungen Änderungen vorgenommen werden.
+      (z.B. Ford Kuga -> "simulate unplug and plug again")
     en: |
       Requires firmware 052.1 or later.
 
