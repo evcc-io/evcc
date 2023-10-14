@@ -12,11 +12,6 @@ type DB struct {
 	name string
 }
 
-type Database interface {
-	New(startEnergy float64) *Session
-	Persist(session interface{})
-}
-
 // NewStore creates a session store
 func NewStore(name string, db *gorm.DB) (*DB, error) {
 	err := db.AutoMigrate(new(Session))

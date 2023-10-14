@@ -139,13 +139,11 @@ func NewSiteFromConfig(
 
 		if db.Instance != nil {
 			var err error
-			var sessionDb *session.DB
-			if sessionDb, err = session.NewStore(lp.Title(), db.Instance); err != nil {
+			if lp.db, err = session.NewStore(lp.Title(), db.Instance); err != nil {
 				return nil, err
 			}
-			lp.db = sessionDb
 			//Fix any dangling history
-			if err = sessionDb.ClosePendingSessionsInHistory(lp.chargeMeterTotal()); err != nil {
+			if err = lp.db.ClosePendingSessionsInHistory(lp.chargeMeterTotal()); err != nil {
 				return nil, err
 			}
 
