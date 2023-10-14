@@ -280,34 +280,29 @@ func (wb *BenderCC) totalEnergy() (float64, error) {
 	return float64(binary.BigEndian.Uint32(b)) / 1e3, nil
 }
 
-// currents implements the api.PhaseCurrents interface
-func (wb *BenderCC) currents() (float64, float64, float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(bendRegCurrents, 6)
+// getPhaseValues returns 3 sequential register values
+func (wb *BenderCC) getPhaseValues(reg uint16, divider float64) (float64, float64, float64, error) {
+	b, err := wb.conn.ReadHoldingRegisters(reg, 6)
 	if err != nil {
 		return 0, 0, 0, err
 	}
 
 	var res [3]float64
-	for l := 0; l < 3; l++ {
-		res[l] = float64(binary.BigEndian.Uint32(b[4*l:4*(l+1)])) / 1e3
+	for i := 0; i < 3; i++ {
+		res[i] = float64(binary.BigEndian.Uint32(b[4*i:])) / divider
 	}
 
 	return res[0], res[1], res[2], nil
 }
 
+// currents implements the api.PhaseCurrents interface
+func (wb *BenderCC) currents() (float64, float64, float64, error) {
+	return wb.getPhaseValues(bendRegCurrents, 1e3)
+}
+
 // voltages implements the api.PhaseVoltages interface
 func (wb *BenderCC) voltages() (float64, float64, float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(bendRegVoltages, 6)
-	if err != nil {
-		return 0, 0, 0, err
-	}
-
-	var res [3]float64
-	for l := 0; l < 3; l++ {
-		res[l] = float64(binary.BigEndian.Uint32(b[4*l : 4*(l+1)]))
-	}
-
-	return res[0], res[1], res[2], nil
+	return wb.getPhaseValues(bendRegVoltages, 1)
 }
 
 // identify implements the api.Identifier interface
