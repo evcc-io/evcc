@@ -112,5 +112,5 @@ func (t *Elering) Rates() (api.Rates, error) {
 
 // Type implements the api.Tariff interface
 func (t *Elering) Type() api.TariffType {
-	return api.TariffTypePriceDynamic
+	return api.TariffTypePriceForecast
 }

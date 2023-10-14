@@ -64,8 +64,5 @@ func (t *Tariff) Rates() (api.Rates, error) {
 
 // Type implements the api.Tariff interface
 func (t *Tariff) Type() api.TariffType {
-	if t.dynamic {
-		return api.TariffTypePriceDynamic
-	}
-	return api.TariffTypePriceStatic
+	return api.TariffTypePriceDynamic
 }

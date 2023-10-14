@@ -147,7 +147,7 @@ func (site *Site) GetTariff(tariff string) api.Tariff {
 			// prio 0: manually set planner tariff
 			return site.tariffs.Planner
 
-		case site.tariffs.Grid != nil && site.tariffs.Grid.Type() == api.TariffTypePriceDynamic:
+		case site.tariffs.Grid != nil && site.tariffs.Grid.Type() == api.TariffTypePriceForecast:
 			// prio 1: dynamic grid tariff
 			return site.tariffs.Grid
 
