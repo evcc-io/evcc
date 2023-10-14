@@ -60,7 +60,6 @@ func (s *DB) ClosePendingSessionsInHistory(chargeMeterTotal float64) error {
 	}
 
 	for _, session := range res {
-
 		var nextSession Session
 
 		var tx *gorm.DB
@@ -69,7 +68,7 @@ func (s *DB) ClosePendingSessionsInHistory(chargeMeterTotal float64) error {
 		}
 
 		if tx.RowsAffected == 0 {
-			//no successor, this is the most recent session and it is open
+			// no successor, this is the most recent session and it is open
 			session.MeterStop = &chargeMeterTotal
 		} else {
 			session.MeterStop = nextSession.MeterStart
