@@ -162,29 +162,6 @@ func (c *EEBus) isConnected() bool {
 	return c.connected
 }
 
-func (c *EEBus) setLoadpointMinMaxLimits() {
-	if c.lp == nil {
-		return
-	}
-
-	minLimits, maxLimits, _, err := c.emobility.EVCurrentLimits()
-	if err != nil || len(minLimits) == 0 || len(maxLimits) == 0 {
-		return
-	}
-
-	newMin := minLimits[0]
-	newMax := maxLimits[0]
-
-	vehicle := c.lp.GetVehicle()
-
-	if c.lp.GetMinCurrent() != newMin && newMin > 0 && (vehicle == nil || vehicle.OnIdentified().MinCurrent == nil) {
-		c.lp.SetMinCurrent(newMin)
-	}
-	if c.lp.GetMaxCurrent() != newMax && newMax > 0 && (vehicle == nil || vehicle.OnIdentified().MaxCurrent == nil) {
-		c.lp.SetMaxCurrent(newMax)
-	}
-}
-
 // we assume that if any phase current value is > idleFactor * min Current, then charging is active and enabled is true
 func (c *EEBus) isCharging() bool { // d *communication.EVSEClientDataType
 	// check if an external physical meter is assigned
@@ -269,9 +246,6 @@ func (c *EEBus) updateState() (api.ChargeStatus, error) {
 
 // Status implements the api.Charger interface
 func (c *EEBus) Status() (api.ChargeStatus, error) {
-	// check the current limits and update if necessary
-	c.setLoadpointMinMaxLimits()
-
 	return c.updateState()
 }
 
@@ -508,6 +482,4 @@ var _ loadpoint.Controller = (*EEBus)(nil)
 // LoadpointControl implements loadpoint.Controller
 func (c *EEBus) LoadpointControl(lp loadpoint.API) {
 	c.lp = lp
-
-	c.setLoadpointMinMaxLimits()
 }
