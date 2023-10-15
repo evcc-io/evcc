@@ -117,57 +117,30 @@ func (lp *Loadpoint) SetPriority(prio int) {
 	}
 }
 
-// GetTargetSoc returns loadpoint charge target soc
-func (lp *Loadpoint) GetTargetSoc() int {
+// GetSessionLimitSoc returns the session limit soc
+func (lp *Loadpoint) GetSessionLimitSoc() int {
 	lp.Lock()
 	defer lp.Unlock()
-	return lp.Soc.target
+	return lp.sessionLimitSoc
 }
 
-// setTargetSoc sets loadpoint charge target soc (no mutex)
-func (lp *Loadpoint) setTargetSoc(soc int) {
-	lp.Soc.target = soc
-	lp.publish(targetSoc, soc)
+// setSessionLimitSoc sets the session limit soc (no mutex)
+func (lp *Loadpoint) setSessionLimitSoc(soc int) {
+	lp.sessionLimitSoc = soc
+	// TODO publish name
+	lp.publish("sessionLimitSoc", soc)
 }
 
-// SetTargetSoc sets loadpoint charge target soc
-func (lp *Loadpoint) SetTargetSoc(soc int) {
+// SetSessionSocLimit sets the session soc limit
+func (lp *Loadpoint) SetSessionSocLimit(soc int) {
 	lp.Lock()
 	defer lp.Unlock()
 
-	lp.log.DEBUG.Println("set target soc:", soc)
+	lp.log.DEBUG.Println("set session soc limit:", soc)
 
 	// apply immediately
-	if lp.Soc.target != soc {
-		lp.setTargetSoc(soc)
-		lp.requestUpdate()
-		lp.persistVehicleSettings()
-	}
-}
-
-// GetMinSoc returns loadpoint charge minimum soc
-func (lp *Loadpoint) GetMinSoc() int {
-	lp.Lock()
-	defer lp.Unlock()
-	return lp.Soc.min
-}
-
-// setMinSoc sets loadpoint charge min soc (no mutex)
-func (lp *Loadpoint) setMinSoc(soc int) {
-	lp.Soc.min = soc
-	lp.publish(minSoc, soc)
-}
-
-// SetMinSoc sets loadpoint charge minimum soc
-func (lp *Loadpoint) SetMinSoc(soc int) {
-	lp.Lock()
-	defer lp.Unlock()
-
-	lp.log.DEBUG.Println("set min soc:", soc)
-
-	// apply immediately
-	if lp.Soc.min != soc {
-		lp.setMinSoc(soc)
+	if lp.sessionLimitSoc != soc {
+		lp.setSessionLimitSoc(soc)
 		lp.requestUpdate()
 		lp.persistVehicleSettings()
 	}
@@ -203,6 +176,26 @@ func (lp *Loadpoint) SetPhases(phases int) error {
 	lp.requestUpdate()
 
 	return nil
+}
+
+// GetPlanSoc returns the plan soc
+func (lp *Loadpoint) GetPlanSoc() int {
+	lp.Lock()
+	defer lp.Unlock()
+	return lp.planSoc
+}
+
+// SetPlanSoc sets the plan soc
+func (lp *Loadpoint) SetPlanSoc(soc int) {
+	lp.Lock()
+	defer lp.Unlock()
+
+	lp.log.DEBUG.Println("set plan soc:", soc)
+
+	if lp.planSoc != soc {
+		lp.planSoc = soc
+		lp.publish("planSoc", soc)
+	}
 }
 
 // GetTargetTime returns the target time

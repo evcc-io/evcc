@@ -5,9 +5,7 @@ import (
 	"reflect"
 	"strings"
 
-	"dario.cat/mergo"
 	"github.com/fatih/structs"
-	"github.com/jinzhu/copier"
 )
 
 // ActionConfig defines an action to take on event
@@ -15,22 +13,9 @@ type ActionConfig struct {
 	Mode       *ChargeMode `mapstructure:"mode,omitempty"`       // Charge Mode
 	MinCurrent *float64    `mapstructure:"minCurrent,omitempty"` // Minimum Current
 	MaxCurrent *float64    `mapstructure:"maxCurrent,omitempty"` // Maximum Current
-	MinSoc_    *int        `mapstructure:"minSoc,omitempty"`     // Minimum Soc (deprecated)
-	TargetSoc  *int        `mapstructure:"targetSoc,omitempty"`  // Target Soc
+	MinSoc     *int        `mapstructure:"minSoc,omitempty"`     // Minimum Soc (vehicle only)
+	LimitSoc   *int        `mapstructure:"limitSoc,omitempty"`   // Limit Soc
 	Priority   *int        `mapstructure:"priority,omitempty"`   // Priority
-}
-
-// Merge merges all non-nil properties of the additional config into the base config.
-// The receiver's config remains immutable.
-func (a ActionConfig) Merge(m ActionConfig) ActionConfig {
-	var res ActionConfig
-	if err := copier.Copy(&res, a); err != nil {
-		panic(err)
-	}
-	if err := mergo.MergeWithOverwrite(&res, m); err != nil {
-		panic(err)
-	}
-	return res
 }
 
 // String implements Stringer and returns the ActionConfig as comma-separated key:value string
@@ -43,4 +28,46 @@ func (a ActionConfig) String() string {
 		}
 	}
 	return strings.Join(s, ", ")
+}
+
+func (a ActionConfig) GetMode() (ChargeMode, error) {
+	if a.Mode == nil {
+		return "", ErrNotAvailable
+	}
+	return *a.Mode, nil
+}
+
+func (a ActionConfig) GetMinCurrent() (float64, error) {
+	if a.MinCurrent == nil {
+		return 0, ErrNotAvailable
+	}
+	return *a.MinCurrent, nil
+}
+
+func (a ActionConfig) GetMaxCurrent() (float64, error) {
+	if a.MaxCurrent == nil {
+		return 0, ErrNotAvailable
+	}
+	return *a.MaxCurrent, nil
+}
+
+func (a ActionConfig) GetMinSoc() (int, error) {
+	if a.MinSoc == nil {
+		return 0, ErrNotAvailable
+	}
+	return *a.MinSoc, nil
+}
+
+func (a ActionConfig) GetLimitSoc() (int, error) {
+	if a.LimitSoc == nil {
+		return 0, ErrNotAvailable
+	}
+	return *a.LimitSoc, nil
+}
+
+func (a ActionConfig) GetPriority() (int, error) {
+	if a.Priority == nil {
+		return 0, ErrNotAvailable
+	}
+	return *a.Priority, nil
 }

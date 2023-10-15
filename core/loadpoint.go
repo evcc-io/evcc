@@ -25,7 +25,6 @@ import (
 	evbus "github.com/asaskevich/EventBus"
 	"github.com/avast/retry-go/v4"
 	"github.com/benbjohnson/clock"
-	"github.com/cjrd/allocate"
 )
 
 const (
@@ -68,14 +67,10 @@ type PollConfig struct {
 	Interval time.Duration `mapstructure:"interval"` // interval when not charging
 }
 
-// SocConfig defines soc settings, estimation and update behaviour
+// SocConfig defines soc settings, estimation and update behavior
 type SocConfig struct {
 	Poll     PollConfig `mapstructure:"poll"`
 	Estimate *bool      `mapstructure:"estimate"`
-	Min_     int        `mapstructure:"min"`    // TODO deprecated
-	Target_  int        `mapstructure:"target"` // TODO deprecated
-	min      int        // Default minimum Soc, guarded by mutex
-	target   int        // Default target Soc, guarded by mutex
 }
 
 // Poll modes
@@ -122,11 +117,14 @@ type Loadpoint struct {
 	Enable, Disable   ThresholdConfig
 	ResetOnDisconnect bool `mapstructure:"resetOnDisconnect"`
 	onDisconnect      api.ActionConfig
-	targetEnergy      float64 // Target charge energy for dumb vehicles in kWh
 
 	MinCurrent    float64       // PV mode: start current	Min+PV mode: min current
 	MaxCurrent    float64       // Max allowed current. Physically ensured by the charger
 	GuardDuration time.Duration // charger enable/disable minimum holding time
+
+	sessionLimitSoc int     // Session limit for soc
+	planSoc         int     // Plan soc
+	targetEnergy    float64 // Target charge energy for dumb vehicles in kWh
 
 	enabled             bool      // Charger enabled state
 	phases              int       // Charger enabled phases, guarded by mutex
@@ -208,17 +206,6 @@ func NewLoadpointFromConfig(log *util.Logger, other map[string]interface{}) (*Lo
 		lp.log.WARN.Println("maxCurrent must be larger than minCurrent")
 	}
 
-	if lp.Soc.Min_ != 0 {
-		lp.log.WARN.Println("Configuring soc.min at loadpoint is deprecated and must be applied per vehicle")
-	}
-
-	if lp.Soc.Target_ != 0 {
-		lp.log.WARN.Println("Configuring soc.target at loadpoint is deprecated and must be applied per vehicle")
-	}
-
-	// store defaults
-	lp.collectDefaults()
-
 	if lp.MeterRef != "" {
 		dev, err := config.Meters().ByName(lp.MeterRef)
 		if err != nil {
@@ -292,8 +279,6 @@ func NewLoadpoint(log *util.Logger) *Loadpoint {
 				Interval: pollInterval,
 				Mode:     pollCharging,
 			},
-			min:    0,   // %
-			target: 100, // %
 		},
 		Enable:        ThresholdConfig{Delay: time.Minute, Threshold: 0},     // t, W
 		Disable:       ThresholdConfig{Delay: 3 * time.Minute, Threshold: 0}, // t, W
@@ -305,26 +290,6 @@ func NewLoadpoint(log *util.Logger) *Loadpoint {
 	}
 
 	return lp
-}
-
-// collectDefaults collects default values for use on disconnect
-func (lp *Loadpoint) collectDefaults() {
-	// get reference to action config
-	actionCfg := &lp.onDisconnect
-
-	// allocate action config such that all pointer fields are fully allocated
-	if err := allocate.Zero(actionCfg); err == nil {
-		// initialize with default values
-		*actionCfg.Mode = lp.GetMode()
-		*actionCfg.MinCurrent = lp.GetMinCurrent()
-		*actionCfg.MaxCurrent = lp.GetMaxCurrent()
-		*actionCfg.Priority = lp.GetPriority()
-	} else {
-		lp.log.ERROR.Printf("error allocating action config: %v", err)
-	}
-	// deprecated: do not reapply deprecated lp config values
-	actionCfg.TargetSoc = nil
-	actionCfg.MinSoc_ = nil
 }
 
 // requestUpdate requests site to update this loadpoint
@@ -551,18 +516,6 @@ func (lp *Loadpoint) applyAction(actionCfg api.ActionConfig) {
 	if actionCfg.Mode != nil {
 		lp.SetMode(*actionCfg.Mode)
 	}
-	if min := actionCfg.MinCurrent; min != nil && *min >= *lp.onDisconnect.MinCurrent {
-		lp.SetMinCurrent(*min)
-	}
-	if actionCfg.TargetSoc != nil {
-		lp.SetTargetSoc(*actionCfg.TargetSoc)
-	}
-	if max := actionCfg.MaxCurrent; max != nil && *max <= *lp.onDisconnect.MaxCurrent {
-		lp.SetMaxCurrent(*max)
-	}
-	if actionCfg.Priority != nil {
-		lp.SetPriority(*actionCfg.Priority)
-	}
 }
 
 // Prepare loadpoint configuration by adding missing helper elements
@@ -613,8 +566,9 @@ func (lp *Loadpoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 
 	lp.publish("mode", lp.GetMode())
 	lp.publish("priority", lp.GetPriority())
-	lp.publish(targetSoc, lp.GetTargetSoc())
-	lp.publish(minSoc, lp.GetMinSoc())
+	// TODO
+	// lp.publish(targetSoc, lp.GetTargetSoc())
+	// lp.publish(minSoc, lp.GetMinSoc())
 
 	// reset detection state
 	lp.publish(vehicleDetectionActive, false)
@@ -807,35 +761,34 @@ func (lp *Loadpoint) targetEnergyReached() bool {
 	return ok && f <= 0
 }
 
-// targetSocReached checks if target is configured and reached.
-// If vehicle is not configured this will always return false unless the
-// charger is capable of and has provided an soc value.
-func (lp *Loadpoint) targetSocReached() bool {
-	if _, ok := lp.charger.(api.Battery); lp.GetVehicle() == nil && !ok {
-		return false
-	}
-
-	return lp.Soc.target > 0 &&
-		lp.Soc.target < 100 &&
-		lp.vehicleSoc >= float64(lp.Soc.target)
+// sessionLimitSocReached returns true if the effective limit has been reached
+func (lp *Loadpoint) sessionLimitSocReached() bool {
+	limit := lp.GetEffectiveLimitSoc()
+	return limit > 0 && lp.vehicleSoc >= float64(limit)
 }
 
 // minSocNotReached checks if minimum is configured and not reached.
 // If vehicle is not configured this will always return false
 func (lp *Loadpoint) minSocNotReached() bool {
+	var minSoc int
 	vehicle := lp.GetVehicle()
-	if vehicle == nil || lp.Soc.min == 0 {
+	if vehicle != nil {
+		minSoc, _ = vehicle.OnIdentified().GetMinSoc()
+	}
+
+	if vehicle == nil || minSoc == 0 {
 		return false
 	}
 
 	if lp.vehicleSoc != 0 {
-		if lp.vehicleSoc < float64(lp.Soc.min) {
-			lp.log.DEBUG.Printf("forced charging at vehicle soc %.0f%% (< %.0f%% min soc)", lp.vehicleSoc, float64(lp.Soc.min))
+		active := lp.vehicleSoc < float64(minSoc)
+		if active {
+			lp.log.DEBUG.Printf("forced charging at vehicle soc %.0f%% (< %.0f%% min soc)", lp.vehicleSoc, float64(minSoc))
 		}
-		return lp.vehicleSoc < float64(lp.Soc.min)
+		return active
 	}
 
-	minEnergy := vehicle.Capacity() * float64(lp.Soc.min) / 100 / soc.ChargeEfficiency
+	minEnergy := vehicle.Capacity() * float64(minSoc) / 100 / soc.ChargeEfficiency
 	return minEnergy > 0 && lp.getChargedEnergy() < minEnergy
 }
 
@@ -1407,6 +1360,7 @@ func (lp *Loadpoint) publishSocAndRange() {
 		lp.publish(vehicleSoc, lp.vehicleSoc)
 
 		// vehicle target soc
+		// TODO take vehicle api limits into account
 		targetSoc := 100
 		if vs, ok := lp.GetVehicle().(api.SocLimiter); ok {
 			if limit, err := vs.TargetSoc(); err == nil {
@@ -1419,10 +1373,7 @@ func (lp *Loadpoint) publishSocAndRange() {
 		}
 
 		// use minimum of vehicle and loadpoint
-		socLimit := targetSoc
-		if lp.Soc.target < socLimit {
-			socLimit = lp.Soc.target
-		}
+		socLimit := min(targetSoc, lp.GetEffectiveLimitSoc())
 
 		var d time.Duration
 		if lp.charging() {
@@ -1575,8 +1526,8 @@ func (lp *Loadpoint) Update(sitePower float64, autoCharge, batteryBuffered, batt
 		lp.log.DEBUG.Printf("targetEnergy reached: %.0fkWh > %0.1fkWh", lp.getChargedEnergy()/1e3, lp.targetEnergy)
 		err = lp.disableUnlessClimater()
 
-	case lp.targetSocReached():
-		lp.log.DEBUG.Printf("targetSoc reached: %.1f%% > %d%%", lp.vehicleSoc, lp.Soc.target)
+	case lp.sessionLimitSocReached():
+		lp.log.DEBUG.Printf("limitSoc reached: %.1f%% > %d%%", lp.vehicleSoc, lp.GetEffectiveLimitSoc())
 		err = lp.disableUnlessClimater()
 
 	case lp.remoteControlled(loadpoint.RemoteHardDisable):
@@ -1625,7 +1576,8 @@ func (lp *Loadpoint) Update(sitePower float64, autoCharge, batteryBuffered, batt
 
 	// Wake-up checks
 	if lp.enabled && lp.status == api.StatusB &&
-		int(lp.vehicleSoc) < lp.Soc.target && lp.wakeUpTimer.Expired() {
+		// TODO take vehicle api limits into account
+		int(lp.vehicleSoc) < lp.GetEffectiveLimitSoc() && lp.wakeUpTimer.Expired() {
 		lp.wakeUpVehicle()
 	}
 

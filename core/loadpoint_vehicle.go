@@ -126,10 +126,6 @@ func (lp *Loadpoint) setActiveVehicle(vehicle api.Vehicle) {
 	// lock api
 	lp.Lock()
 
-	// reset minSoc and targetSoc before change
-	lp.setMinSoc(0)
-	lp.setTargetSoc(100)
-
 	// reset target energy
 	lp.setTargetEnergy(0)
 
@@ -227,31 +223,25 @@ func (lp *Loadpoint) publishVehicleFeature(f api.Feature) {
 }
 
 // persistVehicleSettings stores user configuration (via UI/API) for the current vehicle
+// TODO save vehicle settings somewhere
 func (lp *Loadpoint) persistVehicleSettings() {
 	idx := lp.coordinator.GetVehicleIndex(lp.GetVehicle())
 	if idx == -1 {
 		return
 	}
-	settings.SetInt(fmt.Sprintf("vehicle.%d.targetSoc", idx), int64(lp.Soc.target))
 	settings.SetFloat(fmt.Sprintf("vehicle.%d.targetEnergy", idx), lp.targetEnergy)
-	settings.SetInt(fmt.Sprintf("vehicle.%d.minSoc", idx), int64(lp.Soc.min))
 	settings.SetTime(fmt.Sprintf("vehicle.%d.targetTime", idx), lp.targetTime)
 }
 
 // restoreVehicleSettings restores user configuration (via UI/API) for the current vehicle
+// TODO restore vehicle settings somewhere
 func (lp *Loadpoint) restoreVehicleSettings() {
 	idx := lp.coordinator.GetVehicleIndex(lp.GetVehicle())
 	if idx == -1 {
 		return
 	}
-	if v, err := settings.Int(fmt.Sprintf("vehicle.%d.targetSoc", idx)); err == nil {
-		lp.setTargetSoc(int(v))
-	}
 	if v, err := settings.Float(fmt.Sprintf("vehicle.%d.targetEnergy", idx)); err == nil {
 		lp.setTargetEnergy(v)
-	}
-	if v, err := settings.Int(fmt.Sprintf("vehicle.%d.minSoc", idx)); err == nil {
-		lp.setMinSoc(int(v))
 	}
 	if v, err := settings.Time(fmt.Sprintf("vehicle.%d.targetTime", idx)); err == nil {
 		if v.After(time.Now()) {
