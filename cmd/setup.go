@@ -16,7 +16,6 @@ import (
 	paho "github.com/eclipse/paho.mqtt.golang"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger"
-	"github.com/evcc-io/evcc/charger/eebus"
 	"github.com/evcc-io/evcc/cmd/shutdown"
 	"github.com/evcc-io/evcc/core"
 	"github.com/evcc-io/evcc/core/site"
@@ -395,10 +394,10 @@ func configureEnvironment(cmd *cobra.Command, conf globalConfig) (err error) {
 	// 	err = configureGo(conf.Go)
 	// }
 
-	// setup EEBus server
-	if err == nil && conf.EEBus != nil {
-		err = configureEEBus(conf.EEBus)
-	}
+	// // setup EEBus server
+	// if err == nil && conf.EEBus != nil {
+	// 	err = configureEEBus(conf.EEBus)
+	// }
 
 	// setup config database
 	if err == nil {
@@ -523,18 +522,18 @@ func configureMDNS(conf networkConfig) error {
 	return nil
 }
 
-// setup EEBus
-func configureEEBus(conf map[string]interface{}) error {
-	var err error
-	if eebus.Instance, err = eebus.NewServer(conf); err != nil {
-		return fmt.Errorf("failed configuring eebus: %w", err)
-	}
+// // setup EEBus
+// func configureEEBus(conf map[string]interface{}) error {
+// 	var err error
+// 	if eebus.Instance, err = eebus.NewServer(conf); err != nil {
+// 		return fmt.Errorf("failed configuring eebus: %w", err)
+// 	}
 
-	eebus.Instance.Run()
-	shutdown.Register(eebus.Instance.Shutdown)
+// 	eebus.Instance.Run()
+// 	shutdown.Register(eebus.Instance.Shutdown)
 
-	return nil
-}
+// 	return nil
+// }
 
 // setup messaging
 func configureMessengers(conf messagingConfig, valueChan chan util.Param, cache *util.Cache) (chan push.Event, error) {

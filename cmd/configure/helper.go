@@ -155,35 +155,35 @@ func (c *CmdConfigure) processDeviceRequirements(templateItem templates.Template
 		}
 	}
 
-	// check if we need to setup an EEBUS HEMS
-	if slices.Contains(templateItem.Requirements.EVCC, templates.RequirementEEBUS) {
-		if c.configuration.config.EEBUS == "" {
-			fmt.Println()
-			fmt.Println("-- EEBUS -----------------------------------")
-			fmt.Println()
-			eebusConfig, err := c.eebusCertificate()
-			if err != nil {
-				return fmt.Errorf("%s: %s", c.localizedString("Requirements_EEBUS_Cert_Error"), err)
-			}
+	// // check if we need to setup an EEBUS HEMS
+	// if slices.Contains(templateItem.Requirements.EVCC, templates.RequirementEEBUS) {
+	// 	if c.configuration.config.EEBUS == "" {
+	// 		fmt.Println()
+	// 		fmt.Println("-- EEBUS -----------------------------------")
+	// 		fmt.Println()
+	// 		eebusConfig, err := c.eebusCertificate()
+	// 		if err != nil {
+	// 			return fmt.Errorf("%s: %s", c.localizedString("Requirements_EEBUS_Cert_Error"), err)
+	// 		}
 
-			if err := c.configureEEBus(eebusConfig); err != nil {
-				return err
-			}
+	// 		if err := c.configureEEBus(eebusConfig); err != nil {
+	// 			return err
+	// 		}
 
-			eebusYaml, err := yaml.Marshal(eebusConfig)
-			if err != nil {
-				return err
-			}
+	// 		eebusYaml, err := yaml.Marshal(eebusConfig)
+	// 		if err != nil {
+	// 			return err
+	// 		}
 
-			c.configuration.config.EEBUS = string(eebusYaml)
-			fmt.Println()
-			fmt.Println("--------------------------------------------")
-		}
+	// 		c.configuration.config.EEBUS = string(eebusYaml)
+	// 		fmt.Println()
+	// 		fmt.Println("--------------------------------------------")
+	// 	}
 
-		fmt.Println()
-		fmt.Println(c.localizedString("Requirements_EEBUS_Pairing"))
-		fmt.Scanln()
-	}
+	// 	fmt.Println()
+	// 	fmt.Println(c.localizedString("Requirements_EEBUS_Pairing"))
+	// 	fmt.Scanln()
+	// }
 
 	return nil
 }
