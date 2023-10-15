@@ -60,7 +60,7 @@ func (s *Stats) publish(days int, p publisher) {
 
 	// First query to calculate solar_percentage and total_kwh
 	err := db.Instance.Raw(`
-		SELECT SUM(charged_kwh * (solar_percentage / 100)) / SUM(charged_kwh) AS SolarPercentage, 
+		SELECT SUM(charged_kwh * solar_percentage) / SUM(charged_kwh) AS SolarPercentage, 
 			SUM(charged_kwh) as ChargedKWh 
 		FROM sessions 
 		WHERE finished >= ? 
