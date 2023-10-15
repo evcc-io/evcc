@@ -282,7 +282,7 @@ func remoteDemandHandler(lp loadpoint.API) http.HandlerFunc {
 	}
 }
 
-// planTimeHandler updates plan soc
+// planTimeHandler updates plan time
 func planTimeHandler(lp loadpoint.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -314,7 +314,7 @@ func planTimeHandler(lp loadpoint.API) http.HandlerFunc {
 	}
 }
 
-// planTimeRemoveHandler removes plan soc
+// planTimeRemoveHandler removes plan time
 func planTimeRemoveHandler(lp loadpoint.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if err := lp.SetPlanTime(time.Time{}); err != nil {
