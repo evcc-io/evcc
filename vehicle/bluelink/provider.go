@@ -169,9 +169,9 @@ func (v *Provider) Odometer() (float64, error) {
 	return res.ResMsg.VehicleStatusInfo.Odometer.Value, err
 }
 
-var _ api.SocLimiter = (*Provider)(nil)
+var _ api.SocLimiterGetter = (*Provider)(nil)
 
-// TargetSoc implements the api.SocLimiter interface
+// TargetSoc implements the api.SocLimiterGetter interface
 func (v *Provider) TargetSoc() (float64, error) {
 	res, err := v.statusG()
 

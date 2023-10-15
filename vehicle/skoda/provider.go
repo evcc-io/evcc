@@ -125,9 +125,9 @@ func (v *Provider) Odometer() (odo float64, err error) {
 // 	return active, outsideTemp, targetTemp, err
 // }
 
-var _ api.SocLimiter = (*Provider)(nil)
+var _ api.SocLimiterGetter = (*Provider)(nil)
 
-// TargetSoc implements the api.SocLimiter interface
+// TargetSoc implements the api.SocLimiterGetter interface
 func (v *Provider) TargetSoc() (float64, error) {
 	res, err := v.settingsG()
 	if err == nil {
