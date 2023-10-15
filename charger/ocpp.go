@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -16,7 +17,6 @@ import (
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/smartcharging"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/types"
-	"github.com/samber/lo"
 )
 
 // OCPP charger implementation
@@ -276,7 +276,7 @@ func NewOCPP(id string, connector int, idtag string,
 
 // hasMeasurement checks if meterValuesSample contains given measurement
 func (c *OCPP) hasMeasurement(val types.Measurand) bool {
-	return lo.Contains(strings.Split(c.meterValuesSample, ","), string(val))
+	return slices.Contains(strings.Split(c.meterValuesSample, ","), string(val))
 }
 
 // configure updates CP configuration
