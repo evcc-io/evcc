@@ -182,7 +182,7 @@ func (d *dumper) Dump(name string, v interface{}) {
 		}
 	}
 
-	if v, ok := v.(api.SocLimiter); ok {
+	if v, ok := v.(api.SocLimiterGetter); ok {
 		if targetSoc, err := v.TargetSoc(); err != nil {
 			fmt.Fprintf(w, "Target Soc:\t%v\n", err)
 		} else {

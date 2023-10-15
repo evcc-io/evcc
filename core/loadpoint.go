@@ -1362,7 +1362,7 @@ func (lp *Loadpoint) publishSocAndRange() {
 		// vehicle target soc
 		// TODO take vehicle api limits into account
 		targetSoc := 100
-		if vs, ok := lp.GetVehicle().(api.SocLimiter); ok {
+		if vs, ok := lp.GetVehicle().(api.SocLimiterGetter); ok {
 			if limit, err := vs.TargetSoc(); err == nil {
 				targetSoc = int(math.Trunc(limit))
 				lp.log.DEBUG.Printf("vehicle soc limit: %.0f%%", limit)

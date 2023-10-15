@@ -215,8 +215,14 @@ type VehiclePosition interface {
 	Position() (float64, float64, error)
 }
 
-// SocLimiter returns the vehicles charge limit
-type SocLimiter interface {
+// CurrentLimiter returns the current limits
+type CurrentLimitGetter interface {
+	GetMinCurrent() (float64, error)
+	GetMaxCurrent() (float64, error)
+}
+
+// SocLimiterGetter returns the soc limit
+type SocLimiterGetter interface {
 	TargetSoc() (float64, error)
 }
 
