@@ -74,8 +74,10 @@ func (s *DB) ClosePendingSessionsInHistory(chargeMeterTotal float64) error {
 			session.MeterStop = nextSession.MeterStart
 		}
 
-		session.ChargedEnergy = *session.MeterStop - *session.MeterStart
-		s.Persist(session)
+		if session.MeterStart != nil && session.MeterStop != nil {
+			session.ChargedEnergy = *session.MeterStop - *session.MeterStart
+			s.Persist(session)
+		}
 	}
 
 	return nil
