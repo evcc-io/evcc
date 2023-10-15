@@ -126,8 +126,8 @@ func (lp *Loadpoint) setActiveVehicle(vehicle api.Vehicle) {
 	// lock api
 	lp.Lock()
 
-	// reset target energy
-	lp.setTargetEnergy(0)
+	// reset plan energy
+	lp.setPlanEnergy(0)
 
 	// unlock api
 	lp.Unlock()
@@ -229,8 +229,8 @@ func (lp *Loadpoint) persistVehicleSettings() {
 	if idx == -1 {
 		return
 	}
-	settings.SetFloat(fmt.Sprintf("vehicle.%d.targetEnergy", idx), lp.targetEnergy)
-	settings.SetTime(fmt.Sprintf("vehicle.%d.targetTime", idx), lp.targetTime)
+	settings.SetFloat(fmt.Sprintf("vehicle.%d.targetEnergy", idx), lp.planEnergy)
+	settings.SetTime(fmt.Sprintf("vehicle.%d.targetTime", idx), lp.planTime)
 }
 
 // restoreVehicleSettings restores user configuration (via UI/API) for the current vehicle
@@ -241,11 +241,11 @@ func (lp *Loadpoint) restoreVehicleSettings() {
 		return
 	}
 	if v, err := settings.Float(fmt.Sprintf("vehicle.%d.targetEnergy", idx)); err == nil {
-		lp.setTargetEnergy(v)
+		lp.setPlanEnergy(v)
 	}
 	if v, err := settings.Time(fmt.Sprintf("vehicle.%d.targetTime", idx)); err == nil {
 		if v.After(time.Now()) {
-			lp.setTargetTime(v)
+			lp.setPlanTime(v)
 		}
 	}
 }

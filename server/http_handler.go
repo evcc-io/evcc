@@ -210,8 +210,13 @@ func tariffHandler(site site.API) http.HandlerFunc {
 	}
 }
 
+type moder interface {
+	GetMode() api.ChargeMode
+	SetMode(api.ChargeMode)
+}
+
 // chargeModeHandler updates charge mode
-func chargeModeHandler(lp loadpoint.API) http.HandlerFunc {
+func chargeModeHandler(lp moder) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
@@ -227,8 +232,13 @@ func chargeModeHandler(lp loadpoint.API) http.HandlerFunc {
 	}
 }
 
+type phaser interface {
+	GetPhases() int
+	SetPhases(int) error
+}
+
 // phasesHandler updates minimum soc
-func phasesHandler(lp loadpoint.API) http.HandlerFunc {
+func phasesHandler(lp phaser) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
@@ -272,8 +282,8 @@ func remoteDemandHandler(lp loadpoint.API) http.HandlerFunc {
 	}
 }
 
-// targetTimeHandler updates target soc
-func targetTimeHandler(lp loadpoint.API) http.HandlerFunc {
+// planTimeHandler updates plan soc
+func planTimeHandler(lp loadpoint.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
@@ -285,7 +295,7 @@ func targetTimeHandler(lp loadpoint.API) http.HandlerFunc {
 			return
 		}
 
-		if err := lp.SetTargetTime(timeV); err != nil {
+		if err := lp.SetPlanTime(timeV); err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
@@ -295,19 +305,19 @@ func targetTimeHandler(lp loadpoint.API) http.HandlerFunc {
 			Energy float64   `json:"energy"`
 			Time   time.Time `json:"time"`
 		}{
-			Soc:    lp.GetTargetSoc(),
-			Energy: lp.GetTargetEnergy(),
-			Time:   lp.GetTargetTime(),
+			Soc:    lp.GetPlanSoc(),
+			Energy: lp.GetPlanEnergy(),
+			Time:   lp.GetPlanTime(),
 		}
 
 		jsonResult(w, res)
 	}
 }
 
-// targetTimeRemoveHandler removes target soc
-func targetTimeRemoveHandler(lp loadpoint.API) http.HandlerFunc {
+// planTimeRemoveHandler removes plan soc
+func planTimeRemoveHandler(lp loadpoint.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if err := lp.SetTargetTime(time.Time{}); err != nil {
+		if err := lp.SetPlanTime(time.Time{}); err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
@@ -367,9 +377,9 @@ func planHandler(lp loadpoint.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var err error
 
-		targetTime := lp.GetTargetTime()
-		if t := r.URL.Query().Get("targetTime"); t != "" {
-			targetTime, err = time.Parse(time.RFC3339, t)
+		planTime := lp.GetPlanTime()
+		if t := r.URL.Query().Get("planTime"); t != "" {
+			planTime, err = time.Parse(time.RFC3339, t)
 		}
 
 		if err != nil {
@@ -378,7 +388,7 @@ func planHandler(lp loadpoint.API) http.HandlerFunc {
 		}
 
 		power := lp.GetMaxPower()
-		requiredDuration, plan, err := lp.GetPlan(targetTime, power)
+		requiredDuration, plan, err := lp.GetPlan(planTime, power)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			return

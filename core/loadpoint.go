@@ -122,9 +122,7 @@ type Loadpoint struct {
 	MaxCurrent    float64       // Max allowed current. Physically ensured by the charger
 	GuardDuration time.Duration // charger enable/disable minimum holding time
 
-	sessionLimitSoc int     // Session limit for soc
-	planSoc         int     // Plan soc
-	targetEnergy    float64 // Target charge energy for dumb vehicles in kWh
+	sessionLimitSoc int // Session limit for soc
 
 	enabled             bool      // Charger enabled state
 	phases              int       // Charger enabled phases, guarded by mutex
@@ -148,9 +146,11 @@ type Loadpoint struct {
 	coordinator    coordinator.API
 	socEstimator   *soc.Estimator
 
-	// target charging
+	// charge planning
 	planner     *planner.Planner
-	targetTime  time.Time // time goal
+	planSoc     int       // Plan soc
+	planEnergy  float64   // Plan charge energy in kWh (dumb vehicles)
+	planTime    time.Time // time goal
 	planSlotEnd time.Time // current plan slot end time
 	planActive  bool      // charge plan exists and has a currently active slot
 
@@ -475,7 +475,7 @@ func (lp *Loadpoint) evVehicleDisconnectHandler() {
 	lp.socUpdated = time.Time{}
 
 	// reset plan once charge goal is met
-	lp.setTargetTime(time.Time{})
+	lp.setPlanTime(time.Time{})
 	lp.setPlanActive(false)
 }
 
@@ -747,16 +747,16 @@ func (lp *Loadpoint) setStatus(status api.ChargeStatus) {
 
 // remainingChargeEnergy returns missing energy amount in kWh if vehicle has a valid energy target
 func (lp *Loadpoint) remainingChargeEnergy() (float64, bool) {
-	return max(0, lp.targetEnergy-lp.getChargedEnergy()/1e3),
-		!lp.vehicleHasSoc() && lp.targetEnergy > 0
+	return max(0, lp.planEnergy-lp.getChargedEnergy()/1e3),
+		!lp.vehicleHasSoc() && lp.planEnergy > 0
 }
 
 func (lp *Loadpoint) vehicleHasSoc() bool {
 	return lp.GetVehicle() != nil && !lp.vehicleHasFeature(api.Offline)
 }
 
-// targetEnergyReached checks if target is configured and reached
-func (lp *Loadpoint) targetEnergyReached() bool {
+// planEnergyReached checks if target is configured and reached
+func (lp *Loadpoint) planEnergyReached() bool {
 	f, ok := lp.remainingChargeEnergy()
 	return ok && f <= 0
 }
@@ -1522,8 +1522,8 @@ func (lp *Loadpoint) Update(sitePower float64, autoCharge, batteryBuffered, batt
 	case lp.scalePhasesRequired():
 		err = lp.scalePhases(lp.ConfiguredPhases)
 
-	case lp.targetEnergyReached():
-		lp.log.DEBUG.Printf("targetEnergy reached: %.0fkWh > %0.1fkWh", lp.getChargedEnergy()/1e3, lp.targetEnergy)
+	case lp.planEnergyReached():
+		lp.log.DEBUG.Printf("planEnergy reached: %.0fkWh > %0.1fkWh", lp.getChargedEnergy()/1e3, lp.planEnergy)
 		err = lp.disableUnlessClimater()
 
 	case lp.sessionLimitSocReached():
@@ -1549,7 +1549,7 @@ func (lp *Loadpoint) Update(sitePower float64, autoCharge, batteryBuffered, batt
 
 	case mode == api.ModeMinPV || mode == api.ModePV:
 		// cheap tariff
-		if autoCharge && lp.GetTargetTime().IsZero() {
+		if autoCharge && lp.GetPlanTime().IsZero() {
 			err = lp.fastCharging()
 			lp.resetPhaseTimer()
 			lp.elapsePVTimer() // let PV mode disable immediately afterwards

@@ -123,31 +123,52 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, cache *util.Cache) {
 		api.Methods(r.Methods...).Path(r.Pattern).Handler(r.HandlerFunc)
 	}
 
-	// loadpoint api
-	for id, lp := range site.Loadpoints() {
-		loadpoint := api.PathPrefix(fmt.Sprintf("/loadpoints/%d", id+1)).Subrouter()
+	// vehicle api
+	for id, v := range site.Vehicles() {
+		api := api.PathPrefix(fmt.Sprintf("/vehicles/%d", id+1)).Subrouter()
 
 		routes := map[string]route{
-			"mode":             {[]string{"POST", "OPTIONS"}, "/mode/{value:[a-z]+}", chargeModeHandler(lp)},
-			"minsoc":           {[]string{"POST", "OPTIONS"}, "/minsoc/{value:[0-9]+}", intHandler(pass(lp.SetMinSoc), lp.GetMinSoc)},
-			"mincurrent":       {[]string{"POST", "OPTIONS"}, "/mincurrent/{value:[0-9.]+}", floatHandler(pass(lp.SetMinCurrent), lp.GetMinCurrent)},
-			"maxcurrent":       {[]string{"POST", "OPTIONS"}, "/maxcurrent/{value:[0-9.]+}", floatHandler(pass(lp.SetMaxCurrent), lp.GetMaxCurrent)},
-			"phases":           {[]string{"POST", "OPTIONS"}, "/phases/{value:[0-9]+}", phasesHandler(lp)},
-			"targetenergy":     {[]string{"POST", "OPTIONS"}, "/target/energy/{value:[0-9.]+}", floatHandler(pass(lp.SetTargetEnergy), lp.GetTargetEnergy)},
-			"targetsoc":        {[]string{"POST", "OPTIONS"}, "/target/soc/{value:[0-9]+}", intHandler(pass(lp.SetTargetSoc), lp.GetTargetSoc)},
-			"targettime":       {[]string{"POST", "OPTIONS"}, "/target/time/{time:[0-9TZ:.-]+}", targetTimeHandler(lp)},
-			"targettime2":      {[]string{"DELETE", "OPTIONS"}, "/target/time", targetTimeRemoveHandler(lp)},
+			"mode":       {[]string{"POST", "OPTIONS"}, "/mode/{value:[a-z]+}", chargeModeHandler(v)},
+			"minsoc":     {[]string{"POST", "OPTIONS"}, "/minsoc/{value:[0-9]+}", intHandler(pass(v.SetMinSoc), v.GetMinSoc)},
+			"limitsoc":   {[]string{"POST", "OPTIONS"}, "/limitsoc/{value:[0-9]+}", intHandler(pass(v.SetLimitSoc), v.GetLimitSoc)},
+			"mincurrent": {[]string{"POST", "OPTIONS"}, "/mincurrent/{value:[0-9.]+}", floatHandler(pass(v.SetMinCurrent), v.GetMinCurrent)},
+			"maxcurrent": {[]string{"POST", "OPTIONS"}, "/maxcurrent/{value:[0-9.]+}", floatHandler(pass(v.SetMaxCurrent), v.GetMaxCurrent)},
+			"phases":     {[]string{"POST", "OPTIONS"}, "/phases/{value:[0-9]+}", phasesHandler(v)},
+			// "targetenergy": {[]string{"POST", "OPTIONS"}, "/target/energy/{value:[0-9.]+}", floatHandler(pass(v.SetTargetEnergy), v.GetTargetEnergy)},
+			// "targetsoc":        {[]string{"POST", "OPTIONS"}, "/target/soc/{value:[0-9]+}", intHandler(pass(v.SetLimitSoc), v.GetLimitSoc)},
+		}
+
+		for _, r := range routes {
+			api.Methods(r.Methods...).Path(r.Pattern).Handler(r.HandlerFunc)
+		}
+	}
+
+	// loadpoint api
+	for id, lp := range site.Loadpoints() {
+		api := api.PathPrefix(fmt.Sprintf("/loadpoints/%d", id+1)).Subrouter()
+
+		routes := map[string]route{
+			"mode": {[]string{"POST", "OPTIONS"}, "/mode/{value:[a-z]+}", chargeModeHandler(lp)},
+			// TODO decide name- maybe sessionsoc for clarity?
+			"limitsoc":   {[]string{"POST", "OPTIONS"}, "/limitsoc/{value:[0-9]+}", intHandler(pass(lp.SetSessionSocLimit), lp.GetSessionLimitSoc)},
+			"mincurrent": {[]string{"POST", "OPTIONS"}, "/mincurrent/{value:[0-9.]+}", floatHandler(pass(lp.SetMinCurrent), lp.GetMinCurrent)},
+			"maxcurrent": {[]string{"POST", "OPTIONS"}, "/maxcurrent/{value:[0-9.]+}", floatHandler(pass(lp.SetMaxCurrent), lp.GetMaxCurrent)},
+			"phases":     {[]string{"POST", "OPTIONS"}, "/phases/{value:[0-9]+}", phasesHandler(lp)},
+			"planenergy": {[]string{"POST", "OPTIONS"}, "/plan/energy/{value:[0-9.]+}", floatHandler(pass(lp.SetPlanEnergy), lp.GetPlanEnergy)},
+			// "plansoc":        {[]string{"POST", "OPTIONS"}, "/plan/soc/{value:[0-9]+}", intHandler(pass(lp.SetLimitSoc), lp.GetLimitSoc)},
+			"plantime":         {[]string{"POST", "OPTIONS"}, "/plan/time/{time:[0-9TZ:.-]+}", planTimeHandler(lp)},
+			"plantime2":        {[]string{"DELETE", "OPTIONS"}, "/plan/time", planTimeRemoveHandler(lp)},
 			"plan":             {[]string{"GET"}, "/target/plan", planHandler(lp)},
 			"vehicle":          {[]string{"POST", "OPTIONS"}, "/vehicle/{vehicle:[1-9][0-9]*}", vehicleHandler(site, lp)},
 			"vehicle2":         {[]string{"DELETE", "OPTIONS"}, "/vehicle", vehicleRemoveHandler(lp)},
 			"vehicleDetect":    {[]string{"PATCH", "OPTIONS"}, "/vehicle", vehicleDetectHandler(lp)},
-			"remotedemand":     {[]string{"POST", "OPTIONS"}, "/remotedemand/{demand:[a-z]+}/{source::[0-9a-zA-Z_-]+}", remoteDemandHandler(lp)},
+			"remotedemand":     {[]string{"POST", "OPTIONS"}, "/remotedemand/{demand:[a-z]+}/{source:[0-9a-zA-Z_-]+}", remoteDemandHandler(lp)},
 			"enableThreshold":  {[]string{"POST", "OPTIONS"}, "/enable/threshold/{value:-?[0-9.]+}", floatHandler(pass(lp.SetEnableThreshold), lp.GetEnableThreshold)},
 			"disableThreshold": {[]string{"POST", "OPTIONS"}, "/disable/threshold/{value:-?[0-9.]+}", floatHandler(pass(lp.SetDisableThreshold), lp.GetDisableThreshold)},
 		}
 
 		for _, r := range routes {
-			loadpoint.Methods(r.Methods...).Path(r.Pattern).Handler(r.HandlerFunc)
+			api.Methods(r.Methods...).Path(r.Pattern).Handler(r.HandlerFunc)
 		}
 	}
 }

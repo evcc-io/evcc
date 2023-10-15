@@ -62,36 +62,36 @@ func (lp *Loadpoint) SetMode(mode api.ChargeMode) {
 	}
 }
 
-// getChargedEnergy returns loadpoint charge target energy in Wh
+// getChargedEnergy returns plan target energy in Wh
 func (lp *Loadpoint) getChargedEnergy() float64 {
 	lp.Lock()
 	defer lp.Unlock()
 	return lp.sessionEnergy.TotalWh()
 }
 
-// GetTargetEnergy returns loadpoint charge target energy
-func (lp *Loadpoint) GetTargetEnergy() float64 {
+// GetPlanEnergy returns plan target energy
+func (lp *Loadpoint) GetPlanEnergy() float64 {
 	lp.Lock()
 	defer lp.Unlock()
-	return lp.targetEnergy
+	return lp.planEnergy
 }
 
-// setTargetEnergy sets loadpoint charge target energy (no mutex)
-func (lp *Loadpoint) setTargetEnergy(energy float64) {
-	lp.targetEnergy = energy
-	lp.publish(targetEnergy, energy)
+// setPlanEnergy sets plan target energy (no mutex)
+func (lp *Loadpoint) setPlanEnergy(energy float64) {
+	lp.planEnergy = energy
+	lp.publish(planEnergy, energy)
 }
 
-// SetTargetEnergy sets loadpoint charge target energy
-func (lp *Loadpoint) SetTargetEnergy(energy float64) {
+// SetPlanEnergy sets plan target energy
+func (lp *Loadpoint) SetPlanEnergy(energy float64) {
 	lp.Lock()
 	defer lp.Unlock()
 
 	lp.log.DEBUG.Println("set target energy:", energy)
 
 	// apply immediately
-	if lp.targetEnergy != energy {
-		lp.setTargetEnergy(energy)
+	if lp.planEnergy != energy {
+		lp.setPlanEnergy(energy)
 		lp.requestUpdate()
 		lp.persistVehicleSettings()
 	}
@@ -127,8 +127,8 @@ func (lp *Loadpoint) GetSessionLimitSoc() int {
 // setSessionLimitSoc sets the session limit soc (no mutex)
 func (lp *Loadpoint) setSessionLimitSoc(soc int) {
 	lp.sessionLimitSoc = soc
-	// TODO publish name
-	lp.publish("sessionLimitSoc", soc)
+	// TODO decide name
+	lp.publish(limitSoc, soc)
 }
 
 // SetSessionSocLimit sets the session soc limit
@@ -198,31 +198,31 @@ func (lp *Loadpoint) SetPlanSoc(soc int) {
 	}
 }
 
-// GetTargetTime returns the target time
-func (lp *Loadpoint) GetTargetTime() time.Time {
+// GetPlanTime returns the plan time
+func (lp *Loadpoint) GetPlanTime() time.Time {
 	lp.Lock()
 	defer lp.Unlock()
-	return lp.targetTime
+	return lp.planTime
 }
 
-// SetTargetTime sets the charge target time
-func (lp *Loadpoint) SetTargetTime(finishAt time.Time) error {
+// SetPlanTime sets the charge plan time
+func (lp *Loadpoint) SetPlanTime(finishAt time.Time) error {
 	if !finishAt.IsZero() && finishAt.Before(time.Now()) {
 		return errors.New("timestamp is in the past")
 	}
 
 	lp.Lock()
 	defer lp.Unlock()
-	lp.setTargetTime(finishAt)
+	lp.setPlanTime(finishAt)
 	lp.persistVehicleSettings()
 
 	return nil
 }
 
-// setTargetTime sets the charge target time
-func (lp *Loadpoint) setTargetTime(finishAt time.Time) {
-	lp.targetTime = finishAt
-	lp.publish(targetTime, finishAt)
+// setPlanTime sets the charge plan time
+func (lp *Loadpoint) setPlanTime(finishAt time.Time) {
+	lp.planTime = finishAt
+	lp.publish(planTime, finishAt)
 
 	// TODO planActive is not guarded by mutex
 	if finishAt.IsZero() {
