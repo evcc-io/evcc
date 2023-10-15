@@ -3,12 +3,14 @@ package site
 import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
+	"github.com/evcc-io/evcc/core/vehicle"
 )
 
 // API is the external site API
 type API interface {
 	Healthy() bool
 	Loadpoints() []loadpoint.API
+	Vehicles() []vehicle.API
 
 	//
 	// battery

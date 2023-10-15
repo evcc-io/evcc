@@ -60,14 +60,14 @@ type API interface {
 	GetPlanSoc() int
 	// SetPlanSoc sets the plan soc
 	SetPlanSoc(soc int)
-	// GetTargetTime returns the target time
-	GetTargetTime() time.Time
-	// SetTargetTime sets the target time
-	SetTargetTime(time.Time) error
-	// GetTargetEnergy returns the charge target energy
-	GetTargetEnergy() float64
-	// SetTargetEnergy sets the charge target energy
-	SetTargetEnergy(float64)
+	// GetPlanTime returns the plan time
+	GetPlanTime() time.Time
+	// SetPlanTime sets the plan time
+	SetPlanTime(time.Time) error
+	// GetPlanEnergy returns the charge plan energy
+	GetPlanEnergy() float64
+	// SetPlanEnergy sets the charge plan energy
+	SetPlanEnergy(float64)
 	// GetSessionLimitSoc returns the session limit soc
 	GetSessionLimitSoc() int
 	// SetSessionSocLimit sets the session soc limit
@@ -97,14 +97,14 @@ type API interface {
 	// GetChargePowerFlexibility returns the flexible amount of current charging power
 	GetChargePowerFlexibility() float64
 	// TODO decide if needed
-	// // GetMinCurrent returns the min charging current
-	// GetMinCurrent() float64
-	// // SetMinCurrent sets the min charging current
-	// SetMinCurrent(float64)
-	// // GetMaxCurrent returns the max charging current
-	// GetMaxCurrent() float64
-	// // SetMaxCurrent sets the max charging current
-	// SetMaxCurrent(float64)
+	// GetMinCurrent returns the min charging current
+	GetMinCurrent() float64
+	// SetMinCurrent sets the min charging current
+	SetMinCurrent(float64)
+	// GetMaxCurrent returns the max charging current
+	GetMaxCurrent() float64
+	// SetMaxCurrent sets the max charging current
+	SetMaxCurrent(float64)
 	// GetMinPower returns the min charging power for a single phase
 	GetMinPower() float64
 	// GetMaxPower returns the max charging power taking active phases into account

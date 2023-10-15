@@ -22,10 +22,12 @@ const (
 	minCurrent              = "minCurrent"              // charger min current
 	maxCurrent              = "maxCurrent"              // charger max current
 	chargeRemainingDuration = "chargeRemainingDuration" // charge remaining duration
-	minSoc                  = "minSoc"                  // min soc goal
-	targetEnergy            = "targetEnergy"            // target charging energy goal
-	targetSoc               = "targetSoc"               // target charging soc goal
-	targetTime              = "targetTime"              // target charging finish time goal
-	planActive              = "planActive"              // target charging plan has determined current slot to be an active slot
-	planProjectedStart      = "planProjectedStart"      // target charging plan start time (earliest slot)
+	minSoc                  = "minSoc"                  // min soc
+	limitSoc                = "limitSoc"                // limit soc
+
+	planEnergy         = "planEnergy"         // charge plan energy goal
+	planSoc            = "planSoc"            // charge plan soc goal
+	planTime           = "planTime"           // charge plan finish time goal
+	planActive         = "planActive"         // charge plan has determined current slot to be an active slot
+	planProjectedStart = "planProjectedStart" // charge plan start time (earliest slot)
 )
