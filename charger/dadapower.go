@@ -207,16 +207,30 @@ var _ api.PhaseSwitcher = (*Dadapower)(nil)
 
 // Phases1p3p implements the api.PhaseSwitcher interface
 func (wb *Dadapower) Phases1p3p(phases int) error {
-	err := wb.Enable(false)
-	if err == nil {
+	enabled, err := wb.Enabled()
+	if err != nil {
+		return err
+	}
+
+	if enabled {
+		if err := wb.Enable(false); err != nil {
+			return err
+		}
 		time.Sleep(5 * time.Second)
-		_, err = wb.conn.WriteSingleRegister(dadapowerRegActivePhases+wb.regOffset, uint16(phases))
 	}
-	if err == nil {
+
+	if _, err := wb.conn.WriteSingleRegister(dadapowerRegActivePhases+wb.regOffset, uint16(phases)); err != nil {
+		return err
+	}
+
+	if enabled {
 		time.Sleep(2 * time.Second)
-		err = wb.Enable(true)
+		if err := wb.Enable(true); err != nil {
+			return err
+		}
 	}
-	return err
+
+	return nil
 }
 
 var _ api.Identifier = (*Dadapower)(nil)
