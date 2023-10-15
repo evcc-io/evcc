@@ -18,6 +18,7 @@ export default {
 		charging: Boolean,
 		targetTime: String,
 		planProjectedStart: String,
+		planActive: Boolean,
 		phaseAction: String,
 		phaseRemainingInterpolated: Number,
 		pvAction: String,
@@ -61,12 +62,12 @@ export default {
 				return t("minCharge", { soc: this.minSoc });
 			}
 
-			// target charge
+			// plan
 			if (this.targetTime && !this.targetChargeDisabled) {
-				if (this.charging) {
+				if (this.planActive && this.charging) {
 					return t("targetChargeActive");
 				}
-				if (this.enabled) {
+				if (this.planActive && this.enabled) {
 					return t("targetChargeWaitForVehicle");
 				}
 				if (this.planProjectedStart) {
