@@ -12,15 +12,13 @@ requirements:
 
       Für 1P/3P-Phasenumschaltung muss die HTTP API v2 im Charger aktiviert sein.
 
-      Bei manchen Fahrzeugen müssen in der App bei den Auto-Einstellungen Änderungen vorgenommen werden.
-      (z.B. Ford Kuga: aktiviere "Ausstecken simulieren")
+      Bei manchen Fahrzeugen kann es notwendig sein, in der Go-E App (Menüpunkt "Auto") "Ausstecken simulieren" zu aktivieren.
     en: |
       Requires firmware 052.1 or later.
 
       For 1P/3P-Phase switching the HTTP API v2 in the charger setup needs to be activated.
 
-      For some vehicles, changes need to be made to the car settings in the app.
-       (e.g. Ford Kuga: activate "simulate unplug and plug again")
+      For some vehicles it may be necessary to activate “simulate unplug and plug again” in the Go-E app ("Car" menu item).
   uri: https://docs.evcc.io/docs/devices/chargers#go-echarger
   evcc: ["sponsorship"]
 params:
