@@ -153,7 +153,7 @@ type Loadpoint struct {
 	planner     *planner.Planner
 	targetTime  time.Time // time goal
 	planSlotEnd time.Time // current plan slot end time
-	planActive  bool      // plan is active
+	planActive  bool      // charge plan exists and has a currently active slot
 
 	// cached state
 	status         api.ChargeStatus       // Charger status
