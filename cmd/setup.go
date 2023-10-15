@@ -22,8 +22,6 @@ import (
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/hems"
 	"github.com/evcc-io/evcc/meter"
-	"github.com/evcc-io/evcc/provider/golang"
-	"github.com/evcc-io/evcc/provider/javascript"
 	"github.com/evcc-io/evcc/provider/mqtt"
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/server"
@@ -387,15 +385,15 @@ func configureEnvironment(cmd *cobra.Command, conf globalConfig) (err error) {
 		err = configureMQTT(conf.Mqtt)
 	}
 
-	// setup javascript VMs
-	if err == nil {
-		err = configureJavascript(conf.Javascript)
-	}
+	// // setup javascript VMs
+	// if err == nil {
+	// 	err = configureJavascript(conf.Javascript)
+	// }
 
-	// setup go VMs
-	if err == nil {
-		err = configureGo(conf.Go)
-	}
+	// // setup go VMs
+	// if err == nil {
+	// 	err = configureGo(conf.Go)
+	// }
 
 	// setup EEBus server
 	if err == nil && conf.EEBus != nil {
@@ -479,25 +477,25 @@ func configureMQTT(conf mqttConfig) error {
 	return nil
 }
 
-// setup javascript
-func configureJavascript(conf []javascriptConfig) error {
-	for _, cc := range conf {
-		if _, err := javascript.RegisteredVM(cc.VM, cc.Script); err != nil {
-			return fmt.Errorf("failed configuring javascript: %w", err)
-		}
-	}
-	return nil
-}
+// // setup javascript
+// func configureJavascript(conf []javascriptConfig) error {
+// 	for _, cc := range conf {
+// 		if _, err := javascript.RegisteredVM(cc.VM, cc.Script); err != nil {
+// 			return fmt.Errorf("failed configuring javascript: %w", err)
+// 		}
+// 	}
+// 	return nil
+// }
 
-// setup go
-func configureGo(conf []goConfig) error {
-	for _, cc := range conf {
-		if _, err := golang.RegisteredVM(cc.VM, cc.Script); err != nil {
-			return fmt.Errorf("failed configuring go: %w", err)
-		}
-	}
-	return nil
-}
+// // setup go
+// func configureGo(conf []goConfig) error {
+// 	for _, cc := range conf {
+// 		if _, err := golang.RegisteredVM(cc.VM, cc.Script); err != nil {
+// 			return fmt.Errorf("failed configuring go: %w", err)
+// 		}
+// 	}
+// 	return nil
+// }
 
 // setup HEMS
 func configureHEMS(conf config.Typed, site *core.Site, httpd *server.HTTPd) error {
