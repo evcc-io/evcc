@@ -135,7 +135,6 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, cache *util.Cache) {
 			"maxcurrent": {[]string{"POST", "OPTIONS"}, "/maxcurrent/{value:[0-9.]+}", floatHandler(pass(v.SetMaxCurrent), v.GetMaxCurrent)},
 			"phases":     {[]string{"POST", "OPTIONS"}, "/phases/{value:[0-9]+}", phasesHandler(v)},
 			// "targetenergy": {[]string{"POST", "OPTIONS"}, "/target/energy/{value:[0-9.]+}", floatHandler(pass(v.SetTargetEnergy), v.GetTargetEnergy)},
-			// "targetsoc":        {[]string{"POST", "OPTIONS"}, "/target/soc/{value:[0-9]+}", intHandler(pass(v.SetLimitSoc), v.GetLimitSoc)},
 		}
 
 		for _, r := range routes {
@@ -150,12 +149,12 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, cache *util.Cache) {
 		routes := map[string]route{
 			"mode": {[]string{"POST", "OPTIONS"}, "/mode/{value:[a-z]+}", chargeModeHandler(lp)},
 			// TODO decide name- maybe sessionsoc for clarity?
-			"limitsoc":   {[]string{"POST", "OPTIONS"}, "/limitsoc/{value:[0-9]+}", intHandler(pass(lp.SetSessionSocLimit), lp.GetSessionLimitSoc)},
-			"mincurrent": {[]string{"POST", "OPTIONS"}, "/mincurrent/{value:[0-9.]+}", floatHandler(pass(lp.SetMinCurrent), lp.GetMinCurrent)},
-			"maxcurrent": {[]string{"POST", "OPTIONS"}, "/maxcurrent/{value:[0-9.]+}", floatHandler(pass(lp.SetMaxCurrent), lp.GetMaxCurrent)},
-			"phases":     {[]string{"POST", "OPTIONS"}, "/phases/{value:[0-9]+}", phasesHandler(lp)},
-			"planenergy": {[]string{"POST", "OPTIONS"}, "/plan/energy/{value:[0-9.]+}", floatHandler(pass(lp.SetPlanEnergy), lp.GetPlanEnergy)},
-			// "plansoc":        {[]string{"POST", "OPTIONS"}, "/plan/soc/{value:[0-9]+}", intHandler(pass(lp.SetLimitSoc), lp.GetLimitSoc)},
+			"limitsoc":         {[]string{"POST", "OPTIONS"}, "/limitsoc/{value:[0-9]+}", intHandler(pass(lp.SetSessionSocLimit), lp.GetSessionLimitSoc)},
+			"mincurrent":       {[]string{"POST", "OPTIONS"}, "/mincurrent/{value:[0-9.]+}", floatHandler(pass(lp.SetMinCurrent), lp.GetMinCurrent)},
+			"maxcurrent":       {[]string{"POST", "OPTIONS"}, "/maxcurrent/{value:[0-9.]+}", floatHandler(pass(lp.SetMaxCurrent), lp.GetMaxCurrent)},
+			"phases":           {[]string{"POST", "OPTIONS"}, "/phases/{value:[0-9]+}", phasesHandler(lp)},
+			"planenergy":       {[]string{"POST", "OPTIONS"}, "/plan/energy/{value:[0-9.]+}", floatHandler(pass(lp.SetPlanEnergy), lp.GetPlanEnergy)},
+			"plansoc":          {[]string{"POST", "OPTIONS"}, "/plan/soc/{value:[0-9]+}", intHandler(pass(lp.SetPlanSoc), lp.GetPlanSoc)},
 			"plantime":         {[]string{"POST", "OPTIONS"}, "/plan/time/{time:[0-9TZ:.-]+}", planTimeHandler(lp)},
 			"plantime2":        {[]string{"DELETE", "OPTIONS"}, "/plan/time", planTimeRemoveHandler(lp)},
 			"plan":             {[]string{"GET"}, "/target/plan", planHandler(lp)},
