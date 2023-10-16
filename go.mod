@@ -59,7 +59,7 @@ require (
 	github.com/korylprince/ipnetgen v1.0.1
 	github.com/kr/pretty v0.3.1
 	github.com/libp2p/zeroconf/v2 v2.2.0
-	github.com/lorenzodonini/ocpp-go v0.17.0
+	github.com/lorenzodonini/ocpp-go v0.17.1-0.20231009195058-5be50a50e6e9
 	github.com/lunixbochs/struc v0.0.0-20200707160740-784aaebc1d40
 	github.com/mabunixda/wattpilot v1.6.2
 	github.com/manifoldco/promptui v0.9.0
