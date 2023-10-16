@@ -18,6 +18,39 @@ low = "kad je donekle pun"
 medium = "kad je napola pun"
 never = "samo s dovoljno viška"
 
+[config]
+
+[config.form]
+example = "Primjer"
+optional = "opcionalno"
+
+[config.main]
+addVehicle = "Dodaj vozilo"
+edit = "uredi"
+title = "Konfiguracija"
+vehicles = "Moja vozila"
+
+[config.validation]
+failed = "nauspjelo"
+label = "Stanje"
+running = "verifikacija …"
+success = "uspješno"
+unknown = "nepoznato"
+validate = "verificiraj"
+
+[config.vehicle]
+cancel = "Odustani"
+delete = "Izbriši vozilo"
+generic = "Druge integracije"
+offline = "Opće vozilo"
+online = "Vozilo s internetskim API sučeljem"
+save = "Spremi"
+scooter = "Skuter"
+template = "Proizvođač"
+titleAdd = "Dodaj vozilo"
+titleEdit = "Uredi vozilo"
+validateSave = "Verificiraj i spremi"
+
 [footer]
 
 [footer.community]
@@ -231,6 +264,8 @@ fallbackName = "Vozilo"
 moreActions = "Više radnji"
 none = "Nijedno vozilo"
 targetSoc = "Ograničenje"
+temp = "Temperatura"
+tempLimit = "Granica temperature"
 unknown = "Vozilo gosta"
 vehicleSoc = "Napajanje"
 
@@ -284,7 +319,9 @@ started = "Počelo"
 title = "Sesije napajanja"
 
 [sessions]
+avgPower = "⌀ snaga"
 avgPrice = "⌀ cijena"
+chargeDuration = "Trajanje"
 co2 = "⌀ CO₂"
 csvMonth = "Preuzmi CSV za {month}"
 csvTotal = "Preuzmi CSV za ukupno"

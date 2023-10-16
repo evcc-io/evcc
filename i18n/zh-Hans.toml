@@ -1,0 +1,69 @@
+[batterySettings]
+batteryLevel = "电池等级"
+capacity = "{energy} / {total}"
+legendBottomName = "家庭优先"
+legendBottomSubline = "不用充电"
+legendMiddleName = "交通工具优先"
+legendMiddleSubline = "家用其次"
+legendTitle = "太阳能应该如何利用?"
+legendTopAutostart = "自动开启"
+legendTopName = "电池支持充电"
+legendTopSubline = "勿打扰"
+modalTitle = "电池配置"
+note = "注意:这些设置仅影响太阳能模式.充电行为会相应调整."
+
+[batterySettings.bufferStart]
+full = "当快满的时候"
+low = "当有点满的时候"
+medium = "半满时"
+never = "只要有足够的剩余"
+
+[config]
+
+[config.form]
+example = "示例"
+optional = "可选"
+
+[config.main]
+addVehicle = "添加车辆"
+edit = "编辑"
+title = "配置"
+vehicles = "我的车辆"
+
+[config.validation]
+failed = "失败"
+label = "状态"
+running = "验证中..."
+success = "成功"
+unknown = "未知"
+validate = "验证"
+
+[config.vehicle]
+cancel = "取消"
+delete = "移除车辆"
+generic = "其他集成"
+offline = "通用车辆"
+online = "具有在线API的车辆"
+save = "保存"
+scooter = "小型摩托车"
+template = "制造商"
+titleAdd = "添加车辆"
+titleEdit = "编辑车辆"
+validateSave = "校验和保存"
+
+[footer]
+
+[footer.community]
+greenEnergy = "太阳能"
+greenEnergySub1 = "用evcc充电"
+greenEnergySub2 = "自 2022 年 10 月起"
+greenShare = "太阳能分享"
+greenShareSub1 = "电力被提供"
+greenShareSub2 = "太阳能和电池存储"
+power = "充电电源"
+powerSub1 = "{activeClients} of {totalClients} 参与者"
+powerSub2 = "充电中..."
+tabTitle = "Live社区"
+
+[footer.savings]
+footerLong = "{percent}% 太阳能"
