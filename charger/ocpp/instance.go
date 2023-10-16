@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/util"
+	"github.com/lorenzodonini/ocpp-go/ocpp"
 	ocpp16 "github.com/lorenzodonini/ocpp-go/ocpp1.6"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/firmware"
@@ -23,6 +24,8 @@ var (
 
 func Instance() *CS {
 	once.Do(func() {
+		log := util.NewLogger("ocpp")
+
 		timeoutConfig := ws.NewServerTimeoutConfig()
 		timeoutConfig.PingWait = 90 * time.Second
 
@@ -33,11 +36,15 @@ func Instance() *CS {
 		dispatcher.SetTimeout(time.Minute)
 
 		endpoint := ocppj.NewServer(server, dispatcher, nil, core.Profile, localauth.Profile, firmware.Profile, reservation.Profile, remotetrigger.Profile, smartcharging.Profile)
+		endpoint.SetInvalidMessageHook(func(client ws.Channel, err *ocpp.Error, rawMessage string, parsedFields []interface{}) *ocpp.Error {
+			log.ERROR.Printf("%v (%s)", err, rawMessage)
+			return nil
+		})
 
 		cs := ocpp16.NewCentralSystem(endpoint, server)
 
 		instance = &CS{
-			log:           util.NewLogger("ocpp"),
+			log:           log,
 			cps:           make(map[string]*CP),
 			CentralSystem: cs,
 		}
