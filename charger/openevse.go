@@ -94,7 +94,9 @@ func (c *OpenEVSE) setOverride() error {
 	uri := fmt.Sprintf("%s/override", c.uri)
 
 	if err := c.GetJSON(uri, &data); err != nil {
-		return err
+		if err.Error() != "unexpected status: 404 (Not Found)" {
+			return err
+		}
 	}
 
 	state := openevse.Disabled
