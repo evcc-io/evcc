@@ -87,27 +87,27 @@ func (nrg *NRGKickConnect) apiURL(api string) string {
 
 func (nrg *NRGKickConnect) putJSON(url string, data interface{}) error {
 	req, err := request.New(http.MethodPut, url, request.MarshalJSON(data), request.JSONEncoding)
+	if err != nil {
+		return err
+	}
 
-	if err == nil {
-		var res struct {
-			Message string
-		}
+	var res struct {
+		Message string
+	}
 
-		if err = nrg.DoJSON(req, &res); err != nil {
-			if err == io.EOF {
-				err = nil
-			} else if res.Message != "" {
-				return errors.New(res.Message)
-			}
-		}
-
-		if err == nil {
-			nrg.settingsG.Reset()
-			nrg.measurementsG.Reset()
+	if err := nrg.DoJSON(req, &res); err != nil {
+		switch {
+		case res.Message != "":
+			return errors.New(res.Message)
+		case err != io.EOF:
+			return err
 		}
 	}
 
-	return err
+	nrg.settingsG.Reset()
+	nrg.measurementsG.Reset()
+
+	return nil
 }
 
 // Status implements the api.Charger interface
