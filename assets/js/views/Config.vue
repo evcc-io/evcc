@@ -28,7 +28,7 @@
 					<button class="btn btn-sm btn-link text-gray" @click="todo">edit</button>
 				</li>
 				<li class="d-flex align-items-center">
-					Grid use <small class="ms-2">32ct/kWh fixed</small>
+					Grid import <small class="ms-2">32ct/kWh fixed</small>
 					<button class="btn btn-sm btn-link text-gray" @click="todo">edit</button>
 				</li>
 				<li class="d-flex align-items-center">
