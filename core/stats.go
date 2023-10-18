@@ -56,9 +56,10 @@ func (s *Stats) publish(days int, p publisher) {
 		SolarPercentage float64
 		ChargedKWh      float64
 		AvgPrice        float64
+		AvgCo2          float64
 	}
 
-	// First query to calculate solar_percentage and total_kwh
+	// calculate solar_percentage and total_kwh
 	err := db.Instance.Raw(`
 		SELECT SUM(charged_kwh * solar_percentage) / SUM(charged_kwh) AS SolarPercentage, 
 			SUM(charged_kwh) as ChargedKWh 
@@ -70,7 +71,7 @@ func (s *Stats) publish(days int, p publisher) {
 		s.log.ERROR.Printf("error executing solar stats query: %v", err)
 	}
 
-	// Second query to calculate avg_price
+	// calculate avg_price
 	err = db.Instance.Raw(`
 		SELECT SUM(charged_kwh * price_per_kwh) / SUM(charged_kwh) AS AvgPrice 
 		FROM sessions 
@@ -81,8 +82,20 @@ func (s *Stats) publish(days int, p publisher) {
 		s.log.ERROR.Printf("error executing price stats query: %v", err)
 	}
 
-	prefix := fmt.Sprintf("stats%d", days)
+	// calculate avg_co2
+	err = db.Instance.Raw(`
+		SELECT SUM(charged_kwh * co2_per_kwh) / SUM(charged_kwh) AS AvgCo2
+		FROM sessions
+		WHERE finished >= ?
+		AND charged_kwh > 0
+		AND co2_per_kwh IS NOT NULL`, fromDate).Scan(&result).Error
+	if err != nil {
+		s.log.ERROR.Printf("error executing co2 stats query: %v", err)
+	}
+
+	prefix := fmt.Sprintf("stats%dd", days)
 	p.publish(prefix+"SolarPercentage", result.SolarPercentage)
 	p.publish(prefix+"ChargedKWh", result.ChargedKWh)
 	p.publish(prefix+"AvgPrice", result.AvgPrice)
+	p.publish(prefix+"AvgCo2", result.AvgCo2)
 }
