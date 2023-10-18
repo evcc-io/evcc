@@ -527,8 +527,8 @@ github.com/libp2p/zeroconf/v2 v2.2.0 h1:Cup06Jv6u81HLhIj1KasuNM/RHHrJ8T7wOTS4+Tv
 github.com/libp2p/zeroconf/v2 v2.2.0/go.mod h1:fuJqLnUwZTshS3U/bMRJ3+ow/v9oid1n0DmyYyNO1Xs=
 github.com/lightstep/lightstep-tracer-common/golang/gogo v0.0.0-20190605223551-bc2310a04743/go.mod h1:qklhhLq1aX+mtWk9cPHPzaBjWImj5ULL6C7HFJtXQMM=
 github.com/lightstep/lightstep-tracer-go v0.18.1/go.mod h1:jlF1pusYV4pidLvZ+XD0UBX0ZE6WURAspgAczcDHrL4=
-github.com/lorenzodonini/ocpp-go v0.17.1-0.20231009195058-5be50a50e6e9 h1:vyxXHKvBUmBPpiFwcUEDDLo8pMpe0P1G7mnmLd202Ck=
-github.com/lorenzodonini/ocpp-go v0.17.1-0.20231009195058-5be50a50e6e9/go.mod h1:jVzgk5k3JVGltWMU/QGlU7chojlCd/bJYc4WYl8R2M4=
+github.com/lorenzodonini/ocpp-go v0.17.1-0.20231018201659-a575f3e7454d h1:ISizXg3UbeviwUvJ0aJTHQlsn0QmGqYwEfxBzPsSWcY=
+github.com/lorenzodonini/ocpp-go v0.17.1-0.20231018201659-a575f3e7454d/go.mod h1:jVzgk5k3JVGltWMU/QGlU7chojlCd/bJYc4WYl8R2M4=
 github.com/lunixbochs/struc v0.0.0-20200707160740-784aaebc1d40 h1:EnfXoSqDfSNJv0VBNqY/88RNnhSGYkrHaO0mmFGbVsc=
 github.com/lunixbochs/struc v0.0.0-20200707160740-784aaebc1d40/go.mod h1:vy1vK6wD6j7xX6O6hXe621WabdtNkou2h7uRtTfRMyg=
 github.com/lyft/protoc-gen-validate v0.0.13/go.mod h1:XbGvPuh87YZc5TdIa2/I4pLk0QoUACkjt2znoq26NVQ=
