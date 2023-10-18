@@ -286,8 +286,8 @@ vehicleTarget = "Automobilyje nustatytas limitas: {soc}%"
 
 [main.vehicleStatus]
 charging = "Įkraunama..."
-cheapEnergyCharging = "Įkraunama pigia energija: {price} (limit < {limit})"
-cleanEnergyCharging = "Įkraunama švaria energija: {co2} (limit < {limit})"
+cheapEnergyCharging = "Įkraunama pigia energija: {price} (limit {limit})"
+cleanEnergyCharging = "Įkraunama švaria energija: {co2} (limit {limit})"
 climating = "Aptiktas išankstinis kondicionavimas."
 connected = "Prijungtas."
 disconnected = "Neprijungtas."
