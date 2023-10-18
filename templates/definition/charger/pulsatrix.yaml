@@ -1,0 +1,13 @@
+template: pulsatrix
+products:
+  - brand: pulsatrix
+    description:
+      generic: Stylus
+params:
+  - name: host
+  - name: path
+    default: /api/ws
+render: |
+  type: pulsatrix
+  host: {{ .host }}
+  path: {{ .path }}
