@@ -67,3 +67,122 @@ tabTitle = "Live社区"
 
 [footer.savings]
 footerLong = "{percent}% 太阳能"
+footerShort = "{percent}% 太阳能"
+modalTitle = "充电概览"
+percentGrid = "{grid} kWh 电网"
+percentSelf = "{self} kWh 太阳能"
+percentTitle = "太阳能"
+priceFeedIn = "{feedInPrice} 冲入"
+priceGrid = "{gridPrice} 电网"
+priceTitle = "电力价格"
+savingsComparedToGrid = "和电网比较"
+savingsTitle = "节省"
+savingsTotalEnergy = "{total} kWh 已充"
+since = "从 {since}"
+tabTitle = "我的数据"
+
+[footer.sponsor]
+becomeSponsor = "成为赞助商"
+confetti = "准备好庆祝了吗?"
+confettiPromise = "你会得到贴纸和数字纸屑"
+sticker = "… 或者 evcc 贴纸?"
+supportUs = "我们的使命是让太阳能成为常态。通过支付对您有价值的东西来帮助 evcc"
+thanks = "谢谢你, {sponsor}! 您的贡献有助于进一步发展evcc"
+titleNoSponsor = "支持我们"
+titleSponsor = "你是支持者"
+
+[footer.telemetry]
+optIn = "我想贡献我的数据"
+optInMoreDetails = "更多细节 {0}."
+optInMoreDetailsLink = "这里"
+optInSponsorship = "需要赞助."
+
+[footer.version]
+availableLong = "新版本可用"
+modalCancel = "取消"
+modalDownload = "下载"
+modalInstalledVersion = "已经安装版本"
+modalNoReleaseNotes = "没有可用的发行说明. 有关新版本的更多信息:"
+modalTitle = "新版本可用"
+modalUpdate = "安装"
+modalUpdateNow = "现在安装"
+modalUpdateStarted = "启动新版本的evcc..."
+modalUpdateStatusStart = "安装已开始:"
+
+[gridSettings]
+activeHours = "{charging} / {total}"
+activeHoursLabel = "运行小时"
+co2Label = "CO₂ 排放"
+co2Limit = "CO₂ 限制"
+costLimitDescription = "在太阳能模式下实现临时快速充电."
+modalTitle = "智能电网充电"
+none = "无"
+priceLabel = "电价"
+priceLimit = "限价"
+
+[header]
+about = "关于"
+blog = "博客"
+docs = " 文档"
+github = "GitHub"
+login = "车辆登录"
+needHelp = "需要帮助?"
+sessions = "充电期"
+settings = "设置"
+
+[help]
+discussionsButton = "GitHub 讨论"
+documentationButton = "文档"
+issueButton = "报告 bug"
+issueDescription = "发现奇怪或错误的行为?"
+modalTitle = "需要帮助?"
+primaryActions = "有些东西没有按照它应该的方式工作 ?这些都是获得帮助的好地方."
+restartButton = "重启"
+restartDescription = "试过关机再开?"
+secondaryActions = "仍然无法解决您的问题?这里有一些更严厉的选择."
+
+[help.restart]
+cancel = "取消"
+confirm = "是, 重启!"
+description = "在正常情况下,没有必要重新启动.如果您需要定期重新启动 evcc,请考虑提交错误."
+disclaimer = "注意: evcc 将终止并依靠操作系统重新启动服务."
+modalTitle = "你确定要重启吗?"
+
+[main]
+vehicles = "停车中"
+
+[main.chargingPlan]
+activeLabel = "{time}"
+arrivalTab = "抵达"
+departureTab = "离开"
+modalTitle = "充电计划"
+none = "无"
+title = "计划"
+titleMinSoc = "平均充电"
+titleTargetCharge = "离开"
+
+[main.energyflow]
+battery = "电池"
+batteryCharge = "电池充电"
+batteryDischarge = "电池放电"
+batteryTooltip = "{energy} / {total} ({soc})"
+gridImport = "电网使用"
+homePower = "消耗"
+loadpoints = "充电器| 充电器 | {count} 充电器"
+noEnergy = "无仪表数据"
+pvExport = "电网导出"
+pvProduction = "生产"
+selfConsumption = "内耗"
+
+[main.loadpoint]
+avgPrice = "⌀ 价格"
+charged = "已充"
+co2 = "⌀ CO₂"
+duration = "时长"
+fallbackName = "充电积分"
+power = "电力"
+price = "Σ 价格"
+solar = "太阳能"
+
+[main.loadpointSettings]
+currents = "充电货币"
