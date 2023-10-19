@@ -780,9 +780,8 @@ func (site *Site) update(lp Updater) {
 
 		site.publishTariffs(greenShareHome, greenShareLoadpoints)
 
-		deltaCharged := 0.0 // TODO: replace this from another source
 		if telemetry.Enabled() && totalChargePower > standbyPower {
-			go telemetry.UpdateChargeProgress(site.log, totalChargePower, deltaCharged, greenShareLoadpoints)
+			go telemetry.UpdateChargeProgress(site.log, totalChargePower, greenShareLoadpoints)
 		}
 	} else {
 		site.log.ERROR.Println(err)
