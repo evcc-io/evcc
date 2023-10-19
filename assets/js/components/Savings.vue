@@ -2,6 +2,7 @@
 	<div>
 		<button
 			class="btn btn-link pe-0 text-decoration-none evcc-default-text text-nowrap d-flex align-items-end"
+			data-testid="savings-button"
 			@click="openModal"
 		>
 			<span class="d-inline d-sm-none text-decoration-underline">{{
@@ -65,6 +66,7 @@
 									<SavingsTile
 										class="text-accent1"
 										icon="sun"
+										data-testid="savings-tile-solar"
 										:title="$t('footer.savings.percentTitle')"
 										:value="fmtNumber(solarPercentage, 1)"
 										unit="%"
@@ -83,6 +85,7 @@
 									<SavingsTile
 										class="text-accent2"
 										icon="receivepayment"
+										data-testid="savings-tile-price"
 										:title="$t('footer.savings.priceTitle')"
 										:value="priceConfigured ? avgPriceFormatted.value : '__'"
 										:unit="avgPriceFormatted.unit"
@@ -102,6 +105,7 @@
 									<SavingsTile
 										class="text-accent3"
 										icon="eco"
+										data-testid="savings-tile-co2"
 										:title="$t('footer.savings.co2Title')"
 										:value="co2Configured ? fmtNumber(avgCo2, 0) : '__'"
 										unit="g/kWh"
@@ -123,7 +127,7 @@
 										<CustomSelect
 											:selected="period"
 											:options="periodOptions"
-											data-testid="sessionInfoSelect"
+											data-testid="savings-period-select"
 											@change="selectPeriod($event.target.value)"
 										>
 											<span class="text-decoration-underline">
@@ -131,7 +135,11 @@
 											</span>
 										</CustomSelect>
 									</div>
-									<div v-if="region" class="d-flex flex-wrap">
+									<div
+										v-if="region"
+										class="d-flex flex-wrap"
+										data-testid="savings-reference"
+									>
 										<div class="me-1">
 											{{ $t("footer.savings.reference") }}
 										</div>
@@ -149,7 +157,7 @@
 												class="me-1 evcc-gray"
 												:selected="region.name"
 												:options="regionOptions"
-												data-testid="sessionInfoSelect"
+												data-testid="savings-region-select"
 												@change="selectRegion($event.target.value)"
 											>
 												(<span class="text-decoration-underline">{{
@@ -210,7 +218,7 @@ export default {
 		return {
 			communityView: false,
 			telemetryEnabled: false,
-			period: settings.savingsPeriod,
+			period: settings.savingsPeriod || "30d",
 			selectedRegion: settings.savingsRegion || "Germany",
 			referenceGrid: undefined,
 		};
