@@ -81,7 +81,7 @@ period30d = "last 30 days"
 period365d = "last 365 days"
 priceTitle = "Energy Price"
 reference = "Reference data:"
-source = "source"
+referenceGrid = "grid"
 tabTitle = "My data"
 
 [footer.sponsor]

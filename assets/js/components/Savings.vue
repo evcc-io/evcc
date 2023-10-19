@@ -84,14 +84,12 @@
 										class="text-accent2"
 										icon="receivepayment"
 										:title="$t('footer.savings.priceTitle')"
-										:value="priceConfigured ? avgPriceFormatted.value : '-'"
+										:value="priceConfigured ? avgPriceFormatted.value : '__'"
 										:unit="avgPriceFormatted.unit"
 										:sub1="
-											region &&
-											priceConfigured &&
-											currency === region.currency
+											priceConfigured
 												? `${fmtMoney(
-														(region.price - avgPrice) * totalCharged,
+														(referenceGrid - avgPrice) * totalCharged,
 														currency,
 														false
 												  )} ${fmtCurrencySymbol(currency)} ${$t(
@@ -105,7 +103,7 @@
 										class="text-accent3"
 										icon="eco"
 										:title="$t('footer.savings.co2Title')"
-										:value="co2Configured ? fmtNumber(avgCo2, 0) : '-'"
+										:value="co2Configured ? fmtNumber(avgCo2, 0) : '__'"
 										unit="g/kWh"
 										:sub1="
 											region && co2Configured
@@ -134,35 +132,31 @@
 										</CustomSelect>
 									</div>
 									<div v-if="region" class="d-flex flex-wrap">
-										<div class="me-1">{{ $t("footer.savings.reference") }}</div>
-										<CustomSelect
-											class="me-1"
-											:selected="region.name"
-											:options="regionOptions"
-											data-testid="sessionInfoSelect"
-											@change="selectRegion($event.target.value)"
-										>
-											<span class="text-decoration-underline">
-												{{ region.name }}
-											</span>
-										</CustomSelect>
-										<div class="evcc-gray">
-											⌀
-											{{ fmtPricePerKWh(region.price, region.currency) }}
-											<a
-												class="evcc-gray"
-												:href="sources.price.url"
-												target="_blank"
-												>({{ $t("footer.savings.source") }})</a
+										<div class="me-1">
+											{{ $t("footer.savings.reference") }}
+										</div>
+										<div class="evcc-gray me-1">
+											{{
+												priceConfigured
+													? fmtPricePerKWh(referenceGrid, currency)
+													: "___"
+											}}
+											({{ $t("footer.savings.referenceGrid") }}),
+										</div>
+										<div class="evcc-gray d-flex">
+											<div class="me-1">⌀ {{ fmtCo2Medium(region.co2) }}</div>
+											<CustomSelect
+												class="me-1 evcc-gray"
+												:selected="region.name"
+												:options="regionOptions"
+												data-testid="sessionInfoSelect"
+												@change="selectRegion($event.target.value)"
 											>
-											, ⌀
-											{{ fmtCo2Medium(region.co2) }}
-											<a
-												class="evcc-gray"
-												:href="sources.co2.url"
-												target="_blank"
-												>({{ $t("footer.savings.source") }})</a
-											>
+												(<span class="text-decoration-underline">{{
+													region.name
+												}}</span
+												>)
+											</CustomSelect>
 										</div>
 									</div>
 									<div v-if="!priceConfigured || !co2Configured">
@@ -198,8 +192,9 @@ import SavingsTile from "./SavingsTile.vue";
 import LiveCommunity from "./LiveCommunity.vue";
 import TelemetrySettings from "./TelemetrySettings.vue";
 import CustomSelect from "./CustomSelect.vue";
-import referenceData from "../referenceData";
+import co2Reference from "../co2Reference";
 import settings from "../settings";
+import api from "../api";
 
 export default {
 	name: "Savings",
@@ -208,7 +203,6 @@ export default {
 	props: {
 		stats: { type: Object, default: () => ({}) },
 		co2Configured: Boolean,
-		priceConfigured: Boolean,
 		sponsor: String,
 		currency: String,
 	},
@@ -217,8 +211,8 @@ export default {
 			communityView: false,
 			telemetryEnabled: false,
 			period: settings.savingsPeriod,
-			selectedRegion: settings.savingsRegion,
-			sources: referenceData.sources,
+			selectedRegion: settings.savingsRegion || "Germany",
+			referenceGrid: undefined,
 		};
 	},
 	computed: {
@@ -226,33 +220,22 @@ export default {
 			return Math.round(this.solarPercentage) || 0;
 		},
 		regionOptions() {
-			return referenceData.regions.map((r) => ({
+			return co2Reference.regions.map((r) => ({
 				value: r.name,
-				name: `${r.name} (${r.currency})`,
+				name: `${r.name} (${this.fmtCo2Short(r.co2)})`,
 			}));
 		},
 		region() {
 			// previously selected region
 			if (this.selectedRegion) {
-				const result = referenceData.regions.find((r) => r.name === this.selectedRegion);
+				const result = co2Reference.regions.find((r) => r.name === this.selectedRegion);
 				if (result) {
 					return result;
 				}
 			}
 
-			// if EUR and no selection, default to Germany
-			if (this.currency === "EUR") {
-				return referenceData.regions.find((r) => r.name === "Germany");
-			}
-
-			// region matching currency
-			let result = referenceData.regions.find((r) => r.currency === this.currency);
-			if (result) {
-				return result;
-			}
-
 			// first region
-			return referenceData.regions[0];
+			return co2Reference.regions[0];
 		},
 		periodOptions() {
 			return ["30d", "365d"].map((p) => ({
@@ -294,6 +277,9 @@ export default {
 		avgCo2() {
 			return this.currentStats.avgCo2;
 		},
+		priceConfigured() {
+			return this.referenceGrid !== undefined;
+		},
 	},
 	methods: {
 		showCommunity() {
@@ -305,6 +291,7 @@ export default {
 		openModal() {
 			const modal = Modal.getOrCreateInstance(document.getElementById("savingsModal"));
 			modal.show();
+			this.updateReferenceGrid();
 		},
 		selectPeriod(period) {
 			this.period = period;
@@ -313,6 +300,22 @@ export default {
 		selectRegion(region) {
 			this.selectedRegion = region;
 			settings.savingsRegion = region;
+		},
+		updateReferenceGrid: async function () {
+			try {
+				const res = await api.get(`tariff/grid`, {
+					validateStatus: (status) => status >= 200 && status < 500,
+				});
+				const { rates } = res.data.result;
+				this.referenceGrid =
+					rates.reduce((acc, slot) => {
+						acc += slot.price;
+						return acc;
+					}, 0) / rates.length;
+			} catch (e) {
+				this.referenceGrid = undefined;
+				console.error(e);
+			}
 		},
 	},
 };

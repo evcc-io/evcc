@@ -84,7 +84,7 @@ period30d = "letzte 30 Tage"
 period365d = "letzte 365 Tage"
 priceTitle = "Energiepreis"
 reference = "Referenzdaten:"
-source = "Quelle"
+referenceGrid = "Netz"
 tabTitle = "Meine Daten"
 
 [footer.sponsor]
