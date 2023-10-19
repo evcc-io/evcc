@@ -278,8 +278,8 @@ vehicleTarget = "Ograničenje vozila: {soc} %"
 
 [main.vehicleStatus]
 charging = "Napajanje …"
-cheapEnergyCharging = "Dostupna je jeftina energija. Napaja se …"
-cleanEnergyCharging = "Dostupna je čista energija. Napaja se …"
+cheapEnergyCharging = "Napajanje jeftinom energijom: {price} (ograničenje < {limit})"
+cleanEnergyCharging = "Napajanje čistom energijom: {co2} (ograničenje < {limit})"
 climating = "Otkriveno predkondicioniranje."
 connected = "Povezano."
 disconnected = "Nepovezano."
