@@ -61,7 +61,7 @@ For frontend development start the Vue toolchain in dev-mode. Open http://127.0.
 
 ```sh
 npm install
-npm run start
+npm run dev
 ```
 
 ### Integration tests

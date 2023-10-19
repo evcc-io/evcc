@@ -11,7 +11,7 @@ import (
 // Since ocpp-go interfaces at charge point level, we need to manage multiple connector separately
 
 type CP struct {
-	mu   sync.Mutex
+	mu   sync.RWMutex
 	once sync.Once
 	log  *util.Logger
 
@@ -46,15 +46,15 @@ func (cp *CP) registerConnector(id int, conn *Connector) error {
 }
 
 func (cp *CP) connectorByID(id int) *Connector {
-	cp.mu.Lock()
-	defer cp.mu.Unlock()
+	cp.mu.RLock()
+	defer cp.mu.RUnlock()
 
 	return cp.connectors[id]
 }
 
 func (cp *CP) connectorByTransactionID(id int) *Connector {
-	cp.mu.Lock()
-	defer cp.mu.Unlock()
+	cp.mu.RLock()
+	defer cp.mu.RUnlock()
 
 	for _, conn := range cp.connectors {
 		if txn, err := conn.TransactionID(); err == nil && txn == id {
@@ -66,8 +66,8 @@ func (cp *CP) connectorByTransactionID(id int) *Connector {
 }
 
 func (cp *CP) ID() string {
-	cp.mu.Lock()
-	defer cp.mu.Unlock()
+	cp.mu.RLock()
+	defer cp.mu.RUnlock()
 
 	return cp.id
 }
@@ -97,8 +97,8 @@ func (cp *CP) connect(connect bool) {
 }
 
 func (cp *CP) Connected() bool {
-	cp.mu.Lock()
-	defer cp.mu.Unlock()
+	cp.mu.RLock()
+	defer cp.mu.RUnlock()
 
 	return cp.connected
 }

@@ -274,6 +274,11 @@ func NewOCPP(id string, connector int, idtag string,
 	return c, conn.Initialized()
 }
 
+// Connector returns the connector instance
+func (c *OCPP) Connector() *ocpp.Connector {
+	return c.conn
+}
+
 // hasMeasurement checks if meterValuesSample contains given measurement
 func (c *OCPP) hasMeasurement(val types.Measurand) bool {
 	return slices.Contains(strings.Split(c.meterValuesSample, ","), string(val))
