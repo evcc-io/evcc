@@ -248,6 +248,8 @@ title = "Zielzeit"
 today = "heute"
 tomorrow = "morgen"
 update = "Aktualisieren"
+vehicleCapacityDocs = "Erfahre, wie du sie konfigurierst."
+vehicleCapacityRequired = "Die Batteriekapazität des Fahrzeugs wird benötigt, um die Ladedauer zu schätzen."
 
 [main.targetChargePlan]
 chargeDuration = "Ladedauer"
