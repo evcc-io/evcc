@@ -122,7 +122,7 @@ func (wb *Pulsares) heartbeat(timeout time.Duration) {
 
 func (wb *Pulsares) setCurrent(current uint16) error {
 	b := make([]byte, 2)
-	binary.BigEndian.PutUint16(b, uint16(current))
+	binary.BigEndian.PutUint16(b, current)
 
 	_, err := wb.conn.WriteMultipleRegisters(pulsaresRegCurrent, 1, b)
 
@@ -187,9 +187,11 @@ func (wb *Pulsares) MaxCurrentMillis(current float64) error {
 		return fmt.Errorf("invalid current %.1f", current)
 	}
 
-	err := wb.setCurrent(wb.curr)
+	curr := uint16(current * 1e3)
+
+	err := wb.setCurrent(curr)
 	if err == nil {
-		wb.curr = uint16(current * 1e3)
+		wb.curr = curr
 	}
 
 	return err
