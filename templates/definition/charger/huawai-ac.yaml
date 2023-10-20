@@ -2,7 +2,7 @@ template: huawei-ac
 products:
   - brand: Huawei
     description:
-      generic: AC charger
+      generic: FusionCharge AC
 requirements:
   evcc: ["sponsorship"]
 params:
