@@ -189,7 +189,7 @@ func NewEasee(user, password, charger string, timeout time.Duration, authorize b
 		err = os.ErrDeadlineExceeded
 	}
 
-	if err != nil {
+	if err == nil {
 		// poll opMode from charger as API can give outdated initial data
 		uri := fmt.Sprintf("%s/chargers/%s/commands/poll_chargeropmode", easee.API, c.charger)
 		_, err = c.Post(uri, request.JSONContent, nil)
@@ -447,6 +447,7 @@ func (c *Easee) Enable(enable bool) (err error) {
 	opMode := c.opMode
 	c.mux.Unlock()
 
+	//unless we return an error, always update internal state
 	defer func() {
 		if err == nil {
 			c.enabled = enable
