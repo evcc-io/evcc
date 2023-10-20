@@ -20,8 +20,10 @@ package charger
 import (
 	"encoding/binary"
 	"fmt"
+	"math"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/sponsor"
@@ -30,14 +32,16 @@ import (
 type HuaweiACCharger struct {
 	conn *modbus.Connection
 	curr float64
+	lp   loadpoint.API
 }
 
 const (
 	huaweiRegVoltages = 0x1000 // uint32 * 3
 	huaweiRegCurrents = 0x1006 // uint32 * 3
 	huaweiRegPower    = 0x100c // uint32
+	huaweiRegStatus   = 0x100e // uint32
 	huaweiRegMaxPower = 0x2000 // uint32
-	huaweiRegStatus   = 0x2006 // uint16
+	huaweiRegControl  = 0x2006 // uint16
 )
 
 func init() {
@@ -80,8 +84,17 @@ func NewHuaweiACCharger(uri string, slaveID uint8) (api.Charger, error) {
 }
 
 func (wb *HuaweiACCharger) setCurrent(current float64) error {
+	var phases int
+	// get (expectedly) active phases from loadpoint
+	if wb.lp != nil {
+		phases = wb.lp.GetPhases()
+	}
+	if phases == 0 {
+		phases = 3
+	}
+
 	b := make([]byte, 4)
-	binary.BigEndian.PutUint32(b, uint32(current*230*3*10))
+	binary.BigEndian.PutUint32(b, uint32(math.Trunc(230.0*current*float64(phases)*10.0)))
 
 	_, err := wb.conn.WriteMultipleRegisters(huaweiRegMaxPower, 2, b)
 
@@ -90,11 +103,12 @@ func (wb *HuaweiACCharger) setCurrent(current float64) error {
 
 // Status implements the api.Charger interface
 func (wb *HuaweiACCharger) Status() (api.ChargeStatus, error) {
-	b, err := wb.conn.ReadHoldingRegisters(huaweiRegStatus, 1)
+	b, err := wb.conn.ReadHoldingRegisters(huaweiRegControl, 1)
 	if err != nil {
 		return api.StatusNone, err
 	}
 
+	//ToDo: Real status
 	switch u := binary.BigEndian.Uint16(b); u {
 	case 0:
 		return api.StatusA, nil
@@ -109,7 +123,7 @@ func (wb *HuaweiACCharger) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *HuaweiACCharger) Enabled() (bool, error) {
-	b, err := wb.conn.ReadCoils(huaweiRegMaxPower, 2)
+	b, err := wb.conn.ReadHoldingRegisters(huaweiRegMaxPower, 2)
 	if err != nil {
 		return false, err
 	}
@@ -183,7 +197,7 @@ func (wb *HuaweiACCharger) getPhaseValues(reg uint16) (float64, float64, float64
 
 	var res [3]float64
 	for i := 0; i < 3; i++ {
-		res[i] = float64(binary.BigEndian.Uint32(b[4*i:]))
+		res[i] = float64(binary.BigEndian.Uint32(b[4*i:])) / 10
 	}
 
 	return res[0], res[1], res[2], nil
