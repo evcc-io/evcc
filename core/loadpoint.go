@@ -668,7 +668,7 @@ func (lp *Loadpoint) syncCharger() error {
 				return err
 			}
 
-			if math.Trunc(lp.chargeCurrent) != math.Trunc(current) {
+			if math.Abs(lp.chargeCurrent-current) > 0.1 {
 				if lp.guardGracePeriodElapsed() {
 					lp.log.WARN.Printf("charger logic error: current mismatch (got %.3gA, expected %.3gA)", current, lp.chargeCurrent)
 				}
