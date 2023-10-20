@@ -1,7 +1,7 @@
 <template>
 	<form @submit.prevent="setTargetTime">
 		<div class="mt-4">
-			<div class="form-group d-lg-flex align-items-baseline mb-2 justify-content-between">
+			<div class="form-group d-lg-flex align-items-baseline mb-3 justify-content-between">
 				<!-- eslint-disable vue/no-v-html -->
 				<label :for="`targetTimeLabel${id}`" class="mb-3 me-3">
 					<span v-if="socBasedCharging">
@@ -41,12 +41,22 @@
 					/>
 				</div>
 			</div>
-			<p class="mb-0">
+			<p class="my-3 pb-1">
 				<span v-if="timeInThePast" class="d-block text-danger mb-1">
 					{{ $t("main.targetCharge.targetIsInThePast") }}
 				</span>
 				<span v-if="!socBasedCharging && !targetEnergy" class="d-block text-danger mb-1">
 					{{ $t("main.targetCharge.targetEnergyRequired") }}
+				</span>
+				<span v-if="vehicleCapacityRequired" class="d-block text-danger mb-1">
+					{{ $t("main.targetCharge.vehicleCapacityRequired") }}
+					<a
+						class="d-inline text-danger"
+						href="https://docs.evcc.io/en/docs/reference/configuration/vehicles/#capacity"
+						target="_blank"
+					>
+						{{ $t("main.targetCharge.vehicleCapacityDocs") }}
+					</a>
 				</span>
 				<span v-if="timeTooFarInTheFuture" class="d-block text-secondary mb-1">
 					{{ $t("main.targetCharge.targetIsTooFarInTheFuture") }}
@@ -61,7 +71,6 @@
 				<span v-if="['off', 'now'].includes(mode)" class="d-block text-secondary mb-1">
 					{{ $t("main.targetCharge.onlyInPvMode") }}
 				</span>
-				&nbsp;
 			</p>
 			<TargetChargePlan v-if="targetChargePlanProps" v-bind="targetChargePlanProps" />
 			<div class="d-flex justify-content-between mt-3">
@@ -73,7 +82,11 @@
 				>
 					{{ $t("main.targetCharge.remove") }}
 				</button>
-				<button type="submit" class="btn btn-primary" :disabled="timeInThePast">
+				<button
+					type="submit"
+					class="btn btn-primary"
+					:disabled="timeInThePast || vehicleCapacityRequired"
+				>
 					<span v-if="targetTime">
 						{{ $t("main.targetCharge.update") }}
 					</span>
@@ -114,6 +127,7 @@ export default {
 		smartCostType: String,
 		currency: String,
 		mode: String,
+		vehicleCapacity: Number,
 	},
 	emits: ["target-time-updated", "target-time-removed"],
 	data: function () {
@@ -188,6 +202,9 @@ export default {
 		},
 		isCo2() {
 			return this.smartCostType === CO2_TYPE;
+		},
+		vehicleCapacityRequired() {
+			return this.socBasedCharging && !this.vehicleCapacity;
 		},
 	},
 	watch: {
