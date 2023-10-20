@@ -768,6 +768,7 @@ func TestMinSoc(t *testing.T) {
 
 	for _, tc := range tc {
 		lp := &Loadpoint{
+			log: util.NewLogger("foo"),
 			Soc: SocConfig{
 				min: tc.min,
 			},
