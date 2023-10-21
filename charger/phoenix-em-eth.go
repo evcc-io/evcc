@@ -43,21 +43,9 @@ func NewPhoenixEMEthFromConfig(other map[string]interface{}) (api.Charger, error
 		return nil, err
 	}
 
-	return NewPhoenixEMEth(cc.URI, cc.ID)
-}
-
-// NewPhoenixEMEth creates a Phoenix charger
-func NewPhoenixEMEth(uri string, slaveID uint8) (api.Charger, error) {
-	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, slaveID)
+	wb, err := NewPhoenixEMEth(cc.URI, cc.ID)
 	if err != nil {
 		return nil, err
-	}
-
-	log := util.NewLogger("em-eth")
-	conn.Logger(log.TRACE)
-
-	wb := &PhoenixEMEth{
-		conn: conn,
 	}
 
 	var (
@@ -76,6 +64,23 @@ func NewPhoenixEMEth(uri string, slaveID uint8) (api.Charger, error) {
 	}
 
 	return decoratePhoenixEMEth(wb, currentPower, totalEnergy, currents, voltages), err
+}
+
+// NewPhoenixEMEth creates a Phoenix charger
+func NewPhoenixEMEth(uri string, slaveID uint8) (*PhoenixEMEth, error) {
+	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, slaveID)
+	if err != nil {
+		return nil, err
+	}
+
+	log := util.NewLogger("em-eth")
+	conn.Logger(log.TRACE)
+
+	wb := &PhoenixEMEth{
+		conn: conn,
+	}
+
+	return wb, nil
 }
 
 // Status implements the api.Charger interface
