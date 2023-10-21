@@ -1,0 +1,16 @@
+template: openwb-2.0
+products:
+  - brand: openWB
+    description:
+      generic: series2 (Software 2)
+capabilities: ["1p3p", "mA"]
+requirements:
+  description:
+    de: Erfordert Software 2.0
+    en: Requires software 2.0
+params:
+  - name: modbus
+    choice: ["tcpip"]
+render: |
+  type: openwb-2.0
+  {{- include "modbus" . }}
