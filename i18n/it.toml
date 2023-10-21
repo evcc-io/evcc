@@ -1,3 +1,7 @@
+[batterySettings]
+batteryLevel = "Livello batteria"
+capacity = "{energy} di {total}"
+
 [footer]
 
 [footer.community]
@@ -279,8 +283,3 @@ title = "Errore di avvio"
 cancel = "Cancella"
 template = "Produttore"
 test = "Test"
-
-
-[batterySettings]
-capacity = "{energy} di {total}"
-batteryLevel = Livello batteria

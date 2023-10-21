@@ -66,27 +66,32 @@ powerSub2 = "cargando..."
 tabTitle = "Comunidad en vivo"
 
 [footer.savings]
+co2Saved = "{value} guardado"
+co2Title = "Emisiones de CO₂"
+configurePriceCo2 = "Aprende a configurar los datos de los precios y el CO₂"
 footerLong = "{percent}% Autoconsumo"
 footerShort = "{percent}% Sol"
 modalTitle = "Evaluación de la energía de carga"
+moneySaved = "{value} guardado"
 percentGrid = "{grid} kWh red"
 percentSelf = "{self} kWh solar"
 percentTitle = "Energía solar"
+periodLabel = "Periodo:"
 priceFeedIn = "{feedInPrice} excedente"
 priceGrid = "{gridPrice} red"
 priceTitle = "Precio de energía"
+referenceGrid = "red"
+referenceLabel = "Datos de referencia:"
 savingsComparedToGrid = "comparado con la red"
 savingsTitle = "Ahorro"
 savingsTotalEnergy = "{total} kWh cargados"
 since = "desde {since}"
 tabTitle = "Mis datos"
-referenceLabel = "Datos de referencia:"
-co2Title = "Emisiones de CO₂"
-co2Saved = "{value} guardado"
-configurePriceCo2 = "Aprende a configurar los datos de los precios y el CO₂"
-moneySaved = "{value} guardado"
-periodLabel = "Periodo:"
-referenceGrid = "red"
+
+[footer.savings.period]
+30d = "últimos 30 días"
+365d = "último año"
+total = "desde siempre"
 
 [footer.sponsor]
 becomeSponsor = "Convertirse en patrocinador"
@@ -285,8 +290,6 @@ temp = "T.ª"
 tempLimit = "Temperatura límite"
 unknown = "Vehículo invitado"
 vehicleSoc = "Nivel de carga"
-temp = "T.ª"
-tempLimit = "Temperatura límite"
 
 [main.vehicleSoc]
 charging = "cargando"
@@ -357,8 +360,6 @@ solar = "Solar"
 title = "Sesiones de carga"
 total = "Total"
 vehicle = "Vehículo"
-avgPower = "⌀ Potencia"
-chargeDuration = "Duración"
 
 [sessions.csv]
 chargedenergy = "Energía (kWh)"
@@ -428,9 +429,3 @@ title = "Error al iniciar"
 cancel = "Cancelar"
 template = "Fabricante"
 test = "Prueba"
-
-
-[footer.savings.period]
-365d = "último año"
-total = "desde siempre"
-30d = "últimos 30 días"

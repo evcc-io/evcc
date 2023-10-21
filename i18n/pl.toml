@@ -276,8 +276,6 @@ temp = "Temp."
 tempLimit = " Ograniczenie temp."
 unknown = "Pojazd gościa"
 vehicleSoc = "Bateria"
-temp = "Temp."
-tempLimit = " Ograniczenie temp. "
 
 [main.vehicleSoc]
 charging = "ładuje się"
@@ -346,8 +344,6 @@ solar = "Słoneczna"
 title = "Sesje ładowania"
 total = "Totalny"
 vehicle = "Pojazd"
-avgPower = "⌀ Moc"
-chargeDuration = "Czas trwania"
 
 [sessions.csv]
 chargedenergy = "Energia (kWh)"

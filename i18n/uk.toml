@@ -245,8 +245,6 @@ title = "Запланований Час"
 today = "сьогодні"
 tomorrow = "завтра"
 update = "Оновлення"
-targetEnergyRequired = «Також потрібно встановити ліміт енергії»
-onlyInPvMode = «План заряджання працює тільки в сонячному режимі.»
 
 [main.targetChargePlan]
 chargeDuration = "Час зарядки"
