@@ -11,7 +11,11 @@ test.afterAll(async () => {
 test.describe("footer", async () => {
   test("default 30d solar percentage in footer and change on period switch", async ({ page }) => {
     await page.goto("/");
+
+    // last 30 days
     await expect(page.getByTestId("savings-button")).toContainText("60% solar energy");
+
+    // last 365 days
     await page.getByTestId("savings-button").click();
     await page
       .getByTestId("savings-period-select")
@@ -19,6 +23,12 @@ test.describe("footer", async () => {
       .selectOption("last 365 days");
     await page.getByRole("button", { name: "Close" }).click();
     await expect(page.getByTestId("savings-button")).toContainText("30% solar energy");
+
+    // all time
+    await page.getByTestId("savings-button").click();
+    await page.getByTestId("savings-period-select").getByRole("combobox").selectOption("all time");
+    await page.getByRole("button", { name: "Close" }).click();
+    await expect(page.getByTestId("savings-button")).toContainText("50% solar energy");
   });
 });
 

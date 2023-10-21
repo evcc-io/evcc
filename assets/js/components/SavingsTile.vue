@@ -15,7 +15,7 @@
 			<div>
 				<p class="my-0 fw-bold text-truncate">{{ title }}</p>
 				<strong class="d-flex align-items-baseline lh-sm">
-					<span class="fs-1">
+					<span class="fs-1 value">
 						<AnimatedNumber v-if="valueFmt" :to="value" :format="valueFmt" />
 						<span v-else>{{ value }}</span>
 					</span>
@@ -66,5 +66,8 @@ export default {
 }
 .unit {
 	font-size: var(--bs-body-font-size);
+}
+.value {
+	font-variant-numeric: tabular-nums;
 }
 </style>

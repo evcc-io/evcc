@@ -48,3 +48,9 @@ export default {
 	},
 };
 </script>
+
+<style scoped>
+span {
+	font-variant-numeric: tabular-nums;
+}
+</style>

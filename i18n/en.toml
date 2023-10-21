@@ -76,13 +76,16 @@ moneySaved = "{value} saved"
 percentGrid = "{grid} kWh grid"
 percentSelf = "{self} kWh solar"
 percentTitle = "Solar Energy"
-period = "Period:"
-period30d = "last 30 days"
-period365d = "last 365 days"
+periodLabel = "Period:"
 priceTitle = "Energy Price"
-reference = "Reference data:"
 referenceGrid = "grid"
+referenceLabel = "Reference data:"
 tabTitle = "My data"
+
+[footer.savings.period]
+30d = "last 30 days"
+365d = "last 365 days"
+total = "all time"
 
 [footer.sponsor]
 becomeSponsor = "Become a Sponsor"

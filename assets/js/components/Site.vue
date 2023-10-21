@@ -80,16 +80,7 @@ export default {
 		auth: Object,
 
 		currency: String,
-
-		stats30dAvgPrice: Number,
-		stats30dAvgCo2: Number,
-		stats30dChargedKWh: Number,
-		stats30dSolarPercentage: Number,
-		stats365dAvgPrice: Number,
-		stats365dAvgCo2: Number,
-		stats365dChargedKWh: Number,
-		stats365dSolarPercentage: Number,
-
+		stats: Object,
 		tariffFeedIn: Number,
 		tariffGrid: Number,
 		tariffCo2: Number,
@@ -145,20 +136,7 @@ export default {
 				},
 				sponsor: this.sponsor,
 				savings: {
-					stats: {
-						"30d": {
-							avgPrice: this.stats30dAvgPrice,
-							avgCo2: this.stats30dAvgCo2,
-							chargedKWh: this.stats30dChargedKWh,
-							solarPercentage: this.stats30dSolarPercentage,
-						},
-						"365d": {
-							avgPrice: this.stats365dAvgPrice,
-							avgCo2: this.stats365dAvgCo2,
-							chargedKWh: this.stats365dChargedKWh,
-							solarPercentage: this.stats365dSolarPercentage,
-						},
-					},
+					stats: this.stats,
 					co2Configured: this.tariffCo2 !== undefined,
 					priceConfigured: this.tariffGrid !== undefined,
 					currency: this.currency,

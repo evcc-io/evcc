@@ -123,15 +123,18 @@
 								</div>
 								<div class="my-3 lh-2">
 									<div class="d-flex">
-										<div class="me-1">{{ $t("footer.savings.period") }}</div>
+										<label for="savingsPeriod" class="me-1">
+											{{ $t("footer.savings.periodLabel") }}
+										</label>
 										<CustomSelect
+											id="savingsPeriod"
 											:selected="period"
 											:options="periodOptions"
 											data-testid="savings-period-select"
 											@change="selectPeriod($event.target.value)"
 										>
-											<span class="text-decoration-underline">
-												{{ $t(`footer.savings.period${period}`) }}
+											<span class="text-decoration-underline evcc-gray">
+												{{ $t(`footer.savings.period.${period}`) }}
 											</span>
 										</CustomSelect>
 									</div>
@@ -141,7 +144,7 @@
 										data-testid="savings-reference"
 									>
 										<div class="me-1">
-											{{ $t("footer.savings.reference") }}
+											{{ $t("footer.savings.referenceLabel") }}
 										</div>
 										<div class="evcc-gray me-1">
 											{{
@@ -246,9 +249,9 @@ export default {
 			return co2Reference.regions[0];
 		},
 		periodOptions() {
-			return ["30d", "365d"].map((p) => ({
+			return ["30d", "365d", "total"].map((p) => ({
 				value: p,
-				name: this.$t(`footer.savings.period${p}`),
+				name: this.$t(`footer.savings.period.${p}`),
 			}));
 		},
 		avgPriceFormatted() {
@@ -260,9 +263,6 @@ export default {
 			);
 			const unit = this.pricePerKWhUnit(this.currency);
 			return { value, unit };
-		},
-		range() {
-			return this.$t(`footer.savings.period${this.period}`);
 		},
 		currentStats() {
 			return this.stats[this.period] || {};
