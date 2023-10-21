@@ -13,31 +13,26 @@ type DeviceInfo struct {
 	NumMeters int    `json:"num_meters"`
 }
 
-type Gen2RpcPost struct {
-	Id     int    `json:"id"`
-	On     bool   `json:"on"`
-	Src    string `json:"src"`
-	Method string `json:"method"`
-}
-
-type Gen2SwitchResponse struct {
-	Output bool `json:"output"`
-}
-
-type Gen2Switch struct {
-	Apower  float64
-	Aenergy struct {
+type StatusResponse struct {
+	// Gen1 Status Response
+	Ison   bool
+	Meters []struct {
+		Power float64
 		Total float64
 	}
-}
+	// Gen1 Shelly EM meter JSON response
+	EMeters []struct {
+		Power float64
+		Total float64
+	}
 
-type Gen2StatusResponse struct {
+	// Gen2 Status Response
+	Output  bool       `json:"output"`
 	Switch0 Gen2Switch `json:"switch:0"`
 	Switch1 Gen2Switch `json:"switch:1"`
 	Switch2 Gen2Switch `json:"switch:2"`
-}
 
-type Gen2EmStatusResponse struct {
+	// Gen2 EM.GetStatus Response
 	TotalPower float64 `json:"total_act_power"`
 	CurrentA   float64 `json:"a_current"`
 	CurrentB   float64 `json:"b_current"`
@@ -48,24 +43,20 @@ type Gen2EmStatusResponse struct {
 	PowerA     float64 `json:"a_act_power"`
 	PowerB     float64 `json:"b_act_power"`
 	PowerC     float64 `json:"c_act_power"`
-}
 
-type Gen2EmDataStatusResponse struct {
+	// Gen2 EM.GetStatus Response
 	TotalEnergy float64 `json:"total_act"`
 }
-
-type Gen1SwitchResponse struct {
-	Ison bool
+type Gen2RpcPost struct {
+	Id     int    `json:"id"`
+	On     bool   `json:"on"`
+	Src    string `json:"src"`
+	Method string `json:"method"`
 }
 
-type Gen1StatusResponse struct {
-	Meters []struct {
-		Power float64
-		Total float64
-	}
-	// Shelly EM meter JSON response
-	EMeters []struct {
-		Power float64
+type Gen2Switch struct {
+	Apower  float64
+	Aenergy struct {
 		Total float64
 	}
 }

@@ -22,11 +22,11 @@ func NewSwitch(conn *Connection) *Switch {
 // CurrentPower implements the api.Meter interface
 func (sh *Switch) CurrentPower() (float64, error) {
 	var power float64
-
 	d := sh.Connection
-	switch d.gen {
+
+	var res StatusResponse
+	switch sh.Connection.gen {
 	case 0, 1:
-		var res Gen1StatusResponse
 		uri := fmt.Sprintf("%s/status", d.uri)
 		if err := d.GetJSON(uri, &res); err != nil {
 			return 0, err
@@ -42,7 +42,6 @@ func (sh *Switch) CurrentPower() (float64, error) {
 		}
 
 	default:
-		var res Gen2StatusResponse
 		if err := d.execGen2Cmd("Shelly.GetStatus", false, &res); err != nil {
 			return 0, err
 		}
@@ -64,15 +63,14 @@ func (sh *Switch) CurrentPower() (float64, error) {
 // Enabled implements the api.Charger interface
 func (sh *Switch) Enabled() (bool, error) {
 	d := sh.Connection
+	var res StatusResponse
 	switch d.gen {
 	case 0, 1:
-		var res Gen1SwitchResponse
 		uri := fmt.Sprintf("%s/relay/%d", d.uri, d.channel)
 		err := d.GetJSON(uri, &res)
 		return res.Ison, err
 
 	default:
-		var res Gen2SwitchResponse
 		err := d.execGen2Cmd("Switch.GetStatus", false, &res)
 		return res.Output, err
 	}
@@ -84,14 +82,13 @@ func (sh *Switch) Enable(enable bool) error {
 	onoff := map[bool]string{true: "on", false: "off"}
 
 	d := sh.Connection
+	var res StatusResponse
 	switch d.gen {
 	case 0, 1:
-		var res Gen1SwitchResponse
 		uri := fmt.Sprintf("%s/relay/%d?turn=%s", d.uri, d.channel, onoff[enable])
 		err = d.GetJSON(uri, &res)
 
 	default:
-		var res Gen2SwitchResponse
 		err = d.execGen2Cmd("Switch.Set", enable, &res)
 	}
 
@@ -103,9 +100,9 @@ func (sh *Switch) TotalEnergy() (float64, error) {
 	var energy float64
 
 	d := sh.Connection
+	var res StatusResponse
 	switch d.gen {
 	case 0, 1:
-		var res Gen1StatusResponse
 		uri := fmt.Sprintf("%s/status", d.uri)
 		if err := d.GetJSON(uri, &res); err != nil {
 			return 0, err
@@ -123,7 +120,6 @@ func (sh *Switch) TotalEnergy() (float64, error) {
 		energy = gen1Energy(d.devicetype, energy)
 
 	default:
-		var res Gen2StatusResponse
 		if err := d.execGen2Cmd("Shelly.GetStatus", false, &res); err != nil {
 			return 0, err
 		}
