@@ -30,7 +30,6 @@ const (
 	openwbRegPhaseTrigger = 10181
 	openwbRegHeartbeat    = 10190
 	openwbRegCpTrigger    = 10198
-	// openwbReg   = 10150
 )
 
 func init() {
@@ -49,12 +48,7 @@ func NewOpenWB20FromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	wb, err := NewOpenWB20(cc.URI, cc.ID)
-	if err != nil {
-		return nil, err
-	}
-
-	return wb, err
+	return NewOpenWB20(cc.URI, cc.ID)
 }
 
 // NewOpenWB20 creates OpenWB20 charger
@@ -79,11 +73,11 @@ func NewOpenWB20(uri string, slaveID uint8) (*OpenWB20, error) {
 
 // Status implements the api.Charger interface
 func (wb *OpenWB20) Status() (api.ChargeStatus, error) {
-	if b, err := wb.conn.ReadInputRegisters(openwbRegCharging, 1); binary.BigEndian.Uint16(b) == 1 || err != nil {
+	if b, err := wb.conn.ReadInputRegisters(openwbRegCharging, 1); err != nil || binary.BigEndian.Uint16(b) == 1 {
 		return api.StatusC, err
 	}
 
-	if b, err := wb.conn.ReadInputRegisters(openwbRegPlugged, 1); binary.BigEndian.Uint16(b) == 1 || err != nil {
+	if b, err := wb.conn.ReadInputRegisters(openwbRegPlugged, 1); err != nil || binary.BigEndian.Uint16(b) == 1 {
 		return api.StatusB, err
 	}
 
