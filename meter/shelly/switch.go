@@ -24,11 +24,10 @@ func (sh *Switch) CurrentPower() (float64, error) {
 	var power float64
 	d := sh.Connection
 
-	var res StatusResponse
 	switch sh.Connection.gen {
 	case 0, 1:
-		uri := fmt.Sprintf("%s/status", d.uri)
-		if err := d.GetJSON(uri, &res); err != nil {
+		res, err := sh.gen1StatusRespG.Get()
+		if err != nil {
 			return 0, err
 		}
 
@@ -42,7 +41,8 @@ func (sh *Switch) CurrentPower() (float64, error) {
 		}
 
 	default:
-		if err := d.execGen2Cmd("Shelly.GetStatus", false, &res); err != nil {
+		res, err := sh.gen2StatusRespG.Get()
+		if err != nil {
 			return 0, err
 		}
 
@@ -63,15 +63,13 @@ func (sh *Switch) CurrentPower() (float64, error) {
 // Enabled implements the api.Charger interface
 func (sh *Switch) Enabled() (bool, error) {
 	d := sh.Connection
-	var res StatusResponse
 	switch d.gen {
 	case 0, 1:
-		uri := fmt.Sprintf("%s/relay/%d", d.uri, d.channel)
-		err := d.GetJSON(uri, &res)
+		res, err := sh.gen1StatusRespG.Get()
 		return res.Ison, err
 
 	default:
-		err := d.execGen2Cmd("Switch.GetStatus", false, &res)
+		res, err := sh.gen2StatusRespG.Get()
 		return res.Output, err
 	}
 }
@@ -92,6 +90,9 @@ func (sh *Switch) Enable(enable bool) error {
 		err = d.execGen2Cmd("Switch.Set", enable, &res)
 	}
 
+	sh.gen1StatusRespG.Reset()
+	sh.gen2StatusRespG.Reset()
+
 	return err
 }
 
@@ -100,11 +101,10 @@ func (sh *Switch) TotalEnergy() (float64, error) {
 	var energy float64
 
 	d := sh.Connection
-	var res StatusResponse
 	switch d.gen {
 	case 0, 1:
-		uri := fmt.Sprintf("%s/status", d.uri)
-		if err := d.GetJSON(uri, &res); err != nil {
+		res, err := sh.gen1StatusRespG.Get()
+		if err != nil {
 			return 0, err
 		}
 
@@ -120,7 +120,8 @@ func (sh *Switch) TotalEnergy() (float64, error) {
 		energy = gen1Energy(d.devicetype, energy)
 
 	default:
-		if err := d.execGen2Cmd("Shelly.GetStatus", false, &res); err != nil {
+		res, err := sh.gen2StatusRespG.Get()
+		if err != nil {
 			return 0, err
 		}
 
