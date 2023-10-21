@@ -80,6 +80,13 @@ savingsTitle = "Ahorro"
 savingsTotalEnergy = "{total} kWh cargados"
 since = "desde {since}"
 tabTitle = "Mis datos"
+referenceLabel = "Datos de referencia:"
+co2Title = "Emisiones de CO₂"
+co2Saved = "{value} guardado"
+configurePriceCo2 = "Aprende a configurar los datos de los precios y el CO₂"
+moneySaved = "{value} guardado"
+periodLabel = "Periodo:"
+referenceGrid = "red"
 
 [footer.sponsor]
 becomeSponsor = "Convertirse en patrocinador"
@@ -252,6 +259,8 @@ title = "Tiempo objetivo"
 today = "hoy"
 tomorrow = "mañana"
 update = "Actualizar"
+vehicleCapacityDocs = "Aprende a configurarlo"
+vehicleCapacityRequired = "La capacidad de la batería del vehículo es necesaria para estimar el tiempo de carga"
 
 [main.targetChargePlan]
 chargeDuration = "Tiempo de carga"
@@ -415,3 +424,9 @@ title = "Error al iniciar"
 cancel = "Cancelar"
 template = "Fabricante"
 test = "Prueba"
+
+
+[footer.savings.period]
+365d = "último año"
+total = "desde siempre"
+30d = "últimos 30 días"
