@@ -33,10 +33,11 @@ func (lp *Loadpoint) planRequiredDuration(maxPower float64) time.Duration {
 		return 0
 	}
 
+	// TODO ensure plan soc <= limit soc
 	// TODO take vehicle api limits into account
-	targetSoc := min(lp.GetEffectiveLimitSoc(), lp.GetPlanSoc())
+	soc := min(lp.GetEffectiveLimitSoc(), lp.GetPlanSoc())
 
-	return lp.socEstimator.RemainingChargeDuration(targetSoc, maxPower)
+	return lp.socEstimator.RemainingChargeDuration(soc, maxPower)
 }
 
 // GetPlan creates a charging plan
