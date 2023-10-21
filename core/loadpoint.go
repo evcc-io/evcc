@@ -102,7 +102,8 @@ type Loadpoint struct {
 	log      *util.Logger
 
 	// exposed public configuration
-	sync.Mutex                // guard status
+	sync.RWMutex // guard status
+
 	vehicleMux sync.Mutex     // guard vehicle
 	Mode       api.ChargeMode `mapstructure:"mode"` // Charge mode, guarded by mutex
 
@@ -148,9 +149,9 @@ type Loadpoint struct {
 
 	// charge planning
 	planner     *planner.Planner
+	planTime    time.Time // time goal
 	planSoc     int       // Plan soc
 	planEnergy  float64   // Plan charge energy in kWh (dumb vehicles)
-	planTime    time.Time // time goal
 	planSlotEnd time.Time // current plan slot end time
 	planActive  bool      // charge plan exists and has a currently active slot
 
@@ -761,8 +762,8 @@ func (lp *Loadpoint) planEnergyReached() bool {
 	return ok && f <= 0
 }
 
-// sessionLimitSocReached returns true if the effective limit has been reached
-func (lp *Loadpoint) sessionLimitSocReached() bool {
+// limitSocReached returns true if the effective limit has been reached
+func (lp *Loadpoint) limitSocReached() bool {
 	limit := lp.GetEffectiveLimitSoc()
 	return limit > 0 && lp.vehicleSoc >= float64(limit)
 }
@@ -1526,7 +1527,7 @@ func (lp *Loadpoint) Update(sitePower float64, autoCharge, batteryBuffered, batt
 		lp.log.DEBUG.Printf("planEnergy reached: %.0fkWh > %0.1fkWh", lp.getChargedEnergy()/1e3, lp.planEnergy)
 		err = lp.disableUnlessClimater()
 
-	case lp.sessionLimitSocReached():
+	case lp.limitSocReached():
 		lp.log.DEBUG.Printf("limitSoc reached: %.1f%% > %d%%", lp.vehicleSoc, lp.GetEffectiveLimitSoc())
 		err = lp.disableUnlessClimater()
 
