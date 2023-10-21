@@ -70,8 +70,8 @@ type API interface {
 	SetPlanEnergy(float64)
 	// GetSessionLimitSoc returns the session limit soc
 	GetSessionLimitSoc() int
-	// SetSessionSocLimit sets the session soc limit
-	SetSessionSocLimit(soc int)
+	// SetSessionLimitSoc sets the session soc limit
+	SetSessionLimitSoc(soc int)
 	// GetPlan creates a charging plan
 	GetPlan(targetTime time.Time, maxPower float64) (time.Duration, api.Rates, error)
 	// GetEnableThreshold gets the loadpoint enable threshold

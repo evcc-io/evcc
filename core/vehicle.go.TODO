@@ -1,10 +1,13 @@
 package core
 
-import "github.com/evcc-io/evcc/api"
+import (
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/vehicle"
+)
 
 type Vehicle struct{}
 
-var _ api.Vehicle = (*Vehicle)(nil)
+var _ vehicle.API = (*Vehicle)(nil)
 
 // GetMode returns the charge mode
 func (v *Vehicle) GetMode() api.ChargeMode {
@@ -22,7 +25,15 @@ func (v *Vehicle) GetPhases() int {
 func (v *Vehicle) SetPhases(phases int) error {
 }
 
-// GetMinCurrent returns the min current
+// GetPriority returns the priority
+func (v *Vehicle) GetPriority() int {
+}
+
+// SetPriority sets the priority
+func (v *Vehicle) SetPriority(priority int) {
+}
+
+// GetMinSoc returns the min soc
 func (v *Vehicle) GetMinSoc() int {
 }
 

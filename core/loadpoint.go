@@ -475,6 +475,10 @@ func (lp *Loadpoint) evVehicleDisconnectHandler() {
 	// soc update reset
 	lp.socUpdated = time.Time{}
 
+	// reset session
+	// TODO decide persistence
+	lp.SetSessionLimitSoc(0)
+
 	// reset plan once charge goal is met
 	lp.setPlanTime(time.Time{})
 	lp.setPlanActive(false)

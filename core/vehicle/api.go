@@ -12,7 +12,12 @@ type API interface {
 	// SetPhases sets the limit soc
 	SetPhases(phases int) error
 
-	// GetMinCurrent returns the min current
+	// GetPriority returns the priority
+	GetPriority() int
+	// SetPriority sets the priority
+	SetPriority(priority int)
+
+	// GetMinSoc returns the min soc
 	GetMinSoc() int
 	// SetMinSoc sets the min soc
 	SetMinSoc(soc int)
