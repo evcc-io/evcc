@@ -22,13 +22,12 @@ func NewSwitch(conn *Connection) *Switch {
 // CurrentPower implements the api.Meter interface
 func (sh *Switch) CurrentPower() (float64, error) {
 	var power float64
-
 	d := sh.Connection
-	switch d.gen {
+
+	switch sh.Connection.gen {
 	case 0, 1:
-		var res Gen1StatusResponse
-		uri := fmt.Sprintf("%s/status", d.uri)
-		if err := d.GetJSON(uri, &res); err != nil {
+		res, err := sh.gen1StatusRespG.Get()
+		if err != nil {
 			return 0, err
 		}
 
@@ -42,8 +41,8 @@ func (sh *Switch) CurrentPower() (float64, error) {
 		}
 
 	default:
-		var res Gen2StatusResponse
-		if err := d.execGen2Cmd("Shelly.GetStatus", false, &res); err != nil {
+		res, err := sh.gen2StatusRespG.Get()
+		if err != nil {
 			return 0, err
 		}
 
@@ -66,14 +65,11 @@ func (sh *Switch) Enabled() (bool, error) {
 	d := sh.Connection
 	switch d.gen {
 	case 0, 1:
-		var res Gen1SwitchResponse
-		uri := fmt.Sprintf("%s/relay/%d", d.uri, d.channel)
-		err := d.GetJSON(uri, &res)
+		res, err := sh.gen1StatusRespG.Get()
 		return res.Ison, err
 
 	default:
-		var res Gen2SwitchResponse
-		err := d.execGen2Cmd("Switch.GetStatus", false, &res)
+		res, err := sh.gen2StatusRespG.Get()
 		return res.Output, err
 	}
 }
@@ -84,16 +80,18 @@ func (sh *Switch) Enable(enable bool) error {
 	onoff := map[bool]string{true: "on", false: "off"}
 
 	d := sh.Connection
+	var res StatusResponse
 	switch d.gen {
 	case 0, 1:
-		var res Gen1SwitchResponse
 		uri := fmt.Sprintf("%s/relay/%d?turn=%s", d.uri, d.channel, onoff[enable])
 		err = d.GetJSON(uri, &res)
 
 	default:
-		var res Gen2SwitchResponse
 		err = d.execGen2Cmd("Switch.Set", enable, &res)
 	}
+
+	sh.gen1StatusRespG.Reset()
+	sh.gen2StatusRespG.Reset()
 
 	return err
 }
@@ -105,9 +103,8 @@ func (sh *Switch) TotalEnergy() (float64, error) {
 	d := sh.Connection
 	switch d.gen {
 	case 0, 1:
-		var res Gen1StatusResponse
-		uri := fmt.Sprintf("%s/status", d.uri)
-		if err := d.GetJSON(uri, &res); err != nil {
+		res, err := sh.gen1StatusRespG.Get()
+		if err != nil {
 			return 0, err
 		}
 
@@ -123,8 +120,8 @@ func (sh *Switch) TotalEnergy() (float64, error) {
 		energy = gen1Energy(d.devicetype, energy)
 
 	default:
-		var res Gen2StatusResponse
-		if err := d.execGen2Cmd("Shelly.GetStatus", false, &res); err != nil {
+		res, err := sh.gen2StatusRespG.Get()
+		if err != nil {
 			return 0, err
 		}
 
