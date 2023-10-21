@@ -75,21 +75,21 @@ func NewConnection(uri, user, password string, channel int, cache time.Duration)
 			c.Client.Transport = digest.NewTransport(user, password, c.Client.Transport)
 		}
 
-		c.gen1StatusRespG = provider.ResettableCached(func() (StatusResponse, error) {
-			var res StatusResponse
-			err := c.GetJSON(fmt.Sprintf("%s/status", c.uri), &res)
-			return res, err
-		}, cache)
-
-		c.gen2StatusRespG = provider.ResettableCached(func() (StatusResponse, error) {
-			var res StatusResponse
-			err := c.execGen2Cmd("Shelly.GetStatus", false, &res)
-			return res, err
-		}, cache)
-
 	default:
 		return c, fmt.Errorf("%s (%s) unknown api generation (%d)", resp.Type, resp.Model, c.gen)
 	}
+
+	c.gen1StatusRespG = provider.ResettableCached(func() (StatusResponse, error) {
+		var res StatusResponse
+		err := c.GetJSON(fmt.Sprintf("%s/status", c.uri), &res)
+		return res, err
+	}, cache)
+
+	c.gen2StatusRespG = provider.ResettableCached(func() (StatusResponse, error) {
+		var res StatusResponse
+		err := c.execGen2Cmd("Shelly.GetStatus", false, &res)
+		return res, err
+	}, cache)
 
 	return c, nil
 }
