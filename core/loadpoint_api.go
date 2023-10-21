@@ -14,20 +14,22 @@ var _ loadpoint.API = (*Loadpoint)(nil)
 
 // Title returns the human-readable loadpoint title
 func (lp *Loadpoint) Title() string {
+	lp.RLock()
+	defer lp.RUnlock()
 	return lp.Title_
 }
 
 // GetStatus returns the charging status
 func (lp *Loadpoint) GetStatus() api.ChargeStatus {
-	lp.Lock()
-	defer lp.Unlock()
+	lp.RLock()
+	defer lp.RUnlock()
 	return lp.status
 }
 
 // GetMode returns loadpoint charge mode
 func (lp *Loadpoint) GetMode() api.ChargeMode {
-	lp.Lock()
-	defer lp.Unlock()
+	lp.RLock()
+	defer lp.RUnlock()
 	return lp.Mode
 }
 
@@ -64,15 +66,15 @@ func (lp *Loadpoint) SetMode(mode api.ChargeMode) {
 
 // getChargedEnergy returns plan target energy in Wh
 func (lp *Loadpoint) getChargedEnergy() float64 {
-	lp.Lock()
-	defer lp.Unlock()
+	lp.RLock()
+	defer lp.RUnlock()
 	return lp.sessionEnergy.TotalWh()
 }
 
 // GetPlanEnergy returns plan target energy
 func (lp *Loadpoint) GetPlanEnergy() float64 {
-	lp.Lock()
-	defer lp.Unlock()
+	lp.RLock()
+	defer lp.RUnlock()
 	return lp.planEnergy
 }
 
@@ -99,8 +101,8 @@ func (lp *Loadpoint) SetPlanEnergy(energy float64) {
 
 // GetPriority returns the loadpoint priority
 func (lp *Loadpoint) GetPriority() int {
-	lp.Lock()
-	defer lp.Unlock()
+	lp.RLock()
+	defer lp.RUnlock()
 	return lp.Priority_
 }
 
@@ -119,8 +121,8 @@ func (lp *Loadpoint) SetPriority(prio int) {
 
 // GetSessionLimitSoc returns the session limit soc
 func (lp *Loadpoint) GetSessionLimitSoc() int {
-	lp.Lock()
-	defer lp.Unlock()
+	lp.RLock()
+	defer lp.RUnlock()
 	return lp.sessionLimitSoc
 }
 
@@ -131,8 +133,8 @@ func (lp *Loadpoint) setSessionLimitSoc(soc int) {
 	lp.publish(limitSoc, soc)
 }
 
-// SetSessionSocLimit sets the session soc limit
-func (lp *Loadpoint) SetSessionSocLimit(soc int) {
+// SetSessionLimitSoc sets the session soc limit
+func (lp *Loadpoint) SetSessionLimitSoc(soc int) {
 	lp.Lock()
 	defer lp.Unlock()
 
@@ -148,8 +150,8 @@ func (lp *Loadpoint) SetSessionSocLimit(soc int) {
 
 // GetPhases returns loadpoint enabled phases
 func (lp *Loadpoint) GetPhases() int {
-	lp.Lock()
-	defer lp.Unlock()
+	lp.RLock()
+	defer lp.RUnlock()
 	return lp.phases
 }
 
@@ -180,8 +182,8 @@ func (lp *Loadpoint) SetPhases(phases int) error {
 
 // GetPlanSoc returns the plan soc
 func (lp *Loadpoint) GetPlanSoc() int {
-	lp.Lock()
-	defer lp.Unlock()
+	lp.RLock()
+	defer lp.RUnlock()
 	return lp.planSoc
 }
 
@@ -200,8 +202,8 @@ func (lp *Loadpoint) SetPlanSoc(soc int) {
 
 // GetPlanTime returns the plan time
 func (lp *Loadpoint) GetPlanTime() time.Time {
-	lp.Lock()
-	defer lp.Unlock()
+	lp.RLock()
+	defer lp.RUnlock()
 	return lp.planTime
 }
 
@@ -232,8 +234,8 @@ func (lp *Loadpoint) setPlanTime(finishAt time.Time) {
 
 // GetEnableThreshold gets the loadpoint enable threshold
 func (lp *Loadpoint) GetEnableThreshold() float64 {
-	lp.Lock()
-	defer lp.Unlock()
+	lp.RLock()
+	defer lp.RUnlock()
 	return lp.Enable.Threshold
 }
 
@@ -252,8 +254,8 @@ func (lp *Loadpoint) SetEnableThreshold(threshold float64) {
 
 // GetDisableThreshold gets the loadpoint enable threshold
 func (lp *Loadpoint) GetDisableThreshold() float64 {
-	lp.Lock()
-	defer lp.Unlock()
+	lp.RLock()
+	defer lp.RUnlock()
 	return lp.Disable.Threshold
 }
 
@@ -296,8 +298,8 @@ func (lp *Loadpoint) HasChargeMeter() bool {
 
 // GetChargePower returns the current charge power
 func (lp *Loadpoint) GetChargePower() float64 {
-	lp.Lock()
-	defer lp.Unlock()
+	lp.RLock()
+	defer lp.RUnlock()
 	return lp.chargePower
 }
 
@@ -319,8 +321,8 @@ func (lp *Loadpoint) GetChargePowerFlexibility() float64 {
 
 // GetMinCurrent returns the min loadpoint current
 func (lp *Loadpoint) GetMinCurrent() float64 {
-	lp.Lock()
-	defer lp.Unlock()
+	lp.RLock()
+	defer lp.RUnlock()
 	return lp.MinCurrent
 }
 
@@ -339,8 +341,8 @@ func (lp *Loadpoint) SetMinCurrent(current float64) {
 
 // GetMaxCurrent returns the max loadpoint current
 func (lp *Loadpoint) GetMaxCurrent() float64 {
-	lp.Lock()
-	defer lp.Unlock()
+	lp.RLock()
+	defer lp.RUnlock()
 	return lp.MaxCurrent
 }
 
@@ -367,6 +369,13 @@ func (lp *Loadpoint) GetMaxPower() float64 {
 	return Voltage * lp.GetMaxCurrent() * float64(lp.maxActivePhases())
 }
 
+// GetRemainingDuration is the estimated remaining charging duration
+func (lp *Loadpoint) GetRemainingDuration() time.Duration {
+	lp.Lock()
+	defer lp.Unlock()
+	return lp.chargeRemainingDuration
+}
+
 // SetRemainingDuration sets the estimated remaining charging duration
 func (lp *Loadpoint) SetRemainingDuration(chargeRemainingDuration time.Duration) {
 	lp.Lock()
@@ -382,11 +391,11 @@ func (lp *Loadpoint) setRemainingDuration(remainingDuration time.Duration) {
 	}
 }
 
-// GetRemainingDuration is the estimated remaining charging duration
-func (lp *Loadpoint) GetRemainingDuration() time.Duration {
-	lp.Lock()
-	defer lp.Unlock()
-	return lp.chargeRemainingDuration
+// GetRemainingEnergy is the remaining charge energy in Wh
+func (lp *Loadpoint) GetRemainingEnergy() float64 {
+	lp.RLock()
+	defer lp.RUnlock()
+	return lp.chargeRemainingEnergy
 }
 
 // SetRemainingEnergy sets the remaining charge energy in Wh
@@ -402,13 +411,6 @@ func (lp *Loadpoint) setRemainingEnergy(chargeRemainingEnergy float64) {
 		lp.chargeRemainingEnergy = chargeRemainingEnergy
 		lp.publish("chargeRemainingEnergy", chargeRemainingEnergy)
 	}
-}
-
-// GetRemainingEnergy is the remaining charge energy in Wh
-func (lp *Loadpoint) GetRemainingEnergy() float64 {
-	lp.Lock()
-	defer lp.Unlock()
-	return lp.chargeRemainingEnergy
 }
 
 // GetVehicle gets the active vehicle
