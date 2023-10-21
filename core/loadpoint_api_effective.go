@@ -32,19 +32,20 @@ func (lp *Loadpoint) GetEffectiveMaxCurrent() float64 {
 
 // GetEffectiveLimitSoc returns the effective session limit soc.
 // TODO take vehicle api limits into account
-// TODO take plan into account?
 func (lp *Loadpoint) GetEffectiveLimitSoc() int {
-	lp.Lock()
+	lp.RLock()
+	defer lp.RUnlock()
+
+	limitSoc := 100
 	if lp.sessionLimitSoc > 0 {
-		return lp.sessionLimitSoc
+		limitSoc = lp.sessionLimitSoc
 	}
-	lp.Unlock()
 
 	if v := lp.GetVehicle(); v != nil {
 		if soc, err := v.OnIdentified().GetLimitSoc(); err == nil && soc > 0 {
-			return soc
+			limitSoc = min(limitSoc, soc)
 		}
 	}
 
-	return 100
+	return limitSoc
 }
