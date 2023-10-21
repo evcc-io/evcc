@@ -80,6 +80,13 @@ savingsTitle = "Sutaupyta"
 savingsTotalEnergy = "{total} kWh įkrauta"
 since = "nuo {since}"
 tabTitle = "Mano"
+referenceLabel = "Atskaitos duomenys:"
+co2Title = "CO₂ Išmetimai"
+co2Saved = "{value} neišmesta"
+configurePriceCo2 = "Išmokite sukonfigūruoti kainą ir CO₂ duomenis."
+moneySaved = "{value} sutaupyta"
+periodLabel = "Laikotarpis:"
+referenceGrid = "tinklas"
 
 [footer.sponsor]
 becomeSponsor = "Tapkite rėmėju"
@@ -252,6 +259,8 @@ title = "Planinis Įkrovimas"
 today = "šiandien"
 tomorrow = "rytoj"
 update = "Atnaujinti"
+vehicleCapacityDocs = "Išmokite, kaip tai sukonfigūruoti."
+vehicleCapacityRequired = "Norint numatyti įkrovimo trukmę reikalinga automobilio baterijos talpa"
 
 [main.targetChargePlan]
 chargeDuration = "Įkrovimo trukmė"
@@ -286,8 +295,8 @@ vehicleTarget = "Automobilyje nustatytas limitas: {soc}%"
 
 [main.vehicleStatus]
 charging = "Įkraunama..."
-cheapEnergyCharging = "Įkraunama pigia energija: {price} (limit {limit})"
-cleanEnergyCharging = "Įkraunama švaria energija: {co2} (limit {limit})"
+cheapEnergyCharging = "Įkraunama pigia energija: {price} (limitas {limit})"
+cleanEnergyCharging = "Įkraunama švaria energija: {co2} (limitas {limit})"
 climating = "Aptiktas išankstinis kondicionavimas."
 connected = "Prijungtas."
 disconnected = "Neprijungtas."
@@ -415,3 +424,9 @@ title = "Klaida startuojant"
 cancel = "Atšaukti"
 template = "Gamintojas"
 test = "Testuoti"
+
+
+[footer.savings.period]
+365d = "paskutinės 365 dienos"
+total = "Iš viso"
+30d = "paskutinės 30 dienų"
