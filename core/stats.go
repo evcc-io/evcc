@@ -24,8 +24,7 @@ func NewStats() *Stats {
 	}
 }
 
-// Update publishes stats for the last 30 and 365 days
-
+// Update publishes stats based on charging sessions
 func (s *Stats) Update(p publisher) {
 	if time.Since(s.updated) < time.Hour {
 		return
