@@ -20,6 +20,7 @@ import (
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
+	"github.com/evcc-io/evcc/util/telemetry"
 
 	evbus "github.com/asaskevich/EventBus"
 	"github.com/avast/retry-go/v4"
@@ -1344,7 +1345,10 @@ func (lp *Loadpoint) publishChargeProgress() {
 		// workaround for Go-E resetting during disconnect, see
 		// https://github.com/evcc-io/evcc/issues/5092
 		if f > lp.chargedAtStartup {
-			lp.sessionEnergy.Update(f - lp.chargedAtStartup)
+			added, addedGreen := lp.sessionEnergy.Update(f - lp.chargedAtStartup)
+			if telemetry.Enabled() && added > 0 {
+				telemetry.UpdateEnergy(added, addedGreen)
+			}
 		}
 	} else {
 		lp.log.ERROR.Printf("charge rater: %v", err)

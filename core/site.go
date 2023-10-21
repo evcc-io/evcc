@@ -78,7 +78,7 @@ type Site struct {
 	loadpoints  []*Loadpoint             // Loadpoints
 	coordinator *coordinator.Coordinator // Vehicles
 	prioritizer *prioritizer.Prioritizer // Power budgets
-	savings     *Savings                 // Savings
+	stats       *Stats                   // Stats
 
 	// cached state
 	gridPower    float64 // Grid power
@@ -119,7 +119,7 @@ func NewSiteFromConfig(
 	config.Vehicles().Subscribe(site.updateVehicles)
 
 	site.prioritizer = prioritizer.New(log)
-	site.savings = NewSavings(tariffs)
+	site.stats = NewStats()
 
 	site.restoreSettings()
 
@@ -780,14 +780,14 @@ func (site *Site) update(lp Updater) {
 
 		site.publishTariffs(greenShareHome, greenShareLoadpoints)
 
-		// TODO: use energy instead of current power for better results
-		deltaCharged := site.savings.Update(site, greenShareLoadpoints, totalChargePower)
 		if telemetry.Enabled() && totalChargePower > standbyPower {
-			go telemetry.UpdateChargeProgress(site.log, totalChargePower, deltaCharged, greenShareLoadpoints)
+			go telemetry.UpdateChargeProgress(site.log, totalChargePower, greenShareLoadpoints)
 		}
 	} else {
 		site.log.ERROR.Println(err)
 	}
+
+	site.stats.Update(site)
 }
 
 // prepare publishes initial values
@@ -808,7 +808,6 @@ func (site *Site) prepare() {
 		site.publish("smartCostType", tariff.Type().String())
 	}
 	site.publish("currency", site.tariffs.Currency.String())
-	site.publish("savingsSince", site.savings.Since())
 
 	site.publish("vehicles", vehicleTitles(site.GetVehicles()))
 }

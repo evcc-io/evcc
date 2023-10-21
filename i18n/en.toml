@@ -66,20 +66,26 @@ powerSub2 = "charging…"
 tabTitle = "Live community"
 
 [footer.savings]
+co2Saved = "{value} saved"
+co2Title = "CO₂ Emissons"
+configurePriceCo2 = "Learn how to configure price and CO₂ data."
 footerLong = "{percent}% solar energy"
 footerShort = "{percent}% solar"
 modalTitle = "Charge Energy Overview"
+moneySaved = "{value} saved"
 percentGrid = "{grid} kWh grid"
 percentSelf = "{self} kWh solar"
 percentTitle = "Solar Energy"
-priceFeedIn = "{feedInPrice} feed-in"
-priceGrid = "{gridPrice} grid"
+periodLabel = "Period:"
 priceTitle = "Energy Price"
-savingsComparedToGrid = "compared to grid"
-savingsTitle = "Savings"
-savingsTotalEnergy = "{total} kWh charged"
-since = "since {since}"
+referenceGrid = "grid"
+referenceLabel = "Reference data:"
 tabTitle = "My data"
+
+[footer.savings.period]
+30d = "last 30 days"
+365d = "last 365 days"
+total = "all time"
 
 [footer.sponsor]
 becomeSponsor = "Become a Sponsor"
