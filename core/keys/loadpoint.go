@@ -24,17 +24,25 @@ const (
 	VehicleTargetSoc       = "vehicleTargetSoc"       // vehicle soc limit
 	VehicleTitle           = "vehicleTitle"           // vehicle title
 
-	// loadpoint status
+	// loadpoint settings
 	Mode        = "mode"        // charge mode
 	Priority    = "priority"    // priority
-	Enabled     = "enabled"     // loadpoint enabled
-	Connected   = "connected"   // connected
-	Charging    = "charging"    // charging
 	MinCurrent  = "minCurrent"  // min current
 	MaxCurrent  = "maxCurrent"  // max current
 	MinSoc      = "minSoc"      // min soc
 	LimitSoc    = "limitSoc"    // limit soc
 	LimitEnergy = "limitEnergy" // limit energy
+
+	// loadpoint status
+	Enabled   = "enabled"   // loadpoint enabled
+	Connected = "connected" // connected
+	Charging  = "charging"  // charging
+
+	// effective values
+	EffectivePriority   = "effectivePriority"   // effective priority
+	EffectiveMinCurrent = "effectiveMinCurrent" // effective min current
+	EffectiveMaxCurrent = "effectiveMaxCurrent" // effective max current
+	EffectiveLimitSoc   = "effectiveLimitSoc"   // effective limit soc
 
 	// measurements
 	ChargeCurrent     = "chargeCurrent"     // charge current

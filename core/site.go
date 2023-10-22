@@ -752,7 +752,7 @@ func (site *Site) update(lp Updater) {
 			autoCharge = limit != 0 && rate.Price <= limit
 			site.publish("smartCostActive", autoCharge)
 		} else {
-			site.log.ERROR.Println("tariff:", err)
+			site.log.ERROR.Println("autoCharge:", err)
 		}
 	}
 

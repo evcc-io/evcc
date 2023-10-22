@@ -46,6 +46,8 @@ type API interface {
 	GetPriority() int
 	// SetPriority sets the priority
 	SetPriority(int)
+	// EffectivePriority returns the effective priority
+	EffectivePriority() int
 
 	// GetMode returns the charge mode
 	GetMode() api.ChargeMode

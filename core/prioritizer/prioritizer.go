@@ -26,7 +26,7 @@ func (p *Prioritizer) UpdateChargePowerFlexibility(lp loadpoint.API) {
 }
 
 func (p *Prioritizer) GetChargePowerFlexibility(lp loadpoint.API) float64 {
-	prio := lp.GetPriority()
+	prio := lp.EffectivePriority()
 
 	var (
 		reduceBy float64
@@ -36,12 +36,12 @@ func (p *Prioritizer) GetChargePowerFlexibility(lp loadpoint.API) float64 {
 	for lp, power := range p.demand {
 		if lp.GetPriority() < prio {
 			reduceBy += power
-			msg += fmt.Sprintf("%.0fW from %s at prio %d, ", power, lp.Title(), lp.GetPriority())
+			msg += fmt.Sprintf("%.0fW from %s at prio %d, ", power, lp.Title(), lp.EffectivePriority())
 		}
 	}
 
 	if p.log != nil && reduceBy > 0 {
-		p.log.DEBUG.Printf("lp %s at prio %d gets additional %stotal %.0fW\n", lp.Title(), lp.GetPriority(), msg, reduceBy)
+		p.log.DEBUG.Printf("lp %s at prio %d gets additional %stotal %.0fW\n", lp.Title(), lp.EffectivePriority(), msg, reduceBy)
 	}
 
 	return reduceBy

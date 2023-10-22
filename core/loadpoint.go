@@ -107,18 +107,16 @@ type Loadpoint struct {
 	sync.RWMutex // guard status
 
 	vehicleMux sync.Mutex     // guard vehicle
-	Mode       api.ChargeMode `mapstructure:"mode"` // Charge mode, guarded by mutex
+	Mode_      api.ChargeMode `mapstructure:"mode"` // Default charge mode, used for disconnect
 
-	Title_            string `mapstructure:"title"`    // UI title
-	Priority_         int    `mapstructure:"priority"` // Priority
-	ConfiguredPhases  int    `mapstructure:"phases"`   // Charger configured phase mode 0/1/3
-	ChargerRef        string `mapstructure:"charger"`  // Charger reference
-	VehicleRef        string `mapstructure:"vehicle"`  // Vehicle reference
-	MeterRef          string `mapstructure:"meter"`    // Charge meter reference
-	Soc               SocConfig
-	Enable, Disable   ThresholdConfig
-	ResetOnDisconnect bool `mapstructure:"resetOnDisconnect"`
-	onDisconnect      api.ActionConfig
+	Title_           string `mapstructure:"title"`    // UI title
+	Priority_        int    `mapstructure:"priority"` // Priority
+	ConfiguredPhases int    `mapstructure:"phases"`   // Charger configured phase mode 0/1/3
+	ChargerRef       string `mapstructure:"charger"`  // Charger reference
+	VehicleRef       string `mapstructure:"vehicle"`  // Vehicle reference
+	MeterRef         string `mapstructure:"meter"`    // Charge meter reference
+	Soc              SocConfig
+	Enable, Disable  ThresholdConfig
 
 	MinCurrent    float64       // PV mode: start current	Min+PV mode: min current
 	MaxCurrent    float64       // Max allowed current. Physically ensured by the charger
@@ -127,6 +125,7 @@ type Loadpoint struct {
 	limitSoc    int     // Session limit for soc
 	limitEnergy float64 // Session limit for energy
 
+	mode                api.ChargeMode
 	enabled             bool      // Charger enabled state
 	phases              int       // Charger enabled phases, guarded by mutex
 	measuredPhases      int       // Charger physically measured phases
@@ -257,8 +256,17 @@ func NewLoadpointFromConfig(log *util.Logger, settings *Settings, other map[stri
 		lp.log.WARN.Printf("PV mode enable threshold %.0fW > 0 will start PV charging on grid power consumption. Did you mean -%.0f?", lp.Enable.Threshold, lp.Enable.Threshold)
 	}
 
+	// restore settings
 	lp.settings = settings
 	lp.restoreSettings()
+
+	// chose sane default if mode is not set
+	if lp.mode == "" {
+		lp.mode = lp.Mode_
+	}
+	if lp.mode == "" {
+		lp.mode = api.ModeOff
+	}
 
 	return lp, nil
 }
@@ -272,7 +280,7 @@ func NewLoadpoint(log *util.Logger) *Loadpoint {
 		log:        log,   // logger
 		clock:      clock, // mockable time
 		bus:        bus,   // event bus
-		Mode:       api.ModeOff,
+		mode:       api.ModeOff,
 		status:     api.StatusNone,
 		MinCurrent: 6,  // A
 		MaxCurrent: 16, // A
@@ -296,6 +304,9 @@ func NewLoadpoint(log *util.Logger) *Loadpoint {
 
 // restoreSettings restores loadpoint settings
 func (lp *Loadpoint) restoreSettings() {
+	if v, err := lp.settings.String(keys.Mode); err == nil {
+		lp.mode = api.ChargeMode(v)
+	}
 	if v, err := lp.settings.Time(keys.PlanTime); err == nil {
 		lp.planTime = v
 	}
@@ -479,14 +490,14 @@ func (lp *Loadpoint) evVehicleDisconnectHandler() {
 	// set default vehicle (may be nil)
 	lp.setActiveVehicle(lp.defaultVehicle)
 
-	// set defaults
-	if lp.ResetOnDisconnect {
-		lp.applyAction(lp.onDisconnect)
-	}
+	// set default mode on disconnect
+	lp.defaultMode()
 
-	// override global defaults with default vehicle
+	// override default mode on disconnect
 	if lp.defaultVehicle != nil {
-		lp.applyAction(lp.defaultVehicle.OnIdentified())
+		if mode, err := lp.defaultVehicle.OnIdentified().GetMode(); err == nil {
+			lp.SetMode(mode)
+		}
 	}
 
 	// soc update reset
@@ -536,6 +547,17 @@ func (lp *Loadpoint) applyAction(actionCfg api.ActionConfig) {
 	}
 }
 
+// defaultMode executes the action
+func (lp *Loadpoint) defaultMode() {
+	lp.RLock()
+	mode := lp.Mode_
+	lp.RUnlock()
+
+	if mode != "" && mode != lp.GetMode() {
+		lp.SetMode(mode)
+	}
+}
+
 // Prepare loadpoint configuration by adding missing helper elements
 func (lp *Loadpoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Event, lpChan chan<- *Loadpoint) {
 	lp.uiChan = uiChan
@@ -552,8 +574,10 @@ func (lp *Loadpoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 
 	// publish initial values
 	lp.publish(keys.Title, lp.Title())
-	lp.publish(keys.MinCurrent, lp.MinCurrent)
-	lp.publish(keys.MaxCurrent, lp.MaxCurrent)
+	lp.publish(keys.Mode, lp.GetMode())
+	lp.publish(keys.Priority, lp.GetPriority())
+	lp.publish(keys.MinCurrent, lp.GetMinCurrent())
+	lp.publish(keys.MaxCurrent, lp.GetMaxCurrent())
 
 	lp.publish("enableThreshold", lp.Enable.Threshold)
 	lp.publish("disableThreshold", lp.Disable.Threshold)
@@ -582,15 +606,14 @@ func (lp *Loadpoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 		lp.setActiveVehicle(lp.defaultVehicle)
 	}
 
-	lp.publish(keys.Mode, lp.GetMode())
-	lp.publish(keys.Priority, lp.effectivePriority())
-
-	// TODO
-	// lp.publish(keys.TargetSoc, lp.GetTargetSoc())
-	// lp.publish(keys.MinSoc, lp.GetMinSoc())
-
 	// reset detection state
 	lp.publish(keys.VehicleDetectionActive, false)
+
+	// restored settings
+	lp.publish(keys.PlanTime, lp.planTime)
+	lp.publish(keys.PlanEnergy, lp.planEnergy)
+	lp.publish(keys.LimitSoc, lp.limitSoc)
+	lp.publish(keys.LimitEnergy, lp.limitEnergy)
 
 	// read initial charger state to prevent immediately disabling charger
 	if enabled, err := lp.charger.Enabled(); err == nil {
