@@ -15,9 +15,6 @@ type Controller interface {
 
 // API is the external loadpoint API
 type API interface {
-	// Title returns the defined loadpoint title
-	Title() string
-
 	//
 	// status
 	//
@@ -26,28 +23,23 @@ type API interface {
 	GetStatus() api.ChargeStatus
 
 	//
-	// effective settings
-	//
-
-	// // GetEffectivePriority returns the effective priority
-	// GetEffectivePriority() int
-	// // GetEffectiveMinCurrent returns the effective min current
-	// GetEffectiveMinCurrent() float64
-	// // GetEffectiveMaxCurrent returns the effective max current
-	// GetEffectiveMaxCurrent() float64
-	// // GetEffectiveLimitSoc returns the effective session limit soc
-	// GetEffectiveLimitSoc() int
-
-	//
 	// settings
 	//
 
+	// Title returns the defined loadpoint title
+	Title() string
 	// GetPriority returns the priority
 	GetPriority() int
 	// SetPriority sets the priority
 	SetPriority(int)
-	// EffectivePriority returns the effective priority
-	EffectivePriority() int
+	// GetMinCurrent returns the min charging current
+	GetMinCurrent() float64
+	// SetMinCurrent sets the min charging current
+	SetMinCurrent(float64)
+	// GetMaxCurrent returns the max charging current
+	GetMaxCurrent() float64
+	// SetMaxCurrent sets the max charging current
+	SetMaxCurrent(float64)
 
 	// GetMode returns the charge mode
 	GetMode() api.ChargeMode
@@ -66,6 +58,17 @@ type API interface {
 	GetLimitEnergy() float64
 	// SetLimitEnergy sets the session limit energy
 	SetLimitEnergy(energy float64)
+
+	//
+	// effective values
+	//
+
+	// EffectivePriority returns the effective priority
+	EffectivePriority() int
+
+	//
+	// plan
+	//
 
 	// GetPlanTime returns the plan time
 	GetPlanTime() time.Time
@@ -98,15 +101,6 @@ type API interface {
 	GetChargePower() float64
 	// GetChargePowerFlexibility returns the flexible amount of current charging power
 	GetChargePowerFlexibility() float64
-	// TODO decide if needed
-	// GetMinCurrent returns the min charging current
-	GetMinCurrent() float64
-	// SetMinCurrent sets the min charging current
-	SetMinCurrent(float64)
-	// GetMaxCurrent returns the max charging current
-	GetMaxCurrent() float64
-	// SetMaxCurrent sets the max charging current
-	SetMaxCurrent(float64)
 	// GetMinPower returns the min charging power for a single phase
 	GetMinPower() float64
 	// GetMaxPower returns the max charging power taking active phases into account
