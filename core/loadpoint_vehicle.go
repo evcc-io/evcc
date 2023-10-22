@@ -143,7 +143,7 @@ func (lp *Loadpoint) setActiveVehicle(vehicle api.Vehicle) {
 		lp.publish(keys.VehicleIcon, vehicle.Icon())
 		lp.publish(keys.VehicleCapacity, vehicle.Capacity())
 
-		if mode, err := vehicle.OnIdentified().GetMode(); err == nil {
+		if mode, ok := vehicle.OnIdentified().GetMode(); ok {
 			lp.SetMode(mode)
 		}
 
