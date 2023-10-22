@@ -1,0 +1,67 @@
+package core
+
+import "github.com/evcc-io/evcc/api"
+
+// effectivePriority returns the effective priority
+func (lp *Loadpoint) effectivePriority() int {
+	if v := lp.GetVehicle(); v != nil {
+		if res, err := v.OnIdentified().GetPriority(); err == nil {
+			return res
+		}
+	}
+	return lp.GetPriority()
+}
+
+// effectiveMinCurrent returns the effective min current
+func (lp *Loadpoint) effectiveMinCurrent() float64 {
+	if v := lp.GetVehicle(); v != nil {
+		if res, err := v.OnIdentified().GetMinCurrent(); err == nil {
+			return res
+		}
+	}
+
+	if c, ok := lp.charger.(api.CurrentLimiter); ok {
+		if res, _, err := c.GetMinMaxCurrent(); err == nil {
+			return res
+		}
+	}
+
+	return lp.GetMinCurrent()
+}
+
+// effectiveMaxCurrent returns the effective max current
+func (lp *Loadpoint) effectiveMaxCurrent() float64 {
+	if v := lp.GetVehicle(); v != nil {
+		if res, err := v.OnIdentified().GetMaxCurrent(); err == nil {
+			return res
+		}
+	}
+
+	if c, ok := lp.charger.(api.CurrentLimiter); ok {
+		if _, res, err := c.GetMinMaxCurrent(); err == nil {
+			return res
+		}
+	}
+
+	return lp.GetMaxCurrent()
+}
+
+// effectiveLimitSoc returns the effective session limit soc.
+// Session takes precedence over vehicle.
+// TODO take vehicle api limits into account
+func (lp *Loadpoint) effectiveLimitSoc() int {
+	lp.RLock()
+	defer lp.RUnlock()
+
+	if lp.limitSoc > 0 {
+		return lp.limitSoc
+	}
+
+	if v := lp.GetVehicle(); v != nil {
+		if soc, err := v.OnIdentified().GetLimitSoc(); err == nil && soc > 0 {
+			return soc
+		}
+	}
+
+	return 100
+}
