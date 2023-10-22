@@ -41,17 +41,17 @@ func DayAheadPricesRequest(domain string, duration time.Duration) *http.Request 
 	return req
 }
 
-// RateData defines the per-unit Value over a period of time spanning Start and End.
-type RateData struct {
+// Rate defines the per-unit Value over a period of time spanning Start and End.
+type Rate struct {
 	Start time.Time
 	End   time.Time
 	Value float64
 }
 
 // GetTsPriceData accepts a set of TimeSeries data entries, and
-// returns a sorted array of RateData based on the timestamp of each data entry.
-func GetTsPriceData(ts []TimeSeries, resolution ResolutionType) ([]RateData, error) {
-	var res []RateData
+// returns a sorted array of Rate based on the timestamp of each data entry.
+func GetTsPriceData(ts []TimeSeries, resolution ResolutionType) ([]Rate, error) {
+	var res []Rate
 
 	for _, v := range ts {
 		if v.Period.Resolution != resolution {
@@ -73,9 +73,9 @@ func GetTsPriceData(ts []TimeSeries, resolution ResolutionType) ([]RateData, err
 	return res, nil
 }
 
-// ExtractTsPriceData massages the given TimeSeries data set to provide RateData entries with associated start and end timestamps.
-func ExtractTsPriceData(timeseries *TimeSeries) ([]RateData, error) {
-	data := make([]RateData, 0, len(timeseries.Period.Point))
+// ExtractTsPriceData massages the given TimeSeries data set to provide Rate entries with associated start and end timestamps.
+func ExtractTsPriceData(timeseries *TimeSeries) ([]Rate, error) {
+	data := make([]Rate, 0, len(timeseries.Period.Point))
 
 	duration, err := iso8601.ParseDuration(string(timeseries.Period.Resolution))
 	if err != nil {
@@ -88,7 +88,7 @@ func ExtractTsPriceData(timeseries *TimeSeries) ([]RateData, error) {
 
 	ts := timeseries.Period.TimeInterval.Start.Time
 	for _, point := range timeseries.Period.Point {
-		d := RateData{
+		d := Rate{
 			Value: point.PriceAmount / 1e3, // Price/MWh to Price/kWh
 			Start: ts,
 		}
