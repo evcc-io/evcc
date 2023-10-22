@@ -17,12 +17,13 @@ import (
 // Connection is the Shelly connection
 type Connection struct {
 	*request.Helper
-	uri         string
-	channel     int
-	gen         int    // Shelly api generation
-	devicetype  string // Shelly device type
-	gen1StatusG provider.Cacheable[StatusResponse]
-	gen2StatusG provider.Cacheable[StatusResponse]
+	uri           string
+	channel       int
+	gen           int    // Shelly api generation
+	devicetype    string // Shelly device type
+	gen1StatusG   provider.Cacheable[StatusResponse]
+	gen2StatusG   provider.Cacheable[StatusResponse]
+	gen2EMStatusG provider.Cacheable[StatusResponse]
 }
 
 // NewConnection creates a new Shelly device connection.
@@ -88,6 +89,12 @@ func NewConnection(uri, user, password string, channel int, cache time.Duration)
 	c.gen2StatusG = provider.ResettableCached(func() (StatusResponse, error) {
 		var res StatusResponse
 		err := c.execGen2Cmd("Shelly.GetStatus", false, &res)
+		return res, err
+	}, cache)
+
+	c.gen2EMStatusG = provider.ResettableCached(func() (StatusResponse, error) {
+		var res StatusResponse
+		err := c.execGen2Cmd("EM.GetStatus", false, &res)
 		return res, err
 	}, cache)
 

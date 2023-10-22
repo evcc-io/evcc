@@ -16,8 +16,8 @@ func NewEnergyMeter(conn *Connection) *EnergyMeter {
 
 // CurrentPower implements the api.Meter interface
 func (sh *EnergyMeter) CurrentPower() (float64, error) {
-	var res StatusResponse
-	if err := sh.Connection.execGen2Cmd("EM.GetStatus", false, &res); err != nil {
+	res, err := sh.gen2EMStatusG.Get()
+	if err != nil {
 		return 0, err
 	}
 
@@ -38,8 +38,8 @@ var _ api.PhaseCurrents = (*EnergyMeter)(nil)
 
 // Currents implements the api.PhaseCurrents interface
 func (sh *EnergyMeter) Currents() (float64, float64, float64, error) {
-	var res StatusResponse
-	if err := sh.Connection.execGen2Cmd("EM.GetStatus", false, &res); err != nil {
+	res, err := sh.gen2EMStatusG.Get()
+	if err != nil {
 		return 0, 0, 0, err
 	}
 
@@ -50,8 +50,8 @@ var _ api.PhaseVoltages = (*EnergyMeter)(nil)
 
 // Voltages implements the api.PhaseVoltages interface
 func (sh *EnergyMeter) Voltages() (float64, float64, float64, error) {
-	var res StatusResponse
-	if err := sh.Connection.execGen2Cmd("EM.GetStatus", false, &res); err != nil {
+	res, err := sh.gen2EMStatusG.Get()
+	if err != nil {
 		return 0, 0, 0, err
 	}
 
@@ -62,8 +62,8 @@ var _ api.PhasePowers = (*EnergyMeter)(nil)
 
 // Powers implements the api.PhasePowers interface
 func (sh *EnergyMeter) Powers() (float64, float64, float64, error) {
-	var res StatusResponse
-	if err := sh.Connection.execGen2Cmd("EM.GetStatus", false, &res); err != nil {
+	res, err := sh.gen2EMStatusG.Get()
+	if err != nil {
 		return 0, 0, 0, err
 	}
 
