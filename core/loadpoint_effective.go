@@ -7,14 +7,14 @@ import (
 
 // publishEffectiveValues publishes all effective values
 func (lp *Loadpoint) publishEffectiveValues() {
-	lp.publish(keys.EffectivePriority, lp.effectivePriority())
+	lp.publish(keys.EffectivePriority, lp.EffectivePriority())
 	lp.publish(keys.EffectiveMinCurrent, lp.effectiveMinCurrent())
 	lp.publish(keys.EffectiveMaxCurrent, lp.effectiveMaxCurrent())
 	lp.publish(keys.EffectiveLimitSoc, lp.effectiveLimitSoc())
 }
 
-// effectivePriority returns the effective priority
-func (lp *Loadpoint) effectivePriority() int {
+// EffectivePriority returns the effective priority
+func (lp *Loadpoint) EffectivePriority() int {
 	if v := lp.GetVehicle(); v != nil {
 		if res, ok := v.OnIdentified().GetPriority(); ok {
 			return res
@@ -33,6 +33,7 @@ func (lp *Loadpoint) effectiveMinCurrent() float64 {
 
 	if c, ok := lp.charger.(api.CurrentLimiter); ok {
 		if res, _, err := c.GetMinMaxCurrent(); err == nil {
+			lp.publish(keys.EffectiveMinCurrent, res)
 			return res
 		}
 	}
@@ -50,6 +51,7 @@ func (lp *Loadpoint) effectiveMaxCurrent() float64 {
 
 	if c, ok := lp.charger.(api.CurrentLimiter); ok {
 		if _, res, err := c.GetMinMaxCurrent(); err == nil {
+			lp.publish(keys.EffectiveMaxCurrent, res)
 			return res
 		}
 	}
@@ -57,8 +59,7 @@ func (lp *Loadpoint) effectiveMaxCurrent() float64 {
 	return lp.GetMaxCurrent()
 }
 
-// effectiveLimitSoc returns the effective session limit soc.
-// Session takes precedence over vehicle.
+// effectiveLimitSoc returns the effective session limit soc
 // TODO take vehicle api limits into account
 func (lp *Loadpoint) effectiveLimitSoc() int {
 	lp.RLock()

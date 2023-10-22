@@ -66,7 +66,7 @@ func (lp *Loadpoint) SetMode(mode api.ChargeMode) {
 	}
 }
 
-// getChargedEnergy returns plan target energy in Wh
+// getChargedEnergy returns session charge energy in Wh
 func (lp *Loadpoint) getChargedEnergy() float64 {
 	lp.RLock()
 	defer lp.RUnlock()
@@ -91,13 +91,6 @@ func (lp *Loadpoint) SetPriority(prio int) {
 		lp.Priority_ = prio
 		lp.publish(keys.Priority, prio)
 	}
-}
-
-// EffectivePriority returns the loadpoint effective priority
-func (lp *Loadpoint) EffectivePriority() int {
-	lp.RLock()
-	defer lp.RUnlock()
-	return lp.effectivePriority()
 }
 
 // GetPhases returns loadpoint enabled phases
