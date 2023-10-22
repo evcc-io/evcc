@@ -125,8 +125,9 @@ func (lp *Loadpoint) setActiveVehicle(vehicle api.Vehicle) {
 	// lock api
 	lp.Lock()
 
-	// reset plan energy
-	lp.setPlanEnergy(0)
+	// reset session values
+	lp.setLimitSoc(0)
+	lp.setLimitEnergy(0)
 
 	// unlock api
 	lp.Unlock()
@@ -163,6 +164,9 @@ func (lp *Loadpoint) setActiveVehicle(vehicle api.Vehicle) {
 	// re-publish vehicle settings
 	lp.publish(keys.PhasesActive, lp.activePhases())
 	lp.unpublishVehicle()
+
+	// publish effective values
+	lp.publishEffectiveValues()
 
 	lp.updateSession(func(session *session.Session) {
 		var title string

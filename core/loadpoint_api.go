@@ -31,7 +31,7 @@ func (lp *Loadpoint) GetStatus() api.ChargeStatus {
 func (lp *Loadpoint) GetMode() api.ChargeMode {
 	lp.RLock()
 	defer lp.RUnlock()
-	return lp.Mode
+	return lp.mode
 }
 
 // SetMode sets loadpoint charge mode
@@ -47,8 +47,8 @@ func (lp *Loadpoint) SetMode(mode api.ChargeMode) {
 	lp.log.DEBUG.Printf("set charge mode: %s", string(mode))
 
 	// apply immediately
-	if lp.Mode != mode {
-		lp.Mode = mode
+	if lp.mode != mode {
+		lp.mode = mode
 		lp.publish(keys.Mode, mode)
 
 		// reset timers
@@ -88,8 +88,15 @@ func (lp *Loadpoint) SetPriority(prio int) {
 
 	if lp.Priority_ != prio {
 		lp.Priority_ = prio
-		lp.publish(keys.Priority, lp.effectivePriority())
+		lp.publish(keys.Priority, prio)
 	}
+}
+
+// EffectivePriority returns the loadpoint effective priority
+func (lp *Loadpoint) EffectivePriority() int {
+	lp.RLock()
+	defer lp.RUnlock()
+	return lp.effectivePriority()
 }
 
 // GetPhases returns loadpoint enabled phases
@@ -134,8 +141,10 @@ func (lp *Loadpoint) GetLimitSoc() int {
 // setLimitSoc sets the session limit soc (no mutex)
 func (lp *Loadpoint) setLimitSoc(soc int) {
 	lp.limitSoc = soc
-	lp.publish(keys.LimitSoc, soc)
 	lp.settings.SetInt(keys.LimitSoc, int64(soc))
+	lp.publish(keys.LimitSoc, soc)
+	// TODO locking and more values
+	// lp.publish(keys.EffectiveLimitSoc, lp.effectiveLimitSoc())
 }
 
 // SetLimitSoc sets the session soc limit
