@@ -8,7 +8,7 @@ products:
   - brand: TinkerForge
     description:
       generic: WARP Charger Pro
-capabilities: ["mA", "1p3p"]
+capabilities: ["mA", "1p3p", "rfid"]
 requirements:
   description:
     en: Firmware v2 required. Automatic phase switching requires the additional WARP Energy Manager.
