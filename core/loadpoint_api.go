@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/wrapper"
 )
@@ -48,7 +49,7 @@ func (lp *Loadpoint) SetMode(mode api.ChargeMode) {
 	// apply immediately
 	if lp.Mode != mode {
 		lp.Mode = mode
-		lp.publish("mode", mode)
+		lp.publish(keys.Mode, mode)
 
 		// reset timers
 		switch mode {
@@ -87,7 +88,7 @@ func (lp *Loadpoint) SetPriority(prio int) {
 
 	if lp.Priority_ != prio {
 		lp.Priority_ = prio
-		lp.publish("priority", prio)
+		lp.publish(keys.Priority, prio)
 	}
 }
 
@@ -133,7 +134,7 @@ func (lp *Loadpoint) GetSessionLimitSoc() int {
 // setSessionLimitSoc sets the session limit soc (no mutex)
 func (lp *Loadpoint) setSessionLimitSoc(soc int) {
 	lp.sessionLimitSoc = soc
-	lp.publish(limitSoc, soc)
+	lp.publish(keys.LimitSoc, soc)
 }
 
 // SetSessionLimitSoc sets the session soc limit
@@ -147,7 +148,7 @@ func (lp *Loadpoint) SetSessionLimitSoc(soc int) {
 	if lp.sessionLimitSoc != soc {
 		lp.setSessionLimitSoc(soc)
 		lp.requestUpdate()
-		lp.settings.SetInt(limitSoc, int64(soc))
+		lp.settings.SetInt(keys.LimitSoc, int64(soc))
 	}
 }
 
@@ -161,7 +162,7 @@ func (lp *Loadpoint) GetSessionLimitEnergy() float64 {
 // setSessionLimitEnergy sets the session limit energy (no mutex)
 func (lp *Loadpoint) setSessionLimitEnergy(energy float64) {
 	lp.sessionLimitEnergy = energy
-	lp.publish(limitEnergy, energy)
+	lp.publish(keys.LimitEnergy, energy)
 }
 
 // SetSessionLimitEnergy sets the session energy limit
@@ -175,7 +176,7 @@ func (lp *Loadpoint) SetSessionLimitEnergy(energy float64) {
 	if lp.sessionLimitEnergy != energy {
 		lp.setSessionLimitEnergy(energy)
 		lp.requestUpdate()
-		lp.settings.SetFloat(limitEnergy, energy)
+		lp.settings.SetFloat(keys.LimitEnergy, energy)
 	}
 }
 
@@ -189,7 +190,7 @@ func (lp *Loadpoint) GetPlanTime() time.Time {
 // setPlanTime sets the charge plan time
 func (lp *Loadpoint) setPlanTime(finishAt time.Time) {
 	lp.planTime = finishAt
-	lp.publish(planTime, finishAt)
+	lp.publish(keys.PlanTime, finishAt)
 
 	if finishAt.IsZero() {
 		lp.setPlanActive(false)
@@ -206,7 +207,7 @@ func (lp *Loadpoint) GetPlanEnergy() float64 {
 // setPlanEnergy sets plan target energy (no mutex)
 func (lp *Loadpoint) setPlanEnergy(energy float64) {
 	lp.planEnergy = energy
-	lp.publish(planEnergy, energy)
+	lp.publish(keys.PlanEnergy, energy)
 
 	if energy == 0 {
 		lp.setPlanActive(false)
@@ -231,8 +232,8 @@ func (lp *Loadpoint) SetPlanEnergy(finishAt time.Time, energy float64) error {
 		lp.requestUpdate()
 
 		// TODO decide persisting in api vs internal setter
-		lp.settings.SetFloat(planEnergy, energy)
-		lp.settings.SetTime(planTime, finishAt)
+		lp.settings.SetFloat(keys.PlanEnergy, energy)
+		lp.settings.SetTime(keys.PlanTime, finishAt)
 	}
 
 	return nil
@@ -289,8 +290,8 @@ func (lp *Loadpoint) RemoteControl(source string, demand loadpoint.RemoteDemand)
 	if lp.remoteDemand != demand {
 		lp.remoteDemand = demand
 
-		lp.publish("remoteDisabled", demand)
-		lp.publish("remoteDisabledSource", source)
+		lp.publish(keys.RemoteDisabled, demand)
+		lp.publish(keys.RemoteDisabledSource, source)
 
 		lp.requestUpdate()
 	}
@@ -341,7 +342,7 @@ func (lp *Loadpoint) SetMinCurrent(current float64) {
 
 	if current != lp.MinCurrent {
 		lp.MinCurrent = current
-		lp.publish(minCurrent, lp.MinCurrent)
+		lp.publish(keys.MinCurrent, lp.MinCurrent)
 	}
 }
 
@@ -361,7 +362,7 @@ func (lp *Loadpoint) SetMaxCurrent(current float64) {
 
 	if current != lp.MaxCurrent {
 		lp.MaxCurrent = current
-		lp.publish(maxCurrent, lp.MaxCurrent)
+		lp.publish(keys.MaxCurrent, lp.MaxCurrent)
 	}
 }
 
@@ -393,7 +394,7 @@ func (lp *Loadpoint) SetRemainingDuration(chargeRemainingDuration time.Duration)
 func (lp *Loadpoint) setRemainingDuration(remainingDuration time.Duration) {
 	if lp.chargeRemainingDuration != remainingDuration {
 		lp.chargeRemainingDuration = remainingDuration
-		lp.publish(chargeRemainingDuration, remainingDuration)
+		lp.publish(keys.ChargeRemainingDuration, remainingDuration)
 	}
 }
 
@@ -415,7 +416,7 @@ func (lp *Loadpoint) SetRemainingEnergy(chargeRemainingEnergy float64) {
 func (lp *Loadpoint) setRemainingEnergy(chargeRemainingEnergy float64) {
 	if lp.chargeRemainingEnergy != chargeRemainingEnergy {
 		lp.chargeRemainingEnergy = chargeRemainingEnergy
-		lp.publish("chargeRemainingEnergy", chargeRemainingEnergy)
+		lp.publish(keys.ChargeRemainingEnergy, chargeRemainingEnergy)
 	}
 }
 

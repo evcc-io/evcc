@@ -2,6 +2,7 @@ package core
 
 import (
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/keys"
 )
 
 // setConfiguredPhases sets the default phase configuration
@@ -13,9 +14,9 @@ func (lp *Loadpoint) setConfiguredPhases(phases int) {
 
 	// publish 1p3p capability and phase configuration
 	if _, ok := lp.charger.(api.PhaseSwitcher); ok {
-		lp.publish(phasesConfigured, lp.ConfiguredPhases)
+		lp.publish(keys.PhasesConfigured, lp.ConfiguredPhases)
 	} else {
-		lp.publish(phasesConfigured, nil)
+		lp.publish(keys.PhasesConfigured, nil)
 	}
 }
 
@@ -27,7 +28,7 @@ func (lp *Loadpoint) setPhases(phases int) {
 		lp.Unlock()
 
 		// publish updated phase configuration
-		lp.publish(phasesEnabled, lp.phases)
+		lp.publish(keys.PhasesEnabled, lp.phases)
 
 		// reset timer to disabled state
 		lp.resetPhaseTimer()
@@ -43,7 +44,7 @@ func (lp *Loadpoint) resetMeasuredPhases() {
 	lp.measuredPhases = 0
 	lp.Unlock()
 
-	lp.publish(phasesActive, lp.activePhases())
+	lp.publish(keys.PhasesActive, lp.activePhases())
 }
 
 // getMeasuredPhases provides synchronized access to measuredPhases

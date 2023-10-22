@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/planner"
 	"github.com/evcc-io/evcc/core/vehicle"
 )
@@ -24,7 +25,7 @@ func (lp *Loadpoint) setPlanActive(active bool) {
 	}
 	if lp.planActive != active {
 		lp.planActive = active
-		lp.publish(planActive, lp.planActive)
+		lp.publish(keys.PlanActive, lp.planActive)
 	}
 }
 
@@ -95,7 +96,7 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 	}
 
 	planStart := planner.Start(plan)
-	lp.publish(planProjectedStart, planStart)
+	lp.publish(keys.PlanProjectedStart, planStart)
 
 	var requiredString string
 	if req := requiredDuration.Round(time.Second); req > planner.Duration(plan).Round(time.Second) {
