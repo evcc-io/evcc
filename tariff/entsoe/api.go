@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"sort"
 	"time"
 
 	"github.com/dylanmei/iso8601"
@@ -42,16 +41,18 @@ func DayAheadPricesRequest(domain string, duration time.Duration) *http.Request 
 	return req
 }
 
-// RateData defines the per-unit Value over a period of time spanning ValidityStart and ValidityEnd.
+// RateData defines the per-unit Value over a period of time spanning Start and End.
 type RateData struct {
-	ValidityStart time.Time
-	ValidityEnd   time.Time
-	Value         float64
+	Start time.Time
+	End   time.Time
+	Value float64
 }
 
 // GetTsPriceData accepts a set of TimeSeries data entries, and
 // returns a sorted array of RateData based on the timestamp of each data entry.
 func GetTsPriceData(ts []TimeSeries, resolution ResolutionType) ([]RateData, error) {
+	var res []RateData
+
 	for _, v := range ts {
 		if v.Period.Resolution != resolution {
 			continue
@@ -62,16 +63,14 @@ func GetTsPriceData(ts []TimeSeries, resolution ResolutionType) ([]RateData, err
 			return nil, err
 		}
 
-		// Now sort all entries by timestamp.
-		// Not sure if this is entirely necessary for evcc's use, could consider removing this if it becomes a performance issue.
-		sort.Slice(data, func(i, j int) bool {
-			return data[i].ValidityStart.Before(data[j].ValidityStart)
-		})
-
-		return data, nil
+		res = append(res, data...)
 	}
 
-	return nil, fmt.Errorf("no data for resolution: %v", resolution)
+	if len(res) == 0 {
+		return nil, fmt.Errorf("no data for resolution: %v", resolution)
+	}
+
+	return res, nil
 }
 
 // ExtractTsPriceData massages the given TimeSeries data set to provide RateData entries with associated start and end timestamps.
@@ -83,34 +82,31 @@ func ExtractTsPriceData(timeseries *TimeSeries) ([]RateData, error) {
 		return nil, err
 	}
 
-	// tCurrencyUnit := timeseries.CurrencyUnitName
-	// tPriceMeasureUnit := timeseries.PriceMeasureUnitName
-	// Brief check just to make sure we're about to decode the data as expected.
-	if timeseries.PriceMeasureUnitName != "MWH" {
-		return nil, fmt.Errorf("%w: price data not in expected unit", ErrInvalidData)
+	if unit := timeseries.PriceMeasureUnitName; unit != "MWH" {
+		return nil, fmt.Errorf("%w: invalid unit: %s", ErrInvalidData, unit)
 	}
 
-	tPointer := timeseries.Period.TimeInterval.Start.Time
+	ts := timeseries.Period.TimeInterval.Start.Time
 	for _, point := range timeseries.Period.Point {
 		d := RateData{
-			Value:         point.PriceAmount / 1e3, // Price/MWh to Price/kWh
-			ValidityStart: tPointer,
+			Value: point.PriceAmount / 1e3, // Price/MWh to Price/kWh
+			Start: ts,
 		}
 
 		// Nudge pointer on as required by defined data resolution
 		switch timeseries.Period.Resolution {
 		case ResolutionQuarterHour, ResolutionHalfHour, ResolutionHour:
-			tPointer = tPointer.Add(duration)
+			ts = ts.Add(duration)
 		case ResolutionDay:
-			tPointer = tPointer.AddDate(0, 0, 1)
+			ts = ts.AddDate(0, 0, 1)
 		case ResolutionWeek:
-			tPointer = tPointer.AddDate(0, 0, 7)
+			ts = ts.AddDate(0, 0, 7)
 		case ResolutionYear:
-			tPointer = tPointer.AddDate(0, 1, 0)
+			ts = ts.AddDate(1, 0, 0)
 		default:
-			return nil, fmt.Errorf("invalid resolution: %v", timeseries.Period.Resolution)
+			return nil, fmt.Errorf("%w: invalid resolution: %v", ErrInvalidData, timeseries.Period.Resolution)
 		}
-		d.ValidityEnd = tPointer
+		d.End = ts
 
 		data = append(data, d)
 	}
