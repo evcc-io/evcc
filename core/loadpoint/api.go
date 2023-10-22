@@ -56,24 +56,24 @@ type API interface {
 	// SetPhases sets the enabled phases
 	SetPhases(int) error
 
-	// GetPlanSoc returns the plan soc
-	GetPlanSoc() int
-	// SetPlanSoc sets the plan soc
-	SetPlanSoc(soc int)
+	// GetSessionLimitSoc returns the session limit soc
+	GetSessionLimitSoc() int
+	// SetSessionLimitSoc sets the session limit soc
+	SetSessionLimitSoc(soc int)
+	// GetSessionLimitEnergy returns the session limit energy
+	GetSessionLimitEnergy() float64
+	// SetSessionLimitEnergy sets the session limit energy
+	SetSessionLimitEnergy(energy float64)
+
 	// GetPlanTime returns the plan time
 	GetPlanTime() time.Time
-	// SetPlanTime sets the plan time
-	SetPlanTime(time.Time) error
 	// GetPlanEnergy returns the charge plan energy
 	GetPlanEnergy() float64
 	// SetPlanEnergy sets the charge plan energy
-	SetPlanEnergy(float64)
-	// GetSessionLimitSoc returns the session limit soc
-	GetSessionLimitSoc() int
-	// SetSessionLimitSoc sets the session soc limit
-	SetSessionLimitSoc(soc int)
+	SetPlanEnergy(time.Time, float64) error
 	// GetPlan creates a charging plan
 	GetPlan(targetTime time.Time, maxPower float64) (time.Duration, api.Rates, error)
+
 	// GetEnableThreshold gets the loadpoint enable threshold
 	GetEnableThreshold() float64
 	// SetEnableThreshold sets loadpoint enable threshold

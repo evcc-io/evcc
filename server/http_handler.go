@@ -282,8 +282,44 @@ func remoteDemandHandler(lp loadpoint.API) http.HandlerFunc {
 	}
 }
 
-// planTimeHandler updates plan time
-func planTimeHandler(lp loadpoint.API) http.HandlerFunc {
+// planHandler starts vehicle detection
+func planHandler(lp loadpoint.API) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var err error
+
+		planTime := lp.GetPlanTime()
+		if t := r.URL.Query().Get("planTime"); t != "" {
+			planTime, err = time.Parse(time.RFC3339, t)
+		}
+
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		power := lp.GetMaxPower()
+		requiredDuration, plan, err := lp.GetPlan(planTime, power)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		res := struct {
+			Duration int64     `json:"duration"`
+			Plan     api.Rates `json:"plan"`
+			Unit     string    `json:"unit"`
+			Power    float64   `json:"power"`
+		}{
+			Duration: int64(requiredDuration.Seconds()),
+			Plan:     plan,
+			Power:    power,
+		}
+		jsonResult(w, res)
+	}
+}
+
+// planEnergyHandler updates plan energy and time
+func planEnergyHandler(lp loadpoint.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
@@ -295,17 +331,23 @@ func planTimeHandler(lp loadpoint.API) http.HandlerFunc {
 			return
 		}
 
-		if err := lp.SetPlanTime(timeV); err != nil {
+		valueS, ok := vars["value"]
+		valueV, err := strconv.ParseFloat(valueS, 64)
+
+		if !ok || err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		if err := lp.SetPlanEnergy(timeV, valueV); err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
 
 		res := struct {
-			Soc    int       `json:"soc"`
 			Energy float64   `json:"energy"`
 			Time   time.Time `json:"time"`
 		}{
-			Soc:    lp.GetPlanSoc(),
 			Energy: lp.GetPlanEnergy(),
 			Time:   lp.GetPlanTime(),
 		}
@@ -314,10 +356,10 @@ func planTimeHandler(lp loadpoint.API) http.HandlerFunc {
 	}
 }
 
-// planTimeRemoveHandler removes plan time
-func planTimeRemoveHandler(lp loadpoint.API) http.HandlerFunc {
+// planRemoveHandler removes plan time
+func planRemoveHandler(lp loadpoint.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if err := lp.SetPlanTime(time.Time{}); err != nil {
+		if err := lp.SetPlanEnergy(time.Time{}, 0); err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
@@ -368,42 +410,6 @@ func vehicleDetectHandler(lp loadpoint.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		lp.StartVehicleDetection()
 		res := struct{}{}
-		jsonResult(w, res)
-	}
-}
-
-// planHandler starts vehicle detection
-func planHandler(lp loadpoint.API) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		var err error
-
-		planTime := lp.GetPlanTime()
-		if t := r.URL.Query().Get("planTime"); t != "" {
-			planTime, err = time.Parse(time.RFC3339, t)
-		}
-
-		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			return
-		}
-
-		power := lp.GetMaxPower()
-		requiredDuration, plan, err := lp.GetPlan(planTime, power)
-		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			return
-		}
-
-		res := struct {
-			Duration int64     `json:"duration"`
-			Plan     api.Rates `json:"plan"`
-			Unit     string    `json:"unit"`
-			Power    float64   `json:"power"`
-		}{
-			Duration: int64(requiredDuration.Seconds()),
-			Plan:     plan,
-			Power:    power,
-		}
 		jsonResult(w, res)
 	}
 }

@@ -658,7 +658,8 @@ func configureLoadpoints(conf globalConfig) (loadpoints []*core.Loadpoint, err e
 		}
 
 		log := util.NewLoggerWithLoadpoint("lp-"+strconv.Itoa(id+1), id+1)
-		lp, err := core.NewLoadpointFromConfig(log, lpc)
+		settings := &core.Settings{Key: "lp" + strconv.Itoa(id+1) + "."}
+		lp, err := core.NewLoadpointFromConfig(log, settings, lpc)
 		if err != nil {
 			return nil, fmt.Errorf("failed configuring loadpoint: %w", err)
 		}

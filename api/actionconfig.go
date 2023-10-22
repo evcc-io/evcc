@@ -13,7 +13,6 @@ type ActionConfig struct {
 	Mode       *ChargeMode `mapstructure:"mode,omitempty"`       // Charge Mode
 	MinCurrent *float64    `mapstructure:"minCurrent,omitempty"` // Minimum Current
 	MaxCurrent *float64    `mapstructure:"maxCurrent,omitempty"` // Maximum Current
-	MinSoc     *int        `mapstructure:"minSoc,omitempty"`     // Minimum Soc (vehicle only)
 	LimitSoc   *int        `mapstructure:"limitSoc,omitempty"`   // Limit Soc
 	Priority   *int        `mapstructure:"priority,omitempty"`   // Priority
 }
@@ -49,13 +48,6 @@ func (a ActionConfig) GetMaxCurrent() (float64, error) {
 		return 0, ErrNotAvailable
 	}
 	return *a.MaxCurrent, nil
-}
-
-func (a ActionConfig) GetMinSoc() (int, error) {
-	if a.MinSoc == nil {
-		return 0, ErrNotAvailable
-	}
-	return *a.MinSoc, nil
 }
 
 func (a ActionConfig) GetLimitSoc() (int, error) {

@@ -1,6 +1,8 @@
 package coordinator
 
-import "github.com/evcc-io/evcc/api"
+import (
+	"github.com/evcc-io/evcc/api"
+)
 
 // API is the coordinator API
 type API interface {

@@ -71,34 +71,6 @@ func (lp *Loadpoint) getChargedEnergy() float64 {
 	return lp.sessionEnergy.TotalWh()
 }
 
-// GetPlanEnergy returns plan target energy
-func (lp *Loadpoint) GetPlanEnergy() float64 {
-	lp.RLock()
-	defer lp.RUnlock()
-	return lp.planEnergy
-}
-
-// setPlanEnergy sets plan target energy (no mutex)
-func (lp *Loadpoint) setPlanEnergy(energy float64) {
-	lp.planEnergy = energy
-	lp.publish(planEnergy, energy)
-}
-
-// SetPlanEnergy sets plan target energy
-func (lp *Loadpoint) SetPlanEnergy(energy float64) {
-	lp.Lock()
-	defer lp.Unlock()
-
-	lp.log.DEBUG.Println("set target energy:", energy)
-
-	// apply immediately
-	if lp.planEnergy != energy {
-		lp.setPlanEnergy(energy)
-		lp.requestUpdate()
-		lp.persistVehicleSettings()
-	}
-}
-
 // GetPriority returns the loadpoint priority
 func (lp *Loadpoint) GetPriority() int {
 	lp.RLock()
@@ -116,35 +88,6 @@ func (lp *Loadpoint) SetPriority(prio int) {
 	if lp.Priority_ != prio {
 		lp.Priority_ = prio
 		lp.publish("priority", prio)
-	}
-}
-
-// GetSessionLimitSoc returns the session limit soc
-func (lp *Loadpoint) GetSessionLimitSoc() int {
-	lp.RLock()
-	defer lp.RUnlock()
-	return lp.sessionLimitSoc
-}
-
-// setSessionLimitSoc sets the session limit soc (no mutex)
-func (lp *Loadpoint) setSessionLimitSoc(soc int) {
-	lp.sessionLimitSoc = soc
-	// TODO decide name
-	lp.publish(limitSoc, soc)
-}
-
-// SetSessionLimitSoc sets the session soc limit
-func (lp *Loadpoint) SetSessionLimitSoc(soc int) {
-	lp.Lock()
-	defer lp.Unlock()
-
-	lp.log.DEBUG.Println("set session soc limit:", soc)
-
-	// apply immediately
-	if lp.sessionLimitSoc != soc {
-		lp.setSessionLimitSoc(soc)
-		lp.requestUpdate()
-		lp.persistVehicleSettings()
 	}
 }
 
@@ -180,23 +123,59 @@ func (lp *Loadpoint) SetPhases(phases int) error {
 	return nil
 }
 
-// GetPlanSoc returns the plan soc
-func (lp *Loadpoint) GetPlanSoc() int {
+// GetSessionLimitSoc returns the session limit soc
+func (lp *Loadpoint) GetSessionLimitSoc() int {
 	lp.RLock()
 	defer lp.RUnlock()
-	return lp.planSoc
+	return lp.sessionLimitSoc
 }
 
-// SetPlanSoc sets the plan soc
-func (lp *Loadpoint) SetPlanSoc(soc int) {
+// setSessionLimitSoc sets the session limit soc (no mutex)
+func (lp *Loadpoint) setSessionLimitSoc(soc int) {
+	lp.sessionLimitSoc = soc
+	lp.publish(limitSoc, soc)
+}
+
+// SetSessionLimitSoc sets the session soc limit
+func (lp *Loadpoint) SetSessionLimitSoc(soc int) {
 	lp.Lock()
 	defer lp.Unlock()
 
-	lp.log.DEBUG.Println("set plan soc:", soc)
+	lp.log.DEBUG.Println("set session soc limit:", soc)
 
-	if lp.planSoc != soc {
-		lp.planSoc = soc
-		lp.publish("planSoc", soc)
+	// apply immediately
+	if lp.sessionLimitSoc != soc {
+		lp.setSessionLimitSoc(soc)
+		lp.requestUpdate()
+		lp.settings.SetInt(limitSoc, int64(soc))
+	}
+}
+
+// GetSessionLimitEnergy returns the session limit energy
+func (lp *Loadpoint) GetSessionLimitEnergy() float64 {
+	lp.RLock()
+	defer lp.RUnlock()
+	return lp.sessionLimitEnergy
+}
+
+// setSessionLimitEnergy sets the session limit energy (no mutex)
+func (lp *Loadpoint) setSessionLimitEnergy(energy float64) {
+	lp.sessionLimitEnergy = energy
+	lp.publish(limitEnergy, energy)
+}
+
+// SetSessionLimitEnergy sets the session energy limit
+func (lp *Loadpoint) SetSessionLimitEnergy(energy float64) {
+	lp.Lock()
+	defer lp.Unlock()
+
+	lp.log.DEBUG.Println("set session energy limit:", energy)
+
+	// apply immediately
+	if lp.sessionLimitEnergy != energy {
+		lp.setSessionLimitEnergy(energy)
+		lp.requestUpdate()
+		lp.settings.SetFloat(limitEnergy, energy)
 	}
 }
 
@@ -207,29 +186,56 @@ func (lp *Loadpoint) GetPlanTime() time.Time {
 	return lp.planTime
 }
 
-// SetPlanTime sets the charge plan time
-func (lp *Loadpoint) SetPlanTime(finishAt time.Time) error {
-	if !finishAt.IsZero() && finishAt.Before(time.Now()) {
-		return errors.New("timestamp is in the past")
-	}
-
-	lp.Lock()
-	defer lp.Unlock()
-	lp.setPlanTime(finishAt)
-	lp.persistVehicleSettings()
-
-	return nil
-}
-
 // setPlanTime sets the charge plan time
 func (lp *Loadpoint) setPlanTime(finishAt time.Time) {
 	lp.planTime = finishAt
 	lp.publish(planTime, finishAt)
 
-	// TODO planActive is not guarded by mutex
 	if finishAt.IsZero() {
 		lp.setPlanActive(false)
 	}
+}
+
+// GetPlanEnergy returns plan target energy
+func (lp *Loadpoint) GetPlanEnergy() float64 {
+	lp.RLock()
+	defer lp.RUnlock()
+	return lp.planEnergy
+}
+
+// setPlanEnergy sets plan target energy (no mutex)
+func (lp *Loadpoint) setPlanEnergy(energy float64) {
+	lp.planEnergy = energy
+	lp.publish(planEnergy, energy)
+
+	if energy == 0 {
+		lp.setPlanActive(false)
+	}
+}
+
+// SetPlanEnergy sets plan target energy
+func (lp *Loadpoint) SetPlanEnergy(finishAt time.Time, energy float64) error {
+	lp.Lock()
+	defer lp.Unlock()
+
+	if !finishAt.IsZero() && finishAt.Before(time.Now()) {
+		return errors.New("timestamp is in the past")
+	}
+
+	lp.log.DEBUG.Println("set plan energy:", energy)
+
+	// apply immediately
+	if lp.planEnergy != energy || !lp.planTime.Equal(finishAt) {
+		lp.setPlanEnergy(energy)
+		lp.setPlanTime(finishAt)
+		lp.requestUpdate()
+
+		// TODO decide persisting in api vs internal setter
+		lp.settings.SetFloat(planEnergy, energy)
+		lp.settings.SetTime(planTime, finishAt)
+	}
+
+	return nil
 }
 
 // GetEnableThreshold gets the loadpoint enable threshold

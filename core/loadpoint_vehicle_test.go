@@ -156,8 +156,8 @@ func TestDefaultVehicle(t *testing.T) {
 	dflt.EXPECT().Capacity().AnyTimes()
 	dflt.EXPECT().Phases().AnyTimes()
 	dflt.EXPECT().OnIdentified().Return(api.ActionConfig{
-		Mode:      &mode,
-		TargetSoc: &targetsoc,
+		Mode:     &mode,
+		LimitSoc: &targetsoc,
 	}).AnyTimes()
 
 	vehicle := mock.NewMockVehicle(ctrl)
@@ -180,7 +180,6 @@ func TestDefaultVehicle(t *testing.T) {
 		Priority:   &zero,
 	}
 
-	lp.collectDefaults()
 	assert.Equal(t, lp.onDisconnect, onDisconnect)
 
 	// populate channels
@@ -227,7 +226,7 @@ func TestApplyVehicleDefaults(t *testing.T) {
 			Mode:       &mode,
 			MinCurrent: &minCurrent,
 			MaxCurrent: &maxCurrent,
-			TargetSoc:  targetSoc,
+			LimitSoc:   targetSoc,
 		}
 	}
 
@@ -261,7 +260,7 @@ func TestApplyVehicleDefaults(t *testing.T) {
 	lp.ResetOnDisconnect = true
 
 	// check loadpoint default currents can't be violated
-	lp.applyAction(newConfig(*od.Mode, 5, 17, od.TargetSoc))
+	lp.applyAction(newConfig(*od.Mode, 5, 17, od.LimitSoc))
 	assertConfig(lp, od)
 
 	// vehicle identified

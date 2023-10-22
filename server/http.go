@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/core/site"
+	"github.com/evcc-io/evcc/core/vehicle"
 	"github.com/evcc-io/evcc/server/assets"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/telemetry"
@@ -124,17 +125,27 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, cache *util.Cache) {
 	}
 
 	// vehicle api
-	for id, v := range site.Vehicles() {
-		api := api.PathPrefix(fmt.Sprintf("/vehicles/%d", id+1)).Subrouter()
+	for _, v := range site.GetVehicles() {
+		dev := vehicle.Device(v)
+		vv := vehicle.Settings(v)
+		if dev == nil || vv == nil {
+			continue
+		}
+
+		name := dev.Config().Name
+		api := api.PathPrefix(fmt.Sprintf("/vehicles/%s", name)).Subrouter()
 
 		routes := map[string]route{
-			"mode":       {[]string{"POST", "OPTIONS"}, "/mode/{value:[a-z]+}", chargeModeHandler(v)},
-			"minsoc":     {[]string{"POST", "OPTIONS"}, "/minsoc/{value:[0-9]+}", intHandler(pass(v.SetMinSoc), v.GetMinSoc)},
-			"limitsoc":   {[]string{"POST", "OPTIONS"}, "/limitsoc/{value:[0-9]+}", intHandler(pass(v.SetLimitSoc), v.GetLimitSoc)},
-			"mincurrent": {[]string{"POST", "OPTIONS"}, "/mincurrent/{value:[0-9.]+}", floatHandler(pass(v.SetMinCurrent), v.GetMinCurrent)},
-			"maxcurrent": {[]string{"POST", "OPTIONS"}, "/maxcurrent/{value:[0-9.]+}", floatHandler(pass(v.SetMaxCurrent), v.GetMaxCurrent)},
-			"phases":     {[]string{"POST", "OPTIONS"}, "/phases/{value:[0-9]+}", phasesHandler(v)},
-			// "targetenergy": {[]string{"POST", "OPTIONS"}, "/target/energy/{value:[0-9.]+}", floatHandler(pass(v.SetTargetEnergy), v.GetTargetEnergy)},
+			"minsoc": {[]string{"POST", "OPTIONS"}, "/minsoc/{value:[0-9]+}", intHandler(pass(vv.SetMinSoc), vv.GetMinSoc)},
+			"plan":   {[]string{"POST", "OPTIONS"}, "/plan/soc/{value:[0-9]+}/{time:[0-9TZ:.-]+}", planSocHandler(vv)},
+			"plan2":  {[]string{"DELETE", "OPTIONS"}, "/plan/soc", planSocRemoveHandler(vv)},
+
+			// config ui
+			// "mode":     {[]string{"POST", "OPTIONS"}, "/mode/{value:[a-z]+}", chargeModeHandler(v)},
+			// "limitsoc": {[]string{"POST", "OPTIONS"}, "/limitsoc/{value:[0-9]+}", intHandler(pass(v.SetLimitSoc), v.GetLimitSoc)},
+			// "mincurrent": {[]string{"POST", "OPTIONS"}, "/mincurrent/{value:[0-9.]+}", floatHandler(pass(v.SetMinCurrent), v.GetMinCurrent)},
+			// "maxcurrent": {[]string{"POST", "OPTIONS"}, "/maxcurrent/{value:[0-9.]+}", floatHandler(pass(v.SetMaxCurrent), v.GetMaxCurrent)},
+			// "phases":     {[]string{"POST", "OPTIONS"}, "/phases/{value:[0-9]+}", intHandler(pass(v.SetMinSoc), v.GetMinSoc)},
 		}
 
 		for _, r := range routes {
@@ -146,18 +157,17 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, cache *util.Cache) {
 	for id, lp := range site.Loadpoints() {
 		api := api.PathPrefix(fmt.Sprintf("/loadpoints/%d", id+1)).Subrouter()
 
+		// TODO check vehicleHandler id
 		routes := map[string]route{
-			"mode": {[]string{"POST", "OPTIONS"}, "/mode/{value:[a-z]+}", chargeModeHandler(lp)},
-			// TODO decide name- maybe sessionsoc for clarity?
-			"limitsoc":         {[]string{"POST", "OPTIONS"}, "/limitsoc/{value:[0-9]+}", intHandler(pass(lp.SetSessionSocLimit), lp.GetSessionLimitSoc)},
+			"mode":             {[]string{"POST", "OPTIONS"}, "/mode/{value:[a-z]+}", chargeModeHandler(lp)},
+			"limitsoc":         {[]string{"POST", "OPTIONS"}, "/limitsoc/{value:[0-9]+}", intHandler(pass(lp.SetSessionLimitSoc), lp.GetSessionLimitSoc)},
+			"limitenergy":      {[]string{"POST", "OPTIONS"}, "/limitenergy/{value:[0-9.]+}", floatHandler(pass(lp.SetSessionLimitEnergy), lp.GetSessionLimitEnergy)},
 			"mincurrent":       {[]string{"POST", "OPTIONS"}, "/mincurrent/{value:[0-9.]+}", floatHandler(pass(lp.SetMinCurrent), lp.GetMinCurrent)},
 			"maxcurrent":       {[]string{"POST", "OPTIONS"}, "/maxcurrent/{value:[0-9.]+}", floatHandler(pass(lp.SetMaxCurrent), lp.GetMaxCurrent)},
 			"phases":           {[]string{"POST", "OPTIONS"}, "/phases/{value:[0-9]+}", phasesHandler(lp)},
-			"planenergy":       {[]string{"POST", "OPTIONS"}, "/plan/energy/{value:[0-9.]+}", floatHandler(pass(lp.SetPlanEnergy), lp.GetPlanEnergy)},
-			"plansoc":          {[]string{"POST", "OPTIONS"}, "/plan/soc/{value:[0-9]+}", intHandler(pass(lp.SetPlanSoc), lp.GetPlanSoc)},
-			"plantime":         {[]string{"POST", "OPTIONS"}, "/plan/time/{time:[0-9TZ:.-]+}", planTimeHandler(lp)},
-			"plantime2":        {[]string{"DELETE", "OPTIONS"}, "/plan/time", planTimeRemoveHandler(lp)},
-			"plan":             {[]string{"GET"}, "/target/plan", planHandler(lp)},
+			"plan":             {[]string{"GET"}, "/plan", planHandler(lp)},
+			"planenergy":       {[]string{"POST", "OPTIONS"}, "/plan/energy/{value:[0-9]+}/{time:[0-9TZ:.-]+}", planEnergyHandler(lp)},
+			"planenergy2":      {[]string{"DELETE", "OPTIONS"}, "/plan/energy", planRemoveHandler(lp)},
 			"vehicle":          {[]string{"POST", "OPTIONS"}, "/vehicle/{vehicle:[1-9][0-9]*}", vehicleHandler(site, lp)},
 			"vehicle2":         {[]string{"DELETE", "OPTIONS"}, "/vehicle", vehicleRemoveHandler(lp)},
 			"vehicleDetect":    {[]string{"PATCH", "OPTIONS"}, "/vehicle", vehicleDetectHandler(lp)},

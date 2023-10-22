@@ -10,7 +10,6 @@ import (
 type API interface {
 	Healthy() bool
 	Loadpoints() []loadpoint.API
-	Vehicles() []vehicle.API
 
 	//
 	// battery
@@ -36,6 +35,7 @@ type API interface {
 
 	// GetVehicles is the list of vehicles
 	GetVehicles() []api.Vehicle
+	VehicleSettings() []vehicle.API
 
 	//
 	// tariffs and costs

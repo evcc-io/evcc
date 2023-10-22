@@ -15,6 +15,7 @@ import (
 	"github.com/evcc-io/evcc/core/planner"
 	"github.com/evcc-io/evcc/core/session"
 	"github.com/evcc-io/evcc/core/soc"
+	"github.com/evcc-io/evcc/core/vehicle"
 	"github.com/evcc-io/evcc/core/wrapper"
 	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/push"
@@ -123,7 +124,8 @@ type Loadpoint struct {
 	MaxCurrent    float64       // Max allowed current. Physically ensured by the charger
 	GuardDuration time.Duration // charger enable/disable minimum holding time
 
-	sessionLimitSoc int // Session limit for soc
+	sessionLimitSoc    int     // Session limit for soc
+	sessionLimitEnergy float64 // Session limit for energy
 
 	enabled             bool      // Charger enabled state
 	phases              int       // Charger enabled phases, guarded by mutex
@@ -150,7 +152,6 @@ type Loadpoint struct {
 	// charge planning
 	planner     *planner.Planner
 	planTime    time.Time // time goal
-	planSoc     int       // Plan soc
 	planEnergy  float64   // Plan charge energy in kWh (dumb vehicles)
 	planSlotEnd time.Time // current plan slot end time
 	planActive  bool      // charge plan exists and has a currently active slot
@@ -177,11 +178,13 @@ type Loadpoint struct {
 	db      session.Database
 	session *session.Session
 
+	settings *Settings
+
 	tasks *util.Queue[Task] // tasks to be executed
 }
 
 // NewLoadpointFromConfig creates a new loadpoint
-func NewLoadpointFromConfig(log *util.Logger, other map[string]interface{}) (*Loadpoint, error) {
+func NewLoadpointFromConfig(log *util.Logger, settings *Settings, other map[string]interface{}) (*Loadpoint, error) {
 	lp := NewLoadpoint(log)
 	if err := util.DecodeOther(other, lp); err != nil {
 		return nil, err
@@ -259,6 +262,9 @@ func NewLoadpointFromConfig(log *util.Logger, other map[string]interface{}) (*Lo
 		lp.log.WARN.Printf("PV mode enable threshold %.0fW > 0 will start PV charging on grid power consumption. Did you mean -%.0f?", lp.Enable.Threshold, lp.Enable.Threshold)
 	}
 
+	lp.settings = settings
+	lp.restoreSettings()
+
 	return lp, nil
 }
 
@@ -291,6 +297,22 @@ func NewLoadpoint(log *util.Logger) *Loadpoint {
 	}
 
 	return lp
+}
+
+// restoreSettings restored loadpoint settings
+func (lp *Loadpoint) restoreSettings() {
+	if v, err := lp.settings.Time(planTime); err == nil {
+		lp.planTime = v
+	}
+	if v, err := lp.settings.Float(planEnergy); err == nil {
+		lp.planEnergy = v
+	}
+	if v, err := lp.settings.Int(limitSoc); err == nil {
+		lp.sessionLimitSoc = int(v)
+	}
+	if v, err := lp.settings.Float(limitEnergy); err == nil {
+		lp.sessionLimitEnergy = v
+	}
 }
 
 // requestUpdate requests site to update this loadpoint
@@ -775,13 +797,10 @@ func (lp *Loadpoint) limitSocReached() bool {
 // minSocNotReached checks if minimum is configured and not reached.
 // If vehicle is not configured this will always return false
 func (lp *Loadpoint) minSocNotReached() bool {
-	var minSoc int
-	vehicle := lp.GetVehicle()
-	if vehicle != nil {
-		minSoc, _ = vehicle.OnIdentified().GetMinSoc()
-	}
+	v := lp.GetVehicle()
+	minSoc := vehicle.Settings(v).GetMinSoc()
 
-	if vehicle == nil || minSoc == 0 {
+	if v == nil || minSoc == 0 {
 		return false
 	}
 
@@ -793,7 +812,7 @@ func (lp *Loadpoint) minSocNotReached() bool {
 		return active
 	}
 
-	minEnergy := vehicle.Capacity() * float64(minSoc) / 100 / soc.ChargeEfficiency
+	minEnergy := v.Capacity() * float64(minSoc) / 100 / soc.ChargeEfficiency
 	return minEnergy > 0 && lp.getChargedEnergy() < minEnergy
 }
 

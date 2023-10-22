@@ -67,16 +67,16 @@ func SetTime(key string, val time.Time) {
 	SetString(key, val.Format(time.RFC3339))
 }
 
+func SetBool(key string, val bool) {
+	SetString(key, strconv.FormatBool(val))
+}
+
 func SetJson(key string, val any) error {
 	b, err := json.Marshal(val)
 	if err == nil {
 		SetString(key, string(b))
 	}
 	return err
-}
-
-func SetBool(key string, val bool) {
-	SetString(key, strconv.FormatBool(val))
 }
 
 func String(key string) (string, error) {

@@ -16,6 +16,7 @@ import (
 	"github.com/evcc-io/evcc/core/prioritizer"
 	"github.com/evcc-io/evcc/core/session"
 	"github.com/evcc-io/evcc/core/soc"
+	"github.com/evcc-io/evcc/core/vehicle"
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/server/db"
 	"github.com/evcc-io/evcc/server/db/settings"
@@ -115,8 +116,11 @@ func NewSiteFromConfig(
 	site.loadpoints = loadpoints
 	site.tariffs = tariffs
 
-	site.coordinator = coordinator.New(log, config.Instances(config.Vehicles().Devices()))
-	config.Vehicles().Subscribe(site.updateVehicles)
+	handler := config.Vehicles()
+	vehicle.Handler = handler
+
+	site.coordinator = coordinator.New(log, config.Instances(handler.Devices()))
+	handler.Subscribe(site.updateVehicles)
 
 	site.prioritizer = prioritizer.New(log)
 	site.stats = NewStats()

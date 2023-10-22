@@ -77,6 +77,62 @@ func (mr *MockAPIMockRecorder) GetDisableThreshold() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDisableThreshold", reflect.TypeOf((*MockAPI)(nil).GetDisableThreshold))
 }
 
+// GetEffectiveLimitSoc mocks base method.
+func (m *MockAPI) GetEffectiveLimitSoc() int {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetEffectiveLimitSoc")
+	ret0, _ := ret[0].(int)
+	return ret0
+}
+
+// GetEffectiveLimitSoc indicates an expected call of GetEffectiveLimitSoc.
+func (mr *MockAPIMockRecorder) GetEffectiveLimitSoc() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEffectiveLimitSoc", reflect.TypeOf((*MockAPI)(nil).GetEffectiveLimitSoc))
+}
+
+// GetEffectiveMaxCurrent mocks base method.
+func (m *MockAPI) GetEffectiveMaxCurrent() float64 {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetEffectiveMaxCurrent")
+	ret0, _ := ret[0].(float64)
+	return ret0
+}
+
+// GetEffectiveMaxCurrent indicates an expected call of GetEffectiveMaxCurrent.
+func (mr *MockAPIMockRecorder) GetEffectiveMaxCurrent() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEffectiveMaxCurrent", reflect.TypeOf((*MockAPI)(nil).GetEffectiveMaxCurrent))
+}
+
+// GetEffectiveMinCurrent mocks base method.
+func (m *MockAPI) GetEffectiveMinCurrent() float64 {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetEffectiveMinCurrent")
+	ret0, _ := ret[0].(float64)
+	return ret0
+}
+
+// GetEffectiveMinCurrent indicates an expected call of GetEffectiveMinCurrent.
+func (mr *MockAPIMockRecorder) GetEffectiveMinCurrent() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEffectiveMinCurrent", reflect.TypeOf((*MockAPI)(nil).GetEffectiveMinCurrent))
+}
+
+// GetEffectivePriority mocks base method.
+func (m *MockAPI) GetEffectivePriority() int {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetEffectivePriority")
+	ret0, _ := ret[0].(int)
+	return ret0
+}
+
+// GetEffectivePriority indicates an expected call of GetEffectivePriority.
+func (mr *MockAPIMockRecorder) GetEffectivePriority() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEffectivePriority", reflect.TypeOf((*MockAPI)(nil).GetEffectivePriority))
+}
+
 // GetEnableThreshold mocks base method.
 func (m *MockAPI) GetEnableThreshold() float64 {
 	m.ctrl.T.Helper()
@@ -147,20 +203,6 @@ func (mr *MockAPIMockRecorder) GetMinPower() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMinPower", reflect.TypeOf((*MockAPI)(nil).GetMinPower))
 }
 
-// GetMinSoc mocks base method.
-func (m *MockAPI) GetMinSoc() int {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetMinSoc")
-	ret0, _ := ret[0].(int)
-	return ret0
-}
-
-// GetMinSoc indicates an expected call of GetMinSoc.
-func (mr *MockAPIMockRecorder) GetMinSoc() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMinSoc", reflect.TypeOf((*MockAPI)(nil).GetMinSoc))
-}
-
 // GetMode mocks base method.
 func (m *MockAPI) GetMode() api.ChargeMode {
 	m.ctrl.T.Helper()
@@ -205,6 +247,34 @@ func (mr *MockAPIMockRecorder) GetPlan(arg0, arg1 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPlan", reflect.TypeOf((*MockAPI)(nil).GetPlan), arg0, arg1)
 }
 
+// GetPlanEnergy mocks base method.
+func (m *MockAPI) GetPlanEnergy() float64 {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPlanEnergy")
+	ret0, _ := ret[0].(float64)
+	return ret0
+}
+
+// GetPlanEnergy indicates an expected call of GetPlanEnergy.
+func (mr *MockAPIMockRecorder) GetPlanEnergy() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPlanEnergy", reflect.TypeOf((*MockAPI)(nil).GetPlanEnergy))
+}
+
+// GetPlanTime mocks base method.
+func (m *MockAPI) GetPlanTime() time.Time {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPlanTime")
+	ret0, _ := ret[0].(time.Time)
+	return ret0
+}
+
+// GetPlanTime indicates an expected call of GetPlanTime.
+func (mr *MockAPIMockRecorder) GetPlanTime() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPlanTime", reflect.TypeOf((*MockAPI)(nil).GetPlanTime))
+}
+
 // GetPriority mocks base method.
 func (m *MockAPI) GetPriority() int {
 	m.ctrl.T.Helper()
@@ -247,6 +317,34 @@ func (mr *MockAPIMockRecorder) GetRemainingEnergy() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRemainingEnergy", reflect.TypeOf((*MockAPI)(nil).GetRemainingEnergy))
 }
 
+// GetSessionLimitEnergy mocks base method.
+func (m *MockAPI) GetSessionLimitEnergy() float64 {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSessionLimitEnergy")
+	ret0, _ := ret[0].(float64)
+	return ret0
+}
+
+// GetSessionLimitEnergy indicates an expected call of GetSessionLimitEnergy.
+func (mr *MockAPIMockRecorder) GetSessionLimitEnergy() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSessionLimitEnergy", reflect.TypeOf((*MockAPI)(nil).GetSessionLimitEnergy))
+}
+
+// GetSessionLimitSoc mocks base method.
+func (m *MockAPI) GetSessionLimitSoc() int {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSessionLimitSoc")
+	ret0, _ := ret[0].(int)
+	return ret0
+}
+
+// GetSessionLimitSoc indicates an expected call of GetSessionLimitSoc.
+func (mr *MockAPIMockRecorder) GetSessionLimitSoc() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSessionLimitSoc", reflect.TypeOf((*MockAPI)(nil).GetSessionLimitSoc))
+}
+
 // GetStatus mocks base method.
 func (m *MockAPI) GetStatus() api.ChargeStatus {
 	m.ctrl.T.Helper()
@@ -259,48 +357,6 @@ func (m *MockAPI) GetStatus() api.ChargeStatus {
 func (mr *MockAPIMockRecorder) GetStatus() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetStatus", reflect.TypeOf((*MockAPI)(nil).GetStatus))
-}
-
-// GetTargetEnergy mocks base method.
-func (m *MockAPI) GetTargetEnergy() float64 {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetTargetEnergy")
-	ret0, _ := ret[0].(float64)
-	return ret0
-}
-
-// GetTargetEnergy indicates an expected call of GetTargetEnergy.
-func (mr *MockAPIMockRecorder) GetTargetEnergy() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTargetEnergy", reflect.TypeOf((*MockAPI)(nil).GetTargetEnergy))
-}
-
-// GetTargetSoc mocks base method.
-func (m *MockAPI) GetTargetSoc() int {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetTargetSoc")
-	ret0, _ := ret[0].(int)
-	return ret0
-}
-
-// GetTargetSoc indicates an expected call of GetTargetSoc.
-func (mr *MockAPIMockRecorder) GetTargetSoc() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTargetSoc", reflect.TypeOf((*MockAPI)(nil).GetTargetSoc))
-}
-
-// GetTargetTime mocks base method.
-func (m *MockAPI) GetTargetTime() time.Time {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetTargetTime")
-	ret0, _ := ret[0].(time.Time)
-	return ret0
-}
-
-// GetTargetTime indicates an expected call of GetTargetTime.
-func (mr *MockAPIMockRecorder) GetTargetTime() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTargetTime", reflect.TypeOf((*MockAPI)(nil).GetTargetTime))
 }
 
 // GetVehicle mocks base method.
@@ -391,18 +447,6 @@ func (mr *MockAPIMockRecorder) SetMinCurrent(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetMinCurrent", reflect.TypeOf((*MockAPI)(nil).SetMinCurrent), arg0)
 }
 
-// SetMinSoc mocks base method.
-func (m *MockAPI) SetMinSoc(arg0 int) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "SetMinSoc", arg0)
-}
-
-// SetMinSoc indicates an expected call of SetMinSoc.
-func (mr *MockAPIMockRecorder) SetMinSoc(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetMinSoc", reflect.TypeOf((*MockAPI)(nil).SetMinSoc), arg0)
-}
-
 // SetMode mocks base method.
 func (m *MockAPI) SetMode(arg0 api.ChargeMode) {
 	m.ctrl.T.Helper()
@@ -429,6 +473,20 @@ func (mr *MockAPIMockRecorder) SetPhases(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPhases", reflect.TypeOf((*MockAPI)(nil).SetPhases), arg0)
 }
 
+// SetPlanEnergy mocks base method.
+func (m *MockAPI) SetPlanEnergy(arg0 time.Time, arg1 float64) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetPlanEnergy", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetPlanEnergy indicates an expected call of SetPlanEnergy.
+func (mr *MockAPIMockRecorder) SetPlanEnergy(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPlanEnergy", reflect.TypeOf((*MockAPI)(nil).SetPlanEnergy), arg0, arg1)
+}
+
 // SetPriority mocks base method.
 func (m *MockAPI) SetPriority(arg0 int) {
 	m.ctrl.T.Helper()
@@ -441,42 +499,28 @@ func (mr *MockAPIMockRecorder) SetPriority(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPriority", reflect.TypeOf((*MockAPI)(nil).SetPriority), arg0)
 }
 
-// SetTargetEnergy mocks base method.
-func (m *MockAPI) SetTargetEnergy(arg0 float64) {
+// SetSessionLimitEnergy mocks base method.
+func (m *MockAPI) SetSessionLimitEnergy(arg0 float64) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "SetTargetEnergy", arg0)
+	m.ctrl.Call(m, "SetSessionLimitEnergy", arg0)
 }
 
-// SetTargetEnergy indicates an expected call of SetTargetEnergy.
-func (mr *MockAPIMockRecorder) SetTargetEnergy(arg0 interface{}) *gomock.Call {
+// SetSessionLimitEnergy indicates an expected call of SetSessionLimitEnergy.
+func (mr *MockAPIMockRecorder) SetSessionLimitEnergy(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetTargetEnergy", reflect.TypeOf((*MockAPI)(nil).SetTargetEnergy), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetSessionLimitEnergy", reflect.TypeOf((*MockAPI)(nil).SetSessionLimitEnergy), arg0)
 }
 
-// SetTargetSoc mocks base method.
-func (m *MockAPI) SetTargetSoc(arg0 int) {
+// SetSessionLimitSoc mocks base method.
+func (m *MockAPI) SetSessionLimitSoc(arg0 int) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "SetTargetSoc", arg0)
+	m.ctrl.Call(m, "SetSessionLimitSoc", arg0)
 }
 
-// SetTargetSoc indicates an expected call of SetTargetSoc.
-func (mr *MockAPIMockRecorder) SetTargetSoc(arg0 interface{}) *gomock.Call {
+// SetSessionLimitSoc indicates an expected call of SetSessionLimitSoc.
+func (mr *MockAPIMockRecorder) SetSessionLimitSoc(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetTargetSoc", reflect.TypeOf((*MockAPI)(nil).SetTargetSoc), arg0)
-}
-
-// SetTargetTime mocks base method.
-func (m *MockAPI) SetTargetTime(arg0 time.Time) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SetTargetTime", arg0)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// SetTargetTime indicates an expected call of SetTargetTime.
-func (mr *MockAPIMockRecorder) SetTargetTime(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetTargetTime", reflect.TypeOf((*MockAPI)(nil).SetTargetTime), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetSessionLimitSoc", reflect.TypeOf((*MockAPI)(nil).SetSessionLimitSoc), arg0)
 }
 
 // SetVehicle mocks base method.

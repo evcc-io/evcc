@@ -14,13 +14,17 @@ const (
 	smallGapDuration  = 60 * time.Minute // small gap duration between planner slots we might ignore
 )
 
+// TODO planActive is not guarded by mutex
+
 // setPlanActive updates plan active flag
 func (lp *Loadpoint) setPlanActive(active bool) {
 	if !active {
 		lp.planSlotEnd = time.Time{}
 	}
-	lp.planActive = active
-	lp.publish(planActive, lp.planActive)
+	if lp.planActive != active {
+		lp.planActive = active
+		lp.publish(planActive, lp.planActive)
+	}
 }
 
 // planRequiredDuration is the estimated total charging duration
@@ -33,9 +37,17 @@ func (lp *Loadpoint) planRequiredDuration(maxPower float64) time.Duration {
 		return 0
 	}
 
+	v := lp.GetVehicle()
+	if v == nil {
+		return 0
+	}
+
+	// TODO decide if limit soc should be relevant for plan duration
 	// TODO ensure plan soc <= limit soc
 	// TODO take vehicle api limits into account
-	soc := min(lp.GetEffectiveLimitSoc(), lp.GetPlanSoc())
+	soc := 0
+	// TODO get plan soc from vehicle
+	// soc := min(lp.GetEffectiveLimitSoc(), v.GetPlanSoc())
 
 	return lp.socEstimator.RemainingChargeDuration(soc, maxPower)
 }
