@@ -23,7 +23,7 @@ func planSocHandler(v vehicle.API) http.HandlerFunc {
 		}
 
 		valueS, ok := vars["value"]
-		valueV, err := strconv.ParseFloat(valueS, 64)
+		valueV, err := strconv.Atoi(valueS)
 
 		if !ok || err != nil {
 			jsonError(w, http.StatusBadRequest, err)
@@ -36,7 +36,7 @@ func planSocHandler(v vehicle.API) http.HandlerFunc {
 		}
 
 		res := struct {
-			Soc  float64   `json:"soc"`
+			Soc  int       `json:"soc"`
 			Time time.Time `json:"time"`
 		}{
 			Soc:  v.GetPlanSoc(),

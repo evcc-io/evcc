@@ -31,9 +31,9 @@ type API interface {
 	// GetPlanTime returns the plan time
 	GetPlanTime() time.Time
 	// GetPlanSoc returns the charge plan soc
-	GetPlanSoc() float64
+	GetPlanSoc() int
 	// SetPlanSoc sets the charge plan soc
-	SetPlanSoc(time.Time, float64) error
+	SetPlanSoc(time.Time, int) error
 
 	// // GetMinCurrent returns the min charging current
 	// GetMinCurrent() float64
