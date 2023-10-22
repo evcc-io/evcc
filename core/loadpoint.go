@@ -766,19 +766,21 @@ func (lp *Loadpoint) setStatus(status api.ChargeStatus) {
 	lp.status = status
 }
 
-// remainingChargeEnergy returns missing energy amount in kWh if vehicle has a valid energy target
-func (lp *Loadpoint) remainingChargeEnergy() (float64, bool) {
-	return max(0, lp.planEnergy-lp.getChargedEnergy()/1e3),
-		!lp.vehicleHasSoc() && lp.planEnergy > 0
-}
-
+// vehicleHasSoc returns true if active vehicle supports returning soc, i.e. it is not an offline vehicle
 func (lp *Loadpoint) vehicleHasSoc() bool {
 	return lp.GetVehicle() != nil && !lp.vehicleHasFeature(api.Offline)
 }
 
-// planEnergyReached checks if target is configured and reached
-func (lp *Loadpoint) planEnergyReached() bool {
-	f, ok := lp.remainingChargeEnergy()
+// remainingSessionLimitEnergy returns missing energy amount in kWh if vehicle has a valid energy target
+func (lp *Loadpoint) remainingSessionLimitEnergy() (float64, bool) {
+	limit := lp.GetSessionLimitEnergy()
+	return max(0, limit-lp.getChargedEnergy()/1e3),
+		limit > 0 && !lp.vehicleHasSoc()
+}
+
+// limitEnergyReached checks if target is configured and reached
+func (lp *Loadpoint) limitEnergyReached() bool {
+	f, ok := lp.remainingSessionLimitEnergy()
 	return ok && f <= 0
 }
 
@@ -792,9 +794,12 @@ func (lp *Loadpoint) limitSocReached() bool {
 // If vehicle is not configured this will always return false
 func (lp *Loadpoint) minSocNotReached() bool {
 	v := lp.GetVehicle()
-	minSoc := vehicle.Settings(v).GetMinSoc()
+	if v == nil {
+		return false
+	}
 
-	if v == nil || minSoc == 0 {
+	minSoc := vehicle.Settings(v).GetMinSoc()
+	if minSoc == 0 {
 		return false
 	}
 
@@ -1540,8 +1545,8 @@ func (lp *Loadpoint) Update(sitePower float64, autoCharge, batteryBuffered, batt
 	case lp.scalePhasesRequired():
 		err = lp.scalePhases(lp.ConfiguredPhases)
 
-	case lp.planEnergyReached():
-		lp.log.DEBUG.Printf("planEnergy reached: %.0fkWh > %0.1fkWh", lp.getChargedEnergy()/1e3, lp.planEnergy)
+	case lp.limitEnergyReached():
+		lp.log.DEBUG.Printf("limitEnergy reached: %.0fkWh > %0.1fkWh", lp.getChargedEnergy()/1e3, lp.sessionLimitEnergy)
 		err = lp.disableUnlessClimater()
 
 	case lp.limitSocReached():
