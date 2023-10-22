@@ -33,8 +33,9 @@ type API interface {
 	// vehicles
 	//
 
-	// GetVehicles is the list of vehicles
+	// GetVehicles returns the list of vehicles
 	GetVehicles() []api.Vehicle
+	// VehicleSettings returns the list of vehicle setting adapters
 	VehicleSettings() []vehicle.API
 
 	//
