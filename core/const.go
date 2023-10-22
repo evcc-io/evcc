@@ -24,10 +24,12 @@ const (
 	chargeRemainingDuration = "chargeRemainingDuration" // charge remaining duration
 	minSoc                  = "minSoc"                  // min soc
 	limitSoc                = "limitSoc"                // limit soc
+	limitEnergy             = "limitEnergy"             // limit energy
 
+	// plan
+	planTime           = "planTime"           // charge plan finish time goal
 	planEnergy         = "planEnergy"         // charge plan energy goal
 	planSoc            = "planSoc"            // charge plan soc goal
-	planTime           = "planTime"           // charge plan finish time goal
 	planActive         = "planActive"         // charge plan has determined current slot to be an active slot
 	planProjectedStart = "planProjectedStart" // charge plan start time (earliest slot)
 )

@@ -2,6 +2,7 @@ package coordinator
 
 import (
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/vehicle"
 )
 
 type dummy struct{}
@@ -25,4 +26,8 @@ func (a *dummy) IdentifyVehicleByStatus() api.Vehicle {
 
 func (a *dummy) GetVehicleIndex(v api.Vehicle) int {
 	return -1
+}
+
+func (a *dummy) Settings(v api.Vehicle) vehicle.API {
+	return nil
 }
