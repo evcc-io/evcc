@@ -6,14 +6,12 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/config"
 )
 
 // Coordinator coordinates vehicle access between loadpoints
 type Coordinator struct {
 	mu       sync.Mutex
 	log      *util.Logger
-	handler  config.Handler[api.Vehicle]
 	vehicles []api.Vehicle
 	tracked  map[api.Vehicle]loadpoint.API
 }
