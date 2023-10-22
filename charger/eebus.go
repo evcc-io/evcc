@@ -191,7 +191,7 @@ func (c *EEBus) minMax() (minMax, error) {
 }
 
 func (c *EEBus) GetMinMaxCurrent() (float64, float64, error) {
-	minMax, err := c.minMaxG.Get()
+	minMax, err := c.minMaxG()
 	return minMax.min, minMax.max, err
 }
 
