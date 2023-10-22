@@ -100,9 +100,9 @@ func (v *Provider) Climater() (bool, error) {
 	return res.Services.Climatisation.Active, err
 }
 
-var _ api.SocLimiterGetter = (*Provider)(nil)
+var _ api.SocLimiter = (*Provider)(nil)
 
-// TargetSoc implements the api.SocLimiterGetter interface
+// TargetSoc implements the api.SocLimiter interface
 func (v *Provider) TargetSoc() (float64, error) {
 	res, err := v.statusG()
 	return float64(res.Services.Charging.TargetPct), err

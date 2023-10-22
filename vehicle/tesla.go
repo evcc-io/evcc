@@ -184,9 +184,9 @@ func (v *Tesla) Position() (float64, float64, error) {
 	return res.Response.DriveState.Latitude, res.Response.DriveState.Longitude, nil
 }
 
-var _ api.SocLimiterGetter = (*Tesla)(nil)
+var _ api.SocLimiter = (*Tesla)(nil)
 
-// TargetSoc implements the api.SocLimiterGetter interface
+// TargetSoc implements the api.SocLimiter interface
 func (v *Tesla) TargetSoc() (float64, error) {
 	res, err := v.dataG()
 	if err != nil {
@@ -195,7 +195,7 @@ func (v *Tesla) TargetSoc() (float64, error) {
 	return float64(res.Response.ChargeState.ChargeLimitSoc), nil
 }
 
-var _ api.CurrentLimiter = (*Tesla)(nil)
+var _ api.CurrentController = (*Tesla)(nil)
 
 // StartCharge implements the api.VehicleChargeController interface
 func (v *Tesla) MaxCurrent(current int64) error {
