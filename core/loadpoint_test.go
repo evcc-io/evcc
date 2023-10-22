@@ -180,7 +180,7 @@ func TestUpdatePowerZero(t *testing.T) {
 			tc.expect(charger)
 		}
 
-		lp.Mode = tc.mode
+		lp.mode = tc.mode
 		lp.Update(0, false, false, false, 0, nil, nil) // false,sitePower false,0
 
 		ctrl.Finish()
@@ -405,7 +405,7 @@ func TestDisableAndEnableAtTargetSoc(t *testing.T) {
 		MaxCurrent:    maxA,
 		vehicle:       vehicle,      // needed for targetSoc check
 		socEstimator:  socEstimator, // instead of vehicle: vehicle,
-		Mode:          api.ModeNow,
+		mode:          api.ModeNow,
 		sessionEnergy: NewEnergyMetrics(),
 		Soc: SocConfig{
 			// target: 90,
@@ -479,11 +479,7 @@ func TestSetModeAndSocAtDisconnect(t *testing.T) {
 		MinCurrent:    minA,
 		MaxCurrent:    maxA,
 		status:        api.StatusC,
-		Mode:          api.ModeOff,
-		// Soc: SocConfig{
-		// 	target: 70,
-		// },
-		ResetOnDisconnect: true,
+		mode:          api.ModeOff,
 	}
 
 	attachListeners(t, lp)
@@ -491,7 +487,7 @@ func TestSetModeAndSocAtDisconnect(t *testing.T) {
 
 	lp.enabled = true
 	lp.chargeCurrent = float64(minA)
-	lp.Mode = api.ModeNow
+	lp.mode = api.ModeNow
 
 	t.Log("charging at min")
 	charger.EXPECT().Enabled().Return(lp.enabled, nil)
@@ -506,8 +502,8 @@ func TestSetModeAndSocAtDisconnect(t *testing.T) {
 	charger.EXPECT().Enable(false).Return(nil)
 	lp.Update(-3000, false, false, false, 0, nil, nil)
 
-	if lp.Mode != api.ModeOff {
-		t.Error("unexpected mode", lp.Mode)
+	if mode := lp.GetMode(); mode != api.ModeOff {
+		t.Error("unexpected mode", mode)
 	}
 
 	ctrl.Finish()
@@ -558,7 +554,7 @@ func TestChargedEnergyAtDisconnect(t *testing.T) {
 
 	lp.enabled = true
 	lp.chargeCurrent = float64(maxA)
-	lp.Mode = api.ModeNow
+	lp.mode = api.ModeNow
 
 	// attach cache for verifying values
 	_, expectCache := cacheExpecter(t, lp)

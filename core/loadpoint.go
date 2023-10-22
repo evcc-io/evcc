@@ -495,9 +495,7 @@ func (lp *Loadpoint) evVehicleDisconnectHandler() {
 
 	// override default mode on disconnect
 	if lp.defaultVehicle != nil {
-		if mode, err := lp.defaultVehicle.OnIdentified().GetMode(); err == nil {
-			lp.SetMode(mode)
-		}
+		lp.vehicleMode(lp.defaultVehicle)
 	}
 
 	// soc update reset
@@ -538,13 +536,6 @@ func (lp *Loadpoint) evChargeCurrentWrappedMeterHandler(current float64) {
 
 	// handler only called if charge meter was replaced by dummy
 	lp.chargeMeter.(*wrapper.ChargeMeter).SetPower(power)
-}
-
-// applyAction executes the action
-func (lp *Loadpoint) applyAction(actionCfg api.ActionConfig) {
-	if actionCfg.Mode != nil {
-		lp.SetMode(*actionCfg.Mode)
-	}
 }
 
 // defaultMode executes the action
