@@ -92,12 +92,10 @@ type Site struct {
 
 // MetersConfig contains the loadpoint's meter configuration
 type MetersConfig struct {
-	GridMeterRef      string   `mapstructure:"grid"`      // Grid usage meter
-	PVMetersRef       []string `mapstructure:"pv"`        // PV meter
-	PVMetersRef_      []string `mapstructure:"pvs"`       // TODO deprecated
-	BatteryMetersRef  []string `mapstructure:"battery"`   // Battery charging meter
-	BatteryMetersRef_ []string `mapstructure:"batteries"` // TODO deprecated
-	AuxMetersRef      []string `mapstructure:"aux"`       // Auxiliary meters
+	GridMeterRef     string   `mapstructure:"grid"`    // Grid usage meter
+	PVMetersRef      []string `mapstructure:"pv"`      // PV meter
+	BatteryMetersRef []string `mapstructure:"battery"` // Battery charging meter
+	AuxMetersRef     []string `mapstructure:"aux"`     // Auxiliary meters
 }
 
 // NewSiteFromConfig creates a new site
@@ -162,7 +160,7 @@ func NewSiteFromConfig(
 	}
 
 	// multiple pv
-	for _, ref := range append(site.Meters.PVMetersRef, site.Meters.PVMetersRef_...) {
+	for _, ref := range site.Meters.PVMetersRef {
 		dev, err := config.Meters().ByName(ref)
 		if err != nil {
 			return nil, err
@@ -170,23 +168,13 @@ func NewSiteFromConfig(
 		site.pvMeters = append(site.pvMeters, dev.Instance())
 	}
 
-	// TODO deprecated
-	if len(site.Meters.PVMetersRef_) > 0 {
-		site.log.WARN.Println("deprecated: use 'pv' instead of 'pvs'")
-	}
-
 	// multiple batteries
-	for _, ref := range append(site.Meters.BatteryMetersRef, site.Meters.BatteryMetersRef_...) {
+	for _, ref := range site.Meters.BatteryMetersRef {
 		dev, err := config.Meters().ByName(ref)
 		if err != nil {
 			return nil, err
 		}
 		site.batteryMeters = append(site.batteryMeters, dev.Instance())
-	}
-
-	// TODO deprecated
-	if len(site.Meters.BatteryMetersRef_) > 0 {
-		site.log.WARN.Println("deprecated: use 'battery' instead of 'batteries'")
 	}
 
 	if len(site.batteryMeters) > 0 && site.ResidualPower <= 0 {

@@ -108,13 +108,12 @@ type Loadpoint struct {
 	vehicleMux sync.Mutex     // guard vehicle
 	Mode       api.ChargeMode `mapstructure:"mode"` // Charge mode, guarded by mutex
 
-	Title_            string   `mapstructure:"title"`    // UI title
-	Priority_         int      `mapstructure:"priority"` // Priority
-	ConfiguredPhases  int      `mapstructure:"phases"`   // Charger configured phase mode 0/1/3
-	ChargerRef        string   `mapstructure:"charger"`  // Charger reference
-	VehicleRef        string   `mapstructure:"vehicle"`  // Vehicle reference
-	VehiclesRef_      []string `mapstructure:"vehicles"` // TODO deprecated
-	MeterRef          string   `mapstructure:"meter"`    // Charge meter reference
+	Title_            string `mapstructure:"title"`    // UI title
+	Priority_         int    `mapstructure:"priority"` // Priority
+	ConfiguredPhases  int    `mapstructure:"phases"`   // Charger configured phase mode 0/1/3
+	ChargerRef        string `mapstructure:"charger"`  // Charger reference
+	VehicleRef        string `mapstructure:"vehicle"`  // Vehicle reference
+	MeterRef          string `mapstructure:"meter"`    // Charge meter reference
 	Soc               SocConfig
 	Enable, Disable   ThresholdConfig
 	ResetOnDisconnect bool `mapstructure:"resetOnDisconnect"`
@@ -225,11 +224,6 @@ func NewLoadpointFromConfig(log *util.Logger, settings *Settings, other map[stri
 			return nil, err
 		}
 		lp.defaultVehicle = dev.Instance()
-	}
-
-	// TODO deprecated
-	if len(lp.VehiclesRef_) > 0 {
-		lp.log.WARN.Println("vehicles option is deprecated")
 	}
 
 	if lp.ChargerRef == "" {

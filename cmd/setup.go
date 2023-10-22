@@ -69,7 +69,6 @@ var conf = globalConfig{
 }
 
 type globalConfig struct {
-	URI          interface{} // TODO deprecated
 	Network      networkConfig
 	Log          string
 	SponsorToken string
