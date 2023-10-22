@@ -97,13 +97,6 @@ func (lp *Loadpoint) selectVehicleByID(id string) api.Vehicle {
 	return nil
 }
 
-// vehicleMode sets the mode for the vehicle
-func (lp *Loadpoint) vehicleMode(vehicle api.Vehicle) {
-	if mode, err := vehicle.OnIdentified().GetMode(); err == nil {
-		lp.SetMode(mode)
-	}
-}
-
 // setActiveVehicle assigns currently active vehicle, configures soc estimator
 // and adds an odometer task
 func (lp *Loadpoint) setActiveVehicle(vehicle api.Vehicle) {
@@ -129,14 +122,10 @@ func (lp *Loadpoint) setActiveVehicle(vehicle api.Vehicle) {
 
 	lp.log.INFO.Printf("vehicle updated: %s -> %s", from, to)
 
-	// lock api
-	lp.Lock()
-
 	// reset session values
+	lp.Lock()
 	lp.setLimitSoc(0)
 	lp.setLimitEnergy(0)
-
-	// unlock api
 	lp.Unlock()
 
 	if vehicle != nil {
@@ -154,7 +143,10 @@ func (lp *Loadpoint) setActiveVehicle(vehicle api.Vehicle) {
 		lp.publish(keys.VehicleIcon, vehicle.Icon())
 		lp.publish(keys.VehicleCapacity, vehicle.Capacity())
 
-		lp.vehicleMode(vehicle)
+		if mode, err := vehicle.OnIdentified().GetMode(); err == nil {
+			lp.SetMode(mode)
+		}
+
 		lp.addTask(lp.vehicleOdometer)
 
 		lp.progress.Reset()
