@@ -17,12 +17,12 @@ import (
 // Connection is the Shelly connection
 type Connection struct {
 	*request.Helper
-	uri             string
-	channel         int
-	gen             int    // Shelly api generation
-	devicetype      string // Shelly device type
-	gen1StatusRespG provider.Cacheable[StatusResponse]
-	gen2StatusRespG provider.Cacheable[StatusResponse]
+	uri         string
+	channel     int
+	gen         int    // Shelly api generation
+	devicetype  string // Shelly device type
+	gen1StatusG provider.Cacheable[StatusResponse]
+	gen2StatusG provider.Cacheable[StatusResponse]
 }
 
 // NewConnection creates a new Shelly device connection.
@@ -79,13 +79,13 @@ func NewConnection(uri, user, password string, channel int, cache time.Duration)
 		return c, fmt.Errorf("%s (%s) unknown api generation (%d)", resp.Type, resp.Model, c.gen)
 	}
 
-	c.gen1StatusRespG = provider.ResettableCached(func() (StatusResponse, error) {
+	c.gen1StatusG = provider.ResettableCached(func() (StatusResponse, error) {
 		var res StatusResponse
 		err := c.GetJSON(fmt.Sprintf("%s/status", c.uri), &res)
 		return res, err
 	}, cache)
 
-	c.gen2StatusRespG = provider.ResettableCached(func() (StatusResponse, error) {
+	c.gen2StatusG = provider.ResettableCached(func() (StatusResponse, error) {
 		var res StatusResponse
 		err := c.execGen2Cmd("Shelly.GetStatus", false, &res)
 		return res, err
