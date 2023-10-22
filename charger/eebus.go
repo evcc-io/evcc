@@ -32,7 +32,7 @@ type EEBus struct {
 
 	log     *util.Logger
 	lp      loadpoint.API
-	minMaxG provider.Cacheable[minMax]
+	minMaxG func() (minMax, error)
 
 	communicationStandard emobility.EVCommunicationStandardType
 
