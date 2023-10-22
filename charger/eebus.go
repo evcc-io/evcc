@@ -12,6 +12,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/eebus"
 	"github.com/evcc-io/evcc/core/loadpoint"
+	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
 )
 
@@ -21,12 +22,17 @@ const (
 	voltage              float64 = 230
 )
 
+type minMax struct {
+	min, max float64
+}
+
 type EEBus struct {
 	ski       string
 	emobility emobility.EmobilityI
 
-	log *util.Logger
-	lp  loadpoint.API
+	log     *util.Logger
+	lp      loadpoint.API
+	minMaxG provider.Cacheable[minMax]
 
 	communicationStandard emobility.EVCommunicationStandardType
 
@@ -89,17 +95,21 @@ func NewEEBus(ski, ip string, hasMeter, hasChargedEnergy bool) (api.Charger, err
 
 	c.emobility = eebus.Instance.RegisterEVSE(ski, ip, c.onConnect, c.onDisconnect, nil)
 
-	err := c.waitForConnection()
+	c.minMaxG = provider.Cached(c.minMax, time.Second)
+
+	if err := c.waitForConnection(); err != nil {
+		return c, err
+	}
 
 	if hasMeter {
 		var energyG func() (float64, error)
 		if hasChargedEnergy {
 			energyG = c.chargedEnergy
 		}
-		return decorateEEBus(c, c.currentPower, c.currents, energyG), err
+		return decorateEEBus(c, c.currentPower, c.currents, energyG), nil
 	}
 
-	return c, err
+	return c, nil
 }
 
 // waitForConnection wait for initial connection and returns an error on failure
@@ -164,20 +174,25 @@ func (c *EEBus) isConnected() bool {
 
 var _ api.CurrentLimiter = (*EEBus)(nil)
 
-func (c *EEBus) GetMinMaxCurrent() (float64, float64, error) {
+func (c *EEBus) minMax() (minMax, error) {
 	minLimits, maxLimits, _, err := c.emobility.EVCurrentLimits()
 	if err != nil {
 		if err == features.ErrDataNotAvailable {
 			err = api.ErrNotAvailable
 		}
-		return 0, 0, err
+		return minMax{}, err
 	}
 
 	if len(minLimits) == 0 || len(maxLimits) == 0 {
-		return 0, 0, api.ErrNotAvailable
+		return minMax{}, api.ErrNotAvailable
 	}
 
-	return minLimits[0], maxLimits[0], nil
+	return minMax{minLimits[0], maxLimits[0]}, nil
+}
+
+func (c *EEBus) GetMinMaxCurrent() (float64, float64, error) {
+	minMax, err := c.minMaxG.Get()
+	return minMax.min, minMax.max, err
 }
 
 // we assume that if any phase current value is > idleFactor * min Current, then charging is active and enabled is true
