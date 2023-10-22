@@ -16,7 +16,7 @@ func (lp *Loadpoint) publishEffectiveValues() {
 // effectivePriority returns the effective priority
 func (lp *Loadpoint) effectivePriority() int {
 	if v := lp.GetVehicle(); v != nil {
-		if res, err := v.OnIdentified().GetPriority(); err == nil {
+		if res, ok := v.OnIdentified().GetPriority(); ok {
 			return res
 		}
 	}
@@ -26,7 +26,7 @@ func (lp *Loadpoint) effectivePriority() int {
 // effectiveMinCurrent returns the effective min current
 func (lp *Loadpoint) effectiveMinCurrent() float64 {
 	if v := lp.GetVehicle(); v != nil {
-		if res, err := v.OnIdentified().GetMinCurrent(); err == nil {
+		if res, ok := v.OnIdentified().GetMinCurrent(); ok {
 			return res
 		}
 	}
@@ -43,7 +43,7 @@ func (lp *Loadpoint) effectiveMinCurrent() float64 {
 // effectiveMaxCurrent returns the effective max current
 func (lp *Loadpoint) effectiveMaxCurrent() float64 {
 	if v := lp.GetVehicle(); v != nil {
-		if res, err := v.OnIdentified().GetMaxCurrent(); err == nil {
+		if res, ok := v.OnIdentified().GetMaxCurrent(); ok {
 			return res
 		}
 	}
@@ -69,7 +69,7 @@ func (lp *Loadpoint) effectiveLimitSoc() int {
 	}
 
 	if v := lp.GetVehicle(); v != nil {
-		if soc, err := v.OnIdentified().GetLimitSoc(); err == nil && soc > 0 {
+		if soc, ok := v.OnIdentified().GetLimitSoc(); ok {
 			return soc
 		}
 	}
