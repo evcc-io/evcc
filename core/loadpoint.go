@@ -1405,15 +1405,15 @@ func (lp *Loadpoint) publishSocAndRange() {
 		}
 
 		// use minimum of vehicle and loadpoint
-		socLimit := min(targetSoc, lp.effectiveLimitSoc())
+		limitSoc := min(targetSoc, lp.effectiveLimitSoc())
 
 		var d time.Duration
 		if lp.charging() {
-			d = lp.socEstimator.RemainingChargeDuration(socLimit, lp.chargePower)
+			d = lp.socEstimator.RemainingChargeDuration(limitSoc, lp.chargePower)
 		}
 		lp.SetRemainingDuration(d)
 
-		lp.SetRemainingEnergy(1e3 * lp.socEstimator.RemainingChargeEnergy(socLimit))
+		lp.SetRemainingEnergy(1e3 * lp.socEstimator.RemainingChargeEnergy(limitSoc))
 
 		// range
 		if vs, ok := lp.GetVehicle().(api.VehicleRange); ok {

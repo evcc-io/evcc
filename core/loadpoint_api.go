@@ -50,6 +50,7 @@ func (lp *Loadpoint) SetMode(mode api.ChargeMode) {
 	if lp.mode != mode {
 		lp.mode = mode
 		lp.publish(keys.Mode, mode)
+		lp.settings.SetString(keys.Mode, string(mode))
 
 		// reset timers
 		switch mode {
