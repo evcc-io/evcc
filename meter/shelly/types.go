@@ -44,7 +44,7 @@ type StatusResponse struct {
 	PowerB     float64 `json:"b_act_power"`
 	PowerC     float64 `json:"c_act_power"`
 
-	// Gen2 EM.GetStatus Response
+	// Gen2 EMData.GetStatus Response
 	TotalEnergy float64 `json:"total_act"`
 }
 type Gen2RpcPost struct {
