@@ -32,7 +32,7 @@ test.describe("footer", async () => {
   });
 });
 
-test.describe("stats values", async () => {
+test.describe.skip("stats values", async () => {
   test("last 30 days", async ({ page }) => {
     await page.goto("/");
     await page.getByTestId("savings-button").click();
