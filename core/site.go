@@ -738,7 +738,7 @@ func (site *Site) update(lp Updater) {
 		flexiblePower = site.prioritizer.GetChargePowerFlexibility(lp)
 	}
 
-	var autoCharge bool
+	var smartCostActive bool
 	if tariff := site.GetTariff(PlannerTariff); tariff != nil {
 		rates, err := tariff.Rates()
 
@@ -749,10 +749,10 @@ func (site *Site) update(lp Updater) {
 
 		if err == nil {
 			limit := site.GetSmartCostLimit()
-			autoCharge = limit != 0 && rate.Price <= limit
-			site.publish("smartCostActive", autoCharge)
+			smartCostActive = limit != 0 && rate.Price <= limit
+			site.publish("smartCostActive", smartCostActive)
 		} else {
-			site.log.ERROR.Println("autoCharge:", err)
+			site.log.ERROR.Println("smartCost:", err)
 		}
 	}
 
@@ -766,7 +766,7 @@ func (site *Site) update(lp Updater) {
 		greenShareHome := site.greenShare(0, homePower)
 		greenShareLoadpoints := site.greenShare(homePower, homePower+totalChargePower)
 
-		lp.Update(sitePower, autoCharge, batteryBuffered, batteryStart, greenShareLoadpoints, site.effectivePrice(greenShareLoadpoints), site.effectiveCo2(greenShareLoadpoints))
+		lp.Update(sitePower, smartCostActive, batteryBuffered, batteryStart, greenShareLoadpoints, site.effectivePrice(greenShareLoadpoints), site.effectiveCo2(greenShareLoadpoints))
 
 		site.Health.Update()
 
