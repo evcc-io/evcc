@@ -217,8 +217,7 @@ type VehiclePosition interface {
 
 // CurrentLimiter returns the current limits
 type CurrentLimiter interface {
-	GetMinCurrent() (float64, error)
-	GetMaxCurrent() (float64, error)
+	GetMinMaxCurrent() (float64, float64, error)
 }
 
 // SocLimiter returns the soc limit

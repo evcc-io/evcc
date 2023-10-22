@@ -175,7 +175,7 @@ func (m *MQTT) listenLoadpointSetters(topic string, site site.API, lp loadpoint.
 	m.Handler.ListenSetter(topic+"/limitSoc", func(payload string) error {
 		soc, err := strconv.Atoi(payload)
 		if err == nil {
-			lp.SetSessionLimitSoc(soc)
+			lp.SetLimitSoc(soc)
 		}
 		return err
 	})

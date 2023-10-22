@@ -77,62 +77,6 @@ func (mr *MockAPIMockRecorder) GetDisableThreshold() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDisableThreshold", reflect.TypeOf((*MockAPI)(nil).GetDisableThreshold))
 }
 
-// GetEffectiveLimitSoc mocks base method.
-func (m *MockAPI) GetEffectiveLimitSoc() int {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetEffectiveLimitSoc")
-	ret0, _ := ret[0].(int)
-	return ret0
-}
-
-// GetEffectiveLimitSoc indicates an expected call of GetEffectiveLimitSoc.
-func (mr *MockAPIMockRecorder) GetEffectiveLimitSoc() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEffectiveLimitSoc", reflect.TypeOf((*MockAPI)(nil).GetEffectiveLimitSoc))
-}
-
-// GetEffectiveMaxCurrent mocks base method.
-func (m *MockAPI) GetEffectiveMaxCurrent() float64 {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetEffectiveMaxCurrent")
-	ret0, _ := ret[0].(float64)
-	return ret0
-}
-
-// GetEffectiveMaxCurrent indicates an expected call of GetEffectiveMaxCurrent.
-func (mr *MockAPIMockRecorder) GetEffectiveMaxCurrent() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEffectiveMaxCurrent", reflect.TypeOf((*MockAPI)(nil).GetEffectiveMaxCurrent))
-}
-
-// GetEffectiveMinCurrent mocks base method.
-func (m *MockAPI) GetEffectiveMinCurrent() float64 {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetEffectiveMinCurrent")
-	ret0, _ := ret[0].(float64)
-	return ret0
-}
-
-// GetEffectiveMinCurrent indicates an expected call of GetEffectiveMinCurrent.
-func (mr *MockAPIMockRecorder) GetEffectiveMinCurrent() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEffectiveMinCurrent", reflect.TypeOf((*MockAPI)(nil).GetEffectiveMinCurrent))
-}
-
-// GetEffectivePriority mocks base method.
-func (m *MockAPI) GetEffectivePriority() int {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetEffectivePriority")
-	ret0, _ := ret[0].(int)
-	return ret0
-}
-
-// GetEffectivePriority indicates an expected call of GetEffectivePriority.
-func (mr *MockAPIMockRecorder) GetEffectivePriority() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEffectivePriority", reflect.TypeOf((*MockAPI)(nil).GetEffectivePriority))
-}
-
 // GetEnableThreshold mocks base method.
 func (m *MockAPI) GetEnableThreshold() float64 {
 	m.ctrl.T.Helper()
@@ -317,32 +261,32 @@ func (mr *MockAPIMockRecorder) GetRemainingEnergy() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRemainingEnergy", reflect.TypeOf((*MockAPI)(nil).GetRemainingEnergy))
 }
 
-// GetSessionLimitEnergy mocks base method.
-func (m *MockAPI) GetSessionLimitEnergy() float64 {
+// GetLimitEnergy mocks base method.
+func (m *MockAPI) GetLimitEnergy() float64 {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetSessionLimitEnergy")
+	ret := m.ctrl.Call(m, "GetLimitEnergy")
 	ret0, _ := ret[0].(float64)
 	return ret0
 }
 
-// GetSessionLimitEnergy indicates an expected call of GetSessionLimitEnergy.
-func (mr *MockAPIMockRecorder) GetSessionLimitEnergy() *gomock.Call {
+// GetLimitEnergy indicates an expected call of GetLimitEnergy.
+func (mr *MockAPIMockRecorder) GetLimitEnergy() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSessionLimitEnergy", reflect.TypeOf((*MockAPI)(nil).GetSessionLimitEnergy))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLimitEnergy", reflect.TypeOf((*MockAPI)(nil).GetLimitEnergy))
 }
 
-// GetSessionLimitSoc mocks base method.
-func (m *MockAPI) GetSessionLimitSoc() int {
+// GetLimitSoc mocks base method.
+func (m *MockAPI) GetLimitSoc() int {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetSessionLimitSoc")
+	ret := m.ctrl.Call(m, "GetLimitSoc")
 	ret0, _ := ret[0].(int)
 	return ret0
 }
 
-// GetSessionLimitSoc indicates an expected call of GetSessionLimitSoc.
-func (mr *MockAPIMockRecorder) GetSessionLimitSoc() *gomock.Call {
+// GetLimitSoc indicates an expected call of GetLimitSoc.
+func (mr *MockAPIMockRecorder) GetLimitSoc() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSessionLimitSoc", reflect.TypeOf((*MockAPI)(nil).GetSessionLimitSoc))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLimitSoc", reflect.TypeOf((*MockAPI)(nil).GetLimitSoc))
 }
 
 // GetStatus mocks base method.
@@ -499,28 +443,28 @@ func (mr *MockAPIMockRecorder) SetPriority(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPriority", reflect.TypeOf((*MockAPI)(nil).SetPriority), arg0)
 }
 
-// SetSessionLimitEnergy mocks base method.
-func (m *MockAPI) SetSessionLimitEnergy(arg0 float64) {
+// SetLimitEnergy mocks base method.
+func (m *MockAPI) SetLimitEnergy(arg0 float64) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "SetSessionLimitEnergy", arg0)
+	m.ctrl.Call(m, "SetLimitEnergy", arg0)
 }
 
-// SetSessionLimitEnergy indicates an expected call of SetSessionLimitEnergy.
-func (mr *MockAPIMockRecorder) SetSessionLimitEnergy(arg0 interface{}) *gomock.Call {
+// SetLimitEnergy indicates an expected call of SetLimitEnergy.
+func (mr *MockAPIMockRecorder) SetLimitEnergy(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetSessionLimitEnergy", reflect.TypeOf((*MockAPI)(nil).SetSessionLimitEnergy), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetLimitEnergy", reflect.TypeOf((*MockAPI)(nil).SetLimitEnergy), arg0)
 }
 
-// SetSessionLimitSoc mocks base method.
-func (m *MockAPI) SetSessionLimitSoc(arg0 int) {
+// SetLimitSoc mocks base method.
+func (m *MockAPI) SetLimitSoc(arg0 int) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "SetSessionLimitSoc", arg0)
+	m.ctrl.Call(m, "SetLimitSoc", arg0)
 }
 
-// SetSessionLimitSoc indicates an expected call of SetSessionLimitSoc.
-func (mr *MockAPIMockRecorder) SetSessionLimitSoc(arg0 interface{}) *gomock.Call {
+// SetLimitSoc indicates an expected call of SetLimitSoc.
+func (mr *MockAPIMockRecorder) SetLimitSoc(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetSessionLimitSoc", reflect.TypeOf((*MockAPI)(nil).SetSessionLimitSoc), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetLimitSoc", reflect.TypeOf((*MockAPI)(nil).SetLimitSoc), arg0)
 }
 
 // SetVehicle mocks base method.

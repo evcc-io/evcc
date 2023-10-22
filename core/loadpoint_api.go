@@ -88,7 +88,7 @@ func (lp *Loadpoint) SetPriority(prio int) {
 
 	if lp.Priority_ != prio {
 		lp.Priority_ = prio
-		lp.publish(keys.Priority, prio)
+		lp.publish(keys.Priority, lp.effectivePriority())
 	}
 }
 
@@ -124,59 +124,59 @@ func (lp *Loadpoint) SetPhases(phases int) error {
 	return nil
 }
 
-// GetSessionLimitSoc returns the session limit soc
-func (lp *Loadpoint) GetSessionLimitSoc() int {
+// GetLimitSoc returns the session limit soc
+func (lp *Loadpoint) GetLimitSoc() int {
 	lp.RLock()
 	defer lp.RUnlock()
-	return lp.sessionLimitSoc
+	return lp.limitSoc
 }
 
-// setSessionLimitSoc sets the session limit soc (no mutex)
-func (lp *Loadpoint) setSessionLimitSoc(soc int) {
-	lp.sessionLimitSoc = soc
+// setLimitSoc sets the session limit soc (no mutex)
+func (lp *Loadpoint) setLimitSoc(soc int) {
+	lp.limitSoc = soc
 	lp.publish(keys.LimitSoc, soc)
+	lp.settings.SetInt(keys.LimitSoc, int64(soc))
 }
 
-// SetSessionLimitSoc sets the session soc limit
-func (lp *Loadpoint) SetSessionLimitSoc(soc int) {
+// SetLimitSoc sets the session soc limit
+func (lp *Loadpoint) SetLimitSoc(soc int) {
 	lp.Lock()
 	defer lp.Unlock()
 
 	lp.log.DEBUG.Println("set session soc limit:", soc)
 
 	// apply immediately
-	if lp.sessionLimitSoc != soc {
-		lp.setSessionLimitSoc(soc)
+	if lp.limitSoc != soc {
+		lp.setLimitSoc(soc)
 		lp.requestUpdate()
-		lp.settings.SetInt(keys.LimitSoc, int64(soc))
 	}
 }
 
-// GetSessionLimitEnergy returns the session limit energy
-func (lp *Loadpoint) GetSessionLimitEnergy() float64 {
+// GetLimitEnergy returns the session limit energy
+func (lp *Loadpoint) GetLimitEnergy() float64 {
 	lp.RLock()
 	defer lp.RUnlock()
-	return lp.sessionLimitEnergy
+	return lp.limitEnergy
 }
 
-// setSessionLimitEnergy sets the session limit energy (no mutex)
-func (lp *Loadpoint) setSessionLimitEnergy(energy float64) {
-	lp.sessionLimitEnergy = energy
+// setLimitEnergy sets the session limit energy (no mutex)
+func (lp *Loadpoint) setLimitEnergy(energy float64) {
+	lp.limitEnergy = energy
 	lp.publish(keys.LimitEnergy, energy)
+	lp.settings.SetFloat(keys.LimitEnergy, energy)
 }
 
-// SetSessionLimitEnergy sets the session energy limit
-func (lp *Loadpoint) SetSessionLimitEnergy(energy float64) {
+// SetLimitEnergy sets the session energy limit
+func (lp *Loadpoint) SetLimitEnergy(energy float64) {
 	lp.Lock()
 	defer lp.Unlock()
 
 	lp.log.DEBUG.Println("set session energy limit:", energy)
 
 	// apply immediately
-	if lp.sessionLimitEnergy != energy {
-		lp.setSessionLimitEnergy(energy)
+	if lp.limitEnergy != energy {
+		lp.setLimitEnergy(energy)
 		lp.requestUpdate()
-		lp.settings.SetFloat(keys.LimitEnergy, energy)
 	}
 }
 
@@ -191,6 +191,7 @@ func (lp *Loadpoint) GetPlanTime() time.Time {
 func (lp *Loadpoint) setPlanTime(finishAt time.Time) {
 	lp.planTime = finishAt
 	lp.publish(keys.PlanTime, finishAt)
+	lp.settings.SetTime(keys.PlanTime, finishAt)
 
 	if finishAt.IsZero() {
 		lp.setPlanActive(false)
@@ -208,6 +209,7 @@ func (lp *Loadpoint) GetPlanEnergy() float64 {
 func (lp *Loadpoint) setPlanEnergy(energy float64) {
 	lp.planEnergy = energy
 	lp.publish(keys.PlanEnergy, energy)
+	lp.settings.SetFloat(keys.PlanEnergy, energy)
 
 	if energy == 0 {
 		lp.setPlanActive(false)
@@ -230,10 +232,6 @@ func (lp *Loadpoint) SetPlanEnergy(finishAt time.Time, energy float64) error {
 		lp.setPlanEnergy(energy)
 		lp.setPlanTime(finishAt)
 		lp.requestUpdate()
-
-		// TODO decide persisting in api vs internal setter
-		lp.settings.SetFloat(keys.PlanEnergy, energy)
-		lp.settings.SetTime(keys.PlanTime, finishAt)
 	}
 
 	return nil
@@ -368,12 +366,12 @@ func (lp *Loadpoint) SetMaxCurrent(current float64) {
 
 // GetMinPower returns the min loadpoint power for a single phase
 func (lp *Loadpoint) GetMinPower() float64 {
-	return Voltage * lp.GetMinCurrent()
+	return Voltage * lp.effectiveMinCurrent()
 }
 
 // GetMaxPower returns the max loadpoint power taking vehicle capabilities and phase scaling into account
 func (lp *Loadpoint) GetMaxPower() float64 {
-	return Voltage * lp.GetMaxCurrent() * float64(lp.maxActivePhases())
+	return Voltage * lp.effectiveMaxCurrent() * float64(lp.maxActivePhases())
 }
 
 // GetRemainingDuration is the estimated remaining charging duration

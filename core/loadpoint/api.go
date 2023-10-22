@@ -29,14 +29,14 @@ type API interface {
 	// effective settings
 	//
 
-	// GetEffectivePriority returns the effective priority
-	GetEffectivePriority() int
-	// GetEffectiveMinCurrent returns the effective min current
-	GetEffectiveMinCurrent() float64
-	// GetEffectiveMaxCurrent returns the effective max current
-	GetEffectiveMaxCurrent() float64
-	// GetEffectiveLimitSoc returns the effective session limit soc
-	GetEffectiveLimitSoc() int
+	// // GetEffectivePriority returns the effective priority
+	// GetEffectivePriority() int
+	// // GetEffectiveMinCurrent returns the effective min current
+	// GetEffectiveMinCurrent() float64
+	// // GetEffectiveMaxCurrent returns the effective max current
+	// GetEffectiveMaxCurrent() float64
+	// // GetEffectiveLimitSoc returns the effective session limit soc
+	// GetEffectiveLimitSoc() int
 
 	//
 	// settings
@@ -56,14 +56,14 @@ type API interface {
 	// SetPhases sets the enabled phases
 	SetPhases(int) error
 
-	// GetSessionLimitSoc returns the session limit soc
-	GetSessionLimitSoc() int
-	// SetSessionLimitSoc sets the session limit soc
-	SetSessionLimitSoc(soc int)
-	// GetSessionLimitEnergy returns the session limit energy
-	GetSessionLimitEnergy() float64
-	// SetSessionLimitEnergy sets the session limit energy
-	SetSessionLimitEnergy(energy float64)
+	// GetLimitSoc returns the session limit soc
+	GetLimitSoc() int
+	// SetLimitSoc sets the session limit soc
+	SetLimitSoc(soc int)
+	// GetLimitEnergy returns the session limit energy
+	GetLimitEnergy() float64
+	// SetLimitEnergy sets the session limit energy
+	SetLimitEnergy(energy float64)
 
 	// GetPlanTime returns the plan time
 	GetPlanTime() time.Time

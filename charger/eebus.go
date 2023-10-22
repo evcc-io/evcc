@@ -162,27 +162,22 @@ func (c *EEBus) isConnected() bool {
 	return c.connected
 }
 
-func (c *EEBus) setLoadpointMinMaxLimits() {
-	if c.lp == nil {
-		return
-	}
+var _ api.CurrentLimiter = (*EEBus)(nil)
 
+func (c *EEBus) GetMinMaxCurrent() (float64, float64, error) {
 	minLimits, maxLimits, _, err := c.emobility.EVCurrentLimits()
-	if err != nil || len(minLimits) == 0 || len(maxLimits) == 0 {
-		return
+	if err != nil {
+		if err == features.ErrDataNotAvailable {
+			err = api.ErrNotAvailable
+		}
+		return 0, 0, err
 	}
 
-	newMin := minLimits[0]
-	newMax := maxLimits[0]
-
-	vehicle := c.lp.GetVehicle()
-
-	if c.lp.GetMinCurrent() != newMin && newMin > 0 && (vehicle == nil || vehicle.OnIdentified().MinCurrent == nil) {
-		c.lp.SetMinCurrent(newMin)
+	if len(minLimits) == 0 || len(maxLimits) == 0 {
+		return 0, 0, api.ErrNotAvailable
 	}
-	if c.lp.GetMaxCurrent() != newMax && newMax > 0 && (vehicle == nil || vehicle.OnIdentified().MaxCurrent == nil) {
-		c.lp.SetMaxCurrent(newMax)
-	}
+
+	return minLimits[0], maxLimits[0], nil
 }
 
 // we assume that if any phase current value is > idleFactor * min Current, then charging is active and enabled is true
@@ -228,7 +223,8 @@ func (c *EEBus) isCharging() bool { // d *communication.EVSEClientDataType
 	return phasesCurrent > limitMin*idleFactor
 }
 
-func (c *EEBus) updateState() (api.ChargeStatus, error) {
+// Status implements the api.Charger interface
+func (c *EEBus) Status() (api.ChargeStatus, error) {
 	if !c.isConnected() {
 		return api.StatusNone, api.ErrTimeout
 	}
@@ -267,19 +263,11 @@ func (c *EEBus) updateState() (api.ChargeStatus, error) {
 	}
 }
 
-// Status implements the api.Charger interface
-func (c *EEBus) Status() (api.ChargeStatus, error) {
-	// check the current limits and update if necessary
-	c.setLoadpointMinMaxLimits()
-
-	return c.updateState()
-}
-
 // Enabled implements the api.Charger interface
 // should return true if the charger allows the EV to draw power
 func (c *EEBus) Enabled() (bool, error) {
 	// when unplugged there is no overload limit data available
-	state, err := c.updateState()
+	state, err := c.Status()
 	if err != nil || state == api.StatusA {
 		return c.expectedEnableUnpluggedState, nil
 	}
@@ -310,7 +298,7 @@ func (c *EEBus) Enabled() (bool, error) {
 // Enable implements the api.Charger interface
 func (c *EEBus) Enable(enable bool) error {
 	// if the ev is unplugged or the state is unknown, there is nothing to be done
-	if state, err := c.updateState(); err != nil || state == api.StatusA {
+	if state, err := c.Status(); err != nil || state == api.StatusA {
 		c.expectedEnableUnpluggedState = enable
 		return nil
 	}
@@ -448,7 +436,7 @@ func (c *EEBus) currents() (float64, float64, float64, error) {
 	currents, err := c.emobility.EVCurrentsPerPhase()
 	if err != nil {
 		if err == features.ErrDataNotAvailable {
-			return 0, 0, 0, api.ErrNotAvailable
+			err = api.ErrNotAvailable
 		}
 		return 0, 0, 0, err
 	}
@@ -508,6 +496,4 @@ var _ loadpoint.Controller = (*EEBus)(nil)
 // LoadpointControl implements loadpoint.Controller
 func (c *EEBus) LoadpointControl(lp loadpoint.API) {
 	c.lp = lp
-
-	c.setLoadpointMinMaxLimits()
 }
