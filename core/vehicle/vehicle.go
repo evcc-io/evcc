@@ -61,21 +61,21 @@ func (v *adapter) GetPlanTime() time.Time {
 }
 
 // GetPlanSoc returns the charge plan soc
-func (v *adapter) GetPlanSoc() float64 {
-	if v, err := settings.Float(v.key + "planSoc"); err == nil {
-		return v
+func (v *adapter) GetPlanSoc() int {
+	if v, err := settings.Int(v.key + "planSoc"); err == nil {
+		return int(v)
 	}
 	return 0
 }
 
 // SetPlanSoc sets the charge plan soc
-func (v *adapter) SetPlanSoc(finishAt time.Time, soc float64) error {
+func (v *adapter) SetPlanSoc(finishAt time.Time, soc int) error {
 	if !finishAt.IsZero() && finishAt.Before(time.Now()) {
 		return errors.New("timestamp is in the past")
 	}
 
 	settings.SetTime(v.key+"planTime", finishAt)
-	settings.SetFloat(v.key+"planSoc", soc)
+	settings.SetInt(v.key+"planSoc", int64(soc))
 
 	return nil
 }

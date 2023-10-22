@@ -6,6 +6,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/planner"
+	"github.com/evcc-io/evcc/core/vehicle"
 )
 
 const (
@@ -51,9 +52,7 @@ func (lp *Loadpoint) planRequiredDuration(maxPower float64) time.Duration {
 	// TODO decide if limit soc should be relevant for plan duration
 	// TODO ensure plan soc <= limit soc
 	// TODO take vehicle api limits into account
-	soc := 0
-	// TODO get plan soc from vehicle
-	// soc := min(lp.GetEffectiveLimitSoc(), v.GetPlanSoc())
+	soc := vehicle.Settings(v).GetPlanSoc()
 
 	return lp.socEstimator.RemainingChargeDuration(soc, maxPower)
 }
