@@ -41,18 +41,11 @@ func (lp *Loadpoint) planRequiredDuration(maxPower float64) time.Duration {
 		return time.Duration(energy * 1e3 / maxPower * float64(time.Hour))
 	}
 
-	if lp.socEstimator == nil {
-		return 0
-	}
-
 	v := lp.GetVehicle()
-	if v == nil {
+	if v == nil || lp.socEstimator == nil {
 		return 0
 	}
 
-	// TODO decide if limit soc should be relevant for plan duration
-	// TODO ensure plan soc <= limit soc
-	// TODO take vehicle api limits into account
 	soc := vehicle.Settings(v).GetPlanSoc()
 
 	return lp.socEstimator.RemainingChargeDuration(soc, maxPower)
