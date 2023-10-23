@@ -25,7 +25,8 @@ func (em *EnergyMetrics) SetEnvironment(greenShare float64, effPrice, effCo2 *fl
 	em.currentCo2 = effCo2
 }
 
-// Update sets the a new value for the total amount of charged energy and updated metrics based on enviroment values. It returns the added totan and green energy
+// Update sets the a new value for the total amount of charged energy and updated metrics based on environment values.
+// It returns the added total and green energy.
 func (em *EnergyMetrics) Update(chargedKWh float64) (float64, float64) {
 	added := chargedKWh - em.totalKWh
 	// nothing changed or invalid lower value
