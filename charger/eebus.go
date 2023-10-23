@@ -202,8 +202,7 @@ func (c *EEBus) isCharging() bool { // d *communication.EVSEClientDataType
 	// right now it works as expected
 	if c.lp != nil && c.lp.HasChargeMeter() {
 		// we only check ever 10 seconds, maybe we can use the config interval duration
-		timeDiff := time.Since(c.lastIsChargingCheck)
-		if timeDiff.Seconds() >= 10 {
+		if time.Since(c.lastIsChargingCheck) >= 10*time.Second {
 			c.lastIsChargingCheck = time.Now()
 			c.lastIsChargingResult = false
 			// compare charge power for all phases to 0.6 * min. charge power of a single phase
@@ -232,7 +231,7 @@ func (c *EEBus) isCharging() bool { // d *communication.EVSEClientDataType
 	}
 
 	// require sum of all phase currents to be > 0.6 * a single phase minimum
-	// in some scenarions, e.g. Cayenne Hybrid, sometimes the meter of a PMCC device
+	// in some scenarios, e.g. Cayenne Hybrid, sometimes the meter of a PMCC device
 	// reported 600W, even tough the car was not charging
 	limitMin := limitsMin[0]
 	return phasesCurrent > limitMin*idleFactor
@@ -436,10 +435,7 @@ func (c *EEBus) chargedEnergy() (float64, error) {
 		return 0, err
 	}
 
-	// return kWh
-	energy /= 1000
-
-	return energy, nil
+	return energy / 1e3, nil
 }
 
 // Currents implements the api.PhaseCurrents interface
