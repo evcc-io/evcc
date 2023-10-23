@@ -680,9 +680,9 @@ func (site *Site) greenShare(powerFrom float64, powerTo float64) float64 {
 }
 
 // effectivePrice calculates the real energy price based on self-produced and grid-imported energy.
-func (s *Site) effectivePrice(greenShare float64) *float64 {
-	if grid, err := s.tariffs.CurrentGridPrice(); err == nil {
-		feedin, err := s.tariffs.CurrentFeedInPrice()
+func (site *Site) effectivePrice(greenShare float64) *float64 {
+	if grid, err := site.tariffs.CurrentGridPrice(); err == nil {
+		feedin, err := site.tariffs.CurrentFeedInPrice()
 		if err != nil {
 			feedin = 0
 		}
@@ -693,38 +693,38 @@ func (s *Site) effectivePrice(greenShare float64) *float64 {
 }
 
 // effectiveCo2 calculates the amount of emitted co2 based on self-produced and grid-imported energy.
-func (s *Site) effectiveCo2(greenShare float64) *float64 {
-	if co2, err := s.tariffs.CurrentCo2(); err == nil {
+func (site *Site) effectiveCo2(greenShare float64) *float64 {
+	if co2, err := site.tariffs.CurrentCo2(); err == nil {
 		effCo2 := co2 * (1 - greenShare)
 		return &effCo2
 	}
 	return nil
 }
 
-func (s *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints float64) {
-	s.publish("greenShareHome", greenShareHome)
-	s.publish("greenShareLoadpoints", greenShareLoadpoints)
+func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints float64) {
+	site.publish("greenShareHome", greenShareHome)
+	site.publish("greenShareLoadpoints", greenShareLoadpoints)
 
-	if gridPrice, err := s.tariffs.CurrentGridPrice(); err == nil {
-		s.publishDelta("tariffGrid", gridPrice)
+	if gridPrice, err := site.tariffs.CurrentGridPrice(); err == nil {
+		site.publishDelta("tariffGrid", gridPrice)
 	}
-	if feedInPrice, err := s.tariffs.CurrentFeedInPrice(); err == nil {
-		s.publishDelta("tariffFeedIn", feedInPrice)
+	if feedInPrice, err := site.tariffs.CurrentFeedInPrice(); err == nil {
+		site.publishDelta("tariffFeedIn", feedInPrice)
 	}
-	if co2, err := s.tariffs.CurrentCo2(); err == nil {
-		s.publishDelta("tariffCo2", co2)
+	if co2, err := site.tariffs.CurrentCo2(); err == nil {
+		site.publishDelta("tariffCo2", co2)
 	}
-	if price := s.effectivePrice(greenShareHome); price != nil {
-		s.publish("tariffPriceHome", price)
+	if price := site.effectivePrice(greenShareHome); price != nil {
+		site.publish("tariffPriceHome", price)
 	}
-	if co2 := s.effectiveCo2(greenShareHome); co2 != nil {
-		s.publish("tariffCo2Home", co2)
+	if co2 := site.effectiveCo2(greenShareHome); co2 != nil {
+		site.publish("tariffCo2Home", co2)
 	}
-	if price := s.effectivePrice(greenShareLoadpoints); price != nil {
-		s.publish("tariffPriceLoadpoints", price)
+	if price := site.effectivePrice(greenShareLoadpoints); price != nil {
+		site.publish("tariffPriceLoadpoints", price)
 	}
-	if co2 := s.effectiveCo2(greenShareLoadpoints); co2 != nil {
-		s.publish("tariffCo2Loadpoints", co2)
+	if co2 := site.effectiveCo2(greenShareLoadpoints); co2 != nil {
+		site.publish("tariffCo2Loadpoints", co2)
 	}
 }
 
