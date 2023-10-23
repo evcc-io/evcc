@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/imdario/mergo"
+	"dario.cat/mergo"
 )
 
 const (

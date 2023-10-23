@@ -171,7 +171,7 @@ import GridSettingsModal from "../GridSettingsModal.vue";
 import formatter from "../../mixins/formatter";
 import AnimatedNumber from "../AnimatedNumber.vue";
 import settings from "../../settings";
-import { CO2_TYPE, PRICE_DYNAMIC_TYPE } from "../../units";
+import { CO2_TYPE, PRICE_DYNAMIC_TYPE, PRICE_FORECAST_TYPE } from "../../units";
 import collector from "../../mixins/collector";
 import BatterySettingsModal from "../BatterySettingsModal.vue";
 
@@ -216,7 +216,7 @@ export default {
 	},
 	computed: {
 		smartCostAvailable: function () {
-			return [CO2_TYPE, PRICE_DYNAMIC_TYPE].includes(this.smartCostType);
+			return [CO2_TYPE, PRICE_DYNAMIC_TYPE, PRICE_FORECAST_TYPE].includes(this.smartCostType);
 		},
 		gridImport: function () {
 			return Math.max(0, this.gridPower);

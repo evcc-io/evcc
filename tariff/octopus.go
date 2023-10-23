@@ -110,5 +110,5 @@ func (t *Octopus) Rates() (api.Rates, error) {
 
 // Type implements the api.Tariff interface
 func (t *Octopus) Type() api.TariffType {
-	return api.TariffTypePriceDynamic
+	return api.TariffTypePriceForecast
 }

@@ -6,7 +6,6 @@ import (
 	"os"
 	"path"
 	"slices"
-	"sort"
 	"strings"
 
 	"github.com/evcc-io/evcc/util/templates"
@@ -88,8 +87,8 @@ func clearDir(dir string) error {
 }
 
 func sorted(keys []string) []string {
-	sort.Slice(keys, func(i, j int) bool {
-		return strings.ToLower(keys[i]) < strings.ToLower(keys[j])
+	slices.SortFunc(keys, func(i, j string) int {
+		return strings.Compare(strings.ToLower(i), strings.ToLower(j))
 	})
 	return slices.Compact(keys)
 }
