@@ -148,7 +148,7 @@ func (t *Entsoe) run(done chan error) {
 		}
 
 		// extract desired series
-		tsdata, err := entsoe.GetTsPriceData(tr.TimeSeries, entsoe.ResolutionHour)
+		res, err := entsoe.GetTsPriceData(tr.TimeSeries, entsoe.ResolutionHour)
 		if err != nil {
 			once.Do(func() { done <- err })
 			t.log.ERROR.Println(err)
@@ -160,11 +160,11 @@ func (t *Entsoe) run(done chan error) {
 		t.mux.Lock()
 		t.updated = time.Now()
 
-		t.data = make(api.Rates, 0, len(tsdata))
-		for _, r := range tsdata {
+		t.data = make(api.Rates, 0, len(res))
+		for _, r := range res {
 			ar := api.Rate{
-				Start: r.ValidityStart,
-				End:   r.ValidityEnd,
+				Start: r.Start,
+				End:   r.End,
 				Price: t.totalPrice(r.Value),
 			}
 			t.data = append(t.data, ar)
