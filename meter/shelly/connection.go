@@ -126,19 +126,7 @@ func (c *Connection) getStatus(res interface{}) error {
 		return c.GetJSON(fmt.Sprintf("%s/status", c.uri), &res)
 
 	case 2:
-		method := "Shelly.GetStatus"
-		data := &Gen2RpcPost{
-			Id:     c.channel,
-			Src:    "evcc",
-			Method: method,
-		}
-
-		req, err := request.New(http.MethodPost, fmt.Sprintf("%s/%s", c.uri, method), request.MarshalJSON(data), request.JSONEncoding)
-		if err != nil {
-			return err
-		}
-
-		return c.DoJSON(req, &res)
+		return c.execGen2Cmd("Shelly.GetStatus", false, &res)
 
 	default:
 		return fmt.Errorf("unknown api generation (%d)", c.gen)
