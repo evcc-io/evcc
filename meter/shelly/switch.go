@@ -26,7 +26,7 @@ func (sh *Switch) CurrentPower() (float64, error) {
 
 	switch sh.Connection.gen {
 	case 0, 1:
-		res, err := sh.gen1StatusG.Get()
+		res, err := sh.statusG.Get()
 		if err != nil {
 			return 0, err
 		}
@@ -41,7 +41,7 @@ func (sh *Switch) CurrentPower() (float64, error) {
 		}
 
 	default:
-		res, err := sh.gen2StatusG.Get()
+		res, err := sh.statusG.Get()
 		if err != nil {
 			return 0, err
 		}
@@ -65,11 +65,11 @@ func (sh *Switch) Enabled() (bool, error) {
 	d := sh.Connection
 	switch d.gen {
 	case 0, 1:
-		res, err := sh.gen1StatusG.Get()
+		res, err := sh.statusG.Get()
 		return res.Ison, err
 
 	default:
-		res, err := sh.gen2StatusG.Get()
+		res, err := sh.statusG.Get()
 		return res.Output, err
 	}
 }
@@ -91,8 +91,7 @@ func (sh *Switch) Enable(enable bool) error {
 	}
 
 	if err == nil {
-		sh.gen1StatusG.Reset()
-		sh.gen2StatusG.Reset()
+		sh.statusG.Reset()
 	}
 
 	return err
@@ -105,7 +104,7 @@ func (sh *Switch) TotalEnergy() (float64, error) {
 	d := sh.Connection
 	switch d.gen {
 	case 0, 1:
-		res, err := sh.gen1StatusG.Get()
+		res, err := sh.statusG.Get()
 		if err != nil {
 			return 0, err
 		}
@@ -122,7 +121,7 @@ func (sh *Switch) TotalEnergy() (float64, error) {
 		energy = gen1Energy(d.devicetype, energy)
 
 	default:
-		res, err := sh.gen2StatusG.Get()
+		res, err := sh.statusG.Get()
 		if err != nil {
 			return 0, err
 		}

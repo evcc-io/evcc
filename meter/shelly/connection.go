@@ -21,8 +21,7 @@ type Connection struct {
 	channel       int
 	gen           int    // Shelly api generation
 	devicetype    string // Shelly device type
-	gen1StatusG   provider.Cacheable[StatusResponse]
-	gen2StatusG   provider.Cacheable[StatusResponse]
+	statusG       provider.Cacheable[StatusResponse]
 	gen2EMStatusG provider.Cacheable[StatusResponse]
 }
 
@@ -80,15 +79,9 @@ func NewConnection(uri, user, password string, channel int, cache time.Duration)
 		return c, fmt.Errorf("%s (%s) unknown api generation (%d)", resp.Type, resp.Model, c.gen)
 	}
 
-	c.gen1StatusG = provider.ResettableCached(func() (StatusResponse, error) {
+	c.statusG = provider.ResettableCached(func() (StatusResponse, error) {
 		var res StatusResponse
-		err := c.GetJSON(fmt.Sprintf("%s/status", c.uri), &res)
-		return res, err
-	}, cache)
-
-	c.gen2StatusG = provider.ResettableCached(func() (StatusResponse, error) {
-		var res StatusResponse
-		err := c.execGen2Cmd("Shelly.GetStatus", false, &res)
+		err := c.getStatus(&res)
 		return res, err
 	}, cache)
 
@@ -120,4 +113,35 @@ func (d *Connection) execGen2Cmd(method string, enable bool, res interface{}) er
 	}
 
 	return d.DoJSON(req, &res)
+}
+
+// getStatus executes a shelly api gen1/gen2 status command and provides the response
+func (c *Connection) getStatus(res interface{}) error {
+	// Shelly gen 2 rfc7616 authentication
+	// https://shelly-api-docs.shelly.cloud/gen2/Overview/CommonDeviceTraits#authentication
+	// https://datatracker.ietf.org/doc/html/rfc7616
+
+	switch c.gen {
+	case 0, 1:
+		return c.GetJSON(fmt.Sprintf("%s/status", c.uri), &res)
+
+	case 2:
+		method := "Shelly.GetStatus"
+		data := &Gen2RpcPost{
+			Id:     c.channel,
+			Src:    "evcc",
+			Method: method,
+		}
+
+		req, err := request.New(http.MethodPost, fmt.Sprintf("%s/%s", c.uri, method), request.MarshalJSON(data), request.JSONEncoding)
+		if err != nil {
+			return err
+		}
+
+		return c.DoJSON(req, &res)
+
+	default:
+		return fmt.Errorf("unknown api generation (%d)", c.gen)
+	}
+
 }
