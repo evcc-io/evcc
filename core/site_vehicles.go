@@ -2,6 +2,7 @@ package core
 
 import (
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/samber/lo"
 )
@@ -25,5 +26,5 @@ func (site *Site) updateVehicles(op config.Operation, dev config.Device[api.Vehi
 		site.coordinator.Delete(vehicle)
 	}
 
-	site.publish("vehicles", vehicleTitles(site.GetVehicles()))
+	site.publish(keys.Vehicles, vehicleTitles(site.GetVehicles()))
 }
