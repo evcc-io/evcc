@@ -584,6 +584,9 @@ func (lp *Loadpoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	lp.publish(minCurrent, lp.MinCurrent)
 	lp.publish(maxCurrent, lp.MaxCurrent)
 
+	lp.publish("enableThreshold", lp.Enable.Threshold)
+	lp.publish("disableThreshold", lp.Disable.Threshold)
+
 	lp.setConfiguredPhases(lp.ConfiguredPhases)
 	lp.publish(phasesEnabled, lp.phases)
 	lp.publish(phasesActive, lp.activePhases())
