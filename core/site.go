@@ -698,29 +698,29 @@ func (site *Site) effectiveCo2(greenShare float64) *float64 {
 }
 
 func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints float64) {
-	site.publish("greenShareHome", greenShareHome)
-	site.publish("greenShareLoadpoints", greenShareLoadpoints)
+	site.publish(keys.GreenShareHome, greenShareHome)
+	site.publish(keys.GreenShareLoadpoints, greenShareLoadpoints)
 
 	if gridPrice, err := site.tariffs.CurrentGridPrice(); err == nil {
-		site.publishDelta("tariffGrid", gridPrice)
+		site.publishDelta(keys.TariffGrid, gridPrice)
 	}
 	if feedInPrice, err := site.tariffs.CurrentFeedInPrice(); err == nil {
-		site.publishDelta("tariffFeedIn", feedInPrice)
+		site.publishDelta(keys.TariffFeedIn, feedInPrice)
 	}
 	if co2, err := site.tariffs.CurrentCo2(); err == nil {
-		site.publishDelta("tariffCo2", co2)
+		site.publishDelta(keys.TariffCo2, co2)
 	}
 	if price := site.effectivePrice(greenShareHome); price != nil {
-		site.publish("tariffPriceHome", price)
+		site.publish(keys.TariffPriceHome, price)
 	}
 	if co2 := site.effectiveCo2(greenShareHome); co2 != nil {
-		site.publish("tariffCo2Home", co2)
+		site.publish(keys.TariffCo2Home, co2)
 	}
 	if price := site.effectivePrice(greenShareLoadpoints); price != nil {
-		site.publish("tariffPriceLoadpoints", price)
+		site.publish(keys.TariffPriceLoadpoints, price)
 	}
 	if co2 := site.effectiveCo2(greenShareLoadpoints); co2 != nil {
-		site.publish("tariffCo2Loadpoints", co2)
+		site.publish(keys.TariffCo2Loadpoints, co2)
 	}
 }
 
