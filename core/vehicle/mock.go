@@ -49,10 +49,10 @@ func (mr *MockAPIMockRecorder) GetMinSoc() *gomock.Call {
 }
 
 // GetPlanSoc mocks base method.
-func (m *MockAPI) GetPlanSoc() float64 {
+func (m *MockAPI) GetPlanSoc() int {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetPlanSoc")
-	ret0, _ := ret[0].(float64)
+	ret0, _ := ret[0].(int)
 	return ret0
 }
 
@@ -89,7 +89,7 @@ func (mr *MockAPIMockRecorder) SetMinSoc(arg0 interface{}) *gomock.Call {
 }
 
 // SetPlanSoc mocks base method.
-func (m *MockAPI) SetPlanSoc(arg0 time.Time, arg1 float64) error {
+func (m *MockAPI) SetPlanSoc(arg0 time.Time, arg1 int) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SetPlanSoc", arg0, arg1)
 	ret0, _ := ret[0].(error)
