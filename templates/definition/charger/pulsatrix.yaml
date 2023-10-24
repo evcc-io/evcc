@@ -2,11 +2,15 @@ template: pulsatrix
 products:
   - brand: pulsatrix
     description:
-      generic: Stylus
+      generic: Stylus, Penta, Pico, Smart
 params:
-  - name: host
-  - name: path
-    default: /api/ws
+  - name: host #IP address or hostname, found on the 3rd page of the charge controller
+    required: true
+    description:
+      en: IP address or hostname
+      de: IP-Adresse oder Hostname
+  - name: path #Path to the websocket API, if unsure, leave default
+    default: /api/ws 
 render: |
   type: pulsatrix
   host: {{ .host }}
