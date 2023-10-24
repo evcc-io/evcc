@@ -50,6 +50,7 @@
   "Porsche",
   "Pracht",
   "Pulsares",
+  "pulsatrix",
   "Schneider",
   "Schrack",
   "SENEC",
@@ -70,8 +71,7 @@
   "wallbox",
   "Walther Werke",
   "Webasto",
-  "Zaptec",
-  "pulsatrix"
+  "Zaptec"
  ],
  "SmartPlugs": [
   "AVM",
