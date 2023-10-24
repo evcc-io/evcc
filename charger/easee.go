@@ -189,6 +189,12 @@ func NewEasee(user, password, charger string, timeout time.Duration, authorize b
 		err = os.ErrDeadlineExceeded
 	}
 
+	if err == nil {
+		// poll opMode from charger as API can give outdated initial data
+		uri := fmt.Sprintf("%s/chargers/%s/commands/poll_chargeropmode", easee.API, c.charger)
+		_, err = c.Post(uri, request.JSONContent, nil)
+	}
+
 	return c, err
 }
 
@@ -350,8 +356,9 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 			}
 		}
 
-		// OpMode changed FROM charging to something else - stop ticker if channel exists
-		if c.opMode == easee.ModeCharging && opMode != easee.ModeCharging && c.stopTicker != nil {
+		// OpMode changed FROM >1 ("car connected") TO  1/disconnected  - stop ticker if channel exists
+		// channel may not exist regulary if the car was connected but charging never started
+		if c.opMode != easee.ModeDisconnected && opMode == easee.ModeDisconnected && c.stopTicker != nil {
 			close(c.stopTicker)
 			c.stopTicker = nil
 		}

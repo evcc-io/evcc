@@ -20,6 +20,7 @@ import (
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
+	"github.com/evcc-io/evcc/util/telemetry"
 
 	evbus "github.com/asaskevich/EventBus"
 	"github.com/avast/retry-go/v4"
@@ -583,6 +584,9 @@ func (lp *Loadpoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	lp.publish(minCurrent, lp.MinCurrent)
 	lp.publish(maxCurrent, lp.MaxCurrent)
 
+	lp.publish("enableThreshold", lp.Enable.Threshold)
+	lp.publish("disableThreshold", lp.Disable.Threshold)
+
 	lp.setConfiguredPhases(lp.ConfiguredPhases)
 	lp.publish(phasesEnabled, lp.phases)
 	lp.publish(phasesActive, lp.activePhases())
@@ -668,7 +672,8 @@ func (lp *Loadpoint) syncCharger() error {
 				return err
 			}
 
-			if lp.chargeCurrent != current {
+			// smallest adjustment most PWM-Controllers can do is: 100%÷256×0,6A = 0.234A
+			if math.Abs(lp.chargeCurrent-current) > 0.23 {
 				if lp.guardGracePeriodElapsed() {
 					lp.log.WARN.Printf("charger logic error: current mismatch (got %.3gA, expected %.3gA)", current, lp.chargeCurrent)
 				}
@@ -824,6 +829,9 @@ func (lp *Loadpoint) minSocNotReached() bool {
 	}
 
 	if lp.vehicleSoc != 0 {
+		if lp.vehicleSoc < float64(lp.Soc.min) {
+			lp.log.DEBUG.Printf("forced charging at vehicle soc %.0f%% (< %.0f%% min soc)", lp.vehicleSoc, float64(lp.Soc.min))
+		}
 		return lp.vehicleSoc < float64(lp.Soc.min)
 	}
 
@@ -1340,7 +1348,10 @@ func (lp *Loadpoint) publishChargeProgress() {
 		// workaround for Go-E resetting during disconnect, see
 		// https://github.com/evcc-io/evcc/issues/5092
 		if f > lp.chargedAtStartup {
-			lp.sessionEnergy.Update(f - lp.chargedAtStartup)
+			added, addedGreen := lp.sessionEnergy.Update(f - lp.chargedAtStartup)
+			if telemetry.Enabled() && added > 0 {
+				telemetry.UpdateEnergy(added, addedGreen)
+			}
 		}
 	} else {
 		lp.log.ERROR.Printf("charge rater: %v", err)

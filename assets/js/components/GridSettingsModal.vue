@@ -146,7 +146,7 @@ export default {
 			}
 			values.sort((a, b) => a - b);
 			return values.map((value) => {
-				const name = `< ${
+				const name = `≤ ${
 					this.isCo2
 						? this.fmtCo2Medium(value)
 						: this.fmtPricePerKWh(value, this.currency)
@@ -195,7 +195,7 @@ export default {
 				// TODO: handle multiple matching time slots
 				const price = this.findSlotInRange(start, end, rates)?.price;
 				const charging =
-					price < this.selectedSmartCostLimit && this.selectedSmartCostLimit !== 0;
+					price <= this.selectedSmartCostLimit && this.selectedSmartCostLimit !== 0;
 				const selectable = price !== undefined;
 				result.push({ day, price, startHour, endHour, charging, selectable });
 			}
@@ -321,7 +321,7 @@ export default {
 				this.selectedSmartCostLimit = 0;
 				return;
 			}
-			const nextOption = this.costOptions.find(({ value }) => value > limit);
+			const nextOption = this.costOptions.find(({ value }) => value >= limit);
 			if (nextOption) {
 				this.selectedSmartCostLimit = nextOption.value;
 			}

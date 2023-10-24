@@ -335,7 +335,8 @@ func (c *OCPP) Enable(enable bool) (err error) {
 
 	if enable {
 		if txn > 0 {
-			return errors.New("cannot enable: transaction already running")
+			// we have the transaction id, treat as enabled
+			return nil
 		}
 
 		err = ocpp.Instance().RemoteStartTransaction(c.conn.ChargePoint().ID(), func(resp *core.RemoteStartTransactionConfirmation, err error) {

@@ -197,10 +197,6 @@ func (wb *ABLeMH) Enable(enable bool) error {
 
 // MaxCurrent implements the api.Charger interface
 func (wb *ABLeMH) MaxCurrent(current int64) error {
-	if current < 6 {
-		return fmt.Errorf("invalid current %d", current)
-	}
-
 	return wb.MaxCurrentMillis(float64(current))
 }
 

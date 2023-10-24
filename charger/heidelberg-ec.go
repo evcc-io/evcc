@@ -210,10 +210,6 @@ func (wb *HeidelbergEC) Enable(enable bool) error {
 
 // MaxCurrent implements the api.Charger interface
 func (wb *HeidelbergEC) MaxCurrent(current int64) error {
-	if current < 6 {
-		return fmt.Errorf("invalid current %d", current)
-	}
-
 	return wb.MaxCurrentMillis(float64(current))
 }
 

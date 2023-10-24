@@ -1,6 +1,6 @@
 <template>
-	<label class="position-relative d-block">
-		<select :value="selected" class="custom-select" @change="change">
+	<label class="position-relative d-block" :for="id">
+		<select :id="id" :value="selected" class="custom-select" @change="change">
 			<option
 				v-for="{ name, value, count, disabled } in options"
 				:key="value"
@@ -20,6 +20,7 @@ export default {
 	props: {
 		options: { type: Array },
 		selected: { type: String },
+		id: { type: String },
 	},
 	emits: ["change"],
 	methods: {
@@ -40,7 +41,7 @@ export default {
 	left: 0;
 	top: 0;
 	bottom: 0;
-	right: 0;
+	width: 100%;
 	position: absolute;
 	opacity: 0;
 	-webkit-appearance: menulist-button;
