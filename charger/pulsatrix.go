@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/url"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -16,28 +16,25 @@ import (
 
 // pulsatrix charger implementation
 type PulsatrixCharger struct {
-	conn              *websocket.Conn
-	log               *util.Logger
-	tryRead           int
-	enState           bool
-	path              string
-	reconnecting      bool
-	ConnectorStatus   string             `json:"connectorStatus"`
-	VehicleStatus     string             `json:"vehicleStatus"`
-	LastMeterValue    float64            `json:"lastMeterValue"`
-	LastActivePower   float64            `json:"lastActivePower"`
-	MeterStart        float64            `json:"meterStart"`
-	State             string             `json:"state"`
-	UsedPhasesSession string             `json:"usedPhasesSession"`
-	PeakPhaseAmperage map[string]float64 `json:"peakPhaseAmperage"`
-	AllocatedAmperage float64            `json:"allocatedAmperage"`
-	CommandedAmperage float64            `json:"commandedAmperage"`
-	AvailableAmperage float64            `json:"availableAmperage"`
-	SignaledAmperage  float64            `json:"signaledAmperage"`
-	//ChargeControllerStatus string             `json:"chargeControllerStatus"`
-	//ID                     string             `json:"id"`
-	//EffectiveAmperageLimit float64            `json:"effectiveAmperageLimit"`
-	//StartedTime       	 int64              `json:"startedTime"`
+	conn         *websocket.Conn
+	log          *util.Logger
+	tryRead      int
+	enState      bool
+	path         string
+	reconnecting int
+	signaledAmp  float64
+	mutex        sync.Mutex
+	WebsocketData
+}
+
+type WebsocketData struct {
+	VehicleStatus     string    `json:"vehicleStatus"`
+	LastActivePower   float64   `json:"lastActivePower"`
+	PhaseVoltage      []float64 `json:"voltage"`
+	PhaseAmperage     []float64 `json:"amperage"`
+	AllocatedAmperage float64   `json:"allocatedAmperage"`
+	ActivePower       float64   `json:"activePower"`
+	EnergyImported    float64   `json:"energyImported"`
 }
 
 func init() {
@@ -47,27 +44,24 @@ func init() {
 // NewPulsatrixtFromConfig creates a pulsatrix charger from generic config
 func NewPulsatrixFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
-		Host  string
-		Path  string
-		Cache time.Duration
-	}{
-		Cache: time.Second,
-	}
+		Host string
+		Path string
+		Name string
+	}{}
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
-
 	return NewPulsatrix(cc.Host, cc.Path)
 }
 
 // NewPulsatrix creates pulsatrix charger
 func NewPulsatrix(hostname, path string) (*PulsatrixCharger, error) {
 	wb := PulsatrixCharger{}
+	wb.log = util.NewLogger("pulsatrix")
 	err := wb.connectWs(hostname, path)
 	if err != nil {
-		log.Fatal("dial:", err)
+		return nil, err
 	}
-	wb.log = util.NewLogger("pulsatrix")
 	return &wb, err
 }
 
@@ -77,24 +71,69 @@ func (c *PulsatrixCharger) connectWs(hostname, path string) error {
 	dialer := websocket.DefaultDialer
 	conn, _, err := dialer.Dial(u.String(), nil)
 	if err != nil {
-		c.reconnectWs()
+		if strErr := fmt.Sprintf("%s", err); strErr == "websocket: bad handshake" {
+			c.log.ERROR.Println("bad handshake. Make sure the IP and port are correct")
+		} else {
+			c.log.ERROR.Println("error:", err)
+			c.reconnectWs()
+		}
 		return err
 	}
+
+	defer func() {
+		if r := recover(); r != nil {
+			c.log.ERROR.Println("Recovered from panic:", r)
+		}
+	}()
+	if c.reconnecting > 0 {
+		c.log.WARN.Printf("connection reestablished\n")
+		c.reconnecting = 0
+	}
+
 	c.path = path
 	c.enState = false
 	c.conn = conn
 	c.Enable(false)
-	c.reconnecting = false
 	go c.wsReader()
+	go c.heartbeat()
 	return nil
+}
+
+// Heartbeat sends a heartbeat to the pulsatrix charger
+func (c *PulsatrixCharger) heartbeat() {
+	for {
+		if c.VehicleStatus == "A" {
+			c.Enable(false)
+			time.Sleep(2 * time.Minute)
+		} else {
+			if c.enState == true {
+				c.Enable(true)
+				c.MaxCurrentMillis(c.signaledAmp)
+			} else {
+				c.Enable(false)
+			}
+			time.Sleep(30 * time.Second)
+		}
+	}
 }
 
 // ReconnectWs reconnects to a pulsatrix charger websocket
 func (c *PulsatrixCharger) reconnectWs() {
-	c.reconnecting = true
+	c.reconnecting++
 	c.conn.Close()
-	time.Sleep(60 * time.Second)
-	c.log.INFO.Println("Reconnecting...")
+	var waitTime time.Duration
+	if c.reconnecting == 1 {
+		c.log.WARN.Printf("lost connection, trying to reconnect\n")
+		waitTime = 45 * time.Second
+	} else if c.reconnecting <= 5 {
+		waitTime = time.Duration(c.reconnecting) * time.Minute
+		c.log.WARN.Printf("trying to reconnect in %d minutes...\n", c.reconnecting)
+	} else {
+		waitTime = 5 * time.Minute
+		c.log.WARN.Printf("trying to reconnect in 5 minutes...\n")
+	}
+
+	time.Sleep(waitTime)
 	c.connectWs(c.conn.RemoteAddr().String(), c.path)
 }
 
@@ -102,12 +141,12 @@ func (c *PulsatrixCharger) reconnectWs() {
 func (c *PulsatrixCharger) wsReader() {
 	var breaker bool
 	go func() {
-		for breaker == false {
+		for !breaker {
 			messageType, message, err := c.conn.ReadMessage()
 			if err != nil {
 				if c.tryRead < 3 {
-					c.log.ERROR.Println("error reading message: ", err, " trying to read again")
 					c.tryRead++
+					time.Sleep(3 * time.Second)
 				} else {
 					c.log.ERROR.Println("error reading message: ", err)
 					c.tryRead = 0
@@ -123,20 +162,6 @@ func (c *PulsatrixCharger) wsReader() {
 	return
 }
 
-// wsWrite writes a message to the websocket
-func (c *PulsatrixCharger) wsWrite(message []byte) error {
-	if !c.reconnecting {
-		err := c.conn.WriteMessage(websocket.TextMessage, message)
-		if err != nil {
-			fmt.Println("write error: ", err)
-			return err
-		}
-		return nil
-	} else {
-		return fmt.Errorf("connection is reconnecting")
-	}
-}
-
 // ParseWsMessage parses a message from the websocket
 func (c *PulsatrixCharger) parseWsMessage(messageType int, message []byte) {
 	if messageType == websocket.TextMessage {
@@ -147,8 +172,22 @@ func (c *PulsatrixCharger) parseWsMessage(messageType int, message []byte) {
 			return
 		}
 	} else {
-		fmt.Println("messageType is not TextMessage")
+		c.log.WARN.Println("Websocket message is not a TextMessage")
 	}
+}
+
+// wsWrite writes a message to the websocket
+func (c *PulsatrixCharger) wsWrite(message []byte) error {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
+	if c.reconnecting != 0 {
+		return fmt.Errorf("reconnecting...")
+	}
+	err := c.conn.WriteMessage(websocket.TextMessage, message)
+	if err != nil {
+		c.log.ERROR.Println("write error:", err)
+	}
+	return err
 }
 
 // Status implements the api.Charger interface
@@ -171,15 +210,15 @@ func (c *PulsatrixCharger) Status() (api.ChargeStatus, error) {
 	case "F":
 		return api.StatusF, nil
 	default:
+		fmt.Println("error: API-Status is not defined")
 		return api.StatusNone, nil
+
 	}
 }
 
 // Enabled implements the api.Charger interface
 func (c *PulsatrixCharger) Enabled() (bool, error) {
-	//avaAmp := c.AvailableAmperage
-	EnStatus := c.VehicleStatus
-	if EnStatus == "C" || EnStatus == "D" || c.enState {
+	if c.enState {
 		return true, nil
 	} else {
 		return false, nil
@@ -188,7 +227,6 @@ func (c *PulsatrixCharger) Enabled() (bool, error) {
 
 // Enable implements the api.Charger interface
 func (c *PulsatrixCharger) Enable(enable bool) error {
-	fmt.Println("Enable : ", enable)
 	var state string
 	if enable {
 		c.enState = true
@@ -207,7 +245,8 @@ func (c *PulsatrixCharger) MaxCurrent(current int64) error {
 
 // MaxCurrentMillis implements the api.ChargerEx interface
 func (c *PulsatrixCharger) MaxCurrentMillis(current float64) error {
-	if !c.enState {
+	c.signaledAmp = current
+	if !c.enState && current > 0 {
 		c.Enable(true)
 	}
 	res := strconv.FormatFloat(current, 'f', 10, 64)
@@ -216,49 +255,37 @@ func (c *PulsatrixCharger) MaxCurrentMillis(current float64) error {
 
 // GetMaxCurrent implements the api.CurrentGetter interface
 func (c *PulsatrixCharger) GetMaxCurrent() (float64, error) {
-	//c.log.INFO.Println("AllocatedAmperage: ", c.AllocatedAmperage, "AvailableAmperage: ", c.AvailableAmperage, "SignaledAmperage: ", c.SignaledAmperage, "CommandedAmperage: ", c.CommandedAmperage)
 	return float64(c.AllocatedAmperage), nil
 }
 
-// CurrentPower implements the api.PhaseCurrents interface
+// CurrentPower implements the api.Meter interface
 func (c *PulsatrixCharger) CurrentPower() (float64, error) {
 	return float64(c.LastActivePower), nil
 }
 
-// ChargedEnergy implements the api.ChargeRater interface
-func (c *PulsatrixCharger) ChargedEnergy() (float64, error) {
-	var vStart = c.MeterStart
-	var vLast = c.LastMeterValue
-	return float64(vLast - vStart), nil
-}
-
 // StartCharge implements the api.VehicleChargeController interface
 func (c *PulsatrixCharger) StartCharge() error {
-	c.log.INFO.Println("StartCharge function called")
 	return c.wsWrite([]byte("setCurrentLimit\n6"))
 }
 
 // StopCharge implements the api.VehicleChargeController interface
 func (c *PulsatrixCharger) StopCharge() error {
-	c.log.INFO.Println("StopCharge function called")
 	return c.wsWrite([]byte("setCurrentLimit\n0"))
 }
 
-//remove comment after implementation of phase change in SECC firmware
-/*
-func (c *PulsatrixCharger) Phases1p3p(phases int) error {
-	fmt.Println("Phases1p3p function called with: ", phases)
-	if phases == 3 {
-		err := c.wsWrite([]byte("Phases1p3\n1"))
-		if err != nil {
-			return err
-		}
-	} else {
-		err := c.wsWrite([]byte("Phases1p3\n1"))
-		if err != nil {
-			return err
-		}
-	}
-	return nil
+// Currents implements the api.PhaseCurrents interface
+func (c *PulsatrixCharger) Currents() (float64, float64, float64, error) {
+	currents := c.PhaseAmperage
+	return currents[0], currents[1], currents[2], nil
 }
-*/
+
+// Voltages implements the api.PhaseVoltages interface
+func (c *PulsatrixCharger) Voltages() (float64, float64, float64, error) {
+	voltages := c.PhaseVoltage
+	return voltages[0], voltages[1], voltages[2], nil
+}
+
+// Total Energy implements the api.MeterEnergy interface
+func (c *PulsatrixCharger) TotalEnergy() (float64, error) {
+	return float64(c.EnergyImported), nil
+}
