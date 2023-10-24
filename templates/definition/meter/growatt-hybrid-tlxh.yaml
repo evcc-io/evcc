@@ -43,13 +43,36 @@ render: |
   {{- end }}
   {{- if eq .usage "pv" }}
   power:
-    source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: 3001 # PV total power
-      type: input
-      decode: uint32
-    scale: 0.1
+    source: calc
+    add:
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 3005 # PV1 power
+        type: input
+        decode: uint32
+      scale: 0.1
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 3009 # PV2 power
+        type: input
+        decode: uint32
+      scale: 0.1
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 3013 # PV3 power
+        type: input
+        decode: uint32
+      scale: 0.1
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 3017 # PV4 power
+        type: input
+        decode: uint32
+      scale: 0.1
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
