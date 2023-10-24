@@ -167,21 +167,17 @@ func (c *EEBus) setLoadpointMinMaxLimits() {
 		return
 	}
 
-	minLimits, maxLimits, _, err := c.emobility.EVCurrentLimits()
-	if err != nil || len(minLimits) == 0 || len(maxLimits) == 0 {
+	minLimits, _, _, err := c.emobility.EVCurrentLimits()
+	if err != nil || len(minLimits) == 0 {
 		return
 	}
 
 	newMin := minLimits[0]
-	newMax := maxLimits[0]
 
 	vehicle := c.lp.GetVehicle()
 
 	if c.lp.GetMinCurrent() != newMin && newMin > 0 && (vehicle == nil || vehicle.OnIdentified().MinCurrent == nil) {
 		c.lp.SetMinCurrent(newMin)
-	}
-	if c.lp.GetMaxCurrent() != newMax && newMax > 0 && (vehicle == nil || vehicle.OnIdentified().MaxCurrent == nil) {
-		c.lp.SetMaxCurrent(newMax)
 	}
 }
 
