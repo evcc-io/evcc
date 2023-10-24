@@ -87,13 +87,6 @@ savingsTitle = "Sutaupyta"
 savingsTotalEnergy = "{total} kWh įkrauta"
 since = "nuo {since}"
 tabTitle = "Mano"
-referenceLabel = "Atskaitos duomenys:"
-co2Title = "CO₂ Tarša"
-co2Saved = "{value} neišmesta"
-configurePriceCo2 = "Išmokite sukonfigūruoti kainą ir CO₂ duomenis."
-moneySaved = "{value} sutaupyta"
-periodLabel = "Laikotarpis:"
-referenceGrid = "tinklas"
 
 [footer.savings.period]
 30d = "paskutinės 30 dienų"
@@ -436,9 +429,3 @@ title = "Klaida startuojant"
 cancel = "Atšaukti"
 template = "Gamintojas"
 test = "Testuoti"
-
-
-[footer.savings.period]
-365d = "paskutinės 365 dienos"
-total = "Iš viso"
-30d = "paskutinės 30 dienų"
