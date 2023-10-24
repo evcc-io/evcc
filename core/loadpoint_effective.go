@@ -3,6 +3,7 @@ package core
 import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/keys"
+	"math"
 )
 
 // publishEffectiveValues publishes all effective values
@@ -43,20 +44,21 @@ func (lp *Loadpoint) effectiveMinCurrent() float64 {
 
 // effectiveMaxCurrent returns the effective max current
 func (lp *Loadpoint) effectiveMaxCurrent() float64 {
+	maxCurrent := lp.GetMaxCurrent()
 	if v := lp.GetVehicle(); v != nil {
 		if res, ok := v.OnIdentified().GetMaxCurrent(); ok {
-			return res
+			maxCurrent = math.Min(res, maxCurrent)
 		}
 	}
 
 	if c, ok := lp.charger.(api.CurrentLimiter); ok {
 		if _, res, err := c.GetMinMaxCurrent(); err == nil {
 			lp.publish(keys.EffectiveMaxCurrent, res)
-			return res
+			maxCurrent = math.Min(res, maxCurrent)
 		}
 	}
 
-	return lp.GetMaxCurrent()
+	return maxCurrent
 }
 
 // effectiveLimitSoc returns the effective session limit soc
