@@ -283,3 +283,8 @@ title = "Errore di avvio"
 cancel = "Cancella"
 template = "Produttore"
 test = "Test"
+
+
+[batterySettings]
+capacity = "{energy} di {total}"
+batteryLevel = Livello batteria
