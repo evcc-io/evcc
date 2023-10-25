@@ -62,7 +62,7 @@ func NewPulsatrix(hostname, path string) (*PulsatrixCharger, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &wb, err
+	return &wb, nil
 }
 
 // ConnectWs connects to a pulsatrix charger websocket
@@ -93,7 +93,7 @@ func (c *PulsatrixCharger) connectWs(hostname, path string) error {
 	c.path = path
 	c.enState = false
 	c.conn = conn
-	c.Enable(false)
+	c.handleError(c.Enable(false))
 	go c.wsReader()
 	go c.heartbeat()
 	return nil
@@ -103,17 +103,23 @@ func (c *PulsatrixCharger) connectWs(hostname, path string) error {
 func (c *PulsatrixCharger) heartbeat() {
 	for {
 		if c.VehicleStatus == "A" {
-			c.Enable(false)
+			c.handleError(c.Enable(false))
 			time.Sleep(2 * time.Minute)
 		} else {
-			if c.enState == true {
-				c.Enable(true)
-				c.MaxCurrentMillis(c.signaledAmp)
+			if c.enState {
+				c.handleError(c.Enable(true))
+				c.handleError(c.MaxCurrentMillis(c.signaledAmp))
 			} else {
-				c.Enable(false)
+				c.handleError(c.Enable(false))
 			}
 			time.Sleep(30 * time.Second)
 		}
+	}
+}
+
+func (c *PulsatrixCharger) handleError(err error) {
+	if err != nil {
+		c.log.ERROR.Println("error:", err)
 	}
 }
 
@@ -134,7 +140,7 @@ func (c *PulsatrixCharger) reconnectWs() {
 	}
 
 	time.Sleep(waitTime)
-	c.connectWs(c.conn.RemoteAddr().String(), c.path)
+	c.handleError(c.connectWs(c.conn.RemoteAddr().String(), c.path))
 }
 
 // WsReader runs a loop that reads messages from the websocket
@@ -159,7 +165,6 @@ func (c *PulsatrixCharger) wsReader() {
 			}
 		}
 	}()
-	return
 }
 
 // ParseWsMessage parses a message from the websocket
@@ -183,11 +188,9 @@ func (c *PulsatrixCharger) wsWrite(message []byte) error {
 	if c.reconnecting != 0 {
 		return fmt.Errorf("reconnecting...")
 	}
-	err := c.conn.WriteMessage(websocket.TextMessage, message)
-	if err != nil {
-		c.log.ERROR.Println("write error:", err)
-	}
-	return err
+	c.handleError(c.conn.WriteMessage(websocket.TextMessage, message))
+
+	return nil
 }
 
 // Status implements the api.Charger interface
@@ -196,7 +199,7 @@ func (c *PulsatrixCharger) Status() (api.ChargeStatus, error) {
 	switch status {
 	case "A":
 		if c.enState {
-			c.Enable(false)
+			c.handleError(c.Enable(false))
 		}
 		return api.StatusA, nil
 	case "B":
@@ -247,7 +250,7 @@ func (c *PulsatrixCharger) MaxCurrent(current int64) error {
 func (c *PulsatrixCharger) MaxCurrentMillis(current float64) error {
 	c.signaledAmp = current
 	if !c.enState && current > 0 {
-		c.Enable(true)
+		c.handleError(c.Enable(true))
 	}
 	res := strconv.FormatFloat(current, 'f', 10, 64)
 	return c.wsWrite([]byte("setCurrentLimit\n" + res))

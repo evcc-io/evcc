@@ -10,7 +10,7 @@ params:
       en: IP address or hostname
       de: IP-Adresse oder Hostname
   - name: path #Path to the websocket API, if unsure, leave default
-    default: /api/ws 
+    default: /api/ws
 render: |
   type: pulsatrix
   host: {{ .host }}
