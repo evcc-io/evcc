@@ -71,17 +71,17 @@ render: |
   wakeup:
     source: http
     {{- if .host }}
-      {{- if eq .wakeup_alt "true" }}
-        uri: http://{{ .host }}{{ if .port }}:{{ .port }}{{ end }}/charge_now/{{ .vin }}/1
-      {{- else }}
-        uri: http://{{ .host }}{{ if .port }}:{{ .port }}{{ end }}/wakeup/{{ .vin }}
-      {{- end }}
+    {{- if eq .wakeup_alt "true" }}
+    uri: http://{{ .host }}{{ if .port }}:{{ .port }}{{ end }}/charge_now/{{ .vin }}/1
     {{- else }}
-      {{- if eq .wakeup_alt "true" }}
-        uri: {{ trimSuffix "/" .url }}/charge_now/{{ .vin }}/1
-      {{- else }}
-        uri: {{ trimSuffix "/" .url }}/wakeup/{{ .vin }}
-      {{- end }}
+    uri: http://{{ .host }}{{ if .port }}:{{ .port }}{{ end }}/wakeup/{{ .vin }}
+    {{- end }}
+    {{- else }}
+    {{- if eq .wakeup_alt "true" }}
+    uri: {{ trimSuffix "/" .url }}/charge_now/{{ .vin }}/1
+    {{- else }}
+    uri: {{ trimSuffix "/" .url }}/wakeup/{{ .vin }}
+    {{- end }}
     {{- end }} 
   {{- define "source" }}
   source: http
