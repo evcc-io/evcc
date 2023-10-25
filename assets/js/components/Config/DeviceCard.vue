@@ -21,7 +21,7 @@
 			</button>
 			<span v-else class="text-gray opacity-50 px-2 py-1" disabled>yaml</span>
 		</div>
-		<div v-if="tags" class="d-flex mb-2" @click="todo">
+		<div v-if="tags" class="d-flex mb-2 flex-wrap" @click="todo">
 			<span
 				v-for="(tag, index) in tags"
 				:key="index"

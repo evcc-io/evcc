@@ -123,23 +123,70 @@ func testInstance(instance any) map[string]testResult {
 
 	if dev, ok := instance.(api.Meter); ok {
 		val, err := dev.CurrentPower()
-		res["CurrentPower"] = makeResult(val, err)
+		res["power"] = makeResult(val, err)
 	}
 
 	if dev, ok := instance.(api.MeterEnergy); ok {
 		val, err := dev.TotalEnergy()
-		res["TotalEnergy"] = makeResult(val, err)
+		res["energy"] = makeResult(val, err)
 	}
 
 	if dev, ok := instance.(api.Battery); ok {
 		val, err := dev.Soc()
-		res["Soc"] = makeResult(val, err)
+		res["soc"] = makeResult(val, err)
 	}
 
 	if dev, ok := instance.(api.VehicleOdometer); ok {
 		val, err := dev.Odometer()
-		res["Odometer"] = makeResult(val, err)
+		res["odometer"] = makeResult(val, err)
 	}
+
+	if dev, ok := instance.(api.BatteryCapacity); ok {
+		val := dev.Capacity()
+		res["capacity"] = makeResult(val, nil)
+	}
+
+	if dev, ok := instance.(api.PhaseCurrents); ok {
+		i1, i2, i3, err := dev.Currents()
+		res["phaseCurrents"] = makeResult([]float64{i1, i2, i3}, err)
+	}
+
+	if dev, ok := instance.(api.PhaseVoltages); ok {
+		u1, u2, u3, err := dev.Voltages()
+		res["phaseVoltages"] = makeResult([]float64{u1, u2, u3}, err)
+	}
+
+	if dev, ok := instance.(api.PhasePowers); ok {
+		p1, p2, p3, err := dev.Powers()
+		res["phasePowers"] = makeResult([]float64{p1, p2, p3}, err)
+	}
+
+	if dev, ok := instance.(api.ChargeState); ok {
+		val, err := dev.Status()
+		res["chargeStatus"] = makeResult(val, err)
+	}
+
+	if dev, ok := instance.(api.Charger); ok {
+		val, err := dev.Enabled()
+		res["enabled"] = makeResult(val, err)
+	}
+
+	if dev, ok := instance.(api.ChargeRater); ok {
+		val, err := dev.ChargedEnergy()
+		res["chargedEnergy"] = makeResult(val, err)
+	}
+
+	if dev, ok := instance.(api.VehicleRange); ok {
+		val, err := dev.Range()
+		res["range"] = makeResult(val, err)
+	}
+
+	if dev, ok := instance.(api.SocLimiter); ok {
+		val, err := dev.TargetSoc()
+		res["socLimit"] = makeResult(val, err)
+	}
+
+	log.WARN.Printf("testInstance: %v", res)
 
 	return res
 }

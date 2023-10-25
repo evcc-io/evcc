@@ -133,9 +133,7 @@ func deviceConfigHandler(w http.ResponseWriter, r *http.Request) {
 	jsonResult(w, res)
 }
 
-func deviceStatus[T any](id int, h config.Handler[T]) (T, error) {
-	name := config.NameForID(id)
-
+func deviceStatus[T any](name string, h config.Handler[T]) (T, error) {
 	dev, err := h.ByName(name)
 	if err != nil {
 		var zero T
@@ -155,23 +153,19 @@ func deviceStatusHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id, err := strconv.Atoi(vars["id"])
-	if err != nil {
-		jsonError(w, http.StatusBadRequest, err)
-		return
-	}
+	name := vars["name"]
 
 	var instance any
 
 	switch class {
 	case templates.Meter:
-		instance, err = deviceStatus(id, config.Meters())
+		instance, err = deviceStatus(name, config.Meters())
 
 	case templates.Charger:
-		instance, err = deviceStatus(id, config.Chargers())
+		instance, err = deviceStatus(name, config.Chargers())
 
 	case templates.Vehicle:
-		instance, err = deviceStatus(id, config.Vehicles())
+		instance, err = deviceStatus(name, config.Vehicles())
 	}
 
 	if err != nil {

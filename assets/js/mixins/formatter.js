@@ -237,5 +237,31 @@ export default {
         if (Math.abs(elapsed) > units[u] || u == "second")
           return rtf.format(Math.round(elapsed / units[u]), u);
     },
+    fmtDeviceValue(name, value) {
+      switch (name) {
+        case "power":
+          return this.fmtKw(value);
+        case "energy":
+        case "capacity":
+        case "chargedEnergy":
+          return this.fmtKWh(value * 1e3);
+        case "soc":
+          return `${this.fmtNumber(value, 1)}%`;
+        case "odometer":
+        case "range":
+          return `${this.fmtNumber(value, 0)} km`;
+        case "phaseCurrents":
+          return value.map((v) => this.fmtNumber(v, 0)).join(" ") + " A";
+        case "phaseVoltages":
+          return value.map((v) => this.fmtNumber(v, 0)).join(" ") + " V";
+        case "phasePowers":
+          return value.map((v) => this.fmtKw(v)).join(", ");
+        case "chargeStatus":
+          return value;
+        case "socLimit":
+          return `${this.fmtNumber(value)}%`;
+      }
+      return value;
+    },
   },
 };

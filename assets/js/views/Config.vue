@@ -38,7 +38,7 @@
 				:unconfigured="!gridMeter"
 				:editable="!!gridMeter?.id"
 				data-testid="grid"
-				:tags="['-1.220 W', '3A 17A 11A', '72.128 kWh']"
+				:tags="deviceTags('meter', gridMeter?.name)"
 				@configure="addMeter('grid')"
 				@edit="editMeter(gridMeter.id, 'grid')"
 			>
@@ -51,8 +51,8 @@
 				:key="!!meter.name"
 				:name="meter.config?.template || 'Solar system'"
 				:editable="!!meter.id"
-				data-testid="grid"
-				:tags="['7.222 W']"
+				:tags="deviceTags('meter', meter.name)"
+				data-testid="pv"
 				@edit="editMeter(meter.id, 'pv')"
 			>
 				<template #icon>
@@ -64,8 +64,8 @@
 				:key="meter.name"
 				:name="meter.config?.template || 'Battery storage'"
 				:editable="!!meter.id"
-				data-testid="grid"
-				:tags="['220 W', '55%']"
+				:tags="deviceTags('meter', meter.name)"
+				data-testid="battery"
 				@edit="editMeter(meter.id, 'battery')"
 			>
 				<template #icon>
@@ -103,6 +103,7 @@
 					:key="vehicle.id"
 					:name="vehicle.config?.title || vehicle.name"
 					:editable="vehicle.id >= 0"
+					:tags="deviceTags('vehicle', vehicle.name)"
 					data-testid="vehicle"
 					@edit="editVehicle(vehicle.id)"
 				>
@@ -141,6 +142,7 @@ import VehicleModal from "../components/Config/VehicleModal.vue";
 import DeviceCard from "../components/Config/DeviceCard.vue";
 import AddDeviceButton from "../components/Config/AddDeviceButton.vue";
 import MeterModal from "../components/Config/MeterModal.vue";
+import formatter from "../mixins/formatter";
 
 export default {
 	name: "Config",
@@ -159,8 +161,11 @@ export default {
 			selectedMeterId: undefined,
 			selectedMeterType: undefined,
 			site: { grid: "", pv: [], battery: [] },
+			deviceValueTimeout: undefined,
+			deviceValues: {},
 		};
 	},
+	mixins: [formatter],
 	computed: {
 		siteTitle() {
 			return this.site?.title;
@@ -192,12 +197,16 @@ export default {
 	mounted() {
 		this.loadAll();
 	},
+	unmounted() {
+		clearTimeout(this.deviceValueTimeout);
+	},
 	methods: {
 		async loadAll() {
-			this.loadVehicles();
-			this.loadMeters();
-			this.loadSite();
-			this.loadDirty();
+			await this.loadVehicles();
+			await this.loadMeters();
+			await this.loadSite();
+			await this.loadDirty();
+			await this.updateValues();
 		},
 		async loadDirty() {
 			try {
@@ -301,13 +310,45 @@ export default {
 				alert("Unabled to restart server.");
 			}
 		},
+		async updateDeviceValue(type, name) {
+			try {
+				const response = await api.get(`/config/devices/${type}/${name}/status`);
+				const values = Object.entries(response.data.result).reduce(
+					(res, [name, { value }]) => {
+						res[name] = value;
+						return res;
+					},
+					{}
+				);
+				if (!this.deviceValues[type]) this.deviceValues[type] = {};
+				this.deviceValues[type][name] = values;
+			} catch (error) {
+				console.error("Error fetching device values for", type, name, error);
+				return null;
+			}
+		},
+		async updateValues() {
+			const promises = [
+				...this.meters.map((meter) => this.updateDeviceValue("meter", meter.name)),
+				...this.vehicles.map((vehicle) => this.updateDeviceValue("vehicle", vehicle.name)),
+			];
+
+			await Promise.all(promises);
+
+			this.deviceValueTimeout = setTimeout(this.updateValues, 10000);
+		},
+		deviceTags(type, id) {
+			const values = this.deviceValues[type]?.[id];
+			if (!values) return [];
+			return Object.entries(values).map(
+				([name, value]) =>
+					`${this.$t(`config.deviceValue.${name}`)}: ${this.fmtDeviceValue(name, value)}`
+			);
+		},
 	},
 };
 </script>
 <style scoped>
-.container {
-	max-width: 700px;
-}
 .config-list {
 	display: grid;
 	grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
