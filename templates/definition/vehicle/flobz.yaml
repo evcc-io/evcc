@@ -73,16 +73,16 @@ render: |
     {{- if .host }}
       {{- if .wakeup_alt == true }}
         uri: http://{{ .host }}{{ if .port }}:{{ .port }}{{ end }}/charge_now/{{ .vin }}/1
-      {{ - else }}
+      {{- else }}
         uri: http://{{ .host }}{{ if .port }}:{{ .port }}{{ end }}/wakeup/{{ .vin }}
       {{- end }}
     {{- else }}
       {{- if .wakeup_alt == true }}
         uri: {{ trimSuffix "/" .url }}/charge_now/{{ .vin }}/1
-      {{ - else }}
+      {{- else }}
         uri: {{ trimSuffix "/" .url }}/wakeup/{{ .vin }}
       {{- end }}
-    {{ -end }} 
+    {{- end }} 
   {{- define "source" }}
   source: http
   {{- if .host }}
