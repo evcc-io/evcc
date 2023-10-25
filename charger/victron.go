@@ -103,7 +103,7 @@ func (wb *Victron) Status() (api.ChargeStatus, error) {
 	case 5, 6, 7:
 		return api.StatusB, nil
 	default:
-		return api.StatusNone, fmt.Errorf("invalid status… %d", u)
+		return api.StatusNone, fmt.Errorf("invalid status: %d", u)
 	}
 }
 
