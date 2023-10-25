@@ -45,29 +45,27 @@ func init() {
 func NewPulsatrixFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
 		Host string
-		Path string
-		Name string
 	}{}
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
-	return NewPulsatrix(cc.Host, cc.Path)
+	return NewPulsatrix(cc.Host)
 }
 
 // NewPulsatrix creates pulsatrix charger
-func NewPulsatrix(hostname, path string) (*PulsatrixCharger, error) {
+func NewPulsatrix(hostname string) (*PulsatrixCharger, error) {
 	wb := PulsatrixCharger{}
 	wb.log = util.NewLogger("pulsatrix")
-	err := wb.connectWs(hostname, path)
+	err := wb.connectWs(hostname)
 	if err != nil {
 		return nil, err
 	}
 	return &wb, nil
 }
 
-// ConnectWs connects to a pulsatrix charger websocket
-func (c *PulsatrixCharger) connectWs(hostname, path string) error {
-	u := url.URL{Scheme: "ws", Host: hostname, Path: path}
+// ConnectWs connects to a pulsatrix SECC websocket
+func (c *PulsatrixCharger) connectWs(hostname string) error {
+	u := url.URL{Scheme: "ws", Host: hostname, Path: "/api/ws"}
 	dialer := websocket.DefaultDialer
 	conn, _, err := dialer.Dial(u.String(), nil)
 	if err != nil {
@@ -90,7 +88,6 @@ func (c *PulsatrixCharger) connectWs(hostname, path string) error {
 		c.reconnecting = 0
 	}
 
-	c.path = path
 	c.enState = false
 	c.conn = conn
 	c.handleError(c.Enable(false))
@@ -99,7 +96,7 @@ func (c *PulsatrixCharger) connectWs(hostname, path string) error {
 	return nil
 }
 
-// Heartbeat sends a heartbeat to the pulsatrix charger
+// Heartbeat sends a heartbeat to the pulsatrix SECC
 func (c *PulsatrixCharger) heartbeat() {
 	for {
 		if c.VehicleStatus == "A" {
@@ -123,7 +120,7 @@ func (c *PulsatrixCharger) handleError(err error) {
 	}
 }
 
-// ReconnectWs reconnects to a pulsatrix charger websocket
+// ReconnectWs reconnects to a pulsatrix SECC websocket
 func (c *PulsatrixCharger) reconnectWs() {
 	c.reconnecting++
 	c.conn.Close()
@@ -140,7 +137,7 @@ func (c *PulsatrixCharger) reconnectWs() {
 	}
 
 	time.Sleep(waitTime)
-	c.handleError(c.connectWs(c.conn.RemoteAddr().String(), c.path))
+	c.handleError(c.connectWs(c.conn.RemoteAddr().String()))
 }
 
 // WsReader runs a loop that reads messages from the websocket

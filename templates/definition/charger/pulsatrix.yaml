@@ -2,16 +2,17 @@ template: pulsatrix
 products:
   - brand: pulsatrix
     description:
-      generic: Stylus, Penta, Pico, Smart
+      generic: SECC (stylus, penta, pico, ducto, smart)
+requirements:
+  description:
+    de: pulsatrix SECCs nutzen das WebSocket Protokoll zur Kommunikation
+    en: pulsatrix SECCs use WebSocket protocol to communicate
 params:
-  - name: host #IP address or hostname, found on the 3rd page of the charge controller
+  - name: host #IP address or hostname (can be found on 3rd page of SECC display)
     required: true
     description:
-      en: IP address or hostname
-      de: IP-Adresse oder Hostname
-  - name: path #Path to the websocket API, if unsure, leave default
-    default: /api/ws
+      en: IP address or hostname (can be found on 3rd page of SECC display)
+      de: IP-Adresse oder Hostname (wird auf der dritten Displayseite des SECC angezeigt)
 render: |
   type: pulsatrix
   host: {{ .host }}
-  path: {{ .path }}
