@@ -77,6 +77,9 @@ func (m *Influx) writeComplexPoint(writer pointWriter, param util.Param, tags ma
 	fields := make(map[string]any)
 
 	switch val := param.Val.(type) {
+	case string:
+		return
+
 	case int, int64, float64:
 		fields["value"] = param.Val
 

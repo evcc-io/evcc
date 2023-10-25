@@ -46,11 +46,13 @@ delete = "Fahrzeug löschen"
 generic = "Weitere Integrationen"
 offline = "Generisches Fahrzeug"
 online = "Fahrzeuge mit Schnittstelle"
+save = "Speichern"
 scooter = "Scooter"
 template = "Hersteller"
 titleAdd = "Fahrzeug hinzufügen"
 titleEdit = "Fahrzeug bearbeiten"
 update = "Prüfen & speichern"
+validateSave = "Prüfen & speichern"
 
 [footer]
 
@@ -67,20 +69,26 @@ powerSub2 = "laden ..."
 tabTitle = "Live-Community"
 
 [footer.savings]
+co2Saved = "{value} eingespart"
+co2Title = "CO₂ Emisson"
+configurePriceCo2 = "Preis und CO₂-Emissionen konfigurieren"
 footerLong = "{percent}% Sonnenenergie"
 footerShort = "{percent}% Sonne"
 modalTitle = "Auswertung Ladeenergie"
+moneySaved = "{value} gespart"
 percentGrid = "{grid} kWh Netz"
 percentSelf = "{self} kWh Sonne"
 percentTitle = "Sonnenenergie"
-priceFeedIn = "{feedInPrice} Einspeisung"
-priceGrid = "{gridPrice} Netz"
+periodLabel = "Zeitraum:"
 priceTitle = "Energiepreis"
-savingsComparedToGrid = "gegenüber Netzbezug"
-savingsTitle = "Ersparnis"
-savingsTotalEnergy = "{total} kWh geladen"
-since = "seit {since}"
+referenceGrid = "Netz"
+referenceLabel = "Referenzdaten:"
 tabTitle = "Meine Daten"
+
+[footer.savings.period]
+30d = "letzte 30 Tage"
+365d = "letzte 365 Tage"
+total = "gesamt"
 
 [footer.sponsor]
 becomeSponsor = "Sponsor werden"
@@ -246,6 +254,8 @@ title = "Zielzeit"
 today = "heute"
 tomorrow = "morgen"
 update = "Aktualisieren"
+vehicleCapacityDocs = "Erfahre, wie du sie konfigurierst."
+vehicleCapacityRequired = "Die Batteriekapazität des Fahrzeugs wird benötigt, um die Ladedauer zu schätzen."
 
 [main.targetChargePlan]
 chargeDuration = "Ladedauer"
@@ -280,8 +290,8 @@ vehicleTarget = "Fahrzeuglimit: {soc}%"
 
 [main.vehicleStatus]
 charging = "Ladevorgang aktiv …"
-cheapEnergyCharging = "Günstige Energie verfügbar. Ladevorgang aktiv …"
-cleanEnergyCharging = "Saubere Energie verfügbar. Ladevorgang aktiv …"
+cheapEnergyCharging = "Lade günstige Energie: {price} (Grenze {limit})"
+cleanEnergyCharging = "Lade saubere Energie: {co2} (Grenze {limit})"
 climating = "Vorklimatisierung erkannt."
 connected = "Verbunden."
 disconnected = "Nicht verbunden."

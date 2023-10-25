@@ -43,8 +43,8 @@ const (
 	etrelRegSWVersion     = 1015
 
 	// Always zero, see https://github.com/evcc-io/evcc/issues/5346
-	//etrelRegSessionEnergy = 30
-	//etrelRegChargeTime    = 32
+	// etrelRegSessionEnergy = 30
+	// etrelRegChargeTime    = 32
 
 	// holding, write-only!
 	etrelRegMaxCurrent = 8
@@ -211,12 +211,12 @@ func (wb *Etrel) Currents() (float64, float64, float64, error) {
 		return 0, 0, 0, err
 	}
 
-	var currents [3]float64
+	var res [3]float64
 	for i := 0; i < 3; i++ {
-		currents[i] = float64(encoding.Float32(b[4*i:]))
+		res[i] = float64(encoding.Float32(b[4*i:]))
 	}
 
-	return currents[0], currents[1], currents[2], nil
+	return res[0], res[1], res[2], nil
 }
 
 // var _ api.ChargeTimer = (*Etrel)(nil)

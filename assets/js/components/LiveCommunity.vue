@@ -24,7 +24,7 @@
 
 		<SavingsTile
 			class="text-accent3"
-			icon="eco"
+			icon="lightning"
 			:title="$t('footer.community.greenEnergy')"
 			:value="greenEnergy.value"
 			:valueFmt="fmtAnimation"

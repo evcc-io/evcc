@@ -66,7 +66,7 @@ func (lp *Loadpoint) GetPlan(targetTime time.Time, maxPower float64) (time.Durat
 	return requiredDuration, plan, err
 }
 
-// plannerActive checks if the charging plan has an active slot
+// plannerActive checks if the charging plan has a currently active slot
 func (lp *Loadpoint) plannerActive() (active bool) {
 	defer func() {
 		lp.setPlanActive(active)

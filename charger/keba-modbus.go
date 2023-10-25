@@ -246,6 +246,7 @@ func (wb *Keba) totalEnergy() (float64, error) {
 func (wb *Keba) currents() (float64, float64, float64, error) {
 	var res [3]float64
 	for i := uint16(0); i < 3; i++ {
+		// does not support reading across register boundaries
 		b, err := wb.conn.ReadHoldingRegisters(kebaRegCurrents+2*i, 2)
 		if err != nil {
 			return 0, 0, 0, err

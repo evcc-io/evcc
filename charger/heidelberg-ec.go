@@ -210,10 +210,6 @@ func (wb *HeidelbergEC) Enable(enable bool) error {
 
 // MaxCurrent implements the api.Charger interface
 func (wb *HeidelbergEC) MaxCurrent(current int64) error {
-	if current < 6 {
-		return fmt.Errorf("invalid current %d", current)
-	}
-
 	return wb.MaxCurrentMillis(float64(current))
 }
 
@@ -262,38 +258,33 @@ func (wb *HeidelbergEC) TotalEnergy() (float64, error) {
 	return float64(binary.BigEndian.Uint32(b)) / 1e3, nil
 }
 
-var _ api.PhaseCurrents = (*HeidelbergEC)(nil)
-
-// Currents implements the api.PhaseCurrents interface
-func (wb *HeidelbergEC) Currents() (float64, float64, float64, error) {
-	b, err := wb.conn.ReadInputRegisters(hecRegCurrents, 3)
+// getPhaseValues returns 3 sequential register values
+func (wb *HeidelbergEC) getPhaseValues(reg uint16, divider float64) (float64, float64, float64, error) {
+	b, err := wb.conn.ReadInputRegisters(reg, 3)
 	if err != nil {
 		return 0, 0, 0, err
 	}
 
-	var curr [3]float64
-	for l := 0; l < 3; l++ {
-		curr[l] = float64(binary.BigEndian.Uint16(b[2*l:])) / 10
+	var res [3]float64
+	for i := 0; i < 3; i++ {
+		res[i] = float64(binary.BigEndian.Uint16(b[2*i:])) / divider
 	}
 
-	return curr[0], curr[1], curr[2], nil
+	return res[0], res[1], res[2], nil
+}
+
+var _ api.PhaseCurrents = (*HeidelbergEC)(nil)
+
+// Currents implements the api.PhaseCurrents interface
+func (wb *HeidelbergEC) Currents() (float64, float64, float64, error) {
+	return wb.getPhaseValues(hecRegCurrents, 10)
 }
 
 var _ api.PhaseVoltages = (*HeidelbergEC)(nil)
 
 // Voltages implements the api.PhaseVoltages interface
 func (wb *HeidelbergEC) Voltages() (float64, float64, float64, error) {
-	b, err := wb.conn.ReadInputRegisters(hecRegVoltages, 3)
-	if err != nil {
-		return 0, 0, 0, err
-	}
-
-	var volt [3]float64
-	for l := 0; l < 3; l++ {
-		volt[l] = float64(binary.BigEndian.Uint16(b[2*l:]))
-	}
-
-	return volt[0], volt[1], volt[2], nil
+	return wb.getPhaseValues(hecRegVoltages, 1)
 }
 
 var _ api.Diagnosis = (*HeidelbergEC)(nil)

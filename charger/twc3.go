@@ -91,12 +91,7 @@ func NewTwc3FromConfig(other map[string]interface{}) (api.Charger, error) {
 
 // Enabled implements the api.Charger interface
 func (c *Twc3) Enabled() (bool, error) {
-	enabled, err := verifyEnabled(c, c.enabled)
-	if err == nil {
-		c.enabled = enabled
-	}
-
-	return enabled, err
+	return verifyEnabled(c, c.enabled)
 }
 
 // Enable implements the api.Charger interface
@@ -105,12 +100,22 @@ func (c *Twc3) Enable(enable bool) error {
 		return errors.New("loadpoint not initialized")
 	}
 
+	// ignore disabling when vehicle is already disconnected
+	// https://github.com/evcc-io/evcc/issues/10213
+	status, err := c.Status()
+	if err != nil {
+		return err
+	}
+	if status == api.StatusA && !enable {
+		c.enabled = false
+		return nil
+	}
+
 	v, ok := c.lp.GetVehicle().(api.VehicleChargeController)
 	if !ok {
 		return errors.New("vehicle not capable of start/stop")
 	}
 
-	var err error
 	if enable {
 		err = v.StartCharge()
 	} else {

@@ -1,10 +1,10 @@
 <template>
 	<div class="flex-shrink-1 d-flex mb-4 mb-lg-0 align-items-center align-items-lg-start">
 		<shopicon-regular-sun v-if="icon === 'sun'" class="tile-icon"></shopicon-regular-sun>
-		<shopicon-regular-coinjar
-			v-if="icon === 'coinjar'"
+		<shopicon-regular-lightning
+			v-if="icon === 'lightning'"
 			class="tile-icon"
-		></shopicon-regular-coinjar>
+		></shopicon-regular-lightning>
 		<shopicon-regular-receivepayment
 			v-if="icon === 'receivepayment'"
 			class="tile-icon"
@@ -15,7 +15,7 @@
 			<div>
 				<p class="my-0 fw-bold text-truncate">{{ title }}</p>
 				<strong class="d-flex align-items-baseline lh-sm">
-					<span class="fs-1">
+					<span class="fs-1 value">
 						<AnimatedNumber v-if="valueFmt" :to="value" :format="valueFmt" />
 						<span v-else>{{ value }}</span>
 					</span>
@@ -31,7 +31,7 @@
 </template>
 
 <script>
-import "@h2d2/shopicons/es/regular/coinjar";
+import "@h2d2/shopicons/es/regular/lightning";
 import "@h2d2/shopicons/es/regular/sun";
 import "@h2d2/shopicons/es/regular/receivepayment";
 import "@h2d2/shopicons/es/regular/car3";
@@ -66,5 +66,8 @@ export default {
 }
 .unit {
 	font-size: var(--bs-body-font-size);
+}
+.value {
+	font-variant-numeric: tabular-nums;
 }
 </style>

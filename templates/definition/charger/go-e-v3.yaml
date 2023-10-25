@@ -1,9 +1,9 @@
 template: go-e-v3
 covers: ["go-e-gemini"]
 products:
-  - brand: go-eCharger
+  - brand: go-e
     description:
-      generic: Gemini, HOME+, HOMEfix (V3)
+      generic: Charger Gemini, HOME+, HOMEfix (V3)
 capabilities: ["1p3p", "rfid"]
 requirements:
   description:
@@ -11,10 +11,14 @@ requirements:
       Benötigt mindestens Firmware 052.1 oder neuer.
 
       Für 1P/3P-Phasenumschaltung muss die HTTP API v2 im Charger aktiviert sein.
+
+      In der Go-E App (Menüpunkt "Auto") sollte die Option "Ausstecken simulieren" aktiviert sein.
     en: |
       Requires firmware 052.1 or later.
 
       For 1P/3P-Phase switching the HTTP API v2 in the charger setup needs to be activated.
+
+      The “simulate unplugging” option should be activated in the Go-E app ("Car" menu item).
   uri: https://docs.evcc.io/docs/devices/chargers#go-echarger
   evcc: ["sponsorship"]
 params:

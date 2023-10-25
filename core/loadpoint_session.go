@@ -58,8 +58,7 @@ func (lp *Loadpoint) stopSession() {
 	}
 
 	s.Finished = lp.clock.Now()
-	meterStop := lp.chargeMeterTotal()
-	if meterStop > 0 {
+	if meterStop := lp.chargeMeterTotal(); meterStop > 0 {
 		s.MeterStop = &meterStop
 	}
 
