@@ -3,8 +3,10 @@ package vehicle
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
+	"github.com/bogosj/tesla"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
@@ -46,7 +48,7 @@ func NewTeslaVCFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, err
 	}
 
-	ts := OAuth2Config.TokenSource(context.Background(), &oauth2.Token{
+	ts := tesla.OAuth2Config.TokenSource(context.Background(), &oauth2.Token{
 		AccessToken:  cc.Tokens.Access,
 		RefreshToken: cc.Tokens.Refresh,
 	})
@@ -100,11 +102,12 @@ func NewTeslaVCFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 // Soc implements the api.Vehicle interface
 func (v *TeslaVC) Soc() (float64, error) {
-	res, err := v.dataG()
-	if err != nil {
-		return 0, err
-	}
-	return float64(res.Response.ChargeState.UsableBatteryLevel), nil
+	return 0, api.ErrAsleep
+	// res, err := v.dataG()
+	// if err != nil {
+	// 	return 0, err
+	// }
+	// return float64(res.Response.ChargeState.UsableBatteryLevel), nil
 }
 
 // var _ api.ChargeState = (*TeslaVC)(nil)
