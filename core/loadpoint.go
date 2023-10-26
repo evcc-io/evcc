@@ -175,7 +175,7 @@ type Loadpoint struct {
 	progress                *Progress      // Step-wise progress indicator
 
 	// session log
-	db      session.Database
+	db      *session.DB
 	session *session.Session
 
 	tasks *util.Queue[Task] // tasks to be executed
