@@ -100,7 +100,7 @@ func (wb *Victron) Status() (api.ChargeStatus, error) {
 	switch u {
 	case 0, 1, 2, 3:
 		return api.ChargeStatusString(string('A' + rune(binary.BigEndian.Uint16(b))))
-	case 5, 6, 7:
+	case 5, 6:
 		return api.StatusB, nil
 	default:
 		return api.StatusNone, fmt.Errorf("invalid status: %d", u)
