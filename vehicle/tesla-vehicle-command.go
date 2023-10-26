@@ -29,6 +29,8 @@ func init() {
 	registry.Add("tesla-vehicle-command", NewTeslaVCFromConfig)
 }
 
+// https://auth.tesla.com/oauth2/v3/.well-known/openid-configuration
+
 // NewTeslaVCFromConfig creates a new vehicle
 func NewTeslaVCFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
