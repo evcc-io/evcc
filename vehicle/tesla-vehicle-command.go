@@ -46,7 +46,19 @@ func NewTeslaVCFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, err
 	}
 
-	user, err := account.New(cc.Tokens.Access)
+	ts := OAuth2Config.TokenSource(context.Background(), &oauth2.Token{
+		AccessToken:  cc.Tokens.Access,
+		RefreshToken: cc.Tokens.Refresh,
+	})
+
+	token, err := ts.Token()
+	if err != nil {
+		return nil, err
+	}
+
+	fmt.Println(token)
+
+	user, err := account.New(token.AccessToken)
 	if err != nil {
 		return nil, err
 	}
