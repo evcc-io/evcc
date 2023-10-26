@@ -44,7 +44,8 @@ params:
     help:
       de: IP-Adresse oder Hostname
       en: IP address or hostname
-    example: localhost
+    default: localhost
+    example: 192.0.2.2
   - name: ip
     description:
       de: IP-Adresse
@@ -52,7 +53,8 @@ params:
     help:
       de: IP-Adresse
       en: IP address
-    example: 127.0.0.1
+    default: 127.0.0.1
+    example: 192.0.2.2
   - name: port
     description:
       de: Port
