@@ -19,8 +19,8 @@ params:
     default: 502
 render: |
   type: custom
-  power:
   {{- if eq .usage "grid" }}
+  power:
     source: calc
     add:
     - source: modbus
@@ -40,11 +40,20 @@ render: |
         decode: uint32s
   {{- end }}
   {{- if eq .usage "pv" }}
+  power:
     source: modbus
     uri: {{ .host }}:{{ .port }}
     id: 1
     register:
       address: 3502 # Pac
+      type: input
+      decode: uint32s
+  energy:
+    source: modbus
+    uri: {{ .host }}:{{ .port }}
+    id: 1
+    register:
+      address: 3516 # total yield
       type: input
       decode: uint32s
   {{- end }}
