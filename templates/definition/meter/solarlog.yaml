@@ -56,4 +56,5 @@ render: |
       address: 3516 # total yield
       type: input
       decode: uint32s
+    scale: 0.001
   {{- end }}
