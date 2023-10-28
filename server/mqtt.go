@@ -120,16 +120,6 @@ func (m *MQTT) publish(topic string, retained bool, payload interface{}) {
 		m.publishSingleValue(topic, retained, total)
 	}
 
-	// publish vehicles
-	if slice, ok := payload.([]string); ok && strings.HasSuffix(topic, "vehicles") {
-		// publish count
-		payload = len(slice)
-
-		for i, v := range slice {
-			m.publishSingleValue(fmt.Sprintf("%s/%d", topic, i+1), retained, v)
-		}
-	}
-
 	m.publishComplex(topic, retained, payload)
 }
 
