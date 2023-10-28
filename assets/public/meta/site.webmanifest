@@ -41,6 +41,12 @@
 			"sizes": "any",
 			"type": "image/svg+xml",
 			"purpose:": "maskable"
+		},
+		{
+			"src": "android-chrome-monochrome.svg",
+			"sizes": "any",
+			"type": "image/svg+xml",
+			"purpose:": "monochrome"
 		}
 	]
 }
