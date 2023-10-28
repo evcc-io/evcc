@@ -1,6 +1,8 @@
 package provider
 
 import (
+	"sync"
+
 	"github.com/evcc-io/evcc/provider/javascript"
 	"github.com/evcc-io/evcc/util"
 	"github.com/robertkrimen/otto"
@@ -9,6 +11,7 @@ import (
 
 // Javascript implements Javascript request provider
 type Javascript struct {
+	mu     sync.Mutex // otto is not thread safe
 	vm     *otto.Otto
 	script string
 	in     []inputTransformation
@@ -106,6 +109,9 @@ func (p *Javascript) BoolGetter() func() (bool, error) {
 }
 
 func (p *Javascript) handleGetter() (any, error) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+
 	if err := transformInputs(p.in, p.setParam); err != nil {
 		return nil, err
 	}
@@ -114,6 +120,9 @@ func (p *Javascript) handleGetter() (any, error) {
 }
 
 func (p *Javascript) handleSetter(param string, val any) error {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+
 	if err := p.setParam(param, val); err != nil {
 		return err
 	}
