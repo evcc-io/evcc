@@ -445,7 +445,6 @@ func (lp *Loadpoint) evVehicleConnectHandler() {
 	// energy
 	lp.sessionEnergy.Reset()
 	lp.sessionEnergy.Publish("session", lp)
-	lp.publish("chargedEnergy", lp.getChargedEnergy())
 
 	// duration
 	lp.connectedTime = lp.clock.Now()
@@ -483,7 +482,6 @@ func (lp *Loadpoint) evVehicleDisconnectHandler() {
 
 	// energy and duration
 	lp.sessionEnergy.Publish("session", lp)
-	lp.publish("chargedEnergy", lp.getChargedEnergy())
 	lp.publish("connectedDuration", lp.clock.Since(lp.connectedTime).Round(time.Second))
 
 	// forget startup energy offset
@@ -1364,8 +1362,6 @@ func (lp *Loadpoint) publishChargeProgress() {
 	}
 
 	lp.sessionEnergy.Publish("session", lp)
-	// deprecated: use sessionEnergy instead
-	lp.publish("chargedEnergy", lp.getChargedEnergy())
 	lp.publish("chargeDuration", lp.chargeDuration)
 	if _, ok := lp.chargeMeter.(api.MeterEnergy); ok {
 		lp.publish("chargeTotalImport", lp.chargeMeterTotal())

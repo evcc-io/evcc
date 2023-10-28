@@ -11,7 +11,7 @@ const state = reactive({
 	vehicleRange: 231,
 	targetSoc: 90,
 	vehicleCapacity: 72,
-	chargedEnergy: 14123,
+	sessionEnergy: 14123,
 	socBasedCharging: true,
 	id: 0,
 });

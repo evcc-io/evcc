@@ -64,7 +64,7 @@ export default {
 		minSoc: Number,
 		targetSoc: Number,
 		targetEnergy: Number,
-		chargedEnergy: Number,
+		sessionEnergy: Number,
 		socBasedCharging: Boolean,
 	},
 	emits: ["target-soc-drag", "target-soc-updated"],
@@ -84,7 +84,7 @@ export default {
 				return 100;
 			} else {
 				if (this.targetEnergy) {
-					return (100 / this.targetEnergy) * (this.chargedEnergy / 1e3);
+					return (100 / this.targetEnergy) * (this.sessionEnergy / 1e3);
 				}
 				return 100;
 			}

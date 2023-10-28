@@ -6,7 +6,7 @@ const state = reactive({
 	id: 0,
 	pvConfigured: true,
 	chargePower: 2800,
-	chargedEnergy: 11e3,
+	sessionEnergy: 11e3,
 	chargeDuration: 95 * 60,
 	vehiclePresent: true,
 	vehicleTitle: "Mein Auto",

@@ -45,7 +45,7 @@ export default {
 	props: {
 		targetEnergy: Number,
 		socPerKwh: Number,
-		chargedEnergy: Number,
+		sessionEnergy: Number,
 		vehicleCapacity: Number,
 	},
 	emits: ["target-energy-updated"],
@@ -66,7 +66,7 @@ export default {
 			const result = [];
 			for (let energy = 0; energy <= this.maxEnergy; energy += this.steps) {
 				let text = this.fmtEnergy(energy);
-				const disabled = energy < this.chargedEnergy / 1e3 && energy !== 0;
+				const disabled = energy < this.sessionEnergy / 1e3 && energy !== 0;
 				const soc = this.estimatedSoc(energy);
 				if (soc) {
 					text += ` (${this.fmtSoc(soc)})`;

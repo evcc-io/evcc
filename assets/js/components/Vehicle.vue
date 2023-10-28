@@ -27,7 +27,7 @@
 				v-else
 				class="flex-grow-1"
 				:label="$t('main.loadpoint.charged')"
-				:value="fmtEnergy(chargedEnergy)"
+				:value="fmtEnergy(sessionEnergy)"
 				:extraValue="chargedSoc"
 				align="start"
 			/>
@@ -53,7 +53,7 @@
 				class="flex-grow-1 text-end"
 				:target-energy="targetEnergy"
 				:soc-per-kwh="socPerKwh"
-				:charged-energy="chargedEnergy"
+				:session-energy="sessionEnergy"
 				:vehicle-capacity="vehicleCapacity"
 				@target-energy-updated="targetEnergyUpdated"
 			/>
@@ -107,7 +107,7 @@ export default {
 		targetTime: String,
 		targetSoc: Number,
 		targetEnergy: Number,
-		chargedEnergy: Number,
+		sessionEnergy: Number,
 		mode: String,
 		phaseAction: String,
 		phaseRemainingInterpolated: Number,
@@ -186,7 +186,7 @@ export default {
 			return null;
 		},
 		chargedSoc: function () {
-			const value = this.socPerKwh * (this.chargedEnergy / 1e3);
+			const value = this.socPerKwh * (this.sessionEnergy / 1e3);
 			return value > 1 ? `+${Math.round(value)}%` : null;
 		},
 		chargingPlanDisabled: function () {

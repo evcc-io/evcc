@@ -75,7 +75,7 @@
 			<LabelAndValue
 				v-show="socBasedCharging"
 				:label="$t('main.loadpoint.charged')"
-				:value="fmtEnergy(chargedEnergy)"
+				:value="fmtEnergy(sessionEnergy)"
 				align="center"
 			/>
 			<LoadpointSessionInfo v-bind="sessionInfoProps" />
@@ -173,7 +173,6 @@ export default {
 
 		// details
 		chargePower: Number,
-		chargedEnergy: Number,
 		climaterActive: Boolean,
 		chargeRemainingDuration: Number,
 
