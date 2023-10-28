@@ -77,8 +77,16 @@ func (m *MQTT) publishComplex(topic string, retained bool, payload interface{}) 
 
 		// loop slice
 		for i := 0; i < val.Len(); i++ {
-			val := val.Index(i)
-			m.publishComplex(fmt.Sprintf("%s/%d", topic, i+1), retained, val.Interface())
+			m.publishComplex(fmt.Sprintf("%s/%d", topic, i+1), retained, val.Index(i).Interface())
+		}
+
+	case reflect.Map:
+		iter := reflect.ValueOf(m).MapRange()
+
+		// loop map
+		for iter.Next() {
+			k := iter.Key().String()
+			m.publishComplex(fmt.Sprintf("%s/%s", topic, k), retained, iter.Value().Interface())
 		}
 
 	case reflect.Struct:
