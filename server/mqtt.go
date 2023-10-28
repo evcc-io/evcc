@@ -82,7 +82,7 @@ func (m *MQTT) publishComplex(topic string, retained bool, payload interface{}) 
 
 	case reflect.Map:
 		// loop map
-		for iter := reflect.ValueOf(m).MapRange(); iter.Next(); {
+		for iter := reflect.ValueOf(payload).MapRange(); iter.Next(); {
 			k := iter.Key().String()
 			m.publishComplex(fmt.Sprintf("%s/%s", topic, k), retained, iter.Value().Interface())
 		}
