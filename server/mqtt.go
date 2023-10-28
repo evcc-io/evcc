@@ -92,9 +92,9 @@ func (m *MQTT) publishComplex(topic string, retained bool, payload interface{}) 
 		typ := val.Type()
 
 		// loop struct
-		for j := 0; j < typ.NumField(); j++ {
-			n := typ.Field(j).Name
-			m.publishComplex(fmt.Sprintf("%s/%s", topic, strings.ToLower(n[:1])+n[1:]), retained, val.Field(j).Interface())
+		for i := 0; i < typ.NumField(); i++ {
+			n := typ.Field(i).Name
+			m.publishComplex(fmt.Sprintf("%s/%s", topic, strings.ToLower(n[:1])+n[1:]), retained, val.Field(i).Interface())
 		}
 
 	default:
