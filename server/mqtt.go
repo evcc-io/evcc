@@ -18,6 +18,7 @@ import (
 var deprecatedTopics = []string{
 	"activePhases", "range", "socCharge", "vehicleSoC",
 	"batterySoC", "bufferSoC", "minSoC", "prioritySoC",
+	"savingsAmount", "savingsEffectivePrice", "savingsGridCharged", "savingsSelfConsumptionCharged", "savingsSelfConsumptionPercent", "savingsTotalCharged",
 	"targetSoC", "vehicleTargetSoC",
 }
 
