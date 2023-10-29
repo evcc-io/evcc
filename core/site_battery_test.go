@@ -73,3 +73,34 @@ func TestBatteryDischargeDisabled(t *testing.T) {
 	s.updateBatteryMode(loadpoints)
 	assert.Equal(t, api.BatteryLocked, s.GetBatteryMode(), "disabled bat discharge control; battery modified nonetheless")
 }
+
+// test that BatteryControllers are only called if batterymode changes
+func TestBatteryModeNoUpdate(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	batCtrl := mock.NewMockBatteryController(ctrl)
+	batCtrl.EXPECT().SetBatteryMode(api.BatteryLocked).Times(1)
+
+	lp := loadpoint.NewMockAPI(ctrl)
+	lp.EXPECT().GetStatus().Return(api.StatusC).Times(2)
+	lp.EXPECT().GetMode().Return(api.ModeNow).Times(2)
+	lp.EXPECT().GetPlanActive().Times(0)
+	loadpoints := []loadpoint.API{lp}
+
+	s := &Site{
+		batteryMode:             api.BatteryNormal,
+		batteryMeters:           []api.Meter{batCtrl},
+		BatteryDischargeControl: true,
+		log:                     util.NewLogger("foo"),
+	}
+
+	s.updateBatteryMode(loadpoints) // first call should call BatteryController
+	s.updateBatteryMode(loadpoints) // this one should not
+
+	// adjust mocks to simulate charge stop, should cause batMode udpate
+	lp.EXPECT().GetStatus().Return(api.StatusB).Times(1)
+	lp.EXPECT().GetMode().Return(api.ModeNow).Times(0)
+	batCtrl.EXPECT().SetBatteryMode(api.BatteryNormal).Times(1)
+
+	s.updateBatteryMode(loadpoints) // this one should have updated again
+}
