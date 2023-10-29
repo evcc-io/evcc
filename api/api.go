@@ -259,7 +259,6 @@ type CsvWriter interface {
 	WriteCsv(context.Context, io.Writer) error
 }
 type BatteryController interface {
-	Meter
 	SetBatteryMode(BatteryMode) error
 	GetBatteryMode() BatteryMode
 }

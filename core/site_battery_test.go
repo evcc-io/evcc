@@ -33,8 +33,14 @@ func TestBatteryDischarge(t *testing.T) {
 	log := util.NewLogger("foo")
 
 	for _, tc := range tcs {
-		batCtrl := mock.NewMockBatteryController(ctrl)
-		batCtrl.EXPECT().SetBatteryMode(tc.expBatMode).Times(1)
+		batCtrl := struct {
+			*mock.MockBatteryController
+			*mock.MockMeter
+		}{
+			mock.NewMockBatteryController(ctrl),
+			mock.NewMockMeter(ctrl),
+		}
+		batCtrl.MockBatteryController.EXPECT().SetBatteryMode(tc.expBatMode).Times(1)
 
 		s := &Site{
 			log:                     log,
@@ -56,8 +62,15 @@ func TestBatteryDischarge(t *testing.T) {
 func TestBatteryDischargeDisabled(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
-	batCtrl := mock.NewMockBatteryController(ctrl)
-	batCtrl.EXPECT().SetBatteryMode(gomock.Any()).Times(0)
+	batCtrl := struct {
+		*mock.MockBatteryController
+		*mock.MockMeter
+	}{
+		mock.NewMockBatteryController(ctrl),
+		mock.NewMockMeter(ctrl),
+	}
+
+	batCtrl.MockBatteryController.EXPECT().SetBatteryMode(gomock.Any()).Times(0)
 
 	lp := loadpoint.NewMockAPI(ctrl)
 	lp.EXPECT().GetStatus().Return(api.StatusC).Times(1)
@@ -78,8 +91,14 @@ func TestBatteryDischargeDisabled(t *testing.T) {
 func TestBatteryModeNoUpdate(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
-	batCtrl := mock.NewMockBatteryController(ctrl)
-	batCtrl.EXPECT().SetBatteryMode(api.BatteryLocked).Times(1)
+	batCtrl := struct {
+		*mock.MockBatteryController
+		*mock.MockMeter
+	}{
+		mock.NewMockBatteryController(ctrl),
+		mock.NewMockMeter(ctrl),
+	}
+	batCtrl.MockBatteryController.EXPECT().SetBatteryMode(api.BatteryLocked).Times(1)
 
 	lp := loadpoint.NewMockAPI(ctrl)
 	lp.EXPECT().GetStatus().Return(api.StatusC).Times(2)
@@ -100,7 +119,7 @@ func TestBatteryModeNoUpdate(t *testing.T) {
 	// adjust mocks to simulate charge stop, should cause batMode udpate
 	lp.EXPECT().GetStatus().Return(api.StatusB).Times(1)
 	lp.EXPECT().GetMode().Return(api.ModeNow).Times(0)
-	batCtrl.EXPECT().SetBatteryMode(api.BatteryNormal).Times(1)
+	batCtrl.MockBatteryController.EXPECT().SetBatteryMode(api.BatteryNormal).Times(1)
 
 	s.updateBatteryMode(loadpoints) // this one should have updated again
 }

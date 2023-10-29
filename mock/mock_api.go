@@ -566,21 +566,6 @@ func (m *MockBatteryController) EXPECT() *MockBatteryControllerMockRecorder {
 	return m.recorder
 }
 
-// CurrentPower mocks base method.
-func (m *MockBatteryController) CurrentPower() (float64, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CurrentPower")
-	ret0, _ := ret[0].(float64)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// CurrentPower indicates an expected call of CurrentPower.
-func (mr *MockBatteryControllerMockRecorder) CurrentPower() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CurrentPower", reflect.TypeOf((*MockBatteryController)(nil).CurrentPower))
-}
-
 // GetBatteryMode mocks base method.
 func (m *MockBatteryController) GetBatteryMode() api.BatteryMode {
 	m.ctrl.T.Helper()
