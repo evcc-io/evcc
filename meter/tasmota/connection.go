@@ -32,18 +32,18 @@ func NewConnection(uri, user, password string, channels []int, cache time.Durati
 	maxchannel := 1
 	used := make(map[int]bool)
 	for _, c := range channels {
-		if used[channels[c]] {
+		if c < 1 || c > 8 {
+			return nil, fmt.Errorf("invalid channel: %d", c)
+		}
+		if used[c] {
 			return nil, fmt.Errorf("duplicate channel: %d", c)
 		} else {
-			if c < 1 || c > 8 {
-				return nil, fmt.Errorf("invalid channel: %d", c)
+			used[c] = true
+			if c < minchannel {
+				minchannel = c
 			}
-			used[channels[c]] = true
-			if channels[c] < minchannel {
-				minchannel = channels[c]
-			}
-			if channels[c] > maxchannel {
-				maxchannel = channels[c]
+			if c > maxchannel {
+				maxchannel = c
 			}
 		}
 	}
