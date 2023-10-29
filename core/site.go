@@ -81,10 +81,11 @@ type Site struct {
 	stats       *Stats                   // Stats
 
 	// cached state
-	gridPower    float64 // Grid power
-	pvPower      float64 // PV power
-	batteryPower float64 // Battery charge power
-	batterySoc   float64 // Battery soc
+	gridPower    float64         // Grid power
+	pvPower      float64         // PV power
+	batteryPower float64         // Battery charge power
+	batterySoc   float64         // Battery soc
+	batteryMode  api.BatteryMode // Battery discharge currently enabled
 
 	publishCache map[string]any // store last published values to avoid unnecessary republishing
 }
@@ -224,6 +225,7 @@ func NewSite() *Site {
 		log:          util.NewLogger("site"),
 		publishCache: make(map[string]any),
 		Voltage:      230, // V
+		batteryMode:  api.BatteryNormal,
 	}
 
 	return lp
@@ -852,6 +854,17 @@ func (site *Site) loopLoadpoints(next chan<- Updater) {
 			next <- lp
 		}
 	}
+}
+
+func (site *Site) UpdateBatteryMode(loadpoints []loadpoint.API) error {
+
+	site.batteryMode = api.BatteryNormal
+
+	return nil
+}
+
+func (site *Site) GetBatteryMode() api.BatteryMode {
+	return site.batteryMode
 }
 
 // Run is the main control loop. It reacts to trigger events by

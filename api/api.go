@@ -258,3 +258,14 @@ type FeatureDescriber interface {
 type CsvWriter interface {
 	WriteCsv(context.Context, io.Writer) error
 }
+
+// ChargeMode is the charge operation mode. Valid values are off, now, minpv and pv
+type BatteryMode string
+
+// Charge modes
+const (
+	BatteryUnknown BatteryMode = ""
+	BatteryNormal  BatteryMode = "normal"
+	BatteryLocked  BatteryMode = "locked"
+	BatteryCharge  BatteryMode = "charge"
+)
