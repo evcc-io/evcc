@@ -78,7 +78,7 @@ func NewAmperfied(uri string, slaveID uint8) (api.Charger, error) {
 		return nil, api.ErrSponsorRequired
 	}
 
-	log := util.NewLogger("heidel")
+	log := util.NewLogger("amperfied")
 	conn.Logger(log.TRACE)
 
 	wb := &Amperfied{
