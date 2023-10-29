@@ -33,7 +33,7 @@ func TestBatteryDischarge(t *testing.T) {
 	log := util.NewLogger("foo")
 
 	for _, tc := range tcs {
-		batCtrl := mock.NewMockBatteryControl(ctrl)
+		batCtrl := mock.NewMockBatteryController(ctrl)
 		batCtrl.EXPECT().SetBatteryMode(tc.expBatMode).Times(1)
 
 		s := &Site{
@@ -56,7 +56,7 @@ func TestBatteryDischarge(t *testing.T) {
 func TestBatteryDischargeDisabled(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
-	batCtrl := mock.NewMockBatteryControl(ctrl)
+	batCtrl := mock.NewMockBatteryController(ctrl)
 	batCtrl.EXPECT().SetBatteryMode(gomock.Any()).Times(0)
 
 	lp := loadpoint.NewMockAPI(ctrl)
