@@ -887,9 +887,7 @@ func (site *Site) updateBatteryMode(loadpoints []loadpoint.API) {
 	}
 
 	//update state and publish
-	site.Lock()
-	site.batteryMode = batMode
-	site.Unlock()
+	site.SetBatteryMode(batMode)
 	site.publish("batteryMode", site.batteryMode)
 }
 

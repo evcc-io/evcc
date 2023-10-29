@@ -171,3 +171,10 @@ func (site *Site) GetBatteryMode() api.BatteryMode {
 	defer site.Unlock()
 	return site.batteryMode
 }
+
+// sets the current BatteryMode
+func (site *Site) SetBatteryMode(batMode api.BatteryMode) {
+	site.Lock()
+	defer site.Unlock()
+	site.batteryMode = batMode
+}
