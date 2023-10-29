@@ -259,7 +259,7 @@ type CsvWriter interface {
 	WriteCsv(context.Context, io.Writer) error
 }
 
-// ChargeMode is the charge operation mode. Valid values are off, now, minpv and pv
+// BatteryMode is the charge operation mode. Valid values are off, now, minpv and pv
 type BatteryMode string
 
 // Charge modes

@@ -822,9 +822,7 @@ func (site *Site) prepare() {
 
 	site.publish("vehicles", vehicleTitles(site.GetVehicles()))
 	site.publish("batteryDischargeControl", site.BatteryDischargeControl)
-	if site.BatteryDischargeControl {
-		site.publish("batteryMode", site.batteryMode)
-	}
+	site.publish("batteryMode", site.batteryMode)
 }
 
 // Prepare attaches communication channels to site and loadpoints
@@ -865,41 +863,34 @@ func (site *Site) loopLoadpoints(next chan<- Updater) {
 	}
 }
 
-func (site *Site) UpdateBatteryMode(loadpoints []loadpoint.API) {
-	if !site.BatteryDischargeControl {
-		return
-	}
-
+func (site *Site) updateBatteryMode(loadpoints []loadpoint.API) {
 	// determine expected state
 	batMode := api.BatteryNormal
 	for _, lp := range loadpoints {
-
-		if lp.GetStatus() == api.StatusC {
-			if mode := lp.GetMode(); mode == api.ModeNow || mode == api.ModePV && lp.GetPlanActive() {
-				batMode = api.BatteryLocked
-				break
-			}
+		if lp.GetStatus() == api.StatusC && (lp.GetMode() == api.ModeNow || lp.GetPlanActive()) {
+			batMode = api.BatteryLocked
+			break
 		}
 	}
 
 	//update batteries
-	for idx, batMeter := range site.batteryMeters {
-		if batCtrl, ok := batMeter.(api.BatteryControl); ok {
-			site.log.DEBUG.Printf("Updating battery[%d] to mode %s", idx, site.batteryMode)
-			if err := batCtrl.SetBatteryMode(batMode); err != nil {
-				site.log.ERROR.Println("UpdateBatteryMode:", err)
-				return
+	if site.BatteryDischargeControl {
+		for idx, batMeter := range site.batteryMeters {
+			if batCtrl, ok := batMeter.(api.BatteryControl); ok {
+				site.log.DEBUG.Printf("Updating battery[%d] to mode %s", idx, site.batteryMode)
+				if err := batCtrl.SetBatteryMode(batMode); err != nil {
+					site.log.ERROR.Println("UpdateBatteryMode:", err)
+					return
+				}
 			}
 		}
 	}
 
 	//update state and publish
+	site.Lock()
 	site.batteryMode = batMode
+	site.Unlock()
 	site.publish("batteryMode", site.batteryMode)
-}
-
-func (site *Site) GetBatteryMode() api.BatteryMode {
-	return site.batteryMode
 }
 
 // Run is the main control loop. It reacts to trigger events by
@@ -921,7 +912,7 @@ func (site *Site) Run(stopC chan struct{}, interval time.Duration) {
 		select {
 		case <-ticker.C:
 			site.update(<-loadpointChan)
-			site.UpdateBatteryMode(site.Loadpoints())
+			site.updateBatteryMode(site.Loadpoints())
 		case lp := <-site.lpUpdateChan:
 			site.update(lp)
 		case <-stopC:

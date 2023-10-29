@@ -49,7 +49,7 @@ func TestBatteryDischarge(t *testing.T) {
 		lp.EXPECT().GetPlanActive().Return(tc.planActive).AnyTimes()
 
 		loadpoints := []loadpoint.API{lp}
-		s.UpdateBatteryMode(loadpoints)
+		s.updateBatteryMode(loadpoints)
 		assert.Equal(t, tc.expBatMode, s.GetBatteryMode(), tc)
 	}
 }
@@ -61,8 +61,8 @@ func TestBatteryDischargeDisabled(t *testing.T) {
 	batCtrl.EXPECT().SetBatteryMode(gomock.Any()).Times(0)
 
 	lp := loadpoint.NewMockAPI(ctrl)
-	lp.EXPECT().GetStatus().Times(0)
-	lp.EXPECT().GetMode().Times(0)
+	lp.EXPECT().GetStatus().Return(api.StatusC).Times(1)
+	lp.EXPECT().GetMode().Return(api.ModeNow).Times(1)
 	lp.EXPECT().GetPlanActive().Times(0)
 	loadpoints := []loadpoint.API{lp}
 
@@ -71,6 +71,6 @@ func TestBatteryDischargeDisabled(t *testing.T) {
 		batteryMeters: []api.Meter{batCtrl},
 	}
 
-	s.UpdateBatteryMode(loadpoints)
-	assert.Equal(t, api.BatteryNormal, s.GetBatteryMode(), "disabled bat discharge control; battery modified nonetheless")
+	s.updateBatteryMode(loadpoints)
+	assert.Equal(t, api.BatteryLocked, s.GetBatteryMode(), "disabled bat discharge control; battery modified nonetheless")
 }
