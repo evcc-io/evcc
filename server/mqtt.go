@@ -120,6 +120,8 @@ func (m *MQTT) publish(topic string, retained bool, payload interface{}) {
 
 		// publish sum value
 		m.publishSingleValue(topic, retained, total)
+
+		return
 	}
 
 	m.publishComplex(topic, retained, payload)
