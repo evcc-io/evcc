@@ -1,3 +1,4 @@
+# note: this only works for older NRGkicks (before 2022/2023)
 template: nrgkick-bluetooth
 products:
   - brand: NRGKick
