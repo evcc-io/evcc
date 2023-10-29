@@ -19,8 +19,8 @@ params:
     default: 1
     required: true
     description:
-      de: Meterkanal Nummer
-      en: Meterchannel number
+      de: Kanal Nummer
+      en: Channel number
     help:
       de: Meterkanal (1-8)
       en: Meterchannel number (1-8)
