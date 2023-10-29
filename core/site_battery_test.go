@@ -33,7 +33,6 @@ func TestBatteryDischarge(t *testing.T) {
 	log := util.NewLogger("foo")
 
 	for _, tc := range tcs {
-
 		batCtrl := mock.NewMockBatteryControl(ctrl)
 		batCtrl.EXPECT().SetBatteryMode(tc.expBatMode).Times(1)
 
