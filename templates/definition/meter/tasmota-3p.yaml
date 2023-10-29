@@ -1,7 +1,7 @@
 template: tasmota-3p
 products:
   - description:
-      generic: Tasmota (3 Phase Meter - phases 1-3 mist be used)
+      generic: Tasmota (3 Phase Meter - meter channels 1,2+3 must be used)
 group: switchsockets
 params:
   - name: usage
