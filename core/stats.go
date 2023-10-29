@@ -30,12 +30,12 @@ func (s *Stats) Update(p publisher) {
 		return
 	}
 
-	var stats = map[string]map[string]float64{
+	stats := map[string]map[string]float64{
 		"30d":   s.calculate(30),
 		"365d":  s.calculate(365),
 		"total": s.calculate(365 * 100), // 100 years
 	}
-	p.publish("stats", stats)
+	p.publish("statistics", stats)
 
 	s.updated = time.Now()
 }
