@@ -1,8 +1,9 @@
-# note: this only works for older NRGkicks (before 2022/2023)
 template: nrgkick-connect
 products:
   - brand: NRGKick
     description:
+      de: NRGkick Lader via HTTP (älter als 2022/2023)
+      en: NRGkick charger via HTTP (older than 2022/2023)
       generic: Connect
 params:
   - name: host
