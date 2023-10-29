@@ -38,9 +38,6 @@ func TestBatteryDischarge(t *testing.T) {
 		batCtrl.EXPECT().SetBatteryMode(tc.expBatMode).Times(1)
 
 		s := &Site{
-			// gridPower:    tc.grid,
-			// pvPower:      tc.pv,
-			// batteryPower: tc.battery,
 			log:                     log,
 			BatteryDischargeControl: true,
 			batteryMeters:           []api.Meter{batCtrl},
@@ -74,10 +71,6 @@ func TestBatteryDischargeDisabled(t *testing.T) {
 	loadpoints := []loadpoint.API{lp}
 
 	s := &Site{
-		// gridPower:    tc.grid,
-		// pvPower:      tc.pv,
-		// batteryPower: tc.battery,
-		//log:           log,
 		batteryMode:   api.BatteryNormal,
 		batteryMeters: []api.Meter{batCtrl},
 	}
