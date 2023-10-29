@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-//go:generate mockgen -package mock -destination ../mock/mock_api.go github.com/evcc-io/evcc/api Charger,ChargeState,PhaseSwitcher,Identifier,Meter,MeterEnergy,Vehicle,ChargeRater,Battery,Tariff,BatteryControl
+//go:generate mockgen -package mock -destination ../mock/mock_api.go github.com/evcc-io/evcc/api Charger,ChargeState,PhaseSwitcher,Identifier,Meter,MeterEnergy,Vehicle,ChargeRater,Battery,Tariff,BatteryController
 
 // ChargeMode is the charge operation mode. Valid values are off, now, minpv and pv
 type ChargeMode string
@@ -258,18 +258,6 @@ type FeatureDescriber interface {
 type CsvWriter interface {
 	WriteCsv(context.Context, io.Writer) error
 }
-
-// BatteryMode is the home battery operation mode. Valid values are normal, Locked and Charge
-type BatteryMode int
-
-// Battery modes
-const (
-	BatteryUnknown BatteryMode = iota
-	BatteryNormal
-	BatteryLocked
-	BatteryCharge
-)
-
 type BatteryController interface {
 	Meter
 	SetBatteryMode(BatteryMode) error
