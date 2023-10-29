@@ -816,6 +816,7 @@ func (site *Site) prepare() {
 	site.publish("currency", site.tariffs.Currency.String())
 
 	site.publish("vehicles", vehicleTitles(site.GetVehicles()))
+	site.publish("batteryMode", site.batteryMode)
 }
 
 // Prepare attaches communication channels to site and loadpoints
@@ -858,7 +859,24 @@ func (site *Site) loopLoadpoints(next chan<- Updater) {
 
 func (site *Site) UpdateBatteryMode(loadpoints []loadpoint.API) error {
 
-	site.batteryMode = api.BatteryNormal
+	// determine expected state
+	batMode := api.BatteryNormal
+	for _, lp := range loadpoints {
+
+		if lp.GetStatus() == api.StatusC {
+			if mode := lp.GetMode(); mode == api.ModeNow || mode == api.ModePV && lp.GetPlanActive() {
+				batMode = api.BatteryLocked
+				break
+			}
+		}
+	}
+
+	//update batteries
+	//TODO
+
+	//update state and publish
+	site.batteryMode = batMode
+	site.publish("batteryMode", site.batteryMode)
 
 	return nil
 }
