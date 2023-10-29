@@ -58,7 +58,7 @@ func NewTasmota(embed embed, uri, user, password string, channels []int, standby
 
 	c.switchSocket = NewSwitchSocket(&embed, c.Enabled, c.conn.CurrentPower, standbypower)
 
-	return c, c.conn.ChannelExists()
+	return c, c.conn.RelayExists()
 }
 
 // Enabled implements the api.Charger interface

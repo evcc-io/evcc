@@ -76,7 +76,7 @@ func NewConnection(uri, user, password string, channels []int, cache time.Durati
 }
 
 // channelExists checks the existence of the configured relay channel interface
-func (c *Connection) ChannelExists() error {
+func (c *Connection) RelayExists() error {
 	res, err := c.statusStsG.Get()
 	if err != nil {
 		return err
