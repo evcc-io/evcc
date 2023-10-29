@@ -28,8 +28,6 @@ func NewConnection(uri, user, password string, channels []int, cache time.Durati
 		return nil, errors.New("missing uri")
 	}
 
-	minchannel := 8
-	maxchannel := 1
 	used := make(map[int]bool)
 	for _, c := range channels {
 		if c < 1 || c > 8 {
@@ -37,15 +35,8 @@ func NewConnection(uri, user, password string, channels []int, cache time.Durati
 		}
 		if used[c] {
 			return nil, fmt.Errorf("duplicate channel: %d", c)
-		} else {
-			used[c] = true
-			if c < minchannel {
-				minchannel = c
-			}
-			if c > maxchannel {
-				maxchannel = c
-			}
 		}
+		used[c] = true
 	}
 
 	log := util.NewLogger("tasmota")
@@ -140,30 +131,30 @@ func (c *Connection) Enable(enable bool) error {
 			return err
 		}
 
-		var on bool
+		var enabled bool
 		switch channel {
 		case 2:
-			on = strings.ToUpper(res.Power2) == "ON"
+			enabled = strings.ToUpper(res.Power2) == "ON"
 		case 3:
-			on = strings.ToUpper(res.Power3) == "ON"
+			enabled = strings.ToUpper(res.Power3) == "ON"
 		case 4:
-			on = strings.ToUpper(res.Power4) == "ON"
+			enabled = strings.ToUpper(res.Power4) == "ON"
 		case 5:
-			on = strings.ToUpper(res.Power5) == "ON"
+			enabled = strings.ToUpper(res.Power5) == "ON"
 		case 6:
-			on = strings.ToUpper(res.Power6) == "ON"
+			enabled = strings.ToUpper(res.Power6) == "ON"
 		case 7:
-			on = strings.ToUpper(res.Power7) == "ON"
+			enabled = strings.ToUpper(res.Power7) == "ON"
 		case 8:
-			on = strings.ToUpper(res.Power8) == "ON"
+			enabled = strings.ToUpper(res.Power8) == "ON"
 		default:
-			on = strings.ToUpper(res.Power) == "ON" || strings.ToUpper(res.Power1) == "ON"
+			enabled = strings.ToUpper(res.Power) == "ON" || strings.ToUpper(res.Power1) == "ON"
 		}
 
 		switch {
-		case enable && !on:
+		case enable && !enabled:
 			return errors.New("switchOn failed")
-		case !enable && on:
+		case !enable && enabled:
 			return errors.New("switchOff failed")
 		}
 	}
@@ -181,44 +172,28 @@ func (c *Connection) Enabled() (bool, error) {
 		return false, err
 	}
 
-	enabled := true
+	var enabled bool
 	for _, channel := range c.channels {
 		switch channel {
 		case 2:
-			if strings.ToUpper(res.StatusSTS.Power2) != "ON" {
-				enabled = false
-			}
+			enabled = strings.ToUpper(res.StatusSTS.Power2) == "ON"
 		case 3:
-			if strings.ToUpper(res.StatusSTS.Power2) != "ON" {
-				enabled = false
-			}
+			enabled = strings.ToUpper(res.StatusSTS.Power3) == "ON"
 		case 4:
-			if strings.ToUpper(res.StatusSTS.Power2) != "ON" {
-				enabled = false
-			}
+			enabled = strings.ToUpper(res.StatusSTS.Power4) == "ON"
 		case 5:
-			if strings.ToUpper(res.StatusSTS.Power2) != "ON" {
-				enabled = false
-			}
+			enabled = strings.ToUpper(res.StatusSTS.Power5) == "ON"
 		case 6:
-			if strings.ToUpper(res.StatusSTS.Power2) != "ON" {
-				enabled = false
-			}
+			enabled = strings.ToUpper(res.StatusSTS.Power6) == "ON"
 		case 7:
-			if strings.ToUpper(res.StatusSTS.Power2) != "ON" {
-				enabled = false
-			}
+			enabled = strings.ToUpper(res.StatusSTS.Power7) == "ON"
 		case 8:
-			if strings.ToUpper(res.StatusSTS.Power2) != "ON" {
-				enabled = false
-			}
+			enabled = strings.ToUpper(res.StatusSTS.Power8) == "ON"
 		default:
-			if strings.ToUpper(res.StatusSTS.Power) != "ON" && strings.ToUpper(res.StatusSTS.Power1) != "ON" {
-				enabled = false
-			}
+			enabled = strings.ToUpper(res.StatusSTS.Power) == "ON" || strings.ToUpper(res.StatusSTS.Power1) == "ON"
+
 		}
 	}
-
 	return enabled, nil
 }
 
@@ -253,8 +228,8 @@ func (c *Connection) Currents() (float64, float64, float64, error) {
 	}
 
 	var res [3]float64
-	for i := 0; i < len(c.channels) && i < 3; i++ {
-		res[i], err = s.StatusSNS.Energy.Current.Channel(c.channels[i])
+	for i, c := range c.channels {
+		res[i], err = s.StatusSNS.Energy.Current.Channel(c)
 		if err != nil {
 			return 0, 0, 0, err
 		}
@@ -271,8 +246,8 @@ func (c *Connection) Voltages() (float64, float64, float64, error) {
 	}
 
 	var res [3]float64
-	for i := 0; i < len(c.channels) && i < 3; i++ {
-		res[i], err = s.StatusSNS.Energy.Voltage.Channel(c.channels[i])
+	for i, c := range c.channels {
+		res[i], err = s.StatusSNS.Energy.Voltage.Channel(c)
 		if err != nil {
 			return 0, 0, 0, err
 		}
