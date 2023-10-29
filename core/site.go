@@ -876,8 +876,8 @@ func (site *Site) updateBatteryMode(loadpoints []loadpoint.API) {
 	//update batteries
 	if site.BatteryDischargeControl {
 		for idx, batMeter := range site.batteryMeters {
-			if batCtrl, ok := batMeter.(api.BatteryControl); ok {
-				site.log.DEBUG.Printf("Updating battery[%d] to mode %s", idx, site.batteryMode)
+			if batCtrl, ok := batMeter.(api.BatteryController); ok {
+				site.log.DEBUG.Printf("Updating battery[%d] to mode %d", idx, site.batteryMode)
 				if err := batCtrl.SetBatteryMode(batMode); err != nil {
 					site.log.ERROR.Println("UpdateBatteryMode:", err)
 					return

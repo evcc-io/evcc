@@ -259,18 +259,18 @@ type CsvWriter interface {
 	WriteCsv(context.Context, io.Writer) error
 }
 
-// BatteryMode is the charge operation mode. Valid values are off, now, minpv and pv
-type BatteryMode string
+// BatteryMode is the home battery operation mode. Valid values are normal, Locked and Charge
+type BatteryMode int
 
-// Charge modes
+// Battery modes
 const (
-	BatteryUnknown BatteryMode = ""
-	BatteryNormal  BatteryMode = "normal"
-	BatteryLocked  BatteryMode = "locked"
-	BatteryCharge  BatteryMode = "charge"
+	BatteryUnknown BatteryMode = iota
+	BatteryNormal
+	BatteryLocked
+	BatteryCharge
 )
 
-type BatteryControl interface {
+type BatteryController interface {
 	Meter
 	SetBatteryMode(BatteryMode) error
 	GetBatteryMode() BatteryMode
