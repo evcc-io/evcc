@@ -30,22 +30,22 @@ func NewConnection(uri, user, password string, channels []int, cache time.Durati
 
 	minchannel := 8
 	maxchannel := 1
-	duplicatechannels := make(map[int]bool, 0)
-	for i := 0; i < len(channels); i++ {
-		if duplicatechannels[channels[i]] {
-			return nil, errors.New("duplicates in channel list")
+	used := make(map[int]bool)
+	for _, c := range channels {
+		if used[channels[c]] {
+			return nil, fmt.Errorf("duplicate channel: %d", c)
 		} else {
-			duplicatechannels[channels[i]] = true
-			if channels[i] < minchannel {
-				minchannel = channels[i]
+			if c < 1 || c > 8 {
+				return nil, fmt.Errorf("invalid channel: %d", c)
 			}
-			if channels[i] > maxchannel {
-				maxchannel = channels[i]
+			used[channels[c]] = true
+			if channels[c] < minchannel {
+				minchannel = channels[c]
+			}
+			if channels[c] > maxchannel {
+				maxchannel = channels[c]
 			}
 		}
-	}
-	if minchannel < 1 || maxchannel > 8 {
-		return nil, errors.New("only channels 1-8 allowed")
 	}
 
 	log := util.NewLogger("tasmota")
@@ -181,7 +181,7 @@ func (c *Connection) Enabled() (bool, error) {
 		return false, err
 	}
 
-	var enabled bool = true
+	enabled := true
 	for _, channel := range c.channels {
 		switch channel {
 		case 2:
@@ -224,19 +224,19 @@ func (c *Connection) Enabled() (bool, error) {
 
 // CurrentPower implements the api.Meter interface
 func (c *Connection) CurrentPower() (float64, error) {
-	res, err := c.statusSnsG.Get()
+	s, err := c.statusSnsG.Get()
 	if err != nil {
 		return 0, err
 	}
-	var power float64
+	var res float64
 	for _, channel := range c.channels {
-		channelpower, err := res.StatusSNS.Energy.Power.Channel(channel)
+		power, err := s.StatusSNS.Energy.Power.Channel(channel)
 		if err != nil {
 			return 0, err
 		}
-		power = power + channelpower
+		res += power
 	}
-	return power, nil
+	return res, nil
 }
 
 // TotalEnergy implements the api.MeterEnergy interface
@@ -247,38 +247,38 @@ func (c *Connection) TotalEnergy() (float64, error) {
 
 // Currents implements the api.PhaseCurrents interface
 func (c *Connection) Currents() (float64, float64, float64, error) {
-	res, err := c.statusSnsG.Get()
+	s, err := c.statusSnsG.Get()
 	if err != nil {
 		return 0, 0, 0, err
 	}
 
-	current := [3]float64{0, 0, 0}
+	var res [3]float64
 	for i := 0; i < len(c.channels) && i < 3; i++ {
-		current[i], err = res.StatusSNS.Energy.Current.Channel(c.channels[i])
+		res[i], err = s.StatusSNS.Energy.Current.Channel(c.channels[i])
 		if err != nil {
 			return 0, 0, 0, err
 		}
 	}
 
-	return current[0], current[1], current[2], err
+	return res[0], res[1], res[2], err
 }
 
 // Voltages implements the api.PhaseVoltages interface
 func (c *Connection) Voltages() (float64, float64, float64, error) {
-	res, err := c.statusSnsG.Get()
+	s, err := c.statusSnsG.Get()
 	if err != nil {
 		return 0, 0, 0, err
 	}
 
-	voltage := [3]float64{0, 0, 0}
+	var res [3]float64
 	for i := 0; i < len(c.channels) && i < 3; i++ {
-		voltage[i], err = res.StatusSNS.Energy.Voltage.Channel(c.channels[i])
+		res[i], err = s.StatusSNS.Energy.Voltage.Channel(c.channels[i])
 		if err != nil {
 			return 0, 0, 0, err
 		}
 	}
 
-	return voltage[0], voltage[1], voltage[2], err
+	return res[0], res[1], res[2], err
 }
 
 // SmlPower provides the sml sensor power
