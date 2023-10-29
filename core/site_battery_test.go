@@ -49,11 +49,7 @@ func TestBatteryDischarge(t *testing.T) {
 		lp.EXPECT().GetPlanActive().Return(tc.planActive).AnyTimes()
 
 		loadpoints := []loadpoint.API{lp}
-		err := s.UpdateBatteryMode(loadpoints)
-		if err != nil {
-			t.Errorf("error during UpdateBatteryDischarge, %s", err)
-		}
-
+		s.UpdateBatteryMode(loadpoints)
 		assert.Equal(t, tc.expBatMode, s.GetBatteryMode(), tc)
 	}
 }
@@ -75,11 +71,6 @@ func TestBatteryDischargeDisabled(t *testing.T) {
 		batteryMeters: []api.Meter{batCtrl},
 	}
 
-	err := s.UpdateBatteryMode(loadpoints)
-
-	if err != nil {
-		t.Errorf("error during UpdateBatteryDischarge, %s", err)
-	}
-
+	s.UpdateBatteryMode(loadpoints)
 	assert.Equal(t, api.BatteryNormal, s.GetBatteryMode(), "disabled bat discharge control; battery modified nonetheless")
 }

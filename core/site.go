@@ -865,9 +865,9 @@ func (site *Site) loopLoadpoints(next chan<- Updater) {
 	}
 }
 
-func (site *Site) UpdateBatteryMode(loadpoints []loadpoint.API) error {
+func (site *Site) UpdateBatteryMode(loadpoints []loadpoint.API) {
 	if !site.BatteryDischargeControl {
-		return nil
+		return
 	}
 
 	// determine expected state
@@ -887,7 +887,8 @@ func (site *Site) UpdateBatteryMode(loadpoints []loadpoint.API) error {
 		if batCtrl, ok := batMeter.(api.BatteryControl); ok {
 			site.log.DEBUG.Printf("Updating battery[%d] to mode %s", idx, site.batteryMode)
 			if err := batCtrl.SetBatteryMode(batMode); err != nil {
-				return err
+				site.log.ERROR.Println("UpdateBatteryMode:", err)
+				return
 			}
 		}
 	}
@@ -895,8 +896,6 @@ func (site *Site) UpdateBatteryMode(loadpoints []loadpoint.API) error {
 	//update state and publish
 	site.batteryMode = batMode
 	site.publish("batteryMode", site.batteryMode)
-
-	return nil
 }
 
 func (site *Site) GetBatteryMode() api.BatteryMode {
