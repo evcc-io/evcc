@@ -798,12 +798,14 @@ func (site *Site) update(lp Updater) {
 		site.log.ERROR.Println(err)
 	}
 
+	site.updateBatteryMode(site.Loadpoints())
+
+	site.publish("siteTitle", site.Title)
 	site.stats.Update(site)
 }
 
 // prepare publishes initial values
 func (site *Site) prepare() {
-	site.publish("siteTitle", site.Title)
 
 	site.publish("gridConfigured", site.gridMeter != nil)
 	site.publish("pvConfigured", len(site.pvMeters) > 0)
@@ -910,7 +912,6 @@ func (site *Site) Run(stopC chan struct{}, interval time.Duration) {
 		select {
 		case <-ticker.C:
 			site.update(<-loadpointChan)
-			site.updateBatteryMode(site.Loadpoints())
 		case lp := <-site.lpUpdateChan:
 			site.update(lp)
 		case <-stopC:
