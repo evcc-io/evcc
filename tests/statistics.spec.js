@@ -2,7 +2,7 @@ const { test, expect } = require("@playwright/test");
 const { start, stop } = require("./evcc");
 
 test.beforeAll(async () => {
-  await start("stats.evcc.yaml", "stats.sql");
+  await start("statistics.evcc.yaml", "statistics.sql");
 });
 test.afterAll(async () => {
   await stop();
@@ -32,7 +32,7 @@ test.describe("footer", async () => {
   });
 });
 
-test.describe.skip("stats values", async () => {
+test.describe.skip("statistics values", async () => {
   test("last 30 days", async ({ page }) => {
     await page.goto("/");
     await page.getByTestId("savings-button").click();

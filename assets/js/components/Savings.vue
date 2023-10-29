@@ -212,7 +212,7 @@ export default {
 	components: { Sponsor, SavingsTile, LiveCommunity, TelemetrySettings, CustomSelect },
 	mixins: [formatter],
 	props: {
-		stats: { type: Object, default: () => ({}) },
+		statistics: { type: Object, default: () => ({}) },
 		co2Configured: Boolean,
 		sponsor: String,
 		currency: String,
@@ -256,7 +256,7 @@ export default {
 		},
 		avgPriceFormatted() {
 			const value = this.fmtPricePerKWh(
-				this.currentStats.avgPrice,
+				this.currentStatistics.avgPrice,
 				this.currency,
 				false,
 				false
@@ -264,14 +264,14 @@ export default {
 			const unit = this.pricePerKWhUnit(this.currency);
 			return { value, unit };
 		},
-		currentStats() {
-			return this.stats[this.period] || {};
+		currentStatistics() {
+			return this.statistics[this.period] || {};
 		},
 		totalCharged() {
-			return this.currentStats.chargedKWh;
+			return this.currentStatistics.chargedKWh;
 		},
 		solarPercentage() {
-			return this.currentStats.solarPercentage;
+			return this.currentStatistics.solarPercentage;
 		},
 		solarCharged() {
 			return (this.solarPercentage / 100) * this.totalCharged;
@@ -280,10 +280,10 @@ export default {
 			return this.totalCharged - this.solarCharged;
 		},
 		avgPrice() {
-			return this.currentStats.avgPrice;
+			return this.currentStatistics.avgPrice;
 		},
 		avgCo2() {
-			return this.currentStats.avgCo2;
+			return this.currentStatistics.avgCo2;
 		},
 		priceConfigured() {
 			return this.referenceGrid !== undefined;
