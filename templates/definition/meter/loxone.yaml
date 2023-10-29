@@ -30,7 +30,6 @@ render: |
   power:
     source: http
     uri: http://{{ .host }}/jdev/sps/io/{{ .meterblock }}
-    method: GET
     auth:
       type: basic
       user: {{ .user }}
@@ -40,7 +39,6 @@ render: |
   energy:
     source: http
     uri: http://{{ .host }}/jdev/sps/io/{{ .meterblock }}/all
-    method: GET
     auth:
       type: basic
       user: {{ .user }}
@@ -50,7 +48,6 @@ render: |
   soc:
     source: http
     uri: http://{{ .host }}/jdev/sps/io/{{ .socblock }}
-    method: GET
     auth:
       type: basic
       user: {{ .user }}
