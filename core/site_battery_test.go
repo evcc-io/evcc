@@ -5,6 +5,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
+	"github.com/evcc-io/evcc/mock"
 	"github.com/evcc-io/evcc/util"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
@@ -12,9 +13,8 @@ import (
 
 func TestBatteryDischarge(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	lp := loadpoint.NewMockAPI(ctrl)
 
-	tc := []struct {
+	tcs := []struct {
 		chargeStatus api.ChargeStatus
 		planActive   bool
 		expBatMode   api.BatteryMode
@@ -32,17 +32,23 @@ func TestBatteryDischarge(t *testing.T) {
 
 	log := util.NewLogger("foo")
 
-	for _, tc := range tc {
+	for _, tc := range tcs {
+
+		batCtrl := mock.NewMockBatteryControl(ctrl)
+		batCtrl.EXPECT().SetBatteryMode(tc.expBatMode).Times(1)
 
 		s := &Site{
 			// gridPower:    tc.grid,
 			// pvPower:      tc.pv,
 			// batteryPower: tc.battery,
-			log: log,
+			log:           log,
+			batteryMeters: []api.Meter{batCtrl},
 		}
 
-		lp.EXPECT().GetStatus().AnyTimes().Return(tc.chargeStatus)
-		lp.EXPECT().GetPlanActive().AnyTimes().Return(tc.planActive)
+		lp := loadpoint.NewMockAPI(ctrl)
+		lp.EXPECT().GetStatus().Return(tc.chargeStatus).AnyTimes()
+		lp.EXPECT().GetMode().Return(tc.mode).AnyTimes()
+		lp.EXPECT().GetPlanActive().Return(tc.planActive).AnyTimes()
 
 		loadpoints := []loadpoint.API{lp}
 		err := s.UpdateBatteryMode(loadpoints)

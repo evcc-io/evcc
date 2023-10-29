@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-//go:generate mockgen -package mock -destination ../mock/mock_api.go github.com/evcc-io/evcc/api Charger,ChargeState,PhaseSwitcher,Identifier,Meter,MeterEnergy,Vehicle,ChargeRater,Battery,Tariff
+//go:generate mockgen -package mock -destination ../mock/mock_api.go github.com/evcc-io/evcc/api Charger,ChargeState,PhaseSwitcher,Identifier,Meter,MeterEnergy,Vehicle,ChargeRater,Battery,Tariff,BatteryControl
 
 // ChargeMode is the charge operation mode. Valid values are off, now, minpv and pv
 type ChargeMode string
@@ -269,3 +269,9 @@ const (
 	BatteryLocked  BatteryMode = "locked"
 	BatteryCharge  BatteryMode = "charge"
 )
+
+type BatteryControl interface {
+	Meter
+	SetBatteryMode(BatteryMode) error
+	GetBatteryMode() BatteryMode
+}

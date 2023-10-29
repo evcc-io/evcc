@@ -872,7 +872,14 @@ func (site *Site) UpdateBatteryMode(loadpoints []loadpoint.API) error {
 	}
 
 	//update batteries
-	//TODO
+	for idx, batMeter := range site.batteryMeters {
+		if batCtrl, ok := batMeter.(api.BatteryControl); ok {
+			site.log.DEBUG.Printf("Updating battery[%d] to mode %s", idx, site.batteryMode)
+			if err := batCtrl.SetBatteryMode(batMode); err != nil {
+				return err
+			}
+		}
+	}
 
 	//update state and publish
 	site.batteryMode = batMode
@@ -904,6 +911,7 @@ func (site *Site) Run(stopC chan struct{}, interval time.Duration) {
 		select {
 		case <-ticker.C:
 			site.update(<-loadpointChan)
+			site.UpdateBatteryMode(site.Loadpoints())
 		case lp := <-site.lpUpdateChan:
 			site.update(lp)
 		case <-stopC:
