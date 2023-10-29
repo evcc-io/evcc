@@ -56,7 +56,7 @@ func init() {
 
 // NewAmperfiedFromConfig creates a Amperfied charger from generic config
 func NewAmperfiedFromConfig(other map[string]interface{}) (api.Charger, error) {
-	cc := modbus.Settings{
+	cc := modbus.TcpSettings{
 		ID: 255,
 	}
 
