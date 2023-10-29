@@ -67,6 +67,7 @@ type Site struct {
 	BufferStartSoc                    float64      `mapstructure:"bufferStartSoc"`                    // start charging on battery above this Soc
 	MaxGridSupplyWhileBatteryCharging float64      `mapstructure:"maxGridSupplyWhileBatteryCharging"` // ignore battery charging if AC consumption is above this value
 	SmartCostLimit                    float64      `mapstructure:"smartCostLimit"`                    // always charge if cost is below this value
+	BatteryDischargeControl           bool         `mapstructure:"batteryDischargeControl"`           // shall discharge of home battery be adjusted
 
 	// meters
 	gridMeter     api.Meter   // Grid usage meter
@@ -253,6 +254,10 @@ func (site *Site) restoreSettings() {
 	if v, err := settings.Float("site.smartCostLimit"); err == nil {
 		site.SmartCostLimit = v
 	}
+	if v, err := settings.Bool("site.batteryDischargeControl"); err == nil {
+		site.BatteryDischargeControl = v
+	}
+
 }
 
 func meterCapabilities(name string, meter interface{}) string {
@@ -816,7 +821,10 @@ func (site *Site) prepare() {
 	site.publish("currency", site.tariffs.Currency.String())
 
 	site.publish("vehicles", vehicleTitles(site.GetVehicles()))
-	site.publish("batteryMode", site.batteryMode)
+	site.publish("batteryDischargeControl", site.BatteryDischargeControl)
+	if site.BatteryDischargeControl {
+		site.publish("batteryMode", site.batteryMode)
+	}
 }
 
 // Prepare attaches communication channels to site and loadpoints
@@ -858,6 +866,9 @@ func (site *Site) loopLoadpoints(next chan<- Updater) {
 }
 
 func (site *Site) UpdateBatteryMode(loadpoints []loadpoint.API) error {
+	if !site.BatteryDischargeControl {
+		return nil
+	}
 
 	// determine expected state
 	batMode := api.BatteryNormal
