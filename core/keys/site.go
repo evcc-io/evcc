@@ -1,7 +1,5 @@
 package keys
 
-// TODO use
-
 const (
 	Aux                   = "aux"
 	AuxPower              = "auxPower"
