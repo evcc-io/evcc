@@ -38,6 +38,8 @@ func init() {
 
 // https://openwb.de/main/wp-content/uploads/2023/10/ModbusTCP-openWB-series2-Pro-1.pdf
 
+//go:generate go run ../cmd/tools/decorate.go -f decorateOpenWB20 -b *OpenWB20 -r api.Charger -t "api.Identifier,Identify,func() (string, error)"
+
 // NewOpenWB20FromConfig creates a OpenWB20 charger from generic config
 func NewOpenWB20FromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := modbus.TcpSettings{
@@ -48,7 +50,17 @@ func NewOpenWB20FromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	return NewOpenWB20(cc.URI, cc.ID)
+	wb, err := NewOpenWB20(cc.URI, cc.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	var identify func() (string, error)
+	if _, err := wb.identify(); err == nil {
+		identify = wb.identify
+	}
+
+	return decorateOpenWB20(wb, identify), nil
 }
 
 // NewOpenWB20 creates OpenWB20 charger
@@ -180,10 +192,8 @@ func (wb *OpenWB20) WakeUp() error {
 	return err
 }
 
-var _ api.Identifier = (*OpenWB20)(nil)
-
 // Identify implements the api.Identifier interface
-func (wb *OpenWB20) Identify() (string, error) {
+func (wb *OpenWB20) identify() (string, error) {
 	b, err := wb.conn.ReadInputRegisters(openwbRegRfid, 10)
 	if err != nil {
 		return "", err
