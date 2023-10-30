@@ -23,7 +23,6 @@ render: |
   power:
     source: http
     uri: http://{{ .host }}/production.json
-    method: GET
     {{- if .token }}
     auth:
       type: bearer
@@ -36,7 +35,6 @@ render: |
   power:
     source: http
     uri: http://{{ .host }}/production.json
-    method: GET
     {{- if .token }}
     auth:
       type: bearer
@@ -47,7 +45,6 @@ render: |
   energy:
     source: http
     uri: http://{{ .host }}/production.json
-    method: GET
     {{- if .token }}
     auth:
       type: bearer
@@ -61,7 +58,6 @@ render: |
   power:
     source: http
     uri: http://{{ .host }}/production.json
-    method: GET
     {{- if .token }}
     auth:
       type: bearer
@@ -72,7 +68,6 @@ render: |
   soc:
     source: http
     uri: http://{{ .host }}/ivp/ensemble/inventory
-    method: GET
     {{- if .token }}
     auth:
       type: bearer
