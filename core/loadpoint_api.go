@@ -272,7 +272,7 @@ func (lp *Loadpoint) SetEnableThreshold(threshold float64) {
 
 	if lp.Enable.Threshold != threshold {
 		lp.Enable.Threshold = threshold
-		lp.publish("enableThreshold", threshold)
+		lp.publish(keys.EnableThreshold, threshold)
 	}
 }
 
@@ -292,7 +292,7 @@ func (lp *Loadpoint) SetDisableThreshold(threshold float64) {
 
 	if lp.Disable.Threshold != threshold {
 		lp.Disable.Threshold = threshold
-		lp.publish("disableThreshold", threshold)
+		lp.publish(keys.DisableThreshold, threshold)
 	}
 }
 

@@ -28,13 +28,15 @@ const (
 	VehicleClimaterActive = "vehicleClimaterActive" // vehicle climater active
 
 	// loadpoint settings
-	Mode        = "mode"        // charge mode
-	Priority    = "priority"    // priority
-	MinCurrent  = "minCurrent"  // min current
-	MaxCurrent  = "maxCurrent"  // max current
-	MinSoc      = "minSoc"      // min soc
-	LimitSoc    = "limitSoc"    // limit soc
-	LimitEnergy = "limitEnergy" // limit energy
+	Mode             = "mode"        // charge mode
+	Priority         = "priority"    // priority
+	MinCurrent       = "minCurrent"  // min current
+	MaxCurrent       = "maxCurrent"  // max current
+	MinSoc           = "minSoc"      // min soc
+	LimitSoc         = "limitSoc"    // limit soc
+	LimitEnergy      = "limitEnergy" // limit energy
+	EnableThreshold  = "enableThreshold"
+	DisableThreshold = "disableThreshold"
 
 	// loadpoint status
 	Enabled   = "enabled"   // loadpoint enabled

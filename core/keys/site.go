@@ -29,6 +29,7 @@ const (
 	SmartCostActive       = "smartCostActive"
 	SmartCostLimit        = "smartCostLimit"
 	SmartCostType         = "smartCostType"
+	Statistics            = "statistics"
 	TariffCo2             = "tariffCo2"
 	TariffCo2Home         = "tariffCo2Home"
 	TariffCo2Loadpoints   = "tariffCo2Loadpoin"
