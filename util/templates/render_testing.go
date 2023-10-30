@@ -54,6 +54,9 @@ func TestClass(t *testing.T, class Class, instantiate func(t *testing.T, values 
 				tmpl.ModbusValues(TemplateRenderModeUnitTest, values)
 			}
 
+			// https://github.com/evcc-io/evcc/pull/10272 - override example IP (192.0.2.2)
+			values["host"] = "localhost"
+
 			usages := tmpl.Usages()
 			if len(usages) == 0 {
 				test(t, tmpl, values, func(values map[string]interface{}) {
