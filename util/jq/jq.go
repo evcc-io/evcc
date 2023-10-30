@@ -15,11 +15,6 @@ func Query(query *gojq.Query, input []byte) (interface{}, error) {
 		return j, err
 	}
 
-	return QueryAny(query, j)
-}
-
-// QueryAny executes a compiled jq query against given input. It expects a single result only.
-func QueryAny(query *gojq.Query, j any) (any, error) {
 	iter := query.Run(j)
 
 	v, ok := iter.Next()

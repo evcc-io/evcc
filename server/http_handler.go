@@ -179,7 +179,13 @@ func stateHandler(cache *util.Cache) http.HandlerFunc {
 				return
 			}
 
-			res, err := jq.QueryAny(query, res)
+			b, err := json.Marshal(res)
+			if err != nil {
+				jsonError(w, http.StatusBadRequest, err)
+				return
+			}
+
+			res, err := jq.Query(query, b)
 			if err != nil {
 				jsonError(w, http.StatusBadRequest, err)
 				return
