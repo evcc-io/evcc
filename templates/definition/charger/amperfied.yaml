@@ -14,5 +14,5 @@ params:
     choice: ["tcpip"]
     id: 255
 render: |
-  type: heidelberg
+  type: amperfied
   {{- include "modbus" . }}
