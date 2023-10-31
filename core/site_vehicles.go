@@ -11,8 +11,8 @@ import (
 
 type vehicleStruct struct {
 	Title    string `json:"title"`
-	MinSoc   int    `json:"minSoc"`
-	LimitSoc int    `json:"limitSoc"`
+	MinSoc   int    `json:"minSoc,omitempty"`
+	LimitSoc int    `json:"limitSoc,omitempty"`
 }
 
 // publishVehicles returns a list of vehicle titles
