@@ -223,18 +223,20 @@ func NewSite() *Site {
 	return lp
 }
 
+// TODO remove site prefix
+
 // restoreSettings restores site settings
 func (site *Site) restoreSettings() {
-	if v, err := settings.Float("site.bufferSoc"); err == nil {
+	if v, err := settings.Float("site." + keys.BufferSoc); err == nil {
 		site.bufferSoc = v
 	}
-	if v, err := settings.Float("site.bufferStartSoc"); err == nil {
+	if v, err := settings.Float("site." + keys.BufferStartSoc); err == nil {
 		site.bufferStartSoc = v
 	}
-	if v, err := settings.Float("site.prioritySoc"); err == nil {
+	if v, err := settings.Float("site." + keys.PrioritySoc); err == nil {
 		site.prioritySoc = v
 	}
-	if v, err := settings.Float("site.smartCostLimit"); err == nil {
+	if v, err := settings.Float("site." + keys.SmartCostLimit); err == nil {
 		site.SmartCostLimit = v
 	}
 	if v, err := settings.Bool("site.batteryDischargeControl"); err == nil {
