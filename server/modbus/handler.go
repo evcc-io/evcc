@@ -14,8 +14,7 @@ import (
 type handler struct {
 	log      *util.Logger
 	readOnly bool
-	mbserver.RequestHandler
-	conn *modbus.Connection
+	conn     *modbus.Connection
 }
 
 func bytesAsUint16(b []byte) []uint16 {
@@ -125,13 +124,13 @@ func (h *handler) HandleCoils(req *mbserver.CoilsRequest) ([]bool, error) {
 	return h.coilsToResult("read coil", req.Quantity, b, err)
 }
 
-func (h *handler) HandleInputRegisters(req *mbserver.InputRegistersRequest) (res []uint16, err error) {
+func (h *handler) HandleInputRegisters(req *mbserver.InputRegistersRequest) ([]uint16, error) {
 	h.log.TRACE.Printf("read input: id %d addr %d qty %d", req.UnitId, req.Addr, req.Quantity)
 	b, err := h.conn.ReadInputRegistersWithSlave(req.UnitId, req.Addr, req.Quantity)
 	return h.exceptionToUint16AndError("read input", b, err)
 }
 
-func (h *handler) HandleHoldingRegisters(req *mbserver.HoldingRegistersRequest) (res []uint16, err error) {
+func (h *handler) HandleHoldingRegisters(req *mbserver.HoldingRegistersRequest) ([]uint16, error) {
 	if req.IsWrite {
 		if h.readOnly {
 			return nil, mbserver.ErrIllegalFunction
@@ -151,4 +150,10 @@ func (h *handler) HandleHoldingRegisters(req *mbserver.HoldingRegistersRequest) 
 	h.log.TRACE.Printf("read holding: id %d addr %d qty %d", req.UnitId, req.Addr, req.Quantity)
 	b, err := h.conn.ReadHoldingRegistersWithSlave(req.UnitId, req.Addr, req.Quantity)
 	return h.exceptionToUint16AndError("read holding", b, err)
+}
+
+func (h *handler) HandleDiscreteInputs(req *mbserver.DiscreteInputsRequest) ([]bool, error) {
+	h.log.TRACE.Printf("read discrete: id %d addr %d qty %d", req.UnitId, req.Addr, req.Quantity)
+	b, err := h.conn.ReadDiscreteInputsWithSlave(req.UnitId, req.Addr, req.Quantity)
+	return h.coilsToResult("read discrete", req.Quantity, b, err)
 }
