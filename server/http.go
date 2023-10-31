@@ -125,13 +125,13 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, cache *util.Cache) {
 
 	// vehicle api
 	vehicles := map[string]route{
-		"minsoc": {[]string{"POST", "OPTIONS"}, "/vehicles/{name:[a-zA-Z0-9_.:-]+}/minsoc/{value:[0-9]+}", minSocHandler(site)},
-		"plan":   {[]string{"POST", "OPTIONS"}, "/vehicles/{name:[a-zA-Z0-9_.:-]+}/plan/soc/{value:[0-9]+}/{time:[0-9TZ:.-]+}", planSocHandler(site)},
-		"plan2":  {[]string{"DELETE", "OPTIONS"}, "/vehicles/{name:[a-zA-Z0-9_.:-]+}/plan/soc", planSocRemoveHandler(site)},
+		"minsoc":   {[]string{"POST", "OPTIONS"}, "/vehicles/{name:[a-zA-Z0-9_.:-]+}/minsoc/{value:[0-9]+}", minSocHandler(site)},
+		"limitsoc": {[]string{"POST", "OPTIONS"}, "/vehicles/{name:[a-zA-Z0-9_.:-]+}/limitsoc/{value:[0-9]+}", limitSocHandler(site)},
+		"plan":     {[]string{"POST", "OPTIONS"}, "/vehicles/{name:[a-zA-Z0-9_.:-]+}/plan/soc/{value:[0-9]+}/{time:[0-9TZ:.-]+}", planSocHandler(site)},
+		"plan2":    {[]string{"DELETE", "OPTIONS"}, "/vehicles/{name:[a-zA-Z0-9_.:-]+}/plan/soc", planSocRemoveHandler(site)},
 
 		// config ui
 		// "mode":     {[]string{"POST", "OPTIONS"}, "/mode/{value:[a-z]+}", chargeModeHandler(v)},
-		// "limitsoc": {[]string{"POST", "OPTIONS"}, "/limitsoc/{value:[0-9]+}", intHandler(pass(v.SetLimitSoc), v.GetLimitSoc)},
 		// "mincurrent": {[]string{"POST", "OPTIONS"}, "/mincurrent/{value:[0-9.]+}", floatHandler(pass(v.SetMinCurrent), v.GetMinCurrent)},
 		// "maxcurrent": {[]string{"POST", "OPTIONS"}, "/maxcurrent/{value:[0-9.]+}", floatHandler(pass(v.SetMaxCurrent), v.GetMaxCurrent)},
 		// "phases":     {[]string{"POST", "OPTIONS"}, "/phases/{value:[0-9]+}", intHandler(pass(v.SetMinSoc), v.GetMinSoc)},

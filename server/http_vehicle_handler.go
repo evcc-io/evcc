@@ -20,8 +20,6 @@ func vehicleFromRequest(r *http.Request, site site.API) (vehicle.API, error) {
 	return site.Vehicles().ByName(name)
 }
 
-// TODO limitSoc handler
-
 // minSocHandler updates min soc
 func minSocHandler(site site.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -45,6 +43,35 @@ func minSocHandler(site site.API) http.HandlerFunc {
 			Soc int `json:"soc"`
 		}{
 			Soc: v.GetMinSoc(),
+		}
+
+		jsonResult(w, res)
+	}
+}
+
+// limitSocHandler updates limit soc
+func limitSocHandler(site site.API) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+
+		v, err := vehicleFromRequest(r, site)
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		soc, err := strconv.Atoi(vars["value"])
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		v.SetLimitSoc(soc)
+
+		res := struct {
+			Soc int `json:"soc"`
+		}{
+			Soc: v.GetLimitSoc(),
 		}
 
 		jsonResult(w, res)

@@ -353,23 +353,19 @@ func planEnergyHandler(lp loadpoint.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
-		timeS, ok := vars["time"]
-		timeV, err := time.Parse(time.RFC3339, timeS)
-
-		if !ok || err != nil {
+		ts, err := time.Parse(time.RFC3339, vars["time"])
+		if err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
 
-		valueS, ok := vars["value"]
-		valueV, err := strconv.ParseFloat(valueS, 64)
-
-		if !ok || err != nil {
+		val, err := strconv.ParseFloat(vars["value"], 64)
+		if err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
 
-		if err := lp.SetPlanEnergy(timeV, valueV); err != nil {
+		if err := lp.SetPlanEnergy(ts, val); err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
@@ -399,16 +395,17 @@ func planRemoveHandler(lp loadpoint.API) http.HandlerFunc {
 	}
 }
 
+// TODO decide numeric vs named index
+
 // vehicleHandler sets active vehicle
 func vehicleHandler(site site.API, lp loadpoint.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
-		valS, ok := vars["vehicle"]
-		val, err := strconv.Atoi(valS)
+		val, err := strconv.Atoi(vars["vehicle"])
 
-		vehicles := site.Vehicles().Instances()
-		if !ok || val < 1 || val > len(vehicles) || err != nil {
+		vehicles := site.Vehicles().All()
+		if val < 1 || val > len(vehicles) || err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}

@@ -250,7 +250,7 @@ func (m *MQTT) listenLoadpointSetters(topic string, site site.API, lp loadpoint.
 		vehicle, err := strconv.Atoi(payload)
 		if err == nil {
 			if vehicle > 0 {
-				if vehicles := site.Vehicles().Instances(); vehicle <= len(vehicles) {
+				if vehicles := site.Vehicles().All(); vehicle <= len(vehicles) {
 					lp.SetVehicle(vehicles[vehicle-1])
 				} else {
 					err = fmt.Errorf("invalid vehicle: %d", vehicle)

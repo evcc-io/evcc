@@ -7,14 +7,28 @@ import (
 	"github.com/evcc-io/evcc/core/vehicle"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
-	"github.com/samber/lo"
 )
 
-// vehicleTitles returns a list of vehicle titles
-func vehicleTitles(vehicles []api.Vehicle) []string {
-	return lo.Map(vehicles, func(v api.Vehicle, _ int) string {
-		return v.Title()
-	})
+type vehicleStruct struct {
+	Title    string `json:"title"`
+	MinSoc   int    `json:"minSoc"`
+	LimitSoc int    `json:"limitSoc"`
+}
+
+// publishVehicles returns a list of vehicle titles
+func (site *Site) publishVehicles() {
+	vv := site.Vehicles().All()
+	res := make(map[string]vehicleStruct, len(vv))
+
+	for _, v := range vv {
+		res[v.Name()] = vehicleStruct{
+			Title:  v.Title(),
+			MinSoc: v.GetMinSoc(),
+			// LimitSoc: v.GetLimitSoc(),
+		}
+	}
+
+	site.publish(keys.Vehicles, res)
 }
 
 // updateVehicles adds or removes a vehicle asynchronously
@@ -29,7 +43,7 @@ func (site *Site) updateVehicles(op config.Operation, dev config.Device[api.Vehi
 		site.coordinator.Delete(vehicle)
 	}
 
-	site.publish(keys.Vehicles, vehicleTitles(site.Vehicles().Instances()))
+	site.publishVehicles()
 }
 
 var _ site.Vehicles = (*vehicles)(nil)

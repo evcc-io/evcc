@@ -17,7 +17,6 @@ import (
 	"github.com/evcc-io/evcc/core/prioritizer"
 	"github.com/evcc-io/evcc/core/session"
 	"github.com/evcc-io/evcc/core/soc"
-	"github.com/evcc-io/evcc/core/vehicle"
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/server/db"
 	"github.com/evcc-io/evcc/server/db/settings"
@@ -120,8 +119,6 @@ func NewSiteFromConfig(
 	site.tariffs = tariffs
 
 	handler := config.Vehicles()
-	vehicle.Handler = handler
-
 	site.coordinator = coordinator.New(log, config.Instances(handler.Devices()))
 	handler.Subscribe(site.updateVehicles)
 
@@ -271,7 +268,7 @@ func meterCapabilities(name string, meter interface{}) string {
 // DumpConfig site configuration
 func (site *Site) DumpConfig() {
 	// verify vehicle detection
-	if vehicles := site.Vehicles().Instances(); len(vehicles) > 1 {
+	if vehicles := site.Vehicles().All(); len(vehicles) > 1 {
 		for _, v := range vehicles {
 			if _, ok := v.(api.ChargeState); !ok {
 				site.log.WARN.Printf("vehicle '%s' does not support automatic detection", v.Title())
@@ -308,7 +305,7 @@ func (site *Site) DumpConfig() {
 		}
 	}
 
-	if vehicles := site.Vehicles().Instances(); len(vehicles) > 0 {
+	if vehicles := site.Vehicles().All(); len(vehicles) > 0 {
 		site.log.INFO.Println("  vehicles:")
 
 		for i, v := range vehicles {
@@ -820,7 +817,7 @@ func (site *Site) prepare() {
 	site.publish("batteryDischargeControl", site.BatteryDischargeControl)
 	site.publish("batteryMode", site.batteryMode.String())
 
-	site.publish(keys.Vehicles, vehicleTitles(site.Vehicles().Instances()))
+	site.publishVehicles()
 }
 
 // Prepare attaches communication channels to site and loadpoints

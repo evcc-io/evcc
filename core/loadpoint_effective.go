@@ -3,6 +3,7 @@ package core
 import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/keys"
+	"github.com/evcc-io/evcc/core/vehicle"
 )
 
 // publishEffectiveValues publishes all effective values
@@ -70,7 +71,7 @@ func (lp *Loadpoint) effectiveLimitSoc() int {
 	}
 
 	if v := lp.GetVehicle(); v != nil {
-		if soc, ok := v.OnIdentified().GetLimitSoc(); ok {
+		if soc := vehicle.Settings(lp.log, v).GetLimitSoc(); soc > 0 {
 			return soc
 		}
 	}

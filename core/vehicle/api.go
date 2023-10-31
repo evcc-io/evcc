@@ -1,12 +1,19 @@
 package vehicle
 
-import "time"
+import (
+	"time"
+
+	"github.com/evcc-io/evcc/api"
+)
 
 //go:generate mockgen -package vehicle -destination mock.go -mock_names API=MockAPI github.com/evcc-io/evcc/core/vehicle API
 
-// TODO limitSoc handler
-
 type API interface {
+	api.Vehicle
+
+	// Name returns the vehicle name
+	Name() string
+
 	// // GetMode returns the charge mode
 	// GetMode() api.ChargeMode
 	// // SetMode sets the charge mode
@@ -25,10 +32,10 @@ type API interface {
 	GetMinSoc() int
 	// SetMinSoc sets the min soc
 	SetMinSoc(soc int)
-	// // GetLimitSoc returns the limit soc
-	// GetLimitSoc() int
-	// // SetLimitSoc sets the limit soc
-	// SetLimitSoc(soc int)
+	// GetLimitSoc returns the limit soc
+	GetLimitSoc() int
+	// SetLimitSoc sets the limit soc
+	SetLimitSoc(soc int)
 
 	// GetPlanTime returns the plan time
 	GetPlanTime() time.Time
