@@ -8,6 +8,7 @@ import (
 	reflect "reflect"
 	time "time"
 
+	api "github.com/evcc-io/evcc/api"
 	gomock "github.com/golang/mock/gomock"
 )
 
@@ -32,6 +33,34 @@ func NewMockAPI(ctrl *gomock.Controller) *MockAPI {
 // EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockAPI) EXPECT() *MockAPIMockRecorder {
 	return m.recorder
+}
+
+// Capacity mocks base method.
+func (m *MockAPI) Capacity() float64 {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Capacity")
+	ret0, _ := ret[0].(float64)
+	return ret0
+}
+
+// Capacity indicates an expected call of Capacity.
+func (mr *MockAPIMockRecorder) Capacity() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Capacity", reflect.TypeOf((*MockAPI)(nil).Capacity))
+}
+
+// GetLimitSoc mocks base method.
+func (m *MockAPI) GetLimitSoc() int {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetLimitSoc")
+	ret0, _ := ret[0].(int)
+	return ret0
+}
+
+// GetLimitSoc indicates an expected call of GetLimitSoc.
+func (mr *MockAPIMockRecorder) GetLimitSoc() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLimitSoc", reflect.TypeOf((*MockAPI)(nil).GetLimitSoc))
 }
 
 // GetMinSoc mocks base method.
@@ -76,6 +105,88 @@ func (mr *MockAPIMockRecorder) GetPlanTime() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPlanTime", reflect.TypeOf((*MockAPI)(nil).GetPlanTime))
 }
 
+// Icon mocks base method.
+func (m *MockAPI) Icon() string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Icon")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// Icon indicates an expected call of Icon.
+func (mr *MockAPIMockRecorder) Icon() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Icon", reflect.TypeOf((*MockAPI)(nil).Icon))
+}
+
+// Identifiers mocks base method.
+func (m *MockAPI) Identifiers() []string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Identifiers")
+	ret0, _ := ret[0].([]string)
+	return ret0
+}
+
+// Identifiers indicates an expected call of Identifiers.
+func (mr *MockAPIMockRecorder) Identifiers() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Identifiers", reflect.TypeOf((*MockAPI)(nil).Identifiers))
+}
+
+// Name mocks base method.
+func (m *MockAPI) Name() string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Name")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// Name indicates an expected call of Name.
+func (mr *MockAPIMockRecorder) Name() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Name", reflect.TypeOf((*MockAPI)(nil).Name))
+}
+
+// OnIdentified mocks base method.
+func (m *MockAPI) OnIdentified() api.ActionConfig {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "OnIdentified")
+	ret0, _ := ret[0].(api.ActionConfig)
+	return ret0
+}
+
+// OnIdentified indicates an expected call of OnIdentified.
+func (mr *MockAPIMockRecorder) OnIdentified() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OnIdentified", reflect.TypeOf((*MockAPI)(nil).OnIdentified))
+}
+
+// Phases mocks base method.
+func (m *MockAPI) Phases() int {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Phases")
+	ret0, _ := ret[0].(int)
+	return ret0
+}
+
+// Phases indicates an expected call of Phases.
+func (mr *MockAPIMockRecorder) Phases() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Phases", reflect.TypeOf((*MockAPI)(nil).Phases))
+}
+
+// SetLimitSoc mocks base method.
+func (m *MockAPI) SetLimitSoc(arg0 int) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetLimitSoc", arg0)
+}
+
+// SetLimitSoc indicates an expected call of SetLimitSoc.
+func (mr *MockAPIMockRecorder) SetLimitSoc(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetLimitSoc", reflect.TypeOf((*MockAPI)(nil).SetLimitSoc), arg0)
+}
+
 // SetMinSoc mocks base method.
 func (m *MockAPI) SetMinSoc(arg0 int) {
 	m.ctrl.T.Helper()
@@ -100,4 +211,45 @@ func (m *MockAPI) SetPlanSoc(arg0 time.Time, arg1 int) error {
 func (mr *MockAPIMockRecorder) SetPlanSoc(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPlanSoc", reflect.TypeOf((*MockAPI)(nil).SetPlanSoc), arg0, arg1)
+}
+
+// SetTitle mocks base method.
+func (m *MockAPI) SetTitle(arg0 string) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetTitle", arg0)
+}
+
+// SetTitle indicates an expected call of SetTitle.
+func (mr *MockAPIMockRecorder) SetTitle(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetTitle", reflect.TypeOf((*MockAPI)(nil).SetTitle), arg0)
+}
+
+// Soc mocks base method.
+func (m *MockAPI) Soc() (float64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Soc")
+	ret0, _ := ret[0].(float64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Soc indicates an expected call of Soc.
+func (mr *MockAPIMockRecorder) Soc() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Soc", reflect.TypeOf((*MockAPI)(nil).Soc))
+}
+
+// Title mocks base method.
+func (m *MockAPI) Title() string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Title")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// Title indicates an expected call of Title.
+func (mr *MockAPIMockRecorder) Title() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Title", reflect.TypeOf((*MockAPI)(nil).Title))
 }
