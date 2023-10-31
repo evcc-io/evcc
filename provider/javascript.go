@@ -110,19 +110,26 @@ func (p *Javascript) handleGetter() (any, error) {
 		return nil, err
 	}
 
+	javascript.Lock()
+	defer javascript.Unlock()
+
 	return p.evaluate()
 }
 
 func (p *Javascript) handleSetter(param string, val any) error {
+	javascript.Lock()
 	if err := p.setParam(param, val); err != nil {
+		javascript.Unlock()
 		return err
 	}
 
 	v, err := p.evaluate()
 	if err != nil {
+		javascript.Unlock()
 		return err
 	}
 
+	javascript.Unlock()
 	return transformOutputs(p.out, v)
 }
 
