@@ -147,8 +147,7 @@ func (site *Site) SetSmartCostLimit(val float64) error {
 
 // GetVehicles returns the vehicles proxy
 func (site *Site) Vehicles() site.Vehicles {
-	vv := &vehicles{log: site.log}
-	return vv
+	return &vehicles{log: site.log}
 }
 
 // GetTariff returns the respective tariff if configured or nil

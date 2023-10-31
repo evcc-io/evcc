@@ -1,31 +1,20 @@
 package server
 
 import (
-	"errors"
 	"net/http"
 	"strconv"
 	"time"
 
 	"github.com/evcc-io/evcc/core/site"
-	"github.com/evcc-io/evcc/core/vehicle"
 	"github.com/gorilla/mux"
 )
-
-func vehicleFromRequest(r *http.Request, site site.API) (vehicle.API, error) {
-	name, ok := mux.Vars(r)["name"]
-	if !ok {
-		return nil, errors.New("invalid name")
-	}
-
-	return site.Vehicles().ByName(name)
-}
 
 // minSocHandler updates min soc
 func minSocHandler(site site.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
-		v, err := vehicleFromRequest(r, site)
+		v, err := site.Vehicles().ByName(vars["name"])
 		if err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
@@ -54,7 +43,7 @@ func limitSocHandler(site site.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
-		v, err := vehicleFromRequest(r, site)
+		v, err := site.Vehicles().ByName(vars["name"])
 		if err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
@@ -83,7 +72,7 @@ func planSocHandler(site site.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
-		v, err := vehicleFromRequest(r, site)
+		v, err := site.Vehicles().ByName(vars["name"])
 		if err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
@@ -121,7 +110,9 @@ func planSocHandler(site site.API) http.HandlerFunc {
 // planSocRemoveHandler removes plan soc and time
 func planSocRemoveHandler(site site.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		v, err := vehicleFromRequest(r, site)
+		vars := mux.Vars(r)
+
+		v, err := site.Vehicles().ByName(vars["name"])
 		if err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
