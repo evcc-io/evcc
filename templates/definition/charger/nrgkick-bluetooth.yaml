@@ -2,9 +2,11 @@ template: nrgkick-bluetooth
 products:
   - brand: NRGKick
     description:
-      de: NRGkick Lader via Bluetooth (älter als 2022/2023)
-      en: NRGkick charger via Bluetooth (older than 2022/2023)
       generic: Bluetooth
+requirements:
+  description:
+    de: NRGkick Lader via Bluetooth (älter als 2022/2023)
+    en: NRGkick charger via Bluetooth (older than 2022/2023)
 params:
   - name: mac
     required: true
