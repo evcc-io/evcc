@@ -12,7 +12,7 @@
 			</div>
 			<button
 				type="button"
-				class="btn btn-outline-secondary btn-sm"
+				class="btn btn-outline-dark btn-sm"
 				:disabled="restarting || offline"
 				@click="restart"
 			>
