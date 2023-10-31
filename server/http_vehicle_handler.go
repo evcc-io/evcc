@@ -5,27 +5,50 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/evcc-io/evcc/core/vehicle"
+	"github.com/evcc-io/evcc/core/site"
 	"github.com/gorilla/mux"
 )
 
+// minSocHandler updates min soc
+func minSocHandler(site site.API) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+
+		name, ok := vars["name"]
+		if !ok {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		_ = name
+	}
+}
+
 // planSocHandler updates plan soc and time
-func planSocHandler(v vehicle.API) http.HandlerFunc {
+func planSocHandler(site site.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
 		timeS, ok := vars["time"]
-		timeV, err := time.Parse(time.RFC3339, timeS)
+		if !ok {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
 
+		timeV, err := time.Parse(time.RFC3339, timeS)
 		if !ok || err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
 
 		valueS, ok := vars["value"]
-		valueV, err := strconv.Atoi(valueS)
+		if !ok {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
 
-		if !ok || err != nil {
+		valueV, err := strconv.Atoi(valueS)
+		if err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
@@ -48,8 +71,16 @@ func planSocHandler(v vehicle.API) http.HandlerFunc {
 }
 
 // planSocRemoveHandler removes plan soc and time
-func planSocRemoveHandler(v vehicle.API) http.HandlerFunc {
+func planSocRemoveHandler(site site.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+
+		name, ok := vars["name"]
+		if !ok {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
 		if err := v.SetPlanSoc(time.Time{}, 0); err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
