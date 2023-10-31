@@ -5,6 +5,7 @@ import (
 	"errors"
 	"slices"
 	"strconv"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -20,6 +21,7 @@ type setting struct {
 }
 
 var (
+	mu       sync.RWMutex
 	settings []setting
 	dirty    int32
 )
@@ -42,6 +44,9 @@ func Persist() error {
 }
 
 func SetString(key string, val string) {
+	mu.Lock()
+	defer mu.Unlock()
+
 	idx := slices.IndexFunc(settings, func(s setting) bool {
 		return s.Key == key
 	})
@@ -80,6 +85,9 @@ func SetJson(key string, val any) error {
 }
 
 func String(key string) (string, error) {
+	mu.RLock()
+	defer mu.RUnlock()
+
 	idx := slices.IndexFunc(settings, func(s setting) bool {
 		return s.Key == key
 	})

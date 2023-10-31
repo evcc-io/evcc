@@ -4,6 +4,8 @@ import "time"
 
 //go:generate mockgen -package vehicle -destination mock.go -mock_names API=MockAPI github.com/evcc-io/evcc/core/vehicle API
 
+// TODO limitSoc handler
+
 type API interface {
 	// // GetMode returns the charge mode
 	// GetMode() api.ChargeMode

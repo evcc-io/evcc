@@ -1,26 +1,59 @@
 package server
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 	"time"
 
 	"github.com/evcc-io/evcc/core/site"
+	"github.com/evcc-io/evcc/core/vehicle"
+	"github.com/evcc-io/evcc/util/config"
 	"github.com/gorilla/mux"
 )
+
+func vehicleFromRequest(r *http.Request) (vehicle.API, error) {
+	name, ok := mux.Vars(r)["name"]
+	if !ok {
+		return nil, errors.New("invalid name")
+	}
+
+	dev, err := config.Vehicles().ByName(name)
+	if err != nil {
+		return nil, err
+	}
+
+	return vehicle.Adapter(dev), nil
+}
+
+// TODO limitSoc handler
 
 // minSocHandler updates min soc
 func minSocHandler(site site.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
-		name, ok := vars["name"]
-		if !ok {
-			w.WriteHeader(http.StatusBadRequest)
+		v, err := vehicleFromRequest(r)
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
 
-		_ = name
+		soc, err := strconv.Atoi(vars["value"])
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		v.SetMinSoc(soc)
+
+		res := struct {
+			Soc int `json:"soc"`
+		}{
+			Soc: v.GetMinSoc(),
+		}
+
+		jsonResult(w, res)
 	}
 }
 
@@ -29,31 +62,25 @@ func planSocHandler(site site.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
-		timeS, ok := vars["time"]
-		if !ok {
-			w.WriteHeader(http.StatusBadRequest)
-			return
-		}
-
-		timeV, err := time.Parse(time.RFC3339, timeS)
-		if !ok || err != nil {
-			jsonError(w, http.StatusBadRequest, err)
-			return
-		}
-
-		valueS, ok := vars["value"]
-		if !ok {
-			w.WriteHeader(http.StatusBadRequest)
-			return
-		}
-
-		valueV, err := strconv.Atoi(valueS)
+		v, err := vehicleFromRequest(r)
 		if err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
 
-		if err := v.SetPlanSoc(timeV, valueV); err != nil {
+		ts, err := time.Parse(time.RFC3339, vars["time"])
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		soc, err := strconv.Atoi(vars["value"])
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		if err := v.SetPlanSoc(ts, soc); err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
@@ -73,11 +100,9 @@ func planSocHandler(site site.API) http.HandlerFunc {
 // planSocRemoveHandler removes plan soc and time
 func planSocRemoveHandler(site site.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-
-		name, ok := vars["name"]
-		if !ok {
-			w.WriteHeader(http.StatusBadRequest)
+		v, err := vehicleFromRequest(r)
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
 
