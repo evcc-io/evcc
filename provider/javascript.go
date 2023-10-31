@@ -106,7 +106,7 @@ func (p *Javascript) BoolGetter() func() (bool, error) {
 }
 
 func (p *Javascript) handleGetter() (any, error) {
-	if err := transformInputs(p.in, p.setParam); err != nil {
+	if err := transformInputs(p.in, p.setParamSync); err != nil {
 		return nil, err
 	}
 
@@ -149,6 +149,13 @@ func (p *Javascript) evaluate() (any, error) {
 
 func (p *Javascript) setParam(param string, val any) error {
 	return p.vm.Set(param, val)
+}
+
+// setParamSync is the synchronized version of setParam
+func (p *Javascript) setParamSync(param string, val any) error {
+	javascript.Lock()
+	defer javascript.Unlock()
+	return p.setParam(param, val)
 }
 
 // IntSetter sends int request
