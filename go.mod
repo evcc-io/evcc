@@ -59,7 +59,7 @@ require (
 	github.com/korylprince/ipnetgen v1.0.1
 	github.com/kr/pretty v0.3.1
 	github.com/libp2p/zeroconf/v2 v2.2.0
-	github.com/lorenzodonini/ocpp-go v0.17.1-0.20231022204909-85c930b1a567
+	github.com/lorenzodonini/ocpp-go v0.17.1-0.20231031074144-d214d7c42cbc
 	github.com/lunixbochs/struc v0.0.0-20200707160740-784aaebc1d40
 	github.com/mabunixda/wattpilot v1.6.2
 	github.com/manifoldco/promptui v0.9.0
@@ -169,6 +169,7 @@ require (
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/prometheus/client_model v0.5.0 // indirect
 	github.com/prometheus/procfs v0.12.0 // indirect
+	github.com/relvacode/iso8601 v1.3.0 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	github.com/rickb777/date v1.20.5 // indirect
 	github.com/rickb777/plural v1.4.1 // indirect
