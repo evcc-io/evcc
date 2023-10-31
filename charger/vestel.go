@@ -105,6 +105,9 @@ func NewVestel(uri string, id uint8) (*Vestel, error) {
 	if u := binary.BigEndian.Uint16(b); u > 0 {
 		timeout = time.Duration(u) * time.Second / 4
 	}
+	if timeout < 3*time.Second {
+		timeout = 3 * time.Second
+	}
 	go wb.heartbeat(timeout)
 
 	return wb, nil
