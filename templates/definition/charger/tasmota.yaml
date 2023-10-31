@@ -1,6 +1,6 @@
 template: tasmota
 products:
-  - brand: Tasmota
+  - brand: Tasmota (1 Phase Charger)
 group: switchsockets
 params:
   - name: host
@@ -16,11 +16,11 @@ params:
     default: 1
     required: true
     description:
-      de: Nummer des Schaltkanals
-      en: Device relay channel number
+      de: Schaltkanal Nummer
+      en: Relaychannel number
     help:
-      de: Nummer des Schaltkanals (1-8), bei Geräten mit mehr als einem Schalter
-      en: Device relay channel number (allowed range 1-8)
+      de: Schaltkanal (1-8)
+      en: Relaychannel number (1-8)
   - preset: switchsocket
 render: |
   type: tasmota
@@ -31,5 +31,5 @@ render: |
   {{- if .password }}
   password: {{ .password }}
   {{- end }}
-  channel: {{ .channel }}  # relay channel (allowed range: 1-8)
+  channel: [{{ .channel }}]  # list of relay channels [1,2,....,8]
   {{ include "switchsocket" . }}
