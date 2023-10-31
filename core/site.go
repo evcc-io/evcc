@@ -223,15 +223,6 @@ func NewSite() *Site {
 	return lp
 }
 
-// Loadpoints returns the array of associated loadpoints
-func (site *Site) Loadpoints() []loadpoint.API {
-	res := make([]loadpoint.API, len(site.loadpoints))
-	for id, lp := range site.loadpoints {
-		res[id] = lp
-	}
-	return res
-}
-
 // restoreSettings restores site settings
 func (site *Site) restoreSettings() {
 	if v, err := settings.Float("site.bufferSoc"); err == nil {

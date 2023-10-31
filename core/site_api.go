@@ -5,6 +5,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/keys"
+	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/server/db/settings"
 )
@@ -18,6 +19,20 @@ const (
 	FeedinTariff  = "feedin"
 	PlannerTariff = "planner"
 )
+
+// Loadpoints returns the list loadpoints
+func (site *Site) Loadpoints() []loadpoint.API {
+	res := make([]loadpoint.API, len(site.loadpoints))
+	for id, lp := range site.loadpoints {
+		res[id] = lp
+	}
+	return res
+}
+
+// Vehicles returns the site vehicles
+func (site *Site) Vehicles() site.Vehicles {
+	return &vehicles{log: site.log}
+}
 
 // GetPrioritySoc returns the PrioritySoc
 func (site *Site) GetPrioritySoc() float64 {
@@ -143,11 +158,6 @@ func (site *Site) SetSmartCostLimit(val float64) error {
 	}
 
 	return nil
-}
-
-// GetVehicles returns the vehicles proxy
-func (site *Site) Vehicles() site.Vehicles {
-	return &vehicles{log: site.log}
 }
 
 // GetTariff returns the respective tariff if configured or nil
