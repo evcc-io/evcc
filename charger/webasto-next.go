@@ -150,7 +150,7 @@ func (wb *WebastoNext) Enable(enable bool) error {
 
 // Enabled implements the api.Charger interface
 func (wb *WebastoNext) Enabled() (bool, error) {
-	return wb.enabled, nil
+	return verifyEnabled(wb, wb.enabled)
 
 	// b, err := wb.conn.ReadHoldingRegisters(1104, 1)
 	// if err != nil {
