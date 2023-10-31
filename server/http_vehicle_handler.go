@@ -8,22 +8,16 @@ import (
 
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/core/vehicle"
-	"github.com/evcc-io/evcc/util/config"
 	"github.com/gorilla/mux"
 )
 
-func vehicleFromRequest(r *http.Request) (vehicle.API, error) {
+func vehicleFromRequest(r *http.Request, site site.API) (vehicle.API, error) {
 	name, ok := mux.Vars(r)["name"]
 	if !ok {
 		return nil, errors.New("invalid name")
 	}
 
-	dev, err := config.Vehicles().ByName(name)
-	if err != nil {
-		return nil, err
-	}
-
-	return vehicle.Adapter(dev), nil
+	return site.Vehicles().ByName(name)
 }
 
 // TODO limitSoc handler
@@ -33,7 +27,7 @@ func minSocHandler(site site.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
-		v, err := vehicleFromRequest(r)
+		v, err := vehicleFromRequest(r, site)
 		if err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
@@ -62,7 +56,7 @@ func planSocHandler(site site.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
-		v, err := vehicleFromRequest(r)
+		v, err := vehicleFromRequest(r, site)
 		if err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
@@ -100,7 +94,7 @@ func planSocHandler(site site.API) http.HandlerFunc {
 // planSocRemoveHandler removes plan soc and time
 func planSocRemoveHandler(site site.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		v, err := vehicleFromRequest(r)
+		v, err := vehicleFromRequest(r, site)
 		if err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return

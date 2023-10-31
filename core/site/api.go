@@ -3,7 +3,6 @@ package site
 import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
-	"github.com/evcc-io/evcc/core/vehicle"
 )
 
 // API is the external site API
@@ -33,10 +32,8 @@ type API interface {
 	// vehicles
 	//
 
-	// GetVehicles returns the list of vehicles
-	GetVehicles() []api.Vehicle
-	// VehicleSettings returns the list of vehicle setting adapters
-	VehicleSettings() []vehicle.API
+	// Vehicles returns the vehicle setting adapters
+	Vehicles() Vehicles
 
 	//
 	// tariffs and costs

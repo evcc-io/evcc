@@ -250,7 +250,7 @@ func (m *MQTT) listenLoadpointSetters(topic string, site site.API, lp loadpoint.
 		vehicle, err := strconv.Atoi(payload)
 		if err == nil {
 			if vehicle > 0 {
-				if vehicles := site.GetVehicles(); vehicle <= len(vehicles) {
+				if vehicles := site.Vehicles().Instances(); vehicle <= len(vehicles) {
 					lp.SetVehicle(vehicles[vehicle-1])
 				} else {
 					err = fmt.Errorf("invalid vehicle: %d", vehicle)
@@ -422,11 +422,11 @@ func (m *MQTT) Run(site site.API, in <-chan util.Param) {
 
 	// number of vehicles
 	topic := fmt.Sprintf("%s/vehicles", m.root)
-	m.publish(topic, true, len(site.GetVehicles()))
+	m.publish(topic, true, len(site.Vehicles().All()))
 
 	// TODO decide key
 	// vehicle setters
-	for id, vehicle := range site.VehicleSettings() {
+	for id, vehicle := range site.Vehicles().All() {
 		topic := fmt.Sprintf("%s/vehicles/%d", m.root, id+1)
 		m.listenVehicleSetters(topic, site, vehicle)
 	}

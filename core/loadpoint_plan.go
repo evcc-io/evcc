@@ -46,7 +46,7 @@ func (lp *Loadpoint) planRequiredDuration(maxPower float64) time.Duration {
 		return 0
 	}
 
-	soc := vehicle.Settings(v).GetPlanSoc()
+	soc := vehicle.Settings(lp.log, v).GetPlanSoc()
 
 	return lp.socEstimator.RemainingChargeDuration(soc, maxPower)
 }

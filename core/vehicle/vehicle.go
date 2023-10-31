@@ -27,23 +27,25 @@ func Device(vehicle api.Vehicle) config.Device[api.Vehicle] {
 	return nil
 }
 
-var log = util.NewLogger("vehicle")
+// var log = util.NewLogger("vehicle")
 
-func Settings(v api.Vehicle) API {
+func Settings(log *util.Logger, v api.Vehicle) API {
 	if dev := Device(v); dev != nil {
-		return Adapter(dev)
+		return Adapter(log, dev)
 	}
 	return nil
 }
 
 // Adapter creates a vehicle API adapter
-func Adapter(dev config.Device[api.Vehicle]) API {
+func Adapter(log *util.Logger, dev config.Device[api.Vehicle]) API {
 	return &adapter{
+		log:  log,
 		name: dev.Config().Name,
 	}
 }
 
 type adapter struct {
+	log  *util.Logger
 	name string
 }
 
@@ -61,7 +63,7 @@ func (v *adapter) GetMinSoc() int {
 }
 
 func (v *adapter) SetMinSoc(soc int) {
-	log.DEBUG.Printf("set %s min soc: %d", v.name, soc)
+	v.log.DEBUG.Printf("set %s min soc: %d", v.name, soc)
 	settings.SetInt(v.key()+"minSoc", int64(soc))
 }
 
@@ -87,7 +89,7 @@ func (v *adapter) SetPlanSoc(ts time.Time, soc int) error {
 		return errors.New("timestamp is in the past")
 	}
 
-	log.DEBUG.Printf("set %s plan soc/time: %d/%v", v.name, soc, ts.Round(time.Second))
+	v.log.DEBUG.Printf("set %s plan soc/time: %d/%v", v.name, soc, ts.Round(time.Second))
 	settings.SetTime(v.key()+"planTime", ts)
 	settings.SetInt(v.key()+"planSoc", int64(soc))
 

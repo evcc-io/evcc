@@ -812,7 +812,7 @@ func (lp *Loadpoint) minSocNotReached() bool {
 		return false
 	}
 
-	minSoc := vehicle.Settings(v).GetMinSoc()
+	minSoc := vehicle.Settings(lp.log, v).GetMinSoc()
 	if minSoc == 0 {
 		return false
 	}

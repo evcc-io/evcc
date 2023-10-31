@@ -407,7 +407,7 @@ func vehicleHandler(site site.API, lp loadpoint.API) http.HandlerFunc {
 		valS, ok := vars["vehicle"]
 		val, err := strconv.Atoi(valS)
 
-		vehicles := site.GetVehicles()
+		vehicles := site.Vehicles().Instances()
 		if !ok || val < 1 || val > len(vehicles) || err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			return

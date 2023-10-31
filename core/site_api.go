@@ -6,7 +6,6 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/site"
-	"github.com/evcc-io/evcc/core/vehicle"
 	"github.com/evcc-io/evcc/server/db/settings"
 )
 
@@ -146,21 +145,10 @@ func (site *Site) SetSmartCostLimit(val float64) error {
 	return nil
 }
 
-// GetVehicles returns the list of vehicles
-func (site *Site) GetVehicles() []api.Vehicle {
-	site.RLock()
-	defer site.RUnlock()
-	return site.coordinator.GetVehicles()
-}
-
-// VehicleSettings returns the list of vehicle setting adapters
-func (site *Site) VehicleSettings() []vehicle.API {
-	// TODO refactor
-	res := make([]vehicle.API, 0, len(site.GetVehicles()))
-	for _, dev := range vehicle.Handler.Devices() {
-		res = append(res, vehicle.Settings(dev.Instance()))
-	}
-	return res
+// GetVehicles returns the vehicles proxy
+func (site *Site) Vehicles() site.Vehicles {
+	vv := &vehicles{log: site.log}
+	return vv
 }
 
 // GetTariff returns the respective tariff if configured or nil
