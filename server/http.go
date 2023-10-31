@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/core/site"
-	"github.com/evcc-io/evcc/core/vehicle"
 	"github.com/evcc-io/evcc/server/assets"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/telemetry"
@@ -125,32 +124,21 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, cache *util.Cache) {
 	}
 
 	// vehicle api
-	for _, v := range site.GetVehicles() {
-		dev := vehicle.Device(v)
-		vv := vehicle.Settings(v)
-		if dev == nil || vv == nil {
-			continue
-		}
+	vehicles := map[string]route{
+		"minsoc": {[]string{"POST", "OPTIONS"}, "/vehicles/{name:[a-zA-Z0-9_.:-]+}/minsoc/{value:[0-9]+}", minSocHandler(site)},
+		"plan":   {[]string{"POST", "OPTIONS"}, "/vehicles/{name:[a-zA-Z0-9_.:-]+}/plan/soc/{value:[0-9]+}/{time:[0-9TZ:.-]+}", planSocHandler(site)},
+		"plan2":  {[]string{"DELETE", "OPTIONS"}, "/vehicles/{name:[a-zA-Z0-9_.:-]+}/plan/soc", planSocRemoveHandler(site)},
 
-		name := dev.Config().Name
-		api := api.PathPrefix(fmt.Sprintf("/vehicles/%s", name)).Subrouter()
+		// config ui
+		// "mode":     {[]string{"POST", "OPTIONS"}, "/mode/{value:[a-z]+}", chargeModeHandler(v)},
+		// "limitsoc": {[]string{"POST", "OPTIONS"}, "/limitsoc/{value:[0-9]+}", intHandler(pass(v.SetLimitSoc), v.GetLimitSoc)},
+		// "mincurrent": {[]string{"POST", "OPTIONS"}, "/mincurrent/{value:[0-9.]+}", floatHandler(pass(v.SetMinCurrent), v.GetMinCurrent)},
+		// "maxcurrent": {[]string{"POST", "OPTIONS"}, "/maxcurrent/{value:[0-9.]+}", floatHandler(pass(v.SetMaxCurrent), v.GetMaxCurrent)},
+		// "phases":     {[]string{"POST", "OPTIONS"}, "/phases/{value:[0-9]+}", intHandler(pass(v.SetMinSoc), v.GetMinSoc)},
+	}
 
-		routes := map[string]route{
-			"minsoc": {[]string{"POST", "OPTIONS"}, "/minsoc/{value:[0-9]+}", intHandler(pass(vv.SetMinSoc), vv.GetMinSoc)},
-			"plan":   {[]string{"POST", "OPTIONS"}, "/plan/soc/{value:[0-9]+}/{time:[0-9TZ:.-]+}", planSocHandler(vv)},
-			"plan2":  {[]string{"DELETE", "OPTIONS"}, "/plan/soc", planSocRemoveHandler(vv)},
-
-			// config ui
-			// "mode":     {[]string{"POST", "OPTIONS"}, "/mode/{value:[a-z]+}", chargeModeHandler(v)},
-			// "limitsoc": {[]string{"POST", "OPTIONS"}, "/limitsoc/{value:[0-9]+}", intHandler(pass(v.SetLimitSoc), v.GetLimitSoc)},
-			// "mincurrent": {[]string{"POST", "OPTIONS"}, "/mincurrent/{value:[0-9.]+}", floatHandler(pass(v.SetMinCurrent), v.GetMinCurrent)},
-			// "maxcurrent": {[]string{"POST", "OPTIONS"}, "/maxcurrent/{value:[0-9.]+}", floatHandler(pass(v.SetMaxCurrent), v.GetMaxCurrent)},
-			// "phases":     {[]string{"POST", "OPTIONS"}, "/phases/{value:[0-9]+}", intHandler(pass(v.SetMinSoc), v.GetMinSoc)},
-		}
-
-		for _, r := range routes {
-			api.Methods(r.Methods...).Path(r.Pattern).Handler(r.HandlerFunc)
-		}
+	for _, r := range vehicles {
+		api.Methods(r.Methods...).Path(r.Pattern).Handler(r.HandlerFunc)
 	}
 
 	// loadpoint api
