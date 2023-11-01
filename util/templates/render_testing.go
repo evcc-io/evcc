@@ -38,9 +38,6 @@ func TestClass(t *testing.T, class Class, instantiate func(t *testing.T, values 
 		// set default values for all params
 		values := tmpl.Defaults(TemplateRenderModeUnitTest)
 
-		// set the template value which is needed for rendering
-		values["template"] = tmpl.Template
-
 		// set modbus default test values
 		if values[ParamModbus] != nil {
 			modbusChoices := tmpl.ModbusChoices()
@@ -53,6 +50,8 @@ func TestClass(t *testing.T, class Class, instantiate func(t *testing.T, values 
 			tmpl.ModbusValues(TemplateRenderModeUnitTest, values)
 		}
 
+		// set the template value which is needed for rendering
+		values["template"] = tmpl.Template
 		// https://github.com/evcc-io/evcc/pull/10272 - override example IP (192.0.2.2)
 		values["host"] = "localhost"
 
