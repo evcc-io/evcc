@@ -50,6 +50,10 @@ func (site *Site) SetPrioritySoc(soc float64) error {
 		return ErrBatteryNotConfigured
 	}
 
+	if site.bufferSoc != 0 && soc > site.bufferSoc {
+		return errors.New("priority soc must be smaller or equal than buffer soc")
+	}
+
 	site.log.DEBUG.Println("set priority soc:", soc)
 
 	if site.prioritySoc != soc {
@@ -77,6 +81,14 @@ func (site *Site) SetBufferSoc(soc float64) error {
 		return ErrBatteryNotConfigured
 	}
 
+	if soc != 0 && soc <= site.prioritySoc {
+		return errors.New("buffer soc must be larger than priority soc")
+	}
+
+	if site.bufferStartSoc != 0 && soc > site.bufferStartSoc {
+		return errors.New("buffer soc must be smaller or equal than buffer start soc")
+	}
+
 	site.log.DEBUG.Println("set buffer soc:", soc)
 
 	if site.bufferSoc != soc {
@@ -102,6 +114,10 @@ func (site *Site) SetBufferStartSoc(soc float64) error {
 
 	if len(site.batteryMeters) == 0 {
 		return ErrBatteryNotConfigured
+	}
+
+	if soc != 0 && soc <= site.bufferSoc {
+		return errors.New("buffer start soc must be larger than buffer soc")
 	}
 
 	site.log.DEBUG.Println("set buffer start soc:", soc)

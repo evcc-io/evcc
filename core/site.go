@@ -125,8 +125,6 @@ func NewSiteFromConfig(
 	site.prioritizer = prioritizer.New(log)
 	site.stats = NewStats()
 
-	site.restoreSettings()
-
 	// upload telemetry on shutdown
 	if telemetry.Enabled() {
 		shutdown.Register(func() {
@@ -201,14 +199,6 @@ func NewSiteFromConfig(
 		return nil, errors.New("missing either grid or pv meter")
 	}
 
-	if site.bufferStartSoc != 0 && site.bufferStartSoc <= site.bufferSoc {
-		site.log.WARN.Println("bufferStartSoc must be larger than bufferSoc")
-	}
-
-	if site.bufferSoc != 0 && site.bufferSoc <= site.prioritySoc {
-		site.log.WARN.Println("bufferSoc must be larger than prioritySoc")
-	}
-
 	return site, nil
 }
 
@@ -223,25 +213,32 @@ func NewSite() *Site {
 	return lp
 }
 
-// TODO remove site prefix
-
 // restoreSettings restores site settings
-func (site *Site) restoreSettings() {
-	if v, err := settings.Float("site." + keys.BufferSoc); err == nil {
-		site.bufferSoc = v
+func (site *Site) restoreSettings() error {
+	if v, err := settings.Float(keys.BufferSoc); err == nil {
+		if err := site.SetBufferSoc(v); err != nil {
+			return err
+		}
 	}
-	if v, err := settings.Float("site." + keys.BufferStartSoc); err == nil {
-		site.bufferStartSoc = v
+	if v, err := settings.Float(keys.BufferStartSoc); err == nil {
+		if site.SetBufferStartSoc(v); err != nil {
+			return err
+		}
 	}
-	if v, err := settings.Float("site." + keys.PrioritySoc); err == nil {
-		site.prioritySoc = v
+	if v, err := settings.Float(keys.SmartCostLimit); err == nil {
+		if site.SetSmartCostLimit(v); err != nil {
+			return err
+		}
 	}
-	if v, err := settings.Float("site." + keys.SmartCostLimit); err == nil {
-		site.SmartCostLimit = v
+	if v, err := settings.Float(keys.PrioritySoc); err == nil {
+		if err := site.SetPrioritySoc(v); err != nil {
+			return err
+		}
 	}
 	if v, err := settings.Bool("site.batteryDischargeControl"); err == nil {
 		site.BatteryDischargeControl = v
 	}
+	return nil
 }
 
 func meterCapabilities(name string, meter interface{}) string {
@@ -809,6 +806,9 @@ func (site *Site) prepare() {
 
 	site.publish("batteryDischargeControl", site.BatteryDischargeControl)
 	site.publish("batteryMode", site.batteryMode.String())
+	if err := site.restoreSettings(); err != nil {
+		site.log.ERROR.Println(err)
+	}
 
 	site.publishVehicles()
 }
