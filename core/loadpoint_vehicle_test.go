@@ -143,96 +143,82 @@ func TestVehicleDetectByID(t *testing.T) {
 	}
 }
 
-// func TestDefaultVehicle(t *testing.T) {
-// 	ctrl := gomock.NewController(t)
+func TestDefaultVehicle(t *testing.T) {
+	ctrl := gomock.NewController(t)
 
-// 	mode := api.ModePV
-// 	targetsoc := 80
+	mode := api.ModePV
 
-// 	dflt := api.NewMockVehicle(ctrl)
-// 	dflt.EXPECT().Title().Return("default").AnyTimes()
-// 	dflt.EXPECT().Icon().Return("").AnyTimes()
-// 	dflt.EXPECT().Capacity().AnyTimes()
-// 	dflt.EXPECT().Phases().AnyTimes()
-// 	dflt.EXPECT().OnIdentified().Return(api.ActionConfig{
-// 		Mode:     &mode,
-// 		LimitSoc: &targetsoc,
-// 	}).AnyTimes()
+	dflt := api.NewMockVehicle(ctrl)
+	dflt.EXPECT().Title().Return("default").AnyTimes()
+	dflt.EXPECT().Icon().Return("").AnyTimes()
+	dflt.EXPECT().Capacity().AnyTimes()
+	dflt.EXPECT().Phases().AnyTimes()
+	dflt.EXPECT().OnIdentified().Return(api.ActionConfig{
+		Mode: mode,
+	}).AnyTimes()
 
-// 	vehicle := api.NewMockVehicle(ctrl)
-// 	vehicle.EXPECT().Title().Return("target").AnyTimes()
-// 	vehicle.EXPECT().Icon().Return("").AnyTimes()
-// 	vehicle.EXPECT().Capacity().AnyTimes()
-// 	vehicle.EXPECT().Phases().AnyTimes()
-// 	vehicle.EXPECT().OnIdentified().AnyTimes()
+	vehicle := api.NewMockVehicle(ctrl)
+	vehicle.EXPECT().Title().Return("target").AnyTimes()
+	vehicle.EXPECT().Icon().Return("").AnyTimes()
+	vehicle.EXPECT().Capacity().AnyTimes()
+	vehicle.EXPECT().Phases().AnyTimes()
+	vehicle.EXPECT().OnIdentified().AnyTimes()
 
-// 	lp := NewLoadpoint(util.NewLogger("foo"))
-// 	lp.defaultVehicle = dflt
+	lp := NewLoadpoint(util.NewLogger("foo"), nil)
+	lp.Mode_ = api.ModeOff // ondisconnect
+	lp.defaultVehicle = dflt
 
-// 	// ondisconnect
-// 	off := api.ModeOff
-// 	zero := 0
-// 	onDisconnect := api.ActionConfig{
-// 		Mode:       &off,
-// 		MinCurrent: &lp.MinCurrent,
-// 		MaxCurrent: &lp.MaxCurrent,
-// 		Priority:   &zero,
-// 	}
+	// populate channels
+	x, y, z := createChannels(t)
+	attachChannels(lp, x, y, z)
 
-// 	assert.Equal(t, lp.onDisconnect, onDisconnect)
+	title := func(v api.Vehicle) string {
+		if v == nil {
+			return "<nil>"
+		}
+		return v.Title()
+	}
 
-// 	// populate channels
-// 	x, y, z := createChannels(t)
-// 	attachChannels(lp, x, y, z)
+	// non-default vehicle identified
+	lp.setActiveVehicle(vehicle)
+	assert.Equal(t, vehicle, lp.vehicle, "expected vehicle "+title(vehicle))
 
-// 	title := func(v api.Vehicle) string {
-// 		if v == nil {
-// 			return "<nil>"
-// 		}
-// 		return v.Title()
-// 	}
+	// non-default vehicle disconnected
+	lp.evVehicleDisconnectHandler()
+	assert.Equal(t, dflt, lp.vehicle, "expected default vehicle")
+	assert.Equal(t, mode, lp.GetMode(), "mode")
 
-// 	// non-default vehicle identified
-// 	lp.setActiveVehicle(vehicle)
-// 	assert.Equal(t, vehicle, lp.vehicle, "expected vehicle "+title(vehicle))
+	// default vehicle disconnected
+	lp.evVehicleDisconnectHandler()
+	assert.Equal(t, mode, lp.GetMode(), "mode")
 
-// 	// non-default vehicle disconnected
-// 	lp.evVehicleDisconnectHandler()
-// 	assert.Equal(t, dflt, lp.vehicle, "expected default vehicle")
+	// set non-default vehicle during disconnect - should be default on connect
+	lp.tasks.Clear()
+	lp.evVehicleConnectHandler()
+	assert.Equal(t, dflt, lp.vehicle, "expected default vehicle")
+	assert.Equal(t, 1, lp.tasks.Size(), "task queue length")
 
-// 	// default vehicle disconnected
-// 	lp.ResetOnDisconnect = true
-// 	lp.evVehicleDisconnectHandler()
-// 	assert.Equal(t, mode, lp.GetMode(), "mode")
-// 	assert.Equal(t, lp.onDisconnect, onDisconnect, "ondisconnect must remain untouched")
-
-// 	// set non-default vehicle during disconnect - should be default on connect
-// 	lp.tasks.Clear()
-// 	lp.evVehicleConnectHandler()
-// 	assert.Equal(t, dflt, lp.vehicle, "expected default vehicle")
-// 	assert.Equal(t, 1, lp.tasks.Size(), "task queue length")
-
-// 	// guest connected
-// 	lp.setActiveVehicle(nil)
-// 	assert.Nil(t, lp.vehicle, "expected no vehicle")
-// }
+	// guest connected
+	lp.setActiveVehicle(nil)
+	assert.Nil(t, lp.vehicle, "expected no vehicle")
+}
 
 // func TestApplyVehicleDefaults(t *testing.T) {
 // 	ctrl := gomock.NewController(t)
 
 // 	newConfig := func(mode api.ChargeMode, minCurrent, maxCurrent float64, targetSoc *int) api.ActionConfig {
 // 		return api.ActionConfig{
-// 			Mode:       &mode,
-// 			MinCurrent: &minCurrent,
-// 			MaxCurrent: &maxCurrent,
-// 			LimitSoc:   targetSoc,
+// 			Mode:       mode,
+// 			MinCurrent: minCurrent,
+// 			MaxCurrent: maxCurrent,
+// 			// LimitSoc:   targetSoc,
 // 		}
 // 	}
 
 // 	assertConfig := func(lp *Loadpoint, conf api.ActionConfig) {
-// 		assert.Equal(t, *conf.Mode, lp.Mode)
-// 		assert.Equal(t, *conf.MinCurrent, lp.MinCurrent)
-// 		assert.Equal(t, *conf.MaxCurrent, lp.MaxCurrent)
+// 		assert.Equal(t, conf.Mode, lp.mode)
+// 		assert.Equal(t, conf.MinCurrent, lp.MinCurrent)
+// 		assert.Equal(t, conf.MaxCurrent, lp.MaxCurrent)
 // 	}
 
 // 	// onIdentified config
@@ -249,17 +235,17 @@ func TestVehicleDetectByID(t *testing.T) {
 // 	vehicle.EXPECT().Phases().AnyTimes()
 // 	vehicle.EXPECT().OnIdentified().Return(oi).AnyTimes()
 
-// 	lp := NewLoadpoint(util.NewLogger("foo"))
+// 	lp := NewLoadpoint(util.NewLogger("foo"), nil)
 
 // 	// populate channels
 // 	x, y, z := createChannels(t)
 // 	attachChannels(lp, x, y, z)
 
-// 	lp.onDisconnect = od
-// 	lp.ResetOnDisconnect = true
+// 	// lp.onDisconnect = od
+// 	// lp.ResetOnDisconnect = true
 
 // 	// check loadpoint default currents can't be violated
-// 	lp.applyAction(newConfig(*od.Mode, 5, 17, od.LimitSoc))
+// 	// lp.applyAction(newConfig(*od.Mode, 5, 17, od.LimitSoc))
 // 	assertConfig(lp, od)
 
 // 	// vehicle identified

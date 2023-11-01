@@ -101,10 +101,6 @@ func (lp *Loadpoint) selectVehicleByID(id string) api.Vehicle {
 // and adds an odometer task
 func (lp *Loadpoint) setActiveVehicle(vehicle api.Vehicle) {
 	lp.vehicleMux.Lock()
-	if lp.vehicle == vehicle {
-		lp.vehicleMux.Unlock()
-		return
-	}
 
 	from := "unknown"
 	if lp.vehicle != nil {
@@ -120,7 +116,9 @@ func (lp *Loadpoint) setActiveVehicle(vehicle api.Vehicle) {
 	lp.vehicle = vehicle
 	lp.vehicleMux.Unlock()
 
-	lp.log.INFO.Printf("vehicle updated: %s -> %s", from, to)
+	if from != to {
+		lp.log.INFO.Printf("vehicle updated: %s -> %s", from, to)
+	}
 
 	// reset session values
 	lp.Lock()
