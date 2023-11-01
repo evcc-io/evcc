@@ -7,7 +7,6 @@ import (
 	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/session"
-	"github.com/evcc-io/evcc/mock"
 	serverdb "github.com/evcc-io/evcc/server/db"
 	"github.com/evcc-io/evcc/util"
 	"github.com/golang/mock/gomock"
@@ -27,8 +26,8 @@ func TestSession(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mm := mock.NewMockMeter(ctrl)
-	me := mock.NewMockMeterEnergy(ctrl)
+	mm := api.NewMockMeter(ctrl)
+	me := api.NewMockMeterEnergy(ctrl)
 
 	type EnergyDecorator struct {
 		api.Meter
@@ -114,11 +113,11 @@ func TestCloseSessionsOnStartup(t *testing.T) {
 
 	clock := clock.NewMock()
 
-	//test data, creates 6 sessions for each loadpoint, 3rd and 6th are "unfinished"
+	// test data, creates 6 sessions for each loadpoint, 3rd and 6th are "unfinished"
 	var sessions1 []*session.Session = createMockSessions(db1, clock)
 	var sessions2 []*session.Session = createMockSessions(db2, clock)
 
-	//write interleaved for two loadpoints
+	// write interleaved for two loadpoints
 	for index, session := range sessions1 {
 		db1.Persist(session)
 		db2.Persist(sessions2[index])
@@ -127,24 +126,24 @@ func TestCloseSessionsOnStartup(t *testing.T) {
 	err = db1.ClosePendingSessionsInHistory(1000)
 	assert.NoError(t, err)
 
-	//check fixed sessions for db1
+	// check fixed sessions for db1
 	var db1Sessions session.Sessions
 	err = serverdb.Instance.Where("Loadpoint = ?", "foo").Order("ID").Find(&db1Sessions).Error
 	assert.NoError(t, err)
 	assert.Len(t, db1Sessions, 6)
 
-	//check fixed history
+	// check fixed history
 	for _, s := range db1Sessions[:5] {
 		assert.NotEmpty(t, s.MeterStop)
 		assert.Equal(t, float64(10), s.ChargedEnergy)
 		t.Logf("session: %+v", s)
 	}
 
-	//check fixed most recent record
+	// check fixed most recent record
 	assert.NotEmpty(t, db1Sessions[5].MeterStop)
 	assert.Equal(t, float64(940), db1Sessions[5].ChargedEnergy)
 
-	//ensure no side effects on loadpoint 2 data, i.e. data left unfixed
+	// ensure no side effects on loadpoint 2 data, i.e. data left unfixed
 	var db2Sessions session.Sessions
 	err = serverdb.Instance.Where("Loadpoint = ?", "bar").Order("ID").Find(&db2Sessions).Error
 	assert.NoError(t, err)
@@ -169,7 +168,7 @@ func createMockSessions(db *session.DB, clock *clock.Mock) []*session.Session {
 		session := db.New(meter1Start)
 		session.Created = clock.Now().Add(1 * time.Minute)
 
-		//create every third session as incomplete
+		// create every third session as incomplete
 		if i%3 == 0 {
 			sessions = append(sessions, session)
 			continue
