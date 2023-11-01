@@ -78,31 +78,18 @@ func (mr *MockAPIMockRecorder) GetMinSoc() *gomock.Call {
 }
 
 // GetPlanSoc mocks base method.
-func (m *MockAPI) GetPlanSoc() int {
+func (m *MockAPI) GetPlanSoc() (time.Time, int) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetPlanSoc")
-	ret0, _ := ret[0].(int)
-	return ret0
+	ret0, _ := ret[0].(time.Time)
+	ret1, _ := ret[1].(int)
+	return ret0, ret1
 }
 
 // GetPlanSoc indicates an expected call of GetPlanSoc.
 func (mr *MockAPIMockRecorder) GetPlanSoc() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPlanSoc", reflect.TypeOf((*MockAPI)(nil).GetPlanSoc))
-}
-
-// GetPlanTime mocks base method.
-func (m *MockAPI) GetPlanTime() time.Time {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetPlanTime")
-	ret0, _ := ret[0].(time.Time)
-	return ret0
-}
-
-// GetPlanTime indicates an expected call of GetPlanTime.
-func (mr *MockAPIMockRecorder) GetPlanTime() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPlanTime", reflect.TypeOf((*MockAPI)(nil).GetPlanTime))
 }
 
 // Icon mocks base method.
