@@ -10,21 +10,15 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"io"
-	"log"
 	"net/netip"
 	"os"
 	"time"
 
+	"github.com/evcc-io/evcc/util"
 	"github.com/google/uuid"
 )
 
-var defaultTimeout = 10 * time.Second
-
-func NewPlug(addr netip.Addr, logger *log.Logger) *Plug {
-	if logger == nil {
-		logger = log.New(io.Discard, "", 0)
-	}
+func NewPlug(addr netip.Addr, logger *util.Logger) *Plug {
 	return &Plug{
 		log:          logger,
 		Addr:         addr,
@@ -37,7 +31,7 @@ func (p *Plug) Handshake(username, password string) error {
 		// try the newer KLAP protocol first
 		ks := NewKlapSession(p.log)
 		if err := ks.Handshake(p.Addr, username, password); err != nil {
-			p.log.Printf("KLAP handshake failed, trying passthrough handshake")
+			p.log.TRACE.Printf("KLAP handshake failed, trying passthrough handshake")
 			// then try the older passthrough protocol
 			ps := NewPassthroughSession(p.log)
 			if err := ps.Handshake(p.Addr, username, password); err != nil {
@@ -48,13 +42,13 @@ func (p *Plug) Handshake(username, password string) error {
 			if err != nil {
 				return fmt.Errorf("failed to marshal login_device payload: %w", err)
 			}
-			p.log.Printf("Login request: %s", requestBytes)
+			p.log.TRACE.Printf("Login request: %s", requestBytes)
 
 			response, err := ps.Request(requestBytes)
 			if err != nil {
 				return fmt.Errorf("request failed: %w", err)
 			}
-			p.log.Printf("Login response: %s", response)
+			p.log.TRACE.Printf("Login response: %s", response)
 			var loginResp LoginDeviceResponse
 			if err := json.Unmarshal(response, &loginResp); err != nil {
 				return fmt.Errorf("failed to unmarshal JSON response: %w", err)
@@ -70,7 +64,7 @@ func (p *Plug) Handshake(username, password string) error {
 		} else {
 			p.session = ks
 		}
-		p.log.Printf("Session: %+v", p.session)
+		p.log.TRACE.Printf("Session: %+v", p.session)
 	}
 
 	return nil
@@ -85,13 +79,13 @@ func (p *Plug) GetDeviceInfo() (*DeviceInfo, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal get_device_info payload: %w", err)
 	}
-	p.log.Printf("GetDeviceInfo request: %s", requestBytes)
+	p.log.TRACE.Printf("GetDeviceInfo request: %s", requestBytes)
 
 	response, err := p.session.Request(requestBytes)
 	if err != nil {
 		return nil, fmt.Errorf("request failed: %w", err)
 	}
-	p.log.Printf("GetDeviceInfo response: %s", response)
+	p.log.TRACE.Printf("GetDeviceInfo response: %s", response)
 	var infoResp GetDeviceInfoResponse
 	if err := json.Unmarshal(response, &infoResp); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal JSON response: %w", err)
@@ -124,13 +118,13 @@ func (p *Plug) SetDeviceInfo(deviceOn bool) error {
 	if err != nil {
 		return fmt.Errorf("failed to marshal set_device_info payload: %w", err)
 	}
-	p.log.Printf("SetDeviceInfo request: %s", requestBytes)
+	p.log.TRACE.Printf("SetDeviceInfo request: %s", requestBytes)
 
 	response, err := p.session.Request(requestBytes)
 	if err != nil {
 		return fmt.Errorf("request failed: %w", err)
 	}
-	p.log.Printf("SetDeviceInfo response: %s", response)
+	p.log.TRACE.Printf("SetDeviceInfo response: %s", response)
 	var infoResp SetDeviceInfoResponse
 	if err := json.Unmarshal(response, &infoResp); err != nil {
 		return fmt.Errorf("failed to unmarshal JSON response: %w", err)
@@ -150,13 +144,13 @@ func (p *Plug) GetDeviceUsage() (*DeviceUsage, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal get_device_usage payload: %w", err)
 	}
-	p.log.Printf("GetDeviceUsage request: %s", requestBytes)
+	p.log.TRACE.Printf("GetDeviceUsage request: %s", requestBytes)
 
 	response, err := p.session.Request(requestBytes)
 	if err != nil {
 		return nil, fmt.Errorf("request failed: %w", err)
 	}
-	p.log.Printf("GetDeviceUsage response: %s", response)
+	p.log.TRACE.Printf("GetDeviceUsage response: %s", response)
 	var usageResp GetDeviceUsageResponse
 	if err := json.Unmarshal(response, &usageResp); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal JSON response: %w", err)
@@ -176,13 +170,13 @@ func (p *Plug) GetEnergyUsage() (*EnergyUsage, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal get_energy_usage payload: %w", err)
 	}
-	p.log.Printf("GetEnergyUsage request: %s", requestBytes)
+	p.log.TRACE.Printf("GetEnergyUsage request: %s", requestBytes)
 
 	response, err := p.session.Request(requestBytes)
 	if err != nil {
 		return nil, fmt.Errorf("request failed: %w", err)
 	}
-	p.log.Printf("GetEnergyUsage response: %s", response)
+	p.log.TRACE.Printf("GetEnergyUsage response: %s", response)
 	var usageResp GetEnergyUsageResponse
 	if err := json.Unmarshal(response, &usageResp); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal JSON response: %w", err)

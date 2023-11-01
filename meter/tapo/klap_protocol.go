@@ -13,7 +13,6 @@ import (
 	"encoding/binary"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"net/http/cookiejar"
 	"net/netip"
@@ -22,16 +21,18 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/evcc-io/evcc/util"
 )
 
-func NewKlapSession(l *log.Logger) *KlapSession {
+func NewKlapSession(l *util.Logger) *KlapSession {
 	return &KlapSession{
 		log: l,
 	}
 }
 
 type KlapSession struct {
-	log         *log.Logger
+	log         *util.Logger
 	addr        netip.Addr
 	SessionID   string
 	Expiry      time.Time
@@ -82,7 +83,7 @@ func (s *KlapSession) getIV() []byte {
 }
 
 func (s *KlapSession) encrypt(data []byte) ([]byte, int32, error) {
-	s.log.Printf("Plaintext: %s", data)
+	s.log.TRACE.Printf("Plaintext: %s", data)
 	key := s.getKey()
 	if !s.initialized {
 		s.iv = s.getIV()
@@ -90,9 +91,9 @@ func (s *KlapSession) encrypt(data []byte) ([]byte, int32, error) {
 		s.initialized = true
 	}
 	s.seq++
-	s.log.Printf("Seq: %d", s.seq)
+	s.log.TRACE.Printf("Seq: %d", s.seq)
 	binary.BigEndian.PutUint32(s.iv[12:16], uint32(s.seq))
-	s.log.Printf("IV: %v", s.iv)
+	s.log.TRACE.Printf("IV: %v", s.iv)
 	// PKCS7 padding to aes block size (16)
 	neededBytes := (aes.BlockSize - (len(data))%aes.BlockSize)
 	plaintext := make([]byte, len(data)+neededBytes)
@@ -100,22 +101,22 @@ func (s *KlapSession) encrypt(data []byte) ([]byte, int32, error) {
 	for idx := len(data); idx < len(plaintext); idx++ {
 		plaintext[idx] = byte(neededBytes)
 	}
-	s.log.Printf("Padded plaintext: %v", plaintext)
+	s.log.TRACE.Printf("Padded plaintext: %v", plaintext)
 	ciphertext, err := encryptCBC(key, s.iv[:], plaintext)
 	if err != nil {
 		return nil, 0, fmt.Errorf("encryption failed: %w", err)
 	}
-	s.log.Printf("Ciphertext: %v", ciphertext)
+	s.log.TRACE.Printf("Ciphertext: %v", ciphertext)
 
 	// signature
 	bytesToHash := append(s.getSignature(), s.iv[12:16]...)
 	bytesToHash = append(bytesToHash, ciphertext...)
-	s.log.Printf("Digest %d %v", len(bytesToHash), bytesToHash)
+	s.log.TRACE.Printf("Digest %d %v", len(bytesToHash), bytesToHash)
 	signature := sha256.Sum256(bytesToHash)
-	s.log.Printf("Signature %d %v", len(signature), signature)
+	s.log.TRACE.Printf("Signature %d %v", len(signature), signature)
 
 	ret := append(signature[:], ciphertext...)
-	s.log.Printf("Final ciphertext: %d %v", len(ret), ret)
+	s.log.TRACE.Printf("Final ciphertext: %d %v", len(ret), ret)
 
 	return ret, s.seq, nil
 }
@@ -139,7 +140,7 @@ func (s *KlapSession) decrypt(data []byte) ([]byte, error) {
 		}
 	}
 	plaintext = plaintext[:len(plaintext)-int(numPadBytes)]
-	s.log.Printf("Plaintext: %v", plaintext)
+	s.log.TRACE.Printf("Plaintext: %v", plaintext)
 	return plaintext, nil
 }
 
@@ -195,7 +196,7 @@ func (s *KlapSession) Request(payload []byte) ([]byte, error) {
 		Path:     "/app/request",
 		RawQuery: qs.Encode(),
 	}
-	s.log.Printf("Request URL: %s", u.String())
+	s.log.TRACE.Printf("Request URL: %s", u.String())
 	req, err := http.NewRequest(http.MethodPost, u.String(), bytes.NewReader(encrypted))
 	if err != nil {
 		return nil, fmt.Errorf("http request creation failed: %w", err)

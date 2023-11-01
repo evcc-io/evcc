@@ -3,9 +3,9 @@ package tapo
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/netip"
 
+	"github.com/evcc-io/evcc/util"
 	"github.com/google/uuid"
 )
 
@@ -86,7 +86,7 @@ func (te tapoError) Error() string {
 }
 
 type Plug struct {
-	log          *log.Logger
+	log          *util.Logger
 	Addr         netip.Addr
 	terminalUUID uuid.UUID
 	session      Session
@@ -175,6 +175,8 @@ type DeviceInfo struct {
 	HasSetLocationInfo bool   `json:"has_set_location_info"`
 	DeviceON           bool   `json:"device_on"`
 	OnTime             int    `json:"on_time"`
+	Current_Power      int64  `json:"current_power"`
+	Today_Energy       int64  `json:"today_energy"`
 	DefaultStates      struct {
 		Type string `json:"type"`
 		// TODO add the structure for State
@@ -246,8 +248,8 @@ type GetDeviceUsageResponse struct {
 type EnergyUsage struct {
 	TodayRuntime      int    `json:"today_runtime"`
 	MonthRuntime      int    `json:"month_runtime"`
-	TodayEnergy       int    `json:"today_energy"`
-	MonthEnergy       int    `json:"month_energy"`
+	TodayEnergy       int64  `json:"today_energy"`
+	MonthEnergy       int64  `json:"month_energy"`
 	LocalTime         string `json:"local_time"`
 	ElectricityCharge [3]int `json:"electricity_charge"`
 	CurrentPower      int    `json:"current_power"`
