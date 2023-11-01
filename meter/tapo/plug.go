@@ -11,7 +11,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/netip"
-	"os"
 	"time"
 
 	"github.com/evcc-io/evcc/util"
@@ -37,7 +36,10 @@ func (p *Plug) Handshake(username, password string) error {
 			if err := ps.Handshake(p.Addr, username, password); err != nil {
 				return fmt.Errorf("passthrough handshake failed: %w", err)
 			}
-			request := NewLoginDeviceRequest(username, password)
+			request, err := NewLoginDeviceRequest(username, password)
+			if err != nil {
+				return err
+			}
 			requestBytes, err := json.Marshal(request)
 			if err != nil {
 				return fmt.Errorf("failed to marshal login_device payload: %w", err)
@@ -203,9 +205,9 @@ func (p *Plug) IsOn() (bool, error) {
 	return info.DeviceON, nil
 }
 
-func NewLoginDeviceRequest(username, password string) *LoginDeviceRequest {
+func NewLoginDeviceRequest(username, password string) (*LoginDeviceRequest, error) {
 	if len(password) > 8 {
-		fmt.Fprintf(os.Stderr, "Warning: passwords longer than 8 characters will not work due to a Tapo firmware bug, see https://github.com/fishbigger/TapoP100/issues/4")
+		return nil, fmt.Errorf("passwords > 8 characters will not work due to a Tapo firmware bug, see https://github.com/fishbigger/TapoP100/issues/4")
 	}
 	r := LoginDeviceRequest{
 		Method: "login_device",
@@ -216,7 +218,7 @@ func NewLoginDeviceRequest(username, password string) *LoginDeviceRequest {
 	r.Params.Username = base64.StdEncoding.EncodeToString(hexsha)
 	r.Params.Password = base64.StdEncoding.EncodeToString([]byte(password))
 	r.RequestTimeMils = int(time.Now().UnixMilli())
-	return &r
+	return &r, nil
 }
 
 func NewGetDeviceInfoRequest() *GetDeviceInfoRequest {
