@@ -186,7 +186,5 @@ func testInstance(instance any) map[string]testResult {
 		res["socLimit"] = makeResult(val, err)
 	}
 
-	log.WARN.Printf("testInstance: %v", res)
-
 	return res
 }

@@ -49,12 +49,14 @@ titleAdd = "Add Grid Meter"
 titleEdit = "Edit Grid Meter"
 
 [config.main]
+addLoadpoint = "Add charge point"
 addPvBattery = "Add solar or battery"
 addVehicle = "Add vehicle"
 edit = "edit"
 title = "Configuration"
 unconfigured = "not configured"
 vehicles = "My Vehicles"
+yaml = "Configured in evcc.yaml. Not editable in the UI."
 
 [config.meter]
 cancel = "Cancel"

@@ -31,7 +31,22 @@
 			what your doing. Otherwise you might have to reset or manually repair you database.
 		</div>
 
-		<h2 class="my-4 mt-5">Home: <span>Zuhause</span></h2>
+		<h2 class="my-4 mt-5">General</h2>
+		<div class="group p-4 pb-2">
+			<div class="container mx-0 px-0">
+				<FormRow id="siteTitle" label="Site title">
+					<input
+						id="siteTitle"
+						v-model="siteTitle"
+						class="form-control"
+						placeholder="Home"
+					/>
+				</FormRow>
+			</div>
+			<GeneralSettings />
+		</div>
+
+		<h2 class="my-4 mt-5">Grid, PV & Battery Systems</h2>
 		<ul class="p-0 config-list mb-5">
 			<DeviceCard
 				:name="gridMeter?.config?.template || 'Grid meter'"
@@ -81,24 +96,39 @@
 			<AddDeviceButton :title="$t('config.main.addPvBattery')" @add="addMeter" />
 		</ul>
 
-		<h2 class="my-4">Tariff</h2>
+		<h2 class="my-4">Tariffs</h2>
 
 		<ul class="p-0 config-list mb-5">
-			<DeviceCard name="Grid" editable data-testid="grid" @edit="todo">
+			<DeviceCard name="Grid" editable data-testid="tariff-grid" @edit="todo">
 				<template #icon>
-					<shopicon-regular-powersupply></shopicon-regular-powersupply>
+					<shopicon-regular-money></shopicon-regular-money>
 				</template>
 			</DeviceCard>
-			<DeviceCard name="Feed-in" unconfigured data-testid="grid" @edit="todo">
+			<DeviceCard name="Feed-in" unconfigured data-testid="tariff-feedin" @edit="todo">
 				<template #icon>
-					<shopicon-regular-sun></shopicon-regular-sun>
+					<shopicon-regular-receivepayment></shopicon-regular-receivepayment>
 				</template>
 			</DeviceCard>
-			<DeviceCard name="CO₂ estimate" unconfigured data-testid="grid" @edit="todo">
+			<DeviceCard name="CO₂ estimate" unconfigured data-testid="tariff-co2" @edit="todo">
 				<template #icon>
 					<shopicon-regular-eco1></shopicon-regular-eco1>
 				</template>
 			</DeviceCard>
+		</ul>
+
+		<h2 class="my-4">Charge Points</h2>
+
+		<ul class="p-0 config-list mb-5">
+			<DeviceCard name="Carport" editable data-testid="chargepoint-1" @edit="todo">
+				<template #icon>
+					<shopicon-regular-cablecharge></shopicon-regular-cablecharge>
+				</template>
+			</DeviceCard>
+			<AddDeviceButton
+				data-testid="add-loadpoint"
+				:title="$t('config.main.addLoadpoint')"
+				@click="todo"
+			/>
 		</ul>
 
 		<h2 class="my-4">Vehicles</h2>
@@ -126,6 +156,31 @@
 				/>
 			</ul>
 		</div>
+		<h2 class="my-4">Integrations</h2>
+
+		<ul class="p-0 config-list mb-5">
+			<DeviceCard name="MQTT" editable data-testid="mqtt" @edit="todo">
+				<template #icon>
+					<shopicon-regular-fastdelivery1></shopicon-regular-fastdelivery1>
+				</template>
+			</DeviceCard>
+			<DeviceCard name="Notifications" unconfigured data-testid="eebus" @edit="todo">
+				<template #icon>
+					<shopicon-regular-sendit></shopicon-regular-sendit>
+				</template>
+			</DeviceCard>
+			<DeviceCard name="InfluxDB" unconfigured data-testid="influx" @edit="todo">
+				<template #icon>
+					<shopicon-regular-diagram></shopicon-regular-diagram>
+				</template>
+			</DeviceCard>
+			<DeviceCard name="EEBus" unconfigured data-testid="eebus" @edit="todo">
+				<template #icon>
+					<shopicon-regular-polygon></shopicon-regular-polygon>
+				</template>
+			</DeviceCard>
+		</ul>
+
 		<hr class="my-5" />
 		<VehicleModal :id="selectedVehicleId" @vehicle-changed="vehicleChanged" />
 		<MeterModal
@@ -143,6 +198,15 @@
 import TopHeader from "../components/TopHeader.vue";
 import "@h2d2/shopicons/es/regular/sun";
 import "@h2d2/shopicons/es/regular/batterythreequarters";
+import "@h2d2/shopicons/es/regular/powersupply";
+import "@h2d2/shopicons/es/regular/money";
+import "@h2d2/shopicons/es/regular/receivepayment";
+import "@h2d2/shopicons/es/regular/eco1";
+import "@h2d2/shopicons/es/regular/fastdelivery1";
+import "@h2d2/shopicons/es/regular/sendit";
+import "@h2d2/shopicons/es/regular/diagram";
+import "@h2d2/shopicons/es/regular/polygon";
+import "@h2d2/shopicons/es/regular/cablecharge";
 import Modal from "bootstrap/js/dist/modal";
 import api from "../api";
 import VehicleIcon from "../components/VehicleIcon";
@@ -152,6 +216,8 @@ import DeviceTags from "../components/Config/DeviceTags.vue";
 import AddDeviceButton from "../components/Config/AddDeviceButton.vue";
 import MeterModal from "../components/Config/MeterModal.vue";
 import formatter from "../mixins/formatter";
+import GeneralSettings from "../components/Config/GeneralSettings.vue";
+import FormRow from "../components/FormRow.vue";
 
 export default {
 	name: "Config",
@@ -163,6 +229,8 @@ export default {
 		DeviceTags,
 		AddDeviceButton,
 		MeterModal,
+		GeneralSettings,
+		FormRow,
 	},
 	props: {
 		offline: Boolean,
@@ -356,7 +424,18 @@ export default {
 <style scoped>
 .config-list {
 	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+	grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
 	grid-gap: 1rem;
+}
+.group {
+	border-radius: 2rem;
+	border: 1px solid var(--evcc-gray);
+	color: var(--evcc-default-text);
+	background: var(--evcc-box);
+	padding: 1rem 1rem 0.5rem;
+	display: block;
+	list-style-type: none;
+	min-height: 10rem;
+	max-width: 950px;
 }
 </style>
