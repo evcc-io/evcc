@@ -18,9 +18,9 @@ type API interface {
 	// GetMode() api.ChargeMode
 	// // SetMode sets the charge mode
 	// SetMode(api.ChargeMode)
-	// // GetPhases returns the limit soc
+	// // GetPhases returns the phases
 	// GetPhases() int
-	// // SetPhases sets the limit soc
+	// // SetPhases sets the phases
 	// SetPhases(phases int) error
 
 	// // GetPriority returns the priority
