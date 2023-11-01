@@ -7,6 +7,7 @@ import (
 	evbus "github.com/asaskevich/EventBus"
 	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/coordinator"
 	"github.com/evcc-io/evcc/core/soc"
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/util"
@@ -392,24 +393,24 @@ func TestDisableAndEnableAtTargetSoc(t *testing.T) {
 	socEstimator := soc.NewEstimator(util.NewLogger("foo"), charger, vehicle, false)
 
 	lp := &Loadpoint{
-		log:         util.NewLogger("foo"),
-		bus:         evbus.New(),
-		clock:       clock,
-		charger:     charger,
-		chargeMeter: &Null{},            // silence nil panics
-		chargeRater: &Null{},            // silence nil panics
-		chargeTimer: &Null{},            // silence nil panics
-		progress:    NewProgress(0, 10), // silence nil panics
-		wakeUpTimer: NewTimer(),         // silence nil panics
-		// coordinator:  coordinator.NewDummy(), // silence nil panics
+		log:           util.NewLogger("foo"),
+		bus:           evbus.New(),
+		clock:         clock,
+		charger:       charger,
+		chargeMeter:   &Null{},                // silence nil panics
+		chargeRater:   &Null{},                // silence nil panics
+		chargeTimer:   &Null{},                // silence nil panics
+		progress:      NewProgress(0, 10),     // silence nil panics
+		wakeUpTimer:   NewTimer(),             // silence nil panics
+		coordinator:   coordinator.NewDummy(), // silence nil panics
 		MinCurrent:    minA,
 		MaxCurrent:    maxA,
 		vehicle:       vehicle,      // needed for targetSoc check
 		socEstimator:  socEstimator, // instead of vehicle: vehicle,
 		mode:          api.ModeNow,
 		sessionEnergy: NewEnergyMetrics(),
+		limitSoc:      90, // session limit
 		Soc: SocConfig{
-			// target: 90,
 			Poll: PollConfig{
 				Mode:     pollConnected, // allow polling when connected
 				Interval: pollInterval,
@@ -484,7 +485,6 @@ func TestSetModeAndSocAtDisconnect(t *testing.T) {
 	}
 
 	attachListeners(t, lp)
-	// lp.collectDefaults()
 
 	lp.enabled = true
 	lp.chargeCurrent = float64(minA)

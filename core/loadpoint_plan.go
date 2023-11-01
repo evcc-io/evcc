@@ -46,7 +46,14 @@ func (lp *Loadpoint) planRequiredDuration(maxPower float64) time.Duration {
 		return 0
 	}
 
-	_, soc := vehicle.Settings(lp.log, v).GetPlanSoc()
+	vv := vehicle.Settings(lp.log, v)
+	if vv == nil {
+		// TODO remove
+		lp.log.WARN.Printf("vehicle %s settings adapter not found", v.Title())
+		return 0
+	}
+
+	_, soc := vv.GetPlanSoc()
 
 	return lp.socEstimator.RemainingChargeDuration(soc, maxPower)
 }
