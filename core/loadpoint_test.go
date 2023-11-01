@@ -481,7 +481,7 @@ func TestSetModeAndSocAtDisconnect(t *testing.T) {
 		MinCurrent:    minA,
 		MaxCurrent:    maxA,
 		status:        api.StatusC,
-		mode:          api.ModeOff,
+		Mode_:         api.ModeOff, // default mode
 	}
 
 	attachListeners(t, lp)
