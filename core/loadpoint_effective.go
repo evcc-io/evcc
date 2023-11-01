@@ -30,14 +30,9 @@ func (lp *Loadpoint) EffectivePriority() int {
 // EffectivePlanTime returns the effective plan time
 func (lp *Loadpoint) EffectivePlanTime() time.Time {
 	if v := lp.GetVehicle(); v != nil {
-		if vv := vehicle.Settings(lp.log, v); vv != nil {
-			if ts, _ := vv.GetPlanSoc(); !ts.IsZero() {
-				lp.publish(keys.EffectivePlanTime, ts)
-				return ts
-			}
-		} else {
-			// TODO remove
-			lp.log.WARN.Printf("vehicle %s settings adapter not found", v.Title())
+		if ts, _ := vehicle.Settings(lp.log, v).GetPlanSoc(); !ts.IsZero() {
+			lp.publish(keys.EffectivePlanTime, ts)
+			return ts
 		}
 	}
 	ts, _ := lp.GetPlanEnergy()
@@ -91,13 +86,8 @@ func (lp *Loadpoint) effectiveLimitSoc() int {
 	}
 
 	if v := lp.GetVehicle(); v != nil {
-		if vv := vehicle.Settings(lp.log, v); vv != nil {
-			if soc := vv.GetLimitSoc(); soc > 0 {
-				return soc
-			}
-		} else {
-			// TODO remove
-			lp.log.WARN.Printf("vehicle %s settings adapter not found", v.Title())
+		if soc := vehicle.Settings(lp.log, v).GetLimitSoc(); soc > 0 {
+			return soc
 		}
 	}
 

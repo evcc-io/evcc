@@ -1,13 +1,7 @@
 package vehicle
 
 import (
-	"errors"
-	"fmt"
-	"time"
-
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/core/keys"
-	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 )
@@ -25,7 +19,7 @@ func Settings(log *util.Logger, v api.Vehicle) API {
 	if dev := device(v); dev != nil {
 		return Adapter(log, dev)
 	}
-	return nil
+	return &dummy{v}
 }
 
 // Adapter creates a vehicle API adapter
@@ -35,72 +29,4 @@ func Adapter(log *util.Logger, dev config.Device[api.Vehicle]) API {
 		name:    dev.Config().Name,
 		Vehicle: dev.Instance(),
 	}
-}
-
-type adapter struct {
-	log         *util.Logger
-	name        string
-	api.Vehicle // TODO handle instance updates
-}
-
-func (v *adapter) key() string {
-	return fmt.Sprintf("vehicle.%s.", v.name)
-}
-
-func (v *adapter) Name() string {
-	return v.name
-}
-
-// GetMinSoc returns the min soc
-func (v *adapter) GetMinSoc() int {
-	if v, err := settings.Int(v.key() + keys.MinSoc); err == nil {
-		return int(v)
-	}
-	return 0
-}
-
-// SetMinSoc sets the min soc
-func (v *adapter) SetMinSoc(soc int) {
-	v.log.DEBUG.Printf("set %s min soc: %d", v.name, soc)
-	settings.SetInt(v.key()+keys.MinSoc, int64(soc))
-}
-
-// GetLimitSoc returns the limit soc
-func (v *adapter) GetLimitSoc() int {
-	if v, err := settings.Int(v.key() + keys.LimitSoc); err == nil {
-		return int(v)
-	}
-	return 0
-}
-
-// SetLimitSoc sets the limit soc
-func (v *adapter) SetLimitSoc(soc int) {
-	v.log.DEBUG.Printf("set %s limit soc: %d", v.name, soc)
-	settings.SetInt(v.key()+keys.LimitSoc, int64(soc))
-}
-
-// GetPlanSoc returns the charge plan soc
-func (v *adapter) GetPlanSoc() (time.Time, int) {
-	var ts time.Time
-	if v, err := settings.Time(v.key() + keys.PlanTime); err == nil {
-		ts = v
-	}
-	var soc int
-	if v, err := settings.Int(v.key() + keys.PlanSoc); err == nil {
-		soc = int(v)
-	}
-	return ts, soc
-}
-
-// SetPlanSoc sets the charge plan soc
-func (v *adapter) SetPlanSoc(ts time.Time, soc int) error {
-	if !ts.IsZero() && ts.Before(time.Now()) {
-		return errors.New("timestamp is in the past")
-	}
-
-	v.log.DEBUG.Printf("set %s plan soc/time: %d/%v", v.name, soc, ts.Round(time.Second))
-	settings.SetTime(v.key()+keys.PlanTime, ts)
-	settings.SetInt(v.key()+keys.PlanSoc, int64(soc))
-
-	return nil
 }

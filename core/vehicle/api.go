@@ -10,7 +10,9 @@ import (
 
 type API interface {
 	api.Vehicle
-
+	settingsI
+}
+type settingsI interface {
 	// Name returns the vehicle name
 	Name() string
 

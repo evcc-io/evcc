@@ -809,14 +809,7 @@ func (lp *Loadpoint) minSocNotReached() bool {
 		return false
 	}
 
-	vv := vehicle.Settings(lp.log, v)
-	if vv == nil {
-		// TODO remove
-		lp.log.WARN.Printf("vehicle %s settings adapter not found", v.Title())
-		return false
-	}
-
-	minSoc := vv.GetMinSoc()
+	minSoc := vehicle.Settings(lp.log, v).GetMinSoc()
 	if minSoc == 0 {
 		return false
 	}
