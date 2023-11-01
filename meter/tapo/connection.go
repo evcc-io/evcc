@@ -61,6 +61,21 @@ func NewConnection(uri, user, password string) (*Connection, error) {
 	return conn, err
 }
 
+// Enable implements the api.Charger interface
+func (d *Connection) Enable(enable bool) error {
+	return d.plug.SetDeviceInfo(enable)
+}
+
+// Enabled implements the api.Charger interface
+func (d *Connection) Enabled() (bool, error) {
+	resp, err := d.plug.GetDeviceInfo()
+	if err != nil {
+		return false, err
+	}
+
+	return resp.DeviceON, nil
+}
+
 // CurrentPower provides current power consuption
 func (d *Connection) CurrentPower() (float64, error) {
 	resp, err := d.plug.GetDeviceInfo()
