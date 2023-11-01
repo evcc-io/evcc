@@ -147,6 +147,7 @@ func TestDefaultVehicle(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
 	mode := api.ModePV
+	current := 66.6
 
 	dflt := api.NewMockVehicle(ctrl)
 	dflt.EXPECT().Title().Return("default").AnyTimes()
@@ -154,7 +155,8 @@ func TestDefaultVehicle(t *testing.T) {
 	dflt.EXPECT().Capacity().AnyTimes()
 	dflt.EXPECT().Phases().AnyTimes()
 	dflt.EXPECT().OnIdentified().Return(api.ActionConfig{
-		Mode: mode,
+		Mode:       mode,
+		MinCurrent: current,
 	}).AnyTimes()
 
 	vehicle := api.NewMockVehicle(ctrl)
@@ -182,15 +184,18 @@ func TestDefaultVehicle(t *testing.T) {
 	// non-default vehicle identified
 	lp.setActiveVehicle(vehicle)
 	assert.Equal(t, vehicle, lp.vehicle, "expected vehicle "+title(vehicle))
+	assert.Equal(t, 6.0, lp.effectiveMinCurrent(), "current")
 
 	// non-default vehicle disconnected
 	lp.evVehicleDisconnectHandler()
 	assert.Equal(t, dflt, lp.vehicle, "expected default vehicle")
 	assert.Equal(t, mode, lp.GetMode(), "mode")
+	assert.Equal(t, current, lp.effectiveMinCurrent(), "current")
 
-	// default vehicle disconnected
+	// default vehicle disconnected and reconnected
 	lp.evVehicleDisconnectHandler()
 	assert.Equal(t, mode, lp.GetMode(), "mode")
+	assert.Equal(t, current, lp.effectiveMinCurrent(), "current")
 
 	// set non-default vehicle during disconnect - should be default on connect
 	lp.tasks.Clear()
@@ -202,80 +207,6 @@ func TestDefaultVehicle(t *testing.T) {
 	lp.setActiveVehicle(nil)
 	assert.Nil(t, lp.vehicle, "expected no vehicle")
 }
-
-// func TestApplyVehicleDefaults(t *testing.T) {
-// 	ctrl := gomock.NewController(t)
-
-// 	newConfig := func(mode api.ChargeMode, minCurrent, maxCurrent float64, targetSoc *int) api.ActionConfig {
-// 		return api.ActionConfig{
-// 			Mode:       mode,
-// 			MinCurrent: minCurrent,
-// 			MaxCurrent: maxCurrent,
-// 			// LimitSoc:   targetSoc,
-// 		}
-// 	}
-
-// 	assertConfig := func(lp *Loadpoint, conf api.ActionConfig) {
-// 		assert.Equal(t, conf.Mode, lp.mode)
-// 		assert.Equal(t, conf.MinCurrent, lp.MinCurrent)
-// 		assert.Equal(t, conf.MaxCurrent, lp.MaxCurrent)
-// 	}
-
-// 	// onIdentified config
-// 	targetSoc := 99
-// 	oi := newConfig(api.ModePV, 7, 15, &targetSoc)
-
-// 	// onDefault config
-// 	od := newConfig(api.ModeOff, 6, 16, nil)
-
-// 	vehicle := api.NewMockVehicle(ctrl)
-// 	vehicle.EXPECT().Title().Return("it's me").AnyTimes()
-// 	vehicle.EXPECT().Icon().Return("").AnyTimes()
-// 	vehicle.EXPECT().Capacity().AnyTimes()
-// 	vehicle.EXPECT().Phases().AnyTimes()
-// 	vehicle.EXPECT().OnIdentified().Return(oi).AnyTimes()
-
-// 	lp := NewLoadpoint(util.NewLogger("foo"), nil)
-
-// 	// populate channels
-// 	x, y, z := createChannels(t)
-// 	attachChannels(lp, x, y, z)
-
-// 	// lp.onDisconnect = od
-// 	// lp.ResetOnDisconnect = true
-
-// 	// check loadpoint default currents can't be violated
-// 	// lp.applyAction(newConfig(*od.Mode, 5, 17, od.LimitSoc))
-// 	assertConfig(lp, od)
-
-// 	// vehicle identified
-// 	lp.setActiveVehicle(vehicle)
-// 	assertConfig(lp, oi)
-
-// 	// vehicle disconnected
-// 	vehicle.EXPECT().Phases().AnyTimes()
-// 	lp.evVehicleDisconnectHandler()
-// 	assertConfig(lp, od)
-
-// 	// identify vehicle by id
-// 	charger := struct {
-// 		*api.MockCharger
-// 		*api.MockIdentifier
-// 	}{
-// 		MockCharger:    api.NewMockCharger(ctrl),
-// 		MockIdentifier: api.NewMockIdentifier(ctrl),
-// 	}
-
-// 	lp.charger = charger
-// 	lp.coordinator = coordinator.NewAdapter(lp, coordinator.New(util.NewLogger("foo"), []api.Vehicle{vehicle}))
-
-// 	const id = "don't call me stacey"
-// 	charger.MockIdentifier.EXPECT().Identify().Return(id, nil)
-// 	vehicle.EXPECT().Identifiers().Return([]string{id})
-
-// 	lp.identifyVehicle()
-// 	assertConfig(lp, oi)
-// }
 
 func TestReconnectVehicle(t *testing.T) {
 	tc := []struct {
