@@ -340,7 +340,7 @@ func (lp *Loadpoint) GetChargePowerFlexibility() float64 {
 	}
 
 	// MinPV mode
-	return max(0, lp.GetChargePower()-lp.GetMinPower())
+	return max(0, lp.GetChargePower()-lp.EffectiveMinPower())
 }
 
 // GetMinCurrent returns the min loadpoint current

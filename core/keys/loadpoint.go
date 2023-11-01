@@ -45,6 +45,7 @@ const (
 
 	// effective values
 	EffectivePriority   = "effectivePriority"   // effective priority
+	EffectivePlanTime   = "effectivePlanTime"   // effective plan time
 	EffectiveMinCurrent = "effectiveMinCurrent" // effective min current
 	EffectiveMaxCurrent = "effectiveMaxCurrent" // effective max current
 	EffectiveLimitSoc   = "effectiveLimitSoc"   // effective limit soc

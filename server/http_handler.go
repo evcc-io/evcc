@@ -312,22 +312,20 @@ func remoteDemandHandler(lp loadpoint.API) http.HandlerFunc {
 	}
 }
 
-// planHandler starts vehicle detection
+// planHandler returns the current effective plan
 func planHandler(lp loadpoint.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var err error
-
-		planTime := lp.GetPlanTime()
+		planTime := lp.EffectivePlanTime()
 		if t := r.URL.Query().Get("planTime"); t != "" {
+			var err error
 			planTime, err = time.Parse(time.RFC3339, t)
+			if err != nil {
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
 		}
 
-		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			return
-		}
-
-		power := lp.GetMaxPower()
+		power := lp.EffectiveMaxPower()
 		requiredDuration, plan, err := lp.GetPlan(planTime, power)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
@@ -337,7 +335,6 @@ func planHandler(lp loadpoint.API) http.HandlerFunc {
 		res := struct {
 			Duration int64     `json:"duration"`
 			Plan     api.Rates `json:"plan"`
-			Unit     string    `json:"unit"`
 			Power    float64   `json:"power"`
 		}{
 			Duration: int64(requiredDuration.Seconds()),

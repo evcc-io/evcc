@@ -206,7 +206,7 @@ func (c *EEBus) isCharging() bool { // d *communication.EVSEClientDataType
 			c.lastIsChargingCheck = time.Now()
 			c.lastIsChargingResult = false
 			// compare charge power for all phases to 0.6 * min. charge power of a single phase
-			if c.lp.GetChargePower() > c.lp.GetMinPower()*idleFactor {
+			if c.lp.GetChargePower() > c.lp.EffectiveMinPower()*idleFactor {
 				c.lastIsChargingResult = true
 				return true
 			}

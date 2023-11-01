@@ -65,6 +65,12 @@ type API interface {
 
 	// EffectivePriority returns the effective priority
 	EffectivePriority() int
+	// EffectivePlanTime returns the effective plan time
+	EffectivePlanTime() time.Time
+	// EffectiveMinPower returns the min charging power for a single phase
+	EffectiveMinPower() float64
+	// EffectiveMaxPower returns the max charging power taking active phases into account
+	EffectiveMaxPower() float64
 
 	//
 	// plan
@@ -101,10 +107,6 @@ type API interface {
 	GetChargePower() float64
 	// GetChargePowerFlexibility returns the flexible amount of current charging power
 	GetChargePowerFlexibility() float64
-	// GetMinPower returns the min charging power for a single phase
-	GetMinPower() float64
-	// GetMaxPower returns the max charging power taking active phases into account
-	GetMaxPower() float64
 
 	//
 	// charge progress

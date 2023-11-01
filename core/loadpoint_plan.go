@@ -86,8 +86,9 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 		lp.publish(keys.PlanProjectedStart, planStart)
 	}()
 
-	maxPower := lp.GetMaxPower()
-	requiredDuration, plan, err := lp.GetPlan(lp.GetPlanTime(), maxPower)
+	maxPower := lp.EffectiveMaxPower()
+
+	requiredDuration, plan, err := lp.GetPlan(lp.EffectivePlanTime(), maxPower)
 	if err != nil {
 		lp.log.ERROR.Println("planner:", err)
 		return false

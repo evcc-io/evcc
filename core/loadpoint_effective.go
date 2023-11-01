@@ -1,6 +1,8 @@
 package core
 
 import (
+	"time"
+
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/vehicle"
@@ -9,6 +11,7 @@ import (
 // publishEffectiveValues publishes all effective values
 func (lp *Loadpoint) publishEffectiveValues() {
 	lp.publish(keys.EffectivePriority, lp.EffectivePriority())
+	lp.publish(keys.EffectivePlanTime, lp.EffectivePlanTime())
 	lp.publish(keys.EffectiveMinCurrent, lp.effectiveMinCurrent())
 	lp.publish(keys.EffectiveMaxCurrent, lp.effectiveMaxCurrent())
 	lp.publish(keys.EffectiveLimitSoc, lp.effectiveLimitSoc())
@@ -22,6 +25,17 @@ func (lp *Loadpoint) EffectivePriority() int {
 		}
 	}
 	return lp.GetPriority()
+}
+
+// EffectivePlanTime returns the effective plan time
+func (lp *Loadpoint) EffectivePlanTime() time.Time {
+	if v := lp.GetVehicle(); v != nil {
+		if res := vehicle.Settings(lp.log, v).GetPlanTime(); !res.IsZero() {
+			lp.publish(keys.EffectivePlanTime, res)
+			return res
+		}
+	}
+	return lp.GetPlanTime()
 }
 
 // effectiveMinCurrent returns the effective min current
@@ -77,4 +91,15 @@ func (lp *Loadpoint) effectiveLimitSoc() int {
 	}
 
 	return 100
+}
+
+// EffectiveMinPower returns the effective min power for a single phase
+func (lp *Loadpoint) EffectiveMinPower() float64 {
+	// TODO check if 1p available
+	return Voltage * lp.effectiveMinCurrent()
+}
+
+// EffectiveMaxPower returns the effective max power taking vehicle capabilities and phase scaling into account
+func (lp *Loadpoint) EffectiveMaxPower() float64 {
+	return Voltage * lp.effectiveMaxCurrent() * float64(lp.maxActivePhases())
 }

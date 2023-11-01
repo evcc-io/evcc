@@ -1588,7 +1588,7 @@ func (lp *Loadpoint) Update(sitePower float64, autoCharge, batteryBuffered, batt
 
 	case mode == api.ModeMinPV || mode == api.ModePV:
 		// cheap tariff
-		if autoCharge && lp.GetPlanTime().IsZero() {
+		if autoCharge && lp.EffectivePlanTime().IsZero() {
 			err = lp.fastCharging()
 			lp.resetPhaseTimer()
 			lp.elapsePVTimer() // let PV mode disable immediately afterwards

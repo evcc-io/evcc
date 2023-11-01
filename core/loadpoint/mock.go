@@ -35,6 +35,48 @@ func (m *MockAPI) EXPECT() *MockAPIMockRecorder {
 	return m.recorder
 }
 
+// EffectiveMaxPower mocks base method.
+func (m *MockAPI) EffectiveMaxPower() float64 {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "EffectiveMaxPower")
+	ret0, _ := ret[0].(float64)
+	return ret0
+}
+
+// EffectiveMaxPower indicates an expected call of EffectiveMaxPower.
+func (mr *MockAPIMockRecorder) EffectiveMaxPower() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EffectiveMaxPower", reflect.TypeOf((*MockAPI)(nil).EffectiveMaxPower))
+}
+
+// EffectiveMinPower mocks base method.
+func (m *MockAPI) EffectiveMinPower() float64 {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "EffectiveMinPower")
+	ret0, _ := ret[0].(float64)
+	return ret0
+}
+
+// EffectiveMinPower indicates an expected call of EffectiveMinPower.
+func (mr *MockAPIMockRecorder) EffectiveMinPower() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EffectiveMinPower", reflect.TypeOf((*MockAPI)(nil).EffectiveMinPower))
+}
+
+// EffectivePlanTime mocks base method.
+func (m *MockAPI) EffectivePlanTime() time.Time {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "EffectivePlanTime")
+	ret0, _ := ret[0].(time.Time)
+	return ret0
+}
+
+// EffectivePlanTime indicates an expected call of EffectivePlanTime.
+func (mr *MockAPIMockRecorder) EffectivePlanTime() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EffectivePlanTime", reflect.TypeOf((*MockAPI)(nil).EffectivePlanTime))
+}
+
 // EffectivePriority mocks base method.
 func (m *MockAPI) EffectivePriority() int {
 	m.ctrl.T.Helper()
@@ -147,20 +189,6 @@ func (mr *MockAPIMockRecorder) GetMaxCurrent() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMaxCurrent", reflect.TypeOf((*MockAPI)(nil).GetMaxCurrent))
 }
 
-// GetMaxPower mocks base method.
-func (m *MockAPI) GetMaxPower() float64 {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetMaxPower")
-	ret0, _ := ret[0].(float64)
-	return ret0
-}
-
-// GetMaxPower indicates an expected call of GetMaxPower.
-func (mr *MockAPIMockRecorder) GetMaxPower() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMaxPower", reflect.TypeOf((*MockAPI)(nil).GetMaxPower))
-}
-
 // GetMinCurrent mocks base method.
 func (m *MockAPI) GetMinCurrent() float64 {
 	m.ctrl.T.Helper()
@@ -173,20 +201,6 @@ func (m *MockAPI) GetMinCurrent() float64 {
 func (mr *MockAPIMockRecorder) GetMinCurrent() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMinCurrent", reflect.TypeOf((*MockAPI)(nil).GetMinCurrent))
-}
-
-// GetMinPower mocks base method.
-func (m *MockAPI) GetMinPower() float64 {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetMinPower")
-	ret0, _ := ret[0].(float64)
-	return ret0
-}
-
-// GetMinPower indicates an expected call of GetMinPower.
-func (mr *MockAPIMockRecorder) GetMinPower() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMinPower", reflect.TypeOf((*MockAPI)(nil).GetMinPower))
 }
 
 // GetMode mocks base method.
