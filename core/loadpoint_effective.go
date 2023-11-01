@@ -30,12 +30,13 @@ func (lp *Loadpoint) EffectivePriority() int {
 // EffectivePlanTime returns the effective plan time
 func (lp *Loadpoint) EffectivePlanTime() time.Time {
 	if v := lp.GetVehicle(); v != nil {
-		if res := vehicle.Settings(lp.log, v).GetPlanTime(); !res.IsZero() {
-			lp.publish(keys.EffectivePlanTime, res)
-			return res
+		if ts, _ := vehicle.Settings(lp.log, v).GetPlanSoc(); !ts.IsZero() {
+			lp.publish(keys.EffectivePlanTime, ts)
+			return ts
 		}
 	}
-	return lp.GetPlanTime()
+	ts, _ := lp.GetPlanEnergy()
+	return ts
 }
 
 // effectiveMinCurrent returns the effective min current

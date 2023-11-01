@@ -95,12 +95,14 @@ func planSocHandler(site site.API) http.HandlerFunc {
 			return
 		}
 
+		ts, soc = v.GetPlanSoc()
+
 		res := struct {
 			Soc  int       `json:"soc"`
 			Time time.Time `json:"time"`
 		}{
-			Soc:  v.GetPlanSoc(),
-			Time: v.GetPlanTime(),
+			Soc:  soc,
+			Time: ts,
 		}
 
 		jsonResult(w, res)

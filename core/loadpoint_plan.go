@@ -30,7 +30,7 @@ func (lp *Loadpoint) setPlanActive(active bool) {
 
 // remainingPlanEnergy returns missing energy amount in kWh
 func (lp *Loadpoint) remainingPlanEnergy() (float64, bool) {
-	limit := lp.GetPlanEnergy()
+	_, limit := lp.GetPlanEnergy()
 	return max(0, limit-lp.getChargedEnergy()/1e3),
 		limit > 0 && !lp.vehicleHasSoc()
 }
@@ -46,7 +46,7 @@ func (lp *Loadpoint) planRequiredDuration(maxPower float64) time.Duration {
 		return 0
 	}
 
-	soc := vehicle.Settings(lp.log, v).GetPlanSoc()
+	_, soc := vehicle.Settings(lp.log, v).GetPlanSoc()
 
 	return lp.socEstimator.RemainingChargeDuration(soc, maxPower)
 }

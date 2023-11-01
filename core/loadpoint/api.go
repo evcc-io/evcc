@@ -76,10 +76,8 @@ type API interface {
 	// plan
 	//
 
-	// GetPlanTime returns the plan time
-	GetPlanTime() time.Time
 	// GetPlanEnergy returns the charge plan energy
-	GetPlanEnergy() float64
+	GetPlanEnergy() (time.Time, float64)
 	// SetPlanEnergy sets the charge plan energy
 	SetPlanEnergy(time.Time, float64) error
 	// GetPlan creates a charging plan

@@ -367,12 +367,14 @@ func planEnergyHandler(lp loadpoint.API) http.HandlerFunc {
 			return
 		}
 
+		ts, energy := lp.GetPlanEnergy()
+
 		res := struct {
 			Energy float64   `json:"energy"`
 			Time   time.Time `json:"time"`
 		}{
-			Energy: lp.GetPlanEnergy(),
-			Time:   lp.GetPlanTime(),
+			Energy: energy,
+			Time:   ts,
 		}
 
 		jsonResult(w, res)

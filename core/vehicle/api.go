@@ -37,11 +37,9 @@ type API interface {
 	// SetLimitSoc sets the limit soc
 	SetLimitSoc(soc int)
 
-	// GetPlanTime returns the plan time
-	GetPlanTime() time.Time
 	// GetPlanSoc returns the charge plan soc
-	GetPlanSoc() int
-	// SetPlanSoc sets the charge plan soc
+	GetPlanSoc() (time.Time, int)
+	// SetPlanSoc sets the charge plan time and soc
 	SetPlanSoc(time.Time, int) error
 
 	// // GetMinCurrent returns the min charging current

@@ -78,20 +78,17 @@ func (v *adapter) SetLimitSoc(soc int) {
 	settings.SetInt(v.key()+"limitSoc", int64(soc))
 }
 
-// GetPlanTime returns the plan time
-func (v *adapter) GetPlanTime() time.Time {
-	if v, err := settings.Time(v.key() + "planTime"); err == nil {
-		return v
-	}
-	return time.Time{}
-}
-
 // GetPlanSoc returns the charge plan soc
-func (v *adapter) GetPlanSoc() int {
-	if v, err := settings.Int(v.key() + "planSoc"); err == nil {
-		return int(v)
+func (v *adapter) GetPlanSoc() (time.Time, int) {
+	var ts time.Time
+	if v, err := settings.Time(v.key() + "planTime"); err == nil {
+		ts = v
 	}
-	return 0
+	var soc int
+	if v, err := settings.Int(v.key() + "planSoc"); err == nil {
+		soc = int(v)
+	}
+	return ts, soc
 }
 
 // SetPlanSoc sets the charge plan soc
