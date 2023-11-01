@@ -193,22 +193,6 @@ func (p *Plug) GetEnergyUsage() (*EnergyUsage, error) {
 	return &usageResp.Result, nil
 }
 
-func (p *Plug) On() error {
-	return p.SetDeviceInfo(true)
-}
-
-func (p *Plug) Off() error {
-	return p.SetDeviceInfo(false)
-}
-
-func (p *Plug) IsOn() (bool, error) {
-	info, err := p.GetDeviceInfo()
-	if err != nil {
-		return false, err
-	}
-	return info.DeviceON, nil
-}
-
 func NewGetDeviceInfoRequest() *GetDeviceInfoRequest {
 	return &GetDeviceInfoRequest{
 		Method:          "get_device_info",
