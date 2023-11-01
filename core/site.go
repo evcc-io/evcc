@@ -221,12 +221,12 @@ func (site *Site) restoreSettings() error {
 		}
 	}
 	if v, err := settings.Float(keys.BufferStartSoc); err == nil {
-		if site.SetBufferStartSoc(v); err != nil {
+		if err := site.SetBufferStartSoc(v); err != nil {
 			return err
 		}
 	}
 	if v, err := settings.Float(keys.SmartCostLimit); err == nil {
-		if site.SetSmartCostLimit(v); err != nil {
+		if err := site.SetSmartCostLimit(v); err != nil {
 			return err
 		}
 	}
