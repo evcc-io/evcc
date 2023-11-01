@@ -3,6 +3,7 @@ package tapo
 import (
 	"fmt"
 	"net/netip"
+	"net/url"
 	"time"
 
 	"github.com/evcc-io/evcc/util"
@@ -34,9 +35,14 @@ type Connection struct {
 // User is encoded by using MessageDigest of SHA1 which is afterwards B64 encoded.
 // Password is directly B64 encoded.
 func NewConnection(uri, user, password string) (*Connection, error) {
-	addr, err := netip.ParseAddr(uri)
+	url, err := url.Parse(uri)
 	if err != nil {
-		return nil, fmt.Errorf("invalid ip address: %s", addr)
+		return nil, fmt.Errorf("invalid url: %s", uri)
+	}
+
+	addr, err := netip.ParseAddr(url.Hostname())
+	if err != nil {
+		return nil, fmt.Errorf("invalid ip address: %s", uri)
 	}
 
 	if user == "" || password == "" {
