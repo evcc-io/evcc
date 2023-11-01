@@ -613,11 +613,15 @@ func TestChargedEnergyAtDisconnect(t *testing.T) {
 // 	ctrl := gomock.NewController(t)
 // 	vhc := api.NewMockVehicle(ctrl)
 
+// 	// TODO make vehicle settings mockable
+// 	// make vehicle settings discoverable
+// 	config.Vehicles().Add(config.NewStaticDevice[api.Vehicle](config.Named{}, vhc))
+
 // 	tc := []struct {
-// 		vehicle api.Vehicle
-// 		target  int
-// 		soc     float64
-// 		res     bool
+// 		vehicle    api.Vehicle
+// 		limitSoc   int
+// 		vehicleSoc float64
+// 		res        bool
 // 	}{
 // 		{nil, 0, 0, false},     // never reached without vehicle
 // 		{nil, 0, 10, false},    // never reached without vehicle
@@ -636,16 +640,64 @@ func TestChargedEnergyAtDisconnect(t *testing.T) {
 // 		t.Logf("%+v", tc)
 
 // 		lp := &Loadpoint{
-// 			vehicle: tc.vehicle,
-// 			Soc: SocConfig{
-// 				target: tc.target,
-// 			},
-// 			vehicleSoc: tc.soc,
+// 			vehicle:    tc.vehicle,
+// 			limitSoc:   tc.limitSoc,
+// 			vehicleSoc: tc.vehicleSoc,
 // 		}
 
-// 		if res := lp.targetSocReached(); tc.res != res {
+// 		if res := lp.limitSocReached(); tc.res != res {
 // 			t.Errorf("expected %v, got %v", tc.res, res)
 // 		}
+// 	}
+// }
+
+// func TestMinSoc(t *testing.T) {
+// 	ctrl := gomock.NewController(t)
+// 	vhc := api.NewMockVehicle(ctrl)
+
+// 	// TODO make vehicle settings mockable
+// 	// make vehicle settings discoverable
+// 	config.Vehicles().Add(config.NewStaticDevice[api.Vehicle](config.Named{}, vhc))
+
+// 	tc := []struct {
+// 		vehicle *api.MockVehicle
+// 		min     int
+// 		soc     float64
+// 		energy  float64
+// 		res     bool
+// 	}{
+// 		{nil, 0, 0, 0, false},    // never reached without vehicle
+// 		{nil, 0, 10, 0, false},   // never reached without vehicle
+// 		{nil, 80, 0, 0, false},   // never reached without vehicle
+// 		{nil, 80, 80, 0, false},  // never reached without vehicle
+// 		{nil, 80, 100, 0, false}, // never reached without vehicle
+// 		{vhc, 0, 0, 0, false},    // min disabled
+// 		{vhc, 0, 10, 0, false},   // min disabled
+// 		{vhc, 80, 0, 0, true},    // min not reached
+// 		{vhc, 80, 10, 0, true},   // min not reached
+// 		{vhc, 80, 0, 8.0, true},  // min energy not reached
+// 		{vhc, 80, 0, 9.0, false}, // min energy reached
+// 		{vhc, 80, 80, 0, false},  // min reached
+// 		{vhc, 80, 100, 0, false}, // min reached
+// 	}
+
+// 	for _, tc := range tc {
+// 		lp := &Loadpoint{
+// 			log: util.NewLogger("foo"),
+// 			Soc: SocConfig{
+// 				min: tc.min,
+// 			},
+// 			vehicleSoc:    tc.soc,
+// 			sessionEnergy: NewEnergyMetrics(),
+// 		}
+// 		lp.sessionEnergy.Update(tc.energy / 1e3)
+
+// 		if v := tc.vehicle; v != nil {
+// 			lp.vehicle = tc.vehicle // avoid assigning nil to interface
+// 			v.EXPECT().Capacity().Return(10.0).MaxTimes(1)
+// 		}
+
+// 		assert.Equal(t, tc.res, lp.minSocNotReached(), tc)
 // 	}
 // }
 
@@ -735,49 +787,3 @@ func TestSocPoll(t *testing.T) {
 		}
 	}
 }
-
-// func TestMinSoc(t *testing.T) {
-// 	ctrl := gomock.NewController(t)
-// 	vhc := api.NewMockVehicle(ctrl)
-
-// 	tc := []struct {
-// 		vehicle *api.MockVehicle
-// 		min     int
-// 		soc     float64
-// 		energy  float64
-// 		res     bool
-// 	}{
-// 		{nil, 0, 0, 0, false},    // never reached without vehicle
-// 		{nil, 0, 10, 0, false},   // never reached without vehicle
-// 		{nil, 80, 0, 0, false},   // never reached without vehicle
-// 		{nil, 80, 80, 0, false},  // never reached without vehicle
-// 		{nil, 80, 100, 0, false}, // never reached without vehicle
-// 		{vhc, 0, 0, 0, false},    // min disabled
-// 		{vhc, 0, 10, 0, false},   // min disabled
-// 		{vhc, 80, 0, 0, true},    // min not reached
-// 		{vhc, 80, 10, 0, true},   // min not reached
-// 		{vhc, 80, 0, 8.0, true},  // min energy not reached
-// 		{vhc, 80, 0, 9.0, false}, // min energy reached
-// 		{vhc, 80, 80, 0, false},  // min reached
-// 		{vhc, 80, 100, 0, false}, // min reached
-// 	}
-
-// 	for _, tc := range tc {
-// 		lp := &Loadpoint{
-// 			log: util.NewLogger("foo"),
-// 			Soc: SocConfig{
-// 				min: tc.min,
-// 			},
-// 			vehicleSoc:    tc.soc,
-// 			sessionEnergy: NewEnergyMetrics(),
-// 		}
-// 		lp.sessionEnergy.Update(tc.energy / 1e3)
-
-// 		if v := tc.vehicle; v != nil {
-// 			lp.vehicle = tc.vehicle // avoid assigning nil to interface
-// 			v.EXPECT().Capacity().Return(10.0).MaxTimes(1)
-// 		}
-
-// 		assert.Equal(t, tc.res, lp.minSocNotReached(), tc)
-// 	}
-// }
