@@ -37,17 +37,15 @@ export default {
       this.testState = TEST_RUNNING;
       try {
         const res = await testApi();
-        const result = [];
-        for (const [key, { value, error }] of Object.entries(res.data.result)) {
+        for (const [key, { error }] of Object.entries(res.data.result)) {
           if (error) {
             this.testState = TEST_FAILED;
             this.testResult = null;
             this.testError = `${key}: ${error}`;
             return false;
           }
-          result.push({ key, value });
         }
-        this.testResult = result;
+        this.testResult = res.data.result;
         this.testError = null;
         this.testState = TEST_SUCCESS;
         return true;

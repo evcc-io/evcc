@@ -38,12 +38,14 @@
 				:unconfigured="!gridMeter"
 				:editable="!!gridMeter?.id"
 				data-testid="grid"
-				:tags="deviceTags('meter', gridMeter?.name)"
 				@configure="addMeter('grid')"
 				@edit="editMeter(gridMeter.id, 'grid')"
 			>
 				<template #icon>
 					<shopicon-regular-powersupply></shopicon-regular-powersupply>
+				</template>
+				<template #tags>
+					<DeviceTags :tags="deviceTags('meter', gridMeter?.name)" />
 				</template>
 			</DeviceCard>
 			<DeviceCard
@@ -51,12 +53,14 @@
 				:key="!!meter.name"
 				:name="meter.config?.template || 'Solar system'"
 				:editable="!!meter.id"
-				:tags="deviceTags('meter', meter.name)"
 				data-testid="pv"
 				@edit="editMeter(meter.id, 'pv')"
 			>
 				<template #icon>
 					<shopicon-regular-sun></shopicon-regular-sun>
+				</template>
+				<template #tags>
+					<DeviceTags :tags="deviceTags('meter', meter.name)" />
 				</template>
 			</DeviceCard>
 			<DeviceCard
@@ -64,12 +68,14 @@
 				:key="meter.name"
 				:name="meter.config?.template || 'Battery storage'"
 				:editable="!!meter.id"
-				:tags="deviceTags('meter', meter.name)"
 				data-testid="battery"
 				@edit="editMeter(meter.id, 'battery')"
 			>
 				<template #icon>
 					<shopicon-regular-batterythreequarters></shopicon-regular-batterythreequarters>
+				</template>
+				<template #tags>
+					<DeviceTags :tags="deviceTags('meter', meter.name)" />
 				</template>
 			</DeviceCard>
 			<AddDeviceButton :title="$t('config.main.addPvBattery')" @add="addMeter" />
@@ -103,12 +109,14 @@
 					:key="vehicle.id"
 					:name="vehicle.config?.title || vehicle.name"
 					:editable="vehicle.id >= 0"
-					:tags="deviceTags('vehicle', vehicle.name)"
 					data-testid="vehicle"
 					@edit="editVehicle(vehicle.id)"
 				>
 					<template #icon>
 						<VehicleIcon :name="vehicle.config?.icon" />
+					</template>
+					<template #tags>
+						<DeviceTags :tags="deviceTags('vehicle', vehicle.name)" />
 					</template>
 				</DeviceCard>
 				<AddDeviceButton
@@ -140,13 +148,22 @@ import api from "../api";
 import VehicleIcon from "../components/VehicleIcon";
 import VehicleModal from "../components/Config/VehicleModal.vue";
 import DeviceCard from "../components/Config/DeviceCard.vue";
+import DeviceTags from "../components/Config/DeviceTags.vue";
 import AddDeviceButton from "../components/Config/AddDeviceButton.vue";
 import MeterModal from "../components/Config/MeterModal.vue";
 import formatter from "../mixins/formatter";
 
 export default {
 	name: "Config",
-	components: { TopHeader, VehicleIcon, VehicleModal, DeviceCard, AddDeviceButton, MeterModal },
+	components: {
+		TopHeader,
+		VehicleIcon,
+		VehicleModal,
+		DeviceCard,
+		DeviceTags,
+		AddDeviceButton,
+		MeterModal,
+	},
 	props: {
 		offline: Boolean,
 		notifications: Array,
@@ -313,15 +330,8 @@ export default {
 		async updateDeviceValue(type, name) {
 			try {
 				const response = await api.get(`/config/devices/${type}/${name}/status`);
-				const values = Object.entries(response.data.result).reduce(
-					(res, [name, { value }]) => {
-						res[name] = value;
-						return res;
-					},
-					{}
-				);
 				if (!this.deviceValues[type]) this.deviceValues[type] = {};
-				this.deviceValues[type][name] = values;
+				this.deviceValues[type][name] = response.data.result;
 			} catch (error) {
 				console.error("Error fetching device values for", type, name, error);
 				return null;
@@ -338,12 +348,7 @@ export default {
 			this.deviceValueTimeout = setTimeout(this.updateValues, 10000);
 		},
 		deviceTags(type, id) {
-			const values = this.deviceValues[type]?.[id];
-			if (!values) return [];
-			return Object.entries(values).map(
-				([name, value]) =>
-					`${this.$t(`config.deviceValue.${name}`)}: ${this.fmtDeviceValue(name, value)}`
-			);
+			return this.deviceValues[type]?.[id] || [];
 		},
 	},
 };

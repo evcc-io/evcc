@@ -21,15 +21,7 @@
 			</button>
 			<span v-else class="text-gray opacity-50 px-2 py-1" disabled>yaml</span>
 		</div>
-		<div v-if="tags" class="d-flex mb-2 flex-wrap" @click="todo">
-			<span
-				v-for="(tag, index) in tags"
-				:key="index"
-				class="badge text-bg-secondary me-1 mb-1"
-			>
-				{{ tag }}
-			</span>
-		</div>
+		<slot name="tags" />
 	</li>
 </template>
 
@@ -40,7 +32,6 @@ export default {
 		name: String,
 		editable: Boolean,
 		unconfigured: Boolean,
-		tags: Array,
 	},
 	emits: ["edit", "configure"],
 };

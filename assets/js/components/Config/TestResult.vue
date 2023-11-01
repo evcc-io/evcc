@@ -32,12 +32,14 @@
 		</div>
 		<hr v-if="result" />
 		<div v-if="result">
-			{{ result }}
+			<DeviceTags :tags="result" />
 		</div>
 	</div>
 </template>
 
 <script>
+import DeviceTags from "./DeviceTags.vue";
+
 export default {
 	name: "TestResult",
 	props: {
@@ -49,5 +51,6 @@ export default {
 		error: String,
 	},
 	emits: ["test"],
+	components: { DeviceTags },
 };
 </script>
