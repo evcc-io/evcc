@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
@@ -52,7 +53,7 @@ func (v *adapter) Name() string {
 
 // GetMinSoc returns the min soc
 func (v *adapter) GetMinSoc() int {
-	if v, err := settings.Int(v.key() + "minSoc"); err == nil {
+	if v, err := settings.Int(v.key() + keys.MinSoc); err == nil {
 		return int(v)
 	}
 	return 0
@@ -61,12 +62,12 @@ func (v *adapter) GetMinSoc() int {
 // SetMinSoc sets the min soc
 func (v *adapter) SetMinSoc(soc int) {
 	v.log.DEBUG.Printf("set %s min soc: %d", v.name, soc)
-	settings.SetInt(v.key()+"minSoc", int64(soc))
+	settings.SetInt(v.key()+keys.MinSoc, int64(soc))
 }
 
 // GetLimitSoc returns the limit soc
 func (v *adapter) GetLimitSoc() int {
-	if v, err := settings.Int(v.key() + "limitSoc"); err == nil {
+	if v, err := settings.Int(v.key() + keys.LimitSoc); err == nil {
 		return int(v)
 	}
 	return 0
@@ -75,17 +76,17 @@ func (v *adapter) GetLimitSoc() int {
 // SetLimitSoc sets the limit soc
 func (v *adapter) SetLimitSoc(soc int) {
 	v.log.DEBUG.Printf("set %s limit soc: %d", v.name, soc)
-	settings.SetInt(v.key()+"limitSoc", int64(soc))
+	settings.SetInt(v.key()+keys.LimitSoc, int64(soc))
 }
 
 // GetPlanSoc returns the charge plan soc
 func (v *adapter) GetPlanSoc() (time.Time, int) {
 	var ts time.Time
-	if v, err := settings.Time(v.key() + "planTime"); err == nil {
+	if v, err := settings.Time(v.key() + keys.PlanTime); err == nil {
 		ts = v
 	}
 	var soc int
-	if v, err := settings.Int(v.key() + "planSoc"); err == nil {
+	if v, err := settings.Int(v.key() + keys.PlanSoc); err == nil {
 		soc = int(v)
 	}
 	return ts, soc
@@ -98,8 +99,8 @@ func (v *adapter) SetPlanSoc(ts time.Time, soc int) error {
 	}
 
 	v.log.DEBUG.Printf("set %s plan soc/time: %d/%v", v.name, soc, ts.Round(time.Second))
-	settings.SetTime(v.key()+"planTime", ts)
-	settings.SetInt(v.key()+"planSoc", int64(soc))
+	settings.SetTime(v.key()+keys.PlanTime, ts)
+	settings.SetInt(v.key()+keys.PlanSoc, int64(soc))
 
 	return nil
 }
