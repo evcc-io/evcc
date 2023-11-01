@@ -184,7 +184,7 @@ type Loadpoint struct {
 
 // NewLoadpointFromConfig creates a new loadpoint
 func NewLoadpointFromConfig(log *util.Logger, settings *Settings, other map[string]interface{}) (*Loadpoint, error) {
-	lp := NewLoadpoint(log)
+	lp := NewLoadpoint(log, settings)
 	if err := util.DecodeOther(other, lp); err != nil {
 		return nil, err
 	}
@@ -256,30 +256,27 @@ func NewLoadpointFromConfig(log *util.Logger, settings *Settings, other map[stri
 		lp.log.WARN.Printf("PV mode enable threshold %.0fW > 0 will start PV charging on grid power consumption. Did you mean -%.0f?", lp.Enable.Threshold, lp.Enable.Threshold)
 	}
 
-	// restore settings
-	lp.settings = settings
-	lp.restoreSettings()
-
 	// chose sane default if mode is not set
-	if lp.mode == "" {
-		lp.mode = lp.Mode_
-	}
-	if lp.mode == "" {
+	if lp.mode = lp.Mode_; lp.mode == "" {
 		lp.mode = api.ModeOff
 	}
+
+	// restore settings
+	lp.restoreSettings()
 
 	return lp, nil
 }
 
 // NewLoadpoint creates a Loadpoint with sane defaults
-func NewLoadpoint(log *util.Logger) *Loadpoint {
+func NewLoadpoint(log *util.Logger, settings *Settings) *Loadpoint {
 	clock := clock.New()
 	bus := evbus.New()
 
 	lp := &Loadpoint{
-		log:        log,   // logger
-		clock:      clock, // mockable time
-		bus:        bus,   // event bus
+		log:        log,      // logger
+		settings:   settings, // settings
+		clock:      clock,    // mockable time
+		bus:        bus,      // event bus
 		mode:       api.ModeOff,
 		status:     api.StatusNone,
 		MinCurrent: 6,  // A
