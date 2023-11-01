@@ -121,10 +121,7 @@
               "mode": {
                 "$ref": "#/definitions/mode"
               },
-              "minSoc": {
-                "type": "integer"
-              },
-              "targetSoc": {
+              "priority": {
                 "type": "integer"
               },
               "minCurrent": {
@@ -165,30 +162,12 @@
               "minItems": 1,
               "uniqueItems": true
             },
-            "pvs": {
-              "description": "PV inverters/meters",
-              "type": "array",
-              "items": {
-                "type": "string"
-              },
-              "minItems": 1,
-              "uniqueItems": true
-            },
             "battery": {
               "description": "Home battery (1 or more)",
               "type": [
                 "string",
                 "array"
               ],
-              "items": {
-                "type": "string"
-              },
-              "minItems": 1,
-              "uniqueItems": true
-            },
-            "batteries": {
-              "description": "Home batteries",
-              "type": "array",
               "items": {
                 "type": "string"
               },
@@ -203,19 +182,7 @@
         "residualPower": {
           "type": "number"
         },
-        "prioritySoc": {
-          "type": "number"
-        },
-        "bufferSoc": {
-          "type": "number"
-        },
-        "bufferStartSoc": {
-          "type": "number"
-        },
         "maxGridSupplyWhileBatteryCharging": {
-          "type": "number"
-        },
-        "autoChargeCostLimit": {
           "type": "number"
         }
       }
