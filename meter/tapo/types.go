@@ -175,8 +175,6 @@ type DeviceInfo struct {
 	HasSetLocationInfo bool   `json:"has_set_location_info"`
 	DeviceON           bool   `json:"device_on"`
 	OnTime             int    `json:"on_time"`
-	Current_Power      int64  `json:"current_power"`
-	Today_Energy       int64  `json:"today_energy"`
 	DefaultStates      struct {
 		Type string `json:"type"`
 		// TODO add the structure for State
@@ -252,7 +250,7 @@ type EnergyUsage struct {
 	MonthEnergy       int64  `json:"month_energy"`
 	LocalTime         string `json:"local_time"`
 	ElectricityCharge [3]int `json:"electricity_charge"`
-	CurrentPower      int    `json:"current_power"`
+	CurrentPower      int64  `json:"current_power"`
 }
 
 type GetEnergyUsageRequest struct {

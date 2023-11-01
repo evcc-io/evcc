@@ -84,12 +84,12 @@ func (d *Connection) Enabled() (bool, error) {
 
 // CurrentPower provides current power consuption
 func (d *Connection) CurrentPower() (float64, error) {
-	resp, err := d.plug.GetDeviceInfo()
+	resp, err := d.plug.GetEnergyUsage()
 	if err != nil {
 		return 0, err
 	}
 
-	return float64(resp.Current_Power) / 1e3, nil
+	return float64(resp.CurrentPower) / 1e3, nil
 }
 
 // ChargedEnergy collects the daily charged energy
