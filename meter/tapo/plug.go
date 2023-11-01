@@ -71,7 +71,7 @@ func (p *Plug) Handshake(username, password string) error {
 	if err != nil {
 		return err
 	}
-	p.log.DEBUG.Printf("%s %s connected (fw:%s, hw:%s, mac: %s)", res.Type, res.Model, res.FWVersion, res.HWVersion, res.MAC)
+	p.log.DEBUG.Printf("%s %s connected (fw:%s,hw:%s,mac:%s)", res.Type, res.Model, res.FWVersion, res.HWVersion, res.MAC)
 
 	return nil
 }
