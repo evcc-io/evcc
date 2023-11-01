@@ -341,6 +341,7 @@ func planHandler(lp loadpoint.API) http.HandlerFunc {
 			Plan:     plan,
 			Power:    power,
 		}
+
 		jsonResult(w, res)
 	}
 }
