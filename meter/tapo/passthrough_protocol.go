@@ -6,8 +6,10 @@ import (
 	"crypto/cipher"
 	"crypto/rand"
 	"crypto/rsa"
+	"crypto/sha1"
 	"crypto/x509"
 	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
@@ -43,6 +45,22 @@ type PassthroughSession struct {
 
 func (p *PassthroughSession) Addr() netip.Addr {
 	return p.addr
+}
+
+func passthroughLoginDeviceRequest(username, password string) (*LoginDeviceRequest, error) {
+	if len(password) > 8 {
+		return nil, fmt.Errorf("passwords > 8 characters will not work due to a Tapo firmware bug, see https://github.com/fishbigger/TapoP100/issues/4")
+	}
+	r := LoginDeviceRequest{
+		Method: "login_device",
+	}
+	tmp := sha1.Sum([]byte(username))
+	hexsha := make([]byte, hex.EncodedLen(len(tmp)))
+	hex.Encode(hexsha, tmp[:])
+	r.Params.Username = base64.StdEncoding.EncodeToString(hexsha)
+	r.Params.Password = base64.StdEncoding.EncodeToString([]byte(password))
+	r.RequestTimeMils = int(time.Now().UnixMilli())
+	return &r, nil
 }
 
 func (s *PassthroughSession) Handshake(addr netip.Addr, username, password string) error {
