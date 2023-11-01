@@ -3,6 +3,10 @@ products:
   - brand: NRGKick
     description:
       generic: Connect
+requirements:
+  description:
+    de: NRGkick Ladeeinheit via HTTP (älter als 2022/2023)
+    en: NRGkick charging unit via HTTP (older than 2022/2023)
 params:
   - name: host
   - name: mac
