@@ -103,6 +103,12 @@
           "capacity": {
             "type": "integer"
           },
+          "phases": {
+            "type": "integer"
+          },
+          "identifiers": {
+            "type": "array"
+          },
           "user": {
             "type": "string"
           },
