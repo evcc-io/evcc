@@ -22,9 +22,9 @@ func (site *Site) publishVehicles() {
 
 	for _, v := range vv {
 		res[v.Name()] = vehicleStruct{
-			Title:  v.Title(),
-			MinSoc: v.GetMinSoc(),
-			// LimitSoc: v.GetLimitSoc(),
+			Title:    v.Title(),
+			MinSoc:   v.GetMinSoc(),
+			LimitSoc: v.GetLimitSoc(),
 		}
 	}
 

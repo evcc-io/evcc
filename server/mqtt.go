@@ -11,7 +11,6 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/site"
-	"github.com/evcc-io/evcc/core/vehicle"
 	"github.com/evcc-io/evcc/provider/mqtt"
 	"github.com/evcc-io/evcc/util"
 )
@@ -130,50 +129,50 @@ func (m *MQTT) publish(topic string, retained bool, payload interface{}) {
 }
 
 // TODO add plan api
-func (m *MQTT) listenVehicleSetters(topic string, site site.API, v vehicle.API) {
-	m.Handler.ListenSetter(topic+"/minSoc", func(payload string) error {
-		soc, err := strconv.Atoi(payload)
-		if err == nil {
-			v.SetMinSoc(soc)
-		}
-		return err
-	})
-	// m.Handler.ListenSetter(topic+"/mode", func(payload string) error {
-	// 	mode, err := api.ChargeModeString(payload)
-	// 	if err == nil {
-	// 		v.SetMode(mode)
-	// 	}
-	// 	return err
-	// })
-	// m.Handler.ListenSetter(topic+"/limitSoc", func(payload string) error {
-	// 	soc, err := strconv.Atoi(payload)
-	// 	if err == nil {
-	// 		v.SetLimitSoc(soc)
-	// 	}
-	// 	return err
-	// })
-	// m.Handler.ListenSetter(topic+"/minCurrent", func(payload string) error {
-	// 	current, err := parseFloat(payload)
-	// 	if err == nil {
-	// 		v.SetMinCurrent(current)
-	// 	}
-	// 	return err
-	// })
-	// m.Handler.ListenSetter(topic+"/maxCurrent", func(payload string) error {
-	// 	current, err := parseFloat(payload)
-	// 	if err == nil {
-	// 		v.SetMaxCurrent(current)
-	// 	}
-	// 	return err
-	// })
-	// m.Handler.ListenSetter(topic+"/phases", func(payload string) error {
-	// 	phases, err := strconv.Atoi(payload)
-	// 	if err == nil {
-	// 		err = v.SetPhases(phases)
-	// 	}
-	// 	return err
-	// })
-}
+// func (m *MQTT) listenVehicleSetters(topic string, site site.API, v vehicle.API) {
+// 	m.Handler.ListenSetter(topic+"/minSoc", func(payload string) error {
+// 		soc, err := strconv.Atoi(payload)
+// 		if err == nil {
+// 			v.SetMinSoc(soc)
+// 		}
+// 		return err
+// 	})
+// 	m.Handler.ListenSetter(topic+"/limitSoc", func(payload string) error {
+// 		soc, err := strconv.Atoi(payload)
+// 		if err == nil {
+// 			v.SetLimitSoc(soc)
+// 		}
+// 		return err
+// 	})
+// 	// m.Handler.ListenSetter(topic+"/mode", func(payload string) error {
+// 	// 	mode, err := api.ChargeModeString(payload)
+// 	// 	if err == nil {
+// 	// 		v.SetMode(mode)
+// 	// 	}
+// 	// 	return err
+// 	// })
+// 	// m.Handler.ListenSetter(topic+"/phases", func(payload string) error {
+// 	// 	phases, err := strconv.Atoi(payload)
+// 	// 	if err == nil {
+// 	// 		err = v.SetPhases(phases)
+// 	// 	}
+// 	// 	return err
+// 	// })
+// 	// m.Handler.ListenSetter(topic+"/minCurrent", func(payload string) error {
+// 	// 	current, err := parseFloat(payload)
+// 	// 	if err == nil {
+// 	// 		v.SetMinCurrent(current)
+// 	// 	}
+// 	// 	return err
+// 	// })
+// 	// m.Handler.ListenSetter(topic+"/maxCurrent", func(payload string) error {
+// 	// 	current, err := parseFloat(payload)
+// 	// 	if err == nil {
+// 	// 		v.SetMaxCurrent(current)
+// 	// 	}
+// 	// 	return err
+// 	// })
+// }
 
 <<<<<<< HEAD
 func (m *MQTT) listenLoadpointSetters(topic string, site site.API, lp loadpoint.API) error {
@@ -426,10 +425,10 @@ func (m *MQTT) Run(site site.API, in <-chan util.Param) {
 
 	// TODO decide key
 	// vehicle setters
-	for id, vehicle := range site.Vehicles().All() {
-		topic := fmt.Sprintf("%s/vehicles/%d", m.root, id+1)
-		m.listenVehicleSetters(topic, site, vehicle)
-	}
+	// for id, vehicle := range site.Vehicles().All() {
+	// 	topic := fmt.Sprintf("%s/vehicles/%d", m.root, id+1)
+	// 	m.listenVehicleSetters(topic, site, vehicle)
+	// }
 
 	// number of loadpoints
 	topic = fmt.Sprintf("%s/loadpoints", m.root)
