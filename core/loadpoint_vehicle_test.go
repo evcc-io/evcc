@@ -242,21 +242,12 @@ func TestVehicleDetectByID(t *testing.T) {
 // 	// onDefault config
 // 	od := newConfig(api.ModeOff, 6, 16, nil)
 
-<<<<<<< HEAD
-	vehicle := api.NewMockVehicle(ctrl)
-	vehicle.EXPECT().Title().Return("it's me").AnyTimes()
-	vehicle.EXPECT().Icon().Return("").AnyTimes()
-	vehicle.EXPECT().Capacity().AnyTimes()
-	vehicle.EXPECT().Phases().AnyTimes()
-	vehicle.EXPECT().OnIdentified().Return(oi).AnyTimes()
-=======
-// 	vehicle := mock.NewMockVehicle(ctrl)
+// 	vehicle := api.NewMockVehicle(ctrl)
 // 	vehicle.EXPECT().Title().Return("it's me").AnyTimes()
 // 	vehicle.EXPECT().Icon().Return("").AnyTimes()
 // 	vehicle.EXPECT().Capacity().AnyTimes()
 // 	vehicle.EXPECT().Phases().AnyTimes()
 // 	vehicle.EXPECT().OnIdentified().Return(oi).AnyTimes()
->>>>>>> 2ce42b4f5 (Remove applyAction)
 
 // 	lp := NewLoadpoint(util.NewLogger("foo"))
 
@@ -280,25 +271,14 @@ func TestVehicleDetectByID(t *testing.T) {
 // 	lp.evVehicleDisconnectHandler()
 // 	assertConfig(lp, od)
 
-<<<<<<< HEAD
-	// identify vehicle by id
-	charger := struct {
-		*api.MockCharger
-		*api.MockIdentifier
-	}{
-		MockCharger:    api.NewMockCharger(ctrl),
-		MockIdentifier: api.NewMockIdentifier(ctrl),
-	}
-=======
 // 	// identify vehicle by id
 // 	charger := struct {
-// 		*mock.MockCharger
-// 		*mock.MockIdentifier
+// 		*api.MockCharger
+// 		*api.MockIdentifier
 // 	}{
-// 		MockCharger:    mock.NewMockCharger(ctrl),
-// 		MockIdentifier: mock.NewMockIdentifier(ctrl),
+// 		MockCharger:    api.NewMockCharger(ctrl),
+// 		MockIdentifier: api.NewMockIdentifier(ctrl),
 // 	}
->>>>>>> 2ce42b4f5 (Remove applyAction)
 
 // 	lp.charger = charger
 // 	lp.coordinator = coordinator.NewAdapter(lp, coordinator.New(util.NewLogger("foo"), []api.Vehicle{vehicle}))

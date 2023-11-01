@@ -609,15 +609,9 @@ func TestChargedEnergyAtDisconnect(t *testing.T) {
 	ctrl.Finish()
 }
 
-<<<<<<< HEAD
-func TestTargetSoc(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	vhc := api.NewMockVehicle(ctrl)
-=======
 // func TestTargetSoc(t *testing.T) {
 // 	ctrl := gomock.NewController(t)
-// 	vhc := mock.NewMockVehicle(ctrl)
->>>>>>> 0691e19ef (Add vehicle settings api)
+// 	vhc := api.NewMockVehicle(ctrl)
 
 // 	tc := []struct {
 // 		vehicle api.Vehicle
