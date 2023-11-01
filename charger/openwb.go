@@ -77,7 +77,7 @@ func NewOpenWB(log *util.Logger, mqttconf mqtt.Config, id int, topic string, p1p
 	// check if loadpoint configured
 	configured := boolG(fmt.Sprintf("%s/lp/%d/%s", topic, id, openwb.ConfiguredTopic))
 	if isConfigured, err := configured(); err != nil || !isConfigured {
-		return nil, fmt.Errorf("openWB loadpoint %d is not configured", id)
+		return nil, fmt.Errorf("loadpoint %d is not configured", id)
 	}
 
 	// adapt plugged/charging to status
