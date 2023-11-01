@@ -23,9 +23,6 @@ const Timeout = time.Second * 15
 type Connection struct {
 	*request.Helper
 	log             *util.Logger
-	uti             netip.Addr
-	user            string
-	password        string
 	plug            Plug
 	lasttodayenergy int64
 	energy          int64
