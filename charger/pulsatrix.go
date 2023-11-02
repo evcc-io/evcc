@@ -20,7 +20,6 @@ type PulsatrixCharger struct {
 	log          *util.Logger
 	tryRead      int
 	enState      bool
-	path         string
 	reconnecting int
 	signaledAmp  float64
 	mutex        sync.Mutex
