@@ -2,11 +2,10 @@ package tapo
 
 import (
 	"fmt"
-	"io"
-	"log"
 	"net/netip"
 	"net/url"
 
+	"github.com/evcc-io/evcc/util"
 	"github.com/insomniacslk/tapo"
 )
 
@@ -21,7 +20,7 @@ import (
 
 // Connection is the Tapo connection
 type Connection struct {
-	log             *log.Logger
+	log             *util.Logger
 	plug            tapo.Plug
 	lasttodayenergy int64
 	energy          int64
@@ -45,10 +44,9 @@ func NewConnection(uri, user, password string) (*Connection, error) {
 		return nil, fmt.Errorf("missing user or password")
 	}
 
-	// log := util.NewLogger("tapo")
-	log := log.New(io.Discard, "", 0)
+	log := util.NewLogger("tapo")
 
-	plug := tapo.NewPlug(addr, log)
+	plug := tapo.NewPlug(addr, nil)
 	if err := plug.Handshake(user, password); err != nil {
 		return nil, fmt.Errorf("login failed: %w", err)
 	}
@@ -57,6 +55,12 @@ func NewConnection(uri, user, password string) (*Connection, error) {
 		log:  log,
 		plug: *plug,
 	}
+
+	res, err := conn.plug.GetDeviceInfo()
+	if err != nil {
+		return nil, err
+	}
+	conn.log.DEBUG.Printf("%s %s connected (fw:%s,hw:%s,mac:%s)", res.Type, res.Model, res.FWVersion, res.HWVersion, res.MAC)
 
 	return conn, err
 }
