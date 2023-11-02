@@ -16,3 +16,4 @@ params:
 render: |
   type: pulsatrix
   host: {{ .host }}
+
