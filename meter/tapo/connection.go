@@ -2,10 +2,12 @@ package tapo
 
 import (
 	"fmt"
+	"io"
+	"log"
 	"net/netip"
 	"net/url"
 
-	"github.com/evcc-io/evcc/util"
+	"github.com/insomniacslk/tapo"
 )
 
 // Tapo homepage + api reverse engineering results
@@ -19,8 +21,8 @@ import (
 
 // Connection is the Tapo connection
 type Connection struct {
-	log             *util.Logger
-	plug            Plug
+	log             *log.Logger
+	plug            tapo.Plug
 	lasttodayenergy int64
 	energy          int64
 }
@@ -43,9 +45,10 @@ func NewConnection(uri, user, password string) (*Connection, error) {
 		return nil, fmt.Errorf("missing user or password")
 	}
 
-	log := util.NewLogger("tapo")
+	// log := util.NewLogger("tapo")
+	log := log.New(io.Discard, "", 0)
 
-	plug := NewPlug(addr, log)
+	plug := tapo.NewPlug(addr, log)
 	if err := plug.Handshake(user, password); err != nil {
 		return nil, fmt.Errorf("login failed: %w", err)
 	}
@@ -90,10 +93,10 @@ func (c *Connection) ChargedEnergy() (float64, error) {
 		return 0, err
 	}
 
-	if resp.TodayEnergy > c.lasttodayenergy {
-		c.energy = c.energy + (resp.TodayEnergy - c.lasttodayenergy)
+	if int64(resp.TodayEnergy) > c.lasttodayenergy {
+		c.energy = c.energy + (int64(resp.TodayEnergy) - c.lasttodayenergy)
 	}
-	c.lasttodayenergy = resp.TodayEnergy
+	c.lasttodayenergy = int64(resp.TodayEnergy)
 
 	return float64(c.energy) / 1000, nil
 }

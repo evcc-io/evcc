@@ -1,6 +1,8 @@
 module github.com/evcc-io/evcc
 
-go 1.21
+go 1.21.1
+
+toolchain go1.21.3
 
 require (
 	dario.cat/mergo v1.0.0
@@ -103,6 +105,8 @@ require (
 	nhooyr.io/websocket v1.8.10
 )
 
+require github.com/insomniacslk/xjson v0.0.0-20231023101448-2249e546a131 // indirect
+
 require (
 	github.com/Masterminds/goutils v1.1.1 // indirect
 	github.com/Masterminds/semver/v3 v3.2.1 // indirect
@@ -140,6 +144,7 @@ require (
 	github.com/imdario/mergo v1.0.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/influxdata/line-protocol v0.0.0-20210922203350-b1ad95c89adf // indirect
+	github.com/insomniacslk/tapo v0.0.0-20231102105048-52dbe7a83ca7
 	github.com/itchyny/timefmt-go v0.1.5 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
