@@ -290,13 +290,9 @@ func init() {
 		},
 	})
 
-		taskList.Add(tasks.Task{
+	taskList.Add(tasks.Task{
 		ID:      taskPulsatrix,
 		Type:    tasks.Http,
 		Depends: TaskHttp,
-		Config: map[string]interface{}{
-			"path": "/px/uic",
-		},
 	})
 }
-
