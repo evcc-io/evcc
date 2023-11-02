@@ -65,7 +65,6 @@ require (
 	github.com/lunixbochs/struc v0.0.0-20200707160740-784aaebc1d40
 	github.com/mabunixda/wattpilot v1.6.2
 	github.com/manifoldco/promptui v0.9.0
-	github.com/mergermarket/go-pkcs7 v0.0.0-20170926155232-153b18ea13c9
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/mlnoga/rct v0.1.2-0.20230731074838-03eacb926f99
@@ -105,7 +104,10 @@ require (
 	nhooyr.io/websocket v1.8.10
 )
 
-require github.com/insomniacslk/xjson v0.0.0-20231023101448-2249e546a131 // indirect
+require (
+	github.com/insomniacslk/xjson v0.0.0-20231023101448-2249e546a131 // indirect
+	github.com/mergermarket/go-pkcs7 v0.0.0-20170926155232-153b18ea13c9 // indirect
+)
 
 require (
 	github.com/Masterminds/goutils v1.1.1 // indirect
