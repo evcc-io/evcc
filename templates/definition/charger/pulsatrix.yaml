@@ -1,8 +1,6 @@
 template: pulsatrix
 products:
   - brand: pulsatrix
-    description:
-      generic: SECC (stylus, penta, pico, ducto, smart)
 requirements:
   description:
     de: pulsatrix SECCs nutzen das WebSocket Protokoll zur Kommunikation
