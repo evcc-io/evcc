@@ -12,9 +12,9 @@ import (
 )
 
 type handler struct {
-	log      *util.Logger
-	readOnly bool
-	conn     *modbus.Connection
+	log       *util.Logger
+	writeMode WriteMode
+	conn      *modbus.Connection
 }
 
 func bytesAsUint16(b []byte) []uint16 {
@@ -104,8 +104,11 @@ func (h *handler) HandleDiscreteInputs(req *mbserver.DiscreteInputsRequest) ([]b
 
 func (h *handler) HandleCoils(req *mbserver.CoilsRequest) ([]bool, error) {
 	if req.IsWrite {
-		if h.readOnly {
+		switch h.writeMode {
+		case WriteModeReadOnly:
 			return nil, mbserver.ErrIllegalFunction
+		case WriteModeAccept:
+			return req.Args, nil
 		}
 
 		if req.WriteFuncCode == gridx.FuncCodeWriteSingleCoil {
@@ -138,8 +141,11 @@ func (h *handler) HandleInputRegisters(req *mbserver.InputRegistersRequest) ([]u
 
 func (h *handler) HandleHoldingRegisters(req *mbserver.HoldingRegistersRequest) ([]uint16, error) {
 	if req.IsWrite {
-		if h.readOnly {
+		switch h.writeMode {
+		case WriteModeReadOnly:
 			return nil, mbserver.ErrIllegalFunction
+		case WriteModeAccept:
+			return req.Args, nil
 		}
 
 		if req.WriteFuncCode == gridx.FuncCodeWriteSingleRegister {

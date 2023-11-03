@@ -179,7 +179,14 @@ func runRoot(cmd *cobra.Command, args []string) {
 	// setup modbus proxy
 	if err == nil {
 		for _, cfg := range conf.ModbusProxy {
-			if err = modbus.StartProxy(cfg.Port, cfg.Settings, cfg.ReadOnly); err != nil {
+			mode, err := modbus.WriteModeString(cfg.WriteMode)
+			if err != nil {
+				break
+			}
+			if cfg.ReadOnly {
+				mode = modbus.WriteModeReadOnly
+			}
+			if err = modbus.StartProxy(cfg.Port, cfg.Settings, mode); err != nil {
 				break
 			}
 		}
