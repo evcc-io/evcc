@@ -46,7 +46,7 @@ require (
 	github.com/grid-x/modbus v0.0.0-20230713135356-d9fefd3ae5a5
 	github.com/hashicorp/go-version v1.6.0
 	github.com/hasura/go-graphql-client v0.10.0
-	github.com/influxdata/influxdb-client-go/v2 v2.12.4
+	github.com/influxdata/influxdb-client-go/v2 v2.12.5-0.20231103130105-12eadbdbefaf
 	github.com/itchyny/gojq v0.12.13
 	github.com/jeremywohl/flatten v1.0.1
 	github.com/jinzhu/copier v0.4.0
@@ -114,7 +114,6 @@ require (
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/chzyer/readline v1.5.1 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
-	github.com/deepmap/oapi-codegen v1.16.2 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/fatih/color v1.15.0 // indirect
 	github.com/felixge/httpsnoop v1.0.3 // indirect
@@ -158,6 +157,7 @@ require (
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
+	github.com/oapi-codegen/runtime v1.0.0 // indirect
 	github.com/onsi/ginkgo v1.16.5 // indirect
 	github.com/pascaldekloe/name v1.0.1 // indirect
 	github.com/pelletier/go-toml/v2 v2.1.0 // indirect
@@ -184,6 +184,7 @@ require (
 	gitlab.com/c0b/go-ordered-json v0.0.0-20201030195603-febf46534d5a // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/crypto v0.14.0 // indirect
+	golang.org/x/lint v0.0.0-20210508222113-6edffad5e616 // indirect
 	golang.org/x/mod v0.13.0 // indirect
 	golang.org/x/sys v0.13.0 // indirect
 	golang.org/x/term v0.13.0 // indirect
@@ -198,8 +199,6 @@ require (
 	modernc.org/memory v1.7.2 // indirect
 	modernc.org/sqlite v1.27.0 // indirect
 )
-
-replace github.com/deepmap/oapi-codegen => github.com/deepmap/oapi-codegen v1.12.4
 
 replace github.com/grid-x/modbus => github.com/evcc-io/modbus v0.0.0-20230705160100-23e1df2c01c3
 
