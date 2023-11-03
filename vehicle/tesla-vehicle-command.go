@@ -83,8 +83,16 @@ func NewTeslaVCFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		embed: &cc.embed,
 	}
 
-	if _, err := account.Get(ctx, "api/1/vehicles"); err != nil {
+	if b, err := account.Get(ctx, "api/1/users/region"); err != nil {
 		return nil, err
+	} else {
+		fmt.Println(string(b))
+	}
+
+	if b, err := account.Get(ctx, "api/1/vehicles"); err != nil {
+		return nil, err
+	} else {
+		fmt.Println(string(b))
 	}
 
 	// privKey, err := protocol.UnmarshalECDHPrivateKey(nil)
