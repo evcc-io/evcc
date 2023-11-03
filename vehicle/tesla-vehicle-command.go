@@ -2,17 +2,14 @@ package vehicle
 
 import (
 	"context"
-	"errors"
 	"fmt"
+	"os"
 	"time"
 
-	"github.com/bogosj/tesla"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/teslamotors/vehicle-command/pkg/account"
-	"github.com/teslamotors/vehicle-command/pkg/cache"
-	"github.com/teslamotors/vehicle-command/pkg/protocol"
 	"github.com/teslamotors/vehicle-command/pkg/vehicle"
 	"golang.org/x/oauth2"
 )
@@ -30,6 +27,18 @@ func init() {
 }
 
 // https://auth.tesla.com/oauth2/v3/.well-known/openid-configuration
+
+// OAuth2Config is the OAuth2 configuration for authenticating with the Tesla API.
+var OAuth2Config = &oauth2.Config{
+	ClientID:    os.Getenv("TESLA_CLIENT_ID"),
+	RedirectURL: "https://auth.tesla.com/void/callback",
+	Endpoint: oauth2.Endpoint{
+		AuthURL:   "https://auth.tesla.com/en_us/oauth2/v3/authorize",
+		TokenURL:  "https://auth.tesla.com/oauth2/v3/token",
+		AuthStyle: oauth2.AuthStyleInParams,
+	},
+	Scopes: []string{"openid", "email", "offline_access"},
+}
 
 // NewTeslaVCFromConfig creates a new vehicle
 func NewTeslaVCFromConfig(other map[string]interface{}) (api.Vehicle, error) {
@@ -50,9 +59,12 @@ func NewTeslaVCFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, err
 	}
 
-	ts := tesla.OAuth2Config.TokenSource(context.Background(), &oauth2.Token{
+	client := request.NewClient(util.NewLogger("tesla-vc"))
+	ctx := context.WithValue(context.Background(), oauth2.HTTPClient, client)
+	ts := OAuth2Config.TokenSource(ctx, &oauth2.Token{
 		AccessToken:  cc.Tokens.Access,
 		RefreshToken: cc.Tokens.Refresh,
+		Expiry:       time.Now(),
 	})
 
 	token, err := ts.Token()
@@ -60,9 +72,9 @@ func NewTeslaVCFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, err
 	}
 
-	fmt.Println(token)
+	fmt.Println(token.Expiry)
 
-	user, err := account.New(token.AccessToken)
+	account, err := account.New(token.AccessToken)
 	if err != nil {
 		return nil, err
 	}
@@ -71,24 +83,25 @@ func NewTeslaVCFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		embed: &cc.embed,
 	}
 
-	// authenticated http client with logging injected to the TeslaVC client
-	log := util.NewLogger("tesla").Redact(cc.Tokens.Access, cc.Tokens.Refresh)
-	ctx := context.WithValue(context.Background(), oauth2.HTTPClient, request.NewClient(log))
+	if _, err := account.Get(ctx, "api/1/vehicles"); err != nil {
+		return nil, err
+	}
 
 	// privKey, err := protocol.UnmarshalECDHPrivateKey(nil)
 	// if err != nil {
 	// 	logger.Printf("Failed to load private key: %s", err)
 	// 	return
 	// }
-	privKey := protocol.UnmarshalECDHPrivateKey(nil)
-	if privKey == nil {
-		return nil, errors.New("failed to load private key")
-	}
 
-	v.vehicle, err = user.GetVehicle(ctx, cc.VIN, privKey, cache.New(8))
-	if err != nil {
-		return nil, err
-	}
+	// privKey := protocol.UnmarshalECDHPrivateKey(nil)
+	// if privKey == nil {
+	// 	return nil, errors.New("failed to load private key")
+	// }
+
+	// v.vehicle, err = account.GetVehicle(ctx, cc.VIN, privKey, cache.New(8))
+	// if err != nil {
+	// 	return nil, err
+	// }
 
 	// if v.Title_ == "" {
 	// 	v.Title_ = v.vehicle.DisplayName
