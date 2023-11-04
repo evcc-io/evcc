@@ -41,7 +41,7 @@ func NewConnection(uri, user, password string) (*Connection, error) {
 
 	var tapologger *tapolog.Logger
 	if util.LogLevelForArea("tapo").String() == "TRACE" {
-		tapologger = tapolog.New(os.Stderr, "[tapo  ] "+util.LogLevelForArea("tapo").String()+" ", tapolog.Ltime|tapolog.Lshortfile)
+		tapologger = tapolog.New(os.Stderr, "[tapo  ] "+util.LogLevelForArea("tapo").String()+" ", tapolog.Ldate|tapolog.Ltime)
 	}
 
 	plug := tapo.NewPlug(addr, tapologger)
