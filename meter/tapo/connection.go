@@ -2,8 +2,10 @@ package tapo
 
 import (
 	"fmt"
+	tapolog "log"
 	"net/netip"
 	"net/url"
+	"os"
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/insomniacslk/tapo"
@@ -37,7 +39,12 @@ func NewConnection(uri, user, password string) (*Connection, error) {
 
 	log := util.NewLogger("tapo")
 
-	plug := tapo.NewPlug(addr, nil)
+	var tapologger *tapolog.Logger
+	if util.LogLevelForArea("tapo").String() == "TRACE" {
+		tapologger = tapolog.New(os.Stderr, "[tapo] ", tapolog.Ltime|tapolog.Lshortfile)
+	}
+
+	plug := tapo.NewPlug(addr, tapologger)
 	if err := plug.Handshake(user, password); err != nil {
 		return nil, fmt.Errorf("login failed: %w", err)
 	}
