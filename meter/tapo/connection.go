@@ -9,15 +9,6 @@ import (
 	"github.com/insomniacslk/tapo"
 )
 
-// Tapo homepage + api reverse engineering results
-// https://www.tapo.com/de/
-// Credits to & inspired by:
-// https://k4czp3r.xyz/reverse-engineering/tp-link/tapo/2020/10/15/reverse-engineering-tp-link-tapo.html
-// https://github.com/fishbigger/TapoP100
-// https://github.com/artemvang/p100-go
-// KLAP protocol reference implementation
-// https://github.com/insomniacslk/tapo
-
 // Connection is the Tapo connection
 type Connection struct {
 	log             *util.Logger

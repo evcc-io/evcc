@@ -65,6 +65,7 @@ require (
 	github.com/lunixbochs/struc v0.0.0-20200707160740-784aaebc1d40
 	github.com/mabunixda/wattpilot v1.6.2
 	github.com/manifoldco/promptui v0.9.0
+	github.com/mergermarket/go-pkcs7 v0.0.0-20170926155232-153b18ea13c9 // indirect
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/mlnoga/rct v0.1.2-0.20230731074838-03eacb926f99
@@ -105,11 +106,6 @@ require (
 )
 
 require (
-	github.com/insomniacslk/xjson v0.0.0-20231023101448-2249e546a131 // indirect
-	github.com/mergermarket/go-pkcs7 v0.0.0-20170926155232-153b18ea13c9 // indirect
-)
-
-require (
 	github.com/Masterminds/goutils v1.1.1 // indirect
 	github.com/Masterminds/semver/v3 v3.2.1 // indirect
 	github.com/ahmetb/go-linq/v3 v3.2.0 // indirect
@@ -147,6 +143,7 @@ require (
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/influxdata/line-protocol v0.0.0-20210922203350-b1ad95c89adf // indirect
 	github.com/insomniacslk/tapo v0.0.0-20231102105048-52dbe7a83ca7
+	github.com/insomniacslk/xjson v0.0.0-20231023101448-2249e546a131 // indirect
 	github.com/itchyny/timefmt-go v0.1.5 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
