@@ -26,7 +26,7 @@ type Connector struct {
 	statusC chan struct{}
 
 	meterUpdated time.Time
-	measurements map[string]types.SampledValue
+	measurements map[types.Measurand]types.SampledValue
 	timeout      time.Duration
 
 	txnCount int // change initial value to the last known global transaction. Needs persistence
@@ -40,7 +40,7 @@ func NewConnector(log *util.Logger, id int, cp *CP, timeout time.Duration) (*Con
 		id:           id,
 		clock:        clock.New(),
 		statusC:      make(chan struct{}),
-		measurements: make(map[string]types.SampledValue),
+		measurements: make(map[types.Measurand]types.SampledValue),
 		timeout:      timeout,
 	}
 
@@ -175,7 +175,7 @@ func (conn *Connector) CurrentPower() (float64, error) {
 		return 0, nil
 	}
 
-	if m, ok := conn.measurements[string(types.MeasurandPowerActiveImport)]; ok {
+	if m, ok := conn.measurements[types.MeasurandPowerActiveImport]; ok {
 		f, err := strconv.ParseFloat(m.Value, 64)
 		return scale(f, m.Unit), err
 	}
@@ -198,7 +198,7 @@ func (conn *Connector) TotalEnergy() (float64, error) {
 		return 0, api.ErrTimeout
 	}
 
-	if m, ok := conn.measurements[string(types.MeasurandEnergyActiveImportRegister)]; ok {
+	if m, ok := conn.measurements[types.MeasurandEnergyActiveImportRegister]; ok {
 		f, err := strconv.ParseFloat(m.Value, 64)
 		return scale(f, m.Unit) / 1e3, err
 	}
@@ -217,8 +217,8 @@ func scale(f float64, scale types.UnitOfMeasure) float64 {
 	}
 }
 
-func getKeyCurrentPhase(phase int) string {
-	return string(types.MeasurandCurrentImport) + "@L" + strconv.Itoa(phase)
+func getPhaseKey(key types.Measurand, phase int) types.Measurand {
+	return key + types.Measurand("@L"+strconv.Itoa(phase))
 }
 
 var _ api.PhaseCurrents = (*Connector)(nil)
@@ -243,7 +243,7 @@ func (conn *Connector) Currents() (float64, float64, float64, error) {
 	currents := make([]float64, 0, 3)
 
 	for phase := 1; phase <= 3; phase++ {
-		m, ok := conn.measurements[getKeyCurrentPhase(phase)]
+		m, ok := conn.measurements[getPhaseKey(types.MeasurandCurrentImport, phase)]
 		if !ok {
 			return 0, 0, 0, api.ErrNotAvailable
 		}
