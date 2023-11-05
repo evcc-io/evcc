@@ -799,12 +799,13 @@ func (site *Site) update(lp Updater) {
 
 	site.updateBatteryMode(site.Loadpoints())
 
-	site.publish("siteTitle", site.Title)
 	site.stats.Update(site)
 }
 
 // prepare publishes initial values
 func (site *Site) prepare() {
+	site.publish("siteTitle", site.Title)
+
 	site.publish("gridConfigured", site.gridMeter != nil)
 	site.publish("pvConfigured", len(site.pvMeters) > 0)
 	site.publish("batteryConfigured", len(site.batteryMeters) > 0)
