@@ -89,7 +89,7 @@ require (
 	github.com/tv42/httpunix v0.0.0-20191220191345-2ba4b9c3382c
 	github.com/volkszaehler/mbmd v0.0.0-20231001155117-da2566b6849c
 	github.com/writeas/go-strip-markdown/v2 v2.1.1
-	gitlab.com/bboehmke/sunny v0.15.1-0.20211022160056-2fba1c86ade6
+	gitlab.com/bboehmke/sunny v0.16.0
 	golang.org/x/crypto/x509roots/fallback v0.0.0-20231030152948-74c2ba9521f1
 	golang.org/x/exp v0.0.0-20231006140011-7918f672742d
 	golang.org/x/net v0.17.0
