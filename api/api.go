@@ -134,6 +134,12 @@ type CurrentGetter interface {
 	GetMaxCurrent() (float64, error)
 }
 
+// BatteryController optionally allows to control home battery (dis)charge control
+type BatteryController interface {
+	SetBatteryMode(BatteryMode) error
+	GetBatteryMode() BatteryMode
+}
+
 // Charger provides current charging status and enable/disable charging
 type Charger interface {
 	ChargeState
@@ -257,10 +263,4 @@ type FeatureDescriber interface {
 // CsvWriter converts to csv
 type CsvWriter interface {
 	WriteCsv(context.Context, io.Writer) error
-}
-
-// BatteryController optionally allows to control home battery (dis)charge control
-type BatteryController interface {
-	SetBatteryMode(BatteryMode) error
-	GetBatteryMode() BatteryMode
 }
