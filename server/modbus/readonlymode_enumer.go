@@ -57,7 +57,6 @@ func ReadOnlyModeString(s string) (ReadOnlyMode, error) {
 		return val, nil
 	}
 
-	fmt.Println(s)
 	switch s {
 	case "", "0":
 		return ReadOnlyFalse, nil
