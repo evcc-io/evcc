@@ -12,7 +12,7 @@ import (
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/util"
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
-	"github.com/influxdata/influxdb-client-go/v2/api/write"
+	influxapi "github.com/influxdata/influxdb-client-go/v2/api"
 	influxlog "github.com/influxdata/influxdb-client-go/v2/log"
 )
 
@@ -30,11 +30,10 @@ type InfluxConfig struct {
 // Influx is a influx publisher
 type Influx struct {
 	sync.Mutex
-	log      *util.Logger
-	clock    clock.Clock
-	client   influxdb2.Client
-	org      string
-	database string
+	log    *util.Logger
+	clock  clock.Clock
+	client influxdb2.Client
+	writer influxapi.WriteAPI
 }
 
 // NewInfluxClient creates new publisher for influx
@@ -52,28 +51,32 @@ func NewInfluxClient(url, token, org, user, password, database string) *Influx {
 	// handle error logging in writer
 	influxlog.Log = nil
 
+	writer := client.WriteAPI(org, database)
+
+	// log errors
+	go func() {
+		for err := range writer.Errors() {
+			// log async as we're part of the logging loop
+			go log.ERROR.Println(err)
+		}
+	}()
+
 	return &Influx{
-		log:      log,
-		clock:    clock.New(),
-		client:   client,
-		org:      org,
-		database: database,
+		log:    log,
+		clock:  clock.New(),
+		client: client,
+		writer: writer,
 	}
 }
 
-// pointWriter is the minimal interface for influxdb2 api.Writer
-type pointWriter interface {
-	WritePoint(point *write.Point)
-}
-
 // writePoint asynchronously writes a point to influx
-func (m *Influx) writePoint(writer pointWriter, key string, fields map[string]any, tags map[string]string) {
+func (m *Influx) writePoint(key string, fields map[string]any, tags map[string]string) {
 	m.log.TRACE.Printf("write %s=%v (%v)", key, fields, tags)
-	writer.WritePoint(influxdb2.NewPoint(key, tags, fields, m.clock.Now()))
+	m.writer.WritePoint(influxdb2.NewPoint(key, tags, fields, m.clock.Now()))
 }
 
 // writeComplexPoint asynchronously writes a point to influx
-func (m *Influx) writeComplexPoint(writer pointWriter, param util.Param, tags map[string]string) {
+func (m *Influx) writeComplexPoint(param util.Param, tags map[string]string) {
 	fields := make(map[string]any)
 
 	switch val := param.Val.(type) {
@@ -124,7 +127,7 @@ func (m *Influx) writeComplexPoint(writer pointWriter, param util.Param, tags ma
 					fields["value"] = v
 					tags["id"] = strconv.Itoa(i + 1)
 
-					m.writePoint(writer, key, fields, tags)
+					m.writePoint(key, fields, tags)
 				}
 			}
 		}
@@ -132,21 +135,11 @@ func (m *Influx) writeComplexPoint(writer pointWriter, param util.Param, tags ma
 		return
 	}
 
-	m.writePoint(writer, param.Key, fields, tags)
+	m.writePoint(param.Key, fields, tags)
 }
 
 // Run Influx publisher
 func (m *Influx) Run(site site.API, in <-chan util.Param) {
-	writer := m.client.WriteAPI(m.org, m.database)
-
-	// log errors
-	go func() {
-		for err := range writer.Errors() {
-			// log async as we're part of the logging loop
-			go m.log.ERROR.Println(err)
-		}
-	}()
-
 	// add points to batch for async writing
 	for param := range in {
 		tags := make(map[string]string)
@@ -159,7 +152,7 @@ func (m *Influx) Run(site site.API, in <-chan util.Param) {
 			}
 		}
 
-		m.writeComplexPoint(writer, param, tags)
+		m.writeComplexPoint(param, tags)
 	}
 
 	m.client.Close()

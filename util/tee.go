@@ -1,14 +1,10 @@
 package util
 
 import (
+	"fmt"
 	"reflect"
 	"sync"
 )
-
-// TeeAttacher allows attaching a listener to a tee
-type TeeAttacher interface {
-	Attach() <-chan Param
-}
 
 // Tee distributes parameters to subscribers
 type Tee struct {
@@ -42,8 +38,13 @@ func (t *Tee) Run(in <-chan Param) {
 		}
 
 		t.mu.Lock()
-		for _, recv := range t.recv {
-			recv <- msg
+		for i, recv := range t.recv {
+			select {
+
+			case recv <- msg:
+			default:
+				fmt.Println("tee blocked", i)
+			}
 		}
 		t.mu.Unlock()
 	}

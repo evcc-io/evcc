@@ -72,7 +72,7 @@ func (h *Hub) apply(ev Event, tmpl string) (string, error) {
 }
 
 // Run is the Hub's main publishing loop
-func (h *Hub) Run(events <-chan Event, valueChan chan util.Param) {
+func (h *Hub) Run(events <-chan Event, valueChan <-chan util.Param) {
 	log := util.NewLogger("push")
 
 	for ev := range events {
@@ -84,11 +84,6 @@ func (h *Hub) Run(events <-chan Event, valueChan chan util.Param) {
 		if !ok {
 			continue
 		}
-
-		// let cache catch up, refs https://github.com/evcc-io/evcc/pull/445
-		flushC := util.Flusher()
-		valueChan <- util.Param{Val: flushC}
-		<-flushC
 
 		title, err := h.apply(ev, definition.Title)
 		if err != nil {

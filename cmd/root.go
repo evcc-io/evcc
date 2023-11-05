@@ -38,9 +38,8 @@ var (
 	log     = util.NewLogger("main")
 	cfgFile string
 
-	ignoreEmpty = ""                                      // ignore empty keys
-	ignoreLogs  = []string{"log"}                         // ignore log messages, including warn/error
-	ignoreMqtt  = []string{"log", "auth", "releaseNotes"} // excessive size may crash certain brokers
+	ignoreLogs = []string{"log"}                         // ignore log messages, including warn/error
+	ignoreMqtt = []string{"log", "auth", "releaseNotes"} // excessive size may crash certain brokers
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -139,8 +138,11 @@ func runRoot(cmd *cobra.Command, args []string) {
 	cache := util.NewCache()
 	go cache.Run(pipe.NewDropper(ignoreLogs...).Pipe(tee.Attach()))
 
-	// create web server
+	// web socket hub
 	socketHub := server.NewSocketHub()
+	go socketHub.Run(tee.Attach(), cache)
+
+	// web server
 	httpd := server.NewHTTPd(fmt.Sprintf(":%d", conf.Network.Port), socketHub)
 
 	// metrics
@@ -152,9 +154,6 @@ func runRoot(cmd *cobra.Command, args []string) {
 	if viper.GetBool("profile") {
 		httpd.Router().PathPrefix("/debug/").Handler(http.DefaultServeMux)
 	}
-
-	// publish to UI
-	go socketHub.Run(pipe.NewDropper(ignoreEmpty).Pipe(tee.Attach()), cache)
 
 	// setup values channel
 	valueChan := make(chan util.Param)
@@ -193,13 +192,13 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 	// setup database
 	if err == nil && conf.Influx.URL != "" {
-		configureInflux(conf.Influx, site, pipe.NewDropper(append(ignoreLogs, ignoreEmpty)...).Pipe(tee.Attach()))
+		configureInflux(conf.Influx, site, pipe.NewDropper(ignoreLogs...).Pipe(tee.Attach()))
 	}
 
 	// setup mqtt publisher
 	if err == nil && conf.Mqtt.Broker != "" {
 		publisher := server.NewMQTT(strings.Trim(conf.Mqtt.Topic, "/"))
-		go publisher.Run(site, pipe.NewDropper(append(ignoreMqtt, ignoreEmpty)...).Pipe(tee.Attach()))
+		go publisher.Run(site, pipe.NewDropper(ignoreMqtt...).Pipe(tee.Attach()))
 	}
 
 	// announce on mDNS
@@ -213,9 +212,9 @@ func runRoot(cmd *cobra.Command, args []string) {
 	}
 
 	// setup messaging
-	var pushChan chan push.Event
+	var pushChan chan<- push.Event
 	if err == nil {
-		pushChan, err = configureMessengers(conf.Messaging, valueChan, cache)
+		pushChan, err = configureMessengers(conf.Messaging, cache)
 	}
 
 	// run shutdown functions on stop

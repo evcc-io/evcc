@@ -8,17 +8,8 @@ import (
 // Cache is a data store
 type Cache struct {
 	sync.Mutex
-	val map[string]Param
-}
-
-// flush is the value type used as parameter for flushing the cache.
-// Flushing is implemented by closing the channel. At this time, it is guaranteed
-// that the cache has catched up processing all pending messages.
-type flush chan struct{}
-
-// Flusher returns a new flush channel
-func Flusher() flush {
-	return make(flush)
+	val  map[string]Param
+	recv chan Param
 }
 
 // NewCache creates cache
@@ -28,16 +19,21 @@ func NewCache() *Cache {
 	}
 }
 
+// Attach creates a new receiver channel and attaches it to the tee
+func (c *Cache) Attach() <-chan Param {
+	if c.recv != nil {
+		panic("cache already attached")
+	}
+
+	c.recv = make(chan Param, 16)
+	return c.recv
+}
+
 // Run adds input channel's values to cache
 func (c *Cache) Run(in <-chan Param) {
 	log := NewLogger("cache")
 
 	for p := range in {
-		if flushC, ok := p.Val.(flush); ok {
-			close(flushC)
-			continue
-		}
-
 		key := p.Key
 		if p.Loadpoint != nil {
 			key = fmt.Sprintf("lp-%d/%s", *p.Loadpoint+1, key)
@@ -45,6 +41,16 @@ func (c *Cache) Run(in <-chan Param) {
 
 		log.TRACE.Printf("%s: %v", key, p.Val)
 		c.Add(p.UniqueID(), p)
+
+		// send downstream after adding to cache
+		if c.recv != nil {
+			select {
+
+			case c.recv <- p:
+			default:
+				println("cache blocked")
+			}
+		}
 	}
 }
 
