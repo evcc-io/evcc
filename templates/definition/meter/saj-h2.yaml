@@ -1,0 +1,100 @@
+template: saj-h2
+products:
+  - brand: SAJ
+    description:
+      generic: H2 Series Hybrid Solar Inverter
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+  - name: modbus
+    choice: ["rs485"]
+    baudrate: 115200
+    comset: 8N1
+  - name: capacity
+    advanced: true
+render: |
+  type: custom
+  {{- if eq .usage "grid" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 0x40A7 # TotalGridPowerWatt
+      type: holding
+      decode: int16
+  currents:
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 0x4032 # RGridCurr
+      type: holding
+      decode: int16
+    scale: 0.01
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 0x4039 # SGridCurr
+      type: holding
+      decode: int16
+    scale: 0.01
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 0x4040 # TGridCurr
+      type: holding
+      decode: int16
+    scale: 0.01
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 0x40FD # Total_FeedInEnergy
+      type: holding
+      decode: uint32
+    scale: 0.01
+  {{- end }}
+  {{- if eq .usage "pv" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 0x40A5 # TotalPVPower
+      type: holding
+      decode: int16
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 0x40C5 # Total_PVEnergy
+      type: holding
+      decode: uint32
+    scale: 0.01
+  {{- end }}
+  {{- if eq .usage "battery" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 0x40A6 # TotalBatteryPower
+      type: holding
+      decode: int16
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 0x40D5 # Total_BatDisEnergy
+      type: holding
+      decode: uint32
+    scale: 0.01
+  soc:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 0xA00C # Bat1SOC
+      type: holding
+      decode: uint16
+    scale: 0.01
+  {{- if .capacity }}
+  capacity: {{ .capacity }} # kWh
+  {{- end }}
+  {{- end }}

@@ -8,7 +8,6 @@ import (
 	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/soc"
-	"github.com/evcc-io/evcc/mock"
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/util"
 	"github.com/golang/mock/gomock"
@@ -71,7 +70,7 @@ func attachChannels(lp *Loadpoint, uiChan chan util.Param, pushChan chan push.Ev
 func attachListeners(t *testing.T, lp *Loadpoint) {
 	Voltage = 230 // V
 
-	if charger, ok := lp.charger.(*mock.MockCharger); ok && charger != nil {
+	if charger, ok := lp.charger.(*api.MockCharger); ok && charger != nil {
 		charger.EXPECT().Enabled().Return(true, nil)
 		charger.EXPECT().MaxCurrent(int64(lp.MinCurrent)).Return(nil)
 	}
@@ -104,46 +103,46 @@ func TestUpdatePowerZero(t *testing.T) {
 	tc := []struct {
 		status api.ChargeStatus
 		mode   api.ChargeMode
-		expect func(h *mock.MockCharger)
+		expect func(h *api.MockCharger)
 	}{
-		{api.StatusA, api.ModeOff, func(h *mock.MockCharger) {
+		{api.StatusA, api.ModeOff, func(h *api.MockCharger) {
 			h.EXPECT().Enable(false)
 		}},
-		{api.StatusA, api.ModeNow, func(h *mock.MockCharger) {
+		{api.StatusA, api.ModeNow, func(h *api.MockCharger) {
 			h.EXPECT().Enable(false)
 		}},
-		{api.StatusA, api.ModeMinPV, func(h *mock.MockCharger) {
+		{api.StatusA, api.ModeMinPV, func(h *api.MockCharger) {
 			h.EXPECT().Enable(false)
 		}},
-		{api.StatusA, api.ModePV, func(h *mock.MockCharger) {
+		{api.StatusA, api.ModePV, func(h *api.MockCharger) {
 			h.EXPECT().Enable(false) // zero since update called with 0
 		}},
 
-		{api.StatusB, api.ModeOff, func(h *mock.MockCharger) {
+		{api.StatusB, api.ModeOff, func(h *api.MockCharger) {
 			h.EXPECT().Enable(false)
 		}},
-		{api.StatusB, api.ModeNow, func(h *mock.MockCharger) {
+		{api.StatusB, api.ModeNow, func(h *api.MockCharger) {
 			h.EXPECT().MaxCurrent(int64(maxA)) // true
 		}},
-		{api.StatusB, api.ModeMinPV, func(h *mock.MockCharger) {
+		{api.StatusB, api.ModeMinPV, func(h *api.MockCharger) {
 			// MaxCurrent omitted since identical value
 		}},
-		{api.StatusB, api.ModePV, func(h *mock.MockCharger) {
+		{api.StatusB, api.ModePV, func(h *api.MockCharger) {
 			// zero since update called with 0
 			// force = false due to pv mode climater check
 			h.EXPECT().Enable(false)
 		}},
 
-		{api.StatusC, api.ModeOff, func(h *mock.MockCharger) {
+		{api.StatusC, api.ModeOff, func(h *api.MockCharger) {
 			h.EXPECT().Enable(false)
 		}},
-		{api.StatusC, api.ModeNow, func(h *mock.MockCharger) {
+		{api.StatusC, api.ModeNow, func(h *api.MockCharger) {
 			h.EXPECT().MaxCurrent(int64(maxA)) // true
 		}},
-		{api.StatusC, api.ModeMinPV, func(h *mock.MockCharger) {
+		{api.StatusC, api.ModeMinPV, func(h *api.MockCharger) {
 			// MaxCurrent omitted since identical value
 		}},
-		{api.StatusC, api.ModePV, func(h *mock.MockCharger) {
+		{api.StatusC, api.ModePV, func(h *api.MockCharger) {
 			// omitted since PV balanced
 		}},
 	}
@@ -153,7 +152,7 @@ func TestUpdatePowerZero(t *testing.T) {
 
 		clck := clock.NewMock()
 		ctrl := gomock.NewController(t)
-		charger := mock.NewMockCharger(ctrl)
+		charger := api.NewMockCharger(ctrl)
 
 		lp := &Loadpoint{
 			log:           util.NewLogger("foo"),
@@ -305,7 +304,7 @@ func TestPVHysteresis(t *testing.T) {
 
 			clck := clock.NewMock()
 			ctrl := gomock.NewController(t)
-			charger := mock.NewMockCharger(ctrl)
+			charger := api.NewMockCharger(ctrl)
 
 			Voltage = 100
 			lp := &Loadpoint{
@@ -383,8 +382,8 @@ func TestPVHysteresisForStatusOtherThanC(t *testing.T) {
 func TestDisableAndEnableAtTargetSoc(t *testing.T) {
 	clock := clock.NewMock()
 	ctrl := gomock.NewController(t)
-	charger := mock.NewMockCharger(ctrl)
-	vehicle := mock.NewMockVehicle(ctrl)
+	charger := api.NewMockCharger(ctrl)
+	vehicle := api.NewMockVehicle(ctrl)
 
 	// wrap vehicle with estimator
 	vehicle.EXPECT().Capacity().Return(float64(10))
@@ -465,7 +464,7 @@ func TestDisableAndEnableAtTargetSoc(t *testing.T) {
 func TestSetModeAndSocAtDisconnect(t *testing.T) {
 	clock := clock.NewMock()
 	ctrl := gomock.NewController(t)
-	charger := mock.NewMockCharger(ctrl)
+	charger := api.NewMockCharger(ctrl)
 
 	lp := &Loadpoint{
 		log:           util.NewLogger("foo"),
@@ -537,8 +536,8 @@ func cacheExpecter(t *testing.T, lp *Loadpoint) (*util.Cache, func(key string, v
 func TestChargedEnergyAtDisconnect(t *testing.T) {
 	clock := clock.NewMock()
 	ctrl := gomock.NewController(t)
-	charger := mock.NewMockCharger(ctrl)
-	rater := mock.NewMockChargeRater(ctrl)
+	charger := api.NewMockCharger(ctrl)
+	rater := api.NewMockChargeRater(ctrl)
 
 	lp := &Loadpoint{
 		log:           util.NewLogger("foo"),
@@ -615,7 +614,7 @@ func TestChargedEnergyAtDisconnect(t *testing.T) {
 
 func TestTargetSoc(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	vhc := mock.NewMockVehicle(ctrl)
+	vhc := api.NewMockVehicle(ctrl)
 
 	tc := []struct {
 		vehicle api.Vehicle
@@ -742,10 +741,10 @@ func TestSocPoll(t *testing.T) {
 
 func TestMinSoc(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	vhc := mock.NewMockVehicle(ctrl)
+	vhc := api.NewMockVehicle(ctrl)
 
 	tc := []struct {
-		vehicle *mock.MockVehicle
+		vehicle *api.MockVehicle
 		min     int
 		soc     float64
 		energy  float64

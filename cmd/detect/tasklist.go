@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/evcc-io/evcc/detect/tasks"
+	"github.com/evcc-io/evcc/cmd/detect/tasks"
 	"github.com/evcc-io/evcc/util"
 )
 

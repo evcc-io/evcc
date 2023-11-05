@@ -16,7 +16,7 @@ render: |
     {{- include "modbus" . | indent 2 }}
     register:
       address: 2 # RealPower
-      type: holding
+      type: input
       decode: int16
     scale: 100
   energy:
@@ -24,27 +24,56 @@ render: |
     {{- include "modbus" . | indent 2 }}
     register:
       address: 115 # EnergyExportedAC
-      type: holding
+      type: input
       decode: uint32
+  voltages:
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 7 # ACVoltageL1
+        type: input
+        decode: int16
+      scale: 0.1
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 8 # ACVoltageL2
+        type: input
+        decode: int16
+      scale: 0.1
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 9 # ACVoltageL3
+        type: input
+        decode: int16
+      scale: 0.1  
   currents:
     - source: modbus
       {{- include "modbus" . | indent 4 }}
       register:
         address: 10 # ACCurrentL1
-        type: holding
+        type: input
         decode: int16
       scale: 0.1
     - source: modbus
       {{- include "modbus" . | indent 4 }}
       register:
         address: 11 # ACCurrentL2
-        type: holding
+        type: input
         decode: int16
       scale: 0.1
     - source: modbus
       {{- include "modbus" . | indent 4 }}
       register:
         address: 12 # ACCurrentL3
-        type: holding
+        type: input
         decode: int16
       scale: 0.1
+  soc:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 126 # SXSSOC
+      type: input
+      decode: int16

@@ -77,7 +77,7 @@ COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=builder /build/evcc /usr/local/bin/evcc
 
-COPY docker/bin/* /app/
+COPY packaging/docker/bin/* /app/
 
 # mDNS
 EXPOSE 5353/udp

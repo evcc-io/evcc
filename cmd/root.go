@@ -38,9 +38,9 @@ var (
 	log     = util.NewLogger("main")
 	cfgFile string
 
-	ignoreEmpty = ""                               // ignore empty keys
-	ignoreLogs  = []string{"log"}                  // ignore log messages, including warn/error
-	ignoreMqtt  = []string{"auth", "releaseNotes"} // excessive size may crash certain brokers
+	ignoreEmpty = ""                                      // ignore empty keys
+	ignoreLogs  = []string{"log"}                         // ignore log messages, including warn/error
+	ignoreMqtt  = []string{"log", "auth", "releaseNotes"} // excessive size may crash certain brokers
 )
 
 // rootCmd represents the base command when called without any subcommands

@@ -16,9 +16,10 @@ import (
 )
 
 var deprecatedTopics = []string{
-	"activePhases", "range", "socCharge", "vehicleSoC",
-	"batterySoC", "bufferSoC", "minSoC", "prioritySoC",
-	"targetSoC", "vehicleTargetSoC",
+	"activePhases", "range", "socCharge",
+	"vehicleSoC", "batterySoC", "bufferSoC", "minSoC", "prioritySoC", "targetSoC", "vehicleTargetSoC",
+	"savingsAmount", "savingsEffectivePrice", "savingsGridCharged", "savingsSelfConsumptionCharged", "savingsSelfConsumptionPercent", "savingsTotalCharged",
+	"stats/30d", "stats/365d", "stats/total",
 }
 
 // MQTT is the MQTT server. It uses the MQTT client for publishing.
@@ -63,6 +64,47 @@ func (m *MQTT) encode(v interface{}) string {
 	}
 }
 
+func (m *MQTT) publishComplex(topic string, retained bool, payload interface{}) {
+	if payload == nil {
+		m.publishSingleValue(topic, retained, payload)
+		return
+	}
+
+	switch typ := reflect.TypeOf(payload); typ.Kind() {
+	case reflect.Slice:
+		// publish count
+		val := reflect.ValueOf(payload)
+		m.publishSingleValue(topic, retained, val.Len())
+
+		// loop slice
+		for i := 0; i < val.Len(); i++ {
+			m.publishComplex(fmt.Sprintf("%s/%d", topic, i+1), retained, val.Index(i).Interface())
+		}
+
+	case reflect.Map:
+		// loop map
+		for iter := reflect.ValueOf(payload).MapRange(); iter.Next(); {
+			k := iter.Key().String()
+			m.publishComplex(fmt.Sprintf("%s/%s", topic, k), retained, iter.Value().Interface())
+		}
+
+	case reflect.Struct:
+		val := reflect.ValueOf(payload)
+		typ := val.Type()
+
+		// loop struct
+		for i := 0; i < typ.NumField(); i++ {
+			if f := typ.Field(i); f.IsExported() {
+				n := f.Name
+				m.publishComplex(fmt.Sprintf("%s/%s", topic, strings.ToLower(n[:1])+n[1:]), retained, val.Field(i).Interface())
+			}
+		}
+
+	default:
+		m.publishSingleValue(topic, retained, payload)
+	}
+}
+
 func (m *MQTT) publishSingleValue(topic string, retained bool, payload interface{}) {
 	token := m.Handler.Client.Publish(topic, m.Handler.Qos, retained, m.encode(payload))
 	go m.Handler.WaitForToken("send", topic, token)
@@ -78,43 +120,12 @@ func (m *MQTT) publish(topic string, retained bool, payload interface{}) {
 		}
 
 		// publish sum value
-		payload = total
+		m.publishSingleValue(topic, retained, total)
+
+		return
 	}
 
-	// publish slices of structs as sub topics
-	if payload != nil {
-		if typ := reflect.TypeOf(payload); typ.Kind() == reflect.Slice && typ.Elem().Kind() == reflect.Struct {
-			val := reflect.ValueOf(payload)
-
-			// loop slice
-			for i := 0; i < val.Len(); i++ {
-				val := val.Index(i)
-				typ := val.Type()
-
-				// loop struct
-				for j := 0; j < typ.NumField(); j++ {
-					n := typ.Field(j).Name
-					v := val.Field(j).Interface()
-					m.publishSingleValue(fmt.Sprintf("%s/%d/%s", topic, i+1, strings.ToLower(n[:1])+n[1:]), retained, v)
-				}
-			}
-
-			// publish count
-			payload = val.Len()
-		}
-	}
-
-	// publish vehicles
-	if slice, ok := payload.([]string); ok && strings.HasSuffix(topic, "vehicles") {
-		// publish count
-		payload = len(slice)
-
-		for i, v := range slice {
-			m.publishSingleValue(fmt.Sprintf("%s/%d", topic, i+1), retained, v)
-		}
-	}
-
-	m.publishSingleValue(topic, retained, payload)
+	m.publishComplex(topic, retained, payload)
 }
 
 func (m *MQTT) listenSetters(topic string, site site.API, lp loadpoint.API) {

@@ -126,7 +126,7 @@ func (wb *Alphatec) Status() (api.ChargeStatus, error) {
 	switch u := binary.BigEndian.Uint16(b); u {
 	case 1:
 		return api.StatusA, nil
-	case 2:
+	case 2, 8:
 		return api.StatusB, nil
 	case 3:
 		return api.StatusC, nil

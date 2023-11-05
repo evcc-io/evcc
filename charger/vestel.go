@@ -55,6 +55,7 @@ var (
 type Vestel struct {
 	log     *util.Logger
 	conn    *modbus.Connection
+	enabled bool
 	current uint16
 }
 
@@ -95,13 +96,25 @@ func NewVestel(uri string, id uint8) (*Vestel, error) {
 		current: 6,
 	}
 
-	go wb.heartbeat()
+	// get failsafe timeout from charger
+	b, err := wb.conn.ReadInputRegisters(vestelRegFailsafeTimeout, 1)
+	if err != nil {
+		return nil, fmt.Errorf("failsafe timeout: %w", err)
+	}
+	timeout := 10 * time.Second
+	if u := binary.BigEndian.Uint16(b); u > 0 {
+		timeout = time.Duration(u) * time.Second / 4
+	}
+	if timeout < 3*time.Second {
+		timeout = 3 * time.Second
+	}
+	go wb.heartbeat(timeout)
 
 	return wb, nil
 }
 
-func (wb *Vestel) heartbeat() {
-	for range time.Tick(time.Second * 3) {
+func (wb *Vestel) heartbeat(timeout time.Duration) {
+	for range time.Tick(timeout) {
 		if _, err := wb.conn.WriteSingleRegister(vestelRegAlive, 1); err != nil {
 			wb.log.ERROR.Println("heartbeat:", err)
 		}
@@ -127,12 +140,14 @@ func (wb *Vestel) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *Vestel) Enabled() (bool, error) {
-	b, err := wb.conn.ReadHoldingRegisters(vestelRegMaxCurrent, 1)
-	if err != nil {
-		return false, err
-	}
+	return verifyEnabled(wb, wb.enabled)
 
-	return binary.BigEndian.Uint16(b) > 0, nil
+	// b, err := wb.conn.ReadHoldingRegisters(vestelRegMaxCurrent, 1)
+	// if err != nil {
+	// 	return false, err
+	// }
+
+	// return binary.BigEndian.Uint16(b) > 0, nil
 }
 
 // Enable implements the api.Charger interface
@@ -143,6 +158,9 @@ func (wb *Vestel) Enable(enable bool) error {
 	}
 
 	_, err := wb.conn.WriteSingleRegister(vestelRegMaxCurrent, u)
+	if err == nil {
+		wb.enabled = enable
+	}
 
 	return err
 }
