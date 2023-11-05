@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"reflect"
 	"sync"
+	"time"
 )
 
 // Tee distributes parameters to subscribers
@@ -37,15 +38,14 @@ func (t *Tee) Run(in <-chan Param) {
 			}
 		}
 
-		t.mu.Lock()
 		for i, recv := range t.recv {
+			t.mu.Lock()
 			select {
-
 			case recv <- msg:
-			default:
-				fmt.Println("tee blocked", i)
+			case <-time.After(time.Second):
+				fmt.Println("blocked: tee", i, msg)
 			}
+			t.mu.Unlock()
 		}
-		t.mu.Unlock()
 	}
 }

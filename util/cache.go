@@ -3,6 +3,7 @@ package util
 import (
 	"fmt"
 	"sync"
+	"time"
 )
 
 // Cache is a data store
@@ -45,10 +46,9 @@ func (c *Cache) Run(in <-chan Param) {
 		// send downstream after adding to cache
 		if c.recv != nil {
 			select {
-
 			case c.recv <- p:
-			default:
-				println("cache blocked")
+			case <-time.After(time.Second):
+				fmt.Println("blocked: cache", p)
 			}
 		}
 	}
