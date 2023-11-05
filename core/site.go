@@ -257,7 +257,6 @@ func (site *Site) restoreSettings() {
 	if v, err := settings.Bool("site.batteryDischargeControl"); err == nil {
 		site.BatteryDischargeControl = v
 	}
-
 }
 
 func meterCapabilities(name string, meter interface{}) string {
