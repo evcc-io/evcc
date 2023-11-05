@@ -805,7 +805,6 @@ func (site *Site) update(lp Updater) {
 
 // prepare publishes initial values
 func (site *Site) prepare() {
-
 	site.publish("gridConfigured", site.gridMeter != nil)
 	site.publish("pvConfigured", len(site.pvMeters) > 0)
 	site.publish("batteryConfigured", len(site.batteryMeters) > 0)
@@ -862,33 +861,6 @@ func (site *Site) loopLoadpoints(next chan<- Updater) {
 			next <- lp
 		}
 	}
-}
-
-func (site *Site) updateBatteryMode(loadpoints []loadpoint.API) {
-	// determine expected state
-	batMode := api.BatteryNormal
-	for _, lp := range loadpoints {
-		if lp.GetStatus() == api.StatusC && (lp.GetMode() == api.ModeNow || lp.GetPlanActive()) {
-			batMode = api.BatteryLocked
-			break
-		}
-	}
-
-	//update batteries
-	if site.BatteryDischargeControl && batMode != site.GetBatteryMode() {
-		for idx, batMeter := range site.batteryMeters {
-			if batCtrl, ok := batMeter.(api.BatteryController); ok {
-				if err := batCtrl.SetBatteryMode(batMode); err != nil {
-					site.log.ERROR.Println("battery mode:", err)
-					return
-				}
-			}
-		}
-	}
-
-	// update state and publish
-	site.SetBatteryMode(batMode)
-	site.publish("batteryMode", site.batteryMode)
 }
 
 // Run is the main control loop. It reacts to trigger events by

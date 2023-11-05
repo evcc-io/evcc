@@ -186,17 +186,3 @@ func (site *Site) GetTariff(tariff string) api.Tariff {
 		return nil
 	}
 }
-
-// returns the current BatteryMode
-func (site *Site) GetBatteryMode() api.BatteryMode {
-	site.Lock()
-	defer site.Unlock()
-	return site.batteryMode
-}
-
-// sets the current BatteryMode
-func (site *Site) SetBatteryMode(batMode api.BatteryMode) {
-	site.Lock()
-	defer site.Unlock()
-	site.batteryMode = batMode
-}

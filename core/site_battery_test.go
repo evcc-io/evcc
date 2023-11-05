@@ -54,7 +54,7 @@ func TestBatteryDischarge(t *testing.T) {
 
 		loadpoints := []loadpoint.API{lp}
 		s.updateBatteryMode(loadpoints)
-		assert.Equal(t, tc.expBatMode, s.GetBatteryMode(), tc)
+		assert.Equal(t, tc.expBatMode, s.getBatteryMode(), tc)
 	}
 }
 
@@ -83,7 +83,7 @@ func TestBatteryDischargeDisabled(t *testing.T) {
 	}
 
 	s.updateBatteryMode(loadpoints)
-	assert.Equal(t, api.BatteryLocked, s.GetBatteryMode(), "disabled bat discharge control; battery modified nonetheless")
+	assert.Equal(t, api.BatteryLocked, s.getBatteryMode(), "disabled bat discharge control; battery modified nonetheless")
 }
 
 // test that BatteryControllers are only called if batterymode changes
