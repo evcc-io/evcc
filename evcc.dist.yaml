@@ -49,7 +49,7 @@ modbusproxy:
   #  - port: 5200
   #    uri: solar-edge:502
   #    # rtu: true
-  #    # writemode: readonly # set to accept to prevent writing while not raising modbus errors
+  #    # readonly: true # use `deny` to raise modbus errors
 
 # meter definitions
 # name can be freely chosen and is used as reference when assigning meters to site and loadpoints
