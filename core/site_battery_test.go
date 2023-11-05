@@ -5,7 +5,6 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
-	"github.com/evcc-io/evcc/mock"
 	"github.com/evcc-io/evcc/util"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
@@ -34,11 +33,11 @@ func TestBatteryDischarge(t *testing.T) {
 
 	for _, tc := range tcs {
 		batCtrl := struct {
-			*mock.MockBatteryController
-			*mock.MockMeter
+			*api.MockBatteryController
+			*api.MockMeter
 		}{
-			mock.NewMockBatteryController(ctrl),
-			mock.NewMockMeter(ctrl),
+			api.NewMockBatteryController(ctrl),
+			api.NewMockMeter(ctrl),
 		}
 		batCtrl.MockBatteryController.EXPECT().SetBatteryMode(tc.expBatMode).Times(1)
 
@@ -63,11 +62,11 @@ func TestBatteryDischargeDisabled(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
 	batCtrl := struct {
-		*mock.MockBatteryController
-		*mock.MockMeter
+		*api.MockBatteryController
+		*api.MockMeter
 	}{
-		mock.NewMockBatteryController(ctrl),
-		mock.NewMockMeter(ctrl),
+		api.NewMockBatteryController(ctrl),
+		api.NewMockMeter(ctrl),
 	}
 
 	batCtrl.MockBatteryController.EXPECT().SetBatteryMode(gomock.Any()).Times(0)
@@ -92,11 +91,11 @@ func TestBatteryModeNoUpdate(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
 	batCtrl := struct {
-		*mock.MockBatteryController
-		*mock.MockMeter
+		*api.MockBatteryController
+		*api.MockMeter
 	}{
-		mock.NewMockBatteryController(ctrl),
-		mock.NewMockMeter(ctrl),
+		api.NewMockBatteryController(ctrl),
+		api.NewMockMeter(ctrl),
 	}
 	batCtrl.MockBatteryController.EXPECT().SetBatteryMode(api.BatteryLocked).Times(1)
 

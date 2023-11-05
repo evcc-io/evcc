@@ -566,10 +566,10 @@ func (m *MockBatteryController) EXPECT() *MockBatteryControllerMockRecorder {
 }
 
 // GetBatteryMode mocks base method.
-func (m *MockBatteryController) GetBatteryMode() api.BatteryMode {
+func (m *MockBatteryController) GetBatteryMode() BatteryMode {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetBatteryMode")
-	ret0, _ := ret[0].(api.BatteryMode)
+	ret0, _ := ret[0].(BatteryMode)
 	return ret0
 }
 
@@ -580,7 +580,7 @@ func (mr *MockBatteryControllerMockRecorder) GetBatteryMode() *gomock.Call {
 }
 
 // SetBatteryMode mocks base method.
-func (m *MockBatteryController) SetBatteryMode(arg0 api.BatteryMode) error {
+func (m *MockBatteryController) SetBatteryMode(arg0 BatteryMode) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SetBatteryMode", arg0)
 	ret0, _ := ret[0].(error)
