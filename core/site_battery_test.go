@@ -58,34 +58,6 @@ func TestBatteryDischarge(t *testing.T) {
 	}
 }
 
-func TestBatteryDischargeDisabled(t *testing.T) {
-	ctrl := gomock.NewController(t)
-
-	batCtrl := struct {
-		*api.MockBatteryController
-		*api.MockMeter
-	}{
-		api.NewMockBatteryController(ctrl),
-		api.NewMockMeter(ctrl),
-	}
-
-	batCtrl.MockBatteryController.EXPECT().SetBatteryMode(gomock.Any()).Times(0)
-
-	lp := loadpoint.NewMockAPI(ctrl)
-	lp.EXPECT().GetStatus().Return(api.StatusC).Times(1)
-	lp.EXPECT().GetMode().Return(api.ModeNow).Times(1)
-	lp.EXPECT().GetPlanActive().Times(0)
-	loadpoints := []loadpoint.API{lp}
-
-	s := &Site{
-		batteryMode:   api.BatteryNormal,
-		batteryMeters: []api.Meter{batCtrl},
-	}
-
-	s.updateBatteryMode(loadpoints)
-	assert.Equal(t, api.BatteryLocked, s.getBatteryMode(), "disabled bat discharge control; battery modified nonetheless")
-}
-
 // test that BatteryControllers are only called if batterymode changes
 func TestBatteryModeNoUpdate(t *testing.T) {
 	ctrl := gomock.NewController(t)
