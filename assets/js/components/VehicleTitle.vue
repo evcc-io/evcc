@@ -81,12 +81,7 @@ export default {
 			return !this.vehiclePresent;
 		},
 		otherVehicles() {
-			return this.vehicles
-				.map((v, id) => ({
-					id: id,
-					title: v,
-				}))
-				.filter((v) => v.title !== this.vehicleTitle);
+			return this.vehicles.filter((v) => v.title !== this.vehicleTitle);
 		},
 		showOptions() {
 			return !this.isUnknown || this.vehicles.length;
@@ -101,8 +96,8 @@ export default {
 		this.tooltip();
 	},
 	methods: {
-		changeVehicle(index) {
-			this.$emit("change-vehicle", index);
+		changeVehicle(name) {
+			this.$emit("change-vehicle", name);
 		},
 		removeVehicle() {
 			this.$emit("remove-vehicle");

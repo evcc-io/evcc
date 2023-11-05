@@ -313,8 +313,8 @@ export default {
 		removeTargetTime: function () {
 			api.delete(this.apiPath("target/time"));
 		},
-		changeVehicle(index) {
-			api.post(this.apiPath("vehicle") + `/${index}`);
+		changeVehicle(name) {
+			api.post(this.apiPath("vehicle") + `/${name}`);
 		},
 		removeVehicle() {
 			api.delete(this.apiPath("vehicle"));

@@ -233,8 +233,8 @@ export default {
 		removeTargetTime: function () {
 			this.$emit("target-time-removed");
 		},
-		changeVehicle(index) {
-			this.$emit("change-vehicle", index);
+		changeVehicle(name) {
+			this.$emit("change-vehicle", name);
 		},
 		removeVehicle() {
 			this.$emit("remove-vehicle");

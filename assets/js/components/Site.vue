@@ -20,7 +20,7 @@
 			<Loadpoints
 				class="mt-1 mt-sm-2 flex-grow-1"
 				:loadpoints="loadpoints"
-				:vehicles="vehicles"
+				:vehicles="vehicleList"
 				:smartCostLimit="smartCostLimit"
 				:smartCostType="smartCostType"
 				:smartCostActive="smartCostActive"
@@ -75,7 +75,7 @@ export default {
 		bufferSoc: Number,
 		bufferStartSoc: Number,
 		siteTitle: String,
-		vehicles: Array,
+		vehicles: Object,
 
 		auth: Object,
 
@@ -114,6 +114,12 @@ export default {
 				const power = lp.chargePower || 0;
 				return { icon, charging, power };
 			});
+		},
+		vehicleList: function () {
+			return Object.entries(this.vehicles || {}).map(([name, vehicle]) => ({
+				...vehicle,
+				name,
+			}));
 		},
 		topNavigation: function () {
 			const vehicleLogins = this.auth ? this.auth.vehicles : {};
