@@ -76,6 +76,10 @@ func (v *Identity) login() (*oauth2.Token, error) {
 	}
 	defer resp.Body.Close()
 
+	if resp.StatusCode != http.StatusFound {
+		return nil, fmt.Errorf("unexpected status %d", resp.StatusCode)
+	}
+
 	// username
 	u, err := url.Parse(resp.Header.Get("Location"))
 	if err != nil {
