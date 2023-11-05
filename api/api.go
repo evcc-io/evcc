@@ -258,6 +258,8 @@ type FeatureDescriber interface {
 type CsvWriter interface {
 	WriteCsv(context.Context, io.Writer) error
 }
+
+// BatteryController optionally allows to control home battery (dis)charge control
 type BatteryController interface {
 	SetBatteryMode(BatteryMode) error
 	GetBatteryMode() BatteryMode
