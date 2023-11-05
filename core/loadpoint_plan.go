@@ -72,8 +72,12 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 		lp.setPlanActive(active)
 	}()
 
-	maxPower := lp.GetMaxPower()
+	var planStart time.Time
+	defer func() {
+		lp.publish(planProjectedStart, planStart)
+	}()
 
+	maxPower := lp.GetMaxPower()
 	requiredDuration, plan, err := lp.GetPlan(lp.GetTargetTime(), maxPower)
 	if err != nil {
 		lp.log.ERROR.Println("planner:", err)
@@ -85,14 +89,12 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 		return false
 	}
 
-	planStart := planner.Start(plan)
-	lp.publish(planProjectedStart, planStart)
-
 	var requiredString string
 	if req := requiredDuration.Round(time.Second); req > planner.Duration(plan).Round(time.Second) {
 		requiredString = fmt.Sprintf(" (required: %v)", req)
 	}
 
+	planStart = planner.Start(plan)
 	lp.log.DEBUG.Printf("plan: charge %v%s starting at %v until %v (power: %.0fW, avg cost: %.3f)",
 		planner.Duration(plan).Round(time.Second), requiredString, planStart.Round(time.Second).Local(), lp.targetTime.Round(time.Second).Local(),
 		maxPower, planner.AverageCost(plan))
