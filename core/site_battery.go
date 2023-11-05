@@ -5,14 +5,14 @@ import (
 	"github.com/evcc-io/evcc/core/loadpoint"
 )
 
-// returns the current BatteryMode
+// getBatteryMode returns the battery mode
 func (site *Site) getBatteryMode() api.BatteryMode {
 	site.Lock()
 	defer site.Unlock()
 	return site.batteryMode
 }
 
-// sets the current BatteryMode
+// setBatteryMode sets the battery mode
 func (site *Site) setBatteryMode(batMode api.BatteryMode) {
 	site.Lock()
 	defer site.Unlock()
