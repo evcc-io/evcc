@@ -76,6 +76,8 @@ func (h *Hub) Run(events <-chan Event, valueChan <-chan util.Param) {
 	log := util.NewLogger("push")
 
 	for ev := range events {
+		fmt.Println("event", ev)
+
 		if len(h.sender) == 0 {
 			continue
 		}
@@ -97,12 +99,12 @@ func (h *Hub) Run(events <-chan Event, valueChan <-chan util.Param) {
 			continue
 		}
 
-		for _, sender := range h.sender {
-			if strings.TrimSpace(msg) != "" {
+		if strings.TrimSpace(msg) != "" {
+			for _, sender := range h.sender {
 				go sender.Send(title, msg)
-			} else {
-				log.DEBUG.Printf("did not send empty message template for %s: %v", ev.Event, err)
 			}
+		} else {
+			log.DEBUG.Printf("did not send empty message template for %s: %v", ev.Event, err)
 		}
 	}
 }
