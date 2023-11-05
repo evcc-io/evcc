@@ -29,14 +29,16 @@ func (site *Site) updateBatteryMode(loadpoints []loadpoint.API) {
 		}
 	}
 
+	if batMode == site.getBatteryMode() {
+		return
+	}
+
 	// update batteries
-	if batMode != site.getBatteryMode() {
-		for _, batMeter := range site.batteryMeters {
-			if batCtrl, ok := batMeter.(api.BatteryController); ok {
-				if err := batCtrl.SetBatteryMode(batMode); err != nil {
-					site.log.ERROR.Println("battery mode:", err)
-					return
-				}
+	for _, meter := range site.batteryMeters {
+		if batCtrl, ok := meter.(api.BatteryController); ok {
+			if err := batCtrl.SetBatteryMode(batMode); err != nil {
+				site.log.ERROR.Println("battery mode:", err)
+				return
 			}
 		}
 	}
