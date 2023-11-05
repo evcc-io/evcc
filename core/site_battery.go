@@ -30,7 +30,7 @@ func (site *Site) updateBatteryMode(loadpoints []loadpoint.API) {
 	}
 
 	// update batteries
-	if site.BatteryDischargeControl && batMode != site.getBatteryMode() {
+	if batMode != site.getBatteryMode() {
 		for _, batMeter := range site.batteryMeters {
 			if batCtrl, ok := batMeter.(api.BatteryController); ok {
 				if err := batCtrl.SetBatteryMode(batMode); err != nil {

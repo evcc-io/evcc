@@ -775,7 +775,6 @@ func (site *Site) update(lp Updater) {
 	}
 
 	if sitePower, batteryBuffered, batteryStart, err := site.sitePower(totalChargePower, flexiblePower); err == nil {
-
 		// ignore negative pvPower values as that means it is not an energy source but consumption
 		homePower := site.gridPower + max(0, site.pvPower) + site.batteryPower - totalChargePower
 		homePower = max(homePower, 0)
@@ -797,7 +796,9 @@ func (site *Site) update(lp Updater) {
 		site.log.ERROR.Println(err)
 	}
 
-	site.updateBatteryMode(site.Loadpoints())
+	if site.BatteryDischargeControl {
+		site.updateBatteryMode(site.Loadpoints())
+	}
 
 	site.stats.Update(site)
 }
