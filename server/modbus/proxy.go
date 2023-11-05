@@ -11,17 +11,7 @@ import (
 	"github.com/evcc-io/evcc/util/sponsor"
 )
 
-//go:generate enumer -type WriteMode -trimprefix WriteMode -transform=lower
-type WriteMode int
-
-const (
-	_ WriteMode = iota
-	WriteModeNormal
-	WriteModeReadOnly
-	WriteModeAccept
-)
-
-func StartProxy(port int, config modbus.Settings, writeMode WriteMode) error {
+func StartProxy(port int, config modbus.Settings, readOnly ReadOnlyMode) error {
 	conn, err := modbus.NewConnection(config.URI, config.Device, config.Comset, config.Baudrate, modbus.ProtocolFromRTU(config.RTU), config.ID)
 	if err != nil {
 		return err
@@ -32,9 +22,9 @@ func StartProxy(port int, config modbus.Settings, writeMode WriteMode) error {
 	}
 
 	h := &handler{
-		log:       util.NewLogger(fmt.Sprintf("proxy-%d", port)),
-		writeMode: writeMode,
-		conn:      conn,
+		log:      util.NewLogger(fmt.Sprintf("proxy-%d", port)),
+		readOnly: readOnly,
+		conn:     conn,
 	}
 
 	l, err := net.Listen("tcp", fmt.Sprintf(":%d", port))

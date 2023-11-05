@@ -113,8 +113,7 @@ type goConfig struct {
 
 type proxyConfig struct {
 	Port            int
-	ReadOnly        bool // TODO deprecated
-	WriteMode       string
+	ReadOnly        string
 	modbus.Settings `mapstructure:",squash"`
 }
 
