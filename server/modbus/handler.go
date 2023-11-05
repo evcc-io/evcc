@@ -108,7 +108,7 @@ func (h *handler) HandleCoils(req *mbserver.CoilsRequest) ([]bool, error) {
 		case ReadOnlyDeny:
 			h.log.TRACE.Printf("deny: write coils: id %d addr %d qty %d val %v", req.UnitId, req.Addr, req.Quantity, req.Args)
 			return nil, mbserver.ErrIllegalFunction
-		case ReadOnly:
+		case ReadOnlyTrue:
 			h.log.TRACE.Printf("ignore: write coils: id %d addr %d qty %d val %v", req.UnitId, req.Addr, req.Quantity, req.Args)
 			return req.Args, nil
 		}
@@ -147,7 +147,7 @@ func (h *handler) HandleHoldingRegisters(req *mbserver.HoldingRegistersRequest) 
 		case ReadOnlyDeny:
 			h.log.TRACE.Printf("deny: write holdings: id %d addr %d qty %d val %0x", req.UnitId, req.Addr, req.Quantity, asBytes(req.Args))
 			return nil, mbserver.ErrIllegalFunction
-		case ReadOnly:
+		case ReadOnlyTrue:
 			h.log.TRACE.Printf("ignore: write holdings: id %d addr %d qty %d val %0x", req.UnitId, req.Addr, req.Quantity, asBytes(req.Args))
 			return req.Args, nil
 		}
