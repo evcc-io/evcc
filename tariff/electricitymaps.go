@@ -3,6 +3,7 @@ package tariff
 import (
 	"errors"
 	"fmt"
+	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -20,7 +21,7 @@ type ElectricityMaps struct {
 	mux     sync.Mutex
 	uri     string
 	zone    string
-	data    []CarbonIntensitySlot
+	data    api.Rates
 	updated time.Time
 }
 
@@ -102,7 +103,18 @@ func (t *ElectricityMaps) run(done chan error) {
 
 		t.mux.Lock()
 		t.updated = time.Now()
-		t.data = res.Forecast
+
+		t.data = make(api.Rates, 0, len(res.Forecast))
+		for _, r := range res.Forecast {
+			ar := api.Rate{
+				Start: r.Datetime.Local(),
+				End:   r.Datetime.Add(time.Hour).Local(),
+				Price: r.CarbonIntensity,
+			}
+			t.data = append(t.data, ar)
+		}
+		t.data.Sort()
+
 		t.mux.Unlock()
 	}
 }
@@ -110,18 +122,7 @@ func (t *ElectricityMaps) run(done chan error) {
 func (t *ElectricityMaps) Rates() (api.Rates, error) {
 	t.mux.Lock()
 	defer t.mux.Unlock()
-
-	res := make(api.Rates, 0, len(t.data))
-	for _, r := range t.data {
-		ar := api.Rate{
-			Start: r.Datetime.Local(),
-			End:   r.Datetime.Add(time.Hour).Local(),
-			Price: r.CarbonIntensity,
-		}
-		res = append(res, ar)
-	}
-
-	return res, outdatedError(t.updated, time.Hour)
+	return slices.Clone(t.data), outdatedError(t.updated, time.Hour)
 }
 
 // Type implements the api.Tariff interface
