@@ -220,6 +220,9 @@ func (lp *Loadpoint) SetTargetTime(finishAt time.Time) error {
 
 	lp.Lock()
 	defer lp.Unlock()
+
+	lp.log.DEBUG.Println("set target time:", finishAt.Round(time.Second).Local())
+
 	lp.setTargetTime(finishAt)
 	lp.persistVehicleSettings()
 

@@ -97,7 +97,7 @@ func NewVestel(uri string, id uint8) (*Vestel, error) {
 	}
 
 	// get failsafe timeout from charger
-	b, err := wb.conn.ReadInputRegisters(vestelRegFailsafeTimeout, 1)
+	b, err := wb.conn.ReadHoldingRegisters(vestelRegFailsafeTimeout, 1)
 	if err != nil {
 		return nil, fmt.Errorf("failsafe timeout: %w", err)
 	}

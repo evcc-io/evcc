@@ -606,6 +606,13 @@ func (lp *Loadpoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 		lp.publish(chargerIcon, nil)
 	}
 
+	// vehicle
+	lp.publish(vehiclePresent, false)
+	lp.publish(vehicleTitle, "")
+	lp.publish(vehicleIcon, "")
+	lp.publish(vehicleCapacity, 0.0)
+	lp.publish(vehicleOdometer, 0.0)
+
 	// assign and publish default vehicle
 	if lp.defaultVehicle != nil {
 		lp.setActiveVehicle(lp.defaultVehicle)
@@ -1561,6 +1568,9 @@ func (lp *Loadpoint) Update(sitePower float64, autoCharge, batteryBuffered, batt
 	mode := lp.GetMode()
 	lp.publish("mode", mode)
 
+	// update and publish plan without being short-circuited by modes etc.
+	plannerActive := lp.plannerActive()
+
 	// execute loading strategy
 	switch {
 	case !lp.connected():
@@ -1591,7 +1601,7 @@ func (lp *Loadpoint) Update(sitePower float64, autoCharge, batteryBuffered, batt
 		err = lp.fastCharging()
 
 	// minimum or target charging
-	case lp.minSocNotReached() || lp.plannerActive():
+	case lp.minSocNotReached() || plannerActive:
 		err = lp.fastCharging()
 		lp.resetPhaseTimer()
 		lp.elapsePVTimer() // let PV mode disable immediately afterwards
