@@ -74,7 +74,8 @@ func (v *adapter) SetPlanSoc(ts time.Time, soc int) error {
 		return errors.New("timestamp is in the past")
 	}
 
-	v.log.DEBUG.Printf("set %s plan soc/time: %d/%v", v.name, soc, ts.Round(time.Second))
+	v.log.DEBUG.Printf("set %s plan soc: %d @ %v", v.name, soc, ts.Round(time.Second).Local())
+
 	settings.SetTime(v.key()+keys.PlanTime, ts)
 	settings.SetInt(v.key()+keys.PlanSoc, int64(soc))
 

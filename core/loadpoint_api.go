@@ -216,8 +216,7 @@ func (lp *Loadpoint) SetPlanEnergy(finishAt time.Time, energy float64) error {
 		return errors.New("timestamp is in the past")
 	}
 
-	finishAt = finishAt.Round(time.Second).Local()
-	lp.log.DEBUG.Printf("set plan energy: %.3gkW @ %v", energy, finishAt)
+	lp.log.DEBUG.Printf("set plan energy: %.3gkWh @ %v", energy, finishAt.Round(time.Second).Local())
 
 	// apply immediately
 	if lp.planEnergy != energy || !lp.planTime.Equal(finishAt) {
