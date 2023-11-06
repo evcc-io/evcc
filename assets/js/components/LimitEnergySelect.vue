@@ -7,7 +7,7 @@
 	>
 		<h3 class="value m-0 d-block d-sm-flex align-items-baseline justify-content-end">
 			<label class="position-relative">
-				<select :value="targetEnergy" class="custom-select" @change="change">
+				<select :value="limitEnergy" class="custom-select" @change="change">
 					<option
 						v-for="{ energy, text, disabled } in options"
 						:key="energy"
@@ -19,15 +19,15 @@
 				</select>
 				<span
 					class="text-decoration-underline"
-					:class="{ 'text-gray fw-normal': !targetEnergy }"
+					:class="{ 'text-gray fw-normal': !limitEnergy }"
 					data-testid="target-energy-value"
 				>
-					<AnimatedNumber :to="targetEnergy" :format="fmtEnergy" />
+					<AnimatedNumber :to="limitEnergy" :format="fmtEnergy" />
 				</span>
 			</label>
 
-			<div v-if="estimatedTargetSoc" class="extraValue ms-0 ms-sm-1 text-nowrap">
-				<AnimatedNumber :to="estimatedTargetSoc" :format="fmtSoc" />
+			<div v-if="estimated" class="extraValue ms-0 ms-sm-1 text-nowrap">
+				<AnimatedNumber :to="estimated" :format="fmtSoc" />
 			</div>
 		</h3>
 	</LabelAndValue>
@@ -39,11 +39,11 @@ import AnimatedNumber from "./AnimatedNumber.vue";
 import formatter from "../mixins/formatter";
 
 export default {
-	name: "TargetEnergySelect",
+	name: "LimitEnergySelect",
 	components: { LabelAndValue, AnimatedNumber },
 	mixins: [formatter],
 	props: {
-		targetEnergy: Number,
+		limitEnergy: Number,
 		socPerKwh: Number,
 		chargedEnergy: Number,
 		vehicleCapacity: Number,
@@ -75,8 +75,8 @@ export default {
 			}
 			return result;
 		},
-		estimatedTargetSoc: function () {
-			return this.estimatedSoc(this.targetEnergy);
+		estimated: function () {
+			return this.estimatedSoc(this.limitEnergy);
 		},
 	},
 	methods: {

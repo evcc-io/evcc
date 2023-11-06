@@ -22,10 +22,10 @@
 			<div
 				v-show="vehicleTargetSoc"
 				ref="vehicleTargetSoc"
-				class="vehicle-target-soc"
+				class="vehicle-limit-soc"
 				data-bs-toggle="tooltip"
 				title=" "
-				:class="{ 'vehicle-target-soc--active': vehicleTargetSocActive }"
+				:class="{ 'vehicle-limit-soc--active': vehicleTargetSocActive }"
 				:style="{ left: `${vehicleTargetSoc}%` }"
 			/>
 		</div>
@@ -36,14 +36,14 @@
 				min="0"
 				max="100"
 				step="5"
-				:value="visibleTargetSoc"
-				class="target-slider"
-				:class="{ 'target-slider--active': targetSliderActive }"
-				@mousedown="changeTargetSocStart"
-				@touchstart="changeTargetSocStart"
-				@input="movedTargetSoc"
-				@mouseup="changeTargetSocEnd"
-				@touchend="changeTargetSocEnd"
+				:value="visibleLimitSoc"
+				class="slider"
+				:class="{ 'slider--active': sliderActive }"
+				@mousedown="changeLimitSocStart"
+				@touchstart="changeLimitSocStart"
+				@input="movedLimitSoc"
+				@mouseup="changeLimitSocEnd"
+				@touchend="changeLimitSocEnd"
 			/>
 		</div>
 	</div>
@@ -62,15 +62,15 @@ export default {
 		enabled: Boolean,
 		charging: Boolean,
 		minSoc: Number,
-		targetSoc: Number,
-		targetEnergy: Number,
+		effectiveLimitSoc: Number,
+		limitEnergy: Number,
 		chargedEnergy: Number,
 		socBasedCharging: Boolean,
 	},
-	emits: ["target-soc-drag", "target-soc-updated"],
+	emits: ["limit-soc-drag", "limit-soc-updated"],
 	data: function () {
 		return {
-			selectedTargetSoc: null,
+			selectedLimitSoc: null,
 			interactionStartScreenY: null,
 			tooltip: null,
 		};
@@ -83,8 +83,8 @@ export default {
 				}
 				return 100;
 			} else {
-				if (this.targetEnergy) {
-					return (100 / this.targetEnergy) * (this.chargedEnergy / 1e3);
+				if (this.limitEnergy) {
+					return (100 / this.limitEnergy) * (this.chargedEnergy / 1e3);
 				}
 				return 100;
 			}
@@ -92,8 +92,8 @@ export default {
 		vehicleTargetSocActive: function () {
 			return this.vehicleTargetSoc > 0 && this.vehicleTargetSoc > this.vehicleSoc;
 		},
-		targetSliderActive: function () {
-			return !this.vehicleTargetSoc || this.visibleTargetSoc <= this.vehicleTargetSoc;
+		sliderActive: function () {
+			return !this.vehicleTargetSoc || this.visibleLimitSoc <= this.vehicleTargetSoc;
 		},
 		progressColor: function () {
 			if (this.minSocActive) {
@@ -112,11 +112,9 @@ export default {
 				if (this.minSocActive) {
 					return this.minSoc - this.vehicleSoc;
 				}
-				let targetSoc = this.targetSliderActive
-					? this.visibleTargetSoc
-					: this.vehicleTargetSoc;
-				if (targetSoc > this.vehicleSoc) {
-					return targetSoc - this.vehicleSoc;
+				let soc = this.sliderActive ? this.visibleLimitSoc : this.vehicleTargetSoc;
+				if (soc > this.vehicleSoc) {
+					return soc - this.vehicleSoc;
 				}
 			} else {
 				return 100 - this.vehicleSocDisplayWidth;
@@ -124,13 +122,13 @@ export default {
 
 			return null;
 		},
-		visibleTargetSoc: function () {
-			return Number(this.selectedTargetSoc || this.targetSoc);
+		visibleLimitSoc: function () {
+			return Number(this.selectedLimitSoc || this.effectiveLimitSoc);
 		},
 	},
 	watch: {
-		targetSoc: function () {
-			this.selectedTargetSoc = this.targetSoc;
+		effectiveLimitSoc: function () {
+			this.selectedLimitSoc = this.effectiveLimitSoc;
 		},
 		vehicleTargetSoc: function () {
 			this.updateTooltip();
@@ -140,29 +138,29 @@ export default {
 		this.updateTooltip();
 	},
 	methods: {
-		changeTargetSocStart: function (e) {
+		changeLimitSocStart: function (e) {
 			e.stopPropagation();
 		},
-		changeTargetSocEnd: function (e) {
+		changeLimitSocEnd: function (e) {
 			const value = parseInt(e.target.value, 10);
 			// value changed
-			if (value !== this.targetSoc) {
-				this.$emit("target-soc-updated", value);
+			if (value !== this.effectiveLimitSoc) {
+				this.$emit("limit-soc-updated", value);
 			}
 		},
-		movedTargetSoc: function (e) {
+		movedLimitSoc: function (e) {
 			let value = parseInt(e.target.value, 10);
 			e.stopPropagation();
-			const minTargetSoc = 20;
-			if (value < minTargetSoc) {
-				e.target.value = minTargetSoc;
-				this.selectedTargetSoc = value;
+			const minLimit = 20;
+			if (value < minLimit) {
+				e.target.value = minLimit;
+				this.selectedLimitSoc = value;
 				e.preventDefault();
 				return false;
 			}
-			this.selectedTargetSoc = value;
+			this.selectedLimitSoc = value;
 
-			this.$emit("target-soc-drag", this.selectedTargetSoc);
+			this.$emit("limit-soc-drag", this.selectedLimitSoc);
 			return true;
 		},
 		updateTooltip: function () {
@@ -196,7 +194,7 @@ export default {
 .bg-light {
 	color: var(--bs-gray-dark);
 }
-.target-slider {
+.slider {
 	-webkit-appearance: none;
 	position: absolute;
 	top: calc(var(--thumb-overlap) * -1);
@@ -205,24 +203,24 @@ export default {
 	background: transparent;
 	pointer-events: none;
 }
-.target-slider:focus {
+.slider:focus {
 	outline: none;
 }
 /* Note: Safari,Chrome,Blink and Firefox specific styles need to be in separate definitions to work */
-.target-slider::-webkit-slider-runnable-track {
+.slider::-webkit-slider-runnable-track {
 	position: relative;
 	background: transparent;
 	border: none;
 	height: 100%;
 	cursor: auto;
 }
-.target-slider::-moz-range-track {
+.slider::-moz-range-track {
 	background: transparent;
 	border: none;
 	height: 100%;
 	cursor: auto;
 }
-.target-slider::-webkit-slider-thumb {
+.slider::-webkit-slider-thumb {
 	-webkit-appearance: none;
 	position: relative;
 	margin-left: var(--thumb-width) / 2;
@@ -237,7 +235,7 @@ export default {
 	pointer-events: auto;
 	transition: background-color var(--evcc-transition-fast) linear;
 }
-.target-slider::-moz-range-thumb {
+.slider::-moz-range-thumb {
 	position: relative;
 	height: 100%;
 	width: var(--thumb-width);
@@ -250,13 +248,13 @@ export default {
 	pointer-events: auto;
 	transition: background-color var(--evcc-transition-fast) linear;
 }
-.target-slider--active::-webkit-slider-thumb {
+.slider--active::-webkit-slider-thumb {
 	background-color: var(--evcc-dark-green);
 }
-.target-slider--active::-moz-range-thumb {
+.slider--active::-moz-range-thumb {
 	background-color: var(--evcc-dark-green);
 }
-.vehicle-target-soc {
+.vehicle-limit-soc {
 	position: absolute;
 	top: 0;
 	bottom: 0;
@@ -269,7 +267,7 @@ export default {
 	border-color: transparent;
 	transition: background-color var(--evcc-transition-fast) linear;
 }
-.vehicle-target-soc--active {
+.vehicle-limit-soc--active {
 	background-color: var(--evcc-box);
 }
 </style>

@@ -2,13 +2,13 @@
 	<LabelAndValue class="flex-grow-1" :label="title" align="end" data-testid="target-soc">
 		<h3 class="value m-0 d-block d-sm-flex align-items-baseline justify-content-end">
 			<label class="position-relative">
-				<select :value="targetSoc" class="custom-select" @change="change">
+				<select :value="limitSoc" class="custom-select" @change="change">
 					<option v-for="{ soc, text } in options" :key="soc" :value="soc">
 						{{ text }}
 					</option>
 				</select>
 				<span class="text-decoration-underline" data-testid="target-soc-value">
-					<AnimatedNumber :to="targetSoc" :format="formatSoc" />
+					<AnimatedNumber :to="limitSoc" :format="formatSoc" />
 				</span>
 			</label>
 
@@ -30,11 +30,11 @@ export default {
 	components: { LabelAndValue, AnimatedNumber },
 	mixins: [formatter],
 	props: {
-		targetSoc: Number,
+		limitSoc: Number,
 		rangePerSoc: Number,
 		heating: Boolean,
 	},
-	emits: ["target-soc-updated"],
+	emits: ["limit-soc-updated"],
 
 	computed: {
 		options: function () {
@@ -60,7 +60,7 @@ export default {
 	},
 	methods: {
 		change: function (e) {
-			return this.$emit("target-soc-updated", parseInt(e.target.value, 10));
+			return this.$emit("limit-soc-updated", parseInt(e.target.value, 10));
 		},
 		estimatedRange: function (soc) {
 			if (this.rangePerSoc) {

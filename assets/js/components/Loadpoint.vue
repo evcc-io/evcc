@@ -84,8 +84,8 @@
 		<Vehicle
 			class="flex-grow-1 d-flex flex-column justify-content-end"
 			v-bind="vehicle"
-			@target-soc-updated="setTargetSoc"
-			@target-energy-updated="setTargetEnergy"
+			@limit-soc-updated="setLimitSoc"
+			@limit-energy-updated="setLimitEnergy"
 			@target-time-updated="setTargetTime"
 			@target-time-removed="removeTargetTime"
 			@change-vehicle="changeVehicle"
@@ -130,8 +130,8 @@ export default {
 		// main
 		title: String,
 		mode: String,
-		targetSoc: Number,
-		targetEnergy: Number,
+		effectiveLimitSoc: Number,
+		limitEnergy: Number,
 		remoteDisabled: Boolean,
 		remoteDisabledSource: String,
 		chargeDuration: Number,
@@ -289,11 +289,11 @@ export default {
 		setTargetMode: function (mode) {
 			api.post(this.apiPath("mode") + "/" + mode);
 		},
-		setTargetSoc: function (soc) {
-			api.post(this.apiPath("target/soc") + "/" + soc);
+		setLimitSoc: function (soc) {
+			api.post(this.apiPath("limitsoc") + "/" + soc);
 		},
-		setTargetEnergy: function (kWh) {
-			api.post(this.apiPath("target/energy") + "/" + kWh);
+		setLimitEnergy: function (kWh) {
+			api.post(this.apiPath("limitenergy") + "/" + kWh);
 		},
 		setMaxCurrent: function (maxCurrent) {
 			api.post(this.apiPath("maxcurrent") + "/" + maxCurrent);

@@ -237,7 +237,7 @@ export default {
 				try {
 					this.loading = true;
 					this.plan = (
-						await api.get(`loadpoints/${this.id}/target/plan`, {
+						await api.get(`loadpoints/${this.id}/plan`, {
 							params: { targetTime: this.selectedTargetTime },
 						})
 					).data.result;
