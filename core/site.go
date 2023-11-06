@@ -723,6 +723,9 @@ func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints fl
 func (site *Site) update(lp Updater) {
 	site.log.DEBUG.Println("----")
 
+	// TODO replace with publishing when adapter is updated
+	site.publishVehicles()
+
 	// update all loadpoint's charge power
 	var totalChargePower float64
 	for _, lp := range site.loadpoints {
