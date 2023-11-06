@@ -69,19 +69,14 @@ func (c *PulsatrixCharger) connectWs(hostname string) error {
 	conn, _, err := dialer.Dial(u.String(), nil)
 	if err != nil {
 		if strErr := fmt.Sprintf("%s", err); strErr == "websocket: bad handshake" {
-			c.log.ERROR.Println("bad handshake. Make sure the IP and port are correct")
+			err = fmt.Errorf("bad handshake. Make sure the IP and port are correct")
 		} else {
-			c.log.ERROR.Println("error:", err)
+			err = fmt.Errorf("error connecting to websocket: %v", err)
 			c.reconnectWs()
 		}
 		return err
 	}
 
-	defer func() {
-		if r := recover(); r != nil {
-			c.log.ERROR.Println("Recovered from panic:", r)
-		}
-	}()
 	if c.reconnecting > 0 {
 		c.log.WARN.Printf("connection reestablished\n")
 		c.reconnecting = 0
