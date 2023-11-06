@@ -137,8 +137,6 @@ func (lp *Loadpoint) setLimitSoc(soc int) {
 	lp.limitSoc = soc
 	lp.settings.SetInt(keys.LimitSoc, int64(soc))
 	lp.publish(keys.LimitSoc, soc)
-	// TODO locking and more values
-	// lp.publish(keys.EffectiveLimitSoc, lp.effectiveLimitSoc())
 }
 
 // SetLimitSoc sets the session soc limit

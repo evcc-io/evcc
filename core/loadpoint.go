@@ -1505,6 +1505,7 @@ func (lp *Loadpoint) Update(sitePower float64, autoCharge, batteryBuffered, batt
 
 	// update progress and soc before status is updated
 	lp.publishChargeProgress()
+	lp.publishEffectiveValues()
 
 	// read and publish status
 	if err := lp.updateChargerStatus(); err != nil {
