@@ -145,7 +145,6 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, cache *util.Cache) {
 	for id, lp := range site.Loadpoints() {
 		api := api.PathPrefix(fmt.Sprintf("/loadpoints/%d", id+1)).Subrouter()
 
-		// TODO check vehicleHandler id
 		routes := map[string]route{
 			"mode":             {[]string{"POST", "OPTIONS"}, "/mode/{value:[a-z]+}", chargeModeHandler(lp)},
 			"limitsoc":         {[]string{"POST", "OPTIONS"}, "/limitsoc/{value:[0-9]+}", intHandler(pass(lp.SetLimitSoc), lp.GetLimitSoc)},
@@ -156,7 +155,7 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, cache *util.Cache) {
 			"plan":             {[]string{"GET"}, "/plan", planHandler(lp)},
 			"planenergy":       {[]string{"POST", "OPTIONS"}, "/plan/energy/{value:[0-9]+}/{time:[0-9TZ:.-]+}", planEnergyHandler(lp)},
 			"planenergy2":      {[]string{"DELETE", "OPTIONS"}, "/plan/energy", planRemoveHandler(lp)},
-			"vehicle":          {[]string{"POST", "OPTIONS"}, "/vehicle/{vehicle:[1-9][0-9]*}", vehicleHandler(site, lp)},
+			"vehicle":          {[]string{"POST", "OPTIONS"}, "/vehicle/{name:[a-zA-Z0-9_.:-]+}", vehicleSelectHandler(site, lp)},
 			"vehicle2":         {[]string{"DELETE", "OPTIONS"}, "/vehicle", vehicleRemoveHandler(lp)},
 			"vehicleDetect":    {[]string{"PATCH", "OPTIONS"}, "/vehicle", vehicleDetectHandler(lp)},
 			"remotedemand":     {[]string{"POST", "OPTIONS"}, "/remotedemand/{demand:[a-z]+}/{source:[0-9a-zA-Z_-]+}", remoteDemandHandler(lp)},
