@@ -26,7 +26,7 @@ import { distanceUnit } from "../units";
 import formatter from "../mixins/formatter";
 
 export default {
-	name: "TargetSocSelect",
+	name: "LimitSocSelect",
 	components: { LabelAndValue, AnimatedNumber },
 	mixins: [formatter],
 	props: {
@@ -55,7 +55,7 @@ export default {
 				: this.$t("main.vehicle.targetSoc");
 		},
 		estimatedTargetRange: function () {
-			return this.estimatedRange(this.targetSoc);
+			return this.estimatedRange(this.limitSoc);
 		},
 	},
 	methods: {

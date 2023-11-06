@@ -10,6 +10,7 @@ import (
 )
 
 type vehicleStruct struct {
+	Name     string `json:"name"`
 	Title    string `json:"title"`
 	MinSoc   int    `json:"minSoc,omitempty"`
 	LimitSoc int    `json:"limitSoc,omitempty"`
@@ -22,6 +23,7 @@ func (site *Site) publishVehicles() {
 
 	for _, v := range vv {
 		res[v.Name()] = vehicleStruct{
+			Name:     v.Name(),
 			Title:    v.Title(),
 			MinSoc:   v.GetMinSoc(),
 			LimitSoc: v.GetLimitSoc(),

@@ -90,7 +90,6 @@
 			@target-time-removed="removeTargetTime"
 			@change-vehicle="changeVehicle"
 			@remove-vehicle="removeVehicle"
-			@minsoc-updated="setMinSoc"
 		/>
 	</div>
 </template>
@@ -303,9 +302,6 @@ export default {
 		},
 		setPhasesConfigured: function (phases) {
 			api.post(this.apiPath("phases") + "/" + phases);
-		},
-		setMinSoc: function (soc) {
-			api.post(this.apiPath("minsoc") + "/" + soc);
 		},
 		setTargetTime: function (date) {
 			api.post(`${this.apiPath("target/time")}/${date.toISOString()}`);

@@ -7,14 +7,14 @@
 					<span v-if="socBasedCharging">
 						{{
 							$t("main.targetCharge.descriptionSoc", {
-								targetSoc,
+								effectiveLimitSoc: limitSoc,
 							})
 						}}
 					</span>
 					<span v-else>
 						{{
 							$t("main.targetCharge.descriptionEnergy", {
-								targetEnergy: targetEnergyFormatted,
+								targetSoc: limitEnergyFormatted,
 							})
 						}}
 					</span>
@@ -45,8 +45,8 @@
 				<span v-if="timeInThePast" class="d-block text-danger mb-1">
 					{{ $t("main.targetCharge.targetIsInThePast") }}
 				</span>
-				<span v-if="!socBasedCharging && !targetEnergy" class="d-block text-danger mb-1">
-					{{ $t("main.targetCharge.targetEnergyRequired") }}
+				<span v-if="!socBasedCharging && !limitEnergy" class="d-block text-danger mb-1">
+					{{ $t("main.targetCharge.limitEnergyRequired") }}
 				</span>
 				<span v-if="vehicleCapacityRequired" class="d-block text-danger mb-1">
 					{{ $t("main.targetCharge.vehicleCapacityRequired") }}
@@ -119,8 +119,8 @@ export default {
 		id: [String, Number],
 		planActive: Boolean,
 		targetTime: String,
-		targetSoc: Number,
-		targetEnergy: Number,
+		effectiveLimitSoc: Number,
+		limitEnergy: Number,
 		socBasedCharging: Boolean,
 		disabled: Boolean,
 		smartCostLimit: Number,
@@ -167,8 +167,8 @@ export default {
 		selectedTargetTime: function () {
 			return new Date(`${this.selectedDay}T${this.selectedTime || "00:00"}`);
 		},
-		targetEnergyFormatted: function () {
-			return this.fmtKWh(this.targetEnergy * 1e3, true, true, 1);
+		limitEnergyFormatted: function () {
+			return this.fmtKWh(this.limitEnergy * 1e3, true, true, 1);
 		},
 		targetChargePlanProps: function () {
 			const targetTime = this.selectedTargetTime;
@@ -215,10 +215,10 @@ export default {
 		selectedTargetTime() {
 			this.updatePlan();
 		},
-		targetSoc() {
+		effectiveLimitSoc() {
 			this.updatePlan();
 		},
-		targetEnergy() {
+		limitEnergy() {
 			this.updatePlan();
 		},
 	},
@@ -230,7 +230,7 @@ export default {
 		updatePlan: async function () {
 			if (
 				!this.timeInThePast &&
-				(this.targetEnergy || this.targetSoc) &&
+				(this.limitEnergy || this.effectiveLimitSoc) &&
 				!isNaN(this.selectedTargetTime) &&
 				!this.loading
 			) {

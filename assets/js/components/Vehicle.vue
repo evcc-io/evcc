@@ -72,6 +72,7 @@ import ChargingPlan from "./ChargingPlan.vue";
 import LimitSocSelect from "./LimitSocSelect.vue";
 import LimitEnergySelect from "./LimitEnergySelect.vue";
 import { distanceUnit, distanceValue } from "../units";
+import api from "../api";
 
 export default {
 	name: "Vehicle",
@@ -131,7 +132,6 @@ export default {
 		"limit-energy-updated",
 		"change-vehicle",
 		"remove-vehicle",
-		"minsoc-updated",
 	],
 	data() {
 		return {
@@ -207,6 +207,9 @@ export default {
 
 			return false;
 		},
+		vehicleName: function () {
+			return this.vehicles?.find((v) => v.title === this.vehicleTitle)?.name;
+		},
 	},
 	watch: {
 		effectiveLimitSoc: function () {
@@ -227,8 +230,11 @@ export default {
 		setTargetTime: function (targetTime) {
 			this.$emit("target-time-updated", targetTime);
 		},
-		setMinSoc: function (minSoc) {
-			this.$emit("minsoc-updated", minSoc);
+		setMinSoc: function (soc) {
+			api.post(this.apiPath("minsoc") + "/" + soc);
+		},
+		apiPath: function (func) {
+			return "vehicles/" + this.vehicleName + "/" + func;
 		},
 		removeTargetTime: function () {
 			this.$emit("target-time-removed");
