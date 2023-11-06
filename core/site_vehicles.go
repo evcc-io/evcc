@@ -1,6 +1,8 @@
 package core
 
 import (
+	"time"
+
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/site"
@@ -9,11 +11,17 @@ import (
 	"github.com/evcc-io/evcc/util/config"
 )
 
+type planStruct struct {
+	Soc  int       `json:"soc"`
+	Time time.Time `json:"time"`
+}
+
 type vehicleStruct struct {
-	Name     string `json:"name"`
-	Title    string `json:"title"`
-	MinSoc   int    `json:"minSoc,omitempty"`
-	LimitSoc int    `json:"limitSoc,omitempty"`
+	Name     string       `json:"name"`
+	Title    string       `json:"title"`
+	MinSoc   int          `json:"minSoc,omitempty"`
+	LimitSoc int          `json:"limitSoc,omitempty"`
+	Plans    []planStruct `json:"plans"`
 }
 
 // publishVehicles returns a list of vehicle titles
@@ -22,11 +30,19 @@ func (site *Site) publishVehicles() {
 	res := make(map[string]vehicleStruct, len(vv))
 
 	for _, v := range vv {
+		plans := []planStruct{}
+
+		// TODO: add support for multiple plans
+		if time, soc := v.GetPlanSoc(); !time.IsZero() {
+			plans = append(plans, planStruct{Soc: soc, Time: time})
+		}
+
 		res[v.Name()] = vehicleStruct{
 			Name:     v.Name(),
 			Title:    v.Title(),
 			MinSoc:   v.GetMinSoc(),
 			LimitSoc: v.GetLimitSoc(),
+			Plans:    plans,
 		}
 	}
 

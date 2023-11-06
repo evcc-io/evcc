@@ -107,7 +107,7 @@ export default {
 		limitEnergy: Number,
 		socBasedCharging: Boolean,
 		disabled: Boolean,
-		minSoc: Number,
+		vehicle: Object,
 		vehicleSoc: Number,
 		vehicleName: String,
 		smartCostLimit: Number,
@@ -125,6 +125,9 @@ export default {
 		};
 	},
 	computed: {
+		minSoc: function () {
+			return this.vehicle?.minSoc;
+		},
 		targetChargeEnabled: function () {
 			return this.targetTime;
 		},

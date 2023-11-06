@@ -207,8 +207,9 @@ export default {
 
 			return false;
 		},
-		vehicleName: function () {
-			return this.vehicles?.find((v) => v.title === this.vehicleTitle)?.name;
+		vehicle: function () {
+			// TODO: use vehicleName instead of vehicleTitle
+			return this.vehicles?.find((v) => v.title === this.vehicleTitle);
 		},
 	},
 	watch: {
@@ -234,7 +235,7 @@ export default {
 			api.post(this.apiPath("minsoc") + "/" + soc);
 		},
 		apiPath: function (func) {
-			return "vehicles/" + this.vehicleName + "/" + func;
+			return `vehicles/${this.vehicle?.name}/${func}`;
 		},
 		removeTargetTime: function () {
 			this.$emit("target-time-removed");
