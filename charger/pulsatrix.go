@@ -23,7 +23,6 @@ type PulsatrixCharger struct {
 	ctx         context.Context
 	uri         string
 	log         *util.Logger
-	tryRead     int
 	enState     bool
 	bo          *backoff.ExponentialBackOff
 	signaledAmp float64
@@ -59,13 +58,12 @@ func NewPulsatrix(hostname string) (*PulsatrixCharger, error) {
 	bo := backoff.NewExponentialBackOff()
 	bo.InitialInterval = 30 * time.Second
 	bo.MaxInterval = 5 * time.Minute
-	uri := fmt.Sprintf("ws://%s/api/ws", hostname)
-	updated := time.Now()
+	request.Timeout = 15 * time.Second
 	wb := PulsatrixCharger{
 		log:     util.NewLogger("pulsatrix"),
-		uri:     uri,
+		uri:     fmt.Sprintf("ws://%s/api/ws", hostname),
 		bo:      bo,
-		updated: updated,
+		updated: time.Now(),
 	}
 
 	return &wb, wb.connectWs()
@@ -97,7 +95,7 @@ func (c *PulsatrixCharger) connectWs() error {
 
 // ReconnectWs reconnects to a pulsatrix SECC websocket
 func (c *PulsatrixCharger) reconnectWs() {
-	backoff.RetryNotify(func() error {
+	c.handleError(backoff.RetryNotify(func() error {
 		err := c.connectWs()
 		if err != nil {
 			c.log.WARN.Printf("Reconnect failed!")
@@ -105,7 +103,7 @@ func (c *PulsatrixCharger) reconnectWs() {
 		return err
 	}, c.bo, func(err error, duration time.Duration) {
 		c.log.WARN.Printf("trying to reconnect in %v...\n", duration)
-	})
+	}))
 }
 
 // WsReader runs a loop that reads messages from the websocket
@@ -218,7 +216,7 @@ func (c *PulsatrixCharger) GetMaxCurrent() (float64, error) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 	if !c.valid() {
-		c.Enable(false)
+		c.handleError(c.Enable(false))
 		return 0, fmt.Errorf("data validity expired")
 	}
 	return float64(c.AllocatedAmperage), nil
@@ -230,7 +228,7 @@ func (c *PulsatrixCharger) CurrentPower() (float64, error) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 	if !c.valid() {
-		c.Enable(false)
+		c.handleError(c.Enable(false))
 		return 0, fmt.Errorf("data validity expired")
 	}
 	return float64(c.LastActivePower), nil
@@ -242,7 +240,7 @@ func (c *PulsatrixCharger) Currents() (float64, float64, float64, error) {
 	defer c.mutex.Unlock()
 	currents := c.PhaseAmperage
 	if len(currents) < 3 || !c.valid() {
-		c.Enable(false)
+		c.handleError(c.Enable(false))
 		return 0, 0, 0, fmt.Errorf("data validity expired")
 	}
 	return currents[0], currents[1], currents[2], nil
@@ -254,7 +252,7 @@ func (c *PulsatrixCharger) Voltages() (float64, float64, float64, error) {
 	defer c.mutex.Unlock()
 	voltages := c.PhaseVoltage
 	if len(voltages) < 3 || !c.valid() {
-		c.Enable(false)
+		c.handleError(c.Enable(false))
 		return 0, 0, 0, fmt.Errorf("data validity expired")
 	}
 	return voltages[0], voltages[1], voltages[2], nil
@@ -265,7 +263,7 @@ func (c *PulsatrixCharger) TotalEnergy() (float64, error) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 	if !c.valid() {
-		c.Enable(false)
+		c.handleError(c.Enable(false))
 		return 0, fmt.Errorf("data validity expired")
 	}
 	return float64(c.EnergyImported), nil
