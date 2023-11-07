@@ -13,6 +13,8 @@ import (
 
 var _ API = (*adapter)(nil)
 
+var Publish func()
+
 type adapter struct {
 	log         *util.Logger
 	name        string
@@ -21,6 +23,12 @@ type adapter struct {
 
 func (v *adapter) key() string {
 	return fmt.Sprintf("vehicle.%s.", v.name)
+}
+
+func (v *adapter) publish() {
+	if Publish != nil {
+		Publish()
+	}
 }
 
 func (v *adapter) Name() string {
@@ -39,6 +47,7 @@ func (v *adapter) GetMinSoc() int {
 func (v *adapter) SetMinSoc(soc int) {
 	v.log.DEBUG.Printf("set %s min soc: %d", v.name, soc)
 	settings.SetInt(v.key()+keys.MinSoc, int64(soc))
+	v.publish()
 }
 
 // GetLimitSoc returns the limit soc
@@ -53,6 +62,7 @@ func (v *adapter) GetLimitSoc() int {
 func (v *adapter) SetLimitSoc(soc int) {
 	v.log.DEBUG.Printf("set %s limit soc: %d", v.name, soc)
 	settings.SetInt(v.key()+keys.LimitSoc, int64(soc))
+	v.publish()
 }
 
 // GetPlanSoc returns the charge plan soc
@@ -78,6 +88,8 @@ func (v *adapter) SetPlanSoc(ts time.Time, soc int) error {
 
 	settings.SetTime(v.key()+keys.PlanTime, ts)
 	settings.SetInt(v.key()+keys.PlanSoc, int64(soc))
+
+	v.publish()
 
 	return nil
 }

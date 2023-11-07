@@ -17,6 +17,7 @@ import (
 	"github.com/evcc-io/evcc/core/prioritizer"
 	"github.com/evcc-io/evcc/core/session"
 	"github.com/evcc-io/evcc/core/soc"
+	"github.com/evcc-io/evcc/core/vehicle"
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/server/db"
 	"github.com/evcc-io/evcc/server/db/settings"
@@ -723,9 +724,6 @@ func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints fl
 func (site *Site) update(lp Updater) {
 	site.log.DEBUG.Println("----")
 
-	// TODO replace with publishing when adapter is updated
-	site.publishVehicles()
-
 	// update all loadpoint's charge power
 	var totalChargePower float64
 	for _, lp := range site.loadpoints {
@@ -814,6 +812,7 @@ func (site *Site) prepare() {
 	}
 
 	site.publishVehicles()
+	vehicle.Publish = site.publishVehicles
 }
 
 // Prepare attaches communication channels to site and loadpoints
