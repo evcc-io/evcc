@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -59,12 +60,14 @@ func NewPulsatrix(hostname string) (*PulsatrixCharger, error) {
 	bo.InitialInterval = 30 * time.Second
 	bo.MaxInterval = 5 * time.Minute
 	uri := fmt.Sprintf("ws://%s/api/ws", hostname)
-
+	updated := time.Now()
 	wb := PulsatrixCharger{
-		log: util.NewLogger("pulsatrix"),
-		uri: uri,
-		bo:  bo,
+		log:     util.NewLogger("pulsatrix"),
+		uri:     uri,
+		bo:      bo,
+		updated: updated,
 	}
+
 	return &wb, wb.connectWs()
 }
 
@@ -75,16 +78,15 @@ func (c *PulsatrixCharger) connectWs() error {
 	c.ctx = ctx
 	c.log.INFO.Printf("connecting to %s", c.uri)
 	conn, _, err := websocket.Dial(ctx, c.uri, nil)
-
 	if err != nil {
-		if strErr := fmt.Sprintf("%s", err); strErr == "websocket: bad handshake" {
-			err = fmt.Errorf("bad handshake. Make sure the IP and port are correct")
+		if strErr := fmt.Sprintf("%s", err); strings.Contains(strErr, "context deadline exceeded") {
+			err = fmt.Errorf("Make sure the IP is correct and the SECC is connected to the network")
 		} else {
 			err = fmt.Errorf("error connecting to websocket: %v", err)
 		}
 		return err
 	}
-
+	c.updated = time.Now()
 	c.enState = false
 	c.conn = conn
 	c.handleError(c.Enable(false))
@@ -93,57 +95,59 @@ func (c *PulsatrixCharger) connectWs() error {
 	return nil
 }
 
-// Heartbeat sends a heartbeat to the pulsatrix SECC
-func (c *PulsatrixCharger) heartbeat() {
-	for range time.Tick(time.Minute) {
-		if c.enState {
-			c.handleError(c.Enable(true))
-		} else {
-			c.handleError(c.Enable(false))
-		}
-	}
-}
-
-func (c *PulsatrixCharger) handleError(err error) {
-	if err != nil {
-		c.log.ERROR.Println("error:", err)
-	}
-}
-
 // ReconnectWs reconnects to a pulsatrix SECC websocket
 func (c *PulsatrixCharger) reconnectWs() {
-	c.conn = nil
-	c.log.INFO.Printf("reconnecting to %s", c.uri)
 	backoff.RetryNotify(func() error {
 		err := c.connectWs()
 		if err != nil {
-			c.log.WARN.Printf("lost connection, trying to reconnect\n")
+			c.log.WARN.Printf("Reconnect failed!")
 		}
 		return err
 	}, c.bo, func(err error, duration time.Duration) {
-		c.log.WARN.Printf("trying to reconnect in %s...\n", duration)
+		c.log.WARN.Printf("trying to reconnect in %v...\n", duration)
 	})
 }
 
 // WsReader runs a loop that reads messages from the websocket
 func (c *PulsatrixCharger) wsReader() {
 	go func() {
-		for {
-			messageType, message, err := c.conn.Read(context.Background())
+		for c.valid() {
+			ctx, cancel := context.WithTimeout(context.Background(), request.Timeout)
+			defer cancel()
+			messageType, message, err := c.conn.Read(ctx)
 			if err != nil {
-				c.log.ERROR.Println("error reading message: ", err)
-				if c.conn != nil {
-					c.conn.Close(websocket.StatusGoingAway, "Reconnecting")
-					c.reconnectWs()
-				}
-				return
+				c.log.ERROR.Println("error reading message:", err)
+				break
 			} else {
 				c.parseWsMessage(messageType, message)
 				c.updated = time.Now()
 			}
 		}
+		c.mutex.Lock()
+		if c.conn != nil {
+			c.conn.Close(websocket.StatusNormalClosure, "Reconnecting")
+			c.conn = nil
+		}
+		c.mutex.Unlock()
+		c.reconnectWs()
 	}()
-	fmt.Println("after go func")
+}
+
+// wsWrite writes a message to the websocket
+func (c *PulsatrixCharger) wsWriter(message string) error {
+	if c.valid() && c.conn != nil {
+		c.mutex.Lock()
+		defer c.mutex.Unlock()
+		ctx, cancel := context.WithTimeout(context.Background(), request.Timeout)
+		defer cancel()
+		err := c.conn.Write(ctx, websocket.MessageText, []byte(message))
+		if err != nil {
+			return err
+		}
+	} else {
+		return fmt.Errorf("Waiting for reconnect")
+	}
+	return nil
 }
 
 // ParseWsMessage parses a message from the websocket
@@ -155,29 +159,25 @@ func (c *PulsatrixCharger) parseWsMessage(messageType websocket.MessageType, mes
 	}
 }
 
-func (c *PulsatrixCharger) invalid() bool {
-	return c.updated.Before(time.Now().Add(-30 * time.Second))
+// Heartbeat sends a heartbeat to the pulsatrix SECC
+func (c *PulsatrixCharger) heartbeat() {
+	for range time.Tick(3 * time.Minute) {
+		if c.enState {
+			c.handleError(c.Enable(true))
+		} else {
+			c.handleError(c.Enable(false))
+		}
+	}
 }
 
-// wsWrite writes a message to the websocket
-func (c *PulsatrixCharger) wsWrite(message string) error {
-	fmt.Println("Message: ", message)
-	if c.conn != nil {
-		c.mutex.Lock()
-		defer c.mutex.Unlock()
-		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-		defer cancel()
-		tmpMsg := []byte(message)
-		err := c.conn.Write(ctx, websocket.MessageText, tmpMsg)
-		if err != nil {
-			return err
-		}
-	} else if c.invalid() && c.conn != nil {
-		c.reconnectWs()
-	} else {
-		c.log.ERROR.Println("error: no connection")
+func (c *PulsatrixCharger) valid() bool {
+	return !c.updated.Before(time.Now().Add(-30 * time.Second))
+}
+
+func (c *PulsatrixCharger) handleError(err error) {
+	if err != nil {
+		c.log.ERROR.Println("error:", err)
 	}
-	return nil
 }
 
 // Status implements the api.Charger interface
@@ -195,7 +195,7 @@ func (c *PulsatrixCharger) Enabled() (bool, error) {
 // Enable implements the api.Charger interface
 func (c *PulsatrixCharger) Enable(enable bool) error {
 	c.enState = enable
-	return c.wsWrite("setEnabled\n" + strconv.FormatBool(c.enState))
+	return c.wsWriter("setEnabled\n" + strconv.FormatBool(c.enState))
 }
 
 // MaxCurrent implements the api.CurrentLimiter interface
@@ -210,15 +210,16 @@ func (c *PulsatrixCharger) MaxCurrentMillis(current float64) error {
 		c.handleError(c.Enable(true))
 	}
 	res := strconv.FormatFloat(current, 'f', 10, 64)
-	return c.wsWrite("setCurrentLimit\n" + res)
+	return c.wsWriter("setCurrentLimit\n" + res)
 }
 
 // GetMaxCurrent implements the api.CurrentGetter interface
 func (c *PulsatrixCharger) GetMaxCurrent() (float64, error) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
-	if c.invalid() {
-		return 0, fmt.Errorf("no data received")
+	if !c.valid() {
+		c.Enable(false)
+		return 0, fmt.Errorf("data validity expired")
 	}
 	return float64(c.AllocatedAmperage), nil
 
@@ -228,6 +229,10 @@ func (c *PulsatrixCharger) GetMaxCurrent() (float64, error) {
 func (c *PulsatrixCharger) CurrentPower() (float64, error) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
+	if !c.valid() {
+		c.Enable(false)
+		return 0, fmt.Errorf("data validity expired")
+	}
 	return float64(c.LastActivePower), nil
 }
 
@@ -236,8 +241,9 @@ func (c *PulsatrixCharger) Currents() (float64, float64, float64, error) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 	currents := c.PhaseAmperage
-	if len(currents) < 3 || c.invalid() {
-		return 0, 0, 0, fmt.Errorf("missing current data")
+	if len(currents) < 3 || !c.valid() {
+		c.Enable(false)
+		return 0, 0, 0, fmt.Errorf("data validity expired")
 	}
 	return currents[0], currents[1], currents[2], nil
 }
@@ -247,8 +253,9 @@ func (c *PulsatrixCharger) Voltages() (float64, float64, float64, error) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 	voltages := c.PhaseVoltage
-	if len(voltages) < 3 || c.invalid() {
-		return 0, 0, 0, fmt.Errorf("missing voltage data")
+	if len(voltages) < 3 || !c.valid() {
+		c.Enable(false)
+		return 0, 0, 0, fmt.Errorf("data validity expired")
 	}
 	return voltages[0], voltages[1], voltages[2], nil
 }
@@ -257,5 +264,9 @@ func (c *PulsatrixCharger) Voltages() (float64, float64, float64, error) {
 func (c *PulsatrixCharger) TotalEnergy() (float64, error) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
+	if !c.valid() {
+		c.Enable(false)
+		return 0, fmt.Errorf("data validity expired")
+	}
 	return float64(c.EnergyImported), nil
 }
