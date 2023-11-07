@@ -1,0 +1,109 @@
+template: deye-storage
+products:
+  - brand: Deye
+    description:
+      generic: Storage (hybrid) inverter
+  - brand: Sunsynk
+    description:
+      generic: Storage (hybrid) inverter
+params:
+  - name: usage
+    choice: ["pv", "battery", "grid"]
+  - name: modbus
+    choice: ["rs485", "tcpip"]
+    baudrate: 9600
+    id: 1
+  - name: capacity
+    advanced: true
+render: |
+  type: custom
+  {{- if eq .usage "pv" }}
+  power:
+    source: calc
+    add:
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 186 # "PV1 input power"
+        type: holding
+        decode: uint16
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 187 # "PV2 input power"
+        type: holding
+        decode: uint16
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 188 # "PV3 input power"
+        type: holding
+        decode: uint16
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 189 # "PV4 input power"
+        type: holding
+        decode: uint16
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 96 # "historyPV PowerWh"
+      type: holding
+      decode: uint32
+    scale: 0.1
+  {{- end }}
+  {{- if eq .usage "battery" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 190 # "Battery output power"
+      type: holding
+      decode: int16
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 74 # "Battery cumulative discharge"
+      type: holding
+      decode: uint32
+    scale: 0.1
+  soc:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 184 # "battery capacity"
+      type: holding
+      decode: uint16
+  {{- if .capacity }}
+  capacity: {{ .capacity }} # kWh
+  {{- end }}
+  {{- end }}
+  {{- if eq .usage "grid" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 169 # "Total grid power"
+      type: holding
+      decode: int16
+  energy:
+    source: calc
+    add:
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 78 # "Total_GridBuy_PowerWh_low"
+        type: holding
+        decode: uint16
+      scale: 0.1
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 80 # "Total_GridBuy_PowerWh"
+        type: holding
+        decode: uint16
+      scale: 6553.6
+  {{- end }}
