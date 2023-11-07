@@ -98,9 +98,8 @@ func (c *PulsatrixCharger) reconnectWs() {
 	c.handleError(backoff.RetryNotify(func() error {
 		err := c.connectWs()
 		if err != nil {
-			c.log.WARN.Printf("Reconnect failed!")
+			return err
 		}
-		return err
 	}, c.bo, func(err error, duration time.Duration) {
 		c.log.WARN.Printf("trying to reconnect in %v...\n", duration)
 	}))
