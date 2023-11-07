@@ -2,7 +2,6 @@ package core
 
 import (
 	"fmt"
-	"slices"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -61,7 +60,7 @@ func (lp *Loadpoint) GetPlan(targetTime time.Time, maxPower float64) (time.Durat
 	plan, err := lp.planner.Plan(requiredDuration, targetTime)
 
 	// sort plan by time
-	slices.SortStableFunc(plan, planner.SortByTime)
+	plan.Sort()
 
 	return requiredDuration, plan, err
 }

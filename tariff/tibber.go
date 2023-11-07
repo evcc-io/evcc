@@ -109,6 +109,7 @@ func (t *Tibber) run(done chan error) {
 		pi := res.Viewer.Home.CurrentSubscription.PriceInfo
 		t.data = make(api.Rates, 0, len(pi.Today)+len(pi.Tomorrow))
 		t.data = append(t.rates(pi.Today), t.rates(pi.Tomorrow)...)
+		t.data.Sort()
 
 		t.mux.Unlock()
 	}

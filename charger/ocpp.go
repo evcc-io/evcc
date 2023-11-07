@@ -1,11 +1,11 @@
 package charger
 
 import (
+	"cmp"
 	"errors"
 	"fmt"
 	"math"
 	"slices"
-	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -178,12 +178,12 @@ func NewOCPP(id string, connector int, idtag string,
 			if err == nil {
 				// log unsupported configuration keys
 				if len(resp.UnknownKey) > 0 {
-					c.log.ERROR.Printf("unsupported keys: %v", sort.StringSlice(resp.UnknownKey))
+					c.log.ERROR.Printf("unsupported keys: %v", resp.UnknownKey)
 				}
 
 				// sort configuration keys for printing
-				sort.Slice(resp.ConfigurationKey, func(i, j int) bool {
-					return resp.ConfigurationKey[i].Key < resp.ConfigurationKey[j].Key
+				slices.SortFunc(resp.ConfigurationKey, func(i, j core.ConfigurationKey) int {
+					return cmp.Compare(i.Key, j.Key)
 				})
 
 				rw := map[bool]string{false: "r/w", true: "r/o"}
