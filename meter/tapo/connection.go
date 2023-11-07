@@ -6,6 +6,7 @@ import (
 	"net/netip"
 	"net/url"
 	"os"
+	"strings"
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/insomniacslk/tapo"
@@ -82,7 +83,12 @@ func (c *Connection) Enabled() (bool, error) {
 func (c *Connection) CurrentPower() (float64, error) {
 	resp, err := c.plug.GetEnergyUsage()
 	if err != nil {
-		return 0, err
+		if strings.Contains(err.Error(), "-1001") {
+			c.log.WARN.Printf("power meter not available")
+			return 0, nil
+		} else {
+			return 0, err
+		}
 	}
 
 	return float64(resp.CurrentPower) / 1e3, nil
@@ -92,7 +98,12 @@ func (c *Connection) CurrentPower() (float64, error) {
 func (c *Connection) ChargedEnergy() (float64, error) {
 	resp, err := c.plug.GetEnergyUsage()
 	if err != nil {
-		return 0, err
+		if strings.Contains(err.Error(), "-1001") {
+			c.log.WARN.Printf("energy meter not available")
+			return 0, nil
+		} else {
+			return 0, err
+		}
 	}
 
 	if int64(resp.TodayEnergy) > c.lasttodayenergy {
