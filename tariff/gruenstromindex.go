@@ -128,6 +128,7 @@ func (t *GrünStromIndex) run(done chan error) {
 				End:   time.UnixMilli(r.Timeframe.End).Local(),
 			})
 		}
+		t.data.Sort()
 
 		t.mux.Unlock()
 	}

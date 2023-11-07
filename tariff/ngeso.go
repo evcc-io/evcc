@@ -3,6 +3,7 @@ package tariff
 import (
 	"errors"
 	"net/http"
+	"slices"
 	"sync"
 	"time"
 
@@ -11,7 +12,6 @@ import (
 	"github.com/evcc-io/evcc/tariff/ngeso"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
-	"slices"
 )
 
 type Ngeso struct {
@@ -110,6 +110,7 @@ func (t *Ngeso) run(done chan error) {
 			}
 			t.data = append(t.data, ar)
 		}
+		t.data.Sort()
 
 		t.mux.Unlock()
 	}
