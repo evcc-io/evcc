@@ -47,8 +47,8 @@ func (p *Waiter) Overdue() time.Duration {
 
 		select {
 		case <-p.initial:
-		case <-time.After(timeout):
-			return timeout
+		case <-time.After(p.timeout):
+			return p.timeout
 		}
 	}
 
