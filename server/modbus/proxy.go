@@ -11,7 +11,7 @@ import (
 	"github.com/evcc-io/evcc/util/sponsor"
 )
 
-func StartProxy(port int, config modbus.Settings, readOnly bool) error {
+func StartProxy(port int, config modbus.Settings, readOnly ReadOnlyMode) error {
 	conn, err := modbus.NewConnection(config.URI, config.Device, config.Comset, config.Baudrate, modbus.ProtocolFromRTU(config.RTU), config.ID)
 	if err != nil {
 		return err
