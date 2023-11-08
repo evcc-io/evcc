@@ -5,8 +5,6 @@ import (
 	"time"
 )
 
-var waitInitialTimeout = 10 * time.Second
-
 // Waiter provides monitoring of receive timeouts and reception of initial value
 type Waiter struct {
 	mu      sync.Mutex
