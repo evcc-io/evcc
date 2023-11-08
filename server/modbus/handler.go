@@ -13,7 +13,7 @@ import (
 
 type handler struct {
 	log      *util.Logger
-	readOnly bool
+	readOnly ReadOnlyMode
 	conn     *modbus.Connection
 }
 
@@ -104,8 +104,13 @@ func (h *handler) HandleDiscreteInputs(req *mbserver.DiscreteInputsRequest) ([]b
 
 func (h *handler) HandleCoils(req *mbserver.CoilsRequest) ([]bool, error) {
 	if req.IsWrite {
-		if h.readOnly {
+		switch h.readOnly {
+		case ReadOnlyDeny:
+			h.log.TRACE.Printf("deny: write coils: id %d addr %d qty %d val %v", req.UnitId, req.Addr, req.Quantity, req.Args)
 			return nil, mbserver.ErrIllegalFunction
+		case ReadOnlyTrue:
+			h.log.TRACE.Printf("ignore: write coils: id %d addr %d qty %d val %v", req.UnitId, req.Addr, req.Quantity, req.Args)
+			return req.Args, nil
 		}
 
 		if req.WriteFuncCode == gridx.FuncCodeWriteSingleCoil {
@@ -138,8 +143,13 @@ func (h *handler) HandleInputRegisters(req *mbserver.InputRegistersRequest) ([]u
 
 func (h *handler) HandleHoldingRegisters(req *mbserver.HoldingRegistersRequest) ([]uint16, error) {
 	if req.IsWrite {
-		if h.readOnly {
+		switch h.readOnly {
+		case ReadOnlyDeny:
+			h.log.TRACE.Printf("deny: write holdings: id %d addr %d qty %d val %0x", req.UnitId, req.Addr, req.Quantity, asBytes(req.Args))
 			return nil, mbserver.ErrIllegalFunction
+		case ReadOnlyTrue:
+			h.log.TRACE.Printf("ignore: write holdings: id %d addr %d qty %d val %0x", req.UnitId, req.Addr, req.Quantity, asBytes(req.Args))
+			return req.Args, nil
 		}
 
 		if req.WriteFuncCode == gridx.FuncCodeWriteSingleRegister {
