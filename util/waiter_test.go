@@ -9,7 +9,6 @@ import (
 const testTimeout = 100 * time.Millisecond
 
 func TestMain(t *testing.M) {
-	waitInitialTimeout = 2 * testTimeout
 	os.Exit(t.Run())
 }
 
@@ -32,8 +31,8 @@ func TestWaiterInitialUpdateNotReceived(t *testing.T) {
 	for _, timeout := range []time.Duration{0, testTimeout} {
 		w := NewWaiter(timeout, func() {})
 
-		if elapsed := w.Overdue(); elapsed != waitInitialTimeout {
-			t.Errorf("expected %v, got %v", waitInitialTimeout, elapsed)
+		if elapsed := w.Overdue(); elapsed != timeout {
+			t.Errorf("expected %v, got %v", timeout, elapsed)
 		}
 	}
 }
