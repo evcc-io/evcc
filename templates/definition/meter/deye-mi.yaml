@@ -19,7 +19,6 @@ params:
     choice: ["rs485", "tcpip"]
     baudrate: 9600
     id: 1
-  - name: capacity
     advanced: true
 render: |
   type: custom
