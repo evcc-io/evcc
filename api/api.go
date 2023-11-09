@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-//go:generate mockgen -package api -destination mock.go github.com/evcc-io/evcc/api Charger,ChargeState,PhaseSwitcher,Identifier,Meter,MeterEnergy,Vehicle,ChargeRater,Battery,Tariff
+//go:generate mockgen -package api -destination mock.go github.com/evcc-io/evcc/api Charger,ChargeState,PhaseSwitcher,Identifier,Meter,MeterEnergy,Vehicle,ChargeRater,Battery,Tariff,BatteryController
 
 // ChargeMode is the charge operation mode. Valid values are off, now, minpv and pv
 type ChargeMode string
@@ -132,6 +132,12 @@ type CurrentLimiter interface {
 // CurrentGetter provides getting charging maximum charging current for validation
 type CurrentGetter interface {
 	GetMaxCurrent() (float64, error)
+}
+
+// BatteryController optionally allows to control home battery (dis)charging behaviour
+type BatteryController interface {
+	SetBatteryMode(BatteryMode) error
+	GetBatteryMode() BatteryMode
 }
 
 // Charger provides current charging status and enable/disable charging
