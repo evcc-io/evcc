@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/provider/pipeline"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
@@ -86,6 +87,12 @@ func NewSocketProviderFromConfig(other map[string]interface{}) (Provider, error)
 	}
 
 	go p.listen()
+
+	select {
+	case <-p.val.Done():
+	case <-time.After(cc.Timeout):
+		return nil, api.ErrTimeout
+	}
 
 	return p, nil
 }
