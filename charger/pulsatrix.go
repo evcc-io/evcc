@@ -168,7 +168,7 @@ func (c *PulsatrixCharger) heartbeat() {
 }
 
 func (c *PulsatrixCharger) valid() bool {
-	return !c.updated.Before(time.Now().Add(-30 * time.Second))
+	return time.Since(c.updated) < 30 * time.Second
 }
 
 func (c *PulsatrixCharger) handleError(err error) {
