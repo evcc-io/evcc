@@ -1,0 +1,52 @@
+package util
+
+import (
+	"sync"
+	"time"
+
+	"github.com/evcc-io/evcc/api"
+)
+
+type Monitor[T any] struct {
+	val     T
+	mu      sync.RWMutex
+	once    sync.Once
+	done    chan struct{}
+	updated time.Time
+	timeout time.Duration
+}
+
+func NewMonitor[T any](timeout time.Duration) *Monitor[T] {
+	return &Monitor[T]{
+		done:    make(chan struct{}),
+		timeout: timeout,
+	}
+}
+
+// Set updates the current value and timestamp
+func (m *Monitor[T]) Set(val T) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	m.val = val
+	m.updated = time.Now()
+
+	m.once.Do(func() { close(m.done) })
+}
+
+// Get returns the current value or ErrOutdated if timeout exceeded
+func (m *Monitor[T]) Get() (T, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	if time.Since(m.updated) > m.timeout {
+		return m.val, api.ErrOutdated
+	}
+
+	return m.val, nil
+}
+
+// Done signals if monitor has been updated at least once
+func (m *Monitor[T]) Done() <-chan struct{} {
+	return m.done
+}

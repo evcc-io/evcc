@@ -101,14 +101,12 @@ func (p *Mqtt) WithPipeline(pipeline *pipeline.Pipeline) *Mqtt {
 var _ FloatProvider = (*Mqtt)(nil)
 
 // newReceiver creates a msgHandler and subscribes it to the topic.
-// receiver will ensure actual data guarded by `timeout` and return error
-// if initial value is not received within `timeout` or max. 10s if timeout is not given.
 func (m *Mqtt) newReceiver() *msgHandler {
 	h := &msgHandler{
 		topic:    m.topic,
 		scale:    m.scale,
-		wait:     util.NewWaiter(m.timeout, func() { m.log.DEBUG.Printf("%s wait for initial value", m.topic) }),
 		pipeline: m.pipeline,
+		val:      util.NewMonitor[string](m.timeout),
 	}
 
 	m.client.Listen(m.topic, h.receive)

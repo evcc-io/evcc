@@ -4,45 +4,35 @@ import (
 	"fmt"
 	"math"
 	"strconv"
-	"sync"
-	"time"
 
 	"github.com/evcc-io/evcc/provider/pipeline"
 	"github.com/evcc-io/evcc/util"
 )
 
 type msgHandler struct {
-	mux      sync.Mutex
-	wait     *util.Waiter
 	scale    float64
 	topic    string
 	pipeline *pipeline.Pipeline
-	payload  string
+	val      *util.Monitor[string]
 }
 
 func (h *msgHandler) receive(payload string) {
-	h.mux.Lock()
-	defer h.mux.Unlock()
-
-	h.payload = payload
-	h.wait.Update()
+	h.val.Set(payload)
 }
 
 // hasValue returned the received and processed payload as string
 func (h *msgHandler) hasValue() (string, error) {
-	if late := h.wait.Overdue(); late > 0 {
-		return "", fmt.Errorf("%s outdated: %v", h.topic, late.Truncate(time.Second))
+	payload, err := h.val.Get()
+	if err != nil {
+		return "", err
 	}
 
-	h.mux.Lock()
-	defer h.mux.Unlock()
-
 	if h.pipeline != nil {
-		b, err := h.pipeline.Process([]byte(h.payload))
+		b, err := h.pipeline.Process([]byte(payload))
 		return string(b), err
 	}
 
-	return h.payload, nil
+	return payload, nil
 }
 
 func (h *msgHandler) floatGetter() (float64, error) {
