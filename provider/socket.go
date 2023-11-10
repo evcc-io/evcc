@@ -88,10 +88,12 @@ func NewSocketProviderFromConfig(other map[string]interface{}) (Provider, error)
 
 	go p.listen()
 
-	select {
-	case <-p.val.Done():
-	case <-time.After(cc.Timeout):
-		return nil, api.ErrTimeout
+	if cc.Timeout > 0 {
+		select {
+		case <-p.val.Done():
+		case <-time.After(cc.Timeout):
+			return nil, api.ErrTimeout
+		}
 	}
 
 	return p, nil

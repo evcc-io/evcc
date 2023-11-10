@@ -41,11 +41,12 @@ func TestSocketProvider(t *testing.T) {
 
 	addr := "ws://" + srv.Listener.Addr().String()
 	p, err := NewSocketProviderFromConfig(map[string]any{
-		"uri":     addr,
-		"jq":      `.data | select(.uuid=="bar") .tuples[0][1]`,
-		"timeout": "1s",
+		"uri": addr,
+		"jq":  `.data | select(.uuid=="bar") .tuples[0][1]`,
 	})
 	require.NoError(t, err)
+
+	<-p.(*Socket).val.Done()
 
 	g := p.(IntProvider).IntGetter()
 	i, err := g()
