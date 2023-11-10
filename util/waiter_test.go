@@ -33,11 +33,11 @@ func TestWaiterInitialUpdateNotReceived(t *testing.T) {
 		w := NewWaiter(timeout, func() {})
 
 		if timeout == 0 {
-			if elapsed := w.Overdue(); elapsed != 0) {
+			if elapsed := w.Overdue(); elapsed != 0 {
 				t.Errorf("expected %v, got %v", 0, elapsed)
 			}
 		} else {
-			if elapsed := w.Overdue(); elapsed < 2*testTimeout && !(timeout == 0 && elapsed == 0) {
+			if elapsed := w.Overdue(); elapsed < 2*testTimeout {
 				t.Errorf("expected %v, got %v", 2*testTimeout, elapsed)
 			}
 		}
