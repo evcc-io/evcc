@@ -1,11 +1,11 @@
 package templates
 
 import (
+	"maps"
 	"os"
 	"slices"
 	"testing"
 
-	"github.com/jinzhu/copier"
 	"gopkg.in/yaml.v3"
 )
 
@@ -70,10 +70,7 @@ func TestClass(t *testing.T, class Class, instantiate func(t *testing.T, values 
 
 		for _, u := range usages {
 			// create a copy of the map for parallel execution
-			usageValues := make(map[string]interface{}, len(values)+1)
-			if err := copier.Copy(&usageValues, values); err != nil {
-				panic(err)
-			}
+			usageValues := maps.Clone(values)
 			usageValues[ParamUsage] = u
 
 			// subtest for each usage
