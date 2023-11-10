@@ -67,6 +67,7 @@ type Site struct {
 	BufferStartSoc                    float64      `mapstructure:"bufferStartSoc"`                    // start charging on battery above this Soc
 	MaxGridSupplyWhileBatteryCharging float64      `mapstructure:"maxGridSupplyWhileBatteryCharging"` // ignore battery charging if AC consumption is above this value
 	SmartCostLimit                    float64      `mapstructure:"smartCostLimit"`                    // always charge if cost is below this value
+	BatteryDischargeControl           bool         `mapstructure:"batteryDischargeControl"`           // shall discharge of home battery be adjusted
 
 	// meters
 	gridMeter     api.Meter   // Grid usage meter
@@ -81,10 +82,11 @@ type Site struct {
 	stats       *Stats                   // Stats
 
 	// cached state
-	gridPower    float64 // Grid power
-	pvPower      float64 // PV power
-	batteryPower float64 // Battery charge power
-	batterySoc   float64 // Battery soc
+	gridPower    float64         // Grid power
+	pvPower      float64         // PV power
+	batteryPower float64         // Battery charge power
+	batterySoc   float64         // Battery soc
+	batteryMode  api.BatteryMode // Battery discharge currently enabled
 
 	publishCache map[string]any // store last published values to avoid unnecessary republishing
 }
@@ -224,6 +226,7 @@ func NewSite() *Site {
 		log:          util.NewLogger("site"),
 		publishCache: make(map[string]any),
 		Voltage:      230, // V
+		batteryMode:  api.BatteryNormal,
 	}
 
 	return lp
@@ -250,6 +253,9 @@ func (site *Site) restoreSettings() {
 	}
 	if v, err := settings.Float("site.smartCostLimit"); err == nil {
 		site.SmartCostLimit = v
+	}
+	if v, err := settings.Bool("site.batteryDischargeControl"); err == nil {
+		site.BatteryDischargeControl = v
 	}
 }
 
@@ -769,7 +775,6 @@ func (site *Site) update(lp Updater) {
 	}
 
 	if sitePower, batteryBuffered, batteryStart, err := site.sitePower(totalChargePower, flexiblePower); err == nil {
-
 		// ignore negative pvPower values as that means it is not an energy source but consumption
 		homePower := site.gridPower + max(0, site.pvPower) + site.batteryPower - totalChargePower
 		homePower = max(homePower, 0)
@@ -789,6 +794,10 @@ func (site *Site) update(lp Updater) {
 		}
 	} else {
 		site.log.ERROR.Println(err)
+	}
+
+	if site.BatteryDischargeControl {
+		site.updateBatteryMode(site.Loadpoints())
 	}
 
 	site.stats.Update(site)
@@ -814,6 +823,8 @@ func (site *Site) prepare() {
 	site.publish("currency", site.tariffs.Currency.String())
 
 	site.publish("vehicles", vehicleTitles(site.GetVehicles()))
+	site.publish("batteryDischargeControl", site.BatteryDischargeControl)
+	site.publish("batteryMode", site.batteryMode)
 }
 
 // Prepare attaches communication channels to site and loadpoints

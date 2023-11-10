@@ -1384,7 +1384,7 @@ func (lp *Loadpoint) publishSocAndRange() {
 	soc, err := lp.chargerSoc()
 
 	// guard for socEstimator removed by api
-	if lp.socEstimator == nil || !lp.vehicleHasSoc() {
+	if lp.socEstimator == nil || (!lp.vehicleHasSoc() && err != nil) {
 		// This is a workaround for heaters. Without vehicle, the soc estimator is not initialized.
 		// We need to check if the charger can provide soc and use it if available.
 		if err == nil {
