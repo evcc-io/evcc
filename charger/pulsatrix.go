@@ -173,7 +173,7 @@ func (c *PulsatrixCharger) valid() bool {
 
 func (c *PulsatrixCharger) handleError(err error) {
 	if err != nil {
-		c.log.ERROR.Println("error:", err)
+		c.log.ERROR.Println(err)
 	}
 }
 
