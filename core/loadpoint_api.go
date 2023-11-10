@@ -377,6 +377,13 @@ func (lp *Loadpoint) GetMaxPower() float64 {
 	return Voltage * lp.GetMaxCurrent() * float64(lp.maxActivePhases())
 }
 
+// GetPlanActive returns the active state of the planner
+func (lp *Loadpoint) GetPlanActive() bool {
+	lp.Lock()
+	defer lp.Unlock()
+	return lp.planActive
+}
+
 // SetRemainingDuration sets the estimated remaining charging duration
 func (lp *Loadpoint) SetRemainingDuration(chargeRemainingDuration time.Duration) {
 	lp.Lock()
