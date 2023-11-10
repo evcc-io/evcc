@@ -43,6 +43,7 @@ func (m *Monitor[T]) Get() (T, error) {
 	if m.timeout == 0 {
 		select {
 		case <-m.done:
+			return m.val, nil
 		default:
 			return m.val, api.ErrOutdated
 		}
