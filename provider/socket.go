@@ -20,7 +20,7 @@ const retryDelay = 5 * time.Second
 
 // Socket implements websocket request provider
 type Socket struct {
-	client   *http.Client
+	*request.Helper
 	log      *util.Logger
 	mux      sync.Mutex
 	wait     *util.Waiter
@@ -64,7 +64,7 @@ func NewSocketProviderFromConfig(other map[string]interface{}) (Provider, error)
 
 	p := &Socket{
 		log:     log,
-		client:  request.NewClient(log),
+		Helper:  request.NewHelper(log),
 		wait:    util.NewWaiter(cc.Timeout, func() { log.DEBUG.Println("wait for initial value") }),
 		url:     url,
 		headers: cc.Headers,
@@ -81,7 +81,7 @@ func NewSocketProviderFromConfig(other map[string]interface{}) (Provider, error)
 
 	// ignore the self signed certificate
 	if cc.Insecure {
-		p.client.Transport = request.NewTripper(log, transport.Insecure())
+		p.Client.Transport = request.NewTripper(log, transport.Insecure())
 	}
 
 	var err error
@@ -101,12 +101,14 @@ func (p *Socket) listen() {
 	}
 
 	opts := &websocket.DialOptions{
-		HTTPClient: p.client,
 		HTTPHeader: headers,
 	}
 
 	for {
-		conn, _, err := websocket.Dial(context.Background(), p.url, opts)
+		ctx, cancel := context.WithTimeout(context.Background(), request.Timeout)
+		conn, _, err := websocket.Dial(ctx, p.url, opts)
+		cancel()
+
 		if err != nil {
 			p.log.ERROR.Println(err)
 			time.Sleep(retryDelay)
