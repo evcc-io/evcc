@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+
 	"sync"
 	"time"
 
@@ -78,6 +79,7 @@ func (c *PulsatrixCharger) connectWs() error {
 	conn, _, err := websocket.Dial(ctx, c.uri, nil)
 	if err != nil {
 		if errors.Is(err, context.DeadlineExceeded) {
+
 			err = fmt.Errorf("Make sure the IP is correct and the SECC is connected to the network")
 		} else {
 			err = fmt.Errorf("error connecting to websocket: %v", err)
@@ -89,6 +91,7 @@ func (c *PulsatrixCharger) connectWs() error {
 	c.handleError(c.Enable(false))
 
 	c.conn = conn
+
 	go c.wsReader()
 	go c.heartbeat()
 	return nil
@@ -100,6 +103,7 @@ func (c *PulsatrixCharger) reconnectWs() {
 		c.log.WARN.Printf("trying to reconnect in %v...\n", time)
 	}
 	c.handleError(backoff.RetryNotify(c.connectWs, c.bo, notify))
+
 }
 
 // WsReader runs a loop that reads messages from the websocket
@@ -124,6 +128,7 @@ func (c *PulsatrixCharger) wsReader() {
 	}
 	c.mutex.Unlock()
 	c.reconnectWs()
+
 }
 
 // wsWrite writes a message to the websocket
@@ -149,6 +154,7 @@ func (c *PulsatrixCharger) parseWsMessage(messageType websocket.MessageType, mes
 		b := bytes.ReplaceAll(message, []byte(":NaN"), []byte(":null"))
 		idx := bytes.IndexByte(b, '{')
 		c.handleError(json.Unmarshal(b[idx:], c))
+
 	}
 }
 
@@ -156,11 +162,12 @@ func (c *PulsatrixCharger) parseWsMessage(messageType websocket.MessageType, mes
 func (c *PulsatrixCharger) heartbeat() {
 	for range time.Tick(3 * time.Minute) {
 		c.handleError(c.Enable(c.enState))
+
 	}
 }
 
 func (c *PulsatrixCharger) valid() bool {
-	return time.Since(c.updated) < 30*time.Second
+	return time.Since(c.updated) < 30 * time.Second
 }
 
 func (c *PulsatrixCharger) handleError(err error) {
@@ -208,6 +215,7 @@ func (c *PulsatrixCharger) GetMaxCurrent() (float64, error) {
 	if !c.valid() {
 		c.handleError(c.Enable(false))
 		return 0, fmt.Errorf(api.ErrOutdated.Error())
+
 	}
 	return float64(c.AllocatedAmperage), nil
 
@@ -220,6 +228,7 @@ func (c *PulsatrixCharger) CurrentPower() (float64, error) {
 	if !c.valid() {
 		c.handleError(c.Enable(false))
 		return 0, fmt.Errorf(api.ErrOutdated.Error())
+
 	}
 	return float64(c.LastActivePower), nil
 }
@@ -232,6 +241,7 @@ func (c *PulsatrixCharger) Currents() (float64, float64, float64, error) {
 	if len(currents) < 3 || !c.valid() {
 		c.handleError(c.Enable(false))
 		return 0, 0, 0, fmt.Errorf(api.ErrOutdated.Error())
+
 	}
 	return currents[0], currents[1], currents[2], nil
 }
@@ -244,6 +254,7 @@ func (c *PulsatrixCharger) Voltages() (float64, float64, float64, error) {
 	if len(voltages) < 3 || !c.valid() {
 		c.handleError(c.Enable(false))
 		return 0, 0, 0, fmt.Errorf(api.ErrOutdated.Error())
+
 	}
 	return voltages[0], voltages[1], voltages[2], nil
 }
@@ -255,6 +266,7 @@ func (c *PulsatrixCharger) TotalEnergy() (float64, error) {
 	if !c.valid() {
 		c.handleError(c.Enable(false))
 		return 0, fmt.Errorf(api.ErrOutdated.Error())
+
 	}
 	return float64(c.EnergyImported), nil
 }
