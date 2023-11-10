@@ -5,6 +5,8 @@ import (
 	"time"
 )
 
+var waitInitialTimeout = 10 * time.Second
+
 // Waiter provides monitoring of receive timeouts and reception of initial value
 type Waiter struct {
 	mu      sync.Mutex
@@ -18,6 +20,7 @@ type Waiter struct {
 func NewWaiter(timeout time.Duration, logInitialWait func()) *Waiter {
 	return &Waiter{
 		log:     logInitialWait,
+		updated: time.Now(),
 		timeout: timeout,
 		initial: make(chan bool),
 	}
@@ -47,8 +50,7 @@ func (p *Waiter) Overdue() time.Duration {
 
 		select {
 		case <-p.initial:
-		case <-time.After(p.timeout):
-			return p.timeout
+		case <-time.After(waitInitialTimeout):
 		}
 	}
 
