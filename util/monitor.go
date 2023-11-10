@@ -39,11 +39,11 @@ func (m *Monitor[T]) Get() (T, error) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 
+	// without timeout set, error if not yet received
 	if m.timeout == 0 {
 		select {
 		case <-m.done:
 		default:
-			// without timeout, error if not yet received
 			return m.val, api.ErrOutdated
 		}
 	} else if time.Since(m.updated) > m.timeout {
