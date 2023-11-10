@@ -207,7 +207,7 @@ func (c *PulsatrixCharger) MaxCurrentMillis(current float64) error {
 		c.handleError(c.Enable(true))
 	}
 	res := strconv.FormatFloat(current, 'f', 10, 64)
-	return c.wsWriter("setCurrentLimit\n" + res)
+	return c.wsWriter("setCurrentLimit\n" + strconv.FormatFloat(current, 'f', 10, 64))
 }
 
 // GetMaxCurrent implements the api.CurrentGetter interface
