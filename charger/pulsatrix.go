@@ -100,7 +100,6 @@ func (c *PulsatrixCharger) reconnectWs() {
 		c.log.WARN.Printf("trying to reconnect in %v...\n", time)
 	}
 	c.handleError(backoff.RetryNotify(c.connectWs, c.bo, notify))
-	return
 }
 
 // WsReader runs a loop that reads messages from the websocket
@@ -161,12 +160,12 @@ func (c *PulsatrixCharger) heartbeat() {
 }
 
 func (c *PulsatrixCharger) valid() bool {
-	return !c.updated.Before(time.Now().Add(-30 * time.Second))
+	return time.Since(c.updated) < 30*time.Second
 }
 
 func (c *PulsatrixCharger) handleError(err error) {
 	if err != nil {
-		c.log.ERROR.Println("error:", err)
+		c.log.ERROR.Println(err)
 	}
 }
 
@@ -199,8 +198,7 @@ func (c *PulsatrixCharger) MaxCurrentMillis(current float64) error {
 	if !c.enState && current > 0 {
 		c.handleError(c.Enable(true))
 	}
-	res := strconv.FormatFloat(current, 'f', 10, 64)
-	return c.wsWriter("setCurrentLimit\n" + res)
+	return c.wsWriter("setCurrentLimit\n" + strconv.FormatFloat(current, 'f', 10, 64))
 }
 
 // GetMaxCurrent implements the api.CurrentGetter interface
