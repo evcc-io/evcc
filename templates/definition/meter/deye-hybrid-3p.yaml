@@ -1,11 +1,12 @@
-template: deye-hybrid
+template: deye-hybrid-3p
+covers: ["deye-hybrid"]
 products:
   - brand: Deye
     description:
-      generic: SUN-(5/6/8/10/12)K-SG04LP3-EU series hybrid inverter
+      generic: 3p hybrid inverter
   - brand: Sunsynk
     description:
-      generic: SYNK-(8/10/12)K-SG04LP3 *untested*
+      generic: 3p hybrid inverter
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -22,14 +23,14 @@ render: |
   power:
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    register: # manual non-sunspec register configuration
+    register:
       address: 625 # Grid side total power
       type: holding
       decode: int16
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    register: # manual non-sunspec register configuration
+    register:
       address: 522 # "Total_GridBuy_Power Wh"
       type: holding
       decode: uint32
@@ -37,21 +38,21 @@ render: |
   currents:
     - source: modbus
       {{- include "modbus" . | indent 4 }}
-      register: # manual non-sunspec register configuration
+      register:
         address: 613 # "Out-of-grid - current A"
         type: holding
         decode: int16
       scale: 0.01
     - source: modbus
       {{- include "modbus" . | indent 4 }}
-      register: # manual non-sunspec register configuration
+      register:
         address: 614 # "Out-of-grid - current B"
         type: holding
         decode: int16
       scale: 0.01
     - source: modbus
       {{- include "modbus" . | indent 4 }}
-      register: # manual non-sunspec register configuration
+      register:
         address: 615 # "Out-of-grid - current C"
         type: holding
         decode: int16
@@ -63,32 +64,32 @@ render: |
     add:
     - source: modbus
       {{- include "modbus" . | indent 4 }}
-      register: # manual non-sunspec register configuration
+      register:
         address: 672 # "PV1 input power"
         type: holding
-        decode: int16
+        decode: uint16
     - source: modbus
       {{- include "modbus" . | indent 4 }}
-      register: # manual non-sunspec register configuration
+      register:
         address: 673 # "PV2 input power"
         type: holding
-        decode: int16
+        decode: uint16
     - source: modbus
       {{- include "modbus" . | indent 4 }}
-      register: # manual non-sunspec register configuration
+      register:
         address: 674 # "PV3 input power"
         type: holding
-        decode: int16
+        decode: uint16
     - source: modbus
       {{- include "modbus" . | indent 4 }}
-      register: # manual non-sunspec register configuration
+      register:
         address: 675 # "PV4 input power"
         type: holding
-        decode: int16
+        decode: uint16
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    register: # manual non-sunspec register configuration
+    register:
       address: 534 # "Total_PV_Power_Wh"
       type: holding
       decode: uint32
@@ -98,24 +99,24 @@ render: |
   power:
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    register: # manual non-sunspec register configuration
+    register:
       address: 590 # "Battery output power"
       type: holding
       decode: int16
   soc:
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    register: # manual non-sunspec register configuration
+    register:
       address: 588 # "battery capacity"
       type: holding
-      decode: int16
+      decode: uint16
   {{- if .capacity }}
   capacity: {{ .capacity }} # kWh
   {{- end }}
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    register: # manual non-sunspec register configuration
+    register:
       address: 518 # "Total discharge of the battery (Wh)"
       type: holding
       decode: uint32
