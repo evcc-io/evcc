@@ -164,7 +164,7 @@ jobs:
       - name: Run tests
         uses: docker://mcr.microsoft.com/playwright:v1.39.0-jammy
         with:
-          args: apt install sqlite3 -y && npx playwright test
+          args: apt-get update && apt-get install sqlite3 -y && npx playwright test
 
       - uses: actions/upload-artifact@v3
         if: always()
