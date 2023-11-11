@@ -16,7 +16,7 @@
     "@babel/core": "^7.17.2",
     "@h2d2/shopicons": "^1.2.0",
     "@histoire/plugin-vue": "^0.17.1",
-    "@playwright/test": "^1.34.3",
+    "@playwright/test": "^1.39.0",
     "@popperjs/core": "^2.11.5",
     "@vitejs/plugin-legacy": "^4.0.2",
     "@vitejs/plugin-vue": "^4.1.0",
@@ -50,7 +50,7 @@
     "vue-i18n": "^9.2.2",
     "vue-meta": "^3.0.0-alpha.2",
     "vue-router": "^4.0.12",
-    "wait-on": "^7.0.1"
+    "wait-on": "^7.1.0"
   },
   "engines": {
     "npm": ">=8.0.0",
