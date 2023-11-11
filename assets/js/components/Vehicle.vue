@@ -36,9 +36,6 @@
 				class="flex-grow-1 target-charge"
 				v-bind="chargingPlan"
 				:disabled="chargingPlanDisabled"
-				@target-time-updated="setTargetTime"
-				@target-time-removed="removeTargetTime"
-				@minsoc-updated="setMinSoc"
 			/>
 			<LimitSocSelect
 				v-if="socBasedCharging"
@@ -72,7 +69,6 @@ import ChargingPlan from "./ChargingPlan.vue";
 import LimitSocSelect from "./LimitSocSelect.vue";
 import LimitEnergySelect from "./LimitEnergySelect.vue";
 import { distanceUnit, distanceValue } from "../units";
-import api from "../api";
 
 export default {
 	name: "Vehicle",
@@ -227,18 +223,6 @@ export default {
 		},
 		limitEnergyUpdated: function (limitEnergy) {
 			this.$emit("limit-energy-updated", limitEnergy);
-		},
-		setTargetTime: function (targetTime) {
-			this.$emit("target-time-updated", targetTime);
-		},
-		setMinSoc: function (soc) {
-			api.post(this.apiPath("minsoc") + "/" + soc);
-		},
-		apiPath: function (func) {
-			return `vehicles/${this.vehicle?.name}/${func}`;
-		},
-		removeTargetTime: function () {
-			this.$emit("target-time-removed");
 		},
 		changeVehicle(name) {
 			this.$emit("change-vehicle", name);

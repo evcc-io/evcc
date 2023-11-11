@@ -40,11 +40,7 @@ export default {
 		options: function () {
 			const result = [];
 			for (let soc = 20; soc <= 100; soc += 5) {
-				let text = this.formatSoc(soc);
-				const range = this.estimatedRange(soc);
-				if (range) {
-					text += ` (${this.formatKm(range)})`;
-				}
+				let text = this.fmtSocOption(soc, this.rangePerSoc, distanceUnit(), this.heating);
 				result.push({ soc, text });
 			}
 			return result;

@@ -33,7 +33,8 @@
 					<div class="modal-content">
 						<div class="modal-header">
 							<h5 class="modal-title">
-								{{ $t("main.chargingPlan.modalTitle") }}
+								{{ $t("main.chargingPlan.modalTitle")
+								}}<span v-if="vehicle">: {{ vehicle.title }}</span>
 							</h5>
 							<button
 								type="button"
@@ -66,16 +67,16 @@
 								</li>
 							</ul>
 							<div v-if="isModalVisible">
-								<TargetCharge
+								<ChargingPlanSettings
 									v-if="departureTabActive"
-									v-bind="targetCharge"
-									@target-time-updated="setTargetTime"
-									@target-time-removed="removeTargetTime"
+									v-bind="chargingPlanSettingsProps"
+									@plan-added="addPlan"
 								/>
 								<ChargingPlanArrival
 									v-if="arrivalTabActive"
 									v-bind="chargingPlanArrival"
 									@minsoc-updated="setMinSoc"
+									@limitsoc-updated="setLimitSoc"
 								/>
 							</div>
 						</div>
@@ -89,15 +90,16 @@
 <script>
 import Modal from "bootstrap/js/dist/modal";
 import LabelAndValue from "./LabelAndValue.vue";
-import TargetCharge from "./TargetCharge.vue";
+import ChargingPlanSettings from "./ChargingPlanSettings.vue";
 import ChargingPlanArrival from "./ChargingPlanArrival.vue";
 
 import formatter from "../mixins/formatter";
 import collector from "../mixins/collector";
+import api from "../api";
 
 export default {
 	name: "ChargingPlan",
-	components: { LabelAndValue, TargetCharge, ChargingPlanArrival },
+	components: { LabelAndValue, ChargingPlanSettings, ChargingPlanArrival },
 	mixins: [formatter, collector],
 	props: {
 		id: [String, Number],
@@ -115,8 +117,8 @@ export default {
 		currency: String,
 		mode: String,
 		vehicleCapacity: Number,
+		rangePerSoc: Number,
 	},
-	emits: ["target-time-updated", "target-time-removed", "minsoc-updated"],
 	data: function () {
 		return {
 			modal: null,
@@ -128,8 +130,14 @@ export default {
 		minSoc: function () {
 			return this.vehicle?.minSoc;
 		},
+		limitSoc: function () {
+			return this.vehicle?.limitSoc;
+		},
+		plans: function () {
+			return this.vehicle?.plans;
+		},
 		targetChargeEnabled: function () {
-			return this.targetTime;
+			return this.vehicle?.plan?.length > 0;
 		},
 		enabled: function () {
 			return this.targetChargeEnabled || this.minSocEnabled;
@@ -145,7 +153,7 @@ export default {
 				return this.$t("main.chargingPlan.titleMinSoc");
 			}
 			if (this.targetChargeEnabled) {
-				return this.$t("main.chargingPlan.titleTargetCharge");
+				return this.$t("main.chargingPlan.titleChargingPlanSettings");
 			}
 			return this.$t("main.chargingPlan.title");
 		},
@@ -158,8 +166,8 @@ export default {
 		arrivalTabActive: function () {
 			return this.activeTab === "arrival";
 		},
-		targetCharge: function () {
-			return this.collectProps(TargetCharge);
+		chargingPlanSettingsProps: function () {
+			return this.collectProps(ChargingPlanSettings);
 		},
 		chargingPlanArrival: function () {
 			return this.collectProps(ChargingPlanArrival);
@@ -201,16 +209,19 @@ export default {
 		showArrivalTab: function () {
 			this.activeTab = "arrival";
 		},
-		setTargetTime: function (targetTime) {
-			this.$emit("target-time-updated", targetTime);
-			this.modal.hide();
+		apiPath: function (func) {
+			return "vehicles/" + this.vehicle.name + "/" + func;
 		},
-		removeTargetTime: function () {
-			this.$emit("target-time-removed");
-			this.modal.hide();
+		addPlan: function (plan) {
+			const soc = plan.soc;
+			const time = plan.time.toISOString();
+			api.post(this.apiPath("plan/soc/") + `${soc}/${time}`);
 		},
-		setMinSoc: function (minSoc) {
-			this.$emit("minsoc-updated", minSoc);
+		setMinSoc: function (soc) {
+			api.post(this.apiPath("minsoc") + `/${soc}`);
+		},
+		setLimitSoc: function (soc) {
+			api.post(this.apiPath("limitsoc") + `/${soc}`);
 		},
 	},
 };

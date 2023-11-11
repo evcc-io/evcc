@@ -207,6 +207,10 @@ label = "Max. Current"
 [main.loadpointSettings.minCurrent]
 label = "Min. Current"
 
+[main.loadpointSettings.limitSoc]
+description = "Charging limit that is used when this vehicle is connected."
+label = "Default limit"
+
 [main.loadpointSettings.minSoc]
 description = "The vehicle gets „fast” charged to {0}% in solar mode. Then continues with solar surplus. Useful to ensure a minimum range even for darker days."
 label = "Min. charge %"

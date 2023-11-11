@@ -26,7 +26,7 @@ import { CO2_TYPE } from "../units";
 import TariffChart from "./TariffChart.vue";
 
 export default {
-	name: "TargetChargePlan",
+	name: "ChargingPlanPreview",
 	components: { TariffChart },
 	mixins: [formatter],
 	props: {

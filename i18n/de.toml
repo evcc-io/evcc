@@ -210,6 +210,10 @@ label = "Max. Ladestrom"
 [main.loadpointSettings.minCurrent]
 label = "Min. Ladestrom"
 
+[main.loadpointSettings.limitSoc]
+description = "Dieses Limit wird verwendet, wenn das Fahrzeug angeschlossen wird."
+label = "Standard Ladelimit"
+
 [main.loadpointSettings.minSoc]
 description = "Fahrzeug wird im PV-Modus „schnell“ auf {0}% geladen. Danach weiter mit PV-Überschuss. Nützlich, um auch an dunklen Tagen eine Mindestreichweite zu gewährleisten."
 label = "Min. Ladung %"
@@ -247,7 +251,7 @@ planUnknown = "noch unbekannt"
 priceLimit = "Preisgrenze von {price}"
 remove = "Entfernen"
 setTargetTime = "keine"
-targetEnergyRequired = "Damit die Ladeplanung funktioniert muss ein Ladeziel gesetzt sein."
+targetEnergyRequired = "Damit die Ladeplanung funktioniert muss ein Ladelimit gesetzt sein."
 targetIsInThePast = "Wähle einen Zeitpunkt in der Zukunft, Marty."
 targetIsTooFarInTheFuture = "Wir passen den Plan an, sobald wir mehr über die Zukunft wissen."
 title = "Zielzeit"
@@ -265,7 +269,7 @@ timeRange = "{day} {range} Uhr"
 unknownPrice = "noch unbekannt"
 
 [main.targetEnergy]
-label = "Ladeziel"
+label = "Ladelimit"
 noLimit = "keins"
 
 [main.vehicle]
@@ -275,7 +279,7 @@ detectionActive = "Fahrzeugerkennung läuft …"
 fallbackName = "Fahrzeug"
 moreActions = "Weitere Aktionen"
 none = "Kein Fahrzeug"
-targetSoc = "Ladeziel"
+targetSoc = "Ladelimit"
 temp = "Temp."
 tempLimit = "Zieltemp."
 unknown = "Gastfahrzeug"
