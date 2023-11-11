@@ -48,7 +48,7 @@ export default {
 		chargedEnergy: Number,
 		vehicleCapacity: Number,
 	},
-	emits: ["target-energy-updated"],
+	emits: ["limit-energy-updated"],
 	computed: {
 		maxEnergy: function () {
 			return this.vehicleCapacity || 100;
@@ -81,7 +81,7 @@ export default {
 	},
 	methods: {
 		change: function (e) {
-			return this.$emit("target-energy-updated", parseFloat(e.target.value));
+			return this.$emit("limit-energy-updated", parseFloat(e.target.value));
 		},
 		estimatedSoc: function (kWh) {
 			if (this.socPerKwh) {
