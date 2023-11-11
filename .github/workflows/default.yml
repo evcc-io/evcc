@@ -138,7 +138,12 @@ jobs:
 
   integration:
     name: Integration
+    timeout-minutes: 30
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1/4, 2/4, 3/4, 4/4]
 
     steps:
       - uses: actions/checkout@v4
@@ -164,7 +169,7 @@ jobs:
         run: npx playwright install --with-deps chromium
 
       - name: Run tests
-        run: npx playwright test
+        run: npx playwright test --shard ${{ matrix.shard }}
 
       - uses: actions/upload-artifact@v3
         if: always()
