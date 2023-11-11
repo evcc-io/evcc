@@ -140,10 +140,6 @@ jobs:
     name: Integration
     timeout-minutes: 30
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        shard: [1/2, 2/2]
 
     steps:
       - uses: actions/checkout@v4
@@ -168,7 +164,7 @@ jobs:
       - name: Run tests
         uses: docker://mcr.microsoft.com/playwright:v1.39.0-jammy
         with:
-          args: apt install sqlite3 -y && npx playwright test --shard ${{ matrix.shard }}
+          args: apt install sqlite3 -y && npx playwright test
 
       - uses: actions/upload-artifact@v3
         if: always()
