@@ -126,7 +126,7 @@ render: |
     uri: {{ .host }}:{{ .port }}
     id: 100 # com.victronenergy.system
     register:
-      address: 2740 # max discharge power
+      address: 2704 # max discharge power
       type: holding
       decode: int16
   batteryminsoc:
