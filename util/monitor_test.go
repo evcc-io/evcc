@@ -32,17 +32,20 @@ func TestMonitorRacyMaps(t *testing.T) {
 		}
 	}()
 
+	<-m.Done()
+
 	go func() {
 		for {
 			select {
 			case <-done:
 				return
 			default:
-				m.GetFunc(func(mm map[int]int) {
+				err := m.GetFunc(func(mm map[int]int) {
 					for k, v := range mm {
 						require.Equal(t, k, v)
 					}
 				})
+				require.NoError(t, err)
 			}
 		}
 	}()
