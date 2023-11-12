@@ -11,6 +11,7 @@ import (
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/session"
 	"github.com/evcc-io/evcc/core/soc"
+	"github.com/evcc-io/evcc/core/vehicle"
 	"github.com/evcc-io/evcc/provider"
 )
 
@@ -99,7 +100,7 @@ func (lp *Loadpoint) selectVehicleByID(id string) api.Vehicle {
 
 // setActiveVehicle assigns currently active vehicle, configures soc estimator
 // and adds an odometer task
-func (lp *Loadpoint) setActiveVehicle(vehicle api.Vehicle) {
+func (lp *Loadpoint) setActiveVehicle(v api.Vehicle) {
 	lp.vehicleMux.Lock()
 
 	from := "unknown"
@@ -108,12 +109,12 @@ func (lp *Loadpoint) setActiveVehicle(vehicle api.Vehicle) {
 		from = lp.vehicle.Title()
 	}
 	to := "unknown"
-	if vehicle != nil {
-		lp.coordinator.Acquire(vehicle)
-		to = vehicle.Title()
+	if v != nil {
+		lp.coordinator.Acquire(v)
+		to = v.Title()
 	}
 
-	lp.vehicle = vehicle
+	lp.vehicle = v
 	lp.vehicleMux.Unlock()
 
 	if from != to {
@@ -126,7 +127,7 @@ func (lp *Loadpoint) setActiveVehicle(vehicle api.Vehicle) {
 	lp.setLimitEnergy(0)
 	lp.Unlock()
 
-	if vehicle != nil {
+	if v != nil {
 		lp.socUpdated = time.Time{}
 
 		// resolve optional config
@@ -134,14 +135,15 @@ func (lp *Loadpoint) setActiveVehicle(vehicle api.Vehicle) {
 		if lp.Soc.Estimate == nil || *lp.Soc.Estimate {
 			estimate = true
 		}
-		lp.socEstimator = soc.NewEstimator(lp.log, lp.charger, vehicle, estimate)
+		lp.socEstimator = soc.NewEstimator(lp.log, lp.charger, v, estimate)
 
 		lp.publish(keys.VehiclePresent, true)
-		lp.publish(keys.VehicleTitle, vehicle.Title())
-		lp.publish(keys.VehicleIcon, vehicle.Icon())
-		lp.publish(keys.VehicleCapacity, vehicle.Capacity())
+		lp.publish(keys.VehicleTitle, v.Title())
+		lp.publish(keys.VehicleId, vehicle.Settings(lp.log, v).Name())
+		lp.publish(keys.VehicleIcon, v.Icon())
+		lp.publish(keys.VehicleCapacity, v.Capacity())
 
-		if mode, ok := vehicle.OnIdentified().GetMode(); ok {
+		if mode, ok := v.OnIdentified().GetMode(); ok {
 			lp.SetMode(mode)
 		}
 
@@ -167,8 +169,8 @@ func (lp *Loadpoint) setActiveVehicle(vehicle api.Vehicle) {
 
 	lp.updateSession(func(session *session.Session) {
 		var title string
-		if vehicle != nil {
-			title = vehicle.Title()
+		if v != nil {
+			title = v.Title()
 		}
 
 		lp.session.Vehicle = title
