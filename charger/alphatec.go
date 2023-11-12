@@ -81,6 +81,8 @@ func NewAlphatec(uri, device, comset string, baudrate int, proto modbus.Protocol
 	log := util.NewLogger("alphatec")
 	conn.Logger(log.TRACE)
 
+	conn.Delay(100 * time.Millisecond)
+
 	wb := &Alphatec{
 		conn: conn,
 		curr: 6,
