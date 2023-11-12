@@ -38,7 +38,7 @@ func NewConnection(uri, user, password string) (*Connection, error) {
 		return nil, fmt.Errorf("missing user or password")
 	}
 
-	log := util.NewLogger("tapo")
+	log := util.NewLogger("tapo").Redact(user, password)
 
 	var tapologger *tapolog.Logger
 	if util.LogLevelForArea("tapo").String() == "TRACE" {
