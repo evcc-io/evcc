@@ -1,6 +1,7 @@
 package meter
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -8,17 +9,23 @@ import (
 	"time"
 
 	"github.com/andig/go-powerwall"
+	"github.com/bogosj/tesla"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
+	"golang.org/x/oauth2"
 )
 
 // PowerWall is the tesla powerwall meter
 type PowerWall struct {
-	usage  string
-	client *powerwall.Client
-	meterG func() (map[string]powerwall.MeterAggregatesData, error)
+	usage                 string
+	client                *powerwall.Client
+	meterG                func() (map[string]powerwall.MeterAggregatesData, error)
+	energySite            *tesla.EnergySite
+	batteryControl        bool
+	batteryMode           api.BatteryMode
+	defaultBatteryReserve uint
 }
 
 func init() {
@@ -33,8 +40,12 @@ func NewPowerWallFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
 		URI, Usage, User, Password string
 		Cache                      time.Duration
+		RefreshToken               string
+		EnergySiteProdId           int64
+		DefaultBatteryReserve      uint
 	}{
-		Cache: time.Second,
+		Cache:                 time.Second,
+		DefaultBatteryReserve: 20,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -49,6 +60,17 @@ func NewPowerWallFromConfig(other map[string]interface{}) (api.Meter, error) {
 		return nil, errors.New("missing password")
 	}
 
+	var batteryControl bool
+	if cc.RefreshToken != "" || cc.EnergySiteProdId != 0 {
+		if cc.RefreshToken == "" {
+			return nil, errors.New("missing refresh token")
+		}
+		if cc.EnergySiteProdId == 0 {
+			return nil, errors.New("missing EnergySite Product ID")
+		}
+		batteryControl = true
+	}
+
 	// support default meter names
 	switch strings.ToLower(cc.Usage) {
 	case "grid":
@@ -57,12 +79,12 @@ func NewPowerWallFromConfig(other map[string]interface{}) (api.Meter, error) {
 		cc.Usage = "solar"
 	}
 
-	return NewPowerWall(cc.URI, cc.Usage, cc.User, cc.Password, cc.Cache)
+	return NewPowerWall(cc.URI, cc.Usage, cc.User, cc.Password, cc.Cache, cc.RefreshToken, cc.EnergySiteProdId, cc.DefaultBatteryReserve, batteryControl)
 }
 
 // NewPowerWall creates a Tesla PowerWall Meter
-func NewPowerWall(uri, usage, user, password string, cache time.Duration) (api.Meter, error) {
-	log := util.NewLogger("powerwall").Redact(user, password)
+func NewPowerWall(uri, usage, user, password string, cache time.Duration, refreshToken string, energySiteProdId int64, defaultBatteryReserve uint, batteryControl bool) (api.Meter, error) {
+	log := util.NewLogger("powerwall").Redact(user, password, refreshToken)
 
 	httpClient := &http.Client{
 		Transport: request.NewTripper(log, powerwall.DefaultTransport()),
@@ -75,9 +97,33 @@ func NewPowerWall(uri, usage, user, password string, cache time.Duration) (api.M
 	}
 
 	m := &PowerWall{
-		client: client,
-		usage:  strings.ToLower(usage),
-		meterG: provider.Cached(client.GetMetersAggregates, cache),
+		client:         client,
+		usage:          strings.ToLower(usage),
+		meterG:         provider.Cached(client.GetMetersAggregates, cache),
+		batteryControl: batteryControl,
+		batteryMode:    api.BatteryNormal,
+	}
+
+	if batteryControl {
+		ctx := context.WithValue(context.Background(), oauth2.HTTPClient, request.NewClient(log))
+
+		options := []tesla.ClientOption{tesla.WithToken(&oauth2.Token{
+			RefreshToken: refreshToken,
+			Expiry:       time.Now(),
+		})}
+
+		cloudClient, err := tesla.NewClient(ctx, options...)
+		if err != nil {
+			return nil, err
+		}
+
+		energySite, err := cloudClient.EnergySite(energySiteProdId)
+		if err != nil {
+			return nil, err
+		}
+		m.energySite = energySite
+
+		m.defaultBatteryReserve = defaultBatteryReserve
 	}
 
 	// decorate api.MeterEnergy
@@ -148,4 +194,33 @@ func (m *PowerWall) batterySoc() (float64, error) {
 	}
 
 	return float64(res.Percentage), err
+}
+
+// SetBatteryMode implements the api.BatteryController interface
+func (m *PowerWall) SetBatteryMode(mode api.BatteryMode) error {
+	if !m.batteryControl || mode == m.batteryMode {
+		return nil
+	}
+
+	switch mode {
+	case api.BatteryNormal:
+		if err := m.energySite.SetBatteryReserve(uint64(m.defaultBatteryReserve)); err != nil {
+			return err
+		}
+	case api.BatteryLocked:
+		if err := m.energySite.SetBatteryReserve(uint64(100)); err != nil {
+			return err
+		}
+	case api.BatteryCharge: // not supported(?), just lock
+		if err := m.energySite.SetBatteryReserve(uint64(100)); err != nil {
+			return err
+		}
+	}
+	m.batteryMode = mode
+	return nil
+}
+
+// GetBatteryMode implements the api.BatteryController interface
+func (m *PowerWall) GetBatteryMode() api.BatteryMode {
+	return m.batteryMode
 }

@@ -203,3 +203,5 @@ require (
 replace github.com/grid-x/modbus => github.com/evcc-io/modbus v0.0.0-20230705160100-23e1df2c01c3
 
 replace github.com/imdario/mergo => github.com/imdario/mergo v0.3.16
+
+replace github.com/bogosj/tesla => github.com/grimmimeloni/tesla v0.0.0-20231111103611-96410c3bfce7
