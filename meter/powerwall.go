@@ -65,9 +65,6 @@ func NewPowerWallFromConfig(other map[string]interface{}) (api.Meter, error) {
 		if cc.RefreshToken == "" {
 			return nil, errors.New("missing refresh token")
 		}
-		if cc.EnergySiteProdId == 0 {
-			return nil, errors.New("missing EnergySite Product ID")
-		}
 		batteryControl = true
 	}
 
@@ -115,6 +112,22 @@ func NewPowerWall(uri, usage, user, password string, cache time.Duration, refres
 		cloudClient, err := tesla.NewClient(ctx, options...)
 		if err != nil {
 			return nil, err
+		}
+
+		if energySiteProdId == 0 {
+			//auto detect energy site ID, picking first
+			products, err := cloudClient.Products()
+			if err != nil {
+				return nil, err
+			}
+
+			for _, p := range products {
+				if p.EnergySiteId != 0 {
+					energySiteProdId = p.EnergySiteId
+					break
+				}
+			}
+			log.INFO.Printf("Auto-detected Energy Site with Product ID %d", energySiteProdId)
 		}
 
 		energySite, err := cloudClient.EnergySite(energySiteProdId)

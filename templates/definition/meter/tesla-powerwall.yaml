@@ -35,8 +35,8 @@ params:
       de: "Siehe https://docs.evcc.io/docs/devices/meters#tesla-powerwall"
   - name: energySiteProdId
     help:
-      en: the unique product identifier of the energy site
-      de: die eindeutige Product ID dieser Energy Site
+      en: optional product identifier of the energy site, use to override autodectction
+      de: optionale Product ID dieser Energy Site, zum Übersteuern der automatischen Erkennung
   - name: defaultBatteryReserve
     help:
       en: the battery reserve percentage to reset to when switching the Battery back to normal operations
