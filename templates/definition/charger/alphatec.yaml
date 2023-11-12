@@ -3,11 +3,9 @@ products:
   - brand: Alphatec
     description:
       generic: Wallbox Mini/Power
-products:
   - brand: Alphatec
     description:
       generic: Ladesäule Twin
-requirements:
 requirements:
   description:
     de: Die Hauptplatine benötigt eine aktuelle Firmware. Eine aktuelle Softwareversion kann man daran erkennen, dass die Seriennummer auf dem brauenen Relais mit 2022 beginnt oder auf den kleinen weißen Relais eine 15 steht. Andernfalls bitte direkt an den Hersteller wenden.
