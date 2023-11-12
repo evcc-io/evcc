@@ -519,10 +519,8 @@ export default {
 			return [...new Set(this.currentSessions.map((s) => s.vehicle))];
 		},
 		vehicleList() {
-			return Object.entries(store.state.vehicles || {}).map(([name, vehicle]) => ({
-				name,
-				...vehicle,
-			}));
+			const vehicles = store.state.vehicles || {};
+			return Object.entries(vehicles).map(([name, vehicle]) => ({ name, ...vehicle }));
 		},
 		selectedSession() {
 			return this.sessions.find((s) => s.id == this.selectedSessionId);

@@ -116,7 +116,8 @@ export default {
 			});
 		},
 		vehicleList: function () {
-			return Object.values(this.vehicles || {});
+			const vehicles = this.vehicles || {};
+			return Object.entries(vehicles).map(([name, vehicle]) => ({ name, ...vehicle }));
 		},
 		topNavigation: function () {
 			const vehicleLogins = this.auth ? this.auth.vehicles : {};
