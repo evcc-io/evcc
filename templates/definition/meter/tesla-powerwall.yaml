@@ -50,4 +50,3 @@ render: |
   refreshToken: {{ .refreshToken }}
   energySiteProdId: {{ .energySiteProdId }}
   defaultBatteryReserve: {{ .defaultBatteryReserve }}
-  
