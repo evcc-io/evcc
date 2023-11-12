@@ -137,7 +137,7 @@ type CurrentGetter interface {
 // BatteryController optionally allows to control home battery (dis)charging behaviour
 type BatteryController interface {
 	SetBatteryMode(BatteryMode) error
-	GetBatteryMode() BatteryMode
+	// GetBatteryMode() (BatteryMode, error)
 }
 
 // Charger provides current charging status and enable/disable charging
