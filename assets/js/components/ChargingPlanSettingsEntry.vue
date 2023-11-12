@@ -57,7 +57,7 @@
 				</label>
 			</div>
 			<div class="col-6 col-lg-3 mb-2">
-				<select :id="formId('soc')" class="form-select mx-0">
+				<select :id="formId('soc')" v-model="selectedSoc" class="form-select mx-0">
 					<option v-for="opt in socOptions" :key="opt.value" :value="opt.value">
 						{{ opt.name }}
 					</option>
@@ -99,6 +99,7 @@ export default {
 		return {
 			selectedDay: null,
 			selectedTime: null,
+			selectedSoc: this.soc,
 		};
 	},
 	computed: {
@@ -126,8 +127,11 @@ export default {
 		selectedDate() {
 			this.updatePlan();
 		},
-		soc() {
+		selectedSoc() {
 			this.updatePlan();
+		},
+		soc() {
+			this.selectedSoc = this.soc;
 		},
 	},
 	mounted() {
@@ -176,7 +180,7 @@ export default {
 			} catch (e) {
 				console.warn(e);
 			}
-			this.$emit("plan-updated", { time: this.selectedDate, soc: this.soc });
+			this.$emit("plan-updated", { time: this.selectedDate, soc: this.selectedSoc });
 		},
 		removePlan: function () {
 			this.$emit("plan-removed");

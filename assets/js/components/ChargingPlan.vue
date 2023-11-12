@@ -106,7 +106,7 @@ export default {
 	props: {
 		id: [String, Number],
 		planActive: Boolean,
-		targetTime: String,
+		effectivePlanTime: String,
 		effectiveLimitSoc: Number,
 		limitEnergy: Number,
 		socBasedCharging: Boolean,
@@ -139,7 +139,7 @@ export default {
 			return this.vehicle?.plans;
 		},
 		targetChargeEnabled: function () {
-			return this.vehicle?.plan?.length > 0;
+			return this.effectivePlanTime;
 		},
 		enabled: function () {
 			return this.targetChargeEnabled || this.minSocEnabled;
@@ -153,9 +153,6 @@ export default {
 		title: function () {
 			if (this.minSocEnabled) {
 				return this.$t("main.chargingPlan.titleMinSoc");
-			}
-			if (this.targetChargeEnabled) {
-				return this.$t("main.chargingPlan.titleChargingPlanSettings");
 			}
 			return this.$t("main.chargingPlan.title");
 		},
@@ -200,7 +197,7 @@ export default {
 		},
 		// not computed because it needs to update over time
 		targetTimeLabel: function () {
-			const targetDate = new Date(this.targetTime);
+			const targetDate = new Date(this.effectivePlanTime);
 			return this.$t("main.chargingPlan.activeLabel", {
 				time: this.fmtAbsoluteDate(targetDate),
 			});

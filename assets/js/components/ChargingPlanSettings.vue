@@ -76,6 +76,7 @@ export default {
 		id: [String, Number],
 		plans: { type: Array, default: () => [] },
 		effectiveLimitSoc: Number,
+		effectivePlanTime: String,
 		limitEnergy: Number,
 		socBasedCharging: Boolean,
 		rangePerSoc: Number,
@@ -89,9 +90,8 @@ export default {
 	emits: ["plan-added", "plan-removed", "plan-updated"],
 	data: function () {
 		return {
-			selectedDay: null,
-			selectedTime: null,
 			tariff: {},
+			plan: {},
 			activeTab: "time",
 			loading: false,
 		};
@@ -112,7 +112,8 @@ export default {
 			return false;
 		},
 		selectedTargetTime: function () {
-			return new Date(`${this.selectedDay}T${this.selectedTime || "00:00"}`);
+			console.log(this.effectivePlanTime);
+			return new Date(this.effectivePlanTime);
 		},
 		targetEnergyFormatted: function () {
 			return this.fmtKWh(this.targetEnergy * 1e3, true, true, 1);
@@ -120,9 +121,11 @@ export default {
 		chargingPlanPreviewProps: function () {
 			const targetTime = this.selectedTargetTime;
 			const { rates } = this.tariff;
-			//const { duration, plan } = this.plan;
+			const { duration, plan, power } = this.plan;
 			const { currency, smartCostType } = this;
-			return rates ? { rates, targetTime, currency, smartCostType } : null;
+			return rates
+				? { duration, plan, power, rates, targetTime, currency, smartCostType }
+				: null;
 		},
 		tariffHighest: function () {
 			return this.tariff?.rates.reduce((res, slot) => {

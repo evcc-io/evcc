@@ -92,7 +92,6 @@ export default {
 		vehicleTargetSoc: Number,
 		enabled: Boolean,
 		charging: Boolean,
-		minSoc: Number,
 		vehicleDetectionActive: Boolean,
 		vehicleRange: Number,
 		vehicleTitle: String,
@@ -101,7 +100,7 @@ export default {
 		socBasedCharging: Boolean,
 		planActive: Boolean,
 		planProjectedStart: String,
-		targetTime: String,
+		effectivePlanTime: String,
 		effectiveLimitSoc: Number,
 		limitEnergy: Number,
 		chargedEnergy: Number,
@@ -113,6 +112,7 @@ export default {
 		guardAction: String,
 		guardRemainingInterpolated: Number,
 		vehicles: Array,
+		vehicle: Object,
 		climaterActive: Boolean,
 		smartCostLimit: Number,
 		smartCostType: String,
@@ -121,20 +121,16 @@ export default {
 		tariffCo2: Number,
 		currency: String,
 	},
-	emits: [
-		"target-time-removed",
-		"target-time-updated",
-		"limit-soc-updated",
-		"limit-energy-updated",
-		"change-vehicle",
-		"remove-vehicle",
-	],
+	emits: ["limit-soc-updated", "limit-energy-updated", "change-vehicle", "remove-vehicle"],
 	data() {
 		return {
 			displayLimitSoc: this.effectiveLimitSoc,
 		};
 	},
 	computed: {
+		minSoc: function () {
+			return this.vehicle?.minSoc || 0;
+		},
 		vehicleSocProps: function () {
 			return this.collectProps(VehicleSoc);
 		},
@@ -202,10 +198,6 @@ export default {
 			}
 
 			return false;
-		},
-		vehicle: function () {
-			// TODO: use vehicleName instead of vehicleTitle
-			return this.vehicles?.find((v) => v.title === this.vehicleTitle);
 		},
 	},
 	watch: {

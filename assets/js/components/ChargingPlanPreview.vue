@@ -31,6 +31,7 @@ export default {
 	mixins: [formatter],
 	props: {
 		duration: Number,
+		power: Number,
 		rates: Array,
 		plan: Array,
 		smartCostType: String,

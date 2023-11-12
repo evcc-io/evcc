@@ -16,7 +16,7 @@ export default {
 		enabled: Boolean,
 		connected: Boolean,
 		charging: Boolean,
-		targetTime: String,
+		effectivePlanTime: String,
 		planProjectedStart: String,
 		planActive: Boolean,
 		phaseAction: String,
@@ -63,7 +63,7 @@ export default {
 			}
 
 			// plan
-			if (this.targetTime && !this.targetChargeDisabled) {
+			if (this.effectivePlanTime && !this.targetChargeDisabled) {
 				if (this.planActive && this.charging) {
 					return t("targetChargeActive");
 				}

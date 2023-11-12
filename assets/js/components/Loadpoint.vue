@@ -83,11 +83,9 @@
 		<hr class="divider" />
 		<Vehicle
 			class="flex-grow-1 d-flex flex-column justify-content-end"
-			v-bind="vehicle"
+			v-bind="vehicleProps"
 			@limit-soc-updated="setLimitSoc"
 			@limit-energy-updated="setLimitEnergy"
-			@target-time-updated="setTargetTime"
-			@target-time-removed="removeTargetTime"
 			@change-vehicle="changeVehicle"
 			@remove-vehicle="removeVehicle"
 		/>
@@ -162,10 +160,9 @@ export default {
 		vehicleCapacity: Number,
 		vehicleFeatureOffline: Boolean,
 		vehicles: Array,
-		minSoc: Number,
 		planActive: Boolean,
 		planProjectedStart: String,
-		targetTime: String,
+		effectivePlanTime: String,
 		vehicleProviderLoggedIn: Boolean,
 		vehicleProviderLoginPath: String,
 		vehicleProviderLogoutPath: String,
@@ -210,6 +207,10 @@ export default {
 		};
 	},
 	computed: {
+		vehicle: function () {
+			// TODO: use vehicleName instead of vehicleTitle
+			return this.vehicles?.find((v) => v.title === this.vehicleTitle);
+		},
 		loadpointTitle: function () {
 			return this.title || this.$t("main.loadpoint.fallbackName");
 		},
@@ -231,7 +232,7 @@ export default {
 		settingsButtonVisible: function () {
 			return this.$hiddenFeatures() || [0, 1, 3].includes(this.phasesConfigured);
 		},
-		vehicle: function () {
+		vehicleProps: function () {
 			return this.collectProps(Vehicle);
 		},
 		showChargingIndicator: function () {
@@ -302,12 +303,6 @@ export default {
 		},
 		setPhasesConfigured: function (phases) {
 			api.post(this.apiPath("phases") + "/" + phases);
-		},
-		setTargetTime: function (date) {
-			api.post(`${this.apiPath("target/time")}/${date.toISOString()}`);
-		},
-		removeTargetTime: function () {
-			api.delete(this.apiPath("target/time"));
 		},
 		changeVehicle(name) {
 			api.post(this.apiPath("vehicle") + `/${name}`);
