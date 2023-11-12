@@ -16,11 +16,6 @@ params:
     choice: ["rs485"]
     baudrate: 9600
     comset: 8N1
-  - name: delay
-    default: 100ms
-  - name: timeout
 render: |
   type: alphatec
   {{- include "modbus" . }}
-  delay: {{ .delay }}
-  timeout: {{ .timeout }}
