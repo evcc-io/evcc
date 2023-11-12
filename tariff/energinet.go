@@ -17,11 +17,9 @@ import (
 
 type Energinet struct {
 	*embed
-	mux     sync.Mutex
-	log     *util.Logger
-	region  string
-	data    api.Rates
-	updated time.Time
+	log    *util.Logger
+	region string
+	data   *util.Monitor[api.Rates]
 }
 
 var _ api.Tariff = (*Energinet)(nil)
@@ -48,6 +46,7 @@ func NewEnerginetFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		embed:  &cc.embed,
 		log:    util.NewLogger("energinet"),
 		region: strings.ToLower(cc.Region),
+		data:   util.NewMonitor[api.Rates](2 * time.Hour),
 	}
 
 	done := make(chan error)
@@ -82,10 +81,7 @@ func (t *Energinet) run(done chan error) {
 
 		once.Do(func() { close(done) })
 
-		t.mux.Lock()
-		t.updated = time.Now()
-
-		t.data = make(api.Rates, 0, len(res.Records))
+		data := make(api.Rates, 0, len(res.Records))
 		for _, r := range res.Records {
 			date, _ := time.Parse("2006-01-02T15:04:05", r.HourUTC)
 			ar := api.Rate{
@@ -93,19 +89,21 @@ func (t *Energinet) run(done chan error) {
 				End:   date.Add(time.Hour).Local(),
 				Price: t.totalPrice(r.SpotPriceDKK / 1e3),
 			}
-			t.data = append(t.data, ar)
+			data = append(data, ar)
 		}
-		t.data.Sort()
+		data.Sort()
 
-		t.mux.Unlock()
+		t.data.Set(data)
 	}
 }
 
 // Rates implements the api.Tariff interface
 func (t *Energinet) Rates() (api.Rates, error) {
-	t.mux.Lock()
-	defer t.mux.Unlock()
-	return slices.Clone(t.data), outdatedError(t.updated, time.Hour)
+	var res api.Rates
+	err := t.data.GetFunc(func(val api.Rates) {
+		res = slices.Clone(val)
+	})
+	return res, err
 }
 
 // Type implements the api.Tariff interface
