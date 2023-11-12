@@ -25,10 +25,15 @@ func NewMonitor[T any](timeout time.Duration) *Monitor[T] {
 
 // Set updates the current value and timestamp
 func (m *Monitor[T]) Set(val T) {
+	m.SetFunc(func(v *T) { *v = val })
+}
+
+// SetFunc updates the current value and timestamp while holding the lock
+func (m *Monitor[T]) SetFunc(set func(*T)) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	m.val = val
+	set(&m.val)
 	m.updated = time.Now()
 
 	m.once.Do(func() { close(m.done) })
