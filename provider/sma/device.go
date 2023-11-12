@@ -34,12 +34,13 @@ func (d *Device) run() {
 func (d *Device) UpdateValues() error {
 	res, err := d.Device.GetValues()
 	if err == nil {
-		d.values.SetFunc(func(state *map[sunny.ValueID]any) {
+		d.values.SetFunc(func(state map[sunny.ValueID]any) map[sunny.ValueID]any {
 			if state == nil {
-				*state = res
-			} else {
-				maps.Copy(*state, res)
+				return res
 			}
+
+			maps.Copy(state, res)
+			return state
 		})
 	}
 
