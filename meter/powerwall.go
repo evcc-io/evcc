@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math"
 	"net/http"
 	"strings"
 	"time"
@@ -216,16 +217,21 @@ func (m *PowerWall) SetBatteryMode(mode api.BatteryMode) error {
 	}
 
 	switch mode {
-	case api.BatteryNormal:
+	case api.BatteryNormal: // set minSoc to cofigured default
 		if err := m.energySite.SetBatteryReserve(uint64(m.defaultBatteryReserve)); err != nil {
 			return err
 		}
-	case api.BatteryLocked:
-		if err := m.energySite.SetBatteryReserve(uint64(100)); err != nil {
+	case api.BatteryLocked: // set minSoc to currentSoc
+		ess, err := m.energySite.EnergySiteStatus()
+		if err != nil {
 			return err
 		}
-	case api.BatteryCharge: // not supported(?), just lock
-		if err := m.energySite.SetBatteryReserve(uint64(100)); err != nil {
+		currentSoc := math.Round(ess.PercentageCharged)
+		if err := m.energySite.SetBatteryReserve(uint64(currentSoc)); err != nil {
+			return err
+		}
+	case api.BatteryCharge: // set mincSoc to 100; will not cause grid charge, but any PV surplus will charge
+		if err := m.energySite.SetBatteryReserve(100); err != nil {
 			return err
 		}
 	}
