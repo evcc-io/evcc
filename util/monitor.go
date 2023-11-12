@@ -41,6 +41,15 @@ func (m *Monitor[T]) SetFunc(set func(*T)) {
 
 // Get returns the current value or ErrOutdated if timeout exceeded
 func (m *Monitor[T]) Get() (T, error) {
+	var res T
+	err := m.GetFunc(func(v T) {
+		res = v
+	})
+	return res, err
+}
+
+// GetFunc returns the current value or ErrOutdated if timeout exceeded while holding the lock
+func (m *Monitor[T]) GetFunc(get func(T)) error {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 
@@ -48,15 +57,19 @@ func (m *Monitor[T]) Get() (T, error) {
 	if m.timeout == 0 {
 		select {
 		case <-m.done:
-			return m.val, nil
+			get(m.val)
+			return nil
 		default:
-			return m.val, api.ErrOutdated
+			get(m.val)
+			return api.ErrOutdated
 		}
 	} else if time.Since(m.updated) > m.timeout {
-		return m.val, api.ErrOutdated
+		get(m.val)
+		return api.ErrOutdated
 	}
 
-	return m.val, nil
+	get(m.val)
+	return nil
 }
 
 // Done signals if monitor has been updated at least once

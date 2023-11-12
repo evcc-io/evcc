@@ -34,25 +34,25 @@ func (d *Device) run() {
 func (d *Device) UpdateValues() error {
 	res, err := d.Device.GetValues()
 	if err == nil {
-		current, _ := d.values.Get()
-		if current == nil {
-			current = res
-		} else {
-			maps.Copy(current, res)
-		}
-		d.values.Set(current)
+		d.values.SetFunc(func(state *map[sunny.ValueID]any) {
+			if state == nil {
+				*state = res
+			} else {
+				maps.Copy(*state, res)
+			}
+		})
 	}
 
 	return err
 }
 
 func (d *Device) Values() (map[sunny.ValueID]any, error) {
-	res, err := d.values.Get()
-	if err != nil {
-		return nil, err
-	}
+	var res map[sunny.ValueID]any
+	err := d.values.GetFunc(func(state map[sunny.ValueID]any) {
+		res = maps.Clone(state)
+	})
 
-	return maps.Clone(res), nil
+	return res, err
 }
 
 func AsFloat(value any) float64 {
