@@ -1,68 +1,85 @@
 <template>
-	<div class="row">
-		<div class="col-6 col-sm-4 mb-2 mb-sm-0">
-			<select
-				:id="`targetTimeLabel${id}`"
-				v-model="selectedDay"
-				class="form-select me-2"
-				data-testid="target-day"
-			>
-				<option v-for="opt in dayOptions()" :key="opt.value" :value="opt.value">
-					{{ opt.name }}
-				</option>
-			</select>
+	<div class="mb-4">
+		<div class="row d-none d-lg-flex mb-2">
+			<div class="col-6 col-lg-4">
+				<label :for="formId('day')">
+					{{ $t("main.chargingPlan.day") }}
+				</label>
+			</div>
+			<div class="col-6 col-lg-3">
+				<label :for="formId('time')">
+					{{ $t("main.chargingPlan.time") }}
+				</label>
+			</div>
+			<div class="col-6 col-lg-3">
+				<label :for="formId('soc')">
+					{{ $t("main.chargingPlan.soc") }}
+				</label>
+			</div>
+			<div class="col-2"></div>
 		</div>
-		<div class="col-4 col-sm-3 mb-2 mb-sm-0">
-			<input
-				v-model="selectedTime"
-				type="time"
-				class="form-control mx-0"
-				:step="60 * 5"
-				required
-			/>
-		</div>
-		<div class="offset-6 offset-sm-0 col-4 col-sm-3">
-			<select class="form-select mx-0">
-				<option
-					v-for="opt in [
-						{ value: 5, name: '5 %' },
-						{ value: 10, name: '10 %' },
-						{ value: 15, name: '15 %' },
-						{ value: 20, name: '20 %' },
-						{ value: 25, name: '25 %' },
-						{ value: 30, name: '30 %' },
-						{ value: 35, name: '35 %' },
-						{ value: 40, name: '40 %' },
-						{ value: 45, name: '45 %' },
-						{ value: 50, name: '50 %' },
-						{ value: 55, name: '55 %' },
-						{ value: 60, name: '60 %' },
-						{ value: 65, name: '65 %' },
-						{ value: 70, name: '70 %' },
-						{ value: 75, name: '75 %' },
-						{ value: 80, name: '80 %' },
-						{ value: 85, name: '85 %' },
-						{ value: 90, name: '90 %' },
-						{ value: 95, name: '95 %' },
-						{ value: 100, name: '100 %' },
-					]"
-					:key="opt.value"
-					:value="opt.value"
+		<div class="row">
+			<div class="col-6 d-lg-none col-form-label">
+				<label :for="formId('day')">
+					{{ $t("main.chargingPlan.day") }}
+				</label>
+			</div>
+			<div class="col-6 col-lg-4 mb-2">
+				<select
+					:id="formId('day')"
+					v-model="selectedDay"
+					class="form-select me-2"
+					data-testid="target-day"
 				>
-					{{ opt.name }}
-				</option>
-			</select>
-		</div>
-		<div class="col-2 d-flex justify-content-end">
-			<button type="button" class="btn btn-sm btn-link text-muted">
-				<shopicon-regular-trash></shopicon-regular-trash>
-			</button>
+					<option v-for="opt in dayOptions()" :key="opt.value" :value="opt.value">
+						{{ opt.name }}
+					</option>
+				</select>
+			</div>
+			<div class="col-6 d-lg-none col-form-label">
+				<label :for="formId('day')">
+					{{ $t("main.chargingPlan.time") }}
+				</label>
+			</div>
+			<div class="col-6 col-lg-3 mb-2">
+				<input
+					:id="formId('time')"
+					v-model="selectedTime"
+					type="time"
+					class="form-control mx-0"
+					:step="60 * 5"
+					required
+				/>
+			</div>
+			<div class="col-6 d-lg-none col-form-label">
+				<label :for="formId('soc')">
+					{{ $t("main.chargingPlan.soc") }}
+				</label>
+			</div>
+			<div class="col-6 col-lg-3 mb-2">
+				<select :id="formId('soc')" class="form-select mx-0">
+					<option v-for="opt in socOptions" :key="opt.value" :value="opt.value">
+						{{ opt.name }}
+					</option>
+				</select>
+			</div>
+			<div class="col-12 col-lg-2 d-flex justify-content-end">
+				<button
+					type="button"
+					class="btn btn-sm btn-link text-muted d-flex"
+					@click="removePlan"
+				>
+					<div class="me-2">{{ $t("main.chargingPlan.remove") }}</div>
+					<shopicon-regular-trash></shopicon-regular-trash>
+				</button>
+			</div>
 		</div>
 	</div>
 </template>
 
 <script>
 import "@h2d2/shopicons/es/regular/trash";
+import { distanceUnit } from "../units";
 
 import formatter from "../mixins/formatter";
 
@@ -75,8 +92,9 @@ export default {
 		id: String,
 		soc: Number,
 		time: String,
+		rangePerSoc: Number,
 	},
-	emits: ["target-time-updated", "target-time-removed"],
+	emits: ["plan-removed", "plan-updated"],
 	data: function () {
 		return {
 			selectedDay: null,
@@ -86,32 +104,43 @@ export default {
 	computed: {
 		timeInThePast: function () {
 			const now = new Date();
-			return now >= this.selectedTargetTime;
+			return now >= this.selectedDate;
 		},
-		selectedTargetTime: function () {
+		selectedDate: function () {
 			return new Date(`${this.selectedDay}T${this.selectedTime || "00:00"}`);
 		},
 		targetEnergyFormatted: function () {
 			return this.fmtKWh(this.targetEnergy * 1e3, true, true, 1);
 		},
 		socOptions: function () {
-			// a list of entries from 0 to 100 with a step of 5
-			return Array.from(Array(21).keys())
-				.map((i) => i * 5)
-				.map((soc) => {
-					return { value: soc, name: soc === 0 ? "--" : `${soc}%` };
-				});
+			// a list of entries from 5 to 100 with a step of 5
+			return Array.from(Array(20).keys())
+				.map((i) => 5 + i * 5)
+				.map(this.socOption);
 		},
 	},
 	watch: {
 		time() {
 			this.initInputFields();
 		},
+		selectedDate() {
+			this.updatePlan();
+		},
+		soc() {
+			this.updatePlan();
+		},
 	},
 	mounted() {
 		this.initInputFields();
 	},
 	methods: {
+		formId: function (name) {
+			return `chargingplan-${this.id}-${name}`;
+		},
+		socOption: function (value) {
+			const name = this.fmtSocOption(value, this.rangePerSoc, distanceUnit());
+			return { value, name };
+		},
 		initInputFields: function () {
 			const date = new Date(this.time);
 			this.selectedDay = this.fmtDayString(date);
@@ -139,18 +168,18 @@ export default {
 			}
 			return options;
 		},
-		setTargetTime: function () {
+		updatePlan: function () {
 			try {
-				const hours = this.selectedTargetTime.getHours();
-				const minutes = this.selectedTargetTime.getMinutes();
+				const hours = this.selectedDate.getHours();
+				const minutes = this.selectedDate.getMinutes();
 				window.localStorage[LAST_TARGET_TIME_KEY] = `${hours}:${minutes}`;
 			} catch (e) {
 				console.warn(e);
 			}
-			this.$emit("target-time-updated", this.selectedTargetTime);
+			this.$emit("plan-updated", { time: this.selectedDate, soc: this.soc });
 		},
-		removeTargetTime: function () {
-			this.$emit("target-time-removed");
+		removePlan: function () {
+			this.$emit("plan-removed");
 		},
 	},
 };

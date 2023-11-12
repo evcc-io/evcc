@@ -160,9 +160,13 @@ vehicles = "Parking"
 [main.chargingPlan]
 activeLabel = "{time}"
 arrivalTab = "Arrival"
+day = "Day"
 departureTab = "Departure"
 modalTitle = "Charging Plan"
 none = "none"
+remove = "Remove"
+soc = "Charging goal"
+time = "Time"
 title = "Plan"
 titleMinSoc = "Min charge"
 titleTargetCharge = "Departure"
@@ -201,15 +205,15 @@ disclaimerText = "Changes will be lost after the server is restarted."
 title = "Settings {0}"
 vehicle = "Vehicle"
 
+[main.loadpointSettings.limitSoc]
+description = "Charging limit that is used when this vehicle is connected."
+label = "Default limit"
+
 [main.loadpointSettings.maxCurrent]
 label = "Max. Current"
 
 [main.loadpointSettings.minCurrent]
 label = "Min. Current"
-
-[main.loadpointSettings.limitSoc]
-description = "Charging limit that is used when this vehicle is connected."
-label = "Default limit"
 
 [main.loadpointSettings.minSoc]
 description = "The vehicle gets „fast” charged to {0}% in solar mode. Then continues with solar surplus. Useful to ensure a minimum range even for darker days."

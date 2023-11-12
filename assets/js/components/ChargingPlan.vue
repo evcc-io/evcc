@@ -71,6 +71,8 @@
 									v-if="departureTabActive"
 									v-bind="chargingPlanSettingsProps"
 									@plan-added="addPlan"
+									@plan-updated="updatePlan"
+									@plan-removed="removePlan"
 								/>
 								<ChargingPlanArrival
 									v-if="arrivalTabActive"
@@ -210,12 +212,19 @@ export default {
 			this.activeTab = "arrival";
 		},
 		apiPath: function (func) {
-			return "vehicles/" + this.vehicle.name + "/" + func;
+			return `vehicles/${this.vehicle.name}/${func}`;
 		},
 		addPlan: function (plan) {
-			const soc = plan.soc;
-			const time = plan.time.toISOString();
-			api.post(this.apiPath("plan/soc/") + `${soc}/${time}`);
+			// TODO: implement proper appending when multiple plans are supported
+			this.updatePlan(plan);
+		},
+		updatePlan: function ({ soc, time }) {
+			// TODO: only modify changed plan when multiple plans are supported, ignoring index param for now
+			api.post(this.apiPath("plan/soc/") + `${soc}/${time.toISOString()}`);
+		},
+		removePlan: function () {
+			// TODO: remove plan from list when multiple plans are supported, ignoring index param for now
+			api.delete(this.apiPath("plan/soc"));
 		},
 		setMinSoc: function (soc) {
 			api.post(this.apiPath("minsoc") + `/${soc}`);

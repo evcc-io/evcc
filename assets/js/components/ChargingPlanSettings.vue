@@ -8,6 +8,9 @@
 					:key="index"
 					class="my-3"
 					v-bind="plan"
+					:range-per-soc="rangePerSoc"
+					@plan-updated="(data) => updatePlan({ index, ...data })"
+					@plan-removed="() => removePlan(index)"
 				/>
 			</div>
 			<div v-else>
@@ -59,9 +62,8 @@
 import { CO2_TYPE } from "../units";
 import ChargingPlanPreview from "./ChargingPlanPreview.vue";
 import ChargingPlanSettingsEntry from "./ChargingPlanSettingsEntry.vue";
-import api from "../api";
-
 import formatter from "../mixins/formatter";
+import api from "../api";
 
 const DEFAULT_TARGET_TIME = "7:00";
 const LAST_TARGET_TIME_KEY = "last_target_time";
@@ -72,13 +74,11 @@ export default {
 	mixins: [formatter],
 	props: {
 		id: [String, Number],
-		planActive: Boolean,
-		targetTime: { type: String, default: "2021-10-01T07:00:00.000Z" },
 		plans: { type: Array, default: () => [] },
 		effectiveLimitSoc: Number,
 		limitEnergy: Number,
 		socBasedCharging: Boolean,
-		disabled: Boolean,
+		rangePerSoc: Number,
 		smartCostLimit: Number,
 		smartCostType: String,
 		currency: String,
@@ -86,7 +86,7 @@ export default {
 		vehicleCapacity: Number,
 		vehicle: Object,
 	},
-	emits: ["target-time-updated", "target-time-removed", "plan-added"],
+	emits: ["plan-added", "plan-removed", "plan-updated"],
 	data: function () {
 		return {
 			selectedDay: null,
@@ -149,16 +149,16 @@ export default {
 	watch: {
 		plans: {
 			handler() {
-				this.updatePlan();
+				this.fetchPlan();
 			},
 			deep: true,
 		},
 	},
 	mounted() {
-		this.updatePlan();
+		this.fetchPlan();
 	},
 	methods: {
-		updatePlan: async function () {
+		fetchPlan: async function () {
 			if (this.plans.length > 0 && !this.loading) {
 				try {
 					this.loading = true;
@@ -195,6 +195,12 @@ export default {
 		},
 		addPlan: function () {
 			this.$emit("plan-added", { time: this.defaultDate(), soc: 100 });
+		},
+		removePlan: function (index) {
+			this.$emit("plan-removed", index);
+		},
+		updatePlan: function (data) {
+			this.$emit("plan-updated", data);
 		},
 	},
 };

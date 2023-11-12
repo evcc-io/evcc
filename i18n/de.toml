@@ -204,15 +204,15 @@ disclaimerText = "Änderungen gehen nach einem Neustart des Servers verloren."
 title = "Einstellungen {0}"
 vehicle = "Fahrzeug"
 
+[main.loadpointSettings.limitSoc]
+description = "Dieses Limit wird verwendet, wenn das Fahrzeug angeschlossen wird."
+label = "Standard Ladelimit"
+
 [main.loadpointSettings.maxCurrent]
 label = "Max. Ladestrom"
 
 [main.loadpointSettings.minCurrent]
 label = "Min. Ladestrom"
-
-[main.loadpointSettings.limitSoc]
-description = "Dieses Limit wird verwendet, wenn das Fahrzeug angeschlossen wird."
-label = "Standard Ladelimit"
 
 [main.loadpointSettings.minSoc]
 description = "Fahrzeug wird im PV-Modus „schnell“ auf {0}% geladen. Danach weiter mit PV-Überschuss. Nützlich, um auch an dunklen Tagen eine Mindestreichweite zu gewährleisten."
