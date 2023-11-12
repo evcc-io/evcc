@@ -41,7 +41,7 @@ func (m *battery) BatteryController(dischargePowerS, minSocS func(float64) error
 				return err
 			}
 			// full charge
-			return minSocS(100)
+			return minSocS(95)
 
 		default:
 			return api.ErrNotAvailable
