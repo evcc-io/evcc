@@ -116,8 +116,11 @@ func (t *ElectricityMaps) run(done chan error) {
 }
 
 func (t *ElectricityMaps) Rates() (api.Rates, error) {
-	res, err := t.data.Get()
-	return slices.Clone(res), err
+	var res api.Rates
+	err := t.data.GetFunc(func(val api.Rates) {
+		res = slices.Clone(val)
+	})
+	return res, err
 }
 
 // Type implements the api.Tariff interface

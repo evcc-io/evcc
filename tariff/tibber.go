@@ -103,8 +103,7 @@ func (t *Tibber) run(done chan error) {
 		once.Do(func() { close(done) })
 
 		pi := res.Viewer.Home.CurrentSubscription.PriceInfo
-		data := make(api.Rates, 0, len(pi.Today)+len(pi.Tomorrow))
-		data = append(t.rates(pi.Today), t.rates(pi.Tomorrow)...)
+		data := append(t.rates(pi.Today), t.rates(pi.Tomorrow)...)
 		data.Sort()
 
 		t.data.Set(data)
@@ -130,8 +129,11 @@ func (t *Tibber) rates(pi []tibber.Price) api.Rates {
 
 // Rates implements the api.Tariff interface
 func (t *Tibber) Rates() (api.Rates, error) {
-	res, err := t.data.Get()
-	return slices.Clone(res), err
+	var res api.Rates
+	err := t.data.GetFunc(func(val api.Rates) {
+		res = slices.Clone(val)
+	})
+	return res, err
 }
 
 // Type implements the api.Tariff interface
