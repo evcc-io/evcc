@@ -15,6 +15,7 @@ func readSerial() (string, error) {
 		return "", err
 	}
 
+	// serial timeout
 	time.AfterFunc(3*time.Second, func() {
 		_ = f.Close()
 	})
