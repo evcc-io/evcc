@@ -61,6 +61,10 @@ func NewAlphatecFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
+	if cc.Delay == 0 {
+		cc.Delay = 100 * time.Millisecond
+	}
+
 	return NewAlphatec(cc.URI, cc.Device, cc.Comset, cc.Baudrate, modbus.ProtocolFromRTU(cc.RTU), cc.ID, cc.Delay, cc.Timeout)
 }
 
@@ -71,10 +75,7 @@ func NewAlphatec(uri, device, comset string, baudrate int, proto modbus.Protocol
 		return nil, err
 	}
 
-	conn.Delay(100 * time.Millisecond)
-	if delay > 0 {
-		conn.Delay(delay)
-	}
+	conn.Delay(delay)
 
 	if timeout > 0 {
 		conn.Timeout(timeout)
