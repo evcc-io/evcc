@@ -49,6 +49,7 @@ func init() {
 func NewAlphatecFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
 		modbus.Settings `mapstructure:",squash"`
+		Delay           time.Duration
 		Timeout         time.Duration
 	}{
 		Settings: modbus.Settings{
@@ -60,14 +61,18 @@ func NewAlphatecFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	return NewAlphatec(cc.URI, cc.Device, cc.Comset, cc.Baudrate, modbus.ProtocolFromRTU(cc.RTU), cc.ID, cc.Timeout)
+	return NewAlphatec(cc.URI, cc.Device, cc.Comset, cc.Baudrate, modbus.ProtocolFromRTU(cc.RTU), cc.ID, cc.Delay, cc.Timeout)
 }
 
 // NewAlphatec creates Alphatec charger
-func NewAlphatec(uri, device, comset string, baudrate int, proto modbus.Protocol, slaveID uint8, timeout time.Duration) (api.Charger, error) {
+func NewAlphatec(uri, device, comset string, baudrate int, proto modbus.Protocol, slaveID uint8, delay time.Duration, timeout time.Duration) (api.Charger, error) {
 	conn, err := modbus.NewConnection(uri, device, comset, baudrate, proto, slaveID)
 	if err != nil {
 		return nil, err
+	}
+
+	if delay > 0 {
+		conn.Delay(delay)
 	}
 
 	if timeout > 0 {
@@ -80,8 +85,6 @@ func NewAlphatec(uri, device, comset string, baudrate int, proto modbus.Protocol
 
 	log := util.NewLogger("alphatec")
 	conn.Logger(log.TRACE)
-
-	conn.Delay(100 * time.Millisecond)
 
 	wb := &Alphatec{
 		conn: conn,
