@@ -71,6 +71,7 @@ func NewAlphatec(uri, device, comset string, baudrate int, proto modbus.Protocol
 		return nil, err
 	}
 
+	conn.Delay(100 * time.Millisecond)
 	if delay > 0 {
 		conn.Delay(delay)
 	}
