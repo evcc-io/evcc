@@ -60,7 +60,6 @@ func (m *Monitor[T]) GetFunc(get func(T)) error {
 			get(m.val)
 			return nil
 		default:
-			get(m.val)
 			return api.ErrOutdated
 		}
 	} else if time.Since(m.updated) > m.timeout {
