@@ -15,12 +15,10 @@ import (
 )
 
 type Ngeso struct {
-	mux            sync.Mutex
 	log            *util.Logger
 	regionId       string
 	regionPostcode string
-	data           api.Rates
-	updated        time.Time
+	data           *util.Monitor[api.Rates]
 }
 
 var _ api.Tariff = (*Ngeso)(nil)
@@ -47,6 +45,7 @@ func NewNgesoFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		log:            util.NewLogger("ngeso"),
 		regionId:       cc.Region,
 		regionPostcode: cc.Postcode,
+		data:           util.NewMonitor[api.Rates](2 * time.Hour),
 	}
 
 	done := make(chan error)
@@ -97,10 +96,7 @@ func (t *Ngeso) run(done chan error) {
 
 		once.Do(func() { close(done) })
 
-		t.mux.Lock()
-		t.updated = time.Now()
-
-		t.data = make(api.Rates, 0, len(carbonResponse.Results()))
+		data := make(api.Rates, 0, len(carbonResponse.Results()))
 		for _, r := range carbonResponse.Results() {
 			ar := api.Rate{
 				Start: r.ValidityStart.Time,
@@ -108,19 +104,21 @@ func (t *Ngeso) run(done chan error) {
 				// Use the forecasted rate, as the actual rate is only available for historical data
 				Price: r.Intensity.Forecast,
 			}
-			t.data = append(t.data, ar)
+			data = append(data, ar)
 		}
-		t.data.Sort()
+		data.Sort()
 
-		t.mux.Unlock()
+		t.data.Set(data)
 	}
 }
 
 // Rates implements the api.Tariff interface
 func (t *Ngeso) Rates() (api.Rates, error) {
-	t.mux.Lock()
-	defer t.mux.Unlock()
-	return slices.Clone(t.data), outdatedError(t.updated, time.Hour)
+	var res api.Rates
+	err := t.data.GetFunc(func(val api.Rates) {
+		res = slices.Clone(val)
+	})
+	return res, err
 }
 
 // Type implements the api.Tariff interface

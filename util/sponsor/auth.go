@@ -29,6 +29,13 @@ func IsAuthorizedForApi() bool {
 
 // check and set sponsorship token
 func ConfigureSponsorship(token string) error {
+	if token == "" {
+		var err error
+		if token, err = readSerial(); token == "" || err != nil {
+			return err
+		}
+	}
+
 	host := util.Getenv("GRPC_URI", cloud.Host)
 	conn, err := cloud.Connection(host)
 	if err != nil {
