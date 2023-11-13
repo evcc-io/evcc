@@ -7,7 +7,6 @@ import (
 	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
-	"github.com/jinzhu/copier"
 )
 
 // Planner plans a series of charging slots for a given (variable) tariff
@@ -39,12 +38,8 @@ func (t *Planner) plan(rates api.Rates, requiredDuration time.Duration, targetTi
 			continue
 		}
 
-		var slot api.Rate
-		if err := copier.Copy(&slot, source); err != nil {
-			panic(err)
-		}
-
 		// adjust slot start and end
+		slot := source
 		if slot.Start.Before(t.clock.Now()) {
 			slot.Start = t.clock.Now()
 		}

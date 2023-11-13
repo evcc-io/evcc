@@ -46,6 +46,8 @@ func TestSocketProvider(t *testing.T) {
 	})
 	require.NoError(t, err)
 
+	<-p.(*Socket).val.Done()
+
 	g := p.(IntProvider).IntGetter()
 	i, err := g()
 	require.NoError(t, err)

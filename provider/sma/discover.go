@@ -14,8 +14,10 @@ import (
 const udpTimeout = 10 * time.Second
 
 // map of created discover instances
-var discoverers = make(map[string]*Discoverer)
-var discoverersMutex sync.Mutex
+var (
+	discoverers      = make(map[string]*Discoverer)
+	discoverersMutex sync.Mutex
+)
 
 // initialize sunny logger only once
 var once sync.Once
@@ -65,8 +67,7 @@ func (d *Discoverer) createDevice(device *sunny.Device) *Device {
 	return &Device{
 		Device: device,
 		log:    d.log,
-		wait:   util.NewWaiter(udpTimeout, func() { d.log.DEBUG.Println("wait for initial value") }),
-		values: make(map[sunny.ValueID]interface{}),
+		values: util.NewMonitor[map[sunny.ValueID]any](udpTimeout),
 	}
 }
 
@@ -93,8 +94,9 @@ func (d *Discoverer) run() {
 
 	// discover devicesBySerial and wait for results
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
 	d.conn.DiscoverDevices(ctx, devices, "")
-	cancel()
 	close(devices)
 
 	// mark discover as done

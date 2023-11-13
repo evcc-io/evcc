@@ -1,11 +1,10 @@
 package sma
 
 import (
-	"fmt"
+	"maps"
 	"sync"
 	"time"
 
-	"dario.cat/mergo"
 	"github.com/evcc-io/evcc/util"
 	"gitlab.com/bboehmke/sunny"
 )
@@ -15,58 +14,49 @@ type Device struct {
 	*sunny.Device
 
 	log    *util.Logger
-	mux    sync.Mutex
-	wait   *util.Waiter
-	values map[sunny.ValueID]interface{}
+	values *util.Monitor[map[sunny.ValueID]any]
 	once   sync.Once
 }
 
-// StartUpdateLoop if not already started
-func (d *Device) StartUpdateLoop() {
-	d.once.Do(func() {
-		go func() {
-			for range time.Tick(time.Second * 5) {
-				if err := d.UpdateValues(); err != nil {
-					d.log.ERROR.Println(err)
-				}
-			}
-		}()
-	})
+// Run starts the receive loop once per device
+func (d *Device) Run() {
+	d.once.Do(d.run)
+}
+
+func (d *Device) run() {
+	for range time.Tick(5 * time.Second) {
+		if err := d.UpdateValues(); err != nil {
+			d.log.ERROR.Println(err)
+		}
+	}
 }
 
 func (d *Device) UpdateValues() error {
-	d.mux.Lock()
-	defer d.mux.Unlock()
-
-	values, err := d.Device.GetValues()
+	res, err := d.Device.GetValues()
 	if err == nil {
-		err = mergo.Merge(&d.values, values, mergo.WithOverride)
-		d.wait.Update()
+		d.values.SetFunc(func(state map[sunny.ValueID]any) map[sunny.ValueID]any {
+			if state == nil {
+				return res
+			}
+
+			maps.Copy(state, res)
+			return state
+		})
 	}
 
 	return err
 }
 
-func (d *Device) Values() (map[sunny.ValueID]interface{}, error) {
-	// ensure update loop was started
-	d.StartUpdateLoop()
+func (d *Device) Values() (map[sunny.ValueID]any, error) {
+	var res map[sunny.ValueID]any
+	err := d.values.GetFunc(func(state map[sunny.ValueID]any) {
+		res = maps.Clone(state)
+	})
 
-	d.mux.Lock()
-	defer d.mux.Unlock()
-
-	if late := d.wait.Overdue(); late > 0 {
-		return nil, fmt.Errorf("update timeout: %v", late.Truncate(time.Second))
-	}
-
-	// return a copy of the map to avoid race conditions
-	values := make(map[sunny.ValueID]interface{}, len(d.values))
-	for key, value := range d.values {
-		values[key] = value
-	}
-	return values, nil
+	return res, err
 }
 
-func AsFloat(value interface{}) float64 {
+func AsFloat(value any) float64 {
 	switch v := value.(type) {
 	case float64:
 		return v
