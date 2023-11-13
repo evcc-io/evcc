@@ -21,7 +21,7 @@ func readSerial() (string, error) {
 	})
 
 	b := make([]byte, 512)
-	n, err := f.Read(b)
+	n, _ := f.Read(b)
 
-	return string(b[:n]), err
+	return string(b[:n]), nil
 }
