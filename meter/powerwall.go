@@ -226,7 +226,7 @@ func (m *PowerWall) SetBatteryMode(mode api.BatteryMode) error {
 		if err != nil {
 			return err
 		}
-		currentSoc := math.Round(ess.PercentageCharged)
+		currentSoc := math.Round(ess.PercentageCharged + 0.5) // .5 ensures we round up
 		if err := m.energySite.SetBatteryReserve(uint64(currentSoc)); err != nil {
 			return err
 		}
