@@ -178,7 +178,7 @@ func (p *HTTP) request(url string, body ...string) ([]byte, error) {
 var _ StringProvider = (*HTTP)(nil)
 
 // StringGetter sends string request
-func (p *HTTP) StringGetter() func() (string, error) {
+func (p *HTTP) StringGetter() (func() (string, error), error) {
 	return func() (string, error) {
 		b, err := p.request(p.url, p.body)
 
@@ -187,14 +187,14 @@ func (p *HTTP) StringGetter() func() (string, error) {
 		}
 
 		return string(b), err
-	}
+	}, nil
 }
 
 var _ FloatProvider = (*HTTP)(nil)
 
 // FloatGetter parses float from request
-func (p *HTTP) FloatGetter() func() (float64, error) {
-	g := p.StringGetter()
+func (p *HTTP) FloatGetter() (func() (float64, error), error) {
+	g, err := p.StringGetter()
 
 	return func() (float64, error) {
 		s, err := g()
@@ -205,31 +205,31 @@ func (p *HTTP) FloatGetter() func() (float64, error) {
 		f, err := strconv.ParseFloat(s, 64)
 
 		return f * p.scale, err
-	}
+	}, err
 }
 
 var _ IntProvider = (*HTTP)(nil)
 
 // IntGetter parses int64 from request
-func (p *HTTP) IntGetter() func() (int64, error) {
-	g := p.FloatGetter()
+func (p *HTTP) IntGetter() (func() (int64, error), error) {
+	g, err := p.FloatGetter()
 
 	return func() (int64, error) {
 		f, err := g()
 		return int64(math.Round(f)), err
-	}
+	}, err
 }
 
 var _ BoolProvider = (*HTTP)(nil)
 
 // BoolGetter parses bool from request
-func (p *HTTP) BoolGetter() func() (bool, error) {
-	g := p.StringGetter()
+func (p *HTTP) BoolGetter() (func() (bool, error), error) {
+	g, err := p.StringGetter()
 
 	return func() (bool, error) {
 		s, err := g()
 		return util.Truish(s), err
-	}
+	}, err
 }
 
 func (p *HTTP) set(param string, val interface{}) error {
@@ -251,35 +251,35 @@ func (p *HTTP) set(param string, val interface{}) error {
 var _ SetIntProvider = (*HTTP)(nil)
 
 // IntSetter sends int request
-func (p *HTTP) IntSetter(param string) func(int64) error {
+func (p *HTTP) IntSetter(param string) (func(int64) error, error) {
 	return func(val int64) error {
 		return p.set(param, val)
-	}
+	}, nil
 }
 
 var _ SetFloatProvider = (*HTTP)(nil)
 
 // FloatSetter sends int request
-func (p *HTTP) FloatSetter(param string) func(float64) error {
+func (p *HTTP) FloatSetter(param string) (func(float64) error, error) {
 	return func(val float64) error {
 		return p.set(param, val)
-	}
+	}, nil
 }
 
 var _ SetStringProvider = (*HTTP)(nil)
 
 // StringSetter sends string request
-func (p *HTTP) StringSetter(param string) func(string) error {
+func (p *HTTP) StringSetter(param string) (func(string) error, error) {
 	return func(val string) error {
 		return p.set(param, val)
-	}
+	}, nil
 }
 
 var _ SetBoolProvider = (*HTTP)(nil)
 
 // BoolSetter sends bool request
-func (p *HTTP) BoolSetter(param string) func(bool) error {
+func (p *HTTP) BoolSetter(param string) (func(bool) error, error) {
 	return func(val bool) error {
 		return p.set(param, val)
-	}
+	}, nil
 }

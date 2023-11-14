@@ -8,28 +8,28 @@ import (
 type (
 	Provider    interface{}
 	IntProvider interface {
-		IntGetter() func() (int64, error)
+		IntGetter() (func() (int64, error), error)
 	}
 	StringProvider interface {
-		StringGetter() func() (string, error)
+		StringGetter() (func() (string, error), error)
 	}
 	FloatProvider interface {
-		FloatGetter() func() (float64, error)
+		FloatGetter() (func() (float64, error), error)
 	}
 	BoolProvider interface {
-		BoolGetter() func() (bool, error)
+		BoolGetter() (func() (bool, error), error)
 	}
 	SetIntProvider interface {
-		IntSetter(param string) func(int64) error
+		IntSetter(param string) (func(int64) error, error)
 	}
 	SetStringProvider interface {
-		StringSetter(param string) func(string) error
+		StringSetter(param string) (func(string) error, error)
 	}
 	SetFloatProvider interface {
-		FloatSetter(param string) func(float64) error
+		FloatSetter(param string) (func(float64) error, error)
 	}
 	SetBoolProvider interface {
-		BoolSetter(param string) func(bool) error
+		BoolSetter(param string) (func(bool) error, error)
 	}
 )
 
@@ -75,7 +75,7 @@ func NewIntGetterFromConfig(config Config) (func() (int64, error), error) {
 		return nil, fmt.Errorf("invalid plugin source for type int: %s", config.Source)
 	}
 
-	return prov.IntGetter(), nil
+	return prov.IntGetter()
 }
 
 // NewFloatGetterFromConfig creates a FloatGetter from config
@@ -95,7 +95,7 @@ func NewFloatGetterFromConfig(config Config) (func() (float64, error), error) {
 		return nil, fmt.Errorf("invalid plugin source for type float: %s", config.Source)
 	}
 
-	return prov.FloatGetter(), nil
+	return prov.FloatGetter()
 }
 
 // NewStringGetterFromConfig creates a StringGetter from config
@@ -115,7 +115,7 @@ func NewStringGetterFromConfig(config Config) (func() (string, error), error) {
 		return nil, fmt.Errorf("invalid plugin source for type string: %s", config.Source)
 	}
 
-	return prov.StringGetter(), nil
+	return prov.StringGetter()
 }
 
 // NewBoolGetterFromConfig creates a BoolGetter from config
@@ -135,7 +135,7 @@ func NewBoolGetterFromConfig(config Config) (func() (bool, error), error) {
 		return nil, fmt.Errorf("invalid plugin source for type bool: %s", config.Source)
 	}
 
-	return prov.BoolGetter(), nil
+	return prov.BoolGetter()
 }
 
 // NewIntSetterFromConfig creates a IntSetter from config
@@ -155,7 +155,7 @@ func NewIntSetterFromConfig(param string, config Config) (func(int64) error, err
 		return nil, fmt.Errorf("invalid plugin source for type int: %s", config.Source)
 	}
 
-	return prov.IntSetter(param), nil
+	return prov.IntSetter(param)
 }
 
 // NewFloatSetterFromConfig creates a FloatSetter from config
@@ -175,7 +175,7 @@ func NewFloatSetterFromConfig(param string, config Config) (func(float642 float6
 		return nil, fmt.Errorf("invalid plugin source for type float: %s", config.Source)
 	}
 
-	return prov.FloatSetter(param), nil
+	return prov.FloatSetter(param)
 }
 
 // NewStringSetterFromConfig creates a StringSetter from config
@@ -195,7 +195,7 @@ func NewStringSetterFromConfig(param string, config Config) (func(string) error,
 		return nil, fmt.Errorf("invalid plugin source for type string: %s", config.Source)
 	}
 
-	return prov.StringSetter(param), nil
+	return prov.StringSetter(param)
 }
 
 // NewBoolSetterFromConfig creates a BoolSetter from config
@@ -215,5 +215,5 @@ func NewBoolSetterFromConfig(param string, config Config) (func(bool) error, err
 		return nil, fmt.Errorf("invalid plugin source for type bool: %s", config.Source)
 	}
 
-	return prov.BoolSetter(param), nil
+	return prov.BoolSetter(param)
 }
