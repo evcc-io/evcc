@@ -12,6 +12,7 @@ import (
 func (lp *Loadpoint) publishEffectiveValues() {
 	lp.publish(keys.EffectivePriority, lp.EffectivePriority())
 	lp.publish(keys.EffectivePlanTime, lp.EffectivePlanTime())
+	lp.publish(keys.EffectivePlanSoc, lp.EffectivePlanSoc())
 	lp.publish(keys.EffectiveMinCurrent, lp.effectiveMinCurrent())
 	lp.publish(keys.EffectiveMaxCurrent, lp.effectiveMaxCurrent())
 	lp.publish(keys.EffectiveLimitSoc, lp.effectiveLimitSoc())
@@ -27,14 +28,26 @@ func (lp *Loadpoint) EffectivePriority() int {
 	return lp.GetPriority()
 }
 
+// nextVehiclePlanSoc returns the next vehicle plan time and soc
+func (lp *Loadpoint) nextVehiclePlanSoc() (time.Time, int) {
+	if v := lp.GetVehicle(); v != nil {
+		return vehicle.Settings(lp.log, v).GetPlanSoc()
+	}
+	return time.Time{}, 0
+}
+
+// EffectivePlanSoc returns the soc target for the current plan
+func (lp *Loadpoint) EffectivePlanSoc() int {
+	_, soc := lp.nextVehiclePlanSoc()
+	return soc
+}
+
 // EffectivePlanTime returns the effective plan time
 func (lp *Loadpoint) EffectivePlanTime() time.Time {
-	if v := lp.GetVehicle(); v != nil {
-		if ts, _ := vehicle.Settings(lp.log, v).GetPlanSoc(); !ts.IsZero() {
-			lp.publish(keys.EffectivePlanTime, ts)
-			return ts
-		}
+	if ts, _ := lp.nextVehiclePlanSoc(); !ts.IsZero() {
+		return ts
 	}
+
 	ts, _ := lp.GetPlanEnergy()
 	return ts
 }
