@@ -120,14 +120,16 @@ render: |
       type: input
       decode: uint16
   limitsoc:
-    source: modbus
-    uri: {{ .host }}:{{ .port }}
-    id: 100 # com.victronenergy.system
-    register:
-      address: 2901 # limit soc
-      type: holding
-      decode: uint16
-    scale: 10
+    source: float2int
+    set:
+      source: modbus
+      uri: {{ .host }}:{{ .port }}
+      id: 100 # com.victronenergy.system
+      register:
+        address: 2901 # limit soc
+        type: holding
+        decode: uint16
+      scale: 0.1
   capacity: {{ .capacity }} # kWh
   minsoc: {{ .minsoc }} # %
   maxsoc: {{ .maxsoc }} # %
