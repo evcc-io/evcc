@@ -29,12 +29,12 @@ type Pulsatrix struct {
 }
 
 type pulsatrixData struct {
-	VehicleStatus     string     `json:"vehicleStatus"`
-	LastActivePower   float64    `json:"lastActivePower"`
-	PhaseVoltage      [3]float64 `json:"voltage"`
-	PhaseAmperage     [3]float64 `json:"amperage"`
-	AllocatedAmperage float64    `json:"allocatedAmperage"`
-	EnergyImported    float64    `json:"energyImported"`
+	VehicleStatus   string     `json:"vehicleStatus"`
+	LastActivePower float64    `json:"lastActivePower"`
+	PhaseVoltage    [3]float64 `json:"voltage"`
+	PhaseAmperage   [3]float64 `json:"amperage"`
+	AmperageLimit   float64    `json:"amperageLimit"`
+	EnergyImported  float64    `json:"energyImported"`
 }
 
 func init() {
@@ -81,13 +81,12 @@ func (c *Pulsatrix) connectWs() error {
 		return err
 	}
 
+	c.conn = conn
+
 	// ensure evcc and SECC are in sync
 	if err := c.Enable(false); err != nil {
 		c.log.ERROR.Println(err)
 	}
-
-	c.conn = conn
-
 	go c.wsReader()
 	go c.heartbeat()
 
@@ -109,7 +108,7 @@ func (c *Pulsatrix) reconnectWs() {
 
 // WsReader runs a loop that reads messages from the websocket
 func (c *Pulsatrix) wsReader() {
-	for c.valid() {
+	for {
 		ctx, cancel := context.WithTimeout(context.Background(), request.Timeout)
 		defer cancel()
 
@@ -122,8 +121,6 @@ func (c *Pulsatrix) wsReader() {
 		}
 	}
 
-	fmt.Println("wsReader stopped")
-
 	c.mu.Lock()
 	if c.conn != nil {
 		c.conn.Close(websocket.StatusNormalClosure, "Reconnecting")
@@ -134,14 +131,9 @@ func (c *Pulsatrix) wsReader() {
 	c.reconnectWs()
 }
 
-func (c *Pulsatrix) valid() bool {
-	_, err := c.data.Get()
-	return err == nil
-}
-
 // wsWrite writes a message to the websocket
 func (c *Pulsatrix) write(message string) error {
-	if c.valid() && c.conn != nil {
+	if c.conn != nil {
 		c.mu.Lock()
 		defer c.mu.Unlock()
 
@@ -163,7 +155,7 @@ func (c *Pulsatrix) parseWsMessage(messageType websocket.MessageType, message []
 		b := bytes.ReplaceAll(message, []byte(":NaN"), []byte(":null"))
 		idx := bytes.IndexByte(b, '{')
 
-		var val pulsatrixData
+		val, _ := c.data.Get()
 		if err := json.Unmarshal(b[idx:], &val); err != nil {
 			c.log.WARN.Println(err)
 		} else {
@@ -198,7 +190,7 @@ func (c *Pulsatrix) Enabled() (bool, error) {
 
 // Enable implements the api.Charger interface
 func (c *Pulsatrix) Enable(enable bool) error {
-	err := c.write("setEnabled\n" + strconv.FormatBool(c.enabled))
+	err := c.write("setEnabled\n" + strconv.FormatBool(enable))
 	if err == nil {
 		c.enabled = enable
 	}
@@ -224,7 +216,7 @@ var _ api.CurrentGetter = (*Pulsatrix)(nil)
 // GetMaxCurrent implements the api.CurrentGetter interface
 func (c *Pulsatrix) GetMaxCurrent() (float64, error) {
 	res, err := c.data.Get()
-	return res.AllocatedAmperage, err
+	return res.AmperageLimit, err
 }
 
 // CurrentPower implements the api.Meter interface
