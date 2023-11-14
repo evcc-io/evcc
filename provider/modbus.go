@@ -263,6 +263,13 @@ func (m *Modbus) BoolGetter() func() (bool, error) {
 	}
 }
 
+// // FloatSetter executes configured modbus write operation and implements SetFloatProvider
+// func (m *Modbus) FloatSetter(param string) func(float64) error {
+// 	return func(val float64) error {
+// 		return m.IntSetter(param)(int64(val))
+// 	}
+// }
+
 // IntSetter executes configured modbus write operation and implements SetIntProvider
 func (m *Modbus) IntSetter(param string) func(int64) error {
 	return func(val int64) error {

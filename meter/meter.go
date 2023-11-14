@@ -17,7 +17,7 @@ func init() {
 
 // NewConfigurableFromConfig creates api.Meter from config
 func NewConfigurableFromConfig(other map[string]interface{}) (api.Meter, error) {
-	var cc struct {
+	cc := struct {
 		capacity `mapstructure:",squash"`
 		Power    provider.Config
 		Energy   *provider.Config  // optional
@@ -26,9 +26,13 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Meter, error) 
 		Voltages []provider.Config // optional
 		Powers   []provider.Config // optional
 
-		battery                  `mapstructure:",squash"`
-		BatteryMaxDischargePower *provider.Config // optional
-		BatteryMinSoc            *provider.Config // optional
+		battery  `mapstructure:",squash"`
+		LimitSoc *provider.Config // optional
+	}{
+		battery: battery{
+			MinSoc: 20,
+			MaxSoc: 95,
+		},
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -70,31 +74,25 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Meter, error) 
 	}
 
 	// decorate soc
-	var batterySocG func() (float64, error)
+	var socG func() (float64, error)
 	if cc.Soc != nil {
-		batterySocG, err = provider.NewFloatGetterFromConfig(*cc.Soc)
+		socG, err = provider.NewFloatGetterFromConfig(*cc.Soc)
 		if err != nil {
-			return nil, fmt.Errorf("battery: %w", err)
+			return nil, fmt.Errorf("battery soc: %w", err)
 		}
 	}
 
-	// batModeG func() (api.BatteryMode, error)
 	var batModeS func(api.BatteryMode) error
-	if cc.BatteryMaxDischargePower != nil && cc.BatteryMinSoc != nil {
-		dischargePowerS, err := provider.NewFloatSetterFromConfig("dischargePower", *cc.BatteryMaxDischargePower)
+	if cc.Soc != nil && cc.LimitSoc != nil {
+		limitSocS, err := provider.NewFloatSetterFromConfig("limitSoc", *cc.LimitSoc)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("battery limit soc: %w", err)
 		}
 
-		minSocS, err := provider.NewFloatSetterFromConfig("minSoc", *cc.BatteryMinSoc)
-		if err != nil {
-			return nil, err
-		}
-
-		_, batModeS = cc.battery.BatteryController(dischargePowerS, minSocS)
+		batModeS = cc.battery.BatteryController(socG, limitSocS)
 	}
 
-	res := m.Decorate(totalEnergyG, currentsG, voltagesG, powersG, batterySocG, cc.capacity.Decorator(), batModeS)
+	res := m.Decorate(totalEnergyG, currentsG, voltagesG, powersG, socG, cc.capacity.Decorator(), batModeS)
 
 	return res, nil
 }

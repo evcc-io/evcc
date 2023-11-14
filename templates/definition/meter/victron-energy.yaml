@@ -13,14 +13,12 @@ params:
   - name: capacity
     advanced: true
   # battery control
-  - name: maxdischargepower
-    type: number
-    advanced: true
-    default: -1
   - name: minsoc
     type: number
     advanced: true
-    default: 20
+  - name: maxsoc
+    type: number
+    advanced: true
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -121,23 +119,16 @@ render: |
       address: 843 # Soc
       type: input
       decode: uint16
-  batterymaxdischargepower:
+  limitsoc:
     source: modbus
     uri: {{ .host }}:{{ .port }}
     id: 100 # com.victronenergy.system
     register:
-      address: 2704 # max discharge power
-      type: holding
-      decode: int16
-  batteryminsoc:
-    source: modbus
-    uri: {{ .host }}:{{ .port }}
-    id: 100 # com.victronenergy.system
-    register:
-      address: 2901 # min soc
+      address: 2901 # limit soc
       type: holding
       decode: uint16
-  {{- if .capacity }}
+    scale: 10
   capacity: {{ .capacity }} # kWh
-  {{- end }}
+  minsoc: {{ .minsoc }} # %
+  maxsoc: {{ .maxsoc }} # %
   {{- end }}
