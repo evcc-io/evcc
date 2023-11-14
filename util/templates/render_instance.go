@@ -14,24 +14,24 @@ type Instance struct {
 }
 
 // RenderInstance renders an actual configuration instance
-func RenderInstance(class Class, other map[string]interface{}) (Instance, error) {
+func RenderInstance(class Class, other map[string]interface{}) (*Instance, error) {
 	var cc struct {
 		Template string
 		Other    map[string]interface{} `mapstructure:",remain"`
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
-		return *new(Instance), err
+		return nil, err
 	}
 
 	tmpl, err := ByName(class, cc.Template)
 	if err != nil {
-		return *new(Instance), err
+		return nil, err
 	}
 
 	b, _, err := tmpl.RenderResult(TemplateRenderModeInstance, other)
 	if err != nil {
-		return *new(Instance), err
+		return nil, err
 	}
 
 	var instance Instance
@@ -39,5 +39,5 @@ func RenderInstance(class Class, other map[string]interface{}) (Instance, error)
 		err = errors.New("empty instance type- check for missing usage")
 	}
 
-	return instance, err
+	return &instance, err
 }

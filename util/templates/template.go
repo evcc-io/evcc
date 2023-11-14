@@ -302,6 +302,8 @@ func (t *Template) RenderResult(renderMode string, other map[string]interface{})
 			out = p.Name
 		}
 
+		// TODO move yamlQuote to explicit quoting in templates, see https://github.com/evcc-io/evcc/issues/10742
+
 		switch typed := val.(type) {
 		case []interface{}:
 			var list []string
