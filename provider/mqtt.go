@@ -98,8 +98,6 @@ func (p *Mqtt) WithPipeline(pipeline *pipeline.Pipeline) *Mqtt {
 	return p
 }
 
-var _ FloatProvider = (*Mqtt)(nil)
-
 // newReceiver creates a msgHandler and subscribes it to the topic.
 func (m *Mqtt) newReceiver() (*msgHandler, error) {
 	h := &msgHandler{
@@ -112,6 +110,8 @@ func (m *Mqtt) newReceiver() (*msgHandler, error) {
 	err := m.client.Listen(m.topic, h.receive)
 	return h, err
 }
+
+var _ FloatProvider = (*Mqtt)(nil)
 
 // FloatGetter creates handler for float64 from MQTT topic that returns cached value
 func (m *Mqtt) FloatGetter() (func() (float64, error), error) {

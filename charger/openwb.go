@@ -62,27 +62,46 @@ func NewOpenWB(log *util.Logger, mqttconf mqtt.Config, id int, topic string, p1p
 	}
 
 	// timeout handler
-	to := provider.NewTimeoutHandler(provider.NewMqtt(log, client, fmt.Sprintf("%s/system/%s", topic, openwb.TimestampTopic), timeout).StringGetter())
+	h, err := provider.NewMqtt(log, client, fmt.Sprintf("%s/system/%s", topic, openwb.TimestampTopic), timeout).StringGetter()
+	if err != nil {
+		return nil, err
+	}
+	to := provider.NewTimeoutHandler(h)
 
-	boolG := func(topic string) func() (bool, error) {
-		g := provider.NewMqtt(log, client, topic, 0).BoolGetter()
-		return to.BoolGetter(g)
+	boolG := func(topic string) (func() (bool, error), error) {
+		g, err := provider.NewMqtt(log, client, topic, 0).BoolGetter()
+		if err != nil {
+			return nil, err
+		}
+		return to.BoolGetter(g), nil
 	}
 
-	floatG := func(topic string) func() (float64, error) {
-		g := provider.NewMqtt(log, client, topic, 0).FloatGetter()
-		return to.FloatGetter(g)
+	floatG := func(topic string) (func() (float64, error), error) {
+		g, err := provider.NewMqtt(log, client, topic, 0).FloatGetter()
+		if err != nil {
+			return nil, err
+		}
+		return to.FloatGetter(g), nil
 	}
 
 	// check if loadpoint configured
-	configured := boolG(fmt.Sprintf("%s/lp/%d/%s", topic, id, openwb.ConfiguredTopic))
+	configured, err := boolG(fmt.Sprintf("%s/lp/%d/%s", topic, id, openwb.ConfiguredTopic))
+	if err != nil {
+		return nil, err
+	}
 	if isConfigured, err := configured(); err != nil || !isConfigured {
 		return nil, fmt.Errorf("loadpoint %d is not configured", id)
 	}
 
 	// adapt plugged/charging to status
-	pluggedG := boolG(fmt.Sprintf("%s/lp/%d/%s", topic, id, openwb.PluggedTopic))
-	chargingG := boolG(fmt.Sprintf("%s/lp/%d/%s", topic, id, openwb.ChargingTopic))
+	pluggedG, err := boolG(fmt.Sprintf("%s/lp/%d/%s", topic, id, openwb.PluggedTopic))
+	if err != nil {
+		return nil, err
+	}
+	chargingG, err := boolG(fmt.Sprintf("%s/lp/%d/%s", topic, id, openwb.ChargingTopic))
+	if err != nil {
+		return nil, err
+	}
 	statusG := provider.NewOpenWBStatusProvider(pluggedG, chargingG).StringGetter
 
 	// setters
@@ -91,27 +110,45 @@ func NewOpenWB(log *util.Logger, mqttconf mqtt.Config, id int, topic string, p1p
 		// TODO remove after https://github.com/snaptec/openWB/issues/1757
 		currentTopic = "Lp2" + openwb.SlaveChargeCurrentTopic
 	}
-	currentS := provider.NewMqtt(log, client, fmt.Sprintf("%s/set/isss/%s", topic, currentTopic),
+	currentS, err := provider.NewMqtt(log, client, fmt.Sprintf("%s/set/isss/%s", topic, currentTopic),
 		timeout).WithRetained().IntSetter("current")
+	if err != nil {
+		return nil, err
+	}
 
 	cpTopic := openwb.SlaveCPInterruptTopic
 	if id == 2 {
 		// TODO remove after https://github.com/snaptec/openWB/issues/1757
 		cpTopic = strings.TrimSuffix(cpTopic, "1") + "2"
 	}
-	wakeupS := provider.NewMqtt(log, client, fmt.Sprintf("%s/set/isss/%s", topic, cpTopic),
+	wakeupS, err := provider.NewMqtt(log, client, fmt.Sprintf("%s/set/isss/%s", topic, cpTopic),
 		timeout).WithRetained().IntSetter("cp")
+	if err != nil {
+		return nil, err
+	}
 
-	authS := provider.NewMqtt(log, client, fmt.Sprintf("%s/set/chargepoint/%d/set/%s", topic, id, openwb.RfidTopic),
+	authS, err := provider.NewMqtt(log, client, fmt.Sprintf("%s/set/chargepoint/%d/set/%s", topic, id, openwb.RfidTopic),
 		timeout).WithRetained().StringSetter("rfid")
+	if err != nil {
+		return nil, err
+	}
 
 	// meter getters
-	currentPowerG := floatG(fmt.Sprintf("%s/lp/%d/%s", topic, id, openwb.ChargePowerTopic))
-	totalEnergyG := floatG(fmt.Sprintf("%s/lp/%d/%s", topic, id, openwb.ChargeTotalEnergyTopic))
+	currentPowerG, err := floatG(fmt.Sprintf("%s/lp/%d/%s", topic, id, openwb.ChargePowerTopic))
+	if err != nil {
+		return nil, err
+	}
+	totalEnergyG, err := floatG(fmt.Sprintf("%s/lp/%d/%s", topic, id, openwb.ChargeTotalEnergyTopic))
+	if err != nil {
+		return nil, err
+	}
 
 	var currentsG []func() (float64, error)
 	for i := 1; i <= 3; i++ {
-		current := floatG(fmt.Sprintf("%s/lp/%d/%s%d", topic, id, openwb.CurrentTopic, i))
+		current, err := floatG(fmt.Sprintf("%s/lp/%d/%s%d", topic, id, openwb.CurrentTopic, i))
+		if err != nil {
+			return nil, err
+		}
 		currentsG = append(currentsG, current)
 	}
 
@@ -126,10 +163,13 @@ func NewOpenWB(log *util.Logger, mqttconf mqtt.Config, id int, topic string, p1p
 	}
 
 	// heartbeat
-	go func() {
-		heartbeatS := provider.NewMqtt(log, client, fmt.Sprintf("%s/set/isss/%s", topic, openwb.SlaveHeartbeatTopic),
-			timeout).WithRetained().IntSetter("heartbeat")
+	heartbeatS, err := provider.NewMqtt(log, client, fmt.Sprintf("%s/set/isss/%s", topic, openwb.SlaveHeartbeatTopic),
+		timeout).WithRetained().IntSetter("heartbeat")
+	if err != nil {
+		return nil, err
+	}
 
+	go func() {
 		for range time.Tick(openwb.HeartbeatInterval) {
 			if err := heartbeatS(1); err != nil {
 				log.ERROR.Printf("heartbeat: %v", err)
@@ -146,8 +186,11 @@ func NewOpenWB(log *util.Logger, mqttconf mqtt.Config, id int, topic string, p1p
 			// TODO remove after https://github.com/snaptec/openWB/issues/1757
 			phasesTopic += "Lp2"
 		}
-		phasesS := provider.NewMqtt(log, client, fmt.Sprintf("%s/set/isss/%s", topic, phasesTopic),
+		phasesS, err := provider.NewMqtt(log, client, fmt.Sprintf("%s/set/isss/%s", topic, phasesTopic),
 			timeout).WithRetained().IntSetter("phases")
+		if err != nil {
+			return nil, err
+		}
 
 		phases = func(phases int) error {
 			return phasesS(int64(phases))
@@ -156,7 +199,10 @@ func NewOpenWB(log *util.Logger, mqttconf mqtt.Config, id int, topic string, p1p
 
 	var soc func() (float64, error)
 	if dc {
-		soc = floatG(fmt.Sprintf("%s/lp/%d/%s", topic, id, openwb.VehicleSocTopic))
+		soc, err = floatG(fmt.Sprintf("%s/lp/%d/%s", topic, id, openwb.VehicleSocTopic))
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return decorateOpenWB(c, phases, soc), nil

@@ -42,18 +42,26 @@ func NewOpenWBFromConfig(other map[string]interface{}) (api.Meter, error) {
 	}
 
 	// timeout handler
-	to := provider.NewTimeoutHandler(provider.NewMqtt(log, client,
-		fmt.Sprintf("%s/system/%s", cc.Topic, openwb.TimestampTopic), cc.Timeout,
-	).StringGetter())
+	h, err := provider.NewMqtt(log, client, fmt.Sprintf("%s/system/%s", cc.Topic, openwb.TimestampTopic), cc.Timeout).StringGetter()
+	if err != nil {
+		return nil, err
+	}
+	to := provider.NewTimeoutHandler(h)
 
-	boolG := func(topic string) func() (bool, error) {
-		g := provider.NewMqtt(log, client, topic, 0).BoolGetter()
-		return to.BoolGetter(g)
+	boolG := func(topic string) (func() (bool, error), error) {
+		g, err := provider.NewMqtt(log, client, topic, 0).BoolGetter()
+		if err != nil {
+			return nil, err
+		}
+		return to.BoolGetter(g), nil
 	}
 
-	floatG := func(topic string) func() (float64, error) {
-		g := provider.NewMqtt(log, client, topic, 0).FloatGetter()
-		return to.FloatGetter(g)
+	floatG := func(topic string) (func() (float64, error), error) {
+		g, err := provider.NewMqtt(log, client, topic, 0).FloatGetter()
+		if err != nil {
+			return nil, err
+		}
+		return to.FloatGetter(g), nil
 	}
 
 	var power func() (float64, error)
@@ -63,18 +71,27 @@ func NewOpenWBFromConfig(other map[string]interface{}) (api.Meter, error) {
 
 	switch strings.ToLower(cc.Usage) {
 	case "grid":
-		power = floatG(fmt.Sprintf("%s/evu/%s", cc.Topic, openwb.PowerTopic))
+		power, err = floatG(fmt.Sprintf("%s/evu/%s", cc.Topic, openwb.PowerTopic))
+		if err != nil {
+			return nil, err
+		}
 
 		var curr []func() (float64, error)
 		for i := 1; i <= 3; i++ {
-			current := floatG(fmt.Sprintf("%s/evu/%s%d", cc.Topic, openwb.CurrentTopic, i))
+			current, err := floatG(fmt.Sprintf("%s/evu/%s%d", cc.Topic, openwb.CurrentTopic, i))
+			if err != nil {
+				return nil, err
+			}
 			curr = append(curr, current)
 		}
 
 		currents = collectPhaseProviders(curr)
 
 	case "pv":
-		configuredG := boolG(fmt.Sprintf("%s/pv/1/%s", cc.Topic, openwb.PvConfigured)) // first pv
+		configuredG, err := boolG(fmt.Sprintf("%s/pv/1/%s", cc.Topic, openwb.PvConfigured)) // first pv
+		if err != nil {
+			return nil, err
+		}
 		configured, err := configuredG()
 		if err != nil {
 			return nil, err
@@ -84,14 +101,20 @@ func NewOpenWBFromConfig(other map[string]interface{}) (api.Meter, error) {
 			return nil, errors.New("pv not available")
 		}
 
-		g := floatG(fmt.Sprintf("%s/pv/%s", cc.Topic, openwb.PowerTopic))
+		g, err := floatG(fmt.Sprintf("%s/pv/%s", cc.Topic, openwb.PowerTopic))
+		if err != nil {
+			return nil, err
+		}
 		power = func() (float64, error) {
 			f, err := g()
 			return -f, err
 		}
 
 	case "battery":
-		configuredG := boolG(fmt.Sprintf("%s/housebattery/%s", cc.Topic, openwb.BatteryConfigured))
+		configuredG, err := boolG(fmt.Sprintf("%s/housebattery/%s", cc.Topic, openwb.BatteryConfigured))
+		if err != nil {
+			return nil, err
+		}
 		configured, err := configuredG()
 		if err != nil {
 			return nil, err
@@ -101,12 +124,20 @@ func NewOpenWBFromConfig(other map[string]interface{}) (api.Meter, error) {
 			return nil, errors.New("battery not available")
 		}
 
-		inner := floatG(fmt.Sprintf("%s/housebattery/%s", cc.Topic, openwb.PowerTopic))
+		inner, err := floatG(fmt.Sprintf("%s/housebattery/%s", cc.Topic, openwb.PowerTopic))
+		if err != nil {
+			return nil, err
+		}
 		power = func() (float64, error) {
 			f, err := inner()
 			return -f, err
 		}
-		soc = floatG(fmt.Sprintf("%s/housebattery/%s", cc.Topic, openwb.SocTopic))
+
+		soc, err = floatG(fmt.Sprintf("%s/housebattery/%s", cc.Topic, openwb.SocTopic))
+		if err != nil {
+			return nil, err
+		}
+
 		capacity = cc.capacity.Decorator()
 
 	default:

@@ -103,33 +103,64 @@ func NewWarp2(mqttconf mqtt.Config, topic, emTopic string, timeout time.Duration
 	}
 
 	// timeout handler
-	to := provider.NewTimeoutHandler(provider.NewMqtt(log, client,
-		fmt.Sprintf("%s/evse/low_level_state", topic), timeout,
-	).StringGetter())
+	h, err := provider.NewMqtt(log, client, fmt.Sprintf("%s/evse/low_level_state", topic), timeout).StringGetter()
+	if err != nil {
+		return nil, err
+	}
+	to := provider.NewTimeoutHandler(h)
 
-	stringG := func(topic string) func() (string, error) {
-		g := provider.NewMqtt(log, client, topic, 0).StringGetter()
-		return to.StringGetter(g)
+	stringG := func(topic string) (func() (string, error), error) {
+		g, err := provider.NewMqtt(log, client, topic, 0).StringGetter()
+		if err != nil {
+			return nil, err
+		}
+		return to.StringGetter(g), nil
 	}
 
-	wb.maxcurrentG = stringG(fmt.Sprintf("%s/evse/external_current", topic))
-	wb.statusG = stringG(fmt.Sprintf("%s/evse/state", topic))
-	wb.meterG = stringG(fmt.Sprintf("%s/meter/values", topic))
-	wb.meterDetailsG = stringG(fmt.Sprintf("%s/meter/all_values", topic))
-	wb.chargeG = stringG(fmt.Sprintf("%s/charge_tracker/current_charge", topic))
-	wb.userconfigG = stringG(fmt.Sprintf("%s/users/config", topic))
+	wb.maxcurrentG, err = stringG(fmt.Sprintf("%s/evse/external_current", topic))
+	if err != nil {
+		return nil, err
+	}
+	wb.statusG, err = stringG(fmt.Sprintf("%s/evse/state", topic))
+	if err != nil {
+		return nil, err
+	}
+	wb.meterG, err = stringG(fmt.Sprintf("%s/meter/values", topic))
+	if err != nil {
+		return nil, err
+	}
+	wb.meterDetailsG, err = stringG(fmt.Sprintf("%s/meter/all_values", topic))
+	if err != nil {
+		return nil, err
+	}
+	wb.chargeG, err = stringG(fmt.Sprintf("%s/charge_tracker/current_charge", topic))
+	if err != nil {
+		return nil, err
+	}
+	wb.userconfigG, err = stringG(fmt.Sprintf("%s/users/config", topic))
+	if err != nil {
+		return nil, err
+	}
 
-	wb.maxcurrentS = provider.NewMqtt(log, client,
+	wb.maxcurrentS, err = provider.NewMqtt(log, client,
 		fmt.Sprintf("%s/evse/external_current_update", topic), 0).
 		WithPayload(`{ "current": ${maxcurrent} }`).
 		IntSetter("maxcurrent")
+	if err != nil {
+		return nil, err
+	}
 
-	// wb.emConfigG = stringG(fmt.Sprintf("%s/energy_manager/config", emTopic))
-	wb.emStateG = stringG(fmt.Sprintf("%s/energy_manager/state", emTopic))
-	wb.phasesS = provider.NewMqtt(log, client,
+	wb.emStateG, err = stringG(fmt.Sprintf("%s/energy_manager/state", emTopic))
+	if err != nil {
+		return nil, err
+	}
+	wb.phasesS, err = provider.NewMqtt(log, client,
 		fmt.Sprintf("%s/energy_manager/external_control_update", emTopic), 0).
 		WithPayload(`{ "phases_wanted": ${phases} }`).
 		IntSetter("phases")
+	if err != nil {
+		return nil, err
+	}
 
 	return wb, nil
 }
@@ -141,9 +172,11 @@ func (wb *Warp2) hasFeature(root, feature string) bool {
 
 	topic := fmt.Sprintf("%s/info/features", root)
 
-	if data, err := provider.NewMqtt(wb.log, wb.client, topic, 0).StringGetter()(); err == nil {
-		if err := json.Unmarshal([]byte(data), &wb.features); err == nil {
-			return slices.Contains(wb.features, feature)
+	if dataG, err := provider.NewMqtt(wb.log, wb.client, topic, 0).StringGetter(); err == nil {
+		if data, err := dataG(); err == nil {
+			if err := json.Unmarshal([]byte(data), &wb.features); err == nil {
+				return slices.Contains(wb.features, feature)
+			}
 		}
 	}
 
