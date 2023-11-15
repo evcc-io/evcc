@@ -57,7 +57,7 @@ func (o *constProvider) IntGetter() (func() (int64, error), error) {
 	val, err := strconv.ParseInt(o.str, 10, 64)
 	return func() (int64, error) {
 		return val, err
-	}, nil
+	}, err
 }
 
 var _ FloatProvider = (*constProvider)(nil)
@@ -66,5 +66,5 @@ func (o *constProvider) FloatGetter() (func() (float64, error), error) {
 	val, err := strconv.ParseFloat(o.str, 64)
 	return func() (float64, error) {
 		return val, err
-	}, nil
+	}, err
 }
