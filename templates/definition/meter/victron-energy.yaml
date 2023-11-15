@@ -127,7 +127,7 @@ render: |
       id: 100 # com.victronenergy.system
       register:
         address: 2901 # limit soc
-        type: holding
+        type: writesingle
         decode: uint16
       scale: 0.1
   capacity: {{ .capacity }} # kWh

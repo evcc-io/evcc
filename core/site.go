@@ -824,7 +824,7 @@ func (site *Site) prepare() {
 
 	site.publish("vehicles", vehicleTitles(site.GetVehicles()))
 	site.publish("batteryDischargeControl", site.BatteryDischargeControl)
-	site.publish("batteryMode", site.batteryMode)
+	site.publish("batteryMode", site.batteryMode.String())
 }
 
 // Prepare attaches communication channels to site and loadpoints
