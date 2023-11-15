@@ -18,15 +18,16 @@ func init() {
 // NewConfigurableFromConfig creates api.Meter from config
 func NewConfigurableFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
-		capacity `mapstructure:",squash"`
 		Power    provider.Config
 		Energy   *provider.Config  // optional
-		Soc      *provider.Config  // optional
 		Currents []provider.Config // optional
 		Voltages []provider.Config // optional
 		Powers   []provider.Config // optional
 
+		// battery
+		capacity `mapstructure:",squash"`
 		battery  `mapstructure:",squash"`
+		Soc      *provider.Config // optional
 		LimitSoc *provider.Config // optional
 	}{
 		battery: battery{
