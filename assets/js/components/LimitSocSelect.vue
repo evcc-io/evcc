@@ -1,6 +1,6 @@
 <template>
 	<LabelAndValue class="flex-grow-1" :label="title" align="end" data-testid="target-soc">
-		<h3 class="value m-0 d-block d-sm-flex align-items-baseline justify-content-end">
+		<h3 class="value m-0">
 			<label class="position-relative">
 				<select :value="limitSoc" class="custom-select" @change="change">
 					<option v-for="{ soc, text } in options" :key="soc" :value="soc">
@@ -12,7 +12,7 @@
 				</span>
 			</label>
 
-			<div v-if="estimatedTargetRange" class="extraValue ms-0 ms-sm-1 text-nowrap">
+			<div v-if="estimatedTargetRange" class="extraValue text-nowrap">
 				<AnimatedNumber :to="estimatedTargetRange" :format="formatKm" />
 			</div>
 		</h3>

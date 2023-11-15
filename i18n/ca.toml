@@ -119,7 +119,6 @@ modalTitle = "¿Segur que vols tornar començar?"
 vehicles = "Estacionament"
 
 [main.chargingPlan]
-activeLabel = "{time}"
 arrivalTab = "Arribades"
 departureTab = "Sortides"
 modalTitle = "Plà de càrrega"

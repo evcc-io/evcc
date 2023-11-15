@@ -6,17 +6,26 @@
 			:class="disabled ? 'opacity-25' : 'opacity-100'"
 			data-testid="charging-plan"
 		>
-			<h3 class="value m-0 d-block align-items-baseline justify-content-center">
+			<div class="value m-0 d-block align-items-baseline justify-content-center">
 				<button
 					class="value-button p-0"
 					:class="enabled ? 'evcc-default-text' : 'text-gray'"
 					@click="openModal"
 				>
-					<strong v-if="minSocEnabled">{{ minSocLabel }}</strong>
-					<strong v-else-if="targetChargeEnabled">{{ targetTimeLabel() }}</strong>
-					<span v-else>{{ $t("main.chargingPlan.none") }}</span>
+					<strong v-if="minSocEnabled" class="text-decoration-underline">
+						{{ minSocLabel }}
+					</strong>
+					<strong v-else-if="targetChargeEnabled">
+						<span class="text-decoration-underline"> {{ targetTimeLabel() }}</span>
+						<div class="extraValue text-nowrap">
+							{{ targetSocLabel }}
+						</div>
+					</strong>
+					<span v-else class="text-decoration-underline">
+						{{ $t("main.chargingPlan.none") }}
+					</span>
 				</button>
-			</h3>
+			</div>
 		</LabelAndValue>
 
 		<Teleport to="body">
@@ -107,6 +116,7 @@ export default {
 		id: [String, Number],
 		planActive: Boolean,
 		effectivePlanTime: String,
+		effectivePlanSoc: Number,
 		effectiveLimitSoc: Number,
 		limitEnergy: Number,
 		socBasedCharging: Boolean,
@@ -171,6 +181,12 @@ export default {
 		chargingPlanArrival: function () {
 			return this.collectProps(ChargingPlanArrival);
 		},
+		targetSocLabel: function () {
+			if (this.socBasedCharging) {
+				return `${Math.round(this.effectivePlanSoc)}%`;
+			}
+			return this.fmtKWh(this.planEnergy);
+		},
 	},
 	mounted() {
 		this.modal = Modal.getOrCreateInstance(this.$refs.modal);
@@ -198,9 +214,7 @@ export default {
 		// not computed because it needs to update over time
 		targetTimeLabel: function () {
 			const targetDate = new Date(this.effectivePlanTime);
-			return this.$t("main.chargingPlan.activeLabel", {
-				time: this.fmtAbsoluteDate(targetDate),
-			});
+			return this.fmtAbsoluteDate(targetDate);
 		},
 		showDeatureTab: function () {
 			this.activeTab = "departure";
@@ -242,12 +256,16 @@ export default {
 	font-size: 18px;
 	border: none;
 	background: none;
-	text-decoration: underline;
 }
 .root {
 	transition: opacity var(--evcc-transition-medium) linear;
 }
 .value:hover {
 	color: var(--bs-color-white);
+}
+.extraValue {
+	color: var(--evcc-gray);
+	font-size: 14px;
+	text-decoration: none;
 }
 </style>

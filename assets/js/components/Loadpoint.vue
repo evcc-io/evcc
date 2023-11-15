@@ -163,6 +163,7 @@ export default {
 		planActive: Boolean,
 		planProjectedStart: String,
 		effectivePlanTime: String,
+		effectivePlanSoc: Number,
 		vehicleProviderLoggedIn: Boolean,
 		vehicleProviderLoginPath: String,
 		vehicleProviderLogoutPath: String,

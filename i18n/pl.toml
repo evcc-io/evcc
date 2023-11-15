@@ -157,7 +157,6 @@ modalTitle = "Czy na pewno chcesz uruchomić ponownie?"
 vehicles = "Garaż"
 
 [main.chargingPlan]
-activeLabel = "{time}"
 arrivalTab = "Przyjazd"
 departureTab = "Wyjazd"
 modalTitle = "Plan ładowania"
@@ -230,7 +229,6 @@ logout = "wyloguj"
 
 [main.targetCharge]
 activate = "Aktywować"
-activeLabel = "{time}"
 co2Limit = "Limit CO₂ z {co2}"
 costLimitIgnore = "Skonfigurowany {limit} będzie ignorowany w tym okresie."
 descriptionEnergy = "Do kiedy należy załadować {targetEnergy} do pojazdu?"

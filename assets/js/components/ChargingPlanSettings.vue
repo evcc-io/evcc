@@ -112,7 +112,6 @@ export default {
 			return false;
 		},
 		selectedTargetTime: function () {
-			console.log(this.effectivePlanTime);
 			return new Date(this.effectivePlanTime);
 		},
 		targetEnergyFormatted: function () {

@@ -101,6 +101,7 @@ export default {
 		planActive: Boolean,
 		planProjectedStart: String,
 		effectivePlanTime: String,
+		effectivePlanSoc: Number,
 		effectiveLimitSoc: Number,
 		limitEnergy: Number,
 		chargedEnergy: Number,

@@ -158,7 +158,6 @@ modalTitle = "Are you sure you want to restart?"
 vehicles = "Parking"
 
 [main.chargingPlan]
-activeLabel = "{time}"
 arrivalTab = "Arrival"
 day = "Day"
 departureTab = "Departure"

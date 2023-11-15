@@ -152,7 +152,6 @@ modalTitle = "Ali ste prepričani, da želite znova zagnati?"
 vehicles = "Parkiranje"
 
 [main.chargingPlan]
-activeLabel = "{time}"
 arrivalTab = "Prihod"
 departureTab = "Odhod"
 modalTitle = "Načrt polnjenja"
@@ -222,7 +221,6 @@ logout = "odjava"
 
 [main.targetCharge]
 activate = "Aktiviraj"
-activeLabel = "{time}"
 co2Limit = "Omejitev CO₂ {co2}"
 costLimitIgnore = "V tem obdobju se nastavljena {limit} ne bo upoštevala."
 descriptionEnergy = "Do kdaj želite da se vozilo napolni za {targetEnergy}?"

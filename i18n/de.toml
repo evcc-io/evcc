@@ -161,7 +161,6 @@ modalTitle = "Sicher, dass du neu starten möchtest?"
 vehicles = "Parkplatz"
 
 [main.chargingPlan]
-activeLabel = "{time}"
 arrivalTab = "Ankunft"
 departureTab = "Abfahrt"
 modalTitle = "Ladeplanung"

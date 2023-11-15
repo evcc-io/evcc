@@ -5,7 +5,7 @@
 		align="end"
 		data-testid="target-energy"
 	>
-		<h3 class="value m-0 d-block d-sm-flex align-items-baseline justify-content-end">
+		<h3 class="value m-0">
 			<label class="position-relative">
 				<select :value="limitEnergy" class="custom-select" @change="change">
 					<option
@@ -26,7 +26,7 @@
 				</span>
 			</label>
 
-			<div v-if="estimated" class="extraValue ms-0 ms-sm-1 text-nowrap">
+			<div v-if="estimated" class="extraValue text-nowrap">
 				<AnimatedNumber :to="estimated" :format="fmtSoc" />
 			</div>
 		</h3>

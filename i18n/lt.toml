@@ -169,7 +169,6 @@ modalTitle = "Ar tikrai norite restartuoti?"
 vehicles = "Autoparkas"
 
 [main.chargingPlan]
-activeLabel = "{time}"
 arrivalTab = "Atvykimas"
 departureTab = "Išvykimas"
 modalTitle = "Įkrovimo planas"
@@ -242,7 +241,6 @@ logout = "atsijungti"
 
 [main.targetCharge]
 activate = "Aktyvuoti"
-activeLabel = "{time}"
 co2Limit = "CO₂ riba iš {co2}"
 costLimitIgnore = "Šiuo laikotarpiu sukonfigūruotas {limit} bus ignoruojamas."
 descriptionEnergy = "Iki kada {targetEnergy} turėtų būti įkrauta į automobilį?"

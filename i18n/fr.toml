@@ -157,7 +157,6 @@ modalTitle = "Voulez-vous vraiment redémarrer ?"
 vehicles = "Place de stationnement"
 
 [main.chargingPlan]
-activeLabel = "{time}"
 arrivalTab = "Arrivée"
 departureTab = "Départ"
 modalTitle = "Planification de la charge"
@@ -230,7 +229,6 @@ logout = "déconnexion"
 
 [main.targetCharge]
 activate = "Activer"
-activeLabel = "{time}"
 co2Limit = "Limite de CO₂ {co2]"
 costLimitIgnore = "La limite configurée {limit} sera ignorée durant cette période."
 descriptionEnergy = "Jusqu'à quand le véhicule doit-il être chargé à {targetEnergy}?"

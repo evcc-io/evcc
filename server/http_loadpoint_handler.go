@@ -87,15 +87,6 @@ func remoteDemandHandler(lp loadpoint.API) http.HandlerFunc {
 func planHandler(lp loadpoint.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		planTime := lp.EffectivePlanTime()
-		if t := r.URL.Query().Get("planTime"); t != "" {
-			var err error
-			planTime, err = time.Parse(time.RFC3339, t)
-			if err != nil {
-				w.WriteHeader(http.StatusBadRequest)
-				return
-			}
-		}
-
 		power := lp.EffectiveMaxPower()
 		requiredDuration, plan, err := lp.GetPlan(planTime, power)
 		if err != nil {
