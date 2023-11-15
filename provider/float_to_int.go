@@ -25,6 +25,7 @@ func NewFloatToIntFromConfig(other map[string]interface{}) (Provider, error) {
 		return nil, err
 	}
 
+	// TODO late init
 	set, err := NewIntSetterFromConfig(cc.Param, cc.Set)
 	if err != nil {
 		return nil, fmt.Errorf("set: %w", err)
