@@ -71,6 +71,8 @@ type API interface {
 	EffectiveMinPower() float64
 	// EffectiveMaxPower returns the max charging power taking active phases into account
 	EffectiveMaxPower() float64
+	// PublishEffectiveValues publishes effective values for currently attached vehicle
+	PublishEffectiveValues()
 
 	//
 	// plan

@@ -165,7 +165,7 @@ func (lp *Loadpoint) setActiveVehicle(v api.Vehicle) {
 	lp.unpublishVehicle()
 
 	// publish effective values
-	lp.publishEffectiveValues()
+	lp.PublishEffectiveValues()
 
 	lp.updateSession(func(session *session.Session) {
 		var title string

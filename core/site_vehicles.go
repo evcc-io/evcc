@@ -42,6 +42,11 @@ func (site *Site) publishVehicles() {
 			LimitSoc: v.GetLimitSoc(),
 			Plans:    plans,
 		}
+
+		if lp := site.coordinator.Owner(v); lp != nil {
+			panic("publish")
+			lp.PublishEffectiveValues()
+		}
 	}
 
 	site.publish(keys.Vehicles, res)

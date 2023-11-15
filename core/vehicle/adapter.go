@@ -13,6 +13,7 @@ import (
 
 var _ API = (*adapter)(nil)
 
+// Publish publishes vehicle updates at site level
 var Publish func()
 
 type adapter struct {

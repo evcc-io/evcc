@@ -8,8 +8,8 @@ import (
 	"github.com/evcc-io/evcc/core/vehicle"
 )
 
-// publishEffectiveValues publishes all effective values
-func (lp *Loadpoint) publishEffectiveValues() {
+// PublishEffectiveValues publishes all effective values
+func (lp *Loadpoint) PublishEffectiveValues() {
 	lp.publish(keys.EffectivePriority, lp.EffectivePriority())
 	lp.publish(keys.EffectivePlanTime, lp.EffectivePlanTime())
 	lp.publish(keys.EffectivePlanSoc, lp.EffectivePlanSoc())

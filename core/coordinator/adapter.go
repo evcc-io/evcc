@@ -25,6 +25,10 @@ func (a *adapter) GetVehicles() []api.Vehicle {
 	return a.c.GetVehicles()
 }
 
+func (a *adapter) Owner(v api.Vehicle) loadpoint.API {
+	return a.c.Owner(v)
+}
+
 func (a *adapter) GetVehicleIndex(v api.Vehicle) int {
 	return slices.Index(a.c.vehicles, v)
 }
