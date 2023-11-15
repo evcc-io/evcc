@@ -118,7 +118,7 @@ func (c *EEBus) waitForConnection() error {
 }
 
 func (c *EEBus) onConnect(ski string) {
-	c.log.TRACE.Println("!! onConnect invoked on ski ", ski)
+	c.log.TRACE.Println("connect ski:", ski)
 
 	c.expectedEnableUnpluggedState = false
 	c.setDefaultValues()
@@ -126,7 +126,7 @@ func (c *EEBus) onConnect(ski string) {
 }
 
 func (c *EEBus) onDisconnect(ski string) {
-	c.log.TRACE.Println("!! onDisconnect invoked on ski ", ski)
+	c.log.TRACE.Println("disconnect ski:", ski)
 
 	c.expectedEnableUnpluggedState = false
 	c.setConnected(false)
