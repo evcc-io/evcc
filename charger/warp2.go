@@ -25,11 +25,10 @@ type Warp2 struct {
 	meterDetailsG func() (string, error)
 	chargeG       func() (string, error)
 	userconfigG   func() (string, error)
+	emStateG      func() (string, error)
 	maxcurrentS   func(int64) error
-	// emConfigG     func() (string, error)
-	emStateG func() (string, error)
-	phasesS  func(int64) error
-	current  int64
+	phasesS       func(int64) error
+	current       int64
 }
 
 func init() {
@@ -109,35 +108,31 @@ func NewWarp2(mqttconf mqtt.Config, topic, emTopic string, timeout time.Duration
 	}
 	to := provider.NewTimeoutHandler(h)
 
-	stringG := func(topic string) (func() (string, error), error) {
-		g, err := provider.NewMqtt(log, client, topic, 0).StringGetter()
-		if err != nil {
-			return nil, err
-		}
-		return to.StringGetter(g), nil
+	mq := func(s string, args ...any) *provider.Mqtt {
+		return provider.NewMqtt(log, client, fmt.Sprintf(s, args...), 0)
 	}
 
-	wb.maxcurrentG, err = stringG(fmt.Sprintf("%s/evse/external_current", topic))
+	wb.maxcurrentG, err = to.StringGetter(mq("%s/evse/external_current", topic))
 	if err != nil {
 		return nil, err
 	}
-	wb.statusG, err = stringG(fmt.Sprintf("%s/evse/state", topic))
+	wb.statusG, err = to.StringGetter(mq("%s/evse/state", topic))
 	if err != nil {
 		return nil, err
 	}
-	wb.meterG, err = stringG(fmt.Sprintf("%s/meter/values", topic))
+	wb.meterG, err = to.StringGetter(mq("%s/meter/values", topic))
 	if err != nil {
 		return nil, err
 	}
-	wb.meterDetailsG, err = stringG(fmt.Sprintf("%s/meter/all_values", topic))
+	wb.meterDetailsG, err = to.StringGetter(mq("%s/meter/all_values", topic))
 	if err != nil {
 		return nil, err
 	}
-	wb.chargeG, err = stringG(fmt.Sprintf("%s/charge_tracker/current_charge", topic))
+	wb.chargeG, err = to.StringGetter(mq("%s/charge_tracker/current_charge", topic))
 	if err != nil {
 		return nil, err
 	}
-	wb.userconfigG, err = stringG(fmt.Sprintf("%s/users/config", topic))
+	wb.userconfigG, err = to.StringGetter(mq("%s/users/config", topic))
 	if err != nil {
 		return nil, err
 	}
@@ -150,7 +145,7 @@ func NewWarp2(mqttconf mqtt.Config, topic, emTopic string, timeout time.Duration
 		return nil, err
 	}
 
-	wb.emStateG, err = stringG(fmt.Sprintf("%s/energy_manager/state", emTopic))
+	wb.emStateG, err = to.StringGetter(mq("%s/energy_manager/state", emTopic))
 	if err != nil {
 		return nil, err
 	}
@@ -321,17 +316,6 @@ func (wb *Warp2) identify() (string, error) {
 
 	return res.AuthorizationInfo.TagId, err
 }
-
-// func (wb *Warp2) emConfig() (warp.EmConfig, error) {
-// 	var res warp.EmConfig
-
-// 	s, err := wb.emConfigG()
-// 	if err == nil {
-// 		err = json.Unmarshal([]byte(s), &res)
-// 	}
-
-// 	return res, err
-// }
 
 func (wb *Warp2) emState() (warp.EmState, error) {
 	var res warp.EmState

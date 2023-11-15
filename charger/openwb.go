@@ -2,6 +2,7 @@ package charger
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -68,24 +69,12 @@ func NewOpenWB(log *util.Logger, mqttconf mqtt.Config, id int, topic string, p1p
 	}
 	to := provider.NewTimeoutHandler(h)
 
-	boolG := func(topic string) (func() (bool, error), error) {
-		g, err := provider.NewMqtt(log, client, topic, 0).BoolGetter()
-		if err != nil {
-			return nil, err
-		}
-		return to.BoolGetter(g), nil
-	}
-
-	floatG := func(topic string) (func() (float64, error), error) {
-		g, err := provider.NewMqtt(log, client, topic, 0).FloatGetter()
-		if err != nil {
-			return nil, err
-		}
-		return to.FloatGetter(g), nil
+	mq := func(subtopic string) *provider.Mqtt {
+		return provider.NewMqtt(log, client, fmt.Sprintf("%s/lp/%d/%s", topic, id, subtopic), 0)
 	}
 
 	// check if loadpoint configured
-	configured, err := boolG(fmt.Sprintf("%s/lp/%d/%s", topic, id, openwb.ConfiguredTopic))
+	configured, err := to.BoolGetter(mq(openwb.ConfiguredTopic))
 	if err != nil {
 		return nil, err
 	}
@@ -94,11 +83,11 @@ func NewOpenWB(log *util.Logger, mqttconf mqtt.Config, id int, topic string, p1p
 	}
 
 	// adapt plugged/charging to status
-	pluggedG, err := boolG(fmt.Sprintf("%s/lp/%d/%s", topic, id, openwb.PluggedTopic))
+	pluggedG, err := to.BoolGetter(mq(openwb.PluggedTopic))
 	if err != nil {
 		return nil, err
 	}
-	chargingG, err := boolG(fmt.Sprintf("%s/lp/%d/%s", topic, id, openwb.ChargingTopic))
+	chargingG, err := to.BoolGetter(mq(openwb.ChargingTopic))
 	if err != nil {
 		return nil, err
 	}
@@ -134,18 +123,18 @@ func NewOpenWB(log *util.Logger, mqttconf mqtt.Config, id int, topic string, p1p
 	}
 
 	// meter getters
-	currentPowerG, err := floatG(fmt.Sprintf("%s/lp/%d/%s", topic, id, openwb.ChargePowerTopic))
+	currentPowerG, err := to.FloatGetter(mq(openwb.ChargePowerTopic))
 	if err != nil {
 		return nil, err
 	}
-	totalEnergyG, err := floatG(fmt.Sprintf("%s/lp/%d/%s", topic, id, openwb.ChargeTotalEnergyTopic))
+	totalEnergyG, err := to.FloatGetter(mq(openwb.ChargeTotalEnergyTopic))
 	if err != nil {
 		return nil, err
 	}
 
 	var currentsG []func() (float64, error)
 	for i := 1; i <= 3; i++ {
-		current, err := floatG(fmt.Sprintf("%s/lp/%d/%s%d", topic, id, openwb.CurrentTopic, i))
+		current, err := to.FloatGetter(mq(openwb.CurrentTopic + strconv.Itoa(i)))
 		if err != nil {
 			return nil, err
 		}
@@ -199,7 +188,7 @@ func NewOpenWB(log *util.Logger, mqttconf mqtt.Config, id int, topic string, p1p
 
 	var soc func() (float64, error)
 	if dc {
-		soc, err = floatG(fmt.Sprintf("%s/lp/%d/%s", topic, id, openwb.VehicleSocTopic))
+		soc, err = to.FloatGetter(mq(openwb.VehicleSocTopic))
 		if err != nil {
 			return nil, err
 		}
