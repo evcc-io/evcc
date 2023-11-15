@@ -273,7 +273,7 @@ func (m *Modbus) IntSetter(param string) func(int64) error {
 
 		// if funccode is configured, execute the read directly
 		if op := m.op.MBMD; op.FuncCode != 0 {
-			uval := uint16(int64(m.scale) * val)
+			uval := uint16(m.scale * float64(val))
 
 			switch op.FuncCode {
 			case gridx.FuncCodeWriteSingleRegister:

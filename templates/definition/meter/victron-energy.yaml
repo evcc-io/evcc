@@ -129,7 +129,7 @@ render: |
         address: 2901 # limit soc
         type: writesingle
         decode: uint16
-      scale: 0.1
+      scale: 10
   capacity: {{ .capacity }} # kWh
   minsoc: {{ .minsoc }} # %
   maxsoc: {{ .maxsoc }} # %
