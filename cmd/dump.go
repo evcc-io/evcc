@@ -117,7 +117,8 @@ func runDump(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	for _, v := range site.Vehicles().All() {
+	for _, vv := range site.Vehicles().All() {
+		v := vv.Instance()
 		d.DumpWithHeader(fmt.Sprintf("vehicle: %s", v.Title()), v)
 	}
 

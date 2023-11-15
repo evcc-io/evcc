@@ -6,10 +6,14 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-var _ settingsI = (*dummy)(nil)
+var _ API = (*dummy)(nil)
 
 type dummy struct {
 	api.Vehicle
+}
+
+func (v *dummy) Instance() api.Vehicle {
+	return v.Vehicle
 }
 
 func (v *dummy) Name() string {

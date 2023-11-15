@@ -360,6 +360,18 @@ func (mr *MockAPIMockRecorder) HasChargeMeter() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HasChargeMeter", reflect.TypeOf((*MockAPI)(nil).HasChargeMeter))
 }
 
+// PublishEffectiveValues mocks base method.
+func (m *MockAPI) PublishEffectiveValues() {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "PublishEffectiveValues")
+}
+
+// PublishEffectiveValues indicates an expected call of PublishEffectiveValues.
+func (mr *MockAPIMockRecorder) PublishEffectiveValues() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PublishEffectiveValues", reflect.TypeOf((*MockAPI)(nil).PublishEffectiveValues))
+}
+
 // RemoteControl mocks base method.
 func (m *MockAPI) RemoteControl(arg0 string, arg1 RemoteDemand) {
 	m.ctrl.T.Helper()

@@ -162,12 +162,13 @@ func vehicleSelectHandler(site site.API, lp loadpoint.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
-		v, err := site.Vehicles().ByName(vars["name"])
+		vv, err := site.Vehicles().ByName(vars["name"])
 		if err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
 
+		v := vv.Instance()
 		lp.SetVehicle(v)
 
 		res := struct {

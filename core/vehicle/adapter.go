@@ -32,6 +32,10 @@ func (v *adapter) publish() {
 	}
 }
 
+func (v *adapter) Instance() api.Vehicle {
+	return v.Vehicle
+}
+
 func (v *adapter) Name() string {
 	return v.name
 }

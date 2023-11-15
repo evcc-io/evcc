@@ -20,7 +20,7 @@ type vehicleStruct struct {
 	Title    string       `json:"title"`
 	MinSoc   int          `json:"minSoc,omitempty"`
 	LimitSoc int          `json:"limitSoc,omitempty"`
-	Plans    []planStruct `json:"plans"`
+	Plans    []planStruct `json:"plans,omitempty"`
 }
 
 // publishVehicles returns a list of vehicle titles
@@ -29,7 +29,7 @@ func (site *Site) publishVehicles() {
 	res := make(map[string]vehicleStruct, len(vv))
 
 	for _, v := range vv {
-		plans := []planStruct{}
+		var plans []planStruct
 
 		// TODO: add support for multiple plans
 		if time, soc := v.GetPlanSoc(); !time.IsZero() {
@@ -37,14 +37,13 @@ func (site *Site) publishVehicles() {
 		}
 
 		res[v.Name()] = vehicleStruct{
-			Title:    v.Title(),
+			Title:    v.Instance().Title(),
 			MinSoc:   v.GetMinSoc(),
 			LimitSoc: v.GetLimitSoc(),
 			Plans:    plans,
 		}
 
-		if lp := site.coordinator.Owner(v); lp != nil {
-			panic("publish")
+		if lp := site.coordinator.Owner(v.Instance()); lp != nil {
 			lp.PublishEffectiveValues()
 		}
 	}

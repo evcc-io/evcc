@@ -9,10 +9,9 @@ import (
 //go:generate mockgen -package vehicle -destination mock.go -mock_names API=MockAPI github.com/evcc-io/evcc/core/vehicle API
 
 type API interface {
-	api.Vehicle
-	settingsI
-}
-type settingsI interface {
+	// Instance returns the vehicle instance
+	Instance() api.Vehicle
+
 	// Name returns the vehicle name
 	Name() string
 
