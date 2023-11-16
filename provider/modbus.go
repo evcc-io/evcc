@@ -266,8 +266,32 @@ func (m *Modbus) BoolGetter() func() (bool, error) {
 	}
 }
 
+// FloatSetter executes configured modbus write operation and implements SetFloatProvider
+func (m *Modbus) FloatSetter(_ string) func(float64) error {
+	return func(val float64) error {
+		var err error
+
+		// if funccode is configured, execute the read directly
+		if op := m.op.MBMD; op.FuncCode != 0 {
+			switch op.FuncCode {
+			case gridx.FuncCodeWriteMultipleRegisters:
+				var b [4]byte
+				binary.BigEndian.PutUint32(b[:], math.Float32bits(float32(val)))
+				_, err = m.conn.WriteMultipleRegisters(op.OpCode, 2, b[:])
+
+			default:
+				err = fmt.Errorf("invalid write function code: %d", op.FuncCode)
+			}
+		} else {
+			err = errors.New("modbus plugin does not support writing to sunspec")
+		}
+
+		return err
+	}
+}
+
 // IntSetter executes configured modbus write operation and implements SetIntProvider
-func (m *Modbus) IntSetter(param string) func(int64) error {
+func (m *Modbus) IntSetter(_ string) func(int64) error {
 	return func(val int64) error {
 		var err error
 
