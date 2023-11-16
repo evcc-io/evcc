@@ -23,8 +23,8 @@ var OAuth2Config = &oauth2.Config{
 }
 
 type Identity struct {
+	oauth2.TokenSource
 	log   *util.Logger
-	ts    oauth2.TokenSource
 	token *oauth2.Token
 	acct  *account.Account
 }
@@ -41,14 +41,14 @@ func NewIdentity(log *util.Logger, ts oauth2.TokenSource) (*Identity, error) {
 	}
 
 	return &Identity{
-		ts:    ts,
-		token: token,
-		acct:  acct,
+		TokenSource: ts,
+		token:       token,
+		acct:        acct,
 	}, nil
 }
 
 func (v *Identity) Account() *account.Account {
-	token, err := v.ts.Token()
+	token, err := v.Token()
 	if err != nil {
 		v.log.ERROR.Println(err)
 		return v.acct

@@ -63,7 +63,7 @@ func NewTeslaVCFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, err
 	}
 
-	api := vc.NewAPI(identity)
+	api := vc.NewAPI(log, identity)
 
 	v := &TeslaVC{
 		embed: &cc.embed,
@@ -109,7 +109,7 @@ func NewTeslaVCFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 // apiError converts HTTP 408 error to ErrTimeout
 func (v *TeslaVC) apiError(err error) error {
-	if err != nil && strings.HasSuffix(err.Error(), "408 Request Timeout") {
+	if err != nil && (strings.HasSuffix(err.Error(), "408 Request Timeout") || strings.HasSuffix(err.Error(), "408 (Request Timeout)")) {
 		err = api.ErrAsleep
 	}
 	return err
