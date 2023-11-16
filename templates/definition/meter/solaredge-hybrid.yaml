@@ -68,12 +68,12 @@ render: |
   batterymode:
     source: map
     values:
-      1: 7
-      2: 1
-      3: 3
+      1: 7 # normal
+      2: 1 # hold
+      3: 3 # charge
     set:
       source: modbus
-      {{- include "modbus" . | indent 2 }}
+      {{- include "modbus" . | indent 4 }}
       timeout: {{ .timeout }}
       register:
         address: 0xE00A # Battery mode
