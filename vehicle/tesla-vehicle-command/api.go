@@ -7,24 +7,23 @@ import (
 
 	"github.com/bogosj/tesla"
 	"github.com/evcc-io/evcc/util/request"
-	"github.com/teslamotors/vehicle-command/pkg/account"
 )
 
 type API struct {
-	user *account.Account
+	identity *Identity
 }
 
-func NewAPI(user *account.Account) *API {
+func NewAPI(identity *Identity) *API {
 	return &API{
-		user: user,
+		identity: identity,
 	}
 }
 
-func (v *API) Vehicles() ([]*tesla.Vehicle, error) {
+func (v *API) Vehicles() ([]*Vehicle, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), request.Timeout)
 	defer cancel()
 
-	b, err := v.user.Get(ctx, "api/1/vehicles")
+	b, err := v.identity.Account().Get(ctx, "api/1/vehicles")
 	if err != nil {
 		return nil, err
 	}
@@ -37,11 +36,11 @@ func (v *API) Vehicles() ([]*tesla.Vehicle, error) {
 	return res.Response, nil
 }
 
-func (v *API) VehicleData(id int64) (*tesla.VehicleData, error) {
+func (v *API) VehicleData(id int64) (*VehicleData, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), request.Timeout)
 	defer cancel()
 
-	b, err := v.user.Get(ctx, fmt.Sprintf("api/1/vehicles/%d/vehicle_data", id))
+	b, err := v.identity.Account().Get(ctx, fmt.Sprintf("api/1/vehicles/%d/vehicle_data", id))
 	if err != nil {
 		return nil, err
 	}

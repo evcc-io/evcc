@@ -2,16 +2,14 @@ package vehicle
 
 import (
 	"context"
-	"os"
+	"strings"
 	"time"
 
-	"github.com/bogosj/tesla"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	vc "github.com/evcc-io/evcc/vehicle/tesla-vehicle-command"
-	"github.com/teslamotors/vehicle-command/pkg/account"
 	"golang.org/x/oauth2"
 )
 
@@ -19,34 +17,21 @@ import (
 // It uses the official Tesla vehicle-command api.
 type TeslaVC struct {
 	*embed
-	dataG func() (*tesla.VehicleData, error)
+	dataG func() (*vc.VehicleData, error)
 }
 
 func init() {
 	registry.Add("tesla-vehicle-command", NewTeslaVCFromConfig)
 }
 
-// https://auth.tesla.com/oauth2/v3/.well-known/openid-configuration
-
-// OAuth2Config is the OAuth2 configuration for authenticating with the Tesla API.
-var OAuth2Config = &oauth2.Config{
-	ClientID:    os.Getenv("TESLA_CLIENT_ID"),
-	RedirectURL: "https://auth.tesla.com/void/callback",
-	Endpoint: oauth2.Endpoint{
-		AuthURL:   "https://auth.tesla.com/en_us/oauth2/v3/authorize",
-		TokenURL:  "https://auth.tesla.com/oauth2/v3/token",
-		AuthStyle: oauth2.AuthStyleInParams,
-	},
-	Scopes: []string{"openid", "email", "offline_access"},
-}
-
 // NewTeslaVCFromConfig creates a new vehicle
 func NewTeslaVCFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
-		embed  `mapstructure:",squash"`
-		Tokens Tokens
-		VIN    string
-		Cache  time.Duration
+		embed    `mapstructure:",squash"`
+		ClientID string
+		Tokens   Tokens
+		VIN      string
+		Cache    time.Duration
 	}{
 		Cache: interval,
 	}
@@ -59,25 +44,26 @@ func NewTeslaVCFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, err
 	}
 
-	client := request.NewClient(util.NewLogger("tesla-vc"))
+	if cc.ClientID != "" {
+		vc.OAuth2Config.ClientID = cc.ClientID
+	}
+
+	log := util.NewLogger("tesla-vc")
+	client := request.NewClient(log)
+
 	ctx := context.WithValue(context.Background(), oauth2.HTTPClient, client)
-	ts := OAuth2Config.TokenSource(ctx, &oauth2.Token{
+	ts := vc.OAuth2Config.TokenSource(ctx, &oauth2.Token{
 		AccessToken:  cc.Tokens.Access,
 		RefreshToken: cc.Tokens.Refresh,
 		Expiry:       time.Now(),
 	})
 
-	token, err := ts.Token()
+	identity, err := vc.NewIdentity(log, ts)
 	if err != nil {
 		return nil, err
 	}
 
-	account, err := account.New(token.AccessToken)
-	if err != nil {
-		return nil, err
-	}
-
-	api := vc.NewAPI(account)
+	api := vc.NewAPI(identity)
 
 	v := &TeslaVC{
 		embed: &cc.embed,
@@ -101,7 +87,7 @@ func NewTeslaVCFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 	vehicle, err := ensureVehicleEx(
 		cc.VIN, api.Vehicles,
-		func(v *tesla.Vehicle) string {
+		func(v *vc.Vehicle) string {
 			return v.Vin
 		},
 	)
@@ -113,7 +99,7 @@ func NewTeslaVCFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		v.Title_ = vehicle.DisplayName
 	}
 
-	v.dataG = provider.Cached(func() (*tesla.VehicleData, error) {
+	v.dataG = provider.Cached(func() (*vc.VehicleData, error) {
 		res, err := api.VehicleData(vehicle.ID)
 		return res, v.apiError(err)
 	}, cc.Cache)
@@ -123,7 +109,7 @@ func NewTeslaVCFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 // apiError converts HTTP 408 error to ErrTimeout
 func (v *TeslaVC) apiError(err error) error {
-	if err != nil && err.Error() == "408 Request Timeout" {
+	if err != nil && strings.HasSuffix(err.Error(), "408 Request Timeout") {
 		err = api.ErrAsleep
 	}
 	return err
