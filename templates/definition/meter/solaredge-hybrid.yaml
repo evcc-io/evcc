@@ -68,15 +68,15 @@ render: |
   batterymode:
     source: map
     values:
-      1: 3
-      2: 7
-      3: 0
+      1: 7
+      2: 1
+      3: 3
     set:
       source: modbus
       {{- include "modbus" . | indent 2 }}
       timeout: {{ .timeout }}
       register:
-        address: 62852 # Battery mode
+        address: 0xE00A # Battery mode
         type: writesingle
         decode: uint16
   {{- if .capacity }}
