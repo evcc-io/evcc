@@ -221,7 +221,7 @@ func (m *PowerWall) SetBatteryMode(mode api.BatteryMode) error {
 		if err := m.energySite.SetBatteryReserve(uint64(m.defaultBatteryReserve)); err != nil {
 			return err
 		}
-	case api.BatteryLocked: // set minSoc to currentSoc
+	case api.BatteryHold: // set minSoc to currentSoc
 		ess, err := m.energySite.EnergySiteStatus()
 		if err != nil {
 			return err
