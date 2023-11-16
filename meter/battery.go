@@ -8,7 +8,7 @@ type battery struct {
 	MinSoc, MaxSoc float64
 }
 
-// Decorator returns an api.BatteryController decorator
+// LimitController returns an api.BatteryController decorator
 func (m *battery) LimitController(socG func() (float64, error), limitSocS func(float64) error) func(api.BatteryMode) error {
 	return func(mode api.BatteryMode) error {
 		switch mode {
