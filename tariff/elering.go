@@ -18,11 +18,9 @@ import (
 
 type Elering struct {
 	*embed
-	mux     sync.Mutex
-	log     *util.Logger
-	region  string
-	data    api.Rates
-	updated time.Time
+	log    *util.Logger
+	region string
+	data   *util.Monitor[api.Rates]
 }
 
 var _ api.Tariff = (*Elering)(nil)
@@ -49,6 +47,7 @@ func NewEleringFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		embed:  &cc.embed,
 		log:    util.NewLogger("Elering"),
 		region: strings.ToLower(cc.Region),
+		data:   util.NewMonitor[api.Rates](2 * time.Hour),
 	}
 
 	done := make(chan error)
@@ -82,13 +81,8 @@ func (t *Elering) run(done chan error) {
 
 		once.Do(func() { close(done) })
 
-		t.mux.Lock()
-		t.updated = time.Now()
-
-		data := res.Data[t.region]
-
-		t.data = make(api.Rates, 0, len(data))
-		for _, r := range data {
+		data := make(api.Rates, 0, len(res.Data[t.region]))
+		for _, r := range res.Data[t.region] {
 			ts := time.Unix(r.Timestamp, 0)
 
 			ar := api.Rate{
@@ -96,19 +90,21 @@ func (t *Elering) run(done chan error) {
 				End:   ts.Add(time.Hour).Local(),
 				Price: t.totalPrice(r.Price / 1e3),
 			}
-			t.data = append(t.data, ar)
+			data = append(data, ar)
 		}
-		t.data.Sort()
+		data.Sort()
 
-		t.mux.Unlock()
+		t.data.Set(data)
 	}
 }
 
 // Rates implements the api.Tariff interface
 func (t *Elering) Rates() (api.Rates, error) {
-	t.mux.Lock()
-	defer t.mux.Unlock()
-	return slices.Clone(t.data), outdatedError(t.updated, time.Hour)
+	var res api.Rates
+	err := t.data.GetFunc(func(val api.Rates) {
+		res = slices.Clone(val)
+	})
+	return res, err
 }
 
 // Type implements the api.Tariff interface

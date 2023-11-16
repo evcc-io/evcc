@@ -380,6 +380,8 @@ func RegisterOperation(r Register) (rs485.Operation, error) {
 		r.Decode = "bool8"
 	case "writesingle", "writeholding":
 		op.FuncCode = modbus.FuncCodeWriteSingleRegister
+	case "writemultiple":
+		op.FuncCode = modbus.FuncCodeWriteMultipleRegisters
 	case "writecoil":
 		op.FuncCode = modbus.FuncCodeWriteSingleCoil
 		r.Decode = "bool8"

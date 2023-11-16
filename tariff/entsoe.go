@@ -21,12 +21,10 @@ import (
 type Entsoe struct {
 	*request.Helper
 	*embed
-	mux     sync.Mutex
-	log     *util.Logger
-	token   string
-	domain  string
-	data    api.Rates
-	updated time.Time
+	log    *util.Logger
+	token  string
+	domain string
+	data   *util.Monitor[api.Rates]
 }
 
 var _ api.Tariff = (*Entsoe)(nil)
@@ -157,29 +155,28 @@ func (t *Entsoe) run(done chan error) {
 
 		once.Do(func() { close(done) })
 
-		t.mux.Lock()
-		t.updated = time.Now()
-
-		t.data = make(api.Rates, 0, len(res))
+		data := make(api.Rates, 0, len(res))
 		for _, r := range res {
 			ar := api.Rate{
 				Start: r.Start,
 				End:   r.End,
 				Price: t.totalPrice(r.Value),
 			}
-			t.data = append(t.data, ar)
+			data = append(data, ar)
 		}
-		t.data.Sort()
+		data.Sort()
 
-		t.mux.Unlock()
+		t.data.Set(data)
 	}
 }
 
 // Rates implements the api.Tariff interface
 func (t *Entsoe) Rates() (api.Rates, error) {
-	t.mux.Lock()
-	defer t.mux.Unlock()
-	return slices.Clone(t.data), outdatedError(t.updated, time.Hour)
+	var res api.Rates
+	err := t.data.GetFunc(func(val api.Rates) {
+		res = slices.Clone(val)
+	})
+	return res, err
 }
 
 // Type implements the api.Tariff interface

@@ -226,7 +226,6 @@ func NewSite() *Site {
 		log:          util.NewLogger("site"),
 		publishCache: make(map[string]any),
 		Voltage:      230, // V
-		batteryMode:  api.BatteryNormal,
 	}
 
 	return lp
@@ -824,7 +823,7 @@ func (site *Site) prepare() {
 
 	site.publish("vehicles", vehicleTitles(site.GetVehicles()))
 	site.publish("batteryDischargeControl", site.BatteryDischargeControl)
-	site.publish("batteryMode", site.batteryMode)
+	site.publish("batteryMode", site.batteryMode.String())
 }
 
 // Prepare attaches communication channels to site and loadpoints

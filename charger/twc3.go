@@ -89,6 +89,21 @@ func NewTwc3FromConfig(other map[string]interface{}) (api.Charger, error) {
 	return c, nil
 }
 
+// Status implements the api.Charger interface
+func (v *Twc3) Status() (api.ChargeStatus, error) {
+	status := api.StatusA // disconnected
+
+	res, err := v.vitalsG()
+	switch {
+	case res.ContactorClosed:
+		status = api.StatusC
+	case res.VehicleConnected:
+		status = api.StatusB
+	}
+
+	return status, err
+}
+
 // Enabled implements the api.Charger interface
 func (c *Twc3) Enabled() (bool, error) {
 	return verifyEnabled(c, c.enabled)
@@ -141,21 +156,6 @@ func (c *Twc3) MaxCurrent(current int64) error {
 	}
 
 	return v.MaxCurrent(current)
-}
-
-// Status implements the api.Charger interface
-func (v *Twc3) Status() (api.ChargeStatus, error) {
-	status := api.StatusA // disconnected
-
-	res, err := v.vitalsG()
-	switch {
-	case res.ContactorClosed:
-		status = api.StatusC
-	case res.VehicleConnected:
-		status = api.StatusB
-	}
-
-	return status, err
 }
 
 var _ api.ChargeRater = (*Twc3)(nil)

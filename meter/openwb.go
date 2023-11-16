@@ -118,7 +118,7 @@ func NewOpenWBFromConfig(other map[string]interface{}) (api.Meter, error) {
 		return nil, err
 	}
 
-	res := m.Decorate(nil, currents, nil, nil, soc, capacity)
+	res := m.Decorate(nil, currents, nil, nil, soc, capacity, nil)
 
 	return res, nil
 }

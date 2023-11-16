@@ -141,12 +141,15 @@ func (m *Modbus) bytesGetter() ([]byte, error) {
 		switch op.FuncCode {
 		case gridx.FuncCodeReadHoldingRegisters:
 			return m.conn.ReadHoldingRegisters(op.OpCode, op.ReadLen)
+
 		case gridx.FuncCodeReadInputRegisters:
 			return m.conn.ReadInputRegisters(op.OpCode, op.ReadLen)
+
 		case gridx.FuncCodeReadCoils:
 			return m.conn.ReadCoils(op.OpCode, op.ReadLen)
+
 		default:
-			return nil, fmt.Errorf("unknown function code %d", op.FuncCode)
+			return nil, fmt.Errorf("invalid read function code: %d", op.FuncCode)
 		}
 	}
 
@@ -270,11 +273,17 @@ func (m *Modbus) IntSetter(param string) func(int64) error {
 
 		// if funccode is configured, execute the read directly
 		if op := m.op.MBMD; op.FuncCode != 0 {
-			uval := uint16(int64(m.scale) * val)
+			uval := uint16(m.scale * float64(val))
 
 			switch op.FuncCode {
 			case gridx.FuncCodeWriteSingleRegister:
 				_, err = m.conn.WriteSingleRegister(op.OpCode, uval)
+
+			case gridx.FuncCodeWriteMultipleRegisters:
+				var b [2]byte
+				binary.BigEndian.PutUint16(b[:], uval)
+				_, err = m.conn.WriteMultipleRegisters(op.OpCode, 1, b[:])
+
 			case gridx.FuncCodeWriteSingleCoil:
 				if uval != 0 {
 					// Modbus protocol requires 0xFF00 for ON
@@ -282,8 +291,9 @@ func (m *Modbus) IntSetter(param string) func(int64) error {
 					uval = 0xFF00
 				}
 				_, err = m.conn.WriteSingleCoil(op.OpCode, uval)
+
 			default:
-				err = fmt.Errorf("unknown function code %d", op.FuncCode)
+				err = fmt.Errorf("invalid write function code: %d", op.FuncCode)
 			}
 		} else {
 			err = errors.New("modbus plugin does not support writing to sunspec")
