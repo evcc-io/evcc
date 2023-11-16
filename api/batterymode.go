@@ -7,6 +7,6 @@ type BatteryMode int
 const (
 	BatteryUnknown BatteryMode = iota
 	BatteryNormal
-	BatteryLocked
+	BatteryHold
 	BatteryCharge
 )

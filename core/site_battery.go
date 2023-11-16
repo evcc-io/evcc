@@ -25,7 +25,7 @@ func (site *Site) updateBatteryMode(loadpoints []loadpoint.API) {
 	batMode := api.BatteryNormal
 	for _, lp := range loadpoints {
 		if lp.GetStatus() == api.StatusC && (lp.GetMode() == api.ModeNow || lp.GetPlanActive()) {
-			batMode = api.BatteryLocked
+			batMode = api.BatteryHold
 			break
 		}
 	}

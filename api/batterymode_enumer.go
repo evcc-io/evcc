@@ -7,11 +7,11 @@ import (
 	"strings"
 )
 
-const _BatteryModeName = "unknownnormallockedcharge"
+const _BatteryModeName = "unknownnormalholdcharge"
 
-var _BatteryModeIndex = [...]uint8{0, 7, 13, 19, 25}
+var _BatteryModeIndex = [...]uint8{0, 7, 13, 17, 23}
 
-const _BatteryModeLowerName = "unknownnormallockedcharge"
+const _BatteryModeLowerName = "unknownnormalholdcharge"
 
 func (i BatteryMode) String() string {
 	if i < 0 || i >= BatteryMode(len(_BatteryModeIndex)-1) {
@@ -26,28 +26,28 @@ func _BatteryModeNoOp() {
 	var x [1]struct{}
 	_ = x[BatteryUnknown-(0)]
 	_ = x[BatteryNormal-(1)]
-	_ = x[BatteryLocked-(2)]
+	_ = x[BatteryHold-(2)]
 	_ = x[BatteryCharge-(3)]
 }
 
-var _BatteryModeValues = []BatteryMode{BatteryUnknown, BatteryNormal, BatteryLocked, BatteryCharge}
+var _BatteryModeValues = []BatteryMode{BatteryUnknown, BatteryNormal, BatteryHold, BatteryCharge}
 
 var _BatteryModeNameToValueMap = map[string]BatteryMode{
 	_BatteryModeName[0:7]:        BatteryUnknown,
 	_BatteryModeLowerName[0:7]:   BatteryUnknown,
 	_BatteryModeName[7:13]:       BatteryNormal,
 	_BatteryModeLowerName[7:13]:  BatteryNormal,
-	_BatteryModeName[13:19]:      BatteryLocked,
-	_BatteryModeLowerName[13:19]: BatteryLocked,
-	_BatteryModeName[19:25]:      BatteryCharge,
-	_BatteryModeLowerName[19:25]: BatteryCharge,
+	_BatteryModeName[13:17]:      BatteryHold,
+	_BatteryModeLowerName[13:17]: BatteryHold,
+	_BatteryModeName[17:23]:      BatteryCharge,
+	_BatteryModeLowerName[17:23]: BatteryCharge,
 }
 
 var _BatteryModeNames = []string{
 	_BatteryModeName[0:7],
 	_BatteryModeName[7:13],
-	_BatteryModeName[13:19],
-	_BatteryModeName[19:25],
+	_BatteryModeName[13:17],
+	_BatteryModeName[17:23],
 }
 
 // BatteryModeString retrieves an enum value from the enum constants string name.
