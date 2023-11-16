@@ -226,6 +226,7 @@ func NewSite() *Site {
 		log:          util.NewLogger("site"),
 		publishCache: make(map[string]any),
 		Voltage:      230, // V
+		batteryMode:  api.BatteryNormal,
 	}
 
 	return lp
