@@ -87,7 +87,7 @@ type Site struct {
 	pvPower      float64         // PV power
 	batteryPower float64         // Battery charge power
 	batterySoc   float64         // Battery soc
-	batteryMode  api.BatteryMode // Battery discharge currently enabled
+	batteryMode  api.BatteryMode // Battery mode
 
 	publishCache map[string]any // store last published values to avoid unnecessary republishing
 }
