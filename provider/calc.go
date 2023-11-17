@@ -72,22 +72,28 @@ func NewCalcFromConfig(other map[string]interface{}) (Provider, error) {
 	return o, nil
 }
 
-func (o *calcProvider) IntGetter() func() (int64, error) {
+var _ IntProvider = (*calcProvider)(nil)
+
+func (o *calcProvider) IntGetter() (func() (int64, error), error) {
 	return func() (int64, error) {
 		f, err := o.floatGetter()
 		return int64(f), err
-	}
+	}, nil
 }
 
-func (o *calcProvider) StringGetter() func() (string, error) {
+var _ StringProvider = (*calcProvider)(nil)
+
+func (o *calcProvider) StringGetter() (func() (string, error), error) {
 	return func() (string, error) {
 		f, err := o.floatGetter()
 		return fmt.Sprintf("%c", int(f)), err
-	}
+	}, nil
 }
 
-func (o *calcProvider) FloatGetter() func() (float64, error) {
-	return o.floatGetter
+var _ FloatProvider = (*calcProvider)(nil)
+
+func (o *calcProvider) FloatGetter() (func() (float64, error), error) {
+	return o.floatGetter, nil
 }
 
 func (o *calcProvider) floatGetter() (float64, error) {
