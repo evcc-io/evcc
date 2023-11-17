@@ -25,7 +25,6 @@ type PowerWall struct {
 	meterG                func() (map[string]powerwall.MeterAggregatesData, error)
 	energySite            *tesla.EnergySite
 	batteryControl        bool
-	batteryMode           api.BatteryMode
 	defaultBatteryReserve uint
 }
 
@@ -99,7 +98,6 @@ func NewPowerWall(uri, usage, user, password string, cache time.Duration, refres
 		usage:          strings.ToLower(usage),
 		meterG:         provider.Cached(client.GetMetersAggregates, cache),
 		batteryControl: batteryControl,
-		batteryMode:    api.BatteryNormal,
 	}
 
 	if batteryControl {
@@ -212,7 +210,7 @@ func (m *PowerWall) batterySoc() (float64, error) {
 
 // SetBatteryMode implements the api.BatteryController interface
 func (m *PowerWall) SetBatteryMode(mode api.BatteryMode) error {
-	if !m.batteryControl || mode == m.batteryMode {
+	if !m.batteryControl {
 		return nil
 	}
 
@@ -235,11 +233,5 @@ func (m *PowerWall) SetBatteryMode(mode api.BatteryMode) error {
 			return err
 		}
 	}
-	m.batteryMode = mode
 	return nil
-}
-
-// GetBatteryMode implements the api.BatteryController interface
-func (m *PowerWall) GetBatteryMode() api.BatteryMode {
-	return m.batteryMode
 }
