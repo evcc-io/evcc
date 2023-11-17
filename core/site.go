@@ -15,6 +15,7 @@ import (
 	"github.com/evcc-io/evcc/core/planner"
 	"github.com/evcc-io/evcc/core/prioritizer"
 	"github.com/evcc-io/evcc/core/session"
+	siteapi "github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/core/soc"
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/server/db"
@@ -58,16 +59,16 @@ type Site struct {
 	log *util.Logger
 
 	// configuration
-	Title                             string       `mapstructure:"title"`         // UI title
-	Voltage                           float64      `mapstructure:"voltage"`       // Operating voltage. 230V for Germany.
-	ResidualPower                     float64      `mapstructure:"residualPower"` // PV meter only: household usage. Grid meter: household safety margin
-	Meters                            MetersConfig // Meter references
-	PrioritySoc                       float64      `mapstructure:"prioritySoc"`                       // prefer battery up to this Soc
-	BufferSoc                         float64      `mapstructure:"bufferSoc"`                         // continue charging on battery above this Soc
-	BufferStartSoc                    float64      `mapstructure:"bufferStartSoc"`                    // start charging on battery above this Soc
-	MaxGridSupplyWhileBatteryCharging float64      `mapstructure:"maxGridSupplyWhileBatteryCharging"` // ignore battery charging if AC consumption is above this value
-	SmartCostLimit                    float64      `mapstructure:"smartCostLimit"`                    // always charge if cost is below this value
-	BatteryDischargeControl           bool         `mapstructure:"batteryDischargeControl"`           // shall discharge of home battery be adjusted
+	Title                             string                 `mapstructure:"title"`         // UI title
+	Voltage                           float64                `mapstructure:"voltage"`       // Operating voltage. 230V for Germany.
+	ResidualPower                     float64                `mapstructure:"residualPower"` // PV meter only: household usage. Grid meter: household safety margin
+	Meters                            MetersConfig           // Meter references
+	PrioritySoc                       float64                `mapstructure:"prioritySoc"`                       // prefer battery up to this Soc
+	BufferSoc                         float64                `mapstructure:"bufferSoc"`                         // continue charging on battery above this Soc
+	BufferStartSoc                    float64                `mapstructure:"bufferStartSoc"`                    // start charging on battery above this Soc
+	MaxGridSupplyWhileBatteryCharging float64                `mapstructure:"maxGridSupplyWhileBatteryCharging"` // ignore battery charging if AC consumption is above this value
+	SmartCostLimit                    float64                `mapstructure:"smartCostLimit"`                    // always charge if cost is below this value
+	BatteryControl                    siteapi.BatteryControl `mapstructure:"batteryControl"`                    // shall discharge of home battery be adjusted
 
 	// meters
 	gridMeter     api.Meter   // Grid usage meter
@@ -253,8 +254,8 @@ func (site *Site) restoreSettings() {
 	if v, err := settings.Float("site.smartCostLimit"); err == nil {
 		site.SmartCostLimit = v
 	}
-	if v, err := settings.Bool("site.batteryDischargeControl"); err == nil {
-		site.BatteryDischargeControl = v
+	if v, err := settings.Int("site.batteryControl"); err == nil {
+		site.BatteryControl = siteapi.BatteryControl(v)
 	}
 }
 
@@ -358,6 +359,10 @@ func (site *Site) publish(key string, val interface{}) {
 	// test helper
 	if site.uiChan == nil {
 		return
+	}
+
+	if s, ok := val.(fmt.Stringer); ok {
+		val = s.String()
 	}
 
 	site.uiChan <- util.Param{
@@ -795,7 +800,7 @@ func (site *Site) update(lp Updater) {
 		site.log.ERROR.Println(err)
 	}
 
-	if site.BatteryDischargeControl {
+	if site.GetBatteryControl()&siteapi.BatteryControlDischarge > 0 {
 		site.updateBatteryMode(site.Loadpoints())
 	}
 
@@ -817,13 +822,13 @@ func (site *Site) prepare() {
 	site.publish("smartCostType", nil)
 	site.publish("smartCostActive", false)
 	if tariff := site.GetTariff(PlannerTariff); tariff != nil {
-		site.publish("smartCostType", tariff.Type().String())
+		site.publish("smartCostType", tariff.Type())
 	}
-	site.publish("currency", site.tariffs.Currency.String())
+	site.publish("currency", site.tariffs.Currency)
 
 	site.publish("vehicles", vehicleTitles(site.GetVehicles()))
-	site.publish("batteryDischargeControl", site.BatteryDischargeControl)
-	site.publish("batteryMode", site.batteryMode.String())
+	site.publish("batteryControl", site.GetBatteryControl())
+	site.publish("batteryMode", site.batteryMode)
 }
 
 // Prepare attaches communication channels to site and loadpoints
