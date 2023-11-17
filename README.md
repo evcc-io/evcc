@@ -57,10 +57,10 @@ make
 
 ### Cross Compile
 
-To compile a version for an arm device like a raspberry pi, set the GOARCH and GOARM variables as needed, eg:
+To compile a version for an ARM device like a Raspberry Pi set GO command variables as needed, eg:
 
 ```sh
-GOARCH=arm GOARM=6 make
+GOOS=linux GOARCH=arm GOARM=6 make
 ```
 
 ### UI development
