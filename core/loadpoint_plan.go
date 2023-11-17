@@ -32,7 +32,7 @@ func (lp *Loadpoint) setPlanActive(active bool) {
 func (lp *Loadpoint) remainingPlanEnergy() (float64, bool) {
 	_, limit := lp.GetPlanEnergy()
 	return max(0, limit-lp.getChargedEnergy()/1e3),
-		limit > 0 && !lp.vehicleHasSoc()
+		limit > 0 && !lp.socBasedPlanning()
 }
 
 // planRequiredDuration is the estimated total charging duration

@@ -777,6 +777,12 @@ func (lp *Loadpoint) setStatus(status api.ChargeStatus) {
 	lp.status = status
 }
 
+// socBasedPlanning returns true if vehicle soc (optionally from charger) and capacity are available
+func (lp *Loadpoint) socBasedPlanning() bool {
+	v := lp.GetVehicle()
+	return (v != nil && v.Capacity() > 0) && (lp.vehicleHasSoc() || lp.vehicleSoc > 0)
+}
+
 // vehicleHasSoc returns true if active vehicle supports returning soc, i.e. it is not an offline vehicle
 func (lp *Loadpoint) vehicleHasSoc() bool {
 	return lp.GetVehicle() != nil && !lp.vehicleHasFeature(api.Offline)
@@ -786,7 +792,7 @@ func (lp *Loadpoint) vehicleHasSoc() bool {
 func (lp *Loadpoint) remainingLimitEnergy() (float64, bool) {
 	limit := lp.GetLimitEnergy()
 	return max(0, limit-lp.getChargedEnergy()/1e3),
-		limit > 0 && !lp.vehicleHasSoc()
+		limit > 0 && !lp.socBasedPlanning()
 }
 
 // limitEnergyReached checks if target is configured and reached
