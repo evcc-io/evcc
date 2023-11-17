@@ -3,12 +3,15 @@
 		<div class="form-group d-lg-flex align-items-baseline mb-2 justify-content-between">
 			<div v-if="plans.length > 0" class="container px-0">
 				<ChargingPlanSettingsEntry
-					v-for="(plan, index) in plans"
+					v-for="(p, index) in plans"
 					:id="`${id}_${index}`"
 					:key="index"
 					class="my-3"
-					v-bind="plan"
+					v-bind="p"
+					:vehicle-capacity="vehicleCapacity"
 					:range-per-soc="rangePerSoc"
+					:soc-per-kwh="socPerKwh"
+					:soc-based-charging="socBasedCharging"
 					@plan-updated="(data) => updatePlan({ index, ...data })"
 					@plan-removed="() => removePlan(index)"
 				/>
@@ -79,6 +82,7 @@ export default {
 		effectivePlanTime: String,
 		limitEnergy: Number,
 		socBasedCharging: Boolean,
+		socPerKwh: Number,
 		rangePerSoc: Number,
 		smartCostLimit: Number,
 		smartCostType: String,
@@ -87,7 +91,7 @@ export default {
 		vehicleCapacity: Number,
 		vehicle: Object,
 	},
-	emits: ["plan-added", "plan-removed", "plan-updated"],
+	emits: ["plan-removed", "plan-updated"],
 	data: function () {
 		return {
 			tariff: {},
@@ -196,7 +200,11 @@ export default {
 			return target;
 		},
 		addPlan: function () {
-			this.$emit("plan-added", { time: this.defaultDate(), soc: 100 });
+			this.$emit("plan-updated", {
+				time: this.defaultDate(),
+				soc: 100,
+				energy: this.vehicleCapacity || 10,
+			});
 		},
 		removePlan: function (index) {
 			this.$emit("plan-removed", index);

@@ -43,7 +43,9 @@
 						<div class="modal-header">
 							<h5 class="modal-title">
 								{{ $t("main.chargingPlan.modalTitle")
-								}}<span v-if="vehicle">: {{ vehicle.title }}</span>
+								}}<span v-if="vehicle && socBasedCharging"
+									>: {{ vehicle.title }}</span
+								>
 							</h5>
 							<button
 								type="button"
@@ -79,7 +81,6 @@
 								<ChargingPlanSettings
 									v-if="departureTabActive"
 									v-bind="chargingPlanSettingsProps"
-									@plan-added="addPlan"
 									@plan-updated="updatePlan"
 									@plan-removed="removePlan"
 								/>
@@ -107,6 +108,7 @@ import ChargingPlanArrival from "./ChargingPlanArrival.vue";
 import formatter from "../mixins/formatter";
 import collector from "../mixins/collector";
 import api from "../api";
+import { optionStep, fmtEnergy } from "../utils/energyOptions";
 
 export default {
 	name: "ChargingPlan",
@@ -118,6 +120,8 @@ export default {
 		effectivePlanTime: String,
 		effectivePlanSoc: Number,
 		effectiveLimitSoc: Number,
+		planEnergy: Number,
+		planTime: String,
 		limitEnergy: Number,
 		socBasedCharging: Boolean,
 		disabled: Boolean,
@@ -130,6 +134,7 @@ export default {
 		mode: String,
 		vehicleCapacity: Number,
 		rangePerSoc: Number,
+		socPerKwh: Number,
 	},
 	data: function () {
 		return {
@@ -146,7 +151,13 @@ export default {
 			return this.vehicle?.limitSoc;
 		},
 		plans: function () {
-			return this.vehicle?.plans;
+			if (this.socBasedCharging) {
+				return this.vehicle?.plans || [];
+			}
+			if (this.planEnergy && this.planTime) {
+				return [{ energy: this.planEnergy, time: this.planTime }];
+			}
+			return [];
 		},
 		targetChargeEnabled: function () {
 			return this.effectivePlanTime;
@@ -185,7 +196,18 @@ export default {
 			if (this.socBasedCharging) {
 				return `${Math.round(this.effectivePlanSoc)}%`;
 			}
-			return this.fmtKWh(this.planEnergy);
+			return fmtEnergy(
+				this.planEnergy,
+				optionStep(this.vehicleCapacity || 100),
+				this.fmtKWh,
+				this.$t("main.targetEnergy.noLimit")
+			);
+		},
+		apiVehicle: function () {
+			return `vehicles/${this.vehicle.name}/`;
+		},
+		apiLoadpoint: function () {
+			return `loadpoints/${this.id}/`;
 		},
 	},
 	mounted() {
@@ -211,6 +233,10 @@ export default {
 			}
 			this.modal.show();
 		},
+		openPlanModal() {
+			this.showDeatureTab();
+			this.modal.show();
+		},
 		// not computed because it needs to update over time
 		targetTimeLabel: function () {
 			const targetDate = new Date(this.effectivePlanTime);
@@ -222,26 +248,26 @@ export default {
 		showArrivalTab: function () {
 			this.activeTab = "arrival";
 		},
-		apiPath: function (func) {
-			return `vehicles/${this.vehicle.name}/${func}`;
-		},
-		addPlan: function (plan) {
-			// TODO: implement proper appending when multiple plans are supported
-			this.updatePlan(plan);
-		},
-		updatePlan: function ({ soc, time }) {
-			// TODO: only modify changed plan when multiple plans are supported, ignoring index param for now
-			api.post(this.apiPath("plan/soc/") + `${soc}/${time.toISOString()}`);
+		updatePlan: function ({ soc, time, energy }) {
+			const timeISO = time.toISOString();
+			if (this.socBasedCharging) {
+				api.post(`${this.apiVehicle}plan/soc/${soc}/${timeISO}`);
+			} else {
+				api.post(`${this.apiLoadpoint}plan/energy/${energy}/${timeISO}`);
+			}
 		},
 		removePlan: function () {
-			// TODO: remove plan from list when multiple plans are supported, ignoring index param for now
-			api.delete(this.apiPath("plan/soc"));
+			if (this.socBasedCharging) {
+				api.delete(`${this.apiVehicle}plan/soc`);
+			} else {
+				api.delete(`${this.apiLoadpoint}plan/energy`);
+			}
 		},
 		setMinSoc: function (soc) {
-			api.post(this.apiPath("minsoc") + `/${soc}`);
+			api.post(`${this.apiVehicle}minsoc${soc}`);
 		},
 		setLimitSoc: function (soc) {
-			api.post(this.apiPath("limitsoc") + `/${soc}`);
+			api.post(`${this.apiVehicle}limitsoc${soc}`);
 		},
 	},
 };

@@ -12,6 +12,7 @@
 			class="mt-2 mb-4"
 			@limit-soc-updated="limitSocUpdated"
 			@limit-soc-drag="limitSocDrag"
+			@plan-clicked="openPlanModal"
 		/>
 
 		<div class="details d-flex flex-wrap justify-content-between">
@@ -33,6 +34,7 @@
 			/>
 			<ChargingPlan
 				v-if="!heating"
+				ref="chargingPlan"
 				class="flex-grow-1 target-charge"
 				v-bind="chargingPlan"
 				:disabled="chargingPlanDisabled"
@@ -104,6 +106,8 @@ export default {
 		effectivePlanSoc: Number,
 		effectiveLimitSoc: Number,
 		limitEnergy: Number,
+		planEnergy: Number,
+		planTime: String,
 		chargedEnergy: Number,
 		mode: String,
 		phaseAction: String,
@@ -193,10 +197,6 @@ export default {
 			if (this.socBasedCharging) {
 				return false;
 			}
-			// disabled if limit energy is not set (offline or guest vehicles)
-			if (!this.limitEnergy) {
-				return true;
-			}
 
 			return false;
 		},
@@ -226,6 +226,9 @@ export default {
 		fmtEnergy(value) {
 			const inKw = value == 0 || value >= 1000;
 			return this.fmtKWh(value, inKw);
+		},
+		openPlanModal() {
+			this.$refs.chargingPlan.openPlanModal();
 		},
 	},
 };

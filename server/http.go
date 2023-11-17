@@ -153,7 +153,7 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, cache *util.Cache) {
 			"maxcurrent":       {[]string{"POST", "OPTIONS"}, "/maxcurrent/{value:[0-9.]+}", floatHandler(pass(lp.SetMaxCurrent), lp.GetMaxCurrent)},
 			"phases":           {[]string{"POST", "OPTIONS"}, "/phases/{value:[0-9]+}", phasesHandler(lp)},
 			"plan":             {[]string{"GET"}, "/plan", planHandler(lp)},
-			"planenergy":       {[]string{"POST", "OPTIONS"}, "/plan/energy/{value:[0-9]+}/{time:[0-9TZ:.-]+}", planEnergyHandler(lp)},
+			"planenergy":       {[]string{"POST", "OPTIONS"}, "/plan/energy/{value:[0-9.]+}/{time:[0-9TZ:.-]+}", planEnergyHandler(lp)},
 			"planenergy2":      {[]string{"DELETE", "OPTIONS"}, "/plan/energy", planRemoveHandler(lp)},
 			"vehicle":          {[]string{"POST", "OPTIONS"}, "/vehicle/{name:[a-zA-Z0-9_.:-]+}", vehicleSelectHandler(site, lp)},
 			"vehicle2":         {[]string{"DELETE", "OPTIONS"}, "/vehicle", vehicleRemoveHandler(lp)},

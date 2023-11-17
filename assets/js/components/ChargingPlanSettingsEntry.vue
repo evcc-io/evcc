@@ -12,8 +12,8 @@
 				</label>
 			</div>
 			<div class="col-6 col-lg-3">
-				<label :for="formId('soc')">
-					{{ $t("main.chargingPlan.soc") }}
+				<label :for="formId('goal')">
+					{{ $t("main.chargingPlan.goal") }}
 				</label>
 			</div>
 			<div class="col-2"></div>
@@ -52,25 +52,39 @@
 				/>
 			</div>
 			<div class="col-6 d-lg-none col-form-label">
-				<label :for="formId('soc')">
-					{{ $t("main.chargingPlan.soc") }}
+				<label :for="formId('goal')">
+					{{ $t("main.chargingPlan.goal") }}
 				</label>
 			</div>
 			<div class="col-6 col-lg-3 mb-2">
-				<select :id="formId('soc')" v-model="selectedSoc" class="form-select mx-0">
+				<select
+					v-if="socBasedCharging"
+					:id="formId('goal')"
+					v-model="selectedSoc"
+					class="form-select mx-0"
+				>
 					<option v-for="opt in socOptions" :key="opt.value" :value="opt.value">
 						{{ opt.name }}
 					</option>
 				</select>
+				<select
+					v-else
+					:id="formId('goal')"
+					v-model="selectedEnergy"
+					class="form-select mx-0"
+				>
+					<option v-for="opt in energyOptions" :key="opt.energy" :value="opt.energy">
+						{{ opt.text }}
+					</option>
+				</select>
 			</div>
-			<div class="col-12 col-lg-2 d-flex justify-content-end">
+			<div class="col-12 col-lg-2 d-flex justify-content-end align-items-baseline">
 				<button
 					type="button"
-					class="btn btn-sm btn-link text-muted d-flex"
+					class="btn text-muted text-decoration-underline"
 					@click="removePlan"
 				>
-					<div class="me-2">{{ $t("main.chargingPlan.remove") }}</div>
-					<shopicon-regular-trash></shopicon-regular-trash>
+					{{ $t("main.chargingPlan.remove") }}
 				</button>
 			</div>
 		</div>
@@ -78,10 +92,10 @@
 </template>
 
 <script>
-import "@h2d2/shopicons/es/regular/trash";
 import { distanceUnit } from "../units";
 
 import formatter from "../mixins/formatter";
+import { energyOptions } from "../utils/energyOptions";
 
 const LAST_TARGET_TIME_KEY = "last_target_time";
 
@@ -91,15 +105,20 @@ export default {
 	props: {
 		id: String,
 		soc: Number,
+		energy: Number,
 		time: String,
 		rangePerSoc: Number,
+		socPerKwh: Number,
+		vehicleCapacity: Number,
+		socBasedCharging: Boolean,
 	},
-	emits: ["plan-removed", "plan-updated"],
+	emits: ["plan-updated", "plan-removed"],
 	data: function () {
 		return {
 			selectedDay: null,
 			selectedTime: null,
 			selectedSoc: this.soc,
+			selectedEnergy: this.energy,
 		};
 	},
 	computed: {
@@ -119,6 +138,15 @@ export default {
 				.map((i) => 5 + i * 5)
 				.map(this.socOption);
 		},
+		energyOptions: function () {
+			return energyOptions(
+				0,
+				this.vehicleCapacity || 100,
+				this.socPerKwh,
+				this.fmtKWh,
+				this.$t("main.targetEnergy.noLimit")
+			);
+		},
 	},
 	watch: {
 		time() {
@@ -130,8 +158,14 @@ export default {
 		selectedSoc() {
 			this.updatePlan();
 		},
+		selectedEnergy() {
+			this.updatePlan();
+		},
 		soc() {
 			this.selectedSoc = this.soc;
+		},
+		energy() {
+			this.selectedEnergy = this.energy;
 		},
 	},
 	mounted() {
@@ -180,7 +214,11 @@ export default {
 			} catch (e) {
 				console.warn(e);
 			}
-			this.$emit("plan-updated", { time: this.selectedDate, soc: this.selectedSoc });
+			this.$emit("plan-updated", {
+				time: this.selectedDate,
+				soc: this.selectedSoc,
+				energy: this.selectedEnergy,
+			});
 		},
 		removePlan: function () {
 			this.$emit("plan-removed");

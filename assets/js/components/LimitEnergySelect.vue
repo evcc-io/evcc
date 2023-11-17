@@ -37,6 +37,7 @@
 import LabelAndValue from "./LabelAndValue.vue";
 import AnimatedNumber from "./AnimatedNumber.vue";
 import formatter from "../mixins/formatter";
+import { estimatedSoc, energyOptions, optionStep, fmtEnergy } from "../utils/energyOptions";
 
 export default {
 	name: "LimitEnergySelect",
@@ -50,53 +51,28 @@ export default {
 	},
 	emits: ["limit-energy-updated"],
 	computed: {
-		maxEnergy: function () {
-			return this.vehicleCapacity || 100;
-		},
-		steps: function () {
-			if (this.maxEnergy < 1) return 0.05;
-			if (this.maxEnergy < 2) return 0.1;
-			if (this.maxEnergy < 5) return 0.25;
-			if (this.maxEnergy < 10) return 0.5;
-			if (this.maxEnergy < 25) return 1;
-			if (this.maxEnergy < 50) return 2;
-			return 5;
-		},
 		options: function () {
-			const result = [];
-			for (let energy = 0; energy <= this.maxEnergy; energy += this.steps) {
-				let text = this.fmtEnergy(energy);
-				const disabled = energy < this.chargedEnergy / 1e3 && energy !== 0;
-				const soc = this.estimatedSoc(energy);
-				if (soc) {
-					text += ` (${this.fmtSoc(soc)})`;
-				}
-				result.push({ energy, text, disabled });
-			}
-			return result;
+			return energyOptions(
+				this.chargedEnergy,
+				this.vehicleCapacity || 100,
+				this.socPerKwh,
+				this.fmtKWh,
+				this.$t("main.targetEnergy.noLimit")
+			);
+		},
+		step() {
+			return optionStep(this.vehicleCapacity || 100);
 		},
 		estimated: function () {
-			return this.estimatedSoc(this.limitEnergy);
+			return estimatedSoc(this.limitEnergy, this.socPerKwh);
 		},
 	},
 	methods: {
 		change: function (e) {
 			return this.$emit("limit-energy-updated", parseFloat(e.target.value));
 		},
-		estimatedSoc: function (kWh) {
-			if (this.socPerKwh) {
-				return Math.round(kWh * this.socPerKwh);
-			}
-			return null;
-		},
 		fmtEnergy: function (value) {
-			if (value === 0) {
-				return this.$t("main.targetEnergy.noLimit");
-			}
-
-			const inKWh = this.steps >= 0.1;
-			const digits = inKWh && this.steps < 1 ? 1 : 0;
-			return this.fmtKWh(value * 1e3, inKWh, true, digits);
+			return fmtEnergy(value, this.step, this.fmtKWh, this.$t("main.targetEnergy.noLimit"));
 		},
 		fmtSoc: function (value) {
 			return `+${Math.round(value)}%`;

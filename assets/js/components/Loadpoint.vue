@@ -162,6 +162,8 @@ export default {
 		vehicles: Array,
 		planActive: Boolean,
 		planProjectedStart: String,
+		planEnergy: Number,
+		planTime: String,
 		effectivePlanTime: String,
 		effectivePlanSoc: Number,
 		vehicleProviderLoggedIn: Boolean,

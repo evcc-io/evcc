@@ -28,6 +28,16 @@
 				:class="{ 'vehicle-limit-soc--active': vehicleTargetSocActive }"
 				:style="{ left: `${vehicleTargetSoc}%` }"
 			/>
+			<div
+				v-show="planMarkerPosition"
+				class="plan-marker"
+				data-bs-toggle="tooltip"
+				:class="{ 'plan-marker--active': planMarkerActive }"
+				:style="{ left: `${planMarkerPosition}%` }"
+				@click="$emit('plan-clicked')"
+			>
+				<shopicon-regular-clock></shopicon-regular-clock>
+			</div>
 		</div>
 		<div class="target">
 			<input
@@ -51,6 +61,7 @@
 
 <script>
 import Tooltip from "bootstrap/js/dist/tooltip";
+import "@h2d2/shopicons/es/regular/clock";
 
 export default {
 	name: "VehicleSoc",
@@ -62,12 +73,14 @@ export default {
 		enabled: Boolean,
 		charging: Boolean,
 		minSoc: Number,
+		effectivePlanSoc: Number,
 		effectiveLimitSoc: Number,
 		limitEnergy: Number,
+		planEnergy: Number,
 		chargedEnergy: Number,
 		socBasedCharging: Boolean,
 	},
-	emits: ["limit-soc-drag", "limit-soc-updated"],
+	emits: ["limit-soc-drag", "limit-soc-updated", "plan-clicked"],
 	data: function () {
 		return {
 			selectedLimitSoc: null,
@@ -83,14 +96,34 @@ export default {
 				}
 				return 100;
 			} else {
-				if (this.limitEnergy) {
-					return (100 / this.limitEnergy) * (this.chargedEnergy / 1e3);
+				const maxEnergy = Math.max(this.planEnergy, this.limitEnergy);
+				if (maxEnergy) {
+					return (100 / maxEnergy) * (this.chargedEnergy / 1e3);
 				}
 				return 100;
 			}
 		},
 		vehicleTargetSocActive: function () {
 			return this.vehicleTargetSoc > 0 && this.vehicleTargetSoc > this.vehicleSoc;
+		},
+		planMarkerPosition: function () {
+			if (this.socBasedCharging) {
+				return this.effectivePlanSoc;
+			}
+			const maxEnergy = Math.max(this.planEnergy, this.limitEnergy);
+			if (maxEnergy) {
+				return (100 / maxEnergy) * this.planEnergy;
+			}
+			return 0;
+		},
+		planMarkerActive: function () {
+			if (this.socBasedCharging) {
+				const sessionLimit = this.selectedLimitSoc || this.effectiveLimitSoc;
+				const vehicleLimit = this.vehicleTargetSoc || 100;
+				const maxLimit = Math.min(sessionLimit, vehicleLimit);
+				return this.effectivePlanSoc <= maxLimit;
+			}
+			return this.planEnergy <= this.limitEnergy || !this.limitEnergy;
 		},
 		sliderActive: function () {
 			return !this.vehicleTargetSoc || this.visibleLimitSoc <= this.vehicleTargetSoc;
@@ -117,6 +150,9 @@ export default {
 					return soc - this.vehicleSoc;
 				}
 			} else {
+				if (this.limitEnergy && this.planEnergy > this.limitEnergy) {
+					return (100 / this.planEnergy) * this.limitEnergy - this.vehicleSocDisplayWidth;
+				}
 				return 100 - this.vehicleSocDisplayWidth;
 			}
 
@@ -213,12 +249,16 @@ export default {
 	border: none;
 	height: 100%;
 	cursor: auto;
+	/* ensure slider start/end is at the edge and not inside the track */
+	margin: 0 -6px;
 }
 .slider::-moz-range-track {
 	background: transparent;
 	border: none;
 	height: 100%;
 	cursor: auto;
+	/* ensure slider start/end is at the edge and not inside the track */
+	margin: 0 -6px;
 }
 .slider::-webkit-slider-thumb {
 	-webkit-appearance: none;
@@ -265,9 +305,40 @@ export default {
 	border-width: 0 8px;
 	border-style: solid;
 	border-color: transparent;
-	transition: background-color var(--evcc-transition-fast) linear;
+	transition-property: background-color, left;
+	transition-timing-function: linear;
+	transition-duration: var(--evcc-transition-fast);
 }
 .vehicle-limit-soc--active {
 	background-color: var(--evcc-box);
+}
+.plan-marker {
+	position: absolute;
+	top: 0;
+	transform: translateX(-50%);
+	color: var(--evcc-gray);
+	opacity: 0.5;
+	transition-property: color, left, opacity;
+	transition-timing-function: linear;
+	cursor: pointer;
+	transition-duration: var(--evcc-transition-fast);
+}
+.plan-marker::before {
+	content: "";
+	display: block;
+	height: var(--height);
+	border-width: 0 10px;
+	background-clip: padding-box;
+	border-style: solid;
+	border-color: transparent;
+	background-color: var(--evcc-gray);
+	transition: background-color var(--evcc-transition-fast) linear;
+}
+.plan-marker--active {
+	color: var(--evcc-darker-green);
+	opacity: 1;
+}
+.plan-marker--active::before {
+	background-color: var(--evcc-darker-green);
 }
 </style>
