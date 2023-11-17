@@ -81,7 +81,7 @@ Since we dont want to run tests agains real devices or cloud services we've buil
 npm run simulator
 ```
 
-Run an evcc instance that uses simulator data. This configuration runs with a very high refresh interval to seed up testing.
+Run an evcc instance that uses simulator data. This configuration runs with a very high refresh interval to speed up testing.
 
 ```
 make ui build
