@@ -102,13 +102,14 @@ func (c *Pulsatrix) reconnectWs() {
 	if err := backoff.RetryNotify(c.connectWs, bo, func(err error, time time.Duration) {
 		c.log.WARN.Printf("trying to reconnect in %v...\n", time)
 	}); err != nil {
-		c.log.ERROR.Println(err)
+		c.log.ERROR.Println("RetryNotify: ", err)
 	}
 }
 
 // WsReader runs a loop that reads messages from the websocket
 func (c *Pulsatrix) wsReader() {
-	for {
+	_, err := c.data.Get()
+	for ok := true; ok; ok = err != nil {
 		ctx, cancel := context.WithTimeout(context.Background(), request.Timeout)
 		defer cancel()
 
@@ -122,10 +123,8 @@ func (c *Pulsatrix) wsReader() {
 	}
 
 	c.mu.Lock()
-	if c.conn != nil {
-		c.conn.Close(websocket.StatusNormalClosure, "Reconnecting")
-		c.conn = nil
-	}
+	c.conn.Close(websocket.StatusNormalClosure, "Reconnecting")
+	c.conn = nil
 	c.mu.Unlock()
 
 	c.reconnectWs()
@@ -133,18 +132,15 @@ func (c *Pulsatrix) wsReader() {
 
 // wsWrite writes a message to the websocket
 func (c *Pulsatrix) write(message string) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
 	if c.conn != nil {
-		c.mu.Lock()
-		defer c.mu.Unlock()
-
 		ctx, cancel := context.WithTimeout(context.Background(), request.Timeout)
 		defer cancel()
 
 		if err := c.conn.Write(ctx, websocket.MessageText, []byte(message)); err != nil {
 			return err
 		}
-	} else {
-		return fmt.Errorf("Waiting for reconnect")
 	}
 	return nil
 }
