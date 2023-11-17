@@ -100,6 +100,7 @@ export default {
 		vehicleIcon: String,
 		vehicleCapacity: Number,
 		socBasedCharging: Boolean,
+		socBasedPlanning: Boolean,
 		planActive: Boolean,
 		planProjectedStart: String,
 		effectivePlanTime: String,
@@ -193,11 +194,6 @@ export default {
 			if (["off", "now"].includes(this.mode)) {
 				return true;
 			}
-			// enabled for vehicles with Soc
-			if (this.socBasedCharging) {
-				return false;
-			}
-
 			return false;
 		},
 	},

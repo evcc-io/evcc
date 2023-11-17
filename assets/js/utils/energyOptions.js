@@ -32,7 +32,9 @@ export function energyOptions(fromEnergy, maxEnergy, socPerKwh, fmtKWh, zeroText
     if (soc) {
       text += ` (+${Math.round(soc)}%)`;
     }
-    result.push({ energy, text, disabled });
+    // prevent rounding errors
+    const energyNormal = energy.toFixed(3) * 1;
+    result.push({ energy: energyNormal, text, disabled });
   }
   return result;
 }

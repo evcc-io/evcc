@@ -43,9 +43,7 @@
 						<div class="modal-header">
 							<h5 class="modal-title">
 								{{ $t("main.chargingPlan.modalTitle")
-								}}<span v-if="vehicle && socBasedCharging"
-									>: {{ vehicle.title }}</span
-								>
+								}}<span v-if="socBasedPlanning">: {{ vehicle.title }}</span>
 							</h5>
 							<button
 								type="button"
@@ -123,7 +121,7 @@ export default {
 		planEnergy: Number,
 		planTime: String,
 		limitEnergy: Number,
-		socBasedCharging: Boolean,
+		socBasedPlanning: Boolean,
 		disabled: Boolean,
 		vehicle: Object,
 		vehicleSoc: Number,
@@ -151,7 +149,7 @@ export default {
 			return this.vehicle?.limitSoc;
 		},
 		plans: function () {
-			if (this.socBasedCharging) {
+			if (this.socBasedPlanning) {
 				return this.vehicle?.plans || [];
 			}
 			if (this.planEnergy && this.planTime) {
@@ -193,7 +191,7 @@ export default {
 			return this.collectProps(ChargingPlanArrival);
 		},
 		targetSocLabel: function () {
-			if (this.socBasedCharging) {
+			if (this.socBasedPlanning) {
 				return `${Math.round(this.effectivePlanSoc)}%`;
 			}
 			return fmtEnergy(
@@ -250,24 +248,24 @@ export default {
 		},
 		updatePlan: function ({ soc, time, energy }) {
 			const timeISO = time.toISOString();
-			if (this.socBasedCharging) {
+			if (this.socBasedPlanning) {
 				api.post(`${this.apiVehicle}plan/soc/${soc}/${timeISO}`);
 			} else {
 				api.post(`${this.apiLoadpoint}plan/energy/${energy}/${timeISO}`);
 			}
 		},
 		removePlan: function () {
-			if (this.socBasedCharging) {
+			if (this.socBasedPlanning) {
 				api.delete(`${this.apiVehicle}plan/soc`);
 			} else {
 				api.delete(`${this.apiLoadpoint}plan/energy`);
 			}
 		},
 		setMinSoc: function (soc) {
-			api.post(`${this.apiVehicle}minsoc${soc}`);
+			api.post(`${this.apiVehicle}minsoc/${soc}`);
 		},
 		setLimitSoc: function (soc) {
-			api.post(`${this.apiVehicle}limitsoc${soc}`);
+			api.post(`${this.apiVehicle}limitsoc/${soc}`);
 		},
 	},
 };

@@ -11,7 +11,7 @@
 					:id="formId('minsoc')"
 					v-model.number="selectedMinSoc"
 					class="form-select mb-2"
-					:disabled="!socBasedCharging"
+					:disabled="!socBasedPlanning"
 					@change="changeMinSoc"
 				>
 					<option v-for="soc in minSocOptions" :key="soc.value" :value="soc.value">
@@ -34,7 +34,7 @@
 					:id="formId('limitsoc')"
 					v-model.number="selectedLimitSoc"
 					class="form-select mb-2"
-					:disabled="!socBasedCharging"
+					:disabled="!socBasedPlanning"
 					@change="changeLimitSoc"
 				>
 					<option v-for="soc in limitSocOptions" :key="soc.value" :value="soc.value">
@@ -61,7 +61,7 @@ export default {
 		minSoc: { type: Number, default: 0 },
 		limitSoc: { type: Number, default: 0 },
 		vehicleName: String,
-		socBasedCharging: Boolean,
+		socBasedPlanning: Boolean,
 		rangePerSoc: Number,
 	},
 	emits: ["minsoc-updated", "limitsoc-updated"],

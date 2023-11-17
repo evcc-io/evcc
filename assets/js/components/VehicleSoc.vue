@@ -10,14 +10,14 @@
 					'progress-bar-striped': charging,
 					'progress-bar-animated': charging,
 				}"
-				:style="{ width: `${vehicleSocDisplayWidth}%` }"
+				:style="{ width: `${vehicleSocDisplayWidth}%`, ...transition }"
 			></div>
 			<div
 				v-if="remainingSocWidth > 0 && enabled && connected"
 				class="progress-bar bg-muted"
 				role="progressbar"
 				:class="progressColor"
-				:style="{ width: `${remainingSocWidth}%`, transition: 'none' }"
+				:style="{ width: `${remainingSocWidth}%`, ...transition }"
 			></div>
 			<div
 				v-show="vehicleTargetSoc"
@@ -29,10 +29,17 @@
 				:style="{ left: `${vehicleTargetSoc}%` }"
 			/>
 			<div
-				v-show="planMarkerPosition"
+				v-show="energyLimitMarkerPosition"
+				class="energy-limit-marker"
+				data-bs-toggle="tooltip"
+				:class="{ 'energy-limit-marker--active': energyLimitMarkerPosition < 100 }"
+				:style="{ left: `${energyLimitMarkerPosition}%` }"
+			/>
+			<div
+				v-show="planMarkerAvailable"
 				class="plan-marker"
 				data-bs-toggle="tooltip"
-				:class="{ 'plan-marker--active': planMarkerActive }"
+				:class="{ 'plan-marker--warn': !planMarkerActive }"
 				:style="{ left: `${planMarkerPosition}%` }"
 				@click="$emit('plan-clicked')"
 			>
@@ -79,6 +86,7 @@ export default {
 		planEnergy: Number,
 		chargedEnergy: Number,
 		socBasedCharging: Boolean,
+		socBasedPlanning: Boolean,
 	},
 	emits: ["limit-soc-drag", "limit-soc-updated", "plan-clicked"],
 	data: function () {
@@ -86,6 +94,7 @@ export default {
 			selectedLimitSoc: null,
 			interactionStartScreenY: null,
 			tooltip: null,
+			dragging: false,
 		};
 	},
 	computed: {
@@ -96,18 +105,26 @@ export default {
 				}
 				return 100;
 			} else {
-				const maxEnergy = Math.max(this.planEnergy, this.limitEnergy);
-				if (maxEnergy) {
-					return (100 / maxEnergy) * (this.chargedEnergy / 1e3);
+				if (this.maxEnergy) {
+					return (100 / this.maxEnergy) * (this.chargedEnergy / 1e3);
 				}
 				return 100;
 			}
+		},
+		transition: function () {
+			if (this.dragging) {
+				return { transition: "none" };
+			}
+			return { transition: "width var(--evcc-transition-fast) linear" };
+		},
+		maxEnergy: function () {
+			return Math.max(this.planEnergy, this.limitEnergy, this.chargedEnergy / 1e3);
 		},
 		vehicleTargetSocActive: function () {
 			return this.vehicleTargetSoc > 0 && this.vehicleTargetSoc > this.vehicleSoc;
 		},
 		planMarkerPosition: function () {
-			if (this.socBasedCharging) {
+			if (this.socBasedPlanning) {
 				return this.effectivePlanSoc;
 			}
 			const maxEnergy = Math.max(this.planEnergy, this.limitEnergy);
@@ -116,14 +133,30 @@ export default {
 			}
 			return 0;
 		},
+		planMarkerAvailable: function () {
+			if (this.socBasedCharging && !this.socBasedPlanning) {
+				// mixed mode (% limit and kWh plan): hide marker
+				return false;
+			}
+			return this.planMarkerPosition > 0;
+		},
 		planMarkerActive: function () {
-			if (this.socBasedCharging) {
+			if (this.socBasedPlanning) {
 				const sessionLimit = this.selectedLimitSoc || this.effectiveLimitSoc;
 				const vehicleLimit = this.vehicleTargetSoc || 100;
 				const maxLimit = Math.min(sessionLimit, vehicleLimit);
 				return this.effectivePlanSoc <= maxLimit;
 			}
 			return this.planEnergy <= this.limitEnergy || !this.limitEnergy;
+		},
+		energyLimitMarkerPosition: function () {
+			if (this.socBasedCharging) {
+				return null;
+			}
+			if (this.limitEnergy) {
+				return (100 / this.maxEnergy) * this.limitEnergy;
+			}
+			return 100;
 		},
 		sliderActive: function () {
 			return !this.vehicleTargetSoc || this.visibleLimitSoc <= this.vehicleTargetSoc;
@@ -175,9 +208,11 @@ export default {
 	},
 	methods: {
 		changeLimitSocStart: function (e) {
+			this.dragging = true;
 			e.stopPropagation();
 		},
 		changeLimitSocEnd: function (e) {
+			this.dragging = false;
 			const value = parseInt(e.target.value, 10);
 			// value changed
 			if (value !== this.effectiveLimitSoc) {
@@ -316,8 +351,7 @@ export default {
 	position: absolute;
 	top: 0;
 	transform: translateX(-50%);
-	color: var(--evcc-gray);
-	opacity: 0.5;
+	color: var(--evcc-darker-green);
 	transition-property: color, left, opacity;
 	transition-timing-function: linear;
 	cursor: pointer;
@@ -331,14 +365,29 @@ export default {
 	background-clip: padding-box;
 	border-style: solid;
 	border-color: transparent;
-	background-color: var(--evcc-gray);
+	background-color: var(--evcc-darker-green);
 	transition: background-color var(--evcc-transition-fast) linear;
 }
-.plan-marker--active {
-	color: var(--evcc-darker-green);
+.plan-marker--warn {
 	opacity: 1;
+	color: var(--bs-danger);
 }
-.plan-marker--active::before {
-	background-color: var(--evcc-darker-green);
+.plan-marker--warn::before {
+	background-color: var(--bs-danger);
+}
+.energy-limit-marker {
+	position: absolute;
+	top: -4px;
+	bottom: -4px;
+	transform: translateX(-50%);
+	width: 4px;
+	opacity: 0;
+	background-color: var(--evcc-dark-green);
+	transition-property: opacity, left;
+	transition-timing-function: linear;
+	transition-duration: var(--evcc-transition-fast);
+}
+.energy-limit-marker--active {
+	opacity: 1;
 }
 </style>

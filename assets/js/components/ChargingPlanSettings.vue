@@ -11,7 +11,7 @@
 					:vehicle-capacity="vehicleCapacity"
 					:range-per-soc="rangePerSoc"
 					:soc-per-kwh="socPerKwh"
-					:soc-based-charging="socBasedCharging"
+					:soc-based-planning="socBasedPlanning"
 					@plan-updated="(data) => updatePlan({ index, ...data })"
 					@plan-removed="() => removePlan(index)"
 				/>
@@ -34,7 +34,7 @@
 				<span v-if="timeInThePast" class="d-block text-danger mb-1">
 					{{ $t("main.targetCharge.targetIsInThePast") }}
 				</span>
-				<span v-if="!socBasedCharging && !targetEnergy" class="d-block text-danger mb-1">
+				<span v-if="!socBasedPlanning && !targetEnergy" class="d-block text-danger mb-1">
 					{{ $t("main.targetCharge.targetEnergyRequired") }}
 				</span>
 				<span v-if="timeTooFarInTheFuture" class="d-block text-secondary mb-1">
@@ -81,7 +81,7 @@ export default {
 		effectiveLimitSoc: Number,
 		effectivePlanTime: String,
 		limitEnergy: Number,
-		socBasedCharging: Boolean,
+		socBasedPlanning: Boolean,
 		socPerKwh: Number,
 		rangePerSoc: Number,
 		smartCostLimit: Number,

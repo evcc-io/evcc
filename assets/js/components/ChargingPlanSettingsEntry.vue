@@ -58,7 +58,7 @@
 			</div>
 			<div class="col-6 col-lg-3 mb-2">
 				<select
-					v-if="socBasedCharging"
+					v-if="socBasedPlanning"
 					:id="formId('goal')"
 					v-model="selectedSoc"
 					class="form-select mx-0"
@@ -110,7 +110,7 @@ export default {
 		rangePerSoc: Number,
 		socPerKwh: Number,
 		vehicleCapacity: Number,
-		socBasedCharging: Boolean,
+		socBasedPlanning: Boolean,
 	},
 	emits: ["plan-updated", "plan-removed"],
 	data: function () {
@@ -139,13 +139,15 @@ export default {
 				.map(this.socOption);
 		},
 		energyOptions: function () {
-			return energyOptions(
+			const options = energyOptions(
 				0,
 				this.vehicleCapacity || 100,
 				this.socPerKwh,
 				this.fmtKWh,
-				this.$t("main.targetEnergy.noLimit")
+				"-"
 			);
+			// remove the first entry (0)
+			return options.slice(1);
 		},
 	},
 	watch: {
