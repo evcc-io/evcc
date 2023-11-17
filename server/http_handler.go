@@ -65,6 +65,9 @@ func jsonWrite(w http.ResponseWriter, content interface{}) {
 }
 
 func jsonResult(w http.ResponseWriter, res interface{}) {
+	if s, ok := res.(fmt.Stringer); ok {
+		res = s.String()
+	}
 	jsonWrite(w, map[string]interface{}{"result": res})
 }
 
@@ -209,6 +212,23 @@ func healthHandler(site site.API) http.HandlerFunc {
 
 		w.WriteHeader(http.StatusOK)
 		fmt.Fprintln(w, "OK")
+	}
+}
+
+// batteryControlHandler set the battery control mode
+func batteryControlHandler(site_ site.API) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+
+		mode, err := site.BatteryControlString(vars["value"])
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		site_.SetBatteryControl(mode)
+
+		jsonResult(w, site_.GetBatteryControl())
 	}
 }
 
