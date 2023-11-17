@@ -20,7 +20,7 @@ func (m *battery) BatteryController(socG func() (float64, error), limitSocS func
 			if err != nil {
 				return err
 			}
-			return limitSocS(soc)
+			return limitSocS(max(soc, m.MinSoc))
 
 		case api.BatteryCharge:
 			return limitSocS(m.MaxSoc)
