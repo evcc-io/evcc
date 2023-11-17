@@ -55,6 +55,14 @@ make
 ./evcc
 ```
 
+### Cross Compile
+
+To compile a version for an arm device like a raspberry pi, set the GOARCH and GOARM variables as needed, eg:
+
+```sh
+GOARCH=arm GOARM=6 make
+```
+
 ### UI development
 
 For frontend development start the Vue toolchain in dev-mode. Open http://127.0.0.1:7071/ to get to the livelreloading development server. It pulls its data from port 7070 (see above).
