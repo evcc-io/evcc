@@ -565,20 +565,6 @@ func (m *MockBatteryController) EXPECT() *MockBatteryControllerMockRecorder {
 	return m.recorder
 }
 
-// GetBatteryMode mocks base method.
-func (m *MockBatteryController) GetBatteryMode() BatteryMode {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetBatteryMode")
-	ret0, _ := ret[0].(BatteryMode)
-	return ret0
-}
-
-// GetBatteryMode indicates an expected call of GetBatteryMode.
-func (mr *MockBatteryControllerMockRecorder) GetBatteryMode() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBatteryMode", reflect.TypeOf((*MockBatteryController)(nil).GetBatteryMode))
-}
-
 // SetBatteryMode mocks base method.
 func (m *MockBatteryController) SetBatteryMode(arg0 BatteryMode) error {
 	m.ctrl.T.Helper()

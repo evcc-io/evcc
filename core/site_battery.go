@@ -17,6 +17,7 @@ func (site *Site) setBatteryMode(batMode api.BatteryMode) {
 	site.Lock()
 	defer site.Unlock()
 	site.batteryMode = batMode
+	site.publish("batteryMode", batMode.String())
 }
 
 func (site *Site) updateBatteryMode(loadpoints []loadpoint.API) {
@@ -24,7 +25,7 @@ func (site *Site) updateBatteryMode(loadpoints []loadpoint.API) {
 	batMode := api.BatteryNormal
 	for _, lp := range loadpoints {
 		if lp.GetStatus() == api.StatusC && (lp.GetMode() == api.ModeNow || lp.GetPlanActive()) {
-			batMode = api.BatteryLocked
+			batMode = api.BatteryHold
 			break
 		}
 	}
@@ -45,5 +46,4 @@ func (site *Site) updateBatteryMode(loadpoints []loadpoint.API) {
 
 	// update state and publish
 	site.setBatteryMode(batMode)
-	site.publish("batteryMode", batMode)
 }

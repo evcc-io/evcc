@@ -21,12 +21,12 @@ func TestBatteryDischarge(t *testing.T) {
 	}{
 		{api.StatusB, false, api.BatteryNormal, api.ModeOff},   // mode off -> bat enabled
 		{api.StatusB, false, api.BatteryNormal, api.ModeNow},   // mode now, not charging -> bat enabled
-		{api.StatusC, false, api.BatteryLocked, api.ModeNow},   // mode now, charging -> bat disabled
+		{api.StatusC, false, api.BatteryHold, api.ModeNow},     // mode now, charging -> bat disabled
 		{api.StatusB, false, api.BatteryNormal, api.ModeMinPV}, // mode minPV, not charging -> bat enabled
 		{api.StatusC, false, api.BatteryNormal, api.ModeMinPV}, // mode minPV, charging -> bat enabled
 		{api.StatusB, false, api.BatteryNormal, api.ModePV},    // mode PV, not charging -> bat enabled
 		{api.StatusC, false, api.BatteryNormal, api.ModePV},    // mode PV, charging, no planner -> bat enabled
-		{api.StatusC, true, api.BatteryLocked, api.ModePV},     // mode PV, charging, planner active -> bat disabled
+		{api.StatusC, true, api.BatteryHold, api.ModePV},       // mode PV, charging, planner active -> bat disabled
 	}
 
 	log := util.NewLogger("foo")
@@ -69,7 +69,7 @@ func TestBatteryModeNoUpdate(t *testing.T) {
 		api.NewMockBatteryController(ctrl),
 		api.NewMockMeter(ctrl),
 	}
-	batCtrl.MockBatteryController.EXPECT().SetBatteryMode(api.BatteryLocked).Times(1)
+	batCtrl.MockBatteryController.EXPECT().SetBatteryMode(api.BatteryHold).Times(1)
 
 	lp := loadpoint.NewMockAPI(ctrl)
 	lp.EXPECT().GetStatus().Return(api.StatusC).Times(2)
