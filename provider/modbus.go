@@ -266,37 +266,88 @@ func (m *Modbus) BoolGetter() func() (bool, error) {
 	}
 }
 
-// IntSetter executes configured modbus write operation and implements SetIntProvider
-func (m *Modbus) IntSetter(param string) func(int64) error {
-	return func(val int64) error {
-		var err error
+// FloatSetter executes configured modbus write operation and implements SetFloatProvider
+func (m *Modbus) FloatSetter(_ string) func(float64) error {
+	return func(val float64) error {
+		op := m.op.MBMD
+		if op.FuncCode == 0 {
+			return errors.New("modbus plugin does not support writing to sunspec")
+		}
 
 		// if funccode is configured, execute the read directly
-		if op := m.op.MBMD; op.FuncCode != 0 {
-			uval := uint16(m.scale * float64(val))
+		if op.FuncCode != gridx.FuncCodeWriteMultipleRegisters {
+			return fmt.Errorf("invalid write function code: %d", op.FuncCode)
+		}
 
-			switch op.FuncCode {
-			case gridx.FuncCodeWriteSingleRegister:
-				_, err = m.conn.WriteSingleRegister(op.OpCode, uval)
+		val = m.scale * val
 
-			case gridx.FuncCodeWriteMultipleRegisters:
+		var err error
+		switch op.ReadLen {
+		case 2:
+			var b [4]byte
+			binary.BigEndian.PutUint32(b[:], math.Float32bits(float32(val)))
+			_, err = m.conn.WriteMultipleRegisters(op.OpCode, 2, b[:])
+
+		case 4:
+			var b [8]byte
+			binary.BigEndian.PutUint64(b[:], math.Float64bits(val))
+			_, err = m.conn.WriteMultipleRegisters(op.OpCode, 4, b[:])
+
+		default:
+			err = fmt.Errorf("invalid write length: %d", op.ReadLen)
+		}
+
+		return err
+	}
+}
+
+// IntSetter executes configured modbus write operation and implements SetIntProvider
+func (m *Modbus) IntSetter(_ string) func(int64) error {
+	return func(val int64) error {
+		op := m.op.MBMD
+		if op.FuncCode == 0 {
+			return errors.New("modbus plugin does not support writing to sunspec")
+		}
+
+		ival := int64(m.scale * float64(val))
+
+		// if funccode is configured, execute the read directly
+		var err error
+		switch op.FuncCode {
+		case gridx.FuncCodeWriteSingleRegister:
+			_, err = m.conn.WriteSingleRegister(op.OpCode, uint16(ival))
+
+		case gridx.FuncCodeWriteMultipleRegisters:
+			switch op.ReadLen {
+			case 1:
 				var b [2]byte
-				binary.BigEndian.PutUint16(b[:], uval)
+				binary.BigEndian.PutUint16(b[:], uint16(ival))
 				_, err = m.conn.WriteMultipleRegisters(op.OpCode, 1, b[:])
 
-			case gridx.FuncCodeWriteSingleCoil:
-				if uval != 0 {
-					// Modbus protocol requires 0xFF00 for ON
-					// and 0x0000 for OFF
-					uval = 0xFF00
-				}
-				_, err = m.conn.WriteSingleCoil(op.OpCode, uval)
+			case 2:
+				var b [4]byte
+				binary.BigEndian.PutUint32(b[:], uint32(ival))
+				_, err = m.conn.WriteMultipleRegisters(op.OpCode, 2, b[:])
+
+			case 4:
+				var b [8]byte
+				binary.BigEndian.PutUint64(b[:], uint64(ival))
+				_, err = m.conn.WriteMultipleRegisters(op.OpCode, 4, b[:])
 
 			default:
-				err = fmt.Errorf("invalid write function code: %d", op.FuncCode)
+				err = fmt.Errorf("invalid write length: %d", op.ReadLen)
 			}
-		} else {
-			err = errors.New("modbus plugin does not support writing to sunspec")
+
+		case gridx.FuncCodeWriteSingleCoil:
+			if ival != 0 {
+				// Modbus protocol requires 0xFF00 for ON
+				// and 0x0000 for OFF
+				ival = 0xFF00
+			}
+			_, err = m.conn.WriteSingleCoil(op.OpCode, uint16(ival))
+
+		default:
+			err = fmt.Errorf("invalid write function code: %d", op.FuncCode)
 		}
 
 		return err
