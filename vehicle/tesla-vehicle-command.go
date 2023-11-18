@@ -123,10 +123,10 @@ func NewTeslaVCFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	res := &struct {
-		api.Vehicle
+		*TeslaVC
 		*vc.CommandSession
 	}{
-		Vehicle:        v,
+		TeslaVC:        v,
 		CommandSession: cs,
 	}
 
