@@ -3,7 +3,6 @@ package vehicle
 import (
 	"context"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -11,6 +10,8 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	vc "github.com/evcc-io/evcc/vehicle/tesla-vehicle-command"
+	"github.com/teslamotors/vehicle-command/pkg/cache"
+	"github.com/teslamotors/vehicle-command/pkg/protocol"
 	"golang.org/x/oauth2"
 )
 
@@ -36,6 +37,10 @@ func init() {
 	}
 }
 
+const (
+	privateKeyFile = "tesla-privatekey.pem"
+)
+
 // NewTeslaVCFromConfig creates a new vehicle
 func NewTeslaVCFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
@@ -43,9 +48,11 @@ func NewTeslaVCFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		ClientID string
 		Tokens   Tokens
 		VIN      string
+		Timeout  time.Duration
 		Cache    time.Duration
 	}{
-		Cache: interval,
+		Timeout: 10 * time.Second,
+		Cache:   interval,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -75,30 +82,10 @@ func NewTeslaVCFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, err
 	}
 
-	api := vc.NewAPI(log, identity)
-
-	v := &TeslaVC{
-		embed: &cc.embed,
-	}
-
-	// privKey, err := protocol.UnmarshalECDHPrivateKey(nil)
-	// if err != nil {
-	// 	logger.Printf("Failed to load private key: %s", err)
-	// 	return
-	// }
-
-	// privKey := protocol.UnmarshalECDHPrivateKey(nil)
-	// if privKey == nil {
-	// 	return nil, errors.New("failed to load private key")
-	// }
-
-	// v.vehicle, err = account.GetVehicle(ctx, cc.VIN, privKey, cache.New(8))
-	// if err != nil {
-	// 	return nil, err
-	// }
+	vcapi := vc.NewAPI(log, identity, cc.Timeout)
 
 	vehicle, err := ensureVehicleEx(
-		cc.VIN, api.Vehicles,
+		cc.VIN, vcapi.Vehicles,
 		func(v *vc.Vehicle) string {
 			return v.Vin
 		},
@@ -107,24 +94,43 @@ func NewTeslaVCFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, err
 	}
 
+	v := &TeslaVC{
+		embed: &cc.embed,
+		dataG: provider.Cached(func() (*vc.VehicleData, error) {
+			res, err := vcapi.VehicleData(vehicle.ID)
+			return res, vc.ApiError(err)
+		}, cc.Cache),
+	}
+
 	if v.Title_ == "" {
 		v.Title_ = vehicle.DisplayName
 	}
 
-	v.dataG = provider.Cached(func() (*vc.VehicleData, error) {
-		res, err := api.VehicleData(vehicle.ID)
-		return res, v.apiError(err)
-	}, cc.Cache)
-
-	return v, nil
-}
-
-// apiError converts HTTP 408 error to ErrTimeout
-func (v *TeslaVC) apiError(err error) error {
-	if err != nil && (strings.HasSuffix(err.Error(), "408 Request Timeout") || strings.HasSuffix(err.Error(), "408 (Request Timeout)")) {
-		err = api.ErrAsleep
+	privKey, err := protocol.LoadPrivateKey(privateKeyFile)
+	if err != nil {
+		log.WARN.Println("private key not found, commands are disabled")
+		return v, nil
 	}
-	return err
+
+	vv, err := identity.Account().GetVehicle(context.Background(), vehicle.Vin, privKey, cache.New(8))
+	if err != nil {
+		return nil, err
+	}
+
+	cs, err := vc.NewCommandSession(vv, cc.Timeout)
+	if err != nil {
+		return nil, err
+	}
+
+	res := &struct {
+		api.Vehicle
+		*vc.CommandSession
+	}{
+		Vehicle:        v,
+		CommandSession: cs,
+	}
+
+	return res, nil
 }
 
 // Soc implements the api.Vehicle interface
@@ -212,7 +218,10 @@ func (v *TeslaVC) FinishTime() (time.Time, error) {
 // 	if err != nil {
 // 		return 0, 0, err
 // 	}
-// 	return res.Response.DriveState.Latitude, res.Response.DriveState.Longitude, nil
+// 	if res.Response.DriveState.Latitude != 0 || res.Response.DriveState.Longitude != 0 {
+// 		return res.Response.DriveState.Latitude, res.Response.DriveState.Longitude, nil
+// 	}
+// 	return res.Response.DriveState.ActiveRouteLatitude, res.Response.DriveState.ActiveRouteLongitude, nil
 // }
 
 var _ api.SocLimiter = (*TeslaVC)(nil)
@@ -225,40 +234,3 @@ func (v *TeslaVC) TargetSoc() (float64, error) {
 	}
 	return float64(res.Response.ChargeState.ChargeLimitSoc), nil
 }
-
-// var _ api.CurrentLimiter = (*TeslaVC)(nil)
-
-// // StartCharge implements the api.VehicleChargeController interface
-// func (v *TeslaVC) MaxCurrent(current int64) error {
-// 	return v.apiError(v.vehicle.SetChargingAmps(int(current)))
-// }
-
-// var _ api.Resurrector = (*TeslaVC)(nil)
-
-// func (v *TeslaVC) WakeUp() error {
-// 	_, err := v.vehicle.Wakeup()
-// 	return v.apiError(err)
-// }
-
-// var _ api.VehicleChargeController = (*TeslaVC)(nil)
-
-// // StartCharge implements the api.VehicleChargeController interface
-// func (v *TeslaVC) StartCharge() error {
-// 	err := v.apiError(v.vehicle.StartCharging())
-// 	if err != nil && slices.Contains([]string{"complete", "is_charging"}, err.Error()) {
-// 		return nil
-// 	}
-// 	return err
-// }
-
-// // StopCharge implements the api.VehicleChargeController interface
-// func (v *TeslaVC) StopCharge() error {
-// 	err := v.apiError(v.vehicle.StopCharging())
-
-// 	// ignore sleeping vehicle
-// 	if errors.Is(err, api.ErrAsleep) {
-// 		err = nil
-// 	}
-
-// 	return err
-// }
