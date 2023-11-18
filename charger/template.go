@@ -11,11 +11,9 @@ func init() {
 
 func NewChargerFromTemplateConfig(other map[string]interface{}) (api.Charger, error) {
 	instance, err := templates.RenderInstance(templates.Charger, other)
-
-	var res api.Charger
-	if err == nil {
-		res, err = NewFromConfig(instance.Type, instance.Other)
+	if err != nil {
+		return nil, err
 	}
 
-	return res, err
+	return NewFromConfig(instance.Type, instance.Other)
 }
