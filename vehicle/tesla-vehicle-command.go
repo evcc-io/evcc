@@ -2,6 +2,7 @@ package vehicle
 
 import (
 	"context"
+	"os"
 	"strings"
 	"time"
 
@@ -20,8 +21,16 @@ type TeslaVC struct {
 	dataG func() (*vc.VehicleData, error)
 }
 
+var TeslaClientID string
+
 func init() {
-	registry.Add("tesla-vehicle-command", NewTeslaVCFromConfig)
+	if TeslaClientID == "" {
+		TeslaClientID = os.Getenv("TESLA_CLIENT_ID")
+	}
+	if TeslaClientID != "" {
+		vc.OAuth2Config.ClientID = TeslaClientID
+		registry.Add("tesla-vehicle-command", NewTeslaVCFromConfig)
+	}
 }
 
 // NewTeslaVCFromConfig creates a new vehicle
