@@ -202,6 +202,7 @@ func (lp *Loadpoint) wakeUpVehicle() {
 func (lp *Loadpoint) unpublishVehicle() {
 	lp.vehicleSoc = 0
 
+	lp.publish("climaterActive", nil)
 	lp.publish(vehicleSoc, 0.0)
 	lp.publish(vehicleRange, int64(0))
 	lp.publish(vehicleTargetSoc, 0.0)
