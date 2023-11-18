@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/teslamotors/vehicle-command/pkg/protocol/protobuf/universalmessage"
 	"github.com/teslamotors/vehicle-command/pkg/vehicle"
 )
 
@@ -20,7 +21,7 @@ func NewCommandSession(vv *vehicle.Vehicle, timeout time.Duration) (*CommandSess
 		return nil, err
 	}
 
-	if err := vv.StartSession(context.Background(), nil); err != nil {
+	if err := vv.StartSession(context.Background(), []universalmessage.Domain{universalmessage.Domain_DOMAIN_INFOTAINMENT}); err != nil {
 		return nil, err
 	}
 
