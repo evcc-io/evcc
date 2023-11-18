@@ -21,11 +21,14 @@ type TeslaVC struct {
 	dataG func() (*vc.VehicleData, error)
 }
 
-var TeslaClientID string
+var (
+	TeslaClientID     string
+	TeslaClientSecret string = os.Getenv("TESLA_CLIENT_SECRET")
+)
 
 func init() {
-	if TeslaClientID == "" {
-		TeslaClientID = os.Getenv("TESLA_CLIENT_ID")
+	if id := os.Getenv("TESLA_CLIENT_ID"); id != "" {
+		TeslaClientID = id
 	}
 	if TeslaClientID != "" {
 		vc.OAuth2Config.ClientID = TeslaClientID
