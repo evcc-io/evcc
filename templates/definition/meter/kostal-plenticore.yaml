@@ -58,12 +58,14 @@ render: |
     model: sunspec
     value: 802:SoC # 802 battery control
   limitsoc:
-    source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: 1042 # limit soc
-      type: writemultiple
-      decode: float32
+    source: float2int
+    set:
+      source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 1042 # limit soc
+        type: writesingle
+        decode: uint16
   capacity: {{ .capacity }} # kWh
   minsoc: {{ .minsoc }} # %
   maxsoc: {{ .maxsoc }} # %
