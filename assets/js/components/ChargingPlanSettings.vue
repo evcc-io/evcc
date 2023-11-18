@@ -1,12 +1,12 @@
 <template>
 	<div class="mt-4">
-		<div class="form-group d-lg-flex align-items-baseline mb-2 justify-content-between">
-			<div v-if="plans.length > 0" class="container px-0">
+		<div class="form-group d-lg-flex align-items-baseline justify-content-between">
+			<div v-if="plans.length > 0" class="container px-0 mb-3">
 				<ChargingPlanSettingsEntry
 					v-for="(p, index) in plans"
 					:id="`${id}_${index}`"
 					:key="index"
-					class="my-3"
+					class="mb-2"
 					v-bind="p"
 					:vehicle-capacity="vehicleCapacity"
 					:range-per-soc="rangePerSoc"
@@ -27,32 +27,9 @@
 			</div>
 		</div>
 		<div v-if="plans.length > 0">
+			<ChargingPlanWarnings v-bind="chargingPlanWarningsProps" class="mb-4" />
 			<hr />
 			<h5>PREVIEW</h5>
-			<!--
-			<p class="mb-0">
-				<span v-if="timeInThePast" class="d-block text-danger mb-1">
-					{{ $t("main.targetCharge.targetIsInThePast") }}
-				</span>
-				<span v-if="!socBasedPlanning && !targetEnergy" class="d-block text-danger mb-1">
-					{{ $t("main.targetCharge.targetEnergyRequired") }}
-				</span>
-				<span v-if="timeTooFarInTheFuture" class="d-block text-secondary mb-1">
-					{{ $t("main.targetCharge.targetIsTooFarInTheFuture") }}
-				</span>
-				<span v-if="costLimitExists" class="d-block text-secondary mb-1">
-					{{
-						$t("main.targetCharge.costLimitIgnore", {
-							limit: costLimitText,
-						})
-					}}
-				</span>
-				<span v-if="['off', 'now'].includes(mode)" class="d-block text-secondary mb-1">
-					{{ $t("main.targetCharge.onlyInPvMode") }}
-				</span>
-				&nbsp;
-			</p>
-			-->
 			<ChargingPlanPreview
 				v-if="chargingPlanPreviewProps"
 				v-bind="chargingPlanPreviewProps"
@@ -62,10 +39,11 @@
 </template>
 
 <script>
-import { CO2_TYPE } from "../units";
 import ChargingPlanPreview from "./ChargingPlanPreview.vue";
 import ChargingPlanSettingsEntry from "./ChargingPlanSettingsEntry.vue";
+import ChargingPlanWarnings from "./ChargingPlanWarnings.vue";
 import formatter from "../mixins/formatter";
+import collector from "../mixins/collector";
 import api from "../api";
 
 const DEFAULT_TARGET_TIME = "7:00";
@@ -73,13 +51,15 @@ const LAST_TARGET_TIME_KEY = "last_target_time";
 
 export default {
 	name: "ChargingPlanSettings",
-	components: { ChargingPlanPreview, ChargingPlanSettingsEntry },
-	mixins: [formatter],
+	components: { ChargingPlanPreview, ChargingPlanSettingsEntry, ChargingPlanWarnings },
+	mixins: [formatter, collector],
 	props: {
 		id: [String, Number],
 		plans: { type: Array, default: () => [] },
 		effectiveLimitSoc: Number,
 		effectivePlanTime: String,
+		effectivePlanSoc: Number,
+		planEnergy: Number,
 		limitEnergy: Number,
 		socBasedPlanning: Boolean,
 		socPerKwh: Number,
@@ -101,25 +81,11 @@ export default {
 		};
 	},
 	computed: {
-		timeInThePast: function () {
-			const now = new Date();
-			return now >= this.selectedTargetTime;
-		},
-		timeTooFarInTheFuture: function () {
-			if (this.tariff?.rates) {
-				const lastRate = this.tariff.rates[this.tariff.rates.length - 1];
-				if (lastRate?.end) {
-					const end = new Date(lastRate.end);
-					return this.selectedTargetTime >= end;
-				}
-			}
-			return false;
+		chargingPlanWarningsProps: function () {
+			return this.collectProps(ChargingPlanWarnings);
 		},
 		selectedTargetTime: function () {
 			return new Date(this.effectivePlanTime);
-		},
-		targetEnergyFormatted: function () {
-			return this.fmtKWh(this.targetEnergy * 1e3, true, true, 1);
 		},
 		chargingPlanPreviewProps: function () {
 			const targetTime = this.selectedTargetTime;
@@ -129,27 +95,6 @@ export default {
 			return rates
 				? { duration, plan, power, rates, targetTime, currency, smartCostType }
 				: null;
-		},
-		tariffHighest: function () {
-			return this.tariff?.rates.reduce((res, slot) => {
-				return Math.max(res, slot.price);
-			}, 0);
-		},
-		costLimitExists: function () {
-			return this.smartCostLimit !== 0;
-		},
-		costLimitText: function () {
-			if (this.isCo2) {
-				return this.$t("main.targetCharge.co2Limit", {
-					co2: this.fmtCo2Short(this.smartCostLimit),
-				});
-			}
-			return this.$t("main.targetCharge.priceLimit", {
-				price: this.fmtPricePerKWh(this.smartCostLimit, this.currency, true),
-			});
-		},
-		isCo2() {
-			return this.smartCostType === CO2_TYPE;
 		},
 	},
 	watch: {
@@ -217,14 +162,6 @@ export default {
 </script>
 
 <style scoped>
-@media (min-width: 992px) {
-	.date-selection {
-		width: 370px;
-	}
-}
-.time-selection {
-	flex-basis: 200px;
-}
 h5 {
 	position: relative;
 	display: inline-block;

@@ -1,5 +1,5 @@
 <template>
-	<div class="mb-4">
+	<div>
 		<div class="row d-none d-lg-flex mb-2">
 			<div class="col-6 col-lg-4">
 				<label :for="formId('day')">
@@ -24,7 +24,7 @@
 					{{ $t("main.chargingPlan.day") }}
 				</label>
 			</div>
-			<div class="col-6 col-lg-4 mb-2">
+			<div class="col-6 col-lg-4 mb-2 mb-lg-0">
 				<select
 					:id="formId('day')"
 					v-model="selectedDay"
@@ -41,7 +41,7 @@
 					{{ $t("main.chargingPlan.time") }}
 				</label>
 			</div>
-			<div class="col-6 col-lg-3 mb-2">
+			<div class="col-6 col-lg-3 mb-2 mb-lg-0">
 				<input
 					:id="formId('time')"
 					v-model="selectedTime"
@@ -56,7 +56,7 @@
 					{{ $t("main.chargingPlan.goal") }}
 				</label>
 			</div>
-			<div class="col-6 col-lg-3 mb-2">
+			<div class="col-6 col-lg-3 mb-2 mb-lg-0">
 				<select
 					v-if="socBasedPlanning"
 					:id="formId('goal')"
@@ -128,9 +128,6 @@ export default {
 		},
 		selectedDate: function () {
 			return new Date(`${this.selectedDay}T${this.selectedTime || "00:00"}`);
-		},
-		targetEnergyFormatted: function () {
-			return this.fmtKWh(this.targetEnergy * 1e3, true, true, 1);
 		},
 		socOptions: function () {
 			// a list of entries from 5 to 100 with a step of 5
@@ -228,14 +225,3 @@ export default {
 	},
 };
 </script>
-
-<style scoped>
-@media (min-width: 992px) {
-	.date-selection {
-		width: 370px;
-	}
-}
-.time-selection {
-	flex-basis: 200px;
-}
-</style>
