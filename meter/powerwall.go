@@ -39,7 +39,7 @@ func NewPowerWallFromConfig(other map[string]interface{}) (api.Meter, error) {
 		URI, Usage, User, Password string
 		Cache                      time.Duration
 		RefreshToken               string
-		EnergySiteProdId           int64
+		SiteId                     int64
 		battery                    `mapstructure:",squash"`
 		Soc                        *provider.Config // optional
 		LimitSoc                   *provider.Config // optional
@@ -64,7 +64,7 @@ func NewPowerWallFromConfig(other map[string]interface{}) (api.Meter, error) {
 	}
 
 	var batteryControl bool
-	if cc.RefreshToken != "" || cc.EnergySiteProdId != 0 {
+	if cc.RefreshToken != "" || cc.SiteId != 0 {
 		if cc.RefreshToken == "" {
 			return nil, errors.New("missing refresh token")
 		}
@@ -79,7 +79,7 @@ func NewPowerWallFromConfig(other map[string]interface{}) (api.Meter, error) {
 		cc.Usage = "solar"
 	}
 
-	return NewPowerWall(cc.URI, cc.Usage, cc.User, cc.Password, cc.Cache, cc.RefreshToken, cc.EnergySiteProdId, cc.battery, batteryControl)
+	return NewPowerWall(cc.URI, cc.Usage, cc.User, cc.Password, cc.Cache, cc.RefreshToken, cc.SiteId, cc.battery, batteryControl)
 }
 
 // NewPowerWall creates a Tesla PowerWall Meter

@@ -33,7 +33,7 @@ params:
     help:
       en: "See https://docs.evcc.io/en/docs/devices/meters#tesla-powerwall"
       de: "Siehe https://docs.evcc.io/docs/devices/meters#tesla-powerwall"
-  - name: energySiteProdId
+  - name: siteId
     help:
       en: optional product identifier of the energy site, use to override autodectction
       de: optionale Product ID dieser Energy Site, zum Übersteuern der automatischen Erkennung
@@ -56,6 +56,6 @@ render: |
   user: customer
   password: {{ .password }} # for user 'customer'
   refreshToken: {{ .refreshToken }}
-  energySiteProdId: {{ .energySiteProdId }}
+  siteId: {{ .siteId }}
   minSoc: {{ .minSoc }}
   maxSoc: {{ .maxSoc }}
