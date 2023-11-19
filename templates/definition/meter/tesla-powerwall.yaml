@@ -37,10 +37,18 @@ params:
     help:
       en: optional product identifier of the energy site, use to override autodectction
       de: optionale Product ID dieser Energy Site, zum Übersteuern der automatischen Erkennung
-  - name: defaultBatteryReserve
+  - name: minSoc
+    type: number
+    advanced: true
     help:
       en: the battery reserve percentage to reset to when switching the Battery back to normal operations
       de: die Energyreserve auf die zurückgesetzt wird, wenn die Entladung wieder freigegeben wird
+  - name: maxSoc
+    type: number
+    advanced: true
+    help:
+      en: the battery reserve percentage to set to when switching the Battery to charge mode
+      de: die Energyreserve auf die gesetzt wird, wenn Batterieladung angefordert wird
 render: |
   type: powerwall
   uri: {{ .host }}
@@ -49,4 +57,5 @@ render: |
   password: {{ .password }} # for user 'customer'
   refreshToken: {{ .refreshToken }}
   energySiteProdId: {{ .energySiteProdId }}
-  defaultBatteryReserve: {{ .defaultBatteryReserve }}
+  minSoc: {{ .minSoc }}
+  maxSoc: {{ .maxSoc }}

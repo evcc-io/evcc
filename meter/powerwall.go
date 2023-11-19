@@ -20,12 +20,10 @@ import (
 
 // PowerWall is the tesla powerwall meter
 type PowerWall struct {
-	usage                 string
-	client                *powerwall.Client
-	meterG                func() (map[string]powerwall.MeterAggregatesData, error)
-	energySite            *tesla.EnergySite
-	batteryControl        bool
-	defaultBatteryReserve uint
+	usage      string
+	client     *powerwall.Client
+	meterG     func() (map[string]powerwall.MeterAggregatesData, error)
+	energySite *tesla.EnergySite
 }
 
 func init() {
@@ -33,7 +31,7 @@ func init() {
 	registry.Add("powerwall", NewPowerWallFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decoratePowerWall -b *PowerWall -r api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Battery,Soc,func() (float64, error)" -t "api.BatteryCapacity,Capacity,func() float64"
+// go:generate go run ../cmd/tools/decorate.go -f decoratePowerWall -b *PowerWall -r api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Battery,Soc,func() (float64, error)" -t "api.BatteryCapacity,Capacity,func() float64" -t "api.BatteryController,SetBatteryMode,func(api.BatteryMode) error"
 
 // NewPowerWallFromConfig creates a PowerWall Powerwall Meter from generic config
 func NewPowerWallFromConfig(other map[string]interface{}) (api.Meter, error) {
@@ -42,10 +40,15 @@ func NewPowerWallFromConfig(other map[string]interface{}) (api.Meter, error) {
 		Cache                      time.Duration
 		RefreshToken               string
 		EnergySiteProdId           int64
-		DefaultBatteryReserve      uint
+		battery                    `mapstructure:",squash"`
+		Soc                        *provider.Config // optional
+		LimitSoc                   *provider.Config // optional
 	}{
-		Cache:                 time.Second,
-		DefaultBatteryReserve: 20,
+		Cache: time.Second,
+		battery: battery{
+			MinSoc: 20,
+			MaxSoc: 95,
+		},
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -76,11 +79,11 @@ func NewPowerWallFromConfig(other map[string]interface{}) (api.Meter, error) {
 		cc.Usage = "solar"
 	}
 
-	return NewPowerWall(cc.URI, cc.Usage, cc.User, cc.Password, cc.Cache, cc.RefreshToken, cc.EnergySiteProdId, cc.DefaultBatteryReserve, batteryControl)
+	return NewPowerWall(cc.URI, cc.Usage, cc.User, cc.Password, cc.Cache, cc.RefreshToken, cc.EnergySiteProdId, cc.battery, batteryControl)
 }
 
 // NewPowerWall creates a Tesla PowerWall Meter
-func NewPowerWall(uri, usage, user, password string, cache time.Duration, refreshToken string, energySiteProdId int64, defaultBatteryReserve uint, batteryControl bool) (api.Meter, error) {
+func NewPowerWall(uri, usage, user, password string, cache time.Duration, refreshToken string, energySiteProdId int64, battery battery, batteryControl bool) (api.Meter, error) {
 	log := util.NewLogger("powerwall").Redact(user, password, refreshToken)
 
 	httpClient := &http.Client{
@@ -94,10 +97,9 @@ func NewPowerWall(uri, usage, user, password string, cache time.Duration, refres
 	}
 
 	m := &PowerWall{
-		client:         client,
-		usage:          strings.ToLower(usage),
-		meterG:         provider.Cached(client.GetMetersAggregates, cache),
-		batteryControl: batteryControl,
+		client: client,
+		usage:  strings.ToLower(usage),
+		meterG: provider.Cached(client.GetMetersAggregates, cache),
 	}
 
 	if batteryControl {
@@ -134,8 +136,6 @@ func NewPowerWall(uri, usage, user, password string, cache time.Duration, refres
 			return nil, err
 		}
 		m.energySite = energySite
-
-		m.defaultBatteryReserve = defaultBatteryReserve
 	}
 
 	// decorate api.MeterEnergy
@@ -160,7 +160,13 @@ func NewPowerWall(uri, usage, user, password string, cache time.Duration, refres
 		}
 	}
 
-	return decoratePowerWall(m, totalEnergy, batterySoc, batteryCapacity), nil
+	// decorate api.BatteryController
+	var batModeS func(api.BatteryMode) error
+	if batteryControl {
+		batModeS = battery.BatteryController(m.socG, m.limitSocS)
+	}
+
+	return decoratePowerWall(m, totalEnergy, batterySoc, batteryCapacity, batModeS), nil
 }
 
 var _ api.Meter = (*PowerWall)(nil)
@@ -208,30 +214,19 @@ func (m *PowerWall) batterySoc() (float64, error) {
 	return float64(res.Percentage), err
 }
 
-// SetBatteryMode implements the api.BatteryController interface
-func (m *PowerWall) SetBatteryMode(mode api.BatteryMode) error {
-	if !m.batteryControl {
-		return nil
+// decorate soc
+func (m *PowerWall) socG() (float64, error) {
+	ess, err := m.energySite.EnergySiteStatus()
+	if err != nil {
+		return 0, err
 	}
+	currentSoc := math.Round(ess.PercentageCharged + 0.5) // .5 ensures we round up
+	return currentSoc, nil
+}
 
-	switch mode {
-	case api.BatteryNormal: // set minSoc to cofigured default
-		if err := m.energySite.SetBatteryReserve(uint64(m.defaultBatteryReserve)); err != nil {
-			return err
-		}
-	case api.BatteryHold: // set minSoc to currentSoc
-		ess, err := m.energySite.EnergySiteStatus()
-		if err != nil {
-			return err
-		}
-		currentSoc := math.Round(ess.PercentageCharged + 0.5) // .5 ensures we round up
-		if err := m.energySite.SetBatteryReserve(uint64(currentSoc)); err != nil {
-			return err
-		}
-	case api.BatteryCharge: // set mincSoc to 100; will not cause grid charge, but any PV surplus will charge
-		if err := m.energySite.SetBatteryReserve(100); err != nil {
-			return err
-		}
+func (m *PowerWall) limitSocS(limit float64) error {
+	if err := m.energySite.SetBatteryReserve(uint64(limit)); err != nil {
+		return err
 	}
 	return nil
 }
