@@ -277,18 +277,18 @@ func (m *Modbus) BoolGetter() (func() (bool, error), error) {
 var _ SetFloatProvider = (*Modbus)(nil)
 
 // FloatSetter executes configured modbus write operation and implements SetFloatProvider
-func (m *Modbus) FloatSetter(_ string) func(float64) error {
+func (m *Modbus) FloatSetter(_ string) (func(float64) error, error) {
+	op := m.op.MBMD
+	if op.FuncCode == 0 {
+		return nil, errors.New("modbus plugin does not support writing to sunspec")
+	}
+
+	// need multiple registers for float
+	if op.FuncCode != gridx.FuncCodeWriteMultipleRegisters {
+		return nil, fmt.Errorf("invalid write function code: %d", op.FuncCode)
+	}
+
 	return func(val float64) error {
-		op := m.op.MBMD
-		if op.FuncCode == 0 {
-			return errors.New("modbus plugin does not support writing to sunspec")
-		}
-
-		// if funccode is configured, execute the read directly
-		if op.FuncCode != gridx.FuncCodeWriteMultipleRegisters {
-			return fmt.Errorf("invalid write function code: %d", op.FuncCode)
-		}
-
 		val = m.scale * val
 
 		var err error
@@ -308,19 +308,19 @@ func (m *Modbus) FloatSetter(_ string) func(float64) error {
 		}
 
 		return err
-	}
+	}, nil
 }
 
 var _ SetIntProvider = (*Modbus)(nil)
 
 // IntSetter executes configured modbus write operation and implements SetIntProvider
-func (m *Modbus) IntSetter(_ string) func(int64) error {
-	return func(val int64) error {
-		op := m.op.MBMD
-		if op.FuncCode == 0 {
-			return errors.New("modbus plugin does not support writing to sunspec")
-		}
+func (m *Modbus) IntSetter(_ string) (func(int64) error, error) {
+	op := m.op.MBMD
+	if op.FuncCode == 0 {
+		return nil, errors.New("modbus plugin does not support writing to sunspec")
+	}
 
+	return func(val int64) error {
 		ival := int64(m.scale * float64(val))
 
 		// if funccode is configured, execute the read directly
