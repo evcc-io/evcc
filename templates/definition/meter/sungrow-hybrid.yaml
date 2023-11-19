@@ -97,6 +97,80 @@ render: |
       type: input
       decode: int16
     scale: 0.1
+  batterymode:
+    source: switch
+    - case: 1 # normal
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 0 # self consumption
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 8 }}
+            timeout: {{ .timeout }}
+            register:
+              address: 13049 # EMS mode
+              type: writesingle
+              decode: uint16
+        - source: const
+          value: 0xCC # stop
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 8 }}
+            timeout: {{ .timeout }}
+            register:
+              address: 13050 # Forced mode
+              type: writesingle
+              decode: uint16
+    - case: 2 # hold
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 2 # forced mode
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 8 }}
+            timeout: {{ .timeout }}
+            register:
+              address: 13049 # EMS mode
+              type: writesingle
+              decode: uint16
+        - source: const
+          value: 0xCC
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 8 }}
+            timeout: {{ .timeout }}
+            register:
+              address: 13050 # Forced mode
+              type: writesingle
+              decode: uint16
+    - case: 2 # charge
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 2 # forced mode
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 8 }}
+            timeout: {{ .timeout }}
+            register:
+              address: 13049 # EMS mode
+              type: writesingle
+              decode: uint16
+        - source: const
+          value: 0xAA
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 8 }}
+            timeout: {{ .timeout }}
+            register:
+              address: 13050 # Forced mode
+              type: writesingle
+              decode: uint16
   {{- if .capacity }}
   capacity: {{ .capacity }} # kWh
   {{- end }}
