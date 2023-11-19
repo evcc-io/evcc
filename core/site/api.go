@@ -48,6 +48,6 @@ type API interface {
 	// battery control
 	//
 
-	GetBatteryControl() BatteryControl
-	SetBatteryControl(BatteryControl)
+	GetBatteryDischargeControl() bool
+	SetBatteryDischargeControl(bool) error
 }

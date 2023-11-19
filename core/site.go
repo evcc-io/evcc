@@ -15,7 +15,6 @@ import (
 	"github.com/evcc-io/evcc/core/planner"
 	"github.com/evcc-io/evcc/core/prioritizer"
 	"github.com/evcc-io/evcc/core/session"
-	siteapi "github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/core/soc"
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/server/db"
@@ -59,16 +58,16 @@ type Site struct {
 	log *util.Logger
 
 	// configuration
-	Title                             string                 `mapstructure:"title"`         // UI title
-	Voltage                           float64                `mapstructure:"voltage"`       // Operating voltage. 230V for Germany.
-	ResidualPower                     float64                `mapstructure:"residualPower"` // PV meter only: household usage. Grid meter: household safety margin
-	Meters                            MetersConfig           // Meter references
-	PrioritySoc                       float64                `mapstructure:"prioritySoc"`                       // prefer battery up to this Soc
-	BufferSoc                         float64                `mapstructure:"bufferSoc"`                         // continue charging on battery above this Soc
-	BufferStartSoc                    float64                `mapstructure:"bufferStartSoc"`                    // start charging on battery above this Soc
-	MaxGridSupplyWhileBatteryCharging float64                `mapstructure:"maxGridSupplyWhileBatteryCharging"` // ignore battery charging if AC consumption is above this value
-	SmartCostLimit                    float64                `mapstructure:"smartCostLimit"`                    // always charge if cost is below this value
-	BatteryControl                    siteapi.BatteryControl `mapstructure:"batteryControl"`                    // shall discharge of home battery be adjusted
+	Title                             string       `mapstructure:"title"`         // UI title
+	Voltage                           float64      `mapstructure:"voltage"`       // Operating voltage. 230V for Germany.
+	ResidualPower                     float64      `mapstructure:"residualPower"` // PV meter only: household usage. Grid meter: household safety margin
+	Meters                            MetersConfig // Meter references
+	PrioritySoc                       float64      `mapstructure:"prioritySoc"`                       // prefer battery up to this Soc
+	BufferSoc                         float64      `mapstructure:"bufferSoc"`                         // continue charging on battery above this Soc
+	BufferStartSoc                    float64      `mapstructure:"bufferStartSoc"`                    // start charging on battery above this Soc
+	MaxGridSupplyWhileBatteryCharging float64      `mapstructure:"maxGridSupplyWhileBatteryCharging"` // ignore battery charging if AC consumption is above this value
+	SmartCostLimit                    float64      `mapstructure:"smartCostLimit"`                    // always charge if cost is below this value
+	BatteryDischargeControl           bool         `mapstructure:"batteryDischargeControl"`           // prevent battery discharge for fast and planned charging
 
 	// meters
 	gridMeter     api.Meter   // Grid usage meter
@@ -254,8 +253,8 @@ func (site *Site) restoreSettings() {
 	if v, err := settings.Float("site.smartCostLimit"); err == nil {
 		site.SmartCostLimit = v
 	}
-	if v, err := settings.Int("site.batteryControl"); err == nil {
-		site.BatteryControl = siteapi.BatteryControl(v)
+	if v, err := settings.Bool("site.batteryControl"); err == nil {
+		site.BatteryDischargeControl = v
 	}
 }
 
@@ -800,7 +799,7 @@ func (site *Site) update(lp Updater) {
 		site.log.ERROR.Println(err)
 	}
 
-	if site.GetBatteryControl()&siteapi.BatteryControlDischarge > 0 {
+	if site.BatteryDischargeControl {
 		site.updateBatteryMode(site.Loadpoints())
 	}
 
@@ -827,7 +826,7 @@ func (site *Site) prepare() {
 	site.publish("currency", site.tariffs.Currency)
 
 	site.publish("vehicles", vehicleTitles(site.GetVehicles()))
-	site.publish("batteryControl", site.GetBatteryControl())
+	site.publish("batteryDischargeControl", site.BatteryDischargeControl)
 	site.publish("batteryMode", site.batteryMode)
 }
 

@@ -5,7 +5,6 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/site"
-	siteapi "github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/server/db/settings"
 )
 
@@ -189,22 +188,21 @@ func (site *Site) GetTariff(tariff string) api.Tariff {
 }
 
 // GetBatteryControl returns the battery control mode
-func (site *Site) GetBatteryControl() siteapi.BatteryControl {
+func (site *Site) GetBatteryDischargeControl() bool {
 	site.Lock()
 	defer site.Unlock()
-	return site.BatteryControl
+	return site.BatteryDischargeControl
 }
 
 // SetBatteryControl sets the battery control mode
-func (site *Site) SetBatteryControl(mode siteapi.BatteryControl) {
+func (site *Site) SetBatteryDischargeControl(v bool) error {
 	site.Lock()
 	defer site.Unlock()
 
-	site.log.DEBUG.Println("set battery control:", mode)
+	site.log.DEBUG.Println("set battery discharge control:", v)
 
-	if site.BatteryControl != mode {
-		site.BatteryControl = mode
-		settings.SetInt("site.batteryControl", int64(mode))
-		site.publish("batteryControl", mode)
-	}
+	site.BatteryDischargeControl = v
+	settings.SetBool("site.batteryDischargeControl", v)
+	site.publish("batteryDischargeControl", v)
+	return nil
 }

@@ -5,7 +5,6 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
-	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/util"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
@@ -43,9 +42,9 @@ func TestBatteryDischarge(t *testing.T) {
 		batCtrl.MockBatteryController.EXPECT().SetBatteryMode(tc.expBatMode).Times(1)
 
 		s := &Site{
-			log:            log,
-			BatteryControl: site.BatteryControlDischarge,
-			batteryMeters:  []api.Meter{batCtrl},
+			log:                     log,
+			BatteryDischargeControl: true,
+			batteryMeters:           []api.Meter{batCtrl},
 		}
 
 		lp := loadpoint.NewMockAPI(ctrl)
@@ -79,10 +78,10 @@ func TestBatteryModeNoUpdate(t *testing.T) {
 	loadpoints := []loadpoint.API{lp}
 
 	s := &Site{
-		batteryMode:    api.BatteryNormal,
-		batteryMeters:  []api.Meter{batCtrl},
-		BatteryControl: site.BatteryControlDischarge,
-		log:            util.NewLogger("foo"),
+		batteryMode:             api.BatteryNormal,
+		batteryMeters:           []api.Meter{batCtrl},
+		BatteryDischargeControl: true,
+		log:                     util.NewLogger("foo"),
 	}
 
 	s.updateBatteryMode(loadpoints) // first call should call BatteryController
