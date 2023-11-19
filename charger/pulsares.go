@@ -155,12 +155,11 @@ func (wb *Pulsares) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	switch u := binary.BigEndian.Uint16(b); u {
-	case 3, 4:
+	if u := binary.BigEndian.Uint16(b); u == 3 || u == 4 {
 		return api.StatusC, nil
-	default:
-		return api.StatusB, nil
 	}
+
+	return api.StatusB, nil
 }
 
 // Enabled implements the api.Charger interface
