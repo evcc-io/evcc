@@ -41,8 +41,6 @@ func NewPowerWallFromConfig(other map[string]interface{}) (api.Meter, error) {
 		RefreshToken               string
 		SiteId                     int64
 		battery                    `mapstructure:",squash"`
-		Soc                        *provider.Config // optional
-		LimitSoc                   *provider.Config // optional
 	}{
 		Cache: time.Second,
 		battery: battery{
