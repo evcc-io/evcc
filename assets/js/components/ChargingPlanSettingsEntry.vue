@@ -29,7 +29,7 @@
 					:id="formId('day')"
 					v-model="selectedDay"
 					class="form-select me-2"
-					data-testid="target-day"
+					data-testid="plan-day"
 				>
 					<option v-for="opt in dayOptions()" :key="opt.value" :value="opt.value">
 						{{ opt.name }}
@@ -48,6 +48,7 @@
 					type="time"
 					class="form-control mx-0"
 					:step="60 * 5"
+					data-testid="plan-time"
 					required
 				/>
 			</div>
@@ -62,6 +63,7 @@
 					:id="formId('goal')"
 					v-model="selectedSoc"
 					class="form-select mx-0"
+					data-testid="plan-soc"
 				>
 					<option v-for="opt in socOptions" :key="opt.value" :value="opt.value">
 						{{ opt.name }}
@@ -72,6 +74,7 @@
 					:id="formId('goal')"
 					v-model="selectedEnergy"
 					class="form-select mx-0"
+					data-testid="plan-energy"
 				>
 					<option v-for="opt in energyOptions" :key="opt.energy" :value="opt.energy">
 						{{ opt.text }}

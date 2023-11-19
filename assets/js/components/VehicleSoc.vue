@@ -41,6 +41,7 @@
 				data-bs-toggle="tooltip"
 				:class="{ 'plan-marker--warn': !planMarkerActive }"
 				:style="{ left: `${planMarkerPosition}%` }"
+				data-testid="plan-marker"
 				@click="$emit('plan-clicked')"
 			>
 				<shopicon-regular-clock></shopicon-regular-clock>

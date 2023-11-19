@@ -18,11 +18,10 @@
 			</div>
 			<div v-else>
 				<p>
-					No charging target set. Set your departure and charge goals; evcc computes the
-					optimal charging schedule.
+					{{ $t("main.targetCharge.planDescription") }}
 				</p>
 				<button class="btn btn-outline-primary" type="button" @click="addPlan">
-					Set charging target
+					{{ $t("main.targetCharge.setPlan") }}
 				</button>
 			</div>
 		</div>

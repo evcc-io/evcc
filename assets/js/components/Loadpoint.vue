@@ -154,6 +154,7 @@ export default {
 		vehiclePresent: Boolean,
 		vehicleRange: Number,
 		vehicleSoc: Number,
+		vehicleName: String,
 		vehicleTitle: String,
 		vehicleIcon: String,
 		vehicleTargetSoc: Number,
@@ -211,8 +212,7 @@ export default {
 	},
 	computed: {
 		vehicle: function () {
-			// TODO: use vehicleName instead of vehicleTitle
-			return this.vehicles?.find((v) => v.title === this.vehicleTitle);
+			return this.vehicles?.find((v) => v.name === this.vehicleName);
 		},
 		loadpointTitle: function () {
 			return this.title || this.$t("main.loadpoint.fallbackName");

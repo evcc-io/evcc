@@ -49,13 +49,14 @@ export default {
 	name: "VehicleTitle",
 	components: { VehicleOptions, VehicleIcon },
 	props: {
-		id: [String, Number],
-		vehiclePresent: Boolean,
-		vehicleTitle: String,
-		vehicleIcon: String,
-		vehicleDetectionActive: Boolean,
 		connected: Boolean,
+		id: [String, Number],
+		vehicleDetectionActive: Boolean,
+		vehicleIcon: String,
+		vehicleName: String,
+		vehiclePresent: Boolean,
 		vehicles: { type: Array, default: () => [] },
+		vehicleTitle: String,
 	},
 	emits: ["change-vehicle", "remove-vehicle"],
 	computed: {
@@ -81,7 +82,7 @@ export default {
 			return !this.vehiclePresent;
 		},
 		otherVehicles() {
-			return this.vehicles.filter((v) => v.title !== this.vehicleTitle);
+			return this.vehicles.filter((v) => v.name !== this.vehicleName);
 		},
 		showOptions() {
 			return !this.isUnknown || this.vehicles.length;

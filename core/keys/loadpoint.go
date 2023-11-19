@@ -23,7 +23,7 @@ const (
 	VehicleSoc             = "vehicleSoc"             // vehicle soc
 	VehicleTargetSoc       = "vehicleTargetSoc"       // vehicle soc limit
 	VehicleTitle           = "vehicleTitle"           // vehicle title
-	VehicleId              = "vehicleId"              // vehicle id
+	VehicleName            = "vehicleName"            // vehicle name
 
 	// TODO rename value
 	VehicleClimaterActive = "vehicleClimaterActive" // vehicle climater active

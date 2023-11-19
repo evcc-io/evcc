@@ -1,5 +1,5 @@
 <template>
-	<LabelAndValue class="flex-grow-1" :label="title" align="end" data-testid="target-soc">
+	<LabelAndValue class="flex-grow-1" :label="title" align="end" data-testid="limit-soc">
 		<h3 class="value m-0">
 			<label class="position-relative">
 				<select :value="limitSoc" class="custom-select" @change="change">
@@ -7,7 +7,7 @@
 						{{ text }}
 					</option>
 				</select>
-				<span class="text-decoration-underline" data-testid="target-soc-value">
+				<span class="text-decoration-underline" data-testid="limit-soc-value">
 					<AnimatedNumber :to="limitSoc" :format="formatSoc" />
 				</span>
 			</label>
