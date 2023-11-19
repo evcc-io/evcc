@@ -99,6 +99,7 @@ render: |
     scale: 0.1
   batterymode:
     source: switch
+    switch:
     - case: 1 # normal
       set:
         source: sequence

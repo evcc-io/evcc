@@ -12,8 +12,8 @@ type Case struct {
 }
 
 type switchProvider struct {
-	set  []Case
-	dflt *Config
+	cases []Case
+	dflt  *Config
 }
 
 func init() {
@@ -23,7 +23,7 @@ func init() {
 // NewSwitchFromConfig creates switch provider
 func NewSwitchFromConfig(other map[string]interface{}) (Provider, error) {
 	var cc struct {
-		Set     []Case
+		Switch  []Case
 		Default *Config
 	}
 
@@ -32,8 +32,8 @@ func NewSwitchFromConfig(other map[string]interface{}) (Provider, error) {
 	}
 
 	o := &switchProvider{
-		set:  cc.Set,
-		dflt: cc.Default,
+		cases: cc.Switch,
+		dflt:  cc.Default,
 	}
 
 	return o, nil
@@ -42,8 +42,8 @@ func NewSwitchFromConfig(other map[string]interface{}) (Provider, error) {
 var _ SetIntProvider = (*switchProvider)(nil)
 
 func (o *switchProvider) IntSetter(param string) func(int64) error {
-	set := make([]func(int64) error, 0, len(o.set))
-	for _, cc := range o.set {
+	set := make([]func(int64) error, 0, len(o.cases))
+	for _, cc := range o.cases {
 		s, err := NewIntSetterFromConfig(param, cc.Set)
 		if err != nil {
 			_ = err
@@ -60,7 +60,7 @@ func (o *switchProvider) IntSetter(param string) func(int64) error {
 	}
 
 	return func(val int64) error {
-		for i, s := range o.set {
+		for i, s := range o.cases {
 			if s.Case == val {
 				return set[i](val)
 			}
