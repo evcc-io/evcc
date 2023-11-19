@@ -107,7 +107,7 @@ render: |
           value: 0 # self consumption
           set:
             source: modbus
-            {{- include "modbus" . | indent 8 }}
+            {{- include "modbus" . | indent 10 }}
             timeout: {{ .timeout }}
             register:
               address: 13049 # EMS mode
@@ -117,7 +117,7 @@ render: |
           value: 0xCC # stop
           set:
             source: modbus
-            {{- include "modbus" . | indent 8 }}
+            {{- include "modbus" . | indent 10 }}
             timeout: {{ .timeout }}
             register:
               address: 13050 # Forced mode
@@ -131,7 +131,7 @@ render: |
           value: 2 # forced mode
           set:
             source: modbus
-            {{- include "modbus" . | indent 8 }}
+            {{- include "modbus" . | indent 10 }}
             timeout: {{ .timeout }}
             register:
               address: 13049 # EMS mode
@@ -141,7 +141,7 @@ render: |
           value: 0xCC
           set:
             source: modbus
-            {{- include "modbus" . | indent 8 }}
+            {{- include "modbus" . | indent 10 }}
             timeout: {{ .timeout }}
             register:
               address: 13050 # Forced mode
@@ -155,7 +155,7 @@ render: |
           value: 2 # forced mode
           set:
             source: modbus
-            {{- include "modbus" . | indent 8 }}
+            {{- include "modbus" . | indent 10 }}
             timeout: {{ .timeout }}
             register:
               address: 13049 # EMS mode
@@ -165,7 +165,7 @@ render: |
           value: 0xAA
           set:
             source: modbus
-            {{- include "modbus" . | indent 8 }}
+            {{- include "modbus" . | indent 10 }}
             timeout: {{ .timeout }}
             register:
               address: 13050 # Forced mode
