@@ -56,8 +56,6 @@ type {{$prefix}}{{.ShortType}}Impl struct {
 	{{.VarName}} {{.Signature}}
 }
 
-{{$length := len .Params}}
-
 func (impl *{{$prefix}}{{.ShortType}}Impl) {{.Function}}(
 	{{- range $idx, $param := .Params -}}
 		{{- if gt $idx 0}}, {{end -}}
