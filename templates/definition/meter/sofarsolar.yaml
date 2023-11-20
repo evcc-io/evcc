@@ -17,6 +17,13 @@ params:
     id: 1
   - name: capacity
     advanced: true
+  # battery control
+  - name: minsoc
+    type: number
+    advanced: true
+  - name: maxsoc
+    type: number
+    advanced: true
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -91,7 +98,17 @@ render: |
       address: 0x0210 # The residual capacity of battery
       type: holding
       decode: uint16
-  {{- if .capacity }}
+  limitsoc:
+    source: float2int
+    set:
+      source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 0x104C # BatConfig_Current_Discharge_Limit
+        type: writesingle
+        decode: uint16
+      scale: 100
   capacity: {{ .capacity }} # kWh
-  {{- end }}
+  minsoc: {{ .minsoc }} # %
+  maxsoc: {{ .maxsoc }} # %
   {{- end }}
