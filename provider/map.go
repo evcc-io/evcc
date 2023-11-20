@@ -47,12 +47,12 @@ func NewMapFromConfig(other map[string]interface{}) (Provider, error) {
 
 var _ SetIntProvider = (*mapProvider)(nil)
 
-func (o *mapProvider) IntSetter(param string) func(int64) error {
+func (o *mapProvider) IntSetter(param string) (func(int64) error, error) {
 	return func(val int64) error {
 		m, ok := o.values[val]
 		if !ok {
 			return fmt.Errorf("value %d not found", val)
 		}
 		return o.set(m)
-	}
+	}, nil
 }
