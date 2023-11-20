@@ -8,7 +8,7 @@ import (
 
 type mapProvider struct {
 	values map[int64]int64
-	set    func(int64) error
+	set    Config
 }
 
 func init() {
@@ -18,7 +18,6 @@ func init() {
 // NewMapFromConfig creates type conversion provider
 func NewMapFromConfig(other map[string]interface{}) (Provider, error) {
 	var cc struct {
-		Param  string
 		Values map[int64]int64
 		Set    Config
 	}
@@ -31,14 +30,8 @@ func NewMapFromConfig(other map[string]interface{}) (Provider, error) {
 		return nil, fmt.Errorf("missing values")
 	}
 
-	// TODO late init
-	set, err := NewIntSetterFromConfig(cc.Param, cc.Set)
-	if err != nil {
-		return nil, fmt.Errorf("set: %w", err)
-	}
-
 	o := &mapProvider{
-		set:    set,
+		set:    cc.Set,
 		values: cc.Values,
 	}
 
@@ -48,11 +41,13 @@ func NewMapFromConfig(other map[string]interface{}) (Provider, error) {
 var _ SetIntProvider = (*mapProvider)(nil)
 
 func (o *mapProvider) IntSetter(param string) (func(int64) error, error) {
+	set, err := NewIntSetterFromConfig(param, o.set)
+
 	return func(val int64) error {
 		m, ok := o.values[val]
 		if !ok {
 			return fmt.Errorf("value %d not found", val)
 		}
-		return o.set(m)
-	}, nil
+		return set(m)
+	}, err
 }
