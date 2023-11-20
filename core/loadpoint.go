@@ -256,7 +256,7 @@ func NewLoadpointFromConfig(log *util.Logger, settings *Settings, other map[stri
 		lp.log.WARN.Printf("PV mode enable threshold %.0fW > 0 will start PV charging on grid power consumption. Did you mean -%.0f?", lp.Enable.Threshold, lp.Enable.Threshold)
 	}
 
-	// chose sane default if mode is not set
+	// choose sane default if mode is not set
 	if lp.mode = lp.Mode_; lp.mode == "" {
 		lp.mode = api.ModeOff
 	}
