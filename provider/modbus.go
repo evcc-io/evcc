@@ -208,23 +208,29 @@ func (m *Modbus) floatGetter() (f float64, err error) {
 	return m.scale * res.Value, err
 }
 
+var _ FloatProvider = (*Modbus)(nil)
+
 // FloatGetter executes configured modbus read operation and implements func() (float64, error)
-func (m *Modbus) FloatGetter() func() (f float64, err error) {
-	return m.floatGetter
+func (m *Modbus) FloatGetter() (func() (f float64, err error), error) {
+	return m.floatGetter, nil
 }
 
+var _ IntProvider = (*Modbus)(nil)
+
 // IntGetter executes configured modbus read operation and implements IntProvider
-func (m *Modbus) IntGetter() func() (int64, error) {
-	g := m.FloatGetter()
+func (m *Modbus) IntGetter() (func() (int64, error), error) {
+	g, err := m.FloatGetter()
 
 	return func() (int64, error) {
 		res, err := g()
 		return int64(math.Round(res)), err
-	}
+	}, err
 }
 
+var _ StringProvider = (*Modbus)(nil)
+
 // StringGetter executes configured modbus read operation and implements IntProvider
-func (m *Modbus) StringGetter() func() (string, error) {
+func (m *Modbus) StringGetter() (func() (string, error), error) {
 	return func() (string, error) {
 		b, err := m.bytesGetter()
 		if err != nil {
@@ -232,7 +238,7 @@ func (m *Modbus) StringGetter() func() (string, error) {
 		}
 
 		return strings.TrimSpace(string(bytes.TrimLeft(b, "\x00"))), nil
-	}
+	}, nil
 }
 
 // UintFromBytes converts byte slice to bigendian uint value
@@ -253,8 +259,10 @@ func UintFromBytes(bytes []byte) (u uint64, err error) {
 	return u, err
 }
 
+var _ BoolProvider = (*Modbus)(nil)
+
 // BoolGetter executes configured modbus read operation and implements IntProvider
-func (m *Modbus) BoolGetter() func() (bool, error) {
+func (m *Modbus) BoolGetter() (func() (bool, error), error) {
 	return func() (bool, error) {
 		bytes, err := m.bytesGetter()
 		if err != nil {
@@ -263,22 +271,24 @@ func (m *Modbus) BoolGetter() func() (bool, error) {
 
 		u, err := UintFromBytes(bytes)
 		return u > 0, err
-	}
+	}, nil
 }
 
+var _ SetFloatProvider = (*Modbus)(nil)
+
 // FloatSetter executes configured modbus write operation and implements SetFloatProvider
-func (m *Modbus) FloatSetter(_ string) func(float64) error {
+func (m *Modbus) FloatSetter(_ string) (func(float64) error, error) {
+	op := m.op.MBMD
+	if op.FuncCode == 0 {
+		return nil, errors.New("modbus plugin does not support writing to sunspec")
+	}
+
+	// need multiple registers for float
+	if op.FuncCode != gridx.FuncCodeWriteMultipleRegisters {
+		return nil, fmt.Errorf("invalid write function code: %d", op.FuncCode)
+	}
+
 	return func(val float64) error {
-		op := m.op.MBMD
-		if op.FuncCode == 0 {
-			return errors.New("modbus plugin does not support writing to sunspec")
-		}
-
-		// if funccode is configured, execute the read directly
-		if op.FuncCode != gridx.FuncCodeWriteMultipleRegisters {
-			return fmt.Errorf("invalid write function code: %d", op.FuncCode)
-		}
-
 		val = m.scale * val
 
 		var err error
@@ -298,17 +308,19 @@ func (m *Modbus) FloatSetter(_ string) func(float64) error {
 		}
 
 		return err
-	}
+	}, nil
 }
 
-// IntSetter executes configured modbus write operation and implements SetIntProvider
-func (m *Modbus) IntSetter(_ string) func(int64) error {
-	return func(val int64) error {
-		op := m.op.MBMD
-		if op.FuncCode == 0 {
-			return errors.New("modbus plugin does not support writing to sunspec")
-		}
+var _ SetIntProvider = (*Modbus)(nil)
 
+// IntSetter executes configured modbus write operation and implements SetIntProvider
+func (m *Modbus) IntSetter(_ string) (func(int64) error, error) {
+	op := m.op.MBMD
+	if op.FuncCode == 0 {
+		return nil, errors.New("modbus plugin does not support writing to sunspec")
+	}
+
+	return func(val int64) error {
 		ival := int64(m.scale * float64(val))
 
 		// if funccode is configured, execute the read directly
@@ -351,12 +363,14 @@ func (m *Modbus) IntSetter(_ string) func(int64) error {
 		}
 
 		return err
-	}
+	}, nil
 }
 
+var _ SetBoolProvider = (*Modbus)(nil)
+
 // BoolSetter executes configured modbus write operation and implements SetBoolProvider
-func (m *Modbus) BoolSetter(param string) func(bool) error {
-	set := m.IntSetter(param)
+func (m *Modbus) BoolSetter(param string) (func(bool) error, error) {
+	set, err := m.IntSetter(param)
 
 	return func(val bool) error {
 		var ival int64
@@ -365,5 +379,5 @@ func (m *Modbus) BoolSetter(param string) func(bool) error {
 		}
 
 		return set(ival)
-	}
+	}, err
 }

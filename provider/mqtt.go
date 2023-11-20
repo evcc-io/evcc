@@ -98,10 +98,8 @@ func (p *Mqtt) WithPipeline(pipeline *pipeline.Pipeline) *Mqtt {
 	return p
 }
 
-var _ FloatProvider = (*Mqtt)(nil)
-
 // newReceiver creates a msgHandler and subscribes it to the topic.
-func (m *Mqtt) newReceiver() *msgHandler {
+func (m *Mqtt) newReceiver() (*msgHandler, error) {
 	h := &msgHandler{
 		topic:    m.topic,
 		scale:    m.scale,
@@ -109,44 +107,46 @@ func (m *Mqtt) newReceiver() *msgHandler {
 		val:      util.NewMonitor[string](m.timeout),
 	}
 
-	m.client.Listen(m.topic, h.receive)
-	return h
+	err := m.client.Listen(m.topic, h.receive)
+	return h, err
 }
 
+var _ FloatProvider = (*Mqtt)(nil)
+
 // FloatGetter creates handler for float64 from MQTT topic that returns cached value
-func (m *Mqtt) FloatGetter() func() (float64, error) {
-	h := m.newReceiver()
-	return h.floatGetter
+func (m *Mqtt) FloatGetter() (func() (float64, error), error) {
+	h, err := m.newReceiver()
+	return h.floatGetter, err
 }
 
 var _ IntProvider = (*Mqtt)(nil)
 
 // IntGetter creates handler for int64 from MQTT topic that returns cached value
-func (m *Mqtt) IntGetter() func() (int64, error) {
-	h := m.newReceiver()
-	return h.intGetter
+func (m *Mqtt) IntGetter() (func() (int64, error), error) {
+	h, err := m.newReceiver()
+	return h.intGetter, err
 }
 
 var _ StringProvider = (*Mqtt)(nil)
 
 // StringGetter creates handler for string from MQTT topic that returns cached value
-func (m *Mqtt) StringGetter() func() (string, error) {
-	h := m.newReceiver()
-	return h.stringGetter
+func (m *Mqtt) StringGetter() (func() (string, error), error) {
+	h, err := m.newReceiver()
+	return h.stringGetter, err
 }
 
 var _ BoolProvider = (*Mqtt)(nil)
 
 // BoolGetter creates handler for string from MQTT topic that returns cached value
-func (m *Mqtt) BoolGetter() func() (bool, error) {
-	h := m.newReceiver()
-	return h.boolGetter
+func (m *Mqtt) BoolGetter() (func() (bool, error), error) {
+	h, err := m.newReceiver()
+	return h.boolGetter, err
 }
 
 var _ SetIntProvider = (*Mqtt)(nil)
 
 // IntSetter publishes topic with parameter replaced by int value
-func (m *Mqtt) IntSetter(param string) func(int64) error {
+func (m *Mqtt) IntSetter(param string) (func(int64) error, error) {
 	return func(v int64) error {
 		payload, err := setFormattedValue(m.payload, param, v)
 		if err != nil {
@@ -154,13 +154,13 @@ func (m *Mqtt) IntSetter(param string) func(int64) error {
 		}
 
 		return m.client.Publish(m.topic, m.retained, payload)
-	}
+	}, nil
 }
 
 var _ SetBoolProvider = (*Mqtt)(nil)
 
 // BoolSetter invokes script with parameter replaced by bool value
-func (m *Mqtt) BoolSetter(param string) func(bool) error {
+func (m *Mqtt) BoolSetter(param string) (func(bool) error, error) {
 	return func(v bool) error {
 		payload, err := setFormattedValue(m.payload, param, v)
 		if err != nil {
@@ -168,13 +168,13 @@ func (m *Mqtt) BoolSetter(param string) func(bool) error {
 		}
 
 		return m.client.Publish(m.topic, m.retained, payload)
-	}
+	}, nil
 }
 
 var _ SetStringProvider = (*Mqtt)(nil)
 
 // StringSetter invokes script with parameter replaced by string value
-func (m *Mqtt) StringSetter(param string) func(string) error {
+func (m *Mqtt) StringSetter(param string) (func(string) error, error) {
 	return func(v string) error {
 		payload, err := setFormattedValue(m.payload, param, v)
 		if err != nil {
@@ -182,5 +182,5 @@ func (m *Mqtt) StringSetter(param string) func(string) error {
 		}
 
 		return m.client.Publish(m.topic, m.retained, payload)
-	}
+	}, nil
 }
