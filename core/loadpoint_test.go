@@ -385,7 +385,7 @@ func TestDisableAndEnableAtTargetSoc(t *testing.T) {
 	vehicle := api.NewMockVehicle(ctrl)
 
 	// wrap vehicle with estimator
-	vehicle.EXPECT().Capacity().Return(float64(10))
+	vehicle.EXPECT().Capacity().Return(float64(10)).AnyTimes()
 	vehicle.EXPECT().Phases().Return(0).AnyTimes()
 	vehicle.EXPECT().Title().Return("foo").AnyTimes() // TODO remove when settings always available for vehicle
 	vehicle.EXPECT().OnIdentified().Return(api.ActionConfig{}).AnyTimes()
