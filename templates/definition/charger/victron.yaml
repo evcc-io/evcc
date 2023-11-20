@@ -2,16 +2,16 @@ template: victron
 products:
   - brand: Victron
     description:
-      generic: EV charging station
+      generic: EV charging station (via GX)
 requirements:
   evcc: ["sponsorship"]
   description:
-    en: Charger has to be in manual mode and Modbus has to be configured for ID 100.
-    de: Wallbox muss sich im Modus "Manual" befinden und Modbus ID 100 konfiguriert sein.
+    en: The connection is established to the GX device (not to the EV Charging Station). Modbus TCP must be activated before use in the Settings menu under "services", where the Modbus ID of the EV Charging Station (e.g. 40) can then also be seen. The charger must be in "Manual" mode.
+    de: Die Verbindung wird zum GX-Gerät aufgebaut (nicht zur EV Charging Station). Modbus-TCP muss vor der Verwendung im Settings-Menü unter "services" aktiviert werden, dort ist anschließend auch die Modbus-ID der EV Charging Station (z.B. 40) ersichtlich. Die Wallbox muss sich im Modus "Manual" befinden.
 params:
   - name: modbus
     choice: ["tcpip"]
-    id: 100
+    id: 40
 render: |
   type: victron
   {{- include "modbus" . }}
