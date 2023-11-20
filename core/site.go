@@ -41,10 +41,11 @@ type meterMeasurement struct {
 
 // batteryMeasurement is used as slice element for publishing structured data
 type batteryMeasurement struct {
-	Power    float64 `json:"power"`
-	Energy   float64 `json:"energy,omitempty"`
-	Soc      float64 `json:"soc,omitempty"`
-	Capacity float64 `json:"capacity,omitempty"`
+	Power        float64 `json:"power"`
+	Energy       float64 `json:"energy,omitempty"`
+	Soc          float64 `json:"soc,omitempty"`
+	Capacity     float64 `json:"capacity,omitempty"`
+	Controllable bool    `json:"controllable"`
 }
 
 // Site is the main configuration container. A site can host multiple loadpoints.
@@ -520,11 +521,14 @@ func (site *Site) updateMeters() error {
 				}
 			}
 
+			_, controllable := meter.(api.BatteryController)
+
 			mm[i] = batteryMeasurement{
-				Power:    power,
-				Energy:   energy,
-				Soc:      batSoc,
-				Capacity: capacity,
+				Power:        power,
+				Energy:       energy,
+				Soc:          batSoc,
+				Capacity:     capacity,
+				Controllable: controllable,
 			}
 		}
 
