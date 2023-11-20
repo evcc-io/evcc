@@ -140,18 +140,18 @@ func (p *Socket) listen() {
 var _ StringProvider = (*Socket)(nil)
 
 // StringGetter sends string request
-func (p *Socket) StringGetter() func() (string, error) {
+func (p *Socket) StringGetter() (func() (string, error), error) {
 	return func() (string, error) {
 		val, err := p.val.Get()
 		return string(val), err
-	}
+	}, nil
 }
 
 var _ FloatProvider = (*Socket)(nil)
 
 // FloatGetter parses float from string getter
-func (p *Socket) FloatGetter() func() (float64, error) {
-	g := p.StringGetter()
+func (p *Socket) FloatGetter() (func() (float64, error), error) {
+	g, err := p.StringGetter()
 
 	return func() (float64, error) {
 		s, err := g()
@@ -162,29 +162,29 @@ func (p *Socket) FloatGetter() func() (float64, error) {
 		f, err := strconv.ParseFloat(s, 64)
 
 		return f * p.scale, err
-	}
+	}, err
 }
 
 var _ IntProvider = (*Socket)(nil)
 
 // IntGetter parses int64 from float getter
-func (p *Socket) IntGetter() func() (int64, error) {
-	g := p.FloatGetter()
+func (p *Socket) IntGetter() (func() (int64, error), error) {
+	g, err := p.FloatGetter()
 
 	return func() (int64, error) {
 		f, err := g()
 		return int64(math.Round(f)), err
-	}
+	}, err
 }
 
 var _ BoolProvider = (*Socket)(nil)
 
 // BoolGetter parses bool from string getter
-func (p *Socket) BoolGetter() func() (bool, error) {
-	g := p.StringGetter()
+func (p *Socket) BoolGetter() (func() (bool, error), error) {
+	g, err := p.StringGetter()
 
 	return func() (bool, error) {
 		s, err := g()
 		return util.Truish(s), err
-	}
+	}, err
 }

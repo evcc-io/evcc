@@ -55,6 +55,14 @@ make
 ./evcc
 ```
 
+### Cross Compile
+
+To compile a version for an ARM device like a Raspberry Pi set GO command variables as needed, eg:
+
+```sh
+GOOS=linux GOARCH=arm GOARM=6 make
+```
+
 ### UI development
 
 For frontend development start the Vue toolchain in dev-mode. Open http://127.0.0.1:7071/ to get to the livelreloading development server. It pulls its data from port 7070 (see above).
@@ -81,7 +89,7 @@ Since we dont want to run tests agains real devices or cloud services we've buil
 npm run simulator
 ```
 
-Run an evcc instance that uses simulator data. This configuration runs with a very high refresh interval to seed up testing.
+Run an evcc instance that uses simulator data. This configuration runs with a very high refresh interval to speed up testing.
 
 ```
 make ui build

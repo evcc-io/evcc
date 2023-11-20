@@ -35,9 +35,10 @@ type Pulsares struct {
 }
 
 const (
-	pulsaresRegStatus  = 0x1f
-	pulsaresRegCurrent = 0x5d
-	pulsaresRegBackup  = 0x61
+	pulsaresRegConnectionStatus = 0x1b
+	pulsaresRegChargeStatus     = 0x1f
+	pulsaresRegCurrent          = 0x5d
+	pulsaresRegBackup           = 0x61
 )
 
 func init() {
@@ -140,21 +141,25 @@ func (wb *Pulsares) getCurrent() (uint16, error) {
 
 // Status implements the api.Charger interface
 func (wb *Pulsares) Status() (api.ChargeStatus, error) {
-	b, err := wb.conn.ReadHoldingRegisters(pulsaresRegStatus, 1)
+	b, err := wb.conn.ReadHoldingRegisters(pulsaresRegConnectionStatus, 1)
 	if err != nil {
 		return api.StatusNone, err
 	}
 
-	switch u := binary.BigEndian.Uint16(b); u {
-	case 0:
+	if binary.BigEndian.Uint16(b) != 1 {
 		return api.StatusA, nil
-	case 1, 2:
-		return api.StatusB, nil
-	case 3, 4:
-		return api.StatusC, nil
-	default:
-		return api.StatusNone, fmt.Errorf("invalid status: %d", u)
 	}
+
+	b, err = wb.conn.ReadHoldingRegisters(pulsaresRegChargeStatus, 1)
+	if err != nil {
+		return api.StatusNone, err
+	}
+
+	if u := binary.BigEndian.Uint16(b); u == 3 || u == 4 {
+		return api.StatusC, nil
+	}
+
+	return api.StatusB, nil
 }
 
 // Enabled implements the api.Charger interface
