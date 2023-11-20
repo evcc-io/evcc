@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -61,14 +62,6 @@ func NewPowerWallFromConfig(other map[string]interface{}) (api.Meter, error) {
 		return nil, errors.New("missing password")
 	}
 
-	var batteryControl bool
-	if cc.RefreshToken != "" || cc.SiteId != 0 {
-		if cc.RefreshToken == "" {
-			return nil, errors.New("missing refresh token")
-		}
-		batteryControl = true
-	}
-
 	// support default meter names
 	switch strings.ToLower(cc.Usage) {
 	case "grid":
@@ -77,12 +70,12 @@ func NewPowerWallFromConfig(other map[string]interface{}) (api.Meter, error) {
 		cc.Usage = "solar"
 	}
 
-	return NewPowerWall(cc.URI, cc.Usage, cc.User, cc.Password, cc.Cache, cc.RefreshToken, cc.SiteId, cc.battery, batteryControl)
+	return NewPowerWall(cc.URI, cc.Usage, cc.User, cc.Password, cc.Cache, cc.RefreshToken, cc.SiteId, cc.battery)
 }
 
 // NewPowerWall creates a Tesla PowerWall Meter
-func NewPowerWall(uri, usage, user, password string, cache time.Duration, refreshToken string, energySiteProdId int64, battery battery, batteryControl bool) (api.Meter, error) {
-	log := util.NewLogger("powerwall").Redact(user, password, refreshToken)
+func NewPowerWall(uri, usage, user, password string, cache time.Duration, refreshToken string, siteId int64, battery battery) (api.Meter, error) {
+	log := util.NewLogger("powerwall").Redact(user, password, refreshToken, strconv.FormatInt(siteId, 10))
 
 	httpClient := &http.Client{
 		Transport: request.NewTripper(log, powerwall.DefaultTransport()),
@@ -100,6 +93,14 @@ func NewPowerWall(uri, usage, user, password string, cache time.Duration, refres
 		meterG: provider.Cached(client.GetMetersAggregates, cache),
 	}
 
+	var batteryControl bool
+	if refreshToken != "" || siteId != 0 {
+		if refreshToken == "" {
+			return nil, errors.New("missing refresh token")
+		}
+		batteryControl = true
+	}
+
 	if batteryControl {
 		ctx := context.WithValue(context.Background(), oauth2.HTTPClient, request.NewClient(log))
 
@@ -113,7 +114,7 @@ func NewPowerWall(uri, usage, user, password string, cache time.Duration, refres
 			return nil, err
 		}
 
-		if energySiteProdId == 0 {
+		if siteId == 0 {
 			//auto detect energy site ID, picking first
 			products, err := cloudClient.Products()
 			if err != nil {
@@ -122,14 +123,13 @@ func NewPowerWall(uri, usage, user, password string, cache time.Duration, refres
 
 			for _, p := range products {
 				if p.EnergySiteId != 0 {
-					energySiteProdId = p.EnergySiteId
+					siteId = p.EnergySiteId
 					break
 				}
 			}
-			log.INFO.Printf("Auto-detected Energy Site with Product ID %d", energySiteProdId)
 		}
 
-		energySite, err := cloudClient.EnergySite(energySiteProdId)
+		energySite, err := cloudClient.EnergySite(siteId)
 		if err != nil {
 			return nil, err
 		}
