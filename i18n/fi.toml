@@ -12,15 +12,15 @@ legendTopAutostart = "alkaa automaattisesti"
 legendTopName = "akkutuettu lataus"
 legendTopSubline = "keskeytyksettä"
 modalTitle = "Akun asetukset"
-control = 
-discharge = 
+control =
+discharge =
 
 [batterySettings.bufferStart]
 full = "kun melkein täynnä"
 low = "jos jonkin verran täynnä"
 medium = "kun puolillaan"
 never = "ainoastaan kun riittävästi ylijäämää"
-above = 
+above =
 
 [config]
 
@@ -33,10 +33,10 @@ addVehicle = "Lisää ajoneuvo"
 edit = "muokkaa"
 title = "Määritykset"
 vehicles = "Minun ajoneuvot"
-yaml = 
-addPvBattery = 
-addLoadpoint = 
-unconfigured = 
+yaml =
+addPvBattery =
+addLoadpoint =
+unconfigured =
 
 [config.validation]
 failed = "epäonnistui"
@@ -138,8 +138,8 @@ login = "Ajoneuvon kirjautumiset"
 needHelp = "Tarvitsetko apua?"
 sessions = "Lataustapahtumat"
 settings = "Asetukset"
-nativeSettings = 
-logout = 
+nativeSettings =
+logout =
 
 [help]
 discussionsButton = "GitHub keskustelut"
@@ -151,8 +151,8 @@ primaryActions = "Jokin ei toimi niin kuin sen pitäisi toimia? Nämä ovat hyvi
 restartButton = "Uudelleen käynnistä"
 restartDescription = "Yrititkö sammuttaa ja uudelleen käynnistää sen?"
 secondaryActions = "Etkö vieläkään pysty ratkaisemaan ongelmaasi? Tässä on joitain raskaampia vaihtoehtoja."
-logsButton = 
-logsDescription = 
+logsButton =
+logsDescription =
 
 [help.restart]
 cancel = "Peruuta"
@@ -172,13 +172,13 @@ none = "ei mitään"
 title = "Suunnitelma"
 titleMinSoc = "Minimi lataus"
 titleTargetCharge = "Lähtö"
-goal = 
-remove = 
-active = 
-time = 
-update = 
-day = 
-unsavedChanges = 
+goal =
+remove =
+active =
+time =
+update =
+day =
+unsavedChanges =
 
 [main.energyflow]
 battery = "Akku"
@@ -192,7 +192,7 @@ noEnergy = "Ei mittarin tietoja"
 pvExport = "Verkkoon vienti"
 pvProduction = "Tuotanto"
 selfConsumption = "Tuotannon kulutus"
-batteryHold = 
+batteryHold =
 
 [main.loadpoint]
 avgPrice = "⌀ Hinta"
@@ -203,9 +203,9 @@ fallbackName = "Latauspiste"
 power = "Teho"
 price = "Σ Hinta"
 solar = "Aurinkoenergia"
-remoteDisabledSoft = 
-remaining = 
-remoteDisabledHard = 
+remoteDisabledSoft =
+remaining =
+remoteDisabledHard =
 
 [main.loadpointSettings]
 currents = "Latausvirta"
@@ -213,9 +213,9 @@ default = "oletus"
 disclaimerHint = "Huomautus:"
 title = "Asetukset {0}"
 vehicle = "Ajoneuvo"
-smartCostClean = 
-onlyForSocBasedCharging = 
-smartCostCheap = 
+smartCostClean =
+onlyForSocBasedCharging =
+smartCostCheap =
 
 [main.loadpointSettings.maxCurrent]
 label = "Maksimivirta"
@@ -234,7 +234,7 @@ phases_1 = "1-vaihe"
 phases_1_hint = "({min} - {max})"
 phases_3 = "3-vaihe"
 phases_3_hint = "({min} - {max})"
-no1p3pSupport = 
+no1p3pSupport =
 
 [main.mode]
 minpv = "Minimi+PV"
@@ -269,12 +269,12 @@ tomorrow = "huomenna"
 update = "Päivittää"
 vehicleCapacityDocs = "Opi kuinka voit muokata sitä."
 vehicleCapacityRequired = "Ajoneuvon akun kapasiteetti tarvitaan latausajan arviota varten."
-notReachableInTime = 
-targetIsAboveLimit = 
-remove = 
-targetIsAboveVehicleLimit = 
-currentPlan = 
-preview = 
+notReachableInTime =
+targetIsAboveLimit =
+remove =
+targetIsAboveVehicleLimit =
+currentPlan =
+preview =
 
 [main.targetChargePlan]
 chargeDuration = "Latausaika"
@@ -299,7 +299,7 @@ temp = "Lämpötila."
 tempLimit = "Lämpötila raja-arvo"
 unknown = "Vieras ajoneuvo"
 vehicleSoc = "Lataus"
-notReachable = 
+notReachable =
 
 [main.vehicleSoc]
 charging = "lataa"
@@ -330,7 +330,7 @@ waitForVehicle = "Valmiina. Odotetaan ajoneuvoa…"
 [notifications]
 dismissAll = "Hylkää kaikki"
 modalTitle = "Ilmoitukset"
-logs = 
+logs =
 
 [offline]
 message = "Ei yhteyttä serveriin"
@@ -379,11 +379,11 @@ meterstart = "Mittarin alku (kWh)"
 meterstop = "Mittarin loppu (kWh)"
 odometer = "Ajokilometrit (km)"
 vehicle = "Ajoneuvo"
-co2perkwh = 
-priceperkwh = 
-price = 
-chargeduration = 
-solarpercentage = 
+co2perkwh =
+priceperkwh =
+price =
+chargeduration =
+solarpercentage =
 
 [sessions.filter]
 allLoadpoints = "kaikki latauspisteet"
@@ -436,11 +436,11 @@ modalTitle = "Älykäs lataus verkosta"
 none = "ei mitään"
 priceLabel = "Energian hinta"
 priceLimit = "Hintaraja"
-batteryDescription = 
-cleanTitle = 
-cheapTitle = 
-saved = 
-applyToAll = 
+batteryDescription =
+cleanTitle =
+cheapTitle =
+saved =
+applyToAll =
 
 [startupError]
 configFile = "Käytetty määritystiedostoa:"
@@ -461,114 +461,114 @@ test = "Testi"
 
 
 [settings.fullscreen]
-label = 
-enter = 
-exit = 
+label =
+enter =
+exit =
 
 [main.heatingStatus]
-charging = 
-waitForVehicle = 
-cheapEnergyCharging = 
-cleanEnergyCharging = 
+charging =
+waitForVehicle =
+cheapEnergyCharging =
+cleanEnergyCharging =
 
 [loginModal]
-cancel = 
-error = 
-login = 
-invalid = 
-reset = 
-password = 
-title = 
+cancel =
+error =
+login =
+invalid =
+reset =
+password =
+title =
 
 [passwordModal]
-labelCurrent = 
-error = 
-empty = 
-labelNew = 
-labelRepeat = 
-newPassword = 
-titleNew = 
-titleUpdate = 
-updatePassword = 
-description = 
-noMatch = 
+labelCurrent =
+error =
+empty =
+labelNew =
+labelRepeat =
+newPassword =
+titleNew =
+titleUpdate =
+updatePassword =
+description =
+noMatch =
 
 [config.deviceValue]
-chargeStatus = 
-chargedEnergy = 
-socLimit = 
-soc = 
-range = 
-capacity = 
-energy = 
-current = 
-enabled = 
-power = 
-phasePowers = 
-phaseVoltages = 
-phaseCurrents = 
-odometer = 
+chargeStatus =
+chargedEnergy =
+socLimit =
+soc =
+range =
+capacity =
+energy =
+current =
+enabled =
+power =
+phasePowers =
+phaseVoltages =
+phaseCurrents =
+odometer =
 
 [log]
-title = 
-update = 
-areaLabel = 
-areas = 
-search = 
-showAll = 
-levelLabel = 
-download = 
-noResults = 
+title =
+update =
+areaLabel =
+areas =
+search =
+showAll =
+levelLabel =
+download =
+noResults =
 
 [main.loadpointSettings.limitSoc]
-description = 
-label = 
+description =
+label =
 
 [config.title]
-description = 
-label = 
-title = 
+description =
+label =
+title =
 
 [config.grid]
-titleEdit = 
-titleAdd = 
+titleEdit =
+titleAdd =
 
 [config.options.schema]
-https = 
-http = 
+https =
+http =
 
 [config.options.endianness]
-little = 
-big = 
+little =
+big =
 
 [config.section]
-general = 
-system = 
+general =
+system =
 
 [config.meter]
-save = 
-validateSave = 
-cancel = 
-delete = 
-titleChoice = 
-template = 
+save =
+validateSave =
+cancel =
+delete =
+titleChoice =
+template =
 
 [config.general]
-save = 
-cancel = 
+save =
+cancel =
 
 [config.battery]
-titleAdd = 
-titleEdit = 
+titleAdd =
+titleEdit =
 
 [config.system]
-restartingMessage = 
-restartRequiredDescription = 
-logs = 
-restartRequiredMessage = 
-restartingDescription = 
-restart = 
+restartingMessage =
+restartRequiredDescription =
+logs =
+restartRequiredMessage =
+restartingDescription =
+restart =
 
 [config.pv]
-titleAdd = 
-titleEdit = 
+titleAdd =
+titleEdit =
