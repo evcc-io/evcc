@@ -8,6 +8,7 @@ import (
 	"go/format"
 	"io"
 	"os"
+	"slices"
 	"strings"
 	"text/template"
 
@@ -49,14 +50,9 @@ func generate(out io.Writer, packageName, functionName, baseType string, dynamic
 		},
 		// contains checks if slice contains string
 		"contains": func(combo []string, typ string) bool {
-			for _, v := range combo {
-				if v == typ {
-					return true
-				}
-			}
-			return false
+			return slices.Contains(combo, typ)
 		},
-		// ordered checks if slice ordered string
+		// ordered returns a slice of typeStructs ordered by dynamicType
 		"ordered": func() []typeStruct {
 			ordered := make([]typeStruct, 0)
 			for _, k := range dynamicTypes {
@@ -66,7 +62,6 @@ func generate(out io.Writer, packageName, functionName, baseType string, dynamic
 			return ordered
 		},
 	}).Parse(srcTmpl)
-
 	if err != nil {
 		return err
 	}
