@@ -30,7 +30,7 @@ func init() {
 	registry.Add("cfos", NewCfosPowerBrainFromConfig)
 }
 
-// go:generate go run ../cmd/tools/decorate.go -f decorateCfos -b "*CfosPowerBrain" -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error"
+//go:generate go run ../cmd/tools/decorate.go -f decorateCfos -b *CfosPowerBrain -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error"
 
 // NewCfosPowerBrainFromConfig creates a cFos charger from generic config
 func NewCfosPowerBrainFromConfig(other map[string]interface{}) (api.Charger, error) {

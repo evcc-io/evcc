@@ -1225,11 +1225,11 @@ func decoratePhoenixEVEth(base *PhoenixEVEth, meter func() (float64, error), met
 }
 
 type decoratePhoenixEVEthChargerExImpl struct {
-	chargerEx func(current float64) error
+	chargerEx func(float64) error
 }
 
-func (impl *decoratePhoenixEVEthChargerExImpl) MaxCurrentMillis(current float64) error {
-	return impl.chargerEx(current)
+func (impl *decoratePhoenixEVEthChargerExImpl) MaxCurrentMillis(p0 float64) error {
+	return impl.chargerEx(p0)
 }
 
 type decoratePhoenixEVEthIdentifierImpl struct {
