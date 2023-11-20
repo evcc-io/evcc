@@ -195,14 +195,24 @@ func (site *Site) GetBatteryDischargeControl() bool {
 }
 
 // SetBatteryControl sets the battery control mode
-func (site *Site) SetBatteryDischargeControl(v bool) error {
-	site.Lock()
-	defer site.Unlock()
+func (site *Site) SetBatteryDischargeControl(val bool) error {
+	site.log.DEBUG.Println("set battery discharge control:", val)
 
-	site.log.DEBUG.Println("set battery discharge control:", v)
+	if site.GetBatteryDischargeControl() != val {
+		// reset to normal when disabling
+		if mode := site.GetBatteryMode(); mode != api.BatteryNormal {
+			if err := site.updateBatteryMode(api.BatteryNormal); err != nil {
+				return err
+			}
+		}
 
-	site.BatteryDischargeControl = v
-	settings.SetBool("site.batteryDischargeControl", v)
-	site.publish("batteryDischargeControl", v)
+		site.Lock()
+		defer site.Unlock()
+
+		site.BatteryDischargeControl = val
+		settings.SetBool("site.batteryDischargeControl", val)
+		site.publish("batteryDischargeControl", val)
+	}
+
 	return nil
 }

@@ -53,8 +53,9 @@ func TestBatteryDischarge(t *testing.T) {
 		lp.EXPECT().GetPlanActive().Return(tc.planActive).AnyTimes()
 
 		loadpoints := []loadpoint.API{lp}
-		s.updateBatteryMode(loadpoints)
-		assert.Equal(t, tc.expBatMode, s.getBatteryMode(), tc)
+		err := s.updateBatteryMode(s.loadpointBatteryMode(loadpoints))
+		assert.NoError(t, err)
+		assert.Equal(t, tc.expBatMode, s.GetBatteryMode(), tc)
 	}
 }
 
@@ -84,13 +85,16 @@ func TestBatteryModeNoUpdate(t *testing.T) {
 		log:                     util.NewLogger("foo"),
 	}
 
-	s.updateBatteryMode(loadpoints) // first call should call BatteryController
-	s.updateBatteryMode(loadpoints) // this one should not
+	err := s.updateBatteryMode(s.loadpointBatteryMode(loadpoints)) // first call should call BatteryController)
+	assert.NoError(t, err)
+	err = s.updateBatteryMode(s.loadpointBatteryMode(loadpoints)) // this one should not)
+	assert.NoError(t, err)
 
 	// adjust mocks to simulate charge stop, should cause batMode udpate
 	lp.EXPECT().GetStatus().Return(api.StatusB).Times(1)
 	lp.EXPECT().GetMode().Return(api.ModeNow).Times(0)
 	batCtrl.MockBatteryController.EXPECT().SetBatteryMode(api.BatteryNormal).Times(1)
 
-	s.updateBatteryMode(loadpoints) // this one should have updated again
+	err = s.updateBatteryMode(s.loadpointBatteryMode(loadpoints)) // this one should have updated again)
+	assert.NoError(t, err)
 }
