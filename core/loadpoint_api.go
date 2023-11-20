@@ -249,8 +249,11 @@ func (lp *Loadpoint) SetEnableThreshold(threshold float64) {
 	lp.Lock()
 	defer lp.Unlock()
 
+	lp.log.DEBUG.Println("set enable threshold:", threshold)
+
 	if lp.Enable.Threshold != threshold {
 		lp.Enable.Threshold = threshold
+		lp.publish("enableThreshold", threshold)
 	}
 }
 
@@ -266,8 +269,11 @@ func (lp *Loadpoint) SetDisableThreshold(threshold float64) {
 	lp.Lock()
 	defer lp.Unlock()
 
+	lp.log.DEBUG.Println("set disable threshold:", threshold)
+
 	if lp.Disable.Threshold != threshold {
 		lp.Disable.Threshold = threshold
+		lp.publish("disableThreshold", threshold)
 	}
 }
 

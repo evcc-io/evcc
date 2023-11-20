@@ -12,7 +12,6 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
-	cv "github.com/nirasan/go-oauth-pkce-code-verifier"
 	"golang.org/x/net/publicsuffix"
 	"golang.org/x/oauth2"
 )
@@ -40,17 +39,11 @@ func (v *Identity) Login(user, password string) (oauth2.TokenSource, error) {
 	v.Client.CheckRedirect = request.DontFollow
 	defer func() { v.Client.CheckRedirect = nil }()
 
-	cv, err := cv.CreateCodeVerifier()
-	if err != nil {
-		return nil, err
-	}
+	cv := oauth2.GenerateVerifier()
 
-	v.Jar, err = cookiejar.New(&cookiejar.Options{
+	v.Jar, _ = cookiejar.New(&cookiejar.Options{
 		PublicSuffixList: publicsuffix.List,
 	})
-	if err != nil {
-		return nil, err
-	}
 
 	data := url.Values{
 		"client_id":             {v.region.ClientID},
@@ -60,7 +53,7 @@ func (v *Identity) Login(user, password string) (oauth2.TokenSource, error) {
 		"scope":                 {"openid profile email offline_access smacc vehicle_data perseus dlm svds cesim vsapi remote_services fupo authenticate_user"},
 		"nonce":                 {"login_nonce"},
 		"code_challenge_method": {"S256"},
-		"code_challenge":        {cv.CodeChallengeS256()},
+		"code_challenge":        {oauth2.S256ChallengeFromVerifier(cv)},
 		"username":              {user},
 		"password":              {password},
 		"grant_type":            {"authorization_code"},
@@ -120,7 +113,7 @@ func (v *Identity) Login(user, password string) (oauth2.TokenSource, error) {
 		"code":          {query.Get("code")},
 		"redirect_uri":  {RedirectURI},
 		"grant_type":    {"authorization_code"},
-		"code_verifier": {cv.CodeChallengePlain()},
+		"code_verifier": {cv},
 	}
 
 	token, err := v.retrieveToken(data)

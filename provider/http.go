@@ -12,6 +12,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
+	"github.com/gregjones/httpcache"
 	"github.com/jpfielding/go-http-digest/pkg/digest"
 )
 
@@ -102,6 +103,11 @@ func NewHTTP(log *util.Logger, method, uri string, insecure bool, scale float64,
 		scale:  scale,
 		cache:  cache,
 	}
+
+	// http cache
+	cacheTransport := httpcache.NewMemoryCacheTransport()
+	cacheTransport.Transport = p.Client.Transport
+	p.Client.Transport = cacheTransport
 
 	// ignore the self signed certificate
 	if insecure {

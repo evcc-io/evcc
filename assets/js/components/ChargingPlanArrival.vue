@@ -15,12 +15,8 @@
 						:disabled="!socBasedCharging"
 						@change="changeMinSoc"
 					>
-						<option
-							v-for="soc in [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50]"
-							:key="soc"
-							:value="soc"
-						>
-							{{ soc ? `${soc}%` : "--" }}
+						<option v-for="soc in minSocOptions" :key="soc.value" :value="soc.value">
+							{{ soc.name }}
 						</option>
 					</select>
 				</div>
@@ -44,6 +40,16 @@ export default {
 	emits: ["minsoc-updated"],
 	data: function () {
 		return { selectedMinSoc: this.minSoc };
+	},
+	computed: {
+		minSocOptions() {
+			// a list of entries from 0 to 95 with a step of 5
+			return Array.from(Array(20).keys())
+				.map((i) => i * 5)
+				.map((soc) => {
+					return { value: soc, name: soc === 0 ? "--" : `${soc}%` };
+				});
+		},
 	},
 	watch: {
 		minSoc: function (value) {

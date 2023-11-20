@@ -14,7 +14,7 @@
 				</CustomSelect>
 			</template>
 			<template #value>
-				<div data-testid="sessionInfoValue" @click="nextSessionInfo">
+				<div class="value" data-testid="sessionInfoValue" @click="nextSessionInfo">
 					<div :class="{ 'd-none d-sm-block': showSm }">{{ value }}</div>
 					<div v-if="showSm" class="d-block d-sm-none">{{ valueSm }}</div>
 				</div>
@@ -154,5 +154,8 @@ export default {
 	cursor: pointer;
 	user-select: none;
 	-webkit-user-select: none;
+}
+.value {
+	font-variant-numeric: tabular-nums;
 }
 </style>

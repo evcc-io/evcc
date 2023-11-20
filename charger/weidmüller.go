@@ -234,10 +234,3 @@ func (wb *Weidmüller) Phases1p3p(phases int) error {
 
 	return err
 }
-
-var _ api.Diagnosis = (*Weidmüller)(nil)
-
-// Diagnose implements the api.Diagnosis interface
-func (wb *Weidmüller) Diagnose() {
-
-}

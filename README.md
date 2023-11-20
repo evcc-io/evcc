@@ -39,7 +39,7 @@ evcc is an extensible EV Charge Controller with PV integration implemented in [G
 
 ## Getting Started
 
-You'll find everything you need in our [documentation](https://docs.evcc.io/) (German).
+You'll find everything you need in our [documentation](https://docs.evcc.io/).
 
 ## Contribute
 
@@ -61,7 +61,7 @@ For frontend development start the Vue toolchain in dev-mode. Open http://127.0.
 
 ```sh
 npm install
-npm run start
+npm run dev
 ```
 
 ### Integration tests

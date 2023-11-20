@@ -59,7 +59,7 @@ export default {
 			console.log("websocket connect");
 			const supportsWebSockets = "WebSocket" in window;
 			if (!supportsWebSockets) {
-				window.app.error({
+				window.app.raise({
 					message: "Web sockets not supported. Please upgrade your browser.",
 				});
 				return;
@@ -99,7 +99,7 @@ export default {
 					var msg = JSON.parse(evt.data);
 					store.update(msg);
 				} catch (error) {
-					window.app.error({
+					window.app.raise({
 						message: `Failed to parse web socket data: ${error.message} [${evt.data}]`,
 					});
 				}

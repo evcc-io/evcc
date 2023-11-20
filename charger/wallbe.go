@@ -195,17 +195,17 @@ func (wb *Wallbe) totalEnergy() (float64, error) {
 
 // currents implements the api.PhaseCurrents interface
 func (wb *Wallbe) currents() (float64, float64, float64, error) {
-	var currents []float64
-	for _, regCurrent := range wbRegCurrents {
-		b, err := wb.conn.ReadInputRegisters(regCurrent, 2)
+	var res [3]float64
+	for i, reg := range wbRegCurrents {
+		b, err := wb.conn.ReadInputRegisters(reg, 2)
 		if err != nil {
 			return 0, 0, 0, err
 		}
 
-		currents = append(currents, rs485.RTUInt32ToFloat64Swapped(b))
+		res[i] = rs485.RTUInt32ToFloat64Swapped(b)
 	}
 
-	return currents[0], currents[1], currents[2], nil
+	return res[0], res[1], res[2], nil
 }
 
 var _ api.Diagnosis = (*Wallbe)(nil)

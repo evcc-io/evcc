@@ -62,6 +62,13 @@ render: |
   climater:
     {{- include "source" . | indent 2 }}
     jq: .preconditionning.air_conditioning.status != "Disabled"
+  wakeup:
+    source: http
+    {{- if .host }}
+    uri: http://{{ .host }}{{ if .port }}:{{ .port }}{{ end }}/wakeup/{{ .vin }}
+    {{- else }}
+    uri: {{ trimSuffix "/" .url }}/wakeup/{{ .vin }}
+    {{- end }}
   {{- define "source" }}
   source: http
   {{- if .host }}

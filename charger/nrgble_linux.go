@@ -126,8 +126,7 @@ func (nrg *NRGKickBLE) connect() (*device.Device1, error) {
 		return nil, fmt.Errorf("find device: %s", err)
 	}
 
-	err = ble.Connect(dev, nrg.agent, nrg.device)
-	if err != nil {
+	if err := ble.Connect(dev, nrg.agent, nrg.device); err != nil {
 		return nil, err
 	}
 
@@ -249,7 +248,7 @@ func (nrg *NRGKickBLE) Enabled() (bool, error) {
 
 // Enable implements the api.Charger interface
 func (nrg *NRGKickBLE) Enable(enable bool) error {
-	res := ble.Info{}
+	var res ble.Info
 	if err := nrg.read(ble.InfoService, &res); err != nil {
 		return err
 	}
@@ -276,7 +275,7 @@ func (nrg *NRGKickBLE) Enable(enable bool) error {
 
 // MaxCurrent implements the api.Charger interface
 func (nrg *NRGKickBLE) MaxCurrent(current int64) error {
-	res := ble.Info{}
+	var res ble.Info
 	if err := nrg.read(ble.InfoService, &res); err != nil {
 		return err
 	}
@@ -293,7 +292,7 @@ var _ api.Meter = (*NRGKickBLE)(nil)
 
 // CurrentPower implements the api.Meter interface
 func (nrg *NRGKickBLE) CurrentPower() (float64, error) {
-	res := ble.Power{}
+	var res ble.Power
 	if err := nrg.read(ble.PowerService, &res); err != nil {
 		return 0, err
 	}
@@ -307,7 +306,7 @@ var _ api.MeterEnergy = (*NRGKickBLE)(nil)
 
 // TotalEnergy implements the api.MeterEnergy interface
 func (nrg *NRGKickBLE) TotalEnergy() (float64, error) {
-	res := ble.Energy{}
+	var res ble.Energy
 	if err := nrg.read(ble.EnergyService, &res); err != nil {
 		return 0, err
 	}
@@ -321,7 +320,7 @@ var _ api.PhaseCurrents = (*NRGKickBLE)(nil)
 
 // Currents implements the api.PhaseCurrents interface
 func (nrg *NRGKickBLE) Currents() (float64, float64, float64, error) {
-	res := ble.VoltageCurrent{}
+	var res ble.VoltageCurrent
 	if err := nrg.read(ble.VoltageCurrentService, &res); err != nil {
 		return 0, 0, 0, err
 	}

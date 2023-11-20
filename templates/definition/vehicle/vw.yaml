@@ -12,7 +12,10 @@ params:
   - preset: vehicle-identify
   - name: vin
     example: WVWZZZ...
+  - name: timeout
+    default: 10s
 render: |
   type: vw
   {{ include "vehicle-base" . }}
   {{ include "vehicle-identify" . }}
+  timeout: {{ .timeout }}

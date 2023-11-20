@@ -1,5 +1,5 @@
 <template>
-	<div class="plan pt-2">
+	<div class="plan my-3">
 		<div class="justify-content-between mb-2 d-flex justify-content-between">
 			<div class="text-start">
 				<div class="label">{{ $t("main.targetChargePlan.chargeDuration") }}</div>

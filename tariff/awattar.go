@@ -99,5 +99,5 @@ func (t *Awattar) Rates() (api.Rates, error) {
 
 // Type implements the api.Tariff interface
 func (t *Awattar) Type() api.TariffType {
-	return api.TariffTypePriceDynamic
+	return api.TariffTypePriceForecast
 }

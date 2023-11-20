@@ -7,7 +7,6 @@ params:
   - name: usage
     choice: ["grid", "pv", "battery"]
   - name: host
-    default: 192.0.2.2
   - name: user
     required: false
     help:

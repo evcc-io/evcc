@@ -212,16 +212,16 @@ func (wb *PhoenixEVEth) totalEnergy() (float64, error) {
 
 // currents implements the api.PhaseCurrents interface
 func (wb *PhoenixEVEth) currents() (float64, float64, float64, error) {
-	return wb.getPhases(phxRegCurrents)
+	return wb.getPhaseValues(phxRegCurrents)
 }
 
 // voltages implements the api.PhaseVoltages interface
 func (wb *PhoenixEVEth) voltages() (float64, float64, float64, error) {
-	return wb.getPhases(phxRegVoltages)
+	return wb.getPhaseValues(phxRegVoltages)
 }
 
-// getPhases returns 3 sequential phase values
-func (wb *PhoenixEVEth) getPhases(reg uint16) (float64, float64, float64, error) {
+// getPhaseValues returns 3 sequential phase values
+func (wb *PhoenixEVEth) getPhaseValues(reg uint16) (float64, float64, float64, error) {
 	b, err := wb.conn.ReadInputRegisters(reg, 6)
 	if err != nil {
 		return 0, 0, 0, err

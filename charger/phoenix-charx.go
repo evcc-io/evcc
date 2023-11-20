@@ -217,9 +217,12 @@ func (wb *PhoenixCharx) currents() (float64, float64, float64, error) {
 		return 0, 0, 0, err
 	}
 
-	return float64(encoding.Int32(b)) / 1e3,
-		float64(encoding.Int32(b[4:])) / 1e3,
-		float64(encoding.Int32(b[8:])) / 1e3, nil
+	var res [3]float64
+	for i := 0; i < 3; i++ {
+		res[i] = float64(encoding.Int32(b[4*i:])) / 1e3
+	}
+
+	return res[0], res[1], res[2], nil
 }
 
 // voltages implements the api.PhaseVoltages interface
@@ -229,9 +232,12 @@ func (wb *PhoenixCharx) voltages() (float64, float64, float64, error) {
 		return 0, 0, 0, err
 	}
 
-	return float64(encoding.Int32(b)) / 1e3,
-		float64(encoding.Int32(b[4:])) / 1e3,
-		float64(encoding.Int32(b[8:])) / 1e3, nil
+	var res [3]float64
+	for i := 0; i < 3; i++ {
+		res[i] = float64(encoding.Int32(b[4*i:])) / 1e3
+	}
+
+	return res[0], res[1], res[2], nil
 }
 
 var _ api.Identifier = (*PhoenixCharx)(nil)

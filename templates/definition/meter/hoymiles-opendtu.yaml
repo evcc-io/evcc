@@ -7,7 +7,6 @@ params:
   - name: usage
     choice: ["pv"]
   - name: host
-    required: true
 render: |
   type: custom
   power:

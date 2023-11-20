@@ -1,0 +1,50 @@
+template: storaxe
+products:
+  - brand: Ads-tec
+    description:
+      generic: StoraXe
+params:
+  - name: usage
+    choice: ["battery"]
+  - name: modbus
+    choice: ["tcpip"]
+    id: 2
+render: |
+  type: custom
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 2 # RealPower
+      type: holding
+      decode: int16
+    scale: 100
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 115 # EnergyExportedAC
+      type: holding
+      decode: uint32
+  currents:
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 10 # ACCurrentL1
+        type: holding
+        decode: int16
+      scale: 0.1
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 11 # ACCurrentL2
+        type: holding
+        decode: int16
+      scale: 0.1
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 12 # ACCurrentL3
+        type: holding
+        decode: int16
+      scale: 0.1

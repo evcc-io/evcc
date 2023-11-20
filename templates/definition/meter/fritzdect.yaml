@@ -13,7 +13,6 @@ params:
     required: true
   - name: password
     required: true
-    mask: true
   - name: ain
     required: true
 render: |

@@ -128,6 +128,10 @@ export default {
 		},
 	},
 	mounted() {
+		const $el = document.getElementById("topNavigatonDropdown");
+		if (!$el) {
+			return;
+		}
 		this.dropdown = new Dropdown(document.getElementById("topNavigatonDropdown"));
 	},
 	unmounted() {

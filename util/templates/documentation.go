@@ -4,6 +4,7 @@ import (
 	"bytes"
 	_ "embed"
 	"fmt"
+	"strings"
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
@@ -108,6 +109,6 @@ func (t *Template) RenderDocumentation(product Product, lang string) ([]byte, er
 
 func localize(lang string) func(TextLanguage) string {
 	return func(s TextLanguage) string {
-		return s.String(lang)
+		return strings.TrimSpace(s.String(lang))
 	}
 }

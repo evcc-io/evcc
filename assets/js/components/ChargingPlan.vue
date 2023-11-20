@@ -114,6 +114,7 @@ export default {
 		smartCostType: String,
 		currency: String,
 		mode: String,
+		vehicleCapacity: Number,
 	},
 	emits: ["target-time-updated", "target-time-removed", "minsoc-updated"],
 	data: function () {

@@ -109,5 +109,5 @@ func (t *Energinet) Rates() (api.Rates, error) {
 
 // Type implements the api.Tariff interface
 func (t *Energinet) Type() api.TariffType {
-	return api.TariffTypePriceDynamic
+	return api.TariffTypePriceForecast
 }

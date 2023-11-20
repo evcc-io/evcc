@@ -197,10 +197,6 @@ func (wb *ABLeMH) Enable(enable bool) error {
 
 // MaxCurrent implements the api.Charger interface
 func (wb *ABLeMH) MaxCurrent(current int64) error {
-	if current < 6 {
-		return fmt.Errorf("invalid current %d", current)
-	}
-
 	return wb.MaxCurrentMillis(float64(current))
 }
 
@@ -236,17 +232,17 @@ func (wb *ABLeMH) currents() (float64, float64, float64, error) {
 		return 0, 0, 0, err
 	}
 
-	var currents []float64
-	for i := 2; i < 5; i++ {
-		u := binary.BigEndian.Uint16(b[2*i:])
+	var res [3]float64
+	for i := 0; i < 3; i++ {
+		u := binary.BigEndian.Uint16(b[2*(2+i):])
 		if u == ablAmpsDisabled || u == 1 {
 			u = 0
 		}
 
-		currents = append(currents, float64(u)/10)
+		res[i] = float64(u) / 10
 	}
 
-	return currents[2], currents[1], currents[0], nil
+	return res[2], res[1], res[0], nil
 }
 
 var _ api.Diagnosis = (*ABLeMH)(nil)

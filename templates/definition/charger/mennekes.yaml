@@ -1,0 +1,23 @@
+template: mennekes
+products:
+  - brand: Mennekes
+    description:
+      generic: Amtron Compact 2.0s
+  - brand: Mennekes
+    description:
+      generic: Amtron Start 2.0s
+capabilities: ["1p3p", "mA"]
+requirements:
+  description:
+    de: Die Wallbox muss mit Hilfe der DIP-Schalter auf der Hauptplatine als Satellit konfiguriert werden.
+    en: The charger needs to be configured as Satellite with help of the DIP-Switches on the baseboard.
+  evcc: ["sponsorship"]
+params:
+  - name: modbus
+    choice: ["rs485"]
+    baudrate: 57600
+    comset: 8N2
+    id: 50
+render: |
+  type: mennekes
+  {{- include "modbus" . }}

@@ -177,12 +177,7 @@ func (m *OpenWB) Enable(enable bool) error {
 }
 
 func (m *OpenWB) Enabled() (bool, error) {
-	enabled, err := verifyEnabled(m, m.enabled)
-	if err == nil {
-		m.enabled = enabled
-	}
-
-	return enabled, err
+	return verifyEnabled(m, m.enabled)
 }
 
 func (m *OpenWB) Status() (api.ChargeStatus, error) {
@@ -219,17 +214,17 @@ var _ api.PhaseCurrents = (*OpenWB)(nil)
 
 // Currents implements the api.PhaseCurrents interface
 func (m *OpenWB) Currents() (float64, float64, float64, error) {
-	var currents []float64
+	var res []float64
 	for _, currentG := range m.currentsG {
 		c, err := currentG()
 		if err != nil {
 			return 0, 0, 0, err
 		}
 
-		currents = append(currents, c)
+		res = append(res, c)
 	}
 
-	return currents[0], currents[1], currents[2], nil
+	return res[0], res[1], res[2], nil
 }
 
 var _ api.Authorizer = (*OpenWB)(nil)

@@ -453,11 +453,9 @@ func (c *EEBus) currents() (float64, float64, float64, error) {
 		return 0, 0, 0, err
 	}
 
-	count := len(currents)
-	if count < 3 {
-		for fill := 0; fill < 3-count; fill++ {
-			currents = append(currents, 0)
-		}
+	// fill phases
+	for i := len(currents); i < 3; i++ {
+		currents = append(currents, 0)
 	}
 
 	return currents[0], currents[1], currents[2], nil

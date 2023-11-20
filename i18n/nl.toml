@@ -14,9 +14,42 @@ note = "Opgelet: Deze instellingen beïnvloeden enkel de zonnemodus. Oplaadgedra
 
 [batterySettings.bufferStart]
 full = "als bijna vol"
-low = "als beetje vol"
-medium = "als half vol"
+low = "indien beetje vol"
+medium = "indien half vol"
 never = "enkel bij voldoende overschot"
+
+[config]
+
+[config.form]
+example = "Voorbeeld"
+optional = "Optioneel"
+
+[config.main]
+addVehicle = "Voertuig toevoegen"
+edit = "Bewerken"
+title = "Configuratie"
+vehicles = "Mijn voertuigen"
+
+[config.validation]
+failed = "mislukt"
+label = "Status"
+running = "valideren..."
+success = "succesvol"
+unknown = "onbekend"
+validate = "valideer"
+
+[config.vehicle]
+cancel = "Annuleer"
+delete = "Verwijder voertuig"
+generic = "Andere integraties"
+offline = "Algemeen voertuig"
+online = "Voertuig met online API"
+save = "Opslaan"
+scooter = "Scooter"
+template = "Fabrikant"
+titleAdd = "Voertuig toevoegen"
+titleEdit = "Voertuig bewerken"
+validateSave = "Valideren & opslaan"
 
 [footer]
 
@@ -174,7 +207,7 @@ label = "Max. Stroom"
 label = "Min. Stroom"
 
 [main.loadpointSettings.minSoc]
-description = "Voor noodgevallen. Het voertuig wordt „snel” opgeladen tot {0}% van alle beschikbare zonne-energie, en gaat dan verder met alleen het zonneoverschot."
+description = "Het voertuig wordt „snel” opgeladen tot {0}% in deze modus, en gaat dan verder met alleen het zonneoverschot."
 label = "Min. lading %"
 
 [main.loadpointSettings.phasesConfigured]
@@ -204,6 +237,7 @@ descriptionEnergy = "Tegen wanneer moet {targetEnergy} in het voertuig geladen z
 descriptionSoc = "Wanneer moet het voertuig geladen zijn naar {targetSoc}%?"
 inactiveLabel = "Ingestelde tijd"
 modalTitle = "Stel tijd in"
+onlyInPvMode = "Laadplan werkt alleen in PV modus"
 planDuration = "Oplaadtijd"
 planPeriodLabel = "Periode"
 planPeriodValue = "{start} tot {end}"
@@ -211,6 +245,7 @@ planUnknown = "nog niet bekend"
 priceLimit = "prijslimiet van {price}"
 remove = "Verwijder"
 setTargetTime = "geen"
+targetEnergyRequired = "Je dient ook een energie limiet in te stellen"
 targetIsInThePast = "Kies een tijd in de toekomst, Marty."
 targetIsTooFarInTheFuture = "We passen het plan aan zodra we meer weten over de toekomst."
 title = "Doeltijd"
@@ -237,6 +272,8 @@ fallbackName = "Voertuig"
 moreActions = "Meer acties"
 none = "Geen voertuig"
 targetSoc = "Limiet"
+temp = "Temperatuur"
+tempLimit = "Temperatuur limiet"
 unknown = "Gast voertuig"
 vehicleSoc = "Lading"
 
@@ -290,7 +327,9 @@ started = "Gestart"
 title = "Oplaadsessie"
 
 [sessions]
+avgPower = "⌀ Vermogen"
 avgPrice = "⌀ Prijs"
+chargeDuration = "Duur"
 co2 = "⌀ CO₂"
 csvMonth = "Download CSV van {month}"
 csvTotal = "Download totale CSV"
@@ -303,6 +342,7 @@ price = "Σ Prijs"
 reallyDelete = "Wilt u deze sessie echt verwijderen?"
 solar = "Zon"
 title = "Oplaadsessies"
+total = "Totaal"
 vehicle = "Voertuig"
 
 [sessions.csv]

@@ -10,6 +10,7 @@ export const LOCALES = {
   ar: ["Arabic", "العربية"],
   bh: ["Bihari", "भोजपुरी"],
   ca: ["Catalan", "Català"],
+  "zh-Hans": ["Chinese (Simplified)", "简体中文"],
   cs: ["Czech", "Česky"],
   da: ["Danish", "Dansk"],
   de: ["German", "Deutsch"],

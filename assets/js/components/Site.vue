@@ -6,7 +6,11 @@
 					{{ siteTitle || "evcc" }}
 				</h1>
 				<div class="d-flex">
-					<Notifications :notifications="notifications" class="me-2" />
+					<Notifications
+						:notifications="notifications"
+						:loadpointTitles="loadpointTitles"
+						class="me-2"
+					/>
 					<TopNavigation v-bind="topNavigation" />
 				</div>
 			</div>
@@ -19,6 +23,7 @@
 				:vehicles="vehicles"
 				:smartCostLimit="smartCostLimit"
 				:smartCostType="smartCostType"
+				:smartCostActive="smartCostActive"
 				:tariffGrid="tariffGrid"
 				:tariffCo2="tariffCo2"
 				:currency="currency"
@@ -75,13 +80,7 @@ export default {
 		auth: Object,
 
 		currency: String,
-		savingsAmount: Number,
-		savingsEffectivePrice: Number,
-		savingsGridCharged: Number,
-		savingsSelfConsumptionCharged: Number,
-		savingsSelfConsumptionPercent: Number,
-		savingsSince: String,
-		savingsTotalCharged: Number,
+		stats: Object,
 		tariffFeedIn: Number,
 		tariffGrid: Number,
 		tariffCo2: Number,
@@ -99,10 +98,14 @@ export default {
 		sponsorTokenExpires: Number,
 		smartCostLimit: Number,
 		smartCostType: String,
+		smartCostActive: Boolean,
 	},
 	computed: {
 		energyflow: function () {
 			return this.collectProps(Energyflow);
+		},
+		loadpointTitles: function () {
+			return this.loadpoints.map((lp) => lp.title);
 		},
 		loadpointsCompact: function () {
 			return this.loadpoints.map((lp) => {
@@ -133,15 +136,9 @@ export default {
 				},
 				sponsor: this.sponsor,
 				savings: {
-					since: this.savingsSince,
-					totalCharged: this.savingsTotalCharged,
-					gridCharged: this.savingsGridCharged,
-					selfConsumptionCharged: this.savingsSelfConsumptionCharged,
-					amount: this.savingsAmount,
-					effectivePrice: this.savingsEffectivePrice,
-					selfConsumptionPercent: this.savingsSelfConsumptionPercent,
-					gridPrice: this.tariffGrid,
-					feedInPrice: this.tariffFeedIn,
+					stats: this.stats,
+					co2Configured: this.tariffCo2 !== undefined,
+					priceConfigured: this.tariffGrid !== undefined,
 					currency: this.currency,
 				},
 			};

@@ -1,3 +1,7 @@
+[batterySettings]
+batteryLevel = "Livello batteria"
+capacity = "{energy} di {total}"
+
 [footer]
 
 [footer.community]

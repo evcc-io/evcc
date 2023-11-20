@@ -2,6 +2,7 @@
 	<div>
 		<button
 			class="btn btn-link pe-0 text-decoration-none evcc-default-text text-nowrap d-flex align-items-end"
+			data-testid="savings-button"
 			@click="openModal"
 		>
 			<span class="d-inline d-sm-none text-decoration-underline">{{
@@ -65,18 +66,13 @@
 									<SavingsTile
 										class="text-accent1"
 										icon="sun"
+										data-testid="savings-tile-solar"
 										:title="$t('footer.savings.percentTitle')"
-										:value="selfConsumptionPercent"
-										:valueFmt="fmtAnimation"
+										:value="fmtNumber(solarPercentage, 1)"
 										unit="%"
 										:sub1="
 											$t('footer.savings.percentSelf', {
-												self: fmtKw(
-													selfConsumptionCharged * 1000,
-													true,
-													false,
-													0
-												),
+												self: fmtKw(solarCharged * 1000, true, false, 0),
 											})
 										"
 										:sub2="
@@ -89,44 +85,101 @@
 									<SavingsTile
 										class="text-accent2"
 										icon="receivepayment"
+										data-testid="savings-tile-price"
 										:title="$t('footer.savings.priceTitle')"
-										:value="effectivePriceFormatted.value"
-										:unit="effectivePriceFormatted.unit"
+										:value="priceConfigured ? avgPriceFormatted.value : '__'"
+										:unit="avgPriceFormatted.unit"
 										:sub1="
-											$t('footer.savings.priceFeedIn', {
-												feedInPrice: fmtPricePerKWh(feedInPrice, currency),
-											})
-										"
-										:sub2="
-											$t('footer.savings.priceGrid', {
-												gridPrice: fmtPricePerKWh(gridPrice, currency),
-											})
+											priceConfigured
+												? `${fmtMoney(
+														(referenceGrid - avgPrice) * totalCharged,
+														currency,
+														false
+												  )} ${fmtCurrencySymbol(currency)} ${$t(
+														'footer.savings.moneySaved'
+												  )}`
+												: ''
 										"
 									/>
 
 									<SavingsTile
 										class="text-accent3"
-										icon="coinjar"
-										:title="$t('footer.savings.savingsTitle')"
-										:value="fmtMoney(amount, currency, amount < 100)"
-										:unit="fmtCurrencySymbol(currency)"
-										:sub1="$t('footer.savings.savingsComparedToGrid')"
-										:sub2="
-											$t('footer.savings.savingsTotalEnergy', {
-												total: fmtKw(totalCharged * 1000, true, false, 0),
-											})
+										icon="eco"
+										data-testid="savings-tile-co2"
+										:title="$t('footer.savings.co2Title')"
+										:value="co2Configured ? fmtNumber(avgCo2, 0) : '__'"
+										unit="g/kWh"
+										:sub1="
+											region && co2Configured
+												? `${fmtNumber(
+														((region.co2 - avgCo2) * totalCharged) /
+															1000,
+														0,
+														'kilogram'
+												  )} ${$t('footer.savings.co2Saved')}`
+												: ''
 										"
 									/>
 								</div>
-								<p class="my-3 lh-2">
-									<small>
-										{{
-											$t("footer.savings.since", {
-												since: startDate,
-											})
-										}}
-									</small>
-								</p>
+								<div class="my-3 lh-2">
+									<div class="d-flex">
+										<label for="savingsPeriod" class="me-1">
+											{{ $t("footer.savings.periodLabel") }}
+										</label>
+										<CustomSelect
+											id="savingsPeriod"
+											:selected="period"
+											:options="periodOptions"
+											data-testid="savings-period-select"
+											@change="selectPeriod($event.target.value)"
+										>
+											<span class="text-decoration-underline evcc-gray">
+												{{ $t(`footer.savings.period.${period}`) }}
+											</span>
+										</CustomSelect>
+									</div>
+									<div
+										v-if="region"
+										class="d-flex flex-wrap"
+										data-testid="savings-reference"
+									>
+										<div class="me-1">
+											{{ $t("footer.savings.referenceLabel") }}
+										</div>
+										<div class="evcc-gray me-1">
+											{{
+												priceConfigured
+													? fmtPricePerKWh(referenceGrid, currency)
+													: "___"
+											}}
+											({{ $t("footer.savings.referenceGrid") }}),
+										</div>
+										<div class="evcc-gray d-flex">
+											<div class="me-1">⌀ {{ fmtCo2Medium(region.co2) }}</div>
+											<CustomSelect
+												class="me-1 evcc-gray"
+												:selected="region.name"
+												:options="regionOptions"
+												data-testid="savings-region-select"
+												@change="selectRegion($event.target.value)"
+											>
+												(<span class="text-decoration-underline">{{
+													region.name
+												}}</span
+												>)
+											</CustomSelect>
+										</div>
+									</div>
+									<div v-if="!priceConfigured || !co2Configured">
+										<a
+											href="https://docs.evcc.io/en/docs/reference/configuration/tariffs/"
+											class="evcc-gray"
+											target="_blank"
+										>
+											{{ $t("footer.savings.configurePriceCo2") }}
+										</a>
+									</div>
+								</div>
 							</div>
 							<div v-else class="my-4">
 								<LiveCommunity />
@@ -149,41 +202,91 @@ import Sponsor from "./Sponsor.vue";
 import SavingsTile from "./SavingsTile.vue";
 import LiveCommunity from "./LiveCommunity.vue";
 import TelemetrySettings from "./TelemetrySettings.vue";
+import CustomSelect from "./CustomSelect.vue";
+import co2Reference from "../co2Reference";
+import settings from "../settings";
+import api from "../api";
 
 export default {
 	name: "Savings",
-	components: { Sponsor, SavingsTile, LiveCommunity, TelemetrySettings },
+	components: { Sponsor, SavingsTile, LiveCommunity, TelemetrySettings, CustomSelect },
 	mixins: [formatter],
 	props: {
-		selfConsumptionPercent: Number,
-		since: String,
+		stats: { type: Object, default: () => ({}) },
+		co2Configured: Boolean,
 		sponsor: String,
-		amount: { type: Number, default: 0 },
-		effectivePrice: { type: Number, default: 0 },
-		totalCharged: { type: Number, default: 0 },
-		gridCharged: { type: Number, default: 0 },
-		selfConsumptionCharged: { type: Number, default: 0 },
-		gridPrice: { type: Number },
-		feedInPrice: { type: Number },
 		currency: String,
 	},
 	data() {
-		return { communityView: false, telemetryEnabled: false };
+		return {
+			communityView: false,
+			telemetryEnabled: false,
+			period: settings.savingsPeriod || "30d",
+			selectedRegion: settings.savingsRegion || "Germany",
+			referenceGrid: undefined,
+		};
 	},
 	computed: {
 		percent() {
-			return Math.round(this.selfConsumptionPercent) || 0;
+			return Math.round(this.solarPercentage) || 0;
 		},
-		effectivePriceFormatted() {
-			const value = this.fmtPricePerKWh(this.effectivePrice, this.currency, false, false);
+		regionOptions() {
+			return co2Reference.regions.map((r) => ({
+				value: r.name,
+				name: `${r.name} (${this.fmtCo2Short(r.co2)})`,
+			}));
+		},
+		region() {
+			// previously selected region
+			if (this.selectedRegion) {
+				const result = co2Reference.regions.find((r) => r.name === this.selectedRegion);
+				if (result) {
+					return result;
+				}
+			}
+
+			// first region
+			return co2Reference.regions[0];
+		},
+		periodOptions() {
+			return ["30d", "365d", "total"].map((p) => ({
+				value: p,
+				name: this.$t(`footer.savings.period.${p}`),
+			}));
+		},
+		avgPriceFormatted() {
+			const value = this.fmtPricePerKWh(
+				this.currentStats.avgPrice,
+				this.currency,
+				false,
+				false
+			);
 			const unit = this.pricePerKWhUnit(this.currency);
 			return { value, unit };
 		},
-		startDate() {
-			if (this.since) {
-				return this.fmtDayMonthYear(new Date(this.since));
-			}
-			return "";
+		currentStats() {
+			return this.stats[this.period] || {};
+		},
+		totalCharged() {
+			return this.currentStats.chargedKWh;
+		},
+		solarPercentage() {
+			return this.currentStats.solarPercentage;
+		},
+		solarCharged() {
+			return (this.solarPercentage / 100) * this.totalCharged;
+		},
+		gridCharged() {
+			return this.totalCharged - this.solarCharged;
+		},
+		avgPrice() {
+			return this.currentStats.avgPrice;
+		},
+		avgCo2() {
+			return this.currentStats.avgCo2;
+		},
+		priceConfigured() {
+			return this.referenceGrid !== undefined;
 		},
 	},
 	methods: {
@@ -196,12 +299,31 @@ export default {
 		openModal() {
 			const modal = Modal.getOrCreateInstance(document.getElementById("savingsModal"));
 			modal.show();
+			this.updateReferenceGrid();
 		},
-		fmtAnimation(number) {
-			let decimals = 0;
-			if (number < 100) decimals = 1;
-			if (number < 10) decimals = 2;
-			return this.fmtNumber(number, decimals);
+		selectPeriod(period) {
+			this.period = period;
+			settings.savingsPeriod = period;
+		},
+		selectRegion(region) {
+			this.selectedRegion = region;
+			settings.savingsRegion = region;
+		},
+		updateReferenceGrid: async function () {
+			try {
+				const res = await api.get(`tariff/grid`, {
+					validateStatus: (status) => status >= 200 && status < 500,
+				});
+				const { rates } = res.data.result;
+				this.referenceGrid =
+					rates.reduce((acc, slot) => {
+						acc += slot.price;
+						return acc;
+					}, 0) / rates.length;
+			} catch (e) {
+				this.referenceGrid = undefined;
+				console.error(e);
+			}
 		},
 	},
 };

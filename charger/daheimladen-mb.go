@@ -203,9 +203,13 @@ func (wb *DaheimLadenMB) MaxCurrent(current int64) error {
 		return fmt.Errorf("invalid current %d", current)
 	}
 
-	wb.curr = uint16(current * 10)
+	curr := uint16(current * 10)
+	err := wb.setCurrent(curr)
+	if err == nil {
+		wb.curr = curr
+	}
 
-	return wb.setCurrent(wb.curr)
+	return err
 }
 
 var _ api.Meter = (*DaheimLadenMB)(nil)

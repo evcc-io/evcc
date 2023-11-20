@@ -26,8 +26,8 @@ const store = {
   state,
   update: function (msg) {
     Object.keys(msg).forEach(function (k) {
-      if (typeof window.app[k] === "function") {
-        window.app[k]({ message: msg[k] });
+      if (k === "log") {
+        window.app.raise(msg[k]);
       } else {
         setProperty(state, k.split("."), msg[k]);
       }

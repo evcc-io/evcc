@@ -10,7 +10,6 @@ params:
   - name: usage
     choice: ["grid"]
   - name: host
-    required: true
 render: |
   type: custom
   power:

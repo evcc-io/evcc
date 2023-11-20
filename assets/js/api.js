@@ -20,7 +20,7 @@ api.interceptors.response.use(
       const url = error.config.baseURL + error.config.url;
       message += `: API request failed ${url}`;
     }
-    window.app.error({ message });
+    window.app.raise({ message });
     return Promise.reject(error);
   }
 );

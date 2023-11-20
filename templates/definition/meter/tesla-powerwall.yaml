@@ -10,7 +10,6 @@ params:
   - name: host
   - name: password
     required: true
-    mask: true
     help:
       en: Password of the user "customer"
       de: Passwort des Benutzers "Kunde"
