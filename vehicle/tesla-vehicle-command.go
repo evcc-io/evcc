@@ -44,12 +44,11 @@ const (
 // NewTeslaVCFromConfig creates a new vehicle
 func NewTeslaVCFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
-		embed    `mapstructure:",squash"`
-		ClientID string
-		Tokens   Tokens
-		VIN      string
-		Timeout  time.Duration
-		Cache    time.Duration
+		embed   `mapstructure:",squash"`
+		Tokens  Tokens
+		VIN     string
+		Timeout time.Duration
+		Cache   time.Duration
 	}{
 		Timeout: 10 * time.Second,
 		Cache:   interval,
@@ -61,10 +60,6 @@ func NewTeslaVCFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 	if err := cc.Tokens.Error(); err != nil {
 		return nil, err
-	}
-
-	if cc.ClientID != "" {
-		vc.OAuth2Config.ClientID = cc.ClientID
 	}
 
 	log := util.NewLogger("tesla-vc")
