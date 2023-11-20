@@ -2,12 +2,13 @@ package provider
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/evcc-io/evcc/util"
 )
 
 type Case struct {
-	Case int64
+	Case string
 	Set  Config
 }
 
@@ -61,7 +62,12 @@ func (o *switchProvider) IntSetter(param string) (func(int64) error, error) {
 
 	return func(val int64) error {
 		for i, s := range o.cases {
-			if s.Case == val {
+			ival, err := strconv.ParseInt(s.Case, 10, 64)
+			if err != nil {
+				return err
+			}
+
+			if ival == val {
 				return set[i](val)
 			}
 		}
@@ -70,6 +76,6 @@ func (o *switchProvider) IntSetter(param string) (func(int64) error, error) {
 			return dflt(val)
 		}
 
-		return fmt.Errorf("value %d not found", val)
+		return fmt.Errorf("switch: value not found: %d", val)
 	}, nil
 }
