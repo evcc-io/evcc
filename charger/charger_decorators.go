@@ -564,8 +564,8 @@ type decorateCustomChargerExImpl struct {
 	chargerEx func(float64) error
 }
 
-func (impl *decorateCustomChargerExImpl) MaxCurrentMillis(current float64) error {
-	return impl.chargerEx(current)
+func (impl *decorateCustomChargerExImpl) MaxCurrentMillis(p0 float64) error {
+	return impl.chargerEx(p0)
 }
 
 type decorateCustomIdentifierImpl struct {
@@ -580,8 +580,8 @@ type decorateCustomPhaseSwitcherImpl struct {
 	phaseSwitcher func(int) error
 }
 
-func (impl *decorateCustomPhaseSwitcherImpl) Phases1p3p(phases int) error {
-	return impl.phaseSwitcher(phases)
+func (impl *decorateCustomPhaseSwitcherImpl) Phases1p3p(p0 int) error {
+	return impl.phaseSwitcher(p0)
 }
 
 type decorateCustomResurrectorImpl struct {

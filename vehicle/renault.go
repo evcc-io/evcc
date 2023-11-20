@@ -18,6 +18,7 @@ import (
 //  https://github.com/epenet/Renault-Zoe-API/blob/newapimockup/Test/MyRenault.py
 //  https://github.com/jamesremuscat/pyze
 //  https://muscatoxblog.blogspot.com/2019/07/delving-into-renaults-new-api.html
+//  https://renault-api.readthedocs.io/en/latest/index.html
 
 // Renault is an api.Vehicle implementation for Renault cars
 type Renault struct {
@@ -75,7 +76,6 @@ func NewRenaultDaciaFromConfig(brand string, other map[string]interface{}) (api.
 	api.Client.Timeout = cc.Timeout
 
 	accountID, err := api.Person(identity.PersonID, brand)
-
 	if err != nil {
 		return nil, err
 	}

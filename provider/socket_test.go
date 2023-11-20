@@ -48,7 +48,9 @@ func TestSocketProvider(t *testing.T) {
 
 	<-p.(*Socket).val.Done()
 
-	g := p.(IntProvider).IntGetter()
+	g, err := p.(IntProvider).IntGetter()
+	require.NoError(t, err)
+
 	i, err := g()
 	require.NoError(t, err)
 	require.Equal(t, int64(1), i)

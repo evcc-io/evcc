@@ -20,8 +20,10 @@ func NewCombinedFromConfig(other map[string]interface{}) (Provider, error) {
 	return o, nil
 }
 
-func (o *combinedProvider) StringGetter() func() (string, error) {
+var _ StringProvider = (*combinedProvider)(nil)
+
+func (o *combinedProvider) StringGetter() (func() (string, error), error) {
 	return func() (string, error) {
 		return o.status()
-	}
+	}, nil
 }

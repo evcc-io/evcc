@@ -66,8 +66,8 @@ func (t *Energinet) run(done chan error) {
 
 		ts := time.Now().Truncate(time.Hour)
 		uri := fmt.Sprintf(energinet.URI,
-			ts.Format(time.RFC3339),
-			ts.Add(24*time.Hour).Format(time.RFC3339),
+			ts.Format(energinet.TimeFormat),
+			ts.Add(24*time.Hour).Format(energinet.TimeFormat),
 			t.region)
 
 		if err := backoff.Retry(func() error {

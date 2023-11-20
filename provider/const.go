@@ -43,22 +43,28 @@ func NewConstFromConfig(other map[string]interface{}) (Provider, error) {
 	return o, nil
 }
 
-func (o *constProvider) StringGetter() func() (string, error) {
+var _ StringProvider = (*constProvider)(nil)
+
+func (o *constProvider) StringGetter() (func() (string, error), error) {
 	return func() (string, error) {
 		return o.str, nil
-	}
+	}, nil
 }
 
-func (o *constProvider) IntGetter() func() (int64, error) {
+var _ IntProvider = (*constProvider)(nil)
+
+func (o *constProvider) IntGetter() (func() (int64, error), error) {
 	val, err := strconv.ParseInt(o.str, 10, 64)
 	return func() (int64, error) {
 		return val, err
-	}
+	}, err
 }
 
-func (o *constProvider) FloatGetter() func() (float64, error) {
+var _ FloatProvider = (*constProvider)(nil)
+
+func (o *constProvider) FloatGetter() (func() (float64, error), error) {
 	val, err := strconv.ParseFloat(o.str, 64)
 	return func() (float64, error) {
 		return val, err
-	}
+	}, err
 }

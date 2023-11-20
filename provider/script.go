@@ -133,8 +133,10 @@ func (p *Script) exec(script string) (string, error) {
 	return s, nil
 }
 
+var _ StringProvider = (*Script)(nil)
+
 // StringGetter returns string from exec result. Only STDOUT is considered.
-func (p *Script) StringGetter() func() (string, error) {
+func (p *Script) StringGetter() (func() (string, error), error) {
 	return func() (string, error) {
 		if time.Since(p.updated) > p.cache {
 			p.val, p.err = p.exec(p.script)
@@ -156,12 +158,14 @@ func (p *Script) StringGetter() func() (string, error) {
 		}
 
 		return p.val, p.err
-	}
+	}, nil
 }
 
+var _ FloatProvider = (*Script)(nil)
+
 // FloatGetter parses float from exec result
-func (p *Script) FloatGetter() func() (float64, error) {
-	g := p.StringGetter()
+func (p *Script) FloatGetter() (func() (float64, error), error) {
+	g, err := p.StringGetter()
 
 	return func() (float64, error) {
 		s, err := g()
@@ -175,22 +179,26 @@ func (p *Script) FloatGetter() func() (float64, error) {
 		}
 
 		return f, err
-	}
+	}, err
 }
 
+var _ IntProvider = (*Script)(nil)
+
 // IntGetter parses int64 from exec result
-func (p *Script) IntGetter() func() (int64, error) {
-	g := p.FloatGetter()
+func (p *Script) IntGetter() (func() (int64, error), error) {
+	g, err := p.FloatGetter()
 
 	return func() (int64, error) {
 		f, err := g()
 		return int64(math.Round(f)), err
-	}
+	}, err
 }
 
+var _ BoolProvider = (*Script)(nil)
+
 // BoolGetter parses bool from exec result. "on", "true" and 1 are considered truish.
-func (p *Script) BoolGetter() func() (bool, error) {
-	g := p.StringGetter()
+func (p *Script) BoolGetter() (func() (bool, error), error) {
+	g, err := p.StringGetter()
 
 	return func() (bool, error) {
 		s, err := g()
@@ -199,11 +207,13 @@ func (p *Script) BoolGetter() func() (bool, error) {
 		}
 
 		return util.Truish(s), nil
-	}
+	}, err
 }
 
+var _ SetIntProvider = (*Script)(nil)
+
 // IntSetter invokes script with parameter replaced by int value
-func (p *Script) IntSetter(param string) func(int64) error {
+func (p *Script) IntSetter(param string) (func(int64) error, error) {
 	// return func to access cached value
 	return func(i int64) error {
 		cmd, err := util.ReplaceFormatted(p.script, map[string]interface{}{
@@ -215,11 +225,13 @@ func (p *Script) IntSetter(param string) func(int64) error {
 		}
 
 		return err
-	}
+	}, nil
 }
 
+var _ SetBoolProvider = (*Script)(nil)
+
 // BoolSetter invokes script with parameter replaced by bool value
-func (p *Script) BoolSetter(param string) func(bool) error {
+func (p *Script) BoolSetter(param string) (func(bool) error, error) {
 	// return func to access cached value
 	return func(b bool) error {
 		cmd, err := util.ReplaceFormatted(p.script, map[string]interface{}{
@@ -231,5 +243,5 @@ func (p *Script) BoolSetter(param string) func(bool) error {
 		}
 
 		return err
-	}
+	}, nil
 }
