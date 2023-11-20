@@ -81,30 +81,45 @@ func (o *constProvider) BoolGetter() func() (bool, error) {
 
 var _ SetIntProvider = (*constProvider)(nil)
 
-func (o *constProvider) IntSetter(param string) func(int64) error {
+func (o *constProvider) IntSetter(param string) (func(int64) error, error) {
 	set, err := NewIntSetterFromConfig(param, o.set)
-	_ = err
-	return func(val int64) error {
-		return set(val)
+	if err != nil {
+		return nil, err
 	}
+
+	val, err := strconv.ParseInt(o.str, 10, 64)
+
+	return func(_ int64) error {
+		return set(val)
+	}, err
 }
 
 var _ SetFloatProvider = (*constProvider)(nil)
 
-func (o *constProvider) FloatSetter(param string) func(float64) error {
+func (o *constProvider) FloatSetter(param string) (func(float64) error, error) {
 	set, err := NewFloatSetterFromConfig(param, o.set)
-	_ = err
-	return func(val float64) error {
-		return set(val)
+	if err != nil {
+		return nil, err
 	}
+
+	val, err := strconv.ParseFloat(o.str, 64)
+
+	return func(_ float64) error {
+		return set(val)
+	}, err
 }
 
 var _ SetBoolProvider = (*constProvider)(nil)
 
-func (o *constProvider) BoolSetter(param string) func(bool) error {
+func (o *constProvider) BoolSetter(param string) (func(bool) error, error) {
 	set, err := NewBoolSetterFromConfig(param, o.set)
-	_ = err
-	return func(val bool) error {
-		return set(val)
+	if err != nil {
+		return nil, err
 	}
+
+	val, err := strconv.ParseBool(o.str)
+
+	return func(_ bool) error {
+		return set(val)
+	}, err
 }

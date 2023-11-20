@@ -41,12 +41,12 @@ func NewSwitchFromConfig(other map[string]interface{}) (Provider, error) {
 
 var _ SetIntProvider = (*switchProvider)(nil)
 
-func (o *switchProvider) IntSetter(param string) func(int64) error {
+func (o *switchProvider) IntSetter(param string) (func(int64) error, error) {
 	set := make([]func(int64) error, 0, len(o.cases))
 	for _, cc := range o.cases {
 		s, err := NewIntSetterFromConfig(param, cc.Set)
 		if err != nil {
-			_ = err
+			return nil, err
 		}
 		set = append(set, s)
 	}
@@ -55,7 +55,7 @@ func (o *switchProvider) IntSetter(param string) func(int64) error {
 	if o.dflt != nil {
 		var err error
 		if dflt, err = NewIntSetterFromConfig(param, *o.dflt); err != nil {
-			_ = err
+			return nil, err
 		}
 	}
 
@@ -71,5 +71,5 @@ func (o *switchProvider) IntSetter(param string) func(int64) error {
 		}
 
 		return fmt.Errorf("value %d not found", val)
-	}
+	}, nil
 }

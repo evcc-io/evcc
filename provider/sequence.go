@@ -31,12 +31,12 @@ func NewSequenceFromConfig(other map[string]interface{}) (Provider, error) {
 
 var _ SetIntProvider = (*sequenceProvider)(nil)
 
-func (o *sequenceProvider) IntSetter(param string) func(int64) error {
+func (o *sequenceProvider) IntSetter(param string) (func(int64) error, error) {
 	set := make([]func(int64) error, 0, len(o.set))
 	for _, cc := range o.set {
 		s, err := NewIntSetterFromConfig(param, cc)
 		if err != nil {
-			_ = err
+			return nil, err
 		}
 		set = append(set, s)
 	}
@@ -48,17 +48,17 @@ func (o *sequenceProvider) IntSetter(param string) func(int64) error {
 			}
 		}
 		return nil
-	}
+	}, nil
 }
 
 var _ SetFloatProvider = (*sequenceProvider)(nil)
 
-func (o *sequenceProvider) FloatSetter(param string) func(float64) error {
+func (o *sequenceProvider) FloatSetter(param string) (func(float64) error, error) {
 	set := make([]func(float64) error, 0, len(o.set))
 	for _, cc := range o.set {
 		s, err := NewFloatSetterFromConfig(param, cc)
 		if err != nil {
-			_ = err
+			return nil, err
 		}
 		set = append(set, s)
 	}
@@ -70,17 +70,17 @@ func (o *sequenceProvider) FloatSetter(param string) func(float64) error {
 			}
 		}
 		return nil
-	}
+	}, nil
 }
 
 var _ SetBoolProvider = (*sequenceProvider)(nil)
 
-func (o *sequenceProvider) BoolSetter(param string) func(bool) error {
+func (o *sequenceProvider) BoolSetter(param string) (func(bool) error, error) {
 	set := make([]func(bool) error, 0, len(o.set))
 	for _, cc := range o.set {
 		s, err := NewBoolSetterFromConfig(param, cc)
 		if err != nil {
-			_ = err
+			return nil, err
 		}
 		set = append(set, s)
 	}
@@ -92,5 +92,5 @@ func (o *sequenceProvider) BoolSetter(param string) func(bool) error {
 			}
 		}
 		return nil
-	}
+	}, nil
 }
