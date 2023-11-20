@@ -223,7 +223,7 @@ func (m *PowerWall) socG() (float64, error) {
 }
 
 func (m *PowerWall) limitSocS(limit float64) error {
-	if err := m.energySite.SetBatteryReserve(uint64(limit)); err != nil {
+	return m.energySite.SetBatteryReserve(uint64(limit))
 		return err
 	}
 	return nil
