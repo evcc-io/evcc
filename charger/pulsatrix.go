@@ -24,7 +24,7 @@ type Pulsatrix struct {
 	conn    *websocket.Conn
 	uri     string
 	enabled bool
-	current float64
+	quit    chan struct{}
 	data    *util.Monitor[pulsatrixData]
 }
 
@@ -70,7 +70,7 @@ func (c *Pulsatrix) connectWs() error {
 	ctx, cancel := context.WithTimeout(context.Background(), request.Timeout)
 	defer cancel()
 
-	c.log.INFO.Printf("connecting to %s", c.uri)
+	c.log.TRACE.Printf("connecting to %s", c.uri)
 	conn, _, err := websocket.Dial(ctx, c.uri, nil)
 	if err != nil {
 		if errors.Is(err, context.DeadlineExceeded) {
@@ -87,6 +87,7 @@ func (c *Pulsatrix) connectWs() error {
 	if err := c.Enable(false); err != nil {
 		c.log.ERROR.Println(err)
 	}
+	c.quit = make(chan struct{})
 	go c.wsReader()
 	go c.heartbeat()
 
@@ -96,20 +97,18 @@ func (c *Pulsatrix) connectWs() error {
 // ReconnectWs reconnects to a pulsatrix SECC websocket
 func (c *Pulsatrix) reconnectWs() {
 	bo := backoff.NewExponentialBackOff()
-	bo.InitialInterval = 30 * time.Second
-	bo.MaxInterval = 5 * time.Minute
+	bo.InitialInterval = time.Second
+	bo.MaxInterval = 1 * time.Minute
+	bo.MaxElapsedTime = 0 * time.Second // retry forever; default is 15 min
 
-	if err := backoff.RetryNotify(c.connectWs, bo, func(err error, time time.Duration) {
-		c.log.WARN.Printf("trying to reconnect in %v...\n", time)
-	}); err != nil {
-		c.log.ERROR.Println("RetryNotify: ", err)
-	}
+	backoff.RetryNotify(c.connectWs, bo, func(err error, time time.Duration) {
+		c.log.TRACE.Printf("trying to reconnect in %v...\n", time)
+	})
 }
 
 // WsReader runs a loop that reads messages from the websocket
 func (c *Pulsatrix) wsReader() {
-	_, err := c.data.Get()
-	for ok := true; ok; ok = err != nil {
+	for {
 		ctx, cancel := context.WithTimeout(context.Background(), request.Timeout)
 		defer cancel()
 
@@ -125,6 +124,7 @@ func (c *Pulsatrix) wsReader() {
 	c.mu.Lock()
 	c.conn.Close(websocket.StatusNormalClosure, "Reconnecting")
 	c.conn = nil
+	close(c.quit)
 	c.mu.Unlock()
 
 	c.reconnectWs()
@@ -162,9 +162,17 @@ func (c *Pulsatrix) parseWsMessage(messageType websocket.MessageType, message []
 
 // Heartbeat sends a heartbeat to the pulsatrix SECC
 func (c *Pulsatrix) heartbeat() {
-	for range time.Tick(3 * time.Minute) {
-		if err := c.Enable(c.enabled); err != nil {
-			c.log.ERROR.Println(err)
+	ticker := time.NewTicker(3 * time.Minute)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ticker.C:
+			if err := c.Enable(c.enabled); err != nil {
+				c.log.ERROR.Println(err)
+			}
+		case <-c.quit:
+			return
 		}
 	}
 }
@@ -201,9 +209,6 @@ func (c *Pulsatrix) MaxCurrent(current int64) error {
 // MaxCurrentMillis implements the api.ChargerEx interface
 func (c *Pulsatrix) MaxCurrentMillis(current float64) error {
 	err := c.write("setCurrentLimit\n" + strconv.FormatFloat(current, 'f', 10, 64))
-	if err == nil {
-		c.current = current
-	}
 	return err
 }
 
