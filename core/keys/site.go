@@ -3,14 +3,6 @@ package keys
 const (
 	Aux                   = "aux"
 	AuxPower              = "auxPower"
-	Battery               = "battery"
-	BatteryCapacity       = "batteryCapacity"
-	BatteryConfigured     = "batteryConfigured"
-	BatteryEnergy         = "batteryEnergy"
-	BatteryPower          = "batteryPower"
-	BatterySoc            = "batterySoc"
-	BufferSoc             = "bufferSoc"
-	BufferStartSoc        = "bufferStartSoc"
 	Currency              = "currency"
 	GreenShareHome        = "greenShareHome"
 	GreenShareLoadpoints  = "greenShareLoadpoints"
@@ -38,4 +30,18 @@ const (
 	TariffPriceHome       = "tariffPriceHome"
 	TariffPriceLoadpoints = "tariffPriceLoadpoints"
 	Vehicles              = "vehicles"
+
+	// battery settings
+	BatteryCapacity         = "batteryCapacity"
+	BatteryDischargeControl = "batteryDischargeControl"
+	BufferSoc               = "bufferSoc"
+	BufferStartSoc          = "bufferStartSoc"
+
+	// battery status
+	Battery           = "battery"
+	BatteryConfigured = "batteryConfigured"
+	BatteryEnergy     = "batteryEnergy"
+	BatteryMode       = "batteryMode"
+	BatteryPower      = "batteryPower"
+	BatterySoc        = "batterySoc"
 )

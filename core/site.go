@@ -344,6 +344,10 @@ func (site *Site) publish(key string, val interface{}) {
 		return
 	}
 
+	if s, ok := val.(fmt.Stringer); ok {
+		val = s.String()
+	}
+
 	site.uiChan <- util.Param{
 		Key: key,
 		Val: val,
@@ -805,8 +809,8 @@ func (site *Site) prepare() {
 	}
 	site.publish(keys.Currency, site.tariffs.Currency.String())
 
-	site.publish("batteryDischargeControl", site.BatteryDischargeControl)
-	site.publish("batteryMode", site.batteryMode.String())
+	site.publish(keys.BatteryDischargeControl, site.BatteryDischargeControl)
+	site.publish(keys.BatteryMode, site.batteryMode)
 	if err := site.restoreSettings(); err != nil {
 		site.log.ERROR.Println(err)
 	}

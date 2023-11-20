@@ -2,6 +2,7 @@ package core
 
 import (
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/loadpoint"
 )
 
@@ -17,7 +18,7 @@ func (site *Site) setBatteryMode(batMode api.BatteryMode) {
 	site.Lock()
 	defer site.Unlock()
 	site.batteryMode = batMode
-	site.publish("batteryMode", batMode.String())
+	site.publish(keys.BatteryMode, batMode)
 }
 
 func (site *Site) updateBatteryMode(loadpoints []loadpoint.API) {
