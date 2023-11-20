@@ -101,9 +101,12 @@ func (c *Pulsatrix) reconnectWs() {
 	bo.MaxInterval = 1 * time.Minute
 	bo.MaxElapsedTime = 0 * time.Second // retry forever; default is 15 min
 
-	backoff.RetryNotify(c.connectWs, bo, func(err error, time time.Duration) {
+	err := backoff.RetryNotify(c.connectWs, bo, func(err error, time time.Duration) {
 		c.log.TRACE.Printf("trying to reconnect in %v...\n", time)
 	})
+	if err != nil {
+		c.log.ERROR.Println(err)
+	}
 }
 
 // WsReader runs a loop that reads messages from the websocket
