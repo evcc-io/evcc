@@ -268,8 +268,8 @@ type decoratePowerWallBatteryControllerImpl struct {
 	batteryController func(api.BatteryMode) error
 }
 
-func (impl *decoratePowerWallBatteryControllerImpl) SetBatteryMode(m api.BatteryMode) error {
-	return impl.batteryController(m)
+func (impl *decoratePowerWallBatteryControllerImpl) SetBatteryMode(p0 api.BatteryMode) error {
+	return impl.batteryController(p0)
 }
 
 type decoratePowerWallMeterEnergyImpl struct {
