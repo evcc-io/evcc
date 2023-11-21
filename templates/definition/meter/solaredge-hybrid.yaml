@@ -20,8 +20,8 @@ params:
     advanced: true
 render: |
   type: custom
-  power:
   {{- if eq .usage "grid" }}
+  power:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     timeout: {{ .timeout }}
@@ -31,6 +31,7 @@ render: |
     scale: -1
   {{- end }}
   {{- if eq .usage "pv" }}
+  power:
     source: calc
     add:
     - source: modbus
@@ -47,6 +48,7 @@ render: |
         decode: float32s
   {{- end }}
   {{- if eq .usage "battery" }}
+  power:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     timeout: {{ .timeout }}
@@ -63,6 +65,20 @@ render: |
       address: 62852 # Battery 1 State of Energy (SOE)
       type: holding
       decode: float32s
+  batterymode:
+    source: map
+    values:
+      1: 7 # normal
+      2: 1 # hold
+      3: 3 # charge
+    set:
+      source: modbus
+      {{- include "modbus" . | indent 4 }}
+      timeout: {{ .timeout }}
+      register:
+        address: 0xE00A # Battery mode
+        type: writesingle
+        decode: uint16
   {{- if .capacity }}
   capacity: {{ .capacity }} # kWh
   {{- end }}
