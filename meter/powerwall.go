@@ -115,7 +115,7 @@ func NewPowerWall(uri, usage, user, password string, cache time.Duration, refres
 		}
 
 		if siteId == 0 {
-			//auto detect energy site ID, picking first
+			// auto detect energy site ID, picking first
 			products, err := cloudClient.Products()
 			if err != nil {
 				return nil, err
@@ -161,7 +161,7 @@ func NewPowerWall(uri, usage, user, password string, cache time.Duration, refres
 	// decorate api.BatteryController
 	var batModeS func(api.BatteryMode) error
 	if batteryControl {
-		batModeS = battery.BatteryController(m.socG, func(limit float64) error {
+		batModeS = battery.LimitController(m.socG, func(limit float64) error {
 			return m.energySite.SetBatteryReserve(uint64(limit))
 		})
 	}
