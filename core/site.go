@@ -218,6 +218,13 @@ func NewSiteFromConfig(
 		site.log.WARN.Println("bufferSoc must be larger than prioritySoc")
 	}
 
+	// revert battery mode on shutdown
+	shutdown.Register(func() {
+		if mode := site.GetBatteryMode(); mode != api.BatteryUnknown && mode != api.BatteryNormal {
+			site.updateBatteryMode(api.BatteryNormal)
+		}
+	})
+
 	return site, nil
 }
 
