@@ -2716,8 +2716,8 @@ type decorateMeterBatteryControllerImpl struct {
 	batteryController func(api.BatteryMode) error
 }
 
-func (impl *decorateMeterBatteryControllerImpl) SetBatteryMode(mode api.BatteryMode) error {
-	return impl.batteryController(mode)
+func (impl *decorateMeterBatteryControllerImpl) SetBatteryMode(p0 api.BatteryMode) error {
+	return impl.batteryController(p0)
 }
 
 type decorateMeterMeterEnergyImpl struct {

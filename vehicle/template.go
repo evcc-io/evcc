@@ -11,11 +11,9 @@ func init() {
 
 func NewVehicleFromTemplateConfig(other map[string]interface{}) (api.Vehicle, error) {
 	instance, err := templates.RenderInstance(templates.Vehicle, other)
-
-	var res api.Vehicle
-	if err == nil {
-		res, err = NewFromConfig(instance.Type, instance.Other)
+	if err != nil {
+		return nil, err
 	}
 
-	return res, err
+	return NewFromConfig(instance.Type, instance.Other)
 }

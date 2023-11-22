@@ -33,7 +33,7 @@ import (
 		}
 {{- end -}}
 
-func {{.Function}}(base {{.BaseType}}{{range ordered}}, {{.VarName}} func() {{slice .Signature 7}}{{end}}) {{.ReturnType}} {
+func {{.Function}}(base {{.BaseType}}{{range ordered}}, {{.VarName}} {{.Signature}}{{end}}) {{.ReturnType}} {
 {{- $basetype := .BaseType}}
 {{- $shortbase := .ShortBase}}
 {{- $prefix := .Function}}
@@ -56,8 +56,14 @@ type {{$prefix}}{{.ShortType}}Impl struct {
 	{{.VarName}} {{.Signature}}
 }
 
-func (impl *{{$prefix}}{{.ShortType}}Impl) {{.Function}}{{slice .Signature 4}} {
-	return impl.{{.VarName}}()
-}
+func (impl *{{$prefix}}{{.ShortType}}Impl) {{.Function}}(
+	{{- range $idx, $param := .Params -}}
+		{{- if gt $idx 0}}, {{end -}}
+		p{{$idx}} {{ $param -}} 
+	{{end}}){{ .ReturnTypes }} {
+	return impl.{{.VarName}}(
+	{{- range $idx, $param := .Params -}}
+		{{- if gt $idx 0}}, {{end}}p{{- $idx -}}{{end}})
+	}
 
 {{end}}
