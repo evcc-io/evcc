@@ -235,7 +235,7 @@ func (site *Site) SetBatteryDischargeControl(val bool) error {
 		defer site.Unlock()
 
 		site.BatteryDischargeControl = val
-		settings.SetBool("site.batteryDischargeControl", val)
+		settings.SetBool(keys.BatteryDischargeControl, val)
 		site.publish("batteryDischargeControl", val)
 	}
 

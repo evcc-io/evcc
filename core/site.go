@@ -126,6 +126,8 @@ func NewSiteFromConfig(
 	site.prioritizer = prioritizer.New(log)
 	site.stats = NewStats()
 
+	site.restoreSettings()
+
 	// upload telemetry on shutdown
 	if telemetry.Enabled() {
 		shutdown.Register(func() {
@@ -245,7 +247,7 @@ func (site *Site) restoreSettings() error {
 			return err
 		}
 	}
-	if v, err := settings.Bool("site.batteryDischargeControl"); err == nil {
+	if v, err := settings.Bool(keys.BatteryDischargeControl); err == nil {
 		site.BatteryDischargeControl = v
 	}
 	return nil
