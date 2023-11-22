@@ -80,6 +80,13 @@ savingsTitle = "Oszczędności"
 savingsTotalEnergy = "{total} kWh naładowanych"
 since = "od {since}"
 tabTitle = "Moje dane"
+referenceLabel = "Dane referencyjne:"
+co2Title = "CO₂ Emisje"
+co2Saved = "{value} zaoszczędziło"
+configurePriceCo2 = "Dowiedz się, jak skonfigurować dane dotyczące cen i emisji CO₂."
+moneySaved = "{value} zaoszczędzone"
+periodLabel = "Okres:"
+referenceGrid = "sieć"
 
 [footer.sponsor]
 becomeSponsor = "Zostań sponsorem"
@@ -252,6 +259,8 @@ title = "Czas Docelowy"
 today = "dzisiaj"
 tomorrow = "jutro"
 update = "Aktualizować"
+vehicleCapacityDocs = "Dowiedz się, jak to skonfigurować."
+vehicleCapacityRequired = "Do oszacowania czasu ładowania wymagana jest pojemność akumulatora pojazdu."
 
 [main.targetChargePlan]
 chargeDuration = "Czas ładowania"
@@ -413,3 +422,9 @@ title = "Błąd uruchamiania"
 cancel = "Anulować"
 template = "Producent"
 test = "Test"
+
+
+[footer.savings.period]
+365d = "ostatnie 365 dni"
+total = "cały czas"
+30d = "ostatnie 30 dni"
