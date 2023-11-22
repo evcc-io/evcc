@@ -26,6 +26,12 @@ params:
   - name: capacity
   - name: phases
     advanced: true
+  - name: wakeup_alt
+    help:
+      de: alternativer wakeup-Code; könnte zu erhöhter Entladung der 12V-Batterie führen.
+      en: alternative wakeup-code; could lead to increased discharge of the 12V battery.
+    default: false
+    advanced: true
   - preset: vehicle-identify
 render: |
   type: custom
@@ -65,10 +71,18 @@ render: |
   wakeup:
     source: http
     {{- if .host }}
+    {{- if eq .wakeup_alt "true" }}
+    uri: http://{{ .host }}{{ if .port }}:{{ .port }}{{ end }}/charge_now/{{ .vin }}/1
+    {{- else }}
     uri: http://{{ .host }}{{ if .port }}:{{ .port }}{{ end }}/wakeup/{{ .vin }}
+    {{- end }}
+    {{- else }}
+    {{- if eq .wakeup_alt "true" }}
+    uri: {{ trimSuffix "/" .url }}/charge_now/{{ .vin }}/1
     {{- else }}
     uri: {{ trimSuffix "/" .url }}/wakeup/{{ .vin }}
     {{- end }}
+    {{- end }} 
   {{- define "source" }}
   source: http
   {{- if .host }}
