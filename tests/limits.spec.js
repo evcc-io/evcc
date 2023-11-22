@@ -26,14 +26,13 @@ test.afterEach(async () => {
 });
 
 test.describe("limitSoc", async () => {
-  test("survives a restart", async ({ page }) => {
+  test("survives a reload", async ({ page }) => {
     await page.goto("/");
 
     await expect(page.getByTestId("limit-soc-value")).toHaveText("100%");
     await page.getByTestId("limit-soc").getByRole("combobox").selectOption("50%");
     await expect(page.getByTestId("limit-soc-value")).toHaveText("50%");
 
-    await restart(CONFIG);
     await page.reload();
 
     await expect(page.getByTestId("limit-soc-value")).toHaveText("50%");
@@ -59,7 +58,7 @@ test.describe("limitSoc", async () => {
     await expect(page.getByTestId("limit-soc-value")).toHaveText("50%");
   });
 
-  test("limit soc should be preserved when vehicle gets disconnected", async ({ page }) => {
+  test("limit soc should be resetted when vehicle gets disconnected", async ({ page }) => {
     await page.goto("/");
     await expect(page.getByTestId("limit-soc-value")).toHaveText("100%");
     await page.getByTestId("limit-soc").getByRole("combobox").selectOption("50%");
@@ -72,7 +71,7 @@ test.describe("limitSoc", async () => {
 
     await page.goto("/");
     await expect(page.getByTestId("vehicle-status")).toHaveText("Disconnected.");
-    await expect(page.getByTestId("limit-soc-value")).toHaveText("50%");
+    await expect(page.getByTestId("limit-soc-value")).toHaveText("100%");
 
     // connect
     await page.goto(SIMULATOR_URL);
@@ -81,12 +80,12 @@ test.describe("limitSoc", async () => {
 
     await page.goto("/");
     await expect(page.getByTestId("vehicle-status")).toHaveText("Connected.");
-    await expect(page.getByTestId("limit-soc-value")).toHaveText("50%");
+    await expect(page.getByTestId("limit-soc-value")).toHaveText("100%");
   });
 });
 
 test.describe("limitEnergy", async () => {
-  test("survives a restart", async ({ page }) => {
+  test("survives a reload", async ({ page }) => {
     await page.goto("/");
 
     await page.getByRole("button", { name: "blauer e-Golf" }).click();
@@ -96,12 +95,18 @@ test.describe("limitEnergy", async () => {
     await page.getByTestId("target-energy").getByRole("combobox").selectOption("10 kWh (+35%)");
     await expect(page.getByTestId("target-energy-value")).toHaveText("10 kWh");
 
-    await restart(CONFIG);
     await page.reload();
+    await expect(page.getByTestId("target-energy-value")).toHaveText("10 kWh");
+  });
+  test("should be reset on vehicle change", async ({ page }) => {
+    await page.goto("/");
 
     await page.getByRole("button", { name: "blauer e-Golf" }).click();
     await page.getByRole("button", { name: "grüner Honda e" }).click();
+    await page.getByTestId("target-energy").getByRole("combobox").selectOption("10 kWh (+35%)");
 
-    await expect(page.getByTestId("target-energy-value")).toHaveText("10 kWh");
+    await page.getByRole("button", { name: "grüner Honda e" }).click();
+    await page.getByRole("button", { name: "Guest vehicle" }).click();
+    await expect(page.getByTestId("target-energy-value")).toHaveText("none");
   });
 });

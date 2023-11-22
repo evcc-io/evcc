@@ -135,7 +135,6 @@ func (lp *Loadpoint) GetLimitSoc() int {
 // setLimitSoc sets the session limit soc (no mutex)
 func (lp *Loadpoint) setLimitSoc(soc int) {
 	lp.limitSoc = soc
-	lp.settings.SetInt(keys.LimitSoc, int64(soc))
 	lp.publish(keys.LimitSoc, soc)
 }
 
@@ -164,7 +163,6 @@ func (lp *Loadpoint) GetLimitEnergy() float64 {
 func (lp *Loadpoint) setLimitEnergy(energy float64) {
 	lp.limitEnergy = energy
 	lp.publish(keys.LimitEnergy, energy)
-	lp.settings.SetFloat(keys.LimitEnergy, energy)
 }
 
 // SetLimitEnergy sets the session energy limit

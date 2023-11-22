@@ -17,6 +17,7 @@ import (
 	"github.com/evcc-io/evcc/core/prioritizer"
 	"github.com/evcc-io/evcc/core/session"
 	"github.com/evcc-io/evcc/core/soc"
+	"github.com/evcc-io/evcc/core/vehicle"
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/server/db"
 	"github.com/evcc-io/evcc/server/db/settings"
@@ -125,8 +126,6 @@ func NewSiteFromConfig(
 
 	site.prioritizer = prioritizer.New(log)
 	site.stats = NewStats()
-
-	site.restoreSettings()
 
 	// upload telemetry on shutdown
 	if telemetry.Enabled() {
@@ -823,13 +822,19 @@ func (site *Site) prepare() {
 	site.publish(keys.SmartCostType, nil)
 	site.publish(keys.SmartCostActive, false)
 	if tariff := site.GetTariff(PlannerTariff); tariff != nil {
-		site.publish("smartCostType", tariff.Type().String())
+		site.publish(keys.SmartCostType, tariff.Type().String())
 	}
-	site.publish("currency", site.tariffs.Currency.String())
+	site.publish(keys.Currency, site.tariffs.Currency.String())
 
-	site.publish("vehicles", site.Vehicles())
-	site.publish("batteryDischargeControl", site.BatteryDischargeControl)
-	site.publish("batteryMode", site.batteryMode.String())
+	site.publish(keys.BatteryDischargeControl, site.BatteryDischargeControl)
+	site.publish(keys.BatteryMode, site.batteryMode.String())
+
+	if err := site.restoreSettings(); err != nil {
+		site.log.ERROR.Println(err)
+	}
+
+	site.publishVehicles()
+	vehicle.Publish = site.publishVehicles
 }
 
 // Prepare attaches communication channels to site and loadpoints
