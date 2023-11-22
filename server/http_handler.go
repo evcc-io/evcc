@@ -125,14 +125,12 @@ func boolHandler(set func(bool) error, get func() bool) http.HandlerFunc {
 		vars := mux.Vars(r)
 
 		val, err := strconv.ParseBool(vars["value"])
-		if err != nil {
-			jsonError(w, http.StatusBadRequest, err)
-			return
+		if err == nil {
+			err = set(val)
 		}
 
-		err = set(val)
 		if err != nil {
-			jsonError(w, http.StatusNotAcceptable, err)
+			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
 

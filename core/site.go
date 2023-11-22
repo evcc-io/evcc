@@ -41,10 +41,11 @@ type meterMeasurement struct {
 
 // batteryMeasurement is used as slice element for publishing structured data
 type batteryMeasurement struct {
-	Power    float64 `json:"power"`
-	Energy   float64 `json:"energy,omitempty"`
-	Soc      float64 `json:"soc,omitempty"`
-	Capacity float64 `json:"capacity,omitempty"`
+	Power        float64 `json:"power"`
+	Energy       float64 `json:"energy,omitempty"`
+	Soc          float64 `json:"soc,omitempty"`
+	Capacity     float64 `json:"capacity,omitempty"`
+	Controllable bool    `json:"controllable"`
 }
 
 // Site is the main configuration container. A site can host multiple loadpoints.
@@ -67,7 +68,7 @@ type Site struct {
 	BufferStartSoc                    float64      `mapstructure:"bufferStartSoc"`                    // start charging on battery above this Soc
 	MaxGridSupplyWhileBatteryCharging float64      `mapstructure:"maxGridSupplyWhileBatteryCharging"` // ignore battery charging if AC consumption is above this value
 	SmartCostLimit                    float64      `mapstructure:"smartCostLimit"`                    // always charge if cost is below this value
-	BatteryDischargeControl           bool         `mapstructure:"batteryDischargeControl"`           // shall discharge of home battery be adjusted
+	BatteryDischargeControl           bool         `mapstructure:"batteryDischargeControl"`           // prevent battery discharge for fast and planned charging
 
 	// meters
 	gridMeter     api.Meter   // Grid usage meter
@@ -86,7 +87,7 @@ type Site struct {
 	pvPower      float64         // PV power
 	batteryPower float64         // Battery charge power
 	batterySoc   float64         // Battery soc
-	batteryMode  api.BatteryMode // Battery discharge currently enabled
+	batteryMode  api.BatteryMode // Battery mode
 
 	publishCache map[string]any // store last published values to avoid unnecessary republishing
 }
@@ -217,6 +218,15 @@ func NewSiteFromConfig(
 		site.log.WARN.Println("bufferSoc must be larger than prioritySoc")
 	}
 
+	// revert battery mode on shutdown
+	shutdown.Register(func() {
+		if mode := site.GetBatteryMode(); mode != api.BatteryUnknown && mode != api.BatteryNormal {
+			if err := site.updateBatteryMode(api.BatteryNormal); err != nil {
+				site.log.ERROR.Println("battery mode:", err)
+			}
+		}
+	})
+
 	return site, nil
 }
 
@@ -253,7 +263,7 @@ func (site *Site) restoreSettings() {
 	if v, err := settings.Float("site.smartCostLimit"); err == nil {
 		site.SmartCostLimit = v
 	}
-	if v, err := settings.Bool("site.batteryDischargeControl"); err == nil {
+	if v, err := settings.Bool("site.batteryControl"); err == nil {
 		site.BatteryDischargeControl = v
 	}
 }
@@ -358,6 +368,10 @@ func (site *Site) publish(key string, val interface{}) {
 	// test helper
 	if site.uiChan == nil {
 		return
+	}
+
+	if s, ok := val.(fmt.Stringer); ok {
+		val = s.String()
 	}
 
 	site.uiChan <- util.Param{
@@ -516,11 +530,14 @@ func (site *Site) updateMeters() error {
 				}
 			}
 
+			_, controllable := meter.(api.BatteryController)
+
 			mm[i] = batteryMeasurement{
-				Power:    power,
-				Energy:   energy,
-				Soc:      batSoc,
-				Capacity: capacity,
+				Power:        power,
+				Energy:       energy,
+				Soc:          batSoc,
+				Capacity:     capacity,
+				Controllable: controllable,
 			}
 		}
 
@@ -795,8 +812,12 @@ func (site *Site) update(lp Updater) {
 		site.log.ERROR.Println(err)
 	}
 
-	if site.BatteryDischargeControl {
-		site.updateBatteryMode(site.Loadpoints())
+	if batMode := site.GetBatteryMode(); site.BatteryDischargeControl {
+		if mode := site.determineBatteryMode(site.Loadpoints()); mode != batMode {
+			if err := site.updateBatteryMode(mode); err != nil {
+				site.log.ERROR.Println("battery mode:", err)
+			}
+		}
 	}
 
 	site.stats.Update(site)
@@ -817,13 +838,13 @@ func (site *Site) prepare() {
 	site.publish("smartCostType", nil)
 	site.publish("smartCostActive", false)
 	if tariff := site.GetTariff(PlannerTariff); tariff != nil {
-		site.publish("smartCostType", tariff.Type().String())
+		site.publish("smartCostType", tariff.Type())
 	}
-	site.publish("currency", site.tariffs.Currency.String())
+	site.publish("currency", site.tariffs.Currency)
 
 	site.publish("vehicles", vehicleTitles(site.GetVehicles()))
 	site.publish("batteryDischargeControl", site.BatteryDischargeControl)
-	site.publish("batteryMode", site.batteryMode.String())
+	site.publish("batteryMode", site.batteryMode)
 }
 
 // Prepare attaches communication channels to site and loadpoints

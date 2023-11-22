@@ -186,3 +186,33 @@ func (site *Site) GetTariff(tariff string) api.Tariff {
 		return nil
 	}
 }
+
+// GetBatteryControl returns the battery control mode
+func (site *Site) GetBatteryDischargeControl() bool {
+	site.Lock()
+	defer site.Unlock()
+	return site.BatteryDischargeControl
+}
+
+// SetBatteryControl sets the battery control mode
+func (site *Site) SetBatteryDischargeControl(val bool) error {
+	site.log.DEBUG.Println("set battery discharge control:", val)
+
+	if site.GetBatteryDischargeControl() != val {
+		// reset to normal when disabling
+		if mode := site.GetBatteryMode(); mode != api.BatteryNormal {
+			if err := site.updateBatteryMode(api.BatteryNormal); err != nil {
+				return err
+			}
+		}
+
+		site.Lock()
+		defer site.Unlock()
+
+		site.BatteryDischargeControl = val
+		settings.SetBool("site.batteryDischargeControl", val)
+		site.publish("batteryDischargeControl", val)
+	}
+
+	return nil
+}
