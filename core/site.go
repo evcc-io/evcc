@@ -263,7 +263,7 @@ func (site *Site) restoreSettings() {
 	if v, err := settings.Float("site.smartCostLimit"); err == nil {
 		site.SmartCostLimit = v
 	}
-	if v, err := settings.Bool("site.batteryControl"); err == nil {
+	if v, err := settings.Bool("site.batteryDischargeControl"); err == nil {
 		site.BatteryDischargeControl = v
 	}
 }
