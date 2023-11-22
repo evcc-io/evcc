@@ -221,7 +221,9 @@ func NewSiteFromConfig(
 	// revert battery mode on shutdown
 	shutdown.Register(func() {
 		if mode := site.GetBatteryMode(); mode != api.BatteryUnknown && mode != api.BatteryNormal {
-			site.updateBatteryMode(api.BatteryNormal)
+			if err := site.updateBatteryMode(api.BatteryNormal); err != nil {
+				site.log.ERROR.Println("battery mode:", err)
+			}
 		}
 	})
 
