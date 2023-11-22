@@ -2,7 +2,6 @@
 batteryLevel = "Battery level"
 capacity = "{energy} of {total}"
 control = "Battery control"
-notControllable = "Battery control is not available for this battery."
 discharge = "Prevent discharge in fast mode and planned charging."
 legendBottomName = "home priority"
 legendBottomSubline = "not used for charging"
@@ -13,6 +12,7 @@ legendTopAutostart = "starts automatically"
 legendTopName = "battery supported charging"
 legendTopSubline = "without interruptions"
 modalTitle = "Battery settings"
+notControllable = "Battery control is not available for this battery."
 note = "Note: These settings only affect the solar mode. Charging behaviour is adjusted accordingly."
 
 [batterySettings.bufferStart]
