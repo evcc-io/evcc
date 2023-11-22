@@ -2,7 +2,7 @@ template: hoymiles-opendtu
 products:
   - brand: Hoymiles
     description:
-      generic: HM and HMS Series (via OpenDTU)
+      generic: HM & HMS Series (via OpenDTU)
 params:
   - name: usage
     choice: ["pv"]
