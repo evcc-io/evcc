@@ -25,10 +25,11 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Meter, error) 
 		Powers   []provider.Config // optional
 
 		// battery
-		capacity `mapstructure:",squash"`
-		battery  `mapstructure:",squash"`
-		Soc      *provider.Config // optional
-		LimitSoc *provider.Config // optional
+		capacity    `mapstructure:",squash"`
+		battery     `mapstructure:",squash"`
+		Soc         *provider.Config // optional
+		LimitSoc    *provider.Config // optional
+		BatteryMode *provider.Config // optional
 	}{
 		battery: battery{
 			MinSoc: 20,
@@ -84,13 +85,23 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Meter, error) 
 	}
 
 	var batModeS func(api.BatteryMode) error
-	if cc.Soc != nil && cc.LimitSoc != nil {
+
+	switch {
+	case cc.Soc != nil && cc.LimitSoc != nil:
 		limitSocS, err := provider.NewFloatSetterFromConfig("limitSoc", *cc.LimitSoc)
 		if err != nil {
 			return nil, fmt.Errorf("battery limit soc: %w", err)
 		}
 
-		batModeS = cc.battery.BatteryController(socG, limitSocS)
+		batModeS = cc.battery.LimitController(socG, limitSocS)
+
+	case cc.BatteryMode != nil:
+		modeS, err := provider.NewIntSetterFromConfig("mode", *cc.BatteryMode)
+		if err != nil {
+			return nil, fmt.Errorf("battery mode: %w", err)
+		}
+
+		batModeS = cc.battery.ModeController(modeS)
 	}
 
 	res := m.Decorate(totalEnergyG, currentsG, voltagesG, powersG, socG, cc.capacity.Decorator(), batModeS)
