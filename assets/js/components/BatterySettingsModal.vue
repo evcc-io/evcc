@@ -223,28 +223,33 @@
 								</p>
 							</div>
 						</div>
-						<FormRow
-							v-if="$hiddenFeatures()"
-							id="batteryDischargeControl"
-							:label="`${$t('batterySettings.control')}`"
-						>
-							<div class="form-check form-switch col-form-label">
-								<input
-									id="batteryDischargeControl"
-									:checked="batteryDischargeControl"
-									class="form-check-input"
-									type="checkbox"
-									role="switch"
-									@change="changeDischargeControl"
-								/>
-								<div class="form-check-label">
-									<label for="batteryDischargeControl">
-										{{ $t("batterySettings.discharge") }}
-										<span title="experimental">🧪</span>
-									</label>
+						<div v-if="$hiddenFeatures()">
+							<FormRow
+								v-if="controllable"
+								id="batteryDischargeControl"
+								:label="`${$t('batterySettings.control')}`"
+							>
+								<div class="form-check form-switch col-form-label">
+									<input
+										id="batteryDischargeControl"
+										:checked="batteryDischargeControl"
+										class="form-check-input"
+										type="checkbox"
+										role="switch"
+										@change="changeDischargeControl"
+									/>
+									<div class="form-check-label">
+										<label for="batteryDischargeControl">
+											{{ $t("batterySettings.discharge") }}
+											<span title="experimental">🧪</span>
+										</label>
+									</div>
 								</div>
-							</div>
-						</FormRow>
+							</FormRow>
+							<p v-else>
+								<small>{{ $t("batterySettings.notControllable") }}</small>
+							</p>
+						</div>
 					</div>
 				</div>
 			</div>
@@ -271,7 +276,7 @@ export default {
 		batterySoc: Number,
 		bufferStartSoc: Number,
 		batteryDischargeControl: Boolean,
-		battery: { type: Array },
+		battery: { type: Array, default: () => [] },
 	},
 	data: function () {
 		return {
@@ -292,6 +297,9 @@ export default {
 				options.push({ value: i, name: this.fmtSoc(i), disabled });
 			}
 			return options;
+		},
+		controllable() {
+			return this.battery.some(({ controllable }) => controllable);
 		},
 		bufferOptions() {
 			const options = [];
