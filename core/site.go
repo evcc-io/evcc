@@ -825,7 +825,7 @@ func (site *Site) prepare() {
 	}
 	site.publish("currency", site.tariffs.Currency.String())
 
-	site.publish("vehicles", vehicleTitles(site.GetVehicles()))
+	site.publish("vehicles", site.Vehicles())
 	site.publish("batteryDischargeControl", site.BatteryDischargeControl)
 	site.publish("batteryMode", site.batteryMode.String())
 }
