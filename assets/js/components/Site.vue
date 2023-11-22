@@ -69,6 +69,8 @@ export default {
 		batteryConfigured: Boolean,
 		batteryPower: Number,
 		batterySoc: Number,
+		batteryDischargeControl: Boolean,
+		batteryMode: String,
 		battery: Array,
 		gridCurrents: Array,
 		prioritySoc: Number,
