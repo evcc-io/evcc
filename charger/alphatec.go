@@ -65,7 +65,7 @@ func NewAlphatec(uri, device, comset string, baudrate int, proto modbus.Protocol
 		return nil, err
 	}
 
-	conn.Delay(100 * time.Millisecond)
+	conn.Delay(20 * time.Millisecond)
 
 	if !sponsor.IsAuthorized() {
 		return nil, api.ErrSponsorRequired
