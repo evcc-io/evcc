@@ -15,9 +15,9 @@ render: |
     source: mqtt
     {{- include "mqtt" . | indent 2 }}
     {{- if eq .usage "grid" }}
-    topic: {{ .topic }}/pv_leistung
-    {{- end }}
-    {{- if eq .usage "pv" }}
     topic: {{ .topic }}/einspeisung_bezug
     scale: -1
+    {{- end }}
+    {{- if eq .usage "pv" }}
+    topic: {{ .topic }}/pv_leistung
     {{- end }}
