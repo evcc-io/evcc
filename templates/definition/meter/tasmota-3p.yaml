@@ -1,7 +1,13 @@
 template: tasmota-3p
 products:
-  - description:
-      generic: Tasmota (3 Phase Meter - meter channels 1,2+3 must be used)
+  - brand: Tasmota
+    description:
+      de: dreiphasig
+      en: three phase
+requirements:
+  description:
+    de: Kanäle 1,2,3 müssen verwendet werden.
+    en: Meter channels 1,2,3 must be used.
 group: switchsockets
 params:
   - name: usage
