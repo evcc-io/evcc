@@ -80,13 +80,8 @@ func NewModbusFromConfig(other map[string]interface{}) (Provider, error) {
 	var device meters.Device
 	var op modbus.Operation
 
-	if cc.Value != "" && cc.Register.Decode != "" {
-		return nil, errors.New("modbus cannot have value and register both")
-	}
-
-	if cc.Value == "" && cc.Register.Decode == "" {
-		log.WARN.Println("missing modbus value or register - assuming Power")
-		cc.Value = "Power"
+	if (cc.Value == "") == (cc.Register.Decode == "") {
+		return nil, errors.New("either value or register required")
 	}
 
 	if cc.Model == "" && cc.Value != "" {
@@ -338,7 +333,12 @@ func (m *Modbus) IntSetter(_ string) (func(int64) error, error) {
 
 			case 2:
 				var b [4]byte
-				binary.BigEndian.PutUint32(b[:], uint32(ival))
+
+				// TODO preserve encoding
+				uval := uint32(ival)
+				uval = uval&0xFFFF<<16 | uval>>16
+
+				binary.BigEndian.PutUint32(b[:], uval)
 				_, err = m.conn.WriteMultipleRegisters(op.OpCode, 2, b[:])
 
 			case 4:
