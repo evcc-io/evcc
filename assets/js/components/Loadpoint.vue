@@ -245,7 +245,7 @@ export default {
 			return (!this.vehicleFeatureOffline && this.vehiclePresent) || this.vehicleSoc > 0;
 		},
 		socBasedPlanning: function () {
-			return this.socBasedCharging && this.vehicleCapacity > 0;
+			return this.vehicleSoc > 0 && this.vehicleCapacity > 0;
 		},
 	},
 	watch: {

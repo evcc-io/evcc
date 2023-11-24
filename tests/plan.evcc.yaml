@@ -1,3 +1,5 @@
+interval: 0.1s
+
 site:
   title: Plan
   meters:
@@ -61,22 +63,22 @@ vehicles:
   - name: vehicle
     type: template
     template: offline
-    title: Vehicle
+    title: Vehicle no SoC no Capacity
   - name: vehicleCapacity
     type: template
     template: offline
-    title: Vehicle with Capacity
+    title: Vehicle no SoC with Capacity
     capacity: 100
   - name: vehicleSoc
     type: custom
-    title: Vehicle with SoC
+    title: Vehicle with SoC no Capacity
     soc:
       source: js
       script: |
         50
   - name: vehicleSocCapacity
     type: custom
-    title: Vehicle with SoC and Capacity
+    title: Vehicle with SoC with Capacity
     capacity: 100
     soc:
       source: js
