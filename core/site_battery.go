@@ -5,45 +5,43 @@ import (
 	"github.com/evcc-io/evcc/core/loadpoint"
 )
 
-// getBatteryMode returns the battery mode
-func (site *Site) getBatteryMode() api.BatteryMode {
+// GetBatteryMode returns the battery mode
+func (site *Site) GetBatteryMode() api.BatteryMode {
 	site.Lock()
 	defer site.Unlock()
 	return site.batteryMode
 }
 
-// setBatteryMode sets the battery mode
-func (site *Site) setBatteryMode(batMode api.BatteryMode) {
+// SetBatteryMode sets the battery mode
+func (site *Site) SetBatteryMode(batMode api.BatteryMode) {
 	site.Lock()
 	defer site.Unlock()
 	site.batteryMode = batMode
-	site.publish("batteryMode", batMode.String())
+	site.publish("batteryMode", batMode)
 }
 
-func (site *Site) updateBatteryMode(loadpoints []loadpoint.API) {
-	// determine expected state
-	batMode := api.BatteryNormal
+func (site *Site) determineBatteryMode(loadpoints []loadpoint.API) api.BatteryMode {
 	for _, lp := range loadpoints {
 		if lp.GetStatus() == api.StatusC && (lp.GetMode() == api.ModeNow || lp.GetPlanActive()) {
-			batMode = api.BatteryHold
-			break
+			return api.BatteryHold
 		}
 	}
 
-	if batMode == site.getBatteryMode() {
-		return
-	}
+	return api.BatteryNormal
+}
 
+func (site *Site) updateBatteryMode(mode api.BatteryMode) error {
 	// update batteries
 	for _, meter := range site.batteryMeters {
 		if batCtrl, ok := meter.(api.BatteryController); ok {
-			if err := batCtrl.SetBatteryMode(batMode); err != nil {
-				site.log.ERROR.Println("battery mode:", err)
-				return
+			if err := batCtrl.SetBatteryMode(mode); err != nil {
+				return err
 			}
 		}
 	}
 
 	// update state and publish
-	site.setBatteryMode(batMode)
+	site.SetBatteryMode(mode)
+
+	return nil
 }

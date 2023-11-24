@@ -18,6 +18,39 @@ low = "jos jonkin verran täynnä"
 medium = "kun puolillaan"
 never = "ainoastaan kun riittävästi ylijäämää"
 
+[config]
+
+[config.form]
+example = "Esimerkiksi"
+optional = "valinnainen"
+
+[config.main]
+addVehicle = "Lisää ajoneuvo"
+edit = "muokkaa"
+title = "Määritykset"
+vehicles = "Minun ajoneuvot"
+
+[config.validation]
+failed = "epäonnistui"
+label = "Tila"
+running = "vahvistetaan..."
+success = "onnistui"
+unknown = "tuntematon"
+validate = "vahvista"
+
+[config.vehicle]
+cancel = "Peruuta"
+delete = "Poista ajoneuvo"
+generic = "Muut integraatiot"
+offline = "Yleinen ajoneuvo"
+online = "Ajoneuvot, joissa API-käyttöliittymä"
+save = "Tallenna"
+scooter = "Skootteri"
+template = "Valmistaja"
+titleAdd = "Lisää ajoneuvo"
+titleEdit = "Muokkaa ajoneuvoa"
+validateSave = "Vahvista ja tallenna"
+
 [footer]
 
 [footer.community]
@@ -33,20 +66,32 @@ powerSub2 = "lataa..."
 tabTitle = "Yhteisö"
 
 [footer.savings]
+co2Saved = "{value} tallennettu"
+co2Title = "CO₂ Päästöt"
+configurePriceCo2 = "Opi kuinka voit muokata hinta ja CO₂ arvoja."
 footerLong = "{percent}% aurinkoenergiaa"
 footerShort = "{percent}% aurinkoenergiaa"
 modalTitle = "Latausenergian yhteenveto"
+moneySaved = "{value} tallennettu"
 percentGrid = "{grid} kWh verkosta"
 percentSelf = "{self} kWh auringosta"
 percentTitle = "Aurinkoenergia"
+periodLabel = "Jakso:"
 priceFeedIn = "{feedInPrice} verkkoon myynti"
 priceGrid = "{gridPrice} verkosta osto"
 priceTitle = "Energian hinta"
+referenceGrid = "verkko"
+referenceLabel = "Vertailutieto:"
 savingsComparedToGrid = "Verrattuna verkkoon"
 savingsTitle = "Säästöt"
 savingsTotalEnergy = "ladattuun {total} kWh"
 since = "alkaen {since}"
 tabTitle = "Tietoni"
+
+[footer.savings.period]
+30d = "viimeiset 30 päivää"
+365d = "viimeiset 365 päivää"
+total = "kaikki"
 
 [footer.sponsor]
 becomeSponsor = "Ryhdy sponsoriksi"
@@ -210,6 +255,8 @@ title = "Tavoiteaika"
 today = "tänään"
 tomorrow = "huomenna"
 update = "Päivittää"
+vehicleCapacityDocs = "Opi kuinka voit muokata sitä."
+vehicleCapacityRequired = "Ajoneuvon akun kapasiteetti tarvitaan latausajan arviota varten."
 
 [main.targetChargePlan]
 chargeDuration = "Latausaika"
@@ -230,6 +277,8 @@ fallbackName = "Ajoneuvo"
 moreActions = "Lisää toimintoja"
 none = "Ei ajoneuvoa"
 targetSoc = "Raja"
+temp = "Lämpötila."
+tempLimit = "Lämpötila raja-arvo"
 unknown = "Vieras ajoneuvo"
 vehicleSoc = "Lataus"
 
@@ -242,8 +291,8 @@ vehicleTarget = "Ajoneuvon raja {soc}%"
 
 [main.vehicleStatus]
 charging = "Lataa…"
-cheapEnergyCharging = "Edullista energiaa saatavilla. Lataa…"
-cleanEnergyCharging = "Puhdasta energiaa saataville. Lataa..."
+cheapEnergyCharging = "Lataa edullista energiaa: {price} (limit {limit})"
+cleanEnergyCharging = "Lataa puhdasta energiaa: {co2} (limit {limit})"
 climating = "Esilämmitys/-viilennys havaittu."
 connected = "Yhdistetty."
 disconnected = "Irroitettu."
@@ -283,7 +332,9 @@ started = "Alkoi"
 title = "Latausistunto"
 
 [sessions]
+avgPower = "⌀ Teho"
 avgPrice = "⌀ Hinta"
+chargeDuration = "Kesto"
 co2 = "⌀ CO₂"
 csvMonth = "Lataa {month} CSV"
 csvTotal = "Lataa kaikki CSV"

@@ -66,20 +66,32 @@ powerSub2 = "ładuje się..."
 tabTitle = "Dane społeczności"
 
 [footer.savings]
+co2Saved = "{value} zaoszczędziło"
+co2Title = "CO₂ Emisje"
+configurePriceCo2 = "Dowiedz się, jak skonfigurować dane dotyczące cen i emisji CO₂."
 footerLong = "{percent}% energii słonecznej"
 footerShort = "{percent}% słońce"
 modalTitle = "Przegląd energii ładowania"
+moneySaved = "{value} zaoszczędzone"
 percentGrid = "{grid} kWh sieć"
 percentSelf = "{self} kWh słońce"
 percentTitle = "Energia Słoneczna"
+periodLabel = "Okres:"
 priceFeedIn = "{feedInPrice} eksport"
 priceGrid = "{gridPrice} sieć"
 priceTitle = "Cena Energii"
+referenceGrid = "sieć"
+referenceLabel = "Dane referencyjne:"
 savingsComparedToGrid = "w porównaniu z siecią"
 savingsTitle = "Oszczędności"
 savingsTotalEnergy = "{total} kWh naładowanych"
 since = "od {since}"
 tabTitle = "Moje dane"
+
+[footer.savings.period]
+30d = "ostatnie 30 dni"
+365d = "ostatnie 365 dni"
+total = "cały czas"
 
 [footer.sponsor]
 becomeSponsor = "Zostań sponsorem"
@@ -252,6 +264,8 @@ title = "Czas Docelowy"
 today = "dzisiaj"
 tomorrow = "jutro"
 update = "Aktualizować"
+vehicleCapacityDocs = "Dowiedz się, jak to skonfigurować."
+vehicleCapacityRequired = "Do oszacowania czasu ładowania wymagana jest pojemność akumulatora pojazdu."
 
 [main.targetChargePlan]
 chargeDuration = "Czas ładowania"
