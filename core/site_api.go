@@ -236,7 +236,7 @@ func (site *Site) SetBatteryDischargeControl(val bool) error {
 
 		site.BatteryDischargeControl = val
 		settings.SetBool(keys.BatteryDischargeControl, val)
-		site.publish("batteryDischargeControl", val)
+		site.publish(keys.BatteryDischargeControl, val)
 	}
 
 	return nil
