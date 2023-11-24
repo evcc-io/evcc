@@ -16,7 +16,7 @@ var meterCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(meterCmd)
-	chargerCmd.Flags().StringP(flagBatteryMode, "b", "", flagBatteryModeDescription)
+	meterCmd.Flags().StringP(flagBatteryMode, "b", "", flagBatteryModeDescription)
 }
 
 func runMeter(cmd *cobra.Command, args []string) {
