@@ -2,16 +2,20 @@ template: alphatec
 products:
   - brand: Alphatec
     description:
-      generic: Wallbox Mini/ AW1eM
+      generic: Wallbox Mini/Power
+  - brand: Alphatec
+    description:
+      generic: Ladesäule Twin
 requirements:
+  description:
+    de: Die Hauptplatine benötigt eine aktuelle Firmware. Eine aktuelle Softwareversion kann man daran erkennen, dass die Seriennummer auf dem braunen Relais mit 2022 beginnt oder auf den kleinen weißen Relais eine 15 steht. Andernfalls bitte direkt an den Hersteller wenden.
+    en: The motherboard requires current firmware. You can recognize a current software version by the fact that the serial number on the brown relay starts with 2022 or there is a 15 on the small white relays. Otherwise, please contact the manufacturer directly.
   evcc: ["sponsorship"]
 params:
   - name: modbus
     choice: ["rs485"]
     baudrate: 9600
     comset: 8N1
-  - name: timeout
 render: |
   type: alphatec
   {{- include "modbus" . }}
-  timeout: {{ .timeout }}

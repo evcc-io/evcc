@@ -2,6 +2,7 @@ package sponsor
 
 import (
 	"os"
+	"strings"
 	"time"
 )
 
@@ -20,8 +21,19 @@ func readSerial() (string, error) {
 		_ = f.Close()
 	})
 
+	var token string
 	b := make([]byte, 512)
-	n, _ := f.Read(b)
 
-	return string(b[:n]), nil
+	for {
+		n, err := f.Read(b)
+		if err != nil {
+			return "", nil
+		}
+
+		token += string(b[:n])
+
+		if token, ok := strings.CutSuffix(token, "\x04"); ok {
+			return token, nil
+		}
+	}
 }
