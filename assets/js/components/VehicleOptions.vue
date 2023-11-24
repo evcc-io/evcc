@@ -6,6 +6,7 @@
 			tabindex="0"
 			data-bs-toggle="dropdown"
 			aria-expanded="false"
+			data-testid="change-vehicle"
 		>
 			<slot />
 		</div>

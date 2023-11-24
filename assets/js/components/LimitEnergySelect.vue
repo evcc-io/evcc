@@ -3,7 +3,7 @@
 		class="flex-grow-1"
 		:label="$t('main.targetEnergy.label')"
 		align="end"
-		data-testid="target-energy"
+		data-testid="limit-energy"
 	>
 		<h3 class="value m-0">
 			<label class="position-relative">
@@ -20,7 +20,7 @@
 				<span
 					class="text-decoration-underline"
 					:class="{ 'text-gray fw-normal': !limitEnergy }"
-					data-testid="target-energy-value"
+					data-testid="limit-energy-value"
 				>
 					<AnimatedNumber :to="limitEnergy" :format="fmtEnergy" />
 				</span>

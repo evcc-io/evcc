@@ -14,7 +14,6 @@ test.afterEach(async () => {
 test.describe("basic functionality", async () => {
   test("vehicle with soc and capacity, set and restart", async ({ page }) => {
     await page.goto("/");
-    await page.waitForLoadState();
 
     const lp1 = await page.getByTestId("loadpoint").first();
 
@@ -45,5 +44,24 @@ test.describe("basic functionality", async () => {
     );
     await lp1.getByTestId("charging-plan").getByRole("button").click();
     await expect(page.getByTestId("plan-soc")).toHaveValue("80");
+  });
+});
+
+test.describe("guest vehicle", async () => {
+  test("kWh based plan and limit", async ({ page }) => {
+    await page.goto("/");
+
+    const lp1 = await page.getByTestId("loadpoint").first();
+
+    await lp1.getByTestId("change-vehicle").click();
+    await lp1.getByRole("button", { name: "Guest vehicle" }).click();
+
+    await lp1.getByTestId("limit-energy").getByRole("combobox").selectOption("50 kWh");
+
+    await lp1.getByTestId("charging-plan").getByRole("button", { name: "none" }).click();
+    await page.getByRole("button", { name: "Set a charging plan" }).click();
+    await page.getByTestId("plan-energy").selectOption("25 kWh");
+    await page.getByRole("button", { name: "Close" }).click();
+    await expect(lp1.getByTestId("plan-marker")).toBeVisible();
   });
 });
