@@ -12,6 +12,9 @@ const (
 	flagHeaders            = "log-headers"
 	flagHeadersDescription = "Log headers"
 
+	flagBatteryMode            = "battery-mode"
+	flagBatteryModeDescription = "Set battery mode (normal, hold, charge)"
+
 	flagCurrent            = "current"
 	flagCurrentDescription = "Set maximum current"
 
