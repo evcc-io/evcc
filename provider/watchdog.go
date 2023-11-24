@@ -12,7 +12,7 @@ import (
 type watchdogProvider struct {
 	mu      sync.Mutex
 	log     *util.Logger
-	reset   string
+	reset   *string
 	set     Config
 	timeout time.Duration
 	cancel  func()
@@ -25,7 +25,7 @@ func init() {
 // NewWatchDogFromConfig creates watchDog provider
 func NewWatchDogFromConfig(other map[string]interface{}) (Provider, error) {
 	var cc struct {
-		Reset   string
+		Reset   *string
 		Set     Config
 		Timeout time.Duration
 	}
@@ -64,7 +64,15 @@ func (o *watchdogProvider) IntSetter(param string) (func(int64) error, error) {
 		return nil, err
 	}
 
-	reset, err := strconv.ParseInt(o.reset, 10, 64)
+	var reset *int64
+	if o.reset != nil {
+		val, err := strconv.ParseInt(*o.reset, 10, 64)
+		if err != nil {
+			return nil, err
+		}
+		reset = &val
+	}
+
 	return func(val int64) error {
 		o.mu.Lock()
 
@@ -75,7 +83,7 @@ func (o *watchdogProvider) IntSetter(param string) (func(int64) error, error) {
 		}
 
 		// start wdt on non-reset value
-		if val != reset {
+		if reset == nil || val != *reset {
 			var ctx context.Context
 			ctx, o.cancel = context.WithCancel(context.Background())
 
