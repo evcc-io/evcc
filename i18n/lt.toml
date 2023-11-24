@@ -11,6 +11,9 @@ legendTopName = "kaupiklis padeda įkrauti"
 legendTopSubline = "be pertraukų"
 modalTitle = "Kaupiklio nustatymai"
 note = "Pastaba: Šie nustatymai paveikia tik įkrovimą Saulė. Įkrovimo algoritmas atitinkamai pakeičiamas."
+discharge = "Neleisti kaupiklio iškrovimo režime Greitas ir planiniame įkrovime."
+control = "Kaupiklio valdymas"
+notControllable = "Šiam kaupikliui valdymo nėra."
 
 [batterySettings.bufferStart]
 full = "kai beveik pilnas"
@@ -190,6 +193,7 @@ noEnergy = "Nėra skaitiklių duomenų"
 pvExport = "Tinklo eksportas"
 pvProduction = "Gamyba"
 selfConsumption = "Sunaudojama iškart"
+batteryHold = "Kaupiklis (užblokuotas)"
 
 [main.loadpoint]
 avgPrice = "⌀ Kaina"
