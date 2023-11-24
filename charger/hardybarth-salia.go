@@ -167,7 +167,7 @@ func (wb *Salia) Enabled() (bool, error) {
 	if err == nil && res.Secc.Port0.Salia.ChargeMode != echarge.ModeManual {
 		err = fmt.Errorf("invalid mode: %s", res.Secc.Port0.Salia.ChargeMode)
 	}
-	return res.Secc.Port0.GridCurrentLimit > 0 && res.Secc.Port0.Salia.PauseCharging == 0, err
+	return res.Secc.Port0.Ci.Evse.Basic.OfferedCurrentLimit > 0 && res.Secc.Port0.Salia.PauseCharging == 0, err
 }
 
 func (wb *Salia) pause(enable bool) {
