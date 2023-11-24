@@ -49,6 +49,7 @@ func (o *watchdogProvider) wdt(ctx context.Context, set func() error) {
 	for range tick.C {
 		select {
 		case <-ctx.Done():
+			tick.Stop()
 			return
 		default:
 			if err := set(); err != nil {
