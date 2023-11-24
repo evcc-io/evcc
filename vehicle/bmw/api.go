@@ -79,3 +79,27 @@ func (v *API) Status(vin string) (VehicleStatus, error) {
 
 	return res, err
 }
+
+const (
+	CHARGE_START = "start-charging"
+	CHARGE_STOP  = "stop-charging"
+	DOOR_LOCK    = "door-lock"
+)
+
+// Action implements the /remote-commands/<vin>/<service> api
+func (v *API) Action(vin, action string) error {
+	var res VehicleStatus
+	uri := fmt.Sprintf("%s/eadrax-vrccs/v3/presentation/remote-commands/%s/%s?apptimezone=120&appDateTime=%d", regions[v.region].CocoApiURI, vin, action, time.Now().UnixMilli())
+
+	req, err := request.New(http.MethodPost, uri, nil, map[string]string{
+		"Content-Type": request.JSONContent,
+		"X-User-Agent": v.xUserAgent,
+		"bmw-vin":      vin,
+	})
+	if err == nil {
+		err = v.DoJSON(req, &res)
+	}
+	_ = res
+
+	return err
+}
