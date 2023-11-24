@@ -6,7 +6,6 @@ import (
 
 	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/mock"
 	"github.com/evcc-io/evcc/util"
 	"github.com/golang/mock/gomock"
 )
@@ -61,8 +60,8 @@ func TestWrappedMeter(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mm := mock.NewMockMeter(ctrl)
-	me := mock.NewMockMeterEnergy(ctrl)
+	mm := api.NewMockMeter(ctrl)
+	me := api.NewMockMeterEnergy(ctrl)
 
 	type EnergyDecorator struct {
 		api.Meter

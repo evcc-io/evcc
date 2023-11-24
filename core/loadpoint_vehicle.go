@@ -162,7 +162,7 @@ func (lp *Loadpoint) setActiveVehicle(vehicle api.Vehicle) {
 		lp.publish(vehiclePresent, false)
 		lp.publish(vehicleTitle, "")
 		lp.publish(vehicleIcon, "")
-		lp.publish(vehicleCapacity, int64(0))
+		lp.publish(vehicleCapacity, 0.0)
 		lp.publish(vehicleOdometer, 0.0)
 	}
 
@@ -202,6 +202,7 @@ func (lp *Loadpoint) wakeUpVehicle() {
 func (lp *Loadpoint) unpublishVehicle() {
 	lp.vehicleSoc = 0
 
+	lp.publish("climaterActive", nil)
 	lp.publish(vehicleSoc, 0.0)
 	lp.publish(vehicleRange, int64(0))
 	lp.publish(vehicleTargetSoc, 0.0)

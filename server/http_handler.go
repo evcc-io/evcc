@@ -8,6 +8,7 @@ import (
 	"math"
 	"net/http"
 	"strconv"
+	"strings"
 	"text/template"
 	"time"
 
@@ -16,7 +17,9 @@ import (
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/server/assets"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/jq"
 	"github.com/gorilla/mux"
+	"github.com/itchyny/gojq"
 )
 
 var ignoreState = []string{"releaseNotes"} // excessive size
@@ -122,14 +125,12 @@ func boolHandler(set func(bool) error, get func() bool) http.HandlerFunc {
 		vars := mux.Vars(r)
 
 		val, err := strconv.ParseBool(vars["value"])
-		if err != nil {
-			jsonError(w, http.StatusBadRequest, err)
-			return
+		if err == nil {
+			err = set(val)
 		}
 
-		err = set(val)
 		if err != nil {
-			jsonError(w, http.StatusNotAcceptable, err)
+			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
 
@@ -164,7 +165,34 @@ func stateHandler(cache *util.Cache) http.HandlerFunc {
 		for _, k := range ignoreState {
 			delete(res, k)
 		}
+
 		encodeFloats(res)
+
+		if q := r.URL.Query().Get("jq"); q != "" {
+			q = strings.TrimPrefix(q, ".result")
+
+			query, err := gojq.Parse(q)
+			if err != nil {
+				jsonError(w, http.StatusBadRequest, err)
+				return
+			}
+
+			b, err := json.Marshal(res)
+			if err != nil {
+				jsonError(w, http.StatusBadRequest, err)
+				return
+			}
+
+			res, err := jq.Query(query, b)
+			if err != nil {
+				jsonError(w, http.StatusBadRequest, err)
+				return
+			}
+
+			jsonWrite(w, res)
+			return
+		}
+
 		jsonResult(w, res)
 	}
 }

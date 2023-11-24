@@ -1,9 +1,10 @@
 package vw
 
 import (
+	"cmp"
 	"fmt"
 	"os"
-	"sort"
+	"slices"
 	"strconv"
 	"strings"
 	"text/tabwriter"
@@ -186,8 +187,8 @@ func (v *Provider) Diagnose() {
 
 	tw := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
 
-	sort.Slice(rr.OperationList.ServiceInfo, func(i, j int) bool {
-		return rr.OperationList.ServiceInfo[i].ServiceId < rr.OperationList.ServiceInfo[j].ServiceId
+	slices.SortFunc(rr.OperationList.ServiceInfo, func(i, j ServiceInfo) int {
+		return cmp.Compare(i.ServiceId, j.ServiceId)
 	})
 
 	for _, si := range rr.OperationList.ServiceInfo {

@@ -8,6 +8,7 @@ import (
 	"go/format"
 	"io"
 	"os"
+	"slices"
 	"strings"
 	"text/template"
 
@@ -23,7 +24,8 @@ type dynamicType struct {
 }
 
 type typeStruct struct {
-	Type, ShortType, Signature, Function, VarName string
+	Type, ShortType, Signature, Function, VarName, ReturnTypes string
+	Params                                                     []string
 }
 
 func generate(out io.Writer, packageName, functionName, baseType string, dynamicTypes ...dynamicType) error {
@@ -48,14 +50,9 @@ func generate(out io.Writer, packageName, functionName, baseType string, dynamic
 		},
 		// contains checks if slice contains string
 		"contains": func(combo []string, typ string) bool {
-			for _, v := range combo {
-				if v == typ {
-					return true
-				}
-			}
-			return false
+			return slices.Contains(combo, typ)
 		},
-		// ordered checks if slice ordered string
+		// ordered returns a slice of typeStructs ordered by dynamicType
 		"ordered": func() []typeStruct {
 			ordered := make([]typeStruct, 0)
 			for _, k := range dynamicTypes {
@@ -65,7 +62,6 @@ func generate(out io.Writer, packageName, functionName, baseType string, dynamic
 			return ordered
 		},
 	}).Parse(srcTmpl)
-
 	if err != nil {
 		return err
 	}
@@ -73,12 +69,27 @@ func generate(out io.Writer, packageName, functionName, baseType string, dynamic
 	for _, dt := range dynamicTypes {
 		parts := strings.SplitN(dt.typ, ".", 2)
 
+		openingBrace := strings.Index(dt.signature, "(")
+		closingBrace := strings.Index(dt.signature, ")")
+		paramsStr := dt.signature[openingBrace+1 : closingBrace]
+
+		paramsStr = strings.TrimSpace(paramsStr)
+
+		var params []string
+		if len(paramsStr) > 0 {
+			params = strings.Split(paramsStr, ",")
+		}
+
+		returnValuesStr := dt.signature[closingBrace+1:]
+
 		types[dt.typ] = typeStruct{
-			Type:      dt.typ,
-			ShortType: parts[1],
-			VarName:   strings.ToLower(parts[1][:1]) + parts[1][1:],
-			Signature: dt.signature,
-			Function:  dt.function,
+			Type:        dt.typ,
+			ShortType:   parts[1],
+			VarName:     strings.ToLower(parts[1][:1]) + parts[1][1:],
+			Signature:   dt.signature,
+			Function:    dt.function,
+			Params:      params,
+			ReturnTypes: returnValuesStr,
 		}
 
 		combos = append(combos, dt.typ)

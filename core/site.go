@@ -41,10 +41,11 @@ type meterMeasurement struct {
 
 // batteryMeasurement is used as slice element for publishing structured data
 type batteryMeasurement struct {
-	Power    float64 `json:"power"`
-	Energy   float64 `json:"energy,omitempty"`
-	Soc      float64 `json:"soc,omitempty"`
-	Capacity float64 `json:"capacity,omitempty"`
+	Power        float64 `json:"power"`
+	Energy       float64 `json:"energy,omitempty"`
+	Soc          float64 `json:"soc,omitempty"`
+	Capacity     float64 `json:"capacity,omitempty"`
+	Controllable bool    `json:"controllable"`
 }
 
 // Site is the main configuration container. A site can host multiple loadpoints.
@@ -67,6 +68,7 @@ type Site struct {
 	BufferStartSoc                    float64      `mapstructure:"bufferStartSoc"`                    // start charging on battery above this Soc
 	MaxGridSupplyWhileBatteryCharging float64      `mapstructure:"maxGridSupplyWhileBatteryCharging"` // ignore battery charging if AC consumption is above this value
 	SmartCostLimit                    float64      `mapstructure:"smartCostLimit"`                    // always charge if cost is below this value
+	BatteryDischargeControl           bool         `mapstructure:"batteryDischargeControl"`           // prevent battery discharge for fast and planned charging
 
 	// meters
 	gridMeter     api.Meter   // Grid usage meter
@@ -81,10 +83,11 @@ type Site struct {
 	stats       *Stats                   // Stats
 
 	// cached state
-	gridPower    float64 // Grid power
-	pvPower      float64 // PV power
-	batteryPower float64 // Battery charge power
-	batterySoc   float64 // Battery soc
+	gridPower    float64         // Grid power
+	pvPower      float64         // PV power
+	batteryPower float64         // Battery charge power
+	batterySoc   float64         // Battery soc
+	batteryMode  api.BatteryMode // Battery mode
 
 	publishCache map[string]any // store last published values to avoid unnecessary republishing
 }
@@ -140,6 +143,10 @@ func NewSiteFromConfig(
 		if db.Instance != nil {
 			var err error
 			if lp.db, err = session.NewStore(lp.Title(), db.Instance); err != nil {
+				return nil, err
+			}
+			// Fix any dangling history
+			if err := lp.db.ClosePendingSessionsInHistory(lp.chargeMeterTotal()); err != nil {
 				return nil, err
 			}
 
@@ -211,6 +218,15 @@ func NewSiteFromConfig(
 		site.log.WARN.Println("bufferSoc must be larger than prioritySoc")
 	}
 
+	// revert battery mode on shutdown
+	shutdown.Register(func() {
+		if mode := site.GetBatteryMode(); mode != api.BatteryUnknown && mode != api.BatteryNormal {
+			if err := site.updateBatteryMode(api.BatteryNormal); err != nil {
+				site.log.ERROR.Println("battery mode:", err)
+			}
+		}
+	})
+
 	return site, nil
 }
 
@@ -246,6 +262,9 @@ func (site *Site) restoreSettings() {
 	}
 	if v, err := settings.Float("site.smartCostLimit"); err == nil {
 		site.SmartCostLimit = v
+	}
+	if v, err := settings.Bool("site.batteryDischargeControl"); err == nil {
+		site.BatteryDischargeControl = v
 	}
 }
 
@@ -349,6 +368,10 @@ func (site *Site) publish(key string, val interface{}) {
 	// test helper
 	if site.uiChan == nil {
 		return
+	}
+
+	if s, ok := val.(fmt.Stringer); ok {
+		val = s.String()
 	}
 
 	site.uiChan <- util.Param{
@@ -507,11 +530,14 @@ func (site *Site) updateMeters() error {
 				}
 			}
 
+			_, controllable := meter.(api.BatteryController)
+
 			mm[i] = batteryMeasurement{
-				Power:    power,
-				Energy:   energy,
-				Soc:      batSoc,
-				Capacity: capacity,
+				Power:        power,
+				Energy:       energy,
+				Soc:          batSoc,
+				Capacity:     capacity,
+				Controllable: controllable,
 			}
 		}
 
@@ -680,9 +706,9 @@ func (site *Site) greenShare(powerFrom float64, powerTo float64) float64 {
 }
 
 // effectivePrice calculates the real energy price based on self-produced and grid-imported energy.
-func (s *Site) effectivePrice(greenShare float64) *float64 {
-	if grid, err := s.tariffs.CurrentGridPrice(); err == nil {
-		feedin, err := s.tariffs.CurrentFeedInPrice()
+func (site *Site) effectivePrice(greenShare float64) *float64 {
+	if grid, err := site.tariffs.CurrentGridPrice(); err == nil {
+		feedin, err := site.tariffs.CurrentFeedInPrice()
 		if err != nil {
 			feedin = 0
 		}
@@ -693,38 +719,38 @@ func (s *Site) effectivePrice(greenShare float64) *float64 {
 }
 
 // effectiveCo2 calculates the amount of emitted co2 based on self-produced and grid-imported energy.
-func (s *Site) effectiveCo2(greenShare float64) *float64 {
-	if co2, err := s.tariffs.CurrentCo2(); err == nil {
+func (site *Site) effectiveCo2(greenShare float64) *float64 {
+	if co2, err := site.tariffs.CurrentCo2(); err == nil {
 		effCo2 := co2 * (1 - greenShare)
 		return &effCo2
 	}
 	return nil
 }
 
-func (s *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints float64) {
-	s.publish("greenShareHome", greenShareHome)
-	s.publish("greenShareLoadpoints", greenShareLoadpoints)
+func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints float64) {
+	site.publish("greenShareHome", greenShareHome)
+	site.publish("greenShareLoadpoints", greenShareLoadpoints)
 
-	if gridPrice, err := s.tariffs.CurrentGridPrice(); err == nil {
-		s.publishDelta("tariffGrid", gridPrice)
+	if gridPrice, err := site.tariffs.CurrentGridPrice(); err == nil {
+		site.publishDelta("tariffGrid", gridPrice)
 	}
-	if feedInPrice, err := s.tariffs.CurrentFeedInPrice(); err == nil {
-		s.publishDelta("tariffFeedIn", feedInPrice)
+	if feedInPrice, err := site.tariffs.CurrentFeedInPrice(); err == nil {
+		site.publishDelta("tariffFeedIn", feedInPrice)
 	}
-	if co2, err := s.tariffs.CurrentCo2(); err == nil {
-		s.publishDelta("tariffCo2", co2)
+	if co2, err := site.tariffs.CurrentCo2(); err == nil {
+		site.publishDelta("tariffCo2", co2)
 	}
-	if price := s.effectivePrice(greenShareHome); price != nil {
-		s.publish("tariffPriceHome", price)
+	if price := site.effectivePrice(greenShareHome); price != nil {
+		site.publish("tariffPriceHome", price)
 	}
-	if co2 := s.effectiveCo2(greenShareHome); co2 != nil {
-		s.publish("tariffCo2Home", co2)
+	if co2 := site.effectiveCo2(greenShareHome); co2 != nil {
+		site.publish("tariffCo2Home", co2)
 	}
-	if price := s.effectivePrice(greenShareLoadpoints); price != nil {
-		s.publish("tariffPriceLoadpoints", price)
+	if price := site.effectivePrice(greenShareLoadpoints); price != nil {
+		site.publish("tariffPriceLoadpoints", price)
 	}
-	if co2 := s.effectiveCo2(greenShareLoadpoints); co2 != nil {
-		s.publish("tariffCo2Loadpoints", co2)
+	if co2 := site.effectiveCo2(greenShareLoadpoints); co2 != nil {
+		site.publish("tariffCo2Loadpoints", co2)
 	}
 }
 
@@ -765,7 +791,6 @@ func (site *Site) update(lp Updater) {
 	}
 
 	if sitePower, batteryBuffered, batteryStart, err := site.sitePower(totalChargePower, flexiblePower); err == nil {
-
 		// ignore negative pvPower values as that means it is not an energy source but consumption
 		homePower := site.gridPower + max(0, site.pvPower) + site.batteryPower - totalChargePower
 		homePower = max(homePower, 0)
@@ -787,6 +812,14 @@ func (site *Site) update(lp Updater) {
 		site.log.ERROR.Println(err)
 	}
 
+	if batMode := site.GetBatteryMode(); site.BatteryDischargeControl {
+		if mode := site.determineBatteryMode(site.Loadpoints()); mode != batMode {
+			if err := site.updateBatteryMode(mode); err != nil {
+				site.log.ERROR.Println("battery mode:", err)
+			}
+		}
+	}
+
 	site.stats.Update(site)
 }
 
@@ -805,11 +838,13 @@ func (site *Site) prepare() {
 	site.publish("smartCostType", nil)
 	site.publish("smartCostActive", false)
 	if tariff := site.GetTariff(PlannerTariff); tariff != nil {
-		site.publish("smartCostType", tariff.Type().String())
+		site.publish("smartCostType", tariff.Type())
 	}
-	site.publish("currency", site.tariffs.Currency.String())
+	site.publish("currency", site.tariffs.Currency)
 
 	site.publish("vehicles", vehicleTitles(site.GetVehicles()))
+	site.publish("batteryDischargeControl", site.BatteryDischargeControl)
+	site.publish("batteryMode", site.batteryMode)
 }
 
 // Prepare attaches communication channels to site and loadpoints

@@ -20,6 +20,7 @@ package charger
 import (
 	"encoding/binary"
 	"errors"
+	"fmt"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -95,7 +96,15 @@ func (wb *Victron) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	return api.ChargeStatusString(string('A' + rune(binary.BigEndian.Uint16(b))))
+	u := binary.BigEndian.Uint16(b)
+	switch u {
+	case 0, 1, 2, 3:
+		return api.ChargeStatusString(string('A' + rune(binary.BigEndian.Uint16(b))))
+	case 5, 6:
+		return api.StatusB, nil
+	default:
+		return api.StatusNone, fmt.Errorf("invalid status: %d", u)
+	}
 }
 
 // Enabled implements the api.Charger interface

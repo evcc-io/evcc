@@ -55,7 +55,7 @@ func init() {
 	registry.Add("alfen", NewAlfenFromConfig)
 }
 
-// go:generate go run ../cmd/tools/decorate.go -f decorateAlfen -b "*Alfen" -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error"
+//go:generate go run ../cmd/tools/decorate.go -f decorateAlfen -b *Alfen -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error"
 
 // NewAlfenFromConfig creates a Alfen charger from generic config
 func NewAlfenFromConfig(other map[string]interface{}) (api.Charger, error) {

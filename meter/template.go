@@ -11,11 +11,9 @@ func init() {
 
 func NewMeterFromTemplateConfig(other map[string]interface{}) (api.Meter, error) {
 	instance, err := templates.RenderInstance(templates.Meter, other)
-
-	var res api.Meter
-	if err == nil {
-		res, err = NewFromConfig(instance.Type, instance.Other)
+	if err != nil {
+		return nil, err
 	}
 
-	return res, err
+	return NewFromConfig(instance.Type, instance.Other)
 }

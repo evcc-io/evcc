@@ -3,6 +3,7 @@ package tariff
 import (
 	"errors"
 	"fmt"
+	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -16,12 +17,10 @@ import (
 
 type ElectricityMaps struct {
 	*request.Helper
-	log     *util.Logger
-	mux     sync.Mutex
-	uri     string
-	zone    string
-	data    []CarbonIntensitySlot
-	updated time.Time
+	log  *util.Logger
+	uri  string
+	zone string
+	data *util.Monitor[api.Rates]
 }
 
 type CarbonIntensity struct {
@@ -61,6 +60,7 @@ func NewElectricityMapsFromConfig(other map[string]interface{}) (api.Tariff, err
 		Helper: request.NewHelper(log),
 		uri:    util.DefaultScheme(strings.TrimRight(cc.Uri, "/"), "https"),
 		zone:   strings.ToUpper(cc.Zone),
+		data:   util.NewMonitor[api.Rates](2 * time.Hour),
 	}
 
 	t.Client.Transport = &transport.Decorator{
@@ -100,28 +100,27 @@ func (t *ElectricityMaps) run(done chan error) {
 
 		once.Do(func() { close(done) })
 
-		t.mux.Lock()
-		t.updated = time.Now()
-		t.data = res.Forecast
-		t.mux.Unlock()
+		data := make(api.Rates, 0, len(res.Forecast))
+		for _, r := range res.Forecast {
+			ar := api.Rate{
+				Start: r.Datetime.Local(),
+				End:   r.Datetime.Add(time.Hour).Local(),
+				Price: r.CarbonIntensity,
+			}
+			data = append(data, ar)
+		}
+		data.Sort()
+
+		t.data.Set(data)
 	}
 }
 
 func (t *ElectricityMaps) Rates() (api.Rates, error) {
-	t.mux.Lock()
-	defer t.mux.Unlock()
-
-	res := make(api.Rates, 0, len(t.data))
-	for _, r := range t.data {
-		ar := api.Rate{
-			Start: r.Datetime.Local(),
-			End:   r.Datetime.Add(time.Hour).Local(),
-			Price: r.CarbonIntensity,
-		}
-		res = append(res, ar)
-	}
-
-	return res, outdatedError(t.updated, time.Hour)
+	var res api.Rates
+	err := t.data.GetFunc(func(val api.Rates) {
+		res = slices.Clone(val)
+	})
+	return res, err
 }
 
 // Type implements the api.Tariff interface

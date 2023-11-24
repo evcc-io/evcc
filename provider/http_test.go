@@ -9,6 +9,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 type httpHandler struct {
@@ -32,8 +33,11 @@ func TestHttpGet(t *testing.T) {
 
 	uriUrl, _ := url.Parse(uri)
 
-	res, err := p.StringGetter()()
-	assert.NoError(t, err)
+	g, err := p.StringGetter()
+	require.NoError(t, err)
+
+	res, err := g()
+	require.NoError(t, err)
 	assert.Equal(t, uriUrl.Path, h.req.URL.Path)
 	assert.Equal(t, h.val, res)
 }
@@ -48,8 +52,11 @@ func TestHttpSet(t *testing.T) {
 
 	uriUrl, _ := url.Parse(uri)
 
-	err := p.StringSetter("baz")("4711")
-	assert.NoError(t, err)
+	s, err := p.StringSetter("baz")
+	require.NoError(t, err)
+
+	err = s("4711")
+	require.NoError(t, err)
 	assert.Equal(t, uriUrl.Path, h.req.URL.Path)
 	assert.Equal(t, "baz=4711", h.req.URL.RawQuery)
 }

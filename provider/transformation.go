@@ -56,7 +56,7 @@ func configureInputs(inConfig []transformationConfig) ([]inputTransformation, er
 			f = func() (any, error) { return ff() }
 
 		default:
-			return nil, fmt.Errorf("%s: Could not find converter for %s", cc.Name, cc.Type)
+			return nil, fmt.Errorf("%s: invalid type %s", cc.Name, cc.Type)
 		}
 
 		in = append(in, inputTransformation{

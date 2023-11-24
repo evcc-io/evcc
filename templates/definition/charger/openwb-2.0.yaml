@@ -2,15 +2,17 @@ template: openwb-2.0
 products:
   - brand: openWB
     description:
-      generic: series2 (Software 2)
+      generic: Software 2.x
 capabilities: ["1p3p", "mA"]
 requirements:
   description:
-    de: Erfordert Software 2.0
-    en: Requires software 2.0
+    de: Erfordert Software 2.x
+    en: Requires software 2.x
 params:
   - name: modbus
     choice: ["tcpip"]
+    port: 1502
+    id: 1
 render: |
   type: openwb-2.0
   {{- include "modbus" . }}

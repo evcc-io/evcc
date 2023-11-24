@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/mock"
 	"github.com/evcc-io/evcc/util"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
@@ -14,8 +13,8 @@ import (
 
 func TestRemainingChargeDuration(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	charger := mock.NewMockCharger(ctrl)
-	vehicle := mock.NewMockVehicle(ctrl)
+	charger := api.NewMockCharger(ctrl)
+	vehicle := api.NewMockVehicle(ctrl)
 	// 9 kWh userBatCap => 10 kWh virtualBatCap
 	vehicle.EXPECT().Capacity().Return(float64(9))
 
@@ -32,13 +31,13 @@ func TestRemainingChargeDuration(t *testing.T) {
 
 func TestSocEstimation(t *testing.T) {
 	type chargerStruct struct {
-		*mock.MockCharger
-		*mock.MockBattery
+		*api.MockCharger
+		*api.MockBattery
 	}
 
 	ctrl := gomock.NewController(t)
-	vehicle := mock.NewMockVehicle(ctrl)
-	charger := &chargerStruct{mock.NewMockCharger(ctrl), mock.NewMockBattery(ctrl)}
+	vehicle := api.NewMockVehicle(ctrl)
+	charger := &chargerStruct{api.NewMockCharger(ctrl), api.NewMockBattery(ctrl)}
 
 	// 9 kWh user battery capacity is converted to initial value of 10 kWh virtual capacity
 	var capacity float64 = 9
@@ -116,13 +115,13 @@ func TestSocEstimation(t *testing.T) {
 
 func TestSocFromChargerAndVehicleWithErrors(t *testing.T) {
 	type chargerStruct struct {
-		*mock.MockCharger
-		*mock.MockBattery
+		*api.MockCharger
+		*api.MockBattery
 	}
 
 	ctrl := gomock.NewController(t)
-	vehicle := mock.NewMockVehicle(ctrl)
-	charger := &chargerStruct{mock.NewMockCharger(ctrl), mock.NewMockBattery(ctrl)}
+	vehicle := api.NewMockVehicle(ctrl)
+	charger := &chargerStruct{api.NewMockCharger(ctrl), api.NewMockBattery(ctrl)}
 
 	// 9 kWh user battery capacity is converted to initial value of 10 kWh virtual capacity
 	var capacity float64 = 9
@@ -211,8 +210,8 @@ func TestSocFromChargerAndVehicleWithErrors(t *testing.T) {
 
 func TestImprovedEstimatorRemainingChargeDuration(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	charger := mock.NewMockCharger(ctrl)
-	vehicle := mock.NewMockVehicle(ctrl)
+	charger := api.NewMockCharger(ctrl)
+	vehicle := api.NewMockVehicle(ctrl)
 
 	// https://github.com/evcc-io/evcc/pull/7510#issuecomment-1512688548
 	tc := []struct {
@@ -228,7 +227,7 @@ func TestImprovedEstimatorRemainingChargeDuration(t *testing.T) {
 		{17, 50, 100, 7 * 1e3, 1*time.Hour + 28*time.Minute + 23*time.Second},
 		{50, 10, 60, 11 * 1e3, 2*time.Hour + 31*time.Minute + 31*time.Second},
 		{50, 50, 100, 11 * 1e3, 2*time.Hour + 57*time.Minute + 17*time.Second},
-		{80, 10, 60, 22 * 1e3, 2*time.Hour + 01*time.Minute + 13*time.Second},
+		{80, 10, 60, 22 * 1e3, 2*time.Hour + 0o1*time.Minute + 13*time.Second},
 		{80, 50, 100, 22 * 1e3, 2*time.Hour + 48*time.Minute + 39*time.Second},
 	}
 

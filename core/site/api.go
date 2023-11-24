@@ -43,4 +43,11 @@ type API interface {
 	GetTariff(string) api.Tariff
 	GetSmartCostLimit() float64
 	SetSmartCostLimit(float64) error
+
+	//
+	// battery control
+	//
+
+	GetBatteryDischargeControl() bool
+	SetBatteryDischargeControl(bool) error
 }

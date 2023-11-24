@@ -19,6 +19,13 @@ params:
     port: 1502
   - name: capacity
     advanced: true
+  # battery control
+  - name: minsoc
+    type: number
+    advanced: true
+  - name: maxsoc
+    type: number
+    advanced: true
 render: |
   {{- if eq .usage "pv" }}
   type: custom
@@ -39,12 +46,27 @@ render: |
       value: 160:3:DCW # string 3
   {{- end }}
   {{- if eq .usage "battery" }}
-  type: modbus
-  {{- include "modbus" . }}
-  model: sunspec
-  power: 802:W # sunspec model 802 battery
-  soc: 802:SoC # sunspec model 802 battery
-  {{- if .capacity }}
+  type: custom
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    model: sunspec
+    value: 802:W # 802 battery control
+  soc:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    model: sunspec
+    value: 802:SoC # 802 battery control
+  limitsoc:
+    source: float2int
+    set:
+      source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 1042 # limit soc
+        type: writesingle
+        decode: uint16
   capacity: {{ .capacity }} # kWh
-  {{- end }}
+  minsoc: {{ .minsoc }} # %
+  maxsoc: {{ .maxsoc }} # %
   {{- end }}

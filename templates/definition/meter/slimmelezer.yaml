@@ -17,14 +17,12 @@ render: |
     add:
     - source: http
       uri: http://{{ .host }}/sensor/power_delivered
-      method: GET
       headers:
       - content-type: application/json
       jq: .value
       scale: 1000
     - source: http
       uri: http://{{ .host }}/sensor/power_returned
-      method: GET
       headers:
       - content-type: application/json
       jq: .value
@@ -34,32 +32,27 @@ render: |
     add:
     - source: http
       uri: http://{{ .host }}/sensor/energy_delivered_tariff1
-      method: GET
       headers:
       - content-type: application/json
       jq: .value
     - source: http
       uri: http://{{ .host }}/sensor/energy_delivered_tariff2
-      method: GET
       headers:
       - content-type: application/json
       jq: .value
   currents:
   - source: http
     uri: http://{{ .host }}/sensor/current_l1
-    method: GET
     headers:
     - content-type: application/json
     jq: .value
   - source: http
     uri: http://{{ .host }}/sensor/current_l2
-    method: GET
     headers:
     - content-type: application/json
     jq: .value
   - source: http
     uri: http://{{ .host }}/sensor/current_l3
-    method: GET
     headers:
     - content-type: application/json
     jq: .value
@@ -68,14 +61,12 @@ render: |
     add:
     - source: http
       uri: http://{{ .host }}/sensor/power_delivered_l1
-      method: GET
       headers:
       - content-type: application/json
       jq: .value
       scale: 1000
     - source: http
       uri: http://{{ .host }}/sensor/power_returned_l1
-      method: GET
       headers:
       - content-type: application/json
       jq: .value
@@ -84,14 +75,12 @@ render: |
     add:
     - source: http
       uri: http://{{ .host }}/sensor/power_delivered_l2
-      method: GET
       headers:
       - content-type: application/json
       jq: .value
       scale: 1000
     - source: http
       uri: http://{{ .host }}/sensor/power_returned_l2
-      method: GET
       headers:
       - content-type: application/json
       jq: .value
@@ -100,14 +89,12 @@ render: |
     add:
     - source: http
       uri: http://{{ .host }}/sensor/power_delivered_l3
-      method: GET
       headers:
       - content-type: application/json
       jq: .value
       scale: 1000
     - source: http
       uri: http://{{ .host }}/sensor/power_returned_l3
-      method: GET
       headers:
       - content-type: application/json
       jq: .value

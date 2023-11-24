@@ -38,9 +38,9 @@ var (
 	log     = util.NewLogger("main")
 	cfgFile string
 
-	ignoreEmpty = ""                               // ignore empty keys
-	ignoreLogs  = []string{"log"}                  // ignore log messages, including warn/error
-	ignoreMqtt  = []string{"auth", "releaseNotes"} // excessive size may crash certain brokers
+	ignoreEmpty = ""                                      // ignore empty keys
+	ignoreLogs  = []string{"log"}                         // ignore log messages, including warn/error
+	ignoreMqtt  = []string{"log", "auth", "releaseNotes"} // excessive size may crash certain brokers
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -179,7 +179,13 @@ func runRoot(cmd *cobra.Command, args []string) {
 	// setup modbus proxy
 	if err == nil {
 		for _, cfg := range conf.ModbusProxy {
-			if err = modbus.StartProxy(cfg.Port, cfg.Settings, cfg.ReadOnly); err != nil {
+			var mode modbus.ReadOnlyMode
+			mode, err = modbus.ReadOnlyModeString(cfg.ReadOnly)
+			if err != nil {
+				break
+			}
+
+			if err = modbus.StartProxy(cfg.Port, cfg.Settings, mode); err != nil {
 				break
 			}
 		}

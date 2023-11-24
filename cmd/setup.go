@@ -113,7 +113,7 @@ type goConfig struct {
 
 type proxyConfig struct {
 	Port            int
-	ReadOnly        bool
+	ReadOnly        string
 	modbus.Settings `mapstructure:",squash"`
 }
 
@@ -368,7 +368,7 @@ func configureEnvironment(cmd *cobra.Command, conf globalConfig) (err error) {
 	}
 
 	// setup sponsorship (allow env override)
-	if err == nil && conf.SponsorToken != "" {
+	if err == nil {
 		err = sponsor.ConfigureSponsorship(conf.SponsorToken)
 	}
 

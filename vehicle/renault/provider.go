@@ -178,6 +178,6 @@ func (v *Provider) StartCharge() error {
 
 // StopCharge implements the api.VehicleChargeController interface
 func (v *Provider) StopCharge() error {
-	_, err := v.action(kamereon.ActionStart)
+	_, err := v.action(kamereon.ActionStop)
 	return err
 }

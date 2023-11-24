@@ -7,7 +7,6 @@ import (
 
 	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/mock"
 	"github.com/evcc-io/evcc/util"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
@@ -35,7 +34,7 @@ func TestPlan(t *testing.T) {
 	clock := clock.NewMock()
 	ctrl := gomock.NewController(t)
 
-	trf := mock.NewMockTariff(ctrl)
+	trf := api.NewMockTariff(ctrl)
 	trf.EXPECT().Rates().AnyTimes().Return(rates([]float64{20, 60, 10, 80, 40, 90}, clock.Now(), time.Hour), nil)
 
 	p := &Planner{
@@ -146,7 +145,7 @@ func TestFlatTariffTargetInThePast(t *testing.T) {
 	clock := clock.NewMock()
 	ctrl := gomock.NewController(t)
 
-	trf := mock.NewMockTariff(ctrl)
+	trf := api.NewMockTariff(ctrl)
 	trf.EXPECT().Rates().AnyTimes().Return(rates([]float64{0}, clock.Now(), time.Hour), nil)
 
 	p := &Planner{
@@ -168,7 +167,7 @@ func TestFlatTariffLongSlots(t *testing.T) {
 	clock := clock.NewMock()
 	ctrl := gomock.NewController(t)
 
-	trf := mock.NewMockTariff(ctrl)
+	trf := api.NewMockTariff(ctrl)
 	trf.EXPECT().Rates().AnyTimes().Return(rates([]float64{0}, clock.Now(), 24*time.Hour), nil)
 
 	p := &Planner{
@@ -196,7 +195,7 @@ func TestTargetAfterKnownPrices(t *testing.T) {
 	clock := clock.NewMock()
 	ctrl := gomock.NewController(t)
 
-	trf := mock.NewMockTariff(ctrl)
+	trf := api.NewMockTariff(ctrl)
 	trf.EXPECT().Rates().AnyTimes().Return(rates([]float64{0}, clock.Now(), time.Hour), nil)
 
 	p := &Planner{
@@ -218,7 +217,7 @@ func TestChargeAfterTargetTime(t *testing.T) {
 	clock := clock.NewMock()
 	ctrl := gomock.NewController(t)
 
-	trf := mock.NewMockTariff(ctrl)
+	trf := api.NewMockTariff(ctrl)
 	trf.EXPECT().Rates().AnyTimes().Return(rates([]float64{0, 0, 0, 0}, clock.Now(), time.Hour), nil)
 
 	p := &Planner{

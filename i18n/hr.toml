@@ -66,20 +66,32 @@ powerSub2 = "napajanje …"
 tabTitle = "Živa zajednica"
 
 [footer.savings]
+co2Saved = "{value} ušteđeno"
+co2Title = "CO₂ emisija"
+configurePriceCo2 = "Nauči kako konfigurirati podatke o cijeni i CO₂."
 footerLong = "{percent} % solarna energija"
 footerShort = "{percent} % solarno"
 modalTitle = "Pregled napajanja energije"
+moneySaved = "{value} ušteđeno"
 percentGrid = "{grid} kWh mreža"
 percentSelf = "{self} kWh solarno"
 percentTitle = "Solarna energija"
+periodLabel = "Razdoblje:"
 priceFeedIn = "{feedInPrice} za predaju u mrežu"
 priceGrid = "{gridPrice} iz mreže"
 priceTitle = "Cijena energije"
+referenceGrid = "mreža"
+referenceLabel = "Referentni podaci:"
 savingsComparedToGrid = "u usporedbi s mrežom"
 savingsTitle = "Ušteda"
 savingsTotalEnergy = "{total} kWh napojeno"
 since = "od {since}"
 tabTitle = "Moji podaci"
+
+[footer.savings.period]
+30d = "zadnjih 30 dana"
+365d = "zadnjih 365 dana"
+total = "sveukupno"
 
 [footer.sponsor]
 becomeSponsor = "Postani sponzor"
@@ -244,6 +256,8 @@ title = "Ciljano vrijeme"
 today = "danas"
 tomorrow = "sutra"
 update = "Ažuriraj"
+vehicleCapacityDocs = "Saznaj kako to konfigurirati."
+vehicleCapacityRequired = "Kapacitet baterije vozila je potreban za procjenjivanje vremena punjenja."
 
 [main.targetChargePlan]
 chargeDuration = "Vrijeme napajanja"
@@ -278,8 +292,8 @@ vehicleTarget = "Ograničenje vozila: {soc} %"
 
 [main.vehicleStatus]
 charging = "Napajanje …"
-cheapEnergyCharging = "Napajanje jeftinom energijom: {price} (ograničenje < {limit})"
-cleanEnergyCharging = "Napajanje čistom energijom: {co2} (ograničenje < {limit})"
+cheapEnergyCharging = "Napajanje jeftinom energijom: {price} (ograničenje {limit})"
+cleanEnergyCharging = "Napajanje čistom energijom: {co2} (ograničenje {limit})"
 climating = "Otkriveno predkondicioniranje."
 connected = "Povezano."
 disconnected = "Nepovezano."

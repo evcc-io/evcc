@@ -175,7 +175,7 @@ type Loadpoint struct {
 	progress                *Progress      // Step-wise progress indicator
 
 	// session log
-	db      session.Database
+	db      *session.DB
 	session *session.Session
 
 	tasks *util.Queue[Task] // tasks to be executed
@@ -584,6 +584,9 @@ func (lp *Loadpoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	lp.publish(minCurrent, lp.MinCurrent)
 	lp.publish(maxCurrent, lp.MaxCurrent)
 
+	lp.publish("enableThreshold", lp.Enable.Threshold)
+	lp.publish("disableThreshold", lp.Disable.Threshold)
+
 	lp.setConfiguredPhases(lp.ConfiguredPhases)
 	lp.publish(phasesEnabled, lp.phases)
 	lp.publish(phasesActive, lp.activePhases())
@@ -602,6 +605,13 @@ func (lp *Loadpoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	} else {
 		lp.publish(chargerIcon, nil)
 	}
+
+	// vehicle
+	lp.publish(vehiclePresent, false)
+	lp.publish(vehicleTitle, "")
+	lp.publish(vehicleIcon, "")
+	lp.publish(vehicleCapacity, 0.0)
+	lp.publish(vehicleOdometer, 0.0)
 
 	// assign and publish default vehicle
 	if lp.defaultVehicle != nil {
@@ -980,13 +990,11 @@ func (lp *Loadpoint) scalePhasesRequired() bool {
 
 // scalePhasesIfAvailable scales if api.PhaseSwitcher is available
 func (lp *Loadpoint) scalePhasesIfAvailable(phases int) error {
-	want := phases
 	if lp.ConfiguredPhases != 0 {
 		phases = lp.ConfiguredPhases
 	}
 
 	if _, ok := lp.charger.(api.PhaseSwitcher); ok {
-		lp.log.DEBUG.Printf("!! scalePhasesIfAvailable: %dp -> %dp", want, phases)
 		return lp.scalePhases(phases)
 	}
 
@@ -1001,7 +1009,6 @@ func (lp *Loadpoint) scalePhases(phases int) error {
 		panic("charger does not implement api.PhaseSwitcher")
 	}
 
-	lp.log.DEBUG.Printf("!! scalePhases: GetPhases %dp <> %dp wanted", lp.GetPhases(), phases)
 	if lp.GetPhases() != phases {
 		// switch phases
 		if err := cp.Phases1p3p(phases); err != nil {
@@ -1374,7 +1381,7 @@ func (lp *Loadpoint) publishSocAndRange() {
 	soc, err := lp.chargerSoc()
 
 	// guard for socEstimator removed by api
-	if lp.socEstimator == nil || !lp.vehicleHasSoc() {
+	if lp.socEstimator == nil || (!lp.vehicleHasSoc() && err != nil) {
 		// This is a workaround for heaters. Without vehicle, the soc estimator is not initialized.
 		// We need to check if the charger can provide soc and use it if available.
 		if err == nil {
@@ -1558,6 +1565,9 @@ func (lp *Loadpoint) Update(sitePower float64, autoCharge, batteryBuffered, batt
 	mode := lp.GetMode()
 	lp.publish("mode", mode)
 
+	// update and publish plan without being short-circuited by modes etc.
+	plannerActive := lp.plannerActive()
+
 	// execute loading strategy
 	switch {
 	case !lp.connected():
@@ -1588,7 +1598,7 @@ func (lp *Loadpoint) Update(sitePower float64, autoCharge, batteryBuffered, batt
 		err = lp.fastCharging()
 
 	// minimum or target charging
-	case lp.minSocNotReached() || lp.plannerActive():
+	case lp.minSocNotReached() || plannerActive:
 		err = lp.fastCharging()
 		lp.resetPhaseTimer()
 		lp.elapsePVTimer() // let PV mode disable immediately afterwards
