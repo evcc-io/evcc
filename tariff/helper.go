@@ -34,13 +34,12 @@ func LevelRates(rates api.Rates, percent float64) []LeveledRate {
 	}
 
 	if totalDuration > 0 {
-		weighedCost /= float64(totalDuration)
+		weighedCost /= float64(totalDuration) * percent
 	}
 
-	cheap := weighedCost * percent
 	for i, r := range rates {
 		res[i].Rate = r
-		if r.Price <= cheap {
+		if r.Price <= weighedCost {
 			res[i].Cheap = true
 		}
 	}
