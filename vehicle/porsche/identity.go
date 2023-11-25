@@ -29,7 +29,20 @@ var (
 			TokenURL:  OAuthURI + "/oauth/token",
 			AuthStyle: oauth2.AuthStyleInParams,
 		},
-		Scopes: []string{"openid", "offline_access"},
+		Scopes: []string{
+			"openid", "offline_access", "profile", "email",
+			"pid:user_profile.vehicles:read",
+			// "pid:user_profile.addresses:read",
+			// "pid:user_profile.birthdate:read",
+			// "pid:user_profile.dealers:read",
+			// "pid:user_profile.emails:read",
+			// "pid:user_profile.locale:read",
+			// "pid:user_profile.name:read",
+			// "pid:user_profile.phones:read",
+			// "pid:user_profile.porscheid:read",
+			// "pid:user_profile.vehicles:read",
+			// "pid:user_profile.vehicles:register",
+		},
 	}
 )
 
