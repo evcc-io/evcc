@@ -77,7 +77,7 @@ render: |
     source: sequence
     set:
     - source: const
-      value: 1
+      value: 60
       set:
         source: watchdog
         timeout: 60s # re-write at timeout/2
