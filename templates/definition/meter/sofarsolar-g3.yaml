@@ -163,7 +163,7 @@ render: |
         {{- include "modbus" . | indent 6 }}
         delay: {{ .delay }}
         register:
-          address: 0x104C # BatConfig_Current_Discharge_Limit
+          address: 0x104D # BatConfig_Depth_of_Discharge
           type: writemultiple
           decode: uint16
         scale: 100
