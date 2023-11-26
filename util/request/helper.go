@@ -82,3 +82,12 @@ func (r *Helper) GetJSON(url string, res interface{}) error {
 	}
 	return err
 }
+
+// Get executes HTTP GET request.
+func (r *Helper) Get(url string) (string, error) {
+	req, err := New(http.MethodGet, url, nil, AcceptJSON)
+	if err == nil {
+		return r.Do(req)
+	}
+	return nil, err
+}
