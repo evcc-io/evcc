@@ -12,8 +12,10 @@ const (
 	flagHeaders            = "log-headers"
 	flagHeadersDescription = "Log headers"
 
-	flagBatteryMode            = "battery-mode"
-	flagBatteryModeDescription = "Set battery mode (normal, hold, charge)"
+	flagBatteryMode                = "battery-mode"
+	flagBatteryModeDescription     = "Set battery mode (normal, hold, charge)"
+	flagBatteryModeWait            = "battery-mode-wait"
+	flagBatteryModeWaitDescription = "Wait given duration during which potential watchdogs are active"
 
 	flagCurrent            = "current"
 	flagCurrentDescription = "Set maximum current"
