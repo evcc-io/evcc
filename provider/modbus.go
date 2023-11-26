@@ -290,12 +290,7 @@ func (m *Modbus) FloatSetter(_ string) (func(float64) error, error) {
 		switch op.ReadLen {
 		case 2:
 			var b [4]byte
-
-			// TODO preserve encoding
-			uval := math.Float32bits(float32(val))
-			uval = uval&0xFFFF<<16 | uval>>16
-
-			binary.BigEndian.PutUint32(b[:], uval)
+			binary.BigEndian.PutUint32(b[:], math.Float32bits(float32(val)))
 			_, err = m.conn.WriteMultipleRegisters(op.OpCode, 2, b[:])
 
 		case 4:
