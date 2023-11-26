@@ -31,7 +31,7 @@ func NewProvider(log *util.Logger, connect *API, emobility *EmobilityAPI, vin, c
 		}, cache),
 
 		wakeup: func() error {
-			return emobility.WakeUp(vin)
+			return connect.WakeUp(vin)
 		},
 	}
 
