@@ -72,10 +72,6 @@ func (v *API) Status(vin string) (StatusResponse, error) {
 // WakeUp tries to wakeup the vehicle by requesting the current vehicle overview
 func (v *API) WakeUp(vin string) error {
 	uri := fmt.Sprintf("%s/service-vehicle/de/de_DE/vehicle-data/%s/current/request", ApiURI, vin)
-	req, err := v.New(http.MethodGet, url, nil, AcceptJSON)
-	if err != nil {
-		return err;
-	}
-	resp, err2 := v.Do(req)
-	return err2
+	_, err := v.Get(uri)
+	return err
 }
