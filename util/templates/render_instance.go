@@ -2,7 +2,6 @@ package templates
 
 import (
 	"errors"
-	"fmt"
 
 	"github.com/evcc-io/evcc/util"
 	"gopkg.in/yaml.v3"
@@ -35,7 +34,6 @@ func RenderInstance(class Class, other map[string]interface{}) (*Instance, error
 		return nil, err
 	}
 
-	fmt.Println(string(b))
 	var instance Instance
 	if err = yaml.Unmarshal(b, &instance); err == nil && instance.Type == "" {
 		err = errors.New("empty instance type- check for missing usage")
