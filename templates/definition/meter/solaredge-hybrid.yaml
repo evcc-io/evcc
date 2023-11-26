@@ -22,10 +22,10 @@ params:
   - name: timeout
   - name: capacity
     advanced: true
-  # - name: watchdog
-  #   type: duration
-  #   default: 60s
-  #   advanced: true
+  - name: watchdog
+    type: duration
+    default: 60s
+    advanced: true
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -77,10 +77,10 @@ render: |
     source: sequence
     set:
     - source: const
-      value: 60
+      value: {{ (toDuration .watchdog).Seconds }}
       set:
         source: watchdog
-        timeout: 60s # re-write at timeout/2
+        timeout: {{ .watchdog }} # re-write at timeout/2
         set:
           source: modbus
           {{- include "modbus" . | indent 8 }}
@@ -95,16 +95,13 @@ render: |
         2: 1 # hold
         3: 3 # charge
       set:
-        source: watchdog
-        timeout: 1m
-        set:
-          source: modbus
-          {{- include "modbus" . | indent 8 }}
-          timeout: {{ .timeout }}
-          register:
-            address: 0xE00D # StorageRemoteCtrl_CommandMode
-            type: writesingle
-            decode: uint16
+        source: modbus
+        {{- include "modbus" . | indent 6 }}
+        timeout: {{ .timeout }}
+        register:
+          address: 0xE00D # StorageRemoteCtrl_CommandMode
+          type: writesingle
+          decode: uint16
   {{- if .capacity }}
   capacity: {{ .capacity }} # kWh
   {{- end }}
