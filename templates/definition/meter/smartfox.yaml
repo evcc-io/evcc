@@ -2,15 +2,15 @@ template: smartfox
 products:
   - brand: Smartfox
     description:
-      generic: Smartfox Reg/Reg extended/Pro/Pro 2/Pro Light/Pro Light 2/Light
+      generic: Pro, Pro 2, Pro Light, Pro Light 2, Light, Reg, Reg extended
 requirements:
   description:
     de: |
-      Kann verwendet werden, um Daten für 'grid', 'pv' und 'aux' zu erhalten. 
-      Wenn "usage" nicht definiert ist, wird die Leistung für die Warmwasserbereitung zurückgegeben (als "aux" zu verwenden).
+      Kann verwendet werden, um Daten für `grid`, `pv` und `aux` zu erhalten. 
+      Wenn `usage` nicht definiert ist, wird die Leistung für die Warmwasserbereitung zurückgegeben (als `aux` zu verwenden).
     en: |
-      Can be used to get 'grid', 'pv' and 'aux' data. 
-      If 'usage' is not defined, then return the power for the water heating (to be used as 'aux').
+      Can be used to get `grid`, `pv` and `aux` data. 
+      If `usage` is not defined, then return the power for the water heating (to be used as `aux`).
 params:
   - name: usage
     choice: ["grid", "pv"]
