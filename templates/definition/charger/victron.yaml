@@ -2,7 +2,7 @@ template: victron
 products:
   - brand: Victron
     description:
-      generic: EV charging station
+      generic: EV Charging Station
 requirements:
   evcc: ["sponsorship"]
   description:
