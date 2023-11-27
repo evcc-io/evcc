@@ -82,13 +82,3 @@ func (r *Helper) GetJSON(url string, res interface{}) error {
 	}
 	return err
 }
-
-// GetJSONRaw executes HTTP GET request and returns undecoded result.
-// It returns a StatusError on response codes other than HTTP 2xx.
-func (r *Helper) GetJSONRaw(url string) ([]byte, error) {
-	req, err := New(http.MethodGet, url, nil, AcceptJSON)
-	if err == nil {
-		return r.DoBody(req)
-	}
-	return nil, err
-}
