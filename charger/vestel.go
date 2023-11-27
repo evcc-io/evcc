@@ -273,4 +273,7 @@ func (wb *Vestel) Diagnose() {
 	if b, err := wb.conn.ReadInputRegisters(vestelRegFirmware, 50); err == nil {
 		fmt.Printf("Firmware:\t%s\n", b)
 	}
+	if b, err := wb.conn.ReadHoldingRegisters(vestelRegFailsafeTimeout, 1); err == nil {
+		fmt.Printf("Failsafe timeout (plain):\t%d\n", binary.BigEndian.Uint16(b))
+	}
 }
