@@ -149,7 +149,7 @@ render: |
               address: 13050 # Forced mode
               type: writesingle
               decode: uint16
-    - case: 2 # charge
+    - case: 3 # charge
       set:
         source: sequence
         set:
