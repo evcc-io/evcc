@@ -59,24 +59,10 @@ func (o *watchdogProvider) wdt(ctx context.Context, set func() error) {
 	}
 }
 
-var _ SetIntProvider = (*watchdogProvider)(nil)
-
-func (o *watchdogProvider) IntSetter(param string) (func(int64) error, error) {
-	set, err := NewIntSetterFromConfig(param, o.set)
-	if err != nil {
-		return nil, err
-	}
-
-	var reset *int64
-	if o.reset != nil {
-		val, err := strconv.ParseInt(*o.reset, 10, 64)
-		if err != nil {
-			return nil, err
-		}
-		reset = &val
-	}
-
-	return func(val int64) error {
+// setter is the generic setter function for watchdogProvider
+// it is currently not possible to write this as a method
+func setter[T comparable](o *watchdogProvider, set func(T) error, reset *T) func(T) error {
+	return func(val T) error {
 		o.mu.Lock()
 
 		// stop wdt on new write
@@ -98,33 +84,45 @@ func (o *watchdogProvider) IntSetter(param string) (func(int64) error, error) {
 		o.mu.Unlock()
 
 		return set(val)
-	}, err
+	}
 }
 
-// var _ SetFloatProvider = (*watchdogProvider)(nil)
+var _ SetIntProvider = (*watchdogProvider)(nil)
 
-// func (o *watchdogProvider) FloatSetter(param string) (func(float64) error, error) {
-// 	set, err := NewFloatSetterFromConfig(param, o.set)
-// 	if err != nil {
-// 		return nil, err
-// 	}
+func (o *watchdogProvider) IntSetter(param string) (func(int64) error, error) {
+	set, err := NewIntSetterFromConfig(param, o.set)
+	if err != nil {
+		return nil, err
+	}
 
-// 	val, err := strconv.ParseFloat(o.str, 64)
-// 	return func(_ float64) error {
-// 		return set(val)
-// 	}, err
-// }
+	var reset *int64
+	if o.reset != nil {
+		val, err := strconv.ParseInt(*o.reset, 10, 64)
+		if err != nil {
+			return nil, err
+		}
+		reset = &val
+	}
 
-// var _ SetBoolProvider = (*watchdogProvider)(nil)
+	return setter(o, set, reset), nil
+}
 
-// func (o *watchdogProvider) BoolSetter(param string) (func(bool) error, error) {
-// 	set, err := NewBoolSetterFromConfig(param, o.set)
-// 	if err != nil {
-// 		return nil, err
-// 	}
+var _ SetFloatProvider = (*watchdogProvider)(nil)
 
-// 	val, err := strconv.ParseBool(o.str)
-// 	return func(_ bool) error {
-// 		return set(val)
-// 	}, err
-// }
+func (o *watchdogProvider) FloatSetter(param string) (func(float64) error, error) {
+	set, err := NewFloatSetterFromConfig(param, o.set)
+	if err != nil {
+		return nil, err
+	}
+
+	var reset *float64
+	if o.reset != nil {
+		val, err := strconv.ParseFloat(*o.reset, 64)
+		if err != nil {
+			return nil, err
+		}
+		reset = &val
+	}
+
+	return setter(o, set, reset), nil
+}
