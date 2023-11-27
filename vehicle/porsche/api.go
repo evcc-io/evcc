@@ -2,6 +2,7 @@ package porsche
 
 import (
 	"fmt"
+	"net/http"
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
@@ -71,6 +72,13 @@ func (v *API) Status(vin string) (StatusResponse, error) {
 // WakeUp tries to wakeup the vehicle by requesting the current vehicle overview
 func (v *API) WakeUp(vin string) error {
 	uri := fmt.Sprintf("%s/service-vehicle/de/de_DE/vehicle-data/%s/current/request", ApiURI, vin)
-	_, err := v.GetJSONRaw(uri)
-	return err
+	req, err := request.New(http.MethodPost, uri, nil, request.AcceptJSON)
+	if err != nil {
+		return err
+	}
+	resp, err2 := v.Do(req)
+	if err2 == nil {
+		defer resp.Body.Close()
+	}
+	return err2
 }
