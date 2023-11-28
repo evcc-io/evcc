@@ -29,7 +29,7 @@ func NewConvertFromConfig(other map[string]interface{}) (Provider, error) {
 var _ SetFloatProvider = (*convertProvider)(nil)
 
 func (o *convertProvider) FloatSetter(param string) (func(float64) error, error) {
-	if o.Convert == "float2int" {
+	if o.Convert != "float2int" {
 		return nil, fmt.Errorf("convert: invalid conversion: %s", o.Convert)
 	}
 
@@ -43,7 +43,7 @@ func (o *convertProvider) FloatSetter(param string) (func(float64) error, error)
 var _ SetIntProvider = (*convertProvider)(nil)
 
 func (o *convertProvider) IntSetter(param string) (func(int64) error, error) {
-	if o.Convert == "int2float" {
+	if o.Convert != "int2float" {
 		return nil, fmt.Errorf("convert: invalid conversion: %s", o.Convert)
 	}
 
