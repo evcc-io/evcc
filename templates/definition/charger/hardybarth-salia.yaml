@@ -8,9 +8,6 @@ products:
       generic: cPH2, cPμ2
 requirements:
   evcc: ["sponsorship"]
-  description:
-    de: Erfordert Firmware >= 2.0
-    en: Requires firmware >= 2.0
 params:
   - name: host
 render: |
