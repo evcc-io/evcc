@@ -3,6 +3,22 @@ products:
   - brand: Tesla
     description:
       generic: Powerwall
+requirements:
+  description:
+    de: |
+      Um die optionale Entladesteuerung der Battery zu nutzen wird ein `refresh` Token für die Kommunikation mit der Tesla API benötigt.
+
+      Folgende Apps ermöglichen das Erstellen des Tokens:
+      - [Auth app for Tesla (iOS)](https://apps.apple.com/us/app/auth-app-for-tesla/id1552058613#?platform=iphone)
+      - [Tesla Tokens (Android)](https://play.google.com/store/apps/details?id=net.leveugle.teslatokens)
+      - [Tesla Auth (macOS, Linux)](https://github.com/adriankumpf/tesla_auth)
+    en: |
+      To use the optional battery control you need to generate a `refresh` token for communicating with the Tesla API.
+
+      The following apps allow to create the token:
+      - [Auth app for Tesla (iOS)](https://apps.apple.com/us/app/auth-app-for-tesla/id1552058613#?platform=iphone)
+      - [Tesla Tokens (Android)](https://play.google.com/store/apps/details?id=net.leveugle.teslatokens)
+      - [Tesla Auth (macOS, Linux)](https://github.com/adriankumpf/tesla_auth)
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -13,9 +29,33 @@ params:
     help:
       en: Password of the user "customer"
       de: Passwort des Benutzers "Kunde"
+  - name: refreshToken
+    help:
+      en: "See https://docs.evcc.io/en/docs/devices/meters#tesla-powerwall"
+      de: "Siehe https://docs.evcc.io/docs/devices/meters#tesla-powerwall"
+  - name: siteId
+    help:
+      en: optional product identifier of the energy site, use to override autodectction
+      de: optionale Product ID dieser Energy Site, zum Übersteuern der automatischen Erkennung
+  - name: minSoc
+    type: number
+    advanced: true
+    help:
+      en: the battery reserve percentage to reset to when switching the Battery back to normal operations
+      de: die Energyreserve auf die zurückgesetzt wird, wenn die Entladung wieder freigegeben wird
+  - name: maxSoc
+    type: number
+    advanced: true
+    help:
+      en: the battery reserve percentage to set to when switching the Battery to charge mode
+      de: die Energyreserve auf die gesetzt wird, wenn Batterieladung angefordert wird
 render: |
   type: powerwall
   uri: {{ .host }}
   usage: {{ .usage }}
   user: customer
   password: {{ .password }} # for user 'customer'
+  refreshToken: {{ .refreshToken }}
+  siteId: {{ .siteId }}
+  minSoc: {{ .minSoc }}
+  maxSoc: {{ .maxSoc }}

@@ -189,12 +189,6 @@ func NewEasee(user, password, charger string, timeout time.Duration, authorize b
 		err = os.ErrDeadlineExceeded
 	}
 
-	if err == nil {
-		// poll opMode from charger as API can give outdated initial data
-		uri := fmt.Sprintf("%s/chargers/%s/commands/poll_chargeropmode", easee.API, c.charger)
-		_, err = c.Post(uri, request.JSONContent, nil)
-	}
-
 	return c, err
 }
 
@@ -248,6 +242,11 @@ func (c *Easee) subscribe(client signalr.Client) {
 			if state == signalr.ClientConnected {
 				if err := <-client.Send("SubscribeWithCurrentState", c.charger, true); err != nil {
 					c.log.ERROR.Printf("SubscribeWithCurrentState: %v", err)
+				}
+				// poll opMode from charger as API can give outdated initial data after (re)connect
+				uri := fmt.Sprintf("%s/chargers/%s/commands/poll_chargeropmode", easee.API, c.charger)
+				if _, err := c.Post(uri, request.JSONContent, nil); err != nil {
+					c.log.WARN.Printf("failed to poll CHARGER_OP_MODE, results may vary: %v", err)
 				}
 			}
 		}

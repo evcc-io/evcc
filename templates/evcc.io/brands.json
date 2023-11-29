@@ -74,11 +74,11 @@
  ],
  "SmartPlugs": [
   "AVM",
-  "Homematic / Homematic IP",
+  "Homematic IP",
   "HomeWizard",
   "myStrom",
   "Shelly",
-  "Tasmota (1 Phase Charger)",
+  "Tasmota",
   "TP-Link"
  ],
  "Meters": [
@@ -137,6 +137,7 @@
   "Sonnen",
   "Sungrow",
   "Sunsynk",
+  "Tasmota",
   "Tesla",
   "Tibber",
   "TQ",
@@ -195,6 +196,7 @@
   "Steca",
   "Sungrow",
   "Sunsynk",
+  "Tasmota",
   "Tesla",
   "TP-Link",
   "VARTA",

@@ -80,13 +80,8 @@ func NewModbusFromConfig(other map[string]interface{}) (Provider, error) {
 	var device meters.Device
 	var op modbus.Operation
 
-	if cc.Value != "" && cc.Register.Decode != "" {
-		return nil, errors.New("modbus cannot have value and register both")
-	}
-
-	if cc.Value == "" && cc.Register.Decode == "" {
-		log.WARN.Println("missing modbus value or register - assuming Power")
-		cc.Value = "Power"
+	if (cc.Value == "") == (cc.Register.Decode == "") {
+		return nil, errors.New("either value or register required")
 	}
 
 	if cc.Model == "" && cc.Value != "" {
