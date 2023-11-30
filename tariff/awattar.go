@@ -43,6 +43,7 @@ func NewAwattarFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		embed: &cc.embed,
 		log:   util.NewLogger("awattar"),
 		uri:   fmt.Sprintf(awattar.RegionURI, strings.ToLower(cc.Region)),
+		data:  util.NewMonitor[api.Rates](2 * time.Hour),
 	}
 
 	done := make(chan error)
