@@ -83,6 +83,7 @@ func (c *Pulsatrix) connectWs() error {
 
 	c.conn = conn
 
+	//c.parseWsMessage(1, []byte("{\"vehicleStatus\": \"A1\"}"))
 	// ensure evcc and SECC are in sync
 	if err := c.Enable(false); err != nil {
 		c.log.ERROR.Println(err)
@@ -149,10 +150,17 @@ func (c *Pulsatrix) write(message string) error {
 func (c *Pulsatrix) parseWsMessage(messageType websocket.MessageType, message []byte) {
 	if messageType == websocket.MessageText {
 		b := bytes.ReplaceAll(message, []byte(":NaN"), []byte(":null"))
-		idx := bytes.IndexByte(b, '{')
+		var parsedMessage struct {
+			Message json.RawMessage `json:"message"`
+		}
+
+		if err := json.Unmarshal(b, &parsedMessage); err != nil {
+			c.log.WARN.Println(err)
+			return
+		}
 
 		val, _ := c.data.Get()
-		if err := json.Unmarshal(b[idx:], &val); err != nil {
+		if err := json.Unmarshal(parsedMessage.Message, &val); err != nil {
 			c.log.WARN.Println(err)
 		} else {
 			c.data.Set(val)
