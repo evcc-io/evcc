@@ -87,8 +87,8 @@ render: |
           timeout: {{ .timeout }}
           register:
             address: 0xE00B # StorageRemoteCtrl_CommandTimeout
-            type: writesingle
-            decode: uint16
+            type: writemultiple
+            decode: uint32
     - source: map
       values:
         1: 7 # normal
