@@ -41,6 +41,7 @@ type victronRegs struct {
 	Status     uint16
 	SetCurrent uint16
 	Enabled    uint16
+	isGX       bool
 }
 
 var (
@@ -51,6 +52,7 @@ var (
 		Status:     3824,
 		SetCurrent: 3825,
 		Enabled:    3826,
+		isGX:       true,
 	}
 
 	victronEVCS = victronRegs{
@@ -60,6 +62,7 @@ var (
 		Status:     5015,
 		SetCurrent: 5016,
 		Enabled:    5010,
+		isGX:       false,
 	}
 )
 
@@ -80,15 +83,30 @@ func NewVictronEVCSFromConfig(other map[string]interface{}) (api.Charger, error)
 
 // NewVictronFromConfig creates a ABB charger from generic config
 func NewVictronFromConfig(other map[string]interface{}, regs victronRegs) (api.Charger, error) {
-	cc := modbus.TcpSettings{
-		ID: 100,
-	}
+	if regs.isGX {
 
-	if err := util.DecodeOther(other, &cc); err != nil {
-		return nil, err
-	}
+		cc := modbus.TcpSettings{
+			ID: 100,
+		}
 
-	return NewVictron(cc.URI, cc.ID, regs)
+		if err := util.DecodeOther(other, &cc); err != nil {
+			return nil, err
+		}
+
+		return NewVictron(cc.URI, cc.ID, victronGX)
+
+	} else {
+
+		cc := modbus.TcpSettings{
+			ID: 1,
+		}
+
+		if err := util.DecodeOther(other, &cc); err != nil {
+			return nil, err
+		}
+
+		return NewVictron(cc.URI, cc.ID, victronEVCS)
+	}
 }
 
 // NewVictron creates Victron charger
@@ -133,7 +151,7 @@ func (wb *Victron) Status() (api.ChargeStatus, error) {
 	switch u {
 	case 0, 1, 2, 3:
 		return api.ChargeStatusString(string('A' + rune(binary.BigEndian.Uint16(b))))
-	case 5, 6:
+	case 5, 6, 21:
 		return api.StatusB, nil
 	default:
 		return api.StatusNone, fmt.Errorf("invalid status: %d", u)
@@ -188,5 +206,9 @@ func (wb *Victron) ChargedEnergy() (float64, error) {
 		return 0, err
 	}
 
-	return float64(binary.BigEndian.Uint32(b)) / 100, nil
+	if wb.regs.isGX {
+		return float64(binary.BigEndian.Uint32(b)) / 100, nil
+	} else {
+		return float64(binary.BigEndian.Uint16(b)) / 100, nil
+	}
 }
