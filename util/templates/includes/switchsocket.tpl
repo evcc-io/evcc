@@ -7,5 +7,7 @@ features:
 {{- if .heating }}
 - heating
 {{- end }}
-{{ if .icon }}icon: {{ .icon }}{{ end }}
-{{ end -}}
+{{- if .icon }}
+icon: {{ .icon }}
+{{- end }}
+{{- end }}
