@@ -8,7 +8,7 @@ ifeq ($(RELEASE),1)
 endif
 VERSION := $(if $(TAG_NAME),$(TAG_NAME),$(SHA))
 BUILD_DATE := $(shell date -u '+%Y-%m-%d_%H:%M:%S')
-BUILD_TAGS := -tags=release,slim
+BUILD_TAGS := release,slim
 LD_FLAGS := -X github.com/evcc-io/evcc/server.Version=$(VERSION) -X github.com/evcc-io/evcc/server.Commit=$(COMMIT) -s -w
 BUILD_ARGS := -trimpath -ldflags='$(LD_FLAGS)'
 
@@ -50,7 +50,7 @@ docs::
 	go generate github.com/evcc-io/evcc/util/templates/...
 
 lint::
-	golangci-lint run
+	golangci-lint --build-tags=$(BUILD_TAGS) run
 
 lint-ui::
 	npm run lint
@@ -63,7 +63,7 @@ toml::
 
 test::
 	@echo "Running testsuite"
-	CGO_ENABLED=0 go test $(BUILD_TAGS) ./...
+	CGO_ENABLED=0 go test -tags=$(BUILD_TAGS) ./...
 
 porcelain::
 	gofmt -w -l $$(find . -name '*.go')
@@ -72,7 +72,7 @@ porcelain::
 
 build::
 	@echo Version: $(VERSION) $(SHA) $(BUILD_DATE)
-	CGO_ENABLED=0 go build -v $(BUILD_TAGS) $(BUILD_ARGS)
+	CGO_ENABLED=0 go build -v -tags=$(BUILD_TAGS) $(BUILD_ARGS)
 
 snapshot::
 	goreleaser --snapshot --skip-publish --clean
@@ -115,7 +115,7 @@ gokrazy::
 	echo "EVCC_NETWORK_PORT=80" > env/github.com/evcc-io/evcc/env.txt
 	echo "EVCC_DATABASE_DSN=/perm/evcc.db" >> env/github.com/evcc-io/evcc/env.txt
 	mkdir -p buildflags/github.com/evcc-io/evcc
-	echo "$(BUILD_TAGS),gokrazy" > buildflags/github.com/evcc-io/evcc/buildflags.txt
+	echo "-tags=$(BUILD_TAGS),gokrazy" > buildflags/github.com/evcc-io/evcc/buildflags.txt
 	echo "-ldflags=$(LD_FLAGS)" >> buildflags/github.com/evcc-io/evcc/buildflags.txt
 	gokr-packer -hostname evcc -http_port 8080 -overwrite=$(IMAGE_FILE) -target_storage_bytes=1258299392 $(IMAGE_OPTIONS)
 	# gzip -f $(IMAGE_FILE)
@@ -128,7 +128,7 @@ gokrazy-update::
 
 soc::
 	@echo Version: $(VERSION) $(SHA) $(BUILD_DATE)
-	go build $(BUILD_TAGS) $(BUILD_ARGS) github.com/evcc-io/evcc/cmd/soc
+	go build -tags=$(BUILD_TAGS) $(BUILD_ARGS) github.com/evcc-io/evcc/cmd/soc
 
 # patch asn1.go to allow Elli buggy certificates to be accepted with EEBUS
 patch-asn1-sudo::
