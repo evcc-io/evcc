@@ -233,10 +233,12 @@ func (wb *Pulsares) MaxCurrentMillis(current float64) error {
 
 // phases1p3p implements the api.PhaseSwitcher interface
 func (wb *Pulsares) phases1p3p(phases int) error {
-	var p uint16
+	b := make([]byte, 2)
 	if phases == 3 {
-		p = 2
+		binary.BigEndian.PutUint16(b, 2)
 	}
-	_, err := wb.conn.WriteSingleRegister(pulsaresRegPhases, p)
+
+	_, err := wb.conn.WriteMultipleRegisters(pulsaresRegPhases, 1, b)
+
 	return err
 }
