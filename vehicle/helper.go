@@ -27,20 +27,15 @@ func ensureVehicleEx[T any](
 		return zero, fmt.Errorf("cannot get vehicles: %w", err)
 	}
 
-	// vin defined
-	if vin = strings.ToUpper(vin); vin != "" {
+	if vin := strings.ToUpper(vin); vin != "" {
+		// vin defined
 		for _, vehicle := range vehicles {
 			if vin == extract(vehicle) {
 				return vehicle, nil
 			}
 		}
-
-		// vin defined but doesn't exist
-		return zero, fmt.Errorf("cannot find vehicle: %s", vin)
-	}
-
-	// vin empty
-	if len(vehicles) == 1 {
+	} else if len(vehicles) == 1 {
+		// vin empty and exactly one vehicle
 		return vehicles[0], nil
 	}
 
