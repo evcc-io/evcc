@@ -20,7 +20,8 @@ func NewProvider(api *API, vin string, cache time.Duration) *Provider {
 			return api.Status(vin)
 		}, cache),
 		actionS: func(action string) error {
-			return api.Action(vin, action)
+			_, err := api.Action(vin, action)
+			return err
 		},
 	}
 	return impl
