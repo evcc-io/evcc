@@ -10,6 +10,7 @@ import (
 // Provider implements the vehicle api
 type Provider struct {
 	statusG func() (VehicleStatus, error)
+	actionS func(action string) error
 }
 
 // NewProvider creates a vehicle api provider
@@ -18,6 +19,10 @@ func NewProvider(api *API, vin string, cache time.Duration) *Provider {
 		statusG: provider.Cached(func() (VehicleStatus, error) {
 			return api.Status(vin)
 		}, cache),
+		actionS: func(action string) error {
+			_, err := api.Action(vin, action)
+			return err
+		},
 	}
 	return impl
 }
@@ -89,4 +94,22 @@ func (v *Provider) Odometer() (float64, error) {
 	}
 
 	return float64(res.State.CurrentMileage), nil
+}
+
+var _ api.Resurrector = (*Provider)(nil)
+
+func (v *Provider) WakeUp() error {
+	return v.actionS(DOOR_LOCK)
+}
+
+var _ api.VehicleChargeController = (*Provider)(nil)
+
+// StartCharge implements the api.VehicleChargeController interface
+func (v *Provider) StartCharge() error {
+	return v.actionS(CHARGE_START)
+}
+
+// StopCharge implements the api.VehicleChargeController interface
+func (v *Provider) StopCharge() error {
+	return v.actionS(CHARGE_STOP)
 }
