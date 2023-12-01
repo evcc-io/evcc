@@ -43,27 +43,25 @@ func NewAPI(log *util.Logger, brand, region string, identity oauth2.TokenSource)
 }
 
 // Vehicles implements returns the /user/vehicles api
-func (v *API) Vehicles() ([]string, error) {
+func (v *API) Vehicles() ([]Vehicle, error) {
 	var res []Vehicle
 	uri := fmt.Sprintf("%s/eadrax-vcs/v4/vehicles?apptimezone=120&appDateTime=%d", regions[v.region].CocoApiURI, time.Now().UnixMilli())
-
-	if err := v.GetJSON(uri, &res); err != nil {
-		return nil, err
-	}
-
-	var vehicles []string
-	for _, v := range res {
-		vehicles = append(vehicles, v.VIN)
-	}
-
-	return vehicles, nil
+	err := v.GetJSON(uri, &res)
+	return res, err
 }
 
 // Status implements the /user/vehicles/<vin>/status api
 func (v *API) Status(vin string) (VehicleStatus, error) {
 	var res VehicleStatus
 	uri := fmt.Sprintf("%s/eadrax-vcs/v4/vehicles/state?apptimezone=120&appDateTime=%d", regions[v.region].CocoApiURI, time.Now().UnixMilli())
-	err := v.GetJSON(uri, &res)
+
+	req, err := request.New(http.MethodGet, uri, nil, map[string]string{
+		"bmw-vin": vin,
+	})
+	if err == nil {
+		err = v.DoJSON(req, &res)
+	}
+
 	return res, err
 }
 
