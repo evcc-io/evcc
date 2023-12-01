@@ -26,6 +26,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/sponsor"
+	"github.com/spf13/cast"
 )
 
 // Victron charger implementation
@@ -83,30 +84,15 @@ func NewVictronEVCSFromConfig(other map[string]interface{}) (api.Charger, error)
 
 // NewVictronFromConfig creates a ABB charger from generic config
 func NewVictronFromConfig(other map[string]interface{}, regs victronRegs) (api.Charger, error) {
-	if regs.isGX {
-
-		cc := modbus.TcpSettings{
-			ID: 100,
-		}
-
-		if err := util.DecodeOther(other, &cc); err != nil {
-			return nil, err
-		}
-
-		return NewVictron(cc.URI, cc.ID, victronGX)
-
-	} else {
-
-		cc := modbus.TcpSettings{
-			ID: 1,
-		}
-
-		if err := util.DecodeOther(other, &cc); err != nil {
-			return nil, err
-		}
-
-		return NewVictron(cc.URI, cc.ID, victronEVCS)
+	cc := modbus.TcpSettings{
+		ID: cast.ToUint8(regs.isGX) * 100,
 	}
+
+	if err := util.DecodeOther(other, &cc); err != nil {
+		return nil, err
+	}
+
+	return NewVictron(cc.URI, cc.ID, victronEVCS)
 }
 
 // NewVictron creates Victron charger
@@ -201,14 +187,14 @@ var _ api.ChargeRater = (*Victron)(nil)
 
 // ChargedEnergy implements the api.MeterEnergy interface
 func (wb *Victron) ChargedEnergy() (float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(wb.regs.Energy, 2)
+	b, err := wb.conn.ReadHoldingRegisters(wb.regs.Energy, cast.ToUint16(wb.regs.isGX))
 	if err != nil {
 		return 0, err
 	}
 
 	if wb.regs.isGX {
 		return float64(binary.BigEndian.Uint32(b)) / 100, nil
-	} else {
-		return float64(binary.BigEndian.Uint16(b)) / 100, nil
 	}
+
+	return float64(binary.BigEndian.Uint16(b)) / 100, nil
 }
