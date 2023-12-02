@@ -62,7 +62,6 @@ func NewPhoenixEMEthFromConfig(other map[string]interface{}) (api.Charger, error
 		currents = wb.currents
 		voltages = wb.voltages
 
-		fmt.Println("decorated")
 	}
 
 	return decoratePhoenixEMEth(wb, currentPower, totalEnergy, currents, voltages), err
