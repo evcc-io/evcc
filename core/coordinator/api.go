@@ -21,7 +21,4 @@ type API interface {
 
 	// IdentifyVehicleByStatus returns an available vehicle that is currently connected or charging
 	IdentifyVehicleByStatus() api.Vehicle
-
-	// GetVehicleIndex returns a vehicle by index
-	GetVehicleIndex(api.Vehicle) int
 }
