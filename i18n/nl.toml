@@ -157,7 +157,6 @@ modalTitle = "Ben je zeker dat je wil herstarten?"
 vehicles = "Parking"
 
 [main.chargingPlan]
-activeLabel = "{time}"
 arrivalTab = "Aankomst"
 departureTab = "Vertrek"
 modalTitle = "Laad Plan"
@@ -230,7 +229,6 @@ logout = "afmelden"
 
 [main.targetCharge]
 activate = "Activeren"
-activeLabel = "{time}"
 co2Limit = "CO₂ limiet van {co2}"
 costLimitIgnore = "De geconfigureerde {limit} zal genegeerd worden tijdens deze periode."
 descriptionEnergy = "Tegen wanneer moet {targetEnergy} in het voertuig geladen zijn?"
@@ -245,7 +243,6 @@ planUnknown = "nog niet bekend"
 priceLimit = "prijslimiet van {price}"
 remove = "Verwijder"
 setTargetTime = "geen"
-targetEnergyRequired = "Je dient ook een energie limiet in te stellen"
 targetIsInThePast = "Kies een tijd in de toekomst, Marty."
 targetIsTooFarInTheFuture = "We passen het plan aan zodra we meer weten over de toekomst."
 title = "Doeltijd"

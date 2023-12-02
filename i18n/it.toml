@@ -136,7 +136,6 @@ logout = "log out"
 
 [main.targetCharge]
 activate = "Attivare"
-activeLabel = "{time}"
 descriptionEnergy = "Fino a quando dovrebbero essere {targetEnergy} caricati nel veicolo?"
 descriptionSoc = "Quando dovrebbe essere caricato il veicolo al {targetSoc}%?"
 inactiveLabel = "Tempo target"

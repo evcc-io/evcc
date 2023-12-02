@@ -189,7 +189,7 @@ export default {
 	props: {
 		session: Object,
 		currency: String,
-		vehicles: [Object],
+		vehicles: Array,
 	},
 	emits: ["session-changed"],
 	computed: {
@@ -218,9 +218,9 @@ export default {
 		formatKm: function (value) {
 			return `${this.fmtNumber(distanceValue(value), 0)} ${distanceUnit()}`;
 		},
-		async changeVehicle(index) {
+		async changeVehicle(name) {
 			await this.updateSession({
-				vehicle: this.vehicles[index - 1].title,
+				vehicle: this.vehicles.find((v) => v.name === name)?.title,
 			});
 		},
 		async removeVehicle() {

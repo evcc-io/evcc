@@ -1,5 +1,5 @@
 <script setup>
-import TargetChargePlan from "./TargetChargePlan.vue";
+import ChargingPlanPreview from "./ChargingPlanPreview.vue";
 
 const now = new Date();
 
@@ -80,21 +80,21 @@ const dynamic = {
 </script>
 
 <template>
-	<Story title="TargetChargePlan">
+	<Story title="ChargingPlanPreview">
 		<Variant title="co2">
-			<TargetChargePlan v-bind="co2" />
+			<ChargingPlanPreview v-bind="co2" />
 		</Variant>
 		<Variant title="fixed">
-			<TargetChargePlan v-bind="fixed" />
+			<ChargingPlanPreview v-bind="fixed" />
 		</Variant>
 		<Variant title="zoned">
-			<TargetChargePlan v-bind="zoned" />
+			<ChargingPlanPreview v-bind="zoned" />
 		</Variant>
 		<Variant title="unknown">
-			<TargetChargePlan v-bind="unknown" />
+			<ChargingPlanPreview v-bind="unknown" />
 		</Variant>
 		<Variant title="dynamic">
-			<TargetChargePlan v-bind="dynamic" />
+			<ChargingPlanPreview v-bind="dynamic" />
 		</Variant>
 	</Story>
 </template>

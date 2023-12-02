@@ -124,8 +124,8 @@ type ChargeState interface {
 	Status() (ChargeStatus, error)
 }
 
-// CurrentLimiter provides settings charging maximum charging current
-type CurrentLimiter interface {
+// CurrentController provides settings charging maximum charging current
+type CurrentController interface {
 	MaxCurrent(current int64) error
 }
 
@@ -144,7 +144,7 @@ type Charger interface {
 	ChargeState
 	Enabled() (bool, error)
 	Enable(enable bool) error
-	CurrentLimiter
+	CurrentController
 }
 
 // ChargerEx provides milli-amp precision charger current control
@@ -220,8 +220,14 @@ type VehiclePosition interface {
 	Position() (float64, float64, error)
 }
 
-// SocLimiter returns the vehicles charge limit
+// CurrentLimiter returns the current limits
+type CurrentLimiter interface {
+	GetMinMaxCurrent() (float64, float64, error)
+}
+
+// SocLimiter returns the soc limit
 type SocLimiter interface {
+	// TODO rename LimitSoc
 	TargetSoc() (float64, error)
 }
 

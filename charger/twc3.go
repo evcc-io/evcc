@@ -150,7 +150,7 @@ func (c *Twc3) MaxCurrent(current int64) error {
 		return errors.New("loadpoint not initialized")
 	}
 
-	v, ok := c.lp.GetVehicle().(api.CurrentLimiter)
+	v, ok := c.lp.GetVehicle().(api.CurrentController)
 	if !ok {
 		return errors.New("vehicle not capable of current control")
 	}

@@ -2,17 +2,17 @@ package core
 
 import (
 	"errors"
-	"fmt"
 	"regexp"
 	"slices"
 	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/session"
 	"github.com/evcc-io/evcc/core/soc"
+	"github.com/evcc-io/evcc/core/vehicle"
 	"github.com/evcc-io/evcc/provider"
-	"github.com/evcc-io/evcc/server/db/settings"
 )
 
 const (
@@ -32,7 +32,7 @@ func (lp *Loadpoint) coordinatedVehicles() []api.Vehicle {
 func (lp *Loadpoint) setVehicleIdentifier(id string) {
 	if lp.vehicleIdentifier != id {
 		lp.vehicleIdentifier = id
-		lp.publish("vehicleIdentity", id)
+		lp.publish(keys.VehicleIdentity, id)
 	}
 }
 
@@ -100,12 +100,8 @@ func (lp *Loadpoint) selectVehicleByID(id string) api.Vehicle {
 
 // setActiveVehicle assigns currently active vehicle, configures soc estimator
 // and adds an odometer task
-func (lp *Loadpoint) setActiveVehicle(vehicle api.Vehicle) {
+func (lp *Loadpoint) setActiveVehicle(v api.Vehicle) {
 	lp.vehicleMux.Lock()
-	if lp.vehicle == vehicle {
-		lp.vehicleMux.Unlock()
-		return
-	}
 
 	from := "unknown"
 	if lp.vehicle != nil {
@@ -113,30 +109,25 @@ func (lp *Loadpoint) setActiveVehicle(vehicle api.Vehicle) {
 		from = lp.vehicle.Title()
 	}
 	to := "unknown"
-	if vehicle != nil {
-		lp.coordinator.Acquire(vehicle)
-		to = vehicle.Title()
+	if v != nil {
+		lp.coordinator.Acquire(v)
+		to = v.Title()
 	}
 
-	lp.vehicle = vehicle
+	lp.vehicle = v
 	lp.vehicleMux.Unlock()
 
-	lp.log.INFO.Printf("vehicle updated: %s -> %s", from, to)
+	if from != to {
+		lp.log.INFO.Printf("vehicle updated: %s -> %s", from, to)
+	}
 
-	// lock api
+	// reset session values
 	lp.Lock()
-
-	// reset minSoc and targetSoc before change
-	lp.setMinSoc(0)
-	lp.setTargetSoc(100)
-
-	// reset target energy
-	lp.setTargetEnergy(0)
-
-	// unlock api
+	lp.setLimitSoc(0)
+	lp.setLimitEnergy(0)
 	lp.Unlock()
 
-	if vehicle != nil {
+	if v != nil {
 		lp.socUpdated = time.Time{}
 
 		// resolve optional config
@@ -144,36 +135,43 @@ func (lp *Loadpoint) setActiveVehicle(vehicle api.Vehicle) {
 		if lp.Soc.Estimate == nil || *lp.Soc.Estimate {
 			estimate = true
 		}
-		lp.socEstimator = soc.NewEstimator(lp.log, lp.charger, vehicle, estimate)
+		lp.socEstimator = soc.NewEstimator(lp.log, lp.charger, v, estimate)
 
-		lp.publish(vehiclePresent, true)
-		lp.publish(vehicleTitle, vehicle.Title())
-		lp.publish(vehicleIcon, vehicle.Icon())
-		lp.publish(vehicleCapacity, vehicle.Capacity())
-		lp.restoreVehicleSettings()
+		lp.publish(keys.VehiclePresent, true)
+		lp.publish(keys.VehicleTitle, v.Title())
+		lp.publish(keys.VehicleName, vehicle.Settings(lp.log, v).Name())
+		lp.publish(keys.VehicleIcon, v.Icon())
+		lp.publish(keys.VehicleCapacity, v.Capacity())
 
-		lp.applyAction(vehicle.OnIdentified())
+		if mode, ok := v.OnIdentified().GetMode(); ok {
+			lp.SetMode(mode)
+		}
+
 		lp.addTask(lp.vehicleOdometer)
 
 		lp.progress.Reset()
 	} else {
 		lp.socEstimator = nil
-
-		lp.publish(vehiclePresent, false)
-		lp.publish(vehicleTitle, "")
-		lp.publish(vehicleIcon, "")
-		lp.publish(vehicleCapacity, 0.0)
-		lp.publish(vehicleOdometer, 0.0)
+		lp.publish(keys.VehicleSoc, 0)
+		lp.publish(keys.VehiclePresent, false)
+		lp.publish(keys.VehicleTitle, "")
+		lp.publish(keys.VehicleName, "")
+		lp.publish(keys.VehicleIcon, "")
+		lp.publish(keys.VehicleCapacity, 0.0)
+		lp.publish(keys.VehicleOdometer, 0.0)
 	}
 
 	// re-publish vehicle settings
-	lp.publish(phasesActive, lp.activePhases())
+	lp.publish(keys.PhasesActive, lp.activePhases())
 	lp.unpublishVehicle()
+
+	// publish effective values
+	lp.PublishEffectiveValues()
 
 	lp.updateSession(func(session *session.Session) {
 		var title string
-		if vehicle != nil {
-			title = vehicle.Title()
+		if v != nil {
+			title = v.Title()
 		}
 
 		lp.session.Vehicle = title
@@ -202,10 +200,10 @@ func (lp *Loadpoint) wakeUpVehicle() {
 func (lp *Loadpoint) unpublishVehicle() {
 	lp.vehicleSoc = 0
 
-	lp.publish("climaterActive", nil)
-	lp.publish(vehicleSoc, 0.0)
-	lp.publish(vehicleRange, int64(0))
-	lp.publish(vehicleTargetSoc, 0.0)
+	lp.publish(keys.VehicleClimaterActive, nil)
+	lp.publish(keys.VehicleSoc, 0.0)
+	lp.publish(keys.VehicleRange, int64(0))
+	lp.publish(keys.VehicleTargetSoc, 0.0)
 
 	lp.setRemainingEnergy(0)
 	lp.setRemainingDuration(0)
@@ -225,40 +223,6 @@ func (lp *Loadpoint) vehicleHasFeature(f api.Feature) bool {
 // publishVehicleFeature availability of vehicle features
 func (lp *Loadpoint) publishVehicleFeature(f api.Feature) {
 	lp.publish("vehicleFeature"+f.String(), lp.vehicleHasFeature(f))
-}
-
-// persistVehicleSettings stores user configuration (via UI/API) for the current vehicle
-func (lp *Loadpoint) persistVehicleSettings() {
-	idx := lp.coordinator.GetVehicleIndex(lp.GetVehicle())
-	if idx == -1 {
-		return
-	}
-	settings.SetInt(fmt.Sprintf("vehicle.%d.targetSoc", idx), int64(lp.Soc.target))
-	settings.SetFloat(fmt.Sprintf("vehicle.%d.targetEnergy", idx), lp.targetEnergy)
-	settings.SetInt(fmt.Sprintf("vehicle.%d.minSoc", idx), int64(lp.Soc.min))
-	settings.SetTime(fmt.Sprintf("vehicle.%d.targetTime", idx), lp.targetTime)
-}
-
-// restoreVehicleSettings restores user configuration (via UI/API) for the current vehicle
-func (lp *Loadpoint) restoreVehicleSettings() {
-	idx := lp.coordinator.GetVehicleIndex(lp.GetVehicle())
-	if idx == -1 {
-		return
-	}
-	if v, err := settings.Int(fmt.Sprintf("vehicle.%d.targetSoc", idx)); err == nil {
-		lp.setTargetSoc(int(v))
-	}
-	if v, err := settings.Float(fmt.Sprintf("vehicle.%d.targetEnergy", idx)); err == nil {
-		lp.setTargetEnergy(v)
-	}
-	if v, err := settings.Int(fmt.Sprintf("vehicle.%d.minSoc", idx)); err == nil {
-		lp.setMinSoc(int(v))
-	}
-	if v, err := settings.Time(fmt.Sprintf("vehicle.%d.targetTime", idx)); err == nil {
-		if v.After(time.Now()) {
-			lp.setTargetTime(v)
-		}
-	}
 }
 
 // vehicleUnidentified returns true if there are associated vehicles and detection is running.
@@ -310,7 +274,7 @@ func (lp *Loadpoint) startVehicleDetection() {
 
 	lp.vehicleDetect = lp.clock.Now()
 	lp.vehicleDetectTicker = lp.clock.Ticker(vehicleDetectInterval)
-	lp.publish(vehicleDetectionActive, true)
+	lp.publish(keys.VehicleDetectionActive, true)
 }
 
 // stopVehicleDetection expires the connection timer and ticker
@@ -319,7 +283,7 @@ func (lp *Loadpoint) stopVehicleDetection() {
 	if lp.vehicleDetectTicker != nil {
 		lp.vehicleDetectTicker.Stop()
 	}
-	lp.publish(vehicleDetectionActive, false)
+	lp.publish(keys.VehicleDetectionActive, false)
 }
 
 // identifyVehicleByStatus validates if the active vehicle is still connected to the loadpoint
@@ -345,7 +309,7 @@ func (lp *Loadpoint) vehicleOdometer() {
 	if vs, ok := lp.GetVehicle().(api.VehicleOdometer); ok {
 		if odo, err := vs.Odometer(); err == nil {
 			lp.log.DEBUG.Printf("vehicle odometer: %.0fkm", odo)
-			lp.publish(vehicleOdometer, odo)
+			lp.publish(keys.VehicleOdometer, odo)
 
 			// update session once odometer is read
 			lp.updateSession(func(session *session.Session) {
@@ -406,7 +370,7 @@ func (lp *Loadpoint) vehicleClimateActive() bool {
 				lp.log.DEBUG.Println("climater active")
 			}
 
-			lp.publish("climaterActive", active)
+			lp.publish(keys.VehicleClimaterActive, active)
 			return active
 		}
 

@@ -4,6 +4,8 @@ import (
 	"errors"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/keys"
+	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/server/db/settings"
 )
@@ -18,11 +20,25 @@ const (
 	PlannerTariff = "planner"
 )
 
+// Loadpoints returns the list loadpoints
+func (site *Site) Loadpoints() []loadpoint.API {
+	res := make([]loadpoint.API, len(site.loadpoints))
+	for id, lp := range site.loadpoints {
+		res[id] = lp
+	}
+	return res
+}
+
+// Vehicles returns the site vehicles
+func (site *Site) Vehicles() site.Vehicles {
+	return &vehicles{log: site.log}
+}
+
 // GetPrioritySoc returns the PrioritySoc
 func (site *Site) GetPrioritySoc() float64 {
-	site.Lock()
-	defer site.Unlock()
-	return site.PrioritySoc
+	site.RLock()
+	defer site.RUnlock()
+	return site.prioritySoc
 }
 
 // SetPrioritySoc sets the PrioritySoc
@@ -34,22 +50,26 @@ func (site *Site) SetPrioritySoc(soc float64) error {
 		return ErrBatteryNotConfigured
 	}
 
+	if site.bufferSoc != 0 && soc > site.bufferSoc {
+		return errors.New("priority soc must be smaller or equal than buffer soc")
+	}
+
 	site.log.DEBUG.Println("set priority soc:", soc)
 
-	if site.PrioritySoc != soc {
-		site.PrioritySoc = soc
-		settings.SetFloat("site.prioritySoc", site.PrioritySoc)
-		site.publish("prioritySoc", site.PrioritySoc)
-
+	if site.prioritySoc != soc {
+		site.prioritySoc = soc
+		settings.SetFloat(keys.PrioritySoc, site.prioritySoc)
+		site.publish(keys.PrioritySoc, site.prioritySoc)
 	}
+
 	return nil
 }
 
 // GetBufferSoc returns the BufferSoc
 func (site *Site) GetBufferSoc() float64 {
-	site.Lock()
-	defer site.Unlock()
-	return site.BufferSoc
+	site.RLock()
+	defer site.RUnlock()
+	return site.bufferSoc
 }
 
 // SetBufferSoc sets the BufferSoc
@@ -61,12 +81,20 @@ func (site *Site) SetBufferSoc(soc float64) error {
 		return ErrBatteryNotConfigured
 	}
 
+	if soc != 0 && soc <= site.prioritySoc {
+		return errors.New("buffer soc must be larger than priority soc")
+	}
+
+	if site.bufferStartSoc != 0 && soc > site.bufferStartSoc {
+		return errors.New("buffer soc must be smaller or equal than buffer start soc")
+	}
+
 	site.log.DEBUG.Println("set buffer soc:", soc)
 
-	if site.BufferSoc != soc {
-		site.BufferSoc = soc
-		settings.SetFloat("site.bufferSoc", site.BufferSoc)
-		site.publish("bufferSoc", site.BufferSoc)
+	if site.bufferSoc != soc {
+		site.bufferSoc = soc
+		settings.SetFloat(keys.BufferSoc, site.bufferSoc)
+		site.publish(keys.BufferSoc, site.bufferSoc)
 	}
 
 	return nil
@@ -74,9 +102,9 @@ func (site *Site) SetBufferSoc(soc float64) error {
 
 // GetBufferStartSoc returns the BufferStartSoc
 func (site *Site) GetBufferStartSoc() float64 {
-	site.Lock()
-	defer site.Unlock()
-	return site.BufferStartSoc
+	site.RLock()
+	defer site.RUnlock()
+	return site.bufferStartSoc
 }
 
 // SetBufferStartSoc sets the BufferStartSoc
@@ -88,12 +116,16 @@ func (site *Site) SetBufferStartSoc(soc float64) error {
 		return ErrBatteryNotConfigured
 	}
 
+	if soc != 0 && soc <= site.bufferSoc {
+		return errors.New("buffer start soc must be larger than buffer soc")
+	}
+
 	site.log.DEBUG.Println("set buffer start soc:", soc)
 
-	if site.BufferStartSoc != soc {
-		site.BufferStartSoc = soc
-		settings.SetFloat("site.bufferStartSoc", site.BufferStartSoc)
-		site.publish("bufferStartSoc", site.BufferStartSoc)
+	if site.bufferStartSoc != soc {
+		site.bufferStartSoc = soc
+		settings.SetFloat(keys.BufferStartSoc, site.bufferStartSoc)
+		site.publish(keys.BufferStartSoc, site.bufferStartSoc)
 	}
 
 	return nil
@@ -101,8 +133,8 @@ func (site *Site) SetBufferStartSoc(soc float64) error {
 
 // GetResidualPower returns the ResidualPower
 func (site *Site) GetResidualPower() float64 {
-	site.Lock()
-	defer site.Unlock()
+	site.RLock()
+	defer site.RUnlock()
 	return site.ResidualPower
 }
 
@@ -115,7 +147,7 @@ func (site *Site) SetResidualPower(power float64) error {
 
 	if site.ResidualPower != power {
 		site.ResidualPower = power
-		site.publish("residualPower", site.ResidualPower)
+		site.publish(keys.ResidualPower, site.ResidualPower)
 	}
 
 	return nil
@@ -123,8 +155,8 @@ func (site *Site) SetResidualPower(power float64) error {
 
 // GetSmartCostLimit returns the SmartCostLimit
 func (site *Site) GetSmartCostLimit() float64 {
-	site.Lock()
-	defer site.Unlock()
+	site.RLock()
+	defer site.RUnlock()
 	return site.SmartCostLimit
 }
 
@@ -137,24 +169,17 @@ func (site *Site) SetSmartCostLimit(val float64) error {
 
 	if site.SmartCostLimit != val {
 		site.SmartCostLimit = val
-		settings.SetFloat("site.smartCostLimit", site.SmartCostLimit)
-		site.publish("smartCostLimit", site.SmartCostLimit)
+		settings.SetFloat(keys.SmartCostLimit, site.SmartCostLimit)
+		site.publish(keys.SmartCostLimit, site.SmartCostLimit)
 	}
 
 	return nil
 }
 
-// GetVehicles is the list of vehicles
-func (site *Site) GetVehicles() []api.Vehicle {
-	site.Lock()
-	defer site.Unlock()
-	return site.coordinator.GetVehicles()
-}
-
 // GetTariff returns the respective tariff if configured or nil
 func (site *Site) GetTariff(tariff string) api.Tariff {
-	site.Lock()
-	defer site.Unlock()
+	site.RLock()
+	defer site.RUnlock()
 
 	switch tariff {
 	case GridTariff:
@@ -210,8 +235,8 @@ func (site *Site) SetBatteryDischargeControl(val bool) error {
 		defer site.Unlock()
 
 		site.BatteryDischargeControl = val
-		settings.SetBool("site.batteryDischargeControl", val)
-		site.publish("batteryDischargeControl", val)
+		settings.SetBool(keys.BatteryDischargeControl, val)
+		site.publish(keys.BatteryDischargeControl, val)
 	}
 
 	return nil

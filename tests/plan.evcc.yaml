@@ -1,0 +1,86 @@
+interval: 0.1s
+
+site:
+  title: Plan
+  meters:
+    grid: grid
+
+meters:
+  - name: grid
+    type: custom
+    power:
+      source: js
+      script: |
+        1000
+
+loadpoints:
+  - title: Loadpoint
+    charger: charger
+    vehicle: vehicleSocCapacity
+  - title: Loadpoint with SoC
+    charger: chargerSoc
+    vehicle: vehicle
+
+chargers:
+  - name: charger
+    type: custom
+    enable:
+      source: js
+      script:
+    enabled:
+      source: js
+      script: |
+        false
+    status:
+      source: js
+      script: |
+        "B"
+    maxcurrent:
+      source: js
+      script:
+  - name: chargerSoc
+    type: custom
+    enable:
+      source: js
+      script:
+    enabled:
+      source: js
+      script: |
+        false
+    status:
+      source: js
+      script: |
+        "B"
+    maxcurrent:
+      source: js
+      script:
+    soc:
+      source: js
+      script: |
+        25
+
+vehicles:
+  - name: vehicle
+    type: template
+    template: offline
+    title: Vehicle no SoC no Capacity
+  - name: vehicleCapacity
+    type: template
+    template: offline
+    title: Vehicle no SoC with Capacity
+    capacity: 100
+  - name: vehicleSoc
+    type: custom
+    title: Vehicle with SoC no Capacity
+    soc:
+      source: js
+      script: |
+        50
+  - name: vehicleSocCapacity
+    type: custom
+    title: Vehicle with SoC with Capacity
+    capacity: 100
+    soc:
+      source: js
+      script: |
+        50

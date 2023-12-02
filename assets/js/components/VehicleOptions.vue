@@ -6,6 +6,7 @@
 			tabindex="0"
 			data-bs-toggle="dropdown"
 			aria-expanded="false"
+			data-testid="change-vehicle"
 		>
 			<slot />
 		</div>
@@ -13,8 +14,8 @@
 			<li>
 				<h6 class="dropdown-header">{{ $t("main.vehicle.changeVehicle") }}</h6>
 			</li>
-			<li v-for="vehicle in vehicles" :key="vehicle">
-				<button type="button" class="dropdown-item" @click="changeVehicle(vehicle.id)">
+			<li v-for="vehicle in vehicles" :key="vehicle.name">
+				<button type="button" class="dropdown-item" @click="changeVehicle(vehicle.name)">
 					{{ vehicle.title }}
 				</button>
 			</li>
@@ -51,8 +52,8 @@ export default {
 		this.dropdown?.dispose();
 	},
 	methods: {
-		changeVehicle(index) {
-			this.$emit("change-vehicle", index + 1);
+		changeVehicle(name) {
+			this.$emit("change-vehicle", name);
 		},
 		removeVehicle() {
 			this.$emit("remove-vehicle");

@@ -83,14 +83,11 @@
 		<hr class="divider" />
 		<Vehicle
 			class="flex-grow-1 d-flex flex-column justify-content-end"
-			v-bind="vehicle"
-			@target-soc-updated="setTargetSoc"
-			@target-energy-updated="setTargetEnergy"
-			@target-time-updated="setTargetTime"
-			@target-time-removed="removeTargetTime"
+			v-bind="vehicleProps"
+			@limit-soc-updated="setLimitSoc"
+			@limit-energy-updated="setLimitEnergy"
 			@change-vehicle="changeVehicle"
 			@remove-vehicle="removeVehicle"
-			@minsoc-updated="setMinSoc"
 		/>
 	</div>
 </template>
@@ -130,8 +127,8 @@ export default {
 		// main
 		title: String,
 		mode: String,
-		targetSoc: Number,
-		targetEnergy: Number,
+		effectiveLimitSoc: Number,
+		limitEnergy: Number,
 		remoteDisabled: Boolean,
 		remoteDisabledSource: String,
 		chargeDuration: Number,
@@ -157,24 +154,27 @@ export default {
 		vehiclePresent: Boolean,
 		vehicleRange: Number,
 		vehicleSoc: Number,
+		vehicleName: String,
 		vehicleTitle: String,
 		vehicleIcon: String,
 		vehicleTargetSoc: Number,
 		vehicleCapacity: Number,
 		vehicleFeatureOffline: Boolean,
 		vehicles: Array,
-		minSoc: Number,
 		planActive: Boolean,
 		planProjectedStart: String,
-		targetTime: String,
+		planEnergy: Number,
+		planTime: String,
+		effectivePlanTime: String,
+		effectivePlanSoc: Number,
 		vehicleProviderLoggedIn: Boolean,
 		vehicleProviderLoginPath: String,
 		vehicleProviderLogoutPath: String,
 
 		// details
+		vehicleClimaterActive: Boolean,
 		chargePower: Number,
 		chargedEnergy: Number,
-		climaterActive: Boolean,
 		chargeRemainingDuration: Number,
 
 		// other information
@@ -211,6 +211,9 @@ export default {
 		};
 	},
 	computed: {
+		vehicle: function () {
+			return this.vehicles?.find((v) => v.name === this.vehicleName);
+		},
 		loadpointTitle: function () {
 			return this.title || this.$t("main.loadpoint.fallbackName");
 		},
@@ -232,7 +235,7 @@ export default {
 		settingsButtonVisible: function () {
 			return this.$hiddenFeatures() || [0, 1, 3].includes(this.phasesConfigured);
 		},
-		vehicle: function () {
+		vehicleProps: function () {
 			return this.collectProps(Vehicle);
 		},
 		showChargingIndicator: function () {
@@ -240,6 +243,9 @@ export default {
 		},
 		socBasedCharging: function () {
 			return (!this.vehicleFeatureOffline && this.vehiclePresent) || this.vehicleSoc > 0;
+		},
+		socBasedPlanning: function () {
+			return this.vehicleSoc > 0 && this.vehicleCapacity > 0;
 		},
 	},
 	watch: {
@@ -289,11 +295,11 @@ export default {
 		setTargetMode: function (mode) {
 			api.post(this.apiPath("mode") + "/" + mode);
 		},
-		setTargetSoc: function (soc) {
-			api.post(this.apiPath("target/soc") + "/" + soc);
+		setLimitSoc: function (soc) {
+			api.post(this.apiPath("limitsoc") + "/" + soc);
 		},
-		setTargetEnergy: function (kWh) {
-			api.post(this.apiPath("target/energy") + "/" + kWh);
+		setLimitEnergy: function (kWh) {
+			api.post(this.apiPath("limitenergy") + "/" + kWh);
 		},
 		setMaxCurrent: function (maxCurrent) {
 			api.post(this.apiPath("maxcurrent") + "/" + maxCurrent);
@@ -304,17 +310,8 @@ export default {
 		setPhasesConfigured: function (phases) {
 			api.post(this.apiPath("phases") + "/" + phases);
 		},
-		setMinSoc: function (soc) {
-			api.post(this.apiPath("minsoc") + "/" + soc);
-		},
-		setTargetTime: function (date) {
-			api.post(`${this.apiPath("target/time")}/${date.toISOString()}`);
-		},
-		removeTargetTime: function () {
-			api.delete(this.apiPath("target/time"));
-		},
-		changeVehicle(index) {
-			api.post(this.apiPath("vehicle") + `/${index}`);
+		changeVehicle(name) {
+			api.post(this.apiPath("vehicle") + `/${name}`);
 		},
 		removeVehicle() {
 			api.delete(this.apiPath("vehicle"));

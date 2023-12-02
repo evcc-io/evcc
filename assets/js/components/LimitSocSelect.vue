@@ -1,18 +1,18 @@
 <template>
-	<LabelAndValue class="flex-grow-1" :label="title" align="end" data-testid="target-soc">
-		<h3 class="value m-0 d-block d-sm-flex align-items-baseline justify-content-end">
+	<LabelAndValue class="flex-grow-1" :label="title" align="end" data-testid="limit-soc">
+		<h3 class="value m-0">
 			<label class="position-relative">
-				<select :value="targetSoc" class="custom-select" @change="change">
+				<select :value="limitSoc" class="custom-select" @change="change">
 					<option v-for="{ soc, text } in options" :key="soc" :value="soc">
 						{{ text }}
 					</option>
 				</select>
-				<span class="text-decoration-underline" data-testid="target-soc-value">
-					<AnimatedNumber :to="targetSoc" :format="formatSoc" />
+				<span class="text-decoration-underline" data-testid="limit-soc-value">
+					<AnimatedNumber :to="limitSoc" :format="formatSoc" />
 				</span>
 			</label>
 
-			<div v-if="estimatedTargetRange" class="extraValue ms-0 ms-sm-1 text-nowrap">
+			<div v-if="estimatedTargetRange" class="extraValue text-nowrap">
 				<AnimatedNumber :to="estimatedTargetRange" :format="formatKm" />
 			</div>
 		</h3>
@@ -26,25 +26,21 @@ import { distanceUnit } from "../units";
 import formatter from "../mixins/formatter";
 
 export default {
-	name: "TargetSocSelect",
+	name: "LimitSocSelect",
 	components: { LabelAndValue, AnimatedNumber },
 	mixins: [formatter],
 	props: {
-		targetSoc: Number,
+		limitSoc: Number,
 		rangePerSoc: Number,
 		heating: Boolean,
 	},
-	emits: ["target-soc-updated"],
+	emits: ["limit-soc-updated"],
 
 	computed: {
 		options: function () {
 			const result = [];
 			for (let soc = 20; soc <= 100; soc += 5) {
-				let text = this.formatSoc(soc);
-				const range = this.estimatedRange(soc);
-				if (range) {
-					text += ` (${this.formatKm(range)})`;
-				}
+				let text = this.fmtSocOption(soc, this.rangePerSoc, distanceUnit(), this.heating);
 				result.push({ soc, text });
 			}
 			return result;
@@ -55,12 +51,12 @@ export default {
 				: this.$t("main.vehicle.targetSoc");
 		},
 		estimatedTargetRange: function () {
-			return this.estimatedRange(this.targetSoc);
+			return this.estimatedRange(this.limitSoc);
 		},
 	},
 	methods: {
 		change: function (e) {
-			return this.$emit("target-soc-updated", parseInt(e.target.value, 10));
+			return this.$emit("limit-soc-updated", parseInt(e.target.value, 10));
 		},
 		estimatedRange: function (soc) {
 			if (this.rangePerSoc) {

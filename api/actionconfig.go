@@ -5,32 +5,15 @@ import (
 	"reflect"
 	"strings"
 
-	"dario.cat/mergo"
 	"github.com/fatih/structs"
-	"github.com/jinzhu/copier"
 )
 
 // ActionConfig defines an action to take on event
 type ActionConfig struct {
-	Mode       *ChargeMode `mapstructure:"mode,omitempty"`       // Charge Mode
-	MinCurrent *float64    `mapstructure:"minCurrent,omitempty"` // Minimum Current
-	MaxCurrent *float64    `mapstructure:"maxCurrent,omitempty"` // Maximum Current
-	MinSoc_    *int        `mapstructure:"minSoc,omitempty"`     // Minimum Soc (deprecated)
-	TargetSoc  *int        `mapstructure:"targetSoc,omitempty"`  // Target Soc
-	Priority   *int        `mapstructure:"priority,omitempty"`   // Priority
-}
-
-// Merge merges all non-nil properties of the additional config into the base config.
-// The receiver's config remains immutable.
-func (a ActionConfig) Merge(m ActionConfig) ActionConfig {
-	var res ActionConfig
-	if err := copier.Copy(&res, a); err != nil {
-		panic(err)
-	}
-	if err := mergo.MergeWithOverwrite(&res, m); err != nil {
-		panic(err)
-	}
-	return res
+	Mode       ChargeMode `mapstructure:"mode,omitempty"`       // Charge Mode
+	Priority   int        `mapstructure:"priority,omitempty"`   // Priority
+	MinCurrent float64    `mapstructure:"minCurrent,omitempty"` // Minimum Current
+	MaxCurrent float64    `mapstructure:"maxCurrent,omitempty"` // Maximum Current
 }
 
 // String implements Stringer and returns the ActionConfig as comma-separated key:value string
@@ -43,4 +26,20 @@ func (a ActionConfig) String() string {
 		}
 	}
 	return strings.Join(s, ", ")
+}
+
+func (a ActionConfig) GetMode() (ChargeMode, bool) {
+	return a.Mode, a.Mode != ""
+}
+
+func (a ActionConfig) GetMinCurrent() (float64, bool) {
+	return a.MinCurrent, a.MinCurrent > 0
+}
+
+func (a ActionConfig) GetMaxCurrent() (float64, bool) {
+	return a.MaxCurrent, a.MaxCurrent > 0
+}
+
+func (a ActionConfig) GetPriority() (int, bool) {
+	return a.Priority, a.Priority > 0
 }

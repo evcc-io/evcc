@@ -165,7 +165,6 @@ modalTitle = "Stvarno želiš ponovo pokrenuti aplikaciju?"
 vehicles = "Parkiranje"
 
 [main.chargingPlan]
-activeLabel = "{time}"
 arrivalTab = "Dolazak"
 departureTab = "Odlazak"
 modalTitle = "Plan napajanja"
@@ -235,7 +234,6 @@ logout = "odjavi se"
 
 [main.targetCharge]
 activate = "Aktiviraj"
-activeLabel = "{time}"
 co2Limit = "CO₂ granica od {co2}"
 costLimitIgnore = "Konfigurirani {limit} zanemarit će se tijekom ovog razdoblja."
 descriptionEnergy = "Do kada bi {targetEnergy} trebalo napojiti vozilo?"
@@ -249,7 +247,6 @@ planPeriodValue = "{start} do {end}"
 planUnknown = "još nije poznato"
 priceLimit = "ograničenje cijene od {price}"
 setTargetTime = "ništa"
-targetEnergyRequired = "Moraš postaviti i ograničenje energije."
 targetIsInThePast = "Odaberi vrijeme u budućnosti."
 targetIsTooFarInTheFuture = "Prilagodit ćemo plan čim budemo znali više o budućnosti."
 title = "Ciljano vrijeme"

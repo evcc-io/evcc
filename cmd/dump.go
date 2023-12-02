@@ -99,13 +99,13 @@ func runDump(cmd *cobra.Command, args []string) {
 		d.DumpWithHeader(fmt.Sprintf("grid: %s", name), handle(name, config.Meters()))
 	}
 
-	for id, name := range append(site.Meters.PVMetersRef, site.Meters.PVMetersRef_...) {
+	for id, name := range site.Meters.PVMetersRef {
 		if name != "" {
 			d.DumpWithHeader(fmt.Sprintf("pv %d: %s", id+1, name), handle(name, config.Meters()))
 		}
 	}
 
-	for id, name := range append(site.Meters.BatteryMetersRef, site.Meters.BatteryMetersRef_...) {
+	for id, name := range site.Meters.BatteryMetersRef {
 		if name != "" {
 			d.DumpWithHeader(fmt.Sprintf("battery %d: %s", id+1, name), handle(name, config.Meters()))
 		}
@@ -117,7 +117,8 @@ func runDump(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	for _, v := range site.GetVehicles() {
+	for _, vv := range site.Vehicles().All() {
+		v := vv.Instance()
 		d.DumpWithHeader(fmt.Sprintf("vehicle: %s", v.Title()), v)
 	}
 
