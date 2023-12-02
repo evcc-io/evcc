@@ -172,9 +172,9 @@ export default {
 		vehicleProviderLogoutPath: String,
 
 		// details
+		vehicleClimaterActive: Boolean,
 		chargePower: Number,
 		chargedEnergy: Number,
-		climaterActive: Boolean,
 		chargeRemainingDuration: Number,
 
 		// other information

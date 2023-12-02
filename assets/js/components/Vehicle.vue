@@ -87,7 +87,7 @@ export default {
 	props: {
 		chargedEnergy: Number,
 		charging: Boolean,
-		climaterActive: Boolean,
+		vehicleClimaterActive: Boolean,
 		connected: Boolean,
 		currency: String,
 		effectiveLimitSoc: Number,

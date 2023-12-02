@@ -73,16 +73,16 @@ describe("plan", () => {
 describe("climating", () => {
   test("show climating status", () => {
     expectStatus(
-      { connected: true, enabled: true, climaterActive: true, charging: true },
+      { connected: true, enabled: true, vehicleClimaterActive: true, charging: true },
       "climating"
     );
     expectStatus(
-      { connected: true, enabled: true, climaterActive: true, charging: false },
+      { connected: true, enabled: true, vehicleClimaterActive: true, charging: false },
       "climating"
     );
   });
   test("only show climating if enabled", () => {
-    expectStatus({ connected: true, enabled: false, climaterActive: true }, "connected");
+    expectStatus({ connected: true, enabled: false, vehicleClimaterActive: true }, "connected");
   });
 });
 

@@ -26,7 +26,7 @@ export default {
 		guardAction: String,
 		guardRemainingInterpolated: Number,
 		targetChargeDisabled: Boolean,
-		climaterActive: Boolean,
+		vehicleClimaterActive: Boolean,
 		smartCostLimit: Number,
 		smartCostType: String,
 		smartCostActive: Boolean,
@@ -96,7 +96,7 @@ export default {
 				});
 			}
 
-			if (this.enabled && this.climaterActive) {
+			if (this.enabled && this.vehicleClimaterActive) {
 				return t("climating");
 			}
 

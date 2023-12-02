@@ -370,7 +370,7 @@ func (lp *Loadpoint) vehicleClimateActive() bool {
 				lp.log.DEBUG.Println("climater active")
 			}
 
-			lp.publish(keys.ClimaterActive, active)
+			lp.publish(keys.VehicleClimaterActive, active)
 			return active
 		}
 

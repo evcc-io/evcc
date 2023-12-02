@@ -2,33 +2,7 @@ package keys
 
 const (
 	// loadpoint settings
-	Title = "title" // loadpoint title
-
-	PhasesConfigured = "phasesConfigured" // configured phases (1/3, 0 for auto on 1p3p chargers, nil for plain chargers)
-	PhasesEnabled    = "phasesEnabled"    // enabled phases (1/3)
-	PhasesActive     = "phasesActive"     // active phases as used by vehicle (1/2/3)
-
-	ChargerIcon    = "chargerIcon"    // charger icon for ui
-	ChargerFeature = "chargerFeature" // charger feature
-
-	// vehicle
-	ClimaterActive         = "climaterActive"         // climater active
-	VehicleIdentity        = "vehicleIdentity"        // vehicle identity
-	VehicleCapacity        = "vehicleCapacity"        // vehicle battery capacity
-	VehicleDetectionActive = "vehicleDetectionActive" // vehicle detection active
-	VehicleIcon            = "vehicleIcon"            // vehicle icon for ui
-	VehicleOdometer        = "vehicleOdometer"        // vehicle odometer
-	VehiclePresent         = "vehiclePresent"         // vehicle detected
-	VehicleRange           = "vehicleRange"           // vehicle range
-	VehicleSoc             = "vehicleSoc"             // vehicle soc
-	VehicleTargetSoc       = "vehicleTargetSoc"       // vehicle soc limit
-	VehicleTitle           = "vehicleTitle"           // vehicle title
-	VehicleName            = "vehicleName"            // vehicle name
-
-	// TODO rename value
-	VehicleClimaterActive = "vehicleClimaterActive" // vehicle climater active
-
-	// loadpoint settings
+	Title            = "title"       // loadpoint title
 	Mode             = "mode"        // charge mode
 	Priority         = "priority"    // priority
 	MinCurrent       = "minCurrent"  // min current
@@ -38,6 +12,13 @@ const (
 	LimitEnergy      = "limitEnergy" // limit energy
 	EnableThreshold  = "enableThreshold"
 	DisableThreshold = "disableThreshold"
+
+	PhasesConfigured = "phasesConfigured" // configured phases (1/3, 0 for auto on 1p3p chargers, nil for plain chargers)
+	PhasesEnabled    = "phasesEnabled"    // enabled phases (1/3)
+	PhasesActive     = "phasesActive"     // active phases as used by vehicle (1/2/3)
+
+	ChargerIcon    = "chargerIcon"    // charger icon for ui
+	ChargerFeature = "chargerFeature" // charger feature
 
 	// loadpoint status
 	Enabled   = "enabled"   // loadpoint enabled
@@ -76,4 +57,18 @@ const (
 	// remote control
 	RemoteDisabled       = "remoteDisabled"       // remote disabled
 	RemoteDisabledSource = "remoteDisabledSource" // remote disabled source
+
+	// vehicle
+	VehicleTitle           = "vehicleTitle"           // vehicle title
+	VehicleName            = "vehicleName"            // vehicle name
+	VehicleIdentity        = "vehicleIdentity"        // vehicle identity
+	VehicleCapacity        = "vehicleCapacity"        // vehicle battery capacity
+	VehicleDetectionActive = "vehicleDetectionActive" // vehicle detection active
+	VehicleIcon            = "vehicleIcon"            // vehicle icon for ui
+	VehicleOdometer        = "vehicleOdometer"        // vehicle odometer
+	VehiclePresent         = "vehiclePresent"         // vehicle detected
+	VehicleRange           = "vehicleRange"           // vehicle range
+	VehicleSoc             = "vehicleSoc"             // vehicle soc
+	VehicleTargetSoc       = "vehicleTargetSoc"       // vehicle soc limit
+	VehicleClimaterActive  = "vehicleClimaterActive"  // vehicle climater active
 )
