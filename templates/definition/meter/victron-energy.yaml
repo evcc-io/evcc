@@ -120,7 +120,8 @@ render: |
       type: input
       decode: uint16
   limitsoc:
-    source: float2int
+    source: convert
+    convert: float2int
     set:
       source: modbus
       uri: {{ .host }}:{{ .port }}

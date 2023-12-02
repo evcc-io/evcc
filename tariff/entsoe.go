@@ -65,6 +65,7 @@ func NewEntsoeFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		embed:  &cc.embed,
 		token:  cc.Securitytoken,
 		domain: domain,
+		data:   util.NewMonitor[api.Rates](2 * time.Hour),
 	}
 
 	// Wrap the client with a decorator that adds the security token to each request.

@@ -32,6 +32,14 @@ func NewSwitchFromConfig(other map[string]interface{}) (Provider, error) {
 		return nil, err
 	}
 
+	cases := make(map[string]struct{})
+	for _, c := range cc.Switch {
+		if _, ok := cases[c.Case]; ok {
+			return nil, fmt.Errorf("switch: duplicate case: %s", c.Case)
+		}
+		cases[c.Case] = struct{}{}
+	}
+
 	o := &switchProvider{
 		cases: cc.Switch,
 		dflt:  cc.Default,

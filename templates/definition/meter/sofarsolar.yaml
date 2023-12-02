@@ -2,10 +2,10 @@ template: sofarsolar
 products:
   - brand: SofarSolar
     description:
-      generic: Inverter / Hybrid Inverter
+      generic: Inverter, Hybrid Inverter
   - brand: ZCS Azzurro
     description:
-      generic: Inverter / Hybrid Inverter
+      generic: Inverter, Hybrid Inverter
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]

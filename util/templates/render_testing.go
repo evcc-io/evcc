@@ -74,7 +74,7 @@ func TestClass(t *testing.T, class Class, instantiate func(t *testing.T, values 
 			usageValues[ParamUsage] = u
 
 			// subtest for each usage
-			t.Run(u, func(t *testing.T) {
+			t.Run(tmpl.Template+"/"+u, func(t *testing.T) {
 				t.Parallel()
 
 				test(t, tmpl, usageValues, func(values map[string]interface{}) {

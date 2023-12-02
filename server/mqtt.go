@@ -25,9 +25,10 @@ var deprecatedTopics = []string{
 
 // MQTT is the MQTT server. It uses the MQTT client for publishing.
 type MQTT struct {
-	log     *util.Logger
-	Handler *mqtt.Client
-	root    string
+	log       *util.Logger
+	Handler   *mqtt.Client
+	root      string
+	publisher func(topic string, retained bool, payload string)
 }
 
 // NewMQTT creates MQTT server
@@ -37,6 +38,7 @@ func NewMQTT(root string, site site.API) (*MQTT, error) {
 		Handler: mqtt.Instance,
 		root:    root,
 	}
+	m.publisher = m.publishString
 
 	err := m.Listen(site)
 	return m, err
@@ -69,7 +71,7 @@ func (m *MQTT) encode(v interface{}) string {
 }
 
 func (m *MQTT) publishComplex(topic string, retained bool, payload interface{}) {
-	if payload == nil {
+	if _, ok := payload.(fmt.Stringer); ok || payload == nil {
 		m.publishSingleValue(topic, retained, payload)
 		return
 	}
@@ -109,9 +111,13 @@ func (m *MQTT) publishComplex(topic string, retained bool, payload interface{}) 
 	}
 }
 
-func (m *MQTT) publishSingleValue(topic string, retained bool, payload interface{}) {
+func (m *MQTT) publishString(topic string, retained bool, payload string) {
 	token := m.Handler.Client.Publish(topic, m.Handler.Qos, retained, m.encode(payload))
 	go m.Handler.WaitForToken("send", topic, token)
+}
+
+func (m *MQTT) publishSingleValue(topic string, retained bool, payload interface{}) {
+	m.publisher(topic, retained, m.encode(payload))
 }
 
 func (m *MQTT) publish(topic string, retained bool, payload interface{}) {
