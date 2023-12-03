@@ -42,6 +42,11 @@ var OAuth2Config = &oauth2.Config{
 	Scopes:      []string{"09852200-05fd-41f6-8c21-d36d3497dc64", "openid"},
 }
 
+type Settings struct {
+	TransId string `json:"transId"`
+	Csrf    string `json:"csrf"`
+}
+
 type Identity struct {
 	*request.Helper
 	user, password string
@@ -94,12 +99,14 @@ func (v *Identity) login() (*oauth.Token, error) {
 
 	match := regexp.MustCompile(`var SETTINGS = (\{[^;]*\});`).FindSubmatch(body)
 	if len(match) < 2 {
-		return nil, errors.New("missing login url")
+		return nil, errors.New("missing settings variable")
 	}
 
-	settings := map[string]string{}
+	var settings Settings
 
-	json.Unmarshal([]byte(match[1]), &settings)
+	if err := json.Unmarshal([]byte(match[1]), &settings); err != nil {
+		return nil, err
+	}
 
 	data := url.Values{
 		"request_type": {"RESPONSE"},
@@ -115,14 +122,14 @@ func (v *Identity) login() (*oauth.Token, error) {
 	}
 	defer func() { v.Client.CheckRedirect = nil }()
 
-	uri2 := fmt.Sprintf("%s/4566605f-43a7-400a-946e-89cc9fdb0bd7/B2C_1A_SignInSignUp_de-DE/SelfAsserted?tx=%s&p=B2C_1A_SignInSignUp_de-DE", LoginUri, settings["transId"])
+	uri2 := fmt.Sprintf("%s/4566605f-43a7-400a-946e-89cc9fdb0bd7/B2C_1A_SignInSignUp_de-DE/SelfAsserted?tx=%s&p=B2C_1A_SignInSignUp_de-DE", LoginUri, settings.TransId)
 	req, err = request.New(http.MethodPost, uri2, strings.NewReader(data.Encode()), request.URLEncoding, map[string]string{
 		"Accept":          "*/*",
 		"Accept-Language": "en-us",
 		"User-Agent":      "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Mobile/15E148 Safari/604.1",
 		"Origin":          "https://login.ford.com",
 		"Referer":         uri,
-		"X-Csrf-Token":    settings["csrf"],
+		"X-Csrf-Token":    settings.Csrf,
 	})
 
 	if err == nil {
@@ -136,11 +143,11 @@ func (v *Identity) login() (*oauth.Token, error) {
 		}
 	}
 
-	uri3 := fmt.Sprintf("%s/4566605f-43a7-400a-946e-89cc9fdb0bd7/B2C_1A_SignInSignUp_de-DE/api/CombinedSigninAndSignup/confirmed?rememberMe=false&csrf_token=%s&tx=%s&p=B2C_1A_SignInSignUp_de-DE", LoginUri, settings["csrf"], settings["transId"])
+	uri3 := fmt.Sprintf("%s/4566605f-43a7-400a-946e-89cc9fdb0bd7/B2C_1A_SignInSignUp_de-DE/api/CombinedSigninAndSignup/confirmed?rememberMe=false&csrf_token=%s&tx=%s&p=B2C_1A_SignInSignUp_de-DE", LoginUri, settings.Csrf, settings.TransId)
 	req, err = request.New(http.MethodGet, uri3, nil, request.URLEncoding, map[string]string{
 		"Origin":       "https://login.ford.com",
 		"Referer":      uri,
-		"X-Csrf-Token": settings["csrf"],
+		"X-Csrf-Token": settings.Csrf,
 	})
 
 	var loc *url.URL
