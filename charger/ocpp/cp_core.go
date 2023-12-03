@@ -33,7 +33,7 @@ func (cp *CP) Authorize(request *core.AuthorizeRequest) (*core.AuthorizeConfirma
 
 func (cp *CP) BootNotification(request *core.BootNotificationRequest) (*core.BootNotificationConfirmation, error) {
 	res := &core.BootNotificationConfirmation{
-		CurrentTime: types.NewDateTime(time.Now()),
+		CurrentTime: types.Now(),
 		Interval:    60, // TODO
 		Status:      core.RegistrationStatusAccepted,
 	}
@@ -72,7 +72,7 @@ func (cp *CP) DataTransfer(request *core.DataTransferRequest) (*core.DataTransfe
 
 func (cp *CP) Heartbeat(request *core.HeartbeatRequest) (*core.HeartbeatConfirmation, error) {
 	res := &core.HeartbeatConfirmation{
-		CurrentTime: types.NewDateTime(time.Now()),
+		CurrentTime: types.Now(),
 	}
 
 	return res, nil
