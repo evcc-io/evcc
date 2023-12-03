@@ -41,7 +41,7 @@
     "prettier-plugin-toml": "^1.0.0",
     "rollup-plugin-visualizer": "^5.8.3",
     "smoothscroll-polyfill": "^0.4.4",
-    "vite": "^4.2.1",
+    "vite": "^4.5.0",
     "vite-plugin-toml": "^0.6.0",
     "vitest": "^0.34.4",
     "vue": "^3.2.29",
