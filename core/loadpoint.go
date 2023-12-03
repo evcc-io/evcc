@@ -310,6 +310,12 @@ func (lp *Loadpoint) restoreSettings() {
 	if v, err := lp.settings.Float(keys.PlanEnergy); err == nil {
 		lp.planEnergy = v
 	}
+	if v, err := lp.settings.Int(keys.LimitSoc); err == nil {
+		lp.limitSoc = int(v)
+	}
+	if v, err := lp.settings.Float(keys.LimitEnergy); err == nil {
+		lp.limitEnergy = v
+	}
 }
 
 // requestUpdate requests site to update this loadpoint

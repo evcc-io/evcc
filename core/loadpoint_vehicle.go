@@ -121,12 +121,6 @@ func (lp *Loadpoint) setActiveVehicle(v api.Vehicle) {
 		lp.log.INFO.Printf("vehicle updated: %s -> %s", from, to)
 	}
 
-	// reset session values
-	lp.Lock()
-	lp.setLimitSoc(0)
-	lp.setLimitEnergy(0)
-	lp.Unlock()
-
 	if v != nil {
 		lp.socUpdated = time.Time{}
 
