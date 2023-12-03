@@ -19,9 +19,8 @@ import (
 )
 
 const (
-	AuthURI       = "https://sso.ci.ford.com"
 	TokenURI      = "https://api.mps.ford.com"
-	LoginUri      = "https://login.ford.com"
+	LoginUri      = "https://login.ford.com/4566605f-43a7-400a-946e-89cc9fdb0bd7/B2C_1A_SignInSignUp_de-DE"
 	ClientID      = "09852200-05fd-41f6-8c21-d36d3497dc64"
 	ApplicationID = "1E8C7794-FF5F-49BC-9596-A1E0C86C5B19"
 )
@@ -35,11 +34,11 @@ var loginHeaders = map[string]string{
 var OAuth2Config = &oauth2.Config{
 	ClientID: ClientID,
 	Endpoint: oauth2.Endpoint{
-		AuthURL:  fmt.Sprintf("%s/4566605f-43a7-400a-946e-89cc9fdb0bd7/B2C_1A_SignInSignUp_de-DE/oauth2/v2.0/authorize", LoginUri),
-		TokenURL: fmt.Sprintf("%s/4566605f-43a7-400a-946e-89cc9fdb0bd7/B2C_1A_SignInSignUp_de-DE/oauth2/v2.0/token", LoginUri),
+		AuthURL:  fmt.Sprintf("%s/oauth2/v2.0/authorize", LoginUri),
+		TokenURL: fmt.Sprintf("%s/oauth2/v2.0/token", LoginUri),
 	},
 	RedirectURL: "fordapp://userauthorized",
-	Scopes:      []string{"09852200-05fd-41f6-8c21-d36d3497dc64", "openid"},
+	Scopes:      []string{ClientID, "openid"},
 }
 
 type Settings struct {
@@ -122,7 +121,7 @@ func (v *Identity) login() (*oauth.Token, error) {
 	}
 	defer func() { v.Client.CheckRedirect = nil }()
 
-	uri2 := fmt.Sprintf("%s/4566605f-43a7-400a-946e-89cc9fdb0bd7/B2C_1A_SignInSignUp_de-DE/SelfAsserted?tx=%s&p=B2C_1A_SignInSignUp_de-DE", LoginUri, settings.TransId)
+	uri2 := fmt.Sprintf("%s/SelfAsserted?tx=%s&p=B2C_1A_SignInSignUp_de-DE", LoginUri, settings.TransId)
 	req, err = request.New(http.MethodPost, uri2, strings.NewReader(data.Encode()), request.URLEncoding, map[string]string{
 		"Accept":          "*/*",
 		"Accept-Language": "en-us",
@@ -143,7 +142,7 @@ func (v *Identity) login() (*oauth.Token, error) {
 		}
 	}
 
-	uri3 := fmt.Sprintf("%s/4566605f-43a7-400a-946e-89cc9fdb0bd7/B2C_1A_SignInSignUp_de-DE/api/CombinedSigninAndSignup/confirmed?rememberMe=false&csrf_token=%s&tx=%s&p=B2C_1A_SignInSignUp_de-DE", LoginUri, settings.Csrf, settings.TransId)
+	uri3 := fmt.Sprintf("%s/api/CombinedSigninAndSignup/confirmed?rememberMe=false&csrf_token=%s&tx=%s&p=B2C_1A_SignInSignUp_de-DE", LoginUri, settings.Csrf, settings.TransId)
 	req, err = request.New(http.MethodGet, uri3, nil, request.URLEncoding, map[string]string{
 		"Origin":       "https://login.ford.com",
 		"Referer":      uri,
