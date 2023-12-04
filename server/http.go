@@ -56,9 +56,8 @@ func NewHTTPd(addr string, hub *SocketHub) *HTTPd {
 	})
 
 	static.HandleFunc("/", indexHandler())
-	for _, dir := range []string{"assets", "meta"} {
-		static.PathPrefix("/" + dir).Handler(http.FileServer(http.FS(assets.Web)))
-	}
+	static.PathPrefix("/assets").Handler(CacheControlWrapper(http.FileServer(http.FS(assets.Web))))
+	static.PathPrefix("/meta").Handler(http.FileServer(http.FS(assets.Web)))
 	static.PathPrefix("/i18n").Handler(http.StripPrefix("/i18n", http.FileServer(http.FS(assets.I18n))))
 
 	srv := &HTTPd{
@@ -74,6 +73,13 @@ func NewHTTPd(addr string, hub *SocketHub) *HTTPd {
 	srv.SetKeepAlivesEnabled(true)
 
 	return srv
+}
+
+func CacheControlWrapper(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Cache-Control", "max-age=2592000") // 30 days
+		h.ServeHTTP(w, r)
+	})
 }
 
 // Router returns the main router
