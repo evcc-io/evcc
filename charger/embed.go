@@ -11,7 +11,7 @@ type embed struct {
 
 var _ api.IconDescriber = (*embed)(nil)
 
-// Icon implements the api.Vehicle interface
+// Icon implements the api.IconDescriber interface
 func (v *embed) Icon() string {
 	return v.Icon_
 }

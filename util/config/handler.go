@@ -7,7 +7,7 @@ import (
 )
 
 type handler[T any] struct {
-	mu      sync.Mutex
+	mu      sync.RWMutex
 	topic   string
 	devices []Device[T]
 }
@@ -27,8 +27,8 @@ func (cp *handler[T]) Subscribe(fn func(Operation, Device[T])) {
 
 // Devices returns the handlers devices
 func (cp *handler[T]) Devices() []Device[T] {
-	cp.mu.Lock()
-	defer cp.mu.Unlock()
+	cp.mu.RLock()
+	defer cp.mu.RUnlock()
 
 	return cp.devices
 }
@@ -46,9 +46,9 @@ func (cp *handler[T]) Add(dev Device[T]) error {
 	}
 
 	cp.mu.Lock()
-	defer cp.mu.Unlock()
-
 	cp.devices = append(cp.devices, dev)
+	cp.mu.Unlock()
+
 	bus.Publish(cp.topic, OpAdd, dev)
 
 	return nil
@@ -56,8 +56,8 @@ func (cp *handler[T]) Add(dev Device[T]) error {
 
 // Delete deletes device
 func (cp *handler[T]) Delete(name string) error {
-	cp.mu.Lock()
-	defer cp.mu.Unlock()
+	cp.mu.RLock()
+	defer cp.mu.RUnlock()
 
 	for i, dev := range cp.devices {
 		if name == dev.Config().Name {
@@ -72,8 +72,8 @@ func (cp *handler[T]) Delete(name string) error {
 
 // ByName provides device by name
 func (cp *handler[T]) ByName(name string) (Device[T], error) {
-	cp.mu.Lock()
-	defer cp.mu.Unlock()
+	cp.mu.RLock()
+	defer cp.mu.RUnlock()
 
 	for _, dev := range cp.devices {
 		if name == dev.Config().Name {

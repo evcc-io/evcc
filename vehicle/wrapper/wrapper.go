@@ -65,7 +65,7 @@ func (v *Wrapper) SetTitle(title string) {
 	v.title = fmt.Sprintf("%s (unavailable)", title)
 }
 
-// Icon implements the api.Vehicle interface
+// Icon implements the api.IconDescriber interface
 func (v *Wrapper) Icon() string {
 	return v.icon
 }

@@ -6,6 +6,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
+// Start returns the earliest slot's start time
 func Start(plan api.Rates) time.Time {
 	var start time.Time
 	for _, slot := range plan {
@@ -16,6 +17,7 @@ func Start(plan api.Rates) time.Time {
 	return start
 }
 
+// Duration returns the sum of all slot's durations
 func Duration(plan api.Rates) time.Duration {
 	var duration time.Duration
 	for _, slot := range plan {
@@ -25,6 +27,7 @@ func Duration(plan api.Rates) time.Duration {
 	return duration
 }
 
+// AverageCost returns the time-weighted average cost
 func AverageCost(plan api.Rates) float64 {
 	var cost float64
 	var duration time.Duration

@@ -81,9 +81,8 @@ func TestReadCoils(t *testing.T) {
 	assert.NoError(t, err)
 
 	proxy, _ := mbserver.New(&handler{
-		log:            util.NewLogger("foo"),
-		RequestHandler: new(mbserver.DummyHandler),
-		conn:           downstreamConn,
+		log:  util.NewLogger("foo"),
+		conn: downstreamConn,
 	})
 	assert.NoError(t, proxy.Start(pl))
 	defer func() { _ = proxy.Stop() }()

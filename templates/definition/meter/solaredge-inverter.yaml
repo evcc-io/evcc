@@ -32,3 +32,11 @@ render: |
     model: sunspec
     value: Power
   {{- end }}
+  {{- if eq .usage "pv" }}
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    timeout: {{ .timeout }}
+    model: sunspec
+    value: Export
+  {{- end }}

@@ -1,0 +1,79 @@
+template: storaxe
+products:
+  - brand: Ads-tec
+    description:
+      generic: StoraXe
+params:
+  - name: usage
+    choice: ["battery"]
+  - name: modbus
+    choice: ["tcpip"]
+    id: 2
+render: |
+  type: custom
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 2 # RealPower
+      type: input
+      decode: int16
+    scale: 100
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 115 # EnergyExportedAC
+      type: input
+      decode: uint32
+  voltages:
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 7 # ACVoltageL1
+        type: input
+        decode: int16
+      scale: 0.1
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 8 # ACVoltageL2
+        type: input
+        decode: int16
+      scale: 0.1
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 9 # ACVoltageL3
+        type: input
+        decode: int16
+      scale: 0.1  
+  currents:
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 10 # ACCurrentL1
+        type: input
+        decode: int16
+      scale: 0.1
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 11 # ACCurrentL2
+        type: input
+        decode: int16
+      scale: 0.1
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 12 # ACCurrentL3
+        type: input
+        decode: int16
+      scale: 0.1
+  soc:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 126 # SXSSOC
+      type: input
+      decode: int16

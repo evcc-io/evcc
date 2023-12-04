@@ -129,7 +129,6 @@ logout = "ausloggen"
 
 [main.targetCharge]
 activate = "Aktivéieren"
-activeLabel = "{time}"
 descriptionEnergy = "Bis wéini soll {targetEnergy} an d'Gefier gelueden ginn?"
 descriptionSoc = "Wéini soll d'Gefier op {targetSoc}% gelueden ginn?"
 inactiveLabel = "Zilzäit"

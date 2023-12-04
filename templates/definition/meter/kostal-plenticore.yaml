@@ -9,6 +9,14 @@ linked:
   - template: kostal-ksem
     usage: grid
     excludetemplate: kostal-ksem-inverter
+requirements:
+  description:
+    de: |
+      Nur ein System kann und darf auf den Wechselrichter zugreifen!
+      Für die optionale Batteriesteuerung muss Modbus Bytereihenfolge auf BigEndian (Sunspec) konfiguriert sein.
+    en: |
+      Only one system may access the inverter!
+      For optional battery control, Modbus byte order must be set to BigEndian (Sunspec).
 params:
   - name: usage
     choice: ["pv", "battery"]
@@ -18,6 +26,17 @@ params:
     id: 71
     port: 1502
   - name: capacity
+    advanced: true
+  # battery control
+  - name: minsoc
+    type: number
+    advanced: true
+  - name: maxsoc
+    type: number
+    advanced: true
+  - name: watchdog
+    type: duration
+    default: 60s
     advanced: true
 render: |
   {{- if eq .usage "pv" }}
@@ -39,12 +58,28 @@ render: |
       value: 160:3:DCW # string 3
   {{- end }}
   {{- if eq .usage "battery" }}
-  type: modbus
-  {{- include "modbus" . }}
-  model: sunspec
-  power: 802:W # sunspec model 802 battery
-  soc: 802:SoC # sunspec model 802 battery
-  {{- if .capacity }}
+  type: custom
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    model: sunspec
+    value: 802:W # 802 battery control
+  soc:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    model: sunspec
+    value: 802:SoC # 802 battery control
+  limitsoc:
+    source: watchdog
+    timeout: {{ .watchdog }} # re-write at timeout/2
+    set:
+      source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 1042 # limit soc
+        type: writemultiple
+        decode: float32
   capacity: {{ .capacity }} # kWh
-  {{- end }}
+  minsoc: {{ .minsoc }} # %
+  maxsoc: {{ .maxsoc }} # %
   {{- end }}

@@ -16,7 +16,7 @@ export default {
 		enabled: Boolean,
 		connected: Boolean,
 		charging: Boolean,
-		targetTime: String,
+		effectivePlanTime: String,
 		planProjectedStart: String,
 		planActive: Boolean,
 		phaseAction: String,
@@ -26,7 +26,7 @@ export default {
 		guardAction: String,
 		guardRemainingInterpolated: Number,
 		targetChargeDisabled: Boolean,
-		climaterActive: Boolean,
+		vehicleClimaterActive: Boolean,
 		smartCostLimit: Number,
 		smartCostType: String,
 		smartCostActive: Boolean,
@@ -63,7 +63,7 @@ export default {
 			}
 
 			// plan
-			if (this.targetTime && !this.targetChargeDisabled) {
+			if (this.effectivePlanTime && !this.targetChargeDisabled) {
 				if (this.planActive && this.charging) {
 					return t("targetChargeActive");
 				}
@@ -96,7 +96,7 @@ export default {
 				});
 			}
 
-			if (this.enabled && this.climaterActive) {
+			if (this.enabled && this.vehicleClimaterActive) {
 				return t("climating");
 			}
 

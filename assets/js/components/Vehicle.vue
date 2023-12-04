@@ -10,8 +10,9 @@
 		<VehicleSoc
 			v-bind="vehicleSocProps"
 			class="mt-2 mb-4"
-			@target-soc-updated="targetSocUpdated"
-			@target-soc-drag="targetSocDrag"
+			@limit-soc-updated="limitSocUpdated"
+			@limit-soc-drag="limitSocDrag"
+			@plan-clicked="openPlanModal"
 		/>
 
 		<div class="details d-flex flex-wrap justify-content-between">
@@ -33,29 +34,27 @@
 			/>
 			<ChargingPlan
 				v-if="!heating"
+				ref="chargingPlan"
 				class="flex-grow-1 target-charge"
 				v-bind="chargingPlan"
 				:disabled="chargingPlanDisabled"
-				@target-time-updated="setTargetTime"
-				@target-time-removed="removeTargetTime"
-				@minsoc-updated="setMinSoc"
 			/>
-			<TargetSocSelect
+			<LimitSocSelect
 				v-if="socBasedCharging"
 				class="flex-grow-1 text-end"
-				:target-soc="displayTargetSoc"
+				:limit-soc="displayLimitSoc"
 				:range-per-soc="rangePerSoc"
 				:heating="heating"
-				@target-soc-updated="targetSocUpdated"
+				@limit-soc-updated="limitSocUpdated"
 			/>
-			<TargetEnergySelect
+			<LimitEnergySelect
 				v-else
 				class="flex-grow-1 text-end"
-				:target-energy="targetEnergy"
+				:limit-energy="limitEnergy"
 				:soc-per-kwh="socPerKwh"
 				:charged-energy="chargedEnergy"
 				:vehicle-capacity="vehicleCapacity"
-				@target-energy-updated="targetEnergyUpdated"
+				@limit-energy-updated="limitEnergyUpdated"
 			/>
 		</div>
 	</div>
@@ -69,8 +68,8 @@ import VehicleTitle from "./VehicleTitle.vue";
 import VehicleSoc from "./VehicleSoc.vue";
 import VehicleStatus from "./VehicleStatus.vue";
 import ChargingPlan from "./ChargingPlan.vue";
-import TargetSocSelect from "./TargetSocSelect.vue";
-import TargetEnergySelect from "./TargetEnergySelect.vue";
+import LimitSocSelect from "./LimitSocSelect.vue";
+import LimitEnergySelect from "./LimitEnergySelect.vue";
 import { distanceUnit, distanceValue } from "../units";
 
 export default {
@@ -81,64 +80,64 @@ export default {
 		VehicleStatus,
 		LabelAndValue,
 		ChargingPlan,
-		TargetSocSelect,
-		TargetEnergySelect,
+		LimitSocSelect,
+		LimitEnergySelect,
 	},
 	mixins: [collector, formatter],
 	props: {
-		id: [String, Number],
-		connected: Boolean,
-		integratedDevice: Boolean,
-		heating: Boolean,
-		vehiclePresent: Boolean,
-		vehicleSoc: Number,
-		vehicleTargetSoc: Number,
-		enabled: Boolean,
-		charging: Boolean,
-		minSoc: Number,
-		vehicleDetectionActive: Boolean,
-		vehicleRange: Number,
-		vehicleTitle: String,
-		vehicleIcon: String,
-		vehicleCapacity: Number,
-		socBasedCharging: Boolean,
-		planActive: Boolean,
-		planProjectedStart: String,
-		targetTime: String,
-		targetSoc: Number,
-		targetEnergy: Number,
 		chargedEnergy: Number,
+		charging: Boolean,
+		vehicleClimaterActive: Boolean,
+		connected: Boolean,
+		currency: String,
+		effectiveLimitSoc: Number,
+		effectivePlanSoc: Number,
+		effectivePlanTime: String,
+		enabled: Boolean,
+		guardAction: String,
+		guardRemainingInterpolated: Number,
+		heating: Boolean,
+		id: [String, Number],
+		integratedDevice: Boolean,
+		limitEnergy: Number,
 		mode: String,
 		phaseAction: String,
 		phaseRemainingInterpolated: Number,
+		planActive: Boolean,
+		planEnergy: Number,
+		planProjectedStart: String,
+		planTime: String,
 		pvAction: String,
 		pvRemainingInterpolated: Number,
-		guardAction: String,
-		guardRemainingInterpolated: Number,
-		vehicles: Array,
-		climaterActive: Boolean,
+		smartCostActive: Boolean,
 		smartCostLimit: Number,
 		smartCostType: String,
-		smartCostActive: Boolean,
-		tariffGrid: Number,
+		socBasedCharging: Boolean,
+		socBasedPlanning: Boolean,
 		tariffCo2: Number,
-		currency: String,
+		tariffGrid: Number,
+		vehicle: Object,
+		vehicleCapacity: Number,
+		vehicleDetectionActive: Boolean,
+		vehicleIcon: String,
+		vehicleName: String,
+		vehiclePresent: Boolean,
+		vehicleRange: Number,
+		vehicles: Array,
+		vehicleSoc: Number,
+		vehicleTargetSoc: Number,
+		vehicleTitle: String,
 	},
-	emits: [
-		"target-time-removed",
-		"target-time-updated",
-		"target-soc-updated",
-		"target-energy-updated",
-		"change-vehicle",
-		"remove-vehicle",
-		"minsoc-updated",
-	],
+	emits: ["limit-soc-updated", "limit-energy-updated", "change-vehicle", "remove-vehicle"],
 	data() {
 		return {
-			displayTargetSoc: this.targetSoc,
+			displayLimitSoc: this.effectiveLimitSoc,
 		};
 	},
 	computed: {
+		minSoc: function () {
+			return this.vehicle?.minSoc || 0;
+		},
 		vehicleSocProps: function () {
 			return this.collectProps(VehicleSoc);
 		},
@@ -196,45 +195,27 @@ export default {
 			if (["off", "now"].includes(this.mode)) {
 				return true;
 			}
-			// enabled for vehicles with Soc
-			if (this.socBasedCharging) {
-				return false;
-			}
-			// disabled of no energy target is set (offline or guest vehicles)
-			if (!this.targetEnergy) {
-				return true;
-			}
-
 			return false;
 		},
 	},
 	watch: {
-		targetSoc: function () {
-			this.displayTargetSoc = this.targetSoc;
+		effectiveLimitSoc: function () {
+			this.displayLimitSoc = this.effectiveLimitSoc;
 		},
 	},
 	methods: {
-		targetSocDrag: function (targetSoc) {
-			this.displayTargetSoc = targetSoc;
+		limitSocDrag: function (limitSoc) {
+			this.displayLimitSoc = limitSoc;
 		},
-		targetSocUpdated: function (targetSoc) {
-			this.displayTargetSoc = targetSoc;
-			this.$emit("target-soc-updated", targetSoc);
+		limitSocUpdated: function (limitSoc) {
+			this.displayLimitSoc = limitSoc;
+			this.$emit("limit-soc-updated", limitSoc);
 		},
-		targetEnergyUpdated: function (targetEnergy) {
-			this.$emit("target-energy-updated", targetEnergy);
+		limitEnergyUpdated: function (limitEnergy) {
+			this.$emit("limit-energy-updated", limitEnergy);
 		},
-		setTargetTime: function (targetTime) {
-			this.$emit("target-time-updated", targetTime);
-		},
-		setMinSoc: function (minSoc) {
-			this.$emit("minsoc-updated", minSoc);
-		},
-		removeTargetTime: function () {
-			this.$emit("target-time-removed");
-		},
-		changeVehicle(index) {
-			this.$emit("change-vehicle", index);
+		changeVehicle(name) {
+			this.$emit("change-vehicle", name);
 		},
 		removeVehicle() {
 			this.$emit("remove-vehicle");
@@ -242,6 +223,9 @@ export default {
 		fmtEnergy(value) {
 			const inKw = value == 0 || value >= 1000;
 			return this.fmtKWh(value, inKw);
+		},
+		openPlanModal() {
+			this.$refs.chargingPlan.openPlanModal();
 		},
 	},
 };

@@ -2,11 +2,12 @@ package core
 
 import (
 	"fmt"
-	"slices"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/planner"
+	"github.com/evcc-io/evcc/core/vehicle"
 )
 
 const (
@@ -14,32 +15,40 @@ const (
 	smallGapDuration  = 60 * time.Minute // small gap duration between planner slots we might ignore
 )
 
+// TODO planActive is not guarded by mutex
+
 // setPlanActive updates plan active flag
 func (lp *Loadpoint) setPlanActive(active bool) {
 	if !active {
 		lp.planSlotEnd = time.Time{}
 	}
-	lp.planActive = active
-	lp.publish(planActive, lp.planActive)
+	if lp.planActive != active {
+		lp.planActive = active
+		lp.publish(keys.PlanActive, lp.planActive)
+	}
+}
+
+// remainingPlanEnergy returns missing energy amount in kWh
+func (lp *Loadpoint) remainingPlanEnergy() (float64, bool) {
+	_, limit := lp.GetPlanEnergy()
+	return max(0, limit-lp.getChargedEnergy()/1e3),
+		limit > 0 && !lp.socBasedPlanning()
 }
 
 // planRequiredDuration is the estimated total charging duration
 func (lp *Loadpoint) planRequiredDuration(maxPower float64) time.Duration {
-	if energy, ok := lp.remainingChargeEnergy(); ok {
+	if energy, ok := lp.remainingPlanEnergy(); ok {
 		return time.Duration(energy * 1e3 / maxPower * float64(time.Hour))
 	}
 
-	if lp.socEstimator == nil {
+	v := lp.GetVehicle()
+	if v == nil || lp.socEstimator == nil {
 		return 0
 	}
 
-	// TODO vehicle soc limit
-	targetSoc := lp.Soc.target
-	if targetSoc == 0 {
-		targetSoc = 100
-	}
+	_, soc := vehicle.Settings(lp.log, v).GetPlanSoc()
 
-	return lp.socEstimator.RemainingChargeDuration(targetSoc, maxPower)
+	return lp.socEstimator.RemainingChargeDuration(soc, maxPower)
 }
 
 // GetPlan creates a charging plan
@@ -61,7 +70,7 @@ func (lp *Loadpoint) GetPlan(targetTime time.Time, maxPower float64) (time.Durat
 	plan, err := lp.planner.Plan(requiredDuration, targetTime)
 
 	// sort plan by time
-	slices.SortStableFunc(plan, planner.SortByTime)
+	plan.Sort()
 
 	return requiredDuration, plan, err
 }
@@ -72,9 +81,14 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 		lp.setPlanActive(active)
 	}()
 
-	maxPower := lp.GetMaxPower()
+	var planStart time.Time
+	defer func() {
+		lp.publish(keys.PlanProjectedStart, planStart)
+	}()
 
-	requiredDuration, plan, err := lp.GetPlan(lp.GetTargetTime(), maxPower)
+	maxPower := lp.EffectiveMaxPower()
+
+	requiredDuration, plan, err := lp.GetPlan(lp.EffectivePlanTime(), maxPower)
 	if err != nil {
 		lp.log.ERROR.Println("planner:", err)
 		return false
@@ -85,16 +99,14 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 		return false
 	}
 
-	planStart := planner.Start(plan)
-	lp.publish(planProjectedStart, planStart)
-
 	var requiredString string
 	if req := requiredDuration.Round(time.Second); req > planner.Duration(plan).Round(time.Second) {
 		requiredString = fmt.Sprintf(" (required: %v)", req)
 	}
 
+	planStart = planner.Start(plan)
 	lp.log.DEBUG.Printf("plan: charge %v%s starting at %v until %v (power: %.0fW, avg cost: %.3f)",
-		planner.Duration(plan).Round(time.Second), requiredString, planStart.Round(time.Second).Local(), lp.targetTime.Round(time.Second).Local(),
+		planner.Duration(plan).Round(time.Second), requiredString, planStart.Round(time.Second).Local(), lp.planTime.Round(time.Second).Local(),
 		maxPower, planner.AverageCost(plan))
 
 	// log plan
@@ -118,7 +130,7 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 	} else if lp.planActive {
 		// planner was active (any slot, not necessarily previous slot) and charge goal has not yet been met
 		switch {
-		case lp.clock.Now().After(lp.targetTime) && !lp.targetTime.IsZero():
+		case lp.clock.Now().After(lp.planTime) && !lp.planTime.IsZero():
 			// if the plan did not (entirely) work, we may still be charging beyond plan end- in that case, continue charging
 			// TODO check when schedule is implemented
 			lp.log.DEBUG.Println("plan: continuing after target time")

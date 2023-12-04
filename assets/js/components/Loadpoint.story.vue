@@ -15,7 +15,7 @@ const state = reactive({
 	mode: "pv",
 	charging: true,
 	vehicleSoc: 66,
-	targetSoc: 90,
+	limitSoc: 90,
 	chargeCurrent: 7,
 	minCurrent: 6,
 	maxCurrent: 16,

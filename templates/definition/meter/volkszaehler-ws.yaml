@@ -17,6 +17,6 @@ render: |
   power: # power reading
     source: ws # use websocket plugin
     uri: ws://{{ .host }}:{{ .port }}/socket
-    jq: .data | select(.uuid=="{{ .uuid }}") .tuples[0][1] # parse response json
+    jq: .data | select(.uuid=={{ quote (trimAll "'" .uuid) }}) .tuples[0][1] # parse response json
     timeout: 30s
     scale: 1

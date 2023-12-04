@@ -53,7 +53,7 @@ jobs:
           cache-key-prefix: build-cache-
         id: go
 
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
           node-version: "18"
           cache: "npm"
@@ -108,7 +108,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
           node-version: "18"
           cache: "npm"
@@ -149,7 +149,7 @@ jobs:
           cache-key-prefix: integration-cache-
         id: go
 
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
           node-version: "18"
           cache: "npm"

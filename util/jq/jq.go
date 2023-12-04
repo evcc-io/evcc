@@ -8,7 +8,7 @@ import (
 	"github.com/itchyny/gojq"
 )
 
-// Query executes a compiled jq query against given input. It expects a single result only.
+// Query executes a compiled jq query against given json. It expects a single result only.
 func Query(query *gojq.Query, input []byte) (interface{}, error) {
 	var j interface{}
 	if err := json.Unmarshal(input, &j); err != nil {

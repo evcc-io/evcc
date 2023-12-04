@@ -6,7 +6,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateOCPP(base *OCPP, meter func() (float64, error), meterEnergy func() (float64, error), phaseCurrents func() (float64, float64, float64, error), phaseSwitcher func(phases int) error) api.Charger {
+func decorateOCPP(base *OCPP, meter func() (float64, error), meterEnergy func() (float64, error), phaseCurrents func() (float64, float64, float64, error), phaseSwitcher func(int) error) api.Charger {
 	switch {
 	case meter == nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil:
 		return base
@@ -276,6 +276,6 @@ type decorateOCPPPhaseSwitcherImpl struct {
 	phaseSwitcher func(int) error
 }
 
-func (impl *decorateOCPPPhaseSwitcherImpl) Phases1p3p(phases int) error {
-	return impl.phaseSwitcher(phases)
+func (impl *decorateOCPPPhaseSwitcherImpl) Phases1p3p(p0 int) error {
+	return impl.phaseSwitcher(p0)
 }

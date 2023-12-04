@@ -21,7 +21,6 @@ params:
     advanced: true
   - name: timeout
     default: 1h
-    advanced: true
   - preset: vehicle-identify
 render: |
   type: custom

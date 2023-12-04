@@ -69,7 +69,6 @@ var conf = globalConfig{
 }
 
 type globalConfig struct {
-	URI          interface{} // TODO deprecated
 	Network      networkConfig
 	Log          string
 	SponsorToken string
@@ -113,7 +112,7 @@ type goConfig struct {
 
 type proxyConfig struct {
 	Port            int
-	ReadOnly        bool
+	ReadOnly        string
 	modbus.Settings `mapstructure:",squash"`
 }
 
@@ -368,7 +367,7 @@ func configureEnvironment(cmd *cobra.Command, conf globalConfig) (err error) {
 	}
 
 	// setup sponsorship (allow env override)
-	if err == nil && conf.SponsorToken != "" {
+	if err == nil {
 		err = sponsor.ConfigureSponsorship(conf.SponsorToken)
 	}
 
@@ -658,7 +657,8 @@ func configureLoadpoints(conf globalConfig) (loadpoints []*core.Loadpoint, err e
 		}
 
 		log := util.NewLoggerWithLoadpoint("lp-"+strconv.Itoa(id+1), id+1)
-		lp, err := core.NewLoadpointFromConfig(log, lpc)
+		settings := &core.Settings{Key: "lp" + strconv.Itoa(id+1) + "."}
+		lp, err := core.NewLoadpointFromConfig(log, settings, lpc)
 		if err != nil {
 			return nil, fmt.Errorf("failed configuring loadpoint: %w", err)
 		}

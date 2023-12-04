@@ -30,6 +30,6 @@ type decorateCfosPhaseSwitcherImpl struct {
 	phaseSwitcher func(int) error
 }
 
-func (impl *decorateCfosPhaseSwitcherImpl) Phases1p3p(phases int) error {
-	return impl.phaseSwitcher(phases)
+func (impl *decorateCfosPhaseSwitcherImpl) Phases1p3p(p0 int) error {
+	return impl.phaseSwitcher(p0)
 }

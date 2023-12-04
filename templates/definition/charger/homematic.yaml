@@ -1,6 +1,6 @@
 template: homematic
 products:
-  - brand: Homematic / Homematic IP
+  - brand: Homematic IP
 group: switchsockets
 params:
   - name: host

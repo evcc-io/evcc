@@ -19,23 +19,19 @@ render: |
   power:
     source: http
     uri: http://{{ .host }}/e
-    method: GET
     jq: .[0]|.pwr
   energy:
     source: http
     uri: http://{{ .host }}/e
-    method: GET
     jq: .[0]|.p1+.p2
   {{- end }}
   {{- if eq .usage "pv" }}
   power:
     source: http
     uri: http://{{ .host }}/e
-    method: GET
     jq: .[0].ps0
   energy:
     source: http
     uri: http://{{ .host }}/e
-    method: GET
     jq: .[0].cs0
   {{- end }}

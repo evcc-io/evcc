@@ -32,7 +32,7 @@ func TestRatesSortByTime(t *testing.T) {
 
 	r := testRates(clock)
 
-	slices.SortStableFunc(r, SortByTime)
+	r.Sort()
 	assert.Equal(t, clock.Now(), r[0].Start)
 	assert.Equal(t, clock.Now().Add(time.Hour), r[1].Start) // late slots first
 	assert.Equal(t, clock.Now().Add(2*time.Hour), r[2].Start)

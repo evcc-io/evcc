@@ -20,7 +20,7 @@
 			<Loadpoints
 				class="mt-1 mt-sm-2 flex-grow-1"
 				:loadpoints="loadpoints"
-				:vehicles="vehicles"
+				:vehicles="vehicleList"
 				:smartCostLimit="smartCostLimit"
 				:smartCostType="smartCostType"
 				:smartCostActive="smartCostActive"
@@ -69,18 +69,20 @@ export default {
 		batteryConfigured: Boolean,
 		batteryPower: Number,
 		batterySoc: Number,
+		batteryDischargeControl: Boolean,
+		batteryMode: String,
 		battery: Array,
 		gridCurrents: Array,
 		prioritySoc: Number,
 		bufferSoc: Number,
 		bufferStartSoc: Number,
 		siteTitle: String,
-		vehicles: Array,
+		vehicles: Object,
 
 		auth: Object,
 
 		currency: String,
-		stats: Object,
+		statistics: Object,
 		tariffFeedIn: Number,
 		tariffGrid: Number,
 		tariffCo2: Number,
@@ -115,6 +117,10 @@ export default {
 				return { icon, charging, power };
 			});
 		},
+		vehicleList: function () {
+			const vehicles = this.vehicles || {};
+			return Object.entries(vehicles).map(([name, vehicle]) => ({ name, ...vehicle }));
+		},
 		topNavigation: function () {
 			const vehicleLogins = this.auth ? this.auth.vehicles : {};
 			return { vehicleLogins, ...this.collectProps(TopNavigation) };
@@ -136,7 +142,7 @@ export default {
 				},
 				sponsor: this.sponsor,
 				savings: {
-					stats: this.stats,
+					statistics: this.statistics,
 					co2Configured: this.tariffCo2 !== undefined,
 					priceConfigured: this.tariffGrid !== undefined,
 					currency: this.currency,

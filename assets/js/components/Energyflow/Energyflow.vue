@@ -70,7 +70,7 @@
 						/>
 						<EnergyflowEntry
 							v-if="batteryConfigured"
-							:name="$t('main.energyflow.batteryDischarge')"
+							:name="batteryDischargeLabel"
 							icon="battery"
 							:power="batteryDischarge"
 							:powerInKw="powerInKw"
@@ -134,7 +134,7 @@
 						/>
 						<EnergyflowEntry
 							v-if="batteryConfigured"
-							:name="$t('main.energyflow.batteryCharge')"
+							:name="batteryChargeLabel"
 							icon="battery"
 							:power="batteryCharge"
 							:powerInKw="powerInKw"
@@ -197,6 +197,8 @@ export default {
 		battery: { type: Array },
 		batteryPower: { type: Number, default: 0 },
 		batterySoc: { type: Number, default: 0 },
+		batteryDischargeControl: { type: Boolean },
+		batteryMode: { type: String },
 		tariffGrid: { type: Number },
 		tariffFeedIn: { type: Number },
 		tariffCo2: { type: Number },
@@ -229,6 +231,15 @@ export default {
 		},
 		batteryCharge: function () {
 			return Math.abs(Math.min(0, this.batteryPower) * -1);
+		},
+		batteryChargeLabel: function () {
+			return this.$t(`main.energyflow.battery${this.batteryHold ? "Hold" : "Charge"}`);
+		},
+		batteryDischargeLabel: function () {
+			return this.$t(`main.energyflow.battery${this.batteryHold ? "Hold" : "Discharge"}`);
+		},
+		batteryHold: function () {
+			return this.batteryMode === "hold";
 		},
 		selfConsumption: function () {
 			const ownPower = this.batteryDischarge + this.pvProduction;

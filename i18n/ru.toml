@@ -122,7 +122,6 @@ logout = "выйти"
 
 [main.targetCharge]
 activate = "Активировать"
-activeLabel = "{time}"
 descriptionSoc = "Когда транспортное средство следует зарядить до {targetSoc}%?"
 inactiveLabel = "Запланированное время"
 modalTitle = "Установить запланированное время"

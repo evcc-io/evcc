@@ -35,34 +35,48 @@ type Pulsares struct {
 }
 
 const (
-	pulsaresRegStatus  = 0x1f
-	pulsaresRegCurrent = 0x5d
-	pulsaresRegBackup  = 0x61
+	pulsaresRegSwVersion        = 0x07
+	pulsaresRegConnectionStatus = 0x1b
+	pulsaresRegChargeStatus     = 0x1f
+	pulsaresRegCurrent          = 0x5d
+	pulsaresRegBackup           = 0x61
+	pulsaresRegPhaseWake        = 0x75
+	pulsaresRegPhaseModule      = 0x77
+	pulsaresRegHwVersion        = 0x7b
+	pulsaresRegPhases           = 0x8b
 )
 
 func init() {
 	registry.Add("pulsares", NewPulsaresFromConfig)
 }
 
+//go:generate go run ../cmd/tools/decorate.go -f decoratePulsares -b *Pulsares -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error"
+
 // NewPulsaresFromConfig creates a Pulsares charger from generic config
 func NewPulsaresFromConfig(other map[string]interface{}) (api.Charger, error) {
-	cc := struct {
-		modbus.Settings `mapstructure:",squash"`
-	}{
-		Settings: modbus.Settings{
-			ID: 1,
-		},
+	cc := modbus.Settings{
+		ID: 1,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewPulsares(cc.URI, cc.Device, cc.Comset, cc.Baudrate, modbus.ProtocolFromRTU(cc.RTU), cc.ID)
+	wb, err := NewPulsares(cc.URI, cc.Device, cc.Comset, cc.Baudrate, modbus.ProtocolFromRTU(cc.RTU), cc.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	var phases1p3p func(int) error
+	if wb.has1p3p() {
+		phases1p3p = wb.phases1p3p
+	}
+
+	return decoratePulsares(wb, phases1p3p), nil
 }
 
 // NewPulsares creates Pulsares charger
-func NewPulsares(uri, device, comset string, baudrate int, proto modbus.Protocol, slaveID uint8) (api.Charger, error) {
+func NewPulsares(uri, device, comset string, baudrate int, proto modbus.Protocol, slaveID uint8) (*Pulsares, error) {
 	conn, err := modbus.NewConnection(uri, device, comset, baudrate, proto, slaveID)
 	if err != nil {
 		return nil, err
@@ -120,6 +134,22 @@ func (wb *Pulsares) heartbeat(timeout time.Duration) {
 	}
 }
 
+func (wb *Pulsares) has1p3p() bool {
+	if b, err := wb.conn.ReadHoldingRegisters(pulsaresRegSwVersion, 1); err != nil || binary.BigEndian.Uint16(b) < 4 {
+		return false
+	}
+	if b, err := wb.conn.ReadHoldingRegisters(pulsaresRegHwVersion, 1); err != nil || binary.BigEndian.Uint16(b) < 1 {
+		return false
+	}
+	if b, err := wb.conn.ReadHoldingRegisters(pulsaresRegPhaseModule, 1); err != nil || binary.BigEndian.Uint16(b) != 1 {
+		return false
+	}
+	if b, err := wb.conn.ReadHoldingRegisters(pulsaresRegPhaseWake, 1); err != nil || binary.BigEndian.Uint16(b) < 1 {
+		return false
+	}
+	return true
+}
+
 func (wb *Pulsares) setCurrent(current uint16) error {
 	b := make([]byte, 2)
 	binary.BigEndian.PutUint16(b, current)
@@ -140,21 +170,25 @@ func (wb *Pulsares) getCurrent() (uint16, error) {
 
 // Status implements the api.Charger interface
 func (wb *Pulsares) Status() (api.ChargeStatus, error) {
-	b, err := wb.conn.ReadHoldingRegisters(pulsaresRegStatus, 1)
+	b, err := wb.conn.ReadHoldingRegisters(pulsaresRegConnectionStatus, 1)
 	if err != nil {
 		return api.StatusNone, err
 	}
 
-	switch u := binary.BigEndian.Uint16(b); u {
-	case 0:
+	if binary.BigEndian.Uint16(b) != 1 {
 		return api.StatusA, nil
-	case 1, 2:
-		return api.StatusB, nil
-	case 3, 4:
-		return api.StatusC, nil
-	default:
-		return api.StatusNone, fmt.Errorf("invalid status: %d", u)
 	}
+
+	b, err = wb.conn.ReadHoldingRegisters(pulsaresRegChargeStatus, 1)
+	if err != nil {
+		return api.StatusNone, err
+	}
+
+	if u := binary.BigEndian.Uint16(b); u == 3 || u == 4 {
+		return api.StatusC, nil
+	}
+
+	return api.StatusB, nil
 }
 
 // Enabled implements the api.Charger interface
@@ -193,6 +227,18 @@ func (wb *Pulsares) MaxCurrentMillis(current float64) error {
 	if err == nil {
 		wb.curr = curr
 	}
+
+	return err
+}
+
+// phases1p3p implements the api.PhaseSwitcher interface
+func (wb *Pulsares) phases1p3p(phases int) error {
+	b := make([]byte, 2)
+	if phases == 3 {
+		binary.BigEndian.PutUint16(b, 2)
+	}
+
+	_, err := wb.conn.WriteMultipleRegisters(pulsaresRegPhases, 1, b)
 
 	return err
 }
