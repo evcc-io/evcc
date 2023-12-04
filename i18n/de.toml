@@ -164,7 +164,6 @@ modalTitle = "Sicher, dass du neu starten möchtest?"
 vehicles = "Parkplatz"
 
 [main.chargingPlan]
-activeLabel = "{time}"
 arrivalTab = "Ankunft"
 departureTab = "Abfahrt"
 modalTitle = "Ladeplanung"
@@ -208,6 +207,10 @@ disclaimerText = "Änderungen gehen nach einem Neustart des Servers verloren."
 title = "Einstellungen {0}"
 vehicle = "Fahrzeug"
 
+[main.loadpointSettings.limitSoc]
+description = "Dieses Limit wird verwendet, wenn das Fahrzeug angeschlossen wird."
+label = "Standard Ladelimit"
+
 [main.loadpointSettings.maxCurrent]
 label = "Max. Ladestrom"
 
@@ -244,14 +247,16 @@ descriptionEnergy = "Bis wann sollen {targetEnergy} ins Fahrzeug geladen sein?"
 descriptionSoc = "Wann soll das Fahrzeug auf {targetSoc}% geladen sein?"
 inactiveLabel = "Zielzeit"
 onlyInPvMode = "Ladeplanung ist nur im PV-Modus aktiv."
+planDescription = "Gib eine Abfahrtszeit an, und evcc lädt dein Fahrzeug so kostengünstig und umweltfreundlich wie möglich."
 planDuration = "Ladedauer"
 planPeriodLabel = "Zeitraum"
 planPeriodValue = "{start} bis {end}"
 planUnknown = "noch unbekannt"
 priceLimit = "Preisgrenze von {price}"
 remove = "Entfernen"
+setPlan = "Ladeplan festlegen"
 setTargetTime = "keine"
-targetEnergyRequired = "Damit die Ladeplanung funktioniert muss ein Ladeziel gesetzt sein."
+targetIsAboveLimit = "Das Ladeziel {goal} liegt über dem konfigurierten Limit {limit}. Erhöhe das Limit, um das Ziel zu erreichen."
 targetIsInThePast = "Wähle einen Zeitpunkt in der Zukunft, Marty."
 targetIsTooFarInTheFuture = "Wir passen den Plan an, sobald wir mehr über die Zukunft wissen."
 title = "Zielzeit"
@@ -269,7 +274,7 @@ timeRange = "{day} {range} Uhr"
 unknownPrice = "noch unbekannt"
 
 [main.targetEnergy]
-label = "Ladeziel"
+label = "Ladelimit"
 noLimit = "keins"
 
 [main.vehicle]
@@ -279,7 +284,7 @@ detectionActive = "Fahrzeugerkennung läuft …"
 fallbackName = "Fahrzeug"
 moreActions = "Weitere Aktionen"
 none = "Kein Fahrzeug"
-targetSoc = "Ladeziel"
+targetSoc = "Ladelimit"
 temp = "Temp."
 tempLimit = "Zieltemp."
 unknown = "Gastfahrzeug"

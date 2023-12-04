@@ -1,5 +1,5 @@
 <template>
-	<div class="plan my-3">
+	<div class="plan">
 		<div class="justify-content-between mb-2 d-flex justify-content-between">
 			<div class="text-start">
 				<div class="label">{{ $t("main.targetChargePlan.chargeDuration") }}</div>
@@ -26,11 +26,12 @@ import { CO2_TYPE } from "../units";
 import TariffChart from "./TariffChart.vue";
 
 export default {
-	name: "TargetChargePlan",
+	name: "ChargingPlanPreview",
 	components: { TariffChart },
 	mixins: [formatter],
 	props: {
 		duration: Number,
+		power: Number,
 		rates: Array,
 		plan: Array,
 		smartCostType: String,

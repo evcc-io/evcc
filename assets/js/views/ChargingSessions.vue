@@ -242,7 +242,7 @@
 			</main>
 			<ChargingSessionModal
 				:session="selectedSession"
-				:vehicles="vehiclesObjects"
+				:vehicles="vehicleList"
 				:currency="currency"
 				@session-changed="loadSessions"
 			/>
@@ -518,12 +518,9 @@ export default {
 		vehicles() {
 			return [...new Set(this.currentSessions.map((s) => s.vehicle))];
 		},
-		vehiclesObjects() {
-			return (
-				store.state.vehicles?.map((v, index) => {
-					return { id: index, title: v };
-				}) || []
-			);
+		vehicleList() {
+			const vehicles = store.state.vehicles || {};
+			return Object.entries(vehicles).map(([name, vehicle]) => ({ name, ...vehicle }));
 		},
 		selectedSession() {
 			return this.sessions.find((s) => s.id == this.selectedSessionId);

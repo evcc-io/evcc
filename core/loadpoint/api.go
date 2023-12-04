@@ -15,9 +15,6 @@ type Controller interface {
 
 // API is the external loadpoint API
 type API interface {
-	// Title returns the defined loadpoint title
-	Title() string
-
 	//
 	// status
 	//
@@ -29,38 +26,65 @@ type API interface {
 	// settings
 	//
 
-	// GetPriority returns the loadpoint priority
+	// Title returns the defined loadpoint title
+	Title() string
+	// GetPriority returns the priority
 	GetPriority() int
-	// SetPriority sets the loadpoint priority
+	// SetPriority sets the priority
 	SetPriority(int)
+	// GetMinCurrent returns the min charging current
+	GetMinCurrent() float64
+	// SetMinCurrent sets the min charging current
+	SetMinCurrent(float64)
+	// GetMaxCurrent returns the max charging current
+	GetMaxCurrent() float64
+	// SetMaxCurrent sets the max charging current
+	SetMaxCurrent(float64)
 
 	// GetMode returns the charge mode
 	GetMode() api.ChargeMode
 	// SetMode sets the charge mode
 	SetMode(api.ChargeMode)
-	// GetMinSoc returns the charge minimum soc
-	GetMinSoc() int
-	// SetMinSoc sets the charge minimum soc
-	SetMinSoc(int)
 	// GetPhases returns the enabled phases
 	GetPhases() int
 	// SetPhases sets the enabled phases
 	SetPhases(int) error
 
-	// GetTargetTime returns the target time
-	GetTargetTime() time.Time
-	// SetTargetTime sets the target time
-	SetTargetTime(time.Time) error
-	// GetTargetEnergy returns the charge target energy
-	GetTargetEnergy() float64
-	// SetTargetEnergy sets the charge target energy
-	SetTargetEnergy(float64)
-	// GetTargetSoc returns the charge target soc
-	GetTargetSoc() int
-	// SetTargetSoc sets the charge target soc
-	SetTargetSoc(int)
+	// GetLimitSoc returns the session limit soc
+	GetLimitSoc() int
+	// SetLimitSoc sets the session limit soc
+	SetLimitSoc(soc int)
+	// GetLimitEnergy returns the session limit energy
+	GetLimitEnergy() float64
+	// SetLimitEnergy sets the session limit energy
+	SetLimitEnergy(energy float64)
+
+	//
+	// effective values
+	//
+
+	// EffectivePriority returns the effective priority
+	EffectivePriority() int
+	// EffectivePlanTime returns the effective plan time
+	EffectivePlanTime() time.Time
+	// EffectiveMinPower returns the min charging power for a single phase
+	EffectiveMinPower() float64
+	// EffectiveMaxPower returns the max charging power taking active phases into account
+	EffectiveMaxPower() float64
+	// PublishEffectiveValues publishes effective values for currently attached vehicle
+	PublishEffectiveValues()
+
+	//
+	// plan
+	//
+
+	// GetPlanEnergy returns the charge plan energy
+	GetPlanEnergy() (time.Time, float64)
+	// SetPlanEnergy sets the charge plan energy
+	SetPlanEnergy(time.Time, float64) error
 	// GetPlan creates a charging plan
 	GetPlan(targetTime time.Time, maxPower float64) (time.Duration, api.Rates, error)
+
 	// GetEnableThreshold gets the loadpoint enable threshold
 	GetEnableThreshold() float64
 	// SetEnableThreshold sets loadpoint enable threshold
@@ -83,18 +107,6 @@ type API interface {
 	GetChargePower() float64
 	// GetChargePowerFlexibility returns the flexible amount of current charging power
 	GetChargePowerFlexibility() float64
-	// GetMinCurrent returns the min charging current
-	GetMinCurrent() float64
-	// SetMinCurrent sets the min charging current
-	SetMinCurrent(float64)
-	// GetMaxCurrent returns the max charging current
-	GetMaxCurrent() float64
-	// SetMaxCurrent sets the max charging current
-	SetMaxCurrent(float64)
-	// GetMinPower returns the min charging power for a single phase
-	GetMinPower() float64
-	// GetMaxPower returns the max charging power taking active phases into account
-	GetMaxPower() float64
 
 	//
 	// charge progress

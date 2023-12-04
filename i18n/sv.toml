@@ -114,7 +114,6 @@ modalTitle = "Är du säker på att du vill starta om?"
 vehicles = "Parkering"
 
 [main.chargingPlan]
-activeLabel = "{time}"
 arrivalTab = "Ankomst"
 departureTab = "Avfärd"
 modalTitle = "Laddplan"
@@ -180,7 +179,6 @@ logout = "logga ut"
 
 [main.targetCharge]
 activate = "Aktivera"
-activeLabel = "{time}"
 co2Limit = "CO₂ gräns av {co2}"
 costLimitIgnore = "Den inställda nivån {limit} kommer att ignoreras den här perioden."
 descriptionEnergy = "Fram till när ska {targetEnergy} lastas in i fordonet?"

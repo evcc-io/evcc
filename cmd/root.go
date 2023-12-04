@@ -204,8 +204,11 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 	// setup mqtt publisher
 	if err == nil && conf.Mqtt.Broker != "" {
-		publisher := server.NewMQTT(strings.Trim(conf.Mqtt.Topic, "/"))
-		go publisher.Run(site, pipe.NewDropper(append(ignoreMqtt, ignoreEmpty)...).Pipe(tee.Attach()))
+		var mqtt *server.MQTT
+		mqtt, err = server.NewMQTT(strings.Trim(conf.Mqtt.Topic, "/"), site)
+		if err == nil {
+			go mqtt.Run(site, pipe.NewDropper(append(ignoreMqtt, ignoreEmpty)...).Pipe(tee.Attach()))
+		}
 	}
 
 	// announce on mDNS

@@ -164,7 +164,6 @@ modalTitle = "Oletko varma että haluat uudelleen käynnistää?"
 vehicles = "Pysäköinti"
 
 [main.chargingPlan]
-activeLabel = "{time}"
 arrivalTab = "Saapuminen"
 departureTab = "Lähtö"
 modalTitle = "Lataussuunnitelma"
@@ -234,7 +233,6 @@ logout = "kirjaudu ulos"
 
 [main.targetCharge]
 activate = "Aktivoi"
-activeLabel = "{time}"
 co2Limit = "Raja CO₂ / {co2}"
 costLimitIgnore = "Määritetty {limit} ohitetaan tänä aikana."
 descriptionEnergy = "Mihin mennessä {targetEnergy} tulisi ladata autoon?"
@@ -248,7 +246,6 @@ planPeriodValue = "{start} - {end}"
 planUnknown = "ei vielä tiedossa"
 priceLimit = "{price} hintaraja"
 setTargetTime = "ei mitään"
-targetEnergyRequired = "Sinun on myös asetettava energia määrälle raja"
 targetIsInThePast = "Valitse aika tulevaisuudessa"
 targetIsTooFarInTheFuture = "Muokkaamme suunnitelmaa heti kun tiedämme enemmän tulevaisuudesta."
 title = "Tavoiteaika"
