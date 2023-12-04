@@ -84,7 +84,7 @@
 			<div class="col-12 col-lg-2 d-flex justify-content-end align-items-baseline">
 				<button
 					type="button"
-					class="btn text-muted text-decoration-underline"
+					class="btn evcc-default-text text-decoration-underline"
 					@click="removePlan"
 				>
 					{{ $t("main.chargingPlan.remove") }}
