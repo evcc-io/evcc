@@ -13,6 +13,9 @@ params:
     choice: ["tcpip"]
     port: 1502
     id: 1
+  - name: connector
+    default: 1
 render: |
   type: openwb-2.0
   {{- include "modbus" . }}
+  connector: {{ .connector }}
