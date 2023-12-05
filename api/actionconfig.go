@@ -2,7 +2,6 @@ package api
 
 import (
 	"fmt"
-	"reflect"
 	"strings"
 
 	"github.com/fatih/structs"
@@ -19,10 +18,9 @@ type ActionConfig struct {
 // String implements Stringer and returns the ActionConfig as comma-separated key:value string
 func (a ActionConfig) String() string {
 	var s []string
-	for k, v := range structs.Map(a) {
-		val := reflect.ValueOf(v)
-		if v != nil && !val.IsNil() {
-			s = append(s, fmt.Sprintf("%s:%v", k, val.Elem()))
+	for _, f := range structs.Fields(a) {
+		if !f.IsZero() {
+			s = append(s, fmt.Sprintf("%s:%v", f.Name(), f.Value()))
 		}
 	}
 	return strings.Join(s, ", ")
