@@ -1581,7 +1581,7 @@ func (lp *Loadpoint) Update(sitePower float64, autoCharge, batteryBuffered, batt
 		lp.log.DEBUG.Printf("limitSoc reached: %.1f%% > %d%%", lp.vehicleSoc, lp.effectiveLimitSoc())
 		err = lp.disableUnlessClimater()
 
-	// immediate charging
+	// immediate charging- must be placed after limits are evaluated
 	case mode == api.ModeNow:
 		err = lp.fastCharging()
 
