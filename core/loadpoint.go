@@ -1560,6 +1560,19 @@ func (lp *Loadpoint) Update(sitePower float64, autoCharge, batteryBuffered, batt
 	case lp.scalePhasesRequired():
 		err = lp.scalePhases(lp.ConfiguredPhases)
 
+	case lp.remoteControlled(loadpoint.RemoteHardDisable):
+		remoteDisabled = loadpoint.RemoteHardDisable
+		fallthrough
+
+	case mode == api.ModeOff:
+		err = lp.setLimit(0, true)
+
+	// minimum or target charging
+	case lp.minSocNotReached() || plannerActive:
+		err = lp.fastCharging()
+		lp.resetPhaseTimer()
+		lp.elapsePVTimer() // let PV mode disable immediately afterwards
+
 	case lp.limitEnergyReached():
 		lp.log.DEBUG.Printf("limitEnergy reached: %.0fkWh > %0.1fkWh", lp.getChargedEnergy()/1e3, lp.limitEnergy)
 		err = lp.disableUnlessClimater()
@@ -1568,22 +1581,9 @@ func (lp *Loadpoint) Update(sitePower float64, autoCharge, batteryBuffered, batt
 		lp.log.DEBUG.Printf("limitSoc reached: %.1f%% > %d%%", lp.vehicleSoc, lp.effectiveLimitSoc())
 		err = lp.disableUnlessClimater()
 
-	case lp.remoteControlled(loadpoint.RemoteHardDisable):
-		remoteDisabled = loadpoint.RemoteHardDisable
-		fallthrough
-
-	case mode == api.ModeOff:
-		err = lp.setLimit(0, true)
-
 	// immediate charging
 	case mode == api.ModeNow:
 		err = lp.fastCharging()
-
-	// minimum or target charging
-	case lp.minSocNotReached() || plannerActive:
-		err = lp.fastCharging()
-		lp.resetPhaseTimer()
-		lp.elapsePVTimer() // let PV mode disable immediately afterwards
 
 	case mode == api.ModeMinPV || mode == api.ModePV:
 		// cheap tariff
