@@ -369,6 +369,10 @@ small {
 	background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><path fill='none' stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/></svg>");
 }
 
+.dark .form-select:disabled {
+	opacity: 0.5;
+}
+
 .dark .table {
 	--bs-table-color: var(--evcc-default-text);
 	--bs-table-border-color: var(--evcc-gray);

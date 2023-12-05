@@ -63,7 +63,7 @@ func runMeter(cmd *cobra.Command, args []string) {
 			}
 
 			if d, err := cmd.Flags().GetDuration(flagBatteryModeWait); d > 0 && err == nil {
-				log.FATAL.Println("waiting for:", d)
+				log.INFO.Println("waiting for:", d)
 				time.Sleep(d)
 			}
 		}

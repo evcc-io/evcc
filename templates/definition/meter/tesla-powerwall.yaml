@@ -27,8 +27,8 @@ params:
   - name: password
     required: true
     help:
-      en: Password of the user "customer"
-      de: Passwort des Benutzers "Kunde"
+      en: Password of the user "customer". By default this is the last 5 characters of password stated on the Tesla Gateway.
+      de: Passwort des Benutzers "Kunde". Default sind die letzten 5 Zeichen des auf dem Tesla Gateway genannten Passworts.
   - name: refreshToken
     help:
       en: "See https://docs.evcc.io/en/docs/devices/meters#tesla-powerwall"

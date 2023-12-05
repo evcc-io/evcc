@@ -4,12 +4,6 @@ onIdentify:
 {{- if .mode }}
   mode: {{ .mode }}
 {{- end }}
-{{- if .minSoc }}
-  minSoc: {{ .minSoc }}
-{{- end }}
-{{- if .targetSoc }}
-  targetSoc: {{ .targetSoc }}
-{{- end }}
 {{- if .minCurrent }}
   minCurrent: {{ .minCurrent }}
 {{- end }}

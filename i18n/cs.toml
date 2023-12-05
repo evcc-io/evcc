@@ -119,7 +119,6 @@ modalTitle = "Opravdu chcete restartovat?"
 vehicles = "Parkoviště"
 
 [main.chargingPlan]
-activeLabel = "{time}"
 arrivalTab = "Příchod"
 departureTab = "Odchod"
 modalTitle = "Plán nabíjení"

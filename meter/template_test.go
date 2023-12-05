@@ -14,6 +14,7 @@ var acceptable = []string{
 	"mqtt not configured",
 	"not a SunSpec device",
 	"missing credentials", // sockets
+	"power: timeout",      // sockets
 	"missing password",    // Powerwall
 	"connect: no route to host",
 	"connect: connection refused",
