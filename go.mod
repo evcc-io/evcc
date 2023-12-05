@@ -47,8 +47,8 @@ require (
 	github.com/grid-x/modbus v0.0.0-20230713135356-d9fefd3ae5a5
 	github.com/hashicorp/go-version v1.6.0
 	github.com/hasura/go-graphql-client v0.10.1
-	github.com/influxdata/influxdb-client-go/v2 v2.12.5-0.20231103130105-12eadbdbefaf
-	github.com/insomniacslk/tapo v0.0.0-20231130201649-d2497ac78359
+	github.com/influxdata/influxdb-client-go/v2 v2.13.0
+	github.com/insomniacslk/tapo v1.0.0
 	github.com/itchyny/gojq v0.12.14
 	github.com/jeremywohl/flatten v1.0.1
 	github.com/jinzhu/copier v0.4.0
@@ -70,7 +70,7 @@ require (
 	github.com/mlnoga/rct v0.1.2-0.20230731074838-03eacb926f99
 	github.com/muka/go-bluetooth v0.0.0-20221213043340-85dc80edc4e1
 	github.com/mxschmitt/golang-combinations v1.1.0
-	github.com/nicksnyder/go-i18n/v2 v2.2.2
+	github.com/nicksnyder/go-i18n/v2 v2.3.0
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/philippseith/signalr v0.6.3
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
