@@ -148,7 +148,7 @@ func (wb *Versicharge) CurrentPower() (float64, error) {
 	}
 
 	var sum float64
-	for i := 0; i < 3; i++ {
+	for i := range len(res) {
 		sum += float64(binary.BigEndian.Uint16(b[2*i:]))
 	}
 
@@ -175,7 +175,7 @@ func (wb *Versicharge) getPhaseValues(reg uint16) (float64, float64, float64, er
 	}
 
 	var res [3]float64
-	for i := 0; i < 3; i++ {
+	for i := range len(res) {
 		res[i] = float64(binary.BigEndian.Uint16(b[2*i:]))
 	}
 
