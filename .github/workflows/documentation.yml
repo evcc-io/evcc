@@ -1,7 +1,7 @@
 name: Deploy updated templates
 
 env:
-  GO_VERSION: gotip
+  GO_VERSION: ^1.22-alpha
 
 on:
   push:

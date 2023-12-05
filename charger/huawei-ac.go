@@ -196,7 +196,7 @@ func (wb *HuaweiACCharger) getPhaseValues(reg uint16) (float64, float64, float64
 	}
 
 	var res [3]float64
-	for i := range len(res) {
+	for i := range res {
 		res[i] = float64(binary.BigEndian.Uint32(b[4*i:])) / 10
 	}
 

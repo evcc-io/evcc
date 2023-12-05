@@ -1,7 +1,7 @@
 name: Nightly Build
 
 env:
-  GO_VERSION: gotip
+  GO_VERSION: ^1.22-alpha
 
 on:
   schedule: # runs on the default branch: master

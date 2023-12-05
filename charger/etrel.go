@@ -212,7 +212,7 @@ func (wb *Etrel) Currents() (float64, float64, float64, error) {
 	}
 
 	var res [3]float64
-	for i := range len(res) {
+	for i := range res {
 		res[i] = float64(encoding.Float32(b[4*i:]))
 	}
 
