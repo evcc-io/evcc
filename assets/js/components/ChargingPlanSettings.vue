@@ -164,12 +164,12 @@ export default {
 h5 {
 	position: relative;
 	display: inline-block;
-	background-color: white;
+	background-color: var(--evcc-box);
 	top: -25px;
 	left: calc(50% - 50px);
 	padding: 0 0.5rem;
 	font-weight: normal;
-	color: var(--bs-gray);
+	color: var(--evcc-gray);
 	margin-bottom: -4rem;
 }
 </style>
