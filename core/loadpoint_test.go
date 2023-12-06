@@ -33,6 +33,8 @@ func (n *Null) ChargingTime() (time.Duration, error) {
 }
 
 func createChannels(t *testing.T) (chan util.Param, chan push.Event, chan *Loadpoint) {
+	t.Helper()
+
 	uiChan := make(chan util.Param)
 	pushChan := make(chan push.Event)
 	lpChan := make(chan *Loadpoint)
@@ -67,6 +69,8 @@ func attachChannels(lp *Loadpoint, uiChan chan util.Param, pushChan chan push.Ev
 }
 
 func attachListeners(t *testing.T, lp *Loadpoint) {
+	t.Helper()
+
 	Voltage = 230 // V
 
 	if charger, ok := lp.charger.(*api.MockCharger); ok && charger != nil {
@@ -421,7 +425,7 @@ func TestDisableAndEnableAtTargetSoc(t *testing.T) {
 	attachListeners(t, lp)
 
 	lp.enabled = true
-	lp.chargeCurrent = float64(minA)
+	lp.chargeCurrent = minA
 	lp.status = api.StatusC
 
 	t.Log("charging below soc target")
@@ -487,7 +491,7 @@ func TestSetModeAndSocAtDisconnect(t *testing.T) {
 	attachListeners(t, lp)
 
 	lp.enabled = true
-	lp.chargeCurrent = float64(minA)
+	lp.chargeCurrent = minA
 	lp.mode = api.ModeNow
 
 	t.Log("charging at min")
@@ -512,6 +516,8 @@ func TestSetModeAndSocAtDisconnect(t *testing.T) {
 
 // cacheExpecter can be used to verify asynchronously written values from cache
 func cacheExpecter(t *testing.T, lp *Loadpoint) (*util.Cache, func(key string, val interface{})) {
+	t.Helper()
+
 	// attach cache for verifying values
 	paramC := make(chan util.Param)
 	lp.uiChan = paramC
@@ -554,7 +560,7 @@ func TestChargedEnergyAtDisconnect(t *testing.T) {
 	attachListeners(t, lp)
 
 	lp.enabled = true
-	lp.chargeCurrent = float64(maxA)
+	lp.chargeCurrent = maxA
 	lp.mode = api.ModeNow
 
 	// attach cache for verifying values

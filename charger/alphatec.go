@@ -93,7 +93,7 @@ func NewAlphatec(uri, device, comset string, baudrate int, proto modbus.Protocol
 
 func (wb *Alphatec) setCurrent(current uint16) error {
 	b := make([]byte, 2)
-	binary.BigEndian.PutUint16(b, uint16(current))
+	binary.BigEndian.PutUint16(b, current)
 
 	_, err := wb.conn.WriteMultipleRegisters(alphatecRegAmpsConfig, 1, b)
 

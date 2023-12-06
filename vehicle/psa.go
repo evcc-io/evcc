@@ -102,7 +102,6 @@ func newPSA(log *util.Logger, brand, realm, id, secret string, other map[string]
 			return v.VIN
 		},
 	)
-
 	if err != nil {
 		return nil, err
 	}

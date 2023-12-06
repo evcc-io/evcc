@@ -108,7 +108,7 @@ func (wb *HuaweiACCharger) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	//ToDo: Real status
+	// ToDo: Real status
 	switch u := binary.BigEndian.Uint16(b); u {
 	case 0:
 		return api.StatusA, nil

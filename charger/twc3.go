@@ -55,7 +55,7 @@ type Vitals struct {
 	SessionEnergyWh   float64 `json:"session_energy_wh"`   // 22864.699
 	ConfigStatus      int     `json:"config_status"`       // 5
 	EvseState         int     `json:"evse_state"`          // 1
-	CurrentAlerts     []any   `json:"current_alerts"`      //[]
+	CurrentAlerts     []any   `json:"current_alerts"`      // []
 }
 
 // NewTwc3FromConfig creates a new vehicle

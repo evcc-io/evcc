@@ -13,7 +13,7 @@ type Health struct {
 }
 
 // NewHealth creates new health checker
-func NewHealth(timeout time.Duration) (health *Health) {
+func NewHealth(timeout time.Duration) *Health {
 	return &Health{timeout: timeout}
 }
 

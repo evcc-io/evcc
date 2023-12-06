@@ -209,10 +209,8 @@ func (c *CmdConfigure) flowNewConfigFile() {
 		// in case of permission error, we can't write to the file anyway
 		if os.IsPermission(err) {
 			fmt.Println(c.localizedString("File_Permissions", localizeMap{"FileName": filename}))
-		} else {
-			if c.askYesNo(c.localizedString("File_Exists", localizeMap{"FileName": filename})) {
-				break
-			}
+		} else if c.askYesNo(c.localizedString("File_Exists", localizeMap{"FileName": filename})) {
+			break
 		}
 
 		filename = c.askValue(question{
@@ -302,7 +300,6 @@ func (c *CmdConfigure) configureLoadpoints() {
 	fmt.Println(c.localizedString("Loadpoint_Setup"))
 
 	for {
-
 		loadpointTitle := c.askValue(question{
 			label:        c.localizedString("Loadpoint_Title"),
 			defaultValue: c.localizedString("Loadpoint_DefaultTitle"),

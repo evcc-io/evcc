@@ -36,12 +36,10 @@ func NewWattpilotFromConfig(other map[string]interface{}) (api.Charger, error) {
 	}
 
 	return NewWattpilot(cc.URI, cc.Password, cc.Cache)
-
 }
 
 // NewWattpilot creates Wattpilot charger
 func NewWattpilot(uri, password string, cache time.Duration) (api.Charger, error) {
-
 	c := &Wattpilot{
 		api: wattpilot.New(uri, password),
 	}

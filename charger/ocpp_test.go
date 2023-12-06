@@ -109,16 +109,16 @@ func (suite *ocppTestSuite) TestConnect() {
 
 		// status
 		_, err = c1.Status()
-		suite.NoError(err)
+		suite.Require().NoError(err)
 
 		// power
 		f, err := c1.currentPower()
-		suite.NoError(err)
+		suite.Require().NoError(err)
 		suite.Equal(1e3, f)
 
 		// energy
 		f, err = c1.totalEnergy()
-		suite.NoError(err)
+		suite.Require().NoError(err)
 		suite.Equal(1.2, f)
 	}
 
@@ -148,7 +148,7 @@ func (suite *ocppTestSuite) TestConnect() {
 
 		res, err := cp1.StopTransaction(0, types.NewDateTime(suite.clock.Now()), expectedTxn)
 		suite.Require().NoError(err)
-		suite.Equal(res.IdTagInfo.Status, types.AuthorizationStatusAccepted)
+		suite.Equal(types.AuthorizationStatusAccepted, res.IdTagInfo.Status)
 	}
 
 	// 2nd charge point - remote
@@ -166,7 +166,7 @@ func (suite *ocppTestSuite) TestConnect() {
 
 		// status
 		_, err = c2.Status()
-		suite.NoError(err)
+		suite.Require().NoError(err)
 	}
 
 	// error on unconfigured 2nd charge point

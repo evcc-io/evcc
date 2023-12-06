@@ -55,7 +55,7 @@ func (ct *TimeSecs) UnmarshalJSON(data []byte) error {
 
 	if err == nil {
 		t := time.Unix(i, 0)
-		(*ct).Time = t
+		ct.Time = t
 	}
 
 	return err

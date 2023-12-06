@@ -57,9 +57,7 @@ func FuncMap(tmpl *template.Template) *template.Template {
 			}
 			return buf.String(), nil
 		},
-		"urlEncode": func(v string) string {
-			return url.QueryEscape(v)
-		},
+		"urlEncode": url.QueryEscape,
 		"toDuration": func(v string) time.Duration {
 			d, err := time.ParseDuration(v)
 			if err != nil {

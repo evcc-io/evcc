@@ -123,6 +123,8 @@ func TestMaxActivePhases(t *testing.T) {
 }
 
 func testScale(t *testing.T, lp *Loadpoint, sitePower float64, direction string, tc testCase) {
+	t.Helper()
+
 	act := lp.activePhases()
 	max := lp.maxActivePhases()
 
