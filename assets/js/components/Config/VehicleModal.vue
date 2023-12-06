@@ -8,6 +8,7 @@
 			tabindex="-1"
 			role="dialog"
 			aria-hidden="true"
+			data-testid="vehicle-modal"
 		>
 			<div class="modal-dialog modal-dialog-centered" role="document">
 				<div class="modal-content">

@@ -47,7 +47,7 @@
 		</div>
 
 		<h2 class="my-4 mt-5">Grid, PV & Battery Systems</h2>
-		<ul class="p-0 config-list mb-5">
+		<ul class="p-0 config-list">
 			<DeviceCard
 				:name="gridMeter?.config?.template || 'Grid meter'"
 				:unconfigured="!gridMeter"
@@ -98,7 +98,7 @@
 
 		<h2 class="my-4">Tariffs</h2>
 
-		<ul class="p-0 config-list mb-5">
+		<ul class="p-0 config-list">
 			<DeviceCard name="Grid" editable data-testid="tariff-grid" @edit="todo">
 				<template #icon>
 					<shopicon-regular-money></shopicon-regular-money>
@@ -118,7 +118,7 @@
 
 		<h2 class="my-4">Charge Points</h2>
 
-		<ul class="p-0 config-list mb-5">
+		<ul class="p-0 config-list">
 			<DeviceCard name="Carport" editable data-testid="chargepoint-1" @edit="todo">
 				<template #icon>
 					<shopicon-regular-cablecharge></shopicon-regular-cablecharge>
@@ -133,7 +133,7 @@
 
 		<h2 class="my-4">Vehicles</h2>
 		<div>
-			<ul class="p-0 config-list mb-5">
+			<ul class="p-0 config-list">
 				<DeviceCard
 					v-for="vehicle in vehicles"
 					:key="vehicle.id"
@@ -158,7 +158,7 @@
 		</div>
 		<h2 class="my-4">Integrations</h2>
 
-		<ul class="p-0 config-list mb-5">
+		<ul class="p-0 config-list">
 			<DeviceCard name="MQTT" editable data-testid="mqtt" @edit="todo">
 				<template #icon>
 					<shopicon-regular-fastdelivery1></shopicon-regular-fastdelivery1>
@@ -426,6 +426,7 @@ export default {
 	display: grid;
 	grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
 	grid-gap: 1rem;
+	margin-bottom: 5rem;
 }
 .group {
 	border-radius: 2rem;
@@ -437,5 +438,6 @@ export default {
 	list-style-type: none;
 	min-height: 10rem;
 	max-width: 950px;
+	margin-bottom: 5rem;
 }
 </style>

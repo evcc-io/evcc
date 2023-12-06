@@ -33,20 +33,21 @@ test.describe("vehicles", async () => {
     await page.goto("/#/config");
 
     await expect(page.getByTestId("vehicle")).toHaveCount(0);
+    const vehicleModal = page.getByTestId("vehicle-modal");
 
     // create #1
     await page.getByTestId("add-vehicle").click();
-    await page.getByLabel("Manufacturer").selectOption("Generic vehicle");
-    await page.getByLabel("Title").fill("Green Car");
-    await page.getByRole("button", { name: "Validate & save" }).click();
+    await vehicleModal.getByLabel("Manufacturer").selectOption("Generic vehicle");
+    await vehicleModal.getByLabel("Title").fill("Green Car");
+    await vehicleModal.getByRole("button", { name: "Validate & save" }).click();
 
     await expect(page.getByTestId("vehicle")).toHaveCount(1);
 
     // create #2
     await page.getByTestId("add-vehicle").click();
-    await page.getByLabel("Manufacturer").selectOption("Generic vehicle");
-    await page.getByLabel("Title").fill("Yellow Van");
-    await page.getByRole("button", { name: "Validate & save" }).click();
+    await vehicleModal.getByLabel("Manufacturer").selectOption("Generic vehicle");
+    await vehicleModal.getByLabel("Title").fill("Yellow Van");
+    await vehicleModal.getByRole("button", { name: "Validate & save" }).click();
 
     await expect(page.getByTestId("vehicle")).toHaveCount(2);
     await expect(page.getByTestId("vehicle").nth(0)).toHaveText(/Green Car/);
@@ -54,23 +55,23 @@ test.describe("vehicles", async () => {
 
     // edit #1
     await page.getByTestId("vehicle").nth(0).getByRole("button", { name: "edit" }).click();
-    await expect(page.getByLabel("Title")).toHaveValue("Green Car");
-    await page.getByLabel("Title").fill("Fancy Car");
-    await page.getByRole("button", { name: "Validate & save" }).click();
+    await expect(vehicleModal.getByLabel("Title")).toHaveValue("Green Car");
+    await vehicleModal.getByLabel("Title").fill("Fancy Car");
+    await vehicleModal.getByRole("button", { name: "Validate & save" }).click();
 
     await expect(page.getByTestId("vehicle")).toHaveCount(2);
     await expect(page.getByTestId("vehicle").nth(0)).toHaveText(/Fancy Car/);
 
     // delete #1
     await page.getByTestId("vehicle").nth(0).getByRole("button", { name: "edit" }).click();
-    await page.getByRole("button", { name: "Delete Vehicle" }).click();
+    await vehicleModal.getByRole("button", { name: "Delete Vehicle" }).click();
 
     await expect(page.getByTestId("vehicle")).toHaveCount(1);
     await expect(page.getByTestId("vehicle").nth(0)).toHaveText(/Yellow Van/);
 
     // delete #2
     await page.getByTestId("vehicle").nth(0).getByRole("button", { name: "edit" }).click();
-    await page.getByRole("button", { name: "Delete Vehicle" }).click();
+    await vehicleModal.getByRole("button", { name: "Delete Vehicle" }).click();
 
     await expect(page.getByTestId("vehicle")).toHaveCount(0);
   });
@@ -79,18 +80,20 @@ test.describe("vehicles", async () => {
     await page.goto("/#/config");
 
     await expect(page.getByTestId("vehicle")).toHaveCount(0);
+    const vehicleModal = page.getByTestId("vehicle-modal");
 
     // create #1 & #2
     await page.getByTestId("add-vehicle").click();
-    await page.getByLabel("Manufacturer").selectOption("Generic vehicle");
-    await page.getByLabel("Title").fill("Green Car");
-    await page.getByRole("button", { name: "Validate & save" }).click();
+    await vehicleModal.getByLabel("Manufacturer").selectOption("Generic vehicle");
+    await vehicleModal.getByLabel("Title").fill("Green Car");
+    await vehicleModal.getByRole("button", { name: "Validate & save" }).click();
+
     await page.getByTestId("add-vehicle").click();
-    await page.getByLabel("Manufacturer").selectOption("Generic vehicle");
-    await page.getByLabel("Title").fill("Yellow Van");
-    await page.getByLabel("car").click();
-    await page.getByLabel("van").check();
-    await page.getByRole("button", { name: "Validate & save" }).click();
+    await vehicleModal.getByLabel("Manufacturer").selectOption("Generic vehicle");
+    await vehicleModal.getByLabel("Title").fill("Yellow Van");
+    await vehicleModal.getByLabel("car").click();
+    await vehicleModal.getByLabel("van").check();
+    await vehicleModal.getByRole("button", { name: "Validate & save" }).click();
 
     await expect(page.getByTestId("vehicle")).toHaveCount(2);
 
@@ -109,12 +112,13 @@ test.describe("vehicles", async () => {
     await page.goto("/#/config");
 
     await expect(page.getByTestId("vehicle")).toHaveCount(1);
+    const vehicleModal = page.getByTestId("vehicle-modal");
 
     // create #1
     await page.getByTestId("add-vehicle").click();
-    await page.getByLabel("Manufacturer").selectOption("Generic vehicle");
-    await page.getByLabel("Title").fill("Green Car");
-    await page.getByRole("button", { name: "Validate & save" }).click();
+    await vehicleModal.getByLabel("Manufacturer").selectOption("Generic vehicle");
+    await vehicleModal.getByLabel("Title").fill("Green Car");
+    await vehicleModal.getByRole("button", { name: "Validate & save" }).click();
 
     await expect(page.getByTestId("vehicle")).toHaveCount(2);
     await expect(page.getByTestId("vehicle").nth(0)).toHaveText(/YAML Bike/);
