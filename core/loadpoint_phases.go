@@ -49,8 +49,8 @@ func (lp *Loadpoint) resetMeasuredPhases() {
 
 // getMeasuredPhases provides synchronized access to measuredPhases
 func (lp *Loadpoint) getMeasuredPhases() int {
-	lp.Lock()
-	defer lp.Unlock()
+	lp.RLock()
+	defer lp.RUnlock()
 	return lp.measuredPhases
 }
 

@@ -210,7 +210,7 @@ func (lp *Loadpoint) SetPlanEnergy(finishAt time.Time, energy float64) error {
 	lp.Lock()
 	defer lp.Unlock()
 
-	if !finishAt.IsZero() && finishAt.Before(time.Now()) {
+	if !finishAt.IsZero() && finishAt.Before(lp.clock.Now()) {
 		return errors.New("timestamp is in the past")
 	}
 
