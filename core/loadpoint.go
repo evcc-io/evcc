@@ -839,9 +839,6 @@ func (lp *Loadpoint) disableUnlessClimater() error {
 		current = lp.effectiveMinCurrent()
 	}
 
-	// reset plan once charge goal is met
-	lp.setPlanActive(false)
-
 	return lp.setLimit(current, true)
 }
 

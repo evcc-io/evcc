@@ -16,13 +16,27 @@ type Planner struct {
 	tariff api.Tariff
 }
 
+type Option func(*Planner)
+
+func WithClock(clock clock.Clock) Option {
+	return func(t *Planner) {
+		t.clock = clock
+	}
+}
+
 // New creates a price planner
-func New(log *util.Logger, tariff api.Tariff) *Planner {
-	return &Planner{
+func New(log *util.Logger, tariff api.Tariff, opt ...Option) *Planner {
+	p := &Planner{
 		log:    log,
 		clock:  clock.New(),
 		tariff: tariff,
 	}
+
+	for _, o := range opt {
+		o(p)
+	}
+
+	return p
 }
 
 // plan creates a lowest-cost plan or required duration.
