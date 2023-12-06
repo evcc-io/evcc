@@ -20,7 +20,7 @@
 						></button>
 					</div>
 					<div class="modal-body">
-						<GeneralSettings
+						<UserInterfaceSettings
 							:sponsor="sponsor"
 							:sponsorTokenExpires="sponsorTokenExpires"
 						/>
@@ -32,11 +32,11 @@
 </template>
 
 <script>
-import GeneralSettings from "./Config/GeneralSettings.vue";
+import UserInterfaceSettings from "./Config/UserInterfaceSettings.vue";
 
 export default {
 	name: "GlobalSettingsModal",
-	components: { GeneralSettings },
+	components: { UserInterfaceSettings },
 	props: {
 		sponsor: String,
 		sponsorTokenExpires: Number,

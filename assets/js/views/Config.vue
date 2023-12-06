@@ -32,19 +32,7 @@
 		</div>
 
 		<h2 class="my-4 mt-5">General</h2>
-		<div class="group p-4 pb-2">
-			<div class="container mx-0 px-0">
-				<FormRow id="siteTitle" label="Site title">
-					<input
-						id="siteTitle"
-						v-model="siteTitle"
-						class="form-control"
-						placeholder="Home"
-					/>
-				</FormRow>
-			</div>
-			<GeneralSettings />
-		</div>
+		<SiteSettings @site-changed="siteChanged" />
 
 		<h2 class="my-4 mt-5">Grid, PV & Battery Systems</h2>
 		<ul class="p-0 config-list">
@@ -215,22 +203,20 @@ import DeviceCard from "../components/Config/DeviceCard.vue";
 import DeviceTags from "../components/Config/DeviceTags.vue";
 import AddDeviceButton from "../components/Config/AddDeviceButton.vue";
 import MeterModal from "../components/Config/MeterModal.vue";
+import SiteSettings from "../components/Config/SiteSettings.vue";
 import formatter from "../mixins/formatter";
-import GeneralSettings from "../components/Config/GeneralSettings.vue";
-import FormRow from "../components/FormRow.vue";
 
 export default {
 	name: "Config",
 	components: {
 		TopHeader,
+		SiteSettings,
 		VehicleIcon,
 		VehicleModal,
 		DeviceCard,
 		DeviceTags,
 		AddDeviceButton,
 		MeterModal,
-		GeneralSettings,
-		FormRow,
 	},
 	props: {
 		offline: Boolean,
@@ -362,6 +348,9 @@ export default {
 			this.loadVehicles();
 			this.loadDirty();
 		},
+		siteChanged() {
+			this.loadDirty();
+		},
 		addMeterToSite(type, name) {
 			if (type === "grid") {
 				this.site.grid = name;
@@ -426,18 +415,6 @@ export default {
 	display: grid;
 	grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
 	grid-gap: 1rem;
-	margin-bottom: 5rem;
-}
-.group {
-	border-radius: 2rem;
-	border: 1px solid var(--evcc-gray);
-	color: var(--evcc-default-text);
-	background: var(--evcc-box);
-	padding: 1rem 1rem 0.5rem;
-	display: block;
-	list-style-type: none;
-	min-height: 10rem;
-	max-width: 950px;
 	margin-bottom: 5rem;
 }
 </style>

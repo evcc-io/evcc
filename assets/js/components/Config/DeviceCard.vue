@@ -10,7 +10,7 @@
 				type="button"
 				class="btn btn-sm btn-outline-secondary position-relative border-0 p-2"
 				:title="$t('config.main.new')"
-				@click="$emit('edit')"
+				@click="$emit('configure')"
 			>
 				<shopicon-regular-adjust size="s"></shopicon-regular-adjust>
 			</button>
@@ -54,11 +54,32 @@ export default {
 		editable: Boolean,
 		unconfigured: Boolean,
 	},
+	data() {
+		return {
+			tooltip: null,
+		};
+	},
 	emits: ["edit", "configure"],
 	mounted() {
-		if (this.$refs.tooltip) {
-			return new Tooltip(this.$refs.tooltip);
-		}
+		this.initTooltip();
+	},
+	watch: {
+		editable() {
+			this.initTooltip();
+		},
+		unconfigured() {
+			this.initTooltip();
+		},
+	},
+	methods: {
+		initTooltip() {
+			this.$nextTick(() => {
+				this.tooltip?.dispose();
+				if (this.$refs.tooltip) {
+					this.tooltip = new Tooltip(this.$refs.tooltip);
+				}
+			});
+		},
 	},
 };
 </script>
@@ -72,7 +93,7 @@ export default {
 	padding: 1rem 1rem 0.5rem;
 	display: block;
 	list-style-type: none;
-	min-height: 10rem;
+	min-height: 9rem;
 }
 .icon:empty {
 	display: none;

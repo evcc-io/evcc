@@ -77,7 +77,7 @@ import { getUnits, setUnits, UNITS } from "../../units";
 import { getHiddenFeatures, setHiddenFeatures } from "../../featureflags";
 
 export default {
-	name: "GeneralSettings",
+	name: "UserInterfaceSettings",
 	components: { TelemetrySettings, FormRow, SelectGroup, SponsorTokenExpires },
 	props: {
 		sponsor: String,

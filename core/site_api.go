@@ -35,7 +35,7 @@ func (site *Site) SetTitle(title string) {
 
 	site.Title = title
 	site.publish("siteTitle", title)
-	settings.SetString("site.title", title)
+	settings.SetString(keys.SettingsTitle, title)
 }
 
 // GetGridMeterRef returns the GridMeterRef
@@ -52,7 +52,7 @@ func (site *Site) SetGridMeterRef(ref string) {
 
 	site.Meters.GridMeterRef = ref
 	// site.publish("siteGridMeterRef", meter)
-	settings.SetString("site.grid", ref)
+	settings.SetString(keys.SettingsGrid, ref)
 }
 
 // GetPVMeterRef returns the PvMeterRef
@@ -69,7 +69,7 @@ func (site *Site) SetPVMeterRef(ref []string) {
 
 	site.Meters.PVMetersRef = ref
 	// site.publish("siteGridMeterRef", meter)
-	settings.SetString("site.pv", strings.Join(ref, ","))
+	settings.SetString(keys.SettingsPv, strings.Join(ref, ","))
 }
 
 // GetBatteryMeterRef returns the BatteryMeterRef
@@ -86,7 +86,7 @@ func (site *Site) SetBatteryMeterRef(ref []string) {
 
 	site.Meters.BatteryMetersRef = ref
 	// site.publish("siteGridMeterRef", meter)
-	settings.SetString("site.battery", strings.Join(ref, ","))
+	settings.SetString(keys.SettingsBattery, strings.Join(ref, ","))
 }
 
 // Loadpoints returns the list loadpoints

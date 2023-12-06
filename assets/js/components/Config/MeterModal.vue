@@ -26,11 +26,12 @@
 						<div v-if="!meterType">
 							<AddDeviceButton
 								title="Add solar meter"
-								class="mb-4"
+								class="mb-4 addButton"
 								@click="selectType('pv')"
 							/>
 							<AddDeviceButton
 								title="Add battery meter"
+								class="addButton"
 								@click="selectType('battery')"
 							/>
 						</div>
@@ -394,5 +395,8 @@ export default {
 	margin-left: calc(var(--bs-gutter-x) * -0.5);
 	margin-right: calc(var(--bs-gutter-x) * -0.5);
 	padding-right: 0;
+}
+.addButton {
+	min-height: auto;
 }
 </style>

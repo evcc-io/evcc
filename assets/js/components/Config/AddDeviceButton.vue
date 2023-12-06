@@ -27,7 +27,7 @@ export default {
 	padding: 0;
 	display: block;
 	list-style-type: none;
-	min-height: 10rem;
+	min-height: 9rem;
 }
 .root:hover {
 	border-color: var(--evcc-default-text);

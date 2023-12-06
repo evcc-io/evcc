@@ -73,6 +73,10 @@ validateSave = "Validate & save"
 titleAdd = "Add Solar Meter"
 titleEdit = "Edit Solar Meter"
 
+[config.site]
+save = "Save"
+cancel = "Cancel"
+
 [config.validation]
 failed = "failed"
 label = "Status"
