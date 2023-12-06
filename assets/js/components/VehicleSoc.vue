@@ -42,7 +42,7 @@
 				v-show="planMarkerAvailable"
 				class="plan-marker"
 				data-bs-toggle="tooltip"
-				:class="{ 'plan-marker--warn': !planMarkerActive }"
+				:class="{ 'plan-marker--warn': planMarkerUnreachable }"
 				:style="{ left: `${planMarkerPosition}%` }"
 				data-testid="plan-marker"
 				@click="$emit('plan-clicked')"
@@ -144,12 +144,12 @@ export default {
 			}
 			return this.planMarkerPosition > 0;
 		},
-		planMarkerActive: function () {
+		planMarkerUnreachable: function () {
 			if (this.socBasedPlanning) {
 				const vehicleLimit = this.vehicleTargetSoc || 100;
-				return this.effectivePlanSoc <= vehicleLimit;
+				return this.effectivePlanSoc > vehicleLimit;
 			}
-			return this.planEnergy <= this.limitEnergy || !this.limitEnergy;
+			return false;
 		},
 		energyLimitMarkerPosition: function () {
 			if (this.socBasedCharging) {
