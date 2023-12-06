@@ -1,6 +1,7 @@
 package server
 
 import (
+	"encoding/json"
 	"fmt"
 	"math"
 	"reflect"
@@ -266,27 +267,19 @@ func (m *MQTT) listenLoadpointSetters(topic string, site site.API, lp loadpoint.
 			return err
 		})
 	}
-	// TODO plan
-	// if err == nil {
-	// 	err = m.Handler.ListenSetter(topic+"/planEnergy", func(payload string) error {
-	// 		val, err := parseFloat(payload)
-	// 		if err == nil {
-	// 			lp.SetPlanEnergy(val)
-	// 		}
-	// 		return err
-	// 	})
-	// }
-	// if err == nil {
-	// 	err = m.Handler.ListenSetter(topic+"/planTime", func(payload string) error {
-	// 		val, err := time.Parse(time.RFC3339, payload)
-	// 		if err == nil {
-	// 			err = lp.SetPlanTime(val)
-	// 		} else if string(payload) == "null" {
-	// 			err = lp.SetPlanTime(time.Time{})
-	// 		}
-	// 		return err
-	// 	})
-	// }
+	if err == nil {
+		err = m.Handler.ListenSetter(topic+"/planEnergy", func(payload string) error {
+			var plan struct {
+				Time  time.Time `json:"time"`
+				Value float64   `json:"value"`
+			}
+			err := json.Unmarshal([]byte(payload), &plan)
+			if err == nil {
+				err = lp.SetPlanEnergy(plan.Time, plan.Value)
+			}
+			return err
+		})
+	}
 	if err == nil {
 		err = m.Handler.ListenSetter(topic+"/vehicle", func(payload string) error {
 			if payload == "" {
@@ -322,7 +315,6 @@ func (m *MQTT) listenLoadpointSetters(topic string, site site.API, lp loadpoint.
 	return err
 }
 
-// TODO plan
 func (m *MQTT) listenVehicleSetters(topic string, v vehicle.API) error {
 	var err error
 
@@ -344,7 +336,19 @@ func (m *MQTT) listenVehicleSetters(topic string, v vehicle.API) error {
 			return err
 		})
 	}
-
+	if err == nil {
+		err = m.Handler.ListenSetter(topic+"/planSoc", func(payload string) error {
+			var plan struct {
+				Time  time.Time `json:"time"`
+				Value int       `json:"value"`
+			}
+			err := json.Unmarshal([]byte(payload), &plan)
+			if err == nil {
+				err = v.SetPlanSoc(plan.Time, plan.Value)
+			}
+			return err
+		})
+	}
 	return err
 }
 
