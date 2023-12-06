@@ -84,7 +84,6 @@ func (c *API) updateValues() error {
 	req, err := request.New(http.MethodPost, uri, strings.NewReader(data), map[string]string{
 		"Content-Type": "text/plain",
 	})
-
 	if err != nil {
 		return err
 	}

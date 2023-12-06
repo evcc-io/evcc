@@ -356,7 +356,7 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 		}
 
 		// OpMode changed FROM >1 ("car connected") TO  1/disconnected  - stop ticker if channel exists
-		// channel may not exist regulary if the car was connected but charging never started
+		// channel may not exist regularly if the car was connected but charging never started
 		if c.opMode != easee.ModeDisconnected && opMode == easee.ModeDisconnected && c.stopTicker != nil {
 			close(c.stopTicker)
 			c.stopTicker = nil

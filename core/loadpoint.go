@@ -9,6 +9,9 @@ import (
 	"sync"
 	"time"
 
+	evbus "github.com/asaskevich/EventBus"
+	"github.com/avast/retry-go/v4"
+	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/coordinator"
 	"github.com/evcc-io/evcc/core/keys"
@@ -23,10 +26,6 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/telemetry"
-
-	evbus "github.com/asaskevich/EventBus"
-	"github.com/avast/retry-go/v4"
-	"github.com/benbjohnson/clock"
 )
 
 const (

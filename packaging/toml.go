@@ -67,7 +67,7 @@ func process(filepath string) error {
 		fmt.Fprintln(out, sc.Text())
 	}
 
-	if err := os.WriteFile(filepath, []byte(out.String()), 0644); err != nil {
+	if err := os.WriteFile(filepath, []byte(out.String()), 0o644); err != nil {
 		return fmt.Errorf("%s: %v", filepath, err)
 	}
 

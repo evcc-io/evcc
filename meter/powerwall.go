@@ -155,7 +155,7 @@ func NewPowerWall(uri, usage, user, password string, cache time.Duration, refres
 		}
 
 		batteryCapacity = func() float64 {
-			return float64(res.NominalFullPackEnergy) / 1e3
+			return res.NominalFullPackEnergy / 1e3
 		}
 	}
 
@@ -212,7 +212,7 @@ func (m *PowerWall) batterySoc() (float64, error) {
 		return 0, err
 	}
 
-	return float64(res.Percentage), err
+	return res.Percentage, err
 }
 
 // decorate soc

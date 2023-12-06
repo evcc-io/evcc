@@ -163,7 +163,6 @@ func (c *CmdConfigure) configureLinkedTemplate(templateItem templates.Template, 
 			if c.askConfigFailureNextStep() {
 				continue
 			}
-
 		} else {
 			c.configuration.AddDevice(deviceItem, category)
 			c.processDeviceCapabilities(templateItem.Capabilities)

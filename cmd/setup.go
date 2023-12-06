@@ -645,19 +645,14 @@ func configureSite(conf map[string]interface{}, loadpoints []*core.Loadpoint, ta
 }
 
 func configureLoadpoints(conf globalConfig) (loadpoints []*core.Loadpoint, err error) {
-	lpInterfaces, ok := viper.AllSettings()["loadpoints"].([]interface{})
-	if !ok || len(lpInterfaces) == 0 {
+	if len(conf.Loadpoints) == 0 {
 		return nil, errors.New("missing loadpoints")
 	}
 
-	for id, lpcI := range lpInterfaces {
-		var lpc map[string]interface{}
-		if err := util.DecodeOther(lpcI, &lpc); err != nil {
-			return nil, fmt.Errorf("failed decoding loadpoint configuration: %w", err)
-		}
-
+	for id, lpc := range conf.Loadpoints {
 		log := util.NewLoggerWithLoadpoint("lp-"+strconv.Itoa(id+1), id+1)
 		settings := &core.Settings{Key: "lp" + strconv.Itoa(id+1) + "."}
+
 		lp, err := core.NewLoadpointFromConfig(log, settings, lpc)
 		if err != nil {
 			return nil, fmt.Errorf("failed configuring loadpoint: %w", err)

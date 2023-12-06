@@ -100,7 +100,7 @@ func (c *Connection) ChargedEnergy() (float64, error) {
 	}
 
 	if int64(resp.TodayEnergy) > c.lasttodayenergy {
-		c.energy = c.energy + (int64(resp.TodayEnergy) - c.lasttodayenergy)
+		c.energy += (int64(resp.TodayEnergy) - c.lasttodayenergy)
 	}
 	c.lasttodayenergy = int64(resp.TodayEnergy)
 

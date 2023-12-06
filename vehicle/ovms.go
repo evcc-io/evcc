@@ -2,6 +2,7 @@ package vehicle
 
 import (
 	"fmt"
+	"net"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
@@ -102,31 +103,31 @@ func (v *Ovms) loginToServer() (err error) {
 	return err
 }
 
+func (v *Ovms) uri(path string) string {
+	return fmt.Sprintf("https://%s/api/%s/%s", net.JoinHostPort(v.server, "6869"), path, v.vehicleId)
+}
+
 func (v *Ovms) connectRequest() (ovmsConnectResponse, error) {
-	uri := fmt.Sprintf("https://%s:6869/api/vehicle/%s", v.server, v.vehicleId)
 	var res ovmsConnectResponse
-	err := v.GetJSON(uri, &res)
+	err := v.GetJSON(v.uri("vehicle"), &res)
 	return res, err
 }
 
 func (v *Ovms) chargeRequest() (ovmsChargeResponse, error) {
-	uri := fmt.Sprintf("https://%s:6869/api/charge/%s", v.server, v.vehicleId)
 	var res ovmsChargeResponse
-	err := v.GetJSON(uri, &res)
+	err := v.GetJSON(v.uri("charge"), &res)
 	return res, err
 }
 
 func (v *Ovms) statusRequest() (ovmsStatusResponse, error) {
-	uri := fmt.Sprintf("https://%s:6869/api/status/%s", v.server, v.vehicleId)
 	var res ovmsStatusResponse
-	err := v.GetJSON(uri, &res)
+	err := v.GetJSON(v.uri("status"), &res)
 	return res, err
 }
 
 func (v *Ovms) locationRequest() (ovmsLocationResponse, error) {
-	uri := fmt.Sprintf("https://%s:6869/api/location/%s", v.server, v.vehicleId)
 	var res ovmsLocationResponse
-	err := v.GetJSON(uri, &res)
+	err := v.GetJSON(v.uri("location"), &res)
 	return res, err
 }
 

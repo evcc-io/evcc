@@ -11,6 +11,8 @@ import (
 
 // test renders and instantiates plus yaml-parses the template per usage
 func test(t *testing.T, tmpl Template, values map[string]interface{}, cb func(values map[string]interface{})) {
+	t.Helper()
+
 	b, _, err := tmpl.RenderResult(TemplateRenderModeInstance, values)
 	if err != nil {
 		t.Log(string(b))
@@ -32,6 +34,8 @@ func test(t *testing.T, tmpl Template, values map[string]interface{}, cb func(va
 }
 
 func TestClass(t *testing.T, class Class, instantiate func(t *testing.T, values map[string]interface{})) {
+	t.Parallel()
+
 	for _, tmpl := range ByClass(class) {
 		tmpl := tmpl
 

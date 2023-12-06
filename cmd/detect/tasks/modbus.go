@@ -74,7 +74,7 @@ type ModbusHandler struct {
 	Timeout  time.Duration
 }
 
-func (h *ModbusHandler) testRegister(log *util.Logger, conn gridx.Client) bool {
+func (h *ModbusHandler) testRegister(_ *util.Logger, conn gridx.Client) bool {
 	var bytes []byte
 	var err error
 

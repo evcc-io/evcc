@@ -13,7 +13,7 @@ type API interface {
 	// Owner returns the loadpoint that currently owns the vehicle
 	Owner(api.Vehicle) loadpoint.API
 
-	// Aquire acquires the vehicle for the loadpoint and releases it at any other loadpoint
+	// Acquire acquires the vehicle for the loadpoint and releases it at any other loadpoint
 	Acquire(api.Vehicle)
 
 	// Release releases a vehicle from a loadpoint

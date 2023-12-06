@@ -64,7 +64,7 @@ func (ct *Timestamp) UnmarshalJSON(data []byte) error {
 
 	t, err := time.Parse(TimeFormat, s)
 	if err == nil {
-		(*ct).Time = t
+		ct.Time = t
 	}
 
 	return err

@@ -49,9 +49,7 @@ func generate(out io.Writer, packageName, functionName, baseType string, dynamic
 			return dict, nil
 		},
 		// contains checks if slice contains string
-		"contains": func(combo []string, typ string) bool {
-			return slices.Contains(combo, typ)
-		},
+		"contains": slices.Contains[[]string, string],
 		// ordered returns a slice of typeStructs ordered by dynamicType
 		"ordered": func() []typeStruct {
 			ordered := make([]typeStruct, 0)

@@ -5,6 +5,7 @@ import (
 
 	"github.com/mitchellh/mapstructure"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestDecodeNil(t *testing.T) {
@@ -23,12 +24,12 @@ func TestDecodeNil(t *testing.T) {
 	}
 
 	decoder, err := mapstructure.NewDecoder(decoderConfig)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	err = decoder.Decode(map[string]any{
 		"user": nil,
 	})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	assert.Equal(t, struct {
 		User, Password string

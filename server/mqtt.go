@@ -167,7 +167,7 @@ func (m *MQTT) listenSiteSetters(topic string, site site.API) error {
 	var err error
 
 	if err == nil {
-		err = m.Handler.ListenSetter(m.root+"/site/prioritySoc", func(payload string) error {
+		err = m.Handler.ListenSetter(topic+"/site/prioritySoc", func(payload string) error {
 			val, err := parseFloat(payload)
 			if err == nil {
 				err = site.SetPrioritySoc(val)
@@ -177,7 +177,7 @@ func (m *MQTT) listenSiteSetters(topic string, site site.API) error {
 	}
 
 	if err == nil {
-		err = m.Handler.ListenSetter(m.root+"/site/bufferSoc", func(payload string) error {
+		err = m.Handler.ListenSetter(topic+"/site/bufferSoc", func(payload string) error {
 			val, err := parseFloat(payload)
 			if err == nil {
 				err = site.SetBufferSoc(val)
@@ -187,7 +187,7 @@ func (m *MQTT) listenSiteSetters(topic string, site site.API) error {
 	}
 
 	if err == nil {
-		err = m.Handler.ListenSetter(m.root+"/site/bufferStartSoc", func(payload string) error {
+		err = m.Handler.ListenSetter(topic+"/site/bufferStartSoc", func(payload string) error {
 			val, err := parseFloat(payload)
 			if err == nil {
 				err = site.SetBufferStartSoc(val)
@@ -197,7 +197,7 @@ func (m *MQTT) listenSiteSetters(topic string, site site.API) error {
 	}
 
 	if err == nil {
-		err = m.Handler.ListenSetter(m.root+"/site/residualPower", func(payload string) error {
+		err = m.Handler.ListenSetter(topic+"/site/residualPower", func(payload string) error {
 			val, err := parseFloat(payload)
 			if err == nil {
 				err = site.SetResidualPower(val)
@@ -207,7 +207,7 @@ func (m *MQTT) listenSiteSetters(topic string, site site.API) error {
 	}
 
 	if err == nil {
-		err = m.Handler.ListenSetter(m.root+"/site/smartCostLimit", func(payload string) error {
+		err = m.Handler.ListenSetter(topic+"/site/smartCostLimit", func(payload string) error {
 			val, err := parseFloat(payload)
 			if err == nil {
 				err = site.SetSmartCostLimit(val)

@@ -32,7 +32,7 @@ var _ api.Battery = (*Provider)(nil)
 // Soc implements the api.Vehicle interface
 func (v *Provider) Soc() (float64, error) {
 	res, err := v.statusG()
-	return float64(res.Engines.Primary.Level), err
+	return res.Engines.Primary.Level, err
 }
 
 var _ api.ChargeState = (*Provider)(nil)
@@ -89,7 +89,7 @@ var _ api.VehicleOdometer = (*Provider)(nil)
 // Odometer implements the api.VehicleOdometer interface
 func (v *Provider) Odometer() (float64, error) {
 	res, err := v.statusG()
-	return float64(res.Measurements.MileageKm), err
+	return res.Measurements.MileageKm, err
 }
 
 var _ api.VehicleClimater = (*Provider)(nil)

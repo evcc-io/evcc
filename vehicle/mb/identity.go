@@ -86,7 +86,7 @@ func (v *Identity) Login(user, password string) error {
 	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
 	if err == nil {
 		if err = v.DoJSON(req, &res); err != nil && len(res.Errors) > 0 {
-			err = fmt.Errorf("%s: %w", string(res.Errors[0].Key), err)
+			err = fmt.Errorf("%s: %w", res.Errors[0].Key, err)
 		}
 	}
 
@@ -98,7 +98,7 @@ func (v *Identity) Login(user, password string) error {
 		req, err = request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
 		if err == nil {
 			if err = v.DoJSON(req, &res); err != nil && len(res.Errors) > 0 {
-				err = fmt.Errorf("%s: %w", string(res.Errors[0].Key), err)
+				err = fmt.Errorf("%s: %w", res.Errors[0].Key, err)
 			}
 		}
 	}
