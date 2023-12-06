@@ -32,7 +32,10 @@
 				v-show="energyLimitMarkerPosition"
 				class="energy-limit-marker"
 				data-bs-toggle="tooltip"
-				:class="{ 'energy-limit-marker--active': energyLimitMarkerPosition < 100 }"
+				:class="{
+					'energy-limit-marker--active': energyLimitMarkerActive,
+					'energy-limit-marker--visible': energyLimitMarkerPosition < 100,
+				}"
 				:style="{ left: `${energyLimitMarkerPosition}%` }"
 			/>
 			<div
@@ -157,6 +160,15 @@ export default {
 			}
 			return 100;
 		},
+		energyLimitMarkerActive: function () {
+			if (this.socBasedCharging) {
+				return false;
+			}
+			if (this.planEnergy) {
+				return this.limitEnergy >= this.planEnergy;
+			}
+			return true;
+		},
 		sliderActive: function () {
 			const isBelowVehicleLimit = this.visibleLimitSoc <= (this.vehicleTargetSoc || 100);
 			const isAbovePlanLimit = this.visibleLimitSoc >= (this.effectivePlanSoc || 0);
@@ -187,9 +199,6 @@ export default {
 					return limit - this.vehicleSoc;
 				}
 			} else {
-				if (this.limitEnergy && this.planEnergy > this.limitEnergy) {
-					return (100 / this.planEnergy) * this.limitEnergy - this.vehicleSocDisplayWidth;
-				}
 				return 100 - this.vehicleSocDisplayWidth;
 			}
 
@@ -386,12 +395,15 @@ export default {
 	transform: translateX(-50%);
 	width: 4px;
 	opacity: 0;
-	background-color: var(--evcc-dark-green);
-	transition-property: opacity, left;
+	background-color: var(--evcc-gray);
+	transition-property: opacity, left, background-color;
 	transition-timing-function: linear;
 	transition-duration: var(--evcc-transition-fast);
 }
 .energy-limit-marker--active {
+	background-color: var(--evcc-dark-green);
+}
+.energy-limit-marker--visible {
 	opacity: 1;
 }
 </style>
