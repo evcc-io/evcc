@@ -132,6 +132,7 @@ export default {
 		vehicle: Object,
 		vehicleCapacity: Number,
 		vehicleSoc: Number,
+		vehicleTargetSoc: Number,
 	},
 	data: function () {
 		return {

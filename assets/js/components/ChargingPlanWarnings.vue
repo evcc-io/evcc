@@ -1,28 +1,22 @@
 <template>
 	<p class="mb-0">
+		<span v-if="timeInThePast" class="d-block text-danger mb-1">
+			{{ $t("main.targetCharge.targetIsInThePast") }}
+		</span>
+		<span v-if="targetIsAboveVehicleLimit" class="d-block text-danger mb-1">
+			{{ $t("main.targetCharge.targetIsAboveVehicleLimit", { limit: vehicleLimitFmt }) }}
+		</span>
 		<span v-if="['off', 'now'].includes(mode)" class="d-block text-secondary mb-1">
 			{{ $t("main.targetCharge.onlyInPvMode") }}
 		</span>
-		<span v-if="targetIsAboveLimit" class="d-block text-danger mb-1">
-			{{
-				$t("main.targetCharge.targetIsAboveLimit", {
-					limit: limitFmt,
-					goal: goalFmt,
-				})
-			}}
-		</span>
-		<span v-if="timeInThePast" class="d-block text-danger mb-1">
-			{{ $t("main.targetCharge.targetIsInThePast") }}
+		<span v-if="targetIsAboveLimit" class="d-block text-secondary mb-1">
+			{{ $t("main.targetCharge.targetIsAboveLimit", { limit: limitFmt }) }}
 		</span>
 		<span v-if="timeTooFarInTheFuture" class="d-block text-secondary mb-1">
 			{{ $t("main.targetCharge.targetIsTooFarInTheFuture") }}
 		</span>
 		<span v-if="costLimitExists" class="d-block text-secondary mb-1">
-			{{
-				$t("main.targetCharge.costLimitIgnore", {
-					limit: costLimitText,
-				})
-			}}
+			{{ $t("main.targetCharge.costLimitIgnore", { limit: costLimitText }) }}
 		</span>
 	</p>
 </template>
@@ -50,6 +44,7 @@ export default {
 		mode: String,
 		tariff: Object,
 		selectedTargetTime: Date,
+		vehicleTargetSoc: Number,
 	},
 	computed: {
 		timeInThePast: function () {
@@ -72,11 +67,20 @@ export default {
 			}
 			return this.limitEnergy && this.planEnergy > this.limitEnergy;
 		},
+		targetIsAboveVehicleLimit: function () {
+			if (this.socBasedPlanning) {
+				return this.effectivePlanSoc > (this.vehicleTargetSoc || 100);
+			}
+			return false;
+		},
 		limitFmt: function () {
 			if (this.socBasedPlanning) {
 				return this.fmtSoc(this.effectiveLimitSoc);
 			}
 			return this.fmtKWh(this.limitEnergy * 1e3);
+		},
+		vehicleLimitFmt: function () {
+			return this.fmtSoc(this.vehicleTargetSoc);
 		},
 		goalFmt: function () {
 			if (this.socBasedPlanning) {

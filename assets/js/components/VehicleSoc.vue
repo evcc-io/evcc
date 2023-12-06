@@ -143,10 +143,8 @@ export default {
 		},
 		planMarkerActive: function () {
 			if (this.socBasedPlanning) {
-				const sessionLimit = this.selectedLimitSoc || this.effectiveLimitSoc;
 				const vehicleLimit = this.vehicleTargetSoc || 100;
-				const maxLimit = Math.min(sessionLimit, vehicleLimit);
-				return this.effectivePlanSoc <= maxLimit;
+				return this.effectivePlanSoc <= vehicleLimit;
 			}
 			return this.planEnergy <= this.limitEnergy || !this.limitEnergy;
 		},
@@ -160,7 +158,9 @@ export default {
 			return 100;
 		},
 		sliderActive: function () {
-			return !this.vehicleTargetSoc || this.visibleLimitSoc <= this.vehicleTargetSoc;
+			const isBelowVehicleLimit = this.visibleLimitSoc <= (this.vehicleTargetSoc || 100);
+			const isAbovePlanLimit = this.visibleLimitSoc >= (this.effectivePlanSoc || 0);
+			return isBelowVehicleLimit && isAbovePlanLimit;
 		},
 		progressColor: function () {
 			if (this.minSocActive) {
@@ -179,9 +179,12 @@ export default {
 				if (this.minSocActive) {
 					return this.minSoc - this.vehicleSoc;
 				}
-				let soc = this.sliderActive ? this.visibleLimitSoc : this.vehicleTargetSoc;
-				if (soc > this.vehicleSoc) {
-					return soc - this.vehicleSoc;
+				const limit = Math.min(
+					this.vehicleTargetSoc || 100,
+					Math.max(this.visibleLimitSoc, this.effectivePlanSoc || 0)
+				);
+				if (limit > this.vehicleSoc) {
+					return limit - this.vehicleSoc;
 				}
 			} else {
 				if (this.limitEnergy && this.planEnergy > this.limitEnergy) {
