@@ -65,8 +65,7 @@ export default {
 			return null;
 		},
 		formatSoc: function (value) {
-			// todo: add fahrenheit support
-			return this.heating ? this.fmtNumber(value, 1, "celsius") : `${Math.round(value)}%`;
+			return this.heating ? this.fmtTemperature(value) : `${Math.round(value)}%`;
 		},
 		formatKm: function (value) {
 			return `${this.fmtNumber(value, 0)} ${distanceUnit()}`;

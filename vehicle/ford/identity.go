@@ -2,9 +2,9 @@ package ford
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
@@ -19,20 +19,31 @@ import (
 )
 
 const (
-	AuthURI       = "https://sso.ci.ford.com"
 	TokenURI      = "https://api.mps.ford.com"
-	ClientID      = "9fb503e0-715b-47e8-adfd-ad4b7770f73b"
+	LoginUri      = "https://login.ford.com/4566605f-43a7-400a-946e-89cc9fdb0bd7/B2C_1A_SignInSignUp_de-DE"
+	ClientID      = "09852200-05fd-41f6-8c21-d36d3497dc64"
 	ApplicationID = "1E8C7794-FF5F-49BC-9596-A1E0C86C5B19"
 )
+
+var loginHeaders = map[string]string{
+	"Accept":          "*/*",
+	"Accept-Language": "en-us",
+	"User-Agent":      "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Mobile/15E148 Safari/604.1",
+}
 
 var OAuth2Config = &oauth2.Config{
 	ClientID: ClientID,
 	Endpoint: oauth2.Endpoint{
-		AuthURL:  fmt.Sprintf("%s/v1.0/endpoint/default/authorize", AuthURI),
-		TokenURL: fmt.Sprintf("%s/oidc/endpoint/default/token", AuthURI),
+		AuthURL:  fmt.Sprintf("%s/oauth2/v2.0/authorize", LoginUri),
+		TokenURL: fmt.Sprintf("%s/oauth2/v2.0/token", LoginUri),
 	},
 	RedirectURL: "fordapp://userauthorized",
-	Scopes:      []string{"openid"},
+	Scopes:      []string{ClientID, "openid"},
+}
+
+type Settings struct {
+	TransId string `json:"transId"`
+	Csrf    string `json:"csrf"`
 }
 
 type Identity struct {
@@ -66,13 +77,17 @@ func (v *Identity) login() (*oauth.Token, error) {
 	state := lo.RandomString(16, lo.AlphanumericCharset)
 	uri := OAuth2Config.AuthCodeURL(state, oauth2.S256ChallengeOption(cv),
 		oauth2.SetAuthURLParam("max_age", "3600"),
+		oauth2.SetAuthURLParam("ui_locales", "de-DE"),
+		oauth2.SetAuthURLParam("language_code", "de-DE"),
+		oauth2.SetAuthURLParam("country_code", "DE"),
+		oauth2.SetAuthURLParam("ford_application_id", ApplicationID),
 	)
 
 	v.Jar, _ = cookiejar.New(nil)
 	defer func() { v.Jar = nil }()
 
 	var body []byte
-	req, err := request.New(http.MethodGet, uri, nil, nil)
+	req, err := request.New(http.MethodGet, uri, nil, loginHeaders)
 	if err == nil {
 		body, err = v.DoBody(req)
 	}
@@ -81,16 +96,21 @@ func (v *Identity) login() (*oauth.Token, error) {
 		return nil, err
 	}
 
-	match := regexp.MustCompile(`data-ibm-login-url="(.+?)"`).FindSubmatch(body)
+	match := regexp.MustCompile(`var SETTINGS = (\{[^;]*\});`).FindSubmatch(body)
 	if len(match) < 2 {
-		return nil, errors.New("missing login url")
+		return nil, errors.New("missing settings variable")
+	}
+
+	var settings Settings
+
+	if err := json.Unmarshal([]byte(match[1]), &settings); err != nil {
+		return nil, err
 	}
 
 	data := url.Values{
-		"operation":       {"verify"},
-		"login-form-type": {"pwd"},
-		"username":        {v.user},
-		"password":        {v.password},
+		"request_type": {"RESPONSE"},
+		"signInName":   {v.user},
+		"password":     {v.password},
 	}
 
 	v.Client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
@@ -101,23 +121,39 @@ func (v *Identity) login() (*oauth.Token, error) {
 	}
 	defer func() { v.Client.CheckRedirect = nil }()
 
-	uri = fmt.Sprintf("%s%s", AuthURI, string(match[1]))
-	req, err = request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), request.URLEncoding)
+	uri2 := fmt.Sprintf("%s/SelfAsserted?tx=%s&p=B2C_1A_SignInSignUp_de-DE", LoginUri, settings.TransId)
+	req, err = request.New(http.MethodPost, uri2, strings.NewReader(data.Encode()), request.URLEncoding, map[string]string{
+		"Accept":          "*/*",
+		"Accept-Language": "en-us",
+		"User-Agent":      "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Mobile/15E148 Safari/604.1",
+		"Origin":          "https://login.ford.com",
+		"Referer":         uri,
+		"X-Csrf-Token":    settings.Csrf,
+	})
+
+	if err == nil {
+		var resp *http.Response
+		if resp, err = v.Do(req); err == nil {
+			defer resp.Body.Close()
+
+			if resp.StatusCode != 200 {
+				return nil, errors.New("self-assert failed")
+			}
+		}
+	}
+
+	uri3 := fmt.Sprintf("%s/api/CombinedSigninAndSignup/confirmed?rememberMe=false&csrf_token=%s&tx=%s&p=B2C_1A_SignInSignUp_de-DE", LoginUri, settings.Csrf, settings.TransId)
+	req, err = request.New(http.MethodGet, uri3, nil, request.URLEncoding, map[string]string{
+		"Origin":       "https://login.ford.com",
+		"Referer":      uri,
+		"X-Csrf-Token": settings.Csrf,
+	})
 
 	var loc *url.URL
 	if err == nil {
 		var resp *http.Response
 		if resp, err = v.Do(req); err == nil {
 			defer resp.Body.Close()
-
-			if body, err = io.ReadAll(resp.Body); err == nil {
-				if match := regexp.MustCompile(`data-ibm-login-error-text="(.+?)"`).FindSubmatch(body); len(match) >= 2 {
-					err = errors.New(string(match[1]))
-				}
-			}
-		}
-
-		if err == nil {
 			loc, err = url.Parse(resp.Header.Get("location"))
 		}
 	}
@@ -143,10 +179,10 @@ func (v *Identity) login() (*oauth.Token, error) {
 	var token oauth.Token
 	if err == nil {
 		data := map[string]string{
-			"ciToken": tok.AccessToken,
+			"idpToken": tok.AccessToken,
 		}
 
-		uri := fmt.Sprintf("%s/api/token/v2/cat-with-ci-access-token", TokenURI)
+		uri := fmt.Sprintf("%s/api/token/v2/cat-with-b2c-access-token", TokenURI)
 
 		var req *http.Request
 		req, err = request.New(http.MethodPost, uri, request.MarshalJSON(data), map[string]string{

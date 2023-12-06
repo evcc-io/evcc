@@ -155,8 +155,7 @@ export default {
 				return "--";
 			}
 			if (this.heating) {
-				// todo: add celsius/fahrenheit option to ui
-				return this.fmtNumber(this.vehicleSoc, 1, "celsius");
+				return this.fmtTemperature(this.vehicleSoc);
 			}
 			return `${Math.round(this.vehicleSoc)}%`;
 		},
