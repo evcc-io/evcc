@@ -69,6 +69,7 @@ export default {
 		mode: String,
 		vehicleCapacity: Number,
 		vehicle: Object,
+		vehicleTargetSoc: Number,
 	},
 	emits: ["plan-removed", "plan-updated"],
 	data: function () {

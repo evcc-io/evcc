@@ -31,7 +31,7 @@ type apiResponse struct {
 // NewTestClient returns *http.Client with Transport replaced to avoid making real calls
 func NewTestClient(fn roundTripFunc) *http.Client {
 	return &http.Client{
-		Transport: roundTripFunc(fn),
+		Transport: fn,
 	}
 }
 
@@ -50,13 +50,13 @@ func NewTestMobileConnect(t *testing.T, responses []apiResponse) *MobileConnect 
 		// response string for the currently invoked call
 		var responseString string
 		for _, s := range responses {
-			if strings.Contains("/"+string(s.apiCall), req.URL.Path) {
+			if strings.Contains("/"+s.apiCall, req.URL.Path) {
 				responseString = s.apiResponse
 			}
 		}
 
 		return &http.Response{
-			StatusCode: 200,
+			StatusCode: http.StatusOK,
 			// Send response to be tested
 			Body: io.NopCloser(bytes.NewBufferString(responseString)),
 			// Must be set to non-nil value or it panics
@@ -83,7 +83,7 @@ func TestMobileConnectLogin(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			mcc := NewTestMobileConnect(t, tc.responses)
 
-			if err := mcc.login(tc.password); (err != nil) != tc.wantErr {
+			if err := mcc.login(); (err != nil) != tc.wantErr {
 				t.Errorf("MobileConnect.login() error = %v, wantErr %v", err, tc.wantErr)
 			}
 		})
@@ -263,13 +263,15 @@ func TestMobileConnectCurrentPower(t *testing.T) {
 			"no data response",
 			[]apiResponse{
 				{mccAPIEnergy, "\"\"\n"},
-			}, 0, false,
+			},
+			0, false,
 		},
 		{
 			"home plug - error response",
 			[]apiResponse{
 				{mccAPIEnergy, "\"{\\n    \\\"L1\\\": {\\n        \\\"Ampere\\\": 0,\\n        \\\"Power\\\": 0,\\n        \\\"Volts\\\": 246.60000000000002\\n    },\\n    \\\"L2\\\": {\\n        \\\"Ampere\\\": 0,\\n        \\\"Power\\\": 0,\\n        \\\"Volts\\\": 16.800000000000001\\n    },\\n    \\\"L3\\\": {\\n        \\\"Ampere\\\": 0,\\n        \\\"Power\\\": 0,\\n        \\\"Volts\\\": 16.300000000000001\\n    }\\n}\\n\""},
-			}, 0, false,
+			},
+			0, false,
 		},
 	}
 	for _, tc := range tests {
@@ -300,19 +302,22 @@ func TestMobileConnectChargedEnergy(t *testing.T) {
 			"valid response",
 			[]apiResponse{
 				{mccAPICurrentSession, "\"{\\n    \\\"account\\\": \\\"PRIVATE\\\",\\n    \\\"chargingRate\\\": 0,\\n    \\\"chargingType\\\": \\\"AC\\\",\\n    \\\"clockSrc\\\": \\\"NTP\\\",\\n    \\\"costs\\\": 0,\\n    \\\"currency\\\": \\\"\\\",\\n    \\\"departTime\\\": \\\"\\\",\\n    \\\"duration\\\": 30789,\\n    \\\"endOfChargeTime\\\": \\\"\\\",\\n    \\\"endSoc\\\": 0,\\n    \\\"endTime\\\": \\\"\\\",\\n    \\\"energySumKwh\\\": 18.832000000000001,\\n    \\\"evChargingRatekW\\\": 0,\\n    \\\"evTargetSoc\\\": -1,\\n    \\\"evVasAvailability\\\": false,\\n    \\\"pcid\\\": \\\"\\\",\\n    \\\"powerRange\\\": 0,\\n    \\\"selfEnergy\\\": 0,\\n    \\\"sessionId\\\": 13,\\n    \\\"soc\\\": -1,\\n    \\\"solarEnergyShare\\\": 0,\\n    \\\"startSoc\\\": 0,\\n    \\\"startTime\\\": \\\"2020-04-15T10:07:22+02:00\\\",\\n    \\\"totalRange\\\": 0,\\n    \\\"vehicleBrand\\\": \\\"\\\",\\n    \\\"vehicleModel\\\": \\\"\\\",\\n    \\\"whitelist\\\": false\\n}\\n\""},
-			}, 18.832000000000001, false,
+			},
+			18.832000000000001, false,
 		},
 		{
 			"no data response",
 			[]apiResponse{
 				{mccAPICurrentSession, "\"\"\n"},
-			}, 0, false,
+			},
+			0, false,
 		},
 		{
 			"error response",
 			[]apiResponse{
 				{mccAPICurrentSession, "invalidjson"},
-			}, 0, true,
+			},
+			0, true,
 		},
 	}
 	for _, tc := range tests {
@@ -342,19 +347,22 @@ func TestMobileConnectChargingTime(t *testing.T) {
 			"valid response",
 			[]apiResponse{
 				{mccAPICurrentSession, "\"{\\n    \\\"account\\\": \\\"PRIVATE\\\",\\n    \\\"chargingRate\\\": 0,\\n    \\\"chargingType\\\": \\\"AC\\\",\\n    \\\"clockSrc\\\": \\\"NTP\\\",\\n    \\\"costs\\\": 0,\\n    \\\"currency\\\": \\\"\\\",\\n    \\\"departTime\\\": \\\"\\\",\\n    \\\"duration\\\": 30789,\\n    \\\"endOfChargeTime\\\": \\\"\\\",\\n    \\\"endSoc\\\": 0,\\n    \\\"endTime\\\": \\\"\\\",\\n    \\\"energySumKwh\\\": 18.832000000000001,\\n    \\\"evChargingRatekW\\\": 0,\\n    \\\"evTargetSoc\\\": -1,\\n    \\\"evVasAvailability\\\": false,\\n    \\\"pcid\\\": \\\"\\\",\\n    \\\"powerRange\\\": 0,\\n    \\\"selfEnergy\\\": 0,\\n    \\\"sessionId\\\": 13,\\n    \\\"soc\\\": -1,\\n    \\\"solarEnergyShare\\\": 0,\\n    \\\"startSoc\\\": 0,\\n    \\\"startTime\\\": \\\"2020-04-15T10:07:22+02:00\\\",\\n    \\\"totalRange\\\": 0,\\n    \\\"vehicleBrand\\\": \\\"\\\",\\n    \\\"vehicleModel\\\": \\\"\\\",\\n    \\\"whitelist\\\": false\\n}\\n\""},
-			}, 30789 * time.Second, false,
+			},
+			30789 * time.Second, false,
 		},
 		{
 			"no data response",
 			[]apiResponse{
 				{mccAPICurrentSession, "\"\"\n"},
-			}, 0, false,
+			},
+			0, false,
 		},
 		{
 			"error response",
 			[]apiResponse{
 				{mccAPICurrentSession, "invalidjson"},
-			}, 0, true,
+			},
+			0, true,
 		},
 	}
 	for _, tc := range tests {
@@ -399,13 +407,15 @@ func TestMobileConnectCurrents(t *testing.T) {
 			"no data response",
 			[]apiResponse{
 				{mccAPIEnergy, "\"\"\n"},
-			}, 0, 0, 0, false,
+			},
+			0, 0, 0, false,
 		},
 		{
 			"home plug - error response",
 			[]apiResponse{
 				{mccAPIEnergy, "\"{\\n    \\\"L1\\\": {\\n        \\\"Ampere\\\": 0,\\n        \\\"Power\\\": 0,\\n        \\\"Volts\\\": 246.60000000000002\\n    },\\n    \\\"L2\\\": {\\n        \\\"Ampere\\\": 0,\\n        \\\"Power\\\": 0,\\n        \\\"Volts\\\": 16.800000000000001\\n    },\\n    \\\"L3\\\": {\\n        \\\"Ampere\\\": 0,\\n        \\\"Power\\\": 0,\\n        \\\"Volts\\\": 16.300000000000001\\n    }\\n}\\n\""},
-			}, 0, 0, 0, false,
+			},
+			0, 0, 0, false,
 		},
 	}
 	for _, tc := range tests {

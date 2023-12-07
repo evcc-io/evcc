@@ -50,7 +50,7 @@ func (s *Estimator) Reset() {
 	s.prevSoc = 0
 	s.prevChargedEnergy = 0
 	s.initialSoc = 0
-	s.capacity = float64(s.vehicle.Capacity()) * 1e3  // cache to simplify debugging
+	s.capacity = s.vehicle.Capacity() * 1e3           // cache to simplify debugging
 	s.virtualCapacity = s.capacity / ChargeEfficiency // initial capacity taking efficiency into account
 	s.energyPerSocStep = s.virtualCapacity / 100
 	s.minChargePower = 1000  // default 1 kW

@@ -28,72 +28,83 @@ func TestEnergyMetrics(t *testing.T) {
 		totalWh, solarPercentage      float64
 		price, pricePerKWh, co2PerKWh *float64
 	}{
-		{"initial state",
+		{
+			"initial state",
 			[]tcStep{},
 			0, 0, nil, nil, nil,
 		},
-		{"energy value",
+		{
+			"energy value",
 			[]tcStep{
 				{0.1, 0, nil, nil},
 				{0.2, 0, nil, nil},
 			},
 			200, 0, nil, nil, nil,
 		},
-		{"ignore lower energy value",
+		{
+			"ignore lower energy value",
 			[]tcStep{
 				{0.2, 0, nil, nil},
 				{0.1, 0, nil, nil},
 			},
 			200, 0, nil, nil, nil,
 		},
-		{"half solar",
+		{
+			"half solar",
 			[]tcStep{
 				{0.1, 1, nil, nil},
 				{0.2, 0, nil, nil},
 			},
 			200, 50, nil, nil, nil,
 		},
-		{"only solar",
+		{
+			"only solar",
 			[]tcStep{
 				{0.1, 1, nil, nil},
 				{0.2, 1, nil, nil},
 			},
 			200, 100, nil, nil, nil,
 		},
-		{"static price",
+		{
+			"static price",
 			[]tcStep{
 				{1, 0, f(0.5), nil},
 			},
 			1000, 0, f(0.5), f(0.5), nil,
 		},
-		{"dynamic price",
+		{
+			"dynamic price",
 			[]tcStep{
 				{1, 0, f(1), nil},
 				{2, 0, f(0), nil},
 			},
 			2000, 0, f(1), f(0.5), nil,
 		},
-		{"dynamic price",
+		{
+			"dynamic price",
 			[]tcStep{
 				{2, 0, f(1), nil},
 				{4, 0, f(0), nil},
 			},
 			4000, 0, f(2), f(0.5), nil,
 		},
-		{"static co2",
+		{
+			"static co2",
 			[]tcStep{
 				{1, 0, nil, f(500)},
 			},
 			1000, 0, nil, nil, f(500),
 		},
-		{"dynamic co2",
+		{
+			"dynamic co2",
 			[]tcStep{
 				{1, 0, nil, f(1000)},
 				{2, 0, nil, f(0)},
 			},
 			2000, 0, nil, nil, f(500),
 		},
-		{"grid only, half, full solar, half, grid only",
+		{
+			"grid only, half, full solar, half, grid only",
 			[]tcStep{
 				{1, 0, f(2), f(200)},
 				{2, 0.5, f(1), f(50)},
@@ -106,8 +117,6 @@ func TestEnergyMetrics(t *testing.T) {
 	}
 
 	for _, tc := range tc {
-		//t.Logf("%+v", tc)
-
 		s := NewEnergyMetrics()
 
 		for _, tc := range tc.steps {

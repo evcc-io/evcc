@@ -390,7 +390,6 @@ func RegisterOperation(r Register) (rs485.Operation, error) {
 	}
 
 	switch strings.ToLower(r.Decode) {
-
 	// 8 bit (coil)
 	case "bool8":
 		op.Transform = decodeBool8

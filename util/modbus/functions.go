@@ -53,7 +53,7 @@ func decodeBool16(mask uint64) func(b []byte) float64 {
 	return func(b []byte) float64 {
 		u := binary.BigEndian.Uint16(b)
 		if mask > 0 {
-			u = u & uint16(mask)
+			u &= uint16(mask)
 		}
 		if u > 0 {
 			return 1

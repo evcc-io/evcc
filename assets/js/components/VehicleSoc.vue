@@ -32,14 +32,17 @@
 				v-show="energyLimitMarkerPosition"
 				class="energy-limit-marker"
 				data-bs-toggle="tooltip"
-				:class="{ 'energy-limit-marker--active': energyLimitMarkerPosition < 100 }"
+				:class="{
+					'energy-limit-marker--active': energyLimitMarkerActive,
+					'energy-limit-marker--visible': energyLimitMarkerPosition < 100,
+				}"
 				:style="{ left: `${energyLimitMarkerPosition}%` }"
 			/>
 			<div
 				v-show="planMarkerAvailable"
 				class="plan-marker"
 				data-bs-toggle="tooltip"
-				:class="{ 'plan-marker--warn': !planMarkerActive }"
+				:class="{ 'plan-marker--warn': planMarkerUnreachable }"
 				:style="{ left: `${planMarkerPosition}%` }"
 				data-testid="plan-marker"
 				@click="$emit('plan-clicked')"
@@ -141,14 +144,12 @@ export default {
 			}
 			return this.planMarkerPosition > 0;
 		},
-		planMarkerActive: function () {
+		planMarkerUnreachable: function () {
 			if (this.socBasedPlanning) {
-				const sessionLimit = this.selectedLimitSoc || this.effectiveLimitSoc;
 				const vehicleLimit = this.vehicleTargetSoc || 100;
-				const maxLimit = Math.min(sessionLimit, vehicleLimit);
-				return this.effectivePlanSoc <= maxLimit;
+				return this.effectivePlanSoc > vehicleLimit;
 			}
-			return this.planEnergy <= this.limitEnergy || !this.limitEnergy;
+			return false;
 		},
 		energyLimitMarkerPosition: function () {
 			if (this.socBasedCharging) {
@@ -159,8 +160,19 @@ export default {
 			}
 			return 100;
 		},
+		energyLimitMarkerActive: function () {
+			if (this.socBasedCharging) {
+				return false;
+			}
+			if (this.planEnergy) {
+				return this.limitEnergy >= this.planEnergy;
+			}
+			return true;
+		},
 		sliderActive: function () {
-			return !this.vehicleTargetSoc || this.visibleLimitSoc <= this.vehicleTargetSoc;
+			const isBelowVehicleLimit = this.visibleLimitSoc <= (this.vehicleTargetSoc || 100);
+			const isAbovePlanLimit = this.visibleLimitSoc >= (this.effectivePlanSoc || 0);
+			return isBelowVehicleLimit && isAbovePlanLimit;
 		},
 		progressColor: function () {
 			if (this.minSocActive) {
@@ -179,14 +191,14 @@ export default {
 				if (this.minSocActive) {
 					return this.minSoc - this.vehicleSoc;
 				}
-				let soc = this.sliderActive ? this.visibleLimitSoc : this.vehicleTargetSoc;
-				if (soc > this.vehicleSoc) {
-					return soc - this.vehicleSoc;
+				const limit = Math.min(
+					this.vehicleTargetSoc || 100,
+					Math.max(this.visibleLimitSoc, this.effectivePlanSoc || 0)
+				);
+				if (limit > this.vehicleSoc) {
+					return limit - this.vehicleSoc;
 				}
 			} else {
-				if (this.limitEnergy && this.planEnergy > this.limitEnergy) {
-					return (100 / this.planEnergy) * this.limitEnergy - this.vehicleSocDisplayWidth;
-				}
 				return 100 - this.vehicleSocDisplayWidth;
 			}
 
@@ -383,12 +395,15 @@ export default {
 	transform: translateX(-50%);
 	width: 4px;
 	opacity: 0;
-	background-color: var(--evcc-dark-green);
-	transition-property: opacity, left;
+	background-color: var(--evcc-gray);
+	transition-property: opacity, left, background-color;
 	transition-timing-function: linear;
 	transition-duration: var(--evcc-transition-fast);
 }
 .energy-limit-marker--active {
+	background-color: var(--evcc-dark-green);
+}
+.energy-limit-marker--visible {
 	opacity: 1;
 }
 </style>

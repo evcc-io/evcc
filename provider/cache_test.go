@@ -36,7 +36,8 @@ func TestCachedGetter(t *testing.T) {
 	expect := func(s struct {
 		f float64
 		e error
-	}) {
+	},
+	) {
 		f, e := c.Get()
 		if f != s.f || e != s.e {
 			t.Errorf("unexpected cache value: %f, %v\n", f, e)

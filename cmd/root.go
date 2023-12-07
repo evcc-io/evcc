@@ -24,12 +24,11 @@ import (
 	"github.com/evcc-io/evcc/util/telemetry"
 	"github.com/fatih/structs"
 	"github.com/jeremywohl/flatten"
-	"golang.org/x/exp/maps"
-
 	_ "github.com/joho/godotenv/autoload"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"golang.org/x/exp/maps"
 )
 
 const rebootDelay = 5 * time.Minute // delayed reboot on error
