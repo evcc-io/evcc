@@ -3,7 +3,12 @@
 		<div class="justify-content-between mb-2 d-flex justify-content-between">
 			<div class="text-start">
 				<div class="label">{{ $t("main.targetChargePlan.chargeDuration") }}</div>
-				<div class="value text-primary">{{ planDuration }}</div>
+				<div class="value text-primary d-sm-flex align-items-baseline">
+					<div>{{ planDuration }}</div>
+					<div v-if="fmtPower" class="extraValue text-nowrap ms-sm-1">
+						{{ fmtPower }}
+					</div>
+				</div>
 			</div>
 			<div v-if="hasTariff" class="text-end">
 				<div class="label">
@@ -44,6 +49,12 @@ export default {
 	computed: {
 		planDuration() {
 			return this.fmtDuration(this.duration);
+		},
+		fmtPower() {
+			if (this.duration > 0 && this.power > 0) {
+				return `@ ${this.fmtKw(this.power)}`;
+			}
+			return null;
 		},
 		isCo2() {
 			return this.smartCostType === CO2_TYPE;
@@ -144,6 +155,10 @@ export default {
 .value {
 	font-size: 18px;
 	font-weight: bold;
+}
+.extraValue {
+	color: var(--evcc-gray);
+	font-size: 14px;
 }
 .label {
 	color: var(--evcc-gray);
