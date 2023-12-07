@@ -33,12 +33,7 @@ func runMeter(cmd *cobra.Command, args []string) {
 		log.FATAL.Fatal(err)
 	}
 
-	// select single meter
-	if err := selectByName(args, &conf.Meters); err != nil {
-		log.FATAL.Fatal(err)
-	}
-
-	if err := configureMeters(conf.Meters); err != nil {
+	if err := configureMeters(conf.Meters, args...); err != nil {
 		log.FATAL.Fatal(err)
 	}
 

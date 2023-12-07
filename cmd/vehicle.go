@@ -34,11 +34,6 @@ func runVehicle(cmd *cobra.Command, args []string) {
 		fatal(err)
 	}
 
-	// select single vehicle
-	if err := selectByName(args, &conf.Vehicles); err != nil {
-		fatal(err)
-	}
-
 	// use cloud
 	if cmd.Flags().Lookup(flagCloud).Changed {
 		for _, conf := range conf.Vehicles {
@@ -46,7 +41,7 @@ func runVehicle(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	if err := configureVehicles(conf.Vehicles); err != nil {
+	if err := configureVehicles(conf.Vehicles, args...); err != nil {
 		fatal(err)
 	}
 
