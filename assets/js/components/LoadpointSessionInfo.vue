@@ -155,7 +155,4 @@ export default {
 	user-select: none;
 	-webkit-user-select: none;
 }
-.value {
-	font-variant-numeric: tabular-nums;
-}
 </style>
