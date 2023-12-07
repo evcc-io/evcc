@@ -28,7 +28,9 @@
 		<div v-if="plans.length > 0">
 			<ChargingPlanWarnings v-bind="chargingPlanWarningsProps" class="mb-4" />
 			<hr />
-			<h5>PREVIEW</h5>
+			<h5>
+				<div class="inner">{{ $t("main.targetCharge.preview") }}</div>
+			</h5>
 			<ChargingPlanPreview
 				v-if="chargingPlanPreviewProps"
 				v-bind="chargingPlanPreviewProps"
@@ -164,13 +166,17 @@ export default {
 <style scoped>
 h5 {
 	position: relative;
-	display: inline-block;
-	background-color: var(--evcc-box);
+	display: flex;
 	top: -25px;
-	left: calc(50% - 50px);
 	padding: 0 0.5rem;
+	justify-content: center;
+}
+h5 .inner {
+	padding: 0 0.5rem;
+	background-color: var(--evcc-box);
 	font-weight: normal;
 	color: var(--evcc-gray);
-	margin-bottom: -4rem;
+	text-transform: uppercase;
+	text-align: center;
 }
 </style>
