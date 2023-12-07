@@ -76,9 +76,9 @@ func (v *API) WakeUp(vin string) error {
 	if err != nil {
 		return err
 	}
-	resp, err2 := v.Do(req)
-	if err2 == nil {
-		defer resp.Body.Close()
+	resp, err := v.Do(req)
+	if err == nil {
+		resp.Body.Close()
 	}
-	return err2
+	return err
 }
