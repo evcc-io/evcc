@@ -31,11 +31,7 @@ func NewProvider(log *util.Logger, connect *API, emobility *EmobilityAPI, vin, c
 		}, cache),
 
 		wakeup: func() error {
-			_, err := connect.Status(vin)
-			if err != nil && carModel != "" {
-				_, _ = emobility.Status(vin, carModel)
-			}
-			return nil
+			return connect.WakeUp(vin)
 		},
 	}
 
