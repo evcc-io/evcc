@@ -89,6 +89,11 @@ func (v *adapter) SetPlanSoc(ts time.Time, soc int) error {
 		return errors.New("timestamp is in the past")
 	}
 
+	// remove plan
+	if soc == 0 {
+		ts = time.Time{}
+	}
+
 	v.log.DEBUG.Printf("set %s plan soc: %d @ %v", v.name, soc, ts.Round(time.Second).Local())
 
 	settings.SetTime(v.key()+keys.PlanTime, ts)
