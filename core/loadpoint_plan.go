@@ -28,6 +28,15 @@ func (lp *Loadpoint) setPlanActive(active bool) {
 	}
 }
 
+// deletePlan deletes the charging plan, either loadpoint or vehicle
+func (lp *Loadpoint) deletePlan() {
+	lp.setPlanEnergy(time.Time{}, 0)
+
+	if v := lp.GetVehicle(); v != nil {
+		vehicle.Settings(lp.log, v).SetPlanSoc(time.Time{}, 0)
+	}
+}
+
 // remainingPlanEnergy returns missing energy amount in kWh
 func (lp *Loadpoint) remainingPlanEnergy() (float64, bool) {
 	_, limit := lp.GetPlanEnergy()
@@ -67,6 +76,10 @@ func (lp *Loadpoint) GetPlan(targetTime time.Time, maxPower float64) (time.Durat
 	}
 
 	requiredDuration := lp.planRequiredDuration(maxPower)
+	if requiredDuration <= 0 {
+		return 0, nil, nil
+	}
+
 	plan, err := lp.planner.Plan(requiredDuration, targetTime)
 
 	// sort plan by time
@@ -87,8 +100,9 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 	}()
 
 	maxPower := lp.EffectiveMaxPower()
+	planTime := lp.EffectivePlanTime()
 
-	requiredDuration, plan, err := lp.GetPlan(lp.EffectivePlanTime(), maxPower)
+	requiredDuration, plan, err := lp.GetPlan(planTime, maxPower)
 	if err != nil {
 		lp.log.ERROR.Println("planner:", err)
 		return false
@@ -96,6 +110,7 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 
 	// nothing to do
 	if requiredDuration == 0 {
+		lp.deletePlan()
 		return false
 	}
 
@@ -105,7 +120,6 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 	}
 
 	planStart = planner.Start(plan)
-	planTime := lp.EffectivePlanTime()
 	lp.log.DEBUG.Printf("plan: charge %v%s starting at %v until %v (power: %.0fW, avg cost: %.3f)",
 		planner.Duration(plan).Round(time.Second), requiredString, planStart.Round(time.Second).Local(), planTime.Round(time.Second).Local(),
 		maxPower, planner.AverageCost(plan))
