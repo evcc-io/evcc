@@ -24,43 +24,25 @@ func init() {
 	registry.Add("fixed", NewFixedFromConfig)
 }
 
-type Zone struct {
-	Price       float64
-	Days, Hours string
-}
-
 func NewFixedFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	var cc struct {
 		Price float64
-		Zones []Zone
+		Zones []struct {
+			Price       float64
+			Days, Hours string
+		}
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewFixed(cc.Price, cc.Zones)
-}
-
-type FixedOption func(*Fixed)
-
-func FixedWithClock(clock clock.Clock) FixedOption {
-	return func(t *Fixed) {
-		t.clock = clock
-	}
-}
-
-func NewFixed(price float64, zones []Zone, opt ...FixedOption) (*Fixed, error) {
 	t := &Fixed{
 		clock:   clock.New(),
-		dynamic: len(zones) > 1,
+		dynamic: len(cc.Zones) > 1,
 	}
 
-	for _, o := range opt {
-		o(t)
-	}
-
-	for _, z := range zones {
+	for _, z := range cc.Zones {
 		days, err := fixed.ParseDays(z.Days)
 		if err != nil {
 			return nil, err
@@ -92,7 +74,7 @@ func NewFixed(price float64, zones []Zone, opt ...FixedOption) (*Fixed, error) {
 
 	// prepend catch-all zone
 	t.zones = append([]fixed.Zone{
-		{Price: price}, // full week is implicit
+		{Price: cc.Price}, // full week is implicit
 	}, t.zones...)
 
 	return t, nil
