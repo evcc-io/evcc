@@ -50,6 +50,14 @@ func NewEdfTempoFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		return nil, errors.New("missing credentials")
 	}
 
+	if len(cc.Prices) != 3 {
+		return nil, errors.New("missing prices for red/blue/white")
+	}
+
+	for k, v := range cc.Prices {
+		cc.Prices[strings.ToLower(k)] = v
+	}
+
 	basic := transport.BasicAuthHeader(cc.ClientID, cc.ClientSecret)
 	log := util.NewLogger("edf-tempo").Redact(basic)
 
@@ -104,10 +112,12 @@ func (t *EdfTempo) run(done chan error) {
 			} `json:"tempo_like_calendars"`
 		}
 
-		ts := now.BeginningOfDay()
+		start := now.BeginningOfDay()
+		end := start.AddDate(0, 0, 2)
+
 		uri := fmt.Sprintf("https://digital.iservices.rte-france.com/open_api/tempo_like_supply_contract/v1/tempo_like_calendars?start_date=%s&end_date=%s&fallback_status=true",
-			strings.ReplaceAll(ts.Format(time.RFC3339), "+", "%2B"),
-			strings.ReplaceAll(ts.Add(48*time.Hour).Format(time.RFC3339), "+", "%2B"))
+			strings.ReplaceAll(start.Format(time.RFC3339), "+", "%2B"),
+			strings.ReplaceAll(end.Format(time.RFC3339), "+", "%2B"))
 
 		if err := backoff.Retry(func() error {
 			return backoffPermanentError(t.GetJSON(uri, &res))
@@ -120,14 +130,16 @@ func (t *EdfTempo) run(done chan error) {
 
 		once.Do(func() { close(done) })
 
-		data := make(api.Rates, 0, len(res.Data.Values))
+		data := make(api.Rates, 0, 24*len(res.Data.Values))
 		for _, r := range res.Data.Values {
-			ar := api.Rate{
-				Start: r.StartDate.Local(),
-				End:   r.EndDate.Local(),
-				Price: t.totalPrice(t.prices[strings.ToLower(r.Value)]),
+			for ts := r.StartDate.Local(); ts.Before(r.EndDate); ts = ts.Add(time.Hour) {
+				ar := api.Rate{
+					Start: ts,
+					End:   ts.Add(time.Hour),
+					Price: t.totalPrice(t.prices[strings.ToLower(r.Value)]),
+				}
+				data = append(data, ar)
 			}
-			data = append(data, ar)
 		}
 		data.Sort()
 
