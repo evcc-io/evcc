@@ -435,7 +435,7 @@ input::-webkit-datetime-edit {
 	color: var(--evcc-default-text);
 }
 .form-control:disabled {
-	color: var(--bs-gray-dark)
+	color: var(--bs-gray-dark);
 }
 
 input[type="time"]::-webkit-calendar-picker-indicator {
