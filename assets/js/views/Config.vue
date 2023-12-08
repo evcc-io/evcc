@@ -1,184 +1,199 @@
 <template>
-	<div class="container px-4">
-		<TopHeader title="Configuration 🧪" />
-		<div
-			v-if="dirty"
-			class="alert alert-secondary d-flex justify-content-between align-items-center my-4"
-			role="alert"
-		>
-			<div v-if="restarting"><strong>Restarting evcc.</strong> Please wait ...</div>
-			<div v-else>
-				<strong>Configuration changed.</strong> Please restart to see the effect.
-			</div>
-			<button
-				type="button"
-				class="btn btn-outline-dark btn-sm"
-				:disabled="restarting || offline"
-				@click="restart"
-			>
-				<span
-					v-if="restarting || offline"
-					class="spinner-border spinner-border-sm"
-					role="status"
-					aria-hidden="true"
-				></span>
-				<span v-else> Restart </span>
-			</button>
-		</div>
-
-		<div class="alert alert-danger my-4" role="alert">
-			<strong>Highly experimental!</strong> Only play around with this settings if you know
-			what your doing. Otherwise you might have to reset or manually repair you database.
-		</div>
-
-		<h2 class="my-4 mt-5">General</h2>
-		<SiteSettings @site-changed="siteChanged" />
-
-		<h2 class="my-4 mt-5">Grid, PV & Battery Systems</h2>
-		<ul class="p-0 config-list">
-			<DeviceCard
-				:name="gridMeter?.config?.template || 'Grid meter'"
-				:unconfigured="!gridMeter"
-				:editable="!!gridMeter?.id"
-				data-testid="grid"
-				@configure="addMeter('grid')"
-				@edit="editMeter(gridMeter.id, 'grid')"
-			>
-				<template #icon>
-					<shopicon-regular-powersupply></shopicon-regular-powersupply>
-				</template>
-				<template #tags>
-					<DeviceTags :tags="deviceTags('meter', gridMeter?.name)" />
-				</template>
-			</DeviceCard>
-			<DeviceCard
-				v-for="meter in pvMeters"
-				:key="!!meter.name"
-				:name="meter.config?.template || 'Solar system'"
-				:editable="!!meter.id"
-				data-testid="pv"
-				@edit="editMeter(meter.id, 'pv')"
-			>
-				<template #icon>
-					<shopicon-regular-sun></shopicon-regular-sun>
-				</template>
-				<template #tags>
-					<DeviceTags :tags="deviceTags('meter', meter.name)" />
-				</template>
-			</DeviceCard>
-			<DeviceCard
-				v-for="meter in batteryMeters"
-				:key="meter.name"
-				:name="meter.config?.template || 'Battery storage'"
-				:editable="!!meter.id"
-				data-testid="battery"
-				@edit="editMeter(meter.id, 'battery')"
-			>
-				<template #icon>
-					<shopicon-regular-batterythreequarters></shopicon-regular-batterythreequarters>
-				</template>
-				<template #tags>
-					<DeviceTags :tags="deviceTags('meter', meter.name)" />
-				</template>
-			</DeviceCard>
-			<AddDeviceButton :title="$t('config.main.addPvBattery')" @add="addMeter" />
-		</ul>
-
-		<h2 class="my-4">Tariffs</h2>
-
-		<ul class="p-0 config-list">
-			<DeviceCard name="Grid" editable data-testid="tariff-grid" @edit="todo">
-				<template #icon>
-					<shopicon-regular-money></shopicon-regular-money>
-				</template>
-			</DeviceCard>
-			<DeviceCard name="Feed-in" unconfigured data-testid="tariff-feedin" @edit="todo">
-				<template #icon>
-					<shopicon-regular-receivepayment></shopicon-regular-receivepayment>
-				</template>
-			</DeviceCard>
-			<DeviceCard name="CO₂ estimate" unconfigured data-testid="tariff-co2" @edit="todo">
-				<template #icon>
-					<shopicon-regular-eco1></shopicon-regular-eco1>
-				</template>
-			</DeviceCard>
-		</ul>
-
-		<h2 class="my-4">Charge Points</h2>
-
-		<ul class="p-0 config-list">
-			<DeviceCard name="Carport" editable data-testid="chargepoint-1" @edit="todo">
-				<template #icon>
-					<shopicon-regular-cablecharge></shopicon-regular-cablecharge>
-				</template>
-			</DeviceCard>
-			<AddDeviceButton
-				data-testid="add-loadpoint"
-				:title="$t('config.main.addLoadpoint')"
-				@click="todo"
-			/>
-		</ul>
-
-		<h2 class="my-4">Vehicles</h2>
-		<div>
-			<ul class="p-0 config-list">
-				<DeviceCard
-					v-for="vehicle in vehicles"
-					:key="vehicle.id"
-					:name="vehicle.config?.title || vehicle.name"
-					:editable="vehicle.id >= 0"
-					data-testid="vehicle"
-					@edit="editVehicle(vehicle.id)"
+	<div class="root">
+		<div class="container px-4">
+			<TopHeader title="Configuration 🧪" />
+			<div class="wrapper">
+				<div
+					v-if="dirty"
+					class="alert alert-secondary d-flex justify-content-between align-items-center my-4"
+					role="alert"
 				>
-					<template #icon>
-						<VehicleIcon :name="vehicle.config?.icon" />
-					</template>
-					<template #tags>
-						<DeviceTags :tags="deviceTags('vehicle', vehicle.name)" />
-					</template>
-				</DeviceCard>
-				<AddDeviceButton
-					data-testid="add-vehicle"
-					:title="$t('config.main.addVehicle')"
-					@click="addVehicle"
+					<div v-if="restarting"><strong>Restarting evcc.</strong> Please wait ...</div>
+					<div v-else>
+						<strong>Configuration changed.</strong> Please restart to see the effect.
+					</div>
+					<button
+						type="button"
+						class="btn btn-outline-dark btn-sm"
+						:disabled="restarting || offline"
+						@click="restart"
+					>
+						<span
+							v-if="restarting || offline"
+							class="spinner-border spinner-border-sm"
+							role="status"
+							aria-hidden="true"
+						></span>
+						<span v-else> Restart </span>
+					</button>
+				</div>
+
+				<div class="alert alert-danger my-4" role="alert">
+					<strong>Highly experimental!</strong> Only play around with this settings if you
+					know what your doing. Otherwise you might have to reset or manually repair you
+					database.
+				</div>
+
+				<h2 class="my-4 mt-5">General</h2>
+				<SiteSettings @site-changed="siteChanged" />
+
+				<h2 class="my-4 mt-5">Grid, PV & Battery Systems</h2>
+				<ul class="p-0 config-list">
+					<DeviceCard
+						:name="gridMeter?.config?.template || 'Grid meter'"
+						:unconfigured="!gridMeter"
+						:editable="!!gridMeter?.id"
+						data-testid="grid"
+						@configure="addMeter('grid')"
+						@edit="editMeter(gridMeter.id, 'grid')"
+					>
+						<template #icon>
+							<shopicon-regular-powersupply></shopicon-regular-powersupply>
+						</template>
+						<template #tags>
+							<DeviceTags :tags="deviceTags('meter', gridMeter?.name)" />
+						</template>
+					</DeviceCard>
+					<DeviceCard
+						v-for="meter in pvMeters"
+						:key="!!meter.name"
+						:name="meter.config?.template || 'Solar system'"
+						:editable="!!meter.id"
+						data-testid="pv"
+						@edit="editMeter(meter.id, 'pv')"
+					>
+						<template #icon>
+							<shopicon-regular-sun></shopicon-regular-sun>
+						</template>
+						<template #tags>
+							<DeviceTags :tags="deviceTags('meter', meter.name)" />
+						</template>
+					</DeviceCard>
+					<DeviceCard
+						v-for="meter in batteryMeters"
+						:key="meter.name"
+						:name="meter.config?.template || 'Battery storage'"
+						:editable="!!meter.id"
+						data-testid="battery"
+						@edit="editMeter(meter.id, 'battery')"
+					>
+						<template #icon>
+							<shopicon-regular-batterythreequarters></shopicon-regular-batterythreequarters>
+						</template>
+						<template #tags>
+							<DeviceTags :tags="deviceTags('meter', meter.name)" />
+						</template>
+					</DeviceCard>
+					<AddDeviceButton :title="$t('config.main.addPvBattery')" @add="addMeter" />
+				</ul>
+
+				<h2 class="my-4">Tariffs</h2>
+
+				<ul class="p-0 config-list">
+					<DeviceCard name="Grid" editable data-testid="tariff-grid" @edit="todo">
+						<template #icon>
+							<shopicon-regular-money></shopicon-regular-money>
+						</template>
+					</DeviceCard>
+					<DeviceCard
+						name="Feed-in"
+						unconfigured
+						data-testid="tariff-feedin"
+						@edit="todo"
+					>
+						<template #icon>
+							<shopicon-regular-receivepayment></shopicon-regular-receivepayment>
+						</template>
+					</DeviceCard>
+					<DeviceCard
+						name="CO₂ estimate"
+						unconfigured
+						data-testid="tariff-co2"
+						@edit="todo"
+					>
+						<template #icon>
+							<shopicon-regular-eco1></shopicon-regular-eco1>
+						</template>
+					</DeviceCard>
+				</ul>
+
+				<h2 class="my-4">Charge Points</h2>
+
+				<ul class="p-0 config-list">
+					<DeviceCard name="Carport" editable data-testid="chargepoint-1" @edit="todo">
+						<template #icon>
+							<shopicon-regular-cablecharge></shopicon-regular-cablecharge>
+						</template>
+					</DeviceCard>
+					<AddDeviceButton
+						data-testid="add-loadpoint"
+						:title="$t('config.main.addLoadpoint')"
+						@click="todo"
+					/>
+				</ul>
+
+				<h2 class="my-4">Vehicles</h2>
+				<div>
+					<ul class="p-0 config-list">
+						<DeviceCard
+							v-for="vehicle in vehicles"
+							:key="vehicle.id"
+							:name="vehicle.config?.title || vehicle.name"
+							:editable="vehicle.id >= 0"
+							data-testid="vehicle"
+							@edit="editVehicle(vehicle.id)"
+						>
+							<template #icon>
+								<VehicleIcon :name="vehicle.config?.icon" />
+							</template>
+							<template #tags>
+								<DeviceTags :tags="deviceTags('vehicle', vehicle.name)" />
+							</template>
+						</DeviceCard>
+						<AddDeviceButton
+							data-testid="add-vehicle"
+							:title="$t('config.main.addVehicle')"
+							@click="addVehicle"
+						/>
+					</ul>
+				</div>
+				<h2 class="my-4">Integrations</h2>
+
+				<ul class="p-0 config-list">
+					<DeviceCard name="MQTT" editable data-testid="mqtt" @edit="todo">
+						<template #icon>
+							<shopicon-regular-fastdelivery1></shopicon-regular-fastdelivery1>
+						</template>
+					</DeviceCard>
+					<DeviceCard name="Notifications" unconfigured data-testid="eebus" @edit="todo">
+						<template #icon>
+							<shopicon-regular-sendit></shopicon-regular-sendit>
+						</template>
+					</DeviceCard>
+					<DeviceCard name="InfluxDB" unconfigured data-testid="influx" @edit="todo">
+						<template #icon>
+							<shopicon-regular-diagram></shopicon-regular-diagram>
+						</template>
+					</DeviceCard>
+					<DeviceCard name="EEBus" unconfigured data-testid="eebus" @edit="todo">
+						<template #icon>
+							<shopicon-regular-polygon></shopicon-regular-polygon>
+						</template>
+					</DeviceCard>
+				</ul>
+
+				<hr class="my-5" />
+				<VehicleModal :id="selectedVehicleId" @vehicle-changed="vehicleChanged" />
+				<MeterModal
+					:id="selectedMeterId"
+					:name="selectedMeterName"
+					:type="selectedMeterType"
+					@added="addMeterToSite"
+					@updated="meterChanged"
+					@removed="removeMeterFromSite"
 				/>
-			</ul>
+			</div>
 		</div>
-		<h2 class="my-4">Integrations</h2>
-
-		<ul class="p-0 config-list">
-			<DeviceCard name="MQTT" editable data-testid="mqtt" @edit="todo">
-				<template #icon>
-					<shopicon-regular-fastdelivery1></shopicon-regular-fastdelivery1>
-				</template>
-			</DeviceCard>
-			<DeviceCard name="Notifications" unconfigured data-testid="eebus" @edit="todo">
-				<template #icon>
-					<shopicon-regular-sendit></shopicon-regular-sendit>
-				</template>
-			</DeviceCard>
-			<DeviceCard name="InfluxDB" unconfigured data-testid="influx" @edit="todo">
-				<template #icon>
-					<shopicon-regular-diagram></shopicon-regular-diagram>
-				</template>
-			</DeviceCard>
-			<DeviceCard name="EEBus" unconfigured data-testid="eebus" @edit="todo">
-				<template #icon>
-					<shopicon-regular-polygon></shopicon-regular-polygon>
-				</template>
-			</DeviceCard>
-		</ul>
-
-		<hr class="my-5" />
-		<VehicleModal :id="selectedVehicleId" @vehicle-changed="vehicleChanged" />
-		<MeterModal
-			:id="selectedMeterId"
-			:name="selectedMeterName"
-			:type="selectedMeterType"
-			@added="addMeterToSite"
-			@updated="meterChanged"
-			@removed="removeMeterFromSite"
-		/>
 	</div>
 </template>
 
@@ -416,5 +431,9 @@ export default {
 	grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
 	grid-gap: 1rem;
 	margin-bottom: 5rem;
+}
+.wrapper {
+	max-width: 900px;
+	margin: 0 auto;
 }
 </style>

@@ -1,5 +1,5 @@
 <template>
-	<div class="group p-4 pb-2 col-xl-9">
+	<div class="group p-4 pb-2">
 		<form class="container mx-0 px-0">
 			<FormRow id="siteTitle" label="Site title">
 				<input
@@ -97,8 +97,8 @@ export default {
 
 <style scoped>
 .group {
-	border-radius: 2rem;
-	border: 1px solid var(--evcc-gray);
+	border-radius: 1rem;
+	box-shadow: 0 0 2rem 0 var(--evcc-gray-50);
 	color: var(--evcc-default-text);
 	background: var(--evcc-box);
 	padding: 1rem 1rem 0.5rem;
@@ -106,5 +106,8 @@ export default {
 	list-style-type: none;
 	min-height: 10rem;
 	margin-bottom: 5rem;
+}
+.dark .group {
+	box-shadow: 0 0 2rem 0 var(--evcc-gray-deep);
 }
 </style>

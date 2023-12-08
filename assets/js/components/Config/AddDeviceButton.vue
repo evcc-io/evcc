@@ -21,13 +21,14 @@ export default {
 
 <style scoped>
 .root {
-	border-radius: 2rem;
-	border: 1px solid var(--evcc-gray);
-	color: var(--evcc-gray);
 	padding: 0;
 	display: block;
 	list-style-type: none;
 	min-height: 9rem;
+	border-radius: 1rem;
+	border: 1px solid var(--evcc-gray-50);
+	padding: 1rem 1rem 0.5rem;
+	transition: border-color var(--evcc-transition-fast) linear;
 }
 .root:hover {
 	border-color: var(--evcc-default-text);

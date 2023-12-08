@@ -3,13 +3,13 @@
 		<span
 			v-for="(entry, index) in entries"
 			:key="index"
-			class="badge text-bg-secondary me-1 mb-1"
+			class="badge text-bg-secondary me-2 mb-2"
 			:class="{
 				'text-bg-secondary': !entry.error,
 				'text-bg-danger': entry.error,
 			}"
 		>
-			{{ $t(`config.deviceValue.${entry.name}`) }}:
+			<strong>{{ $t(`config.deviceValue.${entry.name}`) }}:</strong>
 			{{ fmtDeviceValue(entry) }}
 		</span>
 	</div>

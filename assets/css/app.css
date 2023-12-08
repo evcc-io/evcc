@@ -41,6 +41,7 @@
 	--evcc-box: var(--bs-white);
 	--evcc-default-text: var(--bs-gray-dark);
 	--evcc-gray: var(--bs-gray-medium);
+	--evcc-gray-50: #93949e80;
 
 	--evcc-accent1: var(--evcc-dark-yellow);
 	--evcc-accent2: var(--evcc-darker-green);
@@ -87,6 +88,11 @@ html.no-transitions * {
 body {
 	background-color: var(--evcc-background);
 	color: var(--evcc-default-text);
+}
+
+/* white background on config page */
+html.config:not(.dark) body {
+	background-color: var(--bs-white);
 }
 
 h1,
@@ -428,6 +434,9 @@ input::-webkit-datetime-edit {
 	background-color: var(--evcc-box);
 	color: var(--evcc-default-text);
 }
+.form-control:disabled {
+	color: var(--bs-gray-dark)
+}
 
 input[type="time"]::-webkit-calendar-picker-indicator {
 	display: none;
@@ -435,4 +444,11 @@ input[type="time"]::-webkit-calendar-picker-indicator {
 
 .table {
 	--bs-table-bg: transparent;
+}
+
+.badge {
+	--bs-badge-font-size: 0.8rem;
+	--bs-badge-padding-x: 0.75em;
+	--bs-badge-padding-y: 0.75em;
+	font-weight: normal;
 }

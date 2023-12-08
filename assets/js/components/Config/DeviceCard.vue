@@ -1,10 +1,10 @@
 <template>
-	<li class="root p-4">
+	<li class="root py-2 px-4">
 		<div class="d-flex align-items-center mb-2">
 			<div class="icon me-2">
 				<slot name="icon" />
 			</div>
-			<strong class="flex-grow-1 text-nowrap text-truncate text-center">{{ name }}</strong>
+			<strong class="flex-grow-1 text-nowrap text-truncate">{{ name }}</strong>
 			<button
 				v-if="unconfigured"
 				type="button"
@@ -86,14 +86,17 @@ export default {
 
 <style scoped>
 .root {
-	border-radius: 2rem;
-	border: 1px solid var(--evcc-gray);
-	color: var(--evcc-default-text);
-	background: var(--evcc-box);
-	padding: 1rem 1rem 0.5rem;
 	display: block;
 	list-style-type: none;
 	min-height: 9rem;
+	color: var(--evcc-default-text);
+	border-radius: 1rem;
+	border: 1px solid var(--evcc-gray-50);
+	padding: 1rem 1rem 0.5rem;
+	transition: border-color var(--evcc-transition-fast) linear;
+}
+.root:hover {
+	border-color: var(--evcc-gray);
 }
 .icon:empty {
 	display: none;
