@@ -192,8 +192,9 @@ func (lp *Loadpoint) setPlanEnergy(finishAt time.Time, energy float64) {
 	lp.publish(keys.PlanEnergy, energy)
 	lp.settings.SetFloat(keys.PlanEnergy, energy)
 
+	// remove plan
 	if energy == 0 {
-		lp.setPlanActive(false)
+		finishAt = time.Time{}
 	}
 
 	lp.planTime = finishAt

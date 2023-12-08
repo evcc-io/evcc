@@ -67,7 +67,4 @@ export default {
 .unit {
 	font-size: var(--bs-body-font-size);
 }
-.value {
-	font-variant-numeric: tabular-nums;
-}
 </style>
