@@ -15,6 +15,7 @@ import (
 	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
+	"github.com/fatih/structs"
 	"github.com/jinzhu/now"
 	"golang.org/x/oauth2"
 )
@@ -39,7 +40,9 @@ func NewEdfTempoFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		embed        `mapstructure:",squash"`
 		ClientID     string
 		ClientSecret string
-		Prices       map[string]float64
+		Prices       struct {
+			Blue, Red, White float64 `structs:",omitempty"`
+		}
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -48,14 +51,6 @@ func NewEdfTempoFromConfig(other map[string]interface{}) (api.Tariff, error) {
 
 	if cc.ClientID == "" && cc.ClientSecret == "" {
 		return nil, errors.New("missing credentials")
-	}
-
-	if len(cc.Prices) != 3 {
-		return nil, errors.New("missing prices for red/blue/white")
-	}
-
-	for k, v := range cc.Prices {
-		cc.Prices[strings.ToLower(k)] = v
 	}
 
 	basic := transport.BasicAuthHeader(cc.ClientID, cc.ClientSecret)
@@ -67,7 +62,15 @@ func NewEdfTempoFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		basic:  basic,
 		Helper: request.NewHelper(log),
 		data:   util.NewMonitor[api.Rates](2 * time.Hour),
-		prices: cc.Prices,
+	}
+
+	prices := structs.Map(cc.Prices)
+	if len(prices) != 3 {
+		return nil, errors.New("missing prices for red/blue/white")
+	}
+
+	for k, v := range prices {
+		t.prices[strings.ToLower(k)] = v.(float64)
 	}
 
 	t.Client.Transport = &oauth2.Transport{
