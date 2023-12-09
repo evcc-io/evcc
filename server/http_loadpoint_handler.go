@@ -86,9 +86,10 @@ func remoteDemandHandler(lp loadpoint.API) http.HandlerFunc {
 // planHandler returns the current effective plan
 func planHandler(lp loadpoint.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		maxPower := lp.EffectiveMaxPower()
 		planTime := lp.EffectivePlanTime()
-		power := lp.EffectiveMaxPower()
-		requiredDuration, plan, err := lp.GetPlan(planTime, power)
+
+		requiredDuration, plan, err := lp.GetPlan(planTime, maxPower)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			return
@@ -101,7 +102,7 @@ func planHandler(lp loadpoint.API) http.HandlerFunc {
 		}{
 			Duration: int64(requiredDuration.Seconds()),
 			Plan:     plan,
-			Power:    power,
+			Power:    maxPower,
 		}
 
 		jsonResult(w, res)
