@@ -43,7 +43,7 @@ func TestGetPlanAfterTargetTime(t *testing.T) {
 	lp.setPlanEnergy(clock.Now(), 2)
 
 	{
-		// empty plan
+		// target time now, no active slot
 		d, r, err := lp.GetPlan(clock.Now(), 1e3)
 		require.NoError(t, err)
 		assert.Equal(t, time.Duration(0), d)
@@ -52,7 +52,7 @@ func TestGetPlanAfterTargetTime(t *testing.T) {
 
 	lp.planActive = true
 	{
-		// ongoing plan
+		// target time now, active slot
 		d, r, err := lp.GetPlan(clock.Now(), 1e3)
 		require.NoError(t, err)
 		assert.Equal(t, time.Duration(0), d)
