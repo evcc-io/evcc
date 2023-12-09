@@ -71,7 +71,7 @@ func (lp *Loadpoint) GetPlan(targetTime time.Time, maxPower float64) (time.Durat
 	}
 
 	// don't start planning into the past
-	if targetTime.Before(lp.clock.Now()) && !lp.planActive {
+	if (targetTime.Before(lp.clock.Now()) || targetTime.Equal(lp.clock.Now())) && !lp.planActive {
 		return 0, nil, nil
 	}
 
