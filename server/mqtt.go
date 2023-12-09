@@ -153,7 +153,7 @@ func (m *MQTT) Listen(site site.API) error {
 	}
 
 	// vehicle setters
-	for _, vehicle := range site.Vehicles().All() {
+	for _, vehicle := range site.Vehicles().Settings() {
 		topic := fmt.Sprintf("%s/vehicles/%s", m.root, vehicle.Name())
 		if err := m.listenVehicleSetters(topic, vehicle); err != nil {
 			return err
@@ -360,7 +360,7 @@ func (m *MQTT) Run(site site.API, in <-chan util.Param) {
 
 	// number of vehicles
 	topic = fmt.Sprintf("%s/vehicles", m.root)
-	m.publish(topic, true, len(site.Vehicles().All()))
+	m.publish(topic, true, len(site.Vehicles().Settings()))
 
 	// TODO remove deprecated topics
 	for _, dep := range deprecatedTopics {

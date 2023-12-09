@@ -269,10 +269,10 @@ func meterCapabilities(name string, meter interface{}) string {
 // DumpConfig site configuration
 func (site *Site) DumpConfig() {
 	// verify vehicle detection
-	if vehicles := site.Vehicles().All(); len(vehicles) > 1 {
+	if vehicles := site.Vehicles().Instances(); len(vehicles) > 1 {
 		for _, v := range vehicles {
 			if _, ok := v.(api.ChargeState); !ok {
-				site.log.WARN.Printf("vehicle '%s' does not support automatic detection", v.Instance().Title())
+				site.log.WARN.Printf("vehicle '%s' does not support automatic detection", v.Title())
 			}
 		}
 	}
@@ -306,7 +306,7 @@ func (site *Site) DumpConfig() {
 		}
 	}
 
-	if vehicles := site.Vehicles().All(); len(vehicles) > 0 {
+	if vehicles := site.Vehicles().Instances(); len(vehicles) > 0 {
 		site.log.INFO.Println("  vehicles:")
 
 		for i, v := range vehicles {
