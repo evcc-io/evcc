@@ -232,7 +232,6 @@ func configureChargers(static []config.Named, names ...string) error {
 			continue
 		}
 
-		cc := cc
 		g.Go(func() error {
 			instance, err := charger.NewFromConfig(cc.Type, cc.Other)
 			if err != nil {
@@ -308,7 +307,6 @@ func configureVehicles(static []config.Named, names ...string) error {
 			continue
 		}
 
-		cc := cc
 		g.Go(func() error {
 			instance, err := vehicleInstance(cc)
 			if err != nil {
