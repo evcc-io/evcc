@@ -249,7 +249,6 @@ func configureChargers(static []config.Named, names ...string) error {
 	}
 
 	for _, conf := range configurable {
-		conf := conf
 		g.Go(func() error {
 			cc := conf.Named()
 
@@ -331,7 +330,6 @@ func configureVehicles(static []config.Named, names ...string) error {
 	devs2 := make([]config.ConfigurableDevice[api.Vehicle], 0, len(configurable))
 
 	for _, conf := range configurable {
-		conf := conf
 		g.Go(func() error {
 			cc := conf.Named()
 
