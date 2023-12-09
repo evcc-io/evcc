@@ -444,7 +444,7 @@ func (c *EEBus) currents() (float64, float64, float64, error) {
 		return 0, 0, 0, nil
 	}
 
-	currents, err := c.emobility.EVCurrentsPerPhase()
+	res, err := c.emobility.EVCurrentsPerPhase()
 	if err != nil {
 		if err == features.ErrDataNotAvailable {
 			err = api.ErrNotAvailable
@@ -453,11 +453,11 @@ func (c *EEBus) currents() (float64, float64, float64, error) {
 	}
 
 	// fill phases
-	for i := len(currents); i < 3; i++ {
-		currents = append(currents, 0)
+	for len(res) < 3 {
+		res = append(res, 0)
 	}
 
-	return currents[0], currents[1], currents[2], nil
+	return res[0], res[1], res[2], nil
 }
 
 var _ api.Identifier = (*EEBus)(nil)
