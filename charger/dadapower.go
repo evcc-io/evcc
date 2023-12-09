@@ -196,7 +196,7 @@ func (wb *Dadapower) Currents() (float64, float64, float64, error) {
 	}
 
 	var res [3]float64
-	for i := 0; i < 3; i++ {
+	for i := range res {
 		res[i] = float64(binary.BigEndian.Uint16(b[2*i:])) / 100
 	}
 

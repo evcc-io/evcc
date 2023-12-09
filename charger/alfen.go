@@ -233,7 +233,7 @@ func (wb *Alfen) voltagesOrCurrents(reg uint16) (float64, float64, float64, erro
 	}
 
 	var res [3]float64
-	for i := 0; i < 3; i++ {
+	for i := range res {
 		f := rs485.RTUIeee754ToFloat64(b[4*i:])
 		if math.IsNaN(f) {
 			f = 0
