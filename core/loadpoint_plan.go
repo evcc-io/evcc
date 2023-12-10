@@ -70,20 +70,12 @@ func (lp *Loadpoint) GetPlan(targetTime time.Time, maxPower float64) (time.Durat
 		return 0, nil, nil
 	}
 
-	// don't start planning into the past
-	if (targetTime.Before(lp.clock.Now()) || targetTime.Equal(lp.clock.Now())) && !lp.planActive {
-		return 0, nil, nil
-	}
-
 	requiredDuration := lp.planRequiredDuration(maxPower)
 	if requiredDuration <= 0 {
 		return 0, nil, nil
 	}
 
 	plan, err := lp.planner.Plan(requiredDuration, targetTime)
-
-	// sort plan by time
-	plan.Sort()
 
 	return requiredDuration, plan, err
 }
@@ -114,14 +106,14 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 		return false
 	}
 
-	var requiredString string
-	if req := requiredDuration.Round(time.Second); req > planner.Duration(plan).Round(time.Second) {
-		requiredString = fmt.Sprintf(" (required: %v)", req)
+	var overrun string
+	if excessDuration := requiredDuration - lp.clock.Until(planTime); excessDuration > 0 {
+		overrun = fmt.Sprintf("overruns by %v, ", excessDuration.Round(time.Second))
 	}
 
 	planStart = planner.Start(plan)
-	lp.log.DEBUG.Printf("plan: charge %v%s starting at %v until %v (power: %.0fW, avg cost: %.3f)",
-		planner.Duration(plan).Round(time.Second), requiredString, planStart.Round(time.Second).Local(), planTime.Round(time.Second).Local(),
+	lp.log.DEBUG.Printf("plan: charge %v starting at %v until %v (%spower: %.0fW, avg cost: %.3f)",
+		planner.Duration(plan).Round(time.Second), planStart.Round(time.Second).Local(), planTime.Round(time.Second).Local(), overrun,
 		maxPower, planner.AverageCost(plan))
 
 	// log plan
