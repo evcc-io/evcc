@@ -47,7 +47,7 @@ func TestGetPlanAfterTargetTime(t *testing.T) {
 
 		d, r, err := lp.GetPlan(ts, 1e3)
 		require.NoError(t, err)
-		assert.Equal(t, time.Duration(time.Hour), d)
+		assert.Equal(t, time.Hour, d)
 		assert.Len(t, r, 0)
 	}
 
