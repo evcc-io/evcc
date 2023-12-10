@@ -38,7 +38,7 @@ func TestGetPlanAfterTargetTime(t *testing.T) {
 
 	lp := NewLoadpoint(util.NewLogger("foo"), nil)
 	lp.clock = clock
-	lp.planner = planner.New(lp.log, trf)
+	lp.planner = planner.New(lp.log, trf, planner.WithClock(clock))
 
 	{
 		// target time +1 hour, no active slot
@@ -48,7 +48,7 @@ func TestGetPlanAfterTargetTime(t *testing.T) {
 		d, r, err := lp.GetPlan(ts, 1e3)
 		require.NoError(t, err)
 		assert.Equal(t, 2*time.Hour, d)
-		assert.Len(t, r, 0)
+		assert.Len(t, r, 2)
 	}
 
 	{
@@ -59,7 +59,7 @@ func TestGetPlanAfterTargetTime(t *testing.T) {
 		d, r, err := lp.GetPlan(ts, 1e3)
 		require.NoError(t, err)
 		assert.Equal(t, 2*time.Hour, d)
-		assert.Len(t, r, 0)
+		assert.Len(t, r, 2)
 	}
 
 	{
@@ -72,6 +72,6 @@ func TestGetPlanAfterTargetTime(t *testing.T) {
 		d, r, err := lp.GetPlan(ts, 1e3)
 		require.NoError(t, err)
 		assert.Equal(t, 2*time.Hour, d)
-		assert.Len(t, r, 0)
+		assert.Len(t, r, 2)
 	}
 }
