@@ -66,8 +66,6 @@ type Site struct {
 	ResidualPower                     float64      `mapstructure:"residualPower"` // PV meter only: household usage. Grid meter: household safety margin
 	Meters                            MetersConfig // Meter references
 	MaxGridSupplyWhileBatteryCharging float64      `mapstructure:"maxGridSupplyWhileBatteryCharging"` // ignore battery charging if AC consumption is above this value
-	SmartCostLimit                    float64      `mapstructure:"smartCostLimit"`                    // always charge if cost is below this value
-	BatteryDischargeControl           bool         `mapstructure:"batteryDischargeControl"`           // prevent battery discharge for fast and planned charging
 
 	// meters
 	gridMeter     api.Meter   // Grid usage meter
@@ -75,10 +73,14 @@ type Site struct {
 	batteryMeters []api.Meter // Battery charging meters
 	auxMeters     []api.Meter // Auxiliary meters
 
+	// cost settings
+	smartCostLimit float64 // always charge if cost is below this value
+
 	// battery settings
-	prioritySoc    float64 // prefer battery up to this Soc
-	bufferSoc      float64 // continue charging on battery above this Soc
-	bufferStartSoc float64 // start charging on battery above this Soc
+	prioritySoc             float64 // prefer battery up to this Soc
+	bufferSoc               float64 // continue charging on battery above this Soc
+	bufferStartSoc          float64 // start charging on battery above this Soc
+	batteryDischargeControl bool    // prevent battery discharge for fast and planned charging
 
 	tariffs     tariff.Tariffs           // Tariff
 	loadpoints  []*Loadpoint             // Loadpoints
@@ -247,7 +249,7 @@ func (site *Site) restoreSettings() error {
 		}
 	}
 	if v, err := settings.Bool(keys.BatteryDischargeControl); err == nil {
-		site.BatteryDischargeControl = v
+		site.batteryDischargeControl = v
 	}
 	return nil
 }
@@ -796,7 +798,7 @@ func (site *Site) update(lp Updater) {
 		site.log.ERROR.Println(err)
 	}
 
-	if batMode := site.GetBatteryMode(); site.BatteryDischargeControl {
+	if batMode := site.GetBatteryMode(); site.batteryDischargeControl {
 		if mode := site.determineBatteryMode(site.Loadpoints()); mode != batMode {
 			if err := site.updateBatteryMode(mode); err != nil {
 				site.log.ERROR.Println("battery mode:", err)
@@ -818,7 +820,7 @@ func (site *Site) prepare() {
 	site.publish(keys.BufferStartSoc, site.bufferStartSoc)
 	site.publish(keys.PrioritySoc, site.prioritySoc)
 	site.publish(keys.ResidualPower, site.ResidualPower)
-	site.publish(keys.SmartCostLimit, site.SmartCostLimit)
+	site.publish(keys.SmartCostLimit, site.smartCostLimit)
 	site.publish(keys.SmartCostType, nil)
 	site.publish(keys.SmartCostActive, false)
 	if tariff := site.GetTariff(PlannerTariff); tariff != nil {
@@ -826,7 +828,7 @@ func (site *Site) prepare() {
 	}
 	site.publish(keys.Currency, site.tariffs.Currency.String())
 
-	site.publish(keys.BatteryDischargeControl, site.BatteryDischargeControl)
+	site.publish(keys.BatteryDischargeControl, site.batteryDischargeControl)
 	site.publish(keys.BatteryMode, site.batteryMode.String())
 
 	if err := site.restoreSettings(); err != nil {

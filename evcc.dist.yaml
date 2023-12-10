@@ -111,8 +111,6 @@ site:
       - aux # list of auxiliary meters for adjusting grid operating point
   residualPower: 0 # additional household usage margin
   maxGridSupplyWhileBatteryCharging: 0 # ignore battery charging if AC consumption is above this value
-  smartCostLimit: 0 # set cost limit for automatic charging in PV mode
-  batteryDischargeControl: false # disable home battery when charging vehicle and full power
 
 # loadpoint describes the charger, charge meter and connected vehicle
 loadpoints:
