@@ -100,8 +100,8 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 		return false
 	}
 
-	// nothing to do
-	if requiredDuration == 0 {
+	// nothing to do now-invalid plan from the past
+	if requiredDuration == 0 || (lp.clock.Until(planTime) < 0 && !lp.planActive) {
 		lp.deletePlan()
 		return false
 	}
