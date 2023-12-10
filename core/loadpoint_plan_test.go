@@ -40,20 +40,36 @@ func TestGetPlanAfterTargetTime(t *testing.T) {
 	lp.clock = clock
 	lp.planner = planner.New(lp.log, trf)
 
-	lp.setPlanEnergy(clock.Now(), 2)
+	{
+		// target time +1 hour, no active slot
+		ts := clock.Now().Add(time.Hour)
+		lp.setPlanEnergy(ts, 2)
+
+		d, r, err := lp.GetPlan(ts, 1e3)
+		require.NoError(t, err)
+		assert.Equal(t, time.Duration(time.Hour), d)
+		assert.Len(t, r, 0)
+	}
 
 	{
 		// target time now, no active slot
-		d, r, err := lp.GetPlan(clock.Now(), 1e3)
+		ts := clock.Now()
+		lp.setPlanEnergy(ts, 2)
+
+		d, r, err := lp.GetPlan(ts, 1e3)
 		require.NoError(t, err)
 		assert.Equal(t, time.Duration(0), d)
 		assert.Len(t, r, 0)
 	}
 
-	lp.planActive = true
 	{
 		// target time now, active slot
-		d, r, err := lp.GetPlan(clock.Now(), 1e3)
+		ts := clock.Now()
+		lp.setPlanEnergy(ts, 2)
+
+		lp.planActive = true
+
+		d, r, err := lp.GetPlan(ts, 1e3)
 		require.NoError(t, err)
 		assert.Equal(t, time.Duration(0), d)
 		assert.Len(t, r, 0)
