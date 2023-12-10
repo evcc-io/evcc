@@ -180,8 +180,16 @@
               "minItems": 1,
               "uniqueItems": true
             },
-            "smart": {
-              "type": "string"
+            "aux": {
+              "description": "Auxiliary meters (0 or more)",
+              "type": [
+                "string",
+                "array"
+              ],
+              "items": {
+                "type": "string"
+              },
+              "uniqueItems": true
             }
           }
         },
@@ -207,9 +215,6 @@
           },
           "mode": {
             "$ref": "#/definitions/mode"
-          },
-          "resetOnDisconnect": {
-            "type": "boolean"
           },
           "charger": {
             "type": "string"
