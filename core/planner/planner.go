@@ -105,7 +105,12 @@ func (t *Planner) continuousPlan(rates api.Rates, start, end time.Time) api.Rate
 		res = append(res, r)
 	}
 
-	if len(res) > 0 {
+	if len(res) == 0 {
+		res = append(res, api.Rate{
+			Start: start,
+			End:   end,
+		})
+	} else {
 		// prepend missing slot
 		if res[0].Start.After(start) {
 			res = slices.Insert(res, 0, api.Rate{
@@ -130,10 +135,16 @@ func (t *Planner) Plan(requiredDuration time.Duration, targetTime time.Time) (ap
 		return nil, nil
 	}
 
+	latestStart := targetTime.Add(-requiredDuration)
+	if latestStart.Before(t.clock.Now()) {
+		latestStart = t.clock.Now()
+		targetTime = latestStart.Add(requiredDuration)
+	}
+
 	// simplePlan only considers time, but not cost
 	simplePlan := api.Rates{
 		api.Rate{
-			Start: targetTime.Add(-requiredDuration),
+			Start: latestStart,
 			End:   targetTime,
 		},
 	}
@@ -152,8 +163,7 @@ func (t *Planner) Plan(requiredDuration time.Duration, targetTime time.Time) (ap
 
 	// consume remaining time
 	if t.clock.Until(targetTime) <= requiredDuration {
-		now := t.clock.Now()
-		return t.continuousPlan(rates, now, now.Add(requiredDuration)), nil
+		return t.continuousPlan(rates, latestStart, targetTime), nil
 	}
 
 	// rates are by default sorted by date, oldest to newest

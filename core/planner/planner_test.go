@@ -235,3 +235,60 @@ func TestChargeAfterTargetTime(t *testing.T) {
 	require.NoError(t, err)
 	assert.True(t, SlotAt(clock.Now(), plan).IsEmpty(), "should not start past target time")
 }
+
+func TestContinuousPlanNoTariff(t *testing.T) {
+	clock := clock.NewMock()
+
+	p := &Planner{
+		log:   util.NewLogger("foo"),
+		clock: clock,
+	}
+
+	plan, err := p.Plan(time.Hour, clock.Now())
+	require.NoError(t, err)
+
+	// single-slot plan
+	assert.Len(t, plan, 1)
+	assert.Equal(t, clock.Now(), SlotAt(clock.Now(), plan).Start)
+	assert.Equal(t, clock.Now().Add(time.Hour), SlotAt(clock.Now(), plan).End)
+}
+
+func TestContinuousPlan(t *testing.T) {
+	clock := clock.NewMock()
+	ctrl := gomock.NewController(t)
+
+	trf := api.NewMockTariff(ctrl)
+	trf.EXPECT().Rates().AnyTimes().Return(rates([]float64{0}, clock.Now().Add(time.Hour), time.Hour), nil)
+
+	p := &Planner{
+		log:    util.NewLogger("foo"),
+		clock:  clock,
+		tariff: trf,
+	}
+
+	plan, err := p.Plan(150*time.Minute, clock.Now())
+	require.NoError(t, err)
+
+	// 3-slot plan
+	assert.Len(t, plan, 3)
+}
+
+func TestContinuousPlanOutsideRates(t *testing.T) {
+	clock := clock.NewMock()
+	ctrl := gomock.NewController(t)
+
+	trf := api.NewMockTariff(ctrl)
+	trf.EXPECT().Rates().AnyTimes().Return(rates([]float64{0}, clock.Now().Add(time.Hour), time.Hour), nil)
+
+	p := &Planner{
+		log:    util.NewLogger("foo"),
+		clock:  clock,
+		tariff: trf,
+	}
+
+	plan, err := p.Plan(30*time.Minute, clock.Now())
+	require.NoError(t, err)
+
+	// 3-slot plan
+	assert.Len(t, plan, 1)
+}
