@@ -263,7 +263,7 @@ func NewConnection(uri, device, comset string, baudrate int, proto Protocol, sla
 
 	if device != "" {
 		switch strings.ToUpper(comset) {
-		case "8N1", "8E1":
+		case "8N1", "8E1", "8N2":
 		case "80":
 			comset = "8E1"
 		default:
