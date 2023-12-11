@@ -179,6 +179,9 @@ none = "ninguno"
 title = "Plan"
 titleMinSoc = "Carga mínima"
 titleTargetCharge = "Partida"
+day = "Día"
+goal = "Objetivo de la carga"
+time = "Tiempo"
 
 [main.energyflow]
 battery = "Batería"
@@ -267,6 +270,11 @@ tomorrow = "mañana"
 update = "Actualizar"
 vehicleCapacityDocs = "Aprende a configurarlo"
 vehicleCapacityRequired = "La capacidad de la batería del vehículo es necesaria para estimar el tiempo de carga"
+targetIsAboveLimit = "El límite de carga configurado de {limit} se ignorará durante este periodo"
+setPlan = "Establecer un plan de carga"
+planDescription = "Introduzca una hora de salida y evcc cargará el vehículo de la forma más económica o ecológica posible"
+preview = "Vista previa"
+targetIsAboveVehicleLimit = "Aumentar el límite de vehículos ({limit}) para alcanzar el objetivo de carga"
 
 [main.targetChargePlan]
 chargeDuration = "Tiempo de carga"
@@ -430,3 +438,8 @@ title = "Error al iniciar"
 cancel = "Cancelar"
 template = "Fabricante"
 test = "Prueba"
+
+
+[main.loadpointSettings.limitSoc]
+label = "Límite predeterminado"
+description = "Límite de carga que se utiliza cuando este vehículo está conectado"
