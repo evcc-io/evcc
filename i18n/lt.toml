@@ -179,6 +179,9 @@ none = "nėra"
 title = "Planas"
 titleMinSoc = "Minimali įkrova"
 titleTargetCharge = "Išvykimas"
+day = "Diena"
+goal = "Įkrovimo tikslas"
+time = "Laikas"
 
 [main.energyflow]
 battery = "Kaupiklis"
@@ -267,6 +270,11 @@ tomorrow = "rytoj"
 update = "Atnaujinti"
 vehicleCapacityDocs = "Išmokite, kaip tai sukonfigūruoti."
 vehicleCapacityRequired = "Norint numatyti įkrovimo trukmę reikalinga automobilio baterijos talpa"
+targetIsAboveLimit = "Sukonfigūruotas įkrovimo limitas {limit} šiuo periodu bus ignoruojamas."
+setPlan = "Nustatyti įkrovimo planą"
+planDescription = "Įveskite išvykimo laiką ir evcc įkraus automobilį kiek įmanoma ekonomiškiau arba ekologiškiau."
+preview = "Peržvelgti"
+targetIsAboveVehicleLimit = "Padidinkite automobilio limitą ({limit}), kad pasiektumėte įkrovimo tikslą."
 
 [main.targetChargePlan]
 chargeDuration = "Įkrovimo trukmė"
@@ -430,3 +438,8 @@ title = "Klaida startuojant"
 cancel = "Atšaukti"
 template = "Gamintojas"
 test = "Testuoti"
+
+
+[main.loadpointSettings.limitSoc]
+label = "Standartinis limitas"
+description = "Įkrovimo limitas, naudojamas, prijungus šį automobilį."
