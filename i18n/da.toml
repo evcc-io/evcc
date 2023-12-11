@@ -11,6 +11,9 @@ legendTopName = "batteri understøttet opladning"
 legendTopSubline = "uden afbrydelser"
 modalTitle = "batteri indstillinger"
 note = "OBS: Disse indstillinger gælder kun for solar modus. Indstillingerne ændres tilsvarende."
+discharge = "Forhindrer afladning ved planlagt opladning og i hurtig mode"
+control = "Batteri indstillinger"
+notControllable = "Indstilling af batteriet er ikke mulig for dette batteri"
 
 [batterySettings.bufferStart]
 full = "næsten fyldt"
@@ -171,6 +174,9 @@ none = "ingen"
 title = "Plan"
 titleMinSoc = "Min. ladning"
 titleTargetCharge = "Afgang"
+day = "Dag"
+goal = "Opladnings mål"
+time = "Tid"
 
 [main.energyflow]
 battery = "Batteri"
@@ -184,6 +190,7 @@ noEnergy = "Ingen målerdata"
 pvExport = "Eksport til Nettet"
 pvProduction = "Produktion"
 selfConsumption = "Self-konsumption"
+batteryHold = "Batteri (låst)"
 
 [main.loadpoint]
 avgPrice = "⌀ pris"
@@ -254,6 +261,11 @@ tomorrow = "i morgen"
 update = "Opdatering"
 vehicleCapacityDocs = "Lær at indstille det."
 vehicleCapacityRequired = "Køretøjets batterikapacitet skal kendes for at estimere opladningstiden."
+preview = "forhåndsvising"
+targetIsAboveVehicleLimit = "Forøg køretøjets begrænsning {limit} for at kunne nå opladningsmålet"
+targetIsAboveLimit = Den indstillede opladningsgrænse på {limit} ignoreres i denne periode"
+setPlan = "Angiv en ladeplan"
+planDescription = "Angiv et afgangstidpunkt og evcc vil oplade køretøjet så billigt og miljøvenligt som muligt"
 
 [main.targetChargePlan]
 chargeDuration = "Opladningstid"
@@ -409,3 +421,8 @@ title = "Fejl ved opstart"
 cancel = "Afbryd"
 template = "Producent"
 test = "Test"
+
+
+[main.loadpointSettings.limitSoc]
+label = "standard opladningsgrænse"
+description = "Opladningsgrænse som benyttes når dette køretøj er forbundet"
