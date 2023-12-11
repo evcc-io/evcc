@@ -19,9 +19,8 @@ import (
 
 var deprecatedTopics = []string{
 	"activePhases", "range", "socCharge",
-	"vehicleSoC", "batterySoC", "bufferSoC", "minSoC", "prioritySoC", "targetSoC", "vehicleTargetSoC",
+	"vehicleSoC", "batterySoC", "bufferSoC", "minSoC", "prioritySoC", "targetSoC", "vehicleTargetSoC", "vehicles",
 	"savingsAmount", "savingsEffectivePrice", "savingsGridCharged", "savingsSelfConsumptionCharged", "savingsSelfConsumptionPercent", "savingsTotalCharged",
-	"stats/30d", "stats/365d", "stats/total",
 }
 
 // MQTT is the MQTT server. It uses the MQTT client for publishing.
@@ -153,7 +152,7 @@ func (m *MQTT) Listen(site site.API) error {
 	}
 
 	// vehicle setters
-	for _, vehicle := range site.Vehicles().All() {
+	for _, vehicle := range site.Vehicles().Settings() {
 		topic := fmt.Sprintf("%s/vehicles/%s", m.root, vehicle.Name())
 		if err := m.listenVehicleSetters(topic, vehicle); err != nil {
 			return err
@@ -360,7 +359,7 @@ func (m *MQTT) Run(site site.API, in <-chan util.Param) {
 
 	// number of vehicles
 	topic = fmt.Sprintf("%s/vehicles", m.root)
-	m.publish(topic, true, len(site.Vehicles().All()))
+	m.publish(topic, true, len(site.Vehicles().Settings()))
 
 	// TODO remove deprecated topics
 	for _, dep := range deprecatedTopics {
@@ -385,10 +384,14 @@ func (m *MQTT) Run(site site.API, in <-chan util.Param) {
 
 	// publish
 	for p := range in {
-		topic := fmt.Sprintf("%s/site", m.root)
-		if p.Loadpoint != nil {
+		switch {
+		case p.Loadpoint != nil:
 			id := *p.Loadpoint + 1
-			topic = fmt.Sprintf("%s/loadpoints/%d", m.root, id)
+			topic = fmt.Sprintf("%s/loadpoints/%d/%s", m.root, id, p.Key)
+		case p.Key == "vehicles":
+			topic = fmt.Sprintf("%s/vehicles", m.root)
+		default:
+			topic = fmt.Sprintf("%s/site/%s", m.root, p.Key)
 		}
 
 		// alive indicator
@@ -398,7 +401,6 @@ func (m *MQTT) Run(site site.API, in <-chan util.Param) {
 		}
 
 		// value
-		topic += "/" + p.Key
 		m.publish(topic, true, p.Val)
 	}
 }

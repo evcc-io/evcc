@@ -161,7 +161,7 @@ func loadConfigFile(conf *globalConfig) error {
 	log.INFO.Println("using config file:", cfgFile)
 
 	if err == nil {
-		if err = viper.UnmarshalExact(&conf); err != nil {
+		if err = viper.UnmarshalExact(conf); err != nil {
 			err = fmt.Errorf("failed parsing config file: %w", err)
 		}
 	}

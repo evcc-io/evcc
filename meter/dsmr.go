@@ -269,7 +269,7 @@ func (m *Dsmr) totalEnergy() (float64, error) {
 func (m *Dsmr) currents() (float64, float64, float64, error) {
 	var res [3]float64
 
-	for i := 0; i < 3; i++ {
+	for i := range res {
 		var err error
 		if res[i], err = m.get(currentObis[i]); err != nil {
 			return 0, 0, 0, err

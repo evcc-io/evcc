@@ -244,7 +244,7 @@ func (wb *DaheimLadenMB) getPhaseValues(reg uint16) (float64, float64, float64, 
 	}
 
 	var res [3]float64
-	for i := 0; i < 3; i++ {
+	for i := range res {
 		res[i] = float64(binary.BigEndian.Uint32(b[4*i:])) / 10
 	}
 

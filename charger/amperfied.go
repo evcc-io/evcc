@@ -255,7 +255,7 @@ func (wb *Amperfied) getPhaseValues(reg uint16, divider float64) (float64, float
 	}
 
 	var res [3]float64
-	for i := 0; i < 3; i++ {
+	for i := range res {
 		res[i] = float64(binary.BigEndian.Uint16(b[2*i:])) / divider
 	}
 

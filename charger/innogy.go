@@ -173,7 +173,7 @@ func (wb *Innogy) Currents() (float64, float64, float64, error) {
 	}
 
 	var res [3]float64
-	for i := 0; i < 3; i++ {
+	for i := range res {
 		res[i] = float64(math.Float32frombits(binary.BigEndian.Uint32(b[4*i:])))
 	}
 
