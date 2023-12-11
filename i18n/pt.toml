@@ -11,6 +11,9 @@ legendTopName = "carregamento suportado por bateria"
 legendTopSubline = "sem interrupções"
 modalTitle = "Configuraçao da bateria"
 note = "Nota: Estas configurações só afetam o modo solar. O comportamento de carregamento é ajustado de acordo."
+discharge = "Prevenir a descarga no modo rápido e o carregamento planejado."
+control = "Controle de bateria"
+notControllable = "O controle de bateria não está disponível para esta bateria."
 
 [batterySettings.bufferStart]
 full = "quando quase cheio"
@@ -176,6 +179,9 @@ none = "sem"
 title = "Plano"
 titleMinSoc = "Carga mínima"
 titleTargetCharge = "Partida"
+day = "Dia"
+goal = "Real de compartilhamento"
+time = "Tempo"
 
 [main.energyflow]
 battery = "Bateria"
@@ -189,6 +195,7 @@ noEnergy = "Sem leituras"
 pvExport = "Alimentação"
 pvProduction = "Produção"
 selfConsumption = "Consumo próprio"
+batteryHold = "Bateria (suspensa)"
 
 [main.loadpoint]
 avgPrice = "Preço ⌀"
@@ -263,6 +270,11 @@ tomorrow = "amanhã"
 update = "Atualizar"
 vehicleCapacityDocs = "Aprender a configurá-la."
 vehicleCapacityRequired = "A capacidade da bateria do veículo é necessária para estimar o tempo de carregamento."
+preview = "pré-estréia"
+targetIsAboveVehicleLimit = "Aumente o limite do veículo ({limit}) para alcançar o objetivo de carregamento."
+targetIsAboveLimit = "O limite de carregamento configurado de {limit} será ignorado durante este período."
+setPlan = "Defina um plano de carregamento"
+planDescription = "Entrar um tempo de partida, e evcc irá carregar o veículo o mais rentável ou ambientalmente amigável possível."
 
 [main.targetChargePlan]
 chargeDuration = "Tempo de carga"
@@ -427,3 +439,8 @@ title = "Erro ao iniciar"
 cancel = "Cancelar"
 template = "Fabricante"
 test = "Teste"
+
+
+[main.loadpointSettings.limitSoc]
+label = "limite padrão"
+description = "limite de compartilhamento que é usado quando este veículo está conectado."
