@@ -32,9 +32,9 @@ func init() {
 // NewModbusFromConfig creates Modbus plugin
 func NewModbusFromConfig(other map[string]interface{}) (Provider, error) {
 	cc := struct {
-		Model           string
 		modbus.Settings `mapstructure:",squash"`
 		Register        modbus.Register
+		Model           string
 		Value           string
 		Scale           float64
 		Delay           time.Duration
@@ -80,45 +80,41 @@ func NewModbusFromConfig(other map[string]interface{}) (Provider, error) {
 	var device meters.Device
 	var op modbus.Operation
 
-	if (cc.Value == "") == (cc.Register.Decode == "") {
+	if cc.Value == "" && cc.Register.Address == 0 {
 		return nil, errors.New("either value or register required")
 	}
 
 	if cc.Model == "" && cc.Value != "" {
-		return nil, errors.New("need device model when value configured")
+		return nil, errors.New("need device model when value is configured")
 	}
 
-	// no registered configured - need device
-	if cc.Register.Decode == "" {
+	// no register configured - need device
+	if cc.Register.Address == 0 {
 		device, err = modbus.NewDevice(cc.Model, cc.SubDevice)
-
-		// prepare device
-		if err == nil {
-			err = device.Initialize(conn)
-
-			// silence KOSTAL implementation errors
-			if errors.Is(err, meters.ErrPartiallyOpened) {
-				err = nil
-			}
-		}
-
 		if err != nil {
 			return nil, err
 		}
-	}
 
-	// model + value configured
-	if cc.Value != "" {
+		// prepare device; ignore KOSTAL implementation errors
+		if err := device.Initialize(conn); err != nil && !errors.Is(err, meters.ErrPartiallyOpened) {
+			return nil, err
+		}
+
+		// parse value
 		if err := modbus.ParseOperation(device, cc.Value, &op); err != nil {
 			return nil, fmt.Errorf("invalid value %s", cc.Value)
 		}
 	}
 
-	// register configured
-	if cc.Register.Decode != "" {
-		if op.MBMD, err = modbus.RegisterOperation(cc.Register); err != nil {
-			return nil, err
-		}
+	// // register configured
+	// if cc.Register.Address != 0 {
+	// 	if err := modbus.RegisterOperation(cc.Register); err != nil {
+	// 		return nil, err
+	// 	}
+	// }
+
+	if op.Type() == modbus.OperationTypeUnknown {
+		return nil, fmt.Errorf("invalid register: %v/%v/%v", cc.Device, cc.Value, cc.Register)
 	}
 
 	mb := &Modbus{
@@ -131,24 +127,24 @@ func NewModbusFromConfig(other map[string]interface{}) (Provider, error) {
 	return mb, nil
 }
 
-func (m *Modbus) bytesGetter() ([]byte, error) {
-	if op := m.op.MBMD; op.FuncCode != 0 {
-		switch op.FuncCode {
-		case gridx.FuncCodeReadHoldingRegisters:
-			return m.conn.ReadHoldingRegisters(op.OpCode, op.ReadLen)
-
-		case gridx.FuncCodeReadInputRegisters:
-			return m.conn.ReadInputRegisters(op.OpCode, op.ReadLen)
-
-		case gridx.FuncCodeReadCoils:
-			return m.conn.ReadCoils(op.OpCode, op.ReadLen)
-
-		default:
-			return nil, fmt.Errorf("invalid read function code: %d", op.FuncCode)
-		}
+func (m *Modbus) readBytes() ([]byte, error) {
+	if m.op.Type() != modbus.OperationTypeRegister {
+		return nil, errors.New("expected rtu reading")
 	}
 
-	return nil, errors.New("expected rtu reading")
+	switch reg := m.op.Register; reg.Type {
+	case modbus.RegisterTypeHoldings:
+		return m.conn.ReadHoldingRegisters(reg.Address, reg.Encoding.Len())
+
+	case modbus.RegisterTypeInput:
+		return m.conn.ReadInputRegisters(reg.Address, reg.Encoding.Len())
+
+	// case modbus.RegisterTypeCoils:
+	// 	return m.conn.ReadCoils(reg.Address, reg.Encoding.Len())
+
+	default:
+		return nil, fmt.Errorf("invalid read type: %s", reg.Type)
+	}
 }
 
 func (m *Modbus) floatGetter() (f float64, err error) {
@@ -163,7 +159,7 @@ func (m *Modbus) floatGetter() (f float64, err error) {
 	// if funccode is configured, execute the read directly
 	if op := m.op.MBMD; op.FuncCode != 0 {
 		var bytes []byte
-		if bytes, err = m.bytesGetter(); err != nil {
+		if bytes, err = m.readBytes(); err != nil {
 			return 0, fmt.Errorf("read failed: %w", err)
 		}
 
@@ -224,10 +220,10 @@ func (m *Modbus) IntGetter() (func() (int64, error), error) {
 
 var _ StringProvider = (*Modbus)(nil)
 
-// StringGetter executes configured modbus read operation and implements IntProvider
+// StringGetter implements StringProvider
 func (m *Modbus) StringGetter() (func() (string, error), error) {
 	return func() (string, error) {
-		b, err := m.bytesGetter()
+		b, err := m.readBytes()
 		if err != nil {
 			return "", err
 		}
@@ -256,10 +252,10 @@ func UintFromBytes(bytes []byte) (u uint64, err error) {
 
 var _ BoolProvider = (*Modbus)(nil)
 
-// BoolGetter executes configured modbus read operation and implements IntProvider
+// BoolGetter implements BoolProvider
 func (m *Modbus) BoolGetter() (func() (bool, error), error) {
 	return func() (bool, error) {
-		bytes, err := m.bytesGetter()
+		bytes, err := m.readBytes()
 		if err != nil {
 			return false, err
 		}

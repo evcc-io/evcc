@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/util"
-	"github.com/grid-x/modbus"
 	"github.com/volkszaehler/mbmd/encoding"
 	"github.com/volkszaehler/mbmd/meters"
 	"github.com/volkszaehler/mbmd/meters/rs485"
@@ -346,13 +345,14 @@ func RS485FindDeviceOp(device *rs485.RS485, measurement meters.Measurement) (op 
 
 // Register contains the ModBus register configuration
 type Register struct {
-	Address uint16 // Length  uint16
-	Type    string
-	Decode  string
-	BitMask string
+	Address  uint16       // Length  uint16
+	Type     RegisterType // only register types, not read/write
+	Encoding Encoding     // TODO deprecated
+	Decode_  string       `mapstructure:"decode"` // TODO deprecated
+	BitMask  string       // only valid with bools
 }
 
-// asFloat64 creates a function that returns numerics vales as float64
+// asFloat64 creates a function that returns numeric values as float64
 func asFloat64[T constraints.Signed | constraints.Unsigned | constraints.Float](f func([]byte) T) func([]byte) float64 {
 	return func(v []byte) float64 {
 		res := float64(f(v))
@@ -365,30 +365,6 @@ func asFloat64[T constraints.Signed | constraints.Unsigned | constraints.Float](
 
 // RegisterOperation creates a read operation from a register definition
 func RegisterOperation(r Register) (rs485.Operation, error) {
-	op := rs485.Operation{
-		OpCode:  r.Address,
-		ReadLen: 2,
-	}
-
-	switch strings.ToLower(r.Type) {
-	case "holding":
-		op.FuncCode = modbus.FuncCodeReadHoldingRegisters
-	case "input":
-		op.FuncCode = modbus.FuncCodeReadInputRegisters
-	case "coil":
-		op.FuncCode = modbus.FuncCodeReadCoils
-		r.Decode = "bool8"
-	case "writesingle", "writeholding":
-		op.FuncCode = modbus.FuncCodeWriteSingleRegister
-	case "writemultiple", "writeholdings":
-		op.FuncCode = modbus.FuncCodeWriteMultipleRegisters
-	case "writecoil":
-		op.FuncCode = modbus.FuncCodeWriteSingleCoil
-		r.Decode = "bool8"
-	default:
-		return rs485.Operation{}, fmt.Errorf("invalid register type: %s", r.Type)
-	}
-
 	switch strings.ToLower(r.Decode) {
 	// 8 bit (coil)
 	case "bool8":
@@ -483,23 +459,46 @@ func ParsePoint(selector string) (model, block int, point string, err error) {
 	return model, block, point, nil
 }
 
+type OperationType int
+
+const (
+	OperationTypeUnknown OperationType = iota
+	OperationTypeRegister
+	OperationTypeMeasurement
+	OperationTypeSunSpec
+)
+
 // Operation is a register-based or sunspec modbus operation
 type Operation struct {
-	MBMD    rs485.Operation
-	SunSpec SunSpecOperation
+	Measurement meters.Measurement
+	SunSpec     SunSpecOperation
+	Register    Register
+}
+
+func (op *Operation) Type() OperationType {
+	switch {
+	case op.Measurement != 0:
+		return OperationTypeMeasurement
+	case op.SunSpec.Model != 0:
+		return OperationTypeSunSpec
+	case op.Register.Address != 0:
+		return OperationTypeRegister
+	default:
+		return OperationTypeUnknown
+	}
 }
 
 // ParseOperation parses an MBMD measurement or SunsSpec point definition into a modbus operation
 func ParseOperation(dev meters.Device, measurement string, op *Operation) (err error) {
 	// if measurement cannot be parsed it could be SunSpec model/block/point
-	if op.MBMD.IEC61850, err = meters.MeasurementString(measurement); err != nil {
+	if op.Measurement, err = meters.MeasurementString(measurement); err != nil {
 		op.SunSpec.Model, op.SunSpec.Block, op.SunSpec.Point, err = ParsePoint(measurement)
 		return err
 	}
 
 	// for RS485 check if producer supports the measurement
 	if dev, ok := dev.(*rs485.RS485); ok {
-		op.MBMD, err = RS485FindDeviceOp(dev, op.MBMD.IEC61850)
+		_, err = RS485FindDeviceOp(dev, op.Measurement)
 	}
 
 	return err
