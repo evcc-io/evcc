@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/util"
-	"github.com/volkszaehler/mbmd/encoding"
 	"github.com/volkszaehler/mbmd/meters"
 	"github.com/volkszaehler/mbmd/meters/rs485"
 	"github.com/volkszaehler/mbmd/meters/sunspec"
@@ -361,71 +360,6 @@ func asFloat64[T constraints.Signed | constraints.Unsigned | constraints.Float](
 		}
 		return res
 	}
-}
-
-// RegisterOperation creates a read operation from a register definition
-func RegisterOperation(r Register) (rs485.Operation, error) {
-	switch strings.ToLower(r.Decode) {
-	// 8 bit (coil)
-	case "bool8":
-		op.Transform = decodeBool8
-		op.ReadLen = 1
-
-	// 16 bit
-	case "int16":
-		op.Transform = asFloat64(encoding.Int16)
-		op.ReadLen = 1
-	case "int16nan":
-		op.Transform = decodeNaN16(asFloat64(encoding.Int16), 1<<15, 1<<15-1)
-		op.ReadLen = 1
-	case "uint16":
-		op.Transform = asFloat64(encoding.Uint16)
-		op.ReadLen = 1
-	case "uint16nan":
-		op.Transform = decodeNaN16(asFloat64(encoding.Uint16), 1<<16-1)
-		op.ReadLen = 1
-	case "bool16":
-		mask, err := decodeMask(r.BitMask)
-		if err != nil {
-			return op, err
-		}
-		op.Transform = decodeBool16(mask)
-		op.ReadLen = 1
-
-	// 32 bit
-	case "int32":
-		op.Transform = asFloat64(encoding.Int32)
-	case "int32nan":
-		op.Transform = decodeNaN32(asFloat64(encoding.Int32), 1<<31, 1<<31-1)
-	case "int32s":
-		op.Transform = asFloat64(encoding.Int32LswFirst)
-	case "uint32":
-		op.Transform = asFloat64(encoding.Uint32)
-	case "uint32s":
-		op.Transform = asFloat64(encoding.Uint32LswFirst)
-	case "uint32nan":
-		op.Transform = decodeNaN32(asFloat64(encoding.Uint32), 1<<32-1)
-	case "float32", "ieee754":
-		op.Transform = asFloat64(encoding.Float32)
-	case "float32s", "ieee754s":
-		op.Transform = asFloat64(encoding.Float32LswFirst)
-
-	// 64 bit
-	case "uint64":
-		op.Transform = asFloat64(encoding.Uint64)
-		op.ReadLen = 4
-	case "uint64nan":
-		op.Transform = decodeNaN64(asFloat64(encoding.Uint64), 1<<64-1)
-		op.ReadLen = 4
-	case "float64":
-		op.Transform = encoding.Float64
-		op.ReadLen = 4
-
-	default:
-		return rs485.Operation{}, fmt.Errorf("invalid register decoding: %s", r.Decode)
-	}
-
-	return op, nil
 }
 
 // SunSpecOperation is a sunspec modbus operation
