@@ -95,6 +95,7 @@
 						class="form-check-input"
 						type="checkbox"
 						role="switch"
+						data-testid="plan-active"
 						:checked="!isNew"
 						:disabled="timeInThePast"
 						@change="toggle"
@@ -104,6 +105,7 @@
 					v-if="dataChanged && !isNew"
 					type="button"
 					class="btn btn-sm btn-outline-primary ms-3 border-0 text-decoration-underline"
+					data-testid="plan-apply"
 					:disabled="timeInThePast"
 					@click="update"
 				>
