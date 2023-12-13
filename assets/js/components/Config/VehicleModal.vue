@@ -118,7 +118,7 @@
 								<button
 									type="submit"
 									class="btn btn-primary"
-									:disabled="testRunning"
+									:disabled="testRunning || saving"
 									@click.prevent="isNew ? create() : update()"
 								>
 									<span
