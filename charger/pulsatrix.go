@@ -243,7 +243,7 @@ func (c *Pulsatrix) TotalEnergy() (float64, error) {
 
 // Phases1p3p implements the api.PhaseSwitcher interface
 func (c *Pulsatrix) Phases1p3p(phases int) error {
-	err := c.write("setPhaseCount\n" + strconv.Itoa(phases))
+	err := c.write("set1p3p\n" + strconv.Itoa(phases))
 	return err
 }
 
