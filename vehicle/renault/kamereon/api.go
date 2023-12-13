@@ -1,6 +1,7 @@
 package kamereon
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"io"
@@ -57,11 +58,14 @@ func (v *API) request_(uri string, body io.Reader) (Response, error) {
 }
 
 func (v *API) request(uri string, body io.Reader) (Response, error) {
-	res, err := v.request_(uri, body)
+	var body2 bytes.Buffer
+	body1 := io.TeeReader(body, &body2)
+
+	res, err := v.request_(uri, body1)
 	// repeat auth if error
 	if err != nil {
 		if err = v.login(); err == nil {
-			res, err = v.request_(uri, nil)
+			res, err = v.request_(uri, &body2)
 		}
 	}
 
