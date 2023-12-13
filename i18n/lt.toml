@@ -182,6 +182,8 @@ titleTargetCharge = "Išvykimas"
 day = "Diena"
 goal = "Įkrovimo tikslas"
 time = "Laikas"
+active = "Aktyvus"
+update = "Patvirtinti"
 
 [main.energyflow]
 battery = "Kaupiklis"
@@ -275,6 +277,8 @@ setPlan = "Nustatyti įkrovimo planą"
 planDescription = "Įveskite išvykimo laiką ir evcc įkraus automobilį kiek įmanoma ekonomiškiau arba ekologiškiau."
 preview = "Peržvelgti"
 targetIsAboveVehicleLimit = "Padidinkite automobilio limitą ({limit}), kad pasiektumėte įkrovimo tikslą."
+noActivePlan = "Nėra Aktyvaus Plano"
+currentPlan = "Įkrovimo grafikas"
 
 [main.targetChargePlan]
 chargeDuration = "Įkrovimo trukmė"
