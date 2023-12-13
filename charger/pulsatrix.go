@@ -83,7 +83,6 @@ func (c *Pulsatrix) connectWs() error {
 
 	c.conn = conn
 
-	//c.parseWsMessage(1, []byte("{\"vehicleStatus\": \"A1\"}"))
 	// ensure evcc and SECC are in sync
 	if err := c.Enable(false); err != nil {
 		c.log.ERROR.Println(err)
@@ -240,6 +239,12 @@ var _ api.MeterEnergy = (*Pulsatrix)(nil)
 func (c *Pulsatrix) TotalEnergy() (float64, error) {
 	res, err := c.data.Get()
 	return res.EnergyImported, err
+}
+
+// Phases1p3p implements the api.PhaseSwitcher interface
+func (c *Pulsatrix) Phases1p3p(phases int) error {
+	err := c.write("setPhaseCount\n" + strconv.Itoa(phases))
+	return err
 }
 
 var _ api.PhaseCurrents = (*Pulsatrix)(nil)
