@@ -75,6 +75,9 @@ export default {
 			return hourSum ? priceSum / hourSum : undefined;
 		},
 		fmtAvgPrice() {
+			if (!this.targetTime) {
+				return "—";
+			}
 			let price = this.activeSlot ? this.activeSlot.price : this.avgPrice;
 			if (price === undefined) {
 				return this.$t("main.targetChargePlan.unknownPrice");
@@ -109,7 +112,7 @@ export default {
 				end.setHours(startHour + 1);
 				const endHour = end.getHours();
 				const day = this.weekdayShort(start);
-				const toLate = this.targetTime.getTime() <= start.getTime();
+				const toLate = this.targetTime && this.targetTime.getTime() <= start.getTime();
 				// TODO: handle multiple matching time slots
 				const price = this.findSlotInRange(start, end, rates)?.price;
 				const charging = this.findSlotInRange(start, end, plan) != null;

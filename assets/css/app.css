@@ -428,3 +428,10 @@ input[type="time"]::-webkit-calendar-picker-indicator {
 .table {
 	--bs-table-bg: transparent;
 }
+
+/* larger check switch */
+.form-switch .form-check-input {
+	height: 1.1rem;
+	width: calc(1.2rem + 0.75rem);
+	border-radius: 3rem;
+}
