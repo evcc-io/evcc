@@ -6,7 +6,7 @@
 					{{ $t("main.chargingPlan.day") }}
 				</label>
 			</div>
-			<div class="col-6 col-lg-3">
+			<div class="col-6 col-lg-2">
 				<label :for="formId('time')">
 					{{ $t("main.chargingPlan.time") }}
 				</label>
@@ -16,7 +16,9 @@
 					{{ $t("main.chargingPlan.goal") }}
 				</label>
 			</div>
-			<div class="col-2"></div>
+			<div class="col-6 col-lg-1">
+				<label :for="formId('active')"> {{ $t("main.chargingPlan.active") }} </label>
+			</div>
 		</div>
 		<div class="row">
 			<div class="col-6 d-lg-none col-form-label">
@@ -41,7 +43,7 @@
 					{{ $t("main.chargingPlan.time") }}
 				</label>
 			</div>
-			<div class="col-6 col-lg-3 mb-2 mb-lg-0">
+			<div class="col-6 col-lg-2 mb-2 mb-lg-0">
 				<input
 					:id="formId('time')"
 					v-model="selectedTime"
@@ -81,26 +83,53 @@
 					</option>
 				</select>
 			</div>
-			<div class="col-12 col-lg-2 d-flex justify-content-end align-items-baseline">
+			<div class="col-6 d-lg-none col-form-label">
+				<label :for="formId('active')">
+					{{ $t("main.chargingPlan.active") }}
+				</label>
+			</div>
+			<div class="col-2 d-flex align-items-center justify-content-start">
+				<div class="form-check form-switch">
+					<input
+						:id="formId('active')"
+						class="form-check-input"
+						type="checkbox"
+						role="switch"
+						data-testid="plan-active"
+						:checked="!isNew"
+						:disabled="timeInThePast"
+						@change="toggle"
+					/>
+				</div>
 				<button
+					v-if="dataChanged && !isNew"
 					type="button"
-					class="btn evcc-default-text text-decoration-underline"
-					@click="removePlan"
+					class="btn btn-sm btn-outline-primary ms-3 border-0 text-decoration-underline"
+					data-testid="plan-apply"
+					:disabled="timeInThePast"
+					@click="update"
 				>
-					{{ $t("main.chargingPlan.remove") }}
+					{{ $t("main.chargingPlan.update") }}
 				</button>
 			</div>
 		</div>
+		<p class="mb-0">
+			<span v-if="timeInThePast" class="d-block text-danger my-2">
+				{{ $t("main.targetCharge.targetIsInThePast") }}
+			</span>
+		</p>
 	</div>
 </template>
 
 <script>
+import "@h2d2/shopicons/es/regular/checkmark";
 import { distanceUnit } from "../units";
 
 import formatter from "../mixins/formatter";
 import { energyOptions } from "../utils/energyOptions";
 
 const LAST_TARGET_TIME_KEY = "last_target_time";
+const DEFAULT_TARGET_TIME = "7:00";
 
 export default {
 	name: "ChargingPlanSettingsEntry",
@@ -122,13 +151,10 @@ export default {
 			selectedTime: null,
 			selectedSoc: this.soc,
 			selectedEnergy: this.energy,
+			enabled: false,
 		};
 	},
 	computed: {
-		timeInThePast: function () {
-			const now = new Date();
-			return now >= this.selectedDate;
-		},
 		selectedDate: function () {
 			return new Date(`${this.selectedDay}T${this.selectedTime || "00:00"}`);
 		},
@@ -149,25 +175,47 @@ export default {
 			// remove the first entry (0)
 			return options.slice(1);
 		},
+		originalData: function () {
+			if (this.isNew) {
+				return {};
+			}
+			return {
+				soc: this.soc,
+				energy: this.energy,
+				day: this.fmtDayString(new Date(this.time)),
+				time: this.fmtTimeString(new Date(this.time)),
+			};
+		},
+		dataChanged: function () {
+			const dateChanged =
+				this.originalData.day != this.selectedDay ||
+				this.originalData.time != this.selectedTime;
+			const goalChanged = this.socBasedPlanning
+				? this.originalData.soc != this.selectedSoc
+				: this.originalData.energy != this.selectedEnergy;
+			return dateChanged || goalChanged;
+		},
+		isNew: function () {
+			return !this.time && (!this.soc || !this.energy);
+		},
+		timeInThePast: function () {
+			const now = new Date();
+			return now >= this.selectedDate;
+		},
 	},
 	watch: {
 		time() {
 			this.initInputFields();
 		},
-		selectedDate() {
-			this.updatePlan();
-		},
-		selectedSoc() {
-			this.updatePlan();
-		},
-		selectedEnergy() {
-			this.updatePlan();
-		},
 		soc() {
-			this.selectedSoc = this.soc;
+			if (this.soc) {
+				this.selectedSoc = this.soc;
+			}
 		},
 		energy() {
-			this.selectedEnergy = this.energy;
+			if (this.energy) {
+				this.selectedEnergy = this.energy;
+			}
 		},
 	},
 	mounted() {
@@ -182,7 +230,22 @@ export default {
 			return { value, name };
 		},
 		initInputFields: function () {
-			const date = new Date(this.time);
+			if (!this.selectedSoc) {
+				this.selectedSoc = 100;
+			}
+			if (!this.selectedEnergy) {
+				this.selectedEnergy = this.vehicleCapacity || 10;
+			}
+
+			let time = this.time;
+			if (!time) {
+				// no time but existing selection, keep it
+				if (this.selectedDay && this.selectedTime) {
+					return;
+				}
+				time = this.defaultTime();
+			}
+			const date = new Date(time);
 			this.selectedDay = this.fmtDayString(date);
 			this.selectedTime = this.fmtTimeString(date);
 		},
@@ -208,7 +271,7 @@ export default {
 			}
 			return options;
 		},
-		updatePlan: function () {
+		update: function () {
 			try {
 				const hours = this.selectedDate.getHours();
 				const minutes = this.selectedDate.getMinutes();
@@ -222,8 +285,30 @@ export default {
 				energy: this.selectedEnergy,
 			});
 		},
-		removePlan: function () {
-			this.$emit("plan-removed");
+		toggle: function (e) {
+			const { checked } = e.target;
+			if (checked) {
+				this.update();
+			} else {
+				this.$emit("plan-removed");
+			}
+			this.enabled = checked;
+		},
+		defaultTime: function () {
+			const [hours, minutes] = (
+				window.localStorage[LAST_TARGET_TIME_KEY] || DEFAULT_TARGET_TIME
+			).split(":");
+
+			const target = new Date();
+			target.setSeconds(0);
+			target.setMinutes(minutes);
+			target.setHours(hours);
+			// today or tomorrow?
+			const isInPast = target < new Date();
+			if (isInPast) {
+				target.setDate(target.getDate() + 1);
+			}
+			return target;
 		},
 	},
 };

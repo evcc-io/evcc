@@ -1,41 +1,28 @@
 <template>
 	<div class="mt-4">
 		<div class="form-group d-lg-flex align-items-baseline justify-content-between">
-			<div v-if="plans.length > 0" class="container px-0 mb-3">
+			<div class="container px-0 mb-3">
 				<ChargingPlanSettingsEntry
-					v-for="(p, index) in plans"
-					:id="`${id}_${index}`"
-					:key="index"
+					:id="`${id}_0`"
 					class="mb-2"
-					v-bind="p"
+					v-bind="plans[0] || {}"
 					:vehicle-capacity="vehicleCapacity"
 					:range-per-soc="rangePerSoc"
 					:soc-per-kwh="socPerKwh"
 					:soc-based-planning="socBasedPlanning"
-					@plan-updated="(data) => updatePlan({ index, ...data })"
-					@plan-removed="() => removePlan(index)"
+					@plan-updated="(data) => updatePlan({ index: 0, ...data })"
+					@plan-removed="() => removePlan(0)"
 				/>
 			</div>
-			<div v-else>
-				<p>
-					{{ $t("main.targetCharge.planDescription") }}
-				</p>
-				<button class="btn btn-outline-primary" type="button" @click="addPlan">
-					{{ $t("main.targetCharge.setPlan") }}
-				</button>
+		</div>
+		<ChargingPlanWarnings v-bind="chargingPlanWarningsProps" class="mb-4" />
+		<hr />
+		<h5>
+			<div class="inner">
+				{{ $t(`main.targetCharge.${plans.length ? "currentPlan" : "noActivePlan"}`) }}
 			</div>
-		</div>
-		<div v-if="plans.length > 0">
-			<ChargingPlanWarnings v-bind="chargingPlanWarningsProps" class="mb-4" />
-			<hr />
-			<h5>
-				<div class="inner">{{ $t("main.targetCharge.preview") }}</div>
-			</h5>
-			<ChargingPlanPreview
-				v-if="chargingPlanPreviewProps"
-				v-bind="chargingPlanPreviewProps"
-			/>
-		</div>
+		</h5>
+		<ChargingPlanPreview v-if="chargingPlanPreviewProps" v-bind="chargingPlanPreviewProps" />
 	</div>
 </template>
 
@@ -86,11 +73,8 @@ export default {
 		chargingPlanWarningsProps: function () {
 			return this.collectProps(ChargingPlanWarnings);
 		},
-		selectedTargetTime: function () {
-			return new Date(this.effectivePlanTime);
-		},
 		chargingPlanPreviewProps: function () {
-			const targetTime = this.selectedTargetTime;
+			const targetTime = this.effectivePlanTime ? new Date(this.effectivePlanTime) : null;
 			const { rates } = this.tariff;
 			const { duration, plan, power } = this.plan;
 			const { currency, smartCostType } = this;
@@ -112,7 +96,7 @@ export default {
 	},
 	methods: {
 		fetchPlan: async function () {
-			if (this.plans.length > 0 && !this.loading) {
+			if (!this.loading) {
 				try {
 					this.loading = true;
 					this.plan = (await api.get(`loadpoints/${this.id}/plan`)).data.result;
@@ -168,6 +152,7 @@ h5 {
 	position: relative;
 	display: flex;
 	top: -25px;
+	margin-bottom: -0.5rem;
 	padding: 0 0.5rem;
 	justify-content: center;
 }
