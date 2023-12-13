@@ -19,9 +19,8 @@ import (
 
 var deprecatedTopics = []string{
 	"activePhases", "range", "socCharge",
-	"vehicleSoC", "batterySoC", "bufferSoC", "minSoC", "prioritySoC", "targetSoC", "vehicleTargetSoC",
+	"vehicleSoC", "batterySoC", "bufferSoC", "minSoC", "prioritySoC", "targetSoC", "vehicleTargetSoC", "vehicles",
 	"savingsAmount", "savingsEffectivePrice", "savingsGridCharged", "savingsSelfConsumptionCharged", "savingsSelfConsumptionPercent", "savingsTotalCharged",
-	"stats/30d", "stats/365d", "stats/total",
 }
 
 // MQTT is the MQTT server. It uses the MQTT client for publishing.
@@ -106,6 +105,12 @@ func (m *MQTT) publishComplex(topic string, retained bool, payload interface{}) 
 				m.publishComplex(fmt.Sprintf("%s/%s", topic, strings.ToLower(n[:1])+n[1:]), retained, val.Field(i).Interface())
 			}
 		}
+
+	case reflect.Pointer:
+		if reflect.ValueOf(payload).IsNil() {
+			payload = nil
+		}
+		fallthrough
 
 	default:
 		m.publishSingleValue(topic, retained, payload)
@@ -385,10 +390,14 @@ func (m *MQTT) Run(site site.API, in <-chan util.Param) {
 
 	// publish
 	for p := range in {
-		topic := fmt.Sprintf("%s/site", m.root)
-		if p.Loadpoint != nil {
+		switch {
+		case p.Loadpoint != nil:
 			id := *p.Loadpoint + 1
-			topic = fmt.Sprintf("%s/loadpoints/%d", m.root, id)
+			topic = fmt.Sprintf("%s/loadpoints/%d/%s", m.root, id, p.Key)
+		case p.Key == "vehicles":
+			topic = fmt.Sprintf("%s/vehicles", m.root)
+		default:
+			topic = fmt.Sprintf("%s/site/%s", m.root, p.Key)
 		}
 
 		// alive indicator
@@ -398,7 +407,6 @@ func (m *MQTT) Run(site site.API, in <-chan util.Param) {
 		}
 
 		// value
-		topic += "/" + p.Key
 		m.publish(topic, true, p.Val)
 	}
 }

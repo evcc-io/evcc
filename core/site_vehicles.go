@@ -63,6 +63,7 @@ func (site *Site) updateVehicles(op config.Operation, dev config.Device[api.Vehi
 		site.coordinator.Delete(vehicle)
 	}
 
+	// TODO remove vehicle from mqtt
 	site.publishVehicles()
 }
 
