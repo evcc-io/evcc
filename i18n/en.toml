@@ -251,6 +251,7 @@ descriptionEnergy = "Until when should {targetEnergy} be loaded into the vehicle
 descriptionSoc = "When should the vehicle be charged to {targetSoc}%?"
 inactiveLabel = "Target time"
 noActivePlan = "No Active Plan"
+notReachableInTime = "Goal not reachable in time. Estimated finish: {endTime}."
 onlyInPvMode = "Charging plan only works in solar mode."
 planDuration = "Charging time"
 planPeriodLabel = "Period"

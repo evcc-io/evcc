@@ -74,9 +74,9 @@ export default {
 			return this.collectProps(ChargingPlanWarnings);
 		},
 		chargingPlanPreviewProps: function () {
-			const targetTime = this.effectivePlanTime ? new Date(this.effectivePlanTime) : null;
 			const { rates } = this.tariff;
-			const { duration, plan, power } = this.plan;
+			const { duration, plan, power, planTime } = this.plan;
+			const targetTime = planTime ? new Date(planTime) : null;
 			const { currency, smartCostType } = this;
 			return rates
 				? { duration, plan, power, rates, targetTime, currency, smartCostType }
