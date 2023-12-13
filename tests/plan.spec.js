@@ -13,7 +13,6 @@ test.afterEach(async () => {
 
 async function setAndVerifyPlan(page, lp, { soc, energy }) {
   await lp.getByTestId("charging-plan").getByRole("button", { name: "none" }).click();
-  await page.getByRole("button", { name: "Set a charging plan" }).click();
 
   if (soc) {
     await page.getByTestId("plan-soc").selectOption(soc);
@@ -26,6 +25,7 @@ async function setAndVerifyPlan(page, lp, { soc, energy }) {
       .textContent();
     await page.getByTestId("plan-energy").selectOption(optionText);
   }
+  await page.getByTestId("plan-active").click();
   await page.getByRole("button", { name: "Close" }).click();
   await expect(lp.getByTestId("charging-plan")).toContainText(soc || energy);
 }
@@ -41,11 +41,11 @@ test.describe("basic functionality", async () => {
 
     await lp1.getByTestId("limit-soc").getByRole("combobox").selectOption("90%");
     await lp1.getByTestId("charging-plan").getByRole("button", { name: "none" }).click();
-    await page.getByRole("button", { name: "Set a charging plan" }).click();
 
     await page.getByTestId("plan-day").selectOption({ index: 1 });
     await page.getByTestId("plan-time").fill("09:30");
     await page.getByTestId("plan-soc").selectOption("80%");
+    await page.getByTestId("plan-active").click();
     await page.getByRole("button", { name: "Close" }).click();
 
     await expect(lp1.getByTestId("plan-marker")).toBeVisible();
