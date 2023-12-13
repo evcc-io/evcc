@@ -1,28 +1,19 @@
 <template>
 	<p class="mb-0">
+		<span v-if="targetIsAboveVehicleLimit" class="d-block text-danger mb-1">
+			{{ $t("main.targetCharge.targetIsAboveVehicleLimit", { limit: vehicleLimitFmt }) }}
+		</span>
+		<span v-if="targetIsAboveLimit" class="d-block text-secondary mb-1">
+			{{ $t("main.targetCharge.targetIsAboveLimit", { limit: limitFmt }) }}
+		</span>
 		<span v-if="['off', 'now'].includes(mode)" class="d-block text-secondary mb-1">
 			{{ $t("main.targetCharge.onlyInPvMode") }}
-		</span>
-		<span v-if="targetIsAboveLimit" class="d-block text-danger mb-1">
-			{{
-				$t("main.targetCharge.targetIsAboveLimit", {
-					limit: limitFmt,
-					goal: goalFmt,
-				})
-			}}
-		</span>
-		<span v-if="timeInThePast" class="d-block text-danger mb-1">
-			{{ $t("main.targetCharge.targetIsInThePast") }}
 		</span>
 		<span v-if="timeTooFarInTheFuture" class="d-block text-secondary mb-1">
 			{{ $t("main.targetCharge.targetIsTooFarInTheFuture") }}
 		</span>
 		<span v-if="costLimitExists" class="d-block text-secondary mb-1">
-			{{
-				$t("main.targetCharge.costLimitIgnore", {
-					limit: costLimitText,
-				})
-			}}
+			{{ $t("main.targetCharge.costLimitIgnore", { limit: costLimitText }) }}
 		</span>
 	</p>
 </template>
@@ -49,19 +40,18 @@ export default {
 		currency: String,
 		mode: String,
 		tariff: Object,
-		selectedTargetTime: Date,
+		vehicleTargetSoc: Number,
 	},
 	computed: {
-		timeInThePast: function () {
-			const now = new Date();
-			return now >= this.selectedTargetTime;
-		},
 		timeTooFarInTheFuture: function () {
+			if (!this.effectivePlanTime) {
+				return false;
+			}
 			if (this.tariff?.rates) {
 				const lastRate = this.tariff.rates[this.tariff.rates.length - 1];
 				if (lastRate?.end) {
 					const end = new Date(lastRate.end);
-					return this.selectedTargetTime >= end;
+					return new Date(this.effectivePlanTime) >= end;
 				}
 			}
 			return false;
@@ -72,11 +62,20 @@ export default {
 			}
 			return this.limitEnergy && this.planEnergy > this.limitEnergy;
 		},
+		targetIsAboveVehicleLimit: function () {
+			if (this.socBasedPlanning) {
+				return this.effectivePlanSoc > (this.vehicleTargetSoc || 100);
+			}
+			return false;
+		},
 		limitFmt: function () {
 			if (this.socBasedPlanning) {
 				return this.fmtSoc(this.effectiveLimitSoc);
 			}
 			return this.fmtKWh(this.limitEnergy * 1e3);
+		},
+		vehicleLimitFmt: function () {
+			return this.fmtSoc(this.vehicleTargetSoc);
 		},
 		goalFmt: function () {
 			if (this.socBasedPlanning) {

@@ -11,15 +11,16 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestSession(t *testing.T) {
 	var err error
 	serverdb.Instance, err = serverdb.New("sqlite", ":memory:")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	db, err := session.NewStore("foo", serverdb.Instance)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	clock := clock.NewMock()
 
@@ -68,7 +69,7 @@ func TestSession(t *testing.T) {
 	assert.Equal(t, clock.Now(), lp.session.Finished)
 
 	s, err := db.Sessions()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Len(t, s, 1)
 	t.Logf("session: %+v", s)
 
@@ -82,7 +83,7 @@ func TestSession(t *testing.T) {
 	assert.Equal(t, clock.Now(), lp.session.Finished)
 
 	s, err = db.Sessions()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Len(t, s, 1)
 	t.Logf("session: %+v", s)
 }
@@ -90,32 +91,32 @@ func TestSession(t *testing.T) {
 func TestCloseSessionsOnStartup_emptyDb(t *testing.T) {
 	var err error
 	serverdb.Instance, err = serverdb.New("sqlite", ":memory:")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	db, err := session.NewStore("foo", serverdb.Instance)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	// assert empty DB is no problem
 	err = db.ClosePendingSessionsInHistory(1000)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 }
 
 func TestCloseSessionsOnStartup(t *testing.T) {
 	var err error
 	serverdb.Instance, err = serverdb.New("sqlite", ":memory:")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	db1, err := session.NewStore("foo", serverdb.Instance)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	db2, err := session.NewStore("bar", serverdb.Instance)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	clock := clock.NewMock()
 
 	// test data, creates 6 sessions for each loadpoint, 3rd and 6th are "unfinished"
-	var sessions1 []*session.Session = createMockSessions(db1, clock)
-	var sessions2 []*session.Session = createMockSessions(db2, clock)
+	sessions1 := createMockSessions(db1, clock)
+	sessions2 := createMockSessions(db2, clock)
 
 	// write interleaved for two loadpoints
 	for index, session := range sessions1 {
@@ -124,12 +125,12 @@ func TestCloseSessionsOnStartup(t *testing.T) {
 	}
 
 	err = db1.ClosePendingSessionsInHistory(1000)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	// check fixed sessions for db1
 	var db1Sessions session.Sessions
 	err = serverdb.Instance.Where("Loadpoint = ?", "foo").Order("ID").Find(&db1Sessions).Error
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Len(t, db1Sessions, 6)
 
 	// check fixed history
@@ -146,7 +147,7 @@ func TestCloseSessionsOnStartup(t *testing.T) {
 	// ensure no side effects on loadpoint 2 data, i.e. data left unfixed
 	var db2Sessions session.Sessions
 	err = serverdb.Instance.Where("Loadpoint = ?", "bar").Order("ID").Find(&db2Sessions).Error
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Len(t, db2Sessions, 6)
 
 	for i, s := range db2Sessions {
@@ -163,8 +164,7 @@ func TestCloseSessionsOnStartup(t *testing.T) {
 func createMockSessions(db *session.DB, clock *clock.Mock) []*session.Session {
 	var sessions []*session.Session
 	for i := 1; i <= 6; i++ {
-
-		var meter1Start float64 = float64(i * 10)
+		meter1Start := float64(i * 10)
 		session := db.New(meter1Start)
 		session.Created = clock.Now().Add(1 * time.Minute)
 
@@ -175,7 +175,7 @@ func createMockSessions(db *session.DB, clock *clock.Mock) []*session.Session {
 		}
 
 		session.Finished = clock.Now().Add(2 * time.Minute)
-		meterStop := float64(meter1Start + 10)
+		meterStop := meter1Start + 10
 		session.MeterStop = &meterStop
 		session.ChargedEnergy = 10
 		sessions = append(sessions, session)

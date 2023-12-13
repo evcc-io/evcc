@@ -66,10 +66,15 @@ func (v *Identity) Login(user, password string) (oauth2.TokenSource, error) {
 	}
 
 	var res struct {
-		RedirectTo string `json:"redirect_to"`
+		RedirectTo       string `json:"redirect_to"`
+		Error            string `json:"error"`
+		ErrorDescription string `json:"error_description"`
 	}
 
 	if err := v.DoJSON(req, &res); err != nil {
+		if res.ErrorDescription != "" {
+			err = fmt.Errorf("%s: %w", res.ErrorDescription, err)
+		}
 		return nil, err
 	}
 

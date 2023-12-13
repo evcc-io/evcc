@@ -8,6 +8,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestDetermineBatteryMode(t *testing.T) {
@@ -49,7 +50,6 @@ func TestDetermineBatteryMode(t *testing.T) {
 }
 
 func TestUpdateBatteryMode(t *testing.T) {
-
 	expBatMode := api.BatteryHold
 
 	ctrl := gomock.NewController(t)
@@ -70,6 +70,6 @@ func TestUpdateBatteryMode(t *testing.T) {
 	}
 
 	err := s.updateBatteryMode(expBatMode)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, expBatMode, s.GetBatteryMode())
 }

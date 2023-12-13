@@ -105,8 +105,9 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 	}
 
 	planStart = planner.Start(plan)
+	planTime := lp.EffectivePlanTime()
 	lp.log.DEBUG.Printf("plan: charge %v%s starting at %v until %v (power: %.0fW, avg cost: %.3f)",
-		planner.Duration(plan).Round(time.Second), requiredString, planStart.Round(time.Second).Local(), lp.planTime.Round(time.Second).Local(),
+		planner.Duration(plan).Round(time.Second), requiredString, planStart.Round(time.Second).Local(), planTime.Round(time.Second).Local(),
 		maxPower, planner.AverageCost(plan))
 
 	// log plan
@@ -130,7 +131,7 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 	} else if lp.planActive {
 		// planner was active (any slot, not necessarily previous slot) and charge goal has not yet been met
 		switch {
-		case lp.clock.Now().After(lp.planTime) && !lp.planTime.IsZero():
+		case lp.clock.Now().After(planTime) && !planTime.IsZero():
 			// if the plan did not (entirely) work, we may still be charging beyond plan end- in that case, continue charging
 			// TODO check when schedule is implemented
 			lp.log.DEBUG.Println("plan: continuing after target time")

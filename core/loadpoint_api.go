@@ -136,6 +136,7 @@ func (lp *Loadpoint) GetLimitSoc() int {
 func (lp *Loadpoint) setLimitSoc(soc int) {
 	lp.limitSoc = soc
 	lp.publish(keys.LimitSoc, soc)
+	lp.settings.SetInt(keys.LimitSoc, int64(soc))
 }
 
 // SetLimitSoc sets the session soc limit
@@ -163,6 +164,7 @@ func (lp *Loadpoint) GetLimitEnergy() float64 {
 func (lp *Loadpoint) setLimitEnergy(energy float64) {
 	lp.limitEnergy = energy
 	lp.publish(keys.LimitEnergy, energy)
+	lp.settings.SetFloat(keys.LimitEnergy, energy)
 }
 
 // SetLimitEnergy sets the session energy limit
@@ -192,8 +194,9 @@ func (lp *Loadpoint) setPlanEnergy(finishAt time.Time, energy float64) {
 	lp.publish(keys.PlanEnergy, energy)
 	lp.settings.SetFloat(keys.PlanEnergy, energy)
 
+	// remove plan
 	if energy == 0 {
-		lp.setPlanActive(false)
+		finishAt = time.Time{}
 	}
 
 	lp.planTime = finishAt
@@ -210,7 +213,7 @@ func (lp *Loadpoint) SetPlanEnergy(finishAt time.Time, energy float64) error {
 	lp.Lock()
 	defer lp.Unlock()
 
-	if !finishAt.IsZero() && finishAt.Before(time.Now()) {
+	if !finishAt.IsZero() && finishAt.Before(lp.clock.Now()) {
 		return errors.New("timestamp is in the past")
 	}
 

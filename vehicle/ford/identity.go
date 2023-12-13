@@ -103,7 +103,7 @@ func (v *Identity) login() (*oauth.Token, error) {
 
 	var settings Settings
 
-	if err := json.Unmarshal([]byte(match[1]), &settings); err != nil {
+	if err := json.Unmarshal(match[1], &settings); err != nil {
 		return nil, err
 	}
 

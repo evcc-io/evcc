@@ -31,7 +31,6 @@ func TestRegexDefault(t *testing.T) {
 
 func TestJq(t *testing.T) {
 	for _, uuid := range []string{"a8232ee0-a4ab-11ec-8d36-211f6b082dc8", "08232ee0-a4ab-11ec-8d36-211f6b082dc8"} {
-
 		p, err := new(Pipeline).WithJq(fmt.Sprintf(`.data[] | select(.uuid=="%s") | .tuples[0][1]`, uuid))
 		require.NoError(t, err)
 

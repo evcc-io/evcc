@@ -60,7 +60,7 @@ func (h *msgHandler) stringGetter() (string, error) {
 		return "", err
 	}
 
-	return string(v), nil
+	return v, nil
 }
 
 func (h *msgHandler) boolGetter() (bool, error) {

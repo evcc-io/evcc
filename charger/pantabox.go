@@ -2,6 +2,7 @@ package charger
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/evcc-io/evcc/api"
@@ -69,7 +70,7 @@ func (wb *Pantabox) Enabled() (bool, error) {
 
 // Enable implements the api.Charger interface
 func (wb *Pantabox) Enable(enable bool) error {
-	resp, err := wb.Post(wb.uri+"/charger/enable", request.PlainContent, strings.NewReader(fmt.Sprintf("%t", enable)))
+	resp, err := wb.Post(wb.uri+"/charger/enable", request.PlainContent, strings.NewReader(strconv.FormatBool(enable)))
 	if err == nil {
 		defer resp.Body.Close()
 
@@ -83,7 +84,7 @@ func (wb *Pantabox) Enable(enable bool) error {
 
 // MaxCurrent implements the api.Charger interface
 func (wb *Pantabox) MaxCurrent(current int64) error {
-	resp, err := wb.Post(wb.uri+"/charger/current", request.PlainContent, strings.NewReader(fmt.Sprintf("%d", current)))
+	resp, err := wb.Post(wb.uri+"/charger/current", request.PlainContent, strings.NewReader(strconv.FormatInt(current, 10)))
 	if err == nil {
 		defer resp.Body.Close()
 

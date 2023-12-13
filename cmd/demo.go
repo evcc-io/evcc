@@ -17,7 +17,7 @@ func demoConfig(conf *globalConfig) error {
 		return fmt.Errorf("failed decoding demo config: %w", err)
 	}
 
-	if err := viper.UnmarshalExact(&conf); err != nil {
+	if err := viper.UnmarshalExact(conf); err != nil {
 		return fmt.Errorf("failed loading demo config: %w", err)
 	}
 

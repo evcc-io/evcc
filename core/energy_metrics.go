@@ -3,7 +3,7 @@ package core
 // EnergyMetrics calculates stats about the charged energy and gives you details about price or co2s
 type EnergyMetrics struct {
 	totalKWh          float64  // Total amount of energy used (kWh)
-	solarKWh          float64  // Self-produced energy energy (kWh)
+	solarKWh          float64  // Self-produced energy (kWh)
 	price             *float64 // Total cost (Currency)
 	co2               *float64 // Amount of emitted CO2 (gCO2eq)
 	currentGreenShare float64  // Current share of solar energy of site (0-1)

@@ -98,7 +98,7 @@ test.describe("limitEnergy", async () => {
     await page.reload();
     await expect(page.getByTestId("limit-energy-value")).toHaveText("10 kWh");
   });
-  test("should be reset on vehicle change", async ({ page }) => {
+  test("should not be reset on vehicle change", async ({ page }) => {
     await page.goto("/");
 
     await page.getByRole("button", { name: "blauer e-Golf" }).click();
@@ -107,6 +107,6 @@ test.describe("limitEnergy", async () => {
 
     await page.getByRole("button", { name: "grüner Honda e" }).click();
     await page.getByRole("button", { name: "Guest vehicle" }).click();
-    await expect(page.getByTestId("limit-energy-value")).toHaveText("none");
+    await expect(page.getByTestId("limit-energy-value")).toHaveText("10 kWh");
   });
 });

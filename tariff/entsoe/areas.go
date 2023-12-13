@@ -113,7 +113,7 @@ var zones = map[string][]string{
 	"10YPT-REN------W": {"LFA|PT", "LFB|PT", "MBA|PT", "SCA|PT", "CTA|PT", "Portugal (PT)", "BZN|PT"},
 	"10YRO-TEL------P": {"BZN|RO", "Romania (RO)", "CTA|RO", "SCA|RO", "MBA|RO", "LFB|RO", "LFA|RO"},
 	"10YSE-1--------K": {"MBA|SE", "SCA|SE", "CTA|SE", "Sweden (SE)"},
-	"10YSI-ELES-----O": {"Slovenia (SI)", "BZN|SI", "CTA|SI", "SCA|SI", "MBA|SI", "LFA|SI"},
+	"10YSI-EELS-----O": {"Slovenia (SI)", "BZN|SI", "CTA|SI", "SCA|SI", "MBA|SI", "LFA|SI"},
 	"10YSK-SEPS-----K": {"LFA|SK", "LFB|SK", "MBA|SK", "SCA|SK", "CTA|SK", "BZN|SK", "Slovakia (SK)"},
 	"10YTR-TEIAS----W": {"Turkey (TR)", "BZN|TR", "CTA|TR", "SCA|TR", "MBA|TR", "LFB|TR", "LFA|TR"},
 	"10YUA-WEPS-----0": {"LFA|UA-BEI", "LFB|UA-BEI", "MBA|UA-BEI", "SCA|UA-BEI", "CTA|UA-BEI", "BZN|UA-BEI"},

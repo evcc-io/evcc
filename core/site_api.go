@@ -222,24 +222,24 @@ func (site *Site) SetResidualPower(power float64) error {
 	return nil
 }
 
-// GetSmartCostLimit returns the SmartCostLimit
+// GetSmartCostLimit returns the smartCostLimit
 func (site *Site) GetSmartCostLimit() float64 {
 	site.RLock()
 	defer site.RUnlock()
-	return site.SmartCostLimit
+	return site.smartCostLimit
 }
 
-// SetSmartCostLimit sets the SmartCostLimit
+// SetSmartCostLimit sets the smartCostLimit
 func (site *Site) SetSmartCostLimit(val float64) error {
 	site.Lock()
 	defer site.Unlock()
 
 	site.log.DEBUG.Println("set smart cost limit:", val)
 
-	if site.SmartCostLimit != val {
-		site.SmartCostLimit = val
-		settings.SetFloat(keys.SmartCostLimit, site.SmartCostLimit)
-		site.publish(keys.SmartCostLimit, site.SmartCostLimit)
+	if site.smartCostLimit != val {
+		site.smartCostLimit = val
+		settings.SetFloat(keys.SmartCostLimit, site.smartCostLimit)
+		site.publish(keys.SmartCostLimit, site.smartCostLimit)
 	}
 
 	return nil
@@ -285,7 +285,7 @@ func (site *Site) GetTariff(tariff string) api.Tariff {
 func (site *Site) GetBatteryDischargeControl() bool {
 	site.Lock()
 	defer site.Unlock()
-	return site.BatteryDischargeControl
+	return site.batteryDischargeControl
 }
 
 // SetBatteryControl sets the battery control mode
@@ -303,7 +303,7 @@ func (site *Site) SetBatteryDischargeControl(val bool) error {
 		site.Lock()
 		defer site.Unlock()
 
-		site.BatteryDischargeControl = val
+		site.batteryDischargeControl = val
 		settings.SetBool(keys.BatteryDischargeControl, val)
 		site.publish(keys.BatteryDischargeControl, val)
 	}

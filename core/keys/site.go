@@ -24,7 +24,7 @@ const (
 	Statistics            = "statistics"
 	TariffCo2             = "tariffCo2"
 	TariffCo2Home         = "tariffCo2Home"
-	TariffCo2Loadpoints   = "tariffCo2Loadpoin"
+	TariffCo2Loadpoints   = "tariffCo2Loadpoints"
 	TariffFeedIn          = "tariffFeedIn"
 	TariffGrid            = "tariffGrid"
 	TariffPriceHome       = "tariffPriceHome"

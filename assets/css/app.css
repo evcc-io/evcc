@@ -452,3 +452,10 @@ input[type="time"]::-webkit-calendar-picker-indicator {
 	--bs-badge-padding-y: 0.75em;
 	font-weight: normal;
 }
+
+/* larger check switch */
+.form-switch .form-check-input {
+	height: 1.1rem;
+	width: calc(1.2rem + 0.75rem);
+	border-radius: 3rem;
+}

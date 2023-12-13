@@ -9,6 +9,9 @@ import (
 	"sync"
 	"time"
 
+	evbus "github.com/asaskevich/EventBus"
+	"github.com/avast/retry-go/v4"
+	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/coordinator"
 	"github.com/evcc-io/evcc/core/keys"
@@ -23,10 +26,6 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/telemetry"
-
-	evbus "github.com/asaskevich/EventBus"
-	"github.com/avast/retry-go/v4"
-	"github.com/benbjohnson/clock"
 )
 
 const (
@@ -309,6 +308,12 @@ func (lp *Loadpoint) restoreSettings() {
 	}
 	if v, err := lp.settings.Float(keys.PlanEnergy); err == nil {
 		lp.planEnergy = v
+	}
+	if v, err := lp.settings.Int(keys.LimitSoc); err == nil {
+		lp.limitSoc = int(v)
+	}
+	if v, err := lp.settings.Float(keys.LimitEnergy); err == nil {
+		lp.limitEnergy = v
 	}
 }
 
@@ -1560,6 +1565,19 @@ func (lp *Loadpoint) Update(sitePower float64, autoCharge, batteryBuffered, batt
 	case lp.scalePhasesRequired():
 		err = lp.scalePhases(lp.ConfiguredPhases)
 
+	case lp.remoteControlled(loadpoint.RemoteHardDisable):
+		remoteDisabled = loadpoint.RemoteHardDisable
+		fallthrough
+
+	case mode == api.ModeOff:
+		err = lp.setLimit(0, true)
+
+	// minimum or target charging
+	case lp.minSocNotReached() || plannerActive:
+		err = lp.fastCharging()
+		lp.resetPhaseTimer()
+		lp.elapsePVTimer() // let PV mode disable immediately afterwards
+
 	case lp.limitEnergyReached():
 		lp.log.DEBUG.Printf("limitEnergy reached: %.0fkWh > %0.1fkWh", lp.getChargedEnergy()/1e3, lp.limitEnergy)
 		err = lp.disableUnlessClimater()
@@ -1568,22 +1586,9 @@ func (lp *Loadpoint) Update(sitePower float64, autoCharge, batteryBuffered, batt
 		lp.log.DEBUG.Printf("limitSoc reached: %.1f%% > %d%%", lp.vehicleSoc, lp.effectiveLimitSoc())
 		err = lp.disableUnlessClimater()
 
-	case lp.remoteControlled(loadpoint.RemoteHardDisable):
-		remoteDisabled = loadpoint.RemoteHardDisable
-		fallthrough
-
-	case mode == api.ModeOff:
-		err = lp.setLimit(0, true)
-
-	// immediate charging
+	// immediate charging- must be placed after limits are evaluated
 	case mode == api.ModeNow:
 		err = lp.fastCharging()
-
-	// minimum or target charging
-	case lp.minSocNotReached() || plannerActive:
-		err = lp.fastCharging()
-		lp.resetPhaseTimer()
-		lp.elapsePVTimer() // let PV mode disable immediately afterwards
 
 	case mode == api.ModeMinPV || mode == api.ModePV:
 		// cheap tariff

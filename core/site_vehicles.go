@@ -25,7 +25,7 @@ type vehicleStruct struct {
 
 // publishVehicles returns a list of vehicle titles
 func (site *Site) publishVehicles() {
-	vv := site.Vehicles().All()
+	vv := site.Vehicles().Settings()
 	res := make(map[string]vehicleStruct, len(vv))
 
 	for _, v := range vv {
@@ -63,6 +63,7 @@ func (site *Site) updateVehicles(op config.Operation, dev config.Device[api.Vehi
 		site.coordinator.Delete(vehicle)
 	}
 
+	// TODO remove vehicle from mqtt
 	site.publishVehicles()
 }
 
@@ -83,7 +84,7 @@ func (vv *vehicles) Instances() []api.Vehicle {
 	return res
 }
 
-func (vv *vehicles) All() []vehicle.API {
+func (vv *vehicles) Settings() []vehicle.API {
 	devs := config.Vehicles().Devices()
 
 	res := make([]vehicle.API, 0, len(devs))

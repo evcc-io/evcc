@@ -114,7 +114,6 @@ func (c *Connection) RelayExists() error {
 // Enable implements the api.Charger interface
 func (c *Connection) Enable(enable bool) error {
 	for _, channel := range c.channels {
-
 		cmd := fmt.Sprintf("Power%d off", channel)
 		if enable {
 			cmd = fmt.Sprintf("Power%d on", channel)
@@ -191,7 +190,6 @@ func (c *Connection) Enabled() (bool, error) {
 			enabled = strings.ToUpper(res.StatusSTS.Power8) == "ON"
 		default:
 			enabled = strings.ToUpper(res.StatusSTS.Power) == "ON" || strings.ToUpper(res.StatusSTS.Power1) == "ON"
-
 		}
 	}
 	return enabled, nil
