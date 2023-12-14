@@ -275,6 +275,35 @@ func (mr *MockAPIMockRecorder) GetPlanEnergy() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPlanEnergy", reflect.TypeOf((*MockAPI)(nil).GetPlanEnergy))
 }
 
+// GetPlanGoal mocks base method.
+func (m *MockAPI) GetPlanGoal() (float64, bool) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPlanGoal")
+	ret0, _ := ret[0].(float64)
+	ret1, _ := ret[1].(bool)
+	return ret0, ret1
+}
+
+// GetPlanGoal indicates an expected call of GetPlanGoal.
+func (mr *MockAPIMockRecorder) GetPlanGoal() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPlanGoal", reflect.TypeOf((*MockAPI)(nil).GetPlanGoal))
+}
+
+// GetPlanRequiredDuration mocks base method.
+func (m *MockAPI) GetPlanRequiredDuration(arg0, arg1 float64) time.Duration {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPlanRequiredDuration", arg0, arg1)
+	ret0, _ := ret[0].(time.Duration)
+	return ret0
+}
+
+// GetPlanRequiredDuration indicates an expected call of GetPlanRequiredDuration.
+func (mr *MockAPIMockRecorder) GetPlanRequiredDuration(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPlanRequiredDuration", reflect.TypeOf((*MockAPI)(nil).GetPlanRequiredDuration), arg0, arg1)
+}
+
 // GetPriority mocks base method.
 func (m *MockAPI) GetPriority() int {
 	m.ctrl.T.Helper()

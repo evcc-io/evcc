@@ -38,33 +38,41 @@ func (lp *Loadpoint) deletePlan() {
 }
 
 // remainingPlanEnergy returns missing energy amount in kWh
-func (lp *Loadpoint) remainingPlanEnergy() (float64, bool) {
+func (lp *Loadpoint) remainingPlanEnergy(planEnergy float64) float64 {
+	return max(0, planEnergy-lp.getChargedEnergy()/1e3)
+}
+
+// GetPlanRequiredDuration is the estimated total charging duration
+func (lp *Loadpoint) GetPlanRequiredDuration(goal, maxPower float64) time.Duration {
+	lp.RLock()
+	defer lp.RUnlock()
+
+	if lp.socBasedPlanning() {
+		if lp.socEstimator == nil {
+			return 0
+		}
+		return lp.socEstimator.RemainingChargeDuration(int(goal), maxPower)
+	}
+
+	energy := lp.remainingPlanEnergy(goal)
+	return time.Duration(energy * 1e3 / maxPower * float64(time.Hour))
+}
+
+// GetPlanGoal returns the plan goal and if the goal is soc based
+func (lp *Loadpoint) GetPlanGoal() (float64, bool) {
+	lp.RLock()
+	defer lp.RUnlock()
+
+	if lp.socBasedPlanning() {
+		_, soc := vehicle.Settings(lp.log, lp.GetVehicle()).GetPlanSoc()
+		return float64(soc), true
+	}
+
 	_, limit := lp.GetPlanEnergy()
-	return max(0, limit-lp.getChargedEnergy()/1e3),
-		limit > 0 && !lp.socBasedPlanning()
+	return limit, false
 }
 
-// planRequiredDuration is the estimated total charging duration
-func (lp *Loadpoint) planRequiredDuration(maxPower float64) time.Duration {
-	if energy, ok := lp.remainingPlanEnergy(); ok {
-		return time.Duration(energy * 1e3 / maxPower * float64(time.Hour))
-	}
-
-	v := lp.GetVehicle()
-	if v == nil || lp.socEstimator == nil {
-		return 0
-	}
-
-	_, soc := vehicle.Settings(lp.log, v).GetPlanSoc()
-
-	return lp.socEstimator.RemainingChargeDuration(soc, maxPower)
-}
-
-// GetPlan creates a charging plan
-//
-// Results:
-// - required total charging duration
-// - actual charging plan as rate table
+// GetPlan creates a charging plan for given time and duration
 func (lp *Loadpoint) GetPlan(targetTime time.Time, requiredDuration time.Duration) (api.Rates, error) {
 	if lp.planner == nil || targetTime.IsZero() {
 		return nil, nil
@@ -90,8 +98,9 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 		return false
 	}
 
+	goal, _ := lp.GetPlanGoal()
 	maxPower := lp.EffectiveMaxPower()
-	requiredDuration := lp.planRequiredDuration(maxPower)
+	requiredDuration := lp.GetPlanRequiredDuration(goal, maxPower)
 	if requiredDuration <= 0 {
 		lp.deletePlan()
 		return false
