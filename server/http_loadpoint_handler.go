@@ -83,11 +83,54 @@ func remoteDemandHandler(lp loadpoint.API) http.HandlerFunc {
 	}
 }
 
-// planHandler returns the current effective plan
+// planHandler returns the current plan
 func planHandler(lp loadpoint.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		maxPower := lp.EffectiveMaxPower()
 		planTime := lp.EffectivePlanTime()
+
+		requiredDuration, plan, err := lp.GetPlan(planTime, maxPower)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		res := struct {
+			PlanTime time.Time `json:"planTime"`
+			Duration int64     `json:"duration"`
+			Plan     api.Rates `json:"plan"`
+			Power    float64   `json:"power"`
+		}{
+			PlanTime: planTime,
+			Duration: int64(requiredDuration.Seconds()),
+			Plan:     plan,
+			Power:    maxPower,
+		}
+
+		jsonResult(w, res)
+	}
+}
+
+// planPreviewHandler returns a plan preview for given parameters
+func planPreviewHandler(lp loadpoint.API) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		maxPower := lp.EffectiveMaxPower()
+
+		vars := mux.Vars(r)
+
+		ts, err := time.Parse(time.RFC3339, vars["time"])
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		val, err := strconv.ParseFloat(vars["value"], 64)
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		typ := vars["type"]
 
 		requiredDuration, plan, err := lp.GetPlan(planTime, maxPower)
 		if err != nil {

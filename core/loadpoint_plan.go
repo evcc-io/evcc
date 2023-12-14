@@ -65,19 +65,12 @@ func (lp *Loadpoint) planRequiredDuration(maxPower float64) time.Duration {
 // Results:
 // - required total charging duration
 // - actual charging plan as rate table
-func (lp *Loadpoint) GetPlan(targetTime time.Time, maxPower float64) (time.Duration, api.Rates, error) {
+func (lp *Loadpoint) GetPlan(targetTime time.Time, requiredDuration time.Duration) (api.Rates, error) {
 	if lp.planner == nil || targetTime.IsZero() {
-		return 0, nil, nil
+		return nil, nil
 	}
 
-	requiredDuration := lp.planRequiredDuration(maxPower)
-	if requiredDuration <= 0 {
-		return 0, nil, nil
-	}
-
-	plan, err := lp.planner.Plan(requiredDuration, targetTime)
-
-	return requiredDuration, plan, err
+	return lp.planner.Plan(requiredDuration, targetTime)
 }
 
 // plannerActive checks if the charging plan has a currently active slot
@@ -91,18 +84,22 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 		lp.publish(keys.PlanProjectedStart, planStart)
 	}()
 
-	maxPower := lp.EffectiveMaxPower()
 	planTime := lp.EffectivePlanTime()
-
-	requiredDuration, plan, err := lp.GetPlan(planTime, maxPower)
-	if err != nil {
-		lp.log.ERROR.Println("planner:", err)
+	if lp.clock.Until(planTime) < 0 && !lp.planActive {
+		lp.deletePlan()
 		return false
 	}
 
-	// nothing to do now-invalid plan from the past
-	if requiredDuration == 0 || (lp.clock.Until(planTime) < 0 && !lp.planActive) {
+	maxPower := lp.EffectiveMaxPower()
+	requiredDuration := lp.planRequiredDuration(maxPower)
+	if requiredDuration <= 0 {
 		lp.deletePlan()
+		return false
+	}
+
+	plan, err := lp.GetPlan(planTime, requiredDuration)
+	if err != nil {
+		lp.log.ERROR.Println("planner:", err)
 		return false
 	}
 

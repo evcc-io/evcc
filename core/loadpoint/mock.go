@@ -232,13 +232,12 @@ func (mr *MockAPIMockRecorder) GetPhases() *gomock.Call {
 }
 
 // GetPlan mocks base method.
-func (m *MockAPI) GetPlan(arg0 time.Time, arg1 float64) (time.Duration, api.Rates, error) {
+func (m *MockAPI) GetPlan(arg0 time.Time, arg1 time.Duration) (api.Rates, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetPlan", arg0, arg1)
-	ret0, _ := ret[0].(time.Duration)
-	ret1, _ := ret[1].(api.Rates)
-	ret2, _ := ret[2].(error)
-	return ret0, ret1, ret2
+	ret0, _ := ret[0].(api.Rates)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // GetPlan indicates an expected call of GetPlan.

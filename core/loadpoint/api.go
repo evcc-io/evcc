@@ -83,7 +83,7 @@ type API interface {
 	// SetPlanEnergy sets the charge plan energy
 	SetPlanEnergy(time.Time, float64) error
 	// GetPlan creates a charging plan
-	GetPlan(targetTime time.Time, maxPower float64) (time.Duration, api.Rates, error)
+	GetPlan(targetTime time.Time, requiredDuration time.Duration) (api.Rates, error)
 
 	// GetEnableThreshold gets the loadpoint enable threshold
 	GetEnableThreshold() float64
