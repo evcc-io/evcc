@@ -182,6 +182,8 @@ titleTargetCharge = "Partida"
 day = "Día"
 goal = "Objetivo de la carga"
 time = "Tiempo"
+active = "Activo"
+update = "Aplicar"
 
 [main.energyflow]
 battery = "Batería"
@@ -275,6 +277,8 @@ setPlan = "Establecer un plan de carga"
 planDescription = "Introduzca una hora de salida y evcc cargará el vehículo de la forma más económica o ecológica posible"
 preview = "Vista previa"
 targetIsAboveVehicleLimit = "Aumentar el límite de vehículos ({limit}) para alcanzar el objetivo de carga"
+noActivePlan = "Ningún plan activo"
+currentPlan = "Horarios programados"
 
 [main.targetChargePlan]
 chargeDuration = "Tiempo de carga"
