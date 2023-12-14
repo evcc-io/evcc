@@ -177,6 +177,8 @@ titleTargetCharge = "Afgang"
 day = "Dag"
 goal = "Opladnings mål"
 time = "Tid"
+active = "Aktiv"
+update = "Anvend"
 
 [main.energyflow]
 battery = "Batteri"
@@ -266,6 +268,8 @@ targetIsAboveVehicleLimit = "Forøg køretøjets begrænsning {limit} for at kun
 targetIsAboveLimit = Den indstillede opladningsgrænse på {limit} ignoreres i denne periode"
 setPlan = "Angiv en ladeplan"
 planDescription = "Angiv et afgangstidpunkt og evcc vil oplade køretøjet så billigt og miljøvenligt som muligt"
+noActivePlan = "Ingen aktiv plan"
+currentPlan = "Opladningsplan"
 
 [main.targetChargePlan]
 chargeDuration = "Opladningstid"
