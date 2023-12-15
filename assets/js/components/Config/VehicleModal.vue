@@ -137,7 +137,7 @@
 								</button>
 								<button
 									type="button"
-									class="btn btn-link text-muted"
+									class="btn btn-link text-gray"
 									data-bs-dismiss="modal"
 								>
 									{{ $t("config.vehicle.cancel") }}

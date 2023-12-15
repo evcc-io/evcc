@@ -10,7 +10,7 @@
 		<div :class="smallValue ? 'w-50' : 'w-100'">
 			<slot />
 		</div>
-		<div class="form-text">
+		<div class="form-text text-gray">
 			<div v-if="example">{{ $t("config.form.example") }}: {{ example }}</div>
 			<div v-if="help" v-html="helpHtml"></div>
 		</div>
