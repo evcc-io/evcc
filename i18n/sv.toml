@@ -152,6 +152,8 @@ titleTargetCharge = "Avfärd"
 day = "Dag"
 goal = "Laddmål"
 time = "Tid"
+active = "Aktiv"
+update = "Verkställ"
 
 [main.energyflow]
 battery = "Batteri"
@@ -241,6 +243,8 @@ planDescription = "Ange din avgångstid och evcc kommer att ladda så kostnadsef
 onlyInPvMode = "Laddplan fungerar enbart i sol-läge."
 preview = "Förhandsvisning"
 targetIsAboveVehicleLimit = "Öka fordonets gräns ({limit}) för att nå laddmålet."
+noActivePlan = "Ingen aktiv prenumeration"
+currentPlan = "Laddningsschema"
 
 [main.targetChargePlan]
 chargeDuration = "Laddningstid"
