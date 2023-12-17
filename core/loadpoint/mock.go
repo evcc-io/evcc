@@ -71,6 +71,14 @@ func (m *MockAPI) EffectivePlanTime() time.Time {
 	return ret0
 }
 
+// SocBasedPlanning indicates an expected call of SocBasedPlanning.
+func (m *MockAPI) SocBasedPlanning() bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SocBasedPlanning")
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
 // EffectivePlanTime indicates an expected call of EffectivePlanTime.
 func (mr *MockAPIMockRecorder) EffectivePlanTime() *gomock.Call {
 	mr.mock.ctrl.T.Helper()

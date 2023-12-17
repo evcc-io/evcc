@@ -1,6 +1,7 @@
 package server
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 	"time"
@@ -127,6 +128,16 @@ func planPreviewHandler(lp loadpoint.API) http.HandlerFunc {
 		goal, err := strconv.ParseFloat(vars["value"], 64)
 		if err != nil {
 			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		if vars["type"] == "soc" && !lp.SocBasedPlanning() {
+			jsonError(w, http.StatusBadRequest, errors.New("soc planning only available for vehicles with known soc and capacity"))
+			return
+		}
+
+		if vars["type"] == "energy" && lp.SocBasedPlanning() {
+			jsonError(w, http.StatusBadRequest, errors.New("energy planning not available for vehicles with known soc and capacity"))
 			return
 		}
 

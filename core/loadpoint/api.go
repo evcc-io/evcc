@@ -86,6 +86,8 @@ type API interface {
 	GetPlanGoal() (float64, bool)
 	// GetPlanRequiredDuration returns required duration of plan to reach the goal from current state
 	GetPlanRequiredDuration(goal, maxPower float64) time.Duration
+	// SocBasedPlanning determines if the planner is soc based
+	SocBasedPlanning() bool
 	// GetPlan creates a charging plan
 	GetPlan(targetTime time.Time, requiredDuration time.Duration) (api.Rates, error)
 

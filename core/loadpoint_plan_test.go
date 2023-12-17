@@ -45,9 +45,8 @@ func TestGetPlanAfterTargetTime(t *testing.T) {
 		ts := clock.Now().Add(time.Hour)
 		lp.setPlanEnergy(ts, 2)
 
-		d, r, err := lp.GetPlan(ts, 1e3)
+		r, err := lp.GetPlan(ts, 1e3)
 		require.NoError(t, err)
-		assert.Equal(t, 2*time.Hour, d)
 		assert.Len(t, r, 2)
 	}
 
@@ -56,9 +55,8 @@ func TestGetPlanAfterTargetTime(t *testing.T) {
 		ts := clock.Now()
 		lp.setPlanEnergy(ts, 2)
 
-		d, r, err := lp.GetPlan(ts, 1e3)
+		r, err := lp.GetPlan(ts, 1e3)
 		require.NoError(t, err)
-		assert.Equal(t, 2*time.Hour, d)
 		assert.Len(t, r, 2)
 	}
 
@@ -69,9 +67,8 @@ func TestGetPlanAfterTargetTime(t *testing.T) {
 
 		lp.planActive = true
 
-		d, r, err := lp.GetPlan(ts, 1e3)
+		r, err := lp.GetPlan(ts, 1e3)
 		require.NoError(t, err)
-		assert.Equal(t, 2*time.Hour, d)
 		assert.Len(t, r, 2)
 	}
 }
