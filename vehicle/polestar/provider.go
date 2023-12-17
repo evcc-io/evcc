@@ -1,79 +1,85 @@
 package polestar
 
 import (
+	"context"
 	"time"
 
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
 )
 
 // https://github.com/TA2k/ioBroker.polestar
 
 type Provider struct {
-	// statusG func() (StatusResponse, error)
-	expiry time.Duration
+	statusG func() (BatteryData, error)
+	odoG    func() (OdometerData, error)
+	expiry  time.Duration
 }
 
-func NewProvider(log *util.Logger, api *API, vin string, expiry, cache time.Duration) *Provider {
+func NewProvider(log *util.Logger, api *API, vin string, timeout, cache time.Duration) *Provider {
 	v := &Provider{
-		expiry: expiry,
+		statusG: provider.Cached(func() (BatteryData, error) {
+			ctx, cancel := context.WithTimeout(context.Background(), timeout)
+			defer cancel()
+			return api.Status(ctx, vin)
+		}, cache),
+		odoG: provider.Cached(func() (OdometerData, error) {
+			ctx, cancel := context.WithTimeout(context.Background(), timeout)
+			defer cancel()
+			return api.Odometer(ctx, vin)
+		}, cache),
 	}
-
-	// v.statusG = provider.Cached(func() (StatusResponse, error) {
-	// 	return v.status(
-	// 		func() (StatusResponse, error) { return api.Status(vin) },
-	// 		func() (StatusResponse, error) { return api.Refresh(vin) },
-	// 	)
-	// }, cache)
 
 	return v
 }
 
-// func (v *Provider) status(statusG, refreshG func() (StatusResponse, error)) (StatusResponse, error) {
-// res, err := statusG()
-
-// return res, err
-// }
-
 // Soc implements the api.Vehicle interface
 func (v *Provider) Soc() (float64, error) {
-	// res, err := v.statusG()
-	return 0, nil
+	res, err := v.statusG()
+	return float64(res.BatteryChargeLevelPercentage), err
 }
 
-// var _ api.ChargeState = (*Provider)(nil)
+var _ api.ChargeState = (*Provider)(nil)
 
-// // Range implements the api.VehicleRange interface
-// func (v *Provider) Status() (api.ChargeStatus, error) {
-// 	res, err := v.statusG()
+// Range implements the api.VehicleRange interface
+func (v *Provider) Status() (api.ChargeStatus, error) {
+	status, err := v.statusG()
 
-// 	switch v := res.PreCond.Data.ChargingStatus.Status; v {
-// 	case 0:
-// 		if res.PreCond.Data.ChargingActive.Value {
-// 			return api.StatusC, err
-// 		}
-// 		return api.StatusB, err
-// 	case 3:
-// 		return api.StatusA, err
-// 	default:
-// 		if err == nil {
-// 			err = fmt.Errorf("unknown status: %d", v)
-// 		}
-// 		return api.StatusNone, err
-// 	}
-// }
+	res := api.StatusA
+	if status.ChargerConnectionStatus == "CHARGER_CONNECTION_STATUS_CONNECTED" {
+		res = api.StatusB
+	}
+	if status.ChargingStatus == "CHARGING_STATUS_CHARGING" {
+		res = api.StatusB
+	}
 
-// var _ api.VehicleRange = (*Provider)(nil)
+	return res, err
+}
 
-// // Range implements the api.VehicleRange interface
-// func (v *Provider) Range() (int64, error) {
-// 	res, err := v.statusG()
-// 	return int64(res.Status.Data.RangeElectric.Value), err
-// }
+var _ api.VehicleRange = (*Provider)(nil)
 
-// var _ api.VehicleOdometer = (*Provider)(nil)
+// Range implements the api.VehicleRange interface
+func (v *Provider) Range() (int64, error) {
+	res, err := v.statusG()
+	return int64(res.EstimatedDistanceToEmptyKm), err
+}
 
-// // Odometer implements the Provider.VehicleOdometer interface
-// func (v *Provider) Odometer() (float64, error) {
-// 	res, err := v.statusG()
-// 	return res.Status.Data.Odo.Value, err
-// }
+var _ api.VehicleOdometer = (*Provider)(nil)
+
+// Odometer implements the Provider.VehicleOdometer interface
+func (v *Provider) Odometer() (float64, error) {
+	res, err := v.odoG()
+	return float64(res.OdometerMeters) / 1e3, err
+}
+
+var _ api.VehicleFinishTimer = (*Provider)(nil)
+
+// FinishTime implements the api.VehicleFinishTimer interface
+func (v *Provider) FinishTime() (time.Time, error) {
+	res, err := v.statusG()
+	if err != nil {
+		return time.Time{}, err
+	}
+	return time.Now().Add(time.Duration(res.EstimatedChargingTimeToFullMinutes) * time.Minute), nil
+}

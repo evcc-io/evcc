@@ -32,7 +32,6 @@ func NewPolestarFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		Cache          time.Duration
 	}{
 		Timeout: request.Timeout,
-		Expiry:  expiry,
 		Cache:   interval,
 	}
 
@@ -54,15 +53,16 @@ func NewPolestarFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 	api := polestar.NewAPI(log, identity)
 
-	// cc.VIN, err = ensureVehicle(cc.VIN, api.Vehicles)
-	cc.VIN, err = ensureVehicle(cc.VIN, func() ([]string, error) {
+	vehicle, err := ensureVehicleEx(cc.VIN, func() ([]polestar.ConsumerCar, error) {
 		ctx, cancel := context.WithTimeout(context.Background(), cc.Timeout)
 		defer cancel()
 		return api.Vehicles(ctx)
+	}, func(v polestar.ConsumerCar) string {
+		return v.VIN
 	})
 
 	if err == nil {
-		v.Provider = polestar.NewProvider(log, api, cc.VIN, cc.Expiry, cc.Cache)
+		v.Provider = polestar.NewProvider(log, api, vehicle.VIN, cc.Timeout, cc.Cache)
 	}
 
 	return v, err

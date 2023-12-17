@@ -1,100 +1,64 @@
-query GetConsumerInformation {
-	myStar {
-		__typename
-		getConsumer {
+query getCars {
+	getConsumerCarsV2 {
+		vin
+		internalVehicleIdentifier
+		modelYear
+		content {
+			model {
+				code
+				name
+				__typename
+			}
+			images {
+				studio {
+					url
+					angles
+					__typename
+				}
+				__typename
+			}
 			__typename
-			...MyStarConsumerDetails
 		}
-		getOrders {
+		hasPerformancePackage
+		registrationNo
+		deliveryDate
+		currentPlannedDeliveryDate
+		__typename
+	}
+}
+
+query GetBatteryData($vin: String!) {
+	getBatteryData(vin: $vin) {
+		averageEnergyConsumptionKwhPer100Km
+		batteryChargeLevelPercentage
+		chargerConnectionStatus
+		chargingCurrentAmps
+		chargingPowerWatts
+		chargingStatus
+		estimatedChargingTimeMinutesToTargetDistance
+		estimatedChargingTimeToFullMinutes
+		estimatedDistanceToEmptyKm
+		estimatedDistanceToEmptyMiles
+		eventUpdatedTimestamp {
+			iso
+			unix
 			__typename
-			...MyStarOrderDetails
 		}
-		getConsumerCars {
+		__typename
+	}
+}
+
+query GetOdometerData($vin: String!) {
+	getOdometerData(vin: $vin) {
+		averageSpeedKmPerHour
+		eventUpdatedTimestamp {
+			iso
+			unix
 			__typename
-			...MyStarCarDetails
 		}
-	}
-}
-fragment MyStarConsumerDetails on MyStarConsumer {
-	__typename
-	birthdate
-	city
-	country
-	countryCode
-	email
-	firstName
-	lastName
-	mobilePhone
-	salesforceId
-	streetAddress
-	zipCode
-	additionalCustomerIds {
+		odometerMeters
+		tripMeterAutomaticKm
+		tripMeterManualKm
 		__typename
-		code
-		id
 	}
-}
-fragment MyStarOrderDetails on MyStarOrder {
-	__typename
-	type
-	address
-	city
-	configurationId
-	consumerId
-	country
-	countryCode
-	deposit
-	district
-	downPayment
-	externalOrderId
-	orderId
-	orderState
-	packageId
-	placedAt
-	province
-	redirectUrl
-	totalPrice
-	zipCode
-	car {
-		__typename
-		...MyStarCarDetails
-	}
-	items {
-		__typename
-		...MyStarOrderItemDetails
-	}
-}
-fragment MyStarCarDetails on MyStarCar {
-	__typename
-	id
-	consumerId
-	engine
-	exterior
-	exteriorCode
-	exteriorImageUrl
-	gearbox
-	interior
-	interiorCode
-	interiorImageUrl
-	model
-	modelYear
-	package
-	packageCode
-	pdfUrl
-	status
-	steering
-	vin
-	wheels
-	wheelsCode
-}
-fragment MyStarOrderItemDetails on MyStarOrderItem {
-	__typename
-	id
-	currency
-	deposit
-	downPayment
-	price
-	quantity
-	title
-	type
 }
