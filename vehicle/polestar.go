@@ -44,7 +44,7 @@ func NewPolestarFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		embed: &cc.embed,
 	}
 
-	identity := polestar.NewIdentity(log, polestar.OAuth2Config)
+	identity := polestar.NewIdentity(log)
 	if err := identity.Login(cc.User, cc.Password); err != nil {
 		return v, fmt.Errorf("login failed: %w", err)
 	}

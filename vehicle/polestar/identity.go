@@ -35,15 +35,13 @@ var OAuth2Config = &oauth2.Config{
 
 type Identity struct {
 	*request.Helper
-	oc *oauth2.Config
 	oauth2.TokenSource
 }
 
-// NewIdentity creates Mercedes Benz identity
-func NewIdentity(log *util.Logger, oc *oauth2.Config) *Identity {
+// NewIdentity creates Polestar identity
+func NewIdentity(log *util.Logger) *Identity {
 	return &Identity{
 		Helper: request.NewHelper(log),
-		oc:     oc,
 	}
 }
 
@@ -61,7 +59,7 @@ func (v *Identity) Login(user, password string) error {
 	cv := oauth2.GenerateVerifier()
 
 	state := lo.RandomString(16, lo.AlphanumericCharset)
-	uri := v.oc.AuthCodeURL(state, oauth2.AccessTypeOffline, oauth2.S256ChallengeOption(cv))
+	uri := OAuth2Config.AuthCodeURL(state, oauth2.AccessTypeOffline, oauth2.S256ChallengeOption(cv))
 
 	var param request.InterceptResult
 	v.Client.CheckRedirect, param = request.InterceptRedirect("resumePath", false)
