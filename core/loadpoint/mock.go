@@ -71,14 +71,6 @@ func (m *MockAPI) EffectivePlanTime() time.Time {
 	return ret0
 }
 
-// SocBasedPlanning indicates an expected call of SocBasedPlanning.
-func (m *MockAPI) SocBasedPlanning() bool {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SocBasedPlanning")
-	ret0, _ := ret[0].(bool)
-	return ret0
-}
-
 // EffectivePlanTime indicates an expected call of EffectivePlanTime.
 func (mr *MockAPIMockRecorder) EffectivePlanTime() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
@@ -554,6 +546,20 @@ func (m *MockAPI) SetVehicle(arg0 api.Vehicle) {
 func (mr *MockAPIMockRecorder) SetVehicle(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetVehicle", reflect.TypeOf((*MockAPI)(nil).SetVehicle), arg0)
+}
+
+// SocBasedPlanning mocks base method.
+func (m *MockAPI) SocBasedPlanning() bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SocBasedPlanning")
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// SocBasedPlanning indicates an expected call of SocBasedPlanning.
+func (mr *MockAPIMockRecorder) SocBasedPlanning() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SocBasedPlanning", reflect.TypeOf((*MockAPI)(nil).SocBasedPlanning))
 }
 
 // StartVehicleDetection mocks base method.

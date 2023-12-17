@@ -2,6 +2,7 @@ package server
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -131,13 +132,19 @@ func planPreviewHandler(lp loadpoint.API) http.HandlerFunc {
 			return
 		}
 
-		if vars["type"] == "soc" && !lp.SocBasedPlanning() {
-			jsonError(w, http.StatusBadRequest, errors.New("soc planning only available for vehicles with known soc and capacity"))
-			return
-		}
-
-		if vars["type"] == "energy" && lp.SocBasedPlanning() {
-			jsonError(w, http.StatusBadRequest, errors.New("energy planning not available for vehicles with known soc and capacity"))
+		switch typ := vars["type"]; typ {
+		case "soc":
+			if !lp.SocBasedPlanning() {
+				jsonError(w, http.StatusBadRequest, errors.New("soc planning only available for vehicles with known soc and capacity"))
+				return
+			}
+		case "energy":
+			if lp.SocBasedPlanning() {
+				jsonError(w, http.StatusBadRequest, errors.New("energy planning not available for vehicles with known soc and capacity"))
+				return
+			}
+		default:
+			jsonError(w, http.StatusBadRequest, fmt.Errorf("invalid plan type: %s", typ))
 			return
 		}
 
