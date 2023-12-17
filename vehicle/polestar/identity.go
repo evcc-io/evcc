@@ -1,11 +1,7 @@
 package polestar
 
 import (
-	"crypto/rand"
-	"encoding/base64"
-	"errors"
 	"fmt"
-	"io"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
@@ -14,13 +10,17 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/samber/lo"
 	"golang.org/x/net/publicsuffix"
 	"golang.org/x/oauth2"
 )
 
 // https://github.com/TA2k/ioBroker.polestar
 
-const OAuthURI = "https://polestarid.eu.polestar.com"
+const (
+	OAuthURI  = "https://polestarid.eu.polestar.com"
+	basicAuth = "cG9seHBsb3JlOlhhaUtvb0hlaXJlaXNvb3NhaDBFdjZxdW9oczhjb2hGZUtvaHdpZTFhZTdraWV3b2hkb295ZWk5QWVZZWlXb2g"
+)
 
 // https://polestarid.eu.polestar.com/.well-known/openid-configuration
 var OAuth2Config = &oauth2.Config{
@@ -30,11 +30,7 @@ var OAuth2Config = &oauth2.Config{
 		AuthURL:  OAuthURI + "/as/authorization.oauth2",
 		TokenURL: OAuthURI + "/as/token.oauth2",
 	},
-	Scopes: []string{"openid", "profile", "email", "customer:attributes"}, // "oidc.profile.read",
-	// "energy:battery_charge_level", "energy:charging_connection_status", "energy:charging_system_status",
-	// "energy:electric_range", "energy:estimated_charging_time",
-	// "exve:odometer_status", "vehicle:capabilities", "vehicle:climatization_status", "vehicle:climatization",
-
+	Scopes: []string{"openid", "profile", "email", "customer:attributes"},
 }
 
 type Identity struct {
@@ -51,15 +47,6 @@ func NewIdentity(log *util.Logger, oc *oauth2.Config) *Identity {
 	}
 }
 
-// github.com/uhthomas/tesla
-func state() string {
-	var b [9]byte
-	if _, err := io.ReadFull(rand.Reader, b[:]); err != nil {
-		panic(err)
-	}
-	return base64.RawURLEncoding.EncodeToString(b[:])
-}
-
 func (v *Identity) Login(user, password string) error {
 	if v.Client.Jar == nil {
 		var err error
@@ -73,10 +60,8 @@ func (v *Identity) Login(user, password string) error {
 
 	cv := oauth2.GenerateVerifier()
 
-	uri := v.oc.AuthCodeURL(state(), oauth2.AccessTypeOffline,
-		oauth2.S256ChallengeOption(cv),
-		oauth2.SetAuthURLParam("access_token_manager_id", "JWTpolxplore"),
-	)
+	state := lo.RandomString(16, lo.AlphanumericCharset)
+	uri := v.oc.AuthCodeURL(state, oauth2.AccessTypeOffline, oauth2.S256ChallengeOption(cv))
 
 	var param request.InterceptResult
 	v.Client.CheckRedirect, param = request.InterceptRedirect("resumePath", false)
@@ -121,7 +106,7 @@ func (v *Identity) Login(user, password string) error {
 		var req *http.Request
 		req, err = request.New(http.MethodPost, OAuth2Config.Endpoint.TokenURL, strings.NewReader(params.Encode()), map[string]string{
 			"Content-Type":  request.FormContent,
-			"Authorization": "Basic cG9seHBsb3JlOlhhaUtvb0hlaXJlaXNvb3NhaDBFdjZxdW9oczhjb2hGZUtvaHdpZTFhZTdraWV3b2hkb295ZWk5QWVZZWlXb2g",
+			"Authorization": "Basic " + basicAuth,
 		})
 		if err == nil {
 			err = v.DoJSON(req, &token)
@@ -136,26 +121,22 @@ func (v *Identity) Login(user, password string) error {
 }
 
 func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
-	return nil, errors.New("foo")
+	data := url.Values{
+		"redirect_uri":  []string{OAuth2Config.RedirectURL},
+		"refresh_token": []string{token.RefreshToken},
+		"grant_type":    []string{"refresh_token"},
+	}
+	req, err := request.New(http.MethodPost, OAuth2Config.Endpoint.TokenURL, strings.NewReader(data.Encode()), map[string]string{
+		"Content-Type":  request.FormContent,
+		"Authorization": "Basic " + basicAuth,
+	})
 
-	// data := struct {
-	// 	AccessToken  string `json:"accessToken"`
-	// 	RefreshToken string `json:"refreshToken"`
-	// }{
-	// 	AccessToken:  token.AccessToken,
-	// 	RefreshToken: token.RefreshToken,
-	// }
+	var tok oauth.Token
+	if err == nil {
+		if err := v.DoJSON(req, &tok); err != nil {
+			return nil, err
+		}
+	}
 
-	// uri := fmt.Sprintf("%s/%s", API, "accounts/refresh_token")
-	// req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
-
-	// var res *oauth2.Token
-	// if err == nil {
-	// 	var refreshed Token
-	// 	if err = c.DoJSON(req, &refreshed); err == nil {
-	// 		res = refreshed.AsOAuth2Token()
-	// 	}
-	// }
-
-	// return res, err
+	return (*oauth2.Token)(&tok), err
 }

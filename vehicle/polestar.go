@@ -27,12 +27,11 @@ func NewPolestarFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		embed          `mapstructure:",squash"`
 		User, Password string
 		VIN            string
-		Timeout        time.Duration
-		Expiry         time.Duration
 		Cache          time.Duration
+		Timeout        time.Duration
 	}{
-		Timeout: request.Timeout,
 		Cache:   interval,
+		Timeout: request.Timeout,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -46,8 +45,7 @@ func NewPolestarFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	identity := polestar.NewIdentity(log, polestar.OAuth2Config)
-	err := identity.Login(cc.User, cc.Password)
-	if err != nil {
+	if err := identity.Login(cc.User, cc.Password); err != nil {
 		return v, fmt.Errorf("login failed: %w", err)
 	}
 
