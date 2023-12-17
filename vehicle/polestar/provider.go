@@ -14,7 +14,6 @@ import (
 type Provider struct {
 	statusG func() (BatteryData, error)
 	odoG    func() (OdometerData, error)
-	expiry  time.Duration
 }
 
 func NewProvider(log *util.Logger, api *API, vin string, timeout, cache time.Duration) *Provider {
