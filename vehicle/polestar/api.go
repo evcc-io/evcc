@@ -8,8 +8,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
-	"github.com/samber/lo"
-	"github.com/shurcooL/graphql"
+	"github.com/hasura/go-graphql-client"
 	"golang.org/x/oauth2"
 )
 
@@ -49,22 +48,23 @@ func NewAPI(log *util.Logger, identity oauth2.TokenSource) *API {
 
 func (v *API) Vehicles(ctx context.Context) ([]string, error) {
 	var res struct {
-		MyStar struct {
-			// Type            string `graphql:"__typename"`
-			GetConsumer     Consumer
-			GetConsumerCars []ConsumerCar
+		GetConsumerCarsV2 struct {
+			Vin                       string
+			InternalVehicleIdentifier string
 		}
 	}
 
 	var vins []string
-	err := v.client.Query(ctx, &res, nil)
-	if err == nil {
-		vins = lo.Map(res.MyStar.GetConsumerCars, func(v ConsumerCar, _ int) string {
-			return v.Vin
-		})
-	}
+	err := v.client.Query(ctx, &res, nil, graphql.OperationName("getCars"))
+	// if err == nil {
+	// 	vins = lo.Map(res.MyStar.GetConsumerCars, func(v ConsumerCar, _ int) string {
+	// 		return v.Vin
+	// 	})
+	// }
 
-	v.Status(ctx, vins[0])
+	fmt.Println(res)
+
+	// v.Status(ctx, vins[0])
 
 	return vins, err
 }

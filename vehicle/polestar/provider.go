@@ -34,8 +34,8 @@ func NewProvider(log *util.Logger, api *API, vin string, expiry, cache time.Dura
 // return res, err
 // }
 
-// SoC implements the api.Vehicle interface
-func (v *Provider) SoC() (float64, error) {
+// Soc implements the api.Vehicle interface
+func (v *Provider) Soc() (float64, error) {
 	// res, err := v.statusG()
 	return 0, nil
 }

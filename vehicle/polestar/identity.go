@@ -14,7 +14,6 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
-	cv "github.com/nirasan/go-oauth-pkce-code-verifier"
 	"golang.org/x/net/publicsuffix"
 	"golang.org/x/oauth2"
 )
@@ -72,28 +71,24 @@ func (v *Identity) Login(user, password string) error {
 		}
 	}
 
-	cv, err := cv.CreateCodeVerifier()
-	if err != nil {
-		return err
-	}
+	cv := oauth2.GenerateVerifier()
 
 	uri := v.oc.AuthCodeURL(state(), oauth2.AccessTypeOffline,
-		oauth2.SetAuthURLParam("code_challenge", cv.CodeChallengeS256()),
-		oauth2.SetAuthURLParam("code_challenge_method", "S256"),
+		oauth2.S256ChallengeOption(cv),
 		oauth2.SetAuthURLParam("access_token_manager_id", "JWTpolxplore"),
 	)
 
+	var param request.InterceptResult
+	v.Client.CheckRedirect, param = request.InterceptRedirect("resumePath", false)
+
+	_, err := v.Get(uri)
+
 	var resume string
 	if err == nil {
-		var param request.InterceptResult
-		v.Client.CheckRedirect, param = request.InterceptRedirect("resumePath", false)
-
-		if _, err = v.Get(uri); err == nil {
-			resume, err = param()
-		}
-
-		v.Client.CheckRedirect = nil
+		resume, err = param()
 	}
+
+	v.Client.CheckRedirect = nil
 
 	var code string
 	if err == nil {
@@ -118,7 +113,7 @@ func (v *Identity) Login(user, password string) error {
 	if err == nil {
 		params := url.Values{
 			"code":          []string{code},
-			"code_verifier": []string{cv.CodeChallengePlain()},
+			"code_verifier": []string{cv},
 			"redirect_uri":  []string{OAuth2Config.RedirectURL},
 			"grant_type":    []string{"authorization_code"},
 		}
