@@ -13,7 +13,10 @@ import (
 
 // https://github.com/TA2k/ioBroker.smart-eq
 
-const ApiURI = "https://oneapp.microservice.smart.mercedes-benz.com/seqc/v0"
+const (
+	ApiURI = "https://oneapp.microservice.smart.mercedes-benz.com/seqc/v0"
+	ApiKey = "3_L94eyQ-wvJhWm7Afp1oBhfTGXZArUfSHHW9p9Pncg513hZELXsxCfMWHrF8f5P5a"
+)
 
 var OAuth2Config = &oauth2.Config{
 	ClientID:    "70d89501-938c-4bec-82d0-6abb550b0825",

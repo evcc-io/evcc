@@ -99,9 +99,9 @@ func (v *Niu) login() error {
 
 // md5Hash creates a MD5 hash based on a string
 func md5Hash(text string) (string, error) {
-	hasher := md5.New()
-	_, err := hasher.Write([]byte(text))
-	return hex.EncodeToString(hasher.Sum(nil)), err
+	hash := md5.New()
+	_, err := hash.Write([]byte(text))
+	return hex.EncodeToString(hash.Sum(nil)), err
 }
 
 // request implements the Niu web request
