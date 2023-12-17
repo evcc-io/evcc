@@ -30,9 +30,9 @@ func (lp *Loadpoint) setPlanActive(active bool) {
 
 // deletePlan deletes the charging plan, either loadpoint or vehicle
 func (lp *Loadpoint) deletePlan() {
-	lp.setPlanEnergy(time.Time{}, 0)
-
-	if v := lp.GetVehicle(); v != nil {
+	if !lp.socBasedPlanning() {
+		lp.setPlanEnergy(time.Time{}, 0)
+	} else if v := lp.GetVehicle(); v != nil {
 		vehicle.Settings(lp.log, v).SetPlanSoc(time.Time{}, 0)
 	}
 }
