@@ -135,11 +135,12 @@ func TestNilTariff(t *testing.T) {
 
 	plan, err := p.Plan(time.Hour, clock.Now().Add(30*time.Minute))
 	require.NoError(t, err)
-	assert.False(t, SlotAt(clock.Now(), plan).IsEmpty(), "should start past start time")
-
-	plan, err = p.Plan(time.Hour, clock.Now().Add(-30*time.Minute))
-	require.NoError(t, err)
-	assert.True(t, SlotAt(clock.Now(), plan).IsEmpty(), "should not start past target time")
+	assert.Equal(t, api.Rates{
+		{
+			Start: clock.Now(),
+			End:   clock.Now().Add(60 * time.Minute),
+		},
+	}, plan, "expected simple plan")
 }
 
 func TestFlatTariffTargetInThePast(t *testing.T) {
@@ -155,13 +156,20 @@ func TestFlatTariffTargetInThePast(t *testing.T) {
 		tariff: trf,
 	}
 
+	simplePlan := api.Rates{
+		{
+			Start: clock.Now(),
+			End:   clock.Now().Add(60 * time.Minute),
+		},
+	}
+
 	plan, err := p.Plan(time.Hour, clock.Now().Add(30*time.Minute))
 	require.NoError(t, err)
-	assert.False(t, SlotAt(clock.Now(), plan).IsEmpty(), "should start past start time")
+	assert.Equal(t, simplePlan, plan, "expected simple plan")
 
 	plan, err = p.Plan(time.Hour, clock.Now().Add(-30*time.Minute))
 	require.NoError(t, err)
-	assert.True(t, SlotAt(clock.Now(), plan).IsEmpty(), "should not start past target time")
+	assert.Equal(t, simplePlan, plan, "expected simple plan")
 }
 
 func TestFlatTariffLongSlots(t *testing.T) {
@@ -227,13 +235,20 @@ func TestChargeAfterTargetTime(t *testing.T) {
 		tariff: trf,
 	}
 
+	simplePlan := api.Rates{
+		{
+			Start: clock.Now(),
+			End:   clock.Now().Add(60 * time.Minute),
+		},
+	}
+
 	plan, err := p.Plan(time.Hour, clock.Now())
 	require.NoError(t, err)
-	assert.True(t, SlotAt(clock.Now(), plan).IsEmpty(), "should not start past target time")
+	assert.Equal(t, simplePlan, plan, "expected simple plan")
 
 	plan, err = p.Plan(time.Hour, clock.Now().Add(-time.Hour))
 	require.NoError(t, err)
-	assert.True(t, SlotAt(clock.Now(), plan).IsEmpty(), "should not start past target time")
+	assert.Equal(t, simplePlan, plan, "expected simple plan")
 }
 
 func TestContinuousPlanNoTariff(t *testing.T) {
