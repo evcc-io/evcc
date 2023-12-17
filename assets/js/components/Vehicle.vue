@@ -14,7 +14,6 @@
 			@limit-soc-drag="limitSocDrag"
 			@plan-clicked="openPlanModal"
 		/>
-
 		<div class="details d-flex flex-wrap justify-content-between">
 			<LabelAndValue
 				v-if="socBasedCharging"

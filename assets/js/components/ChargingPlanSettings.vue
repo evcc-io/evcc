@@ -12,6 +12,7 @@
 					:soc-based-planning="socBasedPlanning"
 					@plan-updated="(data) => updatePlan({ index: 0, ...data })"
 					@plan-removed="() => removePlan(0)"
+					@plan-preview="previewPlan"
 				/>
 			</div>
 		</div>
@@ -19,7 +20,7 @@
 		<hr />
 		<h5>
 			<div class="inner">
-				{{ $t(`main.targetCharge.${plans.length ? "currentPlan" : "noActivePlan"}`) }}
+				{{ $t(`main.targetCharge.${isPreview ? "preview" : "currentPlan"}`) }}
 			</div>
 		</h5>
 		<ChargingPlanPreview v-if="chargingPlanPreviewProps" v-bind="chargingPlanPreviewProps" />
@@ -67,6 +68,7 @@ export default {
 			plan: {},
 			activeTab: "time",
 			loading: false,
+			isPreview: false,
 		};
 	},
 	computed: {
@@ -86,20 +88,47 @@ export default {
 	watch: {
 		plans: {
 			handler() {
-				this.fetchPlan();
+				if (this.plans.length > 0) {
+					this.fetchPlan();
+				}
 			},
 			deep: true,
 		},
 	},
 	mounted() {
-		this.fetchPlan();
+		if (this.plans.length > 0) {
+			this.fetchPlan();
+		}
 	},
 	methods: {
-		fetchPlan: async function () {
+		fetchActivePlan: async function () {
+			return await api.get(`loadpoints/${this.id}/plan`);
+		},
+		fetchPlanPreviewSoc: async function (soc, time) {
+			const timeISO = time.toISOString();
+			return await api.get(`loadpoints/${this.id}/plan/preview/soc/${soc}/${timeISO}`);
+		},
+		fetchPlanPreviewEnergy: async function (energy, time) {
+			const timeISO = time.toISOString();
+			return await api.get(`loadpoints/${this.id}/plan/preview/energy/${energy}/${timeISO}`);
+		},
+		fetchPlan: async function (preview) {
 			if (!this.loading) {
 				try {
 					this.loading = true;
-					this.plan = (await api.get(`loadpoints/${this.id}/plan`)).data.result;
+
+					let planRes = null;
+					if (preview && this.socBasedPlanning) {
+						planRes = await this.fetchPlanPreviewSoc(preview.soc, preview.time);
+						this.isPreview = true;
+					} else if (preview && !this.socBasedPlanning) {
+						planRes = await this.fetchPlanPreviewEnergy(preview.energy, preview.time);
+						this.isPreview = true;
+					} else {
+						planRes = await this.fetchActivePlan();
+						this.isPreview = false;
+					}
+					this.plan = planRes.data.result;
 
 					const tariffRes = await api.get(`tariff/planner`, {
 						validateStatus: function (status) {
@@ -142,6 +171,9 @@ export default {
 		},
 		updatePlan: function (data) {
 			this.$emit("plan-updated", data);
+		},
+		previewPlan: function (data) {
+			this.fetchPlan(data);
 		},
 	},
 };
