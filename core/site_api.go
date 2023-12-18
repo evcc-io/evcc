@@ -214,8 +214,8 @@ func (site *Site) GetTariff(tariff string) api.Tariff {
 
 // GetBatteryControl returns the battery control mode
 func (site *Site) GetBatteryDischargeControl() bool {
-	site.Lock()
-	defer site.Unlock()
+	site.RLock()
+	defer site.RUnlock()
 	return site.batteryDischargeControl
 }
 

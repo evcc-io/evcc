@@ -136,7 +136,7 @@ func boolHandler(set func(bool) error, get func() bool) http.HandlerFunc {
 	}
 }
 
-// boolGetHandler retrievs bool api values
+// boolGetHandler retrieves bool api values
 func boolGetHandler(get func() bool) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		jsonResult(w, get())
