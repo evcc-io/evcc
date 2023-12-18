@@ -105,8 +105,8 @@ type Loadpoint struct {
 	// exposed public configuration
 	sync.RWMutex // guard status
 
-	vehicleMux sync.Mutex     // guard vehicle
-	Mode_      api.ChargeMode `mapstructure:"mode"` // Default charge mode, used for disconnect
+	vmu   sync.RWMutex   // guard vehicle
+	Mode_ api.ChargeMode `mapstructure:"mode"` // Default charge mode, used for disconnect
 
 	Title_           string `mapstructure:"title"`    // UI title
 	Priority_        int    `mapstructure:"priority"` // Priority
