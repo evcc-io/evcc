@@ -58,6 +58,22 @@ func NewSmartHelloFromConfig(other map[string]interface{}) (api.Vehicle, error) 
 		embed: &cc.embed,
 	}
 
+	// identity := mb.NewIdentity(log, hello.OAuth2Config)
+	// err := identity.Login(cc.User, cc.Password)
+	// if err != nil {
+	// 	return v, fmt.Errorf("login failed: %w", err)
+	// }
+
+	// api := hello.NewAPI(log, identity)
+
+	// cc.VIN, err = ensureVehicle(cc.VIN, api.Vehicles)
+
+	// if err == nil {
+	// 	v.Provider = hello.NewProvider(log, api, cc.VIN, cc.Expiry, cc.Cache)
+	// }
+
+	client := request.NewHelper(log)
+
 	//    const context = await this.requestClient({
 	//   method: 'get',
 	//   url: 'https://awsapi.future.smart.com/login-app/api/v1/authorize?uiLocales=de-DE&uiLocales=de-DE',
@@ -78,6 +94,37 @@ func NewSmartHelloFromConfig(other map[string]interface{}) (api.Vehicle, error) 
 	//   this.log.debug(JSON.stringify(res.data));
 	//   return qs.parse(res.request.path.split('?')[1]);
 	// });
+
+	uri := "https://awsapi.future.smart.com/login-app/api/v1/authorize?uiLocales=de-DE&uiLocales=de-DE"
+	req, _ := request.New(http.MethodGet, uri, nil, map[string]string{
+		"user-agent":       "Mozilla/5.0 (Linux; Android 9; ANE-LX1 Build/HUAWEIANE-L21; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/118.0.0.0 Mobile Safari/537.36",
+		"x-requested-with": "com.smart.hellosmart",
+	})
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	u := resp.Request.URL
+
+	data := url.Values{
+		"loginID":           {cc.User},
+		"password":          {cc.Password},
+		"sessionExpiration": {"2592000"},
+		"targetEnv":         {"jssdk"},
+		"include":           {"profile,data,emails,subscriptions,preferences,"},
+		"includeUserInfo":   {"true"},
+		"loginMode":         {"standard"},
+		"lang":              {"de"},
+		"APIKey":            {hello.ApiKey},
+		"source":            {"showScreenSet"},
+		"sdk":               {"js_latest"},
+		"authMode":          {"cookie"},
+		"pageURL":           {"https://app.id.smart.com/login?gig_ui_locales=de-DE"},
+		"sdkBuild":          {"15482"},
+		"format":            {"json"},
+	}
 
 	// const loginResponse = await this.requestClient({
 	//   method: 'post',
@@ -117,53 +164,6 @@ func NewSmartHelloFromConfig(other map[string]interface{}) (api.Vehicle, error) 
 	//   },
 	// })
 
-	// identity := mb.NewIdentity(log, hello.OAuth2Config)
-	// err := identity.Login(cc.User, cc.Password)
-	// if err != nil {
-	// 	return v, fmt.Errorf("login failed: %w", err)
-	// }
-
-	// api := hello.NewAPI(log, identity)
-
-	// cc.VIN, err = ensureVehicle(cc.VIN, api.Vehicles)
-
-	// if err == nil {
-	// 	v.Provider = hello.NewProvider(log, api, cc.VIN, cc.Expiry, cc.Cache)
-	// }
-
-	client := request.NewHelper(log)
-
-	uri := "https://awsapi.future.smart.com/login-app/api/v1/authorize?uiLocales=de-DE&uiLocales=de-DE"
-	req, _ := request.New(http.MethodGet, uri, nil, map[string]string{
-		"user-agent":       "Mozilla/5.0 (Linux; Android 9; ANE-LX1 Build/HUAWEIANE-L21; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/118.0.0.0 Mobile Safari/537.36",
-		"x-requested-with": "com.smart.hellosmart",
-	})
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	u := resp.Request.URL
-
-	data := url.Values{
-		"loginID":           {cc.User},
-		"password":          {cc.Password},
-		"sessionExpiration": {"2592000"},
-		"targetEnv":         {"jssdk"},
-		"include":           {"profile,data,emails,subscriptions,preferences,"},
-		"includeUserInfo":   {"true"},
-		"loginMode":         {"standard"},
-		"lang":              {"de"},
-		"APIKey":            {hello.ApiKey},
-		"source":            {"showScreenSet"},
-		"sdk":               {"js_latest"},
-		"authMode":          {"cookie"},
-		"pageURL":           {"https://app.id.smart.com/login?gig_ui_locales=de-DE"},
-		"sdkBuild":          {"15482"},
-		"format":            {"json"},
-	}
-
 	uri = "https://auth.smart.com/accounts.login"
 	req, _ = request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), map[string]string{
 		"user-agent":       "Mozilla/5.0 (Linux; Android 9; ANE-LX1 Build/HUAWEIANE-L21; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/118.0.0.0 Mobile Safari/537.36",
@@ -179,6 +179,10 @@ func NewSmartHelloFromConfig(other map[string]interface{}) (api.Vehicle, error) 
 			LoginToken string `json:"login_token"`
 			ExpiresIn  int    `json:"expires_in,string"`
 		}
+		UserInfo struct {
+			UID                           string
+			FirstName, LastName, NickName string
+		}
 	}
 
 	if err := client.DoJSON(req, &login); err != nil {
@@ -192,7 +196,30 @@ func NewSmartHelloFromConfig(other map[string]interface{}) (api.Vehicle, error) 
 	var param request.InterceptResult
 	client.CheckRedirect, param = request.InterceptRedirect("access_token", true)
 
-	fmt.Println(login)
+	//   const authUrl =
+	//     'https://auth.smart.com/oidc/op/v1.0/3_L94eyQ-wvJhWm7Afp1oBhfTGXZArUfSHHW9p9Pncg513hZELXsxCfMWHrF8f5P5a/authorize/continue?context=' +
+	//     context +
+	//     '&login_token=' +
+	//     loginToken
+	//   const cookieValue =
+	//     'gmid=gmid.ver4.AcbHPqUK5Q.xOaWPhRTb7gy-6-GUW6cxQVf_t7LhbmeabBNXqqqsT6dpLJLOWCGWZM07EkmfM4j.u2AMsCQ9ZsKc6ugOIoVwCgryB2KJNCnbBrlY6pq0W2Ww7sxSkUa9_WTPBIwAufhCQYkb7gA2eUbb6EIZjrl5mQ.sc3; ucid=hPzasmkDyTeHN0DinLRGvw; hasGmid=ver4; gig_bootstrap_3_L94eyQ-wvJhWm7Afp1oBhfTGXZArUfSHHW9p9Pncg513hZELXsxCfMWHrF8f5P5a=auth_ver4; glt_3_L94eyQ-wvJhWm7Afp1oBhfTGXZArUfSHHW9p9Pncg513hZELXsxCfMWHrF8f5P5a=' +
+	//     loginToken
+	//   req = new Request(authUrl)
+	//   req.headers = {
+	//     accept: '*/*',
+	//     cookie: cookieValue,
+	//     'accept-language': 'de-DE,de;q=0.9,en-DE;q=0.8,en-US;q=0.7,en;q=0.6',
+	//     'x-requested-with': 'com.smart.hellosmart',
+	//     'user-agent': 'Hello smart/1.4.0 (iPhone; iOS 17.1; Scale/3.00)'
+	//   }
+	//   const authResult = await req.load()
+	//   req = new Request(req.response.url)
+	//   // follow redirect
+	//   const finalAuthResult = await req.load()
+	//   const tokens = getUrlParams(req.response.url)
+	//   await saveCredentials(tokens)
+	//   return tokens
+
 	uri = fmt.Sprintf("https://auth.smart.com/oidc/op/v1.0/%s/authorize/continue?context=%s&login_token=%s", hello.ApiKey, u.Query().Get("context"), login.SessionInfo.LoginToken)
 	req, _ = request.New(http.MethodGet, uri, nil, map[string]string{
 		"user-agent":       "Mozilla/5.0 (Linux; Android 9; ANE-LX1 Build/HUAWEIANE-L21; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/118.0.0.0 Mobile Safari/537.36",
