@@ -147,7 +147,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	go socketHub.Run(pipe.NewDropper(ignoreEmpty).Pipe(tee.Attach()), cache)
 
 	// setup values channel
-	valueChan := make(chan util.Param)
+	valueChan := make(chan util.Param, 1)
 	go tee.Run(valueChan)
 
 	// capture log messages for UI
