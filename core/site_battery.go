@@ -8,8 +8,8 @@ import (
 
 // GetBatteryMode returns the battery mode
 func (site *Site) GetBatteryMode() api.BatteryMode {
-	site.Lock()
-	defer site.Unlock()
+	site.RLock()
+	defer site.RUnlock()
 	return site.batteryMode
 }
 
@@ -17,8 +17,13 @@ func (site *Site) GetBatteryMode() api.BatteryMode {
 func (site *Site) SetBatteryMode(batMode api.BatteryMode) {
 	site.Lock()
 	defer site.Unlock()
-	site.batteryMode = batMode
-	site.publish(keys.BatteryMode, batMode)
+
+	site.log.DEBUG.Println("set battery mode:", batMode)
+
+	if site.batteryMode != batMode {
+		site.batteryMode = batMode
+		site.publish(keys.BatteryMode, batMode)
+	}
 }
 
 func (site *Site) determineBatteryMode(loadpoints []loadpoint.API) api.BatteryMode {
