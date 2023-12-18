@@ -295,14 +295,14 @@ func NewSmartHelloFromConfig(other map[string]interface{}) (api.Vehicle, error) 
 		"accessToken": token.AccessToken,
 	}
 
-	uri = "/auth/account/session/secure"
-	sign, err := createSignature(nonce, params, ts, http.MethodPost, uri, data2)
+	path := "/auth/account/session/secure"
+	sign, err := createSignature(nonce, params, ts, http.MethodPost, path, data2)
 	if err != nil {
 		return nil, err
 	}
 
 	deviceId := lo.RandomString(16, lo.AlphanumericCharset)
-	uri = fmt.Sprintf("https://api.ecloudeu.com/%s?%s", strings.TrimPrefix(uri, "/"), params.Encode())
+	uri = fmt.Sprintf("https://api.ecloudeu.com/%s?%s", strings.TrimPrefix(path, "/"), params.Encode())
 	req, _ = request.New(http.MethodPost, uri, request.MarshalJSON(data2), map[string]string{
 		"Accept-Encoding":         "gzip",
 		"Accept-language":         "en_US",
@@ -345,13 +345,11 @@ func createSignature(nonce string, params url.Values, ts, method, uri string, po
 		if err != nil {
 			return "", err
 		}
+		fmt.Println(string(bytes))
 
-		md5 := md5.New()
-		if _, err := md5.Write(bytes); err != nil {
-			return "", err
-		}
-
-		md5Hash = hex.EncodeToString(md5.Sum(nil))
+		hash := md5.New()
+		hash.Write(bytes)
+		md5Hash = hex.EncodeToString(hash.Sum(nil))
 	}
 
 	payload := fmt.Sprintf(`application/json;responseformat=3
@@ -374,9 +372,7 @@ x-api-signature-version:1.0
 	fmt.Println(string(secret))
 
 	mac := hmac.New(sha1.New, secret)
-	if _, err := mac.Write([]byte(payload)); err != nil {
-		return "", err
-	}
+	mac.Write([]byte(payload))
 
 	return hex.EncodeToString(mac.Sum(nil)), nil
 }
