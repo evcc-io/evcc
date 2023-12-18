@@ -2,10 +2,7 @@ package mb
 
 import (
 	"context"
-	"crypto/rand"
-	"encoding/base64"
 	"fmt"
-	"io"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
@@ -13,6 +10,7 @@ import (
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/samber/lo"
 	"golang.org/x/net/publicsuffix"
 	"golang.org/x/oauth2"
 )
@@ -36,15 +34,6 @@ func NewIdentity(log *util.Logger, oc *oauth2.Config) *Identity {
 	}
 }
 
-// github.com/uhthomas/tesla
-func state() string {
-	var b [9]byte
-	if _, err := io.ReadFull(rand.Reader, b[:]); err != nil {
-		panic(err)
-	}
-	return base64.RawURLEncoding.EncodeToString(b[:])
-}
-
 func (v *Identity) Login(user, password string) error {
 	if v.Client.Jar == nil {
 		v.Client.Jar, _ = cookiejar.New(&cookiejar.Options{
@@ -57,7 +46,8 @@ func (v *Identity) Login(user, password string) error {
 
 	cv := oauth2.GenerateVerifier()
 
-	uri := v.oc.AuthCodeURL(state(), oauth2.AccessTypeOffline, oauth2.S256ChallengeOption(cv))
+	state := lo.RandomString(16, lo.AlphanumericCharset)
+	uri := v.oc.AuthCodeURL(state, oauth2.AccessTypeOffline, oauth2.S256ChallengeOption(cv))
 	if _, err := v.Get(uri); err != nil {
 		return err
 	}
