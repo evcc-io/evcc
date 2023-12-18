@@ -207,6 +207,7 @@ currents = "Charging current"
 default = "default"
 disclaimerHint = "Note:"
 disclaimerText = "Changes will be lost after the server is restarted."
+onlyForSocBasedCharging = "These options are only available for vehicles with known charging level."
 title = "Settings {0}"
 vehicle = "Vehicle"
 
