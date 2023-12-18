@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 
@@ -249,66 +250,109 @@ func NewSmartHelloFromConfig(other map[string]interface{}) (api.Vehicle, error) 
 		// Expiry: time.Now().Add(time.Duration(u.Query().Get("expires_in"))*time.Second),
 	}
 
-	ts := time.Now().Format(time.RFC3339)
+	ts := strconv.FormatInt(time.Now().UnixMilli(), 10)
 	nonce := lo.RandomString(16, lo.AlphanumericCharset)
 
+	// params := url.Values{
+	// 	"needSharedCar": []string{"1"},
+	// 	"userId":        []string{login.SessionInfo.LoginToken},
+	// }
+	// uri = fmt.Sprintf("https://api.ecloudeu.com/device-platform/user/vehicle/secure?%s", params.Encode())
+	// sign, err := createSignature(nonce, params, ts, http.MethodGet, uri, "")
+	// if err != nil {
+	// 	return nil, err
+	// }
+
+	// deviceId := lo.RandomString(16, lo.AlphanumericCharset)
+	// req, _ = request.New(http.MethodGet, uri, nil, map[string]string{
+	// 	"x-app-id":                "SmartAPPEU",
+	// 	"accept":                  "application/json;responseformat=3",
+	// 	"x-agent-type":            "iOS",
+	// 	"x-device-type":           "mobile",
+	// 	"x-operator-code":         "SMART",
+	// 	"x-device-identifier":     deviceId,
+	// 	"x-env-type":              "production",
+	// 	"x-version":               "smartNew",
+	// 	"accept-language":         "en_US",
+	// 	"x-api-signature-version": "1.0",
+	// 	"x-api-signature-nonce":   nonce,
+	// 	"x-device-manufacture":    "Apple",
+	// 	"x-device-brand":          "Apple",
+	// 	"x-device-model":          "iPhone",
+	// 	"x-agent-version":         "17.1",
+	// 	"authorization":           token.AccessToken,
+	// 	"content-type":            "application/json; charset=utf-8",
+	// 	"user-agent":              "Hello smart/1.4.0 (iPhone; iOS 17.1; Scale/3.00)",
+	// 	"x-signature":             sign,
+	// 	"x-timestamp":             ts,
+	// })
+
 	params := url.Values{
-		"needSharedCar": []string{"1"},
-		"userId":        []string{login.SessionInfo.LoginToken},
+		"identity_type": []string{"smart"},
 	}
-	uri = fmt.Sprintf("https://api.ecloudeu.com/device-platform/user/vehicle/secure?%s", params.Encode())
-	sign, err := createSignature(nonce, params, ts, http.MethodGet, uri, "")
+
+	data2 := map[string]string{
+		"accessToken": token.AccessToken,
+	}
+
+	uri = "/auth/account/session/secure"
+	sign, err := createSignature(nonce, params, ts, http.MethodPost, uri, data2)
 	if err != nil {
 		return nil, err
 	}
 
 	deviceId := lo.RandomString(16, lo.AlphanumericCharset)
-	req, _ = request.New(http.MethodGet, uri, nil, map[string]string{
-		"x-app-id":                "SmartAPPEU",
-		"accept":                  "application/json;responseformat=3",
-		"x-agent-type":            "iOS",
-		"x-device-type":           "mobile",
-		"x-operator-code":         "SMART",
-		"x-device-identifier":     deviceId,
-		"x-env-type":              "production",
-		"x-version":               "smartNew",
-		"accept-language":         "en_US",
-		"x-api-signature-version": "1.0",
-		"x-api-signature-nonce":   nonce,
-		"x-device-manufacture":    "Apple",
-		"x-device-brand":          "Apple",
-		"x-device-model":          "iPhone",
-		"x-agent-version":         "17.1",
-		"authorization":           token.AccessToken,
-		"content-type":            "application/json; charset=utf-8",
-		"user-agent":              "Hello smart/1.4.0 (iPhone; iOS 17.1; Scale/3.00)",
-		"x-signature":             sign,
-		"x-timestamp":             ts,
+	uri = fmt.Sprintf("https://api.ecloudeu.com/%s?%s", strings.TrimPrefix(uri, "/"), params.Encode())
+	req, _ = request.New(http.MethodPost, uri, request.MarshalJSON(data2), map[string]string{
+		"Accept-Encoding":         "gzip",
+		"Accept-language":         "en_US",
+		"Accept":                  "application/json;responseformat=3",
+		"Content-Type":            "application/json; charset=utf-8",
+		"User-Agent":              "Hello smart/1.4.0 (iPhone; iOS 17.1; Scale/3.00)",
+		"X-Agent-Type":            "iOS",
+		"X-Agent-Version":         "17.1",
+		"X-Api-Signature-Nonce":   nonce,
+		"X-Api-Signature-Version": "1.0",
+		"X-App-Id":                "SmartAPPEU",
+		"X-Device-Brand":          "Apple",
+		"X-Device-Identifier":     deviceId,
+		"X-Device-Manufacture":    "Apple",
+		"X-Device-Model":          "iPhone",
+		"X-Device-Type":           "mobile",
+		"X-Env-Type":              "production",
+		"X-Operator-Code":         "SMART",
+		"X-Signature":             sign,
+		"X-Timestamp":             ts,
+		"X-Version":               "smartNew",
 	})
 
-	if err := client.DoJSON(req, nil); err != nil {
+	var res struct {
+		Code, Message string
+	}
+	if err := client.DoJSON(req, &res); err != nil {
 		return nil, err
+	} else if res.Code != "" {
+		return nil, fmt.Errorf("%s: %s", res.Code, res.Message)
 	}
 
-	_ = token
 	return v, err
 }
 
-func createSignature(nonce string, params url.Values, ts, method, uri string, data any) (string, error) {
-	md5 := md5.New()
-	bytes := []byte("1B2M2Y8AsgTpgAmY7PhCfg==")
-	if data != "" {
-		var err error
-		if bytes, err = json.Marshal(data); err != nil {
+func createSignature(nonce string, params url.Values, ts, method, uri string, post any) (string, error) {
+	md5Hash := "1B2M2Y8AsgTpgAmY7PhCfg=="
+	if post != nil {
+		bytes, err := json.Marshal(post)
+		if err != nil {
 			return "", err
 		}
-	}
 
-	if _, err := md5.Write(bytes); err != nil {
-		return "", err
-	}
+		md5 := md5.New()
+		if _, err := md5.Write(bytes); err != nil {
+			return "", err
+		}
 
-	md5Hash := hex.EncodeToString(md5.Sum(nil))
+		md5Hash = hex.EncodeToString(md5.Sum(nil))
+	}
 
 	payload := fmt.Sprintf(`application/json;responseformat=3
 x-api-signature-nonce:%s
@@ -320,10 +364,14 @@ x-api-signature-version:1.0
 %s
 %s`, nonce, params.Encode(), md5Hash, ts, method, uri)
 
+	fmt.Println(payload)
+
 	secret, err := base64.StdEncoding.DecodeString("NzRlNzQ2OWFmZjUwNDJiYmJlZDdiYmIxYjM2YzE1ZTk=")
 	if err != nil {
 		return "", err
 	}
+
+	fmt.Println(string(secret))
 
 	mac := hmac.New(sha1.New, secret)
 	if _, err := mac.Write([]byte(payload)); err != nil {
