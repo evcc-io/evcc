@@ -159,7 +159,7 @@ func (wb *Mennekes) Enabled() (bool, error) {
 func (wb *Mennekes) Enable(enable bool) error {
 	var u uint16
 	if enable {
-		u = 1
+		u = mennekesAllowed
 	}
 	_, err := wb.conn.WriteSingleRegister(mennekesRegChargingReleaseEM, u)
 	return err
@@ -192,7 +192,7 @@ func (wb *Mennekes) CurrentPower() (float64, error) {
 		return 0, err
 	}
 
-	return float64(encoding.Float32LswFirst(b)) * 1e3, nil
+	return float64(encoding.Float32(b)) * 1e3, nil
 }
 
 var _ api.MeterEnergy = (*Mennekes)(nil)
@@ -204,7 +204,7 @@ func (wb *Mennekes) TotalEnergy() (float64, error) {
 		return 0, err
 	}
 
-	return float64(encoding.Uint32(b)), nil
+	return float64(encoding.Float32LswFirst(b)), nil
 }
 
 var _ api.PhaseCurrents = (*Mennekes)(nil)
@@ -280,12 +280,12 @@ var _ api.Diagnosis = (*Mennekes)(nil)
 // Diagnose implements the api.Diagnosis interface
 func (wb *Mennekes) Diagnose() {
 	if b, err := wb.conn.ReadHoldingRegisters(mennekesRegModbusVersion, 1); err == nil {
-		fmt.Printf("\tModbus:\t%d\n", encoding.Uint16(b))
+		fmt.Printf("\tModbus: %03X\n", encoding.Uint16(b))
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(mennekesRegFirmwareVersion, 8); err == nil {
-		fmt.Printf("\tFirmware:\t%s\n", encoding.StringLsbFirst(b))
+		fmt.Printf("\tFirmware: %s\n", string(b))
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(mennekesRegSerialNumber, 8); err == nil {
-		fmt.Printf("\tSerial:\t%s\n", encoding.StringLsbFirst(b))
+		fmt.Printf("\tSerial: %s\n", string(b))
 	}
 }
