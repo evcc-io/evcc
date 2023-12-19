@@ -1,5 +1,5 @@
 <template>
-	<p class="mb-0">
+	<p class="mb-0" data-testid="plan-warnings">
 		<span v-if="targetIsAboveLimit" class="d-block text-secondary mb-1">
 			{{ $t("main.targetCharge.targetIsAboveLimit", { limit: limitFmt }) }}
 		</span>

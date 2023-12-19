@@ -19,7 +19,7 @@
 		<ChargingPlanWarnings v-bind="chargingPlanWarningsProps" class="mb-4" />
 		<hr />
 		<h5>
-			<div class="inner">
+			<div class="inner" data-testid="plan-preview-title">
 				{{ $t(`main.targetCharge.${isPreview ? "preview" : "currentPlan"}`) }}
 			</div>
 		</h5>

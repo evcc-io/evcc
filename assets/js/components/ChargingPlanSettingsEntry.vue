@@ -117,7 +117,7 @@
 				</button>
 			</div>
 		</div>
-		<p class="mb-0">
+		<p class="mb-0" data-testid="plan-entry-warnings">
 			<span v-if="timeInThePast" class="d-block text-danger my-2">
 				{{ $t("main.targetCharge.targetIsInThePast") }}
 			</span>
