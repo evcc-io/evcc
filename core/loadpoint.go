@@ -495,6 +495,10 @@ func (lp *Loadpoint) evVehicleDisconnectHandler() {
 	// reset session
 	lp.SetLimitSoc(0)
 	lp.SetLimitEnergy(0)
+
+	// mark plan slot as inactive
+	// this will force a deletion of an outdated plan once plan time is expired in GetPlan()
+	lp.setPlanActive(false)
 }
 
 // evVehicleSocProgressHandler sends external start event
@@ -838,9 +842,6 @@ func (lp *Loadpoint) disableUnlessClimater() error {
 	if lp.vehicleClimateActive() {
 		current = lp.effectiveMinCurrent()
 	}
-
-	// reset plan once charge goal is met
-	lp.setPlanActive(false)
 
 	return lp.setLimit(current, true)
 }

@@ -28,51 +28,57 @@ func (lp *Loadpoint) setPlanActive(active bool) {
 	}
 }
 
+// deletePlan deletes the charging plan, either loadpoint or vehicle
+func (lp *Loadpoint) deletePlan() {
+	if !lp.socBasedPlanning() {
+		lp.setPlanEnergy(time.Time{}, 0)
+	} else if v := lp.GetVehicle(); v != nil {
+		vehicle.Settings(lp.log, v).SetPlanSoc(time.Time{}, 0)
+	}
+}
+
 // remainingPlanEnergy returns missing energy amount in kWh
-func (lp *Loadpoint) remainingPlanEnergy() (float64, bool) {
+func (lp *Loadpoint) remainingPlanEnergy(planEnergy float64) float64 {
+	return max(0, planEnergy-lp.getChargedEnergy()/1e3)
+}
+
+// GetPlanRequiredDuration is the estimated total charging duration
+func (lp *Loadpoint) GetPlanRequiredDuration(goal, maxPower float64) time.Duration {
+	lp.RLock()
+	defer lp.RUnlock()
+
+	if lp.socBasedPlanning() {
+		if lp.socEstimator == nil {
+			return 0
+		}
+		return lp.socEstimator.RemainingChargeDuration(int(goal), maxPower)
+	}
+
+	energy := lp.remainingPlanEnergy(goal)
+	return time.Duration(energy * 1e3 / maxPower * float64(time.Hour))
+}
+
+// GetPlanGoal returns the plan goal and if the goal is soc based
+func (lp *Loadpoint) GetPlanGoal() (float64, bool) {
+	lp.RLock()
+	defer lp.RUnlock()
+
+	if lp.socBasedPlanning() {
+		_, soc := vehicle.Settings(lp.log, lp.GetVehicle()).GetPlanSoc()
+		return float64(soc), true
+	}
+
 	_, limit := lp.GetPlanEnergy()
-	return max(0, limit-lp.getChargedEnergy()/1e3),
-		limit > 0 && !lp.socBasedPlanning()
+	return limit, false
 }
 
-// planRequiredDuration is the estimated total charging duration
-func (lp *Loadpoint) planRequiredDuration(maxPower float64) time.Duration {
-	if energy, ok := lp.remainingPlanEnergy(); ok {
-		return time.Duration(energy * 1e3 / maxPower * float64(time.Hour))
-	}
-
-	v := lp.GetVehicle()
-	if v == nil || lp.socEstimator == nil {
-		return 0
-	}
-
-	_, soc := vehicle.Settings(lp.log, v).GetPlanSoc()
-
-	return lp.socEstimator.RemainingChargeDuration(soc, maxPower)
-}
-
-// GetPlan creates a charging plan
-//
-// Results:
-// - required total charging duration
-// - actual charging plan as rate table
-func (lp *Loadpoint) GetPlan(targetTime time.Time, maxPower float64) (time.Duration, api.Rates, error) {
+// GetPlan creates a charging plan for given time and duration
+func (lp *Loadpoint) GetPlan(targetTime time.Time, requiredDuration time.Duration) (api.Rates, error) {
 	if lp.planner == nil || targetTime.IsZero() {
-		return 0, nil, nil
+		return nil, nil
 	}
 
-	// don't start planning into the past
-	if targetTime.Before(lp.clock.Now()) && !lp.planActive {
-		return 0, nil, nil
-	}
-
-	requiredDuration := lp.planRequiredDuration(maxPower)
-	plan, err := lp.planner.Plan(requiredDuration, targetTime)
-
-	// sort plan by time
-	plan.Sort()
-
-	return requiredDuration, plan, err
+	return lp.planner.Plan(requiredDuration, targetTime)
 }
 
 // plannerActive checks if the charging plan has a currently active slot
@@ -86,28 +92,34 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 		lp.publish(keys.PlanProjectedStart, planStart)
 	}()
 
-	maxPower := lp.EffectiveMaxPower()
+	planTime := lp.EffectivePlanTime()
+	if lp.clock.Until(planTime) < 0 && !lp.planActive {
+		lp.deletePlan()
+		return false
+	}
 
-	requiredDuration, plan, err := lp.GetPlan(lp.EffectivePlanTime(), maxPower)
+	goal, _ := lp.GetPlanGoal()
+	maxPower := lp.EffectiveMaxPower()
+	requiredDuration := lp.GetPlanRequiredDuration(goal, maxPower)
+	if requiredDuration <= 0 {
+		lp.deletePlan()
+		return false
+	}
+
+	plan, err := lp.GetPlan(planTime, requiredDuration)
 	if err != nil {
 		lp.log.ERROR.Println("planner:", err)
 		return false
 	}
 
-	// nothing to do
-	if requiredDuration == 0 {
-		return false
-	}
-
-	var requiredString string
-	if req := requiredDuration.Round(time.Second); req > planner.Duration(plan).Round(time.Second) {
-		requiredString = fmt.Sprintf(" (required: %v)", req)
+	var overrun string
+	if excessDuration := requiredDuration - lp.clock.Until(planTime); excessDuration > 0 {
+		overrun = fmt.Sprintf("overruns by %v, ", excessDuration.Round(time.Second))
 	}
 
 	planStart = planner.Start(plan)
-	planTime := lp.EffectivePlanTime()
-	lp.log.DEBUG.Printf("plan: charge %v%s starting at %v until %v (power: %.0fW, avg cost: %.3f)",
-		planner.Duration(plan).Round(time.Second), requiredString, planStart.Round(time.Second).Local(), planTime.Round(time.Second).Local(),
+	lp.log.DEBUG.Printf("plan: charge %v starting at %v until %v (%spower: %.0fW, avg cost: %.3f)",
+		planner.Duration(plan).Round(time.Second), planStart.Round(time.Second).Local(), planTime.Round(time.Second).Local(), overrun,
 		maxPower, planner.AverageCost(plan))
 
 	// log plan
