@@ -226,7 +226,7 @@ func (wb *Mennekes) getPhaseValues(reg uint16) (float64, float64, float64, error
 
 	var res [3]float64
 	for i := range res {
-		res[i] = float64(encoding.Float32LswFirst(b[4*i:]))
+		res[i] = float64(encoding.Float32(b[4*i:]))
 	}
 
 	return res[0], res[1], res[2], nil
@@ -242,7 +242,7 @@ func (wb *Mennekes) ChargedEnergy() (float64, error) {
 		return 0, err
 	}
 
-	return float64(encoding.Float32LswFirst(b)), err
+	return float64(encoding.Float32(b)), err
 }
 
 var _ api.ChargeTimer = (*Mennekes)(nil)
