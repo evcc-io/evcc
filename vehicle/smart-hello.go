@@ -345,7 +345,6 @@ func createSignature(nonce string, params url.Values, ts, method, uri string, po
 		if err != nil {
 			return "", err
 		}
-		fmt.Println(string(bytes))
 
 		hash := md5.New()
 		hash.Write(bytes)
@@ -362,6 +361,7 @@ x-api-signature-version:1.0
 %s
 %s`, nonce, params.Encode(), md5Hash, ts, method, uri)
 
+	fmt.Println("")
 	fmt.Println(payload)
 
 	secret, err := base64.StdEncoding.DecodeString("NzRlNzQ2OWFmZjUwNDJiYmJlZDdiYmIxYjM2YzE1ZTk=")
@@ -369,10 +369,11 @@ x-api-signature-version:1.0
 		return "", err
 	}
 
+	fmt.Println("")
 	fmt.Println(string(secret))
 
 	mac := hmac.New(sha1.New, secret)
 	mac.Write([]byte(payload))
 
-	return hex.EncodeToString(mac.Sum(nil)), nil
+	return base64.StdEncoding.EncodeToString(mac.Sum(nil)), nil
 }
