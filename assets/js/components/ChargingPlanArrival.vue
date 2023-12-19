@@ -1,4 +1,7 @@
 <template>
+	<div v-if="!socBasedCharging" class="alert alert-secondary my-4" role="alert">
+		{{ $t("main.loadpointSettings.onlyForSocBasedCharging") }}
+	</div>
 	<div class="mt-4 container">
 		<div class="row">
 			<div class="col-6 col-lg-3 col-form-label">
@@ -11,7 +14,7 @@
 					:id="formId('minsoc')"
 					v-model.number="selectedMinSoc"
 					class="form-select mb-2"
-					:disabled="!socBasedPlanning"
+					:disabled="!socBasedCharging"
 					@change="changeMinSoc"
 				>
 					<option v-for="soc in minSocOptions" :key="soc.value" :value="soc.value">
@@ -34,7 +37,7 @@
 					:id="formId('limitsoc')"
 					v-model.number="selectedLimitSoc"
 					class="form-select mb-2"
-					:disabled="!socBasedPlanning"
+					:disabled="!socBasedCharging"
 					@change="changeLimitSoc"
 				>
 					<option v-for="soc in limitSocOptions" :key="soc.value" :value="soc.value">
@@ -61,7 +64,7 @@ export default {
 		minSoc: { type: Number, default: 0 },
 		limitSoc: { type: Number, default: 0 },
 		vehicleName: String,
-		socBasedPlanning: Boolean,
+		socBasedCharging: Boolean,
 		rangePerSoc: Number,
 	},
 	emits: ["minsoc-updated", "limitsoc-updated"],

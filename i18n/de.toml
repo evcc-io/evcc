@@ -210,6 +210,7 @@ currents = "Ladestrom"
 default = "default"
 disclaimerHint = "Hinweis:"
 disclaimerText = "Änderungen gehen nach einem Neustart des Servers verloren."
+onlyForSocBasedCharging = "Diese Optionen sind nur für Fahrzeuge mit bekanntem Ladestand verfügbar."
 title = "Einstellungen {0}"
 vehicle = "Fahrzeug"
 
