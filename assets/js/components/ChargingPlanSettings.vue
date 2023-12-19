@@ -34,6 +34,7 @@ import ChargingPlanWarnings from "./ChargingPlanWarnings.vue";
 import formatter from "../mixins/formatter";
 import collector from "../mixins/collector";
 import api from "../api";
+import deepEqual from "../utils/deepEqual";
 
 const DEFAULT_TARGET_TIME = "7:00";
 const LAST_TARGET_TIME_KEY = "last_target_time";
@@ -86,13 +87,10 @@ export default {
 		},
 	},
 	watch: {
-		plans: {
-			handler() {
-				if (this.plans.length > 0) {
-					this.fetchPlan();
-				}
-			},
-			deep: true,
+		plans(newPlans, oldPlans) {
+			if (!deepEqual(newPlans, oldPlans) && newPlans.length > 0) {
+				this.fetchPlan();
+			}
 		},
 	},
 	mounted() {
