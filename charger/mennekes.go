@@ -58,7 +58,7 @@ const (
 	mennekesRegChargedEnergyTotal   = 0x1000 // float32
 
 	mennekesAllowed           = 1
-	mennekesHeartbeatInterval = 4
+	mennekesHeartbeatInterval = 10
 	mennekesHeartbeatToken    = 0x55AA // 21930
 )
 
