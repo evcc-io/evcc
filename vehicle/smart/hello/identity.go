@@ -165,10 +165,12 @@ func (v *Identity) appToken(token *oauth2.Token) (*oauth2.Token, string, error) 
 	}
 
 	path := "/auth/account/session/secure"
-	uri, nonce, ts, sign, err := createSignature(params, http.MethodPost, path, data2)
+	nonce, ts, sign, err := createSignature(http.MethodPost, path, params, data2)
 	if err != nil {
 		return nil, "", err
 	}
+
+	uri := fmt.Sprintf("%s/%s?%s", ApiURI, strings.TrimPrefix(path, "/"), params.Encode())
 
 	deviceId := lo.RandomString(16, lo.AlphanumericCharset)
 	req, _ := request.New(http.MethodPost, uri, request.MarshalJSON(data2), map[string]string{

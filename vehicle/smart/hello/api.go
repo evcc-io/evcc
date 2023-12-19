@@ -1,17 +1,12 @@
 package hello
 
 import (
-	"crypto/hmac"
-	"crypto/md5"
-	"crypto/sha1"
-	"encoding/base64"
-	"encoding/json"
+	"bytes"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
-	"strconv"
 	"strings"
-	"time"
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
@@ -34,25 +29,74 @@ func NewAPI(log *util.Logger, identity *Identity) *API {
 		identity: identity,
 	}
 
-	// replace client transport with authenticated transport
 	v.Client.Transport = &transport.Decorator{
-		Base: v.Client.Transport,
+		Base: &transport.Decorator{
+			Base: v.Client.Transport,
 
-		// Decorator: transport.DecorateHeaders(map[string]string{
-		// }),
+			// decorate token
+			Decorator: func(req *http.Request) error {
+				token, err := identity.Token()
+				if err != nil {
+					return err
+				}
 
-		Decorator: func(req *http.Request) error {
-			token, err := identity.Token()
-			if err != nil {
-				return err
-			}
-
-			req.Header.Set("authorization", token.AccessToken)
-			return nil
+				req.Header.Set("authorization", token.AccessToken)
+				return nil
+			},
 		},
+
+		// decorate headers
+		Decorator: transport.DecorateHeaders(map[string]string{
+			"x-app-id":                "SmartAPPEU",
+			"accept":                  "application/json;responseformat=3",
+			"x-agent-type":            "iOS",
+			"x-device-type":           "mobile",
+			"x-operator-code":         "SMART",
+			"x-env-type":              "production",
+			"x-version":               "smartNew",
+			"accept-language":         "en_US",
+			"x-api-signature-version": "1.0",
+			"x-device-manufacture":    "Apple",
+			"x-device-brand":          "Apple",
+			"x-device-identifier":     v.deviceId,
+			"x-device-model":          "iPhone",
+			"x-agent-version":         "17.1",
+			"content-type":            "application/json; charset=utf-8",
+			"user-agent":              "Hello smart/1.4.0 (iPhone; iOS 17.1; Scale/3.00)",
+		}),
 	}
 
 	return v
+}
+
+func (v *API) request(method, path string, params url.Values, body io.Reader) (*http.Request, error) {
+	if body != nil {
+		b, err := io.ReadAll(body)
+		if err != nil {
+			return nil, err
+		}
+		// read from buffer
+		body = bytes.NewReader(b)
+	}
+
+	nonce, ts, sign, err := createSignature(method, path, params, body)
+	if err != nil {
+		return nil, err
+	}
+
+	if body != nil {
+		// rewind body
+		body.(*bytes.Reader).Seek(0, io.SeekStart)
+	}
+
+	uri := fmt.Sprintf("%s/%s?%s", ApiURI, strings.TrimPrefix(path, "/"), params.Encode())
+	req, err := request.New(method, uri, body, map[string]string{
+		"x-api-signature-nonce": nonce,
+		"x-signature":           sign,
+		"x-timestamp":           ts,
+	})
+
+	return req, err
 }
 
 func (v *API) Vehicles() ([]string, error) {
@@ -64,8 +108,6 @@ func (v *API) Vehicles() ([]string, error) {
 		}
 	}
 
-	path := "/device-platform/user/vehicle/secure"
-
 	userID, err := v.identity.UserID()
 	if err != nil {
 		return nil, err
@@ -76,32 +118,11 @@ func (v *API) Vehicles() ([]string, error) {
 		"userId":        []string{userID},
 	}
 
-	uri, nonce, ts, sign, err := createSignature(params, http.MethodGet, path, nil)
+	path := "/device-platform/user/vehicle/secure"
+	req, err := v.request(http.MethodGet, path, params, nil)
 	if err != nil {
 		return nil, err
 	}
-
-	req, _ := request.New(http.MethodGet, uri, nil, map[string]string{
-		"x-app-id":                "SmartAPPEU",
-		"accept":                  "application/json;responseformat=3",
-		"x-agent-type":            "iOS",
-		"x-device-type":           "mobile",
-		"x-operator-code":         "SMART",
-		"x-device-identifier":     v.deviceId,
-		"x-env-type":              "production",
-		"x-version":               "smartNew",
-		"accept-language":         "en_US",
-		"x-api-signature-version": "1.0",
-		"x-api-signature-nonce":   nonce,
-		"x-device-manufacture":    "Apple",
-		"x-device-brand":          "Apple",
-		"x-device-model":          "iPhone",
-		"x-agent-version":         "17.1",
-		"content-type":            "application/json; charset=utf-8",
-		"user-agent":              "Hello smart/1.4.0 (iPhone; iOS 17.1; Scale/3.00)",
-		"x-signature":             sign,
-		"x-timestamp":             ts,
-	})
 
 	if err := v.DoJSON(req, &res); err != nil {
 		return nil, err
@@ -116,42 +137,35 @@ func (v *API) Vehicles() ([]string, error) {
 	return vehicles, err
 }
 
-func createSignature(params url.Values, method, path string, post any) (string, string, string, string, error) {
-	nonce := lo.RandomString(16, lo.AlphanumericCharset)
-	ts := strconv.FormatInt(time.Now().UnixMilli(), 10)
-
-	md5Hash := "1B2M2Y8AsgTpgAmY7PhCfg=="
-	if post != nil {
-		bytes, err := json.Marshal(post)
-		if err != nil {
-			return "", "", "", "", err
-		}
-
-		hash := md5.New()
-		hash.Write(bytes)
-		md5Hash = base64.StdEncoding.EncodeToString(hash.Sum(nil))
+func (v *API) Status(vin string) (*StatusResponse, error) {
+	var res struct {
+		Code    ResponseCode
+		Message string
+		Data    any
 	}
 
-	payload := fmt.Sprintf(`application/json;responseformat=3
-x-api-signature-nonce:%s
-x-api-signature-version:1.0
-
-%s
-%s
-%s
-%s
-%s`, nonce, params.Encode(), md5Hash, ts, method, path)
-
-	secret, err := base64.StdEncoding.DecodeString("NzRlNzQ2OWFmZjUwNDJiYmJlZDdiYmIxYjM2YzE1ZTk=")
+	userID, err := v.identity.UserID()
 	if err != nil {
-		return "", "", "", "", err
+		return nil, err
 	}
 
-	mac := hmac.New(sha1.New, secret)
-	mac.Write([]byte(payload))
-	sign := base64.StdEncoding.EncodeToString(mac.Sum(nil))
+	params := url.Values{
+		"latest": []string{"true"},
+		"target": []string{""},
+		"userId": []string{userID},
+	}
 
-	uri := fmt.Sprintf("%s/%s?%s", ApiURI, strings.TrimPrefix(path, "/"), params.Encode())
+	path := "/remote-control/vehicle/status/" + vin
+	req, err := v.request(http.MethodGet, path, params, nil)
+	if err != nil {
+		return nil, err
+	}
 
-	return uri, nonce, ts, sign, nil
+	if err := v.DoJSON(req, &res); err != nil {
+		return nil, err
+	} else if res.Code != ResponseOK {
+		return nil, fmt.Errorf("%d: %s", res.Code, res.Message)
+	}
+
+	return nil, err
 }

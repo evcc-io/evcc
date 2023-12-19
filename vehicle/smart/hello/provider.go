@@ -10,7 +10,7 @@ import (
 // https://github.com/TA2k/ioBroker.smart-eq
 
 type Provider struct {
-	statusG func() (StatusResponse, error)
+	statusG func() (*StatusResponse, error)
 	expiry  time.Duration
 }
 
@@ -19,30 +19,18 @@ func NewProvider(log *util.Logger, api *API, vin string, expiry, cache time.Dura
 		expiry: expiry,
 	}
 
-	v.statusG = provider.Cached(func() (StatusResponse, error) {
-		return StatusResponse{}, nil
+	v.statusG = provider.Cached(func() (*StatusResponse, error) {
+		return api.Status(vin)
 	}, cache)
 
 	return v
 }
 
-func (v *Provider) status(statusG, refreshG func() (StatusResponse, error)) (StatusResponse, error) {
-	res, err := statusG()
-
-	// if ts := res.Status.Data.Soc.Ts.Time; err == nil && ts.Add(v.expiry).Before(time.Now()) {
-	// 	fmt.Println("--------------------------", ts)
-	// 	res, err = refreshG()
-	// 	ts := res.Status.Data.Soc.Ts.Time
-	// 	fmt.Println("--------------------------", ts)
-	// }
-
-	return res, err
-}
-
 // Soc implements the api.Vehicle interface
 func (v *Provider) Soc() (float64, error) {
-	// res, err := v.statusG()
-	return 0, nil
+	res, err := v.statusG()
+	_ = res
+	return 0, err
 }
 
 // var _ api.ChargeState = (*Provider)(nil)
