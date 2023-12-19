@@ -175,11 +175,7 @@ var _ api.ChargerEx = (*Mennekes)(nil)
 // MaxCurrentMillis implements the api.ChargerEx interface
 func (wb *Mennekes) MaxCurrentMillis(current float64) error {
 	b := make([]byte, 4)
-
-	// LSW first
-	u := math.Float32bits(float32(current))
-	binary.BigEndian.PutUint16(b, uint16(u))
-	binary.BigEndian.PutUint16(b[2:], uint16(u>>16))
+	binary.BigEndian.PutUint32(b, math.Float32bits(float32(current)))
 
 	_, err := wb.conn.WriteMultipleRegisters(mennekesRegChargingCurrentEM, 2, b)
 	return err
@@ -204,7 +200,7 @@ func (wb *Mennekes) TotalEnergy() (float64, error) {
 		return 0, err
 	}
 
-	return float64(encoding.Float32LswFirst(b)), nil
+	return float64(encoding.Float32(b)), nil
 }
 
 var _ api.PhaseCurrents = (*Mennekes)(nil)
