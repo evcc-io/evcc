@@ -1,105 +1,157 @@
 package hello
 
 import (
+	"crypto/hmac"
+	"crypto/md5"
+	"crypto/sha1"
+	"encoding/base64"
+	"encoding/json"
 	"fmt"
+	"net/http"
+	"net/url"
+	"strconv"
+	"strings"
+	"time"
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
-	"github.com/evcc-io/evcc/vehicle/mb"
 	"github.com/samber/lo"
-	"golang.org/x/oauth2"
 )
 
 // https://github.com/TA2k/ioBroker.smart-eq
 
-const (
-	ApiURI = "https://oneapp.microservice.smart.mercedes-benz.com/seqc/v0"
-	ApiKey = "3_L94eyQ-wvJhWm7Afp1oBhfTGXZArUfSHHW9p9Pncg513hZELXsxCfMWHrF8f5P5a"
-)
-
-var OAuth2Config = &oauth2.Config{
-	ClientID:    "70d89501-938c-4bec-82d0-6abb550b0825",
-	RedirectURL: "https://oneapp.microservice.smart.mercedes-benz.com",
-	Endpoint: oauth2.Endpoint{
-		AuthURL:  mb.OAuthURI + "/as/authorization.oauth2",
-		TokenURL: mb.OAuthURI + "/as/token.oauth2",
-	},
-	Scopes: []string{"openid", "profile", "email", "phone", "ciam-uid", "offline_access"},
-}
-
 type API struct {
 	*request.Helper
+	identity *Identity
+	deviceId string
 }
 
-func NewAPI(log *util.Logger, identity oauth2.TokenSource) *API {
+func NewAPI(log *util.Logger, identity *Identity) *API {
 	v := &API{
-		Helper: request.NewHelper(log),
+		Helper:   request.NewHelper(log),
+		deviceId: lo.RandomString(16, lo.AlphanumericCharset),
+		identity: identity,
 	}
 
 	// replace client transport with authenticated transport
 	v.Client.Transport = &transport.Decorator{
-		Base: &oauth2.Transport{
-			Source: identity,
-			Base:   v.Client.Transport,
+		Base: v.Client.Transport,
+
+		// Decorator: transport.DecorateHeaders(map[string]string{
+		// }),
+
+		Decorator: func(req *http.Request) error {
+			token, err := identity.Token()
+			if err != nil {
+				return err
+			}
+
+			req.Header.Set("authorization", token.AccessToken)
+			return nil
 		},
-		Decorator: transport.DecorateHeaders(map[string]string{
-			"accept":            "*/*",
-			"accept-language":   "de-DE;q=1.0",
-			"guid":              "280C6B55-F179-4428-88B6-E0CCF5C22A7C",
-			"x-applicationname": OAuth2Config.ClientID,
-		}),
 	}
 
 	return v
 }
 
 func (v *API) Vehicles() ([]string, error) {
-	type vehicle struct {
-		FIN string
-	}
-
 	var res struct {
-		Authorizations, LicensePlates []vehicle
-		Error                         string
-		ErrorDescription              string `json:"error_description"`
+		Code    ResponseCode
+		Message string
+		Data    struct {
+			List []Vehicle
+		}
 	}
 
-	uri := fmt.Sprintf("%s/users/current", ApiURI)
-	err := v.GetJSON(uri, &res)
-	if err != nil && res.Error != "" {
-		err = fmt.Errorf("%s (%s): %w", res.Error, res.ErrorDescription, err)
+	path := "/device-platform/user/vehicle/secure"
+
+	userID, err := v.identity.UserID()
+	if err != nil {
+		return nil, err
 	}
 
-	vehicles := lo.Map(res.LicensePlates, func(v vehicle, _ int) string {
-		return v.FIN
+	params := url.Values{
+		"needSharedCar": []string{"1"},
+		"userId":        []string{userID},
+	}
+
+	uri, nonce, ts, sign, err := createSignature(params, http.MethodGet, path, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	req, _ := request.New(http.MethodGet, uri, nil, map[string]string{
+		"x-app-id":                "SmartAPPEU",
+		"accept":                  "application/json;responseformat=3",
+		"x-agent-type":            "iOS",
+		"x-device-type":           "mobile",
+		"x-operator-code":         "SMART",
+		"x-device-identifier":     v.deviceId,
+		"x-env-type":              "production",
+		"x-version":               "smartNew",
+		"accept-language":         "en_US",
+		"x-api-signature-version": "1.0",
+		"x-api-signature-nonce":   nonce,
+		"x-device-manufacture":    "Apple",
+		"x-device-brand":          "Apple",
+		"x-device-model":          "iPhone",
+		"x-agent-version":         "17.1",
+		"content-type":            "application/json; charset=utf-8",
+		"user-agent":              "Hello smart/1.4.0 (iPhone; iOS 17.1; Scale/3.00)",
+		"x-signature":             sign,
+		"x-timestamp":             ts,
+	})
+
+	if err := v.DoJSON(req, &res); err != nil {
+		return nil, err
+	} else if res.Code != ResponseOK {
+		return nil, fmt.Errorf("%d: %s", res.Code, res.Message)
+	}
+
+	vehicles := lo.Map(res.Data.List, func(v Vehicle, _ int) string {
+		return v.VIN
 	})
 
 	return vehicles, err
 }
 
-func (v *API) Status(vin string) (StatusResponse, error) {
-	var res StatusResponse
+func createSignature(params url.Values, method, path string, post any) (string, string, string, string, error) {
+	nonce := lo.RandomString(16, lo.AlphanumericCharset)
+	ts := strconv.FormatInt(time.Now().UnixMilli(), 10)
 
-	uri := fmt.Sprintf("%s/vehicles/%s/init-data?requestedData=BOTH&countryCode=DE&locale=de-DE", ApiURI, vin)
-	err := v.GetJSON(uri, &res)
+	md5Hash := "1B2M2Y8AsgTpgAmY7PhCfg=="
+	if post != nil {
+		bytes, err := json.Marshal(post)
+		if err != nil {
+			return "", "", "", "", err
+		}
 
-	if err != nil && res.Error != "" {
-		err = fmt.Errorf("%s (%s): %w", res.Error, res.ErrorDescription, err)
+		hash := md5.New()
+		hash.Write(bytes)
+		md5Hash = base64.StdEncoding.EncodeToString(hash.Sum(nil))
 	}
 
-	return res, err
-}
+	payload := fmt.Sprintf(`application/json;responseformat=3
+x-api-signature-nonce:%s
+x-api-signature-version:1.0
 
-func (v *API) Refresh(vin string) (StatusResponse, error) {
-	var res StatusResponse
+%s
+%s
+%s
+%s
+%s`, nonce, params.Encode(), md5Hash, ts, method, path)
 
-	uri := fmt.Sprintf("%s/vehicles/%s/refresh-data", ApiURI, vin)
-	err := v.GetJSON(uri, &res)
-
-	if err != nil && res.Error != "" {
-		err = fmt.Errorf("%s (%s): %w", res.Error, res.ErrorDescription, err)
+	secret, err := base64.StdEncoding.DecodeString("NzRlNzQ2OWFmZjUwNDJiYmJlZDdiYmIxYjM2YzE1ZTk=")
+	if err != nil {
+		return "", "", "", "", err
 	}
 
-	return res, err
+	mac := hmac.New(sha1.New, secret)
+	mac.Write([]byte(payload))
+	sign := base64.StdEncoding.EncodeToString(mac.Sum(nil))
+
+	uri := fmt.Sprintf("%s/%s?%s", ApiURI, strings.TrimPrefix(path, "/"), params.Encode())
+
+	return uri, nonce, ts, sign, nil
 }

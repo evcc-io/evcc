@@ -2,61 +2,30 @@ package hello
 
 import (
 	"strconv"
-	"time"
+	"strings"
 )
 
-type StatusResponse struct {
-	PreCond struct {
-		Data struct {
-			ChargingPower  FloatValue
-			ChargingActive BoolValue
-			ChargingStatus IntValue
-		} `json:"data"`
-	}
-	ChargeOpt struct{}
-	Status    struct {
-		Data struct {
-			Odo           FloatValue
-			RangeElectric FloatValue
-			Soc           FloatValue
-		} `json:"data"`
-	}
-	Images           []string
-	Error            string
-	ErrorDescription string `json:"error_description"`
-}
+const ResponseOK = 1000
 
-type BoolValue struct {
-	Status int
-	Value  bool
-	Ts     TimeSecs
-}
+type ResponseCode int
 
-type IntValue struct {
-	Status int
-	Value  int
-	Ts     TimeSecs
-}
-
-type FloatValue struct {
-	Status int
-	Value  float64
-	Ts     TimeSecs
-}
-
-// TimeSecs implements JSON unmarshal for Unix timestamps in seconds
-type TimeSecs struct {
-	time.Time
-}
-
-// UnmarshalJSON decodes unix timestamps in ms into time.Time
-func (ct *TimeSecs) UnmarshalJSON(data []byte) error {
-	i, err := strconv.ParseInt(string(data), 10, 64)
-
+func (rc *ResponseCode) UnmarshalJSON(data []byte) error {
+	i, err := strconv.Atoi(strings.Trim(string(data), `"`))
 	if err == nil {
-		t := time.Unix(i, 0)
-		(*ct).Time = t
+		*rc = ResponseCode(i)
 	}
-
 	return err
 }
+
+type AppToken struct {
+	ExpiresIn    int
+	AccessToken  string
+	UserId       string
+	RefreshToken string
+}
+
+type Vehicle struct {
+	VIN string
+}
+
+type StatusResponse struct{}
