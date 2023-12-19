@@ -172,7 +172,7 @@ export default {
 		},
 		rangePerSoc: function () {
 			if (this.vehicleSoc > 10 && this.range) {
-				return this.range / this.vehicleSoc;
+				return Math.round((this.range / this.vehicleSoc) * 1e2) / 1e2;
 			}
 			return null;
 		},
