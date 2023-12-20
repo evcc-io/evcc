@@ -19,6 +19,7 @@ package charger
 
 import (
 	"encoding/binary"
+	"encoding/hex"
 	"fmt"
 	"time"
 
@@ -285,7 +286,7 @@ func (wb *Amperfied) Identify() (string, error) {
 		return "", err
 	}
 
-	return bytesAsString(b), nil
+	return hex.EncodeToString(b), nil
 }
 
 var _ api.Diagnosis = (*Amperfied)(nil)
