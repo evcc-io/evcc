@@ -2,7 +2,8 @@ import waitOn from "wait-on";
 import axios from "axios";
 import { exec } from "child_process";
 
-export const SIMULATOR_URL = "http://localhost:7072/";
+export const SIMULATOR_HOST = "localhost:7072";
+export const SIMULATOR_URL = `http://${SIMULATOR_HOST}/`;
 const HEALTH_URL = SIMULATOR_URL + "api/state";
 const SHUTDOWN_URL = SIMULATOR_URL + "api/shutdown";
 

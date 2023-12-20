@@ -7,7 +7,6 @@
 			:step="step"
 			:placeholder="placeholder"
 			:required="required"
-			aria-label="unit"
 			:aria-describedby="id + '_unit'"
 			class="form-control"
 		/>

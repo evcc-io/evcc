@@ -304,7 +304,7 @@ export default {
 		},
 		async loadVehicles() {
 			const response = await api.get("/config/devices/vehicle");
-			this.vehicles = response.data?.result;
+			this.vehicles = response.data?.result || [];
 		},
 		async loadMeters() {
 			const response = await api.get("/config/devices/meter");
@@ -346,8 +346,9 @@ export default {
 			this.selectedMeterId = undefined;
 			this.selectedMeterType = undefined;
 			await this.loadMeters();
-			this.loadDirty();
 			this.meterModal().hide();
+			await this.loadDirty();
+			await this.updateValues();
 		},
 		editVehicle(id) {
 			this.selectedVehicleId = id;
@@ -370,6 +371,9 @@ export default {
 			if (type === "grid") {
 				this.site.grid = name;
 			} else {
+				if (!this.site[type]) {
+					this.site[type] = [];
+				}
 				this.site[type].push(name);
 			}
 			this.saveSite(type);
@@ -385,8 +389,9 @@ export default {
 		async saveSite(key) {
 			const body = key ? { [key]: this.site[key] } : this.site;
 			await api.put("/config/site", body);
-			this.loadDirty();
-			this.loadSite();
+			await this.loadSite();
+			await this.loadDirty();
+			await this.updateValues();
 		},
 		todo() {
 			alert("not implemented yet");
@@ -410,6 +415,8 @@ export default {
 			}
 		},
 		async updateValues() {
+			clearTimeout(this.deviceValueTimeout);
+
 			const promises = [
 				...this.meters.map((meter) => this.updateDeviceValue("meter", meter.name)),
 				...this.vehicles.map((vehicle) => this.updateDeviceValue("vehicle", vehicle.name)),

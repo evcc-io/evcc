@@ -87,7 +87,7 @@ validate = "validate"
 
 [config.vehicle]
 cancel = "Cancel"
-delete = "Delete vehicle"
+delete = "Delete"
 generic = "Other integrations"
 offline = "Generic vehicle"
 online = "Vehicles with online API"
