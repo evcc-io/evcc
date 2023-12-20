@@ -98,7 +98,7 @@ export default {
 <style scoped>
 .group {
 	border-radius: 1rem;
-	box-shadow: 0 0 2rem 0 var(--evcc-gray-50);
+	box-shadow: 0 0 0 0 var(--evcc-gray-50);
 	color: var(--evcc-default-text);
 	background: var(--evcc-box);
 	padding: 1rem 1rem 0.5rem;
@@ -106,8 +106,11 @@ export default {
 	list-style-type: none;
 	min-height: 10rem;
 	margin-bottom: 5rem;
+	border: 1px solid var(--evcc-gray-50);
+	transition: box-shadow var(--evcc-transition-fast) linear;
 }
-.dark .group {
-	box-shadow: 0 0 2rem 0 var(--evcc-gray-deep);
+
+.group:focus-within {
+	box-shadow: 0 0 1rem 0 var(--evcc-gray-50);
 }
 </style>

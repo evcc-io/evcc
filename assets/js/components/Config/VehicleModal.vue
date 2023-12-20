@@ -31,7 +31,6 @@
 									v-model="templateName"
 									:disabled="!isNew"
 									class="form-select w-100"
-									@change="templateChanged"
 								>
 									<option value="offline">
 										{{ $t("config.vehicle.offline") }}
@@ -259,6 +258,8 @@ export default {
 			}
 		},
 		async loadTemplate() {
+			this.template = null;
+			this.reset();
 			try {
 				const opts = {
 					params: {
@@ -271,9 +272,6 @@ export default {
 			} catch (e) {
 				console.error(e);
 			}
-		},
-		templateChanged() {
-			this.reset();
 		},
 		applyDefaultsFromTemplate() {
 			const params = this.template?.Params || [];

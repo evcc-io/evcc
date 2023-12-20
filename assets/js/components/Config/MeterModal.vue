@@ -42,7 +42,6 @@
 									v-model="templateName"
 									:disabled="!isNew"
 									class="form-select w-100"
-									@change="templateChanged"
 								>
 									<option
 										v-for="option in templateOptions"
@@ -53,6 +52,7 @@
 									</option>
 								</select>
 							</FormRow>
+							<p v-if="loadingTemplate">Loading ...</p>
 							<Modbus
 								v-if="modbus"
 								v-model:modbus="values.modbus"
@@ -178,6 +178,7 @@ export default {
 			template: null,
 			saving: false,
 			selectedType: null,
+			loadingTemplate: false,
 			values: { ...initialValues },
 		};
 	},
@@ -297,6 +298,9 @@ export default {
 			}
 		},
 		async loadTemplate() {
+			this.template = null;
+			this.reset();
+			this.loadingTemplate = true;
 			try {
 				const opts = {
 					params: {
@@ -304,14 +308,13 @@ export default {
 						name: this.templateName,
 					},
 				};
-				this.template = (await api.get("config/templates/meter", opts)).data.result;
+				const result = await api.get("config/templates/meter", opts);
+				this.template = result.data.result;
 				this.applyDefaultsFromTemplate();
 			} catch (e) {
 				console.error(e);
 			}
-		},
-		templateChanged() {
-			this.reset();
+			this.loadingTemplate = false;
 		},
 		applyDefaultsFromTemplate() {
 			const params = this.template?.Params || [];

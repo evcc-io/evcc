@@ -13,7 +13,7 @@
 		/>
 		<span :id="id + '_unit'" class="input-group-text">{{ unit }}</span>
 	</div>
-	<div v-else-if="icons" :id="id" class="d-flex flex-wrap">
+	<div v-else-if="icons" class="d-flex flex-wrap">
 		<div
 			v-for="{ key } in selectOptions"
 			v-show="key === value || selectMode"
@@ -29,12 +29,17 @@
 				:value="key"
 				@click="toggleSelectMode"
 			/>
-			<label class="btn btn-outline-secondary" :for="`icon_${key}`" :aria-label="key">
+			<label
+				class="btn btn-outline-secondary"
+				:class="key === value ? 'active' : ''"
+				:for="`icon_${key}`"
+				:aria-label="key"
+			>
 				<VehicleIcon :name="key" />
 			</label>
 		</div>
 		<div v-if="!selectMode" class="me-2 mb-2 d-flex align-items-end">
-			<a class="text-muted" href="#" @click.prevent="toggleSelectMode">change</a>
+			<a :id="id" class="text-muted" href="#" @click.prevent="toggleSelectMode">change</a>
 		</div>
 	</div>
 	<select v-else-if="select" :id="id" v-model="value" class="form-select">
