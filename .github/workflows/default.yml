@@ -139,6 +139,8 @@ jobs:
   integration:
     name: Integration
     runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.34.3-jammy
 
     steps:
       - uses: actions/checkout@v4
@@ -159,9 +161,6 @@ jobs:
 
       - name: Build Go
         run: make build
-
-      - name: Install playwright
-        run: npx playwright install --with-deps chromium
 
       - name: Run tests
         run: npx playwright test
