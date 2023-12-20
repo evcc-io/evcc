@@ -179,3 +179,27 @@ test.describe("meters", async () => {
     await expect(page.getByTestId("battery")).toHaveCount(0);
   });
 });
+
+test.describe("site", async () => {
+  test("change site title", async ({ page }) => {
+    // initial value on main ui
+    await page.goto("/");
+    await expect(page.getByRole("heading", { name: "Hello World" })).toBeVisible();
+
+    // change value in config
+    await page.goto("/#/config");
+    await page.getByLabel("Site title").fill("Whoops World");
+
+    // reset form to initial value
+    await page.getByRole("button", { name: "Cancel" }).click();
+    await expect(page.getByLabel("Site title")).toHaveValue("Hello World");
+
+    // change and save value
+    await page.getByLabel("Site title").fill("Ahoy World");
+    await page.getByRole("button", { name: "Save" }).click();
+
+    // check changed value on main ui
+    await page.getByTestId("home-link").click();
+    await expect(page.getByRole("heading", { name: "Ahoy World" })).toBeVisible();
+  });
+});
