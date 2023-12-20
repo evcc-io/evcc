@@ -6,9 +6,12 @@
 			:data-index="index"
 			class="slot user-select-none"
 			:class="{
-				active: isActive(index),
+				active: slot.charging,
+				hovered: activeIndex === index,
 				toLate: slot.toLate,
+				warning: slot.warning,
 				'cursor-pointer': slot.selectable,
+				faded: activeIndex !== null && activeIndex !== index,
 			}"
 			@touchstart="hoverSlot(index)"
 			@mouseenter="hoverSlot(index)"
@@ -84,11 +87,6 @@ export default {
 				this.$emit("slot-selected", index);
 			}
 		},
-		isActive(index) {
-			return this.activeIndex !== null
-				? this.activeIndex === index
-				: this.slots[index].charging;
-		},
 		priceStyle(price) {
 			const value = price === undefined ? this.avgPrice : price;
 			const height =
@@ -118,6 +116,7 @@ export default {
 	flex-direction: column;
 	position: relative;
 	opacity: 1;
+	transition: opacity var(--evcc-transition-fast) linear;
 }
 @media (max-width: 991px) {
 	.chart {
@@ -171,7 +170,19 @@ export default {
 .slot.active {
 	opacity: 1;
 }
+.slot.warning .slot-bar {
+	background: var(--bs-warning);
+}
+.slot.warning .slot-label {
+	color: var(--bs-warning);
+}
 .unknown {
 	margin: 0 -0.5rem;
+}
+.slot.hovered {
+	opacity: 1;
+}
+.slot.faded {
+	opacity: 0.33;
 }
 </style>

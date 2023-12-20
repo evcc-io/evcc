@@ -84,3 +84,20 @@ vehicles:
       source: js
       script: |
         50
+  - name: vehicleWithMassiveCapacity
+    type: custom
+    title: Vehicle with SoC with Massive Capacity
+    capacity: 1000
+    soc:
+      source: js
+      script: |
+        50
+
+tariffs:
+  currency: EUR
+  grid:
+    type: fixed
+    price: 0.4 # EUR/kWh
+    zones:
+      - hours: 1-6
+        price: 0.2

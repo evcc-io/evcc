@@ -26,8 +26,11 @@
 	--evcc-dark-green: #0fde41;
 	--evcc-darker-green: #0ba631;
 	--evcc-darkest-green: #076f20;
+	--evcc-darkest-green-rgb: 11, 166, 49;
 	--evcc-yellow: #faf000;
 	--evcc-dark-yellow: #bbb400;
+	--evcc-orange: #ff9000;
+	--evcc-orange-rgb: 255, 144, 0;
 	--bs-gray-deep: #010322;
 	--bs-gray-dark: #28293e;
 	--bs-gray-medium: #93949e;
@@ -52,7 +55,10 @@
 	--evcc-transition-very-fast: 100ms;
 
 	--bs-primary: var(--evcc-darker-green);
-	--bs-primary-rgb: 11, 166, 49;
+	--bs-primary-rgb: var(--evcc-darker-green-rgb);
+
+	--bs-warning: var(--evcc-orange);
+	--bs-warning-rgb: var(--evcc-orange-rgb);
 
 	--bs-body-font-size: 14px;
 	--bs-font-sans-serif: Montserrat, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue",

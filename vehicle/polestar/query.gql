@@ -1,0 +1,64 @@
+query getCars {
+	getConsumerCarsV2 {
+		vin
+		internalVehicleIdentifier
+		modelYear
+		content {
+			model {
+				code
+				name
+				__typename
+			}
+			images {
+				studio {
+					url
+					angles
+					__typename
+				}
+				__typename
+			}
+			__typename
+		}
+		hasPerformancePackage
+		registrationNo
+		deliveryDate
+		currentPlannedDeliveryDate
+		__typename
+	}
+}
+
+query GetBatteryData($vin: String!) {
+	getBatteryData(vin: $vin) {
+		averageEnergyConsumptionKwhPer100Km
+		batteryChargeLevelPercentage
+		chargerConnectionStatus
+		chargingCurrentAmps
+		chargingPowerWatts
+		chargingStatus
+		estimatedChargingTimeMinutesToTargetDistance
+		estimatedChargingTimeToFullMinutes
+		estimatedDistanceToEmptyKm
+		estimatedDistanceToEmptyMiles
+		eventUpdatedTimestamp {
+			iso
+			unix
+			__typename
+		}
+		__typename
+	}
+}
+
+query GetOdometerData($vin: String!) {
+	getOdometerData(vin: $vin) {
+		averageSpeedKmPerHour
+		eventUpdatedTimestamp {
+			iso
+			unix
+			__typename
+		}
+		odometerMeters
+		tripMeterAutomaticKm
+		tripMeterManualKm
+		__typename
+	}
+}

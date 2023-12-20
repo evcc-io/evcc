@@ -1,8 +1,5 @@
 <template>
-	<p class="mb-0">
-		<span v-if="targetIsAboveVehicleLimit" class="d-block text-danger mb-1">
-			{{ $t("main.targetCharge.targetIsAboveVehicleLimit", { limit: vehicleLimitFmt }) }}
-		</span>
+	<p class="mb-0" data-testid="plan-warnings">
 		<span v-if="targetIsAboveLimit" class="d-block text-secondary mb-1">
 			{{ $t("main.targetCharge.targetIsAboveLimit", { limit: limitFmt }) }}
 		</span>
@@ -14,6 +11,12 @@
 		</span>
 		<span v-if="costLimitExists" class="d-block text-secondary mb-1">
 			{{ $t("main.targetCharge.costLimitIgnore", { limit: costLimitText }) }}
+		</span>
+		<span v-if="notReachableInTime" class="d-block text-warning mb-1">
+			{{ $t("main.targetCharge.notReachableInTime", { endTime: endTimeFmt }) }}
+		</span>
+		<span v-if="targetIsAboveVehicleLimit" class="d-block text-danger mb-1">
+			{{ $t("main.targetCharge.targetIsAboveVehicleLimit", { limit: vehicleLimitFmt }) }}
 		</span>
 	</p>
 </template>
@@ -40,9 +43,23 @@ export default {
 		currency: String,
 		mode: String,
 		tariff: Object,
+		plan: Object,
 		vehicleTargetSoc: Number,
 	},
 	computed: {
+		endTime: function () {
+			if (!this.plan?.plan?.length) {
+				return null;
+			}
+			const { plan } = this.plan;
+			return plan[plan.length - 1].end;
+		},
+		endTimeFmt: function () {
+			if (!this.endTime) {
+				return "";
+			}
+			return this.fmtAbsoluteDate(new Date(this.endTime));
+		},
 		timeTooFarInTheFuture: function () {
 			if (!this.effectivePlanTime) {
 				return false;
@@ -53,6 +70,13 @@ export default {
 					const end = new Date(lastRate.end);
 					return new Date(this.effectivePlanTime) >= end;
 				}
+			}
+			return false;
+		},
+		notReachableInTime: function () {
+			const { planTime } = this.plan || {};
+			if (planTime && this.endTime) {
+				return new Date(planTime) < new Date(this.endTime);
 			}
 			return false;
 		},
