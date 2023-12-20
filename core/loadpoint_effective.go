@@ -53,6 +53,11 @@ func (lp *Loadpoint) EffectivePlanTime() time.Time {
 	return ts
 }
 
+// SocBasedPlanning returns true if soc based planning is enabled
+func (lp *Loadpoint) SocBasedPlanning() bool {
+	return lp.socBasedPlanning()
+}
+
 // effectiveMinCurrent returns the effective min current
 func (lp *Loadpoint) effectiveMinCurrent() float64 {
 	if v := lp.GetVehicle(); v != nil {

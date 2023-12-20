@@ -3,7 +3,11 @@
 		<div class="justify-content-between mb-2 d-flex justify-content-between">
 			<div class="text-start">
 				<div class="label">{{ $t("main.targetChargePlan.chargeDuration") }}</div>
-				<div class="value text-primary d-sm-flex align-items-baseline">
+				<div
+					:class="`value  d-sm-flex align-items-baseline ${
+						timeWarning ? 'text-warning' : 'text-primary'
+					}`"
+				>
 					<div>{{ planDuration }}</div>
 					<div v-if="fmtPower" class="extraValue text-nowrap ms-sm-1">
 						{{ fmtPower }}
@@ -47,6 +51,19 @@ export default {
 		return { activeIndex: null, startTime: new Date() };
 	},
 	computed: {
+		endTime() {
+			if (!this.plan?.length) {
+				return null;
+			}
+			const end = this.plan[this.plan.length - 1].end;
+			return end ? new Date(end) : null;
+		},
+		timeWarning() {
+			if (this.targetTime && this.endTime) {
+				return this.targetTime < this.endTime;
+			}
+			return false;
+		},
 		planDuration() {
 			return this.fmtDuration(this.duration);
 		},
@@ -112,11 +129,16 @@ export default {
 				end.setHours(startHour + 1);
 				const endHour = end.getHours();
 				const day = this.weekdayShort(start);
-				const toLate = this.targetTime && this.targetTime.getTime() <= start.getTime();
+				const toLate = this.targetTime && this.targetTime <= start;
 				// TODO: handle multiple matching time slots
 				const price = this.findSlotInRange(start, end, rates)?.price;
 				const charging = this.findSlotInRange(start, end, plan) != null;
-				result.push({ day, price, startHour, endHour, charging, toLate });
+				const warning =
+					charging &&
+					this.targetTime &&
+					end > this.targetTime &&
+					this.targetTime < this.endTime;
+				result.push({ day, price, startHour, endHour, charging, toLate, warning });
 			}
 			return result;
 		},

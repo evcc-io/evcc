@@ -87,7 +87,7 @@ func (s *Estimator) RemainingChargeDuration(targetSoc int, chargePower float64) 
 		t2 = (float64(targetSoc) - max(s.vehicleSoc, rrp)) / minChargeSoc * s.virtualCapacity / ((chargePower-s.minChargePower)/2 + s.minChargePower)
 	}
 
-	return time.Duration(float64(time.Hour) * (t1 + t2)).Round(time.Second)
+	return max(0, time.Duration(float64(time.Hour)*(t1+t2))).Round(time.Second)
 }
 
 // RemainingChargeEnergy returns the remaining charge energy in kWh

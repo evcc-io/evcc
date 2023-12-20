@@ -10,5 +10,4 @@ The developed plan is then evaluated in terms of total cost and being "active". 
 
 ## Edge cases
 
-- Target time elapsed: inactive
-- No tariff: active if after or equal start time
+If time goal can not be met, the planner creates a continuous plan until up to required duration.
