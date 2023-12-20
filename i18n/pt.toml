@@ -182,6 +182,8 @@ time = "Tempo"
 title = "Plano"
 titleMinSoc = "Carga mínima"
 titleTargetCharge = "Partida"
+active = "Ativo"
+update = "Aplicar"
 
 [main.energyflow]
 battery = "Bateria"
@@ -217,6 +219,7 @@ disclaimerHint = "Aviso:"
 disclaimerText = "As alterações serão perdidas depois que o servidor for reiniciado."
 title = "Configurações {0}"
 vehicle = "Veículo"
+onlyForSocBasedCharging = "Estas opções só estão disponíveis para veículos com nível de carregamento conhecido."
 
 [main.loadpointSettings.limitSoc]
 description = "limite de compartilhamento que é usado quando este veículo está conectado."
@@ -279,6 +282,8 @@ tomorrow = "amanhã"
 update = "Atualizar"
 vehicleCapacityDocs = "Aprender a configurá-la."
 vehicleCapacityRequired = "A capacidade da bateria do veículo é necessária para estimar o tempo de carregamento."
+notReachableInTime = "O objetivo não é alcançável no tempo. Final estimado: {endTime}."
+currentPlan = "Plano ativo"
 
 [main.targetChargePlan]
 chargeDuration = "Tempo de carga"
