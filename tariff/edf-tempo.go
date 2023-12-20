@@ -49,7 +49,7 @@ func NewEdfTempoFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		return nil, err
 	}
 
-	if cc.ClientID == "" && cc.ClientSecret == "" {
+	if cc.ClientID == "" || cc.ClientSecret == "" {
 		return nil, errors.New("missing credentials")
 	}
 

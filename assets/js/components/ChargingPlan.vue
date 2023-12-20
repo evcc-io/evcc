@@ -128,6 +128,7 @@ export default {
 		smartCostLimit: Number,
 		smartCostType: String,
 		socBasedPlanning: Boolean,
+		socBasedCharging: Boolean,
 		socPerKwh: Number,
 		vehicle: Object,
 		vehicleCapacity: Number,

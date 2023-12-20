@@ -32,6 +32,7 @@
 					v-model="selectedDay"
 					class="form-select me-2"
 					data-testid="plan-day"
+					@change="preview"
 				>
 					<option v-for="opt in dayOptions()" :key="opt.value" :value="opt.value">
 						{{ opt.name }}
@@ -52,6 +53,7 @@
 					:step="60 * 5"
 					data-testid="plan-time"
 					required
+					@change="preview"
 				/>
 			</div>
 			<div class="col-6 d-lg-none col-form-label">
@@ -66,6 +68,7 @@
 					v-model="selectedSoc"
 					class="form-select mx-0"
 					data-testid="plan-soc"
+					@change="preview"
 				>
 					<option v-for="opt in socOptions" :key="opt.value" :value="opt.value">
 						{{ opt.name }}
@@ -77,6 +80,7 @@
 					v-model="selectedEnergy"
 					class="form-select mx-0"
 					data-testid="plan-energy"
+					@change="preview"
 				>
 					<option v-for="opt in energyOptions" :key="opt.energy" :value="opt.energy">
 						{{ opt.text }}
@@ -113,7 +117,7 @@
 				</button>
 			</div>
 		</div>
-		<p class="mb-0">
+		<p class="mb-0" data-testid="plan-entry-warnings">
 			<span v-if="timeInThePast" class="d-block text-danger my-2">
 				{{ $t("main.targetCharge.targetIsInThePast") }}
 			</span>
@@ -129,6 +133,8 @@ import formatter from "../mixins/formatter";
 import { energyOptions } from "../utils/energyOptions";
 
 const LAST_TARGET_TIME_KEY = "last_target_time";
+const LAST_SOC_GOAL_KEY = "last_soc_goal";
+const LAST_ENERGY_GOAL_KEY = "last_energy_goal";
 const DEFAULT_TARGET_TIME = "7:00";
 
 export default {
@@ -144,7 +150,7 @@ export default {
 		vehicleCapacity: Number,
 		socBasedPlanning: Boolean,
 	},
-	emits: ["plan-updated", "plan-removed"],
+	emits: ["plan-updated", "plan-removed", "plan-preview"],
 	data: function () {
 		return {
 			selectedDay: null,
@@ -231,16 +237,18 @@ export default {
 		},
 		initInputFields: function () {
 			if (!this.selectedSoc) {
-				this.selectedSoc = 100;
+				this.selectedSoc = window.localStorage[LAST_SOC_GOAL_KEY] || 100;
 			}
 			if (!this.selectedEnergy) {
-				this.selectedEnergy = this.vehicleCapacity || 10;
+				this.selectedEnergy =
+					window.localStorage[LAST_ENERGY_GOAL_KEY] || this.vehicleCapacity || 10;
 			}
 
 			let time = this.time;
 			if (!time) {
 				// no time but existing selection, keep it
 				if (this.selectedDay && this.selectedTime) {
+					this.preview();
 					return;
 				}
 				time = this.defaultTime();
@@ -248,6 +256,10 @@ export default {
 			const date = new Date(time);
 			this.selectedDay = this.fmtDayString(date);
 			this.selectedTime = this.fmtTimeString(date);
+
+			if (this.isNew || this.dataChanged) {
+				this.preview();
+			}
 		},
 		dayOptions: function () {
 			const options = [];
@@ -276,10 +288,23 @@ export default {
 				const hours = this.selectedDate.getHours();
 				const minutes = this.selectedDate.getMinutes();
 				window.localStorage[LAST_TARGET_TIME_KEY] = `${hours}:${minutes}`;
+				if (this.selectedSoc) {
+					window.localStorage[LAST_SOC_GOAL_KEY] = this.selectedSoc;
+				}
+				if (this.selectedEnergy) {
+					window.localStorage[LAST_ENERGY_GOAL_KEY] = this.selectedEnergy;
+				}
 			} catch (e) {
 				console.warn(e);
 			}
 			this.$emit("plan-updated", {
+				time: this.selectedDate,
+				soc: this.selectedSoc,
+				energy: this.selectedEnergy,
+			});
+		},
+		preview: function () {
+			this.$emit("plan-preview", {
 				time: this.selectedDate,
 				soc: this.selectedSoc,
 				energy: this.selectedEnergy,

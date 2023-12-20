@@ -101,7 +101,7 @@ func (lp *Loadpoint) selectVehicleByID(id string) api.Vehicle {
 // setActiveVehicle assigns currently active vehicle, configures soc estimator
 // and adds an odometer task
 func (lp *Loadpoint) setActiveVehicle(v api.Vehicle) {
-	lp.vehicleMux.Lock()
+	lp.vmu.Lock()
 
 	from := "unknown"
 	if lp.vehicle != nil {
@@ -115,7 +115,7 @@ func (lp *Loadpoint) setActiveVehicle(v api.Vehicle) {
 	}
 
 	lp.vehicle = v
-	lp.vehicleMux.Unlock()
+	lp.vmu.Unlock()
 
 	if from != to {
 		lp.log.INFO.Printf("vehicle updated: %s -> %s", from, to)
