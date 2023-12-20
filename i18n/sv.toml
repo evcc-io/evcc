@@ -274,6 +274,7 @@ tomorrow = "i morgon"
 update = "Uppdatera"
 vehicleCapacityDocs = "Lär dig hur du konfigurerar."
 vehicleCapacityRequired = "Fordonets batterikapacitet behövs för att beräkna laddtid."
+notReachableInTime = "Laddmål kan inte nås i tid. Beräknad sluttid: {endTime}"
 
 [main.targetChargePlan]
 chargeDuration = "Laddningstid"
