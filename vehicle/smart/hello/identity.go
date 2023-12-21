@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/samber/lo"
 	"golang.org/x/oauth2"
@@ -16,8 +17,8 @@ import (
 
 type Identity struct {
 	*request.Helper
+	oauth2.TokenSource
 	user, password string
-	token          *oauth2.Token
 	userID         string
 }
 
@@ -28,6 +29,14 @@ func NewIdentity(log *util.Logger, user, password string) (*Identity, error) {
 		password: password,
 	}
 
+	v.TokenSource = oauth.RefreshTokenSource(nil, v)
+
+	_, err := v.Token()
+
+	return v, err
+}
+
+func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 	token, err := v.login()
 	if err != nil {
 		return nil, err
@@ -38,17 +47,11 @@ func NewIdentity(log *util.Logger, user, password string) (*Identity, error) {
 		return nil, err
 	}
 
-	v.token = appToken
-	v.userID = userID
-	return v, nil
-}
-
-func (v *Identity) Token() (*oauth2.Token, error) {
-	var err error
-	if !v.token.Valid() {
-		err = errors.New("invalid or empty token")
+	if err == nil {
+		v.userID = userID
 	}
-	return v.token, err
+
+	return appToken, err
 }
 
 func (v *Identity) UserID() (string, error) {
