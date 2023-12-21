@@ -137,16 +137,18 @@ func (v *API) Vehicles() ([]string, error) {
 	return vehicles, err
 }
 
-func (v *API) Status(vin string) (*StatusResponse, error) {
+func (v *API) Status(vin string) (VehicleStatus, error) {
 	var res struct {
 		Code    ResponseCode
 		Message string
-		Data    any
+		Data    struct {
+			VehicleStatus VehicleStatus
+		}
 	}
 
 	userID, err := v.identity.UserID()
 	if err != nil {
-		return nil, err
+		return VehicleStatus{}, err
 	}
 
 	params := url.Values{
@@ -158,14 +160,14 @@ func (v *API) Status(vin string) (*StatusResponse, error) {
 	path := "/remote-control/vehicle/status/" + vin
 	req, err := v.request(http.MethodGet, path, params, nil)
 	if err != nil {
-		return nil, err
+		return VehicleStatus{}, err
 	}
 
 	if err := v.DoJSON(req, &res); err != nil {
-		return nil, err
+		return VehicleStatus{}, err
 	} else if res.Code != ResponseOK {
-		return nil, fmt.Errorf("%d: %s", res.Code, res.Message)
+		return VehicleStatus{}, fmt.Errorf("%d: %s", res.Code, res.Message)
 	}
 
-	return nil, err
+	return res.Data.VehicleStatus, err
 }

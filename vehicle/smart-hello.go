@@ -25,11 +25,9 @@ func NewSmartHelloFromConfig(other map[string]interface{}) (api.Vehicle, error) 
 		embed          `mapstructure:",squash"`
 		User, Password string
 		VIN            string
-		Expiry         time.Duration
 		Cache          time.Duration
 	}{
-		Expiry: expiry,
-		Cache:  interval,
+		Cache: interval,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -56,7 +54,11 @@ func NewSmartHelloFromConfig(other map[string]interface{}) (api.Vehicle, error) 
 	cc.VIN, err = ensureVehicle(cc.VIN, api.Vehicles)
 
 	if err == nil {
-		v.Provider = hello.NewProvider(log, api, cc.VIN, cc.Expiry, cc.Cache)
+		if _, err := identity.UpdateSession(cc.VIN); err != nil {
+			return v, fmt.Errorf("update session failed: %w", err)
+		}
+
+		v.Provider = hello.NewProvider(log, api, cc.VIN, cc.Cache)
 	}
 
 	return v, err

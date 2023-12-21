@@ -3,6 +3,7 @@ package hello
 import (
 	"time"
 
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
 )
@@ -10,18 +11,15 @@ import (
 // https://github.com/TA2k/ioBroker.smart-eq
 
 type Provider struct {
-	statusG func() (*StatusResponse, error)
-	expiry  time.Duration
+	statusG func() (VehicleStatus, error)
 }
 
-func NewProvider(log *util.Logger, api *API, vin string, expiry, cache time.Duration) *Provider {
+func NewProvider(log *util.Logger, api *API, vin string, cache time.Duration) *Provider {
 	v := &Provider{
-		expiry: expiry,
+		statusG: provider.Cached(func() (VehicleStatus, error) {
+			return api.Status(vin)
+		}, cache),
 	}
-
-	v.statusG = provider.Cached(func() (*StatusResponse, error) {
-		return api.Status(vin)
-	}, cache)
 
 	return v
 }
@@ -29,55 +27,30 @@ func NewProvider(log *util.Logger, api *API, vin string, expiry, cache time.Dura
 // Soc implements the api.Vehicle interface
 func (v *Provider) Soc() (float64, error) {
 	res, err := v.statusG()
-	_ = res
-	return 0, err
+	return float64(res.AdditionalVehicleStatus.ElectricVehicleStatus.ChargeLevel), err
 }
 
-// var _ api.ChargeState = (*Provider)(nil)
+var _ api.VehicleRange = (*Provider)(nil)
 
-// // Range implements the api.VehicleRange interface
-// func (v *Provider) Status() (api.ChargeStatus, error) {
-// 	res, err := v.statusG()
-// 	if err != nil {
-// 		return api.StatusNone, err
-// 	}
+// Range implements the api.VehicleRange interface
+func (v *Provider) Range() (int64, error) {
+	res, err := v.statusG()
+	return int64(res.AdditionalVehicleStatus.ElectricVehicleStatus.DistanceToEmptyOnBatteryOnly), err
+}
 
-// 	cs := res.PreCond.Data.ChargingStatus
-// 	if cs.Status != 0 {
-// 		return api.StatusNone, fmt.Errorf("unknown status/value: %d/%d", cs.Status, cs.Value)
-// 	}
+var _ api.VehiclePosition = (*Provider)(nil)
 
-// 	// confirmed status/value/active combinations (https://github.com/evcc-io/evcc/discussions/5596#discussioncomment-4556035)
-// 	// 0/0/active: charging
-// 	// 0/2/*:      connected
-// 	// 0/3/*:      disconnected
-// 	switch cs.Value {
-// 	case 0:
-// 		if res.PreCond.Data.ChargingActive.Value {
-// 			return api.StatusC, nil
-// 		}
-// 		return api.StatusB, nil
-// 	case 1, 2:
-// 		return api.StatusB, nil
-// 	case 3:
-// 		return api.StatusA, nil
-// 	default:
-// 		return api.StatusNone, fmt.Errorf("unknown status/value: %d/%d", cs.Status, cs.Value)
-// 	}
-// }
+// Position implements the api.VehiclePosition interface
+func (v *Provider) Position() (float64, float64, error) {
+	res, err := v.statusG()
+	const div = 3600000.0
+	return float64(res.BasicVehicleStatus.Position.Latitude) / div, float64(res.BasicVehicleStatus.Position.Longitude) / div, err
+}
 
-// var _ api.VehicleRange = (*Provider)(nil)
+var _ api.VehicleOdometer = (*Provider)(nil)
 
-// // Range implements the api.VehicleRange interface
-// func (v *Provider) Range() (int64, error) {
-// 	res, err := v.statusG()
-// 	return int64(res.Status.Data.RangeElectric.Value), err
-// }
-
-// var _ api.VehicleOdometer = (*Provider)(nil)
-
-// // Odometer implements the Provider.VehicleOdometer interface
-// func (v *Provider) Odometer() (float64, error) {
-// 	res, err := v.statusG()
-// 	return res.Status.Data.Odo.Value, err
-// }
+// Odometer implements the Provider.VehicleOdometer interface
+func (v *Provider) Odometer() (float64, error) {
+	res, err := v.statusG()
+	return res.AdditionalVehicleStatus.MaintenanceStatus.Odometer, err
+}
