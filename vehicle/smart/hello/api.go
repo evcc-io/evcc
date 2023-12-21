@@ -19,13 +19,11 @@ import (
 type API struct {
 	*request.Helper
 	identity *Identity
-	deviceId string
 }
 
 func NewAPI(log *util.Logger, identity *Identity) *API {
 	v := &API{
 		Helper:   request.NewHelper(log),
-		deviceId: lo.RandomString(16, lo.AlphanumericCharset),
 		identity: identity,
 	}
 
@@ -36,33 +34,21 @@ func NewAPI(log *util.Logger, identity *Identity) *API {
 			// decorate token
 			Decorator: func(req *http.Request) error {
 				token, err := identity.Token()
-				if err != nil {
-					return err
+				if err == nil {
+					req.Header.Set("authorization", token.AccessToken)
 				}
-
-				req.Header.Set("authorization", token.AccessToken)
-				return nil
+				return err
 			},
 		},
 
 		// decorate headers
 		Decorator: transport.DecorateHeaders(map[string]string{
-			"x-app-id":                "SmartAPPEU",
 			"accept":                  "application/json;responseformat=3",
-			"x-agent-type":            "iOS",
-			"x-device-type":           "mobile",
-			"x-operator-code":         "SMART",
-			"x-env-type":              "production",
-			"x-version":               "smartNew",
-			"accept-language":         "en_US",
-			"x-api-signature-version": "1.0",
-			"x-device-manufacture":    "Apple",
-			"x-device-brand":          "Apple",
-			"x-device-identifier":     v.deviceId,
-			"x-device-model":          "iPhone",
-			"x-agent-version":         "17.1",
 			"content-type":            "application/json; charset=utf-8",
-			"user-agent":              "Hello smart/1.4.0 (iPhone; iOS 17.1; Scale/3.00)",
+			"x-operator-code":         operatorCode,
+			"x-api-signature-version": "1.0",
+			"x-app-id":                appID,
+			"x-device-identifier":     v.identity.DeviceID(),
 		}),
 	}
 
@@ -103,6 +89,7 @@ func (v *API) Vehicles() ([]string, error) {
 	var res struct {
 		Code    ResponseCode
 		Message string
+		Error   Error
 		Data    struct {
 			List []Vehicle
 		}
@@ -114,8 +101,8 @@ func (v *API) Vehicles() ([]string, error) {
 	}
 
 	params := url.Values{
-		"needSharedCar": []string{"1"},
-		"userId":        []string{userID},
+		"needSharedCar": {"1"},
+		"userId":        {userID},
 	}
 
 	path := "/device-platform/user/vehicle/secure"
@@ -124,10 +111,9 @@ func (v *API) Vehicles() ([]string, error) {
 		return nil, err
 	}
 
-	if err := v.DoJSON(req, &res); err != nil {
+	err = v.DoJSON(req, &res)
+	if err := responseError(err, res.Code, res.Message, res.Error); err != nil {
 		return nil, err
-	} else if res.Code != ResponseOK {
-		return nil, fmt.Errorf("%d: %s", res.Code, res.Message)
 	}
 
 	vehicles := lo.Map(res.Data.List, func(v Vehicle, _ int) string {
@@ -137,10 +123,48 @@ func (v *API) Vehicles() ([]string, error) {
 	return vehicles, err
 }
 
-func (v *API) Status(vin string) (VehicleStatus, error) {
+func (v *API) UpdateSession(vin string) error {
+	token, err := v.identity.Token()
+	if err != nil {
+		return err
+	}
+
+	params := url.Values{
+		"identity_type": {"smart"},
+	}
+
+	data := map[string]string{
+		"vin":          vin,
+		"sessionToken": token.AccessToken,
+		"language":     "",
+	}
+
+	path := "/device-platform/user/session/update"
+	req, err := v.request(http.MethodPost, path, params, request.MarshalJSON(data))
+	if err != nil {
+		return err
+	}
+
 	var res struct {
 		Code    ResponseCode
 		Message string
+		Error   Error
+	}
+
+	err = v.DoJSON(req, &res)
+	return responseError(err, res.Code, res.Message, res.Error)
+}
+
+func (v *API) Status(vin string) (VehicleStatus, error) {
+	if _, err := v.identity.UpdateSession(vin); err != nil {
+		// if err := v.UpdateSession(vin); err != nil {
+		return VehicleStatus{}, fmt.Errorf("update session failed: %w", err)
+	}
+
+	var res struct {
+		Code    ResponseCode
+		Message string
+		Error   Error
 		Data    struct {
 			VehicleStatus VehicleStatus
 		}
@@ -152,9 +176,9 @@ func (v *API) Status(vin string) (VehicleStatus, error) {
 	}
 
 	params := url.Values{
-		"latest": []string{"true"},
-		"target": []string{""},
-		"userId": []string{userID},
+		"latest": {"true"},
+		"target": {""},
+		"userId": {userID},
 	}
 
 	path := "/remote-control/vehicle/status/" + vin
@@ -163,10 +187,9 @@ func (v *API) Status(vin string) (VehicleStatus, error) {
 		return VehicleStatus{}, err
 	}
 
-	if err := v.DoJSON(req, &res); err != nil {
+	err = v.DoJSON(req, &res)
+	if err := responseError(err, res.Code, res.Message, res.Error); err != nil {
 		return VehicleStatus{}, err
-	} else if res.Code != ResponseOK {
-		return VehicleStatus{}, fmt.Errorf("%d: %s", res.Code, res.Message)
 	}
 
 	return res.Data.VehicleStatus, err

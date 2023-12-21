@@ -17,6 +17,11 @@ func (rc *ResponseCode) UnmarshalJSON(data []byte) error {
 	return err
 }
 
+type Error struct {
+	Code    ResponseCode
+	Message string
+}
+
 type AppToken struct {
 	ExpiresIn    int
 	AccessToken  string

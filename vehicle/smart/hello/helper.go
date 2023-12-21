@@ -51,3 +51,19 @@ x-api-signature-version:1.0
 
 	return nonce, ts, sign, nil
 }
+
+func responseError(err error, code ResponseCode, msg string, errS Error) error {
+	var body error
+
+	if code != 0 && code != ResponseOK {
+		body = fmt.Errorf("%d: %s", code, msg)
+	} else if errS.Code != 0 && errS.Code != ResponseOK {
+		body = fmt.Errorf("%d: %s", errS.Code, errS.Message)
+	}
+
+	if err == nil {
+		return body
+	}
+
+	return fmt.Errorf("%w: %s", err, body)
+}

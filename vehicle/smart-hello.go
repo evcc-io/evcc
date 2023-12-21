@@ -54,10 +54,6 @@ func NewSmartHelloFromConfig(other map[string]interface{}) (api.Vehicle, error) 
 	cc.VIN, err = ensureVehicle(cc.VIN, api.Vehicles)
 
 	if err == nil {
-		if _, err := identity.UpdateSession(cc.VIN); err != nil {
-			return v, fmt.Errorf("update session failed: %w", err)
-		}
-
 		v.Provider = hello.NewProvider(log, api, cc.VIN, cc.Cache)
 	}
 

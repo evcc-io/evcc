@@ -18,8 +18,8 @@ import (
 type Identity struct {
 	*request.Helper
 	oauth2.TokenSource
-	user, password string
-	userID         string
+	user, password   string
+	userID, deviceID string
 }
 
 func NewIdentity(log *util.Logger, user, password string) (*Identity, error) {
@@ -27,6 +27,7 @@ func NewIdentity(log *util.Logger, user, password string) (*Identity, error) {
 		Helper:   request.NewHelper(log),
 		user:     user,
 		password: password,
+		deviceID: lo.RandomString(16, lo.AlphanumericCharset),
 	}
 
 	v.TokenSource = oauth.RefreshTokenSource(nil, v)
@@ -52,6 +53,10 @@ func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 	}
 
 	return appToken, err
+}
+
+func (v *Identity) DeviceID() string {
+	return v.deviceID
 }
 
 func (v *Identity) UserID() (string, error) {
@@ -160,43 +165,30 @@ func (v *Identity) login() (*oauth2.Token, error) {
 
 func (v *Identity) appToken(token *oauth2.Token) (*oauth2.Token, string, error) {
 	params := url.Values{
-		"identity_type": []string{"smart"},
+		"identity_type": {"smart"},
 	}
 
-	data2 := map[string]string{
+	data := map[string]string{
 		"accessToken": token.AccessToken,
 	}
 
 	path := "/auth/account/session/secure"
-	nonce, ts, sign, err := createSignature(http.MethodPost, path, params, data2)
+	nonce, ts, sign, err := createSignature(http.MethodPost, path, params, data)
 	if err != nil {
 		return nil, "", err
 	}
 
 	uri := fmt.Sprintf("%s/%s?%s", ApiURI, strings.TrimPrefix(path, "/"), params.Encode())
-
-	deviceId := lo.RandomString(16, lo.AlphanumericCharset)
-	req, _ := request.New(http.MethodPost, uri, request.MarshalJSON(data2), map[string]string{
-		"Accept-Encoding":         "gzip",
-		"Accept-language":         "en_US",
+	req, _ := request.New(http.MethodPost, uri, request.MarshalJSON(data), map[string]string{
 		"Accept":                  "application/json;responseformat=3",
 		"Content-Type":            "application/json; charset=utf-8",
-		"User-Agent":              "Hello smart/1.4.0 (iPhone; iOS 17.1; Scale/3.00)",
-		"X-Agent-Type":            "iOS",
-		"X-Agent-Version":         "17.1",
-		"X-Api-Signature-Nonce":   nonce,
 		"X-Api-Signature-Version": "1.0",
-		"X-App-Id":                "SmartAPPEU",
-		"X-Device-Brand":          "Apple",
-		"X-Device-Identifier":     deviceId,
-		"X-Device-Manufacture":    "Apple",
-		"X-Device-Model":          "iPhone",
-		"X-Device-Type":           "mobile",
-		"X-Env-Type":              "production",
-		"X-Operator-Code":         "SMART",
+		"X-Api-Signature-Nonce":   nonce,
+		"X-App-Id":                appID,
+		"X-Device-Identifier":     v.deviceID,
+		"X-Operator-Code":         operatorCode,
 		"X-Signature":             sign,
 		"X-Timestamp":             ts,
-		"X-Version":               "smartNew",
 	})
 
 	var res struct {
@@ -230,43 +222,30 @@ func (v *Identity) UpdateSession(vin string) (string, error) {
 		"identity_type": []string{"smart"},
 	}
 
-	data2 := map[string]string{
+	data := map[string]string{
 		"vin":          vin,
 		"sessionToken": token.AccessToken,
 		"language":     "",
 	}
 
 	path := "/device-platform/user/session/update"
-	nonce, ts, sign, err := createSignature(http.MethodPost, path, params, data2)
+	nonce, ts, sign, err := createSignature(http.MethodPost, path, params, data)
 	if err != nil {
 		return "", err
 	}
 
 	uri := fmt.Sprintf("%s/%s?%s", ApiURI, strings.TrimPrefix(path, "/"), params.Encode())
-
-	deviceId := lo.RandomString(16, lo.AlphanumericCharset)
-	req, _ := request.New(http.MethodPost, uri, request.MarshalJSON(data2), map[string]string{
-		"Accept-Encoding":         "gzip",
-		"Accept-language":         "en_US",
+	req, _ := request.New(http.MethodPost, uri, request.MarshalJSON(data), map[string]string{
 		"Accept":                  "application/json;responseformat=3",
-		"Authorization":           token.AccessToken,
 		"Content-Type":            "application/json; charset=utf-8",
-		"User-Agent":              "Hello smart/1.4.0 (iPhone; iOS 17.1; Scale/3.00)",
-		"X-Agent-Type":            "iOS",
-		"X-Agent-Version":         "17.1",
-		"X-Api-Signature-Nonce":   nonce,
 		"X-Api-Signature-Version": "1.0",
-		"X-App-Id":                "SmartAPPEU",
-		"X-Device-Brand":          "Apple",
-		"X-Device-Identifier":     deviceId,
-		"X-Device-Manufacture":    "Apple",
-		"X-Device-Model":          "iPhone",
-		"X-Device-Type":           "mobile",
-		"X-Env-Type":              "production",
-		"X-Operator-Code":         "SMART",
+		"X-Api-Signature-Nonce":   nonce,
+		"Authorization":           token.AccessToken,
+		"X-App-Id":                appID,
+		"X-Device-Identifier":     v.deviceID,
+		"X-Operator-Code":         operatorCode,
 		"X-Signature":             sign,
 		"X-Timestamp":             ts,
-		"X-Version":               "smartNew",
 	})
 
 	var res struct {
