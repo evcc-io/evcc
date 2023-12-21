@@ -32,7 +32,7 @@ jobs:
       ${{ needs.check_date.outputs.should_run != 'false' }}
       && startsWith(github.ref, 'refs/heads/master')
       && ! contains(github.head_ref, 'refs/heads/chore/')
-    uses: evcc-io/evcc/.github/workflows/default.yml@master
+    uses: grimmimeloni/evcc/.github/workflows/default.yml@master
 
   docker:
     name: Publish Docker :nightly
@@ -43,7 +43,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: refs/heads/master # force master
           fetch-depth: 0
 
       - name: Get dist from cache
@@ -69,7 +68,7 @@ jobs:
           platforms: linux/amd64,linux/arm64,linux/arm/v6
           push: true
           tags: |
-            evcc/evcc:nightly
+            grimmimeloni/evcc:${{ github.ref_name }}
 
   apt:
     name: Publish APT nightly

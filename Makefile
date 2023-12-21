@@ -98,7 +98,7 @@ publish-release::
 
 apt-nightly::
 	$(foreach file, $(wildcard $(PACKAGES)/*.deb), \
-		cloudsmith push deb evcc/unstable/any-distro/any-version $(file); \
+		cloudsmith push deb grimmimeloni/evcc/any-distro/any-version $(file); \
 	)
 
 apt-release::
