@@ -303,10 +303,6 @@ presets:
     params:
       - name: mode
         advanced: true
-      - name: minSoc
-        advanced: true
-      - name: targetSoc
-        advanced: true
       - name: minCurrent
         advanced: true
       - name: maxCurrent
