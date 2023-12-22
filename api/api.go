@@ -186,6 +186,7 @@ type Authorizer interface {
 type Vehicle interface {
 	Battery
 	BatteryCapacity
+	FeatureDescriber
 	IconDescriber
 	Title() string
 	SetTitle(string)

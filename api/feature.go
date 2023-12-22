@@ -13,8 +13,10 @@ func (f *Feature) UnmarshalText(text []byte) error {
 //go:generate enumer -type Feature
 const (
 	_ Feature = iota
-	Offline
-	CoarseCurrent
-	IntegratedDevice
-	Heating
+
+	Hidden           // vehicle: hidden from api
+	Offline          // vehicle: no capacity/soc
+	CoarseCurrent    // vehicle: 1A resolution
+	IntegratedDevice // charger: no separate vehicle
+	Heating          // charger: heating device
 )

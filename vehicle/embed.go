@@ -4,7 +4,6 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-// TODO align phases with OnIdentify
 // TODO remove vehicle settings
 type embed struct {
 	Title_       string           `mapstructure:"title"`

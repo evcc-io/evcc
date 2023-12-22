@@ -201,8 +201,6 @@ func (lp *Loadpoint) unpublishVehicle() {
 
 	lp.setRemainingEnergy(0)
 	lp.setRemainingDuration(0)
-
-	lp.publishVehicleFeature(api.Offline)
 }
 
 // vehicleHasFeature checks availability of vehicle feature
@@ -212,11 +210,6 @@ func (lp *Loadpoint) vehicleHasFeature(f api.Feature) bool {
 		ok = slices.Contains(v.Features(), f)
 	}
 	return ok
-}
-
-// publishVehicleFeature availability of vehicle features
-func (lp *Loadpoint) publishVehicleFeature(f api.Feature) {
-	lp.publish("vehicleFeature"+f.String(), lp.vehicleHasFeature(f))
 }
 
 // vehicleUnidentified returns true if there are associated vehicles and detection is running.

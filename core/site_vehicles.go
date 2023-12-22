@@ -1,6 +1,7 @@
 package core
 
 import (
+	"slices"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -17,10 +18,11 @@ type planStruct struct {
 }
 
 type vehicleStruct struct {
-	Title    string       `json:"title"`
-	MinSoc   int          `json:"minSoc,omitempty"`
-	LimitSoc int          `json:"limitSoc,omitempty"`
-	Plans    []planStruct `json:"plans,omitempty"`
+	Title    string        `json:"title"`
+	MinSoc   int           `json:"minSoc,omitempty"`
+	LimitSoc int           `json:"limitSoc,omitempty"`
+	Features []api.Feature `json:"features,omitempty"`
+	Plans    []planStruct  `json:"plans,omitempty"`
 }
 
 // publishVehicles returns a list of vehicle titles
@@ -29,6 +31,13 @@ func (site *Site) publishVehicles() {
 	res := make(map[string]vehicleStruct, len(vv))
 
 	for _, v := range vv {
+		instance := v.Instance()
+
+		// omit hidden vehicles from api
+		if slices.Contains(instance.Features(), api.Hidden) {
+			continue
+		}
+
 		var plans []planStruct
 
 		// TODO: add support for multiple plans
@@ -37,13 +46,14 @@ func (site *Site) publishVehicles() {
 		}
 
 		res[v.Name()] = vehicleStruct{
-			Title:    v.Instance().Title(),
+			Title:    instance.Title(),
+			Features: instance.Features(),
 			MinSoc:   v.GetMinSoc(),
 			LimitSoc: v.GetLimitSoc(),
 			Plans:    plans,
 		}
 
-		if lp := site.coordinator.Owner(v.Instance()); lp != nil {
+		if lp := site.coordinator.Owner(instance); lp != nil {
 			lp.PublishEffectiveValues()
 		}
 	}
