@@ -13,9 +13,8 @@ import (
 
 // Delta charger implementation
 type Delta struct {
-	conn   *modbus.Connection
-	curr   uint32
-	phases uint32
+	conn *modbus.Connection
+	curr uint32
 }
 
 const (
@@ -81,9 +80,8 @@ func NewDelta(uri, device, comset string, baudrate int, proto modbus.Protocol, s
 	conn.Logger(log.TRACE)
 
 	wb := &Delta{
-		conn:   conn,
-		curr:   6000, // assume min current
-		phases: 2,
+		conn: conn,
+		curr: 6000, // assume min current
 	}
 
 	// keep-alive
@@ -160,15 +158,56 @@ func (wb *Delta) Enable(enable bool) error {
 
 // setCurrent writes the current limit in mA
 func (wb *Delta) setCurrent(current uint32) error {
-	//Delta expects Power in Watts. Convert current to Watts considering phases from vehicle
-	//TODO: Can we get the number of phases of the currently connected vehicle somehow??
-	var power = current / 1000 * 230 * wb.phases
+	//Delta expects Power in Watts. Convert current to Watts considering active phases
+	vehiclePhases, err := wb.detectActivePhases()
+	if err != nil {
+		return err
+	}
+	var power = current / 1000 * 230 * vehiclePhases
 
 	b := make([]byte, 4)
 	binary.BigEndian.PutUint32(b, power)
 
-	_, err := wb.conn.WriteMultipleRegisters(deltaRegEvseChargingCurrentLimit, 2, b)
+	_, err = wb.conn.WriteMultipleRegisters(deltaRegEvseChargingCurrentLimit, 2, b)
 	return err
+}
+
+func (wb *Delta) detectActivePhases() (uint32, error) {
+	var vehiclePhases uint32
+
+	b, err := wb.conn.ReadInputRegisters(deltaRegEvseCurrentPowerConsumptionL1, 2)
+	if err != nil {
+		return 0, err
+	}
+
+	if binary.BigEndian.Uint32(b) > 0 {
+		vehiclePhases++
+	}
+
+	b, err = wb.conn.ReadInputRegisters(deltaRegEvseCurrentPowerConsumptionL2, 2)
+	if err != nil {
+		return 0, err
+	}
+
+	if binary.BigEndian.Uint32(b) > 0 {
+		vehiclePhases++
+	}
+
+	b, err = wb.conn.ReadInputRegisters(deltaRegEvseCurrentPowerConsumptionL3, 2)
+	if err != nil {
+		return 0, err
+	}
+
+	if binary.BigEndian.Uint32(b) > 0 {
+		vehiclePhases++
+	}
+
+	//Charging not started? Use 3 as fallback
+	if vehiclePhases == 0 {
+		vehiclePhases = 3
+	}
+
+	return vehiclePhases, nil
 }
 
 // MaxCurrent implements the api.Charger interface
