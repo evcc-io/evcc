@@ -840,6 +840,8 @@ func (c *Easee) updateSmartCharging() {
 	}
 }
 
+var _ loadpoint.Controller = (*Easee)(nil)
+
 // LoadpointControl implements loadpoint.Controller
 func (c *Easee) LoadpointControl(lp loadpoint.API) {
 	c.lp = lp
