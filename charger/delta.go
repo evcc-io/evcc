@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/sponsor"
@@ -15,6 +16,7 @@ import (
 type Delta struct {
 	conn *modbus.Connection
 	curr uint32
+	lp   loadpoint.API
 }
 
 const (
@@ -159,55 +161,13 @@ func (wb *Delta) Enable(enable bool) error {
 // setCurrent writes the current limit in mA
 func (wb *Delta) setCurrent(current uint32) error {
 	//Delta expects Power in Watts. Convert current to Watts considering active phases
-	vehiclePhases, err := wb.detectActivePhases()
-	if err != nil {
-		return err
-	}
-	var power = current / 1000 * 230 * vehiclePhases
+	var power = current / 1000 * 230 * uint32(wb.lp.GetPhases())
 
 	b := make([]byte, 4)
 	binary.BigEndian.PutUint32(b, power)
 
 	_, err := wb.conn.WriteMultipleRegisters(deltaRegEvseChargingPowerLimit, 2, b)
 	return err
-}
-
-func (wb *Delta) detectActivePhases() (uint32, error) {
-	var vehiclePhases uint32
-
-	b, err := wb.conn.ReadInputRegisters(deltaRegEvseCurrentPowerConsumptionL1, 2)
-	if err != nil {
-		return 0, err
-	}
-
-	if binary.BigEndian.Uint32(b) > 0 {
-		vehiclePhases++
-	}
-
-	b, err = wb.conn.ReadInputRegisters(deltaRegEvseCurrentPowerConsumptionL2, 2)
-	if err != nil {
-		return 0, err
-	}
-
-	if binary.BigEndian.Uint32(b) > 0 {
-		vehiclePhases++
-	}
-
-	b, err = wb.conn.ReadInputRegisters(deltaRegEvseCurrentPowerConsumptionL3, 2)
-	if err != nil {
-		return 0, err
-	}
-
-	if binary.BigEndian.Uint32(b) > 0 {
-		vehiclePhases++
-	}
-
-	//Charging not started? Use 3 as fallback
-	if vehiclePhases == 0 {
-		vehiclePhases = 3
-	}
-
-	return vehiclePhases, nil
 }
 
 // MaxCurrent implements the api.Charger interface
