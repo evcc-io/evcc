@@ -390,8 +390,9 @@ func TestDisableAndEnableAtTargetSoc(t *testing.T) {
 
 	// wrap vehicle with estimator
 	vehicle.EXPECT().Capacity().Return(float64(10)).AnyTimes()
-	vehicle.EXPECT().Phases().Return(0).AnyTimes()
-	vehicle.EXPECT().Title().Return("foo").AnyTimes() // TODO remove when settings always available for vehicle
+	vehicle.EXPECT().Phases().AnyTimes()
+	vehicle.EXPECT().Title().AnyTimes()
+	vehicle.EXPECT().Features().AnyTimes()
 	vehicle.EXPECT().OnIdentified().Return(api.ActionConfig{}).AnyTimes()
 
 	socEstimator := soc.NewEstimator(util.NewLogger("foo"), charger, vehicle, false)

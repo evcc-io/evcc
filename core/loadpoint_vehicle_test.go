@@ -27,6 +27,7 @@ func TestPublishSocAndRange(t *testing.T) {
 	vehicle.EXPECT().Title().Return("target").AnyTimes()
 	vehicle.EXPECT().Capacity().AnyTimes()
 	vehicle.EXPECT().Phases().AnyTimes()
+	vehicle.EXPECT().Features().AnyTimes()
 	vehicle.EXPECT().OnIdentified().AnyTimes()
 
 	log := util.NewLogger("foo")
@@ -228,10 +229,11 @@ func TestReconnectVehicle(t *testing.T) {
 			}
 
 			vehicle := &vehicleT{api.NewMockVehicle(ctrl), api.NewMockChargeState(ctrl)}
-			vehicle.MockVehicle.EXPECT().Title().Return("vehicle").AnyTimes()
-			vehicle.MockVehicle.EXPECT().Icon().Return("").AnyTimes()
+			vehicle.MockVehicle.EXPECT().Title().AnyTimes()
+			vehicle.MockVehicle.EXPECT().Icon().AnyTimes()
 			vehicle.MockVehicle.EXPECT().Capacity().AnyTimes()
 			vehicle.MockVehicle.EXPECT().Phases().AnyTimes()
+			vehicle.MockVehicle.EXPECT().Features().AnyTimes()
 			vehicle.MockVehicle.EXPECT().OnIdentified().AnyTimes()
 			vehicle.MockVehicle.EXPECT().Identifiers().AnyTimes().Return(tc.vehicleId)
 			vehicle.MockVehicle.EXPECT().Soc().Return(0.0, nil).AnyTimes()
