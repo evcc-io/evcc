@@ -73,35 +73,6 @@ render: |
       address: 62852 # Battery 1 State of Energy (SOE)
       type: holding
       decode: float32s
-  batterymode:
-    source: sequence
-    set:
-    - source: const
-      value: {{ (toDuration .watchdog).Seconds }}
-      set:
-        source: watchdog
-        timeout: {{ .watchdog }} # re-write at timeout/2
-        set:
-          source: modbus
-          {{- include "modbus" . | indent 8 }}
-          timeout: {{ .timeout }}
-          register:
-            address: 0xE00B # StorageRemoteCtrl_CommandTimeout
-            type: writemultiple
-            decode: uint32
-    - source: map
-      values:
-        1: 7 # normal
-        2: 1 # hold
-        3: 3 # charge
-      set:
-        source: modbus
-        {{- include "modbus" . | indent 6 }}
-        timeout: {{ .timeout }}
-        register:
-          address: 0xE00D # StorageRemoteCtrl_CommandMode
-          type: writesingle
-          decode: uint16
   {{- if .capacity }}
   capacity: {{ .capacity }} # kWh
   {{- end }}

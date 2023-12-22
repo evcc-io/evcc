@@ -1,8 +1,5 @@
 <template>
 	<div class="app">
-		<metainfo>
-			<template #title="{ content }">{{ content ? `${content} | evcc` : `evcc` }}</template>
-		</metainfo>
 		<router-view :notifications="notifications" :offline="offline"></router-view>
 	</div>
 </template>
@@ -18,6 +15,10 @@ export default {
 	},
 	data: () => {
 		return { reconnectTimeout: null, ws: null };
+	},
+	head() {
+		const siteTitle = store.state.siteTitle;
+		return { title: siteTitle ? `${siteTitle} | evcc` : "evcc" };
 	},
 	mounted: function () {
 		this.connect();
@@ -108,9 +109,6 @@ export default {
 		reload() {
 			window.location.reload();
 		},
-	},
-	metaInfo() {
-		return { title: store.state.siteTitle || "" };
 	},
 };
 </script>
