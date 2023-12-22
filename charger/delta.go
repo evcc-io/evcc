@@ -240,6 +240,18 @@ func (wb *Delta) CurrentPower() (float64, error) {
 	return float64(binary.BigEndian.Uint32(b)), err
 }
 
+var _ api.ChargeRater = (*Delta)(nil)
+
+// ChargedEnergy implements the api.ChargeRater interface
+func (wb *Delta) ChargedEnergy() (float64, error) {
+	b, err := wb.conn.ReadInputRegisters(deltaRegEvseChargedEnergy, 2)
+	if err != nil {
+		return 0, err
+	}
+
+	return float64(binary.BigEndian.Uint32(b) / 1000), err
+}
+
 var _ api.Diagnosis = (*Delta)(nil)
 
 // Diagnose implements the api.Diagnosis interface
