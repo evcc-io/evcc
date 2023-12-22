@@ -7,6 +7,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
+// Monitor monitors values for regular updates
 type Monitor[T any] struct {
 	val     T
 	mu      sync.RWMutex
@@ -16,6 +17,7 @@ type Monitor[T any] struct {
 	timeout time.Duration
 }
 
+// NewMonitor created a new monitor with given timeout
 func NewMonitor[T any](timeout time.Duration) *Monitor[T] {
 	return &Monitor[T]{
 		done:    make(chan struct{}),
