@@ -5,8 +5,8 @@ import (
 	"crypto/md5"
 	"crypto/sha1"
 	"encoding/base64"
-	"encoding/json"
 	"fmt"
+	"io"
 	"net/url"
 	"strconv"
 	"time"
@@ -14,13 +14,13 @@ import (
 	"github.com/samber/lo"
 )
 
-func createSignature(method, path string, params url.Values, post any) (string, string, string, error) {
+func createSignature(method, path string, params url.Values, body io.Reader) (string, string, string, error) {
 	nonce := lo.RandomString(16, lo.AlphanumericCharset)
 	ts := strconv.FormatInt(time.Now().UnixMilli(), 10)
 
 	md5Hash := "1B2M2Y8AsgTpgAmY7PhCfg=="
-	if post != nil {
-		bytes, err := json.Marshal(post)
+	if body != nil {
+		bytes, err := io.ReadAll(body)
 		if err != nil {
 			return "", "", "", err
 		}

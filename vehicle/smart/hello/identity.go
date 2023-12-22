@@ -173,7 +173,7 @@ func (v *Identity) appToken(token *oauth2.Token) (*oauth2.Token, string, error) 
 	}
 
 	path := "/auth/account/session/secure"
-	nonce, ts, sign, err := createSignature(http.MethodPost, path, params, data)
+	nonce, ts, sign, err := createSignature(http.MethodPost, path, params, request.MarshalJSON(data))
 	if err != nil {
 		return nil, "", err
 	}
@@ -210,55 +210,4 @@ func (v *Identity) appToken(token *oauth2.Token) (*oauth2.Token, string, error) 
 	}
 
 	return &tok, res.Data.UserId, nil
-}
-
-func (v *Identity) UpdateSession(vin string) (string, error) {
-	token, err := v.Token()
-	if err != nil {
-		return "", err
-	}
-
-	params := url.Values{
-		"identity_type": []string{"smart"},
-	}
-
-	data := map[string]string{
-		"vin":          vin,
-		"sessionToken": token.AccessToken,
-		"language":     "",
-	}
-
-	path := "/device-platform/user/session/update"
-	nonce, ts, sign, err := createSignature(http.MethodPost, path, params, data)
-	if err != nil {
-		return "", err
-	}
-
-	uri := fmt.Sprintf("%s/%s?%s", ApiURI, strings.TrimPrefix(path, "/"), params.Encode())
-	req, _ := request.New(http.MethodPost, uri, request.MarshalJSON(data), map[string]string{
-		"Accept":                  "application/json;responseformat=3",
-		"Content-Type":            "application/json; charset=utf-8",
-		"X-Api-Signature-Version": "1.0",
-		"X-Api-Signature-Nonce":   nonce,
-		"Authorization":           token.AccessToken,
-		"X-App-Id":                appID,
-		"X-Device-Identifier":     v.deviceID,
-		"X-Operator-Code":         operatorCode,
-		"X-Signature":             sign,
-		"X-Timestamp":             ts,
-	})
-
-	var res struct {
-		Code    ResponseCode
-		Message string
-		Data    AppToken
-	}
-
-	if err := v.DoJSON(req, &res); err != nil {
-		return "", err
-	} else if res.Code != ResponseOK {
-		return "", fmt.Errorf("%d: %s", res.Code, res.Message)
-	}
-
-	return "", nil
 }
