@@ -33,7 +33,7 @@ func NewCommandSession(vv *vehicle.Vehicle, timeout time.Duration) (*CommandSess
 	return v, nil
 }
 
-var _ api.CurrentLimiter = (*CommandSession)(nil)
+var _ api.CurrentController = (*CommandSession)(nil)
 
 // MaxCurrent implements the api.CurrentController interface
 func (v *CommandSession) MaxCurrent(current int64) error {

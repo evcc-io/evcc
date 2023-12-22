@@ -19,6 +19,8 @@ var OAuth2Config = &oauth2.Config{
 	Scopes: []string{"openid", "email", "offline_access"},
 }
 
+const userAgent = "evcc/evcc-io"
+
 type Identity struct {
 	oauth2.TokenSource
 	log   *util.Logger
@@ -32,7 +34,7 @@ func NewIdentity(log *util.Logger, ts oauth2.TokenSource) (*Identity, error) {
 		return nil, err
 	}
 
-	acct, err := account.New(token.AccessToken)
+	acct, err := account.New(token.AccessToken, userAgent)
 	if err != nil {
 		return nil, err
 	}
@@ -52,7 +54,7 @@ func (v *Identity) Account() *account.Account {
 	}
 
 	if token.AccessToken != v.token.AccessToken {
-		acct, err := account.New(token.AccessToken)
+		acct, err := account.New(token.AccessToken, userAgent)
 		if err != nil {
 			v.log.ERROR.Println(err)
 			return v.acct
