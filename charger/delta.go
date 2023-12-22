@@ -19,20 +19,34 @@ type Delta struct {
 }
 
 const (
-	//EV Charger
-	deltaRegState  = 0x0064 // 100 - Charger State - Input Register, UINT16 0: not ready, 1: operational, 10: faulted, 255: not responding
-	deltaRegCount  = 0x0066 // 102 - EVSE Count - Input Register, UINT16
-	deltaRegSerial = 0x006E // 110 - Charger Serial - Input Register, STRING20
-	deltaRegModel  = 0x0082 // 130 - Charger Model - Input Register, STRING20
+	//EV Charger Read Input Registers (0x04)
+	deltaRegState  = 100 // Charger State - UINT16 0: not ready, 1: operational, 10: faulted, 255: not responding
+	deltaRegCount  = 102 // EVSE Count - UINT16
+	deltaRegSerial = 110 // Charger Serial - STRING20
+	deltaRegModel  = 130 // Charger Model - STRING20
 
-	deltaRegCommunicationTimeoutEnabled = 0x00C9 // 201 - Communication Timeout Enabled - Write Holding, UINT16 0/1
-	deltaRegCommunicationTimeout        = 0x00CA // 202 - Communication Timeout - Write Holding, UINT16 [s]
-	deltaRegFallbackPower               = 0x00CB // 203 - Fallback Power - Write Holding, UINT32 [W] ==> [mA]???
+	//EV Charger Write Multiple Registers (0x10)
+	deltaRegCommunicationTimeoutEnabled = 201 // Communication Timeout Enabled 0/1
+	deltaRegCommunicationTimeout        = 202 // Communication Timeout [s]
+	deltaRegFallbackPower               = 203 // Fallback Power [W]
 
-	//EVSE
-	deltaRegEvseState                = 0x03E8 // 1000 - EVSE State - Input Register, UINT16 0: Unavailable, 1: Available, 2: Occupied, 3: Preparing, 4: Charging, 5: Finishing, 6: Suspended EV, 7: Suspended EVSE, 8: Not ready, 9: Faulted
-	deltaRegEvseCurrentChargingPower = 0x03ED // 1005 - EVSE Current Charging Power - Input Register, UINT32 [W]
-	deltaRegEvseChargingCurrentLimit = 0x0640 // 1600 - EVSE Charging Power Limit - Write Holding, UINT32 [mA]
+	//EVSE Read Input Registers (0x04)
+	deltaRegEvseState                 = 1000 // EVSE State - UINT16 0: Unavailable, 1: Available, 2: Occupied, 3: Preparing, 4: Charging, 5: Finishing, 6: Suspended EV, 7: Suspended EVSE, 8: Not ready, 9: Faulted
+	deltaRegEvseChargerState          = 1001 // EVSE Charger State - 0: Charging process not started (no, vehicle connected), 1: Connected, waiting for release (by, RFID or local), 2: Charging process starts, 3: Charging, 4: Suspended (loading paused), 5: Charging process successfully com-, pleted (vehicle still plugged in), 6: Charging process completed by, user (vehicle still plugged in), 7: Charging ended with error (vehicle, still connected)
+	deltaRegEvseActualOutputVoltage   = 1003 // EVSE Actual Output Voltage [V]
+	deltaRegEvseActualChargingPower   = 1005 // EVSE Actual Charging Power [W]
+	deltaRegEvseActualChargingCurrent = 1005 // EVSE Actual Charging Current [A]
+
+	deltaRegEvseChargingTime  = 1017 // EVSE Charging Time [s]
+	deltaRegEvseChargedEnergy = 1019 // EVSE Charged Energy [Wh]
+
+	deltaRegEvseCurrentPowerConsumptionL1 = 1049 // EVSE Current Power Consumption L1 (grid) [W]
+	deltaRegEvseCurrentPowerConsumptionL2 = 1051 // EVSE Current Power Consumption L2 (grid) [W]
+	deltaRegEvseCurrentPowerConsumptionL3 = 1053 // EVSE Current Power Consumption L3 (grid) [W]
+
+	//EVSE Write Multiple Registers (0x10)
+	deltaRegEvseChargingCurrentLimit = 1600 // EVSE Charging Power Limit - UINT32 [W]
+	deltaRegEvseSuspendCharging      = 1602 // EVSE Suspend Charging - UINT16 - 0: no pause, 1 charging pause (lock on)
 )
 
 func init() {
@@ -126,7 +140,7 @@ func (wb *Delta) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *Delta) Enabled() (bool, error) {
-	b, err := wb.conn.ReadInputRegisters(deltaRegEvseCurrentChargingPower, 2)
+	b, err := wb.conn.ReadInputRegisters(deltaRegEvseActualChargingPower, 2)
 	if err != nil {
 		return false, err
 	}
@@ -179,7 +193,7 @@ var _ api.Meter = (*Delta)(nil)
 
 // CurrentPower implements the api.Meter interface
 func (wb *Delta) CurrentPower() (float64, error) {
-	b, err := wb.conn.ReadInputRegisters(deltaRegEvseCurrentChargingPower, 2)
+	b, err := wb.conn.ReadInputRegisters(deltaRegEvseActualChargingPower, 2)
 	if err != nil {
 		return 0, err
 	}
@@ -200,7 +214,7 @@ func (wb *Delta) Diagnose() {
 	if b, err := wb.conn.ReadInputRegisters(deltaRegEvseChargingCurrentLimit, 2); err == nil {
 		fmt.Printf("\tCharging current limit:\t%dmA\n", binary.BigEndian.Uint32(b))
 	}
-	if b, err := wb.conn.ReadInputRegisters(deltaRegEvseCurrentChargingPower, 2); err == nil {
+	if b, err := wb.conn.ReadInputRegisters(deltaRegEvseActualChargingPower, 2); err == nil {
 		fmt.Printf("\tCurrent charging power:\t%dW\n", binary.BigEndian.Uint32(b))
 	}
 	if b, err := wb.conn.ReadInputRegisters(deltaRegState, 1); err == nil {
