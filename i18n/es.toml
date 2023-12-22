@@ -184,6 +184,7 @@ title = "Plan"
 titleMinSoc = "Carga mínima"
 titleTargetCharge = "Partida"
 update = "Aplicar"
+remove = "Quitar"
 
 [main.energyflow]
 battery = "Batería"
