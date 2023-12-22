@@ -2,6 +2,7 @@ name: Release
 
 env:
   GO_VERSION: ^1.21
+  BRANCH: release
 
 on:
   push:
@@ -11,7 +12,7 @@ on:
 jobs:
   call-build-workflow:
     if: startsWith(github.ref, 'refs/tags')
-    uses: evcc-io/evcc/.github/workflows/default.yml@master
+    uses: evcc-io/evcc/.github/workflows/default.yml@{{ $env.BRANCH }}
 
   docker:
     name: Publish Docker :release
@@ -22,6 +23,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: refs/heads/{{ $env.BRANCH }}
           fetch-depth: 0
 
       - name: Login
@@ -58,6 +60,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: refs/heads/{{ $env.BRANCH }}
           fetch-depth: 0
 
       - name: Setup Go
@@ -116,6 +119,10 @@ jobs:
       FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: refs/heads/{{ $env.BRANCH }}
+          fetch-depth: 0
+
       - uses: superfly/flyctl-actions/setup-flyctl@master
       - run: flyctl deploy --local-only --config packaging/fly.toml
 

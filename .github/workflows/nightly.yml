@@ -2,6 +2,7 @@ name: Nightly Build
 
 env:
   GO_VERSION: ^1.21
+  BRANCH: master
 
 on:
   schedule: # runs on the default branch: master
@@ -16,6 +17,10 @@ jobs:
       should_run: ${{ steps.should_run.outputs.should_run }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: refs/heads/{{ $env.BRANCH }}
+          fetch-depth: 0
+
       - name: print latest_commit
         run: echo ${{ github.sha }}
 
@@ -30,9 +35,9 @@ jobs:
     needs: check_date
     if: |
       ${{ needs.check_date.outputs.should_run != 'false' }}
-      && startsWith(github.ref, 'refs/heads/master')
+      && startsWith(github.ref, 'refs/heads/{{ $env.BRANCH }}')
       && ! contains(github.head_ref, 'refs/heads/chore/')
-    uses: evcc-io/evcc/.github/workflows/default.yml@master
+    uses: evcc-io/evcc/.github/workflows/default.yml@{{ $env.BRANCH }}
 
   docker:
     name: Publish Docker :nightly
@@ -43,7 +48,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: refs/heads/master # force master
+          ref: refs/heads/{{ $env.BRANCH }}
           fetch-depth: 0
 
       - name: Get dist from cache
@@ -80,6 +85,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: refs/heads/{{ $env.BRANCH }}
           fetch-depth: 0
 
       - uses: actions/setup-go@v4

@@ -2,11 +2,14 @@ name: Deploy data to website
 
 env:
   GO_VERSION: ^1.21
+  BRANCH: release
 
 on:
   push:
-    branches: [master]
-    paths: ["templates/evcc.io/**"]
+    branches:
+      - "{{ $env.BRANCH }}"
+    paths:
+      - templates/evcc.io/**
   workflow_dispatch:
 
 jobs:
@@ -16,6 +19,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: refs/heads/{{ $env.BRANCH }}
 
       - uses: actions/setup-go@v4
         with:
