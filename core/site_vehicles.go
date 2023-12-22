@@ -9,6 +9,7 @@ import (
 	"github.com/evcc-io/evcc/core/vehicle"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
+	"github.com/samber/lo"
 )
 
 type planStruct struct {
@@ -17,10 +18,14 @@ type planStruct struct {
 }
 
 type vehicleStruct struct {
-	Title    string       `json:"title"`
-	MinSoc   int          `json:"minSoc,omitempty"`
-	LimitSoc int          `json:"limitSoc,omitempty"`
-	Plans    []planStruct `json:"plans,omitempty"`
+	Title     string       `json:"title"`
+	Icon      string       `json:"icon,omitempty"`
+	Capacity  float64      `json:"capacity,omitempty"`
+	MinSoc    int          `json:"minSoc,omitempty"`
+	LimitSoc  int          `json:"limitSoc,omitempty"`
+	Connector string       `json:"connector,omitempty"`
+	Features  []string     `json:"features,omitempty"`
+	Plans     []planStruct `json:"plans,omitempty"`
 }
 
 // publishVehicles returns a list of vehicle titles
@@ -36,14 +41,23 @@ func (site *Site) publishVehicles() {
 			plans = append(plans, planStruct{Soc: soc, Time: time})
 		}
 
+		instance := v.Instance()
+		features := lo.Map(instance.Features(), func(f api.Feature, _ int) string {
+			return f.String()
+		})
+
 		res[v.Name()] = vehicleStruct{
-			Title:    v.Instance().Title(),
-			MinSoc:   v.GetMinSoc(),
-			LimitSoc: v.GetLimitSoc(),
-			Plans:    plans,
+			Title:     instance.Title(),
+			Connector: instance.Connector(),
+			Icon:      instance.Icon(),
+			Capacity:  instance.Capacity(),
+			MinSoc:    v.GetMinSoc(),
+			LimitSoc:  v.GetLimitSoc(),
+			Features:  features,
+			Plans:     plans,
 		}
 
-		if lp := site.coordinator.Owner(v.Instance()); lp != nil {
+		if lp := site.coordinator.Owner(instance); lp != nil {
 			lp.PublishEffectiveValues()
 		}
 	}

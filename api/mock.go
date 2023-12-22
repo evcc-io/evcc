@@ -361,6 +361,34 @@ func (mr *MockVehicleMockRecorder) Capacity() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Capacity", reflect.TypeOf((*MockVehicle)(nil).Capacity))
 }
 
+// Connector mocks base method.
+func (m *MockVehicle) Connector() string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Connector")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// Connector indicates an expected call of Connector.
+func (mr *MockVehicleMockRecorder) Connector() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Connector", reflect.TypeOf((*MockVehicle)(nil).Connector))
+}
+
+// Features mocks base method.
+func (m *MockVehicle) Features() []Feature {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Features")
+	ret0, _ := ret[0].([]Feature)
+	return ret0
+}
+
+// Features indicates an expected call of Features.
+func (mr *MockVehicleMockRecorder) Features() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Features", reflect.TypeOf((*MockVehicle)(nil).Features))
+}
+
 // Icon mocks base method.
 func (m *MockVehicle) Icon() string {
 	m.ctrl.T.Helper()

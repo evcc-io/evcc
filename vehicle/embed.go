@@ -5,10 +5,10 @@ import (
 )
 
 // TODO align phases with OnIdentify
-// TODO remove vehicle settings
 type embed struct {
 	Title_       string           `mapstructure:"title"`
 	Icon_        string           `mapstructure:"icon"`
+	Connector_   string           `mapstructure:"connector"`
 	Capacity_    float64          `mapstructure:"capacity"`
 	Phases_      int              `mapstructure:"phases"`
 	Identifiers_ []string         `mapstructure:"identifiers"`
@@ -61,6 +61,13 @@ var _ api.IconDescriber = (*embed)(nil)
 // Icon implements the api.IconDescriber interface
 func (v *embed) Icon() string {
 	return v.Icon_
+}
+
+var _ api.ConnectorDescriber = (*embed)(nil)
+
+// Connector implements the api.ConnectorDescriber interface
+func (v *embed) Connector() string {
+	return v.Connector_
 }
 
 var _ api.FeatureDescriber = (*embed)(nil)
