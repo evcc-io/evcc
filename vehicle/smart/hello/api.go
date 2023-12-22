@@ -156,8 +156,7 @@ func (v *API) UpdateSession(vin string) error {
 }
 
 func (v *API) Status(vin string) (VehicleStatus, error) {
-	if _, err := v.identity.UpdateSession(vin); err != nil {
-		// if err := v.UpdateSession(vin); err != nil {
+	if err := v.UpdateSession(vin); err != nil {
 		return VehicleStatus{}, fmt.Errorf("update session failed: %w", err)
 	}
 
