@@ -8,7 +8,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
-	//TODO: "github.com/evcc-io/evcc/util/sponsor"
+	"github.com/evcc-io/evcc/util/sponsor"
 )
 
 // Delta charger implementation
@@ -59,10 +59,9 @@ func NewDelta(uri, device, comset string, baudrate int, proto modbus.Protocol, s
 		return nil, err
 	}
 
-	//TODO:
-	//if !sponsor.IsAuthorized() {
-	//	return nil, api.ErrSponsorRequired
-	//}
+	if !sponsor.IsAuthorized() {
+		return nil, api.ErrSponsorRequired
+	}
 
 	log := util.NewLogger("delta")
 	conn.Logger(log.TRACE)
