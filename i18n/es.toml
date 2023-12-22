@@ -217,9 +217,9 @@ currents = "Corriente de carga"
 default = "defecto"
 disclaimerHint = "Nota:"
 disclaimerText = "Actualmente, los cambios aún no son persistentes y se restablecen al iniciar el servicio."
+onlyForSocBasedCharging = "Estas opciones sólo están disponibles para vehículos con nivel de carga conocido"
 title = "Configuraciones {0}"
 vehicle = "Vehículo"
-onlyForSocBasedCharging = "Estas opciones sólo están disponibles para vehículos con nivel de carga conocido"
 
 [main.loadpointSettings.limitSoc]
 description = "Límite de carga que se utiliza cuando este vehículo está conectado"
@@ -263,6 +263,7 @@ descriptionSoc = "¿Hasta cuándo debe haberse cargarse el vehículo al {targetS
 inactiveLabel = "Tiempo objetivo"
 modalTitle = "Establecer el tiempo objetivo"
 noActivePlan = "Ningún plan activo"
+notReachableInTime = "Objetivo no alcanzable en el tiempo. Fin estimado: {endTime}"
 onlyInPvMode = "El plan de carga sólo funciona en modo solar"
 planDescription = "Introduzca una hora de salida y evcc cargará el vehículo de la forma más económica o ecológica posible"
 planDuration = "Tiempo de carga"
@@ -284,7 +285,6 @@ tomorrow = "mañana"
 update = "Actualizar"
 vehicleCapacityDocs = "Aprende a configurarlo"
 vehicleCapacityRequired = "La capacidad de la batería del vehículo es necesaria para estimar el tiempo de carga"
-notReachableInTime = "Objetivo no alcanzable en el tiempo. Fin estimado: {endTime}"
 
 [main.targetChargePlan]
 chargeDuration = "Tiempo de carga"
