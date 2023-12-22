@@ -1,0 +1,17 @@
+template: delta
+products:
+  - brand: Delta
+    description:
+      generic: AC Max Basic
+capabilities: ["mA"]
+requirements:
+  description:
+    de: Delta AC MAX Basic Wallbox über TCP/IP RS485 Konverter
+    en: Delta AC MAX Basic Wallbox via TCP/IP RS485 converter
+  evcc: ["sponsorship"]
+params:
+  - name: modbus
+    choice: ["tcpip"]
+render: |
+  type: delta
+  {{- include "modbus" . }}
