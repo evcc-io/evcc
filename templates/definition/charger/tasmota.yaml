@@ -1,6 +1,9 @@
 template: tasmota
 products:
-  - brand: Tasmota (1 Phase Charger)
+  - brand: Tasmota
+    description:
+      de: einphasig
+      en: single phase
 group: switchsockets
 params:
   - name: host

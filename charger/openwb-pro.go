@@ -149,20 +149,38 @@ func (wb *OpenWBPro) TotalEnergy() (float64, error) {
 	return res.Imported / 1e3, err
 }
 
-var _ api.PhaseCurrents = (*OpenWBPro)(nil)
-
-// Currents implements the api.PhaseCurrents interface
-func (wb *OpenWBPro) Currents() (float64, float64, float64, error) {
-	res, err := wb.statusG.Get()
+// getPhaseValues returns phase values
+func (wb *OpenWBPro) getPhaseValues(f func(pro.Status) []float64) (float64, float64, float64, error) {
+	status, err := wb.statusG.Get()
 	if err != nil {
 		return 0, 0, 0, err
 	}
 
-	if len(res.Currents) != 3 {
-		return 0, 0, 0, fmt.Errorf("invalid currents: %v", res.Currents)
+	res := f(status)
+
+	if len(res) != 3 {
+		return 0, 0, 0, fmt.Errorf("invalid phases: %v", res)
 	}
 
-	return res.Currents[0], res.Currents[1], res.Currents[2], err
+	return res[0], res[1], res[2], nil
+}
+
+var _ api.PhaseVoltages = (*OpenWBPro)(nil)
+
+// Voltages implements the api.PhaseVoltages interface
+func (wb *OpenWBPro) Voltages() (float64, float64, float64, error) {
+	return wb.getPhaseValues(func(s pro.Status) []float64 {
+		return s.Voltages
+	})
+}
+
+var _ api.PhaseCurrents = (*OpenWBPro)(nil)
+
+// Currents implements the api.PhaseCurrents interface
+func (wb *OpenWBPro) Currents() (float64, float64, float64, error) {
+	return wb.getPhaseValues(func(s pro.Status) []float64 {
+		return s.Currents
+	})
 }
 
 var _ api.Battery = (*OpenWBPro)(nil)

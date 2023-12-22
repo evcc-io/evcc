@@ -2,7 +2,7 @@ template: pulsarplus
 products:
   - brand: wallbox
     description:
-      generic: Pulsar Plus / Commander 2 / Copper SB
+      generic: Pulsar Plus, Commander 2, Copper SB
 requirements:
   description:
     de: |

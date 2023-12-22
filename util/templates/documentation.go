@@ -3,7 +3,7 @@ package templates
 import (
 	"bytes"
 	_ "embed"
-	"fmt"
+	"strconv"
 	"strings"
 	"text/template"
 
@@ -36,7 +36,7 @@ func (t *Template) RenderDocumentation(product Product, lang string) ([]byte, er
 				case string:
 					t.Params[index].Value = yamlQuote(v)
 				case int:
-					t.Params[index].Value = fmt.Sprintf("%d", v)
+					t.Params[index].Value = strconv.Itoa(v)
 				}
 			}
 		}

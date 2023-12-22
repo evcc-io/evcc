@@ -37,7 +37,6 @@ func RegisteredClient(log *util.Logger, broker, user, password, clientID string,
 	mu.Lock()
 	defer mu.Unlock()
 	client, err := registry.Get(key)
-
 	if err != nil {
 		if clientID == "" {
 			clientID = ClientID()

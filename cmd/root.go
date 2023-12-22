@@ -22,10 +22,6 @@ import (
 	"github.com/evcc-io/evcc/util/pipe"
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/evcc-io/evcc/util/telemetry"
-	"github.com/fatih/structs"
-	"github.com/jeremywohl/flatten"
-	"golang.org/x/exp/maps"
-
 	_ "github.com/joho/godotenv/autoload"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/cobra"
@@ -94,12 +90,6 @@ func initConfig() {
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	viper.AutomaticEnv() // read in environment variables that match
 
-	// register all known config keys
-	flat, _ := flatten.Flatten(structs.Map(conf), "", flatten.DotStyle)
-	for _, v := range maps.Keys(flat) {
-		_ = viper.BindEnv(v)
-	}
-
 	// print version
 	util.LogLevel("info", nil)
 	log.INFO.Printf("evcc %s", server.FormattedVersion())
@@ -157,7 +147,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	go socketHub.Run(pipe.NewDropper(ignoreEmpty).Pipe(tee.Attach()), cache)
 
 	// setup values channel
-	valueChan := make(chan util.Param)
+	valueChan := make(chan util.Param, 1)
 	go tee.Run(valueChan)
 
 	// capture log messages for UI
@@ -204,8 +194,11 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 	// setup mqtt publisher
 	if err == nil && conf.Mqtt.Broker != "" {
-		publisher := server.NewMQTT(strings.Trim(conf.Mqtt.Topic, "/"))
-		go publisher.Run(site, pipe.NewDropper(append(ignoreMqtt, ignoreEmpty)...).Pipe(tee.Attach()))
+		var mqtt *server.MQTT
+		mqtt, err = server.NewMQTT(strings.Trim(conf.Mqtt.Topic, "/"), site)
+		if err == nil {
+			go mqtt.Run(site, pipe.NewDropper(append(ignoreMqtt, ignoreEmpty)...).Pipe(tee.Attach()))
+		}
 	}
 
 	// announce on mDNS

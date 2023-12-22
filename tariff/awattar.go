@@ -16,11 +16,9 @@ import (
 
 type Awattar struct {
 	*embed
-	mux     sync.Mutex
-	log     *util.Logger
-	uri     string
-	data    api.Rates
-	updated time.Time
+	log  *util.Logger
+	uri  string
+	data *util.Monitor[api.Rates]
 }
 
 var _ api.Tariff = (*Awattar)(nil)
@@ -45,6 +43,7 @@ func NewAwattarFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		embed: &cc.embed,
 		log:   util.NewLogger("awattar"),
 		uri:   fmt.Sprintf(awattar.RegionURI, strings.ToLower(cc.Region)),
+		data:  util.NewMonitor[api.Rates](2 * time.Hour),
 	}
 
 	done := make(chan error)
@@ -73,29 +72,28 @@ func (t *Awattar) run(done chan error) {
 
 		once.Do(func() { close(done) })
 
-		t.mux.Lock()
-		t.updated = time.Now()
-
-		t.data = make(api.Rates, 0, len(res.Data))
+		data := make(api.Rates, 0, len(res.Data))
 		for _, r := range res.Data {
 			ar := api.Rate{
 				Start: r.StartTimestamp.Local(),
 				End:   r.EndTimestamp.Local(),
 				Price: t.totalPrice(r.Marketprice / 1e3),
 			}
-			t.data = append(t.data, ar)
+			data = append(data, ar)
 		}
-		t.data.Sort()
+		data.Sort()
 
-		t.mux.Unlock()
+		t.data.Set(data)
 	}
 }
 
 // Rates implements the api.Tariff interface
 func (t *Awattar) Rates() (api.Rates, error) {
-	t.mux.Lock()
-	defer t.mux.Unlock()
-	return slices.Clone(t.data), outdatedError(t.updated, time.Hour)
+	var res api.Rates
+	err := t.data.GetFunc(func(val api.Rates) {
+		res = slices.Clone(val)
+	})
+	return res, err
 }
 
 // Type implements the api.Tariff interface

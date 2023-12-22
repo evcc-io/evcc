@@ -8,6 +8,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestSyncCharger(t *testing.T) {
@@ -42,7 +43,7 @@ func TestSyncCharger(t *testing.T) {
 			enabled: tc.expected,
 		}
 
-		assert.NoError(t, lp.syncCharger())
+		require.NoError(t, lp.syncCharger())
 		assert.Equal(t, tc.corrected, lp.enabled)
 	}
 }

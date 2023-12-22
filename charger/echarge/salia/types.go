@@ -78,7 +78,7 @@ type Port struct {
 			}
 		}
 	}
-	EvPresent        int `json:"ev_present,string"`
-	Charging         int `json:",string"`
-	GridCurrentLimit int `json:"grid_current_limit,string"`
+	EvPresent        int     `json:"ev_present,string"`
+	Charging         int     `json:",string"`
+	GridCurrentLimit float64 `json:"grid_current_limit,string"`
 }

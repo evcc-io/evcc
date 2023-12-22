@@ -33,6 +33,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/sponsor"
+	"github.com/hashicorp/go-version"
 )
 
 // https://github.com/evcc-io/evcc/discussions/778
@@ -43,6 +44,7 @@ type Salia struct {
 	log     *util.Logger
 	uri     string
 	current int64
+	fw      int // 2 if fw 2.0
 	apiG    provider.Cacheable[salia.Api]
 }
 
@@ -93,7 +95,20 @@ func NewSalia(uri string, cache time.Duration) (api.Charger, error) {
 
 	// set chargemode manual
 	res, err := wb.apiG.Get()
-	if err == nil && res.Secc.Port0.Salia.ChargeMode != echarge.ModeManual {
+	if err != nil {
+		return nil, err
+	}
+
+	v, err := version.NewSemver(res.Device.SoftwareVersion)
+	if err != nil {
+		return nil, err
+	}
+
+	if v.Compare(version.Must(version.NewSemver("2.0.0"))) >= 0 {
+		wb.fw = 2
+	}
+
+	if res.Secc.Port0.Salia.ChargeMode != echarge.ModeManual {
 		if err = wb.post(salia.ChargeMode, echarge.ModeManual); err == nil {
 			res, err = wb.apiG.Get()
 		}
@@ -167,7 +182,12 @@ func (wb *Salia) Enabled() (bool, error) {
 	if err == nil && res.Secc.Port0.Salia.ChargeMode != echarge.ModeManual {
 		err = fmt.Errorf("invalid mode: %s", res.Secc.Port0.Salia.ChargeMode)
 	}
-	return res.Secc.Port0.GridCurrentLimit > 0 && res.Secc.Port0.Salia.PauseCharging == 0, err
+
+	if wb.fw < 2 {
+		return res.Secc.Port0.GridCurrentLimit > 0 && res.Secc.Port0.Salia.PauseCharging == 0, err
+	}
+
+	return res.Secc.Port0.Ci.Evse.Basic.OfferedCurrentLimit > 0 && res.Secc.Port0.Salia.PauseCharging == 0, err
 }
 
 func (wb *Salia) pause(enable bool) {

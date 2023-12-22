@@ -218,7 +218,7 @@ func (wb *PhoenixCharx) currents() (float64, float64, float64, error) {
 	}
 
 	var res [3]float64
-	for i := 0; i < 3; i++ {
+	for i := range res {
 		res[i] = float64(encoding.Int32(b[4*i:])) / 1e3
 	}
 
@@ -233,7 +233,7 @@ func (wb *PhoenixCharx) voltages() (float64, float64, float64, error) {
 	}
 
 	var res [3]float64
-	for i := 0; i < 3; i++ {
+	for i := range res {
 		res[i] = float64(encoding.Int32(b[4*i:])) / 1e3
 	}
 

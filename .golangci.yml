@@ -1,10 +1,55 @@
 run:
   go: "1.21"
+
 issues:
   exclude:
     - .regActualCurrent. is unused
     - "`routeLogger` is unused"
+
 linters-settings:
   staticcheck:
     checks:
       - "-SA1019"
+
+linters:
+  disable-all: true
+  enable:
+    - dogsled
+    - durationcheck
+    - exportloopref
+    - gci
+    - gofmt
+    - gofumpt
+    - goimports
+    - goprintffuncname
+    - govet
+    - importas
+    - ineffassign
+    - makezero
+    - misspell
+    - nolintlint
+    - rowserrcheck
+    - sqlclosecheck
+    - staticcheck
+    - tparallel
+    - typecheck
+    - unconvert
+    - unused
+    - wastedassign
+    - whitespace
+
+    # fixme
+    # - bodyclose
+    # - exhaustive
+    # - gocritic
+    # - godot
+    # - gomoddirectives
+    # - nakedret
+    # - nilerr
+    # - noctx
+    # - prealloc
+    # - predeclared
+    # - revive
+    # - stylecheck
+    # - unparam
+    # - dupl

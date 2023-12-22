@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"gopkg.in/yaml.v3"
 )
 
@@ -19,7 +20,7 @@ func TestYamlDecode(t *testing.T) {
 			}
 
 			err := yaml.Unmarshal([]byte(input), &res)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.Equal(t, value, res.Value)
 		})
 	}

@@ -7,9 +7,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/samber/lo"
-
 	"github.com/denisbrodbeck/machineid"
+	"github.com/samber/lo"
 )
 
 var id string

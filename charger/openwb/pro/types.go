@@ -6,6 +6,7 @@ type Status struct {
 	Date           string
 	Timestamp      int64
 	Currents       []float64
+	Voltages       []float64
 	Powers         []float64
 	PowerAll       float64 `json:"power_all"`
 	Imported       float64

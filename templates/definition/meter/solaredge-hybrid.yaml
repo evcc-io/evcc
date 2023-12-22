@@ -5,8 +5,12 @@ products:
       generic: Hybrid Inverter
 requirements:
   description:
-    de: Nur ein System kann und darf auf den Wechselrichter zugreifen!
-    en: Only one system may access the inverter!
+    de: |
+      Nur ein System kann und darf auf den Wechselrichter zugreifen!
+      Für die optionale Batteriesteuerung muss StorageConf_CtrlMode (0xE004) auf 4 "Remote" stehen.
+    en: |
+      Only one system may access the inverter!
+      For optional battery control, StorageConf_CtrlMode (0xE004) must be at 4 "Remote".
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -18,10 +22,14 @@ params:
   - name: timeout
   - name: capacity
     advanced: true
+  - name: watchdog
+    type: duration
+    default: 60s
+    advanced: true
 render: |
   type: custom
-  power:
   {{- if eq .usage "grid" }}
+  power:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     timeout: {{ .timeout }}
@@ -31,6 +39,7 @@ render: |
     scale: -1
   {{- end }}
   {{- if eq .usage "pv" }}
+  power:
     source: calc
     add:
     - source: modbus
@@ -47,6 +56,7 @@ render: |
         decode: float32s
   {{- end }}
   {{- if eq .usage "battery" }}
+  power:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     timeout: {{ .timeout }}

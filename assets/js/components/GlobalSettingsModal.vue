@@ -71,7 +71,7 @@
 								id="hiddenFeaturesEnabled"
 								:label="`${$t('settings.hiddenFeatures.label')} 🧪`"
 							>
-								<div class="form-check form-switch my-1">
+								<div class="form-check form-switch col-form-label">
 									<input
 										id="hiddenFeaturesEnabled"
 										v-model="hiddenFeatures"

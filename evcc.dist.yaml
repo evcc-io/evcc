@@ -110,20 +110,14 @@ site:
     aux:
       - aux # list of auxiliary meters for adjusting grid operating point
   residualPower: 0 # additional household usage margin
-  prioritySoc: 0 # give home battery priority up to this soc (empty to disable)
-  bufferSoc: 0 # continue charging on battery above soc (0 to disable)
-  bufferStartSoc: 0 # start charging on battery above soc (0 to disable)
   maxGridSupplyWhileBatteryCharging: 0 # ignore battery charging if AC consumption is above this value
-  smartCostLimit: 0 # set cost limit for automatic charging in PV mode
 
 # loadpoint describes the charger, charge meter and connected vehicle
 loadpoints:
   - title: Garage # display name for UI
     charger: wallbe # charger
     meter: charge # charge meter
-    mode: "off" # set default charge mode, use "off" to disable by default if charger is publicly available
-    # vehicle: car1 # set default vehicle (disables vehicle detection)
-    resetOnDisconnect: true # set defaults when vehicle disconnects
+    mode: "off" # default charge mode to apply when vehicle is disconnected; use "off" to disable by default if charger is publicly available
     phases: 3 # electrical connection (normal charger: default 3 for 3 phase, 1p3p charger: 0 for "auto" or 1/3 for fixed phases)
     minCurrent: 6 # minimum charge current (default 6A)
     maxCurrent: 16 # maximum charge current (default 16A)

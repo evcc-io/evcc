@@ -16,7 +16,7 @@ export default {
 		enabled: Boolean,
 		connected: Boolean,
 		charging: Boolean,
-		targetTime: String,
+		effectivePlanTime: String,
 		planProjectedStart: String,
 		planActive: Boolean,
 		phaseAction: String,
@@ -26,7 +26,7 @@ export default {
 		guardAction: String,
 		guardRemainingInterpolated: Number,
 		targetChargeDisabled: Boolean,
-		climaterActive: Boolean,
+		vehicleClimaterActive: Boolean,
 		smartCostLimit: Number,
 		smartCostType: String,
 		smartCostActive: Boolean,
@@ -63,7 +63,7 @@ export default {
 			}
 
 			// plan
-			if (this.targetTime && !this.targetChargeDisabled) {
+			if (this.effectivePlanTime && !this.targetChargeDisabled) {
 				if (this.planActive && this.charging) {
 					return t("targetChargeActive");
 				}
@@ -83,11 +83,11 @@ export default {
 					? t("cleanEnergyCharging", {
 							co2: this.fmtCo2Short(this.tariffCo2),
 							limit: this.fmtCo2Short(this.smartCostLimit),
-					  })
+						})
 					: t("cheapEnergyCharging", {
 							price: this.fmtPricePerKWh(this.tariffGrid, this.currency, true),
 							limit: this.fmtPricePerKWh(this.smartCostLimit, this.currency, true),
-					  });
+						});
 			}
 
 			if (this.pvTimerActive && !this.enabled && this.pvAction === "enable") {
@@ -96,7 +96,7 @@ export default {
 				});
 			}
 
-			if (this.enabled && this.climaterActive) {
+			if (this.enabled && this.vehicleClimaterActive) {
 				return t("climating");
 			}
 

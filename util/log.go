@@ -54,7 +54,7 @@ func newLogger(area string, lp int) *Logger {
 
 	padded := area
 	for len(padded) < LogAreaPadding {
-		padded = padded + " "
+		padded += " "
 	}
 
 	level := LogLevelForArea(area)
@@ -188,10 +188,7 @@ func captureLogger(l *Logger) {
 }
 
 func captureLogLevel(level string, lp int, l *log.Logger) {
-	re, err := regexp.Compile(`^\[[a-zA-Z0-9-]+\s*\] \w+ .{19} `)
-	if err != nil {
-		panic(err)
-	}
+	re := regexp.MustCompile(`^\[[a-zA-Z0-9-]+\s*\] \w+ .{19} `)
 
 	ui := uiWriter{
 		lp:    lp,
