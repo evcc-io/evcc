@@ -44,8 +44,8 @@ const (
 	deltaRegEvseCurrentPowerConsumptionL3 = 1053 // EVSE Current Power Consumption L3 (grid) [W]
 
 	//EVSE Write Multiple Registers (0x10)
-	deltaRegEvseChargingCurrentLimit = 1600 // EVSE Charging Power Limit - UINT32 [W]
-	deltaRegEvseSuspendCharging      = 1602 // EVSE Suspend Charging - UINT16 - 0: no pause, 1 charging pause (lock on)
+	deltaRegEvseChargingPowerLimit = 1600 // EVSE Charging Power Limit - UINT32 [W]
+	deltaRegEvseSuspendCharging    = 1602 // EVSE Suspend Charging - UINT16 - 0: no pause, 1 charging pause (lock on)
 )
 
 func init() {
@@ -168,7 +168,7 @@ func (wb *Delta) setCurrent(current uint32) error {
 	b := make([]byte, 4)
 	binary.BigEndian.PutUint32(b, power)
 
-	_, err = wb.conn.WriteMultipleRegisters(deltaRegEvseChargingCurrentLimit, 2, b)
+	_, err := wb.conn.WriteMultipleRegisters(deltaRegEvseChargingPowerLimit, 2, b)
 	return err
 }
 
@@ -262,8 +262,8 @@ func (wb *Delta) Diagnose() {
 	if b, err := wb.conn.ReadInputRegisters(deltaRegModel, 20); err == nil {
 		fmt.Printf("\tModel:\t%x\n", b)
 	}
-	if b, err := wb.conn.ReadInputRegisters(deltaRegEvseChargingCurrentLimit, 2); err == nil {
-		fmt.Printf("\tCharging current limit:\t%dmA\n", binary.BigEndian.Uint32(b))
+	if b, err := wb.conn.ReadInputRegisters(deltaRegEvseChargingPowerLimit, 2); err == nil {
+		fmt.Printf("\tCharging power limit:\t%dmA\n", binary.BigEndian.Uint32(b))
 	}
 	if b, err := wb.conn.ReadInputRegisters(deltaRegEvseActualChargingPower, 2); err == nil {
 		fmt.Printf("\tCurrent charging power:\t%dW\n", binary.BigEndian.Uint32(b))
