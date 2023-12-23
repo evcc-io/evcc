@@ -3,15 +3,24 @@ products:
   - brand: Delta
     description:
       generic: AC Max Basic
-capabilities: ["mA"]
+  - brand: Delta
+    description:
+      generic: AC MAX Smart
+  - brand: Delta
+    description:
+      generic: SLIM Charger
+  - brand: Delta
+    description:
+      generic: Ultra Fast Charger
+capabilities: ["mA", "rfid", "iso151182"]
 requirements:
-  description:
-    de: Delta AC MAX Basic Wallbox über TCP/IP RS485 Konverter
-    en: Delta AC MAX Basic Wallbox via TCP/IP RS485 converter
   evcc: ["sponsorship"]
 params:
   - name: modbus
-    choice: ["tcpip"]
+    choice: ["rs485", "tcpip"]
+    baudrate: 115200
+  - name: connector
 render: |
   type: delta
   {{- include "modbus" . }}
+  connector: {{ .connector }}
