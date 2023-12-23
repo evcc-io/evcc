@@ -57,7 +57,6 @@ loadpoints:
   phases: {{ .Phases }}
   mincurrent: {{ .MinCurrent }}
   maxcurrent: {{ .MaxCurrent }}
-  resetOnDisconnect: {{ .ResetOnDisconnect }}
 {{- end }}
 {{- end }}
 
