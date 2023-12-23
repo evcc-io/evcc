@@ -23,8 +23,8 @@ type Delta struct {
 }
 
 const (
-	//EV Charger
-	//Read Input Registers (0x04)
+	// EV Charger
+	// Read Input Registers (0x04)
 	deltaRegState   = 100 // Charger State - UINT16 0: not ready, 1: operational, 10: faulted, 255: not responding
 	deltaRegVersion = 101 // Charger Version - UINT16
 	deltaRegCount   = 102 // Charger EVSE Count - UINT16
@@ -32,13 +32,13 @@ const (
 	deltaRegSerial  = 110 // Charger Serial - STRING20
 	deltaRegModel   = 130 // Charger Model - STRING20
 
-	//Write Multiple Registers (0x10)
+	// Write Multiple Registers (0x10)
 	deltaRegCommunicationTimeoutEnabled = 201 // Communication Timeout Enabled 0/1
 	deltaRegCommunicationTimeout        = 202 // Communication Timeout [s]
 	deltaRegFallbackPower               = 203 // Fallback Power [W]
 
-	//EVSE - The following Register tables are defined as repeating blocks for each single EVSE
-	//Read Input Registers (0x04)
+	// EVSE - The following Register tables are defined as repeating blocks for each single EVSE
+	// Read Input Registers (0x04)
 	deltaRegEvseState                 = 0   // EVSE State - UINT16 0: Unavailable, 1: Available, 2: Occupied, 3: Preparing, 4: Charging, 5: Finishing, 6: Suspended EV, 7: Suspended EVSE, 8: Not ready, 9: Faulted
 	deltaRegEvseChargerState          = 1   // EVSE Charger State - UINT16 0: Charging process not started (no vehicle connected), 1: Connected, waiting for release (by RFID or local), 2: Charging process starts, 3: Charging, 4: Suspended (paused), 5: Charging process successfully completed (vehicle still plugged in), 6: Charging process completed by user (vehicle still plugged in), 7: Charging ended with error (vehicle still connected)
 	deltaRegEvseActualOutputVoltage   = 3   // EVSE Actual Output Voltage - FLOAT32 [V]
@@ -50,7 +50,7 @@ const (
 	deltaRegEvseChargedEnergy         = 19  // EVSE Charged Energy [Wh]
 	deltaRegEvseRfidUID               = 100 // EVSE Used Authentication ID - STRING
 
-	//Write Multiple Registers (0x10)
+	// Write Multiple Registers (0x10)
 	deltaRegEvseChargingPowerLimit = 600 // EVSE Charging Power Limit - UINT32 [W]
 	deltaRegEvseSuspendCharging    = 602 // EVSE Suspend Charging - UINT16 - 0: no pause, 1 charging pause (lock on)
 )
