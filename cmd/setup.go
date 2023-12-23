@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"regexp"
 	"slices"
 	"strconv"
 	"strings"
@@ -67,6 +68,8 @@ var conf = globalConfig{
 		Dsn:  "~/.evcc/evcc.db",
 	},
 }
+
+var nameRE = regexp.MustCompile(`^[a-zA-Z0-9_.:-]+$`)
 
 type globalConfig struct {
 	Network      networkConfig
@@ -271,6 +274,10 @@ func configureChargers(static []config.Named, names ...string) error {
 }
 
 func vehicleInstance(cc config.Named) (api.Vehicle, error) {
+	if !nameRE.MatchString(cc.Name) {
+		return nil, fmt.Errorf("vehicle name must not contain special characters or spaces: %s", cc.Name)
+	}
+
 	instance, err := vehicle.NewFromConfig(cc.Type, cc.Other)
 	if err != nil {
 		var ce *util.ConfigError
