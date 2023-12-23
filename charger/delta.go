@@ -113,8 +113,6 @@ func (wb *Delta) Status() (api.ChargeStatus, error) {
 	}
 
 	switch s {
-	case 0: //Unavailable
-		return api.StatusNone, nil
 	case 1: //Available
 		return api.StatusA, nil // State A: Idle
 	case 2: //Occupied
@@ -124,15 +122,11 @@ func (wb *Delta) Status() (api.ChargeStatus, error) {
 	case 4: //Charging
 		return api.StatusC, nil // State C2: Charging Contact closed, energy delivering
 	case 5: //Finishing
-		return api.StatusC, nil
+		return api.StatusA, nil
 	case 6: //Suspended EV
-		return api.StatusE, nil // State E: Error EV / Cable
+		return api.StatusB, nil // State E: Error EV / Cable
 	case 7: //Suspended EVSE
-		return api.StatusF, nil // State F: Error EVSE or simulated disconnect
-	case 8: //Not ready
-		return api.StatusNone, nil
-	case 9: //Faulted
-		return api.StatusB, nil
+		return api.StatusB, nil // State F: Error EVSE or simulated disconnect
 	default: // Other
 		return api.StatusNone, fmt.Errorf("invalid status: %0x", s)
 	}
