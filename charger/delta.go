@@ -42,6 +42,7 @@ const (
 	deltaRegEvseActualOutputVoltage   = 3  // EVSE Actual Output Voltage [V]
 	deltaRegEvseActualChargingPower   = 5  // EVSE Actual Charging Power [W]
 	deltaRegEvseActualChargingCurrent = 7  // EVSE Actual Charging Current [A]
+	deltaRegEvseSoc                   = 17 // EVSE SOC [%/10]
 	deltaRegEvseChargingTime          = 17 // EVSE Charging Time [s]
 	deltaRegEvseChargedEnergy         = 19 // EVSE Charged Energy [Wh]
 
@@ -227,6 +228,13 @@ func (wb *Delta) ChargedEnergy() (float64, error) {
 	return float64(binary.BigEndian.Uint32(b) / 1e3), err
 }
 
+var _ api.Battery = (*Delta)(nil)
+
+// Soc implements the api.Battery interface
+func (wb *Delta) Soc() (float64, error) {
+	return 0, api.ErrNotAvailable
+}
+
 var _ api.Diagnosis = (*Delta)(nil)
 
 // Diagnose implements the api.Diagnosis interface
@@ -249,4 +257,11 @@ func (wb *Delta) Diagnose() {
 	if b, err := wb.conn.ReadInputRegisters(wb.base+deltaRegEvseState, 1); err == nil {
 		fmt.Printf("\tEVSE State:\t%x\n", b)
 	}
+}
+
+var _ loadpoint.Controller = (*Delta)(nil)
+
+// LoadpointControl implements loadpoint.Controller
+func (wb *Delta) LoadpointControl(lp loadpoint.API) {
+	wb.lp = lp
 }
