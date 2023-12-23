@@ -184,6 +184,7 @@ title = "Planas"
 titleMinSoc = "Minimali įkrova"
 titleTargetCharge = "Išvykimas"
 update = "Patvirtinti"
+remove = "Pašalinti"
 
 [main.energyflow]
 battery = "Kaupiklis"
