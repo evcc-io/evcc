@@ -3,6 +3,7 @@ package charger
 import (
 	"fmt"
 	"math"
+	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -15,11 +16,13 @@ import (
 
 // Delta charger implementation
 type Delta struct {
-	log  *util.Logger
-	conn *modbus.Connection
-	lp   loadpoint.API
-	curr float64
-	base uint16
+	log     *util.Logger
+	conn    *modbus.Connection
+	lp      loadpoint.API
+	mu      sync.Mutex
+	curr    float64
+	base    uint16
+	enabled bool
 }
 
 const (
@@ -112,11 +115,20 @@ func NewDelta(uri, device, comset string, baudrate int, proto modbus.Protocol, s
 	return wb, err
 }
 
+var currMutex sync.Mutex
+
 func (wb *Delta) heartbeat(timeout time.Duration) {
 	for range time.Tick(timeout) {
-		if err := wb.setCurrent(wb.curr); err != nil {
+		wb.mu.Lock()
+		var curr float64
+		if wb.enabled {
+			curr = wb.curr
+		}
+		wb.mu.Unlock()
+		if err := wb.setCurrent(curr); err != nil {
 			wb.log.ERROR.Println("heartbeat:", err)
 		}
+		currMutex.Unlock()
 	}
 }
 
@@ -149,22 +161,43 @@ func (wb *Delta) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *Delta) Enabled() (bool, error) {
-	b, err := wb.conn.ReadHoldingRegisters(wb.base+deltaRegEvseSuspendCharging, 1)
+	// b, err := wb.conn.ReadHoldingRegisters(wb.base+deltaRegEvseSuspendCharging, 1)
+	// if err != nil {
+	// 	return false, err
+	// }
+
+	// return encoding.Uint16(b) == 0, nil
+
+	b, err := wb.conn.ReadHoldingRegisters(wb.base+deltaRegEvseChargingPowerLimit, 2)
 	if err != nil {
 		return false, err
 	}
 
-	return encoding.Uint16(b) == 0, nil
+	return encoding.Uint32(b) > 0, nil
 }
 
 // Enable implements the api.Charger interface
 func (wb *Delta) Enable(enable bool) error {
-	b := make([]byte, 2)
-	if !enable {
-		encoding.PutUint16(b, 1)
+	// b := make([]byte, 2)
+	// if !enable {
+	// 	encoding.PutUint16(b, 1)
+	// }
+
+	// _, err := wb.conn.WriteMultipleRegisters(wb.base+deltaRegEvseSuspendCharging, 1, b)
+
+	var curr float64
+	if enable {
+		wb.mu.Lock()
+		curr = wb.curr
+		wb.mu.Unlock()
 	}
 
-	_, err := wb.conn.WriteMultipleRegisters(wb.base+deltaRegEvseSuspendCharging, 1, b)
+	err := wb.setCurrent(curr)
+	if err == nil {
+		wb.mu.Lock()
+		wb.enabled = enable
+		wb.mu.Unlock()
+	}
 
 	return err
 }
