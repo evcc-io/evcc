@@ -529,7 +529,7 @@ func cacheExpecter(t *testing.T, lp *Loadpoint) (*util.Cache, func(key string, v
 	go cache.Run(paramC)
 
 	expect := func(key string, val interface{}) {
-		//wrap in retry, as cache async update otherwise causes flaky tests
+		// wrap in retry, as cache async update otherwise causes flaky tests
 		err := retry.Do(
 			func() error {
 				p := cache.Get(key)
@@ -811,7 +811,6 @@ func TestSocPoll(t *testing.T) {
 
 // test guard and pv timers are properly published during disable
 func TestGuardPublish(t *testing.T) {
-
 	clock := clock.NewMock()
 	ctrl := gomock.NewController(t)
 	charger := api.NewMockCharger(ctrl)
@@ -859,7 +858,7 @@ func TestGuardPublish(t *testing.T) {
 	pvTimerExpectWhileRunning := clock.Now()
 	assert.Equal(t, pvTimerExpectWhileRunning, lp.pvTimer)
 
-	expectCache(pvTimer+"Remaining", time.Duration(3*time.Minute))
+	expectCache(pvTimer+"Remaining", 3*time.Minute)
 
 	t.Log("charged 1 minute, continue pv disable timer")
 	clock.Add(time.Minute)
@@ -869,9 +868,9 @@ func TestGuardPublish(t *testing.T) {
 	lp.Update(15000, false, false, false, 0, nil, nil)
 
 	assert.Equal(t, pvTimerExpectWhileRunning, lp.pvTimer)
-	expectCache(pvTimer+"Remaining", time.Duration(2*time.Minute))
+	expectCache(pvTimer+"Remaining", 2*time.Minute)
 
-	//expire PV timer
+	// expire PV timer
 	t.Log("charged another 2 minutes, disable charger prevented by guard")
 	clock.Add(2 * time.Minute)
 	rater.EXPECT().ChargedEnergy().AnyTimes()
@@ -882,7 +881,7 @@ func TestGuardPublish(t *testing.T) {
 	assert.Equal(t, pvTimerExpectWhileRunning, lp.pvTimer)
 
 	expectCache(pvTimer+"Remaining", time.Duration(0))
-	expectCache(guardTimer+"Remaining", time.Duration(2*time.Minute))
+	expectCache(guardTimer+"Remaining", 2*time.Minute)
 
 	t.Log("charged another 2 minute, disable charger after guard elapse")
 	clock.Add(2 * time.Minute)
@@ -911,7 +910,6 @@ func TestGuardPublish(t *testing.T) {
 
 // test guard and pv timers are properly published if disable sequence is aborted
 func TestGuardPublishOnDisableAbort(t *testing.T) {
-
 	clock := clock.NewMock()
 	ctrl := gomock.NewController(t)
 	charger := api.NewMockCharger(ctrl)
@@ -959,7 +957,7 @@ func TestGuardPublishOnDisableAbort(t *testing.T) {
 	assert.Equal(t, t0, lp.guardUpdated)
 	assert.Equal(t, t0, lp.pvTimer)
 
-	expectCache(pvTimer+"Remaining", time.Duration(3*time.Minute))
+	expectCache(pvTimer+"Remaining", 3*time.Minute)
 
 	t.Log("charged 1 minute, continue pv disable timer")
 	clock.Add(time.Minute)
@@ -971,9 +969,9 @@ func TestGuardPublishOnDisableAbort(t *testing.T) {
 	assert.Equal(t, t0, lp.pvTimer)
 	assert.Equal(t, t0, lp.guardUpdated)
 
-	expectCache(pvTimer+"Remaining", time.Duration(2*time.Minute))
+	expectCache(pvTimer+"Remaining", 2*time.Minute)
 
-	//expire PV timer
+	// expire PV timer
 	t.Log("charged another 2 minutes, disable charger prevented by guard")
 	clock.Add(2 * time.Minute)
 	rater.EXPECT().ChargedEnergy().AnyTimes()
@@ -985,7 +983,7 @@ func TestGuardPublishOnDisableAbort(t *testing.T) {
 	assert.Equal(t, t0, lp.guardUpdated)
 
 	expectCache(pvTimer+"Remaining", time.Duration(0))
-	expectCache(guardTimer+"Remaining", time.Duration(2*time.Minute))
+	expectCache(guardTimer+"Remaining", 2*time.Minute)
 
 	t.Log("charged another minute, abort disable, expect guard remain to continue publishing")
 	clock.Add(1 * time.Minute)
@@ -997,7 +995,7 @@ func TestGuardPublishOnDisableAbort(t *testing.T) {
 	assert.Equal(t, time.Time{}, lp.pvTimer)
 	assert.Equal(t, t0, lp.guardUpdated)
 
-	expectCache(guardTimer+"Remaining", time.Duration(time.Minute))
+	expectCache(guardTimer+"Remaining", time.Minute)
 
 	t.Log("wait another minute, guard timer should still publish")
 	clock.Add(1 * time.Minute)

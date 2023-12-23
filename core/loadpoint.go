@@ -731,7 +731,6 @@ func (lp *Loadpoint) setLimit(chargeCurrent float64, force bool) error {
 
 	// set enabled/disabled
 	if enabled := chargeCurrent >= lp.effectiveMinCurrent(); enabled != lp.enabled {
-
 		if err := lp.charger.Enable(enabled); err != nil {
 			v := lp.GetVehicle()
 			if vv, ok := v.(api.Resurrector); enabled && ok && errors.Is(err, api.ErrAsleep) {
