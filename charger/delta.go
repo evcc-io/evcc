@@ -26,10 +26,12 @@ type Delta struct {
 const (
 	//EV Charger
 	//Read Input Registers (0x04)
-	deltaRegState  = 100 // Charger State - UINT16 0: not ready, 1: operational, 10: faulted, 255: not responding
-	deltaRegCount  = 102 // EVSE Count - UINT16
-	deltaRegSerial = 110 // Charger Serial - STRING20
-	deltaRegModel  = 130 // Charger Model - STRING20
+	deltaRegState   = 100 // Charger State - UINT16 0: not ready, 1: operational, 10: faulted, 255: not responding
+	deltaRegVersion = 101 // Charger Version - UINT16
+	deltaRegCount   = 102 // Charger EVSE Count - UINT16
+	deltaRegError   = 103 // Charger Error - UINT16
+	deltaRegSerial  = 110 // Charger Serial - STRING20
+	deltaRegModel   = 130 // Charger Model - STRING20
 
 	//Write Multiple Registers (0x10)
 	deltaRegCommunicationTimeoutEnabled = 201 // Communication Timeout Enabled 0/1
@@ -255,22 +257,13 @@ var _ api.Diagnosis = (*Delta)(nil)
 // Diagnose implements the api.Diagnosis interface
 func (wb *Delta) Diagnose() {
 	if b, err := wb.conn.ReadInputRegisters(deltaRegState, 1); err == nil {
-		fmt.Printf("\tState:\t%x\n", b)
+		fmt.Printf("\tState:\t%d\n", b)
 	}
 	if b, err := wb.conn.ReadInputRegisters(deltaRegSerial, 20); err == nil {
-		fmt.Printf("\tSerial:\t%x\n", b)
+		fmt.Printf("\tSerial:\t%s\n", string(b))
 	}
 	if b, err := wb.conn.ReadInputRegisters(deltaRegModel, 20); err == nil {
-		fmt.Printf("\tModel:\t%x\n", b)
-	}
-	if b, err := wb.conn.ReadInputRegisters(wb.base+deltaRegEvseChargingPowerLimit, 2); err == nil {
-		fmt.Printf("\tCharging power limit:\t%dmA\n", encoding.Uint32(b))
-	}
-	if b, err := wb.conn.ReadInputRegisters(wb.base+deltaRegEvseActualChargingPower, 2); err == nil {
-		fmt.Printf("\tCurrent charging power:\t%dW\n", encoding.Uint32(b))
-	}
-	if b, err := wb.conn.ReadInputRegisters(wb.base+deltaRegEvseState, 1); err == nil {
-		fmt.Printf("\tEVSE State:\t%x\n", b)
+		fmt.Printf("\tModel:\t%s\n", string(b))
 	}
 }
 
