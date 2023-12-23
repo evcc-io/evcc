@@ -2,6 +2,7 @@ package charger
 
 import (
 	"encoding/binary"
+	"encoding/hex"
 	"fmt"
 	"math"
 	"time"
@@ -37,14 +38,15 @@ const (
 
 	//EVSE - The following Register tables are defined as repeating blocks for each single EVSE
 	//Read Input Registers (0x04)
-	deltaRegEvseState                 = 0  // EVSE State - UINT16 0: Unavailable, 1: Available, 2: Occupied, 3: Preparing, 4: Charging, 5: Finishing, 6: Suspended EV, 7: Suspended EVSE, 8: Not ready, 9: Faulted
-	deltaRegEvseChargerState          = 1  // EVSE Charger State - 0: Charging process not started (no vehicle connected), 1: Connected, waiting for release (by RFID or local), 2: Charging process starts, 3: Charging, 4: Suspended (paused), 5: Charging process successfully completed (vehicle still plugged in), 6: Charging process completed by user (vehicle still plugged in), 7: Charging ended with error (vehicle still connected)
-	deltaRegEvseActualOutputVoltage   = 3  // EVSE Actual Output Voltage [V]
-	deltaRegEvseActualChargingPower   = 5  // EVSE Actual Charging Power [W]
-	deltaRegEvseActualChargingCurrent = 7  // EVSE Actual Charging Current [A]
-	deltaRegEvseSoc                   = 17 // EVSE SOC [%/10]
-	deltaRegEvseChargingTime          = 17 // EVSE Charging Time [s]
-	deltaRegEvseChargedEnergy         = 19 // EVSE Charged Energy [Wh]
+	deltaRegEvseState                 = 0   // EVSE State - UINT16 0: Unavailable, 1: Available, 2: Occupied, 3: Preparing, 4: Charging, 5: Finishing, 6: Suspended EV, 7: Suspended EVSE, 8: Not ready, 9: Faulted
+	deltaRegEvseChargerState          = 1   // EVSE Charger State - 0: Charging process not started (no vehicle connected), 1: Connected, waiting for release (by RFID or local), 2: Charging process starts, 3: Charging, 4: Suspended (paused), 5: Charging process successfully completed (vehicle still plugged in), 6: Charging process completed by user (vehicle still plugged in), 7: Charging ended with error (vehicle still connected)
+	deltaRegEvseActualOutputVoltage   = 3   // EVSE Actual Output Voltage [V]
+	deltaRegEvseActualChargingPower   = 5   // EVSE Actual Charging Power [W]
+	deltaRegEvseActualChargingCurrent = 7   // EVSE Actual Charging Current [A]
+	deltaRegEvseSoc                   = 17  // EVSE SOC [%/10]
+	deltaRegEvseChargingTime          = 17  // EVSE Charging Time [s]
+	deltaRegEvseChargedEnergy         = 19  // EVSE Charged Energy [Wh]
+	deltaRegEvseRfidUID               = 100 // EVSE Used Authentication ID - STRING
 
 	//Write Multiple Registers (0x10)
 	deltaRegEvseChargingPowerLimit = 600 // EVSE Charging Power Limit - UINT32 [W]
@@ -226,6 +228,18 @@ func (wb *Delta) ChargedEnergy() (float64, error) {
 	}
 
 	return float64(binary.BigEndian.Uint32(b) / 1e3), err
+}
+
+var _ api.Identifier = (*Delta)(nil)
+
+// identify implements the api.Identifier interface
+func (wb *Delta) Identify() (string, error) {
+	b, err := wb.conn.ReadInputRegisters(wb.base+deltaRegEvseRfidUID, 6)
+	if err != nil {
+		return "", err
+	}
+
+	return hex.EncodeToString(b), nil
 }
 
 var _ api.Battery = (*Delta)(nil)
