@@ -3,6 +3,7 @@ package charger
 import (
 	"encoding/binary"
 	"fmt"
+	"math"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -14,8 +15,9 @@ import (
 
 // Delta charger implementation
 type Delta struct {
+	log  *util.Logger
 	conn *modbus.Connection
-	curr uint32
+	curr float64
 	lp   loadpoint.API
 }
 
@@ -33,17 +35,13 @@ const (
 
 	//EVSE Read Input Registers (0x04)
 	deltaRegEvseState                 = 1000 // EVSE State - UINT16 0: Unavailable, 1: Available, 2: Occupied, 3: Preparing, 4: Charging, 5: Finishing, 6: Suspended EV, 7: Suspended EVSE, 8: Not ready, 9: Faulted
-	deltaRegEvseChargerState          = 1001 // EVSE Charger State - 0: Charging process not started (no, vehicle connected), 1: Connected, waiting for release (by, RFID or local), 2: Charging process starts, 3: Charging, 4: Suspended (loading paused), 5: Charging process successfully com-, pleted (vehicle still plugged in), 6: Charging process completed by, user (vehicle still plugged in), 7: Charging ended with error (vehicle, still connected)
+	deltaRegEvseChargerState          = 1001 // EVSE Charger State - 0: Charging process not started (no vehicle connected), 1: Connected, waiting for release (by RFID or local), 2: Charging process starts, 3: Charging, 4: Suspended (paused), 5: Charging process successfully completed (vehicle still plugged in), 6: Charging process completed by user (vehicle still plugged in), 7: Charging ended with error (vehicle still connected)
 	deltaRegEvseActualOutputVoltage   = 1003 // EVSE Actual Output Voltage [V]
 	deltaRegEvseActualChargingPower   = 1005 // EVSE Actual Charging Power [W]
-	deltaRegEvseActualChargingCurrent = 1005 // EVSE Actual Charging Current [A]
+	deltaRegEvseActualChargingCurrent = 1007 // EVSE Actual Charging Current [A]
 
 	deltaRegEvseChargingTime  = 1017 // EVSE Charging Time [s]
 	deltaRegEvseChargedEnergy = 1019 // EVSE Charged Energy [Wh]
-
-	deltaRegEvseCurrentPowerConsumptionL1 = 1049 // EVSE Current Power Consumption L1 (grid) [W]
-	deltaRegEvseCurrentPowerConsumptionL2 = 1051 // EVSE Current Power Consumption L2 (grid) [W]
-	deltaRegEvseCurrentPowerConsumptionL3 = 1053 // EVSE Current Power Consumption L3 (grid) [W]
 
 	//EVSE Write Multiple Registers (0x10)
 	deltaRegEvseChargingPowerLimit = 1600 // EVSE Charging Power Limit - UINT32 [W]
@@ -82,99 +80,93 @@ func NewDelta(uri, device, comset string, baudrate int, proto modbus.Protocol, s
 	conn.Logger(log.TRACE)
 
 	wb := &Delta{
+		log:  log,
 		conn: conn,
 		curr: 6000, // assume min current
 	}
 
-	// keep-alive
-	go func() {
-		for range time.Tick(30 * time.Second) {
-			_, _ = wb.status()
-		}
-	}()
+	// get failsafe timeout from charger
+	b, err := wb.conn.ReadHoldingRegisters(deltaRegCommunicationTimeout, 1)
+	if err != nil {
+		return nil, fmt.Errorf("failsafe timeout: %w", err)
+	}
+	if u := binary.BigEndian.Uint16(b); u > 0 {
+		go wb.heartbeat(time.Duration(u) * time.Second / 2)
+	}
 
 	return wb, err
 }
 
-func (wb *Delta) status() (byte, error) {
-	b, err := wb.conn.ReadInputRegisters(deltaRegEvseState, 1)
-	if err != nil {
-		return 0, err
+func (wb *Delta) heartbeat(timeout time.Duration) {
+	for range time.Tick(timeout) {
+		if err := wb.setCurrent(wb.curr); err != nil {
+			wb.log.ERROR.Println("heartbeat:", err)
+		}
 	}
-
-	return b[1], nil
 }
 
 // Status implements the api.Charger interface
 func (wb *Delta) Status() (api.ChargeStatus, error) {
-	s, err := wb.status()
+	b, err := wb.conn.ReadInputRegisters(deltaRegEvseChargerState, 1)
 	if err != nil {
 		return api.StatusNone, err
 	}
 
-	switch s {
-	case 1: //Available
-		return api.StatusA, nil // State A: Idle
-	case 2: //Occupied
-		return api.StatusB, nil // State B1: EV Plug in, pending authorization
-	case 3: //Preparing
-		return api.StatusB, nil // State B2: EV Plug in, EVSE ready for charging (PWM)
-	case 4: //Charging
-		return api.StatusC, nil // State C2: Charging Contact closed, energy delivering
-	case 5: //Finishing
+	switch s := binary.BigEndian.Uint16(b); s {
+	case 0:
 		return api.StatusA, nil
-	case 6: //Suspended EV
-		return api.StatusB, nil // State E: Error EV / Cable
-	case 7: //Suspended EVSE
-		return api.StatusB, nil // State F: Error EVSE or simulated disconnect
-	default: // Other
+	case 1, 2, 4, 5, 6, 7:
+		return api.StatusB, nil
+	case 3:
+		return api.StatusC, nil
+	default:
 		return api.StatusNone, fmt.Errorf("invalid status: %0x", s)
 	}
 }
 
 // Enabled implements the api.Charger interface
 func (wb *Delta) Enabled() (bool, error) {
-	b, err := wb.conn.ReadInputRegisters(deltaRegEvseActualChargingPower, 2)
+	b, err := wb.conn.ReadHoldingRegisters(deltaRegEvseSuspendCharging, 1)
 	if err != nil {
 		return false, err
 	}
 
-	return binary.BigEndian.Uint32(b) != 0, nil
+	return binary.BigEndian.Uint16(b) == 0, nil
 }
 
 // Enable implements the api.Charger interface
 func (wb *Delta) Enable(enable bool) error {
-	var current uint32
-	if enable {
-		current = wb.curr
+	b := make([]byte, 2)
+	if !enable {
+		binary.BigEndian.PutUint16(b, 1)
 	}
 
-	return wb.setCurrent(current)
+	_, err := wb.conn.WriteMultipleRegisters(deltaRegEvseChargingPowerLimit, 1, b)
+
+	return err
 }
 
-// setCurrent writes the current limit in mA
-func (wb *Delta) setCurrent(current uint32) error {
-	var phases uint32
+// setCurrent writes the current limit in A
+func (wb *Delta) setCurrent(current float64) error {
+	var phases int
 	if wb.lp != nil {
-		phases = uint32(wb.lp.GetPhases())
+		phases = wb.lp.GetPhases()
 	}
 	if phases == 0 {
 		phases = 3
 	}
 
-	//Delta expects Power in Watts. Convert current to Watts considering active phases
-	var power = current / 1000 * 230 * phases
-
 	b := make([]byte, 4)
-	binary.BigEndian.PutUint32(b, power)
+	binary.BigEndian.PutUint32(b, uint32(math.Trunc(230.0*current*float64(phases))))
 
 	_, err := wb.conn.WriteMultipleRegisters(deltaRegEvseChargingPowerLimit, 2, b)
+
 	return err
 }
 
 // MaxCurrent implements the api.Charger interface
 func (wb *Delta) MaxCurrent(current int64) error {
-	return wb.setCurrent(uint32(current))
+	return wb.MaxCurrentMillis(float64(current))
 }
 
 var _ api.ChargerEx = (*Delta)(nil)
@@ -185,9 +177,12 @@ func (wb *Delta) MaxCurrentMillis(current float64) error {
 		return fmt.Errorf("invalid current %.1f", current)
 	}
 
-	wb.curr = uint32(current * 1e3)
+	err := wb.setCurrent(current)
+	if err == nil {
+		wb.curr = current
+	}
 
-	return wb.setCurrent(wb.curr)
+	return err
 }
 
 var _ api.Meter = (*Delta)(nil)
@@ -211,7 +206,7 @@ func (wb *Delta) ChargedEnergy() (float64, error) {
 		return 0, err
 	}
 
-	return float64(binary.BigEndian.Uint32(b) / 1000), err
+	return float64(binary.BigEndian.Uint32(b) / 1e3), err
 }
 
 var _ api.Diagnosis = (*Delta)(nil)
