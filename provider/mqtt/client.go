@@ -141,6 +141,8 @@ func (m *Client) Listen(topic string, callback func(string)) error {
 	case <-time.After(request.Timeout):
 		return fmt.Errorf("subscribe: %s: %w", topic, api.ErrTimeout)
 	case <-token.Done():
+		// TODO depends on https://github.com/eclipse/paho.mqtt.golang/issues/663
+		time.Sleep(100 * time.Millisecond)
 		return nil
 	}
 }
