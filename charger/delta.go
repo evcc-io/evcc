@@ -115,8 +115,6 @@ func NewDelta(uri, device, comset string, baudrate int, proto modbus.Protocol, s
 	return wb, err
 }
 
-var currMutex sync.Mutex
-
 func (wb *Delta) heartbeat(timeout time.Duration) {
 	for range time.Tick(timeout) {
 		wb.mu.Lock()
@@ -128,7 +126,6 @@ func (wb *Delta) heartbeat(timeout time.Duration) {
 		if err := wb.setCurrent(curr); err != nil {
 			wb.log.ERROR.Println("heartbeat:", err)
 		}
-		currMutex.Unlock()
 	}
 }
 
