@@ -1,7 +1,6 @@
 package charger
 
 import (
-	"encoding/hex"
 	"fmt"
 	"math"
 	"time"
@@ -165,7 +164,7 @@ func (wb *Delta) Enable(enable bool) error {
 		encoding.PutUint16(b, 1)
 	}
 
-	_, err := wb.conn.WriteMultipleRegisters(wb.base+deltaRegEvseChargingPowerLimit, 1, b)
+	_, err := wb.conn.WriteMultipleRegisters(wb.base+deltaRegEvseSuspendCharging, 1, b)
 
 	return err
 }
@@ -242,14 +241,19 @@ func (wb *Delta) Identify() (string, error) {
 		return "", err
 	}
 
-	return hex.EncodeToString(b), nil
+	return bytesAsString(b), nil
 }
 
 var _ api.Battery = (*Delta)(nil)
 
 // Soc implements the api.Battery interface
 func (wb *Delta) Soc() (float64, error) {
-	return 0, api.ErrNotAvailable
+	b, err := wb.conn.ReadInputRegisters(wb.base+deltaRegEvseSoc, 1)
+	if err != nil {
+		return 0, api.ErrNotAvailable
+	}
+
+	return float64(encoding.Uint16(b)) / 10.0, nil
 }
 
 var _ api.Diagnosis = (*Delta)(nil)
@@ -257,13 +261,22 @@ var _ api.Diagnosis = (*Delta)(nil)
 // Diagnose implements the api.Diagnosis interface
 func (wb *Delta) Diagnose() {
 	if b, err := wb.conn.ReadInputRegisters(deltaRegState, 1); err == nil {
-		fmt.Printf("\tState:\t%d\n", b)
+		fmt.Printf("\tState:\t%d\n", encoding.Uint16(b))
+	}
+	if b, err := wb.conn.ReadInputRegisters(deltaRegVersion, 1); err == nil {
+		fmt.Printf("\tVersion:\t%d\n", encoding.Uint16(b))
+	}
+	if b, err := wb.conn.ReadInputRegisters(deltaRegCount, 1); err == nil {
+		fmt.Printf("\tEVSE Count:\t%d\n", encoding.Uint16(b))
+	}
+	if b, err := wb.conn.ReadInputRegisters(deltaRegError, 1); err == nil {
+		fmt.Printf("\tError:\t%d\n", encoding.Uint16(b))
 	}
 	if b, err := wb.conn.ReadInputRegisters(deltaRegSerial, 20); err == nil {
-		fmt.Printf("\tSerial:\t%s\n", string(b))
+		fmt.Printf("\tSerial:\t%s\n", bytesAsString(b))
 	}
 	if b, err := wb.conn.ReadInputRegisters(deltaRegModel, 20); err == nil {
-		fmt.Printf("\tModel:\t%s\n", string(b))
+		fmt.Printf("\tModel:\t%s\n", bytesAsString(b))
 	}
 }
 
