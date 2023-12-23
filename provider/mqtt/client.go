@@ -3,7 +3,9 @@ package mqtt
 import (
 	"crypto/tls"
 	"fmt"
+	"log"
 	"math/rand"
+	"os"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -14,6 +16,10 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 )
+
+func init() {
+	paho.DEBUG = log.New(os.Stdout, "[DEBUG] ", 0)
+}
 
 // Instance is the paho Mqtt client singleton
 var Instance *Client
