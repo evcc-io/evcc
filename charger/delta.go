@@ -154,8 +154,16 @@ func (wb *Delta) Enable(enable bool) error {
 
 // setCurrent writes the current limit in mA
 func (wb *Delta) setCurrent(current uint32) error {
+	var phases uint32
+	if wb.lp != nil {
+		phases = uint32(wb.lp.GetPhases())
+	}
+	if phases == 0 {
+		phases = 3
+	}
+
 	//Delta expects Power in Watts. Convert current to Watts considering active phases
-	var power = current / 1000 * 230 * uint32(wb.lp.GetPhases())
+	var power = current / 1000 * 230 * phases
 
 	b := make([]byte, 4)
 	binary.BigEndian.PutUint32(b, power)
