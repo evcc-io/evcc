@@ -723,7 +723,7 @@ func (lp *Loadpoint) setLimit(chargeCurrent float64, force bool) error {
 		lp.bus.Publish(evChargeCurrent, chargeCurrent)
 	}
 
-	if remaining := (lp.GuardDuration - lp.clock.Since(lp.guardUpdated)).Truncate(time.Second); remaining > 0 && !force {
+	if lp.clock.Since(lp.guardUpdated).Truncate(time.Second) < lp.GuardDuration && !force {
 		lp.publishTimer(guardTimer, lp.GuardDuration, guardEnable)
 		return nil
 	}
