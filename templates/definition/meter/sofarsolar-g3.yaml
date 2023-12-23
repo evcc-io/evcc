@@ -12,17 +12,20 @@ products:
   - brand: SofarSolar
     description:
       generic: SOFAR 5…24KTL-G3
+requirements:
+  description:
+    de: Es wird dringend empfohlen die Verbindung über einen LSE-3 Logger Stick herzustellen. Andere Verbindungswege (z.B. LSW-3 oder via RS485) sind u.U. instabil und benötigen Verzögerungen (delay) > 0s.
+    en: It is strongly recommended to connect via an LSE-3 logger stick. Other connection paths (e.g. LSW-3 or via RS485) may be unstable and require delays > 0s.
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
   - name: modbus
-    choice: ["rs485", "tcpip"]
-    baudrate: 9600
-    comset: 8N1
-    port: 502
+    choice: ["tcpip", "rs485"]
+    port: 8899
     id: 1
   - name: delay
-    default: 1s
+    default: 0s
+    advanced: true
   - name: capacity
     advanced: true
   # battery control
