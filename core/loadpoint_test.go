@@ -538,7 +538,12 @@ func cacheExpecter(t *testing.T, lp *Loadpoint) (*util.Cache, func(key string, v
 					return fmt.Errorf("%s wanted: %v, got %v", key, val, p.Val)
 				}
 				return nil
-			})
+			},
+			retry.OnRetry(func(n uint, err error) {
+				t.Logf("retry #%d: %s\n", n, err)
+			}),
+			retry.Attempts(3),
+		)
 		if err != nil {
 			t.Error(err)
 		}
@@ -804,6 +809,7 @@ func TestSocPoll(t *testing.T) {
 	}
 }
 
+// test guard and pv timers are properly published during disable
 func TestGuardPublish(t *testing.T) {
 
 	clock := clock.NewMock()
@@ -899,6 +905,111 @@ func TestGuardPublish(t *testing.T) {
 	lp.Update(15000, false, false, false, 0, nil, nil)
 
 	assert.Equal(t, time.Time{}, lp.pvTimer)
+
+	ctrl.Finish()
+}
+
+// test guard and pv timers are properly published if disable sequence is aborted
+func TestGuardPublishOnDisableAbort(t *testing.T) {
+
+	clock := clock.NewMock()
+	ctrl := gomock.NewController(t)
+	charger := api.NewMockCharger(ctrl)
+	rater := api.NewMockChargeRater(ctrl)
+
+	t0 := clock.Now()
+
+	lp := &Loadpoint{
+		log:           util.NewLogger("foo"),
+		bus:           evbus.New(),
+		clock:         clock,
+		charger:       charger,
+		chargeMeter:   &Null{}, // silence nil panics
+		chargeRater:   rater,
+		chargeTimer:   &Null{}, // silence nil panics
+		guardUpdated:  t0,
+		pvTimer:       time.Time{},
+		wakeUpTimer:   NewTimer(),
+		sessionEnergy: NewEnergyMetrics(),
+		MinCurrent:    minA,
+		MaxCurrent:    maxA,
+		status:        api.StatusC,
+		Disable:       ThresholdConfig{Delay: 3 * time.Minute, Threshold: 0}, // t, W
+		GuardDuration: 5 * time.Minute,
+	}
+
+	util.LogLevel("DEBUG", nil)
+
+	attachListeners(t, lp)
+
+	lp.enabled = true
+	lp.chargeCurrent = maxA
+	lp.mode = api.ModePV
+
+	// attach cache for verifying values
+	_, expectCache := cacheExpecter(t, lp)
+
+	t.Log("kick off pv disable timer")
+	charger.EXPECT().Enabled().Return(lp.enabled, nil)
+	charger.EXPECT().Status().Return(api.StatusC, nil)
+	charger.EXPECT().MaxCurrent(int64(lp.MinCurrent)).Return(nil)
+	rater.EXPECT().ChargedEnergy().AnyTimes()
+	lp.Update(15000, false, false, false, 0, nil, nil)
+
+	assert.Equal(t, t0, lp.guardUpdated)
+	assert.Equal(t, t0, lp.pvTimer)
+
+	expectCache(pvTimer+"Remaining", time.Duration(3*time.Minute))
+
+	t.Log("charged 1 minute, continue pv disable timer")
+	clock.Add(time.Minute)
+	rater.EXPECT().ChargedEnergy().AnyTimes()
+	charger.EXPECT().Enabled().Return(lp.enabled, nil)
+	charger.EXPECT().Status().Return(api.StatusC, nil)
+	lp.Update(15000, false, false, false, 0, nil, nil)
+
+	assert.Equal(t, t0, lp.pvTimer)
+	assert.Equal(t, t0, lp.guardUpdated)
+
+	expectCache(pvTimer+"Remaining", time.Duration(2*time.Minute))
+
+	//expire PV timer
+	t.Log("charged another 2 minutes, disable charger prevented by guard")
+	clock.Add(2 * time.Minute)
+	rater.EXPECT().ChargedEnergy().AnyTimes()
+	charger.EXPECT().Enabled().Return(lp.enabled, nil)
+	charger.EXPECT().Status().Return(api.StatusC, nil)
+	lp.Update(15000, false, false, false, 0, nil, nil)
+
+	assert.Equal(t, t0, lp.pvTimer)
+	assert.Equal(t, t0, lp.guardUpdated)
+
+	expectCache(pvTimer+"Remaining", time.Duration(0))
+	expectCache(guardTimer+"Remaining", time.Duration(2*time.Minute))
+
+	t.Log("charged another minute, abort disable, expect guard remain to continue publishing")
+	clock.Add(1 * time.Minute)
+	rater.EXPECT().ChargedEnergy().AnyTimes()
+	charger.EXPECT().Enabled().Return(lp.enabled, nil)
+	charger.EXPECT().Status().Return(api.StatusC, nil)
+	lp.Update(-1, false, false, false, 0, nil, nil)
+
+	assert.Equal(t, time.Time{}, lp.pvTimer)
+	assert.Equal(t, t0, lp.guardUpdated)
+
+	expectCache(guardTimer+"Remaining", time.Duration(time.Minute))
+
+	t.Log("wait another minute, guard timer should still publish")
+	clock.Add(1 * time.Minute)
+	rater.EXPECT().ChargedEnergy().AnyTimes()
+	charger.EXPECT().Enabled().Return(lp.enabled, nil)
+	charger.EXPECT().Status().Return(api.StatusC, nil)
+	lp.Update(-1, false, false, false, 0, nil, nil)
+
+	assert.Equal(t, time.Time{}, lp.pvTimer)
+
+	assert.Equal(t, elapsed, lp.guardUpdated)
+	expectCache(guardTimer+"Remaining", time.Duration(0))
 
 	ctrl.Finish()
 }
