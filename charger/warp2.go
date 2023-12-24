@@ -60,19 +60,19 @@ func NewWarp2FromConfig(other map[string]interface{}) (api.Charger, error) {
 	}
 
 	var currentPower, totalEnergy func() (float64, error)
-	if wb.hasFeature(cc.Topic, warp.FeatureMeter) {
+	if wb.hasFeature(cc.Topic, warp.FeatureMeter, cc.Timeout) {
 		currentPower = wb.currentPower
 		totalEnergy = wb.totalEnergy
 	}
 
 	var currents, voltages func() (float64, float64, float64, error)
-	if wb.hasFeature(cc.Topic, warp.FeatureMeterPhases) {
+	if wb.hasFeature(cc.Topic, warp.FeatureMeterPhases, cc.Timeout) {
 		currents = wb.currents
 		voltages = wb.voltages
 	}
 
 	var identity func() (string, error)
-	if wb.hasFeature(cc.Topic, warp.FeatureNfc) {
+	if wb.hasFeature(cc.Topic, warp.FeatureNfc, cc.Timeout) {
 		identity = wb.identify
 	}
 
@@ -160,14 +160,14 @@ func NewWarp2(mqttconf mqtt.Config, topic, emTopic string, timeout time.Duration
 	return wb, nil
 }
 
-func (wb *Warp2) hasFeature(root, feature string) bool {
+func (wb *Warp2) hasFeature(root, feature string, timeout time.Duration) bool {
 	if wb.features != nil {
 		return slices.Contains(wb.features, feature)
 	}
 
 	topic := fmt.Sprintf("%s/info/features", root)
 
-	if dataG, err := provider.NewMqtt(wb.log, wb.client, topic, 0).StringGetter(); err == nil {
+	if dataG, err := provider.NewMqtt(wb.log, wb.client, topic, timeout).StringGetter(); err == nil {
 		if data, err := dataG(); err == nil {
 			if err := json.Unmarshal([]byte(data), &wb.features); err == nil {
 				return slices.Contains(wb.features, feature)
