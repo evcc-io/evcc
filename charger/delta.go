@@ -247,7 +247,7 @@ func (wb *Delta) ChargedEnergy() (float64, error) {
 		return 0, err
 	}
 
-	return float64(encoding.Float32(b) / 1e3), err
+	return float64(encoding.Uint32(b)) / 1e3, err
 }
 
 var _ api.Identifier = (*Delta)(nil)
