@@ -158,13 +158,6 @@ func (wb *Delta) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *Delta) Enabled() (bool, error) {
-	// b, err := wb.conn.ReadHoldingRegisters(wb.base+deltaRegEvseSuspendCharging, 1)
-	// if err != nil {
-	// 	return false, err
-	// }
-
-	// return encoding.Uint16(b) == 0, nil
-
 	b, err := wb.conn.ReadHoldingRegisters(wb.base+deltaRegEvseChargingPowerLimit, 2)
 	if err != nil {
 		return false, err
@@ -175,13 +168,6 @@ func (wb *Delta) Enabled() (bool, error) {
 
 // Enable implements the api.Charger interface
 func (wb *Delta) Enable(enable bool) error {
-	// b := make([]byte, 2)
-	// if !enable {
-	// 	encoding.PutUint16(b, 1)
-	// }
-
-	// _, err := wb.conn.WriteMultipleRegisters(wb.base+deltaRegEvseSuspendCharging, 1, b)
-
 	var curr float64
 	if enable {
 		wb.mu.Lock()
