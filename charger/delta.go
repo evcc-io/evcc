@@ -187,16 +187,29 @@ func (wb *Delta) Enable(enable bool) error {
 
 // setCurrent writes the current limit in A
 func (wb *Delta) setCurrent(current float64) error {
-	var phases int
+	var loadpointPhases, vehiclePhases int
 	if wb.lp != nil {
-		phases = wb.lp.GetPhases()
+		loadpointPhases = wb.lp.GetPhases()
+
+		var curVehicle = wb.lp.GetVehicle()
+		if curVehicle != nil {
+			vehiclePhases = curVehicle.Phases()
+		} else {
+			vehiclePhases = 0
+		}
 	}
-	if phases == 0 {
-		phases = 3
+
+	var availablePhases int
+	if loadpointPhases > 0 && vehiclePhases > 0 {
+		availablePhases = min(loadpointPhases, vehiclePhases)
+	} else if loadpointPhases > 0 || vehiclePhases > 0 {
+		availablePhases = max(loadpointPhases, vehiclePhases)
+	} else {
+		availablePhases = 3
 	}
 
 	b := make([]byte, 4)
-	encoding.PutUint32(b, uint32(math.Trunc(230.0*current*float64(phases))))
+	encoding.PutUint32(b, uint32(math.Trunc(230.0*current*float64(availablePhases))))
 
 	_, err := wb.conn.WriteMultipleRegisters(wb.base+deltaRegEvseChargingPowerLimit, 2, b)
 
