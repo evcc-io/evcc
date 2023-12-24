@@ -218,7 +218,9 @@ func (wb *Delta) MaxCurrentMillis(current float64) error {
 
 	err := wb.setCurrent(current)
 	if err == nil {
+		wb.mu.Lock()
 		wb.curr = current
+		wb.mu.Unlock()
 	}
 
 	return err
