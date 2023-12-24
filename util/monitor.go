@@ -64,9 +64,32 @@ func (m *Monitor[T]) GetFunc(get func(T)) error {
 		default:
 			return api.ErrOutdated
 		}
-	} else if time.Since(m.updated) > m.timeout {
+	}
+
+	if time.Since(m.updated) > m.timeout {
+		err := api.ErrOutdated
+
+		// wait once on very first call
+		if m.updated.IsZero() {
+			m.mu.RUnlock()
+
+			// mark as waited once
+			m.mu.Lock()
+			m.updated.Add(time.Nanosecond)
+			m.mu.Unlock()
+
+			select {
+			case <-m.done:
+				// got value and updated timestamp
+				err = nil
+			case <-time.After(m.timeout):
+			}
+
+			m.mu.RLock()
+		}
+
 		get(m.val)
-		return api.ErrOutdated
+		return err
 	}
 
 	get(m.val)
