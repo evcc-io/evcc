@@ -8,7 +8,6 @@ import (
 	evbus "github.com/asaskevich/EventBus"
 	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/mock"
 	"github.com/evcc-io/evcc/util"
 	"github.com/golang/mock/gomock"
 )
@@ -76,15 +75,15 @@ func TestMaxActivePhases(t *testing.T) {
 
 			t.Log(dflt, tc)
 
-			plainCharger := mock.NewMockCharger(ctrl)
+			plainCharger := api.NewMockCharger(ctrl)
 
 			// 1p3p
-			var phaseCharger *mock.MockPhaseSwitcher
+			var phaseCharger *api.MockPhaseSwitcher
 			if tc.capable == 0 {
-				phaseCharger = mock.NewMockPhaseSwitcher(ctrl)
+				phaseCharger = api.NewMockPhaseSwitcher(ctrl)
 			}
 
-			vehicle := mock.NewMockVehicle(ctrl)
+			vehicle := api.NewMockVehicle(ctrl)
 			vehicle.EXPECT().Phases().Return(tc.vehicle).MinTimes(1)
 
 			lp := &Loadpoint{
@@ -96,14 +95,14 @@ func TestMaxActivePhases(t *testing.T) {
 
 			if phaseCharger != nil {
 				lp.charger = struct {
-					*mock.MockCharger
-					*mock.MockPhaseSwitcher
+					*api.MockCharger
+					*api.MockPhaseSwitcher
 				}{
 					plainCharger, phaseCharger,
 				}
 			} else {
 				lp.charger = struct {
-					*mock.MockCharger
+					*api.MockCharger
 				}{
 					plainCharger,
 				}
@@ -162,17 +161,17 @@ func TestPvScalePhases(t *testing.T) {
 	for _, tc := range phaseTests {
 		t.Log(tc)
 
-		plainCharger := mock.NewMockCharger(ctrl)
+		plainCharger := api.NewMockCharger(ctrl)
 		plainCharger.EXPECT().Enabled().Return(true, nil)
 		plainCharger.EXPECT().MaxCurrent(int64(minA)).Return(nil) // MaxCurrentEx not implemented
 
 		// 1p3p
-		var phaseCharger *mock.MockPhaseSwitcher
+		var phaseCharger *api.MockPhaseSwitcher
 		if tc.capable == 0 {
-			phaseCharger = mock.NewMockPhaseSwitcher(ctrl)
+			phaseCharger = api.NewMockPhaseSwitcher(ctrl)
 		}
 
-		vehicle := mock.NewMockVehicle(ctrl)
+		vehicle := api.NewMockVehicle(ctrl)
 		vehicle.EXPECT().Phases().Return(tc.vehicle).MinTimes(1)
 
 		lp := &Loadpoint{
@@ -195,14 +194,14 @@ func TestPvScalePhases(t *testing.T) {
 
 		if phaseCharger != nil {
 			lp.charger = struct {
-				*mock.MockCharger
-				*mock.MockPhaseSwitcher
+				*api.MockCharger
+				*api.MockPhaseSwitcher
 			}{
 				plainCharger, phaseCharger,
 			}
 		} else {
 			lp.charger = struct {
-				*mock.MockCharger
+				*api.MockCharger
 			}{
 				plainCharger,
 			}
@@ -259,11 +258,11 @@ func TestPvScalePhases(t *testing.T) {
 func TestPvScalePhasesTimer(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	charger := &struct {
-		*mock.MockCharger
-		*mock.MockPhaseSwitcher
+		*api.MockCharger
+		*api.MockPhaseSwitcher
 	}{
-		mock.NewMockCharger(ctrl),
-		mock.NewMockPhaseSwitcher(ctrl),
+		api.NewMockCharger(ctrl),
+		api.NewMockPhaseSwitcher(ctrl),
 	}
 
 	dt := time.Minute
@@ -416,15 +415,15 @@ func TestScalePhasesIfAvailable(t *testing.T) {
 	for _, tc := range tc {
 		t.Log(tc)
 
-		plainCharger := mock.NewMockCharger(ctrl)
-		phaseCharger := mock.NewMockPhaseSwitcher(ctrl)
+		plainCharger := api.NewMockCharger(ctrl)
+		phaseCharger := api.NewMockPhaseSwitcher(ctrl)
 
 		lp := &Loadpoint{
 			log:   util.NewLogger("foo"),
 			clock: clock.NewMock(),
 			charger: struct {
-				*mock.MockCharger
-				*mock.MockPhaseSwitcher
+				*api.MockCharger
+				*api.MockPhaseSwitcher
 			}{
 				plainCharger,
 				phaseCharger,

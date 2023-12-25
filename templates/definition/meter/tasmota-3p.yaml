@@ -1,0 +1,24 @@
+template: tasmota-3p
+products:
+  - description:
+      generic: Tasmota (3 Phase Meter - meter channels 1,2+3 must be used)
+group: switchsockets
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery", "charge"]
+  - name: host
+  - name: user
+    required: false
+    help:
+      de: Standard-User ist admin
+      en: admin is default
+  - name: password
+    required: false
+    mask: true
+render: |
+  type: tasmota
+  uri: http://{{ .host }}
+  usage: {{ .usage }}
+  user: {{ .user }}
+  password: {{ .password }}
+  channel: [1,2,3]  # list of meter channels [1,2,....,8]

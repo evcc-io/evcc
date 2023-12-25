@@ -1,10 +1,18 @@
-//go:build !test
-
 package charger
 
-import "time"
+import (
+	"testing"
+	"time"
+)
 
-const (
+var (
 	ocppConnectTimeout = 5 * time.Minute
 	ocppTimeout        = 2 * time.Minute
 )
+
+func init() {
+	if testing.Testing() {
+		ocppConnectTimeout = 1 * time.Second
+		ocppTimeout = 1 * time.Second
+	}
+}

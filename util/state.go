@@ -85,7 +85,7 @@ func (c *State) Encrypt(key []byte) string {
 }
 
 func (c *State) Validate() error {
-	if c.Time.Add(stateValidity).After(time.Now()) {
+	if time.Since(c.Time) > stateValidity {
 		return nil
 	}
 

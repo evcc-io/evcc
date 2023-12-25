@@ -3,6 +3,10 @@ products:
   - brand: NRGKick
     description:
       generic: Bluetooth
+requirements:
+  description:
+    de: NRGkick Ladeeinheit via Bluetooth (älter als 2022/2023)
+    en: NRGkick charging unit via Bluetooth (older than 2022/2023)
 params:
   - name: mac
     required: true

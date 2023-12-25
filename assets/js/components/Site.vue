@@ -80,7 +80,7 @@ export default {
 		auth: Object,
 
 		currency: String,
-		stats: Object,
+		statistics: Object,
 		tariffFeedIn: Number,
 		tariffGrid: Number,
 		tariffCo2: Number,
@@ -136,7 +136,7 @@ export default {
 				},
 				sponsor: this.sponsor,
 				savings: {
-					stats: this.stats,
+					statistics: this.statistics,
 					co2Configured: this.tariffCo2 !== undefined,
 					priceConfigured: this.tariffGrid !== undefined,
 					currency: this.currency,

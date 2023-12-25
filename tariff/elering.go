@@ -98,6 +98,7 @@ func (t *Elering) run(done chan error) {
 			}
 			t.data = append(t.data, ar)
 		}
+		t.data.Sort()
 
 		t.mux.Unlock()
 	}

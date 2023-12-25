@@ -10,6 +10,8 @@ import (
 
 var _ site.API = (*Site)(nil)
 
+var ErrBatteryNotConfigured = errors.New("battery not configured")
+
 const (
 	GridTariff    = "grid"
 	FeedinTariff  = "feedin"
@@ -29,13 +31,17 @@ func (site *Site) SetPrioritySoc(soc float64) error {
 	defer site.Unlock()
 
 	if len(site.batteryMeters) == 0 {
-		return errors.New("battery not configured")
+		return ErrBatteryNotConfigured
 	}
 
-	site.PrioritySoc = soc
-	settings.SetFloat("site.prioritySoc", site.PrioritySoc)
-	site.publish("prioritySoc", site.PrioritySoc)
+	site.log.DEBUG.Println("set priority soc:", soc)
 
+	if site.PrioritySoc != soc {
+		site.PrioritySoc = soc
+		settings.SetFloat("site.prioritySoc", site.PrioritySoc)
+		site.publish("prioritySoc", site.PrioritySoc)
+
+	}
 	return nil
 }
 
@@ -52,12 +58,16 @@ func (site *Site) SetBufferSoc(soc float64) error {
 	defer site.Unlock()
 
 	if len(site.batteryMeters) == 0 {
-		return errors.New("battery not configured")
+		return ErrBatteryNotConfigured
 	}
 
-	site.BufferSoc = soc
-	settings.SetFloat("site.bufferSoc", site.BufferSoc)
-	site.publish("bufferSoc", site.BufferSoc)
+	site.log.DEBUG.Println("set buffer soc:", soc)
+
+	if site.BufferSoc != soc {
+		site.BufferSoc = soc
+		settings.SetFloat("site.bufferSoc", site.BufferSoc)
+		site.publish("bufferSoc", site.BufferSoc)
+	}
 
 	return nil
 }
@@ -75,12 +85,16 @@ func (site *Site) SetBufferStartSoc(soc float64) error {
 	defer site.Unlock()
 
 	if len(site.batteryMeters) == 0 {
-		return errors.New("battery not configured")
+		return ErrBatteryNotConfigured
 	}
 
-	site.BufferStartSoc = soc
-	settings.SetFloat("site.bufferStartSoc", site.BufferStartSoc)
-	site.publish("bufferStartSoc", site.BufferStartSoc)
+	site.log.DEBUG.Println("set buffer start soc:", soc)
+
+	if site.BufferStartSoc != soc {
+		site.BufferStartSoc = soc
+		settings.SetFloat("site.bufferStartSoc", site.BufferStartSoc)
+		site.publish("bufferStartSoc", site.BufferStartSoc)
+	}
 
 	return nil
 }
@@ -97,8 +111,12 @@ func (site *Site) SetResidualPower(power float64) error {
 	site.Lock()
 	defer site.Unlock()
 
-	site.ResidualPower = power
-	site.publish("residualPower", site.ResidualPower)
+	site.log.DEBUG.Println("set residual power:", power)
+
+	if site.ResidualPower != power {
+		site.ResidualPower = power
+		site.publish("residualPower", site.ResidualPower)
+	}
 
 	return nil
 }
@@ -115,9 +133,13 @@ func (site *Site) SetSmartCostLimit(val float64) error {
 	site.Lock()
 	defer site.Unlock()
 
-	site.SmartCostLimit = val
-	settings.SetFloat("site.smartCostLimit", site.SmartCostLimit)
-	site.publish("smartCostLimit", site.SmartCostLimit)
+	site.log.DEBUG.Println("set smart cost limit:", val)
+
+	if site.SmartCostLimit != val {
+		site.SmartCostLimit = val
+		settings.SetFloat("site.smartCostLimit", site.SmartCostLimit)
+		site.publish("smartCostLimit", site.SmartCostLimit)
+	}
 
 	return nil
 }

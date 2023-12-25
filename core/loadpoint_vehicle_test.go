@@ -10,7 +10,6 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/coordinator"
 	"github.com/evcc-io/evcc/core/soc"
-	"github.com/evcc-io/evcc/mock"
 	"github.com/evcc-io/evcc/util"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
@@ -20,11 +19,11 @@ func TestPublishSocAndRange(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	clck := clock.NewMock()
 
-	charger := mock.NewMockCharger(ctrl)
+	charger := api.NewMockCharger(ctrl)
 	charger.EXPECT().MaxCurrent(int64(maxA)).AnyTimes()
 	charger.EXPECT().Enabled().Return(true, nil).AnyTimes()
 
-	vehicle := mock.NewMockVehicle(ctrl)
+	vehicle := api.NewMockVehicle(ctrl)
 	vehicle.EXPECT().Title().Return("target").AnyTimes()
 	vehicle.EXPECT().Capacity().AnyTimes()
 	vehicle.EXPECT().Phases().AnyTimes()
@@ -82,8 +81,8 @@ func TestPublishSocAndRange(t *testing.T) {
 func TestVehicleDetectByID(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
-	v1 := mock.NewMockVehicle(ctrl)
-	v2 := mock.NewMockVehicle(ctrl)
+	v1 := api.NewMockVehicle(ctrl)
+	v2 := api.NewMockVehicle(ctrl)
 
 	type testcase struct {
 		string
@@ -150,7 +149,7 @@ func TestDefaultVehicle(t *testing.T) {
 	mode := api.ModePV
 	targetsoc := 80
 
-	dflt := mock.NewMockVehicle(ctrl)
+	dflt := api.NewMockVehicle(ctrl)
 	dflt.EXPECT().Title().Return("default").AnyTimes()
 	dflt.EXPECT().Icon().Return("").AnyTimes()
 	dflt.EXPECT().Capacity().AnyTimes()
@@ -160,7 +159,7 @@ func TestDefaultVehicle(t *testing.T) {
 		TargetSoc: &targetsoc,
 	}).AnyTimes()
 
-	vehicle := mock.NewMockVehicle(ctrl)
+	vehicle := api.NewMockVehicle(ctrl)
 	vehicle.EXPECT().Title().Return("target").AnyTimes()
 	vehicle.EXPECT().Icon().Return("").AnyTimes()
 	vehicle.EXPECT().Capacity().AnyTimes()
@@ -244,7 +243,7 @@ func TestApplyVehicleDefaults(t *testing.T) {
 	// onDefault config
 	od := newConfig(api.ModeOff, 6, 16, nil)
 
-	vehicle := mock.NewMockVehicle(ctrl)
+	vehicle := api.NewMockVehicle(ctrl)
 	vehicle.EXPECT().Title().Return("it's me").AnyTimes()
 	vehicle.EXPECT().Icon().Return("").AnyTimes()
 	vehicle.EXPECT().Capacity().AnyTimes()
@@ -275,11 +274,11 @@ func TestApplyVehicleDefaults(t *testing.T) {
 
 	// identify vehicle by id
 	charger := struct {
-		*mock.MockCharger
-		*mock.MockIdentifier
+		*api.MockCharger
+		*api.MockIdentifier
 	}{
-		MockCharger:    mock.NewMockCharger(ctrl),
-		MockIdentifier: mock.NewMockIdentifier(ctrl),
+		MockCharger:    api.NewMockCharger(ctrl),
+		MockIdentifier: api.NewMockIdentifier(ctrl),
 	}
 
 	lp.charger = charger
@@ -308,11 +307,11 @@ func TestReconnectVehicle(t *testing.T) {
 			clck := clock.NewMock()
 
 			type vehicleT struct {
-				*mock.MockVehicle
-				*mock.MockChargeState
+				*api.MockVehicle
+				*api.MockChargeState
 			}
 
-			vehicle := &vehicleT{mock.NewMockVehicle(ctrl), mock.NewMockChargeState(ctrl)}
+			vehicle := &vehicleT{api.NewMockVehicle(ctrl), api.NewMockChargeState(ctrl)}
 			vehicle.MockVehicle.EXPECT().Title().Return("vehicle").AnyTimes()
 			vehicle.MockVehicle.EXPECT().Icon().Return("").AnyTimes()
 			vehicle.MockVehicle.EXPECT().Capacity().AnyTimes()
@@ -321,7 +320,7 @@ func TestReconnectVehicle(t *testing.T) {
 			vehicle.MockVehicle.EXPECT().Identifiers().AnyTimes().Return(tc.vehicleId)
 			vehicle.MockVehicle.EXPECT().Soc().Return(0.0, nil).AnyTimes()
 
-			charger := mock.NewMockCharger(ctrl)
+			charger := api.NewMockCharger(ctrl)
 			charger.EXPECT().Status().Return(api.StatusB, nil).AnyTimes()
 
 			lp := &Loadpoint{

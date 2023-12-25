@@ -220,6 +220,9 @@ func (lp *Loadpoint) SetTargetTime(finishAt time.Time) error {
 
 	lp.Lock()
 	defer lp.Unlock()
+
+	lp.log.DEBUG.Println("set target time:", finishAt.Round(time.Second).Local())
+
 	lp.setTargetTime(finishAt)
 	lp.persistVehicleSettings()
 
@@ -372,6 +375,13 @@ func (lp *Loadpoint) GetMinPower() float64 {
 // GetMaxPower returns the max loadpoint power taking vehicle capabilities and phase scaling into account
 func (lp *Loadpoint) GetMaxPower() float64 {
 	return Voltage * lp.GetMaxCurrent() * float64(lp.maxActivePhases())
+}
+
+// GetPlanActive returns the active state of the planner
+func (lp *Loadpoint) GetPlanActive() bool {
+	lp.Lock()
+	defer lp.Unlock()
+	return lp.planActive
 }
 
 // SetRemainingDuration sets the estimated remaining charging duration

@@ -205,6 +205,20 @@ func (mr *MockAPIMockRecorder) GetPlan(arg0, arg1 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPlan", reflect.TypeOf((*MockAPI)(nil).GetPlan), arg0, arg1)
 }
 
+// GetPlanActive mocks base method.
+func (m *MockAPI) GetPlanActive() bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPlanActive")
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// GetPlanActive indicates an expected call of GetPlanActive.
+func (mr *MockAPIMockRecorder) GetPlanActive() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPlanActive", reflect.TypeOf((*MockAPI)(nil).GetPlanActive))
+}
+
 // GetPriority mocks base method.
 func (m *MockAPI) GetPriority() int {
 	m.ctrl.T.Helper()
