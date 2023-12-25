@@ -398,8 +398,8 @@ type OperationType int
 const (
 	OperationTypeUnknown OperationType = iota
 	OperationTypeRegister
-	OperationTypeMeasurement
 	OperationTypeSunSpec
+	OperationTypeSunSpecMeasurement
 )
 
 // Operation is a register-based or sunspec modbus operation
@@ -411,10 +411,10 @@ type Operation struct {
 
 func (op *Operation) Type() OperationType {
 	switch {
-	case op.Measurement != 0:
-		return OperationTypeMeasurement
 	case op.SunSpec.Model != 0:
 		return OperationTypeSunSpec
+	case op.Measurement != 0:
+		return OperationTypeSunSpecMeasurement
 	case op.Register.Address != 0:
 		return OperationTypeRegister
 	default:
