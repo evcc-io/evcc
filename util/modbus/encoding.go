@@ -1,11 +1,5 @@
 package modbus
 
-import (
-	"fmt"
-
-	"github.com/volkszaehler/mbmd/encoding"
-)
-
 type Encoding int
 
 //go:generate enumer -type Encoding -transform=lower
@@ -86,56 +80,58 @@ func (e Encoding) Len() uint16 {
 
 // creates a read operation from a register definition
 func (e Encoding) Transform() func([]byte) float64 {
-	switch e {
-	// 8 bit (coil)
-	case Bool8:
-		return decodeBool8
+	return nil
 
-	// 16 bit
-	case Int16:
-		return asFloat64(encoding.Int16)
-	case Int16NaN:
-		return decodeNaN16(asFloat64(encoding.Int16), 1<<15, 1<<15-1)
-	case Uint16:
-		return asFloat64(encoding.Uint16)
-	case Uint16NaN:
-		return decodeNaN16(asFloat64(encoding.Uint16), 1<<16-1)
-	case Bool16:
-		mask, err := decodeMask(r.BitMask)
-		if err != nil {
-			return op, err
-		}
-		return decodeBool16(mask)
+	// switch e {
+	// // 8 bit (coil)
+	// case Bool8:
+	// 	return decodeBool8
 
-	// 32 bit
-	case Int32:
-		return asFloat64(encoding.Int32)
-	case Int32NaN:
-		return decodeNaN32(asFloat64(encoding.Int32), 1<<31, 1<<31-1)
-	case Int32S:
-		return asFloat64(encoding.Int32LswFirst)
-	case Uint32:
-		return asFloat64(encoding.Uint32)
-	case Uint32S:
-		return asFloat64(encoding.Uint32LswFirst)
-	case Uint32NaN:
-		return decodeNaN32(asFloat64(encoding.Uint32), 1<<32-1)
-	case Float32:
-		return asFloat64(encoding.Float32)
-	case Float32S:
-		return asFloat64(encoding.Float32LswFirst)
+	// // 16 bit
+	// case Int16:
+	// 	return asFloat64(encoding.Int16)
+	// case Int16NaN:
+	// 	return decodeNaN16(asFloat64(encoding.Int16), 1<<15, 1<<15-1)
+	// case Uint16:
+	// 	return asFloat64(encoding.Uint16)
+	// case Uint16NaN:
+	// 	return decodeNaN16(asFloat64(encoding.Uint16), 1<<16-1)
+	// case Bool16:
+	// 	mask, err := decodeMask(r.BitMask)
+	// 	if err != nil {
+	// 		return op, err
+	// 	}
+	// 	return decodeBool16(mask)
 
-	// 64 bit
-	case Uint64:
-		return asFloat64(encoding.Uint64)
-	case Uint64NaN:
-		return decodeNaN64(asFloat64(encoding.Uint64), 1<<64-1)
-	case Float64:
-		return encoding.Float64
+	// // 32 bit
+	// case Int32:
+	// 	return asFloat64(encoding.Int32)
+	// case Int32NaN:
+	// 	return decodeNaN32(asFloat64(encoding.Int32), 1<<31, 1<<31-1)
+	// case Int32S:
+	// 	return asFloat64(encoding.Int32LswFirst)
+	// case Uint32:
+	// 	return asFloat64(encoding.Uint32)
+	// case Uint32S:
+	// 	return asFloat64(encoding.Uint32LswFirst)
+	// case Uint32NaN:
+	// 	return decodeNaN32(asFloat64(encoding.Uint32), 1<<32-1)
+	// case Float32:
+	// 	return asFloat64(encoding.Float32)
+	// case Float32S:
+	// 	return asFloat64(encoding.Float32LswFirst)
 
-	default:
-		return nil, fmt.Errorf("invalid register decoding: %s", r.Decode)
-	}
+	// // 64 bit
+	// case Uint64:
+	// 	return asFloat64(encoding.Uint64)
+	// case Uint64NaN:
+	// 	return decodeNaN64(asFloat64(encoding.Uint64), 1<<64-1)
+	// case Float64:
+	// 	return encoding.Float64
 
-	return op, nil
+	// default:
+	// 	return nil, fmt.Errorf("invalid register decoding: %s", r.Decode)
+	// }
+
+	// return op, nil
 }

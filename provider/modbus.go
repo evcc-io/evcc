@@ -154,49 +154,43 @@ func (m *Modbus) floatGetter() (f float64, err error) {
 		}
 	}()
 
-	var res meters.MeasurementResult
+	defer func() {
+		// silence NaN reading errors by assuming zero
+		if err != nil && errors.Is(err, meters.ErrNaN) {
+			f = 0
+			err = nil
+		}
+	}()
 
-	// if funccode is configured, execute the read directly
-	if op := m.op.MBMD; op.FuncCode != 0 {
-		var bytes []byte
-		if bytes, err = m.readBytes(); err != nil {
-			return 0, fmt.Errorf("read failed: %w", err)
+	switch m.op.Type() {
+	case modbus.OperationTypeRegister:
+		bytes, err := m.readBytes()
+		if err != nil {
+			return 0, fmt.Errorf("read %d failed: %w", m.op.Register.Address, err)
 		}
 
-		return m.scale * op.Transform(bytes), nil
-	}
+		// TODO transform
+		_ = bytes
+		// return m.scale * op.Transform(bytes), nil
+		return 0, nil
 
-	// if funccode is not configured, try find the reading on sunspec
-	if dev, ok := m.device.(*sunspec.SunSpec); ok {
-		if m.op.MBMD.IEC61850 != 0 {
-			res, err = dev.QueryOp(m.conn, m.op.MBMD.IEC61850)
-		} else {
-			if res.Value, err = dev.QueryPoint(
-				m.conn,
-				m.op.SunSpec.Model,
-				m.op.SunSpec.Block,
-				m.op.SunSpec.Point,
-			); err != nil {
-				err = fmt.Errorf("model %d block %d point %s: %w", m.op.SunSpec.Model, m.op.SunSpec.Block, m.op.SunSpec.Point, err)
-			}
-		}
-	}
+	case modbus.OperationTypeMeasurement:
+		// TODO sunspec catch-all?
+		res, err := m.device.(*sunspec.SunSpec).QueryOp(m.conn, m.op.Measurement)
+		return m.scale * res.Value, err
 
-	// silence NaN reading errors by assuming zero
-	if err != nil && errors.Is(err, meters.ErrNaN) {
-		res.Value = 0
-		err = nil
-	}
+	case modbus.OperationTypeSunSpec:
+		res, err := m.device.(*sunspec.SunSpec).QueryPoint(
+			m.conn,
+			m.op.SunSpec.Model,
+			m.op.SunSpec.Block,
+			m.op.SunSpec.Point,
+		)
+		return m.scale * res, err
 
-	if err == nil {
-		if m.op.MBMD.IEC61850 != 0 {
-			m.log.TRACE.Printf("%s: %v", m.op.MBMD.IEC61850, res.Value)
-		} else {
-			m.log.TRACE.Printf("%d:%d:%s: %v", m.op.SunSpec.Model, m.op.SunSpec.Block, m.op.SunSpec.Point, res.Value)
-		}
+	default:
+		return 0, fmt.Errorf("invalid operation type: %s", m.op.Type())
 	}
-
-	return m.scale * res.Value, err
 }
 
 var _ FloatProvider = (*Modbus)(nil)
