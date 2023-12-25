@@ -1,0 +1,26 @@
+template: keba-kecontact
+# clone of kostal-ksem with different slave id
+products:
+  - brand: KEBA
+    description:
+      generic: KeContact E10
+params:
+  - name: usage
+    choice: ["grid"]
+  - name: modbus
+    choice: ["tcpip"]
+    id: 1
+render: |
+  type: modbus
+  {{- include "modbus" . }}
+  model: sunspec
+  power: Power
+  energy: Import
+  currents:
+    - CurrentL1
+    - CurrentL2
+    - CurrentL3
+  powers:
+    - PowerL1
+    - PowerL2
+    - PowerL3

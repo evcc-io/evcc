@@ -237,5 +237,17 @@ export default {
         if (Math.abs(elapsed) > units[u] || u == "second")
           return rtf.format(Math.round(elapsed / units[u]), u);
     },
+    fmtSocOption: function (soc, rangePerSoc, distanceUnit, heating) {
+      let result = heating ? this.fmtTemperature(soc) : `${this.fmtNumber(soc, 0)}%`;
+      if (rangePerSoc && distanceUnit) {
+        const range = soc * rangePerSoc;
+        result += ` (${this.fmtNumber(range, 0)} ${distanceUnit})`;
+      }
+      return result;
+    },
+    fmtTemperature: function (value) {
+      // TODO: handle fahrenheit
+      return this.fmtNumber(value, 1, "celsius");
+    },
   },
 };

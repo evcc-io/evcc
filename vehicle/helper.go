@@ -15,35 +15,31 @@ func ensureVehicle(vin string, list func() ([]string, error)) (string, error) {
 }
 
 // ensureVehicleEx extracts vehicle with matching VIN from list of vehicles
-func ensureVehicleEx[Vehicle any](
+func ensureVehicleEx[T any](
 	vin string,
-	list func() ([]Vehicle, error),
-	extract func(Vehicle) string,
-) (Vehicle, error) {
+	list func() ([]T, error),
+	extract func(T) string,
+) (T, error) {
+	var zero T
+
 	vehicles, err := list()
 	if err != nil {
-		return *new(Vehicle), fmt.Errorf("cannot get vehicles: %w", err)
+		return zero, fmt.Errorf("cannot get vehicles: %w", err)
 	}
 
-	if vin = strings.ToUpper(vin); vin != "" {
+	if vin := strings.ToUpper(vin); vin != "" {
+		// vin defined
 		for _, vehicle := range vehicles {
 			if vin == extract(vehicle) {
 				return vehicle, nil
 			}
 		}
-
-		// vin defined but doesn't exist
-		err = fmt.Errorf("cannot find vehicle: %s", vin)
-	} else {
-		// vin empty
-		if len(vehicles) == 1 {
-			return vehicles[0], nil
-		}
-
-		err = fmt.Errorf("cannot find vehicle, got: %v", lo.Map(vehicles, func(v Vehicle, _ int) string {
-			return extract(v)
-		}))
+	} else if len(vehicles) == 1 {
+		// vin empty and exactly one vehicle
+		return vehicles[0], nil
 	}
 
-	return *new(Vehicle), err
+	return zero, fmt.Errorf("cannot find vehicle, got: %v", lo.Map(vehicles, func(v T, _ int) string {
+		return extract(v)
+	}))
 }

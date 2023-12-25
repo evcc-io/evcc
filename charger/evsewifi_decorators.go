@@ -6,7 +6,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateEVSE(base *EVSEWifi, meter func() (float64, error), meterEnergy func() (float64, error), phaseCurrents func() (float64, float64, float64, error), phaseVoltages func() (float64, float64, float64, error), chargerEx func(current float64) error, identifier func() (string, error)) api.Charger {
+func decorateEVSE(base *EVSEWifi, meter func() (float64, error), meterEnergy func() (float64, error), phaseCurrents func() (float64, float64, float64, error), phaseVoltages func() (float64, float64, float64, error), chargerEx func(float64) error, identifier func() (string, error)) api.Charger {
 	switch {
 	case chargerEx == nil && identifier == nil && meter == nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages == nil:
 		return base
@@ -1225,11 +1225,11 @@ func decorateEVSE(base *EVSEWifi, meter func() (float64, error), meterEnergy fun
 }
 
 type decorateEVSEChargerExImpl struct {
-	chargerEx func(current float64) error
+	chargerEx func(float64) error
 }
 
-func (impl *decorateEVSEChargerExImpl) MaxCurrentMillis(current float64) error {
-	return impl.chargerEx(current)
+func (impl *decorateEVSEChargerExImpl) MaxCurrentMillis(p0 float64) error {
+	return impl.chargerEx(p0)
 }
 
 type decorateEVSEIdentifierImpl struct {

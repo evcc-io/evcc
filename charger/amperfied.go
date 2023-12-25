@@ -19,6 +19,7 @@ package charger
 
 import (
 	"encoding/binary"
+	"encoding/hex"
 	"fmt"
 	"time"
 
@@ -255,7 +256,7 @@ func (wb *Amperfied) getPhaseValues(reg uint16, divider float64) (float64, float
 	}
 
 	var res [3]float64
-	for i := 0; i < 3; i++ {
+	for i := range res {
 		res[i] = float64(binary.BigEndian.Uint16(b[2*i:])) / divider
 	}
 
@@ -285,7 +286,7 @@ func (wb *Amperfied) Identify() (string, error) {
 		return "", err
 	}
 
-	return bytesAsString(b), nil
+	return hex.EncodeToString(b), nil
 }
 
 var _ api.Diagnosis = (*Amperfied)(nil)

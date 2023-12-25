@@ -33,7 +33,6 @@ func tokenExchangeHandler(oc *oauth2.Config, state string, resC chan *oauth2.Tok
 		token, err := oc.Exchange(ctx, code,
 			oauth2.SetAuthURLParam("grant_type", "code"), // app
 		)
-
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			fmt.Fprintln(w, err)

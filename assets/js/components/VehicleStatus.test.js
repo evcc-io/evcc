@@ -42,43 +42,47 @@ describe("min charge", () => {
 });
 
 describe("plan", () => {
-  const targetTime = "2020-03-16T06:00:00Z";
+  const effectivePlanTime = "2020-03-16T06:00:00Z";
   const planProjectedStart = "2020-03-16T02:00:00Z";
   test("charging if target time is set, status is charging but planned slot is not active", () => {
-    expectStatus({ targetTime, charging: true, connected: true }, "charging");
+    expectStatus({ effectivePlanTime, charging: true, connected: true }, "charging");
   });
   test("active if target time is set, status is charging and planned slot is active", () => {
     expectStatus(
-      { targetTime, planActive: true, charging: true, connected: true },
+      { effectivePlanTime, planActive: true, charging: true, connected: true },
       "targetChargeActive"
     );
   });
   test("waiting for vehicle if a target time is set, the charger is enabled but not charging", () => {
     expectStatus(
-      { targetTime, planActive: true, enabled: true, connected: true },
+      { effectivePlanTime, planActive: true, enabled: true, connected: true },
       "targetChargeWaitForVehicle"
     );
   });
   test("show projected start if not enabled yet", () => {
-    expectStatus({ targetTime, planProjectedStart, connected: true }, "targetChargePlanned", {
-      time: "Mo 03:00",
-    });
+    expectStatus(
+      { effectivePlanTime, planProjectedStart, connected: true },
+      "targetChargePlanned",
+      {
+        time: "Mo 03:00",
+      }
+    );
   });
 });
 
 describe("climating", () => {
   test("show climating status", () => {
     expectStatus(
-      { connected: true, enabled: true, climaterActive: true, charging: true },
+      { connected: true, enabled: true, vehicleClimaterActive: true, charging: true },
       "climating"
     );
     expectStatus(
-      { connected: true, enabled: true, climaterActive: true, charging: false },
+      { connected: true, enabled: true, vehicleClimaterActive: true, charging: false },
       "climating"
     );
   });
   test("only show climating if enabled", () => {
-    expectStatus({ connected: true, enabled: false, climaterActive: true }, "connected");
+    expectStatus({ connected: true, enabled: false, vehicleClimaterActive: true }, "connected");
   });
 });
 

@@ -1,16 +1,18 @@
 package templates
 
 import (
+	"maps"
 	"os"
 	"slices"
 	"testing"
 
-	"github.com/jinzhu/copier"
 	"gopkg.in/yaml.v3"
 )
 
 // test renders and instantiates plus yaml-parses the template per usage
 func test(t *testing.T, tmpl Template, values map[string]interface{}, cb func(values map[string]interface{})) {
+	t.Helper()
+
 	b, _, err := tmpl.RenderResult(TemplateRenderModeInstance, values)
 	if err != nil {
 		t.Log(string(b))
@@ -32,6 +34,8 @@ func test(t *testing.T, tmpl Template, values map[string]interface{}, cb func(va
 }
 
 func TestClass(t *testing.T, class Class, instantiate func(t *testing.T, values map[string]interface{})) {
+	t.Parallel()
+
 	for _, tmpl := range ByClass(class) {
 		tmpl := tmpl
 
@@ -70,14 +74,11 @@ func TestClass(t *testing.T, class Class, instantiate func(t *testing.T, values 
 
 		for _, u := range usages {
 			// create a copy of the map for parallel execution
-			usageValues := make(map[string]interface{}, len(values)+1)
-			if err := copier.Copy(&usageValues, values); err != nil {
-				panic(err)
-			}
+			usageValues := maps.Clone(values)
 			usageValues[ParamUsage] = u
 
 			// subtest for each usage
-			t.Run(u, func(t *testing.T) {
+			t.Run(tmpl.Template+"/"+u, func(t *testing.T) {
 				t.Parallel()
 
 				test(t, tmpl, usageValues, func(values map[string]interface{}) {

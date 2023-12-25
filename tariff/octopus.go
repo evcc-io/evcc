@@ -14,12 +14,10 @@ import (
 )
 
 type Octopus struct {
-	mux     sync.Mutex
-	log     *util.Logger
-	uri     string
-	region  string
-	data    api.Rates
-	updated time.Time
+	log    *util.Logger
+	uri    string
+	region string
+	data   *util.Monitor[api.Rates]
 }
 
 var _ api.Tariff = (*Octopus)(nil)
@@ -49,6 +47,7 @@ func NewOctopusFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		log:    util.NewLogger("octopus"),
 		uri:    octopus.ConstructRatesAPI(cc.Tariff, cc.Region),
 		region: cc.Tariff,
+		data:   util.NewMonitor[api.Rates](2 * time.Hour),
 	}
 
 	done := make(chan error)
@@ -77,10 +76,7 @@ func (t *Octopus) run(done chan error) {
 
 		once.Do(func() { close(done) })
 
-		t.mux.Lock()
-		t.updated = time.Now()
-
-		t.data = make(api.Rates, 0, len(res.Results))
+		data := make(api.Rates, 0, len(res.Results))
 		for _, r := range res.Results {
 			ar := api.Rate{
 				Start: r.ValidityStart,
@@ -88,25 +84,21 @@ func (t *Octopus) run(done chan error) {
 				// UnitRates are supplied inclusive of tax, though this could be flipped easily with a config flag.
 				Price: r.PriceInclusiveTax / 1e2,
 			}
-			t.data = append(t.data, ar)
+			data = append(data, ar)
 		}
-		t.data.Sort()
+		data.Sort()
 
-		t.mux.Unlock()
+		t.data.Set(data)
 	}
-}
-
-// Unit implements the api.Tariff interface
-// Stubbed because supplier always works in GBP
-func (t *Octopus) Unit() string {
-	return "GBP"
 }
 
 // Rates implements the api.Tariff interface
 func (t *Octopus) Rates() (api.Rates, error) {
-	t.mux.Lock()
-	defer t.mux.Unlock()
-	return slices.Clone(t.data), outdatedError(t.updated, time.Hour)
+	var res api.Rates
+	err := t.data.GetFunc(func(val api.Rates) {
+		res = slices.Clone(val)
+	})
+	return res, err
 }
 
 // Type implements the api.Tariff interface

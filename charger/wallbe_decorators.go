@@ -6,7 +6,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateWallbe(base *Wallbe, meter func() (float64, error), meterEnergy func() (float64, error), phaseCurrents func() (float64, float64, float64, error), chargerEx func(current float64) error) api.Charger {
+func decorateWallbe(base *Wallbe, meter func() (float64, error), meterEnergy func() (float64, error), phaseCurrents func() (float64, float64, float64, error), chargerEx func(float64) error) api.Charger {
 	switch {
 	case chargerEx == nil && meter == nil && meterEnergy == nil && phaseCurrents == nil:
 		return base
@@ -249,11 +249,11 @@ func decorateWallbe(base *Wallbe, meter func() (float64, error), meterEnergy fun
 }
 
 type decorateWallbeChargerExImpl struct {
-	chargerEx func(current float64) error
+	chargerEx func(float64) error
 }
 
-func (impl *decorateWallbeChargerExImpl) MaxCurrentMillis(current float64) error {
-	return impl.chargerEx(current)
+func (impl *decorateWallbeChargerExImpl) MaxCurrentMillis(p0 float64) error {
+	return impl.chargerEx(p0)
 }
 
 type decorateWallbeMeterImpl struct {

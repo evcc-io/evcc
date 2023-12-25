@@ -5,6 +5,7 @@ import (
 	_ "embed"
 	"fmt"
 	"slices"
+	"strconv"
 	"strings"
 	"text/template"
 
@@ -230,7 +231,7 @@ func (t *Template) RenderProxyWithValues(values map[string]interface{}, lang str
 				case string:
 					t.Params[index].Value = yamlQuote(v)
 				case int:
-					t.Params[index].Value = fmt.Sprintf("%d", v)
+					t.Params[index].Value = strconv.Itoa(v)
 				}
 			}
 		}
@@ -301,6 +302,8 @@ func (t *Template) RenderResult(renderMode string, other map[string]interface{})
 		} else {
 			out = p.Name
 		}
+
+		// TODO move yamlQuote to explicit quoting in templates, see https://github.com/evcc-io/evcc/issues/10742
 
 		switch typed := val.(type) {
 		case []interface{}:

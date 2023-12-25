@@ -88,7 +88,7 @@ func ParseDays(s string) ([]Day, error) {
 		if err != nil {
 			return nil, err
 		}
-		res = append(res, Day(from%7))
+		res = append(res, from%7)
 
 		if len(fromto) == 2 {
 			to, err := ParseDay(fromto[1])

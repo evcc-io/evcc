@@ -123,6 +123,8 @@ func TestMaxActivePhases(t *testing.T) {
 }
 
 func testScale(t *testing.T, lp *Loadpoint, sitePower float64, direction string, tc testCase) {
+	t.Helper()
+
 	act := lp.activePhases()
 	max := lp.maxActivePhases()
 
@@ -173,6 +175,7 @@ func TestPvScalePhases(t *testing.T) {
 
 		vehicle := api.NewMockVehicle(ctrl)
 		vehicle.EXPECT().Phases().Return(tc.vehicle).MinTimes(1)
+		vehicle.EXPECT().OnIdentified().Return(api.ActionConfig{}).AnyTimes()
 
 		lp := &Loadpoint{
 			log:              util.NewLogger("foo"),
@@ -183,7 +186,7 @@ func TestPvScalePhases(t *testing.T) {
 			chargeTimer:      &Null{},            // silence nil panics
 			progress:         NewProgress(0, 10), // silence nil panics
 			wakeUpTimer:      NewTimer(),         // silence nil panics
-			Mode:             api.ModeNow,
+			mode:             api.ModeNow,
 			MinCurrent:       minA,
 			MaxCurrent:       maxA,
 			vehicle:          vehicle,

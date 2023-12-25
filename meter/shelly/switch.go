@@ -145,7 +145,7 @@ func (sh *Switch) TotalEnergy() (float64, error) {
 func gen1Energy(devicetype string, energy float64) float64 {
 	// Gen 1 Shelly EM devices are providing Watt hours, Gen 1 Shelly PM devices are providing Watt minutes
 	if !strings.Contains(devicetype, "EM") {
-		energy = energy / 60
+		energy /= 60
 	}
 	return energy
 }

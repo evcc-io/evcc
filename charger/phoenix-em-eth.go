@@ -56,7 +56,7 @@ func NewPhoenixEMEthFromConfig(other map[string]interface{}) (api.Charger, error
 	)
 
 	// check presence of meter by voltage on l1
-	if b, err := wb.conn.ReadInputRegisters(phxEMEthRegVoltages, 2); err == nil && encoding.Uint32LswFirst(b) > 0 {
+	if b, err := wb.conn.ReadInputRegisters(phxEMEthRegVoltages, 2); err == nil && encoding.Int32LswFirst(b) > 0 {
 		currentPower = wb.currentPower
 		totalEnergy = wb.totalEnergy
 		currents = wb.currents
@@ -178,7 +178,7 @@ func (wb *PhoenixEMEth) getPhaseValues(reg uint16) (float64, float64, float64, e
 	}
 
 	var res [3]float64
-	for i := 0; i < 3; i++ {
+	for i := range res {
 		res[i] = float64(encoding.Int32LswFirst(b[4*i:])) / 1e3
 	}
 

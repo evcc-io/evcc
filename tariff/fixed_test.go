@@ -9,6 +9,7 @@ import (
 	"github.com/evcc-io/evcc/tariff/fixed"
 	"github.com/jinzhu/now"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestFixed(t *testing.T) {
@@ -33,7 +34,7 @@ func TestFixed(t *testing.T) {
 	}
 
 	rates, err := tf.Rates()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, expect, rates)
 }
 
@@ -47,7 +48,7 @@ func TestFixedSplitZones(t *testing.T) {
 			{0.1, "0-5:30,21-0"},
 		},
 	})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	tf := at.(*Fixed)
 	tf.clock = clock.NewMock()
@@ -99,6 +100,6 @@ func TestFixedSplitZones(t *testing.T) {
 	}
 
 	rates, err := tf.Rates()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, expect, rates)
 }

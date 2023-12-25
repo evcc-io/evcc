@@ -108,7 +108,7 @@ func (wb *HuaweiACCharger) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	//ToDo: Real status
+	// ToDo: Real status
 	switch u := binary.BigEndian.Uint16(b); u {
 	case 0:
 		return api.StatusA, nil
@@ -196,7 +196,7 @@ func (wb *HuaweiACCharger) getPhaseValues(reg uint16) (float64, float64, float64
 	}
 
 	var res [3]float64
-	for i := 0; i < 3; i++ {
+	for i := range res {
 		res[i] = float64(binary.BigEndian.Uint32(b[4*i:])) / 10
 	}
 

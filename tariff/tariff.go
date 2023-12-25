@@ -51,12 +51,16 @@ func (t *Tariff) Rates() (api.Rates, error) {
 		return nil, err
 	}
 
-	res := api.Rates{
-		{
-			Start: now.BeginningOfHour(),
-			End:   now.BeginningOfHour().Add(48 * time.Hour),
+	res := make(api.Rates, 48)
+	start := now.BeginningOfHour()
+
+	for i := 0; i < len(res); i++ {
+		slot := start.Add(time.Duration(i) * time.Hour)
+		res[i] = api.Rate{
+			Start: slot,
+			End:   slot.Add(time.Hour),
 			Price: t.totalPrice(price),
-		},
+		}
 	}
 
 	return res, nil

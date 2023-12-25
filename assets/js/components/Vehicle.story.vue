@@ -9,7 +9,7 @@ const state = reactive({
 	vehiclePresent: true,
 	vehicleSoc: 42.742,
 	vehicleRange: 231,
-	targetSoc: 90,
+	limitSoc: 90,
 	vehicleCapacity: 72,
 	chargedEnergy: 14123,
 	socBasedCharging: true,

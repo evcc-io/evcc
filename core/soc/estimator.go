@@ -50,7 +50,7 @@ func (s *Estimator) Reset() {
 	s.prevSoc = 0
 	s.prevChargedEnergy = 0
 	s.initialSoc = 0
-	s.capacity = float64(s.vehicle.Capacity()) * 1e3  // cache to simplify debugging
+	s.capacity = s.vehicle.Capacity() * 1e3           // cache to simplify debugging
 	s.virtualCapacity = s.capacity / ChargeEfficiency // initial capacity taking efficiency into account
 	s.energyPerSocStep = s.virtualCapacity / 100
 	s.minChargePower = 1000  // default 1 kW
@@ -87,7 +87,7 @@ func (s *Estimator) RemainingChargeDuration(targetSoc int, chargePower float64) 
 		t2 = (float64(targetSoc) - max(s.vehicleSoc, rrp)) / minChargeSoc * s.virtualCapacity / ((chargePower-s.minChargePower)/2 + s.minChargePower)
 	}
 
-	return time.Duration(float64(time.Hour) * (t1 + t2)).Round(time.Second)
+	return max(0, time.Duration(float64(time.Hour)*(t1+t2))).Round(time.Second)
 }
 
 // RemainingChargeEnergy returns the remaining charge energy in kWh

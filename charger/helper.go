@@ -8,46 +8,48 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-// ensureCharger extracts VIN from list of VINs returned from `list` function
-func ensureCharger(vin string, list func() ([]string, error)) (string, error) {
-	vin, _, err := ensureChargerWithFeature(vin, list, func(v string) (string, string) {
+// ensureCharger extracts ID from list of IDs returned from `list` function
+func ensureCharger(id string, list func() ([]string, error)) (string, error) {
+	id, _, err := ensureChargerWithFeature(id, list, func(v string) (string, string) {
 		return v, ""
 	})
 
-	return vin, err
+	return id, err
 }
 
-// ensureChargerWithFeature extracts VIN and feature from list of chargers of type V returned from `list` function
+// ensureChargerWithFeature extracts ID and feature from list of chargers of type V returned from `list` function
 func ensureChargerWithFeature[Charger, Feature any](
-	vin string,
+	id string,
 	list func() ([]Charger, error),
 	extract func(Charger) (string, Feature),
 ) (string, Feature, error) {
+	var zero Feature
+
 	chargers, err := list()
 	if err != nil {
-		return "", *new(Feature), fmt.Errorf("cannot get chargers: %w", err)
+		return "", zero, fmt.Errorf("cannot get chargers: %w", err)
 	}
 
-	if vin = strings.ToUpper(vin); vin != "" {
+	if id = strings.ToUpper(id); id != "" {
 		for _, charger := range chargers {
-			if v, res := extract(charger); strings.ToUpper(v) == vin {
+			if v, res := extract(charger); strings.ToUpper(v) == id {
 				return v, res, nil
 			}
 		}
 
-		// vin defined but doesn't exist
-		err = fmt.Errorf("cannot find charger %s", vin)
+		// id defined but doesn't exist
+		err = fmt.Errorf("cannot find charger %s", id)
 	} else {
-		// vin empty
+		// id empty
 		if len(chargers) == 1 {
-			vin, res := extract(chargers[0])
-			return vin, res, nil
+			id, res := extract(chargers[0])
+			return id, res, nil
 		}
 
 		err = fmt.Errorf("cannot find charger, got: %v", chargers)
 	}
 
-	return "", *new(Feature), err
+	return "", zero, err
 }
 
 // bytesAsString normalises a string by stripping leading 0x00 and trimming white space

@@ -4,11 +4,11 @@
 			<slot name="label">{{ label }}</slot>
 		</div>
 		<slot>
-			<h3 class="value m-0 d-block d-sm-flex align-items-baseline" :class="valueClass">
+			<h3 class="value m-0" :class="valueClass">
 				<slot name="value">
 					<AnimatedNumber v-if="valueFmt" :to="value" :format="valueFmt" />
 					<span v-else>{{ value }}</span>
-					<div v-if="extraValue" class="extraValue ms-0 ms-sm-1 text-nowrap">
+					<div v-if="extraValue" class="extraValue text-nowrap">
 						{{ extraValue }}
 					</div>
 				</slot>

@@ -1,6 +1,8 @@
 [batterySettings]
 batteryLevel = "Raven baterije"
 capacity = "{energy} od {total}"
+control = "Nadzor baterije"
+discharge = "Preprečite praznjenje v hitrem načinu in načrtovano polnjenje."
 legendBottomName = "domača prednost"
 legendBottomSubline = "se ne uporablja za polnjenje"
 legendMiddleName = "najprej vozilo"
@@ -10,6 +12,7 @@ legendTopAutostart = "samodejno se zažene"
 legendTopName = "polnjenje, ki ga podpira baterija"
 legendTopSubline = "brez prekinitev"
 modalTitle = "Nastavitve baterije"
+notControllable = "Nadzor baterije ni na voljo za to baterijo."
 note = "Opomba: Te nastavitve vplivajo samo na solarni način. Obnašanje pri polnjenju je ustrezno prilagojeno."
 
 [batterySettings.bufferStart]
@@ -66,20 +69,32 @@ powerSub2 = "polnjenje…"
 tabTitle = "Skupnost v živo"
 
 [footer.savings]
+co2Saved = "{value} prihranjeno"
+co2Title = "Emisije CO₂"
+configurePriceCo2 = "Naučite se konfigurirati podatke o ceni in CO₂."
 footerLong = "{percent}% sončne energije"
 footerShort = "{percent}% sončne energije"
 modalTitle = "Pregled energije polnjenja"
+moneySaved = "{value} prihranjeno"
 percentGrid = "{grid} kWh omrežja"
 percentSelf = "{self} kWh sončne energije"
 percentTitle = "Sončna energija"
+periodLabel = "Obdobje:"
 priceFeedIn = "{feedInPrice} omrežje"
 priceGrid = "{gridPrice} omrežje"
 priceTitle = "Cena energije"
+referenceGrid = "omrežje"
+referenceLabel = "Referenčni podatki:"
 savingsComparedToGrid = "v primerjavi z omrežjem"
 savingsTitle = "Prihranki"
 savingsTotalEnergy = "{total} kWh zaračunanih"
 since = "od {since}"
 tabTitle = "Moji podatki"
+
+[footer.savings.period]
+30d = "zadnjih 30 dni"
+365d = "zadnjih 365 dni"
+total = "ves čas"
 
 [footer.sponsor]
 becomeSponsor = "Postanite sponzor"
@@ -152,7 +167,6 @@ modalTitle = "Ali ste prepričani, da želite znova zagnati?"
 vehicles = "Parkiranje"
 
 [main.chargingPlan]
-activeLabel = "{time}"
 arrivalTab = "Prihod"
 departureTab = "Odhod"
 modalTitle = "Načrt polnjenja"
@@ -222,7 +236,6 @@ logout = "odjava"
 
 [main.targetCharge]
 activate = "Aktiviraj"
-activeLabel = "{time}"
 co2Limit = "Omejitev CO₂ {co2}"
 costLimitIgnore = "V tem obdobju se nastavljena {limit} ne bo upoštevala."
 descriptionEnergy = "Do kdaj želite da se vozilo napolni za {targetEnergy}?"
@@ -236,7 +249,6 @@ planPeriodValue = "{start} do {end}"
 planUnknown = "še ni znano"
 priceLimit = "cenovna omejitev {price}"
 setTargetTime = "brez"
-targetEnergyRequired = "Postaviti morate tudi mejo energije."
 targetIsInThePast = "Izberi čas v prihodnosti, Marty."
 targetIsTooFarInTheFuture = "Načrt bomo prilagodili takoj, ko bomo izvedeli več o novi funkcionalnosti."
 title = "Ciljni čas"

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"regexp"
 	"slices"
 	"strconv"
 	"strings"
@@ -68,8 +69,9 @@ var conf = globalConfig{
 	},
 }
 
+var nameRE = regexp.MustCompile(`^[a-zA-Z0-9_.:-]+$`)
+
 type globalConfig struct {
-	URI          interface{} // TODO deprecated
 	Network      networkConfig
 	Log          string
 	SponsorToken string
@@ -163,7 +165,7 @@ func loadConfigFile(conf *globalConfig) error {
 	log.INFO.Println("using config file:", cfgFile)
 
 	if err == nil {
-		if err = viper.UnmarshalExact(&conf); err != nil {
+		if err = viper.UnmarshalExact(conf); err != nil {
 			err = fmt.Errorf("failed parsing config file: %w", err)
 		}
 	}
@@ -176,10 +178,14 @@ func loadConfigFile(conf *globalConfig) error {
 	return err
 }
 
-func configureMeters(static []config.Named) error {
+func configureMeters(static []config.Named, names ...string) error {
 	for i, cc := range static {
 		if cc.Name == "" {
 			return fmt.Errorf("cannot create meter %d: missing name", i+1)
+		}
+
+		if len(names) > 0 && !slices.Contains(names, cc.Name) {
+			continue
 		}
 
 		instance, err := meter.NewFromConfig(cc.Type, cc.Other)
@@ -201,6 +207,10 @@ func configureMeters(static []config.Named) error {
 	for _, conf := range configurable {
 		cc := conf.Named()
 
+		if len(names) > 0 && !slices.Contains(names, cc.Name) {
+			return nil
+		}
+
 		instance, err := meter.NewFromConfig(cc.Type, cc.Other)
 		if err != nil {
 			return fmt.Errorf("cannot create meter '%s': %w", cc.Name, err)
@@ -214,12 +224,16 @@ func configureMeters(static []config.Named) error {
 	return nil
 }
 
-func configureChargers(static []config.Named) error {
+func configureChargers(static []config.Named, names ...string) error {
 	g, _ := errgroup.WithContext(context.Background())
 
 	for i, cc := range static {
 		if cc.Name == "" {
 			return fmt.Errorf("cannot create charger %d: missing name", i+1)
+		}
+
+		if len(names) > 0 && !slices.Contains(names, cc.Name) {
+			continue
 		}
 
 		cc := cc
@@ -243,6 +257,11 @@ func configureChargers(static []config.Named) error {
 		conf := conf
 		g.Go(func() error {
 			cc := conf.Named()
+
+			if len(names) > 0 && !slices.Contains(names, cc.Name) {
+				return nil
+			}
+
 			instance, err := charger.NewFromConfig(cc.Type, cc.Other)
 			if err != nil {
 				return fmt.Errorf("cannot create charger '%s': %w", cc.Name, err)
@@ -256,6 +275,10 @@ func configureChargers(static []config.Named) error {
 }
 
 func vehicleInstance(cc config.Named) (api.Vehicle, error) {
+	if !nameRE.MatchString(cc.Name) {
+		return nil, fmt.Errorf("vehicle name must not contain special characters or spaces: %s", cc.Name)
+	}
+
 	instance, err := vehicle.NewFromConfig(cc.Type, cc.Other)
 	if err != nil {
 		var ce *util.ConfigError
@@ -277,7 +300,7 @@ func vehicleInstance(cc config.Named) (api.Vehicle, error) {
 	return instance, nil
 }
 
-func configureVehicles(static []config.Named) error {
+func configureVehicles(static []config.Named, names ...string) error {
 	var mu sync.Mutex
 	g, _ := errgroup.WithContext(context.Background())
 
@@ -287,6 +310,10 @@ func configureVehicles(static []config.Named) error {
 	for i, cc := range static {
 		if cc.Name == "" {
 			return fmt.Errorf("cannot create vehicle %d: missing name", i+1)
+		}
+
+		if len(names) > 0 && !slices.Contains(names, cc.Name) {
+			continue
 		}
 
 		cc := cc
@@ -317,6 +344,11 @@ func configureVehicles(static []config.Named) error {
 		conf := conf
 		g.Go(func() error {
 			cc := conf.Named()
+
+			if len(names) > 0 && !slices.Contains(names, cc.Name) {
+				return nil
+			}
+
 			instance, err := vehicleInstance(cc)
 			if err != nil {
 				return fmt.Errorf("cannot create vehicle '%s': %w", cc.Name, err)
@@ -369,7 +401,7 @@ func configureEnvironment(cmd *cobra.Command, conf globalConfig) (err error) {
 	}
 
 	// setup sponsorship (allow env override)
-	if err == nil && conf.SponsorToken != "" {
+	if err == nil {
 		err = sponsor.ConfigureSponsorship(conf.SponsorToken)
 	}
 
@@ -659,20 +691,15 @@ func configureSite(conf map[string]interface{}, loadpoints []*core.Loadpoint, ve
 }
 
 func configureLoadpoints(conf globalConfig, circuits map[string]*core.Circuit, vMeters map[string]*core.VMeter) (loadpoints []*core.Loadpoint, err error) {
-	lpInterfaces, ok := viper.AllSettings()["loadpoints"].([]interface{})
-	if !ok || len(lpInterfaces) == 0 {
+	if len(conf.Loadpoints) == 0 {
 		return nil, errors.New("missing loadpoints")
 	}
 
-	for id, lpcI := range lpInterfaces {
-		var lpc map[string]interface{}
-		if err := util.DecodeOther(lpcI, &lpc); err != nil {
-			return nil, fmt.Errorf("failed decoding loadpoint configuration: %w", err)
-		}
-
+	for id, lpc := range conf.Loadpoints {
 		log := util.NewLoggerWithLoadpoint("lp-"+strconv.Itoa(id+1), id+1)
-		lp, err := core.NewLoadpointFromConfig(log, circuits, lpc)
+		settings := &core.Settings{Key: "lp" + strconv.Itoa(id+1) + "."}
 
+		lp, err := core.NewLoadpointFromConfig(log, settings, circuits, lpc)
 		if err != nil {
 			return nil, fmt.Errorf("failed configuring loadpoint: %w", err)
 		}
@@ -698,7 +725,6 @@ func configureCircuits(conf globalConfig) (circuits map[string]*core.Circuit, vM
 
 	// TODO cleanup similar to loadpoints
 	for id, cfg := range conf.Circuits {
-
 		log := util.NewLogger("circuit-" + strconv.Itoa(id+1))
 
 		circuit, vMeter, ccName, err := core.NewCircuitFromConfig(log, circuits, vMeters, cfg)

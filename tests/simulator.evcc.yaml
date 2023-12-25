@@ -4,9 +4,9 @@ site:
   title: evcc Simulator
   meters:
     grid: grid
-    pvs:
+    pv:
       - pv
-    batteries:
+    battery:
       - battery
 
 meters:
@@ -51,7 +51,6 @@ loadpoints:
     soc:
       estimate: false
     vehicle: golf
-    resetOnDisconnect: true
 
 chargers:
   - name: charger

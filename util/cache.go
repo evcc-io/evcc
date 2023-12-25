@@ -61,7 +61,6 @@ func (c *Cache) State() map[string]interface{} {
 	ccs := make(map[int]map[string]interface{})
 
 	for _, param := range c.val {
-
 		if param.Loadpoint != nil {
 			lp, ok := lps[*param.Loadpoint]
 			if !ok {

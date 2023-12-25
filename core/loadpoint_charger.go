@@ -4,6 +4,7 @@ import (
 	"slices"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/soc"
 )
 
@@ -22,7 +23,7 @@ func (lp *Loadpoint) publishChargerFeature(f api.Feature) {
 	if ok {
 		ok = slices.Contains(c.Features(), f)
 	}
-	lp.publish("chargerFeature"+f.String(), ok)
+	lp.publish(keys.ChargerFeature+f.String(), ok)
 }
 
 // chargerSoc returns charger soc if available

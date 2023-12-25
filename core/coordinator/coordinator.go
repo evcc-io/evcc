@@ -1,6 +1,7 @@
 package coordinator
 
 import (
+	"slices"
 	"sync"
 
 	"github.com/evcc-io/evcc/api"
@@ -10,7 +11,7 @@ import (
 
 // Coordinator coordinates vehicle access between loadpoints
 type Coordinator struct {
-	mu       sync.Mutex
+	mu       sync.RWMutex
 	log      *util.Logger
 	vehicles []api.Vehicle
 	tracked  map[api.Vehicle]loadpoint.API
@@ -27,12 +28,25 @@ func New(log *util.Logger, vehicles []api.Vehicle) *Coordinator {
 
 // GetVehicles returns the list of all vehicles
 func (c *Coordinator) GetVehicles() []api.Vehicle {
-	c.mu.Lock()
-	defer c.mu.Unlock()
+	c.mu.RLock()
+	defer c.mu.RUnlock()
 
-	return c.vehicles
+	return slices.Clone(c.vehicles)
 }
 
+// Owner returns the loadpoint that currently owns the vehicle
+func (c *Coordinator) Owner(vehicle api.Vehicle) loadpoint.API {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
+	if owner, ok := c.tracked[vehicle]; ok {
+		return owner
+	}
+
+	return nil
+}
+
+// Add adds a vehicle to the coordinator
 func (c *Coordinator) Add(vehicle api.Vehicle) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -40,6 +54,7 @@ func (c *Coordinator) Add(vehicle api.Vehicle) {
 	c.vehicles = append(c.vehicles, vehicle)
 }
 
+// Delete removes a vehicle from the coordinator
 func (c *Coordinator) Delete(vehicle api.Vehicle) {
 	c.mu.Lock()
 
@@ -90,8 +105,8 @@ func (c *Coordinator) release(vehicle api.Vehicle) {
 func (c *Coordinator) availableDetectibleVehicles(owner loadpoint.API) []api.Vehicle {
 	var res []api.Vehicle
 
-	c.mu.Lock()
-	defer c.mu.Unlock()
+	c.mu.RLock()
+	defer c.mu.RUnlock()
 
 	for _, vv := range c.vehicles {
 		// status api available
@@ -110,8 +125,8 @@ func (c *Coordinator) availableDetectibleVehicles(owner loadpoint.API) []api.Veh
 func (c *Coordinator) identifyVehicleByStatus(available []api.Vehicle) api.Vehicle {
 	var res api.Vehicle
 
-	c.mu.Lock()
-	defer c.mu.Unlock()
+	c.mu.RLock()
+	defer c.mu.RUnlock()
 
 	for _, vehicle := range available {
 		if vs, ok := vehicle.(api.ChargeState); ok {

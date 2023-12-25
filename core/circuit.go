@@ -58,7 +58,6 @@ func NewCircuitFromConfig(log *util.Logger, circuits map[string]*Circuit, vMeter
 
 	// check meter exists
 	if cc.MeterRef != "" {
-
 		dev, err := config.Meters().ByName(cc.MeterRef)
 		if err != nil {
 			return nil, nil, "", err
@@ -165,7 +164,6 @@ func (circuit *Circuit) CurrentPower() (float64, error) {
 
 // GetRemainingPower determines the power left to be used from confgigured maxPower
 func (circuit *Circuit) GetRemainingPower() float64 {
-
 	power, err := circuit.CurrentPower()
 	if err != nil {
 		circuit.log.ERROR.Printf("power currents: %v", err)
@@ -191,7 +189,6 @@ func (circuit *Circuit) GetRemainingPower() float64 {
 		circuit.log.DEBUG.Printf("circuit using %.2fkW, no limit checking", power/1000)
 	} else {
 		circuit.log.DEBUG.Printf("circuit using %.2fkW, %.2fkW available", power/1000, powerAvailable/1000)
-
 	}
 
 	return powerAvailable
@@ -222,7 +219,6 @@ func (circuit *Circuit) MaxPhasesCurrent() (float64, error) {
 // GetRemainingCurrent available current based on limit and consumption
 // checks down up to top level parent
 func (circuit *Circuit) GetRemainingCurrent() float64 {
-
 	if circuit.maxCurrent == math.MaxFloat64 && circuit.parentCircuit == nil {
 		return circuit.maxCurrent
 	}
