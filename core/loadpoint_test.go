@@ -796,7 +796,6 @@ func TestSocPoll(t *testing.T) {
 }
 
 func TestLoadmanagement(t *testing.T) {
-
 	tc := []struct {
 		caseName     string
 		lpPhases     int
@@ -818,7 +817,6 @@ func TestLoadmanagement(t *testing.T) {
 	}
 
 	for _, tc := range tc {
-
 		lp := NewLoadpoint(util.NewLogger("foo"), nil)
 		lp.phases = tc.lpPhases
 		lp.status = api.StatusC // charging status

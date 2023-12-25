@@ -179,5 +179,4 @@ func TestNoCurrentMeter(t *testing.T) {
 	// we always need a power meter
 	circ = NewCircuit(util.NewLogger("main"), 0, 0, nil, nil, nil)
 	assert.Nil(t, circ)
-
 }

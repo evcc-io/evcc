@@ -324,7 +324,6 @@ func (site *Site) DumpConfig() {
 			curLmtStr = fmt.Sprintf("Current: max %.1fA", circuit.maxCurrent)
 		} else {
 			curLmtStr = "Current: " + presence[false]
-
 		}
 		if circuit.parentCircuit != nil && circuit.parentCircuit.maxCurrent != math.MaxFloat64 {
 			curLmtStr = fmt.Sprintf("%s (parent: %.1fA)", curLmtStr, circuit.parentCircuit.maxCurrent)
@@ -334,7 +333,6 @@ func (site *Site) DumpConfig() {
 			pwrLmtStr = fmt.Sprintf("Power: max %.1fkW", circuit.maxPower/1000)
 		} else {
 			pwrLmtStr = "Power: " + presence[false]
-
 		}
 		if circuit.parentCircuit != nil && circuit.parentCircuit.maxPower != math.MaxFloat64 {
 			pwrLmtStr = fmt.Sprintf("%s (parent: %.1fkW)", pwrLmtStr, circuit.parentCircuit.maxPower/1000)

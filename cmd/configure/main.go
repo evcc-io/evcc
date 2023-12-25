@@ -525,11 +525,13 @@ func (c *CmdConfigure) configureCircuits() {
 		case 9:
 			curCircuit.MaxCurrent = 100.0
 		case 10:
-			amperage := c.askValue(question{
-				label:          c.localizedString("Circuit_MaxCurrentCustomInput"),
-				valueType:      templates.TypeNumber,
-				maxNumberValue: 1000, // 600kW ... enough?
-				required:       true})
+			amperage := c.askValue(
+				question{
+					label:          c.localizedString("Circuit_MaxCurrentCustomInput"),
+					valueType:      templates.TypeNumber,
+					maxNumberValue: 1000, // 600kW ... enough?
+					required:       true,
+				})
 			curCircuit.MaxCurrent, _ = strconv.ParseFloat(amperage, 64)
 		}
 		pwrChoices := []string{
@@ -554,11 +556,13 @@ func (c *CmdConfigure) configureCircuits() {
 		case 4:
 			curCircuit.MaxPower = 100.0
 		case 5:
-			power := c.askValue(question{
-				label:          c.localizedString("Circuit_MaxPowerCustomInput"),
-				valueType:      templates.TypeNumber,
-				maxNumberValue: 1000, // 1GkW ... enough?
-				required:       true})
+			power := c.askValue(
+				question{
+					label:          c.localizedString("Circuit_MaxPowerCustomInput"),
+					valueType:      templates.TypeNumber,
+					maxNumberValue: 1000, // 1GkW ... enough?
+					required:       true,
+				})
 			curCircuit.MaxPower, _ = strconv.ParseFloat(power, 64)
 		}
 
