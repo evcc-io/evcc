@@ -12,6 +12,7 @@ products:
   - brand: SofarSolar
     description:
       generic: SOFAR 5…24KTL-G3
+capabilities: ["battery-control"]
 requirements:
   description:
     de: Es wird dringend empfohlen die Verbindung über einen LSE-3 Logger Stick herzustellen. Andere Verbindungswege (z.B. LSW-3 oder via RS485) sind u.U. instabil und benötigen Verzögerungen (delay) > 0s.

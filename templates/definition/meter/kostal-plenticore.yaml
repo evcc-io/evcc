@@ -3,6 +3,7 @@ products:
   - brand: Kostal
     description:
       generic: Plenticore Hybrid
+capabilities: ["battery-control"]
 linked:
   - template: kostal-ksem-inverter
     usage: grid

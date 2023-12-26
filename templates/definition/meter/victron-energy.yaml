@@ -3,6 +3,7 @@ products:
   - brand: Victron
     description:
       generic: Energy
+capabilities: ["battery-control"]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
