@@ -384,8 +384,20 @@ func (lp *Loadpoint) pushEvent(event string) {
 
 // publish sends values to UI and databases
 func (lp *Loadpoint) publish(key string, val interface{}) {
-	if lp.uiChan != nil {
-		lp.uiChan <- util.Param{Key: key, Val: val}
+	// test helper
+	if lp.uiChan == nil {
+		return
+	}
+
+	p := util.Param{Key: key, Val: val}
+
+	// https://github.com/evcc-io/evcc/issues/11191 prevent deadlock
+	select {
+	case lp.uiChan <- p:
+	default:
+		go func() {
+			lp.uiChan <- p
+		}()
 	}
 }
 
