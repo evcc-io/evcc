@@ -93,8 +93,7 @@ vehicles:
     user: myuser # user
     password: mypassword # password
     vin: WREN...
-    onIdentify: # set defaults when vehicle is identified
-      mode: pv # enable PV-charging when vehicle is identified
+    mode: pv # enable PV-charging when vehicle is identified
 
 # site describes the EVU connection, PV and home battery
 site:
