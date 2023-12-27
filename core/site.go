@@ -360,9 +360,15 @@ func (site *Site) publish(key string, val interface{}) {
 		val = s.String()
 	}
 
-	site.uiChan <- util.Param{
-		Key: key,
-		Val: val,
+	p := util.Param{Key: key, Val: val}
+
+	// https://github.com/evcc-io/evcc/issues/11191 prevent deadlock
+	select {
+	case site.uiChan <- p:
+	default:
+		go func() {
+			site.uiChan <- p
+		}()
 	}
 }
 

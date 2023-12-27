@@ -228,5 +228,5 @@ func (wb *OpenWB20) identify() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return utf16BytesToString(b, binary.BigEndian), nil
+	return bytesAsString(b), nil
 }

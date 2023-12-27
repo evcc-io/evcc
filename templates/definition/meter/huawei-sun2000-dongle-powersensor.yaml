@@ -23,7 +23,6 @@ render: |
   power:
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    model: huawei
     timeout: {{ .timeout }}
     connectdelay: 1s
     register:
@@ -34,7 +33,6 @@ render: |
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    model: huawei
     timeout: {{ .timeout }}
     register:
       address: 37121 # Active energy import from the grid
@@ -44,7 +42,6 @@ render: |
   currents:
   - source: modbus
     {{- include "modbus" . | indent 2 }}
-    model: huawei
     timeout: {{ .timeout }}
     register:
       address: 37107 # Huawei phase A grid current
@@ -53,7 +50,6 @@ render: |
     scale: -0.01
   - source: modbus
     {{- include "modbus" . | indent 2 }}
-    model: huawei
     timeout: {{ .timeout }}
     register:
       address: 37109 # Huawei phase B grid current
@@ -62,7 +58,6 @@ render: |
     scale: -0.01
   - source: modbus
     {{- include "modbus" . | indent 2 }}
-    model: huawei
     timeout: {{ .timeout }}
     register:
       address: 37111 # Huawei phase C grid current
@@ -74,7 +69,6 @@ render: |
   power:
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    model: huawei
     timeout: {{ .timeout }}
     connectdelay: 1s
     register:
@@ -84,7 +78,6 @@ render: |
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    model: huawei
     timeout: {{ .timeout }}
     register:
       address: 32106 # Accumulated energy yield
@@ -96,7 +89,6 @@ render: |
   power:
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    model: huawei
     timeout: {{ .timeout }}
     connectdelay: 1s
     register:
@@ -112,7 +104,6 @@ render: |
   soc:
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    model: huawei
     timeout: {{ .timeout }}
     register:
       {{- if eq .storageunit "1" }}
@@ -127,7 +118,6 @@ render: |
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    model: huawei
     timeout: {{ .timeout }}
     register:
       {{- if eq .storageunit "1" }}
