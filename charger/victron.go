@@ -187,7 +187,7 @@ var _ api.ChargeRater = (*Victron)(nil)
 
 // ChargedEnergy implements the api.MeterEnergy interface
 func (wb *Victron) ChargedEnergy() (float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(wb.regs.Energy, cast.ToUint16(wb.regs.isGX))
+	b, err := wb.conn.ReadHoldingRegisters(wb.regs.Energy, 1+cast.ToUint16(wb.regs.isGX))
 	if err != nil {
 		return 0, err
 	}
