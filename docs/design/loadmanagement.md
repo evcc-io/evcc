@@ -50,6 +50,7 @@ Configuration assistant supports circuit creation in advanced mode, up to 4 leve
 circuits:
 - name: Garage
   maxCurrent: 25
+  maxPower: 15
   meter:
   parent:
 
@@ -72,7 +73,7 @@ loadpoints:
   circuit: Garage
 ```
 
-## Example 2: secure main circuit, all load points shall not exceed 16A
+## Example 2: secure main circuit at 35A, all load points shall not exceed 11kW
 
 - main circuit is covered.
 - max current is determined by load point consumption
@@ -81,10 +82,12 @@ loadpoints:
 circuits:
 - name: main
   maxCurrent: 35
+  maxPower: 20
   meter: grid1
   parent:
 - name: Garage
-  maxCurrent: 16
+  maxCurrent:
+  maxPower: 11
   meter:
   parent: main
 
