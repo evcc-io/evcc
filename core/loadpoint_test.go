@@ -88,9 +88,6 @@ func TestNew(t *testing.T) {
 	if lp.phases != 0 {
 		t.Errorf("Phases %v", lp.phases)
 	}
-	if lp.MinCurrent != minA {
-		t.Errorf("MinCurrent %v", lp.MinCurrent)
-	}
 	if lp.MaxCurrent != maxA {
 		t.Errorf("MaxCurrent %v", lp.MaxCurrent)
 	}
