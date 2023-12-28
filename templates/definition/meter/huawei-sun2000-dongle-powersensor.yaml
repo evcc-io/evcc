@@ -3,6 +3,7 @@ products:
   - brand: Huawei
     description:
       generic: SUN2000 with SDongle & Power Sensor
+capabilities: ["battery-control"]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -101,20 +102,6 @@ render: |
       type: holding
       decode: int32nan
     scale: -1
-  soc:
-    source: modbus
-    {{- include "modbus" . | indent 2 }}
-    timeout: {{ .timeout }}
-    register:
-      {{- if eq .storageunit "1" }}
-      address: 37004
-      {{- end }}
-      {{- if eq .storageunit "2" }}
-      address: 37738
-      {{- end }}
-      type: holding
-      decode: uint16nan
-    scale: 0.1
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -129,6 +116,35 @@ render: |
       type: holding
       decode: uint32nan
     scale: 0.01
+  soc:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    timeout: {{ .timeout }}
+    register:
+      {{- if eq .storageunit "1" }}
+      address: 37004
+      {{- end }}
+      {{- if eq .storageunit "2" }}
+      address: 37738
+      {{- end }}
+      type: holding
+      decode: uint16nan
+    scale: 0.1
+  limitsoc:
+    source: convert
+    convert: float2int
+    set:
+      source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        {{- if eq .storageunit "1" }}
+        address: 47082
+        {{- end }}
+        {{- if eq .storageunit "2" }}
+        {{ NOT SUPPORTED ACCORDING TO DOCS }}
+        {{- end }}
+        type: holding
+        decode: uint16
   {{- if .capacity }}
   capacity: {{ .capacity }} # kWh
   {{- end }}
