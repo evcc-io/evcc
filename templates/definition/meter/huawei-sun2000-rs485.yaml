@@ -128,7 +128,7 @@ render: |
         address: 47082
         {{- end }}
         {{- if eq .storageunit "2" }}
-        {{ NOT SUPPORTED ACCORDING TO DOCS }}
+        NOT SUPPORTED ACCORDING TO DOCS
         {{- end }}
         type: holding
         decode: uint16
