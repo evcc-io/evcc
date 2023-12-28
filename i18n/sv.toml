@@ -13,7 +13,8 @@ legendTopName = "laddning med batteristöd"
 legendTopSubline = "utan avbrott"
 modalTitle = "Batteriinställningar"
 notControllable = "Inställning ej möjligt för detta batteri"
-note = "OBS: Inställningarna gäller enbart sol-läge. Laddning justeras därefter"
+disclaimerHint = "OBS:"
+disclaimerText = "Inställningarna gäller enbart sol-läge. Laddning justeras därefter"
 
 [batterySettings.bufferStart]
 full = "när det är nästan fullt"

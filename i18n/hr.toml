@@ -10,7 +10,8 @@ legendTopAutostart = "počinje automatski"
 legendTopName = "podržano baterijsko napajanje"
 legendTopSubline = "bez prekida"
 modalTitle = "Postavke baterije"
-note = "Napomena: Ove postavke utječu samo na solarni modus. Napajanje se prilagođava u skladu s tim."
+disclaimerHint = "Napomena:"
+disclaimerText = "Ove postavke utječu samo na solarni modus. Napajanje se prilagođava u skladu s tim."
 
 [batterySettings.bufferStart]
 full = "kad je skoro pun"

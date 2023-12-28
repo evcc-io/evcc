@@ -10,7 +10,8 @@ legendTopAutostart = "porneste automat"
 legendTopName = "Incarcare ajutata de baterie"
 legendTopSubline = "fara intreruperi"
 modalTitle = "Setari baterie"
-note = "Nota: Aceste setari afecteaza doar modul solar. Procesul de incarcare este ajustat corespunzator"
+disclaimerHint = "Nota:"
+disclaimerText = "Aceste setari afecteaza doar modul solar. Procesul de incarcare este ajustat corespunzator"
 
 [batterySettings.bufferStart]
 full = "cand este aproape plin"

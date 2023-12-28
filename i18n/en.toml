@@ -13,7 +13,8 @@ legendTopName = "battery supported charging"
 legendTopSubline = "without interruptions"
 modalTitle = "Battery settings"
 notControllable = "Battery control is not available for this battery."
-note = "Note: These settings only affect the solar mode. Charging behaviour is adjusted accordingly."
+disclaimerHint = "Note:"
+disclaimerText = "These settings only affect solar mode. Charging behaviour is adjusted accordingly."
 
 [batterySettings.bufferStart]
 full = "when nearly full"

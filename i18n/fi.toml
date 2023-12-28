@@ -10,7 +10,8 @@ legendTopAutostart = "alkaa automaattisesti"
 legendTopName = "akkutuettu lataus"
 legendTopSubline = "keskeytyksettä"
 modalTitle = "Akun asetukset"
-note = "Huomaa: Nämä asetukset vaikuttavat vain aurinkotilaan. Latauskäyttäytymistä säädetään vastaavasti."
+disclaimerHint = "Huomaa:"
+disclaimerText = "Nämä asetukset vaikuttavat vain aurinkotilaan. Latauskäyttäytymistä säädetään vastaavasti."
 
 [batterySettings.bufferStart]
 full = "kun melkein täynnä"

@@ -13,7 +13,8 @@ legendTopName = "carga soportada por bateria"
 legendTopSubline = "sin interrupciones"
 modalTitle = "Configuración de batería"
 notControllable = "El control de la batería no está disponible para esta batería"
-note = "Nota: Estos parámetros solo afectan al modo solar. El comportamiento de carga se ajusta correspondientemente."
+disclaimerHint = "Nota:"
+disclaimerText = "Estos parámetros solo afectan al modo solar. El comportamiento de carga se ajusta correspondientemente."
 
 [batterySettings.bufferStart]
 full = "cuando está casi llena"

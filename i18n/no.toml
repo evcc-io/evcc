@@ -10,7 +10,8 @@ legendTopAutostart = "starter automatisk"
 legendTopName = "batteriassistert lading"
 legendTopSubline = "uten avbrudd"
 modalTitle = "Batteriinnstillinger"
-note = "Merk: Kun relevant i PV-modus. Ladeadferden justeres deretter."
+disclaimerHint = "Merk:"
+disclaimerText = "Kun relevant i PV-modus. Ladeadferden justeres deretter."
 
 [batterySettings.bufferStart]
 full = "når det er nesten fullt"

@@ -10,7 +10,8 @@ legendTopAutostart = "start automatisch"
 legendTopName = "batterij-ondersteund opladen"
 legendTopSubline = "zonder onderbrekingen"
 modalTitle = "Batterij-instellingen"
-note = "Opgelet: Deze instellingen beïnvloeden enkel de zonnemodus. Oplaadgedrag wordt overeenkomstig aangepast."
+disclaimerHint = "Opgelet:"
+disclaimerText = "Deze instellingen beïnvloeden enkel de zonnemodus. Oplaadgedrag wordt overeenkomstig aangepast."
 
 [batterySettings.bufferStart]
 full = "als bijna vol"

@@ -13,7 +13,8 @@ legendTopName = "kaupiklis padeda įkrauti"
 legendTopSubline = "be pertraukų"
 modalTitle = "Kaupiklio nustatymai"
 notControllable = "Šiam kaupikliui valdymo nėra."
-note = "Pastaba: Šie nustatymai paveikia tik įkrovimą Saulė. Įkrovimo algoritmas atitinkamai pakeičiamas."
+disclaimerHint = "Pastaba:"
+disclaimerText = "Šie nustatymai paveikia tik įkrovimą Saulė. Įkrovimo algoritmas atitinkamai pakeičiamas."
 
 [batterySettings.bufferStart]
 full = "kai beveik pilnas"

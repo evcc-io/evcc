@@ -10,7 +10,8 @@ legendTopAutostart = "démarre automatiquement"
 legendTopName = "recharge soutenue par la batterie"
 legendTopSubline = "sans interruption"
 modalTitle = "Réglages de la batterie"
-note = "NB : ces réglages n'affectent que le mode solaire. Le comportement de charge est adapté en conséquence."
+disclaimerHint = "NB :"
+disclaimerText = "ces réglages n'affectent que le mode solaire. Le comportement de charge est adapté en conséquence."
 
 [batterySettings.bufferStart]
 full = "quand presque pleine"

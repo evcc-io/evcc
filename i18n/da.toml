@@ -13,7 +13,8 @@ legendTopName = "batteri understøttet opladning"
 legendTopSubline = "uden afbrydelser"
 modalTitle = "batteri indstillinger"
 notControllable = "Indstilling af batteriet er ikke mulig for dette batteri"
-note = "OBS: Disse indstillinger gælder kun for solar modus. Indstillingerne ændres tilsvarende."
+disclaimerHint = "OBS:"
+disclaimerText = "Disse indstillinger gælder kun for solar modus. Indstillingerne ændres tilsvarende."
 
 [batterySettings.bufferStart]
 full = "næsten fyldt"

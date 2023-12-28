@@ -1,5 +1,8 @@
 <template>
-	<div v-if="!socBasedCharging" class="alert alert-secondary my-4" role="alert">
+	<div v-if="!socBasedCharging" class="my-4 mx-2 text-muted">
+		<strong class="text-evcc">
+			{{ $t("main.loadpointSettings.disclaimerHint") }}
+		</strong>
 		{{ $t("main.loadpointSettings.onlyForSocBasedCharging") }}
 	</div>
 	<div class="mt-4 container">
