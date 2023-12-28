@@ -200,10 +200,6 @@ func NewLoadpointFromConfig(log *util.Logger, settings *Settings, other map[stri
 		lp.Soc.Poll.Mode = pollCharging
 	}
 
-	if lp.MinCurrent == 0 {
-		lp.log.WARN.Println("minCurrent must not be zero")
-	}
-
 	if lp.MaxCurrent < lp.MinCurrent {
 		lp.log.WARN.Println("maxCurrent must be larger than minCurrent")
 	}
@@ -278,7 +274,6 @@ func NewLoadpoint(log *util.Logger, settings *Settings) *Loadpoint {
 		bus:        bus,      // event bus
 		mode:       api.ModeOff,
 		status:     api.StatusNone,
-		MinCurrent: 6,  // A
 		MaxCurrent: 16, // A
 		Soc: SocConfig{
 			Poll: PollConfig{
