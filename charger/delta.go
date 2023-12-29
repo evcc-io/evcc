@@ -48,7 +48,7 @@ const (
 	deltaRegEvseActualChargingPower   = 5   // EVSE Actual Charging Power - UINT32 [W]
 	deltaRegEvseActualChargingCurrent = 7   // EVSE Actual Charging Current - FLOAT32 [A]
 	deltaRegEvseActualOutputPower     = 9   // EVSE Actual Output Power - FLOAT32 [W]
-	deltaRegEvseSoc                   = 17  // EVSE SOC [%/10]
+	deltaRegEvseSoc                   = 11  // EVSE SOC [%/10]
 	deltaRegEvseChargingTime          = 17  // EVSE Charging Time [s]
 	deltaRegEvseChargedEnergy         = 19  // EVSE Charged Energy [Wh]
 	deltaRegEvseRfidUID               = 100 // EVSE Used Authentication ID - STRING
