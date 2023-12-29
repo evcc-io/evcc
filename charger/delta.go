@@ -191,7 +191,7 @@ func (wb *Delta) setCurrent(current float64) error {
 	if wb.lp != nil {
 		loadpointPhases = wb.lp.GetPhases()
 
-		var curVehicle = wb.lp.GetVehicle()
+		curVehicle := wb.lp.GetVehicle()
 		if curVehicle != nil {
 			vehiclePhases = curVehicle.Phases()
 		} else {
