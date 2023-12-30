@@ -70,16 +70,16 @@ func (lp *Loadpoint) effectiveMinCurrent() float64 {
 
 	if c, ok := lp.charger.(api.CurrentLimiter); ok {
 		if res, _, err := c.GetMinMaxCurrent(); err == nil {
-			lp.publish(keys.EffectiveMinCurrent, res)
-			minCurrent = max(minCurrent, res)
+			if res > 0 && res < minCurrent {
+				minCurrent = res
+			} else {
+				minCurrent = max(minCurrent, res)
+			}
+			lp.publish(keys.EffectiveMinCurrent, minCurrent)
 		}
 	}
 
-	if minCurrent > 0 {
-		return minCurrent
-	}
-
-	return 6
+	return minCurrent
 }
 
 // effectiveMaxCurrent returns the effective max current
@@ -94,8 +94,8 @@ func (lp *Loadpoint) effectiveMaxCurrent() float64 {
 
 	if c, ok := lp.charger.(api.CurrentLimiter); ok {
 		if _, res, err := c.GetMinMaxCurrent(); err == nil {
-			lp.publish(keys.EffectiveMaxCurrent, res)
 			maxCurrent = min(maxCurrent, res)
+			lp.publish(keys.EffectiveMaxCurrent, maxCurrent)
 		}
 	}
 
