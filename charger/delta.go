@@ -265,7 +265,7 @@ func (wb *Delta) ChargedEnergy() (float64, error) {
 
 var _ api.Identifier = (*Delta)(nil)
 
-// identify implements the api.Identifier interface
+// Identify implements the api.Identifier interface
 func (wb *Delta) Identify() (string, error) {
 	b, err := wb.conn.ReadInputRegisters(wb.base+deltaRegEvseRfidUID, 6)
 	if err != nil {
