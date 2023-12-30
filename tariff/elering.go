@@ -79,8 +79,6 @@ func (t *Elering) run(done chan error) {
 			continue
 		}
 
-		once.Do(func() { close(done) })
-
 		data := make(api.Rates, 0, len(res.Data[t.region]))
 		for _, r := range res.Data[t.region] {
 			ts := time.Unix(r.Timestamp, 0)
@@ -95,6 +93,7 @@ func (t *Elering) run(done chan error) {
 		data.Sort()
 
 		t.data.Set(data)
+		once.Do(func() { close(done) })
 	}
 }
 
