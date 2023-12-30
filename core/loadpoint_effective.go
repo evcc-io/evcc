@@ -60,38 +60,46 @@ func (lp *Loadpoint) SocBasedPlanning() bool {
 
 // effectiveMinCurrent returns the effective min current
 func (lp *Loadpoint) effectiveMinCurrent() float64 {
+	minCurrent := lp.GetMinCurrent()
+
 	if v := lp.GetVehicle(); v != nil {
 		if res, ok := v.OnIdentified().GetMinCurrent(); ok {
-			return res
+			minCurrent = max(minCurrent, res)
 		}
 	}
 
 	if c, ok := lp.charger.(api.CurrentLimiter); ok {
 		if res, _, err := c.GetMinMaxCurrent(); err == nil {
-			lp.publish(keys.EffectiveMinCurrent, res)
-			return res
+			if res > 0 && res < minCurrent {
+				minCurrent = res
+			} else {
+				minCurrent = max(minCurrent, res)
+			}
+			lp.publish(keys.EffectiveMinCurrent, minCurrent)
 		}
 	}
 
-	return lp.GetMinCurrent()
+	return minCurrent
 }
 
 // effectiveMaxCurrent returns the effective max current
 func (lp *Loadpoint) effectiveMaxCurrent() float64 {
+	maxCurrent := lp.GetMaxCurrent()
+
 	if v := lp.GetVehicle(); v != nil {
 		if res, ok := v.OnIdentified().GetMaxCurrent(); ok {
-			return res
+			maxCurrent = min(maxCurrent, res)
 		}
 	}
 
 	if c, ok := lp.charger.(api.CurrentLimiter); ok {
 		if _, res, err := c.GetMinMaxCurrent(); err == nil {
-			lp.publish(keys.EffectiveMaxCurrent, res)
-			return res
+			maxCurrent = min(maxCurrent, res)
+			lp.publish(keys.EffectiveMaxCurrent, maxCurrent)
 		}
 	}
 
-	return lp.GetMaxCurrent()
+	return maxCurrent
 }
 
 // effectiveLimitSoc returns the effective session limit soc
