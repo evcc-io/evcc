@@ -23,6 +23,7 @@ render: |
   # jq: parse json generated from response values.xml (https://jqplay.org is your friend to test queries)
   {{- if not .usage }}
   power: # heating power in W
+    source: http
     uri: {{ include "uri" . }}
     jq: .values.value[] | select(.attrid=="htPowerMeasValue")."#content" | rtrimstr(" kW")
     scale: 1000
