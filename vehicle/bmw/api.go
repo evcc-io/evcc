@@ -55,11 +55,13 @@ func (v *API) Status(vin string) (VehicleStatus, error) {
 	var res VehicleStatus
 	uri := fmt.Sprintf("%s/eadrax-vcs/v4/vehicles/state?apptimezone=120&appDateTime=%d", regions[v.region].CocoApiURI, time.Now().UnixMilli())
 
-	req, err := request.New(http.MethodGet, uri, nil, map[string]string{
+	req, _ := request.New(http.MethodGet, uri, nil, map[string]string{
 		"bmw-vin": vin,
 	})
-	if err == nil {
-		err = v.DoJSON(req, &res)
+
+	err := v.DoJSON(req, &res)
+	if err != nil && res.StatusCode != 0 {
+		err = fmt.Errorf("%d: %s (%w)", res.StatusCode, res.Message, err)
 	}
 
 	return res, err

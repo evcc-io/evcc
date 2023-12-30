@@ -129,7 +129,7 @@ func (m *Client) Publish(topic string, retained bool, payload interface{}) error
 	return nil
 }
 
-// Listen validates uniqueness and registers and attaches listener
+// Listen attaches listener to slice of listeners for given topic
 func (m *Client) Listen(topic string, callback func(string)) error {
 	m.mux.Lock()
 	m.listener[topic] = append(m.listener[topic], callback)

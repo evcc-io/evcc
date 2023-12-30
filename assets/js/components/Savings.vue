@@ -95,9 +95,9 @@
 														(referenceGrid - avgPrice) * totalCharged,
 														currency,
 														false
-												  )} ${fmtCurrencySymbol(currency)} ${$t(
+													)} ${fmtCurrencySymbol(currency)} ${$t(
 														'footer.savings.moneySaved'
-												  )}`
+													)}`
 												: ''
 										"
 									/>
@@ -116,7 +116,7 @@
 															1000,
 														0,
 														'kilogram'
-												  )} ${$t('footer.savings.co2Saved')}`
+													)} ${$t('footer.savings.co2Saved')}`
 												: ''
 										"
 									/>

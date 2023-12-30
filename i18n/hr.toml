@@ -1,6 +1,8 @@
 [batterySettings]
 batteryLevel = "Razina baterije"
 capacity = "{energy} od {total}"
+disclaimerHint = "Napomena:"
+disclaimerText = "Ove postavke utječu samo na solarni modus. Napajanje se prilagođava u skladu s tim."
 legendBottomName = "kuća ima prioritet"
 legendBottomSubline = "ne koristi se za napajanje"
 legendMiddleName = "najprije vozilo"
@@ -10,7 +12,6 @@ legendTopAutostart = "počinje automatski"
 legendTopName = "podržano baterijsko napajanje"
 legendTopSubline = "bez prekida"
 modalTitle = "Postavke baterije"
-note = "Napomena: Ove postavke utječu samo na solarni modus. Napajanje se prilagođava u skladu s tim."
 
 [batterySettings.bufferStart]
 full = "kad je skoro pun"

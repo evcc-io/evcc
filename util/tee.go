@@ -20,7 +20,7 @@ type Tee struct {
 func (t *Tee) Attach() <-chan Param {
 	// TODO find better approach to prevent deadlocks
 	// this will buffer the receiver channel to prevent deadlocks when consumers use mutex-protected loadpoint api
-	out := make(chan Param, 16)
+	out := make(chan Param, 128)
 	t.add(out)
 	return out
 }

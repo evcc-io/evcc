@@ -291,6 +291,9 @@ export default {
 			selectedColumns: settings.sessionColumns,
 		};
 	},
+	head() {
+		return { title: `${this.$t("sessions.title")} | evcc` };
+	},
 	computed: {
 		currentSessions() {
 			const sessionsWithDefaults = this.sessions.map((session) => {

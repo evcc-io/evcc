@@ -1,6 +1,8 @@
 [batterySettings]
 batteryLevel = "Poziom baterii"
 capacity = "{energy} z {total}"
+disclaimerHint = "Uwaga:"
+disclaimerText = "te ustawienia mają wpływ tylko na tryb solarny. Sposób ładowania jest odpowiednio dostosowywany."
 legendBottomName = "priorytet domu"
 legendBottomSubline = "nie używany do ładowania"
 legendMiddleName = "pojazd najpierw"
@@ -10,7 +12,6 @@ legendTopAutostart = "uruchamia się automatycznie"
 legendTopName = "ładowanie wspomagane bateryjnie"
 legendTopSubline = "bez przerw"
 modalTitle = "Ustawienia baterii"
-note = "Uwaga: te ustawienia mają wpływ tylko na tryb solarny. Sposób ładowania jest odpowiednio dostosowywany."
 
 [batterySettings.bufferStart]
 full = "kiedy prawie pełny"

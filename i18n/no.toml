@@ -1,6 +1,8 @@
 [batterySettings]
 batteryLevel = "Ladenivå"
 capacity = "{energy} av {total}"
+disclaimerHint = "Merk:"
+disclaimerText = "Kun relevant i PV-modus. Ladeadferden justeres deretter."
 legendBottomName = "Hjemmelading har prioritet"
 legendBottomSubline = "ikke bruk til lading"
 legendMiddleName = "kjøretøy først"
@@ -10,7 +12,6 @@ legendTopAutostart = "starter automatisk"
 legendTopName = "batteriassistert lading"
 legendTopSubline = "uten avbrudd"
 modalTitle = "Batteriinnstillinger"
-note = "Merk: Kun relevant i PV-modus. Ladeadferden justeres deretter."
 
 [batterySettings.bufferStart]
 full = "når det er nesten fullt"

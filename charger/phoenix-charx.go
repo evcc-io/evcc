@@ -212,22 +212,17 @@ func (wb *PhoenixCharx) totalEnergy() (float64, error) {
 
 // currents implements the api.PhaseCurrents interface
 func (wb *PhoenixCharx) currents() (float64, float64, float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(wb.register(charxRegCurrents), 3*2)
-	if err != nil {
-		return 0, 0, 0, err
-	}
-
-	var res [3]float64
-	for i := range res {
-		res[i] = float64(encoding.Int32(b[4*i:])) / 1e3
-	}
-
-	return res[0], res[1], res[2], nil
+	return wb.getPhaseValues(charxRegCurrents)
 }
 
 // voltages implements the api.PhaseVoltages interface
 func (wb *PhoenixCharx) voltages() (float64, float64, float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(wb.register(charxRegVoltages), 3*2)
+	return wb.getPhaseValues(charxRegVoltages)
+}
+
+// getPhaseValues returns 3 sequential phase values
+func (wb *PhoenixCharx) getPhaseValues(reg uint16) (float64, float64, float64, error) {
+	b, err := wb.conn.ReadHoldingRegisters(wb.register(reg), 6)
 	if err != nil {
 		return 0, 0, 0, err
 	}

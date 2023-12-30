@@ -1,6 +1,8 @@
 [batterySettings]
 batteryLevel = "Batterij-niveau"
 capacity = "{energy} van {total}"
+disclaimerHint = "Opgelet:"
+disclaimerText = "Deze instellingen beïnvloeden enkel de zonnemodus. Oplaadgedrag wordt overeenkomstig aangepast."
 legendBottomName = "huis heeft prioriteit"
 legendBottomSubline = "niet gebruikt voor opladen"
 legendMiddleName = "eerst voertuig"
@@ -10,7 +12,6 @@ legendTopAutostart = "start automatisch"
 legendTopName = "batterij-ondersteund opladen"
 legendTopSubline = "zonder onderbrekingen"
 modalTitle = "Batterij-instellingen"
-note = "Opgelet: Deze instellingen beïnvloeden enkel de zonnemodus. Oplaadgedrag wordt overeenkomstig aangepast."
 
 [batterySettings.bufferStart]
 full = "als bijna vol"

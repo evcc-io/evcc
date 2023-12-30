@@ -49,6 +49,8 @@ type API interface {
 	GetPhases() int
 	// SetPhases sets the enabled phases
 	SetPhases(int) error
+	// ActivePhases returns the active phases for the current vehicle
+	ActivePhases() int
 
 	// GetLimitSoc returns the session limit soc
 	GetLimitSoc() int
