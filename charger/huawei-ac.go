@@ -84,13 +84,9 @@ func NewHuaweiACCharger(uri string, slaveID uint8) (api.Charger, error) {
 }
 
 func (wb *HuaweiACCharger) setCurrent(current float64) error {
-	var phases int
-	// get (expectedly) active phases from loadpoint
+	phases := 3
 	if wb.lp != nil {
-		phases = wb.lp.GetPhases()
-	}
-	if phases == 0 {
-		phases = 3
+		phases = wb.lp.ActivePhases()
 	}
 
 	b := make([]byte, 4)
