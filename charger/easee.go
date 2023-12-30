@@ -45,7 +45,6 @@ type Easee struct {
 	*request.Helper
 	charger                 string
 	site, circuit           int
-	updated                 time.Time
 	lastEnergyPollTriggered time.Time
 	log                     *util.Logger
 	mux                     sync.Mutex
@@ -278,13 +277,6 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
-	if c.updated.IsZero() {
-		defer once.Do(func() {
-			close(c.done)
-		})
-	}
-	c.updated = time.Now()
-
 	if prevTime, ok := c.obsTime[res.ID]; ok && prevTime.After(res.Timestamp) {
 		// received observation is outdated, ignoring
 		return
@@ -336,7 +328,7 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 			c.sessionStartEnergy = nil
 		}
 
-		// OpMode changed TO charging. Start ticker for periodic requests to update LIFETIME_ENERGY
+		// OpMode changed to 3/charging. Start ticker for periodic requests to update LIFETIME_ENERGY
 		if c.opMode != easee.ModeCharging && opMode == easee.ModeCharging {
 			if c.stopTicker == nil {
 				c.stopTicker = make(chan struct{})
@@ -355,7 +347,7 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 			}
 		}
 
-		// OpMode changed FROM >1 ("car connected") TO  1/disconnected  - stop ticker if channel exists
+		// OpMode changed from >1 ("car connected") to 1/disconnected - stop ticker if channel exists
 		// channel may not exist regularly if the car was connected but charging never started
 		if c.opMode != easee.ModeDisconnected && opMode == easee.ModeDisconnected && c.stopTicker != nil {
 			close(c.stopTicker)
@@ -369,6 +361,11 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 			(c.opMode == easee.ModeDisconnected || c.opMode == easee.ModeCharging || // from these op modes
 				opMode == easee.ModeDisconnected || opMode == easee.ModeAwaitingAuthentication) { // or to these op modes
 			c.requestLifetimeEnergyUpdate()
+		}
+
+		// startup completed
+		if c.opMode != 0 {
+			once.Do(func() { close(c.done) })
 		}
 
 		c.opMode = opMode
