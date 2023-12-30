@@ -21,7 +21,7 @@ type Wrapper struct {
 // New creates a new Vehicle
 func New(name string, other map[string]interface{}, err error) api.Vehicle {
 	var cc struct {
-		// add manuelly since embed is not available here
+		// add manually since embed is not available here
 		Title    string
 		Icon     string
 		Phases   int

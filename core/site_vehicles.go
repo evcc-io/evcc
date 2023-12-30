@@ -41,9 +41,6 @@ func (site *Site) publishVehicles() {
 		}
 
 		instance := v.Instance()
-		features := lo.Map(instance.Features(), func(f api.Feature, _ int) string {
-			return f.String()
-		})
 
 		res[v.Name()] = vehicleStruct{
 			Title:    instance.Title(),
@@ -51,7 +48,7 @@ func (site *Site) publishVehicles() {
 			Capacity: instance.Capacity(),
 			MinSoc:   v.GetMinSoc(),
 			LimitSoc: v.GetLimitSoc(),
-			Features: features,
+			Features: lo.Map(instance.Features(), func(f api.Feature, _ int) string { return f.String() }),
 			Plans:    plans,
 		}
 
