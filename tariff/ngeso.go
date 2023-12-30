@@ -94,8 +94,6 @@ func (t *Ngeso) run(done chan error) {
 			continue
 		}
 
-		once.Do(func() { close(done) })
-
 		data := make(api.Rates, 0, len(carbonResponse.Results()))
 		for _, r := range carbonResponse.Results() {
 			ar := api.Rate{
@@ -109,6 +107,7 @@ func (t *Ngeso) run(done chan error) {
 		data.Sort()
 
 		t.data.Set(data)
+		once.Do(func() { close(done) })
 	}
 }
 

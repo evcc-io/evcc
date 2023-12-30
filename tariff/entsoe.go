@@ -154,8 +154,6 @@ func (t *Entsoe) run(done chan error) {
 			continue
 		}
 
-		once.Do(func() { close(done) })
-
 		data := make(api.Rates, 0, len(res))
 		for _, r := range res {
 			ar := api.Rate{
@@ -168,6 +166,7 @@ func (t *Entsoe) run(done chan error) {
 		data.Sort()
 
 		t.data.Set(data)
+		once.Do(func() { close(done) })
 	}
 }
 
@@ -182,5 +181,5 @@ func (t *Entsoe) Rates() (api.Rates, error) {
 
 // Type implements the api.Tariff interface
 func (t *Entsoe) Type() api.TariffType {
-	return api.TariffTypePriceDynamic
+	return api.TariffTypePriceForecast
 }
