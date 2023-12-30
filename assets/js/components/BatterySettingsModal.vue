@@ -216,10 +216,11 @@
 										</small>
 									</span>
 								</p>
-								<p>
-									<small>
-										{{ $t("batterySettings.note") }}
-									</small>
+								<p class="small text-muted">
+									<strong class="text-evcc">
+										{{ $t("batterySettings.disclaimerHint") }}
+									</strong>
+									{{ $t("batterySettings.disclaimerText") }}
 								</p>
 							</div>
 						</div>
