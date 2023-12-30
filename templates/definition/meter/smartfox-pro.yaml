@@ -1,8 +1,8 @@
-template: smartfox-values
+template: smartfox-pro
 products:
   - brand: Smartfox
     description:
-      generic: Pro (Firmware Version EM2 00.01.07.03) - not tested on other SmartFox devices yet
+      generic: Pro (Firmware Version EM2 00.01.07.03) - may also work on Pro 2 (EM3 00.01.07.03)
 requirements:
   description:
     de: |

@@ -830,12 +830,12 @@ func (site *Site) prepare() {
 	site.publish(keys.SmartCostType, nil)
 	site.publish(keys.SmartCostActive, false)
 	if tariff := site.GetTariff(PlannerTariff); tariff != nil {
-		site.publish(keys.SmartCostType, tariff.Type().String())
+		site.publish(keys.SmartCostType, tariff.Type())
 	}
-	site.publish(keys.Currency, site.tariffs.Currency.String())
+	site.publish(keys.Currency, site.tariffs.Currency)
 
 	site.publish(keys.BatteryDischargeControl, site.batteryDischargeControl)
-	site.publish(keys.BatteryMode, site.batteryMode.String())
+	site.publish(keys.BatteryMode, site.batteryMode)
 
 	if err := site.restoreSettings(); err != nil {
 		site.log.ERROR.Println(err)

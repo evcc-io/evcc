@@ -820,7 +820,7 @@ func (lp *Loadpoint) limitEnergyReached() bool {
 // limitSocReached returns true if the effective limit has been reached
 func (lp *Loadpoint) limitSocReached() bool {
 	limit := lp.effectiveLimitSoc()
-	return limit > 0 && lp.vehicleSoc >= float64(limit)
+	return limit > 0 && limit < 100 && lp.vehicleSoc >= float64(limit)
 }
 
 // minSocNotReached checks if minimum is configured and not reached.
