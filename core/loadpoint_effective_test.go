@@ -22,9 +22,9 @@ func TestEffectiveMinMaxCurrent(t *testing.T) {
 	}{
 		{0, 0, 0, 0, 6, 16},
 		{1, 10, 0, 0, 1, 10},     // charger lower
-		{10, 20, 0, 0, 10, 16},   // charger higher
-		{0, 0, 1, 10, 6, 10},     // vehicle lower
-		{0, 0, 10, 20, 10, 16},   // vehicle higher
+		{10, 20, 0, 0, 10, 16},   // charger higher - max ignored
+		{0, 0, 1, 10, 6, 10},     // vehicle lower - min ignored
+		{0, 0, 10, 20, 10, 16},   // vehicle higher - max ignored
 		{1, 10, 2, 12, 1, 10},    // charger + vehicle lower
 		{10, 20, 12, 22, 10, 16}, // charger + vehicle higher
 	}
