@@ -110,7 +110,7 @@ func (lp *Loadpoint) effectiveLimitSoc() int {
 		}
 	}
 
-	return 100
+	return 0
 }
 
 // EffectiveMinPower returns the effective min power for a single phase
