@@ -28,54 +28,85 @@ render: |
     jq: .power_sf
   {{- end }}
   {{- if eq .usage "grid" }}
-  power:
+  power: # grid power in W
     source: http
     uri: {{ include "uri" . }}
     jq: .values.value[] | select(.attrid=="detailsPowerValue")."#content" | rtrimstr(" W")
-  energy:
+  energy: # grid energy in kWh
     source: http
     uri: {{ include "uri" . }}
-    jq: .energy_in
-    scale: 0.001  
-  voltages:
+    jq: .values.value[] | select(.attrid=="energyValue")."#content" | rtrimstr(" kWh")
+  voltages: # grid voltages in V
   - source: http
     uri: {{ include "uri" . }}
-    jq: .voltages[0]
+    jq: .values.value[] | select(.attrid=="voltageL1Value")."#content" | rtrimstr(" V")
   - source: http
     uri: {{ include "uri" . }}
-    jq: .voltages[1]
+    jq: .values.value[] | select(.attrid=="voltageL2Value")."#content" | rtrimstr(" V")
   - source: http
     uri: {{ include "uri" . }}
-    jq: .voltages[2]
-  currents:
+    jq: .values.value[] | select(.attrid=="voltageL3Value")."#content" | rtrimstr(" V")
+  currents: # grid currents in A
   - source: http
     uri: {{ include "uri" . }}
-    jq: .currents[0]
+    jq: .values.value[] | select(.attrid=="ampereL1Value")."#content" | rtrimstr(" A")
   - source: http
     uri: {{ include "uri" . }}
-    jq: .currents[1]
+    jq: .values.value[] | select(.attrid=="ampereL2Value")."#content" | rtrimstr(" A")
   - source: http
     uri: {{ include "uri" . }}
-    jq: .currents[2]
-  powers:
+    jq: .values.value[] | select(.attrid=="ampereL3Value")."#content" | rtrimstr(" A")
+  powers: # grid powers in W
   - source: http
     uri: {{ include "uri" . }}
-    jq: .powers[0]
+    jq: .values.value[] | select(.attrid=="powerL1Value")."#content" | rtrimstr(" W")
   - source: http
     uri: {{ include "uri" . }}
-    jq: .powers[1]
+    jq: .values.value[] | select(.attrid=="powerL2Value")."#content" | rtrimstr(" W")
   - source: http
     uri: {{ include "uri" . }}
-    jq: .powers[2]
+    jq: .values.value[] | select(.attrid=="powerL3Value")."#content" | rtrimstr(" W")
   {{- end }}
   {{- if eq .usage "pv" }}
-  power:
-    source: http
-    uri: {{ include "uri" . }}
-    jq: .PvPower[0]
-  energy:
-    source: http
-    uri: {{ include "uri" . }}
-    jq: .PvEnergy[0]
-    scale: 0.001
+  power: # PV power in W
+    source: calc
+    add:
+    - source: http
+      uri: {{ include "uri" . }}
+      jq: .values.value[] | select(.attrid=="wr1PowerValue")."#content" | rtrimstr(" kW")
+      scale: 1000
+    - source: http
+      uri: {{ include "uri" . }}
+      jq: .values.value[] | select(.attrid=="wr2PowerValue")."#content" | rtrimstr(" kW")
+      scale: 1000
+    - source: http
+      uri: {{ include "uri" . }}
+      jq: .values.value[] | select(.attrid=="wr3PowerValue")."#content" | rtrimstr(" kW")
+      scale: 1000
+    - source: http
+      uri: {{ include "uri" . }}
+      jq: .values.value[] | select(.attrid=="wr4PowerValue")."#content" | rtrimstr(" kW")
+      scale: 1000
+    - source: http
+      uri: {{ include "uri" . }}
+      jq: .values.value[] | select(.attrid=="wr5PowerValue")."#content" | rtrimstr(" kW")
+      scale: 1000
+  energy: # PV energy in kWh
+    source: calc
+    add:
+    - source: http
+      uri: {{ include "uri" . }}
+      jq: .values.value[] | select(.attrid=="wr1EnergyValue")."#content" | rtrimstr(" kWh")
+    - source: http
+      uri: {{ include "uri" . }}
+      jq: .values.value[] | select(.attrid=="wr2EnergyValue")."#content" | rtrimstr(" kWh")
+    - source: http
+      uri: {{ include "uri" . }}
+      jq: .values.value[] | select(.attrid=="wr3EnergyValue")."#content" | rtrimstr(" kWh")
+    - source: http
+      uri: {{ include "uri" . }}
+      jq: .values.value[] | select(.attrid=="wr4EnergyValue")."#content" | rtrimstr(" kWh")
+    - source: http
+      uri: {{ include "uri" . }}
+      jq: .values.value[] | select(.attrid=="wr5EnergyValue")."#content" | rtrimstr(" kWh")
   {{- end }}
