@@ -112,7 +112,6 @@ type Vehicle interface {
 	Battery
 	BatteryCapacity
 	IconDescriber
-	ConnectorDescriber
 	FeatureDescriber
 	Title() string
 	SetTitle(string)
