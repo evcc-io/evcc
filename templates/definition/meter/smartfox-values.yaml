@@ -1,8 +1,8 @@
-template: smartfox
+template: smartfox-values
 products:
   - brand: Smartfox
     description:
-      generic: Pro, Pro 2, Pro Light, Pro Light 2, Light, Reg, Reg extended
+      generic: Pro (Firmware Version EM2 00.01.07.03) - not tested on other SmartFox devices yet
 requirements:
   description:
     de: |
