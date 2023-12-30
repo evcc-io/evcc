@@ -17,7 +17,7 @@ params:
   - name: host
 render: |
   {{- define "uri" -}}
-  http://{{ .host }}/all
+  http://{{ .host }}/values.xml
   {{- end }}
   type: custom
   {{- if not .usage }}
