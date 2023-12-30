@@ -18,14 +18,13 @@ type planStruct struct {
 }
 
 type vehicleStruct struct {
-	Title     string       `json:"title"`
-	Icon      string       `json:"icon,omitempty"`
-	Capacity  float64      `json:"capacity,omitempty"`
-	MinSoc    int          `json:"minSoc,omitempty"`
-	LimitSoc  int          `json:"limitSoc,omitempty"`
-	Connector string       `json:"connector,omitempty"`
-	Features  []string     `json:"features,omitempty"`
-	Plans     []planStruct `json:"plans,omitempty"`
+	Title    string       `json:"title"`
+	Icon     string       `json:"icon,omitempty"`
+	Capacity float64      `json:"capacity,omitempty"`
+	MinSoc   int          `json:"minSoc,omitempty"`
+	LimitSoc int          `json:"limitSoc,omitempty"`
+	Features []string     `json:"features,omitempty"`
+	Plans    []planStruct `json:"plans,omitempty"`
 }
 
 // publishVehicles returns a list of vehicle titles
@@ -47,14 +46,13 @@ func (site *Site) publishVehicles() {
 		})
 
 		res[v.Name()] = vehicleStruct{
-			Title:     instance.Title(),
-			Connector: instance.Connector(),
-			Icon:      instance.Icon(),
-			Capacity:  instance.Capacity(),
-			MinSoc:    v.GetMinSoc(),
-			LimitSoc:  v.GetLimitSoc(),
-			Features:  features,
-			Plans:     plans,
+			Title:    instance.Title(),
+			Icon:     instance.Icon(),
+			Capacity: instance.Capacity(),
+			MinSoc:   v.GetMinSoc(),
+			LimitSoc: v.GetLimitSoc(),
+			Features: features,
+			Plans:    plans,
 		}
 
 		if lp := site.coordinator.Owner(instance); lp != nil {

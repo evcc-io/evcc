@@ -13,7 +13,6 @@ type Wrapper struct {
 	err       error
 	title     string
 	icon      string
-	connector string
 	phases    int
 	capacity  float64
 	Features_ []api.Feature
@@ -23,12 +22,11 @@ type Wrapper struct {
 func New(name string, other map[string]interface{}, err error) api.Vehicle {
 	var cc struct {
 		// add manuelly since embed is not available here
-		Title     string
-		Icon      string
-		Connector string
-		Phases    int
-		Capacity  float64
-		Other     map[string]interface{} `mapstructure:",remain"`
+		Title    string
+		Icon     string
+		Phases   int
+		Capacity float64
+		Other    map[string]interface{} `mapstructure:",remain"`
 	}
 
 	// try to decode vehicle-specific config and look for title attribute
@@ -43,7 +41,6 @@ func New(name string, other map[string]interface{}, err error) api.Vehicle {
 		err:       fmt.Errorf("vehicle not available: %w", err),
 		title:     fmt.Sprintf("%s (offline)", cc.Title),
 		icon:      cc.Icon,
-		connector: cc.Connector,
 		phases:    cc.Phases,
 		capacity:  cc.Capacity,
 		Features_: []api.Feature{api.Offline},
@@ -72,11 +69,6 @@ func (v *Wrapper) SetTitle(title string) {
 // Icon implements the api.IconDescriber interface
 func (v *Wrapper) Icon() string {
 	return v.icon
-}
-
-// Connector implements the api.ConnectorDescriber interface
-func (v *Wrapper) Connector() string {
-	return v.connector
 }
 
 // Capacity implements the api.Vehicle interface

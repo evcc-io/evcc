@@ -187,11 +187,6 @@ type IconDescriber interface {
 	Icon() string
 }
 
-// ConnectorDescriber optionally provides an connector
-type ConnectorDescriber interface {
-	Connector() string
-}
-
 // FeatureDescriber optionally provides a list of supported non-api features
 type FeatureDescriber interface {
 	Features() []Feature
