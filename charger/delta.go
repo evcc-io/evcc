@@ -275,18 +275,6 @@ func (wb *Delta) Identify() (string, error) {
 	return bytesAsString(b), nil
 }
 
-var _ api.Battery = (*Delta)(nil)
-
-// Soc implements the api.Battery interface
-func (wb *Delta) Soc() (float64, error) {
-	b, err := wb.conn.ReadInputRegisters(wb.base+deltaRegEvseSoc, 1)
-	if err != nil {
-		return 0, api.ErrNotAvailable
-	}
-
-	return float64(encoding.Uint16(b)) / 10.0, nil
-}
-
 var _ api.Diagnosis = (*Delta)(nil)
 
 // Diagnose implements the api.Diagnosis interface
