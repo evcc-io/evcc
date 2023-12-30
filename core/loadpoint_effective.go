@@ -110,7 +110,8 @@ func (lp *Loadpoint) effectiveLimitSoc() int {
 		}
 	}
 
-	return 0
+	// MUST return 100 here as UI looks at effectiveLimitSoc and not limitSoc (VehicleSoc.vue)
+	return 100
 }
 
 // EffectiveMinPower returns the effective min power for a single phase
