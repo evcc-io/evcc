@@ -20,6 +20,7 @@ render: |
   http://{{ .host }}/values.xml
   {{- end }}
   type: custom
+  # jq: parse json generated from response values.xml (https://jqplay.org is your friend to test queries)
   {{- if not .usage }}
   power:
     source: http
@@ -30,7 +31,7 @@ render: |
   power:
     source: http
     uri: {{ include "uri" . }}
-    jq: .power_io
+    jq: .values.value[] | select(.attrid=="detailsPowerValue")."#content" | rtrimstr(" W")
   energy:
     source: http
     uri: {{ include "uri" . }}
