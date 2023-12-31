@@ -158,7 +158,7 @@ render: |
   limitsoc:
     source: go
     script:
-      return int(100-limitSoc)
+      int(100-limitSoc)
     out:
     - name: dod
       type: int
