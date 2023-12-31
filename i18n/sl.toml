@@ -14,7 +14,6 @@ legendTopAutostart = "samodejno se zažene"
 legendTopName = "polnjenje, ki ga podpira baterija"
 legendTopSubline = "brez prekinitev"
 modalTitle = "Nastavitve baterije"
-notControllable = "Nadzor baterije ni na voljo za to baterijo."
 
 [batterySettings.bufferStart]
 full = "ko je skoraj poln"

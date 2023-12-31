@@ -14,7 +14,6 @@ legendTopAutostart = "inicio automático"
 legendTopName = "carga soportada por bateria"
 legendTopSubline = "sin interrupciones"
 modalTitle = "Configuración de batería"
-notControllable = "El control de la batería no está disponible para esta batería"
 
 [batterySettings.bufferStart]
 full = "cuando está casi llena"
