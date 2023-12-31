@@ -180,6 +180,7 @@ title = "Plan"
 titleMinSoc = "Min. ladning"
 titleTargetCharge = "Afgang"
 update = "Anvend"
+remove = "Fjern"
 
 [main.energyflow]
 battery = "Batteri"
@@ -204,6 +205,9 @@ fallbackName = "Ladepunkt"
 power = "Effekt"
 price = "Σ Pris"
 solar = "solenergi"
+remoteDisabledSoft = "{source}: Adaptiv sol-opladning er slukket"
+remaining = "Resterende tid"
+remoteDisabledHard = "{source}: slukket"
 
 [main.loadpointSettings]
 currents = "Ladestrøm"
@@ -277,6 +281,7 @@ tomorrow = "i morgen"
 update = "Opdatering"
 vehicleCapacityDocs = "Lær at indstille det."
 vehicleCapacityRequired = "Køretøjets batterikapacitet skal kendes for at estimere opladningstiden."
+remove = "Fjern"
 
 [main.targetChargePlan]
 chargeDuration = "Opladningstid"
