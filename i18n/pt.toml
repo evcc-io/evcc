@@ -180,12 +180,12 @@ departureTab = "Partida"
 goal = "Real de compartilhamento"
 modalTitle = "Plano de carregamento"
 none = "sem"
+remove = "Remover"
 time = "Tempo"
 title = "Plano"
 titleMinSoc = "Carga mínima"
 titleTargetCharge = "Partida"
 update = "Aplicar"
-remove = "Remover"
 
 [main.energyflow]
 battery = "Bateria"
