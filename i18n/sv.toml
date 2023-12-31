@@ -180,6 +180,7 @@ title = "Plan"
 titleMinSoc = "Min. laddning"
 titleTargetCharge = "Avfärd"
 update = "Verkställ"
+remove = Ta bort"
 
 [main.energyflow]
 battery = "Batteri"
@@ -197,13 +198,16 @@ selfConsumption = "Egenförbrukning"
 
 [main.loadpoint]
 avgPrice = "⌀ pris"
-charged = "Laddad"
+charged = "Laddat"
 co2 = "⌀ CO₂"
 duration = "Varaktighet"
 fallbackName = "Laddplats"
 power = "Effekt"
 price = "Σ pris"
 solar = "Solenergi"
+remoteDisabledSoft = "{source}: Adaptiv solladdning avstängd"
+remaining = "Återstående tid"
+remoteDisabledHard = "{source}: avstängd"
 
 [main.loadpointSettings]
 currents = "Laddningsström"
@@ -212,6 +216,7 @@ disclaimerHint = "Anmärkning:"
 disclaimerText = "Ändringarna försvinner när servern startas om."
 title = "Inställningar {0}"
 vehicle = "Fordon"
+onlyForSocBasedCharging = "Dessa inställningar är endast tillgängliga för fordon med känd laddnivå"
 
 [main.loadpointSettings.limitSoc]
 description = "Laddbegränsning när detta fordon är anslutet."
@@ -276,6 +281,7 @@ tomorrow = "i morgon"
 update = "Uppdatera"
 vehicleCapacityDocs = "Lär dig hur du konfigurerar."
 vehicleCapacityRequired = "Fordonets batterikapacitet behövs för att beräkna laddtid."
+remove = "Ta bort"
 
 [main.targetChargePlan]
 chargeDuration = "Laddningstid"
@@ -359,7 +365,7 @@ csvMonth = "Ladda hem {month} CSV"
 csvTotal = "Ladda hem total CSV"
 date = "Start"
 downloadCsv = "Ladda hem som CSV"
-energy = "Laddad"
+energy = "Laddat"
 loadpoint = "Laddplats"
 noData = "Inga laddningar denna månad"
 price = "Σ pris"
