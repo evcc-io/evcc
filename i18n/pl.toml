@@ -12,6 +12,9 @@ legendTopAutostart = "uruchamia się automatycznie"
 legendTopName = "ładowanie wspomagane bateryjnie"
 legendTopSubline = "bez przerw"
 modalTitle = "Ustawienia baterii"
+discharge = "Zapobiegaj rozładowaniu w trybie szybkim i planowemu ładowaniu."
+control = "Kontrola baterii"
+notControllable = "Sterowanie baterią nie jest dostępne dla tej baterii."
 
 [batterySettings.bufferStart]
 full = "kiedy prawie pełny"
@@ -177,6 +180,12 @@ none = "nic"
 title = "Plan"
 titleMinSoc = "Minimalne ładowanie"
 titleTargetCharge = "Wyjazd"
+active = "Aktywny"
+update = "Wykorzystać"
+day = "Dzień"
+remove = "Wyjąć"
+goal = "Cel ładowania"
+time = "Czas"
 
 [main.energyflow]
 battery = "Bateria"
@@ -190,6 +199,7 @@ noEnergy = "Brak danych licznika"
 pvExport = "Eksport na siec"
 pvProduction = "Produkcja"
 selfConsumption = "Konsumpcja własna"
+batteryHold = "Bateria (locked)"
 
 [main.loadpoint]
 avgPrice = "⌀ Cena"
@@ -211,6 +221,7 @@ disclaimerHint = "Uwaga:"
 disclaimerText = "Zmiany zostaną zresetowane po restarcie serwera."
 title = "Ustawienia {0}"
 vehicle = "Pojazd"
+onlyForSocBasedCharging = "Opcje te są dostępne tylko dla pojazdów ze znanym poziomem naładowania."
 
 [main.loadpointSettings.maxCurrent]
 label = "Maks. prąd"
@@ -264,6 +275,11 @@ tomorrow = "jutro"
 update = "Aktualizować"
 vehicleCapacityDocs = "Dowiedz się, jak to skonfigurować."
 vehicleCapacityRequired = "Do oszacowania czasu ładowania wymagana jest pojemność akumulatora pojazdu."
+preview = "Podgląd planu"
+targetIsAboveVehicleLimit = "Zwiększ limit pojazdu ({limit}) , aby osiągnąć cel ładowania."
+notReachableInTime = "Cel nieosiągalny na czas. Szacowane wykończenie: {endTime}."
+targetIsAboveLimit = "Skonfigurowany limit ładowania wynoszący {limit} będzie w tym okresie ignorowany."
+currentPlan = "Plan aktywny"
 
 [main.targetChargePlan]
 chargeDuration = "Czas ładowania"
@@ -425,3 +441,8 @@ title = "Błąd uruchamiania"
 cancel = "Anulować"
 template = "Producent"
 test = "Test"
+
+
+[main.loadpointSettings.limitSoc]
+label = "Domyślny limit"
+description = "Limit ładowania używany, gdy pojazd jest podłączony."
