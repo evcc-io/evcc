@@ -14,7 +14,6 @@ legendTopAutostart = "startar automatiskt"
 legendTopName = "laddning med batteristöd"
 legendTopSubline = "utan avbrott"
 modalTitle = "Batteriinställningar"
-notControllable = "Inställning ej möjligt för detta batteri"
 
 [batterySettings.bufferStart]
 full = "när det är nästan fullt"

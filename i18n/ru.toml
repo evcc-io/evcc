@@ -14,7 +14,6 @@ legendTopAutostart = "запускается автоматически"
 legendTopName = "зарядка с поддержкой от аккумулятора"
 legendTopSubline = "без перебоев"
 modalTitle = "Настройки батареи"
-notControllable = "Управление батарей недоступно для этой батареи"
 
 [batterySettings.bufferStart]
 full = "когда почти полная"

@@ -14,7 +14,6 @@ legendTopAutostart = "startet automatisch"
 legendTopName = "Batterieunterstütztes Laden"
 legendTopSubline = "ohne Unterbrechungen"
 modalTitle = "Batterieeinstellungen"
-notControllable = "Batteriesteuerung ist für diesen Speicher nicht verfügbar."
 
 [batterySettings.bufferStart]
 full = "wenn fast voll"
