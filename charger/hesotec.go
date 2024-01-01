@@ -180,26 +180,31 @@ var _ api.PhaseCurrents = (*Hesotec)(nil)
 
 // Currents implements the api.PhaseCurrents interface
 func (wb *Hesotec) Currents() (float64, float64, float64, error) {
-	return wb.getPhaseValues(hesotecRegCurrents, 2, 1e3)
-}
-
-var _ api.PhaseVoltages = (*Hesotec)(nil)
-
-// Voltages implements the api.PhaseVoltages interface
-func (wb *Hesotec) Voltages() (float64, float64, float64, error) {
-	return wb.getPhaseValues(hesotecRegVoltages, 1, 1)
-}
-
-// getPhaseValues returns 3 sequential phase values
-func (wb *Hesotec) getPhaseValues(reg, width uint16, divider float64) (float64, float64, float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(reg, 3*width)
+	b, err := wb.conn.ReadHoldingRegisters(hesotecRegCurrents, 6)
 	if err != nil {
 		return 0, 0, 0, err
 	}
 
 	var res [3]float64
 	for i := range res {
-		res[i] = float64(binary.BigEndian.Uint32(b[2*int(width)*i:])) / divider
+		res[i] = float64(binary.BigEndian.Uint32(b[4*i:])) / 1e3
+	}
+
+	return res[0], res[1], res[2], nil
+}
+
+var _ api.PhaseVoltages = (*Hesotec)(nil)
+
+// Voltages implements the api.PhaseVoltages interface
+func (wb *Hesotec) Voltages() (float64, float64, float64, error) {
+	b, err := wb.conn.ReadHoldingRegisters(hesotecRegVoltages, 3)
+	if err != nil {
+		return 0, 0, 0, err
+	}
+
+	var res [3]float64
+	for i := range res {
+		res[i] = float64(binary.BigEndian.Uint16(b[2*i:]))
 	}
 
 	return res[0], res[1], res[2], nil
