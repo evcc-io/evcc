@@ -282,7 +282,7 @@ func vehicleInstance(cc config.Named) (api.Vehicle, error) {
 	if err != nil {
 		var ce *util.ConfigError
 		if errors.As(err, &ce) {
-			return nil, fmt.Errorf("cannot create vehicle '%s': %w", cc.Name, err)
+			return nil, err
 		}
 
 		// wrap non-config vehicle errors to prevent fatals
