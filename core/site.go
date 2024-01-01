@@ -82,8 +82,8 @@ type Site struct {
 	bufferStartSoc          float64 // start charging on battery above this Soc
 	batteryDischargeControl bool    // prevent battery discharge for fast and planned charging
 
-	tariffs     tariff.Tariffs           // Tariff
 	loadpoints  []*Loadpoint             // Loadpoints
+	tariffs     *tariff.Tariffs          // Tariffs
 	coordinator *coordinator.Coordinator // Vehicles
 	prioritizer *prioritizer.Prioritizer // Power budgets
 	stats       *Stats                   // Stats
@@ -111,7 +111,7 @@ func NewSiteFromConfig(
 	log *util.Logger,
 	other map[string]interface{},
 	loadpoints []*Loadpoint,
-	tariffs tariff.Tariffs,
+	tariffs *tariff.Tariffs,
 ) (*Site, error) {
 	site := NewSite()
 	if err := util.DecodeOther(other, site); err != nil {
