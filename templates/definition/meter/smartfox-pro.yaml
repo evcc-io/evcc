@@ -69,45 +69,14 @@ render: |
     jq: .values.value[] | select(.attrid=="powerL3Value")."#content" | rtrimstr(" W")
   {{- end }}
   {{- if eq .usage "pv" }}
+  # PV power and energy values are delivered for each inverter, we select them via regex and sum the values
   power: # PV power in W
-    source: calc
-    add:
-    - source: http
-      uri: {{ include "uri" . }}
-      jq: .values.value[] | select(.attrid=="wr1PowerValue")."#content" | rtrimstr(" kW")
-      scale: 1000
-    - source: http
-      uri: {{ include "uri" . }}
-      jq: .values.value[] | select(.attrid=="wr2PowerValue")."#content" | rtrimstr(" kW")
-      scale: 1000
-    - source: http
-      uri: {{ include "uri" . }}
-      jq: .values.value[] | select(.attrid=="wr3PowerValue")."#content" | rtrimstr(" kW")
-      scale: 1000
-    - source: http
-      uri: {{ include "uri" . }}
-      jq: .values.value[] | select(.attrid=="wr4PowerValue")."#content" | rtrimstr(" kW")
-      scale: 1000
-    - source: http
-      uri: {{ include "uri" . }}
-      jq: .values.value[] | select(.attrid=="wr5PowerValue")."#content" | rtrimstr(" kW")
-      scale: 1000
+    source: http
+    uri: {{ include "uri" . }}
+    jq: '[.values.value[] | select(.attrid|test("wr\\d+PowerValue"))."#content" | rtrimstr(" kW") | tonumber] | add'
+    scale: 1000 # wr1PowerValue, ..., wr5PowerValue are in kW
   energy: # PV energy in kWh
-    source: calc
-    add:
-    - source: http
-      uri: {{ include "uri" . }}
-      jq: .values.value[] | select(.attrid=="wr1EnergyValue")."#content" | rtrimstr(" kWh")
-    - source: http
-      uri: {{ include "uri" . }}
-      jq: .values.value[] | select(.attrid=="wr2EnergyValue")."#content" | rtrimstr(" kWh")
-    - source: http
-      uri: {{ include "uri" . }}
-      jq: .values.value[] | select(.attrid=="wr3EnergyValue")."#content" | rtrimstr(" kWh")
-    - source: http
-      uri: {{ include "uri" . }}
-      jq: .values.value[] | select(.attrid=="wr4EnergyValue")."#content" | rtrimstr(" kWh")
-    - source: http
-      uri: {{ include "uri" . }}
-      jq: .values.value[] | select(.attrid=="wr5EnergyValue")."#content" | rtrimstr(" kWh")
+    source: http
+    uri: {{ include "uri" . }}
+    jq: '[.values.value[] | select(.attrid|test("wr\\d+EnergyValue"))."#content" | rtrimstr(" kWh") | tonumber] | add'
   {{- end }}
