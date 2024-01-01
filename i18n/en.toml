@@ -13,7 +13,7 @@ legendTitle = "How should solar energy be used?"
 legendTopAutostart = "starts automatically"
 legendTopName = "battery supported charging"
 legendTopSubline = "without interruptions"
-modalTitle = "Battery settings"
+modalTitle = "Battery Settings"
 
 [batterySettings.bufferStart]
 full = "when nearly full"
@@ -134,10 +134,9 @@ about = "About"
 blog = "Blog"
 docs = "Documentation"
 github = "GitHub"
-login = "Vehicle logins"
+login = "Vehicle Logins"
 needHelp = "Need help?"
-sessions = "Charging sessions"
-settings = "Settings"
+sessions = "Charging Sessions"
 
 [help]
 discussionsButton = "GitHub discussions"
@@ -381,7 +380,7 @@ allVehicles = "all vehicles"
 filter = "Filter"
 
 [settings]
-title = "Settings"
+title = "General Settings"
 
 [settings.hiddenFeatures]
 label = "Experimental"

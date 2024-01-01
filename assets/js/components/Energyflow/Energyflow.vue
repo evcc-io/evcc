@@ -2,6 +2,7 @@
 	<div
 		class="energyflow cursor-pointer position-relative"
 		:class="{ 'energyflow--open': detailsOpen }"
+		data-testid="energyflow"
 		@click="toggleDetails"
 	>
 		<div class="row">
@@ -78,6 +79,7 @@
 							:details="batterySoc"
 							:detailsFmt="batteryFmt"
 							detailsClickable
+							data-testid="energyflow-entry-batterydischarge"
 							@details-clicked="openBatterySettingsModal"
 						/>
 						<EnergyflowEntry
@@ -87,8 +89,9 @@
 							:powerInKw="powerInKw"
 							:details="detailsValue(tariffGrid, tariffCo2)"
 							:detailsFmt="detailsFmt"
-							:detailsClickable="smartCostAvailable"
+							:detailsClickable="gridModalAvailable"
 							:detailsTooltip="detailsTooltip(tariffGrid, tariffCo2)"
+							data-testid="energyflow-entry-gridimport"
 							@details-clicked="openGridSettingsModal"
 						/>
 					</div>
@@ -157,8 +160,6 @@
 				</div>
 			</div>
 		</div>
-		<GridSettingsModal v-bind="gridSettings" />
-		<BatterySettingsModal v-bind="batterySettings" />
 	</div>
 </template>
 
@@ -167,13 +168,12 @@ import "@h2d2/shopicons/es/filled/square";
 import Modal from "bootstrap/js/dist/modal";
 import Visualization from "./Visualization.vue";
 import EnergyflowEntry from "./EnergyflowEntry.vue";
-import GridSettingsModal from "../GridSettingsModal.vue";
 import formatter from "../../mixins/formatter";
 import AnimatedNumber from "../AnimatedNumber.vue";
 import settings from "../../settings";
-import { CO2_TYPE, PRICE_DYNAMIC_TYPE, PRICE_FORECAST_TYPE } from "../../units";
+import { CO2_TYPE } from "../../units";
 import collector from "../../mixins/collector";
-import BatterySettingsModal from "../BatterySettingsModal.vue";
+import gridModalAvailable from "../../utils/gridModalAvailable";
 
 export default {
 	name: "Energyflow",
@@ -181,8 +181,6 @@ export default {
 		Visualization,
 		EnergyflowEntry,
 		AnimatedNumber,
-		GridSettingsModal,
-		BatterySettingsModal,
 	},
 	mixins: [formatter, collector],
 	props: {
@@ -217,8 +215,8 @@ export default {
 		return { detailsOpen: false, detailsCompleteHeight: null, gridSettingsModal: null };
 	},
 	computed: {
-		smartCostAvailable: function () {
-			return [CO2_TYPE, PRICE_DYNAMIC_TYPE, PRICE_FORECAST_TYPE].includes(this.smartCostType);
+		gridModalAvailable: function () {
+			return gridModalAvailable(this.smartCostType);
 		},
 		gridImport: function () {
 			return Math.max(0, this.gridPower);
@@ -288,27 +286,15 @@ export default {
 		batteryFmt() {
 			return (soc) => `${Math.round(soc)}%`;
 		},
-		gridSettings() {
-			return this.collectProps(GridSettingsModal);
-		},
-		batterySettings() {
-			return this.collectProps(BatterySettingsModal);
-		},
 		co2Available() {
 			return this.smartCostType === CO2_TYPE;
 		},
 	},
 	mounted() {
-		this.gridSettingsModal = Modal.getOrCreateInstance(
-			document.querySelector("#gridSettingsModal")
-		);
-		this.batterySettingsModal = Modal.getOrCreateInstance(
-			document.querySelector("#batterySettingsModal")
-		);
 		window.addEventListener("resize", this.updateHeight);
 		// height must be calculated in case of initially open details
 		if (settings.energyflowDetails) {
-			setTimeout(this.toggleDetails, 50);
+			setTimeout(this.toggleDetails, 100);
 		}
 	},
 	unmounted() {
@@ -349,10 +335,14 @@ export default {
 			this.detailsCompleteHeight = this.$refs.detailsInner.offsetHeight;
 		},
 		openGridSettingsModal() {
-			this.gridSettingsModal.show();
+			const modal = Modal.getOrCreateInstance(document.getElementById("gridSettingsModal"));
+			modal.show();
 		},
 		openBatterySettingsModal() {
-			this.batterySettingsModal.show();
+			const modal = Modal.getOrCreateInstance(
+				document.getElementById("batterySettingsModal")
+			);
+			modal.show();
 		},
 	},
 };
