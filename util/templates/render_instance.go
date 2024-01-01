@@ -32,7 +32,7 @@ func RenderInstance(class Class, other map[string]interface{}) (*Instance, error
 
 	b, _, err := tmpl.RenderResult(TemplateRenderModeInstance, other)
 	if err != nil {
-		return nil, err
+		return nil, util.NewConfigError(err)
 	}
 
 	var instance Instance
