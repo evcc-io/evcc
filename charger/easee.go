@@ -369,12 +369,12 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 			c.requestLifetimeEnergyUpdate()
 		}
 
+		c.opMode = opMode
+
 		// startup completed
 		if c.opMode != 0 {
 			c.once.Do(func() { close(c.done) })
 		}
-
-		c.opMode = opMode
 
 	case easee.REASON_FOR_NO_CURRENT:
 		c.reasonForNoCurrent = value.(int)
