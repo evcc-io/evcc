@@ -82,8 +82,8 @@ type Site struct {
 	bufferStartSoc          float64 // start charging on battery above this Soc
 	batteryDischargeControl bool    // prevent battery discharge for fast and planned charging
 
-	tariffs     tariff.Tariffs           // Tariff
 	loadpoints  []*Loadpoint             // Loadpoints
+	tariffs     *tariff.Tariffs          // Tariffs
 	coordinator *coordinator.Coordinator // Vehicles
 	prioritizer *prioritizer.Prioritizer // Power budgets
 	stats       *Stats                   // Stats
@@ -111,7 +111,7 @@ func NewSiteFromConfig(
 	log *util.Logger,
 	other map[string]interface{},
 	loadpoints []*Loadpoint,
-	tariffs tariff.Tariffs,
+	tariffs *tariff.Tariffs,
 ) (*Site, error) {
 	site := NewSite()
 	if err := util.DecodeOther(other, site); err != nil {
@@ -822,20 +822,16 @@ func (site *Site) prepare() {
 	site.publish(keys.GridConfigured, site.gridMeter != nil)
 	site.publish(keys.PvConfigured, len(site.pvMeters) > 0)
 	site.publish(keys.BatteryConfigured, len(site.batteryMeters) > 0)
-	site.publish(keys.BufferSoc, site.bufferSoc)
-	site.publish(keys.BufferStartSoc, site.bufferStartSoc)
-	site.publish(keys.PrioritySoc, site.prioritySoc)
+	site.publish(keys.BatteryMode, site.batteryMode)
 	site.publish(keys.ResidualPower, site.ResidualPower)
-	site.publish(keys.SmartCostLimit, site.smartCostLimit)
-	site.publish(keys.SmartCostType, nil)
+
+	site.publish(keys.Currency, site.tariffs.Currency)
 	site.publish(keys.SmartCostActive, false)
 	if tariff := site.GetTariff(PlannerTariff); tariff != nil {
 		site.publish(keys.SmartCostType, tariff.Type())
+	} else {
+		site.publish(keys.SmartCostType, nil)
 	}
-	site.publish(keys.Currency, site.tariffs.Currency)
-
-	site.publish(keys.BatteryDischargeControl, site.batteryDischargeControl)
-	site.publish(keys.BatteryMode, site.batteryMode)
 
 	if err := site.restoreSettings(); err != nil {
 		site.log.ERROR.Println(err)
