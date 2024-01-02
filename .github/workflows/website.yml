@@ -6,7 +6,6 @@ env:
 on:
   push:
     branches: [master]
-    paths: ["templates/evcc.io/**"]
   workflow_dispatch:
 
 jobs:
