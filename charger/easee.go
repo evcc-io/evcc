@@ -70,6 +70,7 @@ type Easee struct {
 	obsC       chan easee.Observation
 	obsTime    map[easee.ObservationID]time.Time
 	stopTicker chan struct{}
+	once       sync.Once
 }
 
 func init() {
@@ -251,10 +252,7 @@ func (c *Easee) subscribe(client signalr.Client) {
 
 // ProductUpdate implements the signalr receiver
 func (c *Easee) ProductUpdate(i json.RawMessage) {
-	var (
-		once sync.Once
-		res  easee.Observation
-	)
+	var res easee.Observation
 
 	if err := json.Unmarshal(i, &res); err != nil {
 		c.log.ERROR.Printf("invalid message: %s %v", i, err)
@@ -362,7 +360,7 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 
 		// startup completed
 		if c.opMode != 0 {
-			once.Do(func() { close(c.done) })
+			c.once.Do(func() { close(c.done) })
 		}
 
 		c.opMode = opMode
