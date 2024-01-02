@@ -27,32 +27,45 @@ render: |
   {{- if eq .usage "pv" }}
   power:
     source: modbus
-    uri: 192.168.178.92:502
-    id: 3
+    {{- include "modbus" . | indent 2 }}
     register:
       address: 30773 # SMA Modbus Profile: DcMs.Watt
       type: input
       decode: int32nan
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register: # manual non-sunspec register configuration
+      address: 30513 # SMA Modbus Profile: Metering.TotWhOut
+      type: holding
+      decode: uint64nan
+    scale: 0.001
   {{- end }}
   {{- if eq .usage "battery" }}
   power:
     source: calc
     add:
       - source: modbus
-        uri: 192.168.178.93:502
-        id: 3
+        {{- include "modbus" . | indent 4 }}
         register: # manual non-sunspec register configuration
           address: 31395 # SMA Modbus Profile: BatDsch.CurBatDsch
           type: input
           decode: uint32nan
       - source: modbus
-        uri: 192.168.178.93:502
-        id: 3
+        {{- include "modbus" . | indent 4 }}
         register: # manual non-sunspec register configuration
           address: 31393 # SMA Modbus Profile: BatChrg.CurBatCha
           type: input
           decode: uint32nan
         scale: -1
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register: # manual non-sunspec register configuration
+      address: 31401 # SMA Modbus Profile: CmpBMS.GetBatDschWh
+      type: holding
+      decode: uint64nan
+    scale: 0.001
   soc:
     source: modbus
     {{- include "modbus" . | indent 2 }}
