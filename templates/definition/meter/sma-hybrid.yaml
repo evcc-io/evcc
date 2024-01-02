@@ -46,13 +46,13 @@ render: |
     source: calc
     add:
       - source: modbus
-        {{- include "modbus" . | indent 4 }}
+        {{- include "modbus" . | indent 6 }}
         register: # manual non-sunspec register configuration
           address: 31395 # SMA Modbus Profile: BatDsch.CurBatDsch
           type: input
           decode: uint32nan
       - source: modbus
-        {{- include "modbus" . | indent 4 }}
+        {{- include "modbus" . | indent 6 }}
         register: # manual non-sunspec register configuration
           address: 31393 # SMA Modbus Profile: BatChrg.CurBatCha
           type: input
