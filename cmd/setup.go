@@ -609,24 +609,25 @@ func configureTariff(name string, conf config.Typed, t *api.Tariff, wg *sync.Wai
 }
 
 func configureTariffs(conf tariffConfig) (*tariff.Tariffs, error) {
-	var grid, feedin, co2, planner api.Tariff
+	tariffs := tariff.Tariffs{
+		Currency: currency.EUR,
+	}
 
-	currencyCode := currency.EUR
 	if conf.Currency != "" {
-		currencyCode = currency.MustParseISO(conf.Currency)
+		tariffs.Currency = currency.MustParseISO(conf.Currency)
 	}
 
 	var wg sync.WaitGroup
 	wg.Add(4)
 
-	go configureTariff("grid", conf.Grid, &grid, &wg)
-	go configureTariff("feedin", conf.FeedIn, &feedin, &wg)
-	go configureTariff("co2", conf.Co2, &co2, &wg)
-	go configureTariff("planner", conf.Planner, &planner, &wg)
+	go configureTariff("grid", conf.Grid, &tariffs.Grid, &wg)
+	go configureTariff("feedin", conf.FeedIn, &tariffs.FeedIn, &wg)
+	go configureTariff("co2", conf.Co2, &tariffs.Co2, &wg)
+	go configureTariff("planner", conf.Planner, &tariffs.Planner, &wg)
 
 	wg.Wait()
 
-	return tariff.NewTariffs(currencyCode, grid, feedin, co2, planner), nil
+	return &tariffs, nil
 }
 
 func configureDevices(conf globalConfig) error {
