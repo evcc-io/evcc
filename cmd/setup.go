@@ -595,6 +595,10 @@ func configureMessengers(conf messagingConfig, valueChan chan util.Param, cache 
 func configureTariff(name string, conf config.Typed, t *api.Tariff, wg *sync.WaitGroup) {
 	defer wg.Done()
 
+	if conf.Type == "" {
+		return
+	}
+
 	res, err := tariff.NewFromConfig(conf.Type, conf.Other)
 	if err != nil {
 		log.ERROR.Printf("failed configuring %s tariff: %v", name, err)
