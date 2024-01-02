@@ -83,11 +83,11 @@ export default {
 					? t("cleanEnergyCharging", {
 							co2: this.fmtCo2Short(this.tariffCo2),
 							limit: this.fmtCo2Short(this.smartCostLimit),
-					  })
+						})
 					: t("cheapEnergyCharging", {
 							price: this.fmtPricePerKWh(this.tariffGrid, this.currency, true),
 							limit: this.fmtPricePerKWh(this.smartCostLimit, this.currency, true),
-					  });
+						});
 			}
 
 			if (this.pvTimerActive && !this.enabled && this.pvAction === "enable") {

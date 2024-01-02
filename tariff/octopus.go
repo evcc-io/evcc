@@ -74,8 +74,6 @@ func (t *Octopus) run(done chan error) {
 			continue
 		}
 
-		once.Do(func() { close(done) })
-
 		data := make(api.Rates, 0, len(res.Results))
 		for _, r := range res.Results {
 			ar := api.Rate{
@@ -89,6 +87,7 @@ func (t *Octopus) run(done chan error) {
 		data.Sort()
 
 		t.data.Set(data)
+		once.Do(func() { close(done) })
 	}
 }
 

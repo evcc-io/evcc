@@ -16,10 +16,8 @@ meters:
 loadpoints:
   - title: Loadpoint
     charger: charger
-    vehicle: vehicleSocCapacity
   - title: Loadpoint with SoC
     charger: chargerSoc
-    vehicle: vehicle
 
 chargers:
   - name: charger

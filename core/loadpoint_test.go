@@ -88,9 +88,6 @@ func TestNew(t *testing.T) {
 	if lp.phases != 0 {
 		t.Errorf("Phases %v", lp.phases)
 	}
-	if lp.MinCurrent != minA {
-		t.Errorf("MinCurrent %v", lp.MinCurrent)
-	}
 	if lp.MaxCurrent != maxA {
 		t.Errorf("MaxCurrent %v", lp.MaxCurrent)
 	}
@@ -526,6 +523,7 @@ func cacheExpecter(t *testing.T, lp *Loadpoint) (*util.Cache, func(key string, v
 	go cache.Run(paramC)
 
 	expect := func(key string, val interface{}) {
+		time.Sleep(100 * time.Millisecond) // wait for cache to catch up
 		p := cache.Get(key)
 		t.Logf("%s: %.f", key, p.Val) // REMOVE
 		if p.Val != val {

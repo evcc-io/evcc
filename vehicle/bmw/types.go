@@ -7,7 +7,9 @@ type Vehicle struct {
 }
 
 type VehicleStatus struct {
-	State struct {
+	StatusCode int
+	Message    string
+	State      struct {
 		CurrentMileage        int64
 		Range                 int64
 		ElectricChargingState struct {

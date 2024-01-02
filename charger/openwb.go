@@ -74,7 +74,7 @@ func NewOpenWB(log *util.Logger, mqttconf mqtt.Config, id int, topic string, p1p
 	}
 
 	// check if loadpoint configured
-	configured, err := to.BoolGetter(mq(openwb.ConfiguredTopic))
+	configured, err := provider.NewMqtt(log, client, fmt.Sprintf("%s/lp/%d/%s", topic, id, openwb.ConfiguredTopic), timeout).BoolGetter()
 	if err != nil {
 		return nil, err
 	}

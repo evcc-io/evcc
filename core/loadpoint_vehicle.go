@@ -156,7 +156,7 @@ func (lp *Loadpoint) setActiveVehicle(v api.Vehicle) {
 	}
 
 	// re-publish vehicle settings
-	lp.publish(keys.PhasesActive, lp.activePhases())
+	lp.publish(keys.PhasesActive, lp.ActivePhases())
 	lp.unpublishVehicle()
 
 	// publish effective values

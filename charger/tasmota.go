@@ -23,6 +23,8 @@ func init() {
 	registry.Add("tasmota", NewTasmotaFromConfig)
 }
 
+//go:generate go run ../cmd/tools/decorate.go -f decorateTasmota -b *Tasmota -r api.Charger -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)"
+
 // NewTasmotaFromConfig creates a Tasmota charger from generic config
 func NewTasmotaFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
@@ -46,9 +48,13 @@ func NewTasmotaFromConfig(other map[string]interface{}) (api.Charger, error) {
 }
 
 // NewTasmota creates Tasmota charger
-func NewTasmota(embed embed, uri, user, password string, channels []int, standbypower float64, cache time.Duration) (*Tasmota, error) {
+func NewTasmota(embed embed, uri, user, password string, channels []int, standbypower float64, cache time.Duration) (api.Charger, error) {
 	conn, err := tasmota.NewConnection(uri, user, password, channels, cache)
 	if err != nil {
+		return nil, err
+	}
+
+	if err := conn.RelayExists(); err != nil {
 		return nil, err
 	}
 
@@ -58,7 +64,13 @@ func NewTasmota(embed embed, uri, user, password string, channels []int, standby
 
 	c.switchSocket = NewSwitchSocket(&embed, c.Enabled, c.conn.CurrentPower, standbypower)
 
-	return c, c.conn.RelayExists()
+	var currents, voltages func() (float64, float64, float64, error)
+	if len(channels) == 3 {
+		currents = c.currents
+		voltages = c.voltages
+	}
+
+	return decorateTasmota(c, currents, voltages), nil
 }
 
 // Enabled implements the api.Charger interface
@@ -78,16 +90,12 @@ func (c *Tasmota) TotalEnergy() (float64, error) {
 	return c.conn.TotalEnergy()
 }
 
-var _ api.PhaseCurrents = (*Tasmota)(nil)
-
 // Currents implements the api.PhaseCurrents interface
-func (c *Tasmota) Currents() (float64, float64, float64, error) {
+func (c *Tasmota) currents() (float64, float64, float64, error) {
 	return c.conn.Currents()
 }
 
-var _ api.PhaseVoltages = (*Tasmota)(nil)
-
 // Voltages implements the api.PhaseVoltages interface
-func (c *Tasmota) Voltages() (float64, float64, float64, error) {
+func (c *Tasmota) voltages() (float64, float64, float64, error) {
 	return c.conn.Voltages()
 }
