@@ -1,9 +1,5 @@
-template: sma-hybrid
+template: sma-battery
 products:
-  - brand: SMA
-    description:
-      de: Smart Energy Hybrid-Wechselrichter
-      en: Smart Energy Hybrid Inverter
   - brand: SMA
     description:
       generic: Sunny Island (Modbus)
@@ -13,15 +9,14 @@ products:
 capabilities: ["battery-control"]
 params:
   - name: usage
-    choice: ["pv", "battery", "grid"]
-    allinone: true
+    choice: ["battery", "grid"]
   - name: modbus
     choice: ["tcpip"]
     port: 502
     id: 3
     help:
-      en: The Modbus TCP-Server needs to be enabled on this Smart Energy inverter
-      de: Der Modbus TCP-Server muss an diesem Smart Energy Wechselrichter aktiviert sein
+      en: The Modbus TCP-Server needs to be enabled on this battery inverter
+      de: Der Modbus TCP-Server muss an diesem Batteriewechselrichter aktiviert sein
   - name: capacity
     advanced: true
   - name: watchdog
@@ -30,12 +25,12 @@ params:
     advanced: true
 render: |
   type: custom
-  {{- if eq .usage "pv" }}
+  {{- if eq .usage "battery" }}
   power:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 30773 # SMA Modbus Profile: DcMs.Watt
+      address: 30775 # SMA Modbus Profile: GridMs.TotW
       type: input
       decode: int32nan
   energy:
@@ -43,32 +38,6 @@ render: |
     {{- include "modbus" . | indent 2 }}
     register:
       address: 30513 # SMA Modbus Profile: Metering.TotWhOut
-      type: holding
-      decode: uint64nan
-    scale: 0.001
-  {{- end }}
-  {{- if eq .usage "battery" }}
-  power:
-    source: calc
-    add:
-      - source: modbus
-        {{- include "modbus" . | indent 6 }}
-        register:
-          address: 31395 # SMA Modbus Profile: BatDsch.CurBatDsch
-          type: input
-          decode: uint32nan
-      - source: modbus
-        {{- include "modbus" . | indent 6 }}
-        register:
-          address: 31393 # SMA Modbus Profile: BatChrg.CurBatCha
-          type: input
-          decode: uint32nan
-        scale: -1
-  energy:
-    source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: 31401 # SMA Modbus Profile: CmpBMS.GetBatDschWh
       type: holding
       decode: uint64nan
     scale: 0.001
