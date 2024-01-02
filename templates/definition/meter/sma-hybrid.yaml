@@ -26,39 +26,33 @@ render: |
   type: custom
   {{- if eq .usage "pv" }}
   power:
-    source: calc
-    add:
-      - source: modbus
-        {{- include "modbus" . | indent 6 }}
-        register: # manual non-sunspec register configuration
-          address: 30773 # SMA Modbus Profile: DC power input [1]
-          type: holding
-          decode: int32nan
-      - source: modbus
-        {{- include "modbus" . | indent 6 }}
-        register: # manual non-sunspec register configuration
-          address: 30961 # SMA Modbus Profile: DC power input [2]
-          type: holding
-          decode: int32nan
+    source: modbus
+    uri: 192.168.178.92:502
+    id: 3
+    register:
+      address: 30773 # SMA Modbus Profile: DcMs.Watt
+      type: input
+      decode: int32nan
   {{- end }}
   {{- if eq .usage "battery" }}
   power:
     source: calc
-    mul:
+    add:
       - source: modbus
-        {{- include "modbus" . | indent 6 }}
+        uri: 192.168.178.93:502
+        id: 3
         register: # manual non-sunspec register configuration
-          address: 30851 # SMA Modbus Profile: Battery voltage
-          type: holding
+          address: 31395 # SMA Modbus Profile: BatDsch.CurBatDsch
+          type: input
           decode: uint32nan
-        scale: 0.01
       - source: modbus
-        {{- include "modbus" . | indent 6 }}
+        uri: 192.168.178.93:502
+        id: 3
         register: # manual non-sunspec register configuration
-          address: 30843 # SMA Modbus Profile: Battery current
-          type: holding
-          decode: int32nan
-        scale: 0.001
+          address: 31393 # SMA Modbus Profile: BatChrg.CurBatCha
+          type: input
+          decode: uint32nan
+        scale: -1
   soc:
     source: modbus
     {{- include "modbus" . | indent 2 }}
