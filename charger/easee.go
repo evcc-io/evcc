@@ -45,7 +45,6 @@ type Easee struct {
 	*request.Helper
 	charger                 string
 	site, circuit           int
-	updated                 time.Time
 	lastEnergyPollTriggered time.Time
 	log                     *util.Logger
 	mux                     sync.Mutex
@@ -276,13 +275,6 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
-	if c.updated.IsZero() {
-		defer once.Do(func() {
-			close(c.done)
-		})
-	}
-	c.updated = time.Now()
-
 	if prevTime, ok := c.obsTime[res.ID]; ok && prevTime.After(res.Timestamp) {
 		// received observation is outdated, ignoring
 		return
@@ -372,9 +364,7 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 		c.opMode = opMode
 
 		// startup completed
-		if c.opMode != 0 {
-			c.once.Do(func() { close(c.done) })
-		}
+		c.once.Do(func() { close(c.done) })
 
 	case easee.REASON_FOR_NO_CURRENT:
 		c.reasonForNoCurrent = value.(int)
