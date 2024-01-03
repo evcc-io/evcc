@@ -12,8 +12,3 @@ type TypeSummary struct {
 type Summary struct {
 	Charger, Grid, PV, Charge, Battery, Meter TypeSummary
 }
-
-const (
-	tid     = "task.id"
-	smaHttp = "details.http"
-)
