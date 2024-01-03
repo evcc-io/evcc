@@ -30,6 +30,7 @@ const (
 	TariffPriceHome       = "tariffPriceHome"
 	TariffPriceLoadpoints = "tariffPriceLoadpoints"
 	Vehicles              = "vehicles"
+	Language              = "language"
 
 	// battery settings
 	BatteryCapacity         = "batteryCapacity"

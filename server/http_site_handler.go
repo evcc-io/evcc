@@ -136,6 +136,21 @@ func boolHandler(set func(bool) error, get func() bool) http.HandlerFunc {
 	}
 }
 
+// stringHandler updates string-param api
+func stringHandler(set func(string) error, get func() string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+
+		val := vars["value"]
+		if err := set(val); err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		jsonResult(w, get())
+	}
+}
+
 // boolGetHandler retrieves bool api values
 func boolGetHandler(get func() bool) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {

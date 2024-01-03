@@ -95,6 +95,9 @@ type Site struct {
 	batterySoc   float64         // Battery soc
 	batteryMode  api.BatteryMode // Battery mode
 
+	// user settings
+	language string // Language
+
 	publishCache map[string]any // store last published values to avoid unnecessary republishing
 }
 
@@ -250,6 +253,12 @@ func (site *Site) restoreSettings() error {
 	}
 	if v, err := settings.Bool(keys.BatteryDischargeControl); err == nil {
 		if err := site.SetBatteryDischargeControl(v); err != nil {
+			return err
+		}
+	}
+
+	if v, err := settings.String(keys.Language); err == nil {
+		if err := site.SetLanguage(v); err != nil {
 			return err
 		}
 	}

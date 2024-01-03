@@ -48,12 +48,15 @@ async function _start(config) {
       throw new Error("evcc terminated", code);
     }
   });
+  // ensure evcc responds
   await waitOn({ resources: [BASE_URL] });
 }
 
 async function _stop() {
   console.log("shutting down evcc");
   await axios.post(BASE_URL + "/api/shutdown");
+  // ensure evcc is down
+  await waitOn({ resources: [BASE_URL], reverse: true });
 }
 
 async function _clean() {

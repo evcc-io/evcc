@@ -1,8 +1,10 @@
 const { test, expect } = require("@playwright/test");
-const { start, stop } = require("./evcc");
+const { start, stop, restart } = require("./evcc");
+
+const CONFIG = "basics.evcc.yaml";
 
 test.beforeAll(async () => {
-  await start("basics.evcc.yaml");
+  await start(CONFIG);
 });
 test.afterAll(async () => {
   await stop();
@@ -54,5 +56,37 @@ test.describe("session info", async () => {
     await expect(page.getByTestId("sessionInfoLabel").first()).toContainText("Solar");
     await page.reload();
     await expect(page.getByTestId("sessionInfoLabel").first()).toContainText("Solar");
+  });
+});
+
+test.describe("language", async () => {
+  test("change and persist", async ({ page }) => {
+    // english (browser default)
+    await page.goto("/");
+    await expect(page.getByTestId("vehicle-status")).toHaveText("Charging…");
+
+    // switch to german
+    await page.getByTestId("topnavigation-button").click();
+    await page.getByRole("button", { name: "Settings" }).click();
+    await page.getByLabel("Language").selectOption({ label: "Deutsch" });
+    await page.getByRole("button", { name: "Close" }).click();
+    await expect(page.getByTestId("vehicle-status")).toHaveText("Ladevorgang aktiv …");
+
+    // survive reload
+    await page.reload();
+    await expect(page.getByTestId("vehicle-status")).toHaveText("Ladevorgang aktiv …");
+
+    // survive restart
+    await restart(CONFIG);
+    console.log("restarted>>>>");
+    await page.goto("/");
+    await expect(page.getByTestId("vehicle-status")).toHaveText("Ladevorgang aktiv …");
+
+    // switch to auto
+    await page.getByTestId("topnavigation-button").click();
+    await page.getByRole("button", { name: "Einstellungen" }).click();
+    await page.getByLabel("Sprache").selectOption({ label: "Automatisch" });
+    await page.getByRole("button", { name: "Close" }).click();
+    await expect(page.getByTestId("vehicle-status")).toHaveText("Charging…");
   });
 });

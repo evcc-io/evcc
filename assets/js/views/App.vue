@@ -5,6 +5,7 @@
 </template>
 
 <script>
+import { setLocalePreference, removeLocalePreference } from "../i18n";
 import store from "../store";
 
 export default {
@@ -19,6 +20,21 @@ export default {
 	head() {
 		const siteTitle = store.state.siteTitle;
 		return { title: siteTitle ? `${siteTitle} | evcc` : "evcc" };
+	},
+	computed: {
+		language() {
+			return store.state.language;
+		},
+	},
+	watch: {
+		language(value) {
+			const i18n = this.$root.$i18n;
+			if (!value || value == "auto") {
+				removeLocalePreference(i18n);
+			} else {
+				setLocalePreference(i18n, value);
+			}
+		},
 	},
 	mounted: function () {
 		this.connect();

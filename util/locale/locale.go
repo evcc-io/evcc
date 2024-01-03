@@ -60,3 +60,13 @@ func LocalizeID(id string) string {
 		MessageID: id,
 	})
 }
+
+func LanguageExists(lang string) bool {
+	langTag := language.Make(lang)
+	for _, tag := range Bundle.LanguageTags() {
+		if tag == langTag {
+			return true
+		}
+	}
+	return false
+}

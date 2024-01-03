@@ -8,6 +8,7 @@ import (
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/server/db/settings"
+	"github.com/evcc-io/evcc/util/locale"
 )
 
 var _ site.API = (*Site)(nil)
@@ -171,6 +172,33 @@ func (site *Site) SetSmartCostLimit(val float64) error {
 		site.smartCostLimit = val
 		settings.SetFloat(keys.SmartCostLimit, site.smartCostLimit)
 		site.publish(keys.SmartCostLimit, site.smartCostLimit)
+	}
+
+	return nil
+}
+
+// GetLanguage returns the language
+func (site *Site) GetLanguage() string {
+	site.RLock()
+	defer site.RUnlock()
+	return site.language
+}
+
+// SetLanguage sets the language
+func (site *Site) SetLanguage(lang string) error {
+	site.Lock()
+	defer site.Unlock()
+
+	if lang != "auto" && !locale.LanguageExists(lang) {
+		return errors.New("language not supported")
+	}
+
+	site.log.DEBUG.Println("set language:", lang)
+
+	if site.language != lang {
+		site.language = lang
+		settings.SetString(keys.Language, site.language)
+		site.publish(keys.Language, site.language)
 	}
 
 	return nil

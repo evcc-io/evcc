@@ -41,7 +41,12 @@ type API interface {
 	//
 	// battery control
 	//
-
 	GetBatteryDischargeControl() bool
 	SetBatteryDischargeControl(bool) error
+
+	//
+	// ui language
+	//
+	GetLanguage() string
+	SetLanguage(string) error
 }

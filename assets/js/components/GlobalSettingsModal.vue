@@ -41,7 +41,7 @@
 									v-model="language"
 									class="form-select form-select-sm w-75"
 								>
-									<option value="">{{ $t("settings.language.auto") }}</option>
+									<option value="auto">{{ $t("settings.language.auto") }}</option>
 									<option
 										v-for="option in languageOptions"
 										:key="option"
@@ -99,10 +99,11 @@ import TelemetrySettings from "./TelemetrySettings.vue";
 import SponsorTokenExpires from "./SponsorTokenExpires.vue";
 import FormRow from "./FormRow.vue";
 import SelectGroup from "./SelectGroup.vue";
-import { getLocalePreference, setLocalePreference, LOCALES, removeLocalePreference } from "../i18n";
+import { getLocalePreference, LOCALES } from "../i18n";
 import { getThemePreference, setThemePreference, THEMES } from "../theme";
 import { getUnits, setUnits, UNITS } from "../units";
 import { getHiddenFeatures, setHiddenFeatures } from "../featureflags";
+import api from "../api";
 
 export default {
 	name: "GlobalSettingsModal",
@@ -114,7 +115,7 @@ export default {
 	data: function () {
 		return {
 			theme: getThemePreference(),
-			language: getLocalePreference() || "",
+			language: getLocalePreference() || "auto",
 			unit: getUnits(),
 			hiddenFeatures: getHiddenFeatures(),
 			THEMES,
@@ -142,12 +143,7 @@ export default {
 			setHiddenFeatures(value);
 		},
 		language(value) {
-			const i18n = this.$root.$i18n;
-			if (value) {
-				setLocalePreference(i18n, value);
-			} else {
-				removeLocalePreference(i18n);
-			}
+			api.post(`/settings/language/${value}`);
 		},
 	},
 };
