@@ -249,7 +249,9 @@ func (site *Site) restoreSettings() error {
 		}
 	}
 	if v, err := settings.Bool(keys.BatteryDischargeControl); err == nil {
-		site.batteryDischargeControl = v
+		if err := site.SetBatteryDischargeControl(v); err != nil {
+			return err
+		}
 	}
 	return nil
 }
