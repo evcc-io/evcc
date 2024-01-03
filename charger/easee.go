@@ -46,6 +46,7 @@ type Easee struct {
 	charger                 string
 	site, circuit           int
 	lastEnergyPollTriggered time.Time
+	lastOpModePollTriggered time.Time
 	log                     *util.Logger
 	mux                     sync.Mutex
 	lastEnergyPollMux       sync.Mutex
@@ -57,6 +58,7 @@ type Easee struct {
 	authorize               bool
 	enabled                 bool
 	opMode                  int
+	pilotMode               string
 	reasonForNoCurrent      int
 	phaseMode               int
 	sessionStartEnergy      *float64
@@ -243,11 +245,6 @@ func (c *Easee) subscribe(client signalr.Client) {
 				if err := <-client.Send("SubscribeWithCurrentState", c.charger, true); err != nil {
 					c.log.ERROR.Printf("SubscribeWithCurrentState: %v", err)
 				}
-				// poll opMode from charger as API can give outdated initial data after (re)connect
-				uri := fmt.Sprintf("%s/chargers/%s/commands/poll_chargeropmode", easee.API, c.charger)
-				if _, err := c.Post(uri, request.JSONContent, nil); err != nil {
-					c.log.WARN.Printf("failed to poll CHARGER_OP_MODE, results may vary: %v", err)
-				}
 			}
 		}
 	}()
@@ -368,6 +365,8 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 
 	case easee.REASON_FOR_NO_CURRENT:
 		c.reasonForNoCurrent = value.(int)
+	case easee.PILOT_MODE:
+		c.pilotMode = value.(string)
 	}
 
 	select {
@@ -407,6 +406,7 @@ func (c *Easee) chargers() ([]easee.Charger, error) {
 // Status implements the api.Charger interface
 func (c *Easee) Status() (api.ChargeStatus, error) {
 	c.updateSmartCharging()
+	c.confirmStatusConsistency()
 
 	c.mux.Lock()
 	defer c.mux.Unlock()
@@ -838,4 +838,24 @@ var _ loadpoint.Controller = (*Easee)(nil)
 // LoadpointControl implements loadpoint.Controller
 func (c *Easee) LoadpointControl(lp loadpoint.API) {
 	c.lp = lp
+}
+
+// checks that opMode matches powerflow and polls if inconsistent
+func (c *Easee) confirmStatusConsistency() {
+	c.mux.Lock()
+	opCharging := c.opMode == easee.ModeCharging
+	pilotCharging := c.pilotMode == "C"
+	powerFlowing := c.currentPower > 0
+	c.mux.Unlock()
+
+	if opCharging != powerFlowing || opCharging != pilotCharging {
+		// poll opMode from charger as API can give outdated data after SignalR (re)connect
+		if time.Since(c.lastOpModePollTriggered) > time.Minute*3 { // api rate limit, max once in 3 minutes
+			uri := fmt.Sprintf("%s/chargers/%s/commands/poll_chargeropmode", easee.API, c.charger)
+			if _, err := c.Post(uri, request.JSONContent, nil); err != nil {
+				c.log.WARN.Printf("failed to poll CHARGER_OP_MODE, results may vary: %v", err)
+			}
+			c.lastOpModePollTriggered = time.Now()
+		}
+	}
 }
