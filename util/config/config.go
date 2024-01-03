@@ -135,6 +135,13 @@ func ConfigurationsByClass(class templates.Class) ([]Config, error) {
 	return res, tx.Error
 }
 
+// ConfigByID returns device by id from the database
+func ConfigByID(id int) (Config, error) {
+	var config Config
+	tx := db.Where(&Config{ID: id}).Preload("Details").First(&config)
+	return config, tx.Error
+}
+
 // AddConfig adds a new config to the database
 func AddConfig(class templates.Class, typ string, conf map[string]any) (Config, error) {
 	config := Config{
