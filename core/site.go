@@ -819,24 +819,29 @@ func (site *Site) update(lp Updater) {
 
 // prepare publishes initial values
 func (site *Site) prepare() {
+	if err := site.restoreSettings(); err != nil {
+		site.log.ERROR.Println(err)
+	}
+
 	site.publish(keys.SiteTitle, site.Title)
 
 	site.publish(keys.GridConfigured, site.gridMeter != nil)
 	site.publish(keys.PvConfigured, len(site.pvMeters) > 0)
 	site.publish(keys.BatteryConfigured, len(site.batteryMeters) > 0)
+	site.publish(keys.BufferSoc, site.bufferSoc)
+	site.publish(keys.BufferStartSoc, site.bufferStartSoc)
+	site.publish(keys.PrioritySoc, site.prioritySoc)
 	site.publish(keys.BatteryMode, site.batteryMode)
+	site.publish(keys.BatteryDischargeControl, site.batteryDischargeControl)
 	site.publish(keys.ResidualPower, site.ResidualPower)
 
 	site.publish(keys.Currency, site.tariffs.Currency)
 	site.publish(keys.SmartCostActive, false)
+	site.publish(keys.SmartCostLimit, site.smartCostLimit)
 	if tariff := site.GetTariff(PlannerTariff); tariff != nil {
 		site.publish(keys.SmartCostType, tariff.Type())
 	} else {
 		site.publish(keys.SmartCostType, nil)
-	}
-
-	if err := site.restoreSettings(); err != nil {
-		site.log.ERROR.Println(err)
 	}
 
 	site.publishVehicles()
