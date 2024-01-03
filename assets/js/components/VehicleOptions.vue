@@ -21,7 +21,8 @@
 			</li>
 			<li v-if="!isUnknown">
 				<button type="button" class="dropdown-item" @click="removeVehicle()">
-					{{ $t("main.vehicle.unknown") }}
+					<span v-if="connected">{{ $t("main.vehicle.unknown") }}</span>
+					<span v-else>{{ $t("main.vehicle.none") }}</span>
 				</button>
 			</li>
 		</ul>
@@ -35,6 +36,7 @@ import Dropdown from "bootstrap/js/dist/dropdown";
 export default {
 	name: "VehicleOptions",
 	props: {
+		connected: Boolean,
 		id: [String, Number],
 		vehicles: Array,
 		isUnknown: Boolean,
