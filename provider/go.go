@@ -167,6 +167,10 @@ func (p *Go) evaluate() (res any, err error) {
 		return nil, err
 	}
 
+	if v.IsNil() {
+		return nil, nil
+	}
+
 	return normalizeValue(v.Interface())
 }
 
