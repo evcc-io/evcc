@@ -45,7 +45,6 @@ type Easee struct {
 	*request.Helper
 	charger                 string
 	site, circuit           int
-	updated                 time.Time
 	lastEnergyPollTriggered time.Time
 	log                     *util.Logger
 	mux                     sync.Mutex
@@ -69,6 +68,7 @@ type Easee struct {
 	obsC       chan easee.Observation
 	obsTime    map[easee.ObservationID]time.Time
 	stopTicker chan struct{}
+	once       sync.Once
 }
 
 func init() {
@@ -255,10 +255,7 @@ func (c *Easee) subscribe(client signalr.Client) {
 
 // ProductUpdate implements the signalr receiver
 func (c *Easee) ProductUpdate(i json.RawMessage) {
-	var (
-		once sync.Once
-		res  easee.Observation
-	)
+	var res easee.Observation
 
 	if err := json.Unmarshal(i, &res); err != nil {
 		c.log.ERROR.Printf("invalid message: %s %v", i, err)
@@ -277,13 +274,6 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 
 	c.mux.Lock()
 	defer c.mux.Unlock()
-
-	if c.updated.IsZero() {
-		defer once.Do(func() {
-			close(c.done)
-		})
-	}
-	c.updated = time.Now()
 
 	if prevTime, ok := c.obsTime[res.ID]; ok && prevTime.After(res.Timestamp) {
 		// received observation is outdated, ignoring
@@ -372,6 +362,9 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 		}
 
 		c.opMode = opMode
+
+		// startup completed
+		c.once.Do(func() { close(c.done) })
 
 	case easee.REASON_FOR_NO_CURRENT:
 		c.reasonForNoCurrent = value.(int)
