@@ -78,7 +78,6 @@ test.describe("language", async () => {
 
     // survive restart
     await restart(CONFIG);
-    console.log("restarted>>>>");
     await page.goto("/");
     await expect(page.getByTestId("vehicle-status")).toHaveText("Ladevorgang aktiv …");
 
