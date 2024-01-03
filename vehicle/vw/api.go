@@ -41,17 +41,6 @@ func NewAPI(log *util.Logger, ts oauth2.TokenSource, brand, country string) *API
 	return v
 }
 
-// Vehicles implements the /vehicles response
-func (v *API) Vehicles() ([]string, error) {
-	var res VehiclesResponse
-	uri := fmt.Sprintf("%s/usermanagement/users/v1/%s/%s/vehicles", v.baseURI, v.brand, v.country)
-	err := v.GetJSON(uri, &res)
-	if err != nil && res.Error != nil {
-		err = res.Error.Error()
-	}
-	return res.UserVehicles.Vehicle, err
-}
-
 // HomeRegion updates the home region for the given vehicle
 func (v *API) HomeRegion(vin string) error {
 	var res HomeRegion
