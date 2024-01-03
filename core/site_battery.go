@@ -6,6 +6,10 @@ import (
 	"github.com/evcc-io/evcc/core/loadpoint"
 )
 
+func batteryModeModified(mode api.BatteryMode) bool {
+	return mode != api.BatteryUnknown && mode != api.BatteryNormal
+}
+
 // GetBatteryMode returns the battery mode
 func (site *Site) GetBatteryMode() api.BatteryMode {
 	site.RLock()
