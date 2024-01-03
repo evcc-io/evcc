@@ -1,8 +1,8 @@
-template: smartfox-pro
+template: smartfox-em2
 products:
   - brand: Smartfox
     description:
-      generic: Pro (Firmware Version EM2 00.01.07.03) - may also work on Pro 2 (EM3 00.01.07.03)
+      generic: Pro, Pro 2, Pro Light, Pro Light 2, Light, Reg, Reg extended (EM2 firmware)
 requirements:
   description:
     de: |
