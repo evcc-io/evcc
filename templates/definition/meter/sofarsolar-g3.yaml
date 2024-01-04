@@ -170,7 +170,6 @@ render: |
   #         address: 0x104D # BatConfig_Depth_of_Discharge
   #         type: writemultiple
   #         decode: uint16
-  #       scale: 100
   capacity: {{ .capacity }} # kWh
   # minsoc: {{ .minsoc }} # %
   # maxsoc: {{ .maxsoc }} # %
