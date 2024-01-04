@@ -7,7 +7,7 @@ products:
 capabilities: ["battery-control"]
 params:
   - name: usage
-    choice: ["pv", "battery", "grid"]
+    choice: ["pv", "battery"]
     allinone: true
   - name: modbus
     choice: ["tcpip"]

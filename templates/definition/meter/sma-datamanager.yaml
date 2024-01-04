@@ -1,6 +1,5 @@
 template: sma-data-manager
-covers:
-  - sma-data-manager-m-lite
+covers: ["sma-data-manager-m-lite"]
 products:
   - brand: SMA
     description:
