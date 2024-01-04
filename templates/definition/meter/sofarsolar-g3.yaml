@@ -12,7 +12,7 @@ products:
   - brand: SofarSolar
     description:
       generic: SOFAR 5…24KTL-G3
-capabilities: ["battery-control"]
+# capabilities: ["battery-control"]
 requirements:
   description:
     de: Es wird dringend empfohlen die Verbindung über einen LSE-3 Logger Stick herzustellen. Andere Verbindungswege (z.B. LSW-3 oder via RS485) sind u.U. instabil und benötigen Verzögerungen (delay) > 0s.
@@ -155,23 +155,22 @@ render: |
       address: 0x0608 # SOC_Bat1
       type: holding
       decode: uint16
-  limitsoc:
-    source: go
-    script:
-      int(100-limitSoc)
-    out:
-    - name: dod
-      type: int
-      config:
-        source: modbus
-        {{- include "modbus" . | indent 6 }}
-        delay: {{ .delay }}
-        register:
-          address: 0x104D # BatConfig_Depth_of_Discharge
-          type: writemultiple
-          decode: uint16
-        scale: 100
+  # limitsoc:
+  #   source: go
+  #   script:
+  #     int(100-limitSoc)
+  #   out:
+  #   - name: dod
+  #     type: int
+  #     config:
+  #       source: modbus
+  #       {- include "modbus" . | indent 6 }
+  #       delay: { .delay }
+  #       register:
+  #         address: 0x104D # BatConfig_Depth_of_Discharge
+  #         type: writemultiple
+  #         decode: uint16
   capacity: {{ .capacity }} # kWh
-  minsoc: {{ .minsoc }} # %
-  maxsoc: {{ .maxsoc }} # %
+  # minsoc: {{ .minsoc }} # %
+  # maxsoc: {{ .maxsoc }} # %
   {{- end }}
