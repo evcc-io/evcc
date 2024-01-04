@@ -43,6 +43,10 @@ type ConfigError struct {
 	err error
 }
 
+func NewConfigError(err error) error {
+	return &ConfigError{err}
+}
+
 func (e *ConfigError) Error() string {
 	return e.err.Error()
 }

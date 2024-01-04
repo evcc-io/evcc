@@ -1,6 +1,8 @@
 [batterySettings]
 batteryLevel = "Рівень заряду батареї"
 capacity = "{energy} із {total}"
+disclaimerHint = "Примітка:"
+disclaimerText = "Ці налаштування впливають лише на сонячний режим. Поведінка зарядки регулюється відповідно."
 legendBottomName = "домашній пріоритет"
 legendBottomSubline = "не використовується для зарядки"
 legendMiddleName = "спочатку транспортний засіб"
@@ -10,7 +12,6 @@ legendTopAutostart = "запускається автоматично"
 legendTopName = "заряджання з підтримкою батареї"
 legendTopSubline = "без перебоїв"
 modalTitle = "Налаштування батареї"
-note = "Примітка: Ці налаштування впливають лише на сонячний режим. Поведінка зарядки регулюється відповідно."
 
 [batterySettings.bufferStart]
 full = "коли майже повний"

@@ -1,6 +1,8 @@
 [batterySettings]
 batteryLevel = "Akun varaustaso"
 capacity = "{energy} / {total}"
+disclaimerHint = "Huomaa:"
+disclaimerText = "Nämä asetukset vaikuttavat vain aurinkotilaan. Latauskäyttäytymistä säädetään vastaavasti."
 legendBottomName = "talo on etusijalla"
 legendBottomSubline = "ei käytetty lataamiseen"
 legendMiddleName = "ajoneuvo ensin"
@@ -10,7 +12,6 @@ legendTopAutostart = "alkaa automaattisesti"
 legendTopName = "akkutuettu lataus"
 legendTopSubline = "keskeytyksettä"
 modalTitle = "Akun asetukset"
-note = "Huomaa: Nämä asetukset vaikuttavat vain aurinkotilaan. Latauskäyttäytymistä säädetään vastaavasti."
 
 [batterySettings.bufferStart]
 full = "kun melkein täynnä"

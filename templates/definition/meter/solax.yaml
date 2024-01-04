@@ -88,7 +88,6 @@ render: |
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
-            timeout: {{ .timeout }}
             register:
               address: 0x001F # SolarChargeUseMode
               type: writesingle
@@ -98,7 +97,6 @@ render: |
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
-            timeout: {{ .timeout }}
             register:
               address: 0x0020 # Manual mode
               type: writesingle
@@ -112,7 +110,6 @@ render: |
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
-            timeout: {{ .timeout }}
             register:
               address: 0x001F # SolarChargeUseMode
               type: writesingle
@@ -122,7 +119,6 @@ render: |
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
-            timeout: {{ .timeout }}
             register:
               address: 0x0020 # Manual mode
               type: writesingle
@@ -136,7 +132,6 @@ render: |
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
-            timeout: {{ .timeout }}
             register:
               address: 0x001F # SolarChargeUseMode
               type: writesingle
@@ -146,7 +141,6 @@ render: |
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
-            timeout: {{ .timeout }}
             register:
               address: 0x0020 # Manual mode
               type: writesingle

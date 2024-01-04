@@ -79,8 +79,6 @@ func (t *Energinet) run(done chan error) {
 			continue
 		}
 
-		once.Do(func() { close(done) })
-
 		data := make(api.Rates, 0, len(res.Records))
 		for _, r := range res.Records {
 			date, _ := time.Parse("2006-01-02T15:04:05", r.HourUTC)
@@ -94,6 +92,7 @@ func (t *Energinet) run(done chan error) {
 		data.Sort()
 
 		t.data.Set(data)
+		once.Do(func() { close(done) })
 	}
 }
 

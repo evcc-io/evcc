@@ -1,7 +1,4 @@
 <template>
-	<div v-if="!socBasedCharging" class="alert alert-secondary my-4" role="alert">
-		{{ $t("main.loadpointSettings.onlyForSocBasedCharging") }}
-	</div>
 	<div class="mt-4 container">
 		<div class="row">
 			<div class="col-6 col-lg-3 col-form-label">
@@ -49,6 +46,12 @@
 				{{ $t("main.loadpointSettings.limitSoc.description") }}
 			</small>
 		</div>
+	</div>
+	<div v-if="!socBasedCharging" class="mx-2 small text-muted">
+		<strong class="text-evcc">
+			{{ $t("main.loadpointSettings.disclaimerHint") }}
+		</strong>
+		{{ $t("main.loadpointSettings.onlyForSocBasedCharging") }}
 	</div>
 </template>
 

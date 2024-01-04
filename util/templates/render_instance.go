@@ -32,15 +32,17 @@ func RenderInstance(class Class, other map[string]interface{}) (*Instance, error
 
 	b, _, err := tmpl.RenderResult(TemplateRenderModeInstance, other)
 	if err != nil {
-		return nil, err
+		return nil, util.NewConfigError(err)
 	}
 
 	var instance Instance
-	if err = yaml.Unmarshal(b, &instance); err == nil && instance.Type == "" {
-		err = errors.New("empty instance type- check for missing usage")
-	} else if err != nil {
-		err = fmt.Errorf("%w:\n%s", err, string(b))
+	if err := yaml.Unmarshal(b, &instance); err != nil {
+		return nil, fmt.Errorf("%w:\n%s", err, string(b))
 	}
 
-	return &instance, err
+	if instance.Type == "" {
+		return nil, errors.New("empty instance type- check for missing usage")
+	}
+
+	return &instance, nil
 }

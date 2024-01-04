@@ -98,8 +98,6 @@ func (t *ElectricityMaps) run(done chan error) {
 			continue
 		}
 
-		once.Do(func() { close(done) })
-
 		data := make(api.Rates, 0, len(res.Forecast))
 		for _, r := range res.Forecast {
 			ar := api.Rate{
@@ -112,6 +110,7 @@ func (t *ElectricityMaps) run(done chan error) {
 		data.Sort()
 
 		t.data.Set(data)
+		once.Do(func() { close(done) })
 	}
 }
 

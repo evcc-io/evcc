@@ -16,7 +16,7 @@ render: |
     register:
       address: 57
       type: input
-      decode: uint32
+      decode: int32
     scale: 0.01
     timeout: 5s
   energy:
