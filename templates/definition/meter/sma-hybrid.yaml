@@ -4,12 +4,6 @@ products:
     description:
       de: Smart Energy Hybrid-Wechselrichter
       en: Smart Energy Hybrid Inverter
-  - brand: SMA
-    description:
-      generic: Sunny Island (Modbus)
-  - brand: SMA
-    description:
-      generic: Sunny Boy Storage (Modbus)
 capabilities: ["battery-control"]
 params:
   - name: usage
