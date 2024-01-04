@@ -81,40 +81,20 @@ render: |
     switch:
     - case: 1 # normal
       set:
-        source: sequence
+        source: const
+        value: 0 # self use mode
         set:
-        - source: const
-          value: 0 # self use mode
-          set:
-            source: modbus
-            {{- include "modbus" . | indent 10 }}
-            register:
-              address: 0x001F # SolarChargeUseMode
-              type: writesingle
-              decode: uint16
-        - source: const
-          value: 0 # Stop force charge & discharge
-          set:
-            source: modbus
-            {{- include "modbus" . | indent 10 }}
-            register:
-              address: 0x0020 # Manual mode
-              type: writesingle
-              decode: uint16
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 0x001F # SolarChargeUseMode
+            type: writesingle
+            decode: uint16
     - case: 2 # hold
       set:
         source: sequence
         set:
         - source: const
-          value: 2 # backup mode
-          set:
-            source: modbus
-            {{- include "modbus" . | indent 10 }}
-            register:
-              address: 0x001F # SolarChargeUseMode
-              type: writesingle
-              decode: uint16
-        - source: const
           value: 0 # Stop force charge & discharge
           set:
             source: modbus
@@ -123,10 +103,6 @@ render: |
               address: 0x0020 # Manual mode
               type: writesingle
               decode: uint16
-    - case: 3 # charge
-      set:
-        source: sequence
-        set:
         - source: const
           value: 3 # manual mode
           set:
@@ -136,6 +112,10 @@ render: |
               address: 0x001F # SolarChargeUseMode
               type: writesingle
               decode: uint16
+    - case: 3 # charge
+      set:
+        source: sequence
+        set:
         - source: const
           value: 1 # Force charge
           set:
@@ -143,6 +123,15 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 0x0020 # Manual mode
+              type: writesingle
+              decode: uint16
+        - source: const
+          value: 3 # manual mode
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 0x001F # SolarChargeUseMode
               type: writesingle
               decode: uint16
   {{- if .capacity }}
