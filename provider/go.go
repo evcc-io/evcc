@@ -2,6 +2,7 @@ package provider
 
 import (
 	"fmt"
+	"reflect"
 
 	"github.com/evcc-io/evcc/provider/golang"
 	"github.com/evcc-io/evcc/util"
@@ -167,7 +168,7 @@ func (p *Go) evaluate() (res any, err error) {
 		return nil, err
 	}
 
-	if v.IsNil() {
+	if (v.Kind() == reflect.Pointer || v.Kind() == reflect.Interface) && v.IsNil() {
 		return nil, nil
 	}
 
