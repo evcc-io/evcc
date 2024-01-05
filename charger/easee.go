@@ -377,7 +377,12 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 
 // ChargerUpdate implements the signalr receiver
 func (c *Easee) ChargerUpdate(i json.RawMessage) {
-	// c.observe("ChargerUpdate", i)
+	c.log.TRACE.Printf("ChargerUpdate: %s", i)
+}
+
+// SubscribeToMyProduct implements the signalr receiver
+func (c *Easee) SubscribeToMyProduct(i json.RawMessage) {
+	c.log.TRACE.Printf("SubscribeToMyProduct: %s", i)
 }
 
 // CommandResponse implements the signalr receiver
