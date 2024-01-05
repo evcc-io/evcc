@@ -44,7 +44,7 @@ func TestDetermineBatteryMode(t *testing.T) {
 
 		loadpoints := []loadpoint.API{lp}
 
-		mode := s.determineBatteryMode(loadpoints)
+		mode := s.determineBatteryMode(loadpoints, false)
 		assert.Equal(t, tc.expBatMode, mode, tc)
 	}
 }
