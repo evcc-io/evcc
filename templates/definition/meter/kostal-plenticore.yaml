@@ -14,10 +14,8 @@ requirements:
   description:
     de: |
       Nur ein System kann und darf auf den Wechselrichter zugreifen!
-      Für die optionale Batteriesteuerung muss Modbus Bytereihenfolge auf BigEndian (Sunspec) konfiguriert sein.
     en: |
-      Only one system may access the inverter!
-      For optional battery control, Modbus byte order must be set to BigEndian (Sunspec).
+      Only a single system may access the inverter!
 params:
   - name: usage
     choice: ["pv", "battery"]
@@ -26,6 +24,13 @@ params:
     choice: ["tcpip"]
     id: 71
     port: 1502
+  - name: endianness
+    description:
+      de: Byte-Reihenfolge (Little/Big)
+      en: Endianness (Little/Big)
+    validvalues: ["big", "little"]
+    default: little
+    advanced: true
   - name: capacity
     advanced: true
   # battery control
@@ -79,7 +84,7 @@ render: |
       register:
         address: 1042 # limit soc
         type: writemultiple
-        decode: float32
+        decode: {{ if (eq .endianness "big") }}float32{{ else }}float32s{{ end }}
   capacity: {{ .capacity }} # kWh
   minsoc: {{ .minsoc }} # %
   maxsoc: {{ .maxsoc }} # %
