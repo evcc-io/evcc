@@ -95,4 +95,7 @@ tariffs:
   currency: EUR
   grid:
     type: fixed
-    price: 0.40
+    price: 0.4 # EUR/kWh
+    zones:
+      - hours: 1-6
+        price: 0.2

@@ -140,7 +140,6 @@ github = "GitHub"
 login = "Fahrzeug-Logins"
 needHelp = "Hilfe benötigt?"
 sessions = "Ladevorgänge"
-settings = "Einstellungen"
 
 [help]
 discussionsButton = "GitHub Discussions"
@@ -384,7 +383,7 @@ allVehicles = "Alle Fahrzeuge"
 filter = "Filtern"
 
 [settings]
-title = "Einstellungen"
+title = "Allgemeine Einstellungen"
 
 [settings.hiddenFeatures]
 label = "Experimentell"

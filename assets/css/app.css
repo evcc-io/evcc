@@ -78,6 +78,7 @@
 	--evcc-accent2: var(--evcc-dark-green);
 	--evcc-accent3: var(--evcc-darker-green);
 	--bs-primary: var(--evcc-dark-green);
+	--bs-border-color-translucent: rgba(255, 255, 255, 0.175);
 }
 
 html {
