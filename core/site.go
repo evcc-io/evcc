@@ -807,7 +807,7 @@ func (site *Site) update(lp Updater) {
 	}
 
 	if batMode := site.GetBatteryMode(); site.batteryDischargeControl {
-		if mode := site.determineBatteryMode(site.Loadpoints()); mode != batMode {
+		if mode := site.determineBatteryMode(site.Loadpoints(), smartCostActive); mode != batMode {
 			if err := site.updateBatteryMode(mode); err != nil {
 				site.log.ERROR.Println("battery mode:", err)
 			}
