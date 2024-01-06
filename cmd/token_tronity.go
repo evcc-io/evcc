@@ -2,11 +2,8 @@ package cmd
 
 import (
 	"context"
-	"crypto/rand"
-	"encoding/base64"
 	"errors"
 	"fmt"
-	"io"
 	"net/http"
 	"strings"
 	"sync"
@@ -14,20 +11,13 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/vehicle"
 	"github.com/evcc-io/evcc/vehicle/tronity"
+	"github.com/samber/lo"
 	"github.com/skratchdot/open-golang/open"
 	"golang.org/x/oauth2"
 )
-
-// github.com/uhthomas/tesla
-func state() string {
-	var b [9]byte
-	if _, err := io.ReadFull(rand.Reader, b[:]); err != nil {
-		panic(err)
-	}
-	return base64.RawURLEncoding.EncodeToString(b[:])
-}
 
 func tokenExchangeHandler(oc *oauth2.Config, state string, resC chan *oauth2.Token) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -43,7 +33,6 @@ func tokenExchangeHandler(oc *oauth2.Config, state string, resC chan *oauth2.Tok
 		token, err := oc.Exchange(ctx, code,
 			oauth2.SetAuthURLParam("grant_type", "code"), // app
 		)
-
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			fmt.Fprintln(w, err)
@@ -57,7 +46,7 @@ func tokenExchangeHandler(oc *oauth2.Config, state string, resC chan *oauth2.Tok
 }
 
 func tronityAuthorize(addr string, oc *oauth2.Config) (*oauth2.Token, error) {
-	state := state()
+	state := lo.RandomString(16, lo.AlphanumericCharset)
 
 	uri := oc.AuthCodeURL(state, oauth2.AccessTypeOffline)
 	uri = strings.ReplaceAll(uri, "scope=", "scopes=")
@@ -111,7 +100,7 @@ func tronityAuthorize(addr string, oc *oauth2.Config) (*oauth2.Token, error) {
 	}
 }
 
-func tronityToken(conf config, vehicleConf qualifiedConfig) (*oauth2.Token, error) {
+func tronityToken(conf globalConfig, vehicleConf config.Named) (*oauth2.Token, error) {
 	var cc struct {
 		Credentials vehicle.ClientCredentials
 		RedirectURI string

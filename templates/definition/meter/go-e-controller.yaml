@@ -1,0 +1,31 @@
+template: go-e-controller
+products:
+  - brand: go-e
+    description:
+      generic: Controller
+params:
+  - name: usage
+    choice: ["grid", "pv"]
+  - name: host
+render: |
+  type: custom
+  {{- if eq .usage "grid" }}
+  power:
+    source: http
+    uri: http://{{ .host }}/api/status?filter=ccp
+    jq: .ccp[1]
+  energy:
+    source: http
+    uri: http://{{ .host }}/api/status?filter=cec
+    jq: .cec[1][0]/1000
+  {{- end }}
+  {{- if eq .usage "pv" }}
+  power:
+    source: http
+    uri: http://{{ .host }}/api/status?filter=ccp
+    jq: .ccp[4]
+  energy:
+    source: http
+    uri: http://{{ .host }}/api/status?filter=cec
+    jq: .cec[4][0]/1000
+  {{- end }}

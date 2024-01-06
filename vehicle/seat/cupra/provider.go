@@ -14,7 +14,7 @@ type Provider struct {
 	action  func(string, string) error
 }
 
-// NewProvider creates a new vehicle
+// NewProvider creates a vehicle api provider
 func NewProvider(api *API, userID, vin string, cache time.Duration) *Provider {
 	impl := &Provider{
 		statusG: provider.Cached(func() (Status, error) {
@@ -29,10 +29,10 @@ func NewProvider(api *API, userID, vin string, cache time.Duration) *Provider {
 
 var _ api.Battery = (*Provider)(nil)
 
-// SoC implements the api.Vehicle interface
-func (v *Provider) SoC() (float64, error) {
+// Soc implements the api.Vehicle interface
+func (v *Provider) Soc() (float64, error) {
 	res, err := v.statusG()
-	return float64(res.Engines.Primary.Level), err
+	return res.Engines.Primary.Level, err
 }
 
 var _ api.ChargeState = (*Provider)(nil)
@@ -59,21 +59,21 @@ var _ api.VehicleFinishTimer = (*Provider)(nil)
 // FinishTime implements the api.VehicleFinishTimer interface
 func (v *Provider) FinishTime() (time.Time, error) {
 	res, err := v.statusG()
-	if err == nil {
-		rsc := res.Services.Charging
-		if !rsc.Active {
-			return time.Time{}, api.ErrNotAvailable
-		}
-
-		rt := rsc.RemainingTime
-		if rsc.TargetPct > 0 && rsc.TargetPct < 100 {
-			rt = rt * 100 / int64(rsc.TargetPct)
-		}
-
-		return time.Now().Add(time.Duration(rt) * time.Minute), err
+	if err != nil {
+		return time.Time{}, err
 	}
 
-	return time.Time{}, err
+	rsc := res.Services.Charging
+	if !rsc.Active {
+		return time.Time{}, api.ErrNotAvailable
+	}
+
+	rt := rsc.RemainingTime
+	if rsc.TargetPct > 0 && rsc.TargetPct < 100 {
+		rt = rt * 100 / int64(rsc.TargetPct)
+	}
+
+	return time.Now().Add(time.Duration(rt) * time.Minute), nil
 }
 
 var _ api.VehicleRange = (*Provider)(nil)
@@ -84,24 +84,28 @@ func (v *Provider) Range() (int64, error) {
 	return int64(res.Engines.Primary.Range.Value), err
 }
 
+var _ api.VehicleOdometer = (*Provider)(nil)
+
+// Odometer implements the api.VehicleOdometer interface
+func (v *Provider) Odometer() (float64, error) {
+	res, err := v.statusG()
+	return res.Measurements.MileageKm, err
+}
+
 var _ api.VehicleClimater = (*Provider)(nil)
 
 // Climater implements the api.VehicleClimater interface
-func (v *Provider) Climater() (active bool, outsideTemp, targetTemp float64, err error) {
+func (v *Provider) Climater() (bool, error) {
 	res, err := v.statusG()
-	return res.Services.Climatisation.Active, 21, 21, err
+	return res.Services.Climatisation.Active, err
 }
 
 var _ api.SocLimiter = (*Provider)(nil)
 
-// TargetSoC implements the api.SocLimiter interface
-func (v *Provider) TargetSoC() (float64, error) {
+// TargetSoc implements the api.SocLimiter interface
+func (v *Provider) TargetSoc() (float64, error) {
 	res, err := v.statusG()
-	if err == nil {
-		return float64(res.Services.Charging.TargetPct), nil
-	}
-
-	return 0, err
+	return float64(res.Services.Charging.TargetPct), err
 }
 
 var _ api.VehicleChargeController = (*Provider)(nil)

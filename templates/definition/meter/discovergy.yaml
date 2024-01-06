@@ -9,7 +9,6 @@ params:
     required: true
   - name: password
     required: true
-    mask: true
   - name: meter
     required: true
     example: 1ESY1161229886
@@ -18,3 +17,6 @@ render: |
   user: {{ .user }}
   password: {{ .password }} # password
   meter: {{ .meter }}
+  {{- if eq .usage "pv" }}
+  scale: -1
+  {{- end }}

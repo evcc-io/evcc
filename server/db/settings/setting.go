@@ -3,12 +3,13 @@ package settings
 import (
 	"encoding/json"
 	"errors"
+	"slices"
 	"strconv"
+	"sync"
 	"sync/atomic"
 	"time"
 
 	"github.com/evcc-io/evcc/server/db"
-	"golang.org/x/exp/slices"
 )
 
 var ErrNotFound = errors.New("not found")
@@ -20,6 +21,7 @@ type setting struct {
 }
 
 var (
+	mu       sync.RWMutex
 	settings []setting
 	dirty    int32
 )
@@ -42,6 +44,9 @@ func Persist() error {
 }
 
 func SetString(key string, val string) {
+	mu.Lock()
+	defer mu.Unlock()
+
 	idx := slices.IndexFunc(settings, func(s setting) bool {
 		return s.Key == key
 	})
@@ -67,6 +72,10 @@ func SetTime(key string, val time.Time) {
 	SetString(key, val.Format(time.RFC3339))
 }
 
+func SetBool(key string, val bool) {
+	SetString(key, strconv.FormatBool(val))
+}
+
 func SetJson(key string, val any) error {
 	b, err := json.Marshal(val)
 	if err == nil {
@@ -75,11 +84,10 @@ func SetJson(key string, val any) error {
 	return err
 }
 
-func SetBool(key string, val bool) {
-	SetString(key, strconv.FormatBool(val))
-}
-
 func String(key string) (string, error) {
+	mu.RLock()
+	defer mu.RUnlock()
+
 	idx := slices.IndexFunc(settings, func(s setting) bool {
 		return s.Key == key
 	})

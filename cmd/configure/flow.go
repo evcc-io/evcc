@@ -3,9 +3,9 @@ package configure
 import (
 	"errors"
 	"fmt"
+	"slices"
 
 	"github.com/evcc-io/evcc/util/templates"
-	"golang.org/x/exp/slices"
 )
 
 // configureDeviceGuidedSetup lets the user choose a device that is set to support guided setup
@@ -88,7 +88,7 @@ func (c *CmdConfigure) configureDeviceGuidedSetup() {
 	}
 
 	fmt.Println()
-	fmt.Println(templateItem.Title() + " " + c.localizedString("Device_Added", nil))
+	fmt.Println(templateItem.Title() + " " + c.localizedString("Device_Added"))
 
 	c.configureLinkedTypes(templateItem)
 }
@@ -114,7 +114,7 @@ func (c *CmdConfigure) configureLinkedTypes(templateItem templates.Template) {
 			break
 		}
 
-		linkedTemplateItem.SetCombinedTitle()
+		linkedTemplateItem.SetCombinedTitle(c.lang)
 
 		category := DeviceCategory(linkedTemplate.Usage)
 		localizeMap := localizeMap{
@@ -163,13 +163,12 @@ func (c *CmdConfigure) configureLinkedTemplate(templateItem templates.Template, 
 			if c.askConfigFailureNextStep() {
 				continue
 			}
-
 		} else {
 			c.configuration.AddDevice(deviceItem, category)
 			c.processDeviceCapabilities(templateItem.Capabilities)
 
 			fmt.Println()
-			fmt.Println(templateItem.Title() + " " + c.localizedString("Device_Added", nil))
+			fmt.Println(templateItem.Title() + " " + c.localizedString("Device_Added"))
 			return true
 		}
 		break
@@ -180,7 +179,7 @@ func (c *CmdConfigure) configureLinkedTemplate(templateItem templates.Template, 
 // configureDeviceCategory lets the user select and configure a device from a specific category
 func (c *CmdConfigure) configureDeviceCategory(deviceCategory DeviceCategory) (device, []string, error) {
 	fmt.Println()
-	fmt.Printf("- %s %s\n", c.localizedString("Device_Configure", nil), DeviceCategories[deviceCategory].title)
+	fmt.Printf("- %s %s\n", c.localizedString("Device_Configure"), DeviceCategories[deviceCategory].title)
 
 	device := device{
 		Name: DeviceCategories[deviceCategory].defaultName,
@@ -227,7 +226,7 @@ func (c *CmdConfigure) configureDeviceCategory(deviceCategory DeviceCategory) (d
 	}
 
 	fmt.Println()
-	fmt.Println(deviceDescription + deviceTitle + " " + c.localizedString("Device_Added", nil))
+	fmt.Println(deviceDescription + deviceTitle + " " + c.localizedString("Device_Added"))
 
 	return device, capabilities, nil
 }

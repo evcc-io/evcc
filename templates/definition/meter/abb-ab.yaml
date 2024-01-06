@@ -1,0 +1,32 @@
+template: abb-ab
+products:
+  - brand: ABB
+    description:
+      generic: A43, A44, B23, B24
+params:
+  - name: usage
+    choice: ["grid", "charge"]
+  - name: modbus
+    choice: ["rs485"]
+render: |
+  type: modbus
+  model: abb
+  {{- include "modbus" . }}
+  power: Power
+  energy: Import
+  currents:
+    - CurrentL1
+    - CurrentL2
+    - CurrentL3
+  {{- if eq .usage "grid" }}
+  powers:
+    - PowerL1
+    - PowerL2
+    - PowerL3
+  {{- end }}
+  {{- if eq .usage "charge" }}
+  voltages:
+    - VoltageL1
+    - VoltageL2
+    - VoltageL3
+  {{- end }}

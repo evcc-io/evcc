@@ -1,0 +1,12 @@
+template: tibber
+products:
+  - brand: Tibber
+params:
+  - preset: tariff-base
+  - name: token
+  - name: homeid
+render: |
+  type: tibber
+  {{ include "tariff-base" . }}
+  token: {{ .token }}
+  homeid: {{ .homeid }}

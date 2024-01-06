@@ -1,0 +1,35 @@
+template: sma-webbox
+products:
+  - brand: SMA
+    description:
+      generic: WebBox
+params:
+  - name: usage
+    choice: ["pv"]
+    allinone: true
+  - name: modbus
+    choice: ["tcpip"]
+    port: 502
+    id: 2
+    help:
+      en: The Modbus TCP-Server needs to be enabled on this WebBox
+      de: Der Modbus TCP-Server muss auf dieser WebBox aktiviert sein
+render: |
+  type: custom
+  {{- if eq .usage "pv" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register: # manual non-sunspec register configuration
+      address: 30775 # Pac
+      type: holding
+      decode: int32nan
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register: # manual non-sunspec register configuration
+      address: 30513 # E-Total
+      type: holding
+      decode: uint64nan
+    scale: 0.001
+  {{- end }}

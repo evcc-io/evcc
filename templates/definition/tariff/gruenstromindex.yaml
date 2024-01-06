@@ -1,0 +1,8 @@
+template: grünstromindex
+products:
+  - brand: Grünstromindex
+params:
+  - name: zip
+render: |
+  type: grünstromindex
+  zip: {{ .zip }}

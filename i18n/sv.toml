@@ -1,0 +1,444 @@
+[batterySettings]
+batteryLevel = "Batterinivå"
+capacity = "{energy} av {total}"
+control = "Batteriinställningar"
+discharge = "Förhindra urladdning i snabbt läge och vid schemalagd laddning."
+disclaimerHint = "OBS:"
+disclaimerText = "Inställningarna gäller enbart sol-läge. Laddning justeras därefter"
+legendBottomName = "Prioritera hem"
+legendBottomSubline = "används inte till laddning"
+legendMiddleName = "fordon först"
+legendMiddleSubline = "hem därefter"
+legendTitle = "Hur ska solenergin användas?"
+legendTopAutostart = "startar automatiskt"
+legendTopName = "laddning med batteristöd"
+legendTopSubline = "utan avbrott"
+modalTitle = "Batteriinställningar"
+
+[batterySettings.bufferStart]
+full = "när det är nästan fullt"
+low = "när det är något fullt"
+medium = "när det är halvfullt"
+never = "bara med tillräckligt sol-överskott"
+
+[config]
+
+[config.form]
+example = "Exempel"
+optional = "valfri"
+
+[config.main]
+addVehicle = "Lägg till fordon"
+edit = "ändra"
+title = "Inställningar"
+vehicles = "Mina fordon"
+
+[config.validation]
+failed = "misslyckades"
+label = "Status"
+running = "validerar..."
+success = "lyckades"
+unknown = "okänd"
+validate = "validerar"
+
+[config.vehicle]
+cancel = "Avbryt"
+delete = "Radera fordon"
+generic = "Andra integrationer"
+offline = "Generiskt fordon"
+online = "Fordon med online API"
+save = "Spara"
+scooter = "Scooter"
+template = "Tillverkare"
+titleAdd = "Lägg till fordon"
+titleEdit = "Ändra fordon"
+validateSave = "Bekräfta & spara"
+
+[footer]
+
+[footer.community]
+greenEnergy = "Solenergi"
+greenEnergySub1 = "laddat med evcc"
+greenEnergySub2 = "sedan oktober 2022"
+greenShare = "Solenergiandel"
+greenShareSub1 = "andel som levereras av"
+greenShareSub2 = "sol och batteri"
+power = "Laddeffekt"
+powerSub1 = "{activeClients} av {totalClients} deltagare"
+powerSub2 = "laddar..."
+tabTitle = "Live community"
+
+[footer.savings]
+co2Saved = "{value} sparad"
+co2Title = "CO₂ utsläpp"
+configurePriceCo2 = "Konfigurera pris och CO₂-utsläpp"
+footerLong = "{percent}% solenergi"
+footerShort = "{percent}% sol"
+modalTitle = "Översikt laddning"
+moneySaved = "{value} sparad"
+percentGrid = "{grid} kWh nät"
+percentSelf = "{self} kWh sol"
+percentTitle = "Solenergi"
+periodLabel = "Period:"
+priceFeedIn = "{feedInPrice} inmatning"
+priceGrid = "{gridPrice} Nätet"
+priceTitle = "Energipris"
+referenceGrid = "nät"
+referenceLabel = "Referensdata:"
+savingsComparedToGrid = "jämfört med nätet"
+savingsTitle = "Sparande"
+savingsTotalEnergy = "{total} kWh laddad"
+since = "sedan {since}"
+tabTitle = "Mina uppgifter"
+
+[footer.savings.period]
+30d = "senaste 30 dagar"
+365d = "senaste 365 dagarna"
+total = "totalt"
+
+[footer.sponsor]
+becomeSponsor = "Bli sponsor"
+confetti = "Är du redo för konfetti?"
+confettiPromise = "Du får klistermärken och digital konfetti"
+sticker = "... eller evcc-klistermärken?"
+supportUs = "Vårt uppdrag är att göra solenergi till norm. Hjälp evcc genom att betala vad det är värt för dig."
+thanks = "Tack, {sponsor}! Ditt bidrag hjälper oss att utveckla evcc ytterligare."
+titleNoSponsor = "Stöd oss"
+titleSponsor = "Du är en supporter"
+
+[footer.telemetry]
+optIn = "Jag vill bidra med min data."
+optInMoreDetails = "Fler detaljer {0}."
+optInMoreDetailsLink = "här"
+optInSponsorship = "Sponsring krävs."
+
+[footer.version]
+availableLong = "ny version tillgänglig"
+modalCancel = "Avbryt"
+modalDownload = "Nedladdning"
+modalInstalledVersion = "Installerad version"
+modalNoReleaseNotes = "Det finns inga versionsanvisningar tillgängliga. Mer information om den nya versionen:"
+modalTitle = "Ny version finns tillgänglig"
+modalUpdate = "Installera"
+modalUpdateNow = "Installera nu"
+modalUpdateStarted = "Starta den nya versionen av evcc..."
+modalUpdateStatusStart = "Installationen har börjat:"
+
+[gridSettings]
+activeHours = "{charging} av {total}"
+activeHoursLabel = "Aktiva timmar"
+co2Label = "CO₂ utsläpp"
+co2Limit = "CO₂ gräns"
+costLimitDescription = "Ladda när priset är lågt (sol-läge)"
+modalTitle = "Smartladdning elnät"
+none = "ingen"
+priceLabel = "Energipris"
+priceLimit = "Prisgräns"
+
+[header]
+about = "Om"
+blog = "Blogg"
+docs = "Dokumentation"
+github = "GitHub"
+login = "Fordonsinloggningar"
+needHelp = "Behöver du hjälp?"
+sessions = "Laddningssessioner"
+settings = "Inställningar"
+
+[help]
+discussionsButton = "GitHub diskussioner"
+documentationButton = "Dokumentation"
+issueButton = "Rapportera fel"
+issueDescription = "Hittat ett konstigt eller felaktigt beteende?"
+modalTitle = "Behöver du hjälp?"
+primaryActions = "Fungerar det inte som det är tänkt? Här finns mycket hjälp att hitta."
+restartButton = "Omstart"
+restartDescription = "Har du testat att starta om?"
+secondaryActions = "Lyckas du inte lösa problemet? Här finns mer hjälp."
+
+[help.restart]
+cancel = "Avbryt"
+confirm = "Ja, starta om!"
+description = "Normalt behövs inte en omstart. Rapportera ett fel om du behöver starta om evcc frekvent."
+disclaimer = "Notera: evcc kommer stängas av och be operativsystemet starta om tjänsten."
+modalTitle = "Är du säker på att du vill starta om?"
+
+[main]
+vehicles = "Parkering"
+
+[main.chargingPlan]
+active = "Aktiv"
+arrivalTab = "Ankomst"
+day = "Dag"
+departureTab = "Avfärd"
+goal = "Laddmål"
+modalTitle = "Laddplan"
+none = "ingen"
+remove = "Ta bort"
+time = "Tid"
+title = "Plan"
+titleMinSoc = "Min. laddning"
+titleTargetCharge = "Avfärd"
+update = "Verkställ"
+
+[main.energyflow]
+battery = "Batteri"
+batteryCharge = "Batteri laddas"
+batteryDischarge = "Batteri laddas ur"
+batteryHold = "Batteri (låst)"
+batteryTooltip = "{energy} av {total} ({soc})"
+gridImport = "Användning av nätet"
+homePower = "Konsumtion"
+loadpoints = "Laddare | Laddare | {count} laddare"
+noEnergy = "Inga mätaruppgifter"
+pvExport = "Export till elnätet"
+pvProduction = "Produktion"
+selfConsumption = "Egenförbrukning"
+
+[main.loadpoint]
+avgPrice = "⌀ pris"
+charged = "Laddat"
+co2 = "⌀ CO₂"
+duration = "Varaktighet"
+fallbackName = "Laddplats"
+power = "Effekt"
+price = "Σ pris"
+remaining = "Återstående tid"
+remoteDisabledHard = "{source}: avstängd"
+remoteDisabledSoft = "{source}: Adaptiv solladdning avstängd"
+solar = "Solenergi"
+
+[main.loadpointSettings]
+currents = "Laddningsström"
+default = "förvald"
+disclaimerHint = "Anmärkning:"
+disclaimerText = "Ändringarna försvinner när servern startas om."
+onlyForSocBasedCharging = "Dessa inställningar är endast tillgängliga för fordon med känd laddnivå"
+title = "Inställningar {0}"
+vehicle = "Fordon"
+
+[main.loadpointSettings.limitSoc]
+description = "Laddbegränsning när detta fordon är anslutet."
+label = "Förvald laddgräns"
+
+[main.loadpointSettings.maxCurrent]
+label = "Max. ström"
+
+[main.loadpointSettings.minCurrent]
+label = "Min. ström"
+
+[main.loadpointSettings.minSoc]
+description = "Fordonet laddas i sol-läge „snabbt” till {0}% och sedan med endast solel. Användbart för att alltid ha en minsta räckvidd tillgänglig ."
+label = "Min. laddning %"
+
+[main.loadpointSettings.phasesConfigured]
+label = "Faser"
+phases_0 = "automatisk växling"
+phases_1 = "1-fas"
+phases_1_hint = "({min} till {max})"
+phases_3 = "3-fas"
+phases_3_hint = "({min} till {max})"
+
+[main.mode]
+minpv = "Min+Sol"
+now = "Snabbt"
+off = "Av"
+pv = "Sol"
+
+[main.provider]
+login = "logga in"
+logout = "logga ut"
+
+[main.targetCharge]
+activate = "Aktivera"
+co2Limit = "CO₂ gräns av {co2}"
+costLimitIgnore = "Den inställda nivån {limit} kommer att ignoreras den här perioden."
+currentPlan = "Aktiv plan"
+descriptionEnergy = "När ska fordonet vara laddat till {targetEnergy}?"
+descriptionSoc = "När ska fordonet vara laddat till {targetSoc}%?"
+inactiveLabel = "Mål-tid"
+modalTitle = "Ange måltid"
+noActivePlan = "Ingen aktiv prenumeration"
+notReachableInTime = "Laddmål kan inte nås i tid. Beräknad sluttid: {endTime}"
+onlyInPvMode = "Laddplan fungerar enbart i sol-läge."
+planDescription = "Ange din avgångstid och evcc kommer att ladda så kostnadseffektivt och miljövänligt som möjligt."
+planDuration = "Laddtid"
+planPeriodLabel = "Period"
+planPeriodValue = "{start} till {end}"
+planUnknown = "ännu inte känt"
+preview = "Förhandsvisning"
+priceLimit = "prisgräns {price}"
+remove = "Ta bort"
+setPlan = "Laddplan"
+setTargetTime = "ingen"
+targetIsAboveLimit = "Konfigurerat laddmål {limit} kommer ignoreras denna tidsperiod."
+targetIsAboveVehicleLimit = "Öka fordonets gräns ({limit}) för att nå laddmålet."
+targetIsInThePast = "Välj en tid i framtiden, Marty."
+targetIsTooFarInTheFuture = "Vi kommer att justera planen så snart vi vet mer om framtiden."
+title = "Mål-tid"
+today = "idag"
+tomorrow = "i morgon"
+update = "Uppdatera"
+vehicleCapacityDocs = "Lär dig hur du konfigurerar."
+vehicleCapacityRequired = "Fordonets batterikapacitet behövs för att beräkna laddtid."
+
+[main.targetChargePlan]
+chargeDuration = "Laddningstid"
+co2Label = "CO₂-utsläpp ⌀"
+priceLabel = "Energipris"
+timeRange = "{day} {range} t"
+unknownPrice = "fortfarande okänt"
+
+[main.targetEnergy]
+label = "Gräns"
+noLimit = "ingen"
+
+[main.vehicle]
+addVehicle = "Lägg till fordon"
+changeVehicle = "Byt fordon"
+detectionActive = "Detekterar fordon..."
+fallbackName = "Fordon"
+moreActions = "Fler åtgärder"
+none = "Inget fordon"
+targetSoc = "Gräns"
+temp = "Temp."
+tempLimit = "Temp-gräns"
+unknown = "Gästfordon"
+vehicleSoc = "Laddning"
+
+[main.vehicleSoc]
+charging = "laddar"
+connected = "ansluten"
+disconnected = "frånkopplad"
+ready = "redo"
+vehicleTarget = "Fordonsgräns: {soc}%"
+
+[main.vehicleStatus]
+charging = "Laddar..."
+cheapEnergyCharging = "Laddar billig energi: {price} (gräns {limit})"
+cleanEnergyCharging = "Laddar grön energi: {co2} (gräns {limit})"
+climating = "Förvärmning identifierad."
+connected = "Inkopplad."
+disconnected = "Frånkopplad."
+guard = "Brytarskydd aktivt i {remaining}…"
+minCharge = "Minimiladdning till {soc}%."
+pvDisable = "Inte tillräckligt med överskott. Pausar i {remaining}..."
+pvEnable = "Överskott tillgängligt. Börjar om {remaining}..."
+scale1p = "Minskar till 1-fas-laddning om {remaining}..."
+scale3p = "Ökar till 3-fas-laddning om {remaining}..."
+targetChargeActive = "Målladdning aktiv..."
+targetChargePlanned = "Målladdning startar {time}."
+targetChargeWaitForVehicle = "Laddare beredd. Väntar på fordon..."
+unknown = ""
+vehicleTargetReached = "Fordonsgränsen {soc}% nådd."
+waitForVehicle = "Redo. Väntar på fordon..."
+
+[notifications]
+dismissAll = "Avvisa alla"
+modalTitle = "Meddelanden"
+
+[offline]
+message = "Inte ansluten till en server."
+reload = "Ladda igen?"
+
+[session]
+cancel = "Avbryt"
+co2 = "CO₂"
+date = "Period"
+delete = "Radera"
+finished = "Färdig"
+meter = "Mätarställning"
+meterstart = "Mätare start"
+meterstop = "Mätare stopp"
+odometer = "Mätarställning"
+price = "Pris"
+started = "Start-tid"
+title = "Laddningssession"
+
+[sessions]
+avgPower = "⌀-effekt"
+avgPrice = "⌀-pris"
+chargeDuration = "Varaktighet"
+co2 = "⌀ CO₂"
+csvMonth = "Ladda hem {month} CSV"
+csvTotal = "Ladda hem total CSV"
+date = "Start"
+downloadCsv = "Ladda hem som CSV"
+energy = "Laddat"
+loadpoint = "Laddplats"
+noData = "Inga laddningar denna månad"
+price = "Σ pris"
+reallyDelete = "Vill du verkligen radera den här sessionen?"
+solar = "Sol"
+title = "Laddningar"
+total = "Total"
+vehicle = "Fordon"
+
+[sessions.csv]
+chargedenergy = "Energi (kWh)"
+created = "Starttid"
+finished = "Sluttid"
+identifier = "Identifierare"
+loadpoint = "Laddplats"
+meterstart = "Mätare start (kWh)"
+meterstop = "Mätare slut (kWh)"
+odometer = "Mätarställning (km)"
+vehicle = "Fordon"
+
+[sessions.filter]
+allLoadpoints = "alla laddplatser"
+allVehicles = "alla fordon"
+filter = "Filter"
+
+[settings]
+title = "Inställningar"
+
+[settings.gridDetails]
+co2 = "CO₂"
+label = "Detaljer om rutnätet"
+none = "ingen"
+price = "pris"
+
+[settings.hiddenFeatures]
+label = "Experimentella"
+value = "Visa experimentella UI-funktioner."
+
+[settings.language]
+auto = "Automatisk"
+label = "Språk"
+
+[settings.sponsorToken]
+expires = "Din sponsortoken löper ut om {inXDays}. {getNewToken} och uppdatera din konfigurationsfil."
+getNew = "Hämta en ny"
+hint = "Observera: Vi kommer att automatisera detta i framtiden."
+
+[settings.telemetry]
+label = "Telemetri"
+
+[settings.theme]
+auto = "system"
+dark = "mörk"
+label = "Design"
+light = "ljus"
+
+[settings.unit]
+km = "km"
+label = "Enheter"
+mi = "miles"
+
+[startupError]
+configFile = "Konfigurationsfil som används:"
+configuration = "Konfiguration"
+description = "Kontrollera din konfigurationsfil. Om felmeddelandet inte hjälper, kontrollera {0}."
+discussions = "GitHub-diskussioner"
+fixAndRestart = "Vänligen åtgärda problemet och starta om servern."
+hint = "Observera: Det kan också vara så att du har en felaktig enhet (växelriktare, mätare, ...). Kontrollera dina nätverksanslutningar."
+lineError = "Fel i {0}."
+lineErrorLink = "linje {0}"
+restartButton = "Starta om"
+title = "Startfel"
+
+[vehicleSettings]
+cancel = "Avbryt"
+template = "Tillverkare"
+test = "Test"

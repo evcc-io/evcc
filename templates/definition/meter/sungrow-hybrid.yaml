@@ -4,10 +4,11 @@ products:
   - brand: Sungrow
     description:
       generic: SH Series Hybrid Inverter
+capabilities: ["battery-control"]
 requirements:
   description:
-    de: Die Verbindung ist nur seriell (RS485) oder TCP (mit dem WiNet-S-Dongle) möglich.
-    en: Communication is either serial (RS485) or via TCP (WiNet-S-Dongle).
+    de: Die Verbindung ist seriell (RS485) oder über die native (hintere) LAN-Buchse am Wechselrichter möglich. Verbindungen über das WiNet-S-Dongle (WiFi oder LAN) funktionieren NICHT korrekt.
+    en: The connection can be serial (RS485) or via the native (rear) LAN socket on the inverter. Connections via the WiNet-S dongle (WiFi or LAN) do NOT work correctly.
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -15,6 +16,9 @@ params:
   - name: modbus
     choice: ["rs485", "tcpip"]
     baudrate: 9600
+  - name: timeout
+  - name: capacity
+    advanced: true
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -95,4 +99,82 @@ render: |
       type: input
       decode: int16
     scale: 0.1
+  batterymode:
+    source: switch
+    switch:
+    - case: 1 # normal
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 0 # self consumption
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            timeout: {{ .timeout }}
+            register:
+              address: 13049 # EMS mode
+              type: writesingle
+              decode: uint16
+        - source: const
+          value: 0xCC # stop
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            timeout: {{ .timeout }}
+            register:
+              address: 13050 # Forced mode
+              type: writesingle
+              decode: uint16
+    - case: 2 # hold
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 2 # forced mode
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            timeout: {{ .timeout }}
+            register:
+              address: 13049 # EMS mode
+              type: writesingle
+              decode: uint16
+        - source: const
+          value: 0xCC
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            timeout: {{ .timeout }}
+            register:
+              address: 13050 # Forced mode
+              type: writesingle
+              decode: uint16
+    - case: 3 # charge
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 2 # forced mode
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            timeout: {{ .timeout }}
+            register:
+              address: 13049 # EMS mode
+              type: writesingle
+              decode: uint16
+        - source: const
+          value: 0xAA
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            timeout: {{ .timeout }}
+            register:
+              address: 13050 # Forced mode
+              type: writesingle
+              decode: uint16
+  {{- if .capacity }}
+  capacity: {{ .capacity }} # kWh
+  {{- end }}
   {{- end }}

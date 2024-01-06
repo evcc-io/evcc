@@ -17,7 +17,6 @@ params:
     id: 1
     port: 1502
   - name: timeout
-    valuetype: duration
 render: |
   type: custom
   power:
@@ -32,4 +31,12 @@ render: |
   {{- else }}
     model: sunspec
     value: Power
+  {{- end }}
+  {{- if eq .usage "pv" }}
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    timeout: {{ .timeout }}
+    model: sunspec
+    value: Export
   {{- end }}

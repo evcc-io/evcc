@@ -56,7 +56,7 @@ type decorateOpenWBBatteryImpl struct {
 	battery func() (float64, error)
 }
 
-func (impl *decorateOpenWBBatteryImpl) SoC() (float64, error) {
+func (impl *decorateOpenWBBatteryImpl) Soc() (float64, error) {
 	return impl.battery()
 }
 
@@ -64,6 +64,6 @@ type decorateOpenWBPhaseSwitcherImpl struct {
 	phaseSwitcher func(int) error
 }
 
-func (impl *decorateOpenWBPhaseSwitcherImpl) Phases1p3p(phases int) error {
-	return impl.phaseSwitcher(phases)
+func (impl *decorateOpenWBPhaseSwitcherImpl) Phases1p3p(p0 int) error {
+	return impl.phaseSwitcher(p0)
 }

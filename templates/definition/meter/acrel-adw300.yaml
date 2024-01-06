@@ -1,0 +1,107 @@
+template: acrel-adw300
+products:
+  - brand: Acrel
+    description:
+      generic: ADW300 Wireless Metering Meter
+params:
+  - name: usage
+    choice: ["grid", "pv", "charge"]
+  - name: modbus
+    choice: ["rs485", "tcpip"]
+    baudrate: 1200
+render: |
+  type: custom
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 36 # Total active power
+      type: holding
+      decode: int32
+    {{- if eq .usage "pv" }}
+    scale: -1
+    {{- end }}
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      {{- if eq .usage "pv" }}
+      address: 64 # Reversing active energy consumption
+      {{- else }}
+      address: 62 # Forward active energy consumption
+      {{- end }}
+      type: holding
+      decode: int32
+    scale: 0.01
+  currents:
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 26 # Electricity of A phase
+      type: holding
+      decode: uint16
+    scale: 0.01
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 27 # Electricity of B phase
+      type: holding
+      decode: uint16
+    scale: 0.01
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 28 # Electricity of C phase
+      type: holding
+      decode: uint16
+    scale: 0.01
+  voltages:
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 20 # Voltage of A phase
+      type: holding
+      decode: uint16
+    scale: 0.1
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 21 # Voltage of B phase
+      type: holding
+      decode: uint16
+    scale: 0.1
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 22 # Voltage of C phase
+      type: holding
+      decode: uint16
+    scale: 0.1
+  powers:
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 30 # Active power of A phase
+      type: holding
+      decode: int32
+    {{- if eq .usage "pv" }}
+    scale: -1
+    {{- end }}
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 32 # Active power of B phase
+      type: holding
+      decode: int32
+    {{- if eq .usage "pv" }}
+    scale: -1
+    {{- end }}
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 34 # Active power of C phase
+      type: holding
+      decode: int32
+    {{- if eq .usage "pv" }}
+    scale: -1
+    {{- end }}

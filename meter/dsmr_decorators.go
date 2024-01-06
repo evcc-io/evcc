@@ -6,12 +6,12 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateDsmr(base api.Meter, meterEnergy func() (float64, error), meterCurrent func() (float64, float64, float64, error)) api.Meter {
+func decorateDsmr(base api.Meter, meterEnergy func() (float64, error), phaseCurrents func() (float64, float64, float64, error)) api.Meter {
 	switch {
-	case meterCurrent == nil && meterEnergy == nil:
+	case meterEnergy == nil && phaseCurrents == nil:
 		return base
 
-	case meterCurrent == nil && meterEnergy != nil:
+	case meterEnergy != nil && phaseCurrents == nil:
 		return &struct {
 			api.Meter
 			api.MeterEnergy
@@ -22,42 +22,34 @@ func decorateDsmr(base api.Meter, meterEnergy func() (float64, error), meterCurr
 			},
 		}
 
-	case meterCurrent != nil && meterEnergy == nil:
+	case meterEnergy == nil && phaseCurrents != nil:
 		return &struct {
 			api.Meter
-			api.MeterCurrent
+			api.PhaseCurrents
 		}{
 			Meter: base,
-			MeterCurrent: &decorateDsmrMeterCurrentImpl{
-				meterCurrent: meterCurrent,
+			PhaseCurrents: &decorateDsmrPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
 			},
 		}
 
-	case meterCurrent != nil && meterEnergy != nil:
+	case meterEnergy != nil && phaseCurrents != nil:
 		return &struct {
 			api.Meter
-			api.MeterCurrent
 			api.MeterEnergy
+			api.PhaseCurrents
 		}{
 			Meter: base,
-			MeterCurrent: &decorateDsmrMeterCurrentImpl{
-				meterCurrent: meterCurrent,
-			},
 			MeterEnergy: &decorateDsmrMeterEnergyImpl{
 				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateDsmrPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
 			},
 		}
 	}
 
 	return nil
-}
-
-type decorateDsmrMeterCurrentImpl struct {
-	meterCurrent func() (float64, float64, float64, error)
-}
-
-func (impl *decorateDsmrMeterCurrentImpl) Currents() (float64, float64, float64, error) {
-	return impl.meterCurrent()
 }
 
 type decorateDsmrMeterEnergyImpl struct {
@@ -66,4 +58,12 @@ type decorateDsmrMeterEnergyImpl struct {
 
 func (impl *decorateDsmrMeterEnergyImpl) TotalEnergy() (float64, error) {
 	return impl.meterEnergy()
+}
+
+type decorateDsmrPhaseCurrentsImpl struct {
+	phaseCurrents func() (float64, float64, float64, error)
+}
+
+func (impl *decorateDsmrPhaseCurrentsImpl) Currents() (float64, float64, float64, error) {
+	return impl.phaseCurrents()
 }

@@ -51,7 +51,7 @@ type Response struct {
 				BatteryCharging int64 `json:"batteryCharging,omitempty"`
 			} `json:"compartmentA"`
 		}
-		LeftTime         string `json:"leftTime,omitempty"`
-		EstimatedMileage int64  `json:"estimatedMileage,omitempty"`
+		// LeftTime         float32 `json:"leftTime,omitempty"`
+		EstimatedMileage int64 `json:"estimatedMileage,omitempty"`
 	}
 }

@@ -263,7 +263,7 @@ func NewConnection(uri, device, comset string, baudrate int, proto Protocol, sla
 
 	if device != "" {
 		switch strings.ToUpper(comset) {
-		case "8N1", "8E1":
+		case "8N1", "8E1", "8N2":
 		case "80":
 			comset = "8E1"
 		default:
@@ -375,13 +375,25 @@ func RegisterOperation(r Register) (rs485.Operation, error) {
 		op.FuncCode = modbus.FuncCodeReadHoldingRegisters
 	case "input":
 		op.FuncCode = modbus.FuncCodeReadInputRegisters
-	case "writesingle":
+	case "coil":
+		op.FuncCode = modbus.FuncCodeReadCoils
+		r.Decode = "bool8"
+	case "writesingle", "writeholding":
 		op.FuncCode = modbus.FuncCodeWriteSingleRegister
+	case "writemultiple", "writeholdings":
+		op.FuncCode = modbus.FuncCodeWriteMultipleRegisters
+	case "writecoil":
+		op.FuncCode = modbus.FuncCodeWriteSingleCoil
+		r.Decode = "bool8"
 	default:
 		return rs485.Operation{}, fmt.Errorf("invalid register type: %s", r.Type)
 	}
 
 	switch strings.ToLower(r.Decode) {
+	// 8 bit (coil)
+	case "bool8":
+		op.Transform = decodeBool8
+		op.ReadLen = 1
 
 	// 16 bit
 	case "int16":
@@ -480,7 +492,7 @@ type Operation struct {
 // ParseOperation parses an MBMD measurement or SunsSpec point definition into a modbus operation
 func ParseOperation(dev meters.Device, measurement string, op *Operation) (err error) {
 	// if measurement cannot be parsed it could be SunSpec model/block/point
-	if op.MBMD.IEC61850, err = meters.MeasurementString(strings.ToLower(measurement)); err != nil {
+	if op.MBMD.IEC61850, err = meters.MeasurementString(measurement); err != nil {
 		op.SunSpec.Model, op.SunSpec.Block, op.SunSpec.Point, err = ParsePoint(measurement)
 		return err
 	}

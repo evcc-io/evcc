@@ -19,6 +19,7 @@ func init() {
 // NewTapoFromConfig creates a Tapo charger from generic config
 func NewTapoFromConfig(other map[string]interface{}) (api.Charger, error) {
 	var cc struct {
+		embed        `mapstructure:",squash"`
 		URI          string
 		User         string
 		Password     string
@@ -29,11 +30,15 @@ func NewTapoFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	return NewTapo(cc.URI, cc.User, cc.Password, cc.StandbyPower)
+	if cc.User == "" || cc.Password == "" {
+		return nil, api.ErrMissingCredentials
+	}
+
+	return NewTapo(cc.embed, cc.URI, cc.User, cc.Password, cc.StandbyPower)
 }
 
 // NewTapo creates Tapo charger
-func NewTapo(uri, user, password string, standbypower float64) (*Tapo, error) {
+func NewTapo(embed embed, uri, user, password string, standbypower float64) (*Tapo, error) {
 	conn, err := tapo.NewConnection(uri, user, password)
 	if err != nil {
 		return nil, err
@@ -43,29 +48,19 @@ func NewTapo(uri, user, password string, standbypower float64) (*Tapo, error) {
 		conn: conn,
 	}
 
-	c.switchSocket = NewSwitchSocket(c.Enabled, c.conn.CurrentPower, standbypower)
+	c.switchSocket = NewSwitchSocket(&embed, c.Enabled, c.conn.CurrentPower, standbypower)
 
 	return c, nil
 }
 
 // Enabled implements the api.Charger interface
 func (c *Tapo) Enabled() (bool, error) {
-	resp, err := c.conn.ExecCmd("get_device_info", false)
-	if err != nil {
-		return false, err
-	}
-	return resp.Result.DeviceON, nil
+	return c.conn.Enabled()
 }
 
 // Enable implements the api.Charger interface
 func (c *Tapo) Enable(enable bool) error {
-	_, err := c.conn.ExecCmd("set_device_info", enable)
-	return err
-}
-
-// MaxCurrent implements the api.Charger interface
-func (c *Tapo) MaxCurrent(current int64) error {
-	return nil
+	return c.conn.Enable(enable)
 }
 
 var _ api.ChargeRater = (*Tapo)(nil)

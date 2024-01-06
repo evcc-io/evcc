@@ -1,15 +1,20 @@
 import "bootstrap/dist/css/bootstrap.min.css";
-import smoothscroll from "smoothscroll-polyfill";
 import "../css/app.css";
 import { createApp, h } from "vue";
-import { createMetaManager, plugin as metaPlugin } from "vue-meta";
+import { VueHeadMixin, createHead } from "@unhead/vue"; // not deprecated. see https://github.com/unjs/unhead/issues/291
 import App from "./views/App.vue";
 import setupRouter from "./router";
 import setupI18n from "./i18n";
 import featureflags from "./featureflags";
 import { watchThemeChanges } from "./theme";
 
-smoothscroll.polyfill();
+// lazy load smoothscroll polyfill. mainly for safari < 15.4
+if (!window.CSS.supports("scroll-behavior", "smooth")) {
+  console.log("no native smoothscroll support. polyfilling...");
+  import("smoothscroll-polyfill").then((module) => {
+    module.polyfill();
+  });
+}
 
 const app = createApp({
   data() {
@@ -22,10 +27,10 @@ const app = createApp({
   },
   methods: {
     raise: function (msg) {
-      console[msg.type](msg);
+      if (!msg.level) msg.level = "error";
       const now = new Date();
       const latestMsg = this.notifications[0];
-      if (latestMsg && latestMsg.message === msg.message) {
+      if (latestMsg && latestMsg.message === msg.message && latestMsg.lp === msg.lp) {
         latestMsg.count++;
         latestMsg.time = now;
       } else {
@@ -42,19 +47,11 @@ const app = createApp({
     clear: function () {
       this.notifications = [];
     },
-    error: function (msg) {
-      msg.type = "error";
-      this.raise(msg);
-    },
     setOnline: function () {
       this.offline = false;
     },
     setOffline: function () {
       this.offline = true;
-    },
-    warn: function (msg) {
-      msg.type = "warn";
-      this.raise(msg);
     },
   },
   render: function () {
@@ -63,11 +60,13 @@ const app = createApp({
 });
 
 const i18n = setupI18n();
+const head = createHead();
+
 app.use(i18n);
 app.use(setupRouter(i18n));
-app.use(createMetaManager());
-app.use(metaPlugin);
 app.use(featureflags);
+app.use(head);
+app.mixin(VueHeadMixin); // not deprecated. see https://github.com/unjs/unhead/issues/291
 window.app = app.mount("#app");
 
 watchThemeChanges();

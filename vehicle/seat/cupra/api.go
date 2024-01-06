@@ -38,19 +38,15 @@ func NewAPI(log *util.Logger, ts oauth2.TokenSource) *API {
 }
 
 // Vehicles implements the /vehicles response
-func (v *API) Vehicles(userID string) (res []string, err error) {
-	var vehicles struct {
+func (v *API) Vehicles(userID string) ([]Vehicle, error) {
+	var res struct {
 		Vehicles []Vehicle
 	}
 
 	uri := fmt.Sprintf("%s/v1/users/%s/garage/vehicles", BaseURL, userID)
-	err = v.GetJSON(uri, &vehicles)
+	err := v.GetJSON(uri, &res)
 
-	for _, v := range vehicles.Vehicles {
-		res = append(res, v.VIN)
-	}
-
-	return res, err
+	return res.Vehicles, err
 }
 
 // Status implements the /status response

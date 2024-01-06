@@ -26,7 +26,7 @@ func (r vehicleRegistry) Add(name string, factory func(map[string]interface{}) (
 func (r vehicleRegistry) Get(name string) (func(map[string]interface{}) (api.Vehicle, error), error) {
 	factory, exists := r[name]
 	if !exists {
-		return nil, fmt.Errorf("vehicle type not registered: %s", name)
+		return nil, fmt.Errorf("invalid vehicle type: %s", name)
 	}
 	return factory, nil
 }
@@ -43,7 +43,7 @@ func Types() []string {
 }
 
 // NewFromConfig creates vehicle from configuration
-func NewFromConfig(typ string, other map[string]interface{}) (v api.Vehicle, err error) {
+func NewFromConfig(typ string, other map[string]interface{}) (api.Vehicle, error) {
 	var cc struct {
 		Cloud bool
 		Other map[string]interface{} `mapstructure:",remain"`
@@ -59,13 +59,14 @@ func NewFromConfig(typ string, other map[string]interface{}) (v api.Vehicle, err
 	}
 
 	factory, err := registry.Get(strings.ToLower(typ))
-	if err == nil {
-		if v, err = factory(cc.Other); err != nil {
-			err = fmt.Errorf("cannot create vehicle '%s': %w", typ, err)
-		}
-	} else {
-		err = fmt.Errorf("invalid vehicle type: %s", typ)
+	if err != nil {
+		return nil, err
 	}
 
-	return
+	v, err := factory(cc.Other)
+	if err != nil {
+		err = fmt.Errorf("cannot create vehicle type '%s': %w", typ, err)
+	}
+
+	return v, err
 }

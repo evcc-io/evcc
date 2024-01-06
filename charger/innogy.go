@@ -29,18 +29,16 @@ import (
 )
 
 const (
-	igyRegID           = 0   // Input
-	igyRegSerial       = 25  // Input
-	igyRegProtocol     = 50  // Input
-	igyRegManufacturer = 100 // Input
-	igyRegFirmware     = 200 // Input
-	igyRegStatus       = 275 // Input
+	igyRegID           = 0    // Input
+	igyRegSerial       = 25   // Input
+	igyRegProtocol     = 50   // Input
+	igyRegManufacturer = 100  // Input
+	igyRegFirmware     = 200  // Input
+	igyRegStatus       = 275  // Input
+	igyRegCurrents     = 1006 // current readings per phase
 )
 
-var (
-	igyRegMaxCurrents = []uint16{1012, 1014, 1016} // max current per phase
-	igyRegCurrents    = []uint16{1006, 1008, 1010} // current readings per phase
-)
+var igyRegMaxCurrents = []uint16{1012, 1014, 1016} // max current per phase
 
 // https://www.innogy-emobility.com/content/dam/revu-global/emobility-solutions/neue-website-feb-2021/downloadcenter/digital-services/eld_instman_modbustcpde.pdf
 
@@ -96,18 +94,7 @@ func (wb *Innogy) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	switch r := rune(b[0]); r {
-	case 'A', 'B', 'D', 'E', 'F':
-		return api.ChargeStatus(r), nil
-	case 'C':
-		// C1 is "connected"
-		if rune(b[1]) == '1' {
-			return api.StatusB, nil
-		}
-		return api.StatusC, nil
-	default:
-		return api.StatusNone, fmt.Errorf("invalid status: %0x", b[:1])
-	}
+	return api.ChargeStatusStringWithMapping(string(b), api.StatusEasA)
 }
 
 // Enabled implements the api.Charger interface
@@ -168,25 +155,29 @@ var _ api.Meter = (*Innogy)(nil)
 
 // CurrentPower implements the api.Meter interface
 func (wb *Innogy) CurrentPower() (float64, error) {
+	// https://github.com/evcc-io/evcc/issues/6848
+	if status, err := wb.Status(); status != api.StatusC || err != nil {
+		return 0, err
+	}
 	l1, l2, l3, err := wb.Currents()
 	return 230 * (l1 + l2 + l3), err
 }
 
-var _ api.MeterCurrent = (*Innogy)(nil)
+var _ api.PhaseCurrents = (*Innogy)(nil)
 
-// Currents implements the api.MeterCurrent interface
+// Currents implements the api.PhaseCurrents interface
 func (wb *Innogy) Currents() (float64, float64, float64, error) {
-	var currents []float64
-	for _, regCurrent := range igyRegCurrents {
-		b, err := wb.conn.ReadInputRegisters(regCurrent, 2)
-		if err != nil {
-			return 0, 0, 0, err
-		}
-
-		currents = append(currents, float64(math.Float32frombits(binary.BigEndian.Uint32(b))))
+	b, err := wb.conn.ReadInputRegisters(igyRegCurrents, 6)
+	if err != nil {
+		return 0, 0, 0, err
 	}
 
-	return currents[0], currents[1], currents[2], nil
+	var res [3]float64
+	for i := range res {
+		res[i] = float64(math.Float32frombits(binary.BigEndian.Uint32(b[4*i:])))
+	}
+
+	return res[0], res[1], res[2], nil
 }
 
 var _ api.Diagnosis = (*Innogy)(nil)

@@ -4,11 +4,14 @@ release:
 
 builds:
   - id: evcc
-    main: main.go
+    main: .
     flags:
+      - -trimpath
       - -tags=release
     ldflags:
       - -X github.com/evcc-io/evcc/server.Version={{ .Tag }} -X github.com/evcc-io/evcc/server.Commit={{ .ShortCommit }} -s -w
+    env:
+      - CGO_ENABLED=0
     goos:
       - linux
     goarch:
@@ -26,15 +29,17 @@ builds:
 archives:
   - builds:
       - evcc
-    replacements:
-      darwin: macOS
     format: tar.gz
     format_overrides:
       - goos: windows
         format: zip
     files:
       - evcc.dist.yaml
-    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}-{{ .Arch }}{{ if .Arm }}hf{{ end }}"
+    name_template: >-
+      {{ .ProjectName }}_{{ .Version }}_{{ if eq .Os "darwin" }}macOS{{ else }}{{ .Os }}{{ end }}-{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}
+
+env:
+  - CGO_ENABLED=0
 
 universal_binaries:
   - replace: true
@@ -73,6 +78,7 @@ nfpms:
         dst: /lib/systemd/system/evcc.service
 
     scripts:
+      preinstall: ./packaging/scripts/preinstall.sh
       postinstall: ./packaging/scripts/postinstall.sh
       preremove: ./packaging/scripts/preremove.sh
       postremove: ./packaging/scripts/postremove.sh

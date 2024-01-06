@@ -9,6 +9,6 @@ smoothscroll.polyfill();
 watchThemeChanges();
 
 export const setupVue3 = defineSetupVue3(({ app }) => {
-  app.config.globalProperties.$hiddenFeatures = true;
+  app.config.globalProperties.$hiddenFeatures = () => true;
   app.use(setupI18n());
 });

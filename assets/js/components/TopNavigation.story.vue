@@ -35,5 +35,8 @@ import TopNavigation from "./TopNavigation.vue";
 				}"
 			/>
 		</Variant>
+		<Variant title="token expires">
+			<TopNavigation :sponsorTokenExpires="768423" />
+		</Variant>
 	</Story>
 </template>

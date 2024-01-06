@@ -15,6 +15,8 @@ params:
     default: 502
   - name: integer
     deprecated: true
+  - name: capacity
+    advanced: true
 render: |
   # reference: https://github.com/volkszaehler/mbmd/blob/master/meters/sunspec/models.go
   {{- if eq .usage "grid" }}
@@ -23,8 +25,8 @@ render: |
   id: 200
   model: sunspec
   power: Power
-  energy: Export
-  currents:
+  energy: Import
+  currents: # currents are signed already
     - CurrentL1
     - CurrentL2
     - CurrentL3
@@ -73,4 +75,7 @@ render: |
     id: 1
     model: sunspec
     value: ChargeState
+  {{- if .capacity }}
+  capacity: {{ .capacity }} # kWh
+  {{- end }}
   {{- end }}

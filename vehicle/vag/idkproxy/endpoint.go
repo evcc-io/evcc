@@ -15,16 +15,14 @@ import (
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/urlvalues"
 	"github.com/evcc-io/evcc/vehicle/vag"
+	"github.com/evcc-io/evcc/vehicle/vag/cariad"
 )
 
-const (
-	BaseURL   = "https://idkproxy-service.apps.emea.vwapps.io"
-	WellKnown = "https://idkproxy-service.apps.emea.vwapps.io/v1/emea/openid-configuration"
-)
+const WellKnown = cariad.BaseURL + "/login/v1/idk/openid-configuration"
 
 var Config = &oidc.ProviderConfig{
 	AuthURL:  "https://identity.vwgroup.io/oidc/v1/authorize",
-	TokenURL: "https://idkproxy-service.apps.emea.vwapps.io/v1/emea/token",
+	TokenURL: cariad.BaseURL + "/login/v1/idk/token",
 }
 
 var _ vag.TokenExchanger = (*Service)(nil)

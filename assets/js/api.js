@@ -15,9 +15,12 @@ const api = axios.create({
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    const url = error.config.baseURL + error.config.url;
-    const message = `${error.message}: API request failed ${url}`;
-    window.app.error({ message });
+    let message = error.message;
+    if (error.config) {
+      const url = error.config.baseURL + error.config.url;
+      message += `: API request failed ${url}`;
+    }
+    window.app.raise({ message });
     return Promise.reject(error);
   }
 );

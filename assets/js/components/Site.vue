@@ -6,7 +6,11 @@
 					{{ siteTitle || "evcc" }}
 				</h1>
 				<div class="d-flex">
-					<Notifications :notifications="notifications" class="me-2" />
+					<Notifications
+						:notifications="notifications"
+						:loadpointTitles="loadpointTitles"
+						class="me-2"
+					/>
 					<TopNavigation v-bind="topNavigation" />
 				</div>
 			</div>
@@ -16,9 +20,14 @@
 			<Loadpoints
 				class="mt-1 mt-sm-2 flex-grow-1"
 				:loadpoints="loadpoints"
-				:vehicles="vehicles"
+				:vehicles="vehicleList"
+				:smartCostLimit="smartCostLimit"
+				:smartCostType="smartCostType"
+				:smartCostActive="smartCostActive"
+				:tariffGrid="tariffGrid"
+				:tariffCo2="tariffCo2"
+				:currency="currency"
 			/>
-			<Vehicles v-if="showParkingLot" />
 			<Footer v-bind="footer"></Footer>
 		</div>
 	</div>
@@ -30,7 +39,6 @@ import TopNavigation from "./TopNavigation.vue";
 import Notifications from "./Notifications.vue";
 import Energyflow from "./Energyflow/Energyflow.vue";
 import Loadpoints from "./Loadpoints.vue";
-import Vehicles from "./Vehicles.vue";
 import Footer from "./Footer.vue";
 import formatter from "../mixins/formatter";
 import collector from "../mixins/collector";
@@ -43,7 +51,6 @@ export default {
 		Footer,
 		Notifications,
 		TopNavigation,
-		Vehicles,
 	},
 	mixins: [formatter, collector],
 	props: {
@@ -58,27 +65,31 @@ export default {
 		homePower: Number,
 		pvConfigured: Boolean,
 		pvPower: Number,
+		pv: Array,
 		batteryConfigured: Boolean,
 		batteryPower: Number,
-		batterySoC: Number,
+		batterySoc: Number,
+		batteryDischargeControl: Boolean,
+		batteryMode: String,
+		battery: Array,
 		gridCurrents: Array,
-		prioritySoC: Number,
+		prioritySoc: Number,
+		bufferSoc: Number,
+		bufferStartSoc: Number,
 		siteTitle: String,
-		vehicles: Array,
+		vehicles: Object,
 
 		auth: Object,
 
-		// footer
 		currency: String,
-		savingsAmount: Number,
-		savingsEffectivePrice: Number,
-		savingsGridCharged: Number,
-		savingsSelfConsumptionCharged: Number,
-		savingsSelfConsumptionPercent: Number,
-		savingsSince: Number,
-		savingsTotalCharged: Number,
+		statistics: Object,
 		tariffFeedIn: Number,
 		tariffGrid: Number,
+		tariffCo2: Number,
+		tariffPriceHome: Number,
+		tariffCo2Home: Number,
+		tariffPriceLoadpoints: Number,
+		tariffCo2Loadpoints: Number,
 
 		availableVersion: String,
 		releaseNotes: String,
@@ -86,28 +97,29 @@ export default {
 		uploadMessage: String,
 		uploadProgress: Number,
 		sponsor: String,
+		sponsorTokenExpires: Number,
+		smartCostLimit: Number,
+		smartCostType: String,
+		smartCostActive: Boolean,
 	},
 	computed: {
 		energyflow: function () {
 			return this.collectProps(Energyflow);
 		},
-		activeLoadpoints: function () {
-			return this.loadpoints.filter((lp) => lp.chargePower > 0);
+		loadpointTitles: function () {
+			return this.loadpoints.map((lp) => lp.title);
 		},
-		activeLoadpointsCount: function () {
-			return this.activeLoadpoints.length;
+		loadpointsCompact: function () {
+			return this.loadpoints.map((lp) => {
+				const icon = lp.chargerIcon || lp.vehicleIcon || "car";
+				const charging = lp.charging;
+				const power = lp.chargePower || 0;
+				return { icon, charging, power };
+			});
 		},
-		vehicleIcons: function () {
-			if (this.activeLoadpointsCount) {
-				return this.activeLoadpoints.map((lp) => lp.vehicleIcon || "car");
-			}
-			return ["car"];
-		},
-		loadpointsPower: function () {
-			return this.loadpoints.reduce((sum, lp) => {
-				sum += lp.chargePower || 0;
-				return sum;
-			}, 0);
+		vehicleList: function () {
+			const vehicles = this.vehicles || {};
+			return Object.entries(vehicles).map(([name, vehicle]) => ({ name, ...vehicle }));
 		},
 		topNavigation: function () {
 			const vehicleLogins = this.auth ? this.auth.vehicles : {};
@@ -130,15 +142,9 @@ export default {
 				},
 				sponsor: this.sponsor,
 				savings: {
-					since: this.savingsSince,
-					totalCharged: this.savingsTotalCharged,
-					gridCharged: this.savingsGridCharged,
-					selfConsumptionCharged: this.savingsSelfConsumptionCharged,
-					amount: this.savingsAmount,
-					effectivePrice: this.savingsEffectivePrice,
-					selfConsumptionPercent: this.savingsSelfConsumptionPercent,
-					gridPrice: this.tariffGrid,
-					feedInPrice: this.tariffFeedIn,
+					statistics: this.statistics,
+					co2Configured: this.tariffCo2 !== undefined,
+					priceConfigured: this.tariffGrid !== undefined,
 					currency: this.currency,
 				},
 			};

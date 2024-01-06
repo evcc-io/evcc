@@ -78,9 +78,9 @@ func (wb *CfosPowerBrain) TotalEnergy() (float64, error) {
 	return float64(binary.BigEndian.Uint64(b)) / 1e3, err
 }
 
-// var _ api.MeterCurrent = (*CfosPowerBrain)(nil)
+// var _ api.PhaseCurrents = (*CfosPowerBrain)(nil)
 
-// // Currents implements the api.MeterCurrent interface
+// // Currents implements the api.PhaseCurrents interface
 // func (wb *CfosPowerBrain) Currents() (float64, float64, float64, error) {
 // 	var currents []float64
 // 	for _, regCurrent := range cfosRegCurrents {

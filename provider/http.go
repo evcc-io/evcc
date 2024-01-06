@@ -12,6 +12,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
+	"github.com/gregjones/httpcache"
 	"github.com/jpfielding/go-http-digest/pkg/digest"
 )
 
@@ -39,7 +40,7 @@ type Auth struct {
 }
 
 // NewHTTPProviderFromConfig creates a HTTP provider
-func NewHTTPProviderFromConfig(other map[string]interface{}) (IntProvider, error) {
+func NewHTTPProviderFromConfig(other map[string]interface{}) (Provider, error) {
 	cc := struct {
 		URI, Method       string
 		Headers           map[string]string
@@ -60,8 +61,9 @@ func NewHTTPProviderFromConfig(other map[string]interface{}) (IntProvider, error
 		return nil, err
 	}
 
+	log := util.NewLogger("http")
 	http := NewHTTP(
-		util.NewLogger("http"),
+		log,
 		cc.Method,
 		cc.URI,
 		cc.Insecure,
@@ -80,7 +82,7 @@ func NewHTTPProviderFromConfig(other map[string]interface{}) (IntProvider, error
 
 	if err == nil {
 		var pipe *pipeline.Pipeline
-		pipe, err = pipeline.New(cc.Settings)
+		pipe, err = pipeline.New(log, cc.Settings)
 		http = http.WithPipeline(pipe)
 	}
 
@@ -90,7 +92,7 @@ func NewHTTPProviderFromConfig(other map[string]interface{}) (IntProvider, error
 // NewHTTP create HTTP provider
 func NewHTTP(log *util.Logger, method, uri string, insecure bool, scale float64, cache time.Duration) *HTTP {
 	url := util.DefaultScheme(uri, "http")
-	if url != uri {
+	if strings.HasPrefix(url, "http") && !strings.HasPrefix(uri, "http") {
 		log.WARN.Printf("missing scheme for %s, assuming http", uri)
 	}
 
@@ -101,6 +103,11 @@ func NewHTTP(log *util.Logger, method, uri string, insecure bool, scale float64,
 		scale:  scale,
 		cache:  cache,
 	}
+
+	// http cache
+	cacheTransport := httpcache.NewMemoryCacheTransport()
+	cacheTransport.Transport = p.Client.Transport
+	p.Client.Transport = cacheTransport
 
 	// ignore the self signed certificate
 	if insecure {
@@ -136,6 +143,8 @@ func (p *HTTP) WithAuth(typ, user, password string) (*HTTP, error) {
 		log.Redact(basicAuth)
 
 		p.Client.Transport = transport.BasicAuth(user, password, p.Client.Transport)
+	case "bearer":
+		p.Client.Transport = transport.BearerAuth(password, p.Client.Transport)
 	case "digest":
 		p.Client.Transport = digest.NewTransport(user, password, p.Client.Transport)
 	default:
@@ -146,7 +155,7 @@ func (p *HTTP) WithAuth(typ, user, password string) (*HTTP, error) {
 }
 
 // request executes the configured request or returns the cached value
-func (p *HTTP) request(body ...string) ([]byte, error) {
+func (p *HTTP) request(url string, body ...string) ([]byte, error) {
 	if time.Since(p.updated) >= p.cache {
 		var b io.Reader
 		if len(body) == 1 {
@@ -154,7 +163,7 @@ func (p *HTTP) request(body ...string) ([]byte, error) {
 		}
 
 		// empty method becomes GET
-		req, err := request.New(strings.ToUpper(p.method), p.url, b, p.headers)
+		req, err := request.New(strings.ToUpper(p.method), url, b, p.headers)
 		if err != nil {
 			return []byte{}, err
 		}
@@ -166,9 +175,26 @@ func (p *HTTP) request(body ...string) ([]byte, error) {
 	return p.val, p.err
 }
 
+var _ StringProvider = (*HTTP)(nil)
+
+// StringGetter sends string request
+func (p *HTTP) StringGetter() (func() (string, error), error) {
+	return func() (string, error) {
+		b, err := p.request(p.url, p.body)
+
+		if err == nil && p.pipeline != nil {
+			b, err = p.pipeline.Process(b)
+		}
+
+		return string(b), err
+	}, nil
+}
+
+var _ FloatProvider = (*HTTP)(nil)
+
 // FloatGetter parses float from request
-func (p *HTTP) FloatGetter() func() (float64, error) {
-	g := p.StringGetter()
+func (p *HTTP) FloatGetter() (func() (float64, error), error) {
+	g, err := p.StringGetter()
 
 	return func() (float64, error) {
 		s, err := g()
@@ -177,74 +203,83 @@ func (p *HTTP) FloatGetter() func() (float64, error) {
 		}
 
 		f, err := strconv.ParseFloat(s, 64)
-		if err == nil {
-			f *= p.scale
-		}
 
-		return f, err
-	}
+		return f * p.scale, err
+	}, err
 }
 
+var _ IntProvider = (*HTTP)(nil)
+
 // IntGetter parses int64 from request
-func (p *HTTP) IntGetter() func() (int64, error) {
-	g := p.FloatGetter()
+func (p *HTTP) IntGetter() (func() (int64, error), error) {
+	g, err := p.FloatGetter()
 
 	return func() (int64, error) {
 		f, err := g()
 		return int64(math.Round(f)), err
-	}
+	}, err
 }
 
-// StringGetter sends string request
-func (p *HTTP) StringGetter() func() (string, error) {
-	return func() (string, error) {
-		b, err := p.request(p.body)
-
-		if err == nil && p.pipeline != nil {
-			b, err = p.pipeline.Process(b)
-		}
-
-		return string(b), err
-	}
-}
+var _ BoolProvider = (*HTTP)(nil)
 
 // BoolGetter parses bool from request
-func (p *HTTP) BoolGetter() func() (bool, error) {
-	g := p.StringGetter()
+func (p *HTTP) BoolGetter() (func() (bool, error), error) {
+	g, err := p.StringGetter()
 
 	return func() (bool, error) {
 		s, err := g()
 		return util.Truish(s), err
-	}
+	}, err
 }
 
 func (p *HTTP) set(param string, val interface{}) error {
-	body, err := setFormattedValue(p.body, param, val)
-
-	if err == nil {
-		_, err = p.request(body)
+	url, err := setFormattedValue(p.url, param, val)
+	if err != nil {
+		return err
 	}
+
+	body, err := setFormattedValue(p.body, param, val)
+	if err != nil {
+		return err
+	}
+
+	_, err = p.request(url, body)
 
 	return err
 }
 
+var _ SetIntProvider = (*HTTP)(nil)
+
 // IntSetter sends int request
-func (p *HTTP) IntSetter(param string) func(int64) error {
+func (p *HTTP) IntSetter(param string) (func(int64) error, error) {
 	return func(val int64) error {
 		return p.set(param, val)
-	}
+	}, nil
 }
+
+var _ SetFloatProvider = (*HTTP)(nil)
+
+// FloatSetter sends int request
+func (p *HTTP) FloatSetter(param string) (func(float64) error, error) {
+	return func(val float64) error {
+		return p.set(param, val)
+	}, nil
+}
+
+var _ SetStringProvider = (*HTTP)(nil)
 
 // StringSetter sends string request
-func (p *HTTP) StringSetter(param string) func(string) error {
+func (p *HTTP) StringSetter(param string) (func(string) error, error) {
 	return func(val string) error {
 		return p.set(param, val)
-	}
+	}, nil
 }
 
+var _ SetBoolProvider = (*HTTP)(nil)
+
 // BoolSetter sends bool request
-func (p *HTTP) BoolSetter(param string) func(bool) error {
+func (p *HTTP) BoolSetter(param string) (func(bool) error, error) {
 	return func(val bool) error {
 		return p.set(param, val)
-	}
+	}, nil
 }

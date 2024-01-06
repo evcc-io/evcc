@@ -1,4 +1,4 @@
-import toml from "toml";
+import parseToml from "markty-toml";
 import { nextTick } from "vue";
 import { createI18n } from "vue-i18n";
 import en from "../../i18n/en.toml";
@@ -7,10 +7,18 @@ import settings from "./settings";
 
 // https://github.com/joker-x/languages.js/blob/master/languages.json
 export const LOCALES = {
+  ar: ["Arabic", "العربية"],
+  bh: ["Bihari", "भोजपुरी"],
+  ca: ["Catalan", "Català"],
+  "zh-Hans": ["Chinese (Simplified)", "简体中文"],
+  cs: ["Czech", "Česky"],
+  da: ["Danish", "Dansk"],
   de: ["German", "Deutsch"],
   en: ["English", "English"],
   es: ["Spanish", "Español"],
+  fi: ["Finnish", "Suomi"],
   fr: ["French", "Français"],
+  hr: ["Croatian", "Hrvatski"],
   it: ["Italian", "Italiano"],
   lb: ["Luxembourgish", "Lëtzebuergesch"],
   lt: ["Lithuanian", "Lietuvių"],
@@ -18,6 +26,11 @@ export const LOCALES = {
   no: ["Norwegian", "Norsk"],
   pl: ["Polish", "Polski"],
   pt: ["Portuguese", "Português"],
+  ro: ["Romanian", "Română"],
+  ru: ["Russian", "Русский"],
+  sl: ["Slovenian", "Slovenščina"],
+  sv: ["Swedish", "Svenska"],
+  uk: ["Ukrainian", "Українська"],
 };
 
 function getBrowserLocale() {
@@ -36,6 +49,7 @@ export function getLocalePreference() {
 export function removeLocalePreference(i18n) {
   settings.locale = null;
   setI18nLanguage(i18n, getBrowserLocale());
+  ensureCurrentLocaleMessages(i18n);
 }
 
 export function setLocalePreference(i18n, locale) {
@@ -73,7 +87,7 @@ export function setI18nLanguage(i18n, locale) {
 async function loadLocaleMessages(i18n, locale) {
   try {
     const response = await i18nApi.get(`${locale}.toml`, { params: { v: window.evcc?.version } });
-    const messages = toml.parse(response.data);
+    const messages = parseToml(response.data);
     i18n.setLocaleMessage(locale, messages);
   } catch (e) {
     console.error(`unable to load translation for [${locale}]`, e);

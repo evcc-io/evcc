@@ -5,12 +5,11 @@ import (
 	"io"
 	"io/fs"
 	"log"
-	"math/rand"
-	"time"
 
 	"github.com/evcc-io/evcc/cmd"
 	"github.com/evcc-io/evcc/server/assets"
 	_ "github.com/evcc-io/evcc/util/goversion" // require minimum go version
+	_ "golang.org/x/crypto/x509roots/fallback" // fallback certificates
 )
 
 var (
@@ -23,9 +22,6 @@ var (
 
 // init loads embedded assets unless live assets are already loaded
 func init() {
-	// TODO remove this once Go 1.20 is out with it.
-	rand.Seed(time.Now().UnixNano())
-
 	if !assets.Live() {
 		var err error
 

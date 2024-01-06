@@ -7,7 +7,7 @@
 [![OSS hosting by cloudsmith](https://img.shields.io/badge/OSS%20hosting%20by-cloudsmith-blue?logo=cloudsmith)](https://cloudsmith.io/~evcc/packages/)
 [![Latest Version](https://img.shields.io/github/release/evcc-io/evcc.svg)](https://github.com/evcc-io/evcc/releases)
 
-evcc is an extensible EV Charge Controller with PV integration implemented in [Go][2]. Featured in [PV magazine](https://www.pv-magazine.de/2021/01/15/selbst-ist-der-groeoenlandhof-wallbox-ladesteuerung-selbst-gebaut/).
+evcc is an extensible EV Charge Controller with PV integration implemented in [Go][1]. Featured in [PV magazine](https://www.pv-magazine.de/2021/01/15/selbst-ist-der-groeoenlandhof-wallbox-ladesteuerung-selbst-gebaut/).
 
 ![Screenshot](docs/screenshot.png)
 
@@ -15,7 +15,7 @@ evcc is an extensible EV Charge Controller with PV integration implemented in [G
 
 - simple and clean user interface
 - wide range of supported [chargers](https://docs.evcc.io/docs/devices/chargers):
-  - ABL eMH1, Alfen (Eve), Bender (CC612/613), cFos (PowerBrain), Daheimladen, Ebee (Wallbox), Ensto (Chago Wallbox), [EVSEWifi/ smartWB](https://www.evse-wifi.de), Garo (GLB, GLB+, LS4), go-eCharger, HardyBarth (eCB1, cPH1, cPH2), Heidelberg (Energy Control), Innogy (eBox), Juice (Charger Me), KEBA/BMW, Menneckes (Amedio, Amtron Premium/Xtra, Amtron ChargeConrol), NRGkick, [openWB (includes Pro)](https://openwb.de/), Optec (Mobility One), PC Electric (includes Garo), TechniSat (Technivolt), [Tinkerforge Warp Charger](https://www.warp-charger.com), Ubitricity (Heinz), Vestel, Wallbe, Webasto (Live), Mobile Charger Connect and many more
+  - ABL eMH1, Alfen (Eve), Bender (CC612/613), cFos (PowerBrain), Daheimladen, Ebee (Wallbox), Ensto (Chago Wallbox), [EVSEWifi/ smartWB](https://www.evse-wifi.de), Garo (GLB, GLB+, LS4), go-eCharger, HardyBarth (eCB1, cPH1, cPH2), Heidelberg (Energy Control), Innogy (eBox), Juice (Charger Me), KEBA/BMW, Menneckes (Amedio, Amtron Premium/Xtra, Amtron ChargeConrol), older NRGkicks (before 2022/2023), [openWB (includes Pro)](https://openwb.de/), Optec (Mobility One), PC Electric (includes Garo), Siemens, TechniSat (Technivolt), [Tinkerforge Warp Charger](https://www.warp-charger.com), Ubitricity (Heinz), Vestel, Wallbe, Webasto (Live), Mobile Charger Connect and many more
   - experimental EEBus support (Elli, PMCC)
   - experimental OCPP support
   - Build-your-own: Phoenix Contact (includes ESL Walli), [EVSE DIN](http://evracing.cz/simple-evse-wallbox)
@@ -26,9 +26,9 @@ evcc is an extensible EV Charge Controller with PV integration implemented in [G
   - Sunspec-compatible inverter or home battery devices: Fronius, SMA, SolarEdge, KOSTAL, STECA, E3DC, ...
   - and various others: Discovergy, Tesla PowerWall, LG ESS HOME, OpenEMS (FENECON)
 - [vehicle](https://docs.evcc.io/docs/devices/vehicles) integration (state of charge, remote charge, battery and preconditioning status):
-  - Audi, BMW, Citroën, Dacia, Fiat, Ford, Hyundai, Jaguar, Kia, Landrover, Mercedes, Mini, Nissan, Opel, Peugeot, Porsche, Renault, Seat, Smart, Skoda, Tesla, Volkswagen, Volvo, ...
+  - Audi, BMW, Citroën, Dacia, Fiat, Ford, Hyundai, Jaguar, Kia, Landrover, ~~Mercedes~~, Mini, Nissan, Opel, Peugeot, Porsche, Renault, Seat, Smart, Skoda, Tesla, Volkswagen, Volvo, ...
   - Services: OVMS, Tronity
-  - Scooters: Niu, Silence
+  - Scooters: Niu, ~~Silence~~
 - [plugins](https://docs.evcc.io/docs/reference/plugins) for integrating with any charger/ meter/ vehicle:
   - Modbus, HTTP, MQTT, Javascript, WebSockets and shell scripts
 - status [notifications](https://docs.evcc.io/docs/reference/configuration/messaging) using [Telegram](https://telegram.org), [PushOver](https://pushover.net) and [many more](https://containrrr.dev/shoutrrr/)
@@ -39,24 +39,61 @@ evcc is an extensible EV Charge Controller with PV integration implemented in [G
 
 ## Getting Started
 
-You'll find everything you need in our [documentation](https://docs.evcc.io/) (German).
+You'll find everything you need in our [documentation](https://docs.evcc.io/).
 
 ## Contribute
 
-To build evcc from source, [Go][2] 1.18 and [Node][3] 18 are required.
+To build evcc from source, [Go][1] 1.21 and [Node][2] 18 are required.
 
 Build and run go backend. The UI becomes available at http://127.0.0.1:7070/
 
 ```sh
+make install-ui
+make ui
+make install
 make
 ./evcc
 ```
+
+### Cross Compile
+
+To compile a version for an ARM device like a Raspberry Pi set GO command variables as needed, eg:
+
+```sh
+GOOS=linux GOARCH=arm GOARM=6 make
+```
+
+### UI development
 
 For frontend development start the Vue toolchain in dev-mode. Open http://127.0.0.1:7071/ to get to the livelreloading development server. It pulls its data from port 7070 (see above).
 
 ```sh
 npm install
-npm run start
+npm run dev
+```
+
+### Integration tests
+
+We use Playwright for end-to-end integration tests. They start a local evcc instance with different configuration yamls and prefilled databases. To run them, you have to do a local build first.
+
+```sh
+make ui build
+npm run playwright
+```
+
+#### Simulating device state
+
+Since we dont want to run tests agains real devices or cloud services we've build a simple simulator that lets you emulated meters, vehicles and loadpoints. The simulators web interface runs on http://localhost:7072.
+
+```
+npm run simulator
+```
+
+Run an evcc instance that uses simulator data. This configuration runs with a very high refresh interval to speed up testing.
+
+```
+make ui build
+./evcc --config tests/simulator.evcc.yaml
 ```
 
 ### Code formatting
@@ -66,14 +103,6 @@ We use linters (golangci-lint, Prettier) to keep a coherent source code formatti
 ```sh
 make lint
 make lint-ui
-```
-
-### Changing UI code
-
-To ensure reproducability the build frontend artifacts are part of the source code repository. If you've made changes to frontend code, please make sure to rebuild the production assets before you commit.
-
-```sh
-make ui
 ```
 
 ### Changing templates
@@ -93,7 +122,6 @@ evcc already includes many translations for the UI. Weblate Hosted is used to ma
 [![Weblate Hosted](https://hosted.weblate.org/widgets/evcc/-/evcc/287x66-grey.png)](https://hosted.weblate.org/engage/evcc/)
 [![Languages](https://hosted.weblate.org/widgets/evcc/-/evcc/multi-auto.svg)](https://hosted.weblate.org/engage/evcc/)
 
-
 https://hosted.weblate.org/projects/evcc/evcc/
 
 ## Sponsorship
@@ -105,4 +133,7 @@ Maintaining evcc consumes time and effort. With the vast amount of different dev
 
 While evcc is open source, we would also like to encourage vendors to provide open source hardware devices, public documentation and support open source projects like ours that provide additional value to otherwise closed hardware. Where this is not the case, evcc requires "sponsor token" to finance ongoing development and support of evcc.
 
-The personal sponsor token requires a [Github Sponsorship](https://github.com/sponsors/evcc-io) and can be requested at [cloud.evcc.io](https://cloud.evcc.io/).
+The personal sponsor token requires a [Github Sponsorship](https://github.com/sponsors/evcc-io) and can be requested at [sponsor.evcc.io](https://sponsor.evcc.io/).
+
+[1]: https://golang.org
+[2]: https://nodejs.org/

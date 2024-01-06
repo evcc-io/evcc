@@ -19,10 +19,10 @@ import (
 	"github.com/evcc-io/evcc/server/tailscale"
 	"github.com/evcc-io/evcc/server/updater"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/pipe"
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/evcc-io/evcc/util/telemetry"
-
 	_ "github.com/joho/godotenv/autoload"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/cobra"
@@ -35,8 +35,9 @@ var (
 	log     = util.NewLogger("main")
 	cfgFile string
 
-	ignoreErrors = []string{"warn", "error"}        // don't add to cache
-	ignoreMqtt   = []string{"auth", "releaseNotes"} // excessive size may crash certain brokers
+	ignoreEmpty = ""                                      // ignore empty keys
+	ignoreLogs  = []string{"log"}                         // ignore log messages, including warn/error
+	ignoreMqtt  = []string{"log", "auth", "releaseNotes"} // excessive size may crash certain brokers
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -58,9 +59,6 @@ func init() {
 	rootCmd.PersistentFlags().Bool(flagHeaders, false, flagHeadersDescription)
 
 	// config file options
-	rootCmd.PersistentFlags().String(flagSqlite, conf.Database.Dsn, flagSqliteDescription)
-	bindP(rootCmd, "database.dsn", flagSqlite)
-
 	rootCmd.PersistentFlags().StringP("log", "l", "info", "Log level (fatal, error, warn, info, debug, trace)")
 	bindP(rootCmd, "log")
 
@@ -90,6 +88,7 @@ func initConfig() {
 	}
 
 	viper.SetEnvPrefix("evcc")
+	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	viper.AutomaticEnv() // read in environment variables that match
 
 	// print version
@@ -129,7 +128,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 	// value cache
 	cache := util.NewCache()
-	go cache.Run(pipe.NewDropper(ignoreErrors...).Pipe(tee.Attach()))
+	go cache.Run(pipe.NewDropper(ignoreLogs...).Pipe(tee.Attach()))
 
 	// create web server
 	socketHub := server.NewSocketHub()
@@ -146,10 +145,10 @@ func runRoot(cmd *cobra.Command, args []string) {
 	}
 
 	// publish to UI
-	go socketHub.Run(tee.Attach(), cache)
+	go socketHub.Run(pipe.NewDropper(ignoreEmpty).Pipe(tee.Attach()), cache)
 
 	// setup values channel
-	valueChan := make(chan util.Param)
+	valueChan := make(chan util.Param, 64)
 	go tee.Run(valueChan)
 
 	// capture log messages for UI
@@ -171,7 +170,13 @@ func runRoot(cmd *cobra.Command, args []string) {
 	// setup modbus proxy
 	if err == nil {
 		for _, cfg := range conf.ModbusProxy {
-			if err = modbus.StartProxy(cfg.Port, cfg.Settings, cfg.ReadOnly); err != nil {
+			var mode modbus.ReadOnlyMode
+			mode, err = modbus.ReadOnlyModeString(cfg.ReadOnly)
+			if err != nil {
+				break
+			}
+
+			if err = modbus.StartProxy(cfg.Port, cfg.Settings, mode); err != nil {
 				break
 			}
 		}
@@ -191,19 +196,21 @@ func runRoot(cmd *cobra.Command, args []string) {
 	// setup site and loadpoints
 	var site *core.Site
 	if err == nil {
-		cp.TrackVisitors() // track duplicate usage
 		site, err = configureSiteAndLoadpoints(conf)
 	}
 
 	// setup database
 	if err == nil && conf.Influx.URL != "" {
-		configureInflux(conf.Influx, site.LoadPoints(), tee.Attach())
+		configureInflux(conf.Influx, site, pipe.NewDropper(append(ignoreLogs, ignoreEmpty)...).Pipe(tee.Attach()))
 	}
 
 	// setup mqtt publisher
 	if err == nil && conf.Mqtt.Broker != "" {
-		publisher := server.NewMQTT(strings.Trim(conf.Mqtt.Topic, "/"))
-		go publisher.Run(site, pipe.NewDropper(ignoreMqtt...).Pipe(tee.Attach()))
+		var mqtt *server.MQTT
+		mqtt, err = server.NewMQTT(strings.Trim(conf.Mqtt.Topic, "/"), site)
+		if err == nil {
+			go mqtt.Run(site, pipe.NewDropper(append(ignoreMqtt, ignoreEmpty)...).Pipe(tee.Attach()))
+		}
 	}
 
 	// announce on mDNS
@@ -219,7 +226,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	// setup messaging
 	var pushChan chan push.Event
 	if err == nil {
-		pushChan, err = configureMessengers(conf.Messaging, cache)
+		pushChan, err = configureMessengers(conf.Messaging, valueChan, cache)
 	}
 
 	// run shutdown functions on stop
@@ -254,22 +261,33 @@ func runRoot(cmd *cobra.Command, args []string) {
 	// show main ui
 	if err == nil {
 		httpd.RegisterSiteHandlers(site, cache)
+		httpd.RegisterShutdownHandler(func() {
+			log.FATAL.Println("evcc was stopped by user. OS should restart the service. Or restart manually.")
+			once.Do(func() { close(stopC) }) // signal loop to end
+		})
 
 		// set channels
 		site.DumpConfig()
 		site.Prepare(valueChan, pushChan)
 
-		// show and check version
-		valueChan <- util.Param{Key: "version", Val: server.FormattedVersion()}
-		go updater.Run(log, httpd, valueChan)
+		// show and check version, reduce api load during development
+		if server.Version != server.DevVersion {
+			valueChan <- util.Param{Key: "version", Val: server.FormattedVersion()}
+			go updater.Run(log, httpd, valueChan)
+		}
 
 		// expose sponsor to UI
 		if sponsor.Subject != "" {
 			valueChan <- util.Param{Key: "sponsor", Val: sponsor.Subject}
+			var validDuration time.Duration
+			if d := time.Until(sponsor.ExpiresAt); d > 0 && d < 30*24*time.Hour {
+				validDuration = d
+			}
+			valueChan <- util.Param{Key: "sponsorTokenExpires", Val: validDuration}
 		}
 
 		// allow web access for vehicles
-		cp.webControl(conf.Network, httpd.Router(), valueChan)
+		configureAuth(conf.Network, config.Instances(config.Vehicles().Devices()), httpd.Router(), valueChan)
 
 		go func() {
 			site.Run(stopC, conf.Interval)
@@ -279,6 +297,9 @@ func runRoot(cmd *cobra.Command, args []string) {
 			log.FATAL.Println("evcc was stopped. OS should restart the service. Or restart manually.")
 			once.Do(func() { close(stopC) }) // signal loop to end
 		})
+
+		// improve error message
+		err = wrapErrors(err)
 
 		publishErrorInfo(valueChan, cfgFile, err)
 
@@ -294,5 +315,5 @@ func runRoot(cmd *cobra.Command, args []string) {
 	// uds health check listener
 	go server.HealthListener(site)
 
-	log.FATAL.Println(httpd.ListenAndServe())
+	log.FATAL.Println(wrapErrors(httpd.ListenAndServe()))
 }

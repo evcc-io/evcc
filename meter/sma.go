@@ -24,11 +24,12 @@ func init() {
 	registry.Add("sma", NewSMAFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateSMA -b *SMA -r api.Meter -t "api.Battery,SoC,func() (float64, error)"
+//go:generate go run ../cmd/tools/decorate.go -f decorateSMA -b *SMA -r api.Meter -t "api.Battery,Soc,func() (float64, error)" -t "api.BatteryCapacity,Capacity,func() float64"
 
 // NewSMAFromConfig creates an SMA meter from generic config
 func NewSMAFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
+		capacity                 `mapstructure:",squash"`
 		URI, Password, Interface string
 		Serial                   uint32
 		Scale                    float64 // power only
@@ -41,11 +42,11 @@ func NewSMAFromConfig(other map[string]interface{}) (api.Meter, error) {
 		return nil, err
 	}
 
-	return NewSMA(cc.URI, cc.Password, cc.Interface, cc.Serial, cc.Scale)
+	return NewSMA(cc.URI, cc.Password, cc.Interface, cc.Serial, cc.Scale, cc.capacity.Decorator())
 }
 
 // NewSMA creates an SMA meter
-func NewSMA(uri, password, iface string, serial uint32, scale float64) (api.Meter, error) {
+func NewSMA(uri, password, iface string, serial uint32, scale float64, capacity func() float64) (api.Meter, error) {
 	sm := &SMA{
 		uri:   uri,
 		scale: scale,
@@ -79,7 +80,7 @@ func NewSMA(uri, password, iface string, serial uint32, scale float64) (api.Mete
 	}
 
 	// start update loop manually to get values as fast as possible
-	sm.device.StartUpdateLoop()
+	go sm.device.Run()
 
 	// decorate api.Battery in case of inverter
 	var soc func() (float64, error)
@@ -94,7 +95,7 @@ func NewSMA(uri, password, iface string, serial uint32, scale float64) (api.Mete
 		}
 	}
 
-	return decorateSMA(sm, soc), nil
+	return decorateSMA(sm, soc, capacity), nil
 }
 
 // CurrentPower implements the api.Meter interface
@@ -111,18 +112,56 @@ func (sm *SMA) TotalEnergy() (float64, error) {
 	return sma.AsFloat(values[sunny.ActiveEnergyPlus]) / 3600000, err
 }
 
-var _ api.MeterCurrent = (*SMA)(nil)
+var _ api.PhaseCurrents = (*SMA)(nil)
 
-// Currents implements the api.MeterCurrent interface
+// Currents implements the api.PhaseCurrents interface
 func (sm *SMA) Currents() (float64, float64, float64, error) {
 	values, err := sm.device.Values()
 
-	var currents [3]float64
-	for i, id := range []sunny.ValueID{sunny.CurrentL1, sunny.CurrentL2, sunny.CurrentL3} {
-		currents[i] = sma.AsFloat(values[id])
+	var powers [3]float64
+	for i, id := range []sunny.ValueID{sunny.ActivePowerMinusL1, sunny.ActivePowerMinusL2, sunny.ActivePowerMinusL3} {
+		if p := sma.AsFloat(values[id]); p > 0 {
+			powers[i] = -p
+		}
 	}
 
-	return currents[0], currents[1], currents[2], err
+	var res [3]float64
+	for i, id := range []sunny.ValueID{sunny.CurrentL1, sunny.CurrentL2, sunny.CurrentL3} {
+		res[i] = util.SignFromPower(sma.AsFloat(values[id]), powers[i])
+	}
+
+	return res[0], res[1], res[2], err
+}
+
+var _ api.PhaseVoltages = (*SMA)(nil)
+
+// Voltages implements the api.PhaseVoltages interface
+func (sm *SMA) Voltages() (float64, float64, float64, error) {
+	values, err := sm.device.Values()
+
+	var res [3]float64
+	for i, id := range []sunny.ValueID{sunny.VoltageL1, sunny.VoltageL2, sunny.VoltageL3} {
+		res[i] = sma.AsFloat(values[id])
+	}
+
+	return res[0], res[1], res[2], err
+}
+
+var _ api.PhasePowers = (*SMA)(nil)
+
+// Powers implements the api.PhasePowers interface
+func (sm *SMA) Powers() (float64, float64, float64, error) {
+	values, err := sm.device.Values()
+
+	var res [3]float64
+	for i, id := range []sunny.ValueID{sunny.ActivePowerPlusL1, sunny.ActivePowerPlusL2, sunny.ActivePowerPlusL3} {
+		res[i] = sma.AsFloat(values[id])
+	}
+	for i, id := range []sunny.ValueID{sunny.ActivePowerMinusL1, sunny.ActivePowerMinusL2, sunny.ActivePowerMinusL3} {
+		res[i] -= sma.AsFloat(values[id])
+	}
+
+	return res[0], res[1], res[2], err
 }
 
 // soc implements the api.Battery interface

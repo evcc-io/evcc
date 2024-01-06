@@ -1,0 +1,21 @@
+template: homecharge
+products:
+  - brand: Homecharge
+    description:
+      generic: Homecharger HC11L, HC22L
+requirements:
+  description:
+    de: |
+      Die Verwendung mit evcc erfordert einen eingebauten Stromzähler (Ausführungen HC11L/HC22L Energy oder Profi).
+      Die OCPP-Konfiguration erfolgt über den EFR-SECC-Ladecontroller über die URL http://host/secc.
+      Den Zugang erfragen Sie bitte beim Hersteller EFR (www.efr.de) oder Ihrem Händler.
+    en: |
+      The charger must be equipped with a built-in meter (models HC11L/HC22L Energy or Profi).
+      For the OCPP configuration, you need to access the EFR-SECC charge controller at http://host/secc.
+      For login credentials, ask your dealer or the vendor EFR (www.efr.de).
+params:
+  - preset: ocpp
+render: |
+  {{ include "ocpp" . }}
+  getconfiguration: false
+  chargingrateunit: W

@@ -1,0 +1,24 @@
+template: dzg
+products:
+  - brand: DZG
+    description:
+      generic: DVH4013
+params:
+  - name: usage
+    choice: ["charge"]
+  - name: modbus
+    choice: ["rs485"]
+render: |
+  type: modbus
+  model: dzg
+  {{- include "modbus" . }}
+  power: ImportPower
+  energy: Import
+  currents:
+    - CurrentL1
+    - CurrentL2
+    - CurrentL3
+  voltages:
+    - VoltageL1
+    - VoltageL2
+    - VoltageL3

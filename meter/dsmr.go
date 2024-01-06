@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
+	"io"
 	"net"
 	"os"
 	"strconv"
@@ -13,6 +14,7 @@ import (
 
 	"github.com/basvdlei/gotsmart/crc16"
 	"github.com/basvdlei/gotsmart/dsmr"
+	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
@@ -69,7 +71,7 @@ func init() {
 	registry.Add("dsmr", NewDsmrFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateDsmr -b api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)"
+//go:generate go run ../cmd/tools/decorate.go -f decorateDsmr -b api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)"
 
 // NewDsmrFromConfig creates a DSMR meter from generic config
 func NewDsmrFromConfig(other map[string]interface{}) (api.Meter, error) {
@@ -135,15 +137,22 @@ func NewDsmr(uri, energy string, timeout time.Duration) (api.Meter, error) {
 }
 
 // based on https://github.com/basvdlei/gotsmart/blob/master/gotsmart.go
-func (m *Dsmr) run(conn *bufio.Reader, done chan struct{}) {
+func (m *Dsmr) run(conn net.Conn, done chan struct{}) {
 	log := util.NewLogger("dsmr")
+	bo := backoff.NewExponentialBackOff()
+	bo.MaxInterval = 5 * time.Minute
 
 	handle := func(op string, err error) {
 		log.ERROR.Printf("%s: %v", op, err)
-		if errors.Is(err, net.ErrClosed) {
+		if err == io.EOF ||
+			errors.Is(err, io.ErrUnexpectedEOF) ||
+			errors.Is(err, net.ErrClosed) {
+			conn.Close() // closing on nil socket is safe
 			conn = nil
 		}
 	}
+
+	reader := bufio.NewReader(conn)
 
 	for {
 		if conn == nil {
@@ -151,47 +160,52 @@ func (m *Dsmr) run(conn *bufio.Reader, done chan struct{}) {
 			conn, err = m.connect()
 			if err != nil {
 				handle("connect", err)
-				time.Sleep(time.Second)
+				time.Sleep(bo.NextBackOff().Truncate(time.Second))
 				continue
 			}
+
+			reader.Reset(conn)
 		}
 
-		if b, err := conn.Peek(1); err == nil {
+		if b, err := reader.Peek(1); err == nil {
+			bo.Reset()
+
 			if string(b) != "/" {
 				log.DEBUG.Printf("ignoring garbage character: %c\n", b)
-				_, _ = conn.ReadByte()
+				_, _ = reader.ReadByte()
 				continue
 			}
 		} else {
 			handle("peek", err)
+			time.Sleep(bo.NextBackOff().Truncate(time.Second))
 			continue
 		}
 
-		frame, err := conn.ReadBytes('!')
+		frame, err := reader.ReadBytes('!')
 		if err != nil {
 			handle("read", err)
 			continue
 		}
 
-		bcrc, err := conn.ReadBytes('\n')
+		bcrc, err := reader.ReadBytes('\n')
 		if err != nil {
 			handle("read", err)
 			continue
 		}
 
-		log.TRACE.Printf("read: %s\n", frame)
+		log.TRACE.Printf("read: %s", frame)
 
 		// Check CRC
 		mcrc := strings.ToUpper(strings.TrimSpace(string(bcrc)))
 		crc := fmt.Sprintf("%04X", crc16.Checksum(frame))
 		if mcrc != crc {
-			log.ERROR.Printf("crc mismatch: %q != %q\n", mcrc, crc)
+			log.ERROR.Printf("crc mismatch: %q != %q", mcrc, crc)
 			continue
 		}
 
 		dsmrFrame, err := dsmr.ParseFrame(string(frame))
 		if err != nil {
-			log.ERROR.Printf("could not parse frame: %v\n", err)
+			log.ERROR.Printf("could not parse frame: %v", err)
 			continue
 		}
 
@@ -207,7 +221,7 @@ func (m *Dsmr) run(conn *bufio.Reader, done chan struct{}) {
 	}
 }
 
-func (m *Dsmr) connect() (*bufio.Reader, error) {
+func (m *Dsmr) connect() (net.Conn, error) {
 	dialer := net.Dialer{Timeout: request.Timeout}
 
 	conn, err := dialer.Dial("tcp", m.addr)
@@ -215,7 +229,7 @@ func (m *Dsmr) connect() (*bufio.Reader, error) {
 		return nil, err
 	}
 
-	return bufio.NewReader(conn), nil
+	return conn, nil
 }
 
 func (m *Dsmr) get(id string) (float64, error) {
@@ -251,11 +265,11 @@ func (m *Dsmr) totalEnergy() (float64, error) {
 	return m.get(m.energy)
 }
 
-// currents implements the api.MeterCurrent interface
+// currents implements the api.PhaseCurrents interface
 func (m *Dsmr) currents() (float64, float64, float64, error) {
 	var res [3]float64
 
-	for i := 0; i < 3; i++ {
+	for i := range res {
 		var err error
 		if res[i], err = m.get(currentObis[i]); err != nil {
 			return 0, 0, 0, err

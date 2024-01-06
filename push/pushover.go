@@ -2,32 +2,48 @@ package push
 
 import (
 	"errors"
+	"strings"
 
+	"github.com/evcc-io/evcc/util"
 	"github.com/gregdel/pushover"
 )
 
+func init() {
+	registry.Add("pushover", NewPushOverFromConfig)
+}
+
 // PushOver implements the pushover messenger
 type PushOver struct {
+	log        *util.Logger
 	app        *pushover.Pushover
+	device     string
 	recipients []string
 }
 
-type pushOverConfig struct {
-	App        string
-	Recipients []string
-	Events     map[string]EventTemplate
-}
+// NewPushOverFromConfig creates new pushover messenger
+func NewPushOverFromConfig(other map[string]interface{}) (Messenger, error) {
+	var cc struct {
+		App        string
+		Recipients []string
+		Devices    []string
+	}
 
-// NewPushOverMessenger creates new pushover messenger
-func NewPushOverMessenger(app string, recipients []string) (*PushOver, error) {
-	if app == "" {
-		return nil, errors.New("pushover: missing app name")
+	if err := util.DecodeOther(other, &cc); err != nil {
+		return nil, err
+	}
+
+	if cc.App == "" {
+		return nil, errors.New("missing app name")
 	}
 
 	m := &PushOver{
-		app:        pushover.New(app),
-		recipients: recipients,
+		log:        util.NewLogger("pushover").Redact(cc.App),
+		app:        pushover.New(cc.App),
+		device:     strings.Join(cc.Devices, ","),
+		recipients: cc.Recipients,
 	}
+
+	m.log.Redact(cc.Recipients...)
 
 	return m, nil
 }
@@ -35,14 +51,15 @@ func NewPushOverMessenger(app string, recipients []string) (*PushOver, error) {
 // Send sends to all receivers
 func (m *PushOver) Send(title, msg string) {
 	message := pushover.NewMessageWithTitle(msg, title)
+	message.DeviceName = m.device
 
 	for _, id := range m.recipients {
 		go func(id string) {
-			log.DEBUG.Printf("pushover: sending to %s", id)
+			m.log.DEBUG.Printf("sending to %s", id)
 
 			recipient := pushover.NewRecipient(id)
 			if _, err := m.app.SendMessage(message, recipient); err != nil {
-				log.ERROR.Print(err)
+				m.log.ERROR.Print(err)
 			}
 		}(id)
 	}

@@ -3,8 +3,11 @@ covers: ["varta-energiespeicher", "varta-energiespeicher-battery-only"]
 products:
   - brand: VARTA
     description:
-      de: pulse/ pulse neo/ element (PV nur verfügbar mit PV-Sensor)
-      en: pulse/ pulse neo/ element (PV only available with PV sensor)
+      generic: pulse, pulse neo, element
+requirements:
+  description:
+    de: PV nur verfügbar mit PV-Sensor
+    en: PV only available with PV sensor
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -12,6 +15,8 @@ params:
   - name: host
   - name: port
     default: 502
+  - name: capacity
+    advanced: true
 render: |
   type: custom
   power:
@@ -47,4 +52,7 @@ render: |
       address: 1068 # SOC
       type: holding
       decode: int16
+  {{- if .capacity }}
+  capacity: {{ .capacity }} # kWh
+  {{- end }}
   {{- end }}

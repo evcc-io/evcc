@@ -6,6 +6,9 @@ products:
   - brand: E.ON Drive
     description:
       generic: eBox
+  - brand: Compleo
+    description:
+      generic: eBox
 capabilities: ["mA"]
 requirements:
   evcc: ["sponsorship"]

@@ -11,7 +11,6 @@ import (
 	"github.com/evcc-io/evcc/hems/ocpp/profile"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/machine"
-
 	ocpp16 "github.com/lorenzodonini/ocpp-go/ocpp1.6"
 	ocppcore "github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
 	"github.com/lorenzodonini/ocpp-go/ws"
@@ -80,7 +79,7 @@ func (s *OCPP) errorHandler(errC <-chan error) {
 // Run executes the OCPP chargepoint client
 func (s *OCPP) Run() {
 	for {
-		for id, lp := range s.site.LoadPoints() {
+		for id, lp := range s.site.Loadpoints() {
 			connector := id + 1
 
 			status := ocppcore.ChargePointStatusAvailable

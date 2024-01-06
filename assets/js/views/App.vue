@@ -1,23 +1,54 @@
 <template>
-	<div class="app overflow-hidden">
-		<metainfo>
-			<template #title="{ content }">{{ content ? `${content} | evcc` : `evcc` }}</template>
-		</metainfo>
+	<div class="app">
 		<router-view :notifications="notifications" :offline="offline"></router-view>
+
+		<GlobalSettingsModal v-bind="globalSettingsProps" />
+		<BatterySettingsModal v-if="batteryModalAvailabe" v-bind="batterySettingsProps" />
+		<GridSettingsModal v-if="gridModalAvailable" v-bind="gridSettingsProps" />
+		<HelpModal />
 	</div>
 </template>
 
 <script>
 import store from "../store";
+import GlobalSettingsModal from "../components/GlobalSettingsModal.vue";
+import BatterySettingsModal from "../components/BatterySettingsModal.vue";
+import GridSettingsModal from "../components/GridSettingsModal.vue";
+import HelpModal from "../components/HelpModal.vue";
+import collector from "../mixins/collector";
+import gridModalAvailable from "../utils/gridModalAvailable";
 
 export default {
 	name: "App",
+	components: { GlobalSettingsModal, HelpModal, BatterySettingsModal, GridSettingsModal },
+	mixins: [collector],
 	props: {
 		notifications: Array,
 		offline: Boolean,
 	},
 	data: () => {
 		return { reconnectTimeout: null, ws: null };
+	},
+	head() {
+		const siteTitle = store.state.siteTitle;
+		return { title: siteTitle ? `${siteTitle} | evcc` : "evcc" };
+	},
+	computed: {
+		gridModalAvailable: function () {
+			return gridModalAvailable(store.state.smartCostType);
+		},
+		batteryModalAvailabe: function () {
+			return store.state.batteryConfigured;
+		},
+		globalSettingsProps: function () {
+			return this.collectProps(GlobalSettingsModal, store.state);
+		},
+		batterySettingsProps() {
+			return this.collectProps(BatterySettingsModal, store.state);
+		},
+		gridSettingsProps() {
+			return this.collectProps(GridSettingsModal, store.state);
+		},
 	},
 	mounted: function () {
 		this.connect();
@@ -59,7 +90,7 @@ export default {
 			console.log("websocket connect");
 			const supportsWebSockets = "WebSocket" in window;
 			if (!supportsWebSockets) {
-				window.app.error({
+				window.app.raise({
 					message: "Web sockets not supported. Please upgrade your browser.",
 				});
 				return;
@@ -99,7 +130,7 @@ export default {
 					var msg = JSON.parse(evt.data);
 					store.update(msg);
 				} catch (error) {
-					window.app.error({
+					window.app.raise({
 						message: `Failed to parse web socket data: ${error.message} [${evt.data}]`,
 					});
 				}
@@ -108,9 +139,6 @@ export default {
 		reload() {
 			window.location.reload();
 		},
-	},
-	metaInfo() {
-		return { title: store.state.siteTitle || "" };
 	},
 };
 </script>

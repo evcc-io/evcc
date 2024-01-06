@@ -2,9 +2,10 @@ package vehicle
 
 import (
 	"github.com/evcc-io/evcc/api"
-	"golang.org/x/exp/slices"
 )
 
+// TODO align phases with OnIdentify
+// TODO remove vehicle settings
 type embed struct {
 	Title_       string           `mapstructure:"title"`
 	Icon_        string           `mapstructure:"icon"`
@@ -16,13 +17,23 @@ type embed struct {
 }
 
 // Title implements the api.Vehicle interface
+func (v *embed) fromVehicle(title string, capacity float64) {
+	if v.Title_ == "" {
+		v.Title_ = title
+	}
+	if v.Capacity_ == 0 {
+		v.Capacity_ = capacity
+	}
+}
+
+// Title implements the api.Vehicle interface
 func (v *embed) Title() string {
 	return v.Title_
 }
 
-// Icon implements the api.Vehicle interface
-func (v *embed) Icon() string {
-	return v.Icon_
+// SetTitle implements the api.TitleSetter interface
+func (v *embed) SetTitle(title string) {
+	v.Title_ = title
 }
 
 // Capacity implements the api.Vehicle interface
@@ -45,14 +56,16 @@ func (v *embed) OnIdentified() api.ActionConfig {
 	return v.OnIdentify
 }
 
-var _ api.FeatureDescriber = (*embed)(nil)
+var _ api.IconDescriber = (*embed)(nil)
 
-// Features implements the api.Describer interface
-func (v *embed) Features() []api.Feature {
-	return v.Features_
+// Icon implements the api.IconDescriber interface
+func (v *embed) Icon() string {
+	return v.Icon_
 }
 
-// Features implements the api.Describer interface
-func (v *embed) Has(f api.Feature) bool {
-	return slices.Contains(v.Features_, f)
+var _ api.FeatureDescriber = (*embed)(nil)
+
+// Features implements the api.FeatureDescriber interface
+func (v *embed) Features() []api.Feature {
+	return v.Features_
 }

@@ -29,7 +29,7 @@ export default {
 </script>
 <style scoped>
 .letter {
-	fill: #18191a;
+	fill: #1c2445;
 }
 html.dark .letter {
 	fill: var(--bs-white);

@@ -2,8 +2,8 @@ template: citroen
 products:
   - brand: Citroën
 params:
-  - preset: vehiclebase
-  - preset: vehicleidentify
+  - preset: vehicle-base
+  - preset: vehicle-identify
 render: |
   type: citroen
   {{ include "vehicle-base" . }}

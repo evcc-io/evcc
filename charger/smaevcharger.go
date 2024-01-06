@@ -41,8 +41,8 @@ type Smaevcharger struct {
 	uri          string // 192.168.XXX.XXX
 	cache        time.Duration
 	oldstate     float64
-	measurementG func() ([]smaevcharger.Measurements, error)
-	parameterG   func() ([]smaevcharger.Parameters, error)
+	measurementG provider.Cacheable[[]smaevcharger.Measurements]
+	parameterG   provider.Cacheable[[]smaevcharger.Parameters]
 }
 
 func init() {
@@ -95,7 +95,8 @@ func NewSmaevcharger(uri, user, password string, cache time.Duration) (api.Charg
 	}
 
 	// setup cached values
-	wb.reset()
+	wb.measurementG = provider.ResettableCached(wb._measurementData, wb.cache)
+	wb.parameterG = provider.ResettableCached(wb._parameterData, wb.cache)
 
 	ts, err := smaevcharger.TokenSource(log, wb.uri, user, password)
 	if err != nil {
@@ -247,28 +248,28 @@ func (wb *Smaevcharger) ChargedEnergy() (float64, error) {
 	return res / 1e3, err
 }
 
-var _ api.MeterCurrent = (*Smaevcharger)(nil)
+var _ api.PhaseCurrents = (*Smaevcharger)(nil)
 
-// Currents implements the api.MeterCurrent interface
+// Currents implements the api.PhaseCurrents interface
 func (wb *Smaevcharger) Currents() (float64, float64, float64, error) {
-	var curr []float64
+	var res [3]float64
 
-	for _, phase := range []string{"A", "B", "C"} {
+	for i, phase := range []string{"A", "B", "C"} {
 		val, err := wb.getMeasurement("Measurement.GridMs.A.phs" + phase)
 		if err != nil {
 			return 0, 0, 0, err
 		}
 
-		curr = append(curr, -val)
+		res[i] = -val
 	}
 
-	return curr[0], curr[1], curr[2], nil
+	return res[0], res[1], res[2], nil
 }
 
 // reset cache
 func (wb *Smaevcharger) reset() {
-	wb.measurementG = provider.Cached(wb._measurementData, wb.cache)
-	wb.parameterG = provider.Cached(wb._parameterData, wb.cache)
+	wb.measurementG.Reset()
+	wb.parameterG.Reset()
 }
 
 func (wb *Smaevcharger) _measurementData() ([]smaevcharger.Measurements, error) {
@@ -298,7 +299,7 @@ func (wb *Smaevcharger) _parameterData() ([]smaevcharger.Parameters, error) {
 }
 
 func (wb *Smaevcharger) getMeasurement(id string) (float64, error) {
-	res, err := wb.measurementG()
+	res, err := wb.measurementG.Get()
 	if err != nil {
 		return 0, err
 	}
@@ -313,7 +314,7 @@ func (wb *Smaevcharger) getMeasurement(id string) (float64, error) {
 }
 
 func (wb *Smaevcharger) getParameter(id string) (string, error) {
-	res, err := wb.parameterG()
+	res, err := wb.parameterG.Get()
 	if err != nil {
 		return "", err
 	}

@@ -8,21 +8,19 @@ import (
 	"strings"
 
 	xj "github.com/basgys/goxml2json"
-	"github.com/evcc-io/evcc/provider/javascript"
+	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/jq"
 	"github.com/itchyny/gojq"
-	"github.com/robertkrimen/otto"
 	"github.com/volkszaehler/mbmd/meters/rs485"
 )
 
 type Pipeline struct {
+	log    *util.Logger
 	re     *regexp.Regexp
 	jq     *gojq.Query
 	dflt   string
 	unpack string
 	decode string
-	vm     *otto.Otto
-	script string
 }
 
 type Settings struct {
@@ -31,12 +29,12 @@ type Settings struct {
 	Jq      string
 	Unpack  string
 	Decode  string
-	VM      string
-	Script  string
 }
 
-func New(cc Settings) (*Pipeline, error) {
-	p := new(Pipeline)
+func New(log *util.Logger, cc Settings) (*Pipeline, error) {
+	p := &Pipeline{
+		log: log,
+	}
 
 	var err error
 	if err == nil && cc.Regex != "" {
@@ -53,10 +51,6 @@ func New(cc Settings) (*Pipeline, error) {
 
 	if err == nil && cc.Decode != "" {
 		_, err = p.WithDecode(cc.Decode)
-	}
-
-	if err == nil && cc.Script != "" {
-		_, err = p.WithScript(cc.VM, cc.Script)
 	}
 
 	return p, err
@@ -101,19 +95,6 @@ func (p *Pipeline) WithDecode(decode string) (*Pipeline, error) {
 	return p, nil
 }
 
-// WithScript adds a javascript script to process the response
-func (p *Pipeline) WithScript(vm, script string) (*Pipeline, error) {
-	regvm, err := javascript.RegisteredVM(vm, "")
-	if err != nil {
-		return nil, err
-	}
-
-	p.vm = regvm
-	p.script = script
-
-	return p, nil
-}
-
 // transform XML into JSON with attribute names getting 'attr' prefix
 func (p *Pipeline) transformXML(value []byte) []byte {
 	value = bytes.TrimSpace(value)
@@ -135,6 +116,10 @@ func (p *Pipeline) transformXML(value []byte) []byte {
 	out := new(bytes.Buffer)
 	if err := xj.NewEncoder(out).Encode(root); err != nil {
 		return value
+	}
+
+	if p.log != nil {
+		p.log.TRACE.Println(out.String())
 	}
 
 	return out.Bytes()
@@ -218,23 +203,6 @@ func (p *Pipeline) Process(in []byte) ([]byte, error) {
 			return b, err
 		}
 		b = []byte(fmt.Sprintf("%v", v))
-	}
-
-	if p.vm != nil {
-		if err := p.vm.Set("val", string(b)); err != nil {
-			return b, err
-		}
-
-		v, err := p.vm.Eval(p.script)
-		if err != nil {
-			return b, err
-		}
-
-		s, err := v.ToString()
-		b = []byte(s)
-		if err != nil {
-			return b, err
-		}
 	}
 
 	return b, nil

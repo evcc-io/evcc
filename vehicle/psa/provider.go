@@ -13,7 +13,7 @@ type Provider struct {
 	statusG func() (Status, error)
 }
 
-// NewProvider creates a new vehicle
+// NewProvider creates a vehicle api provider
 func NewProvider(api *API, vid string, cache time.Duration) *Provider {
 	impl := &Provider{
 		statusG: provider.Cached(func() (Status, error) {
@@ -25,8 +25,8 @@ func NewProvider(api *API, vid string, cache time.Duration) *Provider {
 
 var _ api.Battery = (*Provider)(nil)
 
-// SoC implements the api.Vehicle interface
-func (v *Provider) SoC() (float64, error) {
+// Soc implements the api.Vehicle interface
+func (v *Provider) Soc() (float64, error) {
 	res, err := v.statusG()
 	if err == nil {
 		for _, e := range res.Energy {
@@ -129,14 +129,14 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 var _ api.VehicleClimater = (*Provider)(nil)
 
 // Climater implements the api.VehicleClimater interface
-func (v *Provider) Climater() (active bool, outsideTemp, targetTemp float64, err error) {
+func (v *Provider) Climater() (bool, error) {
 	res, err := v.statusG()
 	if err == nil {
 		active := strings.ToLower(res.Preconditionning.AirConditioning.Status) != "disabled"
-		return active, 20, 20, nil
+		return active, nil
 	}
 
-	return active, outsideTemp, targetTemp, err
+	return false, err
 }
 
 var _ api.VehiclePosition = (*Provider)(nil)

@@ -97,14 +97,15 @@ func NewWebastoNext(uri string, id uint8) (api.Charger, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failsafe timeout: %w", err)
 	}
-
-	go wb.heartbeat(time.Duration(binary.BigEndian.Uint16(b)/2) * time.Second)
+	if u := binary.BigEndian.Uint16(b); u > 0 {
+		go wb.heartbeat(time.Duration(u) * time.Second / 2)
+	}
 
 	return wb, err
 }
 
 func (wb *WebastoNext) heartbeat(timeout time.Duration) {
-	for range time.NewTicker(timeout).C {
+	for range time.Tick(timeout) {
 		if _, err := wb.conn.WriteSingleRegister(tqRegLifeBit, 1); err != nil {
 			wb.log.ERROR.Println("heartbeat:", err)
 		}
@@ -149,7 +150,7 @@ func (wb *WebastoNext) Enable(enable bool) error {
 
 // Enabled implements the api.Charger interface
 func (wb *WebastoNext) Enabled() (bool, error) {
-	return wb.enabled, nil
+	return verifyEnabled(wb, wb.enabled)
 
 	// b, err := wb.conn.ReadHoldingRegisters(1104, 1)
 	// if err != nil {
@@ -212,21 +213,21 @@ func (wb *WebastoNext) TotalEnergy() (float64, error) {
 	return float64(binary.BigEndian.Uint32(b)) / 1e3, nil
 }
 
-var _ api.MeterCurrent = (*WebastoNext)(nil)
+var _ api.PhaseCurrents = (*WebastoNext)(nil)
 
-// Currents implements the api.MeterCurrent interface
+// Currents implements the api.PhaseCurrents interface
 func (wb *WebastoNext) Currents() (float64, float64, float64, error) {
-	var curr [3]float64
+	var res [3]float64
 	for l := uint16(0); l < 3; l++ {
 		b, err := wb.conn.ReadInputRegisters(tqRegCurrents+2*l, 1)
 		if err != nil {
 			return 0, 0, 0, err
 		}
 
-		curr[l] = float64(binary.BigEndian.Uint16(b)) / 1e3
+		res[l] = float64(binary.BigEndian.Uint16(b)) / 1e3
 	}
 
-	return curr[0], curr[1], curr[2], nil
+	return res[0], res[1], res[2], nil
 }
 
 var _ api.Identifier = (*WebastoNext)(nil)

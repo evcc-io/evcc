@@ -9,8 +9,8 @@ params:
     choice: ["grid"]
   - name: url
     description:
-      de: URL des "data" Kontexts der Volkszähler Middleware (ohne / am Ende)
-      en: URL of the middleware's "data" context (without trailing /)
+      de: URL des "data" Kontexts der Volkszähler Middleware
+      en: URL of the middleware's "data" context
     help:
       de: "Die URL ist zum Beispiel: http://zaehler.network.local:8080/api/data"
       en: "The URL is for example: http://zaehler.network.local:8080/api/data"
@@ -27,14 +27,14 @@ render: |
       {{- if .host }}
       uri: http://{{ .host }}:{{ .port }}/api/data/{{ .importuuid }}.json?from=now
       {{ else }}
-      uri: {{ .url }}/{{ .importuuid }}.json?from=now
+      uri: {{ trimSuffix "/" .url }}/{{ .importuuid }}.json?from=now
       {{- end }}
       jq: .data.tuples[0][1] # parse response json
     - source: http # export channel
       {{- if .host }}
       uri: http://{{ .host }}:{{ .port }}/api/data/{{ .exportuuid }}.json?from=now
       {{ else }}
-      uri: {{ .url }}/{{ .exportuuid }}.json?from=now
+      uri: {{ trimSuffix "/" .url }}/{{ .exportuuid }}.json?from=now
       {{- end }}
       jq: .data.tuples[0][1] # parse response json
       scale: -1 # export must result in negative values

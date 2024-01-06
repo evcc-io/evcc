@@ -1,5 +1,5 @@
 <template>
-	<div class="d-flex justify-content-between mb-3 align-items-center">
+	<div class="d-flex justify-content-between mb-3 align-items-center" data-testid="vehicle-title">
 		<h4 class="d-flex align-items-center m-0 flex-grow-1 overflow-hidden">
 			<shopicon-regular-refresh
 				v-if="icon === 'refresh'"
@@ -19,6 +19,7 @@
 			></shopicon-regular-cablecharge>
 			<VehicleOptions
 				v-if="showOptions"
+				v-bind="vehicleOptionsProps"
 				:id="id"
 				class="options"
 				:vehicles="otherVehicles"
@@ -40,23 +41,24 @@
 <script>
 import "@h2d2/shopicons/es/regular/refresh";
 import "@h2d2/shopicons/es/regular/cablecharge";
-import VehicleIcon from "./VehicleIcon";
 import Tooltip from "bootstrap/js/dist/tooltip";
-
+import VehicleIcon from "./VehicleIcon";
 import VehicleOptions from "./VehicleOptions.vue";
+import collector from "../mixins/collector";
 
 export default {
 	name: "VehicleTitle",
 	components: { VehicleOptions, VehicleIcon },
+	mixins: [collector],
 	props: {
-		id: [String, Number],
-		vehiclePresent: Boolean,
-		vehicleTitle: String,
-		vehicleIcon: String,
-		vehicleDetectionActive: Boolean,
-		parked: Boolean,
 		connected: Boolean,
+		id: [String, Number],
+		vehicleDetectionActive: Boolean,
+		vehicleIcon: String,
+		vehicleName: String,
+		vehiclePresent: Boolean,
 		vehicles: { type: Array, default: () => [] },
+		vehicleTitle: String,
 	},
 	emits: ["change-vehicle", "remove-vehicle"],
 	computed: {
@@ -64,13 +66,13 @@ export default {
 			if (this.vehicleDetectionActive) {
 				return "refresh";
 			}
-			if (this.connected || this.parked) {
+			if (this.connected) {
 				return "vehicle";
 			}
 			return null;
 		},
 		name() {
-			if (this.vehiclePresent || this.parked) {
+			if (this.vehiclePresent) {
 				return this.vehicleTitle || this.$t("main.vehicle.fallbackName");
 			}
 			if (this.connected) {
@@ -82,15 +84,13 @@ export default {
 			return !this.vehiclePresent;
 		},
 		otherVehicles() {
-			return this.vehicles
-				.map((v, id) => ({
-					id: id,
-					title: v,
-				}))
-				.filter((v) => v.title !== this.vehicleTitle);
+			return this.vehicles.filter((v) => v.name !== this.vehicleName);
 		},
 		showOptions() {
 			return !this.isUnknown || this.vehicles.length;
+		},
+		vehicleOptionsProps: function () {
+			return this.collectProps(VehicleOptions);
 		},
 	},
 	watch: {
@@ -102,8 +102,8 @@ export default {
 		this.tooltip();
 	},
 	methods: {
-		changeVehicle(index) {
-			this.$emit("change-vehicle", index);
+		changeVehicle(name) {
+			this.$emit("change-vehicle", name);
 		},
 		removeVehicle() {
 			this.$emit("remove-vehicle");
@@ -132,7 +132,7 @@ export default {
 .spin {
 	animation: rotation 1s infinite cubic-bezier(0.37, 0, 0.63, 1);
 }
-.spin ::v-deep(svg) {
+.spin :deep(svg) {
 	/* workaround to fix the not perfectly centered shopicon. Remove once its fixed in @h2d2/shopicons */
 	transform: translateY(-0.7px);
 }

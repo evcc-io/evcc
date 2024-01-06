@@ -1,56 +1,110 @@
-[header]
-sessions = "Įkrovimo sesijos "
-docs = "Dokumentacija (Vokiečių k.)"
-blog = "Tinklaraštis"
-github = "GitHub"
-login = " Automobilių prisijungimai"
-about = "Apie EVCC"
+[batterySettings]
+batteryLevel = "Kaupiklio įkrova"
+capacity = "{energy} iš {total}"
+control = "Kaupiklio valdymas"
+discharge = "Neleisti kaupiklio iškrovimo režime Greitas ir planiniame įkrovime."
+disclaimerHint = "Pastaba:"
+disclaimerText = "Šie nustatymai paveikia tik įkrovimą Saulė. Įkrovimo algoritmas atitinkamai pakeičiamas."
+legendBottomName = "namo pirmumas"
+legendBottomSubline = "nenaudojama įkrovimui"
+legendMiddleName = "pirmiau automobilis"
+legendMiddleSubline = "namas po to"
+legendTitle = "Kaip naudoti saulės energiją?"
+legendTopAutostart = "startuoja automatiškai"
+legendTopName = "kaupiklis padeda įkrauti"
+legendTopSubline = "be pertraukų"
+modalTitle = "Kaupiklio nustatymai"
 
-[header.theme]
-auto = "Dizainas: sistemos"
-light = "Dizainas: šviesus"
-dark = "Dizainas: tamsus"
+[batterySettings.bufferStart]
+full = "kai beveik pilnas"
+low = "kai nevisai pilnas"
+medium = "kai puspilnis"
+never = "tik su pakankamu pertekliumi"
 
-[footer.version]
-availableShort = "naujinimas"
-availableLong = "yra naujesnė versija"
-modalTitle = "Yra naujesnė versija"
-modalUpdateStarted = "Pasibaigus naujinimui EVCC startuos iš naujo."
-modalInstalledVersion = "Dabartinė versija"
-modalNoReleaseNotes = "Naujinimo pastabų nėra. Daugiau informacijos apie naują versiją galite rasti rasite čia:"
-modalCancel = "Atšaukti"
-modalUpdate = "Naujinti"
-modalUpdateNow = "Naujinti dabar"
-modalDownload = "Atsisiųsti"
-modalUpdateStatusStart = "Naujinimas prasidėjo:"
+[config]
 
-[footer.savings]
-tabTitle = "Mano duomenys"
-footerShort = "{percent}% saulės"
-footerLong = "{percent}% saulės energija"
-modalTitle = "Įkrovimo energijos apžvalga"
-since = "nuo {since}"
-percentTitle = "Saulės energija"
-percentSelf = "{self} kWh saulės"
-percentGrid = "{grid} kWh tinklo"
-priceTitle = "Energijos kaina"
-priceFeedIn = "{feedInPrice} eksporto"
-priceGrid = "{gridPrice} tinklo"
-savingsTitle = "Sutaupyta"
-savingsComparedToGrid = "palyginus su tinklu"
-savingsTotalEnergy = "{total} kWh įkrauta"
+[config.form]
+example = "Pavyzdys"
+optional = "pasirinktinai"
+
+[config.main]
+addVehicle = "Pridėti automobilį"
+edit = "redaguoti"
+title = "Konfigūracija"
+vehicles = "Mano automobiliai"
+
+[config.validation]
+failed = "nepavyko"
+label = "Statusas"
+running = "tikrinama…"
+success = "sėkmingai"
+unknown = "nežinomas"
+validate = "tikrinti"
+
+[config.vehicle]
+cancel = "Atšaukti"
+delete = "Ištrinti automobilį"
+generic = "Kitos integracijos"
+offline = "Tipinis automobilis"
+online = "Automobiliai su internetiniu API"
+save = "Išsaugoti"
+scooter = "Motoroleris"
+template = "Gamintojas"
+titleAdd = "Pridėti Automobilį"
+titleEdit = "Koreguoti Automobilį"
+validateSave = "Patikrinti ir išsaugoti"
+
+[footer]
 
 [footer.community]
-tabTitle = "Bendruomenės duomenys"
-power = "Įkrovimo galia"
-powerSub1 = "{activeClients} iš {totalClients} dalyvių"
-powerSub2 = "įkrauna šiuo metu"
-greenShare = "Saulės dalis"
-greenShareSub1 = "galios tiekia Saulė ir"
-greenShareSub2 = "energijos kaupikliai"
 greenEnergy = "Saulės energija"
 greenEnergySub1 = "įkrauta su evcc"
 greenEnergySub2 = "nuo 2022 Spalio"
+greenShare = "Saulės dalis"
+greenShareSub1 = "galios tiekia Saulė ir"
+greenShareSub2 = "energijos kaupikliai"
+power = "Įkrovimo galia"
+powerSub1 = "{activeClients} iš {totalClients} dalyvių"
+powerSub2 = "įkrauna..."
+tabTitle = "Bendruomenės"
+
+[footer.savings]
+co2Saved = "{value} neišmesta"
+co2Title = "CO₂ Išmetimai"
+configurePriceCo2 = "Išmokite sukonfigūruoti kainą ir CO₂ duomenis."
+footerLong = "{percent}% saulės energija"
+footerShort = "{percent}% saulės"
+modalTitle = "Įkrovimo energijos apžvalga"
+moneySaved = "{value} sutaupyta"
+percentGrid = "{grid} kWh tinklo"
+percentSelf = "{self} kWh saulės"
+percentTitle = "Saulės Energija"
+periodLabel = "Laikotarpis:"
+priceFeedIn = "{feedInPrice} eksporto"
+priceGrid = "{gridPrice} tinklo"
+priceTitle = "Energijos Kaina"
+referenceGrid = "tinklas"
+referenceLabel = "Atskaitos duomenys:"
+savingsComparedToGrid = "palyginus su tinklu"
+savingsTitle = "Sutaupyta"
+savingsTotalEnergy = "{total} kWh įkrauta"
+since = "nuo {since}"
+tabTitle = "Mano"
+
+[footer.savings.period]
+30d = "paskutinės 30 dienų"
+365d = "paskutinės 365 dienos"
+total = "Iš viso"
+
+[footer.sponsor]
+becomeSponsor = "Tapkite rėmėju"
+confetti = "Norite konfeti?"
+confettiPromise = "Gausite lipdukų ir skaitmeninių konfeti"
+sticker = "… ar evcc lipdukų?"
+supportUs = "Mūsų misija - siekti, kad įkrovimas saulės energija taptų įprastu. Padėkite mums ir paremkite evcc."
+thanks = "Ačiū, {sponsor}! Jūs prisidedate prie evcc vystymo."
+titleNoSponsor = "Paremkite mus"
+titleSponsor = "Remiate projektą"
 
 [footer.telemetry]
 optIn = "Noriu prisidėti savo duomenimis."
@@ -58,69 +112,119 @@ optInMoreDetails = "Daugiau informacijos rasite {0}."
 optInMoreDetailsLink = "čia"
 optInSponsorship = "(Gali tik rėmėjai.)"
 
-[footer.sponsor]
-titleSponsor = "Esate rėmėjais"
-titleNoSponsor = "Paremkite mus"
-thanks = "Ačiū, kad mus remiate {sponsor}! Taip prisidedate prie projekto vystymo."
-confetti = "Norite konfeti?"
-supportUs = "Mūsų misija: Siekiame, kad įkrovimas saulės energija taptų standartu. Padėkite mums ir paremkite evcc finansiškai."
-sticker = "… ar evcc lipdukų?"
-confettiPromise = "Bus lipdukų ir skaitmeninių konfeti ;)"
-becomeSponsor = "Tapkite rėmėju"
+[footer.version]
+availableLong = "yra naujesnė versija"
+modalCancel = "Atšaukti"
+modalDownload = "Atsisiųsti"
+modalInstalledVersion = "Instaliuota versija"
+modalNoReleaseNotes = "Naujinimo pastabų nėra. Daugiau informacijos apie naują versiją:"
+modalTitle = "Yra naujesnė versija"
+modalUpdate = "Instaliuoti"
+modalUpdateNow = "Instaliuoti dabar"
+modalUpdateStarted = "Startuoja nauja evcc versija..."
+modalUpdateStatusStart = "Instaliavimas pradėtas:"
 
-[notifications]
-modalTitle = "Pranešimai"
-dismissAll = "Išvalyti visus"
+[gridSettings]
+activeHours = "{charging} iš {total}"
+activeHoursLabel = "Aktyvumo valandos"
+co2Label = "CO₂ emisijos"
+co2Limit = "CO₂ limitas"
+costLimitDescription = "Laikinai aktyvuoja greitą įkrovimą (režime Saulė)."
+modalTitle = "Išmanaus tinklo įkrovimas"
+none = "nėra"
+priceLabel = "Energijos kaina"
+priceLimit = "Kainos limitas"
+
+[header]
+about = "Apie"
+blog = "Tinklaraštis"
+docs = "Dokumentacija (Vokiečių k.)"
+github = "GitHub"
+login = " Automobilių prisijungimai"
+needHelp = "Reikia pagalbos?"
+sessions = "Įkrovimo sesijos "
+settings = "Nustatymai"
+
+[header.theme]
+auto = "Dizainas: sistemos"
+dark = "Dizainas: tamsus"
+light = "Dizainas: šviesus"
+
+[help]
+discussionsButton = "GitHub diskusijos"
+documentationButton = "Dokumentacija"
+issueButton = "Pranešti apie klaidą"
+issueDescription = "Pastebėjote keistą ar netinkamą veikimą?"
+modalTitle = "Reikia pagalbos?"
+primaryActions = "Kažkas veikia ne taip, kaip turėtų? Pagalbos ieškokite čia."
+restartButton = "Restartuoti"
+restartDescription = "Ar pabandėte išjungti ir vėl įjungti?"
+secondaryActions = "Vis dar nepavyksta išspręsti problemos? Čia rasite drastiškesnes opcijas."
+
+[help.restart]
+cancel = "Atšaukti"
+confirm = "Taip, restartuoti!"
+description = "Įprastai restartavimas neturėtų būti reikalingas. Jei jums vis reikia restartuoti, pasvarstykite, gal derėtų pranešti apie problemą."
+disclaimer = "Pastaba: evcc sustos, ir pasitikės operacinės sistemos pagalba paleidžiant iš naujo."
+modalTitle = "Ar tikrai norite restartuoti?"
 
 [main]
 vehicles = "Autoparkas"
 
-[main.energyflow]
-noEnergy = "Nėra skaitiklių duomenų"
-homePower = "Namo suvartojimas"
-pvProduction = "Gamyba"
-loadpoints = "Įkroviklis | Įkroviklis | {count} Įkrovikliai"
-battery = "Baterija"
-batteryCharge = "Baterijos įkrovimas"
-batteryDischarge = "Baterijos iškrovimas"
-gridImport = "Tinklo importas"
-selfConsumption = "Sunaudojama iškart"
-pvExport = "Tinklo eksportas"
+[main.chargingPlan]
+active = "Aktyvus"
+arrivalTab = "Atvykimas"
+day = "Diena"
+departureTab = "Išvykimas"
+goal = "Įkrovimo tikslas"
+modalTitle = "Įkrovimo planas"
+none = "nėra"
+remove = "Pašalinti"
+time = "Laikas"
+title = "Planas"
+titleMinSoc = "Minimali įkrova"
+titleTargetCharge = "Išvykimas"
+update = "Patvirtinti"
 
-[main.mode]
-off = "Stop"
-minpv = "Min+S."
-pv = "Saulės"
-now = "Greitas"
+[main.energyflow]
+battery = "Kaupiklis"
+batteryCharge = "Kaupiklis įkraunamas"
+batteryDischarge = "Kaupiklis iškraunamas"
+batteryHold = "Kaupiklis (užblokuotas)"
+batteryTooltip = "{energy} iš {total} ({soc})"
+gridImport = "Iš tinklo"
+homePower = "Namo suvartojimas"
+loadpoints = "Įkroviklis | Įkroviklis | {count} įkrovikliai"
+noEnergy = "Nėra skaitiklių duomenų"
+pvExport = "Tinklo eksportas"
+pvProduction = "Gamyba"
+selfConsumption = "Sunaudojama iškart"
 
 [main.loadpoint]
-fallbackName = "Įkroviklis"
-remoteDisabledSoft = "{source}: adaptyvus Saulės įkrovimas išjungtas"
-remoteDisabledHard = "{source}: išjungtas"
-power = "Galia"
+avgPrice = "⌀ Kaina"
 charged = "Įkrauta"
+co2 = "⌀ CO₂"
 duration = "Trukmė"
+fallbackName = "Įkroviklis"
+power = "Galia"
+price = "Σ Kaina"
 remaining = "Liko"
+remoteDisabledHard = "{source}: išjungtas"
+remoteDisabledSoft = "{source}: adaptyvus Saulės įkrovimas išjungtas"
+solar = "Saulės"
 
 [main.loadpointSettings]
-title = 'Nustatymai "{0}"'
-vehicle = "Automobilis"
-currents = "Įkraunama"
+currents = "Įkrovimo srovė"
 default = "standartiškai"
 disclaimerHint = "Pastaba:"
-disclaimerText = "Šie pakeitimai neišlieka ir po EVCC serverio restarto pradings."
+disclaimerText = "Šie pakeitimai neišlieka po evcc serverio restarto."
+onlyForSocBasedCharging = "Šie pasirinkimai galimi tik automobiliams su žinomu įkrovos lygiu."
+title = "Nustatymai {0}"
+vehicle = "Automobilis"
 
-[main.loadpointSettings.minSoC]
-label = "Minimali įkrova"
-description = 'Minimali įkrova. Automobilis įkraunamas "Greitai" iki {0}% nustatyme "Saulė" . Toliau įkraunamas tik saulės energijos pertekliumi.'
-
-[main.loadpointSettings.phasesConfigured]
-label = "Fazės"
-phases_0 = "automatinis perjungimas"
-phases_1 = "1 fazė"
-phases_1_hint = "({min} to {max})"
-phases_3 = "3 fazės"
-phases_3_hint = "({min} to {max})"
+[main.loadpointSettings.limitSoc]
+description = "Įkrovimo limitas, naudojamas, prijungus šį automobilį."
+label = "Standartinis limitas"
 
 [main.loadpointSettings.maxCurrent]
 label = "Max. Srovė"
@@ -128,92 +232,220 @@ label = "Max. Srovė"
 [main.loadpointSettings.minCurrent]
 label = "Min. Srovė"
 
-[main.vehicle]
-fallbackName = "Automobilis"
-vehicleSoC = "Akumuliatorius"
-targetSoC = "Limitas"
-none = "Nėra automobilio"
-unknown = "Nežinomas automobilis"
-changeVehicle = "Pakeisti automobilį"
-detectionActive = "Bandome atpažinti automobilį ..."
+[main.loadpointSettings.minSoc]
+description = "Automobilis įkraunamas „Greitai” iki {0}% nustatyme „Saulė”, toliau įkraunamas tik saulės energijos pertekliumi. Padeda užtikrinti minimalią įkrovą dienomis, kai mažai saulės."
+label = "Minimali įkrova %"
 
-[main.vehicleSoC]
-disconnected = "neprijungtas"
-charging = "vyksta įkrovimas"
-ready = "leidžiama įkrauti"
-connected = "automobilis prijungtas"
-vehicleTarget = "Automobilyje nustatytas limitas: {soc}%"
+[main.loadpointSettings.phasesConfigured]
+label = "Fazės"
+phases_0 = "automatinis perjungimas"
+phases_1 = "1 fazė"
+phases_1_hint = "({min} iki {max})"
+phases_3 = "3 fazės"
+phases_3_hint = "({min} iki {max})"
 
-[main.vehicleStatus]
-minCharge = "minimalus įkrovimas iki {soc}%."
-waitForVehicle = "Įkrovimas leidžiamas. Laukiama automobilio signalo."
-vehicleTargetReached = "Automobilio limitas {soc}% pasiektas."
-charging = "Įkraunama."
-targetChargePlanned = "Suplanuotas įkrovimas, prasidės {time}."
-targetChargeWaitForVehicle = "Suplanuotas įkrovimas leidžiamas. Laukiama automobilio signalo."
-targetChargeActive = "Suplanuotas įkrovimas aktyvuotas."
-connected = "Prijungtas."
-pvDisable = "Trūksta saulės, įkrovimo pauzė už {remaining}."
-pvEnable = "Saulės užtenka, įkrovimas prasidės už {remaining}."
-scale1p = "Sumažinti į vienfazį įkrovimą už {remaining}."
-scale3p = "Padidinti į trifazį įkrovimą už {remaining}."
-disconnected = "Neprijungtas."
-unknown = ""
+[main.mode]
+minpv = "Min+Saulė"
+now = "Greitas"
+off = "Stop"
+pv = "Saulė"
 
 [main.provider]
 login = "prisijungti"
 logout = "atsijungti"
 
 [main.targetCharge]
-title = "Įkrauti iki"
-inactiveLabel = "Įkrauti iki"
-activeLabel = "{time}"
+activate = "Aktyvuoti"
+co2Limit = "CO₂ riba iš {co2}"
+costLimitIgnore = "Šiuo laikotarpiu sukonfigūruotas {limit} bus ignoruojamas."
+currentPlan = "Planas aktyvus"
+descriptionEnergy = "Iki kada {targetEnergy} turėtų būti įkrauta į automobilį?"
+descriptionSoc = "Kada automobilis turėtų būti įkrautas iki {targetSoc}%?"
+inactiveLabel = "Suplanuotas laikas"
 modalTitle = "Nustatyti įkrovimo pabaigos laiką"
-setTargetTime = "nenustatytas"
-description = "Kada automobilis turėtų būti įkrautas iki {targetSoC}%?"
+noActivePlan = "Nėra Aktyvaus Plano"
+notReachableInTime = "Tikslo pasiekti nespėsime. Numatoma pabaiga: {endTime}."
+onlyInPvMode = "Įkrovimo planas veikia tik nustatyme Saulė."
+planDescription = "Įveskite išvykimo laiką ir evcc įkraus automobilį kiek įmanoma ekonomiškiau arba ekologiškiau."
+planDuration = "Įkrovimo laikas"
+planPeriodLabel = "Periodas"
+planPeriodValue = "{start} iki {end}"
+planUnknown = "dar nežinome"
+preview = "Peržvelgti"
+priceLimit = "kainos limitas {price}"
+remove = "Panaikinti"
+setPlan = "Nustatyti įkrovimo planą"
+setTargetTime = "nesuplanuotas"
+targetIsAboveLimit = "Sukonfigūruotas įkrovimo limitas {limit} šiuo periodu bus ignoruojamas."
+targetIsAboveVehicleLimit = "Padidinkite automobilio limitą ({limit}), kad pasiektumėte įkrovimo tikslą."
+targetIsInThePast = "Pasirinkite laiką ateityje."
+targetIsTooFarInTheFuture = "Pakoreguosime planą, kai tik gausime naujų duomenų."
+title = "Planinis Įkrovimas"
 today = "šiandien"
 tomorrow = "rytoj"
-targetIsInThePast = "Pasirinktas laikas yra praeityje."
-remove = "Panaikinti"
-activate = "Aktyvuoti"
-experimentalLabel = "Eksperimentinis"
-experimentalText = "Ši funkcija veikia, bet dar nėra tobula. Apie netikėtą elgesį praneškite mūsų"
+update = "Atnaujinti"
+vehicleCapacityDocs = "Išmokite, kaip tai sukonfigūruoti."
+vehicleCapacityRequired = "Norint numatyti įkrovimo trukmę reikalinga automobilio baterijos talpa"
+
+[main.targetChargePlan]
+chargeDuration = "Įkrovimo trukmė"
+co2Label = "CO₂ emisijos ⌀"
+priceLabel = "Energijos kaina"
+timeRange = "{day} {range} val"
+unknownPrice = "dar nežinoma"
 
 [main.targetEnergy]
 label = "Limitas"
 noLimit = "nėra"
 
-[startupError]
-title = "Klaida startuojant"
-description = "Patikrinkite konfigūracijos failą. Jei klaidos žinutė jums nepadėjo, atsakymų ieškokite mūsų {0}."
-discussions = "GitHub Diskusijose"
-hint = "Pastaba: Gali būti, kad pranešimą apie klaidą matote dėl neteisingai veikiančio įrenginio (inverterio, skaitiklio, ...). Patikrinkite tiklo jungtis."
-configuration = "Konfigūracija"
-configFile = "Naudojamas konfiguracijos failas:"
-lineError = "Radome klaidą čia {0}."
-lineErrorLink = "eilutė {0}"
-fixAndRestart = "Ištaisykite klaidą ir restartuokite serverį."
-restartButton = "Restartuoti"
+[main.vehicle]
+addVehicle = "Pridėti automobilį"
+changeVehicle = "Pakeisti automobilį"
+detectionActive = "Bandome atpažinti automobilį ..."
+fallbackName = "Automobilis"
+moreActions = "Daugiau veiksmų"
+none = "Nėra automobilio"
+targetSoc = "Limitas"
+temp = "t."
+tempLimit = "Temp. limitas"
+unknown = "Nežinomas automobilis"
+vehicleSoc = "Baterija"
 
-[sessions]
-title = "Įkrovimo sesijos"
-downloadCsv = "Atsisiųsti CSV failą"
-loadpoint = "Įkroviklis"
-vehicle = "Automobilis"
-energy = "Įkrauta"
-date = "Laikotarpis"
+[main.vehicleSoc]
+charging = "vyksta įkrovimas"
+connected = "automobilis prijungtas"
+disconnected = "neprijungtas"
+ready = "leidžiama įkrauti"
+vehicleTarget = "Automobilyje nustatytas limitas: {soc}%"
 
-[sessions.csv]
-loadpoint = "Įkroviklis"
-vehicle = "Automobilis"
-odometer = "Odometras (km)"
-identifier = "Identifikatorius"
-chargedenergy = "Energija (kWh)"
-meterstart = "Skaitiklis pradžioje (kWh)"
-meterstop = "Skaitiklis pabaigoje (kWh)"
-created = "Pradėta"
-finished = "Pabaigta"
+[main.vehicleStatus]
+charging = "Įkraunama..."
+cheapEnergyCharging = "Įkraunama pigia energija: {price} (limitas {limit})"
+cleanEnergyCharging = "Įkraunama švaria energija: {co2} (limitas {limit})"
+climating = "Aptiktas išankstinis kondicionavimas."
+connected = "Prijungtas."
+disconnected = "Neprijungtas."
+guard = "Per dažno junginėjimo apsauga {remaining}…"
+guardDisable = "Pauzė už {remaining}…"
+guardEnable = "Pradedam už {remaining}…"
+minCharge = "Minimalus įkrovimas iki {soc}%."
+pvDisable = "Trūksta saulės. Pauzė už {remaining}..."
+pvEnable = "Saulės užtenka, įkrovimas už {remaining}..."
+scale1p = "Sumažinimas į vienfazį įkrovimą už {remaining}..."
+scale3p = "Padidinimas į trifazį įkrovimą už {remaining}..."
+targetChargeActive = "Planinis įkrovimas aktyvuotas..."
+targetChargePlanned = "Planinis įkrovimas prasidės {time}."
+targetChargeWaitForVehicle = "Planinis įkrovimas leidžiamas. Laukiama automobilio signalo..."
+unknown = ""
+vehicleTargetReached = "Automobilyje nustatytas limitas {soc}% pasiektas."
+waitForVehicle = "Paruošta. Laukiama automobilio..."
+
+[notifications]
+dismissAll = "Išvalyti visus"
+modalTitle = "Pranešimai"
 
 [offline]
 message = "Nėra ryšio su serveriu."
 reload = "Perkrauti?"
+
+[session]
+cancel = "Atšaukti"
+co2 = "CO₂"
+date = "Periodas"
+delete = "Ištrinti"
+finished = "Pabaigta"
+meter = "Skaitiklis"
+meterstart = "Skaitiklis pradžia"
+meterstop = "Skaitiklis pabaiga"
+odometer = "Odometras"
+price = "Kaina"
+started = "Pradėta"
+title = "Įkrovimo sesija"
+
+[sessions]
+avgPower = "⌀ Galia"
+avgPrice = "⌀ Kaina"
+chargeDuration = "Trukmė"
+co2 = "⌀ CO₂"
+csvMonth = "Atsisiųsti {month} CSV"
+csvTotal = "Atsisiųsti visą CSV"
+date = "Pradžia"
+downloadCsv = "Atsisiųsti CSV failą"
+energy = "Įkrauta"
+loadpoint = "Įkroviklis"
+noData = "Šį mėnesį įkrovimų nebuvo."
+price = "Σ Kaina"
+reallyDelete = "Ar tikrai norite ištrinti šią įkrovimo sesiją?"
+solar = "Saulės"
+title = "Įkrovimo Sesijos"
+total = "Viso"
+vehicle = "Automobilis"
+
+[sessions.csv]
+chargedenergy = "Energija (kWh)"
+created = "Sukurta"
+finished = "Pabaigta"
+identifier = "Identifikatorius"
+loadpoint = "Įkroviklis"
+meterstart = "Skaitiklis pradžia (kWh)"
+meterstop = "Skaitiklis pabaiga (kWh)"
+odometer = "Odometras (km)"
+vehicle = "Automobilis"
+
+[sessions.filter]
+allLoadpoints = "visi įkrovikliai"
+allVehicles = "visi automobiliai"
+filter = "Filtruoti"
+
+[settings]
+title = "Nustatymai"
+
+[settings.gridDetails]
+co2 = "CO₂"
+label = "Tinklas detaliau"
+none = "nėra"
+price = "kaina"
+
+[settings.hiddenFeatures]
+label = "Eksperimentinė"
+value = "Rodyti eksperimentines funkcijas."
+
+[settings.language]
+auto = "Automatiškai"
+label = "Kalba"
+
+[settings.sponsorToken]
+expires = "Jūsų rėmėjo tokenas baigiasi {inXDays}. {getNewToken} ir pakeiskite savo configūracinį failą."
+getNew = "Gaukite naują"
+hint = "Pastaba: ateityje šis procesas bus automatizuotas."
+
+[settings.telemetry]
+label = "Telemetrija"
+
+[settings.theme]
+auto = "sistemos"
+dark = "tamsus"
+label = "Dizainas"
+light = "šviesus"
+
+[settings.unit]
+km = "km"
+label = "Vienetai"
+mi = "mylios"
+
+[startupError]
+configFile = "Naudojamas konfiguracijos failas:"
+configuration = "Konfiguracija"
+description = "Patikrinkite konfigūracijos failą. Jei klaidos žinutė jums nepadėjo, atsakymų ieškokite mūsų {0}."
+discussions = "GitHub Diskusijose"
+fixAndRestart = "Pabandykite Ištaisyti klaidą ir perkrauti serverį."
+hint = "Pastaba: Gali būti, kad neteisingai veikia įrenginiai (inverteris, skaitiklis, ...). Patikrinkite tiklo jungtis."
+lineError = "Klaida čia {0}."
+lineErrorLink = "eilutė {0}"
+restartButton = "Restartuoti"
+title = "Klaida startuojant"
+
+[vehicleSettings]
+cancel = "Atšaukti"
+template = "Gamintojas"
+test = "Testuoti"

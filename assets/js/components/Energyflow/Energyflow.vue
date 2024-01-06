@@ -2,6 +2,7 @@
 	<div
 		class="energyflow cursor-pointer position-relative"
 		:class="{ 'energyflow--open': detailsOpen }"
+		data-testid="energyflow"
 		@click="toggleDetails"
 	>
 		<div class="row">
@@ -9,34 +10,43 @@
 				class="col-12 mb-3 mb-md-4"
 				:gridImport="gridImport"
 				:selfConsumption="selfConsumption"
-				:loadpoints="loadpointsPower"
+				:loadpoints="loadpointsCompact"
 				:pvExport="pvExport"
 				:batteryCharge="batteryCharge"
 				:batteryDischarge="batteryDischarge"
 				:pvProduction="pvProduction"
 				:homePower="homePower"
-				:batterySoC="batterySoC"
-				:valuesInKw="valuesInKw"
+				:batterySoc="batterySoc"
+				:powerInKw="powerInKw"
 				:vehicleIcons="vehicleIcons"
 			/>
 		</div>
 		<div class="details" :style="{ height: detailsHeight }">
 			<div ref="detailsInner" class="details-inner row">
 				<div class="col-12 d-flex justify-content-between pt-2 mb-4">
-					<div class="d-flex flex-nowrap align-items-center">
+					<div class="d-flex flex-nowrap align-items-center text-truncate">
 						<span class="color-self me-2"
 							><shopicon-filled-square></shopicon-filled-square
 						></span>
-						<span>{{ $t("main.energyflow.selfConsumption") }}</span>
+						<span class="text-nowrap text-truncate">
+							{{ $t("main.energyflow.selfConsumption") }}
+						</span>
 					</div>
-					<div v-if="gridImport > 0" class="d-flex flex-nowrap align-items-center">
-						<span>{{ $t("main.energyflow.gridImport") }}</span>
+					<div
+						v-if="gridImport > 0"
+						class="d-flex flex-nowrap align-items-center text-truncate"
+					>
+						<span class="text-nowrap text-truncate">
+							{{ $t("main.energyflow.gridImport") }}
+						</span>
 						<span class="color-grid ms-2"
 							><shopicon-filled-square></shopicon-filled-square
 						></span>
 					</div>
-					<div v-else class="d-flex flex-nowrap align-items-center">
-						<span>{{ $t("main.energyflow.pvExport") }}</span>
+					<div v-else class="d-flex flex-nowrap align-items-center text-truncate">
+						<span class="text-nowrap text-truncate">
+							{{ $t("main.energyflow.pvExport") }}
+						</span>
 						<span class="color-export ms-2"
 							><shopicon-filled-square></shopicon-filled-square
 						></span>
@@ -56,21 +66,33 @@
 							:name="$t('main.energyflow.pvProduction')"
 							icon="sun"
 							:power="pvProduction"
-							:valuesInKw="valuesInKw"
+							:powerTooltip="pvTooltip"
+							:powerInKw="powerInKw"
 						/>
 						<EnergyflowEntry
 							v-if="batteryConfigured"
-							:name="$t('main.energyflow.batteryDischarge')"
+							:name="batteryDischargeLabel"
 							icon="battery"
-							:soc="batterySoC"
 							:power="batteryDischarge"
-							:valuesInKw="valuesInKw"
+							:powerInKw="powerInKw"
+							:soc="batterySoc"
+							:details="batterySoc"
+							:detailsFmt="batteryFmt"
+							detailsClickable
+							data-testid="energyflow-entry-batterydischarge"
+							@details-clicked="openBatterySettingsModal"
 						/>
 						<EnergyflowEntry
 							:name="$t('main.energyflow.gridImport')"
 							icon="powersupply"
 							:power="gridImport"
-							:valuesInKw="valuesInKw"
+							:powerInKw="powerInKw"
+							:details="detailsValue(tariffGrid, tariffCo2)"
+							:detailsFmt="detailsFmt"
+							:detailsClickable="gridModalAvailable"
+							:detailsTooltip="detailsTooltip(tariffGrid, tariffCo2)"
+							data-testid="energyflow-entry-gridimport"
+							@details-clicked="openGridSettingsModal"
 						/>
 					</div>
 				</div>
@@ -88,7 +110,10 @@
 							:name="$t('main.energyflow.homePower')"
 							icon="home"
 							:power="homePower"
-							:valuesInKw="valuesInKw"
+							:powerInKw="powerInKw"
+							:details="detailsValue(tariffPriceHome, tariffCo2Home)"
+							:detailsFmt="detailsFmt"
+							:detailsTooltip="detailsTooltip(tariffPriceHome, tariffCo2Home)"
 						/>
 						<EnergyflowEntry
 							:name="
@@ -99,21 +124,37 @@
 							icon="vehicle"
 							:vehicleIcons="vehicleIcons"
 							:power="loadpointsPower"
-							:valuesInKw="valuesInKw"
+							:powerInKw="powerInKw"
+							:details="
+								activeLoadpointsCount
+									? detailsValue(tariffPriceLoadpoints, tariffCo2Loadpoints)
+									: undefined
+							"
+							:detailsFmt="detailsFmt"
+							:detailsTooltip="
+								detailsTooltip(tariffPriceLoadpoints, tariffCo2Loadpoints)
+							"
 						/>
 						<EnergyflowEntry
 							v-if="batteryConfigured"
-							:name="$t('main.energyflow.batteryCharge')"
+							:name="batteryChargeLabel"
 							icon="battery"
-							:soc="batterySoC"
 							:power="batteryCharge"
-							:valuesInKw="valuesInKw"
+							:powerInKw="powerInKw"
+							:soc="batterySoc"
+							:details="batterySoc"
+							:detailsFmt="batteryFmt"
+							detailsClickable
+							@details-clicked="openBatterySettingsModal"
 						/>
 						<EnergyflowEntry
 							:name="$t('main.energyflow.pvExport')"
 							icon="powersupply"
 							:power="pvExport"
-							:valuesInKw="valuesInKw"
+							:powerInKw="powerInKw"
+							:details="detailsValue(-tariffFeedIn)"
+							:detailsFmt="detailsFmt"
+							:detailsTooltip="detailsTooltip(-tariffFeedIn)"
 						/>
 					</div>
 				</div>
@@ -124,58 +165,108 @@
 
 <script>
 import "@h2d2/shopicons/es/filled/square";
+import Modal from "bootstrap/js/dist/modal";
 import Visualization from "./Visualization.vue";
 import EnergyflowEntry from "./EnergyflowEntry.vue";
 import formatter from "../../mixins/formatter";
 import AnimatedNumber from "../AnimatedNumber.vue";
+import settings from "../../settings";
+import { CO2_TYPE } from "../../units";
+import collector from "../../mixins/collector";
+import gridModalAvailable from "../../utils/gridModalAvailable";
 
 export default {
 	name: "Energyflow",
-	components: { Visualization, EnergyflowEntry, AnimatedNumber },
-	mixins: [formatter],
+	components: {
+		Visualization,
+		EnergyflowEntry,
+		AnimatedNumber,
+	},
+	mixins: [formatter, collector],
 	props: {
 		gridConfigured: Boolean,
 		gridPower: { type: Number, default: 0 },
 		homePower: { type: Number, default: 0 },
 		pvConfigured: Boolean,
+		pv: { type: Array },
 		pvPower: { type: Number, default: 0 },
-		loadpointsPower: { type: Number, default: 0 },
-		activeLoadpointsCount: { type: Number, default: 0 },
-		batteryConfigured: Boolean,
+		loadpointsCompact: { type: Array, default: () => [] },
+		batteryConfigured: { type: Boolean },
+		battery: { type: Array },
 		batteryPower: { type: Number, default: 0 },
-		batterySoC: { type: Number, default: 0 },
-		vehicleIcons: { type: Array },
+		batterySoc: { type: Number, default: 0 },
+		batteryDischargeControl: { type: Boolean },
+		batteryMode: { type: String },
+		tariffGrid: { type: Number },
+		tariffFeedIn: { type: Number },
+		tariffCo2: { type: Number },
+		tariffPriceHome: { type: Number },
+		tariffCo2Home: { type: Number },
+		tariffPriceLoadpoints: { type: Number },
+		tariffCo2Loadpoints: { type: Number },
+		smartCostLimit: { type: Number },
+		smartCostType: { type: String },
+		currency: { type: String },
+		prioritySoc: { type: Number },
+		bufferSoc: { type: Number },
+		bufferStartSoc: { type: Number },
 	},
 	data: () => {
-		return { detailsOpen: false, detailsCompleteHeight: null };
+		return { detailsOpen: false, detailsCompleteHeight: null, gridSettingsModal: null };
 	},
 	computed: {
+		gridModalAvailable: function () {
+			return gridModalAvailable(this.smartCostType);
+		},
 		gridImport: function () {
 			return Math.max(0, this.gridPower);
 		},
 		pvProduction: function () {
 			return Math.abs(this.pvPower);
 		},
-		batteryPowerAdjusted: function () {
-			const batteryPowerThreshold = 50;
-			return Math.abs(this.batteryPower) < batteryPowerThreshold ? 0 : this.batteryPower;
-		},
 		batteryDischarge: function () {
-			return Math.abs(Math.max(0, this.batteryPowerAdjusted));
+			return Math.abs(Math.max(0, this.batteryPower));
 		},
 		batteryCharge: function () {
-			return Math.abs(Math.min(0, this.batteryPowerAdjusted) * -1);
+			return Math.abs(Math.min(0, this.batteryPower) * -1);
+		},
+		batteryChargeLabel: function () {
+			return this.$t(`main.energyflow.battery${this.batteryHold ? "Hold" : "Charge"}`);
+		},
+		batteryDischargeLabel: function () {
+			return this.$t(`main.energyflow.battery${this.batteryHold ? "Hold" : "Discharge"}`);
+		},
+		batteryHold: function () {
+			return this.batteryMode === "hold";
 		},
 		selfConsumption: function () {
 			const ownPower = this.batteryDischarge + this.pvProduction;
 			const consumption = this.homePower + this.batteryCharge + this.loadpointsPower;
 			return Math.min(ownPower, consumption);
 		},
+		activeLoadpoints: function () {
+			return this.loadpointsCompact.filter((lp) => lp.charging);
+		},
+		activeLoadpointsCount: function () {
+			return this.activeLoadpoints.length;
+		},
+		vehicleIcons: function () {
+			if (this.activeLoadpointsCount > 0) {
+				return this.activeLoadpoints.map((lp) => lp.icon);
+			}
+			return ["car"];
+		},
+		loadpointsPower: function () {
+			return this.loadpointsCompact.reduce((sum, lp) => {
+				sum += lp.power || 0;
+				return sum;
+			}, 0);
+		},
 		pvExport: function () {
 			return Math.max(0, this.gridPower * -1);
 		},
-		valuesInKw: function () {
-			return this.gridImport + this.selfConsumption + this.pvExport > 1000;
+		powerInKw: function () {
+			return Math.max(this.gridImport, this.selfConsumption, this.pvExport) >= 1000;
 		},
 		inPower: function () {
 			return this.gridImport + this.pvProduction + this.batteryDischarge;
@@ -186,23 +277,72 @@ export default {
 		detailsHeight: function () {
 			return this.detailsOpen ? this.detailsCompleteHeight + "px" : 0;
 		},
+		pvTooltip() {
+			if (!Array.isArray(this.pv) || this.pv.length <= 1) {
+				return;
+			}
+			return this.pv.map(({ power }) => this.fmtKw(power, this.powerInKw));
+		},
+		batteryFmt() {
+			return (soc) => `${Math.round(soc)}%`;
+		},
+		co2Available() {
+			return this.smartCostType === CO2_TYPE;
+		},
 	},
 	mounted() {
 		window.addEventListener("resize", this.updateHeight);
+		// height must be calculated in case of initially open details
+		if (settings.energyflowDetails) {
+			setTimeout(this.toggleDetails, 100);
+		}
 	},
 	unmounted() {
 		window.removeEventListener("resize", this.updateHeight);
 	},
 	methods: {
+		detailsTooltip(price, co2) {
+			const result = [];
+			if (co2 !== undefined) {
+				result.push(`${this.fmtCo2Long(co2)}`);
+			}
+			if (price !== undefined) {
+				result.push(`${this.fmtPricePerKWh(price, this.currency)}`);
+			}
+			return result;
+		},
+		detailsValue(price, co2) {
+			if (this.co2Available) {
+				return co2;
+			}
+			return price;
+		},
+		detailsFmt(value) {
+			if (this.co2Available) {
+				return this.fmtCo2Short(value);
+			}
+			return this.fmtPricePerKWh(value, this.currency, true);
+		},
 		kw: function (watt) {
-			return this.fmtKw(watt, this.valuesInKw);
+			return this.fmtKw(watt, this.powerInKw);
 		},
 		toggleDetails: function () {
 			this.updateHeight();
 			this.detailsOpen = !this.detailsOpen;
+			settings.energyflowDetails = this.detailsOpen;
 		},
 		updateHeight: function () {
 			this.detailsCompleteHeight = this.$refs.detailsInner.offsetHeight;
+		},
+		openGridSettingsModal() {
+			const modal = Modal.getOrCreateInstance(document.getElementById("gridSettingsModal"));
+			modal.show();
+		},
+		openBatterySettingsModal() {
+			const modal = Modal.getOrCreateInstance(
+				document.getElementById("batterySettingsModal")
+			);
+			modal.show();
 		},
 	},
 };

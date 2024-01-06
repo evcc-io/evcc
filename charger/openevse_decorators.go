@@ -6,7 +6,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateOpenEVSE(base *OpenEVSE, phaseSwitcher func(phases int) error) api.Charger {
+func decorateOpenEVSE(base *OpenEVSE, phaseSwitcher func(int) error) api.Charger {
 	switch {
 	case phaseSwitcher == nil:
 		return base
@@ -30,6 +30,6 @@ type decorateOpenEVSEPhaseSwitcherImpl struct {
 	phaseSwitcher func(int) error
 }
 
-func (impl *decorateOpenEVSEPhaseSwitcherImpl) Phases1p3p(phases int) error {
-	return impl.phaseSwitcher(phases)
+func (impl *decorateOpenEVSEPhaseSwitcherImpl) Phases1p3p(p0 int) error {
+	return impl.phaseSwitcher(p0)
 }

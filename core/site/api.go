@@ -8,16 +8,19 @@ import (
 // API is the external site API
 type API interface {
 	Healthy() bool
-	LoadPoints() []loadpoint.API
+	Loadpoints() []loadpoint.API
+	Vehicles() Vehicles
 
 	//
 	// battery
 	//
 
-	GetBufferSoC() float64
-	SetBufferSoC(float64) error
-	GetPrioritySoC() float64
-	SetPrioritySoC(float64) error
+	GetBufferSoc() float64
+	SetBufferSoc(float64) error
+	GetBufferStartSoc() float64
+	SetBufferStartSoc(float64) error
+	GetPrioritySoc() float64
+	SetPrioritySoc(float64) error
 
 	//
 	// power and energy
@@ -27,9 +30,18 @@ type API interface {
 	SetResidualPower(float64) error
 
 	//
-	// vehicles
+	// tariffs and costs
 	//
 
-	// GetVehicles is the list of vehicles
-	GetVehicles() []api.Vehicle
+	// GetTariff returns the respective tariff
+	GetTariff(string) api.Tariff
+	GetSmartCostLimit() float64
+	SetSmartCostLimit(float64) error
+
+	//
+	// battery control
+	//
+
+	GetBatteryDischargeControl() bool
+	SetBatteryDischargeControl(bool) error
 }

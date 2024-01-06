@@ -12,7 +12,7 @@ params:
   - name: host
   - name: connector
   - name: phases1p3p
-    valuetype: bool
+    type: bool
     description:
       en: Charger is equipped with phase switching feature
       de: Phasenumschaltung vorhanden

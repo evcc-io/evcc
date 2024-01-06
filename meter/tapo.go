@@ -23,5 +23,9 @@ func NewTapoFromConfig(other map[string]interface{}) (api.Meter, error) {
 		return nil, err
 	}
 
+	if cc.User == "" || cc.Password == "" {
+		return nil, api.ErrMissingCredentials
+	}
+
 	return tapo.NewConnection(cc.URI, cc.User, cc.Password)
 }

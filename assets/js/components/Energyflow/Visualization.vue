@@ -1,12 +1,16 @@
 <template>
-	<div class="visualization" :class="{ 'visualization--ready': visualizationReady }">
+	<div
+		data-testid="visualization"
+		class="visualization"
+		:class="{ 'visualization--ready': visualizationReady }"
+	>
 		<div class="label-scale d-flex">
 			<div class="d-flex justify-content-start flex-grow-1">
 				<LabelBar v-bind="labelBarProps('top', 'pvProduction')">
 					<shopicon-regular-sun></shopicon-regular-sun>
 				</LabelBar>
 				<LabelBar v-bind="labelBarProps('top', 'batteryDischarge')">
-					<BatteryIcon :soc="batterySoC" />
+					<BatteryIcon :soc="batterySoc" />
 				</LabelBar>
 				<LabelBar v-bind="labelBarProps('top', 'gridImport')">
 					<shopicon-regular-powersupply></shopicon-regular-powersupply>
@@ -20,7 +24,7 @@
 				:style="{ width: widthTotal(selfConsumptionAdjusted) }"
 			>
 				<AnimatedNumber
-					v-if="selfConsumption"
+					v-if="selfConsumption && visualizationReady"
 					class="power"
 					:to="selfConsumption"
 					:format="fmtBarValue"
@@ -31,7 +35,7 @@
 				:style="{ width: widthTotal(gridImportAdjusted) }"
 			>
 				<AnimatedNumber
-					v-if="gridImport"
+					v-if="gridImport && visualizationReady"
 					class="power"
 					:to="gridImport"
 					:format="fmtBarValue"
@@ -42,7 +46,7 @@
 				:style="{ width: widthTotal(pvExportAdjusted) }"
 			>
 				<AnimatedNumber
-					v-if="pvExport"
+					v-if="pvExport && visualizationReady"
 					class="power"
 					:to="pvExport"
 					:format="fmtBarValue"
@@ -60,11 +64,15 @@
 				<LabelBar v-bind="labelBarProps('bottom', 'homePower')">
 					<shopicon-regular-home></shopicon-regular-home>
 				</LabelBar>
-				<LabelBar v-bind="labelBarProps('bottom', 'loadpoints')">
-					<VehicleIcon :names="vehicleIcons" />
+				<LabelBar
+					v-for="(lp, index) in loadpoints"
+					:key="index"
+					v-bind="labelBarProps('bottom', 'loadpoints', lp.power)"
+				>
+					<VehicleIcon :names="[lp.icon]" />
 				</LabelBar>
 				<LabelBar v-bind="labelBarProps('bottom', 'batteryCharge')">
-					<BatteryIcon :soc="batterySoC" />
+					<BatteryIcon :soc="batterySoc" />
 				</LabelBar>
 				<LabelBar v-bind="labelBarProps('bottom', 'gridExport')">
 					<shopicon-regular-powersupply></shopicon-regular-powersupply>
@@ -92,17 +100,16 @@ export default {
 		gridImport: { type: Number, default: 0 },
 		selfConsumption: { type: Number, default: 0 },
 		pvExport: { type: Number, default: 0 },
-		loadpoints: { type: Number, default: 0 },
+		loadpoints: { type: Array, default: () => [] },
 		batteryCharge: { type: Number, default: 0 },
 		batteryDischarge: { type: Number, default: 0 },
 		pvProduction: { type: Number, default: 0 },
 		homePower: { type: Number, default: 0 },
-		batterySoC: { type: Number, default: 0 },
-		valuesInKw: { type: Boolean, default: false },
-		vehicleIcons: { type: Array },
+		batterySoc: { type: Number, default: 0 },
+		powerInKw: { type: Boolean, default: false },
 	},
 	data: function () {
-		return { width: 0, visualizationReady: false };
+		return { width: 0 };
 	},
 	computed: {
 		gridExport: function () {
@@ -123,15 +130,11 @@ export default {
 		totalAdjusted: function () {
 			return this.gridImportAdjusted + this.selfConsumptionAdjusted + this.pvExportAdjusted;
 		},
-	},
-	watch: {
-		totalAdjusted: function () {
-			if (!this.visualizationReady && this.totalAdjusted > 0)
-				setTimeout(() => {
-					this.visualizationReady = true;
-				}, 500);
+		visualizationReady: function () {
+			return this.totalAdjusted > 0 && this.width > 0;
 		},
 	},
+
 	mounted: function () {
 		this.$nextTick(function () {
 			window.addEventListener("resize", this.updateElementWidth);
@@ -143,12 +146,12 @@ export default {
 	},
 	methods: {
 		widthTotal: function (power) {
-			if (this.totalAdjusted === 0) return "0%";
+			if (this.totalAdjusted === 0 || power === 0) return "0";
 			return (100 / this.totalAdjusted) * power + "%";
 		},
 		fmtBarValue: function (watt) {
-			const valueInKw = this.powerLabelEnoughSpace(watt);
-			return this.fmtKw(watt, this.valuesInKw, valueInKw);
+			const withUnit = this.powerLabelEnoughSpace(watt);
+			return this.fmtKw(watt, this.powerInKw, withUnit);
 		},
 		powerLabelAvailableSpace(power) {
 			if (this.totalAdjusted === 0) return 0;
@@ -157,9 +160,6 @@ export default {
 		},
 		powerLabelEnoughSpace(power) {
 			return this.powerLabelAvailableSpace(power) > 60;
-		},
-		powerLabelSomeSpace(power) {
-			return this.powerLabelAvailableSpace(power) > 35;
 		},
 		hideLabelIcon(power, minWidth = 32) {
 			if (this.totalAdjusted === 0) return true;
@@ -173,8 +173,8 @@ export default {
 		updateElementWidth() {
 			this.width = this.$refs.site_progress.getBoundingClientRect().width;
 		},
-		labelBarProps(position, name) {
-			const value = this[name];
+		labelBarProps(position, name, val) {
+			const value = val === undefined ? this[name] : val;
 			const minWidth = 40;
 			return {
 				value,
@@ -239,12 +239,12 @@ html.dark .grid-import {
 	white-space: nowrap;
 	overflow: hidden;
 }
-.visualization--ready ::v-deep(.label-bar) {
+.visualization--ready :deep(.label-bar) {
 	transition-property: width, opacity;
 	transition-duration: var(--evcc-transition-medium), var(--evcc-transition-fast);
 	transition-timing-function: linear, ease;
 }
-.visualization--ready ::v-deep(.label-bar-icon) {
+.visualization--ready :deep(.label-bar-icon) {
 	transition-duration: var(--evcc-transition-very-fast), 500ms;
 }
 </style>

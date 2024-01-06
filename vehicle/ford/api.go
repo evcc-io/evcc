@@ -1,7 +1,6 @@
 package ford
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 
@@ -27,19 +26,22 @@ func NewAPI(log *util.Logger, ts oauth2.TokenSource) *API {
 	v.Client.Transport = &transport.Decorator{
 		Decorator: func(req *http.Request) error {
 			token, err := ts.Token()
-			if err == nil {
-				for k, v := range map[string]string{
-					"Content-type":   request.JSONContent,
-					"User-Agent":     "FordPass/5 CFNetwork/1333.0.4 Darwin/21.5.0",
-					"locale":         "de-DE",
-					"Application-Id": ApplicationID,
-					"Auth-Token":     token.AccessToken,
-					"CountryCode":    "DEU",
-				} {
-					req.Header.Set(k, v)
-				}
+			if err != nil {
+				return err
 			}
-			return err
+
+			for k, v := range map[string]string{
+				"Content-type":   request.JSONContent,
+				"User-Agent":     "FordPass/5 CFNetwork/1333.0.4 Darwin/21.5.0",
+				"locale":         "de-DE",
+				"Application-Id": ApplicationID,
+				"Auth-Token":     token.AccessToken,
+				"CountryCode":    "DEU",
+			} {
+				req.Header.Set(k, v)
+			}
+
+			return nil
 		},
 		Base: v.Client.Transport,
 	}
@@ -68,52 +70,4 @@ func (v *API) Vehicles() ([]string, error) {
 	}
 
 	return res, err
-}
-
-// Status performs a /status request
-func (v *API) Status(vin string) (StatusResponse, error) {
-	uri := fmt.Sprintf("%s/api/vehicles/v5/%s/status", ApiURI, vin)
-
-	var res StatusResponse
-	err := v.GetJSON(uri, &res)
-
-	return res, err
-}
-
-// RefreshResult retrieves a refresh result using /statusrefresh
-func (v *API) RefreshResult(vin, refreshId string) (StatusResponse, error) {
-	var res StatusResponse
-
-	uri := fmt.Sprintf("%s/api/vehicles/v5/%s/statusrefresh/%s", ApiURI, vin, refreshId)
-	err := v.GetJSON(uri, &res)
-
-	return res, err
-}
-
-// RefreshRequest requests status refresh tracked by commandId
-func (v *API) RefreshRequest(vin string) (string, error) {
-	var resp struct {
-		CommandId string
-	}
-
-	uri := fmt.Sprintf("%s/api/vehicles/v2/%s/status", ApiURI, vin)
-	req, err := http.NewRequest(http.MethodPut, uri, nil)
-	if err == nil {
-		err = v.DoJSON(req, &resp)
-	}
-
-	if err == nil && resp.CommandId == "" {
-		err = errors.New("refresh failed")
-	}
-
-	return resp.CommandId, err
-}
-
-// WakeUp performs a wakeup request
-func (v *API) WakeUp(vin string) error {
-	uri := fmt.Sprintf("%s/api/dashboard/v1/users/vehicles?wakeupVin=%s", TokenURI, vin)
-
-	_, err := v.GetBody(uri)
-
-	return err
 }

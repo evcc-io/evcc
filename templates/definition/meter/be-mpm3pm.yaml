@@ -1,0 +1,32 @@
+template: mpm3pm
+products:
+  - brand: Bernecker Engineering
+    description:
+      generic: MPM3PM
+params:
+  - name: usage
+    choice: ["grid", "charge"]
+  - name: modbus
+    choice: ["rs485"]
+render: |
+  type: modbus
+  {{- include "modbus" . }}
+  model: MPM
+  power: Power
+  energy: Import
+  currents:
+    - CurrentL1
+    - CurrentL2
+    - CurrentL3
+  {{- if eq .usage "grid" }}
+  powers:
+    - PowerL1
+    - PowerL2
+    - PowerL3
+  {{- end }}
+  {{- if eq .usage "charge" }}
+  voltages:
+    - VoltageL1
+    - VoltageL2
+    - VoltageL3
+  {{- end }}

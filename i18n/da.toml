@@ -1,0 +1,438 @@
+[batterySettings]
+batteryLevel = "Batteriniveau"
+capacity = "{energy} af {total}"
+control = "Batteri indstillinger"
+discharge = "Forhindrer afladning ved planlagt opladning og i hurtig mode"
+disclaimerHint = "OBS:"
+disclaimerText = "Disse indstillinger gælder kun for solar modus. Indstillingerne ændres tilsvarende."
+legendBottomName = "Prioritér hjemmet"
+legendBottomSubline = "Anvendes ikke til opladning"
+legendMiddleName = "Køretøj først"
+legendMiddleSubline = "Hjem efterfølgende"
+legendTitle = "Hvordan skal solenergi benyttes?"
+legendTopAutostart = "starter automatisk"
+legendTopName = "batteri understøttet opladning"
+legendTopSubline = "uden afbrydelser"
+modalTitle = "batteri indstillinger"
+
+[batterySettings.bufferStart]
+full = "næsten fyldt"
+low = "en smule fyldt"
+medium = "halv fyldt"
+never = "kun med nok solar overskud"
+
+[config]
+
+[config.form]
+example = "Eksempel"
+optional = "valgfrit"
+
+[config.main]
+addVehicle = "Tilføj køretøj"
+edit = "rediger"
+title = "Opsætning"
+vehicles = "Mine køretøjer"
+
+[config.validation]
+failed = "mislykkedes"
+label = "Status"
+running = "validering"
+success = "succes"
+unknown = "ukendt"
+validate = "validerer"
+
+[config.vehicle]
+cancel = "Annuller"
+delete = "Slet køretøjet"
+generic = "Andre integrationer"
+offline = "Generisk køretøj"
+online = "Køretøj med online API"
+save = "Gem"
+scooter = "Knallert/Scooter"
+template = "Fabrikant"
+titleAdd = "Tilføj køretøj"
+titleEdit = "Rediger køretøj"
+validateSave = "Valider og gem"
+
+[footer]
+
+[footer.community]
+greenEnergy = "Solenergi"
+greenEnergySub1 = "oplader med evcc"
+greenEnergySub2 = "siden oktober 2022"
+greenShare = "Solandel"
+greenShareSub1 = "strøm leveret af"
+greenShareSub2 = "sol, og batteriopbevaring"
+power = "Opladningsstrøm"
+powerSub1 = "{activeClients} af {totalClients} deltagere"
+powerSub2 = "oplader ..."
+tabTitle = "Live fællesskab"
+
+[footer.savings]
+co2Saved = "{value} gemt"
+co2Title = "CO₂ Udledning"
+configurePriceCo2 = "Lær hvordan man indstiller pris og CO₂ data."
+footerLong = "{percent}% Solenergi"
+footerShort = "{percent}% Solenergi"
+modalTitle = "Oversigt over ladeenergi"
+moneySaved = "{value} gemt"
+percentGrid = "{grid} kWh Net"
+percentSelf = "{self} kWh solenergi"
+percentTitle = "Solenergi"
+periodLabel = "Periode:"
+priceFeedIn = "{feedInPrice} net tarif"
+priceGrid = "{gridPrice} Elnet"
+priceTitle = "Energipris"
+referenceGrid = "el-nettet"
+referenceLabel = "Referencedata:"
+savingsComparedToGrid = "Sammenlignet med nettet"
+savingsTitle = "Opsparing"
+savingsTotalEnergy = "{total} kWh opladet"
+since = "siden {siden}"
+tabTitle = "Mine data"
+
+[footer.savings.period]
+30d = "seneste 30 dage"
+365d = "seneste 365 dage"
+total = "hele tiden"
+
+[footer.sponsor]
+becomeSponsor = "Bliv sponsor"
+confetti = "Klar til konfetti?"
+confettiPromise = "Du får klistermærker og digital konfetti"
+sticker = "... eller evcc-klistermærker?"
+supportUs = "Vores mission er at gøre solenergi til normen. Hjælp evcc ved at betale, hvad det er værd for dig."
+thanks = "Tak, {sponsor}! Dit bidrag hjælper med at udvikle evcc yderligere."
+titleNoSponsor = "Støt os"
+titleSponsor = "Du er en støtter"
+
+[footer.telemetry]
+optIn = "Jeg vil gerne bidrage med mine data."
+optInMoreDetails = "Flere detaljer {0}."
+optInMoreDetailsLink = "her"
+optInSponsorship = "Sponsorering påkrævet."
+
+[footer.version]
+availableLong = "ny version tilgængelig"
+modalCancel = "Annuller"
+modalDownload = "Hent"
+modalInstalledVersion = "Installeret version"
+modalNoReleaseNotes = "Der er ingen tilgængelige release notes. Mere info om den nye version:"
+modalTitle = "Ny version tilgængelig"
+modalUpdate = "Installere"
+modalUpdateNow = "Installer nu"
+modalUpdateStarted = "Starter den nye version af evcc..."
+modalUpdateStatusStart = "Installation startede:"
+
+[gridSettings]
+activeHours = "{charging} af {total}"
+activeHoursLabel = "Aktive timer"
+co2Label = "CO₂ udledning"
+co2Limit = "CO₂ grænse"
+costLimitDescription = "Aktiverer midlertidig hurtig ladning i solcelle tilstand"
+modalTitle = "Smart net opladning"
+none = "ingen"
+priceLabel = "Energi pris"
+priceLimit = "Pris grænse"
+
+[header]
+about = "Om"
+blog = "Blog"
+docs = "Dokumentation"
+github = "GitHub"
+login = "Logins til køretøjer"
+needHelp = "Brug for hjælp?"
+sessions = "Opladning sessioner"
+settings = "Indstillinger"
+
+[help]
+discussionsButton = "GitHub diskussioner"
+documentationButton = "Dokumentation"
+issueButton = "Meld en fejl"
+issueDescription = "Fundet en mærkelig eller forkert adfærd?"
+modalTitle = "Brug for hjælp?"
+primaryActions = "Noget fungerer ikke, som det skulle? Disse er gode steder at få hjælp."
+restartButton = "Genstart"
+restartDescription = "Har du prøvet at slukke og tænde den igen?"
+secondaryActions = "Stadig ikke i stand til at løse dit problem? Her er nogle mere ekstreme muligheder."
+
+[help.restart]
+cancel = "Afbryd"
+confirm = "Ja, genstart!"
+description = "Under normale omstændigheder bør genstart ikke være nødvendig. Overvej at indsende en fejlmelding, hvis du har brug for at genstarte evcc regelmæssigt."
+disclaimer = "Bemærk: evcc afsluttes og har brug for at operativsystemet genstarter tjenesten."
+modalTitle = "Er du sikker på, at du vil genstarte?"
+
+[main]
+vehicles = "Parkering"
+
+[main.chargingPlan]
+active = "Aktiv"
+arrivalTab = "Ankomst"
+day = "Dag"
+departureTab = "Afgang"
+goal = "Opladnings mål"
+modalTitle = "Lade plan"
+none = "ingen"
+remove = "Fjern"
+time = "Tid"
+title = "Plan"
+titleMinSoc = "Min. ladning"
+titleTargetCharge = "Afgang"
+update = "Anvend"
+
+[main.energyflow]
+battery = "Batteri"
+batteryCharge = "Battery opladning"
+batteryDischarge = "Batteriet aflades"
+batteryHold = "Batteri (låst)"
+batteryTooltip = "{energi} af {total} ({soc})"
+gridImport = "Grid brug"
+homePower = "Forbrug"
+loadpoints = "Oplader| Oplader | {count} opladere"
+noEnergy = "Ingen målerdata"
+pvExport = "Eksport til Nettet"
+pvProduction = "Produktion"
+selfConsumption = "Self-konsumption"
+
+[main.loadpoint]
+avgPrice = "⌀ pris"
+charged = "Opladt"
+co2 = "⌀ CO₂"
+duration = "Varighed"
+fallbackName = "Ladepunkt"
+power = "Effekt"
+price = "Σ Pris"
+remaining = "Resterende tid"
+remoteDisabledHard = "{source}: slukket"
+remoteDisabledSoft = "{source}: Adaptiv sol-opladning er slukket"
+solar = "solenergi"
+
+[main.loadpointSettings]
+currents = "Ladestrøm"
+default = "standard"
+disclaimerHint = "Bemærk:"
+disclaimerText = "Ændringer vil gå tabt, efter at serveren er genstartet."
+onlyForSocBasedCharging = "Disse indstillinger er kun tilgængelig for køretøjer med kendt opladningsniveau"
+title = "Indstillinger {0}"
+vehicle = "Køretøj"
+
+[main.loadpointSettings.limitSoc]
+description = "Opladningsgrænse som benyttes når dette køretøj er forbundet"
+label = "standard opladningsgrænse"
+
+[main.loadpointSettings.maxCurrent]
+label = "Max. Nuværende"
+
+[main.loadpointSettings.minCurrent]
+label = "Min. Nuværende"
+
+[main.loadpointSettings.minSoc]
+description = "Køretøjet bliver „hurtigt” opladet til {0} % i solar mode, og fortsætter derefter med solenergioverskuddet. Nyttig til at sikre en minimum rækkevidde selv på mørke dage"
+label = "Min. opladning %"
+
+[main.loadpointSettings.phasesConfigured]
+label = "Faser"
+phases_0 = "automatisk skift"
+phases_1 = "1 fase"
+phases_1_hint = "({min} til {max})"
+phases_3 = "3 fase"
+phases_3_hint = "({min} til {max})"
+
+[main.mode]
+minpv = "Min+Sol"
+now = "Hurtig"
+off = "Fra"
+pv = "Sol"
+
+[main.provider]
+login = "Log på"
+logout = "Log ud"
+
+[main.targetCharge]
+activate = "Tænd"
+co2Limit = "CO₂ grænse på {co2}"
+costLimitIgnore = "Den konfigurerede {limit} vil blive ignoreret i denne periode."
+currentPlan = "Aktiv plan"
+descriptionEnergy = "Hvornår skal {targetEnergy} være sendt til køretøjet?"
+descriptionSoc = "Hvornår skal køretøjet være opladt til {targetSoc} %?"
+inactiveLabel = "Planlagt tid"
+modalTitle = "Sæt måltid"
+noActivePlan = "Ingen aktiv plan"
+notReachableInTime = "Mål kan ikke opnås i tide. Forventet færdig: {endTime}."
+onlyInPvMode = "Opladningsplan virker kun i solar mode"
+planDescription = "Angiv et afgangstidpunkt og evcc vil oplade køretøjet så billigt og miljøvenligt som muligt"
+planDuration = "Opladningstid"
+planPeriodLabel = "Periode"
+planPeriodValue = "{start} til {end}"
+planUnknown = "Ikke kendt endnu"
+preview = "forhåndsvising"
+priceLimit = "pris grænse på {price}"
+remove = "Fjern"
+setPlan = "Angiv en ladeplan"
+setTargetTime = "ingen"
+targetIsAboveLimit = "Den indstillede opladningsgrænse på {limit} ignoreres i denne periode\""
+targetIsAboveVehicleLimit = "Forøg køretøjets begrænsning {limit} for at kunne nå opladningsmålet"
+targetIsInThePast = "Vælg et tidspunkt i fremtiden, Marty."
+targetIsTooFarInTheFuture = "Vi justerer planen så snart vi ved mere om fremtiden."
+title = "Planlagt tid"
+today = "i dag"
+tomorrow = "i morgen"
+update = "Opdatering"
+vehicleCapacityDocs = "Lær at indstille det."
+vehicleCapacityRequired = "Køretøjets batterikapacitet skal kendes for at estimere opladningstiden."
+
+[main.targetChargePlan]
+chargeDuration = "Opladningstid"
+co2Label = "CO₂ udledning ⌀"
+priceLabel = "Energi pris"
+timeRange = "{day} {range} t"
+unknownPrice = "stadig ukendt"
+
+[main.targetEnergy]
+label = "Begrænse"
+noLimit = "ingen"
+
+[main.vehicle]
+addVehicle = "Tilføj køretøj"
+changeVehicle = "Ændre køretøj"
+detectionActive = "Detektering af køretøj ..."
+fallbackName = "Køretøj"
+moreActions = "Flere handlinger"
+none = "Intet køretøj"
+targetSoc = "Begrænsning"
+temp = "Temp"
+tempLimit = "Temp. grænse"
+unknown = "Gæstekøretøj"
+vehicleSoc = "Oplader"
+
+[main.vehicleSoc]
+charging = "opladning"
+connected = "forbundet"
+disconnected = "afbrudt"
+ready = "parat"
+vehicleTarget = "Køretøjsgrænse: {soc}%"
+
+[main.vehicleStatus]
+charging = "Oplader..."
+cheapEnergyCharging = "Oplader med billig energi: {price} (limit {limit})"
+cleanEnergyCharging = "Oplader med CO2 neutral energi: {co2} (limit {limit})"
+climating = "Forkonditionering registreret."
+connected = "Forbundet."
+disconnected = "Afbrudt."
+guard = "Switching-beskyttelse er aktiv i {remaining}…"
+minCharge = "Minimum opladning til {soc} %."
+pvDisable = "Ikke nok overskud. Pause i {remaining}..."
+pvEnable = "Overskud tilgængeligt. Starter om {remaining}..."
+scale1p = "Reducerer til 1-faset strøm i {remaining}..."
+scale3p = "Øger til 3-faset opladning om {remaining}..."
+targetChargeActive = "Målladning aktiv..."
+targetChargePlanned = "Målopladning starter kl. {time}."
+targetChargeWaitForVehicle = "Målladning klar. Venter på køretøj..."
+unknown = ""
+vehicleTargetReached = "Køretøjsgrænsen {soc} % nået."
+waitForVehicle = "Parat. Venter på køretøj ..."
+
+[notifications]
+dismissAll = "Afvis alle"
+modalTitle = "Underretninger"
+
+[offline]
+message = "Ikke forbundet til en server."
+reload = "Genindlæs?"
+
+[session]
+cancel = "Afbryd"
+co2 = "CO2"
+date = "Tidsrum"
+delete = "Slet"
+finished = "Fuldført"
+meter = "Kilometertælller"
+meterstart = "kilometertælleraflæsning"
+meterstop = "Meter slut"
+odometer = "Kilometerstand"
+price = "Pris"
+started = "Startet"
+title = "Lade session"
+
+[sessions]
+avgPower = "⌀ Effekt"
+avgPrice = "⌀ pris"
+chargeDuration = "Varighed"
+co2 = "⌀ CO₂"
+csvMonth = "Download {month} CSV"
+csvTotal = "Download total CSV"
+date = "Start"
+downloadCsv = "Download som CSV"
+energy = "Opladt"
+loadpoint = "Ladepunkt"
+noData = "Ingen opladninger i denne måned."
+price = "Σ pris"
+reallyDelete = "Er du sikker på at du vil slette denne session?"
+solar = "solenergi"
+title = "Opladning Sessioner"
+total = "Total"
+vehicle = "Køretøj"
+
+[sessions.csv]
+chargedenergy = "Energi (kWh)"
+created = "Oprettet"
+finished = "Færdig"
+identifier = "Identifikator"
+loadpoint = "Ladepunkt"
+meterstart = "Målerstart (kWh)"
+meterstop = "Målerstop (kWh)"
+odometer = "Kilometertal (km)"
+vehicle = "Køretøj"
+
+[sessions.filter]
+allLoadpoints = "alle ladepunkter"
+allVehicles = "alle køretøjer"
+filter = "Filter"
+
+[settings]
+title = "Indstillinger"
+
+[settings.hiddenFeatures]
+label = "Experimentalt"
+value = "Vis eksperimentielle UI funktioner"
+
+[settings.language]
+auto = "Automatisk"
+label = "Sprog"
+
+[settings.sponsorToken]
+expires = "Dit sponsor token udløber om {inXDays}. {getNewToken} og opdater din konfigurations fil."
+getNew = "Hent en ny"
+hint = "Note: Vi automatiserer dette i fremtiden."
+
+[settings.telemetry]
+label = "Telemetri"
+
+[settings.theme]
+auto = "system"
+dark = "mørk"
+label = "Design"
+light = "lys"
+
+[settings.unit]
+km = "km"
+label = "Enheder"
+mi = "mil"
+
+[startupError]
+configFile = "Konfigurationsfil brugt:"
+configuration = "Opsætning"
+description = "Tjek venligst din konfigurationsfil. Hvis fejlmeddelelsen ikke hjælper, så tjek {0}."
+discussions = "GitHub Diskussioner"
+fixAndRestart = "Løs problemet og genstart serveren."
+hint = "Bemærk: Det kan også være, at du har en defekt enhed (inverter, måler, ...). Tjek dine netværksforbindelser."
+lineError = "Fejl i {0}."
+lineErrorLink = "linje {0}"
+restartButton = "Genstart"
+title = "Fejl ved opstart"
+
+[vehicleSettings]
+cancel = "Afbryd"
+template = "Producent"
+test = "Test"

@@ -10,8 +10,15 @@
 			>
 				<Loadpoint
 					v-bind="loadpoint"
-					:id="index"
+					:id="index + 1"
+					data-testid="loadpoint"
 					:vehicles="vehicles"
+					:smartCostLimit="smartCostLimit"
+					:smartCostType="smartCostType"
+					:smartCostActive="smartCostActive"
+					:tariffGrid="tariffGrid"
+					:tariffCo2="tariffCo2"
+					:currency="currency"
 					class="h-100"
 					:class="{ 'loadpoint-unselected': !selected(index) }"
 					@click="scrollTo(index)"
@@ -43,6 +50,12 @@ export default {
 	props: {
 		loadpoints: Array,
 		vehicles: Array,
+		smartCostLimit: Number,
+		smartCostType: String,
+		smartCostActive: Boolean,
+		tariffGrid: Number,
+		tariffCo2: Number,
+		currency: String,
 	},
 	data() {
 		return { selectedIndex: 0, snapTimeout: null };

@@ -1,6 +1,7 @@
 package kamereon
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"io"
@@ -12,6 +13,11 @@ import (
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/vehicle/renault/gigya"
 	"github.com/evcc-io/evcc/vehicle/renault/keys"
+)
+
+const (
+	ActionStart = "start"
+	ActionStop  = "stop"
 )
 
 type API struct {
@@ -52,12 +58,24 @@ func (v *API) request_(uri string, body io.Reader) (Response, error) {
 }
 
 func (v *API) request(uri string, body io.Reader) (Response, error) {
-	res, err := v.request_(uri, body)
+	if body != nil {
+		b, err := io.ReadAll(body)
+		if err != nil {
+			return Response{}, err
+		}
+		// read from buffer
+		body = bytes.NewReader(b)
+	}
 
+	res, err := v.request_(uri, body)
 	// repeat auth if error
 	if err != nil {
 		if err = v.login(); err == nil {
-			res, err = v.request_(uri, nil)
+			if body != nil {
+				// rewind body
+				body.(*bytes.Reader).Seek(0, io.SeekStart)
+			}
+			res, err = v.request_(uri, body)
 		}
 	}
 
@@ -112,6 +130,26 @@ func (v *API) WakeUp(accountID string, vin string) (Response, error) {
 			"type": "ChargePauseResume",
 			"attributes": map[string]interface{}{
 				"action": "resume",
+			},
+		},
+	}
+
+	return v.request(uri, request.MarshalJSON(data))
+}
+
+func (v *API) Position(accountID string, vin string) (Response, error) {
+	uri := fmt.Sprintf("%s/commerce/v1/accounts/%s/kamereon/kca/car-adapter/v1/cars/%s/location", v.keys.Target, accountID, vin)
+	return v.request(uri, nil)
+}
+
+func (v *API) Action(accountID, action string, vin string) (Response, error) {
+	uri := fmt.Sprintf("%s/commerce/v1/accounts/%s/kamereon/kca/car-adapter/v1/cars/%s/actions/charging-start", v.keys.Target, accountID, vin)
+
+	data := map[string]interface{}{
+		"data": map[string]interface{}{
+			"type": "ChargingStart",
+			"attributes": map[string]interface{}{
+				"action": action,
 			},
 		},
 	}

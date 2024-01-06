@@ -2,34 +2,39 @@ package templates
 
 import (
 	"bytes"
+	"embed"
 	"fmt"
 	"io/fs"
 	"path"
+	"slices"
+	"sync"
+	"text/template"
 
 	"github.com/evcc-io/evcc/templates/definition"
-	"golang.org/x/exp/slices"
 	"gopkg.in/yaml.v3"
 )
 
 var (
-	templates      = make(map[Class][]Template)
-	configDefaults = ConfigDefaults{}
-)
+	//go:embed includes/*.tpl
+	includeFS embed.FS
 
-type Class string
+	// baseTmpl holds all included template definitions
+	baseTmpl *template.Template
 
-const (
-	Charger Class = "charger"
-	Meter   Class = "meter"
-	Vehicle Class = "vehicle"
+	templates       = make(map[Class][]Template)
+	ConfigDefaults  configDefaults
+	mu              sync.Mutex
+	encoderLanguage string
 )
 
 func init() {
-	configDefaults.LoadDefaults()
+	ConfigDefaults.Load()
 
-	loadTemplates(Charger)
-	loadTemplates(Meter)
-	loadTemplates(Vehicle)
+	baseTmpl = template.Must(template.ParseFS(includeFS, "includes/*.tpl"))
+
+	for _, class := range ClassValues() {
+		loadTemplates(class)
+	}
 }
 
 func FromBytes(b []byte) (Template, error) {
@@ -44,7 +49,6 @@ func FromBytes(b []byte) (Template, error) {
 
 	tmpl := Template{
 		TemplateDefinition: definition,
-		ConfigDefaults:     configDefaults,
 	}
 
 	err := tmpl.ResolvePresets()
@@ -84,15 +88,25 @@ func loadTemplates(class Class) {
 			return fmt.Errorf("processing template '%s' failed: %w", filepath, err)
 		}
 
-		path := Class(path.Dir(filepath))
-		templates[path] = append(templates[path], tmpl)
+		class, err := ClassString(path.Dir(filepath))
+		if err != nil {
+			return fmt.Errorf("invalid template class: '%s'", err)
+		}
+
+		templates[class] = append(templates[class], tmpl)
 
 		return nil
 	})
-
 	if err != nil {
 		panic(err)
 	}
+}
+
+// EncoderLanguage sets the template language for encoding json
+func EncoderLanguage(lang string) {
+	mu.Lock()
+	defer mu.Unlock()
+	encoderLanguage = lang
 }
 
 func ByClass(class Class) []Template {

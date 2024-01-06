@@ -11,6 +11,7 @@ import (
 	"github.com/Masterminds/sprig/v3"
 	"github.com/evcc-io/evcc/core"
 	"github.com/evcc-io/evcc/server"
+	"github.com/evcc-io/evcc/util/config"
 	"github.com/spf13/cobra"
 )
 
@@ -34,11 +35,12 @@ func init() {
 	dumpConfig = dumpCmd.Flags().Bool("cfg", false, "Dump config file")
 }
 
-func handle(device any, err error) any {
+func handle[T any](name string, h config.Handler[T]) config.Device[T] {
+	dev, err := h.ByName(name)
 	if err != nil {
 		log.FATAL.Fatal(err)
 	}
-	return device
+	return dev
 }
 
 func runDump(cmd *cobra.Command, args []string) {
@@ -68,7 +70,7 @@ func runDump(cmd *cobra.Command, args []string) {
 
 		tmpl := template.Must(
 			template.New("dump").
-				Funcs(template.FuncMap(sprig.FuncMap())).
+				Funcs(sprig.TxtFuncMap()).
 				Parse(dumpTmpl))
 
 		out := new(bytes.Buffer)
@@ -94,49 +96,43 @@ func runDump(cmd *cobra.Command, args []string) {
 	fmt.Println("")
 
 	if name := site.Meters.GridMeterRef; name != "" {
-		d.DumpWithHeader(fmt.Sprintf("grid: %s", name), handle(cp.Meter(name)))
+		d.DumpWithHeader(fmt.Sprintf("grid: %s", name), handle(name, config.Meters()))
 	}
 
-	if len(site.Meters.PVMetersRef) == 0 {
-		if name := site.Meters.PVMeterRef; name != "" {
-			d.DumpWithHeader(fmt.Sprintf("pv: %s", name), handle(cp.Meter(name)))
-		}
-	} else {
-		for id, name := range site.Meters.PVMetersRef {
-			if name != "" {
-				d.DumpWithHeader(fmt.Sprintf("pv %d: %s", id, name), handle(cp.Meter(name)))
-			}
+	for id, name := range site.Meters.PVMetersRef {
+		if name != "" {
+			d.DumpWithHeader(fmt.Sprintf("pv %d: %s", id+1, name), handle(name, config.Meters()))
 		}
 	}
 
-	if len(site.Meters.BatteryMetersRef) == 0 {
-		if name := site.Meters.BatteryMeterRef; name != "" {
-			d.DumpWithHeader(fmt.Sprintf("battery: %s", name), handle(cp.Meter(name)))
-		}
-	} else {
-		for id, name := range site.Meters.BatteryMetersRef {
-			if name != "" {
-				d.DumpWithHeader(fmt.Sprintf("battery %d: %s", id, name), handle(cp.Meter(name)))
-			}
+	for id, name := range site.Meters.BatteryMetersRef {
+		if name != "" {
+			d.DumpWithHeader(fmt.Sprintf("battery %d: %s", id+1, name), handle(name, config.Meters()))
 		}
 	}
 
-	for _, v := range site.GetVehicles() {
+	for id, name := range site.Meters.AuxMetersRef {
+		if name != "" {
+			d.DumpWithHeader(fmt.Sprintf("aux %d: %s", id+1, name), handle(name, config.Meters()))
+		}
+	}
+
+	for _, v := range site.Vehicles().Instances() {
 		d.DumpWithHeader(fmt.Sprintf("vehicle: %s", v.Title()), v)
 	}
 
-	for id, lpI := range site.LoadPoints() {
-		lp := lpI.(*core.LoadPoint)
+	for id, lpI := range site.Loadpoints() {
+		lp := lpI.(*core.Loadpoint)
 
 		d.Header(fmt.Sprintf("loadpoint %d", id+1), "=")
 		fmt.Println("")
 
 		if name := lp.MeterRef; name != "" {
-			d.DumpWithHeader(fmt.Sprintf("charge: %s", name), handle(cp.Meter(name)))
+			d.DumpWithHeader(fmt.Sprintf("charge: %s", name), handle(name, config.Meters()))
 		}
 
 		if name := lp.ChargerRef; name != "" {
-			d.DumpWithHeader(fmt.Sprintf("charger: %s", name), handle(cp.Charger(name)))
+			d.DumpWithHeader(fmt.Sprintf("charger: %s", name), handle(name, config.Chargers()))
 		}
 	}
 }

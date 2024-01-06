@@ -9,7 +9,7 @@ import (
 
 const refreshTimeout = 2 * time.Minute
 
-// Provider implements the Kia/Hyundai bluelink api.
+// Provider implements the vehicle api.
 // Based on https://github.com/Hacksore/bluelinky.
 type Provider struct {
 	statusG     func() (VehicleStatus, error)
@@ -93,8 +93,8 @@ func (v *Provider) status(statusG func() (StatusLatestResponse, error)) (Vehicle
 
 var _ api.Battery = (*Provider)(nil)
 
-// SoC implements the api.Battery interface
-func (v *Provider) SoC() (float64, error) {
+// Soc implements the api.Battery interface
+func (v *Provider) Soc() (float64, error) {
 	res, err := v.statusG()
 
 	if err == nil {
@@ -113,7 +113,7 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 	status := api.StatusNone
 	if err == nil {
 		status = api.StatusA
-		if res.EvStatus.BatteryPlugin > 0 {
+		if res.EvStatus.BatteryPlugin > 0 || res.EvStatus.ChargePortDoorOpenStatus == 1 {
 			status = api.StatusB
 		}
 		if res.EvStatus.BatteryCharge {
@@ -171,8 +171,8 @@ func (v *Provider) Odometer() (float64, error) {
 
 var _ api.SocLimiter = (*Provider)(nil)
 
-// TargetSoC implements the api.SocLimiter interface
-func (v *Provider) TargetSoC() (float64, error) {
+// TargetSoc implements the api.SocLimiter interface
+func (v *Provider) TargetSoc() (float64, error) {
 	res, err := v.statusG()
 
 	if err == nil {
@@ -193,4 +193,13 @@ func (v *Provider) Position() (float64, float64, error) {
 	res, err := v.statusLG()
 	coord := res.ResMsg.VehicleStatusInfo.VehicleLocation.Coord
 	return coord.Lat, coord.Lon, err
+}
+
+var _ api.Resurrector = (*Provider)(nil)
+
+// WakeUp implements the api.Resurrector interface
+func (v *Provider) WakeUp() error {
+	// forcing an update will usually make the car start charging even if the (first) resulting status still says it does not charge...
+	_, err := v.refreshG()
+	return err
 }

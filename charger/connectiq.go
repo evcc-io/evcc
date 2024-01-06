@@ -173,9 +173,9 @@ func (wb *ConnectIq) TotalEnergy() (float64, error) {
 	return res.Energy, err
 }
 
-var _ api.MeterCurrent = (*ConnectIq)(nil)
+var _ api.PhaseCurrents = (*ConnectIq)(nil)
 
-// Currents implements the api.MeterCurrent interface
+// Currents implements the api.PhaseCurrents interface
 func (wb *ConnectIq) Currents() (float64, float64, float64, error) {
 	res, err := wb.meterG()
 	if err != nil {

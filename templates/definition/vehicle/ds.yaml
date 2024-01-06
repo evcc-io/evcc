@@ -2,8 +2,8 @@ template: ds
 products:
   - brand: DS
 params:
-  - preset: vehiclebase
-  - preset: vehicleidentify
+  - preset: vehicle-base
+  - preset: vehicle-identify
 render: |
   type: ds
   {{ include "vehicle-base" . }}

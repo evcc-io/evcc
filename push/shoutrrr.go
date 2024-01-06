@@ -1,30 +1,40 @@
 package push
 
 import (
-	"fmt"
-
 	"github.com/containrrr/shoutrrr"
 	"github.com/containrrr/shoutrrr/pkg/router"
 	"github.com/containrrr/shoutrrr/pkg/types"
+	"github.com/evcc-io/evcc/util"
 )
+
+func init() {
+	registry.Add("email", NewShoutrrrFromConfig)
+	registry.Add("shout", NewShoutrrrFromConfig)
+}
 
 // Shoutrrr implements the shoutrrr messaging aggregator
 type Shoutrrr struct {
+	log *util.Logger
 	app *router.ServiceRouter
 }
 
-type shoutrrrConfig struct {
-	URI string
-}
+// NewShoutrrrFromConfig creates new Shoutrrr messenger
+func NewShoutrrrFromConfig(other map[string]interface{}) (Messenger, error) {
+	var cc struct {
+		URI string
+	}
 
-// NewShoutrrrMessenger creates new Shoutrrr messenger
-func NewShoutrrrMessenger(uri string) (*Shoutrrr, error) {
-	app, err := shoutrrr.CreateSender(uri)
+	if err := util.DecodeOther(other, &cc); err != nil {
+		return nil, err
+	}
+
+	app, err := shoutrrr.CreateSender(cc.URI)
 	if err != nil {
-		return nil, fmt.Errorf("shoutrrr: %v", err)
+		return nil, err
 	}
 
 	m := &Shoutrrr{
+		log: util.NewLogger("shoutrrr"),
 		app: app,
 	}
 
@@ -39,7 +49,7 @@ func (m *Shoutrrr) Send(title, msg string) {
 
 	for _, err := range m.app.Send(msg, params) {
 		if err != nil {
-			log.ERROR.Printf("shoutrrr: %v", err)
+			m.log.ERROR.Println("send:", err)
 		}
 	}
 }

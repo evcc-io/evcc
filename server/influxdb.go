@@ -2,12 +2,17 @@ package server
 
 import (
 	"fmt"
+	"reflect"
+	"strconv"
+	"strings"
 	"sync"
 	"time"
 
-	"github.com/evcc-io/evcc/core/loadpoint"
+	"github.com/benbjohnson/clock"
+	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/util"
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
+	"github.com/influxdata/influxdb-client-go/v2/api/write"
 	influxlog "github.com/influxdata/influxdb-client-go/v2/log"
 )
 
@@ -26,6 +31,7 @@ type InfluxConfig struct {
 type Influx struct {
 	sync.Mutex
 	log      *util.Logger
+	clock    clock.Clock
 	client   influxdb2.Client
 	org      string
 	database string
@@ -48,32 +54,89 @@ func NewInfluxClient(url, token, org, user, password, database string) *Influx {
 
 	return &Influx{
 		log:      log,
+		clock:    clock.New(),
 		client:   client,
 		org:      org,
 		database: database,
 	}
 }
 
-// supportedType checks if type can be written as influx value
-func (m *Influx) supportedType(p util.Param) bool {
-	if p.Val == nil {
-		return true
+// pointWriter is the minimal interface for influxdb2 api.Writer
+type pointWriter interface {
+	WritePoint(point *write.Point)
+}
+
+// writePoint asynchronously writes a point to influx
+func (m *Influx) writePoint(writer pointWriter, key string, fields map[string]any, tags map[string]string) {
+	m.log.TRACE.Printf("write %s=%v (%v)", key, fields, tags)
+	writer.WritePoint(influxdb2.NewPoint(key, tags, fields, m.clock.Now()))
+}
+
+// writeComplexPoint asynchronously writes a point to influx
+func (m *Influx) writeComplexPoint(writer pointWriter, param util.Param, tags map[string]string) {
+	fields := make(map[string]any)
+
+	switch val := param.Val.(type) {
+	case string:
+		return
+
+	case int, int64, float64:
+		fields["value"] = param.Val
+
+	case []float64:
+		if len(val) != 3 {
+			return
+		}
+
+		// add array as phase values
+		for i, v := range val {
+			fields[fmt.Sprintf("l%d", i+1)] = v
+		}
+
+	case [3]float64:
+		// add array as phase values
+		for i, v := range val {
+			fields[fmt.Sprintf("l%d", i+1)] = v
+		}
+
+	default:
+		// allow writing nil values
+		if param.Val == nil {
+			fields["value"] = nil
+			break
+		}
+
+		// slice of structs
+		if typ := reflect.TypeOf(param.Val); typ.Kind() == reflect.Slice && typ.Elem().Kind() == reflect.Struct {
+			val := reflect.ValueOf(param.Val)
+
+			// loop slice
+			for i := 0; i < val.Len(); i++ {
+				val := val.Index(i)
+				typ := val.Type()
+
+				// loop struct
+				for j := 0; j < typ.NumField(); j++ {
+					n := typ.Field(j).Name
+					v := val.Field(j).Interface()
+
+					key := param.Key + strings.ToUpper(n[:1]) + n[1:]
+					fields["value"] = v
+					tags["id"] = strconv.Itoa(i + 1)
+
+					m.writePoint(writer, key, fields, tags)
+				}
+			}
+		}
+
+		return
 	}
 
-	switch val := p.Val.(type) {
-	case int, int64, float64:
-		return true
-	case [3]float64:
-		return true
-	case []float64:
-		return len(val) == 3
-	default:
-		return false
-	}
+	m.writePoint(writer, param.Key, fields, tags)
 }
 
 // Run Influx publisher
-func (m *Influx) Run(loadPoints []loadpoint.API, in <-chan util.Param) {
+func (m *Influx) Run(site site.API, in <-chan util.Param) {
 	writer := m.client.WriteAPI(m.org, m.database)
 
 	// log errors
@@ -84,55 +147,19 @@ func (m *Influx) Run(loadPoints []loadpoint.API, in <-chan util.Param) {
 		}
 	}()
 
-	// track active vehicle per loadpoint
-	vehicles := make(map[int]string)
-
 	// add points to batch for async writing
 	for param := range in {
-		// vehicle name
-		if param.LoadPoint != nil {
-			if name, ok := param.Val.(string); ok && param.Key == "vehicleTitle" {
-				vehicles[*param.LoadPoint] = name
-				continue
+		tags := make(map[string]string)
+		if param.Loadpoint != nil {
+			lp := site.Loadpoints()[*param.Loadpoint]
+
+			tags["loadpoint"] = lp.Title()
+			if v := lp.GetVehicle(); v != nil {
+				tags["vehicle"] = v.Title()
 			}
 		}
 
-		if !m.supportedType(param) {
-			continue
-		}
-
-		tags := map[string]string{}
-		if param.LoadPoint != nil {
-			tags["loadpoint"] = loadPoints[*param.LoadPoint].Name()
-			tags["vehicle"] = vehicles[*param.LoadPoint]
-		}
-
-		fields := map[string]interface{}{}
-
-		// array to slice
-		val := param.Val
-		if v, ok := val.([3]float64); ok {
-			val = v[:]
-		}
-
-		// add slice as phase values
-		if phases, ok := val.([]float64); ok {
-			var total float64
-			for i, v := range phases {
-				total += v
-				fields[fmt.Sprintf("l%d", i+1)] = v
-			}
-
-			// add total as "value"
-			val = total
-		}
-
-		fields["value"] = val
-
-		// write asynchronously
-		m.log.TRACE.Printf("write %s=%v (%v)", param.Key, param.Val, tags)
-		p := influxdb2.NewPoint(param.Key, tags, fields, time.Now())
-		writer.WritePoint(p)
+		m.writeComplexPoint(writer, param, tags)
 	}
 
 	m.client.Close()

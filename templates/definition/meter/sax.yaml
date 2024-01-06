@@ -1,0 +1,50 @@
+template: sax
+products:
+  - brand: SAX
+    description:
+      generic: Homespeicher
+params:
+  - name: usage
+    choice: ["grid", "battery"]
+  - name: modbus
+    choice: ["tcpip"]
+    port: 3600
+    id: 64
+render: |
+  type: custom
+  {{- if eq .usage "grid" }}
+  power:
+    source: calc
+    add:
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      # register details
+      register:
+        address: 48 # Leistung des Smartmeters
+        type: holding
+        decode: uint16
+    - source: const
+      value: -16384
+  {{- end }}
+  {{- if eq .usage "battery" }}
+  power:
+    source: calc
+    add:
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      # register details
+      register:
+        address: 47 # Leistung P vom Speicher. (Messwert)
+        type: holding
+        decode: uint16
+    - source: const
+      value: -16384
+  soc:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    # register details
+    register:
+      address: 46 # SOC vom Speicher (Messwert)
+      type: holding
+      decode: uint16
+  {{- end }}

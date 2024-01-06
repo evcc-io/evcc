@@ -47,8 +47,8 @@ func TestGoEV1(t *testing.T) {
 		t.Error("missing Meter api")
 	}
 
-	if _, ok := wb.(api.MeterCurrent); !ok {
-		t.Error("missing MeterCurrent api")
+	if _, ok := wb.(api.PhaseCurrents); !ok {
+		t.Error("missing PhaseCurrents api")
 	}
 
 	if _, ok := wb.(api.Identifier); !ok {
@@ -72,8 +72,8 @@ func TestGoEV2(t *testing.T) {
 		t.Error("missing Meter api")
 	}
 
-	if _, ok := wb.(api.MeterCurrent); !ok {
-		t.Error("missing MeterCurrent api")
+	if _, ok := wb.(api.PhaseCurrents); !ok {
+		t.Error("missing PhaseCurrents api")
 	}
 
 	if _, ok := wb.(api.Identifier); !ok {

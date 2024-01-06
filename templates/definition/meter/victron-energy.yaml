@@ -3,6 +3,7 @@ products:
   - brand: Victron
     description:
       generic: Energy
+capabilities: ["battery-control"]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -10,10 +11,19 @@ params:
   - name: host
   - name: port
     default: 502
+  - name: capacity
+    advanced: true
+  # battery control
+  - name: minsoc
+    type: number
+    advanced: true
+  - name: maxsoc
+    type: number
+    advanced: true
 render: |
   type: custom
-  power:
   {{- if eq .usage "grid" }}
+  power:
     source: calc
     add:
     - source: modbus
@@ -39,6 +49,7 @@ render: |
         decode: int16
   {{- end }}
   {{- if eq .usage "pv" }}
+  power:
     source: calc
     add:
     - source: modbus
@@ -92,6 +103,7 @@ render: |
         decode: uint16
   {{- end }}
   {{- if eq .usage "battery" }}
+  power:
     source: modbus
     uri: {{ .host }}:{{ .port }}
     id: 100 # com.victronenergy.system
@@ -105,7 +117,22 @@ render: |
     uri: {{ .host }}:{{ .port }}
     id: 100 # com.victronenergy.system
     register:
-      address: 843 # SoC
+      address: 843 # Soc
       type: input
       decode: uint16
+  limitsoc:
+    source: convert
+    convert: float2int
+    set:
+      source: modbus
+      uri: {{ .host }}:{{ .port }}
+      id: 100 # com.victronenergy.system
+      register:
+        address: 2901 # limit soc
+        type: writesingle
+        decode: uint16
+      scale: 10
+  capacity: {{ .capacity }} # kWh
+  minsoc: {{ .minsoc }} # %
+  maxsoc: {{ .maxsoc }} # %
   {{- end }}

@@ -119,7 +119,7 @@ func (mcc *MobileConnect) fetchToken(request *http.Request) error {
 }
 
 // login as the home user with the given password
-func (mcc *MobileConnect) login(password string) error {
+func (mcc *MobileConnect) login() error {
 	uri := fmt.Sprintf("%s/%s", mcc.uri, mccAPILogin)
 
 	data := url.Values{
@@ -170,7 +170,7 @@ func (mcc *MobileConnect) request(method, uri string) (*http.Request, error) {
 
 	// do we need to login?
 	if mcc.token == "" {
-		if err := mcc.login(mcc.password); err != nil {
+		if err := mcc.login(); err != nil {
 			return nil, err
 		}
 	}
@@ -350,9 +350,9 @@ func (mcc *MobileConnect) ChargingTime() (time.Duration, error) {
 	return time.Duration(currentSession.Duration) * time.Second, nil
 }
 
-var _ api.MeterCurrent = (*MobileConnect)(nil)
+var _ api.PhaseCurrents = (*MobileConnect)(nil)
 
-// Currents implements the api.MeterCurrent interface
+// Currents implements the api.PhaseCurrents interface
 func (mcc *MobileConnect) Currents() (float64, float64, float64, error) {
 	var energy MCCEnergy
 	err := mcc.getEscapedJSON(mcc.apiURL(mccAPIEnergy), &energy)

@@ -11,6 +11,8 @@ params:
     mask: true
     default: user
     advanced: true
+  - name: capacity
+    advanced: true
 render: |
   type: custom
   power:
@@ -28,7 +30,8 @@ render: |
       type: basic
       user: x
       password: {{ .password }}
-    jq: .value
+    jq: (.value // 0)
+  {{- if eq .usage "battery" }}
   soc:
     source: http
     uri: http://{{ .host }}/rest/channel/_sum/EssSoc
@@ -36,4 +39,8 @@ render: |
       type: basic
       user: x
       password: {{ .password }}
-    jq: .value
+    jq: (.value // 0)
+  {{- if .capacity }}
+  capacity: {{ .capacity }} # kWh
+  {{- end }}
+  {{- end }}

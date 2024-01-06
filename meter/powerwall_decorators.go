@@ -6,12 +6,12 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decoratePowerWall(base *PowerWall, meterEnergy func() (float64, error), battery func() (float64, error)) api.Meter {
+func decoratePowerWall(base *PowerWall, meterEnergy func() (float64, error), battery func() (float64, error), batteryCapacity func() float64, batteryController func(api.BatteryMode) error) api.Meter {
 	switch {
-	case battery == nil && meterEnergy == nil:
+	case battery == nil && batteryCapacity == nil && batteryController == nil && meterEnergy == nil:
 		return base
 
-	case battery == nil && meterEnergy != nil:
+	case battery == nil && batteryCapacity == nil && batteryController == nil && meterEnergy != nil:
 		return &struct {
 			*PowerWall
 			api.MeterEnergy
@@ -22,7 +22,7 @@ func decoratePowerWall(base *PowerWall, meterEnergy func() (float64, error), bat
 			},
 		}
 
-	case battery != nil && meterEnergy == nil:
+	case battery != nil && batteryCapacity == nil && batteryController == nil && meterEnergy == nil:
 		return &struct {
 			*PowerWall
 			api.Battery
@@ -33,7 +33,7 @@ func decoratePowerWall(base *PowerWall, meterEnergy func() (float64, error), bat
 			},
 		}
 
-	case battery != nil && meterEnergy != nil:
+	case battery != nil && batteryCapacity == nil && batteryController == nil && meterEnergy != nil:
 		return &struct {
 			*PowerWall
 			api.Battery
@@ -42,6 +42,202 @@ func decoratePowerWall(base *PowerWall, meterEnergy func() (float64, error), bat
 			PowerWall: base,
 			Battery: &decoratePowerWallBatteryImpl{
 				battery: battery,
+			},
+			MeterEnergy: &decoratePowerWallMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+		}
+
+	case battery == nil && batteryCapacity != nil && batteryController == nil && meterEnergy == nil:
+		return &struct {
+			*PowerWall
+			api.BatteryCapacity
+		}{
+			PowerWall: base,
+			BatteryCapacity: &decoratePowerWallBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+		}
+
+	case battery == nil && batteryCapacity != nil && batteryController == nil && meterEnergy != nil:
+		return &struct {
+			*PowerWall
+			api.BatteryCapacity
+			api.MeterEnergy
+		}{
+			PowerWall: base,
+			BatteryCapacity: &decoratePowerWallBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			MeterEnergy: &decoratePowerWallMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController == nil && meterEnergy == nil:
+		return &struct {
+			*PowerWall
+			api.Battery
+			api.BatteryCapacity
+		}{
+			PowerWall: base,
+			Battery: &decoratePowerWallBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decoratePowerWallBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController == nil && meterEnergy != nil:
+		return &struct {
+			*PowerWall
+			api.Battery
+			api.BatteryCapacity
+			api.MeterEnergy
+		}{
+			PowerWall: base,
+			Battery: &decoratePowerWallBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decoratePowerWallBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			MeterEnergy: &decoratePowerWallMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+		}
+
+	case battery == nil && batteryCapacity == nil && batteryController != nil && meterEnergy == nil:
+		return &struct {
+			*PowerWall
+			api.BatteryController
+		}{
+			PowerWall: base,
+			BatteryController: &decoratePowerWallBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+		}
+
+	case battery == nil && batteryCapacity == nil && batteryController != nil && meterEnergy != nil:
+		return &struct {
+			*PowerWall
+			api.BatteryController
+			api.MeterEnergy
+		}{
+			PowerWall: base,
+			BatteryController: &decoratePowerWallBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			MeterEnergy: &decoratePowerWallMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController != nil && meterEnergy == nil:
+		return &struct {
+			*PowerWall
+			api.Battery
+			api.BatteryController
+		}{
+			PowerWall: base,
+			Battery: &decoratePowerWallBatteryImpl{
+				battery: battery,
+			},
+			BatteryController: &decoratePowerWallBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController != nil && meterEnergy != nil:
+		return &struct {
+			*PowerWall
+			api.Battery
+			api.BatteryController
+			api.MeterEnergy
+		}{
+			PowerWall: base,
+			Battery: &decoratePowerWallBatteryImpl{
+				battery: battery,
+			},
+			BatteryController: &decoratePowerWallBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			MeterEnergy: &decoratePowerWallMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+		}
+
+	case battery == nil && batteryCapacity != nil && batteryController != nil && meterEnergy == nil:
+		return &struct {
+			*PowerWall
+			api.BatteryCapacity
+			api.BatteryController
+		}{
+			PowerWall: base,
+			BatteryCapacity: &decoratePowerWallBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryController: &decoratePowerWallBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+		}
+
+	case battery == nil && batteryCapacity != nil && batteryController != nil && meterEnergy != nil:
+		return &struct {
+			*PowerWall
+			api.BatteryCapacity
+			api.BatteryController
+			api.MeterEnergy
+		}{
+			PowerWall: base,
+			BatteryCapacity: &decoratePowerWallBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryController: &decoratePowerWallBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			MeterEnergy: &decoratePowerWallMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController != nil && meterEnergy == nil:
+		return &struct {
+			*PowerWall
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryController
+		}{
+			PowerWall: base,
+			Battery: &decoratePowerWallBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decoratePowerWallBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryController: &decoratePowerWallBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController != nil && meterEnergy != nil:
+		return &struct {
+			*PowerWall
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryController
+			api.MeterEnergy
+		}{
+			PowerWall: base,
+			Battery: &decoratePowerWallBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decoratePowerWallBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryController: &decoratePowerWallBatteryControllerImpl{
+				batteryController: batteryController,
 			},
 			MeterEnergy: &decoratePowerWallMeterEnergyImpl{
 				meterEnergy: meterEnergy,
@@ -56,8 +252,24 @@ type decoratePowerWallBatteryImpl struct {
 	battery func() (float64, error)
 }
 
-func (impl *decoratePowerWallBatteryImpl) SoC() (float64, error) {
+func (impl *decoratePowerWallBatteryImpl) Soc() (float64, error) {
 	return impl.battery()
+}
+
+type decoratePowerWallBatteryCapacityImpl struct {
+	batteryCapacity func() float64
+}
+
+func (impl *decoratePowerWallBatteryCapacityImpl) Capacity() float64 {
+	return impl.batteryCapacity()
+}
+
+type decoratePowerWallBatteryControllerImpl struct {
+	batteryController func(api.BatteryMode) error
+}
+
+func (impl *decoratePowerWallBatteryControllerImpl) SetBatteryMode(p0 api.BatteryMode) error {
+	return impl.batteryController(p0)
 }
 
 type decoratePowerWallMeterEnergyImpl struct {

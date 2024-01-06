@@ -185,21 +185,21 @@ func (wb *KSE) ChargedEnergy() (float64, error) {
 	return float64(binary.BigEndian.Uint16(b)) / 100, err
 }
 
-var _ api.MeterCurrent = (*KSE)(nil)
+var _ api.PhaseCurrents = (*KSE)(nil)
 
-// Currents implements the api.MeterCurrent interface
+// Currents implements the api.PhaseCurrents interface
 func (wb *KSE) Currents() (float64, float64, float64, error) {
 	b, err := wb.conn.ReadInputRegisters(kseRegCurrents, 3)
 	if err != nil {
 		return 0, 0, 0, err
 	}
 
-	var curr [3]float64
-	for l := 0; l < 3; l++ {
-		curr[l] = float64(binary.BigEndian.Uint16(b[2*l:])) / 1e3
+	var res [3]float64
+	for i := range res {
+		res[i] = float64(binary.BigEndian.Uint16(b[2*i:])) / 1e3
 	}
 
-	return curr[0], curr[1], curr[2], nil
+	return res[0], res[1], res[2], nil
 }
 
 // var _ api.PhaseSwitcher = (*KSE)(nil)

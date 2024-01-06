@@ -1,10 +1,10 @@
 package vw
 
 import (
+	"cmp"
 	"fmt"
-	"math"
 	"os"
-	"sort"
+	"slices"
 	"strconv"
 	"strings"
 	"text/tabwriter"
@@ -15,7 +15,7 @@ import (
 	"github.com/samber/lo"
 )
 
-// Provider implements the evcc vehicle api
+// Provider implements the vehicle api
 type Provider struct {
 	chargerG  func() (ChargerResponse, error)
 	statusG   func() (StatusResponse, error)
@@ -25,7 +25,7 @@ type Provider struct {
 	rr        func() (RolesRights, error)
 }
 
-// NewProvider provides the evcc vehicle api provider
+// NewProvider creates a vehicle api provider
 func NewProvider(api *API, vin string, cache time.Duration) *Provider {
 	impl := &Provider{
 		chargerG: provider.Cached(func() (ChargerResponse, error) {
@@ -52,8 +52,8 @@ func NewProvider(api *API, vin string, cache time.Duration) *Provider {
 
 var _ api.Battery = (*Provider)(nil)
 
-// SoC implements the api.Vehicle interface
-func (v *Provider) SoC() (float64, error) {
+// Soc implements the api.Vehicle interface
+func (v *Provider) Soc() (float64, error) {
 	res, err := v.chargerG()
 	if err == nil {
 		return float64(res.Charger.Status.BatteryStatusData.StateOfCharge.Content), nil
@@ -139,22 +139,16 @@ func (v *Provider) Odometer() (float64, error) {
 var _ api.VehicleClimater = (*Provider)(nil)
 
 // Climater implements the api.VehicleClimater interface
-func (v *Provider) Climater() (active bool, outsideTemp, targetTemp float64, err error) {
+func (v *Provider) Climater() (bool, error) {
 	res, err := v.climateG()
 	if err == nil {
 		state := strings.ToLower(res.Climater.Status.ClimatisationStatusData.ClimatisationState.Content)
 		active := state != "off" && state != "invalid" && state != "error"
 
-		targetTemp = res.Climater.Settings.TargetTemperature.Content
-		outsideTemp = res.Climater.Status.TemperatureStatusData.OutdoorTemperature.Content
-		if math.IsNaN(outsideTemp) {
-			outsideTemp = targetTemp // cover "invalid"
-		}
-
-		return active, outsideTemp, targetTemp, nil
+		return active, nil
 	}
 
-	return active, outsideTemp, targetTemp, err
+	return false, err
 }
 
 var _ api.VehiclePosition = (*Provider)(nil)
@@ -193,8 +187,8 @@ func (v *Provider) Diagnose() {
 
 	tw := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
 
-	sort.Slice(rr.OperationList.ServiceInfo, func(i, j int) bool {
-		return rr.OperationList.ServiceInfo[i].ServiceId < rr.OperationList.ServiceInfo[j].ServiceId
+	slices.SortFunc(rr.OperationList.ServiceInfo, func(i, j ServiceInfo) int {
+		return cmp.Compare(i.ServiceId, j.ServiceId)
 	})
 
 	for _, si := range rr.OperationList.ServiceInfo {

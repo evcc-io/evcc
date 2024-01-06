@@ -1,0 +1,176 @@
+template: sofarsolar-g3
+products:
+  - brand: SofarSolar
+    description:
+      generic: HYD 5…20K-3PH
+  - brand: SofarSolar
+    description:
+      generic: HYD 3…6K-EP
+  - brand: SofarSolar
+    description:
+      generic: SOFAR 80…136KTL
+  - brand: SofarSolar
+    description:
+      generic: SOFAR 5…24KTL-G3
+# capabilities: ["battery-control"]
+requirements:
+  description:
+    de: Es wird dringend empfohlen die Verbindung über einen LSE-3 Logger Stick herzustellen. Andere Verbindungswege (z.B. LSW-3 oder via RS485) sind u.U. instabil und benötigen Verzögerungen (delay) > 0s.
+    en: It is strongly recommended to connect via an LSE-3 logger stick. Other connection paths (e.g. LSW-3 or via RS485) may be unstable and require delays > 0s.
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+  - name: modbus
+    choice: ["tcpip", "rs485"]
+    port: 8899
+    id: 1
+  - name: delay
+    default: 0s
+    advanced: true
+  - name: capacity
+    advanced: true
+  # battery control
+  - name: minsoc
+    type: number
+    advanced: true
+  - name: maxsoc
+    type: number
+    advanced: true
+render: |
+  type: custom
+  {{- if eq .usage "grid" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    delay: {{ .delay }}
+    register:
+      address: 0x0488 # ActivePower_PCC_Total
+      type: holding
+      decode: int16
+    scale: -10
+  currents:
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    delay: {{ .delay }}
+    register:
+      address: 0x0492 # Current_PCC_R
+      type: holding
+      decode: uint16
+    scale: 0.01
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    delay: {{ .delay }}
+    register:
+      address: 0x049D # Current_PCC_S
+      type: holding
+      decode: uint16
+    scale: 0.01
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    delay: {{ .delay }}
+    register:
+      address: 0x04A8 # Current_PCC_T
+      type: holding
+      decode: uint16
+    scale: 0.01
+  powers:
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    delay: {{ .delay }}
+    register:
+      address: 0x0493 # ActivePower_PCC_R
+      type: holding
+      decode: int16
+    scale: -10
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    delay: {{ .delay }}
+    register:
+      address: 0x049E # ActivePower_PCC_S
+      type: holding
+      decode: int16
+    scale: -10
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    delay: {{ .delay }}
+    register:
+      address: 0x04A9 # ActivePower_PCC_T
+      type: holding
+      decode: int16
+    scale: -10
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    delay: {{ .delay }}
+    register:
+      address: 0x068E # Energy_Purchase_Total
+      type: holding
+      decode: uint32
+    scale: 0.1
+  {{- end }}
+  {{- if eq .usage "pv" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    delay: {{ .delay }}
+    register:
+      address: 0x05C4 # Power_PV_Total
+      type: holding
+      decode: uint16
+    scale: 100
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    delay: {{ .delay }}
+    register:
+      address: 0x0686 # PV_Generation_Total
+      type: holding
+      decode: uint32
+    scale: 0.1
+  {{- end }}
+  {{- if eq .usage "battery" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    delay: {{ .delay }}
+    register:
+      address: 0x0606 # Power_Bat1
+      type: holding
+      decode: int16
+    scale: -10
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    delay: {{ .delay }}
+    register:
+      address: 0x069A # Bat_Discharge_Total
+      type: holding
+      decode: uint32
+    scale: 0.1
+  soc:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    delay: {{ .delay }}
+    register:
+      address: 0x0608 # SOC_Bat1
+      type: holding
+      decode: uint16
+  # limitsoc:
+  #   source: go
+  #   script:
+  #     int(100-limitSoc)
+  #   out:
+  #   - name: dod
+  #     type: int
+  #     config:
+  #       source: modbus
+  #       {- include "modbus" . | indent 6 }
+  #       delay: { .delay }
+  #       register:
+  #         address: 0x104D # BatConfig_Depth_of_Discharge
+  #         type: writemultiple
+  #         decode: uint16
+  capacity: {{ .capacity }} # kWh
+  # minsoc: {{ .minsoc }} # %
+  # maxsoc: {{ .maxsoc }} # %
+  {{- end }}

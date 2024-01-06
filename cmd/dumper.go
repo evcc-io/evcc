@@ -3,7 +3,6 @@ package cmd
 import (
 	"errors"
 	"fmt"
-	"math"
 	"os"
 	"strings"
 	"text/tabwriter"
@@ -55,11 +54,27 @@ func (d *dumper) Dump(name string, v interface{}) {
 		}
 	}
 
-	if v, ok := v.(api.MeterCurrent); ok {
+	if v, ok := v.(api.PhaseCurrents); ok {
 		if i1, i2, i3, err := v.Currents(); err != nil {
 			fmt.Fprintf(w, "Current L1..L3:\t%v\n", err)
 		} else {
 			fmt.Fprintf(w, "Current L1..L3:\t%.3gA %.3gA %.3gA\n", i1, i2, i3)
+		}
+	}
+
+	if v, ok := v.(api.PhaseVoltages); ok {
+		if u1, u2, u3, err := v.Voltages(); err != nil {
+			fmt.Fprintf(w, "Voltage L1..L3:\t%v\n", err)
+		} else {
+			fmt.Fprintf(w, "Voltage L1..L3:\t%.3gV %.3gV %.3gV\n", u1, u2, u3)
+		}
+	}
+
+	if v, ok := v.(api.PhasePowers); ok {
+		if p1, p2, p3, err := v.Powers(); err != nil {
+			fmt.Fprintf(w, "Power L1..L3:\t%v\n", err)
+		} else {
+			fmt.Fprintf(w, "Power L1..L3:\t%.3gW %.3gW %.3gW\n", p1, p2, p3)
 		}
 	}
 
@@ -70,7 +85,7 @@ func (d *dumper) Dump(name string, v interface{}) {
 		// wait up to 1m for the vehicle to wakeup
 		start := time.Now()
 		for err = api.ErrMustRetry; err != nil && errors.Is(err, api.ErrMustRetry); {
-			if soc, err = v.SoC(); err != nil {
+			if soc, err = v.Soc(); err != nil {
 				if time.Since(start) > time.Minute {
 					err = os.ErrDeadlineExceeded
 				} else {
@@ -81,10 +96,14 @@ func (d *dumper) Dump(name string, v interface{}) {
 		}
 
 		if err != nil {
-			fmt.Fprintf(w, "SoC:\t%v\n", err)
+			fmt.Fprintf(w, "Soc:\t%v\n", err)
 		} else {
-			fmt.Fprintf(w, "SoC:\t%.0f%%\n", soc)
+			fmt.Fprintf(w, "Soc:\t%.0f%%\n", soc)
 		}
+	}
+
+	if v, ok := v.(api.BatteryCapacity); ok {
+		fmt.Fprintf(w, "Capacity:\t%.1fkWh\n", v.Capacity())
 	}
 
 	// charger
@@ -148,16 +167,10 @@ func (d *dumper) Dump(name string, v interface{}) {
 	}
 
 	if v, ok := v.(api.VehicleClimater); ok {
-		if active, ot, tt, err := v.Climater(); err != nil {
+		if active, err := v.Climater(); err != nil {
 			fmt.Fprintf(w, "Climater:\t%v\n", err)
 		} else {
 			fmt.Fprintf(w, "Climate active:\t%v\n", active)
-			if !math.IsNaN(ot) {
-				fmt.Fprintf(w, "Outside temp:\t%.1f°C\n", ot)
-			}
-			if !math.IsNaN(tt) {
-				fmt.Fprintf(w, "Target temp:\t%.1f°C\n", tt)
-			}
 		}
 	}
 
@@ -170,15 +183,14 @@ func (d *dumper) Dump(name string, v interface{}) {
 	}
 
 	if v, ok := v.(api.SocLimiter); ok {
-		if targetSoC, err := v.TargetSoC(); err != nil {
-			fmt.Fprintf(w, "Target SoC:\t%v\n", err)
+		if targetSoc, err := v.TargetSoc(); err != nil {
+			fmt.Fprintf(w, "Target Soc:\t%v\n", err)
 		} else {
-			fmt.Fprintf(w, "Target SoC:\t%.0f%%\n", targetSoC)
+			fmt.Fprintf(w, "Target Soc:\t%.0f%%\n", targetSoc)
 		}
 	}
 
 	if v, ok := v.(api.Vehicle); ok {
-		fmt.Fprintf(w, "Capacity:\t%.1fkWh\n", v.Capacity())
 		if len(v.Identifiers()) > 0 {
 			fmt.Fprintf(w, "Identifiers:\t%v\n", v.Identifiers())
 		}
@@ -198,6 +210,13 @@ func (d *dumper) Dump(name string, v interface{}) {
 			}
 			fmt.Fprintf(w, "Identifier:\t%s\n", id)
 		}
+	}
+
+	// features
+
+	if v, ok := v.(api.FeatureDescriber); ok {
+		ff := v.Features()
+		fmt.Fprintf(w, "Features:\t%v\n", ff)
 	}
 
 	w.Flush()

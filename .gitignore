@@ -12,11 +12,14 @@ __debug_bin
 !util/templates/**/*.yaml
 !package*.json
 !evcc.dist.yaml
+!tests/**/*.evcc.yaml
+/templates/docs
 evcc
 evcc.exe
 evcc_*
 linux-*.Dockerfile
 builddir
+dist
 flags
 node_modules
 release
@@ -31,3 +34,6 @@ fly.toml
 vendor/*
 QEMU_EFI.fd
 asset-stats.html
+/test-results/
+/playwright-report/
+/playwright/.cache/

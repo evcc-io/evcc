@@ -1,13 +1,11 @@
 package core
 
 import (
-	"time"
-
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/core/db"
+	"github.com/evcc-io/evcc/core/session"
 )
 
-func (lp *LoadPoint) chargeMeterTotal() float64 {
+func (lp *Loadpoint) chargeMeterTotal() float64 {
 	m, ok := lp.chargeMeter.(api.MeterEnergy)
 	if !ok {
 		return 0
@@ -15,25 +13,27 @@ func (lp *LoadPoint) chargeMeterTotal() float64 {
 
 	f, err := m.TotalEnergy()
 	if err != nil {
-		lp.log.ERROR.Printf("meter energy: %v", err)
+		lp.log.ERROR.Printf("charge total import: %v", err)
 		return 0
 	}
+
+	lp.log.DEBUG.Printf("charge total import: %.3fkWh", f)
 
 	return f
 }
 
 // createSession creates a charging session. The created timestamp is empty until set by evChargeStartHandler.
 // The session is not persisted yet. That will only happen when stopSession is called.
-func (lp *LoadPoint) createSession() {
+func (lp *Loadpoint) createSession() {
 	// test guard
 	if lp.db == nil || lp.session != nil {
 		return
 	}
 
-	lp.session = lp.db.Session(lp.chargeMeterTotal())
+	lp.session = lp.db.New(lp.chargeMeterTotal())
 
-	if lp.vehicle != nil {
-		lp.session.Vehicle = lp.vehicle.Title()
+	if vehicle := lp.GetVehicle(); vehicle != nil {
+		lp.session.Vehicle = vehicle.Title()
 	}
 
 	if c, ok := lp.charger.(api.Identifier); ok {
@@ -44,31 +44,43 @@ func (lp *LoadPoint) createSession() {
 }
 
 // stopSession ends a charging session segment and persists the session.
-func (lp *LoadPoint) stopSession() {
+func (lp *Loadpoint) stopSession() {
+	s := lp.session
+
 	// test guard
-	if lp.db == nil || lp.session == nil {
+	if lp.db == nil || s == nil {
 		return
 	}
 
 	// abort the session if charging has never started
-	if lp.session.Created.IsZero() {
+	if s.Created.IsZero() {
 		return
 	}
 
-	lp.session.Finished = time.Now()
-	lp.session.MeterStop = lp.chargeMeterTotal()
-
-	if chargedEnergy := lp.getChargedEnergy() / 1e3; chargedEnergy > lp.session.ChargedEnergy {
-		lp.session.ChargedEnergy = chargedEnergy
+	s.Finished = lp.clock.Now()
+	if meterStop := lp.chargeMeterTotal(); meterStop > 0 {
+		s.MeterStop = &meterStop
 	}
 
-	lp.db.Persist(lp.session)
+	if chargedEnergy := lp.getChargedEnergy() / 1e3; chargedEnergy > s.ChargedEnergy {
+		lp.sessionEnergy.Update(chargedEnergy)
+	}
+
+	solarPerc := lp.sessionEnergy.SolarPercentage()
+	s.SolarPercentage = &solarPerc
+	s.Price = lp.sessionEnergy.Price()
+	s.PricePerKWh = lp.sessionEnergy.PricePerKWh()
+	s.Co2PerKWh = lp.sessionEnergy.Co2PerKWh()
+	s.ChargedEnergy = lp.sessionEnergy.TotalWh() / 1e3
+	s.ChargeDuration = &lp.chargeDuration
+
+	lp.db.Persist(s)
 }
 
-type sessionOption func(*db.Session)
+type sessionOption func(*session.Session)
 
 // updateSession updates any parameter of a charging session and persists the session.
-func (lp *LoadPoint) updateSession(opts ...sessionOption) {
+func (lp *Loadpoint) updateSession(opts ...sessionOption) {
 	// test guard
 	if lp.db == nil || lp.session == nil {
 		return
@@ -84,7 +96,7 @@ func (lp *LoadPoint) updateSession(opts ...sessionOption) {
 }
 
 // clearSession clears the charging session without persisting it.
-func (lp *LoadPoint) clearSession() {
+func (lp *Loadpoint) clearSession() {
 	// test guard
 	if lp.db == nil {
 		return

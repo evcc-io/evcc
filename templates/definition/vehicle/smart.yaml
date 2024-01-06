@@ -4,10 +4,8 @@ products:
     description:
       generic: EQ
 params:
-  - preset: vehiclebase
-  - preset: vehicleidentify
-  - name: capacity
-    default: 17.6
+  - preset: vehicle-base
+  - preset: vehicle-identify
 render: |
   type: smart
   {{ include "vehicle-base" . }}

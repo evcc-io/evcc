@@ -44,8 +44,12 @@ func NewNiuFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, err
 	}
 
-	if cc.User == "" || cc.Password == "" || cc.Serial == "" {
-		return nil, errors.New("missing user, password or serial")
+	if cc.User == "" || cc.Password == "" {
+		return nil, api.ErrMissingCredentials
+	}
+
+	if cc.Serial == "" {
+		return nil, errors.New("missing serial")
 	}
 
 	log := util.NewLogger("niu").Redact(cc.User, cc.Password)
@@ -65,10 +69,9 @@ func NewNiuFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 // login implements the Niu oauth2 api
 func (v *Niu) login() error {
-	md5hash, err := md5Hash(v.password)
-	if err != nil {
-		return err
-	}
+	hash := md5.New()
+	hash.Write([]byte(v.password))
+	md5hash := hex.EncodeToString(hash.Sum(nil))
 
 	data := url.Values{
 		"account":    []string{v.user},
@@ -91,13 +94,6 @@ func (v *Niu) login() error {
 	}
 
 	return err
-}
-
-// md5Hash creates a MD5 hash based on a string
-func md5Hash(text string) (string, error) {
-	hasher := md5.New()
-	_, err := hasher.Write([]byte(text))
-	return hex.EncodeToString(hasher.Sum(nil)), err
 }
 
 // request implements the Niu web request
@@ -127,8 +123,8 @@ func (v *Niu) batteryAPI() (niu.Response, error) {
 	return res, err
 }
 
-// SoC implements the api.Vehicle interface
-func (v *Niu) SoC() (float64, error) {
+// Soc implements the api.Vehicle interface
+func (v *Niu) Soc() (float64, error) {
 	res, err := v.apiG()
 	return float64(res.Data.Batteries.CompartmentA.BatteryCharging), err
 }

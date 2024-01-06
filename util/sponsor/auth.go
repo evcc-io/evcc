@@ -12,14 +12,30 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-var Subject, Token string
+var (
+	Subject, Token string
+	ExpiresAt      time.Time
+)
+
+const unavailable = "sponsorship unavailable"
 
 func IsAuthorized() bool {
 	return len(Subject) > 0
 }
 
+func IsAuthorizedForApi() bool {
+	return IsAuthorized() && Subject != unavailable
+}
+
 // check and set sponsorship token
 func ConfigureSponsorship(token string) error {
+	if token == "" {
+		var err error
+		if token, err = readSerial(); token == "" || err != nil {
+			return err
+		}
+	}
+
 	host := util.Getenv("GRPC_URI", cloud.Host)
 	conn, err := cloud.Connection(host)
 	if err != nil {
@@ -34,12 +50,13 @@ func ConfigureSponsorship(token string) error {
 	res, err := client.IsAuthorized(ctx, &pb.AuthRequest{Token: token})
 	if err == nil && res.Authorized {
 		Subject = res.Subject
+		ExpiresAt = res.ExpiresAt.AsTime()
 		Token = token
 	}
 
 	if err != nil {
 		if s, ok := status.FromError(err); ok && s.Code() != codes.Unknown {
-			Subject = "sponsorship unavailable"
+			Subject = unavailable
 			err = nil
 		} else {
 			err = fmt.Errorf("sponsortoken: %w", err)

@@ -7,11 +7,11 @@ import (
 	"strings"
 )
 
-const _FeatureName = "OfflineCoarseCurrent"
+const _FeatureName = "OfflineCoarseCurrentIntegratedDeviceHeating"
 
-var _FeatureIndex = [...]uint8{0, 7, 20}
+var _FeatureIndex = [...]uint8{0, 7, 20, 36, 43}
 
-const _FeatureLowerName = "offlinecoarsecurrent"
+const _FeatureLowerName = "offlinecoarsecurrentintegrateddeviceheating"
 
 func (i Feature) String() string {
 	i -= 1
@@ -27,20 +27,28 @@ func _FeatureNoOp() {
 	var x [1]struct{}
 	_ = x[Offline-(1)]
 	_ = x[CoarseCurrent-(2)]
+	_ = x[IntegratedDevice-(3)]
+	_ = x[Heating-(4)]
 }
 
-var _FeatureValues = []Feature{Offline, CoarseCurrent}
+var _FeatureValues = []Feature{Offline, CoarseCurrent, IntegratedDevice, Heating}
 
 var _FeatureNameToValueMap = map[string]Feature{
-	_FeatureName[0:7]:       Offline,
-	_FeatureLowerName[0:7]:  Offline,
-	_FeatureName[7:20]:      CoarseCurrent,
-	_FeatureLowerName[7:20]: CoarseCurrent,
+	_FeatureName[0:7]:        Offline,
+	_FeatureLowerName[0:7]:   Offline,
+	_FeatureName[7:20]:       CoarseCurrent,
+	_FeatureLowerName[7:20]:  CoarseCurrent,
+	_FeatureName[20:36]:      IntegratedDevice,
+	_FeatureLowerName[20:36]: IntegratedDevice,
+	_FeatureName[36:43]:      Heating,
+	_FeatureLowerName[36:43]: Heating,
 }
 
 var _FeatureNames = []string{
 	_FeatureName[0:7],
 	_FeatureName[7:20],
+	_FeatureName[20:36],
+	_FeatureName[36:43],
 }
 
 // FeatureString retrieves an enum value from the enum constants string name.

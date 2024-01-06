@@ -15,7 +15,7 @@ type Provider struct {
 	action  func(action, value string) error
 }
 
-// NewProvider creates a new vehicle
+// NewProvider creates a vehicle api provider
 func NewProvider(api *API, vin string, cache time.Duration) *Provider {
 	impl := &Provider{
 		statusG: provider.Cached(func() (Status, error) {
@@ -30,8 +30,8 @@ func NewProvider(api *API, vin string, cache time.Duration) *Provider {
 
 var _ api.Battery = (*Provider)(nil)
 
-// SoC implements the api.Vehicle interface
-func (v *Provider) SoC() (float64, error) {
+// Soc implements the api.Vehicle interface
+func (v *Provider) Soc() (float64, error) {
 	res, err := v.statusG()
 
 	var eng EngineRangeStatus
@@ -90,6 +90,9 @@ var _ api.VehicleRange = (*Provider)(nil)
 // Range implements the api.VehicleRange interface
 func (v *Provider) Range() (int64, error) {
 	res, err := v.statusG()
+	if err == nil && res.FuelStatus == nil {
+		err = api.ErrNotAvailable
+	}
 
 	var eng EngineRangeStatus
 	if err == nil {
@@ -103,58 +106,48 @@ func (v *Provider) Range() (int64, error) {
 	return 0, err
 }
 
-// var _ api.VehicleOdometer = (*Provider)(nil)
+var _ api.VehicleOdometer = (*Provider)(nil)
 
-// // Odometer implements the api.VehicleOdometer interface
-// func (v *Provider) Odometer() (float64, error) {
-// 	res, err := v.statusG()
-// 	if err == nil {
-// 		err = res.Error.Extract("maintenanceStatus")
-// 	}
+// Odometer implements the api.VehicleOdometer interface
+func (v *Provider) Odometer() (float64, error) {
+	res, err := v.statusG()
+	if err == nil && res.Measurements == nil {
+		err = api.ErrNotAvailable
+	}
 
-// 	if err == nil {
-// 		if res.Data.MaintenanceStatus == nil {
-// 			return 0, api.ErrNotAvailable
-// 		}
-// 		return float64(res.Data.MaintenanceStatus.MileageKm), nil
-// 	}
+	if err == nil {
+		return res.Measurements.OdometerStatus.Value.Odometer, nil
+	}
 
-// 	return 0, err
-// }
+	return 0, err
+}
 
 var _ api.VehicleClimater = (*Provider)(nil)
 
 // Climater implements the api.VehicleClimater interface
-func (v *Provider) Climater() (active bool, outsideTemp, targetTemp float64, err error) {
+func (v *Provider) Climater() (bool, error) {
 	res, err := v.statusG()
 	if err == nil && res.Climatisation == nil {
-		err = errors.New("missing climatisation status")
+		err = api.ErrNotAvailable
 	}
 
 	if err == nil {
 		state := strings.ToLower(res.Climatisation.ClimatisationStatus.Value.ClimatisationState)
-
 		if state == "" {
-			return false, 0, 0, api.ErrNotAvailable
+			return false, api.ErrNotAvailable
 		}
 
 		active := state != "off" && state != "invalid" && state != "error"
-
-		targetTemp = res.Climatisation.ClimatisationSettings.Value.TargetTemperatureC
-
-		// TODO not available; use target temp to avoid wrong heating/cooling display
-		outsideTemp = targetTemp
-
-		return active, outsideTemp, targetTemp, nil
+		return active, nil
 	}
 
-	return active, outsideTemp, targetTemp, err
+	return false, err
 }
 
 var _ api.SocLimiter = (*Provider)(nil)
 
-// TargetSoC implements the api.SocLimiter interface
-func (v *Provider) TargetSoC() (float64, error) {
+// TargetSoc implements the api.SocLimiter interface
+func (v *Provider) TargetSoc() (float64, error) {
 	res, err := v.statusG()
 	if err == nil && res.Charging == nil {
 		err = errors.New("missing charging status")
@@ -177,4 +170,11 @@ func (v *Provider) StartCharge() error {
 // StopCharge implements the api.VehicleChargeController interface
 func (v *Provider) StopCharge() error {
 	return v.action(ActionCharge, ActionChargeStop)
+}
+
+var _ api.Resurrector = (*Provider)(nil)
+
+// WakeUp implements the api.Resurrector interface
+func (v *Provider) WakeUp() error {
+	return v.StartCharge()
 }

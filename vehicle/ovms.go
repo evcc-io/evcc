@@ -2,8 +2,10 @@ package vehicle
 
 import (
 	"fmt"
+	"net"
 	"net/http"
 	"net/http/cookiejar"
+	"net/url"
 	"strconv"
 	"time"
 
@@ -83,16 +85,15 @@ func NewOvmsFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	v.statusG = provider.Cached(v.statusAPI, cc.Cache)
 	v.locationG = provider.Cached(v.locationAPI, cc.Cache)
 
-	var err error
-	v.Jar, err = cookiejar.New(&cookiejar.Options{
+	v.Jar, _ = cookiejar.New(&cookiejar.Options{
 		PublicSuffixList: publicsuffix.List,
 	})
 
-	return v, err
+	return v, nil
 }
 
 func (v *Ovms) loginToServer() (err error) {
-	uri := fmt.Sprintf("https://%s:6869/api/cookie?username=%s&password=%s", v.server, v.user, v.password)
+	uri := fmt.Sprintf("https://%s:6869/api/cookie?username=%s&password=%s", v.server, url.QueryEscape(v.user), url.QueryEscape(v.password))
 
 	var resp *http.Response
 	if resp, err = v.Get(uri); err == nil {
@@ -102,31 +103,31 @@ func (v *Ovms) loginToServer() (err error) {
 	return err
 }
 
+func (v *Ovms) uri(path string) string {
+	return fmt.Sprintf("https://%s/api/%s/%s", net.JoinHostPort(v.server, "6869"), path, v.vehicleId)
+}
+
 func (v *Ovms) connectRequest() (ovmsConnectResponse, error) {
-	uri := fmt.Sprintf("https://%s:6869/api/vehicle/%s", v.server, v.vehicleId)
 	var res ovmsConnectResponse
-	err := v.GetJSON(uri, &res)
+	err := v.GetJSON(v.uri("vehicle"), &res)
 	return res, err
 }
 
 func (v *Ovms) chargeRequest() (ovmsChargeResponse, error) {
-	uri := fmt.Sprintf("https://%s:6869/api/charge/%s", v.server, v.vehicleId)
 	var res ovmsChargeResponse
-	err := v.GetJSON(uri, &res)
+	err := v.GetJSON(v.uri("charge"), &res)
 	return res, err
 }
 
 func (v *Ovms) statusRequest() (ovmsStatusResponse, error) {
-	uri := fmt.Sprintf("https://%s:6869/api/status/%s", v.server, v.vehicleId)
 	var res ovmsStatusResponse
-	err := v.GetJSON(uri, &res)
+	err := v.GetJSON(v.uri("status"), &res)
 	return res, err
 }
 
 func (v *Ovms) locationRequest() (ovmsLocationResponse, error) {
-	uri := fmt.Sprintf("https://%s:6869/api/location/%s", v.server, v.vehicleId)
 	var res ovmsLocationResponse
-	err := v.GetJSON(uri, &res)
+	err := v.GetJSON(v.uri("location"), &res)
 	return res, err
 }
 
@@ -192,8 +193,8 @@ func (v *Ovms) locationAPI() (ovmsLocationResponse, error) {
 	return resp, err
 }
 
-// SoC implements the api.Vehicle interface
-func (v *Ovms) SoC() (float64, error) {
+// Soc implements the api.Vehicle interface
+func (v *Ovms) Soc() (float64, error) {
 	res, err := v.chargeG()
 	return res.Soc, err
 }

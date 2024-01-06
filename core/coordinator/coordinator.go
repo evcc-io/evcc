@@ -1,6 +1,9 @@
 package coordinator
 
 import (
+	"slices"
+	"sync"
+
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/util"
@@ -8,6 +11,7 @@ import (
 
 // Coordinator coordinates vehicle access between loadpoints
 type Coordinator struct {
+	mu       sync.RWMutex
 	log      *util.Logger
 	vehicles []api.Vehicle
 	tracked  map[api.Vehicle]loadpoint.API
@@ -22,35 +26,94 @@ func New(log *util.Logger, vehicles []api.Vehicle) *Coordinator {
 	}
 }
 
+// GetVehicles returns the list of all vehicles
 func (c *Coordinator) GetVehicles() []api.Vehicle {
-	return c.vehicles
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
+	return slices.Clone(c.vehicles)
+}
+
+// Owner returns the loadpoint that currently owns the vehicle
+func (c *Coordinator) Owner(vehicle api.Vehicle) loadpoint.API {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
+	if owner, ok := c.tracked[vehicle]; ok {
+		return owner
+	}
+
+	return nil
+}
+
+// Add adds a vehicle to the coordinator
+func (c *Coordinator) Add(vehicle api.Vehicle) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	c.vehicles = append(c.vehicles, vehicle)
+}
+
+// Delete removes a vehicle from the coordinator
+func (c *Coordinator) Delete(vehicle api.Vehicle) {
+	c.mu.Lock()
+
+	for i, v := range c.vehicles {
+		if v == vehicle {
+			c.vehicles = append(c.vehicles[:i], c.vehicles[i+1:]...)
+
+			if o, ok := c.tracked[vehicle]; ok {
+				// defer call to SetVehicle to avoid deadlock on c.mu
+				defer func(o loadpoint.API) {
+					o.SetVehicle(nil)
+				}(o)
+			}
+			delete(c.tracked, vehicle)
+
+			break
+		}
+	}
+
+	// unlock before deferred SetVehicle executes a this will round-trip back here
+	c.mu.Unlock()
 }
 
 func (c *Coordinator) acquire(owner loadpoint.API, vehicle api.Vehicle) {
+	c.mu.Lock()
+
 	if o, ok := c.tracked[vehicle]; ok && o != owner {
-		o.SetVehicle(nil)
+		// defer call to SetVehicle to avoid deadlock on c.mu
+		defer func(o loadpoint.API) {
+			o.SetVehicle(nil)
+		}(o)
 	}
 	c.tracked[vehicle] = owner
+
+	// unlock before deferred SetVehicle executes a this will round-trip back here
+	c.mu.Unlock()
 }
 
 func (c *Coordinator) release(vehicle api.Vehicle) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
 	delete(c.tracked, vehicle)
 }
 
 // availableDetectibleVehicles is the list of vehicles that are currently not
 // associated to another loadpoint and have a status api that allows for detection
-func (c *Coordinator) availableDetectibleVehicles(owner loadpoint.API, includeIdCapable bool) []api.Vehicle {
+func (c *Coordinator) availableDetectibleVehicles(owner loadpoint.API) []api.Vehicle {
 	var res []api.Vehicle
+
+	c.mu.RLock()
+	defer c.mu.RUnlock()
 
 	for _, vv := range c.vehicles {
 		// status api available
 		if _, ok := vv.(api.ChargeState); ok {
 			// available or associated to current loadpoint
 			if o, ok := c.tracked[vv]; o == owner || !ok {
-				// no identifiers configured or identifiers ignored
-				if includeIdCapable || len(vv.Identifiers()) == 0 {
-					res = append(res, vv)
-				}
+				res = append(res, vv)
 			}
 		}
 	}
@@ -61,6 +124,10 @@ func (c *Coordinator) availableDetectibleVehicles(owner loadpoint.API, includeId
 // identifyVehicleByStatus finds active vehicle by charge state
 func (c *Coordinator) identifyVehicleByStatus(available []api.Vehicle) api.Vehicle {
 	var res api.Vehicle
+
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
 	for _, vehicle := range available {
 		if vs, ok := vehicle.(api.ChargeState); ok {
 			status, err := vs.Status()

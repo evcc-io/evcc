@@ -38,6 +38,10 @@ func NewVolvoFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, err
 	}
 
+	if cc.User == "" || cc.Password == "" {
+		return nil, api.ErrMissingCredentials
+	}
+
 	basicAuth := transport.BasicAuthHeader(cc.User, cc.Password)
 
 	log := util.NewLogger("volvo").Redact(cc.User, cc.Password, cc.VIN, basicAuth)
@@ -104,8 +108,8 @@ func (v *Volvo) StatusRequest() (volvo.Status, error) {
 	return res, err
 }
 
-// SoC implements the api.Vehicle interface
-func (v *Volvo) SoC() (float64, error) {
+// Soc implements the api.Vehicle interface
+func (v *Volvo) Soc() (float64, error) {
 	res, err := v.statusG()
 	return float64(res.HvBattery.HvBatteryLevel), err
 }

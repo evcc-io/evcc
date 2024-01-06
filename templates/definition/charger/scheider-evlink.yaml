@@ -1,0 +1,14 @@
+template: schneider-evlink
+products:
+  - brand: Schneider
+    description:
+      generic: EVlink Wallbox, EVlink Parkplatz
+requirements:
+  evcc: ["sponsorship"]
+params:
+  - name: modbus
+    choice: ["tcpip"]
+    id: 255
+render: |
+  type: schneider
+  {{- include "modbus" . }}

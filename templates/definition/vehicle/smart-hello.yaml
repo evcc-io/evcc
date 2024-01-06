@@ -1,0 +1,12 @@
+template: smart-hello
+products:
+  - brand: Smart
+    description:
+      generic: "#1"
+params:
+  - preset: vehicle-base
+  - preset: vehicle-identify
+render: |
+  type: smart-hello
+  {{ include "vehicle-base" . }}
+  {{ include "vehicle-identify" . }}

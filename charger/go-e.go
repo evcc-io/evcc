@@ -41,14 +41,16 @@ func init() {
 	registry.Add("go-e", NewGoEFromConfig)
 }
 
-// go:generate go run ../cmd/tools/decorate.go -f decorateGoE -b *GoE -r api.Charger -t "api.MeterEnergy,func() (float64, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) (error)"
+//go:generate go run ../cmd/tools/decorate.go -f decorateGoE -b *GoE -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error"
 
 // NewGoEFromConfig creates a go-e charger from generic config
 func NewGoEFromConfig(other map[string]interface{}) (api.Charger, error) {
-	var cc struct {
+	cc := struct {
 		Token string
 		URI   string
 		Cache time.Duration
+	}{
+		Cache: time.Second,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -162,9 +164,9 @@ func (c *GoE) ChargedEnergy() (float64, error) {
 	return resp.ChargedEnergy(), err
 }
 
-var _ api.MeterCurrent = (*GoE)(nil)
+var _ api.PhaseCurrents = (*GoE)(nil)
 
-// Currents implements the api.MeterCurrent interface
+// Currents implements the api.PhaseCurrents interface
 func (c *GoE) Currents() (float64, float64, float64, error) {
 	resp, err := c.api.Status()
 	if err != nil {
@@ -174,6 +176,20 @@ func (c *GoE) Currents() (float64, float64, float64, error) {
 	i1, i2, i3 := resp.Currents()
 
 	return i1, i2, i3, err
+}
+
+var _ api.PhaseVoltages = (*GoE)(nil)
+
+// Voltages implements the api.PhaseVoltages interface
+func (c *GoE) Voltages() (float64, float64, float64, error) {
+	resp, err := c.api.Status()
+	if err != nil {
+		return 0, 0, 0, err
+	}
+
+	u1, u2, u3 := resp.Voltages()
+
+	return u1, u2, u3, err
 }
 
 var _ api.Identifier = (*GoE)(nil)

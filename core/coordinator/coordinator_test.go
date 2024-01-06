@@ -5,7 +5,6 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
-	"github.com/evcc-io/evcc/mock"
 	"github.com/evcc-io/evcc/util"
 	"github.com/golang/mock/gomock"
 )
@@ -14,12 +13,12 @@ func TestVehicleDetectByStatus(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
 	type vehicle struct {
-		*mock.MockVehicle
-		*mock.MockChargeState
+		*api.MockVehicle
+		*api.MockChargeState
 	}
 
-	v1 := &vehicle{mock.NewMockVehicle(ctrl), mock.NewMockChargeState(ctrl)}
-	v2 := &vehicle{mock.NewMockVehicle(ctrl), mock.NewMockChargeState(ctrl)}
+	v1 := &vehicle{api.NewMockVehicle(ctrl), api.NewMockChargeState(ctrl)}
+	v2 := &vehicle{api.NewMockVehicle(ctrl), api.NewMockChargeState(ctrl)}
 
 	type testcase struct {
 		string
@@ -52,7 +51,7 @@ func TestVehicleDetectByStatus(t *testing.T) {
 		v1.MockChargeState.EXPECT().Status().Return(tc.v1, nil)
 		v2.MockChargeState.EXPECT().Status().Return(tc.v2, nil)
 
-		available := c.availableDetectibleVehicles(lp, true) // include id-able vehicles
+		available := c.availableDetectibleVehicles(lp) // include id-able vehicles
 		res := c.identifyVehicleByStatus(available)
 		if tc.res != res {
 			t.Errorf("expected %v, got %v", tc.res, res)

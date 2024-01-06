@@ -43,6 +43,7 @@ const (
 	abbRegStatus     = 0x400C // Charging state 2 unsigned RO available
 	abbRegGetCurrent = 0x400E // Current charging current limit 2 0.001 A unsigned RO
 	abbRegCurrents   = 0x4010 // Charging current phases 6 0.001 A unsigned RO available
+	abbRegVoltages   = 0x4016 // Voltage phases 6 0.1 V unsigned RO available
 	abbRegPower      = 0x401C // Active power 2 1 W unsigned RO available
 	abbRegEnergy     = 0x401E // Energy delivered in charging session 2 1 Wh unsigned RO available
 	abbRegSetCurrent = 0x4100 // Set charging current limit 2 0.001 A unsigned WO available
@@ -88,7 +89,7 @@ func NewABB(uri, device, comset string, baudrate int, proto modbus.Protocol, sla
 
 	// keep-alive
 	go func() {
-		for range time.NewTicker(30 * time.Second).C {
+		for range time.Tick(30 * time.Second) {
 			_, _ = wb.status()
 		}
 	}()
@@ -208,21 +209,33 @@ func (wb *ABB) ChargedEnergy() (float64, error) {
 	return float64(binary.BigEndian.Uint32(b)) / 1e3, err
 }
 
-var _ api.MeterCurrent = (*ABB)(nil)
-
-// Currents implements the api.MeterCurrent interface
-func (wb *ABB) Currents() (float64, float64, float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(abbRegCurrents, 6)
+// getPhaseValues returns 3 sequential register values
+func (wb *ABB) getPhaseValues(reg uint16, divider float64) (float64, float64, float64, error) {
+	b, err := wb.conn.ReadHoldingRegisters(reg, 6)
 	if err != nil {
 		return 0, 0, 0, err
 	}
 
-	var curr [3]float64
-	for l := 0; l < 3; l++ {
-		curr[l] = float64(binary.BigEndian.Uint32(b[4*l:])) / 1e3
+	var res [3]float64
+	for i := range res {
+		res[i] = float64(binary.BigEndian.Uint32(b[4*i:])) / divider
 	}
 
-	return curr[0], curr[1], curr[2], nil
+	return res[0], res[1], res[2], nil
+}
+
+var _ api.PhaseCurrents = (*ABB)(nil)
+
+// Currents implements the api.PhaseCurrents interface
+func (wb *ABB) Currents() (float64, float64, float64, error) {
+	return wb.getPhaseValues(abbRegCurrents, 1e3)
+}
+
+var _ api.PhaseVoltages = (*ABB)(nil)
+
+// Voltages implements the api.PhaseVoltages interface
+func (wb *ABB) Voltages() (float64, float64, float64, error) {
+	return wb.getPhaseValues(abbRegVoltages, 10)
 }
 
 // var _ api.PhaseSwitcher = (*ABB)(nil)

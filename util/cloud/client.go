@@ -15,7 +15,7 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-var Host = "cloud.evcc.io:8080"
+var Host = "sponsor.evcc.io:8080"
 
 var conn *grpc.ClientConn
 

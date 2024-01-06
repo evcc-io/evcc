@@ -15,9 +15,10 @@ import (
 // Connection is the Shelly connection
 type Connection struct {
 	*request.Helper
-	uri     string
-	channel int
-	gen     int // Shelly api generation
+	uri        string
+	channel    int
+	gen        int    // Shelly api generation
+	devicetype string // Shelly device type
 }
 
 // NewConnection creates a new Shelly device connection.
@@ -40,9 +41,10 @@ func NewConnection(uri, user, password string, channel int) (*Connection, error)
 	}
 
 	conn := &Connection{
-		Helper:  client,
-		channel: channel,
-		gen:     resp.Gen,
+		Helper:     client,
+		channel:    channel,
+		gen:        resp.Gen,
+		devicetype: resp.Type,
 	}
 
 	conn.Client.Transport = request.NewTripper(log, transport.Insecure())
@@ -76,80 +78,6 @@ func NewConnection(uri, user, password string, channel int) (*Connection, error)
 	return conn, nil
 }
 
-// CurrentPower implements the api.Meter interface
-func (d *Connection) CurrentPower() (float64, error) {
-	var power float64
-	switch d.gen {
-	case 0, 1:
-		var res Gen1StatusResponse
-		uri := fmt.Sprintf("%s/status", d.uri)
-		if err := d.GetJSON(uri, &res); err != nil {
-			return 0, err
-		}
-
-		switch {
-		case d.channel < len(res.Meters):
-			power = res.Meters[d.channel].Power
-		case d.channel < len(res.EMeters):
-			power = res.EMeters[d.channel].Power
-		default:
-			return 0, errors.New("invalid channel, missing power meter")
-		}
-
-	default:
-		var res Gen2StatusResponse
-		if err := d.execGen2Cmd("Shelly.GetStatus", false, &res); err != nil {
-			return 0, err
-		}
-
-		switch d.channel {
-		case 1:
-			power = res.Switch1.Apower
-		case 2:
-			power = res.Switch2.Apower
-		default:
-			power = res.Switch0.Apower
-		}
-	}
-
-	return power, nil
-}
-
-// Enabled implements the api.Charger interface
-func (d *Connection) Enabled() (bool, error) {
-	switch d.gen {
-	case 0, 1:
-		var res Gen1SwitchResponse
-		uri := fmt.Sprintf("%s/relay/%d", d.uri, d.channel)
-		err := d.GetJSON(uri, &res)
-		return res.Ison, err
-
-	default:
-		var res Gen2SwitchResponse
-		err := d.execGen2Cmd("Switch.GetStatus", false, &res)
-		return res.Output, err
-	}
-}
-
-// Enable implements the api.Charger interface
-func (d *Connection) Enable(enable bool) error {
-	var err error
-	onoff := map[bool]string{true: "on", false: "off"}
-
-	switch d.gen {
-	case 0, 1:
-		var res Gen1SwitchResponse
-		uri := fmt.Sprintf("%s/relay/%d?turn=%s", d.uri, d.channel, onoff[enable])
-		err = d.GetJSON(uri, &res)
-
-	default:
-		var res Gen2SwitchResponse
-		err = d.execGen2Cmd("Switch.Set", enable, &res)
-	}
-
-	return err
-}
-
 // execGen2Cmd executes a shelly api gen1/gen2 command and provides the response
 func (d *Connection) execGen2Cmd(method string, enable bool, res interface{}) error {
 	// Shelly gen 2 rfc7616 authentication
@@ -169,43 +97,4 @@ func (d *Connection) execGen2Cmd(method string, enable bool, res interface{}) er
 	}
 
 	return d.DoJSON(req, &res)
-}
-
-// TotalEnergy implements the api.Meter interface
-func (d *Connection) TotalEnergy() (float64, error) {
-	var energy float64
-	switch d.gen {
-	case 0, 1:
-		var res Gen1StatusResponse
-		uri := fmt.Sprintf("%s/status", d.uri)
-		if err := d.GetJSON(uri, &res); err != nil {
-			return 0, err
-		}
-
-		switch {
-		case d.channel < len(res.Meters):
-			energy = float64(res.Meters[d.channel].Total) / 60
-		case d.channel < len(res.EMeters):
-			energy = float64(res.EMeters[d.channel].Total) / 60
-		default:
-			return 0, errors.New("invalid channel, missing power meter")
-		}
-
-	default:
-		var res Gen2StatusResponse
-		if err := d.execGen2Cmd("Shelly.GetStatus", false, &res); err != nil {
-			return 0, err
-		}
-
-		switch d.channel {
-		case 1:
-			energy = res.Switch1.Aenergy.Total
-		case 2:
-			energy = res.Switch2.Aenergy.Total
-		default:
-			energy = res.Switch0.Aenergy.Total
-		}
-	}
-
-	return energy / 1000, nil
 }

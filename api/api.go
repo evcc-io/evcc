@@ -5,14 +5,11 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"reflect"
 	"strings"
 	"time"
-
-	"github.com/fatih/structs"
 )
 
-//go:generate mockgen -package mock -destination ../mock/mock_api.go github.com/evcc-io/evcc/api Charger,ChargeState,PhaseSwitcher,Identifier,Meter,MeterEnergy,Vehicle,ChargeRater,Battery
+//go:generate mockgen -package api -destination mock.go github.com/evcc-io/evcc/api Charger,ChargeState,CurrentLimiter,PhaseSwitcher,Identifier,Meter,MeterEnergy,Vehicle,ChargeRater,Battery,Tariff,BatteryController
 
 // ChargeMode is the charge operation mode. Valid values are off, now, minpv and pv
 type ChargeMode string
@@ -37,79 +34,89 @@ type ChargeStatus string
 // Charging states
 const (
 	StatusNone ChargeStatus = ""
-	StatusA    ChargeStatus = "A" // Fzg. angeschlossen: nein    Laden aktiv: nein    - Kabel nicht angeschlossen
-	StatusB    ChargeStatus = "B" // Fzg. angeschlossen:   ja    Laden aktiv: nein    - Kabel angeschlossen
-	StatusC    ChargeStatus = "C" // Fzg. angeschlossen:   ja    Laden aktiv:   ja    - Laden
-	StatusD    ChargeStatus = "D" // Fzg. angeschlossen:   ja    Laden aktiv:   ja    - Laden mit Lüfter
-	StatusE    ChargeStatus = "E" // Fzg. angeschlossen:   ja    Laden aktiv: nein    - Fehler (Kurzschluss)
-	StatusF    ChargeStatus = "F" // Fzg. angeschlossen:   ja    Laden aktiv: nein    - Fehler (Ausfall Wallbox)
+	StatusA    ChargeStatus = "A" // Fzg. angeschlossen: nein    Laden aktiv: nein    Ladestation betriebsbereit, Fahrzeug getrennt
+	StatusB    ChargeStatus = "B" // Fzg. angeschlossen:   ja    Laden aktiv: nein    Fahrzeug verbunden, Netzspannung liegt nicht an
+	StatusC    ChargeStatus = "C" // Fzg. angeschlossen:   ja    Laden aktiv:   ja    Fahrzeug lädt, Netzspannung liegt an
+	StatusD    ChargeStatus = "D" // Fzg. angeschlossen:   ja    Laden aktiv:   ja    Fahrzeug lädt mit externer Belüfungsanforderung (für Blei-Säure-Batterien)
+	StatusE    ChargeStatus = "E" // Fzg. angeschlossen:   ja    Laden aktiv: nein    Fehler Fahrzeug / Kabel (CP-Kurzschluss, 0V)
+	StatusF    ChargeStatus = "F" // Fzg. angeschlossen:   ja    Laden aktiv: nein    Fehler EVSE oder Abstecken simulieren (CP-Wake-up, -12V)
 )
+
+var StatusEasA = map[ChargeStatus]ChargeStatus{StatusE: StatusA}
+
+// ChargeStatusString converts a string to ChargeStatus
+func ChargeStatusString(status string) (ChargeStatus, error) {
+	s := strings.ToUpper(strings.Trim(status, "\x00 "))
+
+	if len(s) == 0 {
+		return StatusNone, fmt.Errorf("invalid status: %s", status)
+	}
+
+	switch s1 := s[:1]; s1 {
+	case "A", "B":
+		return ChargeStatus(s1), nil
+
+	case "C", "D":
+		if s == "C1" || s == "D1" {
+			return StatusB, nil
+		}
+		return StatusC, nil
+
+	case "E", "F":
+		return ChargeStatus(s1), fmt.Errorf("invalid status: %s", s)
+
+	default:
+		return StatusNone, fmt.Errorf("invalid status: %s", status)
+	}
+}
+
+// ChargeStatusStringWithMapping converts a string to ChargeStatus. In case of error, mapping is applied.
+func ChargeStatusStringWithMapping(s string, m map[ChargeStatus]ChargeStatus) (ChargeStatus, error) {
+	status, err := ChargeStatusString(s)
+	if mappedStatus, ok := m[status]; ok && err != nil {
+		return mappedStatus, nil
+	}
+	return status, err
+}
 
 // String implements Stringer
 func (c ChargeStatus) String() string {
 	return string(c)
 }
 
-// ActionConfig defines an action to take on event
-type ActionConfig struct {
-	Mode       *ChargeMode `mapstructure:"mode,omitempty"`       // Charge Mode
-	MinCurrent *float64    `mapstructure:"minCurrent,omitempty"` // Minimum Current
-	MaxCurrent *float64    `mapstructure:"maxCurrent,omitempty"` // Maximum Current
-	MinSoC     *int        `mapstructure:"minSoC,omitempty"`     // Minimum SoC
-	TargetSoC  *int        `mapstructure:"targetSoC,omitempty"`  // Target SoC
-}
-
-// Merge merges all non-nil properties of the additional config into the base config.
-// The receiver's config remains immutable.
-func (a ActionConfig) Merge(m ActionConfig) ActionConfig {
-	if m.Mode != nil {
-		a.Mode = m.Mode
-	}
-	if m.MinCurrent != nil {
-		a.MinCurrent = m.MinCurrent
-	}
-	if m.MaxCurrent != nil {
-		a.MaxCurrent = m.MaxCurrent
-	}
-	if m.MinSoC != nil {
-		a.MinSoC = m.MinSoC
-	}
-	if m.TargetSoC != nil {
-		a.TargetSoC = m.TargetSoC
-	}
-	return a
-}
-
-// String implements Stringer and returns the ActionConfig as comma-separated key:value string
-func (a ActionConfig) String() string {
-	var s []string
-	for k, v := range structs.Map(a) {
-		val := reflect.ValueOf(v)
-		if v != nil && !val.IsNil() {
-			s = append(s, fmt.Sprintf("%s:%v", k, val.Elem()))
-		}
-	}
-	return strings.Join(s, ", ")
-}
-
-// Meter is able to provide current power in W
+// Meter provides total active power in W
 type Meter interface {
 	CurrentPower() (float64, error)
 }
 
-// MeterEnergy is able to provide current energy in kWh
+// MeterEnergy provides total energy in kWh
 type MeterEnergy interface {
 	TotalEnergy() (float64, error)
 }
 
-// MeterCurrent is able to provide per-line current A
-type MeterCurrent interface {
+// PhaseCurrents provides per-phase current A
+type PhaseCurrents interface {
 	Currents() (float64, float64, float64, error)
 }
 
-// Battery is able to provide battery SoC in %
+// PhaseVoltages provides per-phase voltage V
+type PhaseVoltages interface {
+	Voltages() (float64, float64, float64, error)
+}
+
+// PhasePowers provides signed per-phase power W
+type PhasePowers interface {
+	Powers() (float64, float64, float64, error)
+}
+
+// Battery provides battery Soc in %
 type Battery interface {
-	SoC() (float64, error)
+	Soc() (float64, error)
+}
+
+// BatteryCapacity provides a capacity in kWh
+type BatteryCapacity interface {
+	Capacity() float64
 }
 
 // ChargeState provides current charging status
@@ -117,12 +124,27 @@ type ChargeState interface {
 	Status() (ChargeStatus, error)
 }
 
-// Charger is able to provide current charging status and enable/disable charging
+// CurrentController provides settings charging maximum charging current
+type CurrentController interface {
+	MaxCurrent(current int64) error
+}
+
+// CurrentGetter provides getting charging maximum charging current for validation
+type CurrentGetter interface {
+	GetMaxCurrent() (float64, error)
+}
+
+// BatteryController optionally allows to control home battery (dis)charging behaviour
+type BatteryController interface {
+	SetBatteryMode(BatteryMode) error
+}
+
+// Charger provides current charging status and enable/disable charging
 type Charger interface {
 	ChargeState
 	Enabled() (bool, error)
 	Enable(enable bool) error
-	MaxCurrent(current int64) error
+	CurrentController
 }
 
 // ChargerEx provides milli-amp precision charger current control
@@ -163,9 +185,10 @@ type Authorizer interface {
 // Vehicle represents the EV and it's battery
 type Vehicle interface {
 	Battery
+	BatteryCapacity
+	IconDescriber
 	Title() string
-	Icon() string
-	Capacity() float64
+	SetTitle(string)
 	Phases() int
 	Identifiers() []string
 	OnIdentified() ActionConfig
@@ -184,7 +207,7 @@ type VehicleRange interface {
 
 // VehicleClimater provides climatisation data
 type VehicleClimater interface {
-	Climater() (active bool, outsideTemp, targetTemp float64, err error)
+	Climater() (bool, error)
 }
 
 // VehicleOdometer returns the vehicles milage
@@ -197,9 +220,15 @@ type VehiclePosition interface {
 	Position() (float64, float64, error)
 }
 
-// SocLimiter returns the vehicles charge limit
+// CurrentLimiter returns the current limits
+type CurrentLimiter interface {
+	GetMinMaxCurrent() (float64, float64, error)
+}
+
+// SocLimiter returns the soc limit
 type SocLimiter interface {
-	TargetSoC() (float64, error)
+	// TODO rename LimitSoc
+	TargetSoc() (float64, error)
 }
 
 // VehicleChargeController allows to start/stop the charging session on the vehicle side
@@ -213,10 +242,10 @@ type Resurrector interface {
 	WakeUp() error
 }
 
-// Tariff is the grid tariff
+// Tariff is a tariff capable of retrieving tariff rates
 type Tariff interface {
-	IsCheap() (bool, error)
-	CurrentPrice() (float64, error) // EUR/kWh, CHF/kWh, ...
+	Rates() (Rates, error)
+	Type() TariffType
 }
 
 // AuthProvider is the ability to provide OAuth authentication through the ui
@@ -226,10 +255,14 @@ type AuthProvider interface {
 	LogoutHandler() http.HandlerFunc
 }
 
+// IconDescriber optionally provides an icon
+type IconDescriber interface {
+	Icon() string
+}
+
 // FeatureDescriber optionally provides a list of supported non-api features
 type FeatureDescriber interface {
 	Features() []Feature
-	Has(Feature) bool
 }
 
 // CsvWriter converts to csv

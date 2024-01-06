@@ -30,13 +30,19 @@ func NewDiscovergyFromConfig(other map[string]interface{}) (api.Meter, error) {
 		Meter    string
 		Scale    float64
 		Cache    time.Duration
+		Timeout  time.Duration
 	}{
-		Scale: 1,
-		Cache: time.Second,
+		Scale:   1,
+		Cache:   time.Second,
+		Timeout: time.Minute,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
+	}
+
+	if cc.User == "" || cc.Password == "" {
+		return nil, api.ErrMissingCredentials
 	}
 
 	basicAuth := transport.BasicAuthHeader(cc.User, cc.Password)
@@ -72,6 +78,9 @@ func NewDiscovergyFromConfig(other map[string]interface{}) (api.Meter, error) {
 		var res discovergy.Reading
 		uri := fmt.Sprintf("%s/last_reading?meterId=%s", discovergy.API, meterID)
 		err := client.GetJSON(uri, &res)
+		if err == nil && time.Since(time.UnixMilli(res.Time)) > cc.Timeout {
+			err = api.ErrTimeout
+		}
 		return res, err
 	}, cc.Cache)
 

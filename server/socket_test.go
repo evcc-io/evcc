@@ -2,14 +2,19 @@ package server
 
 import (
 	"math"
-	"reflect"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestEncode(t *testing.T) {
+	now := time.Now()
+
 	tc := []struct {
-		in, out interface{}
+		in  interface{}
+		out string
 	}{
 		{int64(1), "1"},
 		{math.NaN(), "null"},
@@ -17,19 +22,30 @@ func TestEncode(t *testing.T) {
 		{"1.2345", "\"1.2345\""},
 		{time.Hour, "3600"},
 		{"minpv", "\"minpv\""},
+		{time.Time{}, "null"},
+		{now, "\"" + now.Format(time.RFC3339) + "\""},
 	}
 
 	for _, tc := range tc {
-		t.Logf("%+v", tc)
 		out, err := encode(tc.in)
-		if err != nil {
-			t.Error(err)
-		}
+		require.NoError(t, err)
+		assert.Equal(t, tc.out, out)
+	}
+}
 
-		if out != tc.out {
-			t.Errorf("expected %v (string), got %v (%s)",
-				tc.out, out, reflect.TypeOf(out).Kind(),
-			)
-		}
+func TestEncodeSlice(t *testing.T) {
+	tc := []struct {
+		in  interface{}
+		out string
+	}{
+		{[]string{"a", "b"}, `["a","b"]`},
+		{[2]int64{1, 2}, `[1,2]`},
+		{[]float64{1, math.NaN()}, `[1,null]`},
+	}
+
+	for _, tc := range tc {
+		out, err := encodeSlice(tc.in)
+		require.NoError(t, err)
+		assert.Equal(t, tc.out, out)
 	}
 }

@@ -6,11 +6,14 @@ release:
 
 builds:
   - id: evcc
-    main: main.go
+    main: .
     flags:
+      - -trimpath
       - -tags=release
     ldflags:
       - -X github.com/evcc-io/evcc/server.Version={{ .Version }} -s -w
+    env:
+      - CGO_ENABLED=0
     goos:
       - linux
       - darwin
@@ -27,17 +30,20 @@ builds:
       - goos: windows
         goarch: arm64
 
+env:
+  - CGO_ENABLED=0
+
 archives:
   - builds:
       - evcc
-    replacements:
-      darwin: macOS
     format: tar.gz
     format_overrides:
       - goos: windows
         format: zip
     files:
       - evcc.dist.yaml
+    name_template: >-
+      {{ .ProjectName }}_{{ .Version }}_{{ if eq .Os "darwin" }}macOS{{ else }}{{ .Os }}{{ end }}-{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}
 
 universal_binaries:
   - replace: true
@@ -76,12 +82,13 @@ nfpms:
         dst: /lib/systemd/system/evcc.service
 
     scripts:
+      preinstall: ./packaging/scripts/preinstall.sh
       postinstall: ./packaging/scripts/postinstall.sh
       preremove: ./packaging/scripts/preremove.sh
       postremove: ./packaging/scripts/postremove.sh
 
 brews:
-  - tap:
+  - repository:
       owner: evcc-io
       name: homebrew-tap
     commit_author:
@@ -93,24 +100,9 @@ brews:
     license: "MIT"
     test: |
       system "#{bin}/evcc --version"
-    plist: |
-      <?xml version="1.0" encoding="UTF-8"?>
-      <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-      <plist version="1.0">
-        <dict>
-          <key>Label</key>
-          <string>#{plist_name}</string>
-          <key>Program</key>
-          <string>#{bin}/evcc</string>
-          <key>WorkingDirectory</key>
-          <string>#{var}</string>
-          <key>RunAtLoad</key>
-          <true/>
-          <key>KeepAlive</key>
-          <true/>
-          <key>StandardOutPath</key>
-          <string>#{var}/log/evcc.log</string>
-          <key>StandardErrorPath</key>
-          <string>#{var}/log/evcc.log</string>
-        </dict>
-      </plist>
+    service: |
+      run [opt_bin/"evcc"]
+      working_dir HOMEBREW_PREFIX
+      keep_alive true
+      log_path var/"log/evcc.log"
+      error_log_path var/"log/evcc.log"

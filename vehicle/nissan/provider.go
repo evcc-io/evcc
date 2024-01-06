@@ -43,7 +43,7 @@ func (v *Provider) status(battery func() (StatusResponse, error), refresh func()
 
 	if err == nil {
 		// result valid?
-		if time.Since(res.Attributes.LastUpdateTime.Time) < v.expiry {
+		if time.Since(res.Attributes.LastUpdateTime.Time) < v.expiry || res.Attributes.LastUpdateTime.IsZero() {
 			v.refreshTime = time.Time{}
 			return res, err
 		}
@@ -81,8 +81,8 @@ func (v *Provider) status(battery func() (StatusResponse, error), refresh func()
 
 var _ api.Battery = (*Provider)(nil)
 
-// SoC implements the api.Vehicle interface
-func (v *Provider) SoC() (float64, error) {
+// Soc implements the api.Vehicle interface
+func (v *Provider) Soc() (float64, error) {
 	res, err := v.statusG()
 
 	if err == nil {
@@ -118,7 +118,11 @@ func (v *Provider) Range() (int64, error) {
 	res, err := v.statusG()
 
 	if err == nil {
-		return int64(res.Attributes.RangeHvacOff), nil
+		if res.Attributes.RangeHvacOff == nil {
+			return 0, api.ErrNotAvailable
+		}
+
+		return int64(*res.Attributes.RangeHvacOff), nil
 	}
 
 	return 0, err

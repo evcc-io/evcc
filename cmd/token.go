@@ -2,11 +2,12 @@ package cmd
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 
+	"github.com/evcc-io/evcc/util/config"
 	"github.com/samber/lo"
 	"github.com/spf13/cobra"
-	"golang.org/x/exp/slices"
 	"golang.org/x/oauth2"
 )
 
@@ -27,11 +28,11 @@ func runToken(cmd *cobra.Command, args []string) {
 		log.FATAL.Fatal(err)
 	}
 
-	var vehicleConf qualifiedConfig
+	var vehicleConf config.Named
 	if len(conf.Vehicles) == 1 {
 		vehicleConf = conf.Vehicles[0]
 	} else if len(args) == 1 {
-		idx := slices.IndexFunc(conf.Vehicles, func(v qualifiedConfig) bool {
+		idx := slices.IndexFunc(conf.Vehicles, func(v config.Named) bool {
 			return strings.EqualFold(v.Name, args[0])
 		})
 
@@ -41,7 +42,7 @@ func runToken(cmd *cobra.Command, args []string) {
 	}
 
 	if vehicleConf.Name == "" {
-		vehicles := lo.Map(conf.Vehicles, func(v qualifiedConfig, _ int) string {
+		vehicles := lo.Map(conf.Vehicles, func(v config.Named, _ int) string {
 			return v.Name
 		})
 		log.FATAL.Fatalf("vehicle not found, have %v", vehicles)

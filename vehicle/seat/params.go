@@ -12,13 +12,8 @@ const (
 
 // Authorization parameters
 var AuthParams = url.Values{
-	"response_type": {"code id_token"},
-	"client_id":     {"50f215ac-4444-4230-9fb1-fe15cd1a9bcc@apps_vw-dilab_com"},
+	"response_type": {"code id_token"}, // token
+	"client_id":     {"3c8e98bc-3ae9-4277-a563-d5ee65ddebba@apps_vw-dilab_com"},
 	"redirect_uri":  {"seatconnect://identity-kit/login"},
-	"scope":         {"openid profile mbb"}, // cars birthdate nickname address phone
-}
-
-// TokenRefreshService parameters
-var TRSParams = url.Values{
-	"brand": {"seat"},
+	"scope":         {"openid profile"}, // address phone email birthdate nationalIdentifier cars mbb dealers badge nationality
 }

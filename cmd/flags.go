@@ -1,21 +1,18 @@
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
 const (
-	flagSqlite            = "sqlite"
-	flagSqliteDescription = "SQlite database file"
-
 	flagHeaders            = "log-headers"
 	flagHeadersDescription = "Log headers"
 
-	flagName            = "name"
-	flagNameDescription = "Select %s by name"
+	flagBatteryMode                = "battery-mode"
+	flagBatteryModeDescription     = "Set battery mode (normal, hold, charge)"
+	flagBatteryModeWait            = "battery-mode-wait"
+	flagBatteryModeWaitDescription = "Wait given duration during which potential watchdogs are active"
 
 	flagCurrent            = "current"
 	flagCurrentDescription = "Set maximum current"
@@ -23,9 +20,14 @@ const (
 	flagPhases            = "phases"
 	flagPhasesDescription = "Set usable phases (1 or 3)"
 
-	flagEnable   = "enable"
-	flagDisable  = "disable"
-	flagDiagnose = "diagnose"
+	flagCloud            = "cloud"
+	flagCloudDescription = "Use cloud service (requires sponsor token)"
+
+	flagEnable  = "enable"
+	flagDisable = "disable"
+
+	flagDiagnose            = "diagnose"
+	flagDiagnoseDescription = "Diagnose"
 
 	flagWakeup            = "wakeup"
 	flagWakeupDescription = "Wake up"
@@ -58,22 +60,4 @@ func bindP(cmd *cobra.Command, key string, flagName ...string) {
 	if err := viper.BindPFlag(key, cmd.PersistentFlags().Lookup(name)); err != nil {
 		panic(err)
 	}
-}
-
-func selectByName(cmd *cobra.Command, conf *[]qualifiedConfig) error {
-	flag := cmd.Flags().Lookup(flagName)
-	if !flag.Changed {
-		return nil
-	}
-
-	name := flag.Value.String()
-
-	for _, cfg := range *conf {
-		if cfg.Name == name {
-			*conf = []qualifiedConfig{cfg}
-			return nil
-		}
-	}
-
-	return fmt.Errorf("%s not found", name)
 }

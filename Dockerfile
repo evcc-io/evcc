@@ -1,31 +1,31 @@
-# # STEP 1 build ui
-# FROM --platform=$BUILDPLATFORM node:16-alpine as node
+# STEP 1 build ui
+FROM --platform=$BUILDPLATFORM node:18-alpine as node
 
-# RUN apk update && apk add --no-cache make alpine-sdk
+RUN apk update && apk add --no-cache make
 
-# WORKDIR /build
+WORKDIR /build
 
-# # install node tools
-# COPY package*.json ./
-# RUN npm ci
+# install node tools
+COPY package*.json ./
+RUN npm ci
 
-# # build ui
-# COPY Makefile .
-# COPY assets assets
-# COPY vite.config.js vite.config.js
-# COPY .eslintrc.js .eslintrc.js
-# COPY postcss.config.js postcss.config.js
+# build ui
+COPY Makefile .
+COPY .*.js ./
+COPY *.js ./
+COPY assets assets
+COPY i18n i18n
 
-# RUN make clean ui
+RUN make ui
 
 
 # STEP 2 build executable binary
-FROM --platform=$BUILDPLATFORM golang:1.18-alpine as builder
+FROM --platform=$BUILDPLATFORM golang:1.21-alpine as builder
 
 # Install git + SSL ca certificates.
 # Git is required for fetching the dependencies.
 # Ca-certificates is required to call HTTPS endpoints.
-RUN apk update && apk add --no-cache git ca-certificates tzdata alpine-sdk && update-ca-certificates
+RUN apk update && apk add --no-cache git make patch tzdata ca-certificates && update-ca-certificates
 
 # define RELEASE=1 to hide commit hash
 ARG RELEASE=0
@@ -48,7 +48,7 @@ RUN make patch-asn1
 RUN make assets
 
 # copy ui
-# COPY --from=node /build/dist /build/dist
+COPY --from=node /build/dist /build/dist
 
 # build
 ARG TARGETOS
@@ -66,7 +66,7 @@ RUN RELEASE=${RELEASE} GOOS=${TARGETOS} GOARCH=${TARGETARCH} make build
 
 
 # STEP 3 build a small image including module support
-FROM alpine:3.15
+FROM alpine:3.18
 
 WORKDIR /app
 
@@ -77,7 +77,7 @@ COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=builder /build/evcc /usr/local/bin/evcc
 
-COPY docker/bin/* /app/
+COPY packaging/docker/bin/* /app/
 
 # mDNS
 EXPOSE 5353/udp

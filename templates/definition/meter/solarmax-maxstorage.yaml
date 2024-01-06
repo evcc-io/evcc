@@ -10,6 +10,8 @@ params:
   - name: modbus
     choice: ["tcpip"]
     id: 1
+  - name: capacity
+    advanced: true
 render: |
   type: custom
   power:
@@ -42,7 +44,10 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register: # manual non-sunspec register configuration
-      address: 122 # Batterie SoC
+      address: 122 # Batterie Soc
       type: input
       decode: int16
+  {{- if .capacity }}
+  capacity: {{ .capacity }} # kWh
+  {{- end }}
   {{- end }}

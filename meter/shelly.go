@@ -24,5 +24,10 @@ func NewShellyFromConfig(other map[string]interface{}) (api.Meter, error) {
 		return nil, err
 	}
 
-	return shelly.NewConnection(cc.URI, cc.User, cc.Password, cc.Channel)
+	conn, err := shelly.NewConnection(cc.URI, cc.User, cc.Password, cc.Channel)
+	if err != nil {
+		return nil, err
+	}
+
+	return shelly.NewSwitch(conn), nil
 }

@@ -1,17 +1,18 @@
 template: fiat
 products:
   - brand: Fiat
+  - brand: Jeep
 params:
-  - preset: vehiclebase
+  - preset: vehicle-base
   - name: vin
     example: ZFAE...
   - name: pin
     mask: true
-  - preset: vehicleidentify
+  - preset: vehicle-identify
 render: |
   type: fiat
   {{ include "vehicle-base" . }}
-  {{- if ne .pin "" }}
-  pin: {{ .pin }} # mandatory to deep refresh SoC
+  {{- if .pin }}
+  pin: {{ .pin }} # mandatory to deep refresh Soc
   {{- end }}
   {{ include "vehicle-identify" . }}

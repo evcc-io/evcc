@@ -7,8 +7,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/evcc-io/evcc/detect"
-	"github.com/evcc-io/evcc/detect/tasks"
+	"github.com/evcc-io/evcc/cmd/detect"
+	"github.com/evcc-io/evcc/cmd/detect/tasks"
 	"github.com/evcc-io/evcc/util"
 	"github.com/korylprince/ipnetgen"
 	"github.com/olekukonko/tablewriter"
@@ -53,7 +53,6 @@ func ParseHostIPNet(arg string) (res []string) {
 	}
 
 	_, ipnet, err := net.ParseCIDR(arg)
-
 	// simple host
 	if err != nil {
 		return []string{arg}

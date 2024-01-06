@@ -11,7 +11,7 @@ import (
 	"github.com/evcc-io/evcc/util/sponsor"
 )
 
-func StartProxy(port int, config modbus.Settings, readOnly bool) error {
+func StartProxy(port int, config modbus.Settings, readOnly ReadOnlyMode) error {
 	conn, err := modbus.NewConnection(config.URI, config.Device, config.Comset, config.Baudrate, modbus.ProtocolFromRTU(config.RTU), config.ID)
 	if err != nil {
 		return err
@@ -22,10 +22,9 @@ func StartProxy(port int, config modbus.Settings, readOnly bool) error {
 	}
 
 	h := &handler{
-		log:            util.NewLogger(fmt.Sprintf("proxy-%d", port)),
-		readOnly:       readOnly,
-		RequestHandler: new(mbserver.DummyHandler), // supplies HandleDiscreteInputs
-		conn:           conn,
+		log:      util.NewLogger(fmt.Sprintf("proxy-%d", port)),
+		readOnly: readOnly,
+		conn:     conn,
 	}
 
 	l, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
@@ -35,7 +34,7 @@ func StartProxy(port int, config modbus.Settings, readOnly bool) error {
 
 	h.log.DEBUG.Printf("modbus proxy for %s listening at :%d", config.String(), port)
 
-	srv, err := mbserver.New(h)
+	srv, err := mbserver.New(h, mbserver.Logger(&logger{log: h.log}))
 
 	if err == nil {
 		err = srv.Start(l)

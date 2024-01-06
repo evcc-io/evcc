@@ -23,9 +23,12 @@ const (
 	Any = "<any>"
 )
 
-// Instance is the KEBA listener instance
+// instance is the KEBA listener instance
 // This is needed since KEBAs ignore the sender port and always UDP back to port 7090
-var Instance *Listener
+var (
+	mu       sync.Mutex
+	instance *Listener
+)
 
 // UDPMsg transports the KEBA response. Report is any of Report1,2,3
 type UDPMsg struct {
@@ -41,6 +44,18 @@ type Listener struct {
 	conn    *net.UDPConn
 	clients map[string]chan<- UDPMsg
 	cache   map[string]string
+}
+
+func Instance(log *util.Logger) (*Listener, error) {
+	mu.Lock()
+	defer mu.Unlock()
+
+	var err error
+	if instance == nil {
+		instance, err = New(log)
+	}
+
+	return instance, err
 }
 
 // New creates a UDP listener that clients can subscribe to
