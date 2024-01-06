@@ -16,13 +16,6 @@ type Planner struct {
 	tariff api.Tariff
 }
 
-// WithClock sets a mockable clock
-func WithClock(clock clock.Clock) func(t *Planner) {
-	return func(t *Planner) {
-		t.clock = clock
-	}
-}
-
 // New creates a price planner
 func New(log *util.Logger, tariff api.Tariff, opt ...func(t *Planner)) *Planner {
 	p := &Planner{

@@ -19,7 +19,7 @@ func (r chargerRegistry) Add(name string, factory func(map[string]interface{}) (
 func (r chargerRegistry) Get(name string) (func(map[string]interface{}) (api.Charger, error), error) {
 	factory, exists := r[name]
 	if !exists {
-		return nil, fmt.Errorf("charger type not registered: %s", name)
+		return nil, fmt.Errorf("invalid charger type: %s", name)
 	}
 	return factory, nil
 }
@@ -27,15 +27,16 @@ func (r chargerRegistry) Get(name string) (func(map[string]interface{}) (api.Cha
 var registry chargerRegistry = make(map[string]func(map[string]interface{}) (api.Charger, error))
 
 // NewFromConfig creates charger from configuration
-func NewFromConfig(typ string, other map[string]interface{}) (v api.Charger, err error) {
+func NewFromConfig(typ string, other map[string]interface{}) (api.Charger, error) {
 	factory, err := registry.Get(strings.ToLower(typ))
-	if err == nil {
-		if v, err = factory(other); err != nil {
-			err = fmt.Errorf("cannot create charger '%s': %w", typ, err)
-		}
-	} else {
-		err = fmt.Errorf("invalid charger type: %s", typ)
+	if err != nil {
+		return nil, err
 	}
 
-	return
+	v, err := factory(other)
+	if err != nil {
+		err = fmt.Errorf("cannot create charger type '%s': %w", typ, err)
+	}
+
+	return v, err
 }

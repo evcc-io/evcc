@@ -56,7 +56,7 @@ func NewTasmota(uri, user, password, usage string, channels []int, cache time.Du
 	}
 
 	var currents, voltages func() (float64, float64, float64, error)
-	if usage != "grid" {
+	if usage != "grid" && len(channels) == 3 {
 		currents = c.currents
 		voltages = c.voltages
 	}

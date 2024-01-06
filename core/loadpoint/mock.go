@@ -35,6 +35,20 @@ func (m *MockAPI) EXPECT() *MockAPIMockRecorder {
 	return m.recorder
 }
 
+// ActivePhases mocks base method.
+func (m *MockAPI) ActivePhases() int {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ActivePhases")
+	ret0, _ := ret[0].(int)
+	return ret0
+}
+
+// ActivePhases indicates an expected call of ActivePhases.
+func (mr *MockAPIMockRecorder) ActivePhases() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ActivePhases", reflect.TypeOf((*MockAPI)(nil).ActivePhases))
+}
+
 // EffectiveMaxPower mocks base method.
 func (m *MockAPI) EffectiveMaxPower() float64 {
 	m.ctrl.T.Helper()

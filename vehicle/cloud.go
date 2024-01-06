@@ -101,7 +101,6 @@ func (v *Cloud) chargeState() (float64, error) {
 	defer cancel()
 
 	res, err := v.client.SoC(ctx, req)
-
 	if err != nil && strings.Contains(err.Error(), api.ErrMustRetry.Error()) {
 		return 0, api.ErrMustRetry
 	}

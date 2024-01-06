@@ -145,6 +145,10 @@ func transformInputs(in []inputTransformation, set func(string, any) error) erro
 
 func transformOutputs(out []outputTransformation, v any) error {
 	for _, cc := range out {
+		if v == nil {
+			return fmt.Errorf("no value to transform")
+		}
+
 		if err := cc.function(v); err != nil {
 			return fmt.Errorf("%s: %w", cc.name, err)
 		}

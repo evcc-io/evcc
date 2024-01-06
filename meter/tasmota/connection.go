@@ -220,38 +220,36 @@ func (c *Connection) TotalEnergy() (float64, error) {
 
 // Currents implements the api.PhaseCurrents interface
 func (c *Connection) Currents() (float64, float64, float64, error) {
-	s, err := c.statusSnsG.Get()
-	if err != nil {
-		return 0, 0, 0, err
-	}
-
-	var res [3]float64
-	for i, c := range c.channels {
-		res[i], err = s.StatusSNS.Energy.Current.Channel(c)
-		if err != nil {
-			return 0, 0, 0, err
-		}
-	}
-
-	return res[0], res[1], res[2], err
+	return c.getPhaseValues(func(s StatusSNSResponse) Channels {
+		return s.StatusSNS.Energy.Current
+	})
 }
 
 // Voltages implements the api.PhaseVoltages interface
 func (c *Connection) Voltages() (float64, float64, float64, error) {
+	return c.getPhaseValues(func(s StatusSNSResponse) Channels {
+		return s.StatusSNS.Energy.Voltage
+	})
+}
+
+// getPhaseValues returns 3 sequential phase values
+func (c *Connection) getPhaseValues(fun func(StatusSNSResponse) Channels) (float64, float64, float64, error) {
 	s, err := c.statusSnsG.Get()
 	if err != nil {
 		return 0, 0, 0, err
 	}
 
+	all := fun(s)
+
 	var res [3]float64
-	for i, c := range c.channels {
-		res[i], err = s.StatusSNS.Energy.Voltage.Channel(c)
+	for i := range res {
+		res[i], err = all.Channel(c.channels[i])
 		if err != nil {
 			return 0, 0, 0, err
 		}
 	}
 
-	return res[0], res[1], res[2], err
+	return res[0], res[1], res[2], nil
 }
 
 // SmlPower provides the sml sensor power

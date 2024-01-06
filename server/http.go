@@ -20,22 +20,6 @@ type route struct {
 	HandlerFunc http.HandlerFunc
 }
 
-// routeLogger traces matched routes including their executing time
-//
-//lint:ignore U1000 if needed
-func routeLogger(inner http.Handler) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		start := time.Now()
-		inner.ServeHTTP(w, r)
-		log.TRACE.Printf(
-			"%s\t%s\t%s",
-			r.Method,
-			r.RequestURI,
-			time.Since(start),
-		)
-	}
-}
-
 // HTTPd wraps an http.Server and adds the root router
 type HTTPd struct {
 	*http.Server

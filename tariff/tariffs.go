@@ -12,16 +12,6 @@ type Tariffs struct {
 	Grid, FeedIn, Co2, Planner api.Tariff
 }
 
-func NewTariffs(currency currency.Unit, grid, feedin, co2 api.Tariff, planner api.Tariff) *Tariffs {
-	return &Tariffs{
-		Currency: currency,
-		Grid:     grid,
-		FeedIn:   feedin,
-		Co2:      co2,
-		Planner:  planner,
-	}
-}
-
 func currentPrice(t api.Tariff) (float64, error) {
 	if t != nil {
 		if rr, err := t.Rates(); err == nil {

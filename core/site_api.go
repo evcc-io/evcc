@@ -195,7 +195,7 @@ func (site *Site) GetTariff(tariff string) api.Tariff {
 			return site.tariffs.Planner
 
 		case site.tariffs.Grid != nil && site.tariffs.Grid.Type() == api.TariffTypePriceForecast:
-			// prio 1: dynamic grid tariff
+			// prio 1: grid tariff with forecast
 			return site.tariffs.Grid
 
 		case site.tariffs.Co2 != nil:
@@ -225,7 +225,7 @@ func (site *Site) SetBatteryDischargeControl(val bool) error {
 
 	if site.GetBatteryDischargeControl() != val {
 		// reset to normal when disabling
-		if mode := site.GetBatteryMode(); mode != api.BatteryNormal {
+		if mode := site.GetBatteryMode(); !val && batteryModeModified(mode) {
 			if err := site.updateBatteryMode(api.BatteryNormal); err != nil {
 				return err
 			}

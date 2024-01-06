@@ -1,14 +1,27 @@
 <template>
 	<div class="app">
 		<router-view :notifications="notifications" :offline="offline"></router-view>
+
+		<GlobalSettingsModal v-bind="globalSettingsProps" />
+		<BatterySettingsModal v-if="batteryModalAvailabe" v-bind="batterySettingsProps" />
+		<GridSettingsModal v-if="gridModalAvailable" v-bind="gridSettingsProps" />
+		<HelpModal />
 	</div>
 </template>
 
 <script>
 import store from "../store";
+import GlobalSettingsModal from "../components/GlobalSettingsModal.vue";
+import BatterySettingsModal from "../components/BatterySettingsModal.vue";
+import GridSettingsModal from "../components/GridSettingsModal.vue";
+import HelpModal from "../components/HelpModal.vue";
+import collector from "../mixins/collector";
+import gridModalAvailable from "../utils/gridModalAvailable";
 
 export default {
 	name: "App",
+	components: { GlobalSettingsModal, HelpModal, BatterySettingsModal, GridSettingsModal },
+	mixins: [collector],
 	props: {
 		notifications: Array,
 		offline: Boolean,
@@ -19,6 +32,23 @@ export default {
 	head() {
 		const siteTitle = store.state.siteTitle;
 		return { title: siteTitle ? `${siteTitle} | evcc` : "evcc" };
+	},
+	computed: {
+		gridModalAvailable: function () {
+			return gridModalAvailable(store.state.smartCostType);
+		},
+		batteryModalAvailabe: function () {
+			return store.state.batteryConfigured;
+		},
+		globalSettingsProps: function () {
+			return this.collectProps(GlobalSettingsModal, store.state);
+		},
+		batterySettingsProps() {
+			return this.collectProps(BatterySettingsModal, store.state);
+		},
+		gridSettingsProps() {
+			return this.collectProps(GridSettingsModal, store.state);
+		},
 	},
 	mounted: function () {
 		this.connect();

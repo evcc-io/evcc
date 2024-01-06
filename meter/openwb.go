@@ -26,8 +26,8 @@ func NewOpenWBFromConfig(other map[string]interface{}) (api.Meter, error) {
 		Usage       string
 		capacity    `mapstructure:",squash"`
 	}{
-		Topic:   "openWB",
-		Timeout: 15 * time.Second,
+		Topic:   openwb.RootTopic,
+		Timeout: openwb.Timeout,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -76,7 +76,8 @@ func NewOpenWBFromConfig(other map[string]interface{}) (api.Meter, error) {
 		currents = collectPhaseProviders(curr)
 
 	case "pv":
-		configuredG, err := to.BoolGetter(mq("%s/pv/1/%s", cc.Topic, openwb.PvConfigured)) // first pv
+		// first pv
+		configuredG, err := provider.NewMqtt(log, client, fmt.Sprintf("%s/pv/1/%s", cc.Topic, openwb.PvConfigured), cc.Timeout).BoolGetter()
 		if err != nil {
 			return nil, err
 		}
@@ -99,7 +100,7 @@ func NewOpenWBFromConfig(other map[string]interface{}) (api.Meter, error) {
 		}
 
 	case "battery":
-		configuredG, err := to.BoolGetter(mq("%s/housebattery/%s", cc.Topic, openwb.BatteryConfigured))
+		configuredG, err := provider.NewMqtt(log, client, fmt.Sprintf("%s/housebattery/%s", cc.Topic, openwb.BatteryConfigured), cc.Timeout).BoolGetter()
 		if err != nil {
 			return nil, err
 		}

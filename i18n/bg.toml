@@ -1,6 +1,8 @@
 [batterySettings]
 batteryLevel = "Батерия %"
 capacity = "{energy} от {total}"
+disclaimerHint = "Бележка:"
+disclaimerText = "Тези настройки важат само за режим на работа използвайки енергия от фотоволтаици. Зареждането ще бъде настроено спрямо тях"
 legendBottomName = "приоритизиране на дом"
 legendBottomSubline = "не се използва за зареждане"
 legendMiddleName = "приоритизиране на кола"
@@ -10,7 +12,6 @@ legendTopAutostart = "автоматично стартиране"
 legendTopName = "зареждане използвайки батерия"
 legendTopSubline = "без прекъсвания"
 modalTitle = "Настройки на батерия"
-note = "Бележка: Тези настройки важат само за режим на работа използвайки енергия от фотоволтаици. Зареждането ще бъде настроено спрямо тях"
 
 [batterySettings.bufferStart]
 full = "при почти заредена батерия"

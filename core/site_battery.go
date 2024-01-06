@@ -6,6 +6,10 @@ import (
 	"github.com/evcc-io/evcc/core/loadpoint"
 )
 
+func batteryModeModified(mode api.BatteryMode) bool {
+	return mode != api.BatteryUnknown && mode != api.BatteryNormal
+}
+
 // GetBatteryMode returns the battery mode
 func (site *Site) GetBatteryMode() api.BatteryMode {
 	site.RLock()
@@ -26,9 +30,9 @@ func (site *Site) SetBatteryMode(batMode api.BatteryMode) {
 	}
 }
 
-func (site *Site) determineBatteryMode(loadpoints []loadpoint.API) api.BatteryMode {
+func (site *Site) determineBatteryMode(loadpoints []loadpoint.API, smartCostActive bool) api.BatteryMode {
 	for _, lp := range loadpoints {
-		if lp.GetStatus() == api.StatusC && (lp.GetMode() == api.ModeNow || lp.GetPlanActive()) {
+		if lp.GetStatus() == api.StatusC && (smartCostActive || lp.GetMode() == api.ModeNow || lp.GetPlanActive()) {
 			return api.BatteryHold
 		}
 	}

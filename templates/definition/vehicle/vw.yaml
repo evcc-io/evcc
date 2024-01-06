@@ -1,12 +1,13 @@
 template: vw
+covers: ["id"]
 products:
   - brand: Volkswagen
     description:
-      generic: We Connect (legacy)
+      generic: We Connect ID
 requirements:
   description:
-    de: ältere Modelle wie e-Up, e-Golf, etc.
-    en: older Models like e-Up, e-Golf, etc.
+    de: e-Golf, e-Up, ID Familie
+    en: e-Golf, e-Up, ID family
 params:
   - preset: vehicle-base
   - preset: vehicle-identify

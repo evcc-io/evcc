@@ -1,6 +1,9 @@
 package charger
 
-import "github.com/evcc-io/evcc/api"
+import (
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/loadpoint"
+)
 
 // switchSocket implements the api.Charger Status and CurrentPower methods
 // using basic generic switch socket functions
@@ -9,6 +12,7 @@ type switchSocket struct {
 	enabled      func() (bool, error)
 	currentPower func() (float64, error)
 	standbypower float64
+	lp           loadpoint.API
 }
 
 func NewSwitchSocket(
@@ -27,6 +31,10 @@ func NewSwitchSocket(
 
 // Status calculates a generic switches status
 func (c *switchSocket) Status() (api.ChargeStatus, error) {
+	if c.lp != nil && c.lp.GetMode() == api.ModeOff {
+		return api.StatusA, nil
+	}
+
 	res := api.StatusB
 
 	// static mode
@@ -82,4 +90,11 @@ func (c *switchSocket) CurrentPower() (float64, error) {
 	}
 
 	return power, err
+}
+
+var _ loadpoint.Controller = (*switchSocket)(nil)
+
+// LoadpointControl implements loadpoint.Controller
+func (c *switchSocket) LoadpointControl(lp loadpoint.API) {
+	c.lp = lp
 }

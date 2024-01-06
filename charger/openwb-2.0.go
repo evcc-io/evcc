@@ -182,7 +182,7 @@ func (wb *OpenWB20) getPhaseValues(reg uint16) (float64, float64, float64, error
 
 	var res [3]float64
 	for i := range res {
-		res[i] = float64(binary.BigEndian.Uint16(b[2*i:])) / 100
+		res[i] = float64(int16(binary.BigEndian.Uint16(b[2*i:]))) / 100
 	}
 
 	return res[0], res[1], res[2], nil
@@ -228,5 +228,5 @@ func (wb *OpenWB20) identify() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return utf16BytesToString(b, binary.BigEndian), nil
+	return bytesAsString(b), nil
 }
