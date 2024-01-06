@@ -526,11 +526,23 @@ func cacheExpecter(t *testing.T, lp *Loadpoint) (*util.Cache, func(key string, v
 	go cache.Run(paramC)
 
 	expect := func(key string, val interface{}) {
-		time.Sleep(100 * time.Millisecond) // wait for cache to catch up
-		p := cache.Get(key)
-		t.Logf("%s: %.f", key, p.Val) // REMOVE
-		if p.Val != val {
-			t.Errorf("%s wanted: %.0f, got %v", key, val, p.Val)
+		// wrap in retry, as cache async update otherwise causes flaky tests
+		err := retry.Do(
+			func() error {
+				p := cache.Get(key)
+				t.Logf("%s: %.f", key, p.Val) // REMOVE
+				if p.Val != val {
+					return fmt.Errorf("%s wanted: %v, got %v", key, val, p.Val)
+				}
+				return nil
+			},
+			retry.OnRetry(func(n uint, err error) {
+				t.Logf("retry #%d: %s\n", n, err)
+			}),
+			retry.Attempts(3),
+		)
+		if err != nil {
+			t.Error(err)
 		}
 	}
 	return cache, expect
