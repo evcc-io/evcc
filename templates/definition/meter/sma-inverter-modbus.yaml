@@ -1,4 +1,4 @@
-template: sma-battery
+template: sma-inverter-modbus
 products:
   - brand: SMA
     description:
