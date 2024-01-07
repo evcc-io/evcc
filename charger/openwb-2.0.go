@@ -11,7 +11,7 @@ import (
 
 // OpenWB20 charger implementation
 type OpenWB20 struct {
-	conn *modbus.Connection
+	conn    *modbus.Connection
 	enabled bool
 	curr    uint16
 	base    uint16
