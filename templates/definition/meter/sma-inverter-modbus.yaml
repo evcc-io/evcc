@@ -62,7 +62,6 @@ render: |
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
-            timeout: {{ .timeout }}
             register:
               address: 44039 # SMA Modbus Profile: Inverter.WModCfg.WCtlComCfg.WSptMaxNom
               type: writemultiple
@@ -74,7 +73,6 @@ render: |
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
-            timeout: {{ .timeout }}
             register:
               address: 44039 # SMA Modbus Profile: Inverter.WModCfg.WCtlComCfg.WSptMaxNom
               type: writemultiple
@@ -86,7 +84,6 @@ render: |
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
-            timeout: {{ .timeout }}
             register:
               address: 44039 # SMA Modbus Profile: Inverter.WModCfg.WCtlComCfg.WSptMaxNom
               type: writemultiple
