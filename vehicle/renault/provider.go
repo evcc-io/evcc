@@ -37,9 +37,8 @@ func NewProvider(api *kamereon.API, accountID, vin string, alternativeWakeup boo
 		wakeup: func() (kamereon.Response, error) {
 			if alternativeWakeup {
 				return api.Action(accountID, kamereon.ActionStart, vin)
-			} else {
-				return api.WakeUp(accountID, vin)
 			}
+			return api.WakeUp(accountID, vin)
 		},
 		position: func() (kamereon.Response, error) {
 			return api.Position(accountID, vin)
