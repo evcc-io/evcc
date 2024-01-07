@@ -4,15 +4,6 @@ products:
   - brand: IGEN Tech
     description:
       generic: Solarman Logger
-  - brand: Deye
-    description:
-      generic: SUN series micro inverter
-  - brand: Bosswerk
-    description:
-      generic: MI series micro inverter
-  - brand: Ginlong
-    description:
-      generic: Solis inverter
 params:
   - name: usage
     choice: ["pv"]
