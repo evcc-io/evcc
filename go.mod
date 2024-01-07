@@ -90,6 +90,7 @@ require (
 	github.com/volkszaehler/mbmd v0.0.0-20231215091549-af16b1f597b9
 	github.com/writeas/go-strip-markdown/v2 v2.1.1
 	gitlab.com/bboehmke/sunny v0.16.0
+	go.uber.org/mock v0.4.0
 	golang.org/x/crypto/x509roots/fallback v0.0.0-20231218163308-9d2ee975ef9f
 	golang.org/x/exp v0.0.0-20231219180239-dc181d75b848
 	golang.org/x/net v0.19.0
