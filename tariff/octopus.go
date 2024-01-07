@@ -6,17 +6,21 @@ import (
 	"sync"
 	"time"
 
+	octoGql "github.com/evcc-io/evcc/tariff/octopus/graphql"
+	octoRest "github.com/evcc-io/evcc/tariff/octopus/rest"
+
 	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/tariff/octopus"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 )
 
 type Octopus struct {
 	log    *util.Logger
-	uri    string
 	region string
+	// Tariff is actually the Product Code
+	tariff string
+	apikey string
 	data   *util.Monitor[api.Rates]
 }
 
@@ -29,24 +33,32 @@ func init() {
 func NewOctopusFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	var cc struct {
 		Region string
+		// Tariff is actually the Product Code
 		Tariff string
+		ApiKey string
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	if cc.Region == "" {
-		return nil, errors.New("missing region")
-	}
-	if cc.Tariff == "" {
-		return nil, errors.New("missing tariff code")
+	// Allow ApiKey to be missing only if Region and Tariff are not.
+	if cc.ApiKey == "" {
+		if cc.Region == "" {
+			return nil, errors.New("missing region")
+		}
+		if cc.Tariff == "" {
+			return nil, errors.New("missing product / tariff code")
+		}
+	} else if cc.Region != "" || cc.Tariff != "" {
+		return nil, errors.New("cannot use apikey at same time as product / tariff code")
 	}
 
 	t := &Octopus{
 		log:    util.NewLogger("octopus"),
-		uri:    octopus.ConstructRatesAPI(cc.Tariff, cc.Region),
-		region: cc.Tariff,
+		region: cc.Region,
+		tariff: cc.Tariff,
+		apikey: cc.ApiKey,
 		data:   util.NewMonitor[api.Rates](2 * time.Hour),
 	}
 
@@ -63,11 +75,34 @@ func (t *Octopus) run(done chan error) {
 	bo := newBackoff()
 
 	tick := time.NewTicker(time.Hour)
+	var restQueryUri string
+
+	// If ApiKey is available, use GraphQL to get appropriate tariff code before entering execution loop.
+	if t.apikey != "" {
+		gqlCli, err := octoGql.NewClient(t.log, t.apikey)
+		if err != nil {
+			once.Do(func() { done <- err })
+			t.log.ERROR.Println(err)
+			return
+		}
+		tariffCode, err := gqlCli.TariffCode()
+		if err != nil {
+			once.Do(func() { done <- err })
+			t.log.ERROR.Println(err)
+			return
+		}
+		restQueryUri = octoRest.ConstructRatesAPIFromTariffCode(tariffCode)
+	} else {
+		// Construct Rest Query URI using tariff and region codes.
+		restQueryUri = octoRest.ConstructRatesAPIFromProductAndRegionCode(t.tariff, t.region)
+	}
+
+	// TODO tick every 15 minutes if GraphQL is available to poll for Intelligent slots.
 	for ; true; <-tick.C {
-		var res octopus.UnitRates
+		var res octoRest.UnitRates
 
 		if err := backoff.Retry(func() error {
-			return backoffPermanentError(client.GetJSON(t.uri, &res))
+			return backoffPermanentError(client.GetJSON(restQueryUri, &res))
 		}, bo); err != nil {
 			once.Do(func() { done <- err })
 
