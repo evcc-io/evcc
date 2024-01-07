@@ -790,11 +790,10 @@ func (site *Site) update(lp Updater) {
 		homePower = max(homePower, 0)
 		site.publish(keys.HomePower, homePower)
 
-		// add battery charging power to homePower to get all consumption which does not occur on loadpoints
+		greenShareHome := site.greenShare(0, homePower)
+		// add battery charging power to homePower to ignore all consumption which does not occur on loadpoints
 		// fix for: https://github.com/evcc-io/evcc/issues/11032
-		nonChargePower := homePower + max(0, -site.batteryPower)
-		greenShareHome := site.greenShare(0, nonChargePower)
-		greenShareLoadpoints := site.greenShare(nonChargePower, nonChargePower+totalChargePower)
+		greenShareLoadpoints := site.greenShare(homePower + max(0, -site.batteryPower), homePower+totalChargePower)
 
 		lp.Update(sitePower, smartCostActive, batteryBuffered, batteryStart, greenShareLoadpoints, site.effectivePrice(greenShareLoadpoints), site.effectiveCo2(greenShareLoadpoints))
 
