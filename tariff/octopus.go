@@ -11,6 +11,8 @@ import (
 
 	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
+	octoGql "github.com/evcc-io/evcc/tariff/octopus/graphql"
+	octoRest "github.com/evcc-io/evcc/tariff/octopus/rest"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 )

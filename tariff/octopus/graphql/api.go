@@ -3,12 +3,13 @@ package graphql
 import (
 	"context"
 	"errors"
-	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/request"
-	"github.com/hasura/go-graphql-client"
 	"net/http"
 	"sync"
 	"time"
+
+	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/request"
+	"github.com/hasura/go-graphql-client"
 )
 
 type OctopusGraphQLClient struct {
