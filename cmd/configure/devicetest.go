@@ -1,6 +1,7 @@
 package configure
 
 import (
+	"context"
 	"errors"
 	"time"
 
@@ -74,7 +75,7 @@ func (d *DeviceTest) configure() (interface{}, error) {
 	case templates.Charger:
 		v, err = charger.NewFromConfig(instance.Type, instance.Other)
 	case templates.Vehicle:
-		v, err = vehicle.NewFromConfig(instance.Type, instance.Other)
+		v, err = vehicle.NewFromConfig(context.Background(), instance.Type, instance.Other)
 	}
 
 	return v, err

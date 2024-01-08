@@ -278,7 +278,7 @@ func vehicleInstance(cc config.Named) (api.Vehicle, error) {
 		return nil, fmt.Errorf("vehicle name must not contain special characters or spaces: %s", cc.Name)
 	}
 
-	instance, err := vehicle.NewFromConfig(cc.Type, cc.Other)
+	instance, err := vehicle.NewFromConfig(context.Background(), cc.Type, cc.Other)
 	if err != nil {
 		var ce *util.ConfigError
 		if errors.As(err, &ce) {

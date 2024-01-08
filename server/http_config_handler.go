@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -235,6 +236,8 @@ func newDeviceHandler(w http.ResponseWriter, r *http.Request) {
 
 	var conf *config.Config
 
+	ctx := context.Background()
+
 	switch class {
 	case templates.Charger:
 		conf, err = newDevice(class, req, charger.NewFromConfig, config.Chargers())
@@ -243,7 +246,9 @@ func newDeviceHandler(w http.ResponseWriter, r *http.Request) {
 		conf, err = newDevice(class, req, meter.NewFromConfig, config.Meters())
 
 	case templates.Vehicle:
-		conf, err = newDevice(class, req, vehicle.NewFromConfig, config.Vehicles())
+		conf, err = newDevice(class, req, func(typ string, cc map[string]any) (api.Vehicle, error) {
+			return vehicle.NewFromConfig(ctx, typ, cc)
+		}, config.Vehicles())
 	}
 
 	if err != nil {
@@ -297,6 +302,8 @@ func updateDeviceHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	delete(req, "type")
 
+	ctx := context.Background()
+
 	switch class {
 	case templates.Charger:
 		err = updateDevice(id, class, req, charger.NewFromConfig, config.Chargers())
@@ -305,7 +312,9 @@ func updateDeviceHandler(w http.ResponseWriter, r *http.Request) {
 		err = updateDevice(id, class, req, meter.NewFromConfig, config.Meters())
 
 	case templates.Vehicle:
-		err = updateDevice(id, class, req, vehicle.NewFromConfig, config.Vehicles())
+		err = updateDevice(id, class, req, func(typ string, cc map[string]any) (api.Vehicle, error) {
+			return vehicle.NewFromConfig(ctx, typ, cc)
+		}, config.Vehicles())
 	}
 
 	if err != nil {
@@ -422,6 +431,9 @@ func testHandler(w http.ResponseWriter, r *http.Request) {
 
 	var instance any
 
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	switch class {
 	case templates.Charger:
 		instance, err = testDevice(id, class, req, charger.NewFromConfig, config.Chargers())
@@ -430,7 +442,9 @@ func testHandler(w http.ResponseWriter, r *http.Request) {
 		instance, err = testDevice(id, class, req, meter.NewFromConfig, config.Meters())
 
 	case templates.Vehicle:
-		instance, err = testDevice(id, class, req, vehicle.NewFromConfig, config.Vehicles())
+		instance, err = testDevice(id, class, req, func(typ string, cc map[string]any) (api.Vehicle, error) {
+			return vehicle.NewFromConfig(ctx, typ, cc)
+		}, config.Vehicles())
 	}
 
 	if err != nil {

@@ -1,6 +1,8 @@
 package vehicle
 
 import (
+	"context"
+
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util/templates"
 )
@@ -15,5 +17,5 @@ func NewVehicleFromTemplateConfig(other map[string]interface{}) (api.Vehicle, er
 		return nil, err
 	}
 
-	return NewFromConfig(instance.Type, instance.Other)
+	return NewFromConfig(context.Background(), instance.Type, instance.Other)
 }

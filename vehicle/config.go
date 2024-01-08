@@ -1,6 +1,7 @@
 package vehicle
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"time"
@@ -14,16 +15,21 @@ const (
 	interval = 15 * time.Minute // refresh interval when charging
 )
 
-type vehicleRegistry map[string]func(map[string]interface{}) (api.Vehicle, error)
+type (
+	factoryFunc     func(context.Context, map[string]interface{}) (api.Vehicle, error)
+	vehicleRegistry map[string]factoryFunc
+)
 
 func (r vehicleRegistry) Add(name string, factory func(map[string]interface{}) (api.Vehicle, error)) {
 	if _, exists := r[name]; exists {
 		panic(fmt.Sprintf("cannot register duplicate vehicle type: %s", name))
 	}
-	r[name] = factory
+	r[name] = func(_ context.Context, cc map[string]interface{}) (api.Vehicle, error) {
+		return factory(cc)
+	}
 }
 
-func (r vehicleRegistry) Get(name string) (func(map[string]interface{}) (api.Vehicle, error), error) {
+func (r vehicleRegistry) Get(name string) (factoryFunc, error) {
 	factory, exists := r[name]
 	if !exists {
 		return nil, fmt.Errorf("invalid vehicle type: %s", name)
@@ -31,7 +37,7 @@ func (r vehicleRegistry) Get(name string) (func(map[string]interface{}) (api.Veh
 	return factory, nil
 }
 
-var registry vehicleRegistry = make(map[string]func(map[string]interface{}) (api.Vehicle, error))
+var registry vehicleRegistry = make(map[string]factoryFunc)
 
 // Types returns the list of vehicle types
 func Types() []string {
@@ -43,7 +49,7 @@ func Types() []string {
 }
 
 // NewFromConfig creates vehicle from configuration
-func NewFromConfig(typ string, other map[string]interface{}) (api.Vehicle, error) {
+func NewFromConfig(ctx context.Context, typ string, other map[string]interface{}) (api.Vehicle, error) {
 	var cc struct {
 		Cloud bool
 		Other map[string]interface{} `mapstructure:",remain"`
@@ -63,7 +69,7 @@ func NewFromConfig(typ string, other map[string]interface{}) (api.Vehicle, error
 		return nil, err
 	}
 
-	v, err := factory(cc.Other)
+	v, err := factory(ctx, cc.Other)
 	if err != nil {
 		err = fmt.Errorf("cannot create vehicle type '%s': %w", typ, err)
 	}
