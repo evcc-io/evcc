@@ -1,6 +1,7 @@
 package oauth
 
 import (
+	"context"
 	"time"
 
 	"github.com/evcc-io/evcc/util"
@@ -8,13 +9,17 @@ import (
 )
 
 // Refresh refreshes the token every 5m. If token refresh fails 5 times, it is aborted.
-func Refresh(log *util.Logger, token *oauth2.Token, ts oauth2.TokenSource, optMaxTokenLifetime ...time.Duration) {
+func Refresh(ctx context.Context, log *util.Logger, token *oauth2.Token, ts oauth2.TokenSource, optMaxTokenLifetime ...time.Duration) {
 	var failed int
 
 	// limit lifetime of initial token
 	limitTokenLife(token, optMaxTokenLifetime...)
 
 	for range time.Tick(5 * time.Minute) {
+		if ctx.Err() != nil {
+			return
+		}
+
 		// get token- either previous or new
 		t, err := ts.Token()
 		if err != nil {

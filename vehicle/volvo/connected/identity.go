@@ -1,6 +1,7 @@
 package connected
 
 import (
+	"context"
 	"net/http"
 	"net/url"
 	"strings"
@@ -44,7 +45,7 @@ func NewIdentity(log *util.Logger) (*Identity, error) {
 	return v, nil
 }
 
-func (v *Identity) Login(user, password string) (oauth2.TokenSource, error) {
+func (v *Identity) Login(ctx context.Context, user, password string) (oauth2.TokenSource, error) {
 	data := url.Values{
 		"username":                {user},
 		"password":                {password},
@@ -68,7 +69,8 @@ func (v *Identity) Login(user, password string) (oauth2.TokenSource, error) {
 
 	token := (*oauth2.Token)(&tok)
 	ts := oauth2.ReuseTokenSourceWithExpiry(token, oauth.RefreshTokenSource(token, v), 15*time.Minute)
-	go oauth.Refresh(v.log, token, ts)
+
+	go oauth.Refresh(ctx, v.log, token, ts)
 
 	return ts, nil
 }
