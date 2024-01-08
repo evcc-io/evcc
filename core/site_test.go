@@ -105,12 +105,12 @@ func TestGreenShare(t *testing.T) {
 		{
 			"half grid, half pv, battery charge, no lp",
 			1000, 1000, -1000, 1000, 0,
-			1, 1, 0,
+			0.5, 1, 0,
 		},
 		{
 			"half grid, half pv, battery charge, home, lp",
 			1000, 1000, -1000, 500, 500,
-			1, 1, 1,
+			0.5, 1, 0,
 		},
 		{
 			"issue #11032",
