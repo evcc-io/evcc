@@ -108,21 +108,22 @@ type Loadpoint struct {
 	vmu   sync.RWMutex   // guard vehicle
 	Mode_ api.ChargeMode `mapstructure:"mode"` // Default charge mode, used for disconnect
 
-	Title_           string `mapstructure:"title"`    // UI title
-	Priority_        int    `mapstructure:"priority"` // Priority
-	ConfiguredPhases int    `mapstructure:"phases"`   // Charger configured phase mode 0/1/3
-	ChargerRef       string `mapstructure:"charger"`  // Charger reference
-	VehicleRef       string `mapstructure:"vehicle"`  // Vehicle reference
-	MeterRef         string `mapstructure:"meter"`    // Charge meter reference
-	Soc              SocConfig
-	Enable, Disable  ThresholdConfig
+	Title_            string `mapstructure:"title"`    // UI title
+	Priority_         int    `mapstructure:"priority"` // Priority
+	ConfiguredPhases_ int    `mapstructure:"phases"`   // Charger configured phase mode 0/1/3
+	ChargerRef        string `mapstructure:"charger"`  // Charger reference
+	VehicleRef        string `mapstructure:"vehicle"`  // Vehicle reference
+	MeterRef          string `mapstructure:"meter"`    // Charge meter reference
+	Soc               SocConfig
+	Enable, Disable   ThresholdConfig
 
 	MinCurrent    float64       // PV mode: start current	Min+PV mode: min current
 	MaxCurrent    float64       // Max allowed current. Physically ensured by the charger
 	GuardDuration time.Duration // charger enable/disable minimum holding time
 
-	limitSoc    int     // Session limit for soc
-	limitEnergy float64 // Session limit for energy
+	configuredPhases int     // charger phase configuration
+	limitSoc         int     // Session limit for soc
+	limitEnergy      float64 // Session limit for energy
 
 	mode                api.ChargeMode
 	enabled             bool      // Charger enabled state
@@ -235,17 +236,8 @@ func NewLoadpointFromConfig(log *util.Logger, settings *Settings, other map[stri
 	lp.charger = dev.Instance()
 	lp.configureChargerType(lp.charger)
 
-	// setup fixed phases:
-	// - simple charger starts with phases config if specified or 3p
-	// - switchable charger starts at 0p since we don't know the current setting
-	if _, ok := lp.charger.(api.PhaseSwitcher); !ok {
-		if lp.ConfiguredPhases == 0 {
-			lp.ConfiguredPhases = 3
-			lp.log.WARN.Println("phases not configured, assuming 3p")
-		}
-		lp.phases = lp.ConfiguredPhases
-	} else if lp.ConfiguredPhases != 0 {
-		lp.log.WARN.Printf("locking phase config to %dp for switchable charger", lp.ConfiguredPhases)
+	if lp.ConfiguredPhases_ > 0 {
+		lp.log.WARN.Println("deprecated: phases setting is ignored, please remove")
 	}
 
 	// validate thresholds
@@ -262,6 +254,17 @@ func NewLoadpointFromConfig(log *util.Logger, settings *Settings, other map[stri
 
 	// restore settings
 	lp.restoreSettings()
+
+	// setup fixed phases:
+	// - simple charger starts with phases config if specified or 3p
+	// - switchable charger starts at 0p since we don't know the current setting
+	if _, ok := lp.charger.(api.PhaseSwitcher); !ok {
+		if lp.configuredPhases == 0 {
+			lp.configuredPhases = 3
+			lp.log.WARN.Println("phases not configured, assuming 3p")
+		}
+		lp.phases = lp.configuredPhases
+	}
 
 	return lp, nil
 }
@@ -302,6 +305,9 @@ func NewLoadpoint(log *util.Logger, settings *Settings) *Loadpoint {
 func (lp *Loadpoint) restoreSettings() {
 	if v, err := lp.settings.String(keys.Mode); err == nil {
 		lp.mode = api.ChargeMode(v)
+	}
+	if v, err := lp.settings.Int(keys.PhasesConfigured); err == nil {
+		lp.configuredPhases = int(v)
 	}
 	if v, err := lp.settings.Time(keys.PlanTime); err == nil {
 		lp.planTime = v
@@ -580,7 +586,7 @@ func (lp *Loadpoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	lp.publish(keys.EnableThreshold, lp.Enable.Threshold)
 	lp.publish(keys.DisableThreshold, lp.Disable.Threshold)
 
-	lp.setConfiguredPhases(lp.ConfiguredPhases)
+	lp.publish(keys.PhasesConfigured, lp.configuredPhases)
 	lp.publish(keys.PhasesEnabled, lp.phases)
 	lp.publish(keys.PhasesActive, lp.ActivePhases())
 	lp.publishTimer(phaseTimer, 0, timerInactive)
@@ -984,13 +990,13 @@ func (lp *Loadpoint) resetPhaseTimer() {
 // scalePhasesRequired validates if fixed phase configuration matches enabled phases
 func (lp *Loadpoint) scalePhasesRequired() bool {
 	_, ok := lp.charger.(api.PhaseSwitcher)
-	return ok && lp.ConfiguredPhases != 0 && lp.ConfiguredPhases != lp.GetPhases()
+	return ok && lp.configuredPhases != 0 && lp.configuredPhases != lp.GetPhases()
 }
 
 // scalePhasesIfAvailable scales if api.PhaseSwitcher is available
 func (lp *Loadpoint) scalePhasesIfAvailable(phases int) error {
-	if lp.ConfiguredPhases != 0 {
-		phases = lp.ConfiguredPhases
+	if lp.configuredPhases != 0 {
+		phases = lp.configuredPhases
 	}
 
 	if _, ok := lp.charger.(api.PhaseSwitcher); ok {
@@ -1054,7 +1060,7 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64) bo
 	var waiting bool
 	activePhases := lp.ActivePhases()
 	availablePower := lp.chargePower - sitePower
-	scalable := (sitePower > 0 || !lp.enabled) && activePhases > 1 && lp.ConfiguredPhases < 3
+	scalable := (sitePower > 0 || !lp.enabled) && activePhases > 1 && lp.configuredPhases < 3
 
 	// scale down phases
 	if targetCurrent := powerToCurrent(availablePower, activePhases); targetCurrent < minCurrent && scalable {
@@ -1576,7 +1582,7 @@ func (lp *Loadpoint) Update(sitePower float64, autoCharge, batteryBuffered, batt
 		err = lp.setLimit(0, false)
 
 	case lp.scalePhasesRequired():
-		err = lp.scalePhases(lp.ConfiguredPhases)
+		err = lp.scalePhases(lp.configuredPhases)
 
 	case lp.remoteControlled(loadpoint.RemoteHardDisable):
 		remoteDisabled = loadpoint.RemoteHardDisable
