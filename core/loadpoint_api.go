@@ -332,6 +332,7 @@ func (lp *Loadpoint) SetMinCurrent(current float64) {
 	if current != lp.minCurrent {
 		lp.minCurrent = current
 		lp.publish(keys.MinCurrent, lp.minCurrent)
+		lp.settings.SetFloat(keys.MinCurrent, lp.minCurrent)
 	}
 }
 
