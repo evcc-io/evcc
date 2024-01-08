@@ -8,7 +8,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
-	"github.com/samber/lo"
+	reg "github.com/evcc-io/evcc/util/registry"
 )
 
 const (
@@ -16,37 +16,11 @@ const (
 	interval = 15 * time.Minute // refresh interval when charging
 )
 
-type (
-	factoryFunc     func(context.Context, map[string]interface{}) (api.Vehicle, error)
-	vehicleRegistry map[string]factoryFunc
-)
-
-func (r vehicleRegistry) Add(name string, factory func(map[string]interface{}) (api.Vehicle, error)) {
-	r.AddCtx(name, func(_ context.Context, cc map[string]interface{}) (api.Vehicle, error) {
-		return factory(cc)
-	})
-}
-
-func (r vehicleRegistry) AddCtx(name string, factory factoryFunc) {
-	if _, exists := r[name]; exists {
-		panic(fmt.Sprintf("cannot register duplicate vehicle type: %s", name))
-	}
-	r[name] = factory
-}
-
-func (r vehicleRegistry) Get(name string) (factoryFunc, error) {
-	factory, exists := r[name]
-	if !exists {
-		return nil, fmt.Errorf("invalid vehicle type: %s", name)
-	}
-	return factory, nil
-}
-
-var registry = make(vehicleRegistry)
+var registry = reg.New[api.Vehicle]("vehicle")
 
 // Types returns the list of vehicle types
 func Types() []string {
-	return lo.Keys(registry)
+	return registry.Types()
 }
 
 // NewFromConfig creates vehicle from configuration
