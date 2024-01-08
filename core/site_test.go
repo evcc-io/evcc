@@ -113,9 +113,9 @@ func TestGreenShare(t *testing.T) {
 			0.5, 1, 0,
 		},
 		{
-			"issue #11032",
-			4000, 6000, -3000, 2000, 5000,
-			0.6, 1, 0.2,
+			"pv ac limited, battery charge & grid import",
+			1000, 3000, -1000, 1000, 2000,
+			0.75, 1, 0.5,
 		},
 	}
 
