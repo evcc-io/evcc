@@ -128,7 +128,8 @@ func TestGreenShare(t *testing.T) {
 			batteryPower: tc.battery,
 		}
 
-		greenShareTotal := s.greenShare(0, tc.home+tc.lp)
+		totalPower := tc.home + tc.lp + max(0, tc.battery)
+		greenShareTotal := s.greenShare(0, totalPower)
 		if greenShareTotal != tc.greenShareTotal {
 			t.Errorf("greenShareTotal wanted %.3f, got %.3f", tc.greenShareTotal, greenShareTotal)
 		}
@@ -136,7 +137,7 @@ func TestGreenShare(t *testing.T) {
 		if greenShareHome != tc.greenShareHome {
 			t.Errorf("greenShareHome wanted %.3f, got %.3f", tc.greenShareHome, greenShareHome)
 		}
-		greenShareLoadpoints := s.greenShare(tc.home, tc.home+tc.lp)
+		greenShareLoadpoints := s.greenShare(tc.home+max(0, -tc.battery), totalPower)
 		if greenShareLoadpoints != tc.greenShareLoadpoints {
 			t.Errorf("greenShareLoadpoints wanted %.3f, got %.3f", tc.greenShareLoadpoints, greenShareLoadpoints)
 		}
