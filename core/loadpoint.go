@@ -108,20 +108,23 @@ type Loadpoint struct {
 	vmu   sync.RWMutex   // guard vehicle
 	Mode_ api.ChargeMode `mapstructure:"mode"` // Default charge mode, used for disconnect
 
-	Title_            string `mapstructure:"title"`    // UI title
-	Priority_         int    `mapstructure:"priority"` // Priority
-	ConfiguredPhases_ int    `mapstructure:"phases"`   // Charger configured phase mode 0/1/3
-	ChargerRef        string `mapstructure:"charger"`  // Charger reference
-	VehicleRef        string `mapstructure:"vehicle"`  // Vehicle reference
-	MeterRef          string `mapstructure:"meter"`    // Charge meter reference
-	Soc               SocConfig
-	Enable, Disable   ThresholdConfig
+	Title_          string `mapstructure:"title"`    // UI title
+	Priority_       int    `mapstructure:"priority"` // Priority
+	ChargerRef      string `mapstructure:"charger"`  // Charger reference
+	VehicleRef      string `mapstructure:"vehicle"`  // Vehicle reference
+	MeterRef        string `mapstructure:"meter"`    // Charge meter reference
+	Soc             SocConfig
+	Enable, Disable ThresholdConfig
+	GuardDuration   time.Duration // charger enable/disable minimum holding time
 
-	MinCurrent    float64       // PV mode: start current	Min+PV mode: min current
-	MaxCurrent    float64       // Max allowed current. Physically ensured by the charger
-	GuardDuration time.Duration // charger enable/disable minimum holding time
+	// TODO deprecated
+	ConfiguredPhases_ int     `mapstructure:"phases"`
+	MinCurrent_       float64 `mapstructure:"minCurrent"`
+	MaxCurrent_       float64 `mapstructure:"maxCurrent"`
 
-	configuredPhases int     // charger phase configuration
+	minCurrent       float64 // PV mode: start current	Min+PV mode: min current
+	maxCurrent       float64 // Max allowed current. Physically ensured by the charger
+	configuredPhases int     // Charger configured phase mode 0/1/3
 	limitSoc         int     // Session limit for soc
 	limitEnergy      float64 // Session limit for energy
 
@@ -201,14 +204,6 @@ func NewLoadpointFromConfig(log *util.Logger, settings *Settings, other map[stri
 		lp.Soc.Poll.Mode = pollCharging
 	}
 
-	if lp.MinCurrent == 0 {
-		lp.log.WARN.Println("minCurrent must not be zero")
-	}
-
-	if lp.MaxCurrent < lp.MinCurrent {
-		lp.log.WARN.Println("maxCurrent must be larger than minCurrent")
-	}
-
 	if lp.MeterRef != "" {
 		dev, err := config.Meters().ByName(lp.MeterRef)
 		if err != nil {
@@ -236,6 +231,13 @@ func NewLoadpointFromConfig(log *util.Logger, settings *Settings, other map[stri
 	lp.charger = dev.Instance()
 	lp.configureChargerType(lp.charger)
 
+	// TODO deprecated
+	if lp.MinCurrent_ > 0 {
+		lp.log.WARN.Println("deprecated: minCurrent setting is ignored, please remove")
+	}
+	if lp.MaxCurrent_ > 0 {
+		lp.log.WARN.Println("deprecated: maxcurrent setting is ignored, please remove")
+	}
 	if lp.ConfiguredPhases_ > 0 {
 		lp.log.WARN.Println("deprecated: phases setting is ignored, please remove")
 	}
@@ -281,8 +283,8 @@ func NewLoadpoint(log *util.Logger, settings *Settings) *Loadpoint {
 		bus:        bus,      // event bus
 		mode:       api.ModeOff,
 		status:     api.StatusNone,
-		MinCurrent: 6,  // A
-		MaxCurrent: 16, // A
+		minCurrent: 6,  // A
+		maxCurrent: 16, // A
 		Soc: SocConfig{
 			Poll: PollConfig{
 				Interval: pollInterval,
@@ -306,8 +308,15 @@ func (lp *Loadpoint) restoreSettings() {
 	if v, err := lp.settings.String(keys.Mode); err == nil {
 		lp.mode = api.ChargeMode(v)
 	}
+	// TODO consistently use setters
 	if v, err := lp.settings.Int(keys.PhasesConfigured); err == nil {
 		lp.configuredPhases = int(v)
+	}
+	if v, err := lp.settings.Float(keys.MinCurrent); err == nil {
+		lp.minCurrent = v
+	}
+	if v, err := lp.settings.Float(keys.MaxCurrent); err == nil {
+		lp.maxCurrent = v
 	}
 	if v, err := lp.settings.Time(keys.PlanTime); err == nil {
 		lp.planTime = v

@@ -319,7 +319,7 @@ func (lp *Loadpoint) GetChargePowerFlexibility() float64 {
 func (lp *Loadpoint) GetMinCurrent() float64 {
 	lp.RLock()
 	defer lp.RUnlock()
-	return lp.MinCurrent
+	return lp.minCurrent
 }
 
 // SetMinCurrent sets the min loadpoint current
@@ -329,9 +329,9 @@ func (lp *Loadpoint) SetMinCurrent(current float64) {
 
 	lp.log.DEBUG.Println("set min current:", current)
 
-	if current != lp.MinCurrent {
-		lp.MinCurrent = current
-		lp.publish(keys.MinCurrent, lp.MinCurrent)
+	if current != lp.minCurrent {
+		lp.minCurrent = current
+		lp.publish(keys.MinCurrent, lp.minCurrent)
 	}
 }
 
@@ -339,7 +339,7 @@ func (lp *Loadpoint) SetMinCurrent(current float64) {
 func (lp *Loadpoint) GetMaxCurrent() float64 {
 	lp.RLock()
 	defer lp.RUnlock()
-	return lp.MaxCurrent
+	return lp.maxCurrent
 }
 
 // SetMaxCurrent sets the max loadpoint current
@@ -349,9 +349,10 @@ func (lp *Loadpoint) SetMaxCurrent(current float64) {
 
 	lp.log.DEBUG.Println("set max current:", current)
 
-	if current != lp.MaxCurrent {
-		lp.MaxCurrent = current
-		lp.publish(keys.MaxCurrent, lp.MaxCurrent)
+	if current != lp.maxCurrent {
+		lp.maxCurrent = current
+		lp.publish(keys.MaxCurrent, lp.maxCurrent)
+		lp.settings.SetFloat(keys.MaxCurrent, lp.maxCurrent)
 	}
 }
 

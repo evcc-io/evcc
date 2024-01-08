@@ -187,8 +187,8 @@ func TestPvScalePhases(t *testing.T) {
 			progress:         NewProgress(0, 10), // silence nil panics
 			wakeUpTimer:      NewTimer(),         // silence nil panics
 			mode:             api.ModeNow,
-			MinCurrent:       minA,
-			MaxCurrent:       maxA,
+			minCurrent:       minA,
+			maxCurrent:       maxA,
 			vehicle:          vehicle,
 			configuredPhases: 0, // allow switching
 			phases:           tc.physical,
@@ -366,8 +366,8 @@ func TestPvScalePhasesTimer(t *testing.T) {
 			log:            util.NewLogger("foo"),
 			clock:          clock,
 			charger:        charger,
-			MinCurrent:     minA,
-			MaxCurrent:     maxA,
+			minCurrent:     minA,
+			maxCurrent:     maxA,
 			phases:         tc.phases,
 			measuredPhases: tc.measuredPhases,
 			status:         api.StatusC,
@@ -431,7 +431,7 @@ func TestScalePhasesIfAvailable(t *testing.T) {
 				plainCharger,
 				phaseCharger,
 			},
-			MinCurrent:       minA,
+			minCurrent:       minA,
 			configuredPhases: tc.dflt,     // fixed phases or default
 			phases:           tc.physical, // current phase status
 		}

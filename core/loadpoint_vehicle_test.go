@@ -41,8 +41,8 @@ func TestPublishSocAndRange(t *testing.T) {
 		chargeTimer:   &Null{}, // silence nil panics
 		socEstimator:  soc.NewEstimator(log, charger, vehicle, false),
 		sessionEnergy: NewEnergyMetrics(),
-		MinCurrent:    minA,
-		MaxCurrent:    maxA,
+		minCurrent:    minA,
+		maxCurrent:    maxA,
 		phases:        1,
 		mode:          api.ModeNow,
 	}
@@ -249,8 +249,8 @@ func TestReconnectVehicle(t *testing.T) {
 				chargeTimer:   &Null{}, // silence nil panics
 				wakeUpTimer:   NewTimer(),
 				sessionEnergy: NewEnergyMetrics(),
-				MinCurrent:    minA,
-				MaxCurrent:    maxA,
+				minCurrent:    minA,
+				maxCurrent:    maxA,
 				phases:        1,
 				mode:          api.ModeNow,
 			}
