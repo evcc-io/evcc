@@ -8,6 +8,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
+	"github.com/samber/lo"
 )
 
 const (
@@ -41,15 +42,11 @@ func (r vehicleRegistry) Get(name string) (factoryFunc, error) {
 	return factory, nil
 }
 
-var registry vehicleRegistry = make(map[string]factoryFunc)
+var registry = make(vehicleRegistry)
 
 // Types returns the list of vehicle types
 func Types() []string {
-	var res []string
-	for typ := range registry {
-		res = append(res, typ)
-	}
-	return res
+	return lo.Keys(registry)
 }
 
 // NewFromConfig creates vehicle from configuration
