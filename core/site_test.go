@@ -128,7 +128,7 @@ func TestGreenShare(t *testing.T) {
 			batteryPower: tc.battery,
 		}
 
-		totalPower := tc.home + tc.lp + max(0, tc.battery)
+		totalPower := tc.grid + tc.pv + max(0, tc.battery)
 		greenShareTotal := s.greenShare(0, totalPower)
 		if greenShareTotal != tc.greenShareTotal {
 			t.Errorf("greenShareTotal wanted %.3f, got %.3f", tc.greenShareTotal, greenShareTotal)
