@@ -31,7 +31,10 @@ type DeviceTest struct {
 // - DeviceTestResult: Valid, Valid_MissingMeter, Invalid
 // - error: != nil if the device is invalid and can not be configured with the provided settings
 func (d *DeviceTest) Test() (DeviceTestResult, error) {
-	v, err := d.configure()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	v, err := d.configure(ctx)
 	if err != nil {
 		return DeviceTestResultInvalid, err
 	}
@@ -52,7 +55,7 @@ func (d *DeviceTest) Test() (DeviceTestResult, error) {
 }
 
 // configure creates a configured device from a template so we can test it
-func (d *DeviceTest) configure() (interface{}, error) {
+func (d *DeviceTest) configure(ctx context.Context) (interface{}, error) {
 	b, _, err := d.Template.RenderResult(templates.TemplateRenderModeInstance, d.ConfigValues)
 	if err != nil {
 		return nil, err
@@ -75,7 +78,7 @@ func (d *DeviceTest) configure() (interface{}, error) {
 	case templates.Charger:
 		v, err = charger.NewFromConfig(instance.Type, instance.Other)
 	case templates.Vehicle:
-		v, err = vehicle.NewFromConfig(context.Background(), instance.Type, instance.Other)
+		v, err = vehicle.NewFromConfig(ctx, instance.Type, instance.Other)
 	}
 
 	return v, err
