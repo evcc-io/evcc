@@ -26,12 +26,20 @@ render: |
   type: custom
   {{- if eq .usage "pv" }}
   power:
-    source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: 30773 # SMA Modbus Profile: DcMs.Watt
-      type: input
-      decode: int32nan
+    source: calc
+    add:
+      - source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register: # manual non-sunspec register configuration
+          address: 30773 # SMA Modbus Profile: DC power input [1]
+          type: holding
+          decode: int32nan
+      - source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register: # manual non-sunspec register configuration
+          address: 30961 # SMA Modbus Profile: DC power input [2]
+          type: holding
+          decode: int32nan
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
