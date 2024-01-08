@@ -8,7 +8,7 @@
 				<div size="s" class="mx-2 flex-grow-0 flex-shrink-0 fw-normal">/</div>
 				<span class="text-truncate">{{ $t("sessions.title") }}</span>
 			</h1>
-			<TopNavigation />
+			<TopNavigation v-bind="topNavigation" />
 		</header>
 
 		<div class="row">
@@ -263,6 +263,7 @@ import CustomSelect from "../components/CustomSelect.vue";
 import ChargingSessionModal from "../components/ChargingSessionModal.vue";
 import breakpoint from "../mixins/breakpoint";
 import settings from "../settings";
+import collector from "../mixins/collector";
 
 const COLUMNS_PER_BREAKPOINT = {
 	xs: 1,
@@ -276,7 +277,7 @@ const COLUMNS_PER_BREAKPOINT = {
 export default {
 	name: "ChargingSessions",
 	components: { TopNavigation, ChargingSessionModal, CustomSelect },
-	mixins: [formatter, breakpoint],
+	mixins: [formatter, breakpoint, collector],
 	props: {
 		notifications: Array,
 		month: { type: Number, default: () => new Date().getMonth() + 1 },
@@ -295,6 +296,10 @@ export default {
 		return { title: `${this.$t("sessions.title")} | evcc` };
 	},
 	computed: {
+		topNavigation: function () {
+			const vehicleLogins = store.state.auth ? store.state.auth.vehicles : {};
+			return { vehicleLogins, ...this.collectProps(TopNavigation, store.state) };
+		},
 		currentSessions() {
 			const sessionsWithDefaults = this.sessions.map((session) => {
 				const loadpoint = session.loadpoint || this.$t("main.loadpoint.fallbackName");
