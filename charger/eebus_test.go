@@ -3,7 +3,6 @@ package charger
 import (
 	"testing"
 
-	"github.com/enbility/cemd/emobility"
 	"go.uber.org/mock/gomock"
 )
 
@@ -117,7 +116,7 @@ func TestEEBusIsCharging(t *testing.T) {
 			for index, m := range tc.measurements {
 				ctrl := gomock.NewController(t)
 
-				emobilityMock := emobility.NewMockEmobilityI(ctrl)
+				emobilityMock := NewMockEmobilityI(ctrl)
 				eebus := &EEBus{
 					emobility: emobilityMock,
 				}
