@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/enbility/cemd/emobility"
-	"github.com/golang/mock/gomock"
+	"go.uber.org/mock/gomock"
 )
 
 func TestEEBusIsCharging(t *testing.T) {
