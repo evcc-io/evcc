@@ -29,7 +29,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"strconv"
 	"sync"
@@ -39,6 +38,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/evcc-io/evcc/util/sponsor"
 	"nhooyr.io/websocket"
 )
 
@@ -87,7 +87,15 @@ func NewPulsatrix(hostname string) (*Pulsatrix, error) {
 		data: util.NewMonitor[pulsatrixData](15 * time.Second),
 	}
 
-	return &wb, wb.connectWs()
+	if err := wb.connectWs(); err != nil {
+		return nil, err
+	}
+
+	if !sponsor.IsAuthorized() {
+		return nil, api.ErrSponsorRequired
+	}
+
+	return &wb, nil
 }
 
 // ConnectWs connects to a pulsatrix SECC websocket
@@ -98,11 +106,6 @@ func (c *Pulsatrix) connectWs() error {
 	c.log.TRACE.Printf("connecting to %s", c.uri)
 	conn, _, err := websocket.Dial(ctx, c.uri, nil)
 	if err != nil {
-		if errors.Is(err, context.DeadlineExceeded) {
-			err = fmt.Errorf("Make sure the IP is correct and the SECC is connected to the network")
-		} else {
-			err = fmt.Errorf("error connecting to websocket: %v", err)
-		}
 		return err
 	}
 
@@ -125,8 +128,7 @@ func (c *Pulsatrix) reconnectWs() {
 	bo.InitialInterval = time.Second
 	bo.MaxInterval = 1 * time.Minute
 	bo.MaxElapsedTime = 0 * time.Second // retry forever; default is 15 min
-	err := backoff.Retry(c.connectWs, bo)
-	if err != nil {
+	if err := backoff.Retry(c.connectWs, bo); err != nil {
 		c.log.ERROR.Println(err)
 	}
 }
@@ -139,7 +141,7 @@ func (c *Pulsatrix) wsReader() {
 
 		messageType, message, err := c.conn.Read(ctx)
 		if err != nil {
-			c.log.ERROR.Println("error reading message:", err)
+			c.log.ERROR.Println("read message:", err)
 			break
 		} else {
 			c.parseWsMessage(messageType, message)
@@ -179,13 +181,13 @@ func (c *Pulsatrix) parseWsMessage(messageType websocket.MessageType, message []
 		}
 
 		if err := json.Unmarshal(b, &parsedMessage); err != nil {
-			c.log.WARN.Println(err)
+			c.log.ERROR.Println(err)
 			return
 		}
 
 		val, _ := c.data.Get()
 		if err := json.Unmarshal(parsedMessage.Message, &val); err != nil {
-			c.log.WARN.Println(err)
+			c.log.ERROR.Println(err)
 		} else {
 			c.data.Set(val)
 		}
@@ -240,8 +242,7 @@ func (c *Pulsatrix) MaxCurrent(current int64) error {
 
 // MaxCurrentMillis implements the api.ChargerEx interface
 func (c *Pulsatrix) MaxCurrentMillis(current float64) error {
-	err := c.write("setCurrentLimit\n" + strconv.FormatFloat(current, 'f', 10, 64))
-	return err
+	return c.write("setCurrentLimit\n" + strconv.FormatFloat(current, 'f', 10, 64))
 }
 
 var _ api.CurrentGetter = (*Pulsatrix)(nil)
@@ -268,8 +269,7 @@ func (c *Pulsatrix) TotalEnergy() (float64, error) {
 
 // Phases1p3p implements the api.PhaseSwitcher interface
 func (c *Pulsatrix) Phases1p3p(phases int) error {
-	err := c.write("set1p3p\n" + strconv.Itoa(phases))
-	return err
+	return c.write("set1p3p\n" + strconv.Itoa(phases))
 }
 
 var _ api.PhaseCurrents = (*Pulsatrix)(nil)
