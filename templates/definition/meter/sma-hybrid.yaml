@@ -20,7 +20,7 @@ params:
     advanced: true
   - name: watchdog
     type: duration
-    default: 60s
+    default: 30s
     advanced: true
 render: |
   type: custom
@@ -30,14 +30,14 @@ render: |
     add:
       - source: modbus
         {{- include "modbus" . | indent 6 }}
-        register: # manual non-sunspec register configuration
-          address: 30773 # SMA Modbus Profile: DC power input [1]
+        register:
+          address: 30773 # SMA Modbus Profile: DcMs.Watt [1]
           type: holding
           decode: int32nan
       - source: modbus
         {{- include "modbus" . | indent 6 }}
-        register: # manual non-sunspec register configuration
-          address: 30961 # SMA Modbus Profile: DC power input [2]
+        register:
+          address: 30961 # SMA Modbus Profile: DcMs.Watt [2]
           type: holding
           decode: int32nan
   energy:
@@ -91,36 +91,58 @@ render: |
       - case: 1 # normal
         set:
           source: const
-          value: 10000 # Maximale Wirkleistung
+          value: 803 # inaktiv (Ina)
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
             register:
-              address: 44039 # SMA Modbus Profile: Inverter.WModCfg.WCtlComCfg.WSptMaxNom
+              address: 40151 # SMA Modbus Profile: Inverter.WModCfg.WCtlComCfg.WCtlComAct
               type: writemultiple
-              decode: int32
+              decode: uint32
       - case: 2 # hold
         set:
-          source: const
-          value: 0 # Maximale Wirkleistung
+          source: sequence
           set:
-            source: modbus
-            {{- include "modbus" . | indent 10 }}
-            register:
-              address: 44039 # SMA Modbus Profile: Inverter.WModCfg.WCtlComCfg.WSptMaxNom
-              type: writemultiple
-              decode: int32
+          - source: const
+            value: 0 # Wirkleistungsvorgabe
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 40149 # SMA Modbus Profile: Inverter.WModCfg.WCtlComCfg.WSpt
+                type: writemultiple
+                decode: int32
+          - source: const
+            value: 802 # aktiv (Act)
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 40151 # SMA Modbus Profile: Inverter.WModCfg.WCtlComCfg.WCtlComAct
+                type: writemultiple
+                decode: uint32
       - case: 3 # charge
         set:
-          source: const
-          value: -10000 # Maximale Wirkleistung
+          source: sequence
           set:
-            source: modbus
-            {{- include "modbus" . | indent 10 }}
-            register:
-              address: 44039 # SMA Modbus Profile: Inverter.WModCfg.WCtlComCfg.WSptMaxNom
-              type: writemultiple
-              decode: int32
+          - source: const
+            value: -2147483648 # Wirkleistungsvorgabe
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 40149 # SMA Modbus Profile: Inverter.WModCfg.WCtlComCfg.WSpt
+                type: writemultiple
+                decode: int32
+          - source: const
+            value: 802 # aktiv (Act)
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 40151 # SMA Modbus Profile: Inverter.WModCfg.WCtlComCfg.WCtlComAct
+                type: writemultiple
+                decode: uint32
   {{- if .capacity }}
   capacity: {{ .capacity }} # kWh
   {{- end }}
