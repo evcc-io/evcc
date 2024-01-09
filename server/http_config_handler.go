@@ -203,8 +203,10 @@ func devicesHandler(w http.ResponseWriter, r *http.Request) {
 	jsonResult(w, res)
 }
 
-func newDevice[T any](class templates.Class, req map[string]any, newFromConf func(string, map[string]any) (T, error), h config.Handler[T]) (*config.Config, error) {
-	instance, err := newFromConf(typeTemplate, req)
+type newFromConfFunc[T any] func(context.Context, string, map[string]any) (T, error)
+
+func newDevice[T any](ctx context.Context, class templates.Class, req map[string]any, newFromConf newFromConfFunc[T], h config.Handler[T]) (*config.Config, error) {
+	instance, err := newFromConf(ctx, typeTemplate, req)
 	if err != nil {
 		return nil, err
 	}
@@ -240,15 +242,13 @@ func newDeviceHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch class {
 	case templates.Charger:
-		conf, err = newDevice(class, req, charger.NewFromConfig, config.Chargers())
+		conf, err = newDevice(ctx, class, req, charger.NewFromConfig, config.Chargers())
 
 	case templates.Meter:
-		conf, err = newDevice(class, req, meter.NewFromConfig, config.Meters())
+		conf, err = newDevice(ctx, class, req, meter.NewFromConfig, config.Meters())
 
 	case templates.Vehicle:
-		conf, err = newDevice(class, req, func(typ string, cc map[string]any) (api.Vehicle, error) {
-			return vehicle.NewFromConfig(ctx, typ, cc)
-		}, config.Vehicles())
+		conf, err = newDevice(ctx, class, req, vehicle.NewFromConfig, config.Vehicles())
 	}
 
 	if err != nil {
@@ -265,8 +265,8 @@ func newDeviceHandler(w http.ResponseWriter, r *http.Request) {
 	jsonResult(w, res)
 }
 
-func updateDevice[T any](id int, class templates.Class, conf map[string]any, newFromConf func(string, map[string]any) (T, error), h config.Handler[T]) error {
-	dev, instance, err := deviceInstanceFromMergedConfig(id, class, conf, newFromConf, h)
+func updateDevice[T any](ctx context.Context, id int, class templates.Class, conf map[string]any, newFromConf newFromConfFunc[T], h config.Handler[T]) error {
+	dev, instance, err := deviceInstanceFromMergedConfig(ctx, id, class, conf, newFromConf, h)
 	if err != nil {
 		return err
 	}
@@ -306,15 +306,13 @@ func updateDeviceHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch class {
 	case templates.Charger:
-		err = updateDevice(id, class, req, charger.NewFromConfig, config.Chargers())
+		err = updateDevice(ctx, id, class, req, charger.NewFromConfig, config.Chargers())
 
 	case templates.Meter:
-		err = updateDevice(id, class, req, meter.NewFromConfig, config.Meters())
+		err = updateDevice(ctx, id, class, req, meter.NewFromConfig, config.Meters())
 
 	case templates.Vehicle:
-		err = updateDevice(id, class, req, func(typ string, cc map[string]any) (api.Vehicle, error) {
-			return vehicle.NewFromConfig(ctx, typ, cc)
-		}, config.Vehicles())
+		err = updateDevice(ctx, id, class, req, vehicle.NewFromConfig, config.Vehicles())
 	}
 
 	if err != nil {
@@ -392,12 +390,12 @@ func deleteDeviceHandler(w http.ResponseWriter, r *http.Request) {
 	jsonResult(w, res)
 }
 
-func testDevice[T any](id int, class templates.Class, conf map[string]any, newFromConf func(string, map[string]any) (T, error), h config.Handler[T]) (T, error) {
+func testDevice[T any](ctx context.Context, id int, class templates.Class, conf map[string]any, newFromConf newFromConfFunc[T], h config.Handler[T]) (T, error) {
 	if id == 0 {
-		return newFromConf(typeTemplate, conf)
+		return newFromConf(ctx, typeTemplate, conf)
 	}
 
-	_, instance, err := deviceInstanceFromMergedConfig(id, class, conf, newFromConf, h)
+	_, instance, err := deviceInstanceFromMergedConfig(ctx, id, class, conf, newFromConf, h)
 
 	return instance, err
 }
@@ -436,15 +434,13 @@ func testHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch class {
 	case templates.Charger:
-		instance, err = testDevice(id, class, req, charger.NewFromConfig, config.Chargers())
+		instance, err = testDevice(ctx, id, class, req, charger.NewFromConfig, config.Chargers())
 
 	case templates.Meter:
-		instance, err = testDevice(id, class, req, meter.NewFromConfig, config.Meters())
+		instance, err = testDevice(ctx, id, class, req, meter.NewFromConfig, config.Meters())
 
 	case templates.Vehicle:
-		instance, err = testDevice(id, class, req, func(typ string, cc map[string]any) (api.Vehicle, error) {
-			return vehicle.NewFromConfig(ctx, typ, cc)
-		}, config.Vehicles())
+		instance, err = testDevice(ctx, id, class, req, vehicle.NewFromConfig, config.Vehicles())
 	}
 
 	if err != nil {

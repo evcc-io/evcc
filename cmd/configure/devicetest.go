@@ -74,9 +74,9 @@ func (d *DeviceTest) configure(ctx context.Context) (interface{}, error) {
 
 	switch DeviceCategories[d.DeviceCategory].class {
 	case templates.Meter:
-		v, err = meter.NewFromConfig(instance.Type, instance.Other)
+		v, err = meter.NewFromConfig(ctx, instance.Type, instance.Other)
 	case templates.Charger:
-		v, err = charger.NewFromConfig(instance.Type, instance.Other)
+		v, err = charger.NewFromConfig(ctx, instance.Type, instance.Other)
 	case templates.Vehicle:
 		v, err = vehicle.NewFromConfig(ctx, instance.Type, instance.Other)
 	}

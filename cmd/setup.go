@@ -187,7 +187,7 @@ func configureMeters(static []config.Named, names ...string) error {
 			continue
 		}
 
-		instance, err := meter.NewFromConfig(cc.Type, cc.Other)
+		instance, err := meter.NewFromConfig(context.Background(), cc.Type, cc.Other)
 		if err != nil {
 			return fmt.Errorf("cannot create meter '%s': %w", cc.Name, err)
 		}
@@ -210,7 +210,7 @@ func configureMeters(static []config.Named, names ...string) error {
 			return nil
 		}
 
-		instance, err := meter.NewFromConfig(cc.Type, cc.Other)
+		instance, err := meter.NewFromConfig(context.Background(), cc.Type, cc.Other)
 		if err != nil {
 			return fmt.Errorf("cannot create meter '%s': %w", cc.Name, err)
 		}
@@ -237,7 +237,7 @@ func configureChargers(static []config.Named, names ...string) error {
 
 		cc := cc
 		g.Go(func() error {
-			instance, err := charger.NewFromConfig(cc.Type, cc.Other)
+			instance, err := charger.NewFromConfig(context.Background(), cc.Type, cc.Other)
 			if err != nil {
 				return fmt.Errorf("cannot create charger '%s': %w", cc.Name, err)
 			}
@@ -261,7 +261,7 @@ func configureChargers(static []config.Named, names ...string) error {
 				return nil
 			}
 
-			instance, err := charger.NewFromConfig(cc.Type, cc.Other)
+			instance, err := charger.NewFromConfig(context.Background(), cc.Type, cc.Other)
 			if err != nil {
 				return fmt.Errorf("cannot create charger '%s': %w", cc.Name, err)
 			}
