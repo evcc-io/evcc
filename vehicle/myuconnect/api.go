@@ -13,10 +13,7 @@ import (
 )
 
 const (
-	ApiURI = "https://channels.sdpr-01.fcagcv.com"
-	// ApiKey  = "3_mOx_J2dRgjXYCdyhchv3b5lhi54eBcdCTX4BI8MORqmZCoQWhA0mV2PTlptLGUQI"
-	// XApiKey = "qLYupk65UU1tw2Ih1cJhs4izijgRDbir2UFHA3Je"
-
+	ApiURI      = "https://channels.sdpr-01.fcagcv.com"
 	AuthURI     = "https://mfa.fcl-01.fcagcv.com"
 	XAuthApiKey = "JWRYW7IYhW9v0RqDghQSx4UcRYRILNmc8zAuh5ys"
 )
