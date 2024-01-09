@@ -1,4 +1,4 @@
-package fiat
+package myuconnect
 
 import (
 	"fmt"
@@ -28,15 +28,17 @@ const (
 
 type Identity struct {
 	*request.Helper
+	params         Params
 	user, password string
 	uid            string
 	creds          *cognitoidentity.Credentials
 }
 
 // NewIdentity creates Fiat identity
-func NewIdentity(log *util.Logger, user, password string) *Identity {
+func NewIdentity(log *util.Logger, params Params, user, password string) *Identity {
 	return &Identity{
 		Helper:   request.NewHelper(log),
+		params:   params,
 		user:     user,
 		password: password,
 	}
@@ -49,7 +51,7 @@ func (v *Identity) Login() error {
 	uri := fmt.Sprintf("%s/accounts.webSdkBootstrap", LoginURI)
 
 	data := url.Values{
-		"APIKey":   {ApiKey},
+		"apiKey":   {v.params.LoginApiKey},
 		"pageURL":  {"https://myuconnect.fiat.com/de/de/vehicle-services"},
 		"sdk":      {"js_latest"},
 		"sdkBuild": {"12234"},
@@ -87,7 +89,7 @@ func (v *Identity) Login() error {
 			"loginID":           {v.user},
 			"password":          {v.password},
 			"sessionExpiration": {"7776000"},
-			"APIKey":            {ApiKey},
+			"apiKey":            {v.params.LoginApiKey},
 			"pageURL":           {"https://myuconnect.fiat.com/de/de/login"},
 			"sdk":               {"js_latest"},
 			"sdkBuild":          {"12234"},
@@ -125,7 +127,7 @@ func (v *Identity) Login() error {
 
 		data := url.Values{
 			"fields":      {"profile.firstName,profile.lastName,profile.email,country,locale,data.disclaimerCodeGSDP"}, // data.GSDPisVerified
-			"APIKey":      {ApiKey},
+			"apiKey":      {v.params.LoginApiKey},
 			"pageURL":     {"https://myuconnect.fiat.com/de/de/dashboard"},
 			"sdk":         {"js_latest"},
 			"sdkBuild":    {"12234"},
@@ -161,7 +163,7 @@ func (v *Identity) Login() error {
 			"Content-Type":        "application/json",
 			"X-Clientapp-Version": "1.0",
 			"ClientRequestId":     lo.RandomString(16, lo.LettersCharset),
-			"X-Api-Key":           XApiKey,
+			"X-Api-Key":           v.params.ApiKey,
 			"X-Originator-Type":   "web",
 		}
 

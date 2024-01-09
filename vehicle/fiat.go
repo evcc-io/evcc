@@ -6,7 +6,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/vehicle/fiat"
+	"github.com/evcc-io/evcc/vehicle/myuconnect"
 )
 
 // https://github.com/TA2k/ioBroker.fiat
@@ -14,15 +14,20 @@ import (
 // Fiat is an api.Vehicle implementation for Fiat cars
 type Fiat struct {
 	*embed
-	*fiat.Provider
+	*myuconnect.Provider
 }
 
 func init() {
-	registry.Add("fiat", NewFiatFromConfig)
+	registry.Add("fiat", func(other map[string]interface{}) (api.Vehicle, error) {
+		return NewFiatJeepFromConfig(myuconnect.Fiat, other)
+	})
+	registry.Add("jeep", func(other map[string]interface{}) (api.Vehicle, error) {
+		return NewFiatJeepFromConfig(myuconnect.Jeep, other)
+	})
 }
 
-// NewFiatFromConfig creates a new vehicle
-func NewFiatFromConfig(other map[string]interface{}) (api.Vehicle, error) {
+// NewFiatJeepFromConfig creates a new vehicle
+func NewFiatJeepFromConfig(params myuconnect.Params, other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
 		embed                    `mapstructure:",squash"`
 		User, Password, VIN, PIN string
@@ -46,19 +51,19 @@ func NewFiatFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	log := util.NewLogger("fiat").Redact(cc.User, cc.Password, cc.VIN)
-	identity := fiat.NewIdentity(log, cc.User, cc.Password)
+	identity := myuconnect.NewIdentity(log, params, cc.User, cc.Password)
 
 	err := identity.Login()
 	if err != nil {
 		return nil, fmt.Errorf("login failed: %w", err)
 	}
 
-	api := fiat.NewAPI(log, identity)
+	api := myuconnect.NewAPI(log, params, identity)
 
 	cc.VIN, err = ensureVehicle(cc.VIN, api.Vehicles)
 
 	if err == nil {
-		v.Provider = fiat.NewProvider(api, cc.VIN, cc.PIN, cc.Expiry, cc.Cache)
+		v.Provider = myuconnect.NewProvider(api, cc.VIN, cc.PIN, cc.Expiry, cc.Cache)
 	}
 
 	return v, err

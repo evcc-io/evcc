@@ -1,4 +1,4 @@
-package fiat
+package myuconnect
 
 import (
 	"encoding/base64"
@@ -13,9 +13,9 @@ import (
 )
 
 const (
-	ApiURI  = "https://channels.sdpr-01.fcagcv.com"
-	ApiKey  = "3_mOx_J2dRgjXYCdyhchv3b5lhi54eBcdCTX4BI8MORqmZCoQWhA0mV2PTlptLGUQI"
-	XApiKey = "qLYupk65UU1tw2Ih1cJhs4izijgRDbir2UFHA3Je"
+	ApiURI = "https://channels.sdpr-01.fcagcv.com"
+	// ApiKey  = "3_mOx_J2dRgjXYCdyhchv3b5lhi54eBcdCTX4BI8MORqmZCoQWhA0mV2PTlptLGUQI"
+	// XApiKey = "qLYupk65UU1tw2Ih1cJhs4izijgRDbir2UFHA3Je"
 
 	AuthURI     = "https://mfa.fcl-01.fcagcv.com"
 	XAuthApiKey = "JWRYW7IYhW9v0RqDghQSx4UcRYRILNmc8zAuh5ys"
@@ -23,13 +23,15 @@ const (
 
 // API is an api.Vehicle implementation for Fiat cars
 type API struct {
-	identity *Identity
 	*request.Helper
+	identity *Identity
+	params   Params
 }
 
-func NewAPI(log *util.Logger, identity *Identity) *API {
+func NewAPI(log *util.Logger, params Params, identity *Identity) *API {
 	api := &API{
 		identity: identity,
+		params:   params,
 		Helper:   request.NewHelper(log),
 	}
 
@@ -42,7 +44,7 @@ func (v *API) request(method, uri string, body io.ReadSeeker) (*http.Request, er
 		"Accept":              "application/json",
 		"X-Clientapp-Version": "1.0",
 		"ClientrequestId":     lo.RandomString(16, lo.LettersCharset),
-		"X-Api-Key":           XApiKey,
+		"X-Api-Key":           v.params.ApiKey,
 		"X-Originator-Type":   "web",
 		"locale":              "de_de", // only required for pinAuth
 	}

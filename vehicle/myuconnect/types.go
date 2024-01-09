@@ -1,4 +1,4 @@
-package fiat
+package myuconnect
 
 import (
 	"fmt"
