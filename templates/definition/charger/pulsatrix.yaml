@@ -1,0 +1,12 @@
+template: pulsatrix
+products:
+  - brand: Pulsatrix
+params:
+  - name: host #IP address or hostname (can be found on 3rd page of SECC display)
+    required: true
+    description:
+      en: IP address or hostname (can be found on 3rd page of SECC display)
+      de: IP-Adresse oder Hostname (wird auf der dritten Displayseite des SECC angezeigt)
+render: |
+  type: pulsatrix
+  host: {{ .host }}
