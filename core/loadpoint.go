@@ -234,12 +234,21 @@ func NewLoadpointFromConfig(log *util.Logger, settings *Settings, other map[stri
 	// TODO deprecated
 	if lp.MinCurrent_ > 0 {
 		lp.log.WARN.Println("deprecated: minCurrent setting is ignored, please remove")
+		if _, err := lp.settings.Float(keys.MinCurrent); err != nil {
+			lp.settings.SetFloat(keys.MinCurrent, lp.MinCurrent_)
+		}
 	}
 	if lp.MaxCurrent_ > 0 {
 		lp.log.WARN.Println("deprecated: maxcurrent setting is ignored, please remove")
+		if _, err := lp.settings.Float(keys.MaxCurrent); err != nil {
+			lp.settings.SetFloat(keys.MaxCurrent, lp.MaxCurrent_)
+		}
 	}
 	if lp.ConfiguredPhases_ > 0 {
 		lp.log.WARN.Println("deprecated: phases setting is ignored, please remove")
+		if _, err := lp.settings.Int(keys.PhasesConfigured); err != nil {
+			lp.settings.SetInt(keys.PhasesConfigured, int64(lp.ConfiguredPhases_))
+		}
 	}
 
 	// validate thresholds
