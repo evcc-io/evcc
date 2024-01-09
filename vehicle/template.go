@@ -8,14 +8,14 @@ import (
 )
 
 func init() {
-	registry.Add("template", NewVehicleFromTemplateConfig)
+	registry.AddCtx("template", NewVehicleFromTemplateConfig)
 }
 
-func NewVehicleFromTemplateConfig(other map[string]interface{}) (api.Vehicle, error) {
+func NewVehicleFromTemplateConfig(ctx context.Context, other map[string]interface{}) (api.Vehicle, error) {
 	instance, err := templates.RenderInstance(templates.Vehicle, other)
 	if err != nil {
 		return nil, err
 	}
 
-	return NewFromConfig(context.Background(), instance.Type, instance.Other)
+	return NewFromConfig(ctx, instance.Type, instance.Other)
 }
