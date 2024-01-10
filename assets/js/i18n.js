@@ -8,9 +8,8 @@ import settings from "./settings";
 // https://github.com/joker-x/languages.js/blob/master/languages.json
 export const LOCALES = {
   ar: ["Arabic", "العربية"],
-  bh: ["Bihari", "भोजपुरी"],
+  bg: ["Bulgarian", "Български"],
   ca: ["Catalan", "Català"],
-  "zh-Hans": ["Chinese (Simplified)", "简体中文"],
   cs: ["Czech", "Česky"],
   da: ["Danish", "Dansk"],
   de: ["German", "Deutsch"],
@@ -30,7 +29,9 @@ export const LOCALES = {
   ru: ["Russian", "Русский"],
   sl: ["Slovenian", "Slovenščina"],
   sv: ["Swedish", "Svenska"],
+  tr: ["Turkish", "Türkçe"],
   uk: ["Ukrainian", "Українська"],
+  "zh-Hans": ["Chinese (Simplified)", "简体中文"],
 };
 
 function getBrowserLocale() {
