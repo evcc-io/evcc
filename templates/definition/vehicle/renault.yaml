@@ -10,7 +10,7 @@ params:
     type: bool
     description:
       de: Alternativer Aufweckmechanismus
-      en: Altnerative wakeup mechanism
+      en: Alternative wakeup mechanism
     advanced: true
 render: |
   type: renault
