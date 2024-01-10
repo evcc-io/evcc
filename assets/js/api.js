@@ -17,7 +17,7 @@ api.interceptors.response.use(
   (error) => {
     const message = [`${error.message}.`];
     if (error.response?.data?.error) {
-      message.push(`Response: ${error.response.data.error}.`);
+      message.push(`${error.response.data.error}.`);
     }
     if (error.config) {
       const method = error.config.method.toUpperCase();
