@@ -6,25 +6,26 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
-	"github.com/evcc-io/evcc/vehicle/vag/service"
-	"github.com/evcc-io/evcc/vehicle/vw"
+	"github.com/evcc-io/evcc/vehicle/vag/loginapps"
+	"github.com/evcc-io/evcc/vehicle/vag/vwidentity"
+	"github.com/evcc-io/evcc/vehicle/vw/id"
 )
 
-// https://github.com/trocotronic/weconnect
 // https://github.com/TA2k/ioBroker.vw-connect
 
-// VW is an api.Vehicle implementation for VW cars
-type VW struct {
+// ID is an api.Vehicle implementation for ID cars
+type ID struct {
 	*embed
-	*vw.Provider // provides the api implementations
+	*id.Provider // provides the api implementations
 }
 
 func init() {
-	registry.Add("vw", NewVWFromConfig)
+	registry.Add("vw", NewIDFromConfig)
+	registry.Add("id", NewIDFromConfig)
 }
 
-// NewVWFromConfig creates a new vehicle
-func NewVWFromConfig(other map[string]interface{}) (api.Vehicle, error) {
+// NewIDFromConfig creates a new vehicle
+func NewIDFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
 		embed               `mapstructure:",squash"`
 		User, Password, VIN string
@@ -43,27 +44,39 @@ func NewVWFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, api.ErrMissingCredentials
 	}
 
-	v := &VW{
+	v := &ID{
 		embed: &cc.embed,
 	}
 
-	log := util.NewLogger("vw").Redact(cc.User, cc.Password, cc.VIN)
+	log := util.NewLogger("id").Redact(cc.User, cc.Password, cc.VIN)
 
-	trs, err := service.TokenRefreshServiceTokenSource(log, vw.TRSParams, vw.AuthParams, cc.User, cc.Password)
+	q, err := vwidentity.LoginWithAuthURL(log, id.LoginURL, id.AuthParams, cc.User, cc.Password)
 	if err != nil {
 		return nil, err
 	}
 
-	ts := service.MbbTokenSource(log, trs, vw.AuthClientID)
-	api := vw.NewAPI(log, ts, vw.Brand, vw.Country)
+	apps := loginapps.New(log)
+	token, err := apps.Exchange(q)
+	if err != nil {
+		return nil, err
+	}
+
+	api := id.NewAPI(log, apps.TokenSource(token))
 	api.Client.Timeout = cc.Timeout
 
-	cc.VIN, err = ensureVehicle(cc.VIN, api.Vehicles)
+	vehicle, err := ensureVehicleEx(
+		cc.VIN, api.Vehicles,
+		func(v id.Vehicle) string {
+			return v.VIN
+		},
+	)
+
+	if v.Title_ == "" {
+		v.Title_ = vehicle.Nickname
+	}
 
 	if err == nil {
-		if err = api.HomeRegion(cc.VIN); err == nil {
-			v.Provider = vw.NewProvider(api, cc.VIN, cc.Cache)
-		}
+		v.Provider = id.NewProvider(api, vehicle.VIN, cc.Cache)
 	}
 
 	return v, err

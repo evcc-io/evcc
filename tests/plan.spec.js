@@ -36,6 +36,10 @@ test.describe("basic functionality", async () => {
 
     const lp1 = await page.getByTestId("loadpoint").first();
 
+    // change vehicle
+    await lp1.getByRole("button", { name: "Guest vehicle" }).click();
+    await lp1.getByRole("button", { name: "Vehicle with SoC with Capacity" }).click();
+
     await expect(lp1.getByTestId("plan-marker")).not.toBeVisible();
     await expect(lp1.getByText("Loadpoint", { exact: true })).toBeVisible();
 
@@ -52,9 +56,6 @@ test.describe("basic functionality", async () => {
     await expect(lp1.getByTestId("charging-plan").getByRole("button")).toHaveText(
       "tomorrow 9:30 AM80%"
     );
-
-    await restart(CONFIG);
-    await page.reload();
 
     await expect(lp1.getByTestId("vehicle-status")).toContainText("Target charging starts at");
     await expect(lp1.getByTestId("plan-marker")).toBeVisible();
@@ -74,8 +75,7 @@ test.describe("vehicle variations", async () => {
       const lp1 = await page.getByTestId("loadpoint").first();
 
       // change vehicle
-      await lp1.getByTestId("change-vehicle").click();
-      await lp1.getByRole("button", { name: "Guest vehicle" }).click();
+      await expect(lp1.getByRole("button", { name: "Guest vehicle" })).toBeVisible();
 
       // kWh based limit
       await lp1.getByTestId("limit-energy").getByRole("combobox").selectOption("50 kWh");
@@ -92,7 +92,7 @@ test.describe("vehicle variations", async () => {
       const lp1 = await page.getByTestId("loadpoint").first();
 
       // change vehicle
-      await lp1.getByTestId("change-vehicle").click();
+      await lp1.getByRole("button", { name: "Guest vehicle" }).click();
       await lp1.getByRole("button", { name: "Vehicle no SoC no Capacity" }).click();
 
       // kWh based limit
@@ -110,7 +110,7 @@ test.describe("vehicle variations", async () => {
       const lp1 = await page.getByTestId("loadpoint").first();
 
       // change vehicle
-      await lp1.getByTestId("change-vehicle").click();
+      await lp1.getByRole("button", { name: "Guest vehicle" }).click();
       await lp1.getByRole("button", { name: "Vehicle no SoC with Capacity" }).click();
 
       // kWh based limit
@@ -128,7 +128,7 @@ test.describe("vehicle variations", async () => {
       const lp1 = await page.getByTestId("loadpoint").first();
 
       // change vehicle
-      await lp1.getByTestId("change-vehicle").click();
+      await lp1.getByRole("button", { name: "Guest vehicle" }).click();
       await lp1.getByRole("button", { name: "Vehicle with SoC no Capacity" }).click();
 
       // soc based limit
@@ -146,7 +146,7 @@ test.describe("vehicle variations", async () => {
       const lp1 = await page.getByTestId("loadpoint").first();
 
       // change vehicle
-      await lp1.getByTestId("change-vehicle").click();
+      await lp1.getByRole("button", { name: "Guest vehicle" }).click();
       await lp1.getByRole("button", { name: "Vehicle with SoC with Capacity" }).click();
 
       // soc based limit
@@ -164,8 +164,7 @@ test.describe("vehicle variations", async () => {
       const lp2 = await page.getByTestId("loadpoint").last();
 
       // change vehicle
-      await lp2.getByTestId("change-vehicle").click();
-      await lp2.getByRole("button", { name: "Guest Vehicle" }).click();
+      await expect(lp2.getByRole("button", { name: "Guest vehicle" })).toBeVisible();
 
       // soc based limit
       await lp2.getByTestId("limit-soc").getByRole("combobox").selectOption("80%");
@@ -182,7 +181,7 @@ test.describe("vehicle variations", async () => {
       const lp2 = await page.getByTestId("loadpoint").last();
 
       // change vehicle
-      await lp2.getByTestId("change-vehicle").click();
+      await lp2.getByRole("button", { name: "Guest vehicle" }).click();
       await lp2.getByRole("button", { name: "Vehicle no SoC with Capacity" }).click();
 
       // soc based limit
@@ -215,7 +214,7 @@ test.describe("preview", async () => {
       const lp1 = await page.getByTestId("loadpoint").first();
 
       // change vehicle
-      await lp1.getByTestId("change-vehicle").click();
+      await lp1.getByRole("button", { name: "Guest vehicle" }).click();
       await lp1.getByRole("button", { name: c.vehicle }).click();
 
       await lp1.getByTestId("charging-plan").getByRole("button", { name: "none" }).click();
@@ -256,7 +255,7 @@ test.describe("warnings", async () => {
     const lp1 = await page.getByTestId("loadpoint").first();
 
     // change vehicle
-    await lp1.getByTestId("change-vehicle").click();
+    await lp1.getByRole("button", { name: "Guest vehicle" }).click();
     await lp1.getByRole("button", { name: "Vehicle with SoC with massive Capacity" }).click();
     await lp1.getByTestId("charging-plan").getByRole("button", { name: "none" }).click();
 
@@ -272,7 +271,7 @@ test.describe("warnings", async () => {
     const lp1 = await page.getByTestId("loadpoint").first();
 
     // change vehicle
-    await lp1.getByTestId("change-vehicle").click();
+    await lp1.getByRole("button", { name: "Guest vehicle" }).click();
     await lp1.getByRole("button", { name: "Vehicle with SoC with Capacity" }).click();
     await lp1.getByTestId("charging-plan").getByRole("button", { name: "none" }).click();
 

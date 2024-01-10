@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"errors"
 	"fmt"
 )
 
@@ -43,6 +44,9 @@ func (r providerRegistry) Add(name string, factory func(map[string]interface{}) 
 }
 
 func (r providerRegistry) Get(name string) (func(map[string]interface{}) (Provider, error), error) {
+	if name == "" {
+		return nil, errors.New("missing configuration")
+	}
 	factory, exists := r[name]
 	if !exists {
 		return nil, fmt.Errorf("invalid plugin source: %s", name)

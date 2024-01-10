@@ -44,7 +44,7 @@ func (lp *Loadpoint) resetMeasuredPhases() {
 	lp.measuredPhases = 0
 	lp.Unlock()
 
-	lp.publish(keys.PhasesActive, lp.activePhases())
+	lp.publish(keys.PhasesActive, lp.ActivePhases())
 }
 
 // getMeasuredPhases provides synchronized access to measuredPhases
@@ -64,9 +64,9 @@ func expect(phases int) int {
 	return unknownPhases
 }
 
-// activePhases returns the number of expectedly active phases for the meter.
+// ActivePhases returns the number of expectedly active phases for the meter.
 // If unknown for 1p3p chargers during startup it will assume 3p.
-func (lp *Loadpoint) activePhases() int {
+func (lp *Loadpoint) ActivePhases() int {
 	physical := lp.GetPhases()
 	vehicle := lp.getVehiclePhases()
 	measured := lp.getMeasuredPhases()

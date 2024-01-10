@@ -493,6 +493,8 @@ func (c *OCPP) phases1p3p(phases int) error {
 // 	return "", errors.New("not implemented")
 // }
 
+var _ loadpoint.Controller = (*OCPP)(nil)
+
 // LoadpointControl implements loadpoint.Controller
 func (c *OCPP) LoadpointControl(lp loadpoint.API) {
 	c.lp = lp
