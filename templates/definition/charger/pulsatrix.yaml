@@ -1,6 +1,8 @@
 template: pulsatrix
 products:
   - brand: Pulsatrix
+requirements:
+  evcc: ["sponsorship"]
 params:
   - name: host #IP address or hostname (can be found on 3rd page of SECC display)
     required: true
