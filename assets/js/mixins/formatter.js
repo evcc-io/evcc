@@ -52,6 +52,9 @@ export default {
       return this.fmtKw(watt, kw, withUnit, digits) + (withUnit ? "h" : "");
     },
     fmtNumber: function (number, decimals, unit) {
+      if (isNaN(number)) {
+        return "—";
+      }
       const style = unit ? "unit" : "decimal";
       return new Intl.NumberFormat(this.$i18n.locale, {
         style,
