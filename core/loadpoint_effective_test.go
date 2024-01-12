@@ -18,15 +18,24 @@ func TestEffectiveMinMaxCurrent(t *testing.T) {
 	tc := []struct {
 		chargerMin, chargerMax     float64
 		vehicleMin, vehicleMax     float64
+		lpMin, lpMax               float64
 		effectiveMin, effectiveMax float64
 	}{
-		{0, 0, 0, 0, 6, 16},
-		{1, 10, 0, 0, 1, 10},     // charger lower
-		{10, 20, 0, 0, 10, 16},   // charger higher - max ignored
-		{0, 0, 1, 10, 6, 10},     // vehicle lower - min ignored
-		{0, 0, 10, 20, 10, 16},   // vehicle higher - max ignored
-		{1, 10, 2, 12, 1, 10},    // charger + vehicle lower
-		{10, 20, 12, 22, 10, 16}, // charger + vehicle higher
+		// In this section the charger has a limit set
+		{0, 0, 0, 0, 0, 0, 6, 16},    // default
+		{1, 10, 0, 0, 0, 0, 1, 10},   // charger lower
+		{10, 20, 0, 0, 0, 0, 10, 16}, // charger higher - max ignored
+		// In this section the charger and vehicle has a limit
+		{0, 0, 1, 10, 0, 0, 6, 10},     // vehicle lower - min ignored
+		{0, 0, 10, 20, 0, 0, 10, 16},   // vehicle higher - max ignored
+		{1, 10, 2, 12, 0, 0, 2, 10},    // charger + vehicle lower
+		{10, 20, 12, 22, 0, 0, 12, 16}, // charger + vehicle higher
+
+		// In this section the charger and vehicle and LP has a limit
+		{2, 20, 3, 22, 5, 0, 5, 16},   // lp defines min limit
+		{2, 20, 3, 22, 1, 0, 3, 16},   // vehicle defines min limit
+		{2, 20, 1, 22, 1, 0, 2, 16},   // charger defines min limit
+		{10, 20, 12, 22, 2, 5, 12, 5}, // lp defines max limit
 	}
 
 	for _, tc := range tc {
@@ -35,6 +44,12 @@ func TestEffectiveMinMaxCurrent(t *testing.T) {
 
 		lp := NewLoadpoint(util.NewLogger("foo"), nil)
 		lp.charger = api.NewMockCharger(ctrl)
+		if tc.lpMax > 0 {
+			lp.SetMaxCurrent(tc.lpMax)
+		}
+		if tc.lpMin > 0 {
+			lp.SetMinCurrent(tc.lpMin)
+		}
 
 		if tc.chargerMin+tc.chargerMax > 0 {
 			currentLimiter := api.NewMockCurrentLimiter(ctrl)

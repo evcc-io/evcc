@@ -331,6 +331,7 @@ func (lp *Loadpoint) SetMinCurrent(current float64) {
 
 	if current != lp.MinCurrent {
 		lp.MinCurrent = current
+		lp.hasUserDefinedMinCurrent = true
 		lp.publish(keys.MinCurrent, lp.MinCurrent)
 	}
 }
@@ -363,6 +364,11 @@ func (lp *Loadpoint) GetMinPower() float64 {
 // GetMaxPower returns the max loadpoint power taking vehicle capabilities and phase scaling into account
 func (lp *Loadpoint) GetMaxPower() float64 {
 	return Voltage * lp.effectiveMaxCurrent() * float64(lp.maxActivePhases())
+}
+
+// HasUserDefinedMinCurrent returns true if the user has configured a minCurrent
+func (lp *Loadpoint) HasUserDefinedMinCurrent() bool {
+	return lp.hasUserDefinedMinCurrent
 }
 
 // GetPlanActive returns the active state of the planner

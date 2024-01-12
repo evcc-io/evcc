@@ -117,9 +117,10 @@ type Loadpoint struct {
 	Soc              SocConfig
 	Enable, Disable  ThresholdConfig
 
-	MinCurrent    float64       // PV mode: start current	Min+PV mode: min current
-	MaxCurrent    float64       // Max allowed current. Physically ensured by the charger
-	GuardDuration time.Duration // charger enable/disable minimum holding time
+	MinCurrent               float64       // PV mode: start current	Min+PV mode: min current
+	MaxCurrent               float64       // Max allowed current. Physically ensured by the charger
+	GuardDuration            time.Duration // charger enable/disable minimum holding time
+	hasUserDefinedMinCurrent bool          // hasUserDefinedMinCurrent is true if the user specified a minCurrent in their configuration
 
 	limitSoc    int     // Session limit for soc
 	limitEnergy float64 // Session limit for energy
@@ -186,6 +187,9 @@ func NewLoadpointFromConfig(log *util.Logger, settings *Settings, other map[stri
 	lp := NewLoadpoint(log, settings)
 	if err := util.DecodeOther(other, lp); err != nil {
 		return nil, err
+	}
+	if _, ok := other["mincurrent"]; ok {
+		lp.hasUserDefinedMinCurrent = true
 	}
 
 	// set vehicle polling mode

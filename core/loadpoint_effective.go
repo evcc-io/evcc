@@ -60,7 +60,26 @@ func (lp *Loadpoint) SocBasedPlanning() bool {
 
 // effectiveMinCurrent returns the effective min current
 func (lp *Loadpoint) effectiveMinCurrent() float64 {
-	minCurrent := lp.GetMinCurrent()
+	// There are multiple modes:
+	// a) The user has defined a minCurrent for the LP, the max value of all sources wins
+	// b) The user has not defined a minCurrent for the loadpoint
+	//	  This will use the default 6A, and only a higher value can override this
+	//	  OR a minCurrent provided by the charger
+
+	lpMinCurrent := lp.GetMinCurrent()
+	minCurrent := lpMinCurrent
+
+	if c, ok := lp.charger.(api.CurrentLimiter); ok {
+		if chargerMinCurrent, _, err := c.GetMinMaxCurrent(); err == nil {
+			if lp.HasUserDefinedMinCurrent() {
+				// Case a)
+				minCurrent = max(minCurrent, chargerMinCurrent)
+			} else {
+				// Case b)
+				minCurrent = chargerMinCurrent
+			}
+		}
+	}
 
 	if v := lp.GetVehicle(); v != nil {
 		if res, ok := v.OnIdentified().GetMinCurrent(); ok {
@@ -68,15 +87,8 @@ func (lp *Loadpoint) effectiveMinCurrent() float64 {
 		}
 	}
 
-	if c, ok := lp.charger.(api.CurrentLimiter); ok {
-		if res, _, err := c.GetMinMaxCurrent(); err == nil {
-			if res > 0 && res < minCurrent {
-				minCurrent = res
-			} else {
-				minCurrent = max(minCurrent, res)
-			}
-			lp.publish(keys.EffectiveMinCurrent, minCurrent)
-		}
+	if lpMinCurrent != minCurrent {
+		lp.publish(keys.EffectiveMinCurrent, minCurrent)
 	}
 
 	return minCurrent
