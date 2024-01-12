@@ -260,9 +260,6 @@ func NewLoadpointFromConfig(log *util.Logger, settings *Settings, other map[stri
 		lp.mode = api.ModeOff
 	}
 
-	// restore settings
-	lp.restoreSettings()
-
 	return lp, nil
 }
 
@@ -301,19 +298,19 @@ func NewLoadpoint(log *util.Logger, settings *Settings) *Loadpoint {
 // restoreSettings restores loadpoint settings
 func (lp *Loadpoint) restoreSettings() {
 	if v, err := lp.settings.String(keys.Mode); err == nil {
-		lp.mode = api.ChargeMode(v)
-	}
-	if v, err := lp.settings.Time(keys.PlanTime); err == nil {
-		lp.planTime = v
-	}
-	if v, err := lp.settings.Float(keys.PlanEnergy); err == nil {
-		lp.planEnergy = v
+		lp.setMode(api.ChargeMode(v))
 	}
 	if v, err := lp.settings.Int(keys.LimitSoc); err == nil {
-		lp.limitSoc = int(v)
+		lp.setLimitSoc(int(v))
 	}
 	if v, err := lp.settings.Float(keys.LimitEnergy); err == nil {
-		lp.limitEnergy = v
+		lp.setLimitEnergy(v)
+	}
+
+	t, err1 := lp.settings.Time(keys.PlanTime)
+	v, err2 := lp.settings.Float(keys.PlanEnergy)
+	if err1 == nil && err2 == nil {
+		lp.setPlanEnergy(t, v)
 	}
 }
 
@@ -569,6 +566,9 @@ func (lp *Loadpoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	_ = lp.bus.Subscribe(evVehicleDisconnect, lp.evVehicleDisconnectHandler)
 	_ = lp.bus.Subscribe(evChargeCurrent, lp.evChargeCurrentHandler)
 	_ = lp.bus.Subscribe(evVehicleSoc, lp.evVehicleSocProgressHandler)
+
+	// restore settings
+	lp.restoreSettings()
 
 	// publish initial values
 	lp.publish(keys.Title, lp.Title())
