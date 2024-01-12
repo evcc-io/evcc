@@ -1,6 +1,6 @@
-template: fiat
+template: jeep
 products:
-  - brand: Fiat
+  - brand: Jeep
 params:
   - preset: vehicle-base
   - name: vin
@@ -9,7 +9,7 @@ params:
     mask: true
   - preset: vehicle-identify
 render: |
-  type: fiat
+  type: jeep
   {{ include "vehicle-base" . }}
   {{- if .pin }}
   pin: {{ .pin }} # mandatory to deep refresh Soc
