@@ -810,8 +810,11 @@ func TestSocPoll(t *testing.T) {
 func TestGuardPublish(t *testing.T) {
 	clock := clock.NewMock()
 	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
 	charger := api.NewMockCharger(ctrl)
 	rater := api.NewMockChargeRater(ctrl)
+
+	startPointInTime := clock.Now()
 
 	lp := &Loadpoint{
 		log:           util.NewLogger("foo"),
@@ -821,13 +824,16 @@ func TestGuardPublish(t *testing.T) {
 		chargeMeter:   &Null{}, // silence nil panics
 		chargeRater:   rater,
 		chargeTimer:   &Null{}, // silence nil panics
-		guardUpdated:  clock.Now(),
+		guardUpdated:  startPointInTime,
 		pvTimer:       time.Time{},
 		wakeUpTimer:   NewTimer(),
 		sessionEnergy: NewEnergyMetrics(),
 		MinCurrent:    minA,
 		MaxCurrent:    maxA,
+		chargeCurrent: maxA,
 		status:        api.StatusC,
+		mode:          api.ModePV,
+		enabled:       true,
 		Disable:       ThresholdConfig{Delay: 3 * time.Minute, Threshold: 0}, // t, W
 		GuardDuration: 5 * time.Minute,
 	}
@@ -835,74 +841,50 @@ func TestGuardPublish(t *testing.T) {
 	util.LogLevel("DEBUG", nil)
 
 	attachListeners(t, lp)
-
-	lp.enabled = true
-	lp.chargeCurrent = maxA
-	lp.mode = api.ModePV
-
 	// attach cache for verifying values
 	_, expectCache := cacheExpecter(t, lp)
 
-	t.Log("kick off pv disable timer")
-	charger.EXPECT().Enabled().Return(lp.enabled, nil)
-	charger.EXPECT().Status().Return(api.StatusC, nil)
-	charger.EXPECT().MaxCurrent(int64(lp.MinCurrent)).Return(nil)
 	rater.EXPECT().ChargedEnergy().AnyTimes()
+	charger.EXPECT().Enabled().DoAndReturn(func() (bool, error) { return lp.enabled, nil }).AnyTimes() // just follow the loadpoint
+	charger.EXPECT().Status().Return(api.StatusC, nil).Times(4)
+
+	// test scenario starts here, lp.Update starts PV Timer
+	t.Log("kick off pv disable timer")
 	lp.Update(15000, false, false, false, 0, nil, nil)
-
-	assert.Equal(t, clock.Now(), lp.guardUpdated)
-
-	pvTimerExpectWhileRunning := clock.Now()
-	assert.Equal(t, pvTimerExpectWhileRunning, lp.pvTimer)
-
+	assert.Equal(t, startPointInTime, lp.guardUpdated)
+	assert.Equal(t, startPointInTime, lp.pvTimer)
 	expectCache(pvTimer+"Remaining", 3*time.Minute)
 
 	t.Log("charged 1 minute, continue pv disable timer")
 	clock.Add(time.Minute)
-	rater.EXPECT().ChargedEnergy().AnyTimes()
-	charger.EXPECT().Enabled().Return(lp.enabled, nil)
-	charger.EXPECT().Status().Return(api.StatusC, nil)
 	lp.Update(15000, false, false, false, 0, nil, nil)
-
-	assert.Equal(t, pvTimerExpectWhileRunning, lp.pvTimer)
+	assert.Equal(t, startPointInTime, lp.pvTimer)
 	expectCache(pvTimer+"Remaining", 2*time.Minute)
 
 	// expire PV timer
 	t.Log("charged another 2 minutes, disable charger prevented by guard")
 	clock.Add(2 * time.Minute)
-	rater.EXPECT().ChargedEnergy().AnyTimes()
-	charger.EXPECT().Enabled().Return(lp.enabled, nil)
-	charger.EXPECT().Status().Return(api.StatusC, nil)
 	lp.Update(15000, false, false, false, 0, nil, nil)
-
-	assert.Equal(t, pvTimerExpectWhileRunning, lp.pvTimer)
-
+	assert.Equal(t, startPointInTime, lp.pvTimer)
 	expectCache(pvTimer+"Remaining", time.Duration(0))
 	expectCache(guardTimer+"Remaining", 2*time.Minute)
 
+	// expire guard
 	t.Log("charged another 2 minute, disable charger after guard elapse")
 	clock.Add(2 * time.Minute)
-	rater.EXPECT().ChargedEnergy().AnyTimes()
-	charger.EXPECT().Enabled().Return(lp.enabled, nil)
-	charger.EXPECT().Status().Return(api.StatusC, nil)
 	charger.EXPECT().Enable(false).Return(nil)
 	lp.Update(15000, false, false, false, 0, nil, nil)
-
-	assert.Equal(t, pvTimerExpectWhileRunning, lp.pvTimer)
+	assert.Equal(t, startPointInTime, lp.pvTimer)
 	assert.Equal(t, clock.Now(), lp.guardUpdated)
-
 	expectCache(guardTimer+"Remaining", time.Duration(0))
 
-	t.Log("wait another minute, timers should reset")
+	//pv timer reset
+	t.Log("wait another minute, PV timer should reset")
 	clock.Add(1 * time.Minute)
-	rater.EXPECT().ChargedEnergy().AnyTimes()
-	charger.EXPECT().Enabled().Return(lp.enabled, nil)
 	charger.EXPECT().Status().Return(api.StatusB, nil)
 	lp.Update(15000, false, false, false, 0, nil, nil)
-
 	assert.Equal(t, time.Time{}, lp.pvTimer)
 
-	ctrl.Finish()
 }
 
 // test guard and pv timers are properly published if disable sequence is aborted
