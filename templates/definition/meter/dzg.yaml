@@ -10,8 +10,8 @@ params:
     choice: ["rs485"]
 render: |
   type: modbus
-  model: dzg
   {{- include "modbus" . }}
+  model: dzg
   power: ImportPower
   energy: Import
   currents:

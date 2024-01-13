@@ -10,8 +10,8 @@ params:
     choice: ["rs485"]
 render: |
   type: modbus
-  model: abb
   {{- include "modbus" . }}
+  model: abb
   power: Power
   energy: Import
   currents:
