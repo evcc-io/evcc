@@ -10,8 +10,8 @@ params:
     choice: ["rs485"]
 render: |
   type: mbmd
-  {{- include "modbus" . }}
   model: dzg
+  {{- include "modbus" . }}
   power: ImportPower
   energy: Import
   currents:
