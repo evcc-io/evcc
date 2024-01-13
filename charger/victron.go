@@ -92,7 +92,7 @@ func NewVictronFromConfig(other map[string]interface{}, regs victronRegs) (api.C
 		return nil, err
 	}
 
-	return NewVictron(cc.URI, cc.ID, victronEVCS)
+	return NewVictron(cc.URI, cc.ID, regs)
 }
 
 // NewVictron creates Victron charger
