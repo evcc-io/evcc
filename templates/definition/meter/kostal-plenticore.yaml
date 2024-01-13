@@ -15,7 +15,7 @@ requirements:
     de: |
       Nur ein System kann und darf auf den Wechselrichter zugreifen! Zur aktiven Batteriesteuerung muss die externe Batteriesteuerung über Modbus mit dem Handwerkerzugang aktiviert sein. 
     en: |
-      Only a single system may access the inverter! For active battery control, the external battery control via Modbus must be activated with the craftsman access. 
+      Only a single system may access the inverter! For active battery control, the external battery control via Modbus must be activated with the access for installers. 
 params:
   - name: usage
     choice: ["pv", "battery"]
