@@ -1,19 +1,17 @@
 package core
 
 import (
-	"fmt"
 	"testing"
 	"time"
 
 	evbus "github.com/asaskevich/EventBus"
-	"github.com/avast/retry-go/v4"
 	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/soc"
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/util"
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/mock/gomock"
 )
 
 const (
@@ -434,6 +432,7 @@ func TestDisableAndEnableAtTargetSoc(t *testing.T) {
 	charger.EXPECT().Enabled().Return(lp.enabled, nil)
 	charger.EXPECT().MaxCurrent(int64(maxA)).Return(nil)
 	lp.Update(500, false, false, false, 0, nil, nil)
+	ctrl.Finish()
 
 	t.Log("charging above target - soc deactivates charger")
 	clock.Add(5 * time.Minute)
@@ -442,6 +441,7 @@ func TestDisableAndEnableAtTargetSoc(t *testing.T) {
 	charger.EXPECT().Enabled().Return(lp.enabled, nil)
 	charger.EXPECT().Enable(false).Return(nil)
 	lp.Update(500, false, false, false, 0, nil, nil)
+	ctrl.Finish()
 
 	t.Log("deactivated charger changes status to B")
 	clock.Add(5 * time.Minute)
@@ -449,12 +449,14 @@ func TestDisableAndEnableAtTargetSoc(t *testing.T) {
 	charger.EXPECT().Status().Return(api.StatusB, nil)
 	charger.EXPECT().Enabled().Return(lp.enabled, nil)
 	lp.Update(-5000, false, false, false, 0, nil, nil)
+	ctrl.Finish()
 
 	t.Log("soc has fallen below target - soc update prevented by timer")
 	clock.Add(5 * time.Minute)
 	charger.EXPECT().Status().Return(api.StatusB, nil)
 	charger.EXPECT().Enabled().Return(lp.enabled, nil)
 	lp.Update(-5000, false, false, false, 0, nil, nil)
+	ctrl.Finish()
 
 	t.Log("soc has fallen below target - soc update timer expired")
 	clock.Add(pollInterval)
@@ -463,7 +465,6 @@ func TestDisableAndEnableAtTargetSoc(t *testing.T) {
 	charger.EXPECT().Enabled().Return(lp.enabled, nil)
 	charger.EXPECT().Enable(true).Return(nil)
 	lp.Update(-5000, false, false, false, 0, nil, nil)
-
 	ctrl.Finish()
 }
 
@@ -526,23 +527,12 @@ func cacheExpecter(t *testing.T, lp *Loadpoint) (*util.Cache, func(key string, v
 	go cache.Run(paramC)
 
 	expect := func(key string, val interface{}) {
-		// wrap in retry, as cache async update otherwise causes flaky tests
-		err := retry.Do(
-			func() error {
-				p := cache.Get(key)
-				//t.Logf("%s: %.f", key, p.Val) // REMOVE
-				if p.Val != val {
-					return fmt.Errorf("%s wanted: %v, got %v", key, val, p.Val)
-				}
-				return nil
-			},
-			retry.OnRetry(func(n uint, err error) {
-				t.Logf("retry #%d: %s\n", n, err)
-			}),
-			retry.Attempts(3),
-		)
-		if err != nil {
-			t.Error(err)
+		time.Sleep(100 * time.Millisecond) // wait for cache to catch up
+
+		p := cache.Get(key)
+		t.Logf("%s: %v", key, p.Val) // REMOVE
+		if p.Val != val {
+			t.Errorf("%s wanted: %v, got %v", key, val, p.Val)
 		}
 	}
 	return cache, expect

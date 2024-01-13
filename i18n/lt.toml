@@ -14,7 +14,6 @@ legendTopAutostart = "startuoja automatiškai"
 legendTopName = "kaupiklis padeda įkrauti"
 legendTopSubline = "be pertraukų"
 modalTitle = "Kaupiklio nustatymai"
-notControllable = "Šiam kaupikliui valdymo nėra."
 
 [batterySettings.bufferStart]
 full = "kai beveik pilnas"

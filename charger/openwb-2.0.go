@@ -11,9 +11,10 @@ import (
 
 // OpenWB20 charger implementation
 type OpenWB20 struct {
-	conn *modbus.Connection
-	curr uint16
-	base uint16
+	conn    *modbus.Connection
+	enabled bool
+	curr    uint16
+	base    uint16
 }
 
 const (
@@ -106,12 +107,7 @@ func (wb *OpenWB20) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *OpenWB20) Enabled() (bool, error) {
-	b, err := wb.conn.ReadInputRegisters(wb.base+openwbRegActualAmps, 1)
-	if err != nil {
-		return false, err
-	}
-
-	return binary.BigEndian.Uint16(b) == 1, nil
+	return verifyEnabled(wb, wb.enabled)
 }
 
 func (wb *OpenWB20) setCurrent(u uint16) error {
@@ -125,8 +121,11 @@ func (wb *OpenWB20) Enable(enable bool) error {
 	if enable {
 		u = wb.curr
 	}
-
-	return wb.setCurrent(u)
+	err := wb.setCurrent(u)
+	if err == nil {
+		wb.enabled = enable
+	}
+	return err
 }
 
 // MaxCurrent implements the api.Charger interface
@@ -182,7 +181,7 @@ func (wb *OpenWB20) getPhaseValues(reg uint16) (float64, float64, float64, error
 
 	var res [3]float64
 	for i := range res {
-		res[i] = float64(binary.BigEndian.Uint16(b[2*i:])) / 100
+		res[i] = float64(int16(binary.BigEndian.Uint16(b[2*i:]))) / 100
 	}
 
 	return res[0], res[1], res[2], nil

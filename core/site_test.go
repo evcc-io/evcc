@@ -105,12 +105,17 @@ func TestGreenShare(t *testing.T) {
 		{
 			"half grid, half pv, battery charge, no lp",
 			1000, 1000, -1000, 1000, 0,
-			1, 1, 0,
+			0.5, 1, 0,
 		},
 		{
 			"half grid, half pv, battery charge, home, lp",
 			1000, 1000, -1000, 500, 500,
-			1, 1, 1,
+			0.5, 1, 0,
+		},
+		{
+			"pv ac limited, battery charge & grid import",
+			1000, 3000, -1000, 1000, 2000,
+			0.75, 1, 0.5,
 		},
 	}
 
@@ -123,7 +128,8 @@ func TestGreenShare(t *testing.T) {
 			batteryPower: tc.battery,
 		}
 
-		greenShareTotal := s.greenShare(0, tc.home+tc.lp)
+		totalPower := tc.grid + tc.pv + max(0, tc.battery)
+		greenShareTotal := s.greenShare(0, totalPower)
 		if greenShareTotal != tc.greenShareTotal {
 			t.Errorf("greenShareTotal wanted %.3f, got %.3f", tc.greenShareTotal, greenShareTotal)
 		}
@@ -131,7 +137,7 @@ func TestGreenShare(t *testing.T) {
 		if greenShareHome != tc.greenShareHome {
 			t.Errorf("greenShareHome wanted %.3f, got %.3f", tc.greenShareHome, greenShareHome)
 		}
-		greenShareLoadpoints := s.greenShare(tc.home, tc.home+tc.lp)
+		greenShareLoadpoints := s.greenShare(tc.home+max(0, -tc.battery), totalPower)
 		if greenShareLoadpoints != tc.greenShareLoadpoints {
 			t.Errorf("greenShareLoadpoints wanted %.3f, got %.3f", tc.greenShareLoadpoints, greenShareLoadpoints)
 		}

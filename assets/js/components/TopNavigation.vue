@@ -26,18 +26,32 @@
 					{{ $t("header.sessions") }}
 				</router-link>
 			</li>
+			<li><hr class="dropdown-divider" /></li>
 			<li>
 				<button type="button" class="dropdown-item" @click="openSettingsModal">
 					<span
 						v-if="sponsorTokenExpires"
 						class="d-inline-block p-1 rounded-circle bg-danger border border-light rounded-circle"
 					></span>
-					{{ $t("header.settings") }}
+					{{ $t("settings.title") }}
+				</button>
+			</li>
+			<li v-if="batteryModalAvailable">
+				<button type="button" class="dropdown-item" @click="openBatterySettingsModal">
+					{{ $t("batterySettings.modalTitle") }}
+				</button>
+			</li>
+			<li v-if="gridModalAvailable">
+				<button type="button" class="dropdown-item" @click="openGridSettingsModal">
+					{{ $t("gridSettings.modalTitle") }}
 				</button>
 			</li>
 			<li v-if="$hiddenFeatures()">
-				<router-link class="dropdown-item" to="/config"> Configuration 🧪 </router-link>
+				<router-link class="dropdown-item" to="/config">
+					Device Configuration 🧪
+				</router-link>
 			</li>
+			<li><hr class="dropdown-divider" /></li>
 			<template v-if="providerLogins.length > 0">
 				<li><hr class="dropdown-divider" /></li>
 				<li>
@@ -73,8 +87,6 @@
 				</a>
 			</li>
 		</ul>
-		<GlobalSettingsModal v-bind="globalSettingsModalProps" />
-		<HelpModal />
 	</div>
 </template>
 
@@ -85,15 +97,13 @@ import "@h2d2/shopicons/es/regular/gift";
 import "@h2d2/shopicons/es/regular/moonstars";
 import "@h2d2/shopicons/es/regular/menu";
 import "@h2d2/shopicons/es/regular/newtab";
-import GlobalSettingsModal from "./GlobalSettingsModal.vue";
-import HelpModal from "./HelpModal.vue";
 import collector from "../mixins/collector";
+import gridModalAvailable from "../utils/gridModalAvailable";
 
 import baseAPI from "../baseapi";
 
 export default {
 	name: "TopNavigation",
-	components: { GlobalSettingsModal, HelpModal },
 	mixins: [collector],
 	props: {
 		vehicleLogins: {
@@ -104,11 +114,10 @@ export default {
 		},
 		sponsor: String,
 		sponsorTokenExpires: Number,
+		batteryConfigured: Boolean,
+		smartCostType: String,
 	},
 	computed: {
-		globalSettingsModalProps: function () {
-			return this.collectProps(GlobalSettingsModal);
-		},
 		logoutCount() {
 			return this.providerLogins.filter((login) => !login.loggedIn).length;
 		},
@@ -125,6 +134,12 @@ export default {
 		},
 		showBadge() {
 			return this.loginRequired || this.sponsorTokenExpires;
+		},
+		batteryModalAvailable() {
+			return this.batteryConfigured;
+		},
+		gridModalAvailable: function () {
+			return gridModalAvailable(this.smartCostType);
 		},
 	},
 	mounted() {
@@ -153,6 +168,16 @@ export default {
 		},
 		openHelpModal() {
 			const modal = Modal.getOrCreateInstance(document.getElementById("helpModal"));
+			modal.show();
+		},
+		openBatterySettingsModal() {
+			const modal = Modal.getOrCreateInstance(
+				document.getElementById("batterySettingsModal")
+			);
+			modal.show();
+		},
+		openGridSettingsModal() {
+			const modal = Modal.getOrCreateInstance(document.getElementById("gridSettingsModal"));
 			modal.show();
 		},
 	},

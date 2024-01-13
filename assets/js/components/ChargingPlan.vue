@@ -43,7 +43,9 @@
 						<div class="modal-header">
 							<h5 class="modal-title">
 								{{ $t("main.chargingPlan.modalTitle")
-								}}<span v-if="socBasedPlanning">: {{ vehicle.title }}</span>
+								}}<span v-if="socBasedPlanning && vehicle"
+									>: {{ vehicle.title }}</span
+								>
 							</h5>
 							<button
 								type="button"
