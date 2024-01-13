@@ -63,7 +63,7 @@ render: |
   power: Power
   energy: Export
   {{- if eq .usage "battery" }}
-  soc: ChargeState
+  soc: 124:ChaState
   {{- if .capacity }}
   capacity: {{ .capacity }} # kWh
   {{- end }}

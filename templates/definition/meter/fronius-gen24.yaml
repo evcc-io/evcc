@@ -48,7 +48,7 @@ render: |
     source: sunspec
     uri: {{ .host }}:{{ .port }}
     id: 1
-    value: Export
+    value: Export ## TODO
   {{- end }}
   {{- if eq .usage "battery" }}
   type: custom
@@ -68,7 +68,7 @@ render: |
     source: sunspec
     uri: {{ .host }}:{{ .port }}
     id: 1
-    value: ChargeState
+    value: 124:ChaState
   {{- if .capacity }}
   capacity: {{ .capacity }} # kWh
   {{- end }}

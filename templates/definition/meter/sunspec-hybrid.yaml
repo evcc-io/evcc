@@ -67,19 +67,19 @@ render: |
     add:
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
-      value: DCPowerS1 # mppt 1
+      value: 160:1:DCW # mppt 1
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
-      value: DCPowerS2 # mppt 2
+      value: 160:2:DCW # mppt 2
   energy:
     source: calc
     add:
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
-      value: DCEnergyS1 # mppt 1
+      value: 160:1:DCWH # mppt 1
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
-      value: DCEnergyS2 # mppt 2
+      value: 160:2:DCWH # mppt 2
   {{- end }}
   {{- if eq .usage "battery" }}
   type: custom
@@ -88,19 +88,19 @@ render: |
     add:
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
-      value: DCPowerS3 # mppt 3 (charge)
+      value: 160:3:DCW # mppt 3 (charge)
       scale: -1
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
-      value: DCPowerS4 # mppt 4 (discharge)
+      value: 160:4:DCW # mppt 4 (discharge)
   energy:
     source: sunspec
     {{- include "modbus" . | indent 2 }}
-    value: DCEnergyS4 # mppt 4 (discharge)
+    value: 160:4:DCWH # mppt 4 (discharge)
   soc:
     source: sunspec
     {{- include "modbus" . | indent 2 }}
-    value: ChargeState
+    value: 124:ChaState
   {{- if .capacity }}
   capacity: {{ .capacity }} # kWh
   {{- end }}
