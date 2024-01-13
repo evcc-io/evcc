@@ -13,7 +13,7 @@ linked:
 requirements:
   description:
     de: |
-      Nur ein System kann und darf auf den Wechselrichter zugreifen! Zur aktiven Batteriesteuerung muss die externe Batteriesteuerung über Modbus mit dem Handwerkerzugang aktiviert sein. Weiterhin muss die Modbus Kommunikation auf big-endian (ABCD) gestellt sein. Liest das Kostal Smart Energy Meter (KSEM) den Wechselrichter über Modbus TCP aus, ist dies nicht mehr möglich, da das KSEM nur little endian unterstützt. 
+      Nur ein System kann und darf auf den Wechselrichter zugreifen! Zur aktiven Batteriesteuerung muss die externe Batteriesteuerung über Modbus mit dem Handwerkerzugang aktiviert sein. Weiterhin muss die Modbus Kommunikation auf big-endian (ABCD) gestellt sein. Liest das Kostal Smart Energy Meter (KSEM) den Wechselrichter über Modbus TCP aus, ist dies dann nicht mehr möglich, da das KSEM nur little endian unterstützt. 
     en: |
       Only a single system may access the inverter! For active battery control, the external battery control via Modbus must be activated with the access for installers. Modbus communication must also be set to big-endian (ABCD). If the Kostal Smart Energy Meter (KSEM) reads the inverter via Modbus TCP, this is no longer possible as the KSEM only supports little endian.
 params:
