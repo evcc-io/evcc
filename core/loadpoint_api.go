@@ -118,7 +118,10 @@ func (lp *Loadpoint) SetPhases(phases int) error {
 
 	// set new default
 	lp.log.DEBUG.Println("set phases:", phases)
+
+	lp.Lock()
 	lp.setConfiguredPhases(phases)
+	lp.Unlock()
 
 	// apply immediately if not 1p3p
 	if _, ok := lp.charger.(api.PhaseSwitcher); !ok {
@@ -327,6 +330,13 @@ func (lp *Loadpoint) GetMinCurrent() float64 {
 	return lp.minCurrent
 }
 
+// setMinCurrent sets the min loadpoint current (no mutex)
+func (lp *Loadpoint) setMinCurrent(current float64) {
+	lp.minCurrent = current
+	lp.publish(keys.MinCurrent, lp.minCurrent)
+	lp.settings.SetFloat(keys.MinCurrent, lp.minCurrent)
+}
+
 // SetMinCurrent sets the min loadpoint current
 func (lp *Loadpoint) SetMinCurrent(current float64) {
 	lp.Lock()
@@ -335,9 +345,7 @@ func (lp *Loadpoint) SetMinCurrent(current float64) {
 	lp.log.DEBUG.Println("set min current:", current)
 
 	if current != lp.minCurrent {
-		lp.minCurrent = current
-		lp.publish(keys.MinCurrent, lp.minCurrent)
-		lp.settings.SetFloat(keys.MinCurrent, lp.minCurrent)
+		lp.setMinCurrent(current)
 	}
 }
 
@@ -348,6 +356,13 @@ func (lp *Loadpoint) GetMaxCurrent() float64 {
 	return lp.maxCurrent
 }
 
+// setMaxCurrent sets the max loadpoint current
+func (lp *Loadpoint) setMaxCurrent(current float64) {
+	lp.maxCurrent = current
+	lp.publish(keys.MaxCurrent, lp.maxCurrent)
+	lp.settings.SetFloat(keys.MaxCurrent, lp.maxCurrent)
+}
+
 // SetMaxCurrent sets the max loadpoint current
 func (lp *Loadpoint) SetMaxCurrent(current float64) {
 	lp.Lock()
@@ -356,9 +371,7 @@ func (lp *Loadpoint) SetMaxCurrent(current float64) {
 	lp.log.DEBUG.Println("set max current:", current)
 
 	if current != lp.maxCurrent {
-		lp.maxCurrent = current
-		lp.publish(keys.MaxCurrent, lp.maxCurrent)
-		lp.settings.SetFloat(keys.MaxCurrent, lp.maxCurrent)
+		lp.setMaxCurrent(current)
 	}
 }
 

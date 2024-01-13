@@ -303,18 +303,15 @@ func (lp *Loadpoint) restoreSettings() {
 	if v, err := lp.settings.String(keys.Mode); err == nil && v != "" {
 		lp.setMode(api.ChargeMode(v))
 	}
-
-	// TODO consistently use setters
-	if v, err := lp.settings.Int(keys.PhasesConfigured); err == nil {
-		lp.configuredPhases = int(v)
+	if v, err := lp.settings.Int(keys.PhasesConfigured); err == nil && v > 0 {
+		lp.setConfiguredPhases(int(v))
 	}
-	if v, err := lp.settings.Float(keys.MinCurrent); err == nil {
-		lp.minCurrent = v
+	if v, err := lp.settings.Float(keys.MinCurrent); err == nil && v > 0 {
+		lp.setMinCurrent(v)
 	}
-	if v, err := lp.settings.Float(keys.MaxCurrent); err == nil {
-		lp.maxCurrent = v
+	if v, err := lp.settings.Float(keys.MaxCurrent); err == nil && v > 0 {
+		lp.setMaxCurrent(v)
 	}
-
 	if v, err := lp.settings.Int(keys.LimitSoc); err == nil && v > 0 {
 		lp.setLimitSoc(int(v))
 	}
