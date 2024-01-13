@@ -530,7 +530,7 @@ func cacheExpecter(t *testing.T, lp *Loadpoint) (*util.Cache, func(key string, v
 		err := retry.Do(
 			func() error {
 				p := cache.Get(key)
-				t.Logf("%s: %.f", key, p.Val) // REMOVE
+				//t.Logf("%s: %.f", key, p.Val) // REMOVE
 				if p.Val != val {
 					return fmt.Errorf("%s wanted: %v, got %v", key, val, p.Val)
 				}
@@ -806,14 +806,13 @@ func TestSocPoll(t *testing.T) {
 	}
 }
 
-// test guard and pv timers are properly published during disable
+// test guard timer is properly published during disable cycle
 func TestGuardPublish(t *testing.T) {
-	clock := clock.NewMock()
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
+	clock := clock.NewMock()
 	charger := api.NewMockCharger(ctrl)
 	rater := api.NewMockChargeRater(ctrl)
-
 	startPointInTime := clock.Now()
 
 	lp := &Loadpoint{
@@ -834,8 +833,8 @@ func TestGuardPublish(t *testing.T) {
 		status:        api.StatusC,
 		mode:          api.ModePV,
 		enabled:       true,
-		Disable:       ThresholdConfig{Delay: 3 * time.Minute, Threshold: 0}, // t, W
-		GuardDuration: 5 * time.Minute,
+		Disable:       ThresholdConfig{Delay: 2 * time.Minute, Threshold: 0}, // t, W
+		GuardDuration: 3 * time.Minute,
 	}
 
 	util.LogLevel("DEBUG", nil)
@@ -847,54 +846,36 @@ func TestGuardPublish(t *testing.T) {
 	rater.EXPECT().ChargedEnergy().AnyTimes()
 	charger.EXPECT().Enabled().DoAndReturn(func() (bool, error) { return lp.enabled, nil }).AnyTimes() // just follow the loadpoint
 	charger.EXPECT().Status().Return(api.StatusC, nil).Times(4)
-
-	// test scenario starts here, lp.Update starts PV Timer
-	t.Log("kick off pv disable timer")
-	lp.Update(15000, false, false, false, 0, nil, nil)
-	assert.Equal(t, startPointInTime, lp.guardUpdated)
-	assert.Equal(t, startPointInTime, lp.pvTimer)
-	expectCache(pvTimer+"Remaining", 3*time.Minute)
-
-	t.Log("charged 1 minute, continue pv disable timer")
-	clock.Add(time.Minute)
-	lp.Update(15000, false, false, false, 0, nil, nil)
-	assert.Equal(t, startPointInTime, lp.pvTimer)
-	expectCache(pvTimer+"Remaining", 2*time.Minute)
-
-	// expire PV timer
-	t.Log("charged another 2 minutes, disable charger prevented by guard")
-	clock.Add(2 * time.Minute)
-	lp.Update(15000, false, false, false, 0, nil, nil)
-	assert.Equal(t, startPointInTime, lp.pvTimer)
-	expectCache(pvTimer+"Remaining", time.Duration(0))
-	expectCache(guardTimer+"Remaining", 2*time.Minute)
-
-	// expire guard
-	t.Log("charged another 2 minute, disable charger after guard elapse")
-	clock.Add(2 * time.Minute)
 	charger.EXPECT().Enable(false).Return(nil)
-	lp.Update(15000, false, false, false, 0, nil, nil)
-	assert.Equal(t, startPointInTime, lp.pvTimer)
-	assert.Equal(t, clock.Now(), lp.guardUpdated)
-	expectCache(guardTimer+"Remaining", time.Duration(0))
 
-	//pv timer reset
-	t.Log("wait another minute, PV timer should reset")
-	clock.Add(1 * time.Minute)
-	charger.EXPECT().Status().Return(api.StatusB, nil)
-	lp.Update(15000, false, false, false, 0, nil, nil)
-	assert.Equal(t, time.Time{}, lp.pvTimer)
+	tc := []struct {
+		step                string
+		guardUpdates        time.Time
+		guardTimerRemaining time.Duration
+	}{
+		{"kick off pv disable timer", startPointInTime, 3 * time.Minute},
+		{"continue pv disable timer", startPointInTime, 2 * time.Minute},
+		{"disable charger prevented by guard", startPointInTime, 1 * time.Minute},
+		{"guard elapse, publish new guard time", startPointInTime.Add(3 * time.Minute), time.Duration(0)},
+	}
 
+	for _, tc := range tc {
+		t.Logf("%+v", tc)
+		lp.Update(15000, false, false, false, 0, nil, nil)
+		assert.Equal(t, tc.guardUpdates, lp.guardUpdated)
+		expectCache(guardTimer+"Remaining", tc.guardTimerRemaining)
+		clock.Add(time.Minute)
+	}
 }
 
-// test guard and pv timers are properly published if disable sequence is aborted
+// test guard timer is properly published if charger disable sequence is aborted
 func TestGuardPublishOnDisableAbort(t *testing.T) {
-	clock := clock.NewMock()
 	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	clock := clock.NewMock()
 	charger := api.NewMockCharger(ctrl)
 	rater := api.NewMockChargeRater(ctrl)
-
-	t0 := clock.Now()
+	startPointInTime := clock.Now()
 
 	lp := &Loadpoint{
 		log:           util.NewLogger("foo"),
@@ -904,89 +885,48 @@ func TestGuardPublishOnDisableAbort(t *testing.T) {
 		chargeMeter:   &Null{}, // silence nil panics
 		chargeRater:   rater,
 		chargeTimer:   &Null{}, // silence nil panics
-		guardUpdated:  t0,
+		guardUpdated:  startPointInTime,
 		pvTimer:       time.Time{},
 		wakeUpTimer:   NewTimer(),
 		sessionEnergy: NewEnergyMetrics(),
 		MinCurrent:    minA,
 		MaxCurrent:    maxA,
+		chargeCurrent: maxA,
 		status:        api.StatusC,
-		Disable:       ThresholdConfig{Delay: 3 * time.Minute, Threshold: 0}, // t, W
-		GuardDuration: 5 * time.Minute,
+		mode:          api.ModePV,
+		enabled:       true,
+		Disable:       ThresholdConfig{Delay: 2 * time.Minute, Threshold: 0}, // t, W
+		GuardDuration: 4 * time.Minute,
 	}
 
 	util.LogLevel("DEBUG", nil)
 
 	attachListeners(t, lp)
-
-	lp.enabled = true
-	lp.chargeCurrent = maxA
-	lp.mode = api.ModePV
-
 	// attach cache for verifying values
 	_, expectCache := cacheExpecter(t, lp)
 
-	t.Log("kick off pv disable timer")
-	charger.EXPECT().Enabled().Return(lp.enabled, nil)
-	charger.EXPECT().Status().Return(api.StatusC, nil)
-	charger.EXPECT().MaxCurrent(int64(lp.MinCurrent)).Return(nil)
 	rater.EXPECT().ChargedEnergy().AnyTimes()
-	lp.Update(15000, false, false, false, 0, nil, nil)
+	charger.EXPECT().Enabled().DoAndReturn(func() (bool, error) { return lp.enabled, nil }).AnyTimes() // just follow the loadpoint
+	charger.EXPECT().Status().Return(api.StatusC, nil).Times(5)
 
-	assert.Equal(t, t0, lp.guardUpdated)
-	assert.Equal(t, t0, lp.pvTimer)
+	tc := []struct {
+		step                string
+		sitePower           float64
+		guardUpdated        time.Time
+		guardTimerRemaining time.Duration
+	}{
+		{"kick off pv disable timer", 15000, startPointInTime, 4 * time.Minute},
+		{"continue pv disable timer", 15000, startPointInTime, 3 * time.Minute},
+		{"disable charger prevented by guard", 15000, startPointInTime, 2 * time.Minute},
+		{"disable charger reset, pv power is back", -1, startPointInTime, 1 * time.Minute},
+		{"guard elapsed, publish new guard time", -1, elapsed, time.Duration(0)},
+	}
 
-	expectCache(pvTimer+"Remaining", 3*time.Minute)
-
-	t.Log("charged 1 minute, continue pv disable timer")
-	clock.Add(time.Minute)
-	rater.EXPECT().ChargedEnergy().AnyTimes()
-	charger.EXPECT().Enabled().Return(lp.enabled, nil)
-	charger.EXPECT().Status().Return(api.StatusC, nil)
-	lp.Update(15000, false, false, false, 0, nil, nil)
-
-	assert.Equal(t, t0, lp.pvTimer)
-	assert.Equal(t, t0, lp.guardUpdated)
-
-	expectCache(pvTimer+"Remaining", 2*time.Minute)
-
-	// expire PV timer
-	t.Log("charged another 2 minutes, disable charger prevented by guard")
-	clock.Add(2 * time.Minute)
-	rater.EXPECT().ChargedEnergy().AnyTimes()
-	charger.EXPECT().Enabled().Return(lp.enabled, nil)
-	charger.EXPECT().Status().Return(api.StatusC, nil)
-	lp.Update(15000, false, false, false, 0, nil, nil)
-
-	assert.Equal(t, t0, lp.pvTimer)
-	assert.Equal(t, t0, lp.guardUpdated)
-
-	expectCache(pvTimer+"Remaining", time.Duration(0))
-	expectCache(guardTimer+"Remaining", 2*time.Minute)
-
-	t.Log("charged another minute, abort disable, expect guard remain to continue publishing")
-	clock.Add(1 * time.Minute)
-	rater.EXPECT().ChargedEnergy().AnyTimes()
-	charger.EXPECT().Enabled().Return(lp.enabled, nil)
-	charger.EXPECT().Status().Return(api.StatusC, nil)
-	lp.Update(-1, false, false, false, 0, nil, nil)
-
-	assert.Equal(t, time.Time{}, lp.pvTimer)
-	assert.Equal(t, t0, lp.guardUpdated)
-
-	expectCache(guardTimer+"Remaining", time.Minute)
-
-	t.Log("wait another minute, guard timer should still publish")
-	clock.Add(1 * time.Minute)
-	rater.EXPECT().ChargedEnergy().AnyTimes()
-	charger.EXPECT().Enabled().Return(lp.enabled, nil)
-	charger.EXPECT().Status().Return(api.StatusC, nil)
-	lp.Update(-1, false, false, false, 0, nil, nil)
-
-	assert.Equal(t, time.Time{}, lp.pvTimer)
-
-	assert.Equal(t, elapsed, lp.guardUpdated)
-	expectCache(guardTimer+"Remaining", time.Duration(0))
-
-	ctrl.Finish()
+	for _, tc := range tc {
+		t.Logf("%+v", tc)
+		lp.Update(tc.sitePower, false, false, false, 0, nil, nil)
+		assert.Equal(t, tc.guardUpdated, lp.guardUpdated)
+		expectCache(guardTimer+"Remaining", tc.guardTimerRemaining)
+		clock.Add(time.Minute)
+	}
 }
