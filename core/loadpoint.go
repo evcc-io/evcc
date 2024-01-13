@@ -263,20 +263,6 @@ func NewLoadpointFromConfig(log *util.Logger, settings *Settings, other map[stri
 		lp.mode = api.ModeOff
 	}
 
-	// restore settings
-	lp.restoreSettings()
-
-	// setup fixed phases:
-	// - simple charger starts with phases config if specified or 3p
-	// - switchable charger starts at 0p since we don't know the current setting
-	if _, ok := lp.charger.(api.PhaseSwitcher); !ok {
-		if lp.configuredPhases == 0 {
-			lp.configuredPhases = 3
-			lp.log.WARN.Println("phases not configured, assuming 3p")
-		}
-		lp.phases = lp.configuredPhases
-	}
-
 	return lp, nil
 }
 
@@ -314,9 +300,10 @@ func NewLoadpoint(log *util.Logger, settings *Settings) *Loadpoint {
 
 // restoreSettings restores loadpoint settings
 func (lp *Loadpoint) restoreSettings() {
-	if v, err := lp.settings.String(keys.Mode); err == nil {
-		lp.mode = api.ChargeMode(v)
+	if v, err := lp.settings.String(keys.Mode); err == nil && v != "" {
+		lp.setMode(api.ChargeMode(v))
 	}
+
 	// TODO consistently use setters
 	if v, err := lp.settings.Int(keys.PhasesConfigured); err == nil {
 		lp.configuredPhases = int(v)
@@ -327,17 +314,18 @@ func (lp *Loadpoint) restoreSettings() {
 	if v, err := lp.settings.Float(keys.MaxCurrent); err == nil {
 		lp.maxCurrent = v
 	}
-	if v, err := lp.settings.Time(keys.PlanTime); err == nil {
-		lp.planTime = v
+
+	if v, err := lp.settings.Int(keys.LimitSoc); err == nil && v > 0 {
+		lp.setLimitSoc(int(v))
 	}
-	if v, err := lp.settings.Float(keys.PlanEnergy); err == nil {
-		lp.planEnergy = v
+	if v, err := lp.settings.Float(keys.LimitEnergy); err == nil && v > 0 {
+		lp.setLimitEnergy(v)
 	}
-	if v, err := lp.settings.Int(keys.LimitSoc); err == nil {
-		lp.limitSoc = int(v)
-	}
-	if v, err := lp.settings.Float(keys.LimitEnergy); err == nil {
-		lp.limitEnergy = v
+
+	t, err1 := lp.settings.Time(keys.PlanTime)
+	v, err2 := lp.settings.Float(keys.PlanEnergy)
+	if err1 == nil && err2 == nil {
+		lp.setPlanEnergy(t, v)
 	}
 }
 
@@ -593,6 +581,9 @@ func (lp *Loadpoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	_ = lp.bus.Subscribe(evVehicleDisconnect, lp.evVehicleDisconnectHandler)
 	_ = lp.bus.Subscribe(evChargeCurrent, lp.evChargeCurrentHandler)
 	_ = lp.bus.Subscribe(evVehicleSoc, lp.evVehicleSocProgressHandler)
+
+	// restore settings
+	lp.restoreSettings()
 
 	// publish initial values
 	lp.publish(keys.Title, lp.Title())
