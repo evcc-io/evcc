@@ -28,12 +28,12 @@ render: |
     value: 203:W # sunspec 3-phase meter power reading
     scale: -1
   {{- else }}
-    value: Power
+    value: Power ## TODO
   {{- end }}
   {{- if eq .usage "pv" }}
   energy:
     source: sunspec
     {{- include "modbus" . | indent 2 }}
     timeout: {{ .timeout }}
-    value: Export
+    value: Export ## TODO
   {{- end }}
