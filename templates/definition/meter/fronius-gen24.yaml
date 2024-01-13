@@ -36,21 +36,18 @@ render: |
   power:
     source: calc
     add:
-    - source: modbus
+    - source: sunspec
       uri: {{ .host }}:{{ .port }}
       id: 1
-      model: sunspec
-      value: 160:1:DCW # mppt 1
-    - source: modbus
+        value: 160:1:DCW # mppt 1
+    - source: sunspec
       uri: {{ .host }}:{{ .port }}
       id: 1
-      model: sunspec
-      value: 160:2:DCW # mppt 2
+        value: 160:2:DCW # mppt 2
   energy:
-    source: modbus
+    source: sunspec
     uri: {{ .host }}:{{ .port }}
     id: 1
-    model: sunspec
     value: Export
   {{- end }}
   {{- if eq .usage "battery" }}
@@ -58,22 +55,19 @@ render: |
   power:
     source: calc
     add:
-    - source: modbus
+    - source: sunspec
       uri: {{ .host }}:{{ .port }}
       id: 1
-      model: sunspec
-      value: 160:3:DCW # mppt 3 charge
+        value: 160:3:DCW # mppt 3 charge
       scale: -1
-    - source: modbus
+    - source: sunspec
       uri: {{ .host }}:{{ .port }}
       id: 1
-      model: sunspec
-      value: 160:4:DCW # mppt 4 discharge
+        value: 160:4:DCW # mppt 4 discharge
   soc:
-    source: modbus
+    source: sunspec
     uri: {{ .host }}:{{ .port }}
     id: 1
-    model: sunspec
     value: ChargeState
   {{- if .capacity }}
   capacity: {{ .capacity }} # kWh

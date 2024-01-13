@@ -352,6 +352,19 @@ type Register struct {
 	BitMask string
 }
 
+func (r Register) Error() error {
+	if r.Address == 0 {
+		return errors.New("address is required")
+	}
+	if r.Type == "" {
+		return errors.New("type is required")
+	}
+	if r.Decode == "" {
+		return errors.New("decode is required")
+	}
+	return nil
+}
+
 // asFloat64 creates a function that returns numerics vales as float64
 func asFloat64[T constraints.Signed | constraints.Unsigned | constraints.Float](f func([]byte) T) func([]byte) float64 {
 	return func(v []byte) float64 {
