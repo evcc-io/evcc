@@ -386,16 +386,7 @@ func (lp *Loadpoint) publish(key string, val interface{}) {
 		return
 	}
 
-	p := util.Param{Key: key, Val: val}
-
-	// https://github.com/evcc-io/evcc/issues/11191 prevent deadlock
-	select {
-	case lp.uiChan <- p:
-	default:
-		go func() {
-			lp.uiChan <- p
-		}()
-	}
+	lp.uiChan <- util.Param{Key: key, Val: val}
 }
 
 // evChargeStartHandler sends external start event
