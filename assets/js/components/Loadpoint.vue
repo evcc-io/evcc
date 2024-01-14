@@ -151,11 +151,9 @@ export default {
 		// charging: Boolean,
 		enabled: Boolean,
 		vehicleDetectionActive: Boolean,
-		vehiclePresent: Boolean,
 		vehicleRange: Number,
 		vehicleSoc: Number,
 		vehicleName: String,
-		vehicleTitle: String,
 		vehicleIcon: String,
 		vehicleTargetSoc: Number,
 		vehicleCapacity: Number,
@@ -214,6 +212,9 @@ export default {
 		vehicle: function () {
 			return this.vehicles?.find((v) => v.name === this.vehicleName);
 		},
+		vehicleTitle: function () {
+			return this.vehicle?.title;
+		},
 		loadpointTitle: function () {
 			return this.title || this.$t("main.loadpoint.fallbackName");
 		},
@@ -241,22 +242,17 @@ export default {
 		showChargingIndicator: function () {
 			return this.charging && this.chargePower > 0;
 		},
-		socBasedCharging: function () {
-			return (!this.vehicleFeatureOffline && this.vehiclePresent) || this.vehicleSoc > 0;
-		},
-		knownVehicle: function () {
+		vehicleKnown: function () {
 			return !!this.vehicleName;
 		},
 		vehicleHasSoc: function () {
-			return this.knownVehicle && !this.vehicleFeatureOffline;
+			return this.vehicleKnown && !this.vehicleFeatureOffline;
+		},
+		socBasedCharging: function () {
+			return this.vehicleHasSoc || this.vehicleSoc > 0;
 		},
 		socBasedPlanning: function () {
-			// TODO: deduplicate business logic. see also: socBasedPlanning() in loadpoint.go
-			return (
-				this.knownVehicle &&
-				this.vehicleCapacity > 0 &&
-				(this.vehicleHasSoc || this.vehicleSoc > 0)
-			);
+			return this.socBasedCharging && this.vehicleCapacity > 0;
 		},
 	},
 	watch: {

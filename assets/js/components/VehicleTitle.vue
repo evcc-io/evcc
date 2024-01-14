@@ -56,7 +56,6 @@ export default {
 		vehicleDetectionActive: Boolean,
 		vehicleIcon: String,
 		vehicleName: String,
-		vehiclePresent: Boolean,
 		vehicles: { type: Array, default: () => [] },
 		vehicleTitle: String,
 	},
@@ -72,22 +71,22 @@ export default {
 			return null;
 		},
 		name() {
-			if (this.vehiclePresent) {
-				return this.vehicleTitle || this.$t("main.vehicle.fallbackName");
+			if (this.vehicleTitle) {
+				return this.vehicleTitle;
 			}
 			if (this.connected) {
 				return this.$t("main.vehicle.unknown");
 			}
 			return this.$t("main.vehicle.none");
 		},
-		isUnknown() {
-			return !this.vehiclePresent;
+		vehicleKnown() {
+			return !!this.vehicleName;
 		},
 		otherVehicles() {
 			return this.vehicles.filter((v) => v.name !== this.vehicleName);
 		},
 		showOptions() {
-			return !this.isUnknown || this.vehicles.length;
+			return this.vehicleKnown || this.vehicles.length;
 		},
 		vehicleOptionsProps: function () {
 			return this.collectProps(VehicleOptions);

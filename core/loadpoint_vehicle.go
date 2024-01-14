@@ -131,11 +131,11 @@ func (lp *Loadpoint) setActiveVehicle(v api.Vehicle) {
 		}
 		lp.socEstimator = soc.NewEstimator(lp.log, lp.charger, v, estimate)
 
-		lp.publish(keys.VehiclePresent, true)
-		lp.publish(keys.VehicleTitle, v.Title())
-		lp.publish(keys.VehicleName, vehicle.Settings(lp.log, v).Name())
+		vehicleName := vehicle.Settings(lp.log, v).Name()
+		lp.publish(keys.VehicleName, vehicleName)
 		lp.publish(keys.VehicleIcon, v.Icon())
 		lp.publish(keys.VehicleCapacity, v.Capacity())
+		lp.log.INFO.Printf("🔊 vehicle: name: %s, capacity: %v", vehicleName, v.Capacity())
 
 		if mode, ok := v.OnIdentified().GetMode(); ok {
 			lp.SetMode(mode)
@@ -147,12 +147,12 @@ func (lp *Loadpoint) setActiveVehicle(v api.Vehicle) {
 	} else {
 		lp.socEstimator = nil
 		lp.publish(keys.VehicleSoc, 0)
-		lp.publish(keys.VehiclePresent, false)
-		lp.publish(keys.VehicleTitle, "")
 		lp.publish(keys.VehicleName, "")
 		lp.publish(keys.VehicleIcon, "")
 		lp.publish(keys.VehicleCapacity, 0.0)
 		lp.publish(keys.VehicleOdometer, 0.0)
+
+		lp.log.INFO.Print("🔊 vehicle: remove 1")
 	}
 
 	// re-publish vehicle settings
