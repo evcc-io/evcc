@@ -76,7 +76,7 @@ func (c *Connection) Enabled() (bool, error) {
 func (c *Connection) CurrentPower() (float64, error) {
 	resp, err := c.plug.GetEnergyUsage()
 	if err != nil {
-		if strings.Contains(err.Error(), "-1001") {
+		if strings.Contains(err.Error(), "-1001") || strings.Contains(err.Error(), "Incorrect Request") {
 			c.log.DEBUG.Printf("meter not available")
 			return 0, nil
 		} else {
@@ -91,7 +91,7 @@ func (c *Connection) CurrentPower() (float64, error) {
 func (c *Connection) ChargedEnergy() (float64, error) {
 	resp, err := c.plug.GetEnergyUsage()
 	if err != nil {
-		if strings.Contains(err.Error(), "-1001") {
+		if strings.Contains(err.Error(), "-1001") || strings.Contains(err.Error(), "Incorrect Request") {
 			c.log.DEBUG.Printf("meter not available")
 			return 0, nil
 		} else {
