@@ -1,6 +1,7 @@
 package core
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"math"
@@ -25,6 +26,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/telemetry"
+	"github.com/smallnest/chanx"
 )
 
 const standbyPower = 10 // consider less than 10W as charger in standby
@@ -362,16 +364,7 @@ func (site *Site) publish(key string, val interface{}) {
 		val = s.String()
 	}
 
-	p := util.Param{Key: key, Val: val}
-
-	// https://github.com/evcc-io/evcc/issues/11191 prevent deadlock
-	select {
-	case site.uiChan <- p:
-	default:
-		go func() {
-			site.uiChan <- p
-		}()
-	}
+	site.uiChan <- util.Param{Key: key, Val: val}
 }
 
 // publishDelta deduplicates messages before publishing
@@ -853,7 +846,22 @@ func (site *Site) prepare() {
 
 // Prepare attaches communication channels to site and loadpoints
 func (site *Site) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Event) {
-	site.uiChan = uiChan
+	// https://github.com/evcc-io/evcc/issues/11191 prevent deadlock
+	// https://github.com/evcc-io/evcc/pull/11675 maintain message order
+
+	// infinite queue with channel semantics
+	ch := chanx.NewUnboundedChan[util.Param](context.Background(), 2)
+
+	// use ch.In for writing
+	site.uiChan = ch.In
+
+	// use ch.Out for reading
+	go func() {
+		for p := range ch.Out {
+			uiChan <- p
+		}
+	}()
+
 	site.lpUpdateChan = make(chan *Loadpoint, 1) // 1 capacity to avoid deadlock
 
 	site.prepare()
@@ -868,7 +876,7 @@ func (site *Site) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Event) 
 				select {
 				case param := <-lpUIChan:
 					param.Loadpoint = &id
-					uiChan <- param
+					site.uiChan <- param
 				case ev := <-lpPushChan:
 					ev.Loadpoint = &id
 					pushChan <- ev

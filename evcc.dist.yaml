@@ -56,7 +56,7 @@ modbusproxy:
 # for documentation see https://docs.evcc.io/docs/devices/meters
 meters:
   - name: grid
-    type: modbus
+    type: mbmd
     model: sdm # SDM630
     uri: rs485.fritz.box:23
     rtu: true # rs485 device connected using ethernet adapter

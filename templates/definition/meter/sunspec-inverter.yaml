@@ -21,7 +21,7 @@ params:
   - name: capacity
     advanced: true
 render: |
-  type: modbus
+  type: mbmd
   {{- include "modbus" . }}
   {{- if eq .usage "grid" }}
   model: sunspec

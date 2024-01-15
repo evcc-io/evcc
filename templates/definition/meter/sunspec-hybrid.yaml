@@ -24,7 +24,7 @@ params:
     advanced: true
 render: |
   {{- if eq .usage "grid" }}
-  type: modbus
+  type: mbmd
   {{- include "modbus" . }}
   {{- if eq .integer "true" }}
   # sunspec model 203 (int+sf) meter
