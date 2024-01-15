@@ -62,3 +62,8 @@ func (c *MyStrom) Enable(enable bool) error {
 	onoff := map[bool]int{false: 0, true: 1}
 	return c.conn.Request(fmt.Sprintf("relay?state=%d", onoff[enable]))
 }
+
+// CurrentPower implements the api.Meter interface
+func (c *MyStrom) CurrentPower() (float64, error) {
+	return c.conn.CurrentPower()
+}
