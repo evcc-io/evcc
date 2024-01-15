@@ -169,8 +169,6 @@ func (lp *Loadpoint) setActiveVehicle(v api.Vehicle) {
 }
 
 func (lp *Loadpoint) wakeUpVehicle() {
-	lp.log.DEBUG.Printf("wake-up repeats left: %d", lp.wakeUpTimer.repeatsLeft)
-
 	c, charger_ok := lp.charger.(api.Resurrector)
 	vs, vehicle_ok := lp.GetVehicle().(api.Resurrector)
 
@@ -187,6 +185,8 @@ func (lp *Loadpoint) wakeUpVehicle() {
 			lp.log.ERROR.Printf("wake-up vehicle: %v", err)
 		}
 	}
+
+	lp.log.DEBUG.Printf("wake-up repeats left: %d", lp.wakeUpTimer.repeatsLeft)
 }
 
 // unpublishVehicle resets published vehicle data
