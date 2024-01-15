@@ -43,6 +43,8 @@ func (m *Timer) Stop() {
 	defer m.Unlock()
 
 	m.started = time.Time{}
+
+	repeatCounter = 4
 }
 
 // Expired checks if the timer has elapsed and if resets its status
