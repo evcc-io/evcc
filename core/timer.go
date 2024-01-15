@@ -7,8 +7,9 @@ import (
 	"github.com/benbjohnson/clock"
 )
 
-const wakeupTimeout     = 30 * time.Second
-var   repeatCounter int = 4
+const wakeupTimeout = 30 * time.Second
+
+var repeatCounter int = 4
 
 // Timer measures active time between start and stop events
 type Timer struct {
