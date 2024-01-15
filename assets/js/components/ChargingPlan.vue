@@ -205,7 +205,7 @@ export default {
 			);
 		},
 		apiVehicle: function () {
-			return `vehicles/${this.vehicle.name}/`;
+			return `vehicles/${this.vehicle?.name}/`;
 		},
 		apiLoadpoint: function () {
 			return `loadpoints/${this.id}/`;

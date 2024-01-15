@@ -78,6 +78,7 @@ require (
 	github.com/robertkrimen/otto v0.3.0
 	github.com/samber/lo v1.39.0
 	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
+	github.com/smallnest/chanx v1.2.0
 	github.com/spf13/cast v1.6.0
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/jwalterweatherman v1.1.0
@@ -185,7 +186,6 @@ require (
 	gitlab.com/c0b/go-ordered-json v0.0.0-20201030195603-febf46534d5a // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/crypto v0.18.0 // indirect
-	golang.org/x/lint v0.0.0-20210508222113-6edffad5e616 // indirect
 	golang.org/x/mod v0.14.0 // indirect
 	golang.org/x/sys v0.16.0 // indirect
 	golang.org/x/term v0.16.0 // indirect
