@@ -169,16 +169,19 @@ func (lp *Loadpoint) setActiveVehicle(v api.Vehicle) {
 }
 
 func (lp *Loadpoint) wakeUpVehicle() {
-	// charger
-	if c, ok := lp.charger.(api.Resurrector); ok {
+	lp.log.DEBUG.Printf("wake-up count %d", repeatCounter)
+
+	c, charger_ok := lp.charger.(api.Resurrector)
+	vs, vehicle_ok := lp.GetVehicle().(api.Resurrector)
+
+	if charger_ok && (repeatCounter%2 == 0 || (repeatCounter%2 != 0 && !vehicle_ok)) {
+		// charger
 		lp.log.DEBUG.Println("wake-up charger")
 		if err := c.WakeUp(); err != nil {
 			lp.log.ERROR.Printf("wake-up charger: %v", err)
 		}
-	}
-
-	// vehicle
-	if vs, ok := lp.GetVehicle().(api.Resurrector); ok {
+	} else if vehicle_ok {
+		// vehicle
 		lp.log.DEBUG.Println("wake-up vehicle")
 		if err := vs.WakeUp(); err != nil {
 			lp.log.ERROR.Printf("wake-up vehicle: %v", err)
