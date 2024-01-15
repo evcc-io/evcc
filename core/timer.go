@@ -8,6 +8,8 @@ import (
 )
 
 const wakeupTimeout = 30 * time.Second
+
+// if use even number, charger wakeup start first
 const maxWakeupRepeats = 4
 
 // Timer measures active time between start and stop events
