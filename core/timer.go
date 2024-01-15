@@ -8,20 +8,21 @@ import (
 )
 
 const wakeupTimeout = 30 * time.Second
-
-var repeatCounter int = 4
+const maxWakeupRepeats = 4
 
 // Timer measures active time between start and stop events
 type Timer struct {
 	sync.Mutex
-	clck    clock.Clock
-	started time.Time
+	clck        clock.Clock
+	started     time.Time
+	repeatsLeft int
 }
 
 // NewTimer creates timer that can expire
 func NewTimer() *Timer {
 	return &Timer{
-		clck: clock.New(),
+		clck:        clock.New(),
+		repeatsLeft: maxWakeupRepeats,
 	}
 }
 
@@ -43,8 +44,7 @@ func (m *Timer) Stop() {
 	defer m.Unlock()
 
 	m.started = time.Time{}
-
-	repeatCounter = 4
+	m.repeatsLeft = maxWakeupRepeats
 }
 
 // Expired checks if the timer has elapsed and if resets its status
@@ -54,8 +54,8 @@ func (m *Timer) Expired() bool {
 
 	res := !m.started.IsZero() && (m.clck.Since(m.started) >= wakeupTimeout)
 	if res {
-		if repeatCounter > 0 {
-			repeatCounter--
+		if m.repeatsLeft > 0 {
+			m.repeatsLeft--
 			m.started = m.clck.Now()
 		} else {
 			m.started = time.Time{}
