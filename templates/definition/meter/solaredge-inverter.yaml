@@ -33,10 +33,5 @@ render: |
     source: sunspec
     {{- include "modbus" . | indent 2 }}
     timeout: {{ .timeout }}
-    value: Power ## TODO
-  energy:
-    source: sunspec
-    {{- include "modbus" . | indent 2 }}
-    timeout: {{ .timeout }}
-    value: Export ## TODO
+    value: 160:1:DCW
   {{- end }}

@@ -40,7 +40,7 @@ render: |
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
       timeout: {{ .timeout }}
-      value: DCPower ## TODO
+      value: 160:1:DCW
     - source: modbus
       {{- include "modbus" . | indent 4 }}
       timeout: {{ .timeout }}
