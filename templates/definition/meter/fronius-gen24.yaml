@@ -44,11 +44,6 @@ render: |
       uri: {{ .host }}:{{ .port }}
       id: 1
       value: 160:2:DCW # mppt 2
-  energy:
-    source: sunspec
-    uri: {{ .host }}:{{ .port }}
-    id: 1
-    value: Export ## TODO
   {{- end }}
   {{- if eq .usage "battery" }}
   type: custom
