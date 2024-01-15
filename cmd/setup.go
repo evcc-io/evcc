@@ -571,10 +571,10 @@ func configureEEBus(conf map[string]interface{}) error {
 }
 
 // setup messaging
-func configureMessengers(conf messagingConfig, valueChan chan util.Param, cache *util.Cache) (chan push.Event, error) {
+func configureMessengers(conf messagingConfig, vehicles push.Vehicles, valueChan chan util.Param, cache *util.Cache) (chan push.Event, error) {
 	messageChan := make(chan push.Event, 1)
 
-	messageHub, err := push.NewHub(conf.Events, cache)
+	messageHub, err := push.NewHub(conf.Events, vehicles, cache)
 	if err != nil {
 		return messageChan, fmt.Errorf("failed configuring push services: %w", err)
 	}
