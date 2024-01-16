@@ -6,6 +6,7 @@ import (
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
+	"github.com/evcc-io/evcc/core/vehicle"
 	"github.com/evcc-io/evcc/util"
 )
 
@@ -20,15 +21,21 @@ type EventTemplateConfig struct {
 	Title, Msg string
 }
 
+type Vehicles interface {
+	// ByName returns a single vehicle adapter by name
+	ByName(string) (vehicle.API, error)
+}
+
 // Hub subscribes to event notifications and sends them to client devices
 type Hub struct {
 	definitions map[string]EventTemplateConfig
 	sender      []Messenger
 	cache       *util.Cache
+	vehicles    Vehicles
 }
 
 // NewHub creates push hub with definitions and receiver
-func NewHub(cc map[string]EventTemplateConfig, cache *util.Cache) (*Hub, error) {
+func NewHub(cc map[string]EventTemplateConfig, vv Vehicles, cache *util.Cache) (*Hub, error) {
 	// instantiate all event templates
 	for k, v := range cc {
 		if _, err := template.New("out").Funcs(sprig.TxtFuncMap()).Parse(v.Title); err != nil {
@@ -42,6 +49,7 @@ func NewHub(cc map[string]EventTemplateConfig, cache *util.Cache) (*Hub, error) 
 	h := &Hub{
 		definitions: cc,
 		cache:       cache,
+		vehicles:    vv,
 	}
 
 	return h, nil
@@ -65,6 +73,13 @@ func (h *Hub) apply(ev Event, tmpl string) (string, error) {
 	for _, p := range h.cache.All() {
 		if p.Loadpoint == nil || ev.Loadpoint == p.Loadpoint {
 			attr[p.Key] = p.Val
+		}
+	}
+
+	// add missing attributes
+	if name, ok := attr["vehicleName"].(string); ok {
+		if v, err := h.vehicles.ByName(name); err == nil {
+			attr["vehicleTitle"] = v.Instance().Title()
 		}
 	}
 
