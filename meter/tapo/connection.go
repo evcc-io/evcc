@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/netip"
 	"net/url"
-	"strings"
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/insomniacslk/tapo"
@@ -14,6 +13,7 @@ import (
 type Connection struct {
 	log             *util.Logger
 	plug            tapo.Plug
+	model           string
 	lasttodayenergy int64
 	energy          int64
 }
@@ -54,6 +54,8 @@ func NewConnection(uri, user, password string) (*Connection, error) {
 	}
 	conn.log.DEBUG.Printf("%s %s connected (fw:%s,hw:%s,mac:%s)", res.Type, res.Model, res.FWVersion, res.HWVersion, res.MAC)
 
+	conn.model = res.Model
+
 	return conn, err
 }
 
@@ -74,29 +76,26 @@ func (c *Connection) Enabled() (bool, error) {
 
 // CurrentPower provides current power consuption
 func (c *Connection) CurrentPower() (float64, error) {
-	resp, err := c.plug.GetEnergyUsage()
-	if err != nil {
-		if strings.Contains(err.Error(), "-1001") || strings.Contains(err.Error(), "Incorrect Request") {
-			c.log.DEBUG.Printf("meter not available")
-			return 0, nil
-		} else {
-			return 0, err
-		}
+	if c.model == "P100" {
+		return 0, nil
 	}
 
+	resp, err := c.plug.GetEnergyUsage()
+	if err != nil {
+		return 0, err
+	}
 	return float64(resp.CurrentPower) / 1e3, nil
 }
 
 // ChargedEnergy collects the daily charged energy
 func (c *Connection) ChargedEnergy() (float64, error) {
+	if c.model == "P100" {
+		return 0, nil
+	}
+
 	resp, err := c.plug.GetEnergyUsage()
 	if err != nil {
-		if strings.Contains(err.Error(), "-1001") || strings.Contains(err.Error(), "Incorrect Request") {
-			c.log.DEBUG.Printf("meter not available")
-			return 0, nil
-		} else {
-			return 0, err
-		}
+		return 0, err
 	}
 
 	if int64(resp.TodayEnergy) > c.lasttodayenergy {
