@@ -39,6 +39,15 @@
 
 	--evcc-grid: var(--bs-gray-dark);
 	--evcc-self: var(--evcc-dark-green);
+	--evcc-pv: var(--evcc-dark-green);
+	--evcc-battery: #0b6e4f;
+	--evcc-battery: #028090;
+	--evcc-battery: #157a6e;
+	--evcc-battery: #297373;
+	--evcc-battery: #1b9aaa;
+	--evcc-battery: #037971;
+	--evcc-battery: var(--evcc-darkest-green);
+	--evcc-battery: var(--evcc-darker-green);
 	--evcc-export: var(--evcc-yellow);
 	--evcc-background: var(--bs-gray-bright);
 	--evcc-box: var(--bs-white);

@@ -9,7 +9,8 @@
 			<Visualization
 				class="col-12 mb-3 mb-md-4"
 				:gridImport="gridImport"
-				:selfConsumption="selfConsumption"
+				:selfPv="selfPv"
+				:selfBattery="selfBattery"
 				:loadpoints="loadpointsCompact"
 				:pvExport="pvExport"
 				:batteryCharge="batteryCharge"
@@ -239,10 +240,14 @@ export default {
 		batteryHold: function () {
 			return this.batteryMode === "hold";
 		},
-		selfConsumption: function () {
-			const ownPower = this.batteryDischarge + this.pvProduction;
-			const consumption = this.homePower + this.batteryCharge + this.loadpointsPower;
-			return Math.min(ownPower, consumption);
+		consumption: function () {
+			return this.homePower + this.batteryCharge + this.loadpointsPower;
+		},
+		selfPv: function () {
+			return Math.min(this.pvProduction, this.consumption);
+		},
+		selfBattery: function () {
+			return Math.min(this.batteryDischarge, this.consumption - this.selfPv);
 		},
 		activeLoadpoints: function () {
 			return this.loadpointsCompact.filter((lp) => lp.charging);
@@ -266,7 +271,7 @@ export default {
 			return Math.max(0, this.gridPower * -1);
 		},
 		powerInKw: function () {
-			return Math.max(this.gridImport, this.selfConsumption, this.pvExport) >= 1000;
+			return Math.max(this.gridImport, this.selfPv, this.selfBattery, this.pvExport) >= 1000;
 		},
 		inPower: function () {
 			return this.gridImport + this.pvProduction + this.batteryDischarge;
