@@ -6,7 +6,7 @@
 					:id="`${id}_0`"
 					class="mb-2"
 					v-bind="plans[0] || {}"
-					:vehicle-capacity="vehicleCapacity"
+					:capacity="capacity"
 					:range-per-soc="rangePerSoc"
 					:soc-per-kwh="socPerKwh"
 					:soc-based-planning="socBasedPlanning"
@@ -58,7 +58,7 @@ export default {
 		smartCostType: String,
 		currency: String,
 		mode: String,
-		vehicleCapacity: Number,
+		capacity: Number,
 		vehicle: Object,
 		vehicleTargetSoc: Number,
 	},
@@ -161,7 +161,7 @@ export default {
 			this.$emit("plan-updated", {
 				time: this.defaultDate(),
 				soc: 100,
-				energy: this.vehicleCapacity || 10,
+				energy: this.capacity || 10,
 			});
 		},
 		removePlan: function (index) {
