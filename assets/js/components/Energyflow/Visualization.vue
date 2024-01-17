@@ -249,7 +249,7 @@ html.dark .grid-import {
 
 .self-battery {
 	background-color: var(--evcc-battery);
-	color: var(--bs-white);
+	color: var(--bs-dark);
 }
 
 .pv-export {
