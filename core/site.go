@@ -11,6 +11,7 @@ import (
 	"github.com/avast/retry-go/v4"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/cmd/shutdown"
+	"github.com/evcc-io/evcc/core/auth"
 	"github.com/evcc-io/evcc/core/coordinator"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/loadpoint"
@@ -98,6 +99,7 @@ type Site struct {
 	batteryMode  api.BatteryMode // Battery mode
 
 	publishCache map[string]any // store last published values to avoid unnecessary republishing
+	auth         *auth.Auth     // authentication
 }
 
 // MetersConfig contains the loadpoint's meter configuration
@@ -213,6 +215,9 @@ func NewSiteFromConfig(
 			}
 		}
 	})
+
+	// configure auth
+	site.auth = auth.NewAuth(&settings.Settings{})
 
 	return site, nil
 }

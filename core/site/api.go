@@ -2,6 +2,7 @@ package site
 
 import (
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/auth"
 	"github.com/evcc-io/evcc/core/loadpoint"
 )
 
@@ -10,6 +11,7 @@ type API interface {
 	Healthy() bool
 	Loadpoints() []loadpoint.API
 	Vehicles() Vehicles
+	Auth() auth.API
 
 	//
 	// battery

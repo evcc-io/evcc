@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/auth"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/site"
@@ -32,6 +33,11 @@ func (site *Site) Loadpoints() []loadpoint.API {
 // Vehicles returns the site vehicles
 func (site *Site) Vehicles() site.Vehicles {
 	return &vehicles{log: site.log}
+}
+
+// Auth returns the site auth
+func (site *Site) Auth() auth.API {
+	return site.auth
 }
 
 // GetPrioritySoc returns the PrioritySoc
