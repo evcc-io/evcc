@@ -205,6 +205,8 @@ func (c *Easee) chargerSite(charger string) (easee.Site, error) {
 func (c *Easee) connect(ts oauth2.TokenSource) func() (signalr.Connection, error) {
 	bo := backoff.NewExponentialBackOff()
 	bo.MaxInterval = time.Minute
+	bo.InitialInterval = 2 * time.Second
+	bo.Multiplier = 2
 
 	return func() (conn signalr.Connection, err error) {
 		defer func() {
