@@ -9,6 +9,7 @@ export default function setupRouter(i18n) {
     routes: [
       { path: "/", component: Main, props: true },
       { path: "/config", component: () => import("./views/Config.vue"), props: true },
+      { path: "/config/editor", component: () => import("./views/ConfigEditor.vue"), props: true },
       {
         path: "/sessions",
         component: () => import("./views/ChargingSessions.vue"),

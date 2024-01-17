@@ -44,6 +44,7 @@ function updateTheme() {
   window.setTimeout(function () {
     $html.classList.remove("no-transitions");
   }, 100);
+  $html.dispatchEvent(new CustomEvent("themechange", { dark: theme === THEME_DARK }));
 }
 
 export function watchThemeChanges() {

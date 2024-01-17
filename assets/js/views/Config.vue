@@ -15,6 +15,10 @@
 			what your doing. Otherwise you might have to reset or manually repair you database.
 		</div>
 
+		<router-link to="/config/editor" class="btn btn-outline-secondary mb-5">
+			Edit evcc.yaml
+		</router-link>
+
 		<!--
 		<h2 class="d-flex align-items-center text-evcc">
 			<shopicon-regular-powersupply size="m" class="me-2"></shopicon-regular-powersupply>

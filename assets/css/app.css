@@ -33,15 +33,18 @@
 	--evcc-orange-rgb: 255, 144, 0;
 	--bs-gray-deep: #010322;
 	--bs-gray-dark: #28293e;
+	--bs-gray-darker: #151630;
 	--bs-gray-medium: #93949e;
 	--bs-gray-light: #b5b6c3;
 	--bs-gray-bright: #f3f3f7;
+	--bs-gray-brighter: #f9f9fb;
 
 	--evcc-grid: var(--bs-gray-dark);
 	--evcc-self: var(--evcc-dark-green);
 	--evcc-export: var(--evcc-yellow);
 	--evcc-background: var(--bs-gray-bright);
 	--evcc-box: var(--bs-white);
+	--evcc-box-border: var(--bs-gray-brighter);
 	--evcc-default-text: var(--bs-gray-dark);
 	--evcc-gray: var(--bs-gray-medium);
 
@@ -72,6 +75,8 @@
 	--evcc-grid: var(--bs-gray-medium);
 	--evcc-background: var(--bs-gray-deep);
 	--evcc-box: var(--bs-gray-dark);
+	--evcc-box-border: var(--vs-gray-darker);
+
 	--evcc-default-text: var(--bs-white);
 	--evcc-gray: var(--bs-gray-light);
 	--evcc-accent1: var(--evcc-yellow);
