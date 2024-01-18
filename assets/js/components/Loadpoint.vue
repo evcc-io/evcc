@@ -153,6 +153,7 @@ export default {
 		vehicles: Array,
 		planActive: Boolean,
 		planProjectedStart: String,
+		planOverrun: Boolean,
 		planEnergy: Number,
 		planTime: String,
 		effectivePlanTime: String,

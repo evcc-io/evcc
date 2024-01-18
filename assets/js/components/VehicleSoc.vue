@@ -42,7 +42,10 @@
 				v-show="planMarkerAvailable"
 				class="plan-marker"
 				data-bs-toggle="tooltip"
-				:class="{ 'plan-marker--warn': planMarkerUnreachable }"
+				:class="{
+					'plan-marker--warning': planOverrun,
+					'plan-marker--error': planMarkerUnreachable,
+				}"
 				:style="{ left: `${planMarkerPosition}%` }"
 				data-testid="plan-marker"
 				@click="$emit('plan-clicked')"
@@ -88,6 +91,7 @@ export default {
 		effectiveLimitSoc: Number,
 		limitEnergy: Number,
 		planEnergy: Number,
+		planOverrun: Boolean,
 		chargedEnergy: Number,
 		socBasedCharging: Boolean,
 		socBasedPlanning: Boolean,
@@ -381,11 +385,17 @@ export default {
 	background-color: var(--evcc-darker-green);
 	transition: background-color var(--evcc-transition-fast) linear;
 }
-.plan-marker--warn {
+.plan-marker--warning {
+	color: var(--bs-warning);
+}
+.plan-marker--warning::before {
+	background-color: var(--bs-warning);
+}
+.plan-marker--error {
 	opacity: 1;
 	color: var(--bs-danger);
 }
-.plan-marker--warn::before {
+.plan-marker--error::before {
 	background-color: var(--bs-danger);
 }
 .energy-limit-marker {
