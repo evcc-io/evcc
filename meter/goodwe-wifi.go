@@ -34,7 +34,6 @@ func init() {
 	registry.Add("goodwe-wifi", NewGoodWeWifiFromConfig)
 }
 
-// NewMyStromFromConfig creates a myStrom meter from generic config
 //
 //go:generate go run ../cmd/tools/decorate.go -f decorateBoschBpts5Hybrid -b api.Meter -t "api.Battery,Soc,func() (float64, error)"
 func NewGoodWeWifiFromConfig(other map[string]interface{}) (api.Meter, error) {
@@ -166,7 +165,6 @@ func (m *Server) listen() {
 
 		if buf[4] == 26 {
 			inverter := server.inverters[ip]
-			fmt.Printf("SOC: %d\n", int16(binary.BigEndian.Uint16(buf[19:])))
 			inverter.soc = float64(int16(binary.BigEndian.Uint16(buf[19:])))
 		}
 
