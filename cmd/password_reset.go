@@ -5,7 +5,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// passwordResetCmd represents the vehicle command
 var passwordResetCmd = &cobra.Command{
 	Use:   "reset",
 	Short: "Reset password",

@@ -5,7 +5,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// passwordSetCmd represents the vehicle command
 var passwordSetCmd = &cobra.Command{
 	Use:   "set",
 	Short: "Set password",
@@ -15,7 +14,6 @@ var passwordSetCmd = &cobra.Command{
 
 func init() {
 	passwordCmd.AddCommand(passwordSetCmd)
-	// passwordSetCmd.Flags().BoolP(flagReset, "r", false, flagResetDescription)
 }
 
 func runPasswordSet(cmd *cobra.Command, args []string) {
