@@ -2,7 +2,6 @@ package meter
 
 import (
 	"encoding/binary"
-	"fmt"
 	"net"
 	"time"
 
@@ -34,8 +33,6 @@ func init() {
 	registry.Add("goodwe-wifi", NewGoodWeWifiFromConfig)
 }
 
-//
-//go:generate go run ../cmd/tools/decorate.go -f decorateBoschBpts5Hybrid -b api.Meter -t "api.Battery,Soc,func() (float64, error)"
 func NewGoodWeWifiFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
 		capacity   `mapstructure:",squash"`
@@ -59,7 +56,6 @@ func NewGoodWeWiFiMeter(uri string, usage string) (api.Meter, error) {
 	}
 
 	server, err := NewServer()
-
 	if err != nil {
 		return nil, err
 	}
@@ -80,18 +76,12 @@ func (m *GoodWeWiFiMeter) CurrentPower() (float64, error) {
 	return server.inverters[m.URI].pvPower, api.ErrNotAvailable
 }
 
-func (m *GoodWeWiFiMeter) batterySoc() (float64, error) {
-	fmt.Printf("Reading SOC")
-	return server.inverters[m.URI].soc, nil
-}
-
 func NewServer() (*Server, error) {
 	if server == nil {
 		server = &Server{
 			inverters: make(map[string]Inverter),
 		}
 		addr, err := net.ResolveUDPAddr("udp", "0.0.0.0:8899")
-
 		if err != nil {
 			return nil, err
 		}
@@ -107,7 +97,6 @@ func NewServer() (*Server, error) {
 		go server.readData()
 
 		return server, err
-
 	} else {
 		return server, nil
 	}
@@ -121,14 +110,15 @@ func (m *Server) readData() {
 	for _, inverter := range server.inverters {
 		addr, err := net.ResolveUDPAddr("udp", inverter.IP+":8899")
 
-		if err != nil {
-			return
-		}
-		_, err = server.conn.WriteToUDP([]byte{0xF7, 0x03, 0x89, 0x1C, 0x00, 0x7D, 0x7A, 0xE7}, addr)
+		server.conn.WriteToUDP([]byte{0xF7, 0x03, 0x89, 0x1C, 0x00, 0x7D, 0x7A, 0xE7}, addr)
 
 		time.Sleep(5 * time.Second)
 
-		_, err = server.conn.WriteToUDP([]byte{0xF7, 0x03, 0x90, 0x88, 0x00, 0x0D, 0x3D, 0xB3}, addr)
+		server.conn.WriteToUDP([]byte{0xF7, 0x03, 0x90, 0x88, 0x00, 0x0D, 0x3D, 0xB3}, addr)
+
+		if err != nil {
+			return
+		}
 	}
 	m.readData()
 }
@@ -137,7 +127,6 @@ func (m *Server) listen() {
 	for {
 		buf := make([]byte, 1024)
 		_, addr, err := m.conn.ReadFromUDP(buf)
-
 		if err != nil {
 			continue
 		}
@@ -145,7 +134,6 @@ func (m *Server) listen() {
 		ip := addr.IP.String()
 
 		if buf[4] == 250 {
-
 			vPv1 := float64(int16(binary.BigEndian.Uint16(buf[11:]))) * 0.1
 			vPv2 := float64(int16(binary.BigEndian.Uint16(buf[19:]))) * 0.1
 			iPv1 := float64(int16(binary.BigEndian.Uint16(buf[13:]))) * 0.1
@@ -167,6 +155,5 @@ func (m *Server) listen() {
 			inverter := server.inverters[ip]
 			inverter.soc = float64(int16(binary.BigEndian.Uint16(buf[19:])))
 		}
-
 	}
 }
