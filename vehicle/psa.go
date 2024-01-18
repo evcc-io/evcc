@@ -22,7 +22,7 @@ func init() {
 func NewCitroenFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	log := util.NewLogger("citroen")
 	return newPSA(log,
-		"citroen.com", "clientsB2CCitroen",
+		"citroen.com", "clientsB2CCitroen/OTPCitroen",
 		"5364defc-80e6-447b-bec6-4af8d1542cae", "iE0cD8bB0yJ0dS6rO3nN1hI2wU7uA5xR4gP7lD6vM0oH0nS8dN",
 		other)
 }
@@ -31,7 +31,7 @@ func NewCitroenFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 func NewDSFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	log := util.NewLogger("ds")
 	return newPSA(log,
-		"driveds.com", "clientsB2CDS",
+		"driveds.com", "clientsB2CDS/OTPDS",
 		"cbf74ee7-a303-4c3d-aba3-29f5994e2dfa", "X6bE6yQ3tH1cG5oA6aW4fS6hK0cR0aK5yN2wE4hP8vL8oW5gU3",
 		other)
 }
@@ -40,7 +40,7 @@ func NewDSFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 func NewOpelFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	log := util.NewLogger("opel")
 	return newPSA(log,
-		"opel.com", "clientsB2COpel",
+		"opel.com", "clientsB2COpel/OTPOpel",
 		"07364655-93cb-4194-8158-6b035ac2c24c", "F2kK7lC5kF5qN7tM0wT8kE3cW1dP0wC5pI6vC0sQ5iP5cN8cJ8",
 		other)
 }
@@ -49,7 +49,7 @@ func NewOpelFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 func NewPeugeotFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	log := util.NewLogger("peugeot")
 	return newPSA(log,
-		"peugeot.com", "clientsB2CPeugeot",
+		"peugeot.com", "clientsB2CPeugeot/OTPPeugeot",
 		"1eebc2d5-5df3-459b-a624-20abfcf82530", "T5tP7iS0cO8sC0lA2iE2aR7gK6uE5rF3lJ8pC3nO1pR7tL8vU1",
 		other)
 }

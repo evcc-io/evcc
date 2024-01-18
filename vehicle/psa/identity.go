@@ -23,7 +23,7 @@ func NewIdentity(log *util.Logger, brand, id, secret string) *Identity {
 			ClientID:     id,
 			ClientSecret: secret,
 			Endpoint: oauth2.Endpoint{
-				AuthURL:   "https://api.mpsa.com/api/connectedcar/v2/oauth/authorize",
+				AuthURL:   "https://idpcvs.opel.com/am/oauth2/authorize",
 				TokenURL:  fmt.Sprintf("https://idpcvs.%s/am/oauth2/access_token", brand),
 				AuthStyle: oauth2.AuthStyleInHeader,
 			},
