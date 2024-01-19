@@ -6,6 +6,48 @@ ETC_SERVICE="/etc/systemd/system/evcc.service"
 USR_LOCAL_BIN="/usr/local/bin/evcc"
 RESTART_FLAG_FILE="/tmp/.restartEvccOnUpgrade"
 
+
+
+# Call /usr/bin/evcc checkconfig and capture the output
+# if exit code is 0, then remove /tmp/oldevcc
+# if exit code is not 0, then fail installation with error message and copy /tmp/oldevcc back to /etc/evcc
+# if /tmp/oldevcc does not exist, then do nothing
+failInstallation=0
+
+if [ -d /tmp/oldevcc ]; then
+	checkConfigOutput=$(/usr/bin/evcc checkconfig)
+	if [ $? -eq 0 ]; then
+		rm -rf /tmp/oldevcc
+	else
+		echo "--------------------------------------------------------------------------------"
+		echo "ERROR: your evcc configuration is not compatible with the new version. Please consider reading the release notes: https://github.com/evcc-io/evcc/releases"
+		echo "checkconfig Output:" 
+		echo $checkConfigOutput
+		echo "--------------------------------------------------------------------------------"
+		while true; do
+			echo "Do you want to keep your old version? [Y/n]: "
+			read choice
+			case "$choice" in
+				n*|N*|"")
+					echo "Ok. We will keep your old version. Your evcc configuration stays untouched!"
+					break
+					;;
+				y*|Y*)
+					echo "The old version will be restored."
+					cp -r /tmp/oldevcc /etc/evcc
+					failInstallation=1
+					break
+					;;
+				*)
+					;;
+			esac
+	fi
+fi 
+
+
+
+
+
 # Usage: askUserKeepFile <file>
 # Return: 1 = keep, 0 = delete
 askUserKeepFile() {
@@ -98,4 +140,9 @@ if [ "$1" = "configure" ] || [ "$1" = "abort-upgrade" ] || [ "$1" = "abort-decon
 			deb-systemd-invoke start evcc.service >/dev/null || true
 		fi
 	fi
+fi
+
+# Fail installation if checkconfig command failed and the user decided to keep the old version to inform package manager about keeping the old version
+if [ failInstallation -eq 1 ]; then
+	exit 1
 fi
