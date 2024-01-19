@@ -44,7 +44,7 @@ if [ -d /tmp/oldevcc ] && [ $INTERACTIVE -eq 1 ]; then
 					;;
 				y*|Y*)
 					echo "The old version will be restored. Your evcc configuration stays untouched!"
-					cp -r /tmp/oldevcc /etc/evcc
+					cp -r /tmp/oldevcc /usr/bin/evcc
 					failInstallation=1
 					break
 					;;
