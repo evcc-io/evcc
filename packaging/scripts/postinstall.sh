@@ -7,14 +7,23 @@ USR_LOCAL_BIN="/usr/local/bin/evcc"
 RESTART_FLAG_FILE="/tmp/.restartEvccOnUpgrade"
 
 
-
 # Call /usr/bin/evcc checkconfig and capture the output
 # if exit code is 0, then remove /tmp/oldevcc
 # if exit code is not 0, then fail installation with error message and copy /tmp/oldevcc back to /etc/evcc
 # if /tmp/oldevcc does not exist, then do nothing
 failInstallation=0
 
-if [ -d /tmp/oldevcc ]; then
+INTERACTIVE=0
+
+# is shell script interactive?
+if [ -t 0 ]; then
+  INTERACTIVE=1
+else
+  INTERACTIVE=0
+fi
+
+
+if [ -d /tmp/oldevcc ] && [ $INTERACTIVE -eq 1 ]; then
 	checkConfigOutput=$(/usr/bin/evcc checkconfig)
 	if [ $? -eq 0 ]; then
 		rm -rf /tmp/oldevcc
@@ -24,16 +33,17 @@ if [ -d /tmp/oldevcc ]; then
 		echo "checkconfig Output:" 
 		echo $checkConfigOutput
 		echo "--------------------------------------------------------------------------------"
+        
 		while true; do
-			echo "Do you want to keep your old version? [Y/n]: "
+			echo "Do you want to keep your old (working) evcc version? [Y/n]: "
 			read choice
 			case "$choice" in
 				n*|N*|"")
-					echo "Ok. We will keep your old version. Your evcc configuration stays untouched!"
+					echo "We will keep the new version. Your evcc configuration stays untouched!"
 					break
 					;;
 				y*|Y*)
-					echo "The old version will be restored."
+					echo "The old version will be restored. Your evcc configuration stays untouched!"
 					cp -r /tmp/oldevcc /etc/evcc
 					failInstallation=1
 					break
@@ -142,7 +152,7 @@ if [ "$1" = "configure" ] || [ "$1" = "abort-upgrade" ] || [ "$1" = "abort-decon
 	fi
 fi
 
-# Fail installation if checkconfig command failed and the user decided to keep the old version to inform package manager about keeping the old version
+# Fail installation if checkconfig command failed and the user decided to keep the old version to inform package manager about outcome
 if [ failInstallation -eq 1 ]; then
 	exit 1
 fi
