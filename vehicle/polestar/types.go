@@ -1,5 +1,7 @@
 package polestar
 
+import "time"
+
 type ConsumerCar struct {
 	VIN                       string
 	InternalVehicleIdentifier string
@@ -11,8 +13,15 @@ type BatteryData struct {
 	ChargingStatus                     string
 	EstimatedChargingTimeToFullMinutes int
 	EstimatedDistanceToEmptyKm         int
+	EventUpdatedTimestamp
 }
 
 type OdometerData struct {
 	OdometerMeters int
+	EventUpdatedTimestamp
+}
+
+type EventUpdatedTimestamp struct {
+	ISO  time.Time
+	Unix uint64
 }
