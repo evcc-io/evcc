@@ -13,12 +13,12 @@ type BatteryData struct {
 	ChargingStatus                     string
 	EstimatedChargingTimeToFullMinutes int
 	EstimatedDistanceToEmptyKm         int
-	EventUpdatedTimestamp
+	EventUpdatedTimestamp              EventUpdatedTimestamp
 }
 
 type OdometerData struct {
-	OdometerMeters int
-	EventUpdatedTimestamp
+	OdometerMeters        int
+	EventUpdatedTimestamp EventUpdatedTimestamp
 }
 
 type EventUpdatedTimestamp struct {

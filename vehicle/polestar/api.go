@@ -2,6 +2,9 @@ package polestar
 
 import (
 	"context"
+	"net/http"
+	"net/url"
+	"strings"
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
@@ -18,8 +21,8 @@ const (
 )
 
 type API struct {
-	client  *graphql.Client
-	client2 *graphql.Client
+	client *graphql.Client
+	// client2 *graphql.Client
 }
 
 func NewAPI(log *util.Logger, identity oauth2.TokenSource) *API {
@@ -31,17 +34,17 @@ func NewAPI(log *util.Logger, identity oauth2.TokenSource) *API {
 		Source: identity,
 	}
 
-	httpClient2 := request.NewClient(log)
+	// httpClient2 := request.NewClient(log)
 
-	// replace client transport with authenticated transport
-	httpClient2.Transport = &oauth2.Transport{
-		Base:   httpClient2.Transport,
-		Source: identity,
-	}
+	// // replace client transport with authenticated transport
+	// httpClient2.Transport = &oauth2.Transport{
+	// 	Base:   httpClient2.Transport,
+	// 	Source: identity,
+	// }
 
 	v := &API{
-		client:  graphql.NewClient(ApiURI, httpClient),
-		client2: graphql.NewClient(ApiURIv2, httpClient2),
+		client: graphql.NewClient(ApiURI, httpClient),
+		// client2: graphql.NewClient(ApiURIv2, httpClient2),
 	}
 
 	return v
@@ -62,24 +65,26 @@ func (v *API) Status(ctx context.Context, vin string) (BatteryData, error) {
 		BatteryData `graphql:"getBatteryData(vin: $vin)"`
 	}
 
-	// err := v.client.WithRequestModifier(func(req *http.Request) {
-	// 	var payload graphql.GraphQLRequestPayload
-	// 	if err := json.NewDecoder(req.Body).Decode(&payload); err != nil {
-	// 		panic(err)
-	// 	}
-	// 	vars, err := json.Marshal(payload.Variables)
-	// 	if err != nil {
-	// 		panic(err)
-	// 	}
-	// 	req.URL, err = url.Parse(fmt.Sprintf("%s?query=%s&variables=%s&operationName=%s", ApiURIv2,
-	// 		url.PathEscape(payload.Query), url.PathEscape(string(vars)), url.PathEscape(payload.OperationName)))
-	// 	if err != nil {
-	// 		panic(err)
-	// 	}
-	// 	req.Method = http.MethodGet
-	// 	req.Body = nil
-	// }).Query(ctx, &res, map[string]any{
-	err := v.client2.Query(ctx, &res, map[string]any{
+	err := v.client.WithRequestModifier(func(req *http.Request) {
+		// var payload graphql.GraphQLRequestPayload
+		// if err := json.NewDecoder(req.Body).Decode(&payload); err != nil {
+		// 	panic(err)
+		// }
+		// vars, err := json.Marshal(payload.Variables)
+		// if err != nil {
+		// 	panic(err)
+		// }
+		// req.URL, err = url.Parse(fmt.Sprintf("%s?query=%s&variables=%s&operationName=%s", ApiURIv2,
+		// 	url.PathEscape(payload.Query), url.PathEscape(string(vars)), url.PathEscape(payload.OperationName)))
+		// if err != nil {
+		// 	panic(err)
+		// }
+		// req.Method = http.MethodGet
+		// req.Body = nil
+
+		req.URL, _ = url.Parse(strings.ReplaceAll(req.URL.String(), "my-star", "mystar-v2"))
+	}).Query(ctx, &res, map[string]any{
+		// err := v.client2.Query(ctx, &res, map[string]any{
 		"vin": vin,
 	}, graphql.OperationName("GetBatteryData"))
 
@@ -92,7 +97,10 @@ func (v *API) Odometer(ctx context.Context, vin string) (OdometerData, error) {
 		OdometerData `graphql:"getOdometerData(vin: $vin)"`
 	}
 
-	err := v.client2.Query(ctx, &res, map[string]any{
+	// err := v.client2.Query(ctx, &res, map[string]any{
+	err := v.client.WithRequestModifier(func(req *http.Request) {
+		req.URL, _ = url.Parse(strings.ReplaceAll(req.URL.String(), "my-star", "mystar-v2"))
+	}).Query(ctx, &res, map[string]any{
 		"vin": vin,
 	}, graphql.OperationName("GetOdometerData"))
 
