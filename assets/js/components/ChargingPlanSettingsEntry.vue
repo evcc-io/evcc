@@ -147,7 +147,7 @@ export default {
 		time: String,
 		rangePerSoc: Number,
 		socPerKwh: Number,
-		vehicleCapacity: Number,
+		capacity: Number,
 		socBasedPlanning: Boolean,
 	},
 	emits: ["plan-updated", "plan-removed", "plan-preview"],
@@ -173,7 +173,7 @@ export default {
 		energyOptions: function () {
 			const options = energyOptions(
 				0,
-				this.vehicleCapacity || 100,
+				this.capacity || 100,
 				this.socPerKwh,
 				this.fmtKWh,
 				"-"
@@ -241,7 +241,7 @@ export default {
 			}
 			if (!this.selectedEnergy) {
 				this.selectedEnergy =
-					window.localStorage[LAST_ENERGY_GOAL_KEY] || this.vehicleCapacity || 10;
+					window.localStorage[LAST_ENERGY_GOAL_KEY] || this.capacity || 10;
 			}
 
 			let time = this.time;

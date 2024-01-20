@@ -3,14 +3,13 @@ import { reactive } from "vue";
 import Vehicle from "./Vehicle.vue";
 
 const state = reactive({
-	vehicleTitle: "Mein Auto",
+	vehicle: { title: "Mein Auto", icon: "car", capacity: 72, features: [] },
 	enabled: false,
 	connected: true,
-	vehiclePresent: true,
+	vehicleName: "meinauto",
 	vehicleSoc: 42.742,
 	vehicleRange: 231,
 	limitSoc: 90,
-	vehicleCapacity: 72,
 	chargedEnergy: 14123,
 	socBasedCharging: true,
 	id: 0,
@@ -45,9 +44,9 @@ const hoursFromNow = function (hours) {
 				v-bind="state"
 				enabled
 				charging
-				:vehiclePresent="false"
+				vehicleName=""
 				:socBasedCharging="false"
-				:vehicleCapacity="null"
+				:vehicle="{ ...state.vehicle, capacity: null }"
 				mode="pv"
 			/>
 		</Variant>
@@ -56,10 +55,13 @@ const hoursFromNow = function (hours) {
 				v-bind="state"
 				enabled
 				charging
-				vehicleTitle="Opel Corsa-e"
 				:socBasedCharging="false"
-				:vehicleCapacity="72"
-				vehicleFeatureOffline
+				:vehicle="{
+					...state.vehicle,
+					title: 'Opel Corsa-e',
+					capacity: 72,
+					features: ['Offline'],
+				}"
 				mode="pv"
 			/>
 		</Variant>
@@ -68,11 +70,14 @@ const hoursFromNow = function (hours) {
 				v-bind="state"
 				enabled
 				charging
-				vehicleTitle="Opel Corsa-e"
 				:socBasedCharging="false"
-				:vehicleCapacity="72"
+				:vehicle="{
+					...state.vehicle,
+					title: 'Opel Corsa-e',
+					capacity: 72,
+					features: ['Offline'],
+				}"
 				:targetEnergy="30"
-				vehicleFeatureOffline
 				mode="pv"
 			/>
 		</Variant>
