@@ -3,6 +3,7 @@ package tariff
 import (
 	"errors"
 	"slices"
+	"strings"
 	"sync"
 	"time"
 
@@ -52,8 +53,14 @@ func NewOctopusFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		if cc.Tariff == "" {
 			return nil, errors.New("missing product / tariff code")
 		}
-	} else if cc.Region != "" || cc.Tariff != "" {
-		return nil, errors.New("cannot use apikey at same time as product / tariff code")
+	} else {
+		// ApiKey validators
+		if cc.Region != "" || cc.Tariff != "" {
+			return nil, errors.New("cannot use apikey at same time as product / tariff code")
+		}
+		if len(cc.ApiKey) != 32 || !strings.HasPrefix(cc.ApiKey, "sk_live_") {
+			return nil, errors.New("apikey of invalid or unexpected format, please check for errors")
+		}
 	}
 
 	t := &Octopus{

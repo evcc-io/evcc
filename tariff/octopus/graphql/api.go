@@ -12,20 +12,32 @@ import (
 	"github.com/hasura/go-graphql-client"
 )
 
+// BaseURI is Octopus Energy's core API root.
+const BaseURI = "https://api.octopus.energy"
+
+// URI is the GraphQL query endpoint for Octopus Energy.
+const URI = BaseURI + "/v1/graphql/"
+
+// OctopusGraphQLClient provides an interface for communicating with Octopus Energy's Kraken platform.
 type OctopusGraphQLClient struct {
 	*graphql.Client
 	log *util.Logger
 
 	// apikey is the Octopus Energy API key (provided by user)
 	apikey string
+
 	// token is the GraphQL token used for communication with kraken (we get this ourselves with the apikey)
 	token *string
-	// accountNumber is the Octopus Energy account number associated with the given API key (queried ourselves via GraphQL)
-	accountNumber   string
+	// tokenExpiration tracks the expiry of the acquired token. A new Token should be obtained if this time is passed.
 	tokenExpiration time.Time
-	tokenMtx        sync.Mutex
+	// tokenMtx should be held when requesting a new token.
+	tokenMtx sync.Mutex
+
+	// accountNumber is the Octopus Energy account number associated with the given API key (queried ourselves via GraphQL)
+	accountNumber string
 }
 
+// NewClient returns a new, unauthenticated instance of OctopusGraphQLClient.
 func NewClient(log *util.Logger, apikey string) (*OctopusGraphQLClient, error) {
 	cli := request.NewClient(log)
 
@@ -58,18 +70,19 @@ func (c *OctopusGraphQLClient) refreshToken() error {
 		return nil
 	}
 
-	// TODO is this a good use of background context?
-	ctx := context.Background()
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+
 	// take a lock against the token mutex for the refresh
 	c.tokenMtx.Lock()
 	defer c.tokenMtx.Unlock()
 
-	var q KrakenTokenAuthentication
+	var q krakenTokenAuthentication
 	err := c.Client.Mutate(ctx, &q, map[string]interface{}{"apiKey": c.apikey})
 	if err != nil {
 		return err
 	}
-	c.log.INFO.Println("got GQL token from octopus")
+	c.log.TRACE.Println("got GQL token from octopus")
 	c.token = &q.ObtainKrakenToken.Token
 	// Refresh in 55 minutes (the token lasts an hour, but just to be safe...)
 	c.tokenExpiration = time.Now().Add(time.Minute * 55)
@@ -89,10 +102,10 @@ func (c *OctopusGraphQLClient) AccountNumber() (string, error) {
 		return "", err
 	}
 
-	// TODO is this a good use of background context?
-	ctx := context.Background()
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
 
-	var q KrakenAccountLookup
+	var q krakenAccountLookup
 	err := c.Client.Query(ctx, &q, nil)
 	if err != nil {
 		return "", err
@@ -121,10 +134,10 @@ func (c *OctopusGraphQLClient) TariffCode() (string, error) {
 		return "", nil
 	}
 
-	// TODO is this a good use of background context?
-	ctx := context.Background()
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
 
-	var q KrakenAccountElectricityAgreements
+	var q krakenAccountElectricityAgreements
 	err = c.Client.Query(ctx, &q, map[string]interface{}{"accountNumber": acc})
 	if err != nil {
 		return "", err
@@ -138,5 +151,5 @@ func (c *OctopusGraphQLClient) TariffCode() (string, error) {
 	//switch t := q.Account.ElectricityAgreements[0].Tariff.(type) {
 	//
 	//}
-	return q.Account.ElectricityAgreements[0].Tariff.StandardTariff.TariffCode, nil
+	return q.Account.ElectricityAgreements[0].Tariff.TariffCode(), nil
 }
