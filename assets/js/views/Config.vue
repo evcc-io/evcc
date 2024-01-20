@@ -90,7 +90,12 @@
 				<h2 class="my-4">Tariffs</h2>
 
 				<ul class="p-0 config-list">
-					<DeviceCard name="Grid" editable data-testid="tariff-grid" @edit="todo">
+					<DeviceCard
+						name="Grid"
+						unconfigured
+						data-testid="tariff-grid"
+						@configure="todo"
+					>
 						<template #icon>
 							<shopicon-regular-money></shopicon-regular-money>
 						</template>
@@ -99,7 +104,7 @@
 						name="Feed-in"
 						unconfigured
 						data-testid="tariff-feedin"
-						@edit="todo"
+						@configure="todo"
 					>
 						<template #icon>
 							<shopicon-regular-receivepayment></shopicon-regular-receivepayment>
@@ -109,7 +114,7 @@
 						name="CO₂ estimate"
 						unconfigured
 						data-testid="tariff-co2"
-						@edit="todo"
+						@configure="todo"
 					>
 						<template #icon>
 							<shopicon-regular-eco1></shopicon-regular-eco1>
@@ -120,9 +125,17 @@
 				<h2 class="my-4">Charge Points</h2>
 
 				<ul class="p-0 config-list">
-					<DeviceCard name="Carport" editable data-testid="chargepoint-1" @edit="todo">
+					<DeviceCard
+						name="Fake Carport"
+						editable
+						data-testid="chargepoint-1"
+						@edit="todo"
+					>
 						<template #icon>
 							<shopicon-regular-cablecharge></shopicon-regular-cablecharge>
+						</template>
+						<template #tags>
+							<DeviceTags :tags="{ power: 0 }" />
 						</template>
 					</DeviceCard>
 					<AddDeviceButton
@@ -160,22 +173,27 @@
 				<h2 class="my-4">Integrations</h2>
 
 				<ul class="p-0 config-list">
-					<DeviceCard name="MQTT" editable data-testid="mqtt" @edit="todo">
+					<DeviceCard name="MQTT" unconfigured data-testid="mqtt" @configure="todo">
 						<template #icon>
 							<shopicon-regular-fastdelivery1></shopicon-regular-fastdelivery1>
 						</template>
 					</DeviceCard>
-					<DeviceCard name="Notifications" unconfigured data-testid="eebus" @edit="todo">
+					<DeviceCard
+						name="Notifications"
+						unconfigured
+						data-testid="eebus"
+						@configure="todo"
+					>
 						<template #icon>
 							<shopicon-regular-sendit></shopicon-regular-sendit>
 						</template>
 					</DeviceCard>
-					<DeviceCard name="InfluxDB" unconfigured data-testid="influx" @edit="todo">
+					<DeviceCard name="InfluxDB" unconfigured data-testid="influx" @configure="todo">
 						<template #icon>
 							<shopicon-regular-diagram></shopicon-regular-diagram>
 						</template>
 					</DeviceCard>
-					<DeviceCard name="EEBus" unconfigured data-testid="eebus" @edit="todo">
+					<DeviceCard name="EEBus" unconfigured data-testid="eebus" @configure="todo">
 						<template #icon>
 							<shopicon-regular-polygon></shopicon-regular-polygon>
 						</template>

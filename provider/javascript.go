@@ -152,6 +152,10 @@ func (p *Javascript) evaluate() (any, error) {
 		return nil, err
 	}
 
+	if vv == nil {
+		return nil, nil
+	}
+
 	return normalizeValue(vv)
 }
 

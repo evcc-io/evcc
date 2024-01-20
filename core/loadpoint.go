@@ -260,9 +260,6 @@ func NewLoadpointFromConfig(log *util.Logger, settings *Settings, other map[stri
 		lp.mode = api.ModeOff
 	}
 
-	// restore settings
-	lp.restoreSettings()
-
 	return lp, nil
 }
 
@@ -300,20 +297,20 @@ func NewLoadpoint(log *util.Logger, settings *Settings) *Loadpoint {
 
 // restoreSettings restores loadpoint settings
 func (lp *Loadpoint) restoreSettings() {
-	if v, err := lp.settings.String(keys.Mode); err == nil {
-		lp.mode = api.ChargeMode(v)
+	if v, err := lp.settings.String(keys.Mode); err == nil && v != "" {
+		lp.setMode(api.ChargeMode(v))
 	}
-	if v, err := lp.settings.Time(keys.PlanTime); err == nil {
-		lp.planTime = v
+	if v, err := lp.settings.Int(keys.LimitSoc); err == nil && v > 0 {
+		lp.setLimitSoc(int(v))
 	}
-	if v, err := lp.settings.Float(keys.PlanEnergy); err == nil {
-		lp.planEnergy = v
+	if v, err := lp.settings.Float(keys.LimitEnergy); err == nil && v > 0 {
+		lp.setLimitEnergy(v)
 	}
-	if v, err := lp.settings.Int(keys.LimitSoc); err == nil {
-		lp.limitSoc = int(v)
-	}
-	if v, err := lp.settings.Float(keys.LimitEnergy); err == nil {
-		lp.limitEnergy = v
+
+	t, err1 := lp.settings.Time(keys.PlanTime)
+	v, err2 := lp.settings.Float(keys.PlanEnergy)
+	if err1 == nil && err2 == nil {
+		lp.setPlanEnergy(t, v)
 	}
 }
 
@@ -384,9 +381,12 @@ func (lp *Loadpoint) pushEvent(event string) {
 
 // publish sends values to UI and databases
 func (lp *Loadpoint) publish(key string, val interface{}) {
-	if lp.uiChan != nil {
-		lp.uiChan <- util.Param{Key: key, Val: val}
+	// test helper
+	if lp.uiChan == nil {
+		return
 	}
+
+	lp.uiChan <- util.Param{Key: key, Val: val}
 }
 
 // evChargeStartHandler sends external start event
@@ -522,7 +522,7 @@ func (lp *Loadpoint) evChargeCurrentHandler(current float64) {
 // If physical charge meter is present this handler is not used.
 // The actual value is published by the evChargeCurrentHandler
 func (lp *Loadpoint) evChargeCurrentWrappedMeterHandler(current float64) {
-	power := current * float64(lp.activePhases()) * Voltage
+	power := current * float64(lp.ActivePhases()) * Voltage
 
 	// if disabled we cannot be charging
 	if !lp.enabled || !lp.charging() {
@@ -558,6 +558,9 @@ func (lp *Loadpoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	_ = lp.bus.Subscribe(evChargeCurrent, lp.evChargeCurrentHandler)
 	_ = lp.bus.Subscribe(evVehicleSoc, lp.evVehicleSocProgressHandler)
 
+	// restore settings
+	lp.restoreSettings()
+
 	// publish initial values
 	lp.publish(keys.Title, lp.Title())
 	lp.publish(keys.Mode, lp.GetMode())
@@ -570,7 +573,7 @@ func (lp *Loadpoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 
 	lp.setConfiguredPhases(lp.ConfiguredPhases)
 	lp.publish(keys.PhasesEnabled, lp.phases)
-	lp.publish(keys.PhasesActive, lp.activePhases())
+	lp.publish(keys.PhasesActive, lp.ActivePhases())
 	lp.publishTimer(phaseTimer, 0, timerInactive)
 	lp.publishTimer(pvTimer, 0, timerInactive)
 	lp.publishTimer(guardTimer, 0, timerInactive)
@@ -588,11 +591,7 @@ func (lp *Loadpoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	}
 
 	// vehicle
-	lp.publish(keys.VehiclePresent, false)
-	lp.publish(keys.VehicleTitle, "")
-	lp.publish(keys.VehicleIcon, "")
 	lp.publish(keys.VehicleName, "")
-	lp.publish(keys.VehicleCapacity, 0.0)
 	lp.publish(keys.VehicleOdometer, 0.0)
 
 	// assign and publish default vehicle
@@ -808,7 +807,7 @@ func (lp *Loadpoint) limitEnergyReached() bool {
 // limitSocReached returns true if the effective limit has been reached
 func (lp *Loadpoint) limitSocReached() bool {
 	limit := lp.effectiveLimitSoc()
-	return limit > 0 && lp.vehicleSoc >= float64(limit)
+	return limit > 0 && limit < 100 && lp.vehicleSoc >= float64(limit)
 }
 
 // minSocNotReached checks if minimum is configured and not reached.
@@ -1040,7 +1039,7 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64) bo
 	}
 
 	var waiting bool
-	activePhases := lp.activePhases()
+	activePhases := lp.ActivePhases()
 	availablePower := lp.chargePower - sitePower
 	scalable := (sitePower > 0 || !lp.enabled) && activePhases > 1 && lp.ConfiguredPhases < 3
 
@@ -1144,7 +1143,7 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batter
 
 	// calculate target charge current from delta power and actual current
 	effectiveCurrent := lp.effectiveCurrent()
-	activePhases := lp.activePhases()
+	activePhases := lp.ActivePhases()
 	deltaCurrent := powerToCurrent(-sitePower, activePhases)
 	targetCurrent := max(effectiveCurrent+deltaCurrent, 0)
 

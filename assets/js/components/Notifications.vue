@@ -51,7 +51,13 @@
 									class="flex-grow-0 flex-shrink-0 d-block"
 								></shopicon-regular-exclamationtriangle>
 								<span class="flex-grow-1 px-2 py-1 text-break">
-									{{ message(msg) }}
+									<span
+										v-for="(line, idx) in message(msg)"
+										:key="idx"
+										class="d-block"
+									>
+										{{ line }}
+									</span>
 								</span>
 								<span v-if="msg.count > 1" class="badge rounded-pill bg-secondary">
 									{{ msg.count }}
@@ -107,11 +113,12 @@ export default {
 	},
 	methods: {
 		message({ message, lp }) {
-			let context = "";
+			const lines = Array.isArray(message) ? message : [message];
 			if (lp) {
-				context = `${this.loadpointTitles[lp - 1] || lp}: `;
+				// add loadpoint title to first line
+				lines[0] = `${this.loadpointTitles[lp - 1] || lp}: ${lines[0]}`;
 			}
-			return `${context}${message}`;
+			return lines;
 		},
 		clear: function () {
 			window.app && window.app.clear();

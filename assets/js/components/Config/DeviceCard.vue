@@ -94,6 +94,7 @@ export default {
 	border: 1px solid var(--evcc-gray-50);
 	padding: 1rem 1rem 0.5rem;
 	transition: border-color var(--evcc-transition-fast) linear;
+	background: var(--evcc-box);
 }
 .root:hover {
 	border-color: var(--evcc-gray);

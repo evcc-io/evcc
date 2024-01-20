@@ -1,0 +1,94 @@
+template: sma-inverter-modbus
+products:
+  - brand: SMA
+    description:
+      generic: Sunny Island (Modbus)
+  - brand: SMA
+    description:
+      generic: Sunny Boy Storage (Modbus)
+capabilities: ["battery-control"]
+params:
+  - name: usage
+    choice: ["battery"]
+  - name: modbus
+    choice: ["tcpip"]
+    port: 502
+    id: 3
+    help:
+      en: The Modbus TCP-Server needs to be enabled on this inverter
+      de: Der Modbus TCP-Server muss an diesem Wechselrichter aktiviert sein
+  - name: capacity
+    advanced: true
+  - name: watchdog
+    type: duration
+    default: 60s
+    advanced: true
+render: |
+  type: custom
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 30775 # SMA Modbus Profile: GridMs.TotW
+      type: input
+      decode: int32nan
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 30513 # SMA Modbus Profile: Metering.TotWhOut
+      type: holding
+      decode: uint64nan
+    scale: 0.001
+  {{- if eq .usage "battery" }}
+  soc:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 30845 # SMA Modbus Profile: Bat.ChaStt
+      type: holding
+      decode: uint32nan
+  batterymode:
+    source: watchdog
+    timeout: {{ .watchdog }} # re-write at timeout/2
+    reset: 1 # reset watchdog on normal
+    set:
+      source: switch
+      switch:
+      - case: 1 # normal
+        set:
+          source: const
+          value: 10000 # Maximale Wirkleistung
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 44039 # SMA Modbus Profile: Inverter.WModCfg.WCtlComCfg.WSptMaxNom
+              type: writemultiple
+              decode: int32
+      - case: 2 # hold
+        set:
+          source: const
+          value: 0 # Maximale Wirkleistung
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 44039 # SMA Modbus Profile: Inverter.WModCfg.WCtlComCfg.WSptMaxNom
+              type: writemultiple
+              decode: int32
+      - case: 3 # charge
+        set:
+          source: const
+          value: -10000 # Maximale Wirkleistung
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 44039 # SMA Modbus Profile: Inverter.WModCfg.WCtlComCfg.WSptMaxNom
+              type: writemultiple
+              decode: int32
+  {{- if .capacity }}
+  capacity: {{ .capacity }} # kWh
+  {{- end }}
+  {{- end }}

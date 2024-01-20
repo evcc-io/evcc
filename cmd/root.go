@@ -147,7 +147,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	go socketHub.Run(pipe.NewDropper(ignoreEmpty).Pipe(tee.Attach()), cache)
 
 	// setup values channel
-	valueChan := make(chan util.Param, 1)
+	valueChan := make(chan util.Param, 64)
 	go tee.Run(valueChan)
 
 	// capture log messages for UI
@@ -214,7 +214,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	// setup messaging
 	var pushChan chan push.Event
 	if err == nil {
-		pushChan, err = configureMessengers(conf.Messaging, valueChan, cache)
+		pushChan, err = configureMessengers(conf.Messaging, site.Vehicles(), valueChan, cache)
 	}
 
 	// run shutdown functions on stop

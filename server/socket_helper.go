@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/util"
-	"github.com/kr/pretty"
 )
 
 func encode(v interface{}) (string, error) {
@@ -72,7 +71,7 @@ func kv(p util.Param) string {
 	}
 
 	if p.Key == "" && val == "" {
-		log.ERROR.Printf("invalid key/val for %+v %# v, please report to https://github.com/evcc-io/evcc/issues/6439", p, pretty.Formatter(p.Val))
+		log.ERROR.Printf("invalid key/val for %+v, please report to https://github.com/evcc-io/evcc/issues/6439", p)
 		return "\"foo\":\"bar\""
 	}
 

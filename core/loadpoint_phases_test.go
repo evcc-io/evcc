@@ -9,7 +9,7 @@ import (
 	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
-	"github.com/golang/mock/gomock"
+	"go.uber.org/mock/gomock"
 )
 
 type testCase struct {
@@ -125,7 +125,7 @@ func TestMaxActivePhases(t *testing.T) {
 func testScale(t *testing.T, lp *Loadpoint, sitePower float64, direction string, tc testCase) {
 	t.Helper()
 
-	act := lp.activePhases()
+	act := lp.ActivePhases()
 	max := lp.maxActivePhases()
 
 	testDirection := direction[0:1] // (d)own or (u)p
@@ -221,7 +221,7 @@ func TestPvScalePhases(t *testing.T) {
 			t.Error("wrong phases", lp.phases, tc.physical)
 		}
 
-		if phs := lp.activePhases(); phs != tc.actExpected {
+		if phs := lp.ActivePhases(); phs != tc.actExpected {
 			t.Errorf("expected active %d, got %d", tc.actExpected, phs)
 		}
 		if phs := lp.maxActivePhases(); phs != tc.maxExpected {

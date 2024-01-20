@@ -20,7 +20,9 @@ const (
 
 func main() {
 	for _, lang := range []string{"de", "en"} {
-		generateDocs(lang)
+		if err := generateDocs(lang); err != nil {
+			panic(err)
+		}
 	}
 
 	if err := generateBrandJSON(); err != nil {
@@ -28,13 +30,13 @@ func main() {
 	}
 }
 
-func generateDocs(lang string) {
+func generateDocs(lang string) error {
 	for _, class := range templates.ClassValues() {
 		path := fmt.Sprintf("%s/%s/%s", docsPath, lang, strings.ToLower(class.String()))
 		_, err := os.Stat(path)
 		if os.IsNotExist(err) {
 			if err := os.MkdirAll(path, 0o755); err != nil {
-				panic(err)
+				return err
 			}
 		}
 		if err := clearDir(path); err != nil {
@@ -42,9 +44,11 @@ func generateDocs(lang string) {
 		}
 
 		if err := generateClass(class, lang); err != nil {
-			panic(err)
+			return err
 		}
 	}
+
+	return nil
 }
 
 func generateClass(class templates.Class, lang string) error {

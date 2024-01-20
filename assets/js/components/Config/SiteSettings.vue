@@ -110,6 +110,10 @@ export default {
 	transition: box-shadow var(--evcc-transition-fast) linear;
 }
 
+.group:hover {
+	border-color: var(--evcc-gray);
+}
+
 .group:focus-within {
 	box-shadow: 0 0 1rem 0 var(--evcc-gray-50);
 }

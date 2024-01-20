@@ -11,9 +11,18 @@ import (
 	"github.com/evcc-io/evcc/core/coordinator"
 	"github.com/evcc-io/evcc/core/soc"
 	"github.com/evcc-io/evcc/util"
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/mock/gomock"
 )
+
+func expectVehiclePublish(vehicle *api.MockVehicle) {
+	vehicle.EXPECT().Title().Return("target").AnyTimes()
+	vehicle.EXPECT().Capacity().AnyTimes()
+	vehicle.EXPECT().Icon().AnyTimes()
+	vehicle.EXPECT().Features().AnyTimes()
+	vehicle.EXPECT().Phases().AnyTimes()
+	vehicle.EXPECT().OnIdentified().AnyTimes()
+}
 
 func TestPublishSocAndRange(t *testing.T) {
 	ctrl := gomock.NewController(t)
@@ -24,10 +33,7 @@ func TestPublishSocAndRange(t *testing.T) {
 	charger.EXPECT().Enabled().Return(true, nil).AnyTimes()
 
 	vehicle := api.NewMockVehicle(ctrl)
-	vehicle.EXPECT().Title().Return("target").AnyTimes()
-	vehicle.EXPECT().Capacity().AnyTimes()
-	vehicle.EXPECT().Phases().AnyTimes()
-	vehicle.EXPECT().OnIdentified().AnyTimes()
+	expectVehiclePublish(vehicle)
 
 	log := util.NewLogger("foo")
 	lp := &Loadpoint{
@@ -227,12 +233,9 @@ func TestReconnectVehicle(t *testing.T) {
 				*api.MockChargeState
 			}
 
-			vehicle := &vehicleT{api.NewMockVehicle(ctrl), api.NewMockChargeState(ctrl)}
-			vehicle.MockVehicle.EXPECT().Title().Return("vehicle").AnyTimes()
-			vehicle.MockVehicle.EXPECT().Icon().Return("").AnyTimes()
-			vehicle.MockVehicle.EXPECT().Capacity().AnyTimes()
-			vehicle.MockVehicle.EXPECT().Phases().AnyTimes()
-			vehicle.MockVehicle.EXPECT().OnIdentified().AnyTimes()
+			v := api.NewMockVehicle(ctrl)
+			vehicle := &vehicleT{v, api.NewMockChargeState(ctrl)}
+			expectVehiclePublish(v)
 			vehicle.MockVehicle.EXPECT().Identifiers().AnyTimes().Return(tc.vehicleId)
 			vehicle.MockVehicle.EXPECT().Soc().Return(0.0, nil).AnyTimes()
 

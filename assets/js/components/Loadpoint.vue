@@ -151,18 +151,15 @@ export default {
 		// charging: Boolean,
 		enabled: Boolean,
 		vehicleDetectionActive: Boolean,
-		vehiclePresent: Boolean,
 		vehicleRange: Number,
 		vehicleSoc: Number,
 		vehicleName: String,
-		vehicleTitle: String,
 		vehicleIcon: String,
 		vehicleTargetSoc: Number,
-		vehicleCapacity: Number,
-		vehicleFeatureOffline: Boolean,
 		vehicles: Array,
 		planActive: Boolean,
 		planProjectedStart: String,
+		planOverrun: Boolean,
 		planEnergy: Number,
 		planTime: String,
 		effectivePlanTime: String,
@@ -214,6 +211,9 @@ export default {
 		vehicle: function () {
 			return this.vehicles?.find((v) => v.name === this.vehicleName);
 		},
+		vehicleTitle: function () {
+			return this.vehicle?.title;
+		},
 		loadpointTitle: function () {
 			return this.title || this.$t("main.loadpoint.fallbackName");
 		},
@@ -241,11 +241,17 @@ export default {
 		showChargingIndicator: function () {
 			return this.charging && this.chargePower > 0;
 		},
+		vehicleKnown: function () {
+			return !!this.vehicleName;
+		},
+		vehicleHasSoc: function () {
+			return this.vehicleKnown && !this.vehicle?.features?.includes("Offline");
+		},
 		socBasedCharging: function () {
-			return (!this.vehicleFeatureOffline && this.vehiclePresent) || this.vehicleSoc > 0;
+			return this.vehicleHasSoc || this.vehicleSoc > 0;
 		},
 		socBasedPlanning: function () {
-			return this.vehicleSoc > 0 && this.vehicleCapacity > 0;
+			return this.socBasedCharging && this.vehicle?.capacity > 0;
 		},
 	},
 	watch: {

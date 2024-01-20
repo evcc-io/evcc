@@ -3,6 +3,7 @@ products:
   - brand: Tesla
     description:
       generic: Powerwall
+capabilities: ["battery-control"]
 requirements:
   description:
     de: |

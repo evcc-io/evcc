@@ -263,7 +263,7 @@ export default {
 			try {
 				const opts = {
 					params: {
-						lang: this.$i18n.locale,
+						lang: this.$i18n?.locale,
 						name: this.templateName,
 					},
 				};

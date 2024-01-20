@@ -39,7 +39,7 @@ func NewFixedFromConfig(other map[string]interface{}) (api.Tariff, error) {
 
 	t := &Fixed{
 		clock:   clock.New(),
-		dynamic: len(cc.Zones) > 1,
+		dynamic: len(cc.Zones) >= 1,
 	}
 
 	for _, z := range cc.Zones {

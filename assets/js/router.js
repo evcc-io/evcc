@@ -24,10 +24,8 @@ export default function setupRouter(i18n) {
       },
     ],
   });
-  router.beforeEach(async (to) => {
+  router.beforeEach(async () => {
     await ensureCurrentLocaleMessages(i18n.global);
-    // add config class to html element when on config page -> other background color
-    window.document.documentElement.classList.toggle("config", to.path === "/config");
     return true;
   });
   return router;

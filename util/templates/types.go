@@ -54,14 +54,15 @@ const (
 var ValidDependencies = []string{DependencyCheckEmpty, DependencyCheckNotEmpty, DependencyCheckEqual}
 
 const (
-	CapabilityISO151182 = "iso151182" // ISO 15118-2 support
-	CapabilityMilliAmps = "mA"        // Granular current control support
-	CapabilityRFID      = "rfid"      // RFID support
-	Capability1p3p      = "1p3p"      // 1P/3P phase switching support
-	CapabilitySMAHems   = "smahems"   // SMA HEMS Support
+	CapabilityISO151182      = "iso151182"       // ISO 15118-2 support
+	CapabilityMilliAmps      = "mA"              // Granular current control support
+	CapabilityRFID           = "rfid"            // RFID support
+	Capability1p3p           = "1p3p"            // 1P/3P phase switching support
+	CapabilitySMAHems        = "smahems"         // SMA HEMS support
+	CapabilityBatteryControl = "battery-control" // Battery control support
 )
 
-var ValidCapabilities = []string{CapabilityISO151182, CapabilityMilliAmps, CapabilityRFID, Capability1p3p, CapabilitySMAHems}
+var ValidCapabilities = []string{CapabilityISO151182, CapabilityMilliAmps, CapabilityRFID, Capability1p3p, CapabilitySMAHems, CapabilityBatteryControl}
 
 const (
 	RequirementEEBUS       = "eebus"       // EEBUS Setup is required

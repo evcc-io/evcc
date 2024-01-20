@@ -34,6 +34,13 @@ func (lp *Loadpoint) GetMode() api.ChargeMode {
 	return lp.mode
 }
 
+// setMode sets loadpoint charge mode (no mutex)
+func (lp *Loadpoint) setMode(mode api.ChargeMode) {
+	lp.mode = mode
+	lp.publish(keys.Mode, mode)
+	lp.settings.SetString(keys.Mode, string(mode))
+}
+
 // SetMode sets loadpoint charge mode
 func (lp *Loadpoint) SetMode(mode api.ChargeMode) {
 	lp.Lock()
@@ -48,9 +55,7 @@ func (lp *Loadpoint) SetMode(mode api.ChargeMode) {
 
 	// apply immediately
 	if lp.mode != mode {
-		lp.mode = mode
-		lp.publish(keys.Mode, mode)
-		lp.settings.SetString(keys.Mode, string(mode))
+		lp.setMode(mode)
 
 		// reset timers
 		switch mode {

@@ -38,7 +38,7 @@
 											:id="session.vehicle"
 											class="options"
 											:vehicles="vehicles"
-											:is-unknown="false"
+											connected
 											@change-vehicle="changeVehicle"
 											@remove-vehicle="removeVehicle"
 										>

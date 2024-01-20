@@ -6,7 +6,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateModbus(base api.Meter, meterEnergy func() (float64, error), phaseCurrents func() (float64, float64, float64, error), phaseVoltages func() (float64, float64, float64, error), phasePowers func() (float64, float64, float64, error), battery func() (float64, error), batteryCapacity func() float64) api.Meter {
+func decorateModbusMbmd(base api.Meter, meterEnergy func() (float64, error), phaseCurrents func() (float64, float64, float64, error), phaseVoltages func() (float64, float64, float64, error), phasePowers func() (float64, float64, float64, error), battery func() (float64, error), batteryCapacity func() float64) api.Meter {
 	switch {
 	case battery == nil && batteryCapacity == nil && meterEnergy == nil && phaseCurrents == nil && phasePowers == nil && phaseVoltages == nil:
 		return base
@@ -17,7 +17,7 @@ func decorateModbus(base api.Meter, meterEnergy func() (float64, error), phaseCu
 			api.MeterEnergy
 		}{
 			Meter: base,
-			MeterEnergy: &decorateModbusMeterEnergyImpl{
+			MeterEnergy: &decorateModbusMbmdMeterEnergyImpl{
 				meterEnergy: meterEnergy,
 			},
 		}
@@ -28,7 +28,7 @@ func decorateModbus(base api.Meter, meterEnergy func() (float64, error), phaseCu
 			api.PhaseCurrents
 		}{
 			Meter: base,
-			PhaseCurrents: &decorateModbusPhaseCurrentsImpl{
+			PhaseCurrents: &decorateModbusMbmdPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
 		}
@@ -40,10 +40,10 @@ func decorateModbus(base api.Meter, meterEnergy func() (float64, error), phaseCu
 			api.PhaseCurrents
 		}{
 			Meter: base,
-			MeterEnergy: &decorateModbusMeterEnergyImpl{
+			MeterEnergy: &decorateModbusMbmdMeterEnergyImpl{
 				meterEnergy: meterEnergy,
 			},
-			PhaseCurrents: &decorateModbusPhaseCurrentsImpl{
+			PhaseCurrents: &decorateModbusMbmdPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
 		}
@@ -54,7 +54,7 @@ func decorateModbus(base api.Meter, meterEnergy func() (float64, error), phaseCu
 			api.PhaseVoltages
 		}{
 			Meter: base,
-			PhaseVoltages: &decorateModbusPhaseVoltagesImpl{
+			PhaseVoltages: &decorateModbusMbmdPhaseVoltagesImpl{
 				phaseVoltages: phaseVoltages,
 			},
 		}
@@ -66,10 +66,10 @@ func decorateModbus(base api.Meter, meterEnergy func() (float64, error), phaseCu
 			api.PhaseVoltages
 		}{
 			Meter: base,
-			MeterEnergy: &decorateModbusMeterEnergyImpl{
+			MeterEnergy: &decorateModbusMbmdMeterEnergyImpl{
 				meterEnergy: meterEnergy,
 			},
-			PhaseVoltages: &decorateModbusPhaseVoltagesImpl{
+			PhaseVoltages: &decorateModbusMbmdPhaseVoltagesImpl{
 				phaseVoltages: phaseVoltages,
 			},
 		}
@@ -81,10 +81,10 @@ func decorateModbus(base api.Meter, meterEnergy func() (float64, error), phaseCu
 			api.PhaseVoltages
 		}{
 			Meter: base,
-			PhaseCurrents: &decorateModbusPhaseCurrentsImpl{
+			PhaseCurrents: &decorateModbusMbmdPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
-			PhaseVoltages: &decorateModbusPhaseVoltagesImpl{
+			PhaseVoltages: &decorateModbusMbmdPhaseVoltagesImpl{
 				phaseVoltages: phaseVoltages,
 			},
 		}
@@ -97,13 +97,13 @@ func decorateModbus(base api.Meter, meterEnergy func() (float64, error), phaseCu
 			api.PhaseVoltages
 		}{
 			Meter: base,
-			MeterEnergy: &decorateModbusMeterEnergyImpl{
+			MeterEnergy: &decorateModbusMbmdMeterEnergyImpl{
 				meterEnergy: meterEnergy,
 			},
-			PhaseCurrents: &decorateModbusPhaseCurrentsImpl{
+			PhaseCurrents: &decorateModbusMbmdPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
-			PhaseVoltages: &decorateModbusPhaseVoltagesImpl{
+			PhaseVoltages: &decorateModbusMbmdPhaseVoltagesImpl{
 				phaseVoltages: phaseVoltages,
 			},
 		}
@@ -114,7 +114,7 @@ func decorateModbus(base api.Meter, meterEnergy func() (float64, error), phaseCu
 			api.PhasePowers
 		}{
 			Meter: base,
-			PhasePowers: &decorateModbusPhasePowersImpl{
+			PhasePowers: &decorateModbusMbmdPhasePowersImpl{
 				phasePowers: phasePowers,
 			},
 		}
@@ -126,10 +126,10 @@ func decorateModbus(base api.Meter, meterEnergy func() (float64, error), phaseCu
 			api.PhasePowers
 		}{
 			Meter: base,
-			MeterEnergy: &decorateModbusMeterEnergyImpl{
+			MeterEnergy: &decorateModbusMbmdMeterEnergyImpl{
 				meterEnergy: meterEnergy,
 			},
-			PhasePowers: &decorateModbusPhasePowersImpl{
+			PhasePowers: &decorateModbusMbmdPhasePowersImpl{
 				phasePowers: phasePowers,
 			},
 		}
@@ -141,10 +141,10 @@ func decorateModbus(base api.Meter, meterEnergy func() (float64, error), phaseCu
 			api.PhasePowers
 		}{
 			Meter: base,
-			PhaseCurrents: &decorateModbusPhaseCurrentsImpl{
+			PhaseCurrents: &decorateModbusMbmdPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
-			PhasePowers: &decorateModbusPhasePowersImpl{
+			PhasePowers: &decorateModbusMbmdPhasePowersImpl{
 				phasePowers: phasePowers,
 			},
 		}
@@ -157,13 +157,13 @@ func decorateModbus(base api.Meter, meterEnergy func() (float64, error), phaseCu
 			api.PhasePowers
 		}{
 			Meter: base,
-			MeterEnergy: &decorateModbusMeterEnergyImpl{
+			MeterEnergy: &decorateModbusMbmdMeterEnergyImpl{
 				meterEnergy: meterEnergy,
 			},
-			PhaseCurrents: &decorateModbusPhaseCurrentsImpl{
+			PhaseCurrents: &decorateModbusMbmdPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
-			PhasePowers: &decorateModbusPhasePowersImpl{
+			PhasePowers: &decorateModbusMbmdPhasePowersImpl{
 				phasePowers: phasePowers,
 			},
 		}
@@ -175,10 +175,10 @@ func decorateModbus(base api.Meter, meterEnergy func() (float64, error), phaseCu
 			api.PhaseVoltages
 		}{
 			Meter: base,
-			PhasePowers: &decorateModbusPhasePowersImpl{
+			PhasePowers: &decorateModbusMbmdPhasePowersImpl{
 				phasePowers: phasePowers,
 			},
-			PhaseVoltages: &decorateModbusPhaseVoltagesImpl{
+			PhaseVoltages: &decorateModbusMbmdPhaseVoltagesImpl{
 				phaseVoltages: phaseVoltages,
 			},
 		}
@@ -191,13 +191,13 @@ func decorateModbus(base api.Meter, meterEnergy func() (float64, error), phaseCu
 			api.PhaseVoltages
 		}{
 			Meter: base,
-			MeterEnergy: &decorateModbusMeterEnergyImpl{
+			MeterEnergy: &decorateModbusMbmdMeterEnergyImpl{
 				meterEnergy: meterEnergy,
 			},
-			PhasePowers: &decorateModbusPhasePowersImpl{
+			PhasePowers: &decorateModbusMbmdPhasePowersImpl{
 				phasePowers: phasePowers,
 			},
-			PhaseVoltages: &decorateModbusPhaseVoltagesImpl{
+			PhaseVoltages: &decorateModbusMbmdPhaseVoltagesImpl{
 				phaseVoltages: phaseVoltages,
 			},
 		}
@@ -210,13 +210,13 @@ func decorateModbus(base api.Meter, meterEnergy func() (float64, error), phaseCu
 			api.PhaseVoltages
 		}{
 			Meter: base,
-			PhaseCurrents: &decorateModbusPhaseCurrentsImpl{
+			PhaseCurrents: &decorateModbusMbmdPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
-			PhasePowers: &decorateModbusPhasePowersImpl{
+			PhasePowers: &decorateModbusMbmdPhasePowersImpl{
 				phasePowers: phasePowers,
 			},
-			PhaseVoltages: &decorateModbusPhaseVoltagesImpl{
+			PhaseVoltages: &decorateModbusMbmdPhaseVoltagesImpl{
 				phaseVoltages: phaseVoltages,
 			},
 		}
@@ -230,16 +230,16 @@ func decorateModbus(base api.Meter, meterEnergy func() (float64, error), phaseCu
 			api.PhaseVoltages
 		}{
 			Meter: base,
-			MeterEnergy: &decorateModbusMeterEnergyImpl{
+			MeterEnergy: &decorateModbusMbmdMeterEnergyImpl{
 				meterEnergy: meterEnergy,
 			},
-			PhaseCurrents: &decorateModbusPhaseCurrentsImpl{
+			PhaseCurrents: &decorateModbusMbmdPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
-			PhasePowers: &decorateModbusPhasePowersImpl{
+			PhasePowers: &decorateModbusMbmdPhasePowersImpl{
 				phasePowers: phasePowers,
 			},
-			PhaseVoltages: &decorateModbusPhaseVoltagesImpl{
+			PhaseVoltages: &decorateModbusMbmdPhaseVoltagesImpl{
 				phaseVoltages: phaseVoltages,
 			},
 		}
@@ -250,7 +250,7 @@ func decorateModbus(base api.Meter, meterEnergy func() (float64, error), phaseCu
 			api.Battery
 		}{
 			Meter: base,
-			Battery: &decorateModbusBatteryImpl{
+			Battery: &decorateModbusMbmdBatteryImpl{
 				battery: battery,
 			},
 		}
@@ -262,10 +262,10 @@ func decorateModbus(base api.Meter, meterEnergy func() (float64, error), phaseCu
 			api.MeterEnergy
 		}{
 			Meter: base,
-			Battery: &decorateModbusBatteryImpl{
+			Battery: &decorateModbusMbmdBatteryImpl{
 				battery: battery,
 			},
-			MeterEnergy: &decorateModbusMeterEnergyImpl{
+			MeterEnergy: &decorateModbusMbmdMeterEnergyImpl{
 				meterEnergy: meterEnergy,
 			},
 		}
@@ -277,10 +277,10 @@ func decorateModbus(base api.Meter, meterEnergy func() (float64, error), phaseCu
 			api.PhaseCurrents
 		}{
 			Meter: base,
-			Battery: &decorateModbusBatteryImpl{
+			Battery: &decorateModbusMbmdBatteryImpl{
 				battery: battery,
 			},
-			PhaseCurrents: &decorateModbusPhaseCurrentsImpl{
+			PhaseCurrents: &decorateModbusMbmdPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
 		}
@@ -293,13 +293,13 @@ func decorateModbus(base api.Meter, meterEnergy func() (float64, error), phaseCu
 			api.PhaseCurrents
 		}{
 			Meter: base,
-			Battery: &decorateModbusBatteryImpl{
+			Battery: &decorateModbusMbmdBatteryImpl{
 				battery: battery,
 			},
-			MeterEnergy: &decorateModbusMeterEnergyImpl{
+			MeterEnergy: &decorateModbusMbmdMeterEnergyImpl{
 				meterEnergy: meterEnergy,
 			},
-			PhaseCurrents: &decorateModbusPhaseCurrentsImpl{
+			PhaseCurrents: &decorateModbusMbmdPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
 		}
@@ -311,10 +311,10 @@ func decorateModbus(base api.Meter, meterEnergy func() (float64, error), phaseCu
 			api.PhaseVoltages
 		}{
 			Meter: base,
-			Battery: &decorateModbusBatteryImpl{
+			Battery: &decorateModbusMbmdBatteryImpl{
 				battery: battery,
 			},
-			PhaseVoltages: &decorateModbusPhaseVoltagesImpl{
+			PhaseVoltages: &decorateModbusMbmdPhaseVoltagesImpl{
 				phaseVoltages: phaseVoltages,
 			},
 		}
@@ -327,13 +327,13 @@ func decorateModbus(base api.Meter, meterEnergy func() (float64, error), phaseCu
 			api.PhaseVoltages
 		}{
 			Meter: base,
-			Battery: &decorateModbusBatteryImpl{
+			Battery: &decorateModbusMbmdBatteryImpl{
 				battery: battery,
 			},
-			MeterEnergy: &decorateModbusMeterEnergyImpl{
+			MeterEnergy: &decorateModbusMbmdMeterEnergyImpl{
 				meterEnergy: meterEnergy,
 			},
-			PhaseVoltages: &decorateModbusPhaseVoltagesImpl{
+			PhaseVoltages: &decorateModbusMbmdPhaseVoltagesImpl{
 				phaseVoltages: phaseVoltages,
 			},
 		}
@@ -346,13 +346,13 @@ func decorateModbus(base api.Meter, meterEnergy func() (float64, error), phaseCu
 			api.PhaseVoltages
 		}{
 			Meter: base,
-			Battery: &decorateModbusBatteryImpl{
+			Battery: &decorateModbusMbmdBatteryImpl{
 				battery: battery,
 			},
-			PhaseCurrents: &decorateModbusPhaseCurrentsImpl{
+			PhaseCurrents: &decorateModbusMbmdPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
-			PhaseVoltages: &decorateModbusPhaseVoltagesImpl{
+			PhaseVoltages: &decorateModbusMbmdPhaseVoltagesImpl{
 				phaseVoltages: phaseVoltages,
 			},
 		}
@@ -366,16 +366,16 @@ func decorateModbus(base api.Meter, meterEnergy func() (float64, error), phaseCu
 			api.PhaseVoltages
 		}{
 			Meter: base,
-			Battery: &decorateModbusBatteryImpl{
+			Battery: &decorateModbusMbmdBatteryImpl{
 				battery: battery,
 			},
-			MeterEnergy: &decorateModbusMeterEnergyImpl{
+			MeterEnergy: &decorateModbusMbmdMeterEnergyImpl{
 				meterEnergy: meterEnergy,
 			},
-			PhaseCurrents: &decorateModbusPhaseCurrentsImpl{
+			PhaseCurrents: &decorateModbusMbmdPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
-			PhaseVoltages: &decorateModbusPhaseVoltagesImpl{
+			PhaseVoltages: &decorateModbusMbmdPhaseVoltagesImpl{
 				phaseVoltages: phaseVoltages,
 			},
 		}
@@ -387,10 +387,10 @@ func decorateModbus(base api.Meter, meterEnergy func() (float64, error), phaseCu
 			api.PhasePowers
 		}{
 			Meter: base,
-			Battery: &decorateModbusBatteryImpl{
+			Battery: &decorateModbusMbmdBatteryImpl{
 				battery: battery,
 			},
-			PhasePowers: &decorateModbusPhasePowersImpl{
+			PhasePowers: &decorateModbusMbmdPhasePowersImpl{
 				phasePowers: phasePowers,
 			},
 		}
@@ -403,13 +403,13 @@ func decorateModbus(base api.Meter, meterEnergy func() (float64, error), phaseCu
 			api.PhasePowers
 		}{
 			Meter: base,
-			Battery: &decorateModbusBatteryImpl{
+			Battery: &decorateModbusMbmdBatteryImpl{
 				battery: battery,
 			},
-			MeterEnergy: &decorateModbusMeterEnergyImpl{
+			MeterEnergy: &decorateModbusMbmdMeterEnergyImpl{
 				meterEnergy: meterEnergy,
 			},
-			PhasePowers: &decorateModbusPhasePowersImpl{
+			PhasePowers: &decorateModbusMbmdPhasePowersImpl{
 				phasePowers: phasePowers,
 			},
 		}
@@ -422,13 +422,13 @@ func decorateModbus(base api.Meter, meterEnergy func() (float64, error), phaseCu
 			api.PhasePowers
 		}{
 			Meter: base,
-			Battery: &decorateModbusBatteryImpl{
+			Battery: &decorateModbusMbmdBatteryImpl{
 				battery: battery,
 			},
-			PhaseCurrents: &decorateModbusPhaseCurrentsImpl{
+			PhaseCurrents: &decorateModbusMbmdPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
-			PhasePowers: &decorateModbusPhasePowersImpl{
+			PhasePowers: &decorateModbusMbmdPhasePowersImpl{
 				phasePowers: phasePowers,
 			},
 		}
@@ -442,16 +442,16 @@ func decorateModbus(base api.Meter, meterEnergy func() (float64, error), phaseCu
 			api.PhasePowers
 		}{
 			Meter: base,
-			Battery: &decorateModbusBatteryImpl{
+			Battery: &decorateModbusMbmdBatteryImpl{
 				battery: battery,
 			},
-			MeterEnergy: &decorateModbusMeterEnergyImpl{
+			MeterEnergy: &decorateModbusMbmdMeterEnergyImpl{
 				meterEnergy: meterEnergy,
 			},
-			PhaseCurrents: &decorateModbusPhaseCurrentsImpl{
+			PhaseCurrents: &decorateModbusMbmdPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
-			PhasePowers: &decorateModbusPhasePowersImpl{
+			PhasePowers: &decorateModbusMbmdPhasePowersImpl{
 				phasePowers: phasePowers,
 			},
 		}
@@ -464,13 +464,13 @@ func decorateModbus(base api.Meter, meterEnergy func() (float64, error), phaseCu
 			api.PhaseVoltages
 		}{
 			Meter: base,
-			Battery: &decorateModbusBatteryImpl{
+			Battery: &decorateModbusMbmdBatteryImpl{
 				battery: battery,
 			},
-			PhasePowers: &decorateModbusPhasePowersImpl{
+			PhasePowers: &decorateModbusMbmdPhasePowersImpl{
 				phasePowers: phasePowers,
 			},
-			PhaseVoltages: &decorateModbusPhaseVoltagesImpl{
+			PhaseVoltages: &decorateModbusMbmdPhaseVoltagesImpl{
 				phaseVoltages: phaseVoltages,
 			},
 		}
@@ -484,16 +484,16 @@ func decorateModbus(base api.Meter, meterEnergy func() (float64, error), phaseCu
 			api.PhaseVoltages
 		}{
 			Meter: base,
-			Battery: &decorateModbusBatteryImpl{
+			Battery: &decorateModbusMbmdBatteryImpl{
 				battery: battery,
 			},
-			MeterEnergy: &decorateModbusMeterEnergyImpl{
+			MeterEnergy: &decorateModbusMbmdMeterEnergyImpl{
 				meterEnergy: meterEnergy,
 			},
-			PhasePowers: &decorateModbusPhasePowersImpl{
+			PhasePowers: &decorateModbusMbmdPhasePowersImpl{
 				phasePowers: phasePowers,
 			},
-			PhaseVoltages: &decorateModbusPhaseVoltagesImpl{
+			PhaseVoltages: &decorateModbusMbmdPhaseVoltagesImpl{
 				phaseVoltages: phaseVoltages,
 			},
 		}
@@ -507,16 +507,16 @@ func decorateModbus(base api.Meter, meterEnergy func() (float64, error), phaseCu
 			api.PhaseVoltages
 		}{
 			Meter: base,
-			Battery: &decorateModbusBatteryImpl{
+			Battery: &decorateModbusMbmdBatteryImpl{
 				battery: battery,
 			},
-			PhaseCurrents: &decorateModbusPhaseCurrentsImpl{
+			PhaseCurrents: &decorateModbusMbmdPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
-			PhasePowers: &decorateModbusPhasePowersImpl{
+			PhasePowers: &decorateModbusMbmdPhasePowersImpl{
 				phasePowers: phasePowers,
 			},
-			PhaseVoltages: &decorateModbusPhaseVoltagesImpl{
+			PhaseVoltages: &decorateModbusMbmdPhaseVoltagesImpl{
 				phaseVoltages: phaseVoltages,
 			},
 		}
@@ -531,19 +531,19 @@ func decorateModbus(base api.Meter, meterEnergy func() (float64, error), phaseCu
 			api.PhaseVoltages
 		}{
 			Meter: base,
-			Battery: &decorateModbusBatteryImpl{
+			Battery: &decorateModbusMbmdBatteryImpl{
 				battery: battery,
 			},
-			MeterEnergy: &decorateModbusMeterEnergyImpl{
+			MeterEnergy: &decorateModbusMbmdMeterEnergyImpl{
 				meterEnergy: meterEnergy,
 			},
-			PhaseCurrents: &decorateModbusPhaseCurrentsImpl{
+			PhaseCurrents: &decorateModbusMbmdPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
-			PhasePowers: &decorateModbusPhasePowersImpl{
+			PhasePowers: &decorateModbusMbmdPhasePowersImpl{
 				phasePowers: phasePowers,
 			},
-			PhaseVoltages: &decorateModbusPhaseVoltagesImpl{
+			PhaseVoltages: &decorateModbusMbmdPhaseVoltagesImpl{
 				phaseVoltages: phaseVoltages,
 			},
 		}
@@ -554,7 +554,7 @@ func decorateModbus(base api.Meter, meterEnergy func() (float64, error), phaseCu
 			api.BatteryCapacity
 		}{
 			Meter: base,
-			BatteryCapacity: &decorateModbusBatteryCapacityImpl{
+			BatteryCapacity: &decorateModbusMbmdBatteryCapacityImpl{
 				batteryCapacity: batteryCapacity,
 			},
 		}
@@ -566,10 +566,10 @@ func decorateModbus(base api.Meter, meterEnergy func() (float64, error), phaseCu
 			api.MeterEnergy
 		}{
 			Meter: base,
-			BatteryCapacity: &decorateModbusBatteryCapacityImpl{
+			BatteryCapacity: &decorateModbusMbmdBatteryCapacityImpl{
 				batteryCapacity: batteryCapacity,
 			},
-			MeterEnergy: &decorateModbusMeterEnergyImpl{
+			MeterEnergy: &decorateModbusMbmdMeterEnergyImpl{
 				meterEnergy: meterEnergy,
 			},
 		}
@@ -581,10 +581,10 @@ func decorateModbus(base api.Meter, meterEnergy func() (float64, error), phaseCu
 			api.PhaseCurrents
 		}{
 			Meter: base,
-			BatteryCapacity: &decorateModbusBatteryCapacityImpl{
+			BatteryCapacity: &decorateModbusMbmdBatteryCapacityImpl{
 				batteryCapacity: batteryCapacity,
 			},
-			PhaseCurrents: &decorateModbusPhaseCurrentsImpl{
+			PhaseCurrents: &decorateModbusMbmdPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
 		}
@@ -597,13 +597,13 @@ func decorateModbus(base api.Meter, meterEnergy func() (float64, error), phaseCu
 			api.PhaseCurrents
 		}{
 			Meter: base,
-			BatteryCapacity: &decorateModbusBatteryCapacityImpl{
+			BatteryCapacity: &decorateModbusMbmdBatteryCapacityImpl{
 				batteryCapacity: batteryCapacity,
 			},
-			MeterEnergy: &decorateModbusMeterEnergyImpl{
+			MeterEnergy: &decorateModbusMbmdMeterEnergyImpl{
 				meterEnergy: meterEnergy,
 			},
-			PhaseCurrents: &decorateModbusPhaseCurrentsImpl{
+			PhaseCurrents: &decorateModbusMbmdPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
 		}
@@ -615,10 +615,10 @@ func decorateModbus(base api.Meter, meterEnergy func() (float64, error), phaseCu
 			api.PhaseVoltages
 		}{
 			Meter: base,
-			BatteryCapacity: &decorateModbusBatteryCapacityImpl{
+			BatteryCapacity: &decorateModbusMbmdBatteryCapacityImpl{
 				batteryCapacity: batteryCapacity,
 			},
-			PhaseVoltages: &decorateModbusPhaseVoltagesImpl{
+			PhaseVoltages: &decorateModbusMbmdPhaseVoltagesImpl{
 				phaseVoltages: phaseVoltages,
 			},
 		}
@@ -631,13 +631,13 @@ func decorateModbus(base api.Meter, meterEnergy func() (float64, error), phaseCu
 			api.PhaseVoltages
 		}{
 			Meter: base,
-			BatteryCapacity: &decorateModbusBatteryCapacityImpl{
+			BatteryCapacity: &decorateModbusMbmdBatteryCapacityImpl{
 				batteryCapacity: batteryCapacity,
 			},
-			MeterEnergy: &decorateModbusMeterEnergyImpl{
+			MeterEnergy: &decorateModbusMbmdMeterEnergyImpl{
 				meterEnergy: meterEnergy,
 			},
-			PhaseVoltages: &decorateModbusPhaseVoltagesImpl{
+			PhaseVoltages: &decorateModbusMbmdPhaseVoltagesImpl{
 				phaseVoltages: phaseVoltages,
 			},
 		}
@@ -650,13 +650,13 @@ func decorateModbus(base api.Meter, meterEnergy func() (float64, error), phaseCu
 			api.PhaseVoltages
 		}{
 			Meter: base,
-			BatteryCapacity: &decorateModbusBatteryCapacityImpl{
+			BatteryCapacity: &decorateModbusMbmdBatteryCapacityImpl{
 				batteryCapacity: batteryCapacity,
 			},
-			PhaseCurrents: &decorateModbusPhaseCurrentsImpl{
+			PhaseCurrents: &decorateModbusMbmdPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
-			PhaseVoltages: &decorateModbusPhaseVoltagesImpl{
+			PhaseVoltages: &decorateModbusMbmdPhaseVoltagesImpl{
 				phaseVoltages: phaseVoltages,
 			},
 		}
@@ -670,16 +670,16 @@ func decorateModbus(base api.Meter, meterEnergy func() (float64, error), phaseCu
 			api.PhaseVoltages
 		}{
 			Meter: base,
-			BatteryCapacity: &decorateModbusBatteryCapacityImpl{
+			BatteryCapacity: &decorateModbusMbmdBatteryCapacityImpl{
 				batteryCapacity: batteryCapacity,
 			},
-			MeterEnergy: &decorateModbusMeterEnergyImpl{
+			MeterEnergy: &decorateModbusMbmdMeterEnergyImpl{
 				meterEnergy: meterEnergy,
 			},
-			PhaseCurrents: &decorateModbusPhaseCurrentsImpl{
+			PhaseCurrents: &decorateModbusMbmdPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
-			PhaseVoltages: &decorateModbusPhaseVoltagesImpl{
+			PhaseVoltages: &decorateModbusMbmdPhaseVoltagesImpl{
 				phaseVoltages: phaseVoltages,
 			},
 		}
@@ -691,10 +691,10 @@ func decorateModbus(base api.Meter, meterEnergy func() (float64, error), phaseCu
 			api.PhasePowers
 		}{
 			Meter: base,
-			BatteryCapacity: &decorateModbusBatteryCapacityImpl{
+			BatteryCapacity: &decorateModbusMbmdBatteryCapacityImpl{
 				batteryCapacity: batteryCapacity,
 			},
-			PhasePowers: &decorateModbusPhasePowersImpl{
+			PhasePowers: &decorateModbusMbmdPhasePowersImpl{
 				phasePowers: phasePowers,
 			},
 		}
@@ -707,13 +707,13 @@ func decorateModbus(base api.Meter, meterEnergy func() (float64, error), phaseCu
 			api.PhasePowers
 		}{
 			Meter: base,
-			BatteryCapacity: &decorateModbusBatteryCapacityImpl{
+			BatteryCapacity: &decorateModbusMbmdBatteryCapacityImpl{
 				batteryCapacity: batteryCapacity,
 			},
-			MeterEnergy: &decorateModbusMeterEnergyImpl{
+			MeterEnergy: &decorateModbusMbmdMeterEnergyImpl{
 				meterEnergy: meterEnergy,
 			},
-			PhasePowers: &decorateModbusPhasePowersImpl{
+			PhasePowers: &decorateModbusMbmdPhasePowersImpl{
 				phasePowers: phasePowers,
 			},
 		}
@@ -726,13 +726,13 @@ func decorateModbus(base api.Meter, meterEnergy func() (float64, error), phaseCu
 			api.PhasePowers
 		}{
 			Meter: base,
-			BatteryCapacity: &decorateModbusBatteryCapacityImpl{
+			BatteryCapacity: &decorateModbusMbmdBatteryCapacityImpl{
 				batteryCapacity: batteryCapacity,
 			},
-			PhaseCurrents: &decorateModbusPhaseCurrentsImpl{
+			PhaseCurrents: &decorateModbusMbmdPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
-			PhasePowers: &decorateModbusPhasePowersImpl{
+			PhasePowers: &decorateModbusMbmdPhasePowersImpl{
 				phasePowers: phasePowers,
 			},
 		}
@@ -746,16 +746,16 @@ func decorateModbus(base api.Meter, meterEnergy func() (float64, error), phaseCu
 			api.PhasePowers
 		}{
 			Meter: base,
-			BatteryCapacity: &decorateModbusBatteryCapacityImpl{
+			BatteryCapacity: &decorateModbusMbmdBatteryCapacityImpl{
 				batteryCapacity: batteryCapacity,
 			},
-			MeterEnergy: &decorateModbusMeterEnergyImpl{
+			MeterEnergy: &decorateModbusMbmdMeterEnergyImpl{
 				meterEnergy: meterEnergy,
 			},
-			PhaseCurrents: &decorateModbusPhaseCurrentsImpl{
+			PhaseCurrents: &decorateModbusMbmdPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
-			PhasePowers: &decorateModbusPhasePowersImpl{
+			PhasePowers: &decorateModbusMbmdPhasePowersImpl{
 				phasePowers: phasePowers,
 			},
 		}
@@ -768,13 +768,13 @@ func decorateModbus(base api.Meter, meterEnergy func() (float64, error), phaseCu
 			api.PhaseVoltages
 		}{
 			Meter: base,
-			BatteryCapacity: &decorateModbusBatteryCapacityImpl{
+			BatteryCapacity: &decorateModbusMbmdBatteryCapacityImpl{
 				batteryCapacity: batteryCapacity,
 			},
-			PhasePowers: &decorateModbusPhasePowersImpl{
+			PhasePowers: &decorateModbusMbmdPhasePowersImpl{
 				phasePowers: phasePowers,
 			},
-			PhaseVoltages: &decorateModbusPhaseVoltagesImpl{
+			PhaseVoltages: &decorateModbusMbmdPhaseVoltagesImpl{
 				phaseVoltages: phaseVoltages,
 			},
 		}
@@ -788,16 +788,16 @@ func decorateModbus(base api.Meter, meterEnergy func() (float64, error), phaseCu
 			api.PhaseVoltages
 		}{
 			Meter: base,
-			BatteryCapacity: &decorateModbusBatteryCapacityImpl{
+			BatteryCapacity: &decorateModbusMbmdBatteryCapacityImpl{
 				batteryCapacity: batteryCapacity,
 			},
-			MeterEnergy: &decorateModbusMeterEnergyImpl{
+			MeterEnergy: &decorateModbusMbmdMeterEnergyImpl{
 				meterEnergy: meterEnergy,
 			},
-			PhasePowers: &decorateModbusPhasePowersImpl{
+			PhasePowers: &decorateModbusMbmdPhasePowersImpl{
 				phasePowers: phasePowers,
 			},
-			PhaseVoltages: &decorateModbusPhaseVoltagesImpl{
+			PhaseVoltages: &decorateModbusMbmdPhaseVoltagesImpl{
 				phaseVoltages: phaseVoltages,
 			},
 		}
@@ -811,16 +811,16 @@ func decorateModbus(base api.Meter, meterEnergy func() (float64, error), phaseCu
 			api.PhaseVoltages
 		}{
 			Meter: base,
-			BatteryCapacity: &decorateModbusBatteryCapacityImpl{
+			BatteryCapacity: &decorateModbusMbmdBatteryCapacityImpl{
 				batteryCapacity: batteryCapacity,
 			},
-			PhaseCurrents: &decorateModbusPhaseCurrentsImpl{
+			PhaseCurrents: &decorateModbusMbmdPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
-			PhasePowers: &decorateModbusPhasePowersImpl{
+			PhasePowers: &decorateModbusMbmdPhasePowersImpl{
 				phasePowers: phasePowers,
 			},
-			PhaseVoltages: &decorateModbusPhaseVoltagesImpl{
+			PhaseVoltages: &decorateModbusMbmdPhaseVoltagesImpl{
 				phaseVoltages: phaseVoltages,
 			},
 		}
@@ -835,19 +835,19 @@ func decorateModbus(base api.Meter, meterEnergy func() (float64, error), phaseCu
 			api.PhaseVoltages
 		}{
 			Meter: base,
-			BatteryCapacity: &decorateModbusBatteryCapacityImpl{
+			BatteryCapacity: &decorateModbusMbmdBatteryCapacityImpl{
 				batteryCapacity: batteryCapacity,
 			},
-			MeterEnergy: &decorateModbusMeterEnergyImpl{
+			MeterEnergy: &decorateModbusMbmdMeterEnergyImpl{
 				meterEnergy: meterEnergy,
 			},
-			PhaseCurrents: &decorateModbusPhaseCurrentsImpl{
+			PhaseCurrents: &decorateModbusMbmdPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
-			PhasePowers: &decorateModbusPhasePowersImpl{
+			PhasePowers: &decorateModbusMbmdPhasePowersImpl{
 				phasePowers: phasePowers,
 			},
-			PhaseVoltages: &decorateModbusPhaseVoltagesImpl{
+			PhaseVoltages: &decorateModbusMbmdPhaseVoltagesImpl{
 				phaseVoltages: phaseVoltages,
 			},
 		}
@@ -859,10 +859,10 @@ func decorateModbus(base api.Meter, meterEnergy func() (float64, error), phaseCu
 			api.BatteryCapacity
 		}{
 			Meter: base,
-			Battery: &decorateModbusBatteryImpl{
+			Battery: &decorateModbusMbmdBatteryImpl{
 				battery: battery,
 			},
-			BatteryCapacity: &decorateModbusBatteryCapacityImpl{
+			BatteryCapacity: &decorateModbusMbmdBatteryCapacityImpl{
 				batteryCapacity: batteryCapacity,
 			},
 		}
@@ -875,13 +875,13 @@ func decorateModbus(base api.Meter, meterEnergy func() (float64, error), phaseCu
 			api.MeterEnergy
 		}{
 			Meter: base,
-			Battery: &decorateModbusBatteryImpl{
+			Battery: &decorateModbusMbmdBatteryImpl{
 				battery: battery,
 			},
-			BatteryCapacity: &decorateModbusBatteryCapacityImpl{
+			BatteryCapacity: &decorateModbusMbmdBatteryCapacityImpl{
 				batteryCapacity: batteryCapacity,
 			},
-			MeterEnergy: &decorateModbusMeterEnergyImpl{
+			MeterEnergy: &decorateModbusMbmdMeterEnergyImpl{
 				meterEnergy: meterEnergy,
 			},
 		}
@@ -894,13 +894,13 @@ func decorateModbus(base api.Meter, meterEnergy func() (float64, error), phaseCu
 			api.PhaseCurrents
 		}{
 			Meter: base,
-			Battery: &decorateModbusBatteryImpl{
+			Battery: &decorateModbusMbmdBatteryImpl{
 				battery: battery,
 			},
-			BatteryCapacity: &decorateModbusBatteryCapacityImpl{
+			BatteryCapacity: &decorateModbusMbmdBatteryCapacityImpl{
 				batteryCapacity: batteryCapacity,
 			},
-			PhaseCurrents: &decorateModbusPhaseCurrentsImpl{
+			PhaseCurrents: &decorateModbusMbmdPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
 		}
@@ -914,16 +914,16 @@ func decorateModbus(base api.Meter, meterEnergy func() (float64, error), phaseCu
 			api.PhaseCurrents
 		}{
 			Meter: base,
-			Battery: &decorateModbusBatteryImpl{
+			Battery: &decorateModbusMbmdBatteryImpl{
 				battery: battery,
 			},
-			BatteryCapacity: &decorateModbusBatteryCapacityImpl{
+			BatteryCapacity: &decorateModbusMbmdBatteryCapacityImpl{
 				batteryCapacity: batteryCapacity,
 			},
-			MeterEnergy: &decorateModbusMeterEnergyImpl{
+			MeterEnergy: &decorateModbusMbmdMeterEnergyImpl{
 				meterEnergy: meterEnergy,
 			},
-			PhaseCurrents: &decorateModbusPhaseCurrentsImpl{
+			PhaseCurrents: &decorateModbusMbmdPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
 		}
@@ -936,13 +936,13 @@ func decorateModbus(base api.Meter, meterEnergy func() (float64, error), phaseCu
 			api.PhaseVoltages
 		}{
 			Meter: base,
-			Battery: &decorateModbusBatteryImpl{
+			Battery: &decorateModbusMbmdBatteryImpl{
 				battery: battery,
 			},
-			BatteryCapacity: &decorateModbusBatteryCapacityImpl{
+			BatteryCapacity: &decorateModbusMbmdBatteryCapacityImpl{
 				batteryCapacity: batteryCapacity,
 			},
-			PhaseVoltages: &decorateModbusPhaseVoltagesImpl{
+			PhaseVoltages: &decorateModbusMbmdPhaseVoltagesImpl{
 				phaseVoltages: phaseVoltages,
 			},
 		}
@@ -956,16 +956,16 @@ func decorateModbus(base api.Meter, meterEnergy func() (float64, error), phaseCu
 			api.PhaseVoltages
 		}{
 			Meter: base,
-			Battery: &decorateModbusBatteryImpl{
+			Battery: &decorateModbusMbmdBatteryImpl{
 				battery: battery,
 			},
-			BatteryCapacity: &decorateModbusBatteryCapacityImpl{
+			BatteryCapacity: &decorateModbusMbmdBatteryCapacityImpl{
 				batteryCapacity: batteryCapacity,
 			},
-			MeterEnergy: &decorateModbusMeterEnergyImpl{
+			MeterEnergy: &decorateModbusMbmdMeterEnergyImpl{
 				meterEnergy: meterEnergy,
 			},
-			PhaseVoltages: &decorateModbusPhaseVoltagesImpl{
+			PhaseVoltages: &decorateModbusMbmdPhaseVoltagesImpl{
 				phaseVoltages: phaseVoltages,
 			},
 		}
@@ -979,16 +979,16 @@ func decorateModbus(base api.Meter, meterEnergy func() (float64, error), phaseCu
 			api.PhaseVoltages
 		}{
 			Meter: base,
-			Battery: &decorateModbusBatteryImpl{
+			Battery: &decorateModbusMbmdBatteryImpl{
 				battery: battery,
 			},
-			BatteryCapacity: &decorateModbusBatteryCapacityImpl{
+			BatteryCapacity: &decorateModbusMbmdBatteryCapacityImpl{
 				batteryCapacity: batteryCapacity,
 			},
-			PhaseCurrents: &decorateModbusPhaseCurrentsImpl{
+			PhaseCurrents: &decorateModbusMbmdPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
-			PhaseVoltages: &decorateModbusPhaseVoltagesImpl{
+			PhaseVoltages: &decorateModbusMbmdPhaseVoltagesImpl{
 				phaseVoltages: phaseVoltages,
 			},
 		}
@@ -1003,19 +1003,19 @@ func decorateModbus(base api.Meter, meterEnergy func() (float64, error), phaseCu
 			api.PhaseVoltages
 		}{
 			Meter: base,
-			Battery: &decorateModbusBatteryImpl{
+			Battery: &decorateModbusMbmdBatteryImpl{
 				battery: battery,
 			},
-			BatteryCapacity: &decorateModbusBatteryCapacityImpl{
+			BatteryCapacity: &decorateModbusMbmdBatteryCapacityImpl{
 				batteryCapacity: batteryCapacity,
 			},
-			MeterEnergy: &decorateModbusMeterEnergyImpl{
+			MeterEnergy: &decorateModbusMbmdMeterEnergyImpl{
 				meterEnergy: meterEnergy,
 			},
-			PhaseCurrents: &decorateModbusPhaseCurrentsImpl{
+			PhaseCurrents: &decorateModbusMbmdPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
-			PhaseVoltages: &decorateModbusPhaseVoltagesImpl{
+			PhaseVoltages: &decorateModbusMbmdPhaseVoltagesImpl{
 				phaseVoltages: phaseVoltages,
 			},
 		}
@@ -1028,13 +1028,13 @@ func decorateModbus(base api.Meter, meterEnergy func() (float64, error), phaseCu
 			api.PhasePowers
 		}{
 			Meter: base,
-			Battery: &decorateModbusBatteryImpl{
+			Battery: &decorateModbusMbmdBatteryImpl{
 				battery: battery,
 			},
-			BatteryCapacity: &decorateModbusBatteryCapacityImpl{
+			BatteryCapacity: &decorateModbusMbmdBatteryCapacityImpl{
 				batteryCapacity: batteryCapacity,
 			},
-			PhasePowers: &decorateModbusPhasePowersImpl{
+			PhasePowers: &decorateModbusMbmdPhasePowersImpl{
 				phasePowers: phasePowers,
 			},
 		}
@@ -1048,16 +1048,16 @@ func decorateModbus(base api.Meter, meterEnergy func() (float64, error), phaseCu
 			api.PhasePowers
 		}{
 			Meter: base,
-			Battery: &decorateModbusBatteryImpl{
+			Battery: &decorateModbusMbmdBatteryImpl{
 				battery: battery,
 			},
-			BatteryCapacity: &decorateModbusBatteryCapacityImpl{
+			BatteryCapacity: &decorateModbusMbmdBatteryCapacityImpl{
 				batteryCapacity: batteryCapacity,
 			},
-			MeterEnergy: &decorateModbusMeterEnergyImpl{
+			MeterEnergy: &decorateModbusMbmdMeterEnergyImpl{
 				meterEnergy: meterEnergy,
 			},
-			PhasePowers: &decorateModbusPhasePowersImpl{
+			PhasePowers: &decorateModbusMbmdPhasePowersImpl{
 				phasePowers: phasePowers,
 			},
 		}
@@ -1071,16 +1071,16 @@ func decorateModbus(base api.Meter, meterEnergy func() (float64, error), phaseCu
 			api.PhasePowers
 		}{
 			Meter: base,
-			Battery: &decorateModbusBatteryImpl{
+			Battery: &decorateModbusMbmdBatteryImpl{
 				battery: battery,
 			},
-			BatteryCapacity: &decorateModbusBatteryCapacityImpl{
+			BatteryCapacity: &decorateModbusMbmdBatteryCapacityImpl{
 				batteryCapacity: batteryCapacity,
 			},
-			PhaseCurrents: &decorateModbusPhaseCurrentsImpl{
+			PhaseCurrents: &decorateModbusMbmdPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
-			PhasePowers: &decorateModbusPhasePowersImpl{
+			PhasePowers: &decorateModbusMbmdPhasePowersImpl{
 				phasePowers: phasePowers,
 			},
 		}
@@ -1095,19 +1095,19 @@ func decorateModbus(base api.Meter, meterEnergy func() (float64, error), phaseCu
 			api.PhasePowers
 		}{
 			Meter: base,
-			Battery: &decorateModbusBatteryImpl{
+			Battery: &decorateModbusMbmdBatteryImpl{
 				battery: battery,
 			},
-			BatteryCapacity: &decorateModbusBatteryCapacityImpl{
+			BatteryCapacity: &decorateModbusMbmdBatteryCapacityImpl{
 				batteryCapacity: batteryCapacity,
 			},
-			MeterEnergy: &decorateModbusMeterEnergyImpl{
+			MeterEnergy: &decorateModbusMbmdMeterEnergyImpl{
 				meterEnergy: meterEnergy,
 			},
-			PhaseCurrents: &decorateModbusPhaseCurrentsImpl{
+			PhaseCurrents: &decorateModbusMbmdPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
-			PhasePowers: &decorateModbusPhasePowersImpl{
+			PhasePowers: &decorateModbusMbmdPhasePowersImpl{
 				phasePowers: phasePowers,
 			},
 		}
@@ -1121,16 +1121,16 @@ func decorateModbus(base api.Meter, meterEnergy func() (float64, error), phaseCu
 			api.PhaseVoltages
 		}{
 			Meter: base,
-			Battery: &decorateModbusBatteryImpl{
+			Battery: &decorateModbusMbmdBatteryImpl{
 				battery: battery,
 			},
-			BatteryCapacity: &decorateModbusBatteryCapacityImpl{
+			BatteryCapacity: &decorateModbusMbmdBatteryCapacityImpl{
 				batteryCapacity: batteryCapacity,
 			},
-			PhasePowers: &decorateModbusPhasePowersImpl{
+			PhasePowers: &decorateModbusMbmdPhasePowersImpl{
 				phasePowers: phasePowers,
 			},
-			PhaseVoltages: &decorateModbusPhaseVoltagesImpl{
+			PhaseVoltages: &decorateModbusMbmdPhaseVoltagesImpl{
 				phaseVoltages: phaseVoltages,
 			},
 		}
@@ -1145,19 +1145,19 @@ func decorateModbus(base api.Meter, meterEnergy func() (float64, error), phaseCu
 			api.PhaseVoltages
 		}{
 			Meter: base,
-			Battery: &decorateModbusBatteryImpl{
+			Battery: &decorateModbusMbmdBatteryImpl{
 				battery: battery,
 			},
-			BatteryCapacity: &decorateModbusBatteryCapacityImpl{
+			BatteryCapacity: &decorateModbusMbmdBatteryCapacityImpl{
 				batteryCapacity: batteryCapacity,
 			},
-			MeterEnergy: &decorateModbusMeterEnergyImpl{
+			MeterEnergy: &decorateModbusMbmdMeterEnergyImpl{
 				meterEnergy: meterEnergy,
 			},
-			PhasePowers: &decorateModbusPhasePowersImpl{
+			PhasePowers: &decorateModbusMbmdPhasePowersImpl{
 				phasePowers: phasePowers,
 			},
-			PhaseVoltages: &decorateModbusPhaseVoltagesImpl{
+			PhaseVoltages: &decorateModbusMbmdPhaseVoltagesImpl{
 				phaseVoltages: phaseVoltages,
 			},
 		}
@@ -1172,19 +1172,19 @@ func decorateModbus(base api.Meter, meterEnergy func() (float64, error), phaseCu
 			api.PhaseVoltages
 		}{
 			Meter: base,
-			Battery: &decorateModbusBatteryImpl{
+			Battery: &decorateModbusMbmdBatteryImpl{
 				battery: battery,
 			},
-			BatteryCapacity: &decorateModbusBatteryCapacityImpl{
+			BatteryCapacity: &decorateModbusMbmdBatteryCapacityImpl{
 				batteryCapacity: batteryCapacity,
 			},
-			PhaseCurrents: &decorateModbusPhaseCurrentsImpl{
+			PhaseCurrents: &decorateModbusMbmdPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
-			PhasePowers: &decorateModbusPhasePowersImpl{
+			PhasePowers: &decorateModbusMbmdPhasePowersImpl{
 				phasePowers: phasePowers,
 			},
-			PhaseVoltages: &decorateModbusPhaseVoltagesImpl{
+			PhaseVoltages: &decorateModbusMbmdPhaseVoltagesImpl{
 				phaseVoltages: phaseVoltages,
 			},
 		}
@@ -1200,22 +1200,22 @@ func decorateModbus(base api.Meter, meterEnergy func() (float64, error), phaseCu
 			api.PhaseVoltages
 		}{
 			Meter: base,
-			Battery: &decorateModbusBatteryImpl{
+			Battery: &decorateModbusMbmdBatteryImpl{
 				battery: battery,
 			},
-			BatteryCapacity: &decorateModbusBatteryCapacityImpl{
+			BatteryCapacity: &decorateModbusMbmdBatteryCapacityImpl{
 				batteryCapacity: batteryCapacity,
 			},
-			MeterEnergy: &decorateModbusMeterEnergyImpl{
+			MeterEnergy: &decorateModbusMbmdMeterEnergyImpl{
 				meterEnergy: meterEnergy,
 			},
-			PhaseCurrents: &decorateModbusPhaseCurrentsImpl{
+			PhaseCurrents: &decorateModbusMbmdPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
-			PhasePowers: &decorateModbusPhasePowersImpl{
+			PhasePowers: &decorateModbusMbmdPhasePowersImpl{
 				phasePowers: phasePowers,
 			},
-			PhaseVoltages: &decorateModbusPhaseVoltagesImpl{
+			PhaseVoltages: &decorateModbusMbmdPhaseVoltagesImpl{
 				phaseVoltages: phaseVoltages,
 			},
 		}
@@ -1224,50 +1224,50 @@ func decorateModbus(base api.Meter, meterEnergy func() (float64, error), phaseCu
 	return nil
 }
 
-type decorateModbusBatteryImpl struct {
+type decorateModbusMbmdBatteryImpl struct {
 	battery func() (float64, error)
 }
 
-func (impl *decorateModbusBatteryImpl) Soc() (float64, error) {
+func (impl *decorateModbusMbmdBatteryImpl) Soc() (float64, error) {
 	return impl.battery()
 }
 
-type decorateModbusBatteryCapacityImpl struct {
+type decorateModbusMbmdBatteryCapacityImpl struct {
 	batteryCapacity func() float64
 }
 
-func (impl *decorateModbusBatteryCapacityImpl) Capacity() float64 {
+func (impl *decorateModbusMbmdBatteryCapacityImpl) Capacity() float64 {
 	return impl.batteryCapacity()
 }
 
-type decorateModbusMeterEnergyImpl struct {
+type decorateModbusMbmdMeterEnergyImpl struct {
 	meterEnergy func() (float64, error)
 }
 
-func (impl *decorateModbusMeterEnergyImpl) TotalEnergy() (float64, error) {
+func (impl *decorateModbusMbmdMeterEnergyImpl) TotalEnergy() (float64, error) {
 	return impl.meterEnergy()
 }
 
-type decorateModbusPhaseCurrentsImpl struct {
+type decorateModbusMbmdPhaseCurrentsImpl struct {
 	phaseCurrents func() (float64, float64, float64, error)
 }
 
-func (impl *decorateModbusPhaseCurrentsImpl) Currents() (float64, float64, float64, error) {
+func (impl *decorateModbusMbmdPhaseCurrentsImpl) Currents() (float64, float64, float64, error) {
 	return impl.phaseCurrents()
 }
 
-type decorateModbusPhasePowersImpl struct {
+type decorateModbusMbmdPhasePowersImpl struct {
 	phasePowers func() (float64, float64, float64, error)
 }
 
-func (impl *decorateModbusPhasePowersImpl) Powers() (float64, float64, float64, error) {
+func (impl *decorateModbusMbmdPhasePowersImpl) Powers() (float64, float64, float64, error) {
 	return impl.phasePowers()
 }
 
-type decorateModbusPhaseVoltagesImpl struct {
+type decorateModbusMbmdPhaseVoltagesImpl struct {
 	phaseVoltages func() (float64, float64, float64, error)
 }
 
-func (impl *decorateModbusPhaseVoltagesImpl) Voltages() (float64, float64, float64, error) {
+func (impl *decorateModbusMbmdPhaseVoltagesImpl) Voltages() (float64, float64, float64, error) {
 	return impl.phaseVoltages()
 }

@@ -216,40 +216,35 @@
 										</small>
 									</span>
 								</p>
-								<p>
-									<small>
-										{{ $t("batterySettings.note") }}
-									</small>
+								<p class="small text-muted">
+									<strong class="text-evcc">
+										{{ $t("batterySettings.disclaimerHint") }}
+									</strong>
+									{{ $t("batterySettings.disclaimerText") }}
 								</p>
 							</div>
 						</div>
-						<div v-if="$hiddenFeatures()">
-							<FormRow
-								v-if="controllable"
-								id="batteryDischargeControl"
-								:label="`${$t('batterySettings.control')}`"
-							>
-								<div class="form-check form-switch col-form-label">
-									<input
-										id="batteryDischargeControl"
-										:checked="batteryDischargeControl"
-										class="form-check-input"
-										type="checkbox"
-										role="switch"
-										@change="changeDischargeControl"
-									/>
-									<div class="form-check-label">
-										<label for="batteryDischargeControl">
-											{{ $t("batterySettings.discharge") }}
-											<span title="experimental">🧪</span>
-										</label>
-									</div>
+						<FormRow
+							v-if="controllable"
+							id="batteryDischargeControl"
+							:label="`${$t('batterySettings.control')}`"
+						>
+							<div class="form-check form-switch col-form-label">
+								<input
+									id="batteryDischargeControl"
+									:checked="batteryDischargeControl"
+									class="form-check-input"
+									type="checkbox"
+									role="switch"
+									@change="changeDischargeControl"
+								/>
+								<div class="form-check-label">
+									<label for="batteryDischargeControl">
+										{{ $t("batterySettings.discharge") }}
+									</label>
 								</div>
-							</FormRow>
-							<p v-else>
-								<small>{{ $t("batterySettings.notControllable") }}</small>
-							</p>
-						</div>
+							</div>
+						</FormRow>
 					</div>
 				</div>
 			</div>

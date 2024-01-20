@@ -10,7 +10,7 @@ import (
 	"github.com/evcc-io/evcc/core/soc"
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/util"
-	"github.com/golang/mock/gomock"
+	"go.uber.org/mock/gomock"
 )
 
 const (
@@ -87,9 +87,6 @@ func TestNew(t *testing.T) {
 
 	if lp.phases != 0 {
 		t.Errorf("Phases %v", lp.phases)
-	}
-	if lp.MinCurrent != minA {
-		t.Errorf("MinCurrent %v", lp.MinCurrent)
 	}
 	if lp.MaxCurrent != maxA {
 		t.Errorf("MaxCurrent %v", lp.MaxCurrent)
@@ -389,10 +386,7 @@ func TestDisableAndEnableAtTargetSoc(t *testing.T) {
 	vehicle := api.NewMockVehicle(ctrl)
 
 	// wrap vehicle with estimator
-	vehicle.EXPECT().Capacity().Return(float64(10)).AnyTimes()
-	vehicle.EXPECT().Phases().Return(0).AnyTimes()
-	vehicle.EXPECT().Title().Return("foo").AnyTimes() // TODO remove when settings always available for vehicle
-	vehicle.EXPECT().OnIdentified().Return(api.ActionConfig{}).AnyTimes()
+	expectVehiclePublish(vehicle)
 
 	socEstimator := soc.NewEstimator(util.NewLogger("foo"), charger, vehicle, false)
 
@@ -434,6 +428,7 @@ func TestDisableAndEnableAtTargetSoc(t *testing.T) {
 	charger.EXPECT().Enabled().Return(lp.enabled, nil)
 	charger.EXPECT().MaxCurrent(int64(maxA)).Return(nil)
 	lp.Update(500, false, false, false, 0, nil, nil)
+	ctrl.Finish()
 
 	t.Log("charging above target - soc deactivates charger")
 	clock.Add(5 * time.Minute)
@@ -442,6 +437,7 @@ func TestDisableAndEnableAtTargetSoc(t *testing.T) {
 	charger.EXPECT().Enabled().Return(lp.enabled, nil)
 	charger.EXPECT().Enable(false).Return(nil)
 	lp.Update(500, false, false, false, 0, nil, nil)
+	ctrl.Finish()
 
 	t.Log("deactivated charger changes status to B")
 	clock.Add(5 * time.Minute)
@@ -449,12 +445,14 @@ func TestDisableAndEnableAtTargetSoc(t *testing.T) {
 	charger.EXPECT().Status().Return(api.StatusB, nil)
 	charger.EXPECT().Enabled().Return(lp.enabled, nil)
 	lp.Update(-5000, false, false, false, 0, nil, nil)
+	ctrl.Finish()
 
 	t.Log("soc has fallen below target - soc update prevented by timer")
 	clock.Add(5 * time.Minute)
 	charger.EXPECT().Status().Return(api.StatusB, nil)
 	charger.EXPECT().Enabled().Return(lp.enabled, nil)
 	lp.Update(-5000, false, false, false, 0, nil, nil)
+	ctrl.Finish()
 
 	t.Log("soc has fallen below target - soc update timer expired")
 	clock.Add(pollInterval)
@@ -463,7 +461,6 @@ func TestDisableAndEnableAtTargetSoc(t *testing.T) {
 	charger.EXPECT().Enabled().Return(lp.enabled, nil)
 	charger.EXPECT().Enable(true).Return(nil)
 	lp.Update(-5000, false, false, false, 0, nil, nil)
-
 	ctrl.Finish()
 }
 
@@ -526,6 +523,7 @@ func cacheExpecter(t *testing.T, lp *Loadpoint) (*util.Cache, func(key string, v
 	go cache.Run(paramC)
 
 	expect := func(key string, val interface{}) {
+		time.Sleep(100 * time.Millisecond) // wait for cache to catch up
 		p := cache.Get(key)
 		t.Logf("%s: %.f", key, p.Val) // REMOVE
 		if p.Val != val {

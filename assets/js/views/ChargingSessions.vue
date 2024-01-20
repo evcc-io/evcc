@@ -280,7 +280,14 @@ export default {
 			selectedColumns: settings.sessionColumns,
 		};
 	},
+	head() {
+		return { title: `${this.$t("sessions.title")} | evcc` };
+	},
 	computed: {
+		topNavigation: function () {
+			const vehicleLogins = store.state.auth ? store.state.auth.vehicles : {};
+			return { vehicleLogins, ...this.collectProps(TopNavigation, store.state) };
+		},
 		currentSessions() {
 			const sessionsWithDefaults = this.sessions.map((session) => {
 				const loadpoint = session.loadpoint || this.$t("main.loadpoint.fallbackName");
@@ -619,7 +626,7 @@ export default {
 		csvHrefLink(year, month) {
 			const params = new URLSearchParams({
 				format: "csv",
-				lang: this.$i18n.locale,
+				lang: this.$i18n?.locale,
 			});
 			if (year && month) {
 				params.append("year", year);

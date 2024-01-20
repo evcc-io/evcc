@@ -10,7 +10,7 @@ params:
     choice: ["tcpip"]
     id: 71
 render: |
-  type: modbus
+  type: mbmd
   {{- include "modbus" . }}
   model: sunspec
   power: Power

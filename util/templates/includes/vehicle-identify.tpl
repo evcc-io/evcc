@@ -1,5 +1,5 @@
 {{ define "vehicle-identify" }}
-{{- if or .mode .minSoc .targetSoc .minCurrent .maxCurrent .priority }}
+{{- if or .mode .minCurrent .maxCurrent .priority }}
 onIdentify:
 {{- if .mode }}
   mode: {{ .mode }}
