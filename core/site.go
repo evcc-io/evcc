@@ -242,7 +242,9 @@ func (site *Site) restoreSettings() error {
 		site.Meters.BatteryMetersRef = strings.Split(v, ",")
 	}
 	if v, err := settings.Float(keys.BufferSoc); err == nil {
-		site.bufferSoc = v
+		if err := site.SetBufferSoc(v); err != nil {
+			return err
+		}
 	}
 	if v, err := settings.Float(keys.BufferStartSoc); err == nil {
 		if err := site.SetBufferStartSoc(v); err != nil {
@@ -260,7 +262,9 @@ func (site *Site) restoreSettings() error {
 		}
 	}
 	if v, err := settings.Bool(keys.BatteryDischargeControl); err == nil {
-		site.batteryDischargeControl = v
+		if err := site.SetBatteryDischargeControl(v); err != nil {
+			return err
+		}
 	}
 	return nil
 }
