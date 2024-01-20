@@ -11,54 +11,150 @@ params:
     allinone: true
   - name: modbus
     choice: ["tcpip", "rs485"]
-  - name: integer
-    description:
-      de: Integer Registerzugriff (nur für Netzzähler)
-      en: Integer register access (grid meter only)
-    help:
-      de: Einstellung Float/Integer im Wechselrichter überprüfen
-      en: Verify Float/Integer setting in inverter
-    advanced: true
-    type: bool
   - name: capacity
     advanced: true
 render: |
   {{- if eq .usage "grid" }}
-  type: mbmd
+  type: custom
   {{- include "modbus" . }}
-  {{- if eq .integer "true" }}
-  # sunspec model 203 (int+sf) meter
-  power: 203:W
-  energy: 203:TotWhImp
+  # sunspec model 203 (int+sf) or 213 (float) meter
+  power: 
+    source: calc
+    add:
+      - source: fallback
+        initial: true
+        get:
+          source: sunspec
+          value: 203:W
+      - source: fallback
+        initial: true
+        get:
+          source: sunspec
+          value: 213:W
+  energy: 
+    source: calc
+    add:
+      - source: fallback
+        initial: true
+        get:
+          source: sunspec
+          value: 203:TotWhImp
+      - source: fallback
+        initial: true
+        get:
+          source: sunspec
+          value: 213:TotWhImp
   currents:
-    - 203:AphA
-    - 203:AphB
-    - 203:AphC
+    - source: calc
+      add:
+        - source: fallback
+          initial: true
+          get:
+            source: sunspec
+            value: 203:AphA
+        - source: fallback
+          initial: true
+          get:
+            source: sunspec
+            value: 213:AphA
+    - source: calc
+      add:
+        - source: fallback
+          initial: true
+          get:
+            source: sunspec
+            value: 203:AphB
+        - source: fallback
+          initial: true
+          get:
+            source: sunspec
+            value: 213:AphB
+    - source: calc
+      add:
+        - source: fallback
+          initial: true
+          get:
+            source: sunspec
+            value: 203:AphC
+        - source: fallback
+          initial: true
+          get:
+            source: sunspec
+            value: 213:AphC
   voltages:
-    - 203:PhVphA
-    - 203:PhVphB
-    - 203:PhVphC
+    - source: calc
+      add:
+        - source: fallback
+          initial: true
+          get:
+            source: sunspec
+            value: 203:PhVphA
+        - source: fallback
+          initial: true
+          get:
+            source: sunspec
+            value: 213:PhVphA
+    - source: calc
+      add:
+        - source: fallback
+          initial: true
+          get:
+            source: sunspec
+            value: 203:PhVphB
+        - source: fallback
+          initial: true
+          get:
+            source: sunspec
+            value: 213:PhVphB
+    - source: calc
+      add:
+        - source: fallback
+          initial: true
+          get:
+            source: sunspec
+            value: 203:PhVphC
+        - source: fallback
+          initial: true
+          get:
+            source: sunspec
+            value: 213:PhVphC
   powers:
-    - 203:WphA
-    - 203:WphB
-    - 203:WphC
-  {{ else }}
-  # sunspec model 213 (float) meter
-  power: 213:W
-  energy: 213:TotWhImp
-  currents:
-    - 213:AphA
-    - 213:AphB
-    - 213:AphC
-  voltages:
-    - 213:PhVphA
-    - 213:PhVphB
-    - 213:PhVphC
-  powers:
-    - 213:WphA
-    - 213:WphB
-    - 213:WphC
-  {{- end }}
+    - source: calc
+      add:
+        - source: fallback
+          initial: true
+          get:
+            source: sunspec
+            value: 203:WphA
+        - source: fallback
+          initial: true
+          get:
+            source: sunspec
+            value: 213:WphA
+    - source: calc
+      add:
+        - source: fallback
+          initial: true
+          get:
+            source: sunspec
+            value: 203:WphB
+        - source: fallback
+          initial: true
+          get:
+            source: sunspec
+            value: 213:WphB
+    - source: calc
+      add:
+        - source: fallback
+          initial: true
+          get:
+            source: sunspec
+            value: 203:WphC
+        - source: fallback
+          initial: true
+          get:
+            source: sunspec
+            value: 213:WphC
   {{- end }}
   {{- if eq .usage "pv" }}
   type: custom

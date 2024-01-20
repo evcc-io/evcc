@@ -9,21 +9,12 @@ params:
     choice: ["grid", "pv", "battery"]
   - name: modbus
     choice: ["tcpip", "rs485"]
-  - name: integer
-    description:
-      de: Integer Registerzugriff (nur für Netzzähler)
-      en: Integer register access (grid meter only)
-    help:
-      de: Einstellung Float/Integer im Wechselrichter überprüfen
-      en: Verify Float/Integer setting in inverter
-    advanced: true
-    type: bool
   - name: capacity
     advanced: true
 render: |
+  {{- if eq .usage "grid" }}
   type: mbmd
   {{- include "modbus" . }}
-  {{- if eq .usage "grid" }}
   model: sunspec
   {{- if eq .integer "true" }}
   # sunspec model 203 (int+sf) meter
@@ -59,10 +50,19 @@ render: |
     - 213:WphC
   {{- end }}
   {{- else }}
+  {{- if eq .usage "pv" }}
+  type: mbmd
+  {{- include "modbus" . }}
   model: sunspec
   power: Power
   energy: Export
+  {{- end }}
   {{- if eq .usage "battery" }}
+  type: mbmd
+  {{- include "modbus" . }}
+  model: sunspec
+  power: Power
+  energy: Export
   soc: 124:ChaState
   {{- if .capacity }}
   capacity: {{ .capacity }} # kWh
