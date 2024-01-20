@@ -133,7 +133,7 @@ export default {
 		socBasedCharging: Boolean,
 		socPerKwh: Number,
 		vehicle: Object,
-		vehicleCapacity: Number,
+		capacity: Number,
 		vehicleSoc: Number,
 		vehicleTargetSoc: Number,
 	},
@@ -208,7 +208,7 @@ export default {
 			}
 			return fmtEnergy(
 				this.planEnergy,
-				optionStep(this.vehicleCapacity || 100),
+				optionStep(this.capacity || 100),
 				this.fmtKWh,
 				this.$t("main.targetEnergy.noLimit")
 			);

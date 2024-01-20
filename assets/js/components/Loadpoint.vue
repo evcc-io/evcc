@@ -156,8 +156,6 @@ export default {
 		vehicleName: String,
 		vehicleIcon: String,
 		vehicleTargetSoc: Number,
-		vehicleCapacity: Number,
-		vehicleFeatureOffline: Boolean,
 		vehicles: Array,
 		planActive: Boolean,
 		planProjectedStart: String,
@@ -247,13 +245,13 @@ export default {
 			return !!this.vehicleName;
 		},
 		vehicleHasSoc: function () {
-			return this.vehicleKnown && !this.vehicleFeatureOffline;
+			return this.vehicleKnown && !this.vehicle?.features?.includes("Offline");
 		},
 		socBasedCharging: function () {
 			return this.vehicleHasSoc || this.vehicleSoc > 0;
 		},
 		socBasedPlanning: function () {
-			return this.socBasedCharging && this.vehicleCapacity > 0;
+			return this.socBasedCharging && this.vehicle?.capacity > 0;
 		},
 	},
 	watch: {

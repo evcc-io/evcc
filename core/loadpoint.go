@@ -591,9 +591,7 @@ func (lp *Loadpoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	}
 
 	// vehicle
-	lp.publish(keys.VehicleIcon, "")
 	lp.publish(keys.VehicleName, "")
-	lp.publish(keys.VehicleCapacity, 0.0)
 	lp.publish(keys.VehicleOdometer, 0.0)
 
 	// assign and publish default vehicle

@@ -47,21 +47,21 @@ export default {
 		limitEnergy: Number,
 		socPerKwh: Number,
 		chargedEnergy: Number,
-		vehicleCapacity: Number,
+		capacity: Number,
 	},
 	emits: ["limit-energy-updated"],
 	computed: {
 		options: function () {
 			return energyOptions(
 				this.chargedEnergy,
-				this.vehicleCapacity || 100,
+				this.capacity || 100,
 				this.socPerKwh,
 				this.fmtKWh,
 				this.$t("main.targetEnergy.noLimit")
 			);
 		},
 		step() {
-			return optionStep(this.vehicleCapacity || 100);
+			return optionStep(this.capacity || 100);
 		},
 		estimated: function () {
 			return estimatedSoc(this.limitEnergy, this.socPerKwh);
