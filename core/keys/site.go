@@ -31,24 +31,22 @@ const (
 	TariffPriceLoadpoints = "tariffPriceLoadpoints"
 	Vehicles              = "vehicles"
 
-	// battery status
-	Battery                 = "battery"
-	BatteryConfigured       = "batteryConfigured"
-	BatteryEnergy           = "batteryEnergy"
-	BatteryMode             = "batteryMode"
-	BatteryPower            = "batteryPower"
-	BatterySoc              = "batterySoc"
+	// meters
+	BatteryMeters = "batteryMeters"
+	GridMeters    = "gridMeters"
+	PvMeters      = "pvMeters"
+
+	// battery settings
+	BatteryCapacity         = "batteryCapacity"
 	BatteryDischargeControl = "batteryDischargeControl"
 	BufferSoc               = "bufferSoc"
 	BufferStartSoc          = "bufferStartSoc"
-	BatteryCapacity         = "batteryCapacity"
 
-	// settings keys
-	SettingsTitle                   = "title"
-	SettingsGrid                    = "grid"
-	SettingsPv                      = "pv"
-	SettingsBattery                 = "battery"
-	SettingsBatteryDischargeControl = "batteryDischargeControl"
-	SettingsBufferSoc               = "bufferSoc"
-	SettingsBufferStartSoc          = "bufferStartSoc"
+	// battery status
+	Battery           = "battery"
+	BatteryConfigured = "batteryConfigured"
+	BatteryEnergy     = "batteryEnergy"
+	BatteryMode       = "batteryMode"
+	BatteryPower      = "batteryPower"
+	BatterySoc        = "batterySoc"
 )

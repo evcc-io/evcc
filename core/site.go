@@ -229,22 +229,22 @@ func NewSite() *Site {
 
 // restoreSettings restores site settings
 func (site *Site) restoreSettings() error {
-	if v, err := settings.String(keys.SettingsTitle); err == nil {
+	if v, err := settings.String(keys.Title); err == nil {
 		site.Title = v
 	}
-	if v, err := settings.String(keys.SettingsGrid); err == nil {
+	if v, err := settings.String(keys.GridMeters); err == nil {
 		site.Meters.GridMeterRef = v
 	}
-	if v, err := settings.String(keys.SettingsPv); err == nil {
+	if v, err := settings.String(keys.PvMeters); err == nil {
 		site.Meters.PVMetersRef = strings.Split(v, ",")
 	}
-	if v, err := settings.String(keys.SettingsBattery); err == nil {
+	if v, err := settings.String(keys.BatteryMeters); err == nil {
 		site.Meters.BatteryMetersRef = strings.Split(v, ",")
 	}
-	if v, err := settings.Float(keys.SettingsBufferSoc); err == nil {
+	if v, err := settings.Float(keys.BufferSoc); err == nil {
 		site.bufferSoc = v
 	}
-	if v, err := settings.Float(keys.SettingsBufferStartSoc); err == nil {
+	if v, err := settings.Float(keys.BufferStartSoc); err == nil {
 		if err := site.SetBufferStartSoc(v); err != nil {
 			return err
 		}
@@ -259,7 +259,7 @@ func (site *Site) restoreSettings() error {
 			return err
 		}
 	}
-	if v, err := settings.Bool(keys.SettingsBatteryDischargeControl); err == nil {
+	if v, err := settings.Bool(keys.BatteryDischargeControl); err == nil {
 		site.batteryDischargeControl = v
 	}
 	return nil
