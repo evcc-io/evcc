@@ -75,6 +75,19 @@ func (v *API) Status(vin string) (res Status, err error) {
 	return res, err
 }
 
+func (v *API) MaxChargeLevel(vin, level string) error {
+	uri := fmt.Sprintf("%s/vehicles/%s/charging/settings", BaseURL, vin)
+	data := map[string]string{"maxChargeCurrentAC": level}
+	req, err := request.New(http.MethodPut, uri, request.MarshalJSON(data), request.JSONEncoding)
+
+	if err == nil {
+		var res interface{}
+		err = v.DoJSON(req, &res)
+	}
+
+	return err
+}
+
 // Action implements vehicle actions
 func (v *API) Action(vin, action, value string) error {
 	uri := fmt.Sprintf("%s/vehicles/%s/%s/%s", BaseURL, vin, action, value)

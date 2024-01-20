@@ -11,8 +11,9 @@ import (
 
 // Provider is an api.Vehicle implementation for VW ID cars
 type Provider struct {
-	statusG func() (Status, error)
-	action  func(action, value string) error
+	statusG        func() (Status, error)
+	action         func(action, value string) error
+	maxChargeLevel func(value string) error
 }
 
 // NewProvider creates a vehicle api provider
@@ -23,6 +24,9 @@ func NewProvider(api *API, vin string, cache time.Duration) *Provider {
 		}, cache),
 		action: func(action, value string) error {
 			return api.Action(vin, action, value)
+		},
+		maxChargeLevel: func(value string) error {
+			return api.MaxChargeLevel(vin, value)
 		},
 	}
 	return impl
@@ -177,4 +181,16 @@ var _ api.Resurrector = (*Provider)(nil)
 // WakeUp implements the api.Resurrector interface
 func (v *Provider) WakeUp() error {
 	return v.StartCharge()
+}
+
+// MaxCurrent implements the api.Charger interface
+func (v *Provider) MaxCurrent(current int64) error {
+	// e-up: there are only two possible levels
+	// "reduced" or "maximum"; reduced is 5A
+	level := "maximum"
+	if current <= 5 {
+		level = "reduced"
+	}
+
+	return v.maxChargeLevel(level)
 }
