@@ -1,28 +1,38 @@
 package graphql
 
-// BaseURI is Octopus Energy's core API root.
-const BaseURI = "https://api.octopus.energy"
-
-// URI is the GraphQL query endpoint for Octopus Energy.
-const URI = BaseURI + "/v1/graphql/"
-
-// FIXME these don't need to be public
-
-// KrakenTokenAuthentication is a representation of a GraphQL query for obtaining a Kraken API token.
-type KrakenTokenAuthentication struct {
+// krakenTokenAuthentication is a representation of a GraphQL query for obtaining a Kraken API token.
+type krakenTokenAuthentication struct {
 	ObtainKrakenToken struct {
 		Token string
 	} `graphql:"obtainKrakenToken(input: {APIKey: $apiKey})"`
 }
 
-// KrakenAccountLookup is a representation of a GraphQL query for obtaining the Account Number associated with the
+// krakenAccountLookup is a representation of a GraphQL query for obtaining the Account Number associated with the
 // credentials used to authorize the request.
-type KrakenAccountLookup struct {
+type krakenAccountLookup struct {
 	Viewer struct {
 		Accounts []struct {
 			Number string
 		}
 	}
+}
+
+type tariffData struct {
+	// yukky but the best way I can think of to handle this
+	// access via any relevant tariff data entry (i.e. standardTariff)
+	standardTariff   `graphql:"... on StandardTariff"`
+	dayNightTariff   `graphql:"... on DayNightTariff"`
+	threeRateTariff  `graphql:"... on ThreeRateTariff"`
+	halfHourlyTariff `graphql:"... on HalfHourlyTariff"`
+	prepayTariff     `graphql:"... on PrepayTariff"`
+}
+
+// TariffCode is a shortcut function to obtaining the Tariff Code of the given tariff, regardless of tariff type.
+// Developer Note: GraphQL query returns the same element keys regardless of type,
+// so it should always be decoded as standardTariff at least.
+// We are unlikely to use the other Tariff types for data access (?).
+func (d *tariffData) TariffCode() string {
+	return d.standardTariff.TariffCode
 }
 
 type tariffType struct {
@@ -39,36 +49,27 @@ type tariffTypeWithTariffCode struct {
 	TariffCode string
 }
 
-type StandardTariff struct {
+type standardTariff struct {
 	tariffTypeWithTariffCode
 }
-type DayNightTariff struct {
+type dayNightTariff struct {
 	tariffTypeWithTariffCode
 }
-type ThreeRateTariff struct {
+type threeRateTariff struct {
 	tariffTypeWithTariffCode
 }
-type HalfHourlyTariff struct {
+type halfHourlyTariff struct {
 	tariffTypeWithTariffCode
 }
-type PrepayTariff struct {
+type prepayTariff struct {
 	tariffTypeWithTariffCode
 }
 
-type KrakenAccountElectricityAgreements struct {
+type krakenAccountElectricityAgreements struct {
 	Account struct {
 		ElectricityAgreements []struct {
-			Id     int
-			Tariff struct {
-				// yukky but the best way I can think of to handle this
-				// access via any relevant tariff data entry (i.e. StandardTariff)
-				// TODO would appreciate peer review
-				StandardTariff   `graphql:"... on StandardTariff"`
-				DayNightTariff   `graphql:"... on DayNightTariff"`
-				ThreeRateTariff  `graphql:"... on ThreeRateTariff"`
-				HalfHourlyTariff `graphql:"... on HalfHourlyTariff"`
-				PrepayTariff     `graphql:"... on PrepayTariff"`
-			}
+			Id         int
+			Tariff     tariffData
 			MeterPoint struct {
 				// Mpan is the serial number of the meter that this ElectricityAgreement is bound to.
 				Mpan string

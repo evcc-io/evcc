@@ -3,6 +3,7 @@ package tariff
 import (
 	"errors"
 	"slices"
+	"strings"
 	"sync"
 	"time"
 
@@ -49,8 +50,14 @@ func NewOctopusFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		if cc.Tariff == "" {
 			return nil, errors.New("missing product / tariff code")
 		}
-	} else if cc.Region != "" || cc.Tariff != "" {
-		return nil, errors.New("cannot use apikey at same time as product / tariff code")
+	} else {
+		// ApiKey validators
+		if cc.Region != "" || cc.Tariff != "" {
+			return nil, errors.New("cannot use apikey at same time as product / tariff code")
+		}
+		if len(cc.ApiKey) != 32 || !strings.HasPrefix(cc.ApiKey, "sk_live_") {
+			return nil, errors.New("apikey of invalid or unexpected format, please check for errors")
+		}
 	}
 
 	t := &Octopus{
@@ -95,7 +102,8 @@ func (t *Octopus) run(done chan error) {
 		restQueryUri = octoRest.ConstructRatesAPIFromProductAndRegionCode(t.tariff, t.region)
 	}
 
-	// TODO tick every 15 minutes if GraphQL is available to poll for Intelligent slots.
+	// When we eventually get around to writing Intelligent support,
+	// we'll want to tick every 15 minutes if GraphQL is available to poll for Intelligent slots.
 	for ; true; <-time.Tick(time.Hour) {
 		var res octoRest.UnitRates
 
