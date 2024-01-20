@@ -26,11 +26,19 @@ const (
 var OAuth2Config = &oauth2.Config{
 	ClientID:    "polxplore",
 	RedirectURL: "polestar-explore://explore.polestar.com",
+	// ClientID:    "polmystar",
+	// RedirectURL: "https://www.polestar.com/sign-in-callback",
 	Endpoint: oauth2.Endpoint{
 		AuthURL:  OAuthURI + "/as/authorization.oauth2",
 		TokenURL: OAuthURI + "/as/token.oauth2",
 	},
-	Scopes: []string{"openid", "profile", "email", "customer:attributes"},
+	Scopes: []string{
+		"openid", "profile", "email", "customer:attributes",
+		// "conve:recharge_status", "conve:fuel_status", "conve:odometer_status",
+		// "energy:charging_connection_status", "energy:electric_range", "energy:estimated_charging_time", "energy:recharge_status",
+		// "energy:battery_charge_level", "energy:charging_system_status", "energy:charging_timer", "energy:electric_range", "energy:recharge_status",
+		// "energy:battery_charge_level",
+	},
 }
 
 type Identity struct {
@@ -63,33 +71,32 @@ func (v *Identity) Login(user, password string) error {
 
 	var param request.InterceptResult
 	v.Client.CheckRedirect, param = request.InterceptRedirect("resumePath", false)
+	defer func() { v.Client.CheckRedirect = nil }()
 
-	_, err := v.Get(uri)
-
-	var resume string
-	if err == nil {
-		resume, err = param()
+	if _, err := v.Get(uri); err != nil {
+		fmt.Println(uri)
+		fmt.Println(1)
+		return err
 	}
 
-	v.Client.CheckRedirect = nil
+	resume, err := param()
+	if err != nil {
+		fmt.Println(2)
+		return err
+	}
+
+	params := url.Values{
+		"pf.username": []string{user},
+		"pf.pass":     []string{password},
+	}
+
+	uri = fmt.Sprintf("%s/as/%s/resume/as/authorization.ping?client_id=%s", OAuthURI, resume, OAuth2Config.ClientID)
+	v.Client.CheckRedirect, param = request.InterceptRedirect("code", true)
+	defer func() { v.Client.CheckRedirect = nil }()
 
 	var code string
-	if err == nil {
-		params := url.Values{
-			"pf.username": []string{user},
-			"pf.pass":     []string{password},
-		}
-
-		var param request.InterceptResult
-		v.Client.CheckRedirect, param = request.InterceptRedirect("code", true)
-
-		uri = fmt.Sprintf("%s/as/%s/resume/as/authorization.ping?client_id=%s", OAuthURI, resume, OAuth2Config.ClientID)
-
-		if _, err = v.Post(uri, request.FormContent, strings.NewReader(params.Encode())); err == nil {
-			code, err = param()
-		}
-
-		v.Client.CheckRedirect = nil
+	if _, err = v.Post(uri, request.FormContent, strings.NewReader(params.Encode())); err == nil {
+		code, err = param()
 	}
 
 	var token oauth.Token
