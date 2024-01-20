@@ -156,7 +156,6 @@ export default {
 		vehicleName: String,
 		vehicleIcon: String,
 		vehicleTargetSoc: Number,
-		vehicleFeatureOffline: Boolean,
 		vehicles: Array,
 		planActive: Boolean,
 		planProjectedStart: String,

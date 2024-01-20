@@ -119,7 +119,6 @@ export default {
 		vehicle: Object,
 		vehicleDetectionActive: Boolean,
 		vehicleName: String,
-		vehiclePresent: Boolean,
 		vehicleRange: Number,
 		vehicles: Array,
 		vehicleSoc: Number,
