@@ -593,6 +593,7 @@ func (lp *Loadpoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	lp.publish(keys.DisableThreshold, lp.Disable.Threshold)
 
 	lp.publish(keys.PhasesConfigured, lp.configuredPhases)
+	lp.publish(keys.PhaseSwitcher, lp.hasPhaseSwitching())
 	lp.publish(keys.PhasesEnabled, lp.phases)
 	lp.publish(keys.PhasesActive, lp.ActivePhases())
 	lp.publishTimer(phaseTimer, 0, timerInactive)
@@ -995,8 +996,7 @@ func (lp *Loadpoint) resetPhaseTimer() {
 
 // scalePhasesRequired validates if fixed phase configuration matches enabled phases
 func (lp *Loadpoint) scalePhasesRequired() bool {
-	_, ok := lp.charger.(api.PhaseSwitcher)
-	return ok && lp.configuredPhases != 0 && lp.configuredPhases != lp.GetPhases()
+	return lp.hasPhaseSwitching() && lp.configuredPhases != 0 && lp.configuredPhases != lp.GetPhases()
 }
 
 // scalePhasesIfAvailable scales if api.PhaseSwitcher is available
@@ -1005,7 +1005,7 @@ func (lp *Loadpoint) scalePhasesIfAvailable(phases int) error {
 		phases = lp.configuredPhases
 	}
 
-	if _, ok := lp.charger.(api.PhaseSwitcher); ok {
+	if lp.hasPhaseSwitching() {
 		return lp.scalePhases(phases)
 	}
 
@@ -1162,7 +1162,7 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batter
 	maxCurrent := lp.effectiveMaxCurrent()
 
 	// switch phases up/down
-	if _, ok := lp.charger.(api.PhaseSwitcher); ok {
+	if lp.hasPhaseSwitching() {
 		_ = lp.pvScalePhases(sitePower, minCurrent, maxCurrent)
 	}
 
@@ -1319,7 +1319,7 @@ func (lp *Loadpoint) updateChargeCurrents() {
 
 // updateChargeVoltages uses PhaseVoltages interface to count phases with nominal grid voltage
 func (lp *Loadpoint) updateChargeVoltages() {
-	if _, ok := lp.charger.(api.PhaseSwitcher); ok {
+	if lp.hasPhaseSwitching() {
 		return // we don't need the voltages
 	}
 

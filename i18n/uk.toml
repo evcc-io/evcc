@@ -188,8 +188,6 @@ solar = "Сонячна"
 [main.loadpointSettings]
 currents = "Струм зарядки"
 default = "за замовчуванням"
-disclaimerHint = "Примітка:"
-disclaimerText = "Зміни будуть втрачені після перезапуску сервера."
 title = "Налаштування {0}"
 vehicle = "Транспортний засіб"
 

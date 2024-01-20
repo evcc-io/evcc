@@ -11,16 +11,8 @@ func (lp *Loadpoint) setConfiguredPhases(phases int) {
 	defer lp.Unlock()
 
 	lp.configuredPhases = phases
-
-	// publish 1p3p capability and phase configuration
-	if _, ok := lp.charger.(api.PhaseSwitcher); ok {
-		lp.publish(keys.PhasesConfigured, lp.configuredPhases)
-		lp.settings.SetInt(keys.PhasesConfigured, int64(lp.phases))
-	} else {
-		// TODO why are we publishing nil? Should be 3 according to NewLoadpointFromConfig?
-		lp.publish(keys.PhasesConfigured, nil)
-		lp.settings.SetInt(keys.PhasesConfigured, 0)
-	}
+	lp.publish(keys.PhasesConfigured, lp.configuredPhases)
+	lp.settings.SetInt(keys.PhasesConfigured, int64(lp.phases))
 }
 
 // setPhases sets the number of enabled phases without modifying the charger
@@ -96,7 +88,7 @@ func (lp *Loadpoint) maxActivePhases() int {
 	}
 
 	// if 1p3p supported then assume configured limit or 3p
-	if _, ok := lp.charger.(api.PhaseSwitcher); ok {
+	if lp.hasPhaseSwitching() {
 		physical = lp.configuredPhases
 	}
 
@@ -109,4 +101,9 @@ func (lp *Loadpoint) getVehiclePhases() int {
 	}
 
 	return 0
+}
+
+func (lp *Loadpoint) hasPhaseSwitching() bool {
+	_, ok := lp.charger.(api.PhaseSwitcher)
+	return ok
 }

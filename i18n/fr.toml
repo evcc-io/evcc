@@ -195,8 +195,6 @@ solar = "Solaire"
 [main.loadpointSettings]
 currents = "Courant de charge"
 default = "défaut"
-disclaimerHint = "Remarque:"
-disclaimerText = "Les modifications seront perdues après le redémarrage du serveur."
 title = "Réglages {0}"
 vehicle = "Véhicule"
 

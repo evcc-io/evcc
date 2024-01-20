@@ -154,8 +154,6 @@ solar = "Solar"
 [main.loadpointSettings]
 currents = "Corrent de càrrega"
 default = "defecte"
-disclaimerHint = "Nota:"
-disclaimerText = "Els canvis encara no són persistents i es restableixen al iniciar el servei."
 title = "Configuracions {0}"
 vehicle = "Vehicle"
 

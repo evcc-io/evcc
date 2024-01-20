@@ -217,8 +217,6 @@ solar = "Słoneczna"
 [main.loadpointSettings]
 currents = "Prąd ładowania"
 default = "domyślny"
-disclaimerHint = "Uwaga:"
-disclaimerText = "Zmiany zostaną zresetowane po restarcie serwera."
 onlyForSocBasedCharging = "Opcje te są dostępne tylko dla pojazdów ze znanym poziomem naładowania."
 title = "Ustawienia {0}"
 vehicle = "Pojazd"
