@@ -232,7 +232,7 @@ func (site *Site) restoreSettings() error {
 	if v, err := settings.String(keys.Title); err == nil {
 		site.Title = v
 	}
-	if v, err := settings.String(keys.GridMeters); err == nil {
+	if v, err := settings.String(keys.GridMeter); err == nil {
 		site.Meters.GridMeterRef = v
 	}
 	if v, err := settings.String(keys.PvMeters); err == nil {

@@ -33,7 +33,7 @@ const (
 
 	// meters
 	BatteryMeters = "batteryMeters"
-	GridMeters    = "gridMeters"
+	GridMeter     = "GridMeter"
 	PvMeters      = "pvMeters"
 
 	// battery settings

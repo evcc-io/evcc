@@ -30,8 +30,8 @@ func (site *Site) GetTitle() string {
 
 // SetTitle sets the title
 func (site *Site) SetTitle(title string) {
-	site.Lock()
-	defer site.Unlock()
+	site.RLock()
+	defer site.RUnlock()
 
 	site.Title = title
 	site.publish("siteTitle", title)
@@ -52,13 +52,13 @@ func (site *Site) SetGridMeterRef(ref string) {
 
 	site.Meters.GridMeterRef = ref
 	// site.publish("siteGridMeterRef", meter)
-	settings.SetString(keys.GridMeters, ref)
+	settings.SetString(keys.GridMeter, ref)
 }
 
 // GetPVMeterRef returns the PvMeterRef
 func (site *Site) GetPVMeterRef() []string {
-	site.Lock()
-	defer site.Unlock()
+	site.RLock()
+	defer site.RUnlock()
 	return site.Meters.PVMetersRef
 }
 
@@ -74,8 +74,8 @@ func (site *Site) SetPVMeterRef(ref []string) {
 
 // GetBatteryMeterRef returns the BatteryMeterRef
 func (site *Site) GetBatteryMeterRef() []string {
-	site.Lock()
-	defer site.Unlock()
+	site.RLock()
+	defer site.RUnlock()
 	return site.Meters.BatteryMetersRef
 }
 
