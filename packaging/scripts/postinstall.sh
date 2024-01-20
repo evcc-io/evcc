@@ -12,16 +12,13 @@ RESTART_FLAG_FILE="/tmp/.restartEvccOnUpgrade"
 # if exit code is not 0, then fail installation with error message and copy /tmp/oldevcc back to /etc/evcc
 # if /tmp/oldevcc does not exist, then do nothing
 failInstallation=0
-
 INTERACTIVE=0
-
 # is shell script interactive?
 if [ -t 0 ]; then
   INTERACTIVE=1
 else
   INTERACTIVE=0
 fi
-
 
 if [ -d /tmp/oldevcc ] && [ $INTERACTIVE -eq 1 ]; then
 	checkConfigOutput=$(/usr/bin/evcc checkconfig)
@@ -53,10 +50,6 @@ if [ -d /tmp/oldevcc ] && [ $INTERACTIVE -eq 1 ]; then
 			esac
 	fi
 fi 
-
-
-
-
 
 # Usage: askUserKeepFile <file>
 # Return: 1 = keep, 0 = delete
@@ -153,6 +146,6 @@ if [ "$1" = "configure" ] || [ "$1" = "abort-upgrade" ] || [ "$1" = "abort-decon
 fi
 
 # Fail installation if checkconfig command failed and the user decided to keep the old version to inform package manager about outcome
-if [ failInstallation -eq 1 ]; then
+if [ $failInstallation -eq 1 ]; then
 	exit 1
 fi
