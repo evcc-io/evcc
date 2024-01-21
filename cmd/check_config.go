@@ -18,13 +18,12 @@ func init() {
 }
 
 func runConfigCheck(cmd *cobra.Command, args []string) {
-	cfgErr := loadConfigFile(&conf)
+	err := loadConfigFile(&conf)
 
 	if cfgErr != nil {
-		log.FATAL.Println("Config not valid")
-		log.FATAL.Println(cfgErr)
+		log.FATAL.Println("config invalid:", err)
 		os.Exit(1)
 	} else {
-		log.INFO.Println("Config is valid")
+		log.INFO.Println("config valid")
 	}
 }
