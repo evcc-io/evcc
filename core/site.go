@@ -760,7 +760,7 @@ func (site *Site) update(lp Updater) {
 	}
 
 	var smartCostActive bool
-	if tariff := site.GetTariff(PlannerTariff); tariff != nil {
+	if tariff := site.GetTariff(PlannerTariff); tariff != nil && tariff.Type() != api.TariffTypePriceStatic {
 		rates, err := tariff.Rates()
 
 		var rate api.Rate
