@@ -157,7 +157,7 @@ export default {
 		id: [String, Number],
 		phasesConfigured: Number,
 		phasesActive: Number,
-		phaseSwitcher: Boolean,
+		phases1p3p: Boolean,
 		minSoc: Number,
 		maxCurrent: Number,
 		minCurrent: Number,
@@ -173,7 +173,7 @@ export default {
 	},
 	computed: {
 		phasesOptions: function () {
-			if (this.phaseSwitcher) {
+			if (this.phases1p3p) {
 				return [PHASES_AUTO, PHASES_3, PHASES_1];
 			}
 			return [PHASES_3, PHASES_1];

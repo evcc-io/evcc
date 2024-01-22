@@ -593,7 +593,7 @@ func (lp *Loadpoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	lp.publish(keys.DisableThreshold, lp.Disable.Threshold)
 
 	lp.publish(keys.PhasesConfigured, lp.configuredPhases)
-	lp.publish(keys.PhaseSwitcher, lp.hasPhaseSwitching())
+	lp.publish(keys.Phases1p3p, lp.hasPhaseSwitching())
 	lp.publish(keys.PhasesEnabled, lp.phases)
 	lp.publish(keys.PhasesActive, lp.ActivePhases())
 	lp.publishTimer(phaseTimer, 0, timerInactive)
