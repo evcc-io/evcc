@@ -11,5 +11,5 @@ params:
     choice: ["tcpip"]
     id: 255
 render: |
-  type: schneider
+  type: schneider-v3
   {{- include "modbus" . }}
