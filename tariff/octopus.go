@@ -59,7 +59,7 @@ func NewOctopusFromConfig(other map[string]interface{}) (api.Tariff, error) {
 			return nil, errors.New("cannot use apikey at same time as product / tariff code")
 		}
 		if len(cc.ApiKey) != 32 || !strings.HasPrefix(cc.ApiKey, "sk_live_") {
-			return nil, errors.New("apikey of invalid or unexpected format, please check for errors")
+			return nil, errors.New("invalid apikey format")
 		}
 	}
 
