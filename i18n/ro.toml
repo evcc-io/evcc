@@ -1,6 +1,7 @@
 [batterySettings]
 batteryLevel = "Nivelul bateriei"
 capacity = "{energy} din {total}"
+control = "Controlul bateriei"
 disclaimerHint = "Nota:"
 disclaimerText = "Aceste setari afecteaza doar modul solar. Procesul de incarcare este ajustat corespunzator"
 legendBottomName = "prioritate casa"
@@ -18,6 +19,23 @@ full = "cand este aproape plin"
 low = "cand este destul de plin"
 medium = "cand este pe jumatate plin"
 never = "numai cand exista surplus suficient"
+
+[config]
+
+[config.form]
+example = "Exemplu"
+optional = "optional"
+
+[config.main]
+addVehicle = "Adauga vehicul"
+title = "Configuratie"
+vehicles = "Vehiculele mele"
+
+[config.validation]
+failed = "esuat"
+label = "Stare"
+running = "validez..."
+success = "reuşit"
 
 [footer]
 

@@ -13,7 +13,7 @@ legendTitle = "¿Cómo debería usarse la energía solar?"
 legendTopAutostart = "inicio automático"
 legendTopName = "carga soportada por bateria"
 legendTopSubline = "sin interrupciones"
-modalTitle = "Configuración de batería"
+modalTitle = "Ajustes de la batería"
 
 [batterySettings.bufferStart]
 full = "cuando está casi llena"
@@ -140,9 +140,9 @@ about = "Sobre"
 blog = "Blog"
 docs = "Documentación"
 github = "GitHub"
-login = "Login de vehículo"
+login = "Registro de vehículos"
 needHelp = "¿Necesitas ayuda?"
-sessions = "Procesos de carga"
+sessions = "Sesiones de carga"
 settings = "Ajustes"
 
 [header.theme]
@@ -199,6 +199,12 @@ noEnergy = "Sin lecturas"
 pvExport = "Excedente"
 pvProduction = "Producción"
 selfConsumption = "Autoconsumo"
+
+[main.heatingStatus]
+charging = "Calefacción..."
+cheapEnergyCharging = "Calefacción con energía barata: {price} (limit {limit})"
+cleanEnergyCharging = "Calefacción con energía limpia: {co2} (limit {limit})"
+waitForVehicle = "Listo. Esperando a que se caliente..."
 
 [main.loadpoint]
 avgPrice = "Precio ⌀"
@@ -398,7 +404,7 @@ allVehicles = "todos los vehiculos"
 filter = "Filtrar"
 
 [settings]
-title = "Ajustes"
+title = "Ajustes generales"
 
 [settings.gridDetails]
 co2 = "CO₂"

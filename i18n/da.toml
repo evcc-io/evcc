@@ -13,7 +13,7 @@ legendTitle = "Hvordan skal solenergi benyttes?"
 legendTopAutostart = "starter automatisk"
 legendTopName = "batteri understøttet opladning"
 legendTopSubline = "uden afbrydelser"
-modalTitle = "batteri indstillinger"
+modalTitle = "Batteri indstillinger"
 
 [batterySettings.bufferStart]
 full = "næsten fyldt"
@@ -140,9 +140,9 @@ about = "Om"
 blog = "Blog"
 docs = "Dokumentation"
 github = "GitHub"
-login = "Logins til køretøjer"
+login = "Login til køretøjer"
 needHelp = "Brug for hjælp?"
-sessions = "Opladning sessioner"
+sessions = "Opladnings sessioner"
 settings = "Indstillinger"
 
 [help]
@@ -391,7 +391,7 @@ allVehicles = "alle køretøjer"
 filter = "Filter"
 
 [settings]
-title = "Indstillinger"
+title = "Generelle indstillinger"
 
 [settings.hiddenFeatures]
 label = "Experimentalt"
