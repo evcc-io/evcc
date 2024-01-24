@@ -10,7 +10,7 @@ VERSION := $(if $(TAG_NAME),$(TAG_NAME),$(SHA))
 BUILD_DATE := $(shell date -u '+%Y-%m-%d_%H:%M:%S')
 BUILD_TAGS := -tags=release
 TESLA_CLIENT_ID := ${TESLA_CLIENT_ID}
-LD_FLAGS := -X github.com/evcc-io/evcc/server.Version=$(VERSION) -X github.com/evcc-io/evcc/server.Commit=$(COMMIT) -X github.com/evcc-io/evcc/vehicle/tesla-vehicle-command.OAuth2Config.ClientID=$(TESLA_CLIENT_ID) -s -w
+LD_FLAGS := -X github.com/evcc-io/evcc/server.Version=$(VERSION) -X github.com/evcc-io/evcc/server.Commit=$(COMMIT) -X github.com/evcc-io/evcc/vehicle/tesla-vehicle-command.TESLA_CLIENT_ID=$(TESLA_CLIENT_ID) -s -w
 BUILD_ARGS := -trimpath -ldflags='$(LD_FLAGS)'
 
 # docker

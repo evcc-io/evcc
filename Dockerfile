@@ -62,6 +62,9 @@ RUN case "${TARGETVARIANT}" in \
 	"v7") export GOARM='7' ;; \
 	esac;
 
+ARG TESLA_CLIENT_ID
+ENV TESLA_CLIENT_ID=${TESLA_CLIENT_ID}
+
 RUN RELEASE=${RELEASE} GOOS=${TARGETOS} GOARCH=${TARGETARCH} make build
 
 
@@ -76,9 +79,6 @@ ENV TZ=Europe/Berlin
 COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=builder /build/evcc /usr/local/bin/evcc
-
-ARG TESLA_CLIENT_ID
-ENV TESLA_CLIENT_ID=${TESLA_CLIENT_ID}
 
 COPY packaging/docker/bin/* /app/
 

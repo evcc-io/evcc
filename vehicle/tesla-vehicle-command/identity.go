@@ -21,6 +21,17 @@ var OAuth2Config = &oauth2.Config{
 
 const userAgent = "evcc/evcc-io"
 
+var TESLA_CLIENT_ID, TESLA_CLIENT_SECRET string
+
+func init() {
+	if TESLA_CLIENT_ID != "" {
+		OAuth2Config.ClientID = TESLA_CLIENT_ID
+	}
+	if TESLA_CLIENT_SECRET != "" {
+		OAuth2Config.ClientSecret = TESLA_CLIENT_SECRET
+	}
+}
+
 type Identity struct {
 	oauth2.TokenSource
 	log   *util.Logger
