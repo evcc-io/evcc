@@ -388,7 +388,7 @@ allVehicles = "vsa vozila"
 filter = "Filter"
 
 [settings]
-title = "Nastavitve"
+title = "Splošne nastavitve"
 
 [settings.gridDetails]
 co2 = "CO₂"
