@@ -165,7 +165,9 @@ func (m *ModbusSunspec) FloatSetter(_ string) (func(float64) error, error) {
 		return nil, err
 	}
 
-	return func(val float64) error {
+	typ := point.Type()
+
+	return func(val float64) (err error) {
 		defer func() {
 			if r := recover(); r != nil {
 				err = fmt.Errorf("panic: %v", r)
@@ -173,7 +175,12 @@ func (m *ModbusSunspec) FloatSetter(_ string) (func(float64) error, error) {
 		}()
 
 		val = val * m.scale
-		point.SetFloat32(float32(val))
+		switch typ {
+		case typelabel.Float32:
+			point.SetFloat32(float32(val))
+		default:
+			return fmt.Errorf("invalid point type: %s", typ)
+		}
 
 		return block.Write(m.op.Point)
 	}, nil
@@ -190,7 +197,7 @@ func (m *ModbusSunspec) IntSetter(_ string) (func(int64) error, error) {
 
 	typ := point.Type()
 
-	return func(val int64) error {
+	return func(val int64) (err error) {
 		defer func() {
 			if r := recover(); r != nil {
 				err = fmt.Errorf("panic: %v", r)
@@ -212,10 +219,14 @@ func (m *ModbusSunspec) IntSetter(_ string) (func(int64) error, error) {
 			point.SetInt16(int16(val))
 		case typelabel.Int32:
 			point.SetInt32(int32(val))
+		case typelabel.Int64:
+			point.SetInt64(int64(val))
 		case typelabel.Uint16:
 			point.SetUint16(uint16(val))
 		case typelabel.Uint32:
 			point.SetUint32(uint32(val))
+		case typelabel.Uint64:
+			point.SetUint64(uint64(val))
 		default:
 			return fmt.Errorf("invalid point type: %s", typ)
 		}
