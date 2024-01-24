@@ -20,15 +20,15 @@ else
   INTERACTIVE=0
 fi
 
-if [ -d /tmp/oldevcc ] && [ $INTERACTIVE -eq 1 ]; then
-	checkConfigOutput=$(/usr/bin/evcc checkconfig)
-	if [ $? -eq 0 ]; then
+if [ -f /tmp/oldevcc ] && [ $INTERACTIVE -eq 1 ]; then
+    checkConfigOutput=$(/usr/bin/evcc checkconfig || true)
+    if [ "$checkConfigOutput" = "" ]; then
 		rm -rf /tmp/oldevcc
 	else
 		echo "--------------------------------------------------------------------------------"
 		echo "ERROR: your evcc configuration is not compatible with the new version. Please consider reading the release notes: https://github.com/evcc-io/evcc/releases"
 		echo "checkconfig Output:" 
-		echo $checkConfigOutput
+		echo "$checkConfigOutput"
 		echo "--------------------------------------------------------------------------------"
         
 		while true; do
@@ -48,6 +48,7 @@ if [ -d /tmp/oldevcc ] && [ $INTERACTIVE -eq 1 ]; then
 				*)
 					;;
 			esac
+	    done
 	fi
 fi 
 
