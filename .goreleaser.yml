@@ -29,6 +29,9 @@ builds:
         goarch: arm
       - goos: windows
         goarch: arm64
+    docker:
+      build_flag_templates:
+        - "--build-arg=TESLA_CLIENT_ID=${TESLA_CLIENT_ID}"
 
 env:
   - CGO_ENABLED=0
