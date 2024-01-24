@@ -12,6 +12,8 @@ legendTopAutostart = "počinje automatski"
 legendTopName = "podržano baterijsko napajanje"
 legendTopSubline = "bez prekida"
 modalTitle = "Postavke baterije"
+control = "Upravljanje baterijom"
+discharge = "Spriječi pražnjenje u brzom načinu rada i planirano napajanje."
 
 [batterySettings.bufferStart]
 full = "kad je skoro pun"
@@ -130,7 +132,7 @@ co2Label = "Co₂ emisija"
 co2Limit = "Ograničenje CO₂"
 costLimitDescription = "Omogućuje privremeno brzo punjenje u solarnom modusu."
 modalTitle = "Smart Grid napajanje"
-none = "ništa"
+none = "bez"
 priceLabel = "Cijena energije"
 priceLimit = "Ograničenje cijene"
 
@@ -169,10 +171,16 @@ vehicles = "Parkiranje"
 arrivalTab = "Dolazak"
 departureTab = "Odlazak"
 modalTitle = "Plan napajanja"
-none = "ništa"
+none = "bez"
 title = "Plan"
 titleMinSoc = "Min. napajanje"
 titleTargetCharge = "Odlazak"
+remove = "Ukloni"
+update = "Primijeni"
+active = "Aktivno"
+day = "Dan"
+goal = "Cilj napajanja"
+time = "Vrijeme"
 
 [main.energyflow]
 battery = "Baterija"
@@ -186,6 +194,7 @@ noEnergy = "Nema mjernih podataka"
 pvExport = "Izvoz mreže"
 pvProduction = "Produkcija"
 selfConsumption = "Samopotrošnja"
+batteryHold = "Baterija (zaključano)"
 
 [main.loadpoint]
 avgPrice = "⌀ cijena"
@@ -196,6 +205,9 @@ fallbackName = "Mjesto napajanja"
 power = "Energija"
 price = "Σ cijena"
 solar = "Solarno"
+remaining = "Preostalo"
+remoteDisabledHard = "{source}: isključeno"
+remoteDisabledSoft = "{source}: adaptivno solarno punjenje isključeno"
 
 [main.loadpointSettings]
 currents = "Struja napajanja"
@@ -204,6 +216,7 @@ disclaimerHint = "Bilješka:"
 disclaimerText = "Promjene će se izgubiti nakon ponovnog pokretanja poslužitelja."
 title = "Postavke {0}"
 vehicle = "Vozilo"
+onlyForSocBasedCharging = "Ove su opcije dostupne samo za vozila s poznatom razinom napunjenosti."
 
 [main.loadpointSettings.maxCurrent]
 label = "Maks. struja"
@@ -247,7 +260,7 @@ planPeriodLabel = "Razdoblje"
 planPeriodValue = "{start} do {end}"
 planUnknown = "još nije poznato"
 priceLimit = "ograničenje cijene od {price}"
-setTargetTime = "ništa"
+setTargetTime = "bez"
 targetIsInThePast = "Odaberi vrijeme u budućnosti."
 targetIsTooFarInTheFuture = "Prilagodit ćemo plan čim budemo znali više o budućnosti."
 title = "Ciljano vrijeme"
@@ -256,6 +269,12 @@ tomorrow = "sutra"
 update = "Ažuriraj"
 vehicleCapacityDocs = "Saznaj kako to konfigurirati."
 vehicleCapacityRequired = "Kapacitet baterije vozila je potreban za procjenjivanje vremena punjenja."
+remove = "Ukloni"
+notReachableInTime = "Cilj nije moguće postići na vrijeme. Procijenjeni kraj: {endTime}."
+preview = "Pregled plana"
+targetIsAboveLimit = "Konfigurirano ograničenje napajanja od {limit} bit će zanemareno tijekom ovog razdoblja."
+currentPlan = "Aktivni plan"
+targetIsAboveVehicleLimit = "Za postizanje cilja napajanja povećaj ograničenje vozila ({limit})."
 
 [main.targetChargePlan]
 chargeDuration = "Vrijeme napajanja"
@@ -366,7 +385,7 @@ allVehicles = "sva vozila"
 filter = "Filtar"
 
 [settings]
-title = "Postavke"
+title = "Opće postavke"
 
 [settings.gridDetails]
 co2 = "CO₂"
@@ -417,3 +436,8 @@ title = "Pogreška pri pokretanju"
 cancel = "Odustani"
 template = "Proizvođač"
 test = "Test"
+
+
+[main.loadpointSettings.limitSoc]
+label = "Zadano ograničenje"
+description = "Ograničenje napajanja koje se koristi kada je ovo vozilo povezano."
