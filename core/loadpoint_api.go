@@ -338,15 +338,20 @@ func (lp *Loadpoint) setMinCurrent(current float64) {
 }
 
 // SetMinCurrent sets the min loadpoint current
-func (lp *Loadpoint) SetMinCurrent(current float64) {
+func (lp *Loadpoint) SetMinCurrent(current float64) error {
 	lp.Lock()
 	defer lp.Unlock()
 
-	lp.log.DEBUG.Println("set min current:", current)
+	if current > lp.maxCurrent {
+		return errors.New("min current must be smaller or equal than max current")
+	}
 
+	lp.log.DEBUG.Println("set min current:", current)
 	if current != lp.minCurrent {
 		lp.setMinCurrent(current)
 	}
+
+	return nil
 }
 
 // GetMaxCurrent returns the max loadpoint current
@@ -364,15 +369,20 @@ func (lp *Loadpoint) setMaxCurrent(current float64) {
 }
 
 // SetMaxCurrent sets the max loadpoint current
-func (lp *Loadpoint) SetMaxCurrent(current float64) {
+func (lp *Loadpoint) SetMaxCurrent(current float64) error {
 	lp.Lock()
 	defer lp.Unlock()
 
-	lp.log.DEBUG.Println("set max current:", current)
+	if current < lp.minCurrent {
+		return errors.New("max current must be greater or equal than min current")
+	}
 
+	lp.log.DEBUG.Println("set max current:", current)
 	if current != lp.maxCurrent {
 		lp.setMaxCurrent(current)
 	}
+
+	return nil
 }
 
 // GetMinPower returns the min loadpoint power for a single phase
