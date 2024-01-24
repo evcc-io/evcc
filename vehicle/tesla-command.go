@@ -25,7 +25,7 @@ func init() {
 	if secret := os.Getenv("TESLA_CLIENT_SECRET"); secret != "" {
 		vc.OAuth2Config.ClientSecret = secret
 	}
-	if vc.OAuth2Config.ClientID == "" {
+	if vc.OAuth2Config.ClientID != "" {
 		registry.Add("tesla-command", NewTeslaCommandFromConfig)
 	}
 }
