@@ -114,13 +114,6 @@ render: |
         scale: 2
       - source: const
         value: -1
-  power:
-    source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      type: input
-      address: 33149 # Battery power
-      decode: int32    
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
