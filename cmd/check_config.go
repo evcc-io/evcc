@@ -20,7 +20,7 @@ func init() {
 func runConfigCheck(cmd *cobra.Command, args []string) {
 	err := loadConfigFile(&conf)
 
-	if cfgErr != nil {
+	if err != nil {
 		log.FATAL.Println("config invalid:", err)
 		os.Exit(1)
 	} else {
