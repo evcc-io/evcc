@@ -44,7 +44,6 @@ archives:
 
 env:
   - CGO_ENABLED=0
-  - TESLA_CLIENT_ID={{ .Env.TESLA_CLIENT_ID }}
 
 universal_binaries:
   - replace: true

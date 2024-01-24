@@ -36,7 +36,6 @@ dockers:
 
 env:
   - CGO_ENABLED=0
-  - TESLA_CLIENT_ID={{ .Env.TESLA_CLIENT_ID }}
 
 archives:
   - builds:
