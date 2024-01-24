@@ -35,15 +35,17 @@ export default {
 		heating: Boolean,
 	},
 	emits: ["limit-soc-updated"],
-
 	computed: {
 		options: function () {
 			const result = [];
-			for (let soc = 20; soc <= 100; soc += 5) {
+			for (let soc = 20; soc <= 100; soc += this.step) {
 				let text = this.fmtSocOption(soc, this.rangePerSoc, distanceUnit(), this.heating);
 				result.push({ soc, text });
 			}
 			return result;
+		},
+		step: function () {
+			return this.heating ? 1 : 5;
 		},
 		title: function () {
 			return this.heating

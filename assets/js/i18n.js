@@ -34,6 +34,8 @@ export const LOCALES = {
   "zh-Hans": ["Chinese (Simplified)", "简体中文"],
 };
 
+export const DEFAULT_LOCALE = "en";
+
 function getBrowserLocale() {
   const navigatorLocale =
     navigator.languages !== undefined ? navigator.languages[0] : navigator.language;
@@ -72,8 +74,8 @@ export default function setupI18n() {
     legacy: true,
     silentFallbackWarn: true,
     silentTranslationWarn: true,
-    locale: "en",
-    fallbackLocale: "en",
+    locale: DEFAULT_LOCALE,
+    fallbackLocale: DEFAULT_LOCALE,
     messages: { en },
   });
   setI18nLanguage(i18n.global, getLocale());
