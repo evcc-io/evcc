@@ -220,7 +220,7 @@ func (m *ModbusSunspec) IntSetter(_ string) (func(int64) error, error) {
 		case typelabel.Int32:
 			point.SetInt32(int32(val))
 		case typelabel.Int64:
-			point.SetInt64(int64(val))
+			point.SetInt64(val)
 		case typelabel.Uint16:
 			point.SetUint16(uint16(val))
 		case typelabel.Uint32:
