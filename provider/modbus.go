@@ -203,7 +203,16 @@ func (m *Modbus) FloatSetter(_ string) (func(float64) error, error) {
 			uval = math.Float64bits(val)
 		}
 
-		return m.writeMultipleRegisters(uval)
+		var err error
+		switch m.op.FuncCode {
+		case gridx.FuncCodeWriteMultipleRegisters:
+			err = m.writeMultipleRegisters(uval)
+
+		default:
+			err = fmt.Errorf("invalid write function code: %d", m.op.FuncCode)
+		}
+
+		return err
 	}, nil
 }
 
