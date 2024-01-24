@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	FleetAudienceEU = "https://fleet-api.prd.eu.vn.cloud.tesla.com/"
+	FleetAudienceEU = "https://fleet-api.prd.eu.vn.cloud.tesla.com"
 )
 
 type API struct {
@@ -48,7 +48,7 @@ func (v *API) Vehicles() ([]*Vehicle, error) {
 	// }
 
 	var res tesla.VehiclesResponse
-	err := v.GetJSON(fmt.Sprintf("%sapi/1/vehicles", FleetAudienceEU), &res)
+	err := v.GetJSON(fmt.Sprintf("%s/api/1/vehicles", FleetAudienceEU), &res)
 
 	return res.Response, err
 }
@@ -68,7 +68,7 @@ func (v *API) VehicleData(id int64) (*VehicleData, error) {
 	// }
 
 	var res tesla.VehicleData
-	err := v.GetJSON(fmt.Sprintf("%sapi/1/vehicles/%d/vehicle_data", FleetAudienceEU, id), &res)
+	err := v.GetJSON(fmt.Sprintf("%s/api/1/vehicles/%d/vehicle_data", FleetAudienceEU, id), &res)
 
 	return &res, err
 }
