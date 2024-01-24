@@ -23,15 +23,15 @@ const (
 
 // GetTitle returns the title
 func (site *Site) GetTitle() string {
-	site.Lock()
-	defer site.Unlock()
+	site.RLock()
+	defer site.RUnlock()
 	return site.Title
 }
 
 // SetTitle sets the title
 func (site *Site) SetTitle(title string) {
-	site.RLock()
-	defer site.RUnlock()
+	site.Lock()
+	defer site.Unlock()
 
 	site.Title = title
 	site.publish("siteTitle", title)
@@ -40,8 +40,8 @@ func (site *Site) SetTitle(title string) {
 
 // GetGridMeterRef returns the GridMeterRef
 func (site *Site) GetGridMeterRef() string {
-	site.Lock()
-	defer site.Unlock()
+	site.RLock()
+	defer site.RUnlock()
 	return site.Meters.GridMeterRef
 }
 
@@ -55,15 +55,15 @@ func (site *Site) SetGridMeterRef(ref string) {
 	settings.SetString(keys.GridMeter, ref)
 }
 
-// GetPVMeterRef returns the PvMeterRef
-func (site *Site) GetPVMeterRef() []string {
+// GetPVMeterRefs returns the PvMeterRef
+func (site *Site) GetPVMeterRefs() []string {
 	site.RLock()
 	defer site.RUnlock()
 	return site.Meters.PVMetersRef
 }
 
-// SetPVMeterRef sets the PvMeterRef
-func (site *Site) SetPVMeterRef(ref []string) {
+// SetPVMeterRefs sets the PvMeterRef
+func (site *Site) SetPVMeterRefs(ref []string) {
 	site.Lock()
 	defer site.Unlock()
 
@@ -72,15 +72,15 @@ func (site *Site) SetPVMeterRef(ref []string) {
 	settings.SetString(keys.PvMeters, strings.Join(ref, ","))
 }
 
-// GetBatteryMeterRef returns the BatteryMeterRef
-func (site *Site) GetBatteryMeterRef() []string {
+// GetBatteryMeterRefs returns the BatteryMeterRef
+func (site *Site) GetBatteryMeterRefs() []string {
 	site.RLock()
 	defer site.RUnlock()
 	return site.Meters.BatteryMetersRef
 }
 
-// SetBatteryMeterRef sets the BatteryMeterRef
-func (site *Site) SetBatteryMeterRef(ref []string) {
+// SetBatteryMeterRefs sets the BatteryMeterRef
+func (site *Site) SetBatteryMeterRefs(ref []string) {
 	site.Lock()
 	defer site.Unlock()
 

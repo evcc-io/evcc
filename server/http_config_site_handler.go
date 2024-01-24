@@ -19,8 +19,8 @@ func siteHandler(site site.API) http.HandlerFunc {
 		}{
 			Title:   site.GetTitle(),
 			Grid:    site.GetGridMeterRef(),
-			PV:      site.GetPVMeterRef(),
-			Battery: site.GetBatteryMeterRef(),
+			PV:      site.GetPVMeterRefs(),
+			Battery: site.GetBatteryMeterRefs(),
 		}
 
 		jsonResult(w, res)
@@ -70,7 +70,7 @@ func updateSiteHandler(site site.API) http.HandlerFunc {
 				return
 			}
 
-			site.SetPVMeterRef(*payload.PV)
+			site.SetPVMeterRefs(*payload.PV)
 			setConfigDirty()
 		}
 
@@ -79,7 +79,7 @@ func updateSiteHandler(site site.API) http.HandlerFunc {
 				return
 			}
 
-			site.SetBatteryMeterRef(*payload.Battery)
+			site.SetBatteryMeterRefs(*payload.Battery)
 			setConfigDirty()
 		}
 
