@@ -72,3 +72,23 @@ func (v *API) VehicleData(id int64) (*VehicleData, error) {
 
 	return &res, err
 }
+
+func (v *API) WakeUp(id int64) (*VehicleData, error) {
+	// ctx, cancel := context.WithTimeout(context.Background(), request.Timeout)
+	// defer cancel()
+
+	// b, err := v.identity.Account().Get(ctx, fmt.Sprintf("api/1/vehicles/%d/vehicle_data", id))
+	// if err != nil {
+	// 	return nil, err
+	// }
+
+	// var res tesla.VehicleData
+	// if err := json.Unmarshal(b, &res); err != nil {
+	// 	return nil, err
+	// }
+
+	var res tesla.VehicleData
+	err := v.GetJSON(fmt.Sprintf("%s/api/1/vehicles/%d/wake_up", FleetAudienceEU, id), &res)
+
+	return &res, err
+}
