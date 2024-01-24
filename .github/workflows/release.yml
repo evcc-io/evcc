@@ -101,10 +101,12 @@ jobs:
         env:
           # use GH_TOKEN for access to evcc-io/homebrew-tap
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+          TESLA_CLIENT_ID: ${{ secrets.TESLA_CLIENT_ID }}
 
       - name: Publish .deb to Cloudsmith
         env:
           CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
+          TESLA_CLIENT_ID: ${{ secrets.TESLA_CLIENT_ID }}
         run: make apt-release
 
   demo:
