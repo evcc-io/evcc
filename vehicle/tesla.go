@@ -40,7 +40,8 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, err
 	}
 
-	if err := cc.Tokens.Error(); err != nil {
+	token, err := cc.Tokens.Token()
+	if err != nil {
 		return nil, err
 	}
 
@@ -52,13 +53,7 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	log := util.NewLogger("tesla").Redact(cc.Tokens.Access, cc.Tokens.Refresh)
 	ctx := context.WithValue(context.Background(), oauth2.HTTPClient, request.NewClient(log))
 
-	options := []tesla.ClientOption{tesla.WithToken(&oauth2.Token{
-		AccessToken:  cc.Tokens.Access,
-		RefreshToken: cc.Tokens.Refresh,
-		Expiry:       time.Now(),
-	})}
-
-	client, err := tesla.NewClient(ctx, options...)
+	client, err := tesla.NewClient(ctx, tesla.WithToken(token))
 	if err != nil {
 		return nil, err
 	}
