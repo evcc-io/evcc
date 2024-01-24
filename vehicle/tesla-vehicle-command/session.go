@@ -40,7 +40,7 @@ func (v *CommandSession) MaxCurrent(current int64) error {
 	ctx, cancel := context.WithTimeout(context.Background(), v.timeout)
 	defer cancel()
 
-	return ApiError(v.vehicle.SetChargingAmps(ctx, int32(current)))
+	return apiError(v.vehicle.SetChargingAmps(ctx, int32(current)))
 }
 
 var _ api.Resurrector = (*CommandSession)(nil)
@@ -50,7 +50,7 @@ func (v *CommandSession) WakeUp() error {
 	ctx, cancel := context.WithTimeout(context.Background(), v.timeout)
 	defer cancel()
 
-	return ApiError(v.vehicle.Wakeup(ctx))
+	return apiError(v.vehicle.Wakeup(ctx))
 }
 
 var _ api.VehicleChargeController = (*CommandSession)(nil)
@@ -60,7 +60,7 @@ func (v *CommandSession) StartCharge() error {
 	ctx, cancel := context.WithTimeout(context.Background(), v.timeout)
 	defer cancel()
 
-	err := ApiError(v.vehicle.ChargeStart(ctx))
+	err := apiError(v.vehicle.ChargeStart(ctx))
 
 	// ignore charging or complete
 	if err != nil && slices.Contains([]string{"complete", "is_charging"}, err.Error()) {
@@ -75,7 +75,7 @@ func (v *CommandSession) StopCharge() error {
 	ctx, cancel := context.WithTimeout(context.Background(), v.timeout)
 	defer cancel()
 
-	err := ApiError(v.vehicle.ChargeStop(ctx))
+	err := apiError(v.vehicle.ChargeStop(ctx))
 
 	// ignore sleeping vehicle
 	if errors.Is(err, api.ErrAsleep) {

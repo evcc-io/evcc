@@ -8,14 +8,20 @@ import (
 )
 
 type Provider struct {
-	dataG func() (*VehicleData, error)
+	dataG  func() (*VehicleData, error)
+	wakeup func() (*VehicleData, error)
 }
 
 func NewProvider(api *API, vid int64, cache time.Duration) *Provider {
 	impl := &Provider{
 		dataG: provider.Cached(func() (*VehicleData, error) {
-			return api.VehicleData(vid)
+			res, err := api.VehicleData(vid)
+			return res, apiError(err)
 		}, cache),
+		wakeup: func() (*VehicleData, error) {
+			res, err := api.WakeUp(vid)
+			return res, apiError(err)
+		},
 	}
 	return impl
 }
@@ -122,4 +128,12 @@ func (v *Provider) TargetSoc() (float64, error) {
 		return 0, err
 	}
 	return float64(res.Response.ChargeState.ChargeLimitSoc), nil
+}
+
+var _ api.Resurrector = (*Provider)(nil)
+
+// WakeUp implements the api.Resurrector interface
+func (v *Provider) WakeUp() error {
+	_, err := v.wakeup()
+	return apiError(err)
 }
