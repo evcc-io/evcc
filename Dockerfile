@@ -54,6 +54,7 @@ COPY --from=node /build/dist /build/dist
 ARG TARGETOS
 ARG TARGETARCH
 ARG TARGETVARIANT
+ARG TESLA_CLIENT_ID
 
 RUN case "${TARGETVARIANT}" in \
 	"armhf") export GOARM='6' ;; \
