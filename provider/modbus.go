@@ -175,7 +175,7 @@ func (m *Modbus) writeMultipleRegisters(val uint64) error {
 
 	case 4:
 		var b [8]byte
-		binary.BigEndian.PutUint64(b[:], uint64(val))
+		binary.BigEndian.PutUint64(b[:], val)
 		_, err = m.conn.WriteMultipleRegisters(m.op.Addr, 4, b[:])
 
 	default:
