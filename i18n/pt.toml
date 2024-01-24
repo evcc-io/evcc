@@ -140,7 +140,7 @@ about = "Sobre"
 blog = "Blog"
 docs = "Documentação"
 github = "GitHub"
-login = "Login de veículo"
+login = "Registo de veículo"
 needHelp = "Precisa ajuda?"
 sessions = "Sessões de carga"
 settings = "Configuração"
@@ -398,7 +398,7 @@ allVehicles = "todos veículos"
 filter = "Filtro"
 
 [settings]
-title = "Configuração"
+title = "Configuração geral"
 
 [settings.gridDetails]
 co2 = "CO₂"
