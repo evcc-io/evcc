@@ -1,0 +1,56 @@
+template: tesla-command
+products:
+  - brand: Tesla
+    description:
+      generic: Vehicle-Command API
+requirements:
+  description:
+    de: |
+      Es wird ein `access` und ein `refresh` Token für die Kommunikation mit der Tesla API erstellt werden.
+      Die Tokens werden unter https://tesla.evcc.io erstellt.
+    en: |
+      You need to generate an `access` and a `refresh` token for communicating with the Tesla API.
+      Tokens are generated using https://tesla.evcc.io.
+params:
+  - name: title
+  - name: icon
+    default: car
+    advanced: true
+  - name: accessToken
+    required: true
+    mask: true
+    help:
+      en: "See https://docs.evcc.io/en/docs/devices/vehicles#tesla-command"
+      de: "Siehe https://docs.evcc.io/docs/devices/vehicles#tesla-command"
+  - name: refreshToken
+    required: true
+    mask: true
+    help:
+      en: "See https://docs.evcc.io/en/docs/devices/vehicles#tesla-command"
+      de: "Siehe https://docs.evcc.io/docs/devices/vehicles#tesla-command"
+  - name: vin
+    example: W...
+  - name: capacity
+  - name: phases
+    advanced: true
+  - preset: vehicle-identify
+render: |
+  type: tesla-command
+  {{- if .title }}
+  title: {{ .title }}
+  {{- end }}
+  {{- if .icon }}
+  icon: {{ .icon }}
+  {{- end }}
+  tokens:
+    access: {{ .accessToken }}
+    refresh: {{ .refreshToken }}
+  capacity: {{ .capacity }}
+  {{- if .phases }}
+  phases: {{ .phases }}
+  {{- end }}
+  {{- if .vin }}
+  vin: {{ .vin }}
+  {{- end }}
+  {{ include "vehicle-identify" . }}
+  features: ["coarsecurrent"]

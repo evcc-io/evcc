@@ -85,6 +85,7 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.18.2
 	github.com/stretchr/testify v1.8.4
+	github.com/teslamotors/vehicle-command v0.0.2
 	github.com/traefik/yaegi v0.15.1
 	github.com/tv42/httpunix v0.0.0-20191220191345-2ba4b9c3382c
 	github.com/volkszaehler/mbmd v0.0.0-20231215091549-af16b1f597b9
