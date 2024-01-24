@@ -11,14 +11,13 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
 	gridx "github.com/grid-x/modbus"
-	"github.com/volkszaehler/mbmd/meters/rs485"
 )
 
 // Modbus implements modbus RTU and TCP access
 type Modbus struct {
 	log   *util.Logger
 	conn  *modbus.Connection
-	op    rs485.Operation
+	op    modbus.RegisterOperation
 	scale float64
 }
 
@@ -70,7 +69,7 @@ func NewModbusFromConfig(other map[string]interface{}) (Provider, error) {
 		return nil, err
 	}
 
-	op, err := modbus.RegisterOperation(cc.Register)
+	op, err := cc.Register.Operation()
 	if err != nil {
 		return nil, err
 	}
@@ -87,13 +86,13 @@ func NewModbusFromConfig(other map[string]interface{}) (Provider, error) {
 func (m *Modbus) bytesGetter() ([]byte, error) {
 	switch m.op.FuncCode {
 	case gridx.FuncCodeReadHoldingRegisters:
-		return m.conn.ReadHoldingRegisters(m.op.OpCode, m.op.ReadLen)
+		return m.conn.ReadHoldingRegisters(m.op.Addr, m.op.Length)
 
 	case gridx.FuncCodeReadInputRegisters:
-		return m.conn.ReadInputRegisters(m.op.OpCode, m.op.ReadLen)
+		return m.conn.ReadInputRegisters(m.op.Addr, m.op.Length)
 
 	case gridx.FuncCodeReadCoils:
-		return m.conn.ReadCoils(m.op.OpCode, m.op.ReadLen)
+		return m.conn.ReadCoils(m.op.Addr, m.op.Length)
 
 	default:
 		return nil, fmt.Errorf("invalid read function code: %d", m.op.FuncCode)
@@ -106,7 +105,7 @@ func (m *Modbus) floatGetter() (f float64, err error) {
 		return 0, fmt.Errorf("read failed: %w", err)
 	}
 
-	return m.scale * m.op.Transform(bytes), nil
+	return m.scale * m.op.Decode(bytes), nil
 }
 
 var _ FloatProvider = (*Modbus)(nil)
@@ -159,6 +158,33 @@ func (m *Modbus) BoolGetter() (func() (bool, error), error) {
 
 var _ SetFloatProvider = (*Modbus)(nil)
 
+func (m *Modbus) writeMultipleRegisters(val uint64) error {
+	val = m.op.Encode(val)
+
+	var err error
+	switch m.op.Length {
+	case 1:
+		var b [2]byte
+		binary.BigEndian.PutUint16(b[:], uint16(val))
+		_, err = m.conn.WriteMultipleRegisters(m.op.Addr, 1, b[:])
+
+	case 2:
+		var b [4]byte
+		binary.BigEndian.PutUint32(b[:], uint32(val))
+		_, err = m.conn.WriteMultipleRegisters(m.op.Addr, 2, b[:])
+
+	case 4:
+		var b [8]byte
+		binary.BigEndian.PutUint64(b[:], uint64(val))
+		_, err = m.conn.WriteMultipleRegisters(m.op.Addr, 4, b[:])
+
+	default:
+		err = fmt.Errorf("invalid write length: %d", m.op.Length)
+	}
+
+	return err
+}
+
 // FloatSetter executes configured modbus write operation and implements SetFloatProvider
 func (m *Modbus) FloatSetter(_ string) (func(float64) error, error) {
 	// need multiple registers for float
@@ -169,23 +195,15 @@ func (m *Modbus) FloatSetter(_ string) (func(float64) error, error) {
 	return func(val float64) error {
 		val = m.scale * val
 
-		var err error
-		switch m.op.ReadLen {
+		var uval uint64
+		switch m.op.Length {
 		case 2:
-			var b [4]byte
-			binary.BigEndian.PutUint32(b[:], math.Float32bits(float32(val)))
-			_, err = m.conn.WriteMultipleRegisters(m.op.OpCode, 2, b[:])
-
+			uval = uint64(math.Float32bits(float32(val)))
 		case 4:
-			var b [8]byte
-			binary.BigEndian.PutUint64(b[:], math.Float64bits(val))
-			_, err = m.conn.WriteMultipleRegisters(m.op.OpCode, 4, b[:])
-
-		default:
-			err = fmt.Errorf("invalid write length: %d", m.op.ReadLen)
+			uval = math.Float64bits(val)
 		}
 
-		return err
+		return m.writeMultipleRegisters(uval)
 	}, nil
 }
 
@@ -199,28 +217,10 @@ func (m *Modbus) IntSetter(_ string) (func(int64) error, error) {
 		var err error
 		switch m.op.FuncCode {
 		case gridx.FuncCodeWriteSingleRegister:
-			_, err = m.conn.WriteSingleRegister(m.op.OpCode, uint16(ival))
+			_, err = m.conn.WriteSingleRegister(m.op.Addr, uint16(ival))
 
 		case gridx.FuncCodeWriteMultipleRegisters:
-			switch m.op.ReadLen {
-			case 1:
-				var b [2]byte
-				binary.BigEndian.PutUint16(b[:], uint16(ival))
-				_, err = m.conn.WriteMultipleRegisters(m.op.OpCode, 1, b[:])
-
-			case 2:
-				var b [4]byte
-				binary.BigEndian.PutUint32(b[:], uint32(ival))
-				_, err = m.conn.WriteMultipleRegisters(m.op.OpCode, 2, b[:])
-
-			case 4:
-				var b [8]byte
-				binary.BigEndian.PutUint64(b[:], uint64(ival))
-				_, err = m.conn.WriteMultipleRegisters(m.op.OpCode, 4, b[:])
-
-			default:
-				err = fmt.Errorf("invalid write length: %d", m.op.ReadLen)
-			}
+			err = m.writeMultipleRegisters(uint64(ival))
 
 		case gridx.FuncCodeWriteSingleCoil:
 			if ival != 0 {
@@ -228,7 +228,7 @@ func (m *Modbus) IntSetter(_ string) (func(int64) error, error) {
 				// and 0x0000 for OFF
 				ival = 0xFF00
 			}
-			_, err = m.conn.WriteSingleCoil(m.op.OpCode, uint16(ival))
+			_, err = m.conn.WriteSingleCoil(m.op.Addr, uint16(ival))
 
 		default:
 			err = fmt.Errorf("invalid write function code: %d", m.op.FuncCode)

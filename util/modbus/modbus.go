@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"slices"
 	"strconv"
 	"strings"
 	"sync"
@@ -346,10 +347,11 @@ func RS485FindDeviceOp(device *rs485.RS485, measurement meters.Measurement) (op 
 
 // Register contains the ModBus register configuration
 type Register struct {
-	Address uint16 // Length  uint16
-	Type    string
-	Decode  string
-	BitMask string
+	Address  uint16 // Length  uint16
+	Type     string
+	Decode   string // TODO deprecated, use Encoding
+	Encoding string
+	BitMask  string
 }
 
 func (r Register) Error() error {
@@ -359,10 +361,144 @@ func (r Register) Error() error {
 	if r.Type == "" {
 		return errors.New("type is required")
 	}
-	if r.Decode == "" {
-		return errors.New("decode is required")
+	if r.Decode == "" && r.Encoding == "" {
+		return errors.New("encoding is required")
+	}
+	if r.Decode != "" && r.Encoding != "" {
+		return errors.New("must not have decide when encoding is specified")
 	}
 	return nil
+}
+
+func (r Register) encoding() string {
+	if r.Encoding != "" {
+		return r.Encoding
+	}
+	return r.Decode
+}
+
+// Operation creates a modbus operation from a register definition
+func (r Register) Operation() (RegisterOperation, error) {
+	op := RegisterOperation{
+		Addr: r.Address,
+	}
+
+	switch strings.ToLower(r.Type) {
+	case "holding":
+		op.FuncCode = modbus.FuncCodeReadHoldingRegisters
+	case "input":
+		op.FuncCode = modbus.FuncCodeReadInputRegisters
+	case "coil":
+		op.FuncCode = modbus.FuncCodeReadCoils
+	case "writesingle", "writeholding":
+		op.FuncCode = modbus.FuncCodeWriteSingleRegister
+	case "writemultiple", "writeholdings":
+		op.FuncCode = modbus.FuncCodeWriteMultipleRegisters
+	case "writecoil":
+		op.FuncCode = modbus.FuncCodeWriteSingleCoil
+	default:
+		return RegisterOperation{}, fmt.Errorf("invalid register type: %s", r.Type)
+	}
+
+	if op.IsRead() {
+		switch strings.ToLower(r.encoding()) {
+		// 8 bit (coil)
+		case "bool8":
+			op.Decode = decodeBool8
+			op.Length = 1
+
+		// 16 bit
+		case "int16":
+			op.Decode = asFloat64(encoding.Int16)
+			op.Length = 1
+		case "int16nan":
+			op.Decode = decodeNaN16(asFloat64(encoding.Int16), 1<<15, 1<<15-1)
+			op.Length = 1
+		case "uint16":
+			op.Decode = asFloat64(encoding.Uint16)
+			op.Length = 1
+		case "uint16nan":
+			op.Decode = decodeNaN16(asFloat64(encoding.Uint16), 1<<16-1)
+			op.Length = 1
+		case "bool16":
+			mask, err := decodeMask(r.BitMask)
+			if err != nil {
+				return op, err
+			}
+			op.Decode = decodeBool16(mask)
+			op.Length = 1
+
+		// 32 bit
+		case "int32":
+			op.Decode = asFloat64(encoding.Int32)
+			op.Length = 2
+		case "int32nan":
+			op.Decode = decodeNaN32(asFloat64(encoding.Int32), 1<<31, 1<<31-1)
+			op.Length = 2
+		case "int32s":
+			op.Decode = asFloat64(encoding.Int32LswFirst)
+			op.Length = 2
+		case "uint32":
+			op.Decode = asFloat64(encoding.Uint32)
+			op.Length = 2
+		case "uint32s":
+			op.Decode = asFloat64(encoding.Uint32LswFirst)
+			op.Length = 2
+		case "uint32nan":
+			op.Decode = decodeNaN32(asFloat64(encoding.Uint32), 1<<32-1)
+			op.Length = 2
+		case "float32", "ieee754":
+			op.Decode = asFloat64(encoding.Float32)
+			op.Length = 2
+		case "float32s", "ieee754s":
+			op.Decode = asFloat64(encoding.Float32LswFirst)
+			op.Length = 2
+
+		// 64 bit
+		case "uint64":
+			op.Decode = asFloat64(encoding.Uint64)
+			op.Length = 4
+		case "uint64nan":
+			op.Decode = decodeNaN64(asFloat64(encoding.Uint64), 1<<64-1)
+			op.Length = 4
+		case "float64":
+			op.Decode = encoding.Float64
+			op.Length = 4
+
+		default:
+			return RegisterOperation{}, fmt.Errorf("invalid register decoding: %s", r.Decode)
+		}
+	} else {
+		switch strings.ToLower(r.encoding()) {
+		case "int32s", "uint32s", "float32s", "ieee754s":
+			op.Encode = func(v uint64) uint64 {
+				return v&0xFFFF<<16 | v&0xFFFF0000>>16
+			}
+
+		default:
+			op.Encode = func(v uint64) uint64 {
+				return v
+			}
+		}
+	}
+
+	return op, nil
+}
+
+type RegisterOperation struct {
+	FuncCode uint8
+	Addr     uint16
+	Length   uint16
+	Encode   func(uint64) uint64
+	Decode   func([]byte) float64
+}
+
+func (op RegisterOperation) IsRead() bool {
+	return !slices.Contains([]uint8{
+		modbus.FuncCodeWriteSingleRegister,
+		modbus.FuncCodeWriteMultipleRegisters,
+		modbus.FuncCodeWriteSingleCoil,
+	}, op.FuncCode)
 }
 
 // asFloat64 creates a function that returns numerics vales as float64
@@ -374,95 +510,6 @@ func asFloat64[T constraints.Signed | constraints.Unsigned | constraints.Float](
 		}
 		return res
 	}
-}
-
-// RegisterOperation creates a read operation from a register definition
-func RegisterOperation(r Register) (rs485.Operation, error) {
-	op := rs485.Operation{
-		OpCode:  r.Address,
-		ReadLen: 2,
-	}
-
-	switch strings.ToLower(r.Type) {
-	case "holding":
-		op.FuncCode = modbus.FuncCodeReadHoldingRegisters
-	case "input":
-		op.FuncCode = modbus.FuncCodeReadInputRegisters
-	case "coil":
-		op.FuncCode = modbus.FuncCodeReadCoils
-		r.Decode = "bool8"
-	case "writesingle", "writeholding":
-		op.FuncCode = modbus.FuncCodeWriteSingleRegister
-	case "writemultiple", "writeholdings":
-		op.FuncCode = modbus.FuncCodeWriteMultipleRegisters
-	case "writecoil":
-		op.FuncCode = modbus.FuncCodeWriteSingleCoil
-		r.Decode = "bool8"
-	default:
-		return rs485.Operation{}, fmt.Errorf("invalid register type: %s", r.Type)
-	}
-
-	switch strings.ToLower(r.Decode) {
-	// 8 bit (coil)
-	case "bool8":
-		op.Transform = decodeBool8
-		op.ReadLen = 1
-
-	// 16 bit
-	case "int16":
-		op.Transform = asFloat64(encoding.Int16)
-		op.ReadLen = 1
-	case "int16nan":
-		op.Transform = decodeNaN16(asFloat64(encoding.Int16), 1<<15, 1<<15-1)
-		op.ReadLen = 1
-	case "uint16":
-		op.Transform = asFloat64(encoding.Uint16)
-		op.ReadLen = 1
-	case "uint16nan":
-		op.Transform = decodeNaN16(asFloat64(encoding.Uint16), 1<<16-1)
-		op.ReadLen = 1
-	case "bool16":
-		mask, err := decodeMask(r.BitMask)
-		if err != nil {
-			return op, err
-		}
-		op.Transform = decodeBool16(mask)
-		op.ReadLen = 1
-
-	// 32 bit
-	case "int32":
-		op.Transform = asFloat64(encoding.Int32)
-	case "int32nan":
-		op.Transform = decodeNaN32(asFloat64(encoding.Int32), 1<<31, 1<<31-1)
-	case "int32s":
-		op.Transform = asFloat64(encoding.Int32LswFirst)
-	case "uint32":
-		op.Transform = asFloat64(encoding.Uint32)
-	case "uint32s":
-		op.Transform = asFloat64(encoding.Uint32LswFirst)
-	case "uint32nan":
-		op.Transform = decodeNaN32(asFloat64(encoding.Uint32), 1<<32-1)
-	case "float32", "ieee754":
-		op.Transform = asFloat64(encoding.Float32)
-	case "float32s", "ieee754s":
-		op.Transform = asFloat64(encoding.Float32LswFirst)
-
-	// 64 bit
-	case "uint64":
-		op.Transform = asFloat64(encoding.Uint64)
-		op.ReadLen = 4
-	case "uint64nan":
-		op.Transform = decodeNaN64(asFloat64(encoding.Uint64), 1<<64-1)
-		op.ReadLen = 4
-	case "float64":
-		op.Transform = encoding.Float64
-		op.ReadLen = 4
-
-	default:
-		return rs485.Operation{}, fmt.Errorf("invalid register decoding: %s", r.Decode)
-	}
-
-	return op, nil
 }
 
 // SunSpecOperation is a sunspec modbus operation
