@@ -485,6 +485,17 @@ func (r Register) Operation() (RegisterOperation, error) {
 	return op, nil
 }
 
+// asFloat64 creates a function that returns numerics vales as float64
+func asFloat64[T constraints.Signed | constraints.Unsigned | constraints.Float](f func([]byte) T) func([]byte) float64 {
+	return func(v []byte) float64 {
+		res := float64(f(v))
+		if math.IsNaN(res) || math.IsInf(res, 0) {
+			res = 0
+		}
+		return res
+	}
+}
+
 type RegisterOperation struct {
 	FuncCode uint8
 	Addr     uint16
@@ -499,17 +510,6 @@ func (op RegisterOperation) IsRead() bool {
 		modbus.FuncCodeWriteMultipleRegisters,
 		modbus.FuncCodeWriteSingleCoil,
 	}, op.FuncCode)
-}
-
-// asFloat64 creates a function that returns numerics vales as float64
-func asFloat64[T constraints.Signed | constraints.Unsigned | constraints.Float](f func([]byte) T) func([]byte) float64 {
-	return func(v []byte) float64 {
-		res := float64(f(v))
-		if math.IsNaN(res) || math.IsInf(res, 0) {
-			res = 0
-		}
-		return res
-	}
 }
 
 // SunSpecOperation is a sunspec modbus operation
