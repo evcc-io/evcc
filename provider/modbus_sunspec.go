@@ -6,17 +6,19 @@ import (
 	"math"
 	"time"
 
+	sunspec "github.com/andig/gosunspec"
+	"github.com/andig/gosunspec/typelabel"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/volkszaehler/mbmd/meters"
-	"github.com/volkszaehler/mbmd/meters/sunspec"
+	sunsdev "github.com/volkszaehler/mbmd/meters/sunspec"
 )
 
 // ModbusSunspec implements modbus RTU and TCP access
 type ModbusSunspec struct {
 	log    *util.Logger
 	conn   *modbus.Connection
-	device *sunspec.SunSpec
+	device *sunsdev.SunSpec
 	op     modbus.SunSpecOperation
 	scale  float64
 }
@@ -70,7 +72,7 @@ func NewModbusSunspecFromConfig(other map[string]interface{}) (Provider, error) 
 	}
 
 	// silence KOSTAL implementation errors
-	device := sunspec.NewDevice("sunspec", cc.SubDevice)
+	device := sunsdev.NewDevice("sunspec", cc.SubDevice)
 	if err := device.Initialize(conn); err != nil && !errors.Is(err, meters.ErrPartiallyOpened) {
 		return nil, err
 	}
@@ -132,14 +134,92 @@ func (m *ModbusSunspec) IntGetter() (func() (int64, error), error) {
 	}, err
 }
 
-// var _ SetFloatProvider = (*Modbus)(nil)
+func (m *ModbusSunspec) blockPoint() (block sunspec.Block, point sunspec.Point, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("panic: %v", r)
+		}
+	}()
 
-// // FloatSetter executes configured modbus write operation and implements SetFloatProvider
-// func (m *ModbusSunspec) FloatSetter(_ string) (func(float64) error, error) {
-// }
+	block, point, err = m.device.QueryPointAny(
+		m.conn,
+		m.op.Model,
+		m.op.Block,
+		m.op.Point,
+	)
+	if err != nil {
+		err = fmt.Errorf("model %d block %d point %s: %w", m.op.Model, m.op.Block, m.op.Point, err)
+	}
 
-// var _ SetIntProvider = (*Modbus)(nil)
+	return block, point, err
+}
 
-// // IntSetter executes configured modbus write operation and implements SetIntProvider
-// func (m *ModbusSunspec) IntSetter(_ string) (func(int64) error, error) {
-// }
+// TODO scale factors
+
+var _ SetFloatProvider = (*Modbus)(nil)
+
+// FloatSetter executes configured modbus write operation and implements SetFloatProvider
+func (m *ModbusSunspec) FloatSetter(_ string) (func(float64) error, error) {
+	block, point, err := m.blockPoint()
+	if err != nil {
+		return nil, err
+	}
+
+	return func(val float64) error {
+		defer func() {
+			if r := recover(); r != nil {
+				err = fmt.Errorf("panic: %v", r)
+			}
+		}()
+
+		val = val * m.scale
+		point.SetFloat32(float32(val))
+
+		return block.Write(m.op.Point)
+	}, nil
+}
+
+var _ SetIntProvider = (*Modbus)(nil)
+
+// IntSetter executes configured modbus write operation and implements SetIntProvider
+func (m *ModbusSunspec) IntSetter(_ string) (func(int64) error, error) {
+	block, point, err := m.blockPoint()
+	if err != nil {
+		return nil, err
+	}
+
+	typ := point.Type()
+
+	return func(val int64) error {
+		defer func() {
+			if r := recover(); r != nil {
+				err = fmt.Errorf("panic: %v", r)
+			}
+		}()
+
+		val = int64(float64(val) * m.scale)
+
+		switch typ {
+		case typelabel.Bitfield16:
+			point.SetBitfield16(sunspec.Bitfield16(val))
+		case typelabel.Bitfield32:
+			point.SetBitfield32(sunspec.Bitfield32(val))
+		case typelabel.Enum16:
+			point.SetEnum16(sunspec.Enum16(val))
+		case typelabel.Enum32:
+			point.SetEnum32(sunspec.Enum32(val))
+		case typelabel.Int16:
+			point.SetInt16(int16(val))
+		case typelabel.Int32:
+			point.SetInt32(int32(val))
+		case typelabel.Uint16:
+			point.SetUint16(uint16(val))
+		case typelabel.Uint32:
+			point.SetUint32(uint32(val))
+		default:
+			return fmt.Errorf("invalid point type: %s", typ)
+		}
+
+		return block.Write(m.op.Point)
+	}, nil
+}
