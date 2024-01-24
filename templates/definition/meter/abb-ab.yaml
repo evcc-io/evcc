@@ -9,9 +9,9 @@ params:
   - name: modbus
     choice: ["rs485"]
 render: |
-  type: modbus
-  model: abb
+  type: mbmd
   {{- include "modbus" . }}
+  model: abb
   power: Power
   energy: Import
   currents:
