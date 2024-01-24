@@ -28,7 +28,7 @@ example = "Exemple"
 optional = "optionnel"
 
 [config.main]
-addVehicle = "Ajouter un véhicule"
+addVehicle = "Ajouter le véhicule"
 edit = "éditer"
 title = "Configuration"
 vehicles = "Mes véhicules"
@@ -43,14 +43,14 @@ validate = "valider"
 
 [config.vehicle]
 cancel = "Annuler"
-delete = "Supprimer un véhicule"
+delete = "Supprimer le véhicule"
 generic = "Autres intégrations"
 offline = "Véhicule générique"
 online = "Véhicules avec API en ligne"
 save = "Enregistrer"
 scooter = "Scooter"
 template = "Fabricant"
-titleAdd = "Ajouter un véhicule"
+titleAdd = "Ajouter le véhicule"
 titleEdit = "Modifier le véhicule"
 validateSave = "Valider & enregistrer"
 
