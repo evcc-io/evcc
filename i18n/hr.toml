@@ -441,3 +441,9 @@ test = "Test"
 [main.loadpointSettings.limitSoc]
 label = "Zadano ograničenje"
 description = "Ograničenje napajanja koje se koristi kada je ovo vozilo povezano."
+
+[main.heatingStatus]
+charging = "Grijanje …"
+cheapEnergyCharging = "Grijanje s jeftinom energijom: {price} (granica {limit})"
+cleanEnergyCharging = "Grijanje sa čistom energijom: {co2} (granica {limit})"
+waitForVehicle = "Spremno. Čeka se na grijač …"
