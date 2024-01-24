@@ -398,7 +398,7 @@ allVehicles = "visi automobiliai"
 filter = "Filtruoti"
 
 [settings]
-title = "Nustatymai"
+title = "Bendrieji Nustatymai"
 
 [settings.gridDetails]
 co2 = "CO₂"

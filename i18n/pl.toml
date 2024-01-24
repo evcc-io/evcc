@@ -394,7 +394,7 @@ allVehicles = "wszystkie pojazdy"
 filter = "Filtrować"
 
 [settings]
-title = "Ustawienia"
+title = "Ustawienia główne"
 
 [settings.gridDetails]
 co2 = "CO₂"
