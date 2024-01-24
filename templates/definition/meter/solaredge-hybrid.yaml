@@ -82,7 +82,7 @@ render: |
           register:
             address: 0xE00B # StorageRemoteCtrl_CommandTimeout
             type: writemultiple
-            decode: uint32
+            encoding: uint32s
     - source: map
       values:
         1: 7 # normal
@@ -95,7 +95,7 @@ render: |
         register:
           address: 0xE00D # StorageRemoteCtrl_CommandMode
           type: writesingle
-          decode: uint16
+          encoding: uint16
   {{- if .capacity }}
   capacity: {{ .capacity }} # kWh
   {{- end }}
