@@ -41,7 +41,7 @@ func NewTeslaCommandFromConfig(other map[string]interface{}) (api.Vehicle, error
 		Timeout time.Duration
 		Cache   time.Duration
 	}{
-		Timeout: 10 * time.Second,
+		Timeout: request.Timeout,
 		Cache:   interval,
 	}
 
@@ -49,20 +49,18 @@ func NewTeslaCommandFromConfig(other map[string]interface{}) (api.Vehicle, error
 		return nil, err
 	}
 
-	if err := cc.Tokens.Error(); err != nil {
+	token, err := cc.Tokens.Token()
+	if err != nil {
 		return nil, err
 	}
 
-	log := util.NewLogger("tesla-command").Redact(vc.OAuth2Config.ClientID, vc.OAuth2Config.ClientSecret)
+	log := util.NewLogger("tesla-command").Redact(
+		cc.Tokens.Access, cc.Tokens.Refresh,
+		vc.OAuth2Config.ClientID, vc.OAuth2Config.ClientSecret,
+	)
 
-	client := request.NewClient(log)
-
-	ctx := context.WithValue(context.Background(), oauth2.HTTPClient, client)
-	ts := vc.OAuth2Config.TokenSource(ctx, &oauth2.Token{
-		AccessToken:  cc.Tokens.Access,
-		RefreshToken: cc.Tokens.Refresh,
-		Expiry:       time.Now(),
-	})
+	ctx := context.WithValue(context.Background(), oauth2.HTTPClient, request.NewClient(log))
+	ts := vc.OAuth2Config.TokenSource(ctx, token)
 
 	identity, err := vc.NewIdentity(log, ts)
 	if err != nil {
