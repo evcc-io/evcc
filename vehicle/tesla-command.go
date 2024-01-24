@@ -53,7 +53,8 @@ func NewTeslaCommandFromConfig(other map[string]interface{}) (api.Vehicle, error
 		return nil, err
 	}
 
-	log := util.NewLogger("tesla-vc")
+	log := util.NewLogger("tesla-command").Redact(vc.OAuth2Config.ClientID, vc.OAuth2Config.ClientSecret)
+
 	client := request.NewClient(log)
 
 	ctx := context.WithValue(context.Background(), oauth2.HTTPClient, client)
