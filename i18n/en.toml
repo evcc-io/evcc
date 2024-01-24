@@ -322,6 +322,12 @@ unknown = ""
 vehicleTargetReached = "Vehicle limit {soc}% reached."
 waitForVehicle = "Ready. Waiting for vehicle…"
 
+[main.heatingStatus]
+charging = "Heating…"
+cheapEnergyCharging = "Heating with cheap energy: {price} (limit {limit})"
+cleanEnergyCharging = "Heating with clean energy: {co2} (limit {limit})"
+waitForVehicle = "Ready. Waiting for heater…"
+
 [notifications]
 dismissAll = "Dismiss all"
 modalTitle = "Notifications"
