@@ -188,6 +188,12 @@ pvExport = "Grid export"
 pvProduction = "Production"
 selfConsumption = "Self-consumption"
 
+[main.heatingStatus]
+charging = "Heating…"
+cheapEnergyCharging = "Heating with cheap energy: {price} (limit {limit})"
+cleanEnergyCharging = "Heating with clean energy: {co2} (limit {limit})"
+waitForVehicle = "Ready. Waiting for heater…"
+
 [main.loadpoint]
 avgPrice = "⌀ Price"
 charged = "Charged"
@@ -321,12 +327,6 @@ targetChargeWaitForVehicle = "Target charge ready. Waiting for vehicle…"
 unknown = ""
 vehicleTargetReached = "Vehicle limit {soc}% reached."
 waitForVehicle = "Ready. Waiting for vehicle…"
-
-[main.heatingStatus]
-charging = "Heating…"
-cheapEnergyCharging = "Heating with cheap energy: {price} (limit {limit})"
-cleanEnergyCharging = "Heating with clean energy: {co2} (limit {limit})"
-waitForVehicle = "Ready. Waiting for heater…"
 
 [notifications]
 dismissAll = "Dismiss all"

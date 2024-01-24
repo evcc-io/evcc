@@ -191,6 +191,12 @@ pvExport = "Einspeisung"
 pvProduction = "Erzeugung"
 selfConsumption = "Eigenverbrauch"
 
+[main.heatingStatus]
+charging = "Heize …"
+cheapEnergyCharging = "Heize mit günstiger Energie: {price} (Grenze {limit})"
+cleanEnergyCharging = "Heize mit sauberer Energie: {co2} (Grenze {limit})"
+waitForVehicle = "Bereit. Warte auf Heizung …"
+
 [main.loadpoint]
 avgPrice = "⌀ Preis"
 charged = "Geladen"
@@ -324,12 +330,6 @@ targetChargeWaitForVehicle = "Zielladen bereit. Warte auf Fahrzeug …"
 unknown = ""
 vehicleTargetReached = "Fahrzeuglimit {soc}% erreicht."
 waitForVehicle = "Ladebereit. Warte auf Fahrzeug …"
-
-[main.heatingStatus]
-charging = "Heize …"
-cheapEnergyCharging = "Heize mit günstiger Energie: {price} (Grenze {limit})"
-cleanEnergyCharging = "Heize mit sauberer Energie: {co2} (Grenze {limit})"
-waitForVehicle = "Bereit. Warte auf Heizung …"
 
 [notifications]
 dismissAll = "Meldungen entfernen"
