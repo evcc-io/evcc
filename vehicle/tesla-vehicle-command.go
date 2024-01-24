@@ -30,9 +30,7 @@ func init() {
 	}
 }
 
-const (
-	privateKeyFile = "tesla-privatekey.pem"
-)
+// const privateKeyFile = "tesla-privatekey.pem"
 
 // NewTeslaCommandFromConfig creates a new vehicle
 func NewTeslaCommandFromConfig(other map[string]interface{}) (api.Vehicle, error) {
