@@ -3,6 +3,7 @@
 </template>
 
 <script>
+import { DEFAULT_LOCALE } from "../i18n";
 import formatter from "../mixins/formatter";
 import { CO2_TYPE } from "../units";
 
@@ -16,6 +17,7 @@ export default {
 		enabled: Boolean,
 		connected: Boolean,
 		charging: Boolean,
+		heating: Boolean,
 		effectivePlanTime: String,
 		planProjectedStart: String,
 		planActive: Boolean,
@@ -51,6 +53,13 @@ export default {
 		},
 		message: function () {
 			const t = (key, data) => {
+				if (this.heating) {
+					// check for special heating status translation
+					const name = `main.heatingStatus.${key}`;
+					if (this.$te(name, DEFAULT_LOCALE)) {
+						return this.$t(name, data);
+					}
+				}
 				return this.$t(`main.vehicleStatus.${key}`, data);
 			};
 

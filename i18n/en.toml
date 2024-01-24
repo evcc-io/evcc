@@ -188,6 +188,12 @@ pvExport = "Grid export"
 pvProduction = "Production"
 selfConsumption = "Self-consumption"
 
+[main.heatingStatus]
+charging = "Heating…"
+cheapEnergyCharging = "Heating with cheap energy: {price} (limit {limit})"
+cleanEnergyCharging = "Heating with clean energy: {co2} (limit {limit})"
+waitForVehicle = "Ready. Waiting for heater…"
+
 [main.loadpoint]
 avgPrice = "⌀ Price"
 charged = "Charged"
