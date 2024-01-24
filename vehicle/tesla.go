@@ -197,13 +197,14 @@ func (v *Tesla) TargetSoc() (float64, error) {
 
 var _ api.CurrentController = (*Tesla)(nil)
 
-// StartCharge implements the api.VehicleChargeController interface
+// MaxCurrent implements the api.CurrentLimiter interface
 func (v *Tesla) MaxCurrent(current int64) error {
 	return v.apiError(v.vehicle.SetChargingAmps(int(current)))
 }
 
 var _ api.Resurrector = (*Tesla)(nil)
 
+// WakeUp implements the api.Resurrector interface
 func (v *Tesla) WakeUp() error {
 	_, err := v.vehicle.Wakeup()
 	return v.apiError(err)
