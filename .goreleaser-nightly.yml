@@ -26,10 +26,6 @@ builds:
       - goos: windows
         goarch: arm64
 
-dockers:
-  - build_flag_templates:
-      - "--build-arg=TESLA_CLIENT_ID={{ .Env.TESLA_CLIENT_ID }}"
-
 archives:
   - builds:
       - evcc
