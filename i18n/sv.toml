@@ -13,7 +13,7 @@ legendTitle = "Hur ska solenergin användas?"
 legendTopAutostart = "startar automatiskt"
 legendTopName = "laddning med batteristöd"
 legendTopSubline = "utan avbrott"
-modalTitle = "Batteriinställningar"
+modalTitle = "Batteri inställningar"
 
 [batterySettings.bufferStart]
 full = "när det är nästan fullt"
@@ -140,9 +140,9 @@ about = "Om"
 blog = "Blogg"
 docs = "Dokumentation"
 github = "GitHub"
-login = "Fordonsinloggningar"
+login = "Fordons inloggningar"
 needHelp = "Behöver du hjälp?"
-sessions = "Laddningssessioner"
+sessions = "Laddnings sessioner"
 settings = "Inställningar"
 
 [help]
@@ -391,7 +391,7 @@ allVehicles = "alla fordon"
 filter = "Filter"
 
 [settings]
-title = "Inställningar"
+title = "Allmänna inställningar"
 
 [settings.gridDetails]
 co2 = "CO₂"
