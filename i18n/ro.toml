@@ -12,6 +12,7 @@ legendTopAutostart = "porneste automat"
 legendTopName = "Incarcare ajutata de baterie"
 legendTopSubline = "fara intreruperi"
 modalTitle = "Setari baterie"
+control = Controlul bateriei
 
 [batterySettings.bufferStart]
 full = "cand este aproape plin"
@@ -335,3 +336,19 @@ title = "Eroare la pornire încărcare"
 cancel = "Anulați"
 template = "Producător"
 test = "Test"
+
+
+[config.validation]
+failed = esuat
+label = Stare
+success = reuşit
+running = validez...
+
+[config.form]
+example = Exemplu
+optional = optional
+
+[config.main]
+title = Configuratie
+vehicles = Vehiculele mele
+addVehicle = Adauga vehicul
