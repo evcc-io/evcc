@@ -69,6 +69,11 @@ func NewTeslaCommandFromConfig(other map[string]interface{}) (api.Vehicle, error
 
 	api := vc.NewAPI(log, identity, cc.Timeout)
 
+	// validate base url
+	if _, err := api.Region(); err != nil {
+		return nil, err
+	}
+
 	vehicle, err := ensureVehicleEx(
 		cc.VIN, api.Vehicles,
 		func(v *vc.Vehicle) string {
