@@ -35,15 +35,7 @@ export const LOCALES = {
 };
 
 export const DEFAULT_LOCALE = "en";
-
-function getBrowserLocale() {
-  const navigatorLocale =
-    navigator.languages !== undefined ? navigator.languages[0] : navigator.language;
-  if (!navigatorLocale) {
-    return undefined;
-  }
-  return navigatorLocale.trim().split(/-|_/)[0];
-}
+const DEFAULT_BROWSER_LOCALE = document.querySelector("html").getAttribute("lang");
 
 export function getLocalePreference() {
   return settings.locale;
@@ -51,7 +43,7 @@ export function getLocalePreference() {
 
 export function removeLocalePreference(i18n) {
   settings.locale = null;
-  setI18nLanguage(i18n, getBrowserLocale());
+  setI18nLanguage(i18n, DEFAULT_BROWSER_LOCALE);
   ensureCurrentLocaleMessages(i18n);
 }
 
@@ -66,7 +58,7 @@ export function setLocalePreference(i18n, locale) {
 }
 
 function getLocale() {
-  return getLocalePreference() || getBrowserLocale();
+  return getLocalePreference() || DEFAULT_BROWSER_LOCALE;
 }
 
 export default function setupI18n() {
