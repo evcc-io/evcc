@@ -24,45 +24,44 @@ if [ -f /tmp/oldevcc ] && [ $INTERACTIVE -eq 1 ]; then
     checkConfigOutput=$(/usr/bin/evcc checkconfig 2>&1 || true)
 	oldevccversion=$(/tmp/oldevcc -v)
 	newevccversion=$(/usr/bin/evcc -v)
-    if echo "$checkConfigOutput" | grep -q "config valid"; then
- 			
-			if [ "$oldevccversion" = "$newevccversion" ]; then
-				echo "--------------------------------------------------------------------------------"
-				echo "Old evcc version detected. To apply the new version, please reinstall evcc. (e.g. apt-get reinstall evcc)"
-				echo "--------------------------------------------------------------------------------"
-			else 
+	if echo "$checkConfigOutput" | grep -q "config valid"; then	
+		if [ "$oldevccversion" = "$newevccversion" ]; then
+			echo "--------------------------------------------------------------------------------"
+			echo "Old evcc version detected. To apply the new version, please reinstall evcc. (e.g. apt-get reinstall evcc)"
+			echo "--------------------------------------------------------------------------------"
+		else 
 			rm -rf /tmp/oldevcc
-			fi
+		fi
 	else
-			if [ "$oldevccversion" = "$newevccversion" ]; then
-				echo "--------------------------------------------------------------------------------"
-				echo "Old evcc version detected. To apply the new version, please reinstall evcc. (e.g. apt-get reinstall evcc)"
-				echo "--------------------------------------------------------------------------------"
-			else 
-				echo "--------------------------------------------------------------------------------"
-				echo "ERROR: your evcc configuration is not compatible with the new version. Please consider reading the release notes: https://github.com/evcc-io/evcc/releases"
-				echo "checkconfig Output:" 
-				echo "$checkConfigOutput"
-				echo "--------------------------------------------------------------------------------"
-        
-		while true; do
-			echo "Do you want to keep your old (working) evcc version? [Y/n]: "
-			read choice
-			case "$choice" in
-				n*|N*|"")
-					echo "We will keep the new version. Your evcc configuration stays untouched!"
-					break
-					;;
-				y*|Y*)
-					echo "The old version will be restored. Your evcc configuration stays untouched! Consider reinstalling the new version after fixing your configuration. (e.g. apt-get reinstall evcc)"
-					cp -r /tmp/oldevcc /usr/bin/evcc
-					failInstallation=1
-					break
-					;;
-				*)
-					;;
-			esac
-	    done
+		if [ "$oldevccversion" = "$newevccversion" ]; then
+			echo "--------------------------------------------------------------------------------"
+			echo "Old evcc version detected. To apply the new version, please reinstall evcc. (e.g. apt-get reinstall evcc)"
+			echo "--------------------------------------------------------------------------------"
+		else 
+			echo "--------------------------------------------------------------------------------"
+			echo "ERROR: your evcc configuration is not compatible with the new version. Please consider reading the release notes: https://github.com/evcc-io/evcc/releases"
+			echo "checkconfig Output:" 
+			echo "$checkConfigOutput"
+			echo "--------------------------------------------------------------------------------"
+    
+			while true; do
+				echo "Do you want to keep your old (working) evcc version? [Y/n]: "
+				read choice
+				case "$choice" in
+					n*|N*|"")
+						echo "We will keep the new version. Your evcc configuration stays untouched!"
+						break
+						;;
+					y*|Y*)
+						echo "The old version will be restored. Your evcc configuration stays untouched! Consider reinstalling the new version after fixing your configuration. (e.g. 	apt-get reinstall evcc)"
+						cp -r /tmp/oldevcc /usr/bin/evcc
+						failInstallation=1
+						break
+						;;
+					*)
+						;;
+				esac
+	   		done
 		fi
 	fi
 fi 
