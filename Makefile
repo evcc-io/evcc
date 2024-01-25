@@ -7,6 +7,8 @@ ifeq ($(RELEASE),1)
     COMMIT :=
 endif
 VERSION := $(if $(TAG_NAME),$(TAG_NAME),$(SHA))
+
+VERSION :=0.123.10-next
 BUILD_DATE := $(shell date -u '+%Y-%m-%d_%H:%M:%S')
 BUILD_TAGS := -tags=release
 LD_FLAGS := -X github.com/evcc-io/evcc/server.Version=$(VERSION) -X github.com/evcc-io/evcc/server.Commit=$(COMMIT) -s -w
@@ -26,6 +28,9 @@ PACKAGES = ./release
 # asn1-patch
 GOROOT := $(shell go env GOROOT)
 CURRDIR := $(shell pwd)
+
+deb::
+	goreleaser --snapshot --skip-publish --rm-dist --release-notes "Dummy release notes"
 
 default:: ui build
 
