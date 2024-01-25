@@ -9,12 +9,12 @@ import (
 	"github.com/evcc-io/evcc/util"
 )
 
-type goodweServer struct {
+type GoodweServer struct {
 	conn      *net.UDPConn
-	inverters map[string]Inverter
+	inverters map[string]GoodweInverter
 }
 
-type goodweInverter struct {
+type GoodweInverter struct {
 	IP           string
 	pvPower      float64
 	netPower     float64
@@ -22,7 +22,7 @@ type goodweInverter struct {
 	soc          float64
 }
 
-var goodweServer *Server
+var goodweServer *GoodweServer
 
 type GoodWeWiFiMeter struct {
 	usage string
@@ -55,11 +55,11 @@ func NewGoodWeWiFiMeter(uri string, usage string) (api.Meter, error) {
 		URI:   uri,
 	}
 
-	server, err := NewServer()
+	goodweServer, err := NewServer()
 	if err != nil {
 		return nil, err
 	}
-	server.addInverter(uri)
+	goodweServer.addInverter(uri)
 
 	return meter, nil
 }
@@ -67,54 +67,54 @@ func NewGoodWeWiFiMeter(uri string, usage string) (api.Meter, error) {
 func (m *GoodWeWiFiMeter) CurrentPower() (float64, error) {
 	switch m.usage {
 	case "grid":
-		return server.inverters[m.URI].netPower, nil
+		return goodweServer.inverters[m.URI].netPower, nil
 	case "pv":
-		return server.inverters[m.URI].pvPower, nil
+		return goodweServer.inverters[m.URI].pvPower, nil
 	case "battery":
-		return server.inverters[m.URI].batteryPower, nil
+		return goodweServer.inverters[m.URI].batteryPower, nil
 	}
 	return 0, api.ErrNotAvailable
 }
 
-func NewServer() (*Server, error) {
-	if server == nil {
-		server = &Server{
-			inverters: make(map[string]Inverter),
+func NewServer() (*GoodweServer, error) {
+	if goodweServer == nil {
+		goodweServer = &GoodweServer{
+			inverters: make(map[string]GoodweInverter),
 		}
 		addr, err := net.ResolveUDPAddr("udp", "0.0.0.0:8899")
 		if err != nil {
 			return nil, err
 		}
 
-		server.conn, err = net.ListenUDP("udp", addr)
+		goodweServer.conn, err = net.ListenUDP("udp", addr)
 
 		if err != nil {
 			return nil, err
 		}
 
-		go server.listen()
+		go goodweServer.listen()
 
-		go server.readData()
+		go goodweServer.readData()
 
-		return server, err
+		return goodweServer, err
 	} else {
-		return server, nil
+		return goodweServer, nil
 	}
 }
 
-func (m *Server) addInverter(ip string) {
-	server.inverters[ip] = Inverter{IP: ip}
+func (m *GoodweServer) addInverter(ip string) {
+	goodweServer.inverters[ip] = GoodweInverter{IP: ip}
 }
 
-func (m *Server) readData() {
-	for _, inverter := range server.inverters {
+func (m *GoodweServer) readData() {
+	for _, inverter := range goodweServer.inverters {
 		addr, err := net.ResolveUDPAddr("udp", inverter.IP+":8899")
 
-		server.conn.WriteToUDP([]byte{0xF7, 0x03, 0x89, 0x1C, 0x00, 0x7D, 0x7A, 0xE7}, addr)
+		goodweServer.conn.WriteToUDP([]byte{0xF7, 0x03, 0x89, 0x1C, 0x00, 0x7D, 0x7A, 0xE7}, addr)
 
 		time.Sleep(5 * time.Second)
 
-		server.conn.WriteToUDP([]byte{0xF7, 0x03, 0x90, 0x88, 0x00, 0x0D, 0x3D, 0xB3}, addr)
+		goodweServer.conn.WriteToUDP([]byte{0xF7, 0x03, 0x90, 0x88, 0x00, 0x0D, 0x3D, 0xB3}, addr)
 
 		if err != nil {
 			return
@@ -123,7 +123,7 @@ func (m *Server) readData() {
 	m.readData()
 }
 
-func (m *Server) listen() {
+func (m *GoodweServer) listen() {
 	for {
 		buf := make([]byte, 1024)
 		_, addr, err := m.conn.ReadFromUDP(buf)
@@ -134,7 +134,7 @@ func (m *Server) listen() {
 		ip := addr.IP.String()
 
 		if buf[4] == 250 {
-			vPv1 := float64(binary.BigEndian.Uint16(buf[11:])) * 0.1
+			vPv1 := float64(int16(binary.BigEndian.Uint16(buf[11:]))) * 0.1
 			vPv2 := float64(int16(binary.BigEndian.Uint16(buf[19:]))) * 0.1
 			iPv1 := float64(int16(binary.BigEndian.Uint16(buf[13:]))) * 0.1
 			iPv2 := float64(int16(binary.BigEndian.Uint16(buf[21:]))) * 0.1
@@ -143,16 +143,16 @@ func (m *Server) listen() {
 
 			pvPower := vPv1*iPv1 + vPv2*iPv2
 
-			inverter := server.inverters[ip]
+			inverter := goodweServer.inverters[ip]
 			inverter.pvPower = pvPower
 			inverter.batteryPower = vBatt * iBatt
-			inverter.netPower = float64(int32(binary.BigEndian.Uint32(buf[83:])))
+			inverter.netPower = float64(int32(binary.BigEndian.Uint32(buf[83:]))) * -1
 
-			server.inverters[ip] = inverter
+			goodweServer.inverters[ip] = inverter
 		}
 
 		if buf[4] == 26 {
-			inverter := server.inverters[ip]
+			inverter := goodweServer.inverters[ip]
 			inverter.soc = float64(int16(binary.BigEndian.Uint16(buf[19:])))
 		}
 	}

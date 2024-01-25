@@ -89,6 +89,8 @@ EXPOSE 7090/udp
 EXPOSE 8887/tcp
 # SMA Energy Manager
 EXPOSE 9522/udp
+# GoodWe Wifi Inverter
+EXPOSE 8899/udp
 
 HEALTHCHECK --interval=60s --start-period=60s --timeout=30s --retries=3 CMD [ "evcc", "health" ]
 
