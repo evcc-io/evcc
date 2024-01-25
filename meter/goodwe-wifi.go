@@ -9,12 +9,12 @@ import (
 	"github.com/evcc-io/evcc/util"
 )
 
-type Server struct {
+type goodweServer struct {
 	conn      *net.UDPConn
 	inverters map[string]Inverter
 }
 
-type Inverter struct {
+type goodweInverter struct {
 	IP           string
 	pvPower      float64
 	netPower     float64
@@ -22,7 +22,7 @@ type Inverter struct {
 	soc          float64
 }
 
-var server *Server
+var goodweServer *Server
 
 type GoodWeWiFiMeter struct {
 	usage string
@@ -73,7 +73,7 @@ func (m *GoodWeWiFiMeter) CurrentPower() (float64, error) {
 	case "battery":
 		return server.inverters[m.URI].batteryPower, nil
 	}
-	return server.inverters[m.URI].pvPower, api.ErrNotAvailable
+	return 0, api.ErrNotAvailable
 }
 
 func NewServer() (*Server, error) {
@@ -134,7 +134,7 @@ func (m *Server) listen() {
 		ip := addr.IP.String()
 
 		if buf[4] == 250 {
-			vPv1 := float64(int16(binary.BigEndian.Uint16(buf[11:]))) * 0.1
+			vPv1 := float64(binary.BigEndian.Uint16(buf[11:])) * 0.1
 			vPv2 := float64(int16(binary.BigEndian.Uint16(buf[19:]))) * 0.1
 			iPv1 := float64(int16(binary.BigEndian.Uint16(buf[13:]))) * 0.1
 			iPv2 := float64(int16(binary.BigEndian.Uint16(buf[21:]))) * 0.1
