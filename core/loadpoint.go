@@ -272,14 +272,15 @@ func NewLoadpoint(log *util.Logger, settings *Settings) *Loadpoint {
 	bus := evbus.New()
 
 	lp := &Loadpoint{
-		log:        log,      // logger
-		settings:   settings, // settings
-		clock:      clock,    // mockable time
-		bus:        bus,      // event bus
-		mode:       api.ModeOff,
-		status:     api.StatusNone,
-		minCurrent: 6,  // A
-		maxCurrent: 16, // A
+		log:              log,      // logger
+		settings:         settings, // settings
+		clock:            clock,    // mockable time
+		bus:              bus,      // event bus
+		mode:             api.ModeOff,
+		status:           api.StatusNone,
+		minCurrent:       6,  // A
+		maxCurrent:       16, // A
+		configuredPhases: 3,
 		Soc: SocConfig{
 			Poll: PollConfig{
 				Interval: pollInterval,
@@ -303,7 +304,7 @@ func (lp *Loadpoint) restoreSettings() {
 	if v, err := lp.settings.String(keys.Mode); err == nil && v != "" {
 		lp.setMode(api.ChargeMode(v))
 	}
-	if v, err := lp.settings.Int(keys.PhasesConfigured); err == nil && v > 0 {
+	if v, err := lp.settings.Int(keys.PhasesConfigured); err == nil {
 		lp.setConfiguredPhases(int(v))
 	}
 	if v, err := lp.settings.Float(keys.MinCurrent); err == nil && v > 0 {
