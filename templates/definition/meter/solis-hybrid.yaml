@@ -95,12 +95,25 @@ render: |
   {{- end }}
   {{- if eq .usage "battery" }}
   power:
-    source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      type: input
-      address: 33149 # Battery power
-      decode: int32    
+    source: calc
+    mul:
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        type: input
+        address: 33149 # Battery power
+        decode: uint32
+    - source: calc
+      add:
+      - source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register:
+          type: input
+          address: 33135 # Battery current direction
+          decode: uint16 # 0：charge, 1：discharge
+        scale: 2
+      - source: const
+        value: -1
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
