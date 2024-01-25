@@ -9,12 +9,12 @@ import (
 	"github.com/evcc-io/evcc/util"
 )
 
-type GoodweServer struct {
+type goodweServer struct {
 	conn      *net.UDPConn
-	inverters map[string]GoodweInverter
+	inverters map[string]goodweInverter
 }
 
-type GoodweInverter struct {
+type goodweInverter struct {
 	IP           string
 	pvPower      float64
 	netPower     float64
@@ -22,9 +22,9 @@ type GoodweInverter struct {
 	soc          float64
 }
 
-var goodweServer *GoodweServer
+var server *goodweServer
 
-type GoodWeWiFiMeter struct {
+type goodWeWiFiMeter struct {
 	usage string
 	URI   string
 }
@@ -50,71 +50,71 @@ func NewGoodWeWifiFromConfig(other map[string]interface{}) (api.Meter, error) {
 }
 
 func NewGoodWeWiFiMeter(uri string, usage string) (api.Meter, error) {
-	meter := &GoodWeWiFiMeter{
+	meter := &goodWeWiFiMeter{
 		usage: usage,
 		URI:   uri,
 	}
 
-	goodweServer, err := NewServer()
+	server, err := NewServer()
 	if err != nil {
 		return nil, err
 	}
-	goodweServer.addInverter(uri)
+	server.addInverter(uri)
 
 	return meter, nil
 }
 
-func (m *GoodWeWiFiMeter) CurrentPower() (float64, error) {
+func (m *goodWeWiFiMeter) CurrentPower() (float64, error) {
 	switch m.usage {
 	case "grid":
-		return goodweServer.inverters[m.URI].netPower, nil
+		return server.inverters[m.URI].netPower, nil
 	case "pv":
-		return goodweServer.inverters[m.URI].pvPower, nil
+		return server.inverters[m.URI].pvPower, nil
 	case "battery":
-		return goodweServer.inverters[m.URI].batteryPower, nil
+		return server.inverters[m.URI].batteryPower, nil
 	}
 	return 0, api.ErrNotAvailable
 }
 
-func NewServer() (*GoodweServer, error) {
-	if goodweServer == nil {
-		goodweServer = &GoodweServer{
-			inverters: make(map[string]GoodweInverter),
+func NewServer() (*goodweServer, error) {
+	if server == nil {
+		server = &goodweServer{
+			inverters: make(map[string]goodweInverter),
 		}
 		addr, err := net.ResolveUDPAddr("udp", "0.0.0.0:8899")
 		if err != nil {
 			return nil, err
 		}
 
-		goodweServer.conn, err = net.ListenUDP("udp", addr)
+		server.conn, err = net.ListenUDP("udp", addr)
 
 		if err != nil {
 			return nil, err
 		}
 
-		go goodweServer.listen()
+		go server.listen()
 
-		go goodweServer.readData()
+		go server.readData()
 
-		return goodweServer, err
+		return server, err
 	} else {
-		return goodweServer, nil
+		return server, nil
 	}
 }
 
-func (m *GoodweServer) addInverter(ip string) {
-	goodweServer.inverters[ip] = GoodweInverter{IP: ip}
+func (m *goodweServer) addInverter(ip string) {
+	server.inverters[ip] = goodweInverter{IP: ip}
 }
 
-func (m *GoodweServer) readData() {
-	for _, inverter := range goodweServer.inverters {
+func (m *goodweServer) readData() {
+	for _, inverter := range server.inverters {
 		addr, err := net.ResolveUDPAddr("udp", inverter.IP+":8899")
 
-		goodweServer.conn.WriteToUDP([]byte{0xF7, 0x03, 0x89, 0x1C, 0x00, 0x7D, 0x7A, 0xE7}, addr)
+		server.conn.WriteToUDP([]byte{0xF7, 0x03, 0x89, 0x1C, 0x00, 0x7D, 0x7A, 0xE7}, addr)
 
 		time.Sleep(5 * time.Second)
 
-		goodweServer.conn.WriteToUDP([]byte{0xF7, 0x03, 0x90, 0x88, 0x00, 0x0D, 0x3D, 0xB3}, addr)
+		server.conn.WriteToUDP([]byte{0xF7, 0x03, 0x90, 0x88, 0x00, 0x0D, 0x3D, 0xB3}, addr)
 
 		if err != nil {
 			return
@@ -123,7 +123,7 @@ func (m *GoodweServer) readData() {
 	m.readData()
 }
 
-func (m *GoodweServer) listen() {
+func (m *goodweServer) listen() {
 	for {
 		buf := make([]byte, 1024)
 		_, addr, err := m.conn.ReadFromUDP(buf)
@@ -143,16 +143,16 @@ func (m *GoodweServer) listen() {
 
 			pvPower := vPv1*iPv1 + vPv2*iPv2
 
-			inverter := goodweServer.inverters[ip]
+			inverter := server.inverters[ip]
 			inverter.pvPower = pvPower
 			inverter.batteryPower = vBatt * iBatt
 			inverter.netPower = float64(int32(binary.BigEndian.Uint32(buf[83:]))) * -1
 
-			goodweServer.inverters[ip] = inverter
+			server.inverters[ip] = inverter
 		}
 
 		if buf[4] == 26 {
-			inverter := goodweServer.inverters[ip]
+			inverter := server.inverters[ip]
 			inverter.soc = float64(int16(binary.BigEndian.Uint16(buf[19:])))
 		}
 	}
