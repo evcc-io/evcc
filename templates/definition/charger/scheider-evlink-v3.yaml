@@ -1,8 +1,9 @@
-template: schneider-evlink
+template: schneider-evlink-v3
+covers: ["schneider-evlink"]
 products:
   - brand: Schneider
     description:
-      generic: EVlink Wallbox, EVlink Parkplatz
+      generic: EVlink Pro
 requirements:
   evcc: ["sponsorship"]
 params:
@@ -10,5 +11,5 @@ params:
     choice: ["tcpip"]
     id: 255
 render: |
-  type: schneider
+  type: schneider-v3
   {{- include "modbus" . }}
