@@ -2,7 +2,6 @@ package meter
 
 import (
 	"encoding/binary"
-	"fmt"
 	"net"
 	"time"
 
@@ -86,7 +85,6 @@ func (m *goodWeWiFiMeter) CurrentPower() (float64, error) {
 }
 
 func (m *goodWeWiFiMeter) batterySoc() (float64, error) {
-	fmt.Println(server.inverters[m.URI])
 	return server.inverters[m.URI].soc, nil
 }
 
