@@ -82,19 +82,19 @@ func (m *Server) listen() {
 
 		mu.Lock()
 		if buf[4] == 250 {
-			vPv1 := float64(binary.BigEndian.Uint16(buf[11:])) * 0.1
-			vPv2 := float64(binary.BigEndian.Uint16(buf[19:])) * 0.1
-			iPv1 := float64(binary.BigEndian.Uint16(buf[13:])) * 0.1
-			iPv2 := float64(binary.BigEndian.Uint16(buf[21:])) * 0.1
-			iBatt := float64(binary.BigEndian.Uint16(buf[167:])) * 0.1
-			vBatt := float64(binary.BigEndian.Uint16(buf[165:])) * 0.1
+			vPv1 := float64(int16(binary.BigEndian.Uint16(buf[11:]))) * 0.1
+			vPv2 := float64(int16(binary.BigEndian.Uint16(buf[19:]))) * 0.1
+			iPv1 := float64(int16(binary.BigEndian.Uint16(buf[13:]))) * 0.1
+			iPv2 := float64(int16(binary.BigEndian.Uint16(buf[21:]))) * 0.1
+			iBatt := float64(int16(binary.BigEndian.Uint16(buf[167:]))) * 0.1
+			vBatt := float64(int16(binary.BigEndian.Uint16(buf[165:]))) * 0.1
 
 			pvPower := vPv1*iPv1 + vPv2*iPv2
 
 			inverter := m.inverters[ip]
 			inverter.PvPower = pvPower
 			inverter.BatteryPower = vBatt * iBatt
-			inverter.NetPower = float64(int32(binary.BigEndian.Uint32(buf[83:]))) * -1
+			inverter.NetPower = -float64(int32(binary.BigEndian.Uint32(buf[83:])))
 
 			m.inverters[ip] = inverter
 		}
