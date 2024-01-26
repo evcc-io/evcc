@@ -95,6 +95,9 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 	}()
 
 	planTime := lp.EffectivePlanTime()
+	if planTime.IsZero() {
+		return false
+	}
 	if lp.clock.Until(planTime) < 0 && !lp.planActive {
 		lp.deletePlan()
 		return false
