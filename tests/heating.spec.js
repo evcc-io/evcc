@@ -21,7 +21,7 @@ test.describe("loadpoint", async () => {
   test("change limit in 1° steps", async ({ page }) => {
     await page.getByTestId("limit-soc").getByRole("combobox").selectOption("69.0°C");
     await expect(page.getByTestId("limit-soc")).toContainText("69.0°C");
-    page.reload();
+    await page.reload();
     await expect(page.getByTestId("limit-soc")).toContainText("69.0°C");
   });
 });
