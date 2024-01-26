@@ -90,6 +90,8 @@ EXPOSE 7070/tcp
 EXPOSE 7090/udp
 # OCPP charger
 EXPOSE 8887/tcp
+# GoodWe Wifi Inverter
+EXPOSE 8899/udp
 # SMA Energy Manager
 EXPOSE 9522/udp
 
