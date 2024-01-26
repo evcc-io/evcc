@@ -3,6 +3,7 @@ package meter
 import (
 	"encoding/binary"
 	"net"
+	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -22,7 +23,10 @@ type goodweInverter struct {
 	soc          float64
 }
 
-var server *goodweServer
+var (
+	server      *goodweServer
+	serverMutex sync.Mutex
+)
 
 type goodWeWiFiMeter struct {
 	usage string
@@ -89,6 +93,9 @@ func (m *goodWeWiFiMeter) batterySoc() (float64, error) {
 }
 
 func NewServer() (*goodweServer, error) {
+	serverMutex.Lock()
+	defer serverMutex.Unlock()
+
 	if server == nil {
 		server = &goodweServer{
 			inverters: make(map[string]goodweInverter),
