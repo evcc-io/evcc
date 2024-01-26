@@ -6,17 +6,17 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateGoodWeWifi(base *goodWeWiFiMeter, battery func() (float64, error)) api.Meter {
+func decorateGoodWeWifi(base *goodWeWiFi, battery func() (float64, error)) api.Meter {
 	switch {
 	case battery == nil:
 		return base
 
 	case battery != nil:
 		return &struct {
-			*goodWeWiFiMeter
+			*goodWeWiFi
 			api.Battery
 		}{
-			goodWeWiFiMeter: base,
+			goodWeWiFi: base,
 			Battery: &decorateGoodWeWifiBatteryImpl{
 				battery: battery,
 			},
