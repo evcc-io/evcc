@@ -119,9 +119,7 @@ func (lp *Loadpoint) SetPhases(phases int) error {
 	// set new default
 	lp.log.DEBUG.Println("set phases:", phases)
 
-	lp.Lock()
 	lp.setConfiguredPhases(phases)
-	lp.Unlock()
 
 	// apply immediately if not 1p3p
 	if !lp.hasPhaseSwitching() {

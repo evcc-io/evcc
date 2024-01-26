@@ -231,6 +231,13 @@ func NewLoadpointFromConfig(log *util.Logger, settings *Settings, other map[stri
 	lp.charger = dev.Instance()
 	lp.configureChargerType(lp.charger)
 
+	// phase switching defaults based on charger capabilities
+	if lp.hasPhaseSwitching() {
+		lp.configuredPhases = 0
+	} else {
+		lp.configuredPhases = 3
+	}
+
 	// TODO deprecated
 	if lp.MinCurrent_ > 0 {
 		lp.log.WARN.Println("deprecated: minCurrent setting is ignored, please remove")
@@ -272,15 +279,14 @@ func NewLoadpoint(log *util.Logger, settings *Settings) *Loadpoint {
 	bus := evbus.New()
 
 	lp := &Loadpoint{
-		log:              log,      // logger
-		settings:         settings, // settings
-		clock:            clock,    // mockable time
-		bus:              bus,      // event bus
-		mode:             api.ModeOff,
-		status:           api.StatusNone,
-		minCurrent:       6,  // A
-		maxCurrent:       16, // A
-		configuredPhases: 3,
+		log:        log,      // logger
+		settings:   settings, // settings
+		clock:      clock,    // mockable time
+		bus:        bus,      // event bus
+		mode:       api.ModeOff,
+		status:     api.StatusNone,
+		minCurrent: 6,  // A
+		maxCurrent: 16, // A
 		Soc: SocConfig{
 			Poll: PollConfig{
 				Interval: pollInterval,
