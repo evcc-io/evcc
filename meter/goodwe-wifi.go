@@ -2,6 +2,7 @@ package meter
 
 import (
 	"encoding/binary"
+	"fmt"
 	"net"
 	"time"
 
@@ -33,6 +34,8 @@ func init() {
 	registry.Add("goodwe-wifi", NewGoodWeWifiFromConfig)
 }
 
+//go:generate go run ../cmd/tools/decorate.go -f decorateGoodWeWifi -b *goodWeWiFiMeter -r api.Meter -t "api.Battery,Soc,func() (float64, error)"
+
 func NewGoodWeWifiFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
 		capacity   `mapstructure:",squash"`
@@ -61,7 +64,13 @@ func NewGoodWeWiFiMeter(uri string, usage string) (api.Meter, error) {
 	}
 	server.addInverter(uri)
 
-	return meter, nil
+	// decorate api.BatterySoc
+	var batterySoc func() (float64, error)
+	if usage == "battery" {
+		batterySoc = meter.batterySoc
+	}
+
+	return decorateGoodWeWifi(meter, batterySoc), nil
 }
 
 func (m *goodWeWiFiMeter) CurrentPower() (float64, error) {
@@ -74,6 +83,11 @@ func (m *goodWeWiFiMeter) CurrentPower() (float64, error) {
 		return server.inverters[m.URI].batteryPower, nil
 	}
 	return 0, api.ErrNotAvailable
+}
+
+func (m *goodWeWiFiMeter) batterySoc() (float64, error) {
+	fmt.Println(server.inverters[m.URI])
+	return server.inverters[m.URI].soc, nil
 }
 
 func NewServer() (*goodweServer, error) {
@@ -153,7 +167,8 @@ func (m *goodweServer) listen() {
 
 		if buf[4] == 26 {
 			inverter := server.inverters[ip]
-			inverter.soc = float64(int16(binary.BigEndian.Uint16(buf[19:])))
+			inverter.soc = float64(buf[20])
+			server.inverters[ip] = inverter
 		}
 	}
 }
