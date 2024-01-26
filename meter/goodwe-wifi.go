@@ -26,6 +26,7 @@ type goodweInverter struct {
 var (
 	server      *goodweServer
 	serverMutex sync.Mutex
+	invertMutex sync.Mutex
 )
 
 type goodWeWiFiMeter struct {
@@ -122,6 +123,8 @@ func NewServer() (*goodweServer, error) {
 }
 
 func (m *goodweServer) addInverter(ip string) {
+	invertMutex.Lock()
+	defer invertMutex.Unlock()
 	server.inverters[ip] = goodweInverter{IP: ip}
 }
 
