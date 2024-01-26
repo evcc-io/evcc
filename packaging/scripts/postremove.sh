@@ -36,7 +36,7 @@ fi
 
 if [ -f /tmp/oldevcc ] && [ $INTERACTIVE -eq 1 ]; then
     checkConfigOutput=$(/usr/bin/evcc checkconfig 2>&1 || true)
-	oldevccversion="oldversion"  #   $(/tmp/oldevcc -v)
+	oldevccversion=$(/tmp/oldevcc -v)
 	newevccversion=$(/usr/bin/evcc -v)
 	if echo "$checkConfigOutput" | grep -q "config valid"; then	
 		if [ "$oldevccversion" = "$newevccversion" ]; then
