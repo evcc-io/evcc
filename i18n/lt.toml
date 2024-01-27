@@ -447,3 +447,10 @@ title = "Klaida startuojant"
 cancel = "Atšaukti"
 template = "Gamintojas"
 test = "Testuoti"
+
+
+[main.heatingStatus]
+cleanEnergyCharging = "Šildoma švaria energija: {co2} (limitas {limit})"
+waitForVehicle = "Paruošta. Laukiame šildytuvo…"
+charging = "Šildoma…"
+cheapEnergyCharging = "Šildoma pigia energija: {price} (limitas {limit})"
