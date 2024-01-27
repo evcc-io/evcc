@@ -1,7 +1,6 @@
 template: THOR Heizstab
 products:
   - brand: Thor
-    description:
       generic: Meter
 params:
   - name: usage
