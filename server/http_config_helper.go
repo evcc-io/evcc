@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"errors"
 
 	"github.com/evcc-io/evcc/util/config"
@@ -54,7 +55,7 @@ func mergeMasked(class templates.Class, conf, old map[string]any) (map[string]an
 	return res, nil
 }
 
-func deviceInstanceFromMergedConfig[T any](id int, class templates.Class, conf map[string]any, newFromConf func(string, map[string]any) (T, error), h config.Handler[T]) (config.Device[T], T, error) {
+func deviceInstanceFromMergedConfig[T any](ctx context.Context, id int, class templates.Class, conf map[string]any, newFromConf newFromConfFunc[T], h config.Handler[T]) (config.Device[T], T, error) {
 	var zero T
 
 	dev, err := h.ByName(config.NameForID(id))
@@ -67,7 +68,7 @@ func deviceInstanceFromMergedConfig[T any](id int, class templates.Class, conf m
 		return nil, zero, err
 	}
 
-	instance, err := newFromConf(typeTemplate, merged)
+	instance, err := newFromConf(ctx, typeTemplate, merged)
 
 	return dev, instance, err
 }

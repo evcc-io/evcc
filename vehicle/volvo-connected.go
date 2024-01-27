@@ -1,6 +1,7 @@
 package vehicle
 
 import (
+	"context"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -15,11 +16,11 @@ type VolvoConnected struct {
 }
 
 func init() {
-	registry.Add("volvo-connected", NewVolvoConnectedFromConfig)
+	registry.AddCtx("volvo-connected", NewVolvoConnectedFromConfig)
 }
 
 // NewVolvoConnectedFromConfig creates a new VolvoConnected vehicle
-func NewVolvoConnectedFromConfig(other map[string]interface{}) (api.Vehicle, error) {
+func NewVolvoConnectedFromConfig(ctx context.Context, other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
 		embed          `mapstructure:",squash"`
 		User, Password string
@@ -64,7 +65,7 @@ func NewVolvoConnectedFromConfig(other map[string]interface{}) (api.Vehicle, err
 		return nil, err
 	}
 
-	ts, err := identity.Login(cc.User, cc.Password)
+	ts, err := identity.Login(ctx, cc.User, cc.Password)
 	if err != nil {
 		return nil, err
 	}

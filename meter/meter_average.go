@@ -1,16 +1,18 @@
 package meter
 
 import (
+	"context"
+
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 )
 
 func init() {
-	registry.Add("movingaverage", NewMovingAverageFromConfig)
+	registry.AddCtx("movingaverage", NewMovingAverageFromConfig)
 }
 
 // NewMovingAverageFromConfig creates api.Meter from config
-func NewMovingAverageFromConfig(other map[string]interface{}) (api.Meter, error) {
+func NewMovingAverageFromConfig(ctx context.Context, other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
 		Decay float64
 		Meter struct {
@@ -26,7 +28,7 @@ func NewMovingAverageFromConfig(other map[string]interface{}) (api.Meter, error)
 		return nil, err
 	}
 
-	m, err := NewFromConfig(cc.Meter.Type, cc.Meter.Other)
+	m, err := NewFromConfig(ctx, cc.Meter.Type, cc.Meter.Other)
 	if err != nil {
 		return nil, err
 	}
