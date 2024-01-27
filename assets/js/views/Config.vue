@@ -87,9 +87,9 @@
 					<AddDeviceButton :title="$t('config.main.addPvBattery')" @add="addMeter" />
 				</ul>
 
-				<h2 class="my-4">Tariffs</h2>
+				<h2 class="my-4 wip">Tariffs</h2>
 
-				<ul class="p-0 config-list">
+				<ul class="p-0 config-list wip">
 					<DeviceCard
 						name="Grid"
 						unconfigured
@@ -122,9 +122,9 @@
 					</DeviceCard>
 				</ul>
 
-				<h2 class="my-4">Charge Points</h2>
+				<h2 class="my-4 wip">Charge Points</h2>
 
-				<ul class="p-0 config-list">
+				<ul class="p-0 config-list wip">
 					<DeviceCard
 						name="Fake Carport"
 						editable
@@ -170,9 +170,9 @@
 						/>
 					</ul>
 				</div>
-				<h2 class="my-4">Integrations</h2>
+				<h2 class="my-4 wip">Integrations</h2>
 
-				<ul class="p-0 config-list">
+				<ul class="p-0 config-list wip">
 					<DeviceCard name="MQTT" unconfigured data-testid="mqtt" @configure="todo">
 						<template #icon>
 							<shopicon-regular-fastdelivery1></shopicon-regular-fastdelivery1>
@@ -460,5 +460,8 @@ export default {
 .wrapper {
 	max-width: 900px;
 	margin: 0 auto;
+}
+.wip {
+	opacity: 0.2 !important;
 }
 </style>

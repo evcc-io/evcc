@@ -9,7 +9,7 @@
 					placeholder="Home"
 				/>
 			</FormRow>
-			<FormRow id="adminPassword" label="Admin password">
+			<FormRow id="adminPassword" label="Admin password" class="wip">
 				<input
 					id="adminPassword"
 					type="password"
@@ -18,7 +18,7 @@
 					disabled
 				/>
 			</FormRow>
-			<FormRow id="sponsorToken" label="Sponsor token">
+			<FormRow id="sponsorToken" label="Sponsor token" class="wip">
 				<textarea id="sponsorToken" class="form-control" rows="3" disabled value="tba" />
 			</FormRow>
 			<div class="my-4 d-flex justify-content-end">
@@ -116,5 +116,9 @@ export default {
 
 .group:focus-within {
 	box-shadow: 0 0 1rem 0 var(--evcc-gray-50);
+}
+
+.wip {
+	opacity: 0.2;
 }
 </style>
