@@ -99,7 +99,5 @@ fi
 
 if [ "$1" = "upgrade" ]; then
     copyDbToUserDir
-    # copy current binary to /tmp/oldevcc (for possibility to rollback)
-    cp /usr/bin/evcc /tmp/oldevcc
 fi
 exit 0
