@@ -172,7 +172,14 @@ test.describe("meters", async () => {
     await expect(page.getByTestId("battery").getByText("Power: -2.5 kW")).toBeVisible();
     await expect(page.getByTestId("battery").getByText("Capacity: 20.0 kWh")).toBeVisible();
 
+    // restart and check in main ui
+    await restart(CONFIG_EMPTY);
+    await page.goto("/");
+    await page.getByTestId("visualization").click();
+    await expect(page.getByTestId("energyflow")).toContainText("Battery charging75%2.5 kW");
+
     // delete #1
+    await page.goto("/#/config");
     await page.getByTestId("battery").getByRole("button", { name: "edit" }).click();
     await meterModal.getByRole("button", { name: "Delete" }).click();
 
