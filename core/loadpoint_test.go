@@ -75,7 +75,7 @@ func attachListeners(t *testing.T, lp *Loadpoint) {
 
 	if charger, ok := lp.charger.(*api.MockCharger); ok && charger != nil {
 		charger.EXPECT().Enabled().Return(true, nil)
-		charger.EXPECT().MaxCurrent(int64(lp.MinCurrent)).Return(nil)
+		charger.EXPECT().MaxCurrent(int64(lp.minCurrent)).Return(nil)
 	}
 
 	uiChan, pushChan, lpChan := createChannels(t)
@@ -88,8 +88,8 @@ func TestNew(t *testing.T) {
 	if lp.phases != 0 {
 		t.Errorf("Phases %v", lp.phases)
 	}
-	if lp.MaxCurrent != maxA {
-		t.Errorf("MaxCurrent %v", lp.MaxCurrent)
+	if lp.maxCurrent != maxA {
+		t.Errorf("MaxCurrent %v", lp.maxCurrent)
 	}
 	if lp.status != api.StatusNone {
 		t.Errorf("status %v", lp.status)
@@ -164,8 +164,8 @@ func TestUpdatePowerZero(t *testing.T) {
 			chargeTimer:   &Null{}, // silence nil panics
 			wakeUpTimer:   NewTimer(),
 			sessionEnergy: NewEnergyMetrics(),
-			MinCurrent:    minA,
-			MaxCurrent:    maxA,
+			minCurrent:    minA,
+			maxCurrent:    maxA,
 			phases:        1,
 			status:        tc.status, // no status change
 		}
@@ -311,8 +311,8 @@ func TestPVHysteresis(t *testing.T) {
 				log:            util.NewLogger("foo"),
 				clock:          clck,
 				charger:        charger,
-				MinCurrent:     minA,
-				MaxCurrent:     maxA,
+				minCurrent:     minA,
+				maxCurrent:     maxA,
 				phases:         phases,
 				measuredPhases: phases,
 				Enable: ThresholdConfig{
@@ -359,8 +359,8 @@ func TestPVHysteresisForStatusOtherThanC(t *testing.T) {
 	lp := &Loadpoint{
 		log:            util.NewLogger("foo"),
 		clock:          clck,
-		MinCurrent:     minA,
-		MaxCurrent:     maxA,
+		minCurrent:     minA,
+		maxCurrent:     maxA,
 		phases:         phases,
 		measuredPhases: phases,
 	}
@@ -401,8 +401,8 @@ func TestDisableAndEnableAtTargetSoc(t *testing.T) {
 		progress:    NewProgress(0, 10), // silence nil panics
 		wakeUpTimer: NewTimer(),         // silence nil panics
 		// coordinator:   coordinator.NewDummy(), // silence nil panics
-		MinCurrent:    minA,
-		MaxCurrent:    maxA,
+		minCurrent:    minA,
+		maxCurrent:    maxA,
 		vehicle:       vehicle,      // needed for targetSoc check
 		socEstimator:  socEstimator, // instead of vehicle: vehicle,
 		mode:          api.ModeNow,
@@ -479,8 +479,8 @@ func TestSetModeAndSocAtDisconnect(t *testing.T) {
 		chargeTimer:   &Null{}, // silence nil panics
 		wakeUpTimer:   NewTimer(),
 		sessionEnergy: NewEnergyMetrics(),
-		MinCurrent:    minA,
-		MaxCurrent:    maxA,
+		minCurrent:    minA,
+		maxCurrent:    maxA,
 		status:        api.StatusC,
 		Mode_:         api.ModeOff, // default mode
 	}
@@ -550,8 +550,8 @@ func TestChargedEnergyAtDisconnect(t *testing.T) {
 		chargeTimer:   &Null{}, // silence nil panics
 		wakeUpTimer:   NewTimer(),
 		sessionEnergy: NewEnergyMetrics(),
-		MinCurrent:    minA,
-		MaxCurrent:    maxA,
+		minCurrent:    minA,
+		maxCurrent:    maxA,
 		status:        api.StatusC,
 	}
 

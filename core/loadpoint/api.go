@@ -35,11 +35,11 @@ type API interface {
 	// GetMinCurrent returns the min charging current
 	GetMinCurrent() float64
 	// SetMinCurrent sets the min charging current
-	SetMinCurrent(float64)
+	SetMinCurrent(float64) error
 	// GetMaxCurrent returns the max charging current
 	GetMaxCurrent() float64
 	// SetMaxCurrent sets the max charging current
-	SetMaxCurrent(float64)
+	SetMaxCurrent(float64) error
 
 	// GetMode returns the charge mode
 	GetMode() api.ChargeMode

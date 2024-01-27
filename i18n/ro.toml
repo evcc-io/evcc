@@ -160,8 +160,6 @@ power = "Putere"
 [main.loadpointSettings]
 currents = "Curent încărcare"
 default = "default"
-disclaimerHint = "Nota:"
-disclaimerText = "Modificările se vor pierde după restartul serverului."
 title = "Setări {0}"
 vehicle = "Vehicul"
 

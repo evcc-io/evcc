@@ -154,8 +154,6 @@ solar = "Slunce"
 [main.loadpointSettings]
 currents = "Nabíjecí proud"
 default = "výchozí"
-disclaimerHint = "Poznámka:"
-disclaimerText = "Po restartovaní serveru budou zmeny ztraceny"
 title = "Nastavení {0}"
 vehicle = "Vozidlo"
 
