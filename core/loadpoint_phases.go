@@ -7,18 +7,6 @@ import (
 
 // setConfiguredPhases sets the default phase configuration
 func (lp *Loadpoint) setConfiguredPhases(phases int) {
-	lp.Lock()
-	defer lp.Unlock()
-
-	if phases != 0 && phases != 1 && phases != 3 {
-		lp.log.WARN.Printf("invalid phase configuration: %d", phases)
-		return
-	}
-	if phases == 0 && !lp.hasPhaseSwitching() {
-		lp.log.WARN.Printf("invalid phase configuration. charger does not support phase switching")
-		return
-	}
-
 	lp.configuredPhases = phases
 	lp.publish(keys.PhasesConfigured, lp.configuredPhases)
 	lp.settings.SetInt(keys.PhasesConfigured, int64(lp.configuredPhases))
