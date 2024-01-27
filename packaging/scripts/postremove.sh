@@ -12,9 +12,6 @@ if [ "$1" = "remove" ]; then
 fi
 
 if [ "$1" = "purge" ]; then
-	if [ -d "/tmp/oldevcc" ]; then
-		rm -rf "/tmp/oldevcc"
-	fi
 	if [ -x "/usr/bin/deb-systemd-helper" ]; then
 		deb-systemd-helper purge evcc.service >/dev/null || true
 		deb-systemd-helper unmask evcc.service >/dev/null || true
