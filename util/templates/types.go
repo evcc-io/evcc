@@ -9,14 +9,19 @@ import (
 	"dario.cat/mergo"
 )
 
+type Usage int
+
+//go:generate enumer -type Usage -trimprefix Usage -transform=lower
+const (
+	UsageGrid Usage = iota
+	UsagePV
+	UsageBattery
+	UsageCharge
+)
+
 const (
 	ParamUsage  = "usage"
 	ParamModbus = "modbus"
-
-	UsageChoiceGrid    = "grid"
-	UsageChoicePV      = "pv"
-	UsageChoiceBattery = "battery"
-	UsageChoiceCharge  = "charge"
 
 	HemsTypeSMA = "sma"
 
@@ -40,18 +45,7 @@ const (
 	TemplateRenderModeInstance = "instance"
 )
 
-var (
-	ValidModbusChoices = []string{ModbusChoiceRS485, ModbusChoiceTCPIP}
-	ValidUsageChoices  = []string{UsageChoiceGrid, UsageChoicePV, UsageChoiceBattery, UsageChoiceCharge}
-)
-
-const (
-	DependencyCheckEmpty    = "empty"
-	DependencyCheckNotEmpty = "notempty"
-	DependencyCheckEqual    = "equal"
-)
-
-var ValidDependencies = []string{DependencyCheckEmpty, DependencyCheckNotEmpty, DependencyCheckEqual}
+var ValidModbusChoices = []string{ModbusChoiceRS485, ModbusChoiceTCPIP}
 
 const (
 	CapabilityISO151182      = "iso151182"       // ISO 15118-2 support

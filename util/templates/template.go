@@ -56,7 +56,7 @@ func (t *Template) Validate() error {
 		switch p.Name {
 		case ParamUsage:
 			for _, c := range p.Choice {
-				if !slices.Contains(ValidUsageChoices, c) {
+				if !slices.Contains(UsageStrings(), c) {
 					return fmt.Errorf("invalid usage choice '%s' in template %s", c, t.Template)
 				}
 			}
