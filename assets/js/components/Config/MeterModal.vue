@@ -1,20 +1,20 @@
 <template>
 	<Teleport to="body">
 		<div
-			id="vehicleModal"
+			id="meterModal"
 			ref="modal"
 			class="modal fade text-dark"
 			data-bs-backdrop="true"
 			tabindex="-1"
 			role="dialog"
 			aria-hidden="true"
-			data-testid="vehicle-modal"
+			data-testid="meter-modal"
 		>
 			<div class="modal-dialog modal-dialog-centered" role="document">
 				<div class="modal-content">
 					<div class="modal-header">
 						<h5 class="modal-title">
-							{{ $t(`config.vehicle.${isNew ? "titleAdd" : "titleEdit"}`) }}
+							{{ modalTitle }}
 						</h5>
 						<button
 							type="button"
@@ -24,50 +24,54 @@
 						></button>
 					</div>
 					<div class="modal-body">
-						<form ref="form" class="container mx-0 px-0">
-							<FormRow id="vehicleTemplate" :label="$t('config.vehicle.template')">
+						<div v-if="!meterType">
+							<AddDeviceButton
+								title="Add solar meter"
+								class="mb-4 addButton"
+								@click="selectType('pv')"
+							/>
+							<AddDeviceButton
+								title="Add battery meter"
+								class="addButton"
+								@click="selectType('battery')"
+							/>
+						</div>
+						<form v-else ref="form" class="container mx-0 px-0">
+							<FormRow id="meterTemplate" :label="$t('config.meter.template')">
 								<select
-									id="vehicleTemplate"
+									id="meterTemplate"
 									v-model="templateName"
 									:disabled="!isNew"
 									class="form-select w-100"
 								>
-									<option value="offline">
-										{{ $t("config.vehicle.offline") }}
+									<option
+										v-for="option in templateOptions"
+										:key="option.name"
+										:value="option.template"
+									>
+										{{ option.name }}
 									</option>
-									<option disabled>----------</option>
-									<optgroup :label="$t('config.vehicle.online')">
-										<option
-											v-for="option in templateOptions.online"
-											:key="option.name"
-											:value="option.template"
-										>
-											{{ option.name }}
-										</option>
-									</optgroup>
-									<optgroup :label="$t('config.vehicle.scooter')">
-										<option
-											v-for="option in templateOptions.scooter"
-											:key="option.name"
-											:value="option.template"
-										>
-											{{ option.name }}
-										</option>
-									</optgroup>
-									<optgroup :label="$t('config.vehicle.generic')">
-										<option
-											v-for="option in templateOptions.generic"
-											:key="option.name"
-											:value="option.template"
-										>
-											{{ option.name }}
-										</option>
-									</optgroup>
 								</select>
 							</FormRow>
+							<p v-if="loadingTemplate">Loading ...</p>
+							<Modbus
+								v-if="modbus"
+								v-model:modbus="values.modbus"
+								v-model:id="values.id"
+								v-model:host="values.host"
+								v-model:port="values.port"
+								v-model:device="values.device"
+								v-model:baudrate="values.baudrate"
+								v-model:comset="values.comset"
+								:defaultId="modbus.ID"
+								:defaultComset="modbus.Comset"
+								:defaultBaudrate="modbus.Baudrate"
+								:defaultPort="modbus.Port"
+								:capabilities="modbusCapabilities"
+							/>
 							<FormRow
 								v-for="param in templateParams"
-								:id="`vehicleParam${param.Name}`"
+								:id="`meterParam${param.Name}`"
 								:key="param.Name"
 								:optional="!param.Required"
 								:label="param.Description || `[${param.Name}]`"
@@ -75,7 +79,7 @@
 								:example="param.Example"
 							>
 								<PropertyField
-									:id="`vehicleParam${param.Name}`"
+									:id="`meterParam${param.Name}`"
 									v-model="values[param.Name]"
 									:masked="param.Mask"
 									:property="param.Name"
@@ -104,7 +108,7 @@
 									class="btn btn-link text-danger"
 									@click.prevent="remove"
 								>
-									{{ $t("config.vehicle.delete") }}
+									{{ $t("config.meter.delete") }}
 								</button>
 								<button
 									v-else
@@ -112,7 +116,7 @@
 									class="btn btn-link text-muted"
 									data-bs-dismiss="modal"
 								>
-									{{ $t("config.vehicle.cancel") }}
+									{{ $t("config.meter.cancel") }}
 								</button>
 								<button
 									type="submit"
@@ -128,8 +132,8 @@
 									></span>
 									{{
 										testUnknown
-											? $t("config.vehicle.validateSave")
-											: $t("config.vehicle.save")
+											? $t("config.meter.validateSave")
+											: $t("config.meter.save")
 									}}
 								</button>
 							</div>
@@ -147,55 +151,81 @@ import PropertyField from "./PropertyField.vue";
 import TestResult from "./TestResult.vue";
 import api from "../../api";
 import test from "./mixins/test";
+import AddDeviceButton from "./AddDeviceButton.vue";
+import Modbus from "./Modbus.vue";
 
-const initialValues = { type: "template", icon: "car" };
+const initialValues = { type: "template" };
 
 function sleep(ms) {
 	return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 export default {
-	name: "VehicleModal",
-	components: { FormRow, PropertyField, TestResult },
+	name: "MeterModal",
+	components: { FormRow, PropertyField, Modbus, TestResult, AddDeviceButton },
 	mixins: [test],
 	props: {
 		id: Number,
+		name: String,
+		type: String,
 	},
-	emits: ["vehicle-changed"],
+	emits: ["added", "updated", "removed"],
 	data() {
 		return {
 			isModalVisible: false,
 			templates: [],
 			products: [],
-			saving: false,
 			templateName: null,
 			template: null,
+			saving: false,
+			selectedType: null,
+			loadingTemplate: false,
 			values: { ...initialValues },
 		};
 	},
 	computed: {
+		modalTitle() {
+			if (this.isNew) {
+				if (this.meterType) {
+					return this.$t(`config.${this.meterType}.titleAdd`);
+				} else {
+					return this.$t("config.meter.titleChoice");
+				}
+			}
+			return this.$t(`config.${this.meterType}.titleEdit`);
+		},
+		meterType() {
+			return this.type || this.selectedType;
+		},
 		templateOptions() {
-			return {
-				online: this.products.filter((p) => !p.group && p.template !== "offline"),
-				generic: this.products.filter((p) => p.group === "generic"),
-				scooter: this.products.filter((p) => p.group === "scooter"),
-			};
+			return this.products;
 		},
 		templateParams() {
 			const params = this.template?.Params || [];
-			const filteredParams = params.filter((p) => !p.Advanced || p.Name === "icon");
-			const adjustedParams = filteredParams.map((p) => {
-				if (p.Name === "title" || p.Name === "icon") {
-					p.Required = true;
-				}
-				return p;
-			});
-			return adjustedParams;
+			return (
+				params
+					// deprecated fields
+					.filter((p) => !p.Deprecated)
+					// remove usage option
+					.filter((p) => p.Name !== "usage")
+					// remove modbus, handles separately
+					.filter((p) => p.Name !== "modbus")
+					// capacity only for battery meters
+					.filter((p) => this.meterType === "battery" || p.Name !== "capacity")
+			);
+		},
+		modbus() {
+			const params = this.template?.Params || [];
+			return params.find((p) => p.Name === "modbus");
+		},
+		modbusCapabilities() {
+			return this.modbus?.Choice || [];
 		},
 		apiData() {
 			return {
 				template: this.templateName,
 				...this.values,
+				usage: this.meterType,
 			};
 		},
 		isNew() {
@@ -208,14 +238,17 @@ export default {
 	watch: {
 		isModalVisible(visible) {
 			if (visible) {
+				this.selectedType = null;
 				this.reset();
-				this.templateName = "offline";
 				this.resetTest();
 				this.loadProducts();
 				if (this.id !== undefined) {
 					this.loadConfiguration();
 				}
 			}
+		},
+		meterType() {
+			this.loadProducts();
 		},
 		templateName() {
 			this.loadTemplate();
@@ -242,8 +275,8 @@ export default {
 		},
 		async loadConfiguration() {
 			try {
-				const vehicle = (await api.get(`config/devices/vehicle/${this.id}`)).data.result;
-				this.values = vehicle.config;
+				const meter = (await api.get(`config/devices/meter/${this.id}`)).data.result;
+				this.values = meter.config;
 				this.applyDefaultsFromTemplate();
 				this.templateName = this.values.template;
 			} catch (e) {
@@ -251,8 +284,16 @@ export default {
 			}
 		},
 		async loadProducts() {
+			if (!this.isModalVisible || !this.meterType) {
+				return;
+			}
 			try {
-				this.products = (await api.get("config/products/vehicle")).data.result;
+				const opts = {
+					params: {
+						usage: this.meterType,
+					},
+				};
+				this.products = (await api.get("config/products/meter", opts)).data.result;
 			} catch (e) {
 				console.error(e);
 			}
@@ -260,6 +301,7 @@ export default {
 		async loadTemplate() {
 			this.template = null;
 			this.reset();
+			this.loadingTemplate = true;
 			try {
 				const opts = {
 					params: {
@@ -267,11 +309,13 @@ export default {
 						name: this.templateName,
 					},
 				};
-				this.template = (await api.get("config/templates/vehicle", opts)).data.result;
+				const result = await api.get("config/templates/meter", opts);
+				this.template = result.data.result;
 				this.applyDefaultsFromTemplate();
 			} catch (e) {
 				console.error(e);
 			}
+			this.loadingTemplate = false;
 		},
 		applyDefaultsFromTemplate() {
 			const params = this.template?.Params || [];
@@ -283,14 +327,16 @@ export default {
 		},
 		async create() {
 			if (this.testUnknown) {
-				const success = await this.test(this.testVehicle);
+				const success = await this.test(this.testMeter);
 				if (!success) return;
-				await sleep(250);
+				await sleep(100);
 			}
 			this.saving = true;
 			try {
-				await api.post("config/devices/vehicle", this.apiData);
-				this.$emit("vehicle-changed");
+				const response = await api.post("config/devices/meter", this.apiData);
+				const { name } = response.data.result;
+				this.$emit("added", this.meterType, name);
+				this.$emit("updated");
 				this.modalInvisible();
 			} catch (e) {
 				console.error(e);
@@ -299,10 +345,10 @@ export default {
 			this.saving = false;
 		},
 		async testManually() {
-			await this.test(this.testVehicle);
+			await this.test(this.testMeter);
 		},
-		async testVehicle() {
-			let url = "config/test/vehicle";
+		async testMeter() {
+			let url = "config/test/meter";
 			if (!this.isNew) {
 				url += `/merge/${this.id}`;
 			}
@@ -310,14 +356,14 @@ export default {
 		},
 		async update() {
 			if (this.testUnknown) {
-				const success = await this.test(this.testVehicle);
+				const success = await this.test(this.testMeter);
 				if (!success) return;
 				await sleep(250);
 			}
 			this.saving = true;
 			try {
-				await api.put(`config/devices/vehicle/${this.id}`, this.apiData);
-				this.$emit("vehicle-changed");
+				await api.put(`config/devices/meter/${this.id}`, this.apiData);
+				this.$emit("updated");
 				this.modalInvisible();
 			} catch (e) {
 				console.error(e);
@@ -327,8 +373,9 @@ export default {
 		},
 		async remove() {
 			try {
-				await api.delete(`config/devices/vehicle/${this.id}`);
-				this.$emit("vehicle-changed");
+				await api.delete(`config/devices/meter/${this.id}`);
+				this.$emit("removed", this.meterType, this.name);
+				this.$emit("updated");
 				this.modalInvisible();
 			} catch (e) {
 				console.error(e);
@@ -341,6 +388,9 @@ export default {
 		modalInvisible() {
 			this.isModalVisible = false;
 		},
+		selectType(type) {
+			this.selectedType = type;
+		},
 	},
 };
 </script>
@@ -349,5 +399,8 @@ export default {
 	margin-left: calc(var(--bs-gutter-x) * -0.5);
 	margin-right: calc(var(--bs-gutter-x) * -0.5);
 	padding-right: 0;
+}
+.addButton {
+	min-height: auto;
 }
 </style>

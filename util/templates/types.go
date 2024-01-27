@@ -192,10 +192,10 @@ type Param struct {
 	Requirements  Requirements `json:"-"`          // requirements for this param to be usable, only supported via Type "bool"
 
 	// TODO move somewhere else should not be part of the param definition
-	Baudrate int    `json:"-"` // device specific default for modbus RS485 baudrate
-	Comset   string `json:"-"` // device specific default for modbus RS485 comset
-	Port     int    `json:"-"` // device specific default for modbus TCPIP port
-	ID       int    `json:"-"` // device specific default for modbus ID
+	Baudrate int    `json:",omitempty"` // device specific default for modbus RS485 baudrate
+	Comset   string `json:",omitempty"` // device specific default for modbus RS485 comset
+	Port     int    `json:",omitempty"` // device specific default for modbus TCPIP port
+	ID       int    `json:",omitempty"` // device specific default for modbus ID
 }
 
 // DefaultValue returns a default or example value depending on the renderMode

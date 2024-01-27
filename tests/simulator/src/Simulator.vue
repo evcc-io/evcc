@@ -38,11 +38,11 @@
 		</div>
 
 		<div class="row">
-			<label for="gridPower" class="col-sm-6 col-form-label">Battery Power</label>
+			<label for="batteryPower" class="col-sm-6 col-form-label">Battery Power</label>
 			<div class="col-sm-6">
 				<div class="input-group mb-3">
 					<input
-						id="gridPower"
+						id="batteryPower"
 						v-model.number="state.site.battery.power"
 						type="number"
 						class="form-control"
@@ -53,11 +53,11 @@
 		</div>
 
 		<div class="row">
-			<label for="gridPower" class="col-sm-6 col-form-label">Battery SoC</label>
+			<label for="batterySoc" class="col-sm-6 col-form-label">Battery SoC</label>
 			<div class="col-sm-6">
 				<div class="input-group mb-3">
 					<input
-						id="gridPower"
+						id="batterySoc"
 						v-model.number="state.site.battery.soc"
 						type="number"
 						class="form-control"
