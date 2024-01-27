@@ -17,6 +17,7 @@ const (
 	UsagePV
 	UsageBattery
 	UsageCharge
+	UsageAux
 )
 
 const (
@@ -45,7 +46,14 @@ const (
 	TemplateRenderModeInstance = "instance"
 )
 
+<<<<<<< HEAD
 var ValidModbusChoices = []string{ModbusChoiceRS485, ModbusChoiceTCPIP}
+=======
+var (
+	ValidModbusChoices = []string{ModbusChoiceRS485, ModbusChoiceTCPIP}
+	ValidUsageChoices  = []string{UsageChoiceGrid, UsageChoicePV, UsageChoiceBattery, UsageChoiceCharge, UsageChoiceAux}
+)
+>>>>>>> d3881bce6 (Add aux type)
 
 const (
 	CapabilityISO151182      = "iso151182"       // ISO 15118-2 support
