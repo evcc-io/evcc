@@ -232,9 +232,7 @@ func NewLoadpointFromConfig(log *util.Logger, settings *Settings, other map[stri
 	lp.configureChargerType(lp.charger)
 
 	// phase switching defaults based on charger capabilities
-	if lp.hasPhaseSwitching() {
-		lp.configuredPhases = 0
-	} else {
+	if !lp.hasPhaseSwitching() {
 		lp.configuredPhases = 3
 	}
 
