@@ -100,4 +100,5 @@ fi
 if [ "$1" = "upgrade" ]; then
     copyDbToUserDir
 fi
+
 exit 0
