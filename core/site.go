@@ -161,6 +161,9 @@ func NewSiteFromConfig(
 		}
 	}
 
+	// add meters from config
+	site.restoreMeters()
+
 	// grid meter
 	if site.Meters.GridMeterRef != "" {
 		dev, err := config.Meters().ByName(site.Meters.GridMeterRef)
@@ -229,19 +232,23 @@ func NewSite() *Site {
 	return lp
 }
 
-// restoreSettings restores site settings
-func (site *Site) restoreSettings() error {
-	if v, err := settings.String(keys.Title); err == nil {
-		site.Title = v
-	}
+// restoreMeters restores site meter configuration
+func (site *Site) restoreMeters() error {
 	if v, err := settings.String(keys.GridMeter); err == nil {
 		site.Meters.GridMeterRef = v
 	}
 	if v, err := settings.String(keys.PvMeters); err == nil {
-		site.Meters.PVMetersRef = strings.Split(v, ",")
+		site.Meters.PVMetersRef = append(site.Meters.PVMetersRef, strings.Split(v, ",")...)
 	}
 	if v, err := settings.String(keys.BatteryMeters); err == nil {
-		site.Meters.BatteryMetersRef = strings.Split(v, ",")
+		site.Meters.BatteryMetersRef = append(site.Meters.BatteryMetersRef, strings.Split(v, ",")...)
+	}
+}
+
+// restoreSettings restores site settings
+func (site *Site) restoreSettings() error {
+	if v, err := settings.String(keys.Title); err == nil {
+		site.Title = v
 	}
 	if v, err := settings.Float(keys.BufferSoc); err == nil {
 		if err := site.SetBufferSoc(v); err != nil {
