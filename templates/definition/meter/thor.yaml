@@ -1,6 +1,8 @@
 template: thor
 products:
-  - brand: Thor
+  - brand: my-PV
+    description:
+      generic: AC Thor
 params:
   - name: usage
     choice: ["aux"]
