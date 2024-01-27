@@ -29,7 +29,6 @@ fi
 # else: Ask user if he wants to keep the old version (working) or the new version (not working) 
 # Remember the choice with /tmp/.evccrollback and fail new-postrm failed-upgrade old-version new-version to initiate dpkg's rollback
 if [ "$1" = "upgrade" ]; then
-	failInstallation=0
 	INTERACTIVE=0
 	# is shell script interactive?
 	if [ -t 0 ]; then
@@ -57,8 +56,8 @@ if [ "$1" = "upgrade" ]; then
 						;;
 					y*|Y*)
 						echo "The old version will be restored. Your evcc configuration stays untouched! Following errors are intended:"
-						failInstallation=1
 						touch /tmp/.evccrollback
+						exit 1
 						break
 						;;
 					*)
@@ -67,10 +66,6 @@ if [ "$1" = "upgrade" ]; then
 			done
 		fi
 	fi 
-# Fail installation if checkconfig command failed and the user decided to keep the old version to inform package manager about outcome
-if [ $failInstallation -eq 1 ]; then
-	exit 1
-fi
 fi
 
 # if upgrade goal fails, new-postrm failed-upgrade old-version new-version is called. It should fail to initiate rollback
