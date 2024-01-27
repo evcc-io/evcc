@@ -137,3 +137,33 @@ func (v *Provider) WakeUp() error {
 	_, err := v.wakeup()
 	return apiError(err)
 }
+
+// var _ api.CurrentController = (*Provider)(nil)
+
+// // MaxCurrent implements the api.CurrentLimiter interface
+// func (v *Provider) MaxCurrent(current int64) error {
+// 	return v.apiError(v.vehicle.SetChargingAmps(int(current)))
+// }
+
+// var _ api.VehicleChargeController = (*Provider)(nil)
+
+// // StartCharge implements the api.VehicleChargeController interface
+// func (v *Provider) StartCharge() error {
+// 	err := v.apiError(v.vehicle.StartCharging())
+// 	if err != nil && slices.Contains([]string{"complete", "is_charging"}, err.Error()) {
+// 		return nil
+// 	}
+// 	return err
+// }
+
+// // StopCharge implements the api.VehicleChargeController interface
+// func (v *Provider) StopCharge() error {
+// 	err := v.apiError(v.vehicle.StopCharging())
+
+// 	// ignore sleeping vehicle
+// 	if errors.Is(err, api.ErrAsleep) {
+// 		err = nil
+// 	}
+
+// 	return err
+// }

@@ -2,6 +2,7 @@ package vehicle
 
 import (
 	"context"
+	"errors"
 	"os"
 	"time"
 
@@ -39,6 +40,7 @@ func NewTeslaCommandFromConfig(other map[string]interface{}) (api.Vehicle, error
 		embed   `mapstructure:",squash"`
 		Tokens  Tokens
 		VIN     string
+		Proxy   bool
 		Timeout time.Duration
 		Cache   time.Duration
 	}{
@@ -75,10 +77,13 @@ func NewTeslaCommandFromConfig(other map[string]interface{}) (api.Vehicle, error
 		return nil, err
 	}
 
-	if sponsor.IsAuthorized() {
-		api.BaseURL = vc.CloudProxyURL
-	} else {
-		log.INFO.Println("tesla-command control not available")
+	// setup api proxy for commands
+	if cc.Proxy {
+		if !sponsor.IsAuthorized() {
+			return nil, errors.New("tesla command control requires sponsor token")
+		}
+
+		api.Proxy(vc.CloudProxyURL, sponsor.Token)
 	}
 
 	vehicle, err := ensureVehicleEx(
