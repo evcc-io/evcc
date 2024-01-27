@@ -434,3 +434,10 @@ title = "Fejl ved opstart"
 cancel = "Afbryd"
 template = "Producent"
 test = "Test"
+
+
+[main.heatingStatus]
+cleanEnergyCharging = "Opvarmer med CO2 neutral energi: {co2} (limit {limit})"
+waitForVehicle = "Klar. Venter på varmelegeme..."
+charging = "Opvarmer..."
+cheapEnergyCharging = "Opvarmer med billig energi: {price} (limit {limit})"
