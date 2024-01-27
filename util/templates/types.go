@@ -39,10 +39,12 @@ const (
 	ModbusParamNameHost     = "host"
 	ModbusParamNamePort     = "port"
 	ModbusParamNameRTU      = "rtu"
+)
 
-	TemplateRenderModeDocs     = "docs"
-	TemplateRenderModeUnitTest = "unittest"
-	TemplateRenderModeInstance = "instance"
+const (
+	RenderModeDocs int = iota
+	RenderModeUnitTest
+	RenderModeInstance
 )
 
 var ValidModbusChoices = []string{ModbusChoiceRS485, ModbusChoiceTCPIP}
@@ -193,13 +195,13 @@ type Param struct {
 }
 
 // DefaultValue returns a default or example value depending on the renderMode
-func (p *Param) DefaultValue(renderMode string) interface{} {
+func (p *Param) DefaultValue(renderMode int) interface{} {
 	// return empty list to allow iterating over in template
 	if p.Type == TypeStringList {
 		return []string{}
 	}
 
-	if (renderMode == TemplateRenderModeDocs || renderMode == TemplateRenderModeUnitTest) && p.Default == "" {
+	if (renderMode == RenderModeDocs || renderMode == RenderModeUnitTest) && p.Default == "" {
 		return p.Example
 	}
 
