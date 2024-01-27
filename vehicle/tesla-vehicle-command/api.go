@@ -12,12 +12,15 @@ import (
 
 const (
 	FleetAudienceEU = "https://fleet-api.prd.eu.vn.cloud.tesla.com"
+
+	CloudProxyURL = "https://tesla.evcc.io"
+	TokenHeader   = "X-Authorization"
 )
 
 type API struct {
 	*request.Helper
 	identity *Identity
-	base     string
+	BaseURL  string
 }
 
 func NewAPI(log *util.Logger, identity *Identity, timeout time.Duration) *API {
@@ -31,7 +34,7 @@ func NewAPI(log *util.Logger, identity *Identity, timeout time.Duration) *API {
 	return &API{
 		Helper:   client,
 		identity: identity,
-		base:     FleetAudienceEU,
+		BaseURL:  FleetAudienceEU,
 	}
 }
 
@@ -39,7 +42,7 @@ func (v *API) Region() (Region, error) {
 	var res RegionResponse
 	err := v.GetJSON(fmt.Sprintf("%s/api/1/users/region", FleetAudienceEU), &res)
 	if err == nil {
-		v.base = res.Response.FleetApiBaseUrl
+		v.BaseURL = res.Response.FleetApiBaseUrl
 	}
 	return res.Response, err
 }
@@ -59,7 +62,7 @@ func (v *API) Vehicles() ([]*Vehicle, error) {
 	// }
 
 	var res tesla.VehiclesResponse
-	err := v.GetJSON(fmt.Sprintf("%s/api/1/vehicles", v.base), &res)
+	err := v.GetJSON(fmt.Sprintf("%s/api/1/vehicles", v.BaseURL), &res)
 
 	return res.Response, err
 }
@@ -79,7 +82,7 @@ func (v *API) VehicleData(id int64) (*VehicleData, error) {
 	// }
 
 	var res tesla.VehicleData
-	err := v.GetJSON(fmt.Sprintf("%s/api/1/vehicles/%d/vehicle_data", v.base, id), &res)
+	err := v.GetJSON(fmt.Sprintf("%s/api/1/vehicles/%d/vehicle_data", v.BaseURL, id), &res)
 
 	return &res, err
 }
@@ -99,7 +102,7 @@ func (v *API) WakeUp(id int64) (*VehicleData, error) {
 	// }
 
 	var res tesla.VehicleData
-	err := v.GetJSON(fmt.Sprintf("%s/api/1/vehicles/%d/wake_up", v.base, id), &res)
+	err := v.GetJSON(fmt.Sprintf("%s/api/1/vehicles/%d/wake_up", v.BaseURL, id), &res)
 
 	return &res, err
 }

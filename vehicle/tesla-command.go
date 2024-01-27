@@ -8,6 +8,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/evcc-io/evcc/util/sponsor"
 	vc "github.com/evcc-io/evcc/vehicle/tesla-vehicle-command"
 	"golang.org/x/oauth2"
 )
@@ -72,6 +73,12 @@ func NewTeslaCommandFromConfig(other map[string]interface{}) (api.Vehicle, error
 	// validate base url
 	if _, err := api.Region(); err != nil {
 		return nil, err
+	}
+
+	if sponsor.IsAuthorized() {
+		api.BaseURL = vc.CloudProxyURL
+	} else {
+		log.INFO.Println("tesla-command control not available")
 	}
 
 	vehicle, err := ensureVehicleEx(
