@@ -234,7 +234,7 @@ func NewSite() *Site {
 
 // restoreMeters restores site meter configuration
 func (site *Site) restoreMeters() {
-	if v, err := settings.String(keys.GridMeter); err == nil {
+	if v, err := settings.String(keys.GridMeter); err == nil && v != "" {
 		site.Meters.GridMeterRef = v
 	}
 	if v, err := settings.String(keys.PvMeters); err == nil {
