@@ -437,3 +437,10 @@ title = "Napaka pri zagonu"
 cancel = "Prekliči"
 template = "Proizvajalec"
 test = "Test"
+
+
+[main.heatingStatus]
+charging = "Gretje…"
+cheapEnergyCharging = "Gretje s poceni energijo: {price} (limit {limit})"
+cleanEnergyCharging = "Gretje s čisto energijo: {co2} (limit {limit})"
+waitForVehicle = "Pripravljen. Čakam na grelec…"
