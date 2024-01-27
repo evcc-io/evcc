@@ -237,10 +237,10 @@ func (site *Site) restoreMeters() {
 	if v, err := settings.String(keys.GridMeter); err == nil && v != "" {
 		site.Meters.GridMeterRef = v
 	}
-	if v, err := settings.String(keys.PvMeters); err == nil {
+	if v, err := settings.String(keys.PvMeters); err == nil && v != "" {
 		site.Meters.PVMetersRef = append(site.Meters.PVMetersRef, strings.Split(v, ",")...)
 	}
-	if v, err := settings.String(keys.BatteryMeters); err == nil {
+	if v, err := settings.String(keys.BatteryMeters); err == nil && v != "" {
 		site.Meters.BatteryMetersRef = append(site.Meters.BatteryMetersRef, strings.Split(v, ",")...)
 	}
 }
