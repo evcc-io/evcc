@@ -1,6 +1,9 @@
 template: volvo-connected
 products:
   - brand: Volvo
+    description:
+      de: aktuell
+      en: latest
 params:
   - preset: vehicle-base
   - preset: vehicle-identify
