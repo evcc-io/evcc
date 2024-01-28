@@ -17,6 +17,7 @@ const (
 	UsagePV
 	UsageBattery
 	UsageCharge
+	UsageAux
 )
 
 const (

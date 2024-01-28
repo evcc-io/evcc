@@ -195,6 +195,12 @@ pvExport = "Eksport til Nettet"
 pvProduction = "Produktion"
 selfConsumption = "Self-konsumption"
 
+[main.heatingStatus]
+charging = "Opvarmer..."
+cheapEnergyCharging = "Opvarmer med billig energi: {price} (limit {limit})"
+cleanEnergyCharging = "Opvarmer med CO2 neutral energi: {co2} (limit {limit})"
+waitForVehicle = "Klar. Venter på varmelegeme..."
+
 [main.loadpoint]
 avgPrice = "⌀ pris"
 charged = "Opladt"
