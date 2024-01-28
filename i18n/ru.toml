@@ -123,8 +123,6 @@ power = "Мощность"
 [main.loadpointSettings]
 currents = "Ток зарядки"
 default = "по умолчанию"
-disclaimerHint = "Заметка:"
-disclaimerText = "Изменения будут потеряны после перезагрузки сервера"
 title = "Настройки {0}"
 vehicle = "Транспортное средство"
 

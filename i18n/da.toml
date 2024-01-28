@@ -211,8 +211,6 @@ solar = "solenergi"
 [main.loadpointSettings]
 currents = "Ladestrøm"
 default = "standard"
-disclaimerHint = "Bemærk:"
-disclaimerText = "Ændringer vil gå tabt, efter at serveren er genstartet."
 onlyForSocBasedCharging = "Disse indstillinger er kun tilgængelig for køretøjer med kendt opladningsniveau"
 title = "Indstillinger {0}"
 vehicle = "Køretøj"

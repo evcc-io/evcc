@@ -12,19 +12,11 @@
 						{{ loadpointTitle }}
 					</div>
 				</h3>
-				<LoadpointSettingsButton
-					v-if="settingsButtonVisible"
-					:id="id"
-					class="d-block d-sm-none"
-				/>
+				<LoadpointSettingsButton :id="id" class="d-block d-sm-none" />
 			</div>
 			<div class="mb-3 d-flex align-items-center">
 				<Mode class="flex-grow-1" :mode="mode" @updated="setTargetMode" />
-				<LoadpointSettingsButton
-					v-if="settingsButtonVisible"
-					:id="id"
-					class="d-none d-sm-block ms-2"
-				/>
+				<LoadpointSettingsButton :id="id" class="d-none d-sm-block ms-2" />
 			</div>
 		</div>
 		<LoadpointSettingsModal
@@ -178,6 +170,7 @@ export default {
 		phases: Number,
 		phasesConfigured: Number,
 		phasesActive: Number,
+		phases1p3p: Boolean,
 		minCurrent: Number,
 		maxCurrent: Number,
 		chargeCurrent: Number,
@@ -231,9 +224,6 @@ export default {
 		},
 		settingsModal: function () {
 			return this.collectProps(LoadpointSettingsModal);
-		},
-		settingsButtonVisible: function () {
-			return this.$hiddenFeatures() || [0, 1, 3].includes(this.phasesConfigured);
 		},
 		vehicleProps: function () {
 			return this.collectProps(Vehicle);

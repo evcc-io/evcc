@@ -211,8 +211,6 @@ solar = "Sončna energija"
 [main.loadpointSettings]
 currents = "Polnilni tok"
 default = "privzeto"
-disclaimerHint = "Opomba:"
-disclaimerText = "Po ponovnem zagonu strežnika bodo spremembe izgubljene."
 onlyForSocBasedCharging = "Te možnosti so na voljo samo za vozila z znano stopnjo napolnjenosti."
 title = "Nastavitve {0}"
 vehicle = "Vozilo"

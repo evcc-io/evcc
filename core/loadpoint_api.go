@@ -108,7 +108,7 @@ func (lp *Loadpoint) GetPhases() int {
 // SetPhases sets loadpoint enabled phases
 func (lp *Loadpoint) SetPhases(phases int) error {
 	// limit auto mode (phases=0) to scalable charger
-	if _, ok := lp.charger.(api.PhaseSwitcher); !ok && phases == 0 {
+	if !lp.hasPhaseSwitching() && phases == 0 {
 		return fmt.Errorf("invalid number of phases: %d", phases)
 	}
 
@@ -118,10 +118,13 @@ func (lp *Loadpoint) SetPhases(phases int) error {
 
 	// set new default
 	lp.log.DEBUG.Println("set phases:", phases)
+
+	lp.Lock()
 	lp.setConfiguredPhases(phases)
+	lp.Unlock()
 
 	// apply immediately if not 1p3p
-	if _, ok := lp.charger.(api.PhaseSwitcher); !ok {
+	if !lp.hasPhaseSwitching() {
 		lp.setPhases(phases)
 	}
 
@@ -324,40 +327,62 @@ func (lp *Loadpoint) GetChargePowerFlexibility() float64 {
 func (lp *Loadpoint) GetMinCurrent() float64 {
 	lp.RLock()
 	defer lp.RUnlock()
-	return lp.MinCurrent
+	return lp.minCurrent
+}
+
+// setMinCurrent sets the min loadpoint current (no mutex)
+func (lp *Loadpoint) setMinCurrent(current float64) {
+	lp.minCurrent = current
+	lp.publish(keys.MinCurrent, lp.minCurrent)
+	lp.settings.SetFloat(keys.MinCurrent, lp.minCurrent)
 }
 
 // SetMinCurrent sets the min loadpoint current
-func (lp *Loadpoint) SetMinCurrent(current float64) {
+func (lp *Loadpoint) SetMinCurrent(current float64) error {
 	lp.Lock()
 	defer lp.Unlock()
 
-	lp.log.DEBUG.Println("set min current:", current)
-
-	if current != lp.MinCurrent {
-		lp.MinCurrent = current
-		lp.publish(keys.MinCurrent, lp.MinCurrent)
+	if current > lp.maxCurrent {
+		return errors.New("min current must be smaller or equal than max current")
 	}
+
+	lp.log.DEBUG.Println("set min current:", current)
+	if current != lp.minCurrent {
+		lp.setMinCurrent(current)
+	}
+
+	return nil
 }
 
 // GetMaxCurrent returns the max loadpoint current
 func (lp *Loadpoint) GetMaxCurrent() float64 {
 	lp.RLock()
 	defer lp.RUnlock()
-	return lp.MaxCurrent
+	return lp.maxCurrent
+}
+
+// setMaxCurrent sets the max loadpoint current
+func (lp *Loadpoint) setMaxCurrent(current float64) {
+	lp.maxCurrent = current
+	lp.publish(keys.MaxCurrent, lp.maxCurrent)
+	lp.settings.SetFloat(keys.MaxCurrent, lp.maxCurrent)
 }
 
 // SetMaxCurrent sets the max loadpoint current
-func (lp *Loadpoint) SetMaxCurrent(current float64) {
+func (lp *Loadpoint) SetMaxCurrent(current float64) error {
 	lp.Lock()
 	defer lp.Unlock()
 
-	lp.log.DEBUG.Println("set max current:", current)
-
-	if current != lp.MaxCurrent {
-		lp.MaxCurrent = current
-		lp.publish(keys.MaxCurrent, lp.MaxCurrent)
+	if current < lp.minCurrent {
+		return errors.New("max current must be greater or equal than min current")
 	}
+
+	lp.log.DEBUG.Println("set max current:", current)
+	if current != lp.maxCurrent {
+		lp.setMaxCurrent(current)
+	}
+
+	return nil
 }
 
 // GetMinPower returns the min loadpoint power for a single phase

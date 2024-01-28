@@ -23,15 +23,59 @@ never = "only with enough surplus"
 
 [config]
 
+[config.battery]
+titleAdd = "Add Battery Meter"
+titleEdit = "Edit Battery Meter"
+
+[config.deviceValue]
+capacity = "Capacity"
+chargeStatus = "Status"
+chargedEnergy = "Charged"
+current = "Current"
+enabled = "Enabled"
+energy = "Energy"
+odometer = "Odometer"
+phaseCurrents = "Current L1..L3"
+phasePowers = "Power L1..L3"
+phaseVoltages = "Voltage L1..L3"
+power = "Power"
+range = "Range"
+soc = "SoC"
+socLimit = "Limit"
+
 [config.form]
 example = "Example"
 optional = "optional"
 
+[config.grid]
+titleAdd = "Add Grid Meter"
+titleEdit = "Edit Grid Meter"
+
 [config.main]
+addLoadpoint = "Add charge point"
+addPvBattery = "Add solar or battery"
 addVehicle = "Add vehicle"
 edit = "edit"
 title = "Configuration"
+unconfigured = "not configured"
 vehicles = "My Vehicles"
+yaml = "Configured in evcc.yaml. Not editable in the UI."
+
+[config.meter]
+cancel = "Cancel"
+delete = "Delete"
+save = "Save"
+template = "Manufacturer"
+titleChoice = "What Do You Want To Add?"
+validateSave = "Validate & save"
+
+[config.pv]
+titleAdd = "Add Solar Meter"
+titleEdit = "Edit Solar Meter"
+
+[config.site]
+cancel = "Cancel"
+save = "Save"
 
 [config.validation]
 failed = "failed"
@@ -43,7 +87,7 @@ validate = "validate"
 
 [config.vehicle]
 cancel = "Cancel"
-delete = "Delete vehicle"
+delete = "Delete"
 generic = "Other integrations"
 offline = "Generic vehicle"
 online = "Vehicles with online API"
@@ -210,8 +254,6 @@ solar = "Solar"
 [main.loadpointSettings]
 currents = "Charging current"
 default = "default"
-disclaimerHint = "Note:"
-disclaimerText = "Changes will be lost after the server is restarted."
 onlyForSocBasedCharging = "These options are only available for vehicles with known charging level."
 title = "Settings {0}"
 vehicle = "Vehicle"

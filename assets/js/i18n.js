@@ -35,7 +35,8 @@ export const LOCALES = {
 };
 
 export const DEFAULT_LOCALE = "en";
-const DEFAULT_BROWSER_LOCALE = document.querySelector("html").getAttribute("lang");
+const htmlLang = document.querySelector("html").getAttribute("lang");
+const DEFAULT_BROWSER_LOCALE = htmlLang?.length == 2 ? htmlLang : DEFAULT_LOCALE;
 
 export function getLocalePreference() {
   return settings.locale;

@@ -195,8 +195,6 @@ solar = "Zon"
 [main.loadpointSettings]
 currents = "Laadstroom"
 default = "standaard"
-disclaimerHint = "Let op:"
-disclaimerText = "Wijzigingen gaan verloren als de server herstart."
 title = "Instellingen {0}"
 vehicle = "Voertuig"
 

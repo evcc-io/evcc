@@ -114,23 +114,30 @@ func (p *Javascript) BoolGetter() (func() (bool, error), error) {
 }
 
 func (p *Javascript) handleGetter() (any, error) {
-	if err := transformInputs(p.in, p.setParam); err != nil {
+	if err := transformInputs(p.in, p.setParamSync); err != nil {
 		return nil, err
 	}
+
+	javascript.Lock()
+	defer javascript.Unlock()
 
 	return p.evaluate()
 }
 
 func (p *Javascript) handleSetter(param string, val any) error {
+	javascript.Lock()
 	if err := p.setParam(param, val); err != nil {
+		javascript.Unlock()
 		return err
 	}
 
 	v, err := p.evaluate()
 	if err != nil {
+		javascript.Unlock()
 		return err
 	}
 
+	javascript.Unlock()
 	return transformOutputs(p.out, v)
 }
 
@@ -154,6 +161,13 @@ func (p *Javascript) evaluate() (any, error) {
 
 func (p *Javascript) setParam(param string, val any) error {
 	return p.vm.Set(param, val)
+}
+
+// setParamSync is the synchronized version of setParam
+func (p *Javascript) setParamSync(param string, val any) error {
+	javascript.Lock()
+	defer javascript.Unlock()
+	return p.setParam(param, val)
 }
 
 var _ SetIntProvider = (*Javascript)(nil)

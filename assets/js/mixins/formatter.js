@@ -42,7 +42,7 @@ export default {
       if (withUnit) {
         unit = kw ? " kW" : " W";
       }
-      return `${new Intl.NumberFormat(this.$i18n.locale, {
+      return `${new Intl.NumberFormat(this.$i18n?.locale, {
         style: "decimal",
         minimumFractionDigits: digits,
         maximumFractionDigits: digits,
@@ -53,7 +53,7 @@ export default {
     },
     fmtNumber: function (number, decimals, unit) {
       const style = unit ? "unit" : "decimal";
-      return new Intl.NumberFormat(this.$i18n.locale, {
+      return new Intl.NumberFormat(this.$i18n?.locale, {
         style,
         unit,
         minimumFractionDigits: decimals,
@@ -73,7 +73,7 @@ export default {
       return Math.abs(val) >= this.fmtLimit ? "k" : "";
     },
     fmtNumberToLocale(val, pad = 0) {
-      return val.toLocaleString(this.$i18n.locale).padStart(pad, "0");
+      return val.toLocaleString(this.$i18n?.locale).padStart(pad, "0");
     },
     fmtDurationNs(duration = 0, withUnit = true, minUnit = "s") {
       return this.fmtDuration(duration / 1e9, withUnit, minUnit);
@@ -124,7 +124,7 @@ export default {
       return tomorrow.toDateString() === date.toDateString();
     },
     weekdayPrefix: function (date) {
-      const rtf = new Intl.RelativeTimeFormat(this.$i18n.locale, { numeric: "auto" });
+      const rtf = new Intl.RelativeTimeFormat(this.$i18n?.locale, { numeric: "auto" });
 
       if (this.isToday(date)) {
         return rtf.formatToParts(0, "day")[0].value;
@@ -132,25 +132,25 @@ export default {
       if (this.isTomorrow(date)) {
         return rtf.formatToParts(1, "day")[0].value;
       }
-      return new Intl.DateTimeFormat(this.$i18n.locale, {
+      return new Intl.DateTimeFormat(this.$i18n?.locale, {
         weekday: "short",
       }).format(date);
     },
     weekdayTime: function (date) {
-      return new Intl.DateTimeFormat(this.$i18n.locale, {
+      return new Intl.DateTimeFormat(this.$i18n?.locale, {
         weekday: "short",
         hour: "numeric",
         minute: "numeric",
       }).format(date);
     },
     weekdayShort: function (date) {
-      return new Intl.DateTimeFormat(this.$i18n.locale, {
+      return new Intl.DateTimeFormat(this.$i18n?.locale, {
         weekday: "short",
       }).format(date);
     },
     fmtAbsoluteDate: function (date) {
       const weekday = this.weekdayPrefix(date);
-      const hour = new Intl.DateTimeFormat(this.$i18n.locale, {
+      const hour = new Intl.DateTimeFormat(this.$i18n?.locale, {
         hour: "numeric",
         minute: "numeric",
       }).format(date);
@@ -158,7 +158,7 @@ export default {
       return `${weekday} ${hour}`;
     },
     fmtFullDateTime: function (date, short) {
-      return new Intl.DateTimeFormat(this.$i18n.locale, {
+      return new Intl.DateTimeFormat(this.$i18n?.locale, {
         weekday: short ? undefined : "short",
         month: short ? "numeric" : "short",
         day: "numeric",
@@ -167,25 +167,25 @@ export default {
       }).format(date);
     },
     fmtMonthYear: function (date) {
-      return new Intl.DateTimeFormat(this.$i18n.locale, {
+      return new Intl.DateTimeFormat(this.$i18n?.locale, {
         month: "long",
         year: "numeric",
       }).format(date);
     },
     fmtMonth: function (date, short) {
-      return new Intl.DateTimeFormat(this.$i18n.locale, {
+      return new Intl.DateTimeFormat(this.$i18n?.locale, {
         month: short ? "short" : "long",
       }).format(date);
     },
     fmtDayMonthYear: function (date) {
-      return new Intl.DateTimeFormat(this.$i18n.locale, {
+      return new Intl.DateTimeFormat(this.$i18n?.locale, {
         day: "numeric",
         month: "long",
         year: "numeric",
       }).format(date);
     },
     fmtMoney: function (amout = 0, currency = "EUR", decimals = true) {
-      return new Intl.NumberFormat(this.$i18n.locale, {
+      return new Intl.NumberFormat(this.$i18n?.locale, {
         style: "currency",
         currency,
         currencyDisplay: "code",
@@ -208,7 +208,7 @@ export default {
         minimumFractionDigits = 1;
         maximumFractionDigits = 1;
       }
-      const price = new Intl.NumberFormat(this.$i18n.locale, {
+      const price = new Intl.NumberFormat(this.$i18n?.locale, {
         style: "decimal",
         minimumFractionDigits,
         maximumFractionDigits,
@@ -230,7 +230,7 @@ export default {
         second: 1000,
       };
 
-      const rtf = new Intl.RelativeTimeFormat(this.$i18n.locale, { numeric: "auto" });
+      const rtf = new Intl.RelativeTimeFormat(this.$i18n?.locale, { numeric: "auto" });
 
       // "Math.abs" accounts for both "past" & "future" scenarios
       for (var u in units)

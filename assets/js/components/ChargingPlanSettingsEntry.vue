@@ -269,12 +269,12 @@ export default {
 				this.$t("main.targetCharge.tomorrow"),
 			];
 			for (let i = 0; i < 7; i++) {
-				const dayNumber = date.toLocaleDateString(this.$i18n.locale, {
+				const dayNumber = date.toLocaleDateString(this.$i18n?.locale, {
 					month: "short",
 					day: "numeric",
 				});
 				const dayName =
-					labels[i] || date.toLocaleDateString(this.$i18n.locale, { weekday: "long" });
+					labels[i] || date.toLocaleDateString(this.$i18n?.locale, { weekday: "long" });
 				options.push({
 					value: this.fmtDayString(date),
 					name: `${dayNumber} (${dayName})`,

@@ -101,8 +101,6 @@ remoteDisabledSoft = "{source}: Ricarica FV adattiva disabilitata"
 [main.loadpointSettings]
 currents = "Corrente di carica"
 default = "default"
-disclaimerHint = "Nota:"
-disclaimerText = "Le modifiche andranno perse dopo il riavvio del server."
 title = "Impostazioni {0}"
 vehicle = "Veicolo"
 

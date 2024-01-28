@@ -120,7 +120,10 @@ func updateSessionHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
 
-	var session map[string]any
+	var session struct {
+		Vehicle string
+	}
+
 	if err := json.NewDecoder(r.Body).Decode(&session); err != nil {
 		jsonError(w, http.StatusBadRequest, err)
 		return

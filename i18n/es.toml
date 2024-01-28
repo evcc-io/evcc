@@ -222,8 +222,6 @@ solar = "Solar"
 [main.loadpointSettings]
 currents = "Corriente de carga"
 default = "defecto"
-disclaimerHint = "Nota:"
-disclaimerText = "Actualmente, los cambios aún no son persistentes y se restablecen al iniciar el servicio."
 onlyForSocBasedCharging = "Estas opciones sólo están disponibles para vehículos con nivel de carga conocido"
 title = "Configuraciones {0}"
 vehicle = "Vehículo"
