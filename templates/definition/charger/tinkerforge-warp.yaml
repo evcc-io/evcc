@@ -11,8 +11,8 @@ products:
 capabilities: ["mA", "1p3p", "rfid"]
 requirements:
   description:
-    en: Firmware v2 required. Automatic phase switching requires the additional WARP Energy Manager.
-    de: Firmware v2 erforderlich. Für automatische Phasenumschaltung wird zusätzlich der WARP Energy Manager benötigt.
+    en: WARP Firmware v2 required. Automatic phase switching requires the additional WARP Energy Manager.
+    de: WARP Firmware v2 erforderlich. Für automatische Phasenumschaltung wird zusätzlich der WARP Energy Manager benötigt.
   uri: https://docs.evcc.io/docs/devices/chargers#tinkerforge
 params:
   - preset: mqtt
@@ -20,8 +20,8 @@ params:
     default: warp
   - name: energymanager
     help:
-      de: EnergyManager MQTT Topic (falls installiert)
-      en: EnergyManager MQTT topic if installed
+      de: WEM Firmware v2 erforderlich. EnergyManager MQTT Topic (falls installiert)
+      en: WEM Firmware v2 required. EnergyManager MQTT topic (if installed)
 render: |
   type: warp2
   {{ include "mqtt" . }}
