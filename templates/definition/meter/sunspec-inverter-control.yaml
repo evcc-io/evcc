@@ -3,6 +3,7 @@ products:
   - description:
       de: Sunspec Batterie (Model 124)
       en: Sunspec Battery (Model 124)
+capabilities: ["battery-control"]
 group: generic
 params:
   - name: usage
