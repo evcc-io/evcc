@@ -4,7 +4,7 @@ products:
 group: switchsockets
 params:
   - name: usage
-    choice: ["grid", "pv", "charge"]
+    choice: ["pv", "charge"]
   - name: host
   - name: device
     description:

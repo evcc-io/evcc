@@ -2,6 +2,7 @@ package core
 
 import (
 	"errors"
+	"strings"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/keys"
@@ -19,6 +20,74 @@ const (
 	FeedinTariff  = "feedin"
 	PlannerTariff = "planner"
 )
+
+// GetTitle returns the title
+func (site *Site) GetTitle() string {
+	site.RLock()
+	defer site.RUnlock()
+	return site.Title
+}
+
+// SetTitle sets the title
+func (site *Site) SetTitle(title string) {
+	site.Lock()
+	defer site.Unlock()
+
+	site.Title = title
+	site.publish("siteTitle", title)
+	settings.SetString(keys.Title, title)
+}
+
+// GetGridMeterRef returns the GridMeterRef
+func (site *Site) GetGridMeterRef() string {
+	site.RLock()
+	defer site.RUnlock()
+	return site.Meters.GridMeterRef
+}
+
+// SetGridMeterRef sets the GridMeterRef
+func (site *Site) SetGridMeterRef(ref string) {
+	site.Lock()
+	defer site.Unlock()
+
+	site.Meters.GridMeterRef = ref
+	// site.publish("siteGridMeterRef", meter)
+	settings.SetString(keys.GridMeter, ref)
+}
+
+// GetPVMeterRefs returns the PvMeterRef
+func (site *Site) GetPVMeterRefs() []string {
+	site.RLock()
+	defer site.RUnlock()
+	return site.Meters.PVMetersRef
+}
+
+// SetPVMeterRefs sets the PvMeterRef
+func (site *Site) SetPVMeterRefs(ref []string) {
+	site.Lock()
+	defer site.Unlock()
+
+	site.Meters.PVMetersRef = ref
+	// site.publish("siteGridMeterRef", meter)
+	settings.SetString(keys.PvMeters, strings.Join(ref, ","))
+}
+
+// GetBatteryMeterRefs returns the BatteryMeterRef
+func (site *Site) GetBatteryMeterRefs() []string {
+	site.RLock()
+	defer site.RUnlock()
+	return site.Meters.BatteryMetersRef
+}
+
+// SetBatteryMeterRefs sets the BatteryMeterRef
+func (site *Site) SetBatteryMeterRefs(ref []string) {
+	site.Lock()
+	defer site.Unlock()
+
+	site.Meters.BatteryMetersRef = ref
+	// site.publish("siteGridMeterRef", meter)
+	settings.SetString(keys.BatteryMeters, strings.Join(ref, ","))
+}
 
 // Loadpoints returns the list loadpoints
 func (site *Site) Loadpoints() []loadpoint.API {

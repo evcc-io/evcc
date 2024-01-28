@@ -192,8 +192,6 @@ solar = "Solenergi"
 [main.loadpointSettings]
 currents = "Ladestrøm"
 default = "forvalg"
-disclaimerHint = "Merknad:"
-disclaimerText = "Endringer vil gå tapt ved omstart av serveren"
 title = "Innstillinger for {0}"
 vehicle = "Kjøretøy"
 

@@ -108,21 +108,25 @@ type Loadpoint struct {
 	vmu   sync.RWMutex   // guard vehicle
 	Mode_ api.ChargeMode `mapstructure:"mode"` // Default charge mode, used for disconnect
 
-	Title_           string `mapstructure:"title"`    // UI title
-	Priority_        int    `mapstructure:"priority"` // Priority
-	ConfiguredPhases int    `mapstructure:"phases"`   // Charger configured phase mode 0/1/3
-	ChargerRef       string `mapstructure:"charger"`  // Charger reference
-	VehicleRef       string `mapstructure:"vehicle"`  // Vehicle reference
-	MeterRef         string `mapstructure:"meter"`    // Charge meter reference
-	Soc              SocConfig
-	Enable, Disable  ThresholdConfig
+	Title_          string `mapstructure:"title"`    // UI title
+	Priority_       int    `mapstructure:"priority"` // Priority
+	ChargerRef      string `mapstructure:"charger"`  // Charger reference
+	VehicleRef      string `mapstructure:"vehicle"`  // Vehicle reference
+	MeterRef        string `mapstructure:"meter"`    // Charge meter reference
+	Soc             SocConfig
+	Enable, Disable ThresholdConfig
+	GuardDuration   time.Duration // charger enable/disable minimum holding time
 
-	MinCurrent    float64       // PV mode: start current	Min+PV mode: min current
-	MaxCurrent    float64       // Max allowed current. Physically ensured by the charger
-	GuardDuration time.Duration // charger enable/disable minimum holding time
+	// TODO deprecated
+	ConfiguredPhases_ int     `mapstructure:"phases"`
+	MinCurrent_       float64 `mapstructure:"minCurrent"`
+	MaxCurrent_       float64 `mapstructure:"maxCurrent"`
 
-	limitSoc    int     // Session limit for soc
-	limitEnergy float64 // Session limit for energy
+	minCurrent       float64 // PV mode: start current	Min+PV mode: min current
+	maxCurrent       float64 // Max allowed current. Physically ensured by the charger
+	configuredPhases int     // Charger configured phase mode 0/1/3
+	limitSoc         int     // Session limit for soc
+	limitEnergy      float64 // Session limit for energy
 
 	mode                api.ChargeMode
 	enabled             bool      // Charger enabled state
@@ -200,14 +204,6 @@ func NewLoadpointFromConfig(log *util.Logger, settings *Settings, other map[stri
 		lp.Soc.Poll.Mode = pollCharging
 	}
 
-	if lp.MinCurrent == 0 {
-		lp.log.WARN.Println("minCurrent must not be zero")
-	}
-
-	if lp.MaxCurrent < lp.MinCurrent {
-		lp.log.WARN.Println("maxCurrent must be larger than minCurrent")
-	}
-
 	if lp.MeterRef != "" {
 		dev, err := config.Meters().ByName(lp.MeterRef)
 		if err != nil {
@@ -235,17 +231,29 @@ func NewLoadpointFromConfig(log *util.Logger, settings *Settings, other map[stri
 	lp.charger = dev.Instance()
 	lp.configureChargerType(lp.charger)
 
-	// setup fixed phases:
-	// - simple charger starts with phases config if specified or 3p
-	// - switchable charger starts at 0p since we don't know the current setting
-	if _, ok := lp.charger.(api.PhaseSwitcher); !ok {
-		if lp.ConfiguredPhases == 0 {
-			lp.ConfiguredPhases = 3
-			lp.log.WARN.Println("phases not configured, assuming 3p")
+	// phase switching defaults based on charger capabilities
+	if !lp.hasPhaseSwitching() {
+		lp.configuredPhases = 3
+	}
+
+	// TODO deprecated
+	if lp.MinCurrent_ > 0 {
+		lp.log.WARN.Println("deprecated: minCurrent setting is ignored, please remove")
+		if _, err := lp.settings.Float(keys.MinCurrent); err != nil {
+			lp.settings.SetFloat(keys.MinCurrent, lp.MinCurrent_)
 		}
-		lp.phases = lp.ConfiguredPhases
-	} else if lp.ConfiguredPhases != 0 {
-		lp.log.WARN.Printf("locking phase config to %dp for switchable charger", lp.ConfiguredPhases)
+	}
+	if lp.MaxCurrent_ > 0 {
+		lp.log.WARN.Println("deprecated: maxcurrent setting is ignored, please remove")
+		if _, err := lp.settings.Float(keys.MaxCurrent); err != nil {
+			lp.settings.SetFloat(keys.MaxCurrent, lp.MaxCurrent_)
+		}
+	}
+	if lp.ConfiguredPhases_ > 0 {
+		lp.log.WARN.Println("deprecated: phases setting is ignored, please remove")
+		if _, err := lp.settings.Int(keys.PhasesConfigured); err != nil {
+			lp.settings.SetInt(keys.PhasesConfigured, int64(lp.ConfiguredPhases_))
+		}
 	}
 
 	// validate thresholds
@@ -275,8 +283,8 @@ func NewLoadpoint(log *util.Logger, settings *Settings) *Loadpoint {
 		bus:        bus,      // event bus
 		mode:       api.ModeOff,
 		status:     api.StatusNone,
-		MinCurrent: 6,  // A
-		MaxCurrent: 16, // A
+		minCurrent: 6,  // A
+		maxCurrent: 16, // A
 		Soc: SocConfig{
 			Poll: PollConfig{
 				Interval: pollInterval,
@@ -299,6 +307,15 @@ func NewLoadpoint(log *util.Logger, settings *Settings) *Loadpoint {
 func (lp *Loadpoint) restoreSettings() {
 	if v, err := lp.settings.String(keys.Mode); err == nil && v != "" {
 		lp.setMode(api.ChargeMode(v))
+	}
+	if v, err := lp.settings.Int(keys.PhasesConfigured); err == nil && (v > 0 || lp.hasPhaseSwitching()) {
+		lp.setConfiguredPhases(int(v))
+	}
+	if v, err := lp.settings.Float(keys.MinCurrent); err == nil && v > 0 {
+		lp.setMinCurrent(v)
+	}
+	if v, err := lp.settings.Float(keys.MaxCurrent); err == nil && v > 0 {
+		lp.setMaxCurrent(v)
 	}
 	if v, err := lp.settings.Int(keys.LimitSoc); err == nil && v > 0 {
 		lp.setLimitSoc(int(v))
@@ -571,7 +588,8 @@ func (lp *Loadpoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	lp.publish(keys.EnableThreshold, lp.Enable.Threshold)
 	lp.publish(keys.DisableThreshold, lp.Disable.Threshold)
 
-	lp.setConfiguredPhases(lp.ConfiguredPhases)
+	lp.publish(keys.PhasesConfigured, lp.configuredPhases)
+	lp.publish(keys.Phases1p3p, lp.hasPhaseSwitching())
 	lp.publish(keys.PhasesEnabled, lp.phases)
 	lp.publish(keys.PhasesActive, lp.ActivePhases())
 	lp.publishTimer(phaseTimer, 0, timerInactive)
@@ -591,9 +609,7 @@ func (lp *Loadpoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	}
 
 	// vehicle
-	lp.publish(keys.VehicleIcon, "")
 	lp.publish(keys.VehicleName, "")
-	lp.publish(keys.VehicleCapacity, 0.0)
 	lp.publish(keys.VehicleOdometer, 0.0)
 
 	// assign and publish default vehicle
@@ -972,17 +988,16 @@ func (lp *Loadpoint) resetPhaseTimer() {
 
 // scalePhasesRequired validates if fixed phase configuration matches enabled phases
 func (lp *Loadpoint) scalePhasesRequired() bool {
-	_, ok := lp.charger.(api.PhaseSwitcher)
-	return ok && lp.ConfiguredPhases != 0 && lp.ConfiguredPhases != lp.GetPhases()
+	return lp.hasPhaseSwitching() && lp.configuredPhases != 0 && lp.configuredPhases != lp.GetPhases()
 }
 
 // scalePhasesIfAvailable scales if api.PhaseSwitcher is available
 func (lp *Loadpoint) scalePhasesIfAvailable(phases int) error {
-	if lp.ConfiguredPhases != 0 {
-		phases = lp.ConfiguredPhases
+	if lp.configuredPhases != 0 {
+		phases = lp.configuredPhases
 	}
 
-	if _, ok := lp.charger.(api.PhaseSwitcher); ok {
+	if lp.hasPhaseSwitching() {
 		return lp.scalePhases(phases)
 	}
 
@@ -1043,7 +1058,7 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64) bo
 	var waiting bool
 	activePhases := lp.ActivePhases()
 	availablePower := lp.chargePower - sitePower
-	scalable := (sitePower > 0 || !lp.enabled) && activePhases > 1 && lp.ConfiguredPhases < 3
+	scalable := (sitePower > 0 || !lp.enabled) && activePhases > 1 && lp.configuredPhases < 3
 
 	// scale down phases
 	if targetCurrent := powerToCurrent(availablePower, activePhases); targetCurrent < minCurrent && scalable {
@@ -1139,7 +1154,7 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batter
 	maxCurrent := lp.effectiveMaxCurrent()
 
 	// switch phases up/down
-	if _, ok := lp.charger.(api.PhaseSwitcher); ok {
+	if lp.hasPhaseSwitching() {
 		_ = lp.pvScalePhases(sitePower, minCurrent, maxCurrent)
 	}
 
@@ -1296,7 +1311,7 @@ func (lp *Loadpoint) updateChargeCurrents() {
 
 // updateChargeVoltages uses PhaseVoltages interface to count phases with nominal grid voltage
 func (lp *Loadpoint) updateChargeVoltages() {
-	if _, ok := lp.charger.(api.PhaseSwitcher); ok {
+	if lp.hasPhaseSwitching() {
 		return // we don't need the voltages
 	}
 
@@ -1565,7 +1580,7 @@ func (lp *Loadpoint) Update(sitePower float64, autoCharge, batteryBuffered, batt
 		err = lp.setLimit(0, false)
 
 	case lp.scalePhasesRequired():
-		err = lp.scalePhases(lp.ConfiguredPhases)
+		err = lp.scalePhases(lp.configuredPhases)
 
 	case lp.remoteControlled(loadpoint.RemoteHardDisable):
 		remoteDisabled = loadpoint.RemoteHardDisable

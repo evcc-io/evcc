@@ -236,7 +236,6 @@ loadpoints:
   - title: Carport
     charger: charger_1
     mode: pv
-    phases: 1
     meter: meter_charger_1
     vehicle: vehicle_1
   - title: Garage

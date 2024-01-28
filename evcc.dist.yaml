@@ -116,9 +116,6 @@ loadpoints:
     charger: wallbe # charger
     meter: charge # charge meter
     mode: "off" # default charge mode to apply when vehicle is disconnected; use "off" to disable by default if charger is publicly available
-    phases: 3 # electrical connection (normal charger: default 3 for 3 phase, 1p3p charger: 0 for "auto" or 1/3 for fixed phases)
-    minCurrent: 6 # minimum charge current (default 6A)
-    maxCurrent: 16 # maximum charge current (default 16A)
 
     # remaining settings are experts-only and best left at default values
     priority: 0 # relative priority for concurrent charging in PV mode with multiple loadpoints (higher values have higher priority)

@@ -31,6 +31,11 @@ const (
 	TariffPriceLoadpoints = "tariffPriceLoadpoints"
 	Vehicles              = "vehicles"
 
+	// meters
+	BatteryMeters = "batteryMeters"
+	GridMeter     = "GridMeter"
+	PvMeters      = "pvMeters"
+
 	// battery settings
 	BatteryCapacity         = "batteryCapacity"
 	BatteryDischargeControl = "batteryDischargeControl"
