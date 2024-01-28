@@ -266,6 +266,20 @@ func (mr *MockAPIMockRecorder) GetPlan(arg0, arg1 any) *gomock.Call {
 }
 
 // GetPlanActive mocks base method.
+func (m *MockAPI) GetMinSocNotReached() bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetMinSocNotReached")
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// GetMinSocNotReached indicates an expected call of GetPlanActive.
+func (mr *MockAPIMockRecorder) GetMinSocNotReached() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMinSocNotReached", reflect.TypeOf((*MockAPI)(nil).GetMinSocNotReached))
+}
+
+// GetPlanActive mocks base method.
 func (m *MockAPI) GetPlanActive() bool {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetPlanActive")

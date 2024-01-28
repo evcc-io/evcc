@@ -120,6 +120,8 @@ type API interface {
 	// charge progress
 	//
 
+	// GetMinSocNotReached returns the state of min soc is not reached
+	GetMinSocNotReached() bool
 	// GetPlanActive returns the active state of the planner
 	GetPlanActive() bool
 	// GetRemainingDuration is the estimated remaining charging duration
