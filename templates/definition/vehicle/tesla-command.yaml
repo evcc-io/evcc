@@ -7,13 +7,13 @@ products:
 requirements:
   description:
     de: |
-      Es wird ein `access` und ein `refresh` Token für die Kommunikation mit der Tesla-API erstellt werden.
-      Die Tokens werden unter [tesla.evcc.io](https://tesla.evcc.io) erstellt.
+      Du benötigst ein `access` und ein `refresh` Token.
+      Diese kannst du über [tesla.evcc.io](https://tesla.evcc.io) erstellt.
 
       **Hinweis:** Dies ist die von Tesla offiziell unterstützte [FleetAPI](https://developer.tesla.com/docs/fleet-api).
     en: |
-      You need to generate an `access` and a `refresh` token for communicating with the Tesla API.
-      Tokens are generated using [tesla.evcc.io](https://tesla.evcc.io).
+      You need an `access` and a `refresh` token.
+      Please generate them through [tesla.evcc.io](https://tesla.evcc.io).
 
       **Note:** This is Tesla's officially supported [FleetAPI](https://developer.tesla.com/docs/fleet-api).
 params:
