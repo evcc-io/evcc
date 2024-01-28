@@ -99,6 +99,7 @@ render: |
                 type: writemultiple
                 encoding: float32s
       - case: 2 # hold
+        set:
           source: sequence
           set:
           - source: const
