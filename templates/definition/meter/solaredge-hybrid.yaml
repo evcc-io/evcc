@@ -22,10 +22,6 @@ params:
   - name: timeout
   - name: capacity
     advanced: true
-  - name: watchdog
-    type: duration
-    default: 60s
-    advanced: true
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -71,70 +67,6 @@ render: |
       address: 62852 # Battery 1 State of Energy (SOE)
       type: holding
       decode: float32s
-  batterymode:
-    source: sequence
-    set:
-    # set StorageConf_CtrlMode remote
-    - source: map
-      values:
-        1: 1 # normal
-        2: 4 # remote
-        3: 4 # remote
-      set:
-        source: modbus
-        {{- include "modbus" . | indent 6 }}
-        timeout: {{ .timeout }}
-        register:
-          address: 0xE004 # StorageConf_CtrlMode
-          type: writesingle
-          encoding: uint16
-    # set StorageRemoteCtrl_CommandMode with watchdog and discharge limit
-    - source: map
-      values:
-        1: 7 # normal
-        2: 77 # hold - this is actually 7 but we need a different value for the switch below
-        3: 3 # charge
-      set:
-        source: watchdog
-        reset: 7 # stop watchdog
-        timeout: {{ .watchdog }} # re-write at timeout/2
-        set:
-          source: switch
-          switch:
-          # hold (77 -> 7)
-          - case: 77
-            set:
-              source: sequence
-              set:
-              - source: const
-                value: 7 # replace 77 with 7
-                set:
-                  source: modbus
-                  {{- include "modbus" . | indent 16 }}
-                  timeout: {{ .timeout }}
-                  register:
-                    address: 0xE00D # StorageRemoteCtrl_CommandMode
-                    type: writesingle
-                    encoding: uint16
-              - source: const
-                value: 0 # StorageRemoteCtrl_DischargeLimit
-                set:
-                  source: modbus
-                  {{- include "modbus" . | indent 16 }}
-                  timeout: {{ .timeout }}
-                  register:
-                    address: 0xe010 # StorageRemoteCtrl_DischargeLimit
-                    type: writesingle
-                    encoding: uint16
-          # normal (1) or charge (3)
-          default:
-            source: modbus
-            {{- include "modbus" . | indent 10 }}
-            timeout: {{ .timeout }}
-            register:
-              address: 0xE00D # StorageRemoteCtrl_CommandMode
-              type: writesingle
-              encoding: uint16
   {{- if .capacity }}
   capacity: {{ .capacity }} # kWh
   {{- end }}
