@@ -96,14 +96,16 @@ func NewModbusMbmdFromConfig(other map[string]interface{}) (api.Meter, error) {
 		device: device,
 	}
 
-	if err := modbus.ParseOperation(device, cc.Power, &m.opPower); err != nil {
+	m.opPower, err = modbus.ParseOperation(device, cc.Power)
+	if err != nil {
 		return nil, fmt.Errorf("invalid measurement for power: %s", cc.Power)
 	}
 
 	// decorate energy
 	var totalEnergy func() (float64, error)
 	if cc.Energy != "" {
-		if err := modbus.ParseOperation(device, cc.Energy, &m.opEnergy); err != nil {
+		m.opEnergy, err = modbus.ParseOperation(device, cc.Energy)
+		if err != nil {
 			return nil, fmt.Errorf("invalid measurement for energy: %s", cc.Energy)
 		}
 
@@ -131,7 +133,8 @@ func NewModbusMbmdFromConfig(other map[string]interface{}) (api.Meter, error) {
 	// decorate soc
 	var soc func() (float64, error)
 	if cc.Soc != "" {
-		if err := modbus.ParseOperation(device, cc.Soc, &m.opSoc); err != nil {
+		m.opSoc, err = modbus.ParseOperation(device, cc.Soc)
+		if err != nil {
 			return nil, fmt.Errorf("invalid measurement for soc: %s", cc.Soc)
 		}
 
@@ -150,9 +153,8 @@ func (m *ModbusMbmd) buildPhaseProviders(readings []string) (func() (float64, fl
 
 		phases := make([]func() (float64, error), 0, 3)
 		for idx, reading := range readings {
-			var opCurrent modbus.Operation
-
-			if err := modbus.ParseOperation(m.device, reading, &opCurrent); err != nil {
+			opCurrent, err := modbus.ParseOperation(m.device, reading)
+			if err != nil {
 				return nil, fmt.Errorf("invalid measurement [%d]: %s", idx, reading)
 			}
 
