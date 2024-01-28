@@ -77,8 +77,7 @@ func NewModbusSunspecFromConfig(other map[string]interface{}) (Provider, error) 
 		return nil, err
 	}
 
-	var op modbus.SunSpecOperation
-	op.Model, op.Block, op.Point, err = modbus.ParsePoint(cc.Value)
+	ops, err := modbus.ParsePoint(cc.Value)
 	if err != nil {
 		return nil, fmt.Errorf("invalid sunspec value: %s", cc.Value)
 	}
@@ -87,10 +86,17 @@ func NewModbusSunspecFromConfig(other map[string]interface{}) (Provider, error) 
 		log:    log,
 		conn:   conn,
 		device: device,
-		op:     op,
 		scale:  cc.Scale,
 	}
-	return mb, nil
+
+	for _, op := range ops {
+		if _, _, err := device.QueryPointAny(conn, op.Model, op.Block, op.Point); err == nil {
+			mb.op = op
+			return mb, nil
+		}
+	}
+
+	return nil, fmt.Errorf("sunspec model not found: %v", ops)
 }
 
 func (m *ModbusSunspec) floatGetter() (f float64, err error) {
