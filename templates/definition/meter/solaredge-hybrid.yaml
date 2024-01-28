@@ -42,7 +42,7 @@ render: |
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
       timeout: {{ .timeout }}
-      value: 160:1:DCW
+      value: 101|103:DCW
     - source: modbus
       {{- include "modbus" . | indent 4 }}
       timeout: {{ .timeout }}

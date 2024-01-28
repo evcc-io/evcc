@@ -7,11 +7,11 @@ import (
 	"strings"
 )
 
-const _UsageName = "gridpvbatterycharge"
+const _UsageName = "gridpvbatterychargeaux"
 
-var _UsageIndex = [...]uint8{0, 4, 6, 13, 19}
+var _UsageIndex = [...]uint8{0, 4, 6, 13, 19, 22}
 
-const _UsageLowerName = "gridpvbatterycharge"
+const _UsageLowerName = "gridpvbatterychargeaux"
 
 func (i Usage) String() string {
 	if i < 0 || i >= Usage(len(_UsageIndex)-1) {
@@ -28,9 +28,10 @@ func _UsageNoOp() {
 	_ = x[UsagePV-(1)]
 	_ = x[UsageBattery-(2)]
 	_ = x[UsageCharge-(3)]
+	_ = x[UsageAux-(4)]
 }
 
-var _UsageValues = []Usage{UsageGrid, UsagePV, UsageBattery, UsageCharge}
+var _UsageValues = []Usage{UsageGrid, UsagePV, UsageBattery, UsageCharge, UsageAux}
 
 var _UsageNameToValueMap = map[string]Usage{
 	_UsageName[0:4]:        UsageGrid,
@@ -41,6 +42,8 @@ var _UsageNameToValueMap = map[string]Usage{
 	_UsageLowerName[6:13]:  UsageBattery,
 	_UsageName[13:19]:      UsageCharge,
 	_UsageLowerName[13:19]: UsageCharge,
+	_UsageName[19:22]:      UsageAux,
+	_UsageLowerName[19:22]: UsageAux,
 }
 
 var _UsageNames = []string{
@@ -48,6 +51,7 @@ var _UsageNames = []string{
 	_UsageName[4:6],
 	_UsageName[6:13],
 	_UsageName[13:19],
+	_UsageName[19:22],
 }
 
 // UsageString retrieves an enum value from the enum constants string name.
