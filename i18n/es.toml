@@ -23,19 +23,59 @@ never = "cuando hay suficiente excedente"
 
 [config]
 
+[config.battery]
+titleAdd = "Añadir medidor de batería"
+titleEdit = "Editar el medidor de batería"
+
+[config.deviceValue]
+capacity = "Capacidad"
+chargeStatus = "Estado"
+chargedEnergy = "Cargado"
+current = "Actual"
+enabled = "Activado"
+energy = "Energía"
+odometer = "Cuentakilómetros"
+phaseCurrents = "Actual L1..L3"
+phasePowers = "Potencia L1..L3"
+phaseVoltages = "Voltaje L1..L3"
+power = "Potencia"
+range = "Alcance"
+soc = "SoC"
+socLimit = "Límite"
+
 [config.form]
 example = "Ejemplo"
 optional = "opcional"
 
+[config.grid]
+titleAdd = "Añadir medidor de cuadrícula"
+titleEdit = "Editar medidor de cuadrícula"
+
 [config.main]
+addLoadpoint = "Añadir un punto de carga"
+addPvBattery = "Añadir solar o batería"
 addVehicle = "Añadir un vehículo"
 edit = "editar"
 title = "Configuración"
-vehicles = "Mis vehículos"
-addLoadpoint = "Añadir un punto de carga"
-addPvBattery = "Añadir solar o batería"
 unconfigured = "no configurado"
+vehicles = "Mis vehículos"
 yaml = "Configurado en evcc.yaml. No editable en la interfaz de usuario"
+
+[config.meter]
+cancel = "Cancelar"
+delete = "Borrar"
+save = "Guardar"
+template = "Fabricante"
+titleChoice = "¿Qué quieres añadir?"
+validateSave = "Validar y guardar"
+
+[config.pv]
+titleAdd = "Añadir contador solar"
+titleEdit = "Editar contador solar"
+
+[config.site]
+cancel = "Cancelar"
+save = "Guardar"
 
 [config.validation]
 failed = "fallido"
@@ -457,44 +497,3 @@ title = "Error al iniciar"
 cancel = "Cancelar"
 template = "Fabricante"
 test = "Prueba"
-
-
-[config.battery]
-titleAdd = "Añadir medidor de batería"
-titleEdit = "Editar el medidor de batería"
-
-[config.deviceValue]
-chargeStatus = "Estado"
-chargedEnergy = "Cargado"
-current = "Actual"
-energy = "Energía
-odometer = "Cuentakilómetros"
-phaseCurrents = "Actual L1..L3"
-phasePowers = "Potencia L1..L3"
-phaseVoltages = "Voltaje L1..L3"
-power = "Potencia"
-range = "Alcance"
-soc = "SoC"
-socLimit = "Límite"
-capacity = "Capacidad"
-enabled = "Activado"
-
-[config.grid]
-titleAdd = "Añadir medidor de cuadrícula"
-titleEdit = "Editar medidor de cuadrícula"
-
-[config.meter]
-cancel = "Cancelar"
-save = "Guardar"
-template = "Fabricante"
-titleChoice = "¿Qué quieres añadir?"
-validateSave = "Validar y guardar"
-delete = "Borrar"
-
-[config.pv]
-titleAdd = "Añadir contador solar"
-titleEdit = "Editar contador solar"
-
-[config.site]
-cancel = "Cancelar"
-save = "Guardar"

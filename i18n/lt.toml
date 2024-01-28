@@ -200,6 +200,12 @@ pvExport = "Tinklo eksportas"
 pvProduction = "Gamyba"
 selfConsumption = "Sunaudojama iškart"
 
+[main.heatingStatus]
+charging = "Šildoma…"
+cheapEnergyCharging = "Šildoma pigia energija: {price} (limitas {limit})"
+cleanEnergyCharging = "Šildoma švaria energija: {co2} (limitas {limit})"
+waitForVehicle = "Paruošta. Laukiame šildytuvo…"
+
 [main.loadpoint]
 avgPrice = "⌀ Kaina"
 charged = "Įkrauta"
@@ -447,10 +453,3 @@ title = "Klaida startuojant"
 cancel = "Atšaukti"
 template = "Gamintojas"
 test = "Testuoti"
-
-
-[main.heatingStatus]
-cleanEnergyCharging = "Šildoma švaria energija: {co2} (limitas {limit})"
-waitForVehicle = "Paruošta. Laukiame šildytuvo…"
-charging = "Šildoma…"
-cheapEnergyCharging = "Šildoma pigia energija: {price} (limitas {limit})"
