@@ -77,9 +77,11 @@ render: |
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
       value: 160:1:DCWH # mppt 1
+      scale: 0.001
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
       value: 160:2:DCWH # mppt 2
+      scale: 0.001
   {{- end }}
   {{- if eq .usage "battery" }}
   type: custom
@@ -97,6 +99,7 @@ render: |
     source: sunspec
     {{- include "modbus" . | indent 2 }}
     value: 160:4:DCWH # mppt 4 (discharge)
+    scale: 0.001
   soc:
     source: sunspec
     {{- include "modbus" . | indent 2 }}
