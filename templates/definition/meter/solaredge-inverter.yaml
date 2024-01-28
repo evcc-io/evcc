@@ -33,5 +33,5 @@ render: |
     source: sunspec
     {{- include "modbus" . | indent 2 }}
     timeout: {{ .timeout }}
-    value: 103:W # sunspec inverter AC power reading
+    value: 101|103:W # sunspec inverter AC power reading
   {{- end }}
