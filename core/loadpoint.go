@@ -1173,7 +1173,7 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batter
 
 	if mode == api.ModePV && lp.enabled && targetCurrent < minCurrent {
 		// kick off disable sequence
-		sitePowerWithLpIn1pMode := sitePower + minCurrent*float64(1-activePhases)
+		sitePowerWithLpIn1pMode := sitePower + Voltage*minCurrent*float64(1-activePhases)
 		if sitePowerWithLpIn1pMode >= lp.Disable.Threshold || (sitePower >= lp.Disable.Threshold && lp.phaseTimer.IsZero()) {
 			lp.log.DEBUG.Printf("site power %.0fW >= %.0fW disable threshold", sitePower, lp.Disable.Threshold)
 
