@@ -124,7 +124,7 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 	}
 
 	planStart = planner.Start(plan)
-	lp.log.DEBUG.Printf("plan: charge %v starting at %v until %v (%spower: %.0fW, avg cost: %.3f)",
+	lp.log.DEBUG.Printf("plan: charge %v between %v until %v (%spower: %.0fW, avg cost: %.3f)",
 		planner.Duration(plan).Round(time.Second), planStart.Round(time.Second).Local(), planTime.Round(time.Second).Local(), overrun,
 		maxPower, planner.AverageCost(plan))
 
@@ -162,7 +162,7 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 			lp.log.DEBUG.Printf("plan: continuing for remaining %v", requiredDuration.Round(time.Second))
 			return true
 		case lp.clock.Until(planStart) < smallGapDuration:
-			lp.log.DEBUG.Printf("plan: will re-start shortly, continuing for remaining %v", lp.clock.Until(planStart).Round(time.Second))
+			lp.log.DEBUG.Printf("plan: avoid re-start within %v, continuing for remaining %v", smallGapDuration, lp.clock.Until(planStart).Round(time.Second))
 			return true
 		}
 	}
