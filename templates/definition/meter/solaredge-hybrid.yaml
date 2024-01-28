@@ -7,10 +7,8 @@ requirements:
   description:
     de: |
       Nur ein System kann und darf auf den Wechselrichter zugreifen!
-      Für die optionale Batteriesteuerung muss StorageConf_CtrlMode (0xE004) auf 4 "Remote" stehen.
     en: |
       Only one system may access the inverter!
-      For optional battery control, StorageConf_CtrlMode (0xE004) must be at 4 "Remote".
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
