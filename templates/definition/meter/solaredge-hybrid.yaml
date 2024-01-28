@@ -101,6 +101,7 @@ render: |
         set:
           source: switch
           switch:
+          # hold (77 -> 7)
           - case: 77
             set:
               source: sequence
@@ -125,6 +126,7 @@ render: |
                     address: 0xe010 # StorageRemoteCtrl_DischargeLimit
                     type: writesingle
                     encoding: uint16
+          # normal (1) or charge (3)
           default:
             source: modbus
             {{- include "modbus" . | indent 10 }}
