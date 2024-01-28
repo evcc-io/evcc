@@ -461,7 +461,7 @@ export default {
 	grid-gap: 1rem;
 	margin-bottom: 5rem;
 }
-.wrapper {
+.container {
 	max-width: 900px;
 	margin: 0 auto;
 }

@@ -106,13 +106,15 @@ func Execute() {
 func runRoot(cmd *cobra.Command, args []string) {
 	// load config and re-configure logging after reading config file
 	var err error
-	if cfgErr := loadConfigFile(&conf); errors.As(cfgErr, &viper.ConfigFileNotFoundError{}) {
+	var configFile string
+	if cfgFile, cfgErr := loadConfigFile(&conf); errors.As(cfgErr, &viper.ConfigFileNotFoundError{}) {
 		log.INFO.Println("missing config file - switching into demo mode")
 		if err := demoConfig(&conf); err != nil {
 			log.FATAL.Fatal(err)
 		}
 	} else {
 		err = cfgErr
+		configFile = cfgFile
 	}
 
 	// network config
@@ -248,7 +250,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 	// show main ui
 	if err == nil {
-		httpd.RegisterSiteHandlers(site, cache)
+		httpd.RegisterSiteHandlers(site, cache, configFile)
 		httpd.RegisterShutdownHandler(func() {
 			log.FATAL.Println("evcc was stopped by user. OS should restart the service. Or restart manually.")
 			once.Do(func() { close(stopC) }) // signal loop to end

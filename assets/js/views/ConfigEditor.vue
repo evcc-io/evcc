@@ -1,45 +1,41 @@
 <template>
-	<div class="container px-4">
-		<header class="d-flex justify-content-between align-items-center py-3 mb-4">
-			<h1 class="mb-1 pt-1 d-flex text-nowrap">
-				<router-link class="dropdown-item mx-2 me-2" to="/">
-					<shopicon-bold-arrowback size="s" class="back"></shopicon-bold-arrowback>
-				</router-link>
-				<router-link class="dropdown-item mx-2 me-2" to="/config">
-					Configuration
-				</router-link>
-				Editor 🧪
-			</h1>
-			<TopNavigation v-bind="topNavigation" />
-		</header>
-
-		<h2 class="my-4">evcc.yaml</h2>
-		<vue-monaco-editor
-			v-model:value="code"
-			class="editor"
-			:theme="theme"
-			language="yaml"
-			height="calc(100vh - 200px)"
-			:options="editorOptions"
-			@mount="handleMount"
-		/>
+	<div class="root">
+		<div class="container px-4">
+			<TopHeader title="Configuration Editor 🧪" />
+			<div class="wrapper">
+				<h2 class="my-4">evcc.yaml</h2>
+				<button class="btn btn-primary" @click="handleSave">Save</button>
+				<vue-monaco-editor
+					v-model:value="yaml"
+					class="editor"
+					:theme="theme"
+					language="yaml"
+					height="calc(100vh - 200px)"
+					:options="editorOptions"
+					@mount="handleMount"
+				>
+					loading editor ...
+				</vue-monaco-editor>
+			</div>
+		</div>
 	</div>
 </template>
 
 <script>
-import TopNavigation from "../components/TopNavigation.vue";
+import TopHeader from "../components/TopHeader.vue";
 import "@h2d2/shopicons/es/bold/arrowback";
 import store from "../store";
 import collector from "../mixins/collector";
+import api from "../api";
 
 export default {
 	name: "ConfigEditor",
-	components: { TopNavigation },
+	components: { TopHeader },
 	mixins: [collector],
 	data() {
 		return {
 			theme: "vs",
-			code: `network:
+			yaml: `network:
   port: 7070
 
 log: debug
@@ -301,9 +297,9 @@ tariffs:
 		};
 	},
 	computed: {
-		topNavigation: function () {
+		TopHeader: function () {
 			const vehicleLogins = store.state.auth ? store.state.auth.vehicles : {};
-			return { vehicleLogins, ...this.collectProps(TopNavigation, store.state) };
+			return { vehicleLogins, ...this.collectProps(TopHeader, store.state) };
 		},
 		editorOptions: function () {
 			return {
@@ -316,9 +312,11 @@ tariffs:
 			};
 		},
 	},
-	mounted() {
+	async mounted() {
 		this.updateTheme();
 		document.querySelector("html").addEventListener("themechange", this.updateTheme);
+		const res = await api.get("/config/yaml");
+		this.yaml = res.data?.result?.Content;
 	},
 	unmounted() {
 		document.querySelector("html").removeEventListener("themechange", this.updateTheme);
@@ -332,6 +330,13 @@ tariffs:
 		handleMount() {
 			console.log("not implemented yet");
 		},
+		async handleSave() {
+			await api.put("/config/yaml", this.yaml);
+		},
+	},
+	errorCaptured(err, vm, info) {
+		console.log({ err, vm, info });
+		return false;
 	},
 };
 </script>
@@ -343,7 +348,7 @@ tariffs:
 	top: -2px;
 }
 .container {
-	max-width: 700px;
+	max-width: 900px;
 }
 .editor :global(.monaco-editor) {
 	--vscode-editor-background: var(--evcc-box) !important;

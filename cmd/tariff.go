@@ -24,7 +24,7 @@ func init() {
 
 func runTariff(cmd *cobra.Command, args []string) {
 	// load config
-	if err := loadConfigFile(&conf); err != nil {
+	if _, err := loadConfigFile(&conf); err != nil {
 		fatal(err)
 	}
 

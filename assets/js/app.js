@@ -71,6 +71,9 @@ app.mixin(VueHeadMixin); // not deprecated. see https://github.com/unjs/unhead/i
 app.use(VueMonacoEditorPlugin, {
   paths: { vs: "https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs" },
 });
+app.config.errorHandler = function (err, vm, info) {
+  console.log("errorHandler", err, vm, info);
+};
 window.app = app.mount("#app");
 
 watchThemeChanges();

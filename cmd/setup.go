@@ -154,11 +154,11 @@ func (c networkConfig) URI() string {
 	return fmt.Sprintf("%s://%s", c.Schema, c.HostPort())
 }
 
-func loadConfigFile(conf *globalConfig) error {
+func loadConfigFile(conf *globalConfig) (string, error) {
 	err := viper.ReadInConfig()
 
 	if cfgFile = viper.ConfigFileUsed(); cfgFile == "" {
-		return err
+		return "", err
 	}
 
 	log.INFO.Println("using config file:", cfgFile)
@@ -174,7 +174,7 @@ func loadConfigFile(conf *globalConfig) error {
 		parseLogLevels()
 	}
 
-	return err
+	return cfgFile, err
 }
 
 func configureMeters(static []config.Named, names ...string) error {

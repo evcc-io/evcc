@@ -66,7 +66,7 @@ func ramp(c api.Charger, digits int, delay time.Duration) {
 
 func runChargerRamp(cmd *cobra.Command, args []string) {
 	// load config
-	if err := loadConfigFile(&conf); err != nil {
+	if _, err := loadConfigFile(&conf); err != nil {
 		log.FATAL.Fatal(err)
 	}
 
