@@ -112,7 +112,7 @@ func (m *ModbusSunspec) floatGetter() (f float64, err error) {
 		m.op.Block,
 		m.op.Point,
 	)
-	if err != nil {
+	if err != nil && !errors.Is(err, meters.ErrNaN) {
 		return 0, fmt.Errorf("model %d block %d point %s: %w", m.op.Model, m.op.Block, m.op.Point, err)
 	}
 
