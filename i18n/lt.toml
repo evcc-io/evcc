@@ -32,6 +32,10 @@ addVehicle = "Pridėti automobilį"
 edit = "redaguoti"
 title = "Konfigūracija"
 vehicles = "Mano automobiliai"
+addLoadpoint = "Pridėti įkroviklį"
+addPvBattery = "Pridėti saulės ar kaupiklio skaitiklį"
+unconfigured = "nesukonfigūruota"
+yaml = "Čia redaguoti neina. Konfigūruokite evcc.yaml faile."
 
 [config.validation]
 failed = "nepavyko"
@@ -43,7 +47,7 @@ validate = "tikrinti"
 
 [config.vehicle]
 cancel = "Atšaukti"
-delete = "Ištrinti automobilį"
+delete = "Ištrinti"
 generic = "Kitos integracijos"
 offline = "Tipinis automobilis"
 online = "Automobiliai su internetiniu API"
@@ -453,3 +457,44 @@ title = "Klaida startuojant"
 cancel = "Atšaukti"
 template = "Gamintojas"
 test = "Testuoti"
+
+
+[config.battery]
+titleEdit = "Redaguoti kaupiklio skaitiklį"
+titleAdd = "Pridėti kaupiklio skaitiklį"
+
+[config.deviceValue]
+capacity = "Talpa"
+chargeStatus = "Statusas"
+chargedEnergy = "Įkrauta"
+current = "Dabartinis"
+enabled = "Aktyvuota"
+energy = "Energija"
+odometer = "Odometras"
+phaseCurrents = "Srovė L1..L3"
+phasePowers = "Galia L1..L3"
+phaseVoltages = "Įtampa L1..L3"
+power = "Galia"
+range = "Nuvažiuojamas atstumas"
+soc = "Įkrova"
+socLimit = "Limitas"
+
+[config.grid]
+titleAdd = "Pridėti tinklo skaitiklį"
+titleEdit = "Redaguoti tinklo skaitiklį"
+
+[config.meter]
+cancel = "Atšaukti"
+delete = "Ištrinti"
+save = "Išsaugoti"
+template = "Gamintojas"
+titleChoice = "Ką norite pridėti?"
+validateSave = "Patikrinti ir išsaugoti"
+
+[config.pv]
+titleAdd = "Pridėti saulės skaitiklį"
+titleEdit = "Redaguoti saulės skaitiklį"
+
+[config.site]
+cancel = "Atšaukti"
+save = "Išsaugoti"
