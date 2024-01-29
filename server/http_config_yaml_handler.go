@@ -9,9 +9,9 @@ import (
 func yamlHandler(configFile string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var payload struct {
-			Content  string
-			Writable bool
-			Path     string
+			Content  string `json:"content"`
+			Writable bool   `json:"writable"`
+			Path     string `json:"path"`
 		}
 
 		// read content from file, check if file is writable
