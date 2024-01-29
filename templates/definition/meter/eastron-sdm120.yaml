@@ -25,7 +25,7 @@ render: |
     {{- include "modbus" . | indent 2 }}
     register:
       {{- if eq .usage "pv" }}
-      address: 0x4c # Export active energy
+      address: 0x4a # Export active energy
       {{- else }}
       address: 0x48 # Import active energy
       {{- end }}
