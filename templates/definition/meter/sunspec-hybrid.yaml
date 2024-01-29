@@ -11,54 +11,27 @@ params:
     allinone: true
   - name: modbus
     choice: ["tcpip", "rs485"]
-  - name: integer
-    description:
-      de: Integer Registerzugriff (nur für Netzzähler)
-      en: Integer register access (grid meter only)
-    help:
-      de: Einstellung Float/Integer im Wechselrichter überprüfen
-      en: Verify Float/Integer setting in inverter
-    advanced: true
-    type: bool
   - name: capacity
     advanced: true
 render: |
   {{- if eq .usage "grid" }}
   type: mbmd
   {{- include "modbus" . }}
-  {{- if eq .integer "true" }}
-  # sunspec model 203 (int+sf) meter
-  power: 203:W
-  energy: 203:TotWhImp
+  # sunspec model 203 (int+sf)/ 213 (float) meter
+  power: 203|213:W
+  energy: 203|213:TotWhImp
   currents:
-    - 203:AphA
-    - 203:AphB
-    - 203:AphC
+    - 203|213:AphA
+    - 203|213:AphB
+    - 203|213:AphC
   voltages:
-    - 203:PhVphA
-    - 203:PhVphB
-    - 203:PhVphC
+    - 203|213:PhVphA
+    - 203|213:PhVphB
+    - 203|213:PhVphC
   powers:
-    - 203:WphA
-    - 203:WphB
-    - 203:WphC
-  {{ else }}
-  # sunspec model 213 (float) meter
-  power: 213:W
-  energy: 213:TotWhImp
-  currents:
-    - 213:AphA
-    - 213:AphB
-    - 213:AphC
-  voltages:
-    - 213:PhVphA
-    - 213:PhVphB
-    - 213:PhVphC
-  powers:
-    - 213:WphA
-    - 213:WphB
-    - 213:WphC
-  {{- end }}
+    - 203|213:WphA
+    - 203|213:WphB
+    - 203|213:WphC
   {{- end }}
   {{- if eq .usage "pv" }}
   type: custom
