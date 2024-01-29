@@ -61,6 +61,7 @@ type Easee struct {
 	pilotMode               string
 	reasonForNoCurrent      int
 	phaseMode               int
+	errorCode               int
 	sessionStartEnergy      *float64
 	currentPower, sessionEnergy, totalEnergy,
 	currentL1, currentL2, currentL3 float64
@@ -363,6 +364,20 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 		// startup completed
 		c.once.Do(func() { close(c.done) })
 
+	case easee.ERROR_CODE:
+		newErrorCode := value.(int)
+
+		// ERROR_CODE 2048:  "Overcurrent", Easee App "Überstrom erkannt" / red  LED stripe, OpMode 5
+	 	// [easee ] TRACE ... ProductUpdate : ... ERROR_CODE 2048
+       	// [easee ] TRACE ... ProductUpdate : ... ERROR_STRING [ERROR] Charger: Overcurrent EV=18637 > 17000 mA
+		// Reboot or plug out/in solves this issue.
+    	if c.errorCode != 2048 && newErrorCode == 2048 {
+			c.log.WARN.Printf("Error code 2048. Rebooting the charger!")
+			uri := fmt.Sprintf("%s/chargers/%s/commands/%s", easee.API, c.charger, easee.Reboot)
+			c.postJSONAndWait(uri, nil)
+		}
+		c.errorCode = value.(int)
+
 	case easee.REASON_FOR_NO_CURRENT:
 		c.reasonForNoCurrent = value.(int)
 	case easee.PILOT_MODE:
@@ -640,6 +655,15 @@ func (c *Easee) waitForDynamicChargerCurrent(targetCurrent float64) error {
 
 // MaxCurrent implements the api.Charger interface
 func (c *Easee) MaxCurrent(current int64) error {
+	c.log.TRACE.Printf("MaxCurrent called with current %v", current);
+	// debug.PrintStack()
+	if (c.opMode != easee.ModeCharging && current == 6) { //do not overwrite if given value > 6 
+		c.log.TRACE.Printf("Op mode is %v, dynamicChargerCurrent is %v and should be set to %v. Overwrite with 8!", c.opMode, c.dynamicChargerCurrent, current);
+		current = 8
+	} else {
+		c.log.TRACE.Printf("Opmode is charging or current is > 6: %v", current);
+	}
+	
 	cur := float64(current)
 	data := easee.ChargerSettings{
 		DynamicChargerCurrent: &cur,
