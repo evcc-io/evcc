@@ -234,6 +234,7 @@ func NewLoadpointFromConfig(log *util.Logger, settings *Settings, other map[stri
 	// phase switching defaults based on charger capabilities
 	if !lp.hasPhaseSwitching() {
 		lp.configuredPhases = 3
+		lp.phases = 3
 	}
 
 	// TODO deprecated
@@ -310,6 +311,7 @@ func (lp *Loadpoint) restoreSettings() {
 	}
 	if v, err := lp.settings.Int(keys.PhasesConfigured); err == nil && (v > 0 || lp.hasPhaseSwitching()) {
 		lp.setConfiguredPhases(int(v))
+		lp.phases = lp.configuredPhases
 	}
 	if v, err := lp.settings.Float(keys.MinCurrent); err == nil && v > 0 {
 		lp.setMinCurrent(v)
