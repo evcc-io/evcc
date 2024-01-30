@@ -44,10 +44,30 @@ func (r Register) encoding() string {
 	return r.Decode
 }
 
+func (r Register) Length() (uint16, error) {
+	enc := r.encoding()
+	switch {
+	case strings.Contains(enc, "8") || strings.Contains(enc, "16"):
+		return 1, nil
+	case strings.Contains(enc, "32") || strings.Contains(enc, "754"):
+		return 2, nil
+	case strings.Contains(enc, "64"):
+		return 4, nil
+	default:
+		return 0, fmt.Errorf("invalid register encoding: %s", enc)
+	}
+}
+
 // Operation creates a modbus operation from a register definition
 func (r Register) Operation() (RegisterOperation, error) {
+	len, err := r.Length()
+	if err != nil {
+		return RegisterOperation{}, err
+	}
+
 	op := RegisterOperation{
-		Addr: r.Address,
+		Addr:   r.Address,
+		Length: len,
 	}
 
 	switch strings.ToLower(r.Type) {
@@ -72,65 +92,48 @@ func (r Register) Operation() (RegisterOperation, error) {
 		// 8 bit (coil)
 		case "bool8":
 			op.Decode = decodeBool8
-			op.Length = 1
 
 		// 16 bit
 		case "int16":
 			op.Decode = asFloat64(encoding.Int16)
-			op.Length = 1
 		case "int16nan":
 			op.Decode = decodeNaN16(asFloat64(encoding.Int16), 1<<15, 1<<15-1)
-			op.Length = 1
 		case "uint16":
 			op.Decode = asFloat64(encoding.Uint16)
-			op.Length = 1
 		case "uint16nan":
 			op.Decode = decodeNaN16(asFloat64(encoding.Uint16), 1<<16-1)
-			op.Length = 1
 		case "bool16":
 			mask, err := decodeMask(r.BitMask)
 			if err != nil {
 				return op, err
 			}
 			op.Decode = decodeBool16(mask)
-			op.Length = 1
 
 		// 32 bit
 		case "int32":
 			op.Decode = asFloat64(encoding.Int32)
-			op.Length = 2
 		case "int32nan":
 			op.Decode = decodeNaN32(asFloat64(encoding.Int32), 1<<31, 1<<31-1)
-			op.Length = 2
 		case "int32s":
 			op.Decode = asFloat64(encoding.Int32LswFirst)
-			op.Length = 2
 		case "uint32":
 			op.Decode = asFloat64(encoding.Uint32)
-			op.Length = 2
 		case "uint32s":
 			op.Decode = asFloat64(encoding.Uint32LswFirst)
-			op.Length = 2
 		case "uint32nan":
 			op.Decode = decodeNaN32(asFloat64(encoding.Uint32), 1<<32-1)
-			op.Length = 2
 		case "float32", "ieee754":
 			op.Decode = asFloat64(encoding.Float32)
-			op.Length = 2
 		case "float32s", "ieee754s":
 			op.Decode = asFloat64(encoding.Float32LswFirst)
-			op.Length = 2
 
 		// 64 bit
 		case "uint64":
 			op.Decode = asFloat64(encoding.Uint64)
-			op.Length = 4
 		case "uint64nan":
 			op.Decode = decodeNaN64(asFloat64(encoding.Uint64), 1<<64-1)
-			op.Length = 4
 		case "float64":
 			op.Decode = encoding.Float64
-			op.Length = 4
 
 		default:
 			return RegisterOperation{}, fmt.Errorf("invalid register decoding: %s", r.Decode)
