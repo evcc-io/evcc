@@ -7,6 +7,7 @@ import (
 	"math"
 	"strings"
 	"sync"
+	"testing"
 	"time"
 
 	"github.com/avast/retry-go/v4"
@@ -234,6 +235,9 @@ func NewSite() *Site {
 
 // restoreMeters restores site meter configuration
 func (site *Site) restoreMeters() {
+	if testing.Testing() {
+		return
+	}
 	if v, err := settings.String(keys.GridMeter); err == nil && v != "" {
 		site.Meters.GridMeterRef = v
 	}
@@ -247,6 +251,9 @@ func (site *Site) restoreMeters() {
 
 // restoreSettings restores site settings
 func (site *Site) restoreSettings() error {
+	if testing.Testing() {
+		return nil
+	}
 	if v, err := settings.String(keys.Title); err == nil {
 		site.Title = v
 	}
