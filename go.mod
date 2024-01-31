@@ -15,7 +15,7 @@ require (
 	github.com/andig/mbserver v0.0.0-20230310211055-1d29cbb5820e
 	github.com/asaskevich/EventBus v0.0.0-20200907212545-49d423059eef
 	github.com/avast/retry-go/v4 v4.5.1
-	github.com/aws/aws-sdk-go v1.50.5
+	github.com/aws/aws-sdk-go v1.50.8
 	github.com/basgys/goxml2json v1.1.0
 	github.com/basvdlei/gotsmart v0.0.3
 	github.com/benbjohnson/clock v1.3.5
@@ -61,14 +61,14 @@ require (
 	github.com/libp2p/zeroconf/v2 v2.2.0
 	github.com/lorenzodonini/ocpp-go v0.17.1-0.20231031074144-d214d7c42cbc
 	github.com/lunixbochs/struc v0.0.0-20200707160740-784aaebc1d40
-	github.com/mabunixda/wattpilot v1.6.3
+	github.com/mabunixda/wattpilot v1.6.4
 	github.com/manifoldco/promptui v0.9.0
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/mlnoga/rct v0.1.2-0.20230731074838-03eacb926f99
 	github.com/muka/go-bluetooth v0.0.0-20240115085408-dfdf79b8f61d
 	github.com/mxschmitt/golang-combinations v1.1.0
-	github.com/nicksnyder/go-i18n/v2 v2.3.0
+	github.com/nicksnyder/go-i18n/v2 v2.4.0
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/philippseith/signalr v0.6.3
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
@@ -172,7 +172,7 @@ require (
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	github.com/rickb777/date v1.20.5 // indirect
 	github.com/rickb777/plural v1.4.1 // indirect
-	github.com/rivo/uniseg v0.4.4 // indirect
+	github.com/rivo/uniseg v0.4.6 // indirect
 	github.com/rogpeppe/go-internal v1.12.0 // indirect
 	github.com/sagikazarmark/locafero v0.4.0 // indirect
 	github.com/sagikazarmark/slog-shim v0.1.0 // indirect
@@ -196,7 +196,7 @@ require (
 	gopkg.in/go-playground/validator.v9 v9.31.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect
-	modernc.org/libc v1.40.7 // indirect
+	modernc.org/libc v1.40.10 // indirect
 	modernc.org/mathutil v1.6.0 // indirect
 	modernc.org/memory v1.7.2 // indirect
 	modernc.org/sqlite v1.28.0 // indirect
@@ -207,5 +207,3 @@ replace github.com/grid-x/modbus => github.com/evcc-io/modbus v0.0.0-20230705160
 replace github.com/imdario/mergo => github.com/imdario/mergo v0.3.16
 
 replace github.com/spf13/viper => github.com/spf13/viper v1.18.1
-
-replace github.com/mabunixda/wattpilot => github.com/mabunixda/wattpilot v1.6.2
