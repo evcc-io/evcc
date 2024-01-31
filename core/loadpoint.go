@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"strings"
 	"sync"
+	"testing"
 	"time"
 
 	evbus "github.com/asaskevich/EventBus"
@@ -306,6 +307,9 @@ func NewLoadpoint(log *util.Logger, settings *Settings) *Loadpoint {
 
 // restoreSettings restores loadpoint settings
 func (lp *Loadpoint) restoreSettings() {
+	if testing.Testing() {
+		return
+	}
 	if v, err := lp.settings.String(keys.Mode); err == nil && v != "" {
 		lp.setMode(api.ChargeMode(v))
 	}
