@@ -32,6 +32,7 @@ render: |
     source: http
     uri: http://{{ .host }}/solar_api/v1/GetPowerFlowRealtimeData.fcgi
     jq: .Body.Data.Inverters."1".SOC
+  {{- if .password }}
   batterymode:
     source: switch
     switch:
@@ -44,7 +45,7 @@ render: |
         - content-type: application/json
         auth:
           type: digest
-          user: {{ .user }}
+          user: {{- if .user }} {{ .user }}{{- else }} customer{{- end }}
           password: {{ .password }}
         body: '{"timeofuse":[]}'
     - case: 2 # hold
@@ -56,7 +57,7 @@ render: |
         - content-type: application/json
         auth:
           type: digest
-          user: {{ .user }}
+          user: {{- if .user }} {{ .user }}{{- else }} customer{{- end }}
           password: {{ .password }}
         body: '{"timeofuse":[{"Active":true,"Power":0,"ScheduleType":"DISCHARGE_MAX","TimeTable":{"Start":"00:00","End":"23:59"},"Weekdays":{"Mon":true,"Tue":true,"Wed":true,"Thu":true,"Fri":true,"Sat":true,"Sun":true}}]}'
     - case: 3 # charge
@@ -68,9 +69,10 @@ render: |
         - content-type: application/json
         auth:
           type: digest
-          user: {{ .user }}
+          user: {{- if .user }} {{ .user }}{{- else }} customer{{- end }}
           password: {{ .password }}
         body: '{"timeofuse":[]}'
+  {{- end }}
   {{- if .capacity }}
   capacity: {{ .capacity }} # kWh
   {{- end }}
