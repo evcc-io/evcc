@@ -746,14 +746,14 @@ func (lp *Loadpoint) setLimit(chargeCurrent float64, force bool) error {
 		lp.bus.Publish(evChargeCurrent, chargeCurrent)
 	}
 
-	if lp.clock.Since(lp.guardUpdated).Truncate(time.Second) < lp.GuardDuration && !force {
-		lp.publishTimer(guardTimer, lp.GuardDuration, guardEnable)
-		return nil
-	}
-	lp.elapseGuard()
-
 	// set enabled/disabled
 	if enabled := chargeCurrent >= lp.effectiveMinCurrent(); enabled != lp.enabled {
+		if lp.clock.Since(lp.guardUpdated).Truncate(time.Second) < lp.GuardDuration && !force {
+			lp.publishTimer(guardTimer, lp.GuardDuration, guardEnable)
+			return nil
+		}
+		lp.elapseGuard()
+
 		if err := lp.charger.Enable(enabled); err != nil {
 			v := lp.GetVehicle()
 			if vv, ok := v.(api.Resurrector); enabled && ok && errors.Is(err, api.ErrAsleep) {
@@ -780,6 +780,16 @@ func (lp *Loadpoint) setLimit(chargeCurrent float64, force bool) error {
 			lp.startWakeUpTimer()
 		} else {
 			lp.stopWakeUpTimer()
+		}
+	} else {
+		//publish guard timer silently in case still running, but no switch required
+		if lp.clock.Since(lp.guardUpdated).Truncate(time.Second) < lp.GuardDuration {
+			lp.publishTimer(guardTimer, lp.GuardDuration, "silent")
+			return nil
+		}
+		//elapse guard, in case not happened yet
+		if lp.guardUpdated != elapsed {
+			lp.elapseGuard()
 		}
 	}
 
