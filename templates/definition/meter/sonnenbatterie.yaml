@@ -1,5 +1,5 @@
 template: sonnenbatterie
-covers: ["sonnenbatterie-eco8", "sonnenbatterie-eco10"]
+covers: ["sonnenbatterie-eco10"]
 products:
   - brand: Sonnen
     description:
