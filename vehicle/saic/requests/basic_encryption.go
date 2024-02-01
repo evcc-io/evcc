@@ -1,12 +1,11 @@
 package requests
 
 import (
+	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
 	"encoding/hex"
-	"bytes"
 )
-
 
 func PKCS5Padding(ciphertext []byte, blockSize int) []byte {
 	padding := blockSize - len(ciphertext)%blockSize
@@ -41,7 +40,6 @@ func Decrypt(cipherText, hexKey, hexIV string) string {
 
 }
 
-
 func Encrypt(plainText, hexKey, hexIV string) string {
 
 	if len(plainText) == 0 || len(hexKey) == 0 || len(hexIV) == 0 {
@@ -51,7 +49,7 @@ func Encrypt(plainText, hexKey, hexIV string) string {
 	secretKey, _ := hex.DecodeString(hexKey)
 	ivParameter, _ := hex.DecodeString(hexIV)
 	block, err := aes.NewCipher(secretKey)
-	
+
 	if err != nil {
 		return ""
 	}
