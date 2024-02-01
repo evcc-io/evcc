@@ -4,7 +4,6 @@ import (
 	"errors"
 	"time"
 
-	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/oauth2"
 )
 
@@ -37,18 +36,9 @@ func (t *Tokens) Token() (*oauth2.Token, error) {
 		return nil, errors.New("missing access and/or refresh token, use `evcc token` to create")
 	}
 
-	expiry := time.Now()
-	if t.Access != "" {
-		var claims jwt.RegisteredClaims
-		if _, _, err := jwt.NewParser().ParseUnverified(t.Access, &claims); err != nil {
-			return nil, err
-		}
-		expiry = claims.ExpiresAt.Time
-	}
-
 	return &oauth2.Token{
 		AccessToken:  t.Access,
 		RefreshToken: t.Refresh,
-		Expiry:       expiry,
+		Expiry:       time.Now(),
 	}, nil
 }
