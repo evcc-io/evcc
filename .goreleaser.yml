@@ -3,6 +3,7 @@ release:
   github:
     owner: evcc-io
     name: evcc
+  mode: replace
 
 builds:
   - id: evcc
