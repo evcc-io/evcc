@@ -782,12 +782,12 @@ func (lp *Loadpoint) setLimit(chargeCurrent float64, force bool) error {
 			lp.stopWakeUpTimer()
 		}
 	} else {
-		//publish guard timer silently in case still running, but no switch required
+		// publish guard timer silently in case still running, but no switch required
 		if lp.clock.Since(lp.guardUpdated).Truncate(time.Second) < lp.GuardDuration {
 			lp.publishTimer(guardTimer, lp.GuardDuration, "silent")
 			return nil
 		}
-		//elapse guard, in case not happened yet
+		// elapse guard, in case not happened yet
 		if lp.guardUpdated != elapsed {
 			lp.elapseGuard()
 		}
