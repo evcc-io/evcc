@@ -46,7 +46,6 @@ func Encrypt(plainText, hexKey, hexIV string) string {
 	secretKey, _ := hex.DecodeString(hexKey)
 	ivParameter, _ := hex.DecodeString(hexIV)
 	block, err := aes.NewCipher(secretKey)
-
 	if err != nil {
 		return ""
 	}

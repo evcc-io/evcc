@@ -8,7 +8,7 @@ import (
 	"github.com/evcc-io/evcc/vehicle/saic/requests"
 )
 
-//https://github.com/SAIC-iSmart-API/reverse-engineering
+// https://github.com/SAIC-iSmart-API/reverse-engineering
 
 // Provider implements the vehicle api
 type Provider struct {

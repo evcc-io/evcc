@@ -41,33 +41,29 @@ func (v *API) Status(vin string) (requests.ChargeStatus, error) {
 	vinHash := requests.Sha256(vin)
 
 	token, err := v.identity.Token()
-
 	if err != nil {
 		return res, err
 	}
 
 	// get charging status of 1st vehicle
-	header, err :=
-		requests.SendRequest(requests.BASE_URL_P+"vehicle/charging/mgmtData?vin="+vinHash,
-			http.MethodGet,
-			"",
-			"application/json",
-			token.AccessToken,
-			"",
-			&answer)
-
+	header, err := requests.SendRequest(requests.BASE_URL_P+"vehicle/charging/mgmtData?vin="+vinHash,
+		http.MethodGet,
+		"",
+		"application/json",
+		token.AccessToken,
+		"",
+		&answer)
 	if err != nil {
 		return res, err
 	}
 
-	_, err =
-		requests.SendRequest("https://gateway-mg-eu.soimt.com/api.app/v1/vehicle/charging/mgmtData?vin="+vinHash,
-			http.MethodGet,
-			"",
-			"application/json",
-			token.AccessToken,
-			header.Get("event-id"),
-			&answer)
+	_, err = requests.SendRequest("https://gateway-mg-eu.soimt.com/api.app/v1/vehicle/charging/mgmtData?vin="+vinHash,
+		http.MethodGet,
+		"",
+		"application/json",
+		token.AccessToken,
+		header.Get("event-id"),
+		&answer)
 
 	return res, err
 }

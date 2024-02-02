@@ -18,24 +18,22 @@ func SendRequest(
 	contentType string,
 	token string,
 	eventId string,
-	result *Answer) (http.Header, error) {
-
+	result *Answer,
+) (http.Header, error) {
 	appSendDate := time.Now().UnixMilli()
 
 	if len(request) != 0 {
-		request =
-			EncryptRequest(
-				endpoint,
-				appSendDate,
-				TENANT_ID,
-				token,
-				request,
-				contentType)
+		request = EncryptRequest(
+			endpoint,
+			appSendDate,
+			TENANT_ID,
+			token,
+			request,
+			contentType)
 	}
 
 	bodyReader := bytes.NewReader([]byte(request))
 	req, err := http.NewRequest(httpMethod, endpoint, bodyReader)
-
 	if err != nil {
 		return nil, err
 	}
@@ -75,11 +73,10 @@ func SendRequest(
 			return resp.Header, err
 		}
 		if resp.Header.Get("app-content-encrypted") == "1" {
-			body =
-				DecryptResponse(
-					resp.Header.Get("app-send-date"),
-					resp.Header.Get("original-content-type"),
-					string(bodyRaw))
+			body = DecryptResponse(
+				resp.Header.Get("app-send-date"),
+				resp.Header.Get("original-content-type"),
+				string(bodyRaw))
 		} else {
 			body = string(bodyRaw)
 		}

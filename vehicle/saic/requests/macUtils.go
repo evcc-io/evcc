@@ -7,7 +7,6 @@ import (
 )
 
 func HmacSha256(secret string, message string) string {
-
 	if len(secret) == 0 || len(message) == 0 {
 		return ""
 	}
