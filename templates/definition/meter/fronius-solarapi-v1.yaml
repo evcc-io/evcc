@@ -12,7 +12,7 @@ params:
   - name: capacity
     advanced: true
   - name: user
-    required: false
+    default: customer
   - name: password
     required: false
 render: |
@@ -45,7 +45,7 @@ render: |
         - content-type: application/json
         auth:
           type: digest
-          user: {{- if .user }} {{ .user }}{{- else }} customer{{- end }}
+          user: {{ .user }}
           password: {{ .password }}
         body: '{"timeofuse":[]}'
     - case: 2 # hold
@@ -57,7 +57,7 @@ render: |
         - content-type: application/json
         auth:
           type: digest
-          user: {{- if .user }} {{ .user }}{{- else }} customer{{- end }}
+          user: {{ .user }}
           password: {{ .password }}
         body: '{"timeofuse":[{"Active":true,"Power":0,"ScheduleType":"DISCHARGE_MAX","TimeTable":{"Start":"00:00","End":"23:59"},"Weekdays":{"Mon":true,"Tue":true,"Wed":true,"Thu":true,"Fri":true,"Sat":true,"Sun":true}}]}'
     - case: 3 # charge
@@ -69,7 +69,7 @@ render: |
         - content-type: application/json
         auth:
           type: digest
-          user: {{- if .user }} {{ .user }}{{- else }} customer{{- end }}
+          user: {{ .user }}
           password: {{ .password }}
         body: '{"timeofuse":[]}'
   {{- end }}
