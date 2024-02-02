@@ -16,12 +16,10 @@ type MG struct {
 
 func init() {
 	registry.Add("mg", NewMGFromConfig)
-
 }
 
 // NewBMWFromConfig creates a new vehicle
 func NewMGFromConfig(other map[string]interface{}) (api.Vehicle, error) {
-
 	cc := struct {
 		embed               `mapstructure:",squash"`
 		User, Password, VIN string
