@@ -2,10 +2,13 @@ package vehicle
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"os"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	vc "github.com/evcc-io/evcc/vehicle/tesla-vehicle-command"
@@ -50,17 +53,22 @@ func NewTeslaCommandFromConfig(other map[string]interface{}) (api.Vehicle, error
 		return nil, err
 	}
 
-	token, err := cc.Tokens.Token()
+	v := &TeslaCommand{
+		embed: &cc.embed,
+	}
+
+	// config token
+	token, claims, err := v.configToken(cc.Tokens)
 	if err != nil {
 		return nil, err
 	}
 
-	if t := cc.Tokens.Access; t != "" {
-		var claims jwt.RegisteredClaims
-		if _, _, err := jwt.NewParser().ParseUnverified(t, &claims); err != nil {
+	// database token
+	if !token.Valid() {
+		token, err = v.settingsToken(claims)
+		if err != nil {
 			return nil, err
 		}
-		token.Expiry = claims.ExpiresAt.Time
 	}
 
 	log := util.NewLogger("tesla-command").Redact(
@@ -93,10 +101,7 @@ func NewTeslaCommandFromConfig(other map[string]interface{}) (api.Vehicle, error
 		return nil, err
 	}
 
-	v := &TeslaCommand{
-		embed:    &cc.embed,
-		Provider: vc.NewProvider(api, vehicle.ID, cc.Cache),
-	}
+	v.Provider = vc.NewProvider(api, vehicle.ID, cc.Cache)
 
 	if v.Title_ == "" {
 		v.Title_ = vehicle.DisplayName
@@ -128,4 +133,48 @@ func NewTeslaCommandFromConfig(other map[string]interface{}) (api.Vehicle, error
 	*/
 
 	return v, nil
+}
+
+func (v *TeslaCommand) settingsToken(claims jwt.Claims) (*oauth2.Token, error) {
+	subject, err := claims.GetSubject()
+	if err != nil {
+		return nil, err
+	}
+
+	var token oauth2.Token
+
+	key := fmt.Sprintf("tesla-command.%s", subject)
+	if err := settings.Json(key, &token); err != nil {
+		return nil, fmt.Errorf("token setting for %s: %w", subject, err)
+	}
+
+	if !token.Valid() {
+		return nil, errors.New("token expired")
+	}
+
+	return &token, nil
+}
+
+func (v *TeslaCommand) configToken(tokens Tokens) (*oauth2.Token, jwt.Claims, error) {
+	token, err := tokens.Token()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	claims, err := v.claims(token)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	token.Expiry = claims.ExpiresAt.Time
+
+	return token, claims, nil
+}
+
+func (v *TeslaCommand) claims(token *oauth2.Token) (*jwt.RegisteredClaims, error) {
+	var claims jwt.RegisteredClaims
+	if _, _, err := jwt.NewParser().ParseUnverified(token.AccessToken, &claims); err != nil {
+		return nil, err
+	}
+	return &claims, nil
 }
