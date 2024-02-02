@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"strings"
 	"sync"
+	"testing"
 	"time"
 
 	evbus "github.com/asaskevich/EventBus"
@@ -234,6 +235,7 @@ func NewLoadpointFromConfig(log *util.Logger, settings *Settings, other map[stri
 	// phase switching defaults based on charger capabilities
 	if !lp.hasPhaseSwitching() {
 		lp.configuredPhases = 3
+		lp.phases = 3
 	}
 
 	// TODO deprecated
@@ -305,11 +307,15 @@ func NewLoadpoint(log *util.Logger, settings *Settings) *Loadpoint {
 
 // restoreSettings restores loadpoint settings
 func (lp *Loadpoint) restoreSettings() {
+	if testing.Testing() {
+		return
+	}
 	if v, err := lp.settings.String(keys.Mode); err == nil && v != "" {
 		lp.setMode(api.ChargeMode(v))
 	}
 	if v, err := lp.settings.Int(keys.PhasesConfigured); err == nil && (v > 0 || lp.hasPhaseSwitching()) {
 		lp.setConfiguredPhases(int(v))
+		lp.phases = lp.configuredPhases
 	}
 	if v, err := lp.settings.Float(keys.MinCurrent); err == nil && v > 0 {
 		lp.setMinCurrent(v)
@@ -740,14 +746,14 @@ func (lp *Loadpoint) setLimit(chargeCurrent float64, force bool) error {
 		lp.bus.Publish(evChargeCurrent, chargeCurrent)
 	}
 
+	if lp.clock.Since(lp.guardUpdated).Truncate(time.Second) < lp.GuardDuration && !force {
+		lp.publishTimer(guardTimer, lp.GuardDuration, guardEnable)
+		return nil
+	}
+	lp.elapseGuard()
+
 	// set enabled/disabled
 	if enabled := chargeCurrent >= lp.effectiveMinCurrent(); enabled != lp.enabled {
-		if remaining := (lp.GuardDuration - lp.clock.Since(lp.guardUpdated)).Truncate(time.Second); remaining > 0 && !force {
-			lp.publishTimer(guardTimer, lp.GuardDuration, guardEnable)
-			return nil
-		}
-		lp.elapseGuard()
-
 		if err := lp.charger.Enable(enabled); err != nil {
 			v := lp.GetVehicle()
 			if vv, ok := v.(api.Resurrector); enabled && ok && errors.Is(err, api.ErrAsleep) {

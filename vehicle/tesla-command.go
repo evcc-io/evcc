@@ -9,6 +9,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	vc "github.com/evcc-io/evcc/vehicle/tesla-vehicle-command"
+	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/oauth2"
 )
 
@@ -52,6 +53,14 @@ func NewTeslaCommandFromConfig(other map[string]interface{}) (api.Vehicle, error
 	token, err := cc.Tokens.Token()
 	if err != nil {
 		return nil, err
+	}
+
+	if t := cc.Tokens.Access; t != "" {
+		var claims jwt.RegisteredClaims
+		if _, _, err := jwt.NewParser().ParseUnverified(t, &claims); err != nil {
+			return nil, err
+		}
+		token.Expiry = claims.ExpiresAt.Time
 	}
 
 	log := util.NewLogger("tesla-command").Redact(
