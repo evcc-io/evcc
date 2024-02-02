@@ -73,7 +73,7 @@ func NewCfosPowerBrain(uri string, id uint8) (api.Charger, error) {
 	var phases1p3p func(int) error
 
 	b, err := wb.conn.ReadHoldingRegisters(cfosRegSolarEnabled, 1)
-	if err == nil && binary.BigEndian.Uint16(b)&1<<8 != 0 {
+	if err == nil && binary.BigEndian.Uint16(b)&(1<<8) != 0 {
 		phases1p3p = wb.phases1p3p
 	}
 
