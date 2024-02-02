@@ -2,7 +2,6 @@ package requests
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -11,15 +10,23 @@ import (
 	"time"
 )
 
-func SendRequest(
+func Decorate(req *http.Request) error {
+	req.Header.Set("tenant-id", TENANT_ID)
+	req.Header.Set("user-type", USER_TYPE)
+	req.Header.Set("app-content-encrypted", CONTENT_ENCRYPTED)
+	req.Header.Set("Authorization", PARAM_AUTHENTICATION)
+
+	return nil
+}
+
+func CreateRequest(
 	endpoint string,
 	httpMethod string,
 	request string,
 	contentType string,
 	token string,
 	eventId string,
-	result *Answer,
-) (http.Header, error) {
+) (*http.Request, error) {
 	appSendDate := time.Now().UnixMilli()
 
 	if len(request) != 0 {
@@ -38,11 +45,9 @@ func SendRequest(
 		return nil, err
 	}
 
-	req.Header.Set("tenant-id", TENANT_ID)
-	req.Header.Set("user-type", USER_TYPE)
 	req.Header.Set("app-send-date", strconv.FormatInt(appSendDate, 10))
-	req.Header.Set("app-content-encrypted", CONTENT_ENCRYPTED)
-	req.Header.Set("Authorization", PARAM_AUTHENTICATION)
+	req.Header.Set("original-content-type", contentType)
+
 	if len(token) != 0 {
 		req.Header.Set("blade-auth", token)
 	}
@@ -61,16 +66,18 @@ func SendRequest(
 			request,
 			token))
 
-	req.Header.Set("original-content-type", contentType)
+	return req, nil
+}
 
-	resp, err := http.DefaultClient.Do(req)
-
+func DecryptAnswer(resp *http.Response) ([]byte, error) {
 	var body string
-	if err == nil && resp.StatusCode == http.StatusOK {
+	var bodyRaw []byte
+	var err error
+	if resp.StatusCode == http.StatusOK {
 		defer resp.Body.Close()
-		bodyRaw, err := io.ReadAll(resp.Body)
+		bodyRaw, err = io.ReadAll(resp.Body)
 		if err != nil {
-			return resp.Header, err
+			return bodyRaw, err
 		}
 		if resp.Header.Get("app-content-encrypted") == "1" {
 			body = DecryptResponse(
@@ -86,12 +93,5 @@ func SendRequest(
 		}
 	}
 
-	if result != nil {
-		err = json.Unmarshal([]byte(body), result)
-		if err == nil && result.Code != 0 {
-			err = fmt.Errorf("%d: %s", result.Code, result.Message)
-		}
-	}
-
-	return resp.Header, err
+	return []byte(body), err
 }
