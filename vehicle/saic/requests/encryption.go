@@ -49,7 +49,6 @@ func CalculateResponseVerification(str, str2, str3 string) string {
 }
 
 func EncryptRequest(url string, time int64, tenant, token, body, contentType string) string {
-
 	sendDate := strconv.FormatInt(time, 10)
 	// tenant
 	replace := ""
@@ -72,7 +71,6 @@ func EncryptRequest(url string, time int64, tenant, token, body, contentType str
 }
 
 func DecryptRequest(url string, time int64, tenant, token, body, contentType string) string {
-
 	timeStamp := strconv.FormatInt(time, 10)
 	resourcePath := strings.Replace(url, BASE_URL_P, "/", -1)
 	if len(body) != 0 {
