@@ -397,8 +397,8 @@ func (lp *Loadpoint) GetMaxPower() float64 {
 
 // IsFastChargingActive indicates if fast charging with maximum power is active
 func (lp *Loadpoint) IsFastChargingActive() bool {
-	lp.Lock()
-	defer lp.Unlock()
+	lp.RLock()
+	defer lp.RUnlock()
 
 	return lp.mode == api.ModeNow || lp.planActive || lp.minSocNotReached()
 }
