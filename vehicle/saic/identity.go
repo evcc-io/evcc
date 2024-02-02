@@ -7,11 +7,10 @@ import (
 	"net/url"
 	"time"
 
-	"golang.org/x/oauth2"
-
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/vehicle/saic/requests"
+	"golang.org/x/oauth2"
 )
 
 type Identity struct {

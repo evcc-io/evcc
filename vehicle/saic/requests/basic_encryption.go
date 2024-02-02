@@ -19,7 +19,6 @@ func PKCS5Trimming(encrypt []byte) []byte {
 }
 
 func Decrypt(cipherText, hexKey, hexIV string) string {
-
 	if len(cipherText) == 0 || len(hexKey) == 0 || len(hexIV) == 0 {
 		return ""
 	}
@@ -37,11 +36,9 @@ func Decrypt(cipherText, hexKey, hexIV string) string {
 	decrypter.CryptBlocks(decrypted, text)
 
 	return string(PKCS5Trimming(decrypted))
-
 }
 
 func Encrypt(plainText, hexKey, hexIV string) string {
-
 	if len(plainText) == 0 || len(hexKey) == 0 || len(hexIV) == 0 {
 		return ""
 	}
