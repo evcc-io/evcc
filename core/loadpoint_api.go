@@ -395,16 +395,12 @@ func (lp *Loadpoint) GetMaxPower() float64 {
 	return Voltage * lp.effectiveMaxCurrent() * float64(lp.maxActivePhases())
 }
 
-// GetMinSocNotReached returns the state of min soc is not reached
-func (lp *Loadpoint) GetMinSocNotReached() bool {
-	return lp.minSocNotReached()
-}
-
-// GetPlanActive returns the active state of the planner
-func (lp *Loadpoint) GetPlanActive() bool {
+// IsFastChargingActive indicates if fast charging with maximum power is active
+func (lp *Loadpoint) IsFastChargingActive() bool {
 	lp.Lock()
 	defer lp.Unlock()
-	return lp.planActive
+
+	return lp.mode == api.ModeNow || lp.planActive || lp.minSocNotReached()
 }
 
 // GetRemainingDuration is the estimated remaining charging duration

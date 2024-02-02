@@ -120,10 +120,8 @@ type API interface {
 	// charge progress
 	//
 
-	// GetMinSocNotReached returns the state of min soc is not reached
-	GetMinSocNotReached() bool
-	// GetPlanActive returns the active state of the planner
-	GetPlanActive() bool
+	// IsFastChargingActive indicates if fast charging with maximum power is active
+	IsFastChargingActive() bool
 	// GetRemainingDuration is the estimated remaining charging duration
 	GetRemainingDuration() time.Duration
 	// GetRemainingEnergy is the remaining charge energy in Wh
