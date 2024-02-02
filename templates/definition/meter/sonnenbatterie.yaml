@@ -21,7 +21,6 @@ params:
   - name: capacity
     advanced: true
   - name: token
-    advanced: true
     required: false
     help:
       de: API Token (benötigt für aktive Batteriesteuerung)
