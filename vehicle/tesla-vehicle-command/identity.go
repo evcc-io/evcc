@@ -8,7 +8,6 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
-	"github.com/teslamotors/vehicle-command/pkg/account"
 	"golang.org/x/oauth2"
 )
 
@@ -25,7 +24,7 @@ var OAuth2Config = &oauth2.Config{
 	Scopes: []string{"openid", "email", "offline_access"},
 }
 
-const userAgent = "evcc/evcc-io"
+// const userAgent = "evcc/evcc-io"
 
 var TESLA_CLIENT_ID, TESLA_CLIENT_SECRET string
 
@@ -40,10 +39,9 @@ func init() {
 
 type Identity struct {
 	oauth2.TokenSource
-	mu    sync.Mutex
-	log   *util.Logger
-	token *oauth2.Token
-	acct  *account.Account
+	mu  sync.Mutex
+	log *util.Logger
+	// acct  *account.Account
 }
 
 func NewIdentity(log *util.Logger, ts oauth2.TokenSource) (*Identity, error) {
@@ -58,7 +56,6 @@ func NewIdentity(log *util.Logger, ts oauth2.TokenSource) (*Identity, error) {
 	// }
 
 	v := &Identity{
-		token: token,
 		// acct:        acct,
 	}
 
