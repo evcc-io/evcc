@@ -2,6 +2,8 @@ package saic
 
 import (
 	"encoding/hex"
+	"encoding/json"
+	"fmt"
 	"math/rand"
 	"net/http"
 	"net/url"
@@ -9,23 +11,33 @@ import (
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/oauth"
+	"github.com/evcc-io/evcc/util/request"
+	"github.com/evcc-io/evcc/util/transport"
 	"github.com/evcc-io/evcc/vehicle/saic/requests"
 	"golang.org/x/oauth2"
 )
 
 type Identity struct {
+	*request.Helper
 	deviceId string
 }
 
 // NewIdentity creates SAIC identity
 func NewIdentity(log *util.Logger) *Identity {
-	v := &Identity{}
+	v := &Identity{
+		Helper: request.NewHelper(log),
+	}
 
 	var deviceId [64]byte
 	for i := 0; i < 64; i++ {
 		deviceId[i] = byte(rand.Intn(255))
 	}
 	v.deviceId = hex.EncodeToString(deviceId[:]) + "###com.saicmotor.europecar"
+
+	v.Client.Transport = &transport.Decorator{
+		Decorator: requests.Decorate,
+		Base:      v.Client.Transport,
+	}
 
 	return v
 }
@@ -60,16 +72,30 @@ func (v *Identity) retrieveToken(data url.Values) (*oauth2.Token, error) {
 	data.Set("loginType", "2")
 	data.Set("language", "en")
 
-	_, err := requests.SendRequest(
+	// get charging status of vehicle
+	req, err := requests.CreateRequest(
 		requests.BASE_URL_P+"oauth/token",
 		http.MethodPost,
 		data.Encode(),
-		"application/x-www-form-urlencoded",
+		request.FormContent,
 		"",
-		"",
-		&answer)
+		"")
 	if err != nil {
 		return nil, err
+	}
+
+	resp, err := v.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	var body []byte
+	body, err = requests.DecryptAnswer(resp)
+	if err == nil {
+		err = json.Unmarshal(body, &answer)
+		if err == nil && answer.Code != 0 {
+			err = fmt.Errorf("%d: %s", answer.Code, answer.Message)
+		}
 	}
 
 	tok := oauth2.Token{

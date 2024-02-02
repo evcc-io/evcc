@@ -1,25 +1,62 @@
 package saic
 
 import (
+	"encoding/json"
+	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/request"
+	"github.com/evcc-io/evcc/util/transport"
 	"github.com/evcc-io/evcc/vehicle/saic/requests"
 	"golang.org/x/oauth2"
 )
 
 // API is an api.Vehicle implementation for SAIC cars
 type API struct {
+	*request.Helper
 	identity oauth2.TokenSource
 }
 
 // NewAPI creates a new vehicle
 func NewAPI(log *util.Logger, identity oauth2.TokenSource) *API {
 	v := &API{
+		Helper:   request.NewHelper(log),
 		identity: identity,
 	}
 
+	// api is unbelievably slow when retrieving status
+	v.Client.Timeout = 120 * time.Second
+
+	v.Client.Transport = &transport.Decorator{
+		Decorator: requests.Decorate,
+		Base:      v.Client.Transport,
+	}
+
 	return v
+}
+
+func (v *API) DoRequest(req *http.Request, result *requests.Answer) (string, error) {
+	var body []byte
+
+	resp, err := v.Do(req)
+	if err != nil {
+		return "", err
+	}
+	event_id := resp.Header.Get("event-id")
+
+	if result != nil {
+		body, err = requests.DecryptAnswer(resp)
+		if err == nil {
+			err = json.Unmarshal(body, result)
+			if err == nil && result.Code != 0 {
+				err = fmt.Errorf("%d: %s", result.Code, result.Message)
+			}
+		}
+	}
+
+	return event_id, err
 }
 
 /* Vehicles implements returns the /user/vehicles api
@@ -33,37 +70,45 @@ func (v *API) Vehicles() ([]Vehicle, error) {
 
 // Status implements the /user/vehicles/<vin>/status api
 func (v *API) Status(vin string) (requests.ChargeStatus, error) {
+	var req *http.Request
 	var res requests.ChargeStatus
+	var event_id string
+	var err error
+	var token *oauth2.Token
 	answer := requests.Answer{
 		Data: &res,
 	}
 
-	vinHash := requests.Sha256(vin)
-
-	token, err := v.identity.Token()
+	token, err = v.identity.Token()
 	if err != nil {
 		return res, err
 	}
 
-	// get charging status of 1st vehicle
-	header, err := requests.SendRequest(requests.BASE_URL_P+"vehicle/charging/mgmtData?vin="+vinHash,
+	url := requests.BASE_URL_P + "vehicle/charging/mgmtData?vin=" + requests.Sha256(vin)
+
+	// get charging status of vehicle
+	req, err = requests.CreateRequest(url,
 		http.MethodGet,
 		"",
-		"application/json",
+		request.JSONContent,
 		token.AccessToken,
-		"",
-		&answer)
+		"")
 	if err != nil {
 		return res, err
 	}
+	event_id, err = v.DoRequest(req, &answer)
+	if err == nil && event_id != "" {
+		req, err = requests.CreateRequest(url,
+			http.MethodGet,
+			"",
+			request.JSONContent,
+			token.AccessToken,
+			event_id)
+		if err != nil {
+			return res, err
+		}
+	}
 
-	_, err = requests.SendRequest("https://gateway-mg-eu.soimt.com/api.app/v1/vehicle/charging/mgmtData?vin="+vinHash,
-		http.MethodGet,
-		"",
-		"application/json",
-		token.AccessToken,
-		header.Get("event-id"),
-		&answer)
-
+	_, err = v.DoRequest(req, &answer)
 	return res, err
 }
