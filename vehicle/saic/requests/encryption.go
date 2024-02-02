@@ -11,8 +11,8 @@ func CalculateRequestVerification(
 	tenant,
 	contentType,
 	bodyEncrypted,
-	token string) string {
-
+	token string,
+) string {
 	dateString := strconv.FormatInt(sendDate, 10)
 	str9 := resourcePath + tenant + token + USER_TYPE
 	a2 := Md5(str9)

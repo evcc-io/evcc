@@ -31,8 +31,6 @@ func NewIdentity(log *util.Logger) *Identity {
 }
 
 func (v *Identity) Login(user, password string) (oauth2.TokenSource, error) {
-	// login
-
 	data := url.Values{
 		"username":   {user},
 		"password":   {requests.Sha1(password)}, // Shold be Sha1 encoded
@@ -47,11 +45,9 @@ func (v *Identity) Login(user, password string) (oauth2.TokenSource, error) {
 	ts := oauth2.ReuseTokenSourceWithExpiry(token, oauth.RefreshTokenSource(token, v), 15*time.Minute)
 
 	return ts, nil
-
 }
 
 func (v *Identity) retrieveToken(data url.Values) (*oauth2.Token, error) {
-
 	var loginData requests.LoginData
 	answer := requests.Answer{
 		Data: &loginData,
@@ -72,7 +68,6 @@ func (v *Identity) retrieveToken(data url.Values) (*oauth2.Token, error) {
 		"",
 		"",
 		&answer)
-
 	if err != nil {
 		return nil, err
 	}
@@ -89,7 +84,6 @@ func (v *Identity) retrieveToken(data url.Values) (*oauth2.Token, error) {
 }
 
 func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
-
 	data := url.Values{
 		"refresh_token": []string{token.RefreshToken},
 		"grant_type":    []string{"refresh_token"},
