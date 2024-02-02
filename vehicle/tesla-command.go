@@ -143,8 +143,7 @@ func (v *TeslaCommand) settingsToken(claims jwt.Claims) (*oauth2.Token, error) {
 
 	var token oauth2.Token
 
-	key := fmt.Sprintf("tesla-command.%s", subject)
-	if err := settings.Json(key, &token); err != nil {
+	if err := settings.Json(vc.SettingsKey(subject), &token); err != nil {
 		return nil, fmt.Errorf("token setting for %s: %w", subject, err)
 	}
 
@@ -161,7 +160,7 @@ func (v *TeslaCommand) configToken(tokens Tokens) (*oauth2.Token, jwt.Claims, er
 		return nil, nil, err
 	}
 
-	claims, err := v.claims(token)
+	claims, err := vc.TokenClaims(token)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -169,12 +168,4 @@ func (v *TeslaCommand) configToken(tokens Tokens) (*oauth2.Token, jwt.Claims, er
 	token.Expiry = claims.ExpiresAt.Time
 
 	return token, claims, nil
-}
-
-func (v *TeslaCommand) claims(token *oauth2.Token) (*jwt.RegisteredClaims, error) {
-	var claims jwt.RegisteredClaims
-	if _, _, err := jwt.NewParser().ParseUnverified(token.AccessToken, &claims); err != nil {
-		return nil, err
-	}
-	return &claims, nil
 }
