@@ -8,9 +8,9 @@ capabilities: ["battery-control"]
 requirements:
   description:
     de: |
-      Für die aktive Batteriesteuerung muss das "JSON Write API" über das Webinterface der sonnenBatterie aktiviert werden (unter Software-Integration).
+      Für die aktive Batteriesteuerung muss über das Webinterface der sonnenBatterie (unter Software-Integration) das "JSON Write API" aktiviert und das dort generierte API-Token in der Batteriekonfiguration unter `token` eingetragen werden.
     en: |
-      For active battery control, the "JSON Write API" must be activated via the sonnenBatterie web interface (under Software-Integration).
+      For active battery control, the "JSON Write API" must be activated via the sonnenBatterie web interface (under Software-Integration) and the API token generated there must be entered in the battery configuration under `token`.
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
