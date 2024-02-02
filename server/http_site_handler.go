@@ -18,12 +18,24 @@ import (
 	"github.com/evcc-io/evcc/util/jq"
 	"github.com/gorilla/mux"
 	"github.com/itchyny/gojq"
+	"golang.org/x/text/language"
 )
 
 var ignoreState = []string{"releaseNotes"} // excessive size
 
+// getPreferredLanguage returns the preferred language as two letter code
+func getPreferredLanguage(header string) string {
+	languages, _, err := language.ParseAcceptLanguage(header)
+	if err != nil || len(languages) == 0 {
+		return "en"
+	}
+
+	base, _ := languages[0].Base()
+	return base.String()
+}
+
 func indexHandler() http.HandlerFunc {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html; charset=UTF-8")
 
 		indexTemplate, err := fs.ReadFile(assets.Web, "index.html")
@@ -39,13 +51,16 @@ func indexHandler() http.HandlerFunc {
 			log.FATAL.Fatal("httpd: failed to create main page template:", err.Error())
 		}
 
+		defaultLang := getPreferredLanguage(r.Header.Get("Accept-Language"))
+
 		if err := t.Execute(w, map[string]interface{}{
-			"Version": Version,
-			"Commit":  Commit,
+			"Version":     Version,
+			"Commit":      Commit,
+			"DefaultLang": defaultLang,
 		}); err != nil {
 			log.ERROR.Println("httpd: failed to render main page:", err.Error())
 		}
-	})
+	}
 }
 
 // jsonHandler is a middleware that decorates responses with JSON and CORS headers

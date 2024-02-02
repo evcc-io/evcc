@@ -94,8 +94,6 @@ power = "Leeschtung"
 [main.loadpointSettings]
 currents = "Ladestroum"
 default = "Standard"
-disclaimerHint = "Notiz:"
-disclaimerText = "Ännerunge ginn verluer nodeems de Server nei gestart ass."
 title = "Astellungen {0}"
 vehicle = "Gefier"
 

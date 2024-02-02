@@ -13,7 +13,7 @@ import (
 func test(t *testing.T, tmpl Template, values map[string]interface{}, cb func(values map[string]interface{})) {
 	t.Helper()
 
-	b, _, err := tmpl.RenderResult(TemplateRenderModeInstance, values)
+	b, _, err := tmpl.RenderResult(RenderModeInstance, values)
 	if err != nil {
 		t.Log(string(b))
 		t.Error(err)
@@ -40,7 +40,7 @@ func TestClass(t *testing.T, class Class, instantiate func(t *testing.T, values 
 		tmpl := tmpl
 
 		// set default values for all params
-		values := tmpl.Defaults(TemplateRenderModeUnitTest)
+		values := tmpl.Defaults(RenderModeUnitTest)
 
 		// set modbus default test values
 		if values[ParamModbus] != nil {
@@ -51,7 +51,7 @@ func TestClass(t *testing.T, class Class, instantiate func(t *testing.T, values 
 			} else {
 				values[ModbusKeyRS485TCPIP] = true
 			}
-			tmpl.ModbusValues(TemplateRenderModeUnitTest, values)
+			tmpl.ModbusValues(RenderModeUnitTest, values)
 		}
 
 		// set the template value which is needed for rendering

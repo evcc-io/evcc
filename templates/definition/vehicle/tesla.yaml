@@ -1,6 +1,9 @@
 template: tesla
 products:
   - brand: Tesla
+    description:
+      de: veraltet
+      en: legacy
 requirements:
   description:
     de: |
@@ -10,6 +13,8 @@ requirements:
       - [Auth app for Tesla (iOS)](https://apps.apple.com/us/app/auth-app-for-tesla/id1552058613#?platform=iphone)
       - [Tesla Tokens (Android)](https://play.google.com/store/apps/details?id=net.leveugle.teslatokens)
       - [Tesla Auth (macOS, Linux)](https://github.com/adriankumpf/tesla_auth)
+
+      **Hinweis:** Diese API ist von Tesla [nicht offiziell unterstützt](https://tesla-api.timdorr.com) und wird Stück für Stück abgeschaltet.**
     en: |
       You need to generate an `access` and a `refresh` token for communicating with the Tesla API.
 
@@ -17,6 +22,8 @@ requirements:
       - [Auth app for Tesla (iOS)](https://apps.apple.com/us/app/auth-app-for-tesla/id1552058613#?platform=iphone)
       - [Tesla Tokens (Android)](https://play.google.com/store/apps/details?id=net.leveugle.teslatokens)
       - [Tesla Auth (macOS, Linux)](https://github.com/adriankumpf/tesla_auth)
+
+      **Note:** This API is [not officially supported](https://tesla-api.timdorr.com) by Tesla and will be deprecated step by step.
 params:
   - name: title
   - name: icon

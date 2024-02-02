@@ -15,6 +15,15 @@ import (
 	"go.uber.org/mock/gomock"
 )
 
+func expectVehiclePublish(vehicle *api.MockVehicle) {
+	vehicle.EXPECT().Title().Return("target").AnyTimes()
+	vehicle.EXPECT().Capacity().AnyTimes()
+	vehicle.EXPECT().Icon().AnyTimes()
+	vehicle.EXPECT().Features().AnyTimes()
+	vehicle.EXPECT().Phases().AnyTimes()
+	vehicle.EXPECT().OnIdentified().AnyTimes()
+}
+
 func TestPublishSocAndRange(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	clck := clock.NewMock()
@@ -24,10 +33,7 @@ func TestPublishSocAndRange(t *testing.T) {
 	charger.EXPECT().Enabled().Return(true, nil).AnyTimes()
 
 	vehicle := api.NewMockVehicle(ctrl)
-	vehicle.EXPECT().Title().Return("target").AnyTimes()
-	vehicle.EXPECT().Capacity().AnyTimes()
-	vehicle.EXPECT().Phases().AnyTimes()
-	vehicle.EXPECT().OnIdentified().AnyTimes()
+	expectVehiclePublish(vehicle)
 
 	log := util.NewLogger("foo")
 	lp := &Loadpoint{
@@ -41,8 +47,8 @@ func TestPublishSocAndRange(t *testing.T) {
 		chargeTimer:   &Null{}, // silence nil panics
 		socEstimator:  soc.NewEstimator(log, charger, vehicle, false),
 		sessionEnergy: NewEnergyMetrics(),
-		MinCurrent:    minA,
-		MaxCurrent:    maxA,
+		minCurrent:    minA,
+		maxCurrent:    maxA,
 		phases:        1,
 		mode:          api.ModeNow,
 	}
@@ -227,12 +233,9 @@ func TestReconnectVehicle(t *testing.T) {
 				*api.MockChargeState
 			}
 
-			vehicle := &vehicleT{api.NewMockVehicle(ctrl), api.NewMockChargeState(ctrl)}
-			vehicle.MockVehicle.EXPECT().Title().Return("vehicle").AnyTimes()
-			vehicle.MockVehicle.EXPECT().Icon().Return("").AnyTimes()
-			vehicle.MockVehicle.EXPECT().Capacity().AnyTimes()
-			vehicle.MockVehicle.EXPECT().Phases().AnyTimes()
-			vehicle.MockVehicle.EXPECT().OnIdentified().AnyTimes()
+			v := api.NewMockVehicle(ctrl)
+			vehicle := &vehicleT{v, api.NewMockChargeState(ctrl)}
+			expectVehiclePublish(v)
 			vehicle.MockVehicle.EXPECT().Identifiers().AnyTimes().Return(tc.vehicleId)
 			vehicle.MockVehicle.EXPECT().Soc().Return(0.0, nil).AnyTimes()
 
@@ -249,8 +252,8 @@ func TestReconnectVehicle(t *testing.T) {
 				chargeTimer:   &Null{}, // silence nil panics
 				wakeUpTimer:   NewTimer(),
 				sessionEnergy: NewEnergyMetrics(),
-				MinCurrent:    minA,
-				MaxCurrent:    maxA,
+				minCurrent:    minA,
+				maxCurrent:    maxA,
 				phases:        1,
 				mode:          api.ModeNow,
 			}

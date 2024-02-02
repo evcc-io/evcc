@@ -1,16 +1,6 @@
 <template>
 	<div class="container px-4">
-		<header class="d-flex justify-content-between align-items-center py-3">
-			<h1 class="mb-1 pt-1 d-flex text-nowrap text-truncate">
-				<router-link class="evcc-default-text" to="/">
-					<shopicon-regular-home size="s" class="home"></shopicon-regular-home>
-				</router-link>
-				<div size="s" class="mx-2 flex-grow-0 flex-shrink-0 fw-normal">/</div>
-				<span class="text-truncate">{{ $t("sessions.title") }}</span>
-			</h1>
-			<TopNavigation v-bind="topNavigation" />
-		</header>
-
+		<TopHeader :title="$t('sessions.title')" />
 		<div class="row">
 			<main class="col-12">
 				<div class="d-flex align-items-baseline justify-content-between my-3 my-md-5">
@@ -252,8 +242,6 @@
 
 <script>
 import Modal from "bootstrap/js/dist/modal";
-import TopNavigation from "../components/TopNavigation.vue";
-import "@h2d2/shopicons/es/regular/home";
 import "@h2d2/shopicons/es/regular/angledoubleleftsmall";
 import "@h2d2/shopicons/es/regular/angledoublerightsmall";
 import formatter from "../mixins/formatter";
@@ -263,7 +251,7 @@ import CustomSelect from "../components/CustomSelect.vue";
 import ChargingSessionModal from "../components/ChargingSessionModal.vue";
 import breakpoint from "../mixins/breakpoint";
 import settings from "../settings";
-import collector from "../mixins/collector";
+import TopHeader from "../components/TopHeader.vue";
 
 const COLUMNS_PER_BREAKPOINT = {
 	xs: 1,
@@ -276,8 +264,8 @@ const COLUMNS_PER_BREAKPOINT = {
 
 export default {
 	name: "ChargingSessions",
-	components: { TopNavigation, ChargingSessionModal, CustomSelect },
-	mixins: [formatter, breakpoint, collector],
+	components: { ChargingSessionModal, CustomSelect, TopHeader },
+	mixins: [formatter, breakpoint],
 	props: {
 		notifications: Array,
 		month: { type: Number, default: () => new Date().getMonth() + 1 },
@@ -638,7 +626,7 @@ export default {
 		csvHrefLink(year, month) {
 			const params = new URLSearchParams({
 				format: "csv",
-				lang: this.$i18n.locale,
+				lang: this.$i18n?.locale,
 			});
 			if (year && month) {
 				params.append("year", year);
@@ -650,12 +638,6 @@ export default {
 };
 </script>
 <style scoped>
-.home {
-	height: 22px;
-	width: 22px;
-	position: relative;
-	top: -3px;
-}
 .table {
 	border-collapse: separate;
 	border-spacing: 0;

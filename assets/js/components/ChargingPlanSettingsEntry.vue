@@ -147,7 +147,7 @@ export default {
 		time: String,
 		rangePerSoc: Number,
 		socPerKwh: Number,
-		vehicleCapacity: Number,
+		capacity: Number,
 		socBasedPlanning: Boolean,
 	},
 	emits: ["plan-updated", "plan-removed", "plan-preview"],
@@ -173,7 +173,7 @@ export default {
 		energyOptions: function () {
 			const options = energyOptions(
 				0,
-				this.vehicleCapacity || 100,
+				this.capacity || 100,
 				this.socPerKwh,
 				this.fmtKWh,
 				"-"
@@ -241,7 +241,7 @@ export default {
 			}
 			if (!this.selectedEnergy) {
 				this.selectedEnergy =
-					window.localStorage[LAST_ENERGY_GOAL_KEY] || this.vehicleCapacity || 10;
+					window.localStorage[LAST_ENERGY_GOAL_KEY] || this.capacity || 10;
 			}
 
 			let time = this.time;
@@ -269,12 +269,12 @@ export default {
 				this.$t("main.targetCharge.tomorrow"),
 			];
 			for (let i = 0; i < 7; i++) {
-				const dayNumber = date.toLocaleDateString(this.$i18n.locale, {
+				const dayNumber = date.toLocaleDateString(this.$i18n?.locale, {
 					month: "short",
 					day: "numeric",
 				});
 				const dayName =
-					labels[i] || date.toLocaleDateString(this.$i18n.locale, { weekday: "long" });
+					labels[i] || date.toLocaleDateString(this.$i18n?.locale, { weekday: "long" });
 				options.push({
 					value: this.fmtDayString(date),
 					name: `${dayNumber} (${dayName})`,

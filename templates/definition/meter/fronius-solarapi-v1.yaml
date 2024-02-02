@@ -3,6 +3,7 @@ products:
   - brand: Fronius
     description:
       generic: Solar API V1
+capabilities: ["battery-control"]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -10,6 +11,10 @@ params:
   - name: host
   - name: capacity
     advanced: true
+  - name: user
+    required: false
+  - name: password
+    required: false
 render: |
   type: custom
   power:
@@ -27,6 +32,45 @@ render: |
     source: http
     uri: http://{{ .host }}/solar_api/v1/GetPowerFlowRealtimeData.fcgi
     jq: .Body.Data.Inverters."1".SOC
+  batterymode:
+    source: switch
+    switch:
+    - case: 1 # normal
+      set:
+        source: http
+        uri: http://{{ .host }}/config/timeofuse
+        method: POST
+        headers:
+        - content-type: application/json
+        auth:
+          type: digest
+          user: {{ .user }}
+          password: {{ .password }}
+        body: '{"timeofuse":[]}'
+    - case: 2 # hold
+      set:
+        source: http
+        uri: http://{{ .host }}/config/timeofuse
+        method: POST
+        headers:
+        - content-type: application/json
+        auth:
+          type: digest
+          user: {{ .user }}
+          password: {{ .password }}
+        body: '{"timeofuse":[{"Active":true,"Power":0,"ScheduleType":"DISCHARGE_MAX","TimeTable":{"Start":"00:00","End":"23:59"},"Weekdays":{"Mon":true,"Tue":true,"Wed":true,"Thu":true,"Fri":true,"Sat":true,"Sun":true}}]}'
+    - case: 3 # charge
+      set:
+        source: http
+        uri: http://{{ .host }}/config/timeofuse
+        method: POST
+        headers:
+        - content-type: application/json
+        auth:
+          type: digest
+          user: {{ .user }}
+          password: {{ .password }}
+        body: '{"timeofuse":[]}'
   {{- if .capacity }}
   capacity: {{ .capacity }} # kWh
   {{- end }}

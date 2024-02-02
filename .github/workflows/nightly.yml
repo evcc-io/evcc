@@ -47,7 +47,7 @@ jobs:
           fetch-depth: 0
 
       - name: Get dist from cache
-        uses: actions/cache/restore@v3
+        uses: actions/cache/restore@v4
         id: cache-dist
         with:
           path: dist
@@ -68,6 +68,8 @@ jobs:
           context: .
           platforms: linux/amd64,linux/arm64,linux/arm/v6
           push: true
+          build-args: |
+            TESLA_CLIENT_ID=${{ secrets.TESLA_CLIENT_ID }}
           tags: |
             evcc/evcc:nightly
 
@@ -94,7 +96,7 @@ jobs:
         run: make patch-asn1-sudo
 
       - name: Get dist from cache
-        uses: actions/cache/restore@v3
+        uses: actions/cache/restore@v4
         id: cache-dist
         with:
           path: dist
@@ -107,6 +109,7 @@ jobs:
           args: --snapshot -f .goreleaser-nightly.yml --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TESLA_CLIENT_ID: ${{ secrets.TESLA_CLIENT_ID }}
 
       - name: Publish .deb to Cloudsmith
         env:

@@ -480,9 +480,11 @@ func (mr *MockAPIMockRecorder) SetLimitSoc(arg0 any) *gomock.Call {
 }
 
 // SetMaxCurrent mocks base method.
-func (m *MockAPI) SetMaxCurrent(arg0 float64) {
+func (m *MockAPI) SetMaxCurrent(arg0 float64) error {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "SetMaxCurrent", arg0)
+	ret := m.ctrl.Call(m, "SetMaxCurrent", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
 // SetMaxCurrent indicates an expected call of SetMaxCurrent.
@@ -492,9 +494,11 @@ func (mr *MockAPIMockRecorder) SetMaxCurrent(arg0 any) *gomock.Call {
 }
 
 // SetMinCurrent mocks base method.
-func (m *MockAPI) SetMinCurrent(arg0 float64) {
+func (m *MockAPI) SetMinCurrent(arg0 float64) error {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "SetMinCurrent", arg0)
+	ret := m.ctrl.Call(m, "SetMinCurrent", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
 // SetMinCurrent indicates an expected call of SetMinCurrent.
