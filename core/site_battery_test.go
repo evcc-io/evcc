@@ -15,19 +15,19 @@ func TestDetermineBatteryMode(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
 	tcs := []struct {
-		chargeStatus api.ChargeStatus
-		planActive   bool
-		expBatMode   api.BatteryMode
-		mode         api.ChargeMode
+		chargeStatus       api.ChargeStatus
+		fastChargingActive bool
+		smartCostActive    bool
+		expBatMode         api.BatteryMode
 	}{
-		{api.StatusB, false, api.BatteryNormal, api.ModeOff},   // mode off -> bat normal
-		{api.StatusB, false, api.BatteryNormal, api.ModeNow},   // mode now, not charging -> bat normal
-		{api.StatusC, false, api.BatteryHold, api.ModeNow},     // mode now, charging -> bat hold
-		{api.StatusB, false, api.BatteryNormal, api.ModeMinPV}, // mode minPV, not charging -> bat normal
-		{api.StatusC, false, api.BatteryNormal, api.ModeMinPV}, // mode minPV, charging -> bat normal
-		{api.StatusB, false, api.BatteryNormal, api.ModePV},    // mode PV, not charging -> bat normal
-		{api.StatusC, false, api.BatteryNormal, api.ModePV},    // mode PV, charging, no planner -> bat normal
-		{api.StatusC, true, api.BatteryHold, api.ModePV},       // mode PV, charging, planner active -> bat hold
+		{api.StatusB, false, false, api.BatteryNormal}, // not charging | fast charge not active | smart cost not active -> bat normal
+		{api.StatusB, true, false, api.BatteryNormal},  // not charging | fast charge active 	 | smart cost not active -> bat normal
+		{api.StatusC, false, false, api.BatteryNormal}, // charging 	| fast charge not active | smart cost not active -> bat normal
+		{api.StatusC, true, false, api.BatteryHold},    // charging 	| fast charge active 	 | smart cost not active -> bat hold
+		{api.StatusB, false, true, api.BatteryNormal},  // not charging | fast charge not active | smart cost active	 -> bat normal
+		{api.StatusB, true, true, api.BatteryNormal},   // not charging | fast charge active	 | smart cost active	 -> bat normal
+		{api.StatusC, false, true, api.BatteryHold},    // charging 	| fast charge not active | smart cost active	 -> bat hold
+		{api.StatusC, true, true, api.BatteryHold},     // charging 	| fast charge active	 | smart cost active	 -> bat hold
 	}
 
 	log := util.NewLogger("foo")
@@ -39,12 +39,11 @@ func TestDetermineBatteryMode(t *testing.T) {
 
 		lp := loadpoint.NewMockAPI(ctrl)
 		lp.EXPECT().GetStatus().Return(tc.chargeStatus).AnyTimes()
-		lp.EXPECT().GetMode().Return(tc.mode).AnyTimes()
-		lp.EXPECT().GetPlanActive().Return(tc.planActive).AnyTimes()
+		lp.EXPECT().IsFastChargingActive().Return(tc.fastChargingActive).AnyTimes()
 
 		loadpoints := []loadpoint.API{lp}
 
-		mode := s.determineBatteryMode(loadpoints, false)
+		mode := s.determineBatteryMode(loadpoints, tc.smartCostActive)
 		assert.Equal(t, tc.expBatMode, mode, tc)
 	}
 }
