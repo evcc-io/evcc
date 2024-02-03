@@ -274,6 +274,7 @@ label = "Min. charge %"
 
 [main.loadpointSettings.phasesConfigured]
 label = "Phases"
+no1p3pSupport = "How is your charger connected?"
 phases_0 = "auto-switching"
 phases_1 = "1 phase"
 phases_1_hint = "({min} to {max})"
