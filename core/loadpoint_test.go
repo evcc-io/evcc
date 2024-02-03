@@ -917,3 +917,76 @@ func TestGuardPublishOnDisableAbort(t *testing.T) {
 		clock.Add(time.Minute)
 	}
 }
+
+// test PV hysteresis after phase switch down, depending on remaining energy
+func TestPVHysteresisAfterPhaseSwitch(t *testing.T) {
+	const dt = time.Minute
+	type se struct {
+		site    float64
+		delay   time.Duration // test case delay since start
+		current float64
+	}
+	tc := []struct {
+		series []se
+	}{
+		// immediately disable when threshold met after phase switch
+		{[]se{
+			{1200, 0, minA},
+			{1200, 1, minA},
+			{1200, dt - 1, minA},
+			{1200, dt + 1, 0},
+		}},
+		// stay enabled when threshold not met after phase switch
+		{[]se{
+			{500, 0, minA},
+			{500, 1, minA},
+			{500, dt - 1, minA},
+			{500, dt + 1, minA},
+		}},
+	}
+
+	for _, tc := range tc {
+		t.Log(tc)
+
+		clck := clock.NewMock()
+		ctrl := gomock.NewController(t)
+
+		switcher := api.NewMockPhaseSwitcher(ctrl)
+		switcher.EXPECT().Phases1p3p(1)
+
+		charger := struct {
+			*api.MockCharger
+			*api.MockPhaseSwitcher
+		}{
+			api.NewMockCharger(ctrl), switcher,
+		}
+
+		Voltage = 100
+		lp := &Loadpoint{
+			log:        util.NewLogger("foo"),
+			clock:      clck,
+			charger:    charger,
+			minCurrent: minA,
+			maxCurrent: maxA,
+			Disable: ThresholdConfig{
+				Delay: dt,
+			},
+			status:  api.StatusC,
+			enabled: true,
+		}
+
+		start := clck.Now()
+
+		for step, se := range tc.series {
+			clck.Set(start.Add(se.delay))
+
+			current := lp.pvMaxCurrent(api.ModePV, se.site, false, false)
+
+			if current != se.current {
+				t.Errorf("step %d: wanted %.1f, got %.1f", step, se.current, current)
+			}
+		}
+
+		ctrl.Finish()
+	}
+}
