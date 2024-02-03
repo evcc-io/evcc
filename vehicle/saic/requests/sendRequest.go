@@ -74,7 +74,6 @@ func DecryptAnswer(resp *http.Response) ([]byte, error) {
 	var bodyRaw []byte
 	var err error
 	if resp.StatusCode == http.StatusOK {
-		defer resp.Body.Close()
 		bodyRaw, err = io.ReadAll(resp.Body)
 		if err != nil {
 			return bodyRaw, err
@@ -88,9 +87,7 @@ func DecryptAnswer(resp *http.Response) ([]byte, error) {
 			body = string(bodyRaw)
 		}
 	} else {
-		if err == nil {
-			err = fmt.Errorf(resp.Status)
-		}
+		err = fmt.Errorf(resp.Status)
 	}
 
 	return []byte(body), err
