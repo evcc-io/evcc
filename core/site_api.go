@@ -121,7 +121,6 @@ func (site *Site) SetAuxMeterRefs(ref []string) {
 	defer site.Unlock()
 
 	site.Meters.AuxMetersRef = ref
-	// site.publish("siteGridMeterRef", meter)
 	settings.SetString(keys.AuxMeters, strings.Join(filterConfigurable(ref), ","))
 }
 
