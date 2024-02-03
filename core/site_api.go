@@ -87,7 +87,6 @@ func (site *Site) SetPVMeterRefs(ref []string) {
 	defer site.Unlock()
 
 	site.Meters.PVMetersRef = ref
-	// site.publish("siteGridMeterRef", meter)
 	settings.SetString(keys.PvMeters, strings.Join(filterConfigurable(ref), ","))
 }
 
