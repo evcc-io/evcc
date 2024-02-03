@@ -103,7 +103,6 @@ func (site *Site) SetBatteryMeterRefs(ref []string) {
 	defer site.Unlock()
 
 	site.Meters.BatteryMetersRef = ref
-	// site.publish("siteGridMeterRef", meter)
 	settings.SetString(keys.BatteryMeters, strings.Join(filterConfigurable(ref), ","))
 }
 
