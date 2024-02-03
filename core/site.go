@@ -247,6 +247,9 @@ func (site *Site) restoreMeters() {
 	if v, err := settings.String(keys.BatteryMeters); err == nil && v != "" {
 		site.Meters.BatteryMetersRef = append(site.Meters.BatteryMetersRef, strings.Split(v, ",")...)
 	}
+	if v, err := settings.String(keys.AuxMeters); err == nil && v != "" {
+		site.Meters.AuxMetersRef = append(site.Meters.AuxMetersRef, strings.Split(v, ",")...)
+	}
 }
 
 // restoreSettings restores site settings
