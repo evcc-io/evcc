@@ -1,7 +1,6 @@
 package vehicle
 
 import (
-	"context"
 	"os"
 	"time"
 
@@ -9,8 +8,6 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	vc "github.com/evcc-io/evcc/vehicle/tesla-vehicle-command"
-	"github.com/golang-jwt/jwt/v5"
-	"golang.org/x/oauth2"
 )
 
 // TeslaCommand is an api.Vehicle implementation for Tesla cars using the official Tesla vehicle-command api.
@@ -55,23 +52,12 @@ func NewTeslaCommandFromConfig(other map[string]interface{}) (api.Vehicle, error
 		return nil, err
 	}
 
-	if t := cc.Tokens.Access; t != "" {
-		var claims jwt.RegisteredClaims
-		if _, _, err := jwt.NewParser().ParseUnverified(t, &claims); err != nil {
-			return nil, err
-		}
-		token.Expiry = claims.ExpiresAt.Time
-	}
-
 	log := util.NewLogger("tesla-command").Redact(
 		cc.Tokens.Access, cc.Tokens.Refresh,
 		vc.OAuth2Config.ClientID, vc.OAuth2Config.ClientSecret,
 	)
 
-	ctx := context.WithValue(context.Background(), oauth2.HTTPClient, request.NewClient(log))
-	ts := vc.OAuth2Config.TokenSource(ctx, token)
-
-	identity, err := vc.NewIdentity(log, ts)
+	identity, err := vc.NewIdentity(log, token)
 	if err != nil {
 		return nil, err
 	}
