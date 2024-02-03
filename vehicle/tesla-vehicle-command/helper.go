@@ -3,10 +3,29 @@ package vc
 import (
 	"errors"
 	"strings"
+	"sync"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/teslamotors/vehicle-command/pkg/connector/inet"
 )
+
+var (
+	mu         sync.Mutex
+	identities = make(map[string]*Identity)
+)
+
+func getInstance(subject string) *Identity {
+	mu.Lock()
+	defer mu.Unlock()
+	v, _ := identities[subject]
+	return v
+}
+
+func addInstance(subject string, identity *Identity) {
+	mu.Lock()
+	defer mu.Unlock()
+	identities[subject] = identity
+}
 
 // apiError converts HTTP 408 error to ErrTimeout
 func apiError(err error) error {
