@@ -3,6 +3,7 @@ release:
   github:
     owner: evcc-io
     name: evcc
+  mode: replace
 
 builds:
   - id: evcc
@@ -62,6 +63,7 @@ changelog:
       - "^bump"
       - "^docs:"
       - "^test:"
+      - "^Translations"
 
 nfpms:
   - id: default

@@ -205,7 +205,7 @@ tariffs:
 
     # type: electricitymaps # https://app.electricitymaps.com/map
     # uri: <uri>
-    # token: <token>
+    # token: <token> # needs to be a token with forecast (not in the free tier)
     # zone: DE
 
     # type: ngeso # National Grid Electricity System Operator data (United Kingdom only) https://carbonintensity.org.uk/
