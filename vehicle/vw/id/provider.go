@@ -2,10 +2,12 @@ package id
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/provider"
 )
 
@@ -14,6 +16,7 @@ type Provider struct {
 	statusG        func() (Status, error)
 	action         func(action, value string) error
 	maxChargeLevel func(value string) error
+	lp             loadpoint.API
 }
 
 // NewProvider creates a vehicle api provider
@@ -185,12 +188,25 @@ func (v *Provider) WakeUp() error {
 
 // MaxCurrent implements the api.Charger interface
 func (v *Provider) MaxCurrent(current int64) error {
+	fmt.Printf("current: %d\n", current)
+	fmt.Printf("lp: %+v\n", v.lp)
+
+	// commented out to avoid spamming API calls during development
+
 	// e-up: there are only two possible levels
 	// "reduced" or "maximum"; reduced is 5A
-	level := "maximum"
-	if current <= 5 {
-		level = "reduced"
-	}
+	// level := "maximum"
+	// if current <= 5 {
+	// 	level = "reduced"
+	// }
 
-	return v.maxChargeLevel(level)
+	//return v.maxChargeLevel(level)
+	return nil
+}
+
+var _ loadpoint.Controller = (*Provider)(nil)
+
+// LoadpointControl implements loadpoint.Controller
+func (v *Provider) LoadpointControl(lp loadpoint.API) {
+	v.lp = lp
 }
