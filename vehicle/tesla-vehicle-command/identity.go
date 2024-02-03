@@ -49,6 +49,10 @@ type Identity struct {
 }
 
 func NewIdentity(log *util.Logger, token *oauth2.Token) (*Identity, error) {
+	// serialise instance handling
+	mu.Lock()
+	defer mu.Unlock()
+
 	// determine tesla identity
 	var claims jwt.RegisteredClaims
 	if _, _, err := jwt.NewParser().ParseUnverified(token.AccessToken, &claims); err != nil {
@@ -56,7 +60,7 @@ func NewIdentity(log *util.Logger, token *oauth2.Token) (*Identity, error) {
 	}
 
 	// reuse identity instance
-	if instance := GetInstance(claims.Subject); instance != nil {
+	if instance := getInstance(claims.Subject); instance != nil {
 		return instance, nil
 	}
 
@@ -87,6 +91,9 @@ func NewIdentity(log *util.Logger, token *oauth2.Token) (*Identity, error) {
 	// }
 
 	v.TokenSource = oauth.RefreshTokenSource(token, v)
+
+	// add instance
+	addInstance(claims.Subject, v)
 
 	return v, nil
 }
