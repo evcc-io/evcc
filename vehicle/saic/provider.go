@@ -13,15 +13,23 @@ import (
 // Provider implements the vehicle api
 type Provider struct {
 	statusG func() (requests.ChargeStatus, error)
+	purge   func()
+	Vin     string
+	Api     *API
 }
 
 // NewProvider creates a vehicle api provider
 func NewProvider(api *API, vin string, cache time.Duration) *Provider {
 	impl := &Provider{
-		statusG: provider.Cached(func() (requests.ChargeStatus, error) {
-			return api.Status(vin)
-		}, cache),
+		Vin: vin,
+		Api: api,
 	}
+	c := provider.ResettableCached(func() (requests.ChargeStatus, error) {
+		return api.Status(vin)
+	}, cache)
+
+	impl.statusG = c.Get
+	impl.purge = c.Reset
 	return impl
 }
 
@@ -34,7 +42,14 @@ func (v *Provider) Soc() (float64, error) {
 		return 0, err
 	}
 
-	return float64(res.ChrgMgmtData.BmsPackSOCDsp) / 10.0, nil
+	val := res.ChrgMgmtData.BmsPackSOCDsp
+	if val > 1000 {
+		v.Api.Logger.ERROR.Printf("Invalid raw SOC value: %d", val)
+		v.purge()
+		return float64(val), api.ErrMustRetry
+	}
+
+	return float64(val) / 10.0, nil
 }
 
 var _ api.ChargeState = (*Provider)(nil)
@@ -48,10 +63,11 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 
 	status := api.StatusA // disconnected
 	if res.RvsChargeStatus.ChargingGunState != 0 {
-		status = api.StatusB
-	}
-	if res.RvsChargeStatus.ChargingType != 0 {
-		status = api.StatusC
+		if (res.ChrgMgmtData.BmsChrgSts & 0x01) == 0 {
+			status = api.StatusB
+		} else {
+			status = api.StatusC
+		}
 	}
 
 	return status, nil
@@ -78,8 +94,13 @@ func (v *Provider) Range() (int64, error) {
 	if err != nil {
 		return 0, err
 	}
-
-	return res.RvsChargeStatus.FuelRangeElec / 10, nil
+	val := res.RvsChargeStatus.FuelRangeElec
+	if val < 10 {
+		// Ok, 0 would be possible, but it's more likely that it's an invalid answer.
+		v.Api.Logger.WARN.Printf("Suspicous raw RANGE value: %d", val)
+		return val, api.ErrMustRetry
+	}
+	return val / 10, nil
 }
 
 var _ api.VehicleOdometer = (*Provider)(nil)
@@ -97,20 +118,6 @@ func (v *Provider) Odometer() (float64, error) {
 var _ api.Resurrector = (*Provider)(nil)
 
 func (v *Provider) WakeUp() error {
-	_, err := v.statusG()
+	err := v.Api.Wakeup(v.Vin)
 	return err
 }
-
-/*
-var _ api.VehicleChargeController = (*Provider)(nil)
-
-// StartCharge implements the api.VehicleChargeController interface
-func (v *Provider) StartCharge() error {
-	return v.actionS(CHARGE_START)
-}
-
-// StopCharge implements the api.VehicleChargeController interface
-func (v *Provider) StopCharge() error {
-	return v.actionS(CHARGE_STOP)
-}
-*/
