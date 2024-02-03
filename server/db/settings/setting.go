@@ -46,9 +46,9 @@ func Persist() error {
 
 func All() []setting {
 	mu.RLock()
-	res := slices.Clone(settings)
-	mu.RUnlock()
+	defer mu.RUnlock()
 
+	res := slices.Clone(settings)
 	slices.SortFunc(res, func(i, j setting) int {
 		return cmp.Compare(i.Key, j.Key)
 	})

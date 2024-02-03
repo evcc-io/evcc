@@ -2,12 +2,15 @@ package vc
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"sync"
 
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/oauth2"
 )
 
@@ -39,15 +42,43 @@ func init() {
 
 type Identity struct {
 	oauth2.TokenSource
-	mu  sync.Mutex
-	log *util.Logger
+	mu      sync.Mutex
+	log     *util.Logger
+	subject string
 	// acct  *account.Account
 }
 
-func NewIdentity(log *util.Logger, ts oauth2.TokenSource) (*Identity, error) {
-	token, err := ts.Token()
-	if err != nil {
+func NewIdentity(log *util.Logger, token *oauth2.Token) (*Identity, error) {
+	// determine tesla identity
+	var claims jwt.RegisteredClaims
+	if _, _, err := jwt.NewParser().ParseUnverified(token.AccessToken, &claims); err != nil {
 		return nil, err
+	}
+
+	// reuse identity instance
+	if instance := GetInstance(claims.Subject); instance != nil {
+		return instance, nil
+	}
+
+	if !token.Valid() {
+		token.Expiry = claims.ExpiresAt.Time
+	}
+
+	v := &Identity{
+		log:     log,
+		subject: claims.Subject,
+		// acct:        acct,
+	}
+
+	// database token
+	if !token.Valid() {
+		if err := settings.Json(v.settingsKey(), &token); err != nil {
+			return nil, fmt.Errorf("missing token setting for %s: %w", claims.Subject, err)
+		}
+
+		if !token.Valid() {
+			return nil, errors.New("token expired")
+		}
 	}
 
 	// acct, err := account.New(token.AccessToken, userAgent)
@@ -55,13 +86,13 @@ func NewIdentity(log *util.Logger, ts oauth2.TokenSource) (*Identity, error) {
 	// 	return nil, err
 	// }
 
-	v := &Identity{
-		// acct:        acct,
-	}
-
 	v.TokenSource = oauth.RefreshTokenSource(token, v)
 
 	return v, nil
+}
+
+func (v *Identity) settingsKey() string {
+	return fmt.Sprintf("tesla-command.%s", v.subject)
 }
 
 func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
@@ -76,17 +107,7 @@ func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 		return nil, err
 	}
 
-	claims, err := TokenClaims(token)
-	if err != nil {
-		return nil, err
-	}
-
-	subject, err := claims.GetSubject()
-	if err != nil {
-		return nil, err
-	}
-
-	err = settings.SetJson(SettingsKey(subject), token)
+	err = settings.SetJson(v.settingsKey(), token)
 
 	return token, err
 }
