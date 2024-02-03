@@ -32,8 +32,9 @@ const (
 	Vehicles              = "vehicles"
 
 	// meters
+	AuxMeters     = "auxMeters"
 	BatteryMeters = "batteryMeters"
-	GridMeter     = "GridMeter"
+	GridMeter     = "gridMeter"
 	PvMeters      = "pvMeters"
 
 	// battery settings
