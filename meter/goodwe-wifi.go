@@ -43,10 +43,15 @@ func NewGoodWeWiFi(uri, usage string, timeout time.Duration) (api.Meter, error) 
 		return nil, err
 	}
 
+	inverter := instance.GetInverter(uri)
+	if inverter == nil {
+		inverter = instance.AddInverter(uri, timeout)
+	}
+
 	res := &goodWeWiFi{
 		Server:   instance,
 		usage:    usage,
-		inverter: instance.AddInverter(uri, timeout),
+		inverter: inverter,
 	}
 
 	// decorate api.BatterySoc
