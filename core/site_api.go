@@ -184,7 +184,7 @@ func (site *Site) SetBufferSoc(soc float64) error {
 	}
 
 	if soc != 0 && soc < site.prioritySoc {
-		return errors.New("buffer soc must be larger than priority soc")
+		return errors.New("buffer soc must not be smaller than priority soc")
 	}
 
 	if site.bufferStartSoc != 0 && soc > site.bufferStartSoc {
