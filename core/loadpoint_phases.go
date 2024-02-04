@@ -62,8 +62,9 @@ func (lp *Loadpoint) ActivePhases() int {
 	physical := lp.GetPhases()
 	vehicle := lp.getVehiclePhases()
 	measured := lp.getMeasuredPhases()
+	charger := lp.getChargerPhases()
 
-	active := min(expect(vehicle), expect(physical), expect(measured))
+	active := min(expect(vehicle), expect(physical), expect(measured), expect(charger))
 
 	// sanity check - we should not assume less active phases than actually measured
 	if measured > 0 && active < measured {
@@ -78,6 +79,7 @@ func (lp *Loadpoint) maxActivePhases() int {
 	physical := lp.GetPhases()
 	measured := lp.getMeasuredPhases()
 	vehicle := lp.getVehiclePhases()
+	charger := lp.getChargerPhases()
 
 	// during 1p or unknown config, 1p measured is not a restriction
 	if physical <= 1 || vehicle == 1 {
@@ -89,12 +91,20 @@ func (lp *Loadpoint) maxActivePhases() int {
 		physical = lp.configuredPhases
 	}
 
-	return min(expect(vehicle), expect(physical), expect(measured))
+	return min(expect(vehicle), expect(physical), expect(measured), expect(charger))
 }
 
 func (lp *Loadpoint) getVehiclePhases() int {
 	if vehicle := lp.GetVehicle(); vehicle != nil {
 		return vehicle.Phases()
+	}
+
+	return 0
+}
+
+func (lp *Loadpoint) getChargerPhases() int {
+	if cc, ok := lp.charger.(api.PhaseDescriber); ok {
+		return cc.Phases()
 	}
 
 	return 0
