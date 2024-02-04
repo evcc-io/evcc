@@ -602,6 +602,12 @@ func (lp *Loadpoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	lp.publishTimer(pvTimer, 0, timerInactive)
 	lp.publishTimer(guardTimer, 0, timerInactive)
 
+	if phases := lp.getChargerPhases(); phases != 0 {
+		lp.publish(keys.ChargerPhases, phases)
+	} else {
+		lp.publish(keys.ChargerPhases, nil)
+	}
+
 	// charger features
 	for _, f := range []api.Feature{api.IntegratedDevice, api.Heating} {
 		lp.publishChargerFeature(f)

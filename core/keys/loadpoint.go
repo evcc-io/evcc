@@ -20,6 +20,7 @@ const (
 
 	ChargerIcon    = "chargerIcon"    // charger icon for ui
 	ChargerFeature = "chargerFeature" // charger feature
+	ChargerPhases  = "chargerPhases"  // charger phases
 
 	// loadpoint status
 	Enabled   = "enabled"   // loadpoint enabled
