@@ -7,31 +7,29 @@ import (
 	"github.com/benbjohnson/clock"
 )
 
-const wakeupTimeout = 30 * time.Second
-
-// if use even number, charger wakeup start first
-const maxWakeupRepeats = 4
+const wakeupTimeout = 45 * time.Second
 
 // Timer measures active time between start and stop events
 type Timer struct {
 	sync.Mutex
-	clck        clock.Clock
-	started     time.Time
-	repeatsLeft int
+	clck           clock.Clock
+	started        time.Time
+	wakeupTrysLeft int
 }
 
 // NewTimer creates timer that can expire
 func NewTimer() *Timer {
 	return &Timer{
-		clck:        clock.New(),
-		repeatsLeft: maxWakeupRepeats,
+		clck: clock.New(),
 	}
 }
 
 // Start starts the timer if not started already
-func (m *Timer) Start() {
+func (m *Timer) Start(maxWakeupTrys int) {
 	m.Lock()
 	defer m.Unlock()
+
+	m.wakeupTrysLeft = maxWakeupTrys
 
 	if !m.started.IsZero() {
 		return
@@ -46,7 +44,6 @@ func (m *Timer) Stop() {
 	defer m.Unlock()
 
 	m.started = time.Time{}
-	m.repeatsLeft = maxWakeupRepeats
 }
 
 // Expired checks if the timer has elapsed and if resets its status
@@ -56,8 +53,8 @@ func (m *Timer) Expired() bool {
 
 	res := !m.started.IsZero() && (m.clck.Since(m.started) >= wakeupTimeout)
 	if res {
-		if m.repeatsLeft > 0 {
-			m.repeatsLeft--
+		m.wakeupTrysLeft--
+		if m.wakeupTrysLeft > 0 {
 			m.started = m.clck.Now()
 		} else {
 			m.started = time.Time{}
