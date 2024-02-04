@@ -38,7 +38,7 @@ func NewGoodWeWifiFromConfig(other map[string]interface{}) (api.Meter, error) {
 }
 
 func NewGoodWeWiFi(uri, usage string, timeout time.Duration) (api.Meter, error) {
-	instance, err := goodwe.Instance()
+	instance, err := goodwe.Instance(util.NewLogger("goodwe-wifi"))
 	if err != nil {
 		return nil, err
 	}
