@@ -56,7 +56,7 @@ func init() {
 	registry.Add("amperfied", NewAmperfiedFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateAmperified -b *Amperified -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error"
+//go:generate go run ../cmd/tools/decorate.go -f decorateAmperfied -b *Amperfied -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error"
 
 // NewAmperfiedFromConfig creates a Amperfied charger from generic config
 func NewAmperfiedFromConfig(other map[string]interface{}) (api.Charger, error) {
@@ -110,7 +110,7 @@ func NewAmperfied(uri string, slaveID uint8, phases bool) (api.Charger, error) {
 		phases1p3p = wb.phases1p3p
 	}
 
-	return decorateAmperified(wb, phases1p3p), nil
+	return decorateAmperfied(wb, phases1p3p), nil
 }
 
 func (wb *Amperfied) heartbeat(timeout time.Duration) {
