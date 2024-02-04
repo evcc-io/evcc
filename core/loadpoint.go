@@ -58,13 +58,12 @@ const (
 	guardGracePeriod          = 60 * time.Second // allow out of sync during this timespan
 	phaseSwitchCommandTimeout = 30 * time.Second // do not sync charger enabled/disabled state during this timespan
 	phaseSwitchDuration       = 60 * time.Second // do not measure phases during this timespan
+
+	wakeupTrysDefault = 2 // wakeupTrys is the count of wakeup trys for evenry Wakeup (vehicle or charger)
 )
 
 // elapsed is the time an expired timer will be set to
 var elapsed = time.Unix(0, 1)
-
-// wakeupTrys is the count of wakeup trys for evenry Wakeup (vehicle or charger)
-var wakeupTrys = 2
 
 // PollConfig defines the vehicle polling mode and interval
 type PollConfig struct {
@@ -117,7 +116,7 @@ type Loadpoint struct {
 	ChargerRef      string `mapstructure:"charger"`    // Charger reference
 	VehicleRef      string `mapstructure:"vehicle"`    // Vehicle reference
 	MeterRef        string `mapstructure:"meter"`      // Charge meter reference
-	WakeupTrys      int    `mapstructure:"wakeuptrys"` // Wakeuptrys
+	WakeupTrys_     int    `mapstructure:"wakeuptrys"` // Wakeuptrys
 	Soc             SocConfig
 	Enable, Disable ThresholdConfig
 	GuardDuration   time.Duration // charger enable/disable minimum holding time
@@ -1500,8 +1499,9 @@ func (lp *Loadpoint) startWakeUpTimer() {
 	_, wakeupCharger := lp.charger.(api.Resurrector)
 	_, wakeupVehicle := lp.GetVehicle().(api.Resurrector)
 
-	if lp.WakeupTrys > 0 {
-		wakeupTrys = lp.WakeupTrys
+	wakeupTrys := wakeupTrysDefault
+	if lp.WakeupTrys_ > 0 {
+		wakeupTrys = lp.WakeupTrys_
 	}
 	if wakeupCharger && wakeupVehicle {
 		wakeupTrys = wakeupTrys * 2

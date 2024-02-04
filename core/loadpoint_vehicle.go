@@ -182,7 +182,7 @@ func (lp *Loadpoint) wakeUpVehicle() {
 		}
 	}
 
-	lp.log.DEBUG.Printf("wake-up repeats left: %d", lp.wakeUpTimer.wakeupTrysLeft)
+	lp.log.DEBUG.Printf("wake-up trys left: %d", lp.wakeUpTimer.wakeupTrysLeft)
 }
 
 // unpublishVehicle resets published vehicle data
