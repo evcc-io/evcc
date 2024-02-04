@@ -112,7 +112,7 @@ func (v *Provider) Odometer() (float64, error) {
 		return 0, err
 	}
 
-	return float64(res.RvsChargeStatus.Mileage), nil
+	return float64(res.RvsChargeStatus.Mileage) / 10.0, nil
 }
 
 var _ api.Resurrector = (*Provider)(nil)
