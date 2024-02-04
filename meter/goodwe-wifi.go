@@ -10,7 +10,6 @@ import (
 )
 
 type goodWeWiFi struct {
-	*goodwe.Server
 	usage    string
 	inverter *util.Monitor[goodwe.Inverter]
 }
@@ -49,7 +48,6 @@ func NewGoodWeWiFi(uri, usage string, timeout time.Duration) (api.Meter, error) 
 	}
 
 	res := &goodWeWiFi{
-		Server:   instance,
 		usage:    usage,
 		inverter: inverter,
 	}
