@@ -1,15 +1,18 @@
 package meter
 
 import (
+	"time"
+
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/meter/goodwe"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/request"
 )
 
 type goodWeWiFi struct {
 	*goodwe.Server
-	usage string
-	uri   string
+	usage    string
+	inverter *util.Monitor[goodwe.Inverter]
 }
 
 func init() {
@@ -19,31 +22,32 @@ func init() {
 //go:generate go run ../cmd/tools/decorate.go -f decorateGoodWeWifi -b *goodWeWiFi -r api.Meter -t "api.Battery,Soc,func() (float64, error)"
 
 func NewGoodWeWifiFromConfig(other map[string]interface{}) (api.Meter, error) {
-	var cc struct {
+	cc := struct {
 		capacity   `mapstructure:",squash"`
 		URI, Usage string
+		Timeout    time.Duration
+	}{
+		Timeout: request.Timeout,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewGoodWeWiFi(cc.URI, cc.Usage)
+	return NewGoodWeWiFi(cc.URI, cc.Usage, cc.Timeout)
 }
 
-func NewGoodWeWiFi(uri string, usage string) (api.Meter, error) {
+func NewGoodWeWiFi(uri, usage string, timeout time.Duration) (api.Meter, error) {
 	instance, err := goodwe.Instance()
 	if err != nil {
 		return nil, err
 	}
 
 	res := &goodWeWiFi{
-		Server: instance,
-		usage:  usage,
-		uri:    uri,
+		Server:   instance,
+		usage:    usage,
+		inverter: instance.AddInverter(uri, timeout),
 	}
-
-	instance.AddInverter(uri)
 
 	// decorate api.BatterySoc
 	var batterySoc func() (float64, error)
@@ -55,7 +59,10 @@ func NewGoodWeWiFi(uri string, usage string) (api.Meter, error) {
 }
 
 func (m *goodWeWiFi) CurrentPower() (float64, error) {
-	data := m.GetInverter(m.uri)
+	data, err := m.inverter.Get()
+	if err != nil {
+		return 0, err
+	}
 
 	switch m.usage {
 	case "grid":
@@ -69,5 +76,6 @@ func (m *goodWeWiFi) CurrentPower() (float64, error) {
 }
 
 func (m *goodWeWiFi) batterySoc() (float64, error) {
-	return m.GetInverter(m.uri).Soc, nil
+	data, err := m.inverter.Get()
+	return data.Soc, err
 }
