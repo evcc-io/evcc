@@ -34,6 +34,15 @@
 									{{ $t("main.loadpointSettings.phasesConfigured.label") }}
 								</label>
 								<div class="col-sm-8 pe-0">
+									<p v-if="!phases1p3p" class="mt-0 mb-2">
+										<small>
+											{{
+												$t(
+													"main.loadpointSettings.phasesConfigured.no1p3pSupport"
+												)
+											}}</small
+										>
+									</p>
 									<div
 										v-for="phases in phasesOptions"
 										:key="phases"
@@ -179,20 +188,24 @@ export default {
 			return [PHASES_3, PHASES_1];
 		},
 		maxPower: function () {
-			if (this.phasesConfigured === PHASES_AUTO) {
-				return this.maxPowerPhases(3);
-			}
-			if ([PHASES_3, PHASES_1].includes(this.phasesConfigured)) {
-				return this.maxPowerPhases(this.phasesConfigured);
+			if (this.phases1p3p) {
+				if (this.phasesConfigured === PHASES_AUTO) {
+					return this.maxPowerPhases(3);
+				}
+				if ([PHASES_3, PHASES_1].includes(this.phasesConfigured)) {
+					return this.maxPowerPhases(this.phasesConfigured);
+				}
 			}
 			return this.fmtKw(this.maxCurrent * V * this.phasesActive);
 		},
 		minPower: function () {
-			if (this.phasesConfigured === PHASES_AUTO) {
-				return this.minPowerPhases(1);
-			}
-			if ([PHASES_3, PHASES_1].includes(this.phasesConfigured)) {
-				return this.minPowerPhases(this.phasesConfigured);
+			if (this.phases1p3p) {
+				if (this.phasesConfigured === PHASES_AUTO) {
+					return this.minPowerPhases(1);
+				}
+				if ([PHASES_3, PHASES_1].includes(this.phasesConfigured)) {
+					return this.minPowerPhases(this.phasesConfigured);
+				}
 			}
 			return this.fmtKw(this.minCurrent * V * this.phasesActive);
 		},
