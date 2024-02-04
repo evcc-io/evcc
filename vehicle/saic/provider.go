@@ -1,6 +1,7 @@
 package saic
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -12,24 +13,21 @@ import (
 
 // Provider implements the vehicle api
 type Provider struct {
-	statusG func() (requests.ChargeStatus, error)
-	purge   func()
-	Vin     string
-	Api     *API
+	status provider.Cacheable[requests.ChargeStatus]
+	wakeup func() error
 }
 
 // NewProvider creates a vehicle api provider
 func NewProvider(api *API, vin string, cache time.Duration) *Provider {
 	impl := &Provider{
-		Vin: vin,
-		Api: api,
+		status: provider.ResettableCached(func() (requests.ChargeStatus, error) {
+			return api.Status(vin)
+		}, cache),
+		wakeup: func() error {
+			return api.Wakeup(vin)
+		},
 	}
-	c := provider.ResettableCached(func() (requests.ChargeStatus, error) {
-		return api.Status(vin)
-	}, cache)
 
-	impl.statusG = c.Get
-	impl.purge = c.Reset
 	return impl
 }
 
@@ -37,16 +35,15 @@ var _ api.Battery = (*Provider)(nil)
 
 // Soc implements the api.Vehicle interface
 func (v *Provider) Soc() (float64, error) {
-	res, err := v.statusG()
+	res, err := v.status.Get()
 	if err != nil {
 		return 0, err
 	}
 
 	val := res.ChrgMgmtData.BmsPackSOCDsp
 	if val > 1000 {
-		v.Api.Logger.ERROR.Printf("Invalid raw SOC value: %d", val)
-		v.purge()
-		return float64(val), api.ErrMustRetry
+		v.status.Reset()
+		return float64(val), fmt.Errorf("invalid raw soc value: %d: %w", val, api.ErrMustRetry)
 	}
 
 	return float64(val) / 10.0, nil
@@ -56,7 +53,7 @@ var _ api.ChargeState = (*Provider)(nil)
 
 // Status implements the api.ChargeState interface
 func (v *Provider) Status() (api.ChargeStatus, error) {
-	res, err := v.statusG()
+	res, err := v.status.Get()
 	if err != nil {
 		return api.StatusNone, err
 	}
@@ -77,7 +74,7 @@ var _ api.VehicleFinishTimer = (*Provider)(nil)
 
 // FinishTime implements the api.VehicleFinishTimer interface
 func (v *Provider) FinishTime() (time.Time, error) {
-	res, err := v.statusG()
+	res, err := v.status.Get()
 	if err == nil {
 		ctr := res.ChrgMgmtData.ChrgngRmnngTime
 		return time.Now().Add(time.Duration(ctr) * time.Minute), err
@@ -90,15 +87,14 @@ var _ api.VehicleRange = (*Provider)(nil)
 
 // Range implements the api.VehicleRange interface
 func (v *Provider) Range() (int64, error) {
-	res, err := v.statusG()
+	res, err := v.status.Get()
 	if err != nil {
 		return 0, err
 	}
 	val := res.RvsChargeStatus.FuelRangeElec
 	if val < 10 {
 		// Ok, 0 would be possible, but it's more likely that it's an invalid answer.
-		v.Api.Logger.WARN.Printf("Suspicous raw RANGE value: %d", val)
-		return val, api.ErrMustRetry
+		return val, fmt.Errorf("invalid raw range value: %d: %w", val, api.ErrMustRetry)
 	}
 	return val / 10, nil
 }
@@ -107,7 +103,7 @@ var _ api.VehicleOdometer = (*Provider)(nil)
 
 // Odometer implements the api.VehicleOdometer interface
 func (v *Provider) Odometer() (float64, error) {
-	res, err := v.statusG()
+	res, err := v.status.Get()
 	if err != nil {
 		return 0, err
 	}
@@ -118,6 +114,5 @@ func (v *Provider) Odometer() (float64, error) {
 var _ api.Resurrector = (*Provider)(nil)
 
 func (v *Provider) WakeUp() error {
-	err := v.Api.Wakeup(v.Vin)
-	return err
+	return v.wakeup()
 }

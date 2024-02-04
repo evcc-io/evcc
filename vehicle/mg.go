@@ -25,7 +25,7 @@ func NewMGFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		User, Password, VIN string
 		Cache               time.Duration
 	}{
-		Cache: 5 * time.Minute,
+		Cache: interval,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -36,23 +36,19 @@ func NewMGFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, api.ErrMissingCredentials
 	}
 
-	v := &MG{
-		embed: &cc.embed,
-	}
-
 	log := util.NewLogger("MG").Redact(cc.User, cc.Password, cc.VIN)
 	identity := saic.NewIdentity(log, cc.User, cc.Password)
 
-	err := identity.Login()
-	if err != nil {
+	if err := identity.Login(); err != nil {
 		return nil, err
 	}
 
 	api := saic.NewAPI(log, identity)
 
-	if err == nil {
-		v.Provider = saic.NewProvider(api, cc.VIN, cc.Cache)
+	v := &MG{
+		embed:    &cc.embed,
+		Provider: saic.NewProvider(api, cc.VIN, cc.Cache),
 	}
 
-	return v, err
+	return v, nil
 }
