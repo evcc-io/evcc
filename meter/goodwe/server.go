@@ -14,7 +14,7 @@ var (
 	mu       sync.RWMutex
 )
 
-func Instance() (*Server, error) {
+func Instance(log *util.Logger) (*Server, error) {
 	mu.Lock()
 	defer mu.Unlock()
 
@@ -23,6 +23,7 @@ func Instance() (*Server, error) {
 	}
 
 	instance = &Server{
+		log:       log,
 		inverters: make(map[string]*util.Monitor[Inverter]),
 	}
 
@@ -80,29 +81,28 @@ func (m *Server) readData() {
 func (m *Server) listen() {
 	for {
 		buf := make([]byte, 1024)
-		_, addr, err := m.conn.ReadFromUDP(buf)
+		n, addr, err := m.conn.ReadFromUDP(buf)
 		if err != nil {
+			m.log.ERROR.Println(err)
 			continue
 		}
+		m.log.TRACE.Printf("recv from %s: % X", addr, buf[:n])
 
-		monitor := m.GetInverter(addr.IP.String())
+		ip := addr.IP.String()
+		monitor := m.GetInverter(ip)
 		if monitor == nil {
+			m.log.ERROR.Println("unknown inverter:", ip)
 			continue
 		}
 
 		monitor.SetFunc(func(inverter Inverter) Inverter {
 			if buf[4] == 250 {
-				vPv1 := float64(int16(binary.BigEndian.Uint16(buf[11:]))) * 0.1
-				vPv2 := float64(int16(binary.BigEndian.Uint16(buf[19:]))) * 0.1
-				iPv1 := float64(int16(binary.BigEndian.Uint16(buf[13:]))) * 0.1
-				iPv2 := float64(int16(binary.BigEndian.Uint16(buf[21:]))) * 0.1
-				iBatt := float64(int16(binary.BigEndian.Uint16(buf[167:]))) * 0.1
-				vBatt := float64(int16(binary.BigEndian.Uint16(buf[165:]))) * 0.1
-
-				pvPower := vPv1*iPv1 + vPv2*iPv2
-
-				inverter.PvPower = pvPower
-				inverter.BatteryPower = vBatt * iBatt
+				ui := func(u, i int16) float64 {
+					return float64(int16(binary.BigEndian.Uint16(buf[u:]))) *
+						float64(int16(binary.BigEndian.Uint16(buf[i:]))) / 100
+				}
+				inverter.PvPower = ui(11, 19) + ui(13, 21)
+				inverter.BatteryPower = ui(167, 165)
 				inverter.NetPower = -float64(int32(binary.BigEndian.Uint32(buf[83:])))
 			}
 

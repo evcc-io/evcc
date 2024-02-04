@@ -7,6 +7,7 @@ import (
 )
 
 type Server struct {
+	log       *util.Logger
 	conn      *net.UDPConn
 	inverters map[string]*util.Monitor[Inverter]
 }
