@@ -112,11 +112,12 @@ type Loadpoint struct {
 	vmu   sync.RWMutex   // guard vehicle
 	Mode_ api.ChargeMode `mapstructure:"mode"` // Default charge mode, used for disconnect
 
-	Title_          string `mapstructure:"title"`    // UI title
-	Priority_       int    `mapstructure:"priority"` // Priority
-	ChargerRef      string `mapstructure:"charger"`  // Charger reference
-	VehicleRef      string `mapstructure:"vehicle"`  // Vehicle reference
-	MeterRef        string `mapstructure:"meter"`    // Charge meter reference
+	Title_          string `mapstructure:"title"`      // UI title
+	Priority_       int    `mapstructure:"priority"`   // Priority
+	ChargerRef      string `mapstructure:"charger"`    // Charger reference
+	VehicleRef      string `mapstructure:"vehicle"`    // Vehicle reference
+	MeterRef        string `mapstructure:"meter"`      // Charge meter reference
+	WakeupTrys      int    `mapstructure:"wakeuptrys"` // Wakeuptrys
 	Soc             SocConfig
 	Enable, Disable ThresholdConfig
 	GuardDuration   time.Duration // charger enable/disable minimum holding time
@@ -1499,6 +1500,9 @@ func (lp *Loadpoint) startWakeUpTimer() {
 	_, wakeupCharger := lp.charger.(api.Resurrector)
 	_, wakeupVehicle := lp.GetVehicle().(api.Resurrector)
 
+	if lp.WakeupTrys > 0 {
+		wakeupTrys = lp.WakeupTrys
+	}
 	if wakeupCharger && wakeupVehicle {
 		wakeupTrys = wakeupTrys * 2
 	} else if !wakeupCharger && !wakeupVehicle {
