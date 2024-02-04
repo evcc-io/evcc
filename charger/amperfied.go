@@ -337,6 +337,9 @@ func (wb *Amperfied) WakeUp() error {
 
 // phases1p3p implements the api.PhaseSwitcher interface
 func (wb *Amperfied) phases1p3p(phases int) error {
-	_, err := wb.conn.WriteSingleRegister(ampRegPhaseSwitchControl, uint16(phases))
+	b := make([]byte, 2)
+	binary.BigEndian.PutUint16(b, uint16(phases))
+
+	_, err := wb.conn.WriteMultipleRegisters(ampRegPhaseSwitchControl, 1, b)
 	return err
 }
