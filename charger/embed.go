@@ -13,6 +13,7 @@ var _ api.PhaseDescriber = (*embed)(nil)
 
 // Phases implements the api.PhasesDescriber interface
 func (v *embed) Phases() int {
+	// TODO make this configurable beyond switch sockets
 	return 1
 }
 
