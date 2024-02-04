@@ -59,11 +59,13 @@ const (
 	phaseSwitchCommandTimeout = 30 * time.Second // do not sync charger enabled/disabled state during this timespan
 	phaseSwitchDuration       = 60 * time.Second // do not measure phases during this timespan
 
-	defaultWakeupTrys = 2 // default Wakeuptrys for every wakeup Method (vehicle or charger)
 )
 
 // elapsed is the time an expired timer will be set to
 var elapsed = time.Unix(0, 1)
+
+// wakeupTrys is the count of wakeup trys for evenry Wakeup (vehicle or charger)
+var wakeupTrys = 2
 
 // PollConfig defines the vehicle polling mode and interval
 type PollConfig struct {
@@ -1498,15 +1500,14 @@ func (lp *Loadpoint) startWakeUpTimer() {
 	_, wakeupCharger := lp.charger.(api.Resurrector)
 	_, wakeupVehicle := lp.GetVehicle().(api.Resurrector)
 
-	var maxWakeupTrys = defaultWakeupTrys
 	if wakeupCharger && wakeupVehicle {
-		maxWakeupTrys = maxWakeupTrys * 2
+		wakeupTrys = wakeupTrys * 2
 	} else if !wakeupCharger && !wakeupVehicle {
-		maxWakeupTrys = 0
+		wakeupTrys = 0
 	}
 
 	lp.log.DEBUG.Printf("wake-up timer: start")
-	lp.wakeUpTimer.Start(maxWakeupTrys)
+	lp.wakeUpTimer.Start(wakeupTrys)
 }
 
 // stopWakeUpTimer stops wakeUpTimer
