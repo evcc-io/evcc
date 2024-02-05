@@ -9,7 +9,7 @@ import (
 
 const wakeupTimeout = 30 * time.Second
 
-const wakeupAttempts = 6 // wakeupAttempts is the count of wakeup attempts for every wakeup type (vehicle or charger)
+const wakeupAttempts = 6 // wakeupAttempts is the count of wakeup attempts
 
 // Timer measures active time between start and stop events
 type Timer struct {
