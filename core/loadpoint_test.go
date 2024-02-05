@@ -10,7 +10,6 @@ import (
 	"github.com/evcc-io/evcc/core/soc"
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/util"
-	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 )
 
