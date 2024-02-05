@@ -59,7 +59,7 @@ const (
 	phaseSwitchCommandTimeout = 30 * time.Second // do not sync charger enabled/disabled state during this timespan
 	phaseSwitchDuration       = 60 * time.Second // do not measure phases during this timespan
 
-	wakeupAttemptsDefault = 1 // wakeupAttemptsDefault is the count of wakeup attempts for every wakeup type (vehicle or charger)
+	wakeupAttemptsDefault = 3 // wakeupAttemptsDefault is the count of wakeup attempts for every wakeup type (vehicle or charger)
 )
 
 // elapsed is the time an expired timer will be set to
@@ -111,12 +111,11 @@ type Loadpoint struct {
 	vmu   sync.RWMutex   // guard vehicle
 	Mode_ api.ChargeMode `mapstructure:"mode"` // Default charge mode, used for disconnect
 
-	Title_          string `mapstructure:"title"`          // UI title
-	Priority_       int    `mapstructure:"priority"`       // Priority
-	ChargerRef      string `mapstructure:"charger"`        // Charger reference
-	VehicleRef      string `mapstructure:"vehicle"`        // Vehicle reference
-	MeterRef        string `mapstructure:"meter"`          // Charge meter reference
-	WakeupAttempts_ int    `mapstructure:"wakeupattempts"` // Wakeup attempts
+	Title_          string `mapstructure:"title"`    // UI title
+	Priority_       int    `mapstructure:"priority"` // Priority
+	ChargerRef      string `mapstructure:"charger"`  // Charger reference
+	VehicleRef      string `mapstructure:"vehicle"`  // Vehicle reference
+	MeterRef        string `mapstructure:"meter"`    // Charge meter reference
 	Soc             SocConfig
 	Enable, Disable ThresholdConfig
 	GuardDuration   time.Duration // charger enable/disable minimum holding time
@@ -1500,9 +1499,6 @@ func (lp *Loadpoint) startWakeUpTimer() {
 	_, wakeupVehicle := lp.GetVehicle().(api.Resurrector)
 
 	wakeupAttempts := wakeupAttemptsDefault
-	if lp.WakeupAttempts_ > 0 {
-		wakeupAttempts = lp.WakeupAttempts_
-	}
 	if wakeupCharger && wakeupVehicle {
 		wakeupAttempts = wakeupAttempts * 2
 	} else if !wakeupCharger && !wakeupVehicle {
