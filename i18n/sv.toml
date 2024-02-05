@@ -211,6 +211,7 @@ solar = "Solenergi"
 [main.loadpointSettings]
 currents = "Laddningsström"
 default = "förvald"
+disclaimerHint = "Anmärkning:"
 onlyForSocBasedCharging = "Dessa inställningar är endast tillgängliga för fordon med känd laddnivå"
 title = "Inställningar {0}"
 vehicle = "Fordon"
