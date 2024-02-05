@@ -649,16 +649,16 @@ func (lp *Loadpoint) syncCharger() error {
 		return err
 	}
 
-	if lp.enableCommandTimeoutElapsed() {
+	if lp.enabledCommandTimeoutElapsed() {
 		defer func() {
-			lp.SetEnabled(enabled)
+			lp.setEnabled(enabled)
 		}()
 	}
 
 	if !enabled && lp.charging() {
 		lp.log.WARN.Println("charger logic error: disabled but charging")
 		enabled = true // treat as enabled when charging
-		if lp.enableCommandTimeoutElapsed() {
+		if lp.enabledCommandTimeoutElapsed() {
 			if err := lp.charger.Enable(true); err != nil { // also enable charger to correct internal state
 				return err
 			}
@@ -678,7 +678,7 @@ func (lp *Loadpoint) syncCharger() error {
 
 			// smallest adjustment most PWM-Controllers can do is: 100%÷256×0,6A = 0.234A
 			if math.Abs(lp.chargeCurrent-current) > 0.23 {
-				if lp.enableCommandTimeoutElapsed() {
+				if lp.enabledCommandTimeoutElapsed() {
 					lp.log.WARN.Printf("charger logic error: current mismatch (got %.3gA, expected %.3gA)", current, lp.chargeCurrent)
 				}
 				lp.chargeCurrent = current
@@ -691,7 +691,7 @@ func (lp *Loadpoint) syncCharger() error {
 
 	if enabled || lp.phaseSwitchCommandTimeoutElapsed() {
 		// ignore disabled state if vehicle was disconnected ^(lp.enabled && ^lp.connected)
-		if lp.enableCommandTimeoutElapsed() && lp.phaseSwitchCompleted() && (enabled || lp.connected()) {
+		if lp.enabledCommandTimeoutElapsed() && lp.phaseSwitchCompleted() && (enabled || lp.connected()) {
 			lp.log.WARN.Printf("charger out of sync: expected %vd, got %vd", status[lp.enabled], status[enabled])
 		}
 		return nil
@@ -1032,7 +1032,7 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64) bo
 	// - https://github.com/evcc-io/evcc/issues/2613
 	measuredPhases := lp.getMeasuredPhases()
 	if phases > 0 && phases < measuredPhases {
-		if lp.enableCommandTimeoutElapsed() {
+		if lp.enabledCommandTimeoutElapsed() {
 			lp.log.WARN.Printf("ignoring inconsistent phases: %dp < %dp observed active", phases, measuredPhases)
 		}
 		lp.resetMeasuredPhases()
@@ -1469,14 +1469,14 @@ func (lp *Loadpoint) stopWakeUpTimer() {
 	lp.wakeUpTimer.Stop()
 }
 
-func (lp *Loadpoint) setEnabled(enable bool) {
+func (lp *Loadpoint) setEnabled(enabled bool) {
 	lp.enabled = enabled
-	lp.enableChanged = lp.clock.Now()
-	lp.log.DEBUG.Printf("charger %s", status[enabled])
+	lp.enabledChanged = lp.clock.Now()
+	lp.log.DEBUG.Printf("charger %s", status[lp.enabled])
 	lp.publish(keys.Enabled, lp.enabled)
 }
 
-// enableCommandTimeoutElapsed checks if last guard update is within guard grace period
+// enabledCommandTimeoutElapsed checks if last guard update is within guard grace period
 func (lp *Loadpoint) enabledCommandTimeoutElapsed() bool {
 	return time.Since(lp.enabledChanged) > enabledCommandTimeout
 }
