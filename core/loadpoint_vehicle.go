@@ -165,7 +165,7 @@ func (lp *Loadpoint) setActiveVehicle(v api.Vehicle) {
 }
 
 func (lp *Loadpoint) wakeUpVehicle() {
-	if lp.wakeUpTimer.wakeupAttemptsLeft%2 != 0 || lp.wakeUpTimer.wakeupAttemptsLeft%2 == 0 {
+	if lp.wakeUpTimer.wakeupAttemptsLeft%2 != 0 {
 		// charger
 		if c, ok := lp.charger.(api.Resurrector); ok {
 			lp.log.DEBUG.Println("wake-up charger")
