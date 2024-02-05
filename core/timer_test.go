@@ -15,7 +15,7 @@ func TestTimer(t *testing.T) {
 	at.clck = clck
 
 	// start
-	at.Start(1)
+	at.Start()
 	clck.Add(10 * time.Second)
 	require.False(t, at.Expired())
 
@@ -24,7 +24,7 @@ func TestTimer(t *testing.T) {
 	require.True(t, at.Expired())
 
 	// start
-	at.Start(1)
+	at.Start()
 	clck.Add(time.Minute)
 	require.True(t, at.Expired())
 }
