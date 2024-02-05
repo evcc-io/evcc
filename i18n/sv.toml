@@ -32,6 +32,10 @@ addVehicle = "Lägg till fordon"
 edit = "ändra"
 title = "Inställningar"
 vehicles = "Mina fordon"
+addLoadpoint = "Lägg till laddbox"
+addPvBattery = "Lägg till solceller eller batteri"
+unconfigured = "ej konfigurerad"
+yaml = "Konfigurera i evcc.yaml. Kan inte ändras i UI."
 
 [config.validation]
 failed = "misslyckades"
@@ -43,7 +47,7 @@ validate = "validerar"
 
 [config.vehicle]
 cancel = "Avbryt"
-delete = "Radera fordon"
+delete = "Radera"
 generic = "Andra integrationer"
 offline = "Generiskt fordon"
 online = "Fordon med online API"
@@ -142,7 +146,7 @@ docs = "Dokumentation"
 github = "GitHub"
 login = "Fordons inloggningar"
 needHelp = "Behöver du hjälp?"
-sessions = "Laddnings sessioner"
+sessions = "Laddningar"
 settings = "Inställningar"
 
 [help]
@@ -209,7 +213,7 @@ remoteDisabledSoft = "{source}: Adaptiv solladdning avstängd"
 solar = "Solenergi"
 
 [main.loadpointSettings]
-currents = "Laddningsström"
+currents = "Laddström"
 default = "förvald"
 onlyForSocBasedCharging = "Dessa inställningar är endast tillgängliga för fordon med känd laddnivå"
 title = "Inställningar {0}"
@@ -281,7 +285,7 @@ vehicleCapacityDocs = "Lär dig hur du konfigurerar."
 vehicleCapacityRequired = "Fordonets batterikapacitet behövs för att beräkna laddtid."
 
 [main.targetChargePlan]
-chargeDuration = "Laddningstid"
+chargeDuration = "Laddtid"
 co2Label = "CO₂-utsläpp ⌀"
 priceLabel = "Energipris"
 timeRange = "{day} {range} t"
@@ -351,7 +355,7 @@ meterstop = "Mätare stopp"
 odometer = "Mätarställning"
 price = "Pris"
 started = "Start-tid"
-title = "Laddningssession"
+title = "Laddning"
 
 [sessions]
 avgPower = "⌀-effekt"
@@ -440,3 +444,50 @@ title = "Startfel"
 cancel = "Avbryt"
 template = "Tillverkare"
 test = "Test"
+
+
+[config.battery]
+titleEdit = "Ändra batterimätare"
+titleAdd = "Lägg till batterimätare"
+
+[config.deviceValue]
+capacity = "Kapacitet"
+chargeStatus = "Status"
+chargedEnergy = "Laddad"
+enabled = "Aktiverad"
+energy = "Energi"
+odometer = "Mätarställning"
+phaseCurrents = "Ström L1..L3"
+phasePowers = "Effekt L1..L3"
+phaseVoltages = "Spänning L1..L3"
+power = "Effekt"
+range = "Räckvidd"
+soc = "SoC"
+socLimit = "SoC gräns"
+current = "Nuvarande"
+
+[config.grid]
+titleAdd = "Lägg till elnätsmätare"
+titleEdit = "Ändra elnätsmätare"
+
+[config.meter]
+cancel = "Avbryt"
+delete = "Radera"
+save = "Spara"
+template = "Tillverkare"
+titleChoice = "Vad vill du lägga till?"
+validateSave = "Validera & spara"
+
+[main.heatingStatus]
+waitForVehicle = "Redo, väntar på värmare..."
+cleanEnergyCharging = "Värmer med CO2-neutral energi: {co2} (limit {limit})"
+charging = "Värmer..."
+cheapEnergyCharging = "Värmer med billig energi: {price} (limit {limit})"
+
+[config.pv]
+titleAdd = "Lägg till solcellsmätare"
+titleEdit = "Ändra solcellsmätare"
+
+[config.site]
+cancel = "Avbryt"
+save = "Spara"
