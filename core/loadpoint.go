@@ -58,8 +58,6 @@ const (
 	guardGracePeriod          = 60 * time.Second // allow out of sync during this timespan
 	phaseSwitchCommandTimeout = 30 * time.Second // do not sync charger enabled/disabled state during this timespan
 	phaseSwitchDuration       = 60 * time.Second // do not measure phases during this timespan
-
-	wakeupAttemptsDefault = 3 // wakeupAttemptsDefault is the count of wakeup attempts for every wakeup type (vehicle or charger)
 )
 
 // elapsed is the time an expired timer will be set to
@@ -1495,18 +1493,8 @@ func (lp *Loadpoint) processTasks() {
 
 // startWakeUpTimer starts wakeUpTimer
 func (lp *Loadpoint) startWakeUpTimer() {
-	_, wakeupCharger := lp.charger.(api.Resurrector)
-	_, wakeupVehicle := lp.GetVehicle().(api.Resurrector)
-
-	wakeupAttempts := wakeupAttemptsDefault
-	if wakeupCharger && wakeupVehicle {
-		wakeupAttempts = wakeupAttempts * 2
-	} else if !wakeupCharger && !wakeupVehicle {
-		wakeupAttempts = 0
-	}
-
 	lp.log.DEBUG.Printf("wake-up timer: start")
-	lp.wakeUpTimer.Start(wakeupAttempts)
+	lp.wakeUpTimer.Start()
 }
 
 // stopWakeUpTimer stops wakeUpTimer

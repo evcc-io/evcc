@@ -9,6 +9,8 @@ import (
 
 const wakeupTimeout = 45 * time.Second
 
+const wakeupAttempts = 6 // wakeupAttempts is the count of wakeup attempts for every wakeup type (vehicle or charger)
+
 // Timer measures active time between start and stop events
 type Timer struct {
 	sync.Mutex
@@ -25,11 +27,11 @@ func NewTimer() *Timer {
 }
 
 // Start starts the timer if not started already
-func (m *Timer) Start(maxWakeupAttempts int) {
+func (m *Timer) Start() {
 	m.Lock()
 	defer m.Unlock()
 
-	m.wakeupAttemptsLeft = maxWakeupAttempts
+	m.wakeupAttemptsLeft = wakeupAttempts
 
 	if !m.started.IsZero() {
 		return
