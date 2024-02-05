@@ -14,13 +14,13 @@ const (
 	DisableThreshold = "disableThreshold"
 
 	PhasesConfigured = "phasesConfigured" // configured phases (1/3, 0 for auto on 1p3p chargers, nil for plain chargers)
-	Phases1p3p       = "phases1p3p"       // phase switcher (1p3p chargers)
 	PhasesEnabled    = "phasesEnabled"    // enabled phases (1/3)
 	PhasesActive     = "phasesActive"     // active phases as used by vehicle (1/2/3)
 
-	ChargerIcon    = "chargerIcon"    // charger icon for ui
-	ChargerFeature = "chargerFeature" // charger feature
-	ChargerPhases  = "chargerPhases"  // charger phases
+	ChargerIcon       = "chargerIcon"       // charger icon for ui
+	ChargerFeature    = "chargerFeature"    // charger feature
+	ChargerPhases     = "chargerPhases"     // charger phases
+	ChargerPhases1p3p = "chargerPhases1p3p" // phase switcher (1p3p chargers)
 
 	// loadpoint status
 	Enabled   = "enabled"   // loadpoint enabled

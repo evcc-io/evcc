@@ -26,7 +26,7 @@
 							<h4 class="d-flex align-items-center mb-3 mt-4 text-evcc">
 								{{ $t("main.loadpointSettings.currents") }}
 							</h4>
-							<div class="mb-3 row">
+							<div v-if="phasesOptions.length" class="mb-3 row">
 								<label
 									:for="formId('phases_0')"
 									class="col-sm-4 col-form-label pt-0"
@@ -34,7 +34,7 @@
 									{{ $t("main.loadpointSettings.phasesConfigured.label") }}
 								</label>
 								<div class="col-sm-8 pe-0">
-									<p v-if="!phases1p3p" class="mt-0 mb-2">
+									<p v-if="!chargerPhases1p3p" class="mt-0 mb-2">
 										<small>
 											{{
 												$t(
@@ -166,7 +166,8 @@ export default {
 		id: [String, Number],
 		phasesConfigured: Number,
 		phasesActive: Number,
-		phases1p3p: Boolean,
+		chargerPhases1p3p: Boolean,
+		chargerPhases: Number,
 		minSoc: Number,
 		maxCurrent: Number,
 		minCurrent: Number,
@@ -182,13 +183,19 @@ export default {
 	},
 	computed: {
 		phasesOptions: function () {
-			if (this.phases1p3p) {
+			if (this.chargerPhases > 0) {
+				// known fixed phase configuration, no settings required
+				return [];
+			}
+			if (this.chargerPhases1p3p) {
+				// automatic switching
 				return [PHASES_AUTO, PHASES_3, PHASES_1];
 			}
+			// 1p or 3p possible
 			return [PHASES_3, PHASES_1];
 		},
 		maxPower: function () {
-			if (this.phases1p3p) {
+			if (this.chargerPhases1p3p) {
 				if (this.phasesConfigured === PHASES_AUTO) {
 					return this.maxPowerPhases(3);
 				}
@@ -199,7 +206,7 @@ export default {
 			return this.fmtKw(this.maxCurrent * V * this.phasesActive);
 		},
 		minPower: function () {
-			if (this.phases1p3p) {
+			if (this.chargerPhases1p3p) {
 				if (this.phasesConfigured === PHASES_AUTO) {
 					return this.minPowerPhases(1);
 				}
