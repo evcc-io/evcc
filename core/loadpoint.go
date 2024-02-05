@@ -1470,10 +1470,12 @@ func (lp *Loadpoint) stopWakeUpTimer() {
 }
 
 func (lp *Loadpoint) setEnabled(enabled bool) {
-	lp.enabled = enabled
-	lp.enabledChanged = lp.clock.Now()
-	lp.log.DEBUG.Printf("charger %s", status[lp.enabled])
-	lp.publish(keys.Enabled, lp.enabled)
+	if lp.enabled != enabled || lp.enabledChanged.IsZero() {
+		lp.log.DEBUG.Printf("charger %s", status[enabled])
+		lp.enabled = enabled
+		lp.enabledChanged = lp.clock.Now()
+		lp.publish(keys.Enabled, lp.enabled)
+	}
 }
 
 // enabledCommandTimeoutElapsed checks if last guard update is within guard grace period
