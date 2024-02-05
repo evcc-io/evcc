@@ -1478,7 +1478,7 @@ func (lp *Loadpoint) setEnabled(enabled bool) {
 	}
 }
 
-// enabledCommandTimeoutElapsed checks if last guard update is within guard grace period
+// enabledCommandTimeoutElapsed checks if enabled command timeout is elapsed (so we should try to sync chanrger and loadpoint)
 func (lp *Loadpoint) enabledCommandTimeoutElapsed() bool {
 	return time.Since(lp.enabledChanged) > enabledCommandTimeout
 }
