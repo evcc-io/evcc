@@ -7,7 +7,7 @@ import (
 	"github.com/benbjohnson/clock"
 )
 
-const wakeupTimeout = 45 * time.Second
+const wakeupTimeout = 30 * time.Second
 
 const wakeupAttempts = 6 // wakeupAttempts is the count of wakeup attempts for every wakeup type (vehicle or charger)
 
