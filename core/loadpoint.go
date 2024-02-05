@@ -52,7 +52,7 @@ const (
 	minActiveCurrent = 1.0 // minimum current at which a phase is treated as active
 	minActiveVoltage = 207 // minimum voltage at which a phase is treated as active
 
-	enableCommandTimeout      = 60 * time.Second // allow out of sync during this timespan
+	enabledCommandTimeout     = 60 * time.Second // allow out of sync during this timespan
 	phaseSwitchCommandTimeout = 30 * time.Second // do not sync charger enabled/disabled state during this timespan
 	phaseSwitchDuration       = 60 * time.Second // do not measure phases during this timespan
 )
@@ -132,7 +132,7 @@ type Loadpoint struct {
 	chargeCurrent       float64   // Charger current limit
 	socUpdated          time.Time // Soc updated timestamp (poll: connected)
 	vehicleDetect       time.Time // Vehicle connected timestamp
-	enableChanged       time.Time // Charger enabled/disabled timestamp
+	enabledChanged      time.Time // Charger enabled/disabled timestamp
 	phasesSwitched      time.Time // Phase switch timestamp
 	vehicleDetectTicker *clock.Ticker
 	vehicleIdentifier   string
@@ -291,7 +291,6 @@ func NewLoadpoint(log *util.Logger, settings *Settings) *Loadpoint {
 		},
 		Enable:        ThresholdConfig{Delay: time.Minute, Threshold: 0},     // t, W
 		Disable:       ThresholdConfig{Delay: 3 * time.Minute, Threshold: 0}, // t, W
-		GuardDuration: 5 * time.Minute,
 		sessionEnergy: NewEnergyMetrics(),
 		progress:      NewProgress(0, 10),     // soc progress indicator
 		coordinator:   coordinator.NewDummy(), // dummy vehicle coordinator
@@ -596,7 +595,6 @@ func (lp *Loadpoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	lp.publish(keys.PhasesActive, lp.ActivePhases())
 	lp.publishTimer(phaseTimer, 0, timerInactive)
 	lp.publishTimer(pvTimer, 0, timerInactive)
-	lp.publishTimer(guardTimer, 0, timerInactive)
 
 	// charger features
 	for _, f := range []api.Feature{api.IntegratedDevice, api.Heating} {
@@ -630,8 +628,7 @@ func (lp *Loadpoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 
 	// read initial charger state to prevent immediately disabling charger
 	if enabled, err := lp.charger.Enabled(); err == nil {
-		if lp.enabled = enabled; enabled {
-			lp.enableChanged = lp.clock.Now()
+		if lp.setEnabled(enabled); enabled {
 			// set defined current for use by pv mode
 			_ = lp.setLimit(lp.effectiveMinCurrent(), false)
 		}
@@ -654,8 +651,7 @@ func (lp *Loadpoint) syncCharger() error {
 
 	if lp.enableCommandTimeoutElapsed() {
 		defer func() {
-			lp.enabled = enabled
-			lp.publish(keys.Enabled, lp.enabled)
+			lp.SetEnabled(enabled)
 		}()
 	}
 
@@ -666,7 +662,6 @@ func (lp *Loadpoint) syncCharger() error {
 			if err := lp.charger.Enable(true); err != nil { // also enable charger to correct internal state
 				return err
 			}
-			lp.elapseGuard()
 			lp.elapsePVTimer()
 			return nil
 		}
@@ -686,7 +681,6 @@ func (lp *Loadpoint) syncCharger() error {
 				if lp.enableCommandTimeoutElapsed() {
 					lp.log.WARN.Printf("charger logic error: current mismatch (got %.3gA, expected %.3gA)", current, lp.chargeCurrent)
 				}
-
 				lp.chargeCurrent = current
 				lp.bus.Publish(evChargeCurrent, lp.chargeCurrent)
 			}
@@ -699,7 +693,6 @@ func (lp *Loadpoint) syncCharger() error {
 		// ignore disabled state if vehicle was disconnected ^(lp.enabled && ^lp.connected)
 		if lp.enableCommandTimeoutElapsed() && lp.phaseSwitchCompleted() && (enabled || lp.connected()) {
 			lp.log.WARN.Printf("charger out of sync: expected %vd, got %vd", status[lp.enabled], status[enabled])
-			lp.elapseGuard()
 		}
 		return nil
 	}
@@ -758,11 +751,7 @@ func (lp *Loadpoint) setLimit(chargeCurrent float64, force bool) error {
 			return fmt.Errorf("charger %s: %w", status[enabled], err)
 		}
 
-		lp.log.DEBUG.Printf("charger %s", status[enabled])
-		lp.enabled = enabled
-		lp.publish(keys.Enabled, lp.enabled)
-		lp.enableChanged = lp.clock.Now()
-
+		lp.setEnabled(enabled)
 		lp.bus.Publish(evChargeCurrent, chargeCurrent)
 
 		// start/stop vehicle wake-up timer
@@ -952,8 +941,6 @@ func (lp *Loadpoint) elapsePVTimer() {
 
 	lp.pvTimer = elapsed
 	lp.publishTimer(pvTimer, 0, timerInactive)
-
-	lp.elapseGuard()
 }
 
 // resetPVTimer resets the pv enable/disable timer to disabled state
@@ -1482,9 +1469,16 @@ func (lp *Loadpoint) stopWakeUpTimer() {
 	lp.wakeUpTimer.Stop()
 }
 
+func (lp *Loadpoint) setEnabled(enable bool) {
+	lp.enabled = enabled
+	lp.enableChanged = lp.clock.Now()
+	lp.log.DEBUG.Printf("charger %s", status[enabled])
+	lp.publish(keys.Enabled, lp.enabled)
+}
+
 // enableCommandTimeoutElapsed checks if last guard update is within guard grace period
-func (lp *Loadpoint) enableCommandTimeoutElapsed() bool {
-	return time.Since(lp.enableChanged) > enableCommandTimeout
+func (lp *Loadpoint) enabledCommandTimeoutElapsed() bool {
+	return time.Since(lp.enabledChanged) > enabledCommandTimeout
 }
 
 // phaseSwitchCommandTimeoutElapsed returns true if phase switch command should be already processed by the charger
