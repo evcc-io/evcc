@@ -102,7 +102,7 @@ func (m *Server) listen() {
 						float64(int16(binary.BigEndian.Uint16(buf[i:]))) / 100
 				}
 		inverter.PvPower = ui(11, 13) + ui(19, 21)
-				inverter.BatteryPower = ui(167, 165)
+				inverter.BatteryPower = ui(165, 167)
 				inverter.NetPower = -float64(int32(binary.BigEndian.Uint32(buf[83:])))
 			}
 
