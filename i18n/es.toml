@@ -291,6 +291,7 @@ phases_1 = "monofásica"
 phases_1_hint = "({min} a {max})"
 phases_3 = "trifásica"
 phases_3_hint = "({min} a {max})"
+no1p3pSupport = "¿Cómo está conectado tu cargador?"
 
 [main.mode]
 minpv = "Min+Sol"
