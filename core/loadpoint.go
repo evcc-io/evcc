@@ -59,7 +59,7 @@ const (
 	phaseSwitchCommandTimeout = 30 * time.Second // do not sync charger enabled/disabled state during this timespan
 	phaseSwitchDuration       = 60 * time.Second // do not measure phases during this timespan
 
-	wakeupTrysDefault = 2 // wakeupTrys is the count of wakeup trys for evenry Wakeup (vehicle or charger)
+	wakeupAttemptsDefault = 1 // wakeupAttemptsDefault is the count of wakeup attempts for every wakeup type (vehicle or charger)
 )
 
 // elapsed is the time an expired timer will be set to
@@ -111,12 +111,12 @@ type Loadpoint struct {
 	vmu   sync.RWMutex   // guard vehicle
 	Mode_ api.ChargeMode `mapstructure:"mode"` // Default charge mode, used for disconnect
 
-	Title_          string `mapstructure:"title"`      // UI title
-	Priority_       int    `mapstructure:"priority"`   // Priority
-	ChargerRef      string `mapstructure:"charger"`    // Charger reference
-	VehicleRef      string `mapstructure:"vehicle"`    // Vehicle reference
-	MeterRef        string `mapstructure:"meter"`      // Charge meter reference
-	WakeupTrys_     int    `mapstructure:"wakeuptrys"` // Wakeuptrys
+	Title_          string `mapstructure:"title"`          // UI title
+	Priority_       int    `mapstructure:"priority"`       // Priority
+	ChargerRef      string `mapstructure:"charger"`        // Charger reference
+	VehicleRef      string `mapstructure:"vehicle"`        // Vehicle reference
+	MeterRef        string `mapstructure:"meter"`          // Charge meter reference
+	WakeupAttempts_ int    `mapstructure:"wakeupattempts"` // Wakeup attempts
 	Soc             SocConfig
 	Enable, Disable ThresholdConfig
 	GuardDuration   time.Duration // charger enable/disable minimum holding time
@@ -1499,18 +1499,18 @@ func (lp *Loadpoint) startWakeUpTimer() {
 	_, wakeupCharger := lp.charger.(api.Resurrector)
 	_, wakeupVehicle := lp.GetVehicle().(api.Resurrector)
 
-	wakeupTrys := wakeupTrysDefault
-	if lp.WakeupTrys_ > 0 {
-		wakeupTrys = lp.WakeupTrys_
+	wakeupAttempts := wakeupAttemptsDefault
+	if lp.WakeupAttempts_ > 0 {
+		wakeupAttempts = lp.WakeupAttempts_
 	}
 	if wakeupCharger && wakeupVehicle {
-		wakeupTrys = wakeupTrys * 2
+		wakeupAttempts = wakeupAttempts * 2
 	} else if !wakeupCharger && !wakeupVehicle {
-		wakeupTrys = 0
+		wakeupAttempts = 0
 	}
 
 	lp.log.DEBUG.Printf("wake-up timer: start")
-	lp.wakeUpTimer.Start(wakeupTrys)
+	lp.wakeUpTimer.Start(wakeupAttempts)
 }
 
 // stopWakeUpTimer stops wakeUpTimer

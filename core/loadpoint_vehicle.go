@@ -168,7 +168,7 @@ func (lp *Loadpoint) wakeUpVehicle() {
 	c, wakeupCharger := lp.charger.(api.Resurrector)
 	vs, wakeupVehicle := lp.GetVehicle().(api.Resurrector)
 
-	if wakeupCharger && (lp.wakeUpTimer.wakeupTrysLeft%2 != 0 || (lp.wakeUpTimer.wakeupTrysLeft%2 == 0 && !wakeupVehicle)) {
+	if wakeupCharger && (lp.wakeUpTimer.wakeupAttemptsLeft%2 != 0 || (lp.wakeUpTimer.wakeupAttemptsLeft%2 == 0 && !wakeupVehicle)) {
 		// charger
 		lp.log.DEBUG.Println("wake-up charger")
 		if err := c.WakeUp(); err != nil {
@@ -182,7 +182,7 @@ func (lp *Loadpoint) wakeUpVehicle() {
 		}
 	}
 
-	lp.log.DEBUG.Printf("wake-up trys left: %d", lp.wakeUpTimer.wakeupTrysLeft)
+	lp.log.DEBUG.Printf("wake-up attempts left: %d", lp.wakeUpTimer.wakeupAttemptsLeft)
 }
 
 // unpublishVehicle resets published vehicle data
