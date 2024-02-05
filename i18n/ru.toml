@@ -123,6 +123,7 @@ power = "Мощность"
 [main.loadpointSettings]
 currents = "Ток зарядки"
 default = "по умолчанию"
+disclaimerHint = "Заметка:"
 title = "Настройки {0}"
 vehicle = "Транспортное средство"
 

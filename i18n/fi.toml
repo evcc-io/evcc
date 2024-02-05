@@ -199,6 +199,7 @@ solar = "Aurinkoenergia"
 [main.loadpointSettings]
 currents = "Latausvirta"
 default = "oletus"
+disclaimerHint = "Huomautus:"
 title = "Asetukset {0}"
 vehicle = "Ajoneuvo"
 
