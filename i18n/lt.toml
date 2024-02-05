@@ -266,6 +266,7 @@ solar = "Saulės"
 [main.loadpointSettings]
 currents = "Įkrovimo srovė"
 default = "standartiškai"
+disclaimerHint = "Pastaba:"
 onlyForSocBasedCharging = "Šie pasirinkimai galimi tik automobiliams su žinomu įkrovos lygiu."
 title = "Nustatymai {0}"
 vehicle = "Automobilis"

@@ -217,6 +217,7 @@ solar = "Sonne"
 [main.loadpointSettings]
 currents = "Ladestrom"
 default = "default"
+disclaimerHint = "Hinweis:"
 onlyForSocBasedCharging = "Diese Optionen sind nur für Fahrzeuge mit bekanntem Ladestand verfügbar."
 title = "Einstellungen {0}"
 vehicle = "Fahrzeug"

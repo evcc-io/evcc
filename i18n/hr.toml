@@ -218,6 +218,7 @@ solar = "Solarno"
 [main.loadpointSettings]
 currents = "Struja napajanja"
 default = "zadano"
+disclaimerHint = "Bilješka:"
 onlyForSocBasedCharging = "Ove su opcije dostupne samo za vozila s poznatom razinom napunjenosti."
 title = "Postavke {0}"
 vehicle = "Vozilo"
