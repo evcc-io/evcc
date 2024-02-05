@@ -50,8 +50,7 @@ func Encrypt(plainText, hexKey, hexIV string) string {
 		return ""
 	}
 
-	content := []byte(plainText)
-	content = PKCS5Padding(content, block.BlockSize())
+	content := PKCS5Padding([]byte(plainText), block.BlockSize())
 	encrypter := cipher.NewCBCEncrypter(block, ivParameter)
 
 	ciphertext := make([]byte, len(content))
