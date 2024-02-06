@@ -25,7 +25,7 @@ never = "nur mit genug PV-Überschuss"
 
 [config.battery]
 titleAdd = "Batterie Zähler hinzufügen"
-titleEdit = "Batterie Zähler editieren"
+titleEdit = "Batterie Zähler bearbeiten"
 
 [config.deviceValue]
 capacity = "Kapazität"
