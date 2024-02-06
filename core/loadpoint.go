@@ -1478,7 +1478,7 @@ func (lp *Loadpoint) setEnabled(enabled bool) {
 	}
 }
 
-// enabledCommandTimeoutElapsed checks if enabled command timeout is elapsed (so we should try to sync chanrger and loadpoint)
+// enabledCommandTimeoutElapsed checks if enabled command timeout is elapsed (so we should try to sync charger and loadpoint)
 func (lp *Loadpoint) enabledCommandTimeoutElapsed() bool {
 	return time.Since(lp.enabledChanged) > enabledCommandTimeout
 }
