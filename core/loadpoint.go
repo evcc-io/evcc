@@ -1474,12 +1474,12 @@ func (lp *Loadpoint) setEnabled(enabled bool) {
 	}
 }
 
-// enabledCommandCompleted checks if enabled command timeout is elapsed (so we should try to sync charger and loadpoint)
+// enabledCommandCompleted returns true if enable command should be already processed by the charger (so we can try to sync charger and loadpoint)
 func (lp *Loadpoint) enabledCommandCompleted() bool {
 	return time.Since(lp.enabledChanged) > enabledCommandDuration
 }
 
-// phaseSwitchCompleted returns true if phase switch has completed
+// phaseSwitchCompleted returns true if phase switch command should be already processed by the charger (so we can try to sync charger and loadpoint and are able to measure currents)
 func (lp *Loadpoint) phaseSwitchCompleted() bool {
 	return time.Since(lp.phasesSwitched) > phaseSwitchDuration
 }
