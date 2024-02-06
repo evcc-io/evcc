@@ -112,12 +112,12 @@ type Loadpoint struct {
 	MeterRef        string `mapstructure:"meter"`    // Charge meter reference
 	Soc             SocConfig
 	Enable, Disable ThresholdConfig
-	GuardDuration   time.Duration // charger enable/disable minimum holding time
 
 	// TODO deprecated
-	ConfiguredPhases_ int     `mapstructure:"phases"`
-	MinCurrent_       float64 `mapstructure:"minCurrent"`
-	MaxCurrent_       float64 `mapstructure:"maxCurrent"`
+	GuardDuration_    time.Duration `mapstructure:"guardduration"` // charger enable/disable minimum holding time
+	ConfiguredPhases_ int           `mapstructure:"phases"`
+	MinCurrent_       float64       `mapstructure:"minCurrent"`
+	MaxCurrent_       float64       `mapstructure:"maxCurrent"`
 
 	minCurrent       float64 // PV mode: start current	Min+PV mode: min current
 	maxCurrent       float64 // Max allowed current. Physically ensured by the charger
