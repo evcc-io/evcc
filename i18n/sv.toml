@@ -23,19 +23,59 @@ never = "bara med tillräckligt sol-överskott"
 
 [config]
 
+[config.battery]
+titleAdd = "Lägg till batterimätare"
+titleEdit = "Ändra batterimätare"
+
+[config.deviceValue]
+capacity = "Kapacitet"
+chargeStatus = "Status"
+chargedEnergy = "Laddad"
+current = "Nuvarande"
+enabled = "Aktiverad"
+energy = "Energi"
+odometer = "Mätarställning"
+phaseCurrents = "Ström L1..L3"
+phasePowers = "Effekt L1..L3"
+phaseVoltages = "Spänning L1..L3"
+power = "Effekt"
+range = "Räckvidd"
+soc = "SoC"
+socLimit = "SoC gräns"
+
 [config.form]
 example = "Exempel"
 optional = "valfri"
 
+[config.grid]
+titleAdd = "Lägg till elnätsmätare"
+titleEdit = "Ändra elnätsmätare"
+
 [config.main]
+addLoadpoint = "Lägg till laddbox"
+addPvBattery = "Lägg till solceller eller batteri"
 addVehicle = "Lägg till fordon"
 edit = "ändra"
 title = "Inställningar"
-vehicles = "Mina fordon"
-addLoadpoint = "Lägg till laddbox"
-addPvBattery = "Lägg till solceller eller batteri"
 unconfigured = "ej konfigurerad"
+vehicles = "Mina fordon"
 yaml = "Konfigurera i evcc.yaml. Kan inte ändras i UI."
+
+[config.meter]
+cancel = "Avbryt"
+delete = "Radera"
+save = "Spara"
+template = "Tillverkare"
+titleChoice = "Vad vill du lägga till?"
+validateSave = "Validera & spara"
+
+[config.pv]
+titleAdd = "Lägg till solcellsmätare"
+titleEdit = "Ändra solcellsmätare"
+
+[config.site]
+cancel = "Avbryt"
+save = "Spara"
 
 [config.validation]
 failed = "misslyckades"
@@ -198,6 +238,12 @@ noEnergy = "Inga mätaruppgifter"
 pvExport = "Export till elnät"
 pvProduction = "Produktion"
 selfConsumption = "Egenförbrukning"
+
+[main.heatingStatus]
+charging = "Värmer..."
+cheapEnergyCharging = "Värmer med billig energi: {price} (limit {limit})"
+cleanEnergyCharging = "Värmer med CO2-neutral energi: {co2} (limit {limit})"
+waitForVehicle = "Redo, väntar på värmare..."
 
 [main.loadpoint]
 avgPrice = "⌀ pris"
@@ -445,50 +491,3 @@ title = "Startfel"
 cancel = "Avbryt"
 template = "Tillverkare"
 test = "Test"
-
-
-[config.battery]
-titleEdit = "Ändra batterimätare"
-titleAdd = "Lägg till batterimätare"
-
-[config.deviceValue]
-capacity = "Kapacitet"
-chargeStatus = "Status"
-chargedEnergy = "Laddad"
-enabled = "Aktiverad"
-energy = "Energi"
-odometer = "Mätarställning"
-phaseCurrents = "Ström L1..L3"
-phasePowers = "Effekt L1..L3"
-phaseVoltages = "Spänning L1..L3"
-power = "Effekt"
-range = "Räckvidd"
-soc = "SoC"
-socLimit = "SoC gräns"
-current = "Nuvarande"
-
-[config.grid]
-titleAdd = "Lägg till elnätsmätare"
-titleEdit = "Ändra elnätsmätare"
-
-[config.meter]
-cancel = "Avbryt"
-delete = "Radera"
-save = "Spara"
-template = "Tillverkare"
-titleChoice = "Vad vill du lägga till?"
-validateSave = "Validera & spara"
-
-[main.heatingStatus]
-waitForVehicle = "Redo, väntar på värmare..."
-cleanEnergyCharging = "Värmer med CO2-neutral energi: {co2} (limit {limit})"
-charging = "Värmer..."
-cheapEnergyCharging = "Värmer med billig energi: {price} (limit {limit})"
-
-[config.pv]
-titleAdd = "Lägg till solcellsmätare"
-titleEdit = "Ändra solcellsmätare"
-
-[config.site]
-cancel = "Avbryt"
-save = "Spara"

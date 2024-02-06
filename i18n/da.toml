@@ -282,12 +282,12 @@ label = "Min. opladning %"
 
 [main.loadpointSettings.phasesConfigured]
 label = "Faser"
+no1p3pSupport = "Hvordan er din oplader forbundet"
 phases_0 = "automatisk skift"
 phases_1 = "1 fase"
 phases_1_hint = "({min} til {max})"
 phases_3 = "3 fase"
 phases_3_hint = "({min} til {max})"
-no1p3pSupport = "Hvordan er din oplader forbundet"
 
 [main.mode]
 minpv = "Min+Sol"
