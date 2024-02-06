@@ -287,6 +287,7 @@ label = "Minimali įkrova %"
 
 [main.loadpointSettings.phasesConfigured]
 label = "Fazės"
+no1p3pSupport = "Kaip prijungtas jūsų įkroviklis?"
 phases_0 = "automatinis perjungimas"
 phases_1 = "1 fazė"
 phases_1_hint = "({min} iki {max})"
