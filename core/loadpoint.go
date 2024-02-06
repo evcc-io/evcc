@@ -112,6 +112,7 @@ type Loadpoint struct {
 	MeterRef        string `mapstructure:"meter"`    // Charge meter reference
 	Soc             SocConfig
 	Enable, Disable ThresholdConfig
+	GuardDuration   time.Duration // charger enable/disable minimum holding time
 
 	// TODO deprecated
 	ConfiguredPhases_ int     `mapstructure:"phases"`
