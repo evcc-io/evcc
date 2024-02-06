@@ -52,9 +52,8 @@ const (
 	minActiveCurrent = 1.0 // minimum current at which a phase is treated as active
 	minActiveVoltage = 207 // minimum voltage at which a phase is treated as active
 
-	enabledCommandTimeout     = 60 * time.Second // allow out of sync during this timespan
-	phaseSwitchCommandTimeout = 30 * time.Second // do not sync charger enabled/disabled state during this timespan
-	phaseSwitchDuration       = 60 * time.Second // do not measure phases during this timespan
+	enabledCommandDuration = 60 * time.Second // allow out of sync during this timespan
+	phaseSwitchDuration    = 60 * time.Second // allow out of sync and do not measure phases during this timespan
 )
 
 // elapsed is the time an expired timer will be set to
@@ -649,7 +648,7 @@ func (lp *Loadpoint) syncCharger() error {
 		return err
 	}
 
-	if lp.enabledCommandTimeoutElapsed() {
+	if lp.enabledCommandCompleted() {
 		defer func() {
 			lp.setEnabled(enabled)
 		}()
@@ -658,7 +657,7 @@ func (lp *Loadpoint) syncCharger() error {
 	if !enabled && lp.charging() {
 		lp.log.WARN.Println("charger logic error: disabled but charging")
 		enabled = true // treat as enabled when charging
-		if lp.enabledCommandTimeoutElapsed() {
+		if lp.enabledCommandCompleted() {
 			if err := lp.charger.Enable(true); err != nil { // also enable charger to correct internal state
 				return err
 			}
@@ -678,7 +677,7 @@ func (lp *Loadpoint) syncCharger() error {
 
 			// smallest adjustment most PWM-Controllers can do is: 100%÷256×0,6A = 0.234A
 			if math.Abs(lp.chargeCurrent-current) > 0.23 {
-				if lp.enabledCommandTimeoutElapsed() {
+				if lp.enabledCommandCompleted() {
 					lp.log.WARN.Printf("charger logic error: current mismatch (got %.3gA, expected %.3gA)", current, lp.chargeCurrent)
 				}
 				lp.chargeCurrent = current
@@ -691,7 +690,7 @@ func (lp *Loadpoint) syncCharger() error {
 
 	if enabled || lp.phaseSwitchCommandTimeoutElapsed() {
 		// ignore disabled state if vehicle was disconnected ^(lp.enabled && ^lp.connected)
-		if lp.enabledCommandTimeoutElapsed() && lp.phaseSwitchCompleted() && (enabled || lp.connected()) {
+		if lp.enabledCommandCompleted() && lp.phaseSwitchCompleted() && (enabled || lp.connected()) {
 			lp.log.WARN.Printf("charger out of sync: expected %vd, got %vd", status[lp.enabled], status[enabled])
 		}
 		return nil
@@ -1032,7 +1031,7 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64) bo
 	// - https://github.com/evcc-io/evcc/issues/2613
 	measuredPhases := lp.getMeasuredPhases()
 	if phases > 0 && phases < measuredPhases {
-		if lp.enabledCommandTimeoutElapsed() {
+		if lp.enabledCommandCompleted() {
 			lp.log.WARN.Printf("ignoring inconsistent phases: %dp < %dp observed active", phases, measuredPhases)
 		}
 		lp.resetMeasuredPhases()
@@ -1478,14 +1477,9 @@ func (lp *Loadpoint) setEnabled(enabled bool) {
 	}
 }
 
-// enabledCommandTimeoutElapsed checks if enabled command timeout is elapsed (so we should try to sync charger and loadpoint)
-func (lp *Loadpoint) enabledCommandTimeoutElapsed() bool {
-	return time.Since(lp.enabledChanged) > enabledCommandTimeout
-}
-
-// phaseSwitchCommandTimeoutElapsed returns true if phase switch command should be already processed by the charger
-func (lp *Loadpoint) phaseSwitchCommandTimeoutElapsed() bool {
-	return time.Since(lp.phasesSwitched) > phaseSwitchCommandTimeout
+// enabledCommandCompleted checks if enabled command timeout is elapsed (so we should try to sync charger and loadpoint)
+func (lp *Loadpoint) enabledCommandCompleted() bool {
+	return time.Since(lp.enabledChanged) > enabledCommandDuration
 }
 
 // phaseSwitchCompleted returns true if phase switch has completed
