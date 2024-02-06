@@ -1,7 +1,16 @@
 import { createRouter, createWebHashHistory } from "vue-router";
-
+import Modal from "bootstrap/js/dist/modal";
 import Main from "./views/Main.vue";
 import { ensureCurrentLocaleMessages } from "./i18n";
+
+function hideAllModals() {
+  [...document.querySelectorAll(".modal.show")].forEach((modal) => {
+    const modalInstance = Modal.getInstance(modal);
+    if (modalInstance) {
+      modalInstance.hide();
+    }
+  });
+}
 
 export default function setupRouter(i18n) {
   const router = createRouter({
@@ -27,6 +36,9 @@ export default function setupRouter(i18n) {
   router.beforeEach(async () => {
     await ensureCurrentLocaleMessages(i18n.global);
     return true;
+  });
+  router.afterEach(() => {
+    hideAllModals();
   });
   return router;
 }
