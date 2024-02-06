@@ -12,9 +12,11 @@ legendTopAutostart = "start automatisch"
 legendTopName = "batterij-ondersteund opladen"
 legendTopSubline = "zonder onderbrekingen"
 modalTitle = "Batterij-instellingen"
+control = "Batterij aansturing"
+discharge = "Beperk het ontladen in de snelle modus of bij gepland laden"
 
 [batterySettings.bufferStart]
-full = "als bijna vol"
+full = "Wanneer bijna vol"
 low = "indien beetje vol"
 medium = "indien half vol"
 never = "enkel bij voldoende overschot"
@@ -26,22 +28,26 @@ example = "Voorbeeld"
 optional = "Optioneel"
 
 [config.main]
-addVehicle = "Voertuig toevoegen"
+addVehicle = "Voeg voertuig toe"
 edit = "Bewerken"
 title = "Configuratie"
 vehicles = "Mijn voertuigen"
+yaml = "Geconfigureerd in evcc.yml. Niet aanpasbaar in de interface"
+addLoadpoint = "Voeg laadpunt toe"
+addPvBattery = "Voeg zonnepanelen of batterij toe"
+unconfigured = "Niet geconfigureerd"
 
 [config.validation]
 failed = "mislukt"
 label = "Status"
-running = "valideren..."
+running = "Bezig met valideren..."
 success = "succesvol"
 unknown = "onbekend"
 validate = "valideer"
 
 [config.vehicle]
 cancel = "Annuleer"
-delete = "Verwijder voertuig"
+delete = "Verwijder"
 generic = "Andere integraties"
 offline = "Algemeen voertuig"
 online = "Voertuig met online API"
@@ -81,6 +87,13 @@ savingsTitle = "Besparing"
 savingsTotalEnergy = "{total} kWh geladen"
 since = "sinds {since}"
 tabTitle = "Mijn data"
+moneySaved = "{value} opgeslagen"
+referenceLabel = "Referentiedata:"
+referenceGrid = "net"
+co2Saved = "{value} opgeslagen"
+co2Title = "CO₂ uitstoot"
+configurePriceCo2 = "Meer informatie rond het configureren van prijs en CO₂ gegevens"
+periodLabel = "Periode:"
 
 [footer.sponsor]
 becomeSponsor = "Word sponsor"
@@ -126,7 +139,7 @@ about = "Over"
 blog = "Blog"
 docs = "Documentatie"
 github = "GitHub"
-login = "Voertuig logins"
+login = "Logingegevens van voertuigen"
 needHelp = "Hulp nodig?"
 sessions = "Laadsessies"
 settings = "Instellingen"
@@ -140,7 +153,7 @@ light = "Design: licht"
 discussionsButton = "GitHub discussies"
 documentationButton = "Documentatie"
 issueButton = "Een bug melden"
-issueDescription = "Vreemd of fout gedrag gevonden?"
+issueDescription = "Vreemd of foutief gedrag gevonden?"
 modalTitle = "Hulp nodig?"
 primaryActions = "Werkt iets niet naar behoren? Er zijn goede plaatsen om hulp te krijgen."
 restartButton = "Herstart"
@@ -165,6 +178,12 @@ none = "geen"
 title = "Plan"
 titleMinSoc = "Min lading"
 titleTargetCharge = "Vertrek"
+day = "Dag"
+time = "Tijd"
+remove = "Verwijderen"
+active = "Actief"
+goal = "Oplaaddoel"
+update = "Toepassen"
 
 [main.energyflow]
 battery = "Batterij"
@@ -178,10 +197,11 @@ noEnergy = "Geen meter data"
 pvExport = "Netinjectie"
 pvProduction = "Productie"
 selfConsumption = "Zelfverbruik"
+batteryHold = "Batterij (aanhouden)"
 
 [main.loadpoint]
 avgPrice = "⌀ Prijs"
-charged = "Geladen"
+charged = "Lading"
 co2 = "⌀ CO₂"
 duration = "Duur"
 fallbackName = "Laadpunt"
@@ -198,24 +218,26 @@ default = "standaard"
 disclaimerHint = "Let op:"
 title = "Instellingen {0}"
 vehicle = "Voertuig"
+onlyForSocBasedCharging = "Deze instellingen zijn alleen beschikbaar bij wagens waar het batterijpercentage gekend is"
 
 [main.loadpointSettings.maxCurrent]
-label = "Max. Stroom"
+label = "Max. Stroomsterkte"
 
 [main.loadpointSettings.minCurrent]
-label = "Min. Stroom"
+label = "Min. Stroomsterkte"
 
 [main.loadpointSettings.minSoc]
-description = "Het voertuig wordt „snel” opgeladen tot {0}% in deze modus, en gaat dan verder met alleen het zonneoverschot."
-label = "Min. lading %"
+description = "Het voertuig wordt „snel” opgeladen tot {0}% in deze modus. Het laden gaat daarna verder met zonneoverschot. Nuttig om een bepaald rijbereik te garanderen, ook gedurende periodes met weinig of geen zonnestroom."
+label = "Min. batterij %"
 
 [main.loadpointSettings.phasesConfigured]
 label = "Fasen"
-phases_0 = "automatisch omschakelen"
+phases_0 = "automatisch wisselen van aantal fases"
 phases_1 = "1 fase"
 phases_1_hint = "({min} tot {max})"
 phases_3 = "3 fase"
 phases_3_hint = "({min} tot {max})"
+no1p3pSupport = "Hoe is je lader aangesloten?"
 
 [main.mode]
 minpv = "Min+PV"
@@ -249,6 +271,13 @@ title = "Doeltijd"
 today = "Vandaag"
 tomorrow = "Morgen"
 update = "Updaten"
+preview = "Schatting laadplan"
+currentPlan = "Geactiveerd laadplan"
+notReachableInTime = "Laaddoel niet haalbaar bij gevraagde eindtijd. Geschatte eindtijd: {endTime}."
+targetIsAboveVehicleLimit = "Verhoog de limiet ({limit}) om het laaddoel te halen"
+vehicleCapacityDocs = "Meer informatie over het configureren hiervan"
+vehicleCapacityRequired = "De batterijcapaciteit van het voertuig is een vereiste parameter om de oplaadtijd te kunnen bepalen"
+targetIsAboveLimit = "De ingestelde laadlimiet {limit} wordt genegeerd gedurende deze periode."
 
 [main.targetChargePlan]
 chargeDuration = "Oplaadtijd"
@@ -283,8 +312,8 @@ vehicleTarget = "Voertuiglimiet: {soc}%"
 
 [main.vehicleStatus]
 charging = "Opladen..."
-cheapEnergyCharging = "Goedkope energie beschikbaar. Aan het laden…"
-cleanEnergyCharging = "Groene energie beschikbaar. Aan het laden…"
+cheapEnergyCharging = "Laden actief met goedkope energie"
+cleanEnergyCharging = "Laden actief met schone energie. {co2} (limit {limit})"
 climating = "Voor-conditionering gedetecteerd."
 connected = "Verbonden."
 disconnected = "Niet verbonden."
@@ -359,7 +388,7 @@ allVehicles = "alle voertuigen"
 filter = "filter"
 
 [settings]
-title = "Instellingen"
+title = "Algemene instellingen"
 
 [settings.gridDetails]
 co2 = "CO₂"
@@ -410,3 +439,59 @@ title = "Start Error"
 cancel = "Annuleer"
 template = "Fabrikant"
 test = "Test"
+
+
+[footer.savings.period]
+30d = "Laatste 30 dagen"
+total = "totaal"
+365d = "Laatste 365 dagen"
+
+[config.meter]
+cancel = "Annuleren"
+delete = "Verwijder"
+save = "Opslaan"
+template = "Fabrikant"
+titleChoice = "Wat wil je toevoegen?"
+validateSave = "Valideren en opslaan"
+
+[main.heatingStatus]
+charging = "Bezig met verwarmen..."
+cheapEnergyCharging = "Verwarmen met goedkope energie: {price} (limiet {limit})"
+cleanEnergyCharging = "Verwarmen met schone energie: {co2} (limiet {limit})"
+waitForVehicle = "Klaar. Wachten op voertuigverwarming"
+
+[main.loadpointSettings.limitSoc]
+label = "Standaard limiet"
+description = "Laadlimiet wanneer dit voertuig aangesloten wordt"
+
+[config.battery]
+titleAdd = "Voeg meter voor batterijsysteem toe"
+titleEdit = "Bewerk meter voor batterijsysteem"
+
+[config.deviceValue]
+capacity = "Capaciteit"
+chargeStatus = "Status"
+chargedEnergy = "Geladen"
+current = "Stroomsterke"
+enabled = "Ingeschakeld"
+energy = "Energie"
+odometer = "Kilometerstand"
+phaseCurrents = "Stroomsterkte L1..L3"
+phasePowers = "Vermogen L1..L3"
+phaseVoltages = "Spanning L1..L3"
+power = "Vermogen"
+range = "Rijbereik"
+soc = "Batterijpercentage"
+socLimit = "Limiet"
+
+[config.grid]
+titleAdd = "Voeg net meter toe"
+titleEdit = "Bewerk net meter"
+
+[config.pv]
+titleAdd = "Voeg meter zonnepanelen toe"
+titleEdit = "Bewerk meter zonnepanelen"
+
+[config.site]
+cancel = "Annuleren"
+save = "Opslaan"
