@@ -122,17 +122,6 @@ modalUpdateNow = "Asenna nyt"
 modalUpdateStarted = "Käynnistetään evcc:n uusin versio..."
 modalUpdateStatusStart = "Asennus aloitettu:"
 
-[smartCost]
-activeHours = "{charging} / {total}"
-activeHoursLabel = "Aktiiviset tunnit"
-co2Label = "CO₂ päästö"
-co2Limit = "CO₂ raja"
-descriptionLoadpoint = "Mahdollistaa väliaikaisesti latauksen nopeasti PV tilassa."
-modalTitle = "Älykäs lataus verkosta"
-none = "ei mitään"
-priceLabel = "Energian hinta"
-priceLimit = "Hintaraja"
-
 [header]
 about = "Tietoa"
 blog = "Blogi"
@@ -398,6 +387,17 @@ light = "vaalea"
 km = "km"
 label = "Yksiköt"
 mi = "mailit"
+
+[smartCost]
+activeHours = "{charging} / {total}"
+activeHoursLabel = "Aktiiviset tunnit"
+co2Label = "CO₂ päästö"
+co2Limit = "CO₂ raja"
+descriptionLoadpoint = "Mahdollistaa väliaikaisesti latauksen nopeasti PV tilassa."
+modalTitle = "Älykäs lataus verkosta"
+none = "ei mitään"
+priceLabel = "Energian hinta"
+priceLimit = "Hintaraja"
 
 [startupError]
 configFile = "Käytetty määritystiedostoa:"

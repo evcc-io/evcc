@@ -15,7 +15,6 @@ legendTopName = "Batterieunterstütztes Laden"
 legendTopSubline = "ohne Unterbrechungen"
 modalTitle = "Batterieeinstellungen"
 
-
 [batterySettings.bufferStart]
 full = "wenn fast voll"
 low = "wenn etwas voll"
@@ -165,21 +164,6 @@ modalUpdate = "Installieren"
 modalUpdateNow = "Jetzt installieren"
 modalUpdateStarted = "Starte die neue Version von evcc ..."
 modalUpdateStatusStart = "Installation gestartet:"
-
-[smartCost]
-activeHours = "{charging} von {total}"
-activeHoursLabel = "Aktive Stunden"
-co2Label = "CO₂-Emission"
-co2Limit = "CO₂-Grenze"
-descriptionLoadpoint = "Aktiviert vorübergehendes Schnellladen im PV-Modus."
-descriptionBattery = "Lädt die Hausbatterie aus dem Netz."
-modalTitle = "Smartes Netzladen"
-none = "keine"
-priceLabel = "Energiepreis"
-priceLimit = "Preisgrenze"
-titleCheap = "Günstiges Netzladen" 
-titleClean = "Sauberes Netzladen"
-
 
 [header]
 about = "Über"
@@ -466,6 +450,20 @@ light = "Hell"
 km = "Kilometer"
 label = "Einheit"
 mi = "Meilen"
+
+[smartCost]
+activeHours = "{charging} von {total}"
+activeHoursLabel = "Aktive Stunden"
+co2Label = "CO₂-Emission"
+co2Limit = "CO₂-Grenze"
+descriptionBattery = "Lädt die Hausbatterie aus dem Netz."
+descriptionLoadpoint = "Aktiviert vorübergehendes Schnellladen im PV-Modus."
+modalTitle = "Smartes Netzladen"
+none = "keine"
+priceLabel = "Energiepreis"
+priceLimit = "Preisgrenze"
+titleCheap = "Günstiges Netzladen"
+titleClean = "Sauberes Netzladen"
 
 [startupError]
 configFile = "Verwendete Konfigurationsdatei:"

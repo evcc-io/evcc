@@ -95,17 +95,6 @@ modalUpdateNow = "Instalează acum"
 modalUpdateStarted = "Pornesc noua versiune evcc..."
 modalUpdateStatusStart = "Instalare pornita:"
 
-[smartCost]
-activeHours = "{charging} din {total}"
-activeHoursLabel = "Ore de functionare"
-co2Label = "emisii CO₂"
-co2Limit = "limita CO₂"
-descriptionLoadpoint = "Activeaza temporar Incarcarea Rapida in mod Solar."
-modalTitle = "Incarcare Smart Grid"
-none = "nimic"
-priceLabel = "Pretul energiei"
-priceLimit = "Limita de pret"
-
 [header]
 about = "Despre"
 blog = "Blog"
@@ -335,6 +324,17 @@ light = "deschis"
 km = "km"
 label = "Unități de măsura"
 mi = "mile"
+
+[smartCost]
+activeHours = "{charging} din {total}"
+activeHoursLabel = "Ore de functionare"
+co2Label = "emisii CO₂"
+co2Limit = "limita CO₂"
+descriptionLoadpoint = "Activeaza temporar Incarcarea Rapida in mod Solar."
+modalTitle = "Incarcare Smart Grid"
+none = "nimic"
+priceLabel = "Pretul energiei"
+priceLimit = "Limita de pret"
 
 [startupError]
 configFile = "Fișier configurare folosit:"
