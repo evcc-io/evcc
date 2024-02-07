@@ -26,6 +26,13 @@ params:
       de: API Token (benötigt für aktive Batteriesteuerung)
       en: API Token (required for active battery control)
     usages: ["battery"]
+  - name: usingtou
+    required: false
+    help:
+      de: Wird die SonnenBatterie im Modus TimeOfUse betrieben?
+      en: Is the SonnenBattery operated in TimeOfUse mode?
+    default: false
+    usages: ["battery"]
   - name: backupbuffer
     required: false
     help:
@@ -59,6 +66,7 @@ render: |
     uri: http://{{ .host }}:{{ .port }}/api/v1/status
     jq: .USOC
   {{- if .token }}
+  {{- if eq .usingtou "true" }}
   batterymode:
     source: switch
     switch:
@@ -92,6 +100,57 @@ render: |
         - content-type: application/json
         - Auth-Token: {{ .token }}
         body: '{"EM_USOC":"{{ .backupbuffer }}"}'  # set BackupBuffer to default
+  {{- else }}
+  batterymode:
+    source: switch
+    switch:
+    - case: 1 # normal
+      set:
+        source: http
+        uri: http://{{ .host }}/api/v2/configurations
+        insecure: true
+        method: PUT
+        headers:
+        - content-type: application/json
+        - Auth-Token: {{ .token }}
+        body: '{"EM_OperatingMode":"2"}'  # self consumption
+    - case: 2 # hold
+      set:
+        source: sequence
+        set:
+        - source: http
+          uri: http://{{ .host }}/api/v2/configurations
+          insecure: true
+          method: PUT
+          headers:
+          - content-type: application/json
+          - Auth-Token: {{ .token }}
+          body: '{"EM_OperatingMode":"1"}'  # manual
+        - source: http
+          uri: http://{{ .host }}/api/v2/setpoint/discharge/0
+          insecure: true
+          method: POST
+          headers:
+          - content-type: application/json
+          - Auth-Token: {{ .token }}
+        - source: http
+          uri: http://{{ .host }}/api/v2/setpoint/charge/0
+          insecure: true
+          method: POST
+          headers:
+          - content-type: application/json
+          - Auth-Token: {{ .token }}
+    - case: 3 # charge
+      set:
+        source: http
+        uri: http://{{ .host }}/api/v2/configurations
+        insecure: true
+        method: PUT
+        headers:
+        - content-type: application/json
+        - Auth-Token: {{ .token }}
+        body: '{"EM_OperatingMode":"2"}'  # self consumption
+  {{- end }}
   {{- end }}
   {{- if .capacity }}
   capacity: {{ .capacity }} # kWh
