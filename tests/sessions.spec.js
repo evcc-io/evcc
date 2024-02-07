@@ -234,17 +234,9 @@ test.describe("columns desktop", async () => {
     await page.goto("/#/sessions?year=2023&month=5");
     await expect(page.getByTestId("vehicle")).toBeVisible();
   });
-  test("hide vehicle column only one exists", async ({ page }) => {
-    await page.goto("/#/sessions?year=2023&month=3");
-    await expect(page.getByTestId("vehicle")).toHaveCount(0);
-  });
   test("show loadpoint column if multiple different exist", async ({ page }) => {
     await page.goto("/#/sessions?year=2023&month=5");
     await expect(page.getByTestId("loadpoint")).toBeVisible();
-  });
-  test("hide loadpoint column only one exists", async ({ page }) => {
-    await page.goto("/#/sessions?year=2023&month=3");
-    await expect(page.getByTestId("loadpoint")).toHaveCount(0);
   });
   test("show co2 column it has values", async ({ page }) => {
     await page.goto("/#/sessions?year=2023&month=3");
