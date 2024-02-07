@@ -195,6 +195,7 @@ solar = "Zon"
 [main.loadpointSettings]
 currents = "Laadstroom"
 default = "standaard"
+disclaimerHint = "Let op:"
 title = "Instellingen {0}"
 vehicle = "Voertuig"
 

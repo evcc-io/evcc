@@ -23,15 +23,59 @@ never = "bara med tillräckligt sol-överskott"
 
 [config]
 
+[config.battery]
+titleAdd = "Lägg till batterimätare"
+titleEdit = "Ändra batterimätare"
+
+[config.deviceValue]
+capacity = "Kapacitet"
+chargeStatus = "Status"
+chargedEnergy = "Laddad"
+current = "Nuvarande"
+enabled = "Aktiverad"
+energy = "Energi"
+odometer = "Mätarställning"
+phaseCurrents = "Ström L1..L3"
+phasePowers = "Effekt L1..L3"
+phaseVoltages = "Spänning L1..L3"
+power = "Effekt"
+range = "Räckvidd"
+soc = "SoC"
+socLimit = "SoC gräns"
+
 [config.form]
 example = "Exempel"
 optional = "valfri"
 
+[config.grid]
+titleAdd = "Lägg till elnätsmätare"
+titleEdit = "Ändra elnätsmätare"
+
 [config.main]
+addLoadpoint = "Lägg till laddbox"
+addPvBattery = "Lägg till solceller eller batteri"
 addVehicle = "Lägg till fordon"
 edit = "ändra"
 title = "Inställningar"
+unconfigured = "ej konfigurerad"
 vehicles = "Mina fordon"
+yaml = "Konfigurera i evcc.yaml. Kan inte ändras i UI."
+
+[config.meter]
+cancel = "Avbryt"
+delete = "Radera"
+save = "Spara"
+template = "Tillverkare"
+titleChoice = "Vad vill du lägga till?"
+validateSave = "Validera & spara"
+
+[config.pv]
+titleAdd = "Lägg till solcellsmätare"
+titleEdit = "Ändra solcellsmätare"
+
+[config.site]
+cancel = "Avbryt"
+save = "Spara"
 
 [config.validation]
 failed = "misslyckades"
@@ -43,7 +87,7 @@ validate = "validerar"
 
 [config.vehicle]
 cancel = "Avbryt"
-delete = "Radera fordon"
+delete = "Radera"
 generic = "Andra integrationer"
 offline = "Generiskt fordon"
 online = "Fordon med online API"
@@ -142,7 +186,7 @@ docs = "Dokumentation"
 github = "GitHub"
 login = "Fordons inloggningar"
 needHelp = "Behöver du hjälp?"
-sessions = "Laddnings sessioner"
+sessions = "Laddningar"
 settings = "Inställningar"
 
 [help]
@@ -195,6 +239,12 @@ pvExport = "Export till elnät"
 pvProduction = "Produktion"
 selfConsumption = "Egenförbrukning"
 
+[main.heatingStatus]
+charging = "Värmer..."
+cheapEnergyCharging = "Värmer med billig energi: {price} (limit {limit})"
+cleanEnergyCharging = "Värmer med CO2-neutral energi: {co2} (limit {limit})"
+waitForVehicle = "Redo, väntar på värmare..."
+
 [main.loadpoint]
 avgPrice = "⌀ pris"
 charged = "Laddat"
@@ -209,8 +259,9 @@ remoteDisabledSoft = "{source}: Adaptiv solladdning avstängd"
 solar = "Solenergi"
 
 [main.loadpointSettings]
-currents = "Laddningsström"
+currents = "Laddström"
 default = "förvald"
+disclaimerHint = "Anmärkning:"
 onlyForSocBasedCharging = "Dessa inställningar är endast tillgängliga för fordon med känd laddnivå"
 title = "Inställningar {0}"
 vehicle = "Fordon"
@@ -281,7 +332,7 @@ vehicleCapacityDocs = "Lär dig hur du konfigurerar."
 vehicleCapacityRequired = "Fordonets batterikapacitet behövs för att beräkna laddtid."
 
 [main.targetChargePlan]
-chargeDuration = "Laddningstid"
+chargeDuration = "Laddtid"
 co2Label = "CO₂-utsläpp ⌀"
 priceLabel = "Energipris"
 timeRange = "{day} {range} t"
@@ -351,7 +402,7 @@ meterstop = "Mätare stopp"
 odometer = "Mätarställning"
 price = "Pris"
 started = "Start-tid"
-title = "Laddningssession"
+title = "Laddning"
 
 [sessions]
 avgPower = "⌀-effekt"

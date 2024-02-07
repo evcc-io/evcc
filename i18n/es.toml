@@ -266,6 +266,7 @@ solar = "Solar"
 [main.loadpointSettings]
 currents = "Corriente de carga"
 default = "defecto"
+disclaimerHint = "Nota:"
 onlyForSocBasedCharging = "Estas opciones sólo están disponibles para vehículos con nivel de carga conocido"
 title = "Configuraciones {0}"
 vehicle = "Vehículo"
@@ -286,6 +287,7 @@ label = "Carga de min. %"
 
 [main.loadpointSettings.phasesConfigured]
 label = "Fases"
+no1p3pSupport = "¿Cómo está conectado tu cargador?"
 phases_0 = "Cambio automático"
 phases_1 = "monofásica"
 phases_1_hint = "({min} a {max})"

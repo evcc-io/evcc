@@ -23,15 +23,59 @@ never = "nur mit genug PV-Überschuss"
 
 [config]
 
+[config.battery]
+titleAdd = "Batterie Zähler hinzufügen"
+titleEdit = "Batterie Zähler editieren"
+
+[config.deviceValue]
+capacity = "Kapazität"
+chargeStatus = "Status"
+chargedEnergy = "Geladen"
+current = "Aktuell"
+enabled = "Aktiviert"
+energy = "Energie"
+odometer = "Kilometerstand"
+phaseCurrents = "Strom L1..L3"
+phasePowers = "Leistung L1..L3"
+phaseVoltages = "Spannung L1..L3"
+power = "Leistung"
+range = "Reichweite"
+soc = "SoC"
+socLimit = "SoC Begrenzung"
+
 [config.form]
 example = "Beispiel"
 optional = "optional"
 
+[config.grid]
+titleAdd = "Stromzähler (Netz) hinzufügen"
+titleEdit = "Stromzähler (Netz) bearbeiten"
+
 [config.main]
+addLoadpoint = "Ladepunkt hinzufügen"
+addPvBattery = "PV oder Speicher hinzufügen"
 addVehicle = "Fahrzeug hinzufügen"
 edit = "bearbeiten"
 title = "Konfiguration"
+unconfigured = "nicht konfiguriert"
 vehicles = "Meine Fahrzeuge"
+yaml = "Konfiguration in evcc.yaml gefunden. Nicht per UI editierbar"
+
+[config.meter]
+cancel = "Abbrechen"
+delete = "Löschen"
+save = "Speichern"
+template = "Hersteller"
+titleChoice = "Was möchtest du hinzufügen?"
+validateSave = "Überprüfen & speichern"
+
+[config.pv]
+titleAdd = "Zähler (PV) hinzufügen"
+titleEdit = "Zähler (PV) bearbeiten"
+
+[config.site]
+cancel = "Abbrechen"
+save = "Speichern"
 
 [config.validation]
 failed = "fehlgeschlagen"
@@ -213,6 +257,7 @@ solar = "Sonne"
 [main.loadpointSettings]
 currents = "Ladestrom"
 default = "default"
+disclaimerHint = "Hinweis:"
 onlyForSocBasedCharging = "Diese Optionen sind nur für Fahrzeuge mit bekanntem Ladestand verfügbar."
 title = "Einstellungen {0}"
 vehicle = "Fahrzeug"
@@ -298,7 +343,7 @@ fallbackName = "Fahrzeug"
 moreActions = "Weitere Aktionen"
 none = "Kein Fahrzeug"
 targetSoc = "Ladelimit"
-temp = "Temp."
+temp = "Temperatur"
 tempLimit = "Zieltemp."
 unknown = "Gastfahrzeug"
 vehicleSoc = "Ladestand"
