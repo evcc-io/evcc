@@ -628,7 +628,7 @@ func (lp *Loadpoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 
 	// read initial charger state to prevent immediately disabling charger
 	if enabled, err := lp.charger.Enabled(); err == nil {
-		if lp.setEnabled(enabled); enabled {
+		if lp.setEnabled(enabled, true); enabled {
 			// set defined current for use by pv mode
 			_ = lp.setLimit(lp.effectiveMinCurrent(), false)
 		}
@@ -651,7 +651,7 @@ func (lp *Loadpoint) syncCharger() error {
 
 	if lp.enabledCommandCompleted() {
 		defer func() {
-			lp.setEnabled(enabled)
+			lp.setEnabled(enabled, false)
 		}()
 	}
 
@@ -748,7 +748,7 @@ func (lp *Loadpoint) setLimit(chargeCurrent float64, force bool) error {
 			return fmt.Errorf("charger %s: %w", status[enabled], err)
 		}
 
-		lp.setEnabled(enabled)
+		lp.setEnabled(enabled, true)
 		lp.bus.Publish(evChargeCurrent, chargeCurrent)
 
 		// start/stop vehicle wake-up timer
@@ -1466,12 +1466,12 @@ func (lp *Loadpoint) stopWakeUpTimer() {
 	lp.wakeUpTimer.Stop()
 }
 
-func (lp *Loadpoint) setEnabled(enabled bool) {
-	if lp.enabled != enabled || lp.enabledChanged.IsZero() {
-		lp.log.DEBUG.Printf("charger %s", status[enabled])
-		lp.enabled = enabled
+func (lp *Loadpoint) setEnabled(enabled bool, chargerEnabledChanged bool) {
+	lp.log.DEBUG.Printf("charger %s", status[enabled])
+	lp.enabled = enabled
+	lp.publish(keys.Enabled, lp.enabled)
+	if chargerEnabledChanged {
 		lp.enabledChanged = lp.clock.Now()
-		lp.publish(keys.Enabled, lp.enabled)
 	}
 }
 
