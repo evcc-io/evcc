@@ -29,15 +29,17 @@ params:
   - name: backupbuffer
     required: false
     help:
-      de: In der Batterie verbleibende Reserve-Kapazität (in %)
-      en: default remaining battery charge (in %)
-    default: 10
+      de: Verbleibende Reservekapazität in der Batterie (in %)
+      en: Remaining reserve capacity in the battery (in %)
+    default: 0
+    usages: ["battery"]
   - name: chargingbuffer
     required: false
     help:
-      de: Maximaler Entladestand der Batterie während des evcc-Ladevorgangs
-      en: Maximum discharge level of the SonnenBatterie during vehicle charging
-    default: 50
+      de: Verbleibende Kapazität in der Batterie beim Laden des Fahrzeugs (in %)
+      en: Remaining capacity in the battery during vehicle charging (in %)
+    default: 100
+    usages: ["battery"]
 render: |
   type: custom
   power:
