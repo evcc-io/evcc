@@ -26,6 +26,18 @@ params:
       de: API Token (benötigt für aktive Batteriesteuerung)
       en: API Token (required for active battery control)
     usages: ["battery"]
+  - name: backupbuffer
+    required: false
+    help:
+      de: In der Batterie verbleibende Reserve-Kapazität (in %)
+      en: default remaining battery charge (in %)
+    default: 10
+  - name: chargingbuffer
+    required: false
+    help:
+      de: Maximaler Entladestand der Batterie während des evcc-Ladevorgangs
+      en: Maximum discharge level of the SonnenBatterie during vehicle charging
+    default: 50
 render: |
   type: custom
   power:
@@ -57,33 +69,17 @@ render: |
         headers:
         - content-type: application/json
         - Auth-Token: {{ .token }}
-        body: '{"EM_OperatingMode":"2"}'  # self consumption
+        body: '{"EM_USOC":"{{ .backupbuffer }}"}'  # reset BackupBuffer to default
     - case: 2 # hold
       set:
-        source: sequence
-        set:
-        - source: http
-          uri: http://{{ .host }}/api/v2/configurations
-          insecure: true
-          method: PUT
-          headers:
-          - content-type: application/json
-          - Auth-Token: {{ .token }}
-          body: '{"EM_OperatingMode":"1"}'  # manual
-        - source: http
-          uri: http://{{ .host }}/api/v2/setpoint/discharge/0
-          insecure: true
-          method: POST
-          headers:
-          - content-type: application/json
-          - Auth-Token: {{ .token }}
-        - source: http
-          uri: http://{{ .host }}/api/v2/setpoint/charge/0
-          insecure: true
-          method: POST
-          headers:
-          - content-type: application/json
-          - Auth-Token: {{ .token }}
+        source: http
+        uri: http://{{ .host }}/api/v2/configurations
+        insecure: true
+        method: PUT
+        headers:
+        - content-type: application/json
+        - Auth-Token: {{ .token }}
+        body: '{"EM_USOC":"{{ .chargingbuffer }}"}'  # increase BackupBuffer to desired percentage
     - case: 3 # charge
       set:
         source: http
@@ -93,7 +89,7 @@ render: |
         headers:
         - content-type: application/json
         - Auth-Token: {{ .token }}
-        body: '{"EM_OperatingMode":"2"}'  # self consumption
+        body: '{"EM_USOC":"{{ .backupbuffer }}"}'  # set BackupBuffer to default
   {{- end }}
   {{- if .capacity }}
   capacity: {{ .capacity }} # kWh
