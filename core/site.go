@@ -270,8 +270,8 @@ func (site *Site) restoreSettings() error {
 			return err
 		}
 	}
-	if v, err := settings.Float(keys.SmartCostLimit); err == nil {
-		if err := site.SetSmartCostLimit(v); err != nil {
+	if v, err := settings.Float(keys.BatterySmartCostLimit); err == nil {
+		if err := site.SetBatterySmartCostLimit(v); err != nil {
 			return err
 		}
 	}
@@ -789,23 +789,26 @@ func (site *Site) update(lp Updater) {
 		flexiblePower = site.prioritizer.GetChargePowerFlexibility(lp)
 	}
 
+	// TODO: implement active check for loadpoints and battery
 	var smartCostActive bool
-	if tariff := site.GetTariff(PlannerTariff); tariff != nil && tariff.Type() != api.TariffTypePriceStatic {
-		rates, err := tariff.Rates()
+	/*
+		if tariff := site.GetTariff(PlannerTariff); tariff != nil && tariff.Type() != api.TariffTypePriceStatic {
+				rates, err := tariff.Rates()
 
-		var rate api.Rate
-		if err == nil {
-			rate, err = rates.Current(time.Now())
-		}
+					var rate api.Rate
+					if err == nil {
+						rate, err = rates.Current(time.Now())
+					}
 
-		if err == nil {
-			limit := site.GetSmartCostLimit()
-			smartCostActive = limit != 0 && rate.Price <= limit
-			site.publish(keys.SmartCostActive, smartCostActive)
-		} else {
-			site.log.ERROR.Println("smartCost:", err)
-		}
-	}
+					if err == nil {
+							limit := site.GetSmartCostLimit()
+							smartCostActive = limit != 0 && rate.Price <= limit
+							site.publish(keys.SmartCostActive, smartCostActive)
+					} else {
+						site.log.ERROR.Println("smartCost:", err)
+					}
+				}
+	*/
 
 	if sitePower, batteryBuffered, batteryStart, err := site.sitePower(totalChargePower, flexiblePower); err == nil {
 		// ignore negative pvPower values as that means it is not an energy source but consumption
@@ -859,11 +862,11 @@ func (site *Site) prepare() {
 	site.publish(keys.PrioritySoc, site.prioritySoc)
 	site.publish(keys.BatteryMode, site.batteryMode)
 	site.publish(keys.BatteryDischargeControl, site.batteryDischargeControl)
+	site.publish(keys.BatterySmartCostLimit, 0)      // TODO: implement
+	site.publish(keys.BatterySmartCostActive, false) // TODO: implement
 	site.publish(keys.ResidualPower, site.ResidualPower)
 
 	site.publish(keys.Currency, site.tariffs.Currency)
-	site.publish(keys.SmartCostActive, false)
-	site.publish(keys.SmartCostLimit, site.smartCostLimit)
 	if tariff := site.GetTariff(PlannerTariff); tariff != nil {
 		site.publish(keys.SmartCostType, tariff.Type())
 	} else {

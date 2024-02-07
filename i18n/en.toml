@@ -162,16 +162,20 @@ modalUpdateNow = "Install now"
 modalUpdateStarted = "Starting the new version of evcc…"
 modalUpdateStatusStart = "Installation started:"
 
-[gridSettings]
+[smartCost]
 activeHours = "{charging} of {total}"
 activeHoursLabel = "Active hours"
 co2Label = "CO₂ emission"
 co2Limit = "CO₂ limit"
-costLimitDescription = "Enables temporary fast-charging in solar mode."
+descriptionLoadpoint = "Enables temporary fast-charging in solar mode."
+descriptionBattery = "Charges the home battery with energy from the grid."
 modalTitle = "Smart Grid Charging"
 none = "none"
 priceLabel = "Energy price"
 priceLimit = "Price limit"
+titleCheap = "Cheap Grid Charging"
+titleClean = "Clean Grid Charging"
+
 
 [header]
 about = "About"
@@ -252,12 +256,14 @@ remoteDisabledSoft = "{source}: turned off adaptive solar-charging"
 solar = "Solar"
 
 [main.loadpointSettings]
-currents = "Charging current"
+currents = "Charging Current"
 default = "default"
 disclaimerHint = "Note:"
 onlyForSocBasedCharging = "These options are only available for vehicles with known charging level."
 title = "Settings {0}"
 vehicle = "Vehicle"
+smartCostCheap = "Cheap Grid Charging"
+smartCostClean = "Clean Grid Charging"
 
 [main.loadpointSettings.limitSoc]
 description = "Charging limit that is used when this vehicle is connected."

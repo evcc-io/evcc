@@ -2,7 +2,8 @@
 	<Teleport to="body">
 		<div
 			:id="`loadpointSettingsModal_${id}`"
-			class="modal fade text-dark"
+			class="modal fade text-dark modal-xl"
+			ref="modal"
 			data-bs-backdrop="true"
 			tabindex="-1"
 			role="dialog"
@@ -23,7 +24,12 @@
 					</div>
 					<div class="modal-body">
 						<div class="container">
-							<h4 class="d-flex align-items-center mb-3 mt-4 text-evcc">
+							<SmartCostLimit
+								v-if="isModalVisible && smartCostAvailable"
+								v-bind="smartCostLimitProps"
+								class="mt-2"
+							/>
+							<h4 class="d-flex align-items-center mb-3 mt-5 text-evcc">
 								{{ $t("main.loadpointSettings.currents") }}
 							</h4>
 							<div class="mb-3 row">
@@ -142,7 +148,10 @@
 </template>
 
 <script>
+import collector from "../mixins/collector";
 import formatter from "../mixins/formatter";
+import SmartCostLimit from "./SmartCostLimit.vue";
+import smartCostAvailable from "../utils/smartCostAvailable";
 
 const V = 230;
 
@@ -161,7 +170,8 @@ const insertSorted = (arr, num) => {
 
 export default {
 	name: "LoadpointSettingsModal",
-	mixins: [formatter],
+	mixins: [formatter, collector],
+	components: { SmartCostLimit },
 	props: {
 		id: [String, Number],
 		phasesConfigured: Number,
@@ -171,6 +181,10 @@ export default {
 		maxCurrent: Number,
 		minCurrent: Number,
 		title: String,
+		smartCostLimit: Number,
+		smartCostType: String,
+		tariffGrid: Number,
+		currency: String,
 	},
 	emits: ["phasesconfigured-updated", "maxcurrent-updated", "mincurrent-updated"],
 	data: function () {
@@ -178,6 +192,7 @@ export default {
 			selectedMaxCurrent: this.maxCurrent,
 			selectedMinCurrent: this.minCurrent,
 			selectedPhases: this.phasesConfigured,
+			isModalVisible: false,
 		};
 	},
 	computed: {
@@ -221,6 +236,15 @@ export default {
 			const opt2 = insertSorted(opt1, this.maxCurrent);
 			return opt2.map((value) => this.currentOption(value, value === 16));
 		},
+		smartCostLimitProps: function () {
+			return this.collectProps(SmartCostLimit);
+		},
+		loadpointId: function () {
+			return this.id;
+		},
+		smartCostAvailable() {
+			return smartCostAvailable(this.smartCostType);
+		},
 	},
 	watch: {
 		maxCurrent: function (value) {
@@ -235,6 +259,14 @@ export default {
 		minSoc: function (value) {
 			this.selectedMinSoc = value;
 		},
+	},
+	mounted() {
+		this.$refs.modal.addEventListener("show.bs.modal", this.modalVisible);
+		this.$refs.modal.addEventListener("hidden.bs.modal", this.modalInvisible);
+	},
+	unmounted() {
+		this.$refs.modal?.removeEventListener("show.bs.modal", this.modalVisible);
+		this.$refs.modal?.removeEventListener("hidden.bs.modal", this.modalInvisible);
 	},
 	methods: {
 		maxPowerPhases: function (phases) {
@@ -261,6 +293,12 @@ export default {
 				name += ` (${this.$t("main.loadpointSettings.default")})`;
 			}
 			return { value, name };
+		},
+		modalVisible: function () {
+			this.isModalVisible = true;
+		},
+		modalInvisible: function () {
+			this.isModalVisible = false;
 		},
 	},
 };

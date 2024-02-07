@@ -168,12 +168,12 @@ modalUpdateNow = "Installer nu"
 modalUpdateStarted = "Starter den nye version af evcc..."
 modalUpdateStatusStart = "Installation startede:"
 
-[gridSettings]
+[smartCost]
 activeHours = "{charging} af {total}"
 activeHoursLabel = "Aktive timer"
 co2Label = "CO₂ udledning"
 co2Limit = "CO₂ grænse"
-costLimitDescription = "Aktiverer midlertidig hurtig ladning i solcelle tilstand"
+descriptionLoadpoint = "Aktiverer midlertidig hurtig ladning i solcelle tilstand"
 modalTitle = "Smart net opladning"
 none = "ingen"
 priceLabel = "Energi pris"

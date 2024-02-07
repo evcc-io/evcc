@@ -255,25 +255,32 @@ func (site *Site) SetResidualPower(power float64) error {
 	return nil
 }
 
-// GetSmartCostLimit returns the smartCostLimit
-func (site *Site) GetSmartCostLimit() float64 {
+// GetBatterySmartCostLimit returns the batterySmartCostLimit
+func (site *Site) GetBatterySmartCostLimit() float64 {
 	site.RLock()
 	defer site.RUnlock()
-	return site.smartCostLimit
+	// TODO: implement
+	return 42
 }
 
-// SetSmartCostLimit sets the smartCostLimit
-func (site *Site) SetSmartCostLimit(val float64) error {
+// SetBatterySmartCostLimit sets the batterySmartCostLimit
+func (site *Site) SetBatterySmartCostLimit(val float64) error {
 	site.Lock()
 	defer site.Unlock()
 
-	site.log.DEBUG.Println("set smart cost limit:", val)
+	site.log.DEBUG.Println("set battery smart cost limit:", val)
 
-	if site.smartCostLimit != val {
-		site.smartCostLimit = val
-		settings.SetFloat(keys.SmartCostLimit, site.smartCostLimit)
-		site.publish(keys.SmartCostLimit, site.smartCostLimit)
-	}
+	// TODO: reject if battery control is not supported
+
+	/*
+		if site.smartCostLimit != val {
+			site.smartCostLimit = val
+			settings.SetFloat(keys.BatterySmartCostLimit, val)
+			site.publish(keys.BatterySmartCostLimit, val)
+		}
+	*/
+	settings.SetFloat(keys.BatterySmartCostLimit, val)
+	site.publish(keys.BatterySmartCostLimit, val)
 
 	return nil
 }

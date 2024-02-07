@@ -97,9 +97,9 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, cache *util.Cache) {
 		"buffersoc":               {[]string{"POST", "OPTIONS"}, "/buffersoc/{value:[0-9.]+}", floatHandler(site.SetBufferSoc, site.GetBufferSoc)},
 		"bufferstartsoc":          {[]string{"POST", "OPTIONS"}, "/bufferstartsoc/{value:[0-9.]+}", floatHandler(site.SetBufferStartSoc, site.GetBufferStartSoc)},
 		"batterydischargecontrol": {[]string{"POST", "OPTIONS"}, "/batterydischargecontrol/{value:[a-z]+}", boolHandler(site.SetBatteryDischargeControl, site.GetBatteryDischargeControl)},
+		"batterysmartcost":        {[]string{"POST", "OPTIONS"}, "/batterysmartcostlimit/{value:[-0-9.]+}", floatHandler(site.SetBatterySmartCostLimit, site.GetBatterySmartCostLimit)},
 		"prioritysoc":             {[]string{"POST", "OPTIONS"}, "/prioritysoc/{value:[0-9.]+}", floatHandler(site.SetPrioritySoc, site.GetPrioritySoc)},
 		"residualpower":           {[]string{"POST", "OPTIONS"}, "/residualpower/{value:[-0-9.]+}", floatHandler(site.SetResidualPower, site.GetResidualPower)},
-		"smartcost":               {[]string{"POST", "OPTIONS"}, "/smartcostlimit/{value:[-0-9.]+}", floatHandler(site.SetSmartCostLimit, site.GetSmartCostLimit)},
 		"tariff":                  {[]string{"GET"}, "/tariff/{tariff:[a-z]+}", tariffHandler(site)},
 		"sessions":                {[]string{"GET"}, "/sessions", sessionHandler},
 		"updatesession":           {[]string{"PUT", "OPTIONS"}, "/session/{id:[0-9]+}", updateSessionHandler},
@@ -151,6 +151,7 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, cache *util.Cache) {
 			"remotedemand":     {[]string{"POST", "OPTIONS"}, "/remotedemand/{demand:[a-z]+}/{source:[0-9a-zA-Z_-]+}", remoteDemandHandler(lp)},
 			"enableThreshold":  {[]string{"POST", "OPTIONS"}, "/enable/threshold/{value:-?[0-9.]+}", floatHandler(pass(lp.SetEnableThreshold), lp.GetEnableThreshold)},
 			"disableThreshold": {[]string{"POST", "OPTIONS"}, "/disable/threshold/{value:-?[0-9.]+}", floatHandler(pass(lp.SetDisableThreshold), lp.GetDisableThreshold)},
+			"smartCostLimit":   {[]string{"POST", "OPTIONS"}, "/smartcostlimit/{value:[0-9.]+}", floatHandler(lp.SetSmartCostLimit, lp.GetSmartCostLimit)},
 			// "priority":         {[]string{"POST", "OPTIONS"}, "/priority/{value:[0-9.]+}", floatHandler(pass(lp.SetPriority), lp.GetPriority)},
 		}
 

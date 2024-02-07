@@ -122,12 +122,12 @@ modalUpdateNow = "Asenna nyt"
 modalUpdateStarted = "Käynnistetään evcc:n uusin versio..."
 modalUpdateStatusStart = "Asennus aloitettu:"
 
-[gridSettings]
+[smartCost]
 activeHours = "{charging} / {total}"
 activeHoursLabel = "Aktiiviset tunnit"
 co2Label = "CO₂ päästö"
 co2Limit = "CO₂ raja"
-costLimitDescription = "Mahdollistaa väliaikaisesti latauksen nopeasti PV tilassa."
+descriptionLoadpoint = "Mahdollistaa väliaikaisesti latauksen nopeasti PV tilassa."
 modalTitle = "Älykäs lataus verkosta"
 none = "ei mitään"
 priceLabel = "Energian hinta"

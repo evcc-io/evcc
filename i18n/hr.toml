@@ -125,12 +125,12 @@ modalUpdateNow = "Instaliraj sada"
 modalUpdateStarted = "Pokretanje nove evcc verzije …"
 modalUpdateStatusStart = "Instalacija je pokrenuta:"
 
-[gridSettings]
+[smartCost]
 activeHours = "{charging} od {total}"
 activeHoursLabel = "Aktivno radno vrijeme"
 co2Label = "Co₂ emisija"
 co2Limit = "Ograničenje CO₂"
-costLimitDescription = "Omogućuje privremeno brzo punjenje u solarnom modusu."
+descriptionLoadpoint = "Omogućuje privremeno brzo punjenje u solarnom modusu."
 modalTitle = "Smart Grid napajanje"
 none = "bez"
 priceLabel = "Cijena energije"

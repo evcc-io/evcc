@@ -124,12 +124,12 @@ modalUpdateNow = "Installer maintenant"
 modalUpdateStarted = "Démarrage de la nouvelle version de evcc..."
 modalUpdateStatusStart = "L'installation a commencé:"
 
-[gridSettings]
+[smartCost]
 activeHours = "{charging} sur {total}"
 activeHoursLabel = "Heures actives"
 co2Label = "Émissions de CO₂"
 co2Limit = "Limite CO₂"
-costLimitDescription = "Autorise la charge rapide temporaire en mode solaire."
+descriptionLoadpoint = "Autorise la charge rapide temporaire en mode solaire."
 modalTitle = "Recharge réseau intelligente"
 none = "aucune"
 priceLabel = "Prix de l'énergie"

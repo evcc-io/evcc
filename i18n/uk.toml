@@ -111,12 +111,12 @@ modalUpdateNow = "Встановити зараз"
 modalUpdateStarted = "Початок нової версії evcc…"
 modalUpdateStatusStart = "Встановлення розпочато:"
 
-[gridSettings]
+[smartCost]
 activeHours = "{charging} зі {total}"
 activeHoursLabel = "Активні години"
 co2Label = "Викиди CO₂"
 co2Limit = "Ліміт CO₂"
-costLimitDescription = "Вмикає тимчасову швидку зарядку в сонячному режимі."
+descriptionLoadpoint = "Вмикає тимчасову швидку зарядку в сонячному режимі."
 modalTitle = "Розумна зарядка"
 none = "немає"
 priceLabel = "Ціна енергії"

@@ -15,6 +15,7 @@ legendTopName = "Batterieunterstütztes Laden"
 legendTopSubline = "ohne Unterbrechungen"
 modalTitle = "Batterieeinstellungen"
 
+
 [batterySettings.bufferStart]
 full = "wenn fast voll"
 low = "wenn etwas voll"
@@ -165,16 +166,20 @@ modalUpdateNow = "Jetzt installieren"
 modalUpdateStarted = "Starte die neue Version von evcc ..."
 modalUpdateStatusStart = "Installation gestartet:"
 
-[gridSettings]
+[smartCost]
 activeHours = "{charging} von {total}"
 activeHoursLabel = "Aktive Stunden"
 co2Label = "CO₂-Emission"
 co2Limit = "CO₂-Grenze"
-costLimitDescription = "Aktiviert vorübergehendes Schnellladen im PV-Modus."
+descriptionLoadpoint = "Aktiviert vorübergehendes Schnellladen im PV-Modus."
+descriptionBattery = "Lädt die Hausbatterie aus dem Netz."
 modalTitle = "Smartes Netzladen"
 none = "keine"
 priceLabel = "Energiepreis"
 priceLimit = "Preisgrenze"
+titleCheap = "Günstiges Netzladen" 
+titleClean = "Sauberes Netzladen"
+
 
 [header]
 about = "Über"

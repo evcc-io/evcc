@@ -212,10 +212,10 @@ func (m *MQTT) listenSiteSetters(topic string, site site.API) error {
 	}
 
 	if err == nil {
-		err = m.Handler.ListenSetter(topic+"/site/smartCostLimit", func(payload string) error {
+		err = m.Handler.ListenSetter(topic+"/site/batterySmartCostLimit", func(payload string) error {
 			val, err := parseFloat(payload)
 			if err == nil {
-				err = site.SetSmartCostLimit(val)
+				err = site.SetBatterySmartCostLimit(val)
 			}
 			return err
 		})

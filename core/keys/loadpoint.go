@@ -26,6 +26,9 @@ const (
 	Connected = "connected" // connected
 	Charging  = "charging"  // charging
 
+	// smart charging
+	SmartCostLimit = "smartCostLimit" // smart cost limit
+
 	// effective values
 	EffectivePriority   = "effectivePriority"   // effective priority
 	EffectivePlanTime   = "effectivePlanTime"   // effective plan time

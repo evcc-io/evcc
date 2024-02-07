@@ -121,12 +121,12 @@ modalUpdateNow = "现在安装"
 modalUpdateStarted = "启动新版本的evcc..."
 modalUpdateStatusStart = "安装已开始:"
 
-[gridSettings]
+[smartCost]
 activeHours = "{charging} / {total}"
 activeHoursLabel = "运行小时"
 co2Label = "CO₂ 排放"
 co2Limit = "CO₂ 限制"
-costLimitDescription = "在太阳能模式下实现临时快速充电."
+descriptionLoadpoint = "在太阳能模式下实现临时快速充电."
 modalTitle = "智能电网充电"
 none = "无"
 priceLabel = "电价"

@@ -18,8 +18,6 @@ const (
 	PvPower               = "pvPower"
 	ResidualPower         = "residualPower"
 	SiteTitle             = "siteTitle"
-	SmartCostActive       = "smartCostActive"
-	SmartCostLimit        = "smartCostLimit"
 	SmartCostType         = "smartCostType"
 	Statistics            = "statistics"
 	TariffCo2             = "tariffCo2"
@@ -40,6 +38,8 @@ const (
 	// battery settings
 	BatteryCapacity         = "batteryCapacity"
 	BatteryDischargeControl = "batteryDischargeControl"
+	BatterySmartCostLimit   = "batterySmartCostLimit" // TODO: implement
+	BatterySmartCostActive  = "smartCostActive"       // TODO: implement
 	BufferSoc               = "bufferSoc"
 	BufferStartSoc          = "bufferStartSoc"
 

@@ -95,12 +95,12 @@ modalUpdateNow = "Instalează acum"
 modalUpdateStarted = "Pornesc noua versiune evcc..."
 modalUpdateStatusStart = "Instalare pornita:"
 
-[gridSettings]
+[smartCost]
 activeHours = "{charging} din {total}"
 activeHoursLabel = "Ore de functionare"
 co2Label = "emisii CO₂"
 co2Limit = "limita CO₂"
-costLimitDescription = "Activeaza temporar Incarcarea Rapida in mod Solar."
+descriptionLoadpoint = "Activeaza temporar Incarcarea Rapida in mod Solar."
 modalTitle = "Incarcare Smart Grid"
 none = "nimic"
 priceLabel = "Pretul energiei"
