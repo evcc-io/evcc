@@ -78,13 +78,13 @@ render: |
   {{- end }}
   {{- if eq .usage "pv" }}
   type: custom
-  power: Power
+  power:
     source: sunspec
     {{- include "modbus" . | indent 2 }}
     value:
       - 101:W
       - 103:W
-  energy: Export
+  energy:
     source: sunspec
     {{- include "modbus" . | indent 2 }}
     value:
