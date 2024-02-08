@@ -52,8 +52,8 @@ const (
 	minActiveCurrent = 1.0 // minimum current at which a phase is treated as active
 	minActiveVoltage = 207 // minimum voltage at which a phase is treated as active
 
-	chargerSwitcheduration = 60 * time.Second // allow out of sync during this timespan
-	phaseSwitchDuration    = 60 * time.Second // allow out of sync and do not measure phases during this timespan
+	chargerSwitchDuration = 60 * time.Second // allow out of sync during this timespan
+	phaseSwitchDuration   = 60 * time.Second // allow out of sync and do not measure phases during this timespan
 )
 
 // elapsed is the time an expired timer will be set to
@@ -628,7 +628,7 @@ func (lp *Loadpoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 
 	// read initial charger state to prevent immediately disabling charger
 	if enabled, err := lp.charger.Enabled(); err == nil {
-		if lp.setEnabled(enabled, false); enabled {
+		if lp.enabled = enabled; enabled {
 			// set defined current for use by pv mode
 			_ = lp.setLimit(lp.effectiveMinCurrent(), false)
 		}
@@ -651,7 +651,8 @@ func (lp *Loadpoint) syncCharger() error {
 
 	if lp.chargerUpdateCompleted() {
 		defer func() {
-			lp.setEnabled(enabled, false)
+			lp.enabled = enabled
+			lp.publish(keys.Enabled, lp.enabled)
 		}()
 	}
 
@@ -748,7 +749,11 @@ func (lp *Loadpoint) setLimit(chargeCurrent float64, force bool) error {
 			return fmt.Errorf("charger %s: %w", status[enabled], err)
 		}
 
-		lp.setEnabled(enabled, true)
+		lp.log.DEBUG.Printf("charger %s", status[enabled])
+		lp.enabled = enabled
+		lp.publish(keys.Enabled, lp.enabled)
+		lp.chargerSwitched = lp.clock.Now()
+
 		lp.bus.Publish(evChargeCurrent, chargeCurrent)
 
 		// start/stop vehicle wake-up timer
@@ -1466,18 +1471,9 @@ func (lp *Loadpoint) stopWakeUpTimer() {
 	lp.wakeUpTimer.Stop()
 }
 
-func (lp *Loadpoint) setEnabled(enabled bool, chargerSwitched bool) {
-	lp.log.DEBUG.Printf("charger %s", status[enabled])
-	lp.enabled = enabled
-	lp.publish(keys.Enabled, lp.enabled)
-	if chargerSwitched {
-		lp.chargerSwitched = lp.clock.Now()
-	}
-}
-
 // chargerUpdateCompleted returns true if enable command should be already processed by the charger (so we can try to sync charger and loadpoint)
 func (lp *Loadpoint) chargerUpdateCompleted() bool {
-	return time.Since(lp.chargerSwitched) > chargerSwitcheduration
+	return time.Since(lp.chargerSwitched) > chargerSwitchDuration
 }
 
 // phaseSwitchCompleted returns true if phase switch command should be already processed by the charger (so we can try to sync charger and loadpoint and are able to measure currents)
