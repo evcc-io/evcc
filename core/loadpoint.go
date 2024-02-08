@@ -628,7 +628,7 @@ func (lp *Loadpoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 
 	// read initial charger state to prevent immediately disabling charger
 	if enabled, err := lp.charger.Enabled(); err == nil {
-		if lp.setEnabled(enabled, true); enabled {
+		if lp.setEnabled(enabled, false); enabled {
 			// set defined current for use by pv mode
 			_ = lp.setLimit(lp.effectiveMinCurrent(), false)
 		}
