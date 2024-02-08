@@ -183,7 +183,7 @@ export default {
 	},
 	computed: {
 		phasesOptions: function () {
-			if (this.chargerPhysicalPhases > 0) {
+			if (this.chargerPhysicalPhases == 1) {
 				// known fixed phase configuration, no settings required
 				return [];
 			}
