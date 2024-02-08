@@ -40,6 +40,7 @@ const (
 
 	flagDigits = "digits"
 	flagDelay  = "delay"
+	flagYes    = "yes"
 )
 
 func bind(cmd *cobra.Command, key string, flagName ...string) {

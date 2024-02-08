@@ -18,7 +18,7 @@ var settingsSetCmd = &cobra.Command{
 
 func init() {
 	settingsCmd.AddCommand(settingsSetCmd)
-	settingsSetCmd.Flags().BoolP("yes", "y", false, "Set without confirmation")
+	settingsSetCmd.Flags().BoolP(flagYes, "y", false, "Set without confirmation")
 }
 
 func runSettingsSet(cmd *cobra.Command, args []string) {
@@ -32,7 +32,7 @@ func runSettingsSet(cmd *cobra.Command, args []string) {
 		log.FATAL.Fatal(err)
 	}
 
-	confirmation, _ := cmd.Flags().GetBool("yes")
+	confirmation, _ := cmd.Flags().GetBool(flagYes)
 	if !confirmation {
 		msg := fmt.Sprintf("Set %s", args[0])
 		if val, _ := settings.String(args[0]); val != "" {
