@@ -167,7 +167,7 @@ export default {
 		phasesConfigured: Number,
 		phasesActive: Number,
 		chargerPhases1p3p: Boolean,
-		chargerPhases: Number,
+		chargerPhysicalPhases: Number,
 		minSoc: Number,
 		maxCurrent: Number,
 		minCurrent: Number,
@@ -183,7 +183,7 @@ export default {
 	},
 	computed: {
 		phasesOptions: function () {
-			if (this.chargerPhases > 0) {
+			if (this.chargerPhysicalPhases > 0) {
 				// known fixed phase configuration, no settings required
 				return [];
 			}

@@ -171,7 +171,7 @@ export default {
 		phasesConfigured: Number,
 		phasesActive: Number,
 		chargerPhases1p3p: Boolean,
-		chargerPhases: Number,
+		chargerPhysicalPhases: Number,
 		minCurrent: Number,
 		maxCurrent: Number,
 		chargeCurrent: Number,
