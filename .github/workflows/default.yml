@@ -1,7 +1,7 @@
 name: Default
 
 env:
-  GO_VERSION: ^1.22-alpha
+  GO_VERSION: ^1.22
 
 on:
   push:
