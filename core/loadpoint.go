@@ -1178,15 +1178,15 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batter
 	}
 
 	if mode == api.ModePV && lp.enabled && targetCurrent < minCurrent {
-		sitePowerAfterPhaseSwitch := sitePower
+		lowestAchievableSitePower := sitePower
 		if !lp.phaseTimer.IsZero() {
 			// calculate site power after a phase switch from activePhases phases -> 1 phase
 			// notes: activePhases can be 1, 2 or 3 and phaseTimer can only be active if lp current is already at minCurrent
-			sitePowerAfterPhaseSwitch -= Voltage * minCurrent * float64(activePhases-1)
+			lowestAchievableSitePower -= Voltage * minCurrent * float64(activePhases-1)
 		}
 		// kick off disable sequence
-		if sitePowerAfterPhaseSwitch >= lp.Disable.Threshold {
-			lp.log.DEBUG.Printf("site power (with lowest achievable charge power) %.0fW >= %.0fW disable threshold", sitePowerAfterPhaseSwitch, lp.Disable.Threshold)
+		if lowestAchievableSitePower >= lp.Disable.Threshold {
+			lp.log.DEBUG.Printf("site power (at lowest achievable charge power) %.0fW >= %.0fW disable threshold", lowestAchievableSitePower, lp.Disable.Threshold)
 
 			if lp.pvTimer.IsZero() {
 				lp.log.DEBUG.Printf("pv disable timer start: %v", lp.Disable.Delay)
