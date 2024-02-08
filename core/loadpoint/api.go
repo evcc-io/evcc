@@ -35,11 +35,11 @@ type API interface {
 	// GetMinCurrent returns the min charging current
 	GetMinCurrent() float64
 	// SetMinCurrent sets the min charging current
-	SetMinCurrent(float64)
+	SetMinCurrent(float64) error
 	// GetMaxCurrent returns the max charging current
 	GetMaxCurrent() float64
 	// SetMaxCurrent sets the max charging current
-	SetMaxCurrent(float64)
+	SetMaxCurrent(float64) error
 
 	// GetMode returns the charge mode
 	GetMode() api.ChargeMode
@@ -120,8 +120,8 @@ type API interface {
 	// charge progress
 	//
 
-	// GetPlanActive returns the active state of the planner
-	GetPlanActive() bool
+	// IsFastChargingActive indicates if fast charging with maximum power is active
+	IsFastChargingActive() bool
 	// GetRemainingDuration is the estimated remaining charging duration
 	GetRemainingDuration() time.Duration
 	// GetRemainingEnergy is the remaining charge energy in Wh

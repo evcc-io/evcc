@@ -1,9 +1,10 @@
-template: sma-inverter
+template: sma-inverter-speedwire
+covers: ["sma-inverter"]
 products:
   - brand: SMA
     description:
-      de: Wechselrichter
-      en: Inverter
+      de: Wechselrichter (Speedwire)
+      en: Inverter (Speedwire)
 params:
   - name: usage
     choice: ["pv", "battery"]

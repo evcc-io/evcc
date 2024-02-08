@@ -32,7 +32,7 @@ func (site *Site) SetBatteryMode(batMode api.BatteryMode) {
 
 func (site *Site) determineBatteryMode(loadpoints []loadpoint.API, smartCostActive bool) api.BatteryMode {
 	for _, lp := range loadpoints {
-		if lp.GetStatus() == api.StatusC && (smartCostActive || lp.GetMode() == api.ModeNow || lp.GetPlanActive()) {
+		if lp.GetStatus() == api.StatusC && (smartCostActive || lp.IsFastChargingActive()) {
 			return api.BatteryHold
 		}
 	}

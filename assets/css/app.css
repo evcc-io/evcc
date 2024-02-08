@@ -44,6 +44,7 @@
 	--evcc-box: var(--bs-white);
 	--evcc-default-text: var(--bs-gray-dark);
 	--evcc-gray: var(--bs-gray-medium);
+	--evcc-gray-50: #93949e80;
 
 	--evcc-accent1: var(--evcc-dark-yellow);
 	--evcc-accent2: var(--evcc-darker-green);
@@ -193,19 +194,27 @@ a:hover {
 	opacity: 0.2;
 }
 
+.btn-outline-primary {
+	--bs-btn-active-bg: var(--bs-primary);
+	--bs-btn-active-border-color: var(--bs-primary);
+}
+
 .btn-outline-primary,
 .btn-outline-primary:focus {
 	color: var(--bs-primary);
 	background-color: transparent;
 	border-color: var(--bs-primary);
 }
+
 .btn-outline-primary:hover {
 	color: var(--evcc-accent3) !important;
 	background-color: transparent !important;
 	border-color: var(--evcc-accent3) !important;
 }
+
+.btn-group > .btn-check + .btn-outline-primary:hover,
 .btn-outline-primary:active {
-	color: var(--evcc-default-text) !important;
+	color: var(--bs-white) !important;
 	background-color: var(--evcc-accent3) !important;
 	border-color: var(--evcc-accent3) !important;
 }
@@ -319,7 +328,6 @@ a:hover {
 
 .modal-body {
 	padding: 1rem 0 0;
-	overflow-x: hidden;
 }
 
 .modal-footer {
@@ -427,6 +435,9 @@ input::-webkit-datetime-edit {
 	background-color: var(--evcc-box);
 	color: var(--evcc-default-text);
 }
+.form-control:disabled {
+	color: var(--bs-gray-dark);
+}
 
 input[type="time"]::-webkit-calendar-picker-indicator {
 	display: none;
@@ -434,6 +445,13 @@ input[type="time"]::-webkit-calendar-picker-indicator {
 
 .table {
 	--bs-table-bg: transparent;
+}
+
+.badge {
+	--bs-badge-font-size: 0.8rem;
+	--bs-badge-padding-x: 0.75em;
+	--bs-badge-padding-y: 0.75em;
+	font-weight: normal;
 }
 
 /* larger check switch */

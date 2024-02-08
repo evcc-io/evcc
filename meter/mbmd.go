@@ -13,8 +13,8 @@ import (
 	"github.com/volkszaehler/mbmd/meters/sunspec"
 )
 
-// Modbus is an api.Meter implementation with configurable getters and setters.
-type Modbus struct {
+// ModbusMbmd is an api.Meter implementation with configurable getters and setters.
+type ModbusMbmd struct {
 	conn     *modbus.Connection
 	device   meters.Device
 	opPower  modbus.Operation
@@ -23,13 +23,13 @@ type Modbus struct {
 }
 
 func init() {
-	registry.Add("modbus", NewModbusFromConfig)
+	registry.Add("mbmd", NewModbusMbmdFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateModbus -b api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.PhasePowers,Powers,func() (float64, float64, float64, error)" -t "api.Battery,Soc,func() (float64, error)" -t "api.BatteryCapacity,Capacity,func() float64"
+//go:generate go run ../cmd/tools/decorate.go -f decorateModbusMbmd -b api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.PhasePowers,Powers,func() (float64, float64, float64, error)" -t "api.Battery,Soc,func() (float64, error)" -t "api.BatteryCapacity,Capacity,func() float64"
 
-// NewModbusFromConfig creates api.Meter from config
-func NewModbusFromConfig(other map[string]interface{}) (api.Meter, error) {
+// NewModbusMbmdFromConfig creates api.Meter from config
+func NewModbusMbmdFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
 		Model              string
 		capacity           `mapstructure:",squash"`
@@ -91,19 +91,21 @@ func NewModbusFromConfig(other map[string]interface{}) (api.Meter, error) {
 		return nil, err
 	}
 
-	m := &Modbus{
+	m := &ModbusMbmd{
 		conn:   conn,
 		device: device,
 	}
 
-	if err := modbus.ParseOperation(device, cc.Power, &m.opPower); err != nil {
+	m.opPower, err = modbus.ParseOperation(device, cc.Power)
+	if err != nil {
 		return nil, fmt.Errorf("invalid measurement for power: %s", cc.Power)
 	}
 
 	// decorate energy
 	var totalEnergy func() (float64, error)
 	if cc.Energy != "" {
-		if err := modbus.ParseOperation(device, cc.Energy, &m.opEnergy); err != nil {
+		m.opEnergy, err = modbus.ParseOperation(device, cc.Energy)
+		if err != nil {
 			return nil, fmt.Errorf("invalid measurement for energy: %s", cc.Energy)
 		}
 
@@ -131,17 +133,18 @@ func NewModbusFromConfig(other map[string]interface{}) (api.Meter, error) {
 	// decorate soc
 	var soc func() (float64, error)
 	if cc.Soc != "" {
-		if err := modbus.ParseOperation(device, cc.Soc, &m.opSoc); err != nil {
+		m.opSoc, err = modbus.ParseOperation(device, cc.Soc)
+		if err != nil {
 			return nil, fmt.Errorf("invalid measurement for soc: %s", cc.Soc)
 		}
 
 		soc = m.soc
 	}
 
-	return decorateModbus(m, totalEnergy, currentsG, voltagesG, powersG, soc, cc.capacity.Decorator()), nil
+	return decorateModbusMbmd(m, totalEnergy, currentsG, voltagesG, powersG, soc, cc.capacity.Decorator()), nil
 }
 
-func (m *Modbus) buildPhaseProviders(readings []string) (func() (float64, float64, float64, error), error) {
+func (m *ModbusMbmd) buildPhaseProviders(readings []string) (func() (float64, float64, float64, error), error) {
 	var res func() (float64, float64, float64, error)
 	if len(readings) > 0 {
 		if len(readings) != 3 {
@@ -150,9 +153,8 @@ func (m *Modbus) buildPhaseProviders(readings []string) (func() (float64, float6
 
 		phases := make([]func() (float64, error), 0, 3)
 		for idx, reading := range readings {
-			var opCurrent modbus.Operation
-
-			if err := modbus.ParseOperation(m.device, reading, &opCurrent); err != nil {
+			opCurrent, err := modbus.ParseOperation(m.device, reading)
+			if err != nil {
 				return nil, fmt.Errorf("invalid measurement [%d]: %s", idx, reading)
 			}
 
@@ -170,7 +172,7 @@ func (m *Modbus) buildPhaseProviders(readings []string) (func() (float64, float6
 }
 
 // floatGetter executes configured modbus read operation and implements func() (float64, error)
-func (m *Modbus) floatGetter(op modbus.Operation) (float64, error) {
+func (m *ModbusMbmd) floatGetter(op modbus.Operation) (float64, error) {
 	var res meters.MeasurementResult
 	var err error
 
@@ -201,16 +203,16 @@ func (m *Modbus) floatGetter(op modbus.Operation) (float64, error) {
 }
 
 // CurrentPower implements the api.Meter interface
-func (m *Modbus) CurrentPower() (float64, error) {
+func (m *ModbusMbmd) CurrentPower() (float64, error) {
 	return m.floatGetter(m.opPower)
 }
 
 // totalEnergy implements the api.MeterEnergy interface
-func (m *Modbus) totalEnergy() (float64, error) {
+func (m *ModbusMbmd) totalEnergy() (float64, error) {
 	return m.floatGetter(m.opEnergy)
 }
 
 // soc implements the api.Battery interface
-func (m *Modbus) soc() (float64, error) {
+func (m *ModbusMbmd) soc() (float64, error) {
 	return m.floatGetter(m.opSoc)
 }

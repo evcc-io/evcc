@@ -19,7 +19,7 @@
 					{{ vehicle.title }}
 				</button>
 			</li>
-			<li v-if="!isUnknown">
+			<li>
 				<button type="button" class="dropdown-item" @click="removeVehicle()">
 					<span v-if="connected">{{ $t("main.vehicle.unknown") }}</span>
 					<span v-else>{{ $t("main.vehicle.none") }}</span>
@@ -39,7 +39,6 @@ export default {
 		connected: Boolean,
 		id: [String, Number],
 		vehicles: Array,
-		isUnknown: Boolean,
 	},
 	emits: ["change-vehicle", "remove-vehicle"],
 	computed: {

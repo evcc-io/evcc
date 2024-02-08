@@ -7,17 +7,16 @@
 			data-testid="charging-plan"
 		>
 			<div class="value m-0 d-block align-items-baseline justify-content-center">
-				<button
-					class="value-button p-0"
-					:class="enabled ? 'evcc-default-text' : 'text-gray'"
-					@click="openModal"
-				>
+				<button class="value-button p-0" :class="buttonColor" @click="openModal">
 					<strong v-if="minSocEnabled" class="text-decoration-underline">
 						{{ minSocLabel }}
 					</strong>
 					<strong v-else-if="targetChargeEnabled">
 						<span class="text-decoration-underline"> {{ targetTimeLabel() }}</span>
-						<div class="extraValue text-nowrap">
+						<div
+							class="extraValue text-nowrap"
+							:class="{ 'text-warning': planOverrun }"
+						>
 							{{ targetSocLabel }}
 						</div>
 					</strong>
@@ -126,6 +125,7 @@ export default {
 		planActive: Boolean,
 		planEnergy: Number,
 		planTime: String,
+		planOverrun: Boolean,
 		rangePerSoc: Number,
 		smartCostLimit: Number,
 		smartCostType: String,
@@ -133,7 +133,7 @@ export default {
 		socBasedCharging: Boolean,
 		socPerKwh: Number,
 		vehicle: Object,
-		vehicleCapacity: Number,
+		capacity: Number,
 		vehicleSoc: Number,
 		vehicleTargetSoc: Number,
 	},
@@ -145,6 +145,15 @@ export default {
 		};
 	},
 	computed: {
+		buttonColor: function () {
+			if (this.planOverrun) {
+				return "text-warning";
+			}
+			if (!this.enabled) {
+				return "text-gray";
+			}
+			return "evcc-default-text";
+		},
 		minSoc: function () {
 			return this.vehicle?.minSoc;
 		},
@@ -199,13 +208,13 @@ export default {
 			}
 			return fmtEnergy(
 				this.planEnergy,
-				optionStep(this.vehicleCapacity || 100),
+				optionStep(this.capacity || 100),
 				this.fmtKWh,
 				this.$t("main.targetEnergy.noLimit")
 			);
 		},
 		apiVehicle: function () {
-			return `vehicles/${this.vehicle.name}/`;
+			return `vehicles/${this.vehicle?.name}/`;
 		},
 		apiLoadpoint: function () {
 			return `loadpoints/${this.id}/`;

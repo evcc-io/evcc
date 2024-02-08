@@ -126,7 +126,7 @@ jobs:
         run: make ui
 
       - name: Cache dist
-        uses: actions/cache/save@v3
+        uses: actions/cache/save@v4
         id: cache-dist
         with:
           path: dist

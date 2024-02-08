@@ -1,0 +1,15 @@
+template: thor
+products:
+  - brand: my-PV
+    description:
+      generic: AC•THOR
+params:
+  - name: usage
+    choice: ["aux"]
+  - name: host
+render: |
+  type: custom
+  power:
+    source: http
+    uri: http://{{ .host }}/data.jsn
+    jq: .power_act

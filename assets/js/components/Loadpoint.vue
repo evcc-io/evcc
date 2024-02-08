@@ -12,19 +12,11 @@
 						{{ loadpointTitle }}
 					</div>
 				</h3>
-				<LoadpointSettingsButton
-					v-if="settingsButtonVisible"
-					:id="id"
-					class="d-block d-sm-none"
-				/>
+				<LoadpointSettingsButton :id="id" class="d-block d-sm-none" />
 			</div>
 			<div class="mb-3 d-flex align-items-center">
 				<Mode class="flex-grow-1" :mode="mode" @updated="setTargetMode" />
-				<LoadpointSettingsButton
-					v-if="settingsButtonVisible"
-					:id="id"
-					class="d-none d-sm-block ms-2"
-				/>
+				<LoadpointSettingsButton :id="id" class="d-none d-sm-block ms-2" />
 			</div>
 		</div>
 		<LoadpointSettingsModal
@@ -151,18 +143,15 @@ export default {
 		// charging: Boolean,
 		enabled: Boolean,
 		vehicleDetectionActive: Boolean,
-		vehiclePresent: Boolean,
 		vehicleRange: Number,
 		vehicleSoc: Number,
 		vehicleName: String,
-		vehicleTitle: String,
 		vehicleIcon: String,
 		vehicleTargetSoc: Number,
-		vehicleCapacity: Number,
-		vehicleFeatureOffline: Boolean,
 		vehicles: Array,
 		planActive: Boolean,
 		planProjectedStart: String,
+		planOverrun: Boolean,
 		planEnergy: Number,
 		planTime: String,
 		effectivePlanTime: String,
@@ -181,6 +170,7 @@ export default {
 		phases: Number,
 		phasesConfigured: Number,
 		phasesActive: Number,
+		phases1p3p: Boolean,
 		minCurrent: Number,
 		maxCurrent: Number,
 		chargeCurrent: Number,
@@ -214,6 +204,9 @@ export default {
 		vehicle: function () {
 			return this.vehicles?.find((v) => v.name === this.vehicleName);
 		},
+		vehicleTitle: function () {
+			return this.vehicle?.title;
+		},
 		loadpointTitle: function () {
 			return this.title || this.$t("main.loadpoint.fallbackName");
 		},
@@ -232,20 +225,23 @@ export default {
 		settingsModal: function () {
 			return this.collectProps(LoadpointSettingsModal);
 		},
-		settingsButtonVisible: function () {
-			return this.$hiddenFeatures() || [0, 1, 3].includes(this.phasesConfigured);
-		},
 		vehicleProps: function () {
 			return this.collectProps(Vehicle);
 		},
 		showChargingIndicator: function () {
 			return this.charging && this.chargePower > 0;
 		},
+		vehicleKnown: function () {
+			return !!this.vehicleName;
+		},
+		vehicleHasSoc: function () {
+			return this.vehicleKnown && !this.vehicle?.features?.includes("Offline");
+		},
 		socBasedCharging: function () {
-			return (!this.vehicleFeatureOffline && this.vehiclePresent) || this.vehicleSoc > 0;
+			return this.vehicleHasSoc || this.vehicleSoc > 0;
 		},
 		socBasedPlanning: function () {
-			return this.vehicleSoc > 0 && this.vehicleCapacity > 0;
+			return this.socBasedCharging && this.vehicle?.capacity > 0;
 		},
 	},
 	watch: {

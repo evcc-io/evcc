@@ -48,9 +48,11 @@ func runMeter(cmd *cobra.Command, args []string) {
 
 	meters := config.Meters().Devices()
 
+	var flagUsed bool
 	if mode != api.BatteryUnknown {
-		for _, dev := range meters {
-			v := dev.Instance()
+		flagUsed = true
+
+		for _, v := range config.Instances(meters) {
 			if b, ok := v.(api.BatteryController); ok {
 				if err := b.SetBatteryMode(mode); err != nil {
 					log.FATAL.Fatalln("set battery mode:", err)
@@ -64,11 +66,13 @@ func runMeter(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	d := dumper{len: len(meters)}
-	for _, dev := range meters {
-		v := dev.Instance()
+	if !flagUsed {
+		d := dumper{len: len(meters)}
+		for _, dev := range meters {
+			v := dev.Instance()
 
-		d.DumpWithHeader(dev.Config().Name, v)
+			d.DumpWithHeader(dev.Config().Name, v)
+		}
 	}
 
 	// wait for shutdown

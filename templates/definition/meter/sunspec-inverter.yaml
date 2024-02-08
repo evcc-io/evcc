@@ -21,7 +21,7 @@ params:
   - name: capacity
     advanced: true
 render: |
-  type: modbus
+  type: mbmd
   {{- include "modbus" . }}
   {{- if eq .usage "grid" }}
   model: sunspec
@@ -63,7 +63,7 @@ render: |
   power: Power
   energy: Export
   {{- if eq .usage "battery" }}
-  soc: ChargeState
+  soc: 124:ChaState
   {{- if .capacity }}
   capacity: {{ .capacity }} # kWh
   {{- end }}

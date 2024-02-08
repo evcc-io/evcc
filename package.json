@@ -22,7 +22,10 @@
     "@vitejs/plugin-legacy": "^4.0.2",
     "@vitejs/plugin-vue": "^4.1.0",
     "@vue/compiler-sfc": "^3.2.30",
+    "@vue/eslint-config-prettier": "^8.0.0",
+    "@vue/eslint-config-typescript": "^12.0.0",
     "@vue/test-utils": "^2.2.7",
+    "@vue/tsconfig": "^0.4.0",
     "axios": "^1.2.1",
     "body-parser": "^1.20.2",
     "bootstrap": "^5.2.2",
@@ -42,6 +45,7 @@
     "prettier-plugin-toml": "^2.0.1",
     "rollup-plugin-visualizer": "^5.8.3",
     "smoothscroll-polyfill": "^0.4.4",
+    "typescript": "^5.2.2",
     "vite": "^4.5.1",
     "vite-plugin-toml": "^0.6.0",
     "vitest": "^1.1.0",
@@ -50,6 +54,7 @@
     "vue-hot-reload-api": "^2.3.4",
     "vue-i18n": "^9.2.2",
     "vue-router": "^4.0.12",
+    "vue-tsc": "^1.8.19",
     "wait-on": "^7.0.1"
   },
   "engines": {

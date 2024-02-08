@@ -3,6 +3,7 @@ release:
   github:
     owner: evcc-io
     name: evcc
+  mode: replace
 
 builds:
   - id: evcc
@@ -11,7 +12,7 @@ builds:
       - -trimpath
       - -tags=release
     ldflags:
-      - -X github.com/evcc-io/evcc/server.Version={{ .Version }} -s -w
+      - -X github.com/evcc-io/evcc/server.Version={{ .Version }} -X github.com/evcc-io/evcc/vehicle/tesla-vehicle-command.TESLA_CLIENT_ID={{ .Env.TESLA_CLIENT_ID }} -s -w
     env:
       - CGO_ENABLED=0
     goos:
@@ -62,6 +63,7 @@ changelog:
       - "^bump"
       - "^docs:"
       - "^test:"
+      - "^Translations"
 
 nfpms:
   - id: default

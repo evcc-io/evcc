@@ -15,10 +15,14 @@ const api = axios.create({
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    let message = error.message;
+    const message = [`${error.message}.`];
+    if (error.response?.data?.error) {
+      message.push(`${error.response.data.error}.`);
+    }
     if (error.config) {
+      const method = error.config.method.toUpperCase();
       const url = error.config.baseURL + error.config.url;
-      message += `: API request failed ${url}`;
+      message.push(`${method} ${url}`);
     }
     window.app.raise({ message });
     return Promise.reject(error);

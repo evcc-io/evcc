@@ -16,6 +16,8 @@ import (
 	"github.com/evcc-io/evcc/util"
 )
 
+//go:generate mockgen -package charger -destination eebus_test_mock.go github.com/enbility/cemd/emobility EmobilityI
+
 const (
 	maxIdRequestTimespan         = time.Second * 120
 	idleFactor                   = 0.6

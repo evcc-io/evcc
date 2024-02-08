@@ -8,9 +8,8 @@ import settings from "./settings";
 // https://github.com/joker-x/languages.js/blob/master/languages.json
 export const LOCALES = {
   ar: ["Arabic", "العربية"],
-  bh: ["Bihari", "भोजपुरी"],
+  bg: ["Bulgarian", "Български"],
   ca: ["Catalan", "Català"],
-  "zh-Hans": ["Chinese (Simplified)", "简体中文"],
   cs: ["Czech", "Česky"],
   da: ["Danish", "Dansk"],
   de: ["German", "Deutsch"],
@@ -30,17 +29,14 @@ export const LOCALES = {
   ru: ["Russian", "Русский"],
   sl: ["Slovenian", "Slovenščina"],
   sv: ["Swedish", "Svenska"],
+  tr: ["Turkish", "Türkçe"],
   uk: ["Ukrainian", "Українська"],
+  "zh-Hans": ["Chinese (Simplified)", "简体中文"],
 };
 
-function getBrowserLocale() {
-  const navigatorLocale =
-    navigator.languages !== undefined ? navigator.languages[0] : navigator.language;
-  if (!navigatorLocale) {
-    return undefined;
-  }
-  return navigatorLocale.trim().split(/-|_/)[0];
-}
+export const DEFAULT_LOCALE = "en";
+const htmlLang = document.querySelector("html").getAttribute("lang");
+const DEFAULT_BROWSER_LOCALE = htmlLang?.length == 2 ? htmlLang : DEFAULT_LOCALE;
 
 export function getLocalePreference() {
   return settings.locale;
@@ -48,7 +44,7 @@ export function getLocalePreference() {
 
 export function removeLocalePreference(i18n) {
   settings.locale = null;
-  setI18nLanguage(i18n, getBrowserLocale());
+  setI18nLanguage(i18n, DEFAULT_BROWSER_LOCALE);
   ensureCurrentLocaleMessages(i18n);
 }
 
@@ -63,7 +59,7 @@ export function setLocalePreference(i18n, locale) {
 }
 
 function getLocale() {
-  return getLocalePreference() || getBrowserLocale();
+  return getLocalePreference() || DEFAULT_BROWSER_LOCALE;
 }
 
 export default function setupI18n() {
@@ -71,8 +67,8 @@ export default function setupI18n() {
     legacy: true,
     silentFallbackWarn: true,
     silentTranslationWarn: true,
-    locale: "en",
-    fallbackLocale: "en",
+    locale: DEFAULT_LOCALE,
+    fallbackLocale: DEFAULT_LOCALE,
     messages: { en },
   });
   setI18nLanguage(i18n.global, getLocale());
