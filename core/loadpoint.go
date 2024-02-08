@@ -52,7 +52,7 @@ const (
 	minActiveCurrent = 1.0 // minimum current at which a phase is treated as active
 	minActiveVoltage = 207 // minimum voltage at which a phase is treated as active
 
-	enabledCommandDuration = 60 * time.Second // allow out of sync during this timespan
+	chargerSwitcheduration = 60 * time.Second // allow out of sync during this timespan
 	phaseSwitchDuration    = 60 * time.Second // allow out of sync and do not measure phases during this timespan
 )
 
@@ -132,7 +132,7 @@ type Loadpoint struct {
 	chargeCurrent       float64   // Charger current limit
 	socUpdated          time.Time // Soc updated timestamp (poll: connected)
 	vehicleDetect       time.Time // Vehicle connected timestamp
-	enabledChanged      time.Time // Charger enabled/disabled timestamp
+	chargerSwitched     time.Time // Charger enabled/disabled timestamp
 	phasesSwitched      time.Time // Phase switch timestamp
 	vehicleDetectTicker *clock.Ticker
 	vehicleIdentifier   string
@@ -649,7 +649,7 @@ func (lp *Loadpoint) syncCharger() error {
 		return err
 	}
 
-	if lp.enabledCommandCompleted() {
+	if lp.chargerUpdateCompleted() {
 		defer func() {
 			lp.setEnabled(enabled, false)
 		}()
@@ -658,7 +658,7 @@ func (lp *Loadpoint) syncCharger() error {
 	if !enabled && lp.charging() {
 		lp.log.WARN.Println("charger logic error: disabled but charging")
 		enabled = true // treat as enabled when charging
-		if lp.enabledCommandCompleted() {
+		if lp.chargerUpdateCompleted() {
 			if err := lp.charger.Enable(true); err != nil { // also enable charger to correct internal state
 				return err
 			}
@@ -678,7 +678,7 @@ func (lp *Loadpoint) syncCharger() error {
 
 			// smallest adjustment most PWM-Controllers can do is: 100%÷256×0,6A = 0.234A
 			if math.Abs(lp.chargeCurrent-current) > 0.23 {
-				if lp.enabledCommandCompleted() {
+				if lp.chargerUpdateCompleted() {
 					lp.log.WARN.Printf("charger logic error: current mismatch (got %.3gA, expected %.3gA)", current, lp.chargeCurrent)
 				}
 				lp.chargeCurrent = current
@@ -690,7 +690,7 @@ func (lp *Loadpoint) syncCharger() error {
 	}
 
 	// ignore disabled state if vehicle was disconnected ^(lp.enabled && ^lp.connected)
-	if lp.enabledCommandCompleted() && lp.phaseSwitchCompleted() && (enabled || lp.connected()) {
+	if lp.chargerUpdateCompleted() && lp.phaseSwitchCompleted() && (enabled || lp.connected()) {
 		lp.log.WARN.Printf("charger out of sync: expected %vd, got %vd", status[lp.enabled], status[enabled])
 	}
 
@@ -1029,7 +1029,7 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64) bo
 	// - https://github.com/evcc-io/evcc/issues/2613
 	measuredPhases := lp.getMeasuredPhases()
 	if phases > 0 && phases < measuredPhases {
-		if lp.enabledCommandCompleted() {
+		if lp.chargerUpdateCompleted() {
 			lp.log.WARN.Printf("ignoring inconsistent phases: %dp < %dp observed active", phases, measuredPhases)
 		}
 		lp.resetMeasuredPhases()
@@ -1466,18 +1466,18 @@ func (lp *Loadpoint) stopWakeUpTimer() {
 	lp.wakeUpTimer.Stop()
 }
 
-func (lp *Loadpoint) setEnabled(enabled bool, chargerEnabledChanged bool) {
+func (lp *Loadpoint) setEnabled(enabled bool, chargerSwitched bool) {
 	lp.log.DEBUG.Printf("charger %s", status[enabled])
 	lp.enabled = enabled
 	lp.publish(keys.Enabled, lp.enabled)
-	if chargerEnabledChanged {
-		lp.enabledChanged = lp.clock.Now()
+	if chargerSwitched {
+		lp.chargerSwitched = lp.clock.Now()
 	}
 }
 
-// enabledCommandCompleted returns true if enable command should be already processed by the charger (so we can try to sync charger and loadpoint)
-func (lp *Loadpoint) enabledCommandCompleted() bool {
-	return time.Since(lp.enabledChanged) > enabledCommandDuration
+// chargerUpdateCompleted returns true if enable command should be already processed by the charger (so we can try to sync charger and loadpoint)
+func (lp *Loadpoint) chargerUpdateCompleted() bool {
+	return time.Since(lp.chargerSwitched) > chargerSwitcheduration
 }
 
 // phaseSwitchCompleted returns true if phase switch command should be already processed by the charger (so we can try to sync charger and loadpoint and are able to measure currents)
