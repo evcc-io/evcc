@@ -97,7 +97,7 @@ render: |
               register:
                 address: 0xE010 # StorageRemoteCtrl_DischargeLimit
                 type: writemultiple
-                encoding: float32s
+                encoding: float32
       - case: 2 # hold
         set:
           source: sequence
@@ -119,7 +119,7 @@ render: |
               register:
                 address: 0xE010 # StorageRemoteCtrl_DischargeLimit
                 type: writemultiple
-                encoding: float32s
+                encoding: float32
       - case: 3 # charge
         set:
           source: sequence
@@ -141,7 +141,7 @@ render: |
               register:
                 address: 0xE010 # StorageRemoteCtrl_DischargeLimit
                 type: writemultiple
-                encoding: float32s
+                encoding: float32
   {{- if .capacity }}
   capacity: {{ .capacity }} # kWh
   {{- end }}
