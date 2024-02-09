@@ -1,16 +1,11 @@
 package tronity
 
-// https://app.platform.tronity.io/docs#operation
+// https://app.tronity.tech/docs#section/Authentication-Flow
 
 const (
-	ReadBattery          = "read_battery"            // Read EV battery's capacity and state of charge
-	ReadCharge           = "read_charge"             // Know whether vehicle is charging
-	ReadLocation         = "read_location"           // Access location
-	ReadOdometer         = "read_odometer"           // Retrieve total distance traveled
-	ReadVehicleInfo      = "read_vehicle_info"       // Know make, model, and year
-	ReadVIN              = "read_vin"                // Read VIN
-	WriteChargeStartStop = "write_charge_start_stop" // Start or stop your vehicle's charging
-	WriteWakeUp          = "write_wake_up"           // Wake up car. Only valid for Tesla
+	ReadCharge           = "tronity_charging" // Know whether vehicle is charging
+	ReadOdometer         = "tronity_odometer" // Retrieve total distance traveled
+	WriteChargeStartStop = "tronity_control_charging"
 )
 
 type Vehicles struct {
@@ -26,7 +21,6 @@ type Vehicle struct {
 }
 
 type Bulk struct {
-	VIN      string
 	Odometer float64
 	Range    float64
 	Level    float64
