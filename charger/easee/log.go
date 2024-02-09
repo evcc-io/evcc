@@ -8,6 +8,9 @@ import (
 	"github.com/philippseith/signalr"
 )
 
+// enumerate instances
+var InstanceCount = 0
+
 // Logger is a simple logger interface
 type Logger interface {
 	Println(v ...interface{})
