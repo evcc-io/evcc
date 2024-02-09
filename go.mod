@@ -208,3 +208,5 @@ replace github.com/grid-x/modbus => github.com/evcc-io/modbus v0.0.0-20230705160
 replace github.com/imdario/mergo => github.com/imdario/mergo v0.3.16
 
 replace github.com/spf13/viper => github.com/spf13/viper v1.18.1
+
+replace github.com/mabunixda/wattpilot => github.com/mabunixda/wattpilot v1.6.2

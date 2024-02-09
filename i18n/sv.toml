@@ -282,6 +282,7 @@ label = "Min. laddning %"
 
 [main.loadpointSettings.phasesConfigured]
 label = "Faser"
+no1p3pSupport = "Hur är din laddbox ansluten?"
 phases_0 = "automatisk växling"
 phases_1 = "1-fas"
 phases_1_hint = "({min} till {max})"
