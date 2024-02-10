@@ -592,7 +592,7 @@ func configureMessengers(conf messagingConfig, vehicles push.Vehicles, valueChan
 	return messageChan, nil
 }
 
-func configureTariff(name string, conf config.Typed, t *api.Tariff, wg *sync.WaitGroup) {
+func configureTariff(name string, conf config.Typed, t *tariff.Tariffs, wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	if conf.Type == "" {
@@ -605,25 +605,24 @@ func configureTariff(name string, conf config.Typed, t *api.Tariff, wg *sync.Wai
 		return
 	}
 
-	*t = res
+	t.SetInstance(name, res)
 }
 
 func configureTariffs(conf tariffConfig) (*tariff.Tariffs, error) {
-	tariffs := tariff.Tariffs{
-		Currency: currency.EUR,
+	c := currency.EUR
+	if conf.Currency != "" {
+		c = currency.MustParseISO(conf.Currency)
 	}
 
-	if conf.Currency != "" {
-		tariffs.Currency = currency.MustParseISO(conf.Currency)
-	}
+	tariffs := tariff.NewTariffs(c)
 
 	var wg sync.WaitGroup
 	wg.Add(4)
 
-	go configureTariff("grid", conf.Grid, &tariffs.Grid, &wg)
-	go configureTariff("feedin", conf.FeedIn, &tariffs.FeedIn, &wg)
-	go configureTariff("co2", conf.Co2, &tariffs.Co2, &wg)
-	go configureTariff("planner", conf.Planner, &tariffs.Planner, &wg)
+	go configureTariff("grid", conf.Grid, tariffs, &wg)
+	go configureTariff("feedin", conf.FeedIn, tariffs, &wg)
+	go configureTariff("co2", conf.Co2, tariffs, &wg)
+	go configureTariff("planner", conf.Planner, tariffs, &wg)
 
 	wg.Wait()
 

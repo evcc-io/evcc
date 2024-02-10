@@ -422,10 +422,10 @@ func testConfigHandler(w http.ResponseWriter, r *http.Request) {
 		instance, err = testConfig(id, class, req, meter.NewFromConfig, config.Meters())
 
 	case templates.Vehicle:
-		instance, err = testDevice(id, class, req, vehicle.NewFromConfig, config.Vehicles())
+		instance, err = testConfig(id, class, req, vehicle.NewFromConfig, config.Vehicles())
 
 	case templates.Tariff:
-		instance, err = testDevice(id, class, req, tariff.NewFromConfig, config.Tariffs())
+		instance, err = testConfig(id, class, req, tariff.NewFromConfig, config.Tariffs())
 	}
 
 	if err != nil {

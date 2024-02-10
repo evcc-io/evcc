@@ -87,7 +87,7 @@ type Site struct {
 	batteryDischargeControl bool    // prevent battery discharge for fast and planned charging
 
 	loadpoints  []*Loadpoint             // Loadpoints
-	tariffs     *tariff.Tariffs          // Tariffs
+	tariffs     tariff.API               // Tariffs
 	coordinator *coordinator.Coordinator // Vehicles
 	prioritizer *prioritizer.Prioritizer // Power budgets
 	stats       *Stats                   // Stats
@@ -140,7 +140,7 @@ func NewSiteFromConfig(
 		})
 	}
 
-	tariff := site.GetTariff(PlannerTariff)
+	tariff := site.GetTariff(tariff.Planner)
 
 	// give loadpoints access to vehicles and database
 	for _, lp := range loadpoints {
@@ -790,7 +790,7 @@ func (site *Site) update(lp Updater) {
 	}
 
 	var smartCostActive bool
-	if tariff := site.GetTariff(PlannerTariff); tariff != nil && tariff.Type() != api.TariffTypePriceStatic {
+	if tariff := site.GetTariff(tariff.Planner); tariff != nil && tariff.Type() != api.TariffTypePriceStatic {
 		rates, err := tariff.Rates()
 
 		var rate api.Rate
@@ -864,7 +864,7 @@ func (site *Site) prepare() {
 	site.publish(keys.Currency, site.tariffs.Currency)
 	site.publish(keys.SmartCostActive, false)
 	site.publish(keys.SmartCostLimit, site.smartCostLimit)
-	if tariff := site.GetTariff(PlannerTariff); tariff != nil {
+	if tariff := site.GetTariff(tariff.Planner); tariff != nil {
 		site.publish(keys.SmartCostType, tariff.Type())
 	} else {
 		site.publish(keys.SmartCostType, nil)

@@ -9,18 +9,13 @@ import (
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/server/db/settings"
+	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util/config"
 )
 
 var _ site.API = (*Site)(nil)
 
 var ErrBatteryNotConfigured = errors.New("battery not configured")
-
-const (
-	GridTariff    = "grid"
-	FeedinTariff  = "feedin"
-	PlannerTariff = "planner"
-)
 
 // isConfigurable checks if the meter is configurable
 func isConfigurable(ref string) bool {
@@ -279,34 +274,31 @@ func (site *Site) SetSmartCostLimit(val float64) error {
 }
 
 // GetTariff returns the respective tariff if configured or nil
-func (site *Site) GetTariff(tariff string) api.Tariff {
+func (site *Site) GetTariff(tf string) api.Tariff {
 	site.RLock()
 	defer site.RUnlock()
 
-	switch tariff {
-	case GridTariff:
-		return site.tariffs.Grid
+	switch tf {
+	case tariff.Grid, tariff.Feedin, tariff.Co2:
+		return site.tariffs.GetInstance(tf)
 
-	case FeedinTariff:
-		return site.tariffs.FeedIn
-
-	case PlannerTariff:
+	case tariff.Planner:
 		switch {
-		case site.tariffs.Planner != nil:
+		case site.tariffs.GetInstance(tariff.Planner) != nil:
 			// prio 0: manually set planner tariff
-			return site.tariffs.Planner
+			return site.tariffs.GetInstance(tariff.Planner)
 
-		case site.tariffs.Grid != nil && site.tariffs.Grid.Type() == api.TariffTypePriceForecast:
+		case site.tariffs.GetInstance(tariff.Grid) != nil && site.tariffs.GetInstance(tariff.Grid).Type() == api.TariffTypePriceForecast:
 			// prio 1: grid tariff with forecast
-			return site.tariffs.Grid
+			return site.tariffs.GetInstance(tariff.Grid)
 
-		case site.tariffs.Co2 != nil:
+		case site.tariffs.GetInstance(tariff.Co2) != nil:
 			// prio 2: co2 tariff
-			return site.tariffs.Co2
+			return site.tariffs.GetInstance(tariff.Co2)
 
 		default:
 			// prio 3: static grid tariff
-			return site.tariffs.Grid
+			return site.tariffs.GetInstance(tariff.Grid)
 		}
 
 	default:
