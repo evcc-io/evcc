@@ -94,6 +94,8 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, cache *util.Cache) {
 		"deletedevice":            {[]string{"DELETE", "OPTIONS"}, "/config/devices/{class:[a-z]+}/{id:[0-9.]+}", deleteDeviceHandler},
 		"testconfig":              {[]string{"POST", "OPTIONS"}, "/config/test/{class:[a-z]+}", testConfigHandler},
 		"testmerged":              {[]string{"POST", "OPTIONS"}, "/config/test/{class:[a-z]+}/merge/{id:[0-9.]+}", testConfigHandler},
+		"tariffs":                 {[]string{"GET"}, "/config/tariffs", tariffsHandler(site)},
+		"updatetariffs":           {[]string{"PUT", "OPTIONS"}, "/config/tariffs", updateTariffsHandler(site)},
 		"buffersoc":               {[]string{"POST", "OPTIONS"}, "/buffersoc/{value:[0-9.]+}", floatHandler(site.SetBufferSoc, site.GetBufferSoc)},
 		"bufferstartsoc":          {[]string{"POST", "OPTIONS"}, "/bufferstartsoc/{value:[0-9.]+}", floatHandler(site.SetBufferStartSoc, site.GetBufferStartSoc)},
 		"batterydischargecontrol": {[]string{"POST", "OPTIONS"}, "/batterydischargecontrol/{value:[a-z]+}", boolHandler(site.SetBatteryDischargeControl, site.GetBatteryDischargeControl)},

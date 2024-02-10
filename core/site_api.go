@@ -273,6 +273,11 @@ func (site *Site) SetSmartCostLimit(val float64) error {
 	return nil
 }
 
+// GetTariffs returns the tariffs api
+func (site *Site) GetTariffs() tariff.API {
+	return site.tariffs
+}
+
 // GetTariff returns the respective tariff if configured or nil
 func (site *Site) GetTariff(tf string) api.Tariff {
 	site.RLock()

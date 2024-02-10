@@ -861,7 +861,7 @@ func (site *Site) prepare() {
 	site.publish(keys.BatteryDischargeControl, site.batteryDischargeControl)
 	site.publish(keys.ResidualPower, site.ResidualPower)
 
-	site.publish(keys.Currency, site.tariffs.Currency)
+	site.publish(keys.Currency, site.tariffs.GetCurrency())
 	site.publish(keys.SmartCostActive, false)
 	site.publish(keys.SmartCostLimit, site.smartCostLimit)
 	if tariff := site.GetTariff(tariff.Planner); tariff != nil {

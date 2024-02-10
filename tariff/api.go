@@ -6,7 +6,8 @@ import (
 )
 
 type API interface {
-	Currency() currency.Unit
+	GetCurrency() currency.Unit
+	SetCurrency(string) error
 
 	GetRef(ref string) string
 	SetRef(ref, value string)

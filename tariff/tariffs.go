@@ -10,6 +10,8 @@ import (
 )
 
 const (
+	settingsPrefix = "tariffs."
+
 	Grid    = "grid"
 	Feedin  = "feedin"
 	Planner = "planner"
@@ -42,7 +44,7 @@ func currentPrice(t api.Tariff) (float64, error) {
 }
 
 func getRef(ref string, t api.Tariff) string {
-	val, err := settings.String("tariffs." + ref)
+	val, err := settings.String(settingsPrefix + ref)
 	if err == nil && val != "" {
 		return val
 	}
@@ -52,8 +54,17 @@ func getRef(ref string, t api.Tariff) string {
 	return ""
 }
 
-func (t *Tariffs) Currency() currency.Unit {
+func (t *Tariffs) GetCurrency() currency.Unit {
 	return t.currency
+}
+
+func (t *Tariffs) SetCurrency(s string) error {
+	c, err := currency.ParseISO(s)
+	if err == nil {
+		t.currency = c
+		settings.SetString(settingsPrefix+"currency", s)
+	}
+	return err
 }
 
 func (t *Tariffs) GetRef(ref string) string {
@@ -78,7 +89,7 @@ func (t *Tariffs) SetRef(ref, value string) {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 
-	settings.SetString("tariffs."+ref, value)
+	settings.SetString(settingsPrefix+ref, value)
 }
 
 func (t *Tariffs) GetInstance(ref string) api.Tariff {

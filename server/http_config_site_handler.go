@@ -27,16 +27,6 @@ func siteHandler(site site.API) http.HandlerFunc {
 	}
 }
 
-func validateRefs(w http.ResponseWriter, refs []string) bool {
-	for _, m := range refs {
-		if _, err := config.Meters().ByName(m); err != nil {
-			jsonError(w, http.StatusBadRequest, err)
-			return false
-		}
-	}
-	return true
-}
-
 // siteHandler returns a device configurations by class
 func updateSiteHandler(site site.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -57,7 +47,7 @@ func updateSiteHandler(site site.API) http.HandlerFunc {
 		}
 
 		if payload.Grid != nil {
-			if *payload.Grid != "" && !validateRefs(w, []string{*payload.Grid}) {
+			if *payload.Grid != "" && !validateRefs(w, config.Meters(), []string{*payload.Grid}) {
 				return
 			}
 
@@ -66,7 +56,7 @@ func updateSiteHandler(site site.API) http.HandlerFunc {
 		}
 
 		if payload.PV != nil {
-			if !validateRefs(w, *payload.PV) {
+			if !validateRefs(w, config.Meters(), *payload.PV) {
 				return
 			}
 
@@ -75,7 +65,7 @@ func updateSiteHandler(site site.API) http.HandlerFunc {
 		}
 
 		if payload.Battery != nil {
-			if !validateRefs(w, *payload.Battery) {
+			if !validateRefs(w, config.Meters(), *payload.Battery) {
 				return
 			}
 

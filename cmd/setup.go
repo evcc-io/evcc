@@ -626,7 +626,7 @@ func configureTariffs(conf tariffConfig) (*tariff.Tariffs, error) {
 
 	wg.Wait()
 
-	return &tariffs, nil
+	return tariffs, nil
 }
 
 func configureDevices(conf globalConfig) error {
