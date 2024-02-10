@@ -590,11 +590,17 @@ func (lp *Loadpoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	lp.publish(keys.DisableThreshold, lp.Disable.Threshold)
 
 	lp.publish(keys.PhasesConfigured, lp.configuredPhases)
-	lp.publish(keys.Phases1p3p, lp.hasPhaseSwitching())
+	lp.publish(keys.ChargerPhases1p3p, lp.hasPhaseSwitching())
 	lp.publish(keys.PhasesEnabled, lp.phases)
 	lp.publish(keys.PhasesActive, lp.ActivePhases())
 	lp.publishTimer(phaseTimer, 0, timerInactive)
 	lp.publishTimer(pvTimer, 0, timerInactive)
+
+	if phases := lp.getChargerPhysicalPhases(); phases != 0 {
+		lp.publish(keys.ChargerPhysicalPhases, phases)
+	} else {
+		lp.publish(keys.ChargerPhysicalPhases, nil)
+	}
 
 	// charger features
 	for _, f := range []api.Feature{api.IntegratedDevice, api.Heating} {
@@ -1154,9 +1160,15 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batter
 	}
 
 	if mode == api.ModePV && lp.enabled && targetCurrent < minCurrent {
+		projectedSitePower := sitePower
+		if !lp.phaseTimer.IsZero() {
+			// calculate site power after a phase switch from activePhases phases -> 1 phase
+			// notes: activePhases can be 1, 2 or 3 and phaseTimer can only be active if lp current is already at minCurrent
+			projectedSitePower -= Voltage * minCurrent * float64(activePhases-1)
+		}
 		// kick off disable sequence
-		if sitePower >= lp.Disable.Threshold && lp.phaseTimer.IsZero() {
-			lp.log.DEBUG.Printf("site power %.0fW >= %.0fW disable threshold", sitePower, lp.Disable.Threshold)
+		if projectedSitePower >= lp.Disable.Threshold {
+			lp.log.DEBUG.Printf("projected site power %.0fW >= %.0fW disable threshold", projectedSitePower, lp.Disable.Threshold)
 
 			if lp.pvTimer.IsZero() {
 				lp.log.DEBUG.Printf("pv disable timer start: %v", lp.Disable.Delay)
