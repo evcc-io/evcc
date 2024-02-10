@@ -1,6 +1,8 @@
 [batterySettings]
 batteryLevel = "Ladenivå"
 capacity = "{energy} av {total}"
+disclaimerHint = "Merk:"
+disclaimerText = "Kun relevant i PV-modus. Ladeadferden justeres deretter."
 legendBottomName = "Hjemmelading har prioritet"
 legendBottomSubline = "ikke bruk til lading"
 legendMiddleName = "kjøretøy først"
@@ -10,7 +12,6 @@ legendTopAutostart = "starter automatisk"
 legendTopName = "batteriassistert lading"
 legendTopSubline = "uten avbrudd"
 modalTitle = "Batteriinnstillinger"
-note = "Merk: Kun relevant i PV-modus. Ladeadferden justeres deretter."
 
 [batterySettings.bufferStart]
 full = "når det er nesten fullt"
@@ -157,7 +158,6 @@ modalTitle = "Er du sikker på at du vil utføre omstart?"
 vehicles = "Parkering"
 
 [main.chargingPlan]
-activeLabel = "{time}"
 arrivalTab = "Ankomst"
 departureTab = "Avgang"
 modalTitle = "Ladeplan"
@@ -193,7 +193,6 @@ solar = "Solenergi"
 currents = "Ladestrøm"
 default = "forvalg"
 disclaimerHint = "Merknad:"
-disclaimerText = "Endringer vil gå tapt ved omstart av serveren"
 title = "Innstillinger for {0}"
 vehicle = "Kjøretøy"
 
@@ -227,7 +226,6 @@ logout = "logg ut"
 
 [main.targetCharge]
 activate = "Aktiver"
-activeLabel = "{time}"
 co2Limit = "CO₂-grense på {co2}"
 costLimitIgnore = "Ser bort fra oppsatt grense på {limit} i løpet av denne perioden."
 descriptionEnergy = "Når skal {targetEnergy} være på kjøretøyet?"
@@ -241,7 +239,6 @@ planPeriodValue = "{start} til {end}"
 planUnknown = "ikke kjent enda"
 priceLimit = "prisgrense på {price}"
 setTargetTime = "ingen"
-targetEnergyRequired = "Du må også sette en energigrense."
 targetIsInThePast = "Velg et tidspunkt i fremtiden, Marty."
 targetIsTooFarInTheFuture = "Planen vil bli justert så snart mer info tilkommer."
 title = "Mål-tid"

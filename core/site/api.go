@@ -9,6 +9,19 @@ import (
 type API interface {
 	Healthy() bool
 	Loadpoints() []loadpoint.API
+	Vehicles() Vehicles
+
+	// Meta
+	GetTitle() string
+	SetTitle(string)
+
+	// Config
+	GetGridMeterRef() string
+	SetGridMeterRef(string)
+	GetPVMeterRefs() []string
+	SetPVMeterRefs([]string)
+	GetBatteryMeterRefs() []string
+	SetBatteryMeterRefs([]string)
 
 	//
 	// battery
@@ -29,13 +42,6 @@ type API interface {
 	SetResidualPower(float64) error
 
 	//
-	// vehicles
-	//
-
-	// GetVehicles is the list of vehicles
-	GetVehicles() []api.Vehicle
-
-	//
 	// tariffs and costs
 	//
 
@@ -43,4 +49,11 @@ type API interface {
 	GetTariff(string) api.Tariff
 	GetSmartCostLimit() float64
 	SetSmartCostLimit(float64) error
+
+	//
+	// battery control
+	//
+
+	GetBatteryDischargeControl() bool
+	SetBatteryDischargeControl(bool) error
 }

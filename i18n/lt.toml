@@ -1,6 +1,10 @@
 [batterySettings]
 batteryLevel = "Kaupiklio įkrova"
 capacity = "{energy} iš {total}"
+control = "Kaupiklio valdymas"
+discharge = "Neleisti kaupiklio iškrovimo režime Greitas ir planiniame įkrovime."
+disclaimerHint = "Pastaba:"
+disclaimerText = "Šie nustatymai paveikia tik įkrovimą Saulė. Įkrovimo algoritmas atitinkamai pakeičiamas."
 legendBottomName = "namo pirmumas"
 legendBottomSubline = "nenaudojama įkrovimui"
 legendMiddleName = "pirmiau automobilis"
@@ -10,7 +14,6 @@ legendTopAutostart = "startuoja automatiškai"
 legendTopName = "kaupiklis padeda įkrauti"
 legendTopSubline = "be pertraukų"
 modalTitle = "Kaupiklio nustatymai"
-note = "Pastaba: Šie nustatymai paveikia tik įkrovimą Saulė. Įkrovimo algoritmas atitinkamai pakeičiamas."
 
 [batterySettings.bufferStart]
 full = "kai beveik pilnas"
@@ -20,15 +23,59 @@ never = "tik su pakankamu pertekliumi"
 
 [config]
 
+[config.battery]
+titleAdd = "Pridėti kaupiklio skaitiklį"
+titleEdit = "Redaguoti kaupiklio skaitiklį"
+
+[config.deviceValue]
+capacity = "Talpa"
+chargeStatus = "Statusas"
+chargedEnergy = "Įkrauta"
+current = "Dabartinis"
+enabled = "Aktyvuota"
+energy = "Energija"
+odometer = "Odometras"
+phaseCurrents = "Srovė L1..L3"
+phasePowers = "Galia L1..L3"
+phaseVoltages = "Įtampa L1..L3"
+power = "Galia"
+range = "Nuvažiuojamas atstumas"
+soc = "Įkrova"
+socLimit = "Limitas"
+
 [config.form]
 example = "Pavyzdys"
 optional = "pasirinktinai"
 
+[config.grid]
+titleAdd = "Pridėti tinklo skaitiklį"
+titleEdit = "Redaguoti tinklo skaitiklį"
+
 [config.main]
+addLoadpoint = "Pridėti įkroviklį"
+addPvBattery = "Pridėti saulės ar kaupiklio skaitiklį"
 addVehicle = "Pridėti automobilį"
 edit = "redaguoti"
 title = "Konfigūracija"
+unconfigured = "nesukonfigūruota"
 vehicles = "Mano automobiliai"
+yaml = "Čia redaguoti neina. Konfigūruokite evcc.yaml faile."
+
+[config.meter]
+cancel = "Atšaukti"
+delete = "Ištrinti"
+save = "Išsaugoti"
+template = "Gamintojas"
+titleChoice = "Ką norite pridėti?"
+validateSave = "Patikrinti ir išsaugoti"
+
+[config.pv]
+titleAdd = "Pridėti saulės skaitiklį"
+titleEdit = "Redaguoti saulės skaitiklį"
+
+[config.site]
+cancel = "Atšaukti"
+save = "Išsaugoti"
 
 [config.validation]
 failed = "nepavyko"
@@ -40,7 +87,7 @@ validate = "tikrinti"
 
 [config.vehicle]
 cancel = "Atšaukti"
-delete = "Ištrinti automobilį"
+delete = "Ištrinti"
 generic = "Kitos integracijos"
 offline = "Tipinis automobilis"
 online = "Automobiliai su internetiniu API"
@@ -66,20 +113,32 @@ powerSub2 = "įkrauna..."
 tabTitle = "Bendruomenės"
 
 [footer.savings]
+co2Saved = "{value} neišmesta"
+co2Title = "CO₂ Išmetimai"
+configurePriceCo2 = "Išmokite sukonfigūruoti kainą ir CO₂ duomenis."
 footerLong = "{percent}% saulės energija"
 footerShort = "{percent}% saulės"
 modalTitle = "Įkrovimo energijos apžvalga"
+moneySaved = "{value} sutaupyta"
 percentGrid = "{grid} kWh tinklo"
 percentSelf = "{self} kWh saulės"
 percentTitle = "Saulės Energija"
+periodLabel = "Laikotarpis:"
 priceFeedIn = "{feedInPrice} eksporto"
 priceGrid = "{gridPrice} tinklo"
 priceTitle = "Energijos Kaina"
+referenceGrid = "tinklas"
+referenceLabel = "Atskaitos duomenys:"
 savingsComparedToGrid = "palyginus su tinklu"
 savingsTitle = "Sutaupyta"
 savingsTotalEnergy = "{total} kWh įkrauta"
 since = "nuo {since}"
 tabTitle = "Mano"
+
+[footer.savings.period]
+30d = "paskutinės 30 dienų"
+365d = "paskutinės 365 dienos"
+total = "Iš viso"
 
 [footer.sponsor]
 becomeSponsor = "Tapkite rėmėju"
@@ -157,19 +216,25 @@ modalTitle = "Ar tikrai norite restartuoti?"
 vehicles = "Autoparkas"
 
 [main.chargingPlan]
-activeLabel = "{time}"
+active = "Aktyvus"
 arrivalTab = "Atvykimas"
+day = "Diena"
 departureTab = "Išvykimas"
+goal = "Įkrovimo tikslas"
 modalTitle = "Įkrovimo planas"
 none = "nėra"
+remove = "Pašalinti"
+time = "Laikas"
 title = "Planas"
 titleMinSoc = "Minimali įkrova"
 titleTargetCharge = "Išvykimas"
+update = "Patvirtinti"
 
 [main.energyflow]
 battery = "Kaupiklis"
 batteryCharge = "Kaupiklis įkraunamas"
 batteryDischarge = "Kaupiklis iškraunamas"
+batteryHold = "Kaupiklis (užblokuotas)"
 batteryTooltip = "{energy} iš {total} ({soc})"
 gridImport = "Iš tinklo"
 homePower = "Namo suvartojimas"
@@ -178,6 +243,12 @@ noEnergy = "Nėra skaitiklių duomenų"
 pvExport = "Tinklo eksportas"
 pvProduction = "Gamyba"
 selfConsumption = "Sunaudojama iškart"
+
+[main.heatingStatus]
+charging = "Šildoma…"
+cheapEnergyCharging = "Šildoma pigia energija: {price} (limitas {limit})"
+cleanEnergyCharging = "Šildoma švaria energija: {co2} (limitas {limit})"
+waitForVehicle = "Paruošta. Laukiame šildytuvo…"
 
 [main.loadpoint]
 avgPrice = "⌀ Kaina"
@@ -196,9 +267,13 @@ solar = "Saulės"
 currents = "Įkrovimo srovė"
 default = "standartiškai"
 disclaimerHint = "Pastaba:"
-disclaimerText = "Šie pakeitimai neišlieka po evcc serverio restarto."
+onlyForSocBasedCharging = "Šie pasirinkimai galimi tik automobiliams su žinomu įkrovos lygiu."
 title = "Nustatymai {0}"
 vehicle = "Automobilis"
+
+[main.loadpointSettings.limitSoc]
+description = "Įkrovimo limitas, naudojamas, prijungus šį automobilį."
+label = "Standartinis limitas"
 
 [main.loadpointSettings.maxCurrent]
 label = "Max. Srovė"
@@ -212,6 +287,7 @@ label = "Minimali įkrova %"
 
 [main.loadpointSettings.phasesConfigured]
 label = "Fazės"
+no1p3pSupport = "Kaip prijungtas jūsų įkroviklis?"
 phases_0 = "automatinis perjungimas"
 phases_1 = "1 fazė"
 phases_1_hint = "({min} iki {max})"
@@ -230,28 +306,36 @@ logout = "atsijungti"
 
 [main.targetCharge]
 activate = "Aktyvuoti"
-activeLabel = "{time}"
 co2Limit = "CO₂ riba iš {co2}"
 costLimitIgnore = "Šiuo laikotarpiu sukonfigūruotas {limit} bus ignoruojamas."
+currentPlan = "Planas aktyvus"
 descriptionEnergy = "Iki kada {targetEnergy} turėtų būti įkrauta į automobilį?"
 descriptionSoc = "Kada automobilis turėtų būti įkrautas iki {targetSoc}%?"
 inactiveLabel = "Suplanuotas laikas"
 modalTitle = "Nustatyti įkrovimo pabaigos laiką"
+noActivePlan = "Nėra Aktyvaus Plano"
+notReachableInTime = "Tikslo pasiekti nespėsime. Numatoma pabaiga: {endTime}."
 onlyInPvMode = "Įkrovimo planas veikia tik nustatyme Saulė."
+planDescription = "Įveskite išvykimo laiką ir evcc įkraus automobilį kiek įmanoma ekonomiškiau arba ekologiškiau."
 planDuration = "Įkrovimo laikas"
 planPeriodLabel = "Periodas"
 planPeriodValue = "{start} iki {end}"
 planUnknown = "dar nežinome"
+preview = "Peržvelgti"
 priceLimit = "kainos limitas {price}"
 remove = "Panaikinti"
+setPlan = "Nustatyti įkrovimo planą"
 setTargetTime = "nesuplanuotas"
-targetEnergyRequired = "Taipogi turite nustatyti energijos limitą."
+targetIsAboveLimit = "Sukonfigūruotas įkrovimo limitas {limit} šiuo periodu bus ignoruojamas."
+targetIsAboveVehicleLimit = "Padidinkite automobilio limitą ({limit}), kad pasiektumėte įkrovimo tikslą."
 targetIsInThePast = "Pasirinkite laiką ateityje."
 targetIsTooFarInTheFuture = "Pakoreguosime planą, kai tik gausime naujų duomenų."
 title = "Planinis Įkrovimas"
 today = "šiandien"
 tomorrow = "rytoj"
 update = "Atnaujinti"
+vehicleCapacityDocs = "Išmokite, kaip tai sukonfigūruoti."
+vehicleCapacityRequired = "Norint numatyti įkrovimo trukmę reikalinga automobilio baterijos talpa"
 
 [main.targetChargePlan]
 chargeDuration = "Įkrovimo trukmė"
@@ -272,7 +356,7 @@ fallbackName = "Automobilis"
 moreActions = "Daugiau veiksmų"
 none = "Nėra automobilio"
 targetSoc = "Limitas"
-temp = "Temp."
+temp = "t."
 tempLimit = "Temp. limitas"
 unknown = "Nežinomas automobilis"
 vehicleSoc = "Baterija"
@@ -286,8 +370,8 @@ vehicleTarget = "Automobilyje nustatytas limitas: {soc}%"
 
 [main.vehicleStatus]
 charging = "Įkraunama..."
-cheapEnergyCharging = "Energijos kaina žema. Įkraunama…"
-cleanEnergyCharging = "Yra švarios energijos. Įkraunama..."
+cheapEnergyCharging = "Įkraunama pigia energija: {price} (limitas {limit})"
+cleanEnergyCharging = "Įkraunama švaria energija: {co2} (limitas {limit})"
 climating = "Aptiktas išankstinis kondicionavimas."
 connected = "Prijungtas."
 disconnected = "Neprijungtas."
@@ -364,7 +448,7 @@ allVehicles = "visi automobiliai"
 filter = "Filtruoti"
 
 [settings]
-title = "Nustatymai"
+title = "Bendrieji Nustatymai"
 
 [settings.gridDetails]
 co2 = "CO₂"

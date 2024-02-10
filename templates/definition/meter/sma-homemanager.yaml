@@ -18,7 +18,10 @@ linked:
   - template: sma-hybrid
     usage: battery
     multiple: true
-  - template: sma-inverter
+  - template: sma-inverter-speedwire
+    usage: battery
+    multiple: true
+  - template: sma-inverter-modbus
     usage: battery
     multiple: true
 params:

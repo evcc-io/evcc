@@ -12,17 +12,15 @@ import (
 	"github.com/evcc-io/evcc/meter/tibber"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
-	"github.com/shurcooL/graphql"
+	"github.com/hasura/go-graphql-client"
 )
 
 type Tibber struct {
 	*embed
-	mux     sync.Mutex
-	log     *util.Logger
-	homeID  string
-	client  *tibber.Client
-	data    api.Rates
-	updated time.Time
+	log    *util.Logger
+	homeID string
+	client *tibber.Client
+	data   *util.Monitor[api.Rates]
 }
 
 var _ api.Tariff = (*Tibber)(nil)
@@ -53,6 +51,7 @@ func NewTibberFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		log:    log,
 		homeID: cc.HomeID,
 		client: tibber.NewClient(log, cc.Token),
+		data:   util.NewMonitor[api.Rates](2 * time.Hour),
 	}
 
 	if t.homeID == "" {
@@ -101,16 +100,12 @@ func (t *Tibber) run(done chan error) {
 			continue
 		}
 
-		once.Do(func() { close(done) })
-
-		t.mux.Lock()
-		t.updated = time.Now()
-
 		pi := res.Viewer.Home.CurrentSubscription.PriceInfo
-		t.data = make(api.Rates, 0, len(pi.Today)+len(pi.Tomorrow))
-		t.data = append(t.rates(pi.Today), t.rates(pi.Tomorrow)...)
+		data := append(t.rates(pi.Today), t.rates(pi.Tomorrow)...)
+		data.Sort()
 
-		t.mux.Unlock()
+		t.data.Set(data)
+		once.Do(func() { close(done) })
 	}
 }
 
@@ -133,12 +128,14 @@ func (t *Tibber) rates(pi []tibber.Price) api.Rates {
 
 // Rates implements the api.Tariff interface
 func (t *Tibber) Rates() (api.Rates, error) {
-	t.mux.Lock()
-	defer t.mux.Unlock()
-	return slices.Clone(t.data), outdatedError(t.updated, time.Hour)
+	var res api.Rates
+	err := t.data.GetFunc(func(val api.Rates) {
+		res = slices.Clone(val)
+	})
+	return res, err
 }
 
 // Type implements the api.Tariff interface
 func (t *Tibber) Type() api.TariffType {
-	return api.TariffTypePriceDynamic
+	return api.TariffTypePriceForecast
 }

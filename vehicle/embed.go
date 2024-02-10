@@ -4,6 +4,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
+// TODO align phases with OnIdentify
 type embed struct {
 	Title_       string           `mapstructure:"title"`
 	Icon_        string           `mapstructure:"icon"`
@@ -56,7 +57,7 @@ func (v *embed) OnIdentified() api.ActionConfig {
 
 var _ api.IconDescriber = (*embed)(nil)
 
-// Icon implements the api.Vehicle interface
+// Icon implements the api.IconDescriber interface
 func (v *embed) Icon() string {
 	return v.Icon_
 }

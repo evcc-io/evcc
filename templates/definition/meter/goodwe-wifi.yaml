@@ -1,0 +1,17 @@
+template: goodwe-wifi
+products:
+  - brand: GoodWe
+    description:
+      generic: GoodWe over Wifi
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+    allinone: true
+  - name: uri
+    description:
+      en: IP address of the GoodWe inverter.
+      de: IP-Adresse des GoodWe Wechselrichters.
+render: |
+  type: goodwe-wifi
+  usage: {{ .usage }}
+  uri: {{ .uri }}

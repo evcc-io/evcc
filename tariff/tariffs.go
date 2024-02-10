@@ -12,16 +12,6 @@ type Tariffs struct {
 	Grid, FeedIn, Co2, Planner api.Tariff
 }
 
-func NewTariffs(currency currency.Unit, grid, feedin, co2 api.Tariff, planner api.Tariff) *Tariffs {
-	return &Tariffs{
-		Currency: currency,
-		Grid:     grid,
-		FeedIn:   feedin,
-		Co2:      co2,
-		Planner:  planner,
-	}
-}
-
 func currentPrice(t api.Tariff) (float64, error) {
 	if t != nil {
 		if rr, err := t.Rates(); err == nil {
@@ -49,12 +39,4 @@ func (t *Tariffs) CurrentCo2() (float64, error) {
 		return currentPrice(t.Co2)
 	}
 	return 0, api.ErrNotAvailable
-}
-
-// outdatedError returns api.ErrOutdated if t is older than 2*d
-func outdatedError(t time.Time, d time.Duration) error {
-	if time.Since(t) > 2*d {
-		return api.ErrOutdated
-	}
-	return nil
 }

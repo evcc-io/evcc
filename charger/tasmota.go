@@ -15,14 +15,15 @@ import (
 
 // Tasmota charger implementation
 type Tasmota struct {
-	conn    *tasmota.Connection
-	channel int
+	conn *tasmota.Connection
 	*switchSocket
 }
 
 func init() {
 	registry.Add("tasmota", NewTasmotaFromConfig)
 }
+
+//go:generate go run ../cmd/tools/decorate.go -f decorateTasmota -b *Tasmota -r api.Charger -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)"
 
 // NewTasmotaFromConfig creates a Tasmota charger from generic config
 func NewTasmotaFromConfig(other map[string]interface{}) (api.Charger, error) {
@@ -32,10 +33,10 @@ func NewTasmotaFromConfig(other map[string]interface{}) (api.Charger, error) {
 		User         string
 		Password     string
 		StandbyPower float64
-		Channel      int
+		Channel      []int
 		Cache        time.Duration
 	}{
-		Channel: 1,
+		Channel: []int{1},
 		Cache:   time.Second,
 	}
 
@@ -47,20 +48,29 @@ func NewTasmotaFromConfig(other map[string]interface{}) (api.Charger, error) {
 }
 
 // NewTasmota creates Tasmota charger
-func NewTasmota(embed embed, uri, user, password string, channel int, standbypower float64, cache time.Duration) (*Tasmota, error) {
-	conn, err := tasmota.NewConnection(uri, user, password, channel, cache)
+func NewTasmota(embed embed, uri, user, password string, channels []int, standbypower float64, cache time.Duration) (api.Charger, error) {
+	conn, err := tasmota.NewConnection(uri, user, password, channels, cache)
 	if err != nil {
 		return nil, err
 	}
 
+	if err := conn.RelayExists(); err != nil {
+		return nil, err
+	}
+
 	c := &Tasmota{
-		conn:    conn,
-		channel: channel,
+		conn: conn,
 	}
 
 	c.switchSocket = NewSwitchSocket(&embed, c.Enabled, c.conn.CurrentPower, standbypower)
 
-	return c, c.conn.ChannelExists(channel)
+	var currents, voltages func() (float64, float64, float64, error)
+	if len(channels) == 3 {
+		currents = c.currents
+		voltages = c.voltages
+	}
+
+	return decorateTasmota(c, currents, voltages), nil
 }
 
 // Enabled implements the api.Charger interface
@@ -78,4 +88,14 @@ var _ api.MeterEnergy = (*Tasmota)(nil)
 // TotalEnergy implements the api.MeterEnergy interface
 func (c *Tasmota) TotalEnergy() (float64, error) {
 	return c.conn.TotalEnergy()
+}
+
+// Currents implements the api.PhaseCurrents interface
+func (c *Tasmota) currents() (float64, float64, float64, error) {
+	return c.conn.Currents()
+}
+
+// Voltages implements the api.PhaseVoltages interface
+func (c *Tasmota) voltages() (float64, float64, float64, error) {
+	return c.conn.Voltages()
 }

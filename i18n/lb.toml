@@ -95,7 +95,6 @@ power = "Leeschtung"
 currents = "Ladestroum"
 default = "Standard"
 disclaimerHint = "Notiz:"
-disclaimerText = "Ännerunge ginn verluer nodeems de Server nei gestart ass."
 title = "Astellungen {0}"
 vehicle = "Gefier"
 
@@ -129,7 +128,6 @@ logout = "ausloggen"
 
 [main.targetCharge]
 activate = "Aktivéieren"
-activeLabel = "{time}"
 descriptionEnergy = "Bis wéini soll {targetEnergy} an d'Gefier gelueden ginn?"
 descriptionSoc = "Wéini soll d'Gefier op {targetSoc}% gelueden ginn?"
 inactiveLabel = "Zilzäit"

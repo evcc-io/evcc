@@ -18,8 +18,8 @@ type Connection struct {
 	*request.Helper
 	uri         string
 	ProductType string
-	dataCache   provider.Cacheable[DataResponse]
-	stateCache  provider.Cacheable[StateResponse]
+	dataG       provider.Cacheable[DataResponse]
+	stateG      provider.Cacheable[StateResponse]
 }
 
 // NewConnection creates a homewizard connection
@@ -48,13 +48,13 @@ func NewConnection(uri string, cache time.Duration) (*Connection, error) {
 	c.uri = c.uri + "/" + res.ApiVersion
 	c.ProductType = res.ProductType
 
-	c.dataCache = provider.ResettableCached(func() (DataResponse, error) {
+	c.dataG = provider.ResettableCached(func() (DataResponse, error) {
 		var res DataResponse
 		err := c.GetJSON(fmt.Sprintf("%s/data", c.uri), &res)
 		return res, err
 	}, cache)
 
-	c.stateCache = provider.ResettableCached(func() (StateResponse, error) {
+	c.stateG = provider.ResettableCached(func() (StateResponse, error) {
 		var res StateResponse
 		err := c.GetJSON(fmt.Sprintf("%s/state", c.uri), &res)
 		return res, err
@@ -79,8 +79,8 @@ func (c *Connection) Enable(enable bool) error {
 	}
 
 	if err == nil {
-		c.stateCache.Reset()
-		c.dataCache.Reset()
+		c.stateG.Reset()
+		c.dataG.Reset()
 	}
 
 	switch {
@@ -95,18 +95,18 @@ func (c *Connection) Enable(enable bool) error {
 
 // Enabled reads the homewizard switch state true=on/false=off
 func (c *Connection) Enabled() (bool, error) {
-	res, err := c.stateCache.Get()
+	res, err := c.stateG.Get()
 	return res.PowerOn, err
 }
 
 // CurrentPower implements the api.Meter interface
 func (c *Connection) CurrentPower() (float64, error) {
-	res, err := c.dataCache.Get()
+	res, err := c.dataG.Get()
 	return res.ActivePowerW, err
 }
 
 // TotalEnergy implements the api.MeterEnergy interface
 func (c *Connection) TotalEnergy() (float64, error) {
-	res, err := c.dataCache.Get()
+	res, err := c.dataG.Get()
 	return res.TotalPowerImportT1kWh + res.TotalPowerImportT2kWh + res.TotalPowerImportT3kWh + res.TotalPowerImportT4kWh, err
 }

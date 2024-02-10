@@ -1,0 +1,14 @@
+template: huawei-ac
+products:
+  - brand: Huawei
+    description:
+      generic: FusionCharge AC
+requirements:
+  evcc: ["sponsorship"]
+params:
+  - name: modbus
+    choice: ["tcpip"]
+    id: 255
+render: |
+  type: huawei-ac
+  {{- include "modbus" . }}

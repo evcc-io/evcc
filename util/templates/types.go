@@ -6,17 +6,23 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/imdario/mergo"
+	"dario.cat/mergo"
+)
+
+type Usage int
+
+//go:generate enumer -type Usage -trimprefix Usage -transform=lower
+const (
+	UsageGrid Usage = iota
+	UsagePV
+	UsageBattery
+	UsageCharge
+	UsageAux
 )
 
 const (
 	ParamUsage  = "usage"
 	ParamModbus = "modbus"
-
-	UsageChoiceGrid    = "grid"
-	UsageChoicePV      = "pv"
-	UsageChoiceBattery = "battery"
-	UsageChoiceCharge  = "charge"
 
 	HemsTypeSMA = "sma"
 
@@ -34,34 +40,26 @@ const (
 	ModbusParamNameHost     = "host"
 	ModbusParamNamePort     = "port"
 	ModbusParamNameRTU      = "rtu"
-
-	TemplateRenderModeDocs     = "docs"
-	TemplateRenderModeUnitTest = "unittest"
-	TemplateRenderModeInstance = "instance"
-)
-
-var (
-	ValidModbusChoices = []string{ModbusChoiceRS485, ModbusChoiceTCPIP}
-	ValidUsageChoices  = []string{UsageChoiceGrid, UsageChoicePV, UsageChoiceBattery, UsageChoiceCharge}
 )
 
 const (
-	DependencyCheckEmpty    = "empty"
-	DependencyCheckNotEmpty = "notempty"
-	DependencyCheckEqual    = "equal"
+	RenderModeDocs int = iota
+	RenderModeUnitTest
+	RenderModeInstance
 )
 
-var ValidDependencies = []string{DependencyCheckEmpty, DependencyCheckNotEmpty, DependencyCheckEqual}
+var ValidModbusChoices = []string{ModbusChoiceRS485, ModbusChoiceTCPIP}
 
 const (
-	CapabilityISO151182 = "iso151182" // ISO 15118-2 support
-	CapabilityMilliAmps = "mA"        // Granular current control support
-	CapabilityRFID      = "rfid"      // RFID support
-	Capability1p3p      = "1p3p"      // 1P/3P phase switching support
-	CapabilitySMAHems   = "smahems"   // SMA HEMS Support
+	CapabilityISO151182      = "iso151182"       // ISO 15118-2 support
+	CapabilityMilliAmps      = "mA"              // Granular current control support
+	CapabilityRFID           = "rfid"            // RFID support
+	Capability1p3p           = "1p3p"            // 1P/3P phase switching support
+	CapabilitySMAHems        = "smahems"         // SMA HEMS support
+	CapabilityBatteryControl = "battery-control" // Battery control support
 )
 
-var ValidCapabilities = []string{CapabilityISO151182, CapabilityMilliAmps, CapabilityRFID, Capability1p3p, CapabilitySMAHems}
+var ValidCapabilities = []string{CapabilityISO151182, CapabilityMilliAmps, CapabilityRFID, Capability1p3p, CapabilitySMAHems, CapabilityBatteryControl}
 
 const (
 	RequirementEEBUS       = "eebus"       // EEBUS Setup is required
@@ -191,20 +189,20 @@ type Param struct {
 	Requirements  Requirements `json:"-"`          // requirements for this param to be usable, only supported via Type "bool"
 
 	// TODO move somewhere else should not be part of the param definition
-	Baudrate int    `json:"-"` // device specific default for modbus RS485 baudrate
-	Comset   string `json:"-"` // device specific default for modbus RS485 comset
-	Port     int    `json:"-"` // device specific default for modbus TCPIP port
-	ID       int    `json:"-"` // device specific default for modbus ID
+	Baudrate int    `json:",omitempty"` // device specific default for modbus RS485 baudrate
+	Comset   string `json:",omitempty"` // device specific default for modbus RS485 comset
+	Port     int    `json:",omitempty"` // device specific default for modbus TCPIP port
+	ID       int    `json:",omitempty"` // device specific default for modbus ID
 }
 
 // DefaultValue returns a default or example value depending on the renderMode
-func (p *Param) DefaultValue(renderMode string) interface{} {
+func (p *Param) DefaultValue(renderMode int) interface{} {
 	// return empty list to allow iterating over in template
 	if p.Type == TypeStringList {
 		return []string{}
 	}
 
-	if (renderMode == TemplateRenderModeDocs || renderMode == TemplateRenderModeUnitTest) && p.Default == "" {
+	if (renderMode == RenderModeDocs || renderMode == RenderModeUnitTest) && p.Default == "" {
 		return p.Example
 	}
 

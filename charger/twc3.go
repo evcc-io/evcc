@@ -55,7 +55,7 @@ type Vitals struct {
 	SessionEnergyWh   float64 `json:"session_energy_wh"`   // 22864.699
 	ConfigStatus      int     `json:"config_status"`       // 5
 	EvseState         int     `json:"evse_state"`          // 1
-	CurrentAlerts     []any   `json:"current_alerts"`      //[]
+	CurrentAlerts     []any   `json:"current_alerts"`      // []
 }
 
 // NewTwc3FromConfig creates a new vehicle
@@ -89,14 +89,24 @@ func NewTwc3FromConfig(other map[string]interface{}) (api.Charger, error) {
 	return c, nil
 }
 
-// Enabled implements the api.Charger interface
-func (c *Twc3) Enabled() (bool, error) {
-	enabled, err := verifyEnabled(c, c.enabled)
-	if err == nil {
-		c.enabled = enabled
+// Status implements the api.Charger interface
+func (v *Twc3) Status() (api.ChargeStatus, error) {
+	status := api.StatusA // disconnected
+
+	res, err := v.vitalsG()
+	switch {
+	case res.ContactorClosed:
+		status = api.StatusC
+	case res.VehicleConnected:
+		status = api.StatusB
 	}
 
-	return enabled, err
+	return status, err
+}
+
+// Enabled implements the api.Charger interface
+func (c *Twc3) Enabled() (bool, error) {
+	return verifyEnabled(c, c.enabled)
 }
 
 // Enable implements the api.Charger interface
@@ -105,12 +115,22 @@ func (c *Twc3) Enable(enable bool) error {
 		return errors.New("loadpoint not initialized")
 	}
 
+	// ignore disabling when vehicle is already disconnected
+	// https://github.com/evcc-io/evcc/issues/10213
+	status, err := c.Status()
+	if err != nil {
+		return err
+	}
+	if status == api.StatusA && !enable {
+		c.enabled = false
+		return nil
+	}
+
 	v, ok := c.lp.GetVehicle().(api.VehicleChargeController)
 	if !ok {
 		return errors.New("vehicle not capable of start/stop")
 	}
 
-	var err error
 	if enable {
 		err = v.StartCharge()
 	} else {
@@ -130,27 +150,12 @@ func (c *Twc3) MaxCurrent(current int64) error {
 		return errors.New("loadpoint not initialized")
 	}
 
-	v, ok := c.lp.GetVehicle().(api.CurrentLimiter)
+	v, ok := c.lp.GetVehicle().(api.CurrentController)
 	if !ok {
 		return errors.New("vehicle not capable of current control")
 	}
 
 	return v.MaxCurrent(current)
-}
-
-// Status implements the api.Charger interface
-func (v *Twc3) Status() (api.ChargeStatus, error) {
-	status := api.StatusA // disconnected
-
-	res, err := v.vitalsG()
-	switch {
-	case res.ContactorClosed:
-		status = api.StatusC
-	case res.VehicleConnected:
-		status = api.StatusB
-	}
-
-	return status, err
 }
 
 var _ api.ChargeRater = (*Twc3)(nil)

@@ -2,15 +2,11 @@ template: phoenix-em-eth
 products:
   - brand: Phoenix Contact
     description:
-      generic: EM-CP-PP-ETH (Modbus TCP)
+      generic: EM-CP-PP-ETH
 params:
   - name: modbus
     choice: ["tcpip"]
-    id: 255
+    id: 180
 render: |
   type: phoenix-em-eth
   {{- include "modbus" . }}
-  meter: # only if a charge meter is connected to the controller
-    power: true
-    energy: true
-    currents: true

@@ -46,17 +46,3 @@ func Init() error {
 
 	return nil
 }
-
-func Localize(lc *Config) string {
-	msg, _, err := Localizer.LocalizeWithTag(lc)
-	if err != nil {
-		msg = lc.MessageID
-	}
-	return msg
-}
-
-func LocalizeID(id string) string {
-	return Localize(&Config{
-		MessageID: id,
-	})
-}

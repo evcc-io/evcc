@@ -10,6 +10,7 @@ var (
 	FormContent  = "application/x-www-form-urlencoded"
 	JSONContent  = "application/json"
 	PlainContent = "text/plain"
+	XMLContent   = "application/xml"
 
 	// URLEncoding specifies application/x-www-form-urlencoded
 	URLEncoding = map[string]string{"Content-Type": FormContent}
@@ -24,16 +25,22 @@ var (
 	AcceptJSON = map[string]string{
 		"Accept": JSONContent,
 	}
+
+	// XMLEncoding specifies application/xml
+	XMLEncoding = map[string]string{
+		"Content-Type": XMLContent,
+		"Accept":       XMLContent,
+	}
+
+	// AcceptXML accepting application/xml
+	AcceptXML = map[string]string{
+		"Accept": XMLContent,
+	}
 )
 
 // StatusError indicates unsuccessful http response
 type StatusError struct {
 	resp *http.Response
-}
-
-// NewStatusError create new StatusError for given response
-func NewStatusError(resp *http.Response) StatusError {
-	return StatusError{resp: resp}
 }
 
 func (e StatusError) Error() string {

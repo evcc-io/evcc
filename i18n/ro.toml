@@ -1,6 +1,9 @@
 [batterySettings]
 batteryLevel = "Nivelul bateriei"
 capacity = "{energy} din {total}"
+control = "Controlul bateriei"
+disclaimerHint = "Nota:"
+disclaimerText = "Aceste setari afecteaza doar modul solar. Procesul de incarcare este ajustat corespunzator"
 legendBottomName = "prioritate casa"
 legendBottomSubline = "neutilizat pentru incarcare"
 legendMiddleName = "in primul rand vehiculul"
@@ -10,13 +13,29 @@ legendTopAutostart = "porneste automat"
 legendTopName = "Incarcare ajutata de baterie"
 legendTopSubline = "fara intreruperi"
 modalTitle = "Setari baterie"
-note = "Nota: Aceste setari afecteaza doar modul solar. Procesul de incarcare este ajustat corespunzator"
 
 [batterySettings.bufferStart]
 full = "cand este aproape plin"
 low = "cand este destul de plin"
 medium = "cand este pe jumatate plin"
 never = "numai cand exista surplus suficient"
+
+[config]
+
+[config.form]
+example = "Exemplu"
+optional = "optional"
+
+[config.main]
+addVehicle = "Adauga vehicul"
+title = "Configuratie"
+vehicles = "Vehiculele mele"
+
+[config.validation]
+failed = "esuat"
+label = "Stare"
+running = "validez..."
+success = "reuşit"
 
 [footer]
 
@@ -111,7 +130,6 @@ restartDescription = "Ai incercat sa inchizi si sa deschizi din nou? "
 vehicles = "Parcare"
 
 [main.chargingPlan]
-activeLabel = "{time}"
 arrivalTab = "Ajungere"
 departureTab = "Plecare"
 modalTitle = "Plan de incarcare"
@@ -143,7 +161,6 @@ power = "Putere"
 currents = "Curent încărcare"
 default = "default"
 disclaimerHint = "Nota:"
-disclaimerText = "Modificările se vor pierde după restartul serverului."
 title = "Setări {0}"
 vehicle = "Vehicul"
 
@@ -177,7 +194,6 @@ logout = "deconectează"
 
 [main.targetCharge]
 activate = "Activează"
-activeLabel = "{time}"
 co2Limit = "limita CO₂ de {co2}"
 costLimitIgnore = "{limit} configurata de va fi ingnorata in acest timp."
 descriptionEnergy = "Pâna când ar trebui ca {targetEnergy} să fie încărcată in vehicul?"

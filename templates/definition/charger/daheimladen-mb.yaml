@@ -9,8 +9,6 @@ requirements:
     en: Wallbox must be operated with a recent firmware including Modbus support. Furthermore, “Nachladen” (Smart) or “RSDA” (Touch) must be activated in settings.
 params:
   - name: host
-    required: true
-    example: 192.0.2.2
   - name: port
     default: 502
 render: |

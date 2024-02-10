@@ -1,9 +1,6 @@
 package cmd
 
 import (
-	"fmt"
-
-	"github.com/evcc-io/evcc/util/config"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -11,6 +8,11 @@ import (
 const (
 	flagHeaders            = "log-headers"
 	flagHeadersDescription = "Log headers"
+
+	flagBatteryMode                = "battery-mode"
+	flagBatteryModeDescription     = "Set battery mode (normal, hold, charge)"
+	flagBatteryModeWait            = "battery-mode-wait"
+	flagBatteryModeWaitDescription = "Wait given duration during which potential watchdogs are active"
 
 	flagCurrent            = "current"
 	flagCurrentDescription = "Set maximum current"
@@ -38,6 +40,7 @@ const (
 
 	flagDigits = "digits"
 	flagDelay  = "delay"
+	flagForce  = "force"
 )
 
 func bind(cmd *cobra.Command, key string, flagName ...string) {
@@ -58,21 +61,4 @@ func bindP(cmd *cobra.Command, key string, flagName ...string) {
 	if err := viper.BindPFlag(key, cmd.PersistentFlags().Lookup(name)); err != nil {
 		panic(err)
 	}
-}
-
-func selectByName(args []string, conf *[]config.Named) error {
-	if len(args) != 1 {
-		return nil
-	}
-
-	name := args[0]
-
-	for _, c := range *conf {
-		if c.Name == name {
-			*conf = []config.Named{c}
-			return nil
-		}
-	}
-
-	return fmt.Errorf("%s not found", name)
 }

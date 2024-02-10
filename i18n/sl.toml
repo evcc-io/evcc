@@ -1,6 +1,10 @@
 [batterySettings]
 batteryLevel = "Raven baterije"
 capacity = "{energy} od {total}"
+control = "Nadzor baterije"
+discharge = "Preprečite praznjenje v hitrem načinu in načrtovano polnjenje."
+disclaimerHint = "Opomba:"
+disclaimerText = "Te nastavitve vplivajo samo na solarni način. Obnašanje pri polnjenju je ustrezno prilagojeno."
 legendBottomName = "domača prednost"
 legendBottomSubline = "se ne uporablja za polnjenje"
 legendMiddleName = "najprej vozilo"
@@ -10,7 +14,6 @@ legendTopAutostart = "samodejno se zažene"
 legendTopName = "polnjenje, ki ga podpira baterija"
 legendTopSubline = "brez prekinitev"
 modalTitle = "Nastavitve baterije"
-note = "Opomba: Te nastavitve vplivajo samo na solarni način. Obnašanje pri polnjenju je ustrezno prilagojeno."
 
 [batterySettings.bufferStart]
 full = "ko je skoraj poln"
@@ -66,20 +69,32 @@ powerSub2 = "polnjenje…"
 tabTitle = "Skupnost v živo"
 
 [footer.savings]
+co2Saved = "{value} prihranjeno"
+co2Title = "Emisije CO₂"
+configurePriceCo2 = "Naučite se konfigurirati podatke o ceni in CO₂."
 footerLong = "{percent}% sončne energije"
 footerShort = "{percent}% sončne energije"
 modalTitle = "Pregled energije polnjenja"
+moneySaved = "{value} prihranjeno"
 percentGrid = "{grid} kWh omrežja"
 percentSelf = "{self} kWh sončne energije"
 percentTitle = "Sončna energija"
+periodLabel = "Obdobje:"
 priceFeedIn = "{feedInPrice} omrežje"
 priceGrid = "{gridPrice} omrežje"
 priceTitle = "Cena energije"
+referenceGrid = "omrežje"
+referenceLabel = "Referenčni podatki:"
 savingsComparedToGrid = "v primerjavi z omrežjem"
 savingsTitle = "Prihranki"
 savingsTotalEnergy = "{total} kWh zaračunanih"
 since = "od {since}"
 tabTitle = "Moji podatki"
+
+[footer.savings.period]
+30d = "zadnjih 30 dni"
+365d = "zadnjih 365 dni"
+total = "ves čas"
 
 [footer.sponsor]
 becomeSponsor = "Postanite sponzor"
@@ -152,19 +167,25 @@ modalTitle = "Ali ste prepričani, da želite znova zagnati?"
 vehicles = "Parkiranje"
 
 [main.chargingPlan]
-activeLabel = "{time}"
+active = "Aktivno"
 arrivalTab = "Prihod"
+day = "Dan"
 departureTab = "Odhod"
+goal = "Cilj polnjenja"
 modalTitle = "Načrt polnjenja"
 none = "brez"
+remove = "Odstrani"
+time = "Čas"
 title = "Načrt"
 titleMinSoc = "Min. polnjenje"
 titleTargetCharge = "Odhod"
+update = "Uporabi"
 
 [main.energyflow]
 battery = "Baterija"
 batteryCharge = "Polnjenje baterije"
 batteryDischarge = "Praznjenje baterije"
+batteryHold = "Baterija (zaklenjena)"
 batteryTooltip = "{energy} od {total} ({soc})"
 gridImport = "Uporaba omrežja"
 homePower = "Poraba"
@@ -174,6 +195,12 @@ pvExport = "Izvoz v omreže"
 pvProduction = "Proizvodnja"
 selfConsumption = "Samoporaba"
 
+[main.heatingStatus]
+charging = "Gretje…"
+cheapEnergyCharging = "Gretje s poceni energijo: {price} (limit {limit})"
+cleanEnergyCharging = "Gretje s čisto energijo: {co2} (limit {limit})"
+waitForVehicle = "Pripravljen. Čakam na grelec…"
+
 [main.loadpoint]
 avgPrice = "⌀ Cena"
 charged = "Napolnjeno"
@@ -182,15 +209,22 @@ duration = "Trajanje"
 fallbackName = "Polnilno mesto"
 power = "Moč"
 price = "Σ Cena"
+remaining = "Preostalo"
+remoteDisabledHard = "{source}: izključeno"
+remoteDisabledSoft = "{source}: izklopljeno prilagodljivo solarno polnjenje"
 solar = "Sončna energija"
 
 [main.loadpointSettings]
 currents = "Polnilni tok"
 default = "privzeto"
 disclaimerHint = "Opomba:"
-disclaimerText = "Po ponovnem zagonu strežnika bodo spremembe izgubljene."
+onlyForSocBasedCharging = "Te možnosti so na voljo samo za vozila z znano stopnjo napolnjenosti."
 title = "Nastavitve {0}"
 vehicle = "Vozilo"
+
+[main.loadpointSettings.limitSoc]
+description = "Omejitev polnjenja, ki se uporablja, ko je to vozilo povezano."
+label = "Privzeta omejitev"
 
 [main.loadpointSettings.maxCurrent]
 label = "Maksimalni tok"
@@ -222,27 +256,33 @@ logout = "odjava"
 
 [main.targetCharge]
 activate = "Aktiviraj"
-activeLabel = "{time}"
 co2Limit = "Omejitev CO₂ {co2}"
 costLimitIgnore = "V tem obdobju se nastavljena {limit} ne bo upoštevala."
+currentPlan = "Aktivni načrt"
 descriptionEnergy = "Do kdaj želite da se vozilo napolni za {targetEnergy}?"
 descriptionSoc = "Kdaj želite, da je vozilo napolnjeno na {targetSoc}%?"
 inactiveLabel = "Ciljni čas"
 modalTitle = "Nastavite ciljni čas"
+notReachableInTime = "Cilja ni mogoče doseči pravočasno. Predvideni cilj: {endTime}."
 onlyInPvMode = "Načrt polnjenja deluje samo v solarnem načinu."
 planDuration = "Čas polnjenja"
 planPeriodLabel = "Obdobje"
 planPeriodValue = "{start} do {end}"
 planUnknown = "še ni znano"
+preview = "Predogled načrta"
 priceLimit = "cenovna omejitev {price}"
+remove = "Odstrani"
 setTargetTime = "brez"
-targetEnergyRequired = "Postaviti morate tudi mejo energije."
+targetIsAboveLimit = "Konfigurirana omejitev polnjenja {limit} se ne bo upoštevala v tem obdobju."
+targetIsAboveVehicleLimit = "Povečaj omejitev vozila ({limit}), da dosežeš cilj polnjenja."
 targetIsInThePast = "Izberi čas v prihodnosti, Marty."
 targetIsTooFarInTheFuture = "Načrt bomo prilagodili takoj, ko bomo izvedeli več o novi funkcionalnosti."
 title = "Ciljni čas"
 today = "danes"
 tomorrow = "jutri"
 update = "Posodobitev"
+vehicleCapacityDocs = "Naučite se konfigurirati."
+vehicleCapacityRequired = "Za oceno časa polnjenja je potrebna kapaciteta baterije vozila."
 
 [main.targetChargePlan]
 chargeDuration = "Čas polnjenja"
@@ -277,8 +317,8 @@ vehicleTarget = "Omejitev vozila: {soc}%"
 
 [main.vehicleStatus]
 charging = "Polnjenje…"
-cheapEnergyCharging = "Na voljo je poceni energija. Polnjenje..."
-cleanEnergyCharging = "Na voljo je čista energija. Polnjenje..."
+cheapEnergyCharging = "Polnjenje s poceni energijo: {price} (omejitev {limit})"
+cleanEnergyCharging = "Polnjenje s čisto energijo: {co2} (omejitev {limit})"
 climating = "Zaznano predkondicioniranje."
 connected = "Povezan."
 disconnected = "Odklopljen."
@@ -353,7 +393,7 @@ allVehicles = "vsa vozila"
 filter = "Filter"
 
 [settings]
-title = "Nastavitve"
+title = "Splošne nastavitve"
 
 [settings.gridDetails]
 co2 = "CO₂"

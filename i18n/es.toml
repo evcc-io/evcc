@@ -1,6 +1,10 @@
 [batterySettings]
 batteryLevel = "Nivel de bateria"
 capacity = "{energy} de {total}"
+control = "Control de la batería"
+discharge = "Evitar la descarga en modo rápido y la carga planificada"
+disclaimerHint = "Nota:"
+disclaimerText = "Estos parámetros solo afectan al modo solar. El comportamiento de carga se ajusta correspondientemente."
 legendBottomName = "prioridad de la casa"
 legendBottomSubline = "no se usa para la carga"
 legendMiddleName = "primero el vehículo"
@@ -9,8 +13,7 @@ legendTitle = "¿Cómo debería usarse la energía solar?"
 legendTopAutostart = "inicio automático"
 legendTopName = "carga soportada por bateria"
 legendTopSubline = "sin interrupciones"
-modalTitle = "Configuración de batería"
-note = "Nota: Estos parámetros solo afectan al modo solar. El comportamiento de carga se ajusta correspondientemente."
+modalTitle = "Ajustes de la batería"
 
 [batterySettings.bufferStart]
 full = "cuando está casi llena"
@@ -20,15 +23,59 @@ never = "cuando hay suficiente excedente"
 
 [config]
 
+[config.battery]
+titleAdd = "Añadir medidor de batería"
+titleEdit = "Editar el medidor de batería"
+
+[config.deviceValue]
+capacity = "Capacidad"
+chargeStatus = "Estado"
+chargedEnergy = "Cargado"
+current = "Actual"
+enabled = "Activado"
+energy = "Energía"
+odometer = "Cuentakilómetros"
+phaseCurrents = "Actual L1..L3"
+phasePowers = "Potencia L1..L3"
+phaseVoltages = "Voltaje L1..L3"
+power = "Potencia"
+range = "Alcance"
+soc = "SoC"
+socLimit = "Límite"
+
 [config.form]
 example = "Ejemplo"
 optional = "opcional"
 
+[config.grid]
+titleAdd = "Añadir medidor de cuadrícula"
+titleEdit = "Editar medidor de cuadrícula"
+
 [config.main]
+addLoadpoint = "Añadir un punto de carga"
+addPvBattery = "Añadir solar o batería"
 addVehicle = "Añadir un vehículo"
 edit = "editar"
 title = "Configuración"
+unconfigured = "no configurado"
 vehicles = "Mis vehículos"
+yaml = "Configurado en evcc.yaml. No editable en la interfaz de usuario"
+
+[config.meter]
+cancel = "Cancelar"
+delete = "Borrar"
+save = "Guardar"
+template = "Fabricante"
+titleChoice = "¿Qué quieres añadir?"
+validateSave = "Validar y guardar"
+
+[config.pv]
+titleAdd = "Añadir contador solar"
+titleEdit = "Editar contador solar"
+
+[config.site]
+cancel = "Cancelar"
+save = "Guardar"
 
 [config.validation]
 failed = "fallido"
@@ -40,7 +87,7 @@ validate = "validar"
 
 [config.vehicle]
 cancel = "Cancelar"
-delete = "Borrar el vehículo"
+delete = "Borrar"
 generic = "Otras integraciones"
 offline = "Vehículo genérico"
 online = "Vehículos con API en línea"
@@ -66,20 +113,32 @@ powerSub2 = "cargando..."
 tabTitle = "Comunidad en vivo"
 
 [footer.savings]
+co2Saved = "{value} guardado"
+co2Title = "Emisiones de CO₂"
+configurePriceCo2 = "Aprende a configurar los datos de los precios y el CO₂"
 footerLong = "{percent}% Autoconsumo"
 footerShort = "{percent}% Sol"
 modalTitle = "Evaluación de la energía de carga"
+moneySaved = "{value} guardado"
 percentGrid = "{grid} kWh red"
 percentSelf = "{self} kWh solar"
 percentTitle = "Energía solar"
+periodLabel = "Periodo:"
 priceFeedIn = "{feedInPrice} excedente"
 priceGrid = "{gridPrice} red"
 priceTitle = "Precio de energía"
+referenceGrid = "red"
+referenceLabel = "Datos de referencia:"
 savingsComparedToGrid = "comparado con la red"
 savingsTitle = "Ahorro"
 savingsTotalEnergy = "{total} kWh cargados"
 since = "desde {since}"
 tabTitle = "Mis datos"
+
+[footer.savings.period]
+30d = "últimos 30 días"
+365d = "último año"
+total = "desde siempre"
 
 [footer.sponsor]
 becomeSponsor = "Convertirse en patrocinador"
@@ -125,9 +184,9 @@ about = "Sobre"
 blog = "Blog"
 docs = "Documentación"
 github = "GitHub"
-login = "Login de vehículo"
+login = "Registro de vehículos"
 needHelp = "¿Necesitas ayuda?"
-sessions = "Procesos de carga"
+sessions = "Sesiones de carga"
 settings = "Ajustes"
 
 [header.theme]
@@ -157,19 +216,25 @@ modalTitle = "¿Seguro que quieres volver a empezar?"
 vehicles = "Estacionamiento"
 
 [main.chargingPlan]
-activeLabel = "{time}"
+active = "Activo"
 arrivalTab = "Llegadas"
+day = "Día"
 departureTab = "Salidas"
+goal = "Objetivo de la carga"
 modalTitle = "Plan de carga"
 none = "ninguno"
+remove = "Quitar"
+time = "Tiempo"
 title = "Plan"
 titleMinSoc = "Carga mínima"
 titleTargetCharge = "Partida"
+update = "Aplicar"
 
 [main.energyflow]
 battery = "Batería"
 batteryCharge = "Cargar la batería"
 batteryDischarge = "Descargar la batería"
+batteryHold = "Batería (bloqueada)"
 batteryTooltip = "{energy} de {total} ({soc})"
 gridImport = "Consumo de red"
 homePower = "Consumo"
@@ -178,6 +243,12 @@ noEnergy = "Sin lecturas"
 pvExport = "Excedente"
 pvProduction = "Producción"
 selfConsumption = "Autoconsumo"
+
+[main.heatingStatus]
+charging = "Calefacción..."
+cheapEnergyCharging = "Calefacción con energía barata: {price} (limit {limit})"
+cleanEnergyCharging = "Calefacción con energía limpia: {co2} (limit {limit})"
+waitForVehicle = "Listo. Esperando a que se caliente..."
 
 [main.loadpoint]
 avgPrice = "Precio ⌀"
@@ -196,9 +267,13 @@ solar = "Solar"
 currents = "Corriente de carga"
 default = "defecto"
 disclaimerHint = "Nota:"
-disclaimerText = "Actualmente, los cambios aún no son persistentes y se restablecen al iniciar el servicio."
+onlyForSocBasedCharging = "Estas opciones sólo están disponibles para vehículos con nivel de carga conocido"
 title = "Configuraciones {0}"
 vehicle = "Vehículo"
+
+[main.loadpointSettings.limitSoc]
+description = "Límite de carga que se utiliza cuando este vehículo está conectado"
+label = "Límite predeterminado"
 
 [main.loadpointSettings.maxCurrent]
 label = "Corriente de carga máxima"
@@ -212,6 +287,7 @@ label = "Carga de min. %"
 
 [main.loadpointSettings.phasesConfigured]
 label = "Fases"
+no1p3pSupport = "¿Cómo está conectado tu cargador?"
 phases_0 = "Cambio automático"
 phases_1 = "monofásica"
 phases_1_hint = "({min} a {max})"
@@ -230,28 +306,36 @@ logout = "cerrar sesión"
 
 [main.targetCharge]
 activate = "Activar"
-activeLabel = "{time}"
 co2Limit = "Límite de CO₂ del {co2}"
 costLimitIgnore = "El {limit} configurado será ignorado durante este periodo."
+currentPlan = "Plan activo"
 descriptionEnergy = "¿Hasta cuándo deben haberse cargado {targetEnergy} al vehículo?"
 descriptionSoc = "¿Hasta cuándo debe haberse cargarse el vehículo al {targetSoc}%?"
 inactiveLabel = "Tiempo objetivo"
 modalTitle = "Establecer el tiempo objetivo"
+noActivePlan = "Ningún plan activo"
+notReachableInTime = "Objetivo no alcanzable en el tiempo. Fin estimado: {endTime}"
 onlyInPvMode = "El plan de carga sólo funciona en modo solar"
+planDescription = "Introduzca una hora de salida y evcc cargará el vehículo de la forma más económica o ecológica posible"
 planDuration = "Tiempo de carga"
 planPeriodLabel = "Período"
 planPeriodValue = "de {start} a {end}"
 planUnknown = "aún no se sabe"
+preview = "Vista previa"
 priceLimit = "límite en el precio de {price}"
 remove = "retirar"
+setPlan = "Establecer un plan de carga"
 setTargetTime = "niguno"
-targetEnergyRequired = "También hay que fijar un límite de energía"
+targetIsAboveLimit = "El límite de carga configurado de {limit} se ignorará durante este periodo"
+targetIsAboveVehicleLimit = "Aumentar el límite de vehículos ({limit}) para alcanzar el objetivo de carga"
 targetIsInThePast = "Elige un tiempo en el futuro, Marty."
 targetIsTooFarInTheFuture = "Ajustaremos el plan en cuanto sepamos más sobre el futuro."
 title = "Tiempo objetivo"
 today = "hoy"
 tomorrow = "mañana"
 update = "Actualizar"
+vehicleCapacityDocs = "Aprende a configurarlo"
+vehicleCapacityRequired = "La capacidad de la batería del vehículo es necesaria para estimar el tiempo de carga"
 
 [main.targetChargePlan]
 chargeDuration = "Tiempo de carga"
@@ -286,8 +370,8 @@ vehicleTarget = "límite de vehículo: {soc}%"
 
 [main.vehicleStatus]
 charging = "Cargando ..."
-cheapEnergyCharging = "Energía barata disponible. Cargando..."
-cleanEnergyCharging = "Energía limpia disponible. Cargando..."
+cheapEnergyCharging = "Cargando con energía barata: {price} (limit {limit})"
+cleanEnergyCharging = "Cargando con energía limpia: {co2} (límite {limit})"
 climating = "Preacondicionamiento detectado."
 connected = "Conectado."
 disconnected = "Desconectado."
@@ -364,7 +448,7 @@ allVehicles = "todos los vehiculos"
 filter = "Filtrar"
 
 [settings]
-title = "Ajustes"
+title = "Ajustes generales"
 
 [settings.gridDetails]
 co2 = "CO₂"

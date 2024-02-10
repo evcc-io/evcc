@@ -1,6 +1,10 @@
 [batterySettings]
 batteryLevel = "Battery level"
 capacity = "{energy} of {total}"
+control = "Battery control"
+discharge = "Prevent discharge in fast mode and planned charging."
+disclaimerHint = "Note:"
+disclaimerText = "These settings only affect solar mode. Charging behaviour is adjusted accordingly."
 legendBottomName = "home priority"
 legendBottomSubline = "not used for charging"
 legendMiddleName = "vehicle first"
@@ -9,8 +13,7 @@ legendTitle = "How should solar energy be used?"
 legendTopAutostart = "starts automatically"
 legendTopName = "battery supported charging"
 legendTopSubline = "without interruptions"
-modalTitle = "Battery settings"
-note = "Note: These settings only affect the solar mode. Charging behaviour is adjusted accordingly."
+modalTitle = "Battery Settings"
 
 [batterySettings.bufferStart]
 full = "when nearly full"
@@ -20,15 +23,59 @@ never = "only with enough surplus"
 
 [config]
 
+[config.battery]
+titleAdd = "Add Battery Meter"
+titleEdit = "Edit Battery Meter"
+
+[config.deviceValue]
+capacity = "Capacity"
+chargeStatus = "Status"
+chargedEnergy = "Charged"
+current = "Current"
+enabled = "Enabled"
+energy = "Energy"
+odometer = "Odometer"
+phaseCurrents = "Current L1..L3"
+phasePowers = "Power L1..L3"
+phaseVoltages = "Voltage L1..L3"
+power = "Power"
+range = "Range"
+soc = "SoC"
+socLimit = "Limit"
+
 [config.form]
 example = "Example"
 optional = "optional"
 
+[config.grid]
+titleAdd = "Add Grid Meter"
+titleEdit = "Edit Grid Meter"
+
 [config.main]
+addLoadpoint = "Add charge point"
+addPvBattery = "Add solar or battery"
 addVehicle = "Add vehicle"
 edit = "edit"
 title = "Configuration"
+unconfigured = "not configured"
 vehicles = "My Vehicles"
+yaml = "Configured in evcc.yaml. Not editable in the UI."
+
+[config.meter]
+cancel = "Cancel"
+delete = "Delete"
+save = "Save"
+template = "Manufacturer"
+titleChoice = "What Do You Want To Add?"
+validateSave = "Validate & save"
+
+[config.pv]
+titleAdd = "Add Solar Meter"
+titleEdit = "Edit Solar Meter"
+
+[config.site]
+cancel = "Cancel"
+save = "Save"
 
 [config.validation]
 failed = "failed"
@@ -40,7 +87,7 @@ validate = "validate"
 
 [config.vehicle]
 cancel = "Cancel"
-delete = "Delete vehicle"
+delete = "Delete"
 generic = "Other integrations"
 offline = "Generic vehicle"
 online = "Vehicles with online API"
@@ -66,20 +113,26 @@ powerSub2 = "charging…"
 tabTitle = "Live community"
 
 [footer.savings]
+co2Saved = "{value} saved"
+co2Title = "CO₂ Emissons"
+configurePriceCo2 = "Learn how to configure price and CO₂ data."
 footerLong = "{percent}% solar energy"
 footerShort = "{percent}% solar"
 modalTitle = "Charge Energy Overview"
+moneySaved = "{value} saved"
 percentGrid = "{grid} kWh grid"
 percentSelf = "{self} kWh solar"
 percentTitle = "Solar Energy"
-priceFeedIn = "{feedInPrice} feed-in"
-priceGrid = "{gridPrice} grid"
+periodLabel = "Period:"
 priceTitle = "Energy Price"
-savingsComparedToGrid = "compared to grid"
-savingsTitle = "Savings"
-savingsTotalEnergy = "{total} kWh charged"
-since = "since {since}"
+referenceGrid = "grid"
+referenceLabel = "Reference data:"
 tabTitle = "My data"
+
+[footer.savings.period]
+30d = "last 30 days"
+365d = "last 365 days"
+total = "all time"
 
 [footer.sponsor]
 becomeSponsor = "Become a Sponsor"
@@ -125,10 +178,9 @@ about = "About"
 blog = "Blog"
 docs = "Documentation"
 github = "GitHub"
-login = "Vehicle logins"
+login = "Vehicle Logins"
 needHelp = "Need help?"
-sessions = "Charging sessions"
-settings = "Settings"
+sessions = "Charging Sessions"
 
 [help]
 discussionsButton = "GitHub discussions"
@@ -152,19 +204,25 @@ modalTitle = "Are you sure you want to restart?"
 vehicles = "Parking"
 
 [main.chargingPlan]
-activeLabel = "{time}"
+active = "Active"
 arrivalTab = "Arrival"
+day = "Day"
 departureTab = "Departure"
+goal = "Charging goal"
 modalTitle = "Charging Plan"
 none = "none"
+remove = "Remove"
+time = "Time"
 title = "Plan"
 titleMinSoc = "Min charge"
 titleTargetCharge = "Departure"
+update = "Apply"
 
 [main.energyflow]
 battery = "Battery"
 batteryCharge = "Battery charging"
 batteryDischarge = "Battery discharging"
+batteryHold = "Battery (locked)"
 batteryTooltip = "{energy} of {total} ({soc})"
 gridImport = "Grid use"
 homePower = "Consumption"
@@ -173,6 +231,12 @@ noEnergy = "No meter data"
 pvExport = "Grid export"
 pvProduction = "Production"
 selfConsumption = "Self-consumption"
+
+[main.heatingStatus]
+charging = "Heating…"
+cheapEnergyCharging = "Heating with cheap energy: {price} (limit {limit})"
+cleanEnergyCharging = "Heating with clean energy: {co2} (limit {limit})"
+waitForVehicle = "Ready. Waiting for heater…"
 
 [main.loadpoint]
 avgPrice = "⌀ Price"
@@ -191,9 +255,13 @@ solar = "Solar"
 currents = "Charging current"
 default = "default"
 disclaimerHint = "Note:"
-disclaimerText = "Changes will be lost after the server is restarted."
+onlyForSocBasedCharging = "These options are only available for vehicles with known charging level."
 title = "Settings {0}"
 vehicle = "Vehicle"
+
+[main.loadpointSettings.limitSoc]
+description = "Charging limit that is used when this vehicle is connected."
+label = "Default limit"
 
 [main.loadpointSettings.maxCurrent]
 label = "Max. Current"
@@ -207,6 +275,7 @@ label = "Min. charge %"
 
 [main.loadpointSettings.phasesConfigured]
 label = "Phases"
+no1p3pSupport = "How is your charger connected?"
 phases_0 = "auto-switching"
 phases_1 = "1 phase"
 phases_1_hint = "({min} to {max})"
@@ -227,24 +296,30 @@ logout = "log out"
 activate = "Activate"
 co2Limit = "CO₂ limit of {co2}"
 costLimitIgnore = "The configured {limit} will be ignored during this period."
+currentPlan = "Active plan"
 descriptionEnergy = "Until when should {targetEnergy} be loaded into the vehicle?"
 descriptionSoc = "When should the vehicle be charged to {targetSoc}%?"
 inactiveLabel = "Target time"
+notReachableInTime = "Goal not reachable in time. Estimated finish: {endTime}."
 onlyInPvMode = "Charging plan only works in solar mode."
 planDuration = "Charging time"
 planPeriodLabel = "Period"
 planPeriodValue = "{start} to {end}"
 planUnknown = "not known yet"
+preview = "Preview plan"
 priceLimit = "price limit of {price}"
 remove = "Remove"
 setTargetTime = "none"
-targetEnergyRequired = "You also need to set an energy limit."
+targetIsAboveLimit = "The configured charging limit of {limit} will be ignored during this period."
+targetIsAboveVehicleLimit = "Increase vehicle limit ({limit}) to reach the charging goal."
 targetIsInThePast = "Pick a time in the future, Marty."
 targetIsTooFarInTheFuture = "We will adjust the plan as soon as we know more about the future."
 title = "Target Time"
 today = "today"
 tomorrow = "tomorrow"
 update = "Update"
+vehicleCapacityDocs = "Learn how to configure it."
+vehicleCapacityRequired = "The vehicle battery capacity is required to estimate the charging time."
 
 [main.targetChargePlan]
 chargeDuration = "Charging time"
@@ -279,8 +354,8 @@ vehicleTarget = "Vehicle limit: {soc}%"
 
 [main.vehicleStatus]
 charging = "Charging…"
-cheapEnergyCharging = "Cheap energy available. Charging…"
-cleanEnergyCharging = "Clean energy available. Charging…"
+cheapEnergyCharging = "Charging cheap energy: {price} (limit {limit})"
+cleanEnergyCharging = "Charging clean energy: {co2} (limit {limit})"
 climating = "Pre-conditioning detected."
 connected = "Connected."
 disconnected = "Disconnected."
@@ -355,7 +430,7 @@ allVehicles = "all vehicles"
 filter = "Filter"
 
 [settings]
-title = "Settings"
+title = "General Settings"
 
 [settings.hiddenFeatures]
 label = "Experimental"

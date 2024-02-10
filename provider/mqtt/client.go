@@ -6,6 +6,8 @@ import (
 	"math/rand"
 	"strings"
 	"sync"
+	"sync/atomic"
+	"time"
 
 	paho "github.com/eclipse/paho.mqtt.golang"
 	"github.com/evcc-io/evcc/api"
@@ -38,6 +40,7 @@ type Client struct {
 	Client   paho.Client
 	broker   string
 	Qos      byte
+	inflight uint32
 	listener map[string][]func(string)
 }
 
@@ -126,19 +129,26 @@ func (m *Client) Publish(topic string, retained bool, payload interface{}) error
 	return nil
 }
 
-// Listen validates uniqueness and registers and attaches listener
-func (m *Client) Listen(topic string, callback func(string)) {
+// Listen attaches listener to slice of listeners for given topic
+func (m *Client) Listen(topic string, callback func(string)) error {
 	m.mux.Lock()
 	m.listener[topic] = append(m.listener[topic], callback)
 	m.mux.Unlock()
 
-	m.listen(topic)
+	token := m.listen(topic)
+
+	select {
+	case <-time.After(request.Timeout):
+		return fmt.Errorf("subscribe: %s: %w", topic, api.ErrTimeout)
+	case <-token.Done():
+		return nil
+	}
 }
 
 // ListenSetter creates a /set listener that resets the payload after handling
-func (m *Client) ListenSetter(topic string, callback func(string) error) {
+func (m *Client) ListenSetter(topic string, callback func(string) error) error {
 	topic += "/set"
-	m.Listen(topic, func(payload string) {
+	err := m.Listen(topic, func(payload string) {
 		if err := callback(payload); err != nil {
 			m.log.ERROR.Printf("set %s: %v", topic, err)
 		}
@@ -146,10 +156,11 @@ func (m *Client) ListenSetter(topic string, callback func(string) error) {
 			m.log.ERROR.Printf("clear: %s: %v", topic, err)
 		}
 	})
+	return err
 }
 
 // listen attaches listener to topic
-func (m *Client) listen(topic string) {
+func (m *Client) listen(topic string) paho.Token {
 	token := m.Client.Subscribe(topic, m.Qos, func(c paho.Client, msg paho.Message) {
 		payload := string(msg.Payload())
 		m.log.TRACE.Printf("recv %s: '%v'", topic, payload)
@@ -163,11 +174,19 @@ func (m *Client) listen(topic string) {
 			}
 		}
 	})
-	go m.WaitForToken("subscribe", topic, token)
+	return token
 }
 
 // WaitForToken synchronously waits until token operation completed
 func (m *Client) WaitForToken(action, topic string, token paho.Token) {
+	if inflight := atomic.LoadUint32(&m.inflight); inflight > 64 {
+		return
+	}
+
+	// track inflight token waits
+	atomic.AddUint32(&m.inflight, 1)
+	defer atomic.AddUint32(&m.inflight, ^uint32(0))
+
 	err := api.ErrTimeout
 	if token.WaitTimeout(request.Timeout) {
 		err = token.Error()

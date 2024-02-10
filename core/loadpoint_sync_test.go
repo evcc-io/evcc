@@ -5,10 +5,10 @@ import (
 
 	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/mock"
 	"github.com/evcc-io/evcc/util"
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 )
 
 func TestSyncCharger(t *testing.T) {
@@ -28,7 +28,7 @@ func TestSyncCharger(t *testing.T) {
 	for _, tc := range tc {
 		t.Logf("%+v", tc)
 
-		charger := mock.NewMockCharger(ctrl)
+		charger := api.NewMockCharger(ctrl)
 		charger.EXPECT().Enabled().Return(tc.actual, nil).AnyTimes()
 
 		if tc.status == api.StatusC {
@@ -43,7 +43,7 @@ func TestSyncCharger(t *testing.T) {
 			enabled: tc.expected,
 		}
 
-		assert.NoError(t, lp.syncCharger())
+		require.NoError(t, lp.syncCharger())
 		assert.Equal(t, tc.corrected, lp.enabled)
 	}
 }

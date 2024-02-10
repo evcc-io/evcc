@@ -70,6 +70,12 @@ params:
     description:
       de: Liste der Zählerwerte
       en: List of meter values
+  - name: chargingrateunit
+    advanced: true
+    type: string
+    description:
+      de: Einheit, in der ChargingProfile-Werte gesetzt werden ("W" oder "A")
+      en: Unit for setting ChargingProfile values ("W" or "A")
 render: |
   {{ include "ocpp" . }}
   {{- if ne .getconfiguration "true" }}
@@ -83,4 +89,7 @@ render: |
   {{- end }}
   {{- if .metervalues }}
   metervalues: {{ .metervalues }}
+  {{- end }}
+  {{- if .chargingrateunit }}
+  chargingrateunit: {{ .chargingrateunit }}
   {{- end }}

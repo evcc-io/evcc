@@ -37,51 +37,86 @@ func TestGreenShare(t *testing.T) {
 		grid, pv, battery, home, lp                           float64
 		greenShareTotal, greenShareHome, greenShareLoadpoints float64
 	}{
-		{"half grid, half pv, green home",
+		{
+			"half grid, half pv, green home",
 			1000, 1000, 0, 1000, 1000,
-			0.5, 1, 0},
-		{"half grid, half pv, no home",
+			0.5, 1, 0,
+		},
+		{
+			"half grid, half pv, no home",
 			1000, 1000, 0, 0, 2000,
-			0.5, 1, 0.5},
-		{"half grid, half pv, no lp",
+			0.5, 1, 0.5,
+		},
+		{
+			"half grid, half pv, no lp",
 			2500, 2500, 0, 5000, 0,
-			0.5, 0.5, 0},
-		{"full pv",
+			0.5, 0.5, 0,
+		},
+		{
+			"full pv",
 			0, 5000, 0, 1000, 4000,
-			1, 1, 1},
-		{"full grid",
+			1, 1, 1,
+		},
+		{
+			"full grid",
 			5000, 0, 0, 1000, 4000,
-			0, 0, 0},
-		{"half grid, half battery, green home",
+			0, 0, 0,
+		},
+		{
+			"half grid, half battery, green home",
 			1000, 0, 1000, 1000, 1000,
-			0.5, 1, 0},
-		{"half grid, half battery, no home",
+			0.5, 1, 0,
+		},
+		{
+			"half grid, half battery, no home",
 			1000, 0, 1000, 0, 2000,
-			0.5, 1, 0.5},
-		{"half grid, half battery, no lp",
+			0.5, 1, 0.5,
+		},
+		{
+			"half grid, half battery, no lp",
 			1000, 0, 1000, 2000, 0,
-			0.5, 0.5, 0},
-		{"full pv, pv export",
+			0.5, 0.5, 0,
+		},
+		{
+			"full pv, pv export",
 			-5000, 10000, 0, 1000, 4000,
-			1, 1, 1},
-		{"full pv, pv export, no lp",
+			1, 1, 1,
+		},
+		{
+			"full pv, pv export, no lp",
 			-5000, 10000, 0, 5000, 0,
-			1, 1, 1},
-		{"full pv, pv export, battery charge",
+			1, 1, 1,
+		},
+		{
+			"full pv, pv export, battery charge",
 			-2500, 10000, -2500, 1000, 4000,
-			1, 1, 1},
-		{"full grid, battery charge",
+			1, 1, 1,
+		},
+		{
+			"full grid, battery charge",
 			3000, 0, -1000, 1000, 1000,
-			0, 0, 0},
-		{"full grid, battery charge, no lp",
+			0, 0, 0,
+		},
+		{
+			"full grid, battery charge, no lp",
 			2000, 0, -1000, 1000, 0,
-			0, 0, 0},
-		{"half grid, half pv, battery charge, no lp",
+			0, 0, 0,
+		},
+		{
+			"half grid, half pv, battery charge, no lp",
 			1000, 1000, -1000, 1000, 0,
-			1, 1, 0},
-		{"half grid, half pv, battery charge, home, lp",
+			0.5, 1, 0,
+		},
+		{
+			"half grid, half pv, battery charge, home, lp",
 			1000, 1000, -1000, 500, 500,
-			1, 1, 1},
+			0.5, 1, 0,
+		},
+		{
+			"pv ac limited, battery charge & grid import",
+			1000, 3000, -1000, 1000, 2000,
+			0.75, 1, 0.5,
+		},
 	}
 
 	for _, tc := range tc {
@@ -93,7 +128,8 @@ func TestGreenShare(t *testing.T) {
 			batteryPower: tc.battery,
 		}
 
-		greenShareTotal := s.greenShare(0, tc.home+tc.lp)
+		totalPower := tc.grid + tc.pv + max(0, tc.battery)
+		greenShareTotal := s.greenShare(0, totalPower)
 		if greenShareTotal != tc.greenShareTotal {
 			t.Errorf("greenShareTotal wanted %.3f, got %.3f", tc.greenShareTotal, greenShareTotal)
 		}
@@ -101,7 +137,7 @@ func TestGreenShare(t *testing.T) {
 		if greenShareHome != tc.greenShareHome {
 			t.Errorf("greenShareHome wanted %.3f, got %.3f", tc.greenShareHome, greenShareHome)
 		}
-		greenShareLoadpoints := s.greenShare(tc.home, tc.home+tc.lp)
+		greenShareLoadpoints := s.greenShare(tc.home+max(0, -tc.battery), totalPower)
 		if greenShareLoadpoints != tc.greenShareLoadpoints {
 			t.Errorf("greenShareLoadpoints wanted %.3f, got %.3f", tc.greenShareLoadpoints, greenShareLoadpoints)
 		}

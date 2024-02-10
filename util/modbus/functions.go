@@ -4,15 +4,9 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
-	"math"
 	"strconv"
 	"strings"
 )
-
-func RTUFloat64ToFloat64(b []byte) float64 {
-	bits := binary.BigEndian.Uint64(b)
-	return math.Float64frombits(bits)
-}
 
 // decodeMask converts a bit mask in decimal or hex format to uint64
 func decodeMask(mask string) (uint64, error) {
@@ -53,7 +47,7 @@ func decodeBool16(mask uint64) func(b []byte) float64 {
 	return func(b []byte) float64 {
 		u := binary.BigEndian.Uint16(b)
 		if mask > 0 {
-			u = u & uint16(mask)
+			u &= uint16(mask)
 		}
 		if u > 0 {
 			return 1

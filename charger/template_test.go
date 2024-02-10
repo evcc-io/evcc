@@ -17,8 +17,10 @@ var acceptable = []string{
 	"hciconfig provided no response",
 	"connect: no route to host",
 	"connect: connection refused",
+	"connector already registered: 1", // ocpp
 	"error connecting: Network Error",
 	"i/o timeout",
+	"loadpoint 1 is not configured", // openWB
 	"recv timeout",
 	"(Client.Timeout exceeded while awaiting headers)",
 	"can only have either uri or device", // modbus
@@ -32,6 +34,7 @@ var acceptable = []string{
 
 func TestTemplates(t *testing.T) {
 	templates.TestClass(t, templates.Charger, func(t *testing.T, values map[string]any) {
+		t.Helper()
 		if _, err := NewFromConfig("template", values); err != nil && !test.Acceptable(err, acceptable) {
 			t.Log(values)
 			t.Error(err)

@@ -42,12 +42,7 @@ func runCharger(cmd *cobra.Command, args []string) {
 		log.FATAL.Fatal(err)
 	}
 
-	// select single charger
-	if err := selectByName(args, &conf.Chargers); err != nil {
-		log.FATAL.Fatal(err)
-	}
-
-	if err := configureChargers(conf.Chargers); err != nil {
+	if err := configureChargers(conf.Chargers, args...); err != nil {
 		log.FATAL.Fatal(err)
 	}
 

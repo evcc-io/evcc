@@ -6,6 +6,7 @@
 			tabindex="0"
 			data-bs-toggle="dropdown"
 			aria-expanded="false"
+			data-testid="change-vehicle"
 		>
 			<slot />
 		</div>
@@ -13,14 +14,15 @@
 			<li>
 				<h6 class="dropdown-header">{{ $t("main.vehicle.changeVehicle") }}</h6>
 			</li>
-			<li v-for="vehicle in vehicles" :key="vehicle">
-				<button type="button" class="dropdown-item" @click="changeVehicle(vehicle.id)">
+			<li v-for="vehicle in vehicles" :key="vehicle.name">
+				<button type="button" class="dropdown-item" @click="changeVehicle(vehicle.name)">
 					{{ vehicle.title }}
 				</button>
 			</li>
-			<li v-if="!isUnknown">
+			<li>
 				<button type="button" class="dropdown-item" @click="removeVehicle()">
-					{{ $t("main.vehicle.unknown") }}
+					<span v-if="connected">{{ $t("main.vehicle.unknown") }}</span>
+					<span v-else>{{ $t("main.vehicle.none") }}</span>
 				</button>
 			</li>
 		</ul>
@@ -34,9 +36,9 @@ import Dropdown from "bootstrap/js/dist/dropdown";
 export default {
 	name: "VehicleOptions",
 	props: {
+		connected: Boolean,
 		id: [String, Number],
 		vehicles: Array,
-		isUnknown: Boolean,
 	},
 	emits: ["change-vehicle", "remove-vehicle"],
 	computed: {
@@ -51,8 +53,8 @@ export default {
 		this.dropdown?.dispose();
 	},
 	methods: {
-		changeVehicle(index) {
-			this.$emit("change-vehicle", index + 1);
+		changeVehicle(name) {
+			this.$emit("change-vehicle", name);
 		},
 		removeVehicle() {
 			this.$emit("remove-vehicle");

@@ -14,7 +14,7 @@
 				</CustomSelect>
 			</template>
 			<template #value>
-				<div data-testid="sessionInfoValue" @click="nextSessionInfo">
+				<div class="value" data-testid="sessionInfoValue" @click="nextSessionInfo">
 					<div :class="{ 'd-none d-sm-block': showSm }">{{ value }}</div>
 					<div v-if="showSm" class="d-block d-sm-none">{{ valueSm }}</div>
 				</div>
@@ -38,12 +38,11 @@ export default {
 	mixins: [formatter],
 	props: {
 		id: Number,
-		sessionEnergy: Number,
-		sessionCo2PerKWh: Number,
-		sessionPricePerKWh: Number,
-		sessionPrice: Number,
+		sessionCo2PerKWh: { type: Number, default: 0 },
+		sessionPricePerKWh: { type: Number, default: 0 },
+		sessionPrice: { type: Number, default: 0 },
 		currency: String,
-		sessionSolarPercentage: Number,
+		sessionSolarPercentage: { type: Number, default: 0 },
 		chargeRemainingDurationInterpolated: Number,
 		chargeDurationInterpolated: Number,
 		tariffCo2: Number,

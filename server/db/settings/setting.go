@@ -1,10 +1,12 @@
 package settings
 
 import (
+	"cmp"
 	"encoding/json"
 	"errors"
 	"slices"
 	"strconv"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -20,6 +22,7 @@ type setting struct {
 }
 
 var (
+	mu       sync.RWMutex
 	settings []setting
 	dirty    int32
 )
@@ -41,7 +44,22 @@ func Persist() error {
 	return db.Instance.Save(settings).Error
 }
 
+func All() []setting {
+	mu.RLock()
+	defer mu.RUnlock()
+
+	res := slices.Clone(settings)
+	slices.SortFunc(res, func(i, j setting) int {
+		return cmp.Compare(i.Key, j.Key)
+	})
+
+	return res
+}
+
 func SetString(key string, val string) {
+	mu.Lock()
+	defer mu.Unlock()
+
 	idx := slices.IndexFunc(settings, func(s setting) bool {
 		return s.Key == key
 	})
@@ -67,6 +85,10 @@ func SetTime(key string, val time.Time) {
 	SetString(key, val.Format(time.RFC3339))
 }
 
+func SetBool(key string, val bool) {
+	SetString(key, strconv.FormatBool(val))
+}
+
 func SetJson(key string, val any) error {
 	b, err := json.Marshal(val)
 	if err == nil {
@@ -75,11 +97,10 @@ func SetJson(key string, val any) error {
 	return err
 }
 
-func SetBool(key string, val bool) {
-	SetString(key, strconv.FormatBool(val))
-}
-
 func String(key string) (string, error) {
+	mu.RLock()
+	defer mu.RUnlock()
+
 	idx := slices.IndexFunc(settings, func(s setting) bool {
 		return s.Key == key
 	})

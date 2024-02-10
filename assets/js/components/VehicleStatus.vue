@@ -3,6 +3,7 @@
 </template>
 
 <script>
+import { DEFAULT_LOCALE } from "../i18n";
 import formatter from "../mixins/formatter";
 import { CO2_TYPE } from "../units";
 
@@ -16,8 +17,10 @@ export default {
 		enabled: Boolean,
 		connected: Boolean,
 		charging: Boolean,
-		targetTime: String,
+		heating: Boolean,
+		effectivePlanTime: String,
 		planProjectedStart: String,
+		planActive: Boolean,
 		phaseAction: String,
 		phaseRemainingInterpolated: Number,
 		pvAction: String,
@@ -25,11 +28,13 @@ export default {
 		guardAction: String,
 		guardRemainingInterpolated: Number,
 		targetChargeDisabled: Boolean,
-		climaterActive: Boolean,
+		vehicleClimaterActive: Boolean,
 		smartCostLimit: Number,
 		smartCostType: String,
+		smartCostActive: Boolean,
 		tariffGrid: Number,
 		tariffCo2: Number,
+		currency: String,
 	},
 	computed: {
 		phaseTimerActive() {
@@ -46,11 +51,15 @@ export default {
 		guardTimerActive() {
 			return this.guardRemainingInterpolated > 0 && this.guardAction === "enable";
 		},
-		isCo2() {
-			return this.smartCostType === CO2_TYPE;
-		},
 		message: function () {
 			const t = (key, data) => {
+				if (this.heating) {
+					// check for special heating status translation
+					const name = `main.heatingStatus.${key}`;
+					if (this.$te(name, DEFAULT_LOCALE)) {
+						return this.$t(name, data);
+					}
+				}
 				return this.$t(`main.vehicleStatus.${key}`, data);
 			};
 
@@ -62,12 +71,12 @@ export default {
 				return t("minCharge", { soc: this.minSoc });
 			}
 
-			// target charge
-			if (this.targetTime && !this.targetChargeDisabled) {
-				if (this.charging) {
+			// plan
+			if (this.effectivePlanTime && !this.targetChargeDisabled) {
+				if (this.planActive && this.charging) {
 					return t("targetChargeActive");
 				}
-				if (this.enabled) {
+				if (this.planActive && this.enabled) {
 					return t("targetChargeWaitForVehicle");
 				}
 				if (this.planProjectedStart) {
@@ -77,14 +86,17 @@ export default {
 				}
 			}
 
-			// clean energy
-			if (this.charging && this.isCo2 && this.tariffCo2 < this.smartCostLimit) {
-				return t("cleanEnergyCharging");
-			}
-
-			// cheap energy
-			if (this.charging && !this.isCo2 && this.tariffGrid < this.smartCostLimit) {
-				return t("cheapEnergyCharging");
+			// clean or cheap energy
+			if (this.charging && this.smartCostActive) {
+				return this.smartCostType === CO2_TYPE
+					? t("cleanEnergyCharging", {
+							co2: this.fmtCo2Short(this.tariffCo2),
+							limit: this.fmtCo2Short(this.smartCostLimit),
+						})
+					: t("cheapEnergyCharging", {
+							price: this.fmtPricePerKWh(this.tariffGrid, this.currency, true),
+							limit: this.fmtPricePerKWh(this.smartCostLimit, this.currency, true),
+						});
 			}
 
 			if (this.pvTimerActive && !this.enabled && this.pvAction === "enable") {
@@ -93,7 +105,7 @@ export default {
 				});
 			}
 
-			if (this.enabled && this.climaterActive) {
+			if (this.enabled && this.vehicleClimaterActive) {
 				return t("climating");
 			}
 

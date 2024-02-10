@@ -11,7 +11,6 @@ params:
   - name: usage
     choice: ["grid", "pv", "battery"]
   - name: host
-    required: true
   - name: token
     help:
       en: "Required if Envoy Firmware D7.x.xxx. Token is valid for one year. Instructions for obtaining a token via web UI: https://enphase.com/download/accessing-iq-gateway-local-apis-or-local-ui-token-based-authentication"
@@ -24,7 +23,6 @@ render: |
   power:
     source: http
     uri: http://{{ .host }}/production.json
-    method: GET
     {{- if .token }}
     auth:
       type: bearer
@@ -37,7 +35,6 @@ render: |
   power:
     source: http
     uri: http://{{ .host }}/production.json
-    method: GET
     {{- if .token }}
     auth:
       type: bearer
@@ -48,7 +45,6 @@ render: |
   energy:
     source: http
     uri: http://{{ .host }}/production.json
-    method: GET
     {{- if .token }}
     auth:
       type: bearer
@@ -62,7 +58,6 @@ render: |
   power:
     source: http
     uri: http://{{ .host }}/production.json
-    method: GET
     {{- if .token }}
     auth:
       type: bearer
@@ -73,7 +68,6 @@ render: |
   soc:
     source: http
     uri: http://{{ .host }}/ivp/ensemble/inventory
-    method: GET
     {{- if .token }}
     auth:
       type: bearer

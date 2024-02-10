@@ -1,6 +1,8 @@
 [batterySettings]
 batteryLevel = "Nabití baterie"
 capacity = "{energy} z {total}"
+disclaimerHint = "Poznámka:"
+disclaimerText = "Tato nastavení ovlivňují pouze solární režim. Chování dobíjení je příslušně upraveno."
 legendBottomName = "dom má přednost"
 legendBottomSubline = "nepoužito pro dobíjení"
 legendMiddleName = "nejdříve vozidlo"
@@ -10,7 +12,6 @@ legendTopAutostart = "startuje automaticky"
 legendTopName = "dobíjení podporované baterií"
 legendTopSubline = "bez přerušování"
 modalTitle = "Nastavení baterie"
-note = "Poznámka: Tato nastavení ovlivňují pouze solární režim. Chování dobíjení je příslušně upraveno."
 
 [batterySettings.bufferStart]
 full = "když je skoro plná"
@@ -119,7 +120,6 @@ modalTitle = "Opravdu chcete restartovat?"
 vehicles = "Parkoviště"
 
 [main.chargingPlan]
-activeLabel = "{time}"
 arrivalTab = "Příchod"
 departureTab = "Odchod"
 modalTitle = "Plán nabíjení"
@@ -154,8 +154,6 @@ solar = "Slunce"
 [main.loadpointSettings]
 currents = "Nabíjecí proud"
 default = "výchozí"
-disclaimerHint = "Poznámka:"
-disclaimerText = "Po restartovaní serveru budou zmeny ztraceny"
 title = "Nastavení {0}"
 vehicle = "Vozidlo"
 

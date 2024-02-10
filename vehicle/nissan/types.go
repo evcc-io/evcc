@@ -78,7 +78,7 @@ type StatusResponse struct {
 
 type Attributes struct {
 	ChargeStatus          float32   `json:"chargeStatus"`
-	RangeHvacOff          int       `json:"rangeHvacOff"`
+	RangeHvacOff          *int      `json:"rangeHvacOff"`
 	BatteryLevel          int       `json:"batteryLevel"`
 	BatteryCapacity       int       `json:"batteryCapacity"`
 	BatteryTemperature    int       `json:"batteryTemperature"`
@@ -111,7 +111,7 @@ func (ct *Timestamp) UnmarshalJSON(data []byte) error {
 
 	t, err := time.Parse(timeFormat, s)
 	if err == nil {
-		(*ct).Time = t
+		ct.Time = t
 	}
 
 	return err

@@ -13,6 +13,7 @@
 				ref="details"
 				class="fw-normal"
 				:class="{ 'text-decoration-underline': detailsClickable }"
+				data-testid="energyflow-entry-details"
 				data-bs-toggle="tooltip"
 				:tabindex="detailsClickable ? 0 : undefined"
 				@click="detailsClicked"

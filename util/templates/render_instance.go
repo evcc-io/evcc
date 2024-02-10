@@ -2,6 +2,7 @@ package templates
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/evcc-io/evcc/util"
 	"gopkg.in/yaml.v3"
@@ -14,30 +15,34 @@ type Instance struct {
 }
 
 // RenderInstance renders an actual configuration instance
-func RenderInstance(class Class, other map[string]interface{}) (Instance, error) {
+func RenderInstance(class Class, other map[string]interface{}) (*Instance, error) {
 	var cc struct {
 		Template string
 		Other    map[string]interface{} `mapstructure:",remain"`
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
-		return *new(Instance), err
+		return nil, err
 	}
 
 	tmpl, err := ByName(class, cc.Template)
 	if err != nil {
-		return *new(Instance), err
+		return nil, err
 	}
 
-	b, _, err := tmpl.RenderResult(TemplateRenderModeInstance, other)
+	b, _, err := tmpl.RenderResult(RenderModeInstance, other)
 	if err != nil {
-		return *new(Instance), err
+		return nil, util.NewConfigError(err)
 	}
 
 	var instance Instance
-	if err = yaml.Unmarshal(b, &instance); err == nil && instance.Type == "" {
-		err = errors.New("empty instance type- check for missing usage")
+	if err := yaml.Unmarshal(b, &instance); err != nil {
+		return nil, fmt.Errorf("%w:\n%s", err, string(b))
 	}
 
-	return instance, err
+	if instance.Type == "" {
+		return nil, errors.New("empty instance type- check for missing usage")
+	}
+
+	return &instance, nil
 }

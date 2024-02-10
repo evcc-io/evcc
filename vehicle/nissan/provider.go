@@ -43,7 +43,7 @@ func (v *Provider) status(battery func() (StatusResponse, error), refresh func()
 
 	if err == nil {
 		// result valid?
-		if time.Since(res.Attributes.LastUpdateTime.Time) < v.expiry {
+		if time.Since(res.Attributes.LastUpdateTime.Time) < v.expiry || res.Attributes.LastUpdateTime.IsZero() {
 			v.refreshTime = time.Time{}
 			return res, err
 		}
@@ -118,7 +118,11 @@ func (v *Provider) Range() (int64, error) {
 	res, err := v.statusG()
 
 	if err == nil {
-		return int64(res.Attributes.RangeHvacOff), nil
+		if res.Attributes.RangeHvacOff == nil {
+			return 0, api.ErrNotAvailable
+		}
+
+		return int64(*res.Attributes.RangeHvacOff), nil
 	}
 
 	return 0, err

@@ -15,7 +15,6 @@ render: |
   power:
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    model: huawei
     timeout: {{ .timeout }}
     connectdelay: 1s
     register:
@@ -25,7 +24,6 @@ render: |
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    model: huawei
     timeout: {{ .timeout }}
     register:
       address: 32106 # Accumulated energy yield

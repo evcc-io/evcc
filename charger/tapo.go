@@ -55,17 +55,12 @@ func NewTapo(embed embed, uri, user, password string, standbypower float64) (*Ta
 
 // Enabled implements the api.Charger interface
 func (c *Tapo) Enabled() (bool, error) {
-	resp, err := c.conn.ExecCmd("get_device_info", false)
-	if err != nil {
-		return false, err
-	}
-	return resp.Result.DeviceON, nil
+	return c.conn.Enabled()
 }
 
 // Enable implements the api.Charger interface
 func (c *Tapo) Enable(enable bool) error {
-	_, err := c.conn.ExecCmd("set_device_info", enable)
-	return err
+	return c.conn.Enable(enable)
 }
 
 var _ api.ChargeRater = (*Tapo)(nil)

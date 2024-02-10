@@ -7,7 +7,6 @@ params:
   - name: usage
     choice: ["grid", "pv", "charge"]
   - name: host
-    default: 192.0.2.2
   - name: user
   - name: password
 render: |

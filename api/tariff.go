@@ -8,5 +8,6 @@ const (
 	_ TariffType = iota
 	TariffTypePriceStatic
 	TariffTypePriceDynamic
+	TariffTypePriceForecast
 	TariffTypeCo2
 )

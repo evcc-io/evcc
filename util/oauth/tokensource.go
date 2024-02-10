@@ -4,7 +4,7 @@ import (
 	"errors"
 	"sync"
 
-	"github.com/imdario/mergo"
+	"dario.cat/mergo"
 	"golang.org/x/oauth2"
 )
 
@@ -19,6 +19,11 @@ type TokenSource struct {
 }
 
 func RefreshTokenSource(token *oauth2.Token, refresher TokenRefresher) oauth2.TokenSource {
+	if token == nil {
+		// allocate an (expired) token or mergeToken will fail
+		token = new(oauth2.Token)
+	}
+
 	ts := &TokenSource{
 		token:     token,
 		refresher: refresher,

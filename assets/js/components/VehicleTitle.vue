@@ -2,15 +2,15 @@
 	<div class="d-flex justify-content-between mb-3 align-items-center" data-testid="vehicle-title">
 		<h4 class="d-flex align-items-center m-0 flex-grow-1 overflow-hidden">
 			<shopicon-regular-refresh
-				v-if="icon === 'refresh'"
+				v-if="iconType === 'refresh'"
 				ref="refresh"
 				data-bs-toggle="tooltip"
 				:title="$t('main.vehicle.detectionActive')"
 				class="me-2 flex-shrink-0 spin"
 			></shopicon-regular-refresh>
 			<VehicleIcon
-				v-else-if="icon === 'vehicle'"
-				:name="vehicleIcon"
+				v-else-if="iconType === 'vehicle'"
+				:name="icon"
 				class="me-2 flex-shrink-0"
 			/>
 			<shopicon-regular-cablecharge
@@ -19,10 +19,10 @@
 			></shopicon-regular-cablecharge>
 			<VehicleOptions
 				v-if="showOptions"
+				v-bind="vehicleOptionsProps"
 				:id="id"
 				class="options"
 				:vehicles="otherVehicles"
-				:is-unknown="isUnknown"
 				@change-vehicle="changeVehicle"
 				@remove-vehicle="removeVehicle"
 			>
@@ -40,26 +40,27 @@
 <script>
 import "@h2d2/shopicons/es/regular/refresh";
 import "@h2d2/shopicons/es/regular/cablecharge";
-import VehicleIcon from "./VehicleIcon";
 import Tooltip from "bootstrap/js/dist/tooltip";
-
+import VehicleIcon from "./VehicleIcon";
 import VehicleOptions from "./VehicleOptions.vue";
+import collector from "../mixins/collector";
 
 export default {
 	name: "VehicleTitle",
 	components: { VehicleOptions, VehicleIcon },
+	mixins: [collector],
 	props: {
-		id: [String, Number],
-		vehiclePresent: Boolean,
-		vehicleTitle: String,
-		vehicleIcon: String,
-		vehicleDetectionActive: Boolean,
 		connected: Boolean,
+		id: [String, Number],
+		vehicleDetectionActive: Boolean,
+		icon: String,
+		vehicleName: String,
 		vehicles: { type: Array, default: () => [] },
+		title: String,
 	},
 	emits: ["change-vehicle", "remove-vehicle"],
 	computed: {
-		icon() {
+		iconType() {
 			if (this.vehicleDetectionActive) {
 				return "refresh";
 			}
@@ -69,31 +70,29 @@ export default {
 			return null;
 		},
 		name() {
-			if (this.vehiclePresent) {
-				return this.vehicleTitle || this.$t("main.vehicle.fallbackName");
+			if (this.title) {
+				return this.title;
 			}
 			if (this.connected) {
 				return this.$t("main.vehicle.unknown");
 			}
 			return this.$t("main.vehicle.none");
 		},
-		isUnknown() {
-			return !this.vehiclePresent;
+		vehicleKnown() {
+			return !!this.vehicleName;
 		},
 		otherVehicles() {
-			return this.vehicles
-				.map((v, id) => ({
-					id: id,
-					title: v,
-				}))
-				.filter((v) => v.title !== this.vehicleTitle);
+			return this.vehicles.filter((v) => v.name !== this.vehicleName);
 		},
 		showOptions() {
-			return !this.isUnknown || this.vehicles.length;
+			return this.vehicleKnown || this.vehicles.length;
+		},
+		vehicleOptionsProps: function () {
+			return this.collectProps(VehicleOptions);
 		},
 	},
 	watch: {
-		icon: function () {
+		iconType: function () {
 			this.tooltip();
 		},
 	},
@@ -101,8 +100,8 @@ export default {
 		this.tooltip();
 	},
 	methods: {
-		changeVehicle(index) {
-			this.$emit("change-vehicle", index);
+		changeVehicle(name) {
+			this.$emit("change-vehicle", name);
 		},
 		removeVehicle() {
 			this.$emit("remove-vehicle");

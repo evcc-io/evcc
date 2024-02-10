@@ -121,7 +121,7 @@ func (wb *Weidmüller) getPhaseValues(reg uint16) (float64, float64, float64, er
 	}
 
 	var res [3]float64
-	for i := 0; i < 3; i++ {
+	for i := range res {
 		res[i] = float64(binary.BigEndian.Uint32(b[4*i:])) / 1e3
 	}
 
@@ -233,11 +233,4 @@ func (wb *Weidmüller) Phases1p3p(phases int) error {
 	_, err := wb.conn.WriteMultipleRegisters(wmRegPhases, 1, b)
 
 	return err
-}
-
-var _ api.Diagnosis = (*Weidmüller)(nil)
-
-// Diagnose implements the api.Diagnosis interface
-func (wb *Weidmüller) Diagnose() {
-
 }

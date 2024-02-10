@@ -22,10 +22,6 @@ import (
 	"github.com/evcc-io/evcc/util/pipe"
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/evcc-io/evcc/util/telemetry"
-	"github.com/fatih/structs"
-	"github.com/jeremywohl/flatten"
-	"golang.org/x/exp/maps"
-
 	_ "github.com/joho/godotenv/autoload"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/cobra"
@@ -38,9 +34,9 @@ var (
 	log     = util.NewLogger("main")
 	cfgFile string
 
-	ignoreEmpty  = ""                               // ignore empty keys
-	ignoreErrors = []string{"warn", "error"}        // ignore errors
-	ignoreMqtt   = []string{"auth", "releaseNotes"} // excessive size may crash certain brokers
+	ignoreEmpty = ""                                      // ignore empty keys
+	ignoreLogs  = []string{"log"}                         // ignore log messages, including warn/error
+	ignoreMqtt  = []string{"log", "auth", "releaseNotes"} // excessive size may crash certain brokers
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -94,12 +90,6 @@ func initConfig() {
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	viper.AutomaticEnv() // read in environment variables that match
 
-	// register all known config keys
-	flat, _ := flatten.Flatten(structs.Map(conf), "", flatten.DotStyle)
-	for _, v := range maps.Keys(flat) {
-		_ = viper.BindEnv(v)
-	}
-
 	// print version
 	util.LogLevel("info", nil)
 	log.INFO.Printf("evcc %s", server.FormattedVersion())
@@ -137,7 +127,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 	// value cache
 	cache := util.NewCache()
-	go cache.Run(pipe.NewDropper(ignoreErrors...).Pipe(tee.Attach()))
+	go cache.Run(pipe.NewDropper(ignoreLogs...).Pipe(tee.Attach()))
 
 	// create web server
 	socketHub := server.NewSocketHub()
@@ -157,7 +147,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	go socketHub.Run(pipe.NewDropper(ignoreEmpty).Pipe(tee.Attach()), cache)
 
 	// setup values channel
-	valueChan := make(chan util.Param)
+	valueChan := make(chan util.Param, 64)
 	go tee.Run(valueChan)
 
 	// capture log messages for UI
@@ -179,7 +169,13 @@ func runRoot(cmd *cobra.Command, args []string) {
 	// setup modbus proxy
 	if err == nil {
 		for _, cfg := range conf.ModbusProxy {
-			if err = modbus.StartProxy(cfg.Port, cfg.Settings, cfg.ReadOnly); err != nil {
+			var mode modbus.ReadOnlyMode
+			mode, err = modbus.ReadOnlyModeString(cfg.ReadOnly)
+			if err != nil {
+				break
+			}
+
+			if err = modbus.StartProxy(cfg.Port, cfg.Settings, mode); err != nil {
 				break
 			}
 		}
@@ -193,13 +189,16 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 	// setup database
 	if err == nil && conf.Influx.URL != "" {
-		configureInflux(conf.Influx, site, pipe.NewDropper(append(ignoreErrors, ignoreEmpty)...).Pipe(tee.Attach()))
+		configureInflux(conf.Influx, site, pipe.NewDropper(append(ignoreLogs, ignoreEmpty)...).Pipe(tee.Attach()))
 	}
 
 	// setup mqtt publisher
 	if err == nil && conf.Mqtt.Broker != "" {
-		publisher := server.NewMQTT(strings.Trim(conf.Mqtt.Topic, "/"))
-		go publisher.Run(site, pipe.NewDropper(append(ignoreMqtt, ignoreEmpty)...).Pipe(tee.Attach()))
+		var mqtt *server.MQTT
+		mqtt, err = server.NewMQTT(strings.Trim(conf.Mqtt.Topic, "/"), site)
+		if err == nil {
+			go mqtt.Run(site, pipe.NewDropper(append(ignoreMqtt, ignoreEmpty)...).Pipe(tee.Attach()))
+		}
 	}
 
 	// announce on mDNS
@@ -215,7 +214,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	// setup messaging
 	var pushChan chan push.Event
 	if err == nil {
-		pushChan, err = configureMessengers(conf.Messaging, valueChan, cache)
+		pushChan, err = configureMessengers(conf.Messaging, site.Vehicles(), valueChan, cache)
 	}
 
 	// run shutdown functions on stop

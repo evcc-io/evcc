@@ -3,7 +3,8 @@ package templates
 import (
 	"bytes"
 	_ "embed"
-	"fmt"
+	"strconv"
+	"strings"
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
@@ -17,7 +18,7 @@ var documentationModbusTmpl string
 
 // RenderDocumentation renders the documentation template
 func (t *Template) RenderDocumentation(product Product, lang string) ([]byte, error) {
-	values := t.Defaults(TemplateRenderModeDocs)
+	values := t.Defaults(RenderModeDocs)
 
 	for index, p := range t.Params {
 		for k, v := range values {
@@ -35,7 +36,7 @@ func (t *Template) RenderDocumentation(product Product, lang string) ([]byte, er
 				case string:
 					t.Params[index].Value = yamlQuote(v)
 				case int:
-					t.Params[index].Value = fmt.Sprintf("%d", v)
+					t.Params[index].Value = strconv.Itoa(v)
 				}
 			}
 		}
@@ -50,7 +51,7 @@ func (t *Template) RenderDocumentation(product Product, lang string) ([]byte, er
 			}
 
 			modbusData := make(map[string]interface{})
-			t.ModbusValues(TemplateRenderModeDocs, modbusData)
+			t.ModbusValues(RenderModeDocs, modbusData)
 
 			out := new(bytes.Buffer)
 			if err := modbusTmpl.Execute(out, modbusData); err != nil {
@@ -108,6 +109,6 @@ func (t *Template) RenderDocumentation(product Product, lang string) ([]byte, er
 
 func localize(lang string) func(TextLanguage) string {
 	return func(s TextLanguage) string {
-		return s.String(lang)
+		return strings.TrimSpace(s.String(lang))
 	}
 }

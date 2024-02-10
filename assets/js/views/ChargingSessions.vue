@@ -1,16 +1,6 @@
 <template>
 	<div class="container px-4">
-		<header class="d-flex justify-content-between align-items-center py-3">
-			<h1 class="mb-1 pt-1 d-flex text-nowrap text-truncate">
-				<router-link class="evcc-default-text" to="/">
-					<shopicon-regular-home size="s" class="home"></shopicon-regular-home>
-				</router-link>
-				<div size="s" class="mx-2 flex-grow-0 flex-shrink-0 fw-normal">/</div>
-				<span class="text-truncate">{{ $t("sessions.title") }}</span>
-			</h1>
-			<TopNavigation />
-		</header>
-
+		<TopHeader :title="$t('sessions.title')" />
 		<div class="row">
 			<main class="col-12">
 				<div class="d-flex align-items-baseline justify-content-between my-3 my-md-5">
@@ -51,7 +41,6 @@
 									{{ $t("sessions.date") }}
 								</th>
 								<th
-									v-if="showLoadpoints"
 									scope="col"
 									class="align-top d-none d-md-table-cell"
 									data-testid="loadpoint"
@@ -71,7 +60,6 @@
 									</CustomSelect>
 								</th>
 								<th
-									v-if="showVehicles"
 									scope="col"
 									class="align-top d-none d-md-table-cell"
 									data-testid="vehicle"
@@ -91,10 +79,7 @@
 									</CustomSelect>
 								</th>
 								<th scope="col" class="align-top d-md-none text-truncate">
-									<div
-										v-if="showLoadpoints"
-										class="d-flex flex-wrap text-truncate"
-									>
+									<div class="d-flex flex-wrap text-truncate">
 										<div class="me-2 text-truncate">
 											{{ $t("sessions.loadpoint") }}
 										</div>
@@ -113,10 +98,7 @@
 											</span>
 										</CustomSelect>
 									</div>
-									<div
-										class="text-truncate"
-										:class="{ 'd-flex flex-wrap': showLoadpoints }"
-									>
+									<div class="text-truncate d-flex flex-wrap">
 										<div class="me-2 text-truncate">
 											{{ $t("sessions.vehicle") }}
 										</div>
@@ -164,16 +146,8 @@
 								<th scope="col" class="align-top ps-0">
 									{{ $t("sessions.total") }}
 								</th>
-								<th
-									v-if="showLoadpoints"
-									scope="col"
-									class="d-none d-md-table-cell"
-								></th>
-								<th
-									v-if="showVehicles"
-									scope="col"
-									class="d-none d-md-table-cell"
-								></th>
+								<th scope="col" class="d-none d-md-table-cell"></th>
+								<th scope="col" class="d-none d-md-table-cell"></th>
 								<th scope="col" class="d-md-none"></th>
 								<th
 									v-for="column in columnsPerBreakpoint"
@@ -197,14 +171,14 @@
 								<td class="ps-0">
 									{{ fmtFullDateTime(new Date(session.created), true) }}
 								</td>
-								<td v-if="showLoadpoints" class="d-none d-md-table-cell">
+								<td class="d-none d-md-table-cell">
 									{{ session.loadpoint }}
 								</td>
-								<td v-if="showVehicles" class="d-none d-md-table-cell">
+								<td class="d-none d-md-table-cell">
 									{{ session.vehicle }}
 								</td>
 								<td class="d-md-none text-truncate">
-									<div v-if="showLoadpoints">{{ session.loadpoint }}</div>
+									<div>{{ session.loadpoint }}</div>
 									<div>{{ session.vehicle }}</div>
 								</td>
 								<td
@@ -242,7 +216,7 @@
 			</main>
 			<ChargingSessionModal
 				:session="selectedSession"
-				:vehicles="vehiclesObjects"
+				:vehicles="vehicleList"
 				:currency="currency"
 				@session-changed="loadSessions"
 			/>
@@ -252,8 +226,6 @@
 
 <script>
 import Modal from "bootstrap/js/dist/modal";
-import TopNavigation from "../components/TopNavigation.vue";
-import "@h2d2/shopicons/es/regular/home";
 import "@h2d2/shopicons/es/regular/angledoubleleftsmall";
 import "@h2d2/shopicons/es/regular/angledoublerightsmall";
 import formatter from "../mixins/formatter";
@@ -263,6 +235,7 @@ import CustomSelect from "../components/CustomSelect.vue";
 import ChargingSessionModal from "../components/ChargingSessionModal.vue";
 import breakpoint from "../mixins/breakpoint";
 import settings from "../settings";
+import TopHeader from "../components/TopHeader.vue";
 
 const COLUMNS_PER_BREAKPOINT = {
 	xs: 1,
@@ -275,7 +248,7 @@ const COLUMNS_PER_BREAKPOINT = {
 
 export default {
 	name: "ChargingSessions",
-	components: { TopNavigation, ChargingSessionModal, CustomSelect },
+	components: { ChargingSessionModal, CustomSelect, TopHeader },
 	mixins: [formatter, breakpoint],
 	props: {
 		notifications: Array,
@@ -291,7 +264,14 @@ export default {
 			selectedColumns: settings.sessionColumns,
 		};
 	},
+	head() {
+		return { title: `${this.$t("sessions.title")} | evcc` };
+	},
 	computed: {
+		topNavigation: function () {
+			const vehicleLogins = store.state.auth ? store.state.auth.vehicles : {};
+			return { vehicleLogins, ...this.collectProps(TopNavigation, store.state) };
+		},
 		currentSessions() {
 			const sessionsWithDefaults = this.sessions.map((session) => {
 				const loadpoint = session.loadpoint || this.$t("main.loadpoint.fallbackName");
@@ -457,20 +437,6 @@ export default {
 			}
 			return null;
 		},
-		showVehicles() {
-			return this.hasMultipleVehicles || this.vehicleFilter;
-		},
-		showLoadpoints() {
-			return this.hasMultipleLoadpoints || this.loadpointFilter;
-		},
-		hasMultipleVehicles() {
-			const vehicles = this.currentSessions.map((s) => s.vehicle);
-			return new Set(vehicles).size > 1;
-		},
-		hasMultipleLoadpoints() {
-			const loadpoints = this.currentSessions.map((s) => s.loadpoint);
-			return new Set(loadpoints).size > 1;
-		},
 		pricePerKWh() {
 			const total = this.filteredSessions
 				.filter((s) => s.price !== null)
@@ -518,12 +484,9 @@ export default {
 		vehicles() {
 			return [...new Set(this.currentSessions.map((s) => s.vehicle))];
 		},
-		vehiclesObjects() {
-			return (
-				store.state.vehicles?.map((v, index) => {
-					return { id: index, title: v };
-				}) || []
-			);
+		vehicleList() {
+			const vehicles = store.state.vehicles || {};
+			return Object.entries(vehicles).map(([name, vehicle]) => ({ name, ...vehicle }));
 		},
 		selectedSession() {
 			return this.sessions.find((s) => s.id == this.selectedSessionId);
@@ -633,7 +596,7 @@ export default {
 		csvHrefLink(year, month) {
 			const params = new URLSearchParams({
 				format: "csv",
-				lang: this.$i18n.locale,
+				lang: this.$i18n?.locale,
 			});
 			if (year && month) {
 				params.append("year", year);
@@ -645,12 +608,6 @@ export default {
 };
 </script>
 <style scoped>
-.home {
-	height: 22px;
-	width: 22px;
-	position: relative;
-	top: -3px;
-}
 .table {
 	border-collapse: separate;
 	border-spacing: 0;

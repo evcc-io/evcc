@@ -12,18 +12,29 @@ products:
   - brand: SofarSolar
     description:
       generic: SOFAR 5…24KTL-G3
+# capabilities: ["battery-control"]
+requirements:
+  description:
+    de: Es wird dringend empfohlen die Verbindung über einen LSE-3 Logger Stick herzustellen. Andere Verbindungswege (z.B. LSW-3 oder via RS485) sind u.U. instabil und benötigen Verzögerungen (delay) > 0s.
+    en: It is strongly recommended to connect via an LSE-3 logger stick. Other connection paths (e.g. LSW-3 or via RS485) may be unstable and require delays > 0s.
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
   - name: modbus
-    choice: ["rs485", "tcpip"]
-    baudrate: 9600
-    comset: 8N1
-    port: 502
+    choice: ["tcpip", "rs485"]
+    port: 8899
     id: 1
   - name: delay
-    default: 1s
+    default: 0s
+    advanced: true
   - name: capacity
+    advanced: true
+  # battery control
+  - name: minsoc
+    type: number
+    advanced: true
+  - name: maxsoc
+    type: number
     advanced: true
 render: |
   type: custom
@@ -127,14 +138,6 @@ render: |
       type: holding
       decode: int16
     scale: -10
-  soc:
-    source: modbus
-    {{- include "modbus" . | indent 2 }}
-    delay: {{ .delay }}
-    register:
-      address: 0x0608 # SOC_Bat1
-      type: holding
-      decode: uint16
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -144,7 +147,30 @@ render: |
       type: holding
       decode: uint32
     scale: 0.1
-  {{- if .capacity }}
+  soc:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    delay: {{ .delay }}
+    register:
+      address: 0x0608 # SOC_Bat1
+      type: holding
+      decode: uint16
+  # limitsoc:
+  #   source: go
+  #   script:
+  #     int(100-limitSoc)
+  #   out:
+  #   - name: dod
+  #     type: int
+  #     config:
+  #       source: modbus
+  #       {- include "modbus" . | indent 6 }
+  #       delay: { .delay }
+  #       register:
+  #         address: 0x104D # BatConfig_Depth_of_Discharge
+  #         type: writemultiple
+  #         decode: uint16
   capacity: {{ .capacity }} # kWh
-  {{- end }}
+  # minsoc: {{ .minsoc }} # %
+  # maxsoc: {{ .maxsoc }} # %
   {{- end }}

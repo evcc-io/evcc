@@ -64,7 +64,7 @@ func init() {
 	registry.Add("keba-modbus", NewKebaFromConfig)
 }
 
-// go:generate go run ../cmd/tools/decorate.go -f decorateKeba -b *Keba -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.Identifier,Identify,func() (string, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) error"
+//go:generate go run ../cmd/tools/decorate.go -f decorateKeba -b *Keba -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.Identifier,Identify,func() (string, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) error"
 
 // NewKebaFromConfig creates a new Keba ModbusTCP charger
 func NewKebaFromConfig(other map[string]interface{}) (api.Charger, error) {
@@ -245,8 +245,9 @@ func (wb *Keba) totalEnergy() (float64, error) {
 // currents implements the api.PhaseCurrents interface
 func (wb *Keba) currents() (float64, float64, float64, error) {
 	var res [3]float64
-	for i := uint16(0); i < 3; i++ {
-		b, err := wb.conn.ReadHoldingRegisters(kebaRegCurrents+2*i, 2)
+	for i := range res {
+		// does not support reading across register boundaries
+		b, err := wb.conn.ReadHoldingRegisters(kebaRegCurrents+2*uint16(i), 2)
 		if err != nil {
 			return 0, 0, 0, err
 		}

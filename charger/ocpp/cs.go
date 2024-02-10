@@ -43,8 +43,10 @@ func (cs *CS) errorHandler(errC <-chan error) {
 	}
 }
 
-// chargepointByID returns a configured charge point identified by id.
-func (cs *CS) chargepointByID(id string) (*CP, error) {
+func (cs *CS) ChargepointByID(id string) (*CP, error) {
+	cs.mu.Lock()
+	defer cs.mu.Unlock()
+
 	cp, ok := cs.cps[id]
 	if !ok {
 		return nil, fmt.Errorf("unknown charge point: %s", id)
@@ -98,12 +100,9 @@ func (cs *CS) NewChargePoint(chargePoint ocpp16.ChargePointConnection) {
 
 // ChargePointDisconnected implements ocpp16.ChargePointConnectionHandler
 func (cs *CS) ChargePointDisconnected(chargePoint ocpp16.ChargePointConnection) {
-	cs.mu.Lock()
-	defer cs.mu.Unlock()
-
 	cs.log.DEBUG.Printf("charge point disconnected: %s", chargePoint.ID())
 
-	if cp, err := cs.chargepointByID(chargePoint.ID()); err != nil {
+	if cp, err := cs.ChargepointByID(chargePoint.ID()); err == nil {
 		cp.connect(false)
 	}
 }

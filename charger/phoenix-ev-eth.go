@@ -61,7 +61,7 @@ func init() {
 	registry.Add("phoenix-ev-eth", NewPhoenixEVEthFromConfig)
 }
 
-// go:generate go run ../cmd/tools/decorate.go -f decoratePhoenixEVEth -b *PhoenixEVEth -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.ChargerEx,MaxCurrentMillis,func(current float64) error" -t "api.Identifier,Identify,func() (string, error)"
+//go:generate go run ../cmd/tools/decorate.go -f decoratePhoenixEVEth -b *PhoenixEVEth -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.ChargerEx,MaxCurrentMillis,func(float64) error" -t "api.Identifier,Identify,func() (string, error)"
 
 // NewPhoenixEVEthFromConfig creates a PhoenixEVEth charger from generic config
 func NewPhoenixEVEthFromConfig(other map[string]interface{}) (api.Charger, error) {
@@ -212,23 +212,23 @@ func (wb *PhoenixEVEth) totalEnergy() (float64, error) {
 
 // currents implements the api.PhaseCurrents interface
 func (wb *PhoenixEVEth) currents() (float64, float64, float64, error) {
-	return wb.getPhases(phxRegCurrents)
+	return wb.getPhaseValues(phxRegCurrents)
 }
 
 // voltages implements the api.PhaseVoltages interface
 func (wb *PhoenixEVEth) voltages() (float64, float64, float64, error) {
-	return wb.getPhases(phxRegVoltages)
+	return wb.getPhaseValues(phxRegVoltages)
 }
 
-// getPhases returns 3 sequential phase values
-func (wb *PhoenixEVEth) getPhases(reg uint16) (float64, float64, float64, error) {
+// getPhaseValues returns 3 sequential phase values
+func (wb *PhoenixEVEth) getPhaseValues(reg uint16) (float64, float64, float64, error) {
 	b, err := wb.conn.ReadInputRegisters(reg, 6)
 	if err != nil {
 		return 0, 0, 0, err
 	}
 
 	var res [3]float64
-	for i := 0; i < 3; i++ {
+	for i := range res {
 		res[i] = float64(encoding.Int32LswFirst(b[4*i:]))
 	}
 

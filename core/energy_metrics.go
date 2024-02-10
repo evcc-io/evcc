@@ -3,7 +3,7 @@ package core
 // EnergyMetrics calculates stats about the charged energy and gives you details about price or co2s
 type EnergyMetrics struct {
 	totalKWh          float64  // Total amount of energy used (kWh)
-	solarKWh          float64  // Self-produced energy energy (kWh)
+	solarKWh          float64  // Self-produced energy (kWh)
 	price             *float64 // Total cost (Currency)
 	co2               *float64 // Amount of emitted CO2 (gCO2eq)
 	currentGreenShare float64  // Current share of solar energy of site (0-1)
@@ -25,15 +25,17 @@ func (em *EnergyMetrics) SetEnvironment(greenShare float64, effPrice, effCo2 *fl
 	em.currentCo2 = effCo2
 }
 
-// Update sets the a new value for the total amount of charged energy and updated metrics based on enviroment values
-func (em *EnergyMetrics) Update(chargedKWh float64) {
+// Update sets the a new value for the total amount of charged energy and updated metrics based on environment values.
+// It returns the added total and green energy.
+func (em *EnergyMetrics) Update(chargedKWh float64) (float64, float64) {
 	added := chargedKWh - em.totalKWh
 	// nothing changed or invalid lower value
 	if added <= 0 {
-		return
+		return 0, 0
 	}
 	em.totalKWh = chargedKWh
-	em.solarKWh += added * em.currentGreenShare
+	addedGreen := added * em.currentGreenShare
+	em.solarKWh += addedGreen
 	// optional values
 	if em.currentPrice != nil {
 		addedPrice := *em.currentPrice * added
@@ -51,6 +53,7 @@ func (em *EnergyMetrics) Update(chargedKWh float64) {
 		}
 		em.co2 = &newCo2
 	}
+	return added, addedGreen
 }
 
 // Reset sets all calculations to initial values

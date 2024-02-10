@@ -183,8 +183,6 @@ vehicles:
         var range = (44 * lp.vehicleSoc) / 15;
         range
     capacity: 44
-    onidentify:
-      targetsoc: 90
   - name: vehicle_2
     title: weißes Model 3
     type: custom
@@ -210,8 +208,6 @@ vehicles:
       script: |
         "B"
     capacity: 80
-    onidentify:
-      targetsoc: 75
   - name: vehicle_3
     type: template
     template: offline
@@ -240,7 +236,6 @@ loadpoints:
   - title: Carport
     charger: charger_1
     mode: pv
-    phases: 1
     meter: meter_charger_1
     vehicle: vehicle_1
   - title: Garage

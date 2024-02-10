@@ -9,7 +9,7 @@ params:
   - name: modbus
     choice: ["rs485"]
 render: |
-  type: modbus
+  type: mbmd
   {{- include "modbus" . }}
   model: sdm220
   power: Power

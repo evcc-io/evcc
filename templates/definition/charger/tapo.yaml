@@ -10,7 +10,6 @@ params:
     required: true
   - name: password
     required: true
-    mask: true
   - preset: switchsocket
 render: |
   type: tapo
