@@ -321,7 +321,6 @@ cleanEnergyCharging = "En charge avec énergie propre : {co2} (limit < {limit}
 climating = "Pré-conditionnement détecté."
 connected = "Connecté."
 disconnected = "Déconnecté."
-guard = "Protection de commutation active pour {remaining}..."
 minCharge = "Charge minimale jusqu'à {soc}%."
 pvDisable = "Pas assez de surplus. Pause dans {remaining}…"
 pvEnable = "Surplus disponible. Démarre dans {remaining}…"
