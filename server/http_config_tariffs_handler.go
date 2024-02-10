@@ -2,12 +2,43 @@ package server
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util/config"
+	"github.com/gorilla/mux"
 )
+
+// tariffHandler returns the configured tariff
+func tariffHandler(site site.API) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		tariff := vars["tariff"]
+
+		t := site.GetTariff(tariff)
+		if t == nil {
+			jsonError(w, http.StatusNotFound, errors.New("tariff not available"))
+			return
+		}
+
+		rates, err := t.Rates()
+		if err != nil {
+			jsonError(w, http.StatusNotFound, err)
+			return
+		}
+
+		res := struct {
+			Rates api.Rates `json:"rates"`
+		}{
+			Rates: rates,
+		}
+
+		jsonResult(w, res)
+	}
+}
 
 // tariffsHandler returns a device configurations by class
 func tariffsHandler(site site.API) http.HandlerFunc {
