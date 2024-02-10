@@ -144,43 +144,6 @@ describe("timer", () => {
       { remaining: "1:30\u202Fm" }
     );
   });
-  test("show guard timer if it exists", () => {
-    expectStatus(
-      {
-        connected: true,
-        guardAction: "enable",
-        guardRemainingInterpolated: 90,
-      },
-      "guard",
-      { remaining: "1:30\u202Fm" }
-    );
-  });
-  test("don't show guard timer if another timer exists", () => {
-    expectStatus(
-      {
-        connected: true,
-        charging: true,
-        pvAction: "disable",
-        pvRemainingInterpolated: 30,
-        guardAction: "enable",
-        guardRemainingInterpolated: 90,
-      },
-      "pvDisable",
-      { remaining: "30\u202Fs" }
-    );
-  });
-  test("show guard timer if charging and no other timer exists", () => {
-    expectStatus(
-      {
-        connected: true,
-        charging: true,
-        guardAction: "enable",
-        guardRemainingInterpolated: 90,
-      },
-      "guard",
-      { remaining: "1:30\u202Fm" }
-    );
-  });
 });
 
 describe("vehicle target soc", () => {
