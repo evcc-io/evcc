@@ -34,7 +34,7 @@ func NewProvider(log *util.Logger, api *API, vin string, timeout, cache time.Dur
 // Soc implements the api.Vehicle interface
 func (v *Provider) Soc() (float64, error) {
 	res, err := v.statusG()
-	return float64(res.BatteryChargeLevelPercentage), err
+	return res.BatteryChargeLevelPercentage, err
 }
 
 var _ api.ChargeState = (*Provider)(nil)
