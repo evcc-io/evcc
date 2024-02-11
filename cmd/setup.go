@@ -593,20 +593,46 @@ func configureMessengers(conf messagingConfig, vehicles push.Vehicles, valueChan
 	return messageChan, nil
 }
 
-func configureTariff(name string, conf config.Typed, t *tariffs.Tariffs, wg *sync.WaitGroup) {
-	defer wg.Done()
+func configureTariff(name string, conf config.Typed, t *tariffs.Tariffs) (err error) {
+	// ignore tariff errors and continue setup
+	defer (func() {
+		if err != nil {
+			log.ERROR.Printf("failed configuring %s tariff: %v", name, err)
+			err = nil
+		}
+	})()
+
+	// load tariff from settings
+	ref, err := settings.String(tariffs.SettingsKey + name)
+	if err == nil && ref != "" {
+		configurable, err := config.ConfigurationsByClass(templates.Tariff)
+		if err != nil {
+			return err
+		}
+
+		idx := slices.IndexFunc(configurable, func(conf config.Config) bool {
+			return conf.Named().Name == name
+		})
+
+		if idx < 0 {
+			return fmt.Errorf("cannot find tariff %s", name)
+		}
+
+		conf = configurable[idx].Typed()
+	}
 
 	if conf.Type == "" {
-		return
+		return nil
 	}
 
 	res, err := tariff.NewFromConfig(conf.Type, conf.Other)
 	if err != nil {
-		log.ERROR.Printf("failed configuring %s tariff: %v", name, err)
-		return
+		return err
 	}
 
 	t.SetInstance(name, res)
+
+	return nil
 }
 
 func configureTariffs(conf tariffConfig) (*tariffs.Tariffs, error) {
@@ -617,17 +643,14 @@ func configureTariffs(conf tariffConfig) (*tariffs.Tariffs, error) {
 
 	res := tariffs.New(c)
 
-	var wg sync.WaitGroup
-	wg.Add(4)
+	g, _ := errgroup.WithContext(context.Background())
+	g.Go(func() error { return configureTariff(tariffs.Grid, conf.Grid, res) })
+	g.Go(func() error { return configureTariff(tariffs.Feedin, conf.Feedin, res) })
+	g.Go(func() error { return configureTariff(tariffs.Co2, conf.Co2, res) })
+	g.Go(func() error { return configureTariff(tariffs.Planner, conf.Planner, res) })
+	err := g.Wait()
 
-	go configureTariff(tariffs.Grid, conf.Grid, res, &wg)
-	go configureTariff(tariffs.Feedin, conf.Feedin, res, &wg)
-	go configureTariff(tariffs.Co2, conf.Co2, res, &wg)
-	go configureTariff(tariffs.Planner, conf.Planner, res, &wg)
-
-	wg.Wait()
-
-	return res, nil
+	return res, err
 }
 
 func configureDevices(conf globalConfig) error {

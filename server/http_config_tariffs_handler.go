@@ -7,6 +7,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/site"
+	"github.com/evcc-io/evcc/tariff/tariffs"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/gorilla/mux"
 )
@@ -41,7 +42,7 @@ func tariffHandler(site site.API) http.HandlerFunc {
 
 // tariffsHandler returns a device configurations by class
 func tariffsHandler(site site.API) http.HandlerFunc {
-	tariffs := site.GetTariffs()
+	tfs := site.GetTariffs()
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		res := struct {
@@ -51,11 +52,11 @@ func tariffsHandler(site site.API) http.HandlerFunc {
 			Co2      string `json:"co2,omitempty"`
 			Planner  string `json:"planner,omitempty"`
 		}{
-			Currency: tariffs.GetCurrency().String(),
-			Grid:     tariffs.GetRef(tariffs.Grid),
-			Feedin:   tariffs.GetRef(tariffs.Feedin),
-			Co2:      tariffs.GetRef(tariffs.Co2),
-			Planner:  tariffs.GetRef(tariffs.Planner),
+			Currency: tfs.GetCurrency().String(),
+			Grid:     tfs.GetRef(tariffs.Grid),
+			Feedin:   tfs.GetRef(tariffs.Feedin),
+			Co2:      tfs.GetRef(tariffs.Co2),
+			Planner:  tfs.GetRef(tariffs.Planner),
 		}
 
 		jsonResult(w, res)
@@ -78,10 +79,10 @@ func updateTariffsHandler(site site.API) http.HandlerFunc {
 			return
 		}
 
-		tariffs := site.GetTariffs()
+		tfs := site.GetTariffs()
 
 		if payload.Currency != nil {
-			if err := tariffs.SetCurrency(*payload.Currency); err != nil {
+			if err := tfs.SetCurrency(*payload.Currency); err != nil {
 				jsonError(w, http.StatusBadRequest, err)
 				return
 			}
@@ -95,7 +96,7 @@ func updateTariffsHandler(site site.API) http.HandlerFunc {
 					return false
 				}
 
-				tariffs.SetRef(tariff, *ref)
+				tfs.SetRef(tariff, *ref)
 				setConfigDirty()
 			}
 			return true
