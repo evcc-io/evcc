@@ -58,7 +58,7 @@ const (
 	mennekesRegChargedEnergyTotal   = 0x1000 // float32
 
 	mennekesAllowed           = 1
-	mennekesHeartbeatInterval = 10
+	mennekesHeartbeatInterval = 8 * time.Second
 	mennekesHeartbeatToken    = 0x55AA // 21930
 )
 
@@ -110,7 +110,7 @@ func NewMennekes(uri, device, comset string, baudrate int, proto modbus.Protocol
 	}
 
 	// failsafe
-	go wb.heartbeat(time.Duration(mennekesHeartbeatInterval) * time.Second)
+	go wb.heartbeat(mennekesHeartbeatInterval)
 
 	return wb, err
 }
