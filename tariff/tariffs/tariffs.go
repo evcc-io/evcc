@@ -45,17 +45,6 @@ func currentPrice(t api.Tariff) (float64, error) {
 	return 0, api.ErrNotAvailable
 }
 
-func getRef(ref string, t api.Tariff) string {
-	val, err := settings.String(SettingsKey + ref)
-	if err == nil && val != "" {
-		return val
-	}
-	if t != nil {
-		return ref
-	}
-	return ""
-}
-
 func (t *Tariffs) GetCurrency() currency.Unit {
 	return t.currency
 }
@@ -67,6 +56,17 @@ func (t *Tariffs) SetCurrency(s string) error {
 		settings.SetString(SettingsKey+"currency", s)
 	}
 	return err
+}
+
+func getRef(ref string, t api.Tariff) string {
+	val, err := settings.String(SettingsKey + ref)
+	if err == nil && val != "" {
+		return val
+	}
+	if t != nil {
+		return ref
+	}
+	return ""
 }
 
 func (t *Tariffs) GetRef(ref string) string {
