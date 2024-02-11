@@ -8,7 +8,7 @@ type ConsumerCar struct {
 }
 
 type BatteryData struct {
-	BatteryChargeLevelPercentage       int
+	BatteryChargeLevelPercentage       float64
 	ChargerConnectionStatus            string
 	ChargingStatus                     string
 	EstimatedChargingTimeToFullMinutes int
@@ -17,11 +17,11 @@ type BatteryData struct {
 }
 
 type OdometerData struct {
-	OdometerMeters        int
+	OdometerMeters        float64
 	EventUpdatedTimestamp EventUpdatedTimestamp
 }
 
 type EventUpdatedTimestamp struct {
-	ISO  time.Time
-	Unix uint64
+	ISO time.Time
+	// Unix int64 `json:",string"`
 }

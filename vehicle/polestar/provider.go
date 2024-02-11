@@ -67,7 +67,7 @@ var _ api.VehicleOdometer = (*Provider)(nil)
 // Odometer implements the Provider.VehicleOdometer interface
 func (v *Provider) Odometer() (float64, error) {
 	res, err := v.odoG()
-	return float64(res.OdometerMeters) / 1e3, err
+	return res.OdometerMeters / 1e3, err
 }
 
 var _ api.VehicleFinishTimer = (*Provider)(nil)

@@ -3,11 +3,10 @@ package polestar
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"net/http/cookiejar"
 	"net/url"
-	"os"
 	"strings"
+	"time"
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/oauth"
@@ -67,25 +66,19 @@ func (v *Identity) Login(user, password string) error {
 		}
 	}
 
-	cv := oauth2.GenerateVerifier()
-
 	state := lo.RandomString(16, lo.AlphanumericCharset)
-	uri := OAuth2Config.AuthCodeURL(state, oauth2.AccessTypeOffline, oauth2.S256ChallengeOption(cv))
-	fmt.Println(uri)
+	uri := OAuth2Config.AuthCodeURL(state, oauth2.AccessTypeOffline)
 
 	var param request.InterceptResult
-	v.Client.CheckRedirect, param = request.InterceptRedirect("resumePath", false)
+	v.Client.CheckRedirect, param = request.InterceptRedirect("resumePath", true)
 	defer func() { v.Client.CheckRedirect = nil }()
 
 	if _, err := v.Get(uri); err != nil {
-		fmt.Println(uri)
-		fmt.Println(1)
 		return err
 	}
 
 	resume, err := param()
 	if err != nil {
-		fmt.Println(2)
 		return err
 	}
 
@@ -110,8 +103,6 @@ func (v *Identity) Login(user, password string) error {
 	gqlClient := graphql.NewClient("https://pc-api.polestar.com/eu-north-1/auth", v.Client)
 
 	type Token struct {
-		// Access_Token string
-		IdToken      string `graphql:"id_token"`
 		AccessToken  string `graphql:"access_token"`
 		RefreshToken string `graphql:"refresh_token"`
 		ExpiresIn    int    `graphql:"expires_in"`
@@ -121,65 +112,42 @@ func (v *Identity) Login(user, password string) error {
 		Token `graphql:"getAuthToken(code: $code)"`
 	}
 
-	// if err := gqlClient.WithRequestModifier(func(r *http.Request) {
-	// 	r.Method = http.MethodOptions
-	// }).Query(context.Background(), &res, map[string]any{
-	// 	"code": code,
-	// }, graphql.OperationName("getAuthToken")); err != nil {
-	// 	// return err
-	// }
-
 	if err := gqlClient.Query(context.Background(), &res, map[string]any{
 		"code": code,
 	}, graphql.OperationName("getAuthToken")); err != nil {
 		return err
 	}
 
-	os.Exit(1)
-
-	var token oauth.Token
-	if err == nil {
-		params := url.Values{
-			"code":          []string{code},
-			"code_verifier": []string{cv},
-			"redirect_uri":  []string{OAuth2Config.RedirectURL},
-			"grant_type":    []string{"authorization_code"},
-		}
-
-		var req *http.Request
-		req, err = request.New(http.MethodPost, OAuth2Config.Endpoint.TokenURL, strings.NewReader(params.Encode()), map[string]string{
-			"Content-Type":  request.FormContent,
-			"Authorization": "Basic " + basicAuth,
-		})
-		if err == nil {
-			err = v.DoJSON(req, &token)
-		}
-	}
-
-	if err == nil {
-		v.TokenSource = oauth.RefreshTokenSource((*oauth2.Token)(&token), v)
-	}
+	v.TokenSource = oauth.RefreshTokenSource(&oauth2.Token{
+		AccessToken:  res.AccessToken,
+		RefreshToken: res.RefreshToken,
+		Expiry:       time.Now().Add(time.Duration(res.ExpiresIn) * time.Second),
+		// Expiry:       time.Now(), //.Add(time.Duration(res.ExpiresIn) * time.Second),
+	}, v)
 
 	return err
 }
 
 func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
-	data := url.Values{
-		"redirect_uri":  []string{OAuth2Config.RedirectURL},
-		"refresh_token": []string{token.RefreshToken},
-		"grant_type":    []string{"refresh_token"},
-	}
-	req, err := request.New(http.MethodPost, OAuth2Config.Endpoint.TokenURL, strings.NewReader(data.Encode()), map[string]string{
-		"Content-Type":  request.FormContent,
-		"Authorization": "Basic " + basicAuth,
-	})
+	gqlClient := graphql.NewClient("https://pc-api.polestar.com/eu-north-1/auth", v.Client)
 
-	var tok oauth.Token
-	if err == nil {
-		if err := v.DoJSON(req, &tok); err != nil {
-			return nil, err
-		}
+	type Token struct {
+		AccessToken  string `graphql:"access_token"`
+		RefreshToken string `graphql:"refresh_token"`
+		ExpiresIn    int    `graphql:"expires_in"`
 	}
 
-	return (*oauth2.Token)(&tok), err
+	var res struct {
+		Token `graphql:"refreshAuthToken(token: $token)"`
+	}
+
+	err := gqlClient.Query(context.Background(), &res, map[string]any{
+		"token": token.RefreshToken,
+	}, graphql.OperationName("refreshAuthToken"))
+
+	return &oauth2.Token{
+		AccessToken:  res.AccessToken,
+		RefreshToken: res.RefreshToken,
+		Expiry:       time.Now().Add(time.Duration(res.ExpiresIn) * time.Second),
+	}, err
 }
