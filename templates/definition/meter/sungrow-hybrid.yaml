@@ -19,7 +19,6 @@ params:
   - name: timeout
   - name: capacity
     advanced: true
-  - name: reservesoc
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -108,7 +107,7 @@ render: |
         source: sequence
         set:
         - source: const
-          value: 0 # self consumptio
+          value: 0 # self consumption
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
@@ -128,7 +127,7 @@ render: |
               type: writesingle
               decode: uint16
         - source: const
-          value: {{ .reservesoc }} # Reserve SoC in %
+          value: 10 # Reserve SoC in %
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
