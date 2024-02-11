@@ -640,6 +640,15 @@ func (c *Easee) waitForDynamicChargerCurrent(targetCurrent float64) error {
 
 // MaxCurrent implements the api.Charger interface
 func (c *Easee) MaxCurrent(current int64) error {
+	c.log.TRACE.Printf("MaxCurrent called with current %v", current);
+	// debug.PrintStack()
+	if (c.opMode != easee.ModeCharging && current == 6) { //do not overwrite if given value > 6 
+		c.log.TRACE.Printf("Op mode is %v, dynamicChargerCurrent is %v and should be set to %v. Overwrite with 8!", c.opMode, c.dynamicChargerCurrent, current);
+		current = 8
+	} else {
+		c.log.TRACE.Printf("Opmode is charging or current is > 6: %v", current);
+	}
+	
 	cur := float64(current)
 	data := easee.ChargerSettings{
 		DynamicChargerCurrent: &cur,
