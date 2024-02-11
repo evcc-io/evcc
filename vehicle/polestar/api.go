@@ -16,8 +16,9 @@ import (
 // https://github.com/TA2k/ioBroker.polestar
 
 const (
-	ApiURI   = "https://pc-api.polestar.com/eu-north-1/my-star"
-	ApiURIv2 = "https://pc-api.polestar.com/eu-north-1/mystar-v2"
+	ApiURI   = "https://pc-api.polestar.com/eu-north-1"
+	ApiURIv1 = ApiURI + "/my-star"
+	ApiURIv2 = ApiURI + "/mystar-v2"
 )
 
 type API struct {

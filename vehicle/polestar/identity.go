@@ -3,6 +3,7 @@ package polestar
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"net/http/cookiejar"
 	"net/url"
 	"strings"
@@ -91,15 +92,14 @@ func (v *Identity) Login(user, password string) error {
 		return err
 	}
 
-	gqlClient := graphql.NewClient("https://pc-api.polestar.com/eu-north-1/auth", v.Client)
-
 	var res struct {
 		Token `graphql:"getAuthToken(code: $code)"`
 	}
 
-	if err := gqlClient.Query(context.Background(), &res, map[string]any{
-		"code": code,
-	}, graphql.OperationName("getAuthToken")); err != nil {
+	if err := graphql.NewClient(ApiURI+"/auth", v.Client).
+		Query(context.Background(), &res, map[string]any{
+			"code": code,
+		}, graphql.OperationName("getAuthToken")); err != nil {
 		return err
 	}
 
@@ -113,13 +113,13 @@ func (v *Identity) Login(user, password string) error {
 }
 
 func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
-	gqlClient := graphql.NewClient("https://pc-api.polestar.com/eu-north-1/auth", v.Client)
-
 	var res struct {
 		Token `graphql:"refreshAuthToken(token: $token)"`
 	}
 
-	err := gqlClient.Query(context.Background(), &res, map[string]any{
+	err := graphql.NewClient(ApiURI+"/auth", v.Client).WithRequestModifier(func(req *http.Request) {
+		req.Header.Set("Authorization", "Bearer "+token.AccessToken)
+	}).Query(context.Background(), &res, map[string]any{
 		"token": token.RefreshToken,
 	}, graphql.OperationName("refreshAuthToken"))
 
