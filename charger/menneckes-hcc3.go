@@ -65,7 +65,7 @@ func NewMenneckesHcc3FromConfig(other map[string]interface{}) (api.Charger, erro
 	return NewMenneckesHcc3(cc.URI, cc.ID)
 }
 
-// NewMenneckesHcc3 creates menneckesHcc3 charger
+// NewMenneckesHcc3 creates Menneckes HCC3 charger
 func NewMenneckesHcc3(uri string, slaveID uint8) (api.Charger, error) {
 	uri = util.DefaultPort(uri, 502)
 
