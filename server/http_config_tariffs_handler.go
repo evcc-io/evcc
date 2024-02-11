@@ -7,7 +7,6 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/site"
-	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/gorilla/mux"
 )
@@ -53,10 +52,10 @@ func tariffsHandler(site site.API) http.HandlerFunc {
 			Planner  string `json:"planner,omitempty"`
 		}{
 			Currency: tariffs.GetCurrency().String(),
-			Grid:     tariffs.GetRef(tariff.Grid),
-			Feedin:   tariffs.GetRef(tariff.Feedin),
-			Co2:      tariffs.GetRef(tariff.Co2),
-			Planner:  tariffs.GetRef(tariff.Planner),
+			Grid:     tariffs.GetRef(tariffs.Grid),
+			Feedin:   tariffs.GetRef(tariffs.Feedin),
+			Co2:      tariffs.GetRef(tariffs.Co2),
+			Planner:  tariffs.GetRef(tariffs.Planner),
 		}
 
 		jsonResult(w, res)
@@ -90,44 +89,32 @@ func updateTariffsHandler(site site.API) http.HandlerFunc {
 			setConfigDirty()
 		}
 
-		if payload.Grid != nil {
-			ref := *payload.Grid
-			if ref != "" && !validateRefs(w, config.Tariffs(), []string{ref}) {
-				return
-			}
+		update := func(tariff string, ref *string) bool {
+			if ref != nil {
+				if *ref != "" && !validateRefs(w, config.Tariffs(), []string{*ref}) {
+					return false
+				}
 
-			tariffs.SetRef(tariff.Grid, ref)
-			setConfigDirty()
+				tariffs.SetRef(tariff, *ref)
+				setConfigDirty()
+			}
+			return true
 		}
 
-		if payload.Feedin != nil {
-			ref := *payload.Feedin
-			if ref != "" && !validateRefs(w, config.Tariffs(), []string{ref}) {
-				return
-			}
-
-			tariffs.SetRef(tariff.Feedin, ref)
-			setConfigDirty()
+		if !update(tariffs.Grid, payload.Grid) {
+			return
 		}
 
-		if payload.Co2 != nil {
-			ref := *payload.Co2
-			if ref != "" && !validateRefs(w, config.Tariffs(), []string{ref}) {
-				return
-			}
-
-			tariffs.SetRef(tariff.Co2, ref)
-			setConfigDirty()
+		if !update(tariffs.Feedin, payload.Feedin) {
+			return
 		}
 
-		if payload.Planner != nil {
-			ref := *payload.Planner
-			if ref != "" && !validateRefs(w, config.Tariffs(), []string{ref}) {
-				return
-			}
+		if !update(tariffs.Co2, payload.Co2) {
+			return
+		}
 
-			tariffs.SetRef(tariff.Planner, ref)
-			setConfigDirty()
+		if !update(tariffs.Planner, payload.Planner) {
+			return
 		}
 
 		status := map[bool]int{false: http.StatusOK, true: http.StatusAccepted}

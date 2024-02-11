@@ -3,7 +3,7 @@ package site
 import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
-	"github.com/evcc-io/evcc/tariff"
+	"github.com/evcc-io/evcc/tariff/tariffs"
 )
 
 // API is the external site API
@@ -46,7 +46,7 @@ type API interface {
 	// tariffs and costs
 	//
 
-	GetTariffs() tariff.API
+	GetTariffs() tariffs.API
 	GetTariff(string) api.Tariff
 	GetSmartCostLimit() float64
 	SetSmartCostLimit(float64) error

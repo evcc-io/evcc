@@ -24,7 +24,7 @@ import (
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/server/db"
 	"github.com/evcc-io/evcc/server/db/settings"
-	"github.com/evcc-io/evcc/tariff"
+	"github.com/evcc-io/evcc/tariff/tariffs"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/telemetry"
@@ -87,7 +87,7 @@ type Site struct {
 	batteryDischargeControl bool    // prevent battery discharge for fast and planned charging
 
 	loadpoints  []*Loadpoint             // Loadpoints
-	tariffs     tariff.API               // Tariffs
+	tariffs     tariffs.API              // Tariffs
 	coordinator *coordinator.Coordinator // Vehicles
 	prioritizer *prioritizer.Prioritizer // Power budgets
 	stats       *Stats                   // Stats
@@ -115,7 +115,7 @@ func NewSiteFromConfig(
 	log *util.Logger,
 	other map[string]interface{},
 	loadpoints []*Loadpoint,
-	tariffs *tariff.Tariffs,
+	tariffs_ *tariffs.Tariffs,
 ) (*Site, error) {
 	site := NewSite()
 	if err := util.DecodeOther(other, site); err != nil {
@@ -124,7 +124,7 @@ func NewSiteFromConfig(
 
 	Voltage = site.Voltage
 	site.loadpoints = loadpoints
-	site.tariffs = tariffs
+	site.tariffs = tariffs_
 
 	handler := config.Vehicles()
 	site.coordinator = coordinator.New(log, config.Instances(handler.Devices()))
@@ -140,7 +140,7 @@ func NewSiteFromConfig(
 		})
 	}
 
-	tariff := site.GetTariff(tariff.Planner)
+	tariff := site.GetTariff(tariffs.Planner)
 
 	// give loadpoints access to vehicles and database
 	for _, lp := range loadpoints {
@@ -790,7 +790,7 @@ func (site *Site) update(lp Updater) {
 	}
 
 	var smartCostActive bool
-	if tariff := site.GetTariff(tariff.Planner); tariff != nil && tariff.Type() != api.TariffTypePriceStatic {
+	if tariff := site.GetTariff(tariffs.Planner); tariff != nil && tariff.Type() != api.TariffTypePriceStatic {
 		rates, err := tariff.Rates()
 
 		var rate api.Rate
@@ -864,7 +864,7 @@ func (site *Site) prepare() {
 	site.publish(keys.Currency, site.tariffs.GetCurrency())
 	site.publish(keys.SmartCostActive, false)
 	site.publish(keys.SmartCostLimit, site.smartCostLimit)
-	if tariff := site.GetTariff(tariff.Planner); tariff != nil {
+	if tariff := site.GetTariff(tariffs.Planner); tariff != nil {
 		site.publish(keys.SmartCostType, tariff.Type())
 	} else {
 		site.publish(keys.SmartCostType, nil)

@@ -1,4 +1,4 @@
-package tariff
+package tariffs
 
 import (
 	"sync"
@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	settingsPrefix = "tariffs."
+	SettingsKey = "tariffs."
 
 	Grid    = "grid"
 	Feedin  = "feedin"
@@ -18,6 +18,7 @@ const (
 	Co2     = "co2"
 )
 
+// Tariffs is the tariffs container
 type Tariffs struct {
 	mu                         sync.RWMutex
 	currency                   currency.Unit
@@ -26,7 +27,8 @@ type Tariffs struct {
 
 var _ API = (*Tariffs)(nil)
 
-func NewTariffs(currency currency.Unit) *Tariffs {
+// New creates a new tariffs container
+func New(currency currency.Unit) *Tariffs {
 	return &Tariffs{
 		currency: currency,
 	}
@@ -44,7 +46,7 @@ func currentPrice(t api.Tariff) (float64, error) {
 }
 
 func getRef(ref string, t api.Tariff) string {
-	val, err := settings.String(settingsPrefix + ref)
+	val, err := settings.String(SettingsKey + ref)
 	if err == nil && val != "" {
 		return val
 	}
@@ -62,7 +64,7 @@ func (t *Tariffs) SetCurrency(s string) error {
 	c, err := currency.ParseISO(s)
 	if err == nil {
 		t.currency = c
-		settings.SetString(settingsPrefix+"currency", s)
+		settings.SetString(SettingsKey+"currency", s)
 	}
 	return err
 }
@@ -89,7 +91,7 @@ func (t *Tariffs) SetRef(ref, value string) {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 
-	settings.SetString(settingsPrefix+ref, value)
+	settings.SetString(SettingsKey+ref, value)
 }
 
 func (t *Tariffs) GetInstance(ref string) api.Tariff {

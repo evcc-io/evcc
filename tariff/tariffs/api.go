@@ -1,4 +1,4 @@
-package tariff
+package tariffs
 
 import (
 	"github.com/evcc-io/evcc/api"

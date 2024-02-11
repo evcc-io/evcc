@@ -32,6 +32,7 @@ import (
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/server/oauth2redirect"
 	"github.com/evcc-io/evcc/tariff"
+	"github.com/evcc-io/evcc/tariff/tariffs"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/locale"
@@ -132,7 +133,7 @@ type messagingConfig struct {
 type tariffConfig struct {
 	Currency string
 	Grid     config.Typed
-	FeedIn   config.Typed
+	Feedin   config.Typed
 	Co2      config.Typed
 	Planner  config.Typed
 }
@@ -592,7 +593,7 @@ func configureMessengers(conf messagingConfig, vehicles push.Vehicles, valueChan
 	return messageChan, nil
 }
 
-func configureTariff(name string, conf config.Typed, t *tariff.Tariffs, wg *sync.WaitGroup) {
+func configureTariff(name string, conf config.Typed, t *tariffs.Tariffs, wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	if conf.Type == "" {
@@ -608,25 +609,25 @@ func configureTariff(name string, conf config.Typed, t *tariff.Tariffs, wg *sync
 	t.SetInstance(name, res)
 }
 
-func configureTariffs(conf tariffConfig) (*tariff.Tariffs, error) {
+func configureTariffs(conf tariffConfig) (*tariffs.Tariffs, error) {
 	c := currency.EUR
 	if conf.Currency != "" {
 		c = currency.MustParseISO(conf.Currency)
 	}
 
-	tariffs := tariff.NewTariffs(c)
+	res := tariffs.New(c)
 
 	var wg sync.WaitGroup
 	wg.Add(4)
 
-	go configureTariff("grid", conf.Grid, tariffs, &wg)
-	go configureTariff("feedin", conf.FeedIn, tariffs, &wg)
-	go configureTariff("co2", conf.Co2, tariffs, &wg)
-	go configureTariff("planner", conf.Planner, tariffs, &wg)
+	go configureTariff(tariffs.Grid, conf.Grid, res, &wg)
+	go configureTariff(tariffs.Feedin, conf.Feedin, res, &wg)
+	go configureTariff(tariffs.Co2, conf.Co2, res, &wg)
+	go configureTariff(tariffs.Planner, conf.Planner, res, &wg)
 
 	wg.Wait()
 
-	return tariffs, nil
+	return res, nil
 }
 
 func configureDevices(conf globalConfig) error {
@@ -657,7 +658,7 @@ func configureSiteAndLoadpoints(conf globalConfig) (*core.Site, error) {
 	return configureSite(conf.Site, loadpoints, tariffs)
 }
 
-func configureSite(conf map[string]interface{}, loadpoints []*core.Loadpoint, tariffs *tariff.Tariffs) (*core.Site, error) {
+func configureSite(conf map[string]interface{}, loadpoints []*core.Loadpoint, tariffs *tariffs.Tariffs) (*core.Site, error) {
 	site, err := core.NewSiteFromConfig(log, conf, loadpoints, tariffs)
 	if err != nil {
 		return nil, fmt.Errorf("failed configuring site: %w", err)

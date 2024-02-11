@@ -42,12 +42,14 @@ func updateSiteHandler(site site.API) http.HandlerFunc {
 			return
 		}
 
+		meters := config.Meters()
+
 		if payload.Title != nil {
 			site.SetTitle(*payload.Title)
 		}
 
 		if payload.Grid != nil {
-			if *payload.Grid != "" && !validateRefs(w, config.Meters(), []string{*payload.Grid}) {
+			if *payload.Grid != "" && !validateRefs(w, meters, []string{*payload.Grid}) {
 				return
 			}
 
@@ -56,7 +58,7 @@ func updateSiteHandler(site site.API) http.HandlerFunc {
 		}
 
 		if payload.PV != nil {
-			if !validateRefs(w, config.Meters(), *payload.PV) {
+			if !validateRefs(w, meters, *payload.PV) {
 				return
 			}
 
@@ -65,7 +67,7 @@ func updateSiteHandler(site site.API) http.HandlerFunc {
 		}
 
 		if payload.Battery != nil {
-			if !validateRefs(w, config.Meters(), *payload.Battery) {
+			if !validateRefs(w, meters, *payload.Battery) {
 				return
 			}
 

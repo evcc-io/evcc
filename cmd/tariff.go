@@ -6,6 +6,7 @@ import (
 	"text/tabwriter"
 
 	"github.com/evcc-io/evcc/tariff"
+	"github.com/evcc-io/evcc/tariff/tariffs"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/spf13/cobra"
 )
@@ -39,10 +40,10 @@ func runTariff(cmd *cobra.Command, args []string) {
 	}
 
 	for key, cc := range map[string]config.Typed{
-		"grid":    conf.Tariffs.Grid,
-		"feedin":  conf.Tariffs.FeedIn,
-		"co2":     conf.Tariffs.Co2,
-		"planner": conf.Tariffs.Planner,
+		tariffs.Grid:    conf.Tariffs.Grid,
+		tariffs.Feedin:  conf.Tariffs.Feedin,
+		tariffs.Co2:     conf.Tariffs.Co2,
+		tariffs.Planner: conf.Tariffs.Planner,
 	} {
 		if cc.Type == "" || (name != "" && key != name) {
 			continue
