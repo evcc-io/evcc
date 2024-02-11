@@ -30,7 +30,7 @@ import (
 	"github.com/volkszaehler/mbmd/meters/rs485"
 )
 
-// https://update.mennekes.de/menneckesHcc3/1.13/Description%20Modbus_menneckesHCC3%20menneckesHCC3_v01_2021-06-25_en.pdf
+// https://update.mennekes.de/hcc3/1.13/Description%20Modbus_AMTRON%20HCC3_v01_2021-06-25_en.pdf
 
 // MenneckesHcc3 Xtra/Premium charger implementation
 type MenneckesHcc3 struct {
