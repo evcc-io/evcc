@@ -2,6 +2,9 @@ package polestar
 
 import (
 	"context"
+	"net/http"
+	"net/url"
+	"strings"
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
@@ -9,12 +12,16 @@ import (
 	"golang.org/x/oauth2"
 )
 
+// https://github.com/leeyuentuen/polestar_api
 // https://github.com/TA2k/ioBroker.polestar
 
-const ApiURI = "https://pc-api.polestar.com/eu-north-1/my-star"
+const (
+	ApiURI   = "https://pc-api.polestar.com/eu-north-1"
+	ApiURIv1 = ApiURI + "/my-star"
+	ApiURIv2 = ApiURI + "/mystar-v2"
+)
 
 type API struct {
-	*request.Helper
 	client *graphql.Client
 }
 
@@ -28,11 +35,8 @@ func NewAPI(log *util.Logger, identity oauth2.TokenSource) *API {
 	}
 
 	v := &API{
-		Helper: request.NewHelper(log),
-		client: graphql.NewClient(ApiURI, httpClient),
+		client: graphql.NewClient(ApiURIv2, httpClient),
 	}
-
-	v.Client.Transport = httpClient.Transport
 
 	return v
 }
@@ -42,7 +46,10 @@ func (v *API) Vehicles(ctx context.Context) ([]ConsumerCar, error) {
 		GetConsumerCarsV2 []ConsumerCar `graphql:"getConsumerCarsV2"`
 	}
 
-	err := v.client.Query(ctx, &res, nil, graphql.OperationName("getCars"))
+	err := v.client.WithRequestModifier(func(req *http.Request) {
+		req.URL, _ = url.Parse(strings.ReplaceAll(req.URL.String(), "mystar-v2", "my-star"))
+	}).Query(ctx, &res, nil, graphql.OperationName("getCars"))
+
 	return res.GetConsumerCarsV2, err
 }
 
@@ -51,9 +58,10 @@ func (v *API) Status(ctx context.Context, vin string) (BatteryData, error) {
 		BatteryData `graphql:"getBatteryData(vin: $vin)"`
 	}
 
-	err := v.client.Query(ctx, &res, map[string]interface{}{
+	err := v.client.Query(ctx, &res, map[string]any{
 		"vin": vin,
 	}, graphql.OperationName("GetBatteryData"))
+
 	return res.BatteryData, err
 }
 
@@ -62,8 +70,9 @@ func (v *API) Odometer(ctx context.Context, vin string) (OdometerData, error) {
 		OdometerData `graphql:"getOdometerData(vin: $vin)"`
 	}
 
-	err := v.client.Query(ctx, &res, map[string]interface{}{
+	err := v.client.Query(ctx, &res, map[string]any{
 		"vin": vin,
 	}, graphql.OperationName("GetOdometerData"))
+
 	return res.OdometerData, err
 }
