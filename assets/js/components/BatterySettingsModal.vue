@@ -240,11 +240,6 @@
 									</label>
 								</div>
 							</div>
-							<SmartCostLimit
-								v-if="isModalVisible && smartCostAvailable"
-								v-bind="smartCostLimitProps"
-								class="mt-5"
-							/>
 						</div>
 					</div>
 				</div>
@@ -257,15 +252,12 @@
 import "@h2d2/shopicons/es/regular/lightning";
 import "@h2d2/shopicons/es/regular/car3";
 import "@h2d2/shopicons/es/regular/home";
-import SmartCostLimit from "./SmartCostLimit.vue";
 import formatter from "../mixins/formatter";
 import collector from "../mixins/collector";
 import api from "../api";
-import smartCostAvailable from "../utils/smartCostAvailable";
 
 export default {
 	name: "BatterySettingsModal",
-	components: { SmartCostLimit },
 	mixins: [formatter, collector],
 	props: {
 		bufferSoc: Number,
@@ -274,10 +266,6 @@ export default {
 		bufferStartSoc: Number,
 		batteryDischargeControl: Boolean,
 		battery: { type: Array, default: () => [] },
-		batterySmartCostLimit: Number,
-		smartCostType: String,
-		tariffGrid: Number,
-		currency: String,
 	},
 	data: function () {
 		return {
@@ -356,15 +344,6 @@ export default {
 					});
 					return `${name}${formattedEnergy}${formattedSoc}`;
 				});
-		},
-		smartCostLimitProps() {
-			return {
-				...this.collectProps(SmartCostLimit),
-				smartCostLimit: this.batterySmartCostLimit,
-			};
-		},
-		smartCostAvailable() {
-			return smartCostAvailable(this.smartCostType);
 		},
 	},
 	watch: {

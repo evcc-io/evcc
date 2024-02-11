@@ -38,8 +38,6 @@ const (
 	// battery settings
 	BatteryCapacity         = "batteryCapacity"
 	BatteryDischargeControl = "batteryDischargeControl"
-	BatterySmartCostLimit   = "batterySmartCostLimit" // TODO: implement
-	BatterySmartCostActive  = "smartCostActive"       // TODO: implement
 	BufferSoc               = "bufferSoc"
 	BufferStartSoc          = "bufferStartSoc"
 

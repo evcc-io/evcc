@@ -77,9 +77,6 @@ type Site struct {
 	batteryMeters []api.Meter // Battery charging meters
 	auxMeters     []api.Meter // Auxiliary meters
 
-	// cost settings
-	smartCostLimit float64 // always charge if cost is below this value
-
 	// battery settings
 	prioritySoc             float64 // prefer battery up to this Soc
 	bufferSoc               float64 // continue charging on battery above this Soc
@@ -267,11 +264,6 @@ func (site *Site) restoreSettings() error {
 	}
 	if v, err := settings.Float(keys.BufferStartSoc); err == nil {
 		if err := site.SetBufferStartSoc(v); err != nil {
-			return err
-		}
-	}
-	if v, err := settings.Float(keys.BatterySmartCostLimit); err == nil {
-		if err := site.SetBatterySmartCostLimit(v); err != nil {
 			return err
 		}
 	}
@@ -862,8 +854,6 @@ func (site *Site) prepare() {
 	site.publish(keys.PrioritySoc, site.prioritySoc)
 	site.publish(keys.BatteryMode, site.batteryMode)
 	site.publish(keys.BatteryDischargeControl, site.batteryDischargeControl)
-	site.publish(keys.BatterySmartCostLimit, 0)      // TODO: implement
-	site.publish(keys.BatterySmartCostActive, false) // TODO: implement
 	site.publish(keys.ResidualPower, site.ResidualPower)
 
 	site.publish(keys.Currency, site.tariffs.Currency)

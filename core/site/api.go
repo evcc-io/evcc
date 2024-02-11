@@ -54,6 +54,4 @@ type API interface {
 
 	GetBatteryDischargeControl() bool
 	SetBatteryDischargeControl(bool) error
-	GetBatterySmartCostLimit() float64
-	SetBatterySmartCostLimit(float64) error
 }

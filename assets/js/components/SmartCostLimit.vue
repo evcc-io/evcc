@@ -294,7 +294,7 @@ export default {
 		async saveSmartCostLimit(limit) {
 			const url = this.loadpointId
 				? `loadpoints/${this.loadpointId}/smartcostlimit`
-				: "batterysmartcostlimit";
+				: "batterysmartcostlimit"; // currently not implemented
 			try {
 				await api.post(`${url}/${encodeURIComponent(limit)}`);
 			} catch (err) {

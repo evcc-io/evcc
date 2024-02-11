@@ -610,3 +610,19 @@ func (mr *MockAPIMockRecorder) Title() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Title", reflect.TypeOf((*MockAPI)(nil).Title))
 }
+
+// GetSmartCostLimit mocks base method.
+func (m *MockAPI) GetSmartCostLimit() float64 {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSmartCostLimit")
+	ret0, _ := ret[0].(float64)
+	return ret0
+}
+
+// SetSmartCostLimit mocks base method.
+func (m *MockAPI) SetSmartCostLimit(arg0 float64) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetSmartCostLimit", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
