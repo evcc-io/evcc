@@ -25,7 +25,7 @@ never = "nur mit genug PV-Überschuss"
 
 [config.battery]
 titleAdd = "Batterie Zähler hinzufügen"
-titleEdit = "Batterie Zähler editieren"
+titleEdit = "Batterie Zähler bearbeiten"
 
 [config.deviceValue]
 capacity = "Kapazität"
@@ -351,7 +351,6 @@ cleanEnergyCharging = "Lade saubere Energie: {co2} (Grenze {limit})"
 climating = "Vorklimatisierung erkannt."
 connected = "Verbunden."
 disconnected = "Nicht verbunden."
-guard = "Schaltschutz aktiv für {remaining}."
 minCharge = "Mindestladung bis {soc}%."
 pvDisable = "Zu wenig Überschuss. Pausiere in {remaining} …"
 pvEnable = "Überschuss verfügbar. Starte in {remaining} …"
