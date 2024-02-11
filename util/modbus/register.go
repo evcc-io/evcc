@@ -22,9 +22,6 @@ type Register struct {
 }
 
 func (r Register) Error() error {
-	if r.Address == 0 {
-		return errors.New("address is required")
-	}
 	if r.Type == "" {
 		return errors.New("type is required")
 	}

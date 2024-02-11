@@ -15,15 +15,11 @@ var (
 )
 
 func getInstance(subject string) *Identity {
-	mu.Lock()
-	defer mu.Unlock()
 	v, _ := identities[subject]
 	return v
 }
 
 func addInstance(subject string, identity *Identity) {
-	mu.Lock()
-	defer mu.Unlock()
 	identities[subject] = identity
 }
 

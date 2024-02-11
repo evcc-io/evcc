@@ -3,9 +3,7 @@ package cmd
 import (
 	"fmt"
 	"os"
-	"os/signal"
 	"regexp"
-	"syscall"
 	"text/tabwriter"
 
 	"github.com/evcc-io/evcc/server/db/settings"
@@ -49,14 +47,4 @@ func runSettingsGet(cmd *cobra.Command, args []string) {
 		fmt.Fprintf(w, "%s:\t%s\n", s.Key, s.Value)
 	}
 	w.Flush()
-
-	// catch signals
-	go func() {
-		signalC := make(chan os.Signal, 1)
-		signal.Notify(signalC, os.Interrupt, syscall.SIGTERM)
-
-		<-signalC // wait for signal
-
-		os.Exit(1)
-	}()
 }

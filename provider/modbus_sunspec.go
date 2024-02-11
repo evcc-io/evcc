@@ -31,7 +31,7 @@ func init() {
 func NewModbusSunspecFromConfig(other map[string]interface{}) (Provider, error) {
 	cc := struct {
 		modbus.Settings `mapstructure:",squash"`
-		Value           string
+		Value           []string
 		Scale           float64
 		Delay           time.Duration
 		ConnectDelay    time.Duration
@@ -67,7 +67,7 @@ func NewModbusSunspecFromConfig(other map[string]interface{}) (Provider, error) 
 	log := util.NewLogger("sunspec")
 	conn.Logger(log.TRACE)
 
-	if cc.Value == "" {
+	if len(cc.Value) == 0 {
 		return nil, errors.New("value is required")
 	}
 
@@ -77,9 +77,13 @@ func NewModbusSunspecFromConfig(other map[string]interface{}) (Provider, error) 
 		return nil, err
 	}
 
-	ops, err := modbus.ParsePoint(cc.Value)
-	if err != nil {
-		return nil, fmt.Errorf("invalid sunspec value: %s", cc.Value)
+	var ops []modbus.SunSpecOperation
+	for _, val := range cc.Value {
+		op, err := modbus.ParsePoint(val)
+		if err != nil {
+			return nil, fmt.Errorf("invalid sunspec value: %s", cc.Value)
+		}
+		ops = append(ops, op)
 	}
 
 	mb := &ModbusSunspec{

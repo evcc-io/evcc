@@ -62,7 +62,7 @@ require (
 	github.com/libp2p/zeroconf/v2 v2.2.0
 	github.com/lorenzodonini/ocpp-go v0.17.1-0.20231031074144-d214d7c42cbc
 	github.com/lunixbochs/struc v0.0.0-20200707160740-784aaebc1d40
-	github.com/mabunixda/wattpilot v1.6.4
+	github.com/mabunixda/wattpilot v1.6.3
 	github.com/manifoldco/promptui v0.9.0
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/mapstructure v1.5.0
@@ -208,3 +208,5 @@ replace github.com/grid-x/modbus => github.com/evcc-io/modbus v0.0.0-20230705160
 replace github.com/imdario/mergo => github.com/imdario/mergo v0.3.16
 
 replace github.com/spf13/viper => github.com/spf13/viper v1.18.1
+
+replace github.com/mabunixda/wattpilot => github.com/mabunixda/wattpilot v1.6.2
