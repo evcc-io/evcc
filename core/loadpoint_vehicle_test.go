@@ -11,8 +11,8 @@ import (
 	"github.com/evcc-io/evcc/core/coordinator"
 	"github.com/evcc-io/evcc/core/soc"
 	"github.com/evcc-io/evcc/util"
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/mock/gomock"
 )
 
 func TestPublishSocAndRange(t *testing.T) {

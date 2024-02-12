@@ -10,10 +10,6 @@ const (
 
 type UsageChoice string
 
-func (u UsageChoice) String() string {
-	return string(u)
-}
-
 type DeviceCategory string
 
 func (c DeviceCategory) String() string {

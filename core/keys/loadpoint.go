@@ -66,7 +66,6 @@ const (
 	VehicleDetectionActive = "vehicleDetectionActive" // vehicle detection active
 	VehicleIcon            = "vehicleIcon"            // vehicle icon for ui
 	VehicleOdometer        = "vehicleOdometer"        // vehicle odometer
-	VehiclePresent         = "vehiclePresent"         // vehicle detected
 	VehicleRange           = "vehicleRange"           // vehicle range
 	VehicleSoc             = "vehicleSoc"             // vehicle soc
 	VehicleTargetSoc       = "vehicleTargetSoc"       // vehicle soc limit

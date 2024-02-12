@@ -1,6 +1,8 @@
 [batterySettings]
 batteryLevel = "Nivell de bateria"
 capacity = "{energy} de {total}"
+disclaimerHint = "Nota:"
+disclaimerText = "aquests paràmetres només afecten el mode solar. El comportament de càrrega s'ajusta en conseqüència."
 legendBottomName = "prioritat de la casa"
 legendBottomSubline = "no utilitzat per carregar"
 legendMiddleName = "primer, el vehicle"
@@ -10,7 +12,6 @@ legendTopAutostart = "s'inicia automaticament"
 legendTopName = "càrrega soportada per bateria"
 legendTopSubline = "sensa interrupcions"
 modalTitle = "Configuració bateria"
-note = "Nota: aquests paràmetres només afecten el mode solar. El comportament de càrrega s'ajusta en conseqüència."
 
 [batterySettings.bufferStart]
 full = "quan gairebé ple"

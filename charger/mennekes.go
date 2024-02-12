@@ -188,7 +188,7 @@ func (wb *Mennekes) CurrentPower() (float64, error) {
 		return 0, err
 	}
 
-	return float64(encoding.Float32(b)) * 1e3, nil
+	return float64(encoding.Float32(b)), nil
 }
 
 var _ api.MeterEnergy = (*Mennekes)(nil)
@@ -263,7 +263,7 @@ var _ api.PhaseSwitcher = (*Mennekes)(nil)
 // Phases1p3p implements the api.PhaseSwitcher interface
 func (wb *Mennekes) Phases1p3p(phases int) error {
 	var u uint16
-	if phases == 3 {
+	if phases == 1 {
 		u = 1
 	}
 

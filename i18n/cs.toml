@@ -1,6 +1,8 @@
 [batterySettings]
 batteryLevel = "Nabití baterie"
 capacity = "{energy} z {total}"
+disclaimerHint = "Poznámka:"
+disclaimerText = "Tato nastavení ovlivňují pouze solární režim. Chování dobíjení je příslušně upraveno."
 legendBottomName = "dom má přednost"
 legendBottomSubline = "nepoužito pro dobíjení"
 legendMiddleName = "nejdříve vozidlo"
@@ -10,7 +12,6 @@ legendTopAutostart = "startuje automaticky"
 legendTopName = "dobíjení podporované baterií"
 legendTopSubline = "bez přerušování"
 modalTitle = "Nastavení baterie"
-note = "Poznámka: Tato nastavení ovlivňují pouze solární režim. Chování dobíjení je příslušně upraveno."
 
 [batterySettings.bufferStart]
 full = "když je skoro plná"

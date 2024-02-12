@@ -7,7 +7,7 @@
 				</router-link>
 				Configuration 🧪
 			</h1>
-			<TopNavigation />
+			<TopNavigation v-bind="topNavigation" />
 		</header>
 
 		<div class="alert alert-danger mb-5" role="alert">
@@ -189,10 +189,13 @@ import Modal from "bootstrap/js/dist/modal";
 import api from "../api";
 import VehicleIcon from "../components/VehicleIcon";
 import VehicleModal from "../components/Config/VehicleModal.vue";
+import store from "../store";
+import collector from "../mixins/collector";
 
 export default {
 	name: "Config",
 	components: { TopNavigation, VehicleIcon, VehicleModal },
+	mixins: [collector],
 	data() {
 		return {
 			vehicles: [],
@@ -202,6 +205,12 @@ export default {
 			grid: null,
 			vehicleId: undefined,
 		};
+	},
+	computed: {
+		topNavigation: function () {
+			const vehicleLogins = store.state.auth ? store.state.auth.vehicles : {};
+			return { vehicleLogins, ...this.collectProps(TopNavigation, store.state) };
+		},
 	},
 	mounted() {
 		this.loadVehicles();

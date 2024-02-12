@@ -283,7 +283,7 @@ func vehicleInstance(cc config.Named) (api.Vehicle, error) {
 	if err != nil {
 		var ce *util.ConfigError
 		if errors.As(err, &ce) {
-			return nil, fmt.Errorf("cannot create vehicle '%s': %w", cc.Name, err)
+			return nil, err
 		}
 
 		// wrap non-config vehicle errors to prevent fatals
@@ -572,10 +572,10 @@ func configureEEBus(conf map[string]interface{}) error {
 }
 
 // setup messaging
-func configureMessengers(conf messagingConfig, valueChan chan util.Param, cache *util.Cache) (chan push.Event, error) {
+func configureMessengers(conf messagingConfig, vehicles push.Vehicles, valueChan chan util.Param, cache *util.Cache) (chan push.Event, error) {
 	messageChan := make(chan push.Event, 1)
 
-	messageHub, err := push.NewHub(conf.Events, cache)
+	messageHub, err := push.NewHub(conf.Events, vehicles, cache)
 	if err != nil {
 		return messageChan, fmt.Errorf("failed configuring push services: %w", err)
 	}
@@ -593,52 +593,42 @@ func configureMessengers(conf messagingConfig, valueChan chan util.Param, cache 
 	return messageChan, nil
 }
 
-func configureTariffs(conf tariffConfig) (tariff.Tariffs, error) {
-	var grid, feedin, co2, planner api.Tariff
-	var currencyCode currency.Unit = currency.EUR
-	var err error
+func configureTariff(name string, conf config.Typed, t *api.Tariff, wg *sync.WaitGroup) {
+	defer wg.Done()
+
+	if conf.Type == "" {
+		return
+	}
+
+	res, err := tariff.NewFromConfig(conf.Type, conf.Other)
+	if err != nil {
+		log.ERROR.Printf("failed configuring %s tariff: %v", name, err)
+		return
+	}
+
+	*t = res
+}
+
+func configureTariffs(conf tariffConfig) (*tariff.Tariffs, error) {
+	tariffs := tariff.Tariffs{
+		Currency: currency.EUR,
+	}
 
 	if conf.Currency != "" {
-		currencyCode = currency.MustParseISO(conf.Currency)
+		tariffs.Currency = currency.MustParseISO(conf.Currency)
 	}
 
-	if conf.Grid.Type != "" {
-		grid, err = tariff.NewFromConfig(conf.Grid.Type, conf.Grid.Other)
-		if err != nil {
-			grid = nil
-			log.ERROR.Printf("failed configuring grid tariff: %v", err)
-		}
-	}
+	var wg sync.WaitGroup
+	wg.Add(4)
 
-	if conf.FeedIn.Type != "" {
-		feedin, err = tariff.NewFromConfig(conf.FeedIn.Type, conf.FeedIn.Other)
-		if err != nil {
-			feedin = nil
-			log.ERROR.Printf("failed configuring feed-in tariff: %v", err)
-		}
-	}
+	go configureTariff("grid", conf.Grid, &tariffs.Grid, &wg)
+	go configureTariff("feedin", conf.FeedIn, &tariffs.FeedIn, &wg)
+	go configureTariff("co2", conf.Co2, &tariffs.Co2, &wg)
+	go configureTariff("planner", conf.Planner, &tariffs.Planner, &wg)
 
-	if conf.Co2.Type != "" {
-		co2, err = tariff.NewFromConfig(conf.Co2.Type, conf.Co2.Other)
-		if err != nil {
-			co2 = nil
-			log.ERROR.Printf("failed configuring co2 tariff: %v", err)
-		}
-	}
+	wg.Wait()
 
-	if conf.Planner.Type != "" {
-		planner, err = tariff.NewFromConfig(conf.Planner.Type, conf.Planner.Other)
-		if err != nil {
-			planner = nil
-			log.ERROR.Printf("failed configuring planner tariff: %v", err)
-		} else if planner.Type() == api.TariffTypeCo2 {
-			log.WARN.Printf("tariff configuration changed, use co2 instead of planner for co2 tariff")
-		}
-	}
-
-	tariffs := tariff.NewTariffs(currencyCode, grid, feedin, co2, planner)
-
-	return *tariffs, nil
+	return &tariffs, nil
 }
 
 func configureDevices(conf globalConfig) error {
@@ -676,7 +666,7 @@ func configureSiteAndLoadpoints(conf globalConfig) (*core.Site, error) {
 	return configureSite(conf.Site, loadpoints, config.Instances(config.Vehicles().Devices()), tariffs, circuits)
 }
 
-func configureSite(conf map[string]interface{}, loadpoints []*core.Loadpoint, vehicles []api.Vehicle, tariffs tariff.Tariffs, circuits map[string]*core.Circuit) (*core.Site, error) {
+func configureSite(conf map[string]interface{}, loadpoints []*core.Loadpoint, vehicles []api.Vehicle, tariffs *tariff.Tariffs, circuits map[string]*core.Circuit) (*core.Site, error) {
 	// make list from values of circuit map
 	var circuitList []*core.Circuit
 	for k := range circuits {

@@ -43,7 +43,9 @@
 						<div class="modal-header">
 							<h5 class="modal-title">
 								{{ $t("main.chargingPlan.modalTitle")
-								}}<span v-if="socBasedPlanning">: {{ vehicle.title }}</span>
+								}}<span v-if="socBasedPlanning && vehicle"
+									>: {{ vehicle.title }}</span
+								>
 							</h5>
 							<button
 								type="button"
@@ -203,7 +205,7 @@ export default {
 			);
 		},
 		apiVehicle: function () {
-			return `vehicles/${this.vehicle.name}/`;
+			return `vehicles/${this.vehicle?.name}/`;
 		},
 		apiLoadpoint: function () {
 			return `loadpoints/${this.id}/`;

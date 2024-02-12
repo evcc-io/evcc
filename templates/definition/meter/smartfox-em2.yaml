@@ -1,0 +1,82 @@
+template: smartfox-em2
+products:
+  - brand: Smartfox
+    description:
+      generic: Pro, Pro 2, Pro Light, Pro Light 2, Light, Reg, Reg extended (EM2 firmware)
+requirements:
+  description:
+    de: |
+      Kann verwendet werden, um Daten für `grid`, `pv` und `aux` zu erhalten. 
+      Wenn `usage` nicht definiert ist, wird die Leistung für die Warmwasserbereitung zurückgegeben (als `aux` zu verwenden).
+    en: |
+      Can be used to get `grid`, `pv` and `aux` data. 
+      If `usage` is not defined, then return the power for the water heating (to be used as `aux`).
+params:
+  - name: usage
+    choice: ["grid", "pv"]
+  - name: host
+render: |
+  {{- define "uri" -}}
+  http://{{ .host }}/values.xml
+  {{- end }}
+  type: custom
+  # jq: parse json generated from response values.xml (https://jqplay.org is your friend to test queries)
+  {{- if not .usage }}
+  power: # heating power in W
+    source: http
+    uri: {{ include "uri" . }}
+    jq: .values.value[] | select(.attrid=="htPowerMeasValue")."#content" | rtrimstr(" kW")
+    scale: 1000
+  {{- end }}
+  {{- if eq .usage "grid" }}
+  power: # grid power in W
+    source: http
+    uri: {{ include "uri" . }}
+    jq: .values.value[] | select(.attrid=="detailsPowerValue")."#content" | rtrimstr(" W")
+  energy: # grid energy in kWh
+    source: http
+    uri: {{ include "uri" . }}
+    jq: .values.value[] | select(.attrid=="energyValue")."#content" | rtrimstr(" kWh")
+  voltages: # grid voltages in V
+  - source: http
+    uri: {{ include "uri" . }}
+    jq: .values.value[] | select(.attrid=="voltageL1Value")."#content" | rtrimstr(" V")
+  - source: http
+    uri: {{ include "uri" . }}
+    jq: .values.value[] | select(.attrid=="voltageL2Value")."#content" | rtrimstr(" V")
+  - source: http
+    uri: {{ include "uri" . }}
+    jq: .values.value[] | select(.attrid=="voltageL3Value")."#content" | rtrimstr(" V")
+  currents: # grid currents in A
+  - source: http
+    uri: {{ include "uri" . }}
+    jq: .values.value[] | select(.attrid=="ampereL1Value")."#content" | rtrimstr(" A")
+  - source: http
+    uri: {{ include "uri" . }}
+    jq: .values.value[] | select(.attrid=="ampereL2Value")."#content" | rtrimstr(" A")
+  - source: http
+    uri: {{ include "uri" . }}
+    jq: .values.value[] | select(.attrid=="ampereL3Value")."#content" | rtrimstr(" A")
+  powers: # grid powers in W
+  - source: http
+    uri: {{ include "uri" . }}
+    jq: .values.value[] | select(.attrid=="powerL1Value")."#content" | rtrimstr(" W")
+  - source: http
+    uri: {{ include "uri" . }}
+    jq: .values.value[] | select(.attrid=="powerL2Value")."#content" | rtrimstr(" W")
+  - source: http
+    uri: {{ include "uri" . }}
+    jq: .values.value[] | select(.attrid=="powerL3Value")."#content" | rtrimstr(" W")
+  {{- end }}
+  {{- if eq .usage "pv" }}
+  # PV power and energy values are delivered for each inverter, we select them via regex and sum the values
+  power: # PV power in W
+    source: http
+    uri: {{ include "uri" . }}
+    jq: '[.values.value[] | select(.attrid|test("wr\\d+PowerValue"))."#content" | rtrimstr(" kW") | tonumber] | add'
+    scale: 1000 # wr1PowerValue, ..., wr5PowerValue are in kW
+  energy: # PV energy in kWh
+    source: http
+    uri: {{ include "uri" . }}
+    jq: '[.values.value[] | select(.attrid|test("wr\\d+EnergyValue"))."#content" | rtrimstr(" kWh") | tonumber] | add'
+  {{- end }}

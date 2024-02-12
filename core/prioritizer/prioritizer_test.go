@@ -4,8 +4,8 @@ import (
 	"testing"
 
 	"github.com/evcc-io/evcc/core/loadpoint"
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/mock/gomock"
 )
 
 func TestPrioritzer(t *testing.T) {

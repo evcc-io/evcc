@@ -22,10 +22,6 @@ params:
   - name: timeout
   - name: capacity
     advanced: true
-  - name: watchdog
-    type: duration
-    default: 60s
-    advanced: true
 render: |
   type: custom
   {{- if eq .usage "grid" }}

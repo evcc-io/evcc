@@ -69,7 +69,6 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 			return v.Vin
 		},
 	)
-
 	if err != nil {
 		return nil, err
 	}

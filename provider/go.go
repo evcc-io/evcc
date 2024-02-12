@@ -2,6 +2,7 @@ package provider
 
 import (
 	"fmt"
+	"reflect"
 
 	"github.com/evcc-io/evcc/provider/golang"
 	"github.com/evcc-io/evcc/util"
@@ -155,10 +156,20 @@ func (p *Go) handleSetter(param string, val any) error {
 	return transformOutputs(p.out, vv)
 }
 
-func (p *Go) evaluate() (any, error) {
+func (p *Go) evaluate() (res any, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("go script panic: %v", r)
+		}
+	}()
+
 	v, err := p.vm.Eval(p.script)
 	if err != nil {
 		return nil, err
+	}
+
+	if (v.Kind() == reflect.Pointer || v.Kind() == reflect.Interface) && v.IsNil() {
+		return nil, nil
 	}
 
 	return normalizeValue(v.Interface())

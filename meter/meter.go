@@ -96,7 +96,7 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Meter, error) 
 		batModeS = cc.battery.LimitController(socG, limitSocS)
 
 	case cc.BatteryMode != nil:
-		modeS, err := provider.NewIntSetterFromConfig("mode", *cc.BatteryMode)
+		modeS, err := provider.NewIntSetterFromConfig("batteryMode", *cc.BatteryMode)
 		if err != nil {
 			return nil, fmt.Errorf("battery mode: %w", err)
 		}

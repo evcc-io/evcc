@@ -19,6 +19,7 @@
 			></shopicon-regular-cablecharge>
 			<VehicleOptions
 				v-if="showOptions"
+				v-bind="vehicleOptionsProps"
 				:id="id"
 				class="options"
 				:vehicles="otherVehicles"
@@ -40,21 +41,21 @@
 <script>
 import "@h2d2/shopicons/es/regular/refresh";
 import "@h2d2/shopicons/es/regular/cablecharge";
-import VehicleIcon from "./VehicleIcon";
 import Tooltip from "bootstrap/js/dist/tooltip";
-
+import VehicleIcon from "./VehicleIcon";
 import VehicleOptions from "./VehicleOptions.vue";
+import collector from "../mixins/collector";
 
 export default {
 	name: "VehicleTitle",
 	components: { VehicleOptions, VehicleIcon },
+	mixins: [collector],
 	props: {
 		connected: Boolean,
 		id: [String, Number],
 		vehicleDetectionActive: Boolean,
 		vehicleIcon: String,
 		vehicleName: String,
-		vehiclePresent: Boolean,
 		vehicles: { type: Array, default: () => [] },
 		vehicleTitle: String,
 	},
@@ -70,22 +71,25 @@ export default {
 			return null;
 		},
 		name() {
-			if (this.vehiclePresent) {
-				return this.vehicleTitle || this.$t("main.vehicle.fallbackName");
+			if (this.vehicleTitle) {
+				return this.vehicleTitle;
 			}
 			if (this.connected) {
 				return this.$t("main.vehicle.unknown");
 			}
 			return this.$t("main.vehicle.none");
 		},
-		isUnknown() {
-			return !this.vehiclePresent;
+		vehicleKnown() {
+			return !!this.vehicleName;
 		},
 		otherVehicles() {
 			return this.vehicles.filter((v) => v.name !== this.vehicleName);
 		},
 		showOptions() {
-			return !this.isUnknown || this.vehicles.length;
+			return this.vehicleKnown || this.vehicles.length;
+		},
+		vehicleOptionsProps: function () {
+			return this.collectProps(VehicleOptions);
 		},
 	},
 	watch: {

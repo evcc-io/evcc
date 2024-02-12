@@ -1,5 +1,5 @@
 const { test, expect } = require("@playwright/test");
-const { start, stop, restart } = require("./evcc");
+const { start, stop } = require("./evcc");
 const { startSimulator, stopSimulator, SIMULATOR_URL } = require("./simulator");
 
 const CONFIG = "simulator.evcc.yaml";

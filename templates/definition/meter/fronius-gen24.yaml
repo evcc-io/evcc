@@ -20,7 +20,7 @@ params:
 render: |
   # reference: https://github.com/volkszaehler/mbmd/blob/master/meters/sunspec/models.go
   {{- if eq .usage "grid" }}
-  type: modbus
+  type: mbmd
   uri: {{ .host }}:{{ .port }}
   id: 200
   model: sunspec

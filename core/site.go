@@ -1,6 +1,7 @@
 package core
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"math"
@@ -25,6 +26,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/telemetry"
+	"github.com/smallnest/chanx"
 )
 
 const standbyPower = 10 // consider less than 10W as charger in standby
@@ -82,8 +84,8 @@ type Site struct {
 	bufferStartSoc          float64 // start charging on battery above this Soc
 	batteryDischargeControl bool    // prevent battery discharge for fast and planned charging
 
-	tariffs     tariff.Tariffs           // Tariff
 	loadpoints  []*Loadpoint             // Loadpoints
+	tariffs     *tariff.Tariffs          // Tariffs
 	coordinator *coordinator.Coordinator // Vehicles
 	prioritizer *prioritizer.Prioritizer // Power budgets
 	stats       *Stats                   // Stats
@@ -112,7 +114,7 @@ func NewSiteFromConfig(
 	log *util.Logger,
 	other map[string]interface{},
 	loadpoints []*Loadpoint,
-	tariffs tariff.Tariffs,
+	tariffs *tariff.Tariffs,
 	circuits []*Circuit,
 ) (*Site, error) {
 	site := NewSite()
@@ -210,7 +212,7 @@ func NewSiteFromConfig(
 
 	// revert battery mode on shutdown
 	shutdown.Register(func() {
-		if mode := site.GetBatteryMode(); mode != api.BatteryUnknown && mode != api.BatteryNormal {
+		if mode := site.GetBatteryMode(); batteryModeModified(mode) {
 			if err := site.updateBatteryMode(api.BatteryNormal); err != nil {
 				site.log.ERROR.Println("battery mode:", err)
 			}
@@ -254,7 +256,9 @@ func (site *Site) restoreSettings() error {
 		}
 	}
 	if v, err := settings.Bool(keys.BatteryDischargeControl); err == nil {
-		site.batteryDischargeControl = v
+		if err := site.SetBatteryDischargeControl(v); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -397,10 +401,7 @@ func (site *Site) publish(key string, val interface{}) {
 		val = s.String()
 	}
 
-	site.uiChan <- util.Param{
-		Key: key,
-		Val: val,
-	}
+	site.uiChan <- util.Param{Key: key, Val: val}
 }
 
 // publishDelta deduplicates messages before publishing
@@ -819,8 +820,11 @@ func (site *Site) update(lp Updater) {
 		homePower = max(homePower, 0)
 		site.publish(keys.HomePower, homePower)
 
+		// add battery charging power to homePower to ignore all consumption which does not occur on loadpoints
+		// fix for: https://github.com/evcc-io/evcc/issues/11032
+		nonChargePower := homePower + max(0, -site.batteryPower)
 		greenShareHome := site.greenShare(0, homePower)
-		greenShareLoadpoints := site.greenShare(homePower, homePower+totalChargePower)
+		greenShareLoadpoints := site.greenShare(nonChargePower, nonChargePower+totalChargePower)
 
 		lp.Update(sitePower, smartCostActive, batteryBuffered, batteryStart, greenShareLoadpoints, site.effectivePrice(greenShareLoadpoints), site.effectiveCo2(greenShareLoadpoints))
 
@@ -836,7 +840,7 @@ func (site *Site) update(lp Updater) {
 	}
 
 	if batMode := site.GetBatteryMode(); site.batteryDischargeControl {
-		if mode := site.determineBatteryMode(site.Loadpoints()); mode != batMode {
+		if mode := site.determineBatteryMode(site.Loadpoints(), smartCostActive); mode != batMode {
 			if err := site.updateBatteryMode(mode); err != nil {
 				site.log.ERROR.Println("battery mode:", err)
 			}
@@ -848,6 +852,10 @@ func (site *Site) update(lp Updater) {
 
 // prepare publishes initial values
 func (site *Site) prepare() {
+	if err := site.restoreSettings(); err != nil {
+		site.log.ERROR.Println(err)
+	}
+
 	site.publish(keys.SiteTitle, site.Title)
 
 	site.publish(keys.GridConfigured, site.gridMeter != nil)
@@ -856,20 +864,17 @@ func (site *Site) prepare() {
 	site.publish(keys.BufferSoc, site.bufferSoc)
 	site.publish(keys.BufferStartSoc, site.bufferStartSoc)
 	site.publish(keys.PrioritySoc, site.prioritySoc)
-	site.publish(keys.ResidualPower, site.ResidualPower)
-	site.publish(keys.SmartCostLimit, site.smartCostLimit)
-	site.publish(keys.SmartCostType, nil)
-	site.publish(keys.SmartCostActive, false)
-	if tariff := site.GetTariff(PlannerTariff); tariff != nil {
-		site.publish(keys.SmartCostType, tariff.Type().String())
-	}
-	site.publish(keys.Currency, site.tariffs.Currency.String())
-
+	site.publish(keys.BatteryMode, site.batteryMode)
 	site.publish(keys.BatteryDischargeControl, site.batteryDischargeControl)
-	site.publish(keys.BatteryMode, site.batteryMode.String())
+	site.publish(keys.ResidualPower, site.ResidualPower)
 
-	if err := site.restoreSettings(); err != nil {
-		site.log.ERROR.Println(err)
+	site.publish(keys.Currency, site.tariffs.Currency)
+	site.publish(keys.SmartCostActive, false)
+	site.publish(keys.SmartCostLimit, site.smartCostLimit)
+	if tariff := site.GetTariff(PlannerTariff); tariff != nil {
+		site.publish(keys.SmartCostType, tariff.Type())
+	} else {
+		site.publish(keys.SmartCostType, nil)
 	}
 
 	site.publishVehicles()
@@ -878,7 +883,22 @@ func (site *Site) prepare() {
 
 // Prepare attaches communication channels to site, loadpoints and circuits
 func (site *Site) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Event) {
-	site.uiChan = uiChan
+	// https://github.com/evcc-io/evcc/issues/11191 prevent deadlock
+	// https://github.com/evcc-io/evcc/pull/11675 maintain message order
+
+	// infinite queue with channel semantics
+	ch := chanx.NewUnboundedChan[util.Param](context.Background(), 2)
+
+	// use ch.In for writing
+	site.uiChan = ch.In
+
+	// use ch.Out for reading
+	go func() {
+		for p := range ch.Out {
+			uiChan <- p
+		}
+	}()
+
 	site.lpUpdateChan = make(chan *Loadpoint, 1) // 1 capacity to avoid deadlock
 
 	site.prepare()
@@ -893,7 +913,7 @@ func (site *Site) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Event) 
 				select {
 				case param := <-lpUIChan:
 					param.Loadpoint = &id
-					uiChan <- param
+					site.uiChan <- param
 				case ev := <-lpPushChan:
 					ev.Loadpoint = &id
 					pushChan <- ev
