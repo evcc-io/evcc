@@ -36,15 +36,15 @@ params:
   - name: backupbuffer
     required: false
     help:
-      de: Verbleibende Reservekapazität in der Batterie (in %)
-      en: Remaining reserve capacity in the battery (in %)
+      de: Eingestellte Reservekapazität der Batterie (in %). Nur relevant bei installiertem SonnenProtect-Modul.
+      en: Configured reserve capacity in the battery (in %). Only relevant with installed SonnenProtect mdule.
     default: 0
     usages: ["battery"]
   - name: chargingbuffer
     required: false
     help:
-      de: Verbleibende Kapazität in der Batterie beim Laden des Fahrzeugs (in %)
-      en: Remaining capacity in the battery during vehicle charging (in %)
+      de: Verbleibende Kapazität in der Batterie beim Laden des Fahrzeugs (in %). Nur relevant für aktive Batteriesteuerung im Time-of-Use-Betriebsmodus.
+      en: Remaining capacity in the battery during vehicle charging (in %). Only relevant for active battery control in time-of-use operating mode.
     default: 100
     usages: ["battery"]
 render: |
