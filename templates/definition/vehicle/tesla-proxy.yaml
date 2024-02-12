@@ -14,6 +14,7 @@ requirements:
       You need to generate an `access` and a `refresh` token for communicating with the Tesla API.
       For vehicle control, the virtual key must be installed on the vehicle.
       See https://tesla.evcc.io.
+  evcc: ["sponsorship"]
 params:
   - name: title
   - name: icon
