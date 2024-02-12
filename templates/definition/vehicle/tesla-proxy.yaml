@@ -2,8 +2,8 @@ template: tesla-proxy
 products:
   - brand: Tesla
     description:
-      de: evcc Tesla Proxy
-      en: evcc Tesla Proxy
+      de: Tesla Fleet API Proxy
+      en: Tesla Fleet API Proxy
 requirements:
   description:
     de: |
