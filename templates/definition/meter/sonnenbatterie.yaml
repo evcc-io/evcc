@@ -37,7 +37,7 @@ params:
     required: false
     help:
       de: Eingestellte Reservekapazität der Batterie (in %). Nur relevant bei installiertem SonnenProtect-Modul.
-      en: Configured reserve capacity in the battery (in %). Only relevant with installed SonnenProtect mdule.
+      en: Configured reserve capacity in the battery (in %). Only relevant with installed SonnenProtect module.
     default: 0
     usages: ["battery"]
   - name: chargingbuffer
