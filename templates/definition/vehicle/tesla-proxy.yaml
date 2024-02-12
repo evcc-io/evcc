@@ -41,6 +41,5 @@ render: |
   capacity: {{ .capacity }}
   phases: {{ .phases }}
   vin: {{ .vin }}
-  uri: https://tesla.evcc.io
   {{ include "vehicle-identify" . }}
   features: ["coarsecurrent"]

@@ -24,7 +24,7 @@ type TeslaProxy struct {
 }
 
 func init() {
-	registry.Add("tesla", NewTeslaProxyFromConfig)
+	registry.Add("tesla-proxy", NewTeslaProxyFromConfig)
 }
 
 // NewTeslaProxyFromConfig creates a new vehicle
@@ -36,6 +36,7 @@ func NewTeslaProxyFromConfig(other map[string]interface{}) (api.Vehicle, error) 
 		VIN    string
 		Cache  time.Duration
 	}{
+		URI:   "https://tesla.evcc.io/api/1",
 		Cache: interval,
 	}
 
@@ -46,6 +47,10 @@ func NewTeslaProxyFromConfig(other map[string]interface{}) (api.Vehicle, error) 
 	token, err := cc.Tokens.Token()
 	if err != nil {
 		return nil, err
+	}
+
+	if !sponsor.IsAuthorized() {
+		return nil, api.ErrSponsorRequired
 	}
 
 	v := &TeslaProxy{
