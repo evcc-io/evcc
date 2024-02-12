@@ -111,7 +111,8 @@ export default {
 		},
 		loadpointsCompact: function () {
 			return this.loadpoints.map((lp) => {
-				const icon = lp.chargerIcon || lp.vehicleIcon || "car";
+				const vehicleIcon = this.vehicles?.[lp.vehicleName]?.icon;
+				const icon = lp.chargerIcon || vehicleIcon || "car";
 				const charging = lp.charging;
 				const power = lp.chargePower || 0;
 				return { icon, charging, power };

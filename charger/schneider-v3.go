@@ -55,13 +55,13 @@ const (
 )
 
 func init() {
-	registry.Add("schneider", NewSchneiderFromConfig)
+	registry.Add("schneider-v3", NewSchneiderV3FromConfig)
 }
 
 // https://download.schneider-electric.com/files?p_enDocType=Other+technical+guide&p_File_Name=GEX1969300-04.pdf&p_Doc_Ref=GEX1969300
 
-// NewSchneiderFromConfig creates a Schneider charger from generic config
-func NewSchneiderFromConfig(other map[string]interface{}) (api.Charger, error) {
+// NewSchneiderV3FromConfig creates a Schneider charger from generic config
+func NewSchneiderV3FromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := modbus.TcpSettings{
 		ID: 255,
 	}
@@ -70,11 +70,11 @@ func NewSchneiderFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	return NewSchneider(cc.URI, cc.ID)
+	return NewSchneiderV3(cc.URI, cc.ID)
 }
 
-// NewSchneider creates Schneider charger
-func NewSchneider(uri string, id uint8) (api.Charger, error) {
+// NewSchneiderV3 creates Schneider charger
+func NewSchneiderV3(uri string, id uint8) (api.Charger, error) {
 	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, id)
 	if err != nil {
 		return nil, err

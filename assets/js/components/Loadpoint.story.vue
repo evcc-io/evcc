@@ -8,8 +8,8 @@ const state = reactive({
 	chargePower: 2800,
 	chargedEnergy: 11e3,
 	chargeDuration: 95 * 60,
-	vehiclePresent: true,
 	vehicleTitle: "Mein Auto",
+	vehicleName: "meinauto",
 	enabled: true,
 	connected: true,
 	mode: "pv",
@@ -29,14 +29,14 @@ const state = reactive({
 			<Loadpoint v-bind="state" />
 		</Variant>
 		<Variant title="without soc">
-			<Loadpoint v-bind="state" vehicleTitle="" :vehiclePresent="false" />
+			<Loadpoint v-bind="state" vehicleTitle="" vehicleName="" />
 		</Variant>
 		<Variant title="idle">
 			<Loadpoint
 				v-bind="state"
 				:enabled="false"
 				:connected="false"
-				:vehiclePresent="false"
+				vehicleName=""
 				mode="off"
 				:charging="false"
 				:chargeCurrent="0"

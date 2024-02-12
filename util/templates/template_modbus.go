@@ -35,7 +35,7 @@ func (t *Template) ModbusParams(modbusType string, values map[string]interface{}
 }
 
 // ModbusValues adds the values required for modbus.tpl to the value map
-func (t *Template) ModbusValues(renderMode string, values map[string]interface{}) {
+func (t *Template) ModbusValues(renderMode int, values map[string]interface{}) {
 	choices := t.ModbusChoices()
 	if len(choices) == 0 {
 		return
@@ -95,7 +95,7 @@ func (t *Template) ModbusValues(renderMode string, values map[string]interface{}
 				// for modbus params the default value is carried
 				// using the parameter default, not the value
 				// TODO figure out why that's necessary
-				if renderMode == TemplateRenderModeInstance {
+				if renderMode == RenderModeInstance {
 					t.SetParamDefault(p.Name, defaultValue)
 				} else {
 					values[p.Name] = defaultValue
@@ -103,7 +103,7 @@ func (t *Template) ModbusValues(renderMode string, values map[string]interface{}
 			}
 		}
 
-		if renderMode == TemplateRenderModeDocs {
+		if renderMode == RenderModeDocs {
 			values[iface] = true
 		}
 	}

@@ -2,15 +2,15 @@
 	<div class="d-flex justify-content-between mb-3 align-items-center" data-testid="vehicle-title">
 		<h4 class="d-flex align-items-center m-0 flex-grow-1 overflow-hidden">
 			<shopicon-regular-refresh
-				v-if="icon === 'refresh'"
+				v-if="iconType === 'refresh'"
 				ref="refresh"
 				data-bs-toggle="tooltip"
 				:title="$t('main.vehicle.detectionActive')"
 				class="me-2 flex-shrink-0 spin"
 			></shopicon-regular-refresh>
 			<VehicleIcon
-				v-else-if="icon === 'vehicle'"
-				:name="vehicleIcon"
+				v-else-if="iconType === 'vehicle'"
+				:name="icon"
 				class="me-2 flex-shrink-0"
 			/>
 			<shopicon-regular-cablecharge
@@ -23,7 +23,6 @@
 				:id="id"
 				class="options"
 				:vehicles="otherVehicles"
-				:is-unknown="isUnknown"
 				@change-vehicle="changeVehicle"
 				@remove-vehicle="removeVehicle"
 			>
@@ -54,14 +53,14 @@ export default {
 		connected: Boolean,
 		id: [String, Number],
 		vehicleDetectionActive: Boolean,
-		vehicleIcon: String,
+		icon: String,
 		vehicleName: String,
 		vehicles: { type: Array, default: () => [] },
-		vehicleTitle: String,
+		title: String,
 	},
 	emits: ["change-vehicle", "remove-vehicle"],
 	computed: {
-		icon() {
+		iconType() {
 			if (this.vehicleDetectionActive) {
 				return "refresh";
 			}
@@ -71,8 +70,8 @@ export default {
 			return null;
 		},
 		name() {
-			if (this.vehicleTitle) {
-				return this.vehicleTitle;
+			if (this.title) {
+				return this.title;
 			}
 			if (this.connected) {
 				return this.$t("main.vehicle.unknown");
@@ -93,7 +92,7 @@ export default {
 		},
 	},
 	watch: {
-		icon: function () {
+		iconType: function () {
 			this.tooltip();
 		},
 	},

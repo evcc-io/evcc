@@ -265,20 +265,6 @@ func (mr *MockAPIMockRecorder) GetPlan(arg0, arg1 any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPlan", reflect.TypeOf((*MockAPI)(nil).GetPlan), arg0, arg1)
 }
 
-// GetPlanActive mocks base method.
-func (m *MockAPI) GetPlanActive() bool {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetPlanActive")
-	ret0, _ := ret[0].(bool)
-	return ret0
-}
-
-// GetPlanActive indicates an expected call of GetPlanActive.
-func (mr *MockAPIMockRecorder) GetPlanActive() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPlanActive", reflect.TypeOf((*MockAPI)(nil).GetPlanActive))
-}
-
 // GetPlanEnergy mocks base method.
 func (m *MockAPI) GetPlanEnergy() (time.Time, float64) {
 	m.ctrl.T.Helper()
@@ -407,6 +393,20 @@ func (mr *MockAPIMockRecorder) HasChargeMeter() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HasChargeMeter", reflect.TypeOf((*MockAPI)(nil).HasChargeMeter))
 }
 
+// IsFastChargingActive mocks base method.
+func (m *MockAPI) IsFastChargingActive() bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "IsFastChargingActive")
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// IsFastChargingActive indicates an expected call of IsFastChargingActive.
+func (mr *MockAPIMockRecorder) IsFastChargingActive() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsFastChargingActive", reflect.TypeOf((*MockAPI)(nil).IsFastChargingActive))
+}
+
 // PublishEffectiveValues mocks base method.
 func (m *MockAPI) PublishEffectiveValues() {
 	m.ctrl.T.Helper()
@@ -480,9 +480,11 @@ func (mr *MockAPIMockRecorder) SetLimitSoc(arg0 any) *gomock.Call {
 }
 
 // SetMaxCurrent mocks base method.
-func (m *MockAPI) SetMaxCurrent(arg0 float64) {
+func (m *MockAPI) SetMaxCurrent(arg0 float64) error {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "SetMaxCurrent", arg0)
+	ret := m.ctrl.Call(m, "SetMaxCurrent", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
 // SetMaxCurrent indicates an expected call of SetMaxCurrent.
@@ -492,9 +494,11 @@ func (mr *MockAPIMockRecorder) SetMaxCurrent(arg0 any) *gomock.Call {
 }
 
 // SetMinCurrent mocks base method.
-func (m *MockAPI) SetMinCurrent(arg0 float64) {
+func (m *MockAPI) SetMinCurrent(arg0 float64) error {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "SetMinCurrent", arg0)
+	ret := m.ctrl.Call(m, "SetMinCurrent", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
 // SetMinCurrent indicates an expected call of SetMinCurrent.

@@ -21,6 +21,7 @@
 				:label="vehicleSocTitle"
 				:value="formattedSoc"
 				:extraValue="range ? `${fmtNumber(range, 0)} ${rangeUnit}` : null"
+				data-testid="current-soc"
 				align="start"
 			/>
 			<LabelAndValue
@@ -29,6 +30,7 @@
 				:label="$t('main.loadpoint.charged')"
 				:value="fmtEnergy(chargedEnergy)"
 				:extraValue="chargedSoc"
+				data-testid="current-energy"
 				align="start"
 			/>
 			<ChargingPlan
@@ -52,7 +54,7 @@
 				:limit-energy="limitEnergy"
 				:soc-per-kwh="socPerKwh"
 				:charged-energy="chargedEnergy"
-				:vehicle-capacity="vehicleCapacity"
+				:capacity="capacity"
 				@limit-energy-updated="limitEnergyUpdated"
 			/>
 		</div>
@@ -106,6 +108,7 @@ export default {
 		planEnergy: Number,
 		planProjectedStart: String,
 		planTime: String,
+		planOverrun: Boolean,
 		pvAction: String,
 		pvRemainingInterpolated: Number,
 		smartCostActive: Boolean,
@@ -116,16 +119,12 @@ export default {
 		tariffCo2: Number,
 		tariffGrid: Number,
 		vehicle: Object,
-		vehicleCapacity: Number,
 		vehicleDetectionActive: Boolean,
-		vehicleIcon: String,
 		vehicleName: String,
-		vehiclePresent: Boolean,
 		vehicleRange: Number,
 		vehicles: Array,
 		vehicleSoc: Number,
 		vehicleTargetSoc: Number,
-		vehicleTitle: String,
 	},
 	emits: ["limit-soc-updated", "limit-energy-updated", "change-vehicle", "remove-vehicle"],
 	data() {
@@ -134,6 +133,15 @@ export default {
 		};
 	},
 	computed: {
+		title: function () {
+			return this.vehicle?.title || "";
+		},
+		capacity: function () {
+			return this.vehicle?.capacity || 0;
+		},
+		icon: function () {
+			return this.vehicle?.icon || "";
+		},
 		minSoc: function () {
 			return this.vehicle?.minSoc || 0;
 		},
@@ -177,8 +185,8 @@ export default {
 			return null;
 		},
 		socPerKwh: function () {
-			if (this.vehicleCapacity > 0) {
-				return 100 / this.vehicleCapacity;
+			if (this.capacity > 0) {
+				return 100 / this.capacity;
 			}
 			return null;
 		},

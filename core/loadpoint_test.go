@@ -76,7 +76,7 @@ func attachListeners(t *testing.T, lp *Loadpoint) {
 
 	if charger, ok := lp.charger.(*api.MockCharger); ok && charger != nil {
 		charger.EXPECT().Enabled().Return(true, nil)
-		charger.EXPECT().MaxCurrent(int64(lp.MinCurrent)).Return(nil)
+		charger.EXPECT().MaxCurrent(int64(lp.minCurrent)).Return(nil)
 	}
 
 	uiChan, pushChan, lpChan := createChannels(t)
@@ -89,8 +89,8 @@ func TestNew(t *testing.T) {
 	if lp.phases != 0 {
 		t.Errorf("Phases %v", lp.phases)
 	}
-	if lp.MaxCurrent != maxA {
-		t.Errorf("MaxCurrent %v", lp.MaxCurrent)
+	if lp.maxCurrent != maxA {
+		t.Errorf("MaxCurrent %v", lp.maxCurrent)
 	}
 	if lp.status != api.StatusNone {
 		t.Errorf("status %v", lp.status)
@@ -165,8 +165,8 @@ func TestUpdatePowerZero(t *testing.T) {
 			chargeTimer:   &Null{}, // silence nil panics
 			wakeUpTimer:   NewTimer(),
 			sessionEnergy: NewEnergyMetrics(),
-			MinCurrent:    minA,
-			MaxCurrent:    maxA,
+			minCurrent:    minA,
+			maxCurrent:    maxA,
 			phases:        1,
 			status:        tc.status, // no status change
 		}
@@ -312,8 +312,8 @@ func TestPVHysteresis(t *testing.T) {
 				log:            util.NewLogger("foo"),
 				clock:          clck,
 				charger:        charger,
-				MinCurrent:     minA,
-				MaxCurrent:     maxA,
+				minCurrent:     minA,
+				maxCurrent:     maxA,
 				phases:         phases,
 				measuredPhases: phases,
 				Enable: ThresholdConfig{
@@ -360,8 +360,8 @@ func TestPVHysteresisForStatusOtherThanC(t *testing.T) {
 	lp := &Loadpoint{
 		log:            util.NewLogger("foo"),
 		clock:          clck,
-		MinCurrent:     minA,
-		MaxCurrent:     maxA,
+		minCurrent:     minA,
+		maxCurrent:     maxA,
 		phases:         phases,
 		measuredPhases: phases,
 	}
@@ -387,10 +387,7 @@ func TestDisableAndEnableAtTargetSoc(t *testing.T) {
 	vehicle := api.NewMockVehicle(ctrl)
 
 	// wrap vehicle with estimator
-	vehicle.EXPECT().Capacity().Return(float64(10)).AnyTimes()
-	vehicle.EXPECT().Phases().Return(0).AnyTimes()
-	vehicle.EXPECT().Title().Return("foo").AnyTimes() // TODO remove when settings always available for vehicle
-	vehicle.EXPECT().OnIdentified().Return(api.ActionConfig{}).AnyTimes()
+	expectVehiclePublish(vehicle)
 
 	socEstimator := soc.NewEstimator(util.NewLogger("foo"), charger, vehicle, false)
 
@@ -405,8 +402,8 @@ func TestDisableAndEnableAtTargetSoc(t *testing.T) {
 		progress:    NewProgress(0, 10), // silence nil panics
 		wakeUpTimer: NewTimer(),         // silence nil panics
 		// coordinator:   coordinator.NewDummy(), // silence nil panics
-		MinCurrent:    minA,
-		MaxCurrent:    maxA,
+		minCurrent:    minA,
+		maxCurrent:    maxA,
 		vehicle:       vehicle,      // needed for targetSoc check
 		socEstimator:  socEstimator, // instead of vehicle: vehicle,
 		mode:          api.ModeNow,
@@ -483,8 +480,8 @@ func TestSetModeAndSocAtDisconnect(t *testing.T) {
 		chargeTimer:   &Null{}, // silence nil panics
 		wakeUpTimer:   NewTimer(),
 		sessionEnergy: NewEnergyMetrics(),
-		MinCurrent:    minA,
-		MaxCurrent:    maxA,
+		minCurrent:    minA,
+		maxCurrent:    maxA,
 		status:        api.StatusC,
 		Mode_:         api.ModeOff, // default mode
 	}
@@ -528,13 +525,13 @@ func cacheExpecter(t *testing.T, lp *Loadpoint) (*util.Cache, func(key string, v
 
 	expect := func(key string, val interface{}) {
 		time.Sleep(100 * time.Millisecond) // wait for cache to catch up
+
 		p := cache.Get(key)
-		t.Logf("%s: %.f", key, p.Val) // REMOVE
+		t.Logf("%s: %v", key, p.Val) // REMOVE
 		if p.Val != val {
-			t.Errorf("%s wanted: %.0f, got %v", key, val, p.Val)
+			t.Errorf("%s wanted: %v, got %v", key, val, p.Val)
 		}
 	}
-
 	return cache, expect
 }
 
@@ -554,8 +551,8 @@ func TestChargedEnergyAtDisconnect(t *testing.T) {
 		chargeTimer:   &Null{}, // silence nil panics
 		wakeUpTimer:   NewTimer(),
 		sessionEnergy: NewEnergyMetrics(),
-		MinCurrent:    minA,
-		MaxCurrent:    maxA,
+		minCurrent:    minA,
+		maxCurrent:    maxA,
 		status:        api.StatusC,
 	}
 
@@ -796,6 +793,132 @@ func TestSocPoll(t *testing.T) {
 	}
 }
 
+// test guard timer is properly published during disable cycle
+func TestGuardPublish(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	clock := clock.NewMock()
+	charger := api.NewMockCharger(ctrl)
+	rater := api.NewMockChargeRater(ctrl)
+	startPointInTime := clock.Now()
+
+	lp := &Loadpoint{
+		log:           util.NewLogger("foo"),
+		bus:           evbus.New(),
+		clock:         clock,
+		charger:       charger,
+		chargeMeter:   &Null{}, // silence nil panics
+		chargeRater:   rater,
+		chargeTimer:   &Null{}, // silence nil panics
+		guardUpdated:  startPointInTime,
+		pvTimer:       time.Time{},
+		wakeUpTimer:   NewTimer(),
+		sessionEnergy: NewEnergyMetrics(),
+		minCurrent:    minA,
+		maxCurrent:    maxA,
+		chargeCurrent: maxA,
+		status:        api.StatusC,
+		mode:          api.ModePV,
+		enabled:       true,
+		Disable:       ThresholdConfig{Delay: 2 * time.Minute, Threshold: 0}, // t, W
+		GuardDuration: 3 * time.Minute,
+	}
+
+	util.LogLevel("DEBUG", nil)
+
+	attachListeners(t, lp)
+	// attach cache for verifying values
+	_, expectCache := cacheExpecter(t, lp)
+
+	rater.EXPECT().ChargedEnergy().AnyTimes()
+	charger.EXPECT().Enabled().DoAndReturn(func() (bool, error) { return lp.enabled, nil }).AnyTimes() // just follow the loadpoint
+	charger.EXPECT().Status().Return(api.StatusC, nil).Times(4)
+	charger.EXPECT().Enable(false).Return(nil)
+
+	tc := []struct {
+		step                string
+		guardUpdates        time.Time
+		guardTimerRemaining time.Duration
+	}{
+		{"kick off pv disable timer", startPointInTime, 3 * time.Minute},
+		{"continue pv disable timer", startPointInTime, 2 * time.Minute},
+		{"disable charger prevented by guard", startPointInTime, 1 * time.Minute},
+		{"guard elapse, publish new guard time", startPointInTime.Add(3 * time.Minute), time.Duration(0)},
+	}
+
+	for _, tc := range tc {
+		t.Logf("%+v", tc)
+		lp.Update(15000, false, false, false, 0, nil, nil)
+		assert.Equal(t, tc.guardUpdates, lp.guardUpdated)
+		expectCache(guardTimer+"Remaining", tc.guardTimerRemaining)
+		clock.Add(time.Minute)
+	}
+}
+
+// test guard timer is properly published if charger disable sequence is aborted
+func TestGuardPublishOnDisableAbort(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	clock := clock.NewMock()
+	charger := api.NewMockCharger(ctrl)
+	rater := api.NewMockChargeRater(ctrl)
+	startPointInTime := clock.Now()
+
+	lp := &Loadpoint{
+		log:           util.NewLogger("foo"),
+		bus:           evbus.New(),
+		clock:         clock,
+		charger:       charger,
+		chargeMeter:   &Null{}, // silence nil panics
+		chargeRater:   rater,
+		chargeTimer:   &Null{}, // silence nil panics
+		guardUpdated:  startPointInTime,
+		pvTimer:       time.Time{},
+		wakeUpTimer:   NewTimer(),
+		sessionEnergy: NewEnergyMetrics(),
+		minCurrent:    minA,
+		maxCurrent:    maxA,
+		chargeCurrent: maxA,
+		status:        api.StatusC,
+		mode:          api.ModePV,
+		enabled:       true,
+		Disable:       ThresholdConfig{Delay: 2 * time.Minute, Threshold: 0}, // t, W
+		GuardDuration: 4 * time.Minute,
+	}
+
+	util.LogLevel("DEBUG", nil)
+
+	attachListeners(t, lp)
+	// attach cache for verifying values
+	_, expectCache := cacheExpecter(t, lp)
+
+	rater.EXPECT().ChargedEnergy().AnyTimes()
+	charger.EXPECT().Enabled().DoAndReturn(func() (bool, error) { return lp.enabled, nil }).AnyTimes() // just follow the loadpoint
+	charger.EXPECT().Status().Return(api.StatusC, nil).Times(5)
+
+	tc := []struct {
+		step                string
+		sitePower           float64
+		guardUpdated        time.Time
+		guardTimerRemaining time.Duration
+	}{
+		{"kick off pv disable timer", 15000, startPointInTime, 4 * time.Minute},
+		{"continue pv disable timer", 15000, startPointInTime, 3 * time.Minute},
+		{"disable charger prevented by guard", 15000, startPointInTime, 2 * time.Minute},
+		{"disable charger reset, pv power is back", -1, startPointInTime, 1 * time.Minute},
+		{"guard elapsed, publish new guard time", -1, elapsed, time.Duration(0)},
+	}
+
+	for _, tc := range tc {
+		t.Logf("%+v", tc)
+		lp.Update(tc.sitePower, false, false, false, 0, nil, nil)
+		assert.Equal(t, tc.guardUpdated, lp.guardUpdated)
+		expectCache(guardTimer+"Remaining", tc.guardTimerRemaining)
+		clock.Add(time.Minute)
+	}
+}
+
+// test load management tests current limitations based on circuit assignment and consumption
 func TestLoadmanagement(t *testing.T) {
 	tc := []struct {
 		caseName     string

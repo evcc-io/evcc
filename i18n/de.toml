@@ -191,6 +191,12 @@ pvExport = "Einspeisung"
 pvProduction = "Erzeugung"
 selfConsumption = "Eigenverbrauch"
 
+[main.heatingStatus]
+charging = "Heize …"
+cheapEnergyCharging = "Heize mit günstiger Energie: {price} (Grenze {limit})"
+cleanEnergyCharging = "Heize mit sauberer Energie: {co2} (Grenze {limit})"
+waitForVehicle = "Bereit. Warte auf Heizung …"
+
 [main.loadpoint]
 avgPrice = "⌀ Preis"
 charged = "Geladen"
@@ -208,7 +214,6 @@ solar = "Sonne"
 currents = "Ladestrom"
 default = "default"
 disclaimerHint = "Hinweis:"
-disclaimerText = "Änderungen gehen nach einem Neustart des Servers verloren."
 onlyForSocBasedCharging = "Diese Optionen sind nur für Fahrzeuge mit bekanntem Ladestand verfügbar."
 title = "Einstellungen {0}"
 vehicle = "Fahrzeug"
@@ -229,6 +234,7 @@ label = "Min. Ladung %"
 
 [main.loadpointSettings.phasesConfigured]
 label = "Phasen"
+no1p3pSupport = "Wie ist deine Wallbox angeschlossen?"
 phases_0 = "automatischer Wechsel"
 phases_1 = "1-phasig"
 phases_1_hint = "({min} bis {max})"

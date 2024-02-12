@@ -56,7 +56,7 @@ func (t *Template) Validate() error {
 		switch p.Name {
 		case ParamUsage:
 			for _, c := range p.Choice {
-				if !slices.Contains(ValidUsageChoices, c) {
+				if !slices.Contains(UsageStrings(), c) {
 					return fmt.Errorf("invalid usage choice '%s' in template %s", c, t.Template)
 				}
 			}
@@ -156,7 +156,7 @@ func (t *Template) GroupTitle(lang string) string {
 }
 
 // Defaults returns a map of default values for the template
-func (t *Template) Defaults(renderMode string) map[string]interface{} {
+func (t *Template) Defaults(renderMode int) map[string]interface{} {
 	values := make(map[string]interface{})
 	for _, p := range t.Params {
 		values[p.Name] = p.DefaultValue(renderMode)
@@ -268,7 +268,7 @@ func (t *Template) RenderProxyWithValues(values map[string]interface{}, lang str
 }
 
 // RenderResult renders the result template to instantiate the proxy
-func (t *Template) RenderResult(renderMode string, other map[string]interface{}) ([]byte, map[string]interface{}, error) {
+func (t *Template) RenderResult(renderMode int, other map[string]interface{}) ([]byte, map[string]interface{}, error) {
 	values := t.Defaults(renderMode)
 	if err := util.DecodeOther(other, &values); err != nil {
 		return nil, values, err

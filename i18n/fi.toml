@@ -200,7 +200,6 @@ solar = "Aurinkoenergia"
 currents = "Latausvirta"
 default = "oletus"
 disclaimerHint = "Huomautus:"
-disclaimerText = "Muutokset eivät ole voimassa serverin uudelleen käynnistyksen jälkeen."
 title = "Asetukset {0}"
 vehicle = "Ajoneuvo"
 

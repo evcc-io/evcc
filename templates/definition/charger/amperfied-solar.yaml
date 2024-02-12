@@ -1,8 +1,9 @@
-template: schneider-evlink
+template: amperfied-solar
 products:
-  - brand: Schneider
+  - brand: Amperfied
     description:
-      generic: EVlink Wallbox, EVlink Parkplatz
+      generic: Wallbox connect.solar
+capabilities: ["mA", "rfid", "1p3p"]
 requirements:
   evcc: ["sponsorship"]
 params:
@@ -10,5 +11,6 @@ params:
     choice: ["tcpip"]
     id: 255
 render: |
-  type: schneider
+  type: amperfied
   {{- include "modbus" . }}
+  phases1p3p: true

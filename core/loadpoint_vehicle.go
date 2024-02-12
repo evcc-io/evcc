@@ -132,8 +132,6 @@ func (lp *Loadpoint) setActiveVehicle(v api.Vehicle) {
 		lp.socEstimator = soc.NewEstimator(lp.log, lp.charger, v, estimate)
 
 		lp.publish(keys.VehicleName, vehicle.Settings(lp.log, v).Name())
-		lp.publish(keys.VehicleIcon, v.Icon())
-		lp.publish(keys.VehicleCapacity, v.Capacity())
 
 		if mode, ok := v.OnIdentified().GetMode(); ok {
 			lp.SetMode(mode)
@@ -146,8 +144,6 @@ func (lp *Loadpoint) setActiveVehicle(v api.Vehicle) {
 		lp.socEstimator = nil
 		lp.publish(keys.VehicleSoc, 0)
 		lp.publish(keys.VehicleName, "")
-		lp.publish(keys.VehicleIcon, "")
-		lp.publish(keys.VehicleCapacity, 0.0)
 		lp.publish(keys.VehicleOdometer, 0.0)
 	}
 
@@ -197,8 +193,6 @@ func (lp *Loadpoint) unpublishVehicle() {
 
 	lp.setRemainingEnergy(0)
 	lp.setRemainingDuration(0)
-
-	lp.publishVehicleFeature(api.Offline)
 }
 
 // vehicleHasFeature checks availability of vehicle feature
@@ -208,11 +202,6 @@ func (lp *Loadpoint) vehicleHasFeature(f api.Feature) bool {
 		ok = slices.Contains(v.Features(), f)
 	}
 	return ok
-}
-
-// publishVehicleFeature availability of vehicle features
-func (lp *Loadpoint) publishVehicleFeature(f api.Feature) {
-	lp.publish("vehicleFeature"+f.String(), lp.vehicleHasFeature(f))
 }
 
 // vehicleUnidentified returns true if there are associated vehicles and detection is running.

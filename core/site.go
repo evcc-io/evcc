@@ -5,7 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"strings"
 	"sync"
+	"testing"
 	"time"
 
 	"github.com/avast/retry-go/v4"
@@ -162,6 +164,9 @@ func NewSiteFromConfig(
 		}
 	}
 
+	// add meters from config
+	site.restoreMeters()
+
 	// grid meter
 	if site.Meters.GridMeterRef != "" {
 		dev, err := config.Meters().ByName(site.Meters.GridMeterRef)
@@ -233,8 +238,33 @@ func NewSite() *Site {
 	return lp
 }
 
+// restoreMeters restores site meter configuration
+func (site *Site) restoreMeters() {
+	if testing.Testing() {
+		return
+	}
+	if v, err := settings.String(keys.GridMeter); err == nil && v != "" {
+		site.Meters.GridMeterRef = v
+	}
+	if v, err := settings.String(keys.PvMeters); err == nil && v != "" {
+		site.Meters.PVMetersRef = append(site.Meters.PVMetersRef, strings.Split(v, ",")...)
+	}
+	if v, err := settings.String(keys.BatteryMeters); err == nil && v != "" {
+		site.Meters.BatteryMetersRef = append(site.Meters.BatteryMetersRef, strings.Split(v, ",")...)
+	}
+	if v, err := settings.String(keys.AuxMeters); err == nil && v != "" {
+		site.Meters.AuxMetersRef = append(site.Meters.AuxMetersRef, strings.Split(v, ",")...)
+	}
+}
+
 // restoreSettings restores site settings
 func (site *Site) restoreSettings() error {
+	if testing.Testing() {
+		return nil
+	}
+	if v, err := settings.String(keys.Title); err == nil {
+		site.Title = v
+	}
 	if v, err := settings.Float(keys.BufferSoc); err == nil {
 		if err := site.SetBufferSoc(v); err != nil {
 			return err
@@ -797,7 +827,7 @@ func (site *Site) update(lp Updater) {
 	}
 
 	var smartCostActive bool
-	if tariff := site.GetTariff(PlannerTariff); tariff != nil {
+	if tariff := site.GetTariff(PlannerTariff); tariff != nil && tariff.Type() != api.TariffTypePriceStatic {
 		rates, err := tariff.Rates()
 
 		var rate api.Rate

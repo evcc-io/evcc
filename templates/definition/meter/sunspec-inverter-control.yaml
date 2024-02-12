@@ -1,0 +1,109 @@
+template: sunspec-inverter-control
+products:
+  - description:
+      de: Sunspec Batterie (Model 124)
+      en: Sunspec Battery (Model 124)
+capabilities: ["battery-control"]
+group: generic
+params:
+  - name: usage
+    choice: ["battery"]
+  - name: modbus
+    choice: ["tcpip", "rs485"]
+  - name: capacity
+    advanced: true
+render: |
+  {{- if eq .usage "battery" }}
+  type: custom
+  power:
+    source: calc
+    add:
+    - source: sunspec
+      {{- include "modbus" . | indent 4 }}
+      value: 160:3:DCW # mppt 3 (charge)
+      scale: -1
+    - source: sunspec
+      {{- include "modbus" . | indent 4 }}
+      value: 160:4:DCW # mppt 4 (discharge)
+  energy:
+    source: sunspec
+    {{- include "modbus" . | indent 2 }}
+    value: 160:4:DCWH # mppt 4 (discharge)
+    scale: 0.001
+  soc:
+    source: sunspec
+    {{- include "modbus" . | indent 2 }}
+    value: 124:0:ChaState
+  batterymode: # model 124
+    source: switch
+    switch:
+    - case: 1 # normal
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 0 # off
+          set:
+            source: sunspec
+            {{- include "modbus" . | indent 10 }}
+            value: 124:0:ChaGriSet
+        - source: const
+          value: 0
+          set:
+            source: sunspec
+            {{- include "modbus" . | indent 10 }}
+            value: 124:0:StorCtl_Mod
+        - source: const
+          value: 100 # %
+          set:
+            source: sunspec
+            {{- include "modbus" . | indent 10 }}
+            value: 124:0:OutWRte
+    - case: 2 # hold
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 0 # off
+          set:
+            source: sunspec
+            {{- include "modbus" . | indent 10 }}
+            value: 124:0:ChaGriSet
+        - source: const
+          value: 2
+          set:
+            source: sunspec
+            {{- include "modbus" . | indent 10 }}
+            value: 124:0:StorCtl_Mod
+        - source: const
+          value: 0 # %
+          set:
+            source: sunspec
+            {{- include "modbus" . | indent 10 }}
+            value: 124:0:OutWRte
+    - case: 3 # charge
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 1 # off
+          set:
+            source: sunspec
+            {{- include "modbus" . | indent 10 }}
+            value: 124:0:ChaGriSet
+        - source: const
+          value: 2
+          set:
+            source: sunspec
+            {{- include "modbus" . | indent 10 }}
+            value: 124:0:StorCtl_Mod
+        - source: const
+          value: -100 # %
+          set:
+            source: sunspec
+            {{- include "modbus" . | indent 10 }}
+            value: 124:0:OutWRte
+  {{- if .capacity }}
+  capacity: {{ .capacity }} # kWh
+  {{- end }}
+  {{- end }}

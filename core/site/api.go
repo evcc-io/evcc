@@ -11,6 +11,18 @@ type API interface {
 	Loadpoints() []loadpoint.API
 	Vehicles() Vehicles
 
+	// Meta
+	GetTitle() string
+	SetTitle(string)
+
+	// Config
+	GetGridMeterRef() string
+	SetGridMeterRef(string)
+	GetPVMeterRefs() []string
+	SetPVMeterRefs([]string)
+	GetBatteryMeterRefs() []string
+	SetBatteryMeterRefs([]string)
+
 	//
 	// battery
 	//
