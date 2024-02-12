@@ -12,6 +12,7 @@ import (
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/evcc-io/evcc/util/transport"
+	vc "github.com/evcc-io/evcc/vehicle/tesla-vehicle-command"
 	tesla "github.com/evcc-io/tesla-proxy-client"
 	"golang.org/x/oauth2"
 )
@@ -58,27 +59,36 @@ func NewTeslaProxyFromConfig(other map[string]interface{}) (api.Vehicle, error) 
 	}
 
 	// authenticated http client with logging injected to the Tesla client
-	log := util.NewLogger("tesla").Redact(cc.Tokens.Access, cc.Tokens.Refresh)
+	log := util.NewLogger("tesla-proxy").Redact(
+		cc.Tokens.Access, cc.Tokens.Refresh,
+		vc.OAuth2Config.ClientID, vc.OAuth2Config.ClientSecret,
+	)
+
+	identity, err := vc.NewIdentity(log, token)
+	if err != nil {
+		return nil, err
+	}
 
 	hc := request.NewClient(log)
 	hc.Transport = &transport.Decorator{
 		Decorator: transport.DecorateHeaders(map[string]string{
 			"X-Auth-Token": sponsor.Token,
 		}),
-		Base: hc.Transport,
+		Base: &oauth2.Transport{
+			Source: identity,
+			Base:   hc.Transport,
+		},
 	}
 
-	ctx := context.WithValue(context.Background(), oauth2.HTTPClient, hc)
-
 	options := []tesla.ClientOption{
-		tesla.WithClient(oauth2.NewClient(ctx, oauth2.StaticTokenSource(token))),
+		tesla.WithClient(hc),
 	}
 
 	if cc.URI != "" {
 		options = append(options, tesla.WithBaseURL(cc.URI))
 	}
 
-	client, err := tesla.NewClient(ctx, options...)
+	client, err := tesla.NewClient(context.Background(), options...)
 	if err != nil {
 		return nil, err
 	}
