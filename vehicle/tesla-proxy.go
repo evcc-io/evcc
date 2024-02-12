@@ -82,10 +82,7 @@ func NewTeslaProxyFromConfig(other map[string]interface{}) (api.Vehicle, error) 
 
 	options := []tesla.ClientOption{
 		tesla.WithClient(hc),
-	}
-
-	if cc.URI != "" {
-		options = append(options, tesla.WithBaseURL(cc.URI))
+		tesla.WithBaseURL(cc.URI),
 	}
 
 	client, err := tesla.NewClient(context.Background(), options...)
@@ -99,7 +96,6 @@ func NewTeslaProxyFromConfig(other map[string]interface{}) (api.Vehicle, error) 
 			return v.Vin
 		},
 	)
-
 	if err != nil {
 		return nil, err
 	}
