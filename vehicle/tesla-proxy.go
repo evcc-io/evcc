@@ -6,30 +6,31 @@ import (
 	"slices"
 	"time"
 
-	"github.com/bogosj/tesla"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
+	tesla "github.com/evcc-io/tesla-proxy-client"
 	"golang.org/x/oauth2"
 )
 
-// Tesla is an api.Vehicle implementation for Tesla cars
-type Tesla struct {
+// TeslaProxy is an api.Vehicle implementation for Tesla cars
+type TeslaProxy struct {
 	*embed
 	vehicle *tesla.Vehicle
 	dataG   func() (*tesla.VehicleData, error)
 }
 
 func init() {
-	registry.Add("tesla", NewTeslaFromConfig)
+	registry.Add("tesla", NewTeslaProxyFromConfig)
 }
 
-// NewTeslaFromConfig creates a new vehicle
-func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
+// NewTeslaProxyFromConfig creates a new vehicle
+func NewTeslaProxyFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
 		embed  `mapstructure:",squash"`
 		Tokens Tokens
+		URI    string
 		VIN    string
 		Cache  time.Duration
 	}{
@@ -45,7 +46,7 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, err
 	}
 
-	v := &Tesla{
+	v := &TeslaProxy{
 		embed: &cc.embed,
 	}
 
@@ -53,7 +54,15 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	log := util.NewLogger("tesla").Redact(cc.Tokens.Access, cc.Tokens.Refresh)
 	ctx := context.WithValue(context.Background(), oauth2.HTTPClient, request.NewClient(log))
 
-	client, err := tesla.NewClient(ctx, tesla.WithToken(token))
+	options := []tesla.ClientOption{
+		tesla.WithClient(oauth2.NewClient(ctx, oauth2.StaticTokenSource(token))),
+	}
+
+	if cc.URI != "" {
+		options = append(options, tesla.WithBaseURL(cc.URI))
+	}
+
+	client, err := tesla.NewClient(ctx, options...)
 	if err != nil {
 		return nil, err
 	}
@@ -82,7 +91,7 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 }
 
 // apiError converts HTTP 408 error to ErrTimeout
-func (v *Tesla) apiError(err error) error {
+func (v *TeslaProxy) apiError(err error) error {
 	if err != nil && err.Error() == "408 Request Timeout" {
 		err = api.ErrAsleep
 	}
@@ -90,7 +99,7 @@ func (v *Tesla) apiError(err error) error {
 }
 
 // Soc implements the api.Vehicle interface
-func (v *Tesla) Soc() (float64, error) {
+func (v *TeslaProxy) Soc() (float64, error) {
 	res, err := v.dataG()
 	if err != nil {
 		return 0, err
@@ -98,10 +107,10 @@ func (v *Tesla) Soc() (float64, error) {
 	return float64(res.Response.ChargeState.UsableBatteryLevel), nil
 }
 
-var _ api.ChargeState = (*Tesla)(nil)
+var _ api.ChargeState = (*TeslaProxy)(nil)
 
 // Status implements the api.ChargeState interface
-func (v *Tesla) Status() (api.ChargeStatus, error) {
+func (v *TeslaProxy) Status() (api.ChargeStatus, error) {
 	status := api.StatusA // disconnected
 	res, err := v.dataG()
 	if err != nil {
@@ -118,10 +127,10 @@ func (v *Tesla) Status() (api.ChargeStatus, error) {
 	return status, nil
 }
 
-var _ api.ChargeRater = (*Tesla)(nil)
+var _ api.ChargeRater = (*TeslaProxy)(nil)
 
 // ChargedEnergy implements the api.ChargeRater interface
-func (v *Tesla) ChargedEnergy() (float64, error) {
+func (v *TeslaProxy) ChargedEnergy() (float64, error) {
 	res, err := v.dataG()
 	if err != nil {
 		return 0, err
@@ -129,10 +138,10 @@ func (v *Tesla) ChargedEnergy() (float64, error) {
 	return res.Response.ChargeState.ChargeEnergyAdded, nil
 }
 
-var _ api.VehicleRange = (*Tesla)(nil)
+var _ api.VehicleRange = (*TeslaProxy)(nil)
 
 // Range implements the api.VehicleRange interface
-func (v *Tesla) Range() (int64, error) {
+func (v *TeslaProxy) Range() (int64, error) {
 	res, err := v.dataG()
 	if err != nil {
 		return 0, err
@@ -141,10 +150,10 @@ func (v *Tesla) Range() (int64, error) {
 	return int64(kmPerMile * res.Response.ChargeState.BatteryRange), nil
 }
 
-var _ api.VehicleOdometer = (*Tesla)(nil)
+var _ api.VehicleOdometer = (*TeslaProxy)(nil)
 
 // Odometer implements the api.VehicleOdometer interface
-func (v *Tesla) Odometer() (float64, error) {
+func (v *TeslaProxy) Odometer() (float64, error) {
 	res, err := v.dataG()
 	if err != nil {
 		return 0, err
@@ -153,10 +162,10 @@ func (v *Tesla) Odometer() (float64, error) {
 	return kmPerMile * res.Response.VehicleState.Odometer, nil
 }
 
-var _ api.VehicleFinishTimer = (*Tesla)(nil)
+var _ api.VehicleFinishTimer = (*TeslaProxy)(nil)
 
 // FinishTime implements the api.VehicleFinishTimer interface
-func (v *Tesla) FinishTime() (time.Time, error) {
+func (v *TeslaProxy) FinishTime() (time.Time, error) {
 	res, err := v.dataG()
 	if err != nil {
 		return time.Time{}, err
@@ -166,10 +175,10 @@ func (v *Tesla) FinishTime() (time.Time, error) {
 
 // TODO api.Climater implementation has been removed as it drains battery. Re-check at a later time.
 
-var _ api.VehiclePosition = (*Tesla)(nil)
+var _ api.VehiclePosition = (*TeslaProxy)(nil)
 
 // Position implements the api.VehiclePosition interface
-func (v *Tesla) Position() (float64, float64, error) {
+func (v *TeslaProxy) Position() (float64, float64, error) {
 	res, err := v.dataG()
 	if err != nil {
 		return 0, 0, err
@@ -177,10 +186,10 @@ func (v *Tesla) Position() (float64, float64, error) {
 	return res.Response.DriveState.Latitude, res.Response.DriveState.Longitude, nil
 }
 
-var _ api.SocLimiter = (*Tesla)(nil)
+var _ api.SocLimiter = (*TeslaProxy)(nil)
 
 // TargetSoc implements the api.SocLimiter interface
-func (v *Tesla) TargetSoc() (float64, error) {
+func (v *TeslaProxy) TargetSoc() (float64, error) {
 	res, err := v.dataG()
 	if err != nil {
 		return 0, err
@@ -188,25 +197,25 @@ func (v *Tesla) TargetSoc() (float64, error) {
 	return float64(res.Response.ChargeState.ChargeLimitSoc), nil
 }
 
-var _ api.CurrentController = (*Tesla)(nil)
+var _ api.CurrentController = (*TeslaProxy)(nil)
 
 // MaxCurrent implements the api.CurrentLimiter interface
-func (v *Tesla) MaxCurrent(current int64) error {
+func (v *TeslaProxy) MaxCurrent(current int64) error {
 	return v.apiError(v.vehicle.SetChargingAmps(int(current)))
 }
 
-var _ api.Resurrector = (*Tesla)(nil)
+var _ api.Resurrector = (*TeslaProxy)(nil)
 
 // WakeUp implements the api.Resurrector interface
-func (v *Tesla) WakeUp() error {
+func (v *TeslaProxy) WakeUp() error {
 	_, err := v.vehicle.Wakeup()
 	return v.apiError(err)
 }
 
-var _ api.VehicleChargeController = (*Tesla)(nil)
+var _ api.VehicleChargeController = (*TeslaProxy)(nil)
 
 // StartCharge implements the api.VehicleChargeController interface
-func (v *Tesla) StartCharge() error {
+func (v *TeslaProxy) StartCharge() error {
 	err := v.apiError(v.vehicle.StartCharging())
 	if err != nil && slices.Contains([]string{"complete", "is_charging"}, err.Error()) {
 		return nil
@@ -215,7 +224,7 @@ func (v *Tesla) StartCharge() error {
 }
 
 // StopCharge implements the api.VehicleChargeController interface
-func (v *Tesla) StopCharge() error {
+func (v *TeslaProxy) StopCharge() error {
 	err := v.apiError(v.vehicle.StopCharging())
 
 	// ignore sleeping vehicle
