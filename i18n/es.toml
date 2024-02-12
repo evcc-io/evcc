@@ -23,15 +23,59 @@ never = "cuando hay suficiente excedente"
 
 [config]
 
+[config.battery]
+titleAdd = "Añadir medidor de batería"
+titleEdit = "Editar el medidor de batería"
+
+[config.deviceValue]
+capacity = "Capacidad"
+chargeStatus = "Estado"
+chargedEnergy = "Cargado"
+current = "Actual"
+enabled = "Activado"
+energy = "Energía"
+odometer = "Cuentakilómetros"
+phaseCurrents = "Actual L1..L3"
+phasePowers = "Potencia L1..L3"
+phaseVoltages = "Voltaje L1..L3"
+power = "Potencia"
+range = "Alcance"
+soc = "SoC"
+socLimit = "Límite"
+
 [config.form]
 example = "Ejemplo"
 optional = "opcional"
 
+[config.grid]
+titleAdd = "Añadir medidor de cuadrícula"
+titleEdit = "Editar medidor de cuadrícula"
+
 [config.main]
+addLoadpoint = "Añadir un punto de carga"
+addPvBattery = "Añadir solar o batería"
 addVehicle = "Añadir un vehículo"
 edit = "editar"
 title = "Configuración"
+unconfigured = "no configurado"
 vehicles = "Mis vehículos"
+yaml = "Configurado en evcc.yaml. No editable en la interfaz de usuario"
+
+[config.meter]
+cancel = "Cancelar"
+delete = "Borrar"
+save = "Guardar"
+template = "Fabricante"
+titleChoice = "¿Qué quieres añadir?"
+validateSave = "Validar y guardar"
+
+[config.pv]
+titleAdd = "Añadir contador solar"
+titleEdit = "Editar contador solar"
+
+[config.site]
+cancel = "Cancelar"
+save = "Guardar"
 
 [config.validation]
 failed = "fallido"
@@ -43,7 +87,7 @@ validate = "validar"
 
 [config.vehicle]
 cancel = "Cancelar"
-delete = "Borrar el vehículo"
+delete = "Borrar"
 generic = "Otras integraciones"
 offline = "Vehículo genérico"
 online = "Vehículos con API en línea"
@@ -222,6 +266,7 @@ solar = "Solar"
 [main.loadpointSettings]
 currents = "Corriente de carga"
 default = "defecto"
+disclaimerHint = "Nota:"
 onlyForSocBasedCharging = "Estas opciones sólo están disponibles para vehículos con nivel de carga conocido"
 title = "Configuraciones {0}"
 vehicle = "Vehículo"
@@ -242,6 +287,7 @@ label = "Carga de min. %"
 
 [main.loadpointSettings.phasesConfigured]
 label = "Fases"
+no1p3pSupport = "¿Cómo está conectado tu cargador?"
 phases_0 = "Cambio automático"
 phases_1 = "monofásica"
 phases_1_hint = "({min} a {max})"
@@ -329,9 +375,6 @@ cleanEnergyCharging = "Cargando con energía limpia: {co2} (límite {limit})"
 climating = "Preacondicionamiento detectado."
 connected = "Conectado."
 disconnected = "Desconectado."
-guard = "Cambiando la protección activa para {remaining}"
-guardDisable = "Pausando en {remaining}..."
-guardEnable = "Comenzando en {remaining}..."
 minCharge = "Carga mínima hasta {soc}%."
 pvDisable = "Excedente insuficiente. Pausa en {remaining}..."
 pvEnable = "Excedente disponibile. Empezar en {remaining}..."

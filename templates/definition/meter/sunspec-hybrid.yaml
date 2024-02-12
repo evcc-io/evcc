@@ -11,105 +11,118 @@ params:
     allinone: true
   - name: modbus
     choice: ["tcpip", "rs485"]
-  - name: integer
-    description:
-      de: Integer Registerzugriff (nur für Netzzähler)
-      en: Integer register access (grid meter only)
-    help:
-      de: Einstellung Float/Integer im Wechselrichter überprüfen
-      en: Verify Float/Integer setting in inverter
-    advanced: true
-    type: bool
   - name: capacity
     advanced: true
 render: |
   {{- if eq .usage "grid" }}
-  type: mbmd
-  {{- include "modbus" . }}
-  {{- if eq .integer "true" }}
-  # sunspec model 203 (int+sf) meter
-  power: 203:W
-  energy: 203:TotWhImp
+  type: custom
+  # sunspec model 203 (int+sf)/ 213 (float) meter
+  power:
+    source: sunspec
+    {{- include "modbus" . | indent 2 }}
+    value: 
+      - 203:W
+      - 213:W
+  energy:
+    source: sunspec
+    {{- include "modbus" . | indent 2 }}
+    value: 
+      - 203:TotWhImp
+      - 213:TotWhImp
   currents:
-    - 203:AphA
-    - 203:AphB
-    - 203:AphC
+    - source: sunspec
+      {{- include "modbus" . | indent 4 }}
+      value: 
+        - 203:AphA
+        - 213:AphA
+    - source: sunspec
+      {{- include "modbus" . | indent 4 }}
+      value: 
+        - 203:AphB
+        - 213:AphB
+    - source: sunspec
+      {{- include "modbus" . | indent 4 }}
+      value: 
+        - 203:AphC
+        - 213:AphC
   voltages:
-    - 203:PhVphA
-    - 203:PhVphB
-    - 203:PhVphC
+    - source: sunspec
+      {{- include "modbus" . | indent 4 }}
+      value: 
+        - 203:PhVphA
+        - 213:PhVphA
+    - source: sunspec
+      {{- include "modbus" . | indent 4 }}
+      value: 
+        - 203:PhVphB
+        - 213:PhVphB
+    - source: sunspec
+      {{- include "modbus" . | indent 4 }}
+      value: 
+        - 203:PhVphC
+        - 213:PhVphC
   powers:
-    - 203:WphA
-    - 203:WphB
-    - 203:WphC
-  {{ else }}
-  # sunspec model 213 (float) meter
-  power: 213:W
-  energy: 213:TotWhImp
-  currents:
-    - 213:AphA
-    - 213:AphB
-    - 213:AphC
-  voltages:
-    - 213:PhVphA
-    - 213:PhVphB
-    - 213:PhVphC
-  powers:
-    - 213:WphA
-    - 213:WphB
-    - 213:WphC
-  {{- end }}
+    - source: sunspec
+      {{- include "modbus" . | indent 4 }}
+      value: 
+        - 203:WphA
+        - 213:WphA
+    - source: sunspec
+      {{- include "modbus" . | indent 4 }}
+      value: 
+        - 203:WphB
+        - 213:WphB
+    - source: sunspec
+      {{- include "modbus" . | indent 4 }}
+      value: 
+        - 203:WphC
+        - 213:WphC
   {{- end }}
   {{- if eq .usage "pv" }}
   type: custom
   power:
     source: calc
     add:
-    - source: modbus
-      {{- include "modbus" . | indent 4 }}
-      model: sunspec
-      value: DCPowerS1 # mppt 1
-    - source: modbus
-      {{- include "modbus" . | indent 4 }}
-      model: sunspec
-      value: DCPowerS2 # mppt 2
+      - source: sunspec
+        {{- include "modbus" . | indent 6 }}
+        value: 160:1:DCW # mppt 1
+      - source: sunspec
+        {{- include "modbus" . | indent 6 }}
+        value: 160:2:DCW # mppt 2
   energy:
     source: calc
     add:
-    - source: modbus
-      {{- include "modbus" . | indent 4 }}
-      model: sunspec
-      value: DCEnergyS1 # mppt 1
-    - source: modbus
-      {{- include "modbus" . | indent 4 }}
-      model: sunspec
-      value: DCEnergyS2 # mppt 2
+      - source: sunspec
+        {{- include "modbus" . | indent 6 }}
+        value: 160:1:DCWH # mppt 1
+        scale: 0.001
+      - source: sunspec
+        {{- include "modbus" . | indent 6 }}
+        value: 160:2:DCWH # mppt 2
+        scale: 0.001
   {{- end }}
   {{- if eq .usage "battery" }}
   type: custom
   power:
     source: calc
     add:
-    - source: modbus
-      {{- include "modbus" . | indent 4 }}
-      model: sunspec
-      value: DCPowerS3 # mppt 3 (charge)
-      scale: -1
-    - source: modbus
-      {{- include "modbus" . | indent 4 }}
-      model: sunspec
-      value: DCPowerS4 # mppt 4 (discharge)
+      - source: sunspec
+        {{- include "modbus" . | indent 6 }}
+        value: 160:3:DCW # mppt 3 (charge)
+        scale: -1
+      - source: sunspec
+        {{- include "modbus" . | indent 6 }}
+        value: 160:4:DCW # mppt 4 (discharge)
   energy:
-    source: modbus
+    source: sunspec
     {{- include "modbus" . | indent 2 }}
-    model: sunspec
-    value: DCEnergyS4 # mppt 4 (discharge)
+    value: 160:4:DCWH # mppt 4 (discharge)
+    scale: 0.001
   soc:
-    source: modbus
+    source: sunspec
     {{- include "modbus" . | indent 2 }}
-    model: sunspec
-    value: ChargeState
-  {{- if .capacity }}
+    value:
+      - 124:ChaState
+      - 802:SoC
   capacity: {{ .capacity }} # kWh
-  {{- end }}
   {{- end }}

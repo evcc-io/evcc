@@ -12,7 +12,7 @@ params:
   - name: capacity
     advanced: true
   - name: user
-    required: false
+    default: customer
   - name: password
     required: false
 render: |
@@ -32,6 +32,7 @@ render: |
     source: http
     uri: http://{{ .host }}/solar_api/v1/GetPowerFlowRealtimeData.fcgi
     jq: .Body.Data.Inverters."1".SOC
+  {{- if .password }}
   batterymode:
     source: switch
     switch:
@@ -71,6 +72,7 @@ render: |
           user: {{ .user }}
           password: {{ .password }}
         body: '{"timeofuse":[]}'
+  {{- end }}
   {{- if .capacity }}
   capacity: {{ .capacity }} # kWh
   {{- end }}

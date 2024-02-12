@@ -13,9 +13,9 @@ linked:
 requirements:
   description:
     de: |
-      Nur ein System kann und darf auf den Wechselrichter zugreifen!
+      Nur ein System kann und darf auf den Wechselrichter zugreifen! Für die aktive Batteriesteuerung muss die externe Batteriesteuerung über Modbus mit dem Handwerkerzugang aktiviert sein.
     en: |
-      Only a single system may access the inverter!
+      Only a single system may access the inverter! For active battery control, the external battery control via Modbus must be activated using installer access.
 params:
   - name: usage
     choice: ["pv", "battery"]
@@ -50,30 +50,25 @@ render: |
   power:
     source: calc
     add: # The add plugin sums up all string values
-    - source: modbus
+    - source: sunspec
       {{- include "modbus" . | indent 4 }}
-      model: sunspec
       value: 160:1:DCW # string 1
-    - source: modbus
+    - source: sunspec
       {{- include "modbus" . | indent 4 }}
-      model: sunspec
       value: 160:2:DCW # string 2
-    - source: modbus
+    - source: sunspec
       {{- include "modbus" . | indent 4 }}
-      model: sunspec
       value: 160:3:DCW # string 3
   {{- end }}
   {{- if eq .usage "battery" }}
   type: custom
   power:
-    source: modbus
+    source: sunspec
     {{- include "modbus" . | indent 2 }}
-    model: sunspec
     value: 802:W # 802 battery control
   soc:
-    source: modbus
+    source: sunspec
     {{- include "modbus" . | indent 2 }}
-    model: sunspec
     value: 802:SoC # 802 battery control
   limitsoc:
     source: watchdog
@@ -84,7 +79,7 @@ render: |
       register:
         address: 1042 # limit soc
         type: writemultiple
-        decode: {{ if (eq .endianness "big") }}float32{{ else }}float32s{{ end }}
+        encoding: {{ if (eq .endianness "big") }}float32{{ else }}float32s{{ end }}
   capacity: {{ .capacity }} # kWh
   minsoc: {{ .minsoc }} # %
   maxsoc: {{ .maxsoc }} # %

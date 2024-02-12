@@ -19,7 +19,6 @@ linters:
     - exportloopref
     - gci
     - gofmt
-    - gofumpt
     - goimports
     - goprintffuncname
     - govet

@@ -18,7 +18,7 @@ var documentationModbusTmpl string
 
 // RenderDocumentation renders the documentation template
 func (t *Template) RenderDocumentation(product Product, lang string) ([]byte, error) {
-	values := t.Defaults(TemplateRenderModeDocs)
+	values := t.Defaults(RenderModeDocs)
 
 	for index, p := range t.Params {
 		for k, v := range values {
@@ -51,7 +51,7 @@ func (t *Template) RenderDocumentation(product Product, lang string) ([]byte, er
 			}
 
 			modbusData := make(map[string]interface{})
-			t.ModbusValues(TemplateRenderModeDocs, modbusData)
+			t.ModbusValues(RenderModeDocs, modbusData)
 
 			out := new(bytes.Buffer)
 			if err := modbusTmpl.Execute(out, modbusData); err != nil {

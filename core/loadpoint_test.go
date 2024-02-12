@@ -10,6 +10,7 @@ import (
 	"github.com/evcc-io/evcc/core/soc"
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/util"
+	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 )
 
@@ -524,13 +525,10 @@ func cacheExpecter(t *testing.T, lp *Loadpoint) (*util.Cache, func(key string, v
 
 	expect := func(key string, val interface{}) {
 		time.Sleep(100 * time.Millisecond) // wait for cache to catch up
-		p := cache.Get(key)
-		t.Logf("%s: %.f", key, p.Val) // REMOVE
-		if p.Val != val {
-			t.Errorf("%s wanted: %.0f, got %v", key, val, p.Val)
-		}
-	}
 
+		p := cache.Get(key)
+		assert.Equal(t, val, p.Val, key)
+	}
 	return cache, expect
 }
 
@@ -613,98 +611,6 @@ func TestChargedEnergyAtDisconnect(t *testing.T) {
 	ctrl.Finish()
 }
 
-// func TestTargetSoc(t *testing.T) {
-// 	ctrl := gomock.NewController(t)
-// 	vhc := api.NewMockVehicle(ctrl)
-
-// 	// TODO make vehicle settings mockable
-// 	// make vehicle settings discoverable
-// 	config.Vehicles().Add(config.NewStaticDevice[api.Vehicle](config.Named{}, vhc))
-
-// 	tc := []struct {
-// 		vehicle    api.Vehicle
-// 		limitSoc   int
-// 		vehicleSoc float64
-// 		res        bool
-// 	}{
-// 		{nil, 0, 0, false},     // never reached without vehicle
-// 		{nil, 0, 10, false},    // never reached without vehicle
-// 		{nil, 80, 0, false},    // never reached without vehicle
-// 		{nil, 80, 80, false},   // never reached without vehicle
-// 		{nil, 80, 100, false},  // never reached without vehicle
-// 		{vhc, 0, 0, false},     // target disabled
-// 		{vhc, 0, 10, false},    // target disabled
-// 		{vhc, 80, 0, false},    // target not reached
-// 		{vhc, 80, 80, true},    // target reached
-// 		{vhc, 80, 100, true},   // target reached
-// 		{vhc, 100, 100, false}, // target reached, let ev control deactivation
-// 	}
-
-// 	for _, tc := range tc {
-// 		t.Logf("%+v", tc)
-
-// 		lp := &Loadpoint{
-// 			vehicle:    tc.vehicle,
-// 			limitSoc:   tc.limitSoc,
-// 			vehicleSoc: tc.vehicleSoc,
-// 		}
-
-// 		if res := lp.limitSocReached(); tc.res != res {
-// 			t.Errorf("expected %v, got %v", tc.res, res)
-// 		}
-// 	}
-// }
-
-// func TestMinSoc(t *testing.T) {
-// 	ctrl := gomock.NewController(t)
-// 	vhc := api.NewMockVehicle(ctrl)
-
-// 	// TODO make vehicle settings mockable
-// 	// make vehicle settings discoverable
-// 	config.Vehicles().Add(config.NewStaticDevice[api.Vehicle](config.Named{}, vhc))
-
-// 	tc := []struct {
-// 		vehicle *api.MockVehicle
-// 		min     int
-// 		soc     float64
-// 		energy  float64
-// 		res     bool
-// 	}{
-// 		{nil, 0, 0, 0, false},    // never reached without vehicle
-// 		{nil, 0, 10, 0, false},   // never reached without vehicle
-// 		{nil, 80, 0, 0, false},   // never reached without vehicle
-// 		{nil, 80, 80, 0, false},  // never reached without vehicle
-// 		{nil, 80, 100, 0, false}, // never reached without vehicle
-// 		{vhc, 0, 0, 0, false},    // min disabled
-// 		{vhc, 0, 10, 0, false},   // min disabled
-// 		{vhc, 80, 0, 0, true},    // min not reached
-// 		{vhc, 80, 10, 0, true},   // min not reached
-// 		{vhc, 80, 0, 8.0, true},  // min energy not reached
-// 		{vhc, 80, 0, 9.0, false}, // min energy reached
-// 		{vhc, 80, 80, 0, false},  // min reached
-// 		{vhc, 80, 100, 0, false}, // min reached
-// 	}
-
-// 	for _, tc := range tc {
-// 		lp := &Loadpoint{
-// 			log: util.NewLogger("foo"),
-// 			Soc: SocConfig{
-// 				min: tc.min,
-// 			},
-// 			vehicleSoc:    tc.soc,
-// 			sessionEnergy: NewEnergyMetrics(),
-// 		}
-// 		lp.sessionEnergy.Update(tc.energy / 1e3)
-
-// 		if v := tc.vehicle; v != nil {
-// 			lp.vehicle = tc.vehicle // avoid assigning nil to interface
-// 			v.EXPECT().Capacity().Return(10.0).MaxTimes(1)
-// 		}
-
-// 		assert.Equal(t, tc.res, lp.minSocNotReached(), tc)
-// 	}
-// }
-
 func TestSocPoll(t *testing.T) {
 	clock := clock.NewMock()
 	tRefresh := pollInterval
@@ -786,8 +692,74 @@ func TestSocPoll(t *testing.T) {
 			lp.socUpdated = clock.Now()
 		}
 
-		if tc.res != res {
-			t.Errorf("expected %v, got %v", tc.res, res)
+		assert.Equal(t, tc.res, res)
+	}
+}
+
+// test PV hysteresis after phase switch down, depending on remaining energy
+func TestPVHysteresisAfterPhaseSwitch(t *testing.T) {
+	const dt = time.Minute
+	type se struct {
+		site    float64
+		delay   time.Duration // test case delay since start
+		current float64
+	}
+	tc := []struct {
+		series []se
+	}{
+		// immediately disable when threshold met after phase switch
+		{[]se{
+			{1200, 0, minA},
+			{1200, 1, minA},
+			{1200, dt - 1, minA},
+			{1200, dt + 1, 0},
+		}},
+		// stay enabled when threshold not met after phase switch
+		{[]se{
+			{500, 0, minA},
+			{500, 1, minA},
+			{500, dt - 1, minA},
+			{500, dt + 1, minA},
+		}},
+	}
+
+	for _, tc := range tc {
+		t.Log(tc)
+
+		clck := clock.NewMock()
+		ctrl := gomock.NewController(t)
+
+		switcher := api.NewMockPhaseSwitcher(ctrl)
+		switcher.EXPECT().Phases1p3p(1)
+
+		charger := struct {
+			*api.MockCharger
+			*api.MockPhaseSwitcher
+		}{
+			api.NewMockCharger(ctrl), switcher,
 		}
+
+		Voltage = 100
+		lp := &Loadpoint{
+			log:        util.NewLogger("foo"),
+			clock:      clck,
+			charger:    charger,
+			minCurrent: minA,
+			maxCurrent: maxA,
+			Disable: ThresholdConfig{
+				Delay: dt,
+			},
+			status:  api.StatusC,
+			enabled: true,
+		}
+
+		start := clck.Now()
+
+		for step, se := range tc.series {
+			clck.Set(start.Add(se.delay))
+			assert.Equal(t, se.current, lp.pvMaxCurrent(api.ModePV, se.site, false, false), step)
+		}
+
+		ctrl.Finish()
 	}
 }

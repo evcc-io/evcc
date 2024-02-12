@@ -52,7 +52,7 @@ func (d *DeviceTest) Test() (DeviceTestResult, error) {
 
 // configure creates a configured device from a template so we can test it
 func (d *DeviceTest) configure() (interface{}, error) {
-	b, _, err := d.Template.RenderResult(templates.TemplateRenderModeInstance, d.ConfigValues)
+	b, _, err := d.Template.RenderResult(templates.RenderModeInstance, d.ConfigValues)
 	if err != nil {
 		return nil, err
 	}

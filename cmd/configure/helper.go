@@ -97,7 +97,7 @@ func (c *CmdConfigure) processDeviceValues(values map[string]interface{}, templa
 			}
 		}
 
-		b, _, err := templateItem.RenderResult(templates.TemplateRenderModeInstance, values)
+		b, _, err := templateItem.RenderResult(templates.RenderModeInstance, values)
 		if err != nil {
 			c.addedDeviceIndex--
 			return device, err
@@ -523,5 +523,5 @@ func (c *CmdConfigure) processModbusConfig(templateItem *templates.Template) {
 	templateItem.ModbusParams(choiceTypes[index], values)
 
 	// update the modbus default values
-	templateItem.ModbusValues(templates.TemplateRenderModeInstance, values)
+	templateItem.ModbusValues(templates.RenderModeInstance, values)
 }
