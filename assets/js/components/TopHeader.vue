@@ -4,6 +4,12 @@
 			<router-link class="evcc-default-text" to="/" data-testid="home-link">
 				<shopicon-regular-home size="s" class="home"></shopicon-regular-home>
 			</router-link>
+			<div class="d-flex" :key="entry.to" v-for="entry in entries">
+				<div size="s" class="mx-2 flex-grow-0 flex-shrink-0 fw-normal">/</div>
+				<router-link :to="entry.to" class="evcc-default-text text-decoration-none">
+					{{ entry.title }}
+				</router-link>
+			</div>
 			<div size="s" class="mx-2 flex-grow-0 flex-shrink-0 fw-normal">/</div>
 			<span class="text-truncate">{{ title }}</span>
 		</h1>
@@ -24,6 +30,7 @@ export default {
 		TopNavigation,
 	},
 	props: {
+		entries: { type: Array, default: () => [] },
 		title: String,
 	},
 	computed: {

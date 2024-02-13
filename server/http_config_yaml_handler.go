@@ -40,5 +40,6 @@ func updateYamlHandler(configFile string) http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+		setConfigDirty()
 	}
 }
