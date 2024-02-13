@@ -9,6 +9,7 @@ import (
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/server/db/settings"
+	"github.com/evcc-io/evcc/util/config"
 )
 
 var _ site.API = (*Site)(nil)
@@ -20,6 +21,24 @@ const (
 	FeedinTariff  = "feedin"
 	PlannerTariff = "planner"
 )
+
+// isConfigurable checks if the meter is configurable
+func isConfigurable(ref string) bool {
+	dev, _ := config.Meters().ByName(ref)
+	_, ok := dev.(config.ConfigurableDevice[api.Meter])
+	return ok
+}
+
+// filterConfigurable filters configurable meters
+func filterConfigurable(ref []string) []string {
+	var res []string
+	for _, r := range ref {
+		if isConfigurable(r) {
+			res = append(res, r)
+		}
+	}
+	return res
+}
 
 // GetTitle returns the title
 func (site *Site) GetTitle() string {
@@ -68,8 +87,7 @@ func (site *Site) SetPVMeterRefs(ref []string) {
 	defer site.Unlock()
 
 	site.Meters.PVMetersRef = ref
-	// site.publish("siteGridMeterRef", meter)
-	settings.SetString(keys.PvMeters, strings.Join(ref, ","))
+	settings.SetString(keys.PvMeters, strings.Join(filterConfigurable(ref), ","))
 }
 
 // GetBatteryMeterRefs returns the BatteryMeterRef
@@ -85,8 +103,23 @@ func (site *Site) SetBatteryMeterRefs(ref []string) {
 	defer site.Unlock()
 
 	site.Meters.BatteryMetersRef = ref
-	// site.publish("siteGridMeterRef", meter)
-	settings.SetString(keys.BatteryMeters, strings.Join(ref, ","))
+	settings.SetString(keys.BatteryMeters, strings.Join(filterConfigurable(ref), ","))
+}
+
+// GetAuxMeterRefs returns the AuxMeterRef
+func (site *Site) GetAuxMeterRefs() []string {
+	site.RLock()
+	defer site.RUnlock()
+	return site.Meters.AuxMetersRef
+}
+
+// SetAuxMeterRefs sets the AuxMeterRef
+func (site *Site) SetAuxMeterRefs(ref []string) {
+	site.Lock()
+	defer site.Unlock()
+
+	site.Meters.AuxMetersRef = ref
+	settings.SetString(keys.AuxMeters, strings.Join(filterConfigurable(ref), ","))
 }
 
 // Loadpoints returns the list loadpoints
@@ -150,8 +183,8 @@ func (site *Site) SetBufferSoc(soc float64) error {
 		return ErrBatteryNotConfigured
 	}
 
-	if soc != 0 && soc <= site.prioritySoc {
-		return errors.New("buffer soc must be larger than priority soc")
+	if soc != 0 && soc < site.prioritySoc {
+		return errors.New("buffer soc must not be smaller than priority soc")
 	}
 
 	if site.bufferStartSoc != 0 && soc > site.bufferStartSoc {

@@ -19,24 +19,21 @@ params:
   - name: timeout
 render: |
   type: custom
+  {{- if eq .usage "grid" }}
   power:
-    source: modbus
+    source: sunspec
     {{- include "modbus" . | indent 2 }}
     timeout: {{ .timeout }}
-  {{- if eq .usage "grid" }}
-    model: sunspec
     subdevice: 1
     value: 203:W # sunspec 3-phase meter power reading
     scale: -1
-  {{- else }}
-    model: sunspec
-    value: Power
   {{- end }}
   {{- if eq .usage "pv" }}
-  energy:
-    source: modbus
+  power:
+    source: sunspec
     {{- include "modbus" . | indent 2 }}
     timeout: {{ .timeout }}
-    model: sunspec
-    value: Export
+    value:
+      - 101:W
+      - 103:W
   {{- end }}

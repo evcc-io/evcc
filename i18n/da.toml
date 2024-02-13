@@ -23,15 +23,59 @@ never = "kun med nok solar overskud"
 
 [config]
 
+[config.battery]
+titleAdd = "Tilføj batterimåler"
+titleEdit = "Rediger batterimåler"
+
+[config.deviceValue]
+capacity = "Kapacitet"
+chargeStatus = "Status"
+chargedEnergy = "Opladt"
+current = "Nuværende"
+enabled = "Aktiveret"
+energy = "Energi"
+odometer = "Kilometertæller"
+phaseCurrents = "Strømstyrke L1..L3"
+phasePowers = "Effekt L1..L3"
+phaseVoltages = "Spænding L1..L3"
+power = "Effekt"
+range = "Rækkevidde"
+soc = "SoC"
+socLimit = "Begrænse"
+
 [config.form]
 example = "Eksempel"
 optional = "valgfrit"
 
+[config.grid]
+titleAdd = "Tilføj måler for strømnettet"
+titleEdit = "Rediger måler for strømnettet"
+
 [config.main]
+addLoadpoint = "Tilføj opladningspunkt"
+addPvBattery = "Tilføj solpanel eller batteri"
 addVehicle = "Tilføj køretøj"
 edit = "rediger"
 title = "Opsætning"
+unconfigured = "ikke konfigureret"
 vehicles = "Mine køretøjer"
+yaml = "Konfigurer i evcc.yaml. Kan ikke ændres i UI"
+
+[config.meter]
+cancel = "Afbryd"
+delete = "Slet"
+save = "Gem"
+template = "Fabrikant"
+titleChoice = "Hvad ønsker du at tilføje?"
+validateSave = "Valider og gem"
+
+[config.pv]
+titleAdd = "Tilføj solmåler"
+titleEdit = "Rediger solmåler"
+
+[config.site]
+cancel = "Afbryd"
+save = "Gem"
 
 [config.validation]
 failed = "mislykkedes"
@@ -43,7 +87,7 @@ validate = "validerer"
 
 [config.vehicle]
 cancel = "Annuller"
-delete = "Slet køretøjet"
+delete = "Slet"
 generic = "Andre integrationer"
 offline = "Generisk køretøj"
 online = "Køretøj med online API"
@@ -195,6 +239,12 @@ pvExport = "Eksport til Nettet"
 pvProduction = "Produktion"
 selfConsumption = "Self-konsumption"
 
+[main.heatingStatus]
+charging = "Opvarmer..."
+cheapEnergyCharging = "Opvarmer med billig energi: {price} (limit {limit})"
+cleanEnergyCharging = "Opvarmer med CO2 neutral energi: {co2} (limit {limit})"
+waitForVehicle = "Klar. Venter på varmelegeme..."
+
 [main.loadpoint]
 avgPrice = "⌀ pris"
 charged = "Opladt"
@@ -211,6 +261,7 @@ solar = "solenergi"
 [main.loadpointSettings]
 currents = "Ladestrøm"
 default = "standard"
+disclaimerHint = "Bemærk:"
 onlyForSocBasedCharging = "Disse indstillinger er kun tilgængelig for køretøjer med kendt opladningsniveau"
 title = "Indstillinger {0}"
 vehicle = "Køretøj"
@@ -231,6 +282,7 @@ label = "Min. opladning %"
 
 [main.loadpointSettings.phasesConfigured]
 label = "Faser"
+no1p3pSupport = "Hvordan er din oplader forbundet"
 phases_0 = "automatisk skift"
 phases_1 = "1 fase"
 phases_1_hint = "({min} til {max})"
@@ -318,7 +370,6 @@ cleanEnergyCharging = "Oplader med CO2 neutral energi: {co2} (limit {limit})"
 climating = "Forkonditionering registreret."
 connected = "Forbundet."
 disconnected = "Afbrudt."
-guard = "Switching-beskyttelse er aktiv i {remaining}…"
 minCharge = "Minimum opladning til {soc} %."
 pvDisable = "Ikke nok overskud. Pause i {remaining}..."
 pvEnable = "Overskud tilgængeligt. Starter om {remaining}..."

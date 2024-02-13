@@ -1,7 +1,7 @@
 import "bootstrap/dist/css/bootstrap.min.css";
 import "../css/app.css";
 import { createApp, h } from "vue";
-import { VueHeadMixin, createHead } from "@unhead/vue"; // not deprecated. see https://github.com/unjs/unhead/issues/291
+import { VueHeadMixin, createHead } from "@unhead/vue";
 import App from "./views/App.vue";
 import setupRouter from "./router";
 import setupI18n from "./i18n";
@@ -66,10 +66,10 @@ app.use(i18n);
 app.use(setupRouter(i18n));
 app.use(featureflags);
 app.use(head);
-app.mixin(VueHeadMixin); // not deprecated. see https://github.com/unjs/unhead/issues/291
 app.config.errorHandler = function (err, vm, info) {
   console.log("errorHandler", err, vm, info);
 };
+app.mixin(VueHeadMixin);
 window.app = app.mount("#app");
 
 watchThemeChanges();

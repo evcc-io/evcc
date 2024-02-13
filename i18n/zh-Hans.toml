@@ -198,6 +198,7 @@ solar = "太阳能"
 [main.loadpointSettings]
 currents = "充电货币"
 default = "默认"
+disclaimerHint = "笔记:"
 title = "设置 {0}"
 vehicle = "车辆"
 

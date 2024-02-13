@@ -41,7 +41,6 @@
 									{{ $t("sessions.date") }}
 								</th>
 								<th
-									v-if="showLoadpoints"
 									scope="col"
 									class="align-top d-none d-md-table-cell"
 									data-testid="loadpoint"
@@ -61,7 +60,6 @@
 									</CustomSelect>
 								</th>
 								<th
-									v-if="showVehicles"
 									scope="col"
 									class="align-top d-none d-md-table-cell"
 									data-testid="vehicle"
@@ -81,10 +79,7 @@
 									</CustomSelect>
 								</th>
 								<th scope="col" class="align-top d-md-none text-truncate">
-									<div
-										v-if="showLoadpoints"
-										class="d-flex flex-wrap text-truncate"
-									>
+									<div class="d-flex flex-wrap text-truncate">
 										<div class="me-2 text-truncate">
 											{{ $t("sessions.loadpoint") }}
 										</div>
@@ -103,10 +98,7 @@
 											</span>
 										</CustomSelect>
 									</div>
-									<div
-										class="text-truncate"
-										:class="{ 'd-flex flex-wrap': showLoadpoints }"
-									>
+									<div class="text-truncate d-flex flex-wrap">
 										<div class="me-2 text-truncate">
 											{{ $t("sessions.vehicle") }}
 										</div>
@@ -154,16 +146,8 @@
 								<th scope="col" class="align-top ps-0">
 									{{ $t("sessions.total") }}
 								</th>
-								<th
-									v-if="showLoadpoints"
-									scope="col"
-									class="d-none d-md-table-cell"
-								></th>
-								<th
-									v-if="showVehicles"
-									scope="col"
-									class="d-none d-md-table-cell"
-								></th>
+								<th scope="col" class="d-none d-md-table-cell"></th>
+								<th scope="col" class="d-none d-md-table-cell"></th>
 								<th scope="col" class="d-md-none"></th>
 								<th
 									v-for="column in columnsPerBreakpoint"
@@ -187,14 +171,14 @@
 								<td class="ps-0">
 									{{ fmtFullDateTime(new Date(session.created), true) }}
 								</td>
-								<td v-if="showLoadpoints" class="d-none d-md-table-cell">
+								<td class="d-none d-md-table-cell">
 									{{ session.loadpoint }}
 								</td>
-								<td v-if="showVehicles" class="d-none d-md-table-cell">
+								<td class="d-none d-md-table-cell">
 									{{ session.vehicle }}
 								</td>
 								<td class="d-md-none text-truncate">
-									<div v-if="showLoadpoints">{{ session.loadpoint }}</div>
+									<div>{{ session.loadpoint }}</div>
 									<div>{{ session.vehicle }}</div>
 								</td>
 								<td
@@ -452,20 +436,6 @@ export default {
 				return energy / hours;
 			}
 			return null;
-		},
-		showVehicles() {
-			return this.hasMultipleVehicles || this.vehicleFilter;
-		},
-		showLoadpoints() {
-			return this.hasMultipleLoadpoints || this.loadpointFilter;
-		},
-		hasMultipleVehicles() {
-			const vehicles = this.currentSessions.map((s) => s.vehicle);
-			return new Set(vehicles).size > 1;
-		},
-		hasMultipleLoadpoints() {
-			const loadpoints = this.currentSessions.map((s) => s.loadpoint);
-			return new Set(loadpoints).size > 1;
 		},
 		pricePerKWh() {
 			const total = this.filteredSessions

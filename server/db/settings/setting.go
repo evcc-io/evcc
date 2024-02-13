@@ -1,6 +1,7 @@
 package settings
 
 import (
+	"cmp"
 	"encoding/json"
 	"errors"
 	"slices"
@@ -41,6 +42,18 @@ func Persist() error {
 		return nil
 	}
 	return db.Instance.Save(settings).Error
+}
+
+func All() []setting {
+	mu.RLock()
+	defer mu.RUnlock()
+
+	res := slices.Clone(settings)
+	slices.SortFunc(res, func(i, j setting) int {
+		return cmp.Compare(i.Key, j.Key)
+	})
+
+	return res
 }
 
 func SetString(key string, val string) {
