@@ -159,7 +159,7 @@ func (p *Go) handleSetter(param string, val any) error {
 func (p *Go) evaluate() (res any, err error) {
 	defer func() {
 		if r := recover(); r != nil {
-			err = fmt.Errorf("go script panic: %v", r)
+			err = fmt.Errorf("panic: %v", r)
 		}
 	}()
 

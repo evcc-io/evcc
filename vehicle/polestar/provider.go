@@ -9,8 +9,6 @@ import (
 	"github.com/evcc-io/evcc/util"
 )
 
-// https://github.com/TA2k/ioBroker.polestar
-
 type Provider struct {
 	statusG func() (BatteryData, error)
 	odoG    func() (OdometerData, error)
@@ -36,7 +34,7 @@ func NewProvider(log *util.Logger, api *API, vin string, timeout, cache time.Dur
 // Soc implements the api.Vehicle interface
 func (v *Provider) Soc() (float64, error) {
 	res, err := v.statusG()
-	return float64(res.BatteryChargeLevelPercentage), err
+	return res.BatteryChargeLevelPercentage, err
 }
 
 var _ api.ChargeState = (*Provider)(nil)
@@ -69,7 +67,7 @@ var _ api.VehicleOdometer = (*Provider)(nil)
 // Odometer implements the Provider.VehicleOdometer interface
 func (v *Provider) Odometer() (float64, error) {
 	res, err := v.odoG()
-	return float64(res.OdometerMeters) / 1e3, err
+	return res.OdometerMeters / 1e3, err
 }
 
 var _ api.VehicleFinishTimer = (*Provider)(nil)

@@ -107,15 +107,20 @@ type Authorizer interface {
 	Authorize(key string) error
 }
 
+// PhaseDescriber returns the number of availablephases
+type PhaseDescriber interface {
+	Phases() int
+}
+
 // Vehicle represents the EV and it's battery
 type Vehicle interface {
 	Battery
 	BatteryCapacity
 	IconDescriber
 	FeatureDescriber
+	PhaseDescriber
 	Title() string
 	SetTitle(string)
-	Phases() int
 	Identifiers() []string
 	OnIdentified() ActionConfig
 }

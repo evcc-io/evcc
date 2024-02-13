@@ -98,3 +98,10 @@ var _ loadpoint.Controller = (*switchSocket)(nil)
 func (c *switchSocket) LoadpointControl(lp loadpoint.API) {
 	c.lp = lp
 }
+
+var _ api.PhaseDescriber = (*switchSocket)(nil)
+
+// Phases implements the api.PhasesDescriber interface
+func (v *switchSocket) Phases() int {
+	return 1
+}
