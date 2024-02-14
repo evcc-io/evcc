@@ -53,7 +53,7 @@ func (sh *Switch) CurrentPower() (float64, error) {
 		case 2:
 			power = res.Switch2.Apower
 		default:
-			power = res.Switch0.Apower
+			power = res.Switch0.Apower + res.Em0.Act_power + res.Em1.Act_power + res.Em2.Act_power
 		}
 	}
 
@@ -134,7 +134,7 @@ func (sh *Switch) TotalEnergy() (float64, error) {
 		case 2:
 			energy = res.Switch2.Aenergy.Total
 		default:
-			energy = res.Switch0.Aenergy.Total
+			energy = res.Switch0.Aenergy.Total + res.Em0.Total_act_energy + res.Em1.Total_act_energy + res.Em2.Total_act_energy
 		}
 	}
 
