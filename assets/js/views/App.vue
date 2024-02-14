@@ -1,5 +1,7 @@
 <template>
 	<div class="app">
+		<OfflineIndicator v-if="offline" />
+
 		<router-view :notifications="notifications" :offline="offline"></router-view>
 
 		<GlobalSettingsModal v-bind="globalSettingsProps" />
@@ -14,13 +16,20 @@ import store from "../store";
 import GlobalSettingsModal from "../components/GlobalSettingsModal.vue";
 import BatterySettingsModal from "../components/BatterySettingsModal.vue";
 import GridSettingsModal from "../components/GridSettingsModal.vue";
+import OfflineIndicator from "../components/OfflineIndicator.vue";
 import HelpModal from "../components/HelpModal.vue";
 import collector from "../mixins/collector";
 import gridModalAvailable from "../utils/gridModalAvailable";
 
 export default {
 	name: "App",
-	components: { GlobalSettingsModal, HelpModal, BatterySettingsModal, GridSettingsModal },
+	components: {
+		GlobalSettingsModal,
+		HelpModal,
+		BatterySettingsModal,
+		GridSettingsModal,
+		OfflineIndicator,
+	},
 	mixins: [collector],
 	props: {
 		notifications: Array,

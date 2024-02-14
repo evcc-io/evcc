@@ -7,9 +7,29 @@
 			/>
 			<div class="d-flex flex-column flex-grow-1">
 				<Restart ref="restart" v-bind="restartProps" />
-				<code class="fs-6 mb-3">
-					<div v-for="(error, index) in errors" :key="index">{{ error }}</div>
-				</code>
+				<div v-if="errors.length" class="alert alert-danger my-4" role="alert">
+					<p>
+						<strong>{{ $t("config.editor.errorTitle") }}</strong>
+						{{ $t("config.editor.errorMessage") }}
+					</p>
+					<code>
+						<div v-for="(error, index) in errors" :key="index">{{ error }}</div>
+					</code>
+				</div>
+				<div
+					v-else-if="restarted && !saved"
+					class="alert alert-success d-flex justify-content-between align-items-center my-4"
+					role="alert"
+				>
+					<div>
+						<strong>{{ $t("config.editor.successTitle") }}</strong>
+						{{ $t("config.editor.successMessage") }}
+					</div>
+					<router-link to="/" class="btn btn-outline-dark btn-sm">
+						{{ $t("config.editor.toHome") }}
+					</router-link>
+				</div>
+
 				<div class="d-flex justify-content-between my-3 align-items-baseline">
 					<router-link to="/config" class="btn btn-outline-secondary">
 						{{ $t("config.editor.back") }}
@@ -17,7 +37,7 @@
 					<button
 						class="btn btn-primary"
 						@click="handleSave"
-						:disabled="!writable || saving || !dirty"
+						:disabled="!writable || saving || !dirty || offline"
 					>
 						<span
 							v-if="saving"
@@ -25,7 +45,7 @@
 							role="status"
 							aria-hidden="true"
 						></span>
-						{{ $t(`config.editor.${dirty ? "save" : "unchanged"}`) }}
+						{{ $t(`config.editor.${dirty ? "save" : saved ? "saved" : "unchanged"}`) }}
 					</button>
 				</div>
 				<p>
@@ -71,6 +91,8 @@ export default {
 			writable: true,
 			saving: false,
 			loading: false,
+			saved: false,
+			restarted: false,
 		};
 	},
 	computed: {
@@ -85,16 +107,17 @@ export default {
 			return this.collectProps(Restart);
 		},
 		errors: function () {
-			return store.state.fatal;
+			return this.saved ? [] : store.state.fatal;
 		},
 		errorLine: function () {
-			return store.state.line;
+			return this.saved ? undefined : store.state.line;
 		},
 	},
 	watch: {
 		offline() {
 			if (!this.offline) {
 				this.load();
+				this.restarted = true;
 			}
 		},
 	},
@@ -103,6 +126,7 @@ export default {
 	},
 	methods: {
 		async load() {
+			this.saved = false;
 			this.loading = true;
 			const res = await api.get("/config/yaml");
 			const { content, path, writable } = res.data?.result || {};
@@ -118,6 +142,7 @@ export default {
 				await api.put("/config/yaml", this.content);
 				await this.load();
 				await this.$refs.restart.loadDirty();
+				this.saved = true;
 			} catch (e) {
 				console.error(e);
 			}

@@ -45,10 +45,15 @@ socLimit = "Limit"
 
 [config.editor]
 back = "Back"
+errorMessage = "Something went wrong during startup. Please check your configuration and try again."
+errorTitle = "Error!"
 loading = "Loading editor…"
 save = "Save changes"
 saved = "Changes saved"
+successMessage = "Your changes have been applied."
+successTitle = "Success!"
 title = "Editor"
+toHome = "Go to home"
 unchanged = "No changes"
 
 [config.form]
@@ -384,7 +389,7 @@ dismissAll = "Dismiss all"
 modalTitle = "Notifications"
 
 [offline]
-message = "Not connected to a server."
+message = "Server not reachable. Reconnecting…"
 reload = "Reload?"
 
 [session]

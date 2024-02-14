@@ -1,5 +1,6 @@
 <template>
 	<VueMonacoEditor
+		v-if="active"
 		class="editor"
 		language="yaml"
 		:theme="theme"
@@ -50,11 +51,19 @@ export default {
 				wrappingStrategy: "advanced",
 				overviewRulerLanes: 0,
 			},
+			active: true,
 		};
 	},
 	mounted() {
 		this.updateTheme();
 		$html.addEventListener("themechange", this.updateTheme);
+	},
+	watch: {
+		errorLine() {
+			// force rerender to update decorations
+			this.active = false;
+			this.$nextTick(() => (this.active = true));
+		},
 	},
 	computed: {
 		options() {

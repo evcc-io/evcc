@@ -6,9 +6,9 @@
 				<Restart ref="restart" v-bind="restartProps" />
 
 				<h2 class="my-4">Configuration File</h2>
-				<p>Edit your <code>evcc.yaml</code> file in the browser.</p>
+				<p>Edit your evcc.yaml file in the browser.</p>
 				<router-link to="/config/editor" class="btn btn-outline-secondary mb-3">
-					Open configuration editor
+					Open file editor
 				</router-link>
 				<p class="small text-muted">
 					<strong class="text-evcc">Note: </strong>
