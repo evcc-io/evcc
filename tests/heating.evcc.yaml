@@ -1,7 +1,7 @@
-interval: 11s
+interval: 10s
 
 site:
-  title: Hello World!
+  title: Hello World
   meters:
     grid: grid
 

@@ -12,19 +12,24 @@ test.afterAll(async () => {
   await stop();
 });
 
+async function enableExperimental(page) {
+  await page.getByTestId("topnavigation-button").click();
+  await page.getByRole("button", { name: "Settings" }).click();
+  await page.getByLabel("Experimental 🧪").click();
+  await page.getByRole("button", { name: "Close" }).click();
+}
+
 test.describe("basics", async () => {
   test("navigation to config", async ({ page }) => {
     await page.goto("/");
-    await page.getByTestId("topnavigation-button").click();
-    await page.getByRole("button", { name: "Settings" }).click();
-    await page.getByLabel("Experimental 🧪").click();
-    await page.getByRole("button", { name: "Close" }).click();
+    await enableExperimental(page);
     await page.getByTestId("topnavigation-button").click();
     await page.getByRole("link", { name: "Configuration" }).click();
-    await expect(page.getByRole("heading", { name: "Configuration" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Configuration" }).first()).toBeVisible();
   });
   test("alert box should always be visible", async ({ page }) => {
     await page.goto("/#/config");
+    await enableExperimental(page);
     await expect(page.getByRole("alert")).toBeVisible();
   });
 });
@@ -32,6 +37,7 @@ test.describe("basics", async () => {
 test.describe("vehicles", async () => {
   test("create, edit and delete vehicles", async ({ page }) => {
     await page.goto("/#/config");
+    await enableExperimental(page);
 
     await expect(page.getByTestId("vehicle")).toHaveCount(0);
     const vehicleModal = page.getByTestId("vehicle-modal");
@@ -79,6 +85,7 @@ test.describe("vehicles", async () => {
 
   test("config should survive restart", async ({ page }) => {
     await page.goto("/#/config");
+    await enableExperimental(page);
 
     await expect(page.getByTestId("vehicle")).toHaveCount(0);
     const vehicleModal = page.getByTestId("vehicle-modal");
@@ -111,6 +118,7 @@ test.describe("vehicles", async () => {
     await cleanRestart(CONFIG_WITH_VEHICLE);
 
     await page.goto("/#/config");
+    await enableExperimental(page);
 
     await expect(page.getByTestId("vehicle")).toHaveCount(1);
     const vehicleModal = page.getByTestId("vehicle-modal");
@@ -143,6 +151,7 @@ test.describe("meters", async () => {
     await page.getByRole("button", { name: "Apply changes" }).click();
 
     await page.goto("/#/config");
+    await enableExperimental(page);
 
     await expect(page.getByTestId("battery")).toHaveCount(0);
 
