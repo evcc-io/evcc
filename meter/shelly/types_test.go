@@ -46,12 +46,29 @@ func TestUnmarshalGen1StatusResponse(t *testing.T) {
 
 // Test Gen2StatusResponse response
 func TestUnmarshalGen2StatusResponse(t *testing.T) {
-	// Shelly Pro 1PM channel 0 (1)
-	var res Gen2StatusResponse
+	{
+		// Shelly Pro 1PM channel 0 (1)
+		var res Gen2StatusResponse
 
-	jsonstr := `{"ble":{},"cloud":{"connected":true},"eth":{"ip":null},"input:0":{"id":0,"state":false},"input:1":{"id":1,"state":false},"mqtt":{"connected":false},"switch:0":{"id":0, "source":"HTTP", "output":false, "apower":47.11, "voltage":232.0, "current":0.000, "pf":0.00, "aenergy":{"total":5.125,"by_minute":[0.000,0.000,0.000],"minute_ts":1675718520},"temperature":{"tC":25.3, "tF":77.5}},"sys":{"mac":"30C6F78BB4D8","restart_required":false,"time":"22:22","unixtime":1675718522,"uptime":45070,"ram_size":234204,"ram_free":137716,"fs_size":524288,"fs_free":172032,"cfg_rev":13,"kvs_rev":1,"schedule_rev":0,"webhook_rev":0,"available_updates":{"beta":{"version":"0.13.0-beta3"}}},"wifi":{"sta_ip":"192.168.178.64","status":"got ip","ssid":"***","rssi":-62},"ws":{"connected":false}}`
-	require.NoError(t, json.Unmarshal([]byte(jsonstr), &res))
+		jsonstr := `{"ble":{},"cloud":{"connected":true},"eth":{"ip":null},"input:0":{"id":0,"state":false},"input:1":{"id":1,"state":false},"mqtt":{"connected":false},"switch:0":{"id":0, "source":"HTTP", "output":false, "apower":47.11, "voltage":232.0, "current":0.000, "pf":0.00, "aenergy":{"total":5.125,"by_minute":[0.000,0.000,0.000],"minute_ts":1675718520},"temperature":{"tC":25.3, "tF":77.5}},"sys":{"mac":"30C6F78BB4D8","restart_required":false,"time":"22:22","unixtime":1675718522,"uptime":45070,"ram_size":234204,"ram_free":137716,"fs_size":524288,"fs_free":172032,"cfg_rev":13,"kvs_rev":1,"schedule_rev":0,"webhook_rev":0,"available_updates":{"beta":{"version":"0.13.0-beta3"}}},"wifi":{"sta_ip":"192.168.178.64","status":"got ip","ssid":"***","rssi":-62},"ws":{"connected":false}}`
+		require.NoError(t, json.Unmarshal([]byte(jsonstr), &res))
 
-	assert.Equal(t, 5.125, res.Switch0.Aenergy.Total)
-	assert.Equal(t, 47.11, res.Switch0.Apower)
+		assert.Equal(t, 5.125, res.Switch0.Aenergy.Total)
+		assert.Equal(t, 47.11, res.Switch0.Apower)
+	}
+
+	{
+		// Shelly Pro EM - 50 channel 0 (1)
+		var res Gen2StatusResponse
+
+		jsonstr := `{"ble":{},"cloud":{"connected":false},"em1:0":{"id":0,"current":0.020,"voltage":232.2,"act_power":1.2,"aprt_power":4.7,"pf":0.00, "freq":50.0,"calibration":"factory"},"em1:1":{"id":1,"current":0.025,"voltage":232.2,"act_power":2.2,"aprt_power":5.8,"pf":0.00, "freq":50.0,"calibration":"factory"},"em1data:0":{"id":0,"total_act_energy":8.88,"total_act_ret_energy":9.99},"em1data:1":{"id":1,"total_act_energy":6644.89,"total_act_ret_energy":2595.25},"eth":{"ip":null},"modbus":{},"mqtt":{"connected":true},"switch:0":{"id":0, "source":"HTTP_in", "output":true,"temperature":{"tC":29.5, "tF":85.0}},"sys":{"mac":"08F9E0E67204","restart_required":false,"time":"18:15","unixtime":1707930953,"uptime":28960,"ram_size":241936,"ram_free":117100,"fs_size":524288,"fs_free":208896,"cfg_rev":20,"kvs_rev":0,"schedule_rev":0,"webhook_rev":0,"available_updates":{"stable":{"version":"1.2.0"}},"reset_reason":3},"wifi":{"sta_ip":"192.168.8.9","status":"got ip","ssid":"K1","rssi":-59},"ws":{"connected":false}}`
+		require.NoError(t, json.Unmarshal([]byte(jsonstr), &res))
+
+		assert.Equal(t, 1.2, res.Em0.Act_power)
+		assert.Equal(t, 8.88, res.Data0.Total_act_energy)
+		assert.Equal(t, 9.99, res.Data0.Total_act_ret_energy)
+		assert.Equal(t, 2.2, res.Em1.Act_power)
+		assert.Equal(t, 6644.89, res.Data1.Total_act_energy)
+		assert.Equal(t, 2595.25, res.Data1.Total_act_ret_energy)
+	}
 }

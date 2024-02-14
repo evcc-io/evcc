@@ -25,8 +25,11 @@ type Gen2SwitchResponse struct {
 }
 
 type Gen2Switch struct {
-	Apower  float64
-	Aenergy struct {
+	Act_power            float64
+	Total_act_energy     float64
+	Total_act_ret_energy float64
+	Apower               float64
+	Aenergy              struct {
 		Total float64
 	}
 }
@@ -35,6 +38,12 @@ type Gen2StatusResponse struct {
 	Switch0 Gen2Switch `json:"switch:0"`
 	Switch1 Gen2Switch `json:"switch:1"`
 	Switch2 Gen2Switch `json:"switch:2"`
+	Em0     Gen2Switch `json:"em1:0"`
+	Em1     Gen2Switch `json:"em1:1"`
+	Em2     Gen2Switch `json:"em1:2"`
+	Data0   Gen2Switch `json:"em1data:0"`
+	Data1   Gen2Switch `json:"em1data:1"`
+	Data2   Gen2Switch `json:"em1data:2"`
 }
 
 type Gen2EmStatusResponse struct {
