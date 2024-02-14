@@ -7,6 +7,9 @@
 			/>
 			<div class="d-flex flex-column flex-grow-1">
 				<Restart ref="restart" v-bind="restartProps" />
+				<code class="fs-6 mb-3">
+					<div v-for="(error, index) in errors" :key="index">{{ error }}</div>
+				</code>
 				<div class="d-flex justify-content-between my-3 align-items-baseline">
 					<router-link to="/config" class="btn btn-outline-secondary">
 						{{ $t("config.editor.back") }}
@@ -33,7 +36,12 @@
 						</span>
 					</strong>
 				</p>
-				<Editor class="editor flex-grow-1 mb-4" v-model="content" :disabled="!path" />
+				<Editor
+					class="editor flex-grow-1 mb-4"
+					v-model="content"
+					:disabled="!path"
+					:error-line="errorLine"
+				/>
 			</div>
 		</div>
 	</div>
@@ -75,6 +83,12 @@ export default {
 		},
 		restartProps: function () {
 			return this.collectProps(Restart);
+		},
+		errors: function () {
+			return store.state.fatal;
+		},
+		errorLine: function () {
+			return store.state.line;
 		},
 	},
 	watch: {

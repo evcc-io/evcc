@@ -66,7 +66,7 @@ func (s *HTTPd) Router() *mux.Router {
 }
 
 // RegisterSiteHandlers connects the http handlers to the site
-func (s *HTTPd) RegisterSiteHandlers(site site.API, cache *util.Cache, configFile string) {
+func (s *HTTPd) RegisterSiteHandlers(site site.API, cache *util.Cache) {
 	router := s.Server.Handler.(*mux.Router)
 
 	// api
@@ -87,15 +87,12 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, cache *util.Cache, configFil
 		"device":                  {[]string{"GET"}, "/config/devices/{class:[a-z]+}/{id:[0-9.]+}", deviceConfigHandler},
 		"devicestatus":            {[]string{"GET"}, "/config/devices/{class:[a-z]+}/{name:[a-zA-Z0-9_.:-]+}/status", deviceStatusHandler},
 		"site":                    {[]string{"GET"}, "/config/site", siteHandler(site)},
-		"dirty":                   {[]string{"GET"}, "/config/dirty", boolGetHandler(ConfigDirty)},
 		"updatesite":              {[]string{"PUT", "OPTIONS"}, "/config/site", updateSiteHandler(site)},
 		"newdevice":               {[]string{"POST", "OPTIONS"}, "/config/devices/{class:[a-z]+}", newDeviceHandler},
 		"updatedevice":            {[]string{"PUT", "OPTIONS"}, "/config/devices/{class:[a-z]+}/{id:[0-9.]+}", updateDeviceHandler},
 		"deletedevice":            {[]string{"DELETE", "OPTIONS"}, "/config/devices/{class:[a-z]+}/{id:[0-9.]+}", deleteDeviceHandler},
 		"testconfig":              {[]string{"POST", "OPTIONS"}, "/config/test/{class:[a-z]+}", testConfigHandler},
 		"testmerged":              {[]string{"POST", "OPTIONS"}, "/config/test/{class:[a-z]+}/merge/{id:[0-9.]+}", testConfigHandler},
-		"yaml":                    {[]string{"GET"}, "/config/yaml", yamlHandler(configFile)},
-		"yaml2":                   {[]string{"PUT", "OPTIONS"}, "/config/yaml", updateYamlHandler(configFile)},
 		"buffersoc":               {[]string{"POST", "OPTIONS"}, "/buffersoc/{value:[0-9.]+}", floatHandler(site.SetBufferSoc, site.GetBufferSoc)},
 		"bufferstartsoc":          {[]string{"POST", "OPTIONS"}, "/bufferstartsoc/{value:[0-9.]+}", floatHandler(site.SetBufferStartSoc, site.GetBufferStartSoc)},
 		"batterydischargecontrol": {[]string{"POST", "OPTIONS"}, "/batterydischargecontrol/{value:[a-z]+}", boolHandler(site.SetBatteryDischargeControl, site.GetBatteryDischargeControl)},
@@ -162,8 +159,8 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, cache *util.Cache, configFil
 	}
 }
 
-// RegisterShutdownHandler connects the http handlers to the site
-func (s *HTTPd) RegisterShutdownHandler(callback func()) {
+// RegisterBasicHandlers connects the http handlers to the site
+func (s *HTTPd) RegisterBasicHandlers(configFile string, shutdownCallback func()) {
 	router := s.Server.Handler.(*mux.Router)
 
 	// api
@@ -177,9 +174,12 @@ func (s *HTTPd) RegisterShutdownHandler(callback func()) {
 	// site api
 	routes := map[string]route{
 		"shutdown": {[]string{"POST", "OPTIONS"}, "/shutdown", func(w http.ResponseWriter, r *http.Request) {
-			callback()
+			shutdownCallback()
 			w.WriteHeader(http.StatusNoContent)
 		}},
+		"dirty": {[]string{"GET"}, "/config/dirty", boolGetHandler(ConfigDirty)},
+		"yaml":  {[]string{"GET"}, "/config/yaml", yamlHandler(configFile)},
+		"yaml2": {[]string{"PUT", "OPTIONS"}, "/config/yaml", updateYamlHandler(configFile)},
 	}
 
 	for _, r := range routes {

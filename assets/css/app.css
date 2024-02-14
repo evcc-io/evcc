@@ -63,6 +63,7 @@
 
 	--bs-warning: var(--evcc-orange);
 	--bs-warning-rgb: var(--evcc-orange-rgb);
+	--bs-danger-50: #dc354580;
 
 	--bs-body-font-size: 14px;
 	--bs-font-sans-serif: Montserrat, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue",

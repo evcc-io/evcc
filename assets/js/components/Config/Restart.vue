@@ -41,6 +41,7 @@ export default {
 		offline() {
 			if (!this.offline) {
 				this.restarting = false;
+				this.loadDirty();
 			}
 		},
 	},

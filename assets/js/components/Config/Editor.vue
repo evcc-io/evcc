@@ -7,6 +7,7 @@
 		:value="modelValue"
 		ref="editor"
 		@update:value="$emit('update:modelValue', $event)"
+		@mount="ready"
 	>
 		<template #default> {{ $t("config.editor.loading") }} </template>
 		<template #failure>
@@ -30,7 +31,7 @@ export default {
 	name: "Editor",
 	props: {
 		modelValue: String,
-		height: String,
+		errorLine: Number,
 		disabled: Boolean,
 	},
 	components: { VueMonacoEditor },
@@ -54,7 +55,6 @@ export default {
 	mounted() {
 		this.updateTheme();
 		$html.addEventListener("themechange", this.updateTheme);
-		console.log(this.$refs.editor.value);
 	},
 	computed: {
 		options() {
@@ -77,6 +77,27 @@ export default {
 		updateTheme() {
 			this.theme = $html.classList.contains("dark") ? "vs-dark" : "vs";
 		},
+		ready(editor, monaco) {
+			let decorations = null;
+			const highlight = () => {
+				decorations?.clear();
+				if (this.errorLine) {
+					decorations = editor.createDecorationsCollection([
+						{
+							range: new monaco.Range(this.errorLine, 1, this.errorLine, 1),
+							options: {
+								isWholeLine: true,
+								className: "error",
+								lineNumberClassName: "error",
+								marginClassName: "error",
+							},
+						},
+					]);
+				}
+			};
+			editor.onDidChangeModelContent(() => highlight());
+			highlight();
+		},
 	},
 };
 </script>
@@ -85,5 +106,8 @@ export default {
 .editor :global(.monaco-editor) {
 	--vscode-editor-background: var(--evcc-box) !important;
 	--vscode-editorGutter-background: var(--evcc-box-border) !important;
+}
+.editor :global(.error) {
+	background-color: var(--bs-danger-50) !important;
 }
 </style>

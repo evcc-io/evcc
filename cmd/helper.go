@@ -89,6 +89,13 @@ func publishErrorInfo(valueChan chan<- util.Param, cfgFile string, err error) {
 	valueChan <- util.Param{Key: "fatal", Val: unwrap(err)}
 }
 
+func unpublishErrorInfo(valueChan chan<- util.Param) {
+	valueChan <- util.Param{Key: "file", Val: ""}
+	valueChan <- util.Param{Key: "config", Val: ""}
+	valueChan <- util.Param{Key: "line", Val: 0}
+	valueChan <- util.Param{Key: "fatal", Val: []string{}}
+}
+
 // fatal logs a fatal error and runs shutdown functions before terminating
 func fatal(err error) {
 	log.FATAL.Println(err)

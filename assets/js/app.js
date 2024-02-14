@@ -66,9 +66,6 @@ app.use(i18n);
 app.use(setupRouter(i18n));
 app.use(featureflags);
 app.use(head);
-app.config.errorHandler = function (err, vm, info) {
-  console.log("errorHandler", err, vm, info);
-};
 app.mixin(VueHeadMixin);
 window.app = app.mount("#app");
 
