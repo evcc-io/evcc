@@ -1,23 +1,24 @@
 <template>
 	<VueMonacoEditor
-		v-if="!failedLoading"
 		class="editor"
 		language="yaml"
 		:theme="theme"
-		:height="height"
 		:options="options"
 		:value="modelValue"
+		ref="editor"
 		@update:value="$emit('update:modelValue', $event)"
 	>
-		loading editor ...
+		<template #default> {{ $t("config.editor.loading") }} </template>
+		<template #failure>
+			<textarea
+				class="form-control"
+				:rows="lines"
+				:value="modelValue"
+				:disabled="disabled"
+				@input="$emit('update:modelValue', $event.target.value)"
+			/>
+		</template>
 	</VueMonacoEditor>
-	<textarea
-		v-else
-		class="form-control"
-		rows="20"
-		:value="modelValue"
-		@input="$emit('update:modelValue', $event.target.value)"
-	/>
 </template>
 
 <script>
@@ -30,32 +31,44 @@ export default {
 	props: {
 		modelValue: String,
 		height: String,
+		disabled: Boolean,
 	},
 	components: { VueMonacoEditor },
 	emits: ["update:modelValue"],
 	data() {
 		return {
 			theme: "vs",
-			options: {
+			defaultOptions: {
 				automaticLayout: true,
 				formatOnType: true,
 				formatOnPaste: true,
 				minimap: { enabled: false },
 				showFoldingControls: "always",
 				scrollBeyondLastLine: false,
+				wordWrap: "on",
+				wrappingStrategy: "advanced",
+				overviewRulerLanes: 0,
 			},
-			failedLoading: false,
 		};
 	},
 	mounted() {
 		this.updateTheme();
 		$html.addEventListener("themechange", this.updateTheme);
+		console.log(this.$refs.editor.value);
+	},
+	computed: {
+		options() {
+			return { ...this.defaultOptions, readOnly: this.disabled };
+		},
+		lines() {
+			return (this.modelValue || "").split("\n").length;
+		},
 	},
 	beforeMount() {
 		loader.config({
 			paths: { vs: "https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs" },
 		});
-		loader.init().catch(() => (this.failedLoading = true));
+		loader.init();
 	},
 	unmounted() {
 		$html.removeEventListener("themechange", this.updateTheme);

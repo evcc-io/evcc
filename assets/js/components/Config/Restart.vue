@@ -41,9 +41,11 @@ export default {
 		offline() {
 			if (!this.offline) {
 				this.restarting = false;
-				this.loadAll();
 			}
 		},
+	},
+	async mounted() {
+		await this.loadDirty();
 	},
 	methods: {
 		async loadDirty() {

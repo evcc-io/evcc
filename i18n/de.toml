@@ -43,6 +43,14 @@ range = "Reichweite"
 soc = "SoC"
 socLimit = "SoC Begrenzung"
 
+[config.editor]
+back = "Zurück"
+loading = "Lade Editor…"
+save = "Änderungen speichern"
+saved = "Änderungen gespeichert"
+title = "Editor"
+unchanged = "Keine Änderungen"
+
 [config.form]
 example = "Beispiel"
 optional = "optional"
