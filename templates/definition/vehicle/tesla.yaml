@@ -2,9 +2,6 @@ template: tesla
 covers: ["tesla-command"]
 products:
   - brand: Tesla
-    description:
-      de: aktuell
-      en: latest
 requirements:
   description:
     de: |
@@ -41,7 +38,7 @@ params:
     advanced: true
   - preset: vehicle-identify
 render: |
-  type: tesla-command
+  type: tesla
   {{- if .title }}
   title: {{ .title }}
   {{- end }}

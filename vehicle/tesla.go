@@ -24,11 +24,9 @@ func init() {
 		vc.OAuth2Config.ClientSecret = secret
 	}
 	if vc.OAuth2Config.ClientID != "" {
-		registry.Add("tesla-command", NewTeslaCommandFromConfig)
+		registry.Add("tesla", NewTeslaCommandFromConfig)
 	}
 }
-
-// const privateKeyFile = "tesla-privatekey.pem"
 
 // NewTeslaCommandFromConfig creates a new vehicle
 func NewTeslaCommandFromConfig(other map[string]interface{}) (api.Vehicle, error) {
