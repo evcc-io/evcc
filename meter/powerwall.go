@@ -11,11 +11,11 @@ import (
 	"time"
 
 	"github.com/andig/go-powerwall"
-	"github.com/bogosj/tesla"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
+	tesla "github.com/evcc-io/tesla-proxy-client"
 	"golang.org/x/oauth2"
 )
 

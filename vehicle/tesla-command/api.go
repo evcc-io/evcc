@@ -45,20 +45,17 @@ func (v *API) Region() (Region, error) {
 func (v *API) Vehicles() ([]*Vehicle, error) {
 	var res tesla.VehiclesResponse
 	err := v.GetJSON(fmt.Sprintf("%s/api/1/vehicles", v.base), &res)
-
 	return res.Response, err
 }
 
-func (v *API) VehicleData(id int64) (*VehicleData, error) {
+func (v *API) VehicleData(vin string) (*VehicleData, error) {
 	var res tesla.VehicleData
-	err := v.GetJSON(fmt.Sprintf("%s/api/1/vehicles/%d/vehicle_data", v.base, id), &res)
-
+	err := v.GetJSON(fmt.Sprintf("%s/api/1/vehicles/%s/vehicle_data", v.base, vin), &res)
 	return &res, err
 }
 
-func (v *API) WakeUp(id int64) (*VehicleData, error) {
+func (v *API) WakeUp(vin string) (*VehicleData, error) {
 	var res tesla.VehicleData
-	err := v.GetJSON(fmt.Sprintf("%s/api/1/vehicles/%d/wake_up", v.base, id), &res)
-
+	err := v.GetJSON(fmt.Sprintf("%s/api/1/vehicles/%s/wake_up", v.base, vin), &res)
 	return &res, err
 }

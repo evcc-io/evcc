@@ -12,14 +12,14 @@ type Provider struct {
 	wakeup func() (*VehicleData, error)
 }
 
-func NewProvider(api *API, vid int64, cache time.Duration) *Provider {
+func NewProvider(api *API, vin string, cache time.Duration) *Provider {
 	impl := &Provider{
 		dataG: provider.Cached(func() (*VehicleData, error) {
-			res, err := api.VehicleData(vid)
+			res, err := api.VehicleData(vin)
 			return res, apiError(err)
 		}, cache),
 		wakeup: func() (*VehicleData, error) {
-			res, err := api.WakeUp(vid)
+			res, err := api.WakeUp(vin)
 			return res, apiError(err)
 		},
 	}

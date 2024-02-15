@@ -79,7 +79,7 @@ func NewTeslaCommandFromConfig(other map[string]interface{}) (api.Vehicle, error
 
 	v := &TeslaCommand{
 		embed:    &cc.embed,
-		Provider: vc.NewProvider(api, vehicle.ID, cc.Cache),
+		Provider: vc.NewProvider(api, vehicle.Vin, cc.Cache),
 	}
 
 	if v.Title_ == "" {

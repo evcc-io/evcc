@@ -19,7 +19,6 @@ require (
 	github.com/basgys/goxml2json v1.1.0
 	github.com/basvdlei/gotsmart v0.0.3
 	github.com/benbjohnson/clock v1.3.5
-	github.com/bogosj/tesla v1.3.1
 	github.com/cenkalti/backoff/v4 v4.2.1
 	github.com/cloudfoundry/jibber_jabber v0.0.0-20151120183258-bcc4c8345a21
 	github.com/containrrr/shoutrrr v0.8.0
@@ -64,7 +63,6 @@ require (
 	github.com/lorenzodonini/ocpp-go v0.17.1-0.20231031074144-d214d7c42cbc
 	github.com/lunixbochs/struc v0.0.0-20200707160740-784aaebc1d40
 	github.com/mabunixda/wattpilot v1.6.3
-	github.com/manifoldco/promptui v0.9.0
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/mlnoga/rct v0.1.2-0.20230731074838-03eacb926f99
@@ -116,7 +114,6 @@ require (
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bitly/go-simplejson v0.5.0 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
-	github.com/chzyer/readline v1.5.1 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/fatih/color v1.16.0 // indirect
