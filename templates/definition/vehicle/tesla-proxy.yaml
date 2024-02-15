@@ -2,17 +2,21 @@ template: tesla-proxy
 products:
   - brand: Tesla
     description:
-      de: Fleet API Proxy
-      en: Fleet API Proxy
+      de: über evcc Proxy
+      en: via evcc Proxy
 requirements:
   description:
     de: |
-      Es muss ein `access` und ein `refresh` Token für die Kommunikation mit der Tesla API erstellt werden.
-      Für die Steuerung des Fahrzeugs muss ferner der Virtual Key auf dem Fahrzeug installiert werden.
+      Kommunikation mit Tesla API über einen evcc Proxy-Server.
+      Erforderlich für Steuerung am Tesla Wall Connector.
+
+      Generiere ein `access` und ein `refresh` Token und richte den **Virtual Key** über die Tesla App ein, um die Fahrzeugsteuerung zu aktivieren.
       Siehe https://tesla.evcc.io.
     en: |
-      You need to generate an `access` and a `refresh` token for communicating with the Tesla API.
-      For vehicle control, the virtual key must be installed on the vehicle.
+      Communication with Tesla API via an evcc proxy server.
+      Required for control at Tesla Wall Connector.
+
+      Generate an `access` and a `refresh` token and setup the **Virtual Key** via the Tesla app to enable vehicle control.
       See https://tesla.evcc.io.
   evcc: ["sponsorship"]
 params:
