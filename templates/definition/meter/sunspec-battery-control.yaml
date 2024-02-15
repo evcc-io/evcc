@@ -1,8 +1,8 @@
 template: sunspec-battery-control
 products:
   - description:
-      de: Sunspec Batterie (Model 802)
-      en: Sunspec Battery (Model 802)
+      de: SunSpec Batterie (Model 802)
+      en: SunSpec Battery (Model 802)
 capabilities: ["battery-control"]
 group: generic
 params:
