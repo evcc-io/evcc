@@ -15,6 +15,8 @@ import (
 	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/evcc-io/evcc/vehicle"
+	vc "github.com/evcc-io/evcc/vehicle/tesla-command"
 	tesla "github.com/evcc-io/tesla-proxy-client"
 	"golang.org/x/oauth2"
 )
@@ -39,7 +41,7 @@ func NewPowerWallFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
 		URI, Usage, User, Password string
 		Cache                      time.Duration
-		RefreshToken               string
+		Tokens                     vehicle.Tokens
 		SiteId                     int64
 		battery                    `mapstructure:",squash"`
 	}{
@@ -70,12 +72,15 @@ func NewPowerWallFromConfig(other map[string]interface{}) (api.Meter, error) {
 		cc.Usage = "solar"
 	}
 
-	return NewPowerWall(cc.URI, cc.Usage, cc.User, cc.Password, cc.Cache, cc.RefreshToken, cc.SiteId, cc.battery)
+	return NewPowerWall(cc.URI, cc.Usage, cc.User, cc.Password, cc.Cache, cc.Tokens, cc.SiteId, cc.battery)
 }
 
 // NewPowerWall creates a Tesla PowerWall Meter
-func NewPowerWall(uri, usage, user, password string, cache time.Duration, refreshToken string, siteId int64, battery battery) (api.Meter, error) {
-	log := util.NewLogger("powerwall").Redact(user, password, refreshToken)
+func NewPowerWall(uri, usage, user, password string, cache time.Duration, tokens vehicle.Tokens, siteId int64, battery battery) (api.Meter, error) {
+	log := util.NewLogger("powerwall").Redact(
+		user, password,
+		tokens.Access, tokens.Refresh,
+	)
 
 	httpClient := &http.Client{
 		Transport: request.NewTripper(log, powerwall.DefaultTransport()),
@@ -91,50 +96,6 @@ func NewPowerWall(uri, usage, user, password string, cache time.Duration, refres
 		client: client,
 		usage:  strings.ToLower(usage),
 		meterG: provider.Cached(client.GetMetersAggregates, cache),
-	}
-
-	var batteryControl bool
-	if refreshToken != "" || siteId != 0 {
-		if refreshToken == "" {
-			return nil, errors.New("missing refresh token")
-		}
-		batteryControl = true
-	}
-
-	if batteryControl {
-		ctx := context.WithValue(context.Background(), oauth2.HTTPClient, request.NewClient(log))
-
-		options := []tesla.ClientOption{tesla.WithToken(&oauth2.Token{
-			RefreshToken: refreshToken,
-			Expiry:       time.Now(),
-		})}
-
-		cloudClient, err := tesla.NewClient(ctx, options...)
-		if err != nil {
-			return nil, err
-		}
-
-		if siteId == 0 {
-			// auto detect energy site ID, picking first
-			products, err := cloudClient.Products()
-			if err != nil {
-				return nil, err
-			}
-
-			for _, p := range products {
-				if p.EnergySiteId != 0 {
-					siteId = p.EnergySiteId
-					break
-				}
-			}
-		}
-
-		log.Redact(strconv.FormatInt(siteId, 10))
-		energySite, err := cloudClient.EnergySite(siteId)
-		if err != nil {
-			return nil, err
-		}
-		m.energySite = energySite
 	}
 
 	// decorate api.MeterEnergy
@@ -161,7 +122,47 @@ func NewPowerWall(uri, usage, user, password string, cache time.Duration, refres
 
 	// decorate api.BatteryController
 	var batModeS func(api.BatteryMode) error
-	if batteryControl {
+
+	token, err := tokens.Token()
+	if err == nil {
+		identity, err := vc.NewIdentity(log, token)
+		if err != nil {
+			return nil, err
+		}
+
+		hc := request.NewClient(log)
+		hc.Transport = &oauth2.Transport{
+			Source: identity,
+			Base:   hc.Transport,
+		}
+
+		cloudClient, err := tesla.NewClient(context.Background(), tesla.WithClient(hc))
+		if err != nil {
+			return nil, err
+		}
+
+		if siteId == 0 {
+			// auto detect energy site ID, picking first
+			products, err := cloudClient.Products()
+			if err != nil {
+				return nil, err
+			}
+
+			for _, p := range products {
+				if p.EnergySiteId != 0 {
+					siteId = p.EnergySiteId
+					break
+				}
+			}
+		}
+
+		log.Redact(strconv.FormatInt(siteId, 10))
+		energySite, err := cloudClient.EnergySite(siteId)
+		if err != nil {
+			return nil, err
+		}
+		m.energySite = energySite
+
 		batModeS = battery.LimitController(m.socG, func(limit float64) error {
 			return m.energySite.SetBatteryReserve(uint64(limit))
 		})
