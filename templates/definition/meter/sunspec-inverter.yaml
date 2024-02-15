@@ -1,8 +1,8 @@
 template: sunspec-inverter
 products:
   - description:
-      de: Wechselrichter
-      en: Inverter
+      de: SunSpec Wechselrichter
+      en: SunSpec Inverter
 group: generic
 params:
   - name: usage
