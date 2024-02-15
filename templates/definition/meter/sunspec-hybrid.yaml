@@ -2,8 +2,8 @@ template: sunspec-hybrid
 covers: ["sunspec-hybrid-inverter"]
 products:
   - description:
-      de: Hybridwechselrichter
-      en: Hybrid Inverter
+      de: SunSpec Hybridwechselrichter
+      en: SunSpec Hybrid Inverter
 group: generic
 params:
   - name: usage
