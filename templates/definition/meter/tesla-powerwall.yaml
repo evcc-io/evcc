@@ -7,19 +7,11 @@ capabilities: ["battery-control"]
 requirements:
   description:
     de: |
-      Um die optionale Entladesteuerung der Battery zu nutzen wird ein `refresh` Token für die Kommunikation mit der Tesla API benötigt.
-
-      Folgende Apps ermöglichen das Erstellen des Tokens:
-      - [Auth app for Tesla (iOS)](https://apps.apple.com/us/app/auth-app-for-tesla/id1552058613#?platform=iphone)
-      - [Tesla Tokens (Android)](https://play.google.com/store/apps/details?id=net.leveugle.teslatokens)
-      - [Tesla Auth (macOS, Linux)](https://github.com/adriankumpf/tesla_auth)
+      Um die optionale Entladesteuerung der Battery zu nutzen, werden ein `access` und ein `refresh` Token benötigt.
+      Diese kannst du über [tesla.evcc.io](https://tesla.evcc.io) erstellen.
     en: |
-      To use the optional battery control you need to generate a `refresh` token for communicating with the Tesla API.
-
-      The following apps allow to create the token:
-      - [Auth app for Tesla (iOS)](https://apps.apple.com/us/app/auth-app-for-tesla/id1552058613#?platform=iphone)
-      - [Tesla Tokens (Android)](https://play.google.com/store/apps/details?id=net.leveugle.teslatokens)
-      - [Tesla Auth (macOS, Linux)](https://github.com/adriankumpf/tesla_auth)
+      For optional battery control `access` and `refresh` tokens are required.
+      Please generate them through [tesla.evcc.io](https://tesla.evcc.io).
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -30,6 +22,10 @@ params:
     help:
       en: Password of the user "customer". By default this is the last 5 characters of password stated on the Tesla Gateway.
       de: Passwort des Benutzers "Kunde". Default sind die letzten 5 Zeichen des auf dem Tesla Gateway genannten Passworts.
+  - name: accessToken
+    help:
+      en: "See https://docs.evcc.io/en/docs/devices/meters#tesla-powerwall"
+      de: "Siehe https://docs.evcc.io/docs/devices/meters#tesla-powerwall"
   - name: refreshToken
     help:
       en: "See https://docs.evcc.io/en/docs/devices/meters#tesla-powerwall"
@@ -56,7 +52,9 @@ render: |
   usage: {{ .usage }}
   user: customer
   password: {{ .password }} # for user 'customer'
-  refreshToken: {{ .refreshToken }}
+  tokens:
+    access: {{ .accessToken }}
+    refresh: {{ .refreshToken }}
   siteId: {{ .siteId }}
   minSoc: {{ .minSoc }}
   maxSoc: {{ .maxSoc }}
