@@ -84,12 +84,16 @@ render: |
     value:
       - 101:W
       - 103:W
+      - 111:W
+      - 113:W
   energy:
     source: sunspec
     {{- include "modbus" . | indent 2 }}
     value:
       - 101:WH
       - 103:WH
+      - 111:WH
+      - 113:WH
     scale: 0.001
   {{- end }}
   {{- if eq .usage "battery" }}
