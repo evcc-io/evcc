@@ -68,8 +68,8 @@ export default {
 			tariff: {},
 			plan: {},
 			activeTab: "time",
-			loading: false,
 			isPreview: false,
+			debounceTimer: null,
 		};
 	},
 	computed: {
@@ -89,13 +89,13 @@ export default {
 	watch: {
 		plans(newPlans, oldPlans) {
 			if (!deepEqual(newPlans, oldPlans) && newPlans.length > 0) {
-				this.fetchPlan();
+				this.fetchPlanDebounced();
 			}
 		},
 	},
 	mounted() {
 		if (this.plans.length > 0) {
-			this.fetchPlan();
+			this.fetchPlanDebounced();
 		}
 	},
 	methods: {
@@ -111,35 +111,33 @@ export default {
 			return await api.get(`loadpoints/${this.id}/plan/preview/energy/${energy}/${timeISO}`);
 		},
 		fetchPlan: async function (preview) {
-			if (!this.loading) {
-				try {
-					this.loading = true;
-
-					let planRes = null;
-					if (preview && this.socBasedPlanning) {
-						planRes = await this.fetchPlanPreviewSoc(preview.soc, preview.time);
-						this.isPreview = true;
-					} else if (preview && !this.socBasedPlanning) {
-						planRes = await this.fetchPlanPreviewEnergy(preview.energy, preview.time);
-						this.isPreview = true;
-					} else {
-						planRes = await this.fetchActivePlan();
-						this.isPreview = false;
-					}
-					this.plan = planRes.data.result;
-
-					const tariffRes = await api.get(`tariff/planner`, {
-						validateStatus: function (status) {
-							return status >= 200 && status < 500;
-						},
-					});
-					this.tariff = tariffRes.status === 404 ? { rates: [] } : tariffRes.data.result;
-				} catch (e) {
-					console.error(e);
-				} finally {
-					this.loading = false;
+			try {
+				let planRes = null;
+				if (preview && this.socBasedPlanning) {
+					planRes = await this.fetchPlanPreviewSoc(preview.soc, preview.time);
+					this.isPreview = true;
+				} else if (preview && !this.socBasedPlanning) {
+					planRes = await this.fetchPlanPreviewEnergy(preview.energy, preview.time);
+					this.isPreview = true;
+				} else {
+					planRes = await this.fetchActivePlan();
+					this.isPreview = false;
 				}
+				this.plan = planRes.data.result;
+
+				const tariffRes = await api.get(`tariff/planner`, {
+					validateStatus: function (status) {
+						return status >= 200 && status < 500;
+					},
+				});
+				this.tariff = tariffRes.status === 404 ? { rates: [] } : tariffRes.data.result;
+			} catch (e) {
+				console.error(e);
 			}
+		},
+		fetchPlanDebounced: async function (preview) {
+			clearTimeout(this.debounceTimer);
+			this.debounceTimer = setTimeout(async () => await this.fetchPlan(preview), 1000);
 		},
 		defaultDate: function () {
 			const [hours, minutes] = (
@@ -171,7 +169,7 @@ export default {
 			this.$emit("plan-updated", data);
 		},
 		previewPlan: function (data) {
-			this.fetchPlan(data);
+			this.fetchPlanDebounced(data);
 		},
 	},
 };
