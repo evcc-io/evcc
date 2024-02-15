@@ -1,4 +1,5 @@
-template: tesla-command
+template: tesla
+covers: ["tesla-command"]
 products:
   - brand: Tesla
     description:
@@ -8,7 +9,7 @@ requirements:
   description:
     de: |
       Du benötigst ein `access` und ein `refresh` Token.
-      Diese kannst du über [tesla.evcc.io](https://tesla.evcc.io) erstellt.
+      Diese kannst du über [tesla.evcc.io](https://tesla.evcc.io) erstellen.
 
       **Hinweis:** Dies ist die von Tesla offiziell unterstützte [FleetAPI](https://developer.tesla.com/docs/fleet-api).
     en: |

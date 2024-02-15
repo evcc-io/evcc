@@ -12,7 +12,7 @@ import (
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/evcc-io/evcc/util/transport"
-	vc "github.com/evcc-io/evcc/vehicle/tesla-vehicle-command"
+	vc "github.com/evcc-io/evcc/vehicle/tesla-command"
 	tesla "github.com/evcc-io/tesla-proxy-client"
 	"golang.org/x/oauth2"
 )
