@@ -1,26 +1,22 @@
 package tariff
 
 import (
+	"encoding/xml"
 	"fmt"
 	"io"
-	"slices"
-	"strings"
-	"time"
-
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
+	"slices"
+	"strconv"
+	"strings"
+	"sync"
+	"time"
 
+	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"golang.org/x/net/html"
-
-	"encoding/xml"
-
-	"strconv"
-	"sync"
-
-	"github.com/cenkalti/backoff/v4"
 )
 
 type Pun struct {
@@ -93,7 +89,6 @@ func (t *Pun) run(done chan error) {
 			today, err = t.getData(time.Now())
 
 			return err
-
 		}, bo); err != nil {
 			once.Do(func() { done <- err })
 
@@ -108,10 +103,8 @@ func (t *Pun) run(done chan error) {
 			tomorrow, err = t.getData(time.Now().AddDate(0, 0, 1))
 
 			return err
-
 		}, bo); err != nil {
 			once.Do(func() { done <- err })
-
 			t.log.ERROR.Println(err)
 			continue
 		}
@@ -121,7 +114,6 @@ func (t *Pun) run(done chan error) {
 		t.data.Set(data)
 
 		once.Do(func() { close(done) })
-
 	}
 }
 
@@ -140,7 +132,6 @@ func (t *Pun) Type() api.TariffType {
 }
 
 func (t *Pun) getData(day time.Time) (api.Rates, error) {
-
 	// Initial URL
 	urlString := "https://www.mercatoelettrico.org/It/WebServerDataStore/MGP_Prezzi/" + day.Format("20060102") + "MGPPrezzi.xml"
 

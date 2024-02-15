@@ -7,13 +7,11 @@ params:
     description:
       en: "Additional charges"
       de: "Aufschlag auf den PUN"
-      it: "Spread sul PUN"
   - name: tax
     type: float
     description:
       en: "Tax"
       de: "Steuern"
-      it: "Tasse"
 
 render: |
   type: pun
