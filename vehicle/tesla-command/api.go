@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/bogosj/tesla"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
+	tesla "github.com/evcc-io/tesla-proxy-client"
 	"golang.org/x/oauth2"
 )
 
@@ -16,22 +16,20 @@ const (
 
 type API struct {
 	*request.Helper
-	identity *Identity
-	base     string
+	base string
 }
 
-func NewAPI(log *util.Logger, identity *Identity, timeout time.Duration) *API {
+func NewAPI(log *util.Logger, ts oauth2.TokenSource, timeout time.Duration) *API {
 	client := request.NewHelper(log)
 	client.Client.Timeout = timeout
 	client.Transport = &oauth2.Transport{
-		Source: identity,
+		Source: ts,
 		Base:   client.Transport,
 	}
 
 	return &API{
-		Helper:   client,
-		identity: identity,
-		base:     FleetAudienceEU,
+		Helper: client,
+		base:   FleetAudienceEU,
 	}
 }
 
@@ -45,19 +43,6 @@ func (v *API) Region() (Region, error) {
 }
 
 func (v *API) Vehicles() ([]*Vehicle, error) {
-	// ctx, cancel := context.WithTimeout(context.Background(), v.Timeout)
-	// defer cancel()
-
-	// b, err := v.identity.Account().Get(ctx, "api/1/vehicles")
-	// if err != nil {
-	// 	return nil, err
-	// }
-
-	// var res tesla.VehiclesResponse
-	// if err := json.Unmarshal(b, &res); err != nil {
-	// 	return nil, err
-	// }
-
 	var res tesla.VehiclesResponse
 	err := v.GetJSON(fmt.Sprintf("%s/api/1/vehicles", v.base), &res)
 
@@ -65,19 +50,6 @@ func (v *API) Vehicles() ([]*Vehicle, error) {
 }
 
 func (v *API) VehicleData(id int64) (*VehicleData, error) {
-	// ctx, cancel := context.WithTimeout(context.Background(), request.Timeout)
-	// defer cancel()
-
-	// b, err := v.identity.Account().Get(ctx, fmt.Sprintf("api/1/vehicles/%d/vehicle_data", id))
-	// if err != nil {
-	// 	return nil, err
-	// }
-
-	// var res tesla.VehicleData
-	// if err := json.Unmarshal(b, &res); err != nil {
-	// 	return nil, err
-	// }
-
 	var res tesla.VehicleData
 	err := v.GetJSON(fmt.Sprintf("%s/api/1/vehicles/%d/vehicle_data", v.base, id), &res)
 
@@ -85,19 +57,6 @@ func (v *API) VehicleData(id int64) (*VehicleData, error) {
 }
 
 func (v *API) WakeUp(id int64) (*VehicleData, error) {
-	// ctx, cancel := context.WithTimeout(context.Background(), request.Timeout)
-	// defer cancel()
-
-	// b, err := v.identity.Account().Get(ctx, fmt.Sprintf("api/1/vehicles/%d/vehicle_data", id))
-	// if err != nil {
-	// 	return nil, err
-	// }
-
-	// var res tesla.VehicleData
-	// if err := json.Unmarshal(b, &res); err != nil {
-	// 	return nil, err
-	// }
-
 	var res tesla.VehicleData
 	err := v.GetJSON(fmt.Sprintf("%s/api/1/vehicles/%d/wake_up", v.base, id), &res)
 

@@ -15,8 +15,7 @@ var (
 )
 
 func getInstance(subject string) *Identity {
-	v, _ := identities[subject]
-	return v
+	return identities[subject]
 }
 
 func addInstance(subject string, identity *Identity) {

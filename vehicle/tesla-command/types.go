@@ -1,6 +1,8 @@
 package vc
 
-import "github.com/bogosj/tesla"
+import (
+	tesla "github.com/evcc-io/tesla-proxy-client"
+)
 
 type (
 	Vehicle         = tesla.Vehicle
