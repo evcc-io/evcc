@@ -26,14 +26,14 @@ params:
     required: true
     mask: true
     help:
-      en: "See https://docs.evcc.io/en/docs/devices/vehicles#tesla-command"
-      de: "Siehe https://docs.evcc.io/docs/devices/vehicles#tesla-command"
+      en: "See https://docs.evcc.io/en/docs/devices/vehicles#tesla"
+      de: "Siehe https://docs.evcc.io/docs/devices/vehicles#tesla"
   - name: refreshToken
     required: true
     mask: true
     help:
-      en: "See https://docs.evcc.io/en/docs/devices/vehicles#tesla-command"
-      de: "Siehe https://docs.evcc.io/docs/devices/vehicles#tesla-command"
+      en: "See https://docs.evcc.io/en/docs/devices/vehicles#tesla"
+      de: "Siehe https://docs.evcc.io/docs/devices/vehicles#tesla"
   - name: vin
     example: W...
   - name: capacity
