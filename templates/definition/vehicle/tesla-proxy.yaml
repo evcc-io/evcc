@@ -2,8 +2,8 @@ template: tesla-proxy
 products:
   - brand: Tesla
     description:
-      de: Tesla Fleet API Proxy
-      en: Tesla Fleet API Proxy
+      de: Fleet API Proxy
+      en: Fleet API Proxy
 requirements:
   description:
     de: |
