@@ -52,7 +52,7 @@ func NewTeslaCommandFromConfig(other map[string]interface{}) (api.Vehicle, error
 		return nil, err
 	}
 
-	log := util.NewLogger("tesla-command").Redact(
+	log := util.NewLogger("tesla").Redact(
 		cc.Tokens.Access, cc.Tokens.Refresh,
 		vc.OAuth2Config.ClientID, vc.OAuth2Config.ClientSecret,
 	)
@@ -87,31 +87,6 @@ func NewTeslaCommandFromConfig(other map[string]interface{}) (api.Vehicle, error
 	if v.Title_ == "" {
 		v.Title_ = vehicle.DisplayName
 	}
-	/*
-		privKey, err := protocol.LoadPrivateKey(privateKeyFile)
-		if err != nil {
-			log.WARN.Println("private key not found, commands are disabled")
-			return v, nil
-		}
-
-		vv, err := identity.Account().GetVehicle(context.Background(), vehicle.Vin, privKey, cache.New(8))
-		if err != nil {
-			return nil, err
-		}
-
-		cs, err := vc.NewCommandSession(vv, cc.Timeout)
-		if err != nil {
-			return nil, err
-		}
-
-		res := &struct {
-			*TeslaCommand
-			*vc.CommandSession
-		}{
-			TeslaCommand:   v,
-			CommandSession: cs,
-		}
-	*/
 
 	return v, nil
 }
