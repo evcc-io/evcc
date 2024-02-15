@@ -273,6 +273,15 @@ func (m *MQTT) listenLoadpointSetters(topic string, site site.API, lp loadpoint.
 		})
 	}
 	if err == nil {
+		err = m.Handler.ListenSetter(topic+"/limitEnergy", func(payload string) error {
+			energy, err := strconv.ParseFloat(payload, 64)
+			if err == nil {
+				lp.SetLimitEnergy(energy)
+			}
+			return err
+		})
+	}
+	if err == nil {
 		err = m.Handler.ListenSetter(topic+"/planEnergy", func(payload string) error {
 			var plan struct {
 				Time  time.Time `json:"time"`

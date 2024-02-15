@@ -195,6 +195,12 @@ pvExport = "Izvoz v omreže"
 pvProduction = "Proizvodnja"
 selfConsumption = "Samoporaba"
 
+[main.heatingStatus]
+charging = "Gretje…"
+cheapEnergyCharging = "Gretje s poceni energijo: {price} (limit {limit})"
+cleanEnergyCharging = "Gretje s čisto energijo: {co2} (limit {limit})"
+waitForVehicle = "Pripravljen. Čakam na grelec…"
+
 [main.loadpoint]
 avgPrice = "⌀ Cena"
 charged = "Napolnjeno"
@@ -211,6 +217,7 @@ solar = "Sončna energija"
 [main.loadpointSettings]
 currents = "Polnilni tok"
 default = "privzeto"
+disclaimerHint = "Opomba:"
 onlyForSocBasedCharging = "Te možnosti so na voljo samo za vozila z znano stopnjo napolnjenosti."
 title = "Nastavitve {0}"
 vehicle = "Vozilo"

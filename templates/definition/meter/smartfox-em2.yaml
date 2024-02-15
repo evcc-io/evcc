@@ -6,14 +6,12 @@ products:
 requirements:
   description:
     de: |
-      Kann verwendet werden, um Daten für `grid`, `pv` und `aux` zu erhalten. 
-      Wenn `usage` nicht definiert ist, wird die Leistung für die Warmwasserbereitung zurückgegeben (als `aux` zu verwenden).
+      `aux` kann für die Leistung der Warmwasserbereitung verwendet werden.
     en: |
-      Can be used to get `grid`, `pv` and `aux` data. 
-      If `usage` is not defined, then return the power for the water heating (to be used as `aux`).
+      `aux` can be used for water heating power.
 params:
   - name: usage
-    choice: ["grid", "pv"]
+    choice: ["grid", "pv", "aux"]
   - name: host
 render: |
   {{- define "uri" -}}
@@ -21,13 +19,6 @@ render: |
   {{- end }}
   type: custom
   # jq: parse json generated from response values.xml (https://jqplay.org is your friend to test queries)
-  {{- if not .usage }}
-  power: # heating power in W
-    source: http
-    uri: {{ include "uri" . }}
-    jq: .values.value[] | select(.attrid=="htPowerMeasValue")."#content" | rtrimstr(" kW")
-    scale: 1000
-  {{- end }}
   {{- if eq .usage "grid" }}
   power: # grid power in W
     source: http
@@ -79,4 +70,11 @@ render: |
     source: http
     uri: {{ include "uri" . }}
     jq: '[.values.value[] | select(.attrid|test("wr\\d+EnergyValue"))."#content" | rtrimstr(" kWh") | tonumber] | add'
+  {{- end }}
+  {{- if eq .usage "aux" }}
+  power: # heating power in W
+    source: http
+    uri: {{ include "uri" . }}
+    jq: .values.value[] | select(.attrid=="htPowerMeasValue")."#content" | rtrimstr(" kW")
+    scale: 1000
   {{- end }}
