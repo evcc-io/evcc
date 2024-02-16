@@ -99,7 +99,7 @@ jobs:
         uses: golangci/golangci-lint-action@v3
         with:
           version: latest
-          args: --timeout 5m
+          args: --out-format=colored-line-number --timeout 5m
 
   ui:
     name: UI
