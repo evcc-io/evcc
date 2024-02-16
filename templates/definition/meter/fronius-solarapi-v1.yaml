@@ -4,6 +4,10 @@ products:
     description:
       generic: Solar API V1
 capabilities: ["battery-control"]
+requirements:
+  description:
+    de: Benutzername und Passwort werden nur für die aktive Batteriesteuerung benötigt.
+    en: Username and password are only required for battery control.
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -13,8 +17,42 @@ params:
     advanced: true
   - name: user
     default: customer
+    description:
+      de: Benutzername (für aktive Batteriesteuerung)
+      en: Username (for battery control)
   - name: password
     required: false
+    mask: true
+    description:
+      de: Passwort (für aktive Batteriesteuerung)
+      en: Password (for battery control)
+  - name: normalpayload
+    required: false
+    advanced: true
+    description:
+      de: JSON-Struktur für den Batteriemodus 'normal'
+      en: JSON payload used for battery control mode 'normal'
+    help:
+      de: 'Überschreibt die Einstellungen für das Batteriemanagement - Standardwert: {"timeofuse":[]}'
+      en: 'Overwrites the battery management settings - default value: {"timeofuse":[]}'
+  - name: holdpayload
+    required: false
+    advanced: true
+    description:
+      de: JSON-Struktur für den Batteriemodus 'hold'
+      en: JSON payload used for battery control mode 'hold'
+    help:
+      de: 'Überschreibt die Einstellungen für das Batteriemanagement - Standardwert: {"timeofuse":[{"Active":true,"Power":0,"ScheduleType":"DISCHARGE_MAX","TimeTable":{"Start":"00:00","End":"23:59"},"Weekdays":{"Mon":true,"Tue":true,"Wed":true,"Thu":true,"Fri":true,"Sat":true,"Sun":true}}]}'
+      en: 'Overwrites the battery management settings - default value: {"timeofuse":[{"Active":true,"Power":0,"ScheduleType":"DISCHARGE_MAX","TimeTable":{"Start":"00:00","End":"23:59"},"Weekdays":{"Mon":true,"Tue":true,"Wed":true,"Thu":true,"Fri":true,"Sat":true,"Sun":true}}]}'
+  - name: chargepayload
+    required: false
+    advanced: true
+    description:
+      de: JSON-Struktur für den Batteriemodus 'charge'
+      en: JSON payload used for battery control mode 'charge'
+    help:
+      de: 'Überschreibt die Einstellungen für das Batteriemanagement - Standardwert: {"timeofuse":[]}'
+      en: 'Overwrites the battery management settings - default value: {"timeofuse":[]}'
 render: |
   type: custom
   power:
@@ -47,7 +85,11 @@ render: |
           type: digest
           user: {{ .user }}
           password: {{ .password }}
+        {{- if .normalpayload }}
+        body: {{ .normalpayload }}
+        {{- else }}
         body: '{"timeofuse":[]}'
+        {{- end}}
     - case: 2 # hold
       set:
         source: http
@@ -59,7 +101,11 @@ render: |
           type: digest
           user: {{ .user }}
           password: {{ .password }}
+        {{- if .holdpayload }}
+        body: {{ .holdpayload }}
+        {{- else }}
         body: '{"timeofuse":[{"Active":true,"Power":0,"ScheduleType":"DISCHARGE_MAX","TimeTable":{"Start":"00:00","End":"23:59"},"Weekdays":{"Mon":true,"Tue":true,"Wed":true,"Thu":true,"Fri":true,"Sat":true,"Sun":true}}]}'
+        {{- end}}
     - case: 3 # charge
       set:
         source: http
@@ -71,7 +117,11 @@ render: |
           type: digest
           user: {{ .user }}
           password: {{ .password }}
+        {{- if .chargepayload }}
+        body: {{ .chargepayload }}
+        {{- else }}
         body: '{"timeofuse":[]}'
+        {{- end}}
   {{- end }}
   {{- if .capacity }}
   capacity: {{ .capacity }} # kWh
