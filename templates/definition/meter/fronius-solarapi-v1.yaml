@@ -22,7 +22,6 @@ params:
       en: Username (for battery control)
   - name: password
     required: false
-    mask: true
     description:
       de: Passwort (für aktive Batteriesteuerung)
       en: Password (for battery control)
