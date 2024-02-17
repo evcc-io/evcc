@@ -1,25 +1,26 @@
-package vc
+package tesla
 
 import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/provider"
+	"github.com/evcc-io/tesla-proxy-client"
 )
 
 type Provider struct {
-	dataG  func() (*VehicleData, error)
-	wakeup func() (*VehicleData, error)
+	dataG  func() (*tesla.VehicleData, error)
+	wakeup func() (*tesla.Vehicle, error)
 }
 
-func NewProvider(api *API, vid int64, cache time.Duration) *Provider {
+func NewProvider(vehicle *tesla.Vehicle, cache time.Duration) *Provider {
 	impl := &Provider{
-		dataG: provider.Cached(func() (*VehicleData, error) {
-			res, err := api.VehicleData(vid)
+		dataG: provider.Cached(func() (*tesla.VehicleData, error) {
+			res, err := vehicle.Data()
 			return res, apiError(err)
 		}, cache),
-		wakeup: func() (*VehicleData, error) {
-			res, err := api.WakeUp(vid)
+		wakeup: func() (*tesla.Vehicle, error) {
+			res, err := vehicle.Wakeup()
 			return res, apiError(err)
 		},
 	}

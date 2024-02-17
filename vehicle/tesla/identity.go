@@ -1,4 +1,4 @@
-package vc
+package tesla
 
 import (
 	"context"
@@ -27,8 +27,6 @@ var OAuth2Config = &oauth2.Config{
 	Scopes: []string{"openid", "email", "offline_access"},
 }
 
-// const userAgent = "evcc/evcc-io"
-
 var TESLA_CLIENT_ID, TESLA_CLIENT_SECRET string
 
 func init() {
@@ -45,10 +43,9 @@ type Identity struct {
 	mu      sync.Mutex
 	log     *util.Logger
 	subject string
-	// acct  *account.Account
 }
 
-func NewIdentity(log *util.Logger, token *oauth2.Token) (*Identity, error) {
+func NewIdentity(log *util.Logger, token *oauth2.Token) (oauth2.TokenSource, error) {
 	// serialise instance handling
 	mu.Lock()
 	defer mu.Unlock()
@@ -71,7 +68,6 @@ func NewIdentity(log *util.Logger, token *oauth2.Token) (*Identity, error) {
 	v := &Identity{
 		log:     log,
 		subject: claims.Subject,
-		// acct:        acct,
 	}
 
 	// database token
@@ -91,11 +87,6 @@ func NewIdentity(log *util.Logger, token *oauth2.Token) (*Identity, error) {
 	if !token.Valid() {
 		return nil, errors.New("token expired")
 	}
-
-	// acct, err := account.New(token.AccessToken, userAgent)
-	// if err != nil {
-	// 	return nil, err
-	// }
 
 	v.TokenSource = oauth.RefreshTokenSource(token, v)
 
@@ -125,23 +116,3 @@ func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 
 	return token, err
 }
-
-// func (v *Identity) Account() *account.Account {
-// 	token, err := v.Token()
-// 	if err != nil {
-// 		v.log.ERROR.Println(err)
-// 		return v.acct
-// 	}
-
-// 	if token.AccessToken != v.token.AccessToken {
-// 		acct, err := account.New(token.AccessToken, userAgent)
-// 		if err != nil {
-// 			v.log.ERROR.Println(err)
-// 			return v.acct
-// 		}
-
-// 		v.acct = acct
-// 	}
-
-// 	return v.acct
-// }

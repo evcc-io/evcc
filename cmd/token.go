@@ -52,8 +52,6 @@ func runToken(cmd *cobra.Command, args []string) {
 	var err error
 
 	switch strings.ToLower(vehicleConf.Type) {
-	case "tesla":
-		token, err = teslaToken()
 	case "tronity":
 		token, err = tronityToken(conf, vehicleConf)
 	default:
