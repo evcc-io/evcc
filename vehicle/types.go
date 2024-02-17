@@ -7,8 +7,6 @@ import (
 	"golang.org/x/oauth2"
 )
 
-const kmPerMile = 1.609344
-
 // ClientCredentials contains OAuth2 client id and secret
 type ClientCredentials struct {
 	ID, Secret string
