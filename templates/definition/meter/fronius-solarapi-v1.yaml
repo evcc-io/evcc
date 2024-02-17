@@ -4,6 +4,10 @@ products:
     description:
       generic: Solar API V1
 capabilities: ["battery-control"]
+requirements:
+  description:
+    de: Benutzername und Passwort werden nur für die aktive Batteriesteuerung benötigt.
+    en: Username and password are only required for battery control.
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -13,8 +17,15 @@ params:
     advanced: true
   - name: user
     default: customer
+    description:
+      de: Benutzername (für aktive Batteriesteuerung)
+      en: Username (for battery control)
   - name: password
     required: false
+    mask: true
+    description:
+      de: Passwort (für aktive Batteriesteuerung)
+      en: Password (for battery control)
 render: |
   type: custom
   power:
