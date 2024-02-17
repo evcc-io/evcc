@@ -14,6 +14,7 @@ type Controller struct {
 	vehicle *tesla.Vehicle
 }
 
+// NewController creates a vehicle charge controller
 func NewController(vehicle *tesla.Vehicle) *Controller {
 	impl := &Controller{
 		vehicle: vehicle,
