@@ -27,8 +27,6 @@ var OAuth2Config = &oauth2.Config{
 	Scopes: []string{"openid", "email", "offline_access"},
 }
 
-// const userAgent = "evcc/evcc-io"
-
 var TESLA_CLIENT_ID, TESLA_CLIENT_SECRET string
 
 func init() {
