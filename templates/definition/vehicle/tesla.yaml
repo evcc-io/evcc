@@ -6,7 +6,7 @@ requirements:
   description:
     de: |
       Benötigt `access` und `refresh` Tokens. Diese können über [tesla.evcc.io](https://tesla.evcc.io) erstellt werden.
-      Die Steuerung von Fahrzeugen im Zusammenspiel mit einem Tesla Wall Connector erfolgt über einen evcc Proxy-Server und benötigt ein sponsor token.
+      Die Steuerung von Fahrzeugen im Zusammenspiel mit einem Tesla Wall Connector erfolgt über einen evcc Proxy-Server und benötigt ein Sponsor Token.
       Siehe https://tesla.evcc.io.
     en: |
       Teska `access` and `refresh` tokens are required. These can be generated through [tesla.evcc.io](https://tesla.evcc.io).
