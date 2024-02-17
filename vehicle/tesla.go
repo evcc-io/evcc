@@ -62,10 +62,6 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, err
 	}
 
-	if !sponsor.IsAuthorized() {
-		return nil, api.ErrSponsorRequired
-	}
-
 	log := util.NewLogger("tesla").Redact(
 		cc.Tokens.Access, cc.Tokens.Refresh,
 		tesla.OAuth2Config.ClientID, tesla.OAuth2Config.ClientSecret,
@@ -114,6 +110,10 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	if cc.Control {
+		if !sponsor.IsAuthorized() {
+			return nil, api.ErrSponsorRequired
+		}
+
 		// proxy client
 		pc := request.NewClient(log)
 		pc.Transport = &transport.Decorator{
