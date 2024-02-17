@@ -46,21 +46,14 @@ params:
   - preset: vehicle-identify
 render: |
   type: tesla
-  {{- if .title }}
   title: {{ .title }}
-  {{- end }}
-  {{- if .icon }}
   icon: {{ .icon }}
-  {{- end }}
   tokens:
     access: {{ .accessToken }}
     refresh: {{ .refreshToken }}
   capacity: {{ .capacity }}
-  {{- if .phases }}
   phases: {{ .phases }}
-  {{- end }}
-  {{- if .vin }}
+  control: {{ .control }}
   vin: {{ .vin }}
-  {{- end }}
   {{ include "vehicle-identify" . }}
   features: ["coarsecurrent"]
