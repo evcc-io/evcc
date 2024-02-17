@@ -15,9 +15,10 @@ import (
 	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/evcc-io/evcc/vehicle"
-	vc "github.com/evcc-io/evcc/vehicle/tesla"
-	tesla "github.com/evcc-io/tesla-proxy-client"
+	"github.com/evcc-io/evcc/vehicle/tesla"
+	teslaclient "github.com/evcc-io/tesla-proxy-client"
 	"golang.org/x/oauth2"
 )
 
@@ -26,7 +27,7 @@ type PowerWall struct {
 	usage      string
 	client     *powerwall.Client
 	meterG     func() (map[string]powerwall.MeterAggregatesData, error)
-	energySite *tesla.EnergySite
+	energySite *teslaclient.EnergySite
 }
 
 func init() {
@@ -125,7 +126,11 @@ func NewPowerWall(uri, usage, user, password string, cache time.Duration, tokens
 
 	token, err := tokens.Token()
 	if err == nil {
-		identity, err := vc.NewIdentity(log, token)
+		if !sponsor.IsAuthorized() {
+			return nil, api.ErrSponsorRequired
+		}
+
+		identity, err := tesla.NewIdentity(log, token)
 		if err != nil {
 			return nil, err
 		}
@@ -136,7 +141,7 @@ func NewPowerWall(uri, usage, user, password string, cache time.Duration, tokens
 			Base:   hc.Transport,
 		}
 
-		cloudClient, err := tesla.NewClient(context.Background(), tesla.WithClient(hc))
+		cloudClient, err := teslaclient.NewClient(context.Background(), teslaclient.WithClient(hc))
 		if err != nil {
 			return nil, err
 		}
