@@ -1,39 +1,51 @@
 package vehicle
 
 import (
+	"context"
 	"os"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
-	vc "github.com/evcc-io/evcc/vehicle/tesla-command"
+	"github.com/evcc-io/evcc/util/sponsor"
+	"github.com/evcc-io/evcc/util/transport"
+	"github.com/evcc-io/evcc/vehicle/tesla"
+	teslaclient "github.com/evcc-io/tesla-proxy-client"
+	"golang.org/x/oauth2"
 )
 
-// TeslaCommand is an api.Vehicle implementation for Tesla cars using the official Tesla vehicle-command api.
-type TeslaCommand struct {
+// Tesla is an api.Vehicle implementation for Tesla cars using the official Tesla vehicle-command api.
+type Tesla struct {
 	*embed
-	*vc.Provider
+	*tesla.Provider
+}
+
+type teslaController struct {
+	*embed
+	*tesla.Provider
+	*tesla.Controller
 }
 
 func init() {
 	if id := os.Getenv("TESLA_CLIENT_ID"); id != "" {
-		vc.OAuth2Config.ClientID = id
+		tesla.OAuth2Config.ClientID = id
 	}
 	if secret := os.Getenv("TESLA_CLIENT_SECRET"); secret != "" {
-		vc.OAuth2Config.ClientSecret = secret
+		tesla.OAuth2Config.ClientSecret = secret
 	}
-	if vc.OAuth2Config.ClientID != "" {
-		registry.Add("tesla", NewTeslaCommandFromConfig)
+	if tesla.OAuth2Config.ClientID != "" {
+		registry.Add("tesla", NewTeslaFromConfig)
 	}
 }
 
-// NewTeslaCommandFromConfig creates a new vehicle
-func NewTeslaCommandFromConfig(other map[string]interface{}) (api.Vehicle, error) {
+// NewTeslaFromConfig creates a new vehicle
+func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
 		embed   `mapstructure:",squash"`
 		Tokens  Tokens
 		VIN     string
+		Control bool
 		Timeout time.Duration
 		Cache   time.Duration
 	}{
@@ -52,24 +64,35 @@ func NewTeslaCommandFromConfig(other map[string]interface{}) (api.Vehicle, error
 
 	log := util.NewLogger("tesla").Redact(
 		cc.Tokens.Access, cc.Tokens.Refresh,
-		vc.OAuth2Config.ClientID, vc.OAuth2Config.ClientSecret,
+		tesla.OAuth2Config.ClientID, tesla.OAuth2Config.ClientSecret,
 	)
 
-	identity, err := vc.NewIdentity(log, token)
+	identity, err := tesla.NewIdentity(log, token)
 	if err != nil {
 		return nil, err
 	}
 
-	api := vc.NewAPI(log, identity, cc.Timeout)
+	hc := request.NewClient(log)
+	hc.Transport = &oauth2.Transport{
+		Source: identity,
+		Base:   hc.Transport,
+	}
 
-	// validate base url
-	if _, err := api.Region(); err != nil {
+	tc, err := teslaclient.NewClient(context.Background(), teslaclient.WithClient(hc))
+	if err != nil {
 		return nil, err
 	}
 
+	// validate base url
+	region, err := tc.UserRegion()
+	if err != nil {
+		return nil, err
+	}
+	tc.SetBaseUrl(region.FleetApiBaseUrl)
+
 	vehicle, err := ensureVehicleEx(
-		cc.VIN, api.Vehicles,
-		func(v *vc.Vehicle) string {
+		cc.VIN, tc.Vehicles,
+		func(v *tesla.Vehicle) string {
 			return v.Vin
 		},
 	)
@@ -77,13 +100,44 @@ func NewTeslaCommandFromConfig(other map[string]interface{}) (api.Vehicle, error
 		return nil, err
 	}
 
-	v := &TeslaCommand{
+	v := &Tesla{
 		embed:    &cc.embed,
-		Provider: vc.NewProvider(api, vehicle.Vin, cc.Cache),
+		Provider: tesla.NewProvider(vehicle, cc.Cache),
 	}
 
 	if v.Title_ == "" {
 		v.Title_ = vehicle.DisplayName
+	}
+
+	if cc.Control {
+		if !sponsor.IsAuthorized() {
+			return nil, api.ErrSponsorRequired
+		}
+
+		// proxy client
+		pc := request.NewClient(log)
+		pc.Transport = &transport.Decorator{
+			Decorator: transport.DecorateHeaders(map[string]string{
+				"X-Auth-Token": sponsor.Token,
+			}),
+			Base: hc.Transport,
+		}
+
+		tc, err := teslaclient.NewClient(context.Background(), teslaclient.WithClient(pc), teslaclient.WithBaseURL(tesla.ProxyBaseUrl))
+		if err != nil {
+			return nil, err
+		}
+
+		vehicle, err := tc.Vehicle(vehicle.Vin)
+		if err != nil {
+			return nil, err
+		}
+
+		return &teslaController{
+			embed:      v.embed,
+			Provider:   v.Provider,
+			Controller: tesla.NewController(vehicle),
+		}, nil
 	}
 
 	return v, nil

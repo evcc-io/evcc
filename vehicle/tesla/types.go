@@ -1,4 +1,4 @@
-package vc
+package tesla
 
 import (
 	tesla "github.com/evcc-io/tesla-proxy-client"

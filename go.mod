@@ -29,7 +29,7 @@ require (
 	github.com/eclipse/paho.mqtt.golang v1.4.3
 	github.com/enbility/cemd v0.2.2
 	github.com/enbility/eebus-go v0.2.0
-	github.com/evcc-io/tesla-proxy-client v0.0.0-20240210120646-d0be579ff7b7
+	github.com/evcc-io/tesla-proxy-client v0.0.0-20240217105146-44a7844aa5a2
 	github.com/fatih/structs v1.1.0
 	github.com/glebarez/sqlite v1.10.0
 	github.com/go-http-utils/etag v0.0.0-20161124023236-513ea8f21eb1
@@ -208,3 +208,5 @@ replace github.com/imdario/mergo => github.com/imdario/mergo v0.3.16
 replace github.com/spf13/viper => github.com/spf13/viper v1.18.1
 
 replace github.com/mabunixda/wattpilot => github.com/mabunixda/wattpilot v1.6.2
+
+// replace github.com/evcc-io/tesla-proxy-client => ../tesla-proxy-client
