@@ -1,8 +1,6 @@
 module github.com/evcc-io/evcc
 
-go 1.21.1
-
-toolchain go1.21.3
+go 1.22.0
 
 require (
 	dario.cat/mergo v1.0.0
@@ -19,7 +17,6 @@ require (
 	github.com/basgys/goxml2json v1.1.0
 	github.com/basvdlei/gotsmart v0.0.3
 	github.com/benbjohnson/clock v1.3.5
-	github.com/bogosj/tesla v1.3.1
 	github.com/cenkalti/backoff/v4 v4.2.1
 	github.com/cloudfoundry/jibber_jabber v0.0.0-20151120183258-bcc4c8345a21
 	github.com/containrrr/shoutrrr v0.8.0
@@ -30,6 +27,7 @@ require (
 	github.com/eclipse/paho.mqtt.golang v1.4.3
 	github.com/enbility/cemd v0.2.2
 	github.com/enbility/eebus-go v0.2.0
+	github.com/evcc-io/tesla-proxy-client v0.0.0-20240217133531-c8fc01cb2151
 	github.com/fatih/structs v1.1.0
 	github.com/glebarez/sqlite v1.10.0
 	github.com/go-http-utils/etag v0.0.0-20161124023236-513ea8f21eb1
@@ -63,7 +61,6 @@ require (
 	github.com/lorenzodonini/ocpp-go v0.17.1-0.20231031074144-d214d7c42cbc
 	github.com/lunixbochs/struc v0.0.0-20200707160740-784aaebc1d40
 	github.com/mabunixda/wattpilot v1.6.3
-	github.com/manifoldco/promptui v0.9.0
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/mlnoga/rct v0.1.2-0.20230731074838-03eacb926f99
@@ -95,8 +92,8 @@ require (
 	go.uber.org/mock v0.4.0
 	golang.org/x/crypto/x509roots/fallback v0.0.0-20240108164429-dbb6ec16ecef
 	golang.org/x/exp v0.0.0-20240119083558-1b970713d09a
-	golang.org/x/net v0.20.0
-	golang.org/x/oauth2 v0.16.0
+	golang.org/x/net v0.21.0
+	golang.org/x/oauth2 v0.17.0
 	golang.org/x/sync v0.6.0
 	golang.org/x/text v0.14.0
 	google.golang.org/grpc v1.61.0
@@ -115,7 +112,6 @@ require (
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bitly/go-simplejson v0.5.0 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
-	github.com/chzyer/readline v1.5.1 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/fatih/color v1.16.0 // indirect
@@ -187,10 +183,10 @@ require (
 	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
 	gitlab.com/c0b/go-ordered-json v0.0.0-20201030195603-febf46534d5a // indirect
 	go.uber.org/multierr v1.11.0 // indirect
-	golang.org/x/crypto v0.18.0 // indirect
+	golang.org/x/crypto v0.19.0 // indirect
 	golang.org/x/mod v0.14.0 // indirect
-	golang.org/x/sys v0.16.0 // indirect
-	golang.org/x/term v0.16.0 // indirect
+	golang.org/x/sys v0.17.0 // indirect
+	golang.org/x/term v0.17.0 // indirect
 	golang.org/x/tools v0.17.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240125205218-1f4bbc51befe // indirect
@@ -210,3 +206,5 @@ replace github.com/imdario/mergo => github.com/imdario/mergo v0.3.16
 replace github.com/spf13/viper => github.com/spf13/viper v1.18.1
 
 replace github.com/mabunixda/wattpilot => github.com/mabunixda/wattpilot v1.6.2
+
+// replace github.com/evcc-io/tesla-proxy-client => ../tesla-proxy-client

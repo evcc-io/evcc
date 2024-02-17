@@ -30,8 +30,8 @@ import (
 	"github.com/volkszaehler/mbmd/encoding"
 )
 
-// Mennekes is an api.Charger implementation
-type Mennekes struct {
+// MennekesCompact is an api.Charger implementation
+type MennekesCompact struct {
 	log  *util.Logger
 	conn *modbus.Connection
 }
@@ -63,11 +63,11 @@ const (
 )
 
 func init() {
-	registry.Add("mennekes", NewMennekesFromConfig)
+	registry.Add("mennekes-compact", NewMennekesCompactFromConfig)
 }
 
-// NewMennekesFromConfig creates a new Mennekes ModbusTCP charger
-func NewMennekesFromConfig(other map[string]interface{}) (api.Charger, error) {
+// NewMennekesCompactFromConfig creates a new Mennekes ModbusTCP charger
+func NewMennekesCompactFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
 		modbus.Settings `mapstructure:",squash"`
 		Timeout         time.Duration
@@ -83,11 +83,11 @@ func NewMennekesFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	return NewMennekes(cc.URI, cc.Device, cc.Comset, cc.Baudrate, modbus.ProtocolFromRTU(cc.RTU), cc.ID, cc.Timeout)
+	return NewMennekesCompact(cc.URI, cc.Device, cc.Comset, cc.Baudrate, modbus.ProtocolFromRTU(cc.RTU), cc.ID, cc.Timeout)
 }
 
-// NewMennekes creates Mennekes charger
-func NewMennekes(uri, device, comset string, baudrate int, proto modbus.Protocol, slaveID uint8, timeout time.Duration) (api.Charger, error) {
+// NewMennekesCompact creates Mennekes charger
+func NewMennekesCompact(uri, device, comset string, baudrate int, proto modbus.Protocol, slaveID uint8, timeout time.Duration) (api.Charger, error) {
 	conn, err := modbus.NewConnection(uri, device, comset, baudrate, proto, slaveID)
 	if err != nil {
 		return nil, err
@@ -104,7 +104,7 @@ func NewMennekes(uri, device, comset string, baudrate int, proto modbus.Protocol
 	log := util.NewLogger("mennekes")
 	conn.Logger(log.TRACE)
 
-	wb := &Mennekes{
+	wb := &MennekesCompact{
 		log:  log,
 		conn: conn,
 	}
@@ -115,7 +115,7 @@ func NewMennekes(uri, device, comset string, baudrate int, proto modbus.Protocol
 	return wb, err
 }
 
-func (wb *Mennekes) heartbeat(timeout time.Duration) {
+func (wb *MennekesCompact) heartbeat(timeout time.Duration) {
 	for range time.Tick(timeout) {
 		if _, err := wb.conn.WriteSingleRegister(mennekesRegHeartbeat, mennekesHeartbeatToken); err != nil {
 			wb.log.ERROR.Println("heartbeat:", err)
@@ -124,7 +124,7 @@ func (wb *Mennekes) heartbeat(timeout time.Duration) {
 }
 
 // Status implements the api.Charger interface
-func (wb *Mennekes) Status() (api.ChargeStatus, error) {
+func (wb *MennekesCompact) Status() (api.ChargeStatus, error) {
 	b, err := wb.conn.ReadHoldingRegisters(mennekesRegEvseState, 1)
 	if err != nil {
 		return api.StatusNone, err
@@ -146,7 +146,7 @@ func (wb *Mennekes) Status() (api.ChargeStatus, error) {
 }
 
 // Enabled implements the api.Charger interface
-func (wb *Mennekes) Enabled() (bool, error) {
+func (wb *MennekesCompact) Enabled() (bool, error) {
 	b, err := wb.conn.ReadHoldingRegisters(mennekesRegChargingReleaseEM, 1)
 	if err != nil {
 		return false, err
@@ -156,7 +156,7 @@ func (wb *Mennekes) Enabled() (bool, error) {
 }
 
 // Enable implements the api.Charger interface
-func (wb *Mennekes) Enable(enable bool) error {
+func (wb *MennekesCompact) Enable(enable bool) error {
 	var u uint16
 	if enable {
 		u = mennekesAllowed
@@ -166,14 +166,14 @@ func (wb *Mennekes) Enable(enable bool) error {
 }
 
 // MaxCurrent implements the api.Charger interface
-func (wb *Mennekes) MaxCurrent(current int64) error {
+func (wb *MennekesCompact) MaxCurrent(current int64) error {
 	return wb.MaxCurrentMillis(float64(current))
 }
 
-var _ api.ChargerEx = (*Mennekes)(nil)
+var _ api.ChargerEx = (*MennekesCompact)(nil)
 
 // MaxCurrentMillis implements the api.ChargerEx interface
-func (wb *Mennekes) MaxCurrentMillis(current float64) error {
+func (wb *MennekesCompact) MaxCurrentMillis(current float64) error {
 	b := make([]byte, 4)
 	binary.BigEndian.PutUint32(b, math.Float32bits(float32(current)))
 
@@ -182,7 +182,7 @@ func (wb *Mennekes) MaxCurrentMillis(current float64) error {
 }
 
 // CurrentPower implements the api.Meter interface
-func (wb *Mennekes) CurrentPower() (float64, error) {
+func (wb *MennekesCompact) CurrentPower() (float64, error) {
 	b, err := wb.conn.ReadHoldingRegisters(mennekesRegPower, 2)
 	if err != nil {
 		return 0, err
@@ -191,10 +191,10 @@ func (wb *Mennekes) CurrentPower() (float64, error) {
 	return float64(encoding.Float32(b)), nil
 }
 
-var _ api.MeterEnergy = (*Mennekes)(nil)
+var _ api.MeterEnergy = (*MennekesCompact)(nil)
 
 // TotalEnergy implements the api.MeterEnergy interface
-func (wb *Mennekes) TotalEnergy() (float64, error) {
+func (wb *MennekesCompact) TotalEnergy() (float64, error) {
 	b, err := wb.conn.ReadHoldingRegisters(mennekesRegChargedEnergyTotal, 2)
 	if err != nil {
 		return 0, err
@@ -203,22 +203,22 @@ func (wb *Mennekes) TotalEnergy() (float64, error) {
 	return float64(encoding.Float32(b)), nil
 }
 
-var _ api.PhaseCurrents = (*Mennekes)(nil)
+var _ api.PhaseCurrents = (*MennekesCompact)(nil)
 
 // Currents implements the api.PhaseCurrents interface
-func (wb *Mennekes) Currents() (float64, float64, float64, error) {
+func (wb *MennekesCompact) Currents() (float64, float64, float64, error) {
 	return wb.getPhaseValues(mennekesRegCurrents)
 }
 
-var _ api.PhaseVoltages = (*Mennekes)(nil)
+var _ api.PhaseVoltages = (*MennekesCompact)(nil)
 
 // Voltages implements the api.PhaseVoltages interface
-func (wb *Mennekes) Voltages() (float64, float64, float64, error) {
+func (wb *MennekesCompact) Voltages() (float64, float64, float64, error) {
 	return wb.getPhaseValues(mennekesRegVoltages)
 }
 
 // getPhaseValues returns 3 sequential phase values
-func (wb *Mennekes) getPhaseValues(reg uint16) (float64, float64, float64, error) {
+func (wb *MennekesCompact) getPhaseValues(reg uint16) (float64, float64, float64, error) {
 	b, err := wb.conn.ReadHoldingRegisters(reg, 6)
 	if err != nil {
 		return 0, 0, 0, err
@@ -233,10 +233,10 @@ func (wb *Mennekes) getPhaseValues(reg uint16) (float64, float64, float64, error
 }
 
 /*
-var _ api.ChargeRater = (*Mennekes)(nil)
+var _ api.ChargeRater = (*MennekesCompact)(nil)
 
 // ChargedEnergy implements the api.MeterEnergy interface
-func (wb *Mennekes) ChargedEnergy() (float64, error) {
+func (wb *MennekesCompact) ChargedEnergy() (float64, error) {
 	b, err := wb.conn.ReadHoldingRegisters(mennekesRegChargedEnergySession, 2)
 	if err != nil {
 		return 0, err
@@ -245,10 +245,10 @@ func (wb *Mennekes) ChargedEnergy() (float64, error) {
 	return float64(encoding.Float32(b)), err
 }
 
-var _ api.ChargeTimer = (*Mennekes)(nil)
+var _ api.ChargeTimer = (*MennekesCompact)(nil)
 
 // ChargingTime implements the api.ChargeTimer interface
-func (wb *Mennekes) ChargingTime() (time.Duration, error) {
+func (wb *MennekesCompact) ChargingTime() (time.Duration, error) {
 	b, err := wb.conn.ReadHoldingRegisters(mennekesRegDurationSession, 2)
 	if err != nil {
 		return 0, err
@@ -258,10 +258,10 @@ func (wb *Mennekes) ChargingTime() (time.Duration, error) {
 }
 */
 
-var _ api.PhaseSwitcher = (*Mennekes)(nil)
+var _ api.PhaseSwitcher = (*MennekesCompact)(nil)
 
 // Phases1p3p implements the api.PhaseSwitcher interface
-func (wb *Mennekes) Phases1p3p(phases int) error {
+func (wb *MennekesCompact) Phases1p3p(phases int) error {
 	var u uint16
 	if phases == 1 {
 		u = 1
@@ -271,10 +271,10 @@ func (wb *Mennekes) Phases1p3p(phases int) error {
 	return err
 }
 
-var _ api.Diagnosis = (*Mennekes)(nil)
+var _ api.Diagnosis = (*MennekesCompact)(nil)
 
 // Diagnose implements the api.Diagnosis interface
-func (wb *Mennekes) Diagnose() {
+func (wb *MennekesCompact) Diagnose() {
 	if b, err := wb.conn.ReadHoldingRegisters(mennekesRegModbusVersion, 1); err == nil {
 		fmt.Printf("\tModbus: %03X\n", encoding.Uint16(b))
 	}

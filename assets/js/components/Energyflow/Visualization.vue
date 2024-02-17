@@ -150,7 +150,10 @@ export default {
 			return (100 / this.totalAdjusted) * power + "%";
 		},
 		fmtBarValue: function (watt) {
-			const withUnit = this.powerLabelEnoughSpace(watt);
+			if (!this.enoughSpaceForValue(watt)) {
+				return "";
+			}
+			const withUnit = this.enoughSpaceForUnit(watt);
 			return this.fmtKw(watt, this.powerInKw, withUnit);
 		},
 		powerLabelAvailableSpace(power) {
@@ -158,7 +161,10 @@ export default {
 			const percent = (100 / this.totalAdjusted) * power;
 			return (this.width / 100) * percent;
 		},
-		powerLabelEnoughSpace(power) {
+		enoughSpaceForValue(power) {
+			return this.powerLabelAvailableSpace(power) > 40;
+		},
+		enoughSpaceForUnit(power) {
 			return this.powerLabelAvailableSpace(power) > 60;
 		},
 		hideLabelIcon(power, minWidth = 32) {

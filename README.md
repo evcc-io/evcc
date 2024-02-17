@@ -42,7 +42,7 @@ You'll find everything you need in our [documentation](https://docs.evcc.io/).
 
 ## Contribute
 
-To build evcc from source, [Go][1] 1.21 and [Node][2] 18 are required.
+To build evcc from source, [Go][1] 1.22 and [Node][2] 18 are required.
 
 Build and run go backend. The UI becomes available at http://127.0.0.1:7070/
 
@@ -134,5 +134,5 @@ While evcc is open source, we would also like to encourage vendors to provide op
 
 The personal sponsor token requires a [Github Sponsorship](https://github.com/sponsors/evcc-io) and can be requested at [sponsor.evcc.io](https://sponsor.evcc.io/).
 
-[1]: https://golang.org
+[1]: https://go.dev
 [2]: https://nodejs.org/
