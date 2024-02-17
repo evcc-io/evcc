@@ -123,10 +123,11 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 			Base: hc.Transport,
 		}
 
-		tc, err := teslaclient.NewClient(context.Background(), teslaclient.WithClient(pc), teslaclient.WithBaseURL(tesla.ProxyBaseUrl))
+		tc, err := teslaclient.NewClient(context.Background(), teslaclient.WithClient(pc))
 		if err != nil {
 			return nil, err
 		}
+		tc.SetBaseUrl(tesla.ProxyBaseUrl)
 
 		vehicle, err := tc.Vehicle(vehicle.Vin)
 		if err != nil {

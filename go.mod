@@ -29,7 +29,7 @@ require (
 	github.com/eclipse/paho.mqtt.golang v1.4.3
 	github.com/enbility/cemd v0.2.2
 	github.com/enbility/eebus-go v0.2.0
-	github.com/evcc-io/tesla-proxy-client v0.0.0-20240217105146-44a7844aa5a2
+	github.com/evcc-io/tesla-proxy-client v0.0.0-20240217113313-a49f391e5570
 	github.com/fatih/structs v1.1.0
 	github.com/glebarez/sqlite v1.10.0
 	github.com/go-http-utils/etag v0.0.0-20161124023236-513ea8f21eb1
