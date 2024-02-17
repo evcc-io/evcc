@@ -14,12 +14,19 @@ type Controller struct {
 	vehicle *tesla.Vehicle
 }
 
-// NewController creates a vehicle charge controller
+// NewController creates a vehicle current and charge controller
 func NewController(vehicle *tesla.Vehicle) *Controller {
 	impl := &Controller{
 		vehicle: vehicle,
 	}
 	return impl
+}
+
+var _ api.CurrentController = (*Controller)(nil)
+
+// StartCharge implements the api.VehicleChargeController interface
+func (v *Controller) MaxCurrent(current int64) error {
+	return apiError(v.vehicle.SetChargingAmps(int(current)))
 }
 
 var _ api.VehicleChargeController = (*Controller)(nil)
