@@ -95,8 +95,6 @@ export default {
 		effectivePlanSoc: Number,
 		effectivePlanTime: String,
 		enabled: Boolean,
-		guardAction: String,
-		guardRemainingInterpolated: Number,
 		heating: Boolean,
 		id: [String, Number],
 		integratedDevice: Boolean,

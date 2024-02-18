@@ -94,6 +94,7 @@ power = "Leeschtung"
 [main.loadpointSettings]
 currents = "Ladestroum"
 default = "Standard"
+disclaimerHint = "Notiz:"
 title = "Astellungen {0}"
 vehicle = "Gefier"
 

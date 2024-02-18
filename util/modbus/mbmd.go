@@ -21,11 +21,9 @@ func ParseOperation(dev meters.Device, measurement string) (Operation, error) {
 	// if measurement cannot be parsed it could be SunSpec model/block/point
 	op.MBMD.IEC61850, err = meters.MeasurementString(measurement)
 	if err != nil {
-		suns, err := ParsePoint(measurement)
-		if err == nil {
-			op.SunSpec = suns[0]
+		if op.SunSpec, err = ParsePoint(measurement); err != nil {
+			return op, err
 		}
-		return op, err
 	}
 
 	// for RS485 check if producer supports the measurement

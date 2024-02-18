@@ -138,7 +138,6 @@ loadpoints:
     disable: # pv mode disable behavior
       delay: 3m # threshold must be exceeded for this long
       threshold: 0 # maximum import power (W)
-    guardDuration: 5m # switch charger contactor not more often than this (default 5m)
 
 # tariffs are the fixed or variable tariffs
 tariffs:

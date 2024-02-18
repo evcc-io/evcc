@@ -1,5 +1,5 @@
 <template>
-	<label class="position-relative d-block" :for="id">
+	<label class="position-relative d-block" :for="id" role="button">
 		<select :id="id" :value="selected" class="custom-select" @change="change">
 			<option
 				v-for="{ name, value, count, disabled } in options"
@@ -42,6 +42,7 @@ export default {
 	top: 0;
 	bottom: 0;
 	width: 100%;
+	cursor: pointer;
 	position: absolute;
 	opacity: 0;
 	-webkit-appearance: menulist-button;

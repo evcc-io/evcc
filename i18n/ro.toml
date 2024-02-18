@@ -160,6 +160,7 @@ power = "Putere"
 [main.loadpointSettings]
 currents = "Curent încărcare"
 default = "default"
+disclaimerHint = "Nota:"
 title = "Setări {0}"
 vehicle = "Vehicul"
 

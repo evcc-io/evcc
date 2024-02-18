@@ -61,8 +61,8 @@ func init() {
 // NewAmperfiedFromConfig creates a Amperfied charger from generic config
 func NewAmperfiedFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
-		modbus.TcpSettings
-		Phases1p3p bool
+		modbus.TcpSettings `mapstructure:",squash"`
+		Phases1p3p         bool
 	}{
 		TcpSettings: modbus.TcpSettings{
 			ID: 255,
