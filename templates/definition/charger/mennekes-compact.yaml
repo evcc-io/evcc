@@ -1,4 +1,5 @@
-template: mennekes
+template: mennekes-compact
+covers: ["mennekes"]
 products:
   - brand: Mennekes
     description:
@@ -19,5 +20,5 @@ params:
     comset: 8N2
     id: 50
 render: |
-  type: mennekes
+  type: mennekes-compact
   {{- include "modbus" . }}

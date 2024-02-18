@@ -1,7 +1,7 @@
 name: Nightly Build
 
 env:
-  GO_VERSION: ^1.21
+  GO_VERSION: ^1.22
 
 on:
   schedule: # runs on the default branch: master

@@ -488,7 +488,7 @@ func (c *Easee) Enable(enable bool) (err error) {
 		return err
 	}
 
-	if c.authorize { // authenticating charger does not mingle with DCC, no need for below operations
+	if action == easee.ChargeStart { // ChargeStart does not mingle with DCC, no need for below operations
 		return nil
 	}
 
