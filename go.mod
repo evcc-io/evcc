@@ -25,8 +25,9 @@ require (
 	github.com/dmarkham/enumer v1.5.9
 	github.com/dylanmei/iso8601 v0.1.0
 	github.com/eclipse/paho.mqtt.golang v1.4.3
-	github.com/enbility/cemd v0.2.2
-	github.com/enbility/eebus-go v0.2.0
+	github.com/enbility/cemd v0.2.3-0.20240210103742-78ea63e43553
+	github.com/enbility/eebus-go v0.2.1-0.20240218151147-ff26e3c2d343
+	github.com/enbility/spine-go v0.0.0-20240215131224-a7c6b999150f
 	github.com/evcc-io/tesla-proxy-client v0.0.0-20240217133531-c8fc01cb2151
 	github.com/fatih/structs v1.1.0
 	github.com/glebarez/sqlite v1.10.0
@@ -91,7 +92,7 @@ require (
 	gitlab.com/bboehmke/sunny v0.16.0
 	go.uber.org/mock v0.4.0
 	golang.org/x/crypto/x509roots/fallback v0.0.0-20240108164429-dbb6ec16ecef
-	golang.org/x/exp v0.0.0-20240119083558-1b970713d09a
+	golang.org/x/exp v0.0.0-20240205201215-2c58cdc269a3
 	golang.org/x/net v0.21.0
 	golang.org/x/oauth2 v0.17.0
 	golang.org/x/sync v0.6.0
@@ -114,6 +115,8 @@ require (
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
+	github.com/enbility/ship-go v0.0.0-20240218150505-eb6afd77b082 // indirect
+	github.com/enbility/zeroconf/v2 v2.0.0-20240210101930-d0004078577b // indirect
 	github.com/fatih/color v1.16.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
@@ -129,11 +132,11 @@ require (
 	github.com/gobwas/httphead v0.1.0 // indirect
 	github.com/gobwas/pool v0.2.1 // indirect
 	github.com/gobwas/ws v1.3.2 // indirect
-	github.com/golang/mock v1.6.0 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/gorilla/websocket v1.5.1 // indirect
 	github.com/grid-x/serial v0.0.0-20211107191517-583c7356b3aa // indirect
+	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/holoplot/go-avahi v1.0.1 // indirect
 	github.com/huandu/xstrings v1.4.0 // indirect
@@ -184,7 +187,7 @@ require (
 	gitlab.com/c0b/go-ordered-json v0.0.0-20201030195603-febf46534d5a // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/crypto v0.19.0 // indirect
-	golang.org/x/mod v0.14.0 // indirect
+	golang.org/x/mod v0.15.0 // indirect
 	golang.org/x/sys v0.17.0 // indirect
 	golang.org/x/term v0.17.0 // indirect
 	golang.org/x/tools v0.17.0 // indirect

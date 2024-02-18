@@ -17,7 +17,7 @@ import (
 	"github.com/enbility/cemd/cem"
 	"github.com/enbility/cemd/emobility"
 	"github.com/enbility/eebus-go/service"
-	"github.com/enbility/eebus-go/spine/model"
+	"github.com/enbility/spine-go/model"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/machine"
 )
@@ -123,6 +123,7 @@ func NewServer(other map[string]interface{}) (*EEBus, error) {
 	c.Cem.EnableEmobility(emobility.EmobilityConfiguration{
 		CoordinatedChargingEnabled: false,
 	})
+	c.Cem.EnableGrid()
 
 	return c, nil
 }
