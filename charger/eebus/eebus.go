@@ -13,10 +13,15 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/enbility/cemd/cem"
 	"github.com/enbility/cemd/emobility"
-	"github.com/enbility/eebus-go/service"
+	"github.com/enbility/cemd/grid"
+	"github.com/enbility/eebus-go/api"
+	shipapi "github.com/enbility/ship-go/api"
+	"github.com/enbility/ship-go/cert"
+	"github.com/enbility/ship-go/logging"
 	"github.com/enbility/spine-go/model"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/machine"
@@ -34,14 +39,16 @@ type EEBusClientCBs struct {
 }
 
 type EEBus struct {
-	Cem *cem.CemImpl
-
 	mux sync.Mutex
 	log *util.Logger
 
 	SKI string
 
 	clients map[string]EEBusClientCBs
+
+	cem               *cem.CemImpl
+	emobilityScenario *emobility.EmobilitySolution
+	gridScenario      *grid.GridSolution
 }
 
 var Instance *EEBus
@@ -91,9 +98,11 @@ func NewServer(other map[string]interface{}) (*EEBus, error) {
 	}
 
 	// TODO: get the voltage from the site
-	configuration, err := service.NewConfiguration(
+	configuration, err := api.NewConfiguration(
 		EEBUSBrandName, EEBUSBrandName, EEBUSModel, serial,
-		model.DeviceTypeTypeEnergyManagementSystem, port, certificate, 230,
+		model.DeviceTypeTypeEnergyManagementSystem, []model.EntityTypeType{model.EntityTypeTypeCEM},
+		port, certificate,
+		230, 5*time.Second,
 	)
 	if err != nil {
 		return nil, err
@@ -116,19 +125,25 @@ func NewServer(other map[string]interface{}) (*EEBus, error) {
 		SKI:     ski,
 	}
 
-	c.Cem = cem.NewCEM(configuration, c, c)
-	if err := c.Cem.Setup(); err != nil {
+	c.cem = cem.NewCEM(configuration, c, c)
+	if err := c.cem.Setup(); err != nil {
 		return nil, err
 	}
-	c.Cem.EnableEmobility(emobility.EmobilityConfiguration{
+
+	c.emobilityScenario = emobility.NewEMobilitySolution(c.cem.Service, c.cem.Currency, emobility.EmobilityConfiguration{
 		CoordinatedChargingEnabled: false,
 	})
-	c.Cem.EnableGrid()
+	c.emobilityScenario.AddFeatures()
+	c.emobilityScenario.AddUseCases()
+
+	c.gridScenario = grid.NewGridScenario(c.cem.Service)
+	c.gridScenario.AddFeatures()
+	c.gridScenario.AddUseCases()
 
 	return c, nil
 }
 
-func (c *EEBus) RegisterEVSE(ski, ip string, connectHandler func(string), disconnectHandler func(string), dataProvider emobility.EmobilityDataProvider) *emobility.EMobilityImpl {
+func (c *EEBus) RegisterEVSE(ski, ip string, connectHandler func(string), disconnectHandler func(string), dataProvider emobility.EmobilityDataProvider) *emobility.EMobility {
 	ski = strings.ReplaceAll(ski, "-", "")
 	ski = strings.ReplaceAll(ski, " ", "")
 	ski = strings.ToLower(ski)
@@ -138,34 +153,29 @@ func (c *EEBus) RegisterEVSE(ski, ip string, connectHandler func(string), discon
 		c.log.FATAL.Fatal("The charger SKI can not be identical to the SKI of evcc!")
 	}
 
-	serviceDetails := service.NewServiceDetails(ski)
+	serviceDetails := shipapi.NewServiceDetails(ski)
 	serviceDetails.SetIPv4(ip)
 
 	c.mux.Lock()
 	defer c.mux.Unlock()
 	c.clients[ski] = EEBusClientCBs{onConnect: connectHandler, onDisconnect: disconnectHandler}
 
-	return c.Cem.RegisterEmobilityRemoteDevice(serviceDetails, dataProvider)
+	return c.emobilityScenario.RegisterRemoteDevice(serviceDetails, dataProvider).(*emobility.EMobility)
 }
 
 func (c *EEBus) Run() {
-	c.Cem.Start()
+	c.cem.Start()
 }
 
 func (c *EEBus) Shutdown() {
-	c.Cem.Shutdown()
+	c.cem.Shutdown()
 }
 
 // EEBUSServiceHandler
 
-// report the Ship ID of a newly trusted connection
-func (c *EEBus) RemoteServiceShipIDReported(service *service.EEBUSService, ski string, shipID string) {
-	// we should associated the Ship ID with the SKI and store it
-	// so the next connection can start trusted
-	c.log.DEBUG.Println("SKI", ski, "has Ship ID:", shipID)
-}
+var _ api.ServiceReaderInterface = (*EEBus)(nil)
 
-func (c *EEBus) RemoteSKIConnected(service *service.EEBUSService, ski string) {
+func (c *EEBus) RemoteSKIConnected(service api.ServiceInterface, ski string) {
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
@@ -176,7 +186,7 @@ func (c *EEBus) RemoteSKIConnected(service *service.EEBUSService, ski string) {
 	client.onConnect(ski)
 }
 
-func (c *EEBus) RemoteSKIDisconnected(service *service.EEBUSService, ski string) {
+func (c *EEBus) RemoteSKIDisconnected(service api.ServiceInterface, ski string) {
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
@@ -187,9 +197,22 @@ func (c *EEBus) RemoteSKIDisconnected(service *service.EEBUSService, ski string)
 	client.onDisconnect(ski)
 }
 
-func (h *EEBus) ReportServiceShipID(ski string, shipdID string) {}
+func (c *EEBus) VisibleRemoteServicesUpdated(service api.ServiceInterface, entries []shipapi.RemoteService) {
+}
+
+func (c *EEBus) ServiceShipIDUpdate(ski string, shipdID string) {
+}
+
+func (c *EEBus) ServicePairingDetailUpdate(ski string, detail *shipapi.ConnectionStateDetail) {
+}
+
+func (c *EEBus) AllowWaitingForTrust(ski string) bool {
+	return true
+}
 
 // EEBUS Logging interface
+
+var _ logging.LoggingInterface = (*EEBus)(nil)
 
 func (c *EEBus) Trace(args ...interface{}) {
 	c.log.TRACE.Println(args...)
@@ -227,7 +250,7 @@ func (c *EEBus) Errorf(format string, args ...interface{}) {
 
 // CreateCertificate returns a newly created EEBUS compatible certificate
 func CreateCertificate() (tls.Certificate, error) {
-	return service.CreateCertificate("", EEBUSBrandName, "DE", EEBUSDeviceCode)
+	return cert.CreateCertificate("", EEBUSBrandName, "DE", EEBUSDeviceCode)
 }
 
 // pemBlockForKey marshals private key into pem block

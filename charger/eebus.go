@@ -29,12 +29,14 @@ type minMax struct {
 }
 
 type EEBus struct {
-	ski       string
-	emobility emobility.EmobilityI
+	mux sync.Mutex
+	log *util.Logger
 
-	log     *util.Logger
 	lp      loadpoint.API
 	minMaxG func() (minMax, error)
+
+	ski       string
+	emobility *emobility.EMobility
 
 	communicationStandard emobility.EVCommunicationStandardType
 
@@ -51,8 +53,6 @@ type EEBus struct {
 	connected     bool
 	connectedC    chan bool
 	connectedTime time.Time
-
-	mux sync.Mutex
 }
 
 func init() {
