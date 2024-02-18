@@ -12,6 +12,8 @@ legendTopAutostart = "startuje automaticky"
 legendTopName = "dobíjení podporované baterií"
 legendTopSubline = "bez přerušování"
 modalTitle = "Nastavení baterie"
+discharge = "Zabránit vybití v rychlém režimu a plánovaném nabíjení."
+control = "Ovládání baterie"
 
 [batterySettings.bufferStart]
 full = "když je skoro plná"
@@ -165,3 +167,25 @@ label = "Min. Proud"
 
 [main.loadpointSettings.minSoc]
 description = "Vozidlo se “rychle” nabije na {0} % v solárním režimu. Poté pokračuje solárním přebytkem. Užitečné pro zajištění minimálního dojezdu i pro temnější dny."
+
+
+[config.form]
+example = "Příklad"
+optional = "volitelné"
+
+[config.battery]
+titleEdit = "Upravit měřič baterie"
+titleAdd = "Přidat měřič baterie"
+
+[config.deviceValue]
+capacity = "Kapacita"
+chargeStatus = "Stav"
+chargedEnergy = "Nabito"
+current = "Proud"
+phasePowers = "Výkon L1..L3"
+phaseVoltages = "Napětí L1..L3"
+power = "Výkon"
+range = "Rozsah"
+enabled = "Zapnuto"
+energy = "Energie"
+phaseCurrents = "Proud L1..L3"
