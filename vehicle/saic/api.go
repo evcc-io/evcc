@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -13,10 +14,22 @@ import (
 	"golang.org/x/oauth2"
 )
 
+const (
+	StatRunning = iota
+	StatValid
+	StatInvalid
+)
+
+type ConcurrentRequest struct {
+	Status int
+	Result requests.ChargeStatus
+}
+
 // API is an api.Vehicle implementation for SAIC cars
 type API struct {
 	*request.Helper
 	identity *Identity
+	request  ConcurrentRequest
 	Logger   *util.Logger
 }
 
@@ -32,8 +45,69 @@ func NewAPI(log *util.Logger, identity *Identity) *API {
 		Decorator: requests.Decorate,
 		Base:      v.Client.Transport,
 	}
+	v.request.Status = StatInvalid
 
 	return v
+}
+
+/*
+func (v *API) printAnswer() {
+	v.Logger.DEBUG.Printf("SOC:%d ", v.request.Result.ChrgMgmtData.BmsPackSOCDsp)
+	v.Logger.DEBUG.Printf("GUN:%d ", v.request.Result.RvsChargeStatus.ChargingGunState)
+	v.Logger.DEBUG.Printf("Chrg State:%d ", v.request.Result.ChrgMgmtData.BmsChrgSts)
+	v.Logger.DEBUG.Printf("Mileage:%d ", v.request.Result.RvsChargeStatus.Mileage)
+	v.Logger.DEBUG.Printf("Range:%d ", v.request.Result.RvsChargeStatus.FuelRangeElec)
+}
+*/
+
+func (v *API) doRepeatedRequest(url string, event_id string) error {
+	var req *http.Request
+
+	answer := requests.Answer{
+		Data: &v.request.Result,
+	}
+
+	token, err := v.identity.Token()
+	if err != nil {
+		v.request.Status = StatInvalid
+		return err
+	}
+
+	req, err = requests.CreateRequest(url,
+		http.MethodGet,
+		"",
+		request.JSONContent,
+		token.AccessToken,
+		event_id)
+	if err != nil {
+		v.request.Status = StatInvalid
+		return err
+	}
+
+	_, err = v.DoRequest(req, &answer)
+	if err == nil {
+		v.request.Status = StatValid
+	} else if err != api.ErrMustRetry {
+		v.request.Status = StatInvalid
+	}
+	return err
+}
+
+// This is running concurrently
+func (v *API) repeatRequest(url string, event_id string) {
+	var err error
+	var count = 0
+
+	v.request.Status = StatRunning
+	for err = api.ErrMustRetry; err == api.ErrMustRetry && count < 20; {
+		time.Sleep(2 * time.Second)
+		v.Logger.DEBUG.Printf("Starting repeated query. Count: %d\n", count)
+		err = v.doRepeatedRequest(url, event_id)
+		count++
+	}
+
+	v.Logger.DEBUG.Printf("Exitig repeated query. Count: %d\n", count)
+	//v.printAnswer()
 }
 
 func (v *API) DoRequest(req *http.Request, result *requests.Answer) (string, error) {
@@ -121,6 +195,18 @@ func (v *API) Status(vin string) (requests.ChargeStatus, error) {
 		Data: &res,
 	}
 
+	// Check if we are already running in the background
+	if v.request.Status == StatValid {
+		v.request.Status = StatInvalid
+		v.Logger.DEBUG.Printf("StatVaild. Returning stored value\n")
+		//v.printAnswer()
+		return v.request.Result, nil
+	} else if v.request.Status == StatRunning {
+		v.Logger.DEBUG.Printf("StatRunning. Exiting\n")
+		return res, api.ErrMustRetry
+	}
+	v.Logger.DEBUG.Printf("StatInvaild. Starting query\n")
+
 	token, err = v.identity.Token()
 	if err != nil {
 		return res, err
@@ -158,10 +244,20 @@ func (v *API) Status(vin string) (requests.ChargeStatus, error) {
 		token.AccessToken,
 		event_id)
 	if err != nil {
+		v.Logger.ERROR.Printf("Could not create request %s", err.Error())
 		return res, err
 	}
 
 	_, err = v.DoRequest(req, &answer)
+
+	// Continue checking....
+	if err == api.ErrMustRetry {
+		v.request.Status = StatRunning
+		v.Logger.DEBUG.Printf(" No answer yet. Continue status query in background\n")
+		go v.repeatRequest(url, event_id)
+	} else if err != nil {
+		v.Logger.ERROR.Printf("doRequest failed with %s", err.Error())
+	}
 
 	return res, err
 }
