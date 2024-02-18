@@ -56,10 +56,10 @@ func (m *Timer) Expired() bool {
 	res := !m.started.IsZero() && (m.clck.Since(m.started) >= wakeupTimeout)
 	if res {
 		m.wakeupAttemptsLeft--
-		if m.wakeupAttemptsLeft > 0 {
-			m.started = m.clck.Now()
-		} else {
+		if m.wakeupAttemptsLeft == 0 {
 			m.started = time.Time{}
+		} else {
+			m.started = m.clck.Now()
 		}
 	}
 
