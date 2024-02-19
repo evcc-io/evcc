@@ -162,31 +162,19 @@
 												<select
 													id="bufferStartSelect"
 													class="custom-select"
+													:value="selectedBufferStartSoc"
 													@change="changeBufferStart"
 												>
 													<option
-														v-for="option in [
-															'never',
-															'full',
-															'medium',
-															'low',
-														]"
-														:key="option"
-														:value="option"
+														v-for="option in bufferStartOptions"
+														:key="option.value"
+														:value="option.value"
 													>
-														{{
-															$t(
-																`batterySettings.bufferStart.${option}`
-															)
-														}}
+														{{ option.name }}
 													</option>
 												</select>
 												<span class="text-decoration-underline">
-													{{
-														$t(
-															`batterySettings.bufferStart.${bufferStartOption}`
-														)
-													}}
+													{{ bufferStartOption.name }}
 												</span>
 											</label>
 										</small>
@@ -311,6 +299,25 @@ export default {
 			if (!this.selectedBufferStartSoc) return 0;
 			return 100 - this.selectedBufferStartSoc;
 		},
+		bufferStartOptions() {
+			const options = [];
+			for (let i = 100; i >= this.bufferSoc; i -= 5) {
+				options.push({
+					value: i,
+					name: this.$t(`batterySettings.bufferStart.${i === 100 ? "full" : "above"}`, {
+						soc: this.fmtSoc(i),
+					}),
+				});
+			}
+			options.push({
+				value: 0,
+				name: this.$t("batterySettings.bufferStart.never"),
+			});
+			return options;
+		},
+		bufferStartOption() {
+			return this.bufferStartOptions.find((option) => this.bufferStartSoc >= option.value);
+		},
 		topHeight() {
 			return 100 - (this.bufferSoc || 100);
 		},
@@ -319,13 +326,6 @@ export default {
 		},
 		bottomHeight() {
 			return this.prioritySoc;
-		},
-		bufferStartOption() {
-			if (!this.selectedBufferStartSoc) return "never";
-			if (this.selectedBufferStartSoc >= this.bufferStartOptionToSoc("full")) return "full";
-			if (this.selectedBufferStartSoc >= this.bufferStartOptionToSoc("medium"))
-				return "medium";
-			return "low";
 		},
 		batteryDetails() {
 			if (!Array.isArray(this.battery)) {
@@ -382,52 +382,35 @@ export default {
 			this.isModalVisible = false;
 		},
 		changeBufferStart($event) {
-			this.setBufferStart($event.target.value);
+			this.setBufferStartSoc(parseInt($event.target.value, 10));
 		},
 		changePrioritySoc($event) {
-			const value = parseInt($event.target.value, 10);
-			if (value > this.bufferSoc) {
-				const startOption = this.bufferStartOption;
-				this.saveBufferSoc(value);
-				this.setBufferStart(startOption);
+			const soc = parseInt($event.target.value, 10);
+			if (soc > this.bufferSoc) {
+				this.saveBufferSoc(soc);
+				if (soc > this.bufferStartSoc && this.bufferStartSoc > 0) {
+					this.setBufferStartSoc(soc);
+				}
 			} else {
-				this.savePrioritySoc(value);
-			}
-		},
-		bufferStartOptionToSoc(option) {
-			const bufferSoc = this.selectedBufferSoc;
-			const bufferHeight = 100 - bufferSoc;
-			switch (option) {
-				case "low":
-					return bufferSoc + bufferHeight * 0.2;
-				case "medium":
-					return bufferSoc + bufferHeight * 0.5;
-				case "full":
-					return bufferSoc + bufferHeight * 0.8;
-				case "never":
-					return 0;
+				this.savePrioritySoc(soc);
 			}
 		},
 		toggleBufferStart() {
-			const next = {
-				never: "low",
-				low: "medium",
-				medium: "full",
-				full: "never",
-			};
-			const nextOption = next[this.bufferStartOption];
-			if (nextOption) {
-				this.setBufferStart(nextOption);
+			const options = this.bufferStartOptions.map((option) => option.value);
+			const index = options.findIndex((value) => this.bufferStartSoc >= value);
+			const nextIndex = index === 0 ? options.length - 1 : index - 1;
+			this.setBufferStartSoc(options[nextIndex]);
+		},
+		async setBufferStartSoc(soc) {
+			this.selectedBufferStartSoc = soc;
+			await this.saveBufferStartSoc(this.selectedBufferStartSoc);
+		},
+		async changeBufferSoc($event) {
+			const soc = parseInt($event.target.value, 10);
+			if (soc > this.bufferStartSoc && this.bufferStartSoc > 0) {
+				await this.setBufferStartSoc(soc);
 			}
-		},
-		setBufferStart(option) {
-			this.selectedBufferStartSoc = this.bufferStartOptionToSoc(option);
-			this.saveBufferStartSoc(this.selectedBufferStartSoc);
-		},
-		changeBufferSoc($event) {
-			const startOption = this.bufferStartOption;
-			this.saveBufferSoc(parseInt($event.target.value, 10));
-			this.setBufferStart(startOption);
+			await this.saveBufferSoc(soc);
 		},
 		async savePrioritySoc(soc) {
 			this.selectedPrioritySoc = soc;
