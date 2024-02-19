@@ -663,10 +663,10 @@ func configureSiteAndLoadpoints(conf globalConfig) (*core.Site, error) {
 		return nil, err
 	}
 
-	return configureSite(conf.Site, loadpoints, config.Instances(config.Vehicles().Devices()), tariffs, circuits)
+	return configureSite(conf.Site, loadpoints, tariffs, circuits)
 }
 
-func configureSite(conf map[string]interface{}, loadpoints []*core.Loadpoint, vehicles []api.Vehicle, tariffs *tariff.Tariffs, circuits map[string]*core.Circuit) (*core.Site, error) {
+func configureSite(conf map[string]interface{}, loadpoints []*core.Loadpoint, tariffs *tariff.Tariffs, circuits map[string]*core.Circuit) (*core.Site, error) {
 	// make list from values of circuit map
 	var circuitList []*core.Circuit
 	for k := range circuits {
