@@ -15,7 +15,7 @@ products:
 # capabilities: ["battery-control"]
 requirements:
   description:
-    de: Es wird empfohlen die Verbindung über einen LSE-3 Logger Stick mittels ModBus TCP herzustellen. Bei seriellem Anschluss via RS485 mit entsprechendem Adapter am COM Port ist zu beachten, dass Wechselrichterseitig für eine Terminierung des RS485 Busses zu sorgen ist.
+    de: Es wird empfohlen die Verbindung über einen LSE-3 Logger Stick mittels ModBus TCP herzustellen. Bei seriellem Anschluss via RS485 mit entsprechendem Adapter am COM Port ist zu beachten, dass wechselrichterseitig für eine Terminierung des RS485 Busses zu sorgen ist.
     en: It is recommended to establish the connection via a LSE-3 logger stick using ModBus TCP. If you are connecting via serial RS485 using the inverter's COM port and a proper adapter note that on the inverter's side you have to take care of a proper termination of the RS485 bus.
 params:
   - name: usage
