@@ -386,7 +386,7 @@ export default {
 		},
 		changePrioritySoc($event) {
 			const soc = parseInt($event.target.value, 10);
-			if (soc > this.bufferSoc) {
+			if (soc > (this.bufferSoc || 100)) {
 				this.saveBufferSoc(soc);
 				if (soc > this.bufferStartSoc && this.bufferStartSoc > 0) {
 					this.setBufferStartSoc(soc);
