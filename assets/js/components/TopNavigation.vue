@@ -28,7 +28,12 @@
 			</li>
 			<li><hr class="dropdown-divider" /></li>
 			<li>
-				<button type="button" class="dropdown-item" @click="openSettingsModal">
+				<button
+					type="button"
+					class="dropdown-item"
+					data-testid="topnavigation-settings"
+					@click="openSettingsModal"
+				>
 					<span
 						v-if="sponsorTokenExpires"
 						class="d-inline-block p-1 rounded-circle bg-danger border border-light rounded-circle"
@@ -37,7 +42,12 @@
 				</button>
 			</li>
 			<li v-if="batteryModalAvailable">
-				<button type="button" class="dropdown-item" @click="openBatterySettingsModal">
+				<button
+					type="button"
+					class="dropdown-item"
+					data-testid="topnavigation-battery"
+					@click="openBatterySettingsModal"
+				>
 					{{ $t("batterySettings.modalTitle") }}
 				</button>
 			</li>
