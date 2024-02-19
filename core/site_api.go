@@ -218,7 +218,7 @@ func (site *Site) SetBufferStartSoc(soc float64) error {
 		return ErrBatteryNotConfigured
 	}
 
-	if soc != 0 && soc <= site.bufferSoc {
+	if soc != 0 && soc < site.bufferSoc {
 		return errors.New("buffer start soc must be larger than buffer soc")
 	}
 

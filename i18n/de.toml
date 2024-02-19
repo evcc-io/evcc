@@ -16,9 +16,8 @@ legendTopSubline = "ohne Unterbrechungen"
 modalTitle = "Batterieeinstellungen"
 
 [batterySettings.bufferStart]
-full = "wenn fast voll"
-low = "wenn etwas voll"
-medium = "wenn halbvoll"
+above = "wenn über {soc}"
+full = "wenn auf {soc}"
 never = "nur mit genug PV-Überschuss"
 
 [config]

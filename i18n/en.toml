@@ -16,9 +16,8 @@ legendTopSubline = "without interruptions"
 modalTitle = "Battery Settings"
 
 [batterySettings.bufferStart]
-full = "when nearly full"
-low = "when somewhat full"
-medium = "when half full"
+above = "when above {soc}"
+full = "when at {soc}"
 never = "only with enough surplus"
 
 [config]
