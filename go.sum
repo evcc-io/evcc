@@ -74,6 +74,8 @@ github.com/bgentry/speakeasy v0.1.0/go.mod h1:+zsyZBPWlz7T6j88CTgSN5bM796AkVf0kB
 github.com/bitly/go-simplejson v0.5.0 h1:6IH+V8/tVMab511d5bn4M7EwGXZf9Hj6i2xSwkNEM+Y=
 github.com/bitly/go-simplejson v0.5.0/go.mod h1:cXHtHw4XUPsvGaxgjIAn8PhEWG9NfngEKAMDJEczWVA=
 github.com/bmatcuk/doublestar v1.1.1/go.mod h1:UD6OnuiIn0yFxxA2le/rnRU1G4RaI4UvFv1sNto9p6w=
+github.com/bogosj/tesla v1.3.1 h1:2iTieXh8jqG8FGWs63aQfRWbD7toLUm6fQ7677eevIE=
+github.com/bogosj/tesla v1.3.1/go.mod h1:JvkjZAswd288BeRYd37fKqyYKLcDj3E5oY/OuLzndaI=
 github.com/casbin/casbin/v2 v2.1.2/go.mod h1:YcPU1XXisHhLzuxH9coDNf2FbKpjGlbCg3n9yuLkIJQ=
 github.com/cenkalti/backoff v2.2.1+incompatible/go.mod h1:90ReRw6GdpyfrHakVjL/QHaoyV4aDUVVkXQJJJ3NXXM=
 github.com/cenkalti/backoff/v4 v4.2.1 h1:y4OZtCnogmCPw98Zjyt5a6+QwPLGkiQsYW5oUqylYbM=
@@ -132,8 +134,8 @@ github.com/envoyproxy/go-control-plane v0.9.1-0.20191026205805-5f8ba28d4473/go.m
 github.com/envoyproxy/protoc-gen-validate v0.1.0/go.mod h1:iSmxcyjqTsJpI2R4NaDN7+kN2VEUnK/pcBlmesArF7c=
 github.com/evcc-io/modbus v0.0.0-20230705160100-23e1df2c01c3 h1:QBtLqy85cy9KLRWqKxX+42bN1rWti8iU7pL7Vwf2UbE=
 github.com/evcc-io/modbus v0.0.0-20230705160100-23e1df2c01c3/go.mod h1:qVX2WhsI5xyAoM6I/MV1bXSKBPdLAjp7pCvieO/S0AY=
-github.com/evcc-io/tesla-proxy-client v0.0.0-20240217133531-c8fc01cb2151 h1:nnRPTOA++dAAzY/bOJbsXquI1UgSXey4k8so2i6o96E=
-github.com/evcc-io/tesla-proxy-client v0.0.0-20240217133531-c8fc01cb2151/go.mod h1:zWtAweBqXJTk3HSrPSecz3Q3a2hAUQ4vOE6paJfn03I=
+github.com/evcc-io/tesla-proxy-client v0.0.0-20240219081629-3afc7df83f15 h1:KWuX06b4nUyghzzN9QpAzC7kCW8Re9uL4ceZ1N04qGQ=
+github.com/evcc-io/tesla-proxy-client v0.0.0-20240219081629-3afc7df83f15/go.mod h1:zWtAweBqXJTk3HSrPSecz3Q3a2hAUQ4vOE6paJfn03I=
 github.com/fatih/camelcase v1.0.0/go.mod h1:yN2Sb0lFhZJUdVvtELVWefmrXpuZESvPmqwoZc+/fpc=
 github.com/fatih/color v1.7.0/go.mod h1:Zm6kSWBoL9eyXnKyktHP6abPY2pDugNf5KwzbycvMj4=
 github.com/fatih/color v1.16.0 h1:zmkK9Ngbjj+K0yRhTVONQh1p/HknKYSlNT+vZCzyokM=

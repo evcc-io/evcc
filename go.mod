@@ -17,6 +17,7 @@ require (
 	github.com/basgys/goxml2json v1.1.0
 	github.com/basvdlei/gotsmart v0.0.3
 	github.com/benbjohnson/clock v1.3.5
+	github.com/bogosj/tesla v1.3.1
 	github.com/cenkalti/backoff/v4 v4.2.1
 	github.com/cloudfoundry/jibber_jabber v0.0.0-20151120183258-bcc4c8345a21
 	github.com/containrrr/shoutrrr v0.8.0
@@ -27,7 +28,7 @@ require (
 	github.com/eclipse/paho.mqtt.golang v1.4.3
 	github.com/enbility/cemd v0.2.2
 	github.com/enbility/eebus-go v0.2.0
-	github.com/evcc-io/tesla-proxy-client v0.0.0-20240217133531-c8fc01cb2151
+	github.com/evcc-io/tesla-proxy-client v0.0.0-20240219081629-3afc7df83f15
 	github.com/fatih/structs v1.1.0
 	github.com/glebarez/sqlite v1.10.0
 	github.com/go-http-utils/etag v0.0.0-20161124023236-513ea8f21eb1
