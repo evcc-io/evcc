@@ -156,6 +156,8 @@ export default {
 <style scoped>
 .site {
 	min-height: 100vh;
+	padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom)
+		env(safe-area-inset-left);
 }
 .content-area {
 	flex-grow: 1;

@@ -460,3 +460,7 @@ input[type="time"]::-webkit-calendar-picker-indicator {
 	width: calc(1.2rem + 0.75rem);
 	border-radius: 3rem;
 }
+
+html.app .hide-in-app {
+	display: none !important;
+}

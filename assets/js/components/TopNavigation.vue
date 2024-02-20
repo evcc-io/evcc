@@ -86,6 +86,11 @@
 					></shopicon-regular-newtab>
 				</a>
 			</li>
+			<li>
+				<button type="button" class="dropdown-item" @click="openNativeSettings">
+					App Settings
+				</button>
+			</li>
 		</ul>
 	</div>
 </template>
@@ -179,6 +184,9 @@ export default {
 		openGridSettingsModal() {
 			const modal = Modal.getOrCreateInstance(document.getElementById("gridSettingsModal"));
 			modal.show();
+		},
+		openNativeSettings() {
+			window.ReactNativeWebView.postMessage("settings");
 		},
 	},
 };

@@ -1,5 +1,5 @@
 <template>
-	<div class="container px-4">
+	<div class="sessions container px-4">
 		<TopHeader :title="$t('sessions.title')" />
 		<div class="row">
 			<main class="col-12">
@@ -608,6 +608,10 @@ export default {
 };
 </script>
 <style scoped>
+.sessions {
+	padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom)
+		env(safe-area-inset-left);
+}
 .table {
 	border-collapse: separate;
 	border-spacing: 0;
