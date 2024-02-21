@@ -183,6 +183,10 @@ tariffs:
     # charges: # optional, additional charges per kWh
     # tax: # optional, additional tax (0.1 for 10%)
 
+    # type: pun # PUN - Prezzo unico nazionale - Hourly Italian wholesale prices 
+    # charges: 0 # optional, additional charges per kWh
+    # tax: 0 # optional, additional tax (0.1 for 10%)
+
     # type: custom # price from a plugin source; see https://docs.evcc.io/docs/reference/plugins
     # price:
     #   source: http
