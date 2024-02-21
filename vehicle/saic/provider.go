@@ -9,6 +9,18 @@ import (
 	"github.com/evcc-io/evcc/vehicle/saic/requests"
 )
 
+const (
+	Target40  = 1
+	Target50  = 2
+	Target60  = 3
+	Target70  = 4
+	Target80  = 5
+	Target90  = 6
+	Target100 = 7
+)
+
+var TargetSocVals = [...]int{0, 40, 50, 60, 70, 80, 90, 100}
+
 // https://github.com/SAIC-iSmart-API/reverse-engineering
 
 // Provider implements the vehicle api
@@ -109,6 +121,25 @@ func (v *Provider) Odometer() (float64, error) {
 	}
 
 	return float64(res.RvsChargeStatus.Mileage) / 10.0, nil
+}
+
+var _ api.SocLimiter = (*Provider)(nil)
+
+// TargetSoc implements the api.SocLimiter interface
+func (v *Provider) TargetSoc() (float64, error) {
+	var result = 0
+	res, err := v.status.Get()
+	if err != nil {
+		return 0, err
+	}
+
+	index := res.ChrgMgmtData.BmsOnBdChrgTrgtSOCDspCmd
+
+	if index <= Target100 {
+		result = TargetSocVals[res.ChrgMgmtData.BmsOnBdChrgTrgtSOCDspCmd]
+	}
+
+	return float64(result), err
 }
 
 var _ api.Resurrector = (*Provider)(nil)
