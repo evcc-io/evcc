@@ -134,8 +134,8 @@ github.com/envoyproxy/go-control-plane v0.9.1-0.20191026205805-5f8ba28d4473/go.m
 github.com/envoyproxy/protoc-gen-validate v0.1.0/go.mod h1:iSmxcyjqTsJpI2R4NaDN7+kN2VEUnK/pcBlmesArF7c=
 github.com/evcc-io/modbus v0.0.0-20230705160100-23e1df2c01c3 h1:QBtLqy85cy9KLRWqKxX+42bN1rWti8iU7pL7Vwf2UbE=
 github.com/evcc-io/modbus v0.0.0-20230705160100-23e1df2c01c3/go.mod h1:qVX2WhsI5xyAoM6I/MV1bXSKBPdLAjp7pCvieO/S0AY=
-github.com/evcc-io/tesla-proxy-client v0.0.0-20240220130921-cdf51549e213 h1:iHnuiPRtVoHtHd82y50sDQmJbn07xPQ3fr48+qLlvl8=
-github.com/evcc-io/tesla-proxy-client v0.0.0-20240220130921-cdf51549e213/go.mod h1:zWtAweBqXJTk3HSrPSecz3Q3a2hAUQ4vOE6paJfn03I=
+github.com/evcc-io/tesla-proxy-client v0.0.0-20240221194046-4168b3759701 h1:3JplY3KS6KMDVDNAU+3+KWmSWmoHIU34qwuIpW6SiHk=
+github.com/evcc-io/tesla-proxy-client v0.0.0-20240221194046-4168b3759701/go.mod h1:zWtAweBqXJTk3HSrPSecz3Q3a2hAUQ4vOE6paJfn03I=
 github.com/fatih/camelcase v1.0.0/go.mod h1:yN2Sb0lFhZJUdVvtELVWefmrXpuZESvPmqwoZc+/fpc=
 github.com/fatih/color v1.7.0/go.mod h1:Zm6kSWBoL9eyXnKyktHP6abPY2pDugNf5KwzbycvMj4=
 github.com/fatih/color v1.16.0 h1:zmkK9Ngbjj+K0yRhTVONQh1p/HknKYSlNT+vZCzyokM=
