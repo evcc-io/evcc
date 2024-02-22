@@ -42,7 +42,7 @@ func NewMercedesFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	if token.AccessToken == "" || token.RefreshToken == "" {
-		return nil, errors.New("Access/Refresh Token not defined. Please generate the token wit 'evcc token mercedes' and add it to the configuration file.")
+		return nil, errors.New("Access/Refresh Token not defined. Please generate the token with 'evcc token mercedes' and add it to the configuration file.")
 	}
 
 	log := util.NewLogger("mercedes").Redact(cc.Tokens.Access, cc.Tokens.Refresh)
