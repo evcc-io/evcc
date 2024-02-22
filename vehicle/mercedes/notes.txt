@@ -1,0 +1,27 @@
+protoc -I ~/repo/MBSDK-CarKit-iOS/Proto/ --go_opt=Mprotos.proto=nulsch.de/mbsdk/protos/protos --go_opt=Mservice-activation.proto=nulsch.de/mbsdk/protos --go_opt=Muser-events.proto=nulsch.de/mbsdk/protos --go_opt=Mvehicle-commands.proto=nulsch.de/mbsdk/protos --go_opt=Macp.proto=nulsch.de/mbsdk/protos --go_opt=Mvehicle-events.proto=nulsch.de/mbsdk/protos --go_opt=Mclient.proto=nulsch.de/mbsdk/protos --go_opt=Mvin-events.proto=nulsch.de/mbsdk/protos  --go_opt=Mvehicleapi.proto=nulsch.de/mbsdk/protos --go_opt=Mcluster.proto=nulsch.de/mbsdk/protos --go_opt=Meventpush.proto=nulsch.de/mbsdk/protos  --go_out ~/projects/proto-evcc-mb/ *.proto
+
+	// // Dev case: We need a connection without cert check
+	// if use_proxy_plus_no_cert_check {
+	// 	client.Client = &http.Client{
+	// 		Timeout:   request.Timeout,
+	// 		Transport: request.NewTripper(log, transport.Insecure()),
+	// 	}
+	// } else {
+	// 	client.Client = &http.Client{
+	// 		Timeout:   request.Timeout,
+	// 		Transport: request.NewTripper(log, transport.Default()),
+	// 	}
+	// }
+
+
+	vehicles:
+  - name: mbdedvcar1
+    type: mercedes
+    title: MB Dev Car
+    tokens:
+      access: eyJhbGciOiJkaXIiLCJlbmMiOiJBMjU2Q0JDLUhTNTEyIiwiY3R5IjoiSldUIiwia2lkIjoiQ0lBTVNZTSIsInBpLmF0bSI6Imh4M2UifQ..a0kDr7Ig4NPKGi_1Q45swQ.wxDYOvGRyxhH2hSe8b2boKwFBG0-Bbzw6bAV_Rz1mEP98UB1LnsYCQ75io_piLnYAvZbTEec6UgTgRtzkGNHKQDK5_EAN20553VzyjJsxo3oXgXZrPuM25MPi5sk9bNc4aDFuizMDnLsTa5V3LtKxazbcM4vkyGmRu2Zwe_LUhrBGiH4yLn2qZFNCn4rYgdL6KcckFAB3o48H8bYN0gfpC_4J_ZpWDCe2IV6YsHrv7fZw0-j_LT0FAcP8Tdvt2rEqGSDiN4MZmWBTN2PrRIxDDcw0S9Ie_u8S--Z4-kDLhemoAjT1Vrc5rIaHPJuUsGGemcUWsI5Pmlk1ntzkgXHeCFpdQuSCaRuQ4H0GDxkDGzp6JmYH5Gzv2l7ExDF3M7bj_Eq5doUn6F2Pgvci2NUYoekIz5b4EAQfEgaUFi3X5_8mpuYv7GkPNtbcjP-6CX3PTLBnOibo8mrAeDhXqbHFaZmxv71n5-2tOQritNNZ7r_8pGtpGuO_HNryc_Bfekscy0sJEwJiFqqBWjzRTHD_2I2M8FIfxUBro0HNRardfa0V3wGmy0E56IeIMZUa3eBZPYpa0RH_NP3H8SzihsnzikozhovX5hKF358KrbxaWLZM3-MiqMfhXg8AHax13bGlkJvtNirkxhjXqvribhbMASCIcxiCBoOh7f36bMx3Kmm_gIqpxhjPEJ9a10nw7VcW3JhO_03olSlHKhYV43HKr3ZjyCU4fTfFnzdyMxKt0Qnw3ZrUKu3P5o2zFrJSrqemrw8GKV7zLZ28SmQLwpgLF4wu7dYS6rGuevvT_XVAx2unZH33RjtYGO-f8LxqB2OUVXMfhSjSY6d0igaQVTnsptaCYY3WvILA8_Vf7568pjarB6885M9yUfQSFBtTQ4y5rTEjrsZyAPoxKCKb-XJd_OYNw5Mn0ADLz8EuQgQVdKWMXWesAYl4NKUyYp2YCFpB4nj8zqHhHGUSrWgOsg7QejPPvhJiwRcd_vmzunKv36_WOD9ouKZVhyt822Oo935Ts5T0LjBA2tOZuO0pGcmEQxszM59DS-LOQUQsEnmsnc.M9kcQPrfC_xnadWwwQMs00CwTBmx8eZ42s7sCzrrpsk
+      refresh: MuD3pjCpLmL0IPwbgrl4uxAQzeA0fxucbr9.xXZwuk
+    vin: W1N2539111F913806
+    cache: 3m
+    Account: rene1
+    region: "EMEA"
