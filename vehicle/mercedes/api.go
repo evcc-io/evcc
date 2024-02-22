@@ -117,7 +117,6 @@ func (v *API) Status(vin string) (StatusResponse, error) {
 					res.EvInfo.Battery.DistanceToEmpty.Value = int(val.GetIntValue())
 					res.EvInfo.Battery.DistanceToEmpty.Unit = val.GetDistanceUnit().String()
 				}
-
 			}
 
 			if val, ok := message.Attributes["endofchargetime"]; ok {
