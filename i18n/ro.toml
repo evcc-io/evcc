@@ -2,6 +2,7 @@
 batteryLevel = "Nivelul bateriei"
 capacity = "{energy} din {total}"
 control = "Controlul bateriei"
+discharge = "“Preveniți descărcarea în modul rapid și încărcarea planificată.”"
 disclaimerHint = "Nota:"
 disclaimerText = "Aceste setari afecteaza doar modul solar. Procesul de incarcare este ajustat corespunzator"
 legendBottomName = "prioritate casa"
@@ -12,7 +13,7 @@ legendTitle = "Cum ar trebui utilizata energia solara?"
 legendTopAutostart = "porneste automat"
 legendTopName = "Incarcare ajutata de baterie"
 legendTopSubline = "fara intreruperi"
-modalTitle = "Setari baterie"
+modalTitle = "Setari bateriei"
 
 [batterySettings.bufferStart]
 full = "cand este aproape plin"
@@ -22,14 +23,50 @@ never = "numai cand exista surplus suficient"
 
 [config]
 
+[config.battery]
+titleAdd = "“adăugați indicatorul de baterie\""
+titleEdit = "“Editați indicatorul de baterie.\""
+
+[config.deviceValue]
+capacity = "“Căpăcitatea”"
+chargeStatus = "“Stare”"
+chargedEnergy = "“Încărcat”"
+current = "“Curent”"
+enabled = "“Activat”"
+energy = "“Energie”"
+odometer = "“Odometru”"
+phaseCurrents = "Curent L1..L3"
+phasePowers = "Putere L1..L3"
+phaseVoltages = "Voltaj L1..L3"
+power = "“Putere”"
+range = "“Distanța”"
+soc = "“Stare de încărcare”"
+socLimit = "“Limită”"
+
 [config.form]
 example = "Exemplu"
 optional = "optional"
 
+[config.grid]
+titleAdd = "“Adăugați Contorul de Grilă”"
+titleEdit = "“Editați Contorul Grilei”"
+
 [config.main]
+addLoadpoint = "“Adăugați punct de încărcare”"
+addPvBattery = "“Adăugați solar sau baterie”"
 addVehicle = "Adauga vehicul"
+edit = "“Edita”"
 title = "Configuratie"
+unconfigured = "“neconfigurat\""
 vehicles = "Vehiculele mele"
+yaml = "“Configurat în evcc.yaml. Nu poate fi editat în interfața de utilizare.”"
+
+[config.meter]
+cancel = "“Anulare”"
+delete = "“șterge”"
+save = "Salva"
+template = "Producător"
+titleChoice = "“Ce vrei să adaugi?”"
 
 [config.validation]
 failed = "esuat"
