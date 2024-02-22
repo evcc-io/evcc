@@ -183,6 +183,11 @@ tariffs:
     # charges: # optional, additional charges per kWh
     # tax: # optional, additional tax (0.1 for 10%)
 
+    # type: amber
+    # token: # api token from https://app.amber.com.au/developers/
+    # siteid: # site ID returned by the API
+    # channel: general
+
     # type: custom # price from a plugin source; see https://docs.evcc.io/docs/reference/plugins
     # price:
     #   source: http
@@ -197,6 +202,11 @@ tariffs:
     # type: octopusenergy
     # tariff: AGILE-FLEX-22-11-25 # Tariff code
     # region: A # optional
+
+    # type: amber
+    # token: # api token from https://app.amber.com.au/developers/
+    # siteid: # site ID returned by the API
+    # channel: feedIn
   co2:
     # co2 tariff provides co2 intensity forecast and is for co2-optimized target charging if no variable grid tariff is specified
     # type: grünstromindex # GrünStromIndex (Germany only)
