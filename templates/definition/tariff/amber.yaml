@@ -1,0 +1,14 @@
+template: amber
+products:
+  - brand: Amber Electric
+params:
+  - preset: tariff-base
+  - name: token
+  - name: siteid
+  - name: channel
+render: |
+  type: amber
+  {{ include "tariff-base" . }}
+  token: {{ .token }}
+  siteid: {{ .siteid }}
+  channel: {{ .channel }}
