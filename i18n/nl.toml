@@ -1,7 +1,7 @@
 [batterySettings]
 batteryLevel = "Batterij-niveau"
 capacity = "{energy} van {total}"
-control = Batterijsturing
+control = "Batterijsturing"
 discharge = "Voorkom ontladen in de snelle modus of bij gepland laden"
 disclaimerHint = "Opgelet:"
 disclaimerText = "Deze instellingen beïnvloeden enkel de zonnemodus. Oplaadgedrag wordt overeenkomstig aangepast."
@@ -44,8 +44,8 @@ soc = "Batterijpercentage"
 socLimit = "Hoeveelheid"
 
 [config.form]
-example = Voorbeeld
-optional = optioneel
+example = "Voorbeeld"
+optional = "optioneel"
 
 [config.grid]
 titleAdd = "Voeg net meter toe"
@@ -55,10 +55,10 @@ titleEdit = "Bewerk net meter"
 addLoadpoint = "Voeg laadpunt toe"
 addPvBattery = "Voeg zonnepanelen of batterij toe"
 addVehicle = "Voeg voertuig toe"
-edit = bewerken
-title = Configuratie
+edit = "bewerken"
+title = "Configuratie"
 unconfigured = "Niet geconfigureerd"
-vehicles = Mijn voertuigen
+vehicles = "Mijn voertuigen"
 yaml = "Geconfigureerd in evcc.yml. Niet aanpasbaar in de interface"
 
 [config.meter]
@@ -78,25 +78,25 @@ cancel = "Annuleren"
 save = "Opslaan"
 
 [config.validation]
-failed = mislukt
-label = Status
+failed = "mislukt"
+label = "Status"
 running = "Bezig met valideren..."
-success = succesvol
-unknown = onbekend
-validate = valideer
+success = "succesvol"
+unknown = "onbekend"
+validate = "valideer"
 
 [config.vehicle]
 cancel = "Annuleren"
 delete = "Verwijder"
-generic = Andere integraties
-offline = Algemeen voertuig
-online = Voertuig met online API
-save = Opslaan
-scooter = Scooter
-template = Fabrikant
-titleAdd = Voertuig toevoegen
-titleEdit = Voertuig bewerken
-validateSave = Valideren & opslaan
+generic = "Andere integraties"
+offline = "Algemeen voertuig"
+online = "Voertuig met online API"
+save = "Opslaan"
+scooter = "Scooter"
+template = "Fabrikant"
+titleAdd = "Voertuig toevoegen"
+titleEdit = "Voertuig bewerken"
+validateSave = "Valideren & opslaan"
 
 [footer]
 
@@ -170,7 +170,7 @@ modalUpdateStatusStart = "Installatie gestart:"
 
 [gridSettings]
 activeHours = "{charging} van {total}"
-activeHoursLabel = Actieve uren
+activeHoursLabel = "Actieve uren"
 co2Label = "CO₂ uitstoot"
 co2Limit = "CO₂ limiet"
 costLimitDescription = "Zet tijdelijk snel-laden in solar mode aan"
@@ -422,7 +422,7 @@ price = "Σ Prijs"
 reallyDelete = "Wilt u deze sessie echt verwijderen?"
 solar = "Zon"
 title = "Oplaadsessies"
-total = Totaal
+total = "Totaal"
 vehicle = "Voertuig"
 
 [sessions.csv]
