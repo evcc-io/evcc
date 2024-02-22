@@ -30,6 +30,12 @@ products:
   - brand: Ubitricity
     description:
       generic: Heinz
+  - brand: CUBOS
+    description:
+      generic: C11E, C22E
+  - brand: Spelsberg
+    description:
+      generic: Wallbox
 capabilities: ["rfid"]
 requirements:
   description:
