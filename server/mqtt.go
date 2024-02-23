@@ -316,7 +316,15 @@ func (m *MQTT) listenLoadpointSetters(topic string, site site.API, lp loadpoint.
 			return err
 		})
 	}
-
+	if err == nil {
+		err = m.Handler.ListenSetter(topic+"/site/smartCostLimit", func(payload string) error {
+			val, err := parseFloat(payload)
+			if err == nil {
+				lp.SetSmartCostLimit(val)
+			}
+			return err
+		})
+	}
 	return err
 }
 
