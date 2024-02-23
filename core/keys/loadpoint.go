@@ -28,8 +28,8 @@ const (
 	Charging  = "charging"  // charging
 
 	// smart charging
-	SmartCostLimit  = "smartCostLimit"  // smart cost limit
 	SmartCostActive = "smartCostActive" // smart cost active
+	SmartCostLimit  = "smartCostLimit"  // smart cost limit
 
 	// effective values
 	EffectivePriority   = "effectivePriority"   // effective priority
