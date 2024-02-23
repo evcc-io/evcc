@@ -6,7 +6,7 @@
 		data-testid="limit-energy"
 	>
 		<h3 class="value m-0">
-			<label class="position-relative">
+			<label class="position-relative" role="button">
 				<select :value="limitEnergy" class="custom-select" @change="change">
 					<option
 						v-for="{ energy, text, disabled } in options"
@@ -94,6 +94,7 @@ export default {
 	top: 0;
 	bottom: 0;
 	right: 0;
+	cursor: pointer;
 	position: absolute;
 	opacity: 0;
 }
