@@ -6,11 +6,11 @@ products:
 requirements:
   description:
     de: |
-      Nur ein System kann und darf auf den Wechselrichter zugreifen!
+      Nur ein System kann und darf zeitgleich eine Modbus TCP-Verbindung zum Wechselrichter haben!
       Für die optionale Batteriesteuerung muss StorageConf_CtrlMode (0xE004) auf 4 "Remote" stehen.
     en: |
-      Only one system may access the inverter!
-      For optional battery control, StorageConf_CtrlMode (0xE004) must be at 4 "Remote".
+      Only one system can and may have a Modbus TCP connection to the inverter at the same time!
+      For optional battery control, StorageConf_CtrlMode (0xE004) must be set to 4 "Remote".
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -21,6 +21,10 @@ params:
     port: 1502
   - name: timeout
   - name: capacity
+    advanced: true
+  - name: watchdog
+    type: duration
+    default: 60s
     advanced: true
 render: |
   type: custom
@@ -57,7 +61,7 @@ render: |
     {{- include "modbus" . | indent 2 }}
     timeout: {{ .timeout }}
     register:
-      address: 62836 # Battery 1 Instantaneous Power
+      address: 0xE174 # Battery 1 Instantaneous Power
       type: holding
       decode: float32s
     scale: -1
@@ -66,9 +70,82 @@ render: |
     {{- include "modbus" . | indent 2 }}
     timeout: {{ .timeout }}
     register:
-      address: 62852 # Battery 1 State of Energy (SOE)
+      address: 0xE184 # Battery 1 State of Energy (SOE)
       type: holding
       decode: float32s
+  batterymode:
+    source: watchdog
+    timeout: {{ .watchdog }}
+    reset: 1 # reset watchdog on normal
+    set:
+      source: switch
+      switch:
+      - case: 1 # normal
+        set:
+          source: sequence
+          set:
+          - source: const
+            value: 7 # Maximize self-consumption
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 0xE00D # StorageRemoteCtrl_CommandMode
+                type: writesingle
+                encoding: uint16
+          - source: const
+            value: 5000 # W
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 0xE010 # StorageRemoteCtrl_DischargeLimit
+                type: writemultiple
+                encoding: float32s
+      - case: 2 # hold
+        set:
+          source: sequence
+          set:
+          - source: const
+            value: 7 # Maximize self-consumption
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 0xE00D # StorageRemoteCtrl_CommandMode
+                type: writesingle
+                encoding: uint16
+          - source: const
+            value: 0 # W
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 0xE010 # StorageRemoteCtrl_DischargeLimit
+                type: writemultiple
+                encoding: float32s
+      - case: 3 # charge
+        set:
+          source: sequence
+          set:
+          - source: const
+            value: 3 # Charge from PV+AC according to the max battery power
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 0xE00D # StorageRemoteCtrl_CommandMode
+                type: writesingle
+                encoding: uint16
+          - source: const
+            value: 0 # W
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 0xE010 # StorageRemoteCtrl_DischargeLimit
+                type: writemultiple
+                encoding: float32s
   {{- if .capacity }}
   capacity: {{ .capacity }} # kWh
   {{- end }}

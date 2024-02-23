@@ -165,19 +165,21 @@ func (lp *Loadpoint) setActiveVehicle(v api.Vehicle) {
 }
 
 func (lp *Loadpoint) wakeUpVehicle() {
-	// charger
-	if c, ok := lp.charger.(api.Resurrector); ok {
-		lp.log.DEBUG.Println("wake-up charger")
-		if err := c.WakeUp(); err != nil {
-			lp.log.ERROR.Printf("wake-up charger: %v", err)
+	if lp.wakeUpTimer.wakeupAttemptsLeft%2 != 0 {
+		// charger
+		if c, ok := lp.charger.(api.Resurrector); ok {
+			lp.log.DEBUG.Printf("wake-up charger, attempts left: %d", lp.wakeUpTimer.wakeupAttemptsLeft)
+			if err := c.WakeUp(); err != nil {
+				lp.log.ERROR.Printf("wake-up charger: %v", err)
+			}
 		}
-	}
-
-	// vehicle
-	if vs, ok := lp.GetVehicle().(api.Resurrector); ok {
-		lp.log.DEBUG.Println("wake-up vehicle")
-		if err := vs.WakeUp(); err != nil {
-			lp.log.ERROR.Printf("wake-up vehicle: %v", err)
+	} else {
+		// vehicle
+		if vs, ok := lp.GetVehicle().(api.Resurrector); ok {
+			lp.log.DEBUG.Printf("wake-up vehicle, attempts left: %d", lp.wakeUpTimer.wakeupAttemptsLeft)
+			if err := vs.WakeUp(); err != nil {
+				lp.log.ERROR.Printf("wake-up vehicle: %v", err)
+			}
 		}
 	}
 }
