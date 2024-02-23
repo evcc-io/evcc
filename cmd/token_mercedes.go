@@ -13,9 +13,7 @@ func mercedesUsernameAndRegionPrompt() (string, string, error) {
 		Message: "Please enter your Mercedes ME user-account (e-mail or mobile)",
 	}
 	var user string
-	err := survey.AskOne(prompt_user, &user, survey.WithValidator(survey.Required))
-
-	if err != nil {
+	if err := survey.AskOne(prompt_user, &user, survey.WithValidator(survey.Required)); err != nil {
 		return "", "", err
 	}
 
@@ -24,9 +22,7 @@ func mercedesUsernameAndRegionPrompt() (string, string, error) {
 		Options: []string{"APAC", "EMEA", "NORAM"},
 	}
 	var region string
-	err = survey.AskOne(prompt_region, &region, survey.WithValidator(survey.Required))
-
-	if err != nil {
+	if err := survey.AskOne(prompt_region, &region, survey.WithValidator(survey.Required)); err != nil {
 		return "", "", err
 	}
 
@@ -38,9 +34,7 @@ func mercedesPinPrompt() (string, error) {
 	prompt_pin := &survey.Input{
 		Message: "Please enter the Pin that you received via email/sms",
 	}
-	err := survey.AskOne(prompt_pin, &code, survey.WithValidator(survey.Required))
-
-	if err != nil {
+	if err := survey.AskOne(prompt_pin, &code, survey.WithValidator(survey.Required)); err != nil {
 		return "", err
 	}
 
@@ -58,10 +52,6 @@ func mercedesToken() (*oauth2.Token, error) {
 	result, nonce, err := api.RequestPin()
 	if err != nil {
 		return nil, err
-	} else {
-		if nonce == nil {
-			log.DEBUG.Printf("Request Pin unsuccessful - nonce nil:")
-		}
 	}
 
 	if result {
@@ -71,9 +61,8 @@ func mercedesToken() (*oauth2.Token, error) {
 		}
 
 		token, err := api.RequestAccessToken(*nonce, pin)
-
 		if err == nil {
-			return token, err
+			return token, nil
 		}
 	}
 
