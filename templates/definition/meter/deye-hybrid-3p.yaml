@@ -110,6 +110,82 @@ render: |
       address: 588 # "battery capacity"
       type: holding
       decode: uint16
+  batterymode:
+    source: switch
+    switch:
+    - case: 1 # normal
+      set:
+        source: sequence
+        set: 
+        - source: const
+          value: 25 # SoC TOU 1 100%
+          set: 
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 166 # soc time of use 1
+              type: writemultiple
+              decode: int32s
+        - source: const
+          value: 0 # start time TOU Slot 1
+          set: 
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 148 # soc time of use 1
+              type: writemultiple
+              decode: int32s
+        - source: const
+          value: 2355 # end time TOU Slot 1
+          set: 
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 149 # soc time of use 1
+              type: writemultiple
+              decode: int32s
+    - case: 2 # hold
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 100 # SoC TOU 1 100%
+          set: 
+            source: modbus
+            {{- include "modbus" . | indent 10 }}        
+            register:
+              address: 166 # soc time of use 1
+              type: writemultiple
+              decode: int32s
+        - source: const
+          value: 0 # start time TOU Slot 1
+          set: 
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 148 # soc time of use 1
+              type: writemultiple
+              decode: int32s
+        - source: const
+          value: 2355 # end time TOU Slot 1
+          set: 
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 149 # soc time of use 1
+              type: writemultiple
+              decode: int32s
+    - case: 3 # charge
+      set:
+        source: const
+        value: 100 # SoC TOU 1 100%
+        set: 
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 166 # soc time of use 1
+            type: writemultiple
+            decode: int32s
   {{- if .capacity }}
   capacity: {{ .capacity }} # kWh
   {{- end }}
