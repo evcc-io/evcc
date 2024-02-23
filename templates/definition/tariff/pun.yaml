@@ -2,19 +2,8 @@ template: pun
 products:
   - brand: PUN
 params:
-  - name: charges
-    type: float
-    description:
-      en: "Additional charges"
-      de: "Aufschlag auf den PUN"
-  - name: tax
-    type: float
-    description:
-      en: "Tax"
-      de: "Steuern"
+  - preset: tariff-base
 
 render: |
   type: pun
   {{ include "tariff-base" . }}
-  charges: {{ .charges }}
-  tax: {{ .tax }}
