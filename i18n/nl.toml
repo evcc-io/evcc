@@ -17,8 +17,6 @@ modalTitle = "Batterij-instellingen"
 
 [batterySettings.bufferStart]
 full = "Wanneer bijna vol"
-low = "indien beetje vol"
-medium = "indien half vol"
 never = "enkel bij voldoende overschot"
 
 [config]
