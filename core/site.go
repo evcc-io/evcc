@@ -33,8 +33,8 @@ import (
 
 const standbyPower = 10 // consider less than 10W as charger in standby
 
-// Updater abstracts the Loadpoint implementation for testing
-type Updater interface {
+// updater abstracts the Loadpoint implementation for testing
+type updater interface {
 	loadpoint.API
 	Update(availablePower float64, autoCharge, batteryBuffered, batteryStart bool, greenShare float64, effectivePrice, effectiveCo2 *float64)
 }
@@ -763,7 +763,7 @@ func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints fl
 	}
 }
 
-func (site *Site) update(lp Updater) {
+func (site *Site) update(lp updater) {
 	site.log.DEBUG.Println("----")
 
 	// update all loadpoint's charge power
@@ -783,24 +783,21 @@ func (site *Site) update(lp Updater) {
 
 	// TODO: implement active check for loadpoints and battery
 	var smartCostActive bool
-	/*
-		if tariff := site.GetTariff(PlannerTariff); tariff != nil && tariff.Type() != api.TariffTypePriceStatic {
-				rates, err := tariff.Rates()
+	if tariff := site.GetTariff(PlannerTariff); tariff != nil && tariff.Type() != api.TariffTypePriceStatic {
+		rates, err := tariff.Rates()
 
-					var rate api.Rate
-					if err == nil {
-						rate, err = rates.Current(time.Now())
-					}
+		var rate api.Rate
+		if err == nil {
+			rate, err = rates.Current(time.Now())
+		}
 
-					if err == nil {
-							limit := site.GetSmartCostLimit()
-							smartCostActive = limit != 0 && rate.Price <= limit
-							site.publish(keys.SmartCostActive, smartCostActive)
-					} else {
-						site.log.ERROR.Println("smartCost:", err)
-					}
-				}
-	*/
+		if err == nil {
+			limit := lp.GetSmartCostLimit()
+			smartCostActive = limit != 0 && rate.Price <= limit
+		} else {
+			site.log.ERROR.Println("smartCost:", err)
+		}
+	}
 
 	if sitePower, batteryBuffered, batteryStart, err := site.sitePower(totalChargePower, flexiblePower); err == nil {
 		// ignore negative pvPower values as that means it is not an energy source but consumption
@@ -912,7 +909,7 @@ func (site *Site) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Event) 
 }
 
 // loopLoadpoints keeps iterating across loadpoints sending the next to the given channel
-func (site *Site) loopLoadpoints(next chan<- Updater) {
+func (site *Site) loopLoadpoints(next chan<- updater) {
 	for {
 		for _, lp := range site.loadpoints {
 			next <- lp
@@ -929,7 +926,7 @@ func (site *Site) Run(stopC chan struct{}, interval time.Duration) {
 		site.log.WARN.Printf("interval <%.0fs can lead to unexpected behavior, see https://docs.evcc.io/docs/reference/configuration/interval", max.Seconds())
 	}
 
-	loadpointChan := make(chan Updater)
+	loadpointChan := make(chan updater)
 	go site.loopLoadpoints(loadpointChan)
 
 	ticker := time.NewTicker(interval)
