@@ -17,6 +17,12 @@ params:
     id: 1
   - name: capacity
     advanced: true
+  - name: minsoc
+    type: number
+    advanced: true 
+  - name: maxsoc
+    type: number
+    advanced: true
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -127,7 +133,7 @@ render: |
               type: writemultiple
               decode: int32s
         - source: const
-          value: 0 # start time TOU Slot 1
+          value: {{ .minsoc }} # start time TOU Slot 1
           set: 
             source: modbus
             {{- include "modbus" . | indent 10 }}
@@ -149,7 +155,7 @@ render: |
         source: sequence
         set:
         - source: const
-          value: 100 # SoC TOU 1 100%
+          value: {{ .maxsoc }} # SoC TOU 1 100%
           set: 
             source: modbus
             {{- include "modbus" . | indent 10 }}        
@@ -187,6 +193,8 @@ render: |
             type: writemultiple
             decode: int32s
   {{- if .capacity }}
+  minsoc: {{.minsoc}}
+  maxsoc: {{.maxsoc}}
   capacity: {{ .capacity }} # kWh
   {{- end }}
   energy:
