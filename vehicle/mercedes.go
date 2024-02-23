@@ -1,7 +1,6 @@
 package vehicle
 
 import (
-	"errors"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -39,10 +38,6 @@ func NewMercedesFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	token, err := cc.Tokens.Token()
 	if err != nil {
 		return nil, err
-	}
-
-	if token.AccessToken == "" || token.RefreshToken == "" {
-		return nil, errors.New("Access/Refresh Token not defined. Please generate the token with 'evcc token mercedes' and add it to the configuration file.")
 	}
 
 	log := util.NewLogger("mercedes").Redact(cc.Tokens.Access, cc.Tokens.Refresh)
