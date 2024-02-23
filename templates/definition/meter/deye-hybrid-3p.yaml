@@ -7,6 +7,7 @@ products:
   - brand: Sunsynk
     description:
       generic: 3p hybrid inverter
+capabilities: ["battery-control"]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -124,16 +125,7 @@ render: |
         source: sequence
         set: 
         - source: const
-          value: 25 # SoC TOU 1 100%
-          set: 
-            source: modbus
-            {{- include "modbus" . | indent 10 }}
-            register:
-              address: 166 # soc time of use 1
-              type: writemultiple
-              decode: int32s
-        - source: const
-          value: {{ .minsoc }} # start time TOU Slot 1
+          value: 0 # start time TOU Slot 1
           set: 
             source: modbus
             {{- include "modbus" . | indent 10 }}
@@ -155,15 +147,6 @@ render: |
         source: sequence
         set:
         - source: const
-          value: {{ .maxsoc }} # SoC TOU 1 100%
-          set: 
-            source: modbus
-            {{- include "modbus" . | indent 10 }}        
-            register:
-              address: 166 # soc time of use 1
-              type: writemultiple
-              decode: int32s
-        - source: const
           value: 0 # start time TOU Slot 1
           set: 
             source: modbus
@@ -184,7 +167,7 @@ render: |
     - case: 3 # charge
       set:
         source: const
-        value: 100 # SoC TOU 1 100%
+        value: {{ .maxsoc }} # SoC TOU 1 
         set: 
           source: modbus
           {{- include "modbus" . | indent 8 }}
@@ -192,9 +175,20 @@ render: |
             address: 166 # soc time of use 1
             type: writemultiple
             decode: int32s
-  {{- if .capacity }}
+  limitsoc:
+    source: convert
+    convert: float2int
+    set: 
+      source: modbus
+      {{- include "modbus" . | indent 4 }}        
+      register:
+        address: 166 # soc time of use 1
+        type: writemultiple
+        decode: int32s
+      scale: 1
   minsoc: {{.minsoc}}
   maxsoc: {{.maxsoc}}
+  {{- if .capacity }}
   capacity: {{ .capacity }} # kWh
   {{- end }}
   energy:
