@@ -3,7 +3,6 @@ products:
   - brand: PUN
 params:
   - preset: tariff-base
-
 render: |
   type: pun
   {{ include "tariff-base" . }}

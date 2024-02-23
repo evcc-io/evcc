@@ -149,9 +149,6 @@ func (t *Pun) getData(day time.Time) (api.Rates, error) {
 	}
 	defer resp.Body.Close()
 
-	// print resp location
-	fmt.Println(resp.Location())
-
 	body, _ := io.ReadAll(resp.Body)
 	formData, err := parseFormFields(body)
 	if err != nil {
