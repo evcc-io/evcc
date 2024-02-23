@@ -2,7 +2,6 @@ package server
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/fs"
 	"math"
@@ -11,7 +10,6 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/server/assets"
 	"github.com/evcc-io/evcc/util"
@@ -220,34 +218,6 @@ func healthHandler(site site.API) http.HandlerFunc {
 
 		w.WriteHeader(http.StatusOK)
 		fmt.Fprintln(w, "OK")
-	}
-}
-
-// tariffHandler returns the configured tariff
-func tariffHandler(site site.API) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-		tariff := vars["tariff"]
-
-		t := site.GetTariff(tariff)
-		if t == nil {
-			jsonError(w, http.StatusNotFound, errors.New("tariff not available"))
-			return
-		}
-
-		rates, err := t.Rates()
-		if err != nil {
-			jsonError(w, http.StatusNotFound, err)
-			return
-		}
-
-		res := struct {
-			Rates api.Rates `json:"rates"`
-		}{
-			Rates: rates,
-		}
-
-		jsonResult(w, res)
 	}
 }
 

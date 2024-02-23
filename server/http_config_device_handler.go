@@ -8,6 +8,7 @@ import (
 
 	"github.com/evcc-io/evcc/charger"
 	"github.com/evcc-io/evcc/meter"
+	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/templates"
 	"github.com/evcc-io/evcc/vehicle"
@@ -218,6 +219,9 @@ func newDeviceHandler(w http.ResponseWriter, r *http.Request) {
 
 	case templates.Vehicle:
 		conf, err = newDevice(class, req, vehicle.NewFromConfig, config.Vehicles())
+
+	case templates.Tariff:
+		conf, err = newDevice(class, req, tariff.NewFromConfig, config.Tariffs())
 	}
 
 	if err != nil {
@@ -284,6 +288,9 @@ func updateDeviceHandler(w http.ResponseWriter, r *http.Request) {
 
 	case templates.Vehicle:
 		err = updateDevice(id, class, req, vehicle.NewFromConfig, config.Vehicles())
+
+	case templates.Tariff:
+		err = updateDevice(id, class, req, tariff.NewFromConfig, config.Tariffs())
 	}
 
 	setConfigDirty()
@@ -347,6 +354,9 @@ func deleteDeviceHandler(w http.ResponseWriter, r *http.Request) {
 
 	case templates.Vehicle:
 		err = deleteDevice(id, config.Vehicles())
+
+	case templates.Tariff:
+		err = deleteDevice(id, config.Tariffs())
 	}
 
 	setConfigDirty()
@@ -413,6 +423,9 @@ func testConfigHandler(w http.ResponseWriter, r *http.Request) {
 
 	case templates.Vehicle:
 		instance, err = testConfig(id, class, req, vehicle.NewFromConfig, config.Vehicles())
+
+	case templates.Tariff:
+		instance, err = testConfig(id, class, req, tariff.NewFromConfig, config.Tariffs())
 	}
 
 	if err != nil {

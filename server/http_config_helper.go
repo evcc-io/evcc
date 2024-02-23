@@ -2,6 +2,7 @@ package server
 
 import (
 	"errors"
+	"net/http"
 	"sync"
 
 	"github.com/evcc-io/evcc/api"
@@ -187,4 +188,15 @@ func testInstance(instance any) map[string]testResult {
 	}
 
 	return res
+}
+
+// validateRefs checks if the given references are valid and returns HTTP 400 otherwise
+func validateRefs[T any](w http.ResponseWriter, handler config.Handler[T], refs []string) bool {
+	for _, m := range refs {
+		if _, err := handler.ByName(m); err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return false
+		}
+	}
+	return true
 }

@@ -101,6 +101,8 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, cache *util.Cache) {
 		"residualpower":           {[]string{"POST", "OPTIONS"}, "/residualpower/{value:[-0-9.]+}", floatHandler(site.SetResidualPower, site.GetResidualPower)},
 		"smartcost":               {[]string{"POST", "OPTIONS"}, "/smartcostlimit/{value:[-0-9.]+}", floatHandler(site.SetSmartCostLimit, site.GetSmartCostLimit)},
 		"tariff":                  {[]string{"GET"}, "/tariff/{tariff:[a-z]+}", tariffHandler(site)},
+		"tariffs":                 {[]string{"GET"}, "/tariffs", tariffsHandler(site)},
+		"updatetariffs":           {[]string{"PUT", "OPTIONS"}, "/tariffs", updateTariffsHandler(site)},
 		"sessions":                {[]string{"GET"}, "/sessions", sessionHandler},
 		"updatesession":           {[]string{"PUT", "OPTIONS"}, "/session/{id:[0-9]+}", updateSessionHandler},
 		"deletesession":           {[]string{"DELETE", "OPTIONS"}, "/session/{id:[0-9]+}", deleteSessionHandler},

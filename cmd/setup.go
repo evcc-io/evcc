@@ -32,6 +32,7 @@ import (
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/server/oauth2redirect"
 	"github.com/evcc-io/evcc/tariff"
+	"github.com/evcc-io/evcc/tariff/tariffs"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/locale"
@@ -132,7 +133,7 @@ type messagingConfig struct {
 type tariffConfig struct {
 	Currency string
 	Grid     config.Typed
-	FeedIn   config.Typed
+	Feedin   config.Typed
 	Co2      config.Typed
 	Planner  config.Typed
 }
@@ -586,42 +587,64 @@ func configureMessengers(conf messagingConfig, vehicles push.Vehicles, valueChan
 	return messageChan, nil
 }
 
-func configureTariff(name string, conf config.Typed, t *api.Tariff, wg *sync.WaitGroup) {
-	defer wg.Done()
+func configureTariff(name string, conf config.Typed, t *tariffs.Tariffs) (err error) {
+	// ignore tariff errors and continue setup
+	defer (func() {
+		if err != nil {
+			log.ERROR.Printf("failed configuring %s tariff: %v", name, err)
+			err = nil
+		}
+	})()
+
+	// load tariff from settings
+	ref, err := settings.String(tariffs.SettingsKey + name)
+	if err == nil && ref != "" {
+		configurable, err := config.ConfigurationsByClass(templates.Tariff)
+		if err != nil {
+			return err
+		}
+
+		idx := slices.IndexFunc(configurable, func(conf config.Config) bool {
+			return conf.Named().Name == name
+		})
+
+		if idx < 0 {
+			return fmt.Errorf("cannot find tariff %s", name)
+		}
+
+		conf = configurable[idx].Typed()
+	}
 
 	if conf.Type == "" {
-		return
+		return nil
 	}
 
 	res, err := tariff.NewFromConfig(conf.Type, conf.Other)
 	if err != nil {
-		log.ERROR.Printf("failed configuring %s tariff: %v", name, err)
-		return
+		return err
 	}
 
-	*t = res
+	t.SetInstance(name, res)
+
+	return nil
 }
 
-func configureTariffs(conf tariffConfig) (*tariff.Tariffs, error) {
-	tariffs := tariff.Tariffs{
-		Currency: currency.EUR,
-	}
-
+func configureTariffs(conf tariffConfig) (*tariffs.Tariffs, error) {
+	c := currency.EUR
 	if conf.Currency != "" {
-		tariffs.Currency = currency.MustParseISO(conf.Currency)
+		c = currency.MustParseISO(conf.Currency)
 	}
 
-	var wg sync.WaitGroup
-	wg.Add(4)
+	res := tariffs.New(c)
 
-	go configureTariff("grid", conf.Grid, &tariffs.Grid, &wg)
-	go configureTariff("feedin", conf.FeedIn, &tariffs.FeedIn, &wg)
-	go configureTariff("co2", conf.Co2, &tariffs.Co2, &wg)
-	go configureTariff("planner", conf.Planner, &tariffs.Planner, &wg)
+	g, _ := errgroup.WithContext(context.Background())
+	g.Go(func() error { return configureTariff(tariffs.Grid, conf.Grid, res) })
+	g.Go(func() error { return configureTariff(tariffs.Feedin, conf.Feedin, res) })
+	g.Go(func() error { return configureTariff(tariffs.Co2, conf.Co2, res) })
+	g.Go(func() error { return configureTariff(tariffs.Planner, conf.Planner, res) })
+	err := g.Wait()
 
-	wg.Wait()
-
-	return &tariffs, nil
+	return res, err
 }
 
 func configureDevices(conf globalConfig) error {
@@ -652,7 +675,7 @@ func configureSiteAndLoadpoints(conf globalConfig) (*core.Site, error) {
 	return configureSite(conf.Site, loadpoints, tariffs)
 }
 
-func configureSite(conf map[string]interface{}, loadpoints []*core.Loadpoint, tariffs *tariff.Tariffs) (*core.Site, error) {
+func configureSite(conf map[string]interface{}, loadpoints []*core.Loadpoint, tariffs *tariffs.Tariffs) (*core.Site, error) {
 	site, err := core.NewSiteFromConfig(log, conf, loadpoints, tariffs)
 	if err != nil {
 		return nil, fmt.Errorf("failed configuring site: %w", err)
