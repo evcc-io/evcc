@@ -193,6 +193,7 @@ func (m *MQTT) listenLoadpointSetters(topic string, site site.API, lp loadpoint.
 		{"/limitEnergy", floatSetter(lp.SetLimitEnergy)},
 		{"/enableThreshold", floatSetter(lp.SetEnableThreshold)},
 		{"/disableThreshold", floatSetter(lp.SetDisableThreshold)},
+		{"/smartCostLimit", floatSetter(lp.SetSmartCostLimit)},
 		{"/planEnergy", func(payload string) error {
 			var plan struct {
 				Time  time.Time `json:"time"`
