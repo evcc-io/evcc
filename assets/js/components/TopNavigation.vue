@@ -113,7 +113,6 @@ import "@h2d2/shopicons/es/regular/moonstars";
 import "@h2d2/shopicons/es/regular/menu";
 import "@h2d2/shopicons/es/regular/newtab";
 import collector from "../mixins/collector";
-import gridModalAvailable from "../utils/gridModalAvailable";
 
 import baseAPI from "../baseapi";
 
@@ -130,7 +129,6 @@ export default {
 		sponsor: String,
 		sponsorTokenExpires: Number,
 		batteryConfigured: Boolean,
-		smartCostType: String,
 	},
 	computed: {
 		logoutCount() {
@@ -152,9 +150,6 @@ export default {
 		},
 		batteryModalAvailable() {
 			return this.batteryConfigured;
-		},
-		gridModalAvailable: function () {
-			return gridModalAvailable(this.smartCostType);
 		},
 	},
 	mounted() {
@@ -189,10 +184,6 @@ export default {
 			const modal = Modal.getOrCreateInstance(
 				document.getElementById("batterySettingsModal")
 			);
-			modal.show();
-		},
-		openGridSettingsModal() {
-			const modal = Modal.getOrCreateInstance(document.getElementById("gridSettingsModal"));
 			modal.show();
 		},
 	},

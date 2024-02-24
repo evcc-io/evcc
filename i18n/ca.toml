@@ -75,17 +75,6 @@ modalUpdateNow = "Instal·lar ara"
 modalUpdateStarted = "Després de l'actualització, evcc es reiniciarà."
 modalUpdateStatusStart = "Instal·lació iniciada:"
 
-[gridSettings]
-activeHours = "{charging} de {total}"
-activeHoursLabel = "Hores funcionant"
-co2Label = "Emissions de CO₂"
-co2Limit = "Límit de CO₂"
-costLimitDescription = "Habilita temporalment la càrrega ràpida en mode solar"
-modalTitle = "Xarxa intel·ligent de càrrega"
-none = "cap"
-priceLabel = "Preu de l'energia"
-priceLimit = "Límit de preu"
-
 [header]
 about = "Sobre"
 blog = "Blog"
@@ -326,6 +315,17 @@ light = "clar"
 km = "km"
 label = "Unitats"
 mi = "milles"
+
+[smartCost]
+activeHours = "{charging} de {total}"
+activeHoursLabel = "Hores funcionant"
+co2Label = "Emissions de CO₂"
+co2Limit = "Límit de CO₂"
+loadpointDescription = "Habilita temporalment la càrrega ràpida en mode solar"
+modalTitle = "Xarxa intel·ligent de càrrega"
+none = "cap"
+priceLabel = "Preu de l'energia"
+priceLimit = "Límit de preu"
 
 [startupError]
 configFile = "Arxiu de configuració utilitzat:"

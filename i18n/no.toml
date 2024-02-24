@@ -108,17 +108,6 @@ modalUpdateNow = "Installer nå"
 modalUpdateStarted = "Starter den nye versjonen av evcc..."
 modalUpdateStatusStart = "Installasjonen startet:"
 
-[gridSettings]
-activeHours = "{charging} av {total}"
-activeHoursLabel = "Aktive timer"
-co2Label = "CO₂-utslipp"
-co2Limit = "CO₂-grense"
-costLimitDescription = "Slår på midlertidig hurtiglading i solcellemodus."
-modalTitle = "Smart lysnettlading"
-none = "ingen"
-priceLabel = "Energipris"
-priceLimit = "Prisgrense"
-
 [header]
 about = "Om"
 blog = "Blogg"
@@ -380,6 +369,17 @@ light = "lys"
 km = "km"
 label = "Enheter"
 mi = "mil"
+
+[smartCost]
+activeHours = "{charging} av {total}"
+activeHoursLabel = "Aktive timer"
+co2Label = "CO₂-utslipp"
+co2Limit = "CO₂-grense"
+loadpointDescription = "Slår på midlertidig hurtiglading i solcellemodus."
+modalTitle = "Smart lysnettlading"
+none = "ingen"
+priceLabel = "Energipris"
+priceLimit = "Prisgrense"
 
 [startupError]
 configFile = "Brukt oppsettsfil:"

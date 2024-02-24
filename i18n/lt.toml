@@ -166,17 +166,6 @@ modalUpdateNow = "Instaliuoti dabar"
 modalUpdateStarted = "Startuoja nauja evcc versija..."
 modalUpdateStatusStart = "Instaliavimas pradėtas:"
 
-[gridSettings]
-activeHours = "{charging} iš {total}"
-activeHoursLabel = "Aktyvumo valandos"
-co2Label = "CO₂ emisijos"
-co2Limit = "CO₂ limitas"
-costLimitDescription = "Laikinai aktyvuoja greitą įkrovimą (režime Saulė)."
-modalTitle = "Išmanaus tinklo įkrovimas"
-none = "nėra"
-priceLabel = "Energijos kaina"
-priceLimit = "Kainos limitas"
-
 [header]
 about = "Apie"
 blog = "Tinklaraštis"
@@ -477,6 +466,17 @@ light = "šviesus"
 km = "km"
 label = "Vienetai"
 mi = "mylios"
+
+[smartCost]
+activeHours = "{charging} iš {total}"
+activeHoursLabel = "Aktyvumo valandos"
+co2Label = "CO₂ emisijos"
+co2Limit = "CO₂ limitas"
+loadpointDescription = "Laikinai aktyvuoja greitą įkrovimą (režime Saulė)."
+modalTitle = "Išmanaus tinklo įkrovimas"
+none = "nėra"
+priceLabel = "Energijos kaina"
+priceLimit = "Kainos limitas"
 
 [startupError]
 configFile = "Naudojamas konfiguracijos failas:"

@@ -166,17 +166,6 @@ modalUpdateNow = "Nu installeren"
 modalUpdateStarted = "Starten van de nieuwe versie van evcc..."
 modalUpdateStatusStart = "Installatie gestart:"
 
-[gridSettings]
-activeHours = "{charging} van {total}"
-activeHoursLabel = "Actieve uren"
-co2Label = "CO₂ uitstoot"
-co2Limit = "CO₂ limiet"
-costLimitDescription = "Zet tijdelijk snel-laden in solar mode aan"
-modalTitle = "Smart Grid laden"
-none = "geen"
-priceLabel = "Energieprijs"
-priceLimit = "Prijslimiet"
-
 [header]
 about = "Over"
 blog = "Blog"
@@ -474,6 +463,17 @@ light = "licht"
 km = "km"
 label = "Eenheden"
 mi = "mijlen"
+
+[smartCost]
+activeHours = "{charging} van {total}"
+activeHoursLabel = "Actieve uren"
+co2Label = "CO₂ uitstoot"
+co2Limit = "CO₂ limiet"
+loadpointDescription = "Zet tijdelijk snel-laden in solar mode aan"
+modalTitle = "Smart Grid laden"
+none = "geen"
+priceLabel = "Energieprijs"
+priceLimit = "Prijslimiet"
 
 [startupError]
 configFile = "Gebruikt configuratiebestand:"

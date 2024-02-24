@@ -108,5 +108,5 @@ modalUpdateNow = "Инсталирай сега"
 modalUpdateStarted = "Стартирай новата версия на evcc..."
 modalUpdateStatusStart = "Инсталацията започна:"
 
-[gridSettings]
+[smartCost]
 activeHours = "{charging} от {total}"

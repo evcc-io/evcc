@@ -109,17 +109,6 @@ modalUpdateNow = "Встановити зараз"
 modalUpdateStarted = "Початок нової версії evcc…"
 modalUpdateStatusStart = "Встановлення розпочато:"
 
-[gridSettings]
-activeHours = "{charging} зі {total}"
-activeHoursLabel = "Активні години"
-co2Label = "Викиди CO₂"
-co2Limit = "Ліміт CO₂"
-costLimitDescription = "Вмикає тимчасову швидку зарядку в сонячному режимі."
-modalTitle = "Розумна зарядка"
-none = "немає"
-priceLabel = "Ціна енергії"
-priceLimit = "Ліміт ціни"
-
 [header]
 about = "Про evcc"
 blog = "Блог"
@@ -383,6 +372,17 @@ light = "світла"
 km = "км"
 label = "Одиниці вимірювання"
 mi = "милі"
+
+[smartCost]
+activeHours = "{charging} зі {total}"
+activeHoursLabel = "Активні години"
+co2Label = "Викиди CO₂"
+co2Limit = "Ліміт CO₂"
+loadpointDescription = "Вмикає тимчасову швидку зарядку в сонячному режимі."
+modalTitle = "Розумна зарядка"
+none = "немає"
+priceLabel = "Ціна енергії"
+priceLimit = "Ліміт ціни"
 
 [startupError]
 configFile = "Використаний файл конфігурації:"
