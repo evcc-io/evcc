@@ -139,6 +139,25 @@ func encodeFloats(data map[string]any) {
 	}
 }
 
+// updateSmartCostLimit sets the smart cost limit globally
+func updateSmartCostLimit(site site.API) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+
+		val, err := parseFloat(vars["value"])
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		for _, lp := range site.Loadpoints() {
+			lp.SetSmartCostLimit(val)
+		}
+
+		jsonResult(w, val)
+	}
+}
+
 // stateHandler returns the combined state
 func stateHandler(cache *util.Cache) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
