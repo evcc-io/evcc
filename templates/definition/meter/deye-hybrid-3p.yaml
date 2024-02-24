@@ -165,7 +165,7 @@ render: |
         source: sequence
         set:
         - source: const
-          value: 100
+          value: {{ .maxsoc }}
           set: 
             source: modbus
             {{- include "modbus" . | indent 10 }}        
