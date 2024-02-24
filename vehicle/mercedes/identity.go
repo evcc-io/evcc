@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/url"
 	"strings"
 	"sync"
 	"time"
@@ -106,9 +107,12 @@ func (v *Identity) RefreshToken(currenttoken *oauth2.Token) (*oauth2.Token, erro
 	defer v.mu.Unlock()
 
 	uri := fmt.Sprintf("%s/as/token.oauth2", IdUri)
-	data := fmt.Sprintf("grant_type=refresh_token&refresh_token=%s", currenttoken.RefreshToken)
+	data := url.Values{
+		"grant_type":    []string{"password"},
+		"refresh_token": []string{currenttoken.RefreshToken},
+	}
 
-	req, err := request.New(http.MethodPost, uri, strings.NewReader(data), mbheaders(true, v.region))
+	req, err := request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), mbheaders(true, v.region))
 
 	var res MBToken
 	if err == nil {
