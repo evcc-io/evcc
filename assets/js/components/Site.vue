@@ -1,5 +1,5 @@
 <template>
-	<div class="d-flex flex-column site">
+	<div class="d-flex flex-column site safe-area-inset">
 		<div class="container px-4 top-area">
 			<div class="d-flex justify-content-between align-items-center my-3">
 				<h1 class="d-block my-0">
@@ -157,8 +157,6 @@ export default {
 <style scoped>
 .site {
 	min-height: 100vh;
-	padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom)
-		env(safe-area-inset-left);
 }
 .content-area {
 	flex-grow: 1;

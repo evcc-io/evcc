@@ -103,7 +103,7 @@
 			</li>
 			<li>
 				<button type="button" class="dropdown-item" @click="openNativeSettings">
-					Server ändern
+					{{ $t("header.nativeSettings") }}
 				</button>
 			</li>
 		</ul>

@@ -172,6 +172,7 @@ github = "GitHub"
 login = "Fahrzeug-Logins"
 needHelp = "Hilfe benötigt?"
 sessions = "Ladevorgänge"
+nativeSettings = "Server ändern"
 
 [help]
 discussionsButton = "GitHub Discussions"
