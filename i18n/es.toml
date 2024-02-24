@@ -166,17 +166,6 @@ modalUpdateNow = "Instalar ahora"
 modalUpdateStarted = "Después de la actualización, evcc se reiniciará."
 modalUpdateStatusStart = "Instalación iniciada:"
 
-[gridSettings]
-activeHours = "{charging} de {total}"
-activeHoursLabel = "Horas funcionando"
-co2Label = "Emisiones de CO₂"
-co2Limit = "Límite de CO₂"
-costLimitDescription = "Habilita temporalmente la carga rápida en modo solar"
-modalTitle = "Red inteligente de carga"
-none = "ninguno"
-priceLabel = "Precio de la energía"
-priceLimit = "Límite de precio"
-
 [header]
 about = "Sobre"
 blog = "Blog"
@@ -477,6 +466,17 @@ light = "claro"
 km = "km"
 label = "Unidades"
 mi = "millas"
+
+[smartCost]
+activeHours = "{charging} de {total}"
+activeHoursLabel = "Horas funcionando"
+co2Label = "Emisiones de CO₂"
+co2Limit = "Límite de CO₂"
+loadpointDescription = "Habilita temporalmente la carga rápida en modo solar"
+modalTitle = "Red inteligente de carga"
+none = "ninguno"
+priceLabel = "Precio de la energía"
+priceLimit = "Límite de precio"
 
 [startupError]
 configFile = "Archivo de configuración utilizado:"

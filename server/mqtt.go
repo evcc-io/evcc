@@ -3,7 +3,6 @@ package server
 import (
 	"encoding/json"
 	"fmt"
-	"math"
 	"reflect"
 	"strconv"
 	"strings"
@@ -170,11 +169,10 @@ func (m *MQTT) Listen(site site.API) error {
 
 func (m *MQTT) listenSiteSetters(topic string, site site.API) error {
 	for _, s := range []setter{
-		{"/prioritySoc", floatSetterErr(site.SetPrioritySoc)},
-		{"/bufferSoc", floatSetterErr(site.SetBufferSoc)},
-		{"/bufferStartSoc", floatSetterErr(site.SetBufferStartSoc)},
-		{"/residualPower", floatSetterErr(site.SetResidualPower)},
-		{"/smartCostLimit", floatSetterErr(site.SetSmartCostLimit)},
+		{"/prioritySoc", floatSetter(site.SetPrioritySoc)},
+		{"/bufferSoc", floatSetter(site.SetBufferSoc)},
+		{"/bufferStartSoc", floatSetter(site.SetBufferStartSoc)},
+		{"/residualPower", floatSetter(site.SetResidualPower)},
 	} {
 		if err := m.Handler.ListenSetter(topic+s.topic, s.fun); err != nil {
 			return err
@@ -186,14 +184,15 @@ func (m *MQTT) listenSiteSetters(topic string, site site.API) error {
 
 func (m *MQTT) listenLoadpointSetters(topic string, site site.API, lp loadpoint.API) error {
 	for _, s := range []setter{
-		{"/mode", setterFunc(api.ChargeModeString, lp.SetMode)},
-		{"/phases", intSetterErr(lp.SetPhases)},
-		{"/limitSoc", intSetter(lp.SetLimitSoc)},
-		{"/minCurrent", floatSetterErr(lp.SetMinCurrent)},
-		{"/maxCurrent", floatSetterErr(lp.SetMaxCurrent)},
-		{"/limitEnergy", floatSetter(lp.SetLimitEnergy)},
-		{"/enableThreshold", floatSetter(lp.SetEnableThreshold)},
-		{"/disableThreshold", floatSetter(lp.SetDisableThreshold)},
+		{"/mode", setterFunc(api.ChargeModeString, pass(lp.SetMode))},
+		{"/phases", intSetter(lp.SetPhases)},
+		{"/limitSoc", intSetter(pass(lp.SetLimitSoc))},
+		{"/minCurrent", floatSetter(lp.SetMinCurrent)},
+		{"/maxCurrent", floatSetter(lp.SetMaxCurrent)},
+		{"/limitEnergy", floatSetter(pass(lp.SetLimitEnergy))},
+		{"/enableThreshold", floatSetter(pass(lp.SetEnableThreshold))},
+		{"/disableThreshold", floatSetter(pass(lp.SetDisableThreshold))},
+		{"/smartCostLimit", floatSetter(pass(lp.SetSmartCostLimit))},
 		{"/planEnergy", func(payload string) error {
 			var plan struct {
 				Time  time.Time `json:"time"`
@@ -228,8 +227,8 @@ func (m *MQTT) listenLoadpointSetters(topic string, site site.API, lp loadpoint.
 
 func (m *MQTT) listenVehicleSetters(topic string, v vehicle.API) error {
 	for _, s := range []setter{
-		{topic + "/limitSoc", intSetter(v.SetLimitSoc)},
-		{topic + "/minSoc", intSetter(v.SetMinSoc)},
+		{topic + "/limitSoc", intSetter(pass(v.SetLimitSoc))},
+		{topic + "/minSoc", intSetter(pass(v.SetMinSoc))},
 		{topic + "/planSoc", func(payload string) error {
 			var plan struct {
 				Time  time.Time `json:"time"`
@@ -302,13 +301,4 @@ func (m *MQTT) Run(site site.API, in <-chan util.Param) {
 		// value
 		m.publish(topic, true, p.Val)
 	}
-}
-
-// parseFloat rejects NaN and Inf values
-func parseFloat(payload string) (float64, error) {
-	f, err := strconv.ParseFloat(payload, 64)
-	if err == nil && (math.IsNaN(f) || math.IsInf(f, 0)) {
-		err = fmt.Errorf("invalid float value: %s", payload)
-	}
-	return f, err
 }

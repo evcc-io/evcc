@@ -122,17 +122,6 @@ modalUpdateNow = "Namesti zdaj"
 modalUpdateStarted = "Zagon nove različice evcc…"
 modalUpdateStatusStart = "Namestitev se je začela:"
 
-[gridSettings]
-activeHours = "{charging} od {total}"
-activeHoursLabel = "Aktivne ure"
-co2Label = "Emisije CO₂"
-co2Limit = "Omejitev CO₂"
-costLimitDescription = "Omogoči začasno hitro polnjenje v solarnem načinu."
-modalTitle = "Smart Grid Polnjenje"
-none = "brez"
-priceLabel = "Cena energije"
-priceLimit = "Omejitev cene"
-
 [header]
 about = "Informacije"
 blog = "Blog"
@@ -425,6 +414,17 @@ light = "svetlo"
 km = "km"
 label = "Enote"
 mi = "milje"
+
+[smartCost]
+activeHours = "{charging} od {total}"
+activeHoursLabel = "Aktivne ure"
+co2Label = "Emisije CO₂"
+co2Limit = "Omejitev CO₂"
+loadpointDescription = "Omogoči začasno hitro polnjenje v solarnem načinu."
+modalTitle = "Smart Grid Polnjenje"
+none = "brez"
+priceLabel = "Cena energije"
+priceLimit = "Omejitev cene"
 
 [startupError]
 configFile = "Uporabljena konfiguracijska datoteka:"

@@ -100,17 +100,6 @@ modalUpdateNow = "Instalovat nyní"
 modalUpdateStarted = "Spouštím novou verzi evcc..."
 modalUpdateStatusStart = "Instalace spuštěna:"
 
-[gridSettings]
-activeHours = "{charging} z {total}"
-activeHoursLabel = "Aktivně hodin"
-co2Label = "CO₂ emise"
-co2Limit = "CO₂ limit"
-costLimitDescription = "Umožňuje dočasné rychlé dobíjení v solárním režimu"
-modalTitle = "Smart Grid Nabíjení"
-none = "žádné"
-priceLabel = "Cena energie"
-priceLimit = "Cenový strop"
-
 [header]
 about = "O"
 blog = "Blog"
@@ -188,3 +177,14 @@ label = "Min. Proud"
 
 [main.loadpointSettings.minSoc]
 description = "Vozidlo se “rychle” nabije na {0} % v solárním režimu. Poté pokračuje solárním přebytkem. Užitečné pro zajištění minimálního dojezdu i pro temnější dny."
+
+[smartCost]
+activeHours = "{charging} z {total}"
+activeHoursLabel = "Aktivně hodin"
+co2Label = "CO₂ emise"
+co2Limit = "CO₂ limit"
+loadpointDescription = "Umožňuje dočasné rychlé dobíjení v solárním režimu"
+modalTitle = "Smart Grid Nabíjení"
+none = "žádné"
+priceLabel = "Cena energie"
+priceLimit = "Cenový strop"

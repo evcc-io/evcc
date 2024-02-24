@@ -166,17 +166,6 @@ modalUpdateNow = "Installer nu"
 modalUpdateStarted = "Starter den nye version af evcc..."
 modalUpdateStatusStart = "Installation startede:"
 
-[gridSettings]
-activeHours = "{charging} af {total}"
-activeHoursLabel = "Aktive timer"
-co2Label = "CO₂ udledning"
-co2Limit = "CO₂ grænse"
-costLimitDescription = "Aktiverer midlertidig hurtig ladning i solcelle tilstand"
-modalTitle = "Smart net opladning"
-none = "ingen"
-priceLabel = "Energi pris"
-priceLimit = "Pris grænse"
-
 [header]
 about = "Om"
 blog = "Blog"
@@ -466,6 +455,17 @@ light = "lys"
 km = "km"
 label = "Enheder"
 mi = "mil"
+
+[smartCost]
+activeHours = "{charging} af {total}"
+activeHoursLabel = "Aktive timer"
+co2Label = "CO₂ udledning"
+co2Limit = "CO₂ grænse"
+loadpointDescription = "Aktiverer midlertidig hurtig ladning i solcelle tilstand"
+modalTitle = "Smart net opladning"
+none = "ingen"
+priceLabel = "Energi pris"
+priceLimit = "Pris grænse"
 
 [startupError]
 configFile = "Konfigurationsfil brugt:"
