@@ -17,8 +17,6 @@ modalTitle = "Kaupiklio nustatymai"
 
 [batterySettings.bufferStart]
 full = "kai beveik pilnas"
-low = "kai nevisai pilnas"
-medium = "kai puspilnis"
 never = "tik su pakankamu pertekliumi"
 
 [config]
