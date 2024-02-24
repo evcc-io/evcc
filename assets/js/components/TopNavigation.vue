@@ -51,6 +51,16 @@
 					{{ $t("batterySettings.modalTitle") }}
 				</button>
 			</li>
+			<li v-if="gridModalAvailable">
+				<button
+					type="button"
+					class="dropdown-item"
+					data-testid="topnavigation-grid"
+					@click="openGridSettingsModal"
+				>
+					{{ $t("gridSettings.modalTitle") }}
+				</button>
+			</li>
 			<li v-if="$hiddenFeatures()">
 				<router-link class="dropdown-item" to="/config">
 					Device Configuration 🧪

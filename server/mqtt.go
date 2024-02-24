@@ -222,7 +222,7 @@ func (m *MQTT) listenLoadpointSetters(topic string, site site.API, lp loadpoint.
 		}
 	}
 
-	return err
+	return nil
 }
 
 func (m *MQTT) listenVehicleSetters(topic string, v vehicle.API) error {
