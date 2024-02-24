@@ -145,7 +145,7 @@ func (m *MQTT) publish(topic string, retained bool, payload interface{}) {
 }
 
 func (m *MQTT) Listen(site site.API) error {
-	if err := m.listenSiteSetters(m.root, site); err != nil {
+	if err := m.listenSiteSetters(m.root+"/site", site); err != nil {
 		return err
 	}
 
@@ -169,120 +169,32 @@ func (m *MQTT) Listen(site site.API) error {
 }
 
 func (m *MQTT) listenSiteSetters(topic string, site site.API) error {
-	var err error
-
-	if err == nil {
-		err = m.Handler.ListenSetter(topic+"/site/prioritySoc", func(payload string) error {
-			val, err := parseFloat(payload)
-			if err == nil {
-				err = site.SetPrioritySoc(val)
-			}
+	for _, s := range []setter{
+		{"/prioritySoc", floatSetterErr(site.SetPrioritySoc)},
+		{"/bufferSoc", floatSetterErr(site.SetBufferSoc)},
+		{"/bufferStartSoc", floatSetterErr(site.SetBufferStartSoc)},
+		{"/residualPower", floatSetterErr(site.SetResidualPower)},
+		{"/smartCostLimit", floatSetterErr(site.SetSmartCostLimit)},
+	} {
+		if err := m.Handler.ListenSetter(topic+s.topic, s.fun); err != nil {
 			return err
-		})
+		}
 	}
 
-	if err == nil {
-		err = m.Handler.ListenSetter(topic+"/site/bufferSoc", func(payload string) error {
-			val, err := parseFloat(payload)
-			if err == nil {
-				err = site.SetBufferSoc(val)
-			}
-			return err
-		})
-	}
-
-	if err == nil {
-		err = m.Handler.ListenSetter(topic+"/site/bufferStartSoc", func(payload string) error {
-			val, err := parseFloat(payload)
-			if err == nil {
-				err = site.SetBufferStartSoc(val)
-			}
-			return err
-		})
-	}
-
-	if err == nil {
-		err = m.Handler.ListenSetter(topic+"/site/residualPower", func(payload string) error {
-			val, err := parseFloat(payload)
-			if err == nil {
-				err = site.SetResidualPower(val)
-			}
-			return err
-		})
-	}
-
-	if err == nil {
-		err = m.Handler.ListenSetter(topic+"/site/smartCostLimit", func(payload string) error {
-			val, err := parseFloat(payload)
-			if err == nil {
-				err = site.SetSmartCostLimit(val)
-			}
-			return err
-		})
-	}
-
-	return err
+	return nil
 }
 
 func (m *MQTT) listenLoadpointSetters(topic string, site site.API, lp loadpoint.API) error {
-	var err error
-
-	if err == nil {
-		err = m.Handler.ListenSetter(topic+"/mode", func(payload string) error {
-			mode, err := api.ChargeModeString(payload)
-			if err == nil {
-				lp.SetMode(mode)
-			}
-			return err
-		})
-	}
-	if err == nil {
-		err = m.Handler.ListenSetter(topic+"/minCurrent", func(payload string) error {
-			current, err := parseFloat(payload)
-			if err == nil {
-				lp.SetMinCurrent(current)
-			}
-			return err
-		})
-	}
-	if err == nil {
-		err = m.Handler.ListenSetter(topic+"/maxCurrent", func(payload string) error {
-			current, err := parseFloat(payload)
-			if err == nil {
-				lp.SetMaxCurrent(current)
-			}
-			return err
-		})
-	}
-	if err == nil {
-		err = m.Handler.ListenSetter(topic+"/phases", func(payload string) error {
-			phases, err := strconv.Atoi(payload)
-			if err == nil {
-				err = lp.SetPhases(phases)
-			}
-			return err
-		})
-	}
-	if err == nil {
-		err = m.Handler.ListenSetter(topic+"/limitSoc", func(payload string) error {
-			soc, err := strconv.Atoi(payload)
-			if err == nil {
-				lp.SetLimitSoc(soc)
-			}
-			return err
-		})
-	}
-	if err == nil {
-		err = m.Handler.ListenSetter(topic+"/limitEnergy", func(payload string) error {
-			energy, err := strconv.ParseFloat(payload, 64)
-			if err == nil {
-				lp.SetLimitEnergy(energy)
-			}
-			return err
-		})
-	}
-	if err == nil {
-		err = m.Handler.ListenSetter(topic+"/planEnergy", func(payload string) error {
+	for _, s := range []setter{
+		{"/mode", setterFunc(api.ChargeModeString, lp.SetMode)},
+		{"/phases", intSetterErr(lp.SetPhases)},
+		{"/limitSoc", intSetter(lp.SetLimitSoc)},
+		{"/minCurrent", floatSetterErr(lp.SetMinCurrent)},
+		{"/maxCurrent", floatSetterErr(lp.SetMaxCurrent)},
+		{"/limitEnergy", floatSetter(lp.SetLimitEnergy)},
+		{"/enableThreshold", floatSetter(lp.SetEnableThreshold)},
+		{"/disableThreshold", floatSetter(lp.SetDisableThreshold)},
+		{"/planEnergy", func(payload string) error {
 			var plan struct {
 				Time  time.Time `json:"time"`
 				Value float64   `json:"value"`
@@ -292,10 +204,8 @@ func (m *MQTT) listenLoadpointSetters(topic string, site site.API, lp loadpoint.
 				err = lp.SetPlanEnergy(plan.Time, plan.Value)
 			}
 			return err
-		})
-	}
-	if err == nil {
-		err = m.Handler.ListenSetter(topic+"/vehicle", func(payload string) error {
+		}},
+		{"/vehicle", func(payload string) error {
 			// https://github.com/evcc-io/evcc/issues/11184 empty payload is swallowed by listener
 			if payload == "-" {
 				lp.SetVehicle(nil)
@@ -306,53 +216,21 @@ func (m *MQTT) listenLoadpointSetters(topic string, site site.API, lp loadpoint.
 				lp.SetVehicle(vehicle.Instance())
 			}
 			return err
-		})
-	}
-	if err == nil {
-		err = m.Handler.ListenSetter(topic+"/enableThreshold", func(payload string) error {
-			threshold, err := parseFloat(payload)
-			if err == nil {
-				lp.SetEnableThreshold(threshold)
-			}
+		}},
+	} {
+		if err := m.Handler.ListenSetter(topic+s.topic, s.fun); err != nil {
 			return err
-		})
-	}
-	if err == nil {
-		err = m.Handler.ListenSetter(topic+"/disableThreshold", func(payload string) error {
-			threshold, err := parseFloat(payload)
-			if err == nil {
-				lp.SetDisableThreshold(threshold)
-			}
-			return err
-		})
+		}
 	}
 
-	return err
+	return nil
 }
 
 func (m *MQTT) listenVehicleSetters(topic string, v vehicle.API) error {
-	var err error
-
-	if err == nil {
-		err = m.Handler.ListenSetter(topic+"/minSoc", func(payload string) error {
-			soc, err := strconv.Atoi(payload)
-			if err == nil {
-				v.SetMinSoc(soc)
-			}
-			return err
-		})
-	}
-	if err == nil {
-		err = m.Handler.ListenSetter(topic+"/limitSoc", func(payload string) error {
-			soc, err := strconv.Atoi(payload)
-			if err == nil {
-				v.SetLimitSoc(soc)
-			}
-			return err
-		})
-	}
-	if err == nil {
-		err = m.Handler.ListenSetter(topic+"/planSoc", func(payload string) error {
+	for _, s := range []setter{
+		{topic + "/limitSoc", intSetter(v.SetLimitSoc)},
+		{topic + "/minSoc", intSetter(v.SetMinSoc)},
+		{topic + "/planSoc", func(payload string) error {
 			var plan struct {
 				Time  time.Time `json:"time"`
 				Value int       `json:"value"`
@@ -362,9 +240,14 @@ func (m *MQTT) listenVehicleSetters(topic string, v vehicle.API) error {
 				err = v.SetPlanSoc(plan.Time, plan.Value)
 			}
 			return err
-		})
+		}},
+	} {
+		if err := m.Handler.ListenSetter(s.topic, s.fun); err != nil {
+			return err
+		}
 	}
-	return err
+
+	return nil
 }
 
 // Run starts the MQTT publisher for the MQTT API
