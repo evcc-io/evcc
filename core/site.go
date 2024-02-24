@@ -781,7 +781,6 @@ func (site *Site) update(lp updater) {
 		flexiblePower = site.prioritizer.GetChargePowerFlexibility(lp)
 	}
 
-	// TODO: implement active check for loadpoints and battery
 	var smartCostActive bool
 	if tariff := site.GetTariff(PlannerTariff); tariff != nil && tariff.Type() != api.TariffTypePriceStatic {
 		rates, err := tariff.Rates()
