@@ -1,17 +1,14 @@
 package mercedes
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/provider"
-	"github.com/evcc-io/evcc/util"
 )
 
 type Provider struct {
 	dataG func() (StatusResponse, error)
-	log   *util.Logger
 }
 
 func NewProvider(api *API, vin string, cache time.Duration) *Provider {
@@ -20,7 +17,6 @@ func NewProvider(api *API, vin string, cache time.Duration) *Provider {
 			res, err := api.Status(vin)
 			return res, err
 		}, cache),
-		log: api.log,
 	}
 	return impl
 }
@@ -32,7 +28,6 @@ func (v *Provider) Soc() (float64, error) {
 		return res.EvInfo.Battery.StateOfCharge, nil
 	}
 
-	v.log.DEBUG.Printf("Provider: SOC - %s", err)
 	return 0, err
 }
 
@@ -45,7 +40,6 @@ func (v *Provider) Range() (int64, error) {
 		return int64(res.EvInfo.Battery.DistanceToEmpty.Value), nil
 	}
 
-	v.log.DEBUG.Printf("Provider: Range - %s", err)
 	return 0, err
 }
 
@@ -58,7 +52,6 @@ func (v *Provider) Odometer() (float64, error) {
 		return float64(res.VehicleInfo.Odometer.Value), nil
 	}
 
-	v.log.DEBUG.Printf("Provider: Odo - %s", err)
 	return 0, err
 }
 
@@ -73,7 +66,6 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 		status = MapChargeStatus(res.EvInfo.Battery.ChargingStatus)
 	}
 
-	v.log.DEBUG.Printf("Provider: Status - %s", fmt.Sprint(res.EvInfo.Battery.ChargingStatus))
 	return status, err
 }
 
@@ -86,7 +78,6 @@ func (v *Provider) Position() (float64, float64, error) {
 		return res.LocationResponse.Latitude, res.LocationResponse.Longitude, nil
 	}
 
-	v.log.DEBUG.Printf("Provider: Loc - %s", err)
 	return 0, 0, err
 }
 
@@ -98,7 +89,6 @@ func (v *Provider) FinishTime() (time.Time, error) {
 	if err != nil {
 		return time.Time{}, err
 	}
-	v.log.DEBUG.Printf("Provider: FinishTime - %s", fmt.Sprint(res.EvInfo.Battery.EndOfChargeTime))
 
 	now := time.Now()
 	targetDateTime := time.Date(now.Year(), now.Month(), now.Day(), 0, res.EvInfo.Battery.EndOfChargeTime, 0, 0, now.Location())
