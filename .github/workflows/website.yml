@@ -4,9 +4,8 @@ env:
   GO_VERSION: ^1.22
 
 on:
-  push:
-    branches: [master]
-    paths: ["templates/**"]
+  release:
+    types: [created]
   workflow_dispatch:
 
 jobs:
