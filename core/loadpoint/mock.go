@@ -574,11 +574,9 @@ func (mr *MockAPIMockRecorder) SetPriority(arg0 any) *gomock.Call {
 }
 
 // SetSmartCostLimit mocks base method.
-func (m *MockAPI) SetSmartCostLimit(arg0 float64) error {
+func (m *MockAPI) SetSmartCostLimit(arg0 float64) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SetSmartCostLimit", arg0)
-	ret0, _ := ret[0].(error)
-	return ret0
+	m.ctrl.Call(m, "SetSmartCostLimit", arg0)
 }
 
 // SetSmartCostLimit indicates an expected call of SetSmartCostLimit.
