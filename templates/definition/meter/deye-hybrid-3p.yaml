@@ -142,6 +142,15 @@ render: |
               address: 149 # soc time of use 1
               type: writemultiple
               decode: int32s
+        - source: const
+          value: 0
+          set: 
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 172 # grid charge enable tou 1
+              type: writemultiple
+              decode: int32s
     - case: 2 # hold
       set:
         source: sequence
@@ -166,15 +175,35 @@ render: |
               decode: int32s
     - case: 3 # charge
       set:
-        source: const
-        value: {{ .maxsoc }} # SoC TOU 1 
-        set: 
-          source: modbus
-          {{- include "modbus" . | indent 8 }}
-          register:
-            address: 166 # soc time of use 1
-            type: writemultiple
-            decode: int32s
+        source: sequence
+        set:
+        - source: const
+          value: 0 # start time TOU Slot 1
+          set: 
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 148 # soc time of use 1
+              type: writemultiple
+              decode: int32s
+        - source: const
+          value: 2355 # end time TOU Slot 1
+          set: 
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 149 # soc time of use 1
+              type: writemultiple
+              decode: int32s
+        - source: const
+          value: 1
+          set: 
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 172 # grid charge enable tou 1
+              type: writemultiple
+              decode: int32s
   limitsoc:
     source: convert
     convert: float2int
