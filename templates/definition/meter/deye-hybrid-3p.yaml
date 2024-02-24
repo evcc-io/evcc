@@ -125,21 +125,21 @@ render: |
         source: sequence
         set: 
         - source: const
-          value: 0 # start time TOU Slot 1
+          value: 0 # start time tou slot 1
           set: 
             source: modbus
             {{- include "modbus" . | indent 10 }}
             register:
-              address: 148 # soc time of use 1
+              address: 148 # sell mode time point 1
               type: writemultiple
               decode: int32s
         - source: const
-          value: 2355 # end time TOU Slot 1
+          value: 2355 # end time tou slot 1
           set: 
             source: modbus
             {{- include "modbus" . | indent 10 }}
             register:
-              address: 149 # soc time of use 1
+              address: 149 # sell mode time point 2
               type: writemultiple
               decode: int32s
         - source: const
@@ -149,6 +149,15 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 172 # grid charge enable tou 1
+              type: writemultiple
+              decode: int32s
+        - source: const
+          value: {{ .minsoc }}
+          set: 
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 166 # soc tou 1
               type: writemultiple
               decode: int32s
     - case: 2 # hold
@@ -171,6 +180,15 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 149 # soc time of use 1
+              type: writemultiple
+              decode: int32s
+          - source: const
+          value: 100
+          set: 
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 166 # soc tou 1
               type: writemultiple
               decode: int32s
     - case: 3 # charge
@@ -204,17 +222,15 @@ render: |
               address: 172 # grid charge enable tou 1
               type: writemultiple
               decode: int32s
-  limitsoc:
-    source: convert
-    convert: float2int
-    set: 
-      source: modbus
-      {{- include "modbus" . | indent 4 }}        
-      register:
-        address: 166 # soc time of use 1
-        type: writemultiple
-        decode: int32s
-      scale: 1
+          - source: const
+          value: {{ .maxsoc }}
+          set: 
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 166 # soc tou 1
+              type: writemultiple
+              decode: int32s
   minsoc: {{.minsoc}}
   maxsoc: {{.maxsoc}}
   {{- if .capacity }}
