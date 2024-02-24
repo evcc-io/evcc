@@ -451,6 +451,7 @@ mi = "miles"
 [smartCost]
 activeHours = "{charging} of {total}"
 activeHoursLabel = "Active hours"
+applyToAll = "Apply everywhere?"
 batteryDescription = "Charges the home battery with energy from the grid."
 cheapTitle = "Cheap Grid Charging"
 cleanTitle = "Clean Grid Charging"
@@ -461,6 +462,7 @@ modalTitle = "Smart Grid Charging"
 none = "none"
 priceLabel = "Energy price"
 priceLimit = "Price limit"
+saved = "Saved."
 
 [startupError]
 configFile = "Configuration file used:"

@@ -8,11 +8,11 @@
 			<label :for="formId" class="col-sm-4 col-form-label pt-0 pt-sm-2">
 				{{ isCo2 ? $t("smartCost.co2Limit") : $t("smartCost.priceLimit") }}
 			</label>
-			<div class="col-sm-8 pe-0">
+			<div class="col-sm-8 col-lg-4 pe-0">
 				<select
 					:id="formId"
 					v-model.number="selectedSmartCostLimit"
-					class="form-select form-select-sm w-50 mb-1"
+					class="form-select form-select-sm mb-1"
 					@change="changeSmartCostLimit"
 				>
 					<option value="0">{{ $t("smartCost.none") }}</option>
@@ -20,6 +20,15 @@
 						{{ name }}
 					</option>
 				</select>
+			</div>
+			<div
+				v-if="applyToAllVisible"
+				class="col-sm-8 offset-sm-4 offset-lg-0 col-lg-4 d-flex align-items-baseline"
+			>
+				<div class="text-primary">{{ $t("smartCost.saved") }}</div>
+				<button class="ms-1 btn btn-sm btn-link text-muted p-0" @click="applyToAll">
+					{{ $t("smartCost.applyToAll") }}
+				</button>
 			</div>
 		</div>
 		<div class="justify-content-between mb-2 d-flex justify-content-between">
@@ -81,6 +90,7 @@ export default {
 		tariffGrid: Number,
 		currency: String,
 		loadpointId: Number,
+		multipleLoadpoints: Boolean,
 	},
 	data: function () {
 		return {
@@ -88,6 +98,7 @@ export default {
 			tariff: null,
 			startTime: null,
 			activeIndex: null,
+			applyToAllVisible: false,
 		};
 	},
 	computed: {
@@ -292,11 +303,23 @@ export default {
 			this.saveSmartCostLimit($event.target.value);
 		},
 		async saveSmartCostLimit(limit) {
-			const url = this.loadpointId
+			const isLoadpoint = !!this.loadpointId;
+			const url = isLoadpoint
 				? `loadpoints/${this.loadpointId}/smartcostlimit`
 				: "batterysmartcostlimit"; // currently not implemented
 			try {
 				await api.post(`${url}/${encodeURIComponent(limit)}`);
+				if (isLoadpoint && this.multipleLoadpoints) {
+					this.applyToAllVisible = true;
+				}
+			} catch (err) {
+				console.error(err);
+			}
+		},
+		async applyToAll() {
+			try {
+				await api.post(`smartcostlimit/${encodeURIComponent(this.selectedSmartCostLimit)}`);
+				this.applyToAllVisible = false;
 			} catch (err) {
 				console.error(err);
 			}

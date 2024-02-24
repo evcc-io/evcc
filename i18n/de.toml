@@ -452,6 +452,7 @@ mi = "Meilen"
 [smartCost]
 activeHours = "{charging} von {total}"
 activeHoursLabel = "Aktive Stunden"
+applyToAll = "Überall anwenden?"
 batteryDescription = "Lädt die Hausbatterie aus dem Netz."
 cheapTitle = "Günstiges Netzladen"
 cleanTitle = "Sauberes Netzladen"
@@ -462,6 +463,7 @@ modalTitle = "Smartes Netzladen"
 none = "keine"
 priceLabel = "Energiepreis"
 priceLimit = "Preisgrenze"
+saved = "Gepeichert."
 
 [startupError]
 configFile = "Verwendete Konfigurationsdatei:"

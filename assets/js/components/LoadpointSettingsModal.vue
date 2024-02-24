@@ -187,6 +187,7 @@ export default {
 		smartCostType: String,
 		tariffGrid: Number,
 		currency: String,
+		multipleLoadpoints: Boolean,
 	},
 	emits: ["phasesconfigured-updated", "maxcurrent-updated", "mincurrent-updated"],
 	data: function () {

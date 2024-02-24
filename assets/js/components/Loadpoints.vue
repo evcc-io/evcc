@@ -17,6 +17,7 @@
 					:tariffGrid="tariffGrid"
 					:tariffCo2="tariffCo2"
 					:currency="currency"
+					:multiple-loadpoints="loadpoints.length > 1"
 					class="h-100"
 					:class="{ 'loadpoint-unselected': !selected(index) }"
 					@click="scrollTo(index)"
