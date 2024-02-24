@@ -16,10 +16,11 @@ legendTopSubline = "uden afbrydelser"
 modalTitle = "Batteri indstillinger"
 
 [batterySettings.bufferStart]
-full = "næsten fyldt"
+full = "når den er på {soc}"
 low = "en smule fyldt"
 medium = "halv fyldt"
 never = "kun med nok solar overskud"
+above = "når den er over {soc}"
 
 [config]
 
