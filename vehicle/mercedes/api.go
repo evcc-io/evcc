@@ -86,59 +86,59 @@ func (v *API) Status(vin string) (StatusResponse, error) {
 
 	data, err := v.GetBody(uri)
 
-	if err == nil {
-		message := &protos.VEPUpdate{}
-		err := proto.Unmarshal(data, message)
+	if err != nil {
+		return res, err
+	}
 
-		if err == nil {
-			if val, ok := message.Attributes["odo"]; ok {
-				if val.GetNilValue() {
-					res.VehicleInfo.Odometer.Value = -1
-					res.VehicleInfo.Odometer.Unit = ""
-				} else {
-					res.VehicleInfo.Odometer.Value = int(val.GetIntValue())
-					res.VehicleInfo.Odometer.Unit = val.GetDistanceUnit().String()
-				}
-			}
+	message := &protos.VEPUpdate{}
+	if err = proto.Unmarshal(data, message); err != nil {
+		return res, err
+	}
 
-			if val, ok := message.Attributes["soc"]; ok {
-				if val.GetNilValue() {
-					res.EvInfo.Battery.StateOfCharge = -1
-				} else {
-					res.EvInfo.Battery.StateOfCharge = float64(val.GetIntValue())
-				}
-			}
-
-			if val, ok := message.Attributes["rangeelectric"]; ok {
-				if val.GetNilValue() {
-					res.EvInfo.Battery.DistanceToEmpty.Value = -1
-					res.EvInfo.Battery.DistanceToEmpty.Unit = ""
-				} else {
-					res.EvInfo.Battery.DistanceToEmpty.Value = int(val.GetIntValue())
-					res.EvInfo.Battery.DistanceToEmpty.Unit = val.GetDistanceUnit().String()
-				}
-			}
-
-			if val, ok := message.Attributes["endofchargetime"]; ok {
-				if val.GetNilValue() {
-					res.EvInfo.Battery.EndOfChargeTime = -1
-				} else {
-					res.EvInfo.Battery.EndOfChargeTime = int(val.GetIntValue())
-				}
-			}
-
-			if val, ok := message.Attributes["chargingstatus"]; ok {
-				if val.GetNilValue() {
-					res.EvInfo.Battery.ChargingStatus = 3
-				} else {
-					res.EvInfo.Battery.ChargingStatus = int(val.GetIntValue())
-				}
-			} else {
-				res.EvInfo.Battery.ChargingStatus = 3
-			}
+	if val, ok := message.Attributes["odo"]; ok {
+		if val.GetNilValue() {
+			res.VehicleInfo.Odometer.Value = 0
+			res.VehicleInfo.Odometer.Unit = ""
 		} else {
-			v.log.ERROR.Printf("api.status - cant convert status message - %s", err)
+			res.VehicleInfo.Odometer.Value = int(val.GetIntValue())
+			res.VehicleInfo.Odometer.Unit = val.GetDistanceUnit().String()
 		}
+	}
+
+	if val, ok := message.Attributes["soc"]; ok {
+		if val.GetNilValue() {
+			res.EvInfo.Battery.StateOfCharge = 0
+		} else {
+			res.EvInfo.Battery.StateOfCharge = float64(val.GetIntValue())
+		}
+	}
+
+	if val, ok := message.Attributes["rangeelectric"]; ok {
+		if val.GetNilValue() {
+			res.EvInfo.Battery.DistanceToEmpty.Value = 0
+			res.EvInfo.Battery.DistanceToEmpty.Unit = ""
+		} else {
+			res.EvInfo.Battery.DistanceToEmpty.Value = int(val.GetIntValue())
+			res.EvInfo.Battery.DistanceToEmpty.Unit = val.GetDistanceUnit().String()
+		}
+	}
+
+	if val, ok := message.Attributes["endofchargetime"]; ok {
+		if val.GetNilValue() {
+			res.EvInfo.Battery.EndOfChargeTime = 0
+		} else {
+			res.EvInfo.Battery.EndOfChargeTime = int(val.GetIntValue())
+		}
+	}
+
+	if val, ok := message.Attributes["chargingstatus"]; ok {
+		if val.GetNilValue() {
+			res.EvInfo.Battery.ChargingStatus = 3
+		} else {
+			res.EvInfo.Battery.ChargingStatus = int(val.GetIntValue())
+		}
+	} else {
+		res.EvInfo.Battery.ChargingStatus = 3
 	}
 
 	return res, err
@@ -156,7 +156,6 @@ func (vs *SetupAPI) RequestPin() (bool, *string, error) {
 	uri := fmt.Sprintf("%s/v1/config", getBffUri(vs.region))
 	_, err := vs.Helper.GetBody(uri)
 	if err != nil {
-		vs.log.DEBUG.Println("setupapi.RequestPin - error preflight")
 		return false, nil, err
 	}
 
@@ -165,22 +164,20 @@ func (vs *SetupAPI) RequestPin() (bool, *string, error) {
 	data := fmt.Sprintf("{\"emailOrPhoneNumber\": \"%s\", \"countryCode\": \"EN\", \"nonce\": \"%s\"}", vs.account, nonce)
 	res, err := client.Post(uri, "application/json", strings.NewReader(data))
 	var pinResponse PinResponse
-	if err == nil {
-		defer res.Body.Close()
-		var content []byte
-		content, err := io.ReadAll(res.Body)
-		if err != nil {
-			return false, nil, err
-		}
-		json.Unmarshal(content, &pinResponse)
-	}
-
-	// Only if the response field email is the same like the account an email is send by the servers.
-	if pinResponse.UserName == vs.account {
-		return true, &nonce, err
-	} else {
+	if err != nil {
 		return false, nil, err
 	}
+
+	defer res.Body.Close()
+	var content []byte
+	content, err = io.ReadAll(res.Body)
+	if err != nil {
+		return false, nil, err
+	}
+	json.Unmarshal(content, &pinResponse)
+
+	// Only if the response field email is the same like the account an email is send by the servers.
+	return pinResponse.UserName == vs.account, &nonce, err
 }
 
 func (vs *SetupAPI) RequestAccessToken(nonce string, pin string) (*oauth2.Token, error) {
@@ -195,10 +192,8 @@ func (vs *SetupAPI) RequestAccessToken(nonce string, pin string) (*oauth2.Token,
 	}
 
 	if err != nil {
-		vs.log.DEBUG.Println("RefreshToken - After token - error", err)
 		return nil, err
 	}
 
-	vs.log.DEBUG.Println("Api.RequestAccessToken - Token set - ok")
 	return res.GetToken(), err
 }
