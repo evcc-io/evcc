@@ -17,8 +17,6 @@ modalTitle = "Batteri indstillinger"
 
 [batterySettings.bufferStart]
 full = "næsten fyldt"
-low = "en smule fyldt"
-medium = "halv fyldt"
 never = "kun med nok solar overskud"
 
 [config]

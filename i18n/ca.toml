@@ -15,8 +15,6 @@ modalTitle = "Configuració bateria"
 
 [batterySettings.bufferStart]
 full = "quan gairebé ple"
-low = "quan una mica ple"
-medium = "quan mig ple"
 never = "només amb prous excedents"
 
 [footer]
