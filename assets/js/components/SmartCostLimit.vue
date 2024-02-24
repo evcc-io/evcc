@@ -200,10 +200,10 @@ export default {
 			return this.fmtPricePerKWh(price, this.currency);
 		},
 		title() {
-			return this.$t(`smartCost.title${this.isCo2 ? "Clean" : "Cheap"}`);
+			return this.$t(`smartCost.${this.isCo2 ? "clean" : "cheap"}Title`);
 		},
 		description() {
-			return this.$t(`smartCost.description${this.loadpointId ? "Loadpoint" : "Battery"}`);
+			return this.$t(`smartCost.${this.loadpointId ? "loadpoint" : "battery"}Description`);
 		},
 		formId() {
 			return `smartCostLimit-${this.loadpointId || "battery"}`;
