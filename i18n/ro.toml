@@ -178,8 +178,8 @@ login = "Login Masina"
 needHelp = "Ai nevoie de Ajutor ?"
 sessions = "Sesiuni de Incărcare"
 settings = "Configurare"
-nativeSettings = 
-logout = 
+nativeSettings =
+logout =
 
 [help]
 discussionsButton = "Discutii GitHub"
@@ -191,8 +191,8 @@ primaryActions = "Ceva nu functioneaza cum ar trebui? Aici este locul potrivit s
 restartButton = "Restart"
 restartDescription = "Ai incercat sa inchizi si sa deschizi din nou? "
 secondaryActions = "Inca nu ati rezolvat problema? Iata niste alte optiuni"
-logsButton = 
-logsDescription = 
+logsButton =
+logsDescription =
 
 [help.restart]
 cancel = "Anuleaza"
@@ -218,7 +218,7 @@ title = "Plan"
 titleMinSoc = "Incarcare minima"
 titleTargetCharge = "Plecare"
 update = "Aplica"
-unsavedChanges = 
+unsavedChanges =
 
 [main.energyflow]
 battery = "Baterie"
@@ -260,8 +260,8 @@ disclaimerHint = "Nota:"
 onlyForSocBasedCharging = "Aceste optiuni sunt active doar pentru masini carora le cunoaste gradul de incarcare."
 title = "Setări {0}"
 vehicle = "Vehicul"
-smartCostCheap = 
-smartCostClean = 
+smartCostCheap =
+smartCostClean =
 
 [main.loadpointSettings.limitSoc]
 description = "Limita de incarcare care e folosita cand e conectat a aceasta masina."
@@ -349,7 +349,7 @@ temp = "Temp."
 tempLimit = "Temp. limit"
 unknown = "Vehicul musafir"
 vehicleSoc = "Încărcare"
-notReachable = 
+notReachable =
 
 [main.vehicleSoc]
 charging = "încarcă"
@@ -381,7 +381,7 @@ waitForVehicle = "Pregătit. Aștept după vehicul…"
 [notifications]
 dismissAll = "Închide tot"
 modalTitle = "Notificări"
-logs = 
+logs =
 
 [offline]
 message = "Nu se poate conecta la server."
@@ -430,11 +430,11 @@ meterstart = "Start contor (kWh)"
 meterstop = "Stop contor (kWh)"
 odometer = "Kilometraj (km)"
 vehicle = "Vehicul"
-chargeduration = 
-co2perkwh = 
-solarpercentage = 
-price = 
-priceperkwh = 
+chargeduration =
+co2perkwh =
+solarpercentage =
+price =
+priceperkwh =
 
 [sessions.filter]
 allLoadpoints = "toate punctele de incarcare"
@@ -487,11 +487,11 @@ modalTitle = "Incarcare Smart Grid"
 none = "nimic"
 priceLabel = "Pretul energiei"
 priceLimit = "Limita de pret"
-applyToAll = 
-cleanTitle = 
-cheapTitle = 
-saved = 
-batteryDescription = 
+applyToAll =
+cleanTitle =
+cheapTitle =
+saved =
+batteryDescription =
 
 [startupError]
 configFile = "Fișier configurare folosit:"
@@ -512,68 +512,68 @@ test = "Test"
 
 
 [passwordModal]
-labelCurrent = 
-updatePassword = 
-noMatch = 
-labelNew = 
-error = 
-newPassword = 
-labelRepeat = 
-empty = 
-titleUpdate = 
-titleNew = 
-description = 
+labelCurrent =
+updatePassword =
+noMatch =
+labelNew =
+error =
+newPassword =
+labelRepeat =
+empty =
+titleUpdate =
+titleNew =
+description =
 
 [settings.fullscreen]
-enter = 
-exit = 
-label = 
+enter =
+exit =
+label =
 
 [config.system]
-restart = 
-logs = 
-restartRequiredDescription = 
-restartingMessage = 
-restartRequiredMessage = 
-restartingDescription = 
+restart =
+logs =
+restartRequiredDescription =
+restartingMessage =
+restartRequiredMessage =
+restartingDescription =
 
 [config.section]
-general = 
-system = 
+general =
+system =
 
 [config.general]
-save = 
-cancel = 
+save =
+cancel =
 
 [config.options.endianness]
-big = 
-little = 
+big =
+little =
 
 [log]
-areaLabel = 
-areas = 
-levelLabel = 
-showAll = 
-noResults = 
-search = 
-update = 
-download = 
-title = 
+areaLabel =
+areas =
+levelLabel =
+showAll =
+noResults =
+search =
+update =
+download =
+title =
 
 [loginModal]
-password = 
-reset = 
-cancel = 
-error = 
-login = 
-invalid = 
-title = 
+password =
+reset =
+cancel =
+error =
+login =
+invalid =
+title =
 
 [config.title]
-label = 
-title = 
-description = 
+label =
+title =
+description =
 
 [config.options.schema]
-http = 
-https = 
+http =
+https =
