@@ -8,12 +8,15 @@ import (
 	"testing"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/evcc-io/tesla-proxy-client"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/oauth2"
 )
 
 func TestCommandResponse(t *testing.T) {
+	sponsor.Subject = "any"
+
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(r.URL.Path)
 

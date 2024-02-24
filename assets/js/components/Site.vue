@@ -70,6 +70,7 @@ export default {
 		batteryPower: Number,
 		batterySoc: Number,
 		batteryDischargeControl: Boolean,
+		batterySmartCostLimit: Number,
 		batteryMode: String,
 		battery: Array,
 		gridCurrents: Array,

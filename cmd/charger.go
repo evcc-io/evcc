@@ -17,11 +17,9 @@ var chargerCmd = &cobra.Command{
 	Run:   runCharger,
 }
 
-const noCurrent = -1
-
 func init() {
 	rootCmd.AddCommand(chargerCmd)
-	chargerCmd.Flags().IntP(flagCurrent, "i", noCurrent, flagCurrentDescription)
+	chargerCmd.Flags().IntP(flagCurrent, "i", 0, flagCurrentDescription)
 	//lint:ignore SA1019 as Title is safe on ascii
 	chargerCmd.Flags().BoolP(flagEnable, "e", false, strings.Title(flagEnable))
 	//lint:ignore SA1019 as Title is safe on ascii
@@ -46,15 +44,6 @@ func runCharger(cmd *cobra.Command, args []string) {
 		log.FATAL.Fatal(err)
 	}
 
-	current := int64(noCurrent)
-	if flag := cmd.Flags().Lookup(flagCurrent); flag.Changed {
-		var err error
-		current, err = strconv.ParseInt(flag.Value.String(), 10, 64)
-		if err != nil {
-			log.ERROR.Fatalln(err)
-		}
-	}
-
 	var phases int
 	if flag := cmd.Flags().Lookup(flagPhases); flag.Changed {
 		var err error
@@ -68,8 +57,13 @@ func runCharger(cmd *cobra.Command, args []string) {
 
 	var flagUsed bool
 	for _, v := range config.Instances(chargers) {
-		if current != noCurrent {
+		if flag := cmd.Flags().Lookup(flagCurrent); flag.Changed {
 			flagUsed = true
+
+			current, err := strconv.ParseInt(flag.Value.String(), 10, 64)
+			if err != nil {
+				log.ERROR.Fatalln(err)
+			}
 
 			if err := v.MaxCurrent(current); err != nil {
 				log.ERROR.Println("set current:", err)

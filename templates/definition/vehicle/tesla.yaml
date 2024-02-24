@@ -35,14 +35,6 @@ params:
   - name: capacity
   - name: phases
     advanced: true
-  - name: control
-    type: bool
-    description:
-      de: Fahrzeugsteuerung aktivieren
-      en: Enable vehicle control
-    help:
-      de: Notwendig für Tesla Wall Connector. Der Virtual Key für evcc muss eingerichtet sein. Siehe https://tesla.evcc.io
-      en: Use with Tesla Wall Connector. The Virtual Key for evcc must be installed. See https://tesla.evcc.io
   - preset: vehicle-identify
 render: |
   type: tesla
@@ -53,7 +45,6 @@ render: |
     refresh: {{ .refreshToken }}
   capacity: {{ .capacity }}
   phases: {{ .phases }}
-  control: {{ .control }}
   vin: {{ .vin }}
   {{ include "vehicle-identify" . }}
   features: ["coarsecurrent"]

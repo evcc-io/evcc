@@ -28,7 +28,12 @@
 			</li>
 			<li><hr class="dropdown-divider" /></li>
 			<li>
-				<button type="button" class="dropdown-item" @click="openSettingsModal">
+				<button
+					type="button"
+					class="dropdown-item"
+					data-testid="topnavigation-settings"
+					@click="openSettingsModal"
+				>
 					<span
 						v-if="sponsorTokenExpires"
 						class="d-inline-block p-1 rounded-circle bg-danger border border-light rounded-circle"
@@ -37,12 +42,22 @@
 				</button>
 			</li>
 			<li v-if="batteryModalAvailable">
-				<button type="button" class="dropdown-item" @click="openBatterySettingsModal">
+				<button
+					type="button"
+					class="dropdown-item"
+					data-testid="topnavigation-battery"
+					@click="openBatterySettingsModal"
+				>
 					{{ $t("batterySettings.modalTitle") }}
 				</button>
 			</li>
 			<li v-if="gridModalAvailable">
-				<button type="button" class="dropdown-item" @click="openGridSettingsModal">
+				<button
+					type="button"
+					class="dropdown-item"
+					data-testid="topnavigation-grid"
+					@click="openGridSettingsModal"
+				>
 					{{ $t("gridSettings.modalTitle") }}
 				</button>
 			</li>
@@ -103,7 +118,6 @@ import "@h2d2/shopicons/es/regular/moonstars";
 import "@h2d2/shopicons/es/regular/menu";
 import "@h2d2/shopicons/es/regular/newtab";
 import collector from "../mixins/collector";
-import gridModalAvailable from "../utils/gridModalAvailable";
 
 import baseAPI from "../baseapi";
 import { sendToApp } from "../utils/native";
@@ -121,7 +135,6 @@ export default {
 		sponsor: String,
 		sponsorTokenExpires: Number,
 		batteryConfigured: Boolean,
-		smartCostType: String,
 	},
 	computed: {
 		logoutCount() {
@@ -143,9 +156,6 @@ export default {
 		},
 		batteryModalAvailable() {
 			return this.batteryConfigured;
-		},
-		gridModalAvailable: function () {
-			return gridModalAvailable(this.smartCostType);
 		},
 	},
 	mounted() {
@@ -180,10 +190,6 @@ export default {
 			const modal = Modal.getOrCreateInstance(
 				document.getElementById("batterySettingsModal")
 			);
-			modal.show();
-		},
-		openGridSettingsModal() {
-			const modal = Modal.getOrCreateInstance(document.getElementById("gridSettingsModal"));
 			modal.show();
 		},
 		openNativeSettings() {

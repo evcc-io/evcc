@@ -188,6 +188,7 @@ export default {
 		tariffGrid: Number,
 		tariffCo2: Number,
 		currency: String,
+		multipleLoadpoints: Boolean,
 	},
 	data() {
 		return {

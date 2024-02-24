@@ -106,6 +106,15 @@ type API interface {
 	RemoteControl(string, RemoteDemand)
 
 	//
+	// smart grid charging
+	//
+
+	// GetSmartChargingActive determines if smart charging is active
+	GetSmartCostLimit() float64
+	// SetSmartCostLimit sets the smart cost limit
+	SetSmartCostLimit(limit float64)
+
+	//
 	// power and energy
 	//
 
