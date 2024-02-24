@@ -20,7 +20,7 @@ params:
     advanced: true
   - name: minsoc
     type: number
-    advanced: true 
+    advanced: true
   - name: maxsoc
     type: number
     advanced: true
