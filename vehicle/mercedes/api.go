@@ -154,8 +154,7 @@ func (vs *SetupAPI) RequestPin() (bool, *string, error) {
 
 	// Preflight request required to get a pin
 	uri := fmt.Sprintf("%s/v1/config", getBffUri(vs.region))
-	_, err := vs.Helper.GetBody(uri)
-	if err != nil {
+	if _, err := vs.Helper.GetBody(uri); err != nil {
 		return false, nil, err
 	}
 
