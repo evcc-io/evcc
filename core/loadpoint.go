@@ -822,8 +822,12 @@ func (lp *Loadpoint) limitSocReached() bool {
 }
 
 // minSocNotReached checks if minimum is configured and not reached.
-// If vehicle is not configured this will always return false
+// If vehicle is not configured or does not provide soc (i.E. if it is offline) this will always return false
 func (lp *Loadpoint) minSocNotReached() bool {
+	if !lp.vehicleHasSoc() {
+		return false
+	}
+
 	v := lp.GetVehicle()
 	if v == nil {
 		return false
