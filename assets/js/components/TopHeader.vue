@@ -1,5 +1,5 @@
 <template>
-	<header class="d-flex justify-content-between align-items-center py-3 hide-in-app">
+	<header class="d-flex justify-content-between align-items-center py-3">
 		<h1 class="mb-1 pt-1 d-flex text-nowrap text-truncate">
 			<router-link class="evcc-default-text" to="/" data-testid="home-link">
 				<shopicon-regular-home size="s" class="home"></shopicon-regular-home>

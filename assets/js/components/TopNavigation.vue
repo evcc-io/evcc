@@ -88,7 +88,7 @@
 			</li>
 			<li>
 				<button type="button" class="dropdown-item" @click="openNativeSettings">
-					App Settings
+					Server ändern
 				</button>
 			</li>
 		</ul>
@@ -106,6 +106,7 @@ import collector from "../mixins/collector";
 import gridModalAvailable from "../utils/gridModalAvailable";
 
 import baseAPI from "../baseapi";
+import { sendToApp } from "../utils/native";
 
 export default {
 	name: "TopNavigation",
@@ -186,7 +187,7 @@ export default {
 			modal.show();
 		},
 		openNativeSettings() {
-			window.ReactNativeWebView.postMessage("settings");
+			sendToApp({ type: "settings" });
 		},
 	},
 };
