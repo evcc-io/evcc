@@ -86,6 +86,8 @@ render: |
       - 103:W
       - 111:W
       - 113:W
+      - 102:W
+      - 112:W
   energy:
     source: sunspec
     {{- include "modbus" . | indent 2 }}
@@ -94,6 +96,8 @@ render: |
       - 103:WH
       - 111:WH
       - 113:WH
+      - 102:WH
+      - 112:WH
     scale: 0.001
   {{- end }}
   {{- if eq .usage "battery" }}

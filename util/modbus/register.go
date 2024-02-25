@@ -1,6 +1,7 @@
 package modbus
 
 import (
+	"encoding/binary"
 	"errors"
 	"fmt"
 	"math"
@@ -137,9 +138,16 @@ func (r Register) Operation() (RegisterOperation, error) {
 		}
 	} else {
 		switch strings.ToLower(r.encoding()) {
-		case "int32s", "uint32s", "float32s", "ieee754s":
+		case "int32s", "uint32s":
 			op.Encode = func(v uint64) uint64 {
 				return v&0xFFFF<<16 | v&0xFFFF0000>>16
+			}
+
+		case "float32s", "ieee754s":
+			op.Encode = func(v uint64) uint64 {
+				b := make([]byte, 4)
+				encoding.PutFloat32LswFirst(b, float32(v))
+				return uint64(binary.BigEndian.Uint32(b))
 			}
 
 		default:

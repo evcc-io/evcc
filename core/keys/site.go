@@ -18,8 +18,6 @@ const (
 	PvPower               = "pvPower"
 	ResidualPower         = "residualPower"
 	SiteTitle             = "siteTitle"
-	SmartCostActive       = "smartCostActive"
-	SmartCostLimit        = "smartCostLimit"
 	SmartCostType         = "smartCostType"
 	Statistics            = "statistics"
 	TariffCo2             = "tariffCo2"

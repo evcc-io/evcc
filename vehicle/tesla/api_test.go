@@ -15,7 +15,7 @@ import (
 )
 
 func TestCommandResponse(t *testing.T) {
-	sponsor.Token = "token"
+	sponsor.Subject = "any"
 
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(r.URL.Path)

@@ -1,3 +1,4 @@
+#!/bin/sh
 set -e
 
 if [ -d /run/systemd/system ]; then
@@ -14,5 +15,60 @@ if [ "$1" = "purge" ]; then
 	if [ -x "/usr/bin/deb-systemd-helper" ]; then
 		deb-systemd-helper purge evcc.service >/dev/null || true
 		deb-systemd-helper unmask evcc.service >/dev/null || true
+	fi
+fi
+
+
+
+
+# if interactive: Call /usr/bin/evcc checkconfig and capture the output (newer version)
+# if output contains "config valid" then do nothing
+# else: Ask user if he wants to keep the old version (working) or the new version (not working) 
+# Remember the choice with /tmp/.evccrollback and fail new-postrm failed-upgrade old-version new-version to initiate dpkg's rollback
+if [ "$1" = "upgrade" ]; then
+	INTERACTIVE=0
+	# is shell script interactive?
+	if [ -t 0 ]; then
+	  INTERACTIVE=1
+	else
+	  INTERACTIVE=0
+	fi
+
+	if [ $INTERACTIVE -eq 1 ]; then
+	    checkConfigOutput=$(/usr/bin/evcc checkconfig 2>&1 || true)
+		if ! echo "$checkConfigOutput" | grep -q "config valid"; then
+			echo "--------------------------------------------------------------------------------"
+			echo "ERROR: your evcc configuration is not compatible with the new version. Please consider reading the release notes: https://github.com/evcc-io/evcc/releases"
+			echo "checkconfig Output:" 
+			echo "$checkConfigOutput"
+			echo "--------------------------------------------------------------------------------"
+	
+			while true; do
+				echo "Do you want to keep your old (working) evcc version? [Y/n]: "
+				read choice
+				case "$choice" in
+					n*|N*|"")
+						echo "We will keep the new version. Your evcc configuration stays untouched!"
+						break
+						;;
+					y*|Y*)
+						echo "The old version will be restored. Your evcc configuration stays untouched! Following errors are intended:"
+						touch /tmp/.evccrollback
+						exit 1
+						break
+						;;
+					*)
+						;;
+				esac
+			done
+		fi
+	fi 
+fi
+
+# if upgrade goal fails, new-postrm failed-upgrade old-version new-version is called. It should fail to initiate rollback
+if [ "$1" = "failed-upgrade" ]; then
+	if [ -f "/tmp/.evccrollback" ]; then
+		rm "/tmp/.evccrollback"
+		exit 1
 	fi
 fi
