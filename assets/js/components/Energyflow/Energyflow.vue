@@ -89,10 +89,8 @@
 							:powerInKw="powerInKw"
 							:details="detailsValue(tariffGrid, tariffCo2)"
 							:detailsFmt="detailsFmt"
-							:detailsClickable="gridModalAvailable"
 							:detailsTooltip="detailsTooltip(tariffGrid, tariffCo2)"
 							data-testid="energyflow-entry-gridimport"
-							@details-clicked="openGridSettingsModal"
 						/>
 					</div>
 				</div>
@@ -173,7 +171,6 @@ import AnimatedNumber from "../AnimatedNumber.vue";
 import settings from "../../settings";
 import { CO2_TYPE } from "../../units";
 import collector from "../../mixins/collector";
-import gridModalAvailable from "../../utils/gridModalAvailable";
 
 export default {
 	name: "Energyflow",
@@ -204,7 +201,6 @@ export default {
 		tariffCo2Home: { type: Number },
 		tariffPriceLoadpoints: { type: Number },
 		tariffCo2Loadpoints: { type: Number },
-		smartCostLimit: { type: Number },
 		smartCostType: { type: String },
 		currency: { type: String },
 		prioritySoc: { type: Number },
@@ -212,12 +208,9 @@ export default {
 		bufferStartSoc: { type: Number },
 	},
 	data: () => {
-		return { detailsOpen: false, detailsCompleteHeight: null, gridSettingsModal: null };
+		return { detailsOpen: false, detailsCompleteHeight: null };
 	},
 	computed: {
-		gridModalAvailable: function () {
-			return gridModalAvailable(this.smartCostType);
-		},
 		gridImport: function () {
 			return Math.max(0, this.gridPower);
 		},
@@ -333,10 +326,6 @@ export default {
 		},
 		updateHeight: function () {
 			this.detailsCompleteHeight = this.$refs.detailsInner.offsetHeight;
-		},
-		openGridSettingsModal() {
-			const modal = Modal.getOrCreateInstance(document.getElementById("gridSettingsModal"));
-			modal.show();
 		},
 		openBatterySettingsModal() {
 			const modal = Modal.getOrCreateInstance(

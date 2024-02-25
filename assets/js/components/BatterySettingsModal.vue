@@ -3,7 +3,7 @@
 		<div
 			id="batterySettingsModal"
 			ref="modal"
-			class="modal fade text-dark"
+			class="modal fade text-dark modal-xl"
 			data-bs-backdrop="true"
 			tabindex="-1"
 			role="dialog"
@@ -26,7 +26,7 @@
 						<div
 							class="d-flex justify-content-between align-items-center align-items-sm-start pb-2 flex-column flex-sm-row-reverse"
 						>
-							<div class="battery mb-5 mb-sm-3 me-5 me-sm-0">
+							<div class="battery mb-5 mb-sm-3 me-5 me-sm-0 w-sm-50">
 								<div class="batteryLimits">
 									<label
 										class="bufferSoc p-2 end-0"
@@ -130,7 +130,7 @@
 									</div>
 								</div>
 							</div>
-							<div class="me-sm-4">
+							<div class="legend me-sm-4 align-self-start w-sm-50">
 								<p>
 									{{ $t("batterySettings.batteryLevel") }}:
 									<strong>{{ fmtSoc(batterySoc) }}</strong>
@@ -212,12 +212,8 @@
 								</p>
 							</div>
 						</div>
-						<FormRow
-							v-if="controllable"
-							id="batteryDischargeControl"
-							:label="`${$t('batterySettings.control')}`"
-						>
-							<div class="form-check form-switch col-form-label">
+						<div v-if="!controllable">
+							<div class="form-check form-switch">
 								<input
 									id="batteryDischargeControl"
 									:checked="batteryDischargeControl"
@@ -232,7 +228,7 @@
 									</label>
 								</div>
 							</div>
-						</FormRow>
+						</div>
 					</div>
 				</div>
 			</div>
@@ -245,14 +241,12 @@ import "@h2d2/shopicons/es/regular/lightning";
 import "@h2d2/shopicons/es/regular/car3";
 import "@h2d2/shopicons/es/regular/home";
 import formatter from "../mixins/formatter";
-import FormRow from "./FormRow.vue";
-
+import collector from "../mixins/collector";
 import api from "../api";
 
 export default {
 	name: "BatterySettingsModal",
-	components: { FormRow },
-	mixins: [formatter],
+	mixins: [formatter, collector],
 	props: {
 		bufferSoc: Number,
 		prioritySoc: Number,
@@ -460,6 +454,11 @@ export default {
 	height: 300px;
 	display: flex;
 }
+
+.legend {
+	min-width: 260px;
+}
+
 .batteryLimits {
 	width: 50px;
 	position: relative;
@@ -521,11 +520,13 @@ export default {
 	border-radius: 0.5rem 0 0 0.5rem;
 }
 .progress {
+	flex: 1;
 	height: 100%;
-	width: 100px;
+	min-width: 100px;
+	max-width: 150px;
 	flex-direction: column;
 	position: relative;
-	border-radius: 10px;
+	border-radius: 1rem;
 	background-color: var(--evcc-box) !important;
 }
 .progress-bar {

@@ -477,3 +477,24 @@ func (lp *Loadpoint) StartVehicleDetection() {
 	// start auto-detect
 	lp.startVehicleDetection()
 }
+
+// GetSmartCostLimit gets the smart cost limit
+func (lp *Loadpoint) GetSmartCostLimit() float64 {
+	lp.RLock()
+	defer lp.RUnlock()
+	return lp.smartCostLimit
+}
+
+// SetSmartCostLimit sets the smart cost limit
+func (lp *Loadpoint) SetSmartCostLimit(val float64) {
+	lp.Lock()
+	defer lp.Unlock()
+
+	lp.log.DEBUG.Println("set smart cost limit:", val)
+
+	if lp.smartCostLimit != val {
+		lp.smartCostLimit = val
+		lp.settings.SetFloat(keys.SmartCostLimit, lp.smartCostLimit)
+		lp.publish(keys.SmartCostLimit, lp.smartCostLimit)
+	}
+}

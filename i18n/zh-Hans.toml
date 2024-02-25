@@ -14,8 +14,6 @@ note = "注意:这些设置仅影响太阳能模式.充电行为会相应调整.
 
 [batterySettings.bufferStart]
 full = "当快满的时候"
-low = "当有点满的时候"
-medium = "半满时"
 never = "只要有足够的剩余"
 
 [config]
@@ -120,17 +118,6 @@ modalUpdate = "安装"
 modalUpdateNow = "现在安装"
 modalUpdateStarted = "启动新版本的evcc..."
 modalUpdateStatusStart = "安装已开始:"
-
-[gridSettings]
-activeHours = "{charging} / {total}"
-activeHoursLabel = "运行小时"
-co2Label = "CO₂ 排放"
-co2Limit = "CO₂ 限制"
-costLimitDescription = "在太阳能模式下实现临时快速充电."
-modalTitle = "智能电网充电"
-none = "无"
-priceLabel = "电价"
-priceLimit = "限价"
 
 [header]
 about = "关于"
@@ -390,6 +377,17 @@ light = "浅色模式"
 km = "km"
 label = "单位"
 mi = "英里"
+
+[smartCost]
+activeHours = "{charging} / {total}"
+activeHoursLabel = "运行小时"
+co2Label = "CO₂ 排放"
+co2Limit = "CO₂ 限制"
+loadpointDescription = "在太阳能模式下实现临时快速充电."
+modalTitle = "智能电网充电"
+none = "无"
+priceLabel = "电价"
+priceLimit = "限价"
 
 [startupError]
 configFile = "使用的配置文件:"

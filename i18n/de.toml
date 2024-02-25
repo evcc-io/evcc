@@ -164,17 +164,6 @@ modalUpdateNow = "Jetzt installieren"
 modalUpdateStarted = "Starte die neue Version von evcc ..."
 modalUpdateStatusStart = "Installation gestartet:"
 
-[gridSettings]
-activeHours = "{charging} von {total}"
-activeHoursLabel = "Aktive Stunden"
-co2Label = "CO₂-Emission"
-co2Limit = "CO₂-Grenze"
-costLimitDescription = "Aktiviert vorübergehendes Schnellladen im PV-Modus."
-modalTitle = "Smartes Netzladen"
-none = "keine"
-priceLabel = "Energiepreis"
-priceLimit = "Preisgrenze"
-
 [header]
 about = "Über"
 blog = "Blog"
@@ -459,6 +448,22 @@ light = "Hell"
 km = "Kilometer"
 label = "Einheit"
 mi = "Meilen"
+
+[smartCost]
+activeHours = "{charging} von {total}"
+activeHoursLabel = "Aktive Stunden"
+applyToAll = "Überall anwenden?"
+batteryDescription = "Lädt die Hausbatterie aus dem Netz."
+cheapTitle = "Günstiges Netzladen"
+cleanTitle = "Sauberes Netzladen"
+co2Label = "CO₂-Emission"
+co2Limit = "CO₂-Grenze"
+loadpointDescription = "Aktiviert vorübergehendes Schnellladen im PV-Modus."
+modalTitle = "Smartes Netzladen"
+none = "keine"
+priceLabel = "Energiepreis"
+priceLimit = "Preisgrenze"
+saved = "Gepeichert."
 
 [startupError]
 configFile = "Verwendete Konfigurationsdatei:"

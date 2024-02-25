@@ -460,3 +460,17 @@ input[type="time"]::-webkit-calendar-picker-indicator {
 	width: calc(1.2rem + 0.75rem);
 	border-radius: 3rem;
 }
+
+.form-switch .form-check-input + .form-check-label {
+	margin-top: 0.1rem;
+	padding-left: 0.5rem;
+}
+
+@media (min-width: 576px) {
+	.w-sm-100 {
+		width: 100% !important;
+	}
+	.w-sm-50 {
+		width: 50% !important;
+	}
+}

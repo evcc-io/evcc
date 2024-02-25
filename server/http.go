@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	eapi "github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/server/assets"
 	"github.com/evcc-io/evcc/util"
@@ -99,7 +100,7 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, cache *util.Cache) {
 		"batterydischargecontrol": {[]string{"POST", "OPTIONS"}, "/batterydischargecontrol/{value:[a-z]+}", boolHandler(site.SetBatteryDischargeControl, site.GetBatteryDischargeControl)},
 		"prioritysoc":             {[]string{"POST", "OPTIONS"}, "/prioritysoc/{value:[0-9.]+}", floatHandler(site.SetPrioritySoc, site.GetPrioritySoc)},
 		"residualpower":           {[]string{"POST", "OPTIONS"}, "/residualpower/{value:[-0-9.]+}", floatHandler(site.SetResidualPower, site.GetResidualPower)},
-		"smartcost":               {[]string{"POST", "OPTIONS"}, "/smartcostlimit/{value:[-0-9.]+}", floatHandler(site.SetSmartCostLimit, site.GetSmartCostLimit)},
+		"smartcost":               {[]string{"POST", "OPTIONS"}, "/smartcostlimit/{value:[-0-9.]+}", updateSmartCostLimit(site)},
 		"tariff":                  {[]string{"GET"}, "/tariff/{tariff:[a-z]+}", tariffHandler(site)},
 		"sessions":                {[]string{"GET"}, "/sessions", sessionHandler},
 		"updatesession":           {[]string{"PUT", "OPTIONS"}, "/session/{id:[0-9]+}", updateSessionHandler},
@@ -135,12 +136,12 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, cache *util.Cache) {
 		api := api.PathPrefix(fmt.Sprintf("/loadpoints/%d", id+1)).Subrouter()
 
 		routes := map[string]route{
-			"mode":             {[]string{"POST", "OPTIONS"}, "/mode/{value:[a-z]+}", chargeModeHandler(lp)},
+			"mode":             {[]string{"POST", "OPTIONS"}, "/mode/{value:[a-z]+}", handler(eapi.ChargeModeString, pass(lp.SetMode), lp.GetMode)},
 			"limitsoc":         {[]string{"POST", "OPTIONS"}, "/limitsoc/{value:[0-9]+}", intHandler(pass(lp.SetLimitSoc), lp.GetLimitSoc)},
 			"limitenergy":      {[]string{"POST", "OPTIONS"}, "/limitenergy/{value:[0-9.]+}", floatHandler(pass(lp.SetLimitEnergy), lp.GetLimitEnergy)},
 			"mincurrent":       {[]string{"POST", "OPTIONS"}, "/mincurrent/{value:[0-9.]+}", floatHandler(lp.SetMinCurrent, lp.GetMinCurrent)},
 			"maxcurrent":       {[]string{"POST", "OPTIONS"}, "/maxcurrent/{value:[0-9.]+}", floatHandler(lp.SetMaxCurrent, lp.GetMaxCurrent)},
-			"phases":           {[]string{"POST", "OPTIONS"}, "/phases/{value:[0-9]+}", phasesHandler(lp)},
+			"phases":           {[]string{"POST", "OPTIONS"}, "/phases/{value:[0-9]+}", intHandler(lp.SetPhases, lp.GetPhases)},
 			"plan":             {[]string{"GET"}, "/plan", planHandler(lp)},
 			"planpreview":      {[]string{"GET"}, "/plan/preview/{type:(?:soc|energy)}/{value:[0-9.]+}/{time:[0-9TZ:.-]+}", planPreviewHandler(lp)},
 			"planenergy":       {[]string{"POST", "OPTIONS"}, "/plan/energy/{value:[0-9.]+}/{time:[0-9TZ:.-]+}", planEnergyHandler(lp)},
@@ -151,6 +152,7 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, cache *util.Cache) {
 			"remotedemand":     {[]string{"POST", "OPTIONS"}, "/remotedemand/{demand:[a-z]+}/{source:[0-9a-zA-Z_-]+}", remoteDemandHandler(lp)},
 			"enableThreshold":  {[]string{"POST", "OPTIONS"}, "/enable/threshold/{value:-?[0-9.]+}", floatHandler(pass(lp.SetEnableThreshold), lp.GetEnableThreshold)},
 			"disableThreshold": {[]string{"POST", "OPTIONS"}, "/disable/threshold/{value:-?[0-9.]+}", floatHandler(pass(lp.SetDisableThreshold), lp.GetDisableThreshold)},
+			"smartCostLimit":   {[]string{"POST", "OPTIONS"}, "/smartcostlimit/{value:[0-9.]+}", floatHandler(pass(lp.SetSmartCostLimit), lp.GetSmartCostLimit)},
 			// "priority":         {[]string{"POST", "OPTIONS"}, "/priority/{value:[0-9.]+}", floatHandler(pass(lp.SetPriority), lp.GetPriority)},
 		}
 

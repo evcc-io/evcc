@@ -255,29 +255,6 @@ func (site *Site) SetResidualPower(power float64) error {
 	return nil
 }
 
-// GetSmartCostLimit returns the smartCostLimit
-func (site *Site) GetSmartCostLimit() float64 {
-	site.RLock()
-	defer site.RUnlock()
-	return site.smartCostLimit
-}
-
-// SetSmartCostLimit sets the smartCostLimit
-func (site *Site) SetSmartCostLimit(val float64) error {
-	site.Lock()
-	defer site.Unlock()
-
-	site.log.DEBUG.Println("set smart cost limit:", val)
-
-	if site.smartCostLimit != val {
-		site.smartCostLimit = val
-		settings.SetFloat(keys.SmartCostLimit, site.smartCostLimit)
-		site.publish(keys.SmartCostLimit, site.smartCostLimit)
-	}
-
-	return nil
-}
-
 // GetTariff returns the respective tariff if configured or nil
 func (site *Site) GetTariff(tariff string) api.Tariff {
 	site.RLock()
