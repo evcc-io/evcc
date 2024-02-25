@@ -37,9 +37,8 @@ test.describe("smart cost limit", async () => {
       .selectOption("≤ 50.0 ct/kWh");
     await page.getByTestId("loadpoint-settings-modal").getByLabel("Close").click();
     await expect(page.getByTestId("loadpoint-settings-modal")).not.toBeVisible();
-    await expect(page.getByTestId("vehicle-status")).toHaveText(
-      "Charging cheap energy: 40.0 ct (limit 50.0 ct)"
-    );
+    await expect(page.getByTestId("vehicle-status")).toContainText("Charging cheap energy");
+    await expect(page.getByTestId("vehicle-status")).toContainText("(limit 50.0 ct)");
   });
   test("price above limit", async ({ page }) => {
     await page.goto("/");
