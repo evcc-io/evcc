@@ -17,9 +17,8 @@ import (
 
 	cemdapi "github.com/enbility/cemd/api"
 	"github.com/enbility/cemd/cem"
-	"github.com/enbility/cemd/ucevcc"
-	"github.com/enbility/cemd/ucevcem"
 	"github.com/enbility/eebus-go/api"
+	eebusapi "github.com/enbility/eebus-go/api"
 	shipapi "github.com/enbility/ship-go/api"
 	"github.com/enbility/ship-go/cert"
 	"github.com/enbility/ship-go/logging"
@@ -36,21 +35,18 @@ const (
 )
 
 type EEBusClientCBs struct {
+	spineapi.EntityRemoteInterface
 	onConnect    func(string)
 	onDisconnect func(string)
-	entity       spineapi.EntityRemoteInterface
 }
 
 type EEBus struct {
 	mux sync.Mutex
 	log *util.Logger
 
-	SKI string
-
+	SKI     string
 	clients map[string]*EEBusClientCBs
-
 	cem     *cem.Cem
-	ucEvCem *ucevcem.UCEVCEM
 }
 
 var Instance *EEBus
@@ -128,7 +124,6 @@ func NewServer(other map[string]interface{}) (*EEBus, error) {
 	}
 
 	c.cem = cem.NewCEM(configuration, c, c)
-	c.ucEvCem = ucevcem.NewUCEVCEM(c.cem.Service, c.cem.Service.LocalService(), c)
 
 	if err := c.cem.Setup(); err != nil {
 		return nil, err
@@ -137,8 +132,12 @@ func NewServer(other map[string]interface{}) (*EEBus, error) {
 	return c, nil
 }
 
+func (c *EEBus) Service() eebusapi.ServiceInterface {
+	return c.cem.Service
+}
+
 func (c *EEBus) SpineEvent(ski string, entity spineapi.EntityRemoteInterface, event cemdapi.UseCaseEventType) {
-	c.log.DEBUG.Printf("SpineEvent: %s %s", ski, event)
+	c.log.DEBUG.Printf("SpineEvent: %s %s %v", ski, event, entity)
 
 	c.mux.Lock()
 	defer c.mux.Unlock()
@@ -148,13 +147,13 @@ func (c *EEBus) SpineEvent(ski string, entity spineapi.EntityRemoteInterface, ev
 		c.log.DEBUG.Printf("SpineEvent: ski %s not registered", ski)
 	}
 
-	if callbacks.entity == nil {
-		callbacks.entity = entity
+	if callbacks.EntityRemoteInterface == nil {
+		callbacks.EntityRemoteInterface = entity
 		return
 	}
 
-	if callbacks.entity != entity {
-		c.log.ERROR.Printf("SpineEvent: mismatched entity for ski %s", ski)
+	if callbacks.EntityRemoteInterface != entity {
+		c.log.ERROR.Printf("SpineEvent: mismatched entity for ski %s (%v != %v)", ski, callbacks.EntityRemoteInterface, entity)
 		return
 	}
 
@@ -166,21 +165,23 @@ func (c *EEBus) SpineEvent(ski string, entity spineapi.EntityRemoteInterface, ev
 	}
 }
 
-func (c *EEBus) RegisterEVSE(ski, ip string, connectHandler func(string), disconnectHandler func(string)) ucevcc.UCEVCCInterface {
+func (c *EEBus) RegisterEVSE(ski, ip string, connectHandler func(string), disconnectHandler func(string)) *EEBusClientCBs {
 	ski = strings.ReplaceAll(ski, "-", "")
 	ski = strings.ReplaceAll(ski, " ", "")
 	ski = strings.ToLower(ski)
 	c.log.TRACE.Printf("registering ski: %s", ski)
 
 	if ski == c.SKI {
-		c.log.FATAL.Fatal("The charger SKI can not be identical to the SKI of evcc!")
+		c.log.FATAL.Fatal("charger SKI can not be identical to evcc SKI")
 	}
 
 	c.mux.Lock()
 	defer c.mux.Unlock()
-	c.clients[ski] = &EEBusClientCBs{onConnect: connectHandler, onDisconnect: disconnectHandler}
 
-	return nil
+	cb := &EEBusClientCBs{onConnect: connectHandler, onDisconnect: disconnectHandler}
+	c.clients[ski] = cb
+
+	return cb
 }
 
 func (c *EEBus) Run() {

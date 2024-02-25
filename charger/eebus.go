@@ -13,6 +13,7 @@ import (
 	"github.com/enbility/cemd/ucevsoc"
 	"github.com/enbility/cemd/ucopev"
 	"github.com/enbility/eebus-go/features"
+	spineapi "github.com/enbility/spine-go/api"
 	"github.com/enbility/spine-go/model"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/eebus"
@@ -41,6 +42,7 @@ type EEBus struct {
 	minMaxG func() (minMax, error)
 
 	ski     string
+	entity  spineapi.EntityRemoteInterface
 	ucEvCC  ucevcc.UCEVCCInterface   // Commissioning and Configuration
 	ucEvCem ucevcem.UCEVCEMInterface // Charging Electricity Measurement
 	ucEvOP  ucopev.UCOPEVInterface   // Overload Protection
@@ -103,7 +105,13 @@ func NewEEBus(ski, ip string, hasMeter, hasChargedEnergy bool) (api.Charger, err
 		current:               6,
 	}
 
-	c.ucEvCC = eebus.Instance.RegisterEVSE(ski, ip, c.onConnect, c.onDisconnect)
+	c.entity = eebus.Instance.RegisterEVSE(ski, ip, c.onConnect, c.onDisconnect)
+
+	service := eebus.Instance.Service()
+	c.ucEvCC = ucevcc.NewUCEVCC(service, service.LocalService(), c)
+	c.ucEvCem = ucevcem.NewUCEVCEM(service, service.LocalService(), c)
+	c.ucEvOP = ucopev.NewUCOPEV(service, service.LocalService(), c)
+	c.ucEvSoc = ucevsoc.NewUCEVSOC(service, service.LocalService(), c)
 
 	c.minMaxG = provider.Cached(c.minMax, time.Second)
 
@@ -185,7 +193,7 @@ func (c *EEBus) isEVConnected() bool {
 var _ api.CurrentLimiter = (*EEBus)(nil)
 
 func (c *EEBus) minMax() (minMax, error) {
-	minLimits, maxLimits, _, err := c.ucEvCC.CurrentLimits()
+	minLimits, maxLimits, _, err := c.ucEvCC.CurrentLimits(c.entity)
 	if err != nil {
 		if err == features.ErrDataNotAvailable {
 			err = api.ErrNotAvailable
@@ -226,11 +234,11 @@ func (c *EEBus) isCharging() bool { // d *communication.EVSEClientDataType
 	}
 
 	// The above doesn't (yet) work for built in meters, so check the EEBUS measurements also
-	currents, err := c.ucEvCC.CurrentsPerPhase()
+	currents, err := c.ucEvCem.CurrentsPerPhase(c.entity)
 	if err != nil {
 		return false
 	}
-	limitsMin, _, _, err := c.ucEvCC.CurrentLimits()
+	limitsMin, _, _, err := c.ucEvCC.CurrentLimits(c.entity)
 	if err != nil || limitsMin == nil || len(limitsMin) == 0 {
 		return false
 	}
@@ -253,7 +261,7 @@ func (c *EEBus) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, api.ErrTimeout
 	}
 
-	if !c.ucEvCC.EVConnected() {
+	if !c.ucEvCC.EVConnected(c.entity) {
 		c.expectedEnableUnpluggedState = false
 		c.evConnected = false
 		return api.StatusA, nil
@@ -264,7 +272,7 @@ func (c *EEBus) Status() (api.ChargeStatus, error) {
 		c.currentLimit = -1
 	}
 
-	currentState, err := c.ucEvCC.CurrentChargeState()
+	currentState, err := c.ucEvCC.CurrentChargeState(c.entity)
 	if err != nil {
 		return api.StatusNone, err
 	}
@@ -301,7 +309,7 @@ func (c *EEBus) Enabled() (bool, error) {
 		return true, nil
 	}
 
-	limits, err := c.ucEvCC.LoadControlObligationLimits()
+	limits, err := c.ucEvOP.LoadControlLimits(c.entity)
 	if err != nil {
 		// there are no overload protection limits available, e.g. because the data was not received yet
 		return true, nil
@@ -330,7 +338,7 @@ func (c *EEBus) Enable(enable bool) error {
 	// if we disable charging with a potential but not yet known communication standard ISO15118
 	// this would set allowed A value to be 0. And this would trigger ISO connections to switch to IEC!
 	if !enable {
-		comStandard, err := c.ucEvCC.CommunicationStandard()
+		comStandard, err := c.ucEvCC.CommunicationStandard(c.entity)
 		if err != nil || comStandard == cemdapi.UCEVCCCommunicationStandardUnknown {
 			return api.ErrMustRetry
 		}
@@ -347,7 +355,7 @@ func (c *EEBus) Enable(enable bool) error {
 
 // send current charging power limits to the EV
 func (c *EEBus) writeCurrentLimitData(currents []float64) error {
-	comStandard, err := c.ucEvCC.CommunicationStandard()
+	comStandard, err := c.ucEvCC.CommunicationStandard(c.entity)
 	if err != nil {
 		return err
 	}
@@ -359,7 +367,7 @@ func (c *EEBus) writeCurrentLimitData(currents []float64) error {
 	// So if there are currents smaller than 6A with unknown communication standard change them to 6A.
 	// Keep in mind that this will still confuse evcc as it thinks charging is stopped, but it hasn't yet.
 	if comStandard == cemdapi.UCEVCCCommunicationStandardUnknown {
-		minLimits, _, _, err := c.ucEvCC.CurrentLimits()
+		minLimits, _, _, err := c.ucEvCC.CurrentLimits(c.entity)
 		if err == nil {
 			for index, current := range currents {
 				if index < len(minLimits) && current < minLimits[index] {
@@ -371,7 +379,7 @@ func (c *EEBus) writeCurrentLimitData(currents []float64) error {
 
 	// Set overload protection limits and self consumption limits to identical values,
 	// so if the EV supports self consumption it will be used automatically.
-	if _, err = c.ucEvOP.WriteLoadControlLimits([]cemdapi.LoadLimitsPhase{
+	if _, err = c.ucEvOP.WriteLoadControlLimits(c.entity, []cemdapi.LoadLimitsPhase{
 		{Phase: model.ElectricalConnectionPhaseNameTypeA, IsActive: true, Value: currents[0]},
 		{Phase: model.ElectricalConnectionPhaseNameTypeB, IsActive: true, Value: currents[1]},
 		{Phase: model.ElectricalConnectionPhaseNameTypeC, IsActive: true, Value: currents[2]},
@@ -391,7 +399,7 @@ var _ api.ChargerEx = (*EEBus)(nil)
 
 // MaxCurrentMillis implements the api.ChargerEx interface
 func (c *EEBus) MaxCurrentMillis(current float64) error {
-	if !c.connected || !c.ucEvCC.EVConnected() {
+	if !c.connected || !c.ucEvCC.EVConnected(c.entity) {
 		return errors.New("can't set new current as ev is unplugged")
 	}
 
@@ -413,16 +421,16 @@ func (c *EEBus) GetMaxCurrent() (float64, error) {
 
 // CurrentPower implements the api.Meter interface
 func (c *EEBus) currentPower() (float64, error) {
-	if !c.ucEvCC.EVConnected() {
+	if !c.ucEvCC.EVConnected(c.entity) {
 		return 0, nil
 	}
 
-	connectedPhases, err := c.ucEvCem.ConnectedPhases()
+	connectedPhases, err := c.ucEvCem.ConnectedPhases(c.entity)
 	if err != nil {
 		return 0, err
 	}
 
-	powers, err := c.ucEvCem.PowerPerPhase()
+	powers, err := c.ucEvCem.PowerPerPhase(c.entity)
 	if err != nil {
 		return 0, err
 	}
@@ -440,11 +448,11 @@ func (c *EEBus) currentPower() (float64, error) {
 
 // ChargedEnergy implements the api.ChargeRater interface
 func (c *EEBus) chargedEnergy() (float64, error) {
-	if !c.ucEvCC.EVConnected() {
+	if !c.ucEvCC.EVConnected(c.entity) {
 		return 0, nil
 	}
 
-	energy, err := c.ucEvCem.ChargedEnergy()
+	energy, err := c.ucEvCem.ChargedEnergy(c.entity)
 	if err != nil {
 		return 0, err
 	}
@@ -454,11 +462,11 @@ func (c *EEBus) chargedEnergy() (float64, error) {
 
 // Currents implements the api.PhaseCurrents interface
 func (c *EEBus) currents() (float64, float64, float64, error) {
-	if !c.ucEvCC.EVConnected() {
+	if !c.ucEvCC.EVConnected(c.entity) {
 		return 0, 0, 0, nil
 	}
 
-	res, err := c.ucEvCem.CurrentsPerPhase()
+	res, err := c.ucEvCem.CurrentsPerPhase(c.entity)
 	if err != nil {
 		if err == features.ErrDataNotAvailable {
 			err = api.ErrNotAvailable
@@ -478,18 +486,18 @@ var _ api.Identifier = (*EEBus)(nil)
 
 // Identify implements the api.Identifier interface
 func (c *EEBus) Identify() (string, error) {
-	if !c.isEVConnected() || !c.ucEvCC.EVConnected() {
+	if !c.isEVConnected() || !c.ucEvCC.EVConnected(c.entity) {
 		return "", nil
 	}
 
-	if !c.ucEvCC.EVConnected() {
+	if !c.ucEvCC.EVConnected(c.entity) {
 		return "", nil
 	}
-	if identification, _ := c.ucEvCC.Identifications(); len(identification) > 0 {
+	if identification, _ := c.ucEvCC.Identifications(c.entity); len(identification) > 0 {
 		return identification[0].Value, nil
 	}
 
-	if comStandard, _ := c.ucEvCC.CommunicationStandard(); comStandard == "emobility.CommunicationStandardTypeIEC61851" {
+	if comStandard, _ := c.ucEvCC.CommunicationStandard(c.entity); comStandard == "emobility.CommunicationStandardTypeIEC61851" {
 		return "", nil
 	}
 
@@ -504,11 +512,11 @@ var _ api.Battery = (*EEBus)(nil)
 
 // Soc implements the api.Vehicle interface
 func (c *EEBus) Soc() (float64, error) {
-	if socSupported, err := c.ucEvSoc.IsUseCaseSupported(); err != nil || !socSupported {
+	if socSupported, err := c.ucEvSoc.IsUseCaseSupported(c.entity); err != nil || !socSupported {
 		return 0, api.ErrNotAvailable
 	}
 
-	soc, err := c.ucEvSoc.StateOfCharge()
+	soc, err := c.ucEvSoc.StateOfCharge(c.entity)
 	if err != nil {
 		return 0, api.ErrNotAvailable
 	}
