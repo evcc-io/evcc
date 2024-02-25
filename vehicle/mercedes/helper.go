@@ -19,7 +19,7 @@ var (
 )
 
 func getInstance(subject string) *Identity {
-	v, _ := identities[subject]
+	v := identities[subject]
 	return v
 }
 

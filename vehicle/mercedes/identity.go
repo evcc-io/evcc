@@ -32,7 +32,7 @@ type Identity struct {
 var OAuth2Config = &oauth2.Config{
 	//	RedirectURL: fmt.Sprintf("%s/void/RedirectURL", IdUri),
 	Endpoint: oauth2.Endpoint{
-		//AuthURL:   fmt.Sprintf("%s/void/AuthURL", IdUri),
+		// AuthURL:   fmt.Sprintf("%s/void/AuthURL", IdUri),
 		TokenURL:  fmt.Sprintf("%s/as/token.oauth2", IdUri),
 		AuthStyle: oauth2.AuthStyleInParams,
 	},
@@ -102,34 +102,27 @@ func (v *Identity) settingsKey() string {
 	return fmt.Sprintf("mercedes.%s-%s", v.account, v.region)
 }
 
-func (v *Identity) RefreshToken(currenttoken *oauth2.Token) (*oauth2.Token, error) {
+func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 	v.mu.Lock()
 	defer v.mu.Unlock()
 
-	uri := fmt.Sprintf("%s/as/token.oauth2", IdUri)
 	data := url.Values{
 		"grant_type":    []string{"refresh_token"},
-		"refresh_token": []string{currenttoken.RefreshToken},
+		"refresh_token": []string{token.RefreshToken},
 	}
 
-	req, err := request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), mbheaders(true, v.region))
+	uri := fmt.Sprintf("%s/as/token.oauth2", IdUri)
+	req, _ := request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), mbheaders(true, v.region))
 
-	var res MBToken
-	if err == nil {
-		err = v.DoJSON(req, &res)
-	}
-
-	if err != nil {
-		v.log.DEBUG.Println("RefreshToken - After token - error", err)
+	var res oauth.Token
+	if err := v.DoJSON(req, &res); err != nil {
 		return nil, err
 	}
-	token := res.GetToken()
-	v.TokenSource = oauth.RefreshTokenSource(token, v)
-	err = settings.SetJson(v.settingsKey(), token)
-	if err != nil {
-		v.log.DEBUG.Println("RefreshToken - Can't save token to db - error", err)
-		return nil, err
-	}
-	v.log.DEBUG.Println("Identity.RefreshToken - Token set - ok")
-	return token, err
+
+	tok := (*oauth2.Token)(&res)
+	v.TokenSource = oauth.RefreshTokenSource(tok, v)
+
+	err := settings.SetJson(v.settingsKey(), tok)
+
+	return tok, err
 }

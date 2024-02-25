@@ -3,11 +3,11 @@ package mercedes
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"strings"
 
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
 	protos "github.com/evcc-io/evcc/vehicle/mercedes/pb"
@@ -85,58 +85,35 @@ func (v *API) Status(vin string) (StatusResponse, error) {
 	uri := fmt.Sprintf("%s/v1/vehicle/%s/vehicleattributes", getWidgetUri(v.identity.region), vin)
 
 	data, err := v.GetBody(uri)
-
 	if err != nil {
 		return res, err
 	}
 
-	message := &protos.VEPUpdate{}
-	if err = proto.Unmarshal(data, message); err != nil {
+	var message protos.VEPUpdate
+	if err = proto.Unmarshal(data, &message); err != nil {
 		return res, err
 	}
 
 	if val, ok := message.Attributes["odo"]; ok {
-		if val.GetNilValue() {
-			res.VehicleInfo.Odometer.Value = 0
-			res.VehicleInfo.Odometer.Unit = ""
-		} else {
-			res.VehicleInfo.Odometer.Value = int(val.GetIntValue())
-			res.VehicleInfo.Odometer.Unit = val.GetDistanceUnit().String()
-		}
+		res.VehicleInfo.Odometer.Value = int(val.GetIntValue())
+		res.VehicleInfo.Odometer.Unit = val.GetDistanceUnit().String()
 	}
 
 	if val, ok := message.Attributes["soc"]; ok {
-		if val.GetNilValue() {
-			res.EvInfo.Battery.StateOfCharge = 0
-		} else {
-			res.EvInfo.Battery.StateOfCharge = float64(val.GetIntValue())
-		}
+		res.EvInfo.Battery.StateOfCharge = float64(val.GetIntValue())
 	}
 
 	if val, ok := message.Attributes["rangeelectric"]; ok {
-		if val.GetNilValue() {
-			res.EvInfo.Battery.DistanceToEmpty.Value = 0
-			res.EvInfo.Battery.DistanceToEmpty.Unit = ""
-		} else {
-			res.EvInfo.Battery.DistanceToEmpty.Value = int(val.GetIntValue())
-			res.EvInfo.Battery.DistanceToEmpty.Unit = val.GetDistanceUnit().String()
-		}
+		res.EvInfo.Battery.DistanceToEmpty.Value = int(val.GetIntValue())
+		res.EvInfo.Battery.DistanceToEmpty.Unit = val.GetDistanceUnit().String()
 	}
 
 	if val, ok := message.Attributes["endofchargetime"]; ok {
-		if val.GetNilValue() {
-			res.EvInfo.Battery.EndOfChargeTime = 0
-		} else {
-			res.EvInfo.Battery.EndOfChargeTime = int(val.GetIntValue())
-		}
+		res.EvInfo.Battery.EndOfChargeTime = int(val.GetIntValue())
 	}
 
 	if val, ok := message.Attributes["chargingstatus"]; ok {
-		if val.GetNilValue() {
-			res.EvInfo.Battery.ChargingStatus = 3
-		} else {
-			res.EvInfo.Battery.ChargingStatus = int(val.GetIntValue())
-		}
+		res.EvInfo.Battery.ChargingStatus = int(val.GetIntValue())
 	} else {
 		res.EvInfo.Battery.ChargingStatus = 3
 	}
@@ -161,38 +138,29 @@ func (vs *SetupAPI) RequestPin() (bool, *string, error) {
 	uri = fmt.Sprintf("%s/v1/login", getBffUri(vs.region))
 	nonce := uuid.New().String()
 	data := fmt.Sprintf("{\"emailOrPhoneNumber\": \"%s\", \"countryCode\": \"EN\", \"nonce\": \"%s\"}", vs.account, nonce)
-	res, err := client.Post(uri, "application/json", strings.NewReader(data))
-	var pinResponse PinResponse
+	resp, err := client.Post(uri, "application/json", strings.NewReader(data))
 	if err != nil {
 		return false, nil, err
 	}
+	defer resp.Body.Close()
 
-	defer res.Body.Close()
-	var content []byte
-	content, err = io.ReadAll(res.Body)
-	if err != nil {
-		return false, nil, err
-	}
-	json.Unmarshal(content, &pinResponse)
+	var res PinResponse
+	err = json.NewDecoder(resp.Body).Decode(&res)
 
 	// Only if the response field email is the same like the account an email is send by the servers.
-	return pinResponse.UserName == vs.account, &nonce, err
+	return res.UserName == vs.account, &nonce, err
 }
 
 func (vs *SetupAPI) RequestAccessToken(nonce string, pin string) (*oauth2.Token, error) {
-	uri := fmt.Sprintf("%s/as/token.oauth2", IdUri)
 	data := fmt.Sprintf("client_id=%s&grant_type=password&password=%s:%s&scope=openid email phone profile offline_access ciam-uid&username=%s", ClientId, nonce, pin, vs.account)
 
-	req, err := request.New(http.MethodPost, uri, strings.NewReader(data), mbheaders(true, vs.region))
+	uri := fmt.Sprintf("%s/as/token.oauth2", IdUri)
+	req, _ := request.New(http.MethodPost, uri, strings.NewReader(data), mbheaders(true, vs.region))
 
-	var res MBToken
-	if err == nil {
-		err = vs.DoJSON(req, &res)
-	}
-
-	if err != nil {
+	var res oauth.Token
+	if err := vs.DoJSON(req, &res); err != nil {
 		return nil, err
 	}
 
-	return res.GetToken(), err
+	return (*oauth2.Token)(&res), nil
 }

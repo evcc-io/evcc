@@ -4,29 +4,12 @@ import (
 	"fmt"
 	"html"
 	"time"
-
-	"golang.org/x/oauth2"
 )
 
 var Regions = map[string]string{
 	"apac":  "Asia-Pacific",
 	"ece":   "ECE",
 	"noram": "North-America",
-}
-
-type MBToken struct {
-	Access    string `json:"access_token"`
-	Refresh   string `json:"refresh_token"`
-	ExpiresIn int    `json:"expires_in"`
-	oauth2.Token
-}
-
-func (t *MBToken) GetToken() *oauth2.Token {
-	return &oauth2.Token{
-		AccessToken:  t.Access,
-		RefreshToken: t.Refresh,
-		Expiry:       time.Now().Add(time.Duration(t.ExpiresIn) * time.Second),
-	}
 }
 
 type ErrorInfo struct {
