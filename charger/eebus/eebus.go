@@ -15,13 +15,15 @@ import (
 	"sync"
 	"time"
 
+	cemdapi "github.com/enbility/cemd/api"
 	"github.com/enbility/cemd/cem"
-	"github.com/enbility/cemd/emobility"
-	"github.com/enbility/cemd/grid"
+	"github.com/enbility/cemd/ucevcc"
+	"github.com/enbility/cemd/ucevcem"
 	"github.com/enbility/eebus-go/api"
 	shipapi "github.com/enbility/ship-go/api"
 	"github.com/enbility/ship-go/cert"
 	"github.com/enbility/ship-go/logging"
+	spineapi "github.com/enbility/spine-go/api"
 	"github.com/enbility/spine-go/model"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/machine"
@@ -34,8 +36,9 @@ const (
 )
 
 type EEBusClientCBs struct {
-	onConnect    func(string) // , ship.Conn) error
+	onConnect    func(string)
 	onDisconnect func(string)
+	entity       spineapi.EntityRemoteInterface
 }
 
 type EEBus struct {
@@ -44,11 +47,10 @@ type EEBus struct {
 
 	SKI string
 
-	clients map[string]EEBusClientCBs
+	clients map[string]*EEBusClientCBs
 
-	cem               *cem.CemImpl
-	emobilityScenario *emobility.EmobilitySolution
-	gridScenario      *grid.GridSolution
+	cem     *cem.Cem
+	ucEvCem *ucevcem.UCEVCEM
 }
 
 var Instance *EEBus
@@ -121,29 +123,50 @@ func NewServer(other map[string]interface{}) (*EEBus, error) {
 
 	c := &EEBus{
 		log:     log,
-		clients: make(map[string]EEBusClientCBs),
+		clients: make(map[string]*EEBusClientCBs),
 		SKI:     ski,
 	}
 
 	c.cem = cem.NewCEM(configuration, c, c)
+	c.ucEvCem = ucevcem.NewUCEVCEM(c.cem.Service, c.cem.Service.LocalService(), c)
+
 	if err := c.cem.Setup(); err != nil {
 		return nil, err
 	}
 
-	c.emobilityScenario = emobility.NewEMobilitySolution(c.cem.Service, c.cem.Currency, emobility.EmobilityConfiguration{
-		CoordinatedChargingEnabled: false,
-	})
-	c.emobilityScenario.AddFeatures()
-	c.emobilityScenario.AddUseCases()
-
-	c.gridScenario = grid.NewGridScenario(c.cem.Service)
-	c.gridScenario.AddFeatures()
-	c.gridScenario.AddUseCases()
-
 	return c, nil
 }
 
-func (c *EEBus) RegisterEVSE(ski, ip string, connectHandler func(string), disconnectHandler func(string), dataProvider emobility.EmobilityDataProvider) *emobility.EMobility {
+func (c *EEBus) SpineEvent(ski string, entity spineapi.EntityRemoteInterface, event cemdapi.UseCaseEventType) {
+	c.log.DEBUG.Printf("SpineEvent: %s %s", ski, event)
+
+	c.mux.Lock()
+	defer c.mux.Unlock()
+
+	callbacks, ok := c.clients[ski]
+	if !ok {
+		c.log.DEBUG.Printf("SpineEvent: ski %s not registered", ski)
+	}
+
+	if callbacks.entity == nil {
+		callbacks.entity = entity
+		return
+	}
+
+	if callbacks.entity != entity {
+		c.log.ERROR.Printf("SpineEvent: mismatched entity for ski %s", ski)
+		return
+	}
+
+	switch event {
+	case cemdapi.UCEVCCEventConnected:
+		callbacks.onConnect(ski)
+	case cemdapi.UCEVCCEventDisconnected:
+		callbacks.onDisconnect(ski)
+	}
+}
+
+func (c *EEBus) RegisterEVSE(ski, ip string, connectHandler func(string), disconnectHandler func(string)) ucevcc.UCEVCCInterface {
 	ski = strings.ReplaceAll(ski, "-", "")
 	ski = strings.ReplaceAll(ski, " ", "")
 	ski = strings.ToLower(ski)
@@ -153,14 +176,11 @@ func (c *EEBus) RegisterEVSE(ski, ip string, connectHandler func(string), discon
 		c.log.FATAL.Fatal("The charger SKI can not be identical to the SKI of evcc!")
 	}
 
-	serviceDetails := shipapi.NewServiceDetails(ski)
-	serviceDetails.SetIPv4(ip)
-
 	c.mux.Lock()
 	defer c.mux.Unlock()
-	c.clients[ski] = EEBusClientCBs{onConnect: connectHandler, onDisconnect: disconnectHandler}
+	c.clients[ski] = &EEBusClientCBs{onConnect: connectHandler, onDisconnect: disconnectHandler}
 
-	return c.emobilityScenario.RegisterRemoteDevice(serviceDetails, dataProvider).(*emobility.EMobility)
+	return nil
 }
 
 func (c *EEBus) Run() {
@@ -183,7 +203,8 @@ func (c *EEBus) RemoteSKIConnected(service api.ServiceInterface, ski string) {
 	if !exists {
 		return
 	}
-	client.onConnect(ski)
+	_ = client
+	// client.onConnect(ski)
 }
 
 func (c *EEBus) RemoteSKIDisconnected(service api.ServiceInterface, ski string) {
@@ -194,7 +215,8 @@ func (c *EEBus) RemoteSKIDisconnected(service api.ServiceInterface, ski string) 
 	if !exists {
 		return
 	}
-	client.onDisconnect(ski)
+	_ = client
+	// client.onDisconnect(ski)
 }
 
 func (c *EEBus) VisibleRemoteServicesUpdated(service api.ServiceInterface, entries []shipapi.RemoteService) {

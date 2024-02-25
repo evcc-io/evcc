@@ -7,7 +7,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/enbility/cemd/emobility"
+	cemdapi "github.com/enbility/cemd/api"
+	"github.com/enbility/cemd/ucevcc"
 	"github.com/enbility/eebus-go/features"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/eebus"
@@ -16,7 +17,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 )
 
-//go:generate mockgen -package charger -destination eebus_test_mock.go github.com/enbility/cemd/emobility EmobilityI
+// go:generate mockgen -package charger -destination eebus_test_mock.go github.com/enbility/cemd/emobility EmobilityI
 
 const (
 	maxIdRequestTimespan         = time.Second * 120
@@ -36,9 +37,8 @@ type EEBus struct {
 	minMaxG func() (minMax, error)
 
 	ski       string
-	emobility *emobility.EMobility
-
-	communicationStandard emobility.EVCommunicationStandardType
+	emobility ucevcc.UCEVCCInterface
+	// communicationStandard emobility.CommunicationStandardType
 
 	expectedEnableUnpluggedState bool
 	current                      float64
@@ -88,14 +88,14 @@ func NewEEBus(ski, ip string, hasMeter, hasChargedEnergy bool) (api.Charger, err
 	}
 
 	c := &EEBus{
-		ski:                   ski,
-		log:                   log,
-		connectedC:            make(chan bool, 1),
-		communicationStandard: emobility.EVCommunicationStandardTypeUnknown,
-		current:               6,
+		ski:        ski,
+		log:        log,
+		connectedC: make(chan bool, 1),
+		// communicationStandard: emobility.CommunicationStandardTypeUnknown,
+		current: 6,
 	}
 
-	c.emobility = eebus.Instance.RegisterEVSE(ski, ip, c.onConnect, c.onDisconnect, nil)
+	c.emobility = eebus.Instance.RegisterEVSE(ski, ip, c.onConnect, c.onDisconnect)
 
 	c.minMaxG = provider.Cached(c.minMax, time.Second)
 
@@ -146,7 +146,7 @@ func (c *EEBus) onDisconnect(ski string) {
 }
 
 func (c *EEBus) setDefaultValues() {
-	c.communicationStandard = emobility.EVCommunicationStandardTypeUnknown
+	// c.communicationStandard = emobility.CommunicationStandardTypeUnknown
 	c.lastIsChargingCheck = time.Now().Add(-time.Hour * 1)
 	c.lastIsChargingResult = false
 }
@@ -177,7 +177,7 @@ func (c *EEBus) isConnected() bool {
 var _ api.CurrentLimiter = (*EEBus)(nil)
 
 func (c *EEBus) minMax() (minMax, error) {
-	minLimits, maxLimits, _, err := c.emobility.EVCurrentLimits()
+	minLimits, maxLimits, _, err := c.emobility.CurrentLimits()
 	if err != nil {
 		if err == features.ErrDataNotAvailable {
 			err = api.ErrNotAvailable
@@ -218,11 +218,11 @@ func (c *EEBus) isCharging() bool { // d *communication.EVSEClientDataType
 	}
 
 	// The above doesn't (yet) work for built in meters, so check the EEBUS measurements also
-	currents, err := c.emobility.EVCurrentsPerPhase()
+	currents, err := c.emobility.CurrentsPerPhase()
 	if err != nil {
 		return false
 	}
-	limitsMin, _, _, err := c.emobility.EVCurrentLimits()
+	limitsMin, _, _, err := c.emobility.CurrentLimits()
 	if err != nil || limitsMin == nil || len(limitsMin) == 0 {
 		return false
 	}
@@ -245,7 +245,7 @@ func (c *EEBus) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, api.ErrTimeout
 	}
 
-	if !c.emobility.EVConnected() {
+	if !c.emobility.Connected() {
 		c.expectedEnableUnpluggedState = false
 		c.evConnected = false
 		return api.StatusA, nil
@@ -256,23 +256,23 @@ func (c *EEBus) Status() (api.ChargeStatus, error) {
 		c.currentLimit = -1
 	}
 
-	currentState, err := c.emobility.EVCurrentChargeState()
+	currentState, err := c.emobility.CurrentChargeState()
 	if err != nil {
 		return api.StatusNone, err
 	}
 
 	switch currentState {
-	case emobility.EVChargeStateTypeUnknown, emobility.EVChargeStateTypeUnplugged: // Unplugged
+	case cemdapi.EVChargeStateTypeUnknown, cemdapi.EVChargeStateTypeUnplugged: // Unplugged
 		c.expectedEnableUnpluggedState = false
 		return api.StatusA, nil
-	case emobility.EVChargeStateTypeFinished, emobility.EVChargeStateTypePaused: // Finished, Paused
+	case cemdapi.EVChargeStateTypeFinished, cemdapi.EVChargeStateTypePaused: // Finished, Paused
 		return api.StatusB, nil
-	case emobility.EVChargeStateTypeActive: // Active
+	case cemdapi.EVChargeStateTypeActive: // Active
 		if c.isCharging() {
 			return api.StatusC, nil
 		}
 		return api.StatusB, nil
-	case emobility.EVChargeStateTypeError: // Error
+	case cemdapi.EVChargeStateTypeError: // Error
 		return api.StatusF, nil
 	default:
 		return api.StatusNone, fmt.Errorf("%s properties unknown result: %s", c.ski, currentState)
@@ -293,7 +293,7 @@ func (c *EEBus) Enabled() (bool, error) {
 		return true, nil
 	}
 
-	limits, err := c.emobility.EVLoadControlObligationLimits()
+	limits, err := c.emobility.LoadControlObligationLimits()
 	if err != nil {
 		// there are no overload protection limits available, e.g. because the data was not received yet
 		return true, nil
@@ -322,8 +322,8 @@ func (c *EEBus) Enable(enable bool) error {
 	// if we disable charging with a potential but not yet known communication standard ISO15118
 	// this would set allowed A value to be 0. And this would trigger ISO connections to switch to IEC!
 	if !enable {
-		comStandard, err := c.emobility.EVCommunicationStandard()
-		if err != nil || comStandard == emobility.EVCommunicationStandardTypeUnknown {
+		comStandard, err := c.emobility.CommunicationStandard()
+		if err != nil || comStandard == emobility.CommunicationStandardTypeUnknown {
 			return api.ErrMustRetry
 		}
 	}
@@ -339,7 +339,7 @@ func (c *EEBus) Enable(enable bool) error {
 
 // send current charging power limits to the EV
 func (c *EEBus) writeCurrentLimitData(currents []float64) error {
-	comStandard, err := c.emobility.EVCommunicationStandard()
+	comStandard, err := c.emobility.CommunicationStandard()
 	if err != nil {
 		return err
 	}
@@ -350,8 +350,8 @@ func (c *EEBus) writeCurrentLimitData(currents []float64) error {
 	// wait for the car to go into sleep and plug it back in.
 	// So if there are currents smaller than 6A with unknown communication standard change them to 6A.
 	// Keep in mind that this will still confuse evcc as it thinks charging is stopped, but it hasn't yet.
-	if comStandard == emobility.EVCommunicationStandardTypeUnknown {
-		minLimits, _, _, err := c.emobility.EVCurrentLimits()
+	if comStandard == emobility.CommunicationStandardTypeUnknown {
+		minLimits, _, _, err := c.emobility.CurrentLimits()
 		if err == nil {
 			for index, current := range currents {
 				if index < len(minLimits) && current < minLimits[index] {
@@ -363,7 +363,7 @@ func (c *EEBus) writeCurrentLimitData(currents []float64) error {
 
 	// Set overload protection limits and self consumption limits to identical values,
 	// so if the EV supports self consumption it will be used automatically.
-	if err = c.emobility.EVWriteLoadControlLimits(currents, currents); err == nil {
+	if err = c.emobility.WriteLoadControlLimits(currents, currents); err == nil {
 		c.currentLimit = currents[0]
 	}
 
@@ -379,7 +379,7 @@ var _ api.ChargerEx = (*EEBus)(nil)
 
 // MaxCurrentMillis implements the api.ChargerEx interface
 func (c *EEBus) MaxCurrentMillis(current float64) error {
-	if !c.connected || !c.emobility.EVConnected() {
+	if !c.connected || !c.emobility.Connected() {
 		return errors.New("can't set new current as ev is unplugged")
 	}
 
@@ -401,16 +401,16 @@ func (c *EEBus) GetMaxCurrent() (float64, error) {
 
 // CurrentPower implements the api.Meter interface
 func (c *EEBus) currentPower() (float64, error) {
-	if !c.emobility.EVConnected() {
+	if !c.emobility.Connected() {
 		return 0, nil
 	}
 
-	connectedPhases, err := c.emobility.EVConnectedPhases()
+	connectedPhases, err := c.emobility.ConnectedPhases()
 	if err != nil {
 		return 0, err
 	}
 
-	powers, err := c.emobility.EVPowerPerPhase()
+	powers, err := c.emobility.PowerPerPhase()
 	if err != nil {
 		return 0, err
 	}
@@ -428,11 +428,11 @@ func (c *EEBus) currentPower() (float64, error) {
 
 // ChargedEnergy implements the api.ChargeRater interface
 func (c *EEBus) chargedEnergy() (float64, error) {
-	if !c.emobility.EVConnected() {
+	if !c.emobility.Connected() {
 		return 0, nil
 	}
 
-	energy, err := c.emobility.EVChargedEnergy()
+	energy, err := c.emobility.ChargedEnergy()
 	if err != nil {
 		return 0, err
 	}
@@ -442,11 +442,11 @@ func (c *EEBus) chargedEnergy() (float64, error) {
 
 // Currents implements the api.PhaseCurrents interface
 func (c *EEBus) currents() (float64, float64, float64, error) {
-	if !c.emobility.EVConnected() {
+	if !c.emobility.Connected() {
 		return 0, 0, 0, nil
 	}
 
-	res, err := c.emobility.EVCurrentsPerPhase()
+	res, err := c.emobility.CurrentsPerPhase()
 	if err != nil {
 		if err == features.ErrDataNotAvailable {
 			err = api.ErrNotAvailable
@@ -466,18 +466,18 @@ var _ api.Identifier = (*EEBus)(nil)
 
 // Identify implements the api.Identifier interface
 func (c *EEBus) Identify() (string, error) {
-	if !c.isConnected() || !c.emobility.EVConnected() {
+	if !c.isConnected() || !c.emobility.Connected() {
 		return "", nil
 	}
 
-	if !c.emobility.EVConnected() {
+	if !c.emobility.Connected() {
 		return "", nil
 	}
-	if identification, _ := c.emobility.EVIdentification(); identification != "" {
+	if identification, _ := c.emobility.Identification(); identification != "" {
 		return identification, nil
 	}
 
-	if comStandard, _ := c.emobility.EVCommunicationStandard(); comStandard == emobility.EVCommunicationStandardTypeIEC61851 {
+	if comStandard, _ := c.emobility.CommunicationStandard(); comStandard == emobility.CommunicationStandardTypeIEC61851 {
 		return "", nil
 	}
 
@@ -492,11 +492,11 @@ var _ api.Battery = (*EEBus)(nil)
 
 // Soc implements the api.Vehicle interface
 func (c *EEBus) Soc() (float64, error) {
-	if socSupported, err := c.emobility.EVSoCSupported(); err != nil || !socSupported {
+	if socSupported, err := c.emobility.SoCSupported(); err != nil || !socSupported {
 		return 0, api.ErrNotAvailable
 	}
 
-	soc, err := c.emobility.EVSoC()
+	soc, err := c.emobility.SoC()
 	if err != nil {
 		return 0, api.ErrNotAvailable
 	}
