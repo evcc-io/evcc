@@ -3,7 +3,7 @@ package mqtt
 import (
 	"crypto/tls"
 	"fmt"
-	"math/rand"
+	"math/rand/v2"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -20,8 +20,7 @@ var Instance *Client
 
 // ClientID created unique mqtt client id
 func ClientID() string {
-	pid := rand.Int31()
-	return fmt.Sprintf("evcc-%d", pid)
+	return fmt.Sprintf("evcc-%d", rand.Uint32())
 }
 
 // Config is the public configuration
