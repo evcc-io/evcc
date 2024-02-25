@@ -187,7 +187,6 @@ render: |
       set:
         source: sequence
         set:
-        set:
         - source: const
           value: 1 # charge
           set: 
