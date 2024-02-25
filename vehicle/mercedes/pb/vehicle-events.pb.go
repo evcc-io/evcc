@@ -7,9 +7,9 @@
 package protos
 
 import (
+	protos "github.com/evcc-io/evcc/vehicle/mercedes/pb/protos"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
-	protos "github.com/evcc-io/evcc/vehicle/mercedes/pb/protos"
 	reflect "reflect"
 	sync "sync"
 )
