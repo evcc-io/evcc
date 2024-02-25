@@ -108,7 +108,7 @@ func (v *Identity) RefreshToken(currenttoken *oauth2.Token) (*oauth2.Token, erro
 
 	uri := fmt.Sprintf("%s/as/token.oauth2", IdUri)
 	data := url.Values{
-		"grant_type":    []string{"password"},
+		"grant_type":    []string{"refresh_token"},
 		"refresh_token": []string{currenttoken.RefreshToken},
 	}
 
