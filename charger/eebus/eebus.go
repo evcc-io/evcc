@@ -137,14 +137,14 @@ func (c *EEBus) Service() eebusapi.ServiceInterface {
 }
 
 func (c *EEBus) SpineEvent(ski string, entity spineapi.EntityRemoteInterface, event cemdapi.UseCaseEventType) {
-	c.log.DEBUG.Printf("SpineEvent: %s %s %v", ski, event, entity)
+	c.log.TRACE.Printf("SpineEvent: CEM %s %s %v", ski, event, entity)
 
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
 	callbacks, ok := c.clients[ski]
 	if !ok {
-		c.log.DEBUG.Printf("SpineEvent: ski %s not registered", ski)
+		c.log.TRACE.Printf("SpineEvent: CEM ski %s not registered", ski)
 	}
 
 	if callbacks.EntityRemoteInterface == nil {
@@ -153,7 +153,7 @@ func (c *EEBus) SpineEvent(ski string, entity spineapi.EntityRemoteInterface, ev
 	}
 
 	if callbacks.EntityRemoteInterface != entity {
-		c.log.ERROR.Printf("SpineEvent: mismatched entity for ski %s (%v != %v)", ski, callbacks.EntityRemoteInterface, entity)
+		c.log.ERROR.Printf("SpineEvent: CEM mismatched entity for ski %s (%v != %v)", ski, callbacks.EntityRemoteInterface, entity)
 		return
 	}
 
