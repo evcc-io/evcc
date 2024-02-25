@@ -86,69 +86,37 @@ func jsonError(w http.ResponseWriter, status int, err error) {
 	jsonWrite(w, map[string]interface{}{"error": err.Error()})
 }
 
-// pass converts a simple api without return value to api with nil error return value
-func pass[T any](f func(T)) func(T) error {
-	return func(v T) error {
-		f(v)
-		return nil
+func handler[T any](conv func(string) (T, error), set func(T) error, get func() T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+
+		val, err := conv(vars["value"])
+		if err == nil {
+			err = set(val)
+		}
+
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		jsonResult(w, get())
 	}
 }
 
 // floatHandler updates float-param api
 func floatHandler(set func(float64) error, get func() float64) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-
-		val, err := strconv.ParseFloat(vars["value"], 64)
-		if err == nil {
-			err = set(val)
-		}
-
-		if err != nil {
-			jsonError(w, http.StatusBadRequest, err)
-			return
-		}
-
-		jsonResult(w, get())
-	}
+	return handler(parseFloat, set, get)
 }
 
 // intHandler updates int-param api
 func intHandler(set func(int) error, get func() int) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-
-		val, err := strconv.Atoi(vars["value"])
-		if err == nil {
-			err = set(val)
-		}
-
-		if err != nil {
-			jsonError(w, http.StatusBadRequest, err)
-			return
-		}
-
-		jsonResult(w, get())
-	}
+	return handler(strconv.Atoi, set, get)
 }
 
 // boolHandler updates bool-param api
 func boolHandler(set func(bool) error, get func() bool) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-
-		val, err := strconv.ParseBool(vars["value"])
-		if err == nil {
-			err = set(val)
-		}
-
-		if err != nil {
-			jsonError(w, http.StatusBadRequest, err)
-			return
-		}
-
-		jsonResult(w, get())
-	}
+	return handler(strconv.ParseBool, set, get)
 }
 
 // boolGetHandler retrieves bool api values
@@ -168,6 +136,25 @@ func encodeFloats(data map[string]any) {
 				data[k] = nil
 			}
 		}
+	}
+}
+
+// updateSmartCostLimit sets the smart cost limit globally
+func updateSmartCostLimit(site site.API) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+
+		val, err := parseFloat(vars["value"])
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		for _, lp := range site.Loadpoints() {
+			lp.SetSmartCostLimit(val)
+		}
+
+		jsonResult(w, val)
 	}
 }
 

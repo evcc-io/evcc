@@ -17,8 +17,6 @@ modalTitle = "Réglages de la batterie"
 
 [batterySettings.bufferStart]
 full = "quand presque pleine"
-low = "quand partiellement pleine"
-medium = "quand à moitié pleine"
 never = "seulement quand surplus suffisant"
 
 [config]
@@ -123,17 +121,6 @@ modalUpdate = "Installer"
 modalUpdateNow = "Installer maintenant"
 modalUpdateStarted = "Démarrage de la nouvelle version de evcc..."
 modalUpdateStatusStart = "L'installation a commencé:"
-
-[gridSettings]
-activeHours = "{charging} sur {total}"
-activeHoursLabel = "Heures actives"
-co2Label = "Émissions de CO₂"
-co2Limit = "Limite CO₂"
-costLimitDescription = "Autorise la charge rapide temporaire en mode solaire."
-modalTitle = "Recharge réseau intelligente"
-none = "aucune"
-priceLabel = "Prix de l'énergie"
-priceLimit = "Limite de prix"
 
 [header]
 about = "À propos"
@@ -419,6 +406,17 @@ light = "clair"
 km = "km"
 label = "Unités"
 mi = "miles"
+
+[smartCost]
+activeHours = "{charging} sur {total}"
+activeHoursLabel = "Heures actives"
+co2Label = "Émissions de CO₂"
+co2Limit = "Limite CO₂"
+loadpointDescription = "Autorise la charge rapide temporaire en mode solaire."
+modalTitle = "Recharge réseau intelligente"
+none = "aucune"
+priceLabel = "Prix de l'énergie"
+priceLimit = "Limite de prix"
 
 [startupError]
 configFile = "Fichier de configuration utilisé:"

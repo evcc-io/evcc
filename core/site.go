@@ -33,8 +33,8 @@ import (
 
 const standbyPower = 10 // consider less than 10W as charger in standby
 
-// Updater abstracts the Loadpoint implementation for testing
-type Updater interface {
+// updater abstracts the Loadpoint implementation for testing
+type updater interface {
 	loadpoint.API
 	Update(availablePower float64, autoCharge, batteryBuffered, batteryStart bool, greenShare float64, effectivePrice, effectiveCo2 *float64)
 }
@@ -76,9 +76,6 @@ type Site struct {
 	pvMeters      []api.Meter // PV generation meters
 	batteryMeters []api.Meter // Battery charging meters
 	auxMeters     []api.Meter // Auxiliary meters
-
-	// cost settings
-	smartCostLimit float64 // always charge if cost is below this value
 
 	// battery settings
 	prioritySoc             float64 // prefer battery up to this Soc
@@ -267,11 +264,6 @@ func (site *Site) restoreSettings() error {
 	}
 	if v, err := settings.Float(keys.BufferStartSoc); err == nil {
 		if err := site.SetBufferStartSoc(v); err != nil {
-			return err
-		}
-	}
-	if v, err := settings.Float(keys.SmartCostLimit); err == nil {
-		if err := site.SetSmartCostLimit(v); err != nil {
 			return err
 		}
 	}
@@ -771,7 +763,7 @@ func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints fl
 	}
 }
 
-func (site *Site) update(lp Updater) {
+func (site *Site) update(lp updater) {
 	site.log.DEBUG.Println("----")
 
 	// update all loadpoint's charge power
@@ -799,9 +791,8 @@ func (site *Site) update(lp Updater) {
 		}
 
 		if err == nil {
-			limit := site.GetSmartCostLimit()
+			limit := lp.GetSmartCostLimit()
 			smartCostActive = limit != 0 && rate.Price <= limit
-			site.publish(keys.SmartCostActive, smartCostActive)
 		} else {
 			site.log.ERROR.Println("smartCost:", err)
 		}
@@ -862,8 +853,6 @@ func (site *Site) prepare() {
 	site.publish(keys.ResidualPower, site.ResidualPower)
 
 	site.publish(keys.Currency, site.tariffs.Currency)
-	site.publish(keys.SmartCostActive, false)
-	site.publish(keys.SmartCostLimit, site.smartCostLimit)
 	if tariff := site.GetTariff(PlannerTariff); tariff != nil {
 		site.publish(keys.SmartCostType, tariff.Type())
 	} else {
@@ -919,7 +908,7 @@ func (site *Site) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Event) 
 }
 
 // loopLoadpoints keeps iterating across loadpoints sending the next to the given channel
-func (site *Site) loopLoadpoints(next chan<- Updater) {
+func (site *Site) loopLoadpoints(next chan<- updater) {
 	for {
 		for _, lp := range site.loadpoints {
 			next <- lp
@@ -936,7 +925,7 @@ func (site *Site) Run(stopC chan struct{}, interval time.Duration) {
 		site.log.WARN.Printf("interval <%.0fs can lead to unexpected behavior, see https://docs.evcc.io/docs/reference/configuration/interval", max.Seconds())
 	}
 
-	loadpointChan := make(chan Updater)
+	loadpointChan := make(chan updater)
 	go site.loopLoadpoints(loadpointChan)
 
 	ticker := time.NewTicker(interval)

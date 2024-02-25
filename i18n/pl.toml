@@ -18,8 +18,6 @@ notControllable = "Sterowanie baterią nie jest dostępne dla tej baterii."
 
 [batterySettings.bufferStart]
 full = "kiedy prawie pełny"
-low = "kiedy nieco pełny"
-medium = "kiedy w połowie pełny"
 never = "tylko z wystarczającą nadwyżką"
 
 [config]
@@ -124,17 +122,6 @@ modalUpdate = "Instaluj"
 modalUpdateNow = "Instaluj teraz"
 modalUpdateStarted = "Nowa wersja evcc uruchomi się..."
 modalUpdateStatusStart = "Instalacja rozpoczęta:"
-
-[gridSettings]
-activeHours = "{charging} z {total}"
-activeHoursLabel = "Aktywne godziny"
-co2Label = "Emisja CO₂"
-co2Limit = "Limit CO₂"
-costLimitDescription = "Umożliwia tymczasowe szybkie ładowanie w trybie solarnym."
-modalTitle = "Ładowanie z inteligentnej sieci"
-none = "nie ma"
-priceLabel = "Cena energii"
-priceLimit = "Limit ceny"
 
 [header]
 about = "O evcc"
@@ -426,6 +413,17 @@ light = "jasny"
 km = "km"
 label = "Jednostki"
 mi = "mile"
+
+[smartCost]
+activeHours = "{charging} z {total}"
+activeHoursLabel = "Aktywne godziny"
+co2Label = "Emisja CO₂"
+co2Limit = "Limit CO₂"
+loadpointDescription = "Umożliwia tymczasowe szybkie ładowanie w trybie solarnym."
+modalTitle = "Ładowanie z inteligentnej sieci"
+none = "nie ma"
+priceLabel = "Cena energii"
+priceLimit = "Limit ceny"
 
 [startupError]
 configFile = "Używany plik konfiguracyjny:"
