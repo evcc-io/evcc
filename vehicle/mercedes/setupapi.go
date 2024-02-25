@@ -14,6 +14,13 @@ import (
 	"golang.org/x/oauth2"
 )
 
+type SetupAPI struct {
+	log     *util.Logger
+	account string
+	region  string
+	*request.Helper
+}
+
 func NewSetupAPI(log *util.Logger, account string, region string) *SetupAPI {
 	client := request.NewHelper(log)
 

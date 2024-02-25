@@ -18,13 +18,6 @@ type API struct {
 	*request.Helper
 }
 
-type SetupAPI struct {
-	log     *util.Logger
-	account string
-	region  string
-	*request.Helper
-}
-
 func NewAPI(log *util.Logger, identity *Identity) *API {
 	client := request.NewHelper(log)
 
