@@ -2,7 +2,7 @@ package ocpp
 
 import (
 	"fmt"
-	"math/rand"
+	"math/rand/v2"
 	"strings"
 	"time"
 
@@ -43,7 +43,7 @@ func New(conf map[string]interface{}, site site.API) (*OCPP, error) {
 		if err == nil {
 			cc.StationID = fmt.Sprintf("evcc-%s", strings.ToLower(id))
 		} else {
-			cc.StationID = fmt.Sprintf("evcc-%d", rand.Int31())
+			cc.StationID = fmt.Sprintf("evcc-%d", rand.Uint32())
 		}
 		log.DEBUG.Println("station id:", cc.StationID)
 	}
