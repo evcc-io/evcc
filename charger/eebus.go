@@ -10,6 +10,7 @@ import (
 	cemdapi "github.com/enbility/cemd/api"
 	"github.com/enbility/cemd/ucevcc"
 	"github.com/enbility/cemd/ucevcem"
+	"github.com/enbility/cemd/ucevsecc"
 	"github.com/enbility/cemd/ucevsoc"
 	"github.com/enbility/cemd/ucopev"
 	"github.com/enbility/eebus-go/features"
@@ -41,12 +42,13 @@ type EEBus struct {
 	lp      loadpoint.API
 	minMaxG func() (minMax, error)
 
-	ski     string
-	entity  spineapi.EntityRemoteInterface
-	ucEvCC  ucevcc.UCEVCCInterface   // Commissioning and Configuration
-	ucEvCem ucevcem.UCEVCEMInterface // Charging Electricity Measurement
-	ucEvOP  ucopev.UCOPEVInterface   // Overload Protection
-	ucEvSoc ucevsoc.UCEVSOCInterface // State Of Charge
+	ski      string
+	entity   spineapi.EntityRemoteInterface
+	ucEvseCC ucevsecc.UCEVSECCInterface // EVSE Commissioning and Configuration
+	ucEvCC   ucevcc.UCEVCCInterface     // EV Commissioning and Configuration
+	ucEvCem  ucevcem.UCEVCEMInterface   // EV Charging Electricity Measurement
+	ucEvOP   ucopev.UCOPEVInterface     // EV Overload Protection
+	ucEvSoc  ucevsoc.UCEVSOCInterface   // EV State Of Charge
 
 	communicationStandard string
 
@@ -108,6 +110,7 @@ func NewEEBus(ski, ip string, hasMeter, hasChargedEnergy bool) (api.Charger, err
 	c.entity = eebus.Instance.RegisterEVSE(ski, ip, c.onConnect, c.onDisconnect)
 
 	service := eebus.Instance.Service()
+	c.ucEvseCC = ucevsecc.NewUCEVSECC(service, service.LocalService(), c)
 	c.ucEvCC = ucevcc.NewUCEVCC(service, service.LocalService(), c)
 	c.ucEvCem = ucevcem.NewUCEVCEM(service, service.LocalService(), c)
 	c.ucEvOP = ucopev.NewUCOPEV(service, service.LocalService(), c)
