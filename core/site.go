@@ -432,7 +432,7 @@ func (site *Site) updateMeters() error {
 		mm := make([]meterMeasurement, len(site.pvMeters))
 
 		for i, meter := range site.pvMeters {
-			// pv power
+			// pv power - error swallowed
 			bo.Reset()
 			power, err := backoff.RetryWithData(meter.CurrentPower, bo)
 
@@ -482,8 +482,7 @@ func (site *Site) updateMeters() error {
 		mm := make([]batteryMeasurement, len(site.batteryMeters))
 
 		for i, meter := range site.batteryMeters {
-			// battery power
-			// NOTE battery errors are logged but ignored as we don't consider them relevant
+			// battery power - error swallowed
 			bo.Reset()
 			power, err := backoff.RetryWithData(meter.CurrentPower, bo)
 
