@@ -62,7 +62,7 @@ func (m *Server) GetInverter(ip string) *util.Monitor[Inverter] {
 func (m *Server) readData() {
 	bo := backoff.NewExponentialBackOff()
 	bo.MaxInterval = time.Second
-	bo.MaxElapsedTime = 0 // retry forever; default is 15 min
+	bo.MaxElapsedTime = 10 * time.Second
 
 	for {
 		mu.RLock()
