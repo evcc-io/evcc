@@ -89,7 +89,6 @@ func NewIdentity(log *util.Logger, token *oauth2.Token, account string, region s
 		return nil, errors.New("token expired")
 	}
 
-	v.log.DEBUG.Println("Identity.NewIdentity - Step 6 - OK")
 	v.TokenSource = oauth.RefreshTokenSource(token, v)
 
 	// add instance
