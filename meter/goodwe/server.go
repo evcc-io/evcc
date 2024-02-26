@@ -81,9 +81,7 @@ func (m *Server) readData() {
 				time.Sleep(5 * time.Second)
 				_, err = m.conn.WriteToUDP([]byte{0xF7, 0x03, 0x90, 0x88, 0x00, 0x0D, 0x3D, 0xB3}, addr)
 				return err
-			}, bo); err == nil {
-				bo.Reset()
-			} else {
+			}, bo); err != nil {
 				m.log.ERROR.Println(err)
 			}
 		}
