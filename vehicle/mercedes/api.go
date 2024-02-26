@@ -13,8 +13,8 @@ import (
 
 // API is an api.Vehicle implementation for Mercedes-Benz cars
 type API struct {
-	identity *Identity
-	log      *util.Logger
+	region string
+	log    *util.Logger
 	*request.Helper
 }
 
@@ -30,16 +30,16 @@ func NewAPI(log *util.Logger, identity *Identity) *API {
 	}
 
 	return &API{
-		Helper:   client,
-		identity: identity,
-		log:      log,
+		Helper: client,
+		region: identity.region,
+		log:    log,
 	}
 }
 
 func (v *API) Vehicles() ([]string, error) {
 	var res VehiclesResponse
 
-	url := fmt.Sprintf("%s/v2/vehicles", getBffUri(v.identity.region))
+	url := fmt.Sprintf("%s/v2/vehicles", getBffUri(v.region))
 
 	err := v.GetJSON(url, &res)
 
@@ -54,7 +54,7 @@ func (v *API) Vehicles() ([]string, error) {
 func (v *API) Status(vin string) (StatusResponse, error) {
 	var res StatusResponse
 
-	uri := fmt.Sprintf("%s/v1/vehicle/%s/vehicleattributes", getWidgetUri(v.identity.region), vin)
+	uri := fmt.Sprintf("%s/v1/vehicle/%s/vehicleattributes", getWidgetUri(v.region), vin)
 
 	data, err := v.GetBody(uri)
 	if err != nil {
