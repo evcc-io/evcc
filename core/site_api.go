@@ -53,7 +53,7 @@ func (site *Site) SetTitle(title string) {
 	defer site.Unlock()
 
 	site.Title = title
-	site.publish("siteTitle", title)
+	site.publish(keys.SiteTitle, title)
 	settings.SetString(keys.Title, title)
 }
 
@@ -70,7 +70,6 @@ func (site *Site) SetGridMeterRef(ref string) {
 	defer site.Unlock()
 
 	site.Meters.GridMeterRef = ref
-	// site.publish("siteGridMeterRef", meter)
 	settings.SetString(keys.GridMeter, ref)
 }
 
