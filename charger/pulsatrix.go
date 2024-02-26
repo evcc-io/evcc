@@ -127,7 +127,7 @@ func (c *Pulsatrix) reconnectWs() {
 	bo := backoff.NewExponentialBackOff()
 	bo.InitialInterval = time.Second
 	bo.MaxInterval = 1 * time.Minute
-	bo.MaxElapsedTime = 0 // retry forever; default is 15 min
+	bo.MaxElapsedTime = 0 * time.Second // retry forever; default is 15 min
 	if err := backoff.Retry(c.connectWs, bo); err != nil {
 		c.log.ERROR.Println(err)
 	}
