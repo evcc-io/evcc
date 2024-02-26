@@ -72,14 +72,13 @@ func (m *Server) readData() {
 		for _, ip := range ips {
 			if err := backoff.Retry(func() error {
 				addr, err := net.ResolveUDPAddr("udp", net.JoinHostPort(ip, "8899"))
-				if err != nil {
-					return err
+				if err == nil {
+					_, err = m.conn.WriteToUDP([]byte{0xF7, 0x03, 0x89, 0x1C, 0x00, 0x7D, 0x7A, 0xE7}, addr)
 				}
-				if _, err := m.conn.WriteToUDP([]byte{0xF7, 0x03, 0x89, 0x1C, 0x00, 0x7D, 0x7A, 0xE7}, addr); err != nil {
-					return err
+				if err == nil {
+					time.Sleep(5 * time.Second)
+					_, err = m.conn.WriteToUDP([]byte{0xF7, 0x03, 0x90, 0x88, 0x00, 0x0D, 0x3D, 0xB3}, addr)
 				}
-				time.Sleep(5 * time.Second)
-				_, err = m.conn.WriteToUDP([]byte{0xF7, 0x03, 0x90, 0x88, 0x00, 0x0D, 0x3D, 0xB3}, addr)
 				return err
 			}, bo); err != nil {
 				m.log.ERROR.Println(err)
