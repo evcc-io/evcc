@@ -11,8 +11,8 @@ import (
 	"time"
 
 	evbus "github.com/asaskevich/EventBus"
-	"github.com/avast/retry-go/v4"
 	"github.com/benbjohnson/clock"
+	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/coordinator"
 	"github.com/evcc-io/evcc/core/keys"
@@ -1242,7 +1242,10 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batter
 
 // UpdateChargePower updates charge meter power
 func (lp *Loadpoint) UpdateChargePower() {
-	err := retry.Do(func() error {
+	bo := backoff.NewExponentialBackOff()
+	bo.MaxElapsedTime = time.Second
+
+	if err := backoff.Retry(func() error {
 		value, err := lp.chargeMeter.CurrentPower()
 		if err != nil {
 			return err
@@ -1262,8 +1265,7 @@ func (lp *Loadpoint) UpdateChargePower() {
 		}
 
 		return nil
-	}, retryOptions...)
-	if err != nil {
+	}, bo); err != nil {
 		lp.log.ERROR.Printf("charge meter: %v", err)
 	}
 }

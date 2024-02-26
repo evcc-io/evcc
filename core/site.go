@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/avast/retry-go/v4"
+	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/cmd/shutdown"
 	"github.com/evcc-io/evcc/core/coordinator"
@@ -399,209 +399,196 @@ func (site *Site) publishDelta(key string, val interface{}) {
 	site.publish(key, val)
 }
 
-// updateMeter updates and publishes single meter
-func (site *Site) updateMeter(meter api.Meter, power *float64) func() error {
-	return func() error {
-		value, err := meter.CurrentPower()
+// updatePvMeters updates pv meters. All measurements are optional.
+func (site *Site) updatePvMeters() {
+	if len(site.pvMeters) == 0 {
+		return
+	}
+
+	var totalEnergy float64
+
+	site.pvPower = 0
+
+	mm := make([]meterMeasurement, len(site.pvMeters))
+
+	for i, meter := range site.pvMeters {
+		// pv power
+		power, err := meter.CurrentPower()
+
 		if err == nil {
-			*power = value // update value if no error
+			// ignore negative values which represent self-consumption
+			site.pvPower += max(0, power)
+			if power < -500 {
+				site.log.WARN.Printf("pv %d power: %.0fW is negative - check configuration if sign is correct", i+1, power)
+			}
+		} else {
+			err = fmt.Errorf("pv %d power: %v", i+1, err)
+			site.log.ERROR.Println(err)
 		}
 
-		return err
+		// pv energy (production)
+		var energy float64
+		if m, ok := meter.(api.MeterEnergy); err == nil && ok {
+			energy, err = m.TotalEnergy()
+			if err == nil {
+				totalEnergy += energy
+			} else {
+				site.log.ERROR.Printf("pv %d energy: %v", i+1, err)
+			}
+		}
+
+		mm[i] = meterMeasurement{
+			Power:  power,
+			Energy: energy,
+		}
 	}
+
+	site.log.DEBUG.Printf("pv power: %.0fW", site.pvPower)
+	site.publish(keys.PvPower, site.pvPower)
+	site.publish(keys.PvEnergy, totalEnergy)
+	site.publish(keys.Pv, mm)
 }
 
-// retryMeter retries meter update
-func (site *Site) retryMeter(name string, meter api.Meter, power *float64) error {
-	if meter == nil {
+// updateBatteryMeters updates battery meters. Power is retried, other measurements are optional.
+func (site *Site) updateBatteryMeters() error {
+	if len(site.batteryMeters) == 0 {
 		return nil
 	}
 
-	err := retry.Do(site.updateMeter(meter, power), retryOptions...)
+	bo := backoff.NewExponentialBackOff()
+	bo.MaxElapsedTime = time.Second
 
-	if err == nil {
-		site.log.DEBUG.Printf("%s power: %.0fW", name, *power)
-		site.publish(name+"Power", *power)
-	} else {
-		err = fmt.Errorf("%s meter: %v", name, err)
-		site.log.ERROR.Println(err)
+	var totalCapacity, totalEnergy float64
+
+	site.batteryPower = 0
+	site.batterySoc = 0
+
+	mm := make([]batteryMeasurement, len(site.batteryMeters))
+
+	for i, meter := range site.batteryMeters {
+		bo.Reset()
+
+		power, err := backoff.RetryWithData(meter.CurrentPower, bo)
+		if err == nil {
+			site.batteryPower += power
+			if len(site.batteryMeters) > 1 {
+				site.log.DEBUG.Printf("battery %d power: %.0fW", i+1, power)
+			}
+		} else {
+			// power is required- return on error
+			return fmt.Errorf("battery %d power: %v", i+1, err)
+		}
+
+		// battery energy (discharge)
+		var energy float64
+		if m, ok := meter.(api.MeterEnergy); err == nil && ok {
+			energy, err = m.TotalEnergy()
+			if err == nil {
+				totalEnergy += energy
+			} else {
+				site.log.ERROR.Printf("battery %d energy: %v", i+1, err)
+			}
+		}
+
+		// battery soc and capacity
+		var batSoc, capacity float64
+		if meter, ok := meter.(api.Battery); ok {
+			batSoc, err = soc.Guard(meter.Soc())
+
+			if err == nil {
+				// weigh soc by capacity and accumulate total capacity
+				weighedSoc := batSoc
+				if m, ok := meter.(api.BatteryCapacity); ok {
+					capacity = m.Capacity()
+					totalCapacity += capacity
+					weighedSoc *= capacity
+				}
+
+				site.batterySoc += weighedSoc
+				if len(site.batteryMeters) > 1 {
+					site.log.DEBUG.Printf("battery %d soc: %.0f%%", i+1, batSoc)
+				}
+			} else {
+				site.log.ERROR.Printf("battery %d soc: %v", i+1, err)
+			}
+		}
+
+		_, controllable := meter.(api.BatteryController)
+
+		mm[i] = batteryMeasurement{
+			Power:        power,
+			Energy:       energy,
+			Soc:          batSoc,
+			Capacity:     capacity,
+			Controllable: controllable,
+		}
 	}
 
-	return err
+	site.publish(keys.BatteryCapacity, totalCapacity)
+
+	// convert weighed socs to total soc
+	if totalCapacity == 0 {
+		totalCapacity = float64(len(site.batteryMeters))
+	}
+	site.batterySoc /= totalCapacity
+
+	site.log.DEBUG.Printf("battery soc: %.0f%%", math.Round(site.batterySoc))
+	site.publish(keys.BatterySoc, site.batterySoc)
+
+	site.log.DEBUG.Printf("battery power: %.0fW", site.batteryPower)
+	site.publish(keys.BatteryPower, site.batteryPower)
+	site.publish(keys.BatteryEnergy, totalEnergy)
+	site.publish(keys.Battery, mm)
+
+	return nil
 }
 
-// updateMeter updates and publishes single meter
-func (site *Site) updateMeters() error {
-	if len(site.pvMeters) > 0 {
-		var totalEnergy float64
-
-		site.pvPower = 0
-
-		mm := make([]meterMeasurement, len(site.pvMeters))
-
-		for i, meter := range site.pvMeters {
-			// pv power
-			var power float64
-			err := retry.Do(site.updateMeter(meter, &power), retryOptions...)
-
-			if err == nil {
-				// ignore negative values which represent self-consumption
-				site.pvPower += max(0, power)
-				if power < -500 {
-					site.log.WARN.Printf("pv %d power: %.0fW is negative - check configuration if sign is correct", i+1, power)
-				}
-			} else {
-				err = fmt.Errorf("pv %d power: %v", i+1, err)
-				site.log.ERROR.Println(err)
-			}
-
-			// pv energy (production)
-			var energy float64
-			if m, ok := meter.(api.MeterEnergy); err == nil && ok {
-				energy, err = m.TotalEnergy()
-				if err == nil {
-					totalEnergy += energy
-				} else {
-					site.log.ERROR.Printf("pv %d energy: %v", i+1, err)
-				}
-			}
-
-			mm[i] = meterMeasurement{
-				Power:  power,
-				Energy: energy,
-			}
-		}
-
-		site.log.DEBUG.Printf("pv power: %.0fW", site.pvPower)
-		site.publish(keys.PvPower, site.pvPower)
-
-		site.publish(keys.PvEnergy, totalEnergy)
-
-		site.publish(keys.Pv, mm)
+// updateGridMeter updates grid meter. Power is retried, other measurements are optional.
+func (site *Site) updateGridMeter() error {
+	if site.gridMeter == nil {
+		return nil
 	}
 
-	if len(site.batteryMeters) > 0 {
-		var totalCapacity float64
-		var totalEnergy float64
+	bo := backoff.NewExponentialBackOff()
+	bo.MaxElapsedTime = time.Second
 
-		site.batteryPower = 0
-		site.batterySoc = 0
-
-		mm := make([]batteryMeasurement, len(site.batteryMeters))
-
-		for i, meter := range site.batteryMeters {
-			// battery power
-			var power float64
-
-			// NOTE battery errors are logged but ignored as we don't consider them relevant
-			err := retry.Do(site.updateMeter(meter, &power), retryOptions...)
-
-			if err == nil {
-				site.batteryPower += power
-				if len(site.batteryMeters) > 1 {
-					site.log.DEBUG.Printf("battery %d power: %.0fW", i+1, power)
-				}
-			} else {
-				site.log.ERROR.Printf("battery %d power: %v", i+1, err)
-			}
-
-			// battery energy (discharge)
-			var energy float64
-			if m, ok := meter.(api.MeterEnergy); err == nil && ok {
-				energy, err = m.TotalEnergy()
-				if err == nil {
-					totalEnergy += energy
-				} else {
-					site.log.ERROR.Printf("battery %d energy: %v", i+1, err)
-				}
-			}
-
-			// battery soc and capacity
-			var batSoc, capacity float64
-			if meter, ok := meter.(api.Battery); ok {
-				batSoc, err = soc.Guard(meter.Soc())
-
-				if err == nil {
-					// weigh soc by capacity and accumulate total capacity
-					weighedSoc := batSoc
-					if m, ok := meter.(api.BatteryCapacity); ok {
-						capacity = m.Capacity()
-						totalCapacity += capacity
-						weighedSoc *= capacity
-					}
-
-					site.batterySoc += weighedSoc
-					if len(site.batteryMeters) > 1 {
-						site.log.DEBUG.Printf("battery %d soc: %.0f%%", i+1, batSoc)
-					}
-				} else {
-					site.log.ERROR.Printf("battery %d soc: %v", i+1, err)
-				}
-			}
-
-			_, controllable := meter.(api.BatteryController)
-
-			mm[i] = batteryMeasurement{
-				Power:        power,
-				Energy:       energy,
-				Soc:          batSoc,
-				Capacity:     capacity,
-				Controllable: controllable,
-			}
-		}
-
-		site.publish(keys.BatteryCapacity, totalCapacity)
-
-		// convert weighed socs to total soc
-		if totalCapacity == 0 {
-			totalCapacity = float64(len(site.batteryMeters))
-		}
-		site.batterySoc /= totalCapacity
-
-		site.log.DEBUG.Printf("battery soc: %.0f%%", math.Round(site.batterySoc))
-		site.publish(keys.BatterySoc, site.batterySoc)
-
-		site.log.DEBUG.Printf("battery power: %.0fW", site.batteryPower)
-		site.publish(keys.BatteryPower, site.batteryPower)
-
-		site.publish(keys.BatteryEnergy, totalEnergy)
-
-		site.publish(keys.Battery, mm)
+	res, err := backoff.RetryWithData(site.gridMeter.CurrentPower, bo)
+	if err == nil {
+		site.gridPower = res
+		site.log.DEBUG.Printf("grid meter: %.0fW", res)
+		site.publish(keys.GridPower, res)
+	} else {
+		return fmt.Errorf("grid meter: %v", err)
 	}
-
-	// grid power
-	err := site.retryMeter("grid", site.gridMeter, &site.gridPower)
 
 	// grid phase powers
 	var p1, p2, p3 float64
-	if phaseMeter, ok := site.gridMeter.(api.PhasePowers); err == nil && ok {
+	if phaseMeter, ok := site.gridMeter.(api.PhasePowers); ok {
 		p1, p2, p3, err = phaseMeter.Powers()
 		if err == nil {
 			phases := []float64{p1, p2, p3}
 			site.log.DEBUG.Printf("grid powers: %.0fW", phases)
 			site.publish(keys.GridPowers, phases)
 		} else {
-			err = fmt.Errorf("grid powers: %w", err)
+			site.log.ERROR.Printf("grid powers: %v", err)
 		}
 	}
 
 	// grid phase currents (signed)
-	if phaseMeter, ok := site.gridMeter.(api.PhaseCurrents); err == nil && ok {
-		var i1, i2, i3 float64
-		i1, i2, i3, err = phaseMeter.Currents()
+	if phaseMeter, ok := site.gridMeter.(api.PhaseCurrents); ok {
+		i1, i2, i3, err := phaseMeter.Currents()
 		if err == nil {
 			phases := []float64{util.SignFromPower(i1, p1), util.SignFromPower(i2, p2), util.SignFromPower(i3, p3)}
 			site.log.DEBUG.Printf("grid currents: %.3gA", phases)
 			site.publish(keys.GridCurrents, phases)
 		} else {
-			err = fmt.Errorf("grid currents: %w", err)
+			site.log.ERROR.Printf("grid currents: %v", err)
 		}
 	}
 
 	// grid energy (import)
-	if energyMeter, ok := site.gridMeter.(api.MeterEnergy); err == nil && ok {
-		var f float64
-		f, err = energyMeter.TotalEnergy()
+	if energyMeter, ok := site.gridMeter.(api.MeterEnergy); ok {
+		f, err := energyMeter.TotalEnergy()
 		if err == nil {
 			site.publish(keys.GridEnergy, f)
 		} else {
@@ -609,7 +596,21 @@ func (site *Site) updateMeters() error {
 		}
 	}
 
-	return err
+	return nil
+}
+
+// updateMeter updates and publishes single meter
+func (site *Site) updateMeters() error {
+	// errors ignored
+	site.updatePvMeters()
+
+	// power errors returned
+	if err := site.updateBatteryMeters(); err != nil {
+		return err
+	}
+
+	// power errors returned
+	return site.updateGridMeter()
 }
 
 // sitePower returns

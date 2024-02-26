@@ -12,7 +12,6 @@ require (
 	github.com/andig/gosunspec v0.0.0-20231205122018-1daccfa17912
 	github.com/andig/mbserver v0.0.0-20230310211055-1d29cbb5820e
 	github.com/asaskevich/EventBus v0.0.0-20200907212545-49d423059eef
-	github.com/avast/retry-go/v4 v4.5.1
 	github.com/aws/aws-sdk-go v1.50.24
 	github.com/basgys/goxml2json v1.1.0
 	github.com/basvdlei/gotsmart v0.0.3
