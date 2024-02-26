@@ -9,6 +9,7 @@ const (
 	GridConfigured        = "gridConfigured"
 	GridCurrents          = "gridCurrents"
 	GridEnergy            = "gridEnergy"
+	GridPower             = "gridPower"
 	GridPowers            = "gridPowers"
 	HomePower             = "homePower"
 	PrioritySoc           = "prioritySoc"
