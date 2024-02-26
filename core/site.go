@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/avast/retry-go/v4"
+	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/cmd/shutdown"
 	"github.com/evcc-io/evcc/core/coordinator"
@@ -399,39 +399,31 @@ func (site *Site) publishDelta(key string, val interface{}) {
 	site.publish(key, val)
 }
 
-// updateMeter updates and publishes single meter
-func (site *Site) updateMeter(meter api.Meter, power *float64) func() error {
-	return func() error {
-		value, err := meter.CurrentPower()
-		if err == nil {
-			*power = value // update value if no error
-		}
-
-		return err
-	}
-}
-
 // retryMeter retries meter update
-func (site *Site) retryMeter(name string, meter api.Meter, power *float64) error {
+func (site *Site) retryMeter(name string, meter api.Meter) (float64, error) {
 	if meter == nil {
-		return nil
+		return 0, nil
 	}
 
-	err := retry.Do(site.updateMeter(meter, power), retryOptions...)
+	bo := backoff.NewExponentialBackOff()
+	bo.MaxElapsedTime = time.Second
 
+	res, err := backoff.RetryWithData(meter.CurrentPower, bo)
 	if err == nil {
-		site.log.DEBUG.Printf("%s power: %.0fW", name, *power)
-		site.publish(name+"Power", *power)
+		site.log.DEBUG.Printf("%s power: %.0fW", name, res)
+		site.publish(name+"Power", res)
 	} else {
 		err = fmt.Errorf("%s meter: %v", name, err)
-		site.log.ERROR.Println(err)
 	}
 
-	return err
+	return res, err
 }
 
 // updateMeter updates and publishes single meter
 func (site *Site) updateMeters() error {
+	bo := backoff.NewExponentialBackOff()
+	bo.MaxElapsedTime = time.Second
+
 	if len(site.pvMeters) > 0 {
 		var totalEnergy float64
 
@@ -441,8 +433,8 @@ func (site *Site) updateMeters() error {
 
 		for i, meter := range site.pvMeters {
 			// pv power
-			var power float64
-			err := retry.Do(site.updateMeter(meter, &power), retryOptions...)
+			bo.Reset()
+			power, err := backoff.RetryWithData(meter.CurrentPower, bo)
 
 			if err == nil {
 				// ignore negative values which represent self-consumption
@@ -491,10 +483,9 @@ func (site *Site) updateMeters() error {
 
 		for i, meter := range site.batteryMeters {
 			// battery power
-			var power float64
-
 			// NOTE battery errors are logged but ignored as we don't consider them relevant
-			err := retry.Do(site.updateMeter(meter, &power), retryOptions...)
+			bo.Reset()
+			power, err := backoff.RetryWithData(meter.CurrentPower, bo)
 
 			if err == nil {
 				site.batteryPower += power
@@ -570,7 +561,10 @@ func (site *Site) updateMeters() error {
 	}
 
 	// grid power
-	err := site.retryMeter("grid", site.gridMeter, &site.gridPower)
+	res, err := site.retryMeter("grid", site.gridMeter)
+	if err == nil {
+		site.gridPower = res
+	}
 
 	// grid phase powers
 	var p1, p2, p3 float64
