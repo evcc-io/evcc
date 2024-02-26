@@ -145,7 +145,7 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 47100 # Forcible charge/discharge
-              type: write
+              type: writesingle
               encoding: uint16
       - case: 2 # hold
         set:
@@ -158,7 +158,7 @@ render: |
               {{- include "modbus" . | indent 12 }}
               register:
                 address: 47100 # Forcible charge/discharge
-                type: write
+                type: writesingle
                 encoding: uint16
           - source: const
             value: 0 # duration
@@ -167,7 +167,7 @@ render: |
               {{- include "modbus" . | indent 12 }}
               register:
                 address: 47246 # Forcible charge/discharge setting mode
-                type: write
+                type: writesingle
                 encoding: uint16
           - source: const
             value: 1 # Minute
@@ -176,7 +176,7 @@ render: |
               {{- include "modbus" . | indent 12 }}
               register:
                 address: 47083 # Forced charging and discharging period
-                type: write
+                type: writesingle
                 encoding: uint16
           - source: const
             value: 0 # W
@@ -198,7 +198,7 @@ render: |
               {{- include "modbus" . | indent 12 }}
               register:
                 address: 47100 # Forcible charge/discharge
-                type: write
+                type: writesingle
                 encoding: uint16
           - source: const
             value: 0 # duration
@@ -207,7 +207,7 @@ render: |
               {{- include "modbus" . | indent 12 }}
               register:
                 address: 47246 # Forcible charge/discharge setting mode
-                type: write
+                type: writesingle
                 encoding: uint16
           - source: const
             value: 1 # Minute
@@ -216,7 +216,7 @@ render: |
               {{- include "modbus" . | indent 12 }}
               register:
                 address: 47083 # Forced charging and discharging period
-                type: write
+                type: writesingle
                 encoding: uint16
           - source: const
             value: 2500 # W
