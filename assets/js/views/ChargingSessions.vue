@@ -1,9 +1,11 @@
 <template>
-	<div class="container px-4">
+	<div class="container px-4 safe-area-inset">
 		<TopHeader :title="$t('sessions.title')" />
 		<div class="row">
 			<main class="col-12">
-				<div class="d-flex align-items-baseline justify-content-between my-3 my-md-5">
+				<div
+					class="d-flex align-items-baseline justify-content-between my-3 my-md-5 month-header"
+				>
 					<router-link
 						class="d-flex text-decoration-none align-items-center"
 						:class="{ 'pe-none': !hasPrev, 'text-muted': !hasPrev }"
@@ -629,6 +631,21 @@ export default {
 .sticky-top,
 .sticky-bottom {
 	z-index: 1;
+}
+.sticky-top th {
+	padding-top: max(0.5rem, env(safe-area-inset-top));
+}
+.table-outer {
+	position: relative;
+	top: calc(max(0.5rem, env(safe-area-inset-top)) * -1);
+}
+.month-header {
+	position: relative;
+	z-index: 2;
+}
+.sticky-bottom th {
+	padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+	border-bottom: none;
 }
 @media (max-width: 576px) {
 	.table td,

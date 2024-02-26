@@ -7,6 +7,7 @@ import setupRouter from "./router";
 import setupI18n from "./i18n";
 import featureflags from "./featureflags";
 import { watchThemeChanges } from "./theme";
+import { appDetection, sendToApp } from "./utils/native";
 
 // lazy load smoothscroll polyfill. mainly for safari < 15.4
 if (!window.CSS.supports("scroll-behavior", "smooth")) {
@@ -23,6 +24,7 @@ const app = createApp({
   watch: {
     offline: function (value) {
       console.log(`we are ${value ? "offline" : "online"}`);
+      sendToApp({ type: value ? "offline" : "online" });
     },
   },
   methods: {
@@ -70,3 +72,4 @@ app.mixin(VueHeadMixin);
 window.app = app.mount("#app");
 
 watchThemeChanges();
+appDetection();
