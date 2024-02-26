@@ -146,7 +146,7 @@ render: |
             register:
               address: 47100 # Forcible charge/discharge
               type: write
-              encode: uint16
+              encoding: uint16
       - case: 2 # hold
         set:
           source: sequence
@@ -159,7 +159,7 @@ render: |
               register:
                 address: 47100 # Forcible charge/discharge
                 type: write
-                encode: uint16
+                encoding: uint16
           - source: const
             value: 0 # duration
             set: 
@@ -168,7 +168,7 @@ render: |
               register:
                 address: 47246 # Forcible charge/discharge setting mode
                 type: write
-                encode: uint16
+                encoding: uint16
           - source: const
             value: 1 # Minute
             set: 
@@ -177,7 +177,7 @@ render: |
               register:
                 address: 47083 # Forced charging and discharging period
                 type: write
-                encode: uint16
+                encoding: uint16
           - source: const
             value: 0 # W
             set: 
@@ -186,7 +186,7 @@ render: |
               register:
                 address: 47249 # Forcible discharge power
                 type: writemultiple
-                encode: uint32
+                encoding: uint32
       - case: 3 # charge
         set:
           source: sequence
@@ -199,7 +199,7 @@ render: |
               register:
                 address: 47100 # Forcible charge/discharge
                 type: write
-                encode: uint16
+                encoding: uint16
           - source: const
             value: 0 # duration
             set: 
@@ -208,7 +208,7 @@ render: |
               register:
                 address: 47246 # Forcible charge/discharge setting mode
                 type: write
-                encode: uint16
+                encoding: uint16
           - source: const
             value: 1 # Minute
             set: 
@@ -217,7 +217,7 @@ render: |
               register:
                 address: 47083 # Forced charging and discharging period
                 type: write
-                encode: uint16
+                encoding: uint16
           - source: const
             value: 2500 # W
             set: 
@@ -226,7 +226,7 @@ render: |
               register:
                 address: 47247 # Forcible charge power
                 type: writemultiple
-                encode: uint32
+                encoding: uint32
           - source: const
             value: 1 # Enable
             set: 
@@ -235,6 +235,6 @@ render: |
               register:
                 address: 47087 # Charge from grid
                 type: writemultiple
-                encode: uint32
+                encoding: uint32
   capacity: {{ .capacity }} # kWh
   {{- end }}
