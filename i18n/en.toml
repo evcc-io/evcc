@@ -167,9 +167,9 @@ blog = "Blog"
 docs = "Documentation"
 github = "GitHub"
 login = "Vehicle Logins"
+nativeSettings = "Change Server"
 needHelp = "Need Help?"
 sessions = "Charging Sessions"
-nativeSettings = "Change Server"
 
 [help]
 discussionsButton = "GitHub discussions"

@@ -51,16 +51,6 @@
 					{{ $t("batterySettings.modalTitle") }}
 				</button>
 			</li>
-			<li v-if="gridModalAvailable">
-				<button
-					type="button"
-					class="dropdown-item"
-					data-testid="topnavigation-grid"
-					@click="openGridSettingsModal"
-				>
-					{{ $t("gridSettings.modalTitle") }}
-				</button>
-			</li>
 			<li v-if="$hiddenFeatures()">
 				<router-link class="dropdown-item" to="/config">
 					Device Configuration 🧪
@@ -101,7 +91,7 @@
 					></shopicon-regular-newtab>
 				</a>
 			</li>
-			<li>
+			<li v-if="isApp">
 				<button type="button" class="dropdown-item" @click="openNativeSettings">
 					{{ $t("header.nativeSettings") }}
 				</button>
@@ -120,7 +110,7 @@ import "@h2d2/shopicons/es/regular/newtab";
 import collector from "../mixins/collector";
 
 import baseAPI from "../baseapi";
-import { sendToApp } from "../utils/native";
+import { isApp, sendToApp } from "../utils/native";
 
 export default {
 	name: "TopNavigation",
@@ -135,6 +125,11 @@ export default {
 		sponsor: String,
 		sponsorTokenExpires: Number,
 		batteryConfigured: Boolean,
+	},
+	data() {
+		return {
+			isApp: isApp(),
+		};
 	},
 	computed: {
 		logoutCount() {
