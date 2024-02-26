@@ -102,6 +102,16 @@ render: |
   {{- end }}
   {{- if eq .usage "battery" }}
   type: custom
+  power:
+    source: sunspec
+    {{- include "modbus" . | indent 2 }}
+    value:
+      - 101:W
+      - 103:W
+      - 111:W
+      - 113:W
+      - 102:W
+      - 112:W
   soc:
     source: sunspec
     {{- include "modbus" . | indent 2 }}
