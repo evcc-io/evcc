@@ -32,7 +32,7 @@ export default {
 	},
 	computed: {
 		batteryConfigured: function () {
-			return store.state.battery && store.state.battery.length;
+			return store.state.battery?.length;
 		},
 		globalSettingsProps: function () {
 			return this.collectProps(GlobalSettingsModal, store.state);
