@@ -67,5 +67,5 @@ func mercedesToken() (*oauth2.Token, error) {
 		}
 	}
 
-	return nil, errors.New("Unknown PinResponse - 200, Email empty.")
+	return nil, errors.New("unknown PinResponse - 200, Email empty")
 }
