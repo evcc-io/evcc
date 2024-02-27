@@ -193,14 +193,18 @@ func (v *Tronity) Soc() (float64, error) {
 func (v *Tronity) status() (api.ChargeStatus, error) {
 	status := api.StatusA // disconnected
 	res, err := v.bulkG()
-
-	if err == nil {
-		if res.Charging == "Charging" {
-			status = api.StatusC
-		}
+	if err != nil {
+		return status, err
 	}
 
-	return status, err
+	switch {
+	case res.Charging == "Charging":
+		status = api.StatusC
+	case res.Plugged:
+		status = api.StatusB
+	}
+
+	return status, nil
 }
 
 var _ api.VehicleRange = (*Tronity)(nil)

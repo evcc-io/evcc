@@ -558,6 +558,7 @@ export default {
 	top: 0;
 	bottom: 0;
 	right: 0;
+	cursor: pointer;
 	position: absolute;
 	opacity: 0;
 	-webkit-appearance: menulist-button;
