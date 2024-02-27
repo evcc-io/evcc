@@ -3,6 +3,7 @@ package porsche
 import (
 	"errors"
 	"fmt"
+	"net/http"
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
@@ -36,8 +37,12 @@ func NewEmobilityAPI(log *util.Logger, identity oauth2.TokenSource) *EmobilityAP
 
 func (v *EmobilityAPI) Capabilities(vin string) (CapabilitiesResponse, error) {
 	var res CapabilitiesResponse
-	uri := fmt.Sprintf("%s/e-mobility/vcs/capabilities/%s", ApiURI, vin)
-	err := v.GetJSON(uri, &res)
+	uri := fmt.Sprintf("%s/service-vehicle/vcs/capabilities/%s", ApiURI, vin)
+	req, _ := request.New(http.MethodGet, uri, nil, map[string]string{
+		"x-vrs-url-country":  "de",
+		"x-vrs-url-language": "de_DE",
+	})
+	err := v.DoJSON(req, &res)
 	return res, err
 }
 
