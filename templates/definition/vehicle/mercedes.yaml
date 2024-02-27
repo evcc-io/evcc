@@ -13,7 +13,7 @@ requirements:
               type: mercedes
               account: # Mercedes Me Nutzer-Id (email)
               region: # MB me Region (EMEA, APAC, NORAM)
-              vin: W... # Erforderlich
+              vin: W... # Erforderlich, wenn mehr als ein Fahrzeug im Account registriert
               capacity: 50 # Akkukapazität in kWh (optional)
           ```
         2. Ausführen von "./evcc token mercedes" zur Token Generierung
@@ -24,7 +24,7 @@ requirements:
               type: mercedes
               account: # Mercedes Me Nutzer-Id (email)
               region: # MB me Region (EMEA, APAC, NORAM)
-              vin: W... # Erforderlich
+              vin: W... # , wenn mehr als ein Fahrzeug im Account registriert
               capacity: 50 # Akkukapazität in kWh (optional)
               tokens:
                 access: token...
@@ -38,10 +38,10 @@ requirements:
           vehicles:
             - name: my_car
               type: mercedes
-              account: # Mercedes Me Nutzer-Id (email)
-              region: # MB me Region (EMEA, APAC, NORAM)
-              vin: W... # Erforderlich
-              capacity: 50 # Akkukapazität in kWh (optional)
+              account: # Mercedes Me user-Id (email)
+              region: # MB me region (EMEA, APAC, NORAM)
+              vin: W... # Required, if more then one car is registered in this account
+              capacity: 50 # capacity in kWh (optional)
           ```
         2. execute "./evcc token mercedes" for token generation
         3. insert the tokens into evcc.yaml
@@ -49,9 +49,9 @@ requirements:
           vehicles:
             - name: my_car
               type: mercedes
-              account: # Mercedes Me Nutzer-Id (email)
-              region: # MB me Region (EMEA, APAC, NORAM)
-              vin: W... # Required
+              account: # Mercedes Me user-id (email)
+              region: # MB me region (EMEA, APAC, NORAM)
+              vin: W... # Required, if more then one car is registered in this account
               capacity: 50 # capacity in kWh (optional)
               tokens:
                 access: token...
