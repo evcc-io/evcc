@@ -63,10 +63,8 @@ export default {
 		gridConfigured: Boolean,
 		gridPower: Number,
 		homePower: Number,
-		pvConfigured: Boolean,
 		pvPower: Number,
 		pv: Array,
-		batteryConfigured: Boolean,
 		batteryPower: Number,
 		batterySoc: Number,
 		batteryDischargeControl: Boolean,
@@ -104,6 +102,12 @@ export default {
 		smartCostActive: Boolean,
 	},
 	computed: {
+		batteryConfigured: function () {
+			return this.battery && this.battery.length;
+		},
+		pvConfigured: function () {
+			return this.pv && this.pv.length;
+		},
 		energyflow: function () {
 			return this.collectProps(Energyflow);
 		},
