@@ -25,6 +25,12 @@ func (e ErrorInfo) Error() error {
 	return fmt.Errorf("%s: %s", e.ErrorMessage, html.UnescapeString(e.ErrorDetails))
 }
 
+type PinRequest struct {
+	EmailOrPhoneNumber string `json:"emailOrPhoneNumber"`
+	CountryCode        string `json:"countryCode"`
+	Nonce              string `json:"nonce"`
+}
+
 type PinResponse struct {
 	IsEmail  bool   `json:"isEmail"`
 	UserName string `json:"username"`
