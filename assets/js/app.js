@@ -24,7 +24,6 @@ const app = createApp({
   watch: {
     offline: function (value) {
       console.log(`we are ${value ? "offline" : "online"}`);
-      sendToApp({ type: value ? "offline" : "online" });
     },
   },
   methods: {
@@ -51,9 +50,11 @@ const app = createApp({
     },
     setOnline: function () {
       this.offline = false;
+      sendToApp({ type: "online" });
     },
     setOffline: function () {
       this.offline = true;
+      sendToApp({ type: "offline" });
     },
   },
   render: function () {

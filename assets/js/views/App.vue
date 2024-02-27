@@ -15,6 +15,16 @@ import BatterySettingsModal from "../components/BatterySettingsModal.vue";
 import HelpModal from "../components/HelpModal.vue";
 import collector from "../mixins/collector";
 
+// assume offline if not data received for 60 seconds
+let lastDataReceived = new Date();
+const maxDataAge = 60 * 1000;
+setInterval(() => {
+	if (new Date() - lastDataReceived > maxDataAge) {
+		console.log("no data received, assume we are offline");
+		window.app.setOffline();
+	}
+}, 1000);
+
 export default {
 	name: "App",
 	components: { GlobalSettingsModal, HelpModal, BatterySettingsModal },
@@ -120,6 +130,7 @@ export default {
 				try {
 					var msg = JSON.parse(evt.data);
 					store.update(msg);
+					lastDataReceived = new Date();
 				} catch (error) {
 					window.app.raise({
 						message: `Failed to parse web socket data: ${error.message} [${evt.data}]`,
