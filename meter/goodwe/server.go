@@ -5,6 +5,8 @@ import (
 	"net"
 	"sync"
 	"time"
+
+	"github.com/evcc-io/evcc/util"
 )
 
 var (
@@ -12,7 +14,7 @@ var (
 	mu       sync.RWMutex
 )
 
-func Instance() (*Server, error) {
+func Instance(log *util.Logger) (*Server, error) {
 	mu.Lock()
 	defer mu.Unlock()
 
@@ -21,7 +23,8 @@ func Instance() (*Server, error) {
 	}
 
 	instance = &Server{
-		inverters: make(map[string]Inverter),
+		log:       log,
+		inverters: make(map[string]*util.Monitor[Inverter]),
 	}
 
 	addr, err := net.ResolveUDPAddr("udp", "0.0.0.0:8899")
@@ -40,70 +43,81 @@ func Instance() (*Server, error) {
 	return instance, err
 }
 
-func (m *Server) AddInverter(ip string) {
+func (m *Server) AddInverter(ip string, timeout time.Duration) *util.Monitor[Inverter] {
 	mu.Lock()
 	defer mu.Unlock()
-	m.inverters[ip] = Inverter{IP: ip}
+	monitor := util.NewMonitor[Inverter](timeout)
+	m.inverters[ip] = monitor
+	return monitor
 }
 
-func (m *Server) GetInverter(uri string) Inverter {
+func (m *Server) GetInverter(ip string) *util.Monitor[Inverter] {
 	mu.RLock()
 	defer mu.RUnlock()
-	return m.inverters[uri]
+	return m.inverters[ip]
 }
 
 func (m *Server) readData() {
-	for _, inverter := range m.inverters {
-		addr, err := net.ResolveUDPAddr("udp", inverter.IP+":8899")
-		if err != nil {
-			return
+	for {
+		mu.RLock()
+		ips := make([]string, 0, len(m.inverters))
+		for ip := range m.inverters {
+			ips = append(ips, ip)
 		}
+		mu.RUnlock()
 
-		if _, err := m.conn.WriteToUDP([]byte{0xF7, 0x03, 0x89, 0x1C, 0x00, 0x7D, 0x7A, 0xE7}, addr); err != nil {
-			return
-		}
-		time.Sleep(5 * time.Second)
-		if _, err := m.conn.WriteToUDP([]byte{0xF7, 0x03, 0x90, 0x88, 0x00, 0x0D, 0x3D, 0xB3}, addr); err != nil {
-			return
+		for _, ip := range ips {
+			addr, err := net.ResolveUDPAddr("udp", net.JoinHostPort(ip, "8899"))
+			if err != nil {
+				m.log.ERROR.Println(err)
+				continue
+			}
+			if _, err := m.conn.WriteToUDP([]byte{0xF7, 0x03, 0x89, 0x1C, 0x00, 0x7D, 0x7A, 0xE7}, addr); err != nil {
+				m.log.ERROR.Println(err)
+				continue
+			}
+			time.Sleep(5 * time.Second)
+			if _, err := m.conn.WriteToUDP([]byte{0xF7, 0x03, 0x90, 0x88, 0x00, 0x0D, 0x3D, 0xB3}, addr); err != nil {
+				m.log.ERROR.Println(err)
+				continue
+			}
 		}
 	}
-	m.readData()
 }
 
 func (m *Server) listen() {
 	for {
 		buf := make([]byte, 1024)
-		_, addr, err := m.conn.ReadFromUDP(buf)
+		n, addr, err := m.conn.ReadFromUDP(buf)
 		if err != nil {
+			m.log.ERROR.Println(err)
+			continue
+		}
+		m.log.TRACE.Printf("recv from %s: % X", addr, buf[:n])
+
+		ip := addr.IP.String()
+		monitor := m.GetInverter(ip)
+		if monitor == nil {
+			m.log.ERROR.Println("unknown inverter:", ip)
 			continue
 		}
 
-		ip := addr.IP.String()
+		monitor.SetFunc(func(inverter Inverter) Inverter {
+			if buf[4] == 250 {
+				ui := func(u, i int16) float64 {
+					return float64(int16(binary.BigEndian.Uint16(buf[u:]))) *
+						float64(int16(binary.BigEndian.Uint16(buf[i:]))) / 100
+				}
+				inverter.PvPower = ui(11, 13) + ui(19, 21)
+				inverter.BatteryPower = ui(165, 167)
+				inverter.NetPower = -float64(int32(binary.BigEndian.Uint32(buf[83:])))
+			}
 
-		mu.Lock()
-		if buf[4] == 250 {
-			vPv1 := float64(int16(binary.BigEndian.Uint16(buf[11:]))) * 0.1
-			vPv2 := float64(int16(binary.BigEndian.Uint16(buf[19:]))) * 0.1
-			iPv1 := float64(int16(binary.BigEndian.Uint16(buf[13:]))) * 0.1
-			iPv2 := float64(int16(binary.BigEndian.Uint16(buf[21:]))) * 0.1
-			iBatt := float64(int16(binary.BigEndian.Uint16(buf[167:]))) * 0.1
-			vBatt := float64(int16(binary.BigEndian.Uint16(buf[165:]))) * 0.1
+			if buf[4] == 26 {
+				inverter.Soc = float64(buf[20])
+			}
 
-			pvPower := vPv1*iPv1 + vPv2*iPv2
-
-			inverter := m.inverters[ip]
-			inverter.PvPower = pvPower
-			inverter.BatteryPower = vBatt * iBatt
-			inverter.NetPower = -float64(int32(binary.BigEndian.Uint32(buf[83:])))
-
-			m.inverters[ip] = inverter
-		}
-
-		if buf[4] == 26 {
-			inverter := m.inverters[ip]
-			inverter.Soc = float64(buf[20])
-			m.inverters[ip] = inverter
-		}
-		mu.Unlock()
+			return inverter
+		})
 	}
 }

@@ -76,13 +76,20 @@ func NewIdentity(log *util.Logger, token *oauth2.Token) (*Identity, error) {
 
 	// database token
 	if !token.Valid() {
-		if err := settings.Json(v.settingsKey(), &token); err != nil {
-			return nil, fmt.Errorf("missing token setting for %s: %w", claims.Subject, err)
+		var tok oauth2.Token
+		if err := settings.Json(v.settingsKey(), &tok); err == nil {
+			token = &tok
 		}
+	}
 
-		if !token.Valid() {
-			return nil, errors.New("token expired")
+	if !token.Valid() && token.RefreshToken != "" {
+		if tok, err := v.RefreshToken(token); err == nil {
+			token = tok
 		}
+	}
+
+	if !token.Valid() {
+		return nil, errors.New("token expired")
 	}
 
 	// acct, err := account.New(token.AccessToken, userAgent)

@@ -32,28 +32,28 @@ import (
 
 // https://update.mennekes.de/hcc3/1.13/Description%20Modbus_AMTRON%20HCC3_v01_2021-06-25_en.pdf
 
-// Amtron Xtra/Premium charger implementation
-type Amtron struct {
+// MenneckesHcc3 Xtra/Premium charger implementation
+type MenneckesHcc3 struct {
 	conn *modbus.Connection
 	curr uint16
 }
 
 const (
-	amtronRegStatus     = 0x0302
-	amtronRegPhases     = 0x0308
-	amtronRegSerial     = 0x030B
-	amtronRegEnergy     = 0x030D
-	amtronRegName       = 0x0311
-	amtronRegPower      = 0x030F
-	amtronRegAmpsConfig = 0x0400
+	menneckesHcc3RegStatus     = 0x0302
+	menneckesHcc3RegPhases     = 0x0308
+	menneckesHcc3RegSerial     = 0x030B
+	menneckesHcc3RegEnergy     = 0x030D
+	menneckesHcc3RegName       = 0x0311
+	menneckesHcc3RegPower      = 0x030F
+	menneckesHcc3RegAmpsConfig = 0x0400
 )
 
 func init() {
-	registry.Add("amtron", NewAmtronFromConfig)
+	registry.Add("menneckes-hcc3", NewMenneckesHcc3FromConfig)
 }
 
-// NewAmtronFromConfig creates a Mennekes Amtron charger from generic config
-func NewAmtronFromConfig(other map[string]interface{}) (api.Charger, error) {
+// NewMenneckesHcc3FromConfig creates a Mennekes menneckesHcc3 charger from generic config
+func NewMenneckesHcc3FromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := modbus.TcpSettings{
 		ID: 255,
 	}
@@ -62,11 +62,11 @@ func NewAmtronFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	return NewAmtron(cc.URI, cc.ID)
+	return NewMenneckesHcc3(cc.URI, cc.ID)
 }
 
-// NewAmtron creates Amtron charger
-func NewAmtron(uri string, slaveID uint8) (api.Charger, error) {
+// NewMenneckesHcc3 creates Menneckes HCC3 charger
+func NewMenneckesHcc3(uri string, slaveID uint8) (api.Charger, error) {
 	uri = util.DefaultPort(uri, 502)
 
 	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, slaveID)
@@ -78,10 +78,10 @@ func NewAmtron(uri string, slaveID uint8) (api.Charger, error) {
 		return nil, api.ErrSponsorRequired
 	}
 
-	log := util.NewLogger("amtron")
+	log := util.NewLogger("menneckes-hcc3")
 	conn.Logger(log.TRACE)
 
-	wb := &Amtron{
+	wb := &MenneckesHcc3{
 		conn: conn,
 		curr: 6,
 	}
@@ -90,8 +90,8 @@ func NewAmtron(uri string, slaveID uint8) (api.Charger, error) {
 }
 
 // Status implements the api.Charger interface
-func (wb *Amtron) Status() (api.ChargeStatus, error) {
-	b, err := wb.conn.ReadInputRegisters(amtronRegStatus, 1)
+func (wb *MenneckesHcc3) Status() (api.ChargeStatus, error) {
+	b, err := wb.conn.ReadInputRegisters(menneckesHcc3RegStatus, 1)
 	if err != nil {
 		return api.StatusNone, err
 	}
@@ -111,8 +111,8 @@ func (wb *Amtron) Status() (api.ChargeStatus, error) {
 }
 
 // Enabled implements the api.Charger interface
-func (wb *Amtron) Enabled() (bool, error) {
-	b, err := wb.conn.ReadHoldingRegisters(amtronRegAmpsConfig, 1)
+func (wb *MenneckesHcc3) Enabled() (bool, error) {
+	b, err := wb.conn.ReadHoldingRegisters(menneckesHcc3RegAmpsConfig, 1)
 	if err != nil {
 		return false, err
 	}
@@ -123,25 +123,25 @@ func (wb *Amtron) Enabled() (bool, error) {
 }
 
 // Enable implements the api.Charger interface
-func (wb *Amtron) Enable(enable bool) error {
+func (wb *MenneckesHcc3) Enable(enable bool) error {
 	var u uint16
 	if enable {
 		u = wb.curr
 	}
 
-	_, err := wb.conn.WriteSingleRegister(amtronRegAmpsConfig, u)
+	_, err := wb.conn.WriteSingleRegister(menneckesHcc3RegAmpsConfig, u)
 	return err
 }
 
 // MaxCurrent implements the api.Charger interface
-func (wb *Amtron) MaxCurrent(current int64) error {
+func (wb *MenneckesHcc3) MaxCurrent(current int64) error {
 	if current < 6 {
 		return fmt.Errorf("invalid current %d", current)
 	}
 
 	cur := uint16(current)
 
-	_, err := wb.conn.WriteSingleRegister(amtronRegAmpsConfig, cur)
+	_, err := wb.conn.WriteSingleRegister(menneckesHcc3RegAmpsConfig, cur)
 	if err == nil {
 		wb.curr = cur
 	}
@@ -149,11 +149,11 @@ func (wb *Amtron) MaxCurrent(current int64) error {
 	return err
 }
 
-var _ api.Meter = (*Amtron)(nil)
+var _ api.Meter = (*MenneckesHcc3)(nil)
 
 // CurrentPower implements the api.Meter interface
-func (wb *Amtron) CurrentPower() (float64, error) {
-	b, err := wb.conn.ReadInputRegisters(amtronRegPower, 2)
+func (wb *MenneckesHcc3) CurrentPower() (float64, error) {
+	b, err := wb.conn.ReadInputRegisters(menneckesHcc3RegPower, 2)
 	if err != nil {
 		return 0, err
 	}
@@ -161,11 +161,11 @@ func (wb *Amtron) CurrentPower() (float64, error) {
 	return rs485.RTUUint32ToFloat64Swapped(b), nil
 }
 
-var _ api.ChargeRater = (*Amtron)(nil)
+var _ api.ChargeRater = (*MenneckesHcc3)(nil)
 
 // ChargedEnergy implements the api.MeterEnergy interface
-func (wb *Amtron) ChargedEnergy() (float64, error) {
-	b, err := wb.conn.ReadInputRegisters(amtronRegEnergy, 2)
+func (wb *MenneckesHcc3) ChargedEnergy() (float64, error) {
+	b, err := wb.conn.ReadInputRegisters(menneckesHcc3RegEnergy, 2)
 	if err != nil {
 		return 0, err
 	}
@@ -173,19 +173,19 @@ func (wb *Amtron) ChargedEnergy() (float64, error) {
 	return rs485.RTUUint32ToFloat64Swapped(b) / 1e3, nil
 }
 
-var _ api.Diagnosis = (*Amtron)(nil)
+var _ api.Diagnosis = (*MenneckesHcc3)(nil)
 
 // Diagnose implements the api.Diagnosis interface
-func (wb *Amtron) Diagnose() {
-	if b, err := wb.conn.ReadInputRegisters(amtronRegName, 11); err == nil {
+func (wb *MenneckesHcc3) Diagnose() {
+	if b, err := wb.conn.ReadInputRegisters(menneckesHcc3RegName, 11); err == nil {
 		fmt.Printf("Name: %s\n", encoding.StringLsbFirst(b))
 	}
 
-	if b, err := wb.conn.ReadInputRegisters(amtronRegPhases, 1); err == nil {
+	if b, err := wb.conn.ReadInputRegisters(menneckesHcc3RegPhases, 1); err == nil {
 		fmt.Printf("Phases: %d\n", binary.BigEndian.Uint16(b))
 	}
 
-	if b, err := wb.conn.ReadInputRegisters(amtronRegSerial, 2); err == nil {
+	if b, err := wb.conn.ReadInputRegisters(menneckesHcc3RegSerial, 2); err == nil {
 		fmt.Printf("Serial: %d\n", binary.LittleEndian.Uint32(b))
 	}
 }

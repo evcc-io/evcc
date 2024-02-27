@@ -54,12 +54,8 @@ loadpoints:
   vehicle: {{ .Vehicle }}
 {{- end }}
   mode: {{ .Mode }}
-  phases: {{ .Phases }}
-  mincurrent: {{ .MinCurrent }}
-  maxcurrent: {{ .MaxCurrent }}
 {{-     if .Circuit }}
   circuit: {{ .Circuit }}
-{{-   end }}
 {{-   end }}
 {{- end }}
 
