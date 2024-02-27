@@ -14,8 +14,7 @@ type Provider struct {
 func NewProvider(api *API, vin string, cache time.Duration) *Provider {
 	impl := &Provider{
 		dataG: provider.Cached(func() (StatusResponse, error) {
-			res, err := api.Status(vin)
-			return res, err
+			return api.Status(vin)
 		}, cache),
 	}
 	return impl
@@ -24,11 +23,7 @@ func NewProvider(api *API, vin string, cache time.Duration) *Provider {
 // Soc implements the api.Vehicle interface
 func (v *Provider) Soc() (float64, error) {
 	res, err := v.dataG()
-	if err == nil {
-		return res.EvInfo.Battery.StateOfCharge, nil
-	}
-
-	return 0, err
+	return res.EvInfo.Battery.StateOfCharge, err
 }
 
 var _ api.VehicleRange = (*Provider)(nil)
@@ -36,11 +31,7 @@ var _ api.VehicleRange = (*Provider)(nil)
 // Range implements the api.VehicleRange interface
 func (v *Provider) Range() (int64, error) {
 	res, err := v.dataG()
-	if err == nil {
-		return int64(res.EvInfo.Battery.DistanceToEmpty.Value), nil
-	}
-
-	return 0, err
+	return int64(res.EvInfo.Battery.DistanceToEmpty.Value), err
 }
 
 var _ api.VehicleOdometer = (*Provider)(nil)
@@ -48,11 +39,7 @@ var _ api.VehicleOdometer = (*Provider)(nil)
 // Odometer implements the api.VehicleOdometer interface
 func (v *Provider) Odometer() (float64, error) {
 	res, err := v.dataG()
-	if err == nil {
-		return float64(res.VehicleInfo.Odometer.Value), nil
-	}
-
-	return 0, err
+	return float64(res.VehicleInfo.Odometer.Value), err
 }
 
 var _ api.ChargeState = (*Provider)(nil)
@@ -74,29 +61,25 @@ var _ api.VehiclePosition = (*Provider)(nil)
 // Position implements the api.VehiclePosition interface
 func (v *Provider) Position() (float64, float64, error) {
 	res, err := v.dataG()
-	if err == nil {
-		return res.LocationResponse.Latitude, res.LocationResponse.Longitude, nil
-	}
-
-	return 0, 0, err
+	return res.LocationResponse.Latitude, res.LocationResponse.Longitude, err
 }
 
 var _ api.VehicleFinishTimer = (*Provider)(nil)
 
 // FinishTime implements the api.VehicleFinishTimer interface
 func (v *Provider) FinishTime() (time.Time, error) {
-	res, err := v.dataG()
+	data, err := v.dataG()
 	if err != nil {
 		return time.Time{}, err
 	}
 
 	now := time.Now()
-	targetDateTime := time.Date(now.Year(), now.Month(), now.Day(), 0, res.EvInfo.Battery.EndOfChargeTime, 0, 0, now.Location())
+	res := time.Date(now.Year(), now.Month(), now.Day(), 0, data.EvInfo.Battery.EndOfChargeTime, 0, 0, now.Location())
 
-	if targetDateTime.Before(now) {
-		targetDateTime = targetDateTime.Add(24 * time.Hour)
+	if res.Before(now) {
+		res = res.Add(24 * time.Hour)
 	}
-	return targetDateTime, nil
+	return res, nil
 }
 
 // Charging Status
