@@ -1,6 +1,9 @@
 package core
 
 import (
+	"time"
+
+	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/util"
 )
 
@@ -11,6 +14,13 @@ var (
 	// Voltage global value
 	Voltage float64
 )
+
+// bo returns an exponential backoff for reading meter power quickly
+func bo() *backoff.ExponentialBackOff {
+	bo := backoff.NewExponentialBackOff()
+	bo.MaxElapsedTime = time.Second
+	return bo
+}
 
 // powerToCurrent is a helper function to convert power to per-phase current
 func powerToCurrent(power float64, phases int) float64 {
