@@ -65,12 +65,12 @@ func (vs *SetupAPI) RequestPin() (bool, *string, error) {
 	}
 
 	var res PinResponse
-	if err = client.DoJSON(req, &res); err != nil {
+	if err := client.DoJSON(req, &res); err != nil {
 		return false, nil, err
 	}
 
 	// Only if the response field email is the same like the account an email is send by the servers.
-	return res.UserName == vs.account, &nonce, err
+	return res.UserName == vs.account, &nonce, nil
 }
 
 func (vs *SetupAPI) RequestAccessToken(nonce string, pin string) (*oauth2.Token, error) {

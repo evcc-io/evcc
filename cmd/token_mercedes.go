@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
@@ -66,5 +67,5 @@ func mercedesToken() (*oauth2.Token, error) {
 		}
 	}
 
-	return nil, err
+	return nil, errors.New("Unknown PinResponse - 200, Email empty.")
 }
