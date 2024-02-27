@@ -41,7 +41,7 @@ type VehiclesResponse struct {
 }
 
 type Vehicle struct {
-	Fin string `json:"fin"`
+	Fin string
 }
 
 type StatusResponse struct {
