@@ -402,7 +402,7 @@ func (site *Site) publishDelta(key string, val interface{}) {
 // updatePvMeters updates pv meters. All measurements are optional.
 func (site *Site) updatePvMeters() error {
 	if len(site.pvMeters) == 0 {
-		return
+		return nil
 	}
 
 	var totalEnergy float64
