@@ -133,7 +133,7 @@ export default {
 	},
 	computed: {
 		batteryConfigured: function () {
-			return this.battery && this.battery.length;
+			return this.battery?.length;
 		},
 		logoutCount() {
 			return this.providerLogins.filter((login) => !login.loggedIn).length;

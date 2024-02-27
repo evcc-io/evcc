@@ -213,13 +213,13 @@ export default {
 			return Math.max(0, this.gridPower);
 		},
 		pvConfigured: function () {
-			return this.pv && this.pv.length;
+			return this.pv?.length;
 		},
 		pvProduction: function () {
 			return Math.abs(this.pvPower);
 		},
 		batteryConfigured: function () {
-			return this.battery && this.battery.length;
+			return this.battery?.length;
 		},
 		batteryDischarge: function () {
 			return Math.abs(Math.max(0, this.batteryPower));
