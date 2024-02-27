@@ -42,10 +42,13 @@ func (v *API) Vehicles() ([]string, error) {
 	url := fmt.Sprintf("%s/v2/vehicles", getBffUri(v.region))
 
 	err := v.GetJSON(url, &res)
+	if err != nil {
+		return nil, err
+	}
 
 	var vehicles []string
-	for _, v := range res.assignedVehicles {
-		vehicles = append(vehicles, v.fin)
+	for _, v := range res.AssignedVehicles {
+		vehicles = append(vehicles, v.Fin)
 	}
 
 	return vehicles, err

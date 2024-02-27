@@ -42,6 +42,9 @@ func NewMercedesFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 	log := util.NewLogger("mercedes").Redact(cc.Tokens.Access, cc.Tokens.Refresh)
 	identity, err := mercedes.NewIdentity(log, token, cc.Account, cc.Region)
+	if err != nil {
+		return nil, err
+	}
 
 	v := &Mercedes{
 		embed: &cc.embed,
@@ -49,6 +52,7 @@ func NewMercedesFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 	api := mercedes.NewAPI(log, identity)
 
+	cc.VIN, err = ensureVehicle(cc.VIN, api.Vehicles)
 	if err == nil {
 		v.Provider = mercedes.NewProvider(api, cc.VIN, cc.Cache)
 	}

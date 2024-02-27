@@ -37,11 +37,11 @@ type PinResponse struct {
 }
 
 type VehiclesResponse struct {
-	assignedVehicles []Vehicle
+	AssignedVehicles []Vehicle
 }
 
 type Vehicle struct {
-	fin string
+	Fin string `json:"fin"`
 }
 
 type StatusResponse struct {
