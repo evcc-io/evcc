@@ -24,6 +24,8 @@ params:
     choice: ["tcpip", "rs485"]
     port: 8899
     id: 1
+  - name: delay
+    deprecated: true
   - name: capacity
     advanced: true
   # battery control

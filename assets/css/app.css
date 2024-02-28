@@ -384,6 +384,10 @@ small {
 	background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><path fill='none' stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/></svg>");
 }
 
+.dark .text-muted {
+	color: var(--bs-gray-medium) !important;
+}
+
 .dark .form-select:disabled {
 	opacity: 0.5;
 }
@@ -473,4 +477,18 @@ input[type="time"]::-webkit-calendar-picker-indicator {
 	.w-sm-50 {
 		width: 50% !important;
 	}
+}
+
+html.app .hide-in-app {
+	display: none !important;
+}
+
+.safe-area-inset {
+	padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom)
+		env(safe-area-inset-left);
+}
+
+.modal-dialog {
+	margin-top: max(var(--bs-modal-margin), env(safe-area-inset-top));
+	margin-bottom: max(var(--bs-modal-margin), env(safe-area-inset-bottom));
 }

@@ -3,7 +3,7 @@
 		<div
 			id="batterySettingsModal"
 			ref="modal"
-			class="modal fade text-dark modal-xl"
+			class="modal fade text-dark modal-l"
 			data-bs-backdrop="true"
 			tabindex="-1"
 			role="dialog"
@@ -212,7 +212,7 @@
 								</p>
 							</div>
 						</div>
-						<div v-if="!controllable">
+						<div v-if="controllable">
 							<div class="form-check form-switch">
 								<input
 									id="batteryDischargeControl"

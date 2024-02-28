@@ -17,6 +17,8 @@ modalTitle = "Batteri inställningar"
 
 [batterySettings.bufferStart]
 full = "när det är nästan fullt"
+low = "när det är något fullt"
+medium = "när det är halvfullt"
 never = "bara med tillräckligt sol-överskott"
 
 [config]

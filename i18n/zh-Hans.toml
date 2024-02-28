@@ -14,6 +14,8 @@ note = "注意:这些设置仅影响太阳能模式.充电行为会相应调整.
 
 [batterySettings.bufferStart]
 full = "当快满的时候"
+low = "当有点满的时候"
+medium = "半满时"
 never = "只要有足够的剩余"
 
 [config]
