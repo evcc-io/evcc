@@ -42,7 +42,7 @@
 			}}
 		</div>
 
-		<div class="details d-flex align-items-start mb-3">
+		<div class="details d-flex align-items-start mb-2">
 			<div>
 				<div class="d-flex align-items-center">
 					<LabelAndValue
@@ -188,6 +188,7 @@ export default {
 		tariffGrid: Number,
 		tariffCo2: Number,
 		currency: String,
+		multipleLoadpoints: Boolean,
 	},
 	data() {
 		return {

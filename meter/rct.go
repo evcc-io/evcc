@@ -83,7 +83,7 @@ func NewRCT(uri, usage string, cache time.Duration, capacity func() float64) (ap
 
 	bo := backoff.NewExponentialBackOff()
 	bo.InitialInterval = 10 * time.Millisecond
-	bo.MaxInterval = time.Second
+	bo.MaxElapsedTime = time.Second
 
 	m := &RCT{
 		usage: strings.ToLower(usage),
@@ -170,17 +170,15 @@ func (m *RCT) batterySoc() (float64, error) {
 
 // queryFloat adds retry logic of recoverable errors to QueryFloat32
 func (m *RCT) queryFloat(id rct.Identifier) (float64, error) {
-	started := time.Now()
 	m.bo.Reset()
 
-	for {
-		next := m.bo.NextBackOff()
-
+	res, err := backoff.RetryWithData(func() (float32, error) {
 		res, err := m.conn.QueryFloat32(id)
-		if err == nil || !errors.Is(err, &rct.RecoverableError{}) || time.Since(started)+next > m.bo.MaxElapsedTime {
-			return float64(res), err
+		if !errors.Is(err, rct.RecoverableError{}) {
+			err = backoff.Permanent(err)
 		}
+		return res, err
+	}, m.bo)
 
-		time.Sleep(next)
-	}
+	return float64(res), err
 }

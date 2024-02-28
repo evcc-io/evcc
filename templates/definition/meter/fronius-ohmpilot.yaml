@@ -7,13 +7,19 @@ params:
   - name: usage
     choice: ["aux"]
   - name: host
+  - name: key
+    description:
+      de: ID des Ohmpilot im SolarAPI
+      en: ID of the Ohmpilot in SolarAPI
+    default: 0
+    advanced: true
 render: |
   type: custom
   power:
     source: http
     uri: http://{{ .host }}/solar_api/v1/GetPowerFlowRealtimeData.fcgi
-    jq: if .Body.Data.Smartloads.Ohmpilots."720896".P_AC_Total == null then 0 else .Body.Data.Smartloads.Ohmpilots."720896".P_AC_Total * -1 end
+    jq: if .Body.Data.Smartloads.Ohmpilots."{{ .key }}".P_AC_Total == null then 0 else .Body.Data.Smartloads.Ohmpilots."{{ .key }}".P_AC_Total * -1 end
   soc:
     source: http
     uri: http://{{ .host }}/solar_api/v1/GetPowerFlowRealtimeData.fcgi
-    jq: if .Body.Data.Smartloads.Ohmpilots."720896".Temperature == null then 0 else .Body.Data.Smartloads.Ohmpilots."720896".Temperature end
+    jq: if .Body.Data.Smartloads.Ohmpilots."{{ .key }}".Temperature == null then 0 else .Body.Data.Smartloads.Ohmpilots."{{ .key }}".Temperature end

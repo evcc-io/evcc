@@ -17,8 +17,6 @@ modalTitle = "Postavke baterije"
 
 [batterySettings.bufferStart]
 full = "kad je skoro pun"
-low = "kad je donekle pun"
-medium = "kad je napola pun"
 never = "samo s dovoljno viška"
 
 [config]
@@ -124,17 +122,6 @@ modalUpdate = "Instaliraj"
 modalUpdateNow = "Instaliraj sada"
 modalUpdateStarted = "Pokretanje nove evcc verzije …"
 modalUpdateStatusStart = "Instalacija je pokrenuta:"
-
-[gridSettings]
-activeHours = "{charging} od {total}"
-activeHoursLabel = "Aktivno radno vrijeme"
-co2Label = "Co₂ emisija"
-co2Limit = "Ograničenje CO₂"
-costLimitDescription = "Omogućuje privremeno brzo punjenje u solarnom modusu."
-modalTitle = "Smart Grid napajanje"
-none = "bez"
-priceLabel = "Cijena energije"
-priceLimit = "Ograničenje cijene"
 
 [header]
 about = "O"
@@ -427,6 +414,17 @@ light = "svijetli"
 km = "km"
 label = "Jedinice"
 mi = "milje"
+
+[smartCost]
+activeHours = "{charging} od {total}"
+activeHoursLabel = "Aktivno radno vrijeme"
+co2Label = "Co₂ emisija"
+co2Limit = "Ograničenje CO₂"
+loadpointDescription = "Omogućuje privremeno brzo punjenje u solarnom modusu."
+modalTitle = "Smart Grid napajanje"
+none = "bez"
+priceLabel = "Cijena energije"
+priceLimit = "Ograničenje cijene"
 
 [startupError]
 configFile = "Korištena konfiguracijska datoteka:"

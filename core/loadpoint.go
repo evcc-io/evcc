@@ -11,8 +11,8 @@ import (
 	"time"
 
 	evbus "github.com/asaskevich/EventBus"
-	"github.com/avast/retry-go/v4"
 	"github.com/benbjohnson/clock"
+	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/coordinator"
 	"github.com/evcc-io/evcc/core/keys"
@@ -124,6 +124,7 @@ type Loadpoint struct {
 	configuredPhases int     // Charger configured phase mode 0/1/3
 	limitSoc         int     // Session limit for soc
 	limitEnergy      float64 // Session limit for energy
+	smartCostLimit   float64 // always charge if cost is below this value
 
 	mode                api.ChargeMode
 	enabled             bool      // Charger enabled state
@@ -324,7 +325,9 @@ func (lp *Loadpoint) restoreSettings() {
 	if v, err := lp.settings.Float(keys.LimitEnergy); err == nil && v > 0 {
 		lp.setLimitEnergy(v)
 	}
-
+	if v, err := lp.settings.Float(keys.SmartCostLimit); err == nil {
+		lp.SetSmartCostLimit(v)
+	}
 	t, err1 := lp.settings.Time(keys.PlanTime)
 	v, err2 := lp.settings.Float(keys.PlanEnergy)
 	if err1 == nil && err2 == nil {
@@ -1239,7 +1242,10 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batter
 
 // UpdateChargePower updates charge meter power
 func (lp *Loadpoint) UpdateChargePower() {
-	err := retry.Do(func() error {
+	bo := backoff.NewExponentialBackOff()
+	bo.MaxElapsedTime = time.Second
+
+	if err := backoff.Retry(func() error {
 		value, err := lp.chargeMeter.CurrentPower()
 		if err != nil {
 			return err
@@ -1259,8 +1265,7 @@ func (lp *Loadpoint) UpdateChargePower() {
 		}
 
 		return nil
-	}, retryOptions...)
-	if err != nil {
+	}, bo); err != nil {
 		lp.log.ERROR.Printf("charge meter: %v", err)
 	}
 }
@@ -1495,6 +1500,7 @@ func (lp *Loadpoint) phaseSwitchCompleted() bool {
 
 // Update is the main control function. It reevaluates meters and charger state
 func (lp *Loadpoint) Update(sitePower float64, autoCharge, batteryBuffered, batteryStart bool, greenShare float64, effPrice, effCo2 *float64) {
+	lp.publish(keys.SmartCostActive, autoCharge)
 	lp.processTasks()
 
 	// read and publish meters first- charge power has already been updated by the site

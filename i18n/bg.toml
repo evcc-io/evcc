@@ -15,8 +15,6 @@ modalTitle = "Настройки на батерия"
 
 [batterySettings.bufferStart]
 full = "при почти заредена батерия"
-low = "при донякъде заредена батерия"
-medium = "при наполовина заредена батерия"
 never = "само при наличие на излишък"
 
 [config]
@@ -110,5 +108,5 @@ modalUpdateNow = "Инсталирай сега"
 modalUpdateStarted = "Стартирай новата версия на evcc..."
 modalUpdateStatusStart = "Инсталацията започна:"
 
-[gridSettings]
+[smartCost]
 activeHours = "{charging} от {total}"

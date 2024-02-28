@@ -53,7 +53,7 @@ func (site *Site) SetTitle(title string) {
 	defer site.Unlock()
 
 	site.Title = title
-	site.publish("siteTitle", title)
+	site.publish(keys.SiteTitle, title)
 	settings.SetString(keys.Title, title)
 }
 
@@ -70,7 +70,6 @@ func (site *Site) SetGridMeterRef(ref string) {
 	defer site.Unlock()
 
 	site.Meters.GridMeterRef = ref
-	// site.publish("siteGridMeterRef", meter)
 	settings.SetString(keys.GridMeter, ref)
 }
 
@@ -250,29 +249,6 @@ func (site *Site) SetResidualPower(power float64) error {
 	if site.ResidualPower != power {
 		site.ResidualPower = power
 		site.publish(keys.ResidualPower, site.ResidualPower)
-	}
-
-	return nil
-}
-
-// GetSmartCostLimit returns the smartCostLimit
-func (site *Site) GetSmartCostLimit() float64 {
-	site.RLock()
-	defer site.RUnlock()
-	return site.smartCostLimit
-}
-
-// SetSmartCostLimit sets the smartCostLimit
-func (site *Site) SetSmartCostLimit(val float64) error {
-	site.Lock()
-	defer site.Unlock()
-
-	site.log.DEBUG.Println("set smart cost limit:", val)
-
-	if site.smartCostLimit != val {
-		site.smartCostLimit = val
-		settings.SetFloat(keys.SmartCostLimit, site.smartCostLimit)
-		site.publish(keys.SmartCostLimit, site.smartCostLimit)
 	}
 
 	return nil

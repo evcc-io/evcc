@@ -4,9 +4,10 @@ env:
   GO_VERSION: ^1.22
 
 on:
-  push:
-    branches: [master]
-    paths: ["templates/**"]
+  schedule:
+    - cron: "0 2 * * *" # same time as nightly is triggered
+  release:
+    types: [created]
   workflow_dispatch:
 
 jobs:
@@ -32,7 +33,7 @@ jobs:
           publish_dir: ./templates/docs
           external_repository: evcc-io/docs
           publish_branch: main
-          destination_dir: templates
+          destination_dir: ${{ github.event_name == 'release' && 'templates/release' || github.event_name == 'schedule' && 'templates/nightly' || 'templates/unknown_trigger' }}
           allow_empty_commit: false
-          commit_message: Templates update
+          commit_message: ${{ github.event_name == 'release' && 'Templates update for release' || github.event_name == 'schedule' && 'Templates update for nightly' || 'Templates update unknown trigger' }}
         if: ${{ success() }}
