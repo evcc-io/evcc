@@ -42,6 +42,7 @@ type VehiclesResponse struct {
 
 type Vehicle struct {
 	Fin string
+	Vin string
 }
 
 type StatusResponse struct {
