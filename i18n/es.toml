@@ -17,6 +17,8 @@ modalTitle = "Ajustes de la batería"
 
 [batterySettings.bufferStart]
 full = "cuando está casi llena"
+low = "cuando está algo llena"
+medium = "cuando está medio llena"
 never = "cuando hay suficiente excedente"
 
 [config]

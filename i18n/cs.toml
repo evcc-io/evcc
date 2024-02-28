@@ -17,6 +17,8 @@ modalTitle = "Nastavení baterie"
 
 [batterySettings.bufferStart]
 full = "když je skoro plná"
+low = "když dost plná"
+medium = "když je z poloviny plná"
 never = "pouze když je dost přebytků"
 
 [config]
