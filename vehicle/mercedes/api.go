@@ -48,7 +48,11 @@ func (v *API) Vehicles() ([]string, error) {
 
 	var vehicles []string
 	for _, v := range res.AssignedVehicles {
-		vehicles = append(vehicles, v.Fin)
+		if len(v.Vin) > 0 {
+			vehicles = append(vehicles, v.Vin)
+		} else {
+			vehicles = append(vehicles, v.Fin)
+		}
 	}
 
 	return vehicles, err
