@@ -58,6 +58,10 @@ var _ IntProvider = (*constProvider)(nil)
 
 func (o *constProvider) IntGetter() (func() (int64, error), error) {
 	val, err := strconv.ParseInt(o.str, 10, 64)
+	if err != nil && o.str == "" {
+		err = nil
+	}
+
 	return func() (int64, error) {
 		return val, err
 	}, err
@@ -67,6 +71,10 @@ var _ FloatProvider = (*constProvider)(nil)
 
 func (o *constProvider) FloatGetter() (func() (float64, error), error) {
 	val, err := strconv.ParseFloat(o.str, 64)
+	if err != nil && o.str == "" {
+		err = nil
+	}
+
 	return func() (float64, error) {
 		return val, err
 	}, err
@@ -76,6 +84,10 @@ var _ BoolProvider = (*constProvider)(nil)
 
 func (o *constProvider) BoolGetter() (func() (bool, error), error) {
 	val, err := strconv.ParseBool(o.str)
+	if err != nil && o.str == "" {
+		err = nil
+	}
+
 	return func() (bool, error) {
 		return val, err
 	}, err
@@ -90,6 +102,10 @@ func (o *constProvider) IntSetter(param string) (func(int64) error, error) {
 	}
 
 	val, err := strconv.ParseInt(o.str, 10, 64)
+	if err != nil && o.str == "" {
+		err = nil
+	}
+
 	return func(_ int64) error {
 		return set(val)
 	}, err
@@ -104,6 +120,10 @@ func (o *constProvider) FloatSetter(param string) (func(float64) error, error) {
 	}
 
 	val, err := strconv.ParseFloat(o.str, 64)
+	if err != nil && o.str == "" {
+		err = nil
+	}
+
 	return func(_ float64) error {
 		return set(val)
 	}, err
@@ -118,6 +138,10 @@ func (o *constProvider) BoolSetter(param string) (func(bool) error, error) {
 	}
 
 	val, err := strconv.ParseBool(o.str)
+	if err != nil && o.str == "" {
+		err = nil
+	}
+
 	return func(_ bool) error {
 		return set(val)
 	}, err

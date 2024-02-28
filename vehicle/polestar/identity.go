@@ -41,23 +41,27 @@ var OAuth2Config = &oauth2.Config{
 
 type Identity struct {
 	*request.Helper
-	oauth2.TokenSource
+	user, password string
 }
 
 // NewIdentity creates Polestar identity
-func NewIdentity(log *util.Logger) *Identity {
+func NewIdentity(log *util.Logger, user, password string) (oauth2.TokenSource, error) {
 	v := &Identity{
-		Helper: request.NewHelper(log),
+		Helper:   request.NewHelper(log),
+		user:     user,
+		password: password,
 	}
 
 	v.Client.Jar, _ = cookiejar.New(&cookiejar.Options{
 		PublicSuffixList: publicsuffix.List,
 	})
 
-	return v
+	token, err := v.login()
+
+	return oauth.RefreshTokenSource(token, v), err
 }
 
-func (v *Identity) Login(user, password string) error {
+func (v *Identity) login() (*oauth2.Token, error) {
 	state := lo.RandomString(16, lo.AlphanumericCharset)
 	uri := OAuth2Config.AuthCodeURL(state, oauth2.AccessTypeOffline)
 
@@ -66,17 +70,17 @@ func (v *Identity) Login(user, password string) error {
 	defer func() { v.Client.CheckRedirect = nil }()
 
 	if _, err := v.Get(uri); err != nil {
-		return err
+		return nil, err
 	}
 
 	resume, err := param()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	params := url.Values{
-		"pf.username": []string{user},
-		"pf.pass":     []string{password},
+		"pf.username": []string{v.user},
+		"pf.pass":     []string{v.password},
 	}
 
 	uri = fmt.Sprintf("%s/as/%s/resume/as/authorization.ping?client_id=%s", OAuthURI, resume, OAuth2Config.ClientID)
@@ -89,7 +93,7 @@ func (v *Identity) Login(user, password string) error {
 	}
 
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	var res struct {
@@ -100,16 +104,16 @@ func (v *Identity) Login(user, password string) error {
 		Query(context.Background(), &res, map[string]any{
 			"code": code,
 		}, graphql.OperationName("getAuthToken")); err != nil {
-		return err
+		return nil, err
 	}
 
-	v.TokenSource = oauth.RefreshTokenSource(&oauth2.Token{
+	token := &oauth2.Token{
 		AccessToken:  res.AccessToken,
 		RefreshToken: res.RefreshToken,
 		Expiry:       time.Now().Add(time.Duration(res.ExpiresIn) * time.Second),
-	}, v)
+	}
 
-	return err
+	return token, err
 }
 
 func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
@@ -123,9 +127,13 @@ func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 		"token": token.RefreshToken,
 	}, graphql.OperationName("refreshAuthToken"))
 
-	return &oauth2.Token{
-		AccessToken:  res.AccessToken,
-		RefreshToken: res.RefreshToken,
-		Expiry:       time.Now().Add(time.Duration(res.ExpiresIn) * time.Second),
-	}, err
+	if err == nil {
+		return &oauth2.Token{
+			AccessToken:  res.AccessToken,
+			RefreshToken: res.RefreshToken,
+			Expiry:       time.Now().Add(time.Duration(res.ExpiresIn) * time.Second),
+		}, nil
+	}
+
+	return v.login()
 }

@@ -1,29 +1,18 @@
 template: tesla
+covers: ["tesla-command", "tesla-proxy"]
 products:
   - brand: Tesla
-    description:
-      de: veraltet
-      en: legacy
 requirements:
   description:
     de: |
-      Es wird ein `access` und ein `refresh` Token für die Kommunikation mit der Tesla API erstellt werden.
-
-      Folgende Apps ermöglichen das Erstellen von den beiden Tokens:
-      - [Auth app for Tesla (iOS)](https://apps.apple.com/us/app/auth-app-for-tesla/id1552058613#?platform=iphone)
-      - [Tesla Tokens (Android)](https://play.google.com/store/apps/details?id=net.leveugle.teslatokens)
-      - [Tesla Auth (macOS, Linux)](https://github.com/adriankumpf/tesla_auth)
-
-      **Hinweis:** Diese API ist von Tesla [nicht offiziell unterstützt](https://tesla-api.timdorr.com) und wird Stück für Stück abgeschaltet.**
+      Benötigt `access` und `refresh` Tokens. Diese können über [tesla.evcc.io](https://tesla.evcc.io) erstellt werden.
+      Die Steuerung von Fahrzeugen im Zusammenspiel mit einem Tesla Wall Connector erfolgt über einen evcc Proxy-Server und benötigt ein Sponsor Token. Der virtuelle evcc Schlüssel muss auf dem Fahrzeug installiert sein.
+      Siehe [tesla.evcc.io](https://tesla.evcc.io).
     en: |
-      You need to generate an `access` and a `refresh` token for communicating with the Tesla API.
-
-      The following apps allow to create these tokens:
-      - [Auth app for Tesla (iOS)](https://apps.apple.com/us/app/auth-app-for-tesla/id1552058613#?platform=iphone)
-      - [Tesla Tokens (Android)](https://play.google.com/store/apps/details?id=net.leveugle.teslatokens)
-      - [Tesla Auth (macOS, Linux)](https://github.com/adriankumpf/tesla_auth)
-
-      **Note:** This API is [not officially supported](https://tesla-api.timdorr.com) by Tesla and will be deprecated step by step.
+      Teska `access` and `refresh` tokens are required. These can be generated through [tesla.evcc.io](https://tesla.evcc.io).
+      Controlling vehicles in conjunction with a Tesla Wall Connector is done via an evcc proxy server and requires a sponsor token. The evcc virtual key must be installed on the vehicle.
+      See [tesla.evcc.io](https://tesla.evcc.io).
+  evcc: ["sponsorship"]
 params:
   - name: title
   - name: icon
@@ -46,24 +35,18 @@ params:
   - name: capacity
   - name: phases
     advanced: true
+  - name: control
+    deprecated: true
   - preset: vehicle-identify
 render: |
   type: tesla
-  {{- if .title }}
   title: {{ .title }}
-  {{- end }}
-  {{- if .icon }}
   icon: {{ .icon }}
-  {{- end }}
   tokens:
     access: {{ .accessToken }}
     refresh: {{ .refreshToken }}
   capacity: {{ .capacity }}
-  {{- if .phases }}
   phases: {{ .phases }}
-  {{- end }}
-  {{- if .vin }}
   vin: {{ .vin }}
-  {{- end }}
   {{ include "vehicle-identify" . }}
   features: ["coarsecurrent"]

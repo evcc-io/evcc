@@ -20,7 +20,7 @@
 				class="flex-grow-1"
 				:label="vehicleSocTitle"
 				:value="formattedSoc"
-				:extraValue="range ? `${fmtNumber(range, 0)} ${rangeUnit}` : null"
+				:extraValue="range ? `${fmtNumber(range, 0)} ${rangeUnit}` : ''"
 				data-testid="current-soc"
 				align="start"
 			/>
@@ -29,7 +29,7 @@
 				class="flex-grow-1"
 				:label="$t('main.loadpoint.charged')"
 				:value="fmtEnergy(chargedEnergy)"
-				:extraValue="chargedSoc"
+				:extraValue="chargedSoc || ''"
 				data-testid="current-energy"
 				align="start"
 			/>

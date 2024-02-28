@@ -1,5 +1,5 @@
 <template>
-	<div class="root">
+	<div class="root safe-area-inset">
 		<div class="container px-4">
 			<TopHeader title="Configuration 🧪" />
 			<div class="wrapper">

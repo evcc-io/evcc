@@ -1,104 +1,77 @@
 <template>
-	<Teleport to="body">
-		<div
-			id="gridSettingsModal"
-			ref="modal"
-			class="modal fade text-dark modal-xl"
-			data-bs-backdrop="true"
-			tabindex="-1"
-			role="dialog"
-			aria-hidden="true"
-		>
-			<div class="modal-dialog modal-dialog-centered" role="document">
-				<div class="modal-content">
-					<div class="modal-header">
-						<h5 class="modal-title">
-							{{ $t("gridSettings.modalTitle") }}
-						</h5>
-						<button
-							type="button"
-							class="btn-close"
-							data-bs-dismiss="modal"
-							aria-label="Close"
-						></button>
-					</div>
-					<div class="modal-body">
-						<div class="smartCostLimit mb-4">
-							<div class="d-flex justify-content-between align-items-baseline mb-2">
-								<label for="smartCostLimit" class="pt-1">
-									{{
-										isCo2
-											? $t("gridSettings.co2Limit")
-											: $t("gridSettings.priceLimit")
-									}}
-								</label>
-								<select
-									id="smartCostLimit"
-									v-model.number="selectedSmartCostLimit"
-									class="form-select smartCostLimitSelect"
-									@change="changeSmartCostLimit"
-								>
-									<option value="0">{{ $t("gridSettings.none") }}</option>
-									<option
-										v-for="{ value, name } in costOptions"
-										:key="value"
-										:value="value"
-									>
-										{{ name }}
-									</option>
-								</select>
-							</div>
-							<small v-if="selectedSmartCostLimit !== 0">
-								{{ $t("gridSettings.costLimitDescription") }}
-							</small>
-						</div>
-						<div class="justify-content-between mb-2 d-flex justify-content-between">
-							<div class="text-start">
-								<div class="label">
-									{{ $t("gridSettings.activeHoursLabel") }}
-								</div>
-								<div
-									class="value"
-									:class="
-										chargingSlots.length ? 'text-primary' : 'value-inactive'
-									"
-								>
-									{{
-										$t("gridSettings.activeHours", {
-											total: totalSlots.length,
-											charging: chargingSlots.length,
-										})
-									}}
-								</div>
-							</div>
-							<div class="text-end">
-								<div class="label">
-									<span v-if="activeSlot">{{ activeSlotName }}</span>
-									<span v-else-if="isCo2">{{ $t("gridSettings.co2Label") }}</span>
-									<span v-else>{{ $t("gridSettings.priceLabel") }}</span>
-								</div>
-								<div v-if="activeSlot" class="value text-primary">
-									{{ activeSlotCost }}
-								</div>
-								<div v-else-if="chargingSlots.length" class="value text-primary">
-									{{ chargingCostRange }}
-								</div>
-								<div v-else class="value value-inactive">
-									{{ totalCostRange }}
-								</div>
-							</div>
-						</div>
-						<TariffChart
-							v-if="tariff"
-							:slots="slots"
-							@slot-hovered="slotHovered"
-							@slot-selected="slotSelected"
-						/>
-					</div>
+	<div>
+		<h4 class="text-evcc mb-3">{{ title }}</h4>
+		<p>
+			{{ description }}
+		</p>
+		<div class="row mb-3">
+			<label :for="formId" class="col-sm-4 col-form-label pt-0 pt-sm-2">
+				{{ isCo2 ? $t("smartCost.co2Limit") : $t("smartCost.priceLimit") }}
+			</label>
+			<div class="col-sm-8 col-lg-4 pe-0">
+				<select
+					:id="formId"
+					v-model.number="selectedSmartCostLimit"
+					class="form-select form-select-sm mb-1"
+					@change="changeSmartCostLimit"
+				>
+					<option value="0">{{ $t("smartCost.none") }}</option>
+					<option v-for="{ value, name } in costOptions" :key="value" :value="value">
+						{{ name }}
+					</option>
+				</select>
+			</div>
+			<div
+				v-if="applyToAllVisible"
+				class="col-sm-8 offset-sm-4 offset-lg-0 col-lg-4 d-flex align-items-baseline"
+			>
+				<div class="text-primary">{{ $t("smartCost.saved") }}</div>
+				<button class="ms-1 btn btn-sm btn-link text-muted p-0" @click="applyToAll">
+					{{ $t("smartCost.applyToAll") }}
+				</button>
+			</div>
+		</div>
+		<div class="justify-content-between mb-2 d-flex justify-content-between">
+			<div class="text-start">
+				<div class="label">
+					{{ $t("smartCost.activeHoursLabel") }}
+				</div>
+				<div
+					class="value"
+					:class="chargingSlots.length ? 'text-primary' : 'value-inactive'"
+				>
+					{{
+						$t("smartCost.activeHours", {
+							total: totalSlots.length,
+							charging: chargingSlots.length,
+						})
+					}}
+				</div>
+			</div>
+			<div class="text-end">
+				<div class="label">
+					<span v-if="activeSlot">{{ activeSlotName }}</span>
+					<span v-else-if="isCo2">{{ $t("smartCost.co2Label") }}</span>
+					<span v-else>{{ $t("smartCost.priceLabel") }}</span>
+				</div>
+				<div v-if="activeSlot" class="value text-primary">
+					{{ activeSlotCost }}
+				</div>
+				<div v-else-if="chargingSlots.length" class="value text-primary">
+					{{ chargingCostRange }}
+				</div>
+				<div v-else class="value value-inactive">
+					{{ totalCostRange }}
 				</div>
 			</div>
 		</div>
-	</Teleport>
+		<TariffChart
+			v-if="tariff"
+			:slots="slots"
+			@slot-hovered="slotHovered"
+			@slot-selected="slotSelected"
+		/>
+	</div>
 </template>
 
 <script>
@@ -108,22 +81,24 @@ import { CO2_TYPE } from "../units";
 import api from "../api";
 
 export default {
-	name: "GridSettingsModal",
+	name: "SmartCostLimit",
 	components: { TariffChart },
 	mixins: [formatter],
 	props: {
-		smartCostLimit: Number,
+		smartCostLimit: { type: Number, default: 0 },
 		smartCostType: String,
 		tariffGrid: Number,
 		currency: String,
+		loadpointId: Number,
+		multipleLoadpoints: Boolean,
 	},
 	data: function () {
 		return {
-			isModalVisible: false,
 			selectedSmartCostLimit: 0,
 			tariff: null,
 			startTime: null,
 			activeIndex: null,
+			applyToAllVisible: false,
 		};
 	},
 	computed: {
@@ -235,30 +210,27 @@ export default {
 			}
 			return this.fmtPricePerKWh(price, this.currency);
 		},
+		title() {
+			return this.$t(`smartCost.${this.isCo2 ? "clean" : "cheap"}Title`);
+		},
+		description() {
+			return this.$t(`smartCost.${this.loadpointId ? "loadpoint" : "battery"}Description`);
+		},
+		formId() {
+			return `smartCostLimit-${this.loadpointId || "battery"}`;
+		},
 	},
 	watch: {
-		isModalVisible(visible) {
-			if (visible) {
-				this.updateTariff();
-			}
-		},
 		tariffGrid() {
-			if (this.isModalVisible) {
-				this.updateTariff();
-			}
+			this.updateTariff();
 		},
 		smartCostLimit(limit) {
 			this.selectedSmartCostLimit = limit;
 		},
 	},
 	mounted() {
+		this.updateTariff();
 		this.selectedSmartCostLimit = this.smartCostLimit;
-		this.$refs.modal.addEventListener("show.bs.modal", this.modalVisible);
-		this.$refs.modal.addEventListener("hidden.bs.modal", this.modalInvisible);
-	},
-	unmounted() {
-		this.$refs.modal?.removeEventListener("show.bs.modal", this.modalVisible);
-		this.$refs.modal?.removeEventListener("hidden.bs.modal", this.modalInvisible);
 	},
 	methods: {
 		updateTariff: async function () {
@@ -268,12 +240,6 @@ export default {
 			} catch (e) {
 				console.error(e);
 			}
-		},
-		modalVisible: function () {
-			this.isModalVisible = true;
-		},
-		modalInvisible: function () {
-			this.isModalVisible = false;
 		},
 		convertDates(list) {
 			if (!list?.length) {
@@ -337,8 +303,23 @@ export default {
 			this.saveSmartCostLimit($event.target.value);
 		},
 		async saveSmartCostLimit(limit) {
+			const isLoadpoint = !!this.loadpointId;
+			const url = isLoadpoint
+				? `loadpoints/${this.loadpointId}/smartcostlimit`
+				: "batterysmartcostlimit"; // currently not implemented
 			try {
-				await api.post(`smartcostlimit/${encodeURIComponent(limit)}`);
+				await api.post(`${url}/${encodeURIComponent(limit)}`);
+				if (isLoadpoint && this.multipleLoadpoints) {
+					this.applyToAllVisible = true;
+				}
+			} catch (err) {
+				console.error(err);
+			}
+		},
+		async applyToAll() {
+			try {
+				await api.post(`smartcostlimit/${encodeURIComponent(this.selectedSmartCostLimit)}`);
+				this.applyToAllVisible = false;
 			} catch (err) {
 				console.error(err);
 			}
@@ -348,12 +329,6 @@ export default {
 </script>
 
 <style scoped>
-.smartCostLimit {
-	max-width: 400px;
-}
-.smartCostLimitSelect {
-	width: auto;
-}
 .value {
 	font-size: 18px;
 	font-weight: bold;

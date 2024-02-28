@@ -1,4 +1,4 @@
-package vc
+package tesla
 
 import (
 	"errors"
@@ -15,8 +15,7 @@ var (
 )
 
 func getInstance(subject string) *Identity {
-	v, _ := identities[subject]
-	return v
+	return identities[subject]
 }
 
 func addInstance(subject string, identity *Identity) {
@@ -26,7 +25,8 @@ func addInstance(subject string, identity *Identity) {
 // apiError converts HTTP 408 error to ErrTimeout
 func apiError(err error) error {
 	if err != nil && (errors.Is(err, inet.ErrVehicleNotAwake) ||
-		strings.HasSuffix(err.Error(), "408 Request Timeout") || strings.HasSuffix(err.Error(), "408 (Request Timeout)")) {
+		strings.HasSuffix(err.Error(), "408 Request Timeout") || strings.HasSuffix(err.Error(), "408 (Request Timeout)") ||
+		strings.HasSuffix(err.Error(), "vehicle is offline or asleep")) {
 		err = api.ErrAsleep
 	}
 	return err

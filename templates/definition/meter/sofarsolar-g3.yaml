@@ -15,8 +15,8 @@ products:
 # capabilities: ["battery-control"]
 requirements:
   description:
-    de: Es wird dringend empfohlen die Verbindung über einen LSE-3 Logger Stick herzustellen. Andere Verbindungswege (z.B. LSW-3 oder via RS485) sind u.U. instabil und benötigen Verzögerungen (delay) > 0s.
-    en: It is strongly recommended to connect via an LSE-3 logger stick. Other connection paths (e.g. LSW-3 or via RS485) may be unstable and require delays > 0s.
+    de: Es wird empfohlen die Verbindung über einen LSE-3 Logger Stick mittels ModBus TCP herzustellen. Bei seriellem Anschluss via RS485 mit entsprechendem Adapter am COM Port ist zu beachten, dass wechselrichterseitig für eine Terminierung des RS485 Busses zu sorgen ist.
+    en: It is recommended to establish the connection via a LSE-3 logger stick using ModBus TCP. If you are connecting via serial RS485 using the inverter's COM port and a proper adapter note that on the inverter's side you have to take care of a proper termination of the RS485 bus.
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -25,8 +25,7 @@ params:
     port: 8899
     id: 1
   - name: delay
-    default: 0s
-    advanced: true
+    deprecated: true
   - name: capacity
     advanced: true
   # battery control
@@ -42,7 +41,6 @@ render: |
   power:
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    delay: {{ .delay }}
     register:
       address: 0x0488 # ActivePower_PCC_Total
       type: holding
@@ -51,7 +49,6 @@ render: |
   currents:
   - source: modbus
     {{- include "modbus" . | indent 2 }}
-    delay: {{ .delay }}
     register:
       address: 0x0492 # Current_PCC_R
       type: holding
@@ -59,7 +56,6 @@ render: |
     scale: 0.01
   - source: modbus
     {{- include "modbus" . | indent 2 }}
-    delay: {{ .delay }}
     register:
       address: 0x049D # Current_PCC_S
       type: holding
@@ -67,7 +63,6 @@ render: |
     scale: 0.01
   - source: modbus
     {{- include "modbus" . | indent 2 }}
-    delay: {{ .delay }}
     register:
       address: 0x04A8 # Current_PCC_T
       type: holding
@@ -76,7 +71,6 @@ render: |
   powers:
   - source: modbus
     {{- include "modbus" . | indent 2 }}
-    delay: {{ .delay }}
     register:
       address: 0x0493 # ActivePower_PCC_R
       type: holding
@@ -84,7 +78,6 @@ render: |
     scale: -10
   - source: modbus
     {{- include "modbus" . | indent 2 }}
-    delay: {{ .delay }}
     register:
       address: 0x049E # ActivePower_PCC_S
       type: holding
@@ -92,7 +85,6 @@ render: |
     scale: -10
   - source: modbus
     {{- include "modbus" . | indent 2 }}
-    delay: {{ .delay }}
     register:
       address: 0x04A9 # ActivePower_PCC_T
       type: holding
@@ -101,7 +93,6 @@ render: |
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    delay: {{ .delay }}
     register:
       address: 0x068E # Energy_Purchase_Total
       type: holding
@@ -112,7 +103,6 @@ render: |
   power:
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    delay: {{ .delay }}
     register:
       address: 0x05C4 # Power_PV_Total
       type: holding
@@ -121,7 +111,6 @@ render: |
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    delay: {{ .delay }}
     register:
       address: 0x0686 # PV_Generation_Total
       type: holding
@@ -132,7 +121,6 @@ render: |
   power:
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    delay: {{ .delay }}
     register:
       address: 0x0606 # Power_Bat1
       type: holding
@@ -141,7 +129,6 @@ render: |
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    delay: {{ .delay }}
     register:
       address: 0x069A # Bat_Discharge_Total
       type: holding
@@ -150,7 +137,6 @@ render: |
   soc:
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    delay: {{ .delay }}
     register:
       address: 0x0608 # SOC_Bat1
       type: holding
@@ -165,7 +151,6 @@ render: |
   #     config:
   #       source: modbus
   #       {- include "modbus" . | indent 6 }
-  #       delay: { .delay }
   #       register:
   #         address: 0x104D # BatConfig_Depth_of_Discharge
   #         type: writemultiple

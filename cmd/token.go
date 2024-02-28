@@ -52,8 +52,8 @@ func runToken(cmd *cobra.Command, args []string) {
 	var err error
 
 	switch strings.ToLower(vehicleConf.Type) {
-	case "tesla":
-		token, err = teslaToken()
+	case "mercedes":
+		token, err = mercedesToken()
 	case "tronity":
 		token, err = tronityToken(conf, vehicleConf)
 	default:
@@ -67,7 +67,7 @@ func runToken(cmd *cobra.Command, args []string) {
 	fmt.Println()
 	fmt.Println("Add the following tokens to the vehicle config:")
 	fmt.Println()
-	fmt.Println("  tokens:")
-	fmt.Println("    access:", token.AccessToken)
-	fmt.Println("    refresh:", token.RefreshToken)
+	fmt.Println("    tokens:")
+	fmt.Println("      access:", token.AccessToken)
+	fmt.Println("      refresh:", token.RefreshToken)
 }

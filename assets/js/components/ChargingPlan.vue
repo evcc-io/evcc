@@ -12,7 +12,7 @@
 						{{ minSocLabel }}
 					</strong>
 					<strong v-else-if="targetChargeEnabled">
-						<span class="text-decoration-underline"> {{ targetTimeLabel() }}</span>
+						<span class="targetTimeLabel"> {{ targetTimeLabel() }}</span>
 						<div
 							class="extraValue text-nowrap"
 							:class="{ 'text-warning': planOverrun }"
@@ -303,5 +303,8 @@ export default {
 	color: var(--evcc-gray);
 	font-size: 14px;
 	text-decoration: none;
+}
+.targetTimeLabel {
+	text-decoration: underline;
 }
 </style>

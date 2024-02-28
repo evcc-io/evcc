@@ -4,6 +4,16 @@ products:
     description:
       generic: Solar API V1
 capabilities: ["battery-control"]
+requirements:
+  description:
+    de: |
+      Benutzername und Passwort werden nur für die aktive Batteriesteuerung benötigt.
+
+      **Achtung**: Die aktive Batteriesteuerung sollte nur verwendet werden, wenn keine weiteren Einstellungen für die zeitabhängige Batteriesteuerung in der Wechselrichter-Konfiguration unter "Energiemanagement" - "Batteriemanagement" getätigt wurden, denn bestehende Einstellungen werden überschrieben.
+    en: |
+      Username and password are only required for active battery control.
+
+      **Attention**: Active battery control should only be used if no other settings for time-dependent battery control were made in the inverter configuration under "Energy Management" - "Battery Management", as existing settings will be overwritten.
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -13,8 +23,14 @@ params:
     advanced: true
   - name: user
     default: customer
+    description:
+      de: Benutzername (für aktive Batteriesteuerung)
+      en: Username (for active battery control)
   - name: password
     required: false
+    description:
+      de: Passwort (für aktive Batteriesteuerung)
+      en: Password (for active battery control)
 render: |
   type: custom
   power:

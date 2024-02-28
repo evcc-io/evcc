@@ -13,52 +13,6 @@ import (
 	"github.com/gorilla/mux"
 )
 
-type moder interface {
-	GetMode() api.ChargeMode
-	SetMode(api.ChargeMode)
-}
-
-// chargeModeHandler updates charge mode
-func chargeModeHandler(lp moder) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-
-		mode, err := api.ChargeModeString(vars["value"])
-		if err != nil {
-			jsonError(w, http.StatusBadRequest, err)
-			return
-		}
-
-		lp.SetMode(mode)
-
-		jsonResult(w, lp.GetMode())
-	}
-}
-
-type phaser interface {
-	GetPhases() int
-	SetPhases(int) error
-}
-
-// phasesHandler updates minimum soc
-func phasesHandler(lp phaser) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-
-		phases, err := strconv.Atoi(vars["value"])
-		if err == nil {
-			err = lp.SetPhases(phases)
-		}
-
-		if err != nil {
-			jsonError(w, http.StatusBadRequest, err)
-			return
-		}
-
-		jsonResult(w, lp.GetPhases())
-	}
-}
-
 // remoteDemandHandler updates minimum soc
 func remoteDemandHandler(lp loadpoint.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
