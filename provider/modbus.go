@@ -160,6 +160,7 @@ var _ SetFloatProvider = (*Modbus)(nil)
 
 func (m *Modbus) writeMultipleRegisters(val uint64) error {
 	val = m.op.Encode(val)
+	fmt.Printf("encode:\t% x\n", val)
 
 	var err error
 	switch m.op.Length {
@@ -194,11 +195,14 @@ func (m *Modbus) FloatSetter(_ string) (func(float64) error, error) {
 
 	return func(val float64) error {
 		val = m.scale * val
+		fmt.Printf("val:\t%v\n", val)
 
 		var uval uint64
 		switch m.op.Length {
 		case 2:
+			fmt.Printf("Float32bits:\t% x\n", math.Float32bits(float32(val)))
 			uval = uint64(math.Float32bits(float32(val)))
+			fmt.Printf("uval:\t% x\n", uval)
 		case 4:
 			uval = math.Float64bits(val)
 		}
@@ -225,12 +229,6 @@ func (m *Modbus) IntSetter(_ string) (func(int64) error, error) {
 
 		var err error
 		switch m.op.FuncCode {
-		case gridx.FuncCodeWriteSingleRegister:
-			_, err = m.conn.WriteSingleRegister(m.op.Addr, uint16(ival))
-
-		case gridx.FuncCodeWriteMultipleRegisters:
-			err = m.writeMultipleRegisters(uint64(ival))
-
 		case gridx.FuncCodeWriteSingleCoil:
 			if ival != 0 {
 				// Modbus protocol requires 0xFF00 for ON
@@ -238,6 +236,16 @@ func (m *Modbus) IntSetter(_ string) (func(int64) error, error) {
 				ival = 0xFF00
 			}
 			_, err = m.conn.WriteSingleCoil(m.op.Addr, uint16(ival))
+
+		case gridx.FuncCodeWriteSingleRegister:
+			_, err = m.conn.WriteSingleRegister(m.op.Addr, uint16(ival))
+
+		case gridx.FuncCodeWriteMultipleRegisters:
+			uval := uint64(ival)
+			switch {
+			case m.op.Length == 2:
+			}
+			err = m.writeMultipleRegisters(uval)
 
 		default:
 			err = fmt.Errorf("invalid write function code: %d", m.op.FuncCode)

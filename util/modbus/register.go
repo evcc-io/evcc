@@ -1,7 +1,6 @@
 package modbus
 
 import (
-	"encoding/binary"
 	"errors"
 	"fmt"
 	"math"
@@ -54,6 +53,19 @@ func (r Register) Length() (uint16, error) {
 	default:
 		return 0, fmt.Errorf("invalid register encoding: %s", enc)
 	}
+}
+
+func (r Register) isFloat32() bool {
+	return slices.Contains([]string{
+		"float32", "float32s",
+		"ieee754", "ieee754s",
+	}, strings.ToLower(r.encoding()))
+}
+
+func (r Register) isFloat64() bool {
+	return slices.Contains([]string{
+		"float64", "float64s",
+	}, strings.ToLower(r.encoding()))
 }
 
 // Operation creates a modbus operation from a register definition
@@ -138,20 +150,24 @@ func (r Register) Operation() (RegisterOperation, error) {
 		}
 	} else {
 		switch strings.ToLower(r.encoding()) {
-		case "int32s", "uint32s":
+		case "int32s", "uint32s",
+			"float32s", "ieee754s":
 			op.Encode = func(v uint64) uint64 {
+				fmt.Printf("swapped:\t% x\n", v)
 				return v&0xFFFF<<16 | v&0xFFFF0000>>16
 			}
 
-		case "float32s", "ieee754s":
-			op.Encode = func(v uint64) uint64 {
-				b := make([]byte, 4)
-				encoding.PutFloat32LswFirst(b, float32(v))
-				return uint64(binary.BigEndian.Uint32(b))
-			}
+		// case "float32s", "ieee754s":
+		// 	op.Encode = func(v uint64) uint64 {
+		// 		fmt.Printf("litte endian: % x\n", v)
+		// 		b := make([]byte, 4)
+		// 		encoding.PutFloat32LswFirst(b, float32(v))
+		// 		return uint64(binary.BigEndian.Uint32(b))
+		// 	}
 
 		default:
 			op.Encode = func(v uint64) uint64 {
+				fmt.Printf("big endian:\t% x\n", v)
 				return v
 			}
 		}
