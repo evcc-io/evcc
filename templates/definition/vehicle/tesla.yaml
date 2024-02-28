@@ -35,6 +35,8 @@ params:
   - name: capacity
   - name: phases
     advanced: true
+  - name: control
+    deprecated: true
   - preset: vehicle-identify
 render: |
   type: tesla
