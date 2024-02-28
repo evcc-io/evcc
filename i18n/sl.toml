@@ -451,7 +451,6 @@ cancel = "Prekliči"
 template = "Proizvajalec"
 test = "Test"
 
-
 [config.deviceValue]
 capacity = "Kapaciteta"
 chargeStatus = "Status"
