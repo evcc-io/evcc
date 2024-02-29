@@ -40,6 +40,15 @@ func NewHTTPd(addr string, hub *SocketHub) *HTTPd {
 		return etag.Handler(h, false)
 	})
 
+	// allow requesting http assets from a non-private host. see https://developer.chrome.com/blog/cors-rfc1918-feedback?hl=de#step-2:-sending-preflight-requests-with-a-special-header
+	static.Use(func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Access-Control-Allow-Origin", "*")
+			w.Header().Set("Access-Control-Allow-Private-Network", "true")
+			next.ServeHTTP(w, r)
+		})
+	})
+
 	static.HandleFunc("/", indexHandler())
 	for _, dir := range []string{"assets", "meta"} {
 		static.PathPrefix("/" + dir).Handler(http.FileServer(http.FS(assets.Web)))
