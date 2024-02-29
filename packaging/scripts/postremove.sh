@@ -21,8 +21,8 @@ fi
 
 
 
-# if interactive: Call /usr/bin/evcc checkconfig and capture the output (newer version)
-# if output contains "Returncode: 0" then do nothing
+# if interactive: Call /usr/bin/evcc checkconfig and check the return code (newer version)
+# if return code is 0, do nothing
 # else: Ask user if he wants to keep the old version (working) or the new version (not working) 
 # Remember the choice with /tmp/.evccrollback and fail new-postrm failed-upgrade old-version new-version to initiate dpkg's rollback
 if [ "$1" = "upgrade" ]; then
@@ -35,15 +35,11 @@ if [ "$1" = "upgrade" ]; then
 	fi
 
 	if [ $INTERACTIVE -eq 1 ]; then
-    	set +e
-		checkConfigOutput=$(/usr/bin/evcc checkconfig 2>&1)
-		status=$?
-		set -e
-    if [ $status -ne 0 ]; then
+      if ! $(/usr/bin/evcc checkconfig 2>&1); then
 			echo "--------------------------------------------------------------------------------"
 			echo "ERROR: your evcc configuration is not compatible with the new version. Please consider reading the release notes: https://github.com/evcc-io/evcc/releases"
 			echo "checkconfig Output:" 
-			echo "$checkConfigOutput"
+			echo "$(/usr/bin/evcc checkconfig 2>&1)"
 			echo "--------------------------------------------------------------------------------"
 	
 			while true; do
