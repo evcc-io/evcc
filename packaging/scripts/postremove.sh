@@ -35,7 +35,7 @@ if [ "$1" = "upgrade" ]; then
 	fi
 
 	if [ $INTERACTIVE -eq 1 ]; then
-      if ! $(/usr/bin/evcc checkconfig 2>&1); then
+      if ! /usr/bin/evcc checkconfig > /dev/null 2>&1; then
 			echo "--------------------------------------------------------------------------------"
 			echo "ERROR: your evcc configuration is not compatible with the new version. Please consider reading the release notes: https://github.com/evcc-io/evcc/releases"
 			echo "checkconfig Output:" 
