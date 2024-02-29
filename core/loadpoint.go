@@ -736,20 +736,20 @@ func (lp *Loadpoint) checkCircuitAvailableLimit(requestedCurrent float64) (float
 
 		// also check power availability
 		// need to calculate from /to currents using phases
-		requestedPower := CurrentToPower(chargeCurrentNew, uint(lp.phases))
+		requestedPower := CurrentToPower(chargeCurrentNew, uint(lp.GetPhases()))
 		availablePower := lp.circuit.GetRemainingPower() + lp.chargePower // since current power is included in circuit consumtion, add
 		chargePowerNew := math.Min(math.Max(availablePower, 0), requestedPower)
-		lp.log.TRACE.Printf("request: %.1f, available: %.1f, new: %.1f, phases: %d", requestedPower, availablePower, chargePowerNew, lp.phases)
+		lp.log.TRACE.Printf("request: %.1f, available: %.1f, new: %.1f, phases: %d", requestedPower, availablePower, chargePowerNew, lp.GetPhases())
 
 		// apply a small reserve to prevent log messages
 		if chargePowerNew < requestedPower*tolerance {
 			// lower the current based on phases
-			chargeCurrentNew = powerToCurrent(chargePowerNew, lp.phases)
+			chargeCurrentNew = powerToCurrent(chargePowerNew, lp.GetPhases())
 			lp.log.DEBUG.Printf("get power limitation from %.1fW to %.1fW (%.1fA) from circuit", requestedPower, chargePowerNew, chargeCurrentNew)
 
 			// TODO: do we want to switch phases in case of lower load available due to load management?
 			// // exception: we are < minCurrent and phases > 1 and we can switch phases, then switch to 1 phase in order to not stop charging
-			// if chargeCurrentNew < lp.GetMinCurrent() && lp.phases > 1 && powerToCurrent(chargePowerNew, 1) > lp.GetMinCurrent() {
+			// if chargeCurrentNew < lp.GetMinCurrent() && lp.GetPhases > 1 && powerToCurrent(chargePowerNew, 1) > lp.GetMinCurrent() {
 			// 	if err := lp.scalePhasesIfAvailable(1); err == nil {
 			// 		lp.log.DEBUG.Printf("switched to 1 phase")
 			// 		chargeCurrentNew = powerToCurrent(chargePowerNew, 1)

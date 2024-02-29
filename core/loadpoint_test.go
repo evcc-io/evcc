@@ -788,13 +788,14 @@ func TestLoadmanagement(t *testing.T) {
 
 	for _, tc := range tc {
 		lp := NewLoadpoint(util.NewLogger("foo"), nil)
-		lp.phases = tc.lpPhases
+		lp.setPhases(tc.lpPhases)
+		assert.Equal(t, lp.GetPhases(), tc.lpPhases)
 		lp.status = api.StatusC // charging status
 		lp.chargeCurrent = tc.lpChargeCur
 		lp.chargePower = CurrentToPower(tc.lpChargeCur, uint(lp.phases))
 
 		// create circuit with meter
-		mtr := &testMeter{cur: tc.mtrCur, pwr: CurrentToPower(tc.mtrCur, uint(lp.phases))}
+		mtr := &testMeter{cur: tc.mtrCur, pwr: CurrentToPower(tc.mtrCur, uint(lp.GetPhases()))}
 		lp.circuit = NewCircuit(util.NewLogger("foo"), tc.circCurLimit, tc.circPwrLimit, nil, mtr, mtr)
 		assert.NotNilf(t, lp.circuit, "circuit not created", tc.caseName)
 
