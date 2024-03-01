@@ -13,7 +13,7 @@ import (
 	"github.com/enbility/cemd/ucevsecc"
 	"github.com/enbility/cemd/ucevsoc"
 	"github.com/enbility/cemd/ucopev"
-	"github.com/enbility/eebus-go/features"
+	eebusapi "github.com/enbility/eebus-go/api"
 	spineapi "github.com/enbility/spine-go/api"
 	"github.com/enbility/spine-go/model"
 	"github.com/evcc-io/evcc/api"
@@ -110,11 +110,11 @@ func NewEEBus(ski, ip string, hasMeter, hasChargedEnergy bool) (api.Charger, err
 	c.entity = eebus.Instance.RegisterEVSE(ski, ip, c.onConnect, c.onDisconnect)
 
 	service := eebus.Instance.Service()
-	c.ucEvseCC = ucevsecc.NewUCEVSECC(service, service.LocalService(), c)
-	c.ucEvCC = ucevcc.NewUCEVCC(service, service.LocalService(), c)
-	c.ucEvCem = ucevcem.NewUCEVCEM(service, service.LocalService(), c)
-	c.ucEvOP = ucopev.NewUCOPEV(service, service.LocalService(), c)
-	c.ucEvSoc = ucevsoc.NewUCEVSOC(service, service.LocalService(), c)
+	c.ucEvseCC = ucevsecc.NewUCEVSECC(service, c.ucCallback)
+	c.ucEvCC = ucevcc.NewUCEVCC(service, c.ucCallback)
+	c.ucEvCem = ucevcem.NewUCEVCEM(service, c.ucCallback)
+	c.ucEvOP = ucopev.NewUCOPEV(service, c.ucCallback)
+	c.ucEvSoc = ucevsoc.NewUCEVSOC(service, c.ucCallback)
 
 	c.minMaxG = provider.Cached(c.minMax, time.Second)
 
@@ -154,6 +154,10 @@ func (c *EEBus) onConnect(ski string) {
 	c.expectedEnableUnpluggedState = false
 	c.setDefaultValues()
 	c.setConnected(true)
+}
+
+func (c *EEBus) ucCallback(ski string, device spineapi.DeviceRemoteInterface, entity spineapi.EntityRemoteInterface, event cemdapi.EventType) {
+	// TODO implement
 }
 
 func (c *EEBus) onDisconnect(ski string) {
@@ -198,7 +202,7 @@ var _ api.CurrentLimiter = (*EEBus)(nil)
 func (c *EEBus) minMax() (minMax, error) {
 	minLimits, maxLimits, _, err := c.ucEvCC.CurrentLimits(c.entity)
 	if err != nil {
-		if err == features.ErrDataNotAvailable {
+		if err == eebusapi.ErrDataNotAvailable {
 			err = api.ErrNotAvailable
 		}
 		return minMax{}, err
@@ -237,7 +241,7 @@ func (c *EEBus) isCharging() bool { // d *communication.EVSEClientDataType
 	}
 
 	// The above doesn't (yet) work for built in meters, so check the EEBUS measurements also
-	currents, err := c.ucEvCem.CurrentsPerPhase(c.entity)
+	currents, err := c.ucEvCem.CurrentPerPhase(c.entity)
 	if err != nil {
 		return false
 	}
@@ -275,7 +279,7 @@ func (c *EEBus) Status() (api.ChargeStatus, error) {
 		c.currentLimit = -1
 	}
 
-	currentState, err := c.ucEvCC.CurrentChargeState(c.entity)
+	currentState, err := c.ucEvCC.ChargeState(c.entity)
 	if err != nil {
 		return api.StatusNone, err
 	}
@@ -428,7 +432,7 @@ func (c *EEBus) currentPower() (float64, error) {
 		return 0, nil
 	}
 
-	connectedPhases, err := c.ucEvCem.ConnectedPhases(c.entity)
+	connectedPhases, err := c.ucEvCem.PhasesConnected(c.entity)
 	if err != nil {
 		return 0, err
 	}
@@ -455,7 +459,7 @@ func (c *EEBus) chargedEnergy() (float64, error) {
 		return 0, nil
 	}
 
-	energy, err := c.ucEvCem.ChargedEnergy(c.entity)
+	energy, err := c.ucEvCem.EnergyCharged(c.entity)
 	if err != nil {
 		return 0, err
 	}
@@ -469,9 +473,9 @@ func (c *EEBus) currents() (float64, float64, float64, error) {
 		return 0, 0, 0, nil
 	}
 
-	res, err := c.ucEvCem.CurrentsPerPhase(c.entity)
+	res, err := c.ucEvCem.CurrentPerPhase(c.entity)
 	if err != nil {
-		if err == features.ErrDataNotAvailable {
+		if err == eebusapi.ErrDataNotAvailable {
 			err = api.ErrNotAvailable
 		}
 		return 0, 0, 0, err

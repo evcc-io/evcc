@@ -17,6 +17,7 @@ import (
 
 	cemdapi "github.com/enbility/cemd/api"
 	"github.com/enbility/cemd/cem"
+	"github.com/enbility/cemd/ucevcc"
 	"github.com/enbility/eebus-go/api"
 	eebusapi "github.com/enbility/eebus-go/api"
 	shipapi "github.com/enbility/ship-go/api"
@@ -123,7 +124,7 @@ func NewServer(other map[string]interface{}) (*EEBus, error) {
 		SKI:     ski,
 	}
 
-	c.cem = cem.NewCEM(configuration, c, c)
+	c.cem = cem.NewCEM(configuration, c, c.eventHandler, c)
 
 	if err := c.cem.Setup(); err != nil {
 		return nil, err
@@ -136,7 +137,7 @@ func (c *EEBus) Service() eebusapi.ServiceInterface {
 	return c.cem.Service
 }
 
-func (c *EEBus) SpineEvent(ski string, entity spineapi.EntityRemoteInterface, event cemdapi.UseCaseEventType) {
+func (c *EEBus) eventHandler(ski string, device spineapi.DeviceRemoteInterface, entity spineapi.EntityRemoteInterface, event cemdapi.EventType) {
 	c.log.TRACE.Printf("SpineEvent: CEM %s %s %v", ski, event, entity)
 
 	c.mux.Lock()
@@ -158,9 +159,9 @@ func (c *EEBus) SpineEvent(ski string, entity spineapi.EntityRemoteInterface, ev
 	}
 
 	switch event {
-	case cemdapi.UCEVCCEventConnected:
+	case ucevcc.EvConnected:
 		callbacks.onConnect(ski)
-	case cemdapi.UCEVCCEventDisconnected:
+	case ucevcc.EvDisconnected:
 		callbacks.onDisconnect(ski)
 	}
 }
