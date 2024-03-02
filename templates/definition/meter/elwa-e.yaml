@@ -1,8 +1,8 @@
-template: elwa-e
+template: ac-elwa-e
 products:
   - brand: my-PV
     description:
-      generic: AC ELWA
+      generic: AC ELWA-E
 params:
   - name: usage
     choice: ["aux"]
@@ -16,4 +16,4 @@ render: |
   soc:
     source: http
     uri: http://{{ .host }}/data.jsn
-    jq: .temp
+    jq: .temp1
