@@ -156,7 +156,7 @@ func (r Register) encodeToBytes(fun func(float64) uint64) (func(float64) ([]byte
 		case 2:
 			binary.BigEndian.PutUint32(b[:], uint32(v))
 		case 4:
-			binary.BigEndian.PutUint64(b[:], uint64(v))
+			binary.BigEndian.PutUint64(b[:], v)
 		default:
 			return nil, fmt.Errorf("invalid register length: %d", length)
 		}
@@ -188,7 +188,7 @@ func (r Register) EncodeFunc() (func(float64) ([]byte, error), error) {
 
 		case 4:
 			return r.encodeToBytes(func(v float64) uint64 {
-				return uint64(math.Float64bits(v))
+				return math.Float64bits(v)
 			})
 
 		default:
