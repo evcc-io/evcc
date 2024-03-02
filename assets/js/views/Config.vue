@@ -3,20 +3,30 @@
 		<div class="container px-4">
 			<TopHeader :title="$t('config.main.title')" />
 			<div class="wrapper">
-				<Restart ref="restart" v-bind="restartProps" />
-
-				<h2 class="my-4">Configuration File</h2>
-				<p>Edit your evcc.yaml file in the browser.</p>
-				<router-link to="/config/editor" class="btn btn-outline-secondary mb-3">
-					Open file editor
-				</router-link>
-				<p class="small text-muted">
-					<strong class="text-evcc">Note: </strong>
-					We are in the process of migrating the configuration of evcc away from config
-					file to a browser based process. You can enable "experimental features" in the
-					"General Settings" dialog to test this. But until this feature is ready, the
-					evcc.yaml stays the recommended way for configuration.
-				</p>
+				<div
+					v-if="dirty"
+					class="alert alert-secondary d-flex justify-content-between align-items-center my-4"
+					role="alert"
+				>
+					<div v-if="restarting"><strong>Restarting evcc.</strong> Please wait ...</div>
+					<div v-else>
+						<strong>Configuration changed.</strong> Please restart to see the effect.
+					</div>
+					<button
+						type="button"
+						class="btn btn-outline-dark btn-sm"
+						:disabled="restarting || offline"
+						@click="restart"
+					>
+						<span
+							v-if="restarting || offline"
+							class="spinner-border spinner-border-sm"
+							role="status"
+							aria-hidden="true"
+						></span>
+						<span v-else> Restart </span>
+					</button>
+				</div>
 
 				<h2 class="my-4 mt-5">General</h2>
 				<SiteSettings @site-changed="siteChanged" />
