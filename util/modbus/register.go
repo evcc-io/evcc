@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"math"
-	"slices"
 	"strings"
 
 	"github.com/grid-x/modbus"
@@ -56,6 +55,157 @@ func (r Register) Length() (uint16, error) {
 	}
 }
 
+func (r Register) FuncCode() (uint8, error) {
+	switch strings.ToLower(r.Type) {
+	case "holding":
+		return modbus.FuncCodeReadHoldingRegisters, nil
+	case "input":
+		return modbus.FuncCodeReadInputRegisters, nil
+	case "coil":
+		return modbus.FuncCodeReadCoils, nil
+	case "writesingle", "writeholding":
+		return modbus.FuncCodeWriteSingleRegister, nil
+	case "writemultiple", "writeholdings":
+		return modbus.FuncCodeWriteMultipleRegisters, nil
+	case "writecoil":
+		return modbus.FuncCodeWriteSingleCoil, nil
+	default:
+		return 0, fmt.Errorf("invalid register type: %s", r.Type)
+	}
+}
+
+func (r Register) DecodeFunc() (func([]byte) float64, error) {
+	switch strings.ToLower(r.encoding()) {
+	// 8 bit (coil)
+	case "bool8":
+		return decodeBool8, nil
+
+	// 16 bit
+	case "int16":
+		return asFloat64(encoding.Int16), nil
+	case "int16nan":
+		return decodeNaN16(asFloat64(encoding.Int16), 1<<15, 1<<15-1), nil
+	case "uint16":
+		return asFloat64(encoding.Uint16), nil
+	case "uint16nan":
+		return decodeNaN16(asFloat64(encoding.Uint16), 1<<16-1), nil
+	case "bool16":
+		mask, err := decodeMask(r.BitMask)
+		if err != nil {
+			return nil, err
+		}
+		return decodeBool16(mask), nil
+
+	// 32 bit
+	case "int32":
+		return asFloat64(encoding.Int32), nil
+	case "int32nan":
+		return decodeNaN32(asFloat64(encoding.Int32), 1<<31, 1<<31-1), nil
+	case "int32s":
+		return asFloat64(encoding.Int32LswFirst), nil
+	case "uint32":
+		return asFloat64(encoding.Uint32), nil
+	case "uint32s":
+		return asFloat64(encoding.Uint32LswFirst), nil
+	case "uint32nan":
+		return decodeNaN32(asFloat64(encoding.Uint32), 1<<32-1), nil
+	case "float32", "ieee754":
+		return asFloat64(encoding.Float32), nil
+	case "float32s", "ieee754s":
+		return asFloat64(encoding.Float32LswFirst), nil
+
+	// 64 bit
+	case "uint64":
+		return asFloat64(encoding.Uint64), nil
+	case "uint64nan":
+		return decodeNaN64(asFloat64(encoding.Uint64), 1<<64-1), nil
+	case "float64":
+		return encoding.Float64, nil
+
+	default:
+		return nil, fmt.Errorf("invalid register decoding: %s", r.encoding())
+	}
+}
+
+func (r Register) encodeToBytes(fun func(float64) uint64) (func(float64) ([]byte, error), error) {
+	length, err := r.Length()
+	if err != nil {
+		return nil, err
+	}
+
+	// swapped
+	if strings.HasSuffix(strings.ToLower(r.encoding()), "s") {
+		if length != 2 {
+			return nil, fmt.Errorf("invalid swapped encoding register length: %d", length)
+		}
+
+		inner := fun
+		fun = func(f float64) uint64 {
+			v := inner(f)
+			return v&0xFFFF<<16 | v&0xFFFF0000>>16
+		}
+	}
+
+	return func(f float64) ([]byte, error) {
+		v := fun(f)
+		b := make([]byte, 2*length)
+
+		switch length {
+		case 1:
+			binary.BigEndian.PutUint16(b[:], uint16(v))
+		case 2:
+			binary.BigEndian.PutUint32(b[:], uint32(v))
+		case 4:
+			binary.BigEndian.PutUint64(b[:], v)
+		default:
+			return nil, fmt.Errorf("invalid register length: %d", length)
+		}
+
+		return b, nil
+	}, nil
+}
+
+func (r Register) EncodeFunc() (func(float64) ([]byte, error), error) {
+	enc := strings.ToLower(r.encoding())
+
+	switch {
+	case strings.HasPrefix(enc, "int") || strings.HasPrefix(enc, "uint"):
+		return r.encodeToBytes(func(v float64) uint64 {
+			return uint64(v)
+		})
+
+	case strings.HasPrefix(enc, "float") || strings.HasPrefix(enc, "ieee754"):
+		length, err := r.Length()
+		if err != nil {
+			return nil, err
+		}
+
+		switch length {
+		case 2:
+			return r.encodeToBytes(func(v float64) uint64 {
+				return uint64(math.Float32bits(float32(v)))
+			})
+
+		case 4:
+			return r.encodeToBytes(func(v float64) uint64 {
+				return math.Float64bits(v)
+			})
+
+		default:
+			return nil, fmt.Errorf("invalid register length: %d", length)
+		}
+
+	default:
+		return nil, fmt.Errorf("invalid register encoding: %s", r.encoding())
+	}
+}
+
+type RegisterOperation struct {
+	FuncCode uint8
+	Addr     uint16
+	Length   uint16
+}
+
 // Operation creates a modbus operation from a register definition
 func (r Register) Operation() (RegisterOperation, error) {
 	len, err := r.Length()
@@ -63,98 +213,15 @@ func (r Register) Operation() (RegisterOperation, error) {
 		return RegisterOperation{}, err
 	}
 
+	fc, err := r.FuncCode()
+	if err != nil {
+		return RegisterOperation{}, err
+	}
+
 	op := RegisterOperation{
-		Addr:   r.Address,
-		Length: len,
-	}
-
-	switch strings.ToLower(r.Type) {
-	case "holding":
-		op.FuncCode = modbus.FuncCodeReadHoldingRegisters
-	case "input":
-		op.FuncCode = modbus.FuncCodeReadInputRegisters
-	case "coil":
-		op.FuncCode = modbus.FuncCodeReadCoils
-	case "writesingle", "writeholding":
-		op.FuncCode = modbus.FuncCodeWriteSingleRegister
-	case "writemultiple", "writeholdings":
-		op.FuncCode = modbus.FuncCodeWriteMultipleRegisters
-	case "writecoil":
-		op.FuncCode = modbus.FuncCodeWriteSingleCoil
-	default:
-		return RegisterOperation{}, fmt.Errorf("invalid register type: %s", r.Type)
-	}
-
-	if op.IsRead() {
-		switch strings.ToLower(r.encoding()) {
-		// 8 bit (coil)
-		case "bool8":
-			op.Decode = decodeBool8
-
-		// 16 bit
-		case "int16":
-			op.Decode = asFloat64(encoding.Int16)
-		case "int16nan":
-			op.Decode = decodeNaN16(asFloat64(encoding.Int16), 1<<15, 1<<15-1)
-		case "uint16":
-			op.Decode = asFloat64(encoding.Uint16)
-		case "uint16nan":
-			op.Decode = decodeNaN16(asFloat64(encoding.Uint16), 1<<16-1)
-		case "bool16":
-			mask, err := decodeMask(r.BitMask)
-			if err != nil {
-				return op, err
-			}
-			op.Decode = decodeBool16(mask)
-
-		// 32 bit
-		case "int32":
-			op.Decode = asFloat64(encoding.Int32)
-		case "int32nan":
-			op.Decode = decodeNaN32(asFloat64(encoding.Int32), 1<<31, 1<<31-1)
-		case "int32s":
-			op.Decode = asFloat64(encoding.Int32LswFirst)
-		case "uint32":
-			op.Decode = asFloat64(encoding.Uint32)
-		case "uint32s":
-			op.Decode = asFloat64(encoding.Uint32LswFirst)
-		case "uint32nan":
-			op.Decode = decodeNaN32(asFloat64(encoding.Uint32), 1<<32-1)
-		case "float32", "ieee754":
-			op.Decode = asFloat64(encoding.Float32)
-		case "float32s", "ieee754s":
-			op.Decode = asFloat64(encoding.Float32LswFirst)
-
-		// 64 bit
-		case "uint64":
-			op.Decode = asFloat64(encoding.Uint64)
-		case "uint64nan":
-			op.Decode = decodeNaN64(asFloat64(encoding.Uint64), 1<<64-1)
-		case "float64":
-			op.Decode = encoding.Float64
-
-		default:
-			return RegisterOperation{}, fmt.Errorf("invalid register decoding: %s", r.Decode)
-		}
-	} else {
-		switch strings.ToLower(r.encoding()) {
-		case "int32s", "uint32s":
-			op.Encode = func(v uint64) uint64 {
-				return v&0xFFFF<<16 | v&0xFFFF0000>>16
-			}
-
-		case "float32s", "ieee754s":
-			op.Encode = func(v uint64) uint64 {
-				b := make([]byte, 4)
-				encoding.PutFloat32LswFirst(b, float32(v))
-				return uint64(binary.BigEndian.Uint32(b))
-			}
-
-		default:
-			op.Encode = func(v uint64) uint64 {
-				return v
-			}
-		}
+		Addr:     r.Address,
+		Length:   len,
+		FuncCode: fc,
 	}
 
 	return op, nil
@@ -169,20 +236,4 @@ func asFloat64[T constraints.Signed | constraints.Unsigned | constraints.Float](
 		}
 		return res
 	}
-}
-
-type RegisterOperation struct {
-	FuncCode uint8
-	Addr     uint16
-	Length   uint16
-	Encode   func(uint64) uint64
-	Decode   func([]byte) float64
-}
-
-func (op RegisterOperation) IsRead() bool {
-	return !slices.Contains([]uint8{
-		modbus.FuncCodeWriteSingleRegister,
-		modbus.FuncCodeWriteMultipleRegisters,
-		modbus.FuncCodeWriteSingleCoil,
-	}, op.FuncCode)
 }
