@@ -1,10 +1,10 @@
 package modbus
 
 import (
+	"encoding/binary"
 	"errors"
 	"fmt"
 	"math"
-	"slices"
 	"strings"
 
 	"github.com/grid-x/modbus"
@@ -123,21 +123,87 @@ func (r Register) DecodeFunc() (func([]byte) float64, error) {
 		return encoding.Float64, nil
 
 	default:
-		return nil, fmt.Errorf("invalid register decoding: %s", r.Decode)
+		return nil, fmt.Errorf("invalid register decoding: %s", r.encoding())
 	}
 }
 
-func (r Register) isFloat32() bool {
-	return slices.Contains([]string{
-		"float32", "float32s",
-		"ieee754", "ieee754s",
-	}, strings.ToLower(r.encoding()))
+func (r Register) encodeToBytes(fun func(float64) uint64) (func(float64) ([]byte, error), error) {
+	length, err := r.Length()
+	if err != nil {
+		return nil, err
+	}
+
+	// swapped
+	if strings.HasSuffix(strings.ToLower(r.encoding()), "s") {
+		if length != 2 {
+			return nil, fmt.Errorf("invalid swapped encoding register length: %d", length)
+		}
+
+		inner := fun
+		fun = func(f float64) uint64 {
+			v := inner(f)
+			return v&0xFFFF<<16 | v&0xFFFF0000>>16
+		}
+	}
+
+	return func(f float64) ([]byte, error) {
+		v := fun(f)
+		b := make([]byte, 2*length)
+
+		switch length {
+		case 1:
+			binary.BigEndian.PutUint16(b[:], uint16(v))
+		case 2:
+			binary.BigEndian.PutUint32(b[:], uint32(v))
+		case 4:
+			binary.BigEndian.PutUint64(b[:], uint64(v))
+		default:
+			return nil, fmt.Errorf("invalid register length: %d", length)
+		}
+
+		return b, nil
+	}, nil
 }
 
-func (r Register) isFloat64() bool {
-	return slices.Contains([]string{
-		"float64", "float64s",
-	}, strings.ToLower(r.encoding()))
+func (r Register) EncodeFunc() (func(float64) ([]byte, error), error) {
+	enc := strings.ToLower(r.encoding())
+
+	switch {
+	case strings.HasPrefix(enc, "int") || strings.HasPrefix(enc, "uint"):
+		return r.encodeToBytes(func(v float64) uint64 {
+			return uint64(v)
+		})
+
+	case strings.HasPrefix(enc, "float") || strings.HasPrefix(enc, "ieee754"):
+		length, err := r.Length()
+		if err != nil {
+			return nil, err
+		}
+
+		switch length {
+		case 2:
+			return r.encodeToBytes(func(v float64) uint64 {
+				return uint64(math.Float32bits(float32(v)))
+			})
+
+		case 4:
+			return r.encodeToBytes(func(v float64) uint64 {
+				return uint64(math.Float64bits(v))
+			})
+
+		default:
+			return nil, fmt.Errorf("invalid register length: %d", length)
+		}
+
+	default:
+		return nil, fmt.Errorf("invalid register encoding: %s", r.encoding())
+	}
+}
+
+type RegisterOperation struct {
+	FuncCode uint8
+	Addr     uint16
+	Length   uint16
 }
 
 // Operation creates a modbus operation from a register definition
@@ -158,36 +224,6 @@ func (r Register) Operation() (RegisterOperation, error) {
 		FuncCode: fc,
 	}
 
-	if op.IsRead() {
-		op.Decode, err = r.DecodeFunc()
-		if err != nil {
-			return RegisterOperation{}, err
-		}
-	} else {
-		switch strings.ToLower(r.encoding()) {
-		case "int32s", "uint32s",
-			"float32s", "ieee754s":
-			op.Encode = func(v uint64) uint64 {
-				fmt.Printf("swapped:\t% x\n", v)
-				return v&0xFFFF<<16 | v&0xFFFF0000>>16
-			}
-
-		// case "float32s", "ieee754s":
-		// 	op.Encode = func(v uint64) uint64 {
-		// 		fmt.Printf("litte endian: % x\n", v)
-		// 		b := make([]byte, 4)
-		// 		encoding.PutFloat32LswFirst(b, float32(v))
-		// 		return uint64(binary.BigEndian.Uint32(b))
-		// 	}
-
-		default:
-			op.Encode = func(v uint64) uint64 {
-				fmt.Printf("big endian:\t% x\n", v)
-				return v
-			}
-		}
-	}
-
 	return op, nil
 }
 
@@ -200,20 +236,4 @@ func asFloat64[T constraints.Signed | constraints.Unsigned | constraints.Float](
 		}
 		return res
 	}
-}
-
-type RegisterOperation struct {
-	FuncCode uint8
-	Addr     uint16
-	Length   uint16
-	Encode   func(uint64) uint64
-	Decode   func([]byte) float64
-}
-
-func (op RegisterOperation) IsRead() bool {
-	return !slices.Contains([]uint8{
-		modbus.FuncCodeWriteSingleRegister,
-		modbus.FuncCodeWriteMultipleRegisters,
-		modbus.FuncCodeWriteSingleCoil,
-	}, op.FuncCode)
 }

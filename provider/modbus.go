@@ -2,7 +2,6 @@ package provider
 
 import (
 	"bytes"
-	"encoding/binary"
 	"fmt"
 	"math"
 	"strings"
@@ -78,7 +77,7 @@ func NewModbusFromConfig(other map[string]interface{}) (Provider, error) {
 	return mb, nil
 }
 
-func (m *Modbus) bytesGetter(op modbus.RegisterOperation) ([]byte, error) {
+func (m *Modbus) readBytes(op modbus.RegisterOperation) ([]byte, error) {
 	switch op.FuncCode {
 	case gridx.FuncCodeReadHoldingRegisters:
 		return m.conn.ReadHoldingRegisters(op.Addr, op.Length)
@@ -94,15 +93,6 @@ func (m *Modbus) bytesGetter(op modbus.RegisterOperation) ([]byte, error) {
 	}
 }
 
-func (m *Modbus) floatGetter(op modbus.RegisterOperation) (f float64, err error) {
-	bytes, err := m.bytesGetter(op)
-	if err != nil {
-		return 0, fmt.Errorf("read failed: %w", err)
-	}
-
-	return m.scale * op.Decode(bytes), nil
-}
-
 var _ FloatProvider = (*Modbus)(nil)
 
 // FloatGetter implements func() (float64, error)
@@ -112,8 +102,18 @@ func (m *Modbus) FloatGetter() (func() (f float64, err error), error) {
 		return nil, err
 	}
 
+	decode, err := m.reg.DecodeFunc()
+	if err != nil {
+		return nil, err
+	}
+
 	return func() (float64, error) {
-		return m.floatGetter(op)
+		bytes, err := m.readBytes(op)
+		if err != nil {
+			return 0, fmt.Errorf("read failed: %w", err)
+		}
+
+		return m.scale * decode(bytes), nil
 	}, nil
 }
 
@@ -139,7 +139,7 @@ func (m *Modbus) StringGetter() (func() (string, error), error) {
 	}
 
 	return func() (string, error) {
-		b, err := m.bytesGetter(op)
+		b, err := m.readBytes(op)
 		if err != nil {
 			return "", err
 		}
@@ -152,128 +152,64 @@ var _ BoolProvider = (*Modbus)(nil)
 
 // BoolGetter implements BoolProvider
 func (m *Modbus) BoolGetter() (func() (bool, error), error) {
+	g, err := m.FloatGetter()
+
+	return func() (bool, error) {
+		res, err := g()
+		return res != 0, err
+	}, err
+}
+
+func (m *Modbus) writeFunc() (func(float64) error, error) {
 	op, err := m.reg.Operation()
 	if err != nil {
 		return nil, err
 	}
 
-	return func() (bool, error) {
-		bytes, err := m.bytesGetter(op)
-		if err != nil {
-			return false, err
-		}
-
-		u, err := UintFromBytes(bytes)
-		return u > 0, err
-	}, nil
-}
-
-func (m *Modbus) writeMultipleRegisters(op modbus.RegisterOperation, val uint64) error {
-	val = op.Encode(val)
-	fmt.Printf("encode:\t% x\n", val)
-
-	var err error
-	switch op.Length {
-	case 1:
-		var b [2]byte
-		binary.BigEndian.PutUint16(b[:], uint16(val))
-		_, err = m.conn.WriteMultipleRegisters(op.Addr, 1, b[:])
-
-	case 2:
-		var b [4]byte
-		binary.BigEndian.PutUint32(b[:], uint32(val))
-		_, err = m.conn.WriteMultipleRegisters(op.Addr, 2, b[:])
-
-	case 4:
-		var b [8]byte
-		binary.BigEndian.PutUint64(b[:], val)
-		_, err = m.conn.WriteMultipleRegisters(op.Addr, 4, b[:])
-
-	default:
-		err = fmt.Errorf("invalid write length: %d", op.Length)
+	encode, err := m.reg.EncodeFunc()
+	if err != nil {
+		return nil, err
 	}
 
-	return err
+	return func(val float64) error {
+		val *= m.scale
+
+		switch {
+		case op.FuncCode == gridx.FuncCodeWriteSingleRegister:
+			_, err = m.conn.WriteSingleRegister(op.Addr, uint16(val))
+			return err
+
+		case op.FuncCode == gridx.FuncCodeWriteMultipleRegisters:
+			b, err := encode(val)
+			if err == nil {
+				_, err = m.conn.WriteMultipleRegisters(op.Addr, op.Length, b)
+			}
+			return err
+
+		default:
+			return fmt.Errorf("invalid func code: %d", op.FuncCode)
+		}
+	}, nil
 }
 
 var _ SetFloatProvider = (*Modbus)(nil)
 
 // FloatSetter implements SetFloatProvider
 func (m *Modbus) FloatSetter(_ string) (func(float64) error, error) {
-	op, err := m.reg.Operation()
-	if err != nil {
-		return nil, err
-	}
-
-	// need multiple registers for float
-	if op.FuncCode != gridx.FuncCodeWriteMultipleRegisters {
-		return nil, fmt.Errorf("invalid write function code: %d", op.FuncCode)
-	}
-
-	return func(val float64) error {
-		val = m.scale * val
-		fmt.Printf("val:\t%v\n", val)
-
-		var uval uint64
-		switch op.Length {
-		case 2:
-			fmt.Printf("Float32bits:\t% x\n", math.Float32bits(float32(val)))
-			uval = uint64(math.Float32bits(float32(val)))
-			fmt.Printf("uval:\t% x\n", uval)
-		case 4:
-			uval = math.Float64bits(val)
-		}
-
-		var err error
-		switch op.FuncCode {
-		case gridx.FuncCodeWriteMultipleRegisters:
-			err = m.writeMultipleRegisters(op, uval)
-
-		default:
-			err = fmt.Errorf("invalid write function code: %d", op.FuncCode)
-		}
-
-		return err
-	}, nil
+	return m.writeFunc()
 }
 
 var _ SetIntProvider = (*Modbus)(nil)
 
 // IntSetter implements SetIntProvider
 func (m *Modbus) IntSetter(_ string) (func(int64) error, error) {
-	op, err := m.reg.Operation()
+	fun, err := m.writeFunc()
 	if err != nil {
 		return nil, err
 	}
 
 	return func(val int64) error {
-		ival := int64(m.scale * float64(val))
-
-		var err error
-		switch op.FuncCode {
-		case gridx.FuncCodeWriteSingleCoil:
-			if ival != 0 {
-				// Modbus protocol requires 0xFF00 for ON
-				// and 0x0000 for OFF
-				ival = 0xFF00
-			}
-			_, err = m.conn.WriteSingleCoil(op.Addr, uint16(ival))
-
-		case gridx.FuncCodeWriteSingleRegister:
-			_, err = m.conn.WriteSingleRegister(op.Addr, uint16(ival))
-
-		case gridx.FuncCodeWriteMultipleRegisters:
-			uval := uint64(ival)
-			switch {
-			case op.Length == 2:
-			}
-			err = m.writeMultipleRegisters(op, uval)
-
-		default:
-			err = fmt.Errorf("invalid write function code: %d", op.FuncCode)
-		}
-
-		return err
+		return fun(float64(val))
 	}, nil
 }
 
