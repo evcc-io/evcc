@@ -400,9 +400,9 @@ func (site *Site) publishDelta(key string, val interface{}) {
 }
 
 // updatePvMeters updates pv meters. All measurements are optional.
-func (site *Site) updatePvMeters() error {
+func (site *Site) updatePvMeters() {
 	if len(site.pvMeters) == 0 {
-		return nil
+		return
 	}
 
 	var totalEnergy float64
@@ -421,8 +421,7 @@ func (site *Site) updatePvMeters() error {
 				site.log.WARN.Printf("pv %d power: %.0fW is negative - check configuration if sign is correct", i+1, power)
 			}
 		} else {
-			// power is required- return on error
-			return fmt.Errorf("pv %d power: %v", i+1, err)
+			site.log.ERROR.Printf("pv %d power: %v", i+1, err)
 		}
 
 		// pv energy (production)
@@ -446,8 +445,6 @@ func (site *Site) updatePvMeters() error {
 	site.publish(keys.PvPower, site.pvPower)
 	site.publish(keys.PvEnergy, totalEnergy)
 	site.publish(keys.Pv, mm)
-
-	return nil
 }
 
 // updateBatteryMeters updates battery meters. Power is retried, other measurements are optional.
@@ -595,9 +592,7 @@ func (site *Site) updateGridMeter() error {
 // updateMeter updates and publishes single meter
 func (site *Site) updateMeters() error {
 	// TODO parallelize once modbus supports that
-	if err := site.updatePvMeters(); err != nil {
-		return err
-	}
+	site.updatePvMeters()
 	if err := site.updateBatteryMeters(); err != nil {
 		return err
 	}
