@@ -16,12 +16,6 @@ import (
 	"github.com/evcc-io/evcc/util"
 )
 
-var deprecatedTopics = []string{
-	"activePhases", "range", "socCharge",
-	"vehicleSoC", "batterySoC", "bufferSoC", "minSoC", "prioritySoC", "targetSoC", "vehicleTargetSoC", "vehicles",
-	"savingsAmount", "savingsEffectivePrice", "savingsGridCharged", "savingsSelfConsumptionCharged", "savingsSelfConsumptionPercent", "savingsTotalCharged",
-}
-
 // MQTT is the MQTT server. It uses the MQTT client for publishing.
 type MQTT struct {
 	log       *util.Logger
@@ -39,7 +33,11 @@ func NewMQTT(root string, site site.API) (*MQTT, error) {
 	}
 	m.publisher = m.publishString
 
-	err := m.Listen(site)
+	err := m.Handler.Cleanup(m.root+"/#", true)
+	if err == nil {
+		err = m.Listen(site)
+	}
+
 	return m, err
 }
 
@@ -258,18 +256,6 @@ func (m *MQTT) Run(site site.API, in <-chan util.Param) {
 	// number of vehicles
 	topic = fmt.Sprintf("%s/vehicles", m.root)
 	m.publish(topic, true, len(site.Vehicles().Settings()))
-
-	// TODO remove deprecated topics
-	for _, dep := range deprecatedTopics {
-		m.publish(fmt.Sprintf("%s/site/%s", m.root, dep), true, nil)
-	}
-
-	for id := range site.Loadpoints() {
-		topic := fmt.Sprintf("%s/loadpoints/%d", m.root, id+1)
-		for _, dep := range deprecatedTopics {
-			m.publish(fmt.Sprintf("%s/%s", topic, dep), true, nil)
-		}
-	}
 
 	for i := 0; i < 10; i++ {
 		m.publish(fmt.Sprintf("%s/site/pv/%d", m.root, i), true, nil)
