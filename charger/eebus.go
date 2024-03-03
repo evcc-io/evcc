@@ -301,7 +301,7 @@ func (c *EEBus) Enabled() (bool, error) {
 		return true, nil
 	}
 
-	limits, err := c.uc.EvOP.LoadControlLimits(c.entity)
+	limits, err := c.uc.OpEV.LoadControlLimits(c.entity)
 	if err != nil {
 		// there are no overload protection limits available, e.g. because the data was not received yet
 		return true, nil
@@ -371,7 +371,7 @@ func (c *EEBus) writeCurrentLimitData(currents []float64) error {
 
 	// Set overload protection limits and self consumption limits to identical values,
 	// so if the EV supports self consumption it will be used automatically.
-	if _, err = c.uc.EvOP.WriteLoadControlLimits(c.entity, []cemdapi.LoadLimitsPhase{
+	if _, err = c.uc.OpEV.WriteLoadControlLimits(c.entity, []cemdapi.LoadLimitsPhase{
 		{Phase: model.ElectricalConnectionPhaseNameTypeA, IsActive: true, Value: currents[0]},
 		{Phase: model.ElectricalConnectionPhaseNameTypeB, IsActive: true, Value: currents[1]},
 		{Phase: model.ElectricalConnectionPhaseNameTypeC, IsActive: true, Value: currents[2]},

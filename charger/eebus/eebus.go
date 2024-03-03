@@ -41,7 +41,7 @@ type Usecases struct {
 	Evsecc ucevsecc.UCEVSECCInterface // EVSE Commissioning and Configuration
 	EvCC   ucevcc.UCEVCCInterface     // EV Commissioning and Configuration
 	EvCem  ucevcem.UCEVCEMInterface   // EV Charging Electricity Measurement
-	EvOP   ucopev.UCOPEVInterface     // EV Overload Protection
+	OpEV   ucopev.UCOPEVInterface     // EV Overload Protection
 	EvSoc  ucevsoc.UCEVSOCInterface   // EV State Of Charge
 }
 
@@ -142,7 +142,7 @@ func NewServer(other map[string]interface{}) (*EEBus, error) {
 		Evsecc: ucevsecc.NewUCEVSECC(service, c.eventHandler),
 		EvCC:   ucevcc.NewUCEVCC(service, c.eventHandler),
 		EvCem:  ucevcem.NewUCEVCEM(service, c.eventHandler),
-		EvOP:   ucopev.NewUCOPEV(service, c.eventHandler),
+		OpEV:   ucopev.NewUCOPEV(service, c.eventHandler),
 		EvSoc:  ucevsoc.NewUCEVSOC(service, c.eventHandler),
 	}
 
@@ -150,7 +150,7 @@ func NewServer(other map[string]interface{}) (*EEBus, error) {
 	c.cem.AddUseCase(c.uc.Evsecc)
 	c.cem.AddUseCase(c.uc.EvCC)
 	c.cem.AddUseCase(c.uc.EvCem)
-	c.cem.AddUseCase(c.uc.EvOP)
+	c.cem.AddUseCase(c.uc.OpEV)
 	c.cem.AddUseCase(c.uc.EvSoc)
 
 	if err := c.cem.Setup(); err != nil {
