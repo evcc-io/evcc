@@ -58,7 +58,7 @@ func (lp *Loadpoint) GetPlanRequiredDuration(goal, maxPower float64) time.Durati
 	return time.Duration(energy * 1e3 / maxPower * float64(time.Hour))
 }
 
-// GetPlanGoal returns the plan goal and if the goal is soc based
+// GetPlanGoal returns the plan goal in %, true or kWh, false
 func (lp *Loadpoint) GetPlanGoal() (float64, bool) {
 	lp.RLock()
 	defer lp.RUnlock()
@@ -103,10 +103,15 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 		return false
 	}
 
-	goal, _ := lp.GetPlanGoal()
+	goal, isSocBased := lp.GetPlanGoal()
 	maxPower := lp.EffectiveMaxPower()
 	requiredDuration := lp.GetPlanRequiredDuration(goal, maxPower)
 	if requiredDuration <= 0 {
+		// continue a 100% plan as long as the vehicle is charging
+		if lp.planActive && isSocBased && goal == 100 && lp.charging() {
+			return true
+		}
+
 		lp.deletePlan()
 		return false
 	}
