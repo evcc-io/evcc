@@ -106,7 +106,12 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 	goal, isSocBased := lp.GetPlanGoal()
 	maxPower := lp.EffectiveMaxPower()
 	requiredDuration := lp.GetPlanRequiredDuration(goal, maxPower)
-	if requiredDuration <= 0 && !(isSocBased && goal == 100) {
+	if requiredDuration <= 0 {
+		// continue a 100% plan as long as the vehicle is charging
+		if isSocBased && goal == 100 && lp.charging() {
+			return true
+		}
+
 		lp.deletePlan()
 		return false
 	}
