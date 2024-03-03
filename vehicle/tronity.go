@@ -38,7 +38,6 @@ import (
 type Tronity struct {
 	*embed
 	*request.Helper
-	log   *util.Logger
 	oc    *oauth2.Config
 	vid   string
 	bulkG func() (tronity.Bulk, error)
@@ -83,7 +82,6 @@ func NewTronityFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	v := &Tronity{
-		log:    log,
 		embed:  &cc.embed,
 		Helper: request.NewHelper(log),
 		oc:     oc,
@@ -155,7 +153,7 @@ func (v *Tronity) RefreshToken(_ *oauth2.Token) (*oauth2.Token, error) {
 	req, _ := request.New(http.MethodPost, v.oc.Endpoint.TokenURL, request.MarshalJSON(data), request.JSONEncoding)
 
 	var token oauth.Token
-	err := request.NewHelper(v.log).DoJSON(req, &token)
+	err := v.DoJSON(req, &token)
 
 	return (*oauth2.Token)(&token), err
 }
