@@ -490,7 +490,7 @@ func (c *EEBus) Identify() (string, error) {
 	}
 
 	// TODO fix const
-	if comStandard, _ := c.uc.EvCC.CommunicationStandard(c.entity); comStandard == "emobility.CommunicationStandardTypeIEC61851" {
+	if comStandard, _ := c.uc.EvCC.CommunicationStandard(c.entity); comStandard == string(model.DeviceConfigurationKeyValueStringTypeIEC61851) {
 		return "", nil
 	}
 
