@@ -84,9 +84,6 @@ render: |
       address: 37007 # SOC First group battery capacity
       type: holding
       decode: uint16
-  {{- if .capacity }}
-  capacity: {{ .capacity }} # kWh
-  {{- end }}
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -95,4 +92,5 @@ render: |
       type: holding
       decode: uint32
     scale: 0.1
+  capacity: {{ .capacity }} # kWh
   {{- end }}
