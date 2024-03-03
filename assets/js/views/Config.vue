@@ -29,9 +29,9 @@
 				</div>
 
 				<div class="alert alert-danger my-4" role="alert">
-					<strong>Highly experimental!</strong> Only play around with these settings if you
-					know what you're doing. Otherwise you might have to reset or manually repair your
-					database.
+					<strong>Highly experimental!</strong> Only play around with these settings if
+					you know what you're doing. Otherwise you might have to reset or manually repair
+					your database.
 				</div>
 
 				<h2 class="my-4 mt-5">General</h2>
