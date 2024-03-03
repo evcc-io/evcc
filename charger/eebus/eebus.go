@@ -11,15 +11,17 @@ import (
 	"fmt"
 	"net"
 	"strconv"
-	"strings"
 	"sync"
 	"time"
 
 	cemdapi "github.com/enbility/cemd/api"
 	"github.com/enbility/cemd/cem"
 	"github.com/enbility/cemd/ucevcc"
+	"github.com/enbility/cemd/ucevcem"
+	"github.com/enbility/cemd/ucevsecc"
+	"github.com/enbility/cemd/ucevsoc"
+	"github.com/enbility/cemd/ucopev"
 	"github.com/enbility/eebus-go/api"
-	eebusapi "github.com/enbility/eebus-go/api"
 	shipapi "github.com/enbility/ship-go/api"
 	"github.com/enbility/ship-go/cert"
 	"github.com/enbility/ship-go/logging"
@@ -35,10 +37,17 @@ const (
 	EEBUSDeviceCode string = "EVCC_HEMS_01" // used as common name in cert generation
 )
 
-type EEBusClientCBs struct {
-	spineapi.EntityRemoteInterface
-	onConnect    func(string)
-	onDisconnect func(string)
+type Usecases struct {
+	Evsecc ucevsecc.UCEVSECCInterface // EVSE Commissioning and Configuration
+	EvCC   ucevcc.UCEVCCInterface     // EV Commissioning and Configuration
+	EvCem  ucevcem.UCEVCEMInterface   // EV Charging Electricity Measurement
+	EvOP   ucopev.UCOPEVInterface     // EV Overload Protection
+	EvSoc  ucevsoc.UCEVSOCInterface   // EV State Of Charge
+}
+
+type Callbacks struct {
+	onConnect    func(spineapi.EntityRemoteInterface)
+	onDisconnect func(spineapi.EntityRemoteInterface)
 }
 
 type EEBus struct {
@@ -46,8 +55,9 @@ type EEBus struct {
 	log *util.Logger
 
 	SKI     string
-	clients map[string]*EEBusClientCBs
+	clients map[string]*Callbacks
 	cem     *cem.Cem
+	uc      *Usecases
 }
 
 var Instance *EEBus
@@ -120,11 +130,28 @@ func NewServer(other map[string]interface{}) (*EEBus, error) {
 
 	c := &EEBus{
 		log:     log,
-		clients: make(map[string]*EEBusClientCBs),
+		clients: make(map[string]*Callbacks),
 		SKI:     ski,
 	}
 
 	c.cem = cem.NewCEM(configuration, c, c.eventHandler, c)
+
+	// create use cases
+	service := c.cem.Service
+	c.uc = &Usecases{
+		Evsecc: ucevsecc.NewUCEVSECC(service, c.eventHandler),
+		EvCC:   ucevcc.NewUCEVCC(service, c.eventHandler),
+		EvCem:  ucevcem.NewUCEVCEM(service, c.eventHandler),
+		EvOP:   ucopev.NewUCOPEV(service, c.eventHandler),
+		EvSoc:  ucevsoc.NewUCEVSOC(service, c.eventHandler),
+	}
+
+	// register use cases
+	c.cem.AddUseCase(c.uc.Evsecc)
+	c.cem.AddUseCase(c.uc.EvCC)
+	c.cem.AddUseCase(c.uc.EvCem)
+	c.cem.AddUseCase(c.uc.EvOP)
+	c.cem.AddUseCase(c.uc.EvSoc)
 
 	if err := c.cem.Setup(); err != nil {
 		return nil, err
@@ -133,43 +160,28 @@ func NewServer(other map[string]interface{}) (*EEBus, error) {
 	return c, nil
 }
 
-func (c *EEBus) Service() eebusapi.ServiceInterface {
-	return c.cem.Service
-}
-
 func (c *EEBus) eventHandler(ski string, device spineapi.DeviceRemoteInterface, entity spineapi.EntityRemoteInterface, event cemdapi.EventType) {
-	c.log.TRACE.Printf("SpineEvent: CEM %s %s %v", ski, event, entity)
+	c.log.TRACE.Printf("eventHandler: CEM %s %s %v", ski, event, entity)
 
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
 	callbacks, ok := c.clients[ski]
 	if !ok {
-		c.log.TRACE.Printf("SpineEvent: CEM ski %s not registered", ski)
-	}
-
-	if callbacks.EntityRemoteInterface == nil {
-		callbacks.EntityRemoteInterface = entity
-		return
-	}
-
-	if callbacks.EntityRemoteInterface != entity {
-		c.log.ERROR.Printf("SpineEvent: CEM mismatched entity for ski %s (%v != %v)", ski, callbacks.EntityRemoteInterface, entity)
+		c.log.TRACE.Printf("eventHandler: CEM ski %s not registered", ski)
 		return
 	}
 
 	switch event {
 	case ucevcc.EvConnected:
-		callbacks.onConnect(ski)
+		callbacks.onConnect(entity)
 	case ucevcc.EvDisconnected:
-		callbacks.onDisconnect(ski)
+		callbacks.onDisconnect(entity)
 	}
 }
 
-func (c *EEBus) RegisterEVSE(ski, ip string, connectHandler func(string), disconnectHandler func(string)) *EEBusClientCBs {
-	ski = strings.ReplaceAll(ski, "-", "")
-	ski = strings.ReplaceAll(ski, " ", "")
-	ski = strings.ToLower(ski)
+func (c *EEBus) RegisterEVSE(ski, ip string, connectHandler, disconnectHandler func(spineapi.EntityRemoteInterface)) (*Usecases, error) {
+	ski = NormalizeSki(ski)
 	c.log.TRACE.Printf("registering ski: %s", ski)
 
 	if ski == c.SKI {
@@ -179,10 +191,13 @@ func (c *EEBus) RegisterEVSE(ski, ip string, connectHandler func(string), discon
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
-	cb := &EEBusClientCBs{onConnect: connectHandler, onDisconnect: disconnectHandler}
-	c.clients[ski] = cb
+	if _, ok := c.clients[ski]; ok {
+		return nil, errors.New("ski already registered")
+	}
 
-	return cb
+	c.clients[ski] = &Callbacks{onConnect: connectHandler, onDisconnect: disconnectHandler}
+
+	return c.uc, nil
 }
 
 func (c *EEBus) Run() {
