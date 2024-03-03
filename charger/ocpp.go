@@ -335,8 +335,8 @@ func (c *OCPP) Enable(enable bool) (err error) {
 
 	if enable {
 		if txn > 0 {
-			// we have the transaction id, treat as enabled
-			return nil
+			// we have the transaction id, switch from 0A to last current
+			return c.updatePeriod(c.current)
 		}
 
 		err = ocpp.Instance().RemoteStartTransaction(c.conn.ChargePoint().ID(), func(resp *core.RemoteStartTransactionConfirmation, err error) {
@@ -350,31 +350,25 @@ func (c *OCPP) Enable(enable bool) (err error) {
 			request.ConnectorId = &connector
 			request.ChargingProfile = c.getTxChargingProfile(c.current, 0)
 		})
-	} else {
-		// if no transaction is running, the vehicle may have stopped it (which is ok) or an unknown transaction is running
-		if txn == 0 {
-			// we cannot tell if a transaction is really running, so we check the status
-			status, err := c.Status()
-			if err != nil {
-				return err
-			}
-			if status == api.StatusC {
-				return errors.New("cannot disable: unknown transaction running")
-			}
 
-			return nil
-		}
-
-		err = ocpp.Instance().RemoteStopTransaction(c.conn.ChargePoint().ID(), func(resp *core.RemoteStopTransactionConfirmation, err error) {
-			if err == nil && resp != nil && resp.Status != types.RemoteStartStopStatusAccepted {
-				err = errors.New(string(resp.Status))
-			}
-
-			rc <- err
-		}, txn)
+		return c.wait(err, rc)
 	}
 
-	return c.wait(err, rc)
+	// if no transaction is running, the vehicle may have stopped it (which is ok) or an unknown transaction is running
+	if txn == 0 {
+		// we cannot tell if a transaction is really running, so we check the status
+		status, err := c.Status()
+		if err != nil {
+			return err
+		}
+		if status == api.StatusC {
+			return errors.New("cannot disable: unknown transaction running")
+		}
+
+		return nil
+	}
+
+	return c.updatePeriod(0)
 }
 
 func (c *OCPP) setChargingProfile(profile *types.ChargingProfile) error {
