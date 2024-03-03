@@ -213,9 +213,11 @@ func (c *EEBus) Shutdown() {
 var _ api.ServiceReaderInterface = (*EEBus)(nil)
 
 func (c *EEBus) RemoteSKIConnected(service api.ServiceInterface, ski string) {
+	c.log.DEBUG.Println("ski connected:", ski)
 }
 
 func (c *EEBus) RemoteSKIDisconnected(service api.ServiceInterface, ski string) {
+	c.log.DEBUG.Println("ski disconnected:", ski)
 }
 
 func (c *EEBus) VisibleRemoteServicesUpdated(service api.ServiceInterface, entries []shipapi.RemoteService) {
