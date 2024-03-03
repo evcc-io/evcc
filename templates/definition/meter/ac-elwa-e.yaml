@@ -1,4 +1,5 @@
 template: ac-elwa-e
+covers: ["elwa-e"]
 products:
   - brand: my-PV
     description:
