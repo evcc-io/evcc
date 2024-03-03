@@ -213,27 +213,9 @@ func (c *EEBus) Shutdown() {
 var _ api.ServiceReaderInterface = (*EEBus)(nil)
 
 func (c *EEBus) RemoteSKIConnected(service api.ServiceInterface, ski string) {
-	c.mux.Lock()
-	defer c.mux.Unlock()
-
-	client, exists := c.clients[ski]
-	if !exists {
-		return
-	}
-	_ = client
-	// client.onConnect(ski)
 }
 
 func (c *EEBus) RemoteSKIDisconnected(service api.ServiceInterface, ski string) {
-	c.mux.Lock()
-	defer c.mux.Unlock()
-
-	client, exists := c.clients[ski]
-	if !exists {
-		return
-	}
-	_ = client
-	// client.onDisconnect(ski)
 }
 
 func (c *EEBus) VisibleRemoteServicesUpdated(service api.ServiceInterface, entries []shipapi.RemoteService) {
