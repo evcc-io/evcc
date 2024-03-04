@@ -123,7 +123,7 @@ func (m *Client) ConnectionHandler(client paho.Client) {
 
 // Cleanup recursively removes a topic
 func (m *Client) Cleanup(topic string, retained bool) error {
-	if m.Client.Subscribe(topic, m.Qos, func(c paho.Client, msg paho.Message) {
+	if !m.Client.Subscribe(topic, m.Qos, func(c paho.Client, msg paho.Message) {
 		if len(msg.Payload()) == 0 {
 			return
 		}
@@ -136,7 +136,7 @@ func (m *Client) Cleanup(topic string, retained bool) error {
 
 	time.Sleep(time.Second)
 
-	if m.Client.Unsubscribe(topic).WaitTimeout(request.Timeout) {
+	if !m.Client.Unsubscribe(topic).WaitTimeout(request.Timeout) {
 		return api.ErrTimeout
 	}
 

@@ -37,6 +37,9 @@ func NewMQTT(root string, site site.API) (*MQTT, error) {
 	if err == nil {
 		err = m.Listen(site)
 	}
+	if err != nil {
+		err = fmt.Errorf("mqtt: %w", err)
+	}
 
 	return m, err
 }
