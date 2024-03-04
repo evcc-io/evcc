@@ -8,6 +8,7 @@ import (
 	"time"
 
 	cemdapi "github.com/enbility/cemd/api"
+	"github.com/enbility/cemd/ucevcc"
 	eebusapi "github.com/enbility/eebus-go/api"
 	spineapi "github.com/enbility/spine-go/api"
 	"github.com/enbility/spine-go/model"
@@ -41,7 +42,7 @@ type EEBus struct {
 	uc     *eebus.Usecases
 	entity spineapi.EntityRemoteInterface
 
-	communicationStandard string
+	communicationStandard model.DeviceConfigurationKeyValueStringType
 
 	expectedEnableUnpluggedState bool
 	current                      float64
@@ -94,7 +95,7 @@ func NewEEBus(ski, ip string, hasMeter, hasChargedEnergy bool) (api.Charger, err
 		ski:                   ski,
 		log:                   log,
 		connectedC:            make(chan bool, 1),
-		communicationStandard: cemdapi.UCEVCCCommunicationStandardUnknown,
+		communicationStandard: ucevcc.UCEVCCCommunicationStandardUnknown,
 		current:               6,
 	}
 
@@ -154,7 +155,7 @@ func (c *EEBus) onDisconnect(entity spineapi.EntityRemoteInterface) {
 }
 
 func (c *EEBus) setDefaultValues() {
-	c.communicationStandard = cemdapi.UCEVCCCommunicationStandardUnknown
+	c.communicationStandard = ucevcc.UCEVCCCommunicationStandardUnknown
 	c.lastIsChargingCheck = time.Now().Add(-time.Hour * 1)
 	c.lastIsChargingResult = false
 }
@@ -331,7 +332,7 @@ func (c *EEBus) Enable(enable bool) error {
 	// this would set allowed A value to be 0. And this would trigger ISO connections to switch to IEC!
 	if !enable {
 		comStandard, err := c.uc.EvCC.CommunicationStandard(c.entity)
-		if err != nil || comStandard == cemdapi.UCEVCCCommunicationStandardUnknown {
+		if err != nil || comStandard == ucevcc.UCEVCCCommunicationStandardUnknown {
 			return api.ErrMustRetry
 		}
 	}
@@ -358,7 +359,7 @@ func (c *EEBus) writeCurrentLimitData(currents []float64) error {
 	// wait for the car to go into sleep and plug it back in.
 	// So if there are currents smaller than 6A with unknown communication standard change them to 6A.
 	// Keep in mind that this will still confuse evcc as it thinks charging is stopped, but it hasn't yet.
-	if comStandard == cemdapi.UCEVCCCommunicationStandardUnknown {
+	if comStandard == ucevcc.UCEVCCCommunicationStandardUnknown {
 		minLimits, _, _, err := c.uc.EvCC.CurrentLimits(c.entity)
 		if err == nil {
 			for index, current := range currents {
@@ -489,8 +490,7 @@ func (c *EEBus) Identify() (string, error) {
 		return identification[0].Value, nil
 	}
 
-	// TODO fix const
-	if comStandard, _ := c.uc.EvCC.CommunicationStandard(c.entity); comStandard == string(model.DeviceConfigurationKeyValueStringTypeIEC61851) {
+	if comStandard, _ := c.uc.EvCC.CommunicationStandard(c.entity); comStandard == model.DeviceConfigurationKeyValueStringTypeIEC61851 {
 		return "", nil
 	}
 
