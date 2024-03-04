@@ -3,20 +3,23 @@ package cloud
 import (
 	_ "embed"
 
+	"github.com/evcc-io/evcc/util"
 	"google.golang.org/grpc"
 )
 
-var Host = "sponsor.evcc.io:8080"
+var (
+	host = util.Getenv("GRPC_URI", "sponsor.evcc.io:8080")
 
-var conn *grpc.ClientConn
+	conn *grpc.ClientConn
+)
 
-func Connection(hostPort string) (*grpc.ClientConn, error) {
+func Connection() (*grpc.ClientConn, error) {
 	if conn != nil {
 		return conn, nil
 	}
 
 	var err error
-	conn, err = grpc.Dial(hostPort)
+	conn, err = grpc.Dial(host)
 
 	return conn, err
 }
