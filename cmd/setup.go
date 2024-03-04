@@ -540,7 +540,12 @@ func configureHEMS(conf config.Typed, site *core.Site, httpd *server.HTTPd) erro
 
 // setup MDNS
 func configureMDNS(conf networkConfig) error {
-	zc, err := zeroconf.Register("evcc", "_http._tcp", "local.", conf.Port, []string{"path=/"}, nil)
+	host := conf.Host
+	if strings.HasSuffix(host, ".local") {
+		host = host[:len(host)-6]
+	}
+
+	zc, err := zeroconf.RegisterProxy("evcc", "_http._tcp", "local.", conf.Port, host, nil, []string{"path=/"}, nil)
 	if err != nil {
 		return fmt.Errorf("mDNS announcement: %w", err)
 	}
