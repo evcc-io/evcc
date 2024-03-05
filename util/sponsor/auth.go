@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api/proto/pb"
+	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/cloud"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -35,7 +36,8 @@ func ConfigureSponsorship(token string) error {
 		}
 	}
 
-	conn, err := cloud.Connection()
+	host := util.Getenv("GRPC_URI", cloud.Host)
+	conn, err := cloud.Connection(host)
 	if err != nil {
 		return err
 	}
