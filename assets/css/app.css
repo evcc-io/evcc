@@ -484,8 +484,22 @@ html.app .hide-in-app {
 }
 
 .safe-area-inset {
-	padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom)
-		env(safe-area-inset-left);
+	padding: max(1rem, env(safe-area-inset-top)) env(safe-area-inset-right)
+		calc(0.5 * env(safe-area-inset-bottom)) env(safe-area-inset-left);
+	position: relative;
+}
+
+.safe-area-inset::before {
+	content: "";
+	display: block;
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	height: env(safe-area-inset-top);
+	z-index: 1000;
+	opacity: 0.9;
+	background-color: var(--evcc-background);
 }
 
 .modal-dialog {
