@@ -1,0 +1,73 @@
+template: plexlog
+products:
+  - description:
+      generic: Plexlog
+requirements:
+  description:
+    de: |
+      Die Werte werden ca. alle 15 Sekunden aktualisiert, weshalb der Abfragezyklus ähnlich definiert sein sollte.
+    en: |
+      The values are updated approximately every 15 seconds, which is why the query cycle should be defined similarly.
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+    allinone: true
+  - name: host
+  - name: port
+    default: 503
+render: |
+  type: custom
+  {{- if eq .usage "grid" }}
+  power:
+    source: calc
+    add:
+    - source: modbus
+      uri: {{ .host }}:{{ .port }}
+      id: 1
+      register:
+        address: 0 # Erzeugung
+        type: input
+        decode: int32
+      scale: -1
+      timeout: 30s
+    - source: modbus
+      uri: {{ .host }}:{{ .port }}
+      id: 1
+      register:
+        address: 2 # Verbrauch
+        type: input
+        decode: int32
+      timeout: 30s
+  {{- end }}
+  {{- if eq .usage "pv" }}
+  power:
+    source: modbus
+    uri: {{ .host }}:{{ .port }}
+    id: 1
+    register:
+      address: 0 # Erzeugung
+      type: input
+      decode: int32
+    timeout: 30s
+  {{- end }}
+  {{- if eq .usage "battery" }}
+  power:
+    source: modbus
+    uri: {{ .host }}:{{ .port }}
+    id: 1
+    register:
+      address: 37 # Batterie Leistung
+      type: input
+      decode: int32
+    timeout: 30s
+  soc:
+   source: modbus
+    uri: {{ .host }}:{{ .port }}
+    id: 1
+    register:
+      address: 36 # Batterie SOC
+      type: input
+      decode: uint16
+    timeout: 30s
+  {{- end }}
+  
