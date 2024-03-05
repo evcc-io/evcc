@@ -61,7 +61,7 @@ render: |
       decode: int32
     timeout: 30s
   soc:
-   source: modbus
+    source: modbus
     uri: {{ .host }}:{{ .port }}
     id: 1
     register:
@@ -70,4 +70,3 @@ render: |
       decode: uint16
     timeout: 30s
   {{- end }}
-  
