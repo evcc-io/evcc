@@ -48,7 +48,8 @@ func NewCloudFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, api.ErrSponsorRequired
 	}
 
-	conn, err := cloud.Connection()
+	host := util.Getenv("GRPC_URI", cloud.Host)
+	conn, err := cloud.Connection(host)
 	if err != nil {
 		return nil, err
 	}
@@ -61,7 +62,9 @@ func NewCloudFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		client: pb.NewVehicleClient(conn),
 	}
 
-	err = v.prepareVehicle()
+	if err == nil {
+		err = v.prepareVehicle()
+	}
 
 	v.chargeStateG = provider.Cached(v.chargeState, cc.Cache)
 
