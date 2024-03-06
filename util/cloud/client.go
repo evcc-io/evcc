@@ -1,10 +1,12 @@
 package cloud
 
 import (
+	"crypto/tls"
 	_ "embed"
 
 	"github.com/evcc-io/evcc/util"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 )
 
 var (
@@ -19,7 +21,8 @@ func Connection() (*grpc.ClientConn, error) {
 	}
 
 	var err error
-	conn, err = grpc.Dial(host)
+	creds := credentials.NewTLS(new(tls.Config))
+	conn, err = grpc.Dial(host, grpc.WithTransportCredentials(creds))
 
 	return conn, err
 }
