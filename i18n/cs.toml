@@ -179,7 +179,7 @@ nativeSettings = "Změna serveru"
 needHelp = "Potřebujete poradit?"
 sessions = "Průběhy nabíjení"
 settings = "Nastavení"
-logout = 
+logout =
 
 [help]
 discussionsButton = "GitHub diskuse"
@@ -191,8 +191,8 @@ primaryActions = "Něco nefunguje, jak má? Tohle jsou dobrá místa, kde získa
 restartButton = "Restartovat"
 restartDescription = "Zkusili jste to restartovat?"
 secondaryActions = "Stále se vám nedaří vyřešit váš problém? Zde jsou některé další možnosti."
-logsButton = 
-logsDescription = 
+logsButton =
+logsDescription =
 
 [help.restart]
 cancel = "Zrušit"
@@ -379,7 +379,7 @@ waitForVehicle = "Připraveno. Čekám na vozidlo..."
 [notifications]
 dismissAll = "Zrušit vše"
 modalTitle = "Oznámení"
-logs = 
+logs =
 
 [offline]
 message = "Nepřipojeno na server."
@@ -428,11 +428,11 @@ meterstart = "Počáteční stav měřiče (kWh)"
 meterstop = "Konečný stav měřiče (kWh)"
 odometer = "Tachometr (km)"
 vehicle = "Vozidlo"
-price = 
-co2perkwh = 
-priceperkwh = 
-chargeduration = 
-solarpercentage = 
+price =
+co2perkwh =
+priceperkwh =
+chargeduration =
+solarpercentage =
 
 [sessions.filter]
 allLoadpoints = "všechny nabíjecí body"
@@ -499,68 +499,68 @@ title = "Chyba při spuštění"
 
 
 [settings.fullscreen]
-enter = 
-exit = 
-label = 
+enter =
+exit =
+label =
 
 [passwordModal]
-description = 
-empty = 
-labelNew = 
-labelRepeat = 
-newPassword = 
-error = 
-labelCurrent = 
-noMatch = 
-titleNew = 
-titleUpdate = 
-updatePassword = 
+description =
+empty =
+labelNew =
+labelRepeat =
+newPassword =
+error =
+labelCurrent =
+noMatch =
+titleNew =
+titleUpdate =
+updatePassword =
 
 [config.section]
-general = 
-system = 
+general =
+system =
 
 [config.system]
-restartRequiredDescription = 
-logs = 
-restart = 
-restartRequiredMessage = 
-restartingDescription = 
-restartingMessage = 
+restartRequiredDescription =
+logs =
+restart =
+restartRequiredMessage =
+restartingDescription =
+restartingMessage =
 
 [log]
-areaLabel = 
-areas = 
-title = 
-update = 
-noResults = 
-search = 
-showAll = 
-levelLabel = 
-download = 
+areaLabel =
+areas =
+title =
+update =
+noResults =
+search =
+showAll =
+levelLabel =
+download =
 
 [loginModal]
-invalid = 
-login = 
-error = 
-password = 
-reset = 
-cancel = 
-title = 
+invalid =
+login =
+error =
+password =
+reset =
+cancel =
+title =
 
 [config.title]
-title = 
-description = 
-label = 
+title =
+description =
+label =
 
 [config.general]
-cancel = 
-save = 
+cancel =
+save =
 
 [config.options.endianness]
-big = 
-little = 
+big =
+little =
 
 [config.options.schema]
-http = 
-https = 
+http =
+https =
