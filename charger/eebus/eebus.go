@@ -38,7 +38,7 @@ const (
 )
 
 type Usecases struct {
-	Evsecc ucevsecc.UCEVSECCInterface // EVSE Commissioning and Configuration
+	EvseCC ucevsecc.UCEVSECCInterface // EVSE Commissioning and Configuration
 	EvCC   ucevcc.UCEVCCInterface     // EV Commissioning and Configuration
 	EvCem  ucevcem.UCEVCEMInterface   // EV Charging Electricity Measurement
 	OpEV   ucopev.UCOPEVInterface     // EV Overload Protection
@@ -134,24 +134,25 @@ func NewServer(other map[string]interface{}) (*EEBus, error) {
 		SKI:     ski,
 	}
 
-	c.cem = cem.NewCEM(configuration, c, c.eventHandler, c)
+	c.cem = cem.NewCEM(configuration, c, c.deviceHandler, c)
 
 	// create use cases
 	service := c.cem.Service
 	c.uc = &Usecases{
-		Evsecc: ucevsecc.NewUCEVSECC(service, c.eventHandler),
-		EvCC:   ucevcc.NewUCEVCC(service, c.eventHandler),
-		EvCem:  ucevcem.NewUCEVCEM(service, c.eventHandler),
-		OpEV:   ucopev.NewUCOPEV(service, c.eventHandler),
-		EvSoc:  ucevsoc.NewUCEVSOC(service, c.eventHandler),
+		EvseCC: ucevsecc.NewUCEVSECC(service, c.evseHandler),
+		EvCC:   ucevcc.NewUCEVCC(service, c.evHandler),
+		EvCem:  ucevcem.NewUCEVCEM(service, c.evHandler),
+		OpEV:   ucopev.NewUCOPEV(service, c.evHandler),
+		EvSoc:  ucevsoc.NewUCEVSOC(service, c.evHandler),
 	}
 
 	// register use cases
-	c.cem.AddUseCase(c.uc.Evsecc)
-	c.cem.AddUseCase(c.uc.EvCC)
-	c.cem.AddUseCase(c.uc.EvCem)
-	c.cem.AddUseCase(c.uc.OpEV)
-	c.cem.AddUseCase(c.uc.EvSoc)
+	for _, uc := range []cemdapi.UseCaseInterface{
+		c.uc.EvseCC,
+		c.uc.EvCC, c.uc.EvCem, c.uc.OpEV, c.uc.EvSoc,
+	} {
+		c.cem.AddUseCase(uc)
+	}
 
 	if err := c.cem.Setup(); err != nil {
 		return nil, err
@@ -160,15 +161,55 @@ func NewServer(other map[string]interface{}) (*EEBus, error) {
 	return c, nil
 }
 
-func (c *EEBus) eventHandler(ski string, device spineapi.DeviceRemoteInterface, entity spineapi.EntityRemoteInterface, event cemdapi.EventType) {
-	c.log.TRACE.Printf("eventHandler: CEM %s %s %v", ski, event, entity)
+func (c *EEBus) deviceHandler(ski string, device spineapi.DeviceRemoteInterface, entity spineapi.EntityRemoteInterface, event cemdapi.EventType) {
+	c.log.TRACE.Printf("deviceHandler: CEM %s %s %v", ski, event, entity)
 
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
 	callbacks, ok := c.clients[ski]
 	if !ok {
-		c.log.TRACE.Printf("eventHandler: CEM ski %s not registered", ski)
+		c.log.TRACE.Printf("deviceHandler: CEM ski %s not registered", ski)
+		return
+	}
+
+	switch event {
+	case ucevcc.EvConnected:
+		callbacks.onConnect(entity)
+	case ucevcc.EvDisconnected:
+		callbacks.onDisconnect(entity)
+	}
+}
+
+func (c *EEBus) evseHandler(ski string, device spineapi.DeviceRemoteInterface, entity spineapi.EntityRemoteInterface, event cemdapi.EventType) {
+	c.log.TRACE.Printf("evseHandler: CEM %s %s %v", ski, event, entity)
+
+	c.mux.Lock()
+	defer c.mux.Unlock()
+
+	callbacks, ok := c.clients[ski]
+	if !ok {
+		c.log.TRACE.Printf("evseHandler: CEM ski %s not registered", ski)
+		return
+	}
+
+	switch event {
+	case ucevcc.EvConnected:
+		callbacks.onConnect(entity)
+	case ucevcc.EvDisconnected:
+		callbacks.onDisconnect(entity)
+	}
+}
+
+func (c *EEBus) evHandler(ski string, device spineapi.DeviceRemoteInterface, entity spineapi.EntityRemoteInterface, event cemdapi.EventType) {
+	c.log.TRACE.Printf("evHandler: CEM %s %s %v", ski, event, entity)
+
+	c.mux.Lock()
+	defer c.mux.Unlock()
+
+	callbacks, ok := c.clients[ski]
+	if !ok {
+		c.log.TRACE.Printf("evHandler: CEM ski %s not registered", ski)
 		return
 	}
 
