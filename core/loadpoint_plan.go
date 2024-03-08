@@ -58,7 +58,7 @@ func (lp *Loadpoint) GetPlanRequiredDuration(goal, maxPower float64) time.Durati
 	return time.Duration(energy * 1e3 / maxPower * float64(time.Hour))
 }
 
-// GetPlanGoal returns the plan goal and if the goal is soc based
+// GetPlanGoal returns the plan goal in %, true or kWh, false
 func (lp *Loadpoint) GetPlanGoal() (float64, bool) {
 	lp.RLock()
 	defer lp.RUnlock()
@@ -88,20 +88,30 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 	}()
 
 	var planStart time.Time
+	var planOverrun bool
 	defer func() {
 		lp.publish(keys.PlanProjectedStart, planStart)
+		lp.publish(keys.PlanOverrun, planOverrun)
 	}()
 
 	planTime := lp.EffectivePlanTime()
+	if planTime.IsZero() {
+		return false
+	}
 	if lp.clock.Until(planTime) < 0 && !lp.planActive {
 		lp.deletePlan()
 		return false
 	}
 
-	goal, _ := lp.GetPlanGoal()
+	goal, isSocBased := lp.GetPlanGoal()
 	maxPower := lp.EffectiveMaxPower()
 	requiredDuration := lp.GetPlanRequiredDuration(goal, maxPower)
 	if requiredDuration <= 0 {
+		// continue a 100% plan as long as the vehicle is charging
+		if lp.planActive && isSocBased && goal == 100 && lp.charging() {
+			return true
+		}
+
 		lp.deletePlan()
 		return false
 	}
@@ -115,10 +125,11 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 	var overrun string
 	if excessDuration := requiredDuration - lp.clock.Until(planTime); excessDuration > 0 {
 		overrun = fmt.Sprintf("overruns by %v, ", excessDuration.Round(time.Second))
+		planOverrun = true
 	}
 
 	planStart = planner.Start(plan)
-	lp.log.DEBUG.Printf("plan: charge %v starting at %v until %v (%spower: %.0fW, avg cost: %.3f)",
+	lp.log.DEBUG.Printf("plan: charge %v between %v until %v (%spower: %.0fW, avg cost: %.3f)",
 		planner.Duration(plan).Round(time.Second), planStart.Round(time.Second).Local(), planTime.Round(time.Second).Local(), overrun,
 		maxPower, planner.AverageCost(plan))
 
@@ -156,7 +167,7 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 			lp.log.DEBUG.Printf("plan: continuing for remaining %v", requiredDuration.Round(time.Second))
 			return true
 		case lp.clock.Until(planStart) < smallGapDuration:
-			lp.log.DEBUG.Printf("plan: will re-start shortly, continuing for remaining %v", lp.clock.Until(planStart).Round(time.Second))
+			lp.log.DEBUG.Printf("plan: avoid re-start within %v, continuing for remaining %v", smallGapDuration, lp.clock.Until(planStart).Round(time.Second))
 			return true
 		}
 	}

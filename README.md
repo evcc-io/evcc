@@ -1,13 +1,12 @@
 # evcc 🚘☀️
 
-[![Build Status](https://github.com/evcc-io/evcc/workflows/Build/badge.svg)](https://github.com/evcc-io/evcc/actions?query=workflow%3ABuild)
-[![Code Quality](https://goreportcard.com/badge/github.com/evcc-io/evcc)](https://goreportcard.com/report/github.com/evcc-io/evcc)
+[![Build](https://github.com/evcc-io/evcc/actions/workflows/nightly.yml/badge.svg)](https://github.com/evcc-io/evcc/actions/workflows/nightly.yml)
 [![Translation](https://hosted.weblate.org/widgets/evcc/-/evcc/svg-badge.svg)](https://hosted.weblate.org/engage/evcc/)
 [![Open in Visual Studio Code](https://img.shields.io/static/v1?logo=visualstudiocode&label=&message=Open%20in%20VS%20Code&labelColor=2c2c32&color=007acc&logoColor=007acc)](https://open.vscode.dev/evcc-io/evcc)
 [![OSS hosting by cloudsmith](https://img.shields.io/badge/OSS%20hosting%20by-cloudsmith-blue?logo=cloudsmith)](https://cloudsmith.io/~evcc/packages/)
 [![Latest Version](https://img.shields.io/github/release/evcc-io/evcc.svg)](https://github.com/evcc-io/evcc/releases)
 
-evcc is an extensible EV Charge Controller with PV integration implemented in [Go][1]. Featured in [PV magazine](https://www.pv-magazine.de/2021/01/15/selbst-ist-der-groeoenlandhof-wallbox-ladesteuerung-selbst-gebaut/).
+evcc is an extensible EV Charge Controller and home energy management system. Featured in [PV magazine](https://www.pv-magazine.de/2021/01/15/selbst-ist-der-groeoenlandhof-wallbox-ladesteuerung-selbst-gebaut/).
 
 ![Screenshot](docs/screenshot.png)
 
@@ -43,7 +42,7 @@ You'll find everything you need in our [documentation](https://docs.evcc.io/).
 
 ## Contribute
 
-To build evcc from source, [Go][1] 1.21 and [Node][2] 18 are required.
+To build evcc from source, [Go][1] 1.22 and [Node][2] 18 are required.
 
 Build and run go backend. The UI becomes available at http://127.0.0.1:7070/
 
@@ -135,5 +134,5 @@ While evcc is open source, we would also like to encourage vendors to provide op
 
 The personal sponsor token requires a [Github Sponsorship](https://github.com/sponsors/evcc-io) and can be requested at [sponsor.evcc.io](https://sponsor.evcc.io/).
 
-[1]: https://golang.org
+[1]: https://go.dev
 [2]: https://nodejs.org/

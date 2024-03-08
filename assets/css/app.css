@@ -46,6 +46,7 @@
 	--evcc-box: var(--bs-white);
 	--evcc-default-text: var(--bs-gray-dark);
 	--evcc-gray: var(--bs-gray-medium);
+	--evcc-gray-50: #93949e80;
 
 	--evcc-accent1: var(--evcc-dark-yellow);
 	--evcc-accent2: var(--evcc-darker-green);
@@ -195,19 +196,27 @@ a:hover {
 	opacity: 0.2;
 }
 
+.btn-outline-primary {
+	--bs-btn-active-bg: var(--bs-primary);
+	--bs-btn-active-border-color: var(--bs-primary);
+}
+
 .btn-outline-primary,
 .btn-outline-primary:focus {
 	color: var(--bs-primary);
 	background-color: transparent;
 	border-color: var(--bs-primary);
 }
+
 .btn-outline-primary:hover {
 	color: var(--evcc-accent3) !important;
 	background-color: transparent !important;
 	border-color: var(--evcc-accent3) !important;
 }
+
+.btn-group > .btn-check + .btn-outline-primary:hover,
 .btn-outline-primary:active {
-	color: var(--evcc-default-text) !important;
+	color: var(--bs-white) !important;
 	background-color: var(--evcc-accent3) !important;
 	border-color: var(--evcc-accent3) !important;
 }
@@ -321,7 +330,6 @@ a:hover {
 
 .modal-body {
 	padding: 1rem 0 0;
-	overflow-x: hidden;
 }
 
 .modal-footer {
@@ -378,6 +386,10 @@ small {
 	background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><path fill='none' stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/></svg>");
 }
 
+.dark .text-muted {
+	color: var(--bs-gray-medium) !important;
+}
+
 .dark .form-select:disabled {
 	opacity: 0.5;
 }
@@ -429,6 +441,9 @@ input::-webkit-datetime-edit {
 	background-color: var(--evcc-box);
 	color: var(--evcc-default-text);
 }
+.form-control:disabled {
+	color: var(--bs-gray-dark);
+}
 
 input[type="time"]::-webkit-calendar-picker-indicator {
 	display: none;
@@ -438,9 +453,58 @@ input[type="time"]::-webkit-calendar-picker-indicator {
 	--bs-table-bg: transparent;
 }
 
+.badge {
+	--bs-badge-font-size: 0.8rem;
+	--bs-badge-padding-x: 0.75em;
+	--bs-badge-padding-y: 0.75em;
+	font-weight: normal;
+}
+
 /* larger check switch */
 .form-switch .form-check-input {
 	height: 1.1rem;
 	width: calc(1.2rem + 0.75rem);
 	border-radius: 3rem;
+}
+
+.form-switch .form-check-input + .form-check-label {
+	margin-top: 0.1rem;
+	padding-left: 0.5rem;
+}
+
+@media (min-width: 576px) {
+	.w-sm-100 {
+		width: 100% !important;
+	}
+	.w-sm-50 {
+		width: 50% !important;
+	}
+}
+
+html.app .hide-in-app {
+	display: none !important;
+}
+
+.safe-area-inset {
+	padding: max(1rem, env(safe-area-inset-top)) env(safe-area-inset-right)
+		calc(0.5 * env(safe-area-inset-bottom)) env(safe-area-inset-left);
+	position: relative;
+}
+
+.safe-area-inset::before {
+	content: "";
+	display: block;
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	height: env(safe-area-inset-top);
+	z-index: 1000;
+	opacity: 0.9;
+	background-color: var(--evcc-background);
+}
+
+.modal-dialog {
+	margin-top: max(var(--bs-modal-margin), env(safe-area-inset-top));
+	margin-bottom: max(var(--bs-modal-margin), env(safe-area-inset-bottom));
 }

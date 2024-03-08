@@ -3,7 +3,7 @@
 		<div
 			id="batterySettingsModal"
 			ref="modal"
-			class="modal fade text-dark"
+			class="modal fade text-dark modal-l"
 			data-bs-backdrop="true"
 			tabindex="-1"
 			role="dialog"
@@ -26,7 +26,7 @@
 						<div
 							class="d-flex justify-content-between align-items-center align-items-sm-start pb-2 flex-column flex-sm-row-reverse"
 						>
-							<div class="battery mb-5 mb-sm-3 me-5 me-sm-0">
+							<div class="battery mb-5 mb-sm-3 me-5 me-sm-0 w-sm-50">
 								<div class="batteryLimits">
 									<label
 										class="bufferSoc p-2 end-0"
@@ -130,7 +130,7 @@
 									</div>
 								</div>
 							</div>
-							<div class="me-sm-4">
+							<div class="legend me-sm-4 align-self-start w-sm-50">
 								<p>
 									{{ $t("batterySettings.batteryLevel") }}:
 									<strong>{{ fmtSoc(batterySoc) }}</strong>
@@ -162,31 +162,19 @@
 												<select
 													id="bufferStartSelect"
 													class="custom-select"
+													:value="selectedBufferStartSoc"
 													@change="changeBufferStart"
 												>
 													<option
-														v-for="option in [
-															'never',
-															'full',
-															'medium',
-															'low',
-														]"
-														:key="option"
-														:value="option"
+														v-for="option in bufferStartOptions"
+														:key="option.value"
+														:value="option.value"
 													>
-														{{
-															$t(
-																`batterySettings.bufferStart.${option}`
-															)
-														}}
+														{{ option.name }}
 													</option>
 												</select>
 												<span class="text-decoration-underline">
-													{{
-														$t(
-															`batterySettings.bufferStart.${bufferStartOption}`
-														)
-													}}
+													{{ bufferStartOption.name }}
 												</span>
 											</label>
 										</small>
@@ -224,12 +212,8 @@
 								</p>
 							</div>
 						</div>
-						<FormRow
-							v-if="controllable"
-							id="batteryDischargeControl"
-							:label="`${$t('batterySettings.control')}`"
-						>
-							<div class="form-check form-switch col-form-label">
+						<div v-if="controllable">
+							<div class="form-check form-switch">
 								<input
 									id="batteryDischargeControl"
 									:checked="batteryDischargeControl"
@@ -244,7 +228,7 @@
 									</label>
 								</div>
 							</div>
-						</FormRow>
+						</div>
 					</div>
 				</div>
 			</div>
@@ -257,14 +241,12 @@ import "@h2d2/shopicons/es/regular/lightning";
 import "@h2d2/shopicons/es/regular/car3";
 import "@h2d2/shopicons/es/regular/home";
 import formatter from "../mixins/formatter";
-import FormRow from "./FormRow.vue";
-
+import collector from "../mixins/collector";
 import api from "../api";
 
 export default {
 	name: "BatterySettingsModal",
-	components: { FormRow },
-	mixins: [formatter],
+	mixins: [formatter, collector],
 	props: {
 		bufferSoc: Number,
 		prioritySoc: Number,
@@ -311,6 +293,25 @@ export default {
 			if (!this.selectedBufferStartSoc) return 0;
 			return 100 - this.selectedBufferStartSoc;
 		},
+		bufferStartOptions() {
+			const options = [];
+			for (let i = 100; i >= this.bufferSoc; i -= 5) {
+				options.push({
+					value: i,
+					name: this.$t(`batterySettings.bufferStart.${i === 100 ? "full" : "above"}`, {
+						soc: this.fmtSoc(i),
+					}),
+				});
+			}
+			options.push({
+				value: 0,
+				name: this.$t("batterySettings.bufferStart.never"),
+			});
+			return options;
+		},
+		bufferStartOption() {
+			return this.bufferStartOptions.find((option) => this.bufferStartSoc >= option.value);
+		},
 		topHeight() {
 			return 100 - (this.bufferSoc || 100);
 		},
@@ -319,13 +320,6 @@ export default {
 		},
 		bottomHeight() {
 			return this.prioritySoc;
-		},
-		bufferStartOption() {
-			if (!this.selectedBufferStartSoc) return "never";
-			if (this.selectedBufferStartSoc >= this.bufferStartOptionToSoc("full")) return "full";
-			if (this.selectedBufferStartSoc >= this.bufferStartOptionToSoc("medium"))
-				return "medium";
-			return "low";
 		},
 		batteryDetails() {
 			if (!Array.isArray(this.battery)) {
@@ -382,52 +376,35 @@ export default {
 			this.isModalVisible = false;
 		},
 		changeBufferStart($event) {
-			this.setBufferStart($event.target.value);
+			this.setBufferStartSoc(parseInt($event.target.value, 10));
 		},
 		changePrioritySoc($event) {
-			const value = parseInt($event.target.value, 10);
-			if (value > this.bufferSoc) {
-				const startOption = this.bufferStartOption;
-				this.saveBufferSoc(value);
-				this.setBufferStart(startOption);
+			const soc = parseInt($event.target.value, 10);
+			if (soc > (this.bufferSoc || 100)) {
+				this.saveBufferSoc(soc);
+				if (soc > this.bufferStartSoc && this.bufferStartSoc > 0) {
+					this.setBufferStartSoc(soc);
+				}
 			} else {
-				this.savePrioritySoc(value);
-			}
-		},
-		bufferStartOptionToSoc(option) {
-			const bufferSoc = this.selectedBufferSoc;
-			const bufferHeight = 100 - bufferSoc;
-			switch (option) {
-				case "low":
-					return bufferSoc + bufferHeight * 0.2;
-				case "medium":
-					return bufferSoc + bufferHeight * 0.5;
-				case "full":
-					return bufferSoc + bufferHeight * 0.8;
-				case "never":
-					return 0;
+				this.savePrioritySoc(soc);
 			}
 		},
 		toggleBufferStart() {
-			const next = {
-				never: "low",
-				low: "medium",
-				medium: "full",
-				full: "never",
-			};
-			const nextOption = next[this.bufferStartOption];
-			if (nextOption) {
-				this.setBufferStart(nextOption);
+			const options = this.bufferStartOptions.map((option) => option.value);
+			const index = options.findIndex((value) => this.bufferStartSoc >= value);
+			const nextIndex = index === 0 ? options.length - 1 : index - 1;
+			this.setBufferStartSoc(options[nextIndex]);
+		},
+		async setBufferStartSoc(soc) {
+			this.selectedBufferStartSoc = soc;
+			await this.saveBufferStartSoc(this.selectedBufferStartSoc);
+		},
+		async changeBufferSoc($event) {
+			const soc = parseInt($event.target.value, 10);
+			if (soc > this.bufferStartSoc && this.bufferStartSoc > 0) {
+				await this.setBufferStartSoc(soc);
 			}
-		},
-		setBufferStart(option) {
-			this.selectedBufferStartSoc = this.bufferStartOptionToSoc(option);
-			this.saveBufferStartSoc(this.selectedBufferStartSoc);
-		},
-		changeBufferSoc($event) {
-			const startOption = this.bufferStartOption;
-			this.saveBufferSoc(parseInt($event.target.value, 10));
-			this.setBufferStart(startOption);
+			await this.saveBufferSoc(soc);
 		},
 		async savePrioritySoc(soc) {
 			this.selectedPrioritySoc = soc;
@@ -477,6 +454,11 @@ export default {
 	height: 300px;
 	display: flex;
 }
+
+.legend {
+	min-width: 260px;
+}
+
 .batteryLimits {
 	width: 50px;
 	position: relative;
@@ -538,11 +520,13 @@ export default {
 	border-radius: 0.5rem 0 0 0.5rem;
 }
 .progress {
+	flex: 1;
 	height: 100%;
-	width: 100px;
+	min-width: 100px;
+	max-width: 150px;
 	flex-direction: column;
 	position: relative;
-	border-radius: 10px;
+	border-radius: 1rem;
 	background-color: var(--evcc-box) !important;
 }
 .progress-bar {
@@ -558,6 +542,7 @@ export default {
 	top: 0;
 	bottom: 0;
 	right: 0;
+	cursor: pointer;
 	position: absolute;
 	opacity: 0;
 	-webkit-appearance: menulist-button;

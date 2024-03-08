@@ -1,0 +1,15 @@
+template: schneider-evlink-v3
+covers: ["schneider-evlink"]
+products:
+  - brand: Schneider
+    description:
+      generic: EVlink Pro
+requirements:
+  evcc: ["sponsorship"]
+params:
+  - name: modbus
+    choice: ["tcpip"]
+    id: 255
+render: |
+  type: schneider-v3
+  {{- include "modbus" . }}

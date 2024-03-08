@@ -16,22 +16,65 @@ legendTopSubline = "ohne Unterbrechungen"
 modalTitle = "Batterieeinstellungen"
 
 [batterySettings.bufferStart]
-full = "wenn fast voll"
-low = "wenn etwas voll"
-medium = "wenn halbvoll"
+above = "wenn über {soc}"
+full = "wenn auf {soc}"
 never = "nur mit genug PV-Überschuss"
 
 [config]
+
+[config.battery]
+titleAdd = "Batterie Zähler hinzufügen"
+titleEdit = "Batterie Zähler bearbeiten"
+
+[config.deviceValue]
+capacity = "Kapazität"
+chargeStatus = "Status"
+chargedEnergy = "Geladen"
+current = "Aktuell"
+enabled = "Aktiviert"
+energy = "Energie"
+odometer = "Kilometerstand"
+phaseCurrents = "Strom L1..L3"
+phasePowers = "Leistung L1..L3"
+phaseVoltages = "Spannung L1..L3"
+power = "Leistung"
+range = "Reichweite"
+soc = "SoC"
+socLimit = "SoC Begrenzung"
 
 [config.form]
 example = "Beispiel"
 optional = "optional"
 
+[config.grid]
+titleAdd = "Stromzähler (Netz) hinzufügen"
+titleEdit = "Stromzähler (Netz) bearbeiten"
+
 [config.main]
+addLoadpoint = "Ladepunkt hinzufügen"
+addPvBattery = "PV oder Speicher hinzufügen"
 addVehicle = "Fahrzeug hinzufügen"
 edit = "bearbeiten"
 title = "Konfiguration"
+unconfigured = "nicht konfiguriert"
 vehicles = "Meine Fahrzeuge"
+yaml = "Konfiguration in evcc.yaml gefunden. Nicht per UI editierbar"
+
+[config.meter]
+cancel = "Abbrechen"
+delete = "Löschen"
+save = "Speichern"
+template = "Hersteller"
+titleChoice = "Was möchtest du hinzufügen?"
+validateSave = "Überprüfen & speichern"
+
+[config.pv]
+titleAdd = "Zähler (PV) hinzufügen"
+titleEdit = "Zähler (PV) bearbeiten"
+
+[config.site]
+cancel = "Abbrechen"
+save = "Speichern"
 
 [config.validation]
 failed = "fehlgeschlagen"
@@ -121,23 +164,13 @@ modalUpdateNow = "Jetzt installieren"
 modalUpdateStarted = "Starte die neue Version von evcc ..."
 modalUpdateStatusStart = "Installation gestartet:"
 
-[gridSettings]
-activeHours = "{charging} von {total}"
-activeHoursLabel = "Aktive Stunden"
-co2Label = "CO₂-Emission"
-co2Limit = "CO₂-Grenze"
-costLimitDescription = "Aktiviert vorübergehendes Schnellladen im PV-Modus."
-modalTitle = "Smartes Netzladen"
-none = "keine"
-priceLabel = "Energiepreis"
-priceLimit = "Preisgrenze"
-
 [header]
 about = "Über"
 blog = "Blog"
 docs = "Dokumentation"
 github = "GitHub"
 login = "Fahrzeug-Logins"
+nativeSettings = "Server ändern"
 needHelp = "Hilfe benötigt?"
 sessions = "Ladevorgänge"
 
@@ -191,6 +224,12 @@ pvExport = "Einspeisung"
 pvProduction = "Erzeugung"
 selfConsumption = "Eigenverbrauch"
 
+[main.heatingStatus]
+charging = "Heize …"
+cheapEnergyCharging = "Heize mit günstiger Energie: {price} (Grenze {limit})"
+cleanEnergyCharging = "Heize mit sauberer Energie: {co2} (Grenze {limit})"
+waitForVehicle = "Bereit. Warte auf Heizung …"
+
 [main.loadpoint]
 avgPrice = "⌀ Preis"
 charged = "Geladen"
@@ -208,7 +247,6 @@ solar = "Sonne"
 currents = "Ladestrom"
 default = "default"
 disclaimerHint = "Hinweis:"
-disclaimerText = "Änderungen gehen nach einem Neustart des Servers verloren."
 onlyForSocBasedCharging = "Diese Optionen sind nur für Fahrzeuge mit bekanntem Ladestand verfügbar."
 title = "Einstellungen {0}"
 vehicle = "Fahrzeug"
@@ -229,6 +267,7 @@ label = "Min. Ladung %"
 
 [main.loadpointSettings.phasesConfigured]
 label = "Phasen"
+no1p3pSupport = "Wie ist deine Wallbox angeschlossen?"
 phases_0 = "automatischer Wechsel"
 phases_1 = "1-phasig"
 phases_1_hint = "({min} bis {max})"
@@ -293,7 +332,7 @@ fallbackName = "Fahrzeug"
 moreActions = "Weitere Aktionen"
 none = "Kein Fahrzeug"
 targetSoc = "Ladelimit"
-temp = "Temp."
+temp = "Temperatur"
 tempLimit = "Zieltemp."
 unknown = "Gastfahrzeug"
 vehicleSoc = "Ladestand"
@@ -312,7 +351,6 @@ cleanEnergyCharging = "Lade saubere Energie: {co2} (Grenze {limit})"
 climating = "Vorklimatisierung erkannt."
 connected = "Verbunden."
 disconnected = "Nicht verbunden."
-guard = "Schaltschutz aktiv für {remaining}."
 minCharge = "Mindestladung bis {soc}%."
 pvDisable = "Zu wenig Überschuss. Pausiere in {remaining} …"
 pvEnable = "Überschuss verfügbar. Starte in {remaining} …"
@@ -411,6 +449,22 @@ light = "Hell"
 km = "Kilometer"
 label = "Einheit"
 mi = "Meilen"
+
+[smartCost]
+activeHours = "{charging} von {total}"
+activeHoursLabel = "Aktive Stunden"
+applyToAll = "Überall anwenden?"
+batteryDescription = "Lädt die Hausbatterie aus dem Netz."
+cheapTitle = "Günstiges Netzladen"
+cleanTitle = "Sauberes Netzladen"
+co2Label = "CO₂-Emission"
+co2Limit = "CO₂-Grenze"
+loadpointDescription = "Aktiviert vorübergehendes Schnellladen im PV-Modus."
+modalTitle = "Smartes Netzladen"
+none = "keine"
+priceLabel = "Energiepreis"
+priceLimit = "Preisgrenze"
+saved = "Gepeichert."
 
 [startupError]
 configFile = "Verwendete Konfigurationsdatei:"

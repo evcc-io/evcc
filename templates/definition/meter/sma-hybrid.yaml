@@ -83,7 +83,7 @@ render: |
       decode: uint32nan
   batterymode:
     source: watchdog
-    timeout: {{ .watchdog }} # re-write at timeout/2
+    timeout: {{ .watchdog }}
     reset: 1 # reset watchdog on normal
     set:
       source: switch

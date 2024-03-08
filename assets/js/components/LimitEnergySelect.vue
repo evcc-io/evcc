@@ -6,7 +6,7 @@
 		data-testid="limit-energy"
 	>
 		<h3 class="value m-0">
-			<label class="position-relative">
+			<label class="position-relative" role="button">
 				<select :value="limitEnergy" class="custom-select" @change="change">
 					<option
 						v-for="{ energy, text, disabled } in options"
@@ -47,21 +47,21 @@ export default {
 		limitEnergy: Number,
 		socPerKwh: Number,
 		chargedEnergy: Number,
-		vehicleCapacity: Number,
+		capacity: Number,
 	},
 	emits: ["limit-energy-updated"],
 	computed: {
 		options: function () {
 			return energyOptions(
 				this.chargedEnergy,
-				this.vehicleCapacity || 100,
+				this.capacity || 100,
 				this.socPerKwh,
 				this.fmtKWh,
 				this.$t("main.targetEnergy.noLimit")
 			);
 		},
 		step() {
-			return optionStep(this.vehicleCapacity || 100);
+			return optionStep(this.capacity || 100);
 		},
 		estimated: function () {
 			return estimatedSoc(this.limitEnergy, this.socPerKwh);
@@ -94,6 +94,7 @@ export default {
 	top: 0;
 	bottom: 0;
 	right: 0;
+	cursor: pointer;
 	position: absolute;
 	opacity: 0;
 }

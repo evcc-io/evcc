@@ -77,17 +77,6 @@ modalUpdateNow = "Instal·lar ara"
 modalUpdateStarted = "Després de l'actualització, evcc es reiniciarà."
 modalUpdateStatusStart = "Instal·lació iniciada:"
 
-[gridSettings]
-activeHours = "{charging} de {total}"
-activeHoursLabel = "Hores funcionant"
-co2Label = "Emissions de CO₂"
-co2Limit = "Límit de CO₂"
-costLimitDescription = "Habilita temporalment la càrrega ràpida en mode solar"
-modalTitle = "Xarxa intel·ligent de càrrega"
-none = "cap"
-priceLabel = "Preu de l'energia"
-priceLimit = "Límit de preu"
-
 [header]
 about = "Sobre"
 blog = "Blog"
@@ -154,8 +143,6 @@ solar = "Solar"
 [main.loadpointSettings]
 currents = "Corrent de càrrega"
 default = "defecte"
-disclaimerHint = "Nota:"
-disclaimerText = "Els canvis encara no són persistents i es restableixen al iniciar el servei."
 title = "Configuracions {0}"
 vehicle = "Vehicle"
 
@@ -243,7 +230,6 @@ cleanEnergyCharging = "Energia neta disponible. Carregant..."
 climating = "Precondicionament detectat."
 connected = "Connectat."
 disconnected = "Desconnectat."
-guard = "Protecció de commutació activa durant {remaining}"
 minCharge = "Càrrega mínima fins a {soc}%."
 pvDisable = "Excedent insuficient. Pausa en {remaining}..."
 pvEnable = "Excedent disponible. Començar en {remaining}..."
@@ -331,6 +317,17 @@ light = "clar"
 km = "km"
 label = "Unitats"
 mi = "milles"
+
+[smartCost]
+activeHours = "{charging} de {total}"
+activeHoursLabel = "Hores funcionant"
+co2Label = "Emissions de CO₂"
+co2Limit = "Límit de CO₂"
+loadpointDescription = "Habilita temporalment la càrrega ràpida en mode solar"
+modalTitle = "Xarxa intel·ligent de càrrega"
+none = "cap"
+priceLabel = "Preu de l'energia"
+priceLimit = "Límit de preu"
 
 [startupError]
 configFile = "Arxiu de configuració utilitzat:"

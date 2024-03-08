@@ -1,12 +1,13 @@
 import "bootstrap/dist/css/bootstrap.min.css";
 import "../css/app.css";
 import { createApp, h } from "vue";
-import { VueHeadMixin, createHead } from "@unhead/vue"; // not deprecated. see https://github.com/unjs/unhead/issues/291
+import { VueHeadMixin, createHead } from "@unhead/vue";
 import App from "./views/App.vue";
 import setupRouter from "./router";
 import setupI18n from "./i18n";
 import featureflags from "./featureflags";
 import { watchThemeChanges } from "./theme";
+import { appDetection, sendToApp } from "./utils/native";
 
 // lazy load smoothscroll polyfill. mainly for safari < 15.4
 if (!window.CSS.supports("scroll-behavior", "smooth")) {
@@ -49,9 +50,11 @@ const app = createApp({
     },
     setOnline: function () {
       this.offline = false;
+      sendToApp({ type: "online" });
     },
     setOffline: function () {
       this.offline = true;
+      sendToApp({ type: "offline" });
     },
   },
   render: function () {
@@ -66,7 +69,8 @@ app.use(i18n);
 app.use(setupRouter(i18n));
 app.use(featureflags);
 app.use(head);
-app.mixin(VueHeadMixin); // not deprecated. see https://github.com/unjs/unhead/issues/291
+app.mixin(VueHeadMixin);
 window.app = app.mount("#app");
 
 watchThemeChanges();
+appDetection();

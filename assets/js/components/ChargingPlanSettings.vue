@@ -6,7 +6,7 @@
 					:id="`${id}_0`"
 					class="mb-2"
 					v-bind="plans[0] || {}"
-					:vehicle-capacity="vehicleCapacity"
+					:capacity="capacity"
 					:range-per-soc="rangePerSoc"
 					:soc-per-kwh="socPerKwh"
 					:soc-based-planning="socBasedPlanning"
@@ -23,7 +23,7 @@
 				{{ $t(`main.targetCharge.${isPreview ? "preview" : "currentPlan"}`) }}
 			</div>
 		</h5>
-		<ChargingPlanPreview v-if="chargingPlanPreviewProps" v-bind="chargingPlanPreviewProps" />
+		<ChargingPlanPreview v-bind="chargingPlanPreviewProps" />
 	</div>
 </template>
 
@@ -58,7 +58,7 @@ export default {
 		smartCostType: String,
 		currency: String,
 		mode: String,
-		vehicleCapacity: Number,
+		capacity: Number,
 		vehicle: Object,
 		vehicleTargetSoc: Number,
 	},
@@ -68,8 +68,8 @@ export default {
 			tariff: {},
 			plan: {},
 			activeTab: "time",
-			loading: false,
 			isPreview: false,
+			debounceTimer: null,
 		};
 	},
 	computed: {
@@ -89,13 +89,13 @@ export default {
 	watch: {
 		plans(newPlans, oldPlans) {
 			if (!deepEqual(newPlans, oldPlans) && newPlans.length > 0) {
-				this.fetchPlan();
+				this.fetchPlanDebounced();
 			}
 		},
 	},
 	mounted() {
 		if (this.plans.length > 0) {
-			this.fetchPlan();
+			this.fetchPlanDebounced();
 		}
 	},
 	methods: {
@@ -111,35 +111,37 @@ export default {
 			return await api.get(`loadpoints/${this.id}/plan/preview/energy/${energy}/${timeISO}`);
 		},
 		fetchPlan: async function (preview) {
-			if (!this.loading) {
-				try {
-					this.loading = true;
-
-					let planRes = null;
-					if (preview && this.socBasedPlanning) {
-						planRes = await this.fetchPlanPreviewSoc(preview.soc, preview.time);
-						this.isPreview = true;
-					} else if (preview && !this.socBasedPlanning) {
-						planRes = await this.fetchPlanPreviewEnergy(preview.energy, preview.time);
-						this.isPreview = true;
-					} else {
-						planRes = await this.fetchActivePlan();
-						this.isPreview = false;
-					}
-					this.plan = planRes.data.result;
-
-					const tariffRes = await api.get(`tariff/planner`, {
-						validateStatus: function (status) {
-							return status >= 200 && status < 500;
-						},
-					});
-					this.tariff = tariffRes.status === 404 ? { rates: [] } : tariffRes.data.result;
-				} catch (e) {
-					console.error(e);
-				} finally {
-					this.loading = false;
+			try {
+				let planRes = null;
+				if (preview && this.socBasedPlanning) {
+					planRes = await this.fetchPlanPreviewSoc(preview.soc, preview.time);
+					this.isPreview = true;
+				} else if (preview && !this.socBasedPlanning) {
+					planRes = await this.fetchPlanPreviewEnergy(preview.energy, preview.time);
+					this.isPreview = true;
+				} else {
+					planRes = await this.fetchActivePlan();
+					this.isPreview = false;
 				}
+				this.plan = planRes.data.result;
+
+				const tariffRes = await api.get(`tariff/planner`, {
+					validateStatus: function (status) {
+						return status >= 200 && status < 500;
+					},
+				});
+				this.tariff = tariffRes.status === 404 ? { rates: [] } : tariffRes.data.result;
+			} catch (e) {
+				console.error(e);
 			}
+		},
+		fetchPlanDebounced: async function (preview) {
+			if (!this.debounceTimer) {
+				await this.fetchPlan(preview);
+				return;
+			}
+			clearTimeout(this.debounceTimer);
+			this.debounceTimer = setTimeout(async () => await this.fetchPlan(preview), 1000);
 		},
 		defaultDate: function () {
 			const [hours, minutes] = (
@@ -161,7 +163,7 @@ export default {
 			this.$emit("plan-updated", {
 				time: this.defaultDate(),
 				soc: 100,
-				energy: this.vehicleCapacity || 10,
+				energy: this.capacity || 10,
 			});
 		},
 		removePlan: function (index) {
@@ -171,7 +173,7 @@ export default {
 			this.$emit("plan-updated", data);
 		},
 		previewPlan: function (data) {
-			this.fetchPlan(data);
+			this.fetchPlanDebounced(data);
 		},
 	},
 };

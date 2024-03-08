@@ -1,0 +1,12 @@
+template: mg
+products:
+  - brand: MG
+params:
+  - preset: vehicle-base
+  - preset: vehicle-identify
+  - name: vin
+    required: true
+render: |
+  type: mg
+  {{ include "vehicle-base" . }}
+  {{ include "vehicle-identify" . }}

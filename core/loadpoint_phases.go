@@ -7,17 +7,9 @@ import (
 
 // setConfiguredPhases sets the default phase configuration
 func (lp *Loadpoint) setConfiguredPhases(phases int) {
-	lp.Lock()
-	defer lp.Unlock()
-
-	lp.ConfiguredPhases = phases
-
-	// publish 1p3p capability and phase configuration
-	if _, ok := lp.charger.(api.PhaseSwitcher); ok {
-		lp.publish(keys.PhasesConfigured, lp.ConfiguredPhases)
-	} else {
-		lp.publish(keys.PhasesConfigured, nil)
-	}
+	lp.configuredPhases = phases
+	lp.publish(keys.PhasesConfigured, lp.configuredPhases)
+	lp.settings.SetInt(keys.PhasesConfigured, int64(lp.configuredPhases))
 }
 
 // setPhases sets the number of enabled phases without modifying the charger
@@ -70,8 +62,9 @@ func (lp *Loadpoint) ActivePhases() int {
 	physical := lp.GetPhases()
 	vehicle := lp.getVehiclePhases()
 	measured := lp.getMeasuredPhases()
+	charger := lp.getChargerPhysicalPhases()
 
-	active := min(expect(vehicle), expect(physical), expect(measured))
+	active := min(expect(vehicle), expect(physical), expect(measured), expect(charger))
 
 	// sanity check - we should not assume less active phases than actually measured
 	if measured > 0 && active < measured {
@@ -86,6 +79,7 @@ func (lp *Loadpoint) maxActivePhases() int {
 	physical := lp.GetPhases()
 	measured := lp.getMeasuredPhases()
 	vehicle := lp.getVehiclePhases()
+	charger := lp.getChargerPhysicalPhases()
 
 	// during 1p or unknown config, 1p measured is not a restriction
 	if physical <= 1 || vehicle == 1 {
@@ -93,11 +87,11 @@ func (lp *Loadpoint) maxActivePhases() int {
 	}
 
 	// if 1p3p supported then assume configured limit or 3p
-	if _, ok := lp.charger.(api.PhaseSwitcher); ok {
-		physical = lp.ConfiguredPhases
+	if lp.hasPhaseSwitching() {
+		physical = lp.configuredPhases
 	}
 
-	return min(expect(vehicle), expect(physical), expect(measured))
+	return min(expect(vehicle), expect(physical), expect(measured), expect(charger))
 }
 
 func (lp *Loadpoint) getVehiclePhases() int {
@@ -106,4 +100,17 @@ func (lp *Loadpoint) getVehiclePhases() int {
 	}
 
 	return 0
+}
+
+func (lp *Loadpoint) getChargerPhysicalPhases() int {
+	if cc, ok := lp.charger.(api.PhaseDescriber); ok {
+		return cc.Phases()
+	}
+
+	return 0
+}
+
+func (lp *Loadpoint) hasPhaseSwitching() bool {
+	_, ok := lp.charger.(api.PhaseSwitcher)
+	return ok
 }

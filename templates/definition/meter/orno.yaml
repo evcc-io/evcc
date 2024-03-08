@@ -8,6 +8,7 @@ params:
     choice: ["grid", "charge"]
   - name: modbus
     choice: ["rs485"]
+    comset: "8E1"
 render: |
   type: mbmd
   {{- include "modbus" . }}
