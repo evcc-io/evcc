@@ -26,8 +26,14 @@
 			<div ref="detailsInner" class="details-inner row">
 				<div class="col-12 d-flex justify-content-between pt-2 mb-4">
 					<div class="d-flex flex-nowrap align-items-center text-truncate">
-						<span class="color-self me-2"
-							><shopicon-filled-square></shopicon-filled-square
+						<span class="me-2 legend-self"
+							><shopicon-filled-square
+								class="color-pv legend-pv"
+							></shopicon-filled-square>
+							<shopicon-filled-square
+								v-if="selfBattery > 0"
+								:class="`color-battery legend-battery legend-battery--${selfPv > 0 ? 'mixed' : 'only'}`"
+							></shopicon-filled-square
 						></span>
 						<span class="text-nowrap text-truncate">
 							{{ $t("main.energyflow.selfConsumption") }}
@@ -40,16 +46,16 @@
 						<span class="text-nowrap text-truncate">
 							{{ $t("main.energyflow.gridImport") }}
 						</span>
-						<span class="color-grid ms-2"
-							><shopicon-filled-square></shopicon-filled-square
+						<span class="ms-2"
+							><shopicon-filled-square class="legend-grid"></shopicon-filled-square
 						></span>
 					</div>
 					<div v-else class="d-flex flex-nowrap align-items-center text-truncate">
 						<span class="text-nowrap text-truncate">
 							{{ $t("main.energyflow.pvExport") }}
 						</span>
-						<span class="color-export ms-2"
-							><shopicon-filled-square></shopicon-filled-square
+						<span class="ms-2"
+							><shopicon-filled-square class="legend-export"></shopicon-filled-square
 						></span>
 					</div>
 				</div>
@@ -358,10 +364,28 @@ export default {
 .color-grid {
 	color: var(--evcc-grid);
 }
-.color-self {
-	color: var(--evcc-self);
-}
 .color-export {
 	color: var(--evcc-export);
+}
+.legend-grid {
+	color: var(--evcc-grid);
+}
+.legend-export {
+	color: var(--evcc-export);
+}
+.legend-pv {
+	color: var(--evcc-pv);
+}
+.legend-self {
+	position: relative;
+}
+.legend-battery {
+	position: absolute;
+	top: 0;
+	left: 0;
+	color: var(--evcc-battery);
+}
+.legend-battery--mixed {
+	clip-path: polygon(100% 0, 100% 100%, 0 100%);
 }
 </style>
