@@ -157,6 +157,7 @@ export default {
 <style scoped>
 .site {
 	min-height: 100vh;
+	min-height: 100dvh;
 }
 .content-area {
 	flex-grow: 1;

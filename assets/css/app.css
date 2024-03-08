@@ -485,13 +485,13 @@ html.app .hide-in-app {
 	display: none !important;
 }
 
-.safe-area-inset {
+html.app .safe-area-inset {
 	padding: max(1rem, env(safe-area-inset-top)) env(safe-area-inset-right)
 		calc(0.5 * env(safe-area-inset-bottom)) env(safe-area-inset-left);
 	position: relative;
 }
 
-.safe-area-inset::before {
+html.app .safe-area-inset::before {
 	content: "";
 	display: block;
 	position: fixed;
@@ -504,7 +504,7 @@ html.app .hide-in-app {
 	background-color: var(--evcc-background);
 }
 
-.modal-dialog {
-	margin-top: max(var(--bs-modal-margin), env(safe-area-inset-top));
-	margin-bottom: max(var(--bs-modal-margin), env(safe-area-inset-bottom));
+html.app .modal-dialog {
+	margin-top: env(safe-area-inset-top);
+	margin-bottom: env(safe-area-inset-bottom);
 }
