@@ -39,6 +39,8 @@
 
 	--evcc-grid: var(--bs-gray-dark);
 	--evcc-self: var(--evcc-dark-green);
+	--evcc-pv: var(--evcc-dark-green);
+	--evcc-battery: var(--evcc-darker-green);
 	--evcc-export: var(--evcc-yellow);
 	--evcc-background: var(--bs-gray-bright);
 	--evcc-box: var(--bs-white);
