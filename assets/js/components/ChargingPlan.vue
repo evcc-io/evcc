@@ -224,12 +224,22 @@ export default {
 		this.modal = Modal.getOrCreateInstance(this.$refs.modal);
 		this.$refs.modal.addEventListener("show.bs.modal", this.modalVisible);
 		this.$refs.modal.addEventListener("hidden.bs.modal", this.modalInvisible);
+		this.$refs.modal.addEventListener("hide.bs.modal", this.checkUnsavedOnClose);
 	},
 	unmounted() {
 		this.$refs.modal?.removeEventListener("show.bs.modal", this.modalVisible);
 		this.$refs.modal?.removeEventListener("hidden.bs.modal", this.modalInvisible);
+		this.$refs.modal?.removeEventListener("hide.bs.modal", this.checkUnsavedOnClose);
 	},
 	methods: {
+		checkUnsavedOnClose: function () {
+			const $applyButton = this.$refs.modal.querySelector("[data-testid=plan-apply]");
+			if ($applyButton) {
+				if (confirm(this.$t("main.chargingPlan.unsavedChanges"))) {
+					$applyButton.click();
+				}
+			}
+		},
 		modalVisible: function () {
 			this.isModalVisible = true;
 		},
