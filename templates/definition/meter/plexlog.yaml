@@ -5,9 +5,9 @@ products:
 requirements:
   description:
     de: |
-      Die Werte werden ca. alle 15 Sekunden aktualisiert, weshalb der Abfragezyklus ähnlich definiert sein sollte.
+      Die Werte werden ca. alle 15 Sekunden aktualisiert, deshalb solle evcc Intervall nicht kleiner als 30 Sekunden gewählt werden.
     en: |
-      The values are updated approximately every 15 seconds, which is why the query cycle should be defined similarly.
+      The values are updated approximately every 15 seconds, so the evcc interval should not less than 30 seconds.
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
