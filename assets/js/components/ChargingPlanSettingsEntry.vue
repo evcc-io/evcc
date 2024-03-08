@@ -87,7 +87,7 @@
 					</option>
 				</select>
 			</div>
-			<div class="col-6 d-lg-none col-form-label">
+			<div class="col-5 d-lg-none col-form-label">
 				<label :for="formId('active')">
 					{{ $t("main.chargingPlan.active") }}
 				</label>
