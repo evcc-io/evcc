@@ -210,7 +210,7 @@ func NewSiteFromConfig(
 	// revert battery mode on shutdown
 	shutdown.Register(func() {
 		if mode := site.GetBatteryMode(); batteryModeModified(mode) {
-			if err := site.updateBatteryMode(api.BatteryNormal); err != nil {
+			if err := site.applyBatteryMode(api.BatteryNormal); err != nil {
 				site.log.ERROR.Println("battery mode:", err)
 			}
 		}
@@ -462,19 +462,19 @@ func (site *Site) updateBatteryMeters() error {
 
 	for i, meter := range site.batteryMeters {
 		power, err := backoff.RetryWithData(meter.CurrentPower, bo())
-		if err == nil {
-			site.batteryPower += power
-			if len(site.batteryMeters) > 1 {
-				site.log.DEBUG.Printf("battery %d power: %.0fW", i+1, power)
-			}
-		} else {
+		if err != nil {
 			// power is required- return on error
 			return fmt.Errorf("battery %d power: %v", i+1, err)
 		}
 
+		site.batteryPower += power
+		if len(site.batteryMeters) > 1 {
+			site.log.DEBUG.Printf("battery %d power: %.0fW", i+1, power)
+		}
+
 		// battery energy (discharge)
 		var energy float64
-		if m, ok := meter.(api.MeterEnergy); err == nil && ok {
+		if m, ok := meter.(api.MeterEnergy); ok {
 			energy, err = m.TotalEnergy()
 			if err == nil {
 				totalEnergy += energy
@@ -768,21 +768,9 @@ func (site *Site) update(lp updater) {
 		flexiblePower = site.prioritizer.GetChargePowerFlexibility(lp)
 	}
 
-	var smartCostActive bool
-	if tariff := site.GetTariff(PlannerTariff); tariff != nil && tariff.Type() != api.TariffTypePriceStatic {
-		rates, err := tariff.Rates()
-
-		var rate api.Rate
-		if err == nil {
-			rate, err = rates.Current(time.Now())
-		}
-
-		if err == nil {
-			limit := lp.GetSmartCostLimit()
-			smartCostActive = limit != 0 && rate.Price <= limit
-		} else {
-			site.log.ERROR.Println("smartCost:", err)
-		}
+	smartCostActive, err := site.smartCostActive(lp)
+	if err != nil {
+		site.log.ERROR.Println("smartCost:", err)
 	}
 
 	if sitePower, batteryBuffered, batteryStart, err := site.sitePower(totalChargePower, flexiblePower); err == nil {
@@ -810,12 +798,8 @@ func (site *Site) update(lp updater) {
 		site.log.ERROR.Println(err)
 	}
 
-	if batMode := site.GetBatteryMode(); site.batteryDischargeControl {
-		if mode := site.determineBatteryMode(site.Loadpoints(), smartCostActive); mode != batMode {
-			if err := site.updateBatteryMode(mode); err != nil {
-				site.log.ERROR.Println("battery mode:", err)
-			}
-		}
+	if site.batteryDischargeControl {
+		site.updateBatteryMode()
 	}
 
 	site.stats.Update(site)
