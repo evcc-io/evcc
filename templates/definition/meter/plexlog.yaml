@@ -7,7 +7,7 @@ requirements:
     de: |
       Die Werte werden ca. alle 15 Sekunden aktualisiert, deshalb sollte das evcc `interval` nicht kleiner als 30 Sekunden gewählt werden.
     en: |
-      The values are updated approximately every 15 seconds, so the evcc interval should not be less than 30 seconds.
+      The values are updated approximately every 15 seconds, hence the evcc `interval` should not be less than 30 seconds.
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
