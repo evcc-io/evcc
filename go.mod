@@ -25,10 +25,10 @@ require (
 	github.com/dmarkham/enumer v1.5.9
 	github.com/dylanmei/iso8601 v0.1.0
 	github.com/eclipse/paho.mqtt.golang v1.4.3
-	github.com/enbility/cemd v0.2.3-0.20240304111638-e18d4265b5ec
-	github.com/enbility/eebus-go v0.2.1-0.20240228123408-4437d35c805b
+	github.com/enbility/cemd v0.2.3-0.20240307183023-6ce38e7775b8
+	github.com/enbility/eebus-go v0.2.1-0.20240307200329-74134889a2ff
 	github.com/enbility/ship-go v0.0.0-20240304152211-acb2920b6711
-	github.com/enbility/spine-go v0.0.0-20240228085027-5102eacf33f3
+	github.com/enbility/spine-go v0.0.0-20240307132753-7fea429a63c1
 	github.com/evcc-io/tesla-proxy-client v0.0.0-20240221194046-4168b3759701
 	github.com/fatih/structs v1.1.0
 	github.com/glebarez/sqlite v1.10.0

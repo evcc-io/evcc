@@ -161,8 +161,8 @@ func NewServer(other map[string]interface{}) (*EEBus, error) {
 	return c, nil
 }
 
-func (c *EEBus) deviceHandler(ski string, device spineapi.DeviceRemoteInterface, entity spineapi.EntityRemoteInterface, event cemdapi.EventType) {
-	c.log.TRACE.Printf("deviceHandler: CEM %s %s %v", ski, event, entity)
+func (c *EEBus) deviceHandler(ski string, device spineapi.DeviceRemoteInterface, event cemdapi.EventType) {
+	c.log.TRACE.Printf("deviceHandler: CEM %s %s", ski, event)
 
 	c.mux.Lock()
 	defer c.mux.Unlock()
@@ -173,12 +173,8 @@ func (c *EEBus) deviceHandler(ski string, device spineapi.DeviceRemoteInterface,
 		return
 	}
 
-	switch event {
-	case ucevcc.EvConnected:
-		callbacks.onConnect(entity)
-	case ucevcc.EvDisconnected:
-		callbacks.onDisconnect(entity)
-	}
+	// TODO
+	_ = callbacks
 }
 
 func (c *EEBus) evseHandler(ski string, device spineapi.DeviceRemoteInterface, entity spineapi.EntityRemoteInterface, event cemdapi.EventType) {
@@ -213,12 +209,8 @@ func (c *EEBus) evHandler(ski string, device spineapi.DeviceRemoteInterface, ent
 		return
 	}
 
-	switch event {
-	case ucevcc.EvConnected:
-		callbacks.onConnect(entity)
-	case ucevcc.EvDisconnected:
-		callbacks.onDisconnect(entity)
-	}
+	// TODO
+	_ = callbacks
 }
 
 func (c *EEBus) RegisterEVSE(ski, ip string, connectHandler, disconnectHandler func(spineapi.EntityRemoteInterface)) (*Usecases, error) {
