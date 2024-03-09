@@ -218,6 +218,7 @@ time = "Time"
 title = "Plan"
 titleMinSoc = "Min charge"
 titleTargetCharge = "Departure"
+unsavedChanges = "There are unsaved changes. Apply now?"
 update = "Apply"
 
 [main.energyflow]
