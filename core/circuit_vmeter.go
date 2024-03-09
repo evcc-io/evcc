@@ -7,11 +7,11 @@ import (
 	"github.com/evcc-io/evcc/util"
 )
 
-// interface to get the current in use from a consumer
+// interface to get the current and power in use from a consumer
 // it is expected to get the max current over all phases
 type Consumer interface {
-	MaxPhasesCurrent() (float64, error)
-	CurrentPower() (float64, error) // reuse meter.api
+	MaxPhasesCurrent() (float64, error) // returns max current from all phases
+	CurrentPower() (float64, error)     // reuse meter.api
 }
 
 // VMeter evaluates consumtion from assigned list of consumers

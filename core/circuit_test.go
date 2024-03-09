@@ -184,8 +184,10 @@ func TestNoCurrentMeter(t *testing.T) {
 	// we need a phase meter in casewe have a current limit
 	circ, err = NewCircuit(util.NewLogger("main"), 10, 0, nil, nil, &tstMtr)
 	assert.Nil(t, circ)
+	assert.NotNil(t, err)
 
 	// we always need a power meter
 	circ, err = NewCircuit(util.NewLogger("main"), 0, 0, nil, nil, nil)
 	assert.Nil(t, circ)
+	assert.NotNil(t, err)
 }
