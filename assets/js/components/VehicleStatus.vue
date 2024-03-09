@@ -3,6 +3,7 @@
 </template>
 
 <script>
+import { DEFAULT_LOCALE } from "../i18n";
 import formatter from "../mixins/formatter";
 import { CO2_TYPE } from "../units";
 
@@ -16,6 +17,7 @@ export default {
 		enabled: Boolean,
 		connected: Boolean,
 		charging: Boolean,
+		heating: Boolean,
 		effectivePlanTime: String,
 		planProjectedStart: String,
 		planActive: Boolean,
@@ -23,8 +25,6 @@ export default {
 		phaseRemainingInterpolated: Number,
 		pvAction: String,
 		pvRemainingInterpolated: Number,
-		guardAction: String,
-		guardRemainingInterpolated: Number,
 		targetChargeDisabled: Boolean,
 		vehicleClimaterActive: Boolean,
 		smartCostLimit: Number,
@@ -46,11 +46,15 @@ export default {
 				this.pvRemainingInterpolated > 0 && ["enable", "disable"].includes(this.pvAction)
 			);
 		},
-		guardTimerActive() {
-			return this.guardRemainingInterpolated > 0 && this.guardAction === "enable";
-		},
 		message: function () {
 			const t = (key, data) => {
+				if (this.heating) {
+					// check for special heating status translation
+					const name = `main.heatingStatus.${key}`;
+					if (this.$te(name, DEFAULT_LOCALE)) {
+						return this.$t(name, data);
+					}
+				}
 				return this.$t(`main.vehicleStatus.${key}`, data);
 			};
 
@@ -116,12 +120,6 @@ export default {
 			if (this.phaseTimerActive) {
 				return t(this.phaseAction, {
 					remaining: this.fmtDuration(this.phaseRemainingInterpolated),
-				});
-			}
-
-			if (this.guardTimerActive) {
-				return t("guard", {
-					remaining: this.fmtDuration(this.guardRemainingInterpolated),
 				});
 			}
 

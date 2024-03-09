@@ -1,0 +1,10 @@
+template: groupe-e
+products:
+  - brand: Groupe E
+    description:
+      generic: Vario Plus
+params:
+  - preset: tariff-base
+render: |
+  type: groupe-e
+  {{ include "tariff-base" . }}

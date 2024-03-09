@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	_ "embed"
 	"os"
 	"os/signal"
 	"syscall"

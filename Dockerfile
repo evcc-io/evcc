@@ -20,7 +20,7 @@ RUN make ui
 
 
 # STEP 2 build executable binary
-FROM --platform=$BUILDPLATFORM golang:1.21-alpine as builder
+FROM --platform=$BUILDPLATFORM golang:1.22-alpine as builder
 
 # Install git + SSL ca certificates.
 # Git is required for fetching the dependencies.
@@ -62,6 +62,9 @@ RUN case "${TARGETVARIANT}" in \
 	"v7") export GOARM='7' ;; \
 	esac;
 
+ARG TESLA_CLIENT_ID
+ENV TESLA_CLIENT_ID=${TESLA_CLIENT_ID}
+
 RUN RELEASE=${RELEASE} GOOS=${TARGETOS} GOARCH=${TARGETARCH} make build
 
 
@@ -87,6 +90,8 @@ EXPOSE 7070/tcp
 EXPOSE 7090/udp
 # OCPP charger
 EXPOSE 8887/tcp
+# GoodWe Wifi Inverter
+EXPOSE 8899/udp
 # SMA Energy Manager
 EXPOSE 9522/udp
 

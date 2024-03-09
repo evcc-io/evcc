@@ -21,12 +21,12 @@
 			</div>
 		</div>
 		<div class="row">
-			<div class="col-6 d-lg-none col-form-label">
+			<div class="col-5 d-lg-none col-form-label">
 				<label :for="formId('day')">
 					{{ $t("main.chargingPlan.day") }}
 				</label>
 			</div>
-			<div class="col-6 col-lg-4 mb-2 mb-lg-0">
+			<div class="col-7 col-lg-4 mb-2 mb-lg-0">
 				<select
 					:id="formId('day')"
 					v-model="selectedDay"
@@ -39,12 +39,12 @@
 					</option>
 				</select>
 			</div>
-			<div class="col-6 d-lg-none col-form-label">
+			<div class="col-5 d-lg-none col-form-label">
 				<label :for="formId('day')">
 					{{ $t("main.chargingPlan.time") }}
 				</label>
 			</div>
-			<div class="col-6 col-lg-2 mb-2 mb-lg-0">
+			<div class="col-7 col-lg-2 mb-2 mb-lg-0">
 				<input
 					:id="formId('time')"
 					v-model="selectedTime"
@@ -56,12 +56,12 @@
 					@change="preview"
 				/>
 			</div>
-			<div class="col-6 d-lg-none col-form-label">
+			<div class="col-5 d-lg-none col-form-label">
 				<label :for="formId('goal')">
 					{{ $t("main.chargingPlan.goal") }}
 				</label>
 			</div>
-			<div class="col-6 col-lg-3 mb-2 mb-lg-0">
+			<div class="col-7 col-lg-3 mb-2 mb-lg-0">
 				<select
 					v-if="socBasedPlanning"
 					:id="formId('goal')"
@@ -87,7 +87,7 @@
 					</option>
 				</select>
 			</div>
-			<div class="col-6 d-lg-none col-form-label">
+			<div class="col-5 d-lg-none col-form-label">
 				<label :for="formId('active')">
 					{{ $t("main.chargingPlan.active") }}
 				</label>
@@ -147,7 +147,7 @@ export default {
 		time: String,
 		rangePerSoc: Number,
 		socPerKwh: Number,
-		vehicleCapacity: Number,
+		capacity: Number,
 		socBasedPlanning: Boolean,
 	},
 	emits: ["plan-updated", "plan-removed", "plan-preview"],
@@ -173,7 +173,7 @@ export default {
 		energyOptions: function () {
 			const options = energyOptions(
 				0,
-				this.vehicleCapacity || 100,
+				this.capacity || 100,
 				this.socPerKwh,
 				this.fmtKWh,
 				"-"
@@ -241,7 +241,7 @@ export default {
 			}
 			if (!this.selectedEnergy) {
 				this.selectedEnergy =
-					window.localStorage[LAST_ENERGY_GOAL_KEY] || this.vehicleCapacity || 10;
+					window.localStorage[LAST_ENERGY_GOAL_KEY] || this.capacity || 10;
 			}
 
 			let time = this.time;
@@ -269,12 +269,12 @@ export default {
 				this.$t("main.targetCharge.tomorrow"),
 			];
 			for (let i = 0; i < 7; i++) {
-				const dayNumber = date.toLocaleDateString(this.$i18n.locale, {
+				const dayNumber = date.toLocaleDateString(this.$i18n?.locale, {
 					month: "short",
 					day: "numeric",
 				});
 				const dayName =
-					labels[i] || date.toLocaleDateString(this.$i18n.locale, { weekday: "long" });
+					labels[i] || date.toLocaleDateString(this.$i18n?.locale, { weekday: "long" });
 				options.push({
 					value: this.fmtDayString(date),
 					name: `${dayNumber} (${dayName})`,

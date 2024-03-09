@@ -38,38 +38,46 @@ type Amperfied struct {
 }
 
 const (
-	ampRegChargingState  = 5    // Input
-	ampRegCurrents       = 6    // Input 6,7,8
-	ampRegTemperature    = 9    // Input
-	ampRegVoltages       = 10   // Input 10,11,12
-	ampRegPower          = 14   // Input
-	ampRegEnergy         = 17   // Input
-	ampRegTimeoutConfig  = 257  // Holding
-	ampRegRemoteLock     = 259  // Holding
-	ampRegAmpsConfig     = 261  // Holding
-	ampRegFailSafeConfig = 262  // Holding
-	ampRegRfidUID        = 2002 // Input
+	ampRegChargingState      = 5    // Input
+	ampRegCurrents           = 6    // Input 6,7,8
+	ampRegTemperature        = 9    // Input
+	ampRegVoltages           = 10   // Input 10,11,12
+	ampRegPower              = 14   // Input
+	ampRegEnergy             = 17   // Input
+	ampRegTimeoutConfig      = 257  // Holding
+	ampRegRemoteLock         = 259  // Holding
+	ampRegAmpsConfig         = 261  // Holding
+	ampRegFailSafeConfig     = 262  // Holding
+	ampRegPhaseSwitchControl = 501  // Holding
+	ampRegRfidUID            = 2002 // Input
 )
 
 func init() {
 	registry.Add("amperfied", NewAmperfiedFromConfig)
 }
 
+//go:generate go run ../cmd/tools/decorate.go -f decorateAmperfied -b *Amperfied -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error"
+
 // NewAmperfiedFromConfig creates a Amperfied charger from generic config
 func NewAmperfiedFromConfig(other map[string]interface{}) (api.Charger, error) {
-	cc := modbus.TcpSettings{
-		ID: 255,
+	cc := struct {
+		modbus.TcpSettings `mapstructure:",squash"`
+		Phases1p3p         bool
+	}{
+		TcpSettings: modbus.TcpSettings{
+			ID: 255,
+		},
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewAmperfied(cc.URI, cc.ID)
+	return NewAmperfied(cc.URI, cc.ID, cc.Phases1p3p)
 }
 
 // NewAmperfied creates Amperfied charger
-func NewAmperfied(uri string, slaveID uint8) (api.Charger, error) {
+func NewAmperfied(uri string, slaveID uint8, phases bool) (api.Charger, error) {
 	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, slaveID)
 	if err != nil {
 		return nil, err
@@ -97,7 +105,12 @@ func NewAmperfied(uri string, slaveID uint8) (api.Charger, error) {
 		go wb.heartbeat(time.Duration(u) * time.Millisecond / 2)
 	}
 
-	return wb, nil
+	var phases1p3p func(int) error
+	if phases {
+		phases1p3p = wb.phases1p3p
+	}
+
+	return decorateAmperfied(wb, phases1p3p), nil
 }
 
 func (wb *Amperfied) heartbeat(timeout time.Duration) {
@@ -320,4 +333,13 @@ func (wb *Amperfied) WakeUp() error {
 
 	// return to normal operation by unlocking after ~10 sec
 	return wb.set(ampRegRemoteLock, 1)
+}
+
+// phases1p3p implements the api.PhaseSwitcher interface
+func (wb *Amperfied) phases1p3p(phases int) error {
+	b := make([]byte, 2)
+	binary.BigEndian.PutUint16(b, uint16(phases))
+
+	_, err := wb.conn.WriteMultipleRegisters(ampRegPhaseSwitchControl, 1, b)
+	return err
 }

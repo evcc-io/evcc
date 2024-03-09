@@ -17,13 +17,19 @@ const (
 	PhasesEnabled    = "phasesEnabled"    // enabled phases (1/3)
 	PhasesActive     = "phasesActive"     // active phases as used by vehicle (1/2/3)
 
-	ChargerIcon    = "chargerIcon"    // charger icon for ui
-	ChargerFeature = "chargerFeature" // charger feature
+	ChargerIcon           = "chargerIcon"           // charger icon for ui
+	ChargerFeature        = "chargerFeature"        // charger feature
+	ChargerPhysicalPhases = "chargerPhysicalPhases" // charger phases
+	ChargerPhases1p3p     = "chargerPhases1p3p"     // phase switcher (1p3p chargers)
 
 	// loadpoint status
 	Enabled   = "enabled"   // loadpoint enabled
 	Connected = "connected" // connected
 	Charging  = "charging"  // charging
+
+	// smart charging
+	SmartCostActive = "smartCostActive" // smart cost active
+	SmartCostLimit  = "smartCostLimit"  // smart cost limit
 
 	// effective values
 	EffectivePriority   = "effectivePriority"   // effective priority
@@ -53,21 +59,19 @@ const (
 	PlanSoc            = "planSoc"            // charge plan soc goal
 	PlanActive         = "planActive"         // charge plan has determined current slot to be an active slot
 	PlanProjectedStart = "planProjectedStart" // charge plan start time (earliest slot)
+	PlanOverrun        = "planOverrun"        // charge plan goal not reachable in time
 
 	// remote control
 	RemoteDisabled       = "remoteDisabled"       // remote disabled
 	RemoteDisabledSource = "remoteDisabledSource" // remote disabled source
 
 	// vehicle
-	VehicleTitle           = "vehicleTitle"           // vehicle title
 	VehicleName            = "vehicleName"            // vehicle name
 	VehicleIdentity        = "vehicleIdentity"        // vehicle identity
-	VehicleCapacity        = "vehicleCapacity"        // vehicle battery capacity
 	VehicleDetectionActive = "vehicleDetectionActive" // vehicle detection active
-	VehicleIcon            = "vehicleIcon"            // vehicle icon for ui
 	VehicleOdometer        = "vehicleOdometer"        // vehicle odometer
 	VehicleRange           = "vehicleRange"           // vehicle range
 	VehicleSoc             = "vehicleSoc"             // vehicle soc
-	VehicleTargetSoc       = "vehicleTargetSoc"       // vehicle soc limit
+	VehicleTargetSoc       = "vehicleTargetSoc"       // vehicle api soc limit
 	VehicleClimaterActive  = "vehicleClimaterActive"  // vehicle climater active
 )

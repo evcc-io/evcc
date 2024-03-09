@@ -1,19 +1,18 @@
 <template>
-	<div v-if="unit" class="input-group w-100">
+	<div v-if="unit" class="input-group" :class="short ? 'w-50' : ''">
 		<input
 			:id="id"
 			v-model="value"
-			type="number"
-			step="any"
+			:type="inputType"
+			:step="step"
 			:placeholder="placeholder"
 			:required="required"
-			aria-label="unit"
 			:aria-describedby="id + '_unit'"
 			class="form-control"
 		/>
 		<span :id="id + '_unit'" class="input-group-text">{{ unit }}</span>
 	</div>
-	<div v-else-if="icons" :id="id" class="d-flex flex-wrap">
+	<div v-else-if="icons" class="d-flex flex-wrap">
 		<div
 			v-for="{ key } in selectOptions"
 			v-show="key === value || selectMode"
@@ -24,16 +23,22 @@
 				:id="`icon_${key}`"
 				v-model="value"
 				type="radio"
-				class="btn-check"
+				:class="selectMode ? 'btn-check' : 'd-none'"
 				:name="property"
-				autocomplete="off"
-				:required="required"
 				:value="key"
 				@click="toggleSelectMode"
 			/>
-			<label class="btn btn-outline-secondary" :for="`icon_${key}`" :aria-label="key">
+			<label
+				class="btn btn-outline-secondary"
+				:class="key === value ? 'active' : ''"
+				:for="`icon_${key}`"
+				:aria-label="key"
+			>
 				<VehicleIcon :name="key" />
 			</label>
+		</div>
+		<div v-if="!selectMode" class="me-2 mb-2 d-flex align-items-end">
+			<a :id="id" class="text-muted" href="#" @click.prevent="toggleSelectMode">change</a>
 		</div>
 	</div>
 	<select v-else-if="select" :id="id" v-model="value" class="form-select">
@@ -47,7 +52,7 @@
 		:id="id"
 		v-model="value"
 		class="form-control"
-		:type="type"
+		:type="inputType"
 		:placeholder="placeholder"
 		:required="required"
 		rows="4"
@@ -57,7 +62,9 @@
 		:id="id"
 		v-model="value"
 		class="form-control"
-		:type="type"
+		:class="short ? 'w-50' : ''"
+		:type="inputType"
+		:step="step"
 		:placeholder="placeholder"
 		:required="required"
 	/>
@@ -74,6 +81,7 @@ export default {
 		property: String,
 		masked: Boolean,
 		placeholder: String,
+		type: String,
 		required: Boolean,
 		validValues: { type: Array, default: () => [] },
 		modelValue: [String, Number, Boolean, Object],
@@ -83,8 +91,23 @@ export default {
 		return { selectMode: false };
 	},
 	computed: {
-		type() {
-			return this.masked ? "password" : "text";
+		inputType() {
+			if (this.masked) {
+				return "password";
+			}
+			if (["Number", "Float"].includes(this.type)) {
+				return "number";
+			}
+			return "text";
+		},
+		short() {
+			return ["Number", "Float", "Duration"].includes(this.type);
+		},
+		step() {
+			if (this.type === "Float") {
+				return "any";
+			}
+			return null;
 		},
 		unit() {
 			if (this.property === "capacity") {
@@ -102,6 +125,12 @@ export default {
 			return this.validValues.length > 0;
 		},
 		selectOptions() {
+			// If the valid values are already in the correct format, return them
+			if (this.validValues[0].key && this.validValues[0].name) {
+				return this.validValues;
+			}
+
+			// Otherwise, convert them to the correct format
 			return this.validValues.map((value) => ({
 				key: value,
 				name: this.$t(`config.options.${this.property}.${value}`),

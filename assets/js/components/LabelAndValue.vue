@@ -8,7 +8,7 @@
 				<slot name="value">
 					<AnimatedNumber v-if="valueFmt" :to="value" :format="valueFmt" />
 					<span v-else>{{ value }}</span>
-					<div class="extraValue text-nowrap">
+					<div v-if="extraValue != null" class="extraValue text-nowrap">
 						{{ extraValue || "&nbsp;" }}
 					</div>
 				</slot>

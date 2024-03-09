@@ -9,7 +9,7 @@ function loadpoint(opts) {
 		chargePower: 2800,
 		chargedEnergy: 11e3,
 		chargeDuration: 95 * 60,
-		vehiclePresent: true,
+		vehicleName: "tesla",
 		vehicleTitle: "Tesla Model 3",
 		enabled: true,
 		connected: true,

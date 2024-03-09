@@ -145,12 +145,12 @@ func NewWarp2(mqttconf mqtt.Config, topic, emTopic string, timeout time.Duration
 		return nil, err
 	}
 
-	wb.emStateG, err = to.StringGetter(mq("%s/energy_manager/state", emTopic))
+	wb.emStateG, err = to.StringGetter(mq("%s/power_manager/state", emTopic))
 	if err != nil {
 		return nil, err
 	}
 	wb.phasesS, err = provider.NewMqtt(log, client,
-		fmt.Sprintf("%s/energy_manager/external_control_update", emTopic), 0).
+		fmt.Sprintf("%s/power_manager/external_control_update", emTopic), 0).
 		WithPayload(`{ "phases_wanted": ${phases} }`).
 		IntSetter("phases")
 	if err != nil {

@@ -13,6 +13,18 @@ type API interface {
 	Vehicles() Vehicles
 	Auth() auth.API
 
+	// Meta
+	GetTitle() string
+	SetTitle(string)
+
+	// Config
+	GetGridMeterRef() string
+	SetGridMeterRef(string)
+	GetPVMeterRefs() []string
+	SetPVMeterRefs([]string)
+	GetBatteryMeterRefs() []string
+	SetBatteryMeterRefs([]string)
+
 	//
 	// battery
 	//
@@ -37,8 +49,6 @@ type API interface {
 
 	// GetTariff returns the respective tariff
 	GetTariff(string) api.Tariff
-	GetSmartCostLimit() float64
-	SetSmartCostLimit(float64) error
 
 	//
 	// battery control

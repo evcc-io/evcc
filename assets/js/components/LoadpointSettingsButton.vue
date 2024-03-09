@@ -2,6 +2,7 @@
 	<button
 		type="button"
 		class="btn btn-sm btn-outline-secondary position-relative border-0 p-2 evcc-gray"
+		data-testid="loadpoint-settings-button"
 		@click="openModal"
 	>
 		<shopicon-regular-adjust size="s"></shopicon-regular-adjust>

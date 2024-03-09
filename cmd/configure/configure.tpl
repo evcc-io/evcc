@@ -11,7 +11,7 @@ levels:
 # unique installation id
 plant: {{ .Plant }}
 
-interval: 10s # control cycle interval
+interval: 30s # control cycle interval
 {{- if .SponsorToken }}
 
 sponsortoken: {{ .SponsorToken }}
@@ -54,9 +54,6 @@ loadpoints:
   vehicle: {{ .Vehicle }}
 {{- end }}
   mode: {{ .Mode }}
-  phases: {{ .Phases }}
-  mincurrent: {{ .MinCurrent }}
-  maxcurrent: {{ .MaxCurrent }}
 {{- end }}
 {{- end }}
 

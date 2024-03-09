@@ -12,7 +12,6 @@ import (
 	"github.com/evcc-io/evcc/util/modbus"
 	gridx "github.com/grid-x/modbus"
 	"github.com/volkszaehler/mbmd/meters"
-	"github.com/volkszaehler/mbmd/meters/rs485"
 	"github.com/volkszaehler/mbmd/meters/sunspec"
 )
 
@@ -56,7 +55,7 @@ func ModbusHandlerFactory(conf map[string]interface{}) (TaskHandler, error) {
 	}
 
 	if handler.Register.Address > 0 {
-		handler.op, err = modbus.RegisterOperation(handler.Register)
+		handler.op, err = handler.Register.Operation()
 	}
 
 	return &handler, err
@@ -70,7 +69,7 @@ type ModbusHandler struct {
 	Register modbus.Register `mapstructure:",squash"`
 	Values   []int
 	Invalid  []int
-	op       rs485.Operation
+	op       modbus.RegisterOperation
 	Timeout  time.Duration
 }
 
@@ -80,9 +79,9 @@ func (h *ModbusHandler) testRegister(_ *util.Logger, conn gridx.Client) bool {
 
 	switch h.op.FuncCode {
 	case gridx.FuncCodeReadHoldingRegisters:
-		bytes, err = conn.ReadHoldingRegisters(h.op.OpCode, h.op.ReadLen)
+		bytes, err = conn.ReadHoldingRegisters(h.op.Addr, h.op.Length)
 	case gridx.FuncCodeReadInputRegisters:
-		bytes, err = conn.ReadInputRegisters(h.op.OpCode, h.op.ReadLen)
+		bytes, err = conn.ReadInputRegisters(h.op.Addr, h.op.Length)
 	}
 
 	if err != nil {
@@ -94,7 +93,7 @@ func (h *ModbusHandler) testRegister(_ *util.Logger, conn gridx.Client) bool {
 	}
 
 	var u uint64
-	switch h.op.ReadLen {
+	switch h.op.Length {
 	case 1:
 		u = uint64(binary.BigEndian.Uint16(bytes))
 	case 2:
@@ -200,7 +199,7 @@ func (h *ModbusHandler) Test(log *util.Logger, in ResultDetails) (res []ResultDe
 		}
 
 		var ok bool
-		if h.op.OpCode > 0 {
+		if h.op.Addr > 0 {
 			// log.DEBUG.Printf("slave id: %d op: %v", slaveID, h.op)
 			ok = h.testRegister(log, conn.ModbusClient())
 		} else {

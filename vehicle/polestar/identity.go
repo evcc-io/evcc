@@ -1,15 +1,18 @@
 package polestar
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/hasura/go-graphql-client"
 	"github.com/samber/lo"
 	"golang.org/x/net/publicsuffix"
 	"golang.org/x/oauth2"
@@ -17,124 +20,120 @@ import (
 
 // https://github.com/TA2k/ioBroker.polestar
 
-const (
-	OAuthURI  = "https://polestarid.eu.polestar.com"
-	basicAuth = "cG9seHBsb3JlOlhhaUtvb0hlaXJlaXNvb3NhaDBFdjZxdW9oczhjb2hGZUtvaHdpZTFhZTdraWV3b2hkb295ZWk5QWVZZWlXb2g"
-)
+const OAuthURI = "https://polestarid.eu.polestar.com"
 
 // https://polestarid.eu.polestar.com/.well-known/openid-configuration
 var OAuth2Config = &oauth2.Config{
-	ClientID:    "polxplore",
-	RedirectURL: "polestar-explore://explore.polestar.com",
+	ClientID:    "polmystar",
+	RedirectURL: "https://www.polestar.com/sign-in-callback",
 	Endpoint: oauth2.Endpoint{
 		AuthURL:  OAuthURI + "/as/authorization.oauth2",
 		TokenURL: OAuthURI + "/as/token.oauth2",
 	},
-	Scopes: []string{"openid", "profile", "email", "customer:attributes"},
+	Scopes: []string{
+		"openid", "profile", "email", "customer:attributes",
+		// "conve:recharge_status", "conve:fuel_status", "conve:odometer_status",
+		// "energy:charging_connection_status", "energy:electric_range", "energy:estimated_charging_time", "energy:recharge_status",
+		// "energy:battery_charge_level", "energy:charging_system_status", "energy:charging_timer", "energy:electric_range", "energy:recharge_status",
+		// "energy:battery_charge_level",
+	},
 }
 
 type Identity struct {
 	*request.Helper
-	oauth2.TokenSource
+	user, password string
 }
 
 // NewIdentity creates Polestar identity
-func NewIdentity(log *util.Logger) *Identity {
-	return &Identity{
-		Helper: request.NewHelper(log),
+func NewIdentity(log *util.Logger, user, password string) (oauth2.TokenSource, error) {
+	v := &Identity{
+		Helper:   request.NewHelper(log),
+		user:     user,
+		password: password,
 	}
+
+	v.Client.Jar, _ = cookiejar.New(&cookiejar.Options{
+		PublicSuffixList: publicsuffix.List,
+	})
+
+	token, err := v.login()
+
+	return oauth.RefreshTokenSource(token, v), err
 }
 
-func (v *Identity) Login(user, password string) error {
-	if v.Client.Jar == nil {
-		var err error
-		v.Client.Jar, err = cookiejar.New(&cookiejar.Options{
-			PublicSuffixList: publicsuffix.List,
-		})
-		if err != nil {
-			return err
-		}
-	}
-
-	cv := oauth2.GenerateVerifier()
-
+func (v *Identity) login() (*oauth2.Token, error) {
 	state := lo.RandomString(16, lo.AlphanumericCharset)
-	uri := OAuth2Config.AuthCodeURL(state, oauth2.AccessTypeOffline, oauth2.S256ChallengeOption(cv))
+	uri := OAuth2Config.AuthCodeURL(state, oauth2.AccessTypeOffline)
 
 	var param request.InterceptResult
-	v.Client.CheckRedirect, param = request.InterceptRedirect("resumePath", false)
+	v.Client.CheckRedirect, param = request.InterceptRedirect("resumePath", true)
+	defer func() { v.Client.CheckRedirect = nil }()
 
-	_, err := v.Get(uri)
-
-	var resume string
-	if err == nil {
-		resume, err = param()
+	if _, err := v.Get(uri); err != nil {
+		return nil, err
 	}
 
-	v.Client.CheckRedirect = nil
+	resume, err := param()
+	if err != nil {
+		return nil, err
+	}
+
+	params := url.Values{
+		"pf.username": []string{v.user},
+		"pf.pass":     []string{v.password},
+	}
+
+	uri = fmt.Sprintf("%s/as/%s/resume/as/authorization.ping?client_id=%s", OAuthURI, resume, OAuth2Config.ClientID)
+	v.Client.CheckRedirect, param = request.InterceptRedirect("code", true)
+	defer func() { v.Client.CheckRedirect = nil }()
 
 	var code string
-	if err == nil {
-		params := url.Values{
-			"pf.username": []string{user},
-			"pf.pass":     []string{password},
-		}
-
-		var param request.InterceptResult
-		v.Client.CheckRedirect, param = request.InterceptRedirect("code", true)
-
-		uri = fmt.Sprintf("%s/as/%s/resume/as/authorization.ping?client_id=%s", OAuthURI, resume, OAuth2Config.ClientID)
-
-		if _, err = v.Post(uri, request.FormContent, strings.NewReader(params.Encode())); err == nil {
-			code, err = param()
-		}
-
-		v.Client.CheckRedirect = nil
+	if _, err = v.Post(uri, request.FormContent, strings.NewReader(params.Encode())); err == nil {
+		code, err = param()
 	}
 
-	var token oauth.Token
-	if err == nil {
-		params := url.Values{
-			"code":          []string{code},
-			"code_verifier": []string{cv},
-			"redirect_uri":  []string{OAuth2Config.RedirectURL},
-			"grant_type":    []string{"authorization_code"},
-		}
-
-		var req *http.Request
-		req, err = request.New(http.MethodPost, OAuth2Config.Endpoint.TokenURL, strings.NewReader(params.Encode()), map[string]string{
-			"Content-Type":  request.FormContent,
-			"Authorization": "Basic " + basicAuth,
-		})
-		if err == nil {
-			err = v.DoJSON(req, &token)
-		}
+	if err != nil {
+		return nil, err
 	}
 
-	if err == nil {
-		v.TokenSource = oauth.RefreshTokenSource((*oauth2.Token)(&token), v)
+	var res struct {
+		Token `graphql:"getAuthToken(code: $code)"`
 	}
 
-	return err
+	if err := graphql.NewClient(ApiURI+"/auth", v.Client).
+		Query(context.Background(), &res, map[string]any{
+			"code": code,
+		}, graphql.OperationName("getAuthToken")); err != nil {
+		return nil, err
+	}
+
+	token := &oauth2.Token{
+		AccessToken:  res.AccessToken,
+		RefreshToken: res.RefreshToken,
+		Expiry:       time.Now().Add(time.Duration(res.ExpiresIn) * time.Second),
+	}
+
+	return token, err
 }
 
 func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
-	data := url.Values{
-		"redirect_uri":  []string{OAuth2Config.RedirectURL},
-		"refresh_token": []string{token.RefreshToken},
-		"grant_type":    []string{"refresh_token"},
+	var res struct {
+		Token `graphql:"refreshAuthToken(token: $token)"`
 	}
-	req, err := request.New(http.MethodPost, OAuth2Config.Endpoint.TokenURL, strings.NewReader(data.Encode()), map[string]string{
-		"Content-Type":  request.FormContent,
-		"Authorization": "Basic " + basicAuth,
-	})
 
-	var tok oauth.Token
+	err := graphql.NewClient(ApiURI+"/auth", v.Client).WithRequestModifier(func(req *http.Request) {
+		req.Header.Set("Authorization", "Bearer "+token.AccessToken)
+	}).Query(context.Background(), &res, map[string]any{
+		"token": token.RefreshToken,
+	}, graphql.OperationName("refreshAuthToken"))
+
 	if err == nil {
-		if err := v.DoJSON(req, &tok); err != nil {
-			return nil, err
-		}
+		return &oauth2.Token{
+			AccessToken:  res.AccessToken,
+			RefreshToken: res.RefreshToken,
+			Expiry:       time.Now().Add(time.Duration(res.ExpiresIn) * time.Second),
+		}, nil
 	}
 
-	return (*oauth2.Token)(&tok), err
+	return v.login()
 }

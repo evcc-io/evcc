@@ -28,7 +28,12 @@
 			</li>
 			<li><hr class="dropdown-divider" /></li>
 			<li>
-				<button type="button" class="dropdown-item" @click="openSettingsModal">
+				<button
+					type="button"
+					class="dropdown-item"
+					data-testid="topnavigation-settings"
+					@click="openSettingsModal"
+				>
 					<span
 						v-if="sponsorTokenExpires"
 						class="d-inline-block p-1 rounded-circle bg-danger border border-light rounded-circle"
@@ -37,13 +42,13 @@
 				</button>
 			</li>
 			<li v-if="batteryModalAvailable">
-				<button type="button" class="dropdown-item" @click="openBatterySettingsModal">
+				<button
+					type="button"
+					class="dropdown-item"
+					data-testid="topnavigation-battery"
+					@click="openBatterySettingsModal"
+				>
 					{{ $t("batterySettings.modalTitle") }}
-				</button>
-			</li>
-			<li v-if="gridModalAvailable">
-				<button type="button" class="dropdown-item" @click="openGridSettingsModal">
-					{{ $t("gridSettings.modalTitle") }}
 				</button>
 			</li>
 			<li v-if="$hiddenFeatures()">
@@ -86,6 +91,11 @@
 					></shopicon-regular-newtab>
 				</a>
 			</li>
+			<li v-if="isApp">
+				<button type="button" class="dropdown-item" @click="openNativeSettings">
+					{{ $t("header.nativeSettings") }}
+				</button>
+			</li>
 		</ul>
 	</div>
 </template>
@@ -98,9 +108,9 @@ import "@h2d2/shopicons/es/regular/moonstars";
 import "@h2d2/shopicons/es/regular/menu";
 import "@h2d2/shopicons/es/regular/newtab";
 import collector from "../mixins/collector";
-import gridModalAvailable from "../utils/gridModalAvailable";
 
 import baseAPI from "../baseapi";
+import { isApp, sendToApp } from "../utils/native";
 
 export default {
 	name: "TopNavigation",
@@ -115,7 +125,11 @@ export default {
 		sponsor: String,
 		sponsorTokenExpires: Number,
 		batteryConfigured: Boolean,
-		smartCostType: String,
+	},
+	data() {
+		return {
+			isApp: isApp(),
+		};
 	},
 	computed: {
 		logoutCount() {
@@ -137,9 +151,6 @@ export default {
 		},
 		batteryModalAvailable() {
 			return this.batteryConfigured;
-		},
-		gridModalAvailable: function () {
-			return gridModalAvailable(this.smartCostType);
 		},
 	},
 	mounted() {
@@ -176,9 +187,8 @@ export default {
 			);
 			modal.show();
 		},
-		openGridSettingsModal() {
-			const modal = Modal.getOrCreateInstance(document.getElementById("gridSettingsModal"));
-			modal.show();
+		openNativeSettings() {
+			sendToApp({ type: "settings" });
 		},
 	},
 };

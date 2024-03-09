@@ -488,7 +488,7 @@ func (c *Easee) Enable(enable bool) (err error) {
 		return err
 	}
 
-	if c.authorize { // authenticating charger does not mingle with DCC, no need for below operations
+	if action == easee.ChargeStart { // ChargeStart does not mingle with DCC, no need for below operations
 		return nil
 	}
 
@@ -853,7 +853,7 @@ func (c *Easee) confirmStatusConsistency() {
 	powerFlowing := c.currentPower > 0
 	c.mux.Unlock()
 
-	if opCharging != powerFlowing || opCharging != pilotCharging {
+	if (!opCharging && powerFlowing) || opCharging != pilotCharging {
 		// poll opMode from charger as API can give outdated data after SignalR (re)connect
 		if time.Since(c.lastOpModePollTriggered) > time.Minute*3 { // api rate limit, max once in 3 minutes
 			uri := fmt.Sprintf("%s/chargers/%s/commands/poll_chargeropmode", easee.API, c.charger)

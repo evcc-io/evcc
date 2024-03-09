@@ -3,19 +3,14 @@ package modbus
 import (
 	"errors"
 	"fmt"
-	"math"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/util"
-	"github.com/grid-x/modbus"
-	"github.com/volkszaehler/mbmd/encoding"
 	"github.com/volkszaehler/mbmd/meters"
 	"github.com/volkszaehler/mbmd/meters/rs485"
 	"github.com/volkszaehler/mbmd/meters/sunspec"
-	"golang.org/x/exp/constraints"
 )
 
 type Protocol int
@@ -342,165 +337,4 @@ func RS485FindDeviceOp(device *rs485.RS485, measurement meters.Measurement) (op 
 	}
 
 	return op, fmt.Errorf("unsupported measurement: %s", measurement.String())
-}
-
-// Register contains the ModBus register configuration
-type Register struct {
-	Address uint16 // Length  uint16
-	Type    string
-	Decode  string
-	BitMask string
-}
-
-// asFloat64 creates a function that returns numerics vales as float64
-func asFloat64[T constraints.Signed | constraints.Unsigned | constraints.Float](f func([]byte) T) func([]byte) float64 {
-	return func(v []byte) float64 {
-		res := float64(f(v))
-		if math.IsNaN(res) || math.IsInf(res, 0) {
-			res = 0
-		}
-		return res
-	}
-}
-
-// RegisterOperation creates a read operation from a register definition
-func RegisterOperation(r Register) (rs485.Operation, error) {
-	op := rs485.Operation{
-		OpCode:  r.Address,
-		ReadLen: 2,
-	}
-
-	switch strings.ToLower(r.Type) {
-	case "holding":
-		op.FuncCode = modbus.FuncCodeReadHoldingRegisters
-	case "input":
-		op.FuncCode = modbus.FuncCodeReadInputRegisters
-	case "coil":
-		op.FuncCode = modbus.FuncCodeReadCoils
-		r.Decode = "bool8"
-	case "writesingle", "writeholding":
-		op.FuncCode = modbus.FuncCodeWriteSingleRegister
-	case "writemultiple", "writeholdings":
-		op.FuncCode = modbus.FuncCodeWriteMultipleRegisters
-	case "writecoil":
-		op.FuncCode = modbus.FuncCodeWriteSingleCoil
-		r.Decode = "bool8"
-	default:
-		return rs485.Operation{}, fmt.Errorf("invalid register type: %s", r.Type)
-	}
-
-	switch strings.ToLower(r.Decode) {
-	// 8 bit (coil)
-	case "bool8":
-		op.Transform = decodeBool8
-		op.ReadLen = 1
-
-	// 16 bit
-	case "int16":
-		op.Transform = asFloat64(encoding.Int16)
-		op.ReadLen = 1
-	case "int16nan":
-		op.Transform = decodeNaN16(asFloat64(encoding.Int16), 1<<15, 1<<15-1)
-		op.ReadLen = 1
-	case "uint16":
-		op.Transform = asFloat64(encoding.Uint16)
-		op.ReadLen = 1
-	case "uint16nan":
-		op.Transform = decodeNaN16(asFloat64(encoding.Uint16), 1<<16-1)
-		op.ReadLen = 1
-	case "bool16":
-		mask, err := decodeMask(r.BitMask)
-		if err != nil {
-			return op, err
-		}
-		op.Transform = decodeBool16(mask)
-		op.ReadLen = 1
-
-	// 32 bit
-	case "int32":
-		op.Transform = asFloat64(encoding.Int32)
-	case "int32nan":
-		op.Transform = decodeNaN32(asFloat64(encoding.Int32), 1<<31, 1<<31-1)
-	case "int32s":
-		op.Transform = asFloat64(encoding.Int32LswFirst)
-	case "uint32":
-		op.Transform = asFloat64(encoding.Uint32)
-	case "uint32s":
-		op.Transform = asFloat64(encoding.Uint32LswFirst)
-	case "uint32nan":
-		op.Transform = decodeNaN32(asFloat64(encoding.Uint32), 1<<32-1)
-	case "float32", "ieee754":
-		op.Transform = asFloat64(encoding.Float32)
-	case "float32s", "ieee754s":
-		op.Transform = asFloat64(encoding.Float32LswFirst)
-
-	// 64 bit
-	case "uint64":
-		op.Transform = asFloat64(encoding.Uint64)
-		op.ReadLen = 4
-	case "uint64nan":
-		op.Transform = decodeNaN64(asFloat64(encoding.Uint64), 1<<64-1)
-		op.ReadLen = 4
-	case "float64":
-		op.Transform = encoding.Float64
-		op.ReadLen = 4
-
-	default:
-		return rs485.Operation{}, fmt.Errorf("invalid register decoding: %s", r.Decode)
-	}
-
-	return op, nil
-}
-
-// SunSpecOperation is a sunspec modbus operation
-type SunSpecOperation struct {
-	Model, Block int
-	Point        string
-}
-
-// ParsePoint parses sunspec point from string
-func ParsePoint(selector string) (model, block int, point string, err error) {
-	err = fmt.Errorf("invalid point: %s", selector)
-
-	el := strings.Split(selector, ":")
-	if len(el) < 2 || len(el) > 3 {
-		return
-	}
-
-	if model, err = strconv.Atoi(el[0]); err != nil {
-		return
-	}
-
-	if len(el) == 3 {
-		// block is the middle element
-		if block, err = strconv.Atoi(el[1]); err != nil {
-			return
-		}
-	}
-
-	point = el[len(el)-1]
-
-	return model, block, point, nil
-}
-
-// Operation is a register-based or sunspec modbus operation
-type Operation struct {
-	MBMD    rs485.Operation
-	SunSpec SunSpecOperation
-}
-
-// ParseOperation parses an MBMD measurement or SunsSpec point definition into a modbus operation
-func ParseOperation(dev meters.Device, measurement string, op *Operation) (err error) {
-	// if measurement cannot be parsed it could be SunSpec model/block/point
-	if op.MBMD.IEC61850, err = meters.MeasurementString(measurement); err != nil {
-		op.SunSpec.Model, op.SunSpec.Block, op.SunSpec.Point, err = ParsePoint(measurement)
-		return err
-	}
-
-	// for RS485 check if producer supports the measurement
-	if dev, ok := dev.(*rs485.RS485); ok {
-		op.MBMD, err = RS485FindDeviceOp(dev, op.MBMD.IEC61850)
-	}
-
-	return err
 }

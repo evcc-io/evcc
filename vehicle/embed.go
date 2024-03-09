@@ -5,7 +5,6 @@ import (
 )
 
 // TODO align phases with OnIdentify
-// TODO remove vehicle settings
 type embed struct {
 	Title_       string           `mapstructure:"title"`
 	Icon_        string           `mapstructure:"icon"`

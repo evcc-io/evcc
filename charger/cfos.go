@@ -11,12 +11,13 @@ import (
 )
 
 const (
-	cfosRegRelaySelect  = 8087 // Holding
-	cfosRegStatus       = 8092 // Holding
-	cfosRegMaxCurrent   = 8093 // Holding
-	cfosRegEnable       = 8094 // Holding
-	cfosRegLastRfid     = 8096 // Holding
-	cfosRegSolarEnabled = 8113 // Holding
+	cfosRegDisconnectCp = 8086
+	cfosRegRelaySelect  = 8087
+	cfosRegStatus       = 8092
+	cfosRegMaxCurrent   = 8093
+	cfosRegEnable       = 8094
+	cfosRegLastRfid     = 8096
+	cfosRegSolarEnabled = 8113
 )
 
 // CfosPowerBrain is an charger implementation for cFos PowerBrain wallboxes.
@@ -73,7 +74,7 @@ func NewCfosPowerBrain(uri string, id uint8) (api.Charger, error) {
 	var phases1p3p func(int) error
 
 	b, err := wb.conn.ReadHoldingRegisters(cfosRegSolarEnabled, 1)
-	if err == nil && binary.BigEndian.Uint16(b) == 256 {
+	if err == nil && binary.BigEndian.Uint16(b)&(1<<8) != 0 {
 		phases1p3p = wb.phases1p3p
 	}
 
@@ -146,6 +147,14 @@ func (wb *CfosPowerBrain) phases1p3p(phases int) error {
 		phases = 0
 	}
 	_, err := wb.conn.WriteSingleRegister(cfosRegRelaySelect, uint16(phases))
+	return err
+}
+
+var _ api.Resurrector = (*CfosPowerBrain)(nil)
+
+// WakeUp implements the api.Resurrector interface
+func (wb *CfosPowerBrain) WakeUp() error {
+	_, err := wb.conn.WriteSingleRegister(cfosRegDisconnectCp, uint16(5))
 	return err
 }
 
