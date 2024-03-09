@@ -208,6 +208,7 @@ time = "Zeit"
 title = "Plan"
 titleMinSoc = "Min. Ladung"
 titleTargetCharge = "Abfahrt"
+unsavedChanges = "Ungespeicherte Änderungen vorhanden. Jetzt anwenden?"
 update = "Anwenden"
 
 [main.energyflow]
