@@ -48,7 +48,7 @@ func logoutHandler(w http.ResponseWriter, r *http.Request) {
 		Value:    "",
 		Path:     "/",
 		HttpOnly: true,
-		MaxAge:  0,
+		MaxAge:   0,
 	})
 }
 
