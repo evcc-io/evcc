@@ -79,7 +79,7 @@ func NewCircuitFromConfig(log *util.Logger, circuits map[string]*Circuit, vMeter
 		meterPower = vMeter
 	}
 
-	newCC := NewCircuit(log, cc.MaxCurrent, cc.MaxPower*1000, parent, meterPhaseCurrents, meterPower)
+	newCC, err := NewCircuit(log, cc.MaxCurrent, cc.MaxPower*1000, parent, meterPhaseCurrents, meterPower)
 
 	// if we have parent circuit and this one uses a vMeter, add this circuit as consumer
 	if cc.ParentRef != "" {
@@ -87,15 +87,14 @@ func NewCircuitFromConfig(log *util.Logger, circuits map[string]*Circuit, vMeter
 			vm.AddConsumer(newCC)
 		}
 	}
-	return newCC, vMeter, cc.Name, nil
+	return newCC, vMeter, cc.Name, err
 }
 
 // NewCircuit a circuit with defaults
-func NewCircuit(log *util.Logger, limitCurrent float64, limitPower float64, p *Circuit, pc api.PhaseCurrents, pm api.Meter) *Circuit {
+func NewCircuit(log *util.Logger, limitCurrent float64, limitPower float64, p *Circuit, pc api.PhaseCurrents, pm api.Meter) (*Circuit, error) {
 	if pm == nil {
 		// we always need a power meter
-		log.ERROR.Printf("power meter not allowed to be nil")
-		return nil
+		return nil, fmt.Errorf("power meter not allowed to be nil")
 	}
 	circuit := &Circuit{
 		log:           log,
@@ -113,15 +112,15 @@ func NewCircuit(log *util.Logger, limitCurrent float64, limitPower float64, p *C
 		circuit.log.DEBUG.Printf("current checking disabled")
 	} else {
 		if pc == nil {
-			log.ERROR.Printf("need phase meter when current checking is enabled")
-			return nil
+			return nil, fmt.Errorf("need meter with phase currents when current checking is enabled")
 		}
 	}
+
 	if limitPower == 0 {
 		circuit.maxPower = math.MaxFloat64
 		circuit.log.DEBUG.Printf("power checking disabled")
 	}
-	return circuit
+	return circuit, nil
 }
 
 // publish sends values to UI and databases
@@ -157,12 +156,12 @@ func (circuit *Circuit) update() error {
 
 var _ Consumer = (*Circuit)(nil)
 
-// MaxPower determines current in use. Implements consumer interface
+// CurrentPower implements consumer interface and determines actual power in use.
 func (circuit *Circuit) CurrentPower() (float64, error) {
 	return circuit.powerMeter.CurrentPower()
 }
 
-// GetRemainingPower determines the power left to be used from confgigured maxPower
+// GetRemainingPower determines the power left to be used from configured maxPower
 func (circuit *Circuit) GetRemainingPower() float64 {
 	power, err := circuit.CurrentPower()
 	if err != nil {

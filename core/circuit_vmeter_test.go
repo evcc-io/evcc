@@ -80,7 +80,8 @@ func TestVMeterWithCircuit(t *testing.T) {
 
 	// subcircuit
 	testMeter := testMeter{cur: 10.0}
-	circSub := NewCircuit(util.NewLogger("foo"), 20.0, 0, nil, &testMeter, &testMeter)
+	circSub, err := NewCircuit(util.NewLogger("foo"), 20.0, 0, nil, &testMeter, &testMeter)
+	assert.Nil(t, err)
 	assert.NotNilf(t, circSub, "circuit not created")
 	subPwr, _ := circSub.CurrentPower()
 	expectedPwr = expectedPwr + subPwr
@@ -88,7 +89,6 @@ func TestVMeterWithCircuit(t *testing.T) {
 
 	var (
 		l1, l2, l3 float64
-		err        error
 	)
 
 	// expect to get the consumers current + circuit current

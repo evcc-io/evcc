@@ -27,7 +27,8 @@ func (dm *testMeter) Currents() (float64, float64, float64, error) {
 func TestCircuitMeterCurrent(t *testing.T) {
 	limit := 20.0
 	mtr := &testMeter{cur: 0.0}
-	circ := NewCircuit(util.NewLogger("foo"), limit, 0, nil, mtr, mtr)
+	circ, err := NewCircuit(util.NewLogger("foo"), limit, 0, nil, mtr, mtr)
+	assert.Nil(t, err)
 	assert.NotNilf(t, circ, "circuit not created")
 
 	// no consumption
@@ -54,7 +55,9 @@ func TestCircuitMeterCurrent(t *testing.T) {
 func TestCircuitMeter_noCheck(t *testing.T) {
 	Voltage = 236
 	mtr := &testMeter{cur: 5.0, pwr: 1000}
-	circ := NewCircuit(util.NewLogger("foo"), 0, 0, nil, mtr, mtr)
+	circ, err := NewCircuit(util.NewLogger("foo"), 0, 0, nil, mtr, mtr)
+	assert.Nil(t, err)
+
 	assert.NotNilf(t, circ, "circuit not created")
 
 	// initilized with 0 should give maxFloat as remaining current / power
@@ -77,14 +80,16 @@ func TestHierarchyCurrent(t *testing.T) {
 	// two circuits, check limit and consumption from both sides
 	limitMain := 20.0
 	tstMtrMain := testMeter{cur: 16.0}
-	circMain := NewCircuit(util.NewLogger("main"), limitMain, 0, nil, &tstMtrMain, &tstMtrMain)
+	circMain, err := NewCircuit(util.NewLogger("main"), limitMain, 0, nil, &tstMtrMain, &tstMtrMain)
+	assert.Nil(t, err)
 	assert.NotNilf(t, circMain, "circuit not created")
 
 	// add subcircuit with meter
 	limitSub := 20.0
 	tstMtrSub := testMeter{cur: 10.0}
-	circSub := NewCircuit(util.NewLogger("sub"), limitSub, 0, circMain, &tstMtrSub, &tstMtrSub)
+	circSub, err := NewCircuit(util.NewLogger("sub"), limitSub, 0, circMain, &tstMtrSub, &tstMtrSub)
 
+	assert.Nil(t, err)
 	assert.NotNilf(t, circSub.parentCircuit, "parent circuit not set")
 	assert.NotNilf(t, circSub.phaseCurrents, "sub circuit meter not set")
 
@@ -105,9 +110,10 @@ func TestHierarchyCurrent(t *testing.T) {
 }
 
 func TestCircuitMeterPower(t *testing.T) {
-	limit := 20000.0
+	limitPwr := 20000.0
 	mtr := &testMeter{cur: 0, pwr: 0} // power will be calculated from current and phases
-	circ := NewCircuit(util.NewLogger("foo"), 0, limit, nil, mtr, mtr)
+	circ, err := NewCircuit(util.NewLogger("foo"), 0, limitPwr, nil, mtr, mtr)
+	assert.Nil(t, err)
 	assert.NotNilf(t, circ, "circuit not created")
 
 	// no consumption
@@ -117,32 +123,34 @@ func TestCircuitMeterPower(t *testing.T) {
 
 	// no consumption from meter, return limit
 	pwrAv = circ.GetRemainingPower()
-	assert.Equal(t, limit, pwrAv)
+	assert.Equal(t, limitPwr, pwrAv)
 
 	// set some consumption on meter
 	mtr.pwr = 5000.0
 	pwrAv = circ.GetRemainingPower()
-	assert.Equal(t, limit-mtr.pwr, pwrAv)
+	assert.Equal(t, limitPwr-mtr.pwr, pwrAv)
 
 	// simulate production in circuit (negative consumption)
 	// available current is limit - consumption
 	mtr.pwr = -5000.0
 	pwrAv = circ.GetRemainingPower()
-	assert.Equal(t, limit-mtr.pwr, pwrAv)
+	assert.Equal(t, limitPwr-mtr.pwr, pwrAv)
 }
 
 func TestHierarchyPower(t *testing.T) {
 	// two circuits, check limit and consumption from both sides
 	limitMain := 20000.0
 	tstMtrMain := testMeter{pwr: 16000.0}
-	circMain := NewCircuit(util.NewLogger("main"), 0, limitMain, nil, &tstMtrMain, &tstMtrMain)
+	circMain, err := NewCircuit(util.NewLogger("main"), 0, limitMain, nil, &tstMtrMain, &tstMtrMain)
+	assert.Nil(t, err)
 	assert.NotNilf(t, circMain, "circuit not created")
 
 	// add subcircuit with meter
 	limitSub := 20000.0
 	tstMtrSub := testMeter{pwr: 10000.0}
-	circSub := NewCircuit(util.NewLogger("sub"), 0, limitSub, circMain, &tstMtrSub, &tstMtrSub)
+	circSub, err := NewCircuit(util.NewLogger("sub"), 0, limitSub, circMain, &tstMtrSub, &tstMtrSub)
 
+	assert.Nil(t, err)
 	assert.NotNilf(t, circSub.parentCircuit, "parent circuit not set")
 	assert.NotNilf(t, circSub.phaseCurrents, "sub circuit meter not set")
 
@@ -163,20 +171,21 @@ func TestHierarchyPower(t *testing.T) {
 func TestNoCurrentMeter(t *testing.T) {
 	// circuit may have nil for phase current
 	tstMtr := testMeter{}
-	circ := NewCircuit(util.NewLogger("main"), 0, 10, nil, nil, &tstMtr)
+	circ, err := NewCircuit(util.NewLogger("main"), 0, 10, nil, nil, &tstMtr)
+	assert.Nil(t, err)
 	assert.NotNilf(t, circ, "circuit not created")
 
 	res := circ.GetRemainingCurrent()
 	assert.Equal(t, math.MaxFloat64, res)
 	assert.Nil(t, circ.update())
-	_, err := circ.MaxPhasesCurrent()
+	_, err = circ.MaxPhasesCurrent()
 	assert.NotNil(t, err)
 
 	// we need a phase meter in casewe have a current limit
-	circ = NewCircuit(util.NewLogger("main"), 10, 0, nil, nil, &tstMtr)
+	circ, err = NewCircuit(util.NewLogger("main"), 10, 0, nil, nil, &tstMtr)
 	assert.Nil(t, circ)
 
 	// we always need a power meter
-	circ = NewCircuit(util.NewLogger("main"), 0, 0, nil, nil, nil)
+	circ, err = NewCircuit(util.NewLogger("main"), 0, 0, nil, nil, nil)
 	assert.Nil(t, circ)
 }
