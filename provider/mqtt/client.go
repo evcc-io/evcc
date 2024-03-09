@@ -137,7 +137,7 @@ func (m *Client) Cleanup(topic string, retained bool) error {
 
 	time.Sleep(time.Second)
 
-	if !m.Client.Unsubscribe(topic).WaitTimeout(request.Timeout) {
+	if !m.Client.Unsubscribe(topic + "/#").WaitTimeout(request.Timeout) {
 		return api.ErrTimeout
 	}
 
