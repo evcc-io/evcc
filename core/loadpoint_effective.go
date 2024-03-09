@@ -61,16 +61,21 @@ func (lp *Loadpoint) SocBasedPlanning() bool {
 // effectiveMinCurrent returns the effective min current
 func (lp *Loadpoint) effectiveMinCurrent() float64 {
 	minCurrent := lp.GetMinCurrent()
+	// issue #12829 : if minCurrent is set on the loadpoint's vehicle this defines the absolute minimum
+	var isMinCurrentFromVehicle = false
 
 	if v := lp.GetVehicle(); v != nil {
 		if res, ok := v.OnIdentified().GetMinCurrent(); ok {
-			minCurrent = max(minCurrent, res)
+			if res > 0 && res >= minCurrent {
+				isMinCurrentFromVehicle = true
+				minCurrent = res
+			}
 		}
 	}
 
 	if c, ok := lp.charger.(api.CurrentLimiter); ok {
 		if res, _, err := c.GetMinMaxCurrent(); err == nil {
-			if res > 0 && res < minCurrent {
+			if res > 0 && res < minCurrent && !isMinCurrentFromVehicle {
 				minCurrent = res
 			} else {
 				minCurrent = max(minCurrent, res)
