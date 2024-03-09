@@ -29,6 +29,7 @@
 								<select
 									id="vehicleTemplate"
 									v-model="templateName"
+									@change="templateChanged"
 									:disabled="!isNew"
 									class="form-select w-100"
 								>
@@ -259,7 +260,6 @@ export default {
 		},
 		async loadTemplate() {
 			this.template = null;
-			this.reset();
 			try {
 				const opts = {
 					params: {
@@ -340,6 +340,9 @@ export default {
 		},
 		modalInvisible() {
 			this.isModalVisible = false;
+		},
+		templateChanged() {
+			this.reset();
 		},
 	},
 };
