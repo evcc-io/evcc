@@ -42,7 +42,6 @@ import (
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/evcc-io/evcc/util/templates"
 	"github.com/evcc-io/evcc/vehicle"
-	"github.com/evcc-io/evcc/vehicle/wrapper"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/libp2p/zeroconf/v2"
@@ -286,7 +285,7 @@ func vehicleInstance(cc config.Named) (api.Vehicle, error) {
 
 		// wrap non-config vehicle errors to prevent fatals
 		log.ERROR.Printf("creating vehicle %s failed: %v", cc.Name, err)
-		instance = wrapper.New(cc.Name, cc.Other, err)
+		instance = vehicle.NewWrapper(cc.Name, cc.Other, err)
 	}
 
 	// ensure vehicle config has title
@@ -544,7 +543,7 @@ func configureHEMS(conf config.Typed, site *core.Site, httpd *server.HTTPd) erro
 func configureMDNS(conf networkConfig) error {
 	host := strings.TrimSuffix(conf.Host, ".local")
 
-	zc, err := zeroconf.RegisterProxy("EV Charge Controller", "_http._tcp", "local.", conf.Port, host, nil, []string{}, nil)
+	zc, err := zeroconf.RegisterProxy("evcc", "_http._tcp", "local.", conf.Port, host, nil, []string{"path=/"}, nil)
 	if err != nil {
 		return fmt.Errorf("mDNS announcement: %w", err)
 	}

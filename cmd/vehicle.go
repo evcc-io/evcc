@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"strconv"
+
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/spf13/cobra"
@@ -16,6 +18,7 @@ var vehicleCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(vehicleCmd)
+	vehicleCmd.Flags().Int64P(flagCurrent, "i", 0, flagCurrentDescription)
 	vehicleCmd.Flags().BoolP(flagStart, "a", false, flagStartDescription)
 	vehicleCmd.Flags().BoolP(flagStop, "o", false, flagStopDescription)
 	vehicleCmd.Flags().BoolP(flagWakeup, "w", false, flagWakeupDescription)
@@ -49,6 +52,27 @@ func runVehicle(cmd *cobra.Command, args []string) {
 
 	var flagUsed bool
 	for _, v := range config.Instances(vehicles) {
+		if flag := cmd.Flags().Lookup(flagCurrent); flag.Changed {
+			flagUsed = true
+
+			f, err := strconv.ParseFloat(flag.Value.String(), 64)
+			if err != nil {
+				log.ERROR.Println("max current:", err)
+			} else {
+				if vv, ok := v.(api.ChargerEx); ok {
+					if err := vv.MaxCurrentMillis(f); err != nil {
+						log.ERROR.Println("max current:", err)
+					}
+				} else if vv, ok := v.(api.CurrentController); ok {
+					if err := vv.MaxCurrent(int64(f)); err != nil {
+						log.ERROR.Println("max current:", err)
+					}
+				} else {
+					log.ERROR.Println("max current: not implemented")
+				}
+			}
+		}
+
 		if cmd.Flags().Lookup(flagWakeup).Changed {
 			flagUsed = true
 

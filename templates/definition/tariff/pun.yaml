@@ -1,0 +1,8 @@
+template: pun
+products:
+  - brand: PUN Orario
+params:
+  - preset: tariff-base
+render: |
+  type: pun
+  {{ include "tariff-base" . }}

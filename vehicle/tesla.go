@@ -19,11 +19,6 @@ import (
 type Tesla struct {
 	*embed
 	*tesla.Provider
-}
-
-type teslaController struct {
-	*embed
-	*tesla.Provider
 	*tesla.Controller
 }
 
@@ -45,7 +40,6 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		embed   `mapstructure:",squash"`
 		Tokens  Tokens
 		VIN     string
-		Control bool
 		Timeout time.Duration
 		Cache   time.Duration
 	}{
@@ -100,45 +94,29 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, err
 	}
 
+	// proxy client
+	pc := request.NewClient(log)
+	pc.Transport = &transport.Decorator{
+		Decorator: transport.DecorateHeaders(map[string]string{
+			"X-Auth-Token": sponsor.Token,
+		}),
+		Base: hc.Transport,
+	}
+
+	tcc, err := teslaclient.NewClient(context.Background(), teslaclient.WithClient(pc))
+	if err != nil {
+		return nil, err
+	}
+	tcc.SetBaseUrl(tesla.ProxyBaseUrl)
+
 	v := &Tesla{
-		embed:    &cc.embed,
-		Provider: tesla.NewProvider(vehicle, cc.Cache),
+		embed:      &cc.embed,
+		Provider:   tesla.NewProvider(vehicle, cc.Cache),
+		Controller: tesla.NewController(vehicle.WithClient(tcc)),
 	}
 
 	if v.Title_ == "" {
 		v.Title_ = vehicle.DisplayName
-	}
-
-	if cc.Control {
-		if !sponsor.IsAuthorized() {
-			return nil, api.ErrSponsorRequired
-		}
-
-		// proxy client
-		pc := request.NewClient(log)
-		pc.Transport = &transport.Decorator{
-			Decorator: transport.DecorateHeaders(map[string]string{
-				"X-Auth-Token": sponsor.Token,
-			}),
-			Base: hc.Transport,
-		}
-
-		tc, err := teslaclient.NewClient(context.Background(), teslaclient.WithClient(pc))
-		if err != nil {
-			return nil, err
-		}
-		tc.SetBaseUrl(tesla.ProxyBaseUrl)
-
-		vehicle, err := tc.Vehicle(vehicle.Vin)
-		if err != nil {
-			return nil, err
-		}
-
-		return &teslaController{
-			embed:      v.embed,
-			Provider:   v.Provider,
-			Controller: tesla.NewController(vehicle),
-		}, nil
 	}
 
 	return v, nil

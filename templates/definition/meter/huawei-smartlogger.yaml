@@ -5,28 +5,236 @@ products:
       generic: SmartLogger
 params:
   - name: usage
-    choice: ["pv"]
-  - name: host
-  - name: port
-    default: 502
+    choice: ["grid", "pv", "battery"]
+    allinone: true
+  - name: storageunit
+    type: number
+    default: 1
+    advanced: true
+  - name: modbus
+    choice: ["tcpip"]
+  - name: timeout
+    default: 15s
+  - name: capacity
+    advanced: true
 render: |
   type: custom
+  {{- if eq .usage "grid" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    timeout: {{ .timeout }}
+    connectdelay: 1s
+    register:
+      address: 32278 # Active power
+      type: holding
+      decode: int32
+    scale: 1
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    timeout: {{ .timeout }}
+    register:
+      address: 32349 # Negative active electricity
+      type: holding
+      decode: int64
+    scale: 0.01
+  currents:
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    timeout: {{ .timeout }}
+    register:
+      address: 32272 # Huawei phase A grid current
+      type: holding
+      decode: int32
+    scale: 0.1
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    timeout: {{ .timeout }}
+    register:
+      address: 32274 # Huawei phase B grid current
+      type: holding
+      decode: int32
+    scale: 0.1
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    timeout: {{ .timeout }}
+    register:
+      address: 32276 # Huawei phase C grid current
+      type: holding
+      decode: int32
+    scale: 0.1
+  {{- end }}
   {{- if eq .usage "pv" }}
   power:
     source: modbus
-    id: 0
-    uri: {{ .host }}:{{ .port }}
+    {{- include "modbus" . | indent 2 }}
+    timeout: {{ .timeout }}
+    connectdelay: 1s
     register:
-      address: 40525 # Active power
+      address: 32064 # Input power DC (if no battery in your system - for more precise readings use 32080 # Active generation power AC)
       type: holding
-      decode: int32
+      decode: int32nan
   energy:
     source: modbus
-    id: 0
-    uri: {{ .host }}:{{ .port }}
+    {{- include "modbus" . | indent 2 }}
+    timeout: {{ .timeout }}
     register:
-      address: 40560 # E-Total
+      address: 32106 # Accumulated energy yield
       type: holding
-      decode: uint32
+      decode: uint32nan
+    scale: 0.01
+  {{- end }}
+  {{- if eq .usage "battery" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    timeout: {{ .timeout }}
+    connectdelay: 1s
+    register:
+      {{- if eq .storageunit "1" }}
+      address: 37001
+      {{- end }}
+      {{- if eq .storageunit "2" }}
+      address: 37743
+      {{- end }}
+      type: holding
+      decode: int32nan
+    scale: -1
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    timeout: {{ .timeout }}
+    register:
+      {{- if eq .storageunit "1" }}
+      address: 37068 # [Energy storage unit 1] Total discharge
+      {{- end }}
+      {{- if eq .storageunit "2" }}
+      address: 37755 # [Energy storage unit 2] Total discharge
+      {{- end }}
+      type: holding
+      decode: uint32nan
+    scale: 0.01
+  soc:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    timeout: {{ .timeout }}
+    register:
+      {{- if eq .storageunit "1" }}
+      address: 37004
+      {{- end }}
+      {{- if eq .storageunit "2" }}
+      address: 37738
+      {{- end }}
+      type: holding
+      decode: uint16nan
     scale: 0.1
+  batterymode:
+    source: watchdog
+    timeout: 30s
+    reset: 1 # reset watchdog on normal
+    set:
+      source: switch
+      switch:
+      - case: 1 # normal
+        set:
+          source: const
+          value: 0 # stop
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 47100 # Forcible charge/discharge
+              type: writesingle
+              encoding: uint16
+      - case: 2 # hold
+        set:
+          source: sequence
+          set:
+          - source: const
+            value: 2 # discharge
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 47100 # Forcible charge/discharge
+                type: writesingle
+                encoding: uint16
+          - source: const
+            value: 0 # duration
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 47246 # Forcible charge/discharge setting mode
+                type: writesingle
+                encoding: uint16
+          - source: const
+            value: 1 # Minute
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 47083 # Forced charging and discharging period
+                type: writesingle
+                encoding: uint16
+          - source: const
+            value: 0 # W
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 47249 # Forcible discharge power
+                type: writemultiple
+                encoding: uint32
+      - case: 3 # charge
+        set:
+          source: sequence
+          set:
+          - source: const
+            value: 1 # charge
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 47100 # Forcible charge/discharge
+                type: writesingle
+                encoding: uint16
+          - source: const
+            value: 0 # duration
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 47246 # Forcible charge/discharge setting mode
+                type: writesingle
+                encoding: uint16
+          - source: const
+            value: 1 # Minute
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 47083 # Forced charging and discharging period
+                type: writesingle
+                encoding: uint16
+          - source: const
+            value: 2500 # W
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 47247 # Forcible charge power
+                type: writemultiple
+                encoding: uint32
+          - source: const
+            value: 1 # Enable
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 47087 # Charge from grid
+                type: writemultiple
+                encoding: uint32
+  capacity: {{ .capacity }} # kWh
   {{- end }}

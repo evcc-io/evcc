@@ -11,8 +11,8 @@ import (
 	"time"
 
 	evbus "github.com/asaskevich/EventBus"
-	"github.com/avast/retry-go/v4"
 	"github.com/benbjohnson/clock"
+	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/coordinator"
 	"github.com/evcc-io/evcc/core/keys"
@@ -125,6 +125,7 @@ type Loadpoint struct {
 	configuredPhases int     // Charger configured phase mode 0/1/3
 	limitSoc         int     // Session limit for soc
 	limitEnergy      float64 // Session limit for energy
+	smartCostLimit   float64 // always charge if cost is below this value
 
 	mode                api.ChargeMode
 	enabled             bool      // Charger enabled state
@@ -334,7 +335,9 @@ func (lp *Loadpoint) restoreSettings() {
 	if v, err := lp.settings.Float(keys.LimitEnergy); err == nil && v > 0 {
 		lp.setLimitEnergy(v)
 	}
-
+	if v, err := lp.settings.Float(keys.SmartCostLimit); err == nil {
+		lp.SetSmartCostLimit(v)
+	}
 	t, err1 := lp.settings.Time(keys.PlanTime)
 	v, err2 := lp.settings.Float(keys.PlanEnergy)
 	if err1 == nil && err2 == nil {
@@ -646,7 +649,7 @@ func (lp *Loadpoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	if enabled, err := lp.charger.Enabled(); err == nil {
 		if lp.enabled = enabled; enabled {
 			// set defined current for use by pv mode
-			_ = lp.setLimit(lp.effectiveMinCurrent(), false)
+			_ = lp.setLimit(lp.effectiveMinCurrent())
 		}
 	} else {
 		lp.log.ERROR.Printf("charger: %v", err)
@@ -774,26 +777,27 @@ func (lp *Loadpoint) checkCircuitAvailableLimit(requestedCurrent float64) (float
 }
 
 // setLimit applies charger current limits and enables/disables accordingly
-func (lp *Loadpoint) setLimit(chargeCurrent float64, force bool) error {
-	// apply load management
-	forceCurrentChange := false
-	maxCurAvailable, _, err := lp.checkCircuitAvailableLimit(chargeCurrent)
-	if err != nil {
-		return err
-	}
-	// apply limitation
-	if maxCurAvailable < chargeCurrent {
-		chargeCurrent = maxCurAvailable
-		forceCurrentChange = true
-	}
-
+func (lp *Loadpoint) setLimit(chargeCurrent float64) error {
 	// full amps only?
 	if _, ok := lp.charger.(api.ChargerEx); !ok || lp.vehicleHasFeature(api.CoarseCurrent) {
 		chargeCurrent = math.Trunc(chargeCurrent)
 	}
 
+	// apply load management
+	forceCurrentChangeLM := false
+	maxCurAvailable, _, err := lp.checkCircuitAvailableLimit(chargeCurrent)
+	if err != nil {
+		return err
+	}
+
+	// apply limitation
+	if maxCurAvailable < chargeCurrent {
+		chargeCurrent = maxCurAvailable
+		forceCurrentChangeLM = true
+	}
+
 	// set current
-	if (chargeCurrent != lp.chargeCurrent && chargeCurrent >= lp.effectiveMinCurrent()) || forceCurrentChange {
+	if (chargeCurrent != lp.chargeCurrent && chargeCurrent >= lp.effectiveMinCurrent()) || forceCurrentChangeLM {
 		var err error
 		if charger, ok := lp.charger.(api.ChargerEx); ok {
 			err = charger.MaxCurrentMillis(chargeCurrent)
@@ -934,7 +938,7 @@ func (lp *Loadpoint) disableUnlessClimater() error {
 		current = lp.effectiveMinCurrent()
 	}
 
-	return lp.setLimit(current, true)
+	return lp.setLimit(current)
 }
 
 // remoteControlled returns true if remote control status is active
@@ -1132,7 +1136,7 @@ func (lp *Loadpoint) scalePhases(phases int) error {
 func (lp *Loadpoint) fastCharging() error {
 	err := lp.scalePhasesIfAvailable(3)
 	if err == nil {
-		err = lp.setLimit(lp.effectiveMaxCurrent(), true)
+		err = lp.setLimit(lp.effectiveMaxCurrent())
 	}
 	return err
 }
@@ -1346,7 +1350,10 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batter
 
 // UpdateChargePower updates charge meter power
 func (lp *Loadpoint) UpdateChargePower() {
-	err := retry.Do(func() error {
+	bo := backoff.NewExponentialBackOff()
+	bo.MaxElapsedTime = time.Second
+
+	if err := backoff.Retry(func() error {
 		value, err := lp.chargeMeter.CurrentPower()
 		if err != nil {
 			return err
@@ -1366,8 +1373,7 @@ func (lp *Loadpoint) UpdateChargePower() {
 		}
 
 		return nil
-	}, retryOptions...)
-	if err != nil {
+	}, bo); err != nil {
 		lp.log.ERROR.Printf("charge meter: %v", err)
 	}
 }
@@ -1602,6 +1608,7 @@ func (lp *Loadpoint) phaseSwitchCompleted() bool {
 
 // Update is the main control function. It reevaluates meters and charger state
 func (lp *Loadpoint) Update(sitePower float64, autoCharge, batteryBuffered, batteryStart bool, greenShare float64, effPrice, effCo2 *float64) {
+	lp.publish(keys.SmartCostActive, autoCharge)
 	lp.processTasks()
 
 	// read and publish meters first- charge power has already been updated by the site
@@ -1665,7 +1672,7 @@ func (lp *Loadpoint) Update(sitePower float64, autoCharge, batteryBuffered, batt
 	case !lp.connected():
 		// always disable charger if not connected
 		// https://github.com/evcc-io/evcc/issues/105
-		err = lp.setLimit(0, false)
+		err = lp.setLimit(0)
 
 	case lp.scalePhasesRequired():
 		err = lp.scalePhases(lp.configuredPhases)
@@ -1675,7 +1682,7 @@ func (lp *Loadpoint) Update(sitePower float64, autoCharge, batteryBuffered, batt
 		fallthrough
 
 	case mode == api.ModeOff:
-		err = lp.setLimit(0, true)
+		err = lp.setLimit(0)
 
 	// minimum or target charging
 	case lp.minSocNotReached() || plannerActive:
@@ -1706,20 +1713,17 @@ func (lp *Loadpoint) Update(sitePower float64, autoCharge, batteryBuffered, batt
 
 		targetCurrent := lp.pvMaxCurrent(mode, sitePower, batteryBuffered, batteryStart)
 
-		var required bool // false
 		if targetCurrent == 0 && lp.vehicleClimateActive() {
 			targetCurrent = lp.effectiveMinCurrent()
-			required = true
 		}
 
 		// Sunny Home Manager
 		if lp.remoteControlled(loadpoint.RemoteSoftDisable) {
 			remoteDisabled = loadpoint.RemoteSoftDisable
 			targetCurrent = 0
-			required = true
 		}
 
-		err = lp.setLimit(targetCurrent, required)
+		err = lp.setLimit(targetCurrent)
 	}
 
 	// Wake-up checks
