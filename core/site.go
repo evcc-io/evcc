@@ -219,7 +219,7 @@ func NewSiteFromConfig(
 	})
 
 	// configure auth
-	site.auth = auth.NewAuth(&settings.Settings{})
+	site.auth = auth.New(&settings.Settings{})
 
 	return site, nil
 }

@@ -20,7 +20,7 @@ type Auth struct {
 	settings Settings
 }
 
-func NewAuth(settings Settings) *Auth {
+func New(settings Settings) *Auth {
 	return &Auth{settings: settings}
 }
 
@@ -29,7 +29,7 @@ func (a *Auth) hashPassword(password string) (string, error) {
 	return string(bytes), err
 }
 
-func (a *Auth) getAdminPassword() string {
+func (a *Auth) getAdminPasswordHash() string {
 	if pw, err := a.settings.String(keys.AdminPassword); err == nil {
 		return pw
 	}
@@ -43,7 +43,7 @@ func (a *Auth) RemoveAdminPassword() {
 
 // SetAdminPassword sets the admin password if not already set
 func (a *Auth) SetAdminPassword(password string) error {
-	if a.getAdminPassword() != "" {
+	if a.getAdminPasswordHash() != "" {
 		return errors.New("admin password already set")
 	}
 
@@ -58,7 +58,7 @@ func (a *Auth) SetAdminPassword(password string) error {
 
 // IsAdminPasswordValid checks if the given password matches the admin password
 func (a *Auth) IsAdminPasswordValid(password string) bool {
-	adminHash := a.getAdminPassword()
+	adminHash := a.getAdminPasswordHash()
 	if adminHash == "" {
 		return false
 	}

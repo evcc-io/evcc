@@ -21,7 +21,7 @@ func (m *MockSettings) SetString(key string, value string) {
 
 func TestSetAdminPassword(t *testing.T) {
 	mockSettings := &MockSettings{values: make(map[string]string)}
-	auth := NewAuth(mockSettings)
+	auth := New(mockSettings)
 
 	password := "testpassword"
 
@@ -46,7 +46,7 @@ func TestSetAdminPassword(t *testing.T) {
 func TestRemoveAdminPassword(t *testing.T) {
 	mockSettings := &MockSettings{values: make(map[string]string)}
 	mockSettings.values[keys.AdminPassword] = "testpassword"
-	auth := NewAuth(mockSettings)
+	auth := New(mockSettings)
 
 	auth.RemoveAdminPassword()
 
@@ -57,7 +57,7 @@ func TestRemoveAdminPassword(t *testing.T) {
 
 func TestIsAdminPasswordValid(t *testing.T) {
 	mockSettings := &MockSettings{values: make(map[string]string)}
-	auth := NewAuth(mockSettings)
+	auth := New(mockSettings)
 
 	validPw := "testpassword"
 	invalidPw := "wrongpassword"
@@ -79,7 +79,7 @@ func TestIsAdminPasswordValid(t *testing.T) {
 
 func TestJwtToken(t *testing.T) {
 	mockSettings := &MockSettings{values: make(map[string]string)}
-	auth := NewAuth(mockSettings)
+	auth := New(mockSettings)
 
 	lifetime := time.Hour
 	tokenString, err := auth.GenerateJwtToken(lifetime)

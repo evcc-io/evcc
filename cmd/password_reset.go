@@ -40,7 +40,7 @@ func runPasswordReset(cmd *cobra.Command, args []string) {
 	}
 
 	if confirm {
-		a := auth.NewAuth(&settings.Settings{})
+		a := auth.New(&settings.Settings{})
 		a.RemoveAdminPassword()
 	}
 
