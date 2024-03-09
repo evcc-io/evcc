@@ -424,7 +424,8 @@ export default {
 		},
 		async updateDeviceValue(type, name) {
 			try {
-				const response = await api.get(`/config/devices/${type}/${name}/status`);
+				const url = `/config/devices/${encodeURIComponent(type)}/${encodeURIComponent(name)}/status`;
+				const response = await api.get(url);
 				if (!this.deviceValues[type]) this.deviceValues[type] = {};
 				this.deviceValues[type][name] = response.data.result;
 			} catch (error) {
