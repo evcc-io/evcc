@@ -76,7 +76,12 @@ export default {
 		notReachableInTime: function () {
 			const { planTime } = this.plan || {};
 			if (planTime && this.endTime) {
-				return new Date(planTime) < new Date(this.endTime);
+				const dateWanted = new Date(planTime);
+				const dateEstimated = new Date(this.endTime);
+				// account for rounding errors
+				dateWanted.setSeconds(60);
+				dateEstimated.setSeconds(0);
+				return dateWanted < dateEstimated;
 			}
 			return false;
 		},
