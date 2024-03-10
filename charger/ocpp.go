@@ -174,6 +174,10 @@ func NewOCPP(id string, connector int, idtag string,
 			meterInterval = 10 * time.Second
 		}
 	} else {
+		// Wait 1 second before querying getConfiguration, as there seems to be a timing issue in EVBox when switching OCPP protocol version
+		c.log.DEBUG.Printf("waiting 1 second before getConfiguration call")
+		time.Sleep(1 * time.Second)
+
 		err := ocpp.Instance().GetConfiguration(cp.ID(), func(resp *core.GetConfigurationConfirmation, err error) {
 			if err == nil {
 				// log unsupported configuration keys
