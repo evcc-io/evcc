@@ -38,7 +38,7 @@ render: |
     register: # manual non-sunspec register configuration
       address: 35301 # PV Total Power
       type: holding
-      decode: uint32
+      decode: uint32nan
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
