@@ -175,7 +175,7 @@ func NewOCPP(id string, connector int, idtag string,
 		}
 	} else {
 		// fix timing issue in EVBox when switching OCPP protocol version
-		time.Sleep(1 * time.Second)
+		time.Sleep(time.Second)
 
 		err := ocpp.Instance().GetConfiguration(cp.ID(), func(resp *core.GetConfigurationConfirmation, err error) {
 			if err == nil {
