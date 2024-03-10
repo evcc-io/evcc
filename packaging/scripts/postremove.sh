@@ -25,9 +25,9 @@ fi
 if [ "$1" = "upgrade" ] && [ -t 0 ]; then
 	if ! /usr/bin/evcc checkconfig > /dev/null; then
 		echo "--------------------------------------------------------------------------------"
-		echo "ERROR: your evcc configuration is not compatible with the new version. Please consider reading the release notes: https://github.com/evcc-io/evcc/releases"
-		echo "checkconfig Output:" 
-		/usr/bin/evcc checkconfig || true
+		echo "ERROR: your configuration is not compatible with the new version:"
+		/usr/bin/evcc checkconfig --log error || true
+		echo "Please consult the release notes: https://github.com/evcc-io/evcc/releases"
 		echo "--------------------------------------------------------------------------------"
 
 		while true; do
