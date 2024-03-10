@@ -142,6 +142,6 @@ render: |
               register:
                 address: 47512 # EMSPowerSet
                 type: writemultiple
-                encoding: uint32
+                encoding: uint16
   capacity: {{ .capacity }} # kWh
   {{- end }}
