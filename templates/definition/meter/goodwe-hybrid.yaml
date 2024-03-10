@@ -30,7 +30,6 @@ render: |
       address: 36017 # E-Total-Buy
       type: holding
       decode: float32
-    scale: 0.001
   {{- end }}
   {{- if eq .usage "pv" }}
   power:
@@ -68,7 +67,7 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register: # manual non-sunspec register configuration
-      address: 35209 # Energy-Battery Discharg
+      address: 35209 # Energy-Battery Discharge
       type: holding
       decode: uint32
     scale: 0.1
