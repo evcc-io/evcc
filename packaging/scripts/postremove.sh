@@ -31,15 +31,15 @@ if [ "$1" = "upgrade" ] && [ -t 0 ]; then
 		echo "--------------------------------------------------------------------------------"
 
 		while true; do
-			echo "Do you want to keep your old (working) evcc version? [Y/n]: "
+			echo "Do you want to keep your old (working) version? [Y/n]: "
 			read choice
 			case "$choice" in
 				n*|N*|"")
-					echo "We will keep the new version. Your evcc configuration stays untouched!"
+					echo "We will keep the new version. Your configuration stays untouched!"
 					break
 					;;
 				y*|Y*)
-					echo "The old version will be restored. Your evcc configuration stays untouched! Following errors are intended:"
+					echo "The old version will be restored. Your configuration stays untouched! Following errors are intended:"
 					touch /tmp/.evccrollback
 					exit 1
 					break
