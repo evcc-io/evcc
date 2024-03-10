@@ -2,6 +2,7 @@ package cmd
 
 import (
 	_ "embed"
+	"fmt"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -24,6 +25,6 @@ func runConfigCheck(cmd *cobra.Command, args []string) {
 		log.FATAL.Println("config invalid:", err)
 		os.Exit(1)
 	} else {
-		log.INFO.Println("config valid")
+		fmt.Println("config valid")
 	}
 }
