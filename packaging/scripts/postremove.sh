@@ -18,7 +18,7 @@ if [ "$1" = "purge" ]; then
 	fi
 fi
 
-# if interactive: call `/usr/bin/evcc checkconfig`` and check the return code (newer version)
+# if interactive: call `/usr/bin/evcc checkconfig` and check the return code (newer version)
 # if return code is 0, do nothing
 # else: Ask user if he wants to keep the old version (working) or the new version (not working) 
 # Remember the choice with /tmp/.evccrollback and fail new-postrm failed-upgrade old-version new-version to initiate dpkg's rollback
