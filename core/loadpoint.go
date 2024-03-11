@@ -660,7 +660,7 @@ func (lp *Loadpoint) syncCharger() error {
 
 	consistentState := lp.chargerUpdateCompleted() && lp.phaseSwitchCompleted()
 
-	if validState {
+	if consistentState {
 		defer func() {
 			lp.enabled = enabled
 			lp.publish(keys.Enabled, lp.enabled)
