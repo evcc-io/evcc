@@ -153,6 +153,14 @@ func (c networkConfig) URI() string {
 	return fmt.Sprintf("%s://%s", c.Schema, c.HostPort())
 }
 
+func nameValid(name string) error {
+	re := regexp.MustCompile(api.NamePattern)
+	if !re.MatchString(name) {
+		return fmt.Errorf("invalid name: must only contain %s: %s", api.NamePattern, name)
+	}
+	return nil
+}
+
 func loadConfigFile(conf *globalConfig) error {
 	err := viper.ReadInConfig()
 
@@ -180,6 +188,10 @@ func configureMeters(static []config.Named, names ...string) error {
 	for i, cc := range static {
 		if cc.Name == "" {
 			return fmt.Errorf("cannot create meter %d: missing name", i+1)
+		}
+
+		if err := nameValid(cc.Name); err != nil {
+			return fmt.Errorf("cannot create meter %d: %w", i+1, err)
 		}
 
 		if len(names) > 0 && !slices.Contains(names, cc.Name) {
@@ -228,6 +240,10 @@ func configureChargers(static []config.Named, names ...string) error {
 	for i, cc := range static {
 		if cc.Name == "" {
 			return fmt.Errorf("cannot create charger %d: missing name", i+1)
+		}
+
+		if err := nameValid(cc.Name); err != nil {
+			return fmt.Errorf("cannot create charger %d: %w", i+1, err)
 		}
 
 		if len(names) > 0 && !slices.Contains(names, cc.Name) {
@@ -306,6 +322,10 @@ func configureVehicles(static []config.Named, names ...string) error {
 	for i, cc := range static {
 		if cc.Name == "" {
 			return fmt.Errorf("cannot create vehicle %d: missing name", i+1)
+		}
+
+		if err := nameValid(cc.Name); err != nil {
+			return fmt.Errorf("cannot create vehicle %d: %w", i+1, err)
 		}
 
 		if len(names) > 0 && !slices.Contains(names, cc.Name) {
