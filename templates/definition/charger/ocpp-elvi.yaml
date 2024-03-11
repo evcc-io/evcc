@@ -27,4 +27,3 @@ render: |
   metervalues: Current.Import.L1,Current.Import.L2,Current.Import.L3,Energy.Active.Import.Register,Power.Active.Import,Voltage.L1,Voltage.L2,Voltage.L3
   meterinterval: {{ .meterinterval }}
   {{- end }}
-  getconfiguration: false
