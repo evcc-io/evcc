@@ -667,7 +667,7 @@ func (lp *Loadpoint) syncCharger() error {
 		}()
 	}
 
-	// #1: check charger logic, fix charger state if necessary (this might be obsolete)
+	// #1: check charger logic, fix charger state if necessary (for chargers that start charging while being disabled)
 	if !enabled && lp.charging() {
 		lp.log.WARN.Println("charger logic error: disabled but charging")
 		enabled = true // treat as enabled when charging
@@ -675,7 +675,7 @@ func (lp *Loadpoint) syncCharger() error {
 			if err := lp.charger.Enable(true); err != nil { // also enable charger to correct internal state
 				return err
 			}
-			lp.elapsePVTimer()
+			lp.elapsePVTimer() // elapse PV timer so loadpoint can immediately switch charger if necessary
 			return nil
 		}
 	}
