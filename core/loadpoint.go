@@ -671,7 +671,7 @@ func (lp *Loadpoint) syncCharger() error {
 	if !enabled && lp.charging() {
 		lp.log.WARN.Println("charger logic error: disabled but charging")
 		enabled = true // treat as enabled when charging
-		if validState {
+		if consistentState {
 			if err := lp.charger.Enable(true); err != nil { // also enable charger to correct internal state
 				return err
 			}
@@ -690,7 +690,7 @@ func (lp *Loadpoint) syncCharger() error {
 			}
 			// smallest adjustment most PWM-Controllers can do is: 100%÷256×0,6A = 0.234A
 			if math.Abs(lp.chargeCurrent-current) > 0.23 {
-				if validState {
+				if consistentState {
 					lp.log.WARN.Printf("charger logic error: current mismatch (got %.3gA, expected %.3gA)", current, lp.chargeCurrent)
 				}
 				lp.chargeCurrent = current
@@ -700,7 +700,7 @@ func (lp *Loadpoint) syncCharger() error {
 	} else if !enabled && !lp.phaseSwitchCompleted() {
 		// some chargers (i.E. Easee in some configurations) disable themself to be able to switch phases
 		return lp.charger.Enable(true) // enable charger
-	} else if validState && (enabled || lp.connected()) {
+	} else if consistentState && (enabled || lp.connected()) {
 		// ignore disabled state if vehicle was disconnected (!lp.enabled && !lp.connected)
 		lp.log.WARN.Printf("charger out of sync: expected %vd, got %vd", status[lp.enabled], status[enabled])
 	}
