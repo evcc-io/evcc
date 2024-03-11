@@ -42,6 +42,10 @@ func NewEnerginetFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		return nil, errors.New("missing region")
 	}
 
+	if err := cc.embed.parse(); err != nil {
+		return nil, err
+	}
+
 	t := &Energinet{
 		embed:  &cc.embed,
 		log:    util.NewLogger("energinet"),
@@ -79,13 +83,28 @@ func (t *Energinet) run(done chan error) {
 			continue
 		}
 
+		charges, err := t.zones.Rates(time.Now())
+		if err != nil {
+			once.Do(func() { done <- err })
+			t.log.ERROR.Println(err)
+			continue
+		}
+
 		data := make(api.Rates, 0, len(res.Records))
 		for _, r := range res.Records {
 			date, _ := time.Parse("2006-01-02T15:04:05", r.HourUTC)
+
+			charge, err := charges.Current(date)
+			if err != nil {
+				once.Do(func() { done <- err })
+				t.log.ERROR.Println(err)
+				continue
+			}
+
 			ar := api.Rate{
 				Start: date.Local(),
 				End:   date.Add(time.Hour).Local(),
-				Price: t.totalPrice(r.SpotPriceDKK / 1e3),
+				Price: t.totalPriceZonesCharges(r.SpotPriceDKK/1e3, charge.Price),
 			}
 			data = append(data, ar)
 		}

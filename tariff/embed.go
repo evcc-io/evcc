@@ -4,8 +4,8 @@ import "github.com/evcc-io/evcc/tariff/fixed"
 
 type embed struct {
 	Charges float64          `mapstructure:"charges"`
-	Zones   fixed.ZoneConfig `mapstructure:"zones"`
 	Tax     float64          `mapstructure:"tax"`
+	Zones   fixed.ZoneConfig `mapstructure:"zones"`
 	zones   fixed.Zones
 }
 
