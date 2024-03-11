@@ -658,7 +658,7 @@ func (lp *Loadpoint) syncCharger() error {
 		return err
 	}
 
-	validState := lp.chargerUpdateCompleted() && lp.phaseSwitchCompleted()
+	consistentState := lp.chargerUpdateCompleted() && lp.phaseSwitchCompleted()
 
 	if validState {
 		defer func() {
