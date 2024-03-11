@@ -699,7 +699,7 @@ func (lp *Loadpoint) syncCharger() error {
 		}
 	} else if !enabled && !lp.phaseSwitchCompleted() {
 		// some chargers (i.E. Easee in some configurations) disable themself to be able to switch phases
-		return lp.charger.Enable(true) // enable charger		
+		return lp.charger.Enable(true) // enable charger
 	} else if validState && (enabled || lp.connected()) {
 		// ignore disabled state if vehicle was disconnected (!lp.enabled && !lp.connected)
 		lp.log.WARN.Printf("charger out of sync: expected %vd, got %vd", status[lp.enabled], status[enabled])
