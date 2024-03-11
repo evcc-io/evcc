@@ -98,7 +98,6 @@ func (lp *Loadpoint) effectiveMaxCurrent() float64 {
 	if c, ok := lp.charger.(api.CurrentLimiter); ok {
 		if _, res, err := c.GetMinMaxCurrent(); err == nil && res > 0 {
 			maxCurrent = min(maxCurrent, res)
-			lp.publish(keys.EffectiveMaxCurrent, maxCurrent)
 		}
 	}
 
