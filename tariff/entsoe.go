@@ -57,6 +57,10 @@ func NewEntsoeFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		return nil, err
 	}
 
+	if err := cc.embed.parse(); err != nil {
+		return nil, err
+	}
+
 	log := util.NewLogger("entsoe").Redact(cc.Securitytoken)
 
 	t := &Entsoe{
@@ -85,7 +89,6 @@ func NewEntsoeFromConfig(other map[string]interface{}) (api.Tariff, error) {
 
 func (t *Entsoe) run(done chan error) {
 	var once sync.Once
-
 	bo := newBackoff()
 
 	// Data updated by ESO every half hour, but we only need data every hour to stay current.
@@ -154,12 +157,26 @@ func (t *Entsoe) run(done chan error) {
 			continue
 		}
 
+		charges, err := t.zones.Rates(time.Now())
+		if err != nil {
+			once.Do(func() { done <- err })
+			t.log.ERROR.Println(err)
+			continue
+		}
+
 		data := make(api.Rates, 0, len(res))
 		for _, r := range res {
+			charge, err := charges.Current(r.Start)
+			if err != nil {
+				once.Do(func() { done <- err })
+				t.log.ERROR.Println(err)
+				continue
+			}
+
 			ar := api.Rate{
 				Start: r.Start,
 				End:   r.End,
-				Price: t.totalPrice(r.Value),
+				Price: t.totalPriceZonesCharges(r.Value, charge.Price),
 			}
 			data = append(data, ar)
 		}
