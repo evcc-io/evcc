@@ -658,22 +658,20 @@ func (lp *Loadpoint) syncCharger() error {
 		return err
 	}
 
-	// some chargers (i.E. Easee in some configurations) disable themself to be able to switch phases
-	if !enabled && lp.enabled && !lp.phaseSwitchCompleted() {
-		return lp.charger.Enable(true) // enable charger
-	}
+	validState := lp.chargerUpdateCompleted() && lp.phaseSwitchCompleted()
 
-	if lp.chargerUpdateCompleted() {
+	if validState {
 		defer func() {
 			lp.enabled = enabled
 			lp.publish(keys.Enabled, lp.enabled)
 		}()
 	}
 
+	// #1: check charger logic, fix charger state if necessary (this might be obsolete)
 	if !enabled && lp.charging() {
 		lp.log.WARN.Println("charger logic error: disabled but charging")
 		enabled = true // treat as enabled when charging
-		if lp.chargerUpdateCompleted() {
+		if validState {
 			if err := lp.charger.Enable(true); err != nil { // also enable charger to correct internal state
 				return err
 			}
@@ -682,7 +680,7 @@ func (lp *Loadpoint) syncCharger() error {
 		}
 	}
 
-	// status in sync
+	// #2: sync charger
 	if enabled == lp.enabled {
 		// sync max current
 		if charger, ok := lp.charger.(api.CurrentGetter); ok && enabled {
@@ -690,7 +688,6 @@ func (lp *Loadpoint) syncCharger() error {
 			if err != nil {
 				return err
 			}
-
 			// smallest adjustment most PWM-Controllers can do is: 100%÷256×0,6A = 0.234A
 			if math.Abs(lp.chargeCurrent-current) > 0.23 {
 				if lp.chargerUpdateCompleted() {
@@ -700,15 +697,13 @@ func (lp *Loadpoint) syncCharger() error {
 				lp.bus.Publish(evChargeCurrent, lp.chargeCurrent)
 			}
 		}
-
-		return nil
-	}
-
-	// ignore disabled state if vehicle was disconnected ^(lp.enabled && ^lp.connected)
-	if lp.chargerUpdateCompleted() && lp.phaseSwitchCompleted() && (enabled || lp.connected()) {
+	} else if !enabled && !lp.phaseSwitchCompleted() {
+		// some chargers (i.E. Easee in some configurations) disable themself to be able to switch phases
+		return lp.charger.Enable(true) // enable charger		
+	} else if validState && (enabled || lp.connected()) {
+		// ignore disabled state if vehicle was disconnected (!lp.enabled && !lp.connected)
 		lp.log.WARN.Printf("charger out of sync: expected %vd, got %vd", status[lp.enabled], status[enabled])
 	}
-
 	return nil
 }
 
