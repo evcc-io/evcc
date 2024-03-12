@@ -652,7 +652,7 @@ func (lp *Loadpoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 }
 
 func (lp *Loadpoint) setAndPublishEnabled(enabled bool) {
-	if (enabled != lp.enabled) {
+	if enabled != lp.enabled {
 		lp.log.DEBUG.Printf("charger %s", status[enabled])
 		lp.enabled = enabled
 	}
