@@ -3,6 +3,7 @@ package cloud
 import (
 	"crypto/tls"
 	_ "embed"
+	"net"
 
 	"github.com/evcc-io/evcc/util"
 	"google.golang.org/grpc"
@@ -10,7 +11,7 @@ import (
 )
 
 var (
-	host = util.Getenv("GRPC_URI", "sponsor.evcc.io:8080")
+	hostport = util.Getenv("GRPC_URI", "sponsor.evcc.io:8080")
 
 	conn *grpc.ClientConn
 )
@@ -20,9 +21,15 @@ func Connection() (*grpc.ClientConn, error) {
 		return conn, nil
 	}
 
-	var err error
-	creds := credentials.NewTLS(new(tls.Config))
-	conn, err = grpc.Dial(host, grpc.WithTransportCredentials(creds))
+	host, _, err := net.SplitHostPort(hostport)
+	if err != nil {
+		return nil, err
+	}
+
+	creds := credentials.NewTLS(&tls.Config{
+		ServerName: host,
+	})
+	conn, err = grpc.Dial(hostport, grpc.WithTransportCredentials(creds))
 
 	return conn, err
 }
