@@ -37,6 +37,8 @@ type MennekesCompact struct {
 }
 
 const (
+	mennekesCompactName = "mennekes-compact"
+
 	mennekesRegModbusVersion        = 0x0000 // uint16
 	mennekesRegFirmwareVersion      = 0x0001 // ascii[16]
 	mennekesRegSerialNumber         = 0x0013 // ascii[16]
@@ -63,7 +65,7 @@ const (
 )
 
 func init() {
-	registry.Add("mennekes-compact", NewMennekesCompactFromConfig)
+	registry.Add(mennekesCompactName, NewMennekesCompactFromConfig)
 }
 
 // NewMennekesCompactFromConfig creates a new Mennekes ModbusTCP charger
@@ -101,7 +103,7 @@ func NewMennekesCompact(uri, device, comset string, baudrate int, proto modbus.P
 		return nil, api.ErrSponsorRequired
 	}
 
-	log := util.NewLogger("mennekes")
+	log := util.NewLogger(mennekesCompactName)
 	conn.Logger(log.TRACE)
 
 	wb := &MennekesCompact{
