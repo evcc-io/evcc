@@ -26,6 +26,7 @@ import (
 	"github.com/volkszaehler/mbmd/encoding"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/charger/mennekes"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/sponsor"
@@ -52,6 +53,7 @@ const (
 	mennekesRegHeartbeat            = 0x0D00 // uint16
 	mennekesRegRequestedPhases      = 0x0D04 // uint16
 	mennekesRegChargingReleaseEM    = 0x0D05 // uint16
+	mennekesRegActiveErrorCode      = 0x0E00 // uint16
 	mennekesRegChargedEnergyTotal   = 0x1000 // float32
 
 	mennekesAllowed           = 1
@@ -151,18 +153,23 @@ func (wb *MennekesCompact) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	switch status := encoding.Uint16(b); status {
-	case 1:
+	switch state := mennekes.EVSEState(encoding.Uint16(b)); state {
+	case mennekes.NotInitialized:
+		return api.StatusNone, nil
+	case mennekes.Idle:
 		return api.StatusA, nil
-
-	case 2, 3, 4:
+	case mennekes.EVConnected, mennekes.PreconditionsValid, mennekes.ReadyToCharge:
 		return api.StatusB, nil
-
-	case 5:
+	case mennekes.Charging:
 		return api.StatusC, nil
-
+	case mennekes.Error:
+		if errCode, e := wb.conn.
+			ReadHoldingRegisters(mennekesRegActiveErrorCode, 1); e == nil && encoding.Uint16(errCode) != 0 {
+			return api.StatusNone, fmt.Errorf("invalid status: %s: code: %d", state, encoding.Uint16(errCode))
+		}
+		fallthrough
 	default:
-		return api.StatusNone, fmt.Errorf("invalid status: %d", status)
+		return api.StatusNone, fmt.Errorf("invalid status: %s", state)
 	}
 }
 
