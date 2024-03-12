@@ -651,6 +651,14 @@ func (lp *Loadpoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	}
 }
 
+func (lp *Loadpoint) setAndPublishEnabled(enabled bool) {
+	if (enabled != lp.enabled) {
+		lp.log.DEBUG.Printf("charger %s", status[enabled])
+		lp.enabled = enabled
+	}
+	lp.publish(keys.Enabled, enabled)
+}
+
 // syncCharger updates charger status and synchronizes it with expectations
 func (lp *Loadpoint) syncCharger() error {
 	enabled, err := lp.charger.Enabled()
@@ -662,7 +670,7 @@ func (lp *Loadpoint) syncCharger() error {
 
 	if consistentState {
 		defer func() {
-			setAndPublishEnabled(enabled);
+			setAndPublishEnabled(enabled)
 		}()
 	}
 
@@ -704,14 +712,6 @@ func (lp *Loadpoint) syncCharger() error {
 		lp.log.WARN.Printf("charger out of sync: expected %vd, got %vd", status[lp.enabled], status[enabled])
 	}
 	return nil
-}
-
-func (lp *Loadpoint) setAndPublishEnabled(enabled bool) {
-	if (enabled != lp.enabled) {
-		lp.log.DEBUG.Printf("charger %s", status[enabled])
-		lp.enabled = enabled
-	}
-	lp.publish(keys.Enabled, enabled)
 }
 
 // setLimit applies charger current limits and enables/disables accordingly
@@ -765,7 +765,7 @@ func (lp *Loadpoint) setLimit(chargeCurrent float64) error {
 			return fmt.Errorf("charger %s: %w", status[enabled], err)
 		}
 
-		setAndPublishEnabled(enabled);
+		setAndPublishEnabled(enabled)
 		lp.chargerSwitched = lp.clock.Now()
 
 		lp.bus.Publish(evChargeCurrent, chargeCurrent)
