@@ -2,7 +2,7 @@ package charger
 
 // LICENSE
 
-// Copyright (c) 2023 premultiply
+// Copyright (c) 2023, 2024 premultiply, andig, Marcel Ludwig <malud>
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -109,17 +109,24 @@ func NewMennekesCompact(uri, device, comset string, baudrate int, proto modbus.P
 		conn: conn,
 	}
 
-	// failsafe
+	// send heartbeat on startup and don't wait for the first tick
+	wb.doHeartbeat()
+	// initiate heartbeat with given interval
 	go wb.heartbeat(mennekesHeartbeatInterval)
 
 	return wb, err
 }
 
+// heartbeat sends a regular heartbeat to the charger.
 func (wb *MennekesCompact) heartbeat(timeout time.Duration) {
 	for range time.Tick(timeout) {
-		if _, err := wb.conn.WriteSingleRegister(mennekesRegHeartbeat, mennekesHeartbeatToken); err != nil {
-			wb.log.ERROR.Println("heartbeat:", err)
-		}
+		wb.doHeartbeat()
+	}
+}
+
+func (wb *MennekesCompact) doHeartbeat() {
+	if _, err := wb.conn.WriteSingleRegister(mennekesRegHeartbeat, mennekesHeartbeatToken); err != nil {
+		wb.log.ERROR.Println("heartbeat:", err)
 	}
 }
 
