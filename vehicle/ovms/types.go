@@ -1,11 +1,14 @@
 package ovms
 
+const UnitMiles = "M"
+
 type StatusResponse struct {
-	Unit     string  `json:"unit"`
+	Units    string  `json:"units"`
 	Odometer float64 `json:"odometer,string"`
 }
 
 type ChargeResponse struct {
+	Units            string  `json:"units"`
 	ChargeEtrFull    int64   `json:"charge_etr_full,string"`
 	ChargeState      string  `json:"chargestate"`
 	ChargePortOpen   int     `json:"cp_dooropen"`

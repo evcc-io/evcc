@@ -198,9 +198,14 @@ func (v *Ovms) Status() (api.ChargeStatus, error) {
 
 var _ api.VehicleRange = (*Ovms)(nil)
 
+const kmPerMile = 1.609344
+
 // Range implements the api.VehicleRange interface
 func (v *Ovms) Range() (int64, error) {
 	res, err := v.chargeG()
+	if res.Units == ovms.UnitMiles {
+		res.EstimatedRange = int64(float64(res.EstimatedRange) * kmPerMile)
+	}
 	return res.EstimatedRange, err
 }
 
@@ -209,6 +214,9 @@ var _ api.VehicleOdometer = (*Ovms)(nil)
 // Odometer implements the api.VehicleOdometer interface
 func (v *Ovms) Odometer() (float64, error) {
 	res, err := v.statusG()
+	if res.Units == ovms.UnitMiles {
+		res.Odometer *= kmPerMile
+	}
 	return res.Odometer / 10, err
 }
 
