@@ -58,7 +58,7 @@ var _ api.Vehicle = (*Wrapper)(nil)
 
 // SetTitle implements the api.TitleSetter interface
 func (v *Wrapper) SetTitle(title string) {
-	v.Title_ = fmt.Sprintf("%s (unavailable)", title)
+	v.Title_ = title
 }
 
 var _ api.Battery = (*Wrapper)(nil)
