@@ -295,7 +295,7 @@ func vehicleInstance(cc config.Named) (api.Vehicle, error) {
 
 		// wrap non-config vehicle errors to prevent fatals
 		log.ERROR.Printf("creating vehicle %s failed: %v", cc.Name, err)
-		instance = vehicle.NewWrapper(cc.Name, cc.Other, err)
+		instance = vehicle.NewWrapper(cc.Name, cc.Type, cc.Other, err)
 	}
 
 	// ensure vehicle config has title
