@@ -1,4 +1,4 @@
-template: mennekes-hcc3
+template: menneckes-hcc3
 covers: ["amtron"]
 products:
   - brand: Mennekes
@@ -11,5 +11,5 @@ params:
     choice: ["tcpip"]
     id: 255
 render: |
-  type: mennekes-hcc3
+  type: menneckes-hcc3
   {{- include "modbus" . }}
