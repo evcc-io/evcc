@@ -5,6 +5,8 @@
 		<GlobalSettingsModal v-bind="globalSettingsProps" />
 		<BatterySettingsModal v-if="batteryModalAvailabe" v-bind="batterySettingsProps" />
 		<HelpModal />
+		<SetPasswordModal v-if="passwordConfigurationRequired" />
+		<LoginModal v-else />
 	</div>
 </template>
 
@@ -12,8 +14,11 @@
 import store from "../store";
 import GlobalSettingsModal from "../components/GlobalSettingsModal.vue";
 import BatterySettingsModal from "../components/BatterySettingsModal.vue";
+import SetPasswordModal from "../components/SetPasswordModal.vue";
+import LoginModal from "../components/LoginModal.vue";
 import HelpModal from "../components/HelpModal.vue";
 import collector from "../mixins/collector";
+import Modal from "bootstrap/js/dist/modal";
 
 // assume offline if not data received for 60 seconds
 let lastDataReceived = new Date();
@@ -27,7 +32,13 @@ setInterval(() => {
 
 export default {
 	name: "App",
-	components: { GlobalSettingsModal, HelpModal, BatterySettingsModal },
+	components: {
+		GlobalSettingsModal,
+		HelpModal,
+		BatterySettingsModal,
+		SetPasswordModal,
+		LoginModal,
+	},
 	mixins: [collector],
 	props: {
 		notifications: Array,
@@ -44,11 +55,23 @@ export default {
 		batteryModalAvailabe: function () {
 			return store.state.batteryConfigured;
 		},
+		passwordConfigurationRequired: function () {
+			return store.state.passwordConfigured === false;
+		},
 		globalSettingsProps: function () {
 			return this.collectProps(GlobalSettingsModal, store.state);
 		},
 		batterySettingsProps() {
 			return this.collectProps(BatterySettingsModal, store.state);
+		},
+	},
+	watch: {
+		passwordConfigurationRequired: function (value) {
+			if (value) {
+				this.$nextTick(() => {
+					new Modal(document.getElementById("setPasswordModal")).show();
+				});
+			}
 		},
 	},
 	mounted: function () {

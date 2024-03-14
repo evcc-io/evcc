@@ -41,6 +41,11 @@ func (a *Auth) RemoveAdminPassword() {
 	a.settings.SetString(keys.AdminPassword, "")
 }
 
+// IsAdminPasswordConfigured checks if the admin password is already set
+func (a *Auth) IsAdminPasswordConfigured() bool {
+	return a.getAdminPasswordHash() != ""
+}
+
 // SetAdminPassword sets the admin password if not already set
 func (a *Auth) SetAdminPassword(password string) error {
 	if a.getAdminPasswordHash() != "" {

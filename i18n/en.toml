@@ -421,6 +421,15 @@ allLoadpoints = "all charging points"
 allVehicles = "all vehicles"
 filter = "Filter"
 
+[setPasswordModal]
+empty = "Password cannot be empty"
+noMatch = "Passwords do not match"
+noPassword = "Without password"
+password = "Password"
+passwordRepeat = "Repeat password"
+setPassword = "Set password"
+title = "Set Administrator Password"
+
 [settings]
 title = "General Settings"
 

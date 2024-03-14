@@ -9,4 +9,5 @@ type API interface {
 	IsAdminPasswordValid(string) bool
 	GenerateJwtToken(time.Duration) (string, error)
 	ValidateJwtToken(string) (bool, error)
+	IsAdminPasswordConfigured() bool
 }

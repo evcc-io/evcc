@@ -246,6 +246,9 @@ func runRoot(cmd *cobra.Command, args []string) {
 		os.Exit(0)
 	}()
 
+	// check if admin password is configured
+	valueChan <- util.Param{Key: "passwordConfigured", Val: site.Auth().IsAdminPasswordConfigured()}
+
 	// show main ui
 	if err == nil {
 		httpd.RegisterSiteHandlers(site, cache)
