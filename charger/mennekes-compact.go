@@ -23,6 +23,7 @@ import (
 	"math"
 	"time"
 
+	mbus "github.com/grid-x/modbus"
 	"github.com/volkszaehler/mbmd/encoding"
 
 	"github.com/evcc-io/evcc/api"
@@ -64,7 +65,9 @@ const (
 // MennekesCompact is an api.Charger implementation
 type MennekesCompact struct {
 	log  *util.Logger
-	conn *modbus.Connection
+	conn mbus.Client
+
+	config *MennekesCompactConfig
 }
 
 type MennekesCompactConfig struct {
@@ -120,17 +123,23 @@ func NewMennekesCompact(conf *MennekesCompactConfig) (api.Charger, error) {
 	log := util.NewLogger(mennekesCompactName)
 	conn.Logger(log.TRACE)
 
-	wb := &MennekesCompact{
-		log:  log,
-		conn: conn,
+	mc := NewMennekesCompactWithModbusClient(conf, log, conn)
+	return mc, nil
+}
+
+func NewMennekesCompactWithModbusClient(conf *MennekesCompactConfig, log *util.Logger, client mbus.Client) api.Charger {
+	mc := &MennekesCompact{
+		config: conf,
+		conn:   client,
+		log:    log,
 	}
 
 	// send heartbeat on startup and don't wait for the first tick
-	wb.doHeartbeat()
+	mc.doHeartbeat()
 	// initiate heartbeat with given interval
-	go wb.heartbeat(mennekesHeartbeatInterval)
+	go mc.heartbeat(mennekesHeartbeatInterval)
 
-	return wb, err
+	return mc
 }
 
 // heartbeat sends a regular heartbeat to the charger.
