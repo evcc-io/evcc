@@ -32,28 +32,28 @@ import (
 
 // https://update.mennekes.de/hcc3/1.13/Description%20Modbus_AMTRON%20HCC3_v01_2021-06-25_en.pdf
 
-// MennekesHcc3 Xtra/Premium charger implementation
-type MennekesHcc3 struct {
+// MenneckesHcc3 Xtra/Premium charger implementation
+type MenneckesHcc3 struct {
 	conn *modbus.Connection
 	curr uint16
 }
 
 const (
-	mennekesHcc3RegStatus     = 0x0302
-	mennekesHcc3RegPhases     = 0x0308
-	mennekesHcc3RegSerial     = 0x030B
-	mennekesHcc3RegEnergy     = 0x030D
-	mennekesHcc3RegName       = 0x0311
-	mennekesHcc3RegPower      = 0x030F
-	mennekesHcc3RegAmpsConfig = 0x0400
+	menneckesHcc3RegStatus     = 0x0302
+	menneckesHcc3RegPhases     = 0x0308
+	menneckesHcc3RegSerial     = 0x030B
+	menneckesHcc3RegEnergy     = 0x030D
+	menneckesHcc3RegName       = 0x0311
+	menneckesHcc3RegPower      = 0x030F
+	menneckesHcc3RegAmpsConfig = 0x0400
 )
 
 func init() {
-	registry.Add("mennekes-hcc3", NewMennekesHcc3FromConfig)
+	registry.Add("menneckes-hcc3", NewMenneckesHcc3FromConfig)
 }
 
-// NewMennekesHcc3FromConfig creates a Mennekes mennekesHcc3 charger from generic config
-func NewMennekesHcc3FromConfig(other map[string]interface{}) (api.Charger, error) {
+// NewMenneckesHcc3FromConfig creates a Mennekes menneckesHcc3 charger from generic config
+func NewMenneckesHcc3FromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := modbus.TcpSettings{
 		ID: 255,
 	}
@@ -62,11 +62,11 @@ func NewMennekesHcc3FromConfig(other map[string]interface{}) (api.Charger, error
 		return nil, err
 	}
 
-	return NewMennekesHcc3(cc.URI, cc.ID)
+	return NewMenneckesHcc3(cc.URI, cc.ID)
 }
 
-// NewMennekesHcc3 creates Mennekes HCC3 charger
-func NewMennekesHcc3(uri string, slaveID uint8) (api.Charger, error) {
+// NewMenneckesHcc3 creates Menneckes HCC3 charger
+func NewMenneckesHcc3(uri string, slaveID uint8) (api.Charger, error) {
 	uri = util.DefaultPort(uri, 502)
 
 	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, slaveID)
@@ -78,10 +78,10 @@ func NewMennekesHcc3(uri string, slaveID uint8) (api.Charger, error) {
 		return nil, api.ErrSponsorRequired
 	}
 
-	log := util.NewLogger("mennekes-hcc3")
+	log := util.NewLogger("menneckes-hcc3")
 	conn.Logger(log.TRACE)
 
-	wb := &MennekesHcc3{
+	wb := &MenneckesHcc3{
 		conn: conn,
 		curr: 6,
 	}
@@ -90,8 +90,8 @@ func NewMennekesHcc3(uri string, slaveID uint8) (api.Charger, error) {
 }
 
 // Status implements the api.Charger interface
-func (wb *MennekesHcc3) Status() (api.ChargeStatus, error) {
-	b, err := wb.conn.ReadInputRegisters(mennekesHcc3RegStatus, 1)
+func (wb *MenneckesHcc3) Status() (api.ChargeStatus, error) {
+	b, err := wb.conn.ReadInputRegisters(menneckesHcc3RegStatus, 1)
 	if err != nil {
 		return api.StatusNone, err
 	}
@@ -111,8 +111,8 @@ func (wb *MennekesHcc3) Status() (api.ChargeStatus, error) {
 }
 
 // Enabled implements the api.Charger interface
-func (wb *MennekesHcc3) Enabled() (bool, error) {
-	b, err := wb.conn.ReadHoldingRegisters(mennekesHcc3RegAmpsConfig, 1)
+func (wb *MenneckesHcc3) Enabled() (bool, error) {
+	b, err := wb.conn.ReadHoldingRegisters(menneckesHcc3RegAmpsConfig, 1)
 	if err != nil {
 		return false, err
 	}
@@ -123,25 +123,25 @@ func (wb *MennekesHcc3) Enabled() (bool, error) {
 }
 
 // Enable implements the api.Charger interface
-func (wb *MennekesHcc3) Enable(enable bool) error {
+func (wb *MenneckesHcc3) Enable(enable bool) error {
 	var u uint16
 	if enable {
 		u = wb.curr
 	}
 
-	_, err := wb.conn.WriteSingleRegister(mennekesHcc3RegAmpsConfig, u)
+	_, err := wb.conn.WriteSingleRegister(menneckesHcc3RegAmpsConfig, u)
 	return err
 }
 
 // MaxCurrent implements the api.Charger interface
-func (wb *MennekesHcc3) MaxCurrent(current int64) error {
+func (wb *MenneckesHcc3) MaxCurrent(current int64) error {
 	if current < 6 {
 		return fmt.Errorf("invalid current %d", current)
 	}
 
 	cur := uint16(current)
 
-	_, err := wb.conn.WriteSingleRegister(mennekesHcc3RegAmpsConfig, cur)
+	_, err := wb.conn.WriteSingleRegister(menneckesHcc3RegAmpsConfig, cur)
 	if err == nil {
 		wb.curr = cur
 	}
@@ -149,11 +149,11 @@ func (wb *MennekesHcc3) MaxCurrent(current int64) error {
 	return err
 }
 
-var _ api.Meter = (*MennekesHcc3)(nil)
+var _ api.Meter = (*MenneckesHcc3)(nil)
 
 // CurrentPower implements the api.Meter interface
-func (wb *MennekesHcc3) CurrentPower() (float64, error) {
-	b, err := wb.conn.ReadInputRegisters(mennekesHcc3RegPower, 2)
+func (wb *MenneckesHcc3) CurrentPower() (float64, error) {
+	b, err := wb.conn.ReadInputRegisters(menneckesHcc3RegPower, 2)
 	if err != nil {
 		return 0, err
 	}
@@ -161,11 +161,11 @@ func (wb *MennekesHcc3) CurrentPower() (float64, error) {
 	return rs485.RTUUint32ToFloat64Swapped(b), nil
 }
 
-var _ api.ChargeRater = (*MennekesHcc3)(nil)
+var _ api.ChargeRater = (*MenneckesHcc3)(nil)
 
 // ChargedEnergy implements the api.MeterEnergy interface
-func (wb *MennekesHcc3) ChargedEnergy() (float64, error) {
-	b, err := wb.conn.ReadInputRegisters(mennekesHcc3RegEnergy, 2)
+func (wb *MenneckesHcc3) ChargedEnergy() (float64, error) {
+	b, err := wb.conn.ReadInputRegisters(menneckesHcc3RegEnergy, 2)
 	if err != nil {
 		return 0, err
 	}
@@ -173,19 +173,19 @@ func (wb *MennekesHcc3) ChargedEnergy() (float64, error) {
 	return rs485.RTUUint32ToFloat64Swapped(b) / 1e3, nil
 }
 
-var _ api.Diagnosis = (*MennekesHcc3)(nil)
+var _ api.Diagnosis = (*MenneckesHcc3)(nil)
 
 // Diagnose implements the api.Diagnosis interface
-func (wb *MennekesHcc3) Diagnose() {
-	if b, err := wb.conn.ReadInputRegisters(mennekesHcc3RegName, 11); err == nil {
+func (wb *MenneckesHcc3) Diagnose() {
+	if b, err := wb.conn.ReadInputRegisters(menneckesHcc3RegName, 11); err == nil {
 		fmt.Printf("Name: %s\n", encoding.StringLsbFirst(b))
 	}
 
-	if b, err := wb.conn.ReadInputRegisters(mennekesHcc3RegPhases, 1); err == nil {
+	if b, err := wb.conn.ReadInputRegisters(menneckesHcc3RegPhases, 1); err == nil {
 		fmt.Printf("Phases: %d\n", binary.BigEndian.Uint16(b))
 	}
 
-	if b, err := wb.conn.ReadInputRegisters(mennekesHcc3RegSerial, 2); err == nil {
+	if b, err := wb.conn.ReadInputRegisters(menneckesHcc3RegSerial, 2); err == nil {
 		fmt.Printf("Serial: %d\n", binary.LittleEndian.Uint32(b))
 	}
 }
