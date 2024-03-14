@@ -126,7 +126,7 @@ render: |
           source: sequence
           set:
           - source: const
-            value: 2 # Charge from PV+AC according to the EMSPowerSet
+            value: 2 # Charge from PV+AC according to the EMSPowerSet below
             set: 
               source: modbus
               {{- include "modbus" . | indent 12 }}
@@ -135,12 +135,12 @@ render: |
                 type: writesingle
                 encoding: uint16
           - source: const
-            value: 2500 # W
+            value: 10000 # For charge battery mode: Maximum allowed power from Grid in W 
             set: 
               source: modbus
               {{- include "modbus" . | indent 12 }}
               register:
-                address: 47512 # EMSPowerSet
+                address: 47512 # EMSPowerSet [0-10000]
                 type: writemultiple
                 encoding: uint16
   capacity: {{ .capacity }} # kWh
