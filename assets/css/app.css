@@ -508,3 +508,10 @@ html.app .modal-dialog {
 	margin-top: env(safe-area-inset-top);
 	margin-bottom: env(safe-area-inset-bottom);
 }
+
+.btn-neutral {
+	all: unset;
+}
+.btn-neutral:hover {
+	outline: revert;
+}
