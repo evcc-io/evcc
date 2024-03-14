@@ -43,8 +43,10 @@ const (
 	mennekesRegAuthorizationStatus  = 0x0101 // uint16
 	mennekesRegCpState              = 0x0108 // uint16
 	mennekesRegChargingCurrentEM    = 0x0302 // float32
+	mennekesRegPhaseSwitchingMode   = 0x030A // uint16
 	mennekesRegPhaseOptionsHW       = 0x030C // uint16
 	mennekesRegGridPhasesConnected  = 0x0311 // uint16
+	mennekesRegPhaseSwitchingPause  = 0x0314 // uint16
 	mennekesRegAuthorization        = 0x0312 // uint16
 	mennekesRegCurrents             = 0x0500 // float32[3]
 	mennekesRegVoltages             = 0x0506 // float32[3]
@@ -52,6 +54,7 @@ const (
 	mennekesRegChargedEnergySession = 0x0B02 // float32
 	mennekesRegDurationSession      = 0x0B04 // uint32
 	mennekesRegHeartbeat            = 0x0D00 // uint16
+	mennekesRegSolarChargingMode    = 0x0D03 // uint16
 	mennekesRegRequestedPhases      = 0x0D04 // uint16
 	mennekesRegChargingReleaseEM    = 0x0D05 // uint16
 	mennekesRegActiveErrorCode      = 0x0E00 // uint16
@@ -68,6 +71,9 @@ type MennekesCompact struct {
 	conn mbus.Client
 
 	config *MennekesCompactConfig
+
+	// phaseSwitchingPause describes the duration the charger will pause after a dynamic phase switch.
+	phaseSwitchingPause time.Duration
 }
 
 type MennekesCompactConfig struct {
@@ -139,6 +145,8 @@ func NewMennekesCompactWithModbusClient(conf *MennekesCompactConfig, log *util.L
 	// initiate heartbeat with given interval
 	go mc.heartbeat(mennekesHeartbeatInterval)
 
+	mc.readPhaseSwitchingPause()
+
 	return mc
 }
 
@@ -153,6 +161,20 @@ func (wb *MennekesCompact) doHeartbeat() {
 	if _, err := wb.conn.WriteSingleRegister(mennekesRegHeartbeat, mennekesHeartbeatToken); err != nil {
 		wb.log.ERROR.Println("heartbeat:", err)
 	}
+}
+
+// readPhaseSwitchingPause reads the phase switching pause duration from the charger which has been set via
+// the configuration tool and affects the duration the charger will pause after a dynamic phase switch.
+func (wb *MennekesCompact) readPhaseSwitchingPause() {
+	b, err := wb.conn.ReadHoldingRegisters(mennekesRegPhaseSwitchingPause, 1)
+	if err != nil {
+		wb.log.ERROR.Println("phaseSwitchingPause:", err)
+		return
+	}
+	if len(b) == 2 {
+		wb.phaseSwitchingPause = time.Duration(encoding.Uint16(b)) * time.Second
+	}
+	wb.log.DEBUG.Printf("phaseSwitchingPause: %v\n", wb.phaseSwitchingPause)
 }
 
 // Status implements the api.Charger interface
@@ -299,13 +321,68 @@ var _ api.PhaseSwitcher = (*MennekesCompact)(nil)
 
 // Phases1p3p implements the api.PhaseSwitcher interface
 func (wb *MennekesCompact) Phases1p3p(phases int) error {
-	var u uint16
+	var p = mennekes.AllAvailablePhases
+
+	// 1) check the current charging mode
+	b, err := wb.conn.ReadHoldingRegisters(mennekesRegSolarChargingMode, 1)
+	if err != nil {
+		return err
+	}
+	chargeMode := mennekes.SolarChargingMode(encoding.Uint16(b))
+	wb.log.DEBUG.Printf("Solar Charging Mode: %s\n", chargeMode)
+
+	// 2) check which phase switching mode is supported by the current charging mode
+	b, err = wb.conn.ReadHoldingRegisters(mennekesRegPhaseSwitchingMode, 1)
+	if err != nil {
+		return err
+	}
+	phaseMode := mennekes.PhaseSwitchingMode(encoding.Uint16(b))
+	wb.log.DEBUG.Printf("Solar Charging Phase Switching Mode: %s\n", phaseMode)
+
+	var phaseSwitched bool
 	if phases == 1 {
-		u = 1
+		p = mennekes.Force1PhaseOnly
 	}
 
-	_, err := wb.conn.WriteSingleRegister(mennekesRegRequestedPhases, u)
-	return err
+	// 3) set a - 1Phase - compatible mode if the current mode only supports 3 phases.
+	// According to the documentation, we have to pick Sunshine or SunshinePlus mode.
+	// TODO: The SunshinePlus mode can be configured via configuration tool to use 1p or dynamic 1p/3p. Provide as user option?
+	if phaseMode == mennekes.PhaseSolarOnly3Phases {
+		wb.log.DEBUG.Printf("Set Solar Charging Mode: %s\n", mennekes.SunshinePlusMode)
+		_, err = wb.conn.WriteSingleRegister(mennekesRegSolarChargingMode, uint16(mennekes.SunshinePlusMode))
+		if err != nil {
+			return err
+		}
+
+		{ // debug - check again
+			b, err = wb.conn.ReadHoldingRegisters(mennekesRegPhaseSwitchingMode, 1)
+			if err != nil {
+				return err
+			}
+			phaseMode = mennekes.PhaseSwitchingMode(encoding.Uint16(b))
+			wb.log.DEBUG.Printf("Solar Charging Phase Support: %s\n", phaseMode)
+		}
+	} else if chargeMode == mennekes.SunshinePlusMode {
+		// 3a) set a - 3Phase - compatible mode if the current mode only supports 1 phase.
+		wb.log.DEBUG.Printf("Set Solar Charging Mode due to 3 phases: %s\n", mennekes.SunshineMode)
+		_, err = wb.conn.WriteSingleRegister(mennekesRegSolarChargingMode, uint16(mennekes.SunshineMode))
+		if err != nil {
+			return err
+		}
+	}
+
+	// 4) set the requested phase(s)
+	if _, err = wb.conn.WriteSingleRegister(mennekesRegRequestedPhases, uint16(p)); err != nil {
+		return err
+	}
+
+	// 5) check if the phase switch was made and respect the charging pause duration
+	if phaseSwitched && wb.phaseSwitchingPause > 0 {
+		wb.log.DEBUG.Printf("Waiting due to phase switching pause: %s\n", wb.phaseSwitchingPause)
+		time.Sleep(wb.phaseSwitchingPause)
+	}
+
+	return nil
 }
 
 var _ api.Diagnosis = (*MennekesCompact)(nil)
