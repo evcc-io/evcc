@@ -3,6 +3,7 @@ package modbus
 import (
 	"encoding/binary"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -11,6 +12,10 @@ import (
 // decodeMask converts a bit mask in decimal or hex format to uint64
 func decodeMask(mask string) (uint64, error) {
 	mask = strings.ToLower(mask)
+
+	if mask == "" {
+		return 0, errors.New("mask is required")
+	}
 
 	if strings.HasPrefix(mask, "0x") {
 		if len(mask) < 3 {

@@ -30,7 +30,7 @@ render: |
       address: 36017 # E-Total-Buy
       type: holding
       decode: float32
-    scale: 0.1
+    scale: 0.001
   {{- end }}
   {{- if eq .usage "pv" }}
   power:
@@ -64,7 +64,7 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register: # manual non-sunspec register configuration
-      address: 35191 # PV E-Total Total PV Energy
+      address: 35191 # PV Energy-Total
       type: holding
       decode: uint32
     scale: 0.1
@@ -74,21 +74,21 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register: # manual non-sunspec register configuration
-      address: 35183 # Pbattery1 First group battery power
+      address: 35182 # Battery1 Power
       type: holding
-      decode: int16
+      decode: int32
   soc:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register: # manual non-sunspec register configuration
-      address: 37007 # SOC First group battery capacity
+      address: 37007 # SOC
       type: holding
       decode: uint16
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register: # manual non-sunspec register configuration
-      address: 35209 # E-BatteryDischarge Discharge energy
+      address: 35209 # Energy-Battery Discharge
       type: holding
       decode: uint32
     scale: 0.1

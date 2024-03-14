@@ -16,10 +16,7 @@ import (
 
 // Twc3 is an api.Vehicle implementation for Twc3 cars
 type Twc3 struct {
-	*request.Helper
-	log     *util.Logger
 	lp      loadpoint.API
-	uri     string
 	vitalsG func() (Vitals, error)
 	enabled bool
 }
@@ -71,20 +68,16 @@ func NewTwc3FromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	log := util.NewLogger("twc3")
+	c := &Twc3{}
 
-	c := &Twc3{
-		Helper: request.NewHelper(log),
-		uri:    util.DefaultScheme(strings.TrimSuffix(cc.URI, "/"), "http"),
-		log:    log,
-	}
+	client := request.NewHelper(util.NewLogger("twc3"))
+	uri := fmt.Sprintf("%s/api/1/vitals", util.DefaultScheme(strings.TrimSuffix(cc.URI, "/"), "http"))
 
 	c.vitalsG = provider.Cached(func() (Vitals, error) {
 		var res Vitals
-		uri := fmt.Sprintf("%s/api/1/vitals", c.uri)
-		err := c.GetJSON(uri, &res)
+		err := client.GetJSON(uri, &res)
 		return res, err
-	}, time.Second)
+	}, cc.Cache)
 
 	return c, nil
 }

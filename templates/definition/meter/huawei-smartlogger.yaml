@@ -68,22 +68,21 @@ render: |
   {{- if eq .usage "pv" }}
   power:
     source: modbus
-    {{- include "modbus" . | indent 2 }}
-    timeout: {{ .timeout }}
-    connectdelay: 1s
+    id: 0
+    uri: {{ .host }}:{{ .port }}
     register:
-      address: 32064 # Input power DC (if no battery in your system - for more precise readings use 32080 # Active generation power AC)
+      address: 40521 # Active power
       type: holding
-      decode: int32nan
+      decode: int32
   energy:
     source: modbus
-    {{- include "modbus" . | indent 2 }}
-    timeout: {{ .timeout }}
+    id: 0
+    uri: {{ .host }}:{{ .port }}
     register:
-      address: 32106 # Accumulated energy yield
+      address: 40560 # E-Total
       type: holding
-      decode: uint32nan
-    scale: 0.01
+      decode: uint32
+    scale: 0.1
   {{- end }}
   {{- if eq .usage "battery" }}
   power:

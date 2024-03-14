@@ -237,7 +237,7 @@ func NewLoadpointFromConfig(log *util.Logger, settings *Settings, other map[stri
 
 	// TODO deprecated
 	if lp.MinCurrent_ > 0 {
-		lp.log.WARN.Println("deprecated: minCurrent setting is ignored, please remove")
+		lp.log.WARN.Println("deprecated: mincurrent setting is ignored, please remove")
 		if _, err := lp.settings.Float(keys.MinCurrent); err != nil {
 			lp.settings.SetFloat(keys.MinCurrent, lp.MinCurrent_)
 		}
@@ -656,6 +656,11 @@ func (lp *Loadpoint) syncCharger() error {
 	enabled, err := lp.charger.Enabled()
 	if err != nil {
 		return err
+	}
+
+	// some chargers (i.E. Easee in some configurations) disable themself to be able to switch phases
+	if !enabled && lp.enabled && !lp.phaseSwitchCompleted() {
+		return lp.charger.Enable(true) // enable charger
 	}
 
 	if lp.chargerUpdateCompleted() {
@@ -1422,7 +1427,7 @@ func (lp *Loadpoint) publishSocAndRange() {
 				targetSoc = int(math.Trunc(limit))
 				lp.log.DEBUG.Printf("vehicle soc limit: %.0f%%", limit)
 				lp.publish(keys.VehicleTargetSoc, limit)
-			} else {
+			} else if !errors.Is(err, api.ErrNotAvailable) {
 				lp.log.ERROR.Printf("vehicle soc limit: %v", err)
 			}
 		}

@@ -149,15 +149,11 @@ var _ api.SocLimiter = (*Provider)(nil)
 // TargetSoc implements the api.SocLimiter interface
 func (v *Provider) TargetSoc() (float64, error) {
 	res, err := v.statusG()
-	if err == nil && res.Charging == nil {
-		err = errors.New("missing charging status")
+	if err != nil || res.Charging == nil || res.Charging.ChargingSettings.Value.TargetSOCPct == nil {
+		return 0, api.ErrNotAvailable
 	}
 
-	if err == nil {
-		return float64(res.Charging.ChargingSettings.Value.TargetSOCPct), nil
-	}
-
-	return 0, err
+	return float64(*res.Charging.ChargingSettings.Value.TargetSOCPct), nil
 }
 
 var _ api.VehicleChargeController = (*Provider)(nil)
