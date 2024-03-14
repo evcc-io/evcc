@@ -17,4 +17,5 @@ const (
 	CoarseCurrent
 	IntegratedDevice
 	Heating
+	Retryable
 )
