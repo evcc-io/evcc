@@ -3,6 +3,7 @@ products:
   - brand: GoodWe
     description:
       generic: ET/EH/BH/BT Hybrid Inverter
+capabilities: ["battery-control"]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
