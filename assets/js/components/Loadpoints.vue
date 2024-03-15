@@ -36,7 +36,11 @@
 					v-if="isCharging(loadpoint)"
 					class="indicator-icon"
 				></shopicon-filled-lightning>
-				<shopicon-filled-circle v-else class="indicator-icon"></shopicon-filled-circle>
+				<shopicon-filled-circle
+					v-else-if="loadpoint.connected"
+					class="indicator-icon"
+				></shopicon-filled-circle>
+				<shopicon-bold-circle v-else class="indicator-icon"></shopicon-bold-circle>
 			</button>
 		</div>
 	</div>
@@ -44,6 +48,7 @@
 
 <script>
 import "@h2d2/shopicons/es/filled/circle";
+import "@h2d2/shopicons/es/bold/circle";
 import "@h2d2/shopicons/es/filled/lightning";
 
 import Loadpoint from "./Loadpoint.vue";
