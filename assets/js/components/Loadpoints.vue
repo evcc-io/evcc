@@ -128,19 +128,11 @@ export default {
 		height: 32px;
 		opacity: 0.3;
 		transition: opacity var(--evcc-transition-fast) ease-in;
-		position: relative;
 	}
 	.indicator--selected {
 		opacity: 1;
 	}
 	.indicator-icon {
-		width: 18px;
-	}
-	.indicator-active {
-		position: absolute;
-		top: 0;
-		left: 0;
-		color: var(--evcc-background);
 		width: 18px;
 	}
 	.loadpoint {
