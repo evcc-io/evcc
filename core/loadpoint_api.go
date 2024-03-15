@@ -13,11 +13,18 @@ import (
 
 var _ loadpoint.API = (*Loadpoint)(nil)
 
-// Title returns the human-readable loadpoint title
-func (lp *Loadpoint) Title() string {
+// GetTitle returns the loadpoint's title
+func (lp *Loadpoint) GetTitle() string {
 	lp.RLock()
 	defer lp.RUnlock()
 	return lp.Title_
+}
+
+// SetTitle sets the loadpoint's title
+func (lp *Loadpoint) SetTitle(title string) {
+	lp.Lock()
+	defer lp.Unlock()
+	lp.Title_ = title
 }
 
 // GetStatus returns the charging status

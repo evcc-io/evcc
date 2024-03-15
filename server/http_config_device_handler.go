@@ -29,8 +29,8 @@ func devicesConfig[T any](class templates.Class, h config.Handler[T]) ([]map[str
 	return res, nil
 }
 
-// devicesHandler returns a device configurations by class
-func devicesHandler(w http.ResponseWriter, r *http.Request) {
+// devicesConfigHandler returns a device configurations by class
+func devicesConfigHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 
 	class, err := templates.ClassString(vars["class"])

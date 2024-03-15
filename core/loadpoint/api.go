@@ -26,8 +26,10 @@ type API interface {
 	// settings
 	//
 
-	// Title returns the defined loadpoint title
-	Title() string
+	// GetTitle returns the loadpoint title
+	GetTitle() string
+	// SetTitle sets the loadpoint title
+	SetTitle(string)
 	// GetPriority returns the priority
 	GetPriority() int
 	// SetPriority sets the priority
