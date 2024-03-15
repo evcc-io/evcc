@@ -102,8 +102,7 @@ type Loadpoint struct {
 	// exposed public configuration
 	sync.RWMutex // guard status
 
-	vmu   sync.RWMutex   // guard vehicle
-	Mode_ api.ChargeMode `mapstructure:"mode"` // Default charge mode, used for disconnect
+	vmu sync.RWMutex // guard vehicle
 
 	ChargerRef      string `mapstructure:"charger"` // Charger reference
 	VehicleRef      string `mapstructure:"vehicle"` // Vehicle reference
@@ -112,12 +111,13 @@ type Loadpoint struct {
 	Enable, Disable ThresholdConfig
 
 	// TODO deprecated
-	Title_            string        `mapstructure:"title"`         // UI title
-	Priority_         int           `mapstructure:"priority"`      // Priority
-	GuardDuration_    time.Duration `mapstructure:"guardduration"` // charger enable/disable minimum holding time
-	ConfiguredPhases_ int           `mapstructure:"phases"`
-	MinCurrent_       float64       `mapstructure:"minCurrent"`
-	MaxCurrent_       float64       `mapstructure:"maxCurrent"`
+	Mode_             api.ChargeMode `mapstructure:"mode"`          // Default charge mode, used for disconnect
+	Title_            string         `mapstructure:"title"`         // UI title
+	Priority_         int            `mapstructure:"priority"`      // Priority
+	GuardDuration_    time.Duration  `mapstructure:"guardduration"` // charger enable/disable minimum holding time
+	ConfiguredPhases_ int            `mapstructure:"phases"`
+	MinCurrent_       float64        `mapstructure:"minCurrent"`
+	MaxCurrent_       float64        `mapstructure:"maxCurrent"`
 
 	title            string  // UI title
 	priority         int     // Priority
@@ -239,6 +239,12 @@ func NewLoadpointFromConfig(log *util.Logger, settings *Settings, other map[stri
 
 	// TODO deprecated
 	// One-time migrations MUST be mirrored in restoreSettings
+	if lp.Mode_ != "" {
+		lp.log.WARN.Println("deprecated: mode setting is ignored, please remove")
+		if _, err := lp.settings.String(keys.Mode); err != nil {
+			lp.settings.SetString(keys.Mode, string(lp.Mode_))
+		}
+	}
 	if lp.Title_ != "" {
 		lp.log.WARN.Println("deprecated: title setting is ignored, please remove")
 		if _, err := lp.settings.String(keys.Title); err != nil {
