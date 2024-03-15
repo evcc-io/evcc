@@ -372,6 +372,20 @@ modalTitle = "Notifications"
 message = "Not connected to a server."
 reload = "Reload?"
 
+[passwordModal]
+description = "Set a password to protect the configuration settings. Using the main screen is still possible without login."
+empty = "Password should not be empty"
+error = "Unable to set password: "
+noMatch = "Passwords do not match"
+noPassword = "Without password"
+noPasswordCancel = "Cancel"
+noPasswordConfirm = "Yes, no password!"
+noPasswordReally = "Sure, you don't want a password?"
+password = "Password"
+passwordRepeat = "Repeat password"
+setPassword = "Set password"
+title = "Administrator Password"
+
 [session]
 cancel = "Cancel"
 co2 = "CO₂"
@@ -420,15 +434,6 @@ vehicle = "Vehicle"
 allLoadpoints = "all charging points"
 allVehicles = "all vehicles"
 filter = "Filter"
-
-[setPasswordModal]
-empty = "Password cannot be empty"
-noMatch = "Passwords do not match"
-noPassword = "Without password"
-password = "Password"
-passwordRepeat = "Repeat password"
-setPassword = "Set password"
-title = "Set Administrator Password"
 
 [settings]
 title = "General Settings"

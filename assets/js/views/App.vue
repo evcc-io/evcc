@@ -5,7 +5,7 @@
 		<GlobalSettingsModal v-bind="globalSettingsProps" />
 		<BatterySettingsModal v-if="batteryModalAvailabe" v-bind="batterySettingsProps" />
 		<HelpModal />
-		<SetPasswordModal v-if="passwordConfigurationRequired" />
+		<PasswordModal v-if="passwordConfigurationRequired" />
 		<LoginModal v-else />
 	</div>
 </template>
@@ -14,7 +14,7 @@
 import store from "../store";
 import GlobalSettingsModal from "../components/GlobalSettingsModal.vue";
 import BatterySettingsModal from "../components/BatterySettingsModal.vue";
-import SetPasswordModal from "../components/SetPasswordModal.vue";
+import PasswordModal from "../components/PasswordModal.vue";
 import LoginModal from "../components/LoginModal.vue";
 import HelpModal from "../components/HelpModal.vue";
 import collector from "../mixins/collector";
@@ -36,7 +36,7 @@ export default {
 		GlobalSettingsModal,
 		HelpModal,
 		BatterySettingsModal,
-		SetPasswordModal,
+		PasswordModal,
 		LoginModal,
 	},
 	mixins: [collector],
@@ -69,7 +69,7 @@ export default {
 		passwordConfigurationRequired: function (value) {
 			if (value) {
 				this.$nextTick(() => {
-					new Modal(document.getElementById("setPasswordModal")).show();
+					new Modal(document.getElementById("passwordModal")).show();
 				});
 			}
 		},
