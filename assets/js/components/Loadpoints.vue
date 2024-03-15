@@ -32,7 +32,11 @@
 				:class="{ 'indicator--selected': selected(index) }"
 				@click="scrollTo(index)"
 			>
-				<shopicon-filled-circle class="indicator-icon"></shopicon-filled-circle>
+				<shopicon-filled-lightning
+					v-if="isCharging(loadpoint)"
+					class="indicator-icon"
+				></shopicon-filled-lightning>
+				<shopicon-filled-circle v-else class="indicator-icon"></shopicon-filled-circle>
 			</button>
 		</div>
 	</div>
@@ -40,6 +44,7 @@
 
 <script>
 import "@h2d2/shopicons/es/filled/circle";
+import "@h2d2/shopicons/es/filled/lightning";
 
 import Loadpoint from "./Loadpoint.vue";
 
@@ -72,6 +77,9 @@ export default {
 			const { scrollLeft } = this.$refs.carousel;
 			const { offsetWidth } = this.$refs.carousel.children[0];
 			this.selectedIndex = Math.round((scrollLeft - 7.5) / offsetWidth);
+		},
+		isCharging(lp) {
+			return lp.charging && lp.chargePower > 0;
 		},
 		selected(index) {
 			return this.selectedIndex === index;
@@ -120,11 +128,19 @@ export default {
 		height: 32px;
 		opacity: 0.3;
 		transition: opacity var(--evcc-transition-fast) ease-in;
+		position: relative;
 	}
 	.indicator--selected {
 		opacity: 1;
 	}
 	.indicator-icon {
+		width: 18px;
+	}
+	.indicator-active {
+		position: absolute;
+		top: 0;
+		left: 0;
+		color: var(--evcc-background);
 		width: 18px;
 	}
 	.loadpoint {
