@@ -92,5 +92,56 @@ render: |
       type: holding
       decode: uint32
     scale: 0.1
+  batterymode:
+    source: watchdog
+    timeout: 30s
+    reset: 1 # reset watchdog on normal
+    set:
+      source: switch
+      switch:
+      - case: 1 # normal
+        set:
+          source: const
+          value: 1 # Normal operation mode
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 47511 # EMSPowerMode
+              type: writesingle
+              encoding: uint16
+      - case: 2 # hold
+        set:
+          source: const
+          value: 8 # Battery standby
+          set: 
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 47511 # EMSPowerMode
+              type: writesingle
+              encoding: uint16
+      - case: 3 # charge
+        set:
+          source: sequence
+          set:
+          - source: const
+            value: 2 # Charge from PV+AC according to the EMSPowerSet below
+            set: 
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 47511 # EMSPowerMode
+                type: writesingle
+                encoding: uint16
+          - source: const
+            value: 10000 # For charge battery mode: Maximum allowed power from Grid in W 
+            set: 
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 47512 # EMSPowerSet [0-10000]
+                type: writemultiple
+                encoding: uint16
   capacity: {{ .capacity }} # kWh
   {{- end }}
