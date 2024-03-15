@@ -7,6 +7,7 @@ type API interface {
 	RemoveAdminPassword()
 	SetAdminPassword(string) error
 	IsAdminPasswordValid(string) bool
+	IsAdminPasswordDisabled() bool
 	GenerateJwtToken(time.Duration) (string, error)
 	ValidateJwtToken(string) (bool, error)
 	IsAdminPasswordConfigured() bool

@@ -54,6 +54,12 @@ func logoutHandler(w http.ResponseWriter, r *http.Request) {
 
 func ensureAuth(auth auth.API, next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		// auth disabled by user
+		if auth.IsAdminPasswordDisabled() {
+			next.ServeHTTP(w, r)
+			return
+		}
+
 		// read auth cookie
 		cookie, err := r.Cookie(authCookieName)
 		if err != nil || cookie.Value == "" {

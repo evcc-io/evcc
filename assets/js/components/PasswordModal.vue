@@ -108,6 +108,9 @@
 						<h5>{{ $t("passwordModal.noPasswordReally") }}</h5>
 					</div>
 					<div class="modal-footer d-flex justify-content-between">
+						<p v-if="error" class="text-danger mb-4">
+							{{ $t("passwordModal.error") }} "{{ error }}"
+						</p>
 						<button
 							type="button"
 							class="btn btn-outline-secondary"
@@ -116,12 +119,7 @@
 						>
 							{{ $t("passwordModal.noPasswordCancel") }}
 						</button>
-						<button
-							type="button"
-							class="btn btn-danger"
-							data-bs-dismiss="modal"
-							@click="setNoPassword"
-						>
+						<button type="button" class="btn btn-danger" @click="setNoPassword">
 							{{ $t("passwordModal.noPasswordConfirm") }}
 						</button>
 					</div>
@@ -170,24 +168,38 @@ export default {
 			this.showValidation = true;
 
 			if (this.$refs.form.checkValidity()) {
-				this.loading = true;
-				this.error = null;
-				try {
-					await api.post("/password", { password: this.password });
+				const success = await this.savePassword(this.password);
+				if (success) {
 					this.closePasswordModal();
-				} catch (error) {
-					console.error(error);
-					this.error = error.response.data;
-				} finally {
-					this.loading = false;
 				}
 			}
 		},
-		setNoPassword: function () {
-			alert("no password set");
+		savePassword: async function (password) {
+			this.loading = true;
+			this.error = null;
+			try {
+				await api.post("/password", { password });
+				return true;
+			} catch (error) {
+				console.error(error);
+				this.error = error.response.data;
+			} finally {
+				this.loading = false;
+			}
+			return false;
+		},
+		setNoPassword: async function () {
+			const success = await this.savePassword("");
+			if (success) {
+				this.closeNoPasswordModal();
+			}
 		},
 		closePasswordModal() {
 			const modal = Modal.getInstance(document.getElementById("passwordModal"));
+			modal.hide();
+		},
+		closeNoPasswordModal() {
+			const modal = Modal.getInstance(document.getElementById("noPasswordModal"));
 			modal.hide();
 		},
 		openPasswordModal() {
