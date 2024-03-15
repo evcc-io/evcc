@@ -15,19 +15,19 @@ type API interface {
 	// Name returns the vehicle name
 	Name() string
 
-	// // GetMode returns the charge mode
-	// GetMode() api.ChargeMode
-	// // SetMode sets the charge mode
-	// SetMode(api.ChargeMode)
-	// // GetPhases returns the phases
-	// GetPhases() int
-	// // SetPhases sets the phases
-	// SetPhases(phases int) error
+	// GetMode returns the charge mode
+	GetMode() api.ChargeMode
+	// SetMode sets the charge mode
+	SetMode(api.ChargeMode)
+	// GetPhases returns the phases
+	GetPhases() int
+	// SetPhases sets the phases
+	SetPhases(phases int)
 
-	// // GetPriority returns the priority
-	// GetPriority() int
-	// // SetPriority sets the priority
-	// SetPriority(priority int)
+	// GetPriority returns the priority
+	GetPriority() int
+	// SetPriority sets the priority
+	SetPriority(priority int)
 
 	// GetMinSoc returns the min soc
 	GetMinSoc() int
@@ -43,12 +43,12 @@ type API interface {
 	// SetPlanSoc sets the charge plan time and soc
 	SetPlanSoc(time.Time, int) error
 
-	// // GetMinCurrent returns the min charging current
-	// GetMinCurrent() float64
-	// // SetMinCurrent sets the min charging current
-	// SetMinCurrent(float64)
-	// // GetMaxCurrent returns the max charging current
-	// GetMaxCurrent() float64
-	// // SetMaxCurrent sets the max charging current
-	// SetMaxCurrent(float64)
+	// GetMinCurrent returns the min charging current
+	GetMinCurrent() float64
+	// SetMinCurrent sets the min charging current
+	SetMinCurrent(float64)
+	// GetMaxCurrent returns the max charging current
+	GetMaxCurrent() float64
+	// SetMaxCurrent sets the max charging current
+	SetMaxCurrent(float64)
 }
