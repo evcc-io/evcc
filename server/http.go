@@ -146,7 +146,7 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, cache *util.Cache) {
 	for id, lp := range site.Loadpoints() {
 		for _, r := range map[string]route{
 			"get":    {[]string{"GET"}, "/config/loadpoints/" + strconv.Itoa(id), loadpointConfigHandler(id, lp)},
-			"update": {[]string{"OPTIONS", "PUT"}, "/config/loadpoints/" + strconv.Itoa(id), updateLoadpointHandler(id, lp)},
+			"update": {[]string{"OPTIONS", "PUT"}, "/config/loadpoints/" + strconv.Itoa(id), updateLoadpointHandler(lp)},
 		} {
 			api.Methods(r.Methods...).Path(r.Pattern).Handler(r.HandlerFunc)
 		}

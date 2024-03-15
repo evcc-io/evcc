@@ -146,7 +146,7 @@ func NewSiteFromConfig(
 
 		if db.Instance != nil {
 			var err error
-			if lp.db, err = session.NewStore(lp.Title(), db.Instance); err != nil {
+			if lp.db, err = session.NewStore(lp.GetTitle(), db.Instance); err != nil {
 				return nil, err
 			}
 			// Fix any dangling history

@@ -379,6 +379,20 @@ func (mr *MockAPIMockRecorder) GetStatus() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetStatus", reflect.TypeOf((*MockAPI)(nil).GetStatus))
 }
 
+// GetTitle mocks base method.
+func (m *MockAPI) GetTitle() string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetTitle")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// GetTitle indicates an expected call of GetTitle.
+func (mr *MockAPIMockRecorder) GetTitle() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTitle", reflect.TypeOf((*MockAPI)(nil).GetTitle))
+}
+
 // GetVehicle mocks base method.
 func (m *MockAPI) GetVehicle() api.Vehicle {
 	m.ctrl.T.Helper()
@@ -585,6 +599,18 @@ func (mr *MockAPIMockRecorder) SetSmartCostLimit(arg0 any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetSmartCostLimit", reflect.TypeOf((*MockAPI)(nil).SetSmartCostLimit), arg0)
 }
 
+// SetTitle mocks base method.
+func (m *MockAPI) SetTitle(arg0 string) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetTitle", arg0)
+}
+
+// SetTitle indicates an expected call of SetTitle.
+func (mr *MockAPIMockRecorder) SetTitle(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetTitle", reflect.TypeOf((*MockAPI)(nil).SetTitle), arg0)
+}
+
 // SetVehicle mocks base method.
 func (m *MockAPI) SetVehicle(arg0 api.Vehicle) {
 	m.ctrl.T.Helper()
@@ -621,18 +647,4 @@ func (m *MockAPI) StartVehicleDetection() {
 func (mr *MockAPIMockRecorder) StartVehicleDetection() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StartVehicleDetection", reflect.TypeOf((*MockAPI)(nil).StartVehicleDetection))
-}
-
-// Title mocks base method.
-func (m *MockAPI) Title() string {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Title")
-	ret0, _ := ret[0].(string)
-	return ret0
-}
-
-// Title indicates an expected call of Title.
-func (mr *MockAPIMockRecorder) Title() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Title", reflect.TypeOf((*MockAPI)(nil).Title))
 }

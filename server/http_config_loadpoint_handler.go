@@ -3,28 +3,33 @@ package server
 import (
 	"net/http"
 
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/site"
 )
 
 type loadpointStruct struct {
-	ID         int      `json:"id"`
-	Title      *string  `json:"title,omitempty"`
-	Priority   *int     `json:"priority,omitempty"`
-	Phases     *int     `json:"phases,omitempty"`
-	MinCurrent *float64 `json:"minCurrent,omitempty"`
-	MaxCurrent *float64 `json:"maxCurrent,omitempty"`
+	ID             int      `json:"id"`
+	Title          *string  `json:"title,omitempty"`
+	Mode           *string  `json:"mode,omitempty"`
+	Priority       *int     `json:"priority,omitempty"`
+	Phases         *int     `json:"phases,omitempty"`
+	MinCurrent     *float64 `json:"minCurrent,omitempty"`
+	MaxCurrent     *float64 `json:"maxCurrent,omitempty"`
+	SmartCostLimit *float64 `json:"smartCostLimit,omitempty"`
 }
 
 // loadpointConfig returns a single loadpoint's configuration
 func loadpointConfig(id int, lp loadpoint.API) loadpointStruct {
 	res := loadpointStruct{
-		ID:         id,
-		Title:      ptr(lp.GetTitle()),
-		Priority:   ptr(lp.GetPriority()),
-		Phases:     ptr(lp.GetPhases()),
-		MinCurrent: ptr(lp.GetMinCurrent()),
-		MaxCurrent: ptr(lp.GetMaxCurrent()),
+		ID:             id,
+		Title:          ptr(lp.GetTitle()),
+		Mode:           ptr(string(lp.GetMode())),
+		Priority:       ptr(lp.GetPriority()),
+		Phases:         ptr(lp.GetPhases()),
+		MinCurrent:     ptr(lp.GetMinCurrent()),
+		MaxCurrent:     ptr(lp.GetMaxCurrent()),
+		SmartCostLimit: ptr(lp.GetSmartCostLimit()),
 	}
 
 	return res
@@ -53,12 +58,9 @@ func loadpointConfigHandler(id int, lp loadpoint.API) http.HandlerFunc {
 }
 
 // updateLoadpointHandler returns a device configurations by class
-func updateLoadpointHandler(id int, lp loadpoint.API) http.HandlerFunc {
+func updateLoadpointHandler(lp loadpoint.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var (
-			payload loadpointStruct
-			err     error
-		)
+		var payload loadpointStruct
 
 		if err := jsonDecoder(r.Body).Decode(&payload); err != nil {
 			jsonError(w, http.StatusBadRequest, err)
@@ -71,6 +73,19 @@ func updateLoadpointHandler(id int, lp loadpoint.API) http.HandlerFunc {
 
 		if payload.Priority != nil {
 			lp.SetPriority(*payload.Priority)
+		}
+
+		if payload.SmartCostLimit != nil {
+			lp.SetSmartCostLimit(*payload.SmartCostLimit)
+		}
+
+		var err error
+		if payload.Mode != nil {
+			var mode api.ChargeMode
+			mode, err = api.ChargeModeString(*payload.Mode)
+			if err == nil {
+				lp.SetMode(mode)
+			}
 		}
 
 		if err == nil && payload.Phases != nil {
