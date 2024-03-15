@@ -105,20 +105,22 @@ type Loadpoint struct {
 	vmu   sync.RWMutex   // guard vehicle
 	Mode_ api.ChargeMode `mapstructure:"mode"` // Default charge mode, used for disconnect
 
-	Title_          string `mapstructure:"title"`    // UI title
-	Priority_       int    `mapstructure:"priority"` // Priority
-	ChargerRef      string `mapstructure:"charger"`  // Charger reference
-	VehicleRef      string `mapstructure:"vehicle"`  // Vehicle reference
-	MeterRef        string `mapstructure:"meter"`    // Charge meter reference
+	ChargerRef      string `mapstructure:"charger"` // Charger reference
+	VehicleRef      string `mapstructure:"vehicle"` // Vehicle reference
+	MeterRef        string `mapstructure:"meter"`   // Charge meter reference
 	Soc             SocConfig
 	Enable, Disable ThresholdConfig
 
 	// TODO deprecated
+	Title_            string        `mapstructure:"title"`         // UI title
+	Priority_         int           `mapstructure:"priority"`      // Priority
 	GuardDuration_    time.Duration `mapstructure:"guardduration"` // charger enable/disable minimum holding time
 	ConfiguredPhases_ int           `mapstructure:"phases"`
 	MinCurrent_       float64       `mapstructure:"minCurrent"`
 	MaxCurrent_       float64       `mapstructure:"maxCurrent"`
 
+	title            string  // UI title
+	priority         int     // Priority
 	minCurrent       float64 // PV mode: start current	Min+PV mode: min current
 	maxCurrent       float64 // Max allowed current. Physically ensured by the charger
 	configuredPhases int     // Charger configured phase mode 0/1/3
@@ -236,6 +238,19 @@ func NewLoadpointFromConfig(log *util.Logger, settings *Settings, other map[stri
 	}
 
 	// TODO deprecated
+	// One-time migrations MUST be mirrored in restoreSettings
+	if lp.Title_ != "" {
+		lp.log.WARN.Println("deprecated: title setting is ignored, please remove")
+		if _, err := lp.settings.String(keys.Title); err != nil {
+			lp.settings.SetString(keys.Title, lp.Title_)
+		}
+	}
+	if lp.Priority_ > 0 {
+		lp.log.WARN.Println("deprecated: priority setting is ignored, please remove")
+		if _, err := lp.settings.String(keys.Priority); err != nil {
+			lp.settings.SetInt(keys.Priority, int64(lp.Priority_))
+		}
+	}
 	if lp.MinCurrent_ > 0 {
 		lp.log.WARN.Println("deprecated: mincurrent setting is ignored, please remove")
 		if _, err := lp.settings.Float(keys.MinCurrent); err != nil {
@@ -306,8 +321,14 @@ func (lp *Loadpoint) restoreSettings() {
 	if testing.Testing() {
 		return
 	}
+	if v, err := lp.settings.String(keys.Title); err == nil && v != "" {
+		lp.setTitle(v)
+	}
 	if v, err := lp.settings.String(keys.Mode); err == nil && v != "" {
 		lp.setMode(api.ChargeMode(v))
+	}
+	if v, err := lp.settings.Int(keys.Priority); err == nil && v > 0 {
+		lp.setPriority(int(v))
 	}
 	if v, err := lp.settings.Int(keys.PhasesConfigured); err == nil && (v > 0 || lp.hasPhaseSwitching()) {
 		lp.setConfiguredPhases(int(v))
