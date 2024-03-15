@@ -13,14 +13,14 @@ import (
 
 var _ loadpoint.API = (*Loadpoint)(nil)
 
-// GetTitle returns the loadpoint's title
+// GetTitle returns the loadpoint title
 func (lp *Loadpoint) GetTitle() string {
 	lp.RLock()
 	defer lp.RUnlock()
 	return lp.title
 }
 
-// SetTitle sets the loadpoint's title
+// SetTitle sets the loadpoint title
 func (lp *Loadpoint) SetTitle(title string) {
 	lp.Lock()
 	defer lp.Unlock()
@@ -32,7 +32,7 @@ func (lp *Loadpoint) SetTitle(title string) {
 	}
 }
 
-// setTitle sets the loadpoint's title (no mutex)
+// setTitle sets the loadpoint title (no mutex)
 func (lp *Loadpoint) setTitle(title string) {
 	lp.title = title
 	lp.publish(keys.Title, lp.title)
@@ -104,7 +104,7 @@ func (lp *Loadpoint) GetPriority() int {
 	return lp.priority
 }
 
-// setPriority sets the loadpoint's priority (no mutex)
+// setPriority sets the loadpoint priority (no mutex)
 func (lp *Loadpoint) setPriority(prio int) {
 	lp.priority = prio
 	lp.publish(keys.Priority, lp.priority)
