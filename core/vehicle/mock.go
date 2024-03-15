@@ -54,6 +54,34 @@ func (mr *MockAPIMockRecorder) GetLimitSoc() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLimitSoc", reflect.TypeOf((*MockAPI)(nil).GetLimitSoc))
 }
 
+// GetMaxCurrent mocks base method.
+func (m *MockAPI) GetMaxCurrent() float64 {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetMaxCurrent")
+	ret0, _ := ret[0].(float64)
+	return ret0
+}
+
+// GetMaxCurrent indicates an expected call of GetMaxCurrent.
+func (mr *MockAPIMockRecorder) GetMaxCurrent() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMaxCurrent", reflect.TypeOf((*MockAPI)(nil).GetMaxCurrent))
+}
+
+// GetMinCurrent mocks base method.
+func (m *MockAPI) GetMinCurrent() float64 {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetMinCurrent")
+	ret0, _ := ret[0].(float64)
+	return ret0
+}
+
+// GetMinCurrent indicates an expected call of GetMinCurrent.
+func (mr *MockAPIMockRecorder) GetMinCurrent() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMinCurrent", reflect.TypeOf((*MockAPI)(nil).GetMinCurrent))
+}
+
 // GetMinSoc mocks base method.
 func (m *MockAPI) GetMinSoc() int {
 	m.ctrl.T.Helper()
@@ -66,6 +94,34 @@ func (m *MockAPI) GetMinSoc() int {
 func (mr *MockAPIMockRecorder) GetMinSoc() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMinSoc", reflect.TypeOf((*MockAPI)(nil).GetMinSoc))
+}
+
+// GetMode mocks base method.
+func (m *MockAPI) GetMode() api.ChargeMode {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetMode")
+	ret0, _ := ret[0].(api.ChargeMode)
+	return ret0
+}
+
+// GetMode indicates an expected call of GetMode.
+func (mr *MockAPIMockRecorder) GetMode() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMode", reflect.TypeOf((*MockAPI)(nil).GetMode))
+}
+
+// GetPhases mocks base method.
+func (m *MockAPI) GetPhases() int {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPhases")
+	ret0, _ := ret[0].(int)
+	return ret0
+}
+
+// GetPhases indicates an expected call of GetPhases.
+func (mr *MockAPIMockRecorder) GetPhases() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPhases", reflect.TypeOf((*MockAPI)(nil).GetPhases))
 }
 
 // GetPlanSoc mocks base method.
@@ -81,6 +137,20 @@ func (m *MockAPI) GetPlanSoc() (time.Time, int) {
 func (mr *MockAPIMockRecorder) GetPlanSoc() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPlanSoc", reflect.TypeOf((*MockAPI)(nil).GetPlanSoc))
+}
+
+// GetPriority mocks base method.
+func (m *MockAPI) GetPriority() int {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPriority")
+	ret0, _ := ret[0].(int)
+	return ret0
+}
+
+// GetPriority indicates an expected call of GetPriority.
+func (mr *MockAPIMockRecorder) GetPriority() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPriority", reflect.TypeOf((*MockAPI)(nil).GetPriority))
 }
 
 // Instance mocks base method.
@@ -123,6 +193,30 @@ func (mr *MockAPIMockRecorder) SetLimitSoc(arg0 any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetLimitSoc", reflect.TypeOf((*MockAPI)(nil).SetLimitSoc), arg0)
 }
 
+// SetMaxCurrent mocks base method.
+func (m *MockAPI) SetMaxCurrent(arg0 float64) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetMaxCurrent", arg0)
+}
+
+// SetMaxCurrent indicates an expected call of SetMaxCurrent.
+func (mr *MockAPIMockRecorder) SetMaxCurrent(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetMaxCurrent", reflect.TypeOf((*MockAPI)(nil).SetMaxCurrent), arg0)
+}
+
+// SetMinCurrent mocks base method.
+func (m *MockAPI) SetMinCurrent(arg0 float64) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetMinCurrent", arg0)
+}
+
+// SetMinCurrent indicates an expected call of SetMinCurrent.
+func (mr *MockAPIMockRecorder) SetMinCurrent(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetMinCurrent", reflect.TypeOf((*MockAPI)(nil).SetMinCurrent), arg0)
+}
+
 // SetMinSoc mocks base method.
 func (m *MockAPI) SetMinSoc(arg0 int) {
 	m.ctrl.T.Helper()
@@ -133,6 +227,30 @@ func (m *MockAPI) SetMinSoc(arg0 int) {
 func (mr *MockAPIMockRecorder) SetMinSoc(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetMinSoc", reflect.TypeOf((*MockAPI)(nil).SetMinSoc), arg0)
+}
+
+// SetMode mocks base method.
+func (m *MockAPI) SetMode(arg0 api.ChargeMode) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetMode", arg0)
+}
+
+// SetMode indicates an expected call of SetMode.
+func (mr *MockAPIMockRecorder) SetMode(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetMode", reflect.TypeOf((*MockAPI)(nil).SetMode), arg0)
+}
+
+// SetPhases mocks base method.
+func (m *MockAPI) SetPhases(arg0 int) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetPhases", arg0)
+}
+
+// SetPhases indicates an expected call of SetPhases.
+func (mr *MockAPIMockRecorder) SetPhases(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPhases", reflect.TypeOf((*MockAPI)(nil).SetPhases), arg0)
 }
 
 // SetPlanSoc mocks base method.
@@ -147,4 +265,16 @@ func (m *MockAPI) SetPlanSoc(arg0 time.Time, arg1 int) error {
 func (mr *MockAPIMockRecorder) SetPlanSoc(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPlanSoc", reflect.TypeOf((*MockAPI)(nil).SetPlanSoc), arg0, arg1)
+}
+
+// SetPriority mocks base method.
+func (m *MockAPI) SetPriority(arg0 int) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetPriority", arg0)
+}
+
+// SetPriority indicates an expected call of SetPriority.
+func (mr *MockAPIMockRecorder) SetPriority(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPriority", reflect.TypeOf((*MockAPI)(nil).SetPriority), arg0)
 }
