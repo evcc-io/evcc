@@ -23,18 +23,13 @@ import (
 	"math"
 	"time"
 
+	"github.com/volkszaehler/mbmd/encoding"
+
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/sponsor"
-	"github.com/volkszaehler/mbmd/encoding"
 )
-
-// MennekesCompact is an api.Charger implementation
-type MennekesCompact struct {
-	log  *util.Logger
-	conn *modbus.Connection
-}
 
 const (
 	mennekesRegModbusVersion        = 0x0000 // uint16
@@ -62,39 +57,56 @@ const (
 	mennekesHeartbeatToken    = 0x55AA // 21930
 )
 
+// MennekesCompact is an api.Charger implementation
+type MennekesCompact struct {
+	log  *util.Logger
+	conn *modbus.Connection
+}
+
+type MennekesCompactConfig struct {
+	ModbusSettings    modbus.Settings `mapstructure:",squash"`
+	ModbusTimeout     time.Duration   `mapstructure:"timeout"`
+	HeartbeatInterval time.Duration   `mapstructure:"heartbeat"`
+}
+
+var defaultMennekesCompactConfig = MennekesCompactConfig{
+	ModbusSettings: modbus.Settings{
+		ID:       50,
+		Baudrate: 57600,
+		Comset:   "8N2",
+	},
+	HeartbeatInterval: mennekesHeartbeatInterval,
+}
+
 func init() {
 	registry.Add("mennekes-compact", NewMennekesCompactFromConfig)
 }
 
-// NewMennekesCompactFromConfig creates a new Mennekes ModbusTCP charger
+// NewMennekesCompactFromConfig creates a new Mennekes Compact Modbus charger
 func NewMennekesCompactFromConfig(other map[string]interface{}) (api.Charger, error) {
-	cc := struct {
-		modbus.Settings `mapstructure:",squash"`
-		Timeout         time.Duration
-	}{
-		Settings: modbus.Settings{
-			Baudrate: 57600,
-			Comset:   "8N2",
-			ID:       50,
-		},
-	}
-
+	cc := defaultMennekesCompactConfig
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewMennekesCompact(cc.URI, cc.Device, cc.Comset, cc.Baudrate, modbus.ProtocolFromRTU(cc.RTU), cc.ID, cc.Timeout)
+	// maxHeartbeatInterval according to the modbus documentation
+	const maxHeartbeatInterval = time.Second * 10
+	if cc.HeartbeatInterval >= maxHeartbeatInterval {
+		return nil, fmt.Errorf("heartbeat interval must be less than %v", maxHeartbeatInterval)
+	}
+
+	return NewMennekesCompact(&cc)
 }
 
-// NewMennekesCompact creates Mennekes charger
-func NewMennekesCompact(uri, device, comset string, baudrate int, proto modbus.Protocol, slaveID uint8, timeout time.Duration) (api.Charger, error) {
-	conn, err := modbus.NewConnection(uri, device, comset, baudrate, proto, slaveID)
+// NewMennekesCompact creates Mennekes Compact charger
+func NewMennekesCompact(conf *MennekesCompactConfig) (api.Charger, error) {
+	conn, err := modbus.NewConnectionFromSettings(&conf.ModbusSettings)
 	if err != nil {
 		return nil, err
 	}
 
-	if timeout > 0 {
-		conn.Timeout(timeout)
+	if conf.ModbusTimeout > 0 {
+		conn.Timeout(conf.ModbusTimeout)
 	}
 
 	if !sponsor.IsAuthorized() {

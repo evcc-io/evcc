@@ -19,6 +19,11 @@ params:
     baudrate: 57600
     comset: 8N2
     id: 50
+  - name: heartbeat
+    default: 8s
+    description:
+      de: Der Intervall zwischen den Heartbeat-Nachrichten. Dieser muss kleiner als der Heartbeat-Timeout (10s) der Wallbox sein.
+      en: The interval between the heartbeat messages. This must be smaller than the heartbeat timeout (10s) of the charger.
 render: |
   type: mennekes-compact
   {{- include "modbus" . }}

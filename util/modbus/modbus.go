@@ -248,6 +248,11 @@ func ProtocolFromRTU(rtu *bool) Protocol {
 	return Tcp
 }
 
+func NewConnectionFromSettings(settings *Settings) (*Connection, error) {
+	return NewConnection(settings.URI, settings.Device, settings.Comset,
+		settings.Baudrate, ProtocolFromRTU(settings.RTU), settings.ID)
+}
+
 // NewConnection creates physical modbus device from config
 func NewConnection(uri, device, comset string, baudrate int, proto Protocol, slaveID uint8) (*Connection, error) {
 	var conn meters.Connection
