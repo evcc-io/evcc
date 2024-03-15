@@ -2,7 +2,7 @@ template: smartfox
 products:
   - brand: Smartfox
     description:
-      generic: Pro, Pro 2, Pro Light, Pro Light 2, Light, Reg, Reg extended
+      generic: Box, Reg, Reg extended
 requirements:
   description:
     de: |
@@ -75,4 +75,9 @@ render: |
     source: http
     uri: {{ include "uri" . }}
     jq: .power_sf
+  energy:
+    source: http
+    uri: {{ include "uri" . }}
+    jq: .day_energy_sf
+    scale: 0.001
   {{- end }}
