@@ -82,7 +82,8 @@ func (t *ElectricityMaps) run(done chan error) {
 	bo := newBackoff()
 	uri := fmt.Sprintf("%s/carbon-intensity/forecast?zone=%s", t.uri, t.zone)
 
-	for ; true; <-time.Tick(time.Hour) {
+	tick := time.NewTicker(time.Hour)
+	for ; true; <-tick.C {
 		var res CarbonIntensity
 
 		if err := backoff.Retry(func() error {
