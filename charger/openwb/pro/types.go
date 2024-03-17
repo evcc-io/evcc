@@ -18,6 +18,7 @@ type Status struct {
 	PhasesInUse    int     `json:"phases_in_use"`
 	OfferedCurrent float64 `json:"offered_current"`
 	EvseSignaling  string  `json:"evse_signaling"`
+	RfidTag        string  `json:"rfid_tag"`
 	VehicleID      string  `json:"vehicle_id"`
 	Soc            int     `json:"soc_value"`
 	SocTimestamp   int64   `json:"soc_timestamp"`

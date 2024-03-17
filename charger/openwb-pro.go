@@ -215,5 +215,9 @@ func (wb *OpenWBPro) Identify() (string, error) {
 		return "", err
 	}
 
-	return res.VehicleID, err
+	if res.VehicleID != "" {
+		return res.VehicleID, nil
+	}
+
+	return res.RfidTag, nil
 }
