@@ -1,5 +1,5 @@
 template: mennekes-hcc3
-covers: ["amtron"]
+covers: ["amtron", "menneckes-hcc3"]
 products:
   - brand: Mennekes
     description:
