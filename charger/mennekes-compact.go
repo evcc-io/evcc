@@ -116,7 +116,7 @@ func NewMennekesCompact(uri, device, comset string, baudrate int, proto modbus.P
 }
 
 func (wb *MennekesCompact) heartbeat(timeout time.Duration) {
-	for range time.Tick(timeout) {
+	for ; true; <-time.Tick(timeout) {
 		if _, err := wb.conn.WriteSingleRegister(mennekesRegHeartbeat, mennekesHeartbeatToken); err != nil {
 			wb.log.ERROR.Println("heartbeat:", err)
 		}
