@@ -81,7 +81,8 @@ func (t *Pun) run(done chan error) {
 	var once sync.Once
 	bo := newBackoff()
 
-	for ; true; <-time.Tick(time.Hour) {
+	tick := time.NewTicker(time.Hour)
+	for ; true; <-tick.C {
 		var today api.Rates
 		if err := backoff.Retry(func() error {
 			var err error
@@ -109,7 +110,7 @@ func (t *Pun) run(done chan error) {
 			continue
 		}
 
-		//merge today and tomorrow data
+		// merge today and tomorrow data
 		data := append(today, tomorrow...)
 		t.data.Set(data)
 
