@@ -16,10 +16,11 @@ legendTopSubline = "sans interruption"
 modalTitle = "Réglages de la batterie"
 
 [batterySettings.bufferStart]
-full = "quand presque pleine"
+full = "quand chargé à {soc}"
 low = "quand partiellement pleine"
 medium = "quand à moitié pleine"
 never = "seulement quand surplus suffisant"
+above = "lorsque chargé à plus que {soc}"
 
 [config]
 
@@ -32,6 +33,10 @@ addVehicle = "Ajouter le véhicule"
 edit = "éditer"
 title = "Configuration"
 vehicles = "Mes véhicules"
+addLoadpoint = "Ajouter un point de charge"
+addPvBattery = "Ajouter du solaire ou une batterie"
+unconfigured = "non configuré"
+yaml = "Configuré dans evcc.yaml. Non modifiable ici."
 
 [config.validation]
 failed = "échec"
@@ -43,7 +48,7 @@ validate = "valider"
 
 [config.vehicle]
 cancel = "Annuler"
-delete = "Supprimer le véhicule"
+delete = "Supprimer"
 generic = "Autres intégrations"
 offline = "Véhicule générique"
 online = "Véhicules avec API en ligne"
@@ -133,6 +138,7 @@ login = "Connexions véhicule"
 needHelp = "Besoin d'aide?"
 sessions = "Sessions de recharge"
 settings = "Réglages"
+nativeSettings = "Changer de serveur"
 
 [header.theme]
 auto = "Désign: Système"
@@ -174,6 +180,7 @@ title = "Planification"
 titleMinSoc = "Charge min."
 titleTargetCharge = "Départ"
 update = "Appliquer"
+unsavedChanges = Il y a des modifications non sauvegardées. Appliquer ?
 
 [main.energyflow]
 battery = "Batterie"
@@ -209,6 +216,8 @@ disclaimerHint = "Remarque:"
 onlyForSocBasedCharging = "Ces options sont disponibles uniquement pour les véhicules avec niveau de charge connu."
 title = "Réglages {0}"
 vehicle = "Véhicule"
+smartCostClean = "Chargement propre depuis le réseau"
+smartCostCheap = "Chargement bon marché depuis le réseau"
 
 [main.loadpointSettings.limitSoc]
 description = "Limite de charge à utiliser quand ce véhicule est connecté."
@@ -231,6 +240,7 @@ phases_1 = "1 phase"
 phases_1_hint = "({min} à {max})"
 phases_3 = "3 phases"
 phases_3_hint = "({min} à {max})"
+no1p3pSupport = "Comment est connecté votre chargeur ?"
 
 [main.mode]
 minpv = "Min+Sol"
@@ -295,6 +305,7 @@ temp = "Temp."
 tempLimit = "Temp. limite"
 unknown = "Véhicule invité"
 vehicleSoc = "Charge"
+notReachable = «Impossible d’atteindre le véhicule. Essayez de redémarrer evcc.»
 
 [main.vehicleSoc]
 charging = "en charge"
@@ -380,7 +391,7 @@ allVehicles = "tous les véhicules"
 filter = "Filtrer"
 
 [settings]
-title = "Réglages"
+title = "Réglages généraux"
 
 [settings.hiddenFeatures]
 label = "Expérimental"
@@ -419,6 +430,11 @@ modalTitle = "Recharge réseau intelligente"
 none = "aucune"
 priceLabel = "Prix de l'énergie"
 priceLimit = "Limite de prix"
+cheapTitle = "Charge bon marché depuis le réseau"
+applyToAll = "Appliquer partout ?"
+batteryDescription = "Charge la batterie domestique avec du courant du réseau."
+cleanTitle = "Charge propre depuis le réseau"
+saved = "Enregistré."
 
 [startupError]
 configFile = "Fichier de configuration utilisé:"
@@ -436,3 +452,50 @@ title = "Erreur au démarrage"
 cancel = "Annuler"
 template = "Fabricant"
 test = "Test"
+
+
+[main.heatingStatus]
+cheapEnergyCharging = "Chauffage bon marché : {price} (limite {limit})"
+charging = "Chauffage… "
+cleanEnergyCharging = "Chauffage propre : {co2} (limite {limit})"
+waitForVehicle = "Prêt. En attente du chauffage… "
+
+[config.site]
+cancel = "Annuler"
+save = "Enregistrer"
+
+[config.pv]
+titleAdd = "Ajouter un compteur pour le solaire"
+titleEdit = "Modifier le compteur pour le solaire"
+
+[config.meter]
+save = "Enregistrer"
+template = "Fabricant"
+titleChoice = "Que voulez-vous ajouter ?"
+validateSave = "Valider et enregistrer"
+cancel = "Annuler"
+delete = "Supprimer"
+
+[config.battery]
+titleEdit = "Modifier compteur pour batterie"
+titleAdd = "Ajouter compteur pour une batterie domestique"
+
+[config.deviceValue]
+capacity = "Capacité"
+chargeStatus = "Statut"
+chargedEnergy = "Chargé"
+current = "Courant"
+enabled = "Activé"
+energy = "Énergie"
+odometer = "Kilométrage"
+phaseCurrents = "Courant L1..L3"
+phasePowers = "Puissance L1..L3"
+phaseVoltages = "Voltage L1..L3"
+power = "Puissance’
+range = "Autonomie"
+soc = "Etat de Charge"
+socLimit = "Limite"
+
+[config.grid]
+titleAdd = "Ajouter compteur pour réseau"
+titleEdit = "Modifier compteur pour réseau"
