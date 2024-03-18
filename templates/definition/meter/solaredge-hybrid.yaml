@@ -8,10 +8,12 @@ requirements:
   description:
     de: |
       Nur ein System kann und darf zeitgleich eine Modbus TCP-Verbindung zum Wechselrichter haben!
-      Für die optionale Batteriesteuerung muss StorageConf_CtrlMode (0xE004) auf 4 "Remote" stehen.
+      Für die optionale Batteriesteuerung muss StorageConf_CtrlMode (0xE004) auf 4 "Remote" stehen,
+      sowie der Batteriemodus "Nutzungszeit" aktiv sein.
     en: |
       Only one system can and may have a Modbus TCP connection to the inverter at the same time!
-      For optional battery control, StorageConf_CtrlMode (0xE004) must be set to 4 "Remote".
+      For optional battery control, StorageConf_CtrlMode (0xE004) must be set to 4 "Remote" and
+      battery mode must be set to "Time of Use".
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
