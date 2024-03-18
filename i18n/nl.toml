@@ -16,10 +16,11 @@ legendTopSubline = "zonder onderbrekingen"
 modalTitle = "Batterij-instellingen"
 
 [batterySettings.bufferStart]
-full = "Wanneer bijna vol"
+full = "Wanneer op {soc}"
 low = "indien beetje vol"
 medium = "indien half vol"
 never = "enkel bij voldoende overschot"
+above = Indien boven {soc}
 
 [config]
 
@@ -177,6 +178,7 @@ login = "Logingegevens van voertuigen"
 needHelp = "Hulp nodig?"
 sessions = "Laadsessies"
 settings = "Instellingen"
+nativeSettings = "Andere server"
 
 [header.theme]
 auto = "Design: systeem"
@@ -218,6 +220,7 @@ title = "Plan"
 titleMinSoc = "Min lading"
 titleTargetCharge = "Vertrek"
 update = "Toepassen"
+unsavedChanges = "Wijzigingen nog niet opgeslagen. Nu toepassen?"
 
 [main.energyflow]
 battery = "Batterij"
@@ -259,6 +262,8 @@ disclaimerHint = "Let op:"
 onlyForSocBasedCharging = "Deze instellingen zijn alleen beschikbaar bij wagens waar het batterijpercentage gekend is"
 title = "Instellingen {0}"
 vehicle = "Voertuig"
+smartCostCheap = "Goedkoop laden met netstroom"
+smartCostClean = "Laden met schone energie van het net"
 
 [main.loadpointSettings.limitSoc]
 description = "Standaard laadlimiet wanneer dit voertuig aangesloten wordt"
@@ -346,6 +351,7 @@ temp = "Temperatuur"
 tempLimit = "Temperatuur limiet"
 unknown = "Gast voertuig"
 vehicleSoc = "Lading"
+notReachable = "Wagengegevens niet beschikbaar. Herstart EVCC."
 
 [main.vehicleSoc]
 charging = "laden"
@@ -476,6 +482,11 @@ modalTitle = "Smart Grid laden"
 none = "geen"
 priceLabel = "Energieprijs"
 priceLimit = "Prijslimiet"
+applyToAll = "Overal toepassen?"
+batteryDescription = "Laadt de huisbatterij op met stroom uit het net"
+cleanTitle = "Laden met schone energie uit het net"
+cheapTitle = "Goedkoop netstroom laden"
+saved = "Opgeslagen"
 
 [startupError]
 configFile = "Gebruikt configuratiebestand:"
