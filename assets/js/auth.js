@@ -4,7 +4,7 @@ import Modal from "bootstrap/js/dist/modal";
 
 const auth = reactive({
   configured: true,
-  loggedIn: true,
+  loggedIn: false,
 });
 
 export async function updateAuthStatus() {
@@ -17,11 +17,16 @@ export async function updateAuthStatus() {
     }
     if (res.status === 200) {
       auth.configured = true;
-      auth.loggedIn = res.data === "true";
+      auth.loggedIn = res.data === true;
     }
   } catch (e) {
     console.error("unable to fetch auth status", e);
   }
+}
+
+export function openLoginModal() {
+  const modal = Modal.getOrCreateInstance(document.getElementById("loginModal"));
+  modal.show();
 }
 
 // show/hide password modal based on auth status

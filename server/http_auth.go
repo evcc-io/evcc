@@ -58,8 +58,8 @@ func authStatusHandler(site site.API) http.HandlerFunc {
 func loginHandler(site site.API) http.HandlerFunc {
 	auth := site.Auth()
 	return func(w http.ResponseWriter, r *http.Request) {
-		password := r.FormValue("password")
-		if !auth.IsAdminPasswordValid(password) {
+		password, _ := io.ReadAll(r.Body)
+		if !auth.IsAdminPasswordValid(string(password)) {
 			http.Error(w, "Invalid password", http.StatusUnauthorized)
 			return
 		}

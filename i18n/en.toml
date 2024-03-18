@@ -189,6 +189,14 @@ description = "Under normal circumstances restarting should not be necessary. Pl
 disclaimer = "Note: evcc will terminate and rely on the operating system to restart the service."
 modalTitle = "Are you sure you want to restart?"
 
+[loginModal]
+cancel = "Cancel"
+error = "Login failed: "
+invalid = "Password is invalid."
+login = "Login"
+password = "Password"
+title = "Login"
+
 [main]
 vehicles = "Parking"
 
