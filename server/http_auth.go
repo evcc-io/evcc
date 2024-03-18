@@ -1,23 +1,62 @@
 package server
 
 import (
+	"io"
 	"net/http"
 	"time"
 
-	"github.com/evcc-io/evcc/core/auth"
+	"github.com/evcc-io/evcc/core/site"
 )
 
 var authCookieName = "auth"
+var authQueryParam = "auth"
 
-func setPasswordHandler(auth auth.API) http.HandlerFunc {
+func setPasswordHandler(site site.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if err := auth.SetAdminPassword(r.FormValue("password")); err != nil {
+		password, _ := io.ReadAll(r.Body)
+		if err := site.Auth().SetAdminPassword(string(password)); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	}
 }
 
-func loginHandler(auth auth.API) http.HandlerFunc {
+// read jwt from 1) Authorization header, 2) cookie, 3) query parameter
+func jwtFromRequest(r *http.Request) string {
+	tokenString := r.Header.Get("Authorization")
+	if tokenString == "" {
+		cookie, _ := r.Cookie(authCookieName)
+		if cookie != nil {
+			tokenString = cookie.Value
+		}
+	}
+	if tokenString == "" {
+		tokenString = r.URL.Query().Get(authQueryParam)
+	}
+
+	return tokenString
+}
+
+// authStatusHandler login status (true/false) based on jwt token. Error if admin password is not configured
+func authStatusHandler(site site.API) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		auth := site.Auth()
+		if !auth.IsAdminPasswordConfigured() {
+			http.Error(w, "Not implemented", http.StatusNotImplemented)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		ok, err := auth.ValidateJwtToken(jwtFromRequest(r))
+		if err != nil || !ok {
+			w.Write([]byte("false"))
+			return
+		}
+		w.Write([]byte("true"))
+	}
+}
+
+func loginHandler(site site.API) http.HandlerFunc {
+	auth := site.Auth()
 	return func(w http.ResponseWriter, r *http.Request) {
 		password := r.FormValue("password")
 		if !auth.IsAdminPasswordValid(password) {
@@ -25,7 +64,7 @@ func loginHandler(auth auth.API) http.HandlerFunc {
 			return
 		}
 
-		lifetime := time.Hour * 24 // 1 day valid
+		lifetime := time.Hour * 24 * 90 // 90 day valid
 		tokenString, err := auth.GenerateJwtToken(lifetime)
 		if err != nil {
 			http.Error(w, "Failed to generate JWT token: "+err.Error(), http.StatusInternalServerError)
@@ -52,23 +91,11 @@ func logoutHandler(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func ensureAuth(auth auth.API, next http.HandlerFunc) http.HandlerFunc {
+func ensureAuth(site site.API, next http.HandlerFunc) http.HandlerFunc {
+	auth := site.Auth()
 	return func(w http.ResponseWriter, r *http.Request) {
-		// auth disabled by user
-		if auth.IsAdminPasswordDisabled() {
-			next.ServeHTTP(w, r)
-			return
-		}
-
-		// read auth cookie
-		cookie, err := r.Cookie(authCookieName)
-		if err != nil || cookie.Value == "" {
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
-			return
-		}
-
 		// check jwt token
-		ok, err := auth.ValidateJwtToken(cookie.Value)
+		ok, err := auth.ValidateJwtToken(jwtFromRequest(r))
 		if !ok || err != nil {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return

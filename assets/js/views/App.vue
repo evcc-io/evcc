@@ -5,8 +5,8 @@
 		<GlobalSettingsModal v-bind="globalSettingsProps" />
 		<BatterySettingsModal v-if="batteryModalAvailabe" v-bind="batterySettingsProps" />
 		<HelpModal />
-		<PasswordModal v-if="passwordConfigurationRequired" />
-		<LoginModal v-else />
+		<PasswordModal />
+		<LoginModal />
 	</div>
 </template>
 
@@ -18,7 +18,7 @@ import PasswordModal from "../components/PasswordModal.vue";
 import LoginModal from "../components/LoginModal.vue";
 import HelpModal from "../components/HelpModal.vue";
 import collector from "../mixins/collector";
-import Modal from "bootstrap/js/dist/modal";
+import { updateAuthStatus } from "../auth";
 
 // assume offline if not data received for 60 seconds
 let lastDataReceived = new Date();
@@ -45,7 +45,7 @@ export default {
 		offline: Boolean,
 	},
 	data: () => {
-		return { reconnectTimeout: null, ws: null };
+		return { reconnectTimeout: null, ws: null, authNotConfigured: false };
 	},
 	head() {
 		const siteTitle = store.state.siteTitle;
@@ -55,9 +55,6 @@ export default {
 		batteryModalAvailabe: function () {
 			return store.state.batteryConfigured;
 		},
-		passwordConfigurationRequired: function () {
-			return store.state.passwordConfigured === false;
-		},
 		globalSettingsProps: function () {
 			return this.collectProps(GlobalSettingsModal, store.state);
 		},
@@ -65,23 +62,20 @@ export default {
 			return this.collectProps(BatterySettingsModal, store.state);
 		},
 	},
-	watch: {
-		passwordConfigurationRequired: function (value) {
-			if (value) {
-				this.$nextTick(() => {
-					new Modal(document.getElementById("passwordModal")).show();
-				});
-			}
-		},
-	},
 	mounted: function () {
 		this.connect();
 		document.addEventListener("visibilitychange", this.pageVisibilityChanged, false);
+		updateAuthStatus();
 	},
 	unmounted: function () {
 		this.disconnect();
 		window.clearTimeout(this.reconnectTimeout);
 		document.removeEventListener("visibilitychange", this.pageVisibilityChanged, false);
+	},
+	watch: {
+		offline: function () {
+			updateAuthStatus();
+		},
 	},
 	methods: {
 		pageVisibilityChanged: function () {
@@ -90,6 +84,7 @@ export default {
 				this.disconnect();
 			} else {
 				this.connect();
+				updateAuthStatus();
 			}
 		},
 		reconnect: function () {

@@ -53,24 +53,7 @@
 								</div>
 							</FormRow>
 
-							<div
-								class="d-flex"
-								:class="
-									showNoPasswordButton
-										? 'justify-content-between'
-										: 'justify-content-end'
-								"
-							>
-								<button
-									v-if="showNoPasswordButton"
-									type="button"
-									class="btn btn-link text-danger"
-									data-bs-dismiss="modal"
-									:disabled="loading"
-									@click="openNoPasswordModal"
-								>
-									{{ $t("passwordModal.noPassword") }}
-								</button>
+							<div class="d-flex justify-content-end">
 								<button
 									type="submit"
 									class="btn btn-primary justify-self-right"
@@ -91,48 +74,13 @@
 			</div>
 		</div>
 	</Teleport>
-
-	<Teleport to="body">
-		<div
-			id="noPasswordModal"
-			class="modal fade text-dark"
-			tabindex="-1"
-			role="dialog"
-			aria-hidden="true"
-			data-bs-backdrop="static"
-			data-bs-keyboard="false"
-		>
-			<div class="modal-dialog modal-dialog-centered" role="document">
-				<div class="modal-content">
-					<div class="modal-header">
-						<h5>{{ $t("passwordModal.noPasswordReally") }}</h5>
-					</div>
-					<div class="modal-footer d-flex justify-content-between">
-						<p v-if="error" class="text-danger mb-4">
-							{{ $t("passwordModal.error") }} "{{ error }}"
-						</p>
-						<button
-							type="button"
-							class="btn btn-outline-secondary"
-							data-bs-dismiss="modal"
-							@click="openPasswordModal"
-						>
-							{{ $t("passwordModal.noPasswordCancel") }}
-						</button>
-						<button type="button" class="btn btn-danger" @click="setNoPassword">
-							{{ $t("passwordModal.noPasswordConfirm") }}
-						</button>
-					</div>
-				</div>
-			</div>
-		</div>
-	</Teleport>
 </template>
 
 <script>
-import FormRow from "./FormRow.vue";
 import Modal from "bootstrap/js/dist/modal";
+import FormRow from "./FormRow.vue";
 import api from "../api";
+import { updateAuthStatus } from "../auth";
 
 export default {
 	name: "PasswordModal",
@@ -153,9 +101,6 @@ export default {
 		passwordEmpty: function () {
 			return this.password.length === 0;
 		},
-		showNoPasswordButton: function () {
-			return this.showValidation && this.passwordsMatch && this.passwordEmpty;
-		},
 	},
 	methods: {
 		setPassword: async function (e) {
@@ -168,47 +113,24 @@ export default {
 			this.showValidation = true;
 
 			if (this.$refs.form.checkValidity()) {
-				const success = await this.savePassword(this.password);
-				if (success) {
-					this.closePasswordModal();
-				}
+				await this.savePassword(this.password);
+				await updateAuthStatus();
 			}
 		},
 		savePassword: async function (password) {
 			this.loading = true;
 			this.error = null;
 			try {
-				await api.post("/password", { password });
-				return true;
+				await api.post("/password", password);
 			} catch (error) {
 				console.error(error);
 				this.error = error.response.data;
 			} finally {
 				this.loading = false;
 			}
-			return false;
-		},
-		setNoPassword: async function () {
-			const success = await this.savePassword("");
-			if (success) {
-				this.closeNoPasswordModal();
-			}
-		},
-		closePasswordModal() {
-			const modal = Modal.getInstance(document.getElementById("passwordModal"));
-			modal.hide();
-		},
-		closeNoPasswordModal() {
-			const modal = Modal.getInstance(document.getElementById("noPasswordModal"));
-			modal.hide();
 		},
 		openPasswordModal() {
-			const modal = Modal.getOrCreateInstance(document.getElementById("passwordModal"));
-			modal.show();
-		},
-		openNoPasswordModal() {
-			const modal = Modal.getOrCreateInstance(document.getElementById("noPasswordModal"));
-			modal.show();
+			Modal.getOrCreateInstance(document.getElementById("passwordModal")).show();
 		},
 	},
 };

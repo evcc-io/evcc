@@ -87,8 +87,6 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, cache *util.Cache) {
 		handlers.AllowedHeaders([]string{"Content-Type"}),
 	))
 
-	auth := site.Auth()
-
 	// site api
 	routes := map[string]route{
 		"health":                  {[]string{"GET"}, "/health", healthHandler(site)},
@@ -118,10 +116,11 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, cache *util.Cache) {
 		"deletesession":           {[]string{"DELETE", "OPTIONS"}, "/session/{id:[0-9]+}", deleteSessionHandler},
 		"telemetry":               {[]string{"GET"}, "/settings/telemetry", boolGetHandler(telemetry.Enabled)},
 		"telemetry2":              {[]string{"POST", "OPTIONS"}, "/settings/telemetry/{value:[a-z]+}", boolHandler(telemetry.Enable, telemetry.Enabled)},
-		"setpassword":             {[]string{"POST", "OPTIONS"}, "/password", setPasswordHandler(auth)},
-		"login":                   {[]string{"POST", "OPTIONS"}, "/login", loginHandler(auth)},
-		"logout":                  {[]string{"POST", "OPTIONS"}, "/logout", logoutHandler},
-		"hellosecure":             {[]string{"GET"}, "/hellosecure", ensureAuth(auth, helloHandler)},
+		"setpassword":             {[]string{"POST", "OPTIONS"}, "/password", setPasswordHandler(site)},
+		"auth":                    {[]string{"GET"}, "/auth/status", authStatusHandler(site)},
+		"login":                   {[]string{"POST", "OPTIONS"}, "/auth/login", loginHandler(site)},
+		"logout":                  {[]string{"POST", "OPTIONS"}, "/auth/logout", logoutHandler},
+		"hellosecure":             {[]string{"GET"}, "/hellosecure", ensureAuth(site, helloHandler)},
 	}
 
 	for _, r := range routes {

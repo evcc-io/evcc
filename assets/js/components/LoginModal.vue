@@ -20,8 +20,8 @@
 						></button>
 					</div>
 					<div class="modal-body">
-						<FormRow id="newPassword" :label="$t('loginModal.password')">
-							<input id="newPassword" v-model="password" class="form-control" />
+						<FormRow id="loginPassword" :label="$t('loginModal.password')">
+							<input id="loginPassword" v-model="password" class="form-control" />
 						</FormRow>
 					</div>
 				</div>

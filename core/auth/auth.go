@@ -11,8 +11,6 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-const authDisabled = "<DISABLED>"
-
 type Settings interface {
 	String(key string) (string, error)
 	SetString(key string, value string)
@@ -55,10 +53,8 @@ func (a *Auth) SetAdminPassword(password string) error {
 		return errors.New("admin password already set")
 	}
 
-	// empty password -> disable auth
 	if password == "" {
-		a.settings.SetString(keys.AdminPassword, authDisabled)
-		return nil
+		return errors.New("password cannot be empty")
 	}
 
 	hashed, err := a.hashPassword(password)
@@ -78,11 +74,6 @@ func (a *Auth) IsAdminPasswordValid(password string) bool {
 	}
 
 	return bcrypt.CompareHashAndPassword([]byte(adminHash), []byte(password)) == nil
-}
-
-// IsAdminPasswordDisabled checks if the admin password is disabled
-func (a *Auth) IsAdminPasswordDisabled() bool {
-	return a.getAdminPasswordHash() == authDisabled
 }
 
 func (a *Auth) generateRandomKey(length int) (string, error) {

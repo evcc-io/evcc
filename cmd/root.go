@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/core"
-	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/server/modbus"
@@ -246,9 +245,6 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 		os.Exit(0)
 	}()
-
-	// check if admin password is configured
-	valueChan <- util.Param{Key: keys.PasswordConfigured, Val: site.Auth().IsAdminPasswordConfigured()}
 
 	// show main ui
 	if err == nil {
