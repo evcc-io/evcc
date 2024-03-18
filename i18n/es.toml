@@ -16,10 +16,11 @@ legendTopSubline = "sin interrupciones"
 modalTitle = "Ajustes de la batería"
 
 [batterySettings.bufferStart]
-full = "cuando está casi llena"
+full = "si está en {soc}"
 low = "cuando está algo llena"
 medium = "cuando está medio llena"
 never = "cuando hay suficiente excedente"
+above = "cuando esté por encima de {soc}"
 
 [config]
 
@@ -177,6 +178,7 @@ login = "Registro de vehículos"
 needHelp = "¿Necesitas ayuda?"
 sessions = "Sesiones de carga"
 settings = "Ajustes"
+nativeSettings = "Cambiar el servidor"
 
 [header.theme]
 auto = "Tema: System"
@@ -218,6 +220,7 @@ title = "Plan"
 titleMinSoc = "Carga mínima"
 titleTargetCharge = "Partida"
 update = "Aplicar"
+unsavedChanges = "Hay cambios sin guardar. ¿Aplicar ahora?"
 
 [main.energyflow]
 battery = "Batería"
@@ -259,6 +262,8 @@ disclaimerHint = "Nota:"
 onlyForSocBasedCharging = "Estas opciones sólo están disponibles para vehículos con nivel de carga conocido"
 title = "Configuraciones {0}"
 vehicle = "Vehículo"
+smartCostClean = "Carga desde una red ecológica"
+smartCostCheap = “Carga barata desde la red”
 
 [main.loadpointSettings.limitSoc]
 description = "Límite de carga que se utiliza cuando este vehículo está conectado"
@@ -349,6 +354,7 @@ temp = "T.ª"
 tempLimit = "Temperatura límite"
 unknown = "Vehículo invitado"
 vehicleSoc = "Nivel de carga"
+notReachable = "No se pudo acceder al vehículo. Intente reiniciar evcc"
 
 [main.vehicleSoc]
 charging = "cargando"
@@ -479,6 +485,11 @@ modalTitle = "Red inteligente de carga"
 none = "ninguno"
 priceLabel = "Precio de la energía"
 priceLimit = "Límite de precio"
+applyToAll = "¿Aplicar en todas partes?"
+batteryDescription = "Carga la batería doméstica con la red eléctrica"
+cheapTitle = “Carga barata desde la red”
+saved = "Guardado."
+cleanTitle = "Carga desde una red ecológica"
 
 [startupError]
 configFile = "Archivo de configuración utilizado:"
