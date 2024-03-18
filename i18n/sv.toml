@@ -16,10 +16,11 @@ legendTopSubline = "utan avbrott"
 modalTitle = "Batteri inställningar"
 
 [batterySettings.bufferStart]
-full = "när det är nästan fullt"
+full = "när det är {soc}"
 low = "när det är något fullt"
 medium = "när det är halvfullt"
 never = "bara med tillräckligt sol-överskott"
+above = "när den är över {soc}"
 
 [config]
 
@@ -177,6 +178,7 @@ login = "Fordons inloggningar"
 needHelp = "Behöver du hjälp?"
 sessions = "Laddningar"
 settings = "Inställningar"
+nativeSettings = "Byt server"
 
 [help]
 discussionsButton = "GitHub diskussioner"
@@ -213,6 +215,7 @@ title = "Plan"
 titleMinSoc = "Min. laddning"
 titleTargetCharge = "Avfärd"
 update = "Verkställ"
+unsavedChanges = "Det finns ej sparade ändringar. Spara nu?"
 
 [main.energyflow]
 battery = "Batteri"
@@ -254,6 +257,8 @@ disclaimerHint = "Anmärkning:"
 onlyForSocBasedCharging = "Dessa inställningar är endast tillgängliga för fordon med känd laddnivå"
 title = "Inställningar {0}"
 vehicle = "Fordon"
+smartCostCheap = "Billig laddning från nätet"
+smartCostClean = "Laddning med grön el"
 
 [main.loadpointSettings.limitSoc]
 description = "Laddbegränsning när detta fordon är anslutet."
@@ -474,6 +479,11 @@ modalTitle = "Smartladdning elnät"
 none = "ingen"
 priceLabel = "Energipris"
 priceLimit = "Prisgräns"
+batteryDescription = "Laddar batteriet med el från nätet."
+cleanTitle = "Laddar grön el från nätet"
+saved = "Sparad."
+applyToAll = "Tillämpa överallt?"
+cheapTitle = "Billig laddning från nätet"
 
 [startupError]
 configFile = "Konfigurationsfil som används:"
