@@ -17,10 +17,11 @@ modalTitle = "Ustawienia baterii"
 notControllable = "Sterowanie baterią nie jest dostępne dla tej baterii."
 
 [batterySettings.bufferStart]
-full = "kiedy prawie pełny"
+full = "kiedy na {soc}"
 low = "kiedy nieco pełny"
 medium = "kiedy w połowie pełny"
 never = "tylko z wystarczającą nadwyżką"
+above = "kiedy powyżej {soc}"
 
 [config]
 
@@ -33,6 +34,10 @@ addVehicle = "Dodaj pojazd"
 edit = "edytować"
 title = "Konfiguracja"
 vehicles = "Moje pojazdy"
+addLoadpoint = "Dodaj ładowarkę"
+addPvBattery = "Dodaj licznik energii słonecznej lub baterii"
+unconfigured = "nie skonfigurowane"
+yaml = "Skonfigurowano w evcc.yaml Nie można edytować w interfejsie użytkownika."
 
 [config.validation]
 failed = "nie udało się"
@@ -44,7 +49,7 @@ validate = "zweryfikować"
 
 [config.vehicle]
 cancel = "Anulować"
-delete = "Usuń samochód"
+delete = "Usuń."
 generic = "Inne integracje"
 offline = "Samochód ogólny"
 online = "Pojazdy z API online"
@@ -131,9 +136,10 @@ blog = "Blog"
 docs = "Dokumentacja"
 github = "GitHub"
 login = "Dane logowania pojazdu"
-needHelp = "Potrzebuję pomocy?"
+needHelp = "Potrzebuję Pomocy?"
 sessions = "Sesje ładowania"
 settings = "Ustawienia"
+nativeSettings = "Zmień serwer"
 
 [header.theme]
 auto = "Wygląd: system"
@@ -175,6 +181,7 @@ title = "Plan"
 titleMinSoc = "Minimalne ładowanie"
 titleTargetCharge = "Wyjazd"
 update = "Wykorzystać"
+unsavedChanges = "Są niezapisane zmiany. Zastosować teraz?"
 
 [main.energyflow]
 battery = "Bateria"
@@ -204,12 +211,14 @@ remoteDisabledSoft = "{source}: adaptacyjne ładowanie słonecznie wyłączone"
 solar = "Słoneczna"
 
 [main.loadpointSettings]
-currents = "Prąd ładowania"
+currents = "Prąd Ładowania"
 default = "domyślny"
 disclaimerHint = "Uwaga:"
 onlyForSocBasedCharging = "Opcje te są dostępne tylko dla pojazdów ze znanym poziomem naładowania."
 title = "Ustawienia {0}"
 vehicle = "Pojazd"
+smartCostCheap = "Tanie ładowanie sieciowe"
+smartCostClean = "Czyste ładowanie sieci"
 
 [main.loadpointSettings.limitSoc]
 description = "Limit ładowania używany, gdy pojazd jest podłączony."
@@ -232,6 +241,7 @@ phases_1 = "1 faza"
 phases_1_hint = "({min} do {max})"
 phases_3 = "3 fazy"
 phases_3_hint = "({min} do {max})"
+no1p3pSupport = "Jak jest podłączona ładowarka?"
 
 [main.mode]
 minpv = "Min+Słońce"
@@ -296,6 +306,7 @@ temp = "Temp."
 tempLimit = " Ograniczenie temp."
 unknown = "Pojazd gościa"
 vehicleSoc = "Bateria"
+notReachable = "Samochód nie był osiągalny. Spróbuj ponownie uruchomić evcc."
 
 [main.vehicleSoc]
 charging = "ładuje się"
@@ -426,6 +437,11 @@ modalTitle = "Ładowanie z inteligentnej sieci"
 none = "nie ma"
 priceLabel = "Cena energii"
 priceLimit = "Limit ceny"
+saved = "Zapisano."
+applyToAll = "Aplikować wszędzie?"
+batteryDescription = "Ładuje akumulator domu energią z sieci."
+cheapTitle = "Tanie ładowanie z sieci"
+cleanTitle = "Czyste ładowanie z sieci"
 
 [startupError]
 configFile = "Używany plik konfiguracyjny:"
@@ -443,3 +459,50 @@ title = "Błąd uruchamiania"
 cancel = "Anulować"
 template = "Producent"
 test = "Test"
+
+
+[main.heatingStatus]
+cleanEnergyCharging = "Ogrzewanie czystą energią: {co2} (limit {limit})"
+waitForVehicle = "Gotowe. Czekam na grzejnik…"
+cheapEnergyCharging = "Ogrzewanie tanią energią: {price} (limit {limit})"
+charging = "Ogrzewanie…"
+
+[config.battery]
+titleAdd = "Dodaj miernik baterii"
+titleEdit = "Edytuj miernik baterii"
+
+[config.deviceValue]
+capacity = "Pojemność"
+chargeStatus = "Status"
+chargedEnergy = "Naładowany"
+enabled = "Włączony"
+energy = "Energia"
+current = "Prąd"
+odometer = "Drogomierz"
+phaseCurrents = "Prąd L1..L3"
+phasePowers = "Moc L1..L3"
+phaseVoltages = "Napięcie L1..L3"
+power = "Moc"
+range = "Zasięg"
+soc = "Stan naładowania"
+socLimit = "Limit"
+
+[config.meter]
+template = "Producent"
+titleChoice = "Co chcesz dodać?"
+validateSave = "Sprawdź i zapisz"
+cancel = "Anulować"
+delete = "Usuwać"
+save = "Zapisz"
+
+[config.pv]
+titleAdd = "Dodaj licznik energii słonecznej"
+titleEdit = "Edytuj licznik energii słonecznej"
+
+[config.grid]
+titleAdd = "Dodaj licznik sieci"
+titleEdit = "Edytuj licznik sieci"
+
+[config.site]
+cancel = "Anulować"
+save = "Zapisz"

@@ -12,12 +12,15 @@ legendTopAutostart = "запускається автоматично"
 legendTopName = "заряджання з підтримкою батареї"
 legendTopSubline = "без перебоїв"
 modalTitle = "Налаштування батареї"
+control = "Контроль батареї"
+discharge = "Запобігти розрядці в швидкому режимі та плановій зарядці"
 
 [batterySettings.bufferStart]
-full = "коли майже повний"
+full = "коли при {soc}"
 low = "коли трохи повний"
 medium = "коли наполовину повна"
 never = "тільки з достатнім надлишком"
+above = "коли вище {soc}"
 
 [config]
 
@@ -30,6 +33,9 @@ addVehicle = "Додати транспорт"
 edit = "редагувати"
 title = "Конфігурація"
 vehicles = "Мій транспорт"
+unconfigured = "не налаштовано"
+addLoadpoint = "Додати точку зарядки"
+yaml = "Налаштовано в evcc.yaml. Не можна редагувати в інтерфейсі користувача."
 
 [config.validation]
 failed = "не вдалося"
@@ -41,7 +47,7 @@ validate = "перевірити"
 
 [config.vehicle]
 cancel = "Скасувати"
-delete = "Видалити транспорт"
+delete = "Видалити"
 generic = "Інші інтеграції"
 offline = "Загальний транспорт"
 online = "Транспорт з онлайн API"
@@ -81,6 +87,8 @@ savingsTitle = "Економія"
 savingsTotalEnergy = "{total} кВт/год заряджено"
 since = "оскільки {since}"
 tabTitle = "Мої дані"
+periodLabel = "Період:"
+co2Title = "Викиди CO₂"
 
 [footer.sponsor]
 becomeSponsor = "Стати спонсором"
@@ -116,10 +124,11 @@ about = "Про evcc"
 blog = "Блог"
 docs = "Документація"
 github = "GitHub"
-login = "Вхід до транспортного засобу"
-needHelp = "Потрібна допомога?"
-sessions = "Сеанси зарядки"
+login = "Автомобільні логіни"
+needHelp = "Потрібна Допомога?"
+sessions = "Сеанси Зарядки"
 settings = "Налаштування"
+nativeSettings = "Змінити сервер"
 
 [help]
 discussionsButton = "Обговорення GitHub"
@@ -150,6 +159,12 @@ none = "немає"
 title = "План"
 titleMinSoc = "Мінімальна плата"
 titleTargetCharge = "Від'їзд"
+active = "Активний"
+unsavedChanges = "Є незбережені зміни. Застосувати зараз?"
+day = "День"
+time = "Час"
+remove = "Yсувати"
+update = "Застосувати"
 
 [main.energyflow]
 battery = "Батарея"
@@ -175,11 +190,12 @@ price = "Σ Ціна"
 solar = "Сонячна"
 
 [main.loadpointSettings]
-currents = "Струм зарядки"
+currents = "Струм Зарядки"
 default = "за замовчуванням"
 disclaimerHint = "Примітка:"
 title = "Налаштування {0}"
 vehicle = "Транспортний засіб"
+onlyForSocBasedCharging = "Ці параметри доступні лише для автомобілів із відомим рівнем заряду."
 
 [main.loadpointSettings.maxCurrent]
 label = "Макс. струм"
@@ -231,6 +247,8 @@ title = "Запланований Час"
 today = "сьогодні"
 tomorrow = "завтра"
 update = "Оновлення"
+currentPlan = "Активний план"
+vehicleCapacityDocs = "Дізнайтеся, як це налаштувати."
 
 [main.targetChargePlan]
 chargeDuration = "Час зарядки"
@@ -255,6 +273,7 @@ temp = "Темп."
 tempLimit = "Ліміт темп."
 unknown = "Гостьовий транспортний засіб"
 vehicleSoc = "Заряд"
+notReachable = "Автомобіль недоступний. Спробуйте перезапустити evcc."
 
 [main.vehicleSoc]
 charging = "зарядка"
@@ -340,7 +359,7 @@ allVehicles = "всі транспортні засоби"
 filter = "Фільтр"
 
 [settings]
-title = "Налаштування"
+title = "Загальні налаштування"
 
 [settings.gridDetails]
 co2 = "CO₂"
@@ -385,6 +404,7 @@ modalTitle = "Розумна зарядка"
 none = "немає"
 priceLabel = "Ціна енергії"
 priceLimit = "Ліміт ціни"
+applyToAll = "Застосовувати всюди?"
 
 [startupError]
 configFile = "Використаний файл конфігурації:"
@@ -402,3 +422,50 @@ title = "Помилка запуску"
 cancel = "Скасувати"
 template = "Виробник"
 test = "Тест"
+
+
+[config.battery]
+titleEdit = "Редагувати лічильник батареї"
+titleAdd = "Додати лічильник батареї"
+
+[config.deviceValue]
+energy = "Енергія"
+current = "Cтрум"
+capacity = "Ємність"
+chargeStatus = "Статус"
+enabled = "Ввімкнено"
+phaseCurrents = "Cтрум L1..L3"
+phasePowers = "Потужність L1..L3"
+power = "Потужність"
+chargedEnergy = "Заряджений"
+phaseVoltages = "Напруга L1..L3"
+range = "Дальність"
+socLimit = "Ліміт"
+
+[config.meter]
+cancel = "Скасувати"
+template = "Виробник"
+delete = "Видалити"
+save = "Зберегти"
+titleChoice = "Що ви хочете додати?"
+
+[footer.savings.period]
+30d = "за останні 30 днів"
+365d = "за останні 365 днів"
+total = "з самого початку"
+
+[config.grid]
+titleAdd = "Додати лічильник електромережі"
+titleEdit = "Редагувати лічильник електромережі"
+
+[config.pv]
+titleAdd = "Додати сонячний лічильник"
+titleEdit = "Редагувати сонячний лічильник"
+
+[config.site]
+cancel = "Скасувати"
+save = "Зберегти"
+
+[main.loadpointSettings.limitSoc]
+label = "Ліміт за замовчуванням"
+description = "Ліміт заряджання, який використовується, коли цей автомобіль під’єднано."
