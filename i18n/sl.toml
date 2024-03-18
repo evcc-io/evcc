@@ -16,10 +16,11 @@ legendTopSubline = "brez prekinitev"
 modalTitle = "Nastavitve baterije"
 
 [batterySettings.bufferStart]
-full = "ko je skoraj poln"
+full = "ko je na {soc}"
 low = "ko je nekoliko poln"
 medium = "ko je napol poln"
 never = "le z dovolj presežka"
+above = "ko je nad {soc}"
 
 [config]
 
@@ -32,6 +33,10 @@ addVehicle = "Dodaj vozilo"
 edit = "uredi"
 title = "Konfiguracija"
 vehicles = "Moja vozila"
+addLoadpoint = "Dodaj polnilno mesto"
+yaml = "Konfigurirano v evcc.yaml. Ni mogoče urejati v uporabniškem vmesniku."
+addPvBattery = "Dodaj sončne celice ali baterijo"
+unconfigured = "ni konfigurirano"
 
 [config.validation]
 failed = "Napaka"
@@ -43,7 +48,7 @@ validate = "preveri"
 
 [config.vehicle]
 cancel = "Prekliči"
-delete = "Izbriši vozilo"
+delete = "Izbriši"
 generic = "Druge integracije"
 offline = "Generično vozilo"
 online = "Vozila s spletnim API-jem"
@@ -232,6 +237,7 @@ phases_1 = "1 faza"
 phases_1_hint = "({min} do {max})"
 phases_3 = "3 faze"
 phases_3_hint = "({min} do {max})"
+no1p3pSupport = "Kako je priključena vaša polnilnica?"
 
 [main.mode]
 minpv = "Min+Sonce"
@@ -444,3 +450,44 @@ title = "Napaka pri zagonu"
 cancel = "Prekliči"
 template = "Proizvajalec"
 test = "Test"
+
+
+[config.deviceValue]
+capacity = "Kapaciteta"
+chargeStatus = "Status"
+chargedEnergy = "Napolnjeno"
+current = "Tok"
+enabled = "Omogočeno"
+energy = "Energija"
+odometer = "Število kilometrov"
+phaseCurrents = "Tok L1..L3"
+phasePowers = "Moč L1..L3"
+power = "Moč"
+range = "Doseg"
+soc = "SoC"
+socLimit = "Omejitev"
+phaseVoltages = "Napetost L1..L3"
+
+[config.meter]
+template = "Proizvajalec"
+titleChoice = "Kaj želite dodati?"
+validateSave = "Preveri in shrani"
+delete = "Izbriši"
+save = "Shrani"
+cancel = "Prekliči"
+
+[config.pv]
+titleAdd = "Dodaj merilnik sončne energije"
+titleEdit = "Uredi merilnik sončne energije"
+
+[config.site]
+cancel = "Prekliči"
+save = "Shrani"
+
+[config.battery]
+titleEdit = "Uredi merilnik baterije"
+titleAdd = "Dodaj merilnik baterije"
+
+[config.grid]
+titleAdd = "Dodaj števec električnega omrežja"
+titleEdit = "Uredi števec električnega omrežja"
