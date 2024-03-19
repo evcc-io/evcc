@@ -167,10 +167,10 @@ blog = "Blog"
 docs = "Documentation"
 github = "GitHub"
 login = "Vehicle Logins"
+logout = "Logout"
 nativeSettings = "Change Server"
 needHelp = "Need Help?"
 sessions = "Charging Sessions"
-logout = "Logout"
 
 [help]
 discussionsButton = "GitHub discussions"
