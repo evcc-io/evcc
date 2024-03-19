@@ -124,7 +124,7 @@ export default {
 		},
 		sponsor: String,
 		sponsorTokenExpires: Number,
-		batteryConfigured: Boolean,
+		battery: Array,
 	},
 	data() {
 		return {
@@ -132,6 +132,9 @@ export default {
 		};
 	},
 	computed: {
+		batteryConfigured: function () {
+			return this.battery?.length;
+		},
 		logoutCount() {
 			return this.providerLogins.filter((login) => !login.loggedIn).length;
 		},
