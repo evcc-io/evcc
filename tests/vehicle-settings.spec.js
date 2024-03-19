@@ -12,7 +12,7 @@ test.afterAll(async () => {
 });
 
 test.beforeEach(async ({ page }) => {
-  await start(CONFIG);
+  await start(CONFIG, "password.sql");
 
   await page.goto(SIMULATOR_URL);
   await page.getByLabel("Grid Power").fill("500");

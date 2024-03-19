@@ -2,7 +2,7 @@ const { test, expect } = require("@playwright/test");
 const { start, stop } = require("./evcc");
 
 test.beforeAll(async () => {
-  await start("vehicle-error.evcc.yaml");
+  await start("vehicle-error.evcc.yaml", "password.sql");
 });
 test.afterAll(async () => {
   await stop();

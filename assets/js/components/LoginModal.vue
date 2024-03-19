@@ -2,7 +2,7 @@
 	<Teleport to="body">
 		<div
 			id="loginModal"
-			class="modal fade text-dark"
+			class="modal fade text-dark modal-sm"
 			data-bs-backdrop="true"
 			tabindex="-1"
 			role="dialog"
@@ -24,21 +24,26 @@
 							<p v-if="error" class="text-danger">
 								{{ $t("loginModal.error") }}{{ error }}
 							</p>
-							<FormRow id="loginPassword" :label="$t('loginModal.password')">
-								<input id="loginPassword" v-model="password" class="form-control" />
-							</FormRow>
-							<div class="d-flex justify-content-between">
-								<button
-									type="button"
-									class="btn btn-link text-muted"
-									data-bs-dismiss="modal"
-								>
-									{{ $t("loginModal.cancel") }}
-								</button>
-								<button type="submit" class="btn btn-primary" :disabled="loading">
-									{{ $t("loginModal.login") }}
-								</button>
+
+							<div class="mb-4">
+								<label for="loginPassword" class="col-form-label">
+									<div class="w-100">
+										<span class="label">{{ $t("loginModal.password") }}</span>
+									</div>
+								</label>
+								<input
+									id="loginPassword"
+									v-model="password"
+									class="form-control"
+									autocomplete="current-password"
+									type="password"
+									required
+								/>
 							</div>
+
+							<button type="submit" class="btn btn-primary w-100" :disabled="loading">
+								{{ $t("loginModal.login") }}
+							</button>
 						</form>
 					</div>
 				</div>
@@ -49,13 +54,11 @@
 
 <script>
 import Modal from "bootstrap/js/dist/modal";
-import FormRow from "./FormRow.vue";
 import api from "../api";
 import { updateAuthStatus } from "../auth";
 
 export default {
 	name: "LoginModal",
-	components: { FormRow },
 	data: () => {
 		return {
 			password: "",
@@ -79,6 +82,7 @@ export default {
 					this.closeModal();
 					await updateAuthStatus();
 					this.$router.push({ path: "/config" });
+					this.password = "";
 				}
 				if (res.status === 401) {
 					this.error = this.$t("loginModal.invalid");

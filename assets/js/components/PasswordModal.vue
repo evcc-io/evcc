@@ -25,12 +25,22 @@
 							novalidate
 							@submit="setPassword"
 						>
+							<!-- password manager hint -->
+							<input
+								class="d-none"
+								type="text"
+								name="username"
+								id="username"
+								autocomplete="username"
+								value="admin"
+							/>
 							<FormRow id="newPassword" :label="$t('passwordModal.password')">
 								<input
 									id="newPassword"
 									type="password"
 									v-model="password"
 									class="form-control"
+									autocomplete="new-password"
 									required
 								/>
 								<div class="invalid-feedback">
@@ -47,6 +57,7 @@
 									ref="passwordRepeat"
 									v-model="passwordRepeat"
 									class="form-control"
+									autocomplete="new-password"
 								/>
 								<div v-if="!passwordsMatch" class="invalid-feedback">
 									{{ $t("passwordModal.noMatch") }}
@@ -115,6 +126,9 @@ export default {
 			if (this.$refs.form.checkValidity()) {
 				await this.savePassword(this.password);
 				await updateAuthStatus();
+				// reset form
+				this.password = "";
+				this.passwordRepeat = "";
 			}
 		},
 		savePassword: async function (password) {

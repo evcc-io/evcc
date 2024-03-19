@@ -20,8 +20,21 @@ export async function updateAuthStatus() {
       auth.loggedIn = res.data === true;
     }
   } catch (e) {
-    console.error("unable to fetch auth status", e);
+    console.log("unable to fetch auth status", e);
   }
+}
+
+export async function logout() {
+  try {
+    await api.post("/auth/logout");
+    await updateAuthStatus();
+  } catch (e) {
+    console.log("unable to logout", e);
+  }
+}
+
+export function isLoggedIn() {
+  return auth.loggedIn;
 }
 
 export function openLoginModal() {

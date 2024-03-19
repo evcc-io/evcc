@@ -170,6 +170,7 @@ login = "Vehicle Logins"
 nativeSettings = "Change Server"
 needHelp = "Need Help?"
 sessions = "Charging Sessions"
+logout = "Logout"
 
 [help]
 discussionsButton = "GitHub discussions"
@@ -195,7 +196,7 @@ error = "Login failed: "
 invalid = "Password is invalid."
 login = "Login"
 password = "Password"
-title = "Login"
+title = "Authentication"
 
 [main]
 vehicles = "Parking"
@@ -392,7 +393,7 @@ noPasswordReally = "Sure, you don't want a password?"
 password = "Password"
 passwordRepeat = "Repeat password"
 setPassword = "Set password"
-title = "Administrator Password"
+title = "Set Administrator Password"
 
 [session]
 cancel = "Cancel"

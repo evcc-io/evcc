@@ -1,10 +1,10 @@
 const { test, expect } = require("@playwright/test");
-const { start, stop, restart } = require("./evcc");
+const { start, stop } = require("./evcc");
 
 const CONFIG = "plan.evcc.yaml";
 
 test.beforeEach(async () => {
-  await start(CONFIG);
+  await start(CONFIG, "password.sql");
 });
 
 test.afterEach(async () => {
