@@ -28,7 +28,7 @@ api.interceptors.response.use(
     }
     if (error.config) {
       const method = error.config.method.toUpperCase();
-      const url = error.config.baseURL + error.config.url;
+      const url = error.request.responseURL;
       message.push(`${method} ${url}`);
     }
     window.app.raise({ message });

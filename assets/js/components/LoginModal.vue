@@ -7,6 +7,7 @@
 			tabindex="-1"
 			role="dialog"
 			aria-hidden="false"
+			data-testid="login-modal"
 		>
 			<div class="modal-dialog modal-dialog-centered open" role="document">
 				<div class="modal-content">
