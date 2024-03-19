@@ -3,6 +3,7 @@ package tariff
 import (
 	"errors"
 	"fmt"
+	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -13,7 +14,6 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
-	"golang.org/x/exp/slices"
 )
 
 type Amber struct {
@@ -84,7 +84,8 @@ func (t *Amber) run(done chan error) {
 	var once sync.Once
 	bo := newBackoff()
 
-	for ; true; <-time.Tick(time.Minute) {
+	tick := time.NewTicker(time.Minute)
+	for ; true; <-tick.C {
 		var res []amber.PriceInfo
 
 		if err := backoff.Retry(func() error {
