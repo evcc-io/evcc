@@ -1,4 +1,5 @@
 import axios from "axios";
+import { openLoginModal } from "./auth";
 
 const { protocol, hostname, port, pathname } = window.location;
 
@@ -15,6 +16,12 @@ const api = axios.create({
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    // handle unauthorized errors
+    if (error.response?.status === 401) {
+      openLoginModal();
+      return Promise.reject(error);
+    }
+
     const message = [`${error.message}.`];
     if (error.response?.data?.error) {
       message.push(`${error.response.data.error}.`);

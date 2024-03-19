@@ -135,7 +135,7 @@ export default {
 			this.loading = true;
 			this.error = null;
 			try {
-				await api.post("/password", password);
+				await api.put("/auth/password", password);
 			} catch (error) {
 				console.error(error);
 				this.error = error.response.data;

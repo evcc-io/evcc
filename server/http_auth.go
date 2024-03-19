@@ -11,7 +11,7 @@ import (
 var authCookieName = "auth"
 var authQueryParam = "auth"
 
-func setPasswordHandler(site site.API) http.HandlerFunc {
+func updatePasswordHandler(site site.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		password, _ := io.ReadAll(r.Body)
 		if err := site.Auth().SetAdminPassword(string(password)); err != nil {

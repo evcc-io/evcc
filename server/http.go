@@ -3,6 +3,7 @@ package server
 import (
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	eapi "github.com/evcc-io/evcc/api"
@@ -123,14 +124,19 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, cache *util.Cache) {
 		"deletesession":           {"DELETE", "/session/{id:[0-9]+}", deleteSessionHandler},
 		"telemetry":               {"GET", "/settings/telemetry", boolGetHandler(telemetry.Enabled)},
 		"telemetry2":              {"POST", "/settings/telemetry/{value:[a-z]+}", boolHandler(telemetry.Enable, telemetry.Enabled)},
-		"setpassword":             {"POST", "/password", setPasswordHandler(site)},
+		"password":                {"PUT", "/auth/password", updatePasswordHandler(site)},
 		"auth":                    {"GET", "/auth/status", authStatusHandler(site)},
 		"login":                   {"POST", "/auth/login", loginHandler(site)},
 		"logout":                  {"POST", "/auth/logout", logoutHandler},
 	}
 
 	for _, r := range routes {
-		api.Methods(r.Methods()...).Path(r.Pattern).Handler(r.HandlerFunc)
+		handler := r.HandlerFunc
+		// require auth for config api
+		if strings.HasPrefix(r.Pattern, "/config/") {
+			handler = ensureAuth(site, handler)
+		}
+		api.Methods(r.Methods()...).Path(r.Pattern).Handler(handler)
 	}
 
 	// vehicle api

@@ -9,15 +9,6 @@
 					placeholder="Home"
 				/>
 			</FormRow>
-			<FormRow id="adminPassword" label="Admin password" class="wip">
-				<input
-					id="adminPassword"
-					type="password"
-					value="- not set -"
-					class="form-control"
-					disabled
-				/>
-			</FormRow>
 			<FormRow id="sponsorToken" label="Sponsor token" class="wip">
 				<textarea id="sponsorToken" class="form-control" rows="3" disabled value="tba" />
 			</FormRow>
