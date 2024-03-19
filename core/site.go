@@ -814,8 +814,8 @@ func (site *Site) prepare() {
 	site.publish(keys.SiteTitle, site.Title)
 
 	site.publish(keys.GridConfigured, site.gridMeter != nil)
-	site.publish(keys.PvConfigured, len(site.pvMeters) > 0)
-	site.publish(keys.BatteryConfigured, len(site.batteryMeters) > 0)
+	site.publish(keys.Pv, make([]api.Meter, len(site.pvMeters)))
+	site.publish(keys.Battery, make([]api.Meter, len(site.batteryMeters)))
 	site.publish(keys.BufferSoc, site.bufferSoc)
 	site.publish(keys.BufferStartSoc, site.bufferStartSoc)
 	site.publish(keys.PrioritySoc, site.prioritySoc)
