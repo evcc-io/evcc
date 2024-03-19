@@ -53,7 +53,7 @@ export default {
 	},
 	computed: {
 		batteryModalAvailabe: function () {
-			return store.state.batteryConfigured;
+			return store.state.battery?.length;
 		},
 		globalSettingsProps: function () {
 			return this.collectProps(GlobalSettingsModal, store.state);
