@@ -1,0 +1,83 @@
+template: teslalogger
+products:
+  - description:
+      generic: TeslaLogger
+group: generic
+requirements:
+  description:
+    de: Open Source Tesla Datenlogger https://github.com/bassmaster187/TeslaLogger
+    en: Open source Tesla data logger https://github.com/bassmaster187/TeslaLogger
+params:
+  - name: title
+  - name: id
+    description:
+      de: TeslaLogger CarID
+      en: TeslaLogger CarID
+    default: 1
+  - name: url
+    required: true
+    example: http://192.0.2.2
+  - name: port
+    example: 5000
+    default: 5000
+  - name: capacity
+  - name: phases
+    advanced: true
+  - name: icon
+    default: car
+    advanced: true
+  - name: timeout
+    default: 1h
+  - preset: vehicle-identify
+
+render: |
+  type: custom
+  {{- if .title }}
+  title: {{ .title }}
+  {{- end }}
+  {{- if .icon }}
+  icon: {{ .icon }}
+  {{- end }}
+  {{- if .capacity }}
+  capacity: {{ .capacity }}
+  {{- end }}
+  {{- if .phases }}
+  phases: {{ .phases }}
+  {{- end }}
+  {{- include "vehicle-identify" . }}
+  soc: # battery soc (%)
+    source: http
+    uri: {{ .url }}:{{ .port }}/currentjson/{{ .id }}
+    jq: .battery_level
+    timeout: {{ .timeout }}
+  status:
+    source: combined
+    plugged:
+      source: http
+      uri: {{ .url }}:{{ .port }}/currentjson/{{ .id }}
+      jq: .plugged_in
+      timeout: {{ .timeout }}
+    charging:
+      source: http
+      uri: {{ .url }}:{{ .port }}/currentjson/{{ .id }}
+      jq: .charging
+      timeout: {{ .timeout }}
+  range:
+    source: http
+    uri: {{ .url }}:{{ .port }}/currentjson/{{ .id }}
+    jq: .battery_range_km
+    timeout: {{ .timeout }}
+  odometer:
+    source: http
+    uri: {{ .url }}:{{ .port }}/currentjson/{{ .id }}
+    jq: .odometer
+    timeout: {{ .timeout }}
+  climater:
+    source: http
+    uri: {{ .url }}:{{ .port }}/currentjson/{{ .id }}
+    jq: .is_preconditioning
+    timeout: {{ .timeout }}
+  wakeup:
+    source: http
+    uri: {{ .url }}:{{ .port }}/command/{{ .id }}/wake_up
+    timeout: {{ .timeout }}
