@@ -26,8 +26,7 @@ func TestSetAdminPassword(t *testing.T) {
 	password := "testpassword"
 
 	// first call succeeds
-	err := auth.SetAdminPassword(password)
-	if err != nil {
+	if err := auth.SetAdminPassword(password); err != nil {
 		t.Errorf("SetAdminPassword() error = %v", err)
 		return
 	}
@@ -36,8 +35,7 @@ func TestSetAdminPassword(t *testing.T) {
 		t.Errorf("SetAdminPassword() did not store admin password")
 	}
 
-	err = auth.SetAdminPassword(password)
-	if err == nil {
+	if err := auth.SetAdminPassword(password); err == nil {
 		t.Errorf("SetAdminPassword() should have failed, admin password already set")
 		return
 	}
