@@ -3,7 +3,7 @@
 		<router-view :notifications="notifications" :offline="offline"></router-view>
 
 		<GlobalSettingsModal v-bind="globalSettingsProps" />
-		<BatterySettingsModal v-if="batteryConfigured" v-bind="batterySettingsProps" />
+		<BatterySettingsModal v-if="batteryModalAvailabe" v-bind="batterySettingsProps" />
 		<HelpModal />
 	</div>
 </template>
@@ -31,7 +31,7 @@ export default {
 		return { title: siteTitle ? `${siteTitle} | evcc` : "evcc" };
 	},
 	computed: {
-		batteryConfigured: function () {
+		batteryModalAvailabe: function () {
 			return store.state.battery?.length;
 		},
 		globalSettingsProps: function () {

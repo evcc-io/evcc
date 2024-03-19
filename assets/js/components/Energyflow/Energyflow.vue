@@ -184,10 +184,12 @@ export default {
 		gridConfigured: Boolean,
 		gridPower: { type: Number, default: 0 },
 		homePower: { type: Number, default: 0 },
+		pvConfigured: Boolean,
 		pv: { type: Array },
 		pvPower: { type: Number, default: 0 },
 		loadpointsCompact: { type: Array, default: () => [] },
 		battery: { type: Array },
+		batteryConfigured: { type: Boolean },
 		batteryPower: { type: Number, default: 0 },
 		batterySoc: { type: Number, default: 0 },
 		batteryDischargeControl: { type: Boolean },
@@ -212,14 +214,8 @@ export default {
 		gridImport: function () {
 			return Math.max(0, this.gridPower);
 		},
-		pvConfigured: function () {
-			return this.pv?.length;
-		},
 		pvProduction: function () {
 			return Math.abs(this.pvPower);
-		},
-		batteryConfigured: function () {
-			return this.battery?.length;
 		},
 		batteryDischarge: function () {
 			return Math.abs(Math.max(0, this.batteryPower));
