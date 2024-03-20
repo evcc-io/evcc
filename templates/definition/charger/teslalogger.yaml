@@ -5,7 +5,7 @@ products:
 requirements:
   description:
     en: Open source Tesla data logger https://github.com/bassmaster187/TeslaLogger, works only with "Teslalogger vehicle"
-    de: Open Source Tesla Datenlogger https://github.com/bassmaster187/TeslaLogger, funktioniert nur in Verbdinung mit "TeslaLogger Fahrzeug"
+    de: Open Source Tesla Datenlogger https://github.com/bassmaster187/TeslaLogger, funktioniert nur in Verbindung mit "TeslaLogger Fahrzeug"
 params:
   - name: url
     required: true
