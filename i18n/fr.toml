@@ -16,22 +16,67 @@ legendTopSubline = "sans interruption"
 modalTitle = "Réglages de la batterie"
 
 [batterySettings.bufferStart]
-full = "quand presque pleine"
+above = "lorsque chargé à plus que {soc}"
+full = "quand chargé à {soc}"
 low = "quand partiellement pleine"
 medium = "quand à moitié pleine"
 never = "seulement quand surplus suffisant"
 
 [config]
 
+[config.battery]
+titleAdd = "Ajouter compteur pour une batterie domestique"
+titleEdit = "Modifier compteur pour batterie"
+
+[config.deviceValue]
+capacity = "Capacité"
+chargeStatus = "Statut"
+chargedEnergy = "Chargé"
+current = "Courant"
+enabled = "Activé"
+energy = "Énergie"
+odometer = "Kilométrage"
+phaseCurrents = "Courant L1..L3"
+phasePowers = "Puissance L1..L3"
+phaseVoltages = "Voltage L1..L3"
+power = "Puissance"
+range = "Autonomie"
+soc = "Etat de Charge"
+socLimit = "Limite"
+
 [config.form]
 example = "Exemple"
 optional = "optionnel"
 
+[config.grid]
+titleAdd = "Ajouter compteur pour réseau"
+titleEdit = "Modifier compteur pour réseau"
+
 [config.main]
+addLoadpoint = "Ajouter un point de charge"
+addPvBattery = "Ajouter du solaire ou une batterie"
 addVehicle = "Ajouter le véhicule"
 edit = "éditer"
 title = "Configuration"
+unconfigured = "non configuré"
 vehicles = "Mes véhicules"
+yaml = "Configuré dans evcc.yaml. Non modifiable ici."
+
+[config.meter]
+cancel = "Annuler"
+delete = "Supprimer"
+save = "Enregistrer"
+template = "Fabricant"
+titleChoice = "Que voulez-vous ajouter ?"
+validateSave = "Valider et enregistrer"
+
+[config.pv]
+titleAdd = "Ajouter un compteur pour le solaire"
+titleEdit = "Modifier le compteur pour le solaire"
+
+[config.site]
+cancel = "Annuler"
+save = "Enregistrer"
 
 [config.validation]
 failed = "échec"
@@ -43,7 +88,7 @@ validate = "valider"
 
 [config.vehicle]
 cancel = "Annuler"
-delete = "Supprimer le véhicule"
+delete = "Supprimer"
 generic = "Autres intégrations"
 offline = "Véhicule générique"
 online = "Véhicules avec API en ligne"
@@ -130,6 +175,7 @@ blog = "Blog"
 docs = "Documentation"
 github = "GitHub"
 login = "Connexions véhicule"
+nativeSettings = "Changer de serveur"
 needHelp = "Besoin d'aide?"
 sessions = "Sessions de recharge"
 settings = "Réglages"
@@ -173,6 +219,7 @@ time = "Heure"
 title = "Planification"
 titleMinSoc = "Charge min."
 titleTargetCharge = "Départ"
+unsavedChanges = "Il y a des modifications non sauvegardées. Appliquer ?"
 update = "Appliquer"
 
 [main.energyflow]
@@ -188,6 +235,12 @@ noEnergy = "Aucune donnée de compteur"
 pvExport = "Injection"
 pvProduction = "Production"
 selfConsumption = "Consommation propre"
+
+[main.heatingStatus]
+charging = "Chauffage… "
+cheapEnergyCharging = "Chauffage bon marché : {price} (limite {limit})"
+cleanEnergyCharging = "Chauffage propre : {co2} (limite {limit})"
+waitForVehicle = "Prêt. En attente du chauffage… "
 
 [main.loadpoint]
 avgPrice = "Prix ⌀"
@@ -207,6 +260,8 @@ currents = "Courant de charge"
 default = "défaut"
 disclaimerHint = "Remarque:"
 onlyForSocBasedCharging = "Ces options sont disponibles uniquement pour les véhicules avec niveau de charge connu."
+smartCostCheap = "Chargement bon marché depuis le réseau"
+smartCostClean = "Chargement propre depuis le réseau"
 title = "Réglages {0}"
 vehicle = "Véhicule"
 
@@ -226,6 +281,7 @@ label = "Recharge min. %"
 
 [main.loadpointSettings.phasesConfigured]
 label = "Phases"
+no1p3pSupport = "Comment est connecté votre chargeur ?"
 phases_0 = "commutation automatique"
 phases_1 = "1 phase"
 phases_1_hint = "({min} à {max})"
@@ -290,6 +346,7 @@ detectionActive = "Détection du véhicule…"
 fallbackName = "Véhicule"
 moreActions = "Plus d'actions"
 none = "Pas de véhicule"
+notReachable = "«Impossible d’atteindre le véhicule. Essayez de redémarrer evcc.»"
 targetSoc = "Limite"
 temp = "Temp."
 tempLimit = "Temp. limite"
@@ -380,7 +437,7 @@ allVehicles = "tous les véhicules"
 filter = "Filtrer"
 
 [settings]
-title = "Réglages"
+title = "Réglages généraux"
 
 [settings.hiddenFeatures]
 label = "Expérimental"
@@ -412,6 +469,10 @@ mi = "miles"
 [smartCost]
 activeHours = "{charging} sur {total}"
 activeHoursLabel = "Heures actives"
+applyToAll = "Appliquer partout ?"
+batteryDescription = "Charge la batterie domestique avec du courant du réseau."
+cheapTitle = "Charge bon marché depuis le réseau"
+cleanTitle = "Charge propre depuis le réseau"
 co2Label = "Émissions de CO₂"
 co2Limit = "Limite CO₂"
 loadpointDescription = "Autorise la charge rapide temporaire en mode solaire."
@@ -419,6 +480,7 @@ modalTitle = "Recharge réseau intelligente"
 none = "aucune"
 priceLabel = "Prix de l'énergie"
 priceLimit = "Limite de prix"
+saved = "Enregistré."
 
 [startupError]
 configFile = "Fichier de configuration utilisé:"

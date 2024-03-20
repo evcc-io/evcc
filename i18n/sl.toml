@@ -16,22 +16,67 @@ legendTopSubline = "brez prekinitev"
 modalTitle = "Nastavitve baterije"
 
 [batterySettings.bufferStart]
-full = "ko je skoraj poln"
+above = "ko je nad {soc}"
+full = "ko je na {soc}"
 low = "ko je nekoliko poln"
 medium = "ko je napol poln"
 never = "le z dovolj presežka"
 
 [config]
 
+[config.battery]
+titleAdd = "Dodaj merilnik baterije"
+titleEdit = "Uredi merilnik baterije"
+
+[config.deviceValue]
+capacity = "Kapaciteta"
+chargeStatus = "Status"
+chargedEnergy = "Napolnjeno"
+current = "Tok"
+enabled = "Omogočeno"
+energy = "Energija"
+odometer = "Število kilometrov"
+phaseCurrents = "Tok L1..L3"
+phasePowers = "Moč L1..L3"
+phaseVoltages = "Napetost L1..L3"
+power = "Moč"
+range = "Doseg"
+soc = "SoC"
+socLimit = "Omejitev"
+
 [config.form]
 example = "Primer"
 optional = "neobvezno"
 
+[config.grid]
+titleAdd = "Dodaj števec električnega omrežja"
+titleEdit = "Uredi števec električnega omrežja"
+
 [config.main]
+addLoadpoint = "Dodaj polnilno mesto"
+addPvBattery = "Dodaj sončne celice ali baterijo"
 addVehicle = "Dodaj vozilo"
 edit = "uredi"
 title = "Konfiguracija"
+unconfigured = "ni konfigurirano"
 vehicles = "Moja vozila"
+yaml = "Konfigurirano v evcc.yaml. Ni mogoče urejati v uporabniškem vmesniku."
+
+[config.meter]
+cancel = "Prekliči"
+delete = "Izbriši"
+save = "Shrani"
+template = "Proizvajalec"
+titleChoice = "Kaj želite dodati?"
+validateSave = "Preveri in shrani"
+
+[config.pv]
+titleAdd = "Dodaj merilnik sončne energije"
+titleEdit = "Uredi merilnik sončne energije"
+
+[config.site]
+cancel = "Prekliči"
+save = "Shrani"
 
 [config.validation]
 failed = "Napaka"
@@ -43,7 +88,7 @@ validate = "preveri"
 
 [config.vehicle]
 cancel = "Prekliči"
-delete = "Izbriši vozilo"
+delete = "Izbriši"
 generic = "Druge integracije"
 offline = "Generično vozilo"
 online = "Vozila s spletnim API-jem"
@@ -227,6 +272,7 @@ label = "Min. polnjenje %"
 
 [main.loadpointSettings.phasesConfigured]
 label = "Faze"
+no1p3pSupport = "Kako je priključena vaša polnilnica?"
 phases_0 = "samodejno preklapljanje"
 phases_1 = "1 faza"
 phases_1_hint = "({min} do {max})"
