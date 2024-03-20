@@ -30,7 +30,7 @@ titleEdit = "Batterie Zähler bearbeiten"
 capacity = "Kapazität"
 chargeStatus = "Status"
 chargedEnergy = "Geladen"
-current = "Aktuell"
+current = "Strom"
 enabled = "Aktiviert"
 energy = "Energie"
 odometer = "Kilometerstand"
@@ -259,11 +259,13 @@ currents = "Ladestrom"
 default = "default"
 disclaimerHint = "Hinweis:"
 onlyForSocBasedCharging = "Diese Optionen sind nur für Fahrzeuge mit bekanntem Ladestand verfügbar."
+smartCostCheap = "Günstiges Netzladen"
+smartCostClean = "Grünes Netzladen"
 title = "Einstellungen {0}"
 vehicle = "Fahrzeug"
 
 [main.loadpointSettings.limitSoc]
-description = "Dieses Limit wird verwendet, wenn das Fahrzeug angeschlossen wird."
+description = "Dieses Ladelimit wird verwendet, wenn das Fahrzeug angeschlossen wird."
 label = "Standard Ladelimit"
 
 [main.loadpointSettings.maxCurrent]
