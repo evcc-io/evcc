@@ -1,0 +1,55 @@
+template: teslalogger
+products:
+  - description:
+      generic: TeslaLogger
+requirements:
+  description:
+    en: Open source Tesla data logger https://github.com/bassmaster187/TeslaLogger, works only with "Teslalogger vehicle"
+    de: Open Source Tesla Datenlogger https://github.com/bassmaster187/TeslaLogger, funktioniert nur in Verbdinung mit "TeslaLogger Fahrzeug"
+params:
+  - name: url
+    required: true
+    example: http://192.0.2.2
+  - name: port
+    example: 5000
+    default: 5000
+  - name: id
+    description:
+      de: TeslaLogger CarID
+      en: TeslaLogger CarID
+    default: 1
+render: |
+  type: custom
+  status:
+    source: combined
+    charging:
+      source: http
+      uri: {{ .url }}:{{ .port }}/currentjson/{{ .id }}
+      jq: .charging
+    plugged:
+      source: go
+      script: |
+        plugged_in && ishome
+      in:
+      - name: plugged_in
+        type: bool
+        config:
+          source: http
+          uri: {{ .url }}:{{ .port }}/currentjson/{{ .id }}
+          jq: .plugged_in
+      - name: ishome
+        type: bool
+        config:
+          source: http
+          uri: {{ .url }}:{{ .port }}/currentjson/{{ .id }}
+          jq: .TLGeofenceIsHome
+  enabled:
+    source: http
+    uri: {{ .url }}:{{ .port }}/currentjson/{{ .id }}
+    jq: .charging
+  enable:
+    source: http
+    uri: {{ .url }}:{{ .port }}/currentjson/{{ .id }}/charge_start_stop
+  maxcurrent:
+    source: http
+    uri: {{ .url }}:{{ .port }}/command/{{ .id }}/set_charging_amps
