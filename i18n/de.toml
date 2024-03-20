@@ -249,10 +249,10 @@ currents = "Ladestrom"
 default = "default"
 disclaimerHint = "Hinweis:"
 onlyForSocBasedCharging = "Diese Optionen sind nur für Fahrzeuge mit bekanntem Ladestand verfügbar."
+smartCostCheap = "Günstiges Netzladen"
+smartCostClean = "Grünes Netzladen"
 title = "Einstellungen {0}"
 vehicle = "Fahrzeug"
-smartCostClean = Grünes Netzladen
-smartCostCheap = Günstiges Netzladen
 
 [main.loadpointSettings.limitSoc]
 description = "Dieses Ladelimit wird verwendet, wenn das Fahrzeug angeschlossen wird."

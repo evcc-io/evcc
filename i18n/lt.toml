@@ -16,11 +16,11 @@ legendTopSubline = "be pertraukų"
 modalTitle = "Kaupiklio nustatymai"
 
 [batterySettings.bufferStart]
+above = "kai virš {soc}"
 full = "kai {soc}"
 low = "kai nevisai pilnas"
 medium = "kai puspilnis"
 never = "tik su pakankamu pertekliumi"
-above = "kai virš {soc}"
 
 [config]
 
@@ -175,10 +175,10 @@ blog = "Tinklaraštis"
 docs = "Dokumentacija (Vokiečių k.)"
 github = "GitHub"
 login = " Automobilių prisijungimai"
+nativeSettings = "Pakeisti Serverį"
 needHelp = "Reikia Pagalbos?"
 sessions = "Įkrovimo sesijos "
 settings = "Nustatymai"
-nativeSettings = "Pakeisti Serverį"
 
 [header.theme]
 auto = "Dizainas: sistemos"
@@ -219,8 +219,8 @@ time = "Laikas"
 title = "Planas"
 titleMinSoc = "Minimali įkrova"
 titleTargetCharge = "Išvykimas"
-update = "Patvirtinti"
 unsavedChanges = "Yra neišsaugotų pakeitimų. Išsaugoti dabar?"
+update = "Patvirtinti"
 
 [main.energyflow]
 battery = "Kaupiklis"
@@ -260,10 +260,10 @@ currents = "Įkrovimo Srovė"
 default = "standartiškai"
 disclaimerHint = "Pastaba:"
 onlyForSocBasedCharging = "Šie pasirinkimai galimi tik automobiliams su žinomu įkrovos lygiu."
+smartCostCheap = "Įkrovimas pigiai iš tinklo"
+smartCostClean = "Įkrovimas švariai iš tinklo"
 title = "Nustatymai {0}"
 vehicle = "Automobilis"
-smartCostClean = "Įkrovimas švariai iš tinklo"
-smartCostCheap = "Įkrovimas pigiai iš tinklo"
 
 [main.loadpointSettings.limitSoc]
 description = "Įkrovimo limitas, naudojamas, prijungus šį automobilį."
@@ -349,12 +349,12 @@ detectionActive = "Bandome atpažinti automobilį ..."
 fallbackName = "Automobilis"
 moreActions = "Daugiau veiksmų"
 none = "Nėra automobilio"
+notReachable = "Automobilis buvo nepasiekiamas. Pabandykite restartuoti evcc."
 targetSoc = "Limitas"
 temp = "t."
 tempLimit = "Temp. limitas"
 unknown = "Nežinomas automobilis"
 vehicleSoc = "Baterija"
-notReachable = "Automobilis buvo nepasiekiamas. Pabandykite restartuoti evcc."
 
 [main.vehicleSoc]
 charging = "vyksta įkrovimas"
@@ -478,6 +478,10 @@ mi = "mylios"
 [smartCost]
 activeHours = "{charging} iš {total}"
 activeHoursLabel = "Aktyvumo valandos"
+applyToAll = "Pritaikyti visur?"
+batteryDescription = "Įkrauna kaupiklį energija iš tinklo."
+cheapTitle = "Pigus įkrovimas iš tinklo"
+cleanTitle = "Švarus įkrovimas iš tinklo"
 co2Label = "CO₂ emisijos"
 co2Limit = "CO₂ limitas"
 loadpointDescription = "Laikinai aktyvuoja greitą įkrovimą (režime Saulė)."
@@ -486,10 +490,6 @@ none = "nėra"
 priceLabel = "Energijos kaina"
 priceLimit = "Kainos limitas"
 saved = "Išsaugota."
-applyToAll = "Pritaikyti visur?"
-batteryDescription = "Įkrauna kaupiklį energija iš tinklo."
-cheapTitle = "Pigus įkrovimas iš tinklo"
-cleanTitle = "Švarus įkrovimas iš tinklo"
 
 [startupError]
 configFile = "Naudojamas konfiguracijos failas:"

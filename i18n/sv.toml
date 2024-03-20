@@ -16,11 +16,11 @@ legendTopSubline = "utan avbrott"
 modalTitle = "Batteri inställningar"
 
 [batterySettings.bufferStart]
+above = "när den är över {soc}"
 full = "när det är {soc}"
 low = "när det är något fullt"
 medium = "när det är halvfullt"
 never = "bara med tillräckligt sol-överskott"
-above = "när den är över {soc}"
 
 [config]
 
@@ -175,10 +175,10 @@ blog = "Blogg"
 docs = "Dokumentation"
 github = "GitHub"
 login = "Fordons inloggningar"
+nativeSettings = "Byt server"
 needHelp = "Behöver du hjälp?"
 sessions = "Laddningar"
 settings = "Inställningar"
-nativeSettings = "Byt server"
 
 [help]
 discussionsButton = "GitHub diskussioner"
@@ -214,8 +214,8 @@ time = "Tid"
 title = "Plan"
 titleMinSoc = "Min. laddning"
 titleTargetCharge = "Avfärd"
-update = "Verkställ"
 unsavedChanges = "Det finns ej sparade ändringar. Spara nu?"
+update = "Verkställ"
 
 [main.energyflow]
 battery = "Batteri"
@@ -255,10 +255,10 @@ currents = "Laddström"
 default = "förvald"
 disclaimerHint = "Anmärkning:"
 onlyForSocBasedCharging = "Dessa inställningar är endast tillgängliga för fordon med känd laddnivå"
-title = "Inställningar {0}"
-vehicle = "Fordon"
 smartCostCheap = "Billig laddning från nätet"
 smartCostClean = "Laddning med grön el"
+title = "Inställningar {0}"
+vehicle = "Fordon"
 
 [main.loadpointSettings.limitSoc]
 description = "Laddbegränsning när detta fordon är anslutet."
@@ -472,6 +472,10 @@ mi = "miles"
 [smartCost]
 activeHours = "{charging} av {total}"
 activeHoursLabel = "Aktiva timmar"
+applyToAll = "Tillämpa överallt?"
+batteryDescription = "Laddar batteriet med el från nätet."
+cheapTitle = "Billig laddning från nätet"
+cleanTitle = "Laddar grön el från nätet"
 co2Label = "CO₂ utsläpp"
 co2Limit = "CO₂ gräns"
 loadpointDescription = "Ladda när priset är lågt (sol-läge)"
@@ -479,11 +483,7 @@ modalTitle = "Smartladdning elnät"
 none = "ingen"
 priceLabel = "Energipris"
 priceLimit = "Prisgräns"
-batteryDescription = "Laddar batteriet med el från nätet."
-cleanTitle = "Laddar grön el från nätet"
 saved = "Sparad."
-applyToAll = "Tillämpa överallt?"
-cheapTitle = "Billig laddning från nätet"
 
 [startupError]
 configFile = "Konfigurationsfil som används:"

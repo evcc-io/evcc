@@ -16,27 +16,67 @@ legendTopSubline = "sans interruption"
 modalTitle = "Réglages de la batterie"
 
 [batterySettings.bufferStart]
+above = "lorsque chargé à plus que {soc}"
 full = "quand chargé à {soc}"
 low = "quand partiellement pleine"
 medium = "quand à moitié pleine"
 never = "seulement quand surplus suffisant"
-above = "lorsque chargé à plus que {soc}"
 
 [config]
+
+[config.battery]
+titleAdd = "Ajouter compteur pour une batterie domestique"
+titleEdit = "Modifier compteur pour batterie"
+
+[config.deviceValue]
+capacity = "Capacité"
+chargeStatus = "Statut"
+chargedEnergy = "Chargé"
+current = "Courant"
+enabled = "Activé"
+energy = "Énergie"
+odometer = "Kilométrage"
+phaseCurrents = "Courant L1..L3"
+phasePowers = "Puissance L1..L3"
+phaseVoltages = "Voltage L1..L3"
+power = "Puissance"
+range = "Autonomie"
+soc = "Etat de Charge"
+socLimit = "Limite"
 
 [config.form]
 example = "Exemple"
 optional = "optionnel"
 
+[config.grid]
+titleAdd = "Ajouter compteur pour réseau"
+titleEdit = "Modifier compteur pour réseau"
+
 [config.main]
+addLoadpoint = "Ajouter un point de charge"
+addPvBattery = "Ajouter du solaire ou une batterie"
 addVehicle = "Ajouter le véhicule"
 edit = "éditer"
 title = "Configuration"
-vehicles = "Mes véhicules"
-addLoadpoint = "Ajouter un point de charge"
-addPvBattery = "Ajouter du solaire ou une batterie"
 unconfigured = "non configuré"
+vehicles = "Mes véhicules"
 yaml = "Configuré dans evcc.yaml. Non modifiable ici."
+
+[config.meter]
+cancel = "Annuler"
+delete = "Supprimer"
+save = "Enregistrer"
+template = "Fabricant"
+titleChoice = "Que voulez-vous ajouter ?"
+validateSave = "Valider et enregistrer"
+
+[config.pv]
+titleAdd = "Ajouter un compteur pour le solaire"
+titleEdit = "Modifier le compteur pour le solaire"
+
+[config.site]
+cancel = "Annuler"
+save = "Enregistrer"
 
 [config.validation]
 failed = "échec"
@@ -135,10 +175,10 @@ blog = "Blog"
 docs = "Documentation"
 github = "GitHub"
 login = "Connexions véhicule"
+nativeSettings = "Changer de serveur"
 needHelp = "Besoin d'aide?"
 sessions = "Sessions de recharge"
 settings = "Réglages"
-nativeSettings = "Changer de serveur"
 
 [header.theme]
 auto = "Désign: Système"
@@ -179,8 +219,8 @@ time = "Heure"
 title = "Planification"
 titleMinSoc = "Charge min."
 titleTargetCharge = "Départ"
+unsavedChanges = "Il y a des modifications non sauvegardées. Appliquer ?"
 update = "Appliquer"
-unsavedChanges = Il y a des modifications non sauvegardées. Appliquer ?
 
 [main.energyflow]
 battery = "Batterie"
@@ -195,6 +235,12 @@ noEnergy = "Aucune donnée de compteur"
 pvExport = "Injection"
 pvProduction = "Production"
 selfConsumption = "Consommation propre"
+
+[main.heatingStatus]
+charging = "Chauffage… "
+cheapEnergyCharging = "Chauffage bon marché : {price} (limite {limit})"
+cleanEnergyCharging = "Chauffage propre : {co2} (limite {limit})"
+waitForVehicle = "Prêt. En attente du chauffage… "
 
 [main.loadpoint]
 avgPrice = "Prix ⌀"
@@ -214,10 +260,10 @@ currents = "Courant de charge"
 default = "défaut"
 disclaimerHint = "Remarque:"
 onlyForSocBasedCharging = "Ces options sont disponibles uniquement pour les véhicules avec niveau de charge connu."
+smartCostCheap = "Chargement bon marché depuis le réseau"
+smartCostClean = "Chargement propre depuis le réseau"
 title = "Réglages {0}"
 vehicle = "Véhicule"
-smartCostClean = "Chargement propre depuis le réseau"
-smartCostCheap = "Chargement bon marché depuis le réseau"
 
 [main.loadpointSettings.limitSoc]
 description = "Limite de charge à utiliser quand ce véhicule est connecté."
@@ -235,12 +281,12 @@ label = "Recharge min. %"
 
 [main.loadpointSettings.phasesConfigured]
 label = "Phases"
+no1p3pSupport = "Comment est connecté votre chargeur ?"
 phases_0 = "commutation automatique"
 phases_1 = "1 phase"
 phases_1_hint = "({min} à {max})"
 phases_3 = "3 phases"
 phases_3_hint = "({min} à {max})"
-no1p3pSupport = "Comment est connecté votre chargeur ?"
 
 [main.mode]
 minpv = "Min+Sol"
@@ -300,12 +346,12 @@ detectionActive = "Détection du véhicule…"
 fallbackName = "Véhicule"
 moreActions = "Plus d'actions"
 none = "Pas de véhicule"
+notReachable = "«Impossible d’atteindre le véhicule. Essayez de redémarrer evcc.»"
 targetSoc = "Limite"
 temp = "Temp."
 tempLimit = "Temp. limite"
 unknown = "Véhicule invité"
 vehicleSoc = "Charge"
-notReachable = «Impossible d’atteindre le véhicule. Essayez de redémarrer evcc.»
 
 [main.vehicleSoc]
 charging = "en charge"
@@ -423,6 +469,10 @@ mi = "miles"
 [smartCost]
 activeHours = "{charging} sur {total}"
 activeHoursLabel = "Heures actives"
+applyToAll = "Appliquer partout ?"
+batteryDescription = "Charge la batterie domestique avec du courant du réseau."
+cheapTitle = "Charge bon marché depuis le réseau"
+cleanTitle = "Charge propre depuis le réseau"
 co2Label = "Émissions de CO₂"
 co2Limit = "Limite CO₂"
 loadpointDescription = "Autorise la charge rapide temporaire en mode solaire."
@@ -430,10 +480,6 @@ modalTitle = "Recharge réseau intelligente"
 none = "aucune"
 priceLabel = "Prix de l'énergie"
 priceLimit = "Limite de prix"
-cheapTitle = "Charge bon marché depuis le réseau"
-applyToAll = "Appliquer partout ?"
-batteryDescription = "Charge la batterie domestique avec du courant du réseau."
-cleanTitle = "Charge propre depuis le réseau"
 saved = "Enregistré."
 
 [startupError]
@@ -452,50 +498,3 @@ title = "Erreur au démarrage"
 cancel = "Annuler"
 template = "Fabricant"
 test = "Test"
-
-
-[main.heatingStatus]
-cheapEnergyCharging = "Chauffage bon marché : {price} (limite {limit})"
-charging = "Chauffage… "
-cleanEnergyCharging = "Chauffage propre : {co2} (limite {limit})"
-waitForVehicle = "Prêt. En attente du chauffage… "
-
-[config.site]
-cancel = "Annuler"
-save = "Enregistrer"
-
-[config.pv]
-titleAdd = "Ajouter un compteur pour le solaire"
-titleEdit = "Modifier le compteur pour le solaire"
-
-[config.meter]
-save = "Enregistrer"
-template = "Fabricant"
-titleChoice = "Que voulez-vous ajouter ?"
-validateSave = "Valider et enregistrer"
-cancel = "Annuler"
-delete = "Supprimer"
-
-[config.battery]
-titleEdit = "Modifier compteur pour batterie"
-titleAdd = "Ajouter compteur pour une batterie domestique"
-
-[config.deviceValue]
-capacity = "Capacité"
-chargeStatus = "Statut"
-chargedEnergy = "Chargé"
-current = "Courant"
-enabled = "Activé"
-energy = "Énergie"
-odometer = "Kilométrage"
-phaseCurrents = "Courant L1..L3"
-phasePowers = "Puissance L1..L3"
-phaseVoltages = "Voltage L1..L3"
-power = "Puissance’
-range = "Autonomie"
-soc = "Etat de Charge"
-socLimit = "Limite"
-
-[config.grid]
-titleAdd = "Ajouter compteur pour réseau"
-titleEdit = "Modifier compteur pour réseau"

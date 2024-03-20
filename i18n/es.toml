@@ -16,11 +16,11 @@ legendTopSubline = "sin interrupciones"
 modalTitle = "Ajustes de la batería"
 
 [batterySettings.bufferStart]
+above = "cuando esté por encima de {soc}"
 full = "si está en {soc}"
 low = "cuando está algo llena"
 medium = "cuando está medio llena"
 never = "cuando hay suficiente excedente"
-above = "cuando esté por encima de {soc}"
 
 [config]
 
@@ -175,10 +175,10 @@ blog = "Blog"
 docs = "Documentación"
 github = "GitHub"
 login = "Registro de vehículos"
+nativeSettings = "Cambiar el servidor"
 needHelp = "¿Necesitas ayuda?"
 sessions = "Sesiones de carga"
 settings = "Ajustes"
-nativeSettings = "Cambiar el servidor"
 
 [header.theme]
 auto = "Tema: System"
@@ -219,8 +219,8 @@ time = "Tiempo"
 title = "Plan"
 titleMinSoc = "Carga mínima"
 titleTargetCharge = "Partida"
-update = "Aplicar"
 unsavedChanges = "Hay cambios sin guardar. ¿Aplicar ahora?"
+update = "Aplicar"
 
 [main.energyflow]
 battery = "Batería"
@@ -260,10 +260,10 @@ currents = "Corriente de carga"
 default = "defecto"
 disclaimerHint = "Nota:"
 onlyForSocBasedCharging = "Estas opciones sólo están disponibles para vehículos con nivel de carga conocido"
+smartCostCheap = "“Carga barata desde la red”"
+smartCostClean = "Carga desde una red ecológica"
 title = "Configuraciones {0}"
 vehicle = "Vehículo"
-smartCostClean = "Carga desde una red ecológica"
-smartCostCheap = “Carga barata desde la red”
 
 [main.loadpointSettings.limitSoc]
 description = "Límite de carga que se utiliza cuando este vehículo está conectado"
@@ -349,12 +349,12 @@ detectionActive = "Reconociendo vehículo ..."
 fallbackName = "Vehículo"
 moreActions = "Más acciones"
 none = "Ningún vehículo"
+notReachable = "No se pudo acceder al vehículo. Intente reiniciar evcc"
 targetSoc = "Objetivo de carga"
 temp = "T.ª"
 tempLimit = "Temperatura límite"
 unknown = "Vehículo invitado"
 vehicleSoc = "Nivel de carga"
-notReachable = "No se pudo acceder al vehículo. Intente reiniciar evcc"
 
 [main.vehicleSoc]
 charging = "cargando"
@@ -478,6 +478,10 @@ mi = "millas"
 [smartCost]
 activeHours = "{charging} de {total}"
 activeHoursLabel = "Horas funcionando"
+applyToAll = "¿Aplicar en todas partes?"
+batteryDescription = "Carga la batería doméstica con la red eléctrica"
+cheapTitle = "“Carga barata desde la red”"
+cleanTitle = "Carga desde una red ecológica"
 co2Label = "Emisiones de CO₂"
 co2Limit = "Límite de CO₂"
 loadpointDescription = "Habilita temporalmente la carga rápida en modo solar"
@@ -485,11 +489,7 @@ modalTitle = "Red inteligente de carga"
 none = "ninguno"
 priceLabel = "Precio de la energía"
 priceLimit = "Límite de precio"
-applyToAll = "¿Aplicar en todas partes?"
-batteryDescription = "Carga la batería doméstica con la red eléctrica"
-cheapTitle = “Carga barata desde la red”
 saved = "Guardado."
-cleanTitle = "Carga desde una red ecológica"
 
 [startupError]
 configFile = "Archivo de configuración utilizado:"

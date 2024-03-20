@@ -16,11 +16,11 @@ legendTopSubline = "uden afbrydelser"
 modalTitle = "Batteri indstillinger"
 
 [batterySettings.bufferStart]
+above = "når den er over {soc}"
 full = "når den er på {soc}"
 low = "en smule fyldt"
 medium = "halv fyldt"
 never = "kun med nok solar overskud"
-above = "når den er over {soc}"
 
 [config]
 
@@ -175,10 +175,10 @@ blog = "Blog"
 docs = "Dokumentation"
 github = "GitHub"
 login = "Login til køretøjer"
+nativeSettings = "Skift server"
 needHelp = "Brug for hjælp?"
 sessions = "Opladnings sessioner"
 settings = "Indstillinger"
-nativeSettings = "Skift server"
 
 [help]
 discussionsButton = "GitHub diskussioner"
@@ -214,8 +214,8 @@ time = "Tid"
 title = "Plan"
 titleMinSoc = "Min. ladning"
 titleTargetCharge = "Afgang"
-update = "Anvend"
 unsavedChanges = "Der er ændringer som ikke er gemt. Skal de benyttes nu?"
+update = "Anvend"
 
 [main.energyflow]
 battery = "Batteri"
@@ -255,10 +255,10 @@ currents = "Ladestrøm"
 default = "standard"
 disclaimerHint = "Bemærk:"
 onlyForSocBasedCharging = "Disse indstillinger er kun tilgængelig for køretøjer med kendt opladningsniveau"
+smartCostCheap = "Billig opladning fra elnet"
+smartCostClean = "Grøn opladning fra elnet"
 title = "Indstillinger {0}"
 vehicle = "Køretøj"
-smartCostClean = "Grøn opladning fra elnet"
-smartCostCheap = "Billig opladning fra elnet"
 
 [main.loadpointSettings.limitSoc]
 description = "Opladningsgrænse som benyttes når dette køretøj er forbundet"
@@ -344,12 +344,12 @@ detectionActive = "Detektering af køretøj ..."
 fallbackName = "Køretøj"
 moreActions = "Flere handlinger"
 none = "Intet køretøj"
+notReachable = "Ingen kontakt til køretøj. Prøv at genstarte evcc."
 targetSoc = "Begrænsning"
 temp = "Temp"
 tempLimit = "Temp. grænse"
 unknown = "Gæstekøretøj"
 vehicleSoc = "Oplader"
-notReachable = "Ingen kontakt til køretøj. Prøv at genstarte evcc."
 
 [main.vehicleSoc]
 charging = "opladning"
@@ -467,6 +467,10 @@ mi = "mil"
 [smartCost]
 activeHours = "{charging} af {total}"
 activeHoursLabel = "Aktive timer"
+applyToAll = "Anvendes overalt"
+batteryDescription = "Oplader hjemmebatteriet med energi fra elnettet"
+cheapTitle = "Billig opladning fra elnettet"
+cleanTitle = "Grøn opladning fra elnettet"
 co2Label = "CO₂ udledning"
 co2Limit = "CO₂ grænse"
 loadpointDescription = "Aktiverer midlertidig hurtig ladning i solcelle tilstand"
@@ -474,10 +478,6 @@ modalTitle = "Smart opladning fra elnettet"
 none = "ingen"
 priceLabel = "Energi pris"
 priceLimit = "Pris grænse"
-applyToAll = "Anvendes overalt"
-cheapTitle = "Billig opladning fra elnettet"
-cleanTitle = "Grøn opladning fra elnettet"
-batteryDescription = "Oplader hjemmebatteriet med energi fra elnettet"
 saved = "Gemt"
 
 [startupError]
