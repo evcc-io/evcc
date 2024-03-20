@@ -128,6 +128,8 @@ func (wb *WebastoNext) Status() (api.ChargeStatus, error) {
 		return api.StatusB, nil
 	case 3:
 		return api.StatusC, nil
+	case 7:
+		return api.StatusNone, fmt.Errorf("charging error: status %d", sb)
 	default:
 		return api.StatusNone, fmt.Errorf("invalid status: %d", sb)
 	}
