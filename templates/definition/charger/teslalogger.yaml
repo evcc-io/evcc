@@ -27,22 +27,9 @@ render: |
       uri: {{ .url }}:{{ .port }}/currentjson/{{ .id }}
       jq: .charging
     plugged:
-      source: go
-      script: |
-        plugged_in && ishome
-      in:
-      - name: plugged_in
-        type: bool
-        config:
-          source: http
-          uri: {{ .url }}:{{ .port }}/currentjson/{{ .id }}
-          jq: .plugged_in
-      - name: ishome
-        type: bool
-        config:
-          source: http
-          uri: {{ .url }}:{{ .port }}/currentjson/{{ .id }}
-          jq: .TLGeofenceIsHome
+      source: http
+      uri: http://192.168.6.10:5000/currentjson/3
+      jq: if .plugged_in and .TLGeofenceIsHome then true else false end
   enabled:
     source: http
     uri: {{ .url }}:{{ .port }}/currentjson/{{ .id }}
