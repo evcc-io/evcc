@@ -26,8 +26,6 @@ params:
   - name: icon
     default: car
     advanced: true
-  - name: timeout
-    default: 1h
   - preset: vehicle-identify
 
 render: |
@@ -49,35 +47,28 @@ render: |
     source: http
     uri: {{ .url }}:{{ .port }}/currentjson/{{ .id }}
     jq: .battery_level
-    timeout: {{ .timeout }}
   status:
     source: combined
     plugged:
       source: http
       uri: {{ .url }}:{{ .port }}/currentjson/{{ .id }}
       jq: .plugged_in
-      timeout: {{ .timeout }}
     charging:
       source: http
       uri: {{ .url }}:{{ .port }}/currentjson/{{ .id }}
       jq: .charging
-      timeout: {{ .timeout }}
   range:
     source: http
     uri: {{ .url }}:{{ .port }}/currentjson/{{ .id }}
     jq: .battery_range_km
-    timeout: {{ .timeout }}
   odometer:
     source: http
     uri: {{ .url }}:{{ .port }}/currentjson/{{ .id }}
     jq: .odometer
-    timeout: {{ .timeout }}
   climater:
     source: http
     uri: {{ .url }}:{{ .port }}/currentjson/{{ .id }}
     jq: .is_preconditioning
-    timeout: {{ .timeout }}
   wakeup:
     source: http
     uri: {{ .url }}:{{ .port }}/command/{{ .id }}/wake_up
-    timeout: {{ .timeout }}
