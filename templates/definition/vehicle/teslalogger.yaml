@@ -72,3 +72,6 @@ render: |
   wakeup:
     source: http
     uri: {{ .url }}:{{ .port }}/command/{{ .id }}/wake_up
+  maxcurrent:
+    source: http
+    uri: {{ .url }}:{{ .port }}/command/{{ .id }}/set_charging_amps
