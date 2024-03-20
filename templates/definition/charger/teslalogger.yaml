@@ -28,7 +28,7 @@ render: |
       jq: .charging
     plugged:
       source: http
-      uri: http://192.168.6.10:5000/currentjson/3
+      uri: {{ .url }}:{{ .port }}/currentjson/{{ .id }}
       jq: if .plugged_in and .TLGeofenceIsHome then true else false end
   enabled:
     source: http
