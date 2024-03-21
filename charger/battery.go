@@ -51,6 +51,7 @@ func NewBatteryFromConfig(other map[string]interface{}) (api.Charger, error) {
 	}
 
 	c := &Battery{
+		embed:             &cc.embed,
 		ChargeableBattery: battery,
 	}
 
