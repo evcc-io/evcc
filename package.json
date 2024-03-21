@@ -1,7 +1,7 @@
 {
   "name": "evcc",
-  "description": "",
-  "author": "naltatis & andig",
+  "description": "evcc UI",
+  "author": "evcc-io",
   "scripts": {
     "build": "vite build",
     "test": "TZ=Europe/Berlin vitest",
@@ -11,6 +11,7 @@
     "playwright": "playwright test --ui",
     "simulator": "vite tests/simulator"
   },
+  "type": "module",
   "main": "index.js",
   "dependencies": {
     "@babel/core": "^7.17.2",
@@ -23,7 +24,7 @@
     "@vitejs/plugin-vue": "^5.0.4",
     "@vue/compiler-sfc": "^3.2.30",
     "@vue/eslint-config-prettier": "^9.0.0",
-    "@vue/eslint-config-typescript": "^12.0.0",
+    "@vue/eslint-config-typescript": "^13.0.0",
     "@vue/test-utils": "^2.2.7",
     "@vue/tsconfig": "^0.5.1",
     "axios": "^1.2.1",
@@ -38,7 +39,7 @@
     "eslint-plugin-prettier": "^5.0.0-alpha.1",
     "eslint-plugin-promise": "^6.0.0",
     "eslint-plugin-vue": "^9.3.0",
-    "happy-dom": "^13.3.8",
+    "happy-dom": "^14.0.0",
     "histoire": "^0.17.0",
     "markty-toml": "^0.1.1",
     "prettier": "^3.0.0",
@@ -54,7 +55,6 @@
     "vue-hot-reload-api": "^2.3.4",
     "vue-i18n": "^9.2.2",
     "vue-router": "^4.0.12",
-    "vue-tsc": "^1.8.19",
     "wait-on": "^7.0.1"
   },
   "engines": {
