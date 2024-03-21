@@ -36,7 +36,7 @@ render: |
     jq: .charging
   enable:
     source: http
-    uri: {{ .url }}:{{ .port }}/currentjson/{{ .id }}/charge_start_stop
+    uri: {{ .url }}:{{ .port }}/currentjson/{{ .id }}/charge_start_stop?${enable}
   maxcurrent:
     source: http
-    uri: {{ .url }}:{{ .port }}/command/{{ .id }}/set_charging_amps
+    uri: {{ .url }}:{{ .port }}/command/{{ .id }}/set_charging_amps?${maxcurrent}
