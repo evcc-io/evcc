@@ -312,7 +312,7 @@ func (c *EEBus) Enabled() (bool, error) {
 		// for IEC61851 the pause limit is 0A, for ISO15118-2 it is 0.1A
 		// instead of checking for the actual data, hardcode this, so we might run into less
 		// timing issues as the data might not be received yet
-		if limit >= 1 {
+		if limit.IsActive && limit.Value >= 1 {
 			return true, nil
 		}
 	}
