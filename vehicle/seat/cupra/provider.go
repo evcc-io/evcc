@@ -103,9 +103,9 @@ func (v *Provider) Climater() (bool, error) {
 var _ api.SocLimiter = (*Provider)(nil)
 
 // TargetSoc implements the api.SocLimiter interface
-func (v *Provider) TargetSoc() (float64, error) {
+func (v *Provider) GetLimitSoc() (int64, error) {
 	res, err := v.statusG()
-	return float64(res.Services.Charging.TargetPct), err
+	return int64(res.Services.Charging.TargetPct), err
 }
 
 var _ api.VehicleChargeController = (*Provider)(nil)

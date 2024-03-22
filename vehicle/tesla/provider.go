@@ -123,12 +123,12 @@ func (v *Provider) FinishTime() (time.Time, error) {
 var _ api.SocLimiter = (*Provider)(nil)
 
 // TargetSoc implements the api.SocLimiter interface
-func (v *Provider) TargetSoc() (float64, error) {
+func (v *Provider) GetLimitSoc() (int64, error) {
 	res, err := v.dataG()
 	if err != nil {
 		return 0, err
 	}
-	return float64(res.Response.ChargeState.ChargeLimitSoc), nil
+	return int64(res.Response.ChargeState.ChargeLimitSoc), nil
 }
 
 var _ api.Resurrector = (*Provider)(nil)
