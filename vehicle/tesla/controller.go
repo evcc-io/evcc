@@ -15,20 +15,26 @@ const ProxyBaseUrl = "https://tesla.evcc.io"
 
 type Controller struct {
 	vehicle *tesla.Vehicle
-	dataG   provider.Cacheable[*tesla.VehicleData]
+	current int64
+	dataG   provider.Cacheable[float64]
 }
 
 // NewController creates a vehicle current and charge controller
-func NewController(vehicle *tesla.Vehicle) *Controller {
-	impl := &Controller{
-		vehicle: vehicle,
-		dataG: provider.ResettableCached(func() (*tesla.VehicleData, error) {
-			res, err := vehicle.Data()
-			return res, apiError(err)
-		}, time.Minute),
+func NewController(ro, rw *tesla.Vehicle) *Controller {
+	v := &Controller{
+		vehicle: rw,
 	}
 
-	return impl
+	v.dataG = provider.ResettableCached(func() (float64, error) {
+		if v.current >= 6 {
+			// assume match above 6A to save API requests
+			return float64(v.current), nil
+		}
+		res, err := ro.Data()
+		return float64(res.Response.ChargeState.ChargeRate), apiError(err)
+	}, time.Minute)
+
+	return v
 }
 
 var _ api.CurrentController = (*Controller)(nil)
@@ -39,6 +45,7 @@ func (v *Controller) MaxCurrent(current int64) error {
 		return api.ErrSponsorRequired
 	}
 
+	v.current = current
 	v.dataG.Reset()
 
 	return apiError(v.vehicle.SetChargingAmps(int(current)))
@@ -48,8 +55,7 @@ var _ api.CurrentGetter = (*Controller)(nil)
 
 // StartCharge implements the api.VehicleChargeController interface
 func (v *Controller) GetMaxCurrent() (float64, error) {
-	res, err := v.dataG.Get()
-	return float64(res.Response.ChargeState.ChargeRate), err
+	return v.dataG.Get()
 }
 
 var _ api.ChargeController = (*Controller)(nil)
