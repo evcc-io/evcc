@@ -122,7 +122,7 @@ func (v *Provider) FinishTime() (time.Time, error) {
 
 var _ api.SocLimiter = (*Provider)(nil)
 
-// TargetSoc implements the api.SocLimiter interface
+// GetLimitSoc implements the api.SocLimiter interface
 func (v *Provider) GetLimitSoc() (int64, error) {
 	res, err := v.dataG()
 	if err != nil {
