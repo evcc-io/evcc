@@ -24,8 +24,13 @@ type dynamicType struct {
 }
 
 type typeStruct struct {
-	Type, ShortType, Signature, Function, VarName, ReturnTypes string
-	Params                                                     []string
+	Type, ShortType string
+	Methods         []methodStruct
+}
+
+type methodStruct struct {
+	Signature, Function, VarName, ReturnTypes string
+	Params                                    []string
 }
 
 func generate(out io.Writer, packageName, functionName, baseType string, dynamicTypes ...dynamicType) error {
@@ -53,8 +58,18 @@ func generate(out io.Writer, packageName, functionName, baseType string, dynamic
 		// ordered returns a slice of typeStructs ordered by dynamicType
 		"ordered": func() []typeStruct {
 			ordered := make([]typeStruct, 0)
+
 			for _, k := range dynamicTypes {
-				ordered = append(ordered, types[k.typ])
+				var found bool
+				for _, o := range ordered {
+					if o.Type == k.typ {
+						found = true
+						break
+					}
+				}
+				if !found {
+					ordered = append(ordered, types[k.typ])
+				}
 			}
 
 			return ordered
@@ -80,17 +95,33 @@ func generate(out io.Writer, packageName, functionName, baseType string, dynamic
 
 		returnValuesStr := dt.signature[closingBrace+1:]
 
-		types[dt.typ] = typeStruct{
-			Type:        dt.typ,
-			ShortType:   parts[1],
-			VarName:     strings.ToLower(parts[1][:1]) + parts[1][1:],
+		ts, ok := types[dt.typ]
+		if !ok {
+			// key does not exist in the map
+			ts = typeStruct{
+				Type:      dt.typ,
+				ShortType: parts[1],
+				Methods:   make([]methodStruct, 0),
+			}
+			combos = append(combos, dt.typ)
+		}
+
+		idx := len(ts.Methods)
+		var suffix string
+		if idx > 0 {
+			suffix = "_" + fmt.Sprint(idx)
+		}
+
+		ts.Methods = append(ts.Methods, methodStruct{
+			VarName:     strings.ToLower(parts[1][:1]) + parts[1][1:] + suffix,
 			Signature:   dt.signature,
 			Function:    dt.function,
 			Params:      params,
 			ReturnTypes: returnValuesStr,
-		}
+		})
 
-		combos = append(combos, dt.typ)
+		types[dt.typ] = ts
+
 	}
 
 	returnType := *ret
