@@ -25,7 +25,7 @@ func NewController(vehicle *tesla.Vehicle) *Controller {
 
 var _ api.CurrentController = (*Controller)(nil)
 
-// StartCharge implements the api.ChargeController interface
+// MaxCurrent implements the api.CurrentController interface
 func (v *Controller) MaxCurrent(current int64) error {
 	if !sponsor.IsAuthorized() {
 		return api.ErrSponsorRequired
