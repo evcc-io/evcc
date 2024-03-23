@@ -82,7 +82,7 @@ Here's another `launch.json` configuration that can be used for specifically deb
     "request": "launch",
     "mode": "debug",
     "program": "${workspaceFolder}/cmd/tools/decorate.go",
-    "args": ["-o", "decorator_test.go", "-p", "main", "-f", "decorateVehicle", "-b", "api.Vehicle", "-t", "api.VehicleChargeController,StartCharge,func() error", "-t", "api.VehicleChargeController,StopCharge,func() error"]],
+    "args": ["-o", "decorator_test.go", "-p", "main", "-f", "decorateVehicle", "-b", "api.Vehicle", "-t", "api.VehicleChargeController,StartCharge,func() error", "-t", "api.VehicleChargeController,StopCharge,func() error"],
 },
 ```
 
