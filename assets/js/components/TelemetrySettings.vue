@@ -15,7 +15,7 @@
 				{{ $t("footer.telemetry.optIn") }}
 				<i18n-t v-if="sponsor" tag="span" keypath="footer.telemetry.optInMoreDetails">
 					<a
-						href="https://docs.evcc.io/docs/guides/setup/#telemetry--community-daten"
+						href="https://docs.evcc.io/docs/faq/#telemetry--community-daten"
 						target="_blank"
 					>
 						{{ $t("footer.telemetry.optInMoreDetailsLink") }}
