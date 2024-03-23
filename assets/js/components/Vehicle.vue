@@ -122,7 +122,7 @@ export default {
 		vehicleRange: Number,
 		vehicles: Array,
 		vehicleSoc: Number,
-		vehicleTargetSoc: Number,
+		vehicleLimitSoc: Number,
 		vehicleNotReachable: Boolean,
 	},
 	emits: ["limit-soc-updated", "limit-energy-updated", "change-vehicle", "remove-vehicle"],

@@ -82,10 +82,10 @@ const hoursFromNow = function (hours) {
 			/>
 		</Variant>
 		<Variant title="vehicle limit">
-			<Vehicle v-bind="state" enabled charging :vehicleTargetSoc="80" />
+			<Vehicle v-bind="state" enabled charging :vehicleLimitSoc="80" />
 		</Variant>
 		<Variant title="vehicle limit reached">
-			<Vehicle v-bind="state" enabled :vehicleTargetSoc="80" :vehicleSoc="80" />
+			<Vehicle v-bind="state" enabled :vehicleLimitSoc="80" :vehicleSoc="80" />
 		</Variant>
 		<Variant title="target charge planned">
 			<Vehicle v-bind="state" :targetTime="hoursFromNow(34)" mode="pv" />
