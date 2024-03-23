@@ -162,10 +162,9 @@ type SocLimiter interface {
 	TargetSoc() (float64, error)
 }
 
-// VehicleChargeController allows to start/stop the charging session on the vehicle side
-type VehicleChargeController interface {
-	StartCharge() error
-	StopCharge() error
+// ChargeController allows to start/stop the charging session on the vehicle side
+type ChargeController interface {
+	ChargeEnable(bool) error
 }
 
 // Resurrector provides wakeup calls to the vehicle with an API call or a CP interrupt from the charger

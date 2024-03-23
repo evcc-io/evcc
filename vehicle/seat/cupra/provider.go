@@ -108,14 +108,10 @@ func (v *Provider) TargetSoc() (float64, error) {
 	return float64(res.Services.Charging.TargetPct), err
 }
 
-var _ api.VehicleChargeController = (*Provider)(nil)
+var _ api.ChargeController = (*Provider)(nil)
 
-// StartCharge implements the api.VehicleChargeController interface
-func (v *Provider) StartCharge() error {
-	return v.action(ActionCharge, ActionChargeStart)
-}
-
-// StopCharge implements the api.VehicleChargeController interface
-func (v *Provider) StopCharge() error {
-	return v.action(ActionCharge, ActionChargeStop)
+// ChargeEnable implements the api.ChargeController interface
+func (v *Provider) ChargeEnable(enable bool) error {
+	action := map[bool]string{true: ActionChargeStart, false: ActionChargeStop}
+	return v.action(ActionCharge, action[enable])
 }
