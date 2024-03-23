@@ -54,6 +54,38 @@ make
 ./evcc
 ```
 
+### Debugging in VS Code
+
+#### evcc Core
+To debug a local evcc build in VS Code, add the following entry to your `launch.json`.
+You can adjust the referred configuration as needed to e.g. use your live configuration. 
+
+```json
+        {
+            "name": "Launch evcc local build with demo config",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}",
+            "args": ["-c", "${workspaceFolder}/cmd/demo.yaml"],
+            "cwd": "${workspaceFolder}",
+        },
+```
+
+#### Decorator
+Here's another `launch.json` configuration that can be used for specifically debugging the decorator.
+
+```json
+{
+    "name": "Launch file",
+    "type": "go",
+    "request": "launch",
+    "mode": "debug",
+    "program": "${workspaceFolder}/cmd/tools/decorate.go",
+    "args": ["-o", "decorator_test.go", "-p", "main", "-f", "decorateVehicle", "-b", "api.Vehicle", "-t", "api.VehicleChargeController,StartCharge,func() error", "-t", "api.VehicleChargeController,StopCharge,func() error"]],
+},
+```
+
 ### Cross Compile
 
 To compile a version for an ARM device like a Raspberry Pi set GO command variables as needed, eg:
