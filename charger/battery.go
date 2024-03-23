@@ -95,3 +95,11 @@ func (c *Battery) Enable(enable bool) error {
 func (c *Battery) MaxCurrent(current int64) error {
 	return nil
 }
+
+var _ api.Meter = (*Battery)(nil)
+
+// CurrentPower implements the api.Meter interface
+func (c *Battery) CurrentPower() (float64, error) {
+	res, err := c.ChargeableBattery.CurrentPower()
+	return -res, err
+}
