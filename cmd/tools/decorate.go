@@ -106,13 +106,9 @@ func generate(out io.Writer, packageName, functionName, baseType string, dynamic
 			combos = append(combos, dt.typ)
 		}
 
-		// instead of the suffix, we could also define VarName as
-		// strings.ToLower(parts[1][:1]) + parts[1][1:] + dt.function
-		// doing so though would introduce
-		idx := len(ts.Methods)
 		var suffix string
-		if idx > 0 {
-			suffix = "_" + fmt.Sprint(idx)
+		if len(ts.Methods) > 0 {
+			suffix = dt.function
 		}
 
 		ts.Methods = append(ts.Methods, methodStruct{
