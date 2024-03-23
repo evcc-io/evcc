@@ -8,7 +8,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 )
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateVehicle -b api.Vehicle -t "api.ChargeState,Status,func() (api.ChargeStatus, error)" -t "api.VehicleRange,Range,func() (int64, error)" -t "api.VehicleOdometer,Odometer,func() (float64, error)" -t "api.VehicleClimater,Climater,func() (bool, error)" -t "api.CurrentController,MaxCurrent,func(int64) error" -t "api.Resurrector,WakeUp,func() error" -t "api.VehicleChargeController,StartCharge,func() error" -t "api.VehicleChargeController,StopCharge,func() error"
+//go:generate go run ../cmd/tools/decorate.go -f decorateVehicle -b api.Vehicle -t "api.ChargeState,Status,func() (api.ChargeStatus, error)" -t "api.VehicleRange,Range,func() (int64, error)" -t "api.VehicleOdometer,Odometer,func() (float64, error)" -t "api.VehicleClimater,Climater,func() (bool, error)" -t "api.CurrentController,MaxCurrent,func(int64) error" -t "api.Resurrector,WakeUp,func() error"
 
 // Vehicle is an api.Vehicle implementation with configurable getters and setters.
 type Vehicle struct {
@@ -23,16 +23,14 @@ func init() {
 // NewConfigurableFromConfig creates a new Vehicle
 func NewConfigurableFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	var cc struct {
-		embed       `mapstructure:",squash"`
-		Soc         provider.Config
-		Status      *provider.Config
-		Range       *provider.Config
-		Odometer    *provider.Config
-		Climater    *provider.Config
-		MaxCurrent  *provider.Config
-		Wakeup      *provider.Config
-		StartCharge *provider.Config
-		StopCharge  *provider.Config
+		embed      `mapstructure:",squash"`
+		Soc        provider.Config
+		Status     *provider.Config
+		Range      *provider.Config
+		Odometer   *provider.Config
+		Climater   *provider.Config
+		MaxCurrent *provider.Config
+		Wakeup     *provider.Config
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -117,26 +115,7 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Vehicle, error
 		}
 	}
 
-	// decorate startCharge
-	var startCharge, stopCharge func() error
-	if cc.StartCharge != nil && cc.StopCharge != nil {
-		startChargeS, err := provider.NewBoolSetterFromConfig("startCharge", *cc.StartCharge)
-		if err != nil {
-			return nil, fmt.Errorf("startCharge: %w", err)
-		}
-		stopChargeS, err := provider.NewBoolSetterFromConfig("stopCharge", *cc.StopCharge)
-		if err != nil {
-			return nil, fmt.Errorf("stopCharge: %w", err)
-		}
-		startCharge = func() error {
-			return startChargeS(true)
-		}
-		stopCharge = func() error {
-			return stopChargeS(true)
-		}
-	}
-
-	return decorateVehicle(v, status, rng, odo, climater, maxCurrent, wakeup, startCharge, stopCharge), nil
+	return decorateVehicle(v, status, rng, odo, climater, maxCurrent, wakeup), nil
 }
 
 // Soc implements the api.Vehicle interface
