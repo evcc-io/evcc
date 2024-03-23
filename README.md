@@ -77,7 +77,7 @@ Here's another `launch.json` configuration that can be used for specifically deb
 
 ```json
 {
-    "name": "Launch file",
+    "name": "Debug decorator",
     "type": "go",
     "request": "launch",
     "mode": "debug",
