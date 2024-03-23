@@ -10,12 +10,12 @@ VERSION := $(if $(TAG_NAME),$(TAG_NAME),$(SHA))
 BUILD_DATE := $(shell date -u '+%Y-%m-%d_%H:%M:%S')
 BUILD_TAGS := -tags=release
 TESLA_CLIENT_ID := ${TESLA_CLIENT_ID}
-TESTING := testing
 LD_FLAGS := -X github.com/evcc-io/evcc/server.Version=$(VERSION) -X github.com/evcc-io/evcc/server.Commit=$(COMMIT) -X github.com/evcc-io/evcc/vehicle/tesla.TESLA_CLIENT_ID=$(TESLA_CLIENT_ID) -s -w
 BUILD_ARGS := -trimpath -ldflags='$(LD_FLAGS)'
 
 # docker
 DOCKER_IMAGE := evcc/evcc
+DOCKER_TAG := testing
 PLATFORM := linux/amd64,linux/arm64,linux/arm/v6
 
 # gokrazy image
@@ -84,7 +84,7 @@ release::
 
 docker::
 	@echo Version: $(VERSION) $(SHA) $(BUILD_DATE)
-	docker buildx build --platform $(PLATFORM) --tag $(DOCKER_IMAGE):$(TESTING) --push .
+	docker buildx build --platform $(PLATFORM) --tag $(DOCKER_IMAGE):$(DOCKER_TAG) --push .
 
 publish-nightly::
 	@echo Version: $(VERSION) $(SHA) $(BUILD_DATE)
