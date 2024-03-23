@@ -25,7 +25,7 @@ func NewController(vehicle *tesla.Vehicle) *Controller {
 
 var _ api.CurrentController = (*Controller)(nil)
 
-// StartCharge implements the api.VehicleChargeController interface
+// MaxCurrent implements the api.CurrentController interface
 func (v *Controller) MaxCurrent(current int64) error {
 	if !sponsor.IsAuthorized() {
 		return api.ErrSponsorRequired
@@ -34,32 +34,28 @@ func (v *Controller) MaxCurrent(current int64) error {
 	return apiError(v.vehicle.SetChargingAmps(int(current)))
 }
 
-var _ api.VehicleChargeController = (*Controller)(nil)
+var _ api.ChargeController = (*Controller)(nil)
 
-// StartCharge implements the api.VehicleChargeController interface
-func (v *Controller) StartCharge() error {
+// ChargeEnable implements the api.ChargeController interface
+func (v *Controller) ChargeEnable(enable bool) error {
 	if !sponsor.IsAuthorized() {
 		return api.ErrSponsorRequired
 	}
 
-	err := apiError(v.vehicle.StartCharging())
-	if err != nil && slices.Contains([]string{"complete", "is_charging"}, err.Error()) {
-		return nil
-	}
-	return err
-}
+	var err error
 
-// StopCharge implements the api.VehicleChargeController interface
-func (v *Controller) StopCharge() error {
-	if !sponsor.IsAuthorized() {
-		return api.ErrSponsorRequired
-	}
+	if enable {
+		err = apiError(v.vehicle.StartCharging())
+		if err != nil && slices.Contains([]string{"complete", "is_charging"}, err.Error()) {
+			return nil
+		}
+	} else {
+		err = apiError(v.vehicle.StopCharging())
 
-	err := apiError(v.vehicle.StopCharging())
-
-	// ignore sleeping vehicle
-	if errors.Is(err, api.ErrAsleep) {
-		err = nil
+		// ignore sleeping vehicle
+		if errors.Is(err, api.ErrAsleep) {
+			err = nil
+		}
 	}
 
 	return err
