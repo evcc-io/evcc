@@ -119,17 +119,12 @@ func (c *Twc3) Enable(enable bool) error {
 		return nil
 	}
 
-	v, ok := c.lp.GetVehicle().(api.VehicleChargeController)
+	v, ok := c.lp.GetVehicle().(api.ChargeController)
 	if !ok {
 		return errors.New("vehicle not capable of start/stop")
 	}
 
-	if enable {
-		err = v.StartCharge()
-	} else {
-		err = v.StopCharge()
-	}
-
+	err = v.ChargeEnable(enable)
 	if err == nil {
 		c.enabled = enable
 	}
