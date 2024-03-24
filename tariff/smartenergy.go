@@ -1,48 +1,41 @@
 package tariff
 
 import (
-	"fmt"
 	"slices"
-	"strings"
 	"sync"
 	"time"
 
 	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/tariff/awattar"
+	"github.com/evcc-io/evcc/tariff/smartenergy"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 )
 
-type Awattar struct {
+type SmartEnergy struct {
 	*embed
 	log  *util.Logger
-	uri  string
 	data *util.Monitor[api.Rates]
 }
 
-var _ api.Tariff = (*Awattar)(nil)
+var _ api.Tariff = (*SmartEnergy)(nil)
 
 func init() {
-	registry.Add("awattar", NewAwattarFromConfig)
+	registry.Add("smartenergy", NewSmartEnergyFromConfig)
 }
 
-func NewAwattarFromConfig(other map[string]interface{}) (api.Tariff, error) {
-	cc := struct {
-		embed  `mapstructure:",squash"`
-		Region string
-	}{
-		Region: "DE",
+func NewSmartEnergyFromConfig(other map[string]interface{}) (api.Tariff, error) {
+	var cc struct {
+		embed `mapstructure:",squash"`
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	t := &Awattar{
+	t := &SmartEnergy{
 		embed: &cc.embed,
-		log:   util.NewLogger("awattar"),
-		uri:   fmt.Sprintf(awattar.RegionURI, strings.ToLower(cc.Region)),
+		log:   util.NewLogger("smartenergy"),
 		data:  util.NewMonitor[api.Rates](2 * time.Hour),
 	}
 
@@ -53,17 +46,17 @@ func NewAwattarFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	return t, err
 }
 
-func (t *Awattar) run(done chan error) {
+func (t *SmartEnergy) run(done chan error) {
 	var once sync.Once
-	bo := newBackoff()
 	client := request.NewHelper(t.log)
+	bo := newBackoff()
 
 	tick := time.NewTicker(time.Hour)
 	for ; true; <-tick.C {
-		var res awattar.Prices
+		var res smartenergy.Prices
 
 		if err := backoff.Retry(func() error {
-			return client.GetJSON(t.uri, &res)
+			return client.GetJSON(smartenergy.URI, &res)
 		}, bo); err != nil {
 			once.Do(func() { done <- err })
 
@@ -74,9 +67,9 @@ func (t *Awattar) run(done chan error) {
 		data := make(api.Rates, 0, len(res.Data))
 		for _, r := range res.Data {
 			ar := api.Rate{
-				Start: r.StartTimestamp.Local(),
-				End:   r.EndTimestamp.Local(),
-				Price: t.totalPrice(r.Marketprice / 1e3),
+				Start: r.Date.Local(),
+				End:   r.Date.Add(15 * time.Minute).Local(),
+				Price: t.totalPrice(r.Value / 100),
 			}
 			data = append(data, ar)
 		}
@@ -88,7 +81,7 @@ func (t *Awattar) run(done chan error) {
 }
 
 // Rates implements the api.Tariff interface
-func (t *Awattar) Rates() (api.Rates, error) {
+func (t *SmartEnergy) Rates() (api.Rates, error) {
 	var res api.Rates
 	err := t.data.GetFunc(func(val api.Rates) {
 		res = slices.Clone(val)
@@ -97,6 +90,6 @@ func (t *Awattar) Rates() (api.Rates, error) {
 }
 
 // Type implements the api.Tariff interface
-func (t *Awattar) Type() api.TariffType {
+func (t *SmartEnergy) Type() api.TariffType {
 	return api.TariffTypePriceForecast
 }

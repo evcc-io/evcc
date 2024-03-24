@@ -62,7 +62,8 @@ func (t *Elering) run(done chan error) {
 	client := request.NewHelper(t.log)
 	bo := newBackoff()
 
-	for ; true; <-time.Tick(time.Hour) {
+	tick := time.NewTicker(time.Hour)
+	for ; true; <-tick.C {
 		var res elering.NpsPrice
 
 		ts := time.Now().Truncate(time.Hour)

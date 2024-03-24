@@ -1,10 +1,10 @@
-template: groupe-e
+template: smartenergy
 products:
-  - brand: Groupe E (CH)
+  - brand: SmartEnergy (AT)
     description:
-      generic: Vario Plus
+      generic: smartCONTROL
 params:
   - preset: tariff-base
 render: |
-  type: groupe-e
+  type: smartenergy
   {{ include "tariff-base" . }}

@@ -1,5 +1,5 @@
-const { test, expect } = require("@playwright/test");
-const { start, stop, restart } = require("./evcc");
+import { test, expect } from "@playwright/test";
+import { start, stop } from "./evcc";
 
 const CONFIG = "plan.evcc.yaml";
 

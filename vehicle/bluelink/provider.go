@@ -171,14 +171,14 @@ func (v *Provider) Odometer() (float64, error) {
 
 var _ api.SocLimiter = (*Provider)(nil)
 
-// TargetSoc implements the api.SocLimiter interface
-func (v *Provider) TargetSoc() (float64, error) {
+// GetLimitSoc implements the api.SocLimiter interface
+func (v *Provider) GetLimitSoc() (int64, error) {
 	res, err := v.statusG()
 
 	if err == nil {
 		for _, targetSOC := range res.EvStatus.ReservChargeInfos.TargetSocList {
 			if targetSOC.PlugType == plugTypeAC {
-				return float64(targetSOC.TargetSocLevel), nil
+				return int64(targetSOC.TargetSocLevel), nil
 			}
 		}
 	}

@@ -1,6 +1,6 @@
-const { test, expect } = require("@playwright/test");
-const { start, stop, restart, cleanRestart } = require("./evcc");
-const { startSimulator, stopSimulator, SIMULATOR_URL, SIMULATOR_HOST } = require("./simulator");
+import { test, expect } from "@playwright/test";
+import { start, stop, restart, cleanRestart } from "./evcc";
+import { startSimulator, stopSimulator, SIMULATOR_URL, SIMULATOR_HOST } from "./simulator";
 
 const CONFIG_EMPTY = "config-empty.evcc.yaml";
 const CONFIG_WITH_VEHICLE = "config-with-vehicle.evcc.yaml";

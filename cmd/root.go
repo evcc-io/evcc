@@ -264,6 +264,9 @@ func runRoot(cmd *cobra.Command, args []string) {
 			go updater.Run(log, httpd, valueChan)
 		}
 
+		// remove previous fatal startup errors
+		valueChan <- util.Param{Key: "fatal", Val: nil}
+
 		// expose sponsor to UI
 		if sponsor.Subject != "" {
 			valueChan <- util.Param{Key: "sponsor", Val: sponsor.Subject}

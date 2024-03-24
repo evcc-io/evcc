@@ -152,10 +152,10 @@ describe("vehicle target soc", () => {
       {
         connected: true,
         enabled: true,
-        vehicleTargetSoc: 70,
+        vehicleLimitSoc: 70,
         vehicleSoc: 70,
       },
-      "vehicleTargetReached",
+      "vehicleLimitReached",
       { soc: 70 }
     );
   });
@@ -164,10 +164,10 @@ describe("vehicle target soc", () => {
       {
         connected: true,
         enabled: true,
-        vehicleTargetSoc: 70,
+        vehicleLimitSoc: 70,
         vehicleSoc: 69,
       },
-      "vehicleTargetReached",
+      "vehicleLimitReached",
       { soc: 70 }
     );
   });

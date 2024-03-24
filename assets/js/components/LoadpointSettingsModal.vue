@@ -35,7 +35,7 @@
 							</h4>
 							<div v-if="phasesOptions.length" class="mb-3 row">
 								<label
-									:for="formId('phases_0')"
+									:for="formId(`phases_${phasesOptions[0]}`)"
 									class="col-sm-4 col-form-label pt-0"
 								>
 									{{ $t("main.loadpointSettings.phasesConfigured.label") }}
