@@ -664,8 +664,8 @@ func configureSiteAndLoadpoints(conf globalConfig) (*core.Site, error) {
 func configureSite(conf map[string]interface{}, loadpoints []*core.Loadpoint, tariffs *tariff.Tariffs, circuits map[string]*core.Circuit) (*core.Site, error) {
 	// make list from values of circuit map
 	var circuitList []*core.Circuit
-	for k := range circuits {
-		circuitList = append(circuitList, circuits[k])
+	for _, c := range circuits {
+		circuitList = append(circuitList, c)
 	}
 	site, err := core.NewSiteFromConfig(log, conf, loadpoints, tariffs, circuitList)
 	if err != nil {

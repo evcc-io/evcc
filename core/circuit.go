@@ -35,13 +35,12 @@ func NewCircuitFromConfig(log *util.Logger, circuits map[string]*Circuit, vMeter
 		return nil, nil, "", err
 	}
 
-	var ok bool
 
 	if cc.Name == "" {
 		return nil, nil, "", fmt.Errorf("failed configuring circuit, need to have a name")
 	}
 
-	if _, ok = circuits[cc.Name]; ok {
+	if _, ok := circuits[cc.Name]; ok {
 		return nil, nil, "", fmt.Errorf("circuit name already used: %s", cc.Name)
 	}
 
