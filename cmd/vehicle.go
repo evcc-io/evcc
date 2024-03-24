@@ -88,8 +88,8 @@ func runVehicle(cmd *cobra.Command, args []string) {
 		if cmd.Flags().Lookup(flagStart).Changed {
 			flagUsed = true
 
-			if vv, ok := v.(api.VehicleChargeController); ok {
-				if err := vv.StartCharge(); err != nil {
+			if vv, ok := v.(api.ChargeController); ok {
+				if err := vv.ChargeEnable(true); err != nil {
 					log.ERROR.Println("start charge:", err)
 				}
 			} else {
@@ -100,8 +100,8 @@ func runVehicle(cmd *cobra.Command, args []string) {
 		if cmd.Flags().Lookup(flagStop).Changed {
 			flagUsed = true
 
-			if vv, ok := v.(api.VehicleChargeController); ok {
-				if err := vv.StopCharge(); err != nil {
+			if vv, ok := v.(api.ChargeController); ok {
+				if err := vv.ChargeEnable(false); err != nil {
 					log.ERROR.Println("stop charge:", err)
 				}
 			} else {

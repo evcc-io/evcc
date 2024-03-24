@@ -326,7 +326,7 @@ charging = "зарядка"
 connected = "підключено"
 disconnected = "відключено"
 ready = "готовий"
-vehicleTarget = "Ліміт транспортного засобу: {soc}%"
+vehicleLimit = "Ліміт транспортного засобу: {soc}%"
 
 [main.vehicleStatus]
 charging = "Зарядка…"
@@ -344,7 +344,7 @@ targetChargeActive = "Запланований заряд активний…"
 targetChargePlanned = "Запланована зарядка починається о {time}."
 targetChargeWaitForVehicle = "Запланований заряд готовий. В очікуванні транспортного засобу..."
 unknown = ""
-vehicleTargetReached = "Ліміт транспортного засобу {soc}% досягнуто."
+vehicleLimitReached = "Ліміт транспортного засобу {soc}% досягнуто."
 waitForVehicle = "Готовий. В очікуванні транспортного засобу..."
 
 [notifications]

@@ -102,14 +102,10 @@ func (v *Provider) WakeUp() error {
 	return v.actionS(DOOR_LOCK)
 }
 
-var _ api.VehicleChargeController = (*Provider)(nil)
+var _ api.ChargeController = (*Provider)(nil)
 
-// StartCharge implements the api.VehicleChargeController interface
-func (v *Provider) StartCharge() error {
-	return v.actionS(CHARGE_START)
-}
-
-// StopCharge implements the api.VehicleChargeController interface
-func (v *Provider) StopCharge() error {
-	return v.actionS(CHARGE_STOP)
+// ChargeEnable implements the api.ChargeController interface
+func (v *Provider) ChargeEnable(enable bool) error {
+	action := map[bool]string{true: CHARGE_START, false: CHARGE_STOP}
+	return v.actionS(action[enable])
 }
