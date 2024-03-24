@@ -110,6 +110,7 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Vehicle, error
 			return nil, fmt.Errorf("maxCurrent: %w", err)
 		}
 	}
+
 	// decorate getMaxCurrent
 	var getMaxCurrent func() (float64, error)
 	if cc.GetMaxCurrent != nil {
