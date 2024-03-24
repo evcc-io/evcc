@@ -47,6 +47,7 @@ import (
 	"github.com/libp2p/zeroconf/v2"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"golang.org/x/exp/maps"
 	"golang.org/x/sync/errgroup"
 	"golang.org/x/text/currency"
 )
@@ -640,14 +641,12 @@ func configureSiteAndLoadpoints(conf globalConfig) (*core.Site, error) {
 	if err := configureDevices(conf); err != nil {
 		return nil, err
 	}
-	var (
-		circuits map[string]*core.Circuit
-		vMeters  map[string]*core.VMeter
-		err      error
-	)
-	if circuits, vMeters, err = configureCircuits(conf); err != nil {
+
+	circuits, vMeters, err := configureCircuits(conf)
+	if err != nil {
 		return nil, err
 	}
+
 	loadpoints, err := configureLoadpoints(conf, circuits, vMeters)
 	if err != nil {
 		return nil, fmt.Errorf("failed configuring loadpoints: %w", err)
@@ -662,12 +661,9 @@ func configureSiteAndLoadpoints(conf globalConfig) (*core.Site, error) {
 }
 
 func configureSite(conf map[string]interface{}, loadpoints []*core.Loadpoint, tariffs *tariff.Tariffs, circuits map[string]*core.Circuit) (*core.Site, error) {
-	// make list from values of circuit map
-	var circuitList []*core.Circuit
-	for _, c := range circuits {
-		circuitList = append(circuitList, c)
-	}
-	site, err := core.NewSiteFromConfig(log, conf, loadpoints, tariffs, circuitList)
+	cs := maps.Values(circuits)
+
+	site, err := core.NewSiteFromConfig(log, conf, loadpoints, tariffs, cs)
 	if err != nil {
 		return nil, fmt.Errorf("failed configuring site: %w", err)
 	}
@@ -713,9 +709,11 @@ func configureCircuits(conf globalConfig) (circuits map[string]*core.Circuit, vM
 		log := util.NewLogger("circuit-" + strconv.Itoa(id+1))
 
 		circuit, vMeter, ccName, err := core.NewCircuitFromConfig(log, circuits, vMeters, cfg)
-		if circuit == nil {
+		if err != nil {
 			return circuits, vMeters, fmt.Errorf("failed configuring circuit: %w", err)
 		}
+
+		// TODO what if there is no vMeter?
 		// save vMeter for LP access
 		if vMeter != nil {
 			vMeters[ccName] = vMeter

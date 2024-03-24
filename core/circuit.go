@@ -35,7 +35,7 @@ func NewCircuitFromConfig(log *util.Logger, circuits map[string]*Circuit, vMeter
 		return nil, nil, "", err
 	}
 
-
+	// TODO circuits as all other entities MUST NOT know their name
 	if cc.Name == "" {
 		return nil, nil, "", fmt.Errorf("failed configuring circuit, need to have a name")
 	}
@@ -46,6 +46,7 @@ func NewCircuitFromConfig(log *util.Logger, circuits map[string]*Circuit, vMeter
 
 	var parent *Circuit
 	if cc.ParentRef != "" {
+		var ok bool
 		if parent, ok = circuits[cc.ParentRef]; !ok {
 			return nil, nil, "", fmt.Errorf("parent circuit not defined: %s", cc.ParentRef)
 		}
