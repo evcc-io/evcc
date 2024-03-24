@@ -689,18 +689,17 @@ func (lp *Loadpoint) syncCharger() error {
 	if enabled == lp.enabled {
 		// sync max current
 		if charger, ok := lp.charger.(api.CurrentGetter); ok && enabled {
-			current, err := charger.GetMaxCurrent()
-			if err != nil {
-				return fmt.Errorf("charger get max current: %w", err)
-			}
-
-			// smallest adjustment most PWM-Controllers can do is: 100%÷256×0,6A = 0.234A
-			if math.Abs(lp.chargeCurrent-current) > 0.23 {
-				if lp.chargerUpdateCompleted() {
-					lp.log.WARN.Printf("charger logic error: current mismatch (got %.3gA, expected %.3gA)", current, lp.chargeCurrent)
+			if current, err := charger.GetMaxCurrent(); err == nil {
+				// smallest adjustment most PWM-Controllers can do is: 100%÷256×0,6A = 0.234A
+				if math.Abs(lp.chargeCurrent-current) > 0.23 {
+					if lp.chargerUpdateCompleted() {
+						lp.log.WARN.Printf("charger logic error: current mismatch (got %.3gA, expected %.3gA)", current, lp.chargeCurrent)
+					}
+					lp.chargeCurrent = current
+					lp.bus.Publish(evChargeCurrent, lp.chargeCurrent)
 				}
-				lp.chargeCurrent = current
-				lp.bus.Publish(evChargeCurrent, lp.chargeCurrent)
+			} else if !errors.Is(err, api.ErrNotAvailable) {
+				return fmt.Errorf("charger get max current: %w", err)
 			}
 		}
 
