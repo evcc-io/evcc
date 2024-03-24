@@ -31,7 +31,7 @@ func NewController(ro, rw *tesla.Vehicle) *Controller {
 			return float64(v.current), nil
 		}
 		res, err := ro.Data()
-		return float64(res.Response.ChargeState.ChargeRate), apiError(err)
+		return float64(res.Response.ChargeState.ChargeAmps), apiError(err)
 	}, time.Minute)
 
 	return v
