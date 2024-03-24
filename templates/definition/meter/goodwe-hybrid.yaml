@@ -127,7 +127,7 @@ render: |
           source: sequence
           set:
           - source: const
-            value: 8 # EMSPowerMode 8 disables discharge. Charing possible. Charge from PV+AC according to the EMSPowerSet below
+            value: 8 # EMSPowerMode 8 disables discharge. Charging possible. Charge from PV+AC according to the EMSPowerSet below
             set: 
               source: modbus
               {{- include "modbus" . | indent 12 }}
