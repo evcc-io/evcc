@@ -127,11 +127,11 @@ func (v *Provider) Odometer() (odo float64, err error) {
 
 var _ api.SocLimiter = (*Provider)(nil)
 
-// TargetSoc implements the api.SocLimiter interface
-func (v *Provider) TargetSoc() (float64, error) {
+// GetLimitSoc implements the api.SocLimiter interface
+func (v *Provider) GetLimitSoc() (int64, error) {
 	res, err := v.settingsG()
 	if err == nil {
-		return float64(res.TargetStateOfChargeInPercent), nil
+		return int64(res.TargetStateOfChargeInPercent), nil
 	}
 
 	return 0, err

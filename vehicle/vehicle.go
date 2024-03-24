@@ -8,7 +8,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 )
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateVehicle -b api.Vehicle -t "api.ChargeState,Status,func() (api.ChargeStatus, error)" -t "api.VehicleRange,Range,func() (int64, error)" -t "api.VehicleOdometer,Odometer,func() (float64, error)" -t "api.VehicleClimater,Climater,func() (bool, error)" -t "api.CurrentController,MaxCurrent,func(int64) error" -t "api.Resurrector,WakeUp,func() error" -t "api.ChargeController,ChargeEnable,func(bool) error"
+//go:generate go run ../cmd/tools/decorate.go -f decorateVehicle -b api.Vehicle -t "api.SocLimiter,GetLimitSoc,func() (int64, error)" -t "api.ChargeState,Status,func() (api.ChargeStatus, error)" -t "api.VehicleRange,Range,func() (int64, error)" -t "api.VehicleOdometer,Odometer,func() (float64, error)" -t "api.VehicleClimater,Climater,func() (bool, error)" -t "api.CurrentController,MaxCurrent,func(int64) error" -t "api.Resurrector,WakeUp,func() error" -t "api.ChargeController,ChargeEnable,func(bool) error"
 
 // Vehicle is an api.Vehicle implementation with configurable getters and setters.
 type Vehicle struct {
@@ -25,6 +25,7 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Vehicle, error
 	var cc struct {
 		embed        `mapstructure:",squash"`
 		Soc          provider.Config
+		LimitSoc     *provider.Config
 		Status       *provider.Config
 		Range        *provider.Config
 		Odometer     *provider.Config
@@ -48,15 +49,24 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Vehicle, error
 		socG:  socG,
 	}
 
+	// decorate range
+	var limitSoc func() (int64, error)
+	if cc.LimitSoc != nil {
+		limitSoc, err = provider.NewIntGetterFromConfig(*cc.LimitSoc)
+		if err != nil {
+			return nil, fmt.Errorf("limitSoc: %w", err)
+		}
+	}
+
 	// decorate status
 	var status func() (api.ChargeStatus, error)
 	if cc.Status != nil {
-		statusG, err := provider.NewStringGetterFromConfig(*cc.Status)
+		get, err := provider.NewStringGetterFromConfig(*cc.Status)
 		if err != nil {
 			return nil, fmt.Errorf("status: %w", err)
 		}
 		status = func() (api.ChargeStatus, error) {
-			s, err := statusG()
+			s, err := get()
 			if err != nil {
 				return api.StatusNone, err
 			}
@@ -67,52 +77,48 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Vehicle, error
 	// decorate range
 	var rng func() (int64, error)
 	if cc.Range != nil {
-		rangeG, err := provider.NewIntGetterFromConfig(*cc.Range)
+		rng, err = provider.NewIntGetterFromConfig(*cc.Range)
 		if err != nil {
 			return nil, fmt.Errorf("range: %w", err)
 		}
-		rng = rangeG
 	}
 
 	// decorate odometer
 	var odo func() (float64, error)
 	if cc.Odometer != nil {
-		odoG, err := provider.NewFloatGetterFromConfig(*cc.Odometer)
+		odo, err = provider.NewFloatGetterFromConfig(*cc.Odometer)
 		if err != nil {
 			return nil, fmt.Errorf("odometer: %w", err)
 		}
-		odo = odoG
 	}
 
 	// decorate climater
 	var climater func() (bool, error)
 	if cc.Climater != nil {
-		climateG, err := provider.NewBoolGetterFromConfig(*cc.Climater)
+		climater, err = provider.NewBoolGetterFromConfig(*cc.Climater)
 		if err != nil {
 			return nil, fmt.Errorf("climater: %w", err)
 		}
-		climater = climateG
 	}
 
 	// decorate maxCurrent
 	var maxCurrent func(int64) error
 	if cc.MaxCurrent != nil {
-		maxCurrentS, err := provider.NewIntSetterFromConfig("maxCurrent", *cc.MaxCurrent)
+		maxCurrent, err = provider.NewIntSetterFromConfig("maxCurrent", *cc.MaxCurrent)
 		if err != nil {
 			return nil, fmt.Errorf("maxCurrent: %w", err)
 		}
-		maxCurrent = maxCurrentS
 	}
 
 	// decorate wakeup
 	var wakeup func() error
 	if cc.Wakeup != nil {
-		wakeupS, err := provider.NewBoolSetterFromConfig("wakeup", *cc.Wakeup)
+		set, err := provider.NewBoolSetterFromConfig("wakeup", *cc.Wakeup)
 		if err != nil {
 			return nil, fmt.Errorf("wakeup: %w", err)
 		}
 		wakeup = func() error {
-			return wakeupS(true)
+			return set(true)
 		}
 	}
 
@@ -125,7 +131,7 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Vehicle, error
 		}
 	}
 
-	return decorateVehicle(v, status, rng, odo, climater, maxCurrent, wakeup, chargeEnable), nil
+	return decorateVehicle(v, limitSoc, status, rng, odo, climater, maxCurrent, wakeup, chargeEnable), nil
 }
 
 // Soc implements the api.Vehicle interface

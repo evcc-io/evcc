@@ -271,7 +271,7 @@ charging = "充电中"
 connected = "已连接"
 disconnected = "已断开"
 ready = "就绪"
-vehicleTarget = "车辆限制: {soc}%"
+vehicleLimit = "车辆限制: {soc}%"
 
 [main.vehicleStatus]
 charging = "充电中…"
@@ -290,7 +290,7 @@ targetChargeActive = "目标充电激活…"
 targetChargePlanned = "目标充电从 {time}开始."
 targetChargeWaitForVehicle = "目标充电准备就绪. 等车…"
 unknown = ""
-vehicleTargetReached = "达到车辆限制 {soc}% ."
+vehicleLimitReached = "达到车辆限制 {soc}% ."
 waitForVehicle = "准备好了. 等车…"
 
 [notifications]

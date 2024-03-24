@@ -135,7 +135,7 @@ export default {
 		vehicle: Object,
 		capacity: Number,
 		vehicleSoc: Number,
-		vehicleTargetSoc: Number,
+		vehicleLimitSoc: Number,
 	},
 	data: function () {
 		return {

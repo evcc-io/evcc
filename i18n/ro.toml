@@ -348,7 +348,7 @@ charging = "încarcă"
 connected = "conectat"
 disconnected = "deconectat"
 ready = "pregătit"
-vehicleTarget = "Limită vehicul: {soc}%"
+vehicleLimit = "Limită vehicul: {soc}%"
 
 [main.vehicleStatus]
 charging = "Încarcă…"
@@ -367,7 +367,7 @@ targetChargeActive = "Încarcare țintă activă…"
 targetChargePlanned = "Încărcarea pornește la {time}."
 targetChargeWaitForVehicle = "Încărcare terminată. Aștept după vehicul…"
 unknown = ""
-vehicleTargetReached = "Limita {soc}% a fost atinsă."
+vehicleLimitReached = "Limita {soc}% a fost atinsă."
 waitForVehicle = "Pregătit. Aștept după vehicul…"
 
 [notifications]

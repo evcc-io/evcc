@@ -303,7 +303,7 @@ charging = "napajanje"
 connected = "povezano"
 disconnected = "odspojeno"
 ready = "spremno"
-vehicleTarget = "Ograničenje vozila: {soc} %"
+vehicleLimit = "Ograničenje vozila: {soc} %"
 
 [main.vehicleStatus]
 charging = "Napajanje …"
@@ -321,7 +321,7 @@ targetChargeActive = "Ciljano napajanje je aktivno …"
 targetChargePlanned = "Ciljano napajanje počinje u {time}."
 targetChargeWaitForVehicle = "Ciljano napajanje je spremno. Čeka se na vozilo …"
 unknown = ""
-vehicleTargetReached = "Ograničenje vozila od {soc} % dosegnuto."
+vehicleLimitReached = "Ograničenje vozila od {soc} % dosegnuto."
 waitForVehicle = "Spremno. Čeka se na vozilo …"
 
 [notifications]

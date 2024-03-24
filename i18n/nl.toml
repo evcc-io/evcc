@@ -358,7 +358,7 @@ charging = "laden"
 connected = "aangesloten"
 disconnected = "niet aangesloten"
 ready = "klaar"
-vehicleTarget = "Voertuiglimiet: {soc}%"
+vehicleLimit = "Voertuiglimiet: {soc}%"
 
 [main.vehicleStatus]
 charging = "Opladen..."
@@ -376,7 +376,7 @@ targetChargeActive = "Doelladen actief..."
 targetChargePlanned = "Doelladen begint om {time}."
 targetChargeWaitForVehicle = "Doellading gereed. Wachten op voertuig..."
 unknown = ""
-vehicleTargetReached = "Voertuiglimiet {soc}% bereikt."
+vehicleLimitReached = "Voertuiglimiet {soc}% bereikt."
 waitForVehicle = "Klaar. Wachten op voertuig..."
 
 [notifications]
