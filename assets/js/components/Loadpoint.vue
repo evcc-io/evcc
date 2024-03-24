@@ -147,7 +147,7 @@ export default {
 		vehicleSoc: Number,
 		vehicleName: String,
 		vehicleIcon: String,
-		vehicleTargetSoc: Number,
+		vehicleLimitSoc: Number,
 		vehicles: Array,
 		planActive: Boolean,
 		planProjectedStart: String,
@@ -235,6 +235,11 @@ export default {
 		},
 		vehicleHasSoc: function () {
 			return this.vehicleKnown && !this.vehicle?.features?.includes("Offline");
+		},
+		vehicleNotReachable: function () {
+			// online vehicle that was not reachable at startup
+			const features = this.vehicle?.features || [];
+			return features.includes("Offline") && features.includes("Retryable");
 		},
 		socBasedCharging: function () {
 			return this.vehicleHasSoc || this.vehicleSoc > 0;

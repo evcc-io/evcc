@@ -21,12 +21,16 @@ func TestEffectiveMinMaxCurrent(t *testing.T) {
 		effectiveMin, effectiveMax float64
 	}{
 		{0, 0, 0, 0, 6, 16},
-		{1, 10, 0, 0, 1, 10},     // charger lower
-		{10, 20, 0, 0, 10, 16},   // charger higher - max ignored
-		{0, 0, 1, 10, 6, 10},     // vehicle lower - min ignored
-		{0, 0, 10, 20, 10, 16},   // vehicle higher - max ignored
-		{1, 10, 2, 12, 1, 10},    // charger + vehicle lower
-		{10, 20, 12, 22, 10, 16}, // charger + vehicle higher
+		{2, 0, 0, 0, 2, 16},   // charger min lower, max empty - charger wins
+		{7, 0, 0, 0, 7, 16},   // charger min higher, max empty (no practical use)
+		{0, 10, 0, 0, 6, 10},  // charger max lower, min empty - loadpoint wins
+		{0, 20, 0, 0, 6, 16},  // charger max higher, min empty - loadpoint wins
+		{0, 0, 5, 0, 6, 16},   // vehicle min lower, max empty - loadpoint wins
+		{0, 0, 8, 0, 8, 16},   // vehicle min higher, max empty - vehicle wins
+		{0, 0, 0, 10, 6, 10},  // vehicle max lower, min empty - vehicle wins
+		{0, 0, 0, 20, 6, 16},  // vehicle max higher, min empty - loadpoint wins
+		{2, 0, 5, 0, 5, 16},   // charger + vehicle min lower, max empty - vehicle wins
+		{0, 20, 0, 32, 6, 16}, // charger + vehicle max higher, min empty - loadpoint wins
 	}
 
 	for _, tc := range tc {
@@ -60,7 +64,7 @@ func TestEffectiveMinMaxCurrent(t *testing.T) {
 			lp.vehicle = vehicle
 		}
 
-		assert.Equal(t, tc.effectiveMin, lp.effectiveMinCurrent())
-		assert.Equal(t, tc.effectiveMax, lp.effectiveMaxCurrent())
+		assert.Equal(t, tc.effectiveMin, lp.effectiveMinCurrent(), "min")
+		assert.Equal(t, tc.effectiveMax, lp.effectiveMaxCurrent(), "max")
 	}
 }

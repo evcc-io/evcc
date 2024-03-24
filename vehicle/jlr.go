@@ -106,6 +106,8 @@ func (v *JLR) RegisterDevice(log *util.Logger, user, device string, t jlr.Token)
 		"Accept":                  "application/json",
 		"X-Device-Id":             device,
 		"x-telematicsprogramtype": "jlrpy",
+		"x-App-Id":                "ICR_JAGUAR_ANDROID",
+		"x-App-Secret":            "7bf6f544-1926-4714-8066-ceceb40d538d",
 	})
 	if err == nil {
 		_, err = c.DoBody(req)

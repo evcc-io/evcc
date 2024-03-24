@@ -36,6 +36,8 @@ func NewAPI(log *util.Logger, device string, ts oauth2.TokenSource) *API {
 					"Authorization":           fmt.Sprintf("Bearer %s", token.AccessToken),
 					"X-Device-Id":             device,
 					"x-telematicsprogramtype": "jlrpy",
+					"x-App-Id":                "ICR_JAGUAR_ANDROID",
+					"x-App-Secret":            "7bf6f544-1926-4714-8066-ceceb40d538d",
 				} {
 					req.Header.Set(k, v)
 				}
