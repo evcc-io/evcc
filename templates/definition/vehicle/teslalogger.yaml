@@ -69,9 +69,16 @@ render: |
     source: http
     uri: {{ .url }}:{{ .port }}/currentjson/{{ .id }}
     jq: .is_preconditioning
+  getMaxCurrent:
+    source: http
+    uri: {{ .url }}:{{ .port }}/currentjson/{{ .id }}
+    jq: .charge_current_request
   wakeup:
     source: http
     uri: {{ .url }}:{{ .port }}/command/{{ .id }}/wake_up
+  chargeEnable:
+    source: http
+    uri: {{ .url }}:{{ .port }}/command/{{ .id }}/charge_start_stop?${enable}
   maxcurrent:
     source: http
     uri: {{ .url }}:{{ .port }}/command/{{ .id }}/set_charging_amps?${maxcurrent}
