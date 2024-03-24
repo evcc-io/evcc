@@ -642,7 +642,7 @@ func (lp *Loadpoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 			_ = lp.setLimit(lp.effectiveMinCurrent())
 		}
 	} else {
-		lp.log.ERROR.Printf("charger: %v", err)
+		lp.log.ERROR.Printf("charger enabled: %v", err)
 	}
 
 	// allow charger to access loadpoint
@@ -655,12 +655,15 @@ func (lp *Loadpoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 func (lp *Loadpoint) syncCharger() error {
 	enabled, err := lp.charger.Enabled()
 	if err != nil {
-		return err
+		return fmt.Errorf("charger enabled: %w", err)
 	}
 
 	// some chargers (i.E. Easee in some configurations) disable themself to be able to switch phases
 	if !enabled && lp.enabled && !lp.phaseSwitchCompleted() {
-		return lp.charger.Enable(true) // enable charger
+		if err := lp.charger.Enable(true); err != nil {
+			return fmt.Errorf("charger enable: %w", err)
+		}
+		return nil
 	}
 
 	if lp.chargerUpdateCompleted() {
@@ -675,7 +678,7 @@ func (lp *Loadpoint) syncCharger() error {
 		enabled = true // treat as enabled when charging
 		if lp.chargerUpdateCompleted() {
 			if err := lp.charger.Enable(true); err != nil { // also enable charger to correct internal state
-				return err
+				return fmt.Errorf("charger enable: %w", err)
 			}
 			lp.elapsePVTimer()
 			return nil
@@ -688,7 +691,7 @@ func (lp *Loadpoint) syncCharger() error {
 		if charger, ok := lp.charger.(api.CurrentGetter); ok && enabled {
 			current, err := charger.GetMaxCurrent()
 			if err != nil {
-				return err
+				return fmt.Errorf("charger get max current: %w", err)
 			}
 
 			// smallest adjustment most PWM-Controllers can do is: 100%÷256×0,6A = 0.234A
@@ -903,7 +906,7 @@ func statusEvents(prevStatus, status api.ChargeStatus) []string {
 func (lp *Loadpoint) updateChargerStatus() error {
 	status, err := lp.charger.Status()
 	if err != nil {
-		return err
+		return fmt.Errorf("charger status: %w", err)
 	}
 
 	lp.log.DEBUG.Printf("charger status: %s", status)
@@ -1524,7 +1527,7 @@ func (lp *Loadpoint) Update(sitePower float64, autoCharge, batteryBuffered, batt
 
 	// read and publish status
 	if err := lp.updateChargerStatus(); err != nil {
-		lp.log.ERROR.Printf("charger: %v", err)
+		lp.log.ERROR.Println(err)
 		return
 	}
 
@@ -1548,7 +1551,7 @@ func (lp *Loadpoint) Update(sitePower float64, autoCharge, batteryBuffered, batt
 
 	// sync settings with charger
 	if err := lp.syncCharger(); err != nil {
-		lp.log.ERROR.Printf("charger: %v", err)
+		lp.log.ERROR.Println(err)
 		return
 	}
 
