@@ -146,6 +146,18 @@ func (c *Twc3) MaxCurrent(current int64) error {
 	return v.MaxCurrent(current)
 }
 
+var _ api.CurrentGetter = (*Twc3)(nil)
+
+// GetMaxCurrent implements the api.CurrentGetter interface
+func (c *Twc3) GetMaxCurrent() (float64, error) {
+	v, ok := c.lp.GetVehicle().(api.CurrentGetter)
+	if !ok {
+		return 0, api.ErrNotAvailable
+	}
+
+	return v.GetMaxCurrent()
+}
+
 var _ api.ChargeRater = (*Twc3)(nil)
 
 // ChargedEnergy implements the api.ChargeRater interface
