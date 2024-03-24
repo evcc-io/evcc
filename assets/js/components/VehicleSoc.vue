@@ -20,13 +20,13 @@
 				:style="{ width: `${remainingSocWidth}%`, ...transition }"
 			></div>
 			<div
-				v-show="vehicleTargetSoc"
-				ref="vehicleTargetSoc"
+				v-show="vehicleLimitSoc"
+				ref="vehicleLimitSoc"
 				class="vehicle-limit-soc"
 				data-bs-toggle="tooltip"
 				title=" "
-				:class="{ 'vehicle-limit-soc--active': vehicleTargetSocActive }"
-				:style="{ left: `${vehicleTargetSoc}%` }"
+				:class="{ 'vehicle-limit-soc--active': vehicleLimitSocActive }"
+				:style="{ left: `${vehicleLimitSoc}%` }"
 			/>
 			<div
 				v-show="energyLimitMarkerPosition"
@@ -82,7 +82,7 @@ export default {
 	props: {
 		connected: Boolean,
 		vehicleSoc: Number,
-		vehicleTargetSoc: Number,
+		vehicleLimitSoc: Number,
 		enabled: Boolean,
 		charging: Boolean,
 		heating: Boolean,
@@ -131,8 +131,8 @@ export default {
 		maxEnergy: function () {
 			return Math.max(this.planEnergy, this.limitEnergy, this.chargedEnergy / 1e3);
 		},
-		vehicleTargetSocActive: function () {
-			return this.vehicleTargetSoc > 0 && this.vehicleTargetSoc > this.vehicleSoc;
+		vehicleLimitSocActive: function () {
+			return this.vehicleLimitSoc > 0 && this.vehicleLimitSoc > this.vehicleSoc;
 		},
 		planMarkerPosition: function () {
 			if (this.socBasedPlanning) {
@@ -153,7 +153,7 @@ export default {
 		},
 		planMarkerUnreachable: function () {
 			if (this.socBasedPlanning) {
-				const vehicleLimit = this.vehicleTargetSoc || 100;
+				const vehicleLimit = this.vehicleLimitSoc || 100;
 				return this.effectivePlanSoc > vehicleLimit;
 			}
 			return false;
@@ -177,7 +177,7 @@ export default {
 			return true;
 		},
 		sliderActive: function () {
-			const isBelowVehicleLimit = this.visibleLimitSoc <= (this.vehicleTargetSoc || 100);
+			const isBelowVehicleLimit = this.visibleLimitSoc <= (this.vehicleLimitSoc || 100);
 			const isAbovePlanLimit = this.visibleLimitSoc >= (this.effectivePlanSoc || 0);
 			return isBelowVehicleLimit && isAbovePlanLimit;
 		},
@@ -199,7 +199,7 @@ export default {
 					return this.minSoc - this.vehicleSoc;
 				}
 				const limit = Math.min(
-					this.vehicleTargetSoc || 100,
+					this.vehicleLimitSoc || 100,
 					Math.max(this.visibleLimitSoc, this.effectivePlanSoc || 0)
 				);
 				if (limit > this.vehicleSoc) {
@@ -219,7 +219,7 @@ export default {
 		effectiveLimitSoc: function () {
 			this.selectedLimitSoc = this.effectiveLimitSoc;
 		},
-		vehicleTargetSoc: function () {
+		vehicleLimitSoc: function () {
 			this.updateTooltip();
 		},
 	},
@@ -256,10 +256,10 @@ export default {
 		},
 		updateTooltip: function () {
 			if (!this.tooltip) {
-				this.tooltip = new Tooltip(this.$refs.vehicleTargetSoc);
+				this.tooltip = new Tooltip(this.$refs.vehicleLimitSoc);
 			}
-			const soc = this.vehicleTargetSoc;
-			const content = this.$t("main.vehicleSoc.vehicleTarget", { soc });
+			const soc = this.vehicleLimitSoc;
+			const content = this.$t("main.vehicleSoc.vehicleLimit", { soc });
 			this.tooltip.setContent({ ".tooltip-inner": content });
 		},
 	},

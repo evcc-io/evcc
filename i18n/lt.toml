@@ -361,7 +361,7 @@ charging = "vyksta įkrovimas"
 connected = "automobilis prijungtas"
 disconnected = "neprijungtas"
 ready = "leidžiama įkrauti"
-vehicleTarget = "Automobilyje nustatytas limitas: {soc}%"
+vehicleLimit = "Automobilyje nustatytas limitas: {soc}%"
 
 [main.vehicleStatus]
 charging = "Įkraunama..."
@@ -379,7 +379,7 @@ targetChargeActive = "Planinis įkrovimas aktyvuotas..."
 targetChargePlanned = "Planinis įkrovimas prasidės {time}."
 targetChargeWaitForVehicle = "Planinis įkrovimas leidžiamas. Laukiama automobilio signalo..."
 unknown = ""
-vehicleTargetReached = "Automobilyje nustatytas limitas {soc}% pasiektas."
+vehicleLimitReached = "Automobilyje nustatytas limitas {soc}% pasiektas."
 waitForVehicle = "Paruošta. Laukiama automobilio..."
 
 [notifications]

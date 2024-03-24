@@ -348,7 +348,7 @@ charging = "polnjenje"
 connected = "povezan"
 disconnected = "odklopljen"
 ready = "pripravljen"
-vehicleTarget = "Omejitev vozila: {soc}%"
+vehicleLimit = "Omejitev vozila: {soc}%"
 
 [main.vehicleStatus]
 charging = "Polnjenje…"
@@ -367,7 +367,7 @@ targetChargeActive = "Ciljno polnjenje je aktivno..."
 targetChargePlanned = "Ciljno polnjenje se začne ob {time}."
 targetChargeWaitForVehicle = "Ciljno polnjenje je pripravljeno. Čakam na vozilo ..."
 unknown = ""
-vehicleTargetReached = "Omejitev vozila {soc}% dosežena."
+vehicleLimitReached = "Omejitev vozila {soc}% dosežena."
 waitForVehicle = "Pripravljen. Čakam na vozilo..."
 
 [notifications]

@@ -183,10 +183,10 @@ func (d *dumper) Dump(name string, v interface{}) {
 	}
 
 	if v, ok := v.(api.SocLimiter); ok {
-		if targetSoc, err := v.TargetSoc(); err != nil {
-			fmt.Fprintf(w, "Target Soc:\t%v\n", err)
+		if limitSoc, err := v.GetLimitSoc(); err != nil {
+			fmt.Fprintf(w, "Limit Soc:\t%v\n", err)
 		} else {
-			fmt.Fprintf(w, "Target Soc:\t%.0f%%\n", targetSoc)
+			fmt.Fprintf(w, "Limit Soc:\t%d%%\n", limitSoc)
 		}
 	}
 

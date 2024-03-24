@@ -221,7 +221,7 @@ charging = "carregant"
 connected = "connectat"
 disconnected = "desconnectat"
 ready = "preparat"
-vehicleTarget = "límit de vehicle: {soc}%"
+vehicleLimit = "límit de vehicle: {soc}%"
 
 [main.vehicleStatus]
 charging = "Carregant..."
@@ -239,7 +239,7 @@ targetChargeActive = "Càrrega objectiu activa..."
 targetChargePlanned = "La càrrega objectiu comença a {time}."
 targetChargeWaitForVehicle = "Càrrega objectiu llesta. Esperar vehicle."
 unknown = ""
-vehicleTargetReached = "Límit de vehicle {soc}% assolit."
+vehicleLimitReached = "Límit de vehicle {soc}% assolit."
 waitForVehicle = "A punt per carregar. Esperant vehicle."
 
 [notifications]

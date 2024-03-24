@@ -361,7 +361,7 @@ charging = "cargando"
 connected = "conectado"
 disconnected = "desconectado"
 ready = "preparado"
-vehicleTarget = "límite de vehículo: {soc}%"
+vehicleLimit = "límite de vehículo: {soc}%"
 
 [main.vehicleStatus]
 charging = "Cargando ..."
@@ -379,7 +379,7 @@ targetChargeActive = "Carga objetivo activa..."
 targetChargePlanned = "La carga objetivo empieza en {time}."
 targetChargeWaitForVehicle = "Carga de destino lista. Esperar vehículo."
 unknown = ""
-vehicleTargetReached = "Límite de vehículo {soc}% alcanzado."
+vehicleLimitReached = "Límite de vehículo {soc}% alcanzado."
 waitForVehicle = "Listo para cargar. Esperando vehículo."
 
 [notifications]

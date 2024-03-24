@@ -158,8 +158,7 @@ type CurrentLimiter interface {
 
 // SocLimiter returns the soc limit
 type SocLimiter interface {
-	// TODO rename LimitSoc
-	TargetSoc() (float64, error)
+	GetLimitSoc() (int64, error)
 }
 
 // ChargeController allows to start/stop the charging session on the vehicle side

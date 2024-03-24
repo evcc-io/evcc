@@ -355,7 +355,7 @@ charging = "laddar"
 connected = "ansluten"
 disconnected = "frånkopplad"
 ready = "redo"
-vehicleTarget = "Fordonsgräns: {soc}%"
+vehicleLimit = "Fordonsgräns: {soc}%"
 
 [main.vehicleStatus]
 charging = "Laddar..."
@@ -373,7 +373,7 @@ targetChargeActive = "Målladdning aktiv..."
 targetChargePlanned = "Målladdning startar {time}."
 targetChargeWaitForVehicle = "Laddare beredd. Väntar på fordon..."
 unknown = ""
-vehicleTargetReached = "Fordonsgränsen {soc}% nådd."
+vehicleLimitReached = "Fordonsgränsen {soc}% nådd."
 waitForVehicle = "Redo. Väntar på fordon..."
 
 [notifications]

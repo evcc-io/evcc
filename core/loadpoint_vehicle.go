@@ -191,7 +191,7 @@ func (lp *Loadpoint) unpublishVehicle() {
 	lp.publish(keys.VehicleClimaterActive, nil)
 	lp.publish(keys.VehicleSoc, 0.0)
 	lp.publish(keys.VehicleRange, int64(0))
-	lp.publish(keys.VehicleTargetSoc, 0.0)
+	lp.publish(keys.VehicleLimitSoc, 0.0)
 
 	lp.setRemainingEnergy(0)
 	lp.setRemainingDuration(0)
