@@ -87,6 +87,55 @@
 					<AddDeviceButton :title="$t('config.main.addPvBattery')" @add="addMeter" />
 				</ul>
 
+				<h2 class="my-4">Charge Points</h2>
+
+				<ul class="p-0 config-list">
+					<DeviceCard
+						v-for="loadpoint in loadpoints"
+						:key="!!loadpoint.name"
+						:name="loadpoint.title"
+						:editable="true"
+						data-testid="loadpoint"
+						@edit="editLoadpoint(loadpoint.id)"
+					>
+						<template #icon>
+							<shopicon-regular-cablecharge></shopicon-regular-cablecharge>
+						</template>
+					</DeviceCard>
+
+					<AddDeviceButton
+						data-testid="add-loadpoint"
+						:title="$t('config.main.addLoadpoint')"
+						@click="todo"
+					/>
+				</ul>
+
+				<h2 class="my-4">Vehicles</h2>
+				<div>
+					<ul class="p-0 config-list">
+						<DeviceCard
+							v-for="vehicle in vehicles"
+							:key="vehicle.id"
+							:name="vehicle.config?.title || vehicle.name"
+							:editable="vehicle.id >= 0"
+							data-testid="vehicle"
+							@edit="editVehicle(vehicle.id)"
+						>
+							<template #icon>
+								<VehicleIcon :name="vehicle.config?.icon" />
+							</template>
+							<template #tags>
+								<DeviceTags :tags="deviceTags('vehicle', vehicle.name)" />
+							</template>
+						</DeviceCard>
+						<AddDeviceButton
+							data-testid="add-vehicle"
+							:title="$t('config.main.addVehicle')"
+							@click="addVehicle"
+						/>
+					</ul>
+				</div>
+
 				<h2 class="my-4 wip">Tariffs</h2>
 
 				<ul class="p-0 config-list wip">
@@ -122,54 +171,6 @@
 					</DeviceCard>
 				</ul>
 
-				<h2 class="my-4 wip">Charge Points</h2>
-
-				<ul class="p-0 config-list wip">
-					<DeviceCard
-						name="Fake Carport"
-						editable
-						data-testid="chargepoint-1"
-						@edit="todo"
-					>
-						<template #icon>
-							<shopicon-regular-cablecharge></shopicon-regular-cablecharge>
-						</template>
-						<template #tags>
-							<DeviceTags :tags="{ power: 0 }" />
-						</template>
-					</DeviceCard>
-					<AddDeviceButton
-						data-testid="add-loadpoint"
-						:title="$t('config.main.addLoadpoint')"
-						@click="todo"
-					/>
-				</ul>
-
-				<h2 class="my-4">Vehicles</h2>
-				<div>
-					<ul class="p-0 config-list">
-						<DeviceCard
-							v-for="vehicle in vehicles"
-							:key="vehicle.id"
-							:name="vehicle.config?.title || vehicle.name"
-							:editable="vehicle.id >= 0"
-							data-testid="vehicle"
-							@edit="editVehicle(vehicle.id)"
-						>
-							<template #icon>
-								<VehicleIcon :name="vehicle.config?.icon" />
-							</template>
-							<template #tags>
-								<DeviceTags :tags="deviceTags('vehicle', vehicle.name)" />
-							</template>
-						</DeviceCard>
-						<AddDeviceButton
-							data-testid="add-vehicle"
-							:title="$t('config.main.addVehicle')"
-							@click="addVehicle"
-						/>
-					</ul>
-				</div>
 				<h2 class="my-4 wip">Integrations</h2>
 
 				<ul class="p-0 config-list wip">
@@ -210,13 +211,13 @@
 					@updated="meterChanged"
 					@removed="removeMeterFromSite"
 				/>
+				<LoadpointModal :id="selectedLoadpointId" @updated="loadpointChanged" />
 			</div>
 		</div>
 	</div>
 </template>
 
 <script>
-import TopHeader from "../components/TopHeader.vue";
 import "@h2d2/shopicons/es/regular/sun";
 import "@h2d2/shopicons/es/regular/batterythreequarters";
 import "@h2d2/shopicons/es/regular/powersupply";
@@ -230,12 +231,14 @@ import "@h2d2/shopicons/es/regular/polygon";
 import "@h2d2/shopicons/es/regular/cablecharge";
 import Modal from "bootstrap/js/dist/modal";
 import api from "../api";
+import TopHeader from "../components/TopHeader.vue";
 import VehicleIcon from "../components/VehicleIcon";
 import VehicleModal from "../components/Config/VehicleModal.vue";
 import DeviceCard from "../components/Config/DeviceCard.vue";
 import DeviceTags from "../components/Config/DeviceTags.vue";
 import AddDeviceButton from "../components/Config/AddDeviceButton.vue";
 import MeterModal from "../components/Config/MeterModal.vue";
+import LoadpointModal from "../components/Config/LoadpointModal.vue";
 import SiteSettings from "../components/Config/SiteSettings.vue";
 import formatter from "../mixins/formatter";
 
@@ -250,6 +253,7 @@ export default {
 		DeviceTags,
 		AddDeviceButton,
 		MeterModal,
+		LoadpointModal,
 	},
 	props: {
 		offline: Boolean,
@@ -261,10 +265,12 @@ export default {
 			restarting: false,
 			vehicles: [],
 			meters: [],
+			loadpoints: [],
 			selectedVehicleId: undefined,
 			selectedMeterId: undefined,
 			selectedMeterType: undefined,
-			site: { grid: "", pv: [], battery: [] },
+			selectedLoadpointId: undefined,
+			site: { grid: "", pv: [], battery: [], title: "" },
 			deviceValueTimeout: undefined,
 			deviceValues: {},
 		};
@@ -309,6 +315,7 @@ export default {
 			await this.loadVehicles();
 			await this.loadMeters();
 			await this.loadSite();
+			await this.loadLoadpoints();
 			await this.loadDirty();
 			await this.updateValues();
 		},
@@ -331,6 +338,10 @@ export default {
 		async loadSite() {
 			const response = await api.get("/config/site");
 			this.site = response.data?.result;
+		},
+		async loadLoadpoints() {
+			const response = await api.get("/config/loadpoints");
+			this.loadpoints = response.data?.result || [];
 		},
 		getMetersByNames(names) {
 			if (!names || !this.meters) {
@@ -367,6 +378,18 @@ export default {
 			this.meterModal().hide();
 			await this.loadDirty();
 			await this.updateValues();
+		},
+		editLoadpoint(id) {
+			this.selectedLoadpointId = id;
+			this.$nextTick(() => this.loadpointModal().show());
+		},
+		async loadpointChanged() {
+			this.selectedLoadpointId = undefined;
+			await this.loadLoadpoints();
+			this.loadpointModal().hide();
+		},
+		loadpointModal() {
+			return Modal.getOrCreateInstance(document.getElementById("loadpointModal"));
 		},
 		editVehicle(id) {
 			this.selectedVehicleId = id;
@@ -442,7 +465,7 @@ export default {
 
 			await Promise.all(promises);
 
-			this.deviceValueTimeout = setTimeout(this.updateValues, 10000);
+			this.deviceValueTimeout = window.setTimeout(this.updateValues, 10000);
 		},
 		deviceTags(type, id) {
 			return this.deviceValues[type]?.[id] || [];

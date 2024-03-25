@@ -1,5 +1,5 @@
 <template>
-	<div v-if="unit" class="input-group" :class="short ? 'w-50' : ''">
+	<div v-if="unit" class="input-group" :class="size">
 		<input
 			:id="id"
 			v-model="value"
@@ -41,7 +41,7 @@
 			<a :id="id" class="text-muted" href="#" @click.prevent="toggleSelectMode">change</a>
 		</div>
 	</div>
-	<select v-else-if="select" :id="id" v-model="value" class="form-select">
+	<select v-else-if="select" :id="id" v-model="value" class="form-select" :class="size">
 		<option v-if="!required" value="">---</option>
 		<option v-for="{ key, name } in selectOptions" :key="key" :value="key">
 			{{ name }}
@@ -52,6 +52,7 @@
 		:id="id"
 		v-model="value"
 		class="form-control"
+		:class="size"
 		:type="inputType"
 		:placeholder="placeholder"
 		:required="required"
@@ -62,7 +63,7 @@
 		:id="id"
 		v-model="value"
 		class="form-control"
-		:class="short ? 'w-50' : ''"
+		:class="size"
 		:type="inputType"
 		:step="step"
 		:placeholder="placeholder"
@@ -100,8 +101,14 @@ export default {
 			}
 			return "text";
 		},
-		short() {
-			return ["Number", "Float", "Duration"].includes(this.type);
+		size() {
+			if (["minCurrent", "maxCurrent", "phases", "port"].includes(this.property)) {
+				return "w-25";
+			}
+			if (["Number", "Float", "Duration"].includes(this.type)) {
+				return "w-50";
+			}
+			return "";
 		},
 		step() {
 			if (this.type === "Float") {
@@ -112,6 +119,9 @@ export default {
 		unit() {
 			if (this.property === "capacity") {
 				return "kWh";
+			}
+			if (["minCurrent", "maxCurrent"].includes(this.property)) {
+				return "A";
 			}
 			return null;
 		},
@@ -126,7 +136,7 @@ export default {
 		},
 		selectOptions() {
 			// If the valid values are already in the correct format, return them
-			if (this.validValues[0].key && this.validValues[0].name) {
+			if (typeof this.validValues[0] === "object") {
 				return this.validValues;
 			}
 

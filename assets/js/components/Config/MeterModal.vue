@@ -24,6 +24,7 @@
 						></button>
 					</div>
 					<div class="modal-body">
+						>
 						<div v-if="!meterType">
 							<AddDeviceButton
 								title="Add solar meter"

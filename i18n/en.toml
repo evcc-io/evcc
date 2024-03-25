@@ -50,6 +50,11 @@ optional = "optional"
 titleAdd = "Add Grid Meter"
 titleEdit = "Edit Grid Meter"
 
+[config.loadpoint]
+delete = "Delete"
+save = "Save"
+titleEdit = "Edit Charge Point"
+
 [config.main]
 addLoadpoint = "Add charge point"
 addPvBattery = "Add solar or battery"
