@@ -98,6 +98,9 @@
 						data-testid="loadpoint"
 						@edit="editLoadpoint(loadpoint.id)"
 					>
+						<template #tags>
+							<DeviceTags :tags="loadpointTags(loadpoint)" />
+						</template>
 						<template #icon>
 							<shopicon-regular-cablecharge></shopicon-regular-cablecharge>
 						</template>
@@ -266,6 +269,7 @@ export default {
 			vehicles: [],
 			meters: [],
 			loadpoints: [],
+			chargers: [],
 			selectedVehicleId: undefined,
 			selectedMeterId: undefined,
 			selectedMeterType: undefined,
@@ -315,6 +319,7 @@ export default {
 			await this.loadVehicles();
 			await this.loadMeters();
 			await this.loadSite();
+			await this.loadChargers();
 			await this.loadLoadpoints();
 			await this.loadDirty();
 			await this.updateValues();
@@ -330,6 +335,10 @@ export default {
 		async loadVehicles() {
 			const response = await api.get("/config/devices/vehicle");
 			this.vehicles = response.data?.result || [];
+		},
+		async loadChargers() {
+			const response = await api.get("/config/devices/charger");
+			this.chargers = response.data?.result || [];
 		},
 		async loadMeters() {
 			const response = await api.get("/config/devices/meter");
@@ -461,6 +470,7 @@ export default {
 			const promises = [
 				...this.meters.map((meter) => this.updateDeviceValue("meter", meter.name)),
 				...this.vehicles.map((vehicle) => this.updateDeviceValue("vehicle", vehicle.name)),
+				...this.chargers.map((charger) => this.updateDeviceValue("charger", charger.name)),
 			];
 
 			await Promise.all(promises);
@@ -468,7 +478,15 @@ export default {
 			this.deviceValueTimeout = window.setTimeout(this.updateValues, 10000);
 		},
 		deviceTags(type, id) {
-			return this.deviceValues[type]?.[id] || [];
+			return this.deviceValues[type]?.[id] || {};
+		},
+		loadpointTags(loadpoint) {
+			let { charger, meter } = loadpoint;
+			charger = "charger_1";
+			meter = "meter_charger_1";
+			const chargerTags = charger ? this.deviceTags("charger", charger) : {};
+			const meterTags = meter ? this.deviceTags("meter", meter) : {};
+			return { ...chargerTags, ...meterTags };
 		},
 	},
 };
@@ -479,10 +497,6 @@ export default {
 	grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
 	grid-gap: 1rem;
 	margin-bottom: 5rem;
-}
-.wrapper {
-	max-width: 900px;
-	margin: 0 auto;
 }
 .wip {
 	opacity: 0.2 !important;
