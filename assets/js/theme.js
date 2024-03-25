@@ -23,19 +23,27 @@ export function setThemePreference(theme) {
   updateTheme();
 }
 
-function updateTheme() {
-  let theme = getThemePreference();
-
-  if (theme === THEME_AUTO) {
-    theme = darkModeMatcher?.matches ? THEME_DARK : THEME_LIGHT;
-  }
-
-  // update iOS title bar color
+function setMetaThemeColor(theme) {
   const themeColors = { light: "#f3f3f7", dark: "#020318" };
   const $metaThemeColor = document.querySelector("meta[name=theme-color]");
   if ($metaThemeColor) {
     $metaThemeColor.setAttribute("content", themeColors[theme]);
   }
+}
+
+function getCurrentTheme() {
+  let theme = getThemePreference();
+  if (theme === THEME_AUTO) {
+    theme = darkModeMatcher?.matches ? THEME_DARK : THEME_LIGHT;
+  }
+  return theme;
+}
+
+function updateTheme() {
+  const theme = getCurrentTheme();
+
+  // update iOS title bar color
+  setMetaThemeColor(theme);
 
   // toggle the class on html root
   const $html = document.querySelector("html");
@@ -46,7 +54,19 @@ function updateTheme() {
   }, 100);
 }
 
+function updateMetaThemeForBackdrop() {
+  const $backdrop = document.querySelector("[data-bs-backdrop=true][aria-modal=true]");
+  // dark if there is a backdrop, otherwise use the current theme
+  const theme = $backdrop ? THEME_DARK : getCurrentTheme();
+  console.log("backdrop", theme);
+  setMetaThemeColor(theme);
+}
+
 export function watchThemeChanges() {
   darkModeMatcher?.addEventListener("change", updateTheme);
   updateTheme();
+
+  // listen for modal backdrops
+  document.addEventListener("shown.bs.modal", updateMetaThemeForBackdrop);
+  document.addEventListener("hidden.bs.modal", updateMetaThemeForBackdrop);
 }

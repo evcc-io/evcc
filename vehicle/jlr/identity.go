@@ -38,8 +38,8 @@ func (v *Identity) login(data map[string]string) (Token, error) {
 		"Authorization": "Basic YXM6YXNwYXNz",
 		"Content-type":  request.JSONContent,
 		"X-Device-Id":   v.device,
-		"x-App-Id":      "ICR_JAGUAR",
-		"x-App-Secret":  "018dd168-6271-707f-9fd4-aed2bf76905e",
+		"x-App-Id":      "ICR_JAGUAR_ANDROID",
+		"x-App-Secret":  "7bf6f544-1926-4714-8066-ceceb40d538d",
 	})
 
 	var token Token

@@ -171,16 +171,11 @@ func (v *Provider) Position() (float64, float64, error) {
 	return 0, 0, err
 }
 
-var _ api.VehicleChargeController = (*Provider)(nil)
+var _ api.ChargeController = (*Provider)(nil)
 
-// StartCharge implements the api.VehicleChargeController interface
-func (v *Provider) StartCharge() error {
-	_, err := v.action(kamereon.ActionStart)
-	return err
-}
-
-// StopCharge implements the api.VehicleChargeController interface
-func (v *Provider) StopCharge() error {
-	_, err := v.action(kamereon.ActionStop)
+// ChargeEnable implements the api.ChargeController interface
+func (v *Provider) ChargeEnable(enable bool) error {
+	action := map[bool]string{true: kamereon.ActionStart, false: kamereon.ActionStop}
+	_, err := v.action(action[enable])
 	return err
 }
