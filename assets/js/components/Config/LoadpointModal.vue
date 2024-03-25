@@ -112,9 +112,10 @@ const formFields = [
 		Description: "Phases",
 		Help: "Electrical connection of the charger.",
 		ValidValues: [
-			{ key: 1, name: "1" },
-			{ key: 2, name: "2" },
-			{ key: 3, name: "3" },
+			{ key: 0, name: "automatic switching" },
+			{ key: 1, name: "1-phase" },
+			{ key: 2, name: "2-phase" },
+			{ key: 3, name: "3-phase" },
 		],
 		Type: "Number",
 		Required: true,

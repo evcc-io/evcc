@@ -102,11 +102,11 @@ export default {
 			return "text";
 		},
 		size() {
-			if (["minCurrent", "maxCurrent", "phases", "port"].includes(this.property)) {
-				return "w-25";
+			if (["minCurrent", "maxCurrent", "port"].includes(this.property)) {
+				return "w-25 w-min-100";
 			}
 			if (["Number", "Float", "Duration"].includes(this.type)) {
-				return "w-50";
+				return "w-50 w-min-200";
 			}
 			return "";
 		},
@@ -173,5 +173,11 @@ input[type="number"]::-webkit-outer-spin-button,
 input[type="number"]::-webkit-inner-spin-button {
 	-webkit-appearance: none;
 	margin: 0;
+}
+.w-min-100 {
+	min-width: min(100px, 100%);
+}
+.w-min-200 {
+	min-width: min(200px, 100%);
 }
 </style>
