@@ -103,10 +103,10 @@ export default {
 	},
 	computed: {
 		batteryConfigured: function () {
-			return this.battery?.length;
+			return this.battery?.length > 0;
 		},
 		pvConfigured: function () {
-			return this.pv?.length;
+			return this.pv?.length > 0;
 		},
 		energyflow: function () {
 			return this.collectProps(Energyflow);

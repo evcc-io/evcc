@@ -2,7 +2,7 @@ import fs from "fs";
 import waitOn from "wait-on";
 import axios from "axios";
 import { exec, execSync } from "child_process";
-import playwrightConfig from "../playwright.config";
+import playwrightConfig from "../playwright.config.js";
 
 const BASE_URL = playwrightConfig.use.baseURL;
 

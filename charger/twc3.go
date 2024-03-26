@@ -119,17 +119,12 @@ func (c *Twc3) Enable(enable bool) error {
 		return nil
 	}
 
-	v, ok := c.lp.GetVehicle().(api.VehicleChargeController)
+	v, ok := c.lp.GetVehicle().(api.ChargeController)
 	if !ok {
 		return errors.New("vehicle not capable of start/stop")
 	}
 
-	if enable {
-		err = v.StartCharge()
-	} else {
-		err = v.StopCharge()
-	}
-
+	err = v.ChargeEnable(enable)
 	if err == nil {
 		c.enabled = enable
 	}
@@ -149,6 +144,18 @@ func (c *Twc3) MaxCurrent(current int64) error {
 	}
 
 	return v.MaxCurrent(current)
+}
+
+var _ api.CurrentGetter = (*Twc3)(nil)
+
+// GetMaxCurrent implements the api.CurrentGetter interface
+func (c *Twc3) GetMaxCurrent() (float64, error) {
+	v, ok := c.lp.GetVehicle().(api.CurrentGetter)
+	if !ok {
+		return 0, api.ErrNotAvailable
+	}
+
+	return v.GetMaxCurrent()
 }
 
 var _ api.ChargeRater = (*Twc3)(nil)
