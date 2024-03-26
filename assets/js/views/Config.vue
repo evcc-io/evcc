@@ -3,30 +3,7 @@
 		<div class="container px-4">
 			<TopHeader :title="$t('config.main.title')" />
 			<div class="wrapper">
-				<div
-					v-if="dirty"
-					class="alert alert-secondary d-flex justify-content-between align-items-center my-4"
-					role="alert"
-				>
-					<div v-if="restarting"><strong>Restarting evcc.</strong> Please wait ...</div>
-					<div v-else>
-						<strong>Configuration changed.</strong> Please restart to see the effect.
-					</div>
-					<button
-						type="button"
-						class="btn btn-outline-dark btn-sm"
-						:disabled="restarting || offline"
-						@click="restart"
-					>
-						<span
-							v-if="restarting || offline"
-							class="spinner-border spinner-border-sm"
-							role="status"
-							aria-hidden="true"
-						></span>
-						<span v-else> Restart </span>
-					</button>
-				</div>
+				<Restart ref="restart" v-bind="restartProps" />
 
 				<h2 class="my-4 mt-5">General</h2>
 				<SiteSettings @site-changed="siteChanged" />
