@@ -1,6 +1,7 @@
 package server
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/evcc-io/evcc/api"
@@ -10,6 +11,9 @@ import (
 
 type loadpointStruct struct {
 	ID             int      `json:"id"`
+	Charger        *string  `json:"charger,omitempty"`
+	Meter          *string  `json:"meter,omitempty"`
+	DefaultVehicle *string  `json:"defaultVehicle,omitempty"`
 	Title          *string  `json:"title,omitempty"`
 	Mode           *string  `json:"mode,omitempty"`
 	Priority       *int     `json:"priority,omitempty"`
@@ -23,6 +27,9 @@ type loadpointStruct struct {
 func loadpointConfig(id int, lp loadpoint.API) loadpointStruct {
 	res := loadpointStruct{
 		ID:             id,
+		Charger:        ptr(lp.GetCharger()),
+		Meter:          ptr(lp.GetMeter()),
+		DefaultVehicle: ptr(lp.GetDefaultVehicle()),
 		Title:          ptr(lp.GetTitle()),
 		Mode:           ptr(string(lp.GetMode())),
 		Priority:       ptr(lp.GetPriority()),
@@ -67,19 +74,23 @@ func updateLoadpointHandler(lp loadpoint.API) http.HandlerFunc {
 			return
 		}
 
-		if payload.Title != nil {
+		var err error
+		if payload.Charger != nil || payload.Meter != nil || payload.DefaultVehicle != nil {
+			err = errors.New("not implemented")
+		}
+
+		if err == nil && payload.Title != nil {
 			lp.SetTitle(*payload.Title)
 		}
 
-		if payload.Priority != nil {
+		if err == nil && payload.Priority != nil {
 			lp.SetPriority(*payload.Priority)
 		}
 
-		if payload.SmartCostLimit != nil {
+		if err == nil && payload.SmartCostLimit != nil {
 			lp.SetSmartCostLimit(*payload.SmartCostLimit)
 		}
 
-		var err error
 		if payload.Mode != nil {
 			var mode api.ChargeMode
 			mode, err = api.ChargeModeString(*payload.Mode)

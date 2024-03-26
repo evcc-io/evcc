@@ -138,6 +138,34 @@ func (mr *MockAPIMockRecorder) GetChargePowerFlexibility() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetChargePowerFlexibility", reflect.TypeOf((*MockAPI)(nil).GetChargePowerFlexibility))
 }
 
+// GetCharger mocks base method.
+func (m *MockAPI) GetCharger() string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetCharger")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// GetCharger indicates an expected call of GetCharger.
+func (mr *MockAPIMockRecorder) GetCharger() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCharger", reflect.TypeOf((*MockAPI)(nil).GetCharger))
+}
+
+// GetDefaultVehicle mocks base method.
+func (m *MockAPI) GetDefaultVehicle() string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDefaultVehicle")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// GetDefaultVehicle indicates an expected call of GetDefaultVehicle.
+func (mr *MockAPIMockRecorder) GetDefaultVehicle() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDefaultVehicle", reflect.TypeOf((*MockAPI)(nil).GetDefaultVehicle))
+}
+
 // GetDisableThreshold mocks base method.
 func (m *MockAPI) GetDisableThreshold() float64 {
 	m.ctrl.T.Helper()
@@ -206,6 +234,20 @@ func (m *MockAPI) GetMaxCurrent() float64 {
 func (mr *MockAPIMockRecorder) GetMaxCurrent() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMaxCurrent", reflect.TypeOf((*MockAPI)(nil).GetMaxCurrent))
+}
+
+// GetMeter mocks base method.
+func (m *MockAPI) GetMeter() string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetMeter")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// GetMeter indicates an expected call of GetMeter.
+func (mr *MockAPIMockRecorder) GetMeter() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMeter", reflect.TypeOf((*MockAPI)(nil).GetMeter))
 }
 
 // GetMinCurrent mocks base method.

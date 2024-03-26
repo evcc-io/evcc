@@ -13,6 +13,21 @@ import (
 
 var _ loadpoint.API = (*Loadpoint)(nil)
 
+// GetCharger returns the loadpoint charger
+func (lp *Loadpoint) GetCharger() string {
+	return lp.ChargerRef
+}
+
+// GetMeter returns the loadpoint meter
+func (lp *Loadpoint) GetMeter() string {
+	return lp.MeterRef
+}
+
+// GetDefaultVehicle returns the loadpoint default vehicle
+func (lp *Loadpoint) GetDefaultVehicle() string {
+	return lp.VehicleRef
+}
+
 // GetTitle returns the loadpoint title
 func (lp *Loadpoint) GetTitle() string {
 	lp.RLock()
