@@ -1,6 +1,6 @@
 <template>
 	<div class="group pt-4 px-4 pb-1">
-		<dl class="row">
+		<dl class="row" data-testid="sitesettings-title">
 			<dt class="col-sm-4">Title</dt>
 			<dd class="col-sm-8">
 				{{ title || "---" }}

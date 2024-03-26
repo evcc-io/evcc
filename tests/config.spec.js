@@ -195,15 +195,23 @@ test.describe("site", async () => {
 
     // change value in config
     await page.goto("/#/config");
-    await page.getByLabel("Site title").fill("Whoops World");
+    await expect(page.getByTestId("sitesettings-title")).toContainText("Hello World");
+    await page.getByTestId("sitesettings-title").getByRole("link", { name: "edit" }).click();
+    const modal = page.getByTestId("title-modal");
+    await expect(modal).toBeVisible();
+    await modal.getByLabel("Title").fill("Whoops World");
 
-    // reset form to initial value
-    await page.getByRole("button", { name: "Cancel" }).click();
-    await expect(page.getByLabel("Site title")).toHaveValue("Hello World");
+    // close modal and ignore entry on cancel
+    await modal.getByRole("button", { name: "Cancel" }).click();
+    await expect(modal).not.toBeVisible();
+    await expect(page.getByTestId("sitesettings-title")).toContainText("Hello World");
 
     // change and save value
-    await page.getByLabel("Site title").fill("Ahoy World");
-    await page.getByRole("button", { name: "Save" }).click();
+    await page.getByTestId("sitesettings-title").getByRole("link", { name: "edit" }).click();
+    await modal.getByLabel("Title").fill("Ahoy World");
+    await modal.getByRole("button", { name: "Save" }).click();
+    await expect(modal).not.toBeVisible();
+    await expect(page.getByTestId("sitesettings-title")).toContainText("Ahoy World");
 
     // check changed value on main ui
     await page.getByTestId("home-link").click();
