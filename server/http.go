@@ -191,13 +191,13 @@ func (s *HTTPd) RegisterBasicHandlers(configFile string, shutdownCallback func()
 
 	// site api
 	routes := map[string]route{
-		"shutdown": {[]string{"POST", "OPTIONS"}, "/shutdown", func(w http.ResponseWriter, r *http.Request) {
-			callback()
+		"shutdown": {"POST", "/shutdown", func(w http.ResponseWriter, r *http.Request) {
+			shutdownCallback()
 			w.WriteHeader(http.StatusNoContent)
 		}},
-		"dirty": {[]string{"GET"}, "/config/dirty", boolGetHandler(ConfigDirty)},
-		"yaml":  {[]string{"GET"}, "/config/yaml", yamlHandler(configFile)},
-		"yaml2": {[]string{"PUT", "OPTIONS"}, "/config/yaml", updateYamlHandler(configFile)},
+		"dirty": {"GET", "/config/dirty", boolGetHandler(ConfigDirty)},
+		"yaml":  {"GET", "/config/yaml", yamlHandler(configFile)},
+		"yaml2": {"PUT", "/config/yaml", updateYamlHandler(configFile)},
 	}
 
 	for _, r := range routes {

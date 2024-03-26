@@ -63,6 +63,14 @@ function updateMetaThemeForBackdrop() {
   setMetaThemeColor(theme);
 }
 
+function updateMetaThemeForBackdrop() {
+  const $backdrop = document.querySelector("[data-bs-backdrop=true][aria-modal=true]");
+  // dark if there is a backdrop, otherwise use the current theme
+  const theme = $backdrop ? THEME_DARK : getCurrentTheme();
+  console.log("backdrop", theme);
+  setMetaThemeColor(theme);
+}
+
 export function watchThemeChanges() {
   darkModeMatcher?.addEventListener("change", updateTheme);
   updateTheme();
