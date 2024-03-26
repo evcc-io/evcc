@@ -3,8 +3,28 @@
 		<dl class="row">
 			<dt class="col-sm-4">Title</dt>
 			<dd class="col-sm-8">
-				{{ title }}
-				<a href="#" class="ms-2 d-inline-block text-muted" @click.prevent="todo">edit</a>
+				{{ title || "---" }}
+				<a
+					href="#"
+					class="ms-2 d-inline-block text-muted"
+					@click.prevent="openModal('titleModal')"
+				>
+					edit
+				</a>
+				<TitleModal ref="titleModal" @changed="load" />
+			</dd>
+		</dl>
+		<dl class="row">
+			<dt class="col-sm-4">Telemetry</dt>
+			<dd class="col-sm-8">
+				{{ telemetry ? "on" : "off" }}
+				<a
+					href="#"
+					class="ms-2 d-inline-block text-muted"
+					@click.prevent="openModal('globalSettingsModal')"
+				>
+					change
+				</a>
 			</dd>
 		</dl>
 		<dl class="row wip">
@@ -29,13 +49,6 @@
 			</dd>
 		</dl>
 		<dl class="row wip">
-			<dt class="col-sm-4">Telemetry</dt>
-			<dd class="col-sm-8">
-				on
-				<a href="#" class="ms-2 d-inline-block text-muted" @click.prevent="todo">toggle</a>
-			</dd>
-		</dl>
-		<dl class="row wip">
 			<dt class="col-sm-4">Server</dt>
 			<dd class="col-sm-8">
 				http://evcc.local:7070
@@ -53,6 +66,8 @@
 </template>
 
 <script>
+import Modal from "bootstrap/js/dist/modal";
+import TitleModal from "./TitleModal.vue";
 import api from "../../api";
 
 export default {
@@ -60,23 +75,40 @@ export default {
 	data() {
 		return {
 			title: "",
+			telemetry: false,
 		};
 	},
+	components: { TitleModal },
 	emits: ["site-changed"],
 	async mounted() {
 		await this.load();
 	},
 	methods: {
+		async changed() {
+			this.$emit("site-changed");
+			this.load();
+		},
 		async load() {
 			try {
-				const { data } = await api.get("/config/site");
-				this.title = data.result.title;
+				let res = await api.get("/config/site");
+				this.title = res.data.result.title;
+
+				res = await api.get("/settings/telemetry");
+				this.telemetry = res.data.result;
 			} catch (e) {
 				console.error(e);
 			}
 		},
 		todo() {
 			alert("not implemented");
+		},
+		openModal(id) {
+			const $el = document.getElementById(id);
+			if ($el) {
+				Modal.getOrCreateInstance($el).show();
+			} else {
+				console.error(`modal ${id} not found`);
+			}
 		},
 	},
 };

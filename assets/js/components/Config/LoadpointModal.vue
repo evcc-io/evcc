@@ -48,15 +48,6 @@
 
 							<div class="my-4 d-flex justify-content-between">
 								<button
-									v-if="isDeletable"
-									type="button"
-									class="btn btn-link text-danger"
-									@click.prevent="remove"
-								>
-									{{ $t("config.loadpoint.delete") }}
-								</button>
-								<button
-									v-else
 									type="button"
 									class="btn btn-link text-muted"
 									data-bs-dismiss="modal"
@@ -90,10 +81,6 @@
 import FormRow from "./FormRow.vue";
 import PropertyField from "./PropertyField.vue";
 import api from "../../api";
-
-function sleep(ms) {
-	return new Promise((resolve) => setTimeout(resolve, ms));
-}
 
 const priorityValues = Array.from({ length: 11 }, (_, i) => ({ key: i, name: `${i}` }));
 priorityValues[0].name = "0 (default)";
@@ -146,19 +133,8 @@ const formFields = [
 	},
 ];
 
-/*
-id: 1;
-maxCurrent: 16;
-minCurrent: 6;
-mode: "now";
-phases: 3;
-priority: 0;
-smartCostLimit: 0;
-title: "Garage";
-*/
-
 export default {
-	name: "MeterModal",
+	name: "LoadpointModal",
 	components: { FormRow, PropertyField },
 	props: {
 		id: Number,

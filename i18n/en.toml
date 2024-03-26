@@ -51,6 +51,7 @@ titleAdd = "Add Grid Meter"
 titleEdit = "Edit Grid Meter"
 
 [config.loadpoint]
+cancel = "Cancel"
 delete = "Delete"
 save = "Save"
 titleEdit = "Edit Charge Point"
@@ -80,6 +81,13 @@ titleEdit = "Edit Solar Meter"
 [config.site]
 cancel = "Cancel"
 save = "Save"
+
+[config.title]
+cancel = "Cancel"
+description = "Displayed on main screen and browser tab."
+label = "Title"
+save = "Save"
+title = "Edit Site Title"
 
 [config.validation]
 failed = "failed"
