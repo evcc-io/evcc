@@ -289,7 +289,11 @@ func (wb *BenderCC) getPhaseValues(reg uint16, divider float64) (float64, float6
 
 	var res [3]float64
 	for i := range res {
-		res[i] = float64(binary.BigEndian.Uint32(b[4*i:])) / divider
+		u32 := binary.BigEndian.Uint32(b[4*i:])
+		if u32 == math.MaxUint32 {
+			u32 = 0
+		}
+		res[i] = float64(u32) / divider
 	}
 
 	return res[0], res[1], res[2], nil

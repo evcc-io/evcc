@@ -41,6 +41,7 @@
 								<select
 									id="meterTemplate"
 									v-model="templateName"
+									@change="templateChanged"
 									:disabled="!isNew"
 									class="form-select w-100"
 								>
@@ -62,7 +63,6 @@
 										{{ option.name }}
 									</option>
 								</select>
-								{{ templateName }}
 							</FormRow>
 							<p v-if="loadingTemplate">Loading ...</p>
 							<Modbus
@@ -314,7 +314,6 @@ export default {
 		},
 		async loadTemplate() {
 			this.template = null;
-			this.reset();
 			this.loadingTemplate = true;
 			try {
 				const opts = {
@@ -404,6 +403,9 @@ export default {
 		},
 		selectType(type) {
 			this.selectedType = type;
+		},
+		templateChanged() {
+			this.reset();
 		},
 	},
 };

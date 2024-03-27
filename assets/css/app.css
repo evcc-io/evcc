@@ -39,6 +39,8 @@
 
 	--evcc-grid: var(--bs-gray-dark);
 	--evcc-self: var(--evcc-dark-green);
+	--evcc-pv: var(--evcc-dark-green);
+	--evcc-battery: var(--evcc-darker-green);
 	--evcc-export: var(--evcc-yellow);
 	--evcc-background: var(--bs-gray-bright);
 	--evcc-box: var(--bs-white);
@@ -483,12 +485,33 @@ html.app .hide-in-app {
 	display: none !important;
 }
 
-.safe-area-inset {
-	padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom)
-		env(safe-area-inset-left);
+html.app .safe-area-inset {
+	padding: max(1rem, env(safe-area-inset-top)) env(safe-area-inset-right)
+		calc(0.5 * env(safe-area-inset-bottom)) env(safe-area-inset-left);
+	position: relative;
 }
 
-.modal-dialog {
-	margin-top: max(var(--bs-modal-margin), env(safe-area-inset-top));
-	margin-bottom: max(var(--bs-modal-margin), env(safe-area-inset-bottom));
+html.app .safe-area-inset::before {
+	content: "";
+	display: block;
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	height: env(safe-area-inset-top);
+	z-index: 1000;
+	opacity: 0.9;
+	background-color: var(--evcc-background);
+}
+
+html.app .modal-dialog {
+	margin-top: env(safe-area-inset-top);
+	margin-bottom: env(safe-area-inset-bottom);
+}
+
+.btn-neutral {
+	all: unset;
+}
+.btn-neutral:hover {
+	outline: revert;
 }

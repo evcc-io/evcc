@@ -38,6 +38,7 @@ import (
 type Tronity struct {
 	*embed
 	*request.Helper
+	log   *util.Logger
 	oc    *oauth2.Config
 	vid   string
 	bulkG func() (tronity.Bulk, error)
@@ -47,7 +48,7 @@ func init() {
 	registry.Add("tronity", NewTronityFromConfig)
 }
 
-// go:generate go run ../cmd/tools/decorate.go -f decorateTronity -b *Tronity -r api.Vehicle -t "api.ChargeState,Status,func() (api.ChargeStatus, error)" -t "api.VehicleOdometer,Odometer,func() (float64, error)" -t "api.VehicleChargeController,StartCharge,func() error" -t "api.VehicleChargeController,StopCharge,func() error"
+//go:generate go run ../cmd/tools/decorate.go -f decorateTronity -b *Tronity -r api.Vehicle -t "api.ChargeState,Status,func() (api.ChargeStatus, error)" -t "api.VehicleOdometer,Odometer,func() (float64, error)" -t "api.ChargeController,ChargeEnable,func(bool) error"
 
 // NewTronityFromConfig creates a new vehicle
 func NewTronityFromConfig(other map[string]interface{}) (api.Vehicle, error) {
@@ -82,6 +83,7 @@ func NewTronityFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	v := &Tronity{
+		log:    log,
 		embed:  &cc.embed,
 		Helper: request.NewHelper(log),
 		oc:     oc,
@@ -129,13 +131,12 @@ func NewTronityFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		odometer = v.odometer
 	}
 
-	var start, stop func() error
+	var chargeEnable func(bool) error
 	if slices.Contains(vehicle.Scopes, tronity.WriteChargeStartStop) {
-		start = v.startCharge
-		stop = v.stopCharge
+		chargeEnable = v.chargeEnable
 	}
 
-	return decorateTronity(v, status, odometer, start, stop), nil
+	return decorateTronity(v, status, odometer, chargeEnable), nil
 }
 
 // RefreshToken performs token refresh by logging in with app context
@@ -153,7 +154,7 @@ func (v *Tronity) RefreshToken(_ *oauth2.Token) (*oauth2.Token, error) {
 	req, _ := request.New(http.MethodPost, v.oc.Endpoint.TokenURL, request.MarshalJSON(data), request.JSONEncoding)
 
 	var token oauth.Token
-	err := v.DoJSON(req, &token)
+	err := request.NewHelper(v.log).DoJSON(req, &token)
 
 	return (*oauth2.Token)(&token), err
 }
@@ -232,14 +233,9 @@ func (v *Tronity) post(uri string) error {
 	return err
 }
 
-// startCharge implements the api.VehicleChargeController interface
-func (v *Tronity) startCharge() error {
-	uri := fmt.Sprintf("%s/tronity/vehicles/%s/start_charging", tronity.URI, v.vid)
-	return v.post(uri)
-}
-
-// stopCharge implements the api.VehicleChargeController interface
-func (v *Tronity) stopCharge() error {
-	uri := fmt.Sprintf("%s/tronity/vehicles/%s/stop_charging", tronity.URI, v.vid)
+// chargeEnable implements the api.ChargeController interface
+func (v *Tronity) chargeEnable(enable bool) error {
+	action := map[bool]string{true: "start_charging", false: "stop_charging"}
+	uri := fmt.Sprintf("%s/tronity/vehicles/%s/%s", tronity.URI, v.vid, action[enable])
 	return v.post(uri)
 }

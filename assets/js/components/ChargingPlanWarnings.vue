@@ -44,7 +44,7 @@ export default {
 		mode: String,
 		tariff: Object,
 		plan: Object,
-		vehicleTargetSoc: Number,
+		vehicleLimitSoc: Number,
 	},
 	computed: {
 		endTime: function () {
@@ -76,7 +76,12 @@ export default {
 		notReachableInTime: function () {
 			const { planTime } = this.plan || {};
 			if (planTime && this.endTime) {
-				return new Date(planTime) < new Date(this.endTime);
+				const dateWanted = new Date(planTime);
+				const dateEstimated = new Date(this.endTime);
+				// account for rounding errors
+				dateWanted.setSeconds(60);
+				dateEstimated.setSeconds(0);
+				return dateWanted < dateEstimated;
 			}
 			return false;
 		},
@@ -88,7 +93,7 @@ export default {
 		},
 		targetIsAboveVehicleLimit: function () {
 			if (this.socBasedPlanning) {
-				return this.effectivePlanSoc > (this.vehicleTargetSoc || 100);
+				return this.effectivePlanSoc > (this.vehicleLimitSoc || 100);
 			}
 			return false;
 		},
@@ -99,7 +104,7 @@ export default {
 			return this.fmtKWh(this.limitEnergy * 1e3);
 		},
 		vehicleLimitFmt: function () {
-			return this.fmtSoc(this.vehicleTargetSoc);
+			return this.fmtSoc(this.vehicleLimitSoc);
 		},
 		goalFmt: function () {
 			if (this.socBasedPlanning) {

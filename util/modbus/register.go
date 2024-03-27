@@ -51,7 +51,7 @@ func (r Register) Length() (uint16, error) {
 	case strings.Contains(enc, "64"):
 		return 4, nil
 	default:
-		return 0, fmt.Errorf("invalid register encoding: %s", enc)
+		return 0, fmt.Errorf("invalid register length: %s", enc)
 	}
 }
 
@@ -171,6 +171,9 @@ func (r Register) EncodeFunc() (func(float64) ([]byte, error), error) {
 	enc := strings.ToLower(r.encoding())
 
 	switch {
+	case strings.HasPrefix(enc, "bool"):
+		fallthrough
+
 	case strings.HasPrefix(enc, "int") || strings.HasPrefix(enc, "uint"):
 		return r.encodeToBytes(func(v float64) uint64 {
 			return uint64(v)

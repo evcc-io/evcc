@@ -19,14 +19,22 @@
 			<div class="label-scale-name">In</div>
 		</div>
 		<div ref="site_progress" class="site-progress">
+			<div class="site-progress-bar self-pv" :style="{ width: widthTotal(selfPvAdjusted) }">
+				<AnimatedNumber
+					v-if="selfPv && visualizationReady"
+					class="power"
+					:to="selfPv"
+					:format="fmtBarValue"
+				/>
+			</div>
 			<div
-				class="site-progress-bar self-consumption"
-				:style="{ width: widthTotal(selfConsumptionAdjusted) }"
+				class="site-progress-bar self-battery"
+				:style="{ width: widthTotal(selfBatteryAdjusted) }"
 			>
 				<AnimatedNumber
-					v-if="selfConsumption && visualizationReady"
+					v-if="selfBattery && visualizationReady"
 					class="power"
-					:to="selfConsumption"
+					:to="selfBattery"
 					:format="fmtBarValue"
 				/>
 			</div>
@@ -98,7 +106,8 @@ export default {
 	mixins: [formatter],
 	props: {
 		gridImport: { type: Number, default: 0 },
-		selfConsumption: { type: Number, default: 0 },
+		selfPv: { type: Number, default: 0 },
+		selfBattery: { type: Number, default: 0 },
 		pvExport: { type: Number, default: 0 },
 		loadpoints: { type: Array, default: () => [] },
 		batteryCharge: { type: Number, default: 0 },
@@ -116,19 +125,27 @@ export default {
 			return this.applyThreshold(this.pvExport);
 		},
 		totalRaw: function () {
-			return this.gridImport + this.selfConsumption + this.pvExport;
+			return this.gridImport + this.selfPv + this.selfBattery + this.pvExport;
 		},
 		gridImportAdjusted: function () {
 			return this.applyThreshold(this.gridImport);
 		},
-		selfConsumptionAdjusted: function () {
-			return this.applyThreshold(this.selfConsumption);
+		selfPvAdjusted: function () {
+			return this.applyThreshold(this.selfPv);
+		},
+		selfBatteryAdjusted: function () {
+			return this.applyThreshold(this.selfBattery);
 		},
 		pvExportAdjusted: function () {
 			return this.applyThreshold(this.pvExport);
 		},
 		totalAdjusted: function () {
-			return this.gridImportAdjusted + this.selfConsumptionAdjusted + this.pvExportAdjusted;
+			return (
+				this.gridImportAdjusted +
+				this.selfPvAdjusted +
+				this.selfBatteryAdjusted +
+				this.pvExportAdjusted
+			);
 		},
 		visualizationReady: function () {
 			return this.totalAdjusted > 0 && this.width > 0;
@@ -231,10 +248,16 @@ html.dark .grid-import {
 	color: var(--bs-dark);
 }
 
-.self-consumption {
-	background-color: var(--evcc-self);
+.self-pv {
+	background-color: var(--evcc-pv);
 	color: var(--bs-dark);
 }
+
+.self-battery {
+	background-color: var(--evcc-battery);
+	color: var(--bs-dark);
+}
+
 .pv-export {
 	background-color: var(--evcc-export);
 	color: var(--bs-dark);

@@ -23,7 +23,7 @@
 				{{ $t(`main.targetCharge.${isPreview ? "preview" : "currentPlan"}`) }}
 			</div>
 		</h5>
-		<ChargingPlanPreview v-if="chargingPlanPreviewProps" v-bind="chargingPlanPreviewProps" />
+		<ChargingPlanPreview v-bind="chargingPlanPreviewProps" />
 	</div>
 </template>
 
@@ -60,7 +60,7 @@ export default {
 		mode: String,
 		capacity: Number,
 		vehicle: Object,
-		vehicleTargetSoc: Number,
+		vehicleLimitSoc: Number,
 	},
 	emits: ["plan-removed", "plan-updated"],
 	data: function () {
@@ -136,6 +136,10 @@ export default {
 			}
 		},
 		fetchPlanDebounced: async function (preview) {
+			if (!this.debounceTimer) {
+				await this.fetchPlan(preview);
+				return;
+			}
 			clearTimeout(this.debounceTimer);
 			this.debounceTimer = setTimeout(async () => await this.fetchPlan(preview), 1000);
 		},

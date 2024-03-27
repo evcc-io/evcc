@@ -74,7 +74,6 @@ func NewClient(log *util.Logger, broker, user, password, clientID string, qos by
 	options.SetOnConnectHandler(mc.ConnectionHandler)
 	options.SetConnectionLostHandler(mc.ConnectionLostHandler)
 	options.SetConnectTimeout(request.Timeout)
-	options.SetOrderMatters(false)
 
 	if insecure {
 		options.SetTLSConfig(&tls.Config{InsecureSkipVerify: true})
@@ -123,8 +122,9 @@ func (m *Client) ConnectionHandler(client paho.Client) {
 
 // Cleanup recursively removes a topic
 func (m *Client) Cleanup(topic string, retained bool) error {
-	if m.Client.Subscribe(topic, m.Qos, func(c paho.Client, msg paho.Message) {
-		if len(msg.Payload()) == 0 {
+	statusTopic := topic + "/status"
+	if !m.Client.Subscribe(topic+"/#", m.Qos, func(c paho.Client, msg paho.Message) {
+		if len(msg.Payload()) == 0 || msg.Topic() == statusTopic {
 			return
 		}
 
@@ -136,7 +136,7 @@ func (m *Client) Cleanup(topic string, retained bool) error {
 
 	time.Sleep(time.Second)
 
-	if m.Client.Unsubscribe(topic).WaitTimeout(request.Timeout) {
+	if !m.Client.Unsubscribe(topic + "/#").WaitTimeout(request.Timeout) {
 		return api.ErrTimeout
 	}
 

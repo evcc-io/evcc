@@ -40,9 +40,20 @@ export default {
 		const siteTitle = store.state.siteTitle;
 		return { title: siteTitle ? `${siteTitle} | evcc` : "evcc" };
 	},
+	watch: {
+		version: function (prev, now) {
+			if (!!prev && !!now) {
+				console.log("new version detected. reloading browser", { now, prev });
+				this.reload();
+			}
+		},
+	},
 	computed: {
+		version: function () {
+			return store.state.version;
+		},
 		batteryModalAvailabe: function () {
-			return store.state.batteryConfigured;
+			return store.state.battery?.length;
 		},
 		globalSettingsProps: function () {
 			return this.collectProps(GlobalSettingsModal, store.state);
@@ -147,5 +158,6 @@ export default {
 <style scoped>
 .app {
 	min-height: 100vh;
+	min-height: 100dvh;
 }
 </style>

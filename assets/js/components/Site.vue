@@ -1,7 +1,7 @@
 <template>
 	<div class="d-flex flex-column site safe-area-inset">
 		<div class="container px-4 top-area">
-			<div class="d-flex justify-content-between align-items-center my-3">
+			<div class="d-flex justify-content-between align-items-center my-3 my-md-4">
 				<h1 class="d-block my-0">
 					{{ siteTitle || "evcc" }}
 				</h1>
@@ -63,10 +63,8 @@ export default {
 		gridConfigured: Boolean,
 		gridPower: Number,
 		homePower: Number,
-		pvConfigured: Boolean,
 		pvPower: Number,
 		pv: Array,
-		batteryConfigured: Boolean,
 		batteryPower: Number,
 		batterySoc: Number,
 		batteryDischargeControl: Boolean,
@@ -104,6 +102,12 @@ export default {
 		smartCostActive: Boolean,
 	},
 	computed: {
+		batteryConfigured: function () {
+			return this.battery?.length > 0;
+		},
+		pvConfigured: function () {
+			return this.pv?.length > 0;
+		},
 		energyflow: function () {
 			return this.collectProps(Energyflow);
 		},
@@ -157,6 +161,7 @@ export default {
 <style scoped>
 .site {
 	min-height: 100vh;
+	min-height: 100dvh;
 }
 .content-area {
 	flex-grow: 1;

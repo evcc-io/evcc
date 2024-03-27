@@ -33,9 +33,12 @@ func NewMQTT(root string, site site.API) (*MQTT, error) {
 	}
 	m.publisher = m.publishString
 
-	err := m.Handler.Cleanup(m.root+"/#", true)
+	err := m.Handler.Cleanup(m.root, true)
 	if err == nil {
 		err = m.Listen(site)
+	}
+	if err != nil {
+		err = fmt.Errorf("mqtt: %w", err)
 	}
 
 	return m, err
