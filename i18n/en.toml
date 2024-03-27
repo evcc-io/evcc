@@ -42,6 +42,14 @@ range = "Range"
 soc = "SoC"
 socLimit = "Limit"
 
+[config.deviceValueChargeStatus]
+A = "A (not connected)"
+B = "B (connected)"
+C = "C (charging)"
+D = "D (charging with ventilation)"
+E = "E (no power)"
+F = "F (error)"
+
 [config.form]
 example = "Example"
 optional = "optional"

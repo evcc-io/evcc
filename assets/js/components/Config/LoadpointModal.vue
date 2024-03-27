@@ -26,23 +26,146 @@
 					<div class="modal-body">
 						<form ref="form" class="container mx-0 px-0">
 							<FormRow
-								v-for="param in formFields"
-								:id="`meterParam${param.Name}`"
-								:key="param.Name"
-								:optional="!param.Required"
-								:label="param.Description || `[${param.Name}]`"
-								:help="param.Description === param.Help ? undefined : param.Help"
-								:example="param.Example"
+								id="loadpointParamTitle"
+								label="Title"
+								example="Garage, Carport, etc."
 							>
 								<PropertyField
-									:id="`meterParam${param.Name}`"
-									v-model="values[param.Name]"
-									:masked="param.Mask"
-									:property="param.Name"
-									:type="param.Type"
+									id="loadpointParamTitle"
+									v-model="values.title"
+									type="String"
 									class="me-2"
-									:required="param.Required"
-									:validValues="param.ValidValues"
+									required
+								/>
+							</FormRow>
+							<hr class="mt-3 mb-4" />
+							<FormRow id="loadpointParamCharger" label="Charger">
+								<div class="d-flex">
+									<PropertyField
+										id="loadpointParamCharger"
+										v-model="values.charger"
+										type="String"
+										class="me-2 flex-grow-1"
+										disabled
+										required
+									/>
+									<button class="btn btn-link btn-sm evcc-default-text">
+										<shopicon-regular-adjust></shopicon-regular-adjust>
+									</button>
+								</div>
+							</FormRow>
+
+							<div class="row">
+								<FormRow
+									id="loadpointParamMinCurrent"
+									label="Minimum Current"
+									example="6A ... 32A"
+									class="col-sm-6"
+								>
+									<PropertyField
+										id="loadpointParamMinCurrent"
+										v-model="values.minCurrent"
+										type="Number"
+										unit="A"
+										size="w-25 w-min-200"
+										class="me-2"
+										required
+									/>
+								</FormRow>
+								<FormRow
+									id="loadpointParamMaxCurrent"
+									label="Maximum Current"
+									example="6A ... 32A"
+									class="col-sm-6"
+								>
+									<PropertyField
+										id="loadpointParamMaxCurrent"
+										v-model="values.maxCurrent"
+										type="Number"
+										unit="A"
+										size="w-25 w-min-200"
+										class="me-2"
+										required
+									/>
+								</FormRow>
+							</div>
+
+							<div class="row">
+								<FormRow
+									id="loadpointParamPhases"
+									label="Phases"
+									help="Electrical connection of the charger."
+									class="col-md-6"
+								>
+									<PropertyField
+										id="loadpointParamPhases"
+										v-model="values.phases"
+										type="Number"
+										size="w-75 w-min-200"
+										class="me-2"
+										:valid-values="[
+											{ key: 0, name: 'automatic switching' },
+											{ key: 1, name: '1-phase' },
+											{ key: 2, name: '2-phase' },
+											{ key: 3, name: '3-phase' },
+										]"
+										required
+									/>
+								</FormRow>
+								<FormRow
+									id="loadpointParamPriority"
+									label="Priority"
+									help="Higher value means preferred charging with solar surplus."
+									class="col-md-6"
+								>
+									<PropertyField
+										id="loadpointParamPriority"
+										v-model="values.priority"
+										type="Number"
+										size="w-75 w-min-200"
+										class="me-2"
+										:valid-values="priorityOptions"
+										required
+									/>
+								</FormRow>
+							</div>
+							<FormRow
+								v-if="values.meter"
+								id="loadpointParamMeter"
+								label="Energy meter"
+								help="Additional meter if the charger doesn't have an integrated one."
+							>
+								<div class="d-flex">
+									<PropertyField
+										id="loadpointParamMeter"
+										v-model="values.meter"
+										type="String"
+										class="me-2 flex-grow-1"
+										disabled
+										required
+									/>
+									<button class="btn btn-link btn-sm evcc-default-text">
+										<shopicon-regular-adjust></shopicon-regular-adjust>
+									</button>
+								</div>
+							</FormRow>
+							<hr class="mt-3 mb-4" />
+							<FormRow
+								id="loadpointParamVehicle"
+								label="Default vehicle"
+								:help="
+									values.defaultVehicle
+										? 'Always assume this vehicle is charging here. Auto-detection disabled. Manual override is possible.'
+										: 'Automatically selects the most plausible vehicle. Manual override is possible.'
+								"
+							>
+								<PropertyField
+									id="loadpointParamVehicle"
+									v-model="values.defaultVehicle"
+									type="String"
+									class="me-2"
+									:valid-values="allVehicleOptions"
+									required
 								/>
 							</FormRow>
 
@@ -82,63 +205,13 @@ import FormRow from "./FormRow.vue";
 import PropertyField from "./PropertyField.vue";
 import api from "../../api";
 
-const priorityValues = Array.from({ length: 11 }, (_, i) => ({ key: i, name: `${i}` }));
-priorityValues[0].name = "0 (default)";
-priorityValues[10].name = "10 (highest)";
-
-const formFields = [
-	{
-		Name: "title",
-		Description: "Title",
-		Example: "Garage, Carport, etc.",
-		Type: "String",
-		Required: true,
-	},
-	{
-		Name: "phases",
-		Description: "Phases",
-		Help: "Electrical connection of the charger.",
-		ValidValues: [
-			{ key: 0, name: "automatic switching" },
-			{ key: 1, name: "1-phase" },
-			{ key: 2, name: "2-phase" },
-			{ key: 3, name: "3-phase" },
-		],
-		Type: "Number",
-		Required: true,
-	},
-	{
-		Name: "minCurrent",
-		Description: "Min Current",
-		Example: "6A ... 32A",
-		Type: "Number",
-		Unit: "A",
-		Required: true,
-	},
-	{
-		Name: "maxCurrent",
-		Description: "Max Current",
-		Example: "6A ... 32A",
-		Type: "Number",
-		Unit: "A",
-		Required: true,
-	},
-	{
-		Name: "priority",
-		Description: "Priority",
-		Help: "Higher value means preferred charging with solar surplus.",
-		Type: "Number",
-		ValidValues: priorityValues,
-		Required: true,
-	},
-];
-
 export default {
 	name: "LoadpointModal",
 	components: { FormRow, PropertyField },
 	props: {
 		id: Number,
 		name: String,
+		vehicleOptions: { type: Array, default: () => [] },
 	},
 	emits: ["added", "updated", "removed"],
 	data() {
@@ -146,8 +219,13 @@ export default {
 			isModalVisible: false,
 			saving: false,
 			selectedType: null,
-			formFields,
-			values: {},
+			values: {
+				title: "",
+				phases: 0,
+				minCurrent: 0,
+				maxCurrent: 0,
+				priority: 0,
+			},
 		};
 	},
 	computed: {
@@ -157,18 +235,20 @@ export default {
 			}
 			return this.$t(`config.loadpoint.titleEdit`);
 		},
-		apiData() {
-			// only send the fields that are present in the form
-			return formFields.reduce((acc, field) => {
-				acc[field.Name] = this.values[field.Name];
-				return acc;
-			}, {});
-		},
 		isNew() {
 			return this.id === undefined;
 		},
 		isDeletable() {
 			return !this.isNew;
+		},
+		priorityOptions() {
+			const result = Array.from({ length: 11 }, (_, i) => ({ key: i, name: `${i}` }));
+			result[0].name = "0 (default)";
+			result[10].name = "10 (highest)";
+			return result;
+		},
+		allVehicleOptions() {
+			return [{ key: "", name: "- auto detection -" }, ...this.vehicleOptions];
 		},
 	},
 	watch: {
@@ -203,7 +283,7 @@ export default {
 		async update() {
 			this.saving = true;
 			try {
-				await api.put(`config/loadpoints/${this.id}`, this.apiData);
+				await api.put(`config/loadpoints/${this.id}`, this.values);
 				this.$emit("updated");
 				this.modalInvisible();
 			} catch (e) {

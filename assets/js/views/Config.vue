@@ -214,7 +214,11 @@
 					@updated="meterChanged"
 					@removed="removeMeterFromSite"
 				/>
-				<LoadpointModal :id="selectedLoadpointId" @updated="loadpointChanged" />
+				<LoadpointModal
+					:id="selectedLoadpointId"
+					:vehicleOptions="vehicleOptions"
+					@updated="loadpointChanged"
+				/>
 			</div>
 		</div>
 	</div>
@@ -298,6 +302,12 @@ export default {
 		},
 		selectedMeterName() {
 			return this.getMeterById(this.selectedMeterId)?.name;
+		},
+		vehicleOptions() {
+			console.log(
+				this.vehicles.map((v) => ({ key: v.name, name: v.config?.title || v.name }))
+			);
+			return this.vehicles.map((v) => ({ key: v.name, name: v.config?.title || v.name }));
 		},
 	},
 	watch: {
@@ -481,9 +491,7 @@ export default {
 			return this.deviceValues[type]?.[id] || {};
 		},
 		loadpointTags(loadpoint) {
-			let { charger, meter } = loadpoint;
-			charger = "charger_1";
-			meter = "meter_charger_1";
+			const { charger, meter } = loadpoint;
 			const chargerTags = charger ? this.deviceTags("charger", charger) : {};
 			const meterTags = meter ? this.deviceTags("meter", meter) : {};
 			return { ...chargerTags, ...meterTags };
