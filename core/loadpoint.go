@@ -59,18 +59,6 @@ const (
 // elapsed is the time an expired timer will be set to
 var elapsed = time.Unix(0, 1)
 
-// PollConfig defines the vehicle polling mode and interval
-type PollConfig struct {
-	Mode     string        `mapstructure:"mode"`     // polling mode charging (default), connected, always
-	Interval time.Duration `mapstructure:"interval"` // interval when not charging
-}
-
-// SocConfig defines soc settings, estimation and update behavior
-type SocConfig struct {
-	Poll     PollConfig `mapstructure:"poll"`
-	Estimate *bool      `mapstructure:"estimate"`
-}
-
 // Poll modes
 const (
 	pollCharging  = "charging"
@@ -79,15 +67,6 @@ const (
 
 	pollInterval = 60 * time.Minute
 )
-
-// ThresholdConfig defines enable/disable hysteresis parameters
-type ThresholdConfig struct {
-	Delay     time.Duration
-	Threshold float64
-}
-
-// Task is the task type
-type Task = func()
 
 // Loadpoint is responsible for controlling charge depending on
 // Soc needs and power availability.
@@ -104,11 +83,11 @@ type Loadpoint struct {
 
 	vmu sync.RWMutex // guard vehicle
 
-	ChargerRef      string `mapstructure:"charger"` // Charger reference
-	VehicleRef      string `mapstructure:"vehicle"` // Vehicle reference
-	MeterRef        string `mapstructure:"meter"`   // Charge meter reference
-	Soc             SocConfig
-	Enable, Disable ThresholdConfig
+	ChargerRef           string    `mapstructure:"charger"` // Charger reference
+	VehicleRef           string    `mapstructure:"vehicle"` // Vehicle reference
+	MeterRef             string    `mapstructure:"meter"`   // Charge meter reference
+	Soc                  SocConfig // Soc mode configuration
+	loadpoint.Thresholds           // PV mode enable/ disable thresholds
 
 	// TODO deprecated
 	Mode_             api.ChargeMode `mapstructure:"mode"`          // Default charge mode, used for disconnect
@@ -275,8 +254,10 @@ func NewLoadpoint(log *util.Logger, settings *Settings) *Loadpoint {
 				Mode:     pollCharging,
 			},
 		},
-		Enable:        ThresholdConfig{Delay: time.Minute, Threshold: 0},     // t, W
-		Disable:       ThresholdConfig{Delay: 3 * time.Minute, Threshold: 0}, // t, W
+		Thresholds: loadpoint.Thresholds{
+			Enable:  loadpoint.ThresholdConfig{Delay: time.Minute, Threshold: 0},     // t, W
+			Disable: loadpoint.ThresholdConfig{Delay: 3 * time.Minute, Threshold: 0}, // t, W
+		},
 		sessionEnergy: NewEnergyMetrics(),
 		progress:      NewProgress(0, 10),     // soc progress indicator
 		coordinator:   coordinator.NewDummy(), // dummy vehicle coordinator
@@ -360,6 +341,12 @@ func (lp *Loadpoint) restoreSettings() {
 	if v, err := lp.settings.Float(keys.SmartCostLimit); err == nil {
 		lp.SetSmartCostLimit(v)
 	}
+
+	var thresholds loadpoint.Thresholds
+	if err := lp.settings.Json(keys.Thresholds, &thresholds); err == nil {
+		lp.setThresholds(thresholds)
+	}
+
 	t, err1 := lp.settings.Time(keys.PlanTime)
 	v, err2 := lp.settings.Float(keys.PlanEnergy)
 	if err1 == nil && err2 == nil {

@@ -106,6 +106,10 @@ type API interface {
 	// GetPlan creates a charging plan
 	GetPlan(targetTime time.Time, requiredDuration time.Duration) (api.Rates, error)
 
+	// GetThresholds returns the PV mode threshold settings
+	GetThresholds() Thresholds
+	// SetThresholds sets the PV mode threshold settings
+	SetThresholds(thresholds Thresholds)
 	// GetEnableThreshold gets the loadpoint enable threshold
 	GetEnableThreshold() float64
 	// SetEnableThreshold sets loadpoint enable threshold

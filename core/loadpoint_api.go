@@ -276,6 +276,32 @@ func (lp *Loadpoint) SetPlanEnergy(finishAt time.Time, energy float64) error {
 	return nil
 }
 
+// GetThresholds returns the PV mode threshold settings
+func (lp *Loadpoint) GetThresholds() loadpoint.Thresholds {
+	lp.RLock()
+	defer lp.RUnlock()
+	return lp.Thresholds
+}
+
+func (lp *Loadpoint) setThresholds(thresholds loadpoint.Thresholds) {
+	lp.Thresholds = thresholds
+	lp.publish(keys.EnableThreshold, lp.Enable.Threshold)
+	lp.publish(keys.DisableThreshold, lp.Disable.Threshold)
+	lp.settings.SetJson(keys.Thresholds, thresholds)
+	lp.requestUpdate()
+}
+
+// SetThresholds sets the PV mode threshold settings
+func (lp *Loadpoint) SetThresholds(thresholds loadpoint.Thresholds) {
+	lp.Lock()
+	defer lp.Unlock()
+
+	lp.log.DEBUG.Println("set thresholds:", thresholds)
+
+	// apply immediately
+	lp.setThresholds(thresholds)
+}
+
 // GetEnableThreshold gets the loadpoint enable threshold
 func (lp *Loadpoint) GetEnableThreshold() float64 {
 	lp.RLock()
@@ -292,7 +318,7 @@ func (lp *Loadpoint) SetEnableThreshold(threshold float64) {
 
 	if lp.Enable.Threshold != threshold {
 		lp.Enable.Threshold = threshold
-		lp.publish(keys.EnableThreshold, threshold)
+		lp.setThresholds(lp.Thresholds)
 	}
 }
 
@@ -312,7 +338,7 @@ func (lp *Loadpoint) SetDisableThreshold(threshold float64) {
 
 	if lp.Disable.Threshold != threshold {
 		lp.Disable.Threshold = threshold
-		lp.publish(keys.DisableThreshold, threshold)
+		lp.setThresholds(lp.Thresholds)
 	}
 }
 

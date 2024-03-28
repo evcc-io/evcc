@@ -21,6 +21,8 @@ type loadpointStruct struct {
 	MinCurrent     *float64 `json:"minCurrent,omitempty"`
 	MaxCurrent     *float64 `json:"maxCurrent,omitempty"`
 	SmartCostLimit *float64 `json:"smartCostLimit,omitempty"`
+
+	Thresholds *loadpoint.Thresholds `json:"thresholds,omitempty"`
 }
 
 // loadpointConfig returns a single loadpoint's configuration
@@ -37,6 +39,7 @@ func loadpointConfig(id int, lp loadpoint.API) loadpointStruct {
 		MinCurrent:     ptr(lp.GetMinCurrent()),
 		MaxCurrent:     ptr(lp.GetMaxCurrent()),
 		SmartCostLimit: ptr(lp.GetSmartCostLimit()),
+		Thresholds:     ptr(lp.GetThresholds()),
 	}
 
 	return res
@@ -89,6 +92,10 @@ func updateLoadpointHandler(lp loadpoint.API) http.HandlerFunc {
 
 		if err == nil && payload.SmartCostLimit != nil {
 			lp.SetSmartCostLimit(*payload.SmartCostLimit)
+		}
+
+		if err == nil && payload.Thresholds != nil {
+			lp.SetThresholds(*payload.Thresholds)
 		}
 
 		if payload.Mode != nil {

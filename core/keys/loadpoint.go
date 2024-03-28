@@ -2,16 +2,17 @@ package keys
 
 const (
 	// loadpoint settings
-	Title            = "title"       // loadpoint title
-	Mode             = "mode"        // charge mode
-	Priority         = "priority"    // priority
-	MinCurrent       = "minCurrent"  // min current
-	MaxCurrent       = "maxCurrent"  // max current
-	MinSoc           = "minSoc"      // min soc
-	LimitSoc         = "limitSoc"    // limit soc
-	LimitEnergy      = "limitEnergy" // limit energy
-	EnableThreshold  = "enableThreshold"
-	DisableThreshold = "disableThreshold"
+	Title            = "title"            // loadpoint title
+	Mode             = "mode"             // charge mode
+	Priority         = "priority"         // priority
+	MinCurrent       = "minCurrent"       // min current
+	MaxCurrent       = "maxCurrent"       // max current
+	MinSoc           = "minSoc"           // min soc
+	LimitSoc         = "limitSoc"         // limit soc
+	LimitEnergy      = "limitEnergy"      // limit energy
+	Thresholds       = "thresholds"       // settings
+	EnableThreshold  = "enableThreshold"  // published
+	DisableThreshold = "disableThreshold" // published
 
 	PhasesConfigured = "phasesConfigured" // configured phases (1/3, 0 for auto on 1p3p chargers, nil for plain chargers)
 	PhasesEnabled    = "phasesEnabled"    // enabled phases (1/3)

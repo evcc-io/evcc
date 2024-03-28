@@ -8,6 +8,7 @@ import (
 	evbus "github.com/asaskevich/EventBus"
 	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/util"
 	"go.uber.org/mock/gomock"
 )
@@ -371,11 +372,13 @@ func TestPvScalePhasesTimer(t *testing.T) {
 			phases:         tc.phases,
 			measuredPhases: tc.measuredPhases,
 			status:         api.StatusC,
-			Enable: ThresholdConfig{
-				Delay: dt,
-			},
-			Disable: ThresholdConfig{
-				Delay: dt,
+			Thresholds: loadpoint.Thresholds{
+				Enable: loadpoint.ThresholdConfig{
+					Delay: dt,
+				},
+				Disable: loadpoint.ThresholdConfig{
+					Delay: dt,
+				},
 			},
 		}
 

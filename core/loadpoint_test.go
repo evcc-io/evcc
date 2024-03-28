@@ -7,6 +7,7 @@ import (
 	evbus "github.com/asaskevich/EventBus"
 	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/soc"
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/util"
@@ -316,13 +317,15 @@ func TestPVHysteresis(t *testing.T) {
 				maxCurrent:     maxA,
 				phases:         phases,
 				measuredPhases: phases,
-				Enable: ThresholdConfig{
-					Threshold: tc.enable,
-					Delay:     dt,
-				},
-				Disable: ThresholdConfig{
-					Threshold: tc.disable,
-					Delay:     dt,
+				Thresholds: loadpoint.Thresholds{
+					Enable: loadpoint.ThresholdConfig{
+						Threshold: tc.enable,
+						Delay:     dt,
+					},
+					Disable: loadpoint.ThresholdConfig{
+						Threshold: tc.disable,
+						Delay:     dt,
+					},
 				},
 			}
 
@@ -746,8 +749,10 @@ func TestPVHysteresisAfterPhaseSwitch(t *testing.T) {
 			charger:    charger,
 			minCurrent: minA,
 			maxCurrent: maxA,
-			Disable: ThresholdConfig{
-				Delay: dt,
+			Thresholds: loadpoint.Thresholds{
+				Disable: loadpoint.ThresholdConfig{
+					Delay: dt,
+				},
 			},
 			status:  api.StatusC,
 			enabled: true,
