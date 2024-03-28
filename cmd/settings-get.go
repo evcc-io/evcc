@@ -24,7 +24,7 @@ func init() {
 
 func runSettingsGet(cmd *cobra.Command, args []string) {
 	// load config
-	if err := loadConfigFile(&conf); err != nil {
+	if _, err := loadConfigFile(&conf); err != nil {
 		log.FATAL.Fatal(err)
 	}
 

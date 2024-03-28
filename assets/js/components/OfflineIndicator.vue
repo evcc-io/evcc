@@ -5,9 +5,11 @@
 	>
 		<shopicon-regular-cloud class="me-2"></shopicon-regular-cloud>
 		{{ $t("offline.message") }}
+		<!--
 		<button class="btn btn-sm btn-link text-dark" @click="reload">
 			{{ $t("offline.reload") }}
 		</button>
+		-->
 	</div>
 </template>
 

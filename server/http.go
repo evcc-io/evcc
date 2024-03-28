@@ -104,7 +104,6 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, cache *util.Cache) {
 		"device":                  {"GET", "/config/devices/{class:[a-z]+}/{id:[0-9.]+}", deviceConfigHandler},
 		"devicestatus":            {"GET", "/config/devices/{class:[a-z]+}/{name:[a-zA-Z0-9_.:-]+}/status", deviceStatusHandler},
 		"site":                    {"GET", "/config/site", siteHandler(site)},
-		"dirty":                   {"GET", "/config/dirty", boolGetHandler(ConfigDirty)},
 		"updatesite":              {"PUT", "/config/site", updateSiteHandler(site)},
 		"newdevice":               {"POST", "/config/devices/{class:[a-z]+}", newDeviceHandler},
 		"updatedevice":            {"PUT", "/config/devices/{class:[a-z]+}/{id:[0-9.]+}", updateDeviceHandler},
@@ -178,8 +177,8 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, cache *util.Cache) {
 	}
 }
 
-// RegisterShutdownHandler connects the http handlers to the site
-func (s *HTTPd) RegisterShutdownHandler(callback func()) {
+// RegisterBasicHandlers connects the http handlers to the site
+func (s *HTTPd) RegisterBasicHandlers(configFile string, shutdownCallback func()) {
 	router := s.Server.Handler.(*mux.Router)
 
 	// api
@@ -193,9 +192,12 @@ func (s *HTTPd) RegisterShutdownHandler(callback func()) {
 	// site api
 	routes := map[string]route{
 		"shutdown": {"POST", "/shutdown", func(w http.ResponseWriter, r *http.Request) {
-			callback()
+			shutdownCallback()
 			w.WriteHeader(http.StatusNoContent)
 		}},
+		"dirty": {"GET", "/config/dirty", boolGetHandler(ConfigDirty)},
+		"yaml":  {"GET", "/config/yaml", yamlHandler(configFile)},
+		"yaml2": {"PUT", "/config/yaml", updateYamlHandler(configFile)},
 	}
 
 	for _, r := range routes {

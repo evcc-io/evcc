@@ -87,8 +87,12 @@ export default {
 		},
 	},
 	methods: {
-		shutdown() {
-			api.post("shutdown");
+		shutdown: async () => {
+			try {
+				await api.post("shutdown");
+			} catch (e) {
+				alert("Unabled to restart server.");
+			}
 		},
 		scrollTo(e) {
 			const id = e.currentTarget.getAttribute("href").substring(1);

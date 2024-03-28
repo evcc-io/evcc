@@ -1,5 +1,7 @@
 <template>
 	<div class="app">
+		<OfflineIndicator v-if="offline" />
+
 		<router-view :notifications="notifications" :offline="offline"></router-view>
 
 		<GlobalSettingsModal v-bind="globalSettingsProps" />
@@ -12,6 +14,7 @@
 import store from "../store";
 import GlobalSettingsModal from "../components/GlobalSettingsModal.vue";
 import BatterySettingsModal from "../components/BatterySettingsModal.vue";
+import OfflineIndicator from "../components/OfflineIndicator.vue";
 import HelpModal from "../components/HelpModal.vue";
 import collector from "../mixins/collector";
 
@@ -27,7 +30,7 @@ setInterval(() => {
 
 export default {
 	name: "App",
-	components: { GlobalSettingsModal, HelpModal, BatterySettingsModal },
+	components: { GlobalSettingsModal, HelpModal, BatterySettingsModal, OfflineIndicator },
 	mixins: [collector],
 	props: {
 		notifications: Array,

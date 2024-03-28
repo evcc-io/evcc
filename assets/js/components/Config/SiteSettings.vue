@@ -18,9 +18,11 @@
 					disabled
 				/>
 			</FormRow>
+			<!--
 			<FormRow id="sponsorToken" label="Sponsor token" class="wip">
 				<textarea id="sponsorToken" class="form-control" rows="3" disabled value="tba" />
 			</FormRow>
+			-->
 			<div class="my-4 d-flex justify-content-end">
 				<button type="reset" class="btn btn-link text-muted" @click.prevent="reset">
 					{{ $t("config.site.cancel") }}

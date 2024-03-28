@@ -160,11 +160,11 @@ func nameValid(name string) error {
 	return nil
 }
 
-func loadConfigFile(conf *globalConfig) error {
+func loadConfigFile(conf *globalConfig) (string, error) {
 	err := viper.ReadInConfig()
 
 	if cfgFile = viper.ConfigFileUsed(); cfgFile == "" {
-		return err
+		return "", err
 	}
 
 	log.INFO.Println("using config file:", cfgFile)
@@ -180,7 +180,7 @@ func loadConfigFile(conf *globalConfig) error {
 		parseLogLevels()
 	}
 
-	return err
+	return cfgFile, err
 }
 
 func configureMeters(static []config.Named, names ...string) error {

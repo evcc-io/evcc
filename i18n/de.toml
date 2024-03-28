@@ -42,6 +42,19 @@ range = "Reichweite"
 soc = "SoC"
 socLimit = "SoC Begrenzung"
 
+[config.editor]
+back = "Zurück"
+errorMessage = "Beim Hochfahren von evcc ist etwas schiefgelaufen. Bitte überprüfe die Konfiguration."
+errorTitle = "Fehler!"
+loading = "Lade Editor…"
+save = "Änderungen speichern"
+saved = "Änderungen gespeichert"
+successMessage = "Deine Änderungen wurden angewendet."
+successTitle = "Erfolg!"
+title = "Editor"
+toHome = "Zur Hauptansicht"
+unchanged = "Keine Änderungen"
+
 [config.form]
 example = "Beispiel"
 optional = "optional"
@@ -80,11 +93,9 @@ save = "Speichern"
 failed = "fehlgeschlagen"
 label = "Status"
 running = "prüfe…"
-save = "Speichern"
 success = "erfolgreich"
 unknown = "unbekannt"
 validate = "prüfen"
-validateSave = "Prüfen & speichern"
 
 [config.vehicle]
 cancel = "Abbrechen"
@@ -97,7 +108,6 @@ scooter = "Scooter"
 template = "Hersteller"
 titleAdd = "Fahrzeug hinzufügen"
 titleEdit = "Fahrzeug bearbeiten"
-update = "Prüfen & speichern"
 validateSave = "Prüfen & speichern"
 
 [footer]
@@ -372,7 +382,7 @@ dismissAll = "Meldungen entfernen"
 modalTitle = "Meldungen"
 
 [offline]
-message = "Keine Verbindung zum Server."
+message = "Server nicht erreichbar. Verbindung wird neu aufgebaut…"
 reload = "Erneut laden?"
 
 [session]
