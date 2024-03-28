@@ -8,7 +8,8 @@ import (
 	"github.com/evcc-io/evcc/core/site"
 )
 
-var authCookieName = "auth"
+const authCookieName = "auth"
+
 var authQueryParam = "auth"
 
 func updatePasswordHandler(site site.API) http.HandlerFunc {

@@ -58,6 +58,9 @@ export default {
 				this.reload();
 			}
 		},
+		offline: function () {
+			updateAuthStatus();
+		},
 	},
 	computed: {
 		version: function () {
@@ -82,11 +85,6 @@ export default {
 		this.disconnect();
 		window.clearTimeout(this.reconnectTimeout);
 		document.removeEventListener("visibilitychange", this.pageVisibilityChanged, false);
-	},
-	watch: {
-		offline: function () {
-			updateAuthStatus();
-		},
 	},
 	methods: {
 		pageVisibilityChanged: function () {
