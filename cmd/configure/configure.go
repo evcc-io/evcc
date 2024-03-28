@@ -25,6 +25,15 @@ type loadpoint struct {
 	MinCurrent  int
 	MaxCurrent  int
 	Phases      int
+	Circuit     string
+}
+
+type circuit struct {
+	Name       string  `mapstructure:"name"`       // unique name, used as reference in lp
+	MaxCurrent float64 `mapstructure:"maxCurrent"` // the max allowed current of this circuit
+	MaxPower   float64 `mapstructure:"maxPower"`   // the max allowed power of this circuit
+	MeterRef   string  `mapstructure:"meter"`      // Charge meter reference
+	ParentRef  string  `mapstructure:"parent"`     // name of parent circuit
 }
 
 type globalConfig struct {
@@ -32,6 +41,7 @@ type globalConfig struct {
 	Chargers   []device
 	Vehicles   []device
 	Loadpoints []loadpoint
+	Circuits   []circuit
 	Site       struct { // TODO Perspektivisch können wir was aus core wiederverwenden, für später
 		Title     string
 		Grid      string

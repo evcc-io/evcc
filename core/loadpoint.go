@@ -110,6 +110,7 @@ type Loadpoint struct {
 	ChargerRef      string `mapstructure:"charger"`  // Charger reference
 	VehicleRef      string `mapstructure:"vehicle"`  // Vehicle reference
 	MeterRef        string `mapstructure:"meter"`    // Charge meter reference
+	CircuitRef      string `mapstructure:"circuit"`  // Circuit reference
 	Soc             SocConfig
 	Enable, Disable ThresholdConfig
 
@@ -137,6 +138,7 @@ type Loadpoint struct {
 	phasesSwitched      time.Time // Phase switch timestamp
 	vehicleDetectTicker *clock.Ticker
 	vehicleIdentifier   string
+	circuit             *Circuit // circuit this lp belongs to
 
 	charger          api.Charger
 	chargeTimer      api.ChargeTimer
@@ -184,7 +186,7 @@ type Loadpoint struct {
 }
 
 // NewLoadpointFromConfig creates a new loadpoint
-func NewLoadpointFromConfig(log *util.Logger, settings *Settings, other map[string]interface{}) (*Loadpoint, error) {
+func NewLoadpointFromConfig(log *util.Logger, settings *Settings, circuits map[string]*Circuit, other map[string]interface{}) (*Loadpoint, error) {
 	lp := NewLoadpoint(log, settings)
 	if err := util.DecodeOther(other, lp); err != nil {
 		return nil, err
@@ -260,6 +262,14 @@ func NewLoadpointFromConfig(log *util.Logger, settings *Settings, other map[stri
 		lp.log.WARN.Printf("PV mode enable threshold (%.0fW) is larger than disable threshold (%.0fW)", lp.Enable.Threshold, lp.Disable.Threshold)
 	} else if lp.Enable.Threshold > 0 {
 		lp.log.WARN.Printf("PV mode enable threshold %.0fW > 0 will start PV charging on grid power consumption. Did you mean -%.0f?", lp.Enable.Threshold, lp.Enable.Threshold)
+	}
+
+	// check for circuit
+	if lp.CircuitRef != "" {
+		var ok bool
+		if lp.circuit, ok = circuits[lp.CircuitRef]; !ok {
+			return nil, fmt.Errorf("circuit not found: %s", lp.CircuitRef)
+		}
 	}
 
 	// choose sane default if mode is not set
@@ -714,6 +724,65 @@ func (lp *Loadpoint) syncCharger() error {
 	return nil
 }
 
+// checkCircuitAvailableLimit determines remaining usable current and power using circuit limits and consumption
+func (lp *Loadpoint) checkCircuitAvailableLimit(requestedCurrent float64) (float64, float64, error) {
+	// tolerance before throwing alerts
+	mp, _ := lp.MaxPhasesCurrent()
+	lp.log.DEBUG.Printf("trace: requested: %.1f, phases: %d, curLP: %.1f", requestedCurrent, lp.GetPhases(), mp)
+	tolerance := 1.1 // allow 10 % overshooting before raising a warning
+	if lp.circuit != nil && requestedCurrent > 0.0 {
+		// circuits remaining current includes the consumption of this loadpoint, so adjust using consumer interface
+		curLP, err := lp.MaxPhasesCurrent()
+		if err != nil {
+			return 0, 0, fmt.Errorf("error getting current consumption: %s", err)
+		}
+
+		// apply not more than requested. If too little current is available, make sure its not negative
+		// consider als this LPs actuall current, since it is included in the circuit remaining current calculation
+		chargeCurrentNew := math.Min(math.Max(lp.circuit.GetRemainingCurrent()+curLP, 0), requestedCurrent)
+
+		// apply a small reserve to prevent log messages
+		if chargeCurrentNew < requestedCurrent*tolerance {
+			lp.log.DEBUG.Printf("get current limitation from %.1fA to %.1fA from circuit", requestedCurrent, chargeCurrentNew)
+		}
+
+		// also check power availability
+		// need to calculate from /to currents using phases
+		requestedPower := CurrentToPower(chargeCurrentNew, uint(lp.GetPhases()))
+		availablePower := lp.circuit.GetRemainingPower() + lp.chargePower // since current power is included in circuit consumption, add
+		chargePowerNew := math.Min(math.Max(availablePower, 0), requestedPower)
+		lp.log.TRACE.Printf("request: %.1f, available: %.1f, new: %.1f, phases: %d", requestedPower, availablePower, chargePowerNew, lp.GetPhases())
+
+		// apply a small reserve to prevent log messages
+		if chargePowerNew < requestedPower*tolerance {
+			// lower the current based on phases
+			chargeCurrentNew = powerToCurrent(chargePowerNew, lp.GetPhases())
+			lp.log.DEBUG.Printf("get power limitation from %.1fW to %.1fW (%.1fA) from circuit", requestedPower, chargePowerNew, chargeCurrentNew)
+
+			// TODO: do we want to switch phases in case of lower load available due to load management?
+			// // exception: we are < minCurrent and phases > 1 and we can switch phases, then switch to 1 phase in order to not stop charging
+			// if chargeCurrentNew < lp.GetMinCurrent() && lp.GetPhases > 1 && powerToCurrent(chargePowerNew, 1) > lp.GetMinCurrent() {
+			// 	if err := lp.scalePhasesIfAvailable(1); err == nil {
+			// 		lp.log.DEBUG.Printf("switched to 1 phase")
+			// 		chargeCurrentNew = powerToCurrent(chargePowerNew, 1)
+			// 	}
+			// }
+		}
+
+		// if we start charging, use minCurrent() first in order to ramp up
+		// if lp.chargeCurrent == 0 {
+		if lp.GetStatus() != api.StatusC && lp.GetStatus() != api.StatusD {
+			chargeCurrentNew = math.Min(lp.effectiveMinCurrent(), chargeCurrentNew)
+			lp.log.DEBUG.Printf("start charging with minCurrent")
+		}
+		if chargeCurrentNew < requestedCurrent*tolerance {
+			return chargeCurrentNew, chargePowerNew, nil
+		}
+	}
+	// all ok
+	return requestedCurrent, CurrentToPower(requestedCurrent, uint(lp.GetPhases())), nil
+}
+
 // setLimit applies charger current limits and enables/disables accordingly
 func (lp *Loadpoint) setLimit(chargeCurrent float64) error {
 	// full amps only?
@@ -721,8 +790,21 @@ func (lp *Loadpoint) setLimit(chargeCurrent float64) error {
 		chargeCurrent = math.Trunc(chargeCurrent)
 	}
 
+	// apply load management
+	forceCurrentChangeLM := false
+	maxCurAvailable, _, err := lp.checkCircuitAvailableLimit(chargeCurrent)
+	if err != nil {
+		return err
+	}
+
+	// apply limitation
+	if maxCurAvailable < chargeCurrent {
+		chargeCurrent = maxCurAvailable
+		forceCurrentChangeLM = true
+	}
+
 	// set current
-	if chargeCurrent != lp.chargeCurrent && chargeCurrent >= lp.effectiveMinCurrent() {
+	if (chargeCurrent != lp.chargeCurrent && chargeCurrent >= lp.effectiveMinCurrent()) || forceCurrentChangeLM {
 		var err error
 		if charger, ok := lp.charger.(api.ChargerEx); ok {
 			err = charger.MaxCurrentMillis(chargeCurrent)
@@ -932,6 +1014,32 @@ func (lp *Loadpoint) updateChargerStatus() error {
 	}
 
 	return nil
+}
+
+var _ Consumer = (*Loadpoint)(nil)
+
+// implements interface Consumer, redirects to effectiveCurrent
+// TODO check order- if we have currents we should use them
+func (lp *Loadpoint) MaxPhasesCurrent() (float64, error) {
+	// using effective current in use.
+	// potential issue: slow LP might cause interference or short overload
+	if !lp.charging() {
+		return 0, nil
+	}
+
+	if lp.chargeCurrents != nil {
+		return math.Max(lp.chargeCurrents[0], math.Max(lp.chargeCurrents[1], lp.chargeCurrents[2])), nil
+	}
+
+	return lp.chargeCurrent, nil
+}
+
+// CurrentPower() implements consumer interface
+func (lp *Loadpoint) CurrentPower() (float64, error) {
+	if !lp.charging() {
+		return 0, nil
+	}
+	return lp.chargePower, nil
 }
 
 // effectiveCurrent returns the currently effective charging current

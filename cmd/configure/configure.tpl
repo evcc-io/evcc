@@ -54,7 +54,18 @@ loadpoints:
   vehicle: {{ .Vehicle }}
 {{- end }}
   mode: {{ .Mode }}
+{{-     if .Circuit }}
+  circuit: {{ .Circuit }}
+{{-   end }}
 {{- end }}
+
+circuits:
+{{-   range .Circuits }}
+- name: {{ .Name }}
+  maxCurrent: {{ .MaxCurrent }}
+  maxPower: {{ .MaxPower }}
+  meter: {{ .MeterRef }}
+  parent: {{ .ParentRef }}
 {{- end }}
 
 site:

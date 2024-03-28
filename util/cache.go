@@ -41,6 +41,8 @@ func (c *Cache) Run(in <-chan Param) {
 		key := p.Key
 		if p.Loadpoint != nil {
 			key = fmt.Sprintf("lp-%d/%s", *p.Loadpoint+1, key)
+		} else if p.Circuit != nil {
+			key = fmt.Sprintf("circuit-%d/%s", *p.Circuit+1, key)
 		}
 
 		log.TRACE.Printf("%s: %v", key, p.Val)
@@ -56,17 +58,25 @@ func (c *Cache) State() map[string]interface{} {
 
 	res := map[string]interface{}{}
 	lps := make(map[int]map[string]interface{})
+	ccs := make(map[int]map[string]interface{})
 
 	for _, param := range c.val {
-		if param.Loadpoint == nil {
-			res[param.Key] = param.Val
-		} else {
+		if param.Loadpoint != nil {
 			lp, ok := lps[*param.Loadpoint]
 			if !ok {
 				lp = make(map[string]interface{})
 				lps[*param.Loadpoint] = lp
 			}
 			lp[param.Key] = param.Val
+		} else if param.Circuit != nil {
+			cc, ok := ccs[*param.Circuit]
+			if !ok {
+				cc = make(map[string]interface{})
+				ccs[*param.Circuit] = cc
+			}
+			cc[param.Key] = param.Val
+		} else {
+			res[param.Key] = param.Val
 		}
 	}
 
@@ -76,6 +86,12 @@ func (c *Cache) State() map[string]interface{} {
 		loadpoints[id] = lp
 	}
 	res["loadpoints"] = loadpoints
+
+	circuits := make([]map[string]interface{}, len(ccs))
+	for id, cc := range ccs {
+		circuits[id] = cc
+	}
+	res["circuits"] = circuits
 
 	return res
 }

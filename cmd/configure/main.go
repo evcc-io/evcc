@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"slices"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -179,8 +180,11 @@ func (c *CmdConfigure) flowNewConfigFile() {
 	_ = c.configureDevices(DeviceCategoryBatteryMeter, true, true)
 	_ = c.configureDevices(DeviceCategoryVehicle, true, true)
 
-	c.configureLoadpoints()
 	c.configureSite()
+	if c.advancedMode {
+		c.configureCircuits()
+	}
+	c.configureLoadpoints()
 
 	// check if SMA HEMS is available and ask the user if it should be added
 	if c.capabilitySMAHems {
@@ -426,6 +430,17 @@ func (c *CmdConfigure) configureLoadpoints() {
 
 		fmt.Println()
 		loadpoint.Mode = c.askValue(question{valueType: templates.TypeChargeModes, excludeNone: true})
+
+		if len(c.configuration.config.Circuits) > 0 && c.askYesNo(c.localizedString("Loadpoint_CircuitYesNo")) {
+			var circuitNames []string
+			for _, cc := range c.configuration.config.Circuits {
+				circuitNames = append(circuitNames, cc.Name)
+			}
+
+			ccNameId, _ := c.askChoice(c.localizedString("Loadpoint_Circuit"), circuitNames)
+			loadpoint.Circuit = circuitNames[ccNameId]
+		}
+
 		c.configuration.AddLoadpoint(loadpoint)
 
 		fmt.Println()
@@ -446,4 +461,136 @@ func (c *CmdConfigure) configureSite() {
 		required:     true,
 	})
 	c.configuration.config.Site.Title = siteTitle
+}
+
+// configureCircuits asks for circuits
+func (c *CmdConfigure) configureCircuits() {
+	fmt.Println()
+	fmt.Println(c.localizedString("Circuit_Setup"))
+
+	if !c.askYesNo(c.localizedString("Circuit_Add")) {
+		return
+	}
+
+	// helper to know used circuit names
+	circuitNames := []string{}
+
+	for {
+		ccName := c.askValue(question{
+			label:    c.localizedString("Circuit_Title"),
+			help:     c.localizedString("Circuit_TitleHelp"),
+			required: true,
+		})
+
+		if slices.Contains(circuitNames, ccName) {
+			fmt.Println(c.localizedString("Circuit_NameAlreadyUsed"))
+			continue
+		}
+		curCircuit := &circuit{Name: ccName}
+
+		curChoices := []string{
+			c.localizedString("Circuit_MaxCurrentDisable"), // no current checking
+			c.localizedString("Circuit_MaxCurrent16A"),     // 11kVA
+			c.localizedString("Circuit_MaxCurrent20A"),     // 13kVA
+			c.localizedString("Circuit_MaxCurrent25A"),     // 17kVA
+			c.localizedString("Circuit_MaxCurrent32A"),     // 22kVA
+			c.localizedString("Circuit_MaxCurrent35A"),     // 24kVA
+			c.localizedString("Circuit_MaxCurrent50A"),     // 34kVA
+			c.localizedString("Circuit_MaxCurrent63A"),     // 43kVA
+			c.localizedString("Circuit_MaxCurrent80A"),     // 55kVA
+			c.localizedString("Circuit_MaxCurrent100A"),    // 69kVA
+			c.localizedString("Circuit_MaxCurrentCustom"),
+		}
+		fmt.Println()
+		curIndex, _ := c.askChoice(c.localizedString("Circuit_MaxCurrent"), curChoices)
+		switch curIndex {
+		case 0:
+			curCircuit.MaxCurrent = 16.0
+		case 1:
+			curCircuit.MaxCurrent = 16.0
+		case 2:
+			curCircuit.MaxCurrent = 20.0
+		case 3:
+			curCircuit.MaxCurrent = 25.0
+		case 4:
+			curCircuit.MaxCurrent = 32.0
+		case 5:
+			curCircuit.MaxCurrent = 35.0
+		case 6:
+			curCircuit.MaxCurrent = 50.0
+		case 7:
+			curCircuit.MaxCurrent = 63.0
+		case 8:
+			curCircuit.MaxCurrent = 80.0
+		case 9:
+			curCircuit.MaxCurrent = 100.0
+		case 10:
+			amperage := c.askValue(
+				question{
+					label:          c.localizedString("Circuit_MaxCurrentCustomInput"),
+					valueType:      templates.TypeNumber,
+					maxNumberValue: 1000, // 600kW ... enough?
+					required:       true,
+				})
+			curCircuit.MaxCurrent, _ = strconv.ParseFloat(amperage, 64)
+		}
+		pwrChoices := []string{
+			c.localizedString("Circuit_MaxPowerDisable"), // no current checking
+			c.localizedString("Circuit_MaxPower11kW"),
+			c.localizedString("Circuit_MaxPower20kW"),
+			c.localizedString("Circuit_MaxPower50kW"),
+			c.localizedString("Circuit_MaxPower100kW"),
+			c.localizedString("Circuit_MaxCurrentCustom"),
+		}
+		fmt.Println()
+		pwrIndex, _ := c.askChoice(c.localizedString("Circuit_MaxPower"), pwrChoices)
+		switch pwrIndex {
+		case 0:
+			curCircuit.MaxPower = 0.0
+		case 1:
+			curCircuit.MaxPower = 11.0
+		case 2:
+			curCircuit.MaxPower = 20.0
+		case 3:
+			curCircuit.MaxPower = 50.0
+		case 4:
+			curCircuit.MaxPower = 100.0
+		case 5:
+			power := c.askValue(
+				question{
+					label:          c.localizedString("Circuit_MaxPowerCustomInput"),
+					valueType:      templates.TypeNumber,
+					maxNumberValue: 1000, // 1GkW ... enough?
+					required:       true,
+				})
+			curCircuit.MaxPower, _ = strconv.ParseFloat(power, 64)
+		}
+
+		// check meter
+		if c.askYesNo(c.localizedString("Circuit_Meter")) {
+			ccMeter, _, err := c.configureDeviceCategory(DeviceCategoryGridMeter)
+			if err == nil {
+				curCircuit.MeterRef = ccMeter.Name
+			}
+		}
+
+		// in case we have already circuits, ask for parent circuit
+		if len(circuitNames) > 0 {
+			// circuits exist already, ask for parent
+			if c.askYesNo(c.localizedString("Circuit_HasParent")) {
+				sort.Strings(circuitNames)
+				parentCCNameId, _ := c.askChoice(c.localizedString("Circuit_Parent"), circuitNames)
+
+				// assign this circuit as child to the requested parent
+				curCircuit.ParentRef = circuitNames[parentCCNameId]
+			}
+		}
+		// append to known names for later lookup
+		circuitNames = append(circuitNames, curCircuit.Name)
+		c.configuration.config.Circuits = append(c.configuration.config.Circuits, *curCircuit)
+		fmt.Println()
+		if !c.askYesNo(c.localizedString("Circuit_AddAnother")) {
+			break
+		}
+	}
 }

@@ -47,6 +47,7 @@ import (
 	"github.com/libp2p/zeroconf/v2"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"golang.org/x/exp/maps"
 	"golang.org/x/sync/errgroup"
 	"golang.org/x/text/currency"
 )
@@ -95,6 +96,7 @@ type globalConfig struct {
 	Tariffs      tariffConfig
 	Site         map[string]interface{}
 	Loadpoints   []map[string]interface{}
+	Circuits     []map[string]interface{}
 }
 
 type mqttConfig struct {
@@ -655,7 +657,12 @@ func configureSiteAndLoadpoints(conf globalConfig) (*core.Site, error) {
 		return nil, err
 	}
 
-	loadpoints, err := configureLoadpoints(conf)
+	circuits, vMeters, err := configureCircuits(conf)
+	if err != nil {
+		return nil, err
+	}
+
+	loadpoints, err := configureLoadpoints(conf, circuits, vMeters)
 	if err != nil {
 		return nil, fmt.Errorf("failed configuring loadpoints: %w", err)
 	}
@@ -665,11 +672,13 @@ func configureSiteAndLoadpoints(conf globalConfig) (*core.Site, error) {
 		return nil, err
 	}
 
-	return configureSite(conf.Site, loadpoints, tariffs)
+	return configureSite(conf.Site, loadpoints, tariffs, circuits)
 }
 
-func configureSite(conf map[string]interface{}, loadpoints []*core.Loadpoint, tariffs *tariff.Tariffs) (*core.Site, error) {
-	site, err := core.NewSiteFromConfig(log, conf, loadpoints, tariffs)
+func configureSite(conf map[string]interface{}, loadpoints []*core.Loadpoint, tariffs *tariff.Tariffs, circuits map[string]*core.Circuit) (*core.Site, error) {
+	cs := maps.Values(circuits)
+
+	site, err := core.NewSiteFromConfig(log, conf, loadpoints, tariffs, cs)
 	if err != nil {
 		return nil, fmt.Errorf("failed configuring site: %w", err)
 	}
@@ -677,7 +686,7 @@ func configureSite(conf map[string]interface{}, loadpoints []*core.Loadpoint, ta
 	return site, nil
 }
 
-func configureLoadpoints(conf globalConfig) (loadpoints []*core.Loadpoint, err error) {
+func configureLoadpoints(conf globalConfig, circuits map[string]*core.Circuit, vMeters map[string]*core.VMeter) (loadpoints []*core.Loadpoint, err error) {
 	if len(conf.Loadpoints) == 0 {
 		return nil, errors.New("missing loadpoints")
 	}
@@ -686,15 +695,48 @@ func configureLoadpoints(conf globalConfig) (loadpoints []*core.Loadpoint, err e
 		log := util.NewLoggerWithLoadpoint("lp-"+strconv.Itoa(id+1), id+1)
 		settings := &core.Settings{Key: "lp" + strconv.Itoa(id+1) + "."}
 
-		lp, err := core.NewLoadpointFromConfig(log, settings, lpc)
+		lp, err := core.NewLoadpointFromConfig(log, settings, circuits, lpc)
 		if err != nil {
 			return nil, fmt.Errorf("failed configuring loadpoint: %w", err)
+		}
+
+		// check if loadpoint has a circuit assignment.
+		// If so, check there is a vmeter for it and add as consumer
+		if lp.CircuitRef != "" {
+			if vm := vMeters[lp.CircuitRef]; vm != nil {
+				vm.AddConsumer(lp)
+			}
 		}
 
 		loadpoints = append(loadpoints, lp)
 	}
 
 	return loadpoints, nil
+}
+
+// configureCircuits loads circuit definition
+func configureCircuits(conf globalConfig) (circuits map[string]*core.Circuit, vMeters map[string]*core.VMeter, err error) {
+	circuits = make(map[string]*core.Circuit)
+	vMeters = make(map[string]*core.VMeter)
+
+	// TODO cleanup similar to loadpoints
+	for id, cfg := range conf.Circuits {
+		log := util.NewLogger("circuit-" + strconv.Itoa(id+1))
+
+		circuit, vMeter, ccName, err := core.NewCircuitFromConfig(log, circuits, vMeters, cfg)
+		if err != nil {
+			return circuits, vMeters, fmt.Errorf("failed configuring circuit: %w", err)
+		}
+
+		// TODO what if there is no vMeter?
+		// save vMeter for LP access
+		if vMeter != nil {
+			vMeters[ccName] = vMeter
+		}
+
+		circuits[ccName] = circuit
+	}
+	return circuits, vMeters, nil
 }
 
 // configureAuth handles routing for devices. For now only api.AuthProvider related routes

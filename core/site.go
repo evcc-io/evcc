@@ -97,6 +97,7 @@ type Site struct {
 	batteryMode  api.BatteryMode // Battery mode
 
 	publishCache map[string]any // store last published values to avoid unnecessary republishing
+	Circuits     []*Circuit     // circuits in site for load management
 }
 
 // MetersConfig contains the loadpoint's meter configuration
@@ -113,6 +114,7 @@ func NewSiteFromConfig(
 	other map[string]interface{},
 	loadpoints []*Loadpoint,
 	tariffs *tariff.Tariffs,
+	circuits []*Circuit,
 ) (*Site, error) {
 	site := NewSite()
 	if err := util.DecodeOther(other, site); err != nil {
@@ -206,6 +208,9 @@ func NewSiteFromConfig(
 	if site.gridMeter == nil && len(site.pvMeters) == 0 {
 		return nil, errors.New("missing either grid or pv meter")
 	}
+
+	// get circuits for regular udpates
+	site.Circuits = circuits
 
 	// revert battery mode on shutdown
 	shutdown.Register(func() {
@@ -334,6 +339,35 @@ func (site *Site) DumpConfig() {
 		}
 	}
 
+	site.log.INFO.Printf("  circuits:")
+	for _, circuit := range site.Circuits {
+		var (
+			curLmtStr string
+			pwrLmtStr string
+		)
+
+		if circuit.maxCurrent != math.MaxFloat64 {
+			curLmtStr = fmt.Sprintf("Current: max %.1fA", circuit.maxCurrent)
+		} else {
+			curLmtStr = "Current: " + presence[false]
+		}
+		if circuit.parentCircuit != nil && circuit.parentCircuit.maxCurrent != math.MaxFloat64 {
+			curLmtStr = fmt.Sprintf("%s (parent: %.1fA)", curLmtStr, circuit.parentCircuit.maxCurrent)
+		}
+
+		if circuit.maxPower != math.MaxFloat64 {
+			pwrLmtStr = fmt.Sprintf("Power: max %.1fkW", circuit.maxPower/1000)
+		} else {
+			pwrLmtStr = "Power: " + presence[false]
+		}
+		if circuit.parentCircuit != nil && circuit.parentCircuit.maxPower != math.MaxFloat64 {
+			pwrLmtStr = fmt.Sprintf("%s (parent: %.1fkW)", pwrLmtStr, circuit.parentCircuit.maxPower/1000)
+		}
+
+		site.log.INFO.Printf(
+			"     %s, %s", pwrLmtStr, curLmtStr)
+	}
+
 	if vehicles := site.Vehicles().Instances(); len(vehicles) > 0 {
 		site.log.INFO.Println("  vehicles:")
 
@@ -352,6 +386,9 @@ func (site *Site) DumpConfig() {
 	for i, lp := range site.loadpoints {
 		lp.log.INFO.Printf("loadpoint %d:", i+1)
 		lp.log.INFO.Printf("  mode:        %s", lp.GetMode())
+		if lp.circuit != nil {
+			lp.log.INFO.Printf("  circuit:     %s", lp.CircuitRef)
+		}
 
 		_, power := lp.charger.(api.Meter)
 		_, energy := lp.charger.(api.MeterEnergy)
@@ -836,7 +873,7 @@ func (site *Site) prepare() {
 	vehicle.Publish = site.publishVehicles
 }
 
-// Prepare attaches communication channels to site and loadpoints
+// Prepare attaches communication channels to site, loadpoints and circuits
 func (site *Site) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Event) {
 	// https://github.com/evcc-io/evcc/issues/11191 prevent deadlock
 	// https://github.com/evcc-io/evcc/pull/11675 maintain message order
@@ -877,6 +914,21 @@ func (site *Site) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Event) 
 		}(id)
 
 		lp.Prepare(lpUIChan, lpPushChan, site.lpUpdateChan)
+	}
+
+	// circuits
+	for id, circuit := range site.Circuits {
+		circuitUIChan := make(chan util.Param)
+
+		// pipe messages through go func to add id
+		go func(id int) {
+			for c := range circuitUIChan {
+				c.Circuit = &id
+				uiChan <- c
+			}
+		}(id)
+
+		circuit.Prepare(circuitUIChan)
 	}
 }
 
