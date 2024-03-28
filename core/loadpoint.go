@@ -741,6 +741,15 @@ func (lp *Loadpoint) setLimit(chargeCurrent float64) error {
 				}
 			}
 
+			if vv, ok := v.(api.CurrentController); ok {
+				lp.log.DEBUG.Printf("max charge current: setting current on vehicle side")
+				if err := vv.MaxCurrent(int64(chargeCurrent)); err != nil {
+					return fmt.Errorf("setting vehicle: %w", err)
+				}
+			} else {
+				lp.log.DEBUG.Printf("max charge current: vehicle does not support charge current")
+			}
+
 			return fmt.Errorf("max charge current %.3gA: %w", chargeCurrent, err)
 		}
 
