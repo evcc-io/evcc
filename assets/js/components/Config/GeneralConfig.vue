@@ -27,7 +27,7 @@
 				</a>
 			</dd>
 		</dl>
-		<dl class="row">
+		<dl class="row" data-testid="generalconfig-password">
 			<dt class="col-sm-4">Password</dt>
 			<dd class="col-sm-8">
 				*******
