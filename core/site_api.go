@@ -135,8 +135,6 @@ func (site *Site) Vehicles() site.Vehicles {
 	return &vehicles{log: site.log}
 }
 
-
-
 // GetPrioritySoc returns the PrioritySoc
 func (site *Site) GetPrioritySoc() float64 {
 	site.RLock()
