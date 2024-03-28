@@ -146,7 +146,7 @@ func NewSiteFromConfig(
 
 		if db.Instance != nil {
 			var err error
-			if lp.db, err = session.NewStore(lp.Title(), db.Instance); err != nil {
+			if lp.db, err = session.NewStore(lp.GetTitle(), db.Instance); err != nil {
 				return nil, err
 			}
 			// Fix any dangling history
@@ -753,7 +753,7 @@ func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints fl
 func (site *Site) update(lp updater) {
 	site.log.DEBUG.Println("----")
 
-	// update all loadpoint's charge power
+	// update all loadpoints charge power
 	var totalChargePower float64
 	for _, lp := range site.loadpoints {
 		lp.UpdateChargePower()

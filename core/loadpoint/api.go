@@ -23,11 +23,24 @@ type API interface {
 	GetStatus() api.ChargeStatus
 
 	//
+	// references
+	//
+
+	// GetCharger returns the loadpoint charger
+	GetCharger() string
+	// GetMeter returns the loadpoint meter
+	GetMeter() string
+	// GetDefaultVehicle returns the loadpoint default vehicle
+	GetDefaultVehicle() string
+
+	//
 	// settings
 	//
 
-	// Title returns the defined loadpoint title
-	Title() string
+	// GetTitle returns the loadpoint title
+	GetTitle() string
+	// SetTitle sets the loadpoint title
+	SetTitle(string)
 	// GetPriority returns the priority
 	GetPriority() int
 	// SetPriority sets the priority

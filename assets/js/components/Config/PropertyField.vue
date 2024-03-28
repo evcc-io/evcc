@@ -1,5 +1,5 @@
 <template>
-	<div v-if="unit" class="input-group" :class="short ? 'w-50' : ''">
+	<div v-if="unitValue" class="input-group" :class="sizeClass">
 		<input
 			:id="id"
 			v-model="value"
@@ -10,7 +10,7 @@
 			:aria-describedby="id + '_unit'"
 			class="form-control"
 		/>
-		<span :id="id + '_unit'" class="input-group-text">{{ unit }}</span>
+		<span :id="id + '_unit'" class="input-group-text">{{ unitValue }}</span>
 	</div>
 	<div v-else-if="icons" class="d-flex flex-wrap">
 		<div
@@ -41,7 +41,7 @@
 			<a :id="id" class="text-muted" href="#" @click.prevent="toggleSelectMode">change</a>
 		</div>
 	</div>
-	<select v-else-if="select" :id="id" v-model="value" class="form-select">
+	<select v-else-if="select" :id="id" v-model="value" class="form-select" :class="sizeClass">
 		<option v-if="!required" value="">---</option>
 		<option v-for="{ key, name } in selectOptions" :key="key" :value="key">
 			{{ name }}
@@ -52,6 +52,7 @@
 		:id="id"
 		v-model="value"
 		class="form-control"
+		:class="sizeClass"
 		:type="inputType"
 		:placeholder="placeholder"
 		:required="required"
@@ -62,7 +63,7 @@
 		:id="id"
 		v-model="value"
 		class="form-control"
-		:class="short ? 'w-50' : ''"
+		:class="sizeClass"
 		:type="inputType"
 		:step="step"
 		:placeholder="placeholder"
@@ -82,6 +83,8 @@ export default {
 		masked: Boolean,
 		placeholder: String,
 		type: String,
+		unit: String,
+		size: String,
 		required: Boolean,
 		validValues: { type: Array, default: () => [] },
 		modelValue: [String, Number, Boolean, Object],
@@ -100,8 +103,14 @@ export default {
 			}
 			return "text";
 		},
-		short() {
-			return ["Number", "Float", "Duration"].includes(this.type);
+		sizeClass() {
+			if (this.size) {
+				return this.size;
+			}
+			if (["Number", "Float", "Duration"].includes(this.type)) {
+				return "w-50 w-min-200";
+			}
+			return "";
 		},
 		step() {
 			if (this.type === "Float") {
@@ -109,7 +118,10 @@ export default {
 			}
 			return null;
 		},
-		unit() {
+		unitValue() {
+			if (this.unit) {
+				return this.unit;
+			}
 			if (this.property === "capacity") {
 				return "kWh";
 			}
@@ -126,7 +138,7 @@ export default {
 		},
 		selectOptions() {
 			// If the valid values are already in the correct format, return them
-			if (this.validValues[0].key && this.validValues[0].name) {
+			if (typeof this.validValues[0] === "object") {
 				return this.validValues;
 			}
 
@@ -163,5 +175,11 @@ input[type="number"]::-webkit-outer-spin-button,
 input[type="number"]::-webkit-inner-spin-button {
 	-webkit-appearance: none;
 	margin: 0;
+}
+.w-min-100 {
+	min-width: min(100px, 100%);
+}
+.w-min-200 {
+	min-width: min(200px, 100%);
 }
 </style>

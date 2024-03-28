@@ -52,7 +52,7 @@ export default {
 				case "phasePowers":
 					return value.map((v) => this.fmtKw(v)).join(", ");
 				case "chargeStatus":
-					return value;
+					return this.$t(`config.deviceValueChargeStatus.${value}`);
 				case "socLimit":
 					return `${this.fmtNumber(value)}%`;
 			}
@@ -61,4 +61,8 @@ export default {
 	},
 };
 </script>
-<style scoped></style>
+<style scoped>
+.badge {
+	--bs-bg-opacity: 0.5;
+}
+</style>

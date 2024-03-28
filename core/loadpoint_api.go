@@ -13,11 +13,45 @@ import (
 
 var _ loadpoint.API = (*Loadpoint)(nil)
 
-// Title returns the human-readable loadpoint title
-func (lp *Loadpoint) Title() string {
+// GetCharger returns the loadpoint charger
+func (lp *Loadpoint) GetCharger() string {
+	return lp.ChargerRef
+}
+
+// GetMeter returns the loadpoint meter
+func (lp *Loadpoint) GetMeter() string {
+	return lp.MeterRef
+}
+
+// GetDefaultVehicle returns the loadpoint default vehicle
+func (lp *Loadpoint) GetDefaultVehicle() string {
+	return lp.VehicleRef
+}
+
+// GetTitle returns the loadpoint title
+func (lp *Loadpoint) GetTitle() string {
 	lp.RLock()
 	defer lp.RUnlock()
-	return lp.Title_
+	return lp.title
+}
+
+// SetTitle sets the loadpoint title
+func (lp *Loadpoint) SetTitle(title string) {
+	lp.Lock()
+	defer lp.Unlock()
+
+	lp.log.DEBUG.Println("set title:", title)
+
+	if title != lp.title {
+		lp.setTitle(title)
+	}
+}
+
+// setTitle sets the loadpoint title (no mutex)
+func (lp *Loadpoint) setTitle(title string) {
+	lp.title = title
+	lp.publish(keys.Title, lp.title)
+	lp.settings.SetString(keys.Title, lp.title)
 }
 
 // GetStatus returns the charging status
@@ -82,7 +116,14 @@ func (lp *Loadpoint) getChargedEnergy() float64 {
 func (lp *Loadpoint) GetPriority() int {
 	lp.RLock()
 	defer lp.RUnlock()
-	return lp.Priority_
+	return lp.priority
+}
+
+// setPriority sets the loadpoint priority (no mutex)
+func (lp *Loadpoint) setPriority(prio int) {
+	lp.priority = prio
+	lp.publish(keys.Priority, lp.priority)
+	lp.settings.SetInt(keys.Priority, int64(lp.priority))
 }
 
 // SetPriority sets the loadpoint priority
@@ -93,8 +134,7 @@ func (lp *Loadpoint) SetPriority(prio int) {
 	lp.log.DEBUG.Println("set priority:", prio)
 
 	if lp.Priority_ != prio {
-		lp.Priority_ = prio
-		lp.publish(keys.Priority, prio)
+		lp.setPriority(prio)
 	}
 }
 

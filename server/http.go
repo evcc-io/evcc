@@ -3,6 +3,7 @@ package server
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 	"time"
 
 	eapi "github.com/evcc-io/evcc/api"
@@ -100,9 +101,10 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, cache *util.Cache) {
 		"state":                   {"GET", "/state", stateHandler(cache)},
 		"config":                  {"GET", "/config/templates/{class:[a-z]+}", templatesHandler},
 		"products":                {"GET", "/config/products/{class:[a-z]+}", productsHandler},
-		"devices":                 {"GET", "/config/devices/{class:[a-z]+}", devicesHandler},
+		"devices":                 {"GET", "/config/devices/{class:[a-z]+}", devicesConfigHandler},
 		"device":                  {"GET", "/config/devices/{class:[a-z]+}/{id:[0-9.]+}", deviceConfigHandler},
 		"devicestatus":            {"GET", "/config/devices/{class:[a-z]+}/{name:[a-zA-Z0-9_.:-]+}/status", deviceStatusHandler},
+		"loadpoints":              {"GET", "/config/loadpoints", loadpointsConfigHandler(site)},
 		"site":                    {"GET", "/config/site", siteHandler(site)},
 		"dirty":                   {"GET", "/config/dirty", boolGetHandler(ConfigDirty)},
 		"updatesite":              {"PUT", "/config/site", updateSiteHandler(site)},
@@ -149,6 +151,13 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, cache *util.Cache) {
 
 	// loadpoint api
 	for id, lp := range site.Loadpoints() {
+		for _, r := range map[string]route{
+			"get":    {"GET", "/config/loadpoints/" + strconv.Itoa(id), loadpointConfigHandler(id, lp)},
+			"update": {"PUT", "/config/loadpoints/" + strconv.Itoa(id), updateLoadpointHandler(lp)},
+		} {
+			api.Methods(r.Methods()...).Path(r.Pattern).Handler(r.HandlerFunc)
+		}
+
 		api := api.PathPrefix(fmt.Sprintf("/loadpoints/%d", id+1)).Subrouter()
 
 		routes := map[string]route{
@@ -169,7 +178,7 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, cache *util.Cache) {
 			"enableThreshold":  {"POST", "/enable/threshold/{value:-?[0-9.]+}", floatHandler(pass(lp.SetEnableThreshold), lp.GetEnableThreshold)},
 			"disableThreshold": {"POST", "/disable/threshold/{value:-?[0-9.]+}", floatHandler(pass(lp.SetDisableThreshold), lp.GetDisableThreshold)},
 			"smartCostLimit":   {"POST", "/smartcostlimit/{value:[0-9.]+}", floatHandler(pass(lp.SetSmartCostLimit), lp.GetSmartCostLimit)},
-			// "priority":         {"POST", "/priority/{value:[0-9.]+}", floatHandler(pass(lp.SetPriority), lp.GetPriority)},
+			"priority":         {"POST", "/priority/{value:[0-9.]+}", intHandler(pass(lp.SetPriority), lp.GetPriority)},
 		}
 
 		for _, r := range routes {
