@@ -5,97 +5,78 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/core/keys"
+	"github.com/evcc-io/evcc/server/db/settings"
+	"github.com/stretchr/testify/assert"
+	"go.uber.org/mock/gomock"
 )
 
-type MockSettings struct {
-	values map[string]string
-}
-
-func (m *MockSettings) String(key string) (string, error) {
-	return m.values[key], nil
-}
-
-func (m *MockSettings) SetString(key string, value string) {
-	m.values[key] = value
-}
-
 func TestSetAdminPassword(t *testing.T) {
-	mockSettings := &MockSettings{values: make(map[string]string)}
-	auth := New(mockSettings)
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
 
+	mock := settings.NewMockAPI(ctrl)
+	auth := New(mock)
 	password := "testpassword"
 
-	// first call succeeds
-	if err := auth.SetAdminPassword(password); err != nil {
-		t.Errorf("SetAdminPassword() error = %v", err)
-		return
-	}
+	mock.EXPECT().String(keys.AdminPassword).Return("", nil)
+	mock.EXPECT().SetString(keys.AdminPassword, gomock.Not(gomock.Eq("")))
+	assert.Nil(t, auth.SetAdminPassword(password)) // success
 
-	if mockSettings.values[keys.AdminPassword] == "" {
-		t.Errorf("SetAdminPassword() did not store admin password")
-	}
-
-	if err := auth.SetAdminPassword(password); err == nil {
-		t.Errorf("SetAdminPassword() should have failed, admin password already set")
-		return
-	}
+	mock.EXPECT().String(keys.AdminPassword).Return("exists", nil)
+	assert.NotNil(t, auth.SetAdminPassword(password)) // fail, password already set
 }
 
 func TestRemoveAdminPassword(t *testing.T) {
-	mockSettings := &MockSettings{values: make(map[string]string)}
-	mockSettings.values[keys.AdminPassword] = "testpassword"
-	auth := New(mockSettings)
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
 
+	mock := settings.NewMockAPI(ctrl)
+	auth := New(mock)
+
+	mock.EXPECT().SetString(keys.JwtSecret, "")
+	mock.EXPECT().SetString(keys.AdminPassword, "")
 	auth.RemoveAdminPassword()
-
-	if mockSettings.values[keys.AdminPassword] != "" {
-		t.Errorf("RemoveAdminPassword() did not correctly remove admin password")
-	}
 }
 
 func TestIsAdminPasswordValid(t *testing.T) {
-	mockSettings := &MockSettings{values: make(map[string]string)}
-	auth := New(mockSettings)
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mock := settings.NewMockAPI(ctrl)
+	auth := New(mock)
 
 	validPw := "testpassword"
 	invalidPw := "wrongpassword"
 
-	if auth.IsAdminPasswordValid(validPw) {
-		t.Errorf("IsAdminPasswordValid() should have returned false, password not set")
-	}
+	// password not set, reject
+	mock.EXPECT().String(keys.AdminPassword).Return("", nil).Times(2)
+	assert.False(t, auth.IsAdminPasswordValid(validPw))
 
+	// password set, accept
+	var storedHash string
+	mock.EXPECT().SetString(keys.AdminPassword, gomock.Not(gomock.Eq(""))).Do(func(_ string, hash string) { storedHash = hash })
 	auth.SetAdminPassword(validPw)
+	mock.EXPECT().String(keys.AdminPassword).Return(storedHash, nil).Times(2)
+	assert.True(t, auth.IsAdminPasswordValid(validPw))
 
-	if !auth.IsAdminPasswordValid(validPw) {
-		t.Errorf("IsAdminPasswordValid() should have returned true, matching password")
-	}
-
-	if auth.IsAdminPasswordValid(invalidPw) {
-		t.Errorf("IsAdminPasswordValid() should have returned false, wrong password")
-	}
+	// password set, wrong password
+	assert.False(t, auth.IsAdminPasswordValid(invalidPw))
 }
 
 func TestJwtToken(t *testing.T) {
-	mockSettings := &MockSettings{values: make(map[string]string)}
-	auth := New(mockSettings)
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mock := settings.NewMockAPI(ctrl)
+	auth := New(mock)
+
+	mock.EXPECT().String(keys.JwtSecret).Return("somesecret", nil).AnyTimes()
 
 	lifetime := time.Hour
 	tokenString, err := auth.GenerateJwtToken(lifetime)
-	if err != nil {
-		t.Errorf("GenerateJwtToken() error = %v", err)
-		return
-	}
-
-	if tokenString == "" {
-		t.Errorf("GenerateJwtToken() did not return a token")
-	}
+	assert.Nil(t, err, "token generation failed")
+	assert.NotEmpty(t, tokenString, "token is empty")
 
 	ok, err := auth.ValidateJwtToken(tokenString)
-	if !ok || err != nil {
-		t.Errorf("ValidateJwtToken() failed to validate token")
-	}
-
-	if mockSettings.values[keys.JwtSecret] == "" {
-		t.Errorf("GenerateJwtToken() did not store jwtSecret")
-	}
+	assert.True(t, ok && err == nil, "token is invalid")
 }

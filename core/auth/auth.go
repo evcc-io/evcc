@@ -4,25 +4,22 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/evcc-io/evcc/core/keys"
+	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 )
 
-type Settings interface {
-	String(key string) (string, error)
-	SetString(key string, value string)
-}
-
 const admin = "admin"
 
 type Auth struct {
-	settings Settings
+	settings settings.API
 }
 
-func New(settings Settings) *Auth {
+func New(settings settings.API) *Auth {
 	return &Auth{settings: settings}
 }
 
@@ -71,6 +68,7 @@ func (a *Auth) SetAdminPassword(password string) error {
 // IsAdminPasswordValid checks if the given password matches the admin password
 func (a *Auth) IsAdminPasswordValid(password string) bool {
 	adminHash := a.getAdminPasswordHash()
+	fmt.Println("adminHash: " + adminHash)
 	if adminHash == "" {
 		return false
 	}
