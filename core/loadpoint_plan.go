@@ -88,7 +88,7 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 	}()
 
 	var planStart time.Time
-	var planOverrun bool
+	var planOverrun time.Duration
 	defer func() {
 		lp.publish(keys.PlanProjectedStart, planStart)
 		lp.publish(keys.PlanOverrun, planOverrun)
@@ -125,7 +125,7 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 	var overrun string
 	if excessDuration := requiredDuration - lp.clock.Until(planTime); excessDuration > 0 {
 		overrun = fmt.Sprintf("overruns by %v, ", excessDuration.Round(time.Second))
-		planOverrun = true
+		planOverrun = excessDuration
 	}
 
 	planStart = planner.Start(plan)
