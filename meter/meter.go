@@ -23,6 +23,7 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Meter, error) 
 		Currents []provider.Config // optional
 		Voltages []provider.Config // optional
 		Powers   []provider.Config // optional
+		Setup    *provider.Config  // optional
 
 		// battery
 		capacity    `mapstructure:",squash"`
@@ -39,6 +40,17 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Meter, error) 
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
+	}
+
+	// run setup
+	if cc.Setup != nil {
+		setup, err := provider.NewBoolSetterFromConfig("setup", *cc.Setup)
+		if err == nil {
+			err = setup(true)
+		}
+		if err != nil {
+			return nil, fmt.Errorf("setup: %w", err)
+		}
 	}
 
 	power, err := provider.NewFloatGetterFromConfig(cc.Power)
