@@ -768,9 +768,11 @@ func (site *Site) update(lp updater) {
 		flexiblePower = site.prioritizer.GetChargePowerFlexibility(lp)
 	}
 
-	smartCostActive, err := site.smartCostActive(lp)
-	if err != nil {
-		site.log.ERROR.Println("smartCost:", err)
+	var smartCostActive bool
+	if rate, err := site.plannerRate(); err == nil {
+		smartCostActive = site.smartCostActive(lp, rate)
+	} else {
+		site.log.WARN.Println("smartCost:", err)
 	}
 
 	if sitePower, batteryBuffered, batteryStart, err := site.sitePower(totalChargePower, flexiblePower); err == nil {
