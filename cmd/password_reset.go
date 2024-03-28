@@ -2,8 +2,7 @@ package cmd
 
 import (
 	"github.com/AlecAivazis/survey/v2"
-	"github.com/evcc-io/evcc/core/auth"
-	"github.com/evcc-io/evcc/server/db/settings"
+	"github.com/evcc-io/evcc/util/auth"
 	"github.com/spf13/cobra"
 )
 
@@ -40,8 +39,7 @@ func runPasswordReset(cmd *cobra.Command, args []string) {
 	}
 
 	if confirm {
-		a := auth.New(new(settings.Settings))
-		a.RemoveAdminPassword()
+		auth.New().RemoveAdminPassword()
 	}
 
 	// wait for shutdown

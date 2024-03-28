@@ -14,20 +14,34 @@ import (
 
 const admin = "admin"
 
-type Auth struct {
+// Auth is the Auth api
+type Auth interface {
+	RemoveAdminPassword()
+	SetAdminPassword(string) error
+	IsAdminPasswordValid(string) bool
+	GenerateJwtToken(time.Duration) (string, error)
+	ValidateJwtToken(string) (bool, error)
+	IsAdminPasswordConfigured() bool
+}
+
+type auth struct {
 	settings settings.API
 }
 
-func New(settings settings.API) *Auth {
-	return &Auth{settings: settings}
+func New() Auth {
+	return &auth{settings: new(settings.Settings)}
 }
 
-func (a *Auth) hashPassword(password string) (string, error) {
+func NewMock(settings settings.API) Auth {
+	return &auth{settings: settings}
+}
+
+func (a *auth) hashPassword(password string) (string, error) {
 	bytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	return string(bytes), err
 }
 
-func (a *Auth) getAdminPasswordHash() string {
+func (a *auth) getAdminPasswordHash() string {
 	if pw, err := a.settings.String(keys.AdminPassword); err == nil {
 		return pw
 	}
@@ -35,18 +49,18 @@ func (a *Auth) getAdminPasswordHash() string {
 }
 
 // RemoveAdminPassword resets the admin password. For recovery mode via cli.
-func (a *Auth) RemoveAdminPassword() {
+func (a *auth) RemoveAdminPassword() {
 	a.settings.SetString(keys.AdminPassword, "")
 	a.settings.SetString(keys.JwtSecret, "")
 }
 
 // IsAdminPasswordConfigured checks if the admin password is already set
-func (a *Auth) IsAdminPasswordConfigured() bool {
+func (a *auth) IsAdminPasswordConfigured() bool {
 	return a.getAdminPasswordHash() != ""
 }
 
 // SetAdminPassword sets the admin password if not already set
-func (a *Auth) SetAdminPassword(password string) error {
+func (a *auth) SetAdminPassword(password string) error {
 	if password == "" {
 		return errors.New("password cannot be empty")
 	}
@@ -61,7 +75,7 @@ func (a *Auth) SetAdminPassword(password string) error {
 }
 
 // IsAdminPasswordValid checks if the given password matches the admin password
-func (a *Auth) IsAdminPasswordValid(password string) bool {
+func (a *auth) IsAdminPasswordValid(password string) bool {
 	adminHash := a.getAdminPasswordHash()
 	if adminHash == "" {
 		return false
@@ -70,7 +84,7 @@ func (a *Auth) IsAdminPasswordValid(password string) bool {
 	return bcrypt.CompareHashAndPassword([]byte(adminHash), []byte(password)) == nil
 }
 
-func (a *Auth) generateRandomKey(length int) (string, error) {
+func (a *auth) generateRandomKey(length int) (string, error) {
 	bytes := make([]byte, length)
 	if _, err := rand.Read(bytes); err != nil {
 		return "", err
@@ -79,7 +93,7 @@ func (a *Auth) generateRandomKey(length int) (string, error) {
 }
 
 // getJwtSecret returns the JWT secret from the settings or generates a new one
-func (a *Auth) getJwtSecret() ([]byte, error) {
+func (a *auth) getJwtSecret() ([]byte, error) {
 	jwtSecret, err := a.settings.String(keys.JwtSecret)
 
 	// generate new secret if it doesn't exist yet -> new installation
@@ -95,7 +109,7 @@ func (a *Auth) getJwtSecret() ([]byte, error) {
 }
 
 // GenerateJwtToken generates an admin user JWT token with the given lifetime
-func (a *Auth) GenerateJwtToken(lifetime time.Duration) (string, error) {
+func (a *auth) GenerateJwtToken(lifetime time.Duration) (string, error) {
 	claims := &jwt.RegisteredClaims{
 		Subject:   admin,
 		ExpiresAt: jwt.NewNumericDate(time.Now().Add(lifetime)),
@@ -110,7 +124,7 @@ func (a *Auth) GenerateJwtToken(lifetime time.Duration) (string, error) {
 }
 
 // ValidateJwtToken validates the given JWT token
-func (a *Auth) ValidateJwtToken(tokenString string) (bool, error) {
+func (a *auth) ValidateJwtToken(tokenString string) (bool, error) {
 	jwtSecret, err := a.getJwtSecret()
 	if err != nil {
 		return false, err

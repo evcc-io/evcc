@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/evcc-io/evcc/core/site"
+	"github.com/evcc-io/evcc/util/auth"
 )
 
 const authCookieName = "auth"
@@ -19,7 +19,7 @@ type loginRequest struct {
 	Password string `json:"password"`
 }
 
-func updatePasswordHandler(site site.API) http.HandlerFunc {
+func updatePasswordHandler(auth auth.Auth) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req updatePasswordRequest
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -28,21 +28,23 @@ func updatePasswordHandler(site site.API) http.HandlerFunc {
 		}
 
 		// update password
-		if site.Auth().IsAdminPasswordConfigured() {
-			if !site.Auth().IsAdminPasswordValid(req.Current) {
+		if auth.IsAdminPasswordConfigured() {
+			if !auth.IsAdminPasswordValid(req.Current) {
 				http.Error(w, "Invalid password", http.StatusBadRequest)
 				return
 			}
-			if err := site.Auth().SetAdminPassword(req.New); err != nil {
+
+			if err := auth.SetAdminPassword(req.New); err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
+
 			w.WriteHeader(http.StatusAccepted)
 			return
 		}
 
 		// create new password
-		if err := site.Auth().SetAdminPassword(req.New); err != nil {
+		if err := auth.SetAdminPassword(req.New); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -54,8 +56,7 @@ func updatePasswordHandler(site site.API) http.HandlerFunc {
 func jwtFromRequest(r *http.Request) string {
 	tokenString := r.Header.Get("Authorization")
 	if tokenString == "" {
-		cookie, _ := r.Cookie(authCookieName)
-		if cookie != nil {
+		if cookie, _ := r.Cookie(authCookieName); cookie != nil {
 			tokenString = cookie.Value
 		}
 	}
@@ -64,9 +65,8 @@ func jwtFromRequest(r *http.Request) string {
 }
 
 // authStatusHandler login status (true/false) based on jwt token. Error if admin password is not configured
-func authStatusHandler(site site.API) http.HandlerFunc {
+func authStatusHandler(auth auth.Auth) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		auth := site.Auth()
 		if !auth.IsAdminPasswordConfigured() {
 			http.Error(w, "Not implemented", http.StatusNotImplemented)
 			return
@@ -82,8 +82,7 @@ func authStatusHandler(site site.API) http.HandlerFunc {
 	}
 }
 
-func loginHandler(site site.API) http.HandlerFunc {
-	auth := site.Auth()
+func loginHandler(auth auth.Auth) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req loginRequest
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -121,8 +120,7 @@ func logoutHandler(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func ensureAuth(site site.API, next http.HandlerFunc) http.HandlerFunc {
-	auth := site.Auth()
+func ensureAuth(auth auth.Auth, next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// check jwt token
 		ok, err := auth.ValidateJwtToken(jwtFromRequest(r))

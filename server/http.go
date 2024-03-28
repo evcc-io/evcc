@@ -10,6 +10,7 @@ import (
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/server/assets"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/auth"
 	"github.com/evcc-io/evcc/util/telemetry"
 	"github.com/go-http-utils/etag"
 	"github.com/gorilla/handlers"
@@ -95,11 +96,13 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, cache *util.Cache) {
 		handlers.AllowedHeaders([]string{"Content-Type"}),
 	))
 
+	auth := auth.New()
+
 	// site api
 	routes := map[string]route{
 		"health":                  {"GET", "/health", healthHandler(site)},
 		"state":                   {"GET", "/state", stateHandler(cache)},
-		"config":                  {"GET", "/config/templates/{class:[a-z]+}", templatesHandler},
+		"templates":               {"GET", "/config/templates/{class:[a-z]+}", templatesHandler},
 		"products":                {"GET", "/config/products/{class:[a-z]+}", productsHandler},
 		"devices":                 {"GET", "/config/devices/{class:[a-z]+}", devicesHandler},
 		"device":                  {"GET", "/config/devices/{class:[a-z]+}/{id:[0-9.]+}", deviceConfigHandler},
@@ -124,17 +127,18 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, cache *util.Cache) {
 		"deletesession":           {"DELETE", "/session/{id:[0-9]+}", deleteSessionHandler},
 		"telemetry":               {"GET", "/settings/telemetry", boolGetHandler(telemetry.Enabled)},
 		"telemetry2":              {"POST", "/settings/telemetry/{value:[a-z]+}", boolHandler(telemetry.Enable, telemetry.Enabled)},
-		"password":                {"PUT", "/auth/password", updatePasswordHandler(site)},
-		"auth":                    {"GET", "/auth/status", authStatusHandler(site)},
-		"login":                   {"POST", "/auth/login", loginHandler(site)},
+		"password":                {"PUT", "/auth/password", updatePasswordHandler(auth)},
+		"auth":                    {"GET", "/auth/status", authStatusHandler(auth)},
+		"login":                   {"POST", "/auth/login", loginHandler(auth)},
 		"logout":                  {"POST", "/auth/logout", logoutHandler},
 	}
 
+	// TODO split routes
 	for _, r := range routes {
 		handler := r.HandlerFunc
 		// require auth for config api
 		if strings.HasPrefix(r.Pattern, "/config/") {
-			handler = ensureAuth(site, handler)
+			handler = ensureAuth(auth, handler)
 		}
 		api.Methods(r.Methods()...).Path(r.Pattern).Handler(handler)
 	}

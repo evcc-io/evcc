@@ -15,7 +15,7 @@ func TestSetAdminPassword(t *testing.T) {
 	defer ctrl.Finish()
 
 	mock := settings.NewMockAPI(ctrl)
-	auth := New(mock)
+	auth := NewMock(mock)
 	password := "testpassword"
 
 	mock.EXPECT().SetString(keys.AdminPassword, gomock.Not(gomock.Eq("")))
@@ -27,7 +27,7 @@ func TestRemoveAdminPassword(t *testing.T) {
 	defer ctrl.Finish()
 
 	mock := settings.NewMockAPI(ctrl)
-	auth := New(mock)
+	auth := NewMock(mock)
 
 	mock.EXPECT().SetString(keys.JwtSecret, "")
 	mock.EXPECT().SetString(keys.AdminPassword, "")
@@ -39,7 +39,7 @@ func TestIsAdminPasswordValid(t *testing.T) {
 	defer ctrl.Finish()
 
 	mock := settings.NewMockAPI(ctrl)
-	auth := New(mock)
+	auth := NewMock(mock)
 
 	validPw := "testpassword"
 	invalidPw := "wrongpassword"
@@ -64,7 +64,7 @@ func TestJwtToken(t *testing.T) {
 	defer ctrl.Finish()
 
 	mock := settings.NewMockAPI(ctrl)
-	auth := New(mock)
+	auth := NewMock(mock)
 
 	mock.EXPECT().String(keys.JwtSecret).Return("somesecret", nil).AnyTimes()
 

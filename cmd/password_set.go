@@ -2,8 +2,7 @@ package cmd
 
 import (
 	"github.com/AlecAivazis/survey/v2"
-	"github.com/evcc-io/evcc/core/auth"
-	"github.com/evcc-io/evcc/server/db/settings"
+	"github.com/evcc-io/evcc/util/auth"
 	"github.com/spf13/cobra"
 )
 
@@ -42,8 +41,7 @@ func runPasswordSet(cmd *cobra.Command, args []string) {
 	if password == "" {
 		log.FATAL.Fatal("password cannot be empty")
 	} else {
-		a := auth.New(new(settings.Settings))
-		a.SetAdminPassword(password)
+		auth.New().SetAdminPassword(password)
 	}
 
 	// wait for shutdown
