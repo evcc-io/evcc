@@ -44,7 +44,7 @@ export default {
 		mode: String,
 		tariff: Object,
 		plan: Object,
-		vehicleTargetSoc: Number,
+		vehicleLimitSoc: Number,
 	},
 	computed: {
 		endTime: function () {
@@ -91,7 +91,7 @@ export default {
 		},
 		targetIsAboveVehicleLimit: function () {
 			if (this.socBasedPlanning) {
-				return this.effectivePlanSoc > (this.vehicleTargetSoc || 100);
+				return this.effectivePlanSoc > (this.vehicleLimitSoc || 100);
 			}
 			return false;
 		},
@@ -102,7 +102,7 @@ export default {
 			return this.fmtKWh(this.limitEnergy * 1e3);
 		},
 		vehicleLimitFmt: function () {
-			return this.fmtSoc(this.vehicleTargetSoc);
+			return this.fmtSoc(this.vehicleLimitSoc);
 		},
 		goalFmt: function () {
 			if (this.socBasedPlanning) {

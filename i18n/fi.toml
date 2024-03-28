@@ -273,7 +273,7 @@ charging = "lataa"
 connected = "yhdistetty"
 disconnected = "irroitettu"
 ready = "valmis"
-vehicleTarget = "Ajoneuvon raja {soc}%"
+vehicleLimit = "Ajoneuvon raja {soc}%"
 
 [main.vehicleStatus]
 charging = "Lataa…"
@@ -291,7 +291,7 @@ targetChargeActive = "Lataaminen käynnissä…"
 targetChargePlanned = "Lataaminen alkaa {time}."
 targetChargeWaitForVehicle = "Tavoite lataus valmis. Odotetaan ajoneuvoa…"
 unknown = ""
-vehicleTargetReached = "Ajoneuvon raja {soc}% saavutettu."
+vehicleLimitReached = "Ajoneuvon raja {soc}% saavutettu."
 waitForVehicle = "Valmiina. Odotetaan ajoneuvoa…"
 
 [notifications]

@@ -352,7 +352,7 @@ charging = "nabíjení"
 connected = "připojeno"
 disconnected = "odpojeno"
 ready = "připraveno"
-vehicleTarget = "Limit vozidla: {soc}%"
+vehicleLimit = "Limit vozidla: {soc}%"
 
 [main.vehicleStatus]
 charging = "Nabíjení..."
@@ -370,7 +370,7 @@ targetChargeActive = "Nabíjení na cílovou hodnotu aktivní..."
 targetChargePlanned = "Nabíjení na cílovou hodnotu začne v {time}."
 targetChargeWaitForVehicle = "Cílové nabíjení připraveno. Čekám na vozidlo..."
 unknown = ""
-vehicleTargetReached = "Limit vozidla {soc}% dosažen."
+vehicleLimitReached = "Limit vozidla {soc}% dosažen."
 waitForVehicle = "Připraveno. Čekám na vozidlo..."
 
 [notifications]

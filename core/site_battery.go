@@ -48,36 +48,40 @@ func (site *Site) applyBatteryMode(mode api.BatteryMode) error {
 	return nil
 }
 
-func (site *Site) smartCostActive(lp loadpoint.API) (bool, error) {
+func (site *Site) plannerRate() (*api.Rate, error) {
 	tariff := site.GetTariff(PlannerTariff)
 	if tariff == nil || tariff.Type() == api.TariffTypePriceStatic {
-		return false, nil
+		return nil, nil
 	}
 
 	rates, err := tariff.Rates()
 	if err != nil {
-		return false, err
+		return nil, err
 	}
 
 	rate, err := rates.Current(time.Now())
 	if err != nil {
-		return false, err
+		return nil, err
 	}
 
+	return &rate, nil
+}
+
+func (site *Site) smartCostActive(lp loadpoint.API, rate *api.Rate) bool {
 	limit := lp.GetSmartCostLimit()
-	return limit != 0 && rate.Price <= limit, nil
+	return limit != 0 && rate != nil && rate.Price <= limit
 }
 
 func (site *Site) updateBatteryMode() {
 	mode := api.BatteryNormal
 
-	for _, lp := range site.Loadpoints() {
-		smartCostActive, err := site.smartCostActive(lp)
-		if err != nil {
-			site.log.ERROR.Println("smart cost:", err)
-			continue
-		}
+	rate, err := site.plannerRate()
+	if err != nil {
+		site.log.WARN.Println("smart cost:", err)
+	}
 
+	for _, lp := range site.Loadpoints() {
+		smartCostActive := site.smartCostActive(lp, rate)
 		if lp.GetStatus() == api.StatusC && (smartCostActive || lp.IsFastChargingActive()) {
 			mode = api.BatteryHold
 			break

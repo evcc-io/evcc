@@ -356,7 +356,7 @@ charging = "opladning"
 connected = "forbundet"
 disconnected = "afbrudt"
 ready = "parat"
-vehicleTarget = "Køretøjsgrænse: {soc}%"
+vehicleLimit = "Køretøjsgrænse: {soc}%"
 
 [main.vehicleStatus]
 charging = "Oplader..."
@@ -374,7 +374,7 @@ targetChargeActive = "Målladning aktiv..."
 targetChargePlanned = "Målopladning starter kl. {time}."
 targetChargeWaitForVehicle = "Målladning klar. Venter på køretøj..."
 unknown = ""
-vehicleTargetReached = "Køretøjsgrænsen {soc} % nået."
+vehicleLimitReached = "Køretøjsgrænsen {soc} % nået."
 waitForVehicle = "Parat. Venter på køretøj ..."
 
 [notifications]
