@@ -12,7 +12,9 @@ import (
 	{{- $idx := 0}}
 
 	{{- range $typ, $def := .Types}}
-		{{- if gt $idx 0}} &&{{else}}{{$idx = 1}}{{end}} {{$def.VarName}} {{if contains $combo $typ}}!={{else}}=={{end}} nil
+		{{- range $method := $def.Methods }}
+			{{- if gt $idx 0}} &&{{else}}{{$idx = 1}}{{end}} {{$method.VarName}} {{if contains $combo $typ}}!={{else}}=={{end}} nil
+		{{- end}}
 	{{- end}}:
 		return &struct {
 			{{.BaseType}}
@@ -26,14 +28,16 @@ import (
 {{- range $typ, $def := .Types}}
 	{{- if contains $combo $typ}}
 			{{$def.ShortType}}: &{{$prefix}}{{$def.ShortType}}Impl{
-				{{$def.VarName}}: {{$def.VarName}},
+				{{- range $method := $def.Methods }}
+					{{$method.VarName}}: {{$method.VarName}},
+				{{- end}}
 			},
 	{{- end}}
 {{- end}}
 		}
 {{- end -}}
 
-func {{.Function}}(base {{.BaseType}}{{range ordered}}, {{.VarName}} {{.Signature}}{{end}}) {{.ReturnType}} {
+func {{.Function}}(base {{.BaseType}}{{range $type := ordered}}{{range $m := $type.Methods}}, {{$m.VarName}} {{$m.Signature}}{{end}}{{end}}) {{.ReturnType}} {
 {{- $basetype := .BaseType}}
 {{- $shortbase := .ShortBase}}
 {{- $prefix := .Function}}
@@ -41,7 +45,9 @@ func {{.Function}}(base {{.BaseType}}{{range ordered}}, {{.VarName}} {{.Signatur
 {{- $idx := 0}}
 	switch {
 	case {{- range $typ, $def := .Types}}
-		{{- if gt $idx 0}} &&{{else}}{{$idx = 1}}{{end}} {{$def.VarName}} == nil
+		{{- range $method := $def.Methods}}
+			{{- if gt $idx 0}} &&{{else}}{{$idx = 1}}{{end}} {{$method.VarName}} == nil
+		{{- end}}
 	{{- end}}:
 		return base
 {{range $combo := .Combinations}}
@@ -51,19 +57,21 @@ func {{.Function}}(base {{.BaseType}}{{range ordered}}, {{.VarName}} {{.Signatur
 	return nil
 }
 
-{{range .Types -}}
+{{range $t := .Types -}}
 type {{$prefix}}{{.ShortType}}Impl struct {
-	{{.VarName}} {{.Signature}}
+	{{range .Methods -}}
+		{{.VarName}} {{.Signature}}
+	{{end}}
 }
-
-func (impl *{{$prefix}}{{.ShortType}}Impl) {{.Function}}(
-	{{- range $idx, $param := .Params -}}
-		{{- if gt $idx 0}}, {{end -}}
-		p{{$idx}} {{ $param -}} 
-	{{end}}){{ .ReturnTypes }} {
-	return impl.{{.VarName}}(
-	{{- range $idx, $param := .Params -}}
-		{{- if gt $idx 0}}, {{end}}p{{- $idx -}}{{end}})
-	}
-
+	{{range $m := .Methods -}}
+	func (impl *{{$prefix}}{{$t.ShortType}}Impl) {{.Function}}(
+		{{- range $idx, $param := .Params -}}
+			{{- if gt $idx 0}}, {{end -}}
+			p{{$idx}} {{ $param -}} 
+		{{end}}){{ .ReturnTypes }} {
+		return impl.{{$m.VarName}}(
+		{{- range $idx, $param := .Params -}}
+			{{- if gt $idx 0}}, {{end}}p{{- $idx -}}{{end}})
+		}
+	{{end}}
 {{end}}
