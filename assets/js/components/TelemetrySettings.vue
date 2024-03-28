@@ -3,7 +3,7 @@
 	<div class="form-check form-switch my-3">
 		<input
 			id="telemetryEnabled"
-			v-model="enabled"
+			:checked="enabled"
 			class="form-check-input"
 			type="checkbox"
 			role="switch"
@@ -75,6 +75,7 @@ export default {
 			}
 			try {
 				const response = await api.get("settings/telemetry");
+				console.log("update in settings", response.data.result);
 				settings.telemetry = response.data.result;
 			} catch (err) {
 				console.error(err);
