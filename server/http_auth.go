@@ -1,7 +1,7 @@
 package server
 
 import (
-	"io"
+	"encoding/json"
 	"net/http"
 	"time"
 
@@ -10,12 +10,43 @@ import (
 
 const authCookieName = "auth"
 
+type updatePasswordRequest struct {
+	Current string `json:"current"`
+	New     string `json:"new"`
+}
+
+type loginRequest struct {
+	Password string `json:"password"`
+}
+
 func updatePasswordHandler(site site.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		password, _ := io.ReadAll(r.Body)
-		if err := site.Auth().SetAdminPassword(string(password)); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+		var req updatePasswordRequest
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
 		}
+
+		// update password
+		if site.Auth().IsAdminPasswordConfigured() {
+			if !site.Auth().IsAdminPasswordValid(req.Current) {
+				http.Error(w, "Invalid password", http.StatusBadRequest)
+				return
+			}
+			if err := site.Auth().SetAdminPassword(req.New); err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			w.WriteHeader(http.StatusAccepted)
+			return
+		}
+
+		// create new password
+		if err := site.Auth().SetAdminPassword(req.New); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.WriteHeader(http.StatusCreated)
 	}
 }
 
@@ -54,8 +85,13 @@ func authStatusHandler(site site.API) http.HandlerFunc {
 func loginHandler(site site.API) http.HandlerFunc {
 	auth := site.Auth()
 	return func(w http.ResponseWriter, r *http.Request) {
-		password, _ := io.ReadAll(r.Body)
-		if !auth.IsAdminPasswordValid(string(password)) {
+		var req loginRequest
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		if !auth.IsAdminPasswordValid(req.Password) {
 			http.Error(w, "Invalid password", http.StatusUnauthorized)
 			return
 		}

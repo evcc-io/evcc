@@ -37,6 +37,10 @@ export function isLoggedIn() {
   return auth.loggedIn;
 }
 
+export function isConfigured() {
+  return auth.configured;
+}
+
 export function openLoginModal() {
   const modal = Modal.getOrCreateInstance(document.getElementById("loginModal"));
   modal.show();

@@ -27,11 +27,16 @@
 				</a>
 			</dd>
 		</dl>
-		<dl class="row wip">
+		<dl class="row">
 			<dt class="col-sm-4">Password</dt>
 			<dd class="col-sm-8">
 				*******
-				<a href="#" class="ms-2 d-inline-block text-muted" @click.prevent="todo">edit</a>
+				<a
+					href="#"
+					class="ms-2 d-inline-block text-muted"
+					@click.prevent="openModal('passwordModal')"
+					>edit</a
+				>
 			</dd>
 		</dl>
 		<dl class="row wip">

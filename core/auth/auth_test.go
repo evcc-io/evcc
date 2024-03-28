@@ -18,12 +18,8 @@ func TestSetAdminPassword(t *testing.T) {
 	auth := New(mock)
 	password := "testpassword"
 
-	mock.EXPECT().String(keys.AdminPassword).Return("", nil)
 	mock.EXPECT().SetString(keys.AdminPassword, gomock.Not(gomock.Eq("")))
 	assert.Nil(t, auth.SetAdminPassword(password)) // success
-
-	mock.EXPECT().String(keys.AdminPassword).Return("exists", nil)
-	assert.NotNil(t, auth.SetAdminPassword(password)) // fail, password already set
 }
 
 func TestRemoveAdminPassword(t *testing.T) {
@@ -49,7 +45,7 @@ func TestIsAdminPasswordValid(t *testing.T) {
 	invalidPw := "wrongpassword"
 
 	// password not set, reject
-	mock.EXPECT().String(keys.AdminPassword).Return("", nil).Times(2)
+	mock.EXPECT().String(keys.AdminPassword).Return("", nil).Times(1)
 	assert.False(t, auth.IsAdminPasswordValid(validPw))
 
 	// password set, accept

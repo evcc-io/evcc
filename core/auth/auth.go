@@ -4,7 +4,6 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/evcc-io/evcc/core/keys"
@@ -48,10 +47,6 @@ func (a *Auth) IsAdminPasswordConfigured() bool {
 
 // SetAdminPassword sets the admin password if not already set
 func (a *Auth) SetAdminPassword(password string) error {
-	if a.getAdminPasswordHash() != "" {
-		return errors.New("admin password already set")
-	}
-
 	if password == "" {
 		return errors.New("password cannot be empty")
 	}
@@ -68,7 +63,6 @@ func (a *Auth) SetAdminPassword(password string) error {
 // IsAdminPasswordValid checks if the given password matches the admin password
 func (a *Auth) IsAdminPasswordValid(password string) bool {
 	adminHash := a.getAdminPasswordHash()
-	fmt.Println("adminHash: " + adminHash)
 	if adminHash == "" {
 		return false
 	}

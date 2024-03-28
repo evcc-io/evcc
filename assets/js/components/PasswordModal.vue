@@ -1,105 +1,104 @@
 <template>
-	<Teleport to="body">
-		<div
-			id="passwordModal"
-			class="modal fade text-dark"
-			tabindex="-1"
-			role="dialog"
-			aria-hidden="true"
-			data-bs-backdrop="static"
-			data-bs-keyboard="false"
-			data-testid="password-modal"
+	<GenericModal
+		id="passwordModal"
+		:title="title"
+		ref="modal"
+		data-testid="password-modal"
+		:uncloseable="!updateMode"
+		@open="open"
+		@closed="closed"
+	>
+		<p v-if="error" class="text-danger">{{ $t("passwordModal.error") }} "{{ error.trim() }}"</p>
+		<p v-if="!updateMode" class="mb-4">{{ $t("passwordModal.description") }}</p>
+		<form
+			v-if="modalVisible"
+			ref="form"
+			:class="{ 'was-validated': showValidation }"
+			novalidate
+			@submit="setPassword"
 		>
-			<div class="modal-dialog modal-dialog-centered" role="document">
-				<div class="modal-content">
-					<div class="modal-header">
-						<h5 class="modal-title">{{ $t("passwordModal.title") }}</h5>
-					</div>
-					<div class="modal-body">
-						<p v-if="error" class="text-danger">
-							{{ $t("passwordModal.error") }} "{{ error }}"
-						</p>
-						<p class="mb-4">{{ $t("passwordModal.description") }}</p>
-						<form
-							ref="form"
-							:class="{ 'was-validated': showValidation }"
-							novalidate
-							@submit="setPassword"
-						>
-							<!-- password manager hint -->
-							<input
-								class="d-none"
-								type="text"
-								name="username"
-								id="username"
-								autocomplete="username"
-								value="admin"
-							/>
-							<FormRow id="newPassword" :label="$t('passwordModal.password')">
-								<input
-									id="newPassword"
-									type="password"
-									v-model="password"
-									class="form-control"
-									autocomplete="new-password"
-									required
-								/>
-								<div class="invalid-feedback">
-									{{ $t("passwordModal.empty") }}
-								</div>
-							</FormRow>
-							<FormRow
-								id="newPasswordRepeat"
-								:label="$t('passwordModal.passwordRepeat')"
-							>
-								<input
-									id="newPasswordRepeat"
-									type="password"
-									ref="passwordRepeat"
-									v-model="passwordRepeat"
-									class="form-control"
-									autocomplete="new-password"
-								/>
-								<div v-if="!passwordsMatch" class="invalid-feedback">
-									{{ $t("passwordModal.noMatch") }}
-								</div>
-							</FormRow>
-
-							<div class="d-flex justify-content-end">
-								<button
-									type="submit"
-									class="btn btn-primary justify-self-right"
-									:disabled="loading"
-								>
-									<span
-										v-if="loading"
-										class="spinner-border spinner-border-sm"
-										role="status"
-										aria-hidden="true"
-									></span>
-									{{ $t("passwordModal.setPassword") }}
-								</button>
-							</div>
-						</form>
-					</div>
+			<!-- password manager hint -->
+			<input
+				class="d-none"
+				type="text"
+				name="username"
+				id="username"
+				autocomplete="username"
+				value="admin"
+			/>
+			<FormRow
+				v-if="updateMode"
+				id="passwordCurrent"
+				:label="$t('passwordModal.labelCurrent')"
+			>
+				<input
+					id="passwordCurrent"
+					type="password"
+					v-model="passwordCurrent"
+					class="form-control"
+					autocomplete="current-password"
+				/>
+			</FormRow>
+			<FormRow id="passwordNew" :label="$t('passwordModal.labelNew')">
+				<input
+					id="passwordNew"
+					type="password"
+					v-model="passwordNew"
+					class="form-control"
+					autocomplete="new-password"
+					required
+				/>
+				<div class="invalid-feedback">
+					{{ $t("passwordModal.empty") }}
 				</div>
+			</FormRow>
+			<FormRow id="passwordRepeat" :label="$t('passwordModal.labelRepeat')">
+				<input
+					id="passwordRepeat"
+					type="password"
+					ref="passwordRepeat"
+					v-model="passwordRepeat"
+					class="form-control"
+					autocomplete="new-password"
+				/>
+				<div v-if="!passwordsMatch" class="invalid-feedback">
+					{{ $t("passwordModal.noMatch") }}
+				</div>
+			</FormRow>
+
+			<div class="d-flex justify-content-end">
+				<button
+					type="submit"
+					class="btn btn-primary justify-self-right"
+					:disabled="loading"
+				>
+					<span
+						v-if="loading"
+						class="spinner-border spinner-border-sm"
+						role="status"
+						aria-hidden="true"
+					></span>
+					{{ submitText }}
+				</button>
 			</div>
-		</div>
-	</Teleport>
+		</form>
+	</GenericModal>
 </template>
 
 <script>
-import Modal from "bootstrap/js/dist/modal";
+import GenericModal from "./GenericModal.vue";
 import FormRow from "./FormRow.vue";
 import api from "../api";
-import { updateAuthStatus } from "../auth";
+import { updateAuthStatus, isConfigured } from "../auth";
 
 export default {
 	name: "PasswordModal",
-	components: { FormRow },
+	components: { FormRow, GenericModal },
 	data: () => {
 		return {
-			password: "",
+			modalVisible: false,
+			passwordCurrent: "",
+			passwordNew: "",
 			passwordRepeat: "",
 			showValidation: false,
 			loading: false,
@@ -108,13 +107,38 @@ export default {
 	},
 	computed: {
 		passwordsMatch: function () {
-			return this.password === this.passwordRepeat;
+			return this.passwordNew === this.passwordRepeat;
 		},
 		passwordEmpty: function () {
-			return this.password.length === 0;
+			return this.passwordNew.length === 0;
+		},
+		updateMode: function () {
+			return isConfigured();
+		},
+		title: function () {
+			return this.updateMode
+				? this.$t("passwordModal.titleUpdate")
+				: this.$t("passwordModal.titleNew");
+		},
+		submitText: function () {
+			return this.updateMode
+				? this.$t("passwordModal.updatePassword")
+				: this.$t("passwordModal.newPassword");
 		},
 	},
 	methods: {
+		open: function () {
+			this.modalVisible = true;
+		},
+		closed: function () {
+			this.modalVisible = false;
+			this.passwordCurrent = "";
+			this.passwordNew = "";
+			this.passwordRepeat = "";
+			this.error = false;
+			this.loading = false;
+			this.showValidation = false;
+		},
 		setPassword: async function (e) {
 			this.$refs.passwordRepeat.setCustomValidity(
 				this.passwordsMatch && !this.passwordEmpty ? "" : "invalid"
@@ -125,27 +149,28 @@ export default {
 			this.showValidation = true;
 
 			if (this.$refs.form.checkValidity()) {
-				await this.savePassword(this.password);
+				await this.savePassword();
 				await updateAuthStatus();
-				// reset form
-				this.password = "";
-				this.passwordRepeat = "";
 			}
 		},
-		savePassword: async function (password) {
+		savePassword: async function () {
 			this.loading = true;
 			this.error = null;
 			try {
-				await api.put("/auth/password", password);
+				const data = {
+					current: this.passwordCurrent,
+					new: this.passwordNew,
+				};
+				await api.put("/auth/password", data);
+				this.loading = false;
+				this.$refs.modal?.close();
 			} catch (error) {
 				console.error(error);
 				this.error = error.response.data;
+				this.showValidation = false;
 			} finally {
 				this.loading = false;
 			}
-		},
-		openPasswordModal() {
-			Modal.getOrCreateInstance(document.getElementById("passwordModal")).show();
 		},
 	},
 };
