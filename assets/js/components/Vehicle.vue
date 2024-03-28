@@ -106,7 +106,7 @@ export default {
 		planEnergy: Number,
 		planProjectedStart: String,
 		planTime: String,
-		planOverrun: Boolean,
+		planTimeUnreachable: Boolean,
 		pvAction: String,
 		pvRemainingInterpolated: Number,
 		smartCostActive: Boolean,

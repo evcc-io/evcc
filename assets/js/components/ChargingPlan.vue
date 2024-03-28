@@ -15,7 +15,7 @@
 						<span class="targetTimeLabel"> {{ targetTimeLabel() }}</span>
 						<div
 							class="extraValue text-nowrap"
-							:class="{ 'text-warning': planOverrun }"
+							:class="{ 'text-warning': planTimeUnreachable }"
 						>
 							{{ targetSocLabel }}
 						</div>
@@ -125,7 +125,7 @@ export default {
 		planActive: Boolean,
 		planEnergy: Number,
 		planTime: String,
-		planOverrun: Boolean,
+		planTimeUnreachable: Boolean,
 		rangePerSoc: Number,
 		smartCostLimit: Number,
 		smartCostType: String,
@@ -146,7 +146,7 @@ export default {
 	},
 	computed: {
 		buttonColor: function () {
-			if (this.planOverrun) {
+			if (this.planTimeUnreachable) {
 				return "text-warning";
 			}
 			if (!this.enabled) {
