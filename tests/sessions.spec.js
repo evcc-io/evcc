@@ -5,7 +5,7 @@ const mobile = devices["iPhone 12 Mini"].viewport;
 const desktop = devices["Desktop Chrome"].viewport;
 
 test.beforeAll(async () => {
-  await start("basics.evcc.yaml", "sessions.sql");
+  await start("basics.evcc.yaml", ["password.sql", "sessions.sql"]);
 });
 test.afterAll(async () => {
   await stop();

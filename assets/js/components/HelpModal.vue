@@ -105,7 +105,7 @@
 					<div class="modal-footer d-flex justify-content-between">
 						<button
 							type="button"
-							class="btn btn-outline-secondary"
+							class="btn btn-link text-muted"
 							data-bs-dismiss="modal"
 							@click="openHelpModal"
 						>

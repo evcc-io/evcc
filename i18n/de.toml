@@ -197,6 +197,14 @@ description = "Unter normalen Umständen sollte ein Neustart nicht notwendig sei
 disclaimer = "Hinweis: evcc beendet sich und verlässt sich darauf, vom Betriebssystem neu gestartet zu werden."
 modalTitle = "Sicher, dass du neu starten möchtest?"
 
+[loginModal]
+cancel = "Abbrechen"
+error = "Login fehlgeschlagen: "
+invalid = "Passwort ist ungültig."
+login = "Anmelden"
+password = "Passwort"
+title = "Authentifizierung"
+
 [main]
 vehicles = "Parkplatz"
 
@@ -379,6 +387,19 @@ modalTitle = "Meldungen"
 [offline]
 message = "Keine Verbindung zum Server."
 reload = "Erneut laden?"
+
+[passwordModal]
+description = "Setze ein Passwort, um die Konfiguration zu schützen. Die Hauptansicht bleibt ohne Login zugänglich."
+empty = "Passwort darf nicht leer sein"
+error = "Fehler: "
+labelCurrent = "Aktuelles Passwort"
+labelNew = "Neues Passwort"
+labelRepeat = "Neues Passwort wiederholen"
+newPassword = "Passwort setzen"
+noMatch = "Passwörter stimmen nicht überein"
+titleNew = "Administrator Passwort setzen"
+titleUpdate = "Administrator Passwort ändern"
+updatePassword = "Passwort ändern"
 
 [session]
 cancel = "Abbrechen"

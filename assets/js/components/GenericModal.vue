@@ -4,10 +4,12 @@
 			:id="id"
 			ref="modal"
 			class="modal fade text-dark"
-			data-bs-backdrop="true"
+			:class="sizeClass"
 			tabindex="-1"
 			role="dialog"
 			aria-hidden="true"
+			:data-bs-backdrop="uncloseable ? 'static' : 'true'"
+			:data-bs-keyboard="uncloseable ? 'false' : 'true'"
 			:data-testid="dataTestid"
 		>
 			<div class="modal-dialog modal-dialog-centered" role="document">
@@ -17,6 +19,7 @@
 							{{ title }}
 						</h5>
 						<button
+							v-if="!uncloseable"
 							type="button"
 							class="btn-close"
 							data-bs-dismiss="modal"
@@ -41,27 +44,29 @@ export default {
 		id: String,
 		title: String,
 		dataTestid: String,
+		uncloseable: Boolean,
+		size: String,
 	},
-	emits: ["visibilityChanged"],
-	watch: {
-		isModalVisible(visible) {
-			this.$emit("changed", visible);
-		},
-	},
+	emits: ["open", "closed"],
 	mounted() {
-		this.$refs.modal.addEventListener("show.bs.modal", this.modalVisible);
-		this.$refs.modal.addEventListener("hide.bs.modal", this.modalInvisible);
+		this.$refs.modal.addEventListener("show.bs.modal", this.handleShow);
+		this.$refs.modal.addEventListener("hidden.bs.modal", this.handleHidden);
 	},
 	unmounted() {
-		this.$refs.modal?.removeEventListener("show.bs.modal", this.modalVisible);
-		this.$refs.modal?.removeEventListener("hide.bs.modal", this.modalInvisible);
+		this.$refs.modal?.removeEventListener("show.bs.modal", this.handleShow);
+		this.$refs.modal?.removeEventListener("hidden.bs.modal", this.handleHidden);
+	},
+	computed: {
+		sizeClass() {
+			return this.size ? `modal-${this.size}` : "";
+		},
 	},
 	methods: {
-		modalVisible() {
-			this.isModalVisible = true;
+		handleShow() {
+			this.$emit("open");
 		},
-		modalInvisible() {
-			this.isModalVisible = false;
+		handleHidden() {
+			this.$emit("closed");
 		},
 		open() {
 			Modal.getOrCreateInstance(this.$refs.modal).show();
