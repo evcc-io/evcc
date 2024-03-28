@@ -103,8 +103,6 @@ require (
 	nhooyr.io/websocket v1.8.10
 )
 
-require github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
-
 require (
 	github.com/Masterminds/goutils v1.1.1 // indirect
 	github.com/Masterminds/semver/v3 v3.2.1 // indirect

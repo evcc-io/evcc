@@ -10,8 +10,6 @@ import (
 
 const authCookieName = "auth"
 
-var authQueryParam = "auth"
-
 func updatePasswordHandler(site site.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		password, _ := io.ReadAll(r.Body)
@@ -21,7 +19,7 @@ func updatePasswordHandler(site site.API) http.HandlerFunc {
 	}
 }
 
-// read jwt from 1) Authorization header, 2) cookie, 3) query parameter
+// read jwt from header and cookie
 func jwtFromRequest(r *http.Request) string {
 	tokenString := r.Header.Get("Authorization")
 	if tokenString == "" {
@@ -29,9 +27,6 @@ func jwtFromRequest(r *http.Request) string {
 		if cookie != nil {
 			tokenString = cookie.Value
 		}
-	}
-	if tokenString == "" {
-		tokenString = r.URL.Query().Get(authQueryParam)
 	}
 
 	return tokenString
@@ -87,7 +82,6 @@ func logoutHandler(w http.ResponseWriter, r *http.Request) {
 		Name:     authCookieName,
 		Path:     "/",
 		HttpOnly: true,
-		MaxAge:   0,
 	})
 }
 

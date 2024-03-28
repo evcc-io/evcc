@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/core/keys"
-	"github.com/golang-jwt/jwt"
+	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -15,6 +15,8 @@ type Settings interface {
 	String(key string) (string, error)
 	SetString(key string, value string)
 }
+
+const admin = "admin"
 
 type Auth struct {
 	settings Settings
@@ -102,18 +104,17 @@ func (a *Auth) getJwtSecret() ([]byte, error) {
 
 // GenerateJwtToken generates an admin user JWT token with the given lifetime
 func (a *Auth) GenerateJwtToken(lifetime time.Duration) (string, error) {
-	claims := &jwt.StandardClaims{
-		Subject:   "admin",
-		ExpiresAt: time.Now().Add(lifetime).Unix(),
+	claims := &jwt.RegisteredClaims{
+		Subject:   admin,
+		ExpiresAt: jwt.NewNumericDate(time.Now().Add(lifetime)),
 	}
 
-	jwtSecret, err := a.getJwtSecret()
-	if err != nil {
+	if jwtSecret, err := a.getJwtSecret(); err != nil {
 		return "", err
+	} else {
+		token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+		return token.SignedString(jwtSecret)
 	}
-
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString(jwtSecret)
 }
 
 // ValidateJwtToken validates the given JWT token
@@ -124,18 +125,12 @@ func (a *Auth) ValidateJwtToken(tokenString string) (bool, error) {
 	}
 
 	// read token
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+	var claims jwt.RegisteredClaims
+	if _, err := jwt.ParseWithClaims(tokenString, &claims, func(token *jwt.Token) (interface{}, error) {
 		return jwtSecret, nil
-	})
-	if err != nil {
+	}, jwt.WithSubject(admin)); err != nil {
 		return false, err
 	}
 
-	// check validity
-	claims, ok := token.Claims.(jwt.MapClaims)
-	if ok && token.Valid && claims["sub"] == "admin" {
-		return true, nil
-	}
-
-	return false, nil
+	return true, nil
 }
