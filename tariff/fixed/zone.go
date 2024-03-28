@@ -1,7 +1,12 @@
 package fixed
 
 import (
+	"fmt"
 	"slices"
+	"time"
+
+	"github.com/evcc-io/evcc/api"
+	"github.com/jinzhu/now"
 )
 
 type Zone struct {
@@ -74,4 +79,54 @@ HOURS:
 	}
 
 	return res
+}
+
+// Rates implements the api.Tariff interface
+func (r Zones) Rates(tNow time.Time) (api.Rates, error) {
+	var res api.Rates
+
+	start := now.With(tNow.Local()).BeginningOfDay()
+	for i := 0; i < 7; i++ {
+		dow := Day((int(start.Weekday()) + i) % 7)
+
+		zones := r.ForDay(dow)
+		if len(zones) == 0 {
+			return nil, fmt.Errorf("no zones for weekday %d", dow)
+		}
+
+		dayStart := start.AddDate(0, 0, i)
+		markers := zones.TimeTableMarkers()
+
+		for i, m := range markers {
+			ts := dayStart.Add(time.Minute * time.Duration(m.Minutes()))
+
+			var zone *Zone
+			for j := len(zones) - 1; j >= 0; j-- {
+				if zones[j].Hours.Contains(m) {
+					zone = &zones[j]
+					break
+				}
+			}
+
+			if zone == nil {
+				return nil, fmt.Errorf("could not find zone for %02d:%02d", m.Hour, m.Min)
+			}
+
+			// end rate at end of day or next marker
+			end := dayStart.AddDate(0, 0, 1)
+			if i+1 < len(markers) {
+				end = dayStart.Add(time.Minute * time.Duration(markers[i+1].Minutes()))
+			}
+
+			rate := api.Rate{
+				Price: zone.Price,
+				Start: ts,
+				End:   end,
+			}
+
+			res = append(res, rate)
+		}
+	}
+
+	return res, nil
 }
