@@ -36,7 +36,7 @@ func loadpointConfig(id int, lp loadpoint.API) loadpointStruct {
 		Phases:         ptrZero(lp.GetPhases()),
 		MinCurrent:     ptr(lp.GetMinCurrent()),
 		MaxCurrent:     ptr(lp.GetMaxCurrent()),
-		SmartCostLimit: ptrZero(lp.GetSmartCostLimit()),
+		SmartCostLimit: ptr(lp.GetSmartCostLimit()),
 	}
 
 	return res
