@@ -68,7 +68,7 @@ func loginHandler(site site.API) http.HandlerFunc {
 		lifetime := time.Hour * 24 * 90 // 90 day valid
 		tokenString, err := auth.GenerateJwtToken(lifetime)
 		if err != nil {
-			http.Error(w, "Failed to generate JWT token: "+err.Error(), http.StatusInternalServerError)
+			http.Error(w, "Failed to generate JWT token.", http.StatusInternalServerError)
 			return
 		}
 
