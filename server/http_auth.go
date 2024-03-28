@@ -84,7 +84,6 @@ func loginHandler(site site.API) http.HandlerFunc {
 func logoutHandler(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, &http.Cookie{
 		Name:     authCookieName,
-		Value:    "",
 		Path:     "/",
 		HttpOnly: true,
 		MaxAge:   0,

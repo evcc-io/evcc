@@ -42,7 +42,7 @@ func runPasswordSet(cmd *cobra.Command, args []string) {
 	if password == "" {
 		log.FATAL.Fatal("password cannot be empty")
 	} else {
-		a := auth.New(&settings.Settings{})
+		a := auth.New(new(settings.Settings))
 		a.SetAdminPassword(password)
 	}
 
