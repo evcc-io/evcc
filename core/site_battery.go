@@ -74,8 +74,7 @@ func (site *Site) updateBatteryMode() {
 	for _, lp := range site.Loadpoints() {
 		smartCostActive, err := site.smartCostActive(lp)
 		if err != nil {
-			site.log.ERROR.Println("smart cost:", err)
-			continue
+			site.log.WARN.Println("smart cost:", err)
 		}
 
 		if lp.GetStatus() == api.StatusC && (smartCostActive || lp.IsFastChargingActive()) {
