@@ -125,41 +125,113 @@ render: |
         source: sequence
         set: 
         - source: const
-          value: {{ .minsoc }} 
+          value: {{ .minsoc }}
           set: 
             source: modbus
             {{- include "modbus" . | indent 10 }}
             register:
-              address: 166 
+              address: 166 # SOC TOU1
               type: writemultiple
               decode: int32s
         - source: const
-          value: 0
+          value: {{ .minsoc }}
           set: 
             source: modbus
             {{- include "modbus" . | indent 10 }}
             register:
-              address: 148 
+              address: 167 # SOC TOU2
               type: writemultiple
               decode: int32s
         - source: const
-          value: 2355 
+          value: {{ .minsoc }}
           set: 
             source: modbus
             {{- include "modbus" . | indent 10 }}
             register:
-              address: 149 
+              address: 168 # SOC TOU3
               type: writemultiple
               decode: int32s
         - source: const
-          value: 0 
+          value: {{ .minsoc }}
           set: 
             source: modbus
             {{- include "modbus" . | indent 10 }}
             register:
-              address: 172 
+              address: 169 # SOC TOU4
               type: writemultiple
               decode: int32s  
+        - source: const
+          value: {{ .minsoc }}
+          set: 
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 170 # SOC TOU5
+              type: writemultiple
+              decode: int32s  
+        - source: const
+          value: {{ .minsoc }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 171 # SOC TOU6
+              type: writemultiple
+              decode: int32s
+        - source: const
+          value: 0 # grid charge off
+          set: 
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 172 # Charge Mode TOU1
+              type: writemultiple
+              decode: int32s
+        - source: const
+          value: 0 # grid charge off
+          set: 
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 173 # Charge Mode TOU2
+              type: writemultiple
+              decode: int32s
+        - source: const
+          value: 0 # grid charge off
+          set: 
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 174 # Charge Mode TOU3
+              type: writemultiple
+              decode: int32s
+        - source: const
+          value: 0 # grid charge off
+          set: 
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 175 # Charge Mode TOU4
+              type: writemultiple
+              decode: int32s
+        - source: const
+          value: 0 # grid charge off
+          set: 
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 176 # Charge Mode TOU5
+              type: writemultiple
+              decode: int32s
+        - source: const
+          value: 0 # grid charge off
+          set: 
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 177 # Charge Mode TOU6
+              type: writemultiple
+              decode: int32s
     - case: 2 # hold
       set:
         source: sequence
@@ -170,36 +242,54 @@ render: |
             source: modbus
             {{- include "modbus" . | indent 10 }}        
             register:
-              address: 166 
+              address: 166 # SOC TOU1
               type: writemultiple
               decode: int32s
         - source: const
-          value: 0
+          value: {{ .maxsoc }}
           set: 
             source: modbus
-            {{- include "modbus" . | indent 10 }}
+            {{- include "modbus" . | indent 10 }}        
             register:
-              address: 148 # soc time of use 1
+              address: 167 # SOC TOU2
               type: writemultiple
               decode: int32s
         - source: const
-          value: 2355 
+          value: {{ .maxsoc }}
           set: 
             source: modbus
-            {{- include "modbus" . | indent 10 }}
+            {{- include "modbus" . | indent 10 }}        
             register:
-              address: 149 # soc time of use 1
+              address: 168 # SOC TOU3
               type: writemultiple
               decode: int32s
         - source: const
-          value: 0 
+          value: {{ .maxsoc }}
           set: 
             source: modbus
-            {{- include "modbus" . | indent 10 }}
+            {{- include "modbus" . | indent 10 }}        
             register:
-              address: 172 
+              address: 169 # SOC TOU4
               type: writemultiple
-              decode: int32s  
+              decode: int32s
+        - source: const
+          value: {{ .maxsoc }}
+          set: 
+            source: modbus
+            {{- include "modbus" . | indent 10 }}        
+            register:
+              address: 170 # SOC TOU5
+              type: writemultiple
+              decode: int32s
+        - source: const
+          value: {{ .maxsoc }}
+          set: 
+            source: modbus
+            {{- include "modbus" . | indent 10 }}        
+            register:
+              address: 171 # SOC TOU6
+              type: writemultiple
+              decode: int32s            
     - case: 3 # charge
       set:
         source: sequence
@@ -210,36 +300,108 @@ render: |
             source: modbus
             {{- include "modbus" . | indent 10 }}        
             register:
-              address: 166 
+              address: 166 # SOC TOU1
               type: writemultiple
               decode: int32s
         - source: const
-          value: 0
+          value: {{ .maxsoc }}
           set: 
             source: modbus
-            {{- include "modbus" . | indent 10 }}
+            {{- include "modbus" . | indent 10 }}        
             register:
-              address: 148 # soc time of use 1
+              address: 167 # SOC TOU2
               type: writemultiple
               decode: int32s
         - source: const
-          value: 2355 
+          value: {{ .maxsoc }}
           set: 
             source: modbus
-            {{- include "modbus" . | indent 10 }}
+            {{- include "modbus" . | indent 10 }}        
             register:
-              address: 149 # soc time of use 1
+              address: 168 # SOC TOU3
               type: writemultiple
               decode: int32s
         - source: const
-          value: 1 
+          value: {{ .maxsoc }}
           set: 
             source: modbus
-            {{- include "modbus" . | indent 10 }}
+            {{- include "modbus" . | indent 10 }}        
             register:
-              address: 172 
+              address: 169 # SOC TOU4
+              type: writemultiple
+              decode: int32s
+        - source: const
+          value: {{ .maxsoc }}
+          set: 
+            source: modbus
+            {{- include "modbus" . | indent 10 }}        
+            register:
+              address: 170 # SOC TOU5
+              type: writemultiple
+              decode: int32s
+        - source: const
+          value: {{ .maxsoc }}
+          set: 
+            source: modbus
+            {{- include "modbus" . | indent 10 }}        
+            register:
+              address: 171 # SOC TOU6
               type: writemultiple
               decode: int32s  
+        - source: const
+          value: 1 # enable grid charge 
+          set: 
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 172 # Charge Mode TOU1
+              type: writemultiple
+              decode: int32s
+        - source: const
+          value: 1 # enable grid charge 
+          set: 
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 173 # Charge Mode TOU2
+              type: writemultiple
+              decode: int32s
+        - source: const
+          value: 1 # enable grid charge 
+          set: 
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 174 # Charge Mode TOU3
+              type: writemultiple
+              decode: int32s
+        - source: const
+          value: 1 # enable grid charge 
+          set: 
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 175 # Charge Mode TOU4
+              type: writemultiple
+              decode: int32s
+        - source: const
+          value: 1 # enable grid charge 
+          set: 
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 176 # Charge Mode TOU5
+              type: writemultiple
+              decode: int32s
+        - source: const
+          value: 1 # enable grid charge 
+          set: 
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 177 # Charge Mode TOU6
+              type: writemultiple
+              decode: int32s              
   minsoc: {{.minsoc}}
   maxsoc: {{.maxsoc}}
   {{- if .capacity }}
