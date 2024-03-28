@@ -1,5 +1,5 @@
-const { test, expect } = require("@playwright/test");
-const { start, stop } = require("./evcc");
+import { test, expect } from "@playwright/test";
+import { start, stop } from "./evcc";
 
 test.beforeEach(async ({ page }) => {
   await start("basics.evcc.yaml");
