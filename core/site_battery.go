@@ -68,12 +68,8 @@ func (site *Site) plannerRate() (*api.Rate, error) {
 }
 
 func (site *Site) smartCostActive(lp loadpoint.API, rate *api.Rate) bool {
-	if rate == nil {
-		return false
-	}
-
 	limit := lp.GetSmartCostLimit()
-	return limit != 0 && rate.Price <= limit
+	return limit != 0 && rate != nil && rate.Price <= limit
 }
 
 func (site *Site) updateBatteryMode() {
