@@ -25,12 +25,17 @@ func parseFloat(payload string) (float64, error) {
 	return f, err
 }
 
-// ptr returns a pointer to the given value
+// ptr returns a pointer to the given value or nil for the zero value
 func ptr[T comparable](v T) *T {
 	var zero T
 	if v == zero {
 		return nil
 	}
+	return &v
+}
+
+// ptrZero returns a pointer to the given value, including the zero value
+func ptrZero[T comparable](v T) *T {
 	return &v
 }
 

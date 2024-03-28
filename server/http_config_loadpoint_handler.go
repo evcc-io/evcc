@@ -32,11 +32,11 @@ func loadpointConfig(id int, lp loadpoint.API) loadpointStruct {
 		DefaultVehicle: ptr(lp.GetDefaultVehicle()),
 		Title:          ptr(lp.GetTitle()),
 		Mode:           ptr(string(lp.GetMode())),
-		Priority:       ptr(lp.GetPriority()),
-		Phases:         ptr(lp.GetPhases()),
+		Priority:       ptrZero(lp.GetPriority()),
+		Phases:         ptrZero(lp.GetPhases()),
 		MinCurrent:     ptr(lp.GetMinCurrent()),
 		MaxCurrent:     ptr(lp.GetMaxCurrent()),
-		SmartCostLimit: ptr(lp.GetSmartCostLimit()),
+		SmartCostLimit: ptrZero(lp.GetSmartCostLimit()),
 	}
 
 	return res
