@@ -131,16 +131,16 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, cache *util.Cache) {
 
 	// vehicle api
 	vehicles := map[string]route{
-		"minsoc":   {"POST", "/vehicles/{name:[a-zA-Z0-9_.:-]+}/minsoc/{value:[0-9]+}", minSocHandler(site)},
-		"limitsoc": {"POST", "/vehicles/{name:[a-zA-Z0-9_.:-]+}/limitsoc/{value:[0-9]+}", limitSocHandler(site)},
+		"minsoc":   {"POST", "/vehicles/{name:[a-zA-Z0-9_.:-]+}/minsoc/{value:[0-9]+}", vehicleHandler(site, vehicleMinSocHandler)},
+		"limitsoc": {"POST", "/vehicles/{name:[a-zA-Z0-9_.:-]+}/limitsoc/{value:[0-9]+}", vehicleHandler(site, vehicleLimitSocHandler)},
 		"plan":     {"POST", "/vehicles/{name:[a-zA-Z0-9_.:-]+}/plan/soc/{value:[0-9]+}/{time:[0-9TZ:.-]+}", planSocHandler(site)},
 		"plan2":    {"DELETE", "/vehicles/{name:[a-zA-Z0-9_.:-]+}/plan/soc", planSocRemoveHandler(site)},
 
 		// config ui
-		// "mode":       {"POST", "/mode/{value:[a-z]+}", chargeModeHandler(v)},
-		// "mincurrent": {"POST", "/mincurrent/{value:[0-9.]+}", floatHandler(pass(v.SetMinCurrent), v.GetMinCurrent)},
-		// "maxcurrent": {"POST", "/maxcurrent/{value:[0-9.]+}", floatHandler(pass(v.SetMaxCurrent), v.GetMaxCurrent)},
-		// "phases":     {"POST", "/phases/{value:[0-9]+}", intHandler(pass(v.SetMinSoc), v.GetMinSoc)},
+		"mode":       {"POST", "/mode/{value:[a-z]+}", vehicleHandler(site, vehicleModeHandler)},
+		"phases":     {"POST", "/phases/{value:[0-9]+}", vehicleHandler(site, vehiclePhasesHandler)},
+		"mincurrent": {"POST", "/mincurrent/{value:[0-9.]+}", vehicleHandler(site, vehicleMinCurrentHandler)},
+		"maxcurrent": {"POST", "/maxcurrent/{value:[0-9.]+}", vehicleHandler(site, vehicleMaxCurrentHandler)},
 	}
 
 	for _, r := range vehicles {
