@@ -61,7 +61,7 @@ func NewAmberFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		embed:   &cc.embed,
 		log:     log,
 		Helper:  request.NewHelper(log),
-		uri:     fmt.Sprintf(amber.URI, strings.ToUpper(cc.SiteID), time.Now().AddDate(0, 0, 1).Format("2006-01-02")),
+		uri:     fmt.Sprintf(amber.URI, strings.ToUpper(cc.SiteID)),
 		channel: strings.ToLower(cc.Channel),
 		data:    util.NewMonitor[api.Rates](2 * time.Hour),
 	}
@@ -87,9 +87,10 @@ func (t *Amber) run(done chan error) {
 	tick := time.NewTicker(time.Minute)
 	for ; true; <-tick.C {
 		var res []amber.PriceInfo
-
+		uri := fmt.Sprintf("%s&endDate=%s", t.uri,
+			time.Now().AddDate(0, 0, 2).Format("2006-01-02"))
 		if err := backoff.Retry(func() error {
-			return t.GetJSON(t.uri, &res)
+			return t.GetJSON(uri, &res)
 		}, bo); err != nil {
 			once.Do(func() { done <- err })
 
