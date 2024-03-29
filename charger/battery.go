@@ -100,6 +100,10 @@ var _ api.Meter = (*Battery)(nil)
 
 // CurrentPower implements the api.Meter interface
 func (c *Battery) CurrentPower() (float64, error) {
+	if c.mode != api.BatteryCharge {
+		// disabled
+		return 0, nil
+	}
 	res, err := c.ChargeableBattery.CurrentPower()
 	return max(-res, 0), err
 }
