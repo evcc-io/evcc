@@ -17,5 +17,5 @@ params:
     choice: ["rs485"]
     id: 1
 render: |
-type: solax
-{{- include "modbus" . }}
+  type: solax
+  {{- include "modbus" . }}
