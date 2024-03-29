@@ -14,8 +14,8 @@ var _ circuit.API = (*Circuit)(nil)
 
 // the circuit instances to control the load
 type Circuit struct {
-	log    *util.Logger
-	uiChan chan<- util.Param
+	log *util.Logger
+	// uiChan chan<- util.Param
 
 	children []*Circuit // parent circuit reference, used to determine current maxs from hierarchy
 	parent   *Circuit   // parent circuit reference, used to determine current maxs from hierarchy
@@ -97,6 +97,13 @@ func (c *Circuit) updateLoadpoints(loadpoints []loadpoint.API) {
 
 	c.power = totalPower
 	c.current = totalCurrent
+}
+
+func (c *Circuit) GetParent() *Circuit {
+	// if reflect.ValueOf(c.parent).IsNil() {
+	// 	return nil
+	// }
+	return c.parent
 }
 
 func (c *Circuit) Update(loadpoints []loadpoint.API) error {

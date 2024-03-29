@@ -672,12 +672,31 @@ func configureSiteAndLoadpoints(conf globalConfig) (*core.Site, error) {
 		return nil, fmt.Errorf("failed configuring loadpoints: %w", err)
 	}
 
+	if len(circuits) > 0 {
+		for _, lp := range loadpoints {
+			if lp.GetCircuit() == nil {
+				return nil, fmt.Errorf("loadpoint %s has no circuit", lp.Title())
+			}
+		}
+	}
+
 	tariffs, err := configureTariffs(conf.Tariffs)
 	if err != nil {
 		return nil, err
 	}
 
-	return configureSite(conf.Site, loadpoints, tariffs)
+	site, err := configureSite(conf.Site, loadpoints, tariffs)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(circuits) > 0 {
+		if site.GetCircuit() == nil {
+			return nil, fmt.Errorf("site has no circuit")
+		}
+	}
+
+	return site, nil
 }
 
 func configureSite(conf map[string]interface{}, loadpoints []*core.Loadpoint, tariffs *tariff.Tariffs) (*core.Site, error) {
@@ -742,6 +761,20 @@ func configureCircuits(conf globalConfig) (map[string]*core.Circuit, error) {
 		if len(children) > 0 {
 			return nil, fmt.Errorf("missing parent circuit: %s", children[0].Parent)
 		}
+	}
+
+	var rootFound bool
+	for _, c := range circuits {
+		if c.GetParent() != nil {
+			if rootFound {
+				return nil, fmt.Errorf("cannot have multiple root circuits")
+			}
+			rootFound = true
+		}
+	}
+
+	if !rootFound {
+		return nil, fmt.Errorf("need root circuit")
 	}
 
 	return circuits, nil

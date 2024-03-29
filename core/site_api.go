@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/circuit"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/site"
@@ -133,6 +134,11 @@ func (site *Site) Loadpoints() []loadpoint.API {
 // Vehicles returns the site vehicles
 func (site *Site) Vehicles() site.Vehicles {
 	return &vehicles{log: site.log}
+}
+
+// GetCircuit returns the circuit
+func (site *Site) GetCircuit() circuit.API {
+	return site.circuit
 }
 
 // GetPrioritySoc returns the PrioritySoc

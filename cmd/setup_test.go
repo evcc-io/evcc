@@ -8,17 +8,15 @@ import (
 	"github.com/evcc-io/evcc/core"
 	"github.com/evcc-io/evcc/util"
 	"github.com/spf13/viper"
+	"github.com/stretchr/testify/require"
 )
-
-const sample = `
-loadpoints:
-- mode: off
-`
 
 func TestYamlOff(t *testing.T) {
 	var conf globalConfig
 	viper.SetConfigType("yaml")
-	if err := viper.ReadConfig(strings.NewReader(sample)); err != nil {
+	if err := viper.ReadConfig(strings.NewReader(`loadpoints:
+- mode: off
+`)); err != nil {
 		t.Error(err)
 	}
 
@@ -34,4 +32,23 @@ func TestYamlOff(t *testing.T) {
 	if lp.Mode_ != api.ModeOff {
 		t.Errorf("expected `off`, got %s", lp.Mode_)
 	}
+}
+
+func TestCircuitConf(t *testing.T) {
+	var conf globalConfig
+	viper.SetConfigType("yaml")
+
+	require.NoError(t, viper.ReadConfig(strings.NewReader(`circuits:
+- name: master
+  maxPower: 10000
+- name: slave
+  parent: master
+  maxPower: 10000
+`)))
+
+	require.NoError(t, viper.UnmarshalExact(&conf))
+
+	cc, err := configureCircuits(conf)
+	require.NoError(t, err)
+	require.Len(t, cc, 2)
 }

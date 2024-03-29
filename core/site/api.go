@@ -2,6 +2,7 @@ package site
 
 import (
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/circuit"
 	"github.com/evcc-io/evcc/core/loadpoint"
 )
 
@@ -10,6 +11,9 @@ type API interface {
 	Healthy() bool
 	Loadpoints() []loadpoint.API
 	Vehicles() Vehicles
+
+	// GetCircuit returns the assigned circuit
+	GetCircuit() circuit.API
 
 	// Meta
 	GetTitle() string
