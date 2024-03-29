@@ -1,0 +1,20 @@
+template: solax
+products:
+  - brand: Solax
+    description:
+      generic: X3-EVC
+  - brand: Tigo
+    description:
+      generic: GO EV Charger
+  - brand: Qcells
+    description:
+      generic: Q.HOME EDRIVE A
+capabilities: ["mA", "1p3p"]
+  evcc: ["sponsorship"]
+params:
+  - name: modbus
+    choice: ["rs485"]
+    id: 1
+render: |
+  type: solax
+  {{- include "modbus" . }}
