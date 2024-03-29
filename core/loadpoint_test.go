@@ -317,7 +317,7 @@ func TestPVHysteresis(t *testing.T) {
 				maxCurrent:     maxA,
 				phases:         phases,
 				measuredPhases: phases,
-				Thresholds: loadpoint.Thresholds{
+				ThresholdsConfig: loadpoint.ThresholdsConfig{
 					Enable: loadpoint.ThresholdConfig{
 						Threshold: tc.enable,
 						Delay:     dt,
@@ -412,8 +412,8 @@ func TestDisableAndEnableAtTargetSoc(t *testing.T) {
 		mode:          api.ModeNow,
 		sessionEnergy: NewEnergyMetrics(),
 		limitSoc:      90, // session limit
-		Soc: SocConfig{
-			Poll: PollConfig{
+		Soc: loadpoint.SocConfig{
+			Poll: loadpoint.PollConfig{
 				Mode:     pollConnected, // allow polling when connected
 				Interval: pollInterval,
 			},
@@ -622,8 +622,8 @@ func TestSocPoll(t *testing.T) {
 	lp := &Loadpoint{
 		clock: clock,
 		log:   util.NewLogger("foo"),
-		Soc: SocConfig{
-			Poll: PollConfig{
+		Soc: loadpoint.SocConfig{
+			Poll: loadpoint.PollConfig{
 				Interval: time.Hour,
 			},
 		},
@@ -749,7 +749,7 @@ func TestPVHysteresisAfterPhaseSwitch(t *testing.T) {
 			charger:    charger,
 			minCurrent: minA,
 			maxCurrent: maxA,
-			Thresholds: loadpoint.Thresholds{
+			ThresholdsConfig: loadpoint.ThresholdsConfig{
 				Disable: loadpoint.ThresholdConfig{
 					Delay: dt,
 				},

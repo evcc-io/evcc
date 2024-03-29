@@ -68,6 +68,9 @@ const (
 	pollInterval = 60 * time.Minute
 )
 
+// Task is the task type
+type Task = func()
+
 // Loadpoint is responsible for controlling charge depending on
 // Soc needs and power availability.
 type Loadpoint struct {
@@ -83,11 +86,12 @@ type Loadpoint struct {
 
 	vmu sync.RWMutex // guard vehicle
 
-	ChargerRef           string    `mapstructure:"charger"` // Charger reference
-	VehicleRef           string    `mapstructure:"vehicle"` // Vehicle reference
-	MeterRef             string    `mapstructure:"meter"`   // Charge meter reference
-	Soc                  SocConfig // Soc mode configuration
-	loadpoint.Thresholds           // PV mode enable/ disable thresholds
+	ChargerRef string `mapstructure:"charger"` // Charger reference
+	VehicleRef string `mapstructure:"vehicle"` // Vehicle reference
+	MeterRef   string `mapstructure:"meter"`   // Charge meter reference
+
+	Soc                        loadpoint.SocConfig // Soc mode configuration
+	loadpoint.ThresholdsConfig                     // PV mode enable/ disable thresholds
 
 	// TODO deprecated
 	Mode_             api.ChargeMode `mapstructure:"mode"`          // Default charge mode, used for disconnect
@@ -248,13 +252,13 @@ func NewLoadpoint(log *util.Logger, settings *Settings) *Loadpoint {
 		status:     api.StatusNone,
 		minCurrent: 6,  // A
 		maxCurrent: 16, // A
-		Soc: SocConfig{
-			Poll: PollConfig{
+		Soc: loadpoint.SocConfig{
+			Poll: loadpoint.PollConfig{
 				Interval: pollInterval,
 				Mode:     pollCharging,
 			},
 		},
-		Thresholds: loadpoint.Thresholds{
+		ThresholdsConfig: loadpoint.ThresholdsConfig{
 			Enable:  loadpoint.ThresholdConfig{Delay: time.Minute, Threshold: 0},     // t, W
 			Disable: loadpoint.ThresholdConfig{Delay: 3 * time.Minute, Threshold: 0}, // t, W
 		},
@@ -342,7 +346,7 @@ func (lp *Loadpoint) restoreSettings() {
 		lp.SetSmartCostLimit(v)
 	}
 
-	var thresholds loadpoint.Thresholds
+	var thresholds loadpoint.ThresholdsConfig
 	if err := lp.settings.Json(keys.Thresholds, &thresholds); err == nil {
 		lp.setThresholds(thresholds)
 	}

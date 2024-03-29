@@ -372,7 +372,7 @@ func TestPvScalePhasesTimer(t *testing.T) {
 			phases:         tc.phases,
 			measuredPhases: tc.measuredPhases,
 			status:         api.StatusC,
-			Thresholds: loadpoint.Thresholds{
+			ThresholdsConfig: loadpoint.ThresholdsConfig{
 				Enable: loadpoint.ThresholdConfig{
 					Delay: dt,
 				},

@@ -22,7 +22,7 @@ type loadpointStruct struct {
 	MaxCurrent     *float64 `json:"maxCurrent,omitempty"`
 	SmartCostLimit *float64 `json:"smartCostLimit,omitempty"`
 
-	Thresholds *loadpoint.Thresholds `json:"thresholds,omitempty"`
+	Thresholds *loadpoint.ThresholdsConfig `json:"thresholds,omitempty"`
 }
 
 // loadpointConfig returns a single loadpoint's configuration

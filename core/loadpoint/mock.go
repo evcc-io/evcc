@@ -422,10 +422,10 @@ func (mr *MockAPIMockRecorder) GetStatus() *gomock.Call {
 }
 
 // GetThresholds mocks base method.
-func (m *MockAPI) GetThresholds() Thresholds {
+func (m *MockAPI) GetThresholds() ThresholdsConfig {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetThresholds")
-	ret0, _ := ret[0].(Thresholds)
+	ret0, _ := ret[0].(ThresholdsConfig)
 	return ret0
 }
 
@@ -656,7 +656,7 @@ func (mr *MockAPIMockRecorder) SetSmartCostLimit(arg0 any) *gomock.Call {
 }
 
 // SetThresholds mocks base method.
-func (m *MockAPI) SetThresholds(arg0 Thresholds) {
+func (m *MockAPI) SetThresholds(arg0 ThresholdsConfig) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "SetThresholds", arg0)
 }
