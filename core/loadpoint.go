@@ -168,12 +168,6 @@ func NewLoadpointFromConfig(log *util.Logger, settings *Settings, other map[stri
 		return nil, err
 	}
 
-	// TODO migrate to new settings
-	// set vehicle polling mode
-	if lp.Soc.Poll.Mode != loadpoint.PollCharging {
-		lp.log.WARN.Printf("poll mode '%s' may deplete your battery or lead to API misuse. USE AT YOUR OWN RISK.", lp.Soc.Poll)
-	}
-
 	if lp.MeterRef != "" {
 		dev, err := config.Meters().ByName(lp.MeterRef)
 		if err != nil {
@@ -295,6 +289,12 @@ func (lp *Loadpoint) migrateSettings() {
 		lp.log.WARN.Println("deprecated: phases setting is ignored, please remove")
 		if _, err := lp.settings.Int(keys.PhasesConfigured); err != nil {
 			lp.settings.SetInt(keys.PhasesConfigured, int64(lp.ConfiguredPhases_))
+		}
+	}
+	if lp.Soc.Estimate != nil || lp.Soc.Poll.Mode != loadpoint.PollCharging || lp.Soc.Poll.Interval != 0 {
+		lp.log.WARN.Println("deprecated: soc setting is ignored, please remove")
+		if _, err := lp.settings.String(keys.SocPoll); err != nil {
+			lp.settings.SetJson(keys.SocPoll, lp.Soc)
 		}
 	}
 }
@@ -658,6 +658,11 @@ func (lp *Loadpoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 		}
 	} else {
 		lp.log.ERROR.Printf("charger enabled: %v", err)
+	}
+
+	// set vehicle polling mode
+	if lp.Soc.Poll.Mode != loadpoint.PollCharging {
+		lp.log.WARN.Printf("poll mode '%s' may deplete your battery or lead to API misuse. USE AT YOUR OWN RISK.", lp.Soc.Poll)
 	}
 
 	// allow charger to access loadpoint
