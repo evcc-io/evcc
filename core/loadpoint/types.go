@@ -1,6 +1,8 @@
 package loadpoint
 
-import "time"
+import (
+	"time"
+)
 
 // ThresholdsConfig defines pv mode hysteresis parameters
 type ThresholdsConfig struct {
@@ -22,6 +24,16 @@ type SocConfig struct {
 
 // PollConfig defines the vehicle polling mode and interval
 type PollConfig struct {
-	Mode     string        `mapstructure:"mode"`     // polling mode charging (default), connected, always
+	Mode     PollMode      `mapstructure:"mode"`     // polling mode charging (default), connected, always
 	Interval time.Duration `mapstructure:"interval"` // interval when not charging
 }
+
+//go:generate enumer -type PollMode -transform=lower
+type PollMode int
+
+// Poll modes
+const (
+	PollCharging PollMode = iota
+	PollConnected
+	PollAlways
+)

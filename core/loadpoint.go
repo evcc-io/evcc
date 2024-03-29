@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"math"
 	"reflect"
-	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -60,13 +59,7 @@ const (
 var elapsed = time.Unix(0, 1)
 
 // Poll modes
-const (
-	pollCharging  = "charging"
-	pollConnected = "connected"
-	pollAlways    = "always"
-
-	pollInterval = 60 * time.Minute
-)
+const pollInterval = 60 * time.Minute
 
 // Task is the task type
 type Task = func()
@@ -175,16 +168,10 @@ func NewLoadpointFromConfig(log *util.Logger, settings *Settings, other map[stri
 		return nil, err
 	}
 
+	// TODO migrate to new settings
 	// set vehicle polling mode
-	switch lp.Soc.Poll.Mode = strings.ToLower(lp.Soc.Poll.Mode); lp.Soc.Poll.Mode {
-	case pollCharging:
-	case pollConnected, pollAlways:
+	if lp.Soc.Poll.Mode != loadpoint.PollCharging {
 		lp.log.WARN.Printf("poll mode '%s' may deplete your battery or lead to API misuse. USE AT YOUR OWN RISK.", lp.Soc.Poll)
-	default:
-		if lp.Soc.Poll.Mode != "" {
-			lp.log.WARN.Printf("invalid poll mode: %s", lp.Soc.Poll.Mode)
-		}
-		lp.Soc.Poll.Mode = pollCharging
 	}
 
 	if lp.MeterRef != "" {
@@ -255,7 +242,7 @@ func NewLoadpoint(log *util.Logger, settings *Settings) *Loadpoint {
 		Soc: loadpoint.SocConfig{
 			Poll: loadpoint.PollConfig{
 				Interval: pollInterval,
-				Mode:     pollCharging,
+				Mode:     loadpoint.PollCharging,
 			},
 		},
 		ThresholdsConfig: loadpoint.ThresholdsConfig{
@@ -349,6 +336,11 @@ func (lp *Loadpoint) restoreSettings() {
 	var thresholds loadpoint.ThresholdsConfig
 	if err := lp.settings.Json(keys.Thresholds, &thresholds); err == nil {
 		lp.setThresholds(thresholds)
+	}
+
+	var socConfig loadpoint.SocConfig
+	if err := lp.settings.Json(keys.SocPoll, &socConfig); err == nil {
+		lp.setSocConfig(socConfig)
 	}
 
 	t, err1 := lp.settings.Time(keys.PlanTime)

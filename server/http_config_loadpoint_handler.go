@@ -23,6 +23,7 @@ type loadpointStruct struct {
 	SmartCostLimit *float64 `json:"smartCostLimit,omitempty"`
 
 	Thresholds *loadpoint.ThresholdsConfig `json:"thresholds,omitempty"`
+	Soc        *loadpoint.SocConfig        `json:"soc,omitempty"`
 }
 
 // loadpointConfig returns a single loadpoint's configuration
@@ -40,6 +41,7 @@ func loadpointConfig(id int, lp loadpoint.API) loadpointStruct {
 		MaxCurrent:     ptr(lp.GetMaxCurrent()),
 		SmartCostLimit: ptr(lp.GetSmartCostLimit()),
 		Thresholds:     ptr(lp.GetThresholds()),
+		Soc:            ptr(lp.GetSocConfig()),
 	}
 
 	return res
@@ -96,6 +98,11 @@ func updateLoadpointHandler(lp loadpoint.API) http.HandlerFunc {
 
 		if err == nil && payload.Thresholds != nil {
 			lp.SetThresholds(*payload.Thresholds)
+		}
+
+		// TODO mode warning
+		if err == nil && payload.Soc != nil {
+			lp.SetSocConfig(*payload.Soc)
 		}
 
 		if payload.Mode != nil {

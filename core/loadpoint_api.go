@@ -276,6 +276,30 @@ func (lp *Loadpoint) SetPlanEnergy(finishAt time.Time, energy float64) error {
 	return nil
 }
 
+// GetSoc returns the PV mode threshold settings
+func (lp *Loadpoint) GetSocConfig() loadpoint.SocConfig {
+	lp.RLock()
+	defer lp.RUnlock()
+	return lp.Soc
+}
+
+func (lp *Loadpoint) setSocConfig(soc loadpoint.SocConfig) {
+	lp.Soc = soc
+	lp.settings.SetJson(keys.SocPoll, soc)
+	lp.requestUpdate()
+}
+
+// SetSoc sets the PV mode threshold settings
+func (lp *Loadpoint) SetSocConfig(soc loadpoint.SocConfig) {
+	lp.Lock()
+	defer lp.Unlock()
+
+	lp.log.DEBUG.Printf("set soc config: %+v", soc)
+
+	// apply immediately
+	lp.setSocConfig(soc)
+}
+
 // GetThresholds returns the PV mode threshold settings
 func (lp *Loadpoint) GetThresholds() loadpoint.ThresholdsConfig {
 	lp.RLock()
@@ -296,7 +320,7 @@ func (lp *Loadpoint) SetThresholds(thresholds loadpoint.ThresholdsConfig) {
 	lp.Lock()
 	defer lp.Unlock()
 
-	lp.log.DEBUG.Println("set thresholds:", thresholds)
+	lp.log.DEBUG.Printf("set thresholds: %+v", thresholds)
 
 	// apply immediately
 	lp.setThresholds(thresholds)

@@ -407,6 +407,20 @@ func (mr *MockAPIMockRecorder) GetSmartCostLimit() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSmartCostLimit", reflect.TypeOf((*MockAPI)(nil).GetSmartCostLimit))
 }
 
+// GetSocConfig mocks base method.
+func (m *MockAPI) GetSocConfig() SocConfig {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSocConfig")
+	ret0, _ := ret[0].(SocConfig)
+	return ret0
+}
+
+// GetSocConfig indicates an expected call of GetSocConfig.
+func (mr *MockAPIMockRecorder) GetSocConfig() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSocConfig", reflect.TypeOf((*MockAPI)(nil).GetSocConfig))
+}
+
 // GetStatus mocks base method.
 func (m *MockAPI) GetStatus() api.ChargeStatus {
 	m.ctrl.T.Helper()
@@ -653,6 +667,18 @@ func (m *MockAPI) SetSmartCostLimit(arg0 float64) {
 func (mr *MockAPIMockRecorder) SetSmartCostLimit(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetSmartCostLimit", reflect.TypeOf((*MockAPI)(nil).SetSmartCostLimit), arg0)
+}
+
+// SetSocConfig mocks base method.
+func (m *MockAPI) SetSocConfig(arg0 SocConfig) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetSocConfig", arg0)
+}
+
+// SetSocConfig indicates an expected call of SetSocConfig.
+func (mr *MockAPIMockRecorder) SetSocConfig(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetSocConfig", reflect.TypeOf((*MockAPI)(nil).SetSocConfig), arg0)
 }
 
 // SetThresholds mocks base method.

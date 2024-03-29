@@ -10,6 +10,7 @@ const (
 	MinSoc           = "minSoc"           // min soc
 	LimitSoc         = "limitSoc"         // limit soc
 	LimitEnergy      = "limitEnergy"      // limit energy
+	SocPoll          = "socPoll"          // settings
 	Thresholds       = "thresholds"       // settings
 	EnableThreshold  = "enableThreshold"  // published
 	DisableThreshold = "disableThreshold" // published

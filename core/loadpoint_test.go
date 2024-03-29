@@ -414,7 +414,7 @@ func TestDisableAndEnableAtTargetSoc(t *testing.T) {
 		limitSoc:      90, // session limit
 		Soc: loadpoint.SocConfig{
 			Poll: loadpoint.PollConfig{
-				Mode:     pollConnected, // allow polling when connected
+				Mode:     loadpoint.PollConnected, // allow polling when connected
 				Interval: pollInterval,
 			},
 		},
@@ -630,51 +630,51 @@ func TestSocPoll(t *testing.T) {
 	}
 
 	tc := []struct {
-		mode   string
+		mode   loadpoint.PollMode
 		status api.ChargeStatus
 		dt     time.Duration
 		res    bool
 	}{
 		// pollCharging
-		{pollCharging, api.StatusA, -1, false},
-		{pollCharging, api.StatusA, 0, false},
-		{pollCharging, api.StatusA, tRefresh, false},
-		{pollCharging, api.StatusB, -1, true}, // poll once when car connected
-		{pollCharging, api.StatusB, 0, false},
-		{pollCharging, api.StatusB, tRefresh, false},
-		{pollCharging, api.StatusC, -1, true},
-		{pollCharging, api.StatusC, 0, true},
-		{pollCharging, api.StatusC, tNoRefresh, true}, // cached by vehicle
-		{pollCharging, api.StatusB, -1, true},         // fetch if car stopped charging
-		{pollCharging, api.StatusB, 0, false},         // no more polling
-		{pollCharging, api.StatusB, tRefresh, false},  // no more polling
+		{loadpoint.PollCharging, api.StatusA, -1, false},
+		{loadpoint.PollCharging, api.StatusA, 0, false},
+		{loadpoint.PollCharging, api.StatusA, tRefresh, false},
+		{loadpoint.PollCharging, api.StatusB, -1, true}, // poll once when car connected
+		{loadpoint.PollCharging, api.StatusB, 0, false},
+		{loadpoint.PollCharging, api.StatusB, tRefresh, false},
+		{loadpoint.PollCharging, api.StatusC, -1, true},
+		{loadpoint.PollCharging, api.StatusC, 0, true},
+		{loadpoint.PollCharging, api.StatusC, tNoRefresh, true}, // cached by vehicle
+		{loadpoint.PollCharging, api.StatusB, -1, true},         // fetch if car stopped charging
+		{loadpoint.PollCharging, api.StatusB, 0, false},         // no more polling
+		{loadpoint.PollCharging, api.StatusB, tRefresh, false},  // no more polling
 
 		// pollConnected
-		{pollConnected, api.StatusA, -1, false},
-		{pollConnected, api.StatusA, 0, false},
-		{pollConnected, api.StatusA, tRefresh, false},
-		{pollConnected, api.StatusB, -1, true},
-		{pollConnected, api.StatusB, 0, false},
-		{pollConnected, api.StatusB, tNoRefresh, false},
-		{pollConnected, api.StatusB, tRefresh, true},
-		{pollConnected, api.StatusC, -1, true},
-		{pollConnected, api.StatusC, 0, true},
-		{pollConnected, api.StatusC, tNoRefresh, true}, // cached by vehicle
-		{pollConnected, api.StatusC, tRefresh, true},
+		{loadpoint.PollConnected, api.StatusA, -1, false},
+		{loadpoint.PollConnected, api.StatusA, 0, false},
+		{loadpoint.PollConnected, api.StatusA, tRefresh, false},
+		{loadpoint.PollConnected, api.StatusB, -1, true},
+		{loadpoint.PollConnected, api.StatusB, 0, false},
+		{loadpoint.PollConnected, api.StatusB, tNoRefresh, false},
+		{loadpoint.PollConnected, api.StatusB, tRefresh, true},
+		{loadpoint.PollConnected, api.StatusC, -1, true},
+		{loadpoint.PollConnected, api.StatusC, 0, true},
+		{loadpoint.PollConnected, api.StatusC, tNoRefresh, true}, // cached by vehicle
+		{loadpoint.PollConnected, api.StatusC, tRefresh, true},
 
 		// pollAlways
-		{pollAlways, api.StatusA, -1, true},
-		{pollAlways, api.StatusA, 0, false},
-		{pollAlways, api.StatusA, tNoRefresh, false},
-		{pollAlways, api.StatusA, tRefresh, true},
-		{pollAlways, api.StatusB, -1, true},
-		{pollAlways, api.StatusB, 0, false},
-		{pollAlways, api.StatusB, tNoRefresh, false},
-		{pollAlways, api.StatusB, tRefresh, true},
-		{pollAlways, api.StatusC, -1, true},
-		{pollAlways, api.StatusC, 0, true},
-		{pollAlways, api.StatusC, tNoRefresh, true}, // cached by vehicle
-		{pollAlways, api.StatusC, tRefresh, true},
+		{loadpoint.PollAlways, api.StatusA, -1, true},
+		{loadpoint.PollAlways, api.StatusA, 0, false},
+		{loadpoint.PollAlways, api.StatusA, tNoRefresh, false},
+		{loadpoint.PollAlways, api.StatusA, tRefresh, true},
+		{loadpoint.PollAlways, api.StatusB, -1, true},
+		{loadpoint.PollAlways, api.StatusB, 0, false},
+		{loadpoint.PollAlways, api.StatusB, tNoRefresh, false},
+		{loadpoint.PollAlways, api.StatusB, tRefresh, true},
+		{loadpoint.PollAlways, api.StatusC, -1, true},
+		{loadpoint.PollAlways, api.StatusC, 0, true},
+		{loadpoint.PollAlways, api.StatusC, tNoRefresh, true}, // cached by vehicle
+		{loadpoint.PollAlways, api.StatusC, tRefresh, true},
 	}
 
 	for _, tc := range tc {

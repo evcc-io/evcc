@@ -106,6 +106,11 @@ type API interface {
 	// GetPlan creates a charging plan
 	GetPlan(targetTime time.Time, requiredDuration time.Duration) (api.Rates, error)
 
+	// GetSocConfig returns the soc poll settings
+	GetSocConfig() SocConfig
+	// SetSocConfig sets the soc poll settings
+	SetSocConfig(soc SocConfig)
+
 	// GetThresholds returns the PV mode threshold settings
 	GetThresholds() ThresholdsConfig
 	// SetThresholds sets the PV mode threshold settings
