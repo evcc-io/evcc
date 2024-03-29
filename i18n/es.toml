@@ -48,6 +48,10 @@ socLimit = "Límite"
 example = "Ejemplo"
 optional = "opcional"
 
+[config.general]
+cancel = "Cancelar"
+save = "Guardar"
+
 [config.grid]
 titleAdd = "Añadir medidor de cuadrícula"
 titleEdit = "Editar medidor de cuadrícula"
@@ -77,6 +81,11 @@ titleEdit = "Editar contador solar"
 [config.site]
 cancel = "Cancelar"
 save = "Guardar"
+
+[config.title]
+description = "Se muestra en la pantalla principal y en la pestaña del navegador"
+label = "Título"
+title = "Editar título"
 
 [config.validation]
 failed = "fallido"
