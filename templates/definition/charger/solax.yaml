@@ -10,11 +10,12 @@ products:
     description:
       generic: Q.HOME EDRIVE A
 capabilities: ["mA", "1p3p"]
+requirements:
   evcc: ["sponsorship"]
 params:
   - name: modbus
     choice: ["rs485"]
     id: 1
 render: |
-  type: solax
-  {{- include "modbus" . }}
+type: solax
+{{- include "modbus" . }}
