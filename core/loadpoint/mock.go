@@ -14,6 +14,7 @@ import (
 	time "time"
 
 	api "github.com/evcc-io/evcc/api"
+	circuit "github.com/evcc-io/evcc/core/circuit"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -136,6 +137,20 @@ func (m *MockAPI) GetChargePowerFlexibility() float64 {
 func (mr *MockAPIMockRecorder) GetChargePowerFlexibility() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetChargePowerFlexibility", reflect.TypeOf((*MockAPI)(nil).GetChargePowerFlexibility))
+}
+
+// GetCircuit mocks base method.
+func (m *MockAPI) GetCircuit() circuit.API {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetCircuit")
+	ret0, _ := ret[0].(circuit.API)
+	return ret0
+}
+
+// GetCircuit indicates an expected call of GetCircuit.
+func (mr *MockAPIMockRecorder) GetCircuit() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCircuit", reflect.TypeOf((*MockAPI)(nil).GetCircuit))
 }
 
 // GetDisableThreshold mocks base method.

@@ -72,6 +72,7 @@ type Site struct {
 	MaxGridSupplyWhileBatteryCharging float64      `mapstructure:"maxGridSupplyWhileBatteryCharging"` // ignore battery charging if AC consumption is above this value
 
 	// meters
+	circuit       *Circuit    // Circuit
 	gridMeter     api.Meter   // Grid usage meter
 	pvMeters      []api.Meter // PV generation meters
 	batteryMeters []api.Meter // Battery charging meters
@@ -760,6 +761,13 @@ func (site *Site) update(lp updater) {
 		totalChargePower += lp.GetChargePower()
 
 		site.prioritizer.UpdateChargePowerFlexibility(lp)
+	}
+
+	// update all circuits' power and currents
+	if site.circuit != nil {
+		if err := site.circuit.Update(site.Loadpoints()); err != nil {
+			site.log.ERROR.Println(err)
+		}
 	}
 
 	// prioritize if possible
