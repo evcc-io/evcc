@@ -107,6 +107,7 @@ type Loadpoint struct {
 
 	Title_          string `mapstructure:"title"`    // UI title
 	Priority_       int    `mapstructure:"priority"` // Priority
+	CircuitRef      string `mapstructure:"circuit"`  // Circuit reference
 	ChargerRef      string `mapstructure:"charger"`  // Charger reference
 	VehicleRef      string `mapstructure:"vehicle"`  // Vehicle reference
 	MeterRef        string `mapstructure:"meter"`    // Charge meter reference
@@ -143,6 +144,7 @@ type Loadpoint struct {
 	chargeRater      api.ChargeRater
 	chargedAtStartup float64 // session energy at startup
 
+	circuit        *Circuit    // Circuit
 	chargeMeter    api.Meter   // Charger usage meter
 	vehicle        api.Vehicle // Currently active vehicle
 	defaultVehicle api.Vehicle // Default vehicle (disables detection)
@@ -184,7 +186,7 @@ type Loadpoint struct {
 }
 
 // NewLoadpointFromConfig creates a new loadpoint
-func NewLoadpointFromConfig(log *util.Logger, settings *Settings, other map[string]interface{}) (*Loadpoint, error) {
+func NewLoadpointFromConfig(log *util.Logger, settings *Settings, circuits map[string]*Circuit, other map[string]interface{}) (*Loadpoint, error) {
 	lp := NewLoadpoint(log, settings)
 	if err := util.DecodeOther(other, lp); err != nil {
 		return nil, err
@@ -200,6 +202,14 @@ func NewLoadpointFromConfig(log *util.Logger, settings *Settings, other map[stri
 			lp.log.WARN.Printf("invalid poll mode: %s", lp.Soc.Poll.Mode)
 		}
 		lp.Soc.Poll.Mode = pollCharging
+	}
+
+	if lp.CircuitRef != "" {
+		circuit, ok := circuits[lp.CircuitRef]
+		if !ok {
+			return nil, fmt.Errorf("not found: %s", lp.CircuitRef)
+		}
+		lp.circuit = circuit
 	}
 
 	if lp.MeterRef != "" {

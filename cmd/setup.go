@@ -95,6 +95,7 @@ type globalConfig struct {
 	Tariffs      tariffConfig
 	Site         map[string]interface{}
 	Loadpoints   []map[string]interface{}
+	Circuits     []circuitConfig
 }
 
 type mqttConfig struct {
@@ -134,6 +135,12 @@ type tariffConfig struct {
 	FeedIn   config.Typed
 	Co2      config.Typed
 	Planner  config.Typed
+}
+
+type circuitConfig struct {
+	Name   string                 `json:"name"`
+	Parent string                 `json:"parent"`
+	Other  map[string]interface{} `mapstructure:",remain"`
 }
 
 type networkConfig struct {
@@ -655,7 +662,12 @@ func configureSiteAndLoadpoints(conf globalConfig) (*core.Site, error) {
 		return nil, err
 	}
 
-	loadpoints, err := configureLoadpoints(conf)
+	circuits, err := configureCircuits(conf)
+	if err != nil {
+		return nil, fmt.Errorf("failed configuring circuits: %w", err)
+	}
+
+	loadpoints, err := configureLoadpoints(conf, circuits)
 	if err != nil {
 		return nil, fmt.Errorf("failed configuring loadpoints: %w", err)
 	}
@@ -677,16 +689,18 @@ func configureSite(conf map[string]interface{}, loadpoints []*core.Loadpoint, ta
 	return site, nil
 }
 
-func configureLoadpoints(conf globalConfig) (loadpoints []*core.Loadpoint, err error) {
+func configureLoadpoints(conf globalConfig, circuits map[string]*core.Circuit) ([]*core.Loadpoint, error) {
 	if len(conf.Loadpoints) == 0 {
 		return nil, errors.New("missing loadpoints")
 	}
 
-	for id, lpc := range conf.Loadpoints {
+	var loadpoints []*core.Loadpoint
+
+	for id, cfg := range conf.Loadpoints {
 		log := util.NewLoggerWithLoadpoint("lp-"+strconv.Itoa(id+1), id+1)
 		settings := &core.Settings{Key: "lp" + strconv.Itoa(id+1) + "."}
 
-		lp, err := core.NewLoadpointFromConfig(log, settings, lpc)
+		lp, err := core.NewLoadpointFromConfig(log, settings, circuits, cfg)
 		if err != nil {
 			return nil, fmt.Errorf("failed configuring loadpoint: %w", err)
 		}
@@ -695,6 +709,42 @@ func configureLoadpoints(conf globalConfig) (loadpoints []*core.Loadpoint, err e
 	}
 
 	return loadpoints, nil
+}
+
+func configureCircuits(conf globalConfig) (map[string]*core.Circuit, error) {
+	children := slices.Clone(conf.Circuits)
+	circuits := make(map[string]*core.Circuit)
+
+	var id int
+
+	for len(children) > 0 {
+	NEXT:
+		for idx, cfg := range children {
+			if parent, ok := circuits[cfg.Parent]; cfg.Parent == "" || ok {
+				log := util.NewLogger("circuit-" + strconv.Itoa(id+1))
+				id++
+
+				circuit, err := core.NewCircuitFromConfig(log, cfg.Other)
+				if err != nil {
+					return nil, fmt.Errorf("failed configuring circuit: %w", err)
+				}
+
+				if cfg.Parent != "" {
+					circuit.WithParent(parent)
+				}
+				circuits[cfg.Name] = circuit
+
+				children = slices.Delete(children, idx, 1)
+				goto NEXT
+			}
+		}
+
+		if len(children) > 0 {
+			return nil, fmt.Errorf("missing parent circuit: %s", children[0].Parent)
+		}
+	}
+
+	return circuits, nil
 }
 
 // configureAuth handles routing for devices. For now only api.AuthProvider related routes
