@@ -6,37 +6,15 @@ import (
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
-	"strconv"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/evcc-io/evcc/vehicle/ovms"
 	"golang.org/x/net/publicsuffix"
 )
-
-type ovmsStatusResponse struct {
-	Odometer float64 `json:"odometer,string"`
-}
-
-type ovmsChargeResponse struct {
-	ChargeEtrFull    int64   `json:"charge_etr_full,string"`
-	ChargeState      string  `json:"chargestate"`
-	ChargePortOpen   int     `json:"cp_dooropen"`
-	EstimatedRange   string  `json:"estimatedrange"`
-	MessageAgeServer int     `json:"m_msgage_s"`
-	Soc              float64 `json:"soc,string"`
-}
-
-type ovmsLocationResponse struct {
-	Latitude  float64 `json:"latitude,string"`
-	Longitude float64 `json:"longitude,string"`
-}
-
-type ovmsConnectResponse struct {
-	NetConnected int `json:"v_net_connected"`
-}
 
 // OVMS is an api.Vehicle implementation for dexters-web server requests
 type Ovms struct {
@@ -46,9 +24,9 @@ type Ovms struct {
 	vehicleId, server string
 	cache             time.Duration
 	isOnline          bool
-	chargeG           func() (ovmsChargeResponse, error)
-	statusG           func() (ovmsStatusResponse, error)
-	locationG         func() (ovmsLocationResponse, error)
+	chargeG           func() (ovms.ChargeResponse, error)
+	statusG           func() (ovms.StatusResponse, error)
+	locationG         func() (ovms.LocationResponse, error)
 }
 
 func init() {
@@ -107,32 +85,32 @@ func (v *Ovms) uri(path string) string {
 	return fmt.Sprintf("https://%s/api/%s/%s", net.JoinHostPort(v.server, "6869"), path, v.vehicleId)
 }
 
-func (v *Ovms) connectRequest() (ovmsConnectResponse, error) {
-	var res ovmsConnectResponse
+func (v *Ovms) connectRequest() (ovms.ConnectResponse, error) {
+	var res ovms.ConnectResponse
 	err := v.GetJSON(v.uri("vehicle"), &res)
 	return res, err
 }
 
-func (v *Ovms) chargeRequest() (ovmsChargeResponse, error) {
-	var res ovmsChargeResponse
+func (v *Ovms) chargeRequest() (ovms.ChargeResponse, error) {
+	var res ovms.ChargeResponse
 	err := v.GetJSON(v.uri("charge"), &res)
 	return res, err
 }
 
-func (v *Ovms) statusRequest() (ovmsStatusResponse, error) {
-	var res ovmsStatusResponse
+func (v *Ovms) statusRequest() (ovms.StatusResponse, error) {
+	var res ovms.StatusResponse
 	err := v.GetJSON(v.uri("status"), &res)
 	return res, err
 }
 
-func (v *Ovms) locationRequest() (ovmsLocationResponse, error) {
-	var res ovmsLocationResponse
+func (v *Ovms) locationRequest() (ovms.LocationResponse, error) {
+	var res ovms.LocationResponse
 	err := v.GetJSON(v.uri("location"), &res)
 	return res, err
 }
 
 func (v *Ovms) authFlow() error {
-	var resp ovmsConnectResponse
+	var resp ovms.ConnectResponse
 	err := v.loginToServer()
 	if err == nil {
 		resp, err = v.connectRequest()
@@ -144,8 +122,8 @@ func (v *Ovms) authFlow() error {
 }
 
 // batteryAPI provides battery-status api response
-func (v *Ovms) batteryAPI() (ovmsChargeResponse, error) {
-	var resp ovmsChargeResponse
+func (v *Ovms) batteryAPI() (ovms.ChargeResponse, error) {
+	var resp ovms.ChargeResponse
 
 	resp, err := v.chargeRequest()
 	if err != nil {
@@ -164,8 +142,8 @@ func (v *Ovms) batteryAPI() (ovmsChargeResponse, error) {
 }
 
 // statusAPI provides vehicle status api response
-func (v *Ovms) statusAPI() (ovmsStatusResponse, error) {
-	var resp ovmsStatusResponse
+func (v *Ovms) statusAPI() (ovms.StatusResponse, error) {
+	var resp ovms.StatusResponse
 
 	resp, err := v.statusRequest()
 	if err != nil {
@@ -179,8 +157,8 @@ func (v *Ovms) statusAPI() (ovmsStatusResponse, error) {
 }
 
 // location API provides vehicle position api response
-func (v *Ovms) locationAPI() (ovmsLocationResponse, error) {
-	var resp ovmsLocationResponse
+func (v *Ovms) locationAPI() (ovms.LocationResponse, error) {
+	var resp ovms.LocationResponse
 
 	resp, err := v.locationRequest()
 	if err != nil {
@@ -220,15 +198,15 @@ func (v *Ovms) Status() (api.ChargeStatus, error) {
 
 var _ api.VehicleRange = (*Ovms)(nil)
 
+const kmPerMile = 1.609344
+
 // Range implements the api.VehicleRange interface
 func (v *Ovms) Range() (int64, error) {
 	res, err := v.chargeG()
-
-	if err == nil {
-		return strconv.ParseInt(res.EstimatedRange, 0, 64)
+	if res.Units == ovms.UnitMiles {
+		res.EstimatedRange = int64(float64(res.EstimatedRange) * kmPerMile)
 	}
-
-	return 0, err
+	return res.EstimatedRange, err
 }
 
 var _ api.VehicleOdometer = (*Ovms)(nil)
@@ -236,6 +214,9 @@ var _ api.VehicleOdometer = (*Ovms)(nil)
 // Odometer implements the api.VehicleOdometer interface
 func (v *Ovms) Odometer() (float64, error) {
 	res, err := v.statusG()
+	if res.Units == ovms.UnitMiles {
+		res.Odometer *= kmPerMile
+	}
 	return res.Odometer / 10, err
 }
 

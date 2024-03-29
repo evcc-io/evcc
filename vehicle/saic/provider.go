@@ -54,7 +54,7 @@ func (v *Provider) Soc() (float64, error) {
 
 	val := res.ChrgMgmtData.BmsPackSOCDsp
 	if val > 1000 {
-		v.status.Reset()
+		//v.status.Reset()
 		return float64(val), fmt.Errorf("invalid raw soc value: %d: %w", val, api.ErrMustRetry)
 	}
 
@@ -125,9 +125,9 @@ func (v *Provider) Odometer() (float64, error) {
 
 var _ api.SocLimiter = (*Provider)(nil)
 
-// TargetSoc implements the api.SocLimiter interface
-func (v *Provider) TargetSoc() (float64, error) {
-	var result = 0
+// GetLimitSoc implements the api.SocLimiter interface
+func (v *Provider) GetLimitSoc() (int64, error) {
+	result := 0
 	res, err := v.status.Get()
 	if err != nil {
 		return 0, err
@@ -139,7 +139,7 @@ func (v *Provider) TargetSoc() (float64, error) {
 		result = TargetSocVals[res.ChrgMgmtData.BmsOnBdChrgTrgtSOCDspCmd]
 	}
 
-	return float64(result), err
+	return int64(result), err
 }
 
 var _ api.Resurrector = (*Provider)(nil)

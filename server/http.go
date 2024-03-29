@@ -16,9 +16,16 @@ import (
 )
 
 type route struct {
-	Methods     []string
+	Method      string
 	Pattern     string
 	HandlerFunc http.HandlerFunc
+}
+
+func (r route) Methods() []string {
+	if r.Method == http.MethodGet {
+		return []string{r.Method}
+	}
+	return []string{r.Method, http.MethodOptions}
 }
 
 // HTTPd wraps an http.Server and adds the root router
@@ -89,55 +96,55 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, cache *util.Cache) {
 
 	// site api
 	routes := map[string]route{
-		"health":                  {[]string{"GET"}, "/health", healthHandler(site)},
-		"state":                   {[]string{"GET"}, "/state", stateHandler(cache)},
-		"config":                  {[]string{"GET"}, "/config/templates/{class:[a-z]+}", templatesHandler},
-		"products":                {[]string{"GET"}, "/config/products/{class:[a-z]+}", productsHandler},
-		"devices":                 {[]string{"GET"}, "/config/devices/{class:[a-z]+}", devicesHandler},
-		"device":                  {[]string{"GET"}, "/config/devices/{class:[a-z]+}/{id:[0-9.]+}", deviceConfigHandler},
-		"devicestatus":            {[]string{"GET"}, "/config/devices/{class:[a-z]+}/{name:[a-zA-Z0-9_.:-]+}/status", deviceStatusHandler},
-		"site":                    {[]string{"GET"}, "/config/site", siteHandler(site)},
-		"dirty":                   {[]string{"GET"}, "/config/dirty", boolGetHandler(ConfigDirty)},
-		"updatesite":              {[]string{"PUT", "OPTIONS"}, "/config/site", updateSiteHandler(site)},
-		"newdevice":               {[]string{"POST", "OPTIONS"}, "/config/devices/{class:[a-z]+}", newDeviceHandler},
-		"updatedevice":            {[]string{"PUT", "OPTIONS"}, "/config/devices/{class:[a-z]+}/{id:[0-9.]+}", updateDeviceHandler},
-		"deletedevice":            {[]string{"DELETE", "OPTIONS"}, "/config/devices/{class:[a-z]+}/{id:[0-9.]+}", deleteDeviceHandler},
-		"testconfig":              {[]string{"POST", "OPTIONS"}, "/config/test/{class:[a-z]+}", testConfigHandler},
-		"testmerged":              {[]string{"POST", "OPTIONS"}, "/config/test/{class:[a-z]+}/merge/{id:[0-9.]+}", testConfigHandler},
-		"buffersoc":               {[]string{"POST", "OPTIONS"}, "/buffersoc/{value:[0-9.]+}", floatHandler(site.SetBufferSoc, site.GetBufferSoc)},
-		"bufferstartsoc":          {[]string{"POST", "OPTIONS"}, "/bufferstartsoc/{value:[0-9.]+}", floatHandler(site.SetBufferStartSoc, site.GetBufferStartSoc)},
-		"batterydischargecontrol": {[]string{"POST", "OPTIONS"}, "/batterydischargecontrol/{value:[a-z]+}", boolHandler(site.SetBatteryDischargeControl, site.GetBatteryDischargeControl)},
-		"prioritysoc":             {[]string{"POST", "OPTIONS"}, "/prioritysoc/{value:[0-9.]+}", floatHandler(site.SetPrioritySoc, site.GetPrioritySoc)},
-		"residualpower":           {[]string{"POST", "OPTIONS"}, "/residualpower/{value:[-0-9.]+}", floatHandler(site.SetResidualPower, site.GetResidualPower)},
-		"smartcost":               {[]string{"POST", "OPTIONS"}, "/smartcostlimit/{value:[-0-9.]+}", updateSmartCostLimit(site)},
-		"tariff":                  {[]string{"GET"}, "/tariff/{tariff:[a-z]+}", tariffHandler(site)},
-		"sessions":                {[]string{"GET"}, "/sessions", sessionHandler},
-		"updatesession":           {[]string{"PUT", "OPTIONS"}, "/session/{id:[0-9]+}", updateSessionHandler},
-		"deletesession":           {[]string{"DELETE", "OPTIONS"}, "/session/{id:[0-9]+}", deleteSessionHandler},
-		"telemetry":               {[]string{"GET"}, "/settings/telemetry", boolGetHandler(telemetry.Enabled)},
-		"telemetry2":              {[]string{"POST", "OPTIONS"}, "/settings/telemetry/{value:[a-z]+}", boolHandler(telemetry.Enable, telemetry.Enabled)},
+		"health":                  {"GET", "/health", healthHandler(site)},
+		"state":                   {"GET", "/state", stateHandler(cache)},
+		"config":                  {"GET", "/config/templates/{class:[a-z]+}", templatesHandler},
+		"products":                {"GET", "/config/products/{class:[a-z]+}", productsHandler},
+		"devices":                 {"GET", "/config/devices/{class:[a-z]+}", devicesHandler},
+		"device":                  {"GET", "/config/devices/{class:[a-z]+}/{id:[0-9.]+}", deviceConfigHandler},
+		"devicestatus":            {"GET", "/config/devices/{class:[a-z]+}/{name:[a-zA-Z0-9_.:-]+}/status", deviceStatusHandler},
+		"site":                    {"GET", "/config/site", siteHandler(site)},
+		"dirty":                   {"GET", "/config/dirty", boolGetHandler(ConfigDirty)},
+		"updatesite":              {"PUT", "/config/site", updateSiteHandler(site)},
+		"newdevice":               {"POST", "/config/devices/{class:[a-z]+}", newDeviceHandler},
+		"updatedevice":            {"PUT", "/config/devices/{class:[a-z]+}/{id:[0-9.]+}", updateDeviceHandler},
+		"deletedevice":            {"DELETE", "/config/devices/{class:[a-z]+}/{id:[0-9.]+}", deleteDeviceHandler},
+		"testconfig":              {"POST", "/config/test/{class:[a-z]+}", testConfigHandler},
+		"testmerged":              {"POST", "/config/test/{class:[a-z]+}/merge/{id:[0-9.]+}", testConfigHandler},
+		"buffersoc":               {"POST", "/buffersoc/{value:[0-9.]+}", floatHandler(site.SetBufferSoc, site.GetBufferSoc)},
+		"bufferstartsoc":          {"POST", "/bufferstartsoc/{value:[0-9.]+}", floatHandler(site.SetBufferStartSoc, site.GetBufferStartSoc)},
+		"batterydischargecontrol": {"POST", "/batterydischargecontrol/{value:[a-z]+}", boolHandler(site.SetBatteryDischargeControl, site.GetBatteryDischargeControl)},
+		"prioritysoc":             {"POST", "/prioritysoc/{value:[0-9.]+}", floatHandler(site.SetPrioritySoc, site.GetPrioritySoc)},
+		"residualpower":           {"POST", "/residualpower/{value:[-0-9.]+}", floatHandler(site.SetResidualPower, site.GetResidualPower)},
+		"smartcost":               {"POST", "/smartcostlimit/{value:[-0-9.]+}", updateSmartCostLimit(site)},
+		"tariff":                  {"GET", "/tariff/{tariff:[a-z]+}", tariffHandler(site)},
+		"sessions":                {"GET", "/sessions", sessionHandler},
+		"updatesession":           {"PUT", "/session/{id:[0-9]+}", updateSessionHandler},
+		"deletesession":           {"DELETE", "/session/{id:[0-9]+}", deleteSessionHandler},
+		"telemetry":               {"GET", "/settings/telemetry", boolGetHandler(telemetry.Enabled)},
+		"telemetry2":              {"POST", "/settings/telemetry/{value:[a-z]+}", boolHandler(telemetry.Enable, telemetry.Enabled)},
 	}
 
 	for _, r := range routes {
-		api.Methods(r.Methods...).Path(r.Pattern).Handler(r.HandlerFunc)
+		api.Methods(r.Methods()...).Path(r.Pattern).Handler(r.HandlerFunc)
 	}
 
 	// vehicle api
 	vehicles := map[string]route{
-		"minsoc":   {[]string{"POST", "OPTIONS"}, "/vehicles/{name:[a-zA-Z0-9_.:-]+}/minsoc/{value:[0-9]+}", minSocHandler(site)},
-		"limitsoc": {[]string{"POST", "OPTIONS"}, "/vehicles/{name:[a-zA-Z0-9_.:-]+}/limitsoc/{value:[0-9]+}", limitSocHandler(site)},
-		"plan":     {[]string{"POST", "OPTIONS"}, "/vehicles/{name:[a-zA-Z0-9_.:-]+}/plan/soc/{value:[0-9]+}/{time:[0-9TZ:.-]+}", planSocHandler(site)},
-		"plan2":    {[]string{"DELETE", "OPTIONS"}, "/vehicles/{name:[a-zA-Z0-9_.:-]+}/plan/soc", planSocRemoveHandler(site)},
+		"minsoc":   {"POST", "/vehicles/{name:[a-zA-Z0-9_.:-]+}/minsoc/{value:[0-9]+}", minSocHandler(site)},
+		"limitsoc": {"POST", "/vehicles/{name:[a-zA-Z0-9_.:-]+}/limitsoc/{value:[0-9]+}", limitSocHandler(site)},
+		"plan":     {"POST", "/vehicles/{name:[a-zA-Z0-9_.:-]+}/plan/soc/{value:[0-9]+}/{time:[0-9TZ:.-]+}", planSocHandler(site)},
+		"plan2":    {"DELETE", "/vehicles/{name:[a-zA-Z0-9_.:-]+}/plan/soc", planSocRemoveHandler(site)},
 
 		// config ui
-		// "mode":     {[]string{"POST", "OPTIONS"}, "/mode/{value:[a-z]+}", chargeModeHandler(v)},
-		// "mincurrent": {[]string{"POST", "OPTIONS"}, "/mincurrent/{value:[0-9.]+}", floatHandler(pass(v.SetMinCurrent), v.GetMinCurrent)},
-		// "maxcurrent": {[]string{"POST", "OPTIONS"}, "/maxcurrent/{value:[0-9.]+}", floatHandler(pass(v.SetMaxCurrent), v.GetMaxCurrent)},
-		// "phases":     {[]string{"POST", "OPTIONS"}, "/phases/{value:[0-9]+}", intHandler(pass(v.SetMinSoc), v.GetMinSoc)},
+		// "mode":       {"POST", "/mode/{value:[a-z]+}", chargeModeHandler(v)},
+		// "mincurrent": {"POST", "/mincurrent/{value:[0-9.]+}", floatHandler(pass(v.SetMinCurrent), v.GetMinCurrent)},
+		// "maxcurrent": {"POST", "/maxcurrent/{value:[0-9.]+}", floatHandler(pass(v.SetMaxCurrent), v.GetMaxCurrent)},
+		// "phases":     {"POST", "/phases/{value:[0-9]+}", intHandler(pass(v.SetMinSoc), v.GetMinSoc)},
 	}
 
 	for _, r := range vehicles {
-		api.Methods(r.Methods...).Path(r.Pattern).Handler(r.HandlerFunc)
+		api.Methods(r.Methods()...).Path(r.Pattern).Handler(r.HandlerFunc)
 	}
 
 	// loadpoint api
@@ -145,28 +152,28 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, cache *util.Cache) {
 		api := api.PathPrefix(fmt.Sprintf("/loadpoints/%d", id+1)).Subrouter()
 
 		routes := map[string]route{
-			"mode":             {[]string{"POST", "OPTIONS"}, "/mode/{value:[a-z]+}", handler(eapi.ChargeModeString, pass(lp.SetMode), lp.GetMode)},
-			"limitsoc":         {[]string{"POST", "OPTIONS"}, "/limitsoc/{value:[0-9]+}", intHandler(pass(lp.SetLimitSoc), lp.GetLimitSoc)},
-			"limitenergy":      {[]string{"POST", "OPTIONS"}, "/limitenergy/{value:[0-9.]+}", floatHandler(pass(lp.SetLimitEnergy), lp.GetLimitEnergy)},
-			"mincurrent":       {[]string{"POST", "OPTIONS"}, "/mincurrent/{value:[0-9.]+}", floatHandler(lp.SetMinCurrent, lp.GetMinCurrent)},
-			"maxcurrent":       {[]string{"POST", "OPTIONS"}, "/maxcurrent/{value:[0-9.]+}", floatHandler(lp.SetMaxCurrent, lp.GetMaxCurrent)},
-			"phases":           {[]string{"POST", "OPTIONS"}, "/phases/{value:[0-9]+}", intHandler(lp.SetPhases, lp.GetPhases)},
-			"plan":             {[]string{"GET"}, "/plan", planHandler(lp)},
-			"planpreview":      {[]string{"GET"}, "/plan/preview/{type:(?:soc|energy)}/{value:[0-9.]+}/{time:[0-9TZ:.-]+}", planPreviewHandler(lp)},
-			"planenergy":       {[]string{"POST", "OPTIONS"}, "/plan/energy/{value:[0-9.]+}/{time:[0-9TZ:.-]+}", planEnergyHandler(lp)},
-			"planenergy2":      {[]string{"DELETE", "OPTIONS"}, "/plan/energy", planRemoveHandler(lp)},
-			"vehicle":          {[]string{"POST", "OPTIONS"}, "/vehicle/{name:[a-zA-Z0-9_.:-]+}", vehicleSelectHandler(site, lp)},
-			"vehicle2":         {[]string{"DELETE", "OPTIONS"}, "/vehicle", vehicleRemoveHandler(lp)},
-			"vehicleDetect":    {[]string{"PATCH", "OPTIONS"}, "/vehicle", vehicleDetectHandler(lp)},
-			"remotedemand":     {[]string{"POST", "OPTIONS"}, "/remotedemand/{demand:[a-z]+}/{source:[0-9a-zA-Z_-]+}", remoteDemandHandler(lp)},
-			"enableThreshold":  {[]string{"POST", "OPTIONS"}, "/enable/threshold/{value:-?[0-9.]+}", floatHandler(pass(lp.SetEnableThreshold), lp.GetEnableThreshold)},
-			"disableThreshold": {[]string{"POST", "OPTIONS"}, "/disable/threshold/{value:-?[0-9.]+}", floatHandler(pass(lp.SetDisableThreshold), lp.GetDisableThreshold)},
-			"smartCostLimit":   {[]string{"POST", "OPTIONS"}, "/smartcostlimit/{value:[0-9.]+}", floatHandler(pass(lp.SetSmartCostLimit), lp.GetSmartCostLimit)},
-			// "priority":         {[]string{"POST", "OPTIONS"}, "/priority/{value:[0-9.]+}", floatHandler(pass(lp.SetPriority), lp.GetPriority)},
+			"mode":             {"POST", "/mode/{value:[a-z]+}", handler(eapi.ChargeModeString, pass(lp.SetMode), lp.GetMode)},
+			"limitsoc":         {"POST", "/limitsoc/{value:[0-9]+}", intHandler(pass(lp.SetLimitSoc), lp.GetLimitSoc)},
+			"limitenergy":      {"POST", "/limitenergy/{value:[0-9.]+}", floatHandler(pass(lp.SetLimitEnergy), lp.GetLimitEnergy)},
+			"mincurrent":       {"POST", "/mincurrent/{value:[0-9.]+}", floatHandler(lp.SetMinCurrent, lp.GetMinCurrent)},
+			"maxcurrent":       {"POST", "/maxcurrent/{value:[0-9.]+}", floatHandler(lp.SetMaxCurrent, lp.GetMaxCurrent)},
+			"phases":           {"POST", "/phases/{value:[0-9]+}", intHandler(lp.SetPhases, lp.GetPhases)},
+			"plan":             {"GET", "/plan", planHandler(lp)},
+			"planpreview":      {"GET", "/plan/preview/{type:(?:soc|energy)}/{value:[0-9.]+}/{time:[0-9TZ:.-]+}", planPreviewHandler(lp)},
+			"planenergy":       {"POST", "/plan/energy/{value:[0-9.]+}/{time:[0-9TZ:.-]+}", planEnergyHandler(lp)},
+			"planenergy2":      {"DELETE", "/plan/energy", planRemoveHandler(lp)},
+			"vehicle":          {"POST", "/vehicle/{name:[a-zA-Z0-9_.:-]+}", vehicleSelectHandler(site, lp)},
+			"vehicle2":         {"DELETE", "/vehicle", vehicleRemoveHandler(lp)},
+			"vehicleDetect":    {"PATCH", "/vehicle", vehicleDetectHandler(lp)},
+			"remotedemand":     {"POST", "/remotedemand/{demand:[a-z]+}/{source:[0-9a-zA-Z_-]+}", remoteDemandHandler(lp)},
+			"enableThreshold":  {"POST", "/enable/threshold/{value:-?[0-9.]+}", floatHandler(pass(lp.SetEnableThreshold), lp.GetEnableThreshold)},
+			"disableThreshold": {"POST", "/disable/threshold/{value:-?[0-9.]+}", floatHandler(pass(lp.SetDisableThreshold), lp.GetDisableThreshold)},
+			"smartCostLimit":   {"POST", "/smartcostlimit/{value:[0-9.]+}", floatHandler(pass(lp.SetSmartCostLimit), lp.GetSmartCostLimit)},
+			// "priority":         {"POST", "/priority/{value:[0-9.]+}", floatHandler(pass(lp.SetPriority), lp.GetPriority)},
 		}
 
 		for _, r := range routes {
-			api.Methods(r.Methods...).Path(r.Pattern).Handler(r.HandlerFunc)
+			api.Methods(r.Methods()...).Path(r.Pattern).Handler(r.HandlerFunc)
 		}
 	}
 }
@@ -185,13 +192,13 @@ func (s *HTTPd) RegisterShutdownHandler(callback func()) {
 
 	// site api
 	routes := map[string]route{
-		"shutdown": {[]string{"POST", "OPTIONS"}, "/shutdown", func(w http.ResponseWriter, r *http.Request) {
+		"shutdown": {"POST", "/shutdown", func(w http.ResponseWriter, r *http.Request) {
 			callback()
 			w.WriteHeader(http.StatusNoContent)
 		}},
 	}
 
 	for _, r := range routes {
-		api.Methods(r.Methods...).Path(r.Pattern).Handler(r.HandlerFunc)
+		api.Methods(r.Methods()...).Path(r.Pattern).Handler(r.HandlerFunc)
 	}
 }

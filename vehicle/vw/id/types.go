@@ -108,7 +108,7 @@ type Status struct {
 				MaxChargeCurrentAC          string    `json:"maxChargeCurrentAC"` // reduced, maximum
 				AutoUnlockPlugWhenCharged   string    `json:"autoUnlockPlugWhenCharged"`
 				AutoUnlockPlugWhenChargedAC string    `json:"autoUnlockPlugWhenChargedAC"`
-				TargetSOCPct                int       `json:"targetSOC_pct"`
+				TargetSOCPct                *int      `json:"targetSOC_pct"`
 			} `json:"value"`
 		} `json:"chargingSettings"`
 		PlugStatus struct {

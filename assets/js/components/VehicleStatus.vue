@@ -12,7 +12,7 @@ export default {
 	mixins: [formatter],
 	props: {
 		vehicleSoc: Number,
-		vehicleTargetSoc: Number,
+		vehicleLimitSoc: Number,
 		minSoc: Number,
 		enabled: Boolean,
 		connected: Boolean,
@@ -105,8 +105,8 @@ export default {
 			}
 
 			if (this.enabled && !this.charging) {
-				if (this.vehicleTargetSoc > 0 && this.vehicleSoc >= this.vehicleTargetSoc - 1) {
-					return t("vehicleTargetReached", { soc: this.vehicleTargetSoc });
+				if (this.vehicleLimitSoc > 0 && this.vehicleSoc >= this.vehicleLimitSoc - 1) {
+					return t("vehicleLimitReached", { soc: this.vehicleLimitSoc });
 				}
 				return t("waitForVehicle");
 			}

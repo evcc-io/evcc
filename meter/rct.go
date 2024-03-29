@@ -110,8 +110,7 @@ func NewRCT(uri, usage string, cache time.Duration, capacity func() float64) (ap
 func (m *RCT) CurrentPower() (float64, error) {
 	switch m.usage {
 	case "grid":
-		res, err := m.queryFloat(rct.TotalGridPowerW)
-		return res, err
+		return m.queryFloat(rct.TotalGridPowerW)
 
 	case "pv":
 		a, err := m.queryFloat(rct.SolarGenAPowerW)
@@ -126,8 +125,7 @@ func (m *RCT) CurrentPower() (float64, error) {
 		return a + b + c, err
 
 	case "battery":
-		res, err := m.queryFloat(rct.BatteryPowerW)
-		return res, err
+		return m.queryFloat(rct.BatteryPowerW)
 
 	default:
 		return 0, fmt.Errorf("invalid usage: %s", m.usage)
