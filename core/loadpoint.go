@@ -742,6 +742,17 @@ func (lp *Loadpoint) setLimit(chargeCurrent float64) error {
 		chargeCurrent = math.Trunc(chargeCurrent)
 	}
 
+	// apply circuit limits
+	if lp.circuit != nil {
+		currentLimit := lp.circuit.ValidateCurrent(lp.chargeCurrent, chargeCurrent)
+
+		activePhases := lp.ActivePhases()
+		powerLimit := lp.circuit.ValidatePower(lp.chargePower, currentToPower(chargeCurrent, activePhases))
+		currentLimitViaPower := powerToCurrent(powerLimit, activePhases)
+
+		chargeCurrent = min(currentLimit, currentLimitViaPower)
+	}
+
 	// set current
 	if chargeCurrent != lp.chargeCurrent && chargeCurrent >= lp.effectiveMinCurrent() {
 		var err error
