@@ -710,6 +710,19 @@ func (lp *Loadpoint) syncCharger() error {
 			}
 		}
 
+		// sync phases
+		phases := lp.GetPhases()
+		if ps, ok := lp.charger.(api.PhaseGetter); ok && enabled && shouldBeConsistent && phases > 0 {
+			if chargerPhases, err := ps.GetPhases(); err == nil {
+				if chargerPhases != phases {
+					lp.log.WARN.Printf("charger logic error: phases mismatch (got %d, expected %d)", chargerPhases, phases)
+					lp.setPhases(chargerPhases)
+				}
+			} else if !errors.Is(err, api.ErrNotAvailable) {
+				return fmt.Errorf("charger get phases: %w", err)
+			}
+		}
+
 	case !enabled && !lp.phaseSwitchCompleted():
 		// some chargers (i.E. Easee in some configurations) disable themselves to be able to switch phases
 		// -> enable charger
