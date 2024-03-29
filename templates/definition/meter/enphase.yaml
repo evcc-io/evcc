@@ -75,7 +75,6 @@ render: |
   setup:
     source: watchdog
     timeout: 5m
-    reset: 0
     set:
       source: http
       uri: http://{{ .host }}/ivp/livedata/stream
