@@ -84,14 +84,19 @@ func (c *Circuit) WithParent(parent *Circuit) {
 }
 
 func (c *Circuit) updateLoadpoints(loadpoints []loadpoint.API) {
-	var total float64
+	var totalPower, totalCurrent float64
+
 	for _, lp := range loadpoints {
-		if lp.GetCircuit() == c {
-			total += lp.GetChargePower()
+		if lp.GetCircuit() != c {
+			continue
 		}
-		// TODO currents
+
+		totalPower += lp.GetChargePower()
+		totalCurrent += max(lp.GetChargeCurrents())
 	}
-	c.power = total
+
+	c.power = totalPower
+	c.current = totalCurrent
 }
 
 func (c *Circuit) Update(loadpoints []loadpoint.API) error {

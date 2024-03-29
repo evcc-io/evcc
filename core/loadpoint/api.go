@@ -125,6 +125,8 @@ type API interface {
 	GetChargePower() float64
 	// GetChargePowerFlexibility returns the flexible amount of current charging power
 	GetChargePowerFlexibility() float64
+	// GetChargeCurrents returns the current charging power
+	GetChargeCurrents() (float64, float64, float64)
 
 	//
 	// charge progress

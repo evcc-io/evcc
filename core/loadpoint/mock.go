@@ -111,6 +111,22 @@ func (mr *MockAPIMockRecorder) EffectivePriority() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EffectivePriority", reflect.TypeOf((*MockAPI)(nil).EffectivePriority))
 }
 
+// GetChargeCurrents mocks base method.
+func (m *MockAPI) GetChargeCurrents() (float64, float64, float64) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetChargeCurrents")
+	ret0, _ := ret[0].(float64)
+	ret1, _ := ret[1].(float64)
+	ret2, _ := ret[2].(float64)
+	return ret0, ret1, ret2
+}
+
+// GetChargeCurrents indicates an expected call of GetChargeCurrents.
+func (mr *MockAPIMockRecorder) GetChargeCurrents() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetChargeCurrents", reflect.TypeOf((*MockAPI)(nil).GetChargeCurrents))
+}
+
 // GetChargePower mocks base method.
 func (m *MockAPI) GetChargePower() float64 {
 	m.ctrl.T.Helper()
