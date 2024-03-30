@@ -1,6 +1,6 @@
 <template>
 	<div class="group pt-4 px-4 pb-1">
-		<dl class="row" data-testid="sitesettings-title">
+		<dl class="row" data-testid="generalconfig-title">
 			<dt class="col-sm-4">Title</dt>
 			<dd class="col-sm-8">
 				{{ title || "---" }}
@@ -17,7 +17,7 @@
 		<dl class="row">
 			<dt class="col-sm-4">Telemetry</dt>
 			<dd class="col-sm-8">
-				{{ telemetry ? "on" : "off" }}
+				{{ telemetryEnabled ? "on" : "off" }}
 				<a
 					href="#"
 					class="ms-2 d-inline-block text-muted"
@@ -69,19 +69,24 @@
 import Modal from "bootstrap/js/dist/modal";
 import TitleModal from "./TitleModal.vue";
 import api from "../../api";
+import settings from "../../settings";
 
 export default {
-	name: "SiteSettings",
+	name: "GeneralConfig",
 	data() {
 		return {
 			title: "",
-			telemetry: false,
 		};
 	},
 	components: { TitleModal },
 	emits: ["site-changed"],
 	async mounted() {
 		await this.load();
+	},
+	computed: {
+		telemetryEnabled() {
+			return settings.telemetry === true;
+		},
 	},
 	methods: {
 		async changed() {
@@ -92,9 +97,6 @@ export default {
 			try {
 				let res = await api.get("/config/site");
 				this.title = res.data.result.title;
-
-				res = await api.get("/settings/telemetry");
-				this.telemetry = res.data.result;
 			} catch (e) {
 				console.error(e);
 			}

@@ -54,6 +54,10 @@ F = "F (error)"
 example = "Example"
 optional = "optional"
 
+[config.general]
+cancel = "Cancel"
+save = "Save"
+
 [config.grid]
 titleAdd = "Add Grid Meter"
 titleEdit = "Edit Grid Meter"
@@ -86,9 +90,10 @@ validateSave = "Validate & save"
 titleAdd = "Add Solar Meter"
 titleEdit = "Edit Solar Meter"
 
-[config.site]
-cancel = "Cancel"
-save = "Save"
+[config.title]
+description = "Displayed on main screen and browser tab."
+label = "Title"
+title = "Edit Title"
 
 [config.title]
 cancel = "Cancel"

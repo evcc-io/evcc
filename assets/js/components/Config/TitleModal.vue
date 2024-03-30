@@ -16,7 +16,7 @@
 			</FormRow>
 			<div class="my-4 d-flex justify-content-between">
 				<button type="button" class="btn btn-link text-muted" data-bs-dismiss="modal">
-					{{ $t("config.title.cancel") }}
+					{{ $t("config.general.cancel") }}
 				</button>
 				<button
 					type="submit"
@@ -30,7 +30,7 @@
 						role="status"
 						aria-hidden="true"
 					></span>
-					{{ $t("config.title.save") }}
+					{{ $t("config.general.save") }}
 				</button>
 			</div>
 		</form>

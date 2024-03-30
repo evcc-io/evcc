@@ -35,7 +35,7 @@
 				</div>
 
 				<h2 class="my-4 mt-5">General</h2>
-				<SiteSettings @site-changed="siteChanged" />
+				<GeneralConfig @site-changed="siteChanged" />
 
 				<h2 class="my-4 mt-5">Grid, PV & Battery Systems</h2>
 				<ul class="p-0 config-list">
@@ -246,14 +246,14 @@ import DeviceTags from "../components/Config/DeviceTags.vue";
 import AddDeviceButton from "../components/Config/AddDeviceButton.vue";
 import MeterModal from "../components/Config/MeterModal.vue";
 import LoadpointModal from "../components/Config/LoadpointModal.vue";
-import SiteSettings from "../components/Config/SiteSettings.vue";
+import GeneralConfig from "../components/Config/GeneralConfig.vue";
 import formatter from "../mixins/formatter";
 
 export default {
 	name: "Config",
 	components: {
 		TopHeader,
-		SiteSettings,
+		GeneralConfig,
 		VehicleIcon,
 		VehicleModal,
 		DeviceCard,
