@@ -95,13 +95,6 @@ description = "Displayed on main screen and browser tab."
 label = "Title"
 title = "Edit Title"
 
-[config.title]
-cancel = "Cancel"
-description = "Displayed on main screen and browser tab."
-label = "Title"
-save = "Save"
-title = "Edit Site Title"
-
 [config.validation]
 failed = "failed"
 label = "Status"
