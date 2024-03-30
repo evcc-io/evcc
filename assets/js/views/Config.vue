@@ -6,7 +6,7 @@
 				<Restart ref="restart" v-bind="restartProps" />
 
 				<h2 class="my-4 mt-5">General</h2>
-				<SiteSettings @site-changed="siteChanged" />
+				<GeneralConfig @site-changed="siteChanged" />
 
 				<div v-if="$hiddenFeatures()">
 					<hr class="mb-6" />
@@ -220,8 +220,8 @@ import DeviceCard from "../components/Config/DeviceCard.vue";
 import DeviceTags from "../components/Config/DeviceTags.vue";
 import AddDeviceButton from "../components/Config/AddDeviceButton.vue";
 import MeterModal from "../components/Config/MeterModal.vue";
-import SiteSettings from "../components/Config/SiteSettings.vue";
 import Restart from "../components/Config/Restart.vue";
+import GeneralConfig from "../components/Config/GeneralConfig.vue";
 import formatter from "../mixins/formatter";
 import collector from "../mixins/collector";
 
@@ -229,7 +229,7 @@ export default {
 	name: "Config",
 	components: {
 		TopHeader,
-		SiteSettings,
+		GeneralConfig,
 		VehicleIcon,
 		VehicleModal,
 		DeviceCard,
@@ -430,10 +430,6 @@ export default {
 	grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
 	grid-gap: 1rem;
 	margin-bottom: 5rem;
-}
-.container {
-	max-width: 900px;
-	margin: 0 auto;
 }
 .wip {
 	opacity: 0.2 !important;

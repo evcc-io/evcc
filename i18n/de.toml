@@ -59,6 +59,10 @@ unchanged = "Keine Änderungen"
 example = "Beispiel"
 optional = "optional"
 
+[config.general]
+cancel = "Abbrechen"
+save = "Speichern"
+
 [config.grid]
 titleAdd = "Stromzähler (Netz) hinzufügen"
 titleEdit = "Stromzähler (Netz) bearbeiten"
@@ -85,9 +89,10 @@ validateSave = "Überprüfen & speichern"
 titleAdd = "Zähler (PV) hinzufügen"
 titleEdit = "Zähler (PV) bearbeiten"
 
-[config.site]
-cancel = "Abbrechen"
-save = "Speichern"
+[config.title]
+description = "Wird in der Hauptansicht und im Browser-Tab angezeigt."
+label = "Titel"
+title = "Titel bearbeiten"
 
 [config.validation]
 failed = "fehlgeschlagen"
