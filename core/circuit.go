@@ -16,7 +16,6 @@ var _ api.Circuit = (*Circuit)(nil)
 type Circuit struct {
 	mu  sync.RWMutex
 	log *util.Logger
-	// uiChan chan<- util.Param
 
 	parent   api.Circuit   // parent circuit
 	children []api.Circuit // child circuits
@@ -34,8 +33,8 @@ func NewCircuitFromConfig(log *util.Logger, other map[string]interface{}) (api.C
 	var cc struct {
 		ParentRef  string  `mapstructure:"parent"`     // parent circuit reference
 		MeterRef   string  `mapstructure:"meter"`      // meter reference
-		MaxCurrent float64 `mapstructure:"maxCurrent"` // the max allowed current of this circuit
-		MaxPower   float64 `mapstructure:"maxPower"`   // the max allowed power of this circuit (kW)
+		MaxCurrent float64 `mapstructure:"maxCurrent"` // the max allowed current
+		MaxPower   float64 `mapstructure:"maxPower"`   // the max allowed power
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
