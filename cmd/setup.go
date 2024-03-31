@@ -275,7 +275,7 @@ NEXT2:
 		}
 	}
 
-	if !rootFound {
+	if !rootFound && len(config.Circuits().Devices()) > 0 {
 		return errors.New("root circuit required")
 	}
 
@@ -772,8 +772,10 @@ func configureSiteAndLoadpoints(conf globalConfig) (*core.Site, error) {
 		return nil, err
 	}
 
-	if err := validateCircuits(site, loadpoints); err != nil {
-		return nil, err
+	if len(config.Circuits().Devices()) > 0 {
+		if err := validateCircuits(site, loadpoints); err != nil {
+			return nil, err
+		}
 	}
 
 	return site, nil
@@ -797,7 +799,7 @@ NEXT:
 		return fmt.Errorf("circuit %s has no meter or loadpoint assigned", dev.Config().Name)
 	}
 
-	if len(config.Circuits().Devices()) > 0 && site.GetCircuit() == nil {
+	if site.GetCircuit() == nil {
 		return errors.New("site has no circuit")
 	}
 
