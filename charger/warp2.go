@@ -26,6 +26,7 @@ type Warp2 struct {
 	chargeG       func() (string, error)
 	userconfigG   func() (string, error)
 	emStateG      func() (string, error)
+	emLowLevelG   func() (string, error)
 	maxcurrentS   func(int64) error
 	phasesS       func(int64) error
 	current       int64
@@ -36,7 +37,7 @@ func init() {
 	registry.Add("warp-fw2", NewWarp2FromConfig) // deprecated
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateWarp2 -b *Warp2 -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.Identifier,Identify,func() (string, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) error"
+//go:generate go run ../cmd/tools/decorate.go -f decorateWarp2 -b *Warp2 -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.Identifier,Identify,func() (string, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
 
 // NewWarpFromConfig creates a new configurable charger
 func NewWarp2FromConfig(other map[string]interface{}) (api.Charger, error) {
@@ -77,13 +78,15 @@ func NewWarp2FromConfig(other map[string]interface{}) (api.Charger, error) {
 	}
 
 	var phases func(int) error
+	var getPhases func() (int, error)
 	if cc.EnergyManager != "" {
 		if res, err := wb.emState(); err == nil && res.ExternalControl != 1 {
 			phases = wb.phases1p3p
+			getPhases = wb.getPhases
 		}
 	}
 
-	return decorateWarp2(wb, currentPower, totalEnergy, currents, voltages, identity, phases), err
+	return decorateWarp2(wb, currentPower, totalEnergy, currents, voltages, identity, phases, getPhases), err
 }
 
 // NewWarp2 creates a new configurable charger
@@ -149,10 +152,16 @@ func NewWarp2(mqttconf mqtt.Config, topic, emTopic string, timeout time.Duration
 	if err != nil {
 		return nil, err
 	}
+
 	wb.phasesS, err = provider.NewMqtt(log, client,
 		fmt.Sprintf("%s/power_manager/external_control_update", emTopic), 0).
 		WithPayload(`{ "phases_wanted": ${phases} }`).
 		IntSetter("phases")
+	if err != nil {
+		return nil, err
+	}
+
+	wb.emLowLevelG, err = to.StringGetter(mq("%s/power_manager/low_level_state", emTopic))
 	if err != nil {
 		return nil, err
 	}
@@ -328,6 +337,18 @@ func (wb *Warp2) emState() (warp.EmState, error) {
 	return res, err
 }
 
+func (wb *Warp2) emLowLevelState() (warp.EmLowLevelState, error) {
+	var res warp.EmLowLevelState
+
+	s, err := wb.emLowLevelG()
+	if err == nil {
+		err = json.Unmarshal([]byte(s), &res)
+	}
+
+	return res, err
+}
+
+// phases1p3p implements the api.PhaseSwitcher interface
 func (wb *Warp2) phases1p3p(phases int) error {
 	res, err := wb.emState()
 	if err != nil {
@@ -339,4 +360,18 @@ func (wb *Warp2) phases1p3p(phases int) error {
 	}
 
 	return wb.phasesS(int64(phases))
+}
+
+// getPhases implements the api.PhaseGetter interface
+func (wb *Warp2) getPhases() (int, error) {
+	res, err := wb.emLowLevelState()
+	if err != nil {
+		return 0, err
+	}
+
+	if res.Is3phase {
+		return 3, nil
+	}
+
+	return 1, nil
 }
