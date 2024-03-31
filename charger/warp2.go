@@ -24,7 +24,6 @@ type Warp2 struct {
 	meterG        func(any) error
 	meterDetailsG func(any) error
 	chargeG       func(any) error
-	userconfigG   func() (string, error)
 	emStateG      func(any) error
 	emLowLevelG   func(any) error
 	maxcurrentS   func(int64) error
@@ -132,10 +131,6 @@ func NewWarp2(mqttconf mqtt.Config, topic, emTopic string, timeout time.Duration
 		return nil, err
 	}
 	wb.chargeG, err = to.JsonGetter(mq("%s/charge_tracker/current_charge", topic))
-	if err != nil {
-		return nil, err
-	}
-	wb.userconfigG, err = to.StringGetter(mq("%s/users/config", topic))
 	if err != nil {
 		return nil, err
 	}
