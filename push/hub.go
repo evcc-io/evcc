@@ -79,6 +79,11 @@ func (h *Hub) apply(ev Event, tmpl string) (string, error) {
 	// add missing attributes
 	if name, ok := attr["vehicleName"].(string); ok {
 		if v, err := h.vehicles.ByName(name); err == nil {
+			attr["vehicleMode"] = v.GetMode()
+			attr["vehiclePhases"] = v.GetPhases()
+			attr["vehicleMinCurrent"] = v.GetMinCurrent()
+			attr["vehicleMaxCurrent"] = v.GetMaxCurrent()
+			attr["vehiclePriority"] = v.GetPriority()
 			attr["vehicleLimitSoc"] = v.GetLimitSoc()
 			attr["vehicleMinSoc"] = v.GetMinSoc()
 			attr["vehiclePlanTime"], attr["vehiclePlanSoc"] = v.GetPlanSoc()
