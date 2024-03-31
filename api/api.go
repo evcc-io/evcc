@@ -202,6 +202,9 @@ type CsvWriter interface {
 type Circuit interface {
 	GetParent() Circuit
 	RegisterChild(child Circuit)
+	HasMeter() bool
+	GetMaxPower() float64
+	GetMaxCurrent() float64
 	GetChargePower() float64
 	GetChargeCurrent() float64
 	// SetChargePower(float64)

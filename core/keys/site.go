@@ -28,6 +28,7 @@ const (
 	TariffPriceHome       = "tariffPriceHome"
 	TariffPriceLoadpoints = "tariffPriceLoadpoints"
 	Vehicles              = "vehicles"
+	Circuits              = "circuits"
 
 	// meters
 	GridMeter     = "gridMeter"

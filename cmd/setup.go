@@ -267,7 +267,7 @@ NEXT2:
 	for _, dev := range config.Circuits().Devices() {
 		c := dev.Instance()
 
-		if c.GetParent() != nil {
+		if c.GetParent() == nil {
 			if rootFound {
 				return errors.New("cannot have multiple root circuits")
 			}
@@ -276,7 +276,7 @@ NEXT2:
 	}
 
 	if !rootFound {
-		return errors.New("need root circuit")
+		return errors.New("root circuit required")
 	}
 
 	return nil
@@ -740,13 +740,13 @@ func configureTariffs(conf tariffConfig) (*tariff.Tariffs, error) {
 }
 
 func configureDevices(conf globalConfig) error {
-	if err := configureCircuits(conf.Circuits); err != nil {
-		return err
-	}
 	if err := configureMeters(conf.Meters); err != nil {
 		return err
 	}
 	if err := configureChargers(conf.Chargers); err != nil {
+		return err
+	}
+	if err := configureCircuits(conf.Circuits); err != nil {
 		return err
 	}
 	return configureVehicles(conf.Vehicles)
@@ -772,6 +772,27 @@ func configureSiteAndLoadpoints(conf globalConfig) (*core.Site, error) {
 		return nil, err
 	}
 
+NEXT:
+	for _, dev := range config.Circuits().Devices() {
+		instance := dev.Instance()
+
+		if instance.HasMeter() || site.GetCircuit() == instance {
+			continue
+		}
+
+		for _, lp := range loadpoints {
+			if lp.GetCircuit() == instance {
+				goto NEXT
+			}
+		}
+
+		return nil, fmt.Errorf("circuit %s has no meter or loadpoint assigned", dev.Config().Name)
+	}
+
+	if len(config.Circuits().Devices()) > 0 && site.GetCircuit() == nil {
+		return nil, errors.New("site has no circuit")
+	}
+
 	return site, nil
 }
 
@@ -781,10 +802,8 @@ func configureSite(conf map[string]interface{}, loadpoints []*core.Loadpoint, ta
 		return nil, fmt.Errorf("failed configuring site: %w", err)
 	}
 
-	if len(config.Circuits().Devices()) > 0 {
-		if site.GetCircuit() == nil {
-			return nil, errors.New("site has no circuit")
-		}
+	if len(config.Circuits().Devices()) > 0 && site.GetCircuit() == nil {
+		return nil, errors.New("site has no circuit")
 	}
 
 	return site, nil
@@ -807,14 +826,6 @@ func configureLoadpoints(conf globalConfig) ([]*core.Loadpoint, error) {
 		}
 
 		loadpoints = append(loadpoints, lp)
-	}
-
-	if len(config.Circuits().Devices()) > 0 {
-		for _, lp := range loadpoints {
-			if lp.GetCircuit() == nil {
-				return nil, fmt.Errorf("loadpoint %s has no circuit", lp.Title())
-			}
-		}
 	}
 
 	return loadpoints, nil

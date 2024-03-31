@@ -53,6 +53,7 @@ loadpoints:
 
 	suite.Require().NoError(configureCircuits(conf.Circuits))
 	suite.Require().Len(config.Circuits().Devices(), 2)
+	suite.Require().False(config.Circuits().Devices()[0].Instance().HasMeter())
 
 	// empty charger
 	suite.Require().NoError(config.Chargers().Add(config.NewStaticDevice(config.Named{

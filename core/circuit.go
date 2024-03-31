@@ -106,6 +106,13 @@ func (c *Circuit) SetParent(parent api.Circuit) {
 	}
 }
 
+// HasMeter returns the max power setting
+func (c *Circuit) HasMeter() bool {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	return c.meter != nil
+}
+
 // GetMaxPower returns the max power setting
 func (c *Circuit) GetMaxPower() float64 {
 	c.mu.RLock()

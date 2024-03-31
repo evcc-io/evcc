@@ -65,14 +65,16 @@ type Site struct {
 	log *util.Logger
 
 	// configuration
-	Title                             string       `mapstructure:"title"`         // UI title
-	Voltage                           float64      `mapstructure:"voltage"`       // Operating voltage. 230V for Germany.
-	ResidualPower                     float64      `mapstructure:"residualPower"` // PV meter only: household usage. Grid meter: household safety margin
-	Meters                            MetersConfig // Meter references
-	MaxGridSupplyWhileBatteryCharging float64      `mapstructure:"maxGridSupplyWhileBatteryCharging"` // ignore battery charging if AC consumption is above this value
+	Title         string       `mapstructure:"title"`         // UI title
+	Voltage       float64      `mapstructure:"voltage"`       // Operating voltage. 230V for Germany.
+	ResidualPower float64      `mapstructure:"residualPower"` // PV meter only: household usage. Grid meter: household safety margin
+	Meters        MetersConfig `mapstructure:"meters"`        // Meter references
+	CircuitRef    string       `mapstructure:"circuit"`       // Circuit reference
+
+	MaxGridSupplyWhileBatteryCharging float64 `mapstructure:"maxGridSupplyWhileBatteryCharging"` // ignore battery charging if AC consumption is above this value
 
 	// meters
-	circuit       *Circuit    // Circuit
+	circuit       api.Circuit // Circuit
 	gridMeter     api.Meter   // Grid usage meter
 	pvMeters      []api.Meter // PV generation meters
 	batteryMeters []api.Meter // Battery charging meters
@@ -162,6 +164,15 @@ func NewSiteFromConfig(
 
 	// add meters from config
 	site.restoreMeters()
+
+	// circuit
+	if site.CircuitRef != "" {
+		dev, err := config.Circuits().ByName(site.CircuitRef)
+		if err != nil {
+			return nil, err
+		}
+		site.circuit = dev.Instance()
+	}
 
 	// grid meter
 	if site.Meters.GridMeterRef != "" {
@@ -765,9 +776,11 @@ func (site *Site) update(lp updater) {
 
 	// update all circuits' power and currents
 	if site.circuit != nil {
-		if err := site.circuit.Update(site.Loadpoints()); err != nil {
+		if err := site.circuit.(*Circuit).Update(site.Loadpoints()); err != nil {
 			site.log.ERROR.Println(err)
 		}
+
+		site.publishCircuits()
 	}
 
 	// prioritize if possible
