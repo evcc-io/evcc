@@ -61,12 +61,12 @@ func (h *TimeoutHandler) JsonGetter(p StringProvider) (func(any) error, error) {
 
 	return func(res any) error {
 		val, err := g()
-		if err == nil {
-			_, err = h.ticker()
+		if err != nil {
+			return err
 		}
-		if err == nil {
-			err = json.Unmarshal([]byte(val), res)
+		if _, err := h.ticker(); err != nil {
+			return err
 		}
-		return err
+		return json.Unmarshal([]byte(val), res)
 	}, nil
 }
