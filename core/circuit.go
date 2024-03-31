@@ -18,9 +18,9 @@ type Circuit struct {
 	log *util.Logger
 	// uiChan chan<- util.Param
 
-	parent   *Circuit   // parent circuit
-	children []*Circuit // child circuits
-	meter    api.Meter  // meter to determine current power
+	parent   api.Circuit   // parent circuit
+	children []api.Circuit // child circuits
+	meter    api.Meter     // meter to determine current power
 
 	maxCurrent float64 // max allowed current
 	maxPower   float64 // max allowed power
@@ -30,11 +30,12 @@ type Circuit struct {
 }
 
 // NewCircuitFromConfig creates a new Circuit
-func NewCircuitFromConfig(log *util.Logger, other map[string]interface{}) (*Circuit, error) {
+func NewCircuitFromConfig(log *util.Logger, other map[string]interface{}) (api.Circuit, error) {
 	var cc struct {
+		ParentRef  string  `mapstructure:"parent"`     // parent circuit reference
+		MeterRef   string  `mapstructure:"meter"`      // meter reference
 		MaxCurrent float64 `mapstructure:"maxCurrent"` // the max allowed current of this circuit
 		MaxPower   float64 `mapstructure:"maxPower"`   // the max allowed power of this circuit (kW)
-		MeterRef   string  `mapstructure:"meter"`      // Charge meter reference
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -53,6 +54,14 @@ func NewCircuitFromConfig(log *util.Logger, other map[string]interface{}) (*Circ
 	circuit, err := NewCircuit(log, cc.MaxCurrent, cc.MaxPower, meter)
 	if err != nil {
 		return nil, err
+	}
+
+	if cc.ParentRef != "" {
+		dev, err := config.Circuits().ByName(cc.ParentRef)
+		if err != nil {
+			return nil, err
+		}
+		circuit.SetParent(dev.Instance())
 	}
 
 	return circuit, err
@@ -81,14 +90,14 @@ func NewCircuit(log *util.Logger, maxCurrent, maxPower float64, meter api.Meter)
 }
 
 // GetParent returns the parent circuit
-func (c *Circuit) GetParent() *Circuit {
+func (c *Circuit) GetParent() api.Circuit {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 	return c.parent
 }
 
 // SetParent set parent circuit
-func (c *Circuit) SetParent(parent *Circuit) {
+func (c *Circuit) SetParent(parent api.Circuit) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.parent = parent
@@ -112,7 +121,7 @@ func (c *Circuit) GetMaxCurrent() float64 {
 }
 
 // RegisterChild registers child circuit
-func (c *Circuit) RegisterChild(child *Circuit) {
+func (c *Circuit) RegisterChild(child api.Circuit) {
 	c.children = append(c.children, child)
 }
 
@@ -167,7 +176,7 @@ func (c *Circuit) Update(loadpoints []loadpoint.API) (err error) {
 
 	// update children depth-first
 	for _, ch := range c.children {
-		if err := ch.Update(loadpoints); err != nil {
+		if err := ch.(*Circuit).Update(loadpoints); err != nil {
 			return err
 		}
 	}

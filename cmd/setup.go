@@ -95,7 +95,7 @@ type globalConfig struct {
 	Tariffs      tariffConfig
 	Site         map[string]interface{}
 	Loadpoints   []map[string]interface{}
-	Circuits     []circuitConfig
+	Circuits     []config.Named
 }
 
 type mqttConfig struct {
@@ -135,12 +135,6 @@ type tariffConfig struct {
 	FeedIn   config.Typed
 	Co2      config.Typed
 	Planner  config.Typed
-}
-
-type circuitConfig struct {
-	Name   string                 `json:"name"`
-	Parent string                 `json:"parent"`
-	Other  map[string]interface{} `mapstructure:",remain"`
 }
 
 type networkConfig struct {
@@ -188,6 +182,105 @@ func loadConfigFile(conf *globalConfig) error {
 	}
 
 	return err
+}
+
+func configureCircuits(static []config.Named) error {
+	children := slices.Clone(static)
+	errors := make(map[string]struct{})
+
+	// TODO: check for circular references, allow multiple levels of hierarchy
+NEXT:
+	for i, cc := range children {
+		// if _, err := config.Circuits().ByName(cc.Parent); cc.Parent != "" && err != nil {
+		// 	continue
+		// }
+
+		if cc.Name == "" {
+			return fmt.Errorf("cannot create circuit: missing name")
+		}
+
+		if err := nameValid(cc.Name); err != nil {
+			return fmt.Errorf("cannot create circuit: duplicate name: %s", cc.Name)
+		}
+
+		// put parent ref into generic config
+		// cc.Other["parent"] = cc.Parent
+
+		log := util.NewLogger("circuit-" + cc.Name)
+		instance, err := core.NewCircuitFromConfig(log, cc.Other)
+		if err != nil {
+			if _, ok := errors[cc.Name]; !ok {
+				// allow erroring once for parent reference
+				continue
+			}
+			errors[cc.Name] = struct{}{}
+
+			return fmt.Errorf("cannot create circuit: %w", err)
+		}
+
+		if err := config.Circuits().Add(config.NewStaticDevice(config.Named{
+			Name:  cc.Name,
+			Other: cc.Other,
+		}, instance)); err != nil {
+			return err
+		}
+
+		children = slices.Delete(children, i, 1)
+		goto NEXT
+	}
+
+	// append devices from database
+	configurable, err := config.ConfigurationsByClass(templates.Circuit)
+	if err != nil {
+		return err
+	}
+
+	for _, conf := range configurable {
+		cc := conf.Named()
+
+		// if len(names) > 0 && !slices.Contains(names, cc.Name) {
+		// 	return nil
+		// }
+
+		log := util.NewLogger("circuit-" + cc.Name)
+		instance, err := core.NewCircuitFromConfig(log, cc.Other)
+		if err != nil {
+			if _, ok := errors[cc.Name]; !ok {
+				// allow erroring once for parent reference
+				continue
+			}
+			errors[cc.Name] = struct{}{}
+
+			return fmt.Errorf("cannot create circuit '%s': %w", cc.Name, err)
+		}
+
+		if err := config.Circuits().Add(config.NewConfigurableDevice(conf, instance)); err != nil {
+			return err
+		}
+	}
+
+	if len(children) > 0 {
+		return fmt.Errorf("missing parent circuit: %v", children[0].Other)
+	}
+
+	var rootFound bool
+	devs := config.Circuits().Devices()
+	for _, dev := range devs {
+		c := dev.Instance()
+
+		if c.GetParent() != nil {
+			if rootFound {
+				return fmt.Errorf("cannot have multiple root circuits")
+			}
+			rootFound = true
+		}
+	}
+
+	if !rootFound {
+		return fmt.Errorf("need root circuit")
+	}
+
+	return nil
 }
 
 func configureMeters(static []config.Named, names ...string) error {
@@ -648,6 +741,9 @@ func configureTariffs(conf tariffConfig) (*tariff.Tariffs, error) {
 }
 
 func configureDevices(conf globalConfig) error {
+	if err := configureCircuits(conf.Circuits); err != nil {
+		return err
+	}
 	if err := configureMeters(conf.Meters); err != nil {
 		return err
 	}
@@ -662,12 +758,7 @@ func configureSiteAndLoadpoints(conf globalConfig) (*core.Site, error) {
 		return nil, err
 	}
 
-	circuits, err := configureCircuits(conf)
-	if err != nil {
-		return nil, fmt.Errorf("failed configuring circuits: %w", err)
-	}
-
-	loadpoints, err := configureLoadpoints(conf, circuits)
+	loadpoints, err := configureLoadpoints(conf)
 	if err != nil {
 		return nil, fmt.Errorf("failed configuring loadpoints: %w", err)
 	}
@@ -677,27 +768,21 @@ func configureSiteAndLoadpoints(conf globalConfig) (*core.Site, error) {
 		return nil, err
 	}
 
-	site, err := configureSite(conf.Site, loadpoints, circuits, tariffs)
+	site, err := configureSite(conf.Site, loadpoints, tariffs)
 	if err != nil {
 		return nil, err
-	}
-
-	if len(circuits) > 0 {
-		if site.GetCircuit() == nil {
-			return nil, fmt.Errorf("site has no circuit")
-		}
 	}
 
 	return site, nil
 }
 
-func configureSite(conf map[string]interface{}, loadpoints []*core.Loadpoint, circuits map[string]*core.Circuit, tariffs *tariff.Tariffs) (*core.Site, error) {
+func configureSite(conf map[string]interface{}, loadpoints []*core.Loadpoint, tariffs *tariff.Tariffs) (*core.Site, error) {
 	site, err := core.NewSiteFromConfig(log, conf, loadpoints, tariffs)
 	if err != nil {
 		return nil, fmt.Errorf("failed configuring site: %w", err)
 	}
 
-	if len(circuits) > 0 {
+	if len(config.Circuits().Devices()) > 0 {
 		if site.GetCircuit() == nil {
 			return nil, errors.New("site has no circuit")
 		}
@@ -706,7 +791,7 @@ func configureSite(conf map[string]interface{}, loadpoints []*core.Loadpoint, ci
 	return site, nil
 }
 
-func configureLoadpoints(conf globalConfig, circuits map[string]*core.Circuit) ([]*core.Loadpoint, error) {
+func configureLoadpoints(conf globalConfig) ([]*core.Loadpoint, error) {
 	if len(conf.Loadpoints) == 0 {
 		return nil, errors.New("missing loadpoints")
 	}
@@ -717,7 +802,7 @@ func configureLoadpoints(conf globalConfig, circuits map[string]*core.Circuit) (
 		log := util.NewLoggerWithLoadpoint("lp-"+strconv.Itoa(id+1), id+1)
 		settings := &core.Settings{Key: "lp" + strconv.Itoa(id+1) + "."}
 
-		lp, err := core.NewLoadpointFromConfig(log, settings, circuits, cfg)
+		lp, err := core.NewLoadpointFromConfig(log, settings, cfg)
 		if err != nil {
 			return nil, fmt.Errorf("failed configuring loadpoint: %w", err)
 		}
@@ -725,7 +810,7 @@ func configureLoadpoints(conf globalConfig, circuits map[string]*core.Circuit) (
 		loadpoints = append(loadpoints, lp)
 	}
 
-	if len(circuits) > 0 {
+	if len(config.Circuits().Devices()) > 0 {
 		for _, lp := range loadpoints {
 			if lp.GetCircuit() == nil {
 				return nil, fmt.Errorf("loadpoint %s has no circuit", lp.Title())
@@ -736,61 +821,61 @@ func configureLoadpoints(conf globalConfig, circuits map[string]*core.Circuit) (
 	return loadpoints, nil
 }
 
-func configureCircuits(conf globalConfig) (map[string]*core.Circuit, error) {
-	children := slices.Clone(conf.Circuits)
-	circuits := make(map[string]*core.Circuit)
+// func configureCircuits(conf globalConfig) (map[string]*core.Circuit, error) {
+// 	children := slices.Clone(conf.Circuits)
+// 	circuits := make(map[string]*core.Circuit)
 
-NEXT:
-	for i, cc := range children {
-		parent, ok := circuits[cc.Parent]
-		if cc.Parent != "" && !ok {
-			continue
-		}
+// NEXT:
+// 	for i, cc := range children {
+// 		parent, ok := circuits[cc.Parent]
+// 		if cc.Parent != "" && !ok {
+// 			continue
+// 		}
 
-		if cc.Name == "" {
-			// TODO add id
-			return nil, fmt.Errorf("cannot create circuit: missing name")
-		}
+// 		if cc.Name == "" {
+// 			// TODO add id
+// 			return nil, fmt.Errorf("cannot create circuit: missing name")
+// 		}
 
-		if _, ok := circuits[cc.Name]; ok {
-			// TODO add id
-			return nil, fmt.Errorf("cannot create circuit: duplicate name: %s", cc.Name)
-		}
+// 		if _, ok := circuits[cc.Name]; ok {
+// 			// TODO add id
+// 			return nil, fmt.Errorf("cannot create circuit: duplicate name: %s", cc.Name)
+// 		}
 
-		log := util.NewLogger("circuit-" + cc.Name)
+// 		log := util.NewLogger("circuit-" + cc.Name)
 
-		circuit, err := core.NewCircuitFromConfig(log, cc.Other)
-		if err != nil {
-			return nil, fmt.Errorf("failed configuring circuit: %w", err)
-		}
-		circuit.SetParent(parent)
+// 		circuit, err := core.NewCircuitFromConfig(log, cc.Other)
+// 		if err != nil {
+// 			return nil, fmt.Errorf("failed configuring circuit: %w", err)
+// 		}
+// 		circuit.SetParent(parent)
 
-		circuits[cc.Name] = circuit
+// 		circuits[cc.Name] = circuit
 
-		children = slices.Delete(children, i, 1)
-		goto NEXT
-	}
+// 		children = slices.Delete(children, i, 1)
+// 		goto NEXT
+// 	}
 
-	if len(children) > 0 {
-		return nil, fmt.Errorf("missing parent circuit: %s", children[0].Parent)
-	}
+// 	if len(children) > 0 {
+// 		return nil, fmt.Errorf("missing parent circuit: %s", children[0].Parent)
+// 	}
 
-	var rootFound bool
-	for _, c := range circuits {
-		if c.GetParent() != nil {
-			if rootFound {
-				return nil, fmt.Errorf("cannot have multiple root circuits")
-			}
-			rootFound = true
-		}
-	}
+// 	var rootFound bool
+// 	for _, c := range circuits {
+// 		if c.GetParent() != nil {
+// 			if rootFound {
+// 				return nil, fmt.Errorf("cannot have multiple root circuits")
+// 			}
+// 			rootFound = true
+// 		}
+// 	}
 
-	if !rootFound {
-		return nil, fmt.Errorf("need root circuit")
-	}
+// 	if !rootFound {
+// 		return nil, fmt.Errorf("need root circuit")
+// 	}
 
-	return circuits, nil
-}
+// 	return circuits, nil
+// }
 
 // configureAuth handles routing for devices. For now only api.AuthProvider related routes
 func configureAuth(conf networkConfig, vehicles []api.Vehicle, router *mux.Router, paramC chan<- util.Param) {

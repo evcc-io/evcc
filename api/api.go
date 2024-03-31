@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-//go:generate mockgen -package api -destination mock.go github.com/evcc-io/evcc/api Charger,ChargeState,CurrentLimiter,PhaseSwitcher,Identifier,Meter,MeterEnergy,Vehicle,ChargeRater,Battery,Tariff,BatteryController
+//go:generate mockgen -package api -destination mock.go github.com/evcc-io/evcc/api Charger,ChargeState,CurrentLimiter,PhaseSwitcher,Identifier,Meter,MeterEnergy,Vehicle,ChargeRater,Battery,Tariff,BatteryController,Circuit
 
 // Meter provides total active power in W
 type Meter interface {
@@ -200,6 +200,12 @@ type CsvWriter interface {
 }
 
 type Circuit interface {
+	GetParent() Circuit
+	RegisterChild(child Circuit)
+	GetChargePower() float64
+	GetChargeCurrent() float64
+	// SetChargePower(float64)
+	// SetChargeCurrent(float64)
 	ValidateCurrent(old, new float64) float64
 	ValidatePower(old, new float64) float64
 }

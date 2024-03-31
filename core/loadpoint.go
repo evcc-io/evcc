@@ -186,7 +186,7 @@ type Loadpoint struct {
 }
 
 // NewLoadpointFromConfig creates a new loadpoint
-func NewLoadpointFromConfig(log *util.Logger, settings *Settings, circuits map[string]*Circuit, other map[string]interface{}) (*Loadpoint, error) {
+func NewLoadpointFromConfig(log *util.Logger, settings *Settings, other map[string]interface{}) (*Loadpoint, error) {
 	lp := NewLoadpoint(log, settings)
 	if err := util.DecodeOther(other, lp); err != nil {
 		return nil, err
@@ -205,11 +205,11 @@ func NewLoadpointFromConfig(log *util.Logger, settings *Settings, circuits map[s
 	}
 
 	if lp.CircuitRef != "" {
-		circuit, ok := circuits[lp.CircuitRef]
-		if !ok {
-			return nil, fmt.Errorf("not found: %s", lp.CircuitRef)
+		dev, err := config.Circuits().ByName(lp.CircuitRef)
+		if err != nil {
+			return nil, err
 		}
-		lp.circuit = circuit
+		lp.circuit = dev.Instance()
 	}
 
 	if lp.MeterRef != "" {
