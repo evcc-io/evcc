@@ -10,6 +10,7 @@ import (
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/util/config"
+	"github.com/samber/lo"
 )
 
 var _ site.API = (*Site)(nil)
@@ -123,11 +124,7 @@ func (site *Site) SetAuxMeterRefs(ref []string) {
 
 // Loadpoints returns the list loadpoints
 func (site *Site) Loadpoints() []loadpoint.API {
-	res := make([]loadpoint.API, len(site.loadpoints))
-	for id, lp := range site.loadpoints {
-		res[id] = lp
-	}
-	return res
+	return lo.Map(site.loadpoints, func(lp *Loadpoint, _ int) loadpoint.API { return lp })
 }
 
 // Vehicles returns the site vehicles

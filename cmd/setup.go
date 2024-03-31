@@ -772,6 +772,14 @@ func configureSiteAndLoadpoints(conf globalConfig) (*core.Site, error) {
 		return nil, err
 	}
 
+	if err := validateCircuits(site, loadpoints); err != nil {
+		return nil, err
+	}
+
+	return site, nil
+}
+
+func validateCircuits(site site.API, loadpoints []*core.Loadpoint) error {
 NEXT:
 	for _, dev := range config.Circuits().Devices() {
 		instance := dev.Instance()
@@ -786,14 +794,14 @@ NEXT:
 			}
 		}
 
-		return nil, fmt.Errorf("circuit %s has no meter or loadpoint assigned", dev.Config().Name)
+		return fmt.Errorf("circuit %s has no meter or loadpoint assigned", dev.Config().Name)
 	}
 
 	if len(config.Circuits().Devices()) > 0 && site.GetCircuit() == nil {
-		return nil, errors.New("site has no circuit")
+		return errors.New("site has no circuit")
 	}
 
-	return site, nil
+	return nil
 }
 
 func configureSite(conf map[string]interface{}, loadpoints []*core.Loadpoint, tariffs *tariff.Tariffs) (*core.Site, error) {
