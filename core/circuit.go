@@ -2,6 +2,7 @@ package core
 
 import (
 	"fmt"
+	"sync"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
@@ -13,6 +14,7 @@ var _ api.Circuit = (*Circuit)(nil)
 
 // the circuit instances to control the load
 type Circuit struct {
+	mu  sync.RWMutex
 	log *util.Logger
 	// uiChan chan<- util.Param
 
@@ -80,15 +82,33 @@ func NewCircuit(log *util.Logger, maxCurrent, maxPower float64, meter api.Meter)
 
 // GetParent returns the parent circuit
 func (c *Circuit) GetParent() *Circuit {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
 	return c.parent
 }
 
 // SetParent set parent circuit
 func (c *Circuit) SetParent(parent *Circuit) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
 	c.parent = parent
 	if parent != nil {
 		parent.RegisterChild(c)
 	}
+}
+
+// GetMaxPower returns the max power setting
+func (c *Circuit) GetMaxPower() float64 {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	return c.maxPower
+}
+
+// GetMaxCurrent returns the max current setting
+func (c *Circuit) GetMaxCurrent() float64 {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	return c.maxCurrent
 }
 
 // RegisterChild registers child circuit
@@ -110,7 +130,7 @@ func (c *Circuit) updateLoadpoints(loadpoints []loadpoint.API) {
 	}
 }
 
-func (c *Circuit) updateMeters(loadpoints []loadpoint.API) error {
+func (c *Circuit) updateMeters() error {
 	if f, err := c.meter.CurrentPower(); err == nil {
 		// TODO handle negative powers
 		c.power = f
@@ -130,7 +150,21 @@ func (c *Circuit) updateMeters(loadpoints []loadpoint.API) error {
 	return nil
 }
 
-func (c *Circuit) Update(loadpoints []loadpoint.API) error {
+func (c *Circuit) Update(loadpoints []loadpoint.API) (err error) {
+	defer func() {
+		if c.maxPower != 0 && c.power > c.maxPower {
+			c.log.WARN.Printf("over power detected: %gW > %gW", c.power, c.maxPower)
+		} else {
+			c.log.WARN.Printf("power: %gW", c.power)
+		}
+
+		if c.maxCurrent != 0 && c.current > c.maxCurrent {
+			c.log.WARN.Printf("over current detected: %gA > %gA", c.current, c.maxCurrent)
+		} else {
+			c.log.WARN.Printf("current: %gA", c.current)
+		}
+	}()
+
 	// update children depth-first
 	for _, ch := range c.children {
 		if err := ch.Update(loadpoints); err != nil {
@@ -140,7 +174,7 @@ func (c *Circuit) Update(loadpoints []loadpoint.API) error {
 
 	// meter available
 	if c.meter != nil {
-		return c.updateMeters(loadpoints)
+		return c.updateMeters()
 	}
 
 	// no meter available

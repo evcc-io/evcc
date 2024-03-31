@@ -6,7 +6,9 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger"
+	"github.com/evcc-io/evcc/core"
 	"github.com/evcc-io/evcc/meter"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/templates"
@@ -50,6 +52,9 @@ func devicesHandler(w http.ResponseWriter, r *http.Request) {
 
 	case templates.Vehicle:
 		res, err = devicesConfig(class, config.Vehicles())
+
+	case templates.Circuit:
+		res, err = devicesConfig(class, config.Circuits())
 	}
 
 	if err != nil {
@@ -123,6 +128,9 @@ func deviceConfigHandler(w http.ResponseWriter, r *http.Request) {
 
 	case templates.Vehicle:
 		res, err = deviceConfig(class, id, config.Vehicles())
+
+	case templates.Circuit:
+		res, err = deviceConfig(class, id, config.Circuits())
 	}
 
 	if err != nil {
@@ -166,6 +174,9 @@ func deviceStatusHandler(w http.ResponseWriter, r *http.Request) {
 
 	case templates.Vehicle:
 		instance, err = deviceStatus(name, config.Vehicles())
+
+	case templates.Circuit:
+		instance, err = deviceStatus(name, config.Circuits())
 	}
 
 	if err != nil {
@@ -218,6 +229,12 @@ func newDeviceHandler(w http.ResponseWriter, r *http.Request) {
 
 	case templates.Vehicle:
 		conf, err = newDevice(class, req, vehicle.NewFromConfig, config.Vehicles())
+
+	case templates.Circuit:
+		conf, err = newDevice(class, req, func(_ string, other map[string]interface{}) (api.Circuit, error) {
+			// TODO fix logger
+			return core.NewCircuitFromConfig(log, other)
+		}, config.Circuits())
 	}
 
 	if err != nil {
