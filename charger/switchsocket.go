@@ -11,6 +11,7 @@ type switchSocket struct {
 	*embed
 	enabled      func() (bool, error)
 	currentPower func() (float64, error)
+	phases       int
 	standbypower float64
 	lp           loadpoint.API
 }
@@ -19,12 +20,14 @@ func NewSwitchSocket(
 	embed *embed,
 	enabled func() (bool, error),
 	currentPower func() (float64, error),
+	phases int,
 	standbypower float64,
 ) *switchSocket {
 	return &switchSocket{
 		embed:        embed,
 		enabled:      enabled,
 		currentPower: currentPower,
+		phases:       phases,
 		standbypower: standbypower,
 	}
 }
@@ -103,5 +106,5 @@ var _ api.PhaseDescriber = (*switchSocket)(nil)
 
 // Phases implements the api.PhasesDescriber interface
 func (v *switchSocket) Phases() int {
-	return 1
+	return v.phases
 }

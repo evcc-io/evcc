@@ -62,7 +62,7 @@ func NewTasmota(embed embed, uri, user, password string, channels []int, standby
 		conn: conn,
 	}
 
-	c.switchSocket = NewSwitchSocket(&embed, c.Enabled, c.conn.CurrentPower, standbypower)
+	c.switchSocket = NewSwitchSocket(&embed, c.Enabled, c.conn.CurrentPower, 1, standbypower)
 
 	var currents, voltages func() (float64, float64, float64, error)
 	if len(channels) == 3 {

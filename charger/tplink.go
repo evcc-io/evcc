@@ -50,7 +50,7 @@ func NewTPLink(embed embed, uri string, standbypower float64) (*TPLink, error) {
 		conn: conn,
 	}
 
-	c.switchSocket = NewSwitchSocket(&embed, c.Enabled, c.conn.CurrentPower, standbypower)
+	c.switchSocket = NewSwitchSocket(&embed, c.Enabled, c.conn.CurrentPower, 1, standbypower)
 
 	return c, nil
 }

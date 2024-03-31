@@ -26,6 +26,7 @@ func NewShellyFromConfig(other map[string]interface{}) (api.Charger, error) {
 		User         string
 		Password     string
 		Channel      int
+		Phases       int
 		StandbyPower float64
 	}
 
@@ -33,11 +34,11 @@ func NewShellyFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	return NewShelly(cc.embed, cc.URI, cc.User, cc.Password, cc.Channel, cc.StandbyPower)
+	return NewShelly(cc.embed, cc.URI, cc.User, cc.Password, cc.Channel, cc.Phases, cc.StandbyPower)
 }
 
 // NewShelly creates Shelly charger
-func NewShelly(embed embed, uri, user, password string, channel int, standbypower float64) (*Shelly, error) {
+func NewShelly(embed embed, uri, user, password string, channel int, phases int, standbypower float64) (*Shelly, error) {
 	conn, err := shelly.NewConnection(uri, user, password, channel)
 	if err != nil {
 		return nil, err
@@ -47,7 +48,7 @@ func NewShelly(embed embed, uri, user, password string, channel int, standbypowe
 		conn: shelly.NewSwitch(conn),
 	}
 
-	c.switchSocket = NewSwitchSocket(&embed, c.Enabled, c.conn.CurrentPower, standbypower)
+	c.switchSocket = NewSwitchSocket(&embed, c.Enabled, c.conn.CurrentPower, phases, standbypower)
 
 	return c, nil
 }

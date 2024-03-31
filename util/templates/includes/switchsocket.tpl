@@ -1,4 +1,5 @@
 {{ define "switchsocket" }}
+phases: {{ .phases }}
 standbypower: {{ .standbypower }}
 features:
 {{- if .integrateddevice }}

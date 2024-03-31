@@ -56,7 +56,7 @@ func NewHomeWizard(embed embed, uri string, standbypower float64, cache time.Dur
 		return nil, errors.New("unsupported product type: " + c.conn.ProductType)
 	}
 
-	c.switchSocket = NewSwitchSocket(&embed, c.Enabled, c.conn.CurrentPower, standbypower)
+	c.switchSocket = NewSwitchSocket(&embed, c.Enabled, c.conn.CurrentPower, 1, standbypower)
 
 	return c, nil
 }

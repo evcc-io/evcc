@@ -9,6 +9,8 @@ params:
     mask: true
   - name: channel
     default: 0
+  - name: phases
+    default: 1
   - preset: switchsocket
 render: |
   type: shelly

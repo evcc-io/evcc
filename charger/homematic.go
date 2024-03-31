@@ -49,7 +49,7 @@ func NewCCU(embed embed, uri, deviceid, meterid, switchid, user, password string
 		conn: conn,
 	}
 
-	c.switchSocket = NewSwitchSocket(&embed, c.Enabled, c.conn.CurrentPower, standbypower)
+	c.switchSocket = NewSwitchSocket(&embed, c.Enabled, c.conn.CurrentPower, 1, standbypower)
 
 	return c, err
 }

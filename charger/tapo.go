@@ -48,7 +48,7 @@ func NewTapo(embed embed, uri, user, password string, standbypower float64) (*Ta
 		conn: conn,
 	}
 
-	c.switchSocket = NewSwitchSocket(&embed, c.Enabled, c.conn.CurrentPower, standbypower)
+	c.switchSocket = NewSwitchSocket(&embed, c.Enabled, c.conn.CurrentPower, 1, standbypower)
 
 	return c, nil
 }
