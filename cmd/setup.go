@@ -186,15 +186,11 @@ func loadConfigFile(conf *globalConfig) error {
 
 func configureCircuits(static []config.Named) error {
 	children := slices.Clone(static)
-	errors := make(map[string]struct{})
+	errs := make(map[string]struct{})
 
 	// TODO: check for circular references, allow multiple levels of hierarchy
 NEXT:
 	for i, cc := range children {
-		// if _, err := config.Circuits().ByName(cc.Parent); cc.Parent != "" && err != nil {
-		// 	continue
-		// }
-
 		if cc.Name == "" {
 			return fmt.Errorf("cannot create circuit: missing name")
 		}
@@ -203,25 +199,19 @@ NEXT:
 			return fmt.Errorf("cannot create circuit: duplicate name: %s", cc.Name)
 		}
 
-		// put parent ref into generic config
-		// cc.Other["parent"] = cc.Parent
-
 		log := util.NewLogger("circuit-" + cc.Name)
 		instance, err := core.NewCircuitFromConfig(log, cc.Other)
 		if err != nil {
-			if _, ok := errors[cc.Name]; !ok {
+			if _, ok := errs[cc.Name]; !ok {
 				// allow erroring once for parent reference
 				continue
 			}
-			errors[cc.Name] = struct{}{}
+			errs[cc.Name] = struct{}{}
 
 			return fmt.Errorf("cannot create circuit: %w", err)
 		}
 
-		if err := config.Circuits().Add(config.NewStaticDevice(config.Named{
-			Name:  cc.Name,
-			Other: cc.Other,
-		}, instance)); err != nil {
+		if err := config.Circuits().Add(config.NewStaticDevice(cc, instance)); err != nil {
 			return err
 		}
 
@@ -245,11 +235,11 @@ NEXT:
 		log := util.NewLogger("circuit-" + cc.Name)
 		instance, err := core.NewCircuitFromConfig(log, cc.Other)
 		if err != nil {
-			if _, ok := errors[cc.Name]; !ok {
+			if _, ok := errs[cc.Name]; !ok {
 				// allow erroring once for parent reference
 				continue
 			}
-			errors[cc.Name] = struct{}{}
+			errs[cc.Name] = struct{}{}
 
 			return fmt.Errorf("cannot create circuit '%s': %w", cc.Name, err)
 		}
@@ -264,20 +254,19 @@ NEXT:
 	}
 
 	var rootFound bool
-	devs := config.Circuits().Devices()
-	for _, dev := range devs {
+	for _, dev := range config.Circuits().Devices() {
 		c := dev.Instance()
 
 		if c.GetParent() != nil {
 			if rootFound {
-				return fmt.Errorf("cannot have multiple root circuits")
+				return errors.New("cannot have multiple root circuits")
 			}
 			rootFound = true
 		}
 	}
 
 	if !rootFound {
-		return fmt.Errorf("need root circuit")
+		return errors.New("need root circuit")
 	}
 
 	return nil
