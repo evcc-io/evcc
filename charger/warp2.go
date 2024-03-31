@@ -16,20 +16,20 @@ import (
 
 // Warp2 is the Warp charger v2 firmware implementation
 type Warp2 struct {
-	log              *util.Logger
-	client           *mqtt.Client
-	features         []string
-	maxcurrentG      func() (string, error)
-	statusG          func() (string, error)
-	meterG           func() (string, error)
-	meterDetailsG    func() (string, error)
-	chargeG          func() (string, error)
-	userconfigG      func() (string, error)
-	emStateG         func() (string, error)
-	emLowLevelStateG func() (string, error)
-	maxcurrentS      func(int64) error
-	phasesS          func(int64) error
-	current          int64
+	log           *util.Logger
+	client        *mqtt.Client
+	features      []string
+	maxcurrentG   func() (string, error)
+	statusG       func() (string, error)
+	meterG        func() (string, error)
+	meterDetailsG func() (string, error)
+	chargeG       func() (string, error)
+	userconfigG   func() (string, error)
+	emStateG      func() (string, error)
+	emLowLevelG   func() (string, error)
+	maxcurrentS   func(int64) error
+	phasesS       func(int64) error
+	current       int64
 }
 
 func init() {
@@ -161,7 +161,7 @@ func NewWarp2(mqttconf mqtt.Config, topic, emTopic string, timeout time.Duration
 		return nil, err
 	}
 
-	wb.emLowLevelStateG, err = to.StringGetter(mq("%s/power_manager/low_level_state", emTopic))
+	wb.emLowLevelG, err = to.StringGetter(mq("%s/power_manager/low_level_state", emTopic))
 	if err != nil {
 		return nil, err
 	}
@@ -340,7 +340,7 @@ func (wb *Warp2) emState() (warp.EmState, error) {
 func (wb *Warp2) emLowLevelState() (warp.EmLowLevelState, error) {
 	var res warp.EmLowLevelState
 
-	s, err := wb.emLowLevelStateG()
+	s, err := wb.emLowLevelG()
 	if err == nil {
 		err = json.Unmarshal([]byte(s), &res)
 	}
