@@ -14,7 +14,7 @@ type Consumer interface {
 	CurrentPower() (float64, error)     // reuse meter.api
 }
 
-// VMeter evaluates consumtion from assigned list of consumers
+// VMeter evaluates consumption from assigned list of consumers
 type VMeter struct {
 	log       *util.Logger
 	Consumers []Consumer // all consumers under management. Used for consumption evaluation
