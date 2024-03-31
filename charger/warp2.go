@@ -208,7 +208,8 @@ func (wb *Warp2) Status() (api.ChargeStatus, error) {
 	res := api.StatusNone
 
 	var status warp.EvseState
-	if err := wb.statusG(&status); err != nil {
+	err := wb.statusG(&status)
+	if err != nil {
 		return res, err
 	}
 
