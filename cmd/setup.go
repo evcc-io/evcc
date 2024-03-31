@@ -672,20 +672,12 @@ func configureSiteAndLoadpoints(conf globalConfig) (*core.Site, error) {
 		return nil, fmt.Errorf("failed configuring loadpoints: %w", err)
 	}
 
-	if len(circuits) > 0 {
-		for _, lp := range loadpoints {
-			if lp.GetCircuit() == nil {
-				return nil, fmt.Errorf("loadpoint %s has no circuit", lp.Title())
-			}
-		}
-	}
-
 	tariffs, err := configureTariffs(conf.Tariffs)
 	if err != nil {
 		return nil, err
 	}
 
-	site, err := configureSite(conf.Site, loadpoints, tariffs)
+	site, err := configureSite(conf.Site, loadpoints, circuits, tariffs)
 	if err != nil {
 		return nil, err
 	}
@@ -699,10 +691,16 @@ func configureSiteAndLoadpoints(conf globalConfig) (*core.Site, error) {
 	return site, nil
 }
 
-func configureSite(conf map[string]interface{}, loadpoints []*core.Loadpoint, tariffs *tariff.Tariffs) (*core.Site, error) {
+func configureSite(conf map[string]interface{}, loadpoints []*core.Loadpoint, circuits map[string]*core.Circuit, tariffs *tariff.Tariffs) (*core.Site, error) {
 	site, err := core.NewSiteFromConfig(log, conf, loadpoints, tariffs)
 	if err != nil {
 		return nil, fmt.Errorf("failed configuring site: %w", err)
+	}
+
+	if len(circuits) > 0 {
+		if site.GetCircuit() == nil {
+			return nil, errors.New("site has no circuit")
+		}
 	}
 
 	return site, nil
@@ -727,6 +725,14 @@ func configureLoadpoints(conf globalConfig, circuits map[string]*core.Circuit) (
 		loadpoints = append(loadpoints, lp)
 	}
 
+	if len(circuits) > 0 {
+		for _, lp := range loadpoints {
+			if lp.GetCircuit() == nil {
+				return nil, fmt.Errorf("loadpoint %s has no circuit", lp.Title())
+			}
+		}
+	}
+
 	return loadpoints, nil
 }
 
@@ -734,26 +740,33 @@ func configureCircuits(conf globalConfig) (map[string]*core.Circuit, error) {
 	children := slices.Clone(conf.Circuits)
 	circuits := make(map[string]*core.Circuit)
 
-	var id int
-
 	for len(children) > 0 {
 	NEXT:
-		for idx, cfg := range children {
-			if parent, ok := circuits[cfg.Parent]; cfg.Parent == "" || ok {
-				log := util.NewLogger("circuit-" + strconv.Itoa(id+1))
-				id++
+		for i, cc := range children {
+			if parent, ok := circuits[cc.Parent]; cc.Parent == "" || ok {
+				if cc.Name == "" {
+					// TODO add id
+					return nil, fmt.Errorf("cannot create circuit: missing name")
+				}
 
-				circuit, err := core.NewCircuitFromConfig(log, cfg.Other)
+				if _, ok := circuits[cc.Name]; ok {
+					// TODO add id
+					return nil, fmt.Errorf("cannot create circuit: duplicate name: %s", cc.Name)
+				}
+
+				log := util.NewLogger("circuit-" + cc.Name)
+
+				circuit, err := core.NewCircuitFromConfig(log, cc.Other)
 				if err != nil {
 					return nil, fmt.Errorf("failed configuring circuit: %w", err)
 				}
 
-				if cfg.Parent != "" {
+				if cc.Parent != "" {
 					circuit.WithParent(parent)
 				}
-				circuits[cfg.Name] = circuit
+				circuits[cc.Name] = circuit
 
-				children = slices.Delete(children, idx, 1)
+				children = slices.Delete(children, i, 1)
 				goto NEXT
 			}
 		}

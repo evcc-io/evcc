@@ -514,5 +514,11 @@ func (lp *Loadpoint) SetSmartCostLimit(val float64) {
 func (lp *Loadpoint) GetCircuit() circuit.API {
 	lp.RLock()
 	defer lp.RUnlock()
+
+	// return untyped nil
+	if lp.circuit == nil {
+		return nil
+	}
+
 	return lp.circuit
 }

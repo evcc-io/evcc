@@ -138,6 +138,10 @@ func (site *Site) Vehicles() site.Vehicles {
 
 // GetCircuit returns the circuit
 func (site *Site) GetCircuit() circuit.API {
+	if site.circuit == nil {
+		// return untyped nil
+		return nil
+	}
 	return site.circuit
 }
 

@@ -14,6 +14,7 @@ import (
 	"github.com/benbjohnson/clock"
 	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/circuit"
 	"github.com/evcc-io/evcc/core/coordinator"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/loadpoint"
@@ -144,7 +145,7 @@ type Loadpoint struct {
 	chargeRater      api.ChargeRater
 	chargedAtStartup float64 // session energy at startup
 
-	circuit        *Circuit    // Circuit
+	circuit        circuit.API // Circuit
 	chargeMeter    api.Meter   // Charger usage meter
 	vehicle        api.Vehicle // Currently active vehicle
 	defaultVehicle api.Vehicle // Default vehicle (disables detection)
