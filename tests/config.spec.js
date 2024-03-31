@@ -1,6 +1,6 @@
-const { test, expect } = require("@playwright/test");
-const { start, stop, restart, cleanRestart } = require("./evcc");
-const { startSimulator, stopSimulator, SIMULATOR_URL, SIMULATOR_HOST } = require("./simulator");
+import { test, expect } from "@playwright/test";
+import { start, stop, restart, cleanRestart } from "./evcc";
+import { startSimulator, stopSimulator, SIMULATOR_URL, SIMULATOR_HOST } from "./simulator";
 
 const CONFIG_EMPTY = "config-empty.evcc.yaml";
 const CONFIG_WITH_VEHICLE = "config-with-vehicle.evcc.yaml";
@@ -187,7 +187,7 @@ test.describe("meters", async () => {
   });
 });
 
-test.describe("site", async () => {
+test.describe("general", async () => {
   test("change site title", async ({ page }) => {
     // initial value on main ui
     await page.goto("/");
@@ -195,15 +195,23 @@ test.describe("site", async () => {
 
     // change value in config
     await page.goto("/#/config");
-    await page.getByLabel("Site title").fill("Whoops World");
+    await expect(page.getByTestId("generalconfig-title")).toContainText("Hello World");
+    await page.getByTestId("generalconfig-title").getByRole("link", { name: "edit" }).click();
+    const modal = page.getByTestId("title-modal");
+    await expect(modal).toBeVisible();
+    await modal.getByLabel("Title").fill("Whoops World");
 
-    // reset form to initial value
-    await page.getByRole("button", { name: "Cancel" }).click();
-    await expect(page.getByLabel("Site title")).toHaveValue("Hello World");
+    // close modal and ignore entry on cancel
+    await modal.getByRole("button", { name: "Cancel" }).click();
+    await expect(modal).not.toBeVisible();
+    await expect(page.getByTestId("generalconfig-title")).toContainText("Hello World");
 
     // change and save value
-    await page.getByLabel("Site title").fill("Ahoy World");
-    await page.getByRole("button", { name: "Save" }).click();
+    await page.getByTestId("generalconfig-title").getByRole("link", { name: "edit" }).click();
+    await modal.getByLabel("Title").fill("Ahoy World");
+    await modal.getByRole("button", { name: "Save" }).click();
+    await expect(modal).not.toBeVisible();
+    await expect(page.getByTestId("generalconfig-title")).toContainText("Ahoy World");
 
     // check changed value on main ui
     await page.getByTestId("home-link").click();

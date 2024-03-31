@@ -72,6 +72,6 @@ const (
 	VehicleOdometer        = "vehicleOdometer"        // vehicle odometer
 	VehicleRange           = "vehicleRange"           // vehicle range
 	VehicleSoc             = "vehicleSoc"             // vehicle soc
-	VehicleTargetSoc       = "vehicleTargetSoc"       // vehicle api soc limit
+	VehicleLimitSoc        = "vehicleLimitSoc"        // vehicle api soc limit
 	VehicleClimaterActive  = "vehicleClimaterActive"  // vehicle climater active
 )

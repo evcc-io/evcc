@@ -30,7 +30,7 @@ titleEdit = "Batterie Zähler bearbeiten"
 capacity = "Kapazität"
 chargeStatus = "Status"
 chargedEnergy = "Geladen"
-current = "Aktuell"
+current = "Strom"
 enabled = "Aktiviert"
 energy = "Energie"
 odometer = "Kilometerstand"
@@ -45,6 +45,10 @@ socLimit = "SoC Begrenzung"
 [config.form]
 example = "Beispiel"
 optional = "optional"
+
+[config.general]
+cancel = "Abbrechen"
+save = "Speichern"
 
 [config.grid]
 titleAdd = "Stromzähler (Netz) hinzufügen"
@@ -72,9 +76,10 @@ validateSave = "Überprüfen & speichern"
 titleAdd = "Zähler (PV) hinzufügen"
 titleEdit = "Zähler (PV) bearbeiten"
 
-[config.site]
-cancel = "Abbrechen"
-save = "Speichern"
+[config.title]
+description = "Wird in der Hauptansicht und im Browser-Tab angezeigt."
+label = "Titel"
+title = "Titel bearbeiten"
 
 [config.validation]
 failed = "fehlgeschlagen"
@@ -249,11 +254,13 @@ currents = "Ladestrom"
 default = "default"
 disclaimerHint = "Hinweis:"
 onlyForSocBasedCharging = "Diese Optionen sind nur für Fahrzeuge mit bekanntem Ladestand verfügbar."
+smartCostCheap = "Günstiges Netzladen"
+smartCostClean = "Grünes Netzladen"
 title = "Einstellungen {0}"
 vehicle = "Fahrzeug"
 
 [main.loadpointSettings.limitSoc]
-description = "Dieses Limit wird verwendet, wenn das Fahrzeug angeschlossen wird."
+description = "Dieses Ladelimit wird verwendet, wenn das Fahrzeug angeschlossen wird."
 label = "Standard Ladelimit"
 
 [main.loadpointSettings.maxCurrent]
@@ -344,7 +351,7 @@ charging = "lädt"
 connected = "verbunden"
 disconnected = "getrennt"
 ready = "bereit"
-vehicleTarget = "Fahrzeuglimit: {soc}%"
+vehicleLimit = "Fahrzeuglimit: {soc}%"
 
 [main.vehicleStatus]
 charging = "Ladevorgang aktiv …"
@@ -358,11 +365,11 @@ pvDisable = "Zu wenig Überschuss. Pausiere in {remaining} …"
 pvEnable = "Überschuss verfügbar. Starte in {remaining} …"
 scale1p = "Reduziere auf einphasig in {remaining} …"
 scale3p = "Erhöhe auf dreiphasig in {remaining} …"
-targetChargeActive = "Zielladen aktiv …"
-targetChargePlanned = "Zielladen geplant. Ladung startet {time} Uhr."
-targetChargeWaitForVehicle = "Zielladen bereit. Warte auf Fahrzeug …"
+targetChargeActive = "Ladeplan aktiv …"
+targetChargePlanned = "Ladeplan startet {time} Uhr."
+targetChargeWaitForVehicle = "Ladeplan bereit. Warte auf Fahrzeug …"
 unknown = ""
-vehicleTargetReached = "Fahrzeuglimit {soc}% erreicht."
+vehicleLimitReached = "Fahrzeuglimit {soc}% erreicht."
 waitForVehicle = "Ladebereit. Warte auf Fahrzeug …"
 
 [notifications]

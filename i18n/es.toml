@@ -16,7 +16,8 @@ legendTopSubline = "sin interrupciones"
 modalTitle = "Ajustes de la batería"
 
 [batterySettings.bufferStart]
-full = "cuando está casi llena"
+above = "cuando esté por encima de {soc}"
+full = "si está en {soc}"
 low = "cuando está algo llena"
 medium = "cuando está medio llena"
 never = "cuando hay suficiente excedente"
@@ -31,7 +32,7 @@ titleEdit = "Editar el medidor de batería"
 capacity = "Capacidad"
 chargeStatus = "Estado"
 chargedEnergy = "Cargado"
-current = "Actual"
+current = "Corriente "
 enabled = "Activado"
 energy = "Energía"
 odometer = "Cuentakilómetros"
@@ -46,6 +47,10 @@ socLimit = "Límite"
 [config.form]
 example = "Ejemplo"
 optional = "opcional"
+
+[config.general]
+cancel = "Cancelar"
+save = "Guardar"
 
 [config.grid]
 titleAdd = "Añadir medidor de cuadrícula"
@@ -76,6 +81,11 @@ titleEdit = "Editar contador solar"
 [config.site]
 cancel = "Cancelar"
 save = "Guardar"
+
+[config.title]
+description = "Se muestra en la pantalla principal y en la pestaña del navegador"
+label = "Título"
+title = "Editar título"
 
 [config.validation]
 failed = "fallido"
@@ -174,6 +184,7 @@ blog = "Blog"
 docs = "Documentación"
 github = "GitHub"
 login = "Registro de vehículos"
+nativeSettings = "Cambiar el servidor"
 needHelp = "¿Necesitas ayuda?"
 sessions = "Sesiones de carga"
 settings = "Ajustes"
@@ -217,6 +228,7 @@ time = "Tiempo"
 title = "Plan"
 titleMinSoc = "Carga mínima"
 titleTargetCharge = "Partida"
+unsavedChanges = "Hay cambios sin guardar. ¿Aplicar ahora?"
 update = "Aplicar"
 
 [main.energyflow]
@@ -257,6 +269,8 @@ currents = "Corriente de carga"
 default = "defecto"
 disclaimerHint = "Nota:"
 onlyForSocBasedCharging = "Estas opciones sólo están disponibles para vehículos con nivel de carga conocido"
+smartCostCheap = "Carga barata desde la red"
+smartCostClean = "Carga desde una red ecológica"
 title = "Configuraciones {0}"
 vehicle = "Vehículo"
 
@@ -344,6 +358,7 @@ detectionActive = "Reconociendo vehículo ..."
 fallbackName = "Vehículo"
 moreActions = "Más acciones"
 none = "Ningún vehículo"
+notReachable = "No se pudo acceder al vehículo. Intente reiniciar evcc"
 targetSoc = "Objetivo de carga"
 temp = "T.ª"
 tempLimit = "Temperatura límite"
@@ -355,7 +370,7 @@ charging = "cargando"
 connected = "conectado"
 disconnected = "desconectado"
 ready = "preparado"
-vehicleTarget = "límite de vehículo: {soc}%"
+vehicleLimit = "límite de vehículo: {soc}%"
 
 [main.vehicleStatus]
 charging = "Cargando ..."
@@ -373,7 +388,7 @@ targetChargeActive = "Carga objetivo activa..."
 targetChargePlanned = "La carga objetivo empieza en {time}."
 targetChargeWaitForVehicle = "Carga de destino lista. Esperar vehículo."
 unknown = ""
-vehicleTargetReached = "Límite de vehículo {soc}% alcanzado."
+vehicleLimitReached = "Límite de vehículo {soc}% alcanzado."
 waitForVehicle = "Listo para cargar. Esperando vehículo."
 
 [notifications]
@@ -472,6 +487,10 @@ mi = "millas"
 [smartCost]
 activeHours = "{charging} de {total}"
 activeHoursLabel = "Horas funcionando"
+applyToAll = "¿Aplicar en todas partes?"
+batteryDescription = "Carga la batería doméstica con la red eléctrica"
+cheapTitle = "Carga barata desde la red"
+cleanTitle = "Carga desde una red ecológica"
 co2Label = "Emisiones de CO₂"
 co2Limit = "Límite de CO₂"
 loadpointDescription = "Habilita temporalmente la carga rápida en modo solar"
@@ -479,6 +498,7 @@ modalTitle = "Red inteligente de carga"
 none = "ninguno"
 priceLabel = "Precio de la energía"
 priceLimit = "Límite de precio"
+saved = "Guardado."
 
 [startupError]
 configFile = "Archivo de configuración utilizado:"

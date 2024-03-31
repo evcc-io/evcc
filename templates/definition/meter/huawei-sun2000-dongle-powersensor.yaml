@@ -3,6 +3,7 @@ products:
   - brand: Huawei
     description:
       generic: SUN2000 with SDongle & Power Sensor
+capabilities: ["battery-control"]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -234,7 +235,7 @@ render: |
               {{- include "modbus" . | indent 12 }}
               register:
                 address: 47087 # Charge from grid
-                type: writemultiple
-                encoding: uint32
+                type: writesingle
+                encoding: uint16
   capacity: {{ .capacity }} # kWh
   {{- end }}

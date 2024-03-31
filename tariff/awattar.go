@@ -58,7 +58,8 @@ func (t *Awattar) run(done chan error) {
 	bo := newBackoff()
 	client := request.NewHelper(t.log)
 
-	for ; true; <-time.Tick(time.Hour) {
+	tick := time.NewTicker(time.Hour)
+	for ; true; <-tick.C {
 		var res awattar.Prices
 
 		if err := backoff.Retry(func() error {

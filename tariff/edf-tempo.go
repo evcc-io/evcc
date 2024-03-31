@@ -104,7 +104,8 @@ func (t *EdfTempo) run(done chan error) {
 	var once sync.Once
 	bo := newBackoff()
 
-	for ; true; <-time.Tick(time.Hour) {
+	tick := time.NewTicker(time.Hour)
+	for ; true; <-tick.C {
 		var res struct {
 			Data struct {
 				Values []struct {

@@ -642,7 +642,7 @@ func (lp *Loadpoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 			_ = lp.setLimit(lp.effectiveMinCurrent())
 		}
 	} else {
-		lp.log.ERROR.Printf("charger: %v", err)
+		lp.log.ERROR.Printf("charger enabled: %v", err)
 	}
 
 	// allow charger to access loadpoint
@@ -651,61 +651,74 @@ func (lp *Loadpoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	}
 }
 
+func (lp *Loadpoint) setAndPublishEnabled(enabled bool) {
+	if enabled != lp.enabled {
+		lp.log.DEBUG.Printf("charger %s", status[enabled])
+		lp.enabled = enabled
+	}
+	lp.publish(keys.Enabled, enabled)
+}
+
 // syncCharger updates charger status and synchronizes it with expectations
 func (lp *Loadpoint) syncCharger() error {
 	enabled, err := lp.charger.Enabled()
 	if err != nil {
-		return err
+		return fmt.Errorf("charger enabled: %w", err)
 	}
 
-	// some chargers (i.E. Easee in some configurations) disable themself to be able to switch phases
-	if !enabled && lp.enabled && !lp.phaseSwitchCompleted() {
-		return lp.charger.Enable(true) // enable charger
-	}
+	shouldBeConsistent := lp.chargerUpdateCompleted() && lp.phaseSwitchCompleted()
 
-	if lp.chargerUpdateCompleted() {
+	if shouldBeConsistent {
 		defer func() {
-			lp.enabled = enabled
-			lp.publish(keys.Enabled, lp.enabled)
+			lp.setAndPublishEnabled(enabled)
 		}()
 	}
 
+	// #1: check charger logic, fix charger state if necessary (for chargers that start charging while being disabled)
 	if !enabled && lp.charging() {
 		lp.log.WARN.Println("charger logic error: disabled but charging")
-		enabled = true // treat as enabled when charging
-		if lp.chargerUpdateCompleted() {
+
+		// treat as enabled when charging for further validations
+		enabled = true
+
+		if shouldBeConsistent {
 			if err := lp.charger.Enable(true); err != nil { // also enable charger to correct internal state
-				return err
+				return fmt.Errorf("charger enable: %w", err)
 			}
-			lp.elapsePVTimer()
+
+			lp.elapsePVTimer() // elapse PV timer so loadpoint can immediately switch charger if necessary
 			return nil
 		}
 	}
 
-	// status in sync
-	if enabled == lp.enabled {
+	// #2: sync charger
+	switch {
+	case enabled == lp.enabled:
 		// sync max current
 		if charger, ok := lp.charger.(api.CurrentGetter); ok && enabled {
-			current, err := charger.GetMaxCurrent()
-			if err != nil {
-				return err
-			}
-
-			// smallest adjustment most PWM-Controllers can do is: 100%÷256×0,6A = 0.234A
-			if math.Abs(lp.chargeCurrent-current) > 0.23 {
-				if lp.chargerUpdateCompleted() {
-					lp.log.WARN.Printf("charger logic error: current mismatch (got %.3gA, expected %.3gA)", current, lp.chargeCurrent)
+			if current, err := charger.GetMaxCurrent(); err == nil {
+				// smallest adjustment most PWM-Controllers can do is: 100%÷256×0,6A = 0.234A
+				if math.Abs(lp.chargeCurrent-current) > 0.23 {
+					if shouldBeConsistent {
+						lp.log.WARN.Printf("charger logic error: current mismatch (got %.3gA, expected %.3gA)", current, lp.chargeCurrent)
+					}
+					lp.chargeCurrent = current
+					lp.bus.Publish(evChargeCurrent, lp.chargeCurrent)
 				}
-				lp.chargeCurrent = current
-				lp.bus.Publish(evChargeCurrent, lp.chargeCurrent)
+			} else if !errors.Is(err, api.ErrNotAvailable) {
+				return fmt.Errorf("charger get max current: %w", err)
 			}
 		}
 
-		return nil
-	}
+	case !enabled && !lp.phaseSwitchCompleted():
+		// some chargers (i.E. Easee in some configurations) disable themselves to be able to switch phases
+		// -> enable charger
+		if err := lp.charger.Enable(true); err != nil {
+			return fmt.Errorf("charger enable: %w", err)
+		}
 
-	// ignore disabled state if vehicle was disconnected ^(lp.enabled && ^lp.connected)
-	if lp.chargerUpdateCompleted() && lp.phaseSwitchCompleted() && (enabled || lp.connected()) {
+	case shouldBeConsistent && (enabled || lp.connected()):
+		// ignore disabled state if vehicle was disconnected (!lp.enabled && !lp.connected)
 		lp.log.WARN.Printf("charger out of sync: expected %vd, got %vd", status[lp.enabled], status[enabled])
 	}
 
@@ -763,9 +776,7 @@ func (lp *Loadpoint) setLimit(chargeCurrent float64) error {
 			return fmt.Errorf("charger %s: %w", status[enabled], err)
 		}
 
-		lp.log.DEBUG.Printf("charger %s", status[enabled])
-		lp.enabled = enabled
-		lp.publish(keys.Enabled, lp.enabled)
+		lp.setAndPublishEnabled(enabled)
 		lp.chargerSwitched = lp.clock.Now()
 
 		lp.bus.Publish(evChargeCurrent, chargeCurrent)
@@ -903,7 +914,7 @@ func statusEvents(prevStatus, status api.ChargeStatus) []string {
 func (lp *Loadpoint) updateChargerStatus() error {
 	status, err := lp.charger.Status()
 	if err != nil {
-		return err
+		return fmt.Errorf("charger status: %w", err)
 	}
 
 	lp.log.DEBUG.Printf("charger status: %s", status)
@@ -1421,19 +1432,19 @@ func (lp *Loadpoint) publishSocAndRange() {
 
 		// vehicle target soc
 		// TODO take vehicle api limits into account
-		targetSoc := 100
+		apiLimitSoc := 100
 		if vs, ok := lp.GetVehicle().(api.SocLimiter); ok {
-			if limit, err := vs.TargetSoc(); err == nil {
-				targetSoc = int(math.Trunc(limit))
-				lp.log.DEBUG.Printf("vehicle soc limit: %.0f%%", limit)
-				lp.publish(keys.VehicleTargetSoc, limit)
+			if limit, err := vs.GetLimitSoc(); err == nil {
+				apiLimitSoc = int(limit)
+				lp.log.DEBUG.Printf("vehicle soc limit: %d%%", limit)
+				lp.publish(keys.VehicleLimitSoc, limit)
 			} else if !errors.Is(err, api.ErrNotAvailable) {
 				lp.log.ERROR.Printf("vehicle soc limit: %v", err)
 			}
 		}
 
 		// use minimum of vehicle and loadpoint
-		limitSoc := min(targetSoc, lp.effectiveLimitSoc())
+		limitSoc := min(apiLimitSoc, lp.effectiveLimitSoc())
 
 		var d time.Duration
 		if lp.charging() {
@@ -1524,7 +1535,7 @@ func (lp *Loadpoint) Update(sitePower float64, autoCharge, batteryBuffered, batt
 
 	// read and publish status
 	if err := lp.updateChargerStatus(); err != nil {
-		lp.log.ERROR.Printf("charger: %v", err)
+		lp.log.ERROR.Println(err)
 		return
 	}
 
@@ -1548,7 +1559,7 @@ func (lp *Loadpoint) Update(sitePower float64, autoCharge, batteryBuffered, batt
 
 	// sync settings with charger
 	if err := lp.syncCharger(); err != nil {
-		lp.log.ERROR.Printf("charger: %v", err)
+		lp.log.ERROR.Println(err)
 		return
 	}
 

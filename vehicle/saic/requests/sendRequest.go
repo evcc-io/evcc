@@ -45,6 +45,7 @@ func CreateRequest(
 		return nil, err
 	}
 
+	Decorate(req)
 	req.Header.Set("app-send-date", strconv.FormatInt(appSendDate, 10))
 	req.Header.Set("original-content-type", contentType)
 

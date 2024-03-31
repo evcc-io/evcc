@@ -46,6 +46,10 @@ socLimit = "Limit"
 example = "Example"
 optional = "optional"
 
+[config.general]
+cancel = "Cancel"
+save = "Save"
+
 [config.grid]
 titleAdd = "Add Grid Meter"
 titleEdit = "Edit Grid Meter"
@@ -72,9 +76,10 @@ validateSave = "Validate & save"
 titleAdd = "Add Solar Meter"
 titleEdit = "Edit Solar Meter"
 
-[config.site]
-cancel = "Cancel"
-save = "Save"
+[config.title]
+description = "Displayed on main screen and browser tab."
+label = "Title"
+title = "Edit Title"
 
 [config.validation]
 failed = "failed"
@@ -343,7 +348,7 @@ charging = "charging"
 connected = "connected"
 disconnected = "disconnected"
 ready = "ready"
-vehicleTarget = "Vehicle limit: {soc}%"
+vehicleLimit = "Vehicle limit: {soc}%"
 
 [main.vehicleStatus]
 charging = "Charging…"
@@ -357,11 +362,11 @@ pvDisable = "Not enough surplus. Pausing in {remaining}…"
 pvEnable = "Surplus available. Starting in {remaining}…"
 scale1p = "Reducing to 1-phase charging in {remaining}…"
 scale3p = "Increasing to 3-phase charging in {remaining}…"
-targetChargeActive = "Target charge active…"
-targetChargePlanned = "Target charging starts at {time}."
-targetChargeWaitForVehicle = "Target charge ready. Waiting for vehicle…"
+targetChargeActive = "Charging plan active…"
+targetChargePlanned = "Charging plan starts at {time}."
+targetChargeWaitForVehicle = "Charging plan ready. Waiting for vehicle…"
 unknown = ""
-vehicleTargetReached = "Vehicle limit {soc}% reached."
+vehicleLimitReached = "Vehicle limit {soc}% reached."
 waitForVehicle = "Ready. Waiting for vehicle…"
 
 [notifications]

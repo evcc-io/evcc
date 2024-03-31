@@ -89,7 +89,8 @@ func (t *Entsoe) run(done chan error) {
 	bo := newBackoff()
 
 	// Data updated by ESO every half hour, but we only need data every hour to stay current.
-	for ; true; <-time.Tick(time.Hour) {
+	tick := time.NewTicker(time.Hour)
+	for ; true; <-tick.C {
 		var tr entsoe.PublicationMarketDocument
 
 		if err := backoff.Retry(func() error {

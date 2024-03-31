@@ -174,12 +174,20 @@ func (m *Modbus) writeFunc() (func(float64) error, error) {
 	return func(val float64) error {
 		val *= m.scale
 
-		switch {
-		case op.FuncCode == gridx.FuncCodeWriteSingleRegister:
+		switch op.FuncCode {
+		case gridx.FuncCodeWriteSingleCoil:
+			var uval uint16
+			if val != 0 {
+				uval = 0xFF00
+			}
+			_, err = m.conn.WriteSingleCoil(op.Addr, uval)
+			return err
+
+		case gridx.FuncCodeWriteSingleRegister:
 			_, err = m.conn.WriteSingleRegister(op.Addr, uint16(val))
 			return err
 
-		case op.FuncCode == gridx.FuncCodeWriteMultipleRegisters:
+		case gridx.FuncCodeWriteMultipleRegisters:
 			b, err := encode(val)
 			if err == nil {
 				_, err = m.conn.WriteMultipleRegisters(op.Addr, op.Length, b)

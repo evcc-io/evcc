@@ -1,6 +1,6 @@
 template: pun
 products:
-  - brand: PUN Orario
+  - brand: PUN Orario (IT)
 params:
   - preset: tariff-base
 render: |

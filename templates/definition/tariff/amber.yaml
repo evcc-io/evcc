@@ -1,6 +1,6 @@
 template: amber
 products:
-  - brand: Amber Electric
+  - brand: Amber Electric (AU)
 params:
   - preset: tariff-base
   - name: token
