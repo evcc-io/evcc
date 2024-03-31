@@ -76,14 +76,14 @@ func NewCircuit(log *util.Logger, maxCurrent, maxPower float64, meter api.Meter)
 		meter:      meter,
 	}
 
+	if maxPower == 0 {
+		c.log.DEBUG.Printf("validation of max power disabled")
+	}
+
 	if maxCurrent == 0 {
 		c.log.DEBUG.Printf("validation of max phase current disabled")
 	} else if _, ok := meter.(api.PhaseCurrents); !ok {
 		return nil, fmt.Errorf("meter does not support phase currents")
-	}
-
-	if maxPower == 0 {
-		c.log.DEBUG.Printf("validation of max power disabled")
 	}
 
 	return c, nil
@@ -164,13 +164,13 @@ func (c *Circuit) Update(loadpoints []loadpoint.API) (err error) {
 		if c.maxPower != 0 && c.power > c.maxPower {
 			c.log.WARN.Printf("over power detected: %gW > %gW", c.power, c.maxPower)
 		} else {
-			c.log.WARN.Printf("power: %gW", c.power)
+			c.log.DEBUG.Printf("power: %gW", c.power)
 		}
 
 		if c.maxCurrent != 0 && c.current > c.maxCurrent {
 			c.log.WARN.Printf("over current detected: %gA > %gA", c.current, c.maxCurrent)
 		} else {
-			c.log.WARN.Printf("current: %gA", c.current)
+			c.log.DEBUG.Printf("current: %gA", c.current)
 		}
 	}()
 
@@ -213,7 +213,7 @@ func (c *Circuit) ValidatePower(old, new float64) float64 {
 	if c.maxPower != 0 {
 		if c.power+delta > c.maxPower {
 			new = max(0, c.maxPower-c.power)
-			c.log.TRACE.Printf("validate power: %gW -> %gW <= %gW at %gW: capped at %gW", old, new, c.maxPower, c.power, new)
+			c.log.DEBUG.Printf("validate power: %gW -> %gW <= %gW at %gW: capped at %gW", old, new, c.maxPower, c.power, new)
 		} else {
 			c.log.TRACE.Printf("validate power: %gW -> %gW <= %gW at %gW: ok", old, new, c.maxPower, c.power)
 		}
@@ -237,7 +237,7 @@ func (c *Circuit) ValidateCurrent(old, new float64) (res float64) {
 	if c.maxCurrent != 0 {
 		if c.current+delta > c.maxCurrent {
 			new = max(0, c.maxCurrent-c.current)
-			c.log.TRACE.Printf("validate current: %gA -> %gA <= %gA at %gA: capped at %gA", old, new, c.maxCurrent, c.current, new)
+			c.log.DEBUG.Printf("validate current: %gA -> %gA <= %gA at %gA: capped at %gA", old, new, c.maxCurrent, c.current, new)
 		} else {
 			c.log.TRACE.Printf("validate current: %gA -> %gA <= %gA at %gA: ok", old, new, c.maxCurrent, c.current)
 		}

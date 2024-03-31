@@ -45,6 +45,7 @@ import (
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/libp2p/zeroconf/v2"
+	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"golang.org/x/sync/errgroup"
@@ -184,9 +185,8 @@ func loadConfigFile(conf *globalConfig) error {
 	return err
 }
 
-func configureCircuits(static []config.Named) error {
+func configureCircuits(static []config.Named, names ...string) error {
 	children := slices.Clone(static)
-	errs := make(map[string]struct{})
 
 	// TODO: check for circular references, allow multiple levels of hierarchy
 NEXT:
@@ -199,15 +199,15 @@ NEXT:
 			return fmt.Errorf("cannot create circuit: duplicate name: %s", cc.Name)
 		}
 
+		if parent := cast.ToString(cc.Property("parent")); parent != "" {
+			if _, err := config.Circuits().ByName(parent); err != nil {
+				continue
+			}
+		}
+
 		log := util.NewLogger("circuit-" + cc.Name)
 		instance, err := core.NewCircuitFromConfig(log, cc.Other)
 		if err != nil {
-			if _, ok := errs[cc.Name]; !ok {
-				// allow erroring once for parent reference
-				continue
-			}
-			errs[cc.Name] = struct{}{}
-
 			return fmt.Errorf("cannot create circuit: %w", err)
 		}
 
@@ -215,8 +215,12 @@ NEXT:
 			return err
 		}
 
-		children = slices.Delete(children, i, 1)
+		children = slices.Delete(children, i, i+1)
 		goto NEXT
+	}
+
+	if len(children) > 0 {
+		return fmt.Errorf("missing parent circuit: %s", children[0].Name)
 	}
 
 	// append devices from database
@@ -225,32 +229,38 @@ NEXT:
 		return err
 	}
 
-	for _, conf := range configurable {
+	children2 := slices.Clone(configurable)
+
+NEXT2:
+	for i, conf := range children2 {
 		cc := conf.Named()
 
-		// if len(names) > 0 && !slices.Contains(names, cc.Name) {
-		// 	return nil
-		// }
+		if len(names) > 0 && !slices.Contains(names, cc.Name) {
+			return nil
+		}
+
+		if parent := cast.ToString(cc.Property("parent")); parent != "" {
+			if _, err := config.Circuits().ByName(parent); err != nil {
+				continue
+			}
+		}
 
 		log := util.NewLogger("circuit-" + cc.Name)
 		instance, err := core.NewCircuitFromConfig(log, cc.Other)
 		if err != nil {
-			if _, ok := errs[cc.Name]; !ok {
-				// allow erroring once for parent reference
-				continue
-			}
-			errs[cc.Name] = struct{}{}
-
 			return fmt.Errorf("cannot create circuit '%s': %w", cc.Name, err)
 		}
 
 		if err := config.Circuits().Add(config.NewConfigurableDevice(conf, instance)); err != nil {
 			return err
 		}
+
+		children2 = slices.Delete(children2, i, i+1)
+		goto NEXT2
 	}
 
-	if len(children) > 0 {
-		return fmt.Errorf("missing parent circuit: %v", children[0].Other)
+	if len(children2) > 0 {
+		return fmt.Errorf("missing parent circuit: %s", children2[0].Named().Name)
 	}
 
 	var rootFound bool
@@ -809,62 +819,6 @@ func configureLoadpoints(conf globalConfig) ([]*core.Loadpoint, error) {
 
 	return loadpoints, nil
 }
-
-// func configureCircuits(conf globalConfig) (map[string]*core.Circuit, error) {
-// 	children := slices.Clone(conf.Circuits)
-// 	circuits := make(map[string]*core.Circuit)
-
-// NEXT:
-// 	for i, cc := range children {
-// 		parent, ok := circuits[cc.Parent]
-// 		if cc.Parent != "" && !ok {
-// 			continue
-// 		}
-
-// 		if cc.Name == "" {
-// 			// TODO add id
-// 			return nil, fmt.Errorf("cannot create circuit: missing name")
-// 		}
-
-// 		if _, ok := circuits[cc.Name]; ok {
-// 			// TODO add id
-// 			return nil, fmt.Errorf("cannot create circuit: duplicate name: %s", cc.Name)
-// 		}
-
-// 		log := util.NewLogger("circuit-" + cc.Name)
-
-// 		circuit, err := core.NewCircuitFromConfig(log, cc.Other)
-// 		if err != nil {
-// 			return nil, fmt.Errorf("failed configuring circuit: %w", err)
-// 		}
-// 		circuit.SetParent(parent)
-
-// 		circuits[cc.Name] = circuit
-
-// 		children = slices.Delete(children, i, 1)
-// 		goto NEXT
-// 	}
-
-// 	if len(children) > 0 {
-// 		return nil, fmt.Errorf("missing parent circuit: %s", children[0].Parent)
-// 	}
-
-// 	var rootFound bool
-// 	for _, c := range circuits {
-// 		if c.GetParent() != nil {
-// 			if rootFound {
-// 				return nil, fmt.Errorf("cannot have multiple root circuits")
-// 			}
-// 			rootFound = true
-// 		}
-// 	}
-
-// 	if !rootFound {
-// 		return nil, fmt.Errorf("need root circuit")
-// 	}
-
-// 	return circuits, nil
-// }
 
 // configureAuth handles routing for devices. For now only api.AuthProvider related routes
 func configureAuth(conf networkConfig, vehicles []api.Vehicle, router *mux.Router, paramC chan<- util.Param) {

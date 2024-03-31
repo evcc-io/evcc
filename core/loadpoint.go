@@ -1277,7 +1277,7 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batter
 	return targetCurrent
 }
 
-// UpdateChargePower updates charge meter power
+// UpdateChargePower updates charge meter power and currents for load management
 func (lp *Loadpoint) UpdateChargePower() {
 	bo := backoff.NewExponentialBackOff()
 	bo.MaxElapsedTime = time.Second
@@ -1303,12 +1303,10 @@ func (lp *Loadpoint) UpdateChargePower() {
 
 		return nil
 	}, bo); err != nil {
-		lp.log.ERROR.Printf("charge meter: %v", err)
+		lp.log.ERROR.Printf("charge power: %v", err)
 	}
-}
 
-// updateChargeCurrents uses PhaseCurrents interface to count phases with current >=1A
-func (lp *Loadpoint) updateChargeCurrents() {
+	// update charge currents
 	lp.chargeCurrents = nil
 
 	phaseMeter, ok := lp.chargeMeter.(api.PhaseCurrents)
@@ -1316,15 +1314,27 @@ func (lp *Loadpoint) updateChargeCurrents() {
 		return // don't guess
 	}
 
-	i1, i2, i3, err := phaseMeter.Currents()
-	if err != nil {
-		lp.log.ERROR.Printf("charge meter: %v", err)
+	if err := backoff.Retry(func() error {
+		i1, i2, i3, err := phaseMeter.Currents()
+		if err != nil {
+			return err
+		}
+
+		lp.chargeCurrents = []float64{i1, i2, i3}
+		lp.log.DEBUG.Printf("charge currents: %.3gA", lp.chargeCurrents)
+		lp.publish(keys.ChargeCurrents, lp.chargeCurrents)
+
+		return nil
+	}, bo); err != nil {
+		lp.log.ERROR.Printf("charge currents: %v", err)
+	}
+}
+
+// phasesFromChargeCurrents uses PhaseCurrents interface to count phases with current >=1A
+func (lp *Loadpoint) phasesFromChargeCurrents() {
+	if lp.chargeCurrents == nil {
 		return
 	}
-
-	lp.chargeCurrents = []float64{i1, i2, i3}
-	lp.log.DEBUG.Printf("charge currents: %.3gA", lp.chargeCurrents)
-	lp.publish(keys.ChargeCurrents, lp.chargeCurrents)
 
 	if lp.charging() && lp.phaseSwitchCompleted() {
 		var phases int
@@ -1540,9 +1550,9 @@ func (lp *Loadpoint) Update(sitePower float64, autoCharge, batteryBuffered, batt
 	lp.publish(keys.SmartCostActive, autoCharge)
 	lp.processTasks()
 
-	// read and publish meters first- charge power has already been updated by the site
+	// read and publish meters first- charge power and currents have already been updated by the site
 	lp.updateChargeVoltages()
-	lp.updateChargeCurrents()
+	lp.phasesFromChargeCurrents()
 
 	lp.sessionEnergy.SetEnvironment(greenShare, effPrice, effCo2)
 
