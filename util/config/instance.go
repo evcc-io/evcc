@@ -7,14 +7,20 @@ import (
 
 var bus = evbus.New()
 
-var instance = struct {
+var instance struct {
 	meters   *handler[api.Meter]
 	chargers *handler[api.Charger]
 	vehicles *handler[api.Vehicle]
-}{
-	meters:   &handler[api.Meter]{topic: "meter"},
-	chargers: &handler[api.Charger]{topic: "charger"},
-	vehicles: &handler[api.Vehicle]{topic: "vehicle"},
+}
+
+func init() {
+	Reset()
+}
+
+func Reset() {
+	instance.meters = &handler[api.Meter]{topic: "meter"}
+	instance.chargers = &handler[api.Charger]{topic: "charger"}
+	instance.vehicles = &handler[api.Vehicle]{topic: "vehicle"}
 }
 
 type Handler[T any] interface {

@@ -740,40 +740,39 @@ func configureCircuits(conf globalConfig) (map[string]*core.Circuit, error) {
 	children := slices.Clone(conf.Circuits)
 	circuits := make(map[string]*core.Circuit)
 
-	for len(children) > 0 {
-	NEXT:
-		for i, cc := range children {
-			if parent, ok := circuits[cc.Parent]; cc.Parent == "" || ok {
-				if cc.Name == "" {
-					// TODO add id
-					return nil, fmt.Errorf("cannot create circuit: missing name")
-				}
-
-				if _, ok := circuits[cc.Name]; ok {
-					// TODO add id
-					return nil, fmt.Errorf("cannot create circuit: duplicate name: %s", cc.Name)
-				}
-
-				log := util.NewLogger("circuit-" + cc.Name)
-
-				circuit, err := core.NewCircuitFromConfig(log, cc.Other)
-				if err != nil {
-					return nil, fmt.Errorf("failed configuring circuit: %w", err)
-				}
-
-				if cc.Parent != "" {
-					circuit.WithParent(parent)
-				}
-				circuits[cc.Name] = circuit
-
-				children = slices.Delete(children, i, 1)
-				goto NEXT
-			}
+NEXT:
+	for i, cc := range children {
+		parent, ok := circuits[cc.Parent]
+		if cc.Parent != "" && !ok {
+			continue
 		}
 
-		if len(children) > 0 {
-			return nil, fmt.Errorf("missing parent circuit: %s", children[0].Parent)
+		if cc.Name == "" {
+			// TODO add id
+			return nil, fmt.Errorf("cannot create circuit: missing name")
 		}
+
+		if _, ok := circuits[cc.Name]; ok {
+			// TODO add id
+			return nil, fmt.Errorf("cannot create circuit: duplicate name: %s", cc.Name)
+		}
+
+		log := util.NewLogger("circuit-" + cc.Name)
+
+		circuit, err := core.NewCircuitFromConfig(log, cc.Other)
+		if err != nil {
+			return nil, fmt.Errorf("failed configuring circuit: %w", err)
+		}
+		circuit.SetParent(parent)
+
+		circuits[cc.Name] = circuit
+
+		children = slices.Delete(children, i, 1)
+		goto NEXT
+	}
+
+	if len(children) > 0 {
+		return nil, fmt.Errorf("missing parent circuit: %s", children[0].Parent)
 	}
 
 	var rootFound bool

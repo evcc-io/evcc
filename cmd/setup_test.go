@@ -84,6 +84,8 @@ loadpoints:
 		"master": new(core.Circuit),
 	}
 
+	config.Reset()
+
 	// empty charger
 	require.NoError(t, config.Chargers().Add(config.NewStaticDevice(config.Named{
 		Name: "test",
@@ -114,6 +116,8 @@ site:
 	lps := []*core.Loadpoint{
 		new(core.Loadpoint),
 	}
+
+	config.Reset()
 
 	// mock meter
 	m, _ := meter.NewConfigurable(func() (float64, error) {

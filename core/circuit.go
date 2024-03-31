@@ -79,7 +79,7 @@ func NewCircuit(log *util.Logger, maxCurrent, maxPower float64, meter api.Meter)
 	return c, nil
 }
 
-func (c *Circuit) WithParent(parent *Circuit) {
+func (c *Circuit) SetParent(parent *Circuit) {
 	c.parent = parent
 }
 
