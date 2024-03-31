@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/core/circuit"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/wrapper"
@@ -511,7 +510,7 @@ func (lp *Loadpoint) SetSmartCostLimit(val float64) {
 }
 
 // GetCircuit returns the assigned circuit
-func (lp *Loadpoint) GetCircuit() circuit.API {
+func (lp *Loadpoint) GetCircuit() api.Circuit {
 	lp.RLock()
 	defer lp.RUnlock()
 

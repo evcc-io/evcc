@@ -198,3 +198,8 @@ type FeatureDescriber interface {
 type CsvWriter interface {
 	WriteCsv(context.Context, io.Writer) error
 }
+
+type Circuit interface {
+	ValidateCurrent(old, new float64) float64
+	ValidatePower(old, new float64) float64
+}

@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/core/circuit"
 )
 
 //go:generate mockgen -package loadpoint -destination mock.go -mock_names API=MockAPI github.com/evcc-io/evcc/core/loadpoint API
@@ -151,5 +150,5 @@ type API interface {
 	StartVehicleDetection()
 
 	// GetCircuit gets the assigned circuit
-	GetCircuit() circuit.API
+	GetCircuit() api.Circuit
 }

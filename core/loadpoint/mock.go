@@ -14,7 +14,6 @@ import (
 	time "time"
 
 	api "github.com/evcc-io/evcc/api"
-	circuit "github.com/evcc-io/evcc/core/circuit"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -156,10 +155,10 @@ func (mr *MockAPIMockRecorder) GetChargePowerFlexibility() *gomock.Call {
 }
 
 // GetCircuit mocks base method.
-func (m *MockAPI) GetCircuit() circuit.API {
+func (m *MockAPI) GetCircuit() api.Circuit {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetCircuit")
-	ret0, _ := ret[0].(circuit.API)
+	ret0, _ := ret[0].(api.Circuit)
 	return ret0
 }
 
