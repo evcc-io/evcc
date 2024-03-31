@@ -1161,7 +1161,7 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batter
 	maxCurrent := lp.effectiveMaxCurrent()
 
 	// switch phases up/down
-	if lp.hasPhaseSwitching() {
+	if lp.hasPhaseSwitching() && lp.phaseSwitchCompleted() {
 		_ = lp.pvScalePhases(sitePower, minCurrent, maxCurrent)
 	}
 
