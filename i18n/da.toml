@@ -370,9 +370,9 @@ pvDisable = "Ikke nok overskud. Pause i {remaining}..."
 pvEnable = "Overskud tilgængeligt. Starter om {remaining}..."
 scale1p = "Reducerer til 1-faset strøm i {remaining}..."
 scale3p = "Øger til 3-faset opladning om {remaining}..."
-targetChargeActive = "Målladning aktiv..."
-targetChargePlanned = "Målopladning starter kl. {time}."
-targetChargeWaitForVehicle = "Målladning klar. Venter på køretøj..."
+targetChargeActive = "Plan for ladning er aktiv..."
+targetChargePlanned = "Opladningsplan starter kl. {time}."
+targetChargeWaitForVehicle = "Plan for opladning er klar. Venter på køretøj..."
 unknown = ""
 vehicleLimitReached = "Køretøjsgrænsen {soc} % nået."
 waitForVehicle = "Parat. Venter på køretøj ..."
@@ -496,3 +496,13 @@ title = "Fejl ved opstart"
 cancel = "Afbryd"
 template = "Producent"
 test = "Test"
+
+
+[config.general]
+save = "Gem"
+cancel = "Afbryd"
+
+[config.title]
+label = "Titel"
+title = "Rediger titel"
+description = "Vises på hovedskærm og på browserfane"
