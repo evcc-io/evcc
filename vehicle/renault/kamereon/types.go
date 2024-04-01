@@ -54,7 +54,7 @@ type attributes struct {
 	InstantaneousPower int     `json:"instantaneousPower"`
 	RangeHvacOff       int     `json:"rangeHvacOff"`
 	BatteryAutonomy    int     `json:"batteryAutonomy"`
-	BatteryLevel       int     `json:"batteryLevel"`
+	BatteryLevel       *int    `json:"batteryLevel"`
 	BatteryTemperature int     `json:"batteryTemperature"`
 	PlugStatus         int     `json:"plugStatus"`
 	LastUpdateTime     string  `json:"lastUpdateTime"`
