@@ -1142,7 +1142,7 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64) fl
 		lp.resetPhaseTimer()
 	}
 
-	return 0
+	return -1
 }
 
 // TODO move up to timer functions
@@ -1175,7 +1175,7 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batter
 
 	// switch phases up/down
 	if lp.hasPhaseSwitching() && lp.phaseSwitchCompleted() {
-		if newMaxCurrent := lp.pvScalePhases(sitePower, minCurrent, maxCurrent); newMaxCurrent > 0 {
+		if newMaxCurrent := lp.pvScalePhases(sitePower, minCurrent, maxCurrent); newMaxCurrent > -1 {
 			maxCurrent = newMaxCurrent
 		}
 	}
