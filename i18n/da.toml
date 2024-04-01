@@ -48,6 +48,10 @@ socLimit = "Begrænsning"
 example = "Eksempel"
 optional = "valgfrit"
 
+[config.general]
+cancel = "Afbryd"
+save = "Gem"
+
 [config.grid]
 titleAdd = "Tilføj måler for elnettet"
 titleEdit = "Rediger måler for elnettet"
@@ -77,6 +81,11 @@ titleEdit = "Rediger solmåler"
 [config.site]
 cancel = "Afbryd"
 save = "Gem"
+
+[config.title]
+description = "Vises på hovedskærm og på browserfane"
+label = "Titel"
+title = "Rediger titel"
 
 [config.validation]
 failed = "mislykkedes"
