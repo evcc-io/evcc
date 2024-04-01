@@ -35,13 +35,13 @@ type Sungrow struct {
 }
 
 const (
-	//holding
+	// holding
 	sgRegEnable      = 21210 // uint16
 	sgRegMaxCurrent  = 21202 // uint16 0.01A
 	sgRegPhases      = 21203 // uint16
 	sgRegWorkingMode = 21262 // uint16
 
-	//input
+	// input
 	sgRegState         = 21316 // uint16
 	sgRegActivePower   = 21307 // uint16 1W
 	sgRegChargedEnergy = 21309 // uint32 1Wh
