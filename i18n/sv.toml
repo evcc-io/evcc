@@ -349,6 +349,7 @@ temp = "Temp."
 tempLimit = "Temp-gräns"
 unknown = "Gästfordon"
 vehicleSoc = "Laddning"
+notReachable = "Fordonet kunde inte kontaktas. Prova att starta om evcc."
 
 [main.vehicleSoc]
 charging = "laddar"
@@ -501,3 +502,12 @@ title = "Startfel"
 cancel = "Avbryt"
 template = "Tillverkare"
 test = "Test"
+
+
+[config.general]
+cancel = "Avbryt"
+save = "Spara"
+
+[config.title]
+label = "Titel"
+title = "Ändra titel"
