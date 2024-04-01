@@ -301,6 +301,11 @@ func updateDeviceHandler(w http.ResponseWriter, r *http.Request) {
 
 	case templates.Vehicle:
 		err = updateDevice(id, class, req, vehicle.NewFromConfig, config.Vehicles())
+
+	case templates.Circuit:
+		err = updateDevice(id, class, req, func(_ string, other map[string]interface{}) (api.Circuit, error) {
+			return core.NewCircuitFromConfig(util.NewLogger("circuit"), other)
+		}, config.Circuits())
 	}
 
 	setConfigDirty()
@@ -364,6 +369,9 @@ func deleteDeviceHandler(w http.ResponseWriter, r *http.Request) {
 
 	case templates.Vehicle:
 		err = deleteDevice(id, config.Vehicles())
+
+	case templates.Circuit:
+		err = deleteDevice(id, config.Circuits())
 	}
 
 	setConfigDirty()
@@ -430,6 +438,9 @@ func testConfigHandler(w http.ResponseWriter, r *http.Request) {
 
 	case templates.Vehicle:
 		instance, err = testConfig(id, class, req, vehicle.NewFromConfig, config.Vehicles())
+
+	case templates.Circuit:
+		err = api.ErrNotAvailable
 	}
 
 	if err != nil {
