@@ -48,6 +48,10 @@ socLimit = "Limitas"
 example = "Pavyzdys"
 optional = "pasirinktinai"
 
+[config.general]
+cancel = "Atšaukti"
+save = "Išsaugoti"
+
 [config.grid]
 titleAdd = "Pridėti tinklo skaitiklį"
 titleEdit = "Redaguoti tinklo skaitiklį"
@@ -77,6 +81,11 @@ titleEdit = "Redaguoti saulės skaitiklį"
 [config.site]
 cancel = "Atšaukti"
 save = "Išsaugoti"
+
+[config.title]
+description = "Rodoma pagrindiniame ekrane ir naršyklės skirtuke."
+label = "Pavadinimas"
+title = "Redaguoti pavadinimą"
 
 [config.validation]
 failed = "nepavyko"
@@ -507,13 +516,3 @@ title = "Klaida startuojant"
 cancel = "Atšaukti"
 template = "Gamintojas"
 test = "Testuoti"
-
-
-[config.general]
-cancel = "Atšaukti"
-save = "Išsaugoti"
-
-[config.title]
-label = "Pavadinimas"
-title = "Redaguoti pavadinimą"
-description = "Rodoma pagrindiniame ekrane ir naršyklės skirtuke."

@@ -48,6 +48,10 @@ socLimit = "SoC gräns"
 example = "Exempel"
 optional = "valfri"
 
+[config.general]
+cancel = "Avbryt"
+save = "Spara"
+
 [config.grid]
 titleAdd = "Lägg till elnätsmätare"
 titleEdit = "Ändra elnätsmätare"
@@ -77,6 +81,10 @@ titleEdit = "Ändra solcellsmätare"
 [config.site]
 cancel = "Avbryt"
 save = "Spara"
+
+[config.title]
+label = "Titel"
+title = "Ändra titel"
 
 [config.validation]
 failed = "misslyckades"
@@ -344,12 +352,12 @@ detectionActive = "Detekterar fordon..."
 fallbackName = "Fordon"
 moreActions = "Fler åtgärder"
 none = "Inget fordon"
+notReachable = "Fordonet kunde inte kontaktas. Prova att starta om evcc."
 targetSoc = "Gräns"
 temp = "Temp."
 tempLimit = "Temp-gräns"
 unknown = "Gästfordon"
 vehicleSoc = "Laddning"
-notReachable = "Fordonet kunde inte kontaktas. Prova att starta om evcc."
 
 [main.vehicleSoc]
 charging = "laddar"
@@ -502,12 +510,3 @@ title = "Startfel"
 cancel = "Avbryt"
 template = "Tillverkare"
 test = "Test"
-
-
-[config.general]
-cancel = "Avbryt"
-save = "Spara"
-
-[config.title]
-label = "Titel"
-title = "Ändra titel"
