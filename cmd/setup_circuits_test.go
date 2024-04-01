@@ -12,6 +12,7 @@ import (
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/suite"
+	"go.uber.org/mock/gomock"
 )
 
 func TestSetupCircuits(t *testing.T) {
@@ -77,18 +78,25 @@ loadpoints:
 
 	suite.Require().NoError(viper.UnmarshalExact(&conf))
 
+	ctrl := gomock.NewController(suite.T())
+	circuit := api.NewMockCircuit(ctrl)
+
 	// mock circuit
 	suite.Require().NoError(config.Circuits().Add(config.NewStaticDevice(config.Named{
 		Name: "test",
-	}, api.Circuit(nil))))
+	}, api.Circuit(circuit))))
 
 	// mock charger
 	suite.Require().NoError(config.Chargers().Add(config.NewStaticDevice(config.Named{
 		Name: "test",
 	}, api.Charger(nil))))
 
-	_, err := configureLoadpoints(conf)
-	suite.Require().Error(err)
+	lps, err := configureLoadpoints(conf)
+	suite.Require().NoError(err)
+
+	site := core.NewSite()
+	circuit.EXPECT().HasMeter().Return(false)
+	suite.Require().Error(validateCircuits(site, lps))
 }
 
 func (suite *circuitsTestSuite) TestSiteMissingCircuitError() {
