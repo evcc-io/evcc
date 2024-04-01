@@ -688,6 +688,34 @@ func (mr *MockCircuitMockRecorder) GetChargePower() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetChargePower", reflect.TypeOf((*MockCircuit)(nil).GetChargePower))
 }
 
+// GetMaxCurrent mocks base method.
+func (m *MockCircuit) GetMaxCurrent() float64 {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetMaxCurrent")
+	ret0, _ := ret[0].(float64)
+	return ret0
+}
+
+// GetMaxCurrent indicates an expected call of GetMaxCurrent.
+func (mr *MockCircuitMockRecorder) GetMaxCurrent() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMaxCurrent", reflect.TypeOf((*MockCircuit)(nil).GetMaxCurrent))
+}
+
+// GetMaxPower mocks base method.
+func (m *MockCircuit) GetMaxPower() float64 {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetMaxPower")
+	ret0, _ := ret[0].(float64)
+	return ret0
+}
+
+// GetMaxPower indicates an expected call of GetMaxPower.
+func (mr *MockCircuitMockRecorder) GetMaxPower() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMaxPower", reflect.TypeOf((*MockCircuit)(nil).GetMaxPower))
+}
+
 // GetParent mocks base method.
 func (m *MockCircuit) GetParent() Circuit {
 	m.ctrl.T.Helper()
@@ -700,6 +728,20 @@ func (m *MockCircuit) GetParent() Circuit {
 func (mr *MockCircuitMockRecorder) GetParent() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetParent", reflect.TypeOf((*MockCircuit)(nil).GetParent))
+}
+
+// HasMeter mocks base method.
+func (m *MockCircuit) HasMeter() bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "HasMeter")
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// HasMeter indicates an expected call of HasMeter.
+func (mr *MockCircuitMockRecorder) HasMeter() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HasMeter", reflect.TypeOf((*MockCircuit)(nil).HasMeter))
 }
 
 // RegisterChild mocks base method.
