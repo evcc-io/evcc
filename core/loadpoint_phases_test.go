@@ -136,7 +136,7 @@ func testScale(t *testing.T, lp *Loadpoint, sitePower float64, direction string,
 		// scale-up should only execute when the 1p max current is exceeded
 		// we're testing this here and remove the upscale expectation for the following test below 1p max current
 		if maxAmp := -sitePower / Voltage; maxAmp < maxA {
-			if scaled := lp.pvScalePhases(sitePower, minA, maxAmp-0.0001) > -1; !scaled {
+			if scaled, _ := lp.pvScalePhases(sitePower, minA, maxAmp-0.0001); !scaled {
 				t.Errorf("%v act=%d max=%d missing scale %s at reduced max current %.1fA", tc, act, max, direction, maxAmp)
 			}
 
@@ -145,7 +145,7 @@ func testScale(t *testing.T, lp *Loadpoint, sitePower float64, direction string,
 		}
 	}
 
-	scaled := lp.pvScalePhases(sitePower, minA, maxA) > -1
+	scaled, _ := lp.pvScalePhases(sitePower, minA, maxA)
 
 	if strings.Contains(testExpectation, testDirection) {
 		if !scaled {
@@ -387,7 +387,7 @@ func TestPvScalePhasesTimer(t *testing.T) {
 			charger.MockPhaseSwitcher.EXPECT().Phases1p3p(tc.toPhases).Return(nil)
 		}
 
-		res := lp.pvScalePhases(tc.sitePower, minA, maxA) > -1
+		res, _ := lp.pvScalePhases(tc.sitePower, minA, maxA)
 
 		switch {
 		case tc.res != res:
