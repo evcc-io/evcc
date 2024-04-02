@@ -1062,8 +1062,8 @@ func (lp *Loadpoint) fastCharging() error {
 	return err
 }
 
-// pvScalePhases switches phases if necessary and returns new target current if switch occurred
-func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64) float64 {
+// pvScalePhases switches phases if necessary and returns if switch occurred and new target current
+func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64) (bool, float64) {
 	phases := lp.GetPhases()
 
 	// observed phase state inconsistency
@@ -1103,7 +1103,7 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64) fl
 			if err := lp.scalePhases(1); err != nil {
 				lp.log.ERROR.Println(err)
 			}
-			return target1pCurrent
+			return true, target1pCurrent
 		}
 
 		waiting = true
@@ -1131,7 +1131,7 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64) fl
 			if err := lp.scalePhases(3); err != nil {
 				lp.log.ERROR.Println(err)
 			}
-			return targetCurrent
+			return true, targetCurrent
 		}
 
 		waiting = true
@@ -1142,7 +1142,7 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64) fl
 		lp.resetPhaseTimer()
 	}
 
-	return -1
+	return false, 0
 }
 
 // TODO move up to timer functions
@@ -1175,7 +1175,7 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batter
 
 	// switch phases up/down
 	if lp.hasPhaseSwitching() && lp.phaseSwitchCompleted() {
-		if newMaxCurrent := lp.pvScalePhases(sitePower, minCurrent, maxCurrent); newMaxCurrent > -1 {
+		if scaled, newMaxCurrent := lp.pvScalePhases(sitePower, minCurrent, maxCurrent); scaled {
 			maxCurrent = newMaxCurrent
 		}
 	}
