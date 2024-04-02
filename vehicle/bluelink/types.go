@@ -29,7 +29,7 @@ type StatusLatestResponse struct {
 
 type VehicleStatus struct {
 	Time     string
-	EvStatus struct {
+	EvStatus *struct {
 		BatteryCharge bool
 		BatteryStatus float64
 		BatteryPlugin int
@@ -41,6 +41,9 @@ type VehicleStatus struct {
 		ChargePortDoorOpenStatus int
 		DrvDistance              []DrivingDistance
 		ReservChargeInfos        ReservChargeInfo
+	}
+	Battery *struct {
+		BatSoc int
 	}
 	Vehicles []Vehicle
 }

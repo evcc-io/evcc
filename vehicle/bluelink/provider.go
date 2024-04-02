@@ -96,22 +96,33 @@ var _ api.Battery = (*Provider)(nil)
 // Soc implements the api.Battery interface
 func (v *Provider) Soc() (float64, error) {
 	res, err := v.statusG()
+	if err != nil {
+		return 0, err
+	}
 
-	if err == nil {
+	if res.EvStatus != nil {
 		return res.EvStatus.BatteryStatus, nil
 	}
 
-	return 0, err
+	if res.Battery != nil {
+		return float64(res.Battery.BatSoc), nil
+	}
+
+	return 0, api.ErrNotAvailable
 }
 
 var _ api.ChargeState = (*Provider)(nil)
 
 // Status implements the api.Battery interface
 func (v *Provider) Status() (api.ChargeStatus, error) {
-	res, err := v.statusG()
-
 	status := api.StatusNone
-	if err == nil {
+
+	res, err := v.statusG()
+	if err != nil {
+		return status, err
+	}
+
+	if res.EvStatus != nil {
 		status = api.StatusA
 		if res.EvStatus.BatteryPlugin > 0 || res.EvStatus.ChargePortDoorOpenStatus == 1 {
 			status = api.StatusB
@@ -121,7 +132,7 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 		}
 	}
 
-	return status, err
+	return status, api.ErrNotAvailable
 }
 
 var _ api.VehicleFinishTimer = (*Provider)(nil)
@@ -129,8 +140,11 @@ var _ api.VehicleFinishTimer = (*Provider)(nil)
 // FinishTime implements the api.VehicleFinishTimer interface
 func (v *Provider) FinishTime() (time.Time, error) {
 	res, err := v.statusG()
+	if err != nil {
+		return time.Time{}, err
+	}
 
-	if err == nil {
+	if res.EvStatus != nil {
 		remaining := res.EvStatus.RemainTime2.Atc.Value
 
 		if remaining == 0 {
@@ -141,7 +155,7 @@ func (v *Provider) FinishTime() (time.Time, error) {
 		return ts.Add(time.Duration(remaining) * time.Minute), err
 	}
 
-	return time.Time{}, err
+	return time.Time{}, api.ErrNotAvailable
 }
 
 var _ api.VehicleRange = (*Provider)(nil)
@@ -149,16 +163,17 @@ var _ api.VehicleRange = (*Provider)(nil)
 // Range implements the api.VehicleRange interface
 func (v *Provider) Range() (int64, error) {
 	res, err := v.statusG()
+	if err != nil {
+		return 0, err
+	}
 
-	if err == nil {
+	if res.EvStatus != nil {
 		if dist := res.EvStatus.DrvDistance; len(dist) == 1 {
 			return int64(dist[0].RangeByFuel.EvModeRange.Value), nil
 		}
-
-		return 0, api.ErrNotAvailable
 	}
 
-	return 0, err
+	return 0, api.ErrNotAvailable
 }
 
 var _ api.VehicleOdometer = (*Provider)(nil)
@@ -174,8 +189,11 @@ var _ api.SocLimiter = (*Provider)(nil)
 // GetLimitSoc implements the api.SocLimiter interface
 func (v *Provider) GetLimitSoc() (int64, error) {
 	res, err := v.statusG()
+	if err != nil {
+		return 0, err
+	}
 
-	if err == nil {
+	if res.EvStatus != nil {
 		for _, targetSOC := range res.EvStatus.ReservChargeInfos.TargetSocList {
 			if targetSOC.PlugType == plugTypeAC {
 				return int64(targetSOC.TargetSocLevel), nil
@@ -183,7 +201,7 @@ func (v *Provider) GetLimitSoc() (int64, error) {
 		}
 	}
 
-	return 0, err
+	return 0, api.ErrNotAvailable
 }
 
 var _ api.VehiclePosition = (*Provider)(nil)
