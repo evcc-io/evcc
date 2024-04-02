@@ -12,14 +12,12 @@ jobs:
       - name: Create Docs Issue
         uses: actions/github-script@v7
         with:
+          github-token: ${{ secrets.GH_TOKEN }}
           script: |
-            const githubToken = '${{ secrets.GH_TOKEN }}';
-            const octokit = github.getOctokit(githubToken);
-
             const title = `Document: ${context.payload.pull_request.title}`;
             const body = `We need to document the new feature introduced in this PR: ${context.payload.pull_request.html_url}`;
 
-            await octokit.rest.issues.create({
+            await github.rest.issues.create({
               owner: 'evcc-io',
               repo: 'docs',
               title: title,
