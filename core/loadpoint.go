@@ -741,21 +741,56 @@ func (lp *Loadpoint) setLimit(chargeCurrent float64) error {
 				}
 			}
 
-			if vv, ok := v.(api.CurrentController); ok {
-				lp.log.DEBUG.Printf("max charge current: setting current on vehicle side")
-				if err := vv.MaxCurrent(int64(chargeCurrent)); err != nil {
-					return fmt.Errorf("setting vehicle: %w", err)
-				}
-			} else {
-				lp.log.DEBUG.Printf("max charge current: vehicle does not support charge current")
-			}
-
 			return fmt.Errorf("max charge current %.3gA: %w", chargeCurrent, err)
 		}
 
 		lp.log.DEBUG.Printf("max charge current: %.3gA", chargeCurrent)
 		lp.chargeCurrent = chargeCurrent
 		lp.bus.Publish(evChargeCurrent, chargeCurrent)
+	}
+
+	// set current on vehicle if support lower current
+	if c, ok := lp.charger.(api.CurrentLimiter); ok && chargeCurrent != lp.chargeCurrent {
+		var chargerMin, chargerMax, vehicleMin, vehicleCurrent float64
+		if cMin, cMax, err := c.GetMinMaxCurrent(); err == nil {
+			chargerMin = cMin
+			chargerMax = cMax
+		}
+
+		if v := lp.GetVehicle(); v != nil {
+			if res, ok := v.OnIdentified().GetMinCurrent(); ok {
+				vehicleMin = res
+			}
+		}
+
+		var currentToSet = chargerMax
+
+		// Only set vehicle current if below chargerMin
+		if vehicleMin < chargerMin && chargeCurrent < chargerMin {
+			currentToSet = chargeCurrent
+		}
+
+		// TODO: Add caching for Vehicle API Calls?
+		v := lp.GetVehicle()
+		if vv, ok := v.(api.CurrentGetter); ok {
+			lp.log.DEBUG.Printf("max charge current: checking current on vehicle side")
+			if res, err := vv.GetMaxCurrent(); err == nil {
+				vehicleCurrent = res
+			} else {
+				return fmt.Errorf("error getting vehicle current: %w", err)
+			}
+		}
+
+		if vehicleCurrent != currentToSet {
+			if vv, ok := v.(api.CurrentController); ok {
+				lp.log.DEBUG.Printf("max charge current: setting current on vehicle side")
+				if err := vv.MaxCurrent(int64(currentToSet)); err != nil {
+					return fmt.Errorf("error setting vehicle current: %w", err)
+				}
+			} else {
+				lp.log.DEBUG.Printf("max charge current: vehicle does not support charge current")
+			}
+		}
 	}
 
 	// set enabled/disabled
