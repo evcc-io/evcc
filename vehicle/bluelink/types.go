@@ -21,8 +21,8 @@ type StatusLatestResponse struct {
 	ResMsg  struct {
 		VehicleStatusInfo struct {
 			VehicleStatus   VehicleStatus
-			VehicleLocation VehicleLocation
-			Odometer        Odometer
+			VehicleLocation *VehicleLocation
+			Odometer        *Odometer
 		}
 	}
 }

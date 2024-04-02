@@ -181,7 +181,15 @@ var _ api.VehicleOdometer = (*Provider)(nil)
 // Range implements the api.VehicleRange interface
 func (v *Provider) Odometer() (float64, error) {
 	res, err := v.statusLG()
-	return res.ResMsg.VehicleStatusInfo.Odometer.Value, err
+	if err != nil {
+		return 0, err
+	}
+
+	if res.ResMsg.VehicleStatusInfo.Odometer != nil {
+		return res.ResMsg.VehicleStatusInfo.Odometer.Value, err
+	}
+
+	return 0, api.ErrNotAvailable
 }
 
 var _ api.SocLimiter = (*Provider)(nil)
@@ -209,8 +217,16 @@ var _ api.VehiclePosition = (*Provider)(nil)
 // Position implements the api.VehiclePosition interface
 func (v *Provider) Position() (float64, float64, error) {
 	res, err := v.statusLG()
-	coord := res.ResMsg.VehicleStatusInfo.VehicleLocation.Coord
-	return coord.Lat, coord.Lon, err
+	if err != nil {
+		return 0, 0, err
+	}
+
+	if res.ResMsg.VehicleStatusInfo.VehicleLocation != nil {
+		coord := res.ResMsg.VehicleStatusInfo.VehicleLocation.Coord
+		return coord.Lat, coord.Lon, err
+	}
+
+	return 0, 0, api.ErrNotAvailable
 }
 
 var _ api.Resurrector = (*Provider)(nil)
