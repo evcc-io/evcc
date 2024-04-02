@@ -36,14 +36,14 @@ type Solax struct {
 }
 
 const (
-	//holding
+	// holding (FC 0x03, 0x06, 0x10)
 	solaxRegDeviceMode      = 0x060D // uint16
 	solaxRegStartChargeMode = 0x0610 // uint16
 	solaxRegPhases          = 0x0625 // uint16
 	solaxRegCommandControl  = 0x0627 // uint16
 	solaxRegMaxCurrent      = 0x0628 // uint16 0.01A
 
-	//input
+	// input (FC 0x04)
 	solaxRegVoltages    = 0x0000 // 3x uint16 0.01V
 	solaxRegCurrents    = 0x0004 // 3x uint16 0.01A
 	solaxRegActivePower = 0x000B // uint16 1W
@@ -101,10 +101,7 @@ func NewSolax(uri, device, comset string, baudrate int, proto modbus.Protocol, i
 }
 
 func (wb *Solax) setCurrent(current uint16) error {
-	b := make([]byte, 2)
-	binary.BigEndian.PutUint16(b, current)
-
-	_, err := wb.conn.WriteMultipleRegisters(solaxRegMaxCurrent, 1, b)
+	_, err := wb.conn.WriteSingleRegister(solaxRegMaxCurrent, current)
 
 	return err
 }
@@ -120,7 +117,7 @@ func (wb *Solax) getCurrent() (uint16, error) {
 
 // getPhaseValues returns 3 sequential register values
 func (wb *Solax) getPhaseValues(reg uint16) (float64, float64, float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(reg, 6)
+	b, err := wb.conn.ReadInputRegisters(reg, 6)
 	if err != nil {
 		return 0, 0, 0, err
 	}
@@ -202,7 +199,7 @@ var _ api.Meter = (*Solax)(nil)
 
 // CurrentPower implements the api.Meter interface
 func (wb *Solax) CurrentPower() (float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(solaxRegActivePower, 2)
+	b, err := wb.conn.ReadInputRegisters(solaxRegActivePower, 2)
 	if err != nil {
 		return 0, err
 	}
@@ -214,7 +211,7 @@ var _ api.MeterEnergy = (*Solax)(nil)
 
 // TotalEnergy implements the api.MeterEnergy interface
 func (wb *Solax) TotalEnergy() (float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(solaxRegTotalEnergy, 2)
+	b, err := wb.conn.ReadInputRegisters(solaxRegTotalEnergy, 2)
 	if err != nil {
 		return 0, err
 	}
@@ -240,13 +237,13 @@ var _ api.PhaseSwitcher = (*Solax)(nil)
 
 // Phases1p3p implements the api.PhaseSwitcher interface
 func (wb *Solax) Phases1p3p(phases int) error {
-	b := make([]byte, 2)
+	var u uint16
 
 	if phases == 1 {
-		binary.BigEndian.PutUint16(b, 1)
+		u = 1
 	}
 
-	_, err := wb.conn.WriteMultipleRegisters(solaxRegPhases, 1, b)
+	_, err := wb.conn.WriteSingleRegister(solaxRegPhases, u)
 
 	return err
 }
