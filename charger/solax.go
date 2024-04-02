@@ -85,7 +85,7 @@ func NewSolax(uri, device, comset string, baudrate int, proto modbus.Protocol, i
 	wb := &Solax{
 		log:  log,
 		conn: conn,
-		curr: 6, // assume min current
+		curr: 600, // assume min current
 	}
 
 	// get initial state from charger
@@ -117,14 +117,14 @@ func (wb *Solax) getCurrent() (uint16, error) {
 
 // getPhaseValues returns 3 sequential register values
 func (wb *Solax) getPhaseValues(reg uint16) (float64, float64, float64, error) {
-	b, err := wb.conn.ReadInputRegisters(reg, 6)
+	b, err := wb.conn.ReadInputRegisters(reg, 3)
 	if err != nil {
 		return 0, 0, 0, err
 	}
 
 	var res [3]float64
 	for i := range res {
-		res[i] = float64(binary.BigEndian.Uint32(b[4*i:])) / 100
+		res[i] = float64(binary.BigEndian.Uint16(b[2*i:])) / 100
 	}
 
 	return res[0], res[1], res[2], nil
@@ -199,12 +199,12 @@ var _ api.Meter = (*Solax)(nil)
 
 // CurrentPower implements the api.Meter interface
 func (wb *Solax) CurrentPower() (float64, error) {
-	b, err := wb.conn.ReadInputRegisters(solaxRegActivePower, 2)
+	b, err := wb.conn.ReadInputRegisters(solaxRegActivePower, 1)
 	if err != nil {
 		return 0, err
 	}
 
-	return float64(binary.BigEndian.Uint32(b)) / 1e3, err
+	return float64(binary.BigEndian.Uint16(b)), err
 }
 
 var _ api.MeterEnergy = (*Solax)(nil)
