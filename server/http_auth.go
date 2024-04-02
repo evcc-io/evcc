@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/util/auth"
+	"github.com/gorilla/mux"
 )
 
 const authCookieName = "auth"
@@ -120,16 +121,18 @@ func logoutHandler(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func ensureAuth(auth auth.Auth, next http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		// check jwt token
-		ok, err := auth.ValidateJwtToken(jwtFromRequest(r))
-		if !ok || err != nil {
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
-			return
-		}
+func ensureAuthHandler(auth auth.Auth) mux.MiddlewareFunc {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			// check jwt token
+			ok, err := auth.ValidateJwtToken(jwtFromRequest(r))
+			if !ok || err != nil {
+				http.Error(w, "Unauthorized", http.StatusUnauthorized)
+				return
+			}
 
-		// all clear, continue
-		next.ServeHTTP(w, r)
+			// all clear, continue
+			next.ServeHTTP(w, r)
+		})
 	}
 }
