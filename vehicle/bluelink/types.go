@@ -42,9 +42,6 @@ type VehicleStatus struct {
 		DrvDistance              []DrivingDistance
 		ReservChargeInfos        ReservChargeInfo
 	}
-	Battery *struct {
-		BatSoc int
-	}
 	Vehicles []Vehicle
 }
 

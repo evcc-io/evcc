@@ -104,10 +104,6 @@ func (v *Provider) Soc() (float64, error) {
 		return res.EvStatus.BatteryStatus, nil
 	}
 
-	if res.Battery != nil {
-		return float64(res.Battery.BatSoc), nil
-	}
-
 	return 0, api.ErrNotAvailable
 }
 
