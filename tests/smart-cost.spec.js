@@ -5,7 +5,7 @@ import { startSimulator, stopSimulator, SIMULATOR_URL } from "./simulator";
 const CONFIG = "simulator.evcc.yaml";
 
 test.beforeAll(async () => {
-  await start(CONFIG);
+  await start(CONFIG, "password.sql");
   await startSimulator();
 });
 test.afterAll(async () => {

@@ -172,6 +172,7 @@ blog = "Blog"
 docs = "Documentation"
 github = "GitHub"
 login = "Vehicle Logins"
+logout = "Logout"
 nativeSettings = "Change Server"
 needHelp = "Need Help?"
 sessions = "Charging Sessions"
@@ -193,6 +194,14 @@ confirm = "Yes, restart!"
 description = "Under normal circumstances restarting should not be necessary. Please consider filing a bug if you need to restart evcc on a regular basis."
 disclaimer = "Note: evcc will terminate and rely on the operating system to restart the service."
 modalTitle = "Are you sure you want to restart?"
+
+[loginModal]
+cancel = "Cancel"
+error = "Login failed: "
+invalid = "Password is invalid."
+login = "Login"
+password = "Password"
+title = "Authentication"
 
 [main]
 vehicles = "Parking"
@@ -376,6 +385,19 @@ modalTitle = "Notifications"
 [offline]
 message = "Not connected to a server."
 reload = "Reload?"
+
+[passwordModal]
+description = "Set a password to protect the configuration settings. Using the main screen is still possible without login."
+empty = "Password should not be empty"
+error = "Error: "
+labelCurrent = "Current password"
+labelNew = "New password"
+labelRepeat = "Repeat password"
+newPassword = "Create password"
+noMatch = "Passwords do not match"
+titleNew = "Set Administrator Password"
+titleUpdate = "Update Administrator Password"
+updatePassword = "Update password"
 
 [session]
 cancel = "Cancel"
