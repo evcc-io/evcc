@@ -27,14 +27,15 @@
 				</a>
 			</dd>
 		</dl>
-		<dl class="row" data-testid="generalconfig-password">
+		<dl class="row wip" data-testid="generalconfig-password">
 			<dt class="col-sm-4">Password</dt>
 			<dd class="col-sm-8">
 				*******
+				<!-- TODO: update this once auth is released -->
 				<a
 					href="#"
 					class="ms-2 d-inline-block text-muted"
-					@click.prevent="openModal('passwordModal')"
+					@click.prevent="todo() /* openModal('passwordModal')*/"
 					>edit</a
 				>
 			</dd>

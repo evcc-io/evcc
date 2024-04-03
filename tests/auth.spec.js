@@ -10,7 +10,8 @@ test.afterEach(async () => {
   await stop();
 });
 
-test("set initial password", async ({ page }) => {
+// TODO: activate this once auth is released
+test.skip("set initial password", async ({ page }) => {
   const modal = page.getByTestId("password-modal");
 
   await expect(modal).toBeVisible();
@@ -33,7 +34,7 @@ test("set initial password", async ({ page }) => {
   await expect(modal).not.toBeVisible();
 });
 
-test("login", async ({ page }) => {
+test.skip("login", async ({ page }) => {
   // set initial password
   const modal = page.getByTestId("password-modal");
   await modal.getByLabel("New password").fill("secret");
@@ -65,7 +66,7 @@ test("login", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "Configuration" })).toBeVisible();
 });
 
-test("update password", async ({ page }) => {
+test.skip("update password", async ({ page }) => {
   const oldPassword = "secret";
   const newPassword = "newsecret";
 

@@ -7,9 +7,10 @@ const SIMULATOR_CONFIG = "simulator.evcc.yaml";
 
 const UI_ROUTES = ["/", "/#/sessions", "/#/config"];
 
-async function login(page) {
-  await page.locator("#loginPassword").fill("secret");
-  await page.getByRole("button", { name: "Login" }).click();
+async function login() {
+  // TODO: uncomment this once auth is released
+  // await page.locator("#loginPassword").fill("secret");
+  // await page.getByRole("button", { name: "Login" }).click();
 }
 
 test.describe("Basics", async () => {

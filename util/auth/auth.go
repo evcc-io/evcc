@@ -12,6 +12,9 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+// TODO: remove this once auth is released
+const disabled = true
+
 const admin = "admin"
 
 // Auth is the Auth api
@@ -56,11 +59,21 @@ func (a *auth) RemoveAdminPassword() {
 
 // IsAdminPasswordConfigured checks if the admin password is already set
 func (a *auth) IsAdminPasswordConfigured() bool {
+	// TODO: remove this once auth is released
+	if disabled {
+		return true
+	}
+
 	return a.getAdminPasswordHash() != ""
 }
 
 // SetAdminPassword sets the admin password if not already set
 func (a *auth) SetAdminPassword(password string) error {
+	// TODO: remove this once auth is released
+	if disabled {
+		return errors.New("not implemented")
+	}
+
 	if password == "" {
 		return errors.New("password cannot be empty")
 	}
@@ -125,6 +138,11 @@ func (a *auth) GenerateJwtToken(lifetime time.Duration) (string, error) {
 
 // ValidateJwtToken validates the given JWT token
 func (a *auth) ValidateJwtToken(tokenString string) (bool, error) {
+	// TODO: remove this once auth is released
+	if disabled {
+		return true, nil
+	}
+
 	jwtSecret, err := a.getJwtSecret()
 	if err != nil {
 		return false, err
