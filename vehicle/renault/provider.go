@@ -55,12 +55,15 @@ var _ api.Battery = (*Provider)(nil)
 // Soc implements the api.Vehicle interface
 func (v *Provider) Soc() (float64, error) {
 	res, err := v.batteryG()
-
-	if err == nil {
-		return float64(res.Data.Attributes.BatteryLevel), nil
+	if err != nil {
+		return 0, err
 	}
 
-	return 0, err
+	if res.Data.Attributes.BatteryLevel == nil {
+		return 0, api.ErrNotAvailable
+	}
+
+	return float64(*res.Data.Attributes.BatteryLevel), nil
 }
 
 var _ api.ChargeState = (*Provider)(nil)

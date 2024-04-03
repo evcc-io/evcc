@@ -651,6 +651,14 @@ func (lp *Loadpoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	}
 }
 
+func (lp *Loadpoint) setAndPublishEnabled(enabled bool) {
+	if enabled != lp.enabled {
+		lp.log.DEBUG.Printf("charger %s", status[enabled])
+		lp.enabled = enabled
+	}
+	lp.publish(keys.Enabled, enabled)
+}
+
 // syncCharger updates charger status and synchronizes it with expectations
 func (lp *Loadpoint) syncCharger() error {
 	enabled, err := lp.charger.Enabled()
@@ -658,41 +666,40 @@ func (lp *Loadpoint) syncCharger() error {
 		return fmt.Errorf("charger enabled: %w", err)
 	}
 
-	// some chargers (i.E. Easee in some configurations) disable themself to be able to switch phases
-	if !enabled && lp.enabled && !lp.phaseSwitchCompleted() {
-		if err := lp.charger.Enable(true); err != nil {
-			return fmt.Errorf("charger enable: %w", err)
-		}
-		return nil
-	}
+	shouldBeConsistent := lp.chargerUpdateCompleted() && lp.phaseSwitchCompleted()
 
-	if lp.chargerUpdateCompleted() {
+	if shouldBeConsistent {
 		defer func() {
-			lp.enabled = enabled
-			lp.publish(keys.Enabled, lp.enabled)
+			lp.setAndPublishEnabled(enabled)
 		}()
 	}
 
+	// #1: check charger logic, fix charger state if necessary (for chargers that start charging while being disabled)
 	if !enabled && lp.charging() {
 		lp.log.WARN.Println("charger logic error: disabled but charging")
-		enabled = true // treat as enabled when charging
-		if lp.chargerUpdateCompleted() {
+
+		// treat as enabled when charging for further validations
+		enabled = true
+
+		if shouldBeConsistent {
 			if err := lp.charger.Enable(true); err != nil { // also enable charger to correct internal state
 				return fmt.Errorf("charger enable: %w", err)
 			}
-			lp.elapsePVTimer()
+
+			lp.elapsePVTimer() // elapse PV timer so loadpoint can immediately switch charger if necessary
 			return nil
 		}
 	}
 
-	// status in sync
-	if enabled == lp.enabled {
+	// #2: sync charger
+	switch {
+	case enabled == lp.enabled:
 		// sync max current
 		if charger, ok := lp.charger.(api.CurrentGetter); ok && enabled {
 			if current, err := charger.GetMaxCurrent(); err == nil {
 				// smallest adjustment most PWM-Controllers can do is: 100%÷256×0,6A = 0.234A
 				if math.Abs(lp.chargeCurrent-current) > 0.23 {
-					if lp.chargerUpdateCompleted() {
+					if shouldBeConsistent {
 						lp.log.WARN.Printf("charger logic error: current mismatch (got %.3gA, expected %.3gA)", current, lp.chargeCurrent)
 					}
 					lp.chargeCurrent = current
@@ -703,11 +710,28 @@ func (lp *Loadpoint) syncCharger() error {
 			}
 		}
 
-		return nil
-	}
+		// sync phases
+		phases := lp.GetPhases()
+		if ps, ok := lp.charger.(api.PhaseGetter); ok && enabled && shouldBeConsistent && phases > 0 {
+			if chargerPhases, err := ps.GetPhases(); err == nil {
+				if chargerPhases != phases {
+					lp.log.WARN.Printf("charger logic error: phases mismatch (got %d, expected %d)", chargerPhases, phases)
+					lp.setPhases(chargerPhases)
+				}
+			} else if !errors.Is(err, api.ErrNotAvailable) {
+				return fmt.Errorf("charger get phases: %w", err)
+			}
+		}
 
-	// ignore disabled state if vehicle was disconnected ^(lp.enabled && ^lp.connected)
-	if lp.chargerUpdateCompleted() && lp.phaseSwitchCompleted() && (enabled || lp.connected()) {
+	case !enabled && !lp.phaseSwitchCompleted():
+		// some chargers (i.E. Easee in some configurations) disable themselves to be able to switch phases
+		// -> enable charger
+		if err := lp.charger.Enable(true); err != nil {
+			return fmt.Errorf("charger enable: %w", err)
+		}
+
+	case shouldBeConsistent && (enabled || lp.connected()):
+		// ignore disabled state if vehicle was disconnected (!lp.enabled && !lp.connected)
 		lp.log.WARN.Printf("charger out of sync: expected %vd, got %vd", status[lp.enabled], status[enabled])
 	}
 
@@ -765,9 +789,7 @@ func (lp *Loadpoint) setLimit(chargeCurrent float64) error {
 			return fmt.Errorf("charger %s: %w", status[enabled], err)
 		}
 
-		lp.log.DEBUG.Printf("charger %s", status[enabled])
-		lp.enabled = enabled
-		lp.publish(keys.Enabled, lp.enabled)
+		lp.setAndPublishEnabled(enabled)
 		lp.chargerSwitched = lp.clock.Now()
 
 		lp.bus.Publish(evChargeCurrent, chargeCurrent)
@@ -1152,7 +1174,7 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batter
 	maxCurrent := lp.effectiveMaxCurrent()
 
 	// switch phases up/down
-	if lp.hasPhaseSwitching() {
+	if lp.hasPhaseSwitching() && lp.phaseSwitchCompleted() {
 		_ = lp.pvScalePhases(sitePower, minCurrent, maxCurrent)
 	}
 

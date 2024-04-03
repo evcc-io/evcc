@@ -44,6 +44,7 @@ test.describe("basic functionality", async () => {
     await expect(lp1.getByText("Loadpoint", { exact: true })).toBeVisible();
 
     await lp1.getByTestId("limit-soc").getByRole("combobox").selectOption("90%");
+    await lp1.getByRole("button", { name: "Solar", exact: true }).click();
     await lp1.getByTestId("charging-plan").getByRole("button", { name: "none" }).click();
 
     await page.getByTestId("plan-day").selectOption({ index: 1 });
@@ -57,7 +58,7 @@ test.describe("basic functionality", async () => {
       "tomorrow 9:30 AM80%"
     );
 
-    await expect(lp1.getByTestId("vehicle-status")).toContainText("Target charging starts at");
+    await expect(lp1.getByTestId("vehicle-status")).toContainText("Charging plan starts at");
     await expect(lp1.getByTestId("plan-marker")).toBeVisible();
     await expect(lp1.getByTestId("charging-plan").getByRole("button")).toHaveText(
       "tomorrow 9:30 AM80%"

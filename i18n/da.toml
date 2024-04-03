@@ -48,6 +48,10 @@ socLimit = "Begrænsning"
 example = "Eksempel"
 optional = "valgfrit"
 
+[config.general]
+cancel = "Afbryd"
+save = "Gem"
+
 [config.grid]
 titleAdd = "Tilføj måler for elnettet"
 titleEdit = "Rediger måler for elnettet"
@@ -77,6 +81,11 @@ titleEdit = "Rediger solmåler"
 [config.site]
 cancel = "Afbryd"
 save = "Gem"
+
+[config.title]
+description = "Vises på hovedskærm og på browserfane"
+label = "Titel"
+title = "Rediger titel"
 
 [config.validation]
 failed = "mislykkedes"
@@ -370,9 +379,9 @@ pvDisable = "Ikke nok overskud. Pause i {remaining}..."
 pvEnable = "Overskud tilgængeligt. Starter om {remaining}..."
 scale1p = "Reducerer til 1-faset strøm i {remaining}..."
 scale3p = "Øger til 3-faset opladning om {remaining}..."
-targetChargeActive = "Målladning aktiv..."
-targetChargePlanned = "Målopladning starter kl. {time}."
-targetChargeWaitForVehicle = "Målladning klar. Venter på køretøj..."
+targetChargeActive = "Plan for ladning er aktiv..."
+targetChargePlanned = "Opladningsplan starter kl. {time}."
+targetChargeWaitForVehicle = "Plan for opladning er klar. Venter på køretøj..."
 unknown = ""
 vehicleLimitReached = "Køretøjsgrænsen {soc} % nået."
 waitForVehicle = "Parat. Venter på køretøj ..."
