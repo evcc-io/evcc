@@ -225,8 +225,8 @@ type Circuit interface {
 	HasMeter() bool
 	GetMaxPower() float64
 	GetMaxCurrent() float64
-	// SetChargePower(float64)
-	// SetChargeCurrent(float64)
+	SetMaxPower(float64)
+	SetMaxCurrent(float64)
 	Update([]CircuitLoad) error
 	ValidateCurrent(old, new float64) float64
 	ValidatePower(old, new float64) float64

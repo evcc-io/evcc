@@ -133,11 +133,25 @@ func (c *Circuit) GetMaxPower() float64 {
 	return c.maxPower
 }
 
+// SetMaxPower sets the max power
+func (c *Circuit) SetMaxPower(power float64) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.maxPower = power
+}
+
 // GetMaxCurrent returns the max current setting
 func (c *Circuit) GetMaxCurrent() float64 {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 	return c.maxCurrent
+}
+
+// SetMaxCurrent sets the max current
+func (c *Circuit) SetMaxCurrent(current float64) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.maxCurrent = current
 }
 
 // RegisterChild registers child circuit
