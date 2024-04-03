@@ -5,7 +5,6 @@ import (
 	"sync"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 )
@@ -131,7 +130,7 @@ func (c *Circuit) RegisterChild(child api.Circuit) {
 	c.children = append(c.children, child)
 }
 
-func (c *Circuit) updateLoadpoints(loadpoints []loadpoint.API) {
+func (c *Circuit) updateLoadpoints(loadpoints []api.CircuitLoad) {
 	c.power = 0
 	c.current = 0
 
@@ -165,7 +164,7 @@ func (c *Circuit) updateMeters() error {
 	return nil
 }
 
-func (c *Circuit) Update(loadpoints []loadpoint.API) (err error) {
+func (c *Circuit) Update(loadpoints []api.CircuitLoad) (err error) {
 	defer func() {
 		if c.maxPower != 0 && c.power > c.maxPower {
 			c.log.WARN.Printf("over power detected: %gW > %gW", c.power, c.maxPower)
@@ -182,7 +181,7 @@ func (c *Circuit) Update(loadpoints []loadpoint.API) (err error) {
 
 	// update children depth-first
 	for _, ch := range c.children {
-		if err := ch.(*Circuit).Update(loadpoints); err != nil {
+		if err := ch.Update(loadpoints); err != nil {
 			return err
 		}
 	}
@@ -196,7 +195,7 @@ func (c *Circuit) Update(loadpoints []loadpoint.API) (err error) {
 	c.updateLoadpoints(loadpoints)
 	for _, ch := range c.children {
 		c.power += ch.GetChargePower()
-		c.current += ch.GetChargeCurrent()
+		c.current += ch.GetMaxPhaseCurrent()
 	}
 
 	return nil
@@ -207,8 +206,8 @@ func (c *Circuit) GetChargePower() float64 {
 	return c.power
 }
 
-// GetChargeCurrent returns the actual current
-func (c *Circuit) GetChargeCurrent() float64 {
+// GetMaxPhaseCurrent returns the actual current
+func (c *Circuit) GetMaxPhaseCurrent() float64 {
 	return c.current
 }
 

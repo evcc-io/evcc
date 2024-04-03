@@ -700,20 +700,6 @@ func (m *MockCircuit) EXPECT() *MockCircuitMockRecorder {
 	return m.recorder
 }
 
-// GetChargeCurrent mocks base method.
-func (m *MockCircuit) GetChargeCurrent() float64 {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetChargeCurrent")
-	ret0, _ := ret[0].(float64)
-	return ret0
-}
-
-// GetChargeCurrent indicates an expected call of GetChargeCurrent.
-func (mr *MockCircuitMockRecorder) GetChargeCurrent() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetChargeCurrent", reflect.TypeOf((*MockCircuit)(nil).GetChargeCurrent))
-}
-
 // GetChargePower mocks base method.
 func (m *MockCircuit) GetChargePower() float64 {
 	m.ctrl.T.Helper()
@@ -740,6 +726,20 @@ func (m *MockCircuit) GetMaxCurrent() float64 {
 func (mr *MockCircuitMockRecorder) GetMaxCurrent() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMaxCurrent", reflect.TypeOf((*MockCircuit)(nil).GetMaxCurrent))
+}
+
+// GetMaxPhaseCurrent mocks base method.
+func (m *MockCircuit) GetMaxPhaseCurrent() float64 {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetMaxPhaseCurrent")
+	ret0, _ := ret[0].(float64)
+	return ret0
+}
+
+// GetMaxPhaseCurrent indicates an expected call of GetMaxPhaseCurrent.
+func (mr *MockCircuitMockRecorder) GetMaxPhaseCurrent() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMaxPhaseCurrent", reflect.TypeOf((*MockCircuit)(nil).GetMaxPhaseCurrent))
 }
 
 // GetMaxPower mocks base method.
@@ -794,6 +794,20 @@ func (m *MockCircuit) RegisterChild(arg0 Circuit) {
 func (mr *MockCircuitMockRecorder) RegisterChild(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterChild", reflect.TypeOf((*MockCircuit)(nil).RegisterChild), arg0)
+}
+
+// Update mocks base method.
+func (m *MockCircuit) Update(arg0 []CircuitLoad) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Update", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Update indicates an expected call of Update.
+func (mr *MockCircuitMockRecorder) Update(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockCircuit)(nil).Update), arg0)
 }
 
 // ValidateCurrent mocks base method.

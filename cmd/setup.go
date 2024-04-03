@@ -220,7 +220,7 @@ NEXT:
 	}
 
 	if len(children) > 0 {
-		return fmt.Errorf("missing parent circuit: %s", children[0].Name)
+		return fmt.Errorf("circuit is missing parent: %s", children[0].Name)
 	}
 
 	// append devices from database
@@ -782,7 +782,7 @@ func configureSiteAndLoadpoints(conf globalConfig) (*core.Site, error) {
 }
 
 func validateCircuits(site site.API, loadpoints []*core.Loadpoint) error {
-NEXT:
+CONTINUE:
 	for _, dev := range config.Circuits().Devices() {
 		instance := dev.Instance()
 
@@ -792,7 +792,7 @@ NEXT:
 
 		for _, lp := range loadpoints {
 			if lp.GetCircuit() == instance {
-				goto NEXT
+				continue CONTINUE
 			}
 		}
 

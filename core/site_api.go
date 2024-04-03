@@ -122,9 +122,14 @@ func (site *Site) SetAuxMeterRefs(ref []string) {
 	settings.SetString(keys.AuxMeters, strings.Join(filterConfigurable(ref), ","))
 }
 
-// Loadpoints returns the list loadpoints
+// Loadpoints returns the loadpoints as api interfaces
 func (site *Site) Loadpoints() []loadpoint.API {
 	return lo.Map(site.loadpoints, func(lp *Loadpoint, _ int) loadpoint.API { return lp })
+}
+
+// loadpointsAsCircuitDevices returns the loadpoints as circuit devices
+func (site *Site) loadpointsAsCircuitDevices() []api.CircuitLoad {
+	return lo.Map(site.loadpoints, func(lp *Loadpoint, _ int) api.CircuitLoad { return lp })
 }
 
 // Vehicles returns the site vehicles

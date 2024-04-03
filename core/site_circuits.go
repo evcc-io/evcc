@@ -28,7 +28,7 @@ func (site *Site) publishCircuits() {
 		}
 
 		if instance.GetMaxCurrent() > 0 {
-			data.Current = util.PtrTo(instance.GetChargeCurrent())
+			data.Current = util.PtrTo(instance.GetMaxPhaseCurrent())
 		}
 
 		res[c.Config().Name] = data

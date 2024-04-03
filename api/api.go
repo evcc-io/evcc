@@ -199,16 +199,29 @@ type CsvWriter interface {
 	WriteCsv(context.Context, io.Writer) error
 }
 
+// CircuitMeasurements is the measurements a circuit or load must deliver
+type CircuitMeasurements interface {
+	GetChargePower() float64
+	GetMaxPhaseCurrent() float64
+}
+
+// CircuitLoad represents a loadpoint attached to a circuit
+type CircuitLoad interface {
+	CircuitMeasurements
+	GetCircuit() Circuit
+}
+
+// Circuit defines the load control domain
 type Circuit interface {
+	CircuitMeasurements
 	GetParent() Circuit
 	RegisterChild(child Circuit)
 	HasMeter() bool
 	GetMaxPower() float64
 	GetMaxCurrent() float64
-	GetChargePower() float64
-	GetChargeCurrent() float64
 	// SetChargePower(float64)
 	// SetChargeCurrent(float64)
+	Update([]CircuitLoad) error
 	ValidateCurrent(old, new float64) float64
 	ValidatePower(old, new float64) float64
 }
