@@ -188,7 +188,7 @@ func loadConfigFile(conf *globalConfig) error {
 func configureCircuits(static []config.Named, names ...string) error {
 	children := slices.Clone(static)
 
-	// TODO: check for circular references, allow multiple levels of hierarchy
+	// TODO: check for circular references
 NEXT:
 	for i, cc := range children {
 		if cc.Name == "" {
