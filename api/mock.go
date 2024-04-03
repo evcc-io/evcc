@@ -770,6 +770,20 @@ func (mr *MockCircuitMockRecorder) GetParent() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetParent", reflect.TypeOf((*MockCircuit)(nil).GetParent))
 }
 
+// GetTitle mocks base method.
+func (m *MockCircuit) GetTitle() string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetTitle")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// GetTitle indicates an expected call of GetTitle.
+func (mr *MockCircuitMockRecorder) GetTitle() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTitle", reflect.TypeOf((*MockCircuit)(nil).GetTitle))
+}
+
 // HasMeter mocks base method.
 func (m *MockCircuit) HasMeter() bool {
 	m.ctrl.T.Helper()
@@ -794,6 +808,42 @@ func (m *MockCircuit) RegisterChild(arg0 Circuit) {
 func (mr *MockCircuitMockRecorder) RegisterChild(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterChild", reflect.TypeOf((*MockCircuit)(nil).RegisterChild), arg0)
+}
+
+// SetMaxCurrent mocks base method.
+func (m *MockCircuit) SetMaxCurrent(arg0 float64) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetMaxCurrent", arg0)
+}
+
+// SetMaxCurrent indicates an expected call of SetMaxCurrent.
+func (mr *MockCircuitMockRecorder) SetMaxCurrent(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetMaxCurrent", reflect.TypeOf((*MockCircuit)(nil).SetMaxCurrent), arg0)
+}
+
+// SetMaxPower mocks base method.
+func (m *MockCircuit) SetMaxPower(arg0 float64) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetMaxPower", arg0)
+}
+
+// SetMaxPower indicates an expected call of SetMaxPower.
+func (mr *MockCircuitMockRecorder) SetMaxPower(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetMaxPower", reflect.TypeOf((*MockCircuit)(nil).SetMaxPower), arg0)
+}
+
+// SetTitle mocks base method.
+func (m *MockCircuit) SetTitle(arg0 string) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetTitle", arg0)
+}
+
+// SetTitle indicates an expected call of SetTitle.
+func (mr *MockCircuitMockRecorder) SetTitle(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetTitle", reflect.TypeOf((*MockCircuit)(nil).SetTitle), arg0)
 }
 
 // Update mocks base method.
