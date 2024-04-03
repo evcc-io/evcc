@@ -28,7 +28,7 @@ type PollConfig struct {
 	Interval time.Duration `mapstructure:"interval"` // interval when not charging
 }
 
-//go:generate enumer -type PollMode -transform=lower
+//go:generate enumer -type PollMode -text -transform=lower
 type PollMode int
 
 // Poll modes
