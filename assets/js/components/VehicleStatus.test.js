@@ -68,6 +68,32 @@ describe("plan", () => {
       }
     );
   });
+  test("dont show plan status if plan is disabled (e.g. off, fast mode)", () => {
+    expectStatus(
+      {
+        effectivePlanTime,
+        planActive: true,
+        charging: true,
+        connected: true,
+        chargingPlanDisabled: true,
+      },
+      "charging"
+    );
+    expectStatus(
+      {
+        effectivePlanTime,
+        planActive: true,
+        enabled: true,
+        connected: true,
+        chargingPlanDisabled: true,
+      },
+      "waitForVehicle"
+    );
+    expectStatus(
+      { effectivePlanTime, planProjectedStart, connected: true, chargingPlanDisabled: true },
+      "connected"
+    );
+  });
 });
 
 describe("climating", () => {

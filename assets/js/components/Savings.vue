@@ -172,7 +172,7 @@
 									</div>
 									<div v-if="!priceConfigured || !co2Configured">
 										<a
-											href="https://docs.evcc.io/en/docs/reference/configuration/tariffs/"
+											href="https://docs.evcc.io/en/docs/reference/configuration/tariffs"
 											class="evcc-gray"
 											target="_blank"
 										>

@@ -21,15 +21,15 @@ type StatusLatestResponse struct {
 	ResMsg  struct {
 		VehicleStatusInfo struct {
 			VehicleStatus   VehicleStatus
-			VehicleLocation VehicleLocation
-			Odometer        Odometer
+			VehicleLocation *VehicleLocation
+			Odometer        *Odometer
 		}
 	}
 }
 
 type VehicleStatus struct {
 	Time     string
-	EvStatus struct {
+	EvStatus *struct {
 		BatteryCharge bool
 		BatteryStatus float64
 		BatteryPlugin int

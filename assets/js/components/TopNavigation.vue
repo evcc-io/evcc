@@ -57,6 +57,12 @@
 				</router-link>
 			</li>
 			<li><hr class="dropdown-divider" /></li>
+			<li v-if="showLogout">
+				<button type="button" class="dropdown-item" @click="logout">
+					{{ $t("header.logout") }}
+				</button>
+			</li>
+
 			<template v-if="providerLogins.length > 0">
 				<li><hr class="dropdown-divider" /></li>
 				<li>
@@ -108,6 +114,7 @@ import "@h2d2/shopicons/es/regular/moonstars";
 import "@h2d2/shopicons/es/regular/menu";
 import "@h2d2/shopicons/es/regular/newtab";
 import collector from "../mixins/collector";
+import { logout, isLoggedIn, openLoginModal } from "../auth";
 
 import baseAPI from "../baseapi";
 import { isApp, sendToApp } from "../utils/native";
@@ -155,6 +162,9 @@ export default {
 		batteryModalAvailable() {
 			return this.batteryConfigured;
 		},
+		showLogout() {
+			return isLoggedIn();
+		},
 	},
 	mounted() {
 		const $el = document.getElementById("topNavigatonDropdown");
@@ -192,6 +202,13 @@ export default {
 		},
 		openNativeSettings() {
 			sendToApp({ type: "settings" });
+		},
+		async login() {
+			openLoginModal();
+		},
+		async logout() {
+			await logout();
+			this.$router.push({ path: "/" });
 		},
 	},
 };
