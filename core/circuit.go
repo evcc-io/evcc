@@ -81,7 +81,7 @@ func NewCircuit(log *util.Logger, maxCurrent, maxPower float64, meter api.Meter)
 
 	if maxCurrent == 0 {
 		c.log.DEBUG.Printf("validation of max phase current disabled")
-	} else if _, ok := meter.(api.PhaseCurrents); !ok {
+	} else if _, ok := meter.(api.PhaseCurrents); meter != nil && !ok {
 		return nil, fmt.Errorf("meter does not support phase currents")
 	}
 
@@ -141,7 +141,7 @@ func (c *Circuit) updateLoadpoints(loadpoints []loadpoint.API) {
 		}
 
 		c.power += lp.GetChargePower()
-		c.current += max(lp.GetChargeCurrents())
+		c.current += lp.GetMaxPhaseCurrent()
 	}
 }
 

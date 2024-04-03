@@ -323,14 +323,14 @@ func (lp *Loadpoint) GetChargePowerFlexibility() float64 {
 	return max(0, lp.GetChargePower()-lp.EffectiveMinPower())
 }
 
-// GetChargeCurrents returns the current charge power
-func (lp *Loadpoint) GetChargeCurrents() (float64, float64, float64) {
+// GetMaxPhaseCurrent returns the current charge power
+func (lp *Loadpoint) GetMaxPhaseCurrent() float64 {
 	lp.RLock()
 	defer lp.RUnlock()
 	if lp.chargeCurrents == nil {
-		return 0, 0, 0
+		return lp.chargeCurrent
 	}
-	return lp.chargeCurrents[0], lp.chargeCurrents[1], lp.chargeCurrents[2]
+	return max(lp.chargeCurrents[0], lp.chargeCurrents[1], lp.chargeCurrents[2])
 }
 
 // GetMinCurrent returns the min loadpoint current

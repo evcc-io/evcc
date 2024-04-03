@@ -208,7 +208,7 @@ NEXT:
 		log := util.NewLogger("circuit-" + cc.Name)
 		instance, err := core.NewCircuitFromConfig(log, cc.Other)
 		if err != nil {
-			return fmt.Errorf("cannot create circuit: %w", err)
+			return fmt.Errorf("cannot create circuit '%s': %w", cc.Name, err)
 		}
 
 		if err := config.Circuits().Add(config.NewStaticDevice(cc, instance)); err != nil {

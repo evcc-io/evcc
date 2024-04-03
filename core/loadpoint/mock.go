@@ -110,22 +110,6 @@ func (mr *MockAPIMockRecorder) EffectivePriority() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EffectivePriority", reflect.TypeOf((*MockAPI)(nil).EffectivePriority))
 }
 
-// GetChargeCurrents mocks base method.
-func (m *MockAPI) GetChargeCurrents() (float64, float64, float64) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetChargeCurrents")
-	ret0, _ := ret[0].(float64)
-	ret1, _ := ret[1].(float64)
-	ret2, _ := ret[2].(float64)
-	return ret0, ret1, ret2
-}
-
-// GetChargeCurrents indicates an expected call of GetChargeCurrents.
-func (mr *MockAPIMockRecorder) GetChargeCurrents() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetChargeCurrents", reflect.TypeOf((*MockAPI)(nil).GetChargeCurrents))
-}
-
 // GetChargePower mocks base method.
 func (m *MockAPI) GetChargePower() float64 {
 	m.ctrl.T.Helper()
@@ -236,6 +220,20 @@ func (m *MockAPI) GetMaxCurrent() float64 {
 func (mr *MockAPIMockRecorder) GetMaxCurrent() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMaxCurrent", reflect.TypeOf((*MockAPI)(nil).GetMaxCurrent))
+}
+
+// GetMaxPhaseCurrent mocks base method.
+func (m *MockAPI) GetMaxPhaseCurrent() float64 {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetMaxPhaseCurrent")
+	ret0, _ := ret[0].(float64)
+	return ret0
+}
+
+// GetMaxPhaseCurrent indicates an expected call of GetMaxPhaseCurrent.
+func (mr *MockAPIMockRecorder) GetMaxPhaseCurrent() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMaxPhaseCurrent", reflect.TypeOf((*MockAPI)(nil).GetMaxPhaseCurrent))
 }
 
 // GetMinCurrent mocks base method.
