@@ -218,6 +218,8 @@ type CircuitLoad interface {
 // Circuit defines the load control domain
 type Circuit interface {
 	CircuitMeasurements
+	GetTitle() string
+	SetTitle(string)
 	GetParent() Circuit
 	RegisterChild(child Circuit)
 	HasMeter() bool

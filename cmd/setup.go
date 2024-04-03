@@ -211,6 +211,12 @@ NEXT:
 			return fmt.Errorf("cannot create circuit '%s': %w", cc.Name, err)
 		}
 
+		// ensure config has title
+		if instance.GetTitle() == "" {
+			//lint:ignore SA1019 as Title is safe on ascii
+			instance.SetTitle(strings.Title(cc.Name))
+		}
+
 		if err := config.Circuits().Add(config.NewStaticDevice(cc, instance)); err != nil {
 			return err
 		}
@@ -249,6 +255,12 @@ NEXT2:
 		instance, err := core.NewCircuitFromConfig(log, cc.Other)
 		if err != nil {
 			return fmt.Errorf("cannot create circuit '%s': %w", cc.Name, err)
+		}
+
+		// ensure config has title
+		if instance.GetTitle() == "" {
+			//lint:ignore SA1019 as Title is safe on ascii
+			instance.SetTitle(strings.Title(cc.Name))
 		}
 
 		if err := config.Circuits().Add(config.NewConfigurableDevice(conf, instance)); err != nil {
