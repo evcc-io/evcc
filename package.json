@@ -47,7 +47,7 @@
     "rollup-plugin-visualizer": "^5.8.3",
     "smoothscroll-polyfill": "^0.4.4",
     "typescript": "^5.2.2",
-    "vite": "^5.1.1",
+    "vite": "^5.1.7",
     "vite-plugin-toml": "^0.6.0",
     "vitest": "^1.1.0",
     "vue": "^3.2.29",
