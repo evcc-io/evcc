@@ -7,9 +7,15 @@ const SIMULATOR_CONFIG = "simulator.evcc.yaml";
 
 const UI_ROUTES = ["/", "/#/sessions", "/#/config"];
 
+async function login() {
+  // TODO: uncomment this once auth is released
+  // await page.locator("#loginPassword").fill("secret");
+  // await page.getByRole("button", { name: "Login" }).click();
+}
+
 test.describe("Basics", async () => {
   test.beforeAll(async () => {
-    await start(BASICS_CONFIG);
+    await start(BASICS_CONFIG, "password.sql");
   });
 
   test.afterAll(async () => {
@@ -19,6 +25,9 @@ test.describe("Basics", async () => {
   test("Menu options. No battery and grid.", async ({ page }) => {
     for (const route of UI_ROUTES) {
       await page.goto(route);
+      if (route === "/#/config") {
+        await login(page);
+      }
 
       await page.getByTestId("topnavigation-button").click();
       await expect(page.getByRole("button", { name: "General Settings" })).toBeVisible();
@@ -47,7 +56,7 @@ test.describe("Basics", async () => {
 
 test.describe("Advanced", async () => {
   test.beforeAll(async () => {
-    await start(SIMULATOR_CONFIG);
+    await start(SIMULATOR_CONFIG, "password.sql");
     await startSimulator();
   });
 
@@ -59,6 +68,9 @@ test.describe("Advanced", async () => {
   test("Menu options. All available.", async ({ page }) => {
     for (const route of UI_ROUTES) {
       await page.goto(route);
+      if (route === "/#/config") {
+        await login(page);
+      }
 
       await page.getByTestId("topnavigation-button").click();
       await expect(page.getByRole("button", { name: "General Settings" })).toBeVisible();

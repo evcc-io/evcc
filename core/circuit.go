@@ -16,6 +16,7 @@ type Circuit struct {
 	mu  sync.RWMutex
 	log *util.Logger
 
+	title    string
 	parent   api.Circuit   // parent circuit
 	children []api.Circuit // child circuits
 	meter    api.Meter     // meter to determine current power
@@ -30,6 +31,7 @@ type Circuit struct {
 // NewCircuitFromConfig creates a new Circuit
 func NewCircuitFromConfig(log *util.Logger, other map[string]interface{}) (api.Circuit, error) {
 	var cc struct {
+		Title      string  `mapstructure:"title"`      // title
 		ParentRef  string  `mapstructure:"parent"`     // parent circuit reference
 		MeterRef   string  `mapstructure:"meter"`      // meter reference
 		MaxCurrent float64 `mapstructure:"maxCurrent"` // the max allowed current
@@ -49,7 +51,7 @@ func NewCircuitFromConfig(log *util.Logger, other map[string]interface{}) (api.C
 		meter = dev.Instance()
 	}
 
-	circuit, err := NewCircuit(log, cc.MaxCurrent, cc.MaxPower, meter)
+	circuit, err := NewCircuit(log, cc.Title, cc.MaxCurrent, cc.MaxPower, meter)
 	if err != nil {
 		return nil, err
 	}
@@ -66,9 +68,10 @@ func NewCircuitFromConfig(log *util.Logger, other map[string]interface{}) (api.C
 }
 
 // NewCircuit creates a circuit
-func NewCircuit(log *util.Logger, maxCurrent, maxPower float64, meter api.Meter) (*Circuit, error) {
+func NewCircuit(log *util.Logger, title string, maxCurrent, maxPower float64, meter api.Meter) (*Circuit, error) {
 	c := &Circuit{
 		log:        log,
+		title:      title,
 		maxCurrent: maxCurrent,
 		maxPower:   maxPower,
 		meter:      meter,
@@ -85,6 +88,18 @@ func NewCircuit(log *util.Logger, maxCurrent, maxPower float64, meter api.Meter)
 	}
 
 	return c, nil
+}
+
+func (c *Circuit) GetTitle() string {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	return c.title
+}
+
+func (c *Circuit) SetTitle(title string) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.title = title
 }
 
 // GetParent returns the parent circuit
@@ -118,11 +133,25 @@ func (c *Circuit) GetMaxPower() float64 {
 	return c.maxPower
 }
 
+// SetMaxPower sets the max power
+func (c *Circuit) SetMaxPower(power float64) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.maxPower = power
+}
+
 // GetMaxCurrent returns the max current setting
 func (c *Circuit) GetMaxCurrent() float64 {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 	return c.maxCurrent
+}
+
+// SetMaxCurrent sets the max current
+func (c *Circuit) SetMaxCurrent(current float64) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.maxCurrent = current
 }
 
 // RegisterChild registers child circuit

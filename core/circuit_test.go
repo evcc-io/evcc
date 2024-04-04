@@ -14,7 +14,7 @@ func TestCircuitPower(t *testing.T) {
 
 	circ := func(t *testing.T, ctrl *gomock.Controller, maxP float64) (*Circuit, *api.MockMeter) {
 		m := api.NewMockMeter(ctrl)
-		c, err := NewCircuit(log, 0, maxP, m)
+		c, err := NewCircuit(log, "foo", 0, maxP, m)
 		require.NoError(t, err)
 		return c, m
 	}

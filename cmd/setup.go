@@ -188,7 +188,7 @@ func loadConfigFile(conf *globalConfig) error {
 func configureCircuits(static []config.Named, names ...string) error {
 	children := slices.Clone(static)
 
-	// TODO: check for circular references, allow multiple levels of hierarchy
+	// TODO: check for circular references
 NEXT:
 	for i, cc := range children {
 		if cc.Name == "" {
@@ -209,6 +209,12 @@ NEXT:
 		instance, err := core.NewCircuitFromConfig(log, cc.Other)
 		if err != nil {
 			return fmt.Errorf("cannot create circuit '%s': %w", cc.Name, err)
+		}
+
+		// ensure config has title
+		if instance.GetTitle() == "" {
+			//lint:ignore SA1019 as Title is safe on ascii
+			instance.SetTitle(strings.Title(cc.Name))
 		}
 
 		if err := config.Circuits().Add(config.NewStaticDevice(cc, instance)); err != nil {
@@ -249,6 +255,12 @@ NEXT2:
 		instance, err := core.NewCircuitFromConfig(log, cc.Other)
 		if err != nil {
 			return fmt.Errorf("cannot create circuit '%s': %w", cc.Name, err)
+		}
+
+		// ensure config has title
+		if instance.GetTitle() == "" {
+			//lint:ignore SA1019 as Title is safe on ascii
+			instance.SetTitle(strings.Title(cc.Name))
 		}
 
 		if err := config.Circuits().Add(config.NewConfigurableDevice(conf, instance)); err != nil {

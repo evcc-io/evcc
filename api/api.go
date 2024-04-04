@@ -82,6 +82,10 @@ type PhaseSwitcher interface {
 	Phases1p3p(phases int) error
 }
 
+type PhaseGetter interface {
+	GetPhases() (int, error)
+}
+
 // Diagnosis is a helper interface that allows to dump diagnostic data to console
 type Diagnosis interface {
 	Diagnose()
@@ -214,13 +218,15 @@ type CircuitLoad interface {
 // Circuit defines the load control domain
 type Circuit interface {
 	CircuitMeasurements
+	GetTitle() string
+	SetTitle(string)
 	GetParent() Circuit
 	RegisterChild(child Circuit)
 	HasMeter() bool
 	GetMaxPower() float64
 	GetMaxCurrent() float64
-	// SetChargePower(float64)
-	// SetChargeCurrent(float64)
+	SetMaxPower(float64)
+	SetMaxCurrent(float64)
 	Update([]CircuitLoad) error
 	ValidateCurrent(old, new float64) float64
 	ValidatePower(old, new float64) float64
