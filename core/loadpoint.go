@@ -776,7 +776,7 @@ func (lp *Loadpoint) setLimit(chargeCurrent float64) error {
 		if charger, ok := lp.charger.(api.ChargerEx); ok {
 			err = charger.MaxCurrentMillis(chargeCurrent)
 			} else {
-				//hack rro: if boiler then current * 1000
+				//rro: hack, if boiler then current * 1000
 				v := lp.GetVehicle().Title()
 				if v != "Boiler_ESP" {
 					err = lp.charger.MaxCurrent(int64(chargeCurrent))
