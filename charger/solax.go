@@ -32,7 +32,6 @@ import (
 type Solax struct {
 	log  *util.Logger
 	conn *modbus.Connection
-	curr uint16
 }
 
 const (
@@ -85,34 +84,9 @@ func NewSolax(uri, device, comset string, baudrate int, proto modbus.Protocol, i
 	wb := &Solax{
 		log:  log,
 		conn: conn,
-		curr: 600, // assume min current
-	}
-
-	// get initial state from charger
-	curr, err := wb.getCurrent()
-	if err != nil {
-		return nil, fmt.Errorf("current limit: %w", err)
-	}
-	if curr != 0 {
-		wb.curr = curr
 	}
 
 	return wb, err
-}
-
-func (wb *Solax) setCurrent(current uint16) error {
-	_, err := wb.conn.WriteSingleRegister(solaxRegMaxCurrent, current)
-
-	return err
-}
-
-func (wb *Solax) getCurrent() (uint16, error) {
-	b, err := wb.conn.ReadHoldingRegisters(solaxRegMaxCurrent, 1)
-	if err != nil {
-		return 0, err
-	}
-
-	return binary.BigEndian.Uint16(b), nil
 }
 
 // getPhaseValues returns 3 sequential register values
@@ -162,19 +136,24 @@ func (wb *Solax) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *Solax) Enabled() (bool, error) {
-	curr, err := wb.getCurrent()
+	b, err := wb.conn.ReadHoldingRegisters(solaxRegDeviceMode, 1)
+	if err != nil {
+		return false, err
+	}
 
-	return curr != 0, err
+	return binary.BigEndian.Uint16(b) != 0, nil
 }
 
 // Enable implements the api.Charger interface
 func (wb *Solax) Enable(enable bool) error {
-	var current uint16
+	var mode uint16 = 0 // "STOP"
 	if enable {
-		current = wb.curr
+		mode = 1 // "FAST"
 	}
 
-	return wb.setCurrent(current)
+	_, err := wb.conn.WriteSingleRegister(solaxRegDeviceMode, mode)
+
+	return err
 }
 
 // MaxCurrent implements the api.Charger interface
@@ -190,9 +169,9 @@ func (wb *Solax) MaxCurrentMillis(current float64) error {
 		return fmt.Errorf("invalid current %.1f", current)
 	}
 
-	wb.curr = uint16(current * 100)
+	_, err := wb.conn.WriteSingleRegister(solaxRegMaxCurrent, uint16(current*100))
 
-	return wb.setCurrent(wb.curr)
+	return err
 }
 
 var _ api.Meter = (*Solax)(nil)
