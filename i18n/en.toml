@@ -61,7 +61,16 @@ optional = "optional"
 
 [config.general]
 cancel = "Cancel"
+change = "change"
+edit = "edit"
+editEvccYaml = "Edit evcc.yaml"
+experimental = "Experimental"
+off = "off"
+on = "on"
+password = "Password"
 save = "Save"
+telemetry = "Telemetry"
+title = "Title"
 
 [config.grid]
 titleAdd = "Add Grid Meter"

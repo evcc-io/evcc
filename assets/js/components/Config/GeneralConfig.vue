@@ -2,47 +2,61 @@
 	<div class="group p-4">
 		<div class="config-items">
 			<dl class="row" data-testid="generalconfig-title">
-				<dt class="col-sm-4">Title</dt>
-				<dd class="col-sm-8">
+				<dt class="col-sm-6 text-lg-end">{{ $t("config.general.title") }}</dt>
+				<dd class="col-sm-6">
 					{{ title || "---" }}
 					<a
 						href="#"
 						class="ms-2 d-inline-block text-muted"
 						@click.prevent="openModal('titleModal')"
 					>
-						edit
+						{{ $t("config.general.edit") }}
 					</a>
 					<TitleModal ref="titleModal" @changed="load" />
 				</dd>
 			</dl>
 			<dl class="row">
-				<dt class="col-sm-4">Telemetry</dt>
-				<dd class="col-sm-8">
-					{{ telemetryEnabled ? "on" : "off" }}
+				<dt class="col-sm-6 text-lg-end">{{ $t("config.general.telemetry") }}</dt>
+				<dd class="col-sm-6">
+					{{ $t(`config.general.${telemetryEnabled ? "on" : "off"}`) }}
 					<a
 						href="#"
 						class="ms-2 d-inline-block text-muted"
 						@click.prevent="openModal('globalSettingsModal')"
 					>
-						change
+						{{ $t("config.general.change") }}
 					</a>
 				</dd>
 			</dl>
-			<dl class="row wip" data-testid="generalconfig-password">
-				<dt class="col-sm-4">Password</dt>
-				<dd class="col-sm-8">
+			<dl class="row">
+				<dt class="col-sm-6 text-lg-end">{{ $t("config.general.experimental") }} 🧪</dt>
+				<dd class="col-sm-6">
+					{{ $t(`config.general.${experimentalEnabled ? "on" : "off"}`) }}
+					<a
+						href="#"
+						class="ms-2 d-inline-block text-muted"
+						@click.prevent="openModal('globalSettingsModal')"
+					>
+						{{ $t("config.general.change") }}
+					</a>
+				</dd>
+			</dl>
+			<dl class="row" data-testid="generalconfig-password">
+				<dt class="col-sm-6 text-lg-end">{{ $t("config.general.password") }}</dt>
+				<dd class="col-sm-6">
 					*******
 					<a
 						href="#"
 						class="ms-2 d-inline-block text-muted"
 						@click.prevent="openModal('passwordModal')"
-						>edit</a
 					>
+						{{ $t("config.general.edit") }}
+					</a>
 				</dd>
 			</dl>
 			<dl class="row wip">
-				<dt class="col-sm-4">API-Key</dt>
-				<dd class="col-sm-8">
+				<dt class="col-sm-6 text-lg-end">API-Key</dt>
+				<dd class="col-sm-6">
 					*******
 					<a href="#" class="ms-2 d-inline-block text-muted" @click.prevent="todo"
 						>show</a
@@ -50,8 +64,8 @@
 				</dd>
 			</dl>
 			<dl class="row wip">
-				<dt class="col-sm-4">Sponsoring</dt>
-				<dd class="col-sm-8">
+				<dt class="col-sm-6 text-lg-end">Sponsoring</dt>
+				<dd class="col-sm-6">
 					<span class="text-primary"> valid </span>
 					<a href="#" class="ms-2 d-inline-block text-muted" @click.prevent="todo"
 						>change</a
@@ -59,8 +73,8 @@
 				</dd>
 			</dl>
 			<dl class="row wip">
-				<dt class="col-sm-4">Server</dt>
-				<dd class="col-sm-8">
+				<dt class="col-sm-6 text-lg-end">Server</dt>
+				<dd class="col-sm-6">
 					http://evcc.local:7070
 					<a href="#" class="ms-2 d-inline-block text-muted" @click.prevent="todo"
 						>edit</a
@@ -68,8 +82,8 @@
 				</dd>
 			</dl>
 			<dl class="row wip">
-				<dt class="col-sm-4">Update Interval</dt>
-				<dd class="col-sm-8">
+				<dt class="col-sm-6 text-lg-end">Update Interval</dt>
+				<dd class="col-sm-6">
 					30s
 					<a href="#" class="ms-2 d-inline-block text-muted" @click.prevent="todo"
 						>edit</a
@@ -78,9 +92,11 @@
 			</dl>
 		</div>
 		<hr class="mt-0 mb-4" />
-		<router-link to="/config/editor" class="btn btn-outline-primary btn-md">
-			Edit evcc.yaml
-		</router-link>
+		<div class="d-flex justify-content-end">
+			<router-link to="/config/editor" class="btn btn-outline-primary btn-md">
+				{{ $t("config.general.editEvccYaml") }}
+			</router-link>
+		</div>
 	</div>
 </template>
 
@@ -105,6 +121,9 @@ export default {
 	computed: {
 		telemetryEnabled() {
 			return settings.telemetry === true;
+		},
+		experimentalEnabled() {
+			return settings.hiddenFeatures === true;
 		},
 	},
 	methods: {
@@ -157,8 +176,10 @@ export default {
 }
 dt {
 	margin-bottom: 0.5rem;
+	hyphens: auto;
 }
 dd {
 	margin-bottom: 1rem;
+	hyphens: auto;
 }
 </style>

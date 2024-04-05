@@ -153,7 +153,6 @@ export default {
 </script>
 <style scoped>
 .container {
-	max-width: 900px;
 	min-height: 100vh;
 }
 </style>
