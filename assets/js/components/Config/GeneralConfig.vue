@@ -31,11 +31,10 @@
 			<dt class="col-sm-4">Password</dt>
 			<dd class="col-sm-8">
 				*******
-				<!-- TODO: update this once auth is released -->
 				<a
 					href="#"
 					class="ms-2 d-inline-block text-muted"
-					@click.prevent="todo() /* openModal('passwordModal')*/"
+					@click.prevent="openModal('passwordModal')"
 					>edit</a
 				>
 			</dd>
