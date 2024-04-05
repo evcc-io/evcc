@@ -32,6 +32,7 @@ jobs:
           key: ${{ runner.os }}-go-clean-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-go-clean-
+            ${{ runner.os }}-go-
 
       - name: Install tools
         run: make install
@@ -69,6 +70,7 @@ jobs:
           key: ${{ runner.os }}-go-build-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-go-build-
+            ${{ runner.os }}-go-
 
       - uses: actions/setup-node@v4
         with:
@@ -101,6 +103,7 @@ jobs:
           key: ${{ runner.os }}-go-test-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-go-test-
+            ${{ runner.os }}-go-
 
       - name: Test
         run: mkdir dist && touch dist/empty && make test
@@ -182,6 +185,7 @@ jobs:
           key: ${{ runner.os }}-go-integration-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-go-integration-
+            ${{ runner.os }}-go-
 
       - uses: actions/setup-node@v4
         with:
