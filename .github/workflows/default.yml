@@ -207,7 +207,7 @@ jobs:
       - name: Run tests
         uses: docker://mcr.microsoft.com/playwright:v1.34.3-jammy
         with:
-          args: npx playwright test
+          args: npx playwright install && npx playwright test
 
       - uses: actions/upload-artifact@v4
         if: always()
