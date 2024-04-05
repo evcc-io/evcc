@@ -12,20 +12,20 @@ type ThresholdsConfig struct {
 
 // ThresholdConfig defines enable/disable hysteresis parameters
 type ThresholdConfig struct {
-	Delay     time.Duration
-	Threshold float64
+	Delay     time.Duration `json:"delay"`
+	Threshold float64       `json:"threshold"`
 }
 
 // SocConfig defines soc settings, estimation and update behavior
 type SocConfig struct {
-	Poll     PollConfig `mapstructure:"poll"`
-	Estimate *bool      `mapstructure:"estimate"`
+	Poll     PollConfig `json:"poll"`
+	Estimate *bool      `json:"estimate"`
 }
 
 // PollConfig defines the vehicle polling mode and interval
 type PollConfig struct {
-	Mode     PollMode      `mapstructure:"mode"`     // polling mode charging (default), connected, always
-	Interval time.Duration `mapstructure:"interval"` // interval when not charging
+	Mode     PollMode      `json:"mode"`     // polling mode charging (default), connected, always
+	Interval time.Duration `json:"interval"` // interval when not charging
 }
 
 //go:generate enumer -type PollMode -text -transform=lower

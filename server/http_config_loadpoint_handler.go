@@ -11,19 +11,19 @@ import (
 
 type loadpointStruct struct {
 	ID             int      `json:"id"`
-	Charger        *string  `json:"charger,omitempty"`
-	Meter          *string  `json:"meter,omitempty"`
-	DefaultVehicle *string  `json:"defaultVehicle,omitempty"`
-	Title          *string  `json:"title,omitempty"`
-	Mode           *string  `json:"mode,omitempty"`
-	Priority       *int     `json:"priority,omitempty"`
-	Phases         *int     `json:"phases,omitempty"`
-	MinCurrent     *float64 `json:"minCurrent,omitempty"`
-	MaxCurrent     *float64 `json:"maxCurrent,omitempty"`
-	SmartCostLimit *float64 `json:"smartCostLimit,omitempty"`
+	Charger        *string  `json:"charger"`
+	Meter          *string  `json:"meter"`
+	DefaultVehicle *string  `json:"defaultVehicle"`
+	Title          *string  `json:"title"`
+	Mode           *string  `json:"mode"`
+	Priority       *int     `json:"priority"`
+	Phases         *int     `json:"phases"`
+	MinCurrent     *float64 `json:"minCurrent"`
+	MaxCurrent     *float64 `json:"maxCurrent"`
+	SmartCostLimit *float64 `json:"smartCostLimit"`
 
-	Thresholds *loadpoint.ThresholdsConfig `json:"thresholds,omitempty"`
-	Soc        *loadpoint.SocConfig        `json:"soc,omitempty"`
+	Thresholds *loadpoint.ThresholdsConfig `json:"thresholds"`
+	Soc        *loadpoint.SocConfig        `json:"soc"`
 }
 
 // loadpointConfig returns a single loadpoint's configuration

@@ -304,9 +304,6 @@ export default {
 			return this.getMeterById(this.selectedMeterId)?.name;
 		},
 		vehicleOptions() {
-			console.log(
-				this.vehicles.map((v) => ({ key: v.name, name: v.config?.title || v.name }))
-			);
 			return this.vehicles.map((v) => ({ key: v.name, name: v.config?.title || v.name }));
 		},
 	},
