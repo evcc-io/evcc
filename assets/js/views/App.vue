@@ -7,6 +7,8 @@
 		<GlobalSettingsModal v-bind="globalSettingsProps" />
 		<BatterySettingsModal v-if="batteryModalAvailabe" v-bind="batterySettingsProps" />
 		<HelpModal />
+		<PasswordModal />
+		<LoginModal />
 	</div>
 </template>
 
@@ -15,8 +17,11 @@ import store from "../store";
 import GlobalSettingsModal from "../components/GlobalSettingsModal.vue";
 import BatterySettingsModal from "../components/BatterySettingsModal.vue";
 import OfflineIndicator from "../components/OfflineIndicator.vue";
+import PasswordModal from "../components/PasswordModal.vue";
+import LoginModal from "../components/LoginModal.vue";
 import HelpModal from "../components/HelpModal.vue";
 import collector from "../mixins/collector";
+import { updateAuthStatus } from "../auth";
 
 // assume offline if not data received for 60 seconds
 let lastDataReceived = new Date();
@@ -30,14 +35,21 @@ setInterval(() => {
 
 export default {
 	name: "App",
-	components: { GlobalSettingsModal, HelpModal, BatterySettingsModal, OfflineIndicator },
+	components: {
+		GlobalSettingsModal,
+		HelpModal,
+		BatterySettingsModal,
+		PasswordModal,
+		LoginModal,
+		OfflineIndicator,
+	},
 	mixins: [collector],
 	props: {
 		notifications: Array,
 		offline: Boolean,
 	},
 	data: () => {
-		return { reconnectTimeout: null, ws: null };
+		return { reconnectTimeout: null, ws: null, authNotConfigured: false };
 	},
 	head() {
 		const siteTitle = store.state.siteTitle;
@@ -49,6 +61,9 @@ export default {
 				console.log("new version detected. reloading browser", { now, prev });
 				this.reload();
 			}
+		},
+		offline: function () {
+			updateAuthStatus();
 		},
 	},
 	computed: {
@@ -68,6 +83,7 @@ export default {
 	mounted: function () {
 		this.connect();
 		document.addEventListener("visibilitychange", this.pageVisibilityChanged, false);
+		updateAuthStatus();
 	},
 	unmounted: function () {
 		this.disconnect();
@@ -81,6 +97,7 @@ export default {
 				this.disconnect();
 			} else {
 				this.connect();
+				updateAuthStatus();
 			}
 		},
 		reconnect: function () {

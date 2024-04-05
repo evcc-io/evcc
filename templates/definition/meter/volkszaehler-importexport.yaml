@@ -25,16 +25,16 @@ render: |
     add:
     - source: http # import channel
       {{- if .host }}
-      uri: http://{{ .host }}:{{ .port }}/api/data/{{ .importuuid }}.json?from=now
+      uri: http://{{ .host }}:{{ .port }}/api/data/{{ trimAll "'" .importuuid }}.json?from=now
       {{ else }}
-      uri: {{ trimSuffix "/" .url }}/{{ .importuuid }}.json?from=now
+      uri: {{ trimSuffix "/" .url }}/{{ trimAll "'" .importuuid }}.json?from=now
       {{- end }}
       jq: .data.tuples[0][1] # parse response json
     - source: http # export channel
       {{- if .host }}
-      uri: http://{{ .host }}:{{ .port }}/api/data/{{ .exportuuid }}.json?from=now
+      uri: http://{{ .host }}:{{ .port }}/api/data/{{ trimAll "'" .exportuuid }}.json?from=now
       {{ else }}
-      uri: {{ trimSuffix "/" .url }}/{{ .exportuuid }}.json?from=now
+      uri: {{ trimSuffix "/" .url }}/{{ trimAll "'" .exportuuid }}.json?from=now
       {{- end }}
       jq: .data.tuples[0][1] # parse response json
       scale: -1 # export must result in negative values

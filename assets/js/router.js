@@ -2,6 +2,7 @@ import { createRouter, createWebHashHistory } from "vue-router";
 import Modal from "bootstrap/js/dist/modal";
 import Main from "./views/Main.vue";
 import { ensureCurrentLocaleMessages } from "./i18n";
+import { openLoginModal, updateAuthStatus, isLoggedIn } from "./auth";
 
 function hideAllModals() {
   [...document.querySelectorAll(".modal.show")].forEach((modal) => {
@@ -12,13 +13,32 @@ function hideAllModals() {
   });
 }
 
+async function ensureAuth() {
+  await updateAuthStatus();
+  if (!isLoggedIn()) {
+    openLoginModal();
+    return false;
+  }
+  return true;
+}
+
 export default function setupRouter(i18n) {
   const router = createRouter({
     history: createWebHashHistory(),
     routes: [
       { path: "/", component: Main, props: true },
-      { path: "/config", component: () => import("./views/Config.vue"), props: true },
-      { path: "/config/editor", component: () => import("./views/ConfigEditor.vue"), props: true },
+      {
+        path: "/config",
+        component: () => import("./views/Config.vue"),
+        beforeEnter: ensureAuth,
+        props: true,
+      },
+      {
+        path: "/config/editor",
+        component: () => import("./views/ConfigEditor.vue"),
+        beforeEnter: ensureAuth,
+        props: true,
+      },
       {
         path: "/sessions",
         component: () => import("./views/ChargingSessions.vue"),

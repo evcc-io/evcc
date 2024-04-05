@@ -4,7 +4,7 @@ import { start, stop } from "./evcc";
 const CONFIG = "plan.evcc.yaml";
 
 test.beforeEach(async () => {
-  await start(CONFIG);
+  await start(CONFIG, "password.sql");
 });
 
 test.afterEach(async () => {

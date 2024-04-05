@@ -9,6 +9,7 @@ import (
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/server/assets"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/auth"
 	"github.com/evcc-io/evcc/util/telemetry"
 	"github.com/go-http-utils/etag"
 	"github.com/gorilla/handlers"
@@ -83,7 +84,7 @@ func (s *HTTPd) Router() *mux.Router {
 }
 
 // RegisterSiteHandlers connects the http handlers to the site
-func (s *HTTPd) RegisterSiteHandlers(site site.API, cache *util.Cache) {
+func (s *HTTPd) RegisterSiteHandlers(site site.API, cache *util.Cache, auth auth.Auth) {
 	router := s.Server.Handler.(*mux.Router)
 
 	// api
@@ -98,18 +99,6 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, cache *util.Cache) {
 	routes := map[string]route{
 		"health":                  {"GET", "/health", healthHandler(site)},
 		"state":                   {"GET", "/state", stateHandler(cache)},
-		"config":                  {"GET", "/config/templates/{class:[a-z]+}", templatesHandler},
-		"products":                {"GET", "/config/products/{class:[a-z]+}", productsHandler},
-		"devices":                 {"GET", "/config/devices/{class:[a-z]+}", devicesHandler},
-		"device":                  {"GET", "/config/devices/{class:[a-z]+}/{id:[0-9.]+}", deviceConfigHandler},
-		"devicestatus":            {"GET", "/config/devices/{class:[a-z]+}/{name:[a-zA-Z0-9_.:-]+}/status", deviceStatusHandler},
-		"site":                    {"GET", "/config/site", siteHandler(site)},
-		"updatesite":              {"PUT", "/config/site", updateSiteHandler(site)},
-		"newdevice":               {"POST", "/config/devices/{class:[a-z]+}", newDeviceHandler},
-		"updatedevice":            {"PUT", "/config/devices/{class:[a-z]+}/{id:[0-9.]+}", updateDeviceHandler},
-		"deletedevice":            {"DELETE", "/config/devices/{class:[a-z]+}/{id:[0-9.]+}", deleteDeviceHandler},
-		"testconfig":              {"POST", "/config/test/{class:[a-z]+}", testConfigHandler},
-		"testmerged":              {"POST", "/config/test/{class:[a-z]+}/merge/{id:[0-9.]+}", testConfigHandler},
 		"buffersoc":               {"POST", "/buffersoc/{value:[0-9.]+}", floatHandler(site.SetBufferSoc, site.GetBufferSoc)},
 		"bufferstartsoc":          {"POST", "/bufferstartsoc/{value:[0-9.]+}", floatHandler(site.SetBufferStartSoc, site.GetBufferStartSoc)},
 		"batterydischargecontrol": {"POST", "/batterydischargecontrol/{value:[a-z]+}", boolHandler(site.SetBatteryDischargeControl, site.GetBatteryDischargeControl)},
@@ -122,10 +111,37 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, cache *util.Cache) {
 		"deletesession":           {"DELETE", "/session/{id:[0-9]+}", deleteSessionHandler},
 		"telemetry":               {"GET", "/settings/telemetry", boolGetHandler(telemetry.Enabled)},
 		"telemetry2":              {"POST", "/settings/telemetry/{value:[a-z]+}", boolHandler(telemetry.Enable, telemetry.Enabled)},
+		"password":                {"PUT", "/auth/password", updatePasswordHandler(auth)},
+		"auth":                    {"GET", "/auth/status", authStatusHandler(auth)},
+		"login":                   {"POST", "/auth/login", loginHandler(auth)},
+		"logout":                  {"POST", "/auth/logout", logoutHandler},
 	}
 
 	for _, r := range routes {
 		api.Methods(r.Methods()...).Path(r.Pattern).Handler(r.HandlerFunc)
+	}
+
+	// config ui (secured)
+	configApi := api.PathPrefix("/config").Subrouter()
+	configApi.Use(ensureAuthHandler(auth))
+
+	configRoutes := map[string]route{
+		"templates":    {"GET", "/templates/{class:[a-z]+}", templatesHandler},
+		"products":     {"GET", "/products/{class:[a-z]+}", productsHandler},
+		"devices":      {"GET", "/devices/{class:[a-z]+}", devicesHandler},
+		"device":       {"GET", "/devices/{class:[a-z]+}/{id:[0-9.]+}", deviceConfigHandler},
+		"devicestatus": {"GET", "/devices/{class:[a-z]+}/{name:[a-zA-Z0-9_.:-]+}/status", deviceStatusHandler},
+		"site":         {"GET", "/site", siteHandler(site)},
+		"updatesite":   {"PUT", "/site", updateSiteHandler(site)},
+		"newdevice":    {"POST", "/devices/{class:[a-z]+}", newDeviceHandler},
+		"updatedevice": {"PUT", "/devices/{class:[a-z]+}/{id:[0-9.]+}", updateDeviceHandler},
+		"deletedevice": {"DELETE", "/devices/{class:[a-z]+}/{id:[0-9.]+}", deleteDeviceHandler},
+		"testconfig":   {"POST", "/test/{class:[a-z]+}", testConfigHandler},
+		"testmerged":   {"POST", "/test/{class:[a-z]+}/merge/{id:[0-9.]+}", testConfigHandler},
+	}
+
+	for _, r := range configRoutes {
+		configApi.Methods(r.Methods()...).Path(r.Pattern).Handler(r.HandlerFunc)
 	}
 
 	// vehicle api
@@ -178,18 +194,16 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, cache *util.Cache) {
 }
 
 // RegisterBasicHandlers connects the http handlers to the site
-func (s *HTTPd) RegisterBasicHandlers(configFile string, shutdownCallback func()) {
+func (s *HTTPd) RegisterBasicHandlers(configFile string, auth auth.Auth, shutdownCallback func()) {
 	router := s.Server.Handler.(*mux.Router)
 
 	// api
 	api := router.PathPrefix("/api").Subrouter()
 	api.Use(jsonHandler)
 	api.Use(handlers.CompressHandler)
-	api.Use(handlers.CORS(
-		handlers.AllowedHeaders([]string{"Content-Type"}),
-	))
+	api.Use(handlers.CORS(handlers.AllowedHeaders([]string{"Content-Type"})))
+	api.Use(ensureAuthHandler(auth))
 
-	// site api
 	routes := map[string]route{
 		"shutdown": {"POST", "/shutdown", func(w http.ResponseWriter, r *http.Request) {
 			shutdownCallback()
