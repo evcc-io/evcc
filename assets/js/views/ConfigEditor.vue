@@ -107,7 +107,7 @@ export default {
 			return this.collectProps(Restart);
 		},
 		errors: function () {
-			return this.saved ? [] : store.state.fatal;
+			return this.saved ? [] : store.state.fatal || [];
 		},
 		errorLine: function () {
 			return this.saved ? undefined : store.state.line;

@@ -433,6 +433,7 @@ export default {
 }
 .wip {
 	opacity: 0.2 !important;
+	display: none !important;
 }
 .mb-6 {
 	margin-bottom: 5rem;
