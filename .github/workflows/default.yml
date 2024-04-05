@@ -18,12 +18,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # - uses: actions/setup-go@v5
-      - uses: erezrokah/setup-go@feat/add_cache_prefix
+      - uses: actions/setup-go@v5
         with:
           go-version: ${{ env.GO_VERSION }}
-          cache-key-prefix: clean-cache-
+          cache: false
         id: go
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-clean-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-clean-
 
       - name: Install tools
         run: make install
@@ -47,11 +55,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: erezrokah/setup-go@feat/add_cache_prefix
+      - uses: actions/setup-go@v5
         with:
           go-version: ${{ env.GO_VERSION }}
-          cache-key-prefix: build-cache-
+          cache: false
         id: go
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-build-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-build-
 
       - uses: actions/setup-node@v4
         with:
@@ -70,12 +87,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # - uses: actions/setup-go@v5
-      - uses: erezrokah/setup-go@feat/add_cache_prefix
+      - uses: actions/setup-go@v5
         with:
           go-version: ${{ env.GO_VERSION }}
-          cache-key-prefix: test-cache-
+          cache: false
         id: go
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-test-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-test-
 
       - name: Test
         run: mkdir dist && touch dist/empty && make test
@@ -143,11 +168,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: erezrokah/setup-go@feat/add_cache_prefix
+      - uses: actions/setup-go@v5
         with:
           go-version: ${{ env.GO_VERSION }}
-          cache-key-prefix: integration-cache-
+          cache: false
         id: go
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-integration-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-integration-
 
       - uses: actions/setup-node@v4
         with:
