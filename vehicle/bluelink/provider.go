@@ -126,9 +126,11 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 		if res.EvStatus.BatteryCharge {
 			status = api.StatusC
 		}
+	} else {
+		err = api.ErrNotAvailable
 	}
 
-	return status, api.ErrNotAvailable
+	return status, err
 }
 
 var _ api.VehicleFinishTimer = (*Provider)(nil)
