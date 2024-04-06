@@ -61,6 +61,7 @@ type Easee struct {
 	pilotMode               string
 	reasonForNoCurrent      int
 	phaseMode               int
+	outputPhase             int
 	sessionStartEnergy      *float64
 	currentPower, sessionEnergy, totalEnergy,
 	currentL1, currentL2, currentL3 float64
@@ -308,6 +309,8 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 		c.currentL3 = value.(float64)
 	case easee.PHASE_MODE:
 		c.phaseMode = value.(int)
+	case easee.OUTPUT_PHASE:
+		c.outputPhase = value.(int) / 10 //API gives 0,10,30 for 0,1,3p
 	case easee.DYNAMIC_CHARGER_CURRENT:
 		c.dynamicChargerCurrent = value.(float64)
 
@@ -804,7 +807,7 @@ var _ api.PhaseGetter = (*Easee)(nil)
 func (c *Easee) GetPhases() (int, error) {
 	c.mux.RLock()
 	defer c.mux.RUnlock()
-	return c.phaseMode, nil
+	return c.outputPhase, nil
 }
 
 var _ api.Identifier = (*Easee)(nil)
