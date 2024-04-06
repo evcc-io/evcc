@@ -145,9 +145,6 @@ export default {
 		async restartConfirmed() {
 			try {
 				await api.post("shutdown");
-				alert(
-					"Server was stopped successfully. Waiting for the operating system to start evcc again."
-				);
 			} catch (e) {
 				alert("Unabled to restart server.");
 			}

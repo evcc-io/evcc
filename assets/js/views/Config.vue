@@ -1,38 +1,9 @@
 <template>
 	<div class="root safe-area-inset">
 		<div class="container px-4">
-			<TopHeader title="Configuration 🧪" />
+			<TopHeader :title="$t('config.main.title')" />
 			<div class="wrapper">
-				<div
-					v-if="dirty"
-					class="alert alert-secondary d-flex justify-content-between align-items-center my-4"
-					role="alert"
-				>
-					<div v-if="restarting"><strong>Restarting evcc.</strong> Please wait ...</div>
-					<div v-else>
-						<strong>Configuration changed.</strong> Please restart to see the effect.
-					</div>
-					<button
-						type="button"
-						class="btn btn-outline-dark btn-sm"
-						:disabled="restarting || offline"
-						@click="restart"
-					>
-						<span
-							v-if="restarting || offline"
-							class="spinner-border spinner-border-sm"
-							role="status"
-							aria-hidden="true"
-						></span>
-						<span v-else> Restart </span>
-					</button>
-				</div>
-
-				<div class="alert alert-danger my-4" role="alert">
-					<strong>Highly experimental!</strong> Only play around with these settings if
-					you know what you're doing. Otherwise you might have to reset or manually repair
-					your database.
-				</div>
+				<Restart ref="restart" v-bind="restartProps" />
 
 				<h2 class="my-4 mt-5">General</h2>
 				<GeneralConfig @site-changed="siteChanged" />
@@ -233,11 +204,13 @@ import api from "../api";
 import VehicleIcon from "../components/VehicleIcon";
 import VehicleModal from "../components/Config/VehicleModal.vue";
 import DeviceCard from "../components/Config/DeviceCard.vue";
+import Restart from "../components/Config/Restart.vue";
 import DeviceTags from "../components/Config/DeviceTags.vue";
 import AddDeviceButton from "../components/Config/AddDeviceButton.vue";
 import MeterModal from "../components/Config/MeterModal.vue";
 import GeneralConfig from "../components/Config/GeneralConfig.vue";
 import formatter from "../mixins/formatter";
+import collector from "../mixins/collector";
 
 export default {
 	name: "Config",
@@ -250,6 +223,7 @@ export default {
 		DeviceTags,
 		AddDeviceButton,
 		MeterModal,
+		Restart,
 	},
 	props: {
 		offline: Boolean,
@@ -257,8 +231,6 @@ export default {
 	},
 	data() {
 		return {
-			dirty: false,
-			restarting: false,
 			vehicles: [],
 			meters: [],
 			selectedVehicleId: undefined,
@@ -269,7 +241,7 @@ export default {
 			deviceValues: {},
 		};
 	},
-	mixins: [formatter],
+	mixins: [formatter, collector],
 	computed: {
 		siteTitle() {
 			return this.site?.title;
@@ -288,6 +260,9 @@ export default {
 		},
 		selectedMeterName() {
 			return this.getMeterById(this.selectedMeterId)?.name;
+		},
+		restartProps() {
+			return this.collectProps(Restart);
 		},
 	},
 	watch: {
@@ -313,12 +288,7 @@ export default {
 			await this.updateValues();
 		},
 		async loadDirty() {
-			try {
-				const response = await api.get("/config/dirty");
-				this.dirty = response.data?.result;
-			} catch (e) {
-				console.error(e);
-			}
+			await this.$refs.restart.loadDirty();
 		},
 		async loadVehicles() {
 			const response = await api.get("/config/devices/vehicle");
@@ -413,14 +383,6 @@ export default {
 		},
 		todo() {
 			alert("not implemented yet");
-		},
-		async restart() {
-			try {
-				await api.post("shutdown");
-				this.restarting = true;
-			} catch (e) {
-				alert("Unabled to restart server.");
-			}
 		},
 		async updateDeviceValue(type, name) {
 			try {
