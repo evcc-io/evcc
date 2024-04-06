@@ -48,7 +48,7 @@ type Easee struct {
 	lastEnergyPollTriggered time.Time
 	lastOpModePollTriggered time.Time
 	log                     *util.Logger
-	mux                     sync.Mutex
+	mux                     sync.RWMutex
 	lastEnergyPollMux       sync.Mutex
 	done                    chan struct{}
 	dynamicChargerCurrent   float64
@@ -61,6 +61,7 @@ type Easee struct {
 	pilotMode               string
 	reasonForNoCurrent      int
 	phaseMode               int
+	outputPhase             int
 	sessionStartEnergy      *float64
 	currentPower, sessionEnergy, totalEnergy,
 	currentL1, currentL2, currentL3 float64
@@ -308,6 +309,8 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 		c.currentL3 = value.(float64)
 	case easee.PHASE_MODE:
 		c.phaseMode = value.(int)
+	case easee.OUTPUT_PHASE:
+		c.outputPhase = value.(int) / 10 //API gives 0,10,30 for 0,1,3p
 	case easee.DYNAMIC_CHARGER_CURRENT:
 		c.dynamicChargerCurrent = value.(float64)
 
@@ -413,8 +416,8 @@ func (c *Easee) Status() (api.ChargeStatus, error) {
 	c.updateSmartCharging()
 	c.confirmStatusConsistency()
 
-	c.mux.Lock()
-	defer c.mux.Unlock()
+	c.mux.RLock()
+	defer c.mux.RUnlock()
 
 	res := api.StatusNone
 
@@ -435,6 +438,8 @@ func (c *Easee) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (c *Easee) Enabled() (bool, error) {
+	c.mux.RLock()
+	defer c.mux.RUnlock()
 	return c.enabled, nil
 }
 
@@ -505,8 +510,8 @@ func (c *Easee) Enable(enable bool) (err error) {
 }
 
 func (c *Easee) inExpectedOpMode(enable bool) bool {
-	c.mux.Lock()
-	defer c.mux.Unlock()
+	c.mux.RLock()
+	defer c.mux.RUnlock()
 
 	// start/resume
 	if enable {
@@ -606,12 +611,12 @@ func (c *Easee) waitForChargerEnabledState(expEnabled bool) error {
 // wait for current become targetCurrent
 func (c *Easee) waitForDynamicChargerCurrent(targetCurrent float64) error {
 	// check any updates received meanwhile
-	c.mux.Lock()
+	c.mux.RLock()
 	if c.dynamicChargerCurrent == targetCurrent {
-		c.mux.Unlock()
+		c.mux.RUnlock()
 		return nil
 	}
-	c.mux.Unlock()
+	c.mux.RUnlock()
 
 	timer := time.NewTimer(c.Client.Timeout)
 	for {
@@ -628,8 +633,8 @@ func (c *Easee) waitForDynamicChargerCurrent(targetCurrent float64) error {
 				return nil
 			}
 		case <-timer.C: // time is up, bail after one final check
-			c.mux.Lock()
-			defer c.mux.Unlock()
+			c.mux.RLock()
+			defer c.mux.RUnlock()
 			if c.dynamicChargerCurrent == targetCurrent {
 				return nil
 			}
@@ -668,9 +673,70 @@ var _ api.CurrentGetter = (*Easee)(nil)
 
 // GetMaxCurrent implements the api.CurrentGetter interface
 func (c *Easee) GetMaxCurrent() (float64, error) {
-	c.mux.Lock()
-	defer c.mux.Unlock()
+	c.mux.RLock()
+	defer c.mux.RUnlock()
 	return c.dynamicChargerCurrent, nil
+}
+
+var _ api.Meter = (*Easee)(nil)
+
+// CurrentPower implements the api.Meter interface
+func (c *Easee) CurrentPower() (float64, error) {
+	if status, err := c.Status(); err != nil || status == api.StatusA {
+		return 0, err
+	}
+
+	c.mux.RLock()
+	defer c.mux.RUnlock()
+
+	return c.currentPower, nil
+}
+
+func (c *Easee) requestLifetimeEnergyUpdate() {
+	c.lastEnergyPollMux.Lock()
+	defer c.lastEnergyPollMux.Unlock()
+	if time.Since(c.lastEnergyPollTriggered) > time.Minute*3 { // api rate limit, max once in 3 minutes
+		uri := fmt.Sprintf("%s/chargers/%s/commands/%s", easee.API, c.charger, easee.PollLifetimeEnergy)
+		if _, err := c.Post(uri, request.JSONContent, request.MarshalJSON(nil)); err != nil {
+			c.log.WARN.Printf("Failed to trigger an update of LIFETIME_ENERGY: %v", err)
+		}
+		c.lastEnergyPollTriggered = time.Now()
+	}
+}
+
+var _ api.ChargeRater = (*Easee)(nil)
+
+// ChargedEnergy implements the api.ChargeRater interface
+func (c *Easee) ChargedEnergy() (float64, error) {
+	c.mux.RLock()
+	defer c.mux.RUnlock()
+
+	// return either the self calced session energy (current LIFETIME_ENERGY minus remembered start value),
+	// or the SESSION_ENERGY value by the API. Each value could be lower than the other, depending on
+	// order and receive timestamp of the product update. We want to return the higher (and newer) value.
+	if c.sessionStartEnergy != nil {
+		return max(c.sessionEnergy, c.totalEnergy-*c.sessionStartEnergy), nil
+	}
+
+	return c.sessionEnergy, nil
+}
+
+var _ api.PhaseCurrents = (*Easee)(nil)
+
+// Currents implements the api.PhaseCurrents interface
+func (c *Easee) Currents() (float64, float64, float64, error) {
+	c.mux.RLock()
+	defer c.mux.RUnlock()
+	return c.currentL1, c.currentL2, c.currentL3, nil
+}
+
+var _ api.MeterEnergy = (*Easee)(nil)
+
+// TotalEnergy implements the api.MeterEnergy interface
+func (c *Easee) TotalEnergy() (float64, error) {
+	c.mux.RLock()
+	defer c.mux.RUnlock()
+	return c.totalEnergy, nil
 }
 
 var _ api.PhaseSwitcher = (*Easee)(nil)
@@ -734,67 +800,13 @@ func (c *Easee) Phases1p3p(phases int) error {
 	return err
 }
 
-var _ api.Meter = (*Easee)(nil)
+var _ api.PhaseGetter = (*Easee)(nil)
 
-// CurrentPower implements the api.Meter interface
-func (c *Easee) CurrentPower() (float64, error) {
-	if status, err := c.Status(); err != nil || status == api.StatusA {
-		return 0, err
-	}
-
-	c.mux.Lock()
-	defer c.mux.Unlock()
-
-	return c.currentPower, nil
-}
-
-func (c *Easee) requestLifetimeEnergyUpdate() {
-	c.lastEnergyPollMux.Lock()
-	defer c.lastEnergyPollMux.Unlock()
-	if time.Since(c.lastEnergyPollTriggered) > time.Minute*3 { // api rate limit, max once in 3 minutes
-		uri := fmt.Sprintf("%s/chargers/%s/commands/%s", easee.API, c.charger, easee.PollLifetimeEnergy)
-		if _, err := c.Post(uri, request.JSONContent, request.MarshalJSON(nil)); err != nil {
-			c.log.WARN.Printf("Failed to trigger an update of LIFETIME_ENERGY: %v", err)
-		}
-		c.lastEnergyPollTriggered = time.Now()
-	}
-}
-
-var _ api.ChargeRater = (*Easee)(nil)
-
-// ChargedEnergy implements the api.ChargeRater interface
-func (c *Easee) ChargedEnergy() (float64, error) {
-	c.mux.Lock()
-	defer c.mux.Unlock()
-
-	// return either the self calced session energy (current LIFETIME_ENERGY minus remembered start value),
-	// or the SESSION_ENERGY value by the API. Each value could be lower than the other, depending on
-	// order and receive timestamp of the product update. We want to return the higher (and newer) value.
-	if c.sessionStartEnergy != nil {
-		return max(c.sessionEnergy, c.totalEnergy-*c.sessionStartEnergy), nil
-	}
-
-	return c.sessionEnergy, nil
-}
-
-var _ api.PhaseCurrents = (*Easee)(nil)
-
-// Currents implements the api.PhaseCurrents interface
-func (c *Easee) Currents() (float64, float64, float64, error) {
-	c.mux.Lock()
-	defer c.mux.Unlock()
-
-	return c.currentL1, c.currentL2, c.currentL3, nil
-}
-
-var _ api.MeterEnergy = (*Easee)(nil)
-
-// TotalEnergy implements the api.MeterEnergy interface
-func (c *Easee) TotalEnergy() (float64, error) {
-	c.mux.Lock()
-	defer c.mux.Unlock()
-
-	return c.totalEnergy, nil
+// GetPhases implements the api.PhaseGetter interface
+func (c *Easee) GetPhases() (int, error) {
+	c.mux.RLock()
+	defer c.mux.RUnlock()
+	return c.outputPhase, nil
 }
 
 var _ api.Identifier = (*Easee)(nil)
