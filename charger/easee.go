@@ -440,7 +440,6 @@ func (c *Easee) Status() (api.ChargeStatus, error) {
 func (c *Easee) Enabled() (bool, error) {
 	c.mux.RLock()
 	defer c.mux.RUnlock()
-
 	return c.enabled, nil
 }
 
