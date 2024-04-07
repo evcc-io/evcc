@@ -21,6 +21,10 @@ func All(areas, levels []string) []string {
 	return DefaultHandler.All(areas, levels)
 }
 
+func Size() int64 {
+	return DefaultHandler.Size()
+}
+
 type logger struct {
 	mu   sync.RWMutex
 	data *ring.Ring
@@ -47,6 +51,23 @@ func (l *logger) Write(p []byte) (n int, err error) {
 	l.data = l.data.Next()
 
 	return len(p), nil
+}
+
+func (l *logger) Size() int64 {
+	l.mu.RLock()
+	defer l.mu.RUnlock()
+
+	r := l.data
+	var size int64
+
+	for i := 0; i < r.Len(); i++ {
+		if e, ok := r.Value.(element); ok {
+			size += int64(len(e.msg))
+		}
+		r = r.Next()
+	}
+
+	return size
 }
 
 func (l *logger) Areas() []string {
