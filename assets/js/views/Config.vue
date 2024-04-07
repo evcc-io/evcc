@@ -143,8 +143,14 @@
 				</div>
 				<h2 class="my-4 wip">Integrations</h2>
 
-				<ul class="p-0 config-list wip">
-					<DeviceCard name="MQTT" unconfigured data-testid="mqtt" @configure="todo">
+				<ul class="p-0 config-list">
+					<DeviceCard
+						name="MQTT"
+						editable
+						data-testid="mqtt"
+						@configure="openModal('mqttModal')"
+						@edit="openModal('mqttModal')"
+					>
 						<template #icon>
 							<shopicon-regular-fastdelivery1></shopicon-regular-fastdelivery1>
 						</template>
@@ -181,6 +187,7 @@
 					@updated="meterChanged"
 					@removed="removeMeterFromSite"
 				/>
+				<MqttModal />
 			</div>
 		</div>
 	</div>
@@ -208,6 +215,7 @@ import Restart from "../components/Config/Restart.vue";
 import DeviceTags from "../components/Config/DeviceTags.vue";
 import AddDeviceButton from "../components/Config/AddDeviceButton.vue";
 import MeterModal from "../components/Config/MeterModal.vue";
+import MqttModal from "../components/Config/MqttModal.vue";
 import GeneralConfig from "../components/Config/GeneralConfig.vue";
 import formatter from "../mixins/formatter";
 import collector from "../mixins/collector";
@@ -224,6 +232,7 @@ export default {
 		AddDeviceButton,
 		MeterModal,
 		Restart,
+		MqttModal,
 	},
 	props: {
 		offline: Boolean,
@@ -408,6 +417,14 @@ export default {
 		},
 		deviceTags(type, id) {
 			return this.deviceValues[type]?.[id] || [];
+		},
+		openModal(id) {
+			const $el = document.getElementById(id);
+			if ($el) {
+				Modal.getOrCreateInstance($el).show();
+			} else {
+				console.error(`modal ${id} not found`);
+			}
 		},
 	},
 };

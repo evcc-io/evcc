@@ -141,6 +141,27 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, cache *util.Cache) {
 		"deletedevice": {"DELETE", "/devices/{class:[a-z]+}/{id:[0-9.]+}", deleteDeviceHandler},
 		"testconfig":   {"POST", "/test/{class:[a-z]+}", testConfigHandler},
 		"testmerged":   {"POST", "/test/{class:[a-z]+}/merge/{id:[0-9.]+}", testConfigHandler},
+		// new endpoints ⤵︎
+		"mqtt":                {"GET", "/mqtt", updateMqttHandler},
+		"updatemqtt":          {"PUT", "/mqtt", updateMqttHandler},
+		"influx":              {"GET", "/influx", influxHandler},
+		"updateinflux":        {"PUT", "/influx", updateInfluxHandler},
+		"eebus":               {"GET", "/eebus", eebusHandler},
+		"updateeebus":         {"PUT", "/eebus", updateEebusHandler},
+		"tariffs":             {"GET", "/tariffs", tariffsHandler},
+		"updatetariffs":       {"PUT", "/tariffs", updateTariffsHandler},
+		"messaging":           {"GET", "/messaging", messagingHandler},
+		"updatemessaging":     {"PUT", "/messaging", updateMessagingHandler},
+		"modbusproxy":         {"GET", "/modbusproxy", modbusProxyHandler},
+		"updatemodbusproxy":   {"PUT", "/modbusproxy", updateModbusProxyHandler},
+		"interval":            {"GET", "/interval", intervalHandler},
+		"updateinterval":      {"PUT", "/interval/{value:[0-9]+}", updateIntervalHandler},
+		"sponsortatus":        {"GET", "/sponsortatus", sponsorStatusHandler},
+		"updatesponsortoken":  {"PUT", "/sponsortoken/{token:[a-zA-Z0-9]+}", updateSponsortokenHandler},
+		"network":             {"GET", "/network", networkHandler},
+		"updatenetwork":       {"PUT", "/network", updateNetworkHandler},
+		"maxgridsupply":       {"GET", "/maxgridsupply", maxGridSupplyWhileBatteryChargingHandler},
+		"updatemaxgridsupply": {"PUT", "/maxgridsupply/{value:[0-9.]+}", updateMaxGridSupplyWhileBatteryChargingHandler},
 	}
 
 	for _, r := range configRoutes {
