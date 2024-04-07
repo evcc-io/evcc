@@ -6,7 +6,6 @@ import (
 	"slices"
 	"strings"
 	"sync"
-	"unicode"
 
 	"golang.org/x/exp/maps"
 )
@@ -43,7 +42,7 @@ func (l *logger) Write(p []byte) (n int, err error) {
 	defer l.mu.Unlock()
 
 	if !strings.HasPrefix(string(p), "[cache ]") {
-		l.data.Value = element(strings.TrimRightFunc(string(p), unicode.IsSpace))
+		l.data.Value = element(strings.TrimSpace(string(p)))
 		l.data = l.data.Next()
 	}
 
