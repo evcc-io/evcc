@@ -21,7 +21,7 @@ params:
     required: true
     example: EH______
   - name: timeout
-    default: 10s
+    default: 20s
   - name: authorize
     help:
       de: Steuert ob evcc die Authentifizierung am Charger vornimmt. Vorteil ist ein kontrollierter Ladestart. Nicht kompatibel mit RFID Identifikation von Fahrzeugen.
