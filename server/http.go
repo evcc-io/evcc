@@ -142,7 +142,7 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, cache *util.Cache) {
 		"testconfig":   {"POST", "/test/{class:[a-z]+}", testConfigHandler},
 		"testmerged":   {"POST", "/test/{class:[a-z]+}/merge/{id:[0-9.]+}", testConfigHandler},
 		// new endpoints ⤵︎
-		"mqtt":                {"GET", "/mqtt", updateMqttHandler},
+		"mqtt":                {"GET", "/mqtt", mqttHandler},
 		"updatemqtt":          {"PUT", "/mqtt", updateMqttHandler},
 		"influx":              {"GET", "/influx", influxHandler},
 		"updateinflux":        {"PUT", "/influx", updateInfluxHandler},

@@ -50,7 +50,6 @@ func influxHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	jsonResult(w, res)
-
 }
 
 func updateInfluxHandler(w http.ResponseWriter, r *http.Request) {
