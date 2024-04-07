@@ -253,8 +253,8 @@ func logAreasHandler(w http.ResponseWriter, r *http.Request) {
 func logHandler(w http.ResponseWriter, r *http.Request) {
 	a := r.URL.Query()["area"]
 	l := r.URL.Query()["level"]
-	for i, v := range a {
-		a[i] = strings.ToUpper(v)
+	for i, v := range l {
+		l[i] = strings.ToUpper(v)
 	}
 	jsonResult(w, logstash.All(a, l))
 }

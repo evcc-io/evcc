@@ -3,18 +3,14 @@ package logstash
 import (
 	"regexp"
 	"slices"
-	"time"
 )
 
-type element struct {
-	ts  time.Time
-	msg string
-}
+type element string
 
 var re = regexp.MustCompile(`^\[([a-zA-Z0-9-]+)\s*\] (\w+) `)
 
 func (e element) areaLevel() (string, string) {
-	m := re.FindAllStringSubmatch(e.msg, 1)
+	m := re.FindAllStringSubmatch(string(e), 1)
 	if len(m) != 1 && len(m[0]) != 3 {
 		return "", ""
 	}

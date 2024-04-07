@@ -6,7 +6,7 @@ import (
 	"slices"
 	"strings"
 	"sync"
-	"time"
+	"unicode"
 
 	"golang.org/x/exp/maps"
 )
@@ -42,11 +42,10 @@ func (l *logger) Write(p []byte) (n int, err error) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 
-	l.data.Value = element{
-		ts:  time.Now(),
-		msg: strings.TrimSpace(string(p)),
+	if !strings.HasPrefix(string(p), "[cache ]") {
+		l.data.Value = element(strings.TrimRightFunc(string(p), unicode.IsSpace))
+		l.data = l.data.Next()
 	}
-	l.data = l.data.Next()
 
 	return len(p), nil
 }
@@ -60,7 +59,7 @@ func (l *logger) Size() int64 {
 
 	for i := 0; i < r.Len(); i++ {
 		if e, ok := r.Value.(element); ok {
-			size += int64(len(e.msg))
+			size += int64(len(e))
 		}
 		r = r.Next()
 	}
@@ -98,8 +97,8 @@ func (l *logger) All(areas, levels []string) []string {
 
 	var res []string
 	for i := 0; i < r.Len(); i++ {
-		if e, ok := r.Value.(element); ok && !e.ts.IsZero() && (all || e.match(areas, levels)) {
-			res = append(res, e.msg)
+		if e, ok := r.Value.(element); ok && e != "" && (all || e.match(areas, levels)) {
+			res = append(res, string(e))
 		}
 		r = r.Next()
 	}
