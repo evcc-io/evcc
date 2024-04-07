@@ -101,6 +101,8 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, cache *util.Cache) {
 	routes := map[string]route{
 		"health":                  {"GET", "/health", healthHandler(site)},
 		"state":                   {"GET", "/state", stateHandler(cache)},
+		"log":                     {"GET", "/log", logHandler},
+		"logareas":                {"GET", "/log/areas", logAreasHandler},
 		"buffersoc":               {"POST", "/buffersoc/{value:[0-9.]+}", floatHandler(site.SetBufferSoc, site.GetBufferSoc)},
 		"bufferstartsoc":          {"POST", "/bufferstartsoc/{value:[0-9.]+}", floatHandler(site.SetBufferStartSoc, site.GetBufferStartSoc)},
 		"batterydischargecontrol": {"POST", "/batterydischargecontrol/{value:[a-z]+}", boolHandler(site.SetBatteryDischargeControl, site.GetBatteryDischargeControl)},

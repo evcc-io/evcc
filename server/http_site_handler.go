@@ -16,6 +16,7 @@ import (
 	"github.com/evcc-io/evcc/server/assets"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/jq"
+	"github.com/evcc-io/evcc/util/logstash"
 	"github.com/gorilla/mux"
 	"github.com/itchyny/gojq"
 	"golang.org/x/text/language"
@@ -243,4 +244,15 @@ func socketHandler(hub *SocketHub) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		hub.ServeWebsocket(w, r)
 	}
+}
+
+func logAreasHandler(w http.ResponseWriter, r *http.Request) {
+	a := r.URL.Query()["area"]
+	l := r.URL.Query()["level"]
+
+	jsonResult(w, logstash.All(a, l))
+}
+
+func logHandler(w http.ResponseWriter, r *http.Request) {
+	jsonResult(w, logstash.Areas())
 }
