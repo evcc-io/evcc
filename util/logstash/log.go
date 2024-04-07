@@ -2,7 +2,6 @@ package logstash
 
 import (
 	"container/ring"
-	"fmt"
 	"io"
 	"slices"
 	"strings"
@@ -40,8 +39,6 @@ func New(size int) *logger {
 var _ io.Writer = (*logger)(nil)
 
 func (l *logger) Write(p []byte) (n int, err error) {
-	fmt.Println(" -- ", string(p))
-
 	l.mu.Lock()
 	defer l.mu.Unlock()
 
