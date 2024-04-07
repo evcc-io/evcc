@@ -247,12 +247,14 @@ func socketHandler(hub *SocketHub) http.HandlerFunc {
 }
 
 func logAreasHandler(w http.ResponseWriter, r *http.Request) {
-	a := r.URL.Query()["area"]
-	l := r.URL.Query()["level"]
-
-	jsonResult(w, logstash.All(a, l))
+	jsonResult(w, logstash.Areas())
 }
 
 func logHandler(w http.ResponseWriter, r *http.Request) {
-	jsonResult(w, logstash.Areas())
+	a := r.URL.Query()["area"]
+	l := r.URL.Query()["level"]
+	for i, v := range a {
+		a[i] = strings.ToUpper(v)
+	}
+	jsonResult(w, logstash.All(a, l))
 }

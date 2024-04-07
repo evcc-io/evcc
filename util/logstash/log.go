@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"slices"
+	"strings"
 	"sync"
 	"time"
 
@@ -46,7 +47,7 @@ func (l *logger) Write(p []byte) (n int, err error) {
 
 	l.data.Value = element{
 		ts:  time.Now(),
-		msg: string(p),
+		msg: strings.TrimSpace(string(p)),
 	}
 	l.data = l.data.Next()
 
