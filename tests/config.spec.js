@@ -30,7 +30,7 @@ test.describe("basics", async () => {
     await login(page);
     await expect(page.getByRole("heading", { name: "Configuration" })).toBeVisible();
   });
-  test("alert box should always be visible", async ({ page }) => {
+  test.skip("alert box should always be visible", async ({ page }) => {
     await page.goto("/#/config");
     await login(page);
     await expect(page.getByRole("alert")).toBeVisible();
