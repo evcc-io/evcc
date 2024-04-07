@@ -81,6 +81,14 @@ template = "Manufacturer"
 titleChoice = "What Do You Want To Add?"
 validateSave = "Validate & save"
 
+[config.mqtt]
+brokerLabel = "Server"
+passwordLabel = "Password"
+title = "MQTT Integration"
+topicDescription = "Leave empty to disable publishing."
+topicLabel = "Topic"
+userLabel = "Username"
+
 [config.pv]
 titleAdd = "Add Solar Meter"
 titleEdit = "Edit Solar Meter"
@@ -306,14 +314,6 @@ pv = "Solar"
 [main.provider]
 login = "log in"
 logout = "log out"
-
-[config.mqtt]
-title = "MQTT Integration"
-brokerLabel = "Server"
-userLabel= "Username"
-passwordLabel = "Password"
-topicLabel = "Topic"
-topicDescription = "Leave empty to disable publishing."
 
 [main.targetCharge]
 activate = "Activate"
