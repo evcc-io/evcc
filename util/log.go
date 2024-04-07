@@ -8,6 +8,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/evcc-io/evcc/util/logstash"
 	jww "github.com/spf13/jwalterweatherman"
 )
 
@@ -59,7 +60,7 @@ func newLogger(area string, lp int) *Logger {
 
 	level := logLevelForArea(area)
 	redactor := new(Redactor)
-	notepad := jww.NewNotepad(level, level, redactor, logstash.Handler, padded, log.Ldate|log.Ltime)
+	notepad := jww.NewNotepad(level, level, redactor, logstash.DefaultHandler, padded, log.Ldate|log.Ltime)
 
 	logger := &Logger{
 		Notepad:  notepad,

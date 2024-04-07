@@ -11,14 +11,14 @@ import (
 	"golang.org/x/exp/maps"
 )
 
-var defaultHandler = New(10000)
+var DefaultHandler = New(10000)
 
 func Areas() []string {
-	return defaultHandler.Areas()
+	return DefaultHandler.Areas()
 }
 
 func All(areas, levels []string) []string {
-	return defaultHandler.All(areas, levels)
+	return DefaultHandler.All(areas, levels)
 }
 
 type logger struct {
