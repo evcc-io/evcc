@@ -16,8 +16,8 @@ func Areas() []string {
 	return DefaultHandler.Areas()
 }
 
-func All(areas, levels []string) []string {
-	return DefaultHandler.All(areas, levels)
+func All(areas, levels []string, count int) []string {
+	return DefaultHandler.All(areas, levels, count)
 }
 
 func Size() int64 {
@@ -74,12 +74,12 @@ func (l *logger) Areas() []string {
 
 	areas := make(map[string]struct{})
 	for i := 0; i < r.Len(); i++ {
+		r = r.Prev()
 		if e, ok := r.Value.(element); ok {
 			if a, _ := e.areaLevel(); a != "" {
 				areas[a] = struct{}{}
 			}
 		}
-		r = r.Next()
 	}
 
 	keys := maps.Keys(areas)
@@ -87,7 +87,7 @@ func (l *logger) Areas() []string {
 	return keys
 }
 
-func (l *logger) All(areas, levels []string) []string {
+func (l *logger) All(areas, levels []string, count int) []string {
 	l.mu.RLock()
 	defer l.mu.RUnlock()
 
@@ -96,10 +96,13 @@ func (l *logger) All(areas, levels []string) []string {
 
 	var res []string
 	for i := 0; i < r.Len(); i++ {
+		r = r.Prev()
 		if e, ok := r.Value.(element); ok && e != "" && (all || e.match(areas, levels)) {
 			res = append(res, string(e))
+			if count > 0 && len(res) >= count {
+				break
+			}
 		}
-		r = r.Next()
 	}
 
 	return res

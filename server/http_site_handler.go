@@ -256,5 +256,11 @@ func logHandler(w http.ResponseWriter, r *http.Request) {
 	for i, v := range l {
 		l[i] = strings.ToUpper(v)
 	}
-	jsonResult(w, logstash.All(a, l))
+
+	var count int
+	if v := r.URL.Query().Get("count"); v != "" {
+		count, _ = strconv.Atoi(v)
+	}
+
+	jsonResult(w, logstash.All(a, l, count))
 }
