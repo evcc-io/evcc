@@ -121,12 +121,22 @@ jobs:
           cache: false # avoid cache thrashing
         id: go
 
-      - run: mkdir dist && touch dist/empty
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-lint-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-lint-
+            ${{ runner.os }}-go-
 
       - name: Lint
         uses: golangci/golangci-lint-action@v4
         with:
           version: latest
+          skip-pkg-cache: true
+          skip-build-cache: true
           args: --out-format=colored-line-number --timeout 5m
 
   ui:
