@@ -43,6 +43,10 @@ export default function setupRouter(i18n) {
           };
         },
       },
+      {
+        path: "/log",
+        component: () => import("./views/Log.vue"),
+      },
     ],
   });
   router.beforeEach(async () => {
