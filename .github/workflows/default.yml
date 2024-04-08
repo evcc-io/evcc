@@ -131,6 +131,8 @@ jobs:
             ${{ runner.os }}-go-lint-
             ${{ runner.os }}-go-
 
+      - run: mkdir dist && touch dist/empty
+
       - name: Lint
         uses: golangci/golangci-lint-action@v4
         with:
