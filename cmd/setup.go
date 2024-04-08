@@ -16,6 +16,7 @@ import (
 
 	paho "github.com/eclipse/paho.mqtt.golang"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/globalconfig"
 	"github.com/evcc-io/evcc/charger"
 	"github.com/evcc-io/evcc/charger/eebus"
 	"github.com/evcc-io/evcc/cmd/shutdown"
@@ -59,7 +60,7 @@ var conf = globalConfig{
 		Host:   "evcc.local",
 		Port:   7070,
 	},
-	Mqtt: mqttConfig{
+	Mqtt: globalconfig.Mqtt{
 		Topic: "evcc",
 	},
 	Database: dbConfig{
@@ -81,7 +82,7 @@ type globalConfig struct {
 	Levels       map[string]string
 	Interval     time.Duration
 	Database     dbConfig
-	Mqtt         mqttConfig
+	Mqtt         globalconfig.Mqtt
 	ModbusProxy  []proxyConfig
 	Javascript   []javascriptConfig
 	Go           []goConfig
@@ -95,11 +96,6 @@ type globalConfig struct {
 	Tariffs      tariffConfig
 	Site         map[string]interface{}
 	Loadpoints   []map[string]interface{}
-}
-
-type mqttConfig struct {
-	mqtt.Config `mapstructure:",squash"`
-	Topic       string
 }
 
 type javascriptConfig struct {
@@ -500,7 +496,7 @@ func configureInflux(conf server.InfluxConfig, site site.API, in <-chan util.Par
 }
 
 // setup mqtt
-func configureMQTT(conf mqttConfig) error {
+func configureMQTT(conf globalconfig.Mqtt) error {
 	log := util.NewLogger("mqtt")
 
 	instance, err := mqtt.RegisteredClient(log, conf.Broker, conf.User, conf.Password, conf.ClientID, 1, conf.Insecure, func(options *paho.ClientOptions) {

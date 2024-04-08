@@ -6,6 +6,7 @@ import (
 	"time"
 
 	eapi "github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/globalconfig"
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/server/assets"
 	"github.com/evcc-io/evcc/util"
@@ -117,6 +118,9 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, cache *util.Cache) {
 		"auth":                    {"GET", "/auth/status", authStatusHandler(auth)},
 		"login":                   {"POST", "/auth/login", loginHandler(auth)},
 		"logout":                  {"POST", "/auth/logout", logoutHandler},
+
+		"mqtt1": {"GET", "/config/mqtt", settingsGetHandler("mqtt")},
+		"mqtt2": {"POST", "/config/mqtt", settingsSetHandler("mqtt", new(globalconfig.Mqtt))},
 	}
 
 	for _, r := range routes {
