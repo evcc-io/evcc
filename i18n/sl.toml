@@ -178,6 +178,8 @@ login = "Prijave v vozila"
 needHelp = "Potrebuješ pomoč?"
 sessions = "Seje polnjenja"
 settings = "Nastavitve"
+logout = "Odjava"
+nativeSettings = "Zamenjaj strežnik"
 
 [help]
 discussionsButton = "GitHub razprave"
@@ -214,6 +216,7 @@ title = "Načrt"
 titleMinSoc = "Min. polnjenje"
 titleTargetCharge = "Odhod"
 update = "Uporabi"
+unsavedChanges = "Obstajajo neshranjene spremembe. Želite uporabiti zdaj?"
 
 [main.energyflow]
 battery = "Baterija"
@@ -255,6 +258,8 @@ disclaimerHint = "Opomba:"
 onlyForSocBasedCharging = "Te možnosti so na voljo samo za vozila z znano stopnjo napolnjenosti."
 title = "Nastavitve {0}"
 vehicle = "Vozilo"
+smartCostCheap = "Poceni polnjenje iz omrežja"
+smartCostClean = "Čisto polnjenje iz omrežja"
 
 [main.loadpointSettings.limitSoc]
 description = "Omejitev polnjenja, ki se uporablja, ko je to vozilo povezano."
@@ -342,6 +347,7 @@ temp = "Temp."
 tempLimit = "Temp. limit"
 unknown = "Neznano vozilo"
 vehicleSoc = "Napolnjeno"
+notReachable = "Vozilo ni bilo dosegljivo. Poskusite znova zagnati evcc."
 
 [main.vehicleSoc]
 charging = "polnjenje"
@@ -473,6 +479,11 @@ modalTitle = "Smart Grid Polnjenje"
 none = "brez"
 priceLabel = "Cena energije"
 priceLimit = "Omejitev cene"
+batteryDescription = "Napolni domačo baterijo z energijo iz omrežja."
+saved = "Shranjeno."
+applyToAll = "Uporabi povsod?"
+cheapTitle = "Poceni polnjenje iz omrežja"
+cleanTitle = "Čisto polnjenje iz omrežja"
 
 [startupError]
 configFile = "Uporabljena konfiguracijska datoteka:"
@@ -490,3 +501,34 @@ title = "Napaka pri zagonu"
 cancel = "Prekliči"
 template = "Proizvajalec"
 test = "Test"
+
+
+[loginModal]
+error = "Prijava ni uspela: "
+title = "Avtentikacija"
+cancel = "Prekliči"
+invalid = "Geslo ni veljavno."
+login = "Prijava"
+password = "Geslo"
+
+[passwordModal]
+empty = "Geslo ne sme biti prazno"
+error = "Napaka: "
+labelCurrent = "Trenutno geslo"
+description = "Nastavite geslo za zaščito konfiguracijskih nastavitev. Uporaba glavnega vmesnika je še vedno možna brez prijave."
+labelNew = "Novo geslo"
+noMatch = "Geslo se ne ujema"
+titleNew = "Nastavi skrbniško geslo"
+labelRepeat = "Ponovi geslo"
+titleUpdate = "Posodobi skrbniško geslo"
+newPassword = "Ustvari geslo"
+updatePassword = "Posodobi geslo"
+
+[config.general]
+cancel = "Prekliči"
+save = "Shrani"
+
+[config.title]
+description = "Prikazano na glavnem zaslonu in na zavihku brskalnika."
+label = "Naslov"
+title = "Uredi naslov"
