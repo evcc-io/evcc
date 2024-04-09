@@ -179,6 +179,7 @@ nativeSettings = "Changer de serveur"
 needHelp = "Besoin d'aide?"
 sessions = "Sessions de recharge"
 settings = "Réglages"
+logout = Se déconnecter
 
 [header.theme]
 auto = "Désign: Système"
@@ -372,9 +373,9 @@ pvDisable = "Pas assez de surplus. Pause dans {remaining}…"
 pvEnable = "Surplus disponible. Démarre dans {remaining}…"
 scale1p = "Réduction en monophasé dans {remaining}..."
 scale3p = "Augmentation en triphasé dans {remaining}…"
-targetChargeActive = "Charge cible active..."
-targetChargePlanned = "La charge cible démarre à {time}."
-targetChargeWaitForVehicle = "Charge cible prête. Attente du véhicule..."
+targetChargeActive = "Plan de charge actif..."
+targetChargePlanned = "Le plan de charge démarre à {time}."
+targetChargeWaitForVehicle = "Plan de charge prêt. Attente du véhicule..."
 unknown = ""
 vehicleLimitReached = "Limite de véhicule {soc}% atteinte."
 waitForVehicle = "Prêt à charger. Attente du véhicule…"
@@ -484,7 +485,7 @@ saved = "Enregistré."
 
 [startupError]
 configFile = "Fichier de configuration utilisé:"
-configuration = "Configuration"
+configuration = "Config."
 description = "Veuillez vérifier votre fichier de configuration. Si le message d'erreur ne vous aide pas, recherchez une solution : {0}."
 discussions = "Discussions GitHub"
 fixAndRestart = "Corrigez le problème et redémarrez le serveur."
@@ -498,3 +499,34 @@ title = "Erreur au démarrage"
 cancel = "Annuler"
 template = "Fabricant"
 test = "Test"
+
+
+[loginModal]
+cancel = Annuler
+title = Authentification
+invalid = «Mot de passe invalide.»
+login = Identifiant
+error = «Connection échouée:»
+password = Mot de passe
+
+[passwordModal]
+labelNew = Nouveau mot de passe
+labelRepeat = Répétez le mot de passe
+newPassword = Créer un mot de passe
+noMatch = Les deux mots de passes ne correspondent pas
+titleNew = Définir un mot de passe administrateur
+titleUpdate = Mettre à jour le mot de passe administrateur
+empty = Le mot de passe ne doit pas être vide
+error = «Erreur:»
+labelCurrent = Mot de passe actuel
+updatePassword = Mettre à jour le mot de passe
+description = «Configurez un mot de passe pour protéger la configuration. L’utilisation de l’écran principal et toujours possible sans authentification.»
+
+[config.general]
+cancel = Annuler
+save = Enregistrer
+
+[config.title]
+label = Titre
+title = Modifier le titre
+description = «Affiché sur l’écran principal et l’onglet du navigateur.»
