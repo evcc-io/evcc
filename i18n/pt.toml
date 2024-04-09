@@ -16,10 +16,11 @@ legendTopSubline = "sem interrupções"
 modalTitle = "Configuraçao da bateria"
 
 [batterySettings.bufferStart]
-full = "quando quase cheio"
+full = "quando estiver a {soc}"
 low = "quando um pouco cheio"
 medium = "quando meio cheio"
 never = "apenas com excesso suficiente"
+above = "quando acima {soc}"
 
 [config]
 
@@ -32,6 +33,10 @@ addVehicle = "Adicionar veículo"
 edit = "editar"
 title = "Configuração"
 vehicles = "Meus Veículos"
+addPvBattery = "Adicionar solar ou bateria"
+unconfigured = "não configurado"
+addLoadpoint = "Adicionar ponto de carga"
+yaml = "Configurado em evcc.yaml. Não editável na UI."
 
 [config.validation]
 failed = "fracassado"
@@ -43,7 +48,7 @@ validate = "validar"
 
 [config.vehicle]
 cancel = "Cancelar"
-delete = "Excluir veículo"
+delete = "Excluir"
 generic = "Outras integrações"
 offline = "Veículo genérico"
 online = "Veículos com API online"
@@ -133,6 +138,8 @@ login = "Registo de veículo"
 needHelp = "Precisa ajuda?"
 sessions = "Sessões de carga"
 settings = "Configuração"
+nativeSettings = "Alterar servidor"
+logout = "sair do sistema"
 
 [header.theme]
 auto = "Design: Sistema"
@@ -174,6 +181,7 @@ title = "Plano"
 titleMinSoc = "Carga mínima"
 titleTargetCharge = "Partida"
 update = "Aplicar"
+unsavedChanges = "Há mudanças não salvas. Aplicar agora?"
 
 [main.energyflow]
 battery = "Bateria"
@@ -209,6 +217,8 @@ disclaimerHint = "Aviso:"
 onlyForSocBasedCharging = "Estas opções só estão disponíveis para veículos com nível de carregamento conhecido."
 title = "Configurações {0}"
 vehicle = "Veículo"
+smartCostCheap = "Carregamento de rede barato"
+smartCostClean = "Carregamento de rede limpa"
 
 [main.loadpointSettings.limitSoc]
 description = "limite de compartilhamento que é usado quando este veículo está conectado."
@@ -231,6 +241,7 @@ phases_1 = "1 fase"
 phases_1_hint = "({min} a {max})"
 phases_3 = "3 fases"
 phases_3_hint = "({min} a {max})"
+no1p3pSupport = "Como está o seu carregador conectado?"
 
 [main.mode]
 minpv = "Mín+Sol"
@@ -297,6 +308,7 @@ temp = "Temperatura"
 tempLimit = "Temperatura alvo"
 unknown = "Veículo convidado"
 vehicleSoc = "Nível de carga"
+notReachable = "O veículo não foi acessível. Tente reiniciar evcc."
 
 [main.vehicleSoc]
 charging = "carregando"
@@ -317,9 +329,9 @@ pvDisable = "Excesso insuficiente. Pausa em {remaining}..."
 pvEnable = "Excesso disponível. Carga em {remaining}..."
 scale1p = "Reduzindo para carregamento monofásico em {remaining}…"
 scale3p = "Aumentando para carregamento trifásico em {remaining}…"
-targetChargeActive = "Carga programada ativa..."
-targetChargePlanned = "Carga programada começa {time}."
-targetChargeWaitForVehicle = "Carga programada pronta. Esperando pelo veículo..."
+targetChargeActive = "Plano de carregamento activo..."
+targetChargePlanned = "O plano de carregamento começa a {time}."
+targetChargeWaitForVehicle = "Plano de carregamento pronto. À espera do veículo..."
 unknown = ""
 vehicleLimitReached = "Limite de veículo {soc}% atingido."
 waitForVehicle = "Pronto. Esperando pelo veículo..."
@@ -445,3 +457,63 @@ title = "Erro ao iniciar"
 cancel = "Cancelar"
 template = "Fabricante"
 test = "Teste"
+
+
+[loginModal]
+error = "Login falhou: "
+password = "Palavra-passe"
+title = "Autenticação"
+cancel = "Cancelar"
+invalid = "A palavra-passe é inválida."
+login = "Entrar no sistema"
+
+[config.grid]
+titleAdd = "Adicionar contador de rede"
+titleEdit = "Editar contator de rede"
+
+[config.general]
+cancel = "Cancelar"
+save = "Guardar"
+
+[main.heatingStatus]
+charging = "Aquecendo..."
+cheapEnergyCharging = "Aquecimento com energia barata: {price} (limite {limit})"
+cleanEnergyCharging = "Aquecimento com energia limpa: {co2} (limite {limit})"
+waitForVehicle = "Pronto. Esperando pelo aquecedor..."
+
+[config.battery]
+titleEdit = "Editar contador de bateria"
+titleAdd = "Adicionar contador de bateria"
+
+[config.meter]
+cancel = "Cancelar"
+delete = "Excluir"
+save = "Guardar"
+template = "Fabricante"
+titleChoice = "O que você quer adicionar?"
+validateSave = "Validar e guardar"
+
+[config.pv]
+titleAdd = "Adicionar Contador Solar"
+titleEdit = "Editar Contador Solar"
+
+[config.title]
+description = "Exibido no ecrã principal e na guia do navegador."
+label = "Título"
+title = "Editar título"
+
+[config.deviceValue]
+energy = "Energia"
+capacity = "Capacidade"
+chargeStatus = "Estatuto"
+chargedEnergy = "Carregado"
+current = "Corrente"
+enabled = "Ativado"
+odometer = "Odómetro"
+phaseCurrents = "Corrente L1..L3"
+phaseVoltages = "Voltagem L1..L3"
+power = "Energia"
+range = "Distância"
+soc = "Nível de carga"
+socLimit = "Alvo de carga"
+phasePowers = "Energia L1..L3"
