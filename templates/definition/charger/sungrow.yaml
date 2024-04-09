@@ -12,6 +12,7 @@ requirements:
 params:
   - name: modbus
     choice: ["rs485", "tcpip"]
+    id: 248
 render: |
   type: sungrow
   {{- include "modbus" . }}
