@@ -159,7 +159,6 @@ export default {
 			return this.lines.length === DEFAULT_COUNT;
 		},
 		updateInterval() {
-			// update log twice per interval
 			return (store.state?.interval || 10) * 1000;
 		},
 		downloadUrl() {
