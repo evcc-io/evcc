@@ -1,0 +1,98 @@
+
+
+
+[batterySettings]
+control = "Έλεγχος Μπαταρίας"
+legendBottomName = "προτεραιότητα οικίας"
+legendBottomSubline = "δεν αξιοποιείται για φόρτιση"
+legendMiddleName = "πρώτα το όχημα"
+legendTopAutostart = "ξεκινά αυτόματα"
+legendTopSubline = "χωρίς διακοπές"
+batteryLevel = "Ποσοστό Μπαταρίας"
+capacity = "{ενέργεια} της {πλήρους φόρτισης}"
+discharge = "Αποτροπή εκφόρτισης σε γρήγορη λειτουργία και προγραμματισμένη φόρτιση."
+disclaimerHint = "Σημείωση"
+disclaimerText = "Αυτές οι ρυθμίσεις επηρεάζουν μόνο την ηλιακή λειτουργία. Η συμπεριφορά φόρτισης προσαρμόζεται ανάλογα."
+legendMiddleSubline = "η οικία δεύτερη"
+legendTitle = "Πως θέλετε να αξιοποιηθεί η ηλιακή ενέργεια"
+legendTopName = "φόρτιση υποστηριζόμενη από την μπαταρία"
+modalTitle = "Ρυθμίσεις Μπαταρίας"
+
+[batterySettings.bufferStart]
+above = "όταν ειναι πανω απο το επίπεδο φόρτισης της μπαταρίας {soc}"
+full = "όταν είναι στο επίπεδο φόρτισης της μπαταρίας {soc}"
+never = "μόνο με αρκετή περίσσεια"
+
+[config.battery]
+titleEdit = "Eπεξεργασία Mετρητή Mπαταρίας"
+titleAdd = "Πρόσθεσε Μετρητή Μπαταρίας
+
+[config.deviceValue]
+chargedEnergy = "Φορτισμένο"
+current = "Ένταση"
+energy = "Ενέργεια"
+phaseCurrents = "Ένταση L1..L3"
+capacity = "Χωρητικότητα"
+chargeStatus = "Κατάσταση"
+enabled = "Ενεργοποιημένο"
+odometer = "Οδόμετρο"
+phasePowers = "Ισχύς L1..L3"
+soc = "Κατάσταση φόρτισης (SoC)"
+socLimit = "Όριο"
+phaseVoltages = "Τάση L1..L3"
+power = "Ισχύς"
+range = "Αυτονομία"
+
+[config.meter]
+cancel = "Ακύρωση"
+delete = "Διαγραφή"
+save = "Αποθήκευση"
+validateSave = "Επικύρωση & αποθήκευση"
+template = "Κατασκευαστής"
+titleChoice = "Τι θέλετε να προσθέσετε;"
+
+[config.pv]
+titleAdd = "Προσθήκη Ηλιακού Μετρητή"
+titleEdit = "Μεταβολή Ηλιακού Μετρητή"
+
+[config.title]
+label = "Τίτλος"
+title = "Επεξεργασία Τίτλου"
+description = "Προβάλλεται στην κεντρική οθόνη και στον φυλλομετρητή"
+
+[config.validation]
+failed = "απέτυχε"
+label = "Κατάσταση"
+running = "επικύρωση..."
+success = "επιτυχία"
+unknown = "απροσδιόριστο"
+validate = "επικύρωση"
+
+[config.vehicle]
+cancel = "Ακύρωση"
+save = "Αποθήκευση"
+scooter = "Σκούτερ"
+template = "Κατασκευαστής"
+titleAdd = "Προσθήκη Οχήματος"
+
+[config.form]
+example = "Παράδειγμα"
+optional = "προαιρετικό"
+
+[config.general]
+cancel = "Ακύρωση"
+save = "Αποθήκευση"
+
+[config.grid]
+titleAdd = "Προσθήκη Μετρητή Δικτύου"
+titleEdit = "Μεταβολή Μετρητή Δικτύου"
+
+[config.main]
+addLoadpoint = "Προσθήκη σημείου φόρτισης"
+addPvBattery = "Προσθήκη ηλιακής ενέργειας ή μπαταρίας"
+edit = "επεξεργασία"
+addVehicle = "Προσθήκη Οχήματος"
+title = "Διαμόρφωση"
+unconfigured = "δεν έχει ρυθμιστεί"
+vehicles = "Τα Οχήματα μου"
+yaml = "Ρύθμιση στο evcc.yaml. Δεν μεταβάλεται στο σύστημα διαπροσωπείας"
