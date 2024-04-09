@@ -83,9 +83,9 @@ cancel = "Avbryt"
 save = "Spara"
 
 [config.title]
+description = "Visas på huvudskärm och tabbar."
 label = "Titel"
 title = "Ändra titel"
-description = "Visas på huvudskärm och tabbar."
 
 [config.validation]
 failed = "misslyckades"
@@ -184,11 +184,11 @@ blog = "Blogg"
 docs = "Dokumentation"
 github = "GitHub"
 login = "Fordons inloggningar"
+logout = "Logga ut"
 nativeSettings = "Byt server"
 needHelp = "Behöver du hjälp?"
 sessions = "Laddningar"
 settings = "Inställningar"
-logout = "Logga ut"
 
 [help]
 discussionsButton = "GitHub diskussioner"
@@ -207,6 +207,14 @@ confirm = "Ja, starta om!"
 description = "Normalt behövs inte en omstart. Rapportera ett fel om du behöver starta om evcc frekvent."
 disclaimer = "Notera: evcc kommer stängas av och be operativsystemet starta om tjänsten."
 modalTitle = "Är du säker på att du vill starta om?"
+
+[loginModal]
+cancel = "Avbryt"
+error = "Inloggning misslyckades:"
+invalid = "Ogiltigt lösenord."
+login = "Logga in"
+password = "Lösenord"
+title = "Autentisering"
 
 [main]
 vehicles = "Parkering"
@@ -395,6 +403,19 @@ modalTitle = "Meddelanden"
 message = "Inte ansluten till en server."
 reload = "Ladda igen?"
 
+[passwordModal]
+description = "Använd lösenord för att skydda inställningarna. Huvudskärmen kan användas utan att logga in."
+empty = "Lösenordet får inte vara tomt"
+error = "Fel:"
+labelCurrent = "Nuvarande lösenord"
+labelNew = "Nytt lösenord"
+labelRepeat = "Upprepa lösenord"
+newPassword = "Skapa lösenord"
+noMatch = "Lösenorden är olika"
+titleNew = "Ange administratörslösenord"
+titleUpdate = "Ändra administratörslösenord"
+updatePassword = "Ändra lösenord"
+
 [session]
 cancel = "Avbryt"
 co2 = "CO₂"
@@ -512,25 +533,3 @@ title = "Startfel"
 cancel = "Avbryt"
 template = "Tillverkare"
 test = "Test"
-
-
-[passwordModal]
-description = "Använd lösenord för att skydda inställningarna. Huvudskärmen kan användas utan att logga in."
-labelNew = "Nytt lösenord"
-noMatch = "Lösenorden är olika"
-updatePassword = "Ändra lösenord"
-empty = "Lösenordet får inte vara tomt"
-error = "Fel:"
-labelCurrent = "Nuvarande lösenord"
-labelRepeat = "Upprepa lösenord"
-newPassword = "Skapa lösenord"
-titleNew = "Ange administratörslösenord"
-titleUpdate = "Ändra administratörslösenord"
-
-[loginModal]
-error = "Inloggning misslyckades:"
-login = "Logga in"
-password = "Lösenord"
-cancel = "Avbryt"
-invalid = "Ogiltigt lösenord."
-title = "Autentisering"

@@ -48,6 +48,10 @@ socLimit = "Hoeveelheid"
 example = "Voorbeeld"
 optional = "optioneel"
 
+[config.general]
+cancel = "Annuleren"
+save = "Opslaan"
+
 [config.grid]
 titleAdd = "Voeg net meter toe"
 titleEdit = "Bewerk net meter"
@@ -77,6 +81,11 @@ titleEdit = "Bewerk meter zonnepanelen"
 [config.site]
 cancel = "Annuleren"
 save = "Opslaan"
+
+[config.title]
+description = "Wordt weergegeven op het hoofdscherm en op het browsertabblad."
+label = "Titel"
+title = "Wijzig titel"
 
 [config.validation]
 failed = "mislukt"
@@ -175,11 +184,11 @@ blog = "Blog"
 docs = "Documentatie"
 github = "GitHub"
 login = "Logingegevens van voertuigen"
+logout = "Uitloggen"
 nativeSettings = "Andere server"
 needHelp = "Hulp nodig?"
 sessions = "Laadsessies"
 settings = "Instellingen"
-logout = "Uitloggen"
 
 [header.theme]
 auto = "Design: systeem"
@@ -505,13 +514,3 @@ title = "Start Error"
 cancel = "Annuleer"
 template = "Fabrikant"
 test = "Test"
-
-
-[config.general]
-save = "Opslaan"
-cancel = "Annuleren"
-
-[config.title]
-label = Titel
-title = Wijzig titel
-description = "Wordt weergegeven op het hoofdscherm en op het browsertabblad."

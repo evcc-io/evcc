@@ -184,11 +184,11 @@ blog = "Blog"
 docs = "Dokumentation"
 github = "GitHub"
 login = "Login til køretøjer"
+logout = "Log ud"
 nativeSettings = "Skift server"
 needHelp = "Brug for hjælp?"
 sessions = "Opladnings sessioner"
 settings = "Indstillinger"
-logout = "Log ud"
 
 [help]
 discussionsButton = "GitHub diskussioner"
@@ -207,6 +207,14 @@ confirm = "Ja, genstart!"
 description = "Under normale omstændigheder bør genstart ikke være nødvendig. Overvej at indsende en fejlmelding, hvis du har brug for at genstarte evcc regelmæssigt."
 disclaimer = "Bemærk: evcc afsluttes og har brug for at operativsystemet genstarter tjenesten."
 modalTitle = "Er du sikker på, at du vil genstarte?"
+
+[loginModal]
+cancel = "Afbryd"
+error = "Login mislykkedes"
+invalid = "Ugyldig adgangskode"
+login = "Log på"
+password = "Adgangskode"
+title = "Godkendelse"
 
 [main]
 vehicles = "Parkering"
@@ -395,6 +403,19 @@ modalTitle = "Underretninger"
 message = "Ikke forbundet til en server."
 reload = "Genindlæs?"
 
+[passwordModal]
+description = "Angiv adgangskode for at beskytte konfigurations indstillinger. Det er stadig mulig at benytte hovedskærmen uden at logge på"
+empty = "Adgangskode må ikke være tomt"
+error = "Fejl:"
+labelCurrent = "Nuværende adgangskode"
+labelNew = "Ny adgangskode"
+labelRepeat = "Gentag adgangskoden"
+newPassword = "Opret adgangskode"
+noMatch = "Adgangskode stemmer ikke"
+titleNew = "Angiv Administrator adgangskode"
+titleUpdate = "Opdater Administrator adgangskode"
+updatePassword = "Opdater adgangskode"
+
 [session]
 cancel = "Afbryd"
 co2 = "CO2"
@@ -506,25 +527,3 @@ title = "Fejl ved opstart"
 cancel = "Afbryd"
 template = "Producent"
 test = "Test"
-
-
-[loginModal]
-cancel = "Afbryd"
-error = "Login mislykkedes"
-login = "Log på"
-title = "Godkendelse"
-invalid = "Ugyldig adgangskode"
-password = "Adgangskode"
-
-[passwordModal]
-error = "Fejl:"
-description = "Angiv adgangskode for at beskytte konfigurations indstillinger. Det er stadig mulig at benytte hovedskærmen uden at logge på"
-empty = "Adgangskode må ikke være tomt"
-labelCurrent = "Nuværende adgangskode"
-labelNew = "Ny adgangskode"
-labelRepeat = "Gentag adgangskoden"
-newPassword = "Opret adgangskode"
-noMatch = "Adgangskode stemmer ikke"
-updatePassword = "Opdater adgangskode"
-titleUpdate = "Opdater Administrator adgangskode"
-titleNew = "Angiv Administrator adgangskode"

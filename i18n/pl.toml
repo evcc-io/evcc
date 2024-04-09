@@ -49,6 +49,10 @@ socLimit = "Limit"
 example = "Przykład"
 optional = "opcjonalny"
 
+[config.general]
+cancel = "Anulować"
+save = "Zapisz"
+
 [config.grid]
 titleAdd = "Dodaj licznik sieci"
 titleEdit = "Edytuj licznik sieci"
@@ -505,8 +509,3 @@ title = "Błąd uruchamiania"
 cancel = "Anulować"
 template = "Producent"
 test = "Test"
-
-
-[config.general]
-cancel = "Anulować"
-save = "Zapisz"

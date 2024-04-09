@@ -184,11 +184,11 @@ blog = "Tinklaraštis"
 docs = "Dokumentacija (Vokiečių k.)"
 github = "GitHub"
 login = " Automobilių prisijungimai"
+logout = "Atsijungti"
 nativeSettings = "Pakeisti Serverį"
 needHelp = "Reikia Pagalbos?"
 sessions = "Įkrovimo sesijos "
 settings = "Nustatymai"
-logout = "Atsijungti"
 
 [header.theme]
 auto = "Dizainas: sistemos"
@@ -212,6 +212,14 @@ confirm = "Taip, restartuoti!"
 description = "Įprastai restartavimas neturėtų būti reikalingas. Jei jums vis reikia restartuoti, pasvarstykite, gal derėtų pranešti apie problemą."
 disclaimer = "Pastaba: evcc sustos, ir pasitikės operacinės sistemos pagalba paleidžiant iš naujo."
 modalTitle = "Ar tikrai norite restartuoti?"
+
+[loginModal]
+cancel = "Atšaukti"
+error = "Prisijungti nepavyko: "
+invalid = "Neteisingas slaptažodis."
+login = "Prisijungti"
+password = "Slaptažodis"
+title = "Autentifikavimas"
 
 [main]
 vehicles = "Autoparkas"
@@ -400,6 +408,19 @@ modalTitle = "Pranešimai"
 message = "Nėra ryšio su serveriu."
 reload = "Perkrauti?"
 
+[passwordModal]
+description = "Nustatykite slaptažodį konfigūracijos apsaugai. Pagrindiniu ekranu galima naudotis ir neprisijungus."
+empty = "Slaptažodis negali būti tuščias"
+error = "Klaida: "
+labelCurrent = "Dabartinis slaptažodis"
+labelNew = "Naujas slaptažodis"
+labelRepeat = "Pakartoti slaptažodį"
+newPassword = "Sukurti slaptažodį"
+noMatch = "Slaptažodžiai nesutampa"
+titleNew = "Nustatyti Administratoriaus slaptažodį"
+titleUpdate = "Atnaujinti Administratoriaus slaptažodį"
+updatePassword = "Atnaujinti slaptažodį"
+
 [session]
 cancel = "Atšaukti"
 co2 = "CO₂"
@@ -517,25 +538,3 @@ title = "Klaida startuojant"
 cancel = "Atšaukti"
 template = "Gamintojas"
 test = "Testuoti"
-
-
-[loginModal]
-error = "Prisijungti nepavyko: "
-cancel = "Atšaukti"
-invalid = "Neteisingas slaptažodis."
-password = "Slaptažodis"
-title = "Autentifikavimas"
-login = "Prisijungti"
-
-[passwordModal]
-description = "Nustatykite slaptažodį konfigūracijos apsaugai. Pagrindiniu ekranu galima naudotis ir neprisijungus."
-empty = "Slaptažodis negali būti tuščias"
-error = "Klaida: "
-labelNew = "Naujas slaptažodis"
-labelCurrent = "Dabartinis slaptažodis"
-noMatch = "Slaptažodžiai nesutampa"
-titleNew = "Nustatyti Administratoriaus slaptažodį"
-labelRepeat = "Pakartoti slaptažodį"
-newPassword = "Sukurti slaptažodį"
-updatePassword = "Atnaujinti slaptažodį"
-titleUpdate = "Atnaujinti Administratoriaus slaptažodį"
