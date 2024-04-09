@@ -85,6 +85,7 @@ save = "Spara"
 [config.title]
 label = "Titel"
 title = "Ändra titel"
+description = "Visas på huvudskärm och tabbar."
 
 [config.validation]
 failed = "misslyckades"
@@ -187,6 +188,7 @@ nativeSettings = "Byt server"
 needHelp = "Behöver du hjälp?"
 sessions = "Laddningar"
 settings = "Inställningar"
+logout = "Logga ut"
 
 [help]
 discussionsButton = "GitHub diskussioner"
@@ -378,8 +380,8 @@ pvDisable = "Inte tillräckligt med överskott. Pausar i {remaining}..."
 pvEnable = "Överskott tillgängligt. Börjar om {remaining}..."
 scale1p = "Minskar till 1-fas-laddning om {remaining}..."
 scale3p = "Ökar till 3-fas-laddning om {remaining}..."
-targetChargeActive = "Målladdning aktiv..."
-targetChargePlanned = "Målladdning startar {time}."
+targetChargeActive = "Laddplan aktiv..."
+targetChargePlanned = "Laddplan startar {time}."
 targetChargeWaitForVehicle = "Laddare beredd. Väntar på fordon..."
 unknown = ""
 vehicleLimitReached = "Fordonsgränsen {soc}% nådd."
@@ -510,3 +512,25 @@ title = "Startfel"
 cancel = "Avbryt"
 template = "Tillverkare"
 test = "Test"
+
+
+[passwordModal]
+description = "Använd lösenord för att skydda inställningarna. Huvudskärmen kan användas utan att logga in."
+labelNew = "Nytt lösenord"
+noMatch = "Lösenorden är olika"
+updatePassword = "Ändra lösenord"
+empty = "Lösenordet får inte vara tomt"
+error = "Fel:"
+labelCurrent = "Nuvarande lösenord"
+labelRepeat = "Upprepa lösenord"
+newPassword = "Skapa lösenord"
+titleNew = "Ange administratörslösenord"
+titleUpdate = "Ändra administratörslösenord"
+
+[loginModal]
+error = "Inloggning misslyckades:"
+login = "Logga in"
+password = "Lösenord"
+cancel = "Avbryt"
+invalid = "Ogiltigt lösenord."
+title = "Autentisering"
