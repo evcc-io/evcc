@@ -188,6 +188,7 @@ nativeSettings = "Cambiar el servidor"
 needHelp = "¿Necesitas ayuda?"
 sessions = "Sesiones de carga"
 settings = "Ajustes"
+logout = "Cerrar sesión"
 
 [header.theme]
 auto = "Tema: System"
@@ -516,3 +517,25 @@ title = "Error al iniciar"
 cancel = "Cancelar"
 template = "Fabricante"
 test = "Prueba"
+
+
+[loginModal]
+error = "Error en el inicio de sesion: "
+login = "Registro"
+password = "Contraseña"
+cancel = "Cancelar"
+title = "Autenticación"
+invalid = "La contraseña no es válida."
+
+[passwordModal]
+error = "Error: "
+noMatch = "Las contraseñas no coinciden"
+description = "Establezca una contraseña para proteger la configuración. La vista principal permanece accesible sin iniciar sesión"
+titleNew = "Establecer contraseña de administrador"
+titleUpdate = "Cambiar contraseña de administrador"
+empty = "La contraseña no debe estar vacía"
+labelCurrent = "Contraseña actual"
+updatePassword = "Cambiar la contraseña"
+labelNew = "Nueva contraseña"
+labelRepeat = "Repita la contraseña"
+newPassword = "Crear contraseña"
