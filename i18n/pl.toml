@@ -505,3 +505,8 @@ title = "Błąd uruchamiania"
 cancel = "Anulować"
 template = "Producent"
 test = "Test"
+
+
+[config.general]
+cancel = "Anulować"
+save = "Zapisz"
