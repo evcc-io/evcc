@@ -372,9 +372,9 @@ pvDisable = "Onvoldoende PV overschot beschikbaar. Pauzeren over {remaining}..."
 pvEnable = "Voldoende PV overschot beschikbaar. Starten over {remaining}..."
 scale1p = "Wisselen naar laden op 1 fase over {remaining}..."
 scale3p = "Wisselen naar laden op 3 fasen over {remaining}..."
-targetChargeActive = "Doelladen actief..."
-targetChargePlanned = "Doelladen begint om {time}."
-targetChargeWaitForVehicle = "Doellading gereed. Wachten op voertuig..."
+targetChargeActive = "Laadplan actief..."
+targetChargePlanned = "Laadplan begint om {time}."
+targetChargeWaitForVehicle = "Laadplan gereed. Wachten op voertuig..."
 unknown = ""
 vehicleLimitReached = "Voertuiglimiet {soc}% bereikt."
 waitForVehicle = "Klaar. Wachten op voertuig..."
@@ -504,3 +504,13 @@ title = "Start Error"
 cancel = "Annuleer"
 template = "Fabrikant"
 test = "Test"
+
+
+[config.general]
+save = "Opslaan"
+cancel = "Annuleren"
+
+[config.title]
+label = Titel
+title = Wijzig titel
+description = "Wordt weergegeven op het hoofdscherm en op het browsertabblad."
