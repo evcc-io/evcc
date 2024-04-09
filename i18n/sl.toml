@@ -48,6 +48,10 @@ socLimit = "Omejitev"
 example = "Primer"
 optional = "neobvezno"
 
+[config.general]
+cancel = "Prekliči"
+save = "Shrani"
+
 [config.grid]
 titleAdd = "Dodaj števec električnega omrežja"
 titleEdit = "Uredi števec električnega omrežja"
@@ -77,6 +81,11 @@ titleEdit = "Uredi merilnik sončne energije"
 [config.site]
 cancel = "Prekliči"
 save = "Shrani"
+
+[config.title]
+description = "Prikazano na glavnem zaslonu in na zavihku brskalnika."
+label = "Naslov"
+title = "Uredi naslov"
 
 [config.validation]
 failed = "Napaka"
@@ -175,6 +184,8 @@ blog = "Blog"
 docs = "Dokumentacija"
 github = "GitHub"
 login = "Prijave v vozila"
+logout = "Odjava"
+nativeSettings = "Zamenjaj strežnik"
 needHelp = "Potrebuješ pomoč?"
 sessions = "Seje polnjenja"
 settings = "Nastavitve"
@@ -197,6 +208,14 @@ description = "V normalnih okoliščinah ponovni zagon ne bi smel biti potreben.
 disclaimer = "Opomba: evcc bo prenehal delovati in se bo za ponovni zagon storitve zanašal na operacijski sistem."
 modalTitle = "Ali ste prepričani, da želite znova zagnati?"
 
+[loginModal]
+cancel = "Prekliči"
+error = "Prijava ni uspela: "
+invalid = "Geslo ni veljavno."
+login = "Prijava"
+password = "Geslo"
+title = "Avtentikacija"
+
 [main]
 vehicles = "Parkiranje"
 
@@ -213,6 +232,7 @@ time = "Čas"
 title = "Načrt"
 titleMinSoc = "Min. polnjenje"
 titleTargetCharge = "Odhod"
+unsavedChanges = "Obstajajo neshranjene spremembe. Želite uporabiti zdaj?"
 update = "Uporabi"
 
 [main.energyflow]
@@ -253,6 +273,8 @@ currents = "Polnilni tok"
 default = "privzeto"
 disclaimerHint = "Opomba:"
 onlyForSocBasedCharging = "Te možnosti so na voljo samo za vozila z znano stopnjo napolnjenosti."
+smartCostCheap = "Poceni polnjenje iz omrežja"
+smartCostClean = "Čisto polnjenje iz omrežja"
 title = "Nastavitve {0}"
 vehicle = "Vozilo"
 
@@ -337,6 +359,7 @@ detectionActive = "Zaznavanje vozila..."
 fallbackName = "Vozilo"
 moreActions = "Več dejanj"
 none = "Ni vozila"
+notReachable = "Vozilo ni bilo dosegljivo. Poskusite znova zagnati evcc."
 targetSoc = "Omejitev"
 temp = "Temp."
 tempLimit = "Temp. limit"
@@ -377,6 +400,19 @@ modalTitle = "Obvestila"
 [offline]
 message = "Ni povezan s strežnikom."
 reload = "Ponovno naloži?"
+
+[passwordModal]
+description = "Nastavite geslo za zaščito konfiguracijskih nastavitev. Uporaba glavnega vmesnika je še vedno možna brez prijave."
+empty = "Geslo ne sme biti prazno"
+error = "Napaka: "
+labelCurrent = "Trenutno geslo"
+labelNew = "Novo geslo"
+labelRepeat = "Ponovi geslo"
+newPassword = "Ustvari geslo"
+noMatch = "Geslo se ne ujema"
+titleNew = "Nastavi skrbniško geslo"
+titleUpdate = "Posodobi skrbniško geslo"
+updatePassword = "Posodobi geslo"
 
 [session]
 cancel = "Prekliči"
@@ -466,6 +502,10 @@ mi = "milje"
 [smartCost]
 activeHours = "{charging} od {total}"
 activeHoursLabel = "Aktivne ure"
+applyToAll = "Uporabi povsod?"
+batteryDescription = "Napolni domačo baterijo z energijo iz omrežja."
+cheapTitle = "Poceni polnjenje iz omrežja"
+cleanTitle = "Čisto polnjenje iz omrežja"
 co2Label = "Emisije CO₂"
 co2Limit = "Omejitev CO₂"
 loadpointDescription = "Omogoči začasno hitro polnjenje v solarnem načinu."
@@ -473,6 +513,7 @@ modalTitle = "Smart Grid Polnjenje"
 none = "brez"
 priceLabel = "Cena energije"
 priceLimit = "Omejitev cene"
+saved = "Shranjeno."
 
 [startupError]
 configFile = "Uporabljena konfiguracijska datoteka:"

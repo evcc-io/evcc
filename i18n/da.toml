@@ -184,6 +184,7 @@ blog = "Blog"
 docs = "Dokumentation"
 github = "GitHub"
 login = "Login til køretøjer"
+logout = "Log ud"
 nativeSettings = "Skift server"
 needHelp = "Brug for hjælp?"
 sessions = "Opladnings sessioner"
@@ -207,6 +208,14 @@ description = "Under normale omstændigheder bør genstart ikke være nødvendig
 disclaimer = "Bemærk: evcc afsluttes og har brug for at operativsystemet genstarter tjenesten."
 modalTitle = "Er du sikker på, at du vil genstarte?"
 
+[loginModal]
+cancel = "Afbryd"
+error = "Login mislykkedes"
+invalid = "Ugyldig adgangskode"
+login = "Log på"
+password = "Adgangskode"
+title = "Godkendelse"
+
 [main]
 vehicles = "Parkering"
 
@@ -228,7 +237,7 @@ update = "Anvend"
 
 [main.energyflow]
 battery = "Batteri"
-batteryCharge = "Battery opladning"
+batteryCharge = "Batteri opladning"
 batteryDischarge = "Batteriet aflades"
 batteryHold = "Batteri (låst)"
 batteryTooltip = "{energi} af {total} ({soc})"
@@ -236,7 +245,7 @@ gridImport = "Forbrug fra elnet"
 homePower = "Forbrug"
 loadpoints = "Oplader| Oplader | {count} opladere"
 noEnergy = "Ingen målerdata"
-pvExport = "Eksport til elnettet"
+pvExport = "Eksport til elnet"
 pvProduction = "Produktion"
 selfConsumption = "Eget forbrug"
 
@@ -393,6 +402,19 @@ modalTitle = "Underretninger"
 [offline]
 message = "Ikke forbundet til en server."
 reload = "Genindlæs?"
+
+[passwordModal]
+description = "Angiv adgangskode for at beskytte konfigurations indstillinger. Det er stadig mulig at benytte hovedskærmen uden at logge på"
+empty = "Adgangskode må ikke være tomt"
+error = "Fejl:"
+labelCurrent = "Nuværende adgangskode"
+labelNew = "Ny adgangskode"
+labelRepeat = "Gentag adgangskoden"
+newPassword = "Opret adgangskode"
+noMatch = "Adgangskode stemmer ikke"
+titleNew = "Angiv Administrator adgangskode"
+titleUpdate = "Opdater Administrator adgangskode"
+updatePassword = "Opdater adgangskode"
 
 [session]
 cancel = "Afbryd"
