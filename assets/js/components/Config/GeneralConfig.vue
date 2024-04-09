@@ -26,7 +26,7 @@
 				>
 			</dd>
 		</dl>
-		<dl class="row">
+		<dl class="row" data-testid="generalconfig-telemetry">
 			<dt class="col-sm-4">Telemetry</dt>
 			<dd class="col-sm-8">
 				{{ telemetryEnabled ? "on" : "off" }}
@@ -39,7 +39,7 @@
 				</a>
 			</dd>
 		</dl>
-		<dl class="row">
+		<dl class="row" data-testid="generalconfig-experimental">
 			<dt class="col-sm-4">Experimental</dt>
 			<dd class="col-sm-8">
 				{{ hiddenFeatures ? "on" : "off" }}

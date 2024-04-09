@@ -43,10 +43,6 @@ test.skip("login", async ({ page }) => {
 
   // go to config
   await page.getByTestId("topnavigation-button").click();
-  await page.getByRole("button", { name: "Settings" }).click();
-  await page.getByLabel("Experimental 🧪").click();
-  await page.getByRole("button", { name: "Close" }).click();
-  await page.getByTestId("topnavigation-button").click();
   await page.getByRole("link", { name: "Configuration" }).click();
 
   // login modal
