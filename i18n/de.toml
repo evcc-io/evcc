@@ -13,7 +13,7 @@ legendTitle = "Wie soll Sonnenstrom genutzt werden?"
 legendTopAutostart = "startet automatisch"
 legendTopName = "Batterieunterstütztes Laden"
 legendTopSubline = "ohne Unterbrechungen"
-modalTitle = "Batterieeinstellungen"
+modalTitle = "Hausbatterie"
 
 [batterySettings.bufferStart]
 above = "wenn über {soc}"
@@ -196,6 +196,16 @@ confirm = "Ja, neu starten!"
 description = "Unter normalen Umständen sollte ein Neustart nicht notwendig sein. Melde einen Bug, wenn du evcc regelmäßig neu starten musst."
 disclaimer = "Hinweis: evcc beendet sich und verlässt sich darauf, vom Betriebssystem neu gestartet zu werden."
 modalTitle = "Sicher, dass du neu starten möchtest?"
+
+[log]
+areas = "Alle Bereiche"
+download = "Komplettes Log herunterladen"
+levels = "Alle Level"
+noResults = "Keine passenden Einträge gefunden."
+search = "Suchen"
+showAll = "Alle Einträge anzeigen"
+title = "Logs"
+update = "Aktualisieren"
 
 [loginModal]
 cancel = "Abbrechen"
@@ -451,7 +461,7 @@ allVehicles = "Alle Fahrzeuge"
 filter = "Filtern"
 
 [settings]
-title = "Allgemeine Einstellungen"
+title = "Darstellung"
 
 [settings.hiddenFeatures]
 label = "Experimentell"

@@ -51,14 +51,17 @@
 					{{ $t("batterySettings.modalTitle") }}
 				</button>
 			</li>
-			<li v-if="$hiddenFeatures()">
+			<li>
 				<router-link class="dropdown-item" to="/config">
-					Device Configuration 🧪
+					{{ $t("config.main.title") }}
 				</router-link>
 			</li>
 			<li><hr class="dropdown-divider" /></li>
-			<li>
-				<router-link class="dropdown-item" to="/log"> Debugging </router-link>
+
+			<li v-if="showLogout">
+				<button type="button" class="dropdown-item" @click="logout">
+					{{ $t("header.logout") }}
+				</button>
 			</li>
 			<template v-if="providerLogins.length > 0">
 				<li><hr class="dropdown-divider" /></li>
@@ -83,11 +86,6 @@
 			<li>
 				<button type="button" class="dropdown-item" @click="openHelpModal">
 					<span>{{ $t("header.needHelp") }}</span>
-				</button>
-			</li>
-			<li v-if="showLogout">
-				<button type="button" class="dropdown-item" @click="logout">
-					{{ $t("header.logout") }}
 				</button>
 			</li>
 			<li>

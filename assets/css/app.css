@@ -396,6 +396,10 @@ small {
 	background-color: var(--bs-primary);
 	color: var(--bs-white);
 }
+.form-select {
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
 
 .dark .dropdown-menu {
 	box-shadow: 0 0 8px var(--evcc-background);
@@ -543,4 +547,17 @@ html.app .modal-dialog {
 }
 .btn-neutral:hover {
 	outline: revert;
+}
+
+.round-box {
+	border-radius: 1rem;
+	box-shadow: 0 0 0 0 var(--evcc-gray-50);
+	color: var(--evcc-default-text);
+	background: var(--evcc-box);
+	padding: 1rem;
+	border: 1px solid var(--evcc-gray-50);
+	transition: box-shadow var(--evcc-transition-fast) linear;
+}
+.round-box:hover {
+	border-color: var(--evcc-gray);
 }

@@ -1,7 +1,7 @@
 <template>
 	<div class="root safe-area-inset">
 		<div class="container d-flex h-100 flex-column px-0 pb-4">
-			<TopHeader title="Log" class="mx-4" />
+			<TopHeader showConfig :title="$t('log.title')" class="mx-4" />
 			<div class="logs d-flex flex-column overflow-hidden flex-grow-1 px-4 mx-2 mx-sm-4">
 				<div class="flex-grow-0 row py-4">
 					<div class="col-6 col-lg-3 mb-4 mb-lg-0">
@@ -11,7 +11,9 @@
 							:class="autoFollow ? 'btn-secondary' : 'btn-outline-secondary'"
 							@click="toggleAutoFollow"
 						>
-							<span class="text-nowrap text-truncate">Auto update</span>
+							<span class="text-nowrap text-truncate">
+								{{ $t("log.update") }}
+							</span>
 							<Record
 								v-if="autoFollow"
 								ref="spin"
@@ -25,13 +27,13 @@
 						<input
 							type="search"
 							class="form-control search"
-							placeholder="Filter"
+							:placeholder="$t('log.search')"
 							v-model="search"
 						/>
 					</div>
 					<div class="filterLevel col-6 col-lg-2">
 						<select class="form-select" v-model="level" @change="updateLogs()">
-							<option value="">all levels</option>
+							<option value="">{{ $t("log.levels") }}</option>
 							<hr />
 							<option v-for="level in logLevels" :key="level" :value="level">
 								{{ level }}
@@ -45,7 +47,7 @@
 							@focus="updateAreas()"
 							@change="updateLogs()"
 						>
-							<option value="">all areas</option>
+							<option value="">{{ $t("log.areas") }}</option>
 							<hr />
 							<option v-for="area in areas" :key="area" :value="area">
 								{{ area }}
@@ -68,15 +70,15 @@
 							{{ line }}
 						</div>
 					</code>
-					<p v-else class="my-4">No matching log entries</p>
-					<div class="d-flex my-2 align-items-center">
+					<p v-else class="my-4">{{ $t("log.noResults") }}</p>
+					<div v-if="filteredLines.length" class="d-flex my-2 align-items-center">
 						<div v-if="showMoreButton" class="d-flex align-items-center">
 							<button
 								class="btn btn-link btn-sm evcc-default-text px-0"
 								type="button"
 								@click="updateLogs(true)"
 							>
-								Show all entries
+								{{ $t("log.showAll") }}
 							</button>
 							<div class="m-2">|</div>
 						</div>
@@ -85,7 +87,7 @@
 							:href="downloadUrl"
 							download
 						>
-							Download complete log
+							{{ $t("log.download") }}
 						</a>
 					</div>
 				</div>
@@ -102,7 +104,7 @@ import Record from "../components/MaterialIcon/Record.vue";
 import api from "../api";
 import store from "../store";
 
-const DEFAULT_COUNT = 2000;
+const DEFAULT_COUNT = 1000;
 
 const logLevels = ["TRACE", "DEBUG", "INFO", "WARN", "ERROR", "FATAL"];
 const levelMatcher = new RegExp(`\\[.*?\\] (${logLevels.join("|")})`);
