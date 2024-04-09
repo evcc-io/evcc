@@ -895,13 +895,14 @@ func (site *Site) Run(stopC chan struct{}, interval time.Duration) {
 	site.Health = NewHealth(time.Minute + interval)
 
 	if max := 30 * time.Second; interval < max {
-		site.log.WARN.Printf("interval <%.0fs can lead to unexpected behavior, see https://docs.evcc.io/docs/reference/configuration/interval", max.Seconds())
+		site.log.ERROR.Printf("interval <%.0fs can lead to unexpected behavior, see https://docs.evcc.io/docs/reference/configuration/interval", max.Seconds())
 	}
 
 	loadpointChan := make(chan updater)
 	go site.loopLoadpoints(loadpointChan)
 
 	ticker := time.NewTicker(interval)
+	site.publish(keys.Interval, interval.Seconds())
 	site.update(<-loadpointChan) // start immediately
 
 	for {

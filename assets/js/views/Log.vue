@@ -1,111 +1,238 @@
 <template>
 	<div class="root safe-area-inset">
-		<div class="container d-flex h-100 flex-column px-4 pb-5">
-			<TopHeader title="Log" />
-			<div class="logs d-flex flex-column overflow-hidden flex-grow-1 px-4">
-				<div
-					class="flex-grow-0 d-flex py-4 justify-content-between gap-4 flex-wrap flex-md-nowrap"
-				>
-					<div class="autoFollow order-1">
+		<div class="container d-flex h-100 flex-column px-0 pb-4">
+			<TopHeader title="Log" class="mx-4" />
+			<div class="logs d-flex flex-column overflow-hidden flex-grow-1 px-4 mx-2 mx-sm-4">
+				<div class="flex-grow-0 row py-4">
+					<div class="col-6 col-lg-3 mb-4 mb-lg-0">
 						<button
-							class="btn btn-sm text-nowrap"
-							:class="autoFollow ? 'btn-primary' : 'btn-outline-secondary'"
 							type="button"
+							class="btn text-nowrap d-flex w-100 w-lg-auto justify-content-between"
+							:class="autoFollow ? 'btn-secondary' : 'btn-outline-secondary'"
 							@click="toggleAutoFollow"
 						>
-							<span v-if="autoFollow">Disable auto-follow</span>
-							<span v-else>Enable auto-follow</span>
+							<span class="text-nowrap text-truncate">Auto update</span>
+							<Record
+								v-if="autoFollow"
+								ref="spin"
+								class="ms-1 spin flex-shrink-0"
+								:style="{ animationDuration: `${updateInterval}ms` }"
+							/>
+							<Play v-else class="ms-1 flex-shrink-0" />
 						</button>
 					</div>
-					<input
-						type="search"
-						class="form-control form-control-sm order-3 order-md-2 search"
-						placeholder="Filter"
-						v-model="search"
-					/>
-					<div class="logLevelFilter order-2 order-md-3 d-flex justify-content-end">
-						<div
-							class="btn-group btn-group-sm text-nowrap"
-							role="group"
-							aria-label="Basic radio toggle button group"
+					<div class="col-6 offset-lg-1 col-lg-4 mb-4 mb-lg-0">
+						<input
+							type="search"
+							class="form-control search"
+							placeholder="Filter"
+							v-model="search"
+						/>
+					</div>
+					<div class="filterLevel col-6 col-lg-2">
+						<select class="form-select" v-model="level" @change="updateLogs()">
+							<option value="">all levels</option>
+							<hr />
+							<option v-for="level in logLevels" :key="level" :value="level">
+								{{ level }}
+							</option>
+						</select>
+					</div>
+					<div class="filterAreas col-6 col-lg-2">
+						<select
+							class="form-select"
+							v-model="area"
+							@focus="updateAreas()"
+							@change="updateLogs()"
 						>
-							<template
-								v-for="level in ['trace', 'debug', 'warn', 'error']"
-								:key="level"
-							>
-								<input
-									type="radio"
-									class="btn-check"
-									name="logLevel"
-									:id="`logLevel-${level}`"
-									:value="level"
-									v-model="logLevel"
-								/>
-								<label class="btn btn-outline-secondary" :for="`logLevel-${level}`">
-									{{ level }}
-								</label>
-							</template>
-						</div>
+							<option value="">all areas</option>
+							<hr />
+							<option v-for="area in areas" :key="area" :value="area">
+								{{ area }}
+							</option>
+						</select>
 					</div>
 				</div>
 				<hr class="my-0" />
-				<code class="d-block overflow-y-scroll" ref="log" @scroll="onScroll">
-					<div v-for="(line, index) in filteredLines" :key="index">
-						{{ line }}
+				<div
+					class="overflow-y-scroll pt-2 pb-4 flex-grow-1 d-flex flex-column"
+					ref="log"
+					@scroll="onScroll"
+				>
+					<code v-if="filteredLines.length" class="d-block evcc-default-text flex-grow-1">
+						<div
+							v-for="{ line, className, key } in lineEntries"
+							:key="key"
+							:class="className"
+						>
+							{{ line }}
+						</div>
+					</code>
+					<p v-else class="my-4">No matching log entries</p>
+					<div class="d-flex my-2 align-items-center">
+						<div v-if="showMoreButton" class="d-flex align-items-center">
+							<button
+								class="btn btn-link btn-sm evcc-default-text px-0"
+								type="button"
+								@click="updateLogs(true)"
+							>
+								Show all entries
+							</button>
+							<div class="m-2">|</div>
+						</div>
+						<a
+							class="btn btn-link btn-sm evcc-default-text px-0"
+							:href="downloadUrl"
+							download
+						>
+							Download complete log
+						</a>
 					</div>
-				</code>
+				</div>
 			</div>
 		</div>
 	</div>
 </template>
 
 <script>
-import "@h2d2/shopicons/es/regular/backdown";
+import "@h2d2/shopicons/es/regular/arrowforward";
 import TopHeader from "../components/TopHeader.vue";
+import Play from "../components/MaterialIcon/Play.vue";
+import Record from "../components/MaterialIcon/Record.vue";
 import api from "../api";
+import store from "../store";
+
+const DEFAULT_COUNT = 2000;
+
+const logLevels = ["TRACE", "DEBUG", "INFO", "WARN", "ERROR", "FATAL"];
+const levelMatcher = new RegExp(`\\[.*?\\] (${logLevels.join("|")})`);
 
 export default {
 	name: "Log",
 	components: {
 		TopHeader,
+		Play,
+		Record,
 	},
 	data() {
 		return {
 			lines: [],
-			autoFollow: false,
+			areas: [],
 			logLevel: "debug",
 			search: "",
+			level: "",
+			area: "",
+			timeout: null,
+			logLevels,
+			busy: false,
 		};
 	},
 	mounted() {
-		this.load();
+		this.startInterval();
+		this.updateAreas();
+	},
+	unmounted() {
+		this.stopInterval();
 	},
 	computed: {
 		filteredLines() {
-			return this.lines
-				.filter((line) => !this.search || line.includes(this.search))
-				.filter((line) => line.includes(this.logLevel.toUpperCase()));
+			return this.lines.filter(
+				(line) =>
+					!this.search || line.toLowerCase().includes(this.search.toLocaleLowerCase())
+			);
+		},
+		lineEntries() {
+			const occurrences = new Map();
+			return this.filteredLines.map((line) => {
+				// generate a unique key per line for performant dom updates
+				let key = line.substring(0, 50);
+				const count = occurrences.get(key) || 0;
+				occurrences.set(key, count + 1);
+				key = `${key}-${count + 1}`;
+
+				const className = `log-${levelMatcher.exec(line)?.[1].toLowerCase() || "none"}`;
+
+				return { key, className, line };
+			});
+		},
+		showMoreButton() {
+			return this.lines.length === DEFAULT_COUNT;
+		},
+		updateInterval() {
+			// update log twice per interval
+			return (store.state?.interval || 10) * 1000;
+		},
+		downloadUrl() {
+			const params = new URLSearchParams();
+			if (this.level) {
+				params.append("level", this.level);
+			}
+			if (this.area) {
+				params.append("area", this.area);
+			}
+			params.append("format", "txt");
+			return `./api/log?${params.toString()}`;
+		},
+		autoFollow() {
+			return this.timeout !== null;
 		},
 	},
 	methods: {
-		async load() {
+		async updateLogs(showAll) {
+			// prevent concurrent requests
+			if (this.busy) return;
+
 			try {
-				const response = await api.get("/log");
-				this.lines = response.data?.result;
+				this.busy = true;
+				const response = await api.get("/log", {
+					params: {
+						level: this.level?.toLocaleLowerCase() || null,
+						area: this.area || null,
+						count: showAll ? null : DEFAULT_COUNT,
+					},
+				});
+				this.lines = response.data?.result || [];
+			} catch (e) {
+				console.error(e);
+			}
+			this.busy = false;
+		},
+		startInterval() {
+			this.stopInterval();
+			this.updateLogs();
+			this.timeout = setInterval(() => {
+				this.updateLogs();
+			}, this.updateInterval);
+		},
+		stopInterval() {
+			if (this.timeout) {
+				clearTimeout(this.timeout);
+				this.timeout = null;
+			}
+		},
+		async updateAreas() {
+			try {
+				const response = await api.get("/log/areas");
+				this.areas = response.data?.result || [];
 			} catch (e) {
 				console.error(e);
 			}
 		},
-		onScroll() {
-			// enable auto-follow if scrolled to bottom, else set it to false
-			this.autoFollow =
-				this.$refs.log.scrollHeight - this.$refs.log.scrollTop ===
-				this.$refs.log.clientHeight;
+		onScroll(e) {
+			// disable follow when scrolling
+			this.stopInterval();
+
+			// start follow if scrolled to top and area is scrollable
+			if (e.target.scrollTop === 0 && e.target.scrollHeight > e.target.clientHeight) {
+				this.startInterval();
+			}
 		},
 		toggleAutoFollow() {
-			this.autoFollow = !this.autoFollow;
 			if (this.autoFollow) {
-				this.$refs.log.scrollTop = this.$refs.log.scrollHeight;
+				this.stopInterval();
+			} else {
+				this.startInterval();
+				this.$refs.log.scrollTo({ top: 0, behavior: "smooth" });
 			}
 		},
 	},
@@ -122,5 +249,22 @@ export default {
 }
 .btn {
 	--bs-btn-border-width: 1px;
+}
+.spin {
+	animation: rotation 3s infinite ease-in-out;
+}
+@keyframes rotation {
+	from {
+		transform: rotate(0deg) scale(0.8, -0.8);
+	}
+	to {
+		transform: rotate(1440deg) scale(0.8, -0.8);
+	}
+}
+.log-warn {
+	color: var(--bs-warning);
+}
+.log-error {
+	color: var(--bs-danger);
 }
 </style>

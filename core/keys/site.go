@@ -29,6 +29,7 @@ const (
 	TariffPriceLoadpoints = "tariffPriceLoadpoints"
 	Vehicles              = "vehicles"
 	PasswordConfigured    = "passwordConfigured"
+	Interval              = "interval"
 
 	// meters
 	GridMeter     = "gridMeter"
