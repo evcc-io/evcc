@@ -12,7 +12,7 @@ params:
     id: 247
   - name: capacity
     advanced: true
-# battery control
+  # battery control
   - name: minsoc
     type: number
     advanced: true
