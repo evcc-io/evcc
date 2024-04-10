@@ -1297,7 +1297,8 @@ func (lp *Loadpoint) UpdateChargePower() {
 
 		// https://github.com/evcc-io/evcc/issues/2153
 		// https://github.com/evcc-io/evcc/issues/6986
-		if lp.chargePower < -20 && lp.shouldBeConsistent() {
+		// https://github.com/evcc-io/evcc/issues/13378
+		if lp.chargePower < -100 && lp.shouldBeConsistent() {
 			lp.log.WARN.Printf("charge power must not be negative: %.0f", lp.chargePower)
 		}
 
