@@ -48,6 +48,10 @@ socLimit = "Begrænsning"
 example = "Eksempel"
 optional = "valgfrit"
 
+[config.general]
+cancel = "Afbryd"
+save = "Gem"
+
 [config.grid]
 titleAdd = "Tilføj måler for elnettet"
 titleEdit = "Rediger måler for elnettet"
@@ -77,6 +81,11 @@ titleEdit = "Rediger solmåler"
 [config.site]
 cancel = "Afbryd"
 save = "Gem"
+
+[config.title]
+description = "Vises på hovedskærm og på browserfane"
+label = "Titel"
+title = "Rediger titel"
 
 [config.validation]
 failed = "mislykkedes"
@@ -175,6 +184,7 @@ blog = "Blog"
 docs = "Dokumentation"
 github = "GitHub"
 login = "Login til køretøjer"
+logout = "Log ud"
 nativeSettings = "Skift server"
 needHelp = "Brug for hjælp?"
 sessions = "Opladnings sessioner"
@@ -198,6 +208,14 @@ description = "Under normale omstændigheder bør genstart ikke være nødvendig
 disclaimer = "Bemærk: evcc afsluttes og har brug for at operativsystemet genstarter tjenesten."
 modalTitle = "Er du sikker på, at du vil genstarte?"
 
+[loginModal]
+cancel = "Afbryd"
+error = "Login mislykkedes"
+invalid = "Ugyldig adgangskode"
+login = "Log på"
+password = "Adgangskode"
+title = "Godkendelse"
+
 [main]
 vehicles = "Parkering"
 
@@ -219,7 +237,7 @@ update = "Anvend"
 
 [main.energyflow]
 battery = "Batteri"
-batteryCharge = "Battery opladning"
+batteryCharge = "Batteri opladning"
 batteryDischarge = "Batteriet aflades"
 batteryHold = "Batteri (låst)"
 batteryTooltip = "{energi} af {total} ({soc})"
@@ -227,7 +245,7 @@ gridImport = "Forbrug fra elnet"
 homePower = "Forbrug"
 loadpoints = "Oplader| Oplader | {count} opladere"
 noEnergy = "Ingen målerdata"
-pvExport = "Eksport til elnettet"
+pvExport = "Eksport til elnet"
 pvProduction = "Produktion"
 selfConsumption = "Eget forbrug"
 
@@ -370,9 +388,9 @@ pvDisable = "Ikke nok overskud. Pause i {remaining}..."
 pvEnable = "Overskud tilgængeligt. Starter om {remaining}..."
 scale1p = "Reducerer til 1-faset strøm i {remaining}..."
 scale3p = "Øger til 3-faset opladning om {remaining}..."
-targetChargeActive = "Målladning aktiv..."
-targetChargePlanned = "Målopladning starter kl. {time}."
-targetChargeWaitForVehicle = "Målladning klar. Venter på køretøj..."
+targetChargeActive = "Plan for ladning er aktiv..."
+targetChargePlanned = "Opladningsplan starter kl. {time}."
+targetChargeWaitForVehicle = "Plan for opladning er klar. Venter på køretøj..."
 unknown = ""
 vehicleLimitReached = "Køretøjsgrænsen {soc} % nået."
 waitForVehicle = "Parat. Venter på køretøj ..."
@@ -384,6 +402,19 @@ modalTitle = "Underretninger"
 [offline]
 message = "Ikke forbundet til en server."
 reload = "Genindlæs?"
+
+[passwordModal]
+description = "Angiv adgangskode for at beskytte konfigurations indstillinger. Det er stadig mulig at benytte hovedskærmen uden at logge på"
+empty = "Adgangskode må ikke være tomt"
+error = "Fejl:"
+labelCurrent = "Nuværende adgangskode"
+labelNew = "Ny adgangskode"
+labelRepeat = "Gentag adgangskoden"
+newPassword = "Opret adgangskode"
+noMatch = "Adgangskode stemmer ikke"
+titleNew = "Angiv Administrator adgangskode"
+titleUpdate = "Opdater Administrator adgangskode"
+updatePassword = "Opdater adgangskode"
 
 [session]
 cancel = "Afbryd"

@@ -20,6 +20,7 @@ export default {
 		heating: Boolean,
 		effectivePlanTime: String,
 		planProjectedStart: String,
+		chargingPlanDisabled: Boolean,
 		planActive: Boolean,
 		phaseAction: String,
 		phaseRemainingInterpolated: Number,
@@ -67,7 +68,11 @@ export default {
 			}
 
 			// plan
-			if (this.effectivePlanTime && !this.targetChargeDisabled) {
+			if (
+				!this.chargingPlanDisabled &&
+				this.effectivePlanTime &&
+				!this.targetChargeDisabled
+			) {
 				if (this.planActive && this.charging) {
 					return t("targetChargeActive");
 				}

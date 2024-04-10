@@ -18,12 +18,21 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # - uses: actions/setup-go@v5
-      - uses: erezrokah/setup-go@feat/add_cache_prefix
+      - uses: actions/setup-go@v5
         with:
           go-version: ${{ env.GO_VERSION }}
-          cache-key-prefix: clean-cache-
+          cache: false
         id: go
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-clean-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-clean-
+            ${{ runner.os }}-go-
 
       - name: Install tools
         run: make install
@@ -47,11 +56,21 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: erezrokah/setup-go@feat/add_cache_prefix
+      - uses: actions/setup-go@v5
         with:
           go-version: ${{ env.GO_VERSION }}
-          cache-key-prefix: build-cache-
+          cache: false
         id: go
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-build-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-build-
+            ${{ runner.os }}-go-
 
       - uses: actions/setup-node@v4
         with:
@@ -70,12 +89,21 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # - uses: actions/setup-go@v5
-      - uses: erezrokah/setup-go@feat/add_cache_prefix
+      - uses: actions/setup-go@v5
         with:
           go-version: ${{ env.GO_VERSION }}
-          cache-key-prefix: test-cache-
+          cache: false
         id: go
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-test-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-test-
+            ${{ runner.os }}-go-
 
       - name: Test
         run: mkdir dist && touch dist/empty && make test
@@ -93,12 +121,24 @@ jobs:
           cache: false # avoid cache thrashing
         id: go
 
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-lint-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-lint-
+            ${{ runner.os }}-go-
+
       - run: mkdir dist && touch dist/empty
 
       - name: Lint
         uses: golangci/golangci-lint-action@v4
         with:
           version: latest
+          skip-pkg-cache: true
+          skip-build-cache: true
           args: --out-format=colored-line-number --timeout 5m
 
   ui:
@@ -139,15 +179,30 @@ jobs:
   integration:
     name: Integration
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shardIndex: [1, 2]
+        shardTotal: [2]
 
     steps:
       - uses: actions/checkout@v4
 
-      - uses: erezrokah/setup-go@feat/add_cache_prefix
+      - uses: actions/setup-go@v5
         with:
           go-version: ${{ env.GO_VERSION }}
-          cache-key-prefix: integration-cache-
+          cache: false
         id: go
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-integration-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-integration-
+            ${{ runner.os }}-go-
 
       - uses: actions/setup-node@v4
         with:
@@ -160,15 +215,27 @@ jobs:
       - name: Build Go
         run: make build
 
+      - uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: |
+            ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('**/package-lock.json') }}
+
       - name: Install playwright
         run: npx playwright install --with-deps chromium
 
       - name: Run tests
-        run: npx playwright test
+        run: npx playwright test --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
+
+      # - name: Run tests
+      #   uses: docker://mcr.microsoft.com/playwright:v1.34.3-jammy
+      #   with:
+      #     args: npx playwright test
 
       - uses: actions/upload-artifact@v4
-        if: always()
+        if: ${{ !cancelled() }}
         with:
-          name: playwright-report
+          name: playwright-report-${{ matrix.shardIndex }}
           path: playwright-report/
           retention-days: 14

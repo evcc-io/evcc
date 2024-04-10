@@ -48,6 +48,10 @@ socLimit = "SoC gräns"
 example = "Exempel"
 optional = "valfri"
 
+[config.general]
+cancel = "Avbryt"
+save = "Spara"
+
 [config.grid]
 titleAdd = "Lägg till elnätsmätare"
 titleEdit = "Ändra elnätsmätare"
@@ -77,6 +81,11 @@ titleEdit = "Ändra solcellsmätare"
 [config.site]
 cancel = "Avbryt"
 save = "Spara"
+
+[config.title]
+description = "Visas på huvudskärm och tabbar."
+label = "Titel"
+title = "Ändra titel"
 
 [config.validation]
 failed = "misslyckades"
@@ -175,6 +184,7 @@ blog = "Blogg"
 docs = "Dokumentation"
 github = "GitHub"
 login = "Fordons inloggningar"
+logout = "Logga ut"
 nativeSettings = "Byt server"
 needHelp = "Behöver du hjälp?"
 sessions = "Laddningar"
@@ -197,6 +207,14 @@ confirm = "Ja, starta om!"
 description = "Normalt behövs inte en omstart. Rapportera ett fel om du behöver starta om evcc frekvent."
 disclaimer = "Notera: evcc kommer stängas av och be operativsystemet starta om tjänsten."
 modalTitle = "Är du säker på att du vill starta om?"
+
+[loginModal]
+cancel = "Avbryt"
+error = "Inloggning misslyckades:"
+invalid = "Ogiltigt lösenord."
+login = "Logga in"
+password = "Lösenord"
+title = "Autentisering"
 
 [main]
 vehicles = "Parkering"
@@ -344,6 +362,7 @@ detectionActive = "Detekterar fordon..."
 fallbackName = "Fordon"
 moreActions = "Fler åtgärder"
 none = "Inget fordon"
+notReachable = "Fordonet kunde inte kontaktas. Prova att starta om evcc."
 targetSoc = "Gräns"
 temp = "Temp."
 tempLimit = "Temp-gräns"
@@ -369,8 +388,8 @@ pvDisable = "Inte tillräckligt med överskott. Pausar i {remaining}..."
 pvEnable = "Överskott tillgängligt. Börjar om {remaining}..."
 scale1p = "Minskar till 1-fas-laddning om {remaining}..."
 scale3p = "Ökar till 3-fas-laddning om {remaining}..."
-targetChargeActive = "Målladdning aktiv..."
-targetChargePlanned = "Målladdning startar {time}."
+targetChargeActive = "Laddplan aktiv..."
+targetChargePlanned = "Laddplan startar {time}."
 targetChargeWaitForVehicle = "Laddare beredd. Väntar på fordon..."
 unknown = ""
 vehicleLimitReached = "Fordonsgränsen {soc}% nådd."
@@ -383,6 +402,19 @@ modalTitle = "Meddelanden"
 [offline]
 message = "Inte ansluten till en server."
 reload = "Ladda igen?"
+
+[passwordModal]
+description = "Använd lösenord för att skydda inställningarna. Huvudskärmen kan användas utan att logga in."
+empty = "Lösenordet får inte vara tomt"
+error = "Fel:"
+labelCurrent = "Nuvarande lösenord"
+labelNew = "Nytt lösenord"
+labelRepeat = "Upprepa lösenord"
+newPassword = "Skapa lösenord"
+noMatch = "Lösenorden är olika"
+titleNew = "Ange administratörslösenord"
+titleUpdate = "Ändra administratörslösenord"
+updatePassword = "Ändra lösenord"
 
 [session]
 cancel = "Avbryt"

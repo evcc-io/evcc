@@ -43,7 +43,7 @@
 				class="plan-marker"
 				data-bs-toggle="tooltip"
 				:class="{
-					'plan-marker--warning': planOverrun,
+					'plan-marker--warning': planTimeUnreachable,
 					'plan-marker--error': planMarkerUnreachable,
 				}"
 				:style="{ left: `${planMarkerPosition}%` }"
@@ -91,7 +91,7 @@ export default {
 		effectiveLimitSoc: Number,
 		limitEnergy: Number,
 		planEnergy: Number,
-		planOverrun: Boolean,
+		planTimeUnreachable: Boolean,
 		chargedEnergy: Number,
 		socBasedCharging: Boolean,
 		socBasedPlanning: Boolean,

@@ -1,6 +1,6 @@
 package amber
 
-const URI = "https://api.amber.com.au/v1/sites/%s/prices?endDate=%s&resolution=30"
+const URI = "https://api.amber.com.au/v1/sites/%s/prices?resolution=30"
 
 type PriceInfo struct {
 	Type        string  `json:"type"`

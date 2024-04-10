@@ -48,6 +48,10 @@ socLimit = "Limitas"
 example = "Pavyzdys"
 optional = "pasirinktinai"
 
+[config.general]
+cancel = "Atšaukti"
+save = "Išsaugoti"
+
 [config.grid]
 titleAdd = "Pridėti tinklo skaitiklį"
 titleEdit = "Redaguoti tinklo skaitiklį"
@@ -77,6 +81,11 @@ titleEdit = "Redaguoti saulės skaitiklį"
 [config.site]
 cancel = "Atšaukti"
 save = "Išsaugoti"
+
+[config.title]
+description = "Rodoma pagrindiniame ekrane ir naršyklės kortelėje."
+label = "Pavadinimas"
+title = "Redaguoti pavadinimą"
 
 [config.validation]
 failed = "nepavyko"
@@ -175,6 +184,7 @@ blog = "Tinklaraštis"
 docs = "Dokumentacija (Vokiečių k.)"
 github = "GitHub"
 login = " Automobilių prisijungimai"
+logout = "Atsijungti"
 nativeSettings = "Pakeisti Serverį"
 needHelp = "Reikia Pagalbos?"
 sessions = "Įkrovimo sesijos "
@@ -202,6 +212,14 @@ confirm = "Taip, restartuoti!"
 description = "Įprastai restartavimas neturėtų būti reikalingas. Jei jums vis reikia restartuoti, pasvarstykite, gal derėtų pranešti apie problemą."
 disclaimer = "Pastaba: evcc sustos, ir pasitikės operacinės sistemos pagalba paleidžiant iš naujo."
 modalTitle = "Ar tikrai norite restartuoti?"
+
+[loginModal]
+cancel = "Atšaukti"
+error = "Prisijungti nepavyko: "
+invalid = "Neteisingas slaptažodis."
+login = "Prisijungti"
+password = "Slaptažodis"
+title = "Autentifikavimas"
 
 [main]
 vehicles = "Autoparkas"
@@ -375,9 +393,9 @@ pvDisable = "Trūksta saulės. Pauzė už {remaining}..."
 pvEnable = "Saulės užtenka, įkrovimas už {remaining}..."
 scale1p = "Sumažinimas į vienfazį įkrovimą už {remaining}..."
 scale3p = "Padidinimas į trifazį įkrovimą už {remaining}..."
-targetChargeActive = "Planinis įkrovimas aktyvuotas..."
-targetChargePlanned = "Planinis įkrovimas prasidės {time}."
-targetChargeWaitForVehicle = "Planinis įkrovimas leidžiamas. Laukiama automobilio signalo..."
+targetChargeActive = "Įkrovimo planas aktyvuotas..."
+targetChargePlanned = "Suplanuotas įkrovimas prasidės {time}."
+targetChargeWaitForVehicle = "Įkrovimas pagal planą leidžiamas. Laukiama automobilio..."
 unknown = ""
 vehicleLimitReached = "Automobilyje nustatytas limitas {soc}% pasiektas."
 waitForVehicle = "Paruošta. Laukiama automobilio..."
@@ -389,6 +407,19 @@ modalTitle = "Pranešimai"
 [offline]
 message = "Nėra ryšio su serveriu."
 reload = "Perkrauti?"
+
+[passwordModal]
+description = "Nustatykite slaptažodį konfigūracijos apsaugai. Pagrindiniu ekranu galima naudotis ir neprisijungus."
+empty = "Slaptažodis negali būti tuščias"
+error = "Klaida: "
+labelCurrent = "Dabartinis slaptažodis"
+labelNew = "Naujas slaptažodis"
+labelRepeat = "Pakartoti slaptažodį"
+newPassword = "Sukurti slaptažodį"
+noMatch = "Slaptažodžiai nesutampa"
+titleNew = "Nustatyti Administratoriaus slaptažodį"
+titleUpdate = "Atnaujinti Administratoriaus slaptažodį"
+updatePassword = "Atnaujinti slaptažodį"
 
 [session]
 cancel = "Atšaukti"

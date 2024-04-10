@@ -27,12 +27,7 @@ func ChargeModeString(mode string) (ChargeMode, error) {
 var _ encoding.TextUnmarshaler = (*ChargeMode)(nil)
 
 func (c *ChargeMode) UnmarshalText(text []byte) error {
-	casted, err := ChargeModeString(string(text))
-	if err != nil {
-		return err
-	}
-
-	*c = casted
-
-	return nil
+	var err error
+	*c, err = ChargeModeString(string(text))
+	return err
 }

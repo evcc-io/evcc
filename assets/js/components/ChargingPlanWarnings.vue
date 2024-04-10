@@ -78,10 +78,8 @@ export default {
 			if (planTime && this.endTime) {
 				const dateWanted = new Date(planTime);
 				const dateEstimated = new Date(this.endTime);
-				// account for rounding errors
-				dateWanted.setSeconds(60);
-				dateEstimated.setSeconds(0);
-				return dateWanted < dateEstimated;
+				// 1 minute tolerance
+				return dateEstimated - dateWanted > 60 * 1e3;
 			}
 			return false;
 		},

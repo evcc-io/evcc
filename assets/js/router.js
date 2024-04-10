@@ -2,6 +2,7 @@ import { createRouter, createWebHashHistory } from "vue-router";
 import Modal from "bootstrap/js/dist/modal";
 import Main from "./views/Main.vue";
 import { ensureCurrentLocaleMessages } from "./i18n";
+import { openLoginModal, updateAuthStatus, isLoggedIn } from "./auth";
 
 function hideAllModals() {
   [...document.querySelectorAll(".modal.show")].forEach((modal) => {
@@ -17,7 +18,18 @@ export default function setupRouter(i18n) {
     history: createWebHashHistory(),
     routes: [
       { path: "/", component: Main, props: true },
-      { path: "/config", component: () => import("./views/Config.vue"), props: true },
+      {
+        path: "/config",
+        component: () => import("./views/Config.vue"),
+        beforeEnter: async () => {
+          await updateAuthStatus();
+          if (!isLoggedIn()) {
+            openLoginModal();
+            return false;
+          }
+        },
+        props: true,
+      },
       {
         path: "/sessions",
         component: () => import("./views/ChargingSessions.vue"),
