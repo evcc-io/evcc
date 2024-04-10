@@ -471,6 +471,9 @@ func (lp *Loadpoint) StartVehicleDetection() {
 	// reset vehicle
 	lp.setActiveVehicle(nil)
 
+	lp.vmu.Lock()
+	defer lp.vmu.Unlock()
+
 	// start auto-detect
 	lp.startVehicleDetection()
 }
