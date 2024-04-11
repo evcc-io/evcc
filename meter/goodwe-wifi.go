@@ -7,6 +7,7 @@ import (
 	"github.com/evcc-io/evcc/meter/goodwe"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
+	gridx "github.com/grid-x/modbus"
 )
 
 type goodWeWiFi struct {
@@ -37,6 +38,8 @@ func NewGoodWeWifiFromConfig(other map[string]interface{}) (api.Meter, error) {
 }
 
 func NewGoodWeWiFi(uri, usage string, timeout time.Duration) (api.Meter, error) {
+	gridx.RTUOverUDPClient("0.0.0.0:8899")
+
 	instance, err := goodwe.Instance(util.NewLogger("goodwe-wifi"))
 	if err != nil {
 		return nil, err
