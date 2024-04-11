@@ -3,6 +3,9 @@ products:
   - brand: Schrack
     description:
       generic: i-CHARGE CION
+  - brand: Smartfox
+    description:
+      generic: Pro Charger
 params:
   - name: modbus
     choice: ["rs485"]
