@@ -3,6 +3,7 @@ package ocpp
 import (
 	"sync"
 	"time"
+	"net/http"
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/lorenzodonini/ocpp-go/ocpp"
@@ -31,6 +32,7 @@ func Instance() *CS {
 
 		server := ws.NewServer()
 		server.SetTimeoutConfig(timeoutConfig)
+		server.SetCheckOriginHandler(func(r *http.Request) bool { return true })
 
 		dispatcher := ocppj.NewDefaultServerDispatcher(ocppj.NewFIFOQueueMap(0))
 		dispatcher.SetTimeout(time.Minute)
