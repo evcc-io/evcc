@@ -98,17 +98,17 @@ func (cs *CS) OnStatusNotification(id string, request *core.StatusNotificationRe
 	}
 	conn := cp.connectorByID(request.ConnectorId)
 	if request.Status == core.ChargePointStatusPreparing && conn != nil && conn.ResetAfterStop() {
-		conn.log.TRACE.Printf("marking for later soft reset on chargepoint: %s %s",id,request.Status)
+		conn.log.TRACE.Printf("marking for later soft reset on chargepoint: %s %s", id, request.Status)
 		conn.SetNeedsReset(true)
 	}
 	if request.Status == core.ChargePointStatusAvailable && conn != nil && conn.ResetAfterStop() {
-		conn.log.TRACE.Printf("checking soft reset on free chargepoint: %s %s is %t",id,request.Status,conn.NeedsReset())
+		conn.log.TRACE.Printf("checking soft reset on free chargepoint: %s %s is %t", id, request.Status, conn.NeedsReset())
 		if conn.NeedsReset() {
-			conn.log.TRACE.Printf("actually performing soft reset on free chargepoint: %s",conn.ChargePoint().ID())
+			conn.log.TRACE.Printf("actually performing soft reset on free chargepoint: %s", conn.ChargePoint().ID())
 			conn.SetNeedsReset(false)
 			cs.TriggerResetRequest(conn.ChargePoint().ID(), core.ResetTypeSoft)
 		} else {
-			conn.log.TRACE.Printf("not performing soft reset on free chargepoint: %s",conn.ChargePoint().ID())
+			conn.log.TRACE.Printf("not performing soft reset on free chargepoint: %s", conn.ChargePoint().ID())
 		}
 	}
 

@@ -33,20 +33,20 @@ type Connector struct {
 	txnId    int
 
 	resetAfterStop bool
-	needsReset bool
+	needsReset     bool
 }
 
-func NewConnector(log *util.Logger, id int, cp *CP, timeout time.Duration, resetAfterStop bool) (*Connector, error) {
+func NewConnector(log *util.Logger, id int, cp *CP, timeout time.Duration) (*Connector, error) {
 	conn := &Connector{
-		log:          log,
-		cp:           cp,
-		id:           id,
-		clock:        clock.New(),
-		statusC:      make(chan struct{}),
-		measurements: make(map[types.Measurand]types.SampledValue),
-		timeout:      timeout,
-		resetAfterStop: resetAfterStop,
-		needsReset:   true,
+		log:            log,
+		cp:             cp,
+		id:             id,
+		clock:          clock.New(),
+		statusC:        make(chan struct{}),
+		measurements:   make(map[types.Measurand]types.SampledValue),
+		timeout:        timeout,
+		resetAfterStop: false,
+		needsReset:     true,
 	}
 
 	err := cp.registerConnector(id, conn)
@@ -70,12 +70,16 @@ func (conn *Connector) ResetAfterStop() bool {
 	return conn.resetAfterStop
 }
 
+func (conn *Connector) SetResetAfterStop(val bool) {
+	conn.resetAfterStop = val
+}
+
 func (conn *Connector) NeedsReset() bool {
 	return conn.needsReset
 }
 
 func (conn *Connector) SetNeedsReset(val bool) {
-	conn.needsReset=val
+	conn.needsReset = val
 }
 
 func (conn *Connector) TriggerMessageRequest(feature remotetrigger.MessageTrigger, f ...func(request *remotetrigger.TriggerMessageRequest)) {
