@@ -1,8 +1,8 @@
 package ocpp
 
 import (
-	"time"
 	"strings"
+	"time"
 
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/types"
@@ -61,7 +61,7 @@ func (conn *Connector) MeterValues(request *core.MeterValuesRequest) (*core.Mete
 		// ignore old meter value requests
 		if meterValue.Timestamp.Time.After(conn.meterUpdated) {
 			for _, sample := range meterValue.SampledValue {
-				sample.Value=strings.TrimSpace(sample.Value)
+				sample.Value = strings.TrimSpace(sample.Value)
 				conn.measurements[getSampleKey(sample)] = sample
 				conn.meterUpdated = conn.clock.Now()
 			}
