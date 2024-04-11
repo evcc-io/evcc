@@ -1,9 +1,9 @@
 package ocpp
 
 import (
+	"net/http"
 	"sync"
 	"time"
-	"net/http"
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/lorenzodonini/ocpp-go/ocpp"
