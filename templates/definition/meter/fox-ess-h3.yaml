@@ -18,7 +18,7 @@ params:
     advanced: true
   - name: maxsoc
     type: number
-    advanced: true   
+    advanced: true
 render: |
   type: custom
   {{- if eq .usage "grid" }}
