@@ -53,6 +53,7 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 		BootNotification *bool
 		GetConfiguration *bool
 		ChargingRateUnit string
+		ResetAfterStop   *bool
 	}{
 		Connector:        1,
 		IdTag:            defaultIdTag,
@@ -67,11 +68,12 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 
 	boot := cc.BootNotification != nil && *cc.BootNotification
 	noConfig := cc.GetConfiguration != nil && !*cc.GetConfiguration
+	resetAfterStop := cc.ResetAfterStop != nil && *cc.ResetAfterStop
 
 	c, err := NewOCPP(cc.StationId, cc.Connector, cc.IdTag,
 		cc.MeterValues, cc.MeterInterval,
 		boot, noConfig,
-		cc.ConnectTimeout, cc.Timeout, cc.ChargingRateUnit)
+		cc.ConnectTimeout, cc.Timeout, cc.ChargingRateUnit, resetAfterStop)
 	if err != nil {
 		return c, err
 	}
@@ -106,7 +108,7 @@ func NewOCPP(id string, connector int, idtag string,
 	meterValues string, meterInterval time.Duration,
 	boot, noConfig bool,
 	connectTimeout, timeout time.Duration,
-	chargingRateUnit string,
+	chargingRateUnit string, resetAfterStop bool,
 ) (*OCPP, error) {
 	unit := "ocpp"
 	if id != "" {
@@ -126,7 +128,7 @@ func NewOCPP(id string, connector int, idtag string,
 		}
 	}
 
-	conn, err := ocpp.NewConnector(log, connector, cp, timeout)
+	conn, err := ocpp.NewConnector(log, connector, cp, timeout, resetAfterStop)
 	if err != nil {
 		return nil, err
 	}
@@ -375,6 +377,11 @@ func (c *OCPP) Enable(enable bool) (err error) {
 
 			rc <- err
 		}, txn)
+
+		if c.conn.ResetAfterStop() {
+			c.log.TRACE.Printf("performing soft reset on chargepoint after disable: %s",c.conn.ChargePoint().ID())
+			ocpp.Instance().TriggerResetRequest(c.conn.ChargePoint().ID(), core.ResetTypeSoft)
+		}
 	}
 
 	return c.wait(err, rc)

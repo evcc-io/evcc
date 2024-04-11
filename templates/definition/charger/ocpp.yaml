@@ -76,6 +76,16 @@ params:
     description:
       de: Einheit, in der ChargingProfile-Werte gesetzt werden ("W" oder "A")
       en: Unit for setting ChargingProfile values ("W" or "A")
+  - name: resetafterstop
+    advanced: true
+    type: bool
+    default: false
+    description:
+      de: Charger Reset nach Transaktionsende um Laden ohne ocpp zu stoppen (free charge mode)
+      en: charger reset after end of transaction to prevent non ocpp loading (free charge mode)
+    help:
+      de: Enercab Smart laedt nach Aus sonst mit 6A weiter solange Fahrzeug verbunden ist
+      en: Enercab Smart would continue loading after Off with 6A as long as vehicle is connected
 render: |
   {{ include "ocpp" . }}
   {{- if ne .getconfiguration "true" }}
@@ -92,4 +102,7 @@ render: |
   {{- end }}
   {{- if .chargingrateunit }}
   chargingrateunit: {{ .chargingrateunit }}
+  {{- end }}
+  {{- if ne .resetafterstop "false" }}
+  resetafterstop: {{ .resetafterstop }}
   {{- end }}

@@ -31,9 +31,12 @@ type Connector struct {
 
 	txnCount int // change initial value to the last known global transaction. Needs persistence
 	txnId    int
+
+	resetAfterStop bool
+	needsReset bool
 }
 
-func NewConnector(log *util.Logger, id int, cp *CP, timeout time.Duration) (*Connector, error) {
+func NewConnector(log *util.Logger, id int, cp *CP, timeout time.Duration, resetAfterStop bool) (*Connector, error) {
 	conn := &Connector{
 		log:          log,
 		cp:           cp,
@@ -42,6 +45,8 @@ func NewConnector(log *util.Logger, id int, cp *CP, timeout time.Duration) (*Con
 		statusC:      make(chan struct{}),
 		measurements: make(map[types.Measurand]types.SampledValue),
 		timeout:      timeout,
+		resetAfterStop: resetAfterStop,
+		needsReset:   true,
 	}
 
 	err := cp.registerConnector(id, conn)
@@ -59,6 +64,18 @@ func (conn *Connector) ChargePoint() *CP {
 
 func (conn *Connector) ID() int {
 	return conn.id
+}
+
+func (conn *Connector) ResetAfterStop() bool {
+	return conn.resetAfterStop
+}
+
+func (conn *Connector) NeedsReset() bool {
+	return conn.needsReset
+}
+
+func (conn *Connector) SetNeedsReset(val bool) {
+	conn.needsReset=val
 }
 
 func (conn *Connector) TriggerMessageRequest(feature remotetrigger.MessageTrigger, f ...func(request *remotetrigger.TriggerMessageRequest)) {
