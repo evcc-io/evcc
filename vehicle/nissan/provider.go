@@ -19,7 +19,7 @@ type Provider struct {
 }
 
 // NewProvider returns a kamereon provider
-func NewProvider(api *API, vin string, expiry, cache time.Duration) *Provider {
+func NewProvider(api *API, vin, version string, expiry, cache time.Duration) *Provider {
 	impl := &Provider{
 		action: func(value Action) error {
 			_, err := api.ChargingAction(vin, value)
@@ -30,7 +30,7 @@ func NewProvider(api *API, vin string, expiry, cache time.Duration) *Provider {
 
 	impl.statusG = provider.Cached(func() (StatusResponse, error) {
 		return impl.status(
-			func() (StatusResponse, error) { return api.BatteryStatus(vin) },
+			func() (StatusResponse, error) { return api.BatteryStatus(vin, version) },
 			func() (ActionResponse, error) { return api.RefreshRequest(vin, "RefreshBatteryStatus") },
 		)
 	}, cache)
@@ -116,16 +116,18 @@ var _ api.VehicleRange = (*Provider)(nil)
 // Range implements the api.VehicleRange interface
 func (v *Provider) Range() (int64, error) {
 	res, err := v.statusG()
-
-	if err == nil {
-		if res.Attributes.RangeHvacOff == nil {
-			return 0, api.ErrNotAvailable
-		}
-
-		return int64(*res.Attributes.RangeHvacOff), nil
+	if err != nil {
+		return 0, err
 	}
 
-	return 0, err
+	if res.Attributes.RangeHvacOff != nil {
+		return int64(*res.Attributes.RangeHvacOff), nil
+	}
+	if res.Attributes.BatteryAutonomy != nil {
+		return int64(*res.Attributes.BatteryAutonomy), nil
+	}
+
+	return 0, api.ErrNotAvailable
 }
 
 var _ api.VehicleFinishTimer = (*Provider)(nil)

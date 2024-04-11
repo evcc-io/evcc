@@ -89,6 +89,8 @@ type Attributes struct {
 	RemainingToFullFast   int       `json:"timeRequiredToFullFast"`
 	RemainingToFullNormal int       `json:"timeRequiredToFullNormal"`
 	RemainingToFullSlow   int       `json:"timeRequiredToFullSlow"`
+	// v2
+	BatteryAutonomy *int `json:"batteryAutonomy"`
 }
 
 type ActionResponse struct {

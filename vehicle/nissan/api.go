@@ -59,8 +59,8 @@ func (v *API) Vehicles() ([]string, error) {
 	return vehicles, err
 }
 
-// Battery provides battery api response
-func (v *API) BatteryStatus(vin string) (StatusResponse, error) {
+// BatteryStatus provides battery api response
+func (v *API) BatteryStatus(vin, version string) (StatusResponse, error) {
 	uri := fmt.Sprintf("%s/v1/cars/%s/battery-status", CarAdapterBaseURL, vin)
 
 	var res StatusResponse
