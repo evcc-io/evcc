@@ -61,7 +61,7 @@ func (v *API) Vehicles() ([]string, error) {
 
 // BatteryStatus provides battery api response
 func (v *API) BatteryStatus(vin, version string) (StatusResponse, error) {
-	uri := fmt.Sprintf("%s/v1/cars/%s/battery-status", CarAdapterBaseURL, vin)
+	uri := fmt.Sprintf("%s/%s/cars/%s/battery-status", CarAdapterBaseURL, version, vin)
 
 	var res StatusResponse
 	err := v.GetJSON(uri, &res)

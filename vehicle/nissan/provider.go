@@ -43,7 +43,8 @@ func (v *Provider) status(battery func() (StatusResponse, error), refresh func()
 
 	if err == nil {
 		// result valid?
-		if time.Since(res.Attributes.LastUpdateTime.Time) < v.expiry || res.Attributes.LastUpdateTime.IsZero() {
+		updated := res.Attributes.Updated()
+		if time.Since(updated) < v.expiry || updated.IsZero() {
 			v.refreshTime = time.Time{}
 			return res, err
 		}
@@ -123,6 +124,8 @@ func (v *Provider) Range() (int64, error) {
 	if res.Attributes.RangeHvacOff != nil {
 		return int64(*res.Attributes.RangeHvacOff), nil
 	}
+
+	// v2
 	if res.Attributes.BatteryAutonomy != nil {
 		return int64(*res.Attributes.BatteryAutonomy), nil
 	}
@@ -135,16 +138,20 @@ var _ api.VehicleFinishTimer = (*Provider)(nil)
 // FinishTime implements the api.VehicleFinishTimer interface
 func (v *Provider) FinishTime() (time.Time, error) {
 	res, err := v.statusG()
-
-	if err == nil {
-		if res.Attributes.RemainingTime == nil {
-			return time.Time{}, api.ErrNotAvailable
-		}
-
-		return res.Attributes.LastUpdateTime.Time.Add(time.Duration(*res.Attributes.RemainingTime) * time.Minute), err
+	if err != nil {
+		return time.Time{}, err
 	}
 
-	return time.Time{}, err
+	if res.Attributes.RemainingTime != nil {
+		minutes := time.Duration(*res.Attributes.RemainingTime) * time.Minute
+
+		updated := res.Attributes.Updated()
+		if !updated.IsZero() {
+			return updated.Add(minutes), nil
+		}
+	}
+
+	return time.Time{}, api.ErrNotAvailable
 }
 
 var _ api.ChargeController = (*Provider)(nil)
