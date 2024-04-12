@@ -7,6 +7,7 @@ import (
 
 	eapi "github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/globalconfig"
+	"github.com/evcc-io/evcc/charger/eebus"
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/server/assets"
 	"github.com/evcc-io/evcc/util"
@@ -118,9 +119,6 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, cache *util.Cache) {
 		"auth":                    {"GET", "/auth/status", authStatusHandler(auth)},
 		"login":                   {"POST", "/auth/login", loginHandler(auth)},
 		"logout":                  {"POST", "/auth/logout", logoutHandler},
-
-		"mqtt1": {"GET", "/config/mqtt", settingsGetHandler("mqtt")},
-		"mqtt2": {"POST", "/config/mqtt", settingsSetHandler("mqtt", new(globalconfig.Mqtt))},
 	}
 
 	for _, r := range routes {
@@ -145,25 +143,29 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, cache *util.Cache) {
 		"deletedevice": {"DELETE", "/devices/{class:[a-z]+}/{id:[0-9.]+}", deleteDeviceHandler},
 		"testconfig":   {"POST", "/test/{class:[a-z]+}", testConfigHandler},
 		"testmerged":   {"POST", "/test/{class:[a-z]+}/merge/{id:[0-9.]+}", testConfigHandler},
+
 		// new endpoints ⤵︎
-		"mqtt":                {"GET", "/mqtt", mqttHandler},
-		"updatemqtt":          {"PUT", "/mqtt", updateMqttHandler},
-		"influx":              {"GET", "/influx", influxHandler},
-		"updateinflux":        {"PUT", "/influx", updateInfluxHandler},
-		"eebus":               {"GET", "/eebus", eebusHandler},
-		"updateeebus":         {"PUT", "/eebus", updateEebusHandler},
-		"tariffs":             {"GET", "/tariffs", tariffsHandler},
-		"updatetariffs":       {"PUT", "/tariffs", updateTariffsHandler},
-		"messaging":           {"GET", "/messaging", messagingHandler},
-		"updatemessaging":     {"PUT", "/messaging", updateMessagingHandler},
-		"modbusproxy":         {"GET", "/modbusproxy", modbusProxyHandler},
-		"updatemodbusproxy":   {"PUT", "/modbusproxy", updateModbusProxyHandler},
+		"mqtt":         {"GET", "/mqtt", settingsGetHandler("mqtt")},
+		"updatemqtt":   {"PUT", "/mqtt", settingsSetYamlHandler("mqtt", new(globalconfig.Mqtt))},
+		"influx":       {"GET", "/influx", settingsGetHandler("influx")},
+		"updateinflux": {"PUT", "/influx", settingsSetYamlHandler("influx", new(globalconfig.Influx))},
+		// "hems":              {"GET", "/hems", settingsGetHandler("hems")},
+		// "updatehems":        {"PUT", "/hems", settingsSetYamlHandler("hems", new(globalconfig.Hems))},
+		"eebus":             {"GET", "/eebus", settingsGetHandler("eebus")},
+		"updateeebus":       {"PUT", "/eebus", settingsSetYamlHandler("eebus", new(eebus.Config))},
+		"tariffs":           {"GET", "/tariffs", settingsGetHandler("tariffs")},
+		"updatetariffs":     {"PUT", "/tariffs", settingsSetYamlHandler("tariffs", new(globalconfig.Tariffs))},
+		"messaging":         {"GET", "/messaging", settingsGetHandler("messaging")},
+		"updatemessaging":   {"PUT", "/messaging", settingsSetYamlHandler("messaging", new(globalconfig.Messaging))},
+		"modbusproxy":       {"GET", "/modbusproxy", settingsGetHandler("modbusproxy")},
+		"updatemodbusproxy": {"PUT", "/modbusproxy", settingsSetYamlHandler("modbusproxy", new(globalconfig.ModbusProxy))},
+		"network":           {"GET", "/network", settingsGetHandler("network")},
+		"updatenetwork":     {"PUT", "/network", settingsSetYamlHandler("network", new(globalconfig.Network))},
+
 		"interval":            {"GET", "/interval", intervalHandler},
 		"updateinterval":      {"PUT", "/interval/{value:[0-9]+}", updateIntervalHandler},
-		"sponsortatus":        {"GET", "/sponsortatus", sponsorStatusHandler},
+		"sponsortatus":        {"GET", "/sponsorstatus", sponsorStatusHandler},
 		"updatesponsortoken":  {"PUT", "/sponsortoken/{token:[a-zA-Z0-9]+}", updateSponsortokenHandler},
-		"network":             {"GET", "/network", networkHandler},
-		"updatenetwork":       {"PUT", "/network", updateNetworkHandler},
 		"maxgridsupply":       {"GET", "/maxgridsupply", maxGridSupplyWhileBatteryChargingHandler},
 		"updatemaxgridsupply": {"PUT", "/maxgridsupply/{value:[0-9.]+}", updateMaxGridSupplyWhileBatteryChargingHandler},
 	}

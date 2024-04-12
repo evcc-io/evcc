@@ -16,7 +16,7 @@ func settingsGetHandler(key string) http.HandlerFunc {
 	}
 }
 
-func settingsSetHandler(key string, val any) http.HandlerFunc {
+func settingsSetYamlHandler(key string, struc any) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		other := make(map[string]interface{})
 		if err := yaml.NewDecoder(r.Body).Decode(&other); err != nil {
@@ -24,7 +24,7 @@ func settingsSetHandler(key string, val any) http.HandlerFunc {
 			return
 		}
 
-		if err := util.DecodeOther(other, &val); err != nil {
+		if err := util.DecodeOther(other, &struc); err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
@@ -33,14 +33,17 @@ func settingsSetHandler(key string, val any) http.HandlerFunc {
 		enc := yaml.NewEncoder(&res)
 		enc.SetIndent(2)
 
-		if err := enc.Encode(val); err != nil {
+		if err := enc.Encode(struc); err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
 
-		settings.SetString(key, res.String())
+		val := res.String()
+		settings.SetString(key, val)
+
+		setConfigDirty()
 
 		w.WriteHeader(http.StatusOK)
-		jsonResult(w, res)
+		jsonResult(w, val)
 	}
 }

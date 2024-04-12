@@ -5,7 +5,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net"
 	"net/http"
 	"regexp"
 	"slices"
@@ -37,7 +36,6 @@ import (
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/locale"
 	"github.com/evcc-io/evcc/util/machine"
-	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/pipe"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/sponsor"
@@ -52,10 +50,10 @@ import (
 	"golang.org/x/text/currency"
 )
 
-var conf = globalConfig{
+var conf = globalconfig.All{
 	Interval: 10 * time.Second,
 	Log:      "info",
-	Network: networkConfig{
+	Network: globalconfig.Network{
 		Schema: "http",
 		Host:   "evcc.local",
 		Port:   7070,
@@ -63,91 +61,13 @@ var conf = globalConfig{
 	Mqtt: globalconfig.Mqtt{
 		Topic: "evcc",
 	},
-	Database: dbConfig{
+	Database: globalconfig.DB{
 		Type: "sqlite",
 		Dsn:  "~/.evcc/evcc.db",
 	},
 }
 
 var nameRE = regexp.MustCompile(`^[a-zA-Z0-9_.:-]+$`)
-
-type globalConfig struct {
-	Network      networkConfig
-	Log          string
-	SponsorToken string
-	Plant        string // telemetry plant id
-	Telemetry    bool
-	Metrics      bool
-	Profile      bool
-	Levels       map[string]string
-	Interval     time.Duration
-	Database     dbConfig
-	Mqtt         globalconfig.Mqtt
-	ModbusProxy  []proxyConfig
-	Javascript   []javascriptConfig
-	Go           []goConfig
-	Influx       server.InfluxConfig
-	EEBus        map[string]interface{}
-	HEMS         config.Typed
-	Messaging    messagingConfig
-	Meters       []config.Named
-	Chargers     []config.Named
-	Vehicles     []config.Named
-	Tariffs      tariffConfig
-	Site         map[string]interface{}
-	Loadpoints   []map[string]interface{}
-}
-
-type javascriptConfig struct {
-	VM     string
-	Script string
-}
-
-type goConfig struct {
-	VM     string
-	Script string
-}
-
-type proxyConfig struct {
-	Port            int
-	ReadOnly        string
-	modbus.Settings `mapstructure:",squash"`
-}
-
-type dbConfig struct {
-	Type string
-	Dsn  string
-}
-
-type messagingConfig struct {
-	Events   map[string]push.EventTemplateConfig
-	Services []config.Typed
-}
-
-type tariffConfig struct {
-	Currency string
-	Grid     config.Typed
-	FeedIn   config.Typed
-	Co2      config.Typed
-	Planner  config.Typed
-}
-
-type networkConfig struct {
-	Schema string
-	Host   string
-	Port   int
-}
-
-func (c networkConfig) HostPort() string {
-	if c.Schema == "http" && c.Port == 80 || c.Schema == "https" && c.Port == 443 {
-		return c.Host
-	}
-	return net.JoinHostPort(c.Host, strconv.Itoa(c.Port))
-}
-
-func (c networkConfig) URI() string {
-	return fmt.Sprintf("%s://%s", c.Schema, c.HostPort())
-}
 
 func nameValid(name string) error {
 	if !nameRE.MatchString(name) {
@@ -156,7 +76,7 @@ func nameValid(name string) error {
 	return nil
 }
 
-func loadConfigFile(conf *globalConfig) error {
+func loadConfigFile(conf *globalconfig.All) error {
 	err := viper.ReadInConfig()
 
 	if cfgFile = viper.ConfigFileUsed(); cfgFile == "" {
@@ -394,7 +314,7 @@ func configureVehicles(static []config.Named, names ...string) error {
 	return nil
 }
 
-func configureEnvironment(cmd *cobra.Command, conf globalConfig) (err error) {
+func configureEnvironment(cmd *cobra.Command, conf globalconfig.All) (err error) {
 	// full http request log
 	if cmd.Flags().Lookup(flagHeaders).Changed {
 		request.LogHeaders = true
@@ -437,7 +357,7 @@ func configureEnvironment(cmd *cobra.Command, conf globalConfig) (err error) {
 
 	// setup EEBus server
 	if err == nil && conf.EEBus != nil {
-		err = configureEEBus(conf.EEBus)
+		err = configureEEBus(*conf.EEBus)
 	}
 
 	// setup config database
@@ -449,7 +369,7 @@ func configureEnvironment(cmd *cobra.Command, conf globalConfig) (err error) {
 }
 
 // configureDatabase configures session database
-func configureDatabase(conf dbConfig) error {
+func configureDatabase(conf globalconfig.DB) error {
 	if err := db.NewInstance(conf.Type, conf.Dsn); err != nil {
 		return err
 	}
@@ -478,7 +398,7 @@ func configureDatabase(conf dbConfig) error {
 }
 
 // configureInflux configures influx database
-func configureInflux(conf server.InfluxConfig, site site.API, in <-chan util.Param) {
+func configureInflux(conf globalconfig.Influx, site site.API, in <-chan util.Param) {
 	influx := server.NewInfluxClient(
 		conf.URL,
 		conf.Token,
@@ -518,7 +438,7 @@ func configureMQTT(conf globalconfig.Mqtt) error {
 }
 
 // setup javascript
-func configureJavascript(conf []javascriptConfig) error {
+func configureJavascript(conf []globalconfig.Javascript) error {
 	for _, cc := range conf {
 		if _, err := javascript.RegisteredVM(cc.VM, cc.Script); err != nil {
 			return fmt.Errorf("failed configuring javascript: %w", err)
@@ -528,7 +448,7 @@ func configureJavascript(conf []javascriptConfig) error {
 }
 
 // setup go
-func configureGo(conf []goConfig) error {
+func configureGo(conf []globalconfig.Go) error {
 	for _, cc := range conf {
 		if _, err := golang.RegisteredVM(cc.VM, cc.Script); err != nil {
 			return fmt.Errorf("failed configuring go: %w", err)
@@ -550,7 +470,7 @@ func configureHEMS(conf config.Typed, site *core.Site, httpd *server.HTTPd) erro
 }
 
 // setup MDNS
-func configureMDNS(conf networkConfig) error {
+func configureMDNS(conf globalconfig.Network) error {
 	host := strings.TrimSuffix(conf.Host, ".local")
 
 	zc, err := zeroconf.RegisterProxy("evcc", "_http._tcp", "local.", conf.Port, host, nil, []string{"path=/"}, nil)
@@ -564,7 +484,7 @@ func configureMDNS(conf networkConfig) error {
 }
 
 // setup EEBus
-func configureEEBus(conf map[string]interface{}) error {
+func configureEEBus(conf eebus.Config) error {
 	var err error
 	if eebus.Instance, err = eebus.NewServer(conf); err != nil {
 		return fmt.Errorf("failed configuring eebus: %w", err)
@@ -577,7 +497,7 @@ func configureEEBus(conf map[string]interface{}) error {
 }
 
 // setup messaging
-func configureMessengers(conf messagingConfig, vehicles push.Vehicles, valueChan chan util.Param, cache *util.Cache) (chan push.Event, error) {
+func configureMessengers(conf globalconfig.Messaging, vehicles push.Vehicles, valueChan chan util.Param, cache *util.Cache) (chan push.Event, error) {
 	messageChan := make(chan push.Event, 1)
 
 	messageHub, err := push.NewHub(conf.Events, vehicles, cache)
@@ -614,7 +534,7 @@ func configureTariff(name string, conf config.Typed, t *api.Tariff, wg *sync.Wai
 	*t = res
 }
 
-func configureTariffs(conf tariffConfig) (*tariff.Tariffs, error) {
+func configureTariffs(conf globalconfig.Tariffs) (*tariff.Tariffs, error) {
 	tariffs := tariff.Tariffs{
 		Currency: currency.EUR,
 	}
@@ -636,7 +556,7 @@ func configureTariffs(conf tariffConfig) (*tariff.Tariffs, error) {
 	return &tariffs, nil
 }
 
-func configureDevices(conf globalConfig) error {
+func configureDevices(conf globalconfig.All) error {
 	if err := configureMeters(conf.Meters); err != nil {
 		return err
 	}
@@ -646,7 +566,7 @@ func configureDevices(conf globalConfig) error {
 	return configureVehicles(conf.Vehicles)
 }
 
-func configureSiteAndLoadpoints(conf globalConfig) (*core.Site, error) {
+func configureSiteAndLoadpoints(conf globalconfig.All) (*core.Site, error) {
 	if err := configureDevices(conf); err != nil {
 		return nil, err
 	}
@@ -673,7 +593,7 @@ func configureSite(conf map[string]interface{}, loadpoints []*core.Loadpoint, ta
 	return site, nil
 }
 
-func configureLoadpoints(conf globalConfig) (loadpoints []*core.Loadpoint, err error) {
+func configureLoadpoints(conf globalconfig.All) (loadpoints []*core.Loadpoint, err error) {
 	if len(conf.Loadpoints) == 0 {
 		return nil, errors.New("missing loadpoints")
 	}
@@ -694,7 +614,7 @@ func configureLoadpoints(conf globalConfig) (loadpoints []*core.Loadpoint, err e
 }
 
 // configureAuth handles routing for devices. For now only api.AuthProvider related routes
-func configureAuth(conf networkConfig, vehicles []api.Vehicle, router *mux.Router, paramC chan<- util.Param) {
+func configureAuth(conf globalconfig.Network, vehicles []api.Vehicle, router *mux.Router, paramC chan<- util.Param) {
 	auth := router.PathPrefix("/oauth").Subrouter()
 	auth.Use(handlers.CompressHandler)
 	auth.Use(handlers.CORS(
