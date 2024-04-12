@@ -6,12 +6,13 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/evcc-io/evcc/util/templates"
 	"github.com/spali/go-rscp/rscp"
 	"github.com/spf13/cast"
 )
 
 type E3dc struct {
-	usage string
+	usage templates.Usage
 	conn  *rscp.Client
 }
 
@@ -24,7 +25,7 @@ func init() {
 func NewE3dcFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
 		capacity `mapstructure:",squash"`
-		Usage    string
+		Usage    templates.Usage
 		Address  string
 		Port     uint16
 		Username string
@@ -53,7 +54,7 @@ func NewE3dcFromConfig(other map[string]interface{}) (api.Meter, error) {
 	return NewE3dc(cc.Usage, cfg)
 }
 
-func NewE3dc(usage string, cfg rscp.ClientConfig) (api.Meter, error) {
+func NewE3dc(usage templates.Usage, cfg rscp.ClientConfig) (api.Meter, error) {
 	// util.NewLogger("e3dc")
 	conn, err := rscp.NewClient(cfg)
 	if err != nil {
@@ -67,7 +68,7 @@ func NewE3dc(usage string, cfg rscp.ClientConfig) (api.Meter, error) {
 
 	// decorate api.BatterySoc
 	var batterySoc func() (float64, error)
-	if usage == "battery" {
+	if usage == templates.UsageBattery {
 		batterySoc = res.batterySoc
 	}
 
@@ -75,20 +76,20 @@ func NewE3dc(usage string, cfg rscp.ClientConfig) (api.Meter, error) {
 }
 
 func (m *E3dc) CurrentPower() (float64, error) {
-	var msg *rscp.Message
+	var tag rscp.Tag
 
 	switch m.usage {
-	case "grid":
-		msg = rscp.NewMessage(rscp.EMS_REQ_POWER_GRID, nil)
-	case "pv":
-		msg = rscp.NewMessage(rscp.EMS_POWER_PV, nil)
-	case "battery":
-		msg = rscp.NewMessage(rscp.EMS_POWER_BAT, nil)
+	case templates.UsageGrid:
+		tag = rscp.EMS_REQ_POWER_GRID
+	case templates.UsagePV:
+		tag = rscp.EMS_POWER_PV
+	case templates.UsageBattery:
+		tag = rscp.EMS_POWER_BAT
 	default:
 		return 0, api.ErrNotAvailable
 	}
 
-	res, err := m.conn.Send(*msg)
+	res, err := m.conn.Send(*rscp.NewMessage(tag, nil))
 	if err != nil {
 		return 0, err
 	}
