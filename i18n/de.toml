@@ -198,9 +198,10 @@ disclaimer = "Hinweis: evcc beendet sich und verlässt sich darauf, vom Betriebs
 modalTitle = "Sicher, dass du neu starten möchtest?"
 
 [log]
+areaLabel = "Nach Bereich filtern"
 areas = "Alle Bereiche"
 download = "Komplettes Log herunterladen"
-levels = "Alle Level"
+levelLabel = "Nach Log-Level filtern"
 noResults = "Keine passenden Einträge gefunden."
 search = "Suchen"
 showAll = "Alle Einträge anzeigen"

@@ -32,10 +32,13 @@
 						/>
 					</div>
 					<div class="filterLevel col-6 col-lg-2">
-						<select class="form-select" v-model="level" @change="updateLogs()">
-							<option value="">{{ $t("log.levels") }}</option>
-							<hr />
-							<option v-for="level in logLevels" :key="level" :value="level">
+						<select
+							class="form-select"
+							v-model="level"
+							:aria-label="$t('log.levelLabel')"
+							@change="updateLogs()"
+						>
+							<option v-for="level in levels" :key="level" :value="level">
 								{{ level }}
 							</option>
 						</select>
@@ -44,6 +47,7 @@
 						<select
 							class="form-select"
 							v-model="area"
+							:aria-label="$t('log.areaLabel')"
 							@focus="updateAreas()"
 							@change="updateLogs()"
 						>
@@ -104,10 +108,11 @@ import Record from "../components/MaterialIcon/Record.vue";
 import api from "../api";
 import store from "../store";
 
+const LEVELS = ["FATAL", "ERROR", "WARN", "INFO", "DEBUG", "TRACE"];
+const DEFAULT_LEVEL = "DEBUG";
 const DEFAULT_COUNT = 1000;
 
-const logLevels = ["TRACE", "DEBUG", "INFO", "WARN", "ERROR", "FATAL"];
-const levelMatcher = new RegExp(`\\[.*?\\] (${logLevels.join("|")})`);
+const levelMatcher = new RegExp(`\\[.*?\\] (${LEVELS.join("|")})`);
 
 export default {
 	name: "Log",
@@ -120,12 +125,11 @@ export default {
 		return {
 			lines: [],
 			areas: [],
-			logLevel: "debug",
 			search: "",
-			level: "",
+			level: DEFAULT_LEVEL,
 			area: "",
 			timeout: null,
-			logLevels,
+			levels: LEVELS,
 			busy: false,
 		};
 	},
