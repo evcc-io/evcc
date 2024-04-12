@@ -75,17 +75,25 @@ func NewE3dc(usage string, cfg rscp.ClientConfig) (api.Meter, error) {
 }
 
 func (m *E3dc) CurrentPower() (float64, error) {
+	var msg *rscp.Message
+
 	switch m.usage {
 	case "grid":
-		res, err := m.conn.Send(*rscp.NewMessage(rscp.EMS_REQ_POWER_GRID, nil))
-		if err != nil {
-			return 0, err
-		}
-		return cast.ToFloat64E(res.Value)
+		msg = rscp.NewMessage(rscp.EMS_REQ_POWER_GRID, nil)
 	case "pv":
+		msg = rscp.NewMessage(rscp.EMS_POWER_PV, nil)
 	case "battery":
+		msg = rscp.NewMessage(rscp.EMS_POWER_BAT, nil)
+	default:
+		return 0, api.ErrNotAvailable
 	}
-	return 0, api.ErrNotAvailable
+
+	res, err := m.conn.Send(*msg)
+	if err != nil {
+		return 0, err
+	}
+
+	return cast.ToFloat64E(res.Value)
 }
 
 func (m *E3dc) batterySoc() (float64, error) {
