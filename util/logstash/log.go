@@ -7,6 +7,7 @@ import (
 	"strings"
 	"sync"
 
+	jww "github.com/spf13/jwalterweatherman"
 	"golang.org/x/exp/maps"
 )
 
@@ -16,8 +17,8 @@ func Areas() []string {
 	return DefaultHandler.Areas()
 }
 
-func All(areas, levels []string, count int) []string {
-	return DefaultHandler.All(areas, levels, count)
+func All(areas []string, level jww.Threshold, count int) []string {
+	return DefaultHandler.All(areas, level, count)
 }
 
 func Size() int64 {
@@ -87,17 +88,17 @@ func (l *logger) Areas() []string {
 	return keys
 }
 
-func (l *logger) All(areas, levels []string, count int) []string {
+func (l *logger) All(areas []string, level jww.Threshold, count int) []string {
 	l.mu.RLock()
 	defer l.mu.RUnlock()
 
 	r := l.data
-	all := len(areas) == 0 && len(levels) == 0
+	all := len(areas) == 0 && level == jww.LevelTrace
 
 	var res []string
 	for i := 0; i < r.Len(); i++ {
 		r = r.Prev()
-		if e, ok := r.Value.(element); ok && e != "" && (all || e.match(areas, levels)) {
+		if e, ok := r.Value.(element); ok && e != "" && (all || e.match(areas, level)) {
 			res = append(res, string(e))
 			if count > 0 && len(res) >= count {
 				break

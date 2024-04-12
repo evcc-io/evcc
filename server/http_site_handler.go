@@ -252,10 +252,7 @@ func logAreasHandler(w http.ResponseWriter, r *http.Request) {
 
 func logHandler(w http.ResponseWriter, r *http.Request) {
 	a := r.URL.Query()["area"]
-	l := r.URL.Query()["level"]
-	for i, v := range l {
-		l[i] = strings.ToUpper(v)
-	}
+	l := logstash.LogLevelToThreshold(r.URL.Query().Get("level"))
 
 	var count int
 	if v := r.URL.Query().Get("count"); v != "" {
