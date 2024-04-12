@@ -12,6 +12,7 @@ import (
 )
 
 type E3dc struct {
+	// TODO check if we really want to depend on templates
 	usage templates.Usage
 	conn  *rscp.Client
 }
