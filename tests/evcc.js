@@ -59,7 +59,7 @@ async function _start(config) {
 
 async function _stop() {
   console.log("shutting down evcc");
-  await axios.post(BASE_URL + "/api/shutdown");
+  await axios.post(BASE_URL + "/api/system/shutdown");
 }
 
 async function _clean() {

@@ -189,7 +189,7 @@ export default {
 
 			try {
 				this.busy = true;
-				const response = await api.get("/log", {
+				const response = await api.get("/system/log", {
 					params: {
 						level: this.level?.toLocaleLowerCase() || null,
 						area: this.area || null,
@@ -217,7 +217,7 @@ export default {
 		},
 		async updateAreas() {
 			try {
-				const response = await api.get("/log/areas");
+				const response = await api.get("/system/log/areas");
 				this.areas = response.data?.result || [];
 			} catch (e) {
 				console.error(e);

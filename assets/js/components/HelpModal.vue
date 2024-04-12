@@ -26,7 +26,7 @@
 							class="d-block d-sm-flex justify-content-between align-items-stretch mb-4"
 						>
 							<a
-								href="https://docs.evcc.io/"
+								:href="docsUrl"
 								target="_blank"
 								class="btn btn-outline-primary w-100 w-sm-auto flex-grow-1 mb-3 mb-sm-0 me-sm-3"
 								type="button"
@@ -128,11 +128,17 @@
 
 <script>
 import Modal from "bootstrap/js/dist/modal";
+import { docsPrefix } from "../i18n";
 import api from "../api";
 
 export default {
 	name: "HelpModal",
 	props: {},
+	computed: {
+		docsUrl() {
+			return `${docsPrefix()}/`;
+		},
+	},
 	methods: {
 		openHelpModal() {
 			const modal = Modal.getOrCreateInstance(document.getElementById("helpModal"));
@@ -144,10 +150,7 @@ export default {
 		},
 		async restartConfirmed() {
 			try {
-				await api.post("shutdown");
-				alert(
-					"Server was stopped successfully. Waiting for the operating system to start evcc again."
-				);
+				await api.post("/system/shutdown");
 			} catch (e) {
 				alert("Unabled to restart server.");
 			}

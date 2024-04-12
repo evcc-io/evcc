@@ -6,11 +6,23 @@ import { openLoginModal, updateAuthStatus, isLoggedIn } from "./auth";
 
 function hideAllModals() {
   [...document.querySelectorAll(".modal.show")].forEach((modal) => {
+    // skip unclosable modals
+    if (modal.getAttribute("data-bs-backdrop") === "static") return;
+
     const modalInstance = Modal.getInstance(modal);
     if (modalInstance) {
       modalInstance.hide();
     }
   });
+}
+
+async function ensureAuth(to) {
+  await updateAuthStatus();
+  if (!isLoggedIn()) {
+    openLoginModal(to.path);
+    return false;
+  }
+  return true;
 }
 
 export default function setupRouter(i18n) {
@@ -21,13 +33,7 @@ export default function setupRouter(i18n) {
       {
         path: "/config",
         component: () => import("./views/Config.vue"),
-        beforeEnter: async () => {
-          await updateAuthStatus();
-          if (!isLoggedIn()) {
-            openLoginModal();
-            return false;
-          }
-        },
+        beforeEnter: ensureAuth,
         props: true,
       },
       {
@@ -46,6 +52,11 @@ export default function setupRouter(i18n) {
       {
         path: "/log",
         component: () => import("./views/Log.vue"),
+        beforeEnter: ensureAuth,
+      },
+      {
+        path: "/error",
+        component: () => import("./views/StartupError.vue"),
       },
     ],
   });

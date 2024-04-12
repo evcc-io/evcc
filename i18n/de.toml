@@ -76,6 +76,10 @@ validateSave = "Überprüfen & speichern"
 titleAdd = "Zähler (PV) hinzufügen"
 titleEdit = "Zähler (PV) bearbeiten"
 
+[config.section]
+general = "Allgemein"
+system = "System"
+
 [config.title]
 description = "Wird in der Hauptansicht und im Browser-Tab angezeigt."
 label = "Titel"

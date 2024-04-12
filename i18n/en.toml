@@ -76,6 +76,18 @@ validateSave = "Validate & save"
 titleAdd = "Add Solar Meter"
 titleEdit = "Edit Solar Meter"
 
+[config.section]
+general = "General"
+system = "System"
+
+[config.system]
+logs = "Logs"
+restart = "Restart"
+restartRequiredDescription = "Please restart to see the effect."
+restartRequiredMessage = "Configuration changed."
+restartingDescription = "Please wait…"
+restartingMessage = "Restarting evcc."
+
 [config.title]
 description = "Displayed on main screen and browser tab."
 label = "Title"
@@ -212,6 +224,7 @@ error = "Login failed: "
 invalid = "Password is invalid."
 login = "Login"
 password = "Password"
+reset = "Reset password?"
 title = "Authentication"
 
 [main]

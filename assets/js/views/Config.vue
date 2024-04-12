@@ -4,13 +4,17 @@
 			<TopHeader :title="$t('config.main.title')" />
 			<div class="wrapper">
 				<div
-					v-if="dirty"
+					v-if="dirty || restarting"
 					class="alert alert-secondary d-flex justify-content-between align-items-center my-4"
 					role="alert"
 				>
-					<div v-if="restarting"><strong>Restarting evcc.</strong> Please wait ...</div>
+					<div v-if="restarting">
+						<strong>{{ $t("config.system.restartingMessage") }}</strong>
+						{{ $t("config.system.restartingDescription") }}
+					</div>
 					<div v-else>
-						<strong>Configuration changed.</strong> Please restart to see the effect.
+						<strong>{{ $t("config.system.restartRequiredMessage") }}</strong>
+						{{ $t("config.system.restartRequiredDescription") }}
 					</div>
 					<button
 						type="button"
@@ -24,23 +28,30 @@
 							role="status"
 							aria-hidden="true"
 						></span>
-						<span v-else> Restart </span>
+						<span v-else>{{ $t("config.system.restart") }}</span>
 					</button>
 				</div>
 
-				<h2 class="my-4 mt-5">General</h2>
+				<h2 class="my-4 mt-5">{{ $t("config.section.general") }}</h2>
 				<GeneralConfig @site-changed="siteChanged" />
 
-				<h2 class="my-4 mt-5">Administration</h2>
+				<h2 class="my-4 mt-5">{{ $t("config.section.system") }}</h2>
 				<div class="round-box p-4 d-flex gap-4">
 					<router-link to="/log" class="btn btn-outline-secondary">
-						{{ $t("log.title") }}
+						{{ $t("config.system.logs") }}
 					</router-link>
 					<button
 						class="btn btn-outline-danger"
-						@click="openModal('confirmRestartModal')"
+						:disabled="restarting || offline"
+						@click="restart"
 					>
-						{{ $t("help.restartButton") }}
+						<span
+							v-if="restarting || offline"
+							class="spinner-border spinner-border-sm"
+							role="status"
+							aria-hidden="true"
+						></span>
+						{{ $t("config.system.restart") }}
 					</button>
 				</div>
 
@@ -437,7 +448,7 @@ export default {
 		},
 		async restart() {
 			try {
-				await api.post("shutdown");
+				await api.post("/system/shutdown");
 				this.restarting = true;
 			} catch (e) {
 				alert("Unabled to restart server.");
