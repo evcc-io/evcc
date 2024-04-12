@@ -4,24 +4,37 @@
 			<TopHeader showConfig :title="$t('log.title')" class="mx-4" />
 			<div class="logs d-flex flex-column overflow-hidden flex-grow-1 px-4 mx-2 mx-sm-4">
 				<div class="flex-grow-0 row py-4">
-					<div class="col-6 col-lg-3 mb-4 mb-lg-0">
-						<button
-							type="button"
-							class="btn text-nowrap d-flex w-100 w-lg-auto justify-content-between"
-							:class="autoFollow ? 'btn-secondary' : 'btn-outline-secondary'"
-							@click="toggleAutoFollow"
-						>
-							<span class="text-nowrap text-truncate">
-								{{ $t("log.update") }}
-							</span>
-							<Record
-								v-if="autoFollow"
-								ref="spin"
-								class="ms-1 spin flex-shrink-0"
-								:style="{ animationDuration: `${updateInterval}ms` }"
-							/>
-							<Play v-else class="ms-1 flex-shrink-0" />
-						</button>
+					<div class="col-6 col-lg-3 mb-4 mb-lg-0 d-flex gap-2">
+						<div class="btn-group">
+							<button
+								type="button"
+								class="btn text-nowrap d-flex w-100 w-lg-auto justify-content-between"
+								:class="autoFollow ? 'btn-secondary' : 'btn-outline-secondary'"
+								@click="toggleAutoFollow"
+							>
+								<span class="text-nowrap text-truncate">
+									{{ $t("log.update") }}
+								</span>
+								<Record
+									v-if="autoFollow"
+									ref="spin"
+									class="ms-1 spin flex-shrink-0"
+									:style="{ animationDuration: `${updateInterval}ms` }"
+								/>
+								<Play v-else class="ms-1 flex-shrink-0 play" />
+							</button>
+							<a
+								class="btn btn-outline-secondary"
+								:aria-label="$t('log.download')"
+								:href="downloadUrl"
+								download
+							>
+								<shopicon-regular-download
+									size="s"
+									class="icon"
+								></shopicon-regular-download>
+							</a>
+						</div>
 					</div>
 					<div class="col-6 offset-lg-1 col-lg-4 mb-4 mb-lg-0">
 						<input
@@ -65,6 +78,15 @@
 					ref="log"
 					@scroll="onScroll"
 				>
+					<div v-if="showMoreButton" class="my-2">
+						<button
+							class="btn btn-link btn-sm evcc-default-text px-0"
+							type="button"
+							@click="updateLogs(true)"
+						>
+							{{ $t("log.showAll") }}
+						</button>
+					</div>
 					<code v-if="filteredLines.length" class="d-block evcc-default-text flex-grow-1">
 						<div
 							v-for="{ line, className, key } in lineEntries"
@@ -75,25 +97,6 @@
 						</div>
 					</code>
 					<p v-else class="my-4">{{ $t("log.noResults") }}</p>
-					<div v-if="filteredLines.length" class="d-flex my-2 align-items-center">
-						<div v-if="showMoreButton" class="d-flex align-items-center">
-							<button
-								class="btn btn-link btn-sm evcc-default-text px-0"
-								type="button"
-								@click="updateLogs(true)"
-							>
-								{{ $t("log.showAll") }}
-							</button>
-							<div class="m-2">|</div>
-						</div>
-						<a
-							class="btn btn-link btn-sm evcc-default-text px-0"
-							:href="downloadUrl"
-							download
-						>
-							{{ $t("log.download") }}
-						</a>
-					</div>
 				</div>
 			</div>
 		</div>
@@ -101,7 +104,7 @@
 </template>
 
 <script>
-import "@h2d2/shopicons/es/regular/arrowforward";
+import "@h2d2/shopicons/es/regular/download";
 import TopHeader from "../components/TopHeader.vue";
 import Play from "../components/MaterialIcon/Play.vue";
 import Record from "../components/MaterialIcon/Record.vue";
@@ -156,7 +159,7 @@ export default {
 				occurrences.set(key, count + 1);
 				key = `${key}-${count + 1}`;
 
-				const className = `log-${levelMatcher.exec(line)?.[1].toLowerCase() || "none"}`;
+				const className = `log log-${levelMatcher.exec(line)?.[1].toLowerCase() || "none"}`;
 
 				return { key, className, line };
 			});
@@ -197,6 +200,14 @@ export default {
 					},
 				});
 				this.lines = response.data?.result || [];
+				this.lines.reverse();
+				this.$nextTick(() => {
+					if (showAll) {
+						this.scrollToTop();
+					} else {
+						this.scrollToBottom();
+					}
+				});
 			} catch (e) {
 				console.error(e);
 			}
@@ -224,20 +235,26 @@ export default {
 			}
 		},
 		onScroll(e) {
-			// disable follow when scrolling
-			this.stopInterval();
-
-			// start follow if scrolled to top and area is scrollable
-			if (e.target.scrollTop === 0 && e.target.scrollHeight > e.target.clientHeight) {
-				this.startInterval();
+			// disable follow when not at the bottom
+			if (
+				this.autoFollow &&
+				e.target.scrollTop + e.target.clientHeight < e.target.scrollHeight
+			) {
+				this.stopInterval();
 			}
+		},
+		scrollToTop() {
+			this.$refs.log.scrollTop = 0;
+		},
+		scrollToBottom() {
+			this.$refs.log.scrollTop = this.$refs.log.scrollHeight;
 		},
 		toggleAutoFollow() {
 			if (this.autoFollow) {
 				this.stopInterval();
 			} else {
+				this.scrollToBottom();
 				this.startInterval();
-				this.$refs.log.scrollTo({ top: 0, behavior: "smooth" });
 			}
 		},
 	},
@@ -255,21 +272,46 @@ export default {
 .btn {
 	--bs-btn-border-width: 1px;
 }
+.play {
+	transform: scale(1.2);
+}
 .spin {
 	animation: rotation 3s infinite ease-in-out;
 }
 @keyframes rotation {
 	from {
-		transform: rotate(0deg) scale(0.8, -0.8);
+		transform: rotate(0deg) scale(1, -1);
 	}
 	to {
-		transform: rotate(1440deg) scale(0.8, -0.8);
+		transform: rotate(1440deg) scale(1, -1);
 	}
+}
+@keyframes fadeIn {
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: var(--opacity);
+	}
+}
+.log {
+	--opacity: 1;
+	opacity: var(--opacity);
+	animation-name: fadeIn;
+	animation-duration: 1s;
+	animation-fill-mode: forwards;
+	animation-timing-function: ease-out;
 }
 .log-warn {
 	color: var(--bs-warning);
 }
 .log-error {
 	color: var(--bs-danger);
+}
+.log-debug {
+	--opacity: 0.6;
+}
+.log-trace {
+	--opacity: 0.4;
 }
 </style>
