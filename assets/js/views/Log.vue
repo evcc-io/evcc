@@ -305,7 +305,8 @@ export default {
 .log-warn {
 	color: var(--bs-warning);
 }
-.log-error {
+.log-error,
+.log-fatal {
 	color: var(--bs-danger);
 }
 .log-debug {
