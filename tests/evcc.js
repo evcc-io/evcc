@@ -59,7 +59,10 @@ async function _start(config) {
 
 async function _stop() {
   console.log("shutting down evcc");
-  await axios.post(BASE_URL + "/api/system/shutdown");
+  const res = await axios.post(BASE_URL + "/api/auth/login", { password: "secret" });
+  console.log(res.status, res.statusText);
+  const cookie = res.headers["set-cookie"];
+  await axios.post(BASE_URL + "/api/system/shutdown", {}, { headers: { cookie } });
 }
 
 async function _clean() {
