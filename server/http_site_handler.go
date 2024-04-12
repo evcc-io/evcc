@@ -259,5 +259,20 @@ func logHandler(w http.ResponseWriter, r *http.Request) {
 		count, _ = strconv.Atoi(v)
 	}
 
-	jsonResult(w, logstash.All(a, l, count))
+	log := logstash.All(a, l, count)
+
+	if r.URL.Query().Get("format") == "txt" {
+		w.Header().Set("Content-Type", "text/plain")
+		w.Header().Set("Content-Disposition", `attachment; filename="log.txt"`)
+
+		for i := len(log) - 1; i >= 0; i-- {
+			if _, err := w.Write([]byte(log[i] + "\n")); err != nil {
+				return
+			}
+		}
+
+		return
+	}
+
+	jsonResult(w, log)
 }
