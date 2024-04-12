@@ -9,7 +9,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func settingsGetHandler(key string) http.HandlerFunc {
+func settingsGetStringHandler(key string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		res, _ := settings.String(key)
 		jsonResult(w, res)
@@ -46,4 +46,14 @@ func settingsSetYamlHandler(key string, struc any) http.HandlerFunc {
 		w.WriteHeader(http.StatusOK)
 		jsonResult(w, val)
 	}
+}
+
+func settingsFloatHandler(key string) http.HandlerFunc {
+	return floatHandler(func(val float64) error {
+		settings.SetFloat(key, val)
+		return nil
+	}, func() float64 {
+		res, _ := settings.Float(key)
+		return res
+	})
 }
