@@ -176,7 +176,7 @@ export default {
 				params.append("area", this.area);
 			}
 			params.append("format", "txt");
-			return `./api/log?${params.toString()}`;
+			return `./api/system/log?${params.toString()}`;
 		},
 		autoFollow() {
 			return this.timeout !== null;

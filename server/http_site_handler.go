@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 	"text/template"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/site"
@@ -262,8 +263,9 @@ func logHandler(w http.ResponseWriter, r *http.Request) {
 	log := logstash.All(a, l, count)
 
 	if r.URL.Query().Get("format") == "txt" {
+		filename := "evcc-" + time.Now().Format("20060102-150405") + `-` + strings.ToLower(l.String()) + ".log"
 		w.Header().Set("Content-Type", "text/plain")
-		w.Header().Set("Content-Disposition", `attachment; filename="log.txt"`)
+		w.Header().Set("Content-Disposition", `attachment; filename="`+filename+`"`)
 
 		for i := len(log) - 1; i >= 0; i-- {
 			if _, err := w.Write([]byte(log[i] + "\n")); err != nil {
