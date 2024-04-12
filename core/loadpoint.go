@@ -666,7 +666,7 @@ func (lp *Loadpoint) syncCharger() error {
 		return fmt.Errorf("charger enabled: %w", err)
 	}
 
-	shouldBeConsistent := lp.chargerUpdateCompleted() && lp.phaseSwitchCompleted()
+	shouldBeConsistent := lp.shouldBeConsistent()
 
 	if shouldBeConsistent {
 		defer func() {
@@ -1297,7 +1297,8 @@ func (lp *Loadpoint) UpdateChargePower() {
 
 		// https://github.com/evcc-io/evcc/issues/2153
 		// https://github.com/evcc-io/evcc/issues/6986
-		if lp.chargePower < -20 {
+		// https://github.com/evcc-io/evcc/issues/13378
+		if lp.chargePower < -100 && lp.shouldBeConsistent() {
 			lp.log.WARN.Printf("charge power must not be negative: %.0f", lp.chargePower)
 		}
 
@@ -1458,7 +1459,8 @@ func (lp *Loadpoint) publishSocAndRange() {
 			if limit, err := vs.GetLimitSoc(); err == nil {
 				apiLimitSoc = int(limit)
 				lp.log.DEBUG.Printf("vehicle soc limit: %d%%", limit)
-				lp.publish(keys.VehicleLimitSoc, limit)
+				// https://github.com/evcc-io/evcc/issues/13349
+				lp.publish(keys.VehicleLimitSoc, float64(limit))
 			} else if !errors.Is(err, api.ErrNotAvailable) {
 				lp.log.ERROR.Printf("vehicle soc limit: %v", err)
 			}
@@ -1523,6 +1525,10 @@ func (lp *Loadpoint) startWakeUpTimer() {
 func (lp *Loadpoint) stopWakeUpTimer() {
 	lp.log.DEBUG.Printf("wake-up timer: stop")
 	lp.wakeUpTimer.Stop()
+}
+
+func (lp *Loadpoint) shouldBeConsistent() bool {
+	return lp.chargerUpdateCompleted() && lp.phaseSwitchCompleted()
 }
 
 // chargerUpdateCompleted returns true if enable command should be already processed by the charger (so we can try to sync charger and loadpoint)

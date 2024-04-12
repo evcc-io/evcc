@@ -16,22 +16,72 @@ legendTopSubline = "sem interrupções"
 modalTitle = "Configuraçao da bateria"
 
 [batterySettings.bufferStart]
-full = "quando quase cheio"
+above = "quando acima {soc}"
+full = "quando estiver a {soc}"
 low = "quando um pouco cheio"
 medium = "quando meio cheio"
 never = "apenas com excesso suficiente"
 
 [config]
 
+[config.battery]
+titleAdd = "Adicionar contador de bateria"
+titleEdit = "Editar contador de bateria"
+
+[config.deviceValue]
+capacity = "Capacidade"
+chargeStatus = "Estatuto"
+chargedEnergy = "Carregado"
+current = "Corrente"
+enabled = "Ativado"
+energy = "Energia"
+odometer = "Odómetro"
+phaseCurrents = "Corrente L1..L3"
+phasePowers = "Energia L1..L3"
+phaseVoltages = "Voltagem L1..L3"
+power = "Energia"
+range = "Distância"
+soc = "Nível de carga"
+socLimit = "Alvo de carga"
+
 [config.form]
 example = "Exemplo"
 optional = "opcional"
 
+[config.general]
+cancel = "Cancelar"
+save = "Guardar"
+
+[config.grid]
+titleAdd = "Adicionar contador de rede"
+titleEdit = "Editar contator de rede"
+
 [config.main]
+addLoadpoint = "Adicionar ponto de carga"
+addPvBattery = "Adicionar solar ou bateria"
 addVehicle = "Adicionar veículo"
 edit = "editar"
 title = "Configuração"
+unconfigured = "não configurado"
 vehicles = "Meus Veículos"
+yaml = "Configurado em evcc.yaml. Não editável na UI."
+
+[config.meter]
+cancel = "Cancelar"
+delete = "Excluir"
+save = "Guardar"
+template = "Fabricante"
+titleChoice = "O que você quer adicionar?"
+validateSave = "Validar e guardar"
+
+[config.pv]
+titleAdd = "Adicionar Contador Solar"
+titleEdit = "Editar Contador Solar"
+
+[config.title]
+description = "Exibido no ecrã principal e na guia do navegador."
+label = "Título"
+title = "Editar título"
 
 [config.validation]
 failed = "fracassado"
@@ -43,7 +93,7 @@ validate = "validar"
 
 [config.vehicle]
 cancel = "Cancelar"
-delete = "Excluir veículo"
+delete = "Excluir"
 generic = "Outras integrações"
 offline = "Veículo genérico"
 online = "Veículos com API online"
@@ -130,6 +180,8 @@ blog = "Blog"
 docs = "Documentação"
 github = "GitHub"
 login = "Registo de veículo"
+logout = "sair do sistema"
+nativeSettings = "Alterar servidor"
 needHelp = "Precisa ajuda?"
 sessions = "Sessões de carga"
 settings = "Configuração"
@@ -157,6 +209,14 @@ description = "Em circunstâncias normais, a reinicialização não deve ser nec
 disclaimer = "Nota: o evcc terminará e confiará no sistema operacional para reiniciar o serviço."
 modalTitle = "Tens a certeza que queres reiniciar"
 
+[loginModal]
+cancel = "Cancelar"
+error = "Login falhou: "
+invalid = "A palavra-passe é inválida."
+login = "Entrar no sistema"
+password = "Palavra-passe"
+title = "Autenticação"
+
 [main]
 vehicles = "Estacionamento"
 
@@ -173,6 +233,7 @@ time = "Tempo"
 title = "Plano"
 titleMinSoc = "Carga mínima"
 titleTargetCharge = "Partida"
+unsavedChanges = "Há mudanças não salvas. Aplicar agora?"
 update = "Aplicar"
 
 [main.energyflow]
@@ -188,6 +249,12 @@ noEnergy = "Sem leituras"
 pvExport = "Alimentação"
 pvProduction = "Produção"
 selfConsumption = "Consumo próprio"
+
+[main.heatingStatus]
+charging = "Aquecendo..."
+cheapEnergyCharging = "Aquecimento com energia barata: {price} (limite {limit})"
+cleanEnergyCharging = "Aquecimento com energia limpa: {co2} (limite {limit})"
+waitForVehicle = "Pronto. Esperando pelo aquecedor..."
 
 [main.loadpoint]
 avgPrice = "Preço ⌀"
@@ -207,6 +274,8 @@ currents = "Corrente de carga"
 default = "predefinado"
 disclaimerHint = "Aviso:"
 onlyForSocBasedCharging = "Estas opções só estão disponíveis para veículos com nível de carregamento conhecido."
+smartCostCheap = "Carregamento de rede barato"
+smartCostClean = "Carregamento de rede limpa"
 title = "Configurações {0}"
 vehicle = "Veículo"
 
@@ -226,6 +295,7 @@ label = "Mín. de carga %"
 
 [main.loadpointSettings.phasesConfigured]
 label = "Fases elétricas"
+no1p3pSupport = "Como está o seu carregador conectado?"
 phases_0 = "comutação automática"
 phases_1 = "1 fase"
 phases_1_hint = "({min} a {max})"
@@ -292,6 +362,7 @@ detectionActive = "Detecção de veículo..."
 fallbackName = "Veículo"
 moreActions = "Mais ações"
 none = "Nenhum veículo"
+notReachable = "O veículo não foi acessível. Tente reiniciar evcc."
 targetSoc = "Alvo de carga"
 temp = "Temperatura"
 tempLimit = "Temperatura alvo"
@@ -317,9 +388,9 @@ pvDisable = "Excesso insuficiente. Pausa em {remaining}..."
 pvEnable = "Excesso disponível. Carga em {remaining}..."
 scale1p = "Reduzindo para carregamento monofásico em {remaining}…"
 scale3p = "Aumentando para carregamento trifásico em {remaining}…"
-targetChargeActive = "Carga programada ativa..."
-targetChargePlanned = "Carga programada começa {time}."
-targetChargeWaitForVehicle = "Carga programada pronta. Esperando pelo veículo..."
+targetChargeActive = "Plano de carregamento activo..."
+targetChargePlanned = "O plano de carregamento começa a {time}."
+targetChargeWaitForVehicle = "Plano de carregamento pronto. À espera do veículo..."
 unknown = ""
 vehicleLimitReached = "Limite de veículo {soc}% atingido."
 waitForVehicle = "Pronto. Esperando pelo veículo..."

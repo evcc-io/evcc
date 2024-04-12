@@ -32,7 +32,7 @@ titleEdit = "Bewerk meter voor batterijsysteem"
 capacity = "Capaciteit"
 chargeStatus = "Status"
 chargedEnergy = "Geladen"
-current = "Stroomsterke"
+current = "Stroomsterkte"
 enabled = "Ingeschakeld"
 energy = "Energie"
 odometer = "Kilometerstand"
@@ -47,6 +47,10 @@ socLimit = "Hoeveelheid"
 [config.form]
 example = "Voorbeeld"
 optional = "optioneel"
+
+[config.general]
+cancel = "Annuleren"
+save = "Opslaan"
 
 [config.grid]
 titleAdd = "Voeg net meter toe"
@@ -77,6 +81,11 @@ titleEdit = "Bewerk meter zonnepanelen"
 [config.site]
 cancel = "Annuleren"
 save = "Opslaan"
+
+[config.title]
+description = "Wordt weergegeven op het hoofdscherm en op het browsertabblad."
+label = "Titel"
+title = "Wijzig titel"
 
 [config.validation]
 failed = "mislukt"
@@ -175,6 +184,7 @@ blog = "Blog"
 docs = "Documentatie"
 github = "GitHub"
 login = "Logingegevens van voertuigen"
+logout = "Uitloggen"
 nativeSettings = "Andere server"
 needHelp = "Hulp nodig?"
 sessions = "Laadsessies"
@@ -372,9 +382,9 @@ pvDisable = "Onvoldoende PV overschot beschikbaar. Pauzeren over {remaining}..."
 pvEnable = "Voldoende PV overschot beschikbaar. Starten over {remaining}..."
 scale1p = "Wisselen naar laden op 1 fase over {remaining}..."
 scale3p = "Wisselen naar laden op 3 fasen over {remaining}..."
-targetChargeActive = "Doelladen actief..."
-targetChargePlanned = "Doelladen begint om {time}."
-targetChargeWaitForVehicle = "Doellading gereed. Wachten op voertuig..."
+targetChargeActive = "Laadplan actief..."
+targetChargePlanned = "Laadplan begint om {time}."
+targetChargeWaitForVehicle = "Laadplan gereed. Wachten op voertuig..."
 unknown = ""
 vehicleLimitReached = "Voertuiglimiet {soc}% bereikt."
 waitForVehicle = "Klaar. Wachten op voertuig..."

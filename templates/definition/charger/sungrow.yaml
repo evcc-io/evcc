@@ -2,7 +2,7 @@ template: sungrow
 products:
   - brand: Sungrow
     description:
-      generic: ACAC011E-01
+      generic: AC011E-01
 capabilities: ["mA"]
 requirements:
   description:
@@ -12,6 +12,7 @@ requirements:
 params:
   - name: modbus
     choice: ["rs485", "tcpip"]
+    id: 248
 render: |
   type: sungrow
   {{- include "modbus" . }}

@@ -61,7 +61,7 @@ func init() {
 // NewSungrowFromConfig creates a Sungrow charger from generic config
 func NewSungrowFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := modbus.Settings{
-		ID: 1,
+		ID: 248,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
