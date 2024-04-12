@@ -16,7 +16,7 @@ type E3dc struct {
 }
 
 func init() {
-	registry.Add("e3dc", NewE3dcFromConfig)
+	registry.Add("e3dc-2", NewE3dcFromConfig)
 }
 
 //go:generate go run ../cmd/tools/decorate.go -f decorateE3dc -b *E3dc -r api.Meter -t "api.Battery,Soc,func() (float64, error)"
