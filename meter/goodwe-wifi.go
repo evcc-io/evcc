@@ -46,7 +46,7 @@ func NewGoodWeWifiFromConfig(other map[string]interface{}) (api.Meter, error) {
 }
 
 func NewGoodWeWiFi(uri, usage string, timeout time.Duration) (api.Meter, error) {
-	handler := gridx.NewRTUOverUDPClientHandler(uri)
+	handler := gridx.NewRTUOverUDPClientHandler(util.DefaultPort(uri, 8899))
 	conn := gridx.NewClient(handler)
 
 	res := &goodWeWiFi{
