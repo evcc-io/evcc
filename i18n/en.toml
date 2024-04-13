@@ -194,6 +194,8 @@ discussionsButton = "GitHub discussions"
 documentationButton = "Documentation"
 issueButton = "Report a bug"
 issueDescription = "Found a strange or wrong behavior?"
+logsButton = "View logs"
+logsDescription = "Check the logs for errors."
 modalTitle = "Need help?"
 primaryActions = "Something does not work the way it supposed to do? These are good places to get help."
 restartButton = "Restart"
@@ -404,6 +406,7 @@ waitForVehicle = "Ready. Waiting for vehicle…"
 
 [notifications]
 dismissAll = "Dismiss all"
+logs = "View full logs"
 modalTitle = "Notifications"
 
 [offline]

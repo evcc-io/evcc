@@ -87,7 +87,11 @@
 							{{ $t("log.showAll") }}
 						</button>
 					</div>
-					<code v-if="filteredLines.length" class="d-block evcc-default-text flex-grow-1">
+					<code
+						v-if="filteredLines.length"
+						class="d-block evcc-default-text flex-grow-1"
+						data-testid="log-content"
+					>
 						<div
 							v-for="{ line, className, key } in lineEntries"
 							:key="key"
