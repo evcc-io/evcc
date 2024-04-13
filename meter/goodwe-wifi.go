@@ -1,19 +1,27 @@
 package meter
 
 import (
+	"encoding/binary"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/meter/goodwe"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	gridx "github.com/grid-x/modbus"
 )
 
 type goodWeWiFi struct {
-	usage    string
-	inverter *util.Monitor[goodwe.Inverter]
+	log   *util.Logger
+	usage string
+	conn  gridx.Client
 }
+
+const (
+	goodwePv1Power    = 0x8921
+	goodwePv2Power    = 0x8925
+	goodweActivePower = 0x8944
+	goodweBatterySoc  = 0x908F
+)
 
 func init() {
 	registry.Add("goodwe-wifi", NewGoodWeWifiFromConfig)
@@ -38,22 +46,16 @@ func NewGoodWeWifiFromConfig(other map[string]interface{}) (api.Meter, error) {
 }
 
 func NewGoodWeWiFi(uri, usage string, timeout time.Duration) (api.Meter, error) {
-	gridx.RTUOverUDPClient("0.0.0.0:8899")
-
-	instance, err := goodwe.Instance(util.NewLogger("goodwe-wifi"))
-	if err != nil {
-		return nil, err
-	}
-
-	inverter := instance.GetInverter(uri)
-	if inverter == nil {
-		inverter = instance.AddInverter(uri, timeout)
-	}
+	handler := gridx.NewRTUOverUDPClientHandler(uri)
+	conn := gridx.NewClient(handler)
 
 	res := &goodWeWiFi{
-		usage:    usage,
-		inverter: inverter,
+		log:   util.NewLogger("goodwe-wifi"),
+		usage: usage,
+		conn:  conn,
 	}
+
+	handler.Logger = res
 
 	// decorate api.BatterySoc
 	var batterySoc func() (float64, error)
@@ -64,24 +66,38 @@ func NewGoodWeWiFi(uri, usage string, timeout time.Duration) (api.Meter, error) 
 	return decorateGoodWeWifi(res, batterySoc), nil
 }
 
-func (m *goodWeWiFi) CurrentPower() (float64, error) {
-	data, err := m.inverter.Get()
-	if err != nil {
-		return 0, err
-	}
+func (m *goodWeWiFi) Printf(format string, v ...interface{}) {
+	// TODO modbus format
+	m.log.TRACE.Printf(format, v...)
+}
 
+func (m *goodWeWiFi) CurrentPower() (float64, error) {
 	switch m.usage {
 	case "grid":
-		return data.NetPower, nil
+		b, err := m.conn.ReadInputRegisters(goodweActivePower, 1)
+		if err != nil {
+			return 0, err
+		}
+		return float64(int16(binary.BigEndian.Uint16(b))), nil
+
 	case "pv":
-		return data.PvPower, nil
+		b, err := m.conn.ReadInputRegisters(goodwePv1Power, 2)
+		if err != nil {
+			return 0, err
+		}
+		return float64(binary.BigEndian.Uint32(b)), nil
+
 	case "battery":
-		return data.BatteryPower, nil
+		return 0, api.ErrNotAvailable
 	}
+
 	return 0, api.ErrNotAvailable
 }
 
 func (m *goodWeWiFi) batterySoc() (float64, error) {
-	data, err := m.inverter.Get()
-	return data.Soc, err
+	b, err := m.conn.ReadInputRegisters(goodweBatterySoc, 1)
+	if err != nil {
+		return 0, err
+	}
+	return float64(binary.BigEndian.Uint16(b)), nil
 }
