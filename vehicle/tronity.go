@@ -19,6 +19,7 @@ package vehicle
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"slices"
@@ -224,10 +225,9 @@ func (v *Tronity) post(uri string) error {
 	}
 
 	// ignore HTTP 405
-	if err != nil {
-		if err2, ok := err.(request.StatusError); ok && err2.HasStatus(http.StatusMethodNotAllowed) {
-			err = nil
-		}
+	var se request.StatusError
+	if errors.As(err, &se) && se.StatusCode() == http.StatusMethodNotAllowed {
+		err = nil
 	}
 
 	return err

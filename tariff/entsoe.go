@@ -97,9 +97,9 @@ func (t *Entsoe) run(done chan error) {
 			// Request the next 24 hours of data.
 			data, err := t.DoBody(entsoe.DayAheadPricesRequest(t.domain, time.Hour*24))
 
-			// Consider whether errors.As would be more appropriate if this needs to start dealing with wrapped errors.
-			if se, ok := err.(request.StatusError); ok {
-				if se.HasStatus(http.StatusBadRequest) {
+			var se request.StatusError
+			if errors.As(err, &se) {
+				if se.StatusCode() == http.StatusBadRequest {
 					return backoff.Permanent(se)
 				}
 

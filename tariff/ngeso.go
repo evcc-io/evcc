@@ -80,7 +80,7 @@ func (t *Ngeso) run(done chan error) {
 		res, err := backoff.RetryWithData(func() (ngeso.CarbonForecastResponse, error) {
 			res, err := tReq.DoRequest(client)
 			var se request.StatusError
-			if errors.As(err, &se) && se.HasStatus(http.StatusBadRequest) {
+			if errors.As(err, &se) && se.StatusCode() == http.StatusBadRequest {
 				return nil, backoff.Permanent(se)
 			}
 			return res, err
