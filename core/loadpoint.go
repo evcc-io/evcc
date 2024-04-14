@@ -1185,6 +1185,13 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batter
 	// calculate target charge current from delta power and actual current
 	activePhases := lp.ActivePhases()
 	effectiveCurrent := lp.effectiveCurrent()
+
+	// use measured power if available
+	measuredPower, err := lp.chargeMeter.CurrentPower()
+	if err == nil {
+		effectiveCurrent = powerToCurrent(measuredPower, activePhases)
+	}
+
 	if scaledTo == 3 {
 		// if we did scale, adjust the effective current to the new phase count
 		effectiveCurrent /= 3.0
