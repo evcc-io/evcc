@@ -78,9 +78,21 @@ validateSave = "Patikrinti ir išsaugoti"
 titleAdd = "Pridėti saulės skaitiklį"
 titleEdit = "Redaguoti saulės skaitiklį"
 
+[config.section]
+general = "Pagrindiniai"
+system = "Sisteminiai"
+
 [config.site]
 cancel = "Atšaukti"
 save = "Išsaugoti"
+
+[config.system]
+logs = "Žurnalai"
+restart = "Paleisti iš naujo"
+restartRequiredDescription = "Paleiskite iš naujo, kad įsigaliotų pakeitimai"
+restartRequiredMessage = "Nustatymai pasikeitė"
+restartingDescription = "Palaukite..."
+restartingMessage = "Paleidžiama iš naujo"
 
 [config.title]
 description = "Rodoma pagrindiniame ekrane ir naršyklės kortelėje."
@@ -200,13 +212,13 @@ discussionsButton = "GitHub diskusijos"
 documentationButton = "Dokumentacija"
 issueButton = "Pranešti apie klaidą"
 issueDescription = "Pastebėjote keistą ar netinkamą veikimą?"
+logsButton = "Peržiūrėti žurnalus"
+logsDescription = "Patikrinkite ar žurnaluose nėra klaidų"
 modalTitle = "Reikia pagalbos?"
 primaryActions = "Kažkas veikia ne taip, kaip turėtų? Pagalbos ieškokite čia."
 restartButton = "Restartuoti"
 restartDescription = "Ar pabandėte išjungti ir vėl įjungti?"
 secondaryActions = "Vis dar nepavyksta išspręsti problemos? Čia rasite drastiškesnes opcijas."
-logsButton = "Peržiūrėti žurnalus"
-logsDescription = "Patikrinkite ar žurnaluose nėra klaidų"
 
 [help.restart]
 cancel = "Atšaukti"
@@ -215,14 +227,25 @@ description = "Įprastai restartavimas neturėtų būti reikalingas. Jei jums vi
 disclaimer = "Pastaba: evcc sustos, ir pasitikės operacinės sistemos pagalba paleidžiant iš naujo."
 modalTitle = "Ar tikrai norite restartuoti?"
 
+[log]
+areaLabel = "Filtruoti pagal sritis"
+areas = "Visos sritys"
+download = "Atsisiųsti visą žurnalą"
+levelLabel = "Filtruoti pagal žurnalo lygį"
+noResults = "Nėra atitinkančių žurnalo įrašų"
+search = "Ieškoti"
+showAll = "Rodyti visus įrašus"
+title = "Žurnalai"
+update = "Automatinis atnaujinimas"
+
 [loginModal]
 cancel = "Atšaukti"
 error = "Prisijungti nepavyko: "
 invalid = "Neteisingas slaptažodis."
 login = "Prisijungti"
 password = "Slaptažodis"
-title = "Autentifikavimas"
 reset = "Atstatyti slaptažodį?"
+title = "Autentifikavimas"
 
 [main]
 vehicles = "Autoparkas"
@@ -405,8 +428,8 @@ waitForVehicle = "Paruošta. Laukiama automobilio..."
 
 [notifications]
 dismissAll = "Išvalyti visus"
-modalTitle = "Pranešimai"
 logs = "Peržiūrėti visus žurnalus"
+modalTitle = "Pranešimai"
 
 [offline]
 message = "Nėra ryšio su serveriu."
@@ -542,27 +565,3 @@ title = "Klaida startuojant"
 cancel = "Atšaukti"
 template = "Gamintojas"
 test = "Testuoti"
-
-
-[config.section]
-general = "Pagrindiniai"
-system = "Sisteminiai"
-
-[config.system]
-restart = "Paleisti iš naujo"
-logs = "Žurnalai"
-restartRequiredDescription = "Paleiskite iš naujo, kad įsigaliotų pakeitimai"
-restartRequiredMessage = "Nustatymai pasikeitė"
-restartingDescription = "Palaukite..."
-restartingMessage = "Paleidžiama iš naujo"
-
-[log]
-download = "Atsisiųsti visą žurnalą"
-areas = "Visos sritys"
-levelLabel = "Filtruoti pagal žurnalo lygį"
-search = "Ieškoti"
-showAll = "Rodyti visus įrašus"
-title = "Žurnalai"
-update = "Automatinis atnaujinimas"
-noResults = "Nėra atitinkančių žurnalo įrašų"
-areaLabel = "Filtruoti pagal sritis"
