@@ -87,8 +87,8 @@ func (t *Amber) run(done chan error) {
 	tick := time.NewTicker(time.Minute)
 	for ; true; <-tick.C {
 		var res []amber.PriceInfo
-		uri := fmt.Sprintf("%s&endDate=%s", t.uri,
-			time.Now().AddDate(0, 0, 2).Format("2006-01-02"))
+		uri := fmt.Sprintf("%s&endDate=%s", t.uri, time.Now().AddDate(0, 0, 2).Format("2006-01-02"))
+
 		if err := backoff.Retry(func() error {
 			return backoffPermanentError(t.GetJSON(uri, &res))
 		}, bo); err != nil {
