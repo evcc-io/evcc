@@ -13,7 +13,7 @@ legendTitle = "Kaip naudoti saulės energiją?"
 legendTopAutostart = "startuoja automatiškai"
 legendTopName = "kaupiklis padeda įkrauti"
 legendTopSubline = "be pertraukų"
-modalTitle = "Kaupiklio nustatymai"
+modalTitle = "Namų kaupiklis"
 
 [batterySettings.bufferStart]
 above = "kai virš {soc}"
@@ -205,6 +205,8 @@ primaryActions = "Kažkas veikia ne taip, kaip turėtų? Pagalbos ieškokite či
 restartButton = "Restartuoti"
 restartDescription = "Ar pabandėte išjungti ir vėl įjungti?"
 secondaryActions = "Vis dar nepavyksta išspręsti problemos? Čia rasite drastiškesnes opcijas."
+logsButton = "Peržiūrėti žurnalus"
+logsDescription = "Patikrinkite ar žurnaluose nėra klaidų"
 
 [help.restart]
 cancel = "Atšaukti"
@@ -220,6 +222,7 @@ invalid = "Neteisingas slaptažodis."
 login = "Prisijungti"
 password = "Slaptažodis"
 title = "Autentifikavimas"
+reset = "Atstatyti slaptažodį?"
 
 [main]
 vehicles = "Autoparkas"
@@ -403,6 +406,7 @@ waitForVehicle = "Paruošta. Laukiama automobilio..."
 [notifications]
 dismissAll = "Išvalyti visus"
 modalTitle = "Pranešimai"
+logs = "Peržiūrėti visus žurnalus"
 
 [offline]
 message = "Nėra ryšio su serveriu."
@@ -471,7 +475,7 @@ allVehicles = "visi automobiliai"
 filter = "Filtruoti"
 
 [settings]
-title = "Bendrieji Nustatymai"
+title = "Vartotojo sąsaja"
 
 [settings.gridDetails]
 co2 = "CO₂"
@@ -538,3 +542,27 @@ title = "Klaida startuojant"
 cancel = "Atšaukti"
 template = "Gamintojas"
 test = "Testuoti"
+
+
+[config.section]
+general = "Pagrindiniai"
+system = "Sisteminiai"
+
+[config.system]
+restart = "Paleisti iš naujo"
+logs = "Žurnalai"
+restartRequiredDescription = "Paleiskite iš naujo, kad įsigaliotų pakeitimai"
+restartRequiredMessage = "Nustatymai pasikeitė"
+restartingDescription = "Palaukite..."
+restartingMessage = "Paleidžiama iš naujo"
+
+[log]
+download = "Atsisiųsti visą žurnalą"
+areas = "Visos sritys"
+levelLabel = "Filtruoti pagal žurnalo lygį"
+search = "Ieškoti"
+showAll = "Rodyti visus įrašus"
+title = "Žurnalai"
+update = "Automatinis atnaujinimas"
+noResults = "Nėra atitinkančių žurnalo įrašų"
+areaLabel = "Filtruoti pagal sritis"
