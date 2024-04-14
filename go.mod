@@ -198,8 +198,6 @@ require (
 	modernc.org/sqlite v1.29.6 // indirect
 )
 
-replace github.com/grid-x/modbus => github.com/evcc-io/modbus v0.0.0-20230705160100-23e1df2c01c3
-
 replace github.com/imdario/mergo => github.com/imdario/mergo v0.3.16
 
 replace github.com/spf13/viper => github.com/spf13/viper v1.18.1
