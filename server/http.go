@@ -106,6 +106,7 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, cache *util.Cache) {
 		"buffersoc":               {"POST", "/buffersoc/{value:[0-9.]+}", floatHandler(site.SetBufferSoc, site.GetBufferSoc)},
 		"bufferstartsoc":          {"POST", "/bufferstartsoc/{value:[0-9.]+}", floatHandler(site.SetBufferStartSoc, site.GetBufferStartSoc)},
 		"batterydischargecontrol": {"POST", "/batterydischargecontrol/{value:[a-z]+}", boolHandler(site.SetBatteryDischargeControl, site.GetBatteryDischargeControl)},
+		"maxgridsupply":           {"POST", "/maxgridsupply/{value:[0-9.]+}", floatHandler("maxGridSupplyWhileBatteryCharging")},
 		"prioritysoc":             {"POST", "/prioritysoc/{value:[0-9.]+}", floatHandler(site.SetPrioritySoc, site.GetPrioritySoc)},
 		"residualpower":           {"POST", "/residualpower/{value:-?[0-9.]+}", floatHandler(site.SetResidualPower, site.GetResidualPower)},
 		"smartcost":               {"POST", "/smartcostlimit/{value:-?[0-9.]+}", updateSmartCostLimit(site)},
@@ -146,35 +147,33 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, cache *util.Cache) {
 
 		// new endpoints ⤵︎
 		"mqtt":         {"GET", "/mqtt", settingsGetStringHandler("mqtt")},
-		"updatemqtt":   {"PUT", "/mqtt", settingsSetYamlHandler("mqtt", new(globalconfig.Mqtt))},
+		"updatemqtt":   {"POST", "/mqtt", settingsSetYamlHandler("mqtt", new(globalconfig.Mqtt))},
 		"influx":       {"GET", "/influx", settingsGetStringHandler("influx")},
-		"updateinflux": {"PUT", "/influx", settingsSetYamlHandler("influx", new(globalconfig.Influx))},
+		"updateinflux": {"POST", "/influx", settingsSetYamlHandler("influx", new(globalconfig.Influx))},
 		// "hems":              {"GET", "/hems", settingsGetStringHandler("hems")},
-		// "updatehems":        {"PUT", "/hems", settingsSetYamlHandler("hems", new(globalconfig.Hems))},
+		// "updatehems":        {"POST", "/hems", settingsSetYamlHandler("hems", new(globalconfig.Hems))},
 		"eebus":             {"GET", "/eebus", settingsGetStringHandler("eebus")},
-		"updateeebus":       {"PUT", "/eebus", settingsSetYamlHandler("eebus", new(eebus.Config))},
+		"updateeebus":       {"POST", "/eebus", settingsSetYamlHandler("eebus", new(eebus.Config))},
 		"tariffs":           {"GET", "/tariffs", settingsGetStringHandler("tariffs")},
-		"updatetariffs":     {"PUT", "/tariffs", settingsSetYamlHandler("tariffs", new(globalconfig.Tariffs))},
+		"updatetariffs":     {"POST", "/tariffs", settingsSetYamlHandler("tariffs", new(globalconfig.Tariffs))},
 		"messaging":         {"GET", "/messaging", settingsGetStringHandler("messaging")},
-		"updatemessaging":   {"PUT", "/messaging", settingsSetYamlHandler("messaging", new(globalconfig.Messaging))},
+		"updatemessaging":   {"POST", "/messaging", settingsSetYamlHandler("messaging", new(globalconfig.Messaging))},
 		"modbusproxy":       {"GET", "/modbusproxy", settingsGetStringHandler("modbusproxy")},
-		"updatemodbusproxy": {"PUT", "/modbusproxy", settingsSetYamlHandler("modbusproxy", new(globalconfig.ModbusProxy))},
+		"updatemodbusproxy": {"POST", "/modbusproxy", settingsSetYamlHandler("modbusproxy", new(globalconfig.ModbusProxy))},
 		"network":           {"GET", "/network", settingsGetStringHandler("network")},
-		"updatenetwork":     {"PUT", "/network", settingsSetYamlHandler("network", new(globalconfig.Network))},
+		"updatenetwork":     {"POST", "/network", settingsSetYamlHandler("network", new(globalconfig.Network))},
 
 		// TODO https://github.com/evcc-io/evcc/pull/13319#issuecomment-2052423396 @naltatis
 		// "interval":            {"GET", "/interval", intervalHandler},
-		// "updateinterval":      {"PUT", "/interval/{value:[0-9]+}", updateIntervalHandler},
+		// "updateinterval":      {"POST", "/interval/{value:[0-9]+}", updateIntervalHandler},
 		// "sponsortatus":        {"GET", "/sponsorstatus", sponsorStatusHandler},
-		// "updatesponsortoken":  {"PUT", "/sponsortoken/{token:[a-zA-Z0-9]+}", updateSponsortokenHandler},
-		// "maxgridsupply":       {"GET", "/maxgridsupply", maxGridSupplyWhileBatteryChargingHandler},
-		// "updatemaxgridsupply": {"PUT", "/maxgridsupply/{value:[0-9.]+}", updateMaxGridSupplyWhileBatteryChargingHandler},
+		// "updatesponsortoken":  {"POST", "/sponsortoken/{token:[a-zA-Z0-9]+}", updateSponsortokenHandler},
 
-		// TODO duration vs int
-		"interval":      {"POST", "/interval", settingsFloatHandler("interval")},
-		"maxgridsupply": {"POST", "/maxgridsupply", settingsFloatHandler("maxGridSupplyWhileBatteryCharging")},
+		// TODO duration in s
+		"interval": {"POST", "/interval", settingsSetIntHandler("interval")},
+
 		// "sponsortatus":        {"GET", "/sponsorstatus", sponsorStatusHandler},
-		// "updatesponsortoken":  {"PUT", "/sponsortoken/{token:[a-zA-Z0-9]+}", updateSponsortokenHandler},
+		// "updatesponsortoken":  {"POST", "/sponsortoken/{token:[a-zA-Z0-9]+}", updateSponsortokenHandler},
 	}
 
 	for _, r := range configRoutes {
