@@ -186,7 +186,7 @@ func (c *EEBus) isEVConnected() bool {
 var _ api.CurrentLimiter = (*EEBus)(nil)
 
 func (c *EEBus) minMax() (minMax, error) {
-	minLimits, maxLimits, _, err := c.uc.EvCC.CurrentLimits(c.entity)
+	minLimits, maxLimits, _, err := c.uc.OpEV.CurrentLimits(c.entity)
 	if err != nil {
 		if err == eebusapi.ErrDataNotAvailable {
 			err = api.ErrNotAvailable
@@ -231,7 +231,7 @@ func (c *EEBus) isCharging() bool { // d *communication.EVSEClientDataType
 	if err != nil {
 		return false
 	}
-	limitsMin, _, _, err := c.uc.EvCC.CurrentLimits(c.entity)
+	limitsMin, _, _, err := c.uc.OpEV.CurrentLimits(c.entity)
 	if err != nil || limitsMin == nil || len(limitsMin) == 0 {
 		return false
 	}
@@ -360,7 +360,7 @@ func (c *EEBus) writeCurrentLimitData(currents []float64) error {
 	// So if there are currents smaller than 6A with unknown communication standard change them to 6A.
 	// Keep in mind that this will still confuse evcc as it thinks charging is stopped, but it hasn't yet.
 	if comStandard == ucevcc.UCEVCCCommunicationStandardUnknown {
-		minLimits, _, _, err := c.uc.EvCC.CurrentLimits(c.entity)
+		minLimits, _, _, err := c.uc.OpEV.CurrentLimits(c.entity)
 		if err == nil {
 			for index, current := range currents {
 				if index < len(minLimits) && current < minLimits[index] {
