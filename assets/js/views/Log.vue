@@ -204,7 +204,6 @@ export default {
 					},
 				});
 				this.lines = response.data?.result || [];
-				this.lines.reverse();
 				this.$nextTick(() => {
 					if (showAll) {
 						this.scrollToTop();

@@ -43,7 +43,7 @@ func (l *logger) Write(p []byte) (n int, err error) {
 	defer l.mu.Unlock()
 
 	if !strings.HasPrefix(string(p), "[cache ]") {
-		l.data.Value = element(strings.TrimSpace(string(p)))
+		l.data.Value = element(string(p))
 		l.data = l.data.Next()
 	}
 
@@ -74,9 +74,9 @@ func (l *logger) Areas() []string {
 	r := l.data
 
 	areas := make(map[string]struct{})
-	for i := 0; i < r.Len(); i++ {
+	for range r.Len() {
 		r = r.Prev()
-		if e, ok := r.Value.(element); ok {
+		if e, ok := r.Value.(element); ok && e != "" {
 			if a, _ := e.areaLevel(); a != "" {
 				areas[a] = struct{}{}
 			}
@@ -96,8 +96,8 @@ func (l *logger) All(areas []string, level jww.Threshold, count int) []string {
 	all := len(areas) == 0 && level == jww.LevelTrace
 
 	var res []string
-	for i := 0; i < r.Len(); i++ {
-		r = r.Prev()
+	for range r.Len() {
+		r = r.Next()
 		if e, ok := r.Value.(element); ok && e != "" && (all || e.match(areas, level)) {
 			res = append(res, string(e))
 			if count > 0 && len(res) >= count {
