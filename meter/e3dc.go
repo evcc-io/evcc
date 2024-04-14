@@ -98,7 +98,6 @@ func (m *E3dc) CurrentPower() (float64, error) {
 	switch m.usage {
 	case templates.UsageGrid:
 		tag = rscp.EMS_REQ_POWER_GRID
-		sign = -1
 	case templates.UsagePV:
 		tag = rscp.EMS_REQ_POWER_PV
 	case templates.UsageBattery:
