@@ -3,30 +3,39 @@ package server
 import (
 	"net/http"
 	"time"
+
+	"github.com/evcc-io/evcc/util/sponsor"
+	"github.com/gorilla/mux"
 )
 
-// TODO
-func sponsorStatusHandler(w http.ResponseWriter, r *http.Request) {
-	// @andig we should not return the sponsor token here, instead I modeled the sponsorship status.
-	// But maybe it's also a good idea to not implement this single get endpoint at all.
-	// We could build a  separate endpoint returning the state of all configuration.
-	// Something like /api/config/state which is auth-only and returns status info to all config entities (device dump data, mqtt configured? connected?, eebus configured?, sponsorship active?, ...)
+type sponsorResult struct {
+	IsAuthorized       bool      `json:"isAuthorized"`
+	IsAuthorizedForApi bool      `json:"isAuthorizedForApi"`
+	Subject            string    `json:"subject"`
+	ExpiresAt          time.Time `json:"expires"`
+}
 
-	res := struct {
-		Valid   bool      `json:"valid"`
-		Name    string    `json:"name"`
-		Demo    bool      `json:"demo"`
-		Expires time.Time `json:"expires"`
-	}{
-		Valid:   true,
-		Name:    "sponsor@evcc.io",
-		Demo:    false,
-		Expires: time.Now().AddDate(1, 0, 0),
+func sponsorStatus() sponsorResult {
+	return sponsorResult{
+		IsAuthorized:       sponsor.IsAuthorized(),
+		IsAuthorizedForApi: sponsor.IsAuthorizedForApi(),
+		Subject:            sponsor.Subject,
+		ExpiresAt:          sponsor.ExpiresAt,
 	}
+}
 
-	jsonResult(w, res)
+func sponsorStatusHandler(w http.ResponseWriter, r *http.Request) {
+	jsonResult(w, sponsorStatus())
 }
 
 func updateSponsortokenHandler(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
+	vars := mux.Vars(r)
+	token := vars["token"]
+
+	if err := sponsor.ConfigureSponsorship(token); err != nil {
+		jsonError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	jsonResult(w, sponsorStatus())
 }
