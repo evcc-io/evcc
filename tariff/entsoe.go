@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/xml"
 	"errors"
-	"net/http"
 	"slices"
 	"strings"
 	"sync"
@@ -96,14 +95,8 @@ func (t *Entsoe) run(done chan error) {
 		if err := backoff.Retry(func() error {
 			// Request the next 24 hours of data.
 			data, err := t.DoBody(entsoe.DayAheadPricesRequest(t.domain, time.Hour*24))
-
-			var se request.StatusError
-			if errors.As(err, &se) {
-				if se.StatusCode() == http.StatusBadRequest {
-					return backoff.Permanent(se)
-				}
-
-				return se
+			if err != nil {
+				return backoffPermanentError(err)
 			}
 
 			var doc entsoe.Document
