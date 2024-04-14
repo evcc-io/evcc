@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
-	"math"
 	"net/http"
 	"strconv"
 	"strings"
@@ -126,19 +125,6 @@ func boolGetHandler(get func() bool) http.HandlerFunc {
 	}
 }
 
-// encodeFloats replaces NaN and Inf with nil
-// TODO handle hierarchical data
-func encodeFloats(data map[string]any) {
-	for k, v := range data {
-		switch v := v.(type) {
-		case float64:
-			if math.IsNaN(v) || math.IsInf(v, 0) {
-				data[k] = nil
-			}
-		}
-	}
-}
-
 // updateSmartCostLimit sets the smart cost limit globally
 func updateSmartCostLimit(site site.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -165,8 +151,6 @@ func stateHandler(cache *util.Cache) http.HandlerFunc {
 		for _, k := range ignoreState {
 			delete(res, k)
 		}
-
-		encodeFloats(res)
 
 		if q := r.URL.Query().Get("jq"); q != "" {
 			q = strings.TrimPrefix(q, ".result")

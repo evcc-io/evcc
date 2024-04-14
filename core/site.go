@@ -65,11 +65,10 @@ type Site struct {
 	log *util.Logger
 
 	// configuration
-	Title                             string       `mapstructure:"title"`         // UI title
-	Voltage                           float64      `mapstructure:"voltage"`       // Operating voltage. 230V for Germany.
-	ResidualPower                     float64      `mapstructure:"residualPower"` // PV meter only: household usage. Grid meter: household safety margin
-	Meters                            MetersConfig // Meter references
-	MaxGridSupplyWhileBatteryCharging float64      `mapstructure:"maxGridSupplyWhileBatteryCharging"` // ignore battery charging if AC consumption is above this value
+	Title         string       `mapstructure:"title"`         // UI title
+	Voltage       float64      `mapstructure:"voltage"`       // Operating voltage. 230V for Germany.
+	ResidualPower float64      `mapstructure:"residualPower"` // PV meter only: household usage. Grid meter: household safety margin
+	Meters        MetersConfig // Meter references
 
 	// meters
 	gridMeter     api.Meter   // Grid usage meter
@@ -78,10 +77,11 @@ type Site struct {
 	auxMeters     []api.Meter // Auxiliary meters
 
 	// battery settings
-	prioritySoc             float64 // prefer battery up to this Soc
-	bufferSoc               float64 // continue charging on battery above this Soc
-	bufferStartSoc          float64 // start charging on battery above this Soc
-	batteryDischargeControl bool    // prevent battery discharge for fast and planned charging
+	prioritySoc                       float64 // prefer battery up to this Soc
+	bufferSoc                         float64 // continue charging on battery above this Soc
+	bufferStartSoc                    float64 // start charging on battery above this Soc
+	maxGridSupplyWhileBatteryCharging float64 // ignore battery charging if AC consumption is above this value
+	batteryDischargeControl           bool    // prevent battery discharge for fast and planned charging
 
 	loadpoints  []*Loadpoint             // Loadpoints
 	tariffs     *tariff.Tariffs          // Tariffs
@@ -267,6 +267,12 @@ func (site *Site) restoreSettings() error {
 			return err
 		}
 	}
+	// TODO migrate from YAML
+	if v, err := settings.Float(keys.MaxGridSupplyWhileBatteryCharging); err == nil {
+		if err := site.SetMaxGridSupplyWhileBatteryCharging(v); err != nil {
+			return err
+		}
+	}
 	if v, err := settings.Float(keys.PrioritySoc); err == nil {
 		if err := site.SetPrioritySoc(v); err != nil {
 			return err
@@ -380,10 +386,6 @@ func (site *Site) publish(key string, val interface{}) {
 	// test helper
 	if site.uiChan == nil {
 		return
-	}
-
-	if s, ok := val.(fmt.Stringer); ok {
-		val = s.String()
 	}
 
 	site.uiChan <- util.Param{Key: key, Val: val}
@@ -644,7 +646,7 @@ func (site *Site) sitePower(totalChargePower, flexiblePower float64) (float64, b
 		}
 	}
 
-	sitePower := sitePower(site.log, site.MaxGridSupplyWhileBatteryCharging, site.gridPower, batteryPower, site.ResidualPower)
+	sitePower := sitePower(site.log, site.GetMaxGridSupplyWhileBatteryCharging(), site.gridPower, batteryPower, site.ResidualPower)
 
 	// deduct smart loads
 	if len(site.auxMeters) > 0 {
@@ -818,9 +820,10 @@ func (site *Site) prepare() {
 	site.publish(keys.GridConfigured, site.gridMeter != nil)
 	site.publish(keys.Pv, make([]api.Meter, len(site.pvMeters)))
 	site.publish(keys.Battery, make([]api.Meter, len(site.batteryMeters)))
+	site.publish(keys.PrioritySoc, site.prioritySoc)
 	site.publish(keys.BufferSoc, site.bufferSoc)
 	site.publish(keys.BufferStartSoc, site.bufferStartSoc)
-	site.publish(keys.PrioritySoc, site.prioritySoc)
+	site.publish(keys.MaxGridSupplyWhileBatteryCharging, site.maxGridSupplyWhileBatteryCharging)
 	site.publish(keys.BatteryMode, site.batteryMode)
 	site.publish(keys.BatteryDischargeControl, site.batteryDischargeControl)
 	site.publish(keys.ResidualPower, site.ResidualPower)
@@ -902,6 +905,7 @@ func (site *Site) Run(stopC chan struct{}, interval time.Duration) {
 	go site.loopLoadpoints(loadpointChan)
 
 	ticker := time.NewTicker(interval)
+	site.publish(keys.Interval, interval)
 	site.update(<-loadpointChan) // start immediately
 
 	for {

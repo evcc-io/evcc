@@ -7,7 +7,7 @@ import (
 
 // Cache is a data store
 type Cache struct {
-	sync.Mutex
+	mu  sync.RWMutex
 	val map[string]Param
 }
 
@@ -48,30 +48,34 @@ func (c *Cache) Run(in <-chan Param) {
 	}
 }
 
-// State provides a structured copy of the cached values
-// Loadpoints are aggregated as loadpoints array
-func (c *Cache) State() map[string]interface{} {
-	c.Lock()
-	defer c.Unlock()
+// State provides a structured copy of the cached values.
+// Loadpoints are aggregated as loadpoints array.
+// Result values formatted similar to web socket, i.e.
+// - float NaN/Inf are converted to nil
+// - durations are converted to seconds
+// - fmt.Stringer are converted to string
+func (c *Cache) State() map[string]any {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
 
-	res := map[string]interface{}{}
-	lps := make(map[int]map[string]interface{})
+	res := make(map[string]any)
+	lps := make(map[int]map[string]any)
 
 	for _, param := range c.val {
 		if param.Loadpoint == nil {
-			res[param.Key] = param.Val
+			res[param.Key] = EncodeAny(param.Val)
 		} else {
 			lp, ok := lps[*param.Loadpoint]
 			if !ok {
-				lp = make(map[string]interface{})
+				lp = make(map[string]any)
 				lps[*param.Loadpoint] = lp
 			}
-			lp[param.Key] = param.Val
+			lp[param.Key] = EncodeAny(param.Val)
 		}
 	}
 
 	// convert map to array
-	loadpoints := make([]map[string]interface{}, len(lps))
+	loadpoints := make([]map[string]any, len(lps))
 	for id, lp := range lps {
 		loadpoints[id] = lp
 	}
@@ -82,8 +86,8 @@ func (c *Cache) State() map[string]interface{} {
 
 // All provides a copy of the cached values
 func (c *Cache) All() []Param {
-	c.Lock()
-	defer c.Unlock()
+	c.mu.RLock()
+	defer c.mu.RUnlock()
 
 	copy := make([]Param, 0, len(c.val))
 	for _, val := range c.val {
@@ -95,16 +99,16 @@ func (c *Cache) All() []Param {
 
 // Add entry to cache
 func (c *Cache) Add(key string, param Param) {
-	c.Lock()
-	defer c.Unlock()
+	c.mu.Lock()
+	defer c.mu.Unlock()
 
 	c.val[key] = param
 }
 
 // Get entry from cache
 func (c *Cache) Get(key string) Param {
-	c.Lock()
-	defer c.Unlock()
+	c.mu.RLock()
+	defer c.mu.RUnlock()
 
 	if val, ok := c.val[key]; ok {
 		return val

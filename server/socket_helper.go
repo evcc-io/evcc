@@ -3,43 +3,21 @@ package server
 import (
 	"encoding/json"
 	"fmt"
-	"math"
 	"reflect"
 	"strings"
-	"time"
 
 	"github.com/evcc-io/evcc/util"
 )
 
-func encode(v interface{}) (string, error) {
-	var s string
-	switch val := v.(type) {
-	case time.Time:
-		if val.IsZero() {
-			s = "null"
-		} else {
-			s = fmt.Sprintf(`"%s"`, val.Format(time.RFC3339))
-		}
-	case time.Duration:
-		// must be before stringer to convert to seconds instead of string
-		s = fmt.Sprintf("%d", int64(val.Seconds()))
-	case float64:
-		if math.IsNaN(val) {
-			s = "null"
-		} else {
-			s = fmt.Sprintf("%.5g", val)
-		}
-	default:
-		if b, err := json.Marshal(v); err == nil {
-			s = string(b)
-		} else {
-			return "", err
-		}
+func encode(v any) (string, error) {
+	if b, err := json.Marshal(util.EncodeAny(v)); err == nil {
+		return string(b), nil
+	} else {
+		return "", err
 	}
-	return s, nil
 }
 
-func encodeSlice(v interface{}) (string, error) {
+func encodeSlice(v any) (string, error) {
 	rv := reflect.ValueOf(v)
 	res := make([]string, rv.Len())
 
@@ -63,6 +41,12 @@ func kv(p util.Param) string {
 	if p.Val != nil && reflect.TypeOf(p.Val).Kind() == reflect.Slice {
 		val, err = encodeSlice(p.Val)
 	} else {
+		if p.Key == "interval" {
+			p.Key = "interval"
+		}
+		if p.Key == "chargeDuration" {
+			p.Key = "chargeDuration"
+		}
 		val, err = encode(p.Val)
 	}
 

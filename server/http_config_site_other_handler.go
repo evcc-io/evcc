@@ -5,6 +5,7 @@ import (
 	"time"
 )
 
+// TODO
 func sponsorStatusHandler(w http.ResponseWriter, r *http.Request) {
 	// @andig we should not return the sponsor token here, instead I modeled the sponsorship status.
 	// But maybe it's also a good idea to not implement this single get endpoint at all.
@@ -29,26 +30,3 @@ func sponsorStatusHandler(w http.ResponseWriter, r *http.Request) {
 func updateSponsortokenHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
-
-func intervalHandler(w http.ResponseWriter, r *http.Request) {
-	res := struct {
-		Seconds int `json:"interval"`
-	}{
-		Seconds: 30,
-	}
-
-	jsonResult(w, res)
-}
-
-func updateIntervalHandler(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
-}
-
-// // maxgridsupplywhilebatterycharging
-// func maxGridSupplyWhileBatteryChargingHandler(w http.ResponseWriter, r *http.Request) {
-// 	jsonResult(w, 42)
-// }
-
-// func updateMaxGridSupplyWhileBatteryChargingHandler(w http.ResponseWriter, r *http.Request) {
-// 	w.WriteHeader(http.StatusOK)
-// }

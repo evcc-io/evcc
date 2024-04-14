@@ -28,7 +28,6 @@ const (
 	TariffPriceHome       = "tariffPriceHome"
 	TariffPriceLoadpoints = "tariffPriceLoadpoints"
 	Vehicles              = "vehicles"
-	PasswordConfigured    = "passwordConfigured"
 
 	// meters
 	GridMeter     = "gridMeter"
@@ -37,10 +36,11 @@ const (
 	AuxMeters     = "auxMeters"
 
 	// battery settings
-	BatteryCapacity         = "batteryCapacity"
-	BatteryDischargeControl = "batteryDischargeControl"
-	BufferSoc               = "bufferSoc"
-	BufferStartSoc          = "bufferStartSoc"
+	BatteryCapacity                   = "batteryCapacity"
+	BatteryDischargeControl           = "batteryDischargeControl"
+	BufferSoc                         = "bufferSoc"
+	BufferStartSoc                    = "bufferStartSoc"
+	MaxGridSupplyWhileBatteryCharging = "maxGridSupplyWhileBatteryCharging"
 
 	// battery status
 	Battery       = "battery"

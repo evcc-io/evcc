@@ -12,6 +12,7 @@ import (
 	"github.com/evcc-io/evcc/server/assets"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/auth"
+	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/telemetry"
 	"github.com/go-http-utils/etag"
 	"github.com/gorilla/handlers"
@@ -106,7 +107,7 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, cache *util.Cache) {
 		"buffersoc":               {"POST", "/buffersoc/{value:[0-9.]+}", floatHandler(site.SetBufferSoc, site.GetBufferSoc)},
 		"bufferstartsoc":          {"POST", "/bufferstartsoc/{value:[0-9.]+}", floatHandler(site.SetBufferStartSoc, site.GetBufferStartSoc)},
 		"batterydischargecontrol": {"POST", "/batterydischargecontrol/{value:[a-z]+}", boolHandler(site.SetBatteryDischargeControl, site.GetBatteryDischargeControl)},
-		"maxgridsupply":           {"POST", "/maxgridsupply/{value:[0-9.]+}", floatHandler("maxGridSupplyWhileBatteryCharging")},
+		"maxgridsupply":           {"POST", "/maxgridsupply/{value:[0-9.]+}", floatHandler(site.SetMaxGridSupplyWhileBatteryCharging, site.GetMaxGridSupplyWhileBatteryCharging)},
 		"prioritysoc":             {"POST", "/prioritysoc/{value:[0-9.]+}", floatHandler(site.SetPrioritySoc, site.GetPrioritySoc)},
 		"residualpower":           {"POST", "/residualpower/{value:-?[0-9.]+}", floatHandler(site.SetResidualPower, site.GetResidualPower)},
 		"smartcost":               {"POST", "/smartcostlimit/{value:-?[0-9.]+}", updateSmartCostLimit(site)},
@@ -146,14 +147,14 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, cache *util.Cache) {
 		"testmerged":   {"POST", "/test/{class:[a-z]+}/merge/{id:[0-9.]+}", testConfigHandler},
 
 		// new endpoints ⤵︎
-		"mqtt":         {"GET", "/mqtt", settingsGetStringHandler("mqtt")},
-		"updatemqtt":   {"POST", "/mqtt", settingsSetYamlHandler("mqtt", new(globalconfig.Mqtt))},
-		"influx":       {"GET", "/influx", settingsGetStringHandler("influx")},
-		"updateinflux": {"POST", "/influx", settingsSetYamlHandler("influx", new(globalconfig.Influx))},
-		// "hems":              {"GET", "/hems", settingsGetStringHandler("hems")},
-		// "updatehems":        {"POST", "/hems", settingsSetYamlHandler("hems", new(globalconfig.Hems))},
+		"mqtt":              {"GET", "/mqtt", settingsGetStringHandler("mqtt")},
+		"updatemqtt":        {"POST", "/mqtt", settingsSetJsonHandler("mqtt", new(globalconfig.Mqtt))},
+		"influx":            {"GET", "/influx", settingsGetStringHandler("influx")},
+		"updateinflux":      {"POST", "/influx", settingsSetJsonHandler("influx", new(globalconfig.Influx))},
+		"hems":              {"GET", "/hems", settingsGetStringHandler("hems")},
+		"updatehems":        {"POST", "/hems", settingsSetYamlHandler("hems", new(config.Typed))},
 		"eebus":             {"GET", "/eebus", settingsGetStringHandler("eebus")},
-		"updateeebus":       {"POST", "/eebus", settingsSetYamlHandler("eebus", new(eebus.Config))},
+		"updateeebus":       {"POST", "/eebus", settingsSetJsonHandler("eebus", new(eebus.Config))},
 		"tariffs":           {"GET", "/tariffs", settingsGetStringHandler("tariffs")},
 		"updatetariffs":     {"POST", "/tariffs", settingsSetYamlHandler("tariffs", new(globalconfig.Tariffs))},
 		"messaging":         {"GET", "/messaging", settingsGetStringHandler("messaging")},
@@ -161,19 +162,11 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, cache *util.Cache) {
 		"modbusproxy":       {"GET", "/modbusproxy", settingsGetStringHandler("modbusproxy")},
 		"updatemodbusproxy": {"POST", "/modbusproxy", settingsSetYamlHandler("modbusproxy", new(globalconfig.ModbusProxy))},
 		"network":           {"GET", "/network", settingsGetStringHandler("network")},
-		"updatenetwork":     {"POST", "/network", settingsSetYamlHandler("network", new(globalconfig.Network))},
-
-		// TODO https://github.com/evcc-io/evcc/pull/13319#issuecomment-2052423396 @naltatis
-		// "interval":            {"GET", "/interval", intervalHandler},
-		// "updateinterval":      {"POST", "/interval/{value:[0-9]+}", updateIntervalHandler},
-		// "sponsortatus":        {"GET", "/sponsorstatus", sponsorStatusHandler},
-		// "updatesponsortoken":  {"POST", "/sponsortoken/{token:[a-zA-Z0-9]+}", updateSponsortokenHandler},
-
-		// TODO duration in s
-		"interval": {"POST", "/interval", settingsSetIntHandler("interval")},
+		"updatenetwork":     {"POST", "/network", settingsSetJsonHandler("network", new(globalconfig.Network))},
+		"interval":          {"POST", "/interval/{value:[0-9.]+", settingsSetDurationHandler("interval")},
 
 		// "sponsortatus":        {"GET", "/sponsorstatus", sponsorStatusHandler},
-		// "updatesponsortoken":  {"POST", "/sponsortoken/{token:[a-zA-Z0-9]+}", updateSponsortokenHandler},
+		"updatesponsortoken": {"POST", "/sponsortoken/{token:[a-zA-Z0-9_-.]+}", updateSponsortokenHandler},
 	}
 
 	for _, r := range configRoutes {
