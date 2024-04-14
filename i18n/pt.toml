@@ -403,6 +403,19 @@ modalTitle = "Notícias"
 message = "Não conectado a um servidor."
 reload = "Iniciar de novo?"
 
+[passwordModal]
+description = "Defina uma palavra-passe para proteger as definições de configuração. Continua a ser possível utilizar o ecrã principal sem iniciar sessão."
+empty = "A palavra-passe não deve estar vazia"
+error = "Erro: "
+labelCurrent = "Palavra-passe atual"
+labelNew = "Nova palavra-passe"
+labelRepeat = "Repetir palavra-passe"
+newPassword = "Criar palavra-passe"
+noMatch = "As palavras-passe não coincidem"
+titleNew = "Definir palavra-passe de administrador"
+titleUpdate = "Atualizar a palavra-passe do administrador"
+updatePassword = "Atualizar palavra-passe"
+
 [session]
 cancel = "Cancelar"
 co2 = "CO₂"
@@ -492,6 +505,10 @@ mi = "milhas"
 [smartCost]
 activeHours = "{charging} de {total}"
 activeHoursLabel = "Horas ativas"
+applyToAll = "Aplicar em todo o lado?"
+batteryDescription = "Carrega a bateria doméstica com energia da rede."
+cheapTitle = "Carregamento de rede barato"
+cleanTitle = "Carregamento de rede limpa"
 co2Label = "Emissão de CO₂"
 co2Limit = "Limite de CO₂"
 loadpointDescription = "Permite carregamento rápido temporário no modo solar."
@@ -499,6 +516,7 @@ modalTitle = "Carregamento de Rede Inteligente"
 none = "sem"
 priceLabel = "Preço da energia"
 priceLimit = "Limite de preço"
+saved = "Salvo."
 
 [startupError]
 configFile = "Ficheiro de configuração em uso:"
