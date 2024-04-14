@@ -124,6 +124,8 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 	// start broadcasting values
 	tee := new(util.Tee)
+	valueChan := make(chan util.Param, 64)
+	go tee.Run(valueChan)
 
 	// value cache
 	cache := util.NewCache()
@@ -145,10 +147,6 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 	// publish to UI
 	go socketHub.Run(pipe.NewDropper(ignoreEmpty).Pipe(tee.Attach()), cache)
-
-	// setup values channel
-	valueChan := make(chan util.Param, 64)
-	go tee.Run(valueChan)
 
 	// capture log messages for UI
 	util.CaptureLogs(valueChan)
