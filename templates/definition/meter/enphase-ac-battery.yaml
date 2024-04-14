@@ -1,11 +1,11 @@
-template: enphase
+template: enphase-ac-battery
 products:
   - brand: Enphase
     description:
-      generic: Envoy
+      generic: AC Battery
 params:
   - name: usage
-    choice: ["grid", "pv"]
+    choice: ["battery"]
   - name: host
   - name: token
     help:
@@ -15,7 +15,7 @@ params:
     advanced: true
 render: |
   type: custom
-  {{- if eq .usage "grid" }}
+  {{- if eq .usage "battery" }}
   power:
     source: http
     uri: http://{{ .host }}/production.json
@@ -25,28 +25,16 @@ render: |
       password: {{ .token }}
     insecure: true
     {{- end }}
-    jq: .consumption[] | select(.measurementType == "net-consumption").wNow
-  {{- end }}
-  {{- if eq .usage "pv" }}
-  power:
-    source: http
-    uri: http://{{ .host }}/production.json
-    {{- if .token }}
-    auth:
-      type: bearer
-      password: {{ .token }}
-    insecure: true
-    {{- end }}
-    jq: .production[] | select(.measurementType == "production").wNow
-  energy:
-    source: http
-    uri: http://{{ .host }}/production.json
-    {{- if .token }}
-    auth:
-      type: bearer
-      password: {{ .token }}
-    insecure: true
-    {{- end }}
-    jq: .production[] | select(.measurementType == "production").whLifetime
+    jq: .storage[] | .wNow
     scale: 0.001
+  soc:
+    source: http
+    uri: http://{{ .host }}/ivp/ensemble/inventory
+    {{- if .token }}
+    auth:
+      type: bearer
+      password: {{ .token }}
+    insecure: true
+    {{- end }}
+    jq: .[].devices | map(.percentFull) | add / length
   {{- end }}

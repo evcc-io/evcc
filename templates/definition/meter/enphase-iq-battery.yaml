@@ -1,11 +1,11 @@
-template: enphase
+template: enphase-iq-battery
 products:
   - brand: Enphase
     description:
-      generic: Envoy
+      generic: IQ Battery
 params:
   - name: usage
-    choice: ["grid", "pv"]
+    choice: ["battery"]
   - name: host
   - name: token
     help:
@@ -15,38 +15,45 @@ params:
     advanced: true
 render: |
   type: custom
-  {{- if eq .usage "grid" }}
+  {{- if eq .usage "battery" }}
   power:
     source: http
-    uri: http://{{ .host }}/production.json
+    uri: http://{{ .host }}/ivp/livedata/status
     {{- if .token }}
     auth:
       type: bearer
       password: {{ .token }}
     insecure: true
     {{- end }}
-    jq: .consumption[] | select(.measurementType == "net-consumption").wNow
-  {{- end }}
-  {{- if eq .usage "pv" }}
-  power:
-    source: http
-    uri: http://{{ .host }}/production.json
-    {{- if .token }}
-    auth:
-      type: bearer
-      password: {{ .token }}
-    insecure: true
-    {{- end }}
-    jq: .production[] | select(.measurementType == "production").wNow
-  energy:
-    source: http
-    uri: http://{{ .host }}/production.json
-    {{- if .token }}
-    auth:
-      type: bearer
-      password: {{ .token }}
-    insecure: true
-    {{- end }}
-    jq: .production[] | select(.measurementType == "production").whLifetime
+    jq: .meters.storage.agg_p_mw
     scale: 0.001
+  soc:
+    source: http
+    uri: http://{{ .host }}/ivp/ensemble/inventory
+    {{- if .token }}
+    auth:
+      type: bearer
+      password: {{ .token }}
+    insecure: true
+    {{- end }}
+    jq: .[].devices | map(.percentFull) | add / length
+  setup:
+    source: watchdog
+    timeout: 5m
+    set:
+      source: http
+      uri: http://{{ .host }}/ivp/livedata/stream
+      method: POST
+      headers:
+      - content-type: application/json
+      {{- if .token }}
+      auth:
+        type: bearer
+        password: {{ .token }}
+      insecure: true
+      {{- end }}
+      body: '{"enable":1}'
+  {{- if .capacity }}
+  capacity: {{ .capacity }} # kWh
+  {{- end }}
   {{- end }}
