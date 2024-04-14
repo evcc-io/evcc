@@ -90,7 +90,7 @@ func (t *Amber) run(done chan error) {
 		uri := fmt.Sprintf("%s&endDate=%s", t.uri,
 			time.Now().AddDate(0, 0, 2).Format("2006-01-02"))
 		if err := backoff.Retry(func() error {
-			return t.GetJSON(uri, &res)
+			return backoffPermanentError(t.GetJSON(uri, &res))
 		}, bo); err != nil {
 			once.Do(func() { done <- err })
 
