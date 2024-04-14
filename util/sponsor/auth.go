@@ -3,6 +3,7 @@ package sponsor
 import (
 	"context"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/api/proto/pb"
@@ -12,6 +13,7 @@ import (
 )
 
 var (
+	mu             sync.Mutex
 	Subject, Token string
 	ExpiresAt      time.Time
 )
@@ -19,15 +21,22 @@ var (
 const unavailable = "sponsorship unavailable"
 
 func IsAuthorized() bool {
+	mu.Lock()
+	defer mu.Unlock()
 	return len(Subject) > 0
 }
 
 func IsAuthorizedForApi() bool {
+	mu.Lock()
+	defer mu.Unlock()
 	return IsAuthorized() && Subject != unavailable
 }
 
 // check and set sponsorship token
 func ConfigureSponsorship(token string) error {
+	mu.Lock()
+	defer mu.Unlock()
+
 	if token == "" {
 		var err error
 		if token, err = readSerial(); token == "" || err != nil {
@@ -68,12 +77,15 @@ type StatusStruct struct {
 	IsAuthorized       bool      `json:"isAuthorized"`
 	IsAuthorizedForApi bool      `json:"isAuthorizedForApi"`
 	Subject            string    `json:"subject"`
-	ExpiresAt          time.Time `json:"expires"`
+	ExpiresAt          time.Time `json:"expiresAt"`
 	ExpiresIn          int64     `json:"expiresIn,omitempty"`
 }
 
 // Status returns the sponsorship status
 func Status() StatusStruct {
+	mu.Lock()
+	defer mu.Unlock()
+
 	var expiresIn int64
 	if IsAuthorizedForApi() {
 		expiresIn = int64(time.Until(ExpiresAt).Seconds())
