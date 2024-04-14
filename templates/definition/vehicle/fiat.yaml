@@ -14,5 +14,8 @@ render: |
   {{ include "vehicle-base" . }}
   {{- if .pin }}
   pin: {{ .pin }} # mandatory to deep refresh Soc
+  help:
+      de: Für eine regelmäßige Abfrage des SoC beim Laden hier die PIN von der FIAT-App eintragen
+      en: To trigger the regular refresh of the SoC while charging enter the PIN from your FIAT app
   {{- end }}
   {{ include "vehicle-identify" . }}
