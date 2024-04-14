@@ -5,9 +5,6 @@
 	>
 		<shopicon-regular-cloud class="me-2"></shopicon-regular-cloud>
 		{{ $t("offline.message") }}
-		<button class="btn btn-sm btn-link text-dark" @click="reload">
-			{{ $t("offline.reload") }}
-		</button>
 	</div>
 </template>
 
@@ -16,10 +13,11 @@ import "@h2d2/shopicons/es/regular/cloud";
 
 export default {
 	name: "OfflineIndicator",
-	methods: {
-		reload() {
-			window.location.reload();
-		},
-	},
 };
 </script>
+<style>
+.fixed-bottom {
+	/* $zindex-toast https://getbootstrap.com/docs/5.3/layout/z-index/ */
+	z-index: 1090 !important;
+}
+</style>
