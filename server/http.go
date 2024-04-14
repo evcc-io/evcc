@@ -87,7 +87,7 @@ func (s *HTTPd) Router() *mux.Router {
 }
 
 // RegisterSiteHandlers connects the http handlers to the site
-func (s *HTTPd) RegisterSiteHandlers(site site.API, cache *util.Cache) {
+func (s *HTTPd) RegisterSiteHandlers(site site.API, auth auth.Auth, cache *util.Cache) {
 	router := s.Server.Handler.(*mux.Router)
 
 	// api
@@ -97,8 +97,6 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, cache *util.Cache) {
 	api.Use(handlers.CORS(
 		handlers.AllowedHeaders([]string{"Content-Type"}),
 	))
-
-	auth := auth.New()
 
 	// site api
 	routes := map[string]route{
@@ -117,10 +115,6 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, cache *util.Cache) {
 		"deletesession":           {"DELETE", "/session/{id:[0-9]+}", deleteSessionHandler},
 		"telemetry":               {"GET", "/settings/telemetry", boolGetHandler(telemetry.Enabled)},
 		"telemetry2":              {"POST", "/settings/telemetry/{value:[a-z]+}", boolHandler(telemetry.Enable, telemetry.Enabled)},
-		"password":                {"PUT", "/auth/password", updatePasswordHandler(auth)},
-		"auth":                    {"GET", "/auth/status", authStatusHandler(auth)},
-		"login":                   {"POST", "/auth/login", loginHandler(auth)},
-		"logout":                  {"POST", "/auth/logout", logoutHandler},
 	}
 
 	for _, r := range routes {
@@ -222,22 +216,50 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, cache *util.Cache) {
 	}
 }
 
-// RegisterShutdownHandler connects the http handlers to the site
-func (s *HTTPd) RegisterShutdownHandler(callback func()) {
+// RegisterAuthHandlers provides authentication handlers
+func (s *HTTPd) RegisterAuthHandlers(auth auth.Auth) {
 	router := s.Server.Handler.(*mux.Router)
 
 	// api
-	api := router.PathPrefix("/api").Subrouter()
+	api := router.PathPrefix("/api/auth").Subrouter()
 	api.Use(jsonHandler)
 	api.Use(handlers.CompressHandler)
 	api.Use(handlers.CORS(
 		handlers.AllowedHeaders([]string{"Content-Type"}),
 	))
 
-	// site api
+	// auth api
 	routes := map[string]route{
+		"password": {"PUT", "/password", updatePasswordHandler(auth)},
+		"auth":     {"GET", "/status", authStatusHandler(auth)},
+		"login":    {"POST", "/login", loginHandler(auth)},
+		"logout":   {"POST", "/logout", logoutHandler},
+	}
+
+	for _, r := range routes {
+		api.Methods(r.Methods()...).Path(r.Pattern).Handler(r.HandlerFunc)
+	}
+}
+
+// RegisterSystemHandler provides system level handlers
+func (s *HTTPd) RegisterSystemHandler(auth auth.Auth, shutdown func()) {
+	router := s.Server.Handler.(*mux.Router)
+
+	// api
+	api := router.PathPrefix("/api/system").Subrouter()
+	api.Use(jsonHandler)
+	api.Use(ensureAuthHandler(auth))
+	api.Use(handlers.CompressHandler)
+	api.Use(handlers.CORS(
+		handlers.AllowedHeaders([]string{"Content-Type"}),
+	))
+
+	// system api
+	routes := map[string]route{
+		"log":      {"GET", "/log", logHandler},
+		"logareas": {"GET", "/log/areas", logAreasHandler},
 		"shutdown": {"POST", "/shutdown", func(w http.ResponseWriter, r *http.Request) {
-			callback()
+			shutdown()
 			w.WriteHeader(http.StatusNoContent)
 		}},
 	}

@@ -905,7 +905,11 @@ func (site *Site) Run(stopC chan struct{}, interval time.Duration) {
 	go site.loopLoadpoints(loadpointChan)
 
 	ticker := time.NewTicker(interval)
+<<<<<<< HEAD
 	site.publish(keys.Interval, interval)
+=======
+	site.publish(keys.Interval, interval.Seconds())
+>>>>>>> 334ffc15b (Log Viewer: Allow retrieving logs from ring buffer (#13330))
 	site.update(<-loadpointChan) // start immediately
 
 	for {

@@ -14,10 +14,7 @@
 			<label for="telemetryEnabled">
 				{{ $t("footer.telemetry.optIn") }}
 				<i18n-t v-if="sponsor" tag="span" keypath="footer.telemetry.optInMoreDetails">
-					<a
-						href="https://docs.evcc.io/docs/faq/#telemetry--community-daten"
-						target="_blank"
-					>
+					<a :href="docsLink" target="_blank">
 						{{ $t("footer.telemetry.optInMoreDetailsLink") }}
 					</a>
 				</i18n-t>
@@ -30,6 +27,7 @@
 
 <script>
 import api from "../api";
+import { docsPrefix } from "../i18n";
 import settings from "../settings";
 
 function parseMarkdown(markdownText) {
@@ -51,6 +49,9 @@ export default {
 	computed: {
 		enabled() {
 			return settings.telemetry;
+		},
+		docsLink() {
+			return `${docsPrefix()}/docs/faq#telemetry`;
 		},
 	},
 	async mounted() {

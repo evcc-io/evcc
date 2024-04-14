@@ -28,6 +28,11 @@ const (
 	TariffPriceHome       = "tariffPriceHome"
 	TariffPriceLoadpoints = "tariffPriceLoadpoints"
 	Vehicles              = "vehicles"
+<<<<<<< HEAD
+=======
+	PasswordConfigured    = "passwordConfigured"
+	Interval              = "interval"
+>>>>>>> 334ffc15b (Log Viewer: Allow retrieving logs from ring buffer (#13330))
 
 	// meters
 	GridMeter     = "gridMeter"

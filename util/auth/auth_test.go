@@ -11,8 +11,6 @@ import (
 )
 
 func TestSetAdminPassword(t *testing.T) {
-	t.Skip("skipped until auth is released")
-
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -37,8 +35,6 @@ func TestRemoveAdminPassword(t *testing.T) {
 }
 
 func TestIsAdminPasswordValid(t *testing.T) {
-	t.Skip("skipped until auth is released")
-
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 

@@ -13,7 +13,7 @@ legendTitle = "How should solar energy be used?"
 legendTopAutostart = "starts automatically"
 legendTopName = "battery supported charging"
 legendTopSubline = "without interruptions"
-modalTitle = "Battery Settings"
+modalTitle = "Home Battery"
 
 [batterySettings.bufferStart]
 above = "when above {soc}"
@@ -92,6 +92,18 @@ userLabel = "Username"
 [config.pv]
 titleAdd = "Add Solar Meter"
 titleEdit = "Edit Solar Meter"
+
+[config.section]
+general = "General"
+system = "System"
+
+[config.system]
+logs = "Logs"
+restart = "Restart"
+restartRequiredDescription = "Please restart to see the effect."
+restartRequiredMessage = "Configuration changed."
+restartingDescription = "Please wait…"
+restartingMessage = "Restarting evcc."
 
 [config.title]
 description = "Displayed on main screen and browser tab."
@@ -199,6 +211,8 @@ discussionsButton = "GitHub discussions"
 documentationButton = "Documentation"
 issueButton = "Report a bug"
 issueDescription = "Found a strange or wrong behavior?"
+logsButton = "View logs"
+logsDescription = "Check the logs for errors."
 modalTitle = "Need help?"
 primaryActions = "Something does not work the way it supposed to do? These are good places to get help."
 restartButton = "Restart"
@@ -212,12 +226,24 @@ description = "Under normal circumstances restarting should not be necessary. Pl
 disclaimer = "Note: evcc will terminate and rely on the operating system to restart the service."
 modalTitle = "Are you sure you want to restart?"
 
+[log]
+areaLabel = "Filter by area"
+areas = "All areas"
+download = "Download complete log"
+levelLabel = "Filter by log level"
+noResults = "No matching log entries."
+search = "Search"
+showAll = "Show all entries"
+title = "Logs"
+update = "Auto update"
+
 [loginModal]
 cancel = "Cancel"
 error = "Login failed: "
 invalid = "Password is invalid."
 login = "Login"
 password = "Password"
+reset = "Reset password?"
 title = "Authentication"
 
 [main]
@@ -397,6 +423,7 @@ waitForVehicle = "Ready. Waiting for vehicle…"
 
 [notifications]
 dismissAll = "Dismiss all"
+logs = "View full logs"
 modalTitle = "Notifications"
 
 [offline]
@@ -466,7 +493,7 @@ allVehicles = "all vehicles"
 filter = "Filter"
 
 [settings]
-title = "General Settings"
+title = "User Interface"
 
 [settings.hiddenFeatures]
 label = "Experimental"

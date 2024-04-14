@@ -9,6 +9,7 @@
 		<HelpModal />
 		<PasswordModal />
 		<LoginModal />
+		<OfflineIndicator v-if="offline" />
 	</div>
 </template>
 
@@ -56,7 +57,7 @@ export default {
 		return { title: siteTitle ? `${siteTitle} | evcc` : "evcc" };
 	},
 	watch: {
-		version: function (prev, now) {
+		version: function (now, prev) {
 			if (!!prev && !!now) {
 				console.log("new version detected. reloading browser", { now, prev });
 				this.reload();
@@ -64,6 +65,15 @@ export default {
 		},
 		offline: function () {
 			updateAuthStatus();
+		},
+		startupErrors: function (now, prev) {
+			if (now) {
+				console.log("startup errors detected. redirecting to error page");
+				this.$router.push("/error");
+			} else {
+				console.log("startup errors resolved. redirecting to home page");
+				this.$router.push("/");
+			}
 		},
 	},
 	computed: {
@@ -78,6 +88,9 @@ export default {
 		},
 		batterySettingsProps() {
 			return this.collectProps(BatterySettingsModal, store.state);
+		},
+		startupErrors: function () {
+			return store.state.fatal?.length > 0;
 		},
 	},
 	mounted: function () {
