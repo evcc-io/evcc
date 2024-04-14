@@ -189,6 +189,7 @@ logout = "Abmelden"
 nativeSettings = "Server ändern"
 needHelp = "Hilfe benötigt?"
 sessions = "Ladevorgänge"
+logout = Ausloggen
 
 [help]
 discussionsButton = "GitHub Discussions"
