@@ -63,3 +63,27 @@ func ConfigureSponsorship(token string) error {
 
 	return err
 }
+
+type StatusStruct struct {
+	IsAuthorized       bool      `json:"isAuthorized"`
+	IsAuthorizedForApi bool      `json:"isAuthorizedForApi"`
+	Subject            string    `json:"subject"`
+	ExpiresAt          time.Time `json:"expires"`
+	ExpiresIn          int64     `json:"expiresIn,omitempty"`
+}
+
+// Status returns the sponsorship status
+func Status() StatusStruct {
+	var expiresIn int64
+	if IsAuthorizedForApi() {
+		expiresIn = int64(time.Until(ExpiresAt).Seconds())
+	}
+
+	return StatusStruct{
+		IsAuthorized:       IsAuthorized(),
+		IsAuthorizedForApi: IsAuthorizedForApi(),
+		Subject:            Subject,
+		ExpiresAt:          ExpiresAt,
+		ExpiresIn:          expiresIn,
+	}
+}

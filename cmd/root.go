@@ -268,14 +268,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 		valueChan <- util.Param{Key: "fatal", Val: nil}
 
 		// expose sponsor to UI
-		if sponsor.Subject != "" {
-			valueChan <- util.Param{Key: "sponsor", Val: sponsor.Subject}
-			var validDuration time.Duration
-			if d := time.Until(sponsor.ExpiresAt); d > 0 && d < 30*24*time.Hour {
-				validDuration = d
-			}
-			valueChan <- util.Param{Key: "sponsorTokenExpires", Val: validDuration}
-		}
+		valueChan <- util.Param{Key: "sponsor", Val: sponsor.Status()}
 
 		// allow web access for vehicles
 		configureAuth(conf.Network, config.Instances(config.Vehicles().Devices()), httpd.Router(), valueChan)
