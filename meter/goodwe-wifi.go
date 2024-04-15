@@ -74,14 +74,14 @@ func (m *goodWeWiFi) Printf(format string, v ...interface{}) {
 func (m *goodWeWiFi) CurrentPower() (float64, error) {
 	switch m.usage {
 	case "grid":
-		b, err := m.conn.ReadInputRegisters(goodweActivePower, 1)
+		b, err := m.conn.ReadHoldingRegisters(goodweActivePower, 1)
 		if err != nil {
 			return 0, err
 		}
 		return float64(int16(binary.BigEndian.Uint16(b))), nil
 
 	case "pv":
-		b, err := m.conn.ReadInputRegisters(goodwePv1Power, 2)
+		b, err := m.conn.ReadHoldingRegisters(goodwePv1Power, 2)
 		if err != nil {
 			return 0, err
 		}
@@ -95,7 +95,7 @@ func (m *goodWeWiFi) CurrentPower() (float64, error) {
 }
 
 func (m *goodWeWiFi) batterySoc() (float64, error) {
-	b, err := m.conn.ReadInputRegisters(goodweBatterySoc, 1)
+	b, err := m.conn.ReadHoldingRegisters(goodweBatterySoc, 1)
 	if err != nil {
 		return 0, err
 	}
