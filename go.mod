@@ -42,7 +42,7 @@ require (
 	github.com/gorilla/mux v1.8.1
 	github.com/gregdel/pushover v1.3.0
 	github.com/gregjones/httpcache v0.0.0-20190611155906-901d90724c79
-	github.com/grid-x/modbus v0.0.0-20240214112450-0d4922fba364
+	github.com/grid-x/modbus v0.0.0-20240415045618-130d65d9f1cd
 	github.com/hashicorp/go-version v1.6.0
 	github.com/hasura/go-graphql-client v0.12.1
 	github.com/influxdata/influxdb-client-go/v2 v2.13.0
@@ -199,8 +199,6 @@ require (
 	modernc.org/memory v1.7.2 // indirect
 	modernc.org/sqlite v1.29.5 // indirect
 )
-
-replace github.com/grid-x/modbus => github.com/StefanNienhuis/modbus v0.0.0-20240223144801-6e290f266aed
 
 replace github.com/imdario/mergo => github.com/imdario/mergo v0.3.16
 
