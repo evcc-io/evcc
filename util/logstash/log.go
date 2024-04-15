@@ -103,7 +103,7 @@ func (l *logger) All(areas []string, level jww.Threshold, count int) []string {
 		}
 	}
 
-	if count > 0 && len(res) >= count {
+	if count > 0 && len(res) > count {
 		res = res[len(res)-count:]
 	}
 
