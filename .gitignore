@@ -1,5 +1,5 @@
 __debug_bin*
-.vscode
+.vscode/**
 .cache
 .DS_store
 *.gz
@@ -7,6 +7,7 @@ __debug_bin*
 *.log
 *.json
 *.yaml
+!/.vscode/example.launch.json
 !templates/**/*.yaml
 !templates/**/*-schema.json
 !util/templates/**/*.yaml

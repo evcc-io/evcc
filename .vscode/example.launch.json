@@ -1,0 +1,22 @@
+// remove this comment and rename the file to launch.json for debugging with the evcc demo.
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "demo",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "trace": "error",
+            "program": "${workspaceFolder}/main.go",
+            "env": {},
+            "args": [
+                "--profile",
+                "--log",
+                "error,db:trace",
+                "-c",
+                "cmd/demo.yaml"
+            ]
+        }
+    ]
+}
