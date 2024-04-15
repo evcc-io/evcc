@@ -5,10 +5,10 @@
 			<div class="logs d-flex flex-column overflow-hidden flex-grow-1 px-4 mx-2 mx-sm-4">
 				<div class="flex-grow-0 row py-4">
 					<div class="col-6 col-lg-3 mb-4 mb-lg-0 d-flex gap-2">
-						<div class="btn-group">
+						<div class="btn-group w-100 w-lg-auto d-flex">
 							<button
 								type="button"
-								class="btn text-nowrap d-flex w-100 w-lg-auto justify-content-between"
+								class="btn text-nowrap d-flex gap-2 flex-grow-1 text-nowrap text-truncate"
 								:class="autoFollow ? 'btn-secondary' : 'btn-outline-secondary'"
 								@click="toggleAutoFollow"
 							>
@@ -18,13 +18,13 @@
 								<Record
 									v-if="autoFollow"
 									ref="spin"
-									class="ms-1 spin flex-shrink-0"
+									class="spin flex-shrink-0"
 									:style="{ animationDuration: `${updateInterval}ms` }"
 								/>
-								<Play v-else class="ms-1 flex-shrink-0 play" />
+								<Play v-else class="flex-shrink-0 play" />
 							</button>
 							<a
-								class="btn btn-outline-secondary"
+								class="btn btn-outline-secondary flex-grow-0"
 								:aria-label="$t('log.download')"
 								:href="downloadUrl"
 								download
