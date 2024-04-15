@@ -26,6 +26,8 @@ func TestLog(t *testing.T) {
 
 	assert.Equal(t, []string{s1, s3}, log.All([]string{"test1"}, jww.LevelTrace, 0))
 	assert.Equal(t, []string{s1, s2, s3}, log.All(nil, jww.LevelTrace, 0))
+	assert.Equal(t, []string{s3}, log.All(nil, jww.LevelTrace, 1))
+
 	assert.Nil(t, log.All(nil, jww.LevelFatal, 0))
 
 	assert.Equal(t, idx, log.data, "data should not be changed after All() call")
