@@ -407,7 +407,7 @@ waitForVehicle = "Ladebereit. Warte auf Fahrzeug …"
 
 [notifications]
 dismissAll = "Meldungen entfernen"
-logs = "Vollständigs Log ansehen"
+logs = "Vollständiges Log ansehen"
 modalTitle = "Meldungen"
 
 [offline]
