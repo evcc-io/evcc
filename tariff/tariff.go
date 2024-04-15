@@ -84,18 +84,15 @@ func (t *Tariff) run(forecastG func() (string, error), done chan error) {
 
 	tick := time.NewTicker(time.Hour)
 	for ; true; <-tick.C {
-
-		data, err := backoff.RetryWithData(func() (api.Rates, error) {
+		var data api.Rates
+		if err := backoff.Retry(func() error {
 			s, err := forecastG()
 			if err != nil {
-				return nil, backoffPermanentError(err)
+				return backoffPermanentError(err)
 			}
 
-			var res api.Rates
-			err = json.Unmarshal([]byte(s), &res)
-			return res, backoff.Permanent(err)
-		}, bo)
-		if err != nil {
+			return backoff.Permanent(json.Unmarshal([]byte(s), &data))
+		}, bo); err != nil {
 			once.Do(func() { done <- err })
 
 			t.log.ERROR.Println(err)
