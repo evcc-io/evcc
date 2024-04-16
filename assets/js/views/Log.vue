@@ -291,7 +291,7 @@ export default {
 }
 @keyframes fadeIn {
 	from {
-		opacity: 0;
+		opacity: 0.3;
 	}
 	to {
 		opacity: var(--opacity);
@@ -304,7 +304,17 @@ export default {
 	animation-duration: 1s;
 	animation-fill-mode: forwards;
 	animation-timing-function: ease-out;
+	text-indent: 1rem hanging;
+	/* smaller exception for mobile */
+	font-size: 8px;
 }
+@media (min-width: 576px) {
+	.log {
+		/* default code size */
+		font-size: 0.875em;
+	}
+}
+
 .log-warn {
 	color: var(--bs-warning);
 }
