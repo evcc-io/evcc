@@ -14,12 +14,6 @@
 				<TitleModal ref="titleModal" @changed="load" />
 			</dd>
 		</dl>
-<<<<<<< HEAD
-		<dl class="row">
-			<dt class="col-sm-6 text-lg-end">{{ $t("config.general.telemetry") }}</dt>
-			<dd class="col-sm-6">
-				{{ $t(`config.general.${telemetryEnabled ? "on" : "off"}`) }}
-=======
 		<dl class="row" data-testid="generalconfig-password">
 			<dt class="col-sm-4">Password</dt>
 			<dd class="col-sm-8">
@@ -36,7 +30,6 @@
 			<dt class="col-sm-4">Telemetry</dt>
 			<dd class="col-sm-8">
 				{{ telemetryEnabled ? "on" : "off" }}
->>>>>>> 334ffc15b (Log Viewer: Allow retrieving logs from ring buffer (#13330))
 				<a
 					href="#"
 					class="ms-2 d-inline-block text-muted"
@@ -46,23 +39,15 @@
 				</a>
 			</dd>
 		</dl>
-<<<<<<< HEAD
-		<dl class="row">
-			<dt class="col-sm-6 text-lg-end">{{ $t("config.general.experimental") }} 🧪</dt>
-			<dd class="col-sm-6">
-				{{ $t(`config.general.${experimentalEnabled ? "on" : "off"}`) }}
-=======
 		<dl class="row" data-testid="generalconfig-experimental">
 			<dt class="col-sm-4">Experimental</dt>
 			<dd class="col-sm-8">
 				{{ hiddenFeatures ? "on" : "off" }}
->>>>>>> 334ffc15b (Log Viewer: Allow retrieving logs from ring buffer (#13330))
 				<a
 					href="#"
 					class="ms-2 d-inline-block text-muted"
 					@click.prevent="openModal('globalSettingsModal')"
 				>
-<<<<<<< HEAD
 					{{ $t("config.general.change") }}
 				</a>
 			</dd>
@@ -77,9 +62,6 @@
 					@click.prevent="openModal('passwordModal')"
 				>
 					{{ $t("config.general.edit") }}
-=======
-					change
->>>>>>> 334ffc15b (Log Viewer: Allow retrieving logs from ring buffer (#13330))
 				</a>
 			</dd>
 		</dl>
@@ -136,11 +118,7 @@ export default {
 		telemetryEnabled() {
 			return settings.telemetry === true;
 		},
-<<<<<<< HEAD
-		experimentalEnabled() {
-=======
 		hiddenFeatures() {
->>>>>>> 334ffc15b (Log Viewer: Allow retrieving logs from ring buffer (#13330))
 			return settings.hiddenFeatures === true;
 		},
 	},

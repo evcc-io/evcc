@@ -160,11 +160,7 @@ export default {
 		},
 		async restartConfirmed() {
 			try {
-<<<<<<< HEAD
-				await api.post("shutdown");
-=======
 				await api.post("/system/shutdown");
->>>>>>> 334ffc15b (Log Viewer: Allow retrieving logs from ring buffer (#13330))
 			} catch (e) {
 				alert("Unabled to restart server.");
 			}

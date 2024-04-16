@@ -75,11 +75,7 @@ func (m *Monitor[T]) GetFunc(get func(T)) error {
 
 			// mark as waited once
 			m.mu.Lock()
-<<<<<<< HEAD
-			// TODO fix linter
-=======
 			// TODO fix and test
->>>>>>> 334ffc15b (Log Viewer: Allow retrieving logs from ring buffer (#13330))
 			m.updated.Add(time.Nanosecond)
 			m.mu.Unlock()
 

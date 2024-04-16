@@ -3,11 +3,6 @@
 		<div class="container px-4">
 			<TopHeader :title="$t('config.main.title')" />
 			<div class="wrapper">
-<<<<<<< HEAD
-				<Restart ref="restart" v-bind="restartProps" />
-
-				<h2 class="my-4 mt-5">General</h2>
-=======
 				<div
 					v-if="dirty || restarting"
 					class="alert alert-secondary d-flex justify-content-between align-items-center my-4"
@@ -38,7 +33,6 @@
 				</div>
 
 				<h2 class="my-4 mt-5">{{ $t("config.section.general") }}</h2>
->>>>>>> 334ffc15b (Log Viewer: Allow retrieving logs from ring buffer (#13330))
 				<GeneralConfig @site-changed="siteChanged" />
 
 				<h2 class="my-4 mt-5">{{ $t("config.section.system") }}</h2>
@@ -177,36 +171,14 @@
 							@click="todo"
 						/>
 					</ul>
-
-					<h2 class="my-4">Vehicles</h2>
-					<div>
-						<ul class="p-0 config-list">
-							<DeviceCard
-								v-for="vehicle in vehicles"
-								:key="vehicle.id"
-								:name="vehicle.config?.title || vehicle.name"
-								:editable="vehicle.id >= 0"
-								data-testid="vehicle"
-								@edit="editVehicle(vehicle.id)"
-							>
-								<template #icon>
-									<VehicleIcon :name="vehicle.config?.icon" />
-								</template>
-								<template #tags>
-									<DeviceTags :tags="deviceTags('vehicle', vehicle.name)" />
-								</template>
-							</DeviceCard>
-							<AddDeviceButton
-								data-testid="add-vehicle"
-								:title="$t('config.main.addVehicle')"
-								@click="addVehicle"
-							/>
-						</ul>
-					</div>
-					<h2 class="my-4 wip">Integrations</h2>
-
-					<ul class="p-0 config-list wip">
-						<DeviceCard name="MQTT" unconfigured data-testid="mqtt" @configure="todo">
+					<ul class="p-0 config-list">
+						<DeviceCard
+							name="MQTT"
+							editable
+							data-testid="mqtt"
+							@configure="openModal('mqttModal')"
+							@edit="openModal('mqttModal')"
+						>
 							<template #icon>
 								<shopicon-regular-fastdelivery1></shopicon-regular-fastdelivery1>
 							</template>
@@ -237,46 +209,35 @@
 							</template>
 						</DeviceCard>
 					</ul>
+
+					<hr class="my-5" />
+
+					<h2 class="my-4">Vehicles</h2>
+					<div>
+						<ul class="p-0 config-list">
+							<DeviceCard
+								v-for="vehicle in vehicles"
+								:key="vehicle.id"
+								:name="vehicle.config?.title || vehicle.name"
+								:editable="vehicle.id >= 0"
+								data-testid="vehicle"
+								@edit="editVehicle(vehicle.id)"
+							>
+								<template #icon>
+									<VehicleIcon :name="vehicle.config?.icon" />
+								</template>
+								<template #tags>
+									<DeviceTags :tags="deviceTags('vehicle', vehicle.name)" />
+								</template>
+							</DeviceCard>
+							<AddDeviceButton
+								data-testid="add-vehicle"
+								:title="$t('config.main.addVehicle')"
+								@click="addVehicle"
+							/>
+						</ul>
+					</div>
 				</div>
-
-<<<<<<< HEAD
-				<ul class="p-0 config-list">
-					<DeviceCard
-						name="MQTT"
-						editable
-						data-testid="mqtt"
-						@configure="openModal('mqttModal')"
-						@edit="openModal('mqttModal')"
-					>
-						<template #icon>
-							<shopicon-regular-fastdelivery1></shopicon-regular-fastdelivery1>
-						</template>
-					</DeviceCard>
-					<DeviceCard
-						name="Notifications"
-						unconfigured
-						data-testid="eebus"
-						@configure="todo"
-					>
-						<template #icon>
-							<shopicon-regular-sendit></shopicon-regular-sendit>
-						</template>
-					</DeviceCard>
-					<DeviceCard name="InfluxDB" unconfigured data-testid="influx" @configure="todo">
-						<template #icon>
-							<shopicon-regular-diagram></shopicon-regular-diagram>
-						</template>
-					</DeviceCard>
-					<DeviceCard name="EEBus" unconfigured data-testid="eebus" @configure="todo">
-						<template #icon>
-							<shopicon-regular-polygon></shopicon-regular-polygon>
-						</template>
-					</DeviceCard>
-				</ul>
-
-				<hr class="my-5" />
-=======
->>>>>>> 334ffc15b (Log Viewer: Allow retrieving logs from ring buffer (#13330))
 				<VehicleModal :id="selectedVehicleId" @vehicle-changed="vehicleChanged" />
 				<MeterModal
 					:id="selectedMeterId"
@@ -492,8 +453,6 @@ export default {
 		todo() {
 			alert("not implemented yet");
 		},
-<<<<<<< HEAD
-=======
 		async restart() {
 			try {
 				await api.post("/system/shutdown");
@@ -502,7 +461,6 @@ export default {
 				alert("Unabled to restart server.");
 			}
 		},
->>>>>>> 334ffc15b (Log Viewer: Allow retrieving logs from ring buffer (#13330))
 		async updateDeviceValue(type, name) {
 			try {
 				const response = await api.get(`/config/devices/${type}/${name}/status`);
