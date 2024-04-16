@@ -488,11 +488,11 @@ meterstart = "Meter start (kWh)"
 meterstop = "Meter stop (kwh)"
 odometer = "Kilometerstand (km)"
 vehicle = "Voertuig"
-solarpercentage = 
-price = 
-co2perkwh = 
-priceperkwh = 
-chargeduration = 
+solarpercentage =
+price =
+co2perkwh =
+priceperkwh =
+chargeduration =
 
 [sessions.filter]
 allLoadpoints = "alle oplaadpunten"
@@ -575,9 +575,9 @@ test = "Test"
 
 
 [config.options.endianness]
-little = 
-big = 
+little =
+big =
 
 [config.options.schema]
-https = 
-http = 
+https =
+http =
