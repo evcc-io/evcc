@@ -5,6 +5,7 @@ import Modal from "bootstrap/js/dist/modal";
 const auth = reactive({
   configured: true,
   loggedIn: false,
+  nextUrl: null,
 });
 
 export async function updateAuthStatus() {
@@ -28,6 +29,7 @@ export async function logout() {
   try {
     await api.post("/auth/logout");
     await updateAuthStatus();
+    auth.nextUrl = null;
   } catch (e) {
     console.log("unable to logout", e);
   }
@@ -41,7 +43,14 @@ export function isConfigured() {
   return auth.configured;
 }
 
-export function openLoginModal() {
+export function getAndClearNextUrl() {
+  const nextUrl = auth.nextUrl;
+  auth.nextUrl = null;
+  return nextUrl;
+}
+
+export function openLoginModal(nextUrl = null) {
+  auth.nextUrl = nextUrl;
   const modal = Modal.getOrCreateInstance(document.getElementById("loginModal"));
   modal.show();
 }

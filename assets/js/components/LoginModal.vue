@@ -8,8 +8,6 @@
 		@closed="closed"
 	>
 		<form v-if="modalVisible" @submit.prevent="login">
-			<p v-if="error" class="text-danger">{{ $t("loginModal.error") }}{{ error }}</p>
-
 			<div class="mb-4">
 				<label for="loginPassword" class="col-form-label">
 					<div class="w-100">
@@ -27,9 +25,25 @@
 				/>
 			</div>
 
+			<p v-if="error" class="text-danger my-4">{{ $t("loginModal.error") }}{{ error }}</p>
+
 			<button type="submit" class="btn btn-primary w-100 mb-3" :disabled="loading">
+				<span
+					v-if="loading"
+					class="spinner-border spinner-border-sm"
+					role="status"
+					aria-hidden="true"
+				></span>
 				{{ $t("loginModal.login") }}
 			</button>
+			<a
+				v-if="resetHint"
+				class="text-muted my-1 d-block text-center"
+				:href="resetUrl"
+				target="_blank"
+			>
+				{{ $t("loginModal.reset") }}
+			</a>
 		</form>
 	</GenericModal>
 </template>
@@ -38,7 +52,8 @@
 import GenericModal from "./GenericModal.vue";
 import Modal from "bootstrap/js/dist/modal";
 import api from "../api";
-import { updateAuthStatus } from "../auth";
+import { updateAuthStatus, getAndClearNextUrl } from "../auth";
+import { docsPrefix } from "../i18n";
 
 export default {
 	name: "LoginModal",
@@ -48,8 +63,14 @@ export default {
 			modalVisible: false,
 			password: "",
 			loading: false,
+			resetHint: false,
 			error: "",
 		};
+	},
+	computed: {
+		resetUrl() {
+			return `${docsPrefix()}/docs/faq#password-reset`;
+		},
 	},
 	methods: {
 		open() {
@@ -60,6 +81,7 @@ export default {
 			this.password = "";
 			this.loading = false;
 			this.error = "";
+			this.resetHint = false;
 		},
 		focus() {
 			console.log(this.$refs.password);
@@ -70,21 +92,24 @@ export default {
 		},
 		async login() {
 			this.loading = true;
-			this.error = "";
 
 			try {
 				const data = { password: this.password };
 				const res = await api.post("/auth/login", data, {
 					validateStatus: (code) => [200, 401].includes(code),
 				});
+				this.resetHint = false;
+				this.error = "";
 				if (res.status === 200) {
 					this.closeModal();
 					await updateAuthStatus();
-					this.$router.push({ path: "/config" });
+					const target = getAndClearNextUrl();
+					if (target) this.$router.push(target);
 					this.password = "";
 				}
 				if (res.status === 401) {
 					this.error = this.$t("loginModal.invalid");
+					this.resetHint = true;
 				}
 			} catch (err) {
 				console.error(err);
@@ -96,3 +121,9 @@ export default {
 	},
 };
 </script>
+<style scoped>
+form {
+	/* remove body padding due to minimal content */
+	margin-top: -1rem;
+}
+</style>

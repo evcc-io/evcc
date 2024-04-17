@@ -57,11 +57,8 @@ func NewGoEFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	if cc.URI != "" && cc.Token != "" {
-		return nil, errors.New("should only have one of uri/token")
-	}
-	if cc.URI == "" && cc.Token == "" {
-		return nil, errors.New("must have one of uri/token")
+	if (cc.URI != "") == (cc.Token != "") {
+		return nil, errors.New("must have either uri or token")
 	}
 
 	return NewGoE(cc.URI, cc.Token, cc.Cache)

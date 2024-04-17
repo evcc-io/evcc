@@ -10,12 +10,14 @@ import (
 	"strconv"
 	"strings"
 	"text/template"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/server/assets"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/jq"
+	"github.com/evcc-io/evcc/util/logstash"
 	"github.com/gorilla/mux"
 	"github.com/itchyny/gojq"
 	"golang.org/x/text/language"
@@ -243,4 +245,36 @@ func socketHandler(hub *SocketHub) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		hub.ServeWebsocket(w, r)
 	}
+}
+
+func logAreasHandler(w http.ResponseWriter, r *http.Request) {
+	jsonResult(w, logstash.Areas())
+}
+
+func logHandler(w http.ResponseWriter, r *http.Request) {
+	a := r.URL.Query()["area"]
+	l := logstash.LogLevelToThreshold(r.URL.Query().Get("level"))
+
+	var count int
+	if v := r.URL.Query().Get("count"); v != "" {
+		count, _ = strconv.Atoi(v)
+	}
+
+	log := logstash.All(a, l, count)
+
+	if r.URL.Query().Get("format") == "txt" {
+		filename := "evcc-" + time.Now().Format("20060102-150405") + `-` + strings.ToLower(l.String()) + ".log"
+		w.Header().Set("Content-Type", "text/plain")
+		w.Header().Set("Content-Disposition", `attachment; filename="`+filename+`"`)
+
+		for _, s := range log {
+			if _, err := w.Write([]byte(s)); err != nil {
+				return
+			}
+		}
+
+		return
+	}
+
+	jsonResult(w, log)
 }
