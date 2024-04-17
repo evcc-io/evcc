@@ -1,8 +1,8 @@
 <template>
 	<div class="group round-box pt-4 px-4 pb-1">
 		<dl class="row" data-testid="generalconfig-title">
-			<dt class="col-sm-6 text-lg-end">{{ $t("config.general.title") }}</dt>
-			<dd class="col-sm-6">
+			<dt class="col-sm-4">{{ $t("config.general.title") }}</dt>
+			<dd class="col-sm-8">
 				{{ title || "---" }}
 				<a
 					href="#"
@@ -22,8 +22,9 @@
 					href="#"
 					class="ms-2 d-inline-block text-muted"
 					@click.prevent="openModal('passwordModal')"
-					>edit</a
 				>
+					{{ $t("config.general.edit") }}
+				</a>
 			</dd>
 		</dl>
 		<dl class="row" data-testid="generalconfig-telemetry">
@@ -50,26 +51,6 @@
 				>
 					{{ $t("config.general.change") }}
 				</a>
-			</dd>
-		</dl>
-		<dl class="row" data-testid="generalconfig-password">
-			<dt class="col-sm-6 text-lg-end">{{ $t("config.general.password") }}</dt>
-			<dd class="col-sm-6">
-				*******
-				<a
-					href="#"
-					class="ms-2 d-inline-block text-muted"
-					@click.prevent="openModal('passwordModal')"
-				>
-					{{ $t("config.general.edit") }}
-				</a>
-			</dd>
-		</dl>
-		<dl class="row wip">
-			<dt class="col-sm-6 text-lg-end">API-Key</dt>
-			<dd class="col-sm-6">
-				*******
-				<a href="#" class="ms-2 d-inline-block text-muted" @click.prevent="todo">show</a>
 			</dd>
 		</dl>
 		<dl class="row wip">

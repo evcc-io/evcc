@@ -306,6 +306,7 @@ export default {
 			site: { grid: "", pv: [], battery: [] },
 			deviceValueTimeout: undefined,
 			deviceValues: {},
+			dirty: false,
 		};
 	},
 	mixins: [formatter, collector],
@@ -352,7 +353,8 @@ export default {
 			await this.updateValues();
 		},
 		async loadDirty() {
-			await this.$refs.restart.loadDirty();
+			const response = await api.get("/config/dirty");
+			this.dirty = response.data?.result;
 		},
 		async loadVehicles() {
 			const response = await api.get("/config/devices/vehicle");
