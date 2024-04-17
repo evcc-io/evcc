@@ -37,29 +37,29 @@ type Em2GoHome struct {
 }
 
 const (
-	em2GoHomeRegStatus			= 0   // Uint16 RO ENUM
-	em2GoHomeRegConnectorState	= 2   // Uint16 RO ENUM
-	em2GoHomeRegErrorCode		= 4   // Uint16 RO ENUM
-	em2GoHomeRegCurrent1		= 6   // Uint16 RO 0.1A
-	em2GoHomeRegCurrent2		= 8   // Uint16 RO 0.1A
-	em2GoHomeRegCurrent3		= 10  // Uint16 RO 0.1A
-	em2GoHomeRegPower			= 12  // Uint32 RO 1W
-	em2GoHomeRegEnergy			= 28  // Uint16 RO 0.1KWh
-	em2GoHomeRegMaxCurrent		= 32  // Uint16 RO 0.1A
-	em2GoHomeRegMinCurrent		= 34  // Uint16 RO 0.1A
-	em2GoHomeRegCableMaxCurrent	= 36  // Uint16 RO 0.1A
-	em2GoHomeRegSerial			= 38  // Chr[16] RO UTF16
-	em2GoHomeRegChargedEnergy	= 72  // Uint16 RO 0.1kWh
-	em2GoHomeRegChargeDuration	= 78  // Uint32 RO 1s
-	em2GoHomeRegSafeCurrent		= 87  // Uint16 WR 0.1A
-	em2GoHomeRegCommTimeout		= 89  // Uint16 WR 1s
-	em2GoHomeRegCurrentLimit	= 91  // Uint16 WR 0.1A
-	em2GoHomeRegChargeMode		= 93  // Uint16 WR ENUM
-	em2GoHomeRegChargeCommand	= 95  // Uint16 WR ENUM
-	em2GoHomeRegVoltage1		= 109 // Uint16 RO 0.1V
-	em2GoHomeRegVoltage2		= 111 // Uint16 RO 0.1V
-	em2GoHomeRegVoltage3		= 113 // Uint16 RO 0.1V
-	em2GoHomeRegPhases			= 200 // Set charging phase 1 unsigned
+	em2GoHomeRegStatus          = 0   // Uint16 RO ENUM
+	em2GoHomeRegConnectorState  = 2   // Uint16 RO ENUM
+	em2GoHomeRegErrorCode       = 4   // Uint16 RO ENUM
+	em2GoHomeRegCurrent1        = 6   // Uint16 RO 0.1A
+	em2GoHomeRegCurrent2        = 8   // Uint16 RO 0.1A
+	em2GoHomeRegCurrent3        = 10  // Uint16 RO 0.1A
+	em2GoHomeRegPower           = 12  // Uint32 RO 1W
+	em2GoHomeRegEnergy          = 28  // Uint16 RO 0.1KWh
+	em2GoHomeRegMaxCurrent      = 32  // Uint16 RO 0.1A
+	em2GoHomeRegMinCurrent      = 34  // Uint16 RO 0.1A
+	em2GoHomeRegCableMaxCurrent = 36  // Uint16 RO 0.1A
+	em2GoHomeRegSerial          = 38  // Chr[16] RO UTF16
+	em2GoHomeRegChargedEnergy   = 72  // Uint16 RO 0.1kWh
+	em2GoHomeRegChargeDuration  = 78  // Uint32 RO 1s
+	em2GoHomeRegSafeCurrent     = 87  // Uint16 WR 0.1A
+	em2GoHomeRegCommTimeout     = 89  // Uint16 WR 1s
+	em2GoHomeRegCurrentLimit    = 91  // Uint16 WR 0.1A
+	em2GoHomeRegChargeMode      = 93  // Uint16 WR ENUM
+	em2GoHomeRegChargeCommand   = 95  // Uint16 WR ENUM
+	em2GoHomeRegVoltage1        = 109 // Uint16 RO 0.1V
+	em2GoHomeRegVoltage2        = 111 // Uint16 RO 0.1V
+	em2GoHomeRegVoltage3        = 113 // Uint16 RO 0.1V
+	em2GoHomeRegPhases          = 200 // Set charging phase 1 unsigned
 )
 
 func init() {
@@ -89,10 +89,10 @@ func NewEm2GoHome(uri string, slaveID uint8) (api.Charger, error) {
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Add delay of 60 miliseconds between requests
 	conn.Delay(60 * time.Millisecond)
-	
+
 	log := util.NewLogger("em2go-home")
 	conn.Logger(log.TRACE)
 
@@ -198,17 +198,17 @@ var _ api.PhaseCurrents = (*Em2GoHome)(nil)
 // Currents implements the api.PhaseCurrents interface
 func (wb *Em2GoHome) Currents() (float64, float64, float64, error) {
 	b, err := wb.conn.ReadHoldingRegisters(em2GoHomeRegCurrent1, 1)
-	
+
 	if err != nil {
 		return 0, 0, 0, err
 	}
-	
+
 	c, err := wb.conn.ReadHoldingRegisters(em2GoHomeRegCurrent2, 1)
-	
+
 	if err != nil {
 		return 0, 0, 0, err
 	}
-	
+
 	d, err := wb.conn.ReadHoldingRegisters(em2GoHomeRegCurrent3, 1)
 
 	if err != nil {
@@ -225,19 +225,19 @@ var _ api.PhaseVoltages = (*Em2GoHome)(nil)
 // Currents implements the api.PhaseVoltages interface
 func (wb *Em2GoHome) Voltages() (float64, float64, float64, error) {
 	b, err := wb.conn.ReadHoldingRegisters(em2GoHomeRegVoltage1, 1)
-	
+
 	if err != nil {
 		return 0, 0, 0, err
 	}
-	
+
 	c, err := wb.conn.ReadHoldingRegisters(em2GoHomeRegVoltage2, 1)
-	
+
 	if err != nil {
 		return 0, 0, 0, err
 	}
-	
+
 	d, err := wb.conn.ReadHoldingRegisters(em2GoHomeRegVoltage3, 1)
-	
+
 	if err != nil {
 		return 0, 0, 0, err
 	}
@@ -275,7 +275,7 @@ func (wb *Em2GoHome) ChargingTime() (time.Duration, error) {
 func (wb *Em2GoHome) phases1p3p(phases int) error {
 	b := make([]byte, 2)
 	binary.BigEndian.PutUint16(b, uint16(phases))
-	
+
 	_, err := wb.conn.WriteMultipleRegisters(em2GoHomeRegPhases, 1, b)
 	return err
 }
