@@ -478,6 +478,11 @@ filter = "Filter"
 [settings]
 title = "User Interface"
 
+[settings.fullscreen]
+enter = "Enter fullscreen"
+exit = "Exit fullscreen"
+label = "Fullscreen"
+
 [settings.hiddenFeatures]
 label = "Experimental"
 value = "Show experimental UI features."
