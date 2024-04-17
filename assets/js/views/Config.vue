@@ -271,7 +271,6 @@ import api from "../api";
 import VehicleIcon from "../components/VehicleIcon";
 import VehicleModal from "../components/Config/VehicleModal.vue";
 import DeviceCard from "../components/Config/DeviceCard.vue";
-import Restart from "../components/Config/Restart.vue";
 import DeviceTags from "../components/Config/DeviceTags.vue";
 import AddDeviceButton from "../components/Config/AddDeviceButton.vue";
 import MeterModal from "../components/Config/MeterModal.vue";
@@ -291,7 +290,6 @@ export default {
 		DeviceTags,
 		AddDeviceButton,
 		MeterModal,
-		Restart,
 		MqttModal,
 	},
 	props: {
@@ -329,9 +327,6 @@ export default {
 		},
 		selectedMeterName() {
 			return this.getMeterById(this.selectedMeterId)?.name;
-		},
-		restartProps() {
-			return this.collectProps(Restart);
 		},
 	},
 	watch: {
