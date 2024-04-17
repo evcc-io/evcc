@@ -9,10 +9,6 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func sponsorStatusHandler(w http.ResponseWriter, r *http.Request) {
-	jsonResult(w, sponsor.Status())
-}
-
 func updateSponsortokenHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	token := vars["token"]
