@@ -29,7 +29,7 @@ func IsAuthorized() bool {
 func IsAuthorizedForApi() bool {
 	mu.Lock()
 	defer mu.Unlock()
-	return IsAuthorized() && Subject != unavailable
+	return len(Subject) > 0 && Subject != unavailable
 }
 
 // check and set sponsorship token
@@ -83,8 +83,9 @@ type StatusStruct struct {
 
 // Status returns the sponsorship status
 func Status() StatusStruct {
-	mu.Lock()
-	defer mu.Unlock()
+	// TODO: @andig is this necessary?
+	//mu.Lock()
+	//defer mu.Unlock()
 
 	var expiresIn int64
 	if IsAuthorizedForApi() {
