@@ -58,9 +58,8 @@ func updatePasswordHandler(auth auth.Auth) http.HandlerFunc {
 func jwtFromRequest(r *http.Request) string {
 	// read from header
 	authHeader := r.Header.Get("Authorization")
-	splitToken := strings.Split(authHeader, "Bearer ")
-	if len(splitToken) == 2 {
-		return splitToken[1]
+	if token, ok := strings.CutPrefix(authHeader, "Bearer "); ok {
+		return token
 	}
 
 	// read from cookie
