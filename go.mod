@@ -4,9 +4,9 @@ go 1.22.0
 
 require (
 	dario.cat/mergo v1.0.0
+	github.com/42atomys/sprout v0.0.0-20240403003052-d64a48ef7bae
 	github.com/AlecAivazis/survey/v2 v2.3.7
 	github.com/BurntSushi/toml v1.3.2
-	github.com/Masterminds/sprig/v3 v3.2.3
 	github.com/PuerkitoBio/goquery v1.9.1
 	github.com/andig/go-powerwall v0.2.1-0.20230808194509-dd70cdb6e140
 	github.com/andig/gosunspec v0.0.0-20231205122018-1daccfa17912
@@ -104,7 +104,6 @@ require (
 )
 
 require (
-	github.com/Masterminds/goutils v1.1.1 // indirect
 	github.com/Masterminds/semver/v3 v3.2.1 // indirect
 	github.com/ahmetb/go-linq/v3 v3.2.0 // indirect
 	github.com/andybalholm/cascadia v1.3.2 // indirect
@@ -136,7 +135,6 @@ require (
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/holoplot/go-avahi v1.0.1 // indirect
 	github.com/huandu/xstrings v1.4.0 // indirect
-	github.com/imdario/mergo v1.0.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/influxdata/line-protocol v0.0.0-20210922203350-b1ad95c89adf // indirect
 	github.com/insomniacslk/xjson v0.0.0-20240314172816-ab1449dc107f // indirect
@@ -197,7 +195,5 @@ require (
 	modernc.org/memory v1.8.0 // indirect
 	modernc.org/sqlite v1.29.6 // indirect
 )
-
-replace github.com/imdario/mergo => github.com/imdario/mergo v0.3.16
 
 replace github.com/spf13/viper => github.com/spf13/viper v1.18.1
