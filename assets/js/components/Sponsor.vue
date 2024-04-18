@@ -1,12 +1,12 @@
 <template>
-	<div v-if="sponsor">
+	<div v-if="active">
 		<p class="fw-bold mb-1 d-flex">
 			<shopicon-regular-heart
 				class="title-icon text-primary d-inline-block me-1"
 			></shopicon-regular-heart>
 			{{ $t("footer.sponsor.titleSponsor") }}
 		</p>
-		<p class="mb-3">{{ $t("footer.sponsor.thanks", { sponsor }) }}</p>
+		<p class="mb-3">{{ $t("footer.sponsor.thanks", { sponsor: name }) }}</p>
 		<div
 			class="d-flex justify-content-center align-items-center flex-column flex-lg-row align-items-lg-baseline justify-content-lg-start"
 		>
@@ -54,7 +54,8 @@ import "@h2d2/shopicons/es/regular/stars";
 export default {
 	name: "Sponsor",
 	props: {
-		sponsor: String,
+		active: Boolean,
+		name: String,
 	},
 	methods: {
 		surprise: function () {

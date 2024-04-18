@@ -74,29 +74,23 @@ func ConfigureSponsorship(token string) error {
 }
 
 type StatusStruct struct {
-	IsAuthorized       bool      `json:"isAuthorized"`
-	IsAuthorizedForApi bool      `json:"isAuthorizedForApi"`
-	Subject            string    `json:"subject"`
-	ExpiresAt          time.Time `json:"expiresAt"`
-	ExpiresIn          int64     `json:"expiresIn,omitempty"`
+	Active      bool      `json:"active"`
+	Name        string    `json:"name,omitempty"`
+	ExpiresAt   time.Time `json:"expiresAt,omitempty"`
+	ExpiresSoon bool      `json:"expiresIn,omitempty"`
 }
 
 // Status returns the sponsorship status
 func Status() StatusStruct {
-	// TODO: @andig is this necessary?
-	//mu.Lock()
-	//defer mu.Unlock()
-
-	var expiresIn int64
-	if IsAuthorizedForApi() {
-		expiresIn = int64(time.Until(ExpiresAt).Seconds())
+	expiresSoon := false
+	if d := time.Until(ExpiresAt); d < 30*24*time.Hour && d > 0 {
+		expiresSoon = true
 	}
 
 	return StatusStruct{
-		IsAuthorized:       IsAuthorized(),
-		IsAuthorizedForApi: IsAuthorizedForApi(),
-		Subject:            Subject,
-		ExpiresAt:          ExpiresAt,
-		ExpiresIn:          expiresIn,
+		Active:      IsAuthorized(),
+		Name:        Subject,
+		ExpiresAt:   ExpiresAt,
+		ExpiresSoon: expiresSoon,
 	}
 }

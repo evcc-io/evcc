@@ -1,5 +1,5 @@
 <template>
-	<div v-if="sponsorTokenExpires" class="alert alert-warning" role="alert">
+	<div v-if="expiresSoon" class="alert alert-warning" role="alert">
 		<i18n-t tag="div" class="mb-2" keypath="settings.sponsorToken.expires">
 			<template #inXDays>
 				{{ inXDays }}
@@ -24,11 +24,12 @@ export default {
 	name: "SponsorTokenExpires",
 	mixins: [formatter],
 	props: {
-		sponsorTokenExpires: Number,
+		expiresSoon: Boolean,
+		expiresAt: String,
 	},
 	computed: {
 		inXDays() {
-			return this.fmtTimeAgo(this.sponsorTokenExpires * 1000);
+			return this.fmtTimeAgo(new Date(this.expiresAt) - new Date());
 		},
 	},
 };

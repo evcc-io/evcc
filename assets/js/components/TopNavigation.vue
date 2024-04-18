@@ -35,7 +35,7 @@
 					@click="openSettingsModal"
 				>
 					<span
-						v-if="sponsorTokenExpires"
+						v-if="sponsor.expiresSoon"
 						class="d-inline-block p-1 rounded-circle bg-danger border border-light rounded-circle"
 					></span>
 					{{ $t("settings.title") }}
@@ -129,8 +129,7 @@ export default {
 				return {};
 			},
 		},
-		sponsor: String,
-		sponsorTokenExpires: Number,
+		sponsor: Object,
 		battery: Array,
 	},
 	data() {
@@ -157,7 +156,7 @@ export default {
 			return this.logoutCount > 0;
 		},
 		showBadge() {
-			return this.loginRequired || this.sponsorTokenExpires;
+			return this.loginRequired || this.sponsor.expiresSoon;
 		},
 		batteryModalAvailable() {
 			return this.batteryConfigured;

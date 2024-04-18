@@ -4,8 +4,8 @@ import SponsorTokenExpires from "./SponsorTokenExpires.vue";
 
 <template>
 	<Story title="Sponsor Token Expires">
-		<Variant title="in 9 days">
-			<SponsorTokenExpires :sponsorTokenExpires="768423" />
+		<Variant title="some day">
+			<SponsorTokenExpires :sponsorSoon="true" expiresAt="2055-01-01T00:00:00Z" />
 		</Variant>
 		<Variant title="empty">
 			<SponsorTokenExpires />
