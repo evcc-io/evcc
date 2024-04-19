@@ -76,9 +76,8 @@ func NewE3dc(usage templates.Usage, cfg rscp.ClientConfig) (api.Meter, error) {
 		batterySoc = res.batterySoc
 		batteryCapacity = res.batteryCapacity
 
-		const TAG_BAT_REQ_SPECIFICATION = rscp.Tag(0x03000043)
 		resp, err := res.conn.Send(
-			*rscp.NewMessage(rscp.BAT_REQ_DATA, []*rscp.Message{
+			*rscp.NewMessage(rscp.BAT_REQ_DATA, []rscp.Message{
 				{
 					Tag:      rscp.BAT_INDEX,
 					DataType: rscp.UInt16,
