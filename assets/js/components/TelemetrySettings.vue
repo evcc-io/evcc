@@ -75,9 +75,12 @@ export default {
 				return;
 			}
 			try {
-				const response = await api.get("settings/telemetry");
-				console.log("update in settings", response.data.result);
-				settings.telemetry = response.data.result;
+				const response = await api.get("settings/telemetry", {
+					validateStatus: () => true,
+				});
+				if (response.status === 200) {
+					settings.telemetry = response.data.result;
+				}
 			} catch (err) {
 				console.error(err);
 			}

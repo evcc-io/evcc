@@ -11,7 +11,7 @@ const auth = reactive({
 export async function updateAuthStatus() {
   try {
     const res = await api.get("/auth/status", {
-      validateStatus: (code) => [200, 501].includes(code),
+      validateStatus: (code) => [200, 501, 500].includes(code),
     });
     if (res.status === 501) {
       auth.configured = false;
@@ -19,6 +19,9 @@ export async function updateAuthStatus() {
     if (res.status === 200) {
       auth.configured = true;
       auth.loggedIn = res.data === true;
+    }
+    if (res.status === 500) {
+      console.log("unable to fetch auth status", res);
     }
   } catch (e) {
     console.log("unable to fetch auth status", e);
