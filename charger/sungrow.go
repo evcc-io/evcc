@@ -25,7 +25,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/sponsor"
-	"github.com/volkszaehler/mbmd/encoding"
+	"github.com/volkszaehler/mbmd/meters/rs485"
 )
 
 // Sungrow charger implementation
@@ -39,19 +39,21 @@ const (
 	sgRegEnable      = 21210 // uint16
 	sgRegMaxCurrent  = 21202 // uint16 0.01A
 	sgRegPhases      = 21203 // uint16
-	sgRegWorkingMode = 21262 // uint16
+	sgRegWorkingMode = 21262 // uint16 [Network=0, Plug&Play=2, EMS=6]
 
 	// input
-	sgRegState         = 21316 // uint16
-	sgRegActivePower   = 21307 // uint16 1W
-	sgRegChargedEnergy = 21309 // uint32 1Wh
-	sgRegTotalEnergy   = 21299 // uint32 1Wh
+	sgRegPhasesPower   = 21224 // uint16
 	sgRegPhasesState   = 21269 // uint16
+	sgRegTotalEnergy   = 21299 // uint32s 1Wh
+	sgRegActivePower   = 21307 // uint32s 1W
+	sgRegChargedEnergy = 21309 // uint32s 1Wh
+	sgRegStartMode     = 21313 // uint16 [EMS=1, Swiping=2]
+	sgRegState         = 21316 // uint16
 )
 
 var (
-	sgRegCurrents = []uint16{21301, 21303, 21305} // 3x uint16 0.1V
-	sgRegVoltages = []uint16{21302, 21304, 21306} // 3x uint16 0.1A
+	sgRegVoltages = []uint16{21301, 21303, 21305} // uint16 0.1V
+	sgRegCurrents = []uint16{21302, 21304, 21306} // uint16 0.1A
 )
 
 func init() {
@@ -102,7 +104,7 @@ func (wb *Sungrow) getPhaseValues(regs []uint16, divider float64) (float64, floa
 			return 0, 0, 0, err
 		}
 
-		res[i] = float64(binary.BigEndian.Uint16(b)) / divider
+		res[i] = rs485.RTUUint16ToFloat64(b) / divider
 	}
 
 	return res[0], res[1], res[2], nil
@@ -115,10 +117,9 @@ func (wb *Sungrow) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	switch s := encoding.Uint16(b); s {
+	switch s := binary.BigEndian.Uint16(b); s {
 	case
-		1, // "Available"
-		8: // "Disabled"
+		1: // "Idle"
 		return api.StatusA, nil
 	case
 		2, // "Standby"
@@ -131,6 +132,7 @@ func (wb *Sungrow) Status() (api.ChargeStatus, error) {
 		return api.StatusC, nil
 	case
 		7, // "Reserved"
+		8, // "Disabled"
 		9: // "Faulted"
 		return api.StatusF, nil
 	default:
@@ -145,7 +147,7 @@ func (wb *Sungrow) Enabled() (bool, error) {
 		return false, err
 	}
 
-	return encoding.Uint16(b) == 1, nil
+	return binary.BigEndian.Uint16(b) == 1, nil
 }
 
 // Enable implements the api.Charger interface
@@ -187,7 +189,7 @@ func (wb *Sungrow) CurrentPower() (float64, error) {
 		return 0, err
 	}
 
-	return float64(binary.BigEndian.Uint32(b)) / 1e3, err
+	return rs485.RTUUint32ToFloat64Swapped(b), err
 }
 
 var _ api.PhaseCurrents = (*Sungrow)(nil)
@@ -201,7 +203,19 @@ var _ api.PhaseVoltages = (*Sungrow)(nil)
 
 // Voltages implements the api.PhaseVoltages interface
 func (wb *Sungrow) Voltages() (float64, float64, float64, error) {
-	return wb.getPhaseValues(sgRegVoltages, 1)
+	return wb.getPhaseValues(sgRegVoltages, 10)
+}
+
+var _ api.ChargeRater = (*Sungrow)(nil)
+
+// ChargedEnergy implements the api.MeterEnergy interface
+func (wb *Sungrow) ChargedEnergy() (float64, error) {
+	b, err := wb.conn.ReadHoldingRegisters(sgRegChargedEnergy, 2)
+	if err != nil {
+		return 0, err
+	}
+
+	return rs485.RTUUint32ToFloat64Swapped(b) / 1e3, err
 }
 
 var _ api.MeterEnergy = (*Sungrow)(nil)
@@ -213,7 +227,7 @@ func (wb *Sungrow) TotalEnergy() (float64, error) {
 		return 0, err
 	}
 
-	return float64(binary.BigEndian.Uint32(b)) / 1e3, err
+	return rs485.RTUUint32ToFloat64Swapped(b) / 1e3, err
 }
 
 var _ api.PhaseSwitcher = (*Sungrow)(nil)
@@ -229,4 +243,34 @@ func (wb *Sungrow) Phases1p3p(phases int) error {
 	_, err := wb.conn.WriteSingleRegister(sgRegPhases, u)
 
 	return err
+}
+
+var _ api.Diagnosis = (*Sungrow)(nil)
+
+// Diagnose implements the api.Diagnosis interface
+func (wb *Sungrow) Diagnose() {
+	if b, err := wb.conn.ReadHoldingRegisters(sgRegMaxCurrent, 1); err == nil {
+		fmt.Printf("\tMaxCurrent:\t%d\n", binary.BigEndian.Uint16(b))
+	}
+	if b, err := wb.conn.ReadHoldingRegisters(sgRegPhases, 1); err == nil {
+		fmt.Printf("\tPhases:\t%d\n", binary.BigEndian.Uint16(b))
+	}
+	if b, err := wb.conn.ReadHoldingRegisters(sgRegEnable, 1); err == nil {
+		fmt.Printf("\tEnable:\t%d\n", binary.BigEndian.Uint16(b))
+	}
+	if b, err := wb.conn.ReadHoldingRegisters(sgRegWorkingMode, 1); err == nil {
+		fmt.Printf("\tWorkingMode:\t%d\n", binary.BigEndian.Uint16(b))
+	}
+	if b, err := wb.conn.ReadInputRegisters(sgRegPhasesPower, 1); err == nil {
+		fmt.Printf("\tPhasesPower:\t%d\n", binary.BigEndian.Uint16(b))
+	}
+	if b, err := wb.conn.ReadInputRegisters(sgRegPhasesState, 1); err == nil {
+		fmt.Printf("\tPhasesState:\t%d\n", binary.BigEndian.Uint16(b))
+	}
+	if b, err := wb.conn.ReadInputRegisters(sgRegStartMode, 1); err == nil {
+		fmt.Printf("\tStartMode:\t%d\n", binary.BigEndian.Uint16(b))
+	}
+	if b, err := wb.conn.ReadInputRegisters(sgRegState, 1); err == nil {
+		fmt.Printf("\tState:\t%d\n", binary.BigEndian.Uint16(b))
+	}
 }
