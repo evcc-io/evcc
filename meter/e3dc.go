@@ -84,7 +84,8 @@ func NewE3dc(usage templates.Usage, cfg rscp.ClientConfig) (api.Meter, error) {
 					Value:    uint16(0),
 				},
 				{
-					Tag: rscp.BAT_REQ_SPECIFICATION,
+					Tag:      rscp.BAT_REQ_SPECIFICATION,
+					DataType: rscp.None,
 				},
 			}),
 		)
