@@ -48,14 +48,16 @@ func settingsSetYamlHandler(key string, struc any) http.HandlerFunc {
 		}
 
 		other := make(map[string]any)
-		if err := yaml.NewDecoder(bytes.NewBuffer(b)).Decode(&other); err != nil {
+		if err := yaml.NewDecoder(bytes.NewBuffer(b)).Decode(&other); err != nil && err != io.EOF {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
 
-		if err := util.DecodeOther(other, &struc); err != nil {
-			jsonError(w, http.StatusBadRequest, err)
-			return
+		if len(other) > 0 {
+			if err := util.DecodeOther(other, &struc); err != nil {
+				jsonError(w, http.StatusBadRequest, err)
+				return
+			}
 		}
 
 		// var res strings.Builder

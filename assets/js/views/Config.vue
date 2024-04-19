@@ -114,41 +114,6 @@
 						<AddDeviceButton :title="$t('config.main.addPvBattery')" @add="addMeter" />
 					</ul>
 
-					<h2 class="my-4 wip">Tariffs</h2>
-
-					<ul class="p-0 config-list wip">
-						<DeviceCard
-							name="Grid"
-							unconfigured
-							data-testid="tariff-grid"
-							@configure="todo"
-						>
-							<template #icon>
-								<shopicon-regular-money></shopicon-regular-money>
-							</template>
-						</DeviceCard>
-						<DeviceCard
-							name="Feed-in"
-							unconfigured
-							data-testid="tariff-feedin"
-							@configure="todo"
-						>
-							<template #icon>
-								<shopicon-regular-receivepayment></shopicon-regular-receivepayment>
-							</template>
-						</DeviceCard>
-						<DeviceCard
-							name="CO₂ estimate"
-							unconfigured
-							data-testid="tariff-co2"
-							@configure="todo"
-						>
-							<template #icon>
-								<shopicon-regular-eco1></shopicon-regular-eco1>
-							</template>
-						</DeviceCard>
-					</ul>
-
 					<h2 class="my-4 wip">Charge Points</h2>
 
 					<ul class="p-0 config-list wip">
@@ -173,6 +138,16 @@
 					</ul>
 					<ul class="p-0 config-list">
 						<DeviceCard
+							name="Tariffs"
+							editable
+							data-testid="tariffs"
+							@edit="openModal('tariffsModal')"
+						>
+							<template #icon>
+								<shopicon-regular-receivepayment></shopicon-regular-receivepayment>
+							</template>
+						</DeviceCard>
+						<DeviceCard
 							name="MQTT"
 							editable
 							data-testid="mqtt"
@@ -185,9 +160,9 @@
 						</DeviceCard>
 						<DeviceCard
 							name="Notifications"
-							unconfigured
-							data-testid="eebus"
-							@configure="todo"
+							editable
+							data-testid="messaging"
+							@edit="openModal('messagingModal')"
 						>
 							<template #icon>
 								<shopicon-regular-sendit></shopicon-regular-sendit>
@@ -195,15 +170,20 @@
 						</DeviceCard>
 						<DeviceCard
 							name="InfluxDB"
-							unconfigured
+							editable
 							data-testid="influx"
-							@configure="todo"
+							@edit="openModal('influxModal')"
 						>
 							<template #icon>
 								<shopicon-regular-diagram></shopicon-regular-diagram>
 							</template>
 						</DeviceCard>
-						<DeviceCard name="EEBus" unconfigured data-testid="eebus" @configure="todo">
+						<DeviceCard
+							name="EEBus"
+							editable
+							data-testid="eebus"
+							@edit="openModal('mqttModal')"
+						>
 							<template #icon>
 								<shopicon-regular-polygon></shopicon-regular-polygon>
 							</template>
@@ -247,7 +227,9 @@
 					@updated="meterChanged"
 					@removed="removeMeterFromSite"
 				/>
-				<MqttModal />
+				<MqttModal @changed="loadDirty" />
+				<MessagingModal @changed="loadDirty" />
+				<TariffsModal @changed="loadDirty" />
 			</div>
 		</div>
 	</div>
@@ -275,9 +257,11 @@ import DeviceTags from "../components/Config/DeviceTags.vue";
 import AddDeviceButton from "../components/Config/AddDeviceButton.vue";
 import MeterModal from "../components/Config/MeterModal.vue";
 import MqttModal from "../components/Config/MqttModal.vue";
+import MessagingModal from "../components/Config/MessagingModal.vue";
 import GeneralConfig from "../components/Config/GeneralConfig.vue";
 import formatter from "../mixins/formatter";
 import collector from "../mixins/collector";
+import TariffsModal from "../components/Config/TariffsModal.vue";
 
 export default {
 	name: "Config",
@@ -291,6 +275,8 @@ export default {
 		AddDeviceButton,
 		MeterModal,
 		MqttModal,
+		MessagingModal,
+		TariffsModal,
 	},
 	props: {
 		offline: Boolean,
@@ -307,6 +293,7 @@ export default {
 			deviceValueTimeout: undefined,
 			deviceValues: {},
 			dirty: false,
+			restarting: false,
 		};
 	},
 	mixins: [formatter, collector],

@@ -45,7 +45,7 @@ export default {
 				minimap: { enabled: false },
 				showFoldingControls: "always",
 				scrollBeyondLastLine: false,
-				wordWrap: "on",
+				wordWrap: "off",
 				wrappingStrategy: "advanced",
 				overviewRulerLanes: 0,
 			},

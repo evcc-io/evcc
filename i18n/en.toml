@@ -49,6 +49,7 @@ optional = "optional"
 [config.general]
 cancel = "Cancel"
 change = "change"
+docsLink = "See documentation."
 edit = "edit"
 editEvccYaml = "Edit evcc.yaml"
 experimental = "Experimental"
@@ -72,6 +73,10 @@ title = "Configuration"
 unconfigured = "not configured"
 vehicles = "My Vehicles"
 yaml = "Configured in evcc.yaml. Not editable in the UI."
+
+[config.messaging]
+description = "Recieve messages about your charging sessions."
+title = "Notifications"
 
 [config.meter]
 cancel = "Cancel"
