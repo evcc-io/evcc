@@ -433,7 +433,10 @@ modalTitle = "Notifications"
 
 [offline]
 message = "Not connected to a server."
-reload = "Reload?"
+needsRestart = "Restart required to see changes."
+restart = "Restart"
+restarting = "Restarting…"
+waitForRestart = "We'll be back in a moment."
 
 [passwordModal]
 description = "Set a password to protect the configuration settings. Using the main screen is still possible without login."

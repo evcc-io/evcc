@@ -95,7 +95,7 @@ export default {
 			this.error = "";
 			try {
 				const data = this.yaml === this.defaultYaml ? "" : this.yaml;
-				await api.post(this.endpoint, data, {
+				const res = await api.post(this.endpoint, data, {
 					validateStatus: (code) => [200, 400].includes(code),
 				});
 				if (res.status === 200) {

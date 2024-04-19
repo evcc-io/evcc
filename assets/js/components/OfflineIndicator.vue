@@ -5,15 +5,14 @@
 		role="alert"
 	>
 		<div v-if="needsRestart" class="d-flex align-items-center">
-			<Sync v-if="restarting" class="me-2 spin" />
-			<Restart v-else class="me-2" />
-			{{ $t("offline.restarting") }}
+			<Sync class="me-2" :class="{ spin: restarting }" />
+			{{ restarting ? $t("offline.waitForRestart") : $t("offline.needsRestart") }}
 			<button
-				class="btn btn-outline-secondary ms-2 btn-sm"
+				class="btn btn-outline-primary ms-2 btn-sm"
 				:disabled="restarting"
 				@click="restarting = true"
 			>
-				{{ $t("offline.restart") }}
+				{{ restarting ? $t("offline.restarting") : $t("offline.restart") }}
 			</button>
 		</div>
 		<div v-else class="d-flex align-items-center">
@@ -24,16 +23,13 @@
 </template>
 
 <script>
-import "@h2d2/shopicons/es/regular/cloud";
 import CloudOffline from "./MaterialIcon/CloudOffline.vue";
-import Restart from "./MaterialIcon/Restart.vue";
 import Sync from "./MaterialIcon/Sync.vue";
 
 export default {
 	name: "OfflineIndicator",
 	components: {
 		CloudOffline,
-		Restart,
 		Sync,
 	},
 	props: {

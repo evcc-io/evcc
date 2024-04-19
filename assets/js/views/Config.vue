@@ -3,35 +3,6 @@
 		<div class="container px-4">
 			<TopHeader :title="$t('config.main.title')" />
 			<div class="wrapper pb-5">
-				<div
-					v-if="dirty || restarting"
-					class="alert alert-secondary d-flex justify-content-between align-items-center my-4"
-					role="alert"
-				>
-					<div v-if="restarting">
-						<strong>{{ $t("config.system.restartingMessage") }}</strong>
-						{{ $t("config.system.restartingDescription") }}
-					</div>
-					<div v-else>
-						<strong>{{ $t("config.system.restartRequiredMessage") }}</strong>
-						{{ $t("config.system.restartRequiredDescription") }}
-					</div>
-					<button
-						type="button"
-						class="btn btn-outline-dark btn-sm"
-						:disabled="restarting || offline"
-						@click="restart"
-					>
-						<span
-							v-if="restarting || offline"
-							class="spinner-border spinner-border-sm"
-							role="status"
-							aria-hidden="true"
-						></span>
-						<span v-else>{{ $t("config.system.restart") }}</span>
-					</button>
-				</div>
-
 				<h2 class="my-4 mt-5">{{ $t("config.section.general") }}</h2>
 				<GeneralConfig @site-changed="siteChanged" />
 
@@ -282,6 +253,7 @@ import EebusIcon from "../components/MaterialIcon/Eebus.vue";
 import ModbusProxyIcon from "../components/MaterialIcon/ModbusProxy.vue";
 import NotificationIcon from "../components/MaterialIcon/Notification.vue";
 import MqttIcon from "../components/MaterialIcon/Mqtt.vue";
+import store from "../store";
 
 export default {
 	name: "Config",
@@ -319,7 +291,6 @@ export default {
 			site: { grid: "", pv: [], battery: [] },
 			deviceValueTimeout: undefined,
 			deviceValues: {},
-			dirty: false,
 			restarting: false,
 		};
 	},
@@ -368,7 +339,7 @@ export default {
 		},
 		async loadDirty() {
 			const response = await api.get("/config/dirty");
-			this.dirty = response.data?.result;
+			store.state.needsRestart = response.data?.result;
 		},
 		async loadVehicles() {
 			const response = await api.get("/config/devices/vehicle");
