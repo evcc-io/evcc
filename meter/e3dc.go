@@ -93,24 +93,34 @@ func NewE3dc(usage templates.Usage, cfg rscp.ClientConfig) (api.Meter, error) {
 			return nil, err
 		}
 
-		batData, ok := resp.Value.([]*rscp.Message)
-		if !ok && len(batData) == 2 {
-			return nil, errors.New("invalid BAT_DATA response")
+		// batData, ok := resp.Value.([]*rscp.Message)
+		// if !ok && len(batData) == 2 {
+		// 	return nil, errors.New("invalid BAT_DATA response")
+		// }
+
+		// batSpec, ok := batData[1].Value.([]*rscp.Message)
+		// if !ok && len(batSpec) > 0 {
+		// 	return nil, errors.New("invalid BAT_SPECIFICATION response")
+		// }
+
+		// idx := slices.IndexFunc(batSpec, func(m *rscp.Message) bool {
+		// 	return m.Tag == rscp.BAT_SPECIFIED_CAPACITY
+		// })
+		// if idx < 0 {
+		// 	return nil, errors.New("missing BAT_SPECIFIED_CAPACITY")
+		// }
+
+		batSpec, err := rscpChild((resp.Value).(*rscp.Message), rscp.BAT_SPECIFICATION)
+		if err != nil {
+			return nil, err
 		}
 
-		batSpec, ok := batData[1].Value.([]*rscp.Message)
-		if !ok && len(batSpec) > 0 {
-			return nil, errors.New("invalid BAT_SPECIFICATION response")
+		batCap, err := rscpChild((batSpec.Value).(*rscp.Message), rscp.BAT_SPECIFIED_CAPACITY)
+		if err != nil {
+			return nil, err
 		}
 
-		idx := slices.IndexFunc(batSpec, func(m *rscp.Message) bool {
-			return m.Tag == rscp.BAT_SPECIFIED_CAPACITY
-		})
-		if idx < 0 {
-			return nil, errors.New("missing BAT_SPECIFIED_CAPACITY")
-		}
-
-		cap, err := cast.ToFloat64E(batSpec[idx].Value)
+		cap, err := cast.ToFloat64E(batCap.Value)
 		if err != nil {
 			return nil, err
 		}
@@ -119,6 +129,22 @@ func NewE3dc(usage templates.Usage, cfg rscp.ClientConfig) (api.Meter, error) {
 	}
 
 	return decorateE3dc(res, batterySoc, batteryCapacity), nil
+}
+
+func rscpChild(msg *rscp.Message, tag rscp.Tag) (*rscp.Message, error) {
+	slice, ok := msg.Value.([]*rscp.Message)
+	if !ok {
+		return nil, errors.New("invalid slice response")
+	}
+
+	idx := slices.IndexFunc(slice, func(m *rscp.Message) bool {
+		return m.Tag == tag
+	})
+	if idx < 0 {
+		return nil, errors.New("missing " + tag.String())
+	}
+
+	return slice[idx], nil
 }
 
 func (m *E3dc) CurrentPower() (float64, error) {
