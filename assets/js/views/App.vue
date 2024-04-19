@@ -1,7 +1,5 @@
 <template>
 	<div class="app">
-		<OfflineIndicator v-if="offline" />
-
 		<router-view :notifications="notifications" :offline="offline"></router-view>
 
 		<GlobalSettingsModal v-bind="globalSettingsProps" />
@@ -9,7 +7,7 @@
 		<HelpModal />
 		<PasswordModal />
 		<LoginModal />
-		<OfflineIndicator v-if="offline" />
+		<OfflineIndicator v-bind="offlineIndicatorProps" />
 	</div>
 </template>
 
@@ -88,6 +86,9 @@ export default {
 		},
 		batterySettingsProps() {
 			return this.collectProps(BatterySettingsModal, store.state);
+		},
+		offlineIndicatorProps() {
+			return this.collectProps(OfflineIndicator, store.state);
 		},
 		startupErrors: function () {
 			return store.state.fatal?.length > 0;

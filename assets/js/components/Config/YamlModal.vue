@@ -95,12 +95,18 @@ export default {
 			this.error = "";
 			try {
 				const data = this.yaml === this.defaultYaml ? "" : this.yaml;
-				await api.post(this.endpoint, data);
-				this.$emit("changed");
-				this.$refs.modal.close();
+				await api.post(this.endpoint, data, {
+					validateStatus: (code) => [200, 400].includes(code),
+				});
+				if (res.status === 200) {
+					this.$emit("changed");
+					this.$refs.modal.close();
+				}
+				if (res.status === 400) {
+					this.error = e.response.data.error;
+				}
 			} catch (e) {
 				console.error(e);
-				this.error = e.response.data.error;
 			}
 			this.saving = false;
 		},

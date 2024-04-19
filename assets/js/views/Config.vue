@@ -2,7 +2,7 @@
 	<div class="root safe-area-inset">
 		<div class="container px-4">
 			<TopHeader :title="$t('config.main.title')" />
-			<div class="wrapper">
+			<div class="wrapper pb-5">
 				<div
 					v-if="dirty || restarting"
 					class="alert alert-secondary d-flex justify-content-between align-items-center my-4"
@@ -34,26 +34,6 @@
 
 				<h2 class="my-4 mt-5">{{ $t("config.section.general") }}</h2>
 				<GeneralConfig @site-changed="siteChanged" />
-
-				<h2 class="my-4 mt-5">{{ $t("config.section.system") }}</h2>
-				<div class="round-box p-4 d-flex gap-4">
-					<router-link to="/log" class="btn btn-outline-secondary">
-						{{ $t("config.system.logs") }}
-					</router-link>
-					<button
-						class="btn btn-outline-danger"
-						:disabled="restarting || offline"
-						@click="restart"
-					>
-						<span
-							v-if="restarting || offline"
-							class="spinner-border spinner-border-sm"
-							role="status"
-							aria-hidden="true"
-						></span>
-						{{ $t("config.system.restart") }}
-					</button>
-				</div>
 
 				<div v-if="$hiddenFeatures()">
 					<hr class="my-5" />
@@ -227,6 +207,29 @@
 						</ul>
 					</div>
 				</div>
+
+				<hr class="my-5" />
+
+				<h2 class="my-4 mt-5">{{ $t("config.section.system") }}</h2>
+				<div class="round-box p-4 d-flex gap-4 mb-5">
+					<router-link to="/log" class="btn btn-outline-secondary">
+						{{ $t("config.system.logs") }}
+					</router-link>
+					<button
+						class="btn btn-outline-danger"
+						:disabled="restarting || offline"
+						@click="restart"
+					>
+						<span
+							v-if="restarting || offline"
+							class="spinner-border spinner-border-sm"
+							role="status"
+							aria-hidden="true"
+						></span>
+						{{ $t("config.system.restart") }}
+					</button>
+				</div>
+
 				<VehicleModal :id="selectedVehicleId" @vehicle-changed="vehicleChanged" />
 				<MeterModal
 					:id="selectedMeterId"

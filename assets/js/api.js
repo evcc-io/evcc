@@ -22,6 +22,10 @@ api.interceptors.response.use(
       return Promise.reject(error);
     }
 
+    if (error.handled) {
+      return Promise.reject(error);
+    }
+
     const message = [`${error.message}.`];
     if (error.response?.data?.error) {
       message.push(`${error.response.data.error}.`);
