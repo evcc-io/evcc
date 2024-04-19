@@ -6,12 +6,12 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateE3dc(base *E3dc, battery func() (float64, error)) api.Meter {
+func decorateE3dc(base *E3dc, battery func() (float64, error), batteryCapacity func() float64) api.Meter {
 	switch {
-	case battery == nil:
+	case battery == nil && batteryCapacity == nil:
 		return base
 
-	case battery != nil:
+	case battery != nil && batteryCapacity == nil:
 		return &struct {
 			*E3dc
 			api.Battery
@@ -19,6 +19,32 @@ func decorateE3dc(base *E3dc, battery func() (float64, error)) api.Meter {
 			E3dc: base,
 			Battery: &decorateE3dcBatteryImpl{
 				battery: battery,
+			},
+		}
+
+	case battery == nil && batteryCapacity != nil:
+		return &struct {
+			*E3dc
+			api.BatteryCapacity
+		}{
+			E3dc: base,
+			BatteryCapacity: &decorateE3dcBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil:
+		return &struct {
+			*E3dc
+			api.Battery
+			api.BatteryCapacity
+		}{
+			E3dc: base,
+			Battery: &decorateE3dcBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateE3dcBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
 			},
 		}
 	}
@@ -32,4 +58,12 @@ type decorateE3dcBatteryImpl struct {
 
 func (impl *decorateE3dcBatteryImpl) Soc() (float64, error) {
 	return impl.battery()
+}
+
+type decorateE3dcBatteryCapacityImpl struct {
+	batteryCapacity func() float64
+}
+
+func (impl *decorateE3dcBatteryCapacityImpl) Capacity() float64 {
+	return impl.batteryCapacity()
 }

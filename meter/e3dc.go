@@ -12,20 +12,20 @@ import (
 )
 
 type E3dc struct {
-	// capacity float64
-	usage templates.Usage // TODO check if we really want to depend on templates
-	conn  *rscp.Client
+	capacity float64
+	usage    templates.Usage // TODO check if we really want to depend on templates
+	conn     *rscp.Client
 }
 
 func init() {
 	registry.Add("e3dc-2", NewE3dcFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateE3dc -b *E3dc -r api.Meter -t "api.Battery,Soc,func() (float64, error)"
+//go:generate go run ../cmd/tools/decorate.go -f decorateE3dc -b *E3dc -r api.Meter -t "api.Battery,Soc,func() (float64, error)" -t "api.BatteryCapacity,Capacity,func() float64"
 
 func NewE3dcFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
-		capacity `mapstructure:",squash"`
+		// capacity `mapstructure:",squash"`
 		Usage    templates.Usage
 		Address  string
 		Port     uint16
@@ -69,56 +69,78 @@ func NewE3dc(usage templates.Usage, cfg rscp.ClientConfig) (api.Meter, error) {
 
 	// decorate api.BatterySoc
 	var batterySoc func() (float64, error)
-	// var batteryCapacity func() float64
+	var batteryCapacity func() float64
 	if usage == templates.UsageBattery {
 		batterySoc = res.batterySoc
-		// batteryCapacity = res.batteryCapacity
+		batteryCapacity = res.batteryCapacity
 
-		// const TAG_BAT_REQ_SPECIFICATION = rscp.Tag(0x03000043)
-		// msg, err := res.conn.Send(*rscp.NewMessage(TAG_BAT_REQ_SPECIFICATION, nil))
-		// if err != nil {
-		// 	return nil, err
-		// }
+		const TAG_BAT_REQ_SPECIFICATION = rscp.Tag(0x03000043)
+		msg, err := res.conn.Send(*rscp.NewMessage(TAG_BAT_REQ_SPECIFICATION, nil))
+		if err != nil {
+			return nil, err
+		}
 
-		// cap, err := cast.ToFloat64E(msg.Value)
-		// if err != nil {
-		// 	return nil, err
-		// }
+		cap, err := cast.ToFloat64E(msg.Value)
+		if err != nil {
+			return nil, err
+		}
 
-		// res.capacity = cap / 1e3
+		res.capacity = cap / 1e3
 	}
 
-	return decorateE3dc(res, batterySoc), nil
+	return decorateE3dc(res, batterySoc, batteryCapacity), nil
 }
 
 func (m *E3dc) CurrentPower() (float64, error) {
-	var tag rscp.Tag
-	sign := 1.0
-
 	switch m.usage {
 	case templates.UsageGrid:
-		tag = rscp.EMS_REQ_POWER_GRID
+		res, err := m.conn.Send(*rscp.NewMessage(rscp.EMS_REQ_POWER_GRID, nil))
+		if err != nil {
+			return 0, err
+		}
+		return cast.ToFloat64E(res.Value)
+
 	case templates.UsagePV:
-		tag = rscp.EMS_REQ_POWER_PV
+		pv, err := m.conn.Send(*rscp.NewMessage(rscp.EMS_REQ_POWER_PV, nil))
+		if err != nil {
+			return 0, err
+		}
+		pv2, err := cast.ToFloat64E(pv.Value)
+		if err != nil {
+			return 0, err
+		}
+
+		add, err := m.conn.Send(*rscp.NewMessage(rscp.EMS_REQ_POWER_ADD, nil))
+		if err != nil {
+			return 0, err
+		}
+		add2, err := cast.ToFloat64E(add.Value)
+		if err != nil {
+			return 0, err
+		}
+
+		return pv2 + add2, nil
+
 	case templates.UsageBattery:
-		tag = rscp.EMS_REQ_POWER_BAT
-		sign = -1
+		res, err := m.conn.Send(*rscp.NewMessage(rscp.EMS_REQ_POWER_BAT, nil))
+		if err != nil {
+			return 0, err
+		}
+		pwr, err := cast.ToFloat64E(res.Value)
+		if err != nil {
+			return 0, err
+		}
+
+		return -pwr, nil
+
 	default:
 		return 0, api.ErrNotAvailable
 	}
-
-	res, err := m.conn.Send(*rscp.NewMessage(tag, nil))
-	if err != nil {
-		return 0, err
-	}
-
-	val, err := cast.ToFloat64E(res.Value)
-	return sign * val, err
 }
 
-// func (m *E3dc) batteryCapacity() float64 {
-// 	return m.capacity
-// }
+func (m *E3dc) batteryCapacity() float64 {
+	return m.capacity
+}
 
 func (m *E3dc) batterySoc() (float64, error) {
 	res, err := m.conn.Send(*rscp.NewMessage(rscp.EMS_REQ_BAT_SOC, nil))
