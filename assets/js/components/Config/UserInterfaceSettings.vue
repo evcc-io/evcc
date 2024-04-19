@@ -58,6 +58,22 @@
 				</div>
 			</div>
 		</FormRow>
+		<FormRow
+			v-if="fullscreenAvailable"
+			id="settingsFullscreen"
+			:label="$t('settings.fullscreen.label')"
+		>
+			<button
+				v-if="fullscreenActive"
+				class="btn btn-sm btn-outline-secondary"
+				@click="exitFullscreen"
+			>
+				{{ $t("settings.fullscreen.exit") }}
+			</button>
+			<button v-else class="btn btn-sm btn-outline-secondary" @click="enterFullscreen">
+				{{ $t("settings.fullscreen.enter") }}
+			</button>
+		</FormRow>
 	</div>
 </template>
 
@@ -75,6 +91,7 @@ import {
 import { getThemePreference, setThemePreference, THEMES } from "../../theme";
 import { getUnits, setUnits, UNITS } from "../../units";
 import { getHiddenFeatures, setHiddenFeatures } from "../../featureflags";
+import { isApp } from "../../utils/native";
 
 export default {
 	name: "UserInterfaceSettings",
@@ -88,9 +105,16 @@ export default {
 			language: getLocalePreference() || "",
 			unit: getUnits(),
 			hiddenFeatures: getHiddenFeatures(),
+			fullscreenActive: false,
 			THEMES,
 			UNITS,
 		};
+	},
+	mounted() {
+		document.addEventListener("fullscreenchange", this.fullscreenChange);
+	},
+	unmounted() {
+		document.removeEventListener("fullscreenchange", this.fullscreenChange);
 	},
 	computed: {
 		languageOptions: () => {
@@ -100,6 +124,12 @@ export default {
 			// sort by name
 			locales.sort((a, b) => (a.name < b.name ? -1 : 1));
 			return locales;
+		},
+		fullscreenAvailable: () => {
+			const isSupported = document.fullscreenEnabled;
+			const isPwa =
+				navigator.standalone || window.matchMedia("(display-mode: standalone)").matches;
+			return isSupported && !isPwa && !isApp();
 		},
 	},
 	watch: {
@@ -119,6 +149,17 @@ export default {
 			} else {
 				removeLocalePreference(i18n);
 			}
+		},
+	},
+	methods: {
+		enterFullscreen() {
+			document.documentElement.requestFullscreen();
+		},
+		exitFullscreen() {
+			document.exitFullscreen();
+		},
+		fullscreenChange() {
+			this.fullscreenActive = !!document.fullscreenElement;
 		},
 	},
 };
