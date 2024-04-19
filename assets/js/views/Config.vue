@@ -82,6 +82,16 @@
 							</template>
 						</DeviceCard>
 						<DeviceCard
+							name="Tariffs"
+							editable
+							data-testid="tariffs"
+							@edit="openModal('tariffsModal')"
+						>
+							<template #icon>
+								<shopicon-regular-receivepayment></shopicon-regular-receivepayment>
+							</template>
+						</DeviceCard>
+						<DeviceCard
 							v-for="meter in pvMeters"
 							:key="!!meter.name"
 							:name="meter.config?.template || 'Solar system'"
@@ -136,61 +146,6 @@
 							@click="todo"
 						/>
 					</ul>
-					<ul class="p-0 config-list">
-						<DeviceCard
-							name="Tariffs"
-							editable
-							data-testid="tariffs"
-							@edit="openModal('tariffsModal')"
-						>
-							<template #icon>
-								<shopicon-regular-receivepayment></shopicon-regular-receivepayment>
-							</template>
-						</DeviceCard>
-						<DeviceCard
-							name="MQTT"
-							editable
-							data-testid="mqtt"
-							@configure="openModal('mqttModal')"
-							@edit="openModal('mqttModal')"
-						>
-							<template #icon>
-								<shopicon-regular-fastdelivery1></shopicon-regular-fastdelivery1>
-							</template>
-						</DeviceCard>
-						<DeviceCard
-							name="Notifications"
-							editable
-							data-testid="messaging"
-							@edit="openModal('messagingModal')"
-						>
-							<template #icon>
-								<shopicon-regular-sendit></shopicon-regular-sendit>
-							</template>
-						</DeviceCard>
-						<DeviceCard
-							name="InfluxDB"
-							editable
-							data-testid="influx"
-							@edit="openModal('influxModal')"
-						>
-							<template #icon>
-								<shopicon-regular-diagram></shopicon-regular-diagram>
-							</template>
-						</DeviceCard>
-						<DeviceCard
-							name="EEBus"
-							editable
-							data-testid="eebus"
-							@edit="openModal('mqttModal')"
-						>
-							<template #icon>
-								<shopicon-regular-polygon></shopicon-regular-polygon>
-							</template>
-						</DeviceCard>
-					</ul>
-
-					<hr class="my-5" />
 
 					<h2 class="my-4">Vehicles</h2>
 					<div>
@@ -216,6 +171,60 @@
 								@click="addVehicle"
 							/>
 						</ul>
+
+						<h2 class="my-4 mt-5">Integrations</h2>
+
+						<ul class="p-0 config-list">
+							<DeviceCard
+								name="MQTT"
+								editable
+								data-testid="mqtt"
+								@configure="openModal('mqttModal')"
+								@edit="openModal('mqttModal')"
+							>
+								<template #icon><MqttIcon /></template>
+							</DeviceCard>
+							<DeviceCard
+								name="Notifications"
+								editable
+								data-testid="messaging"
+								@edit="openModal('messagingModal')"
+							>
+								<template #icon><NotificationIcon /></template>
+							</DeviceCard>
+							<DeviceCard
+								name="InfluxDB"
+								editable
+								data-testid="influx"
+								@edit="openModal('influxModal')"
+							>
+								<template #icon><InfluxIcon /></template>
+							</DeviceCard>
+							<DeviceCard
+								name="EEBus"
+								editable
+								data-testid="eebus"
+								@edit="openModal('eebusModal')"
+							>
+								<template #icon><EebusIcon /></template>
+							</DeviceCard>
+							<DeviceCard
+								name="Modbus-Proxy"
+								editable
+								data-testid="modbusproxy"
+								@edit="openModal('modbusProxyModal')"
+							>
+								<template #icon><ModbusProxyIcon /></template>
+							</DeviceCard>
+							<DeviceCard
+								name="HEMS"
+								editable
+								data-testid="hems"
+								@edit="openModal('hemsModal')"
+							>
+								<template #icon><HemsIcon /></template>
+							</DeviceCard>
+						</ul>
 					</div>
 				</div>
 				<VehicleModal :id="selectedVehicleId" @vehicle-changed="vehicleChanged" />
@@ -230,6 +239,7 @@
 				<MqttModal @changed="loadDirty" />
 				<MessagingModal @changed="loadDirty" />
 				<TariffsModal @changed="loadDirty" />
+				<ModbusProxyModal @changed="loadDirty" />
 			</div>
 		</div>
 	</div>
@@ -262,6 +272,13 @@ import GeneralConfig from "../components/Config/GeneralConfig.vue";
 import formatter from "../mixins/formatter";
 import collector from "../mixins/collector";
 import TariffsModal from "../components/Config/TariffsModal.vue";
+import ModbusProxyModal from "../components/Config/ModbusProxyModal.vue";
+import HemsIcon from "../components/MaterialIcon/Hems.vue";
+import InfluxIcon from "../components/MaterialIcon/Influx.vue";
+import EebusIcon from "../components/MaterialIcon/Eebus.vue";
+import ModbusProxyIcon from "../components/MaterialIcon/ModbusProxy.vue";
+import NotificationIcon from "../components/MaterialIcon/Notification.vue";
+import MqttIcon from "../components/MaterialIcon/Mqtt.vue";
 
 export default {
 	name: "Config",
@@ -277,6 +294,13 @@ export default {
 		MqttModal,
 		MessagingModal,
 		TariffsModal,
+		ModbusProxyModal,
+		HemsIcon,
+		InfluxIcon,
+		EebusIcon,
+		ModbusProxyIcon,
+		NotificationIcon,
+		MqttIcon,
 	},
 	props: {
 		offline: Boolean,
