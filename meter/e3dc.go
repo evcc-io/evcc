@@ -93,12 +93,12 @@ func NewE3dc(usage templates.Usage, cfg rscp.ClientConfig) (api.Meter, error) {
 			return nil, err
 		}
 
-		batSpec, err := rscpChild(resp, rscp.BAT_SPECIFICATION)
+		batSpec, err := rscpContains(resp, rscp.BAT_SPECIFICATION)
 		if err != nil {
 			return nil, err
 		}
 
-		batCap, err := rscpChild(batSpec, rscp.BAT_SPECIFIED_CAPACITY)
+		batCap, err := rscpContains(&batSpec, rscp.BAT_SPECIFIED_CAPACITY)
 		if err != nil {
 			return nil, err
 		}
@@ -114,17 +114,19 @@ func NewE3dc(usage templates.Usage, cfg rscp.ClientConfig) (api.Meter, error) {
 	return decorateE3dc(res, batterySoc, batteryCapacity), nil
 }
 
-func rscpChild(msg *rscp.Message, tag rscp.Tag) (*rscp.Message, error) {
-	slice, ok := msg.Value.([]*rscp.Message)
+func rscpContains(msg *rscp.Message, tag rscp.Tag) (rscp.Message, error) {
+	var zero rscp.Message
+
+	slice, ok := msg.Value.([]rscp.Message)
 	if !ok {
-		return nil, errors.New("not a slice looking for " + tag.String())
+		return zero, errors.New("not a slice looking for " + tag.String())
 	}
 
-	idx := slices.IndexFunc(slice, func(m *rscp.Message) bool {
+	idx := slices.IndexFunc(slice, func(m rscp.Message) bool {
 		return m.Tag == tag
 	})
 	if idx < 0 {
-		return nil, errors.New("missing " + tag.String())
+		return zero, errors.New("missing " + tag.String())
 	}
 
 	return slice[idx], nil
