@@ -13,6 +13,11 @@ rtu: true
 # Modbus TCP
 uri: {{ .host }}:{{ .port }}
 rtu: false
+{{- else if or (eq .modbus "udp") .udp }}
+# Modbus UDP
+uri: {{ .host }}:{{ .port }}
+udp: true
+rtu: false
 {{- else }}
 # configuration error - should not happen
 modbusConnectionTypeNotDefined: {{ .modbus }}

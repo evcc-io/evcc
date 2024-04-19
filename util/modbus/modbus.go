@@ -38,6 +38,7 @@ type Settings struct {
 	SubDevice           int
 	URI, Device, Comset string
 	Baudrate            int
+	UDP                 bool
 	RTU                 *bool // indicates RTU over TCP if true
 }
 
@@ -250,42 +251,57 @@ func ProtocolFromRTU(rtu *bool) Protocol {
 
 // NewConnection creates physical modbus device from config
 func NewConnection(uri, device, comset string, baudrate int, proto Protocol, slaveID uint8) (*Connection, error) {
+	return NewConnectionWithSettings(Settings{
+		URI:      uri,
+		Device:   device,
+		Comset:   comset,
+		Baudrate: baudrate,
+		// TODO protocol
+	}, slaveID)
+}
+
+func NewConnectionWithSettings(cfg Settings, slaveID uint8) (*Connection, error) {
 	var conn meters.Connection
 
-	if device != "" && uri != "" {
-		return nil, errors.New("invalid modbus configuration: can only have either uri or device")
+	if (cfg.Device != "") == (cfg.URI != "") {
+		return nil, errors.New("invalid modbus configuration: must have either uri or device")
 	}
 
-	if device != "" {
-		switch strings.ToUpper(comset) {
+	if cfg.Device != "" {
+		switch strings.ToUpper(cfg.Comset) {
 		case "8N1", "8E1", "8N2":
 		case "80":
-			comset = "8E1"
+			cfg.Comset = "8E1"
 		default:
-			return nil, fmt.Errorf("invalid comset: %s", comset)
+			return nil, fmt.Errorf("invalid comset: %s", cfg.Comset)
 		}
 
-		if baudrate == 0 {
+		if cfg.Baudrate == 0 {
 			return nil, errors.New("invalid modbus configuration: need baudrate and comset")
 		}
 
 		if proto == Ascii {
-			conn = registeredConnection(device, meters.NewASCII(device, baudrate, comset))
+			conn = registeredConnection(cfg.Device, meters.NewASCII(cfg.Device, cfg.Baudrate, cfg.Comset))
 		} else {
-			conn = registeredConnection(device, meters.NewRTU(device, baudrate, comset))
+			conn = registeredConnection(cfg.Device, meters.NewRTU(cfg.Device, cfg.Baudrate, cfg.Comset))
 		}
 	}
 
-	if uri != "" {
-		uri = util.DefaultPort(uri, 502)
+	if cfg.URI != "" {
+		cfg.URI = util.DefaultPort(cfg.URI, 502)
 
 		switch proto {
 		case Rtu:
-			conn = registeredConnection(uri, meters.NewRTUOverTCP(uri))
+			conn = registeredConnection(cfg.URI, meters.NewRTUOverTCP(cfg.URI))
 		case Ascii:
-			conn = registeredConnection(uri, meters.NewASCIIOverTCP(uri))
+			conn = registeredConnection(cfg.URI, meters.NewASCIIOverTCP(cfg.URI))
 		default:
-			conn = registeredConnection(uri, meters.NewTCP(uri))
+			if cfg.UDP {
+				// TODO
+				conn = registeredConnection(cfg.URI, meters.NewUDP(cfg.URI))
+			} else {
+				conn = registeredConnection(cfg.URI, meters.NewTCP(cfg.URI))
+			}
 		}
 	}
 

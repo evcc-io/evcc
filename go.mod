@@ -42,7 +42,7 @@ require (
 	github.com/gorilla/mux v1.8.1
 	github.com/gregdel/pushover v1.3.0
 	github.com/gregjones/httpcache v0.0.0-20190611155906-901d90724c79
-	github.com/grid-x/modbus v0.0.0-20240214112450-0d4922fba364
+	github.com/grid-x/modbus v0.0.0-20240415045618-130d65d9f1cd
 	github.com/hashicorp/go-version v1.6.0
 	github.com/hasura/go-graphql-client v0.12.1
 	github.com/influxdata/influxdb-client-go/v2 v2.13.0
@@ -199,3 +199,5 @@ require (
 replace github.com/spf13/viper => github.com/spf13/viper v1.18.1
 
 replace github.com/mlnoga/rct => github.com/andig/rct v0.1.2-0.20240419102452-054695c3e7c2
+
+replace github.com/grid-x/modbus => github.com/evcc-io/modbus v0.0.0-20240419133105-829633e7c6b0
