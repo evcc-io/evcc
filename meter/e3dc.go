@@ -117,7 +117,7 @@ func NewE3dc(usage templates.Usage, cfg rscp.ClientConfig) (api.Meter, error) {
 func rscpChild(msg *rscp.Message, tag rscp.Tag) (*rscp.Message, error) {
 	slice, ok := msg.Value.([]*rscp.Message)
 	if !ok {
-		return nil, errors.New("invalid slice response")
+		return nil, errors.New("not a slice looking for " + tag.String())
 	}
 
 	idx := slices.IndexFunc(slice, func(m *rscp.Message) bool {
