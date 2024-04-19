@@ -198,4 +198,4 @@ require (
 
 replace github.com/spf13/viper => github.com/spf13/viper v1.18.1
 
-replace github.com/mlnoga/rct => github.com/andig/rct v0.1.2-0.20240417222304-1a6c8c168d31
+replace github.com/mlnoga/rct => github.com/andig/rct v0.1.2-0.20240419102452-054695c3e7c2

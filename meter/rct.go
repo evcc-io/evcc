@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/cenkalti/backoff/v4"
@@ -74,8 +75,13 @@ func NewRCTFromConfig(other map[string]interface{}) (api.Meter, error) {
 	return NewRCT(cc.Uri, cc.Usage, cc.Cache, cc.capacity.Decorator())
 }
 
+var rctMu sync.Mutex
+
 // NewRCT creates an RCT meter
 func NewRCT(uri, usage string, cache time.Duration, capacity func() float64) (api.Meter, error) {
+	rctMu.Lock()
+	defer rctMu.Unlock()
+
 	conn, err := rct.NewConnection(uri, cache)
 	if err != nil {
 		return nil, err
