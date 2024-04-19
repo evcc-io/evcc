@@ -1,6 +1,8 @@
 package meter
 
 import (
+	"errors"
+	"slices"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -75,12 +77,40 @@ func NewE3dc(usage templates.Usage, cfg rscp.ClientConfig) (api.Meter, error) {
 		batteryCapacity = res.batteryCapacity
 
 		const TAG_BAT_REQ_SPECIFICATION = rscp.Tag(0x03000043)
-		msg, err := res.conn.Send(*rscp.NewMessage(TAG_BAT_REQ_SPECIFICATION, nil))
+		resp, err := res.conn.Send(
+			*rscp.NewMessage(rscp.BAT_REQ_DATA, []*rscp.Message{
+				{
+					Tag:      rscp.BAT_INDEX,
+					DataType: rscp.UInt16,
+					Value:    uint16(0),
+				},
+				{
+					Tag: rscp.BAT_REQ_SPECIFICATION,
+				},
+			}),
+		)
 		if err != nil {
 			return nil, err
 		}
 
-		cap, err := cast.ToFloat64E(msg.Value)
+		batData, ok := resp.Value.([]*rscp.Message)
+		if !ok && len(batData) == 2 {
+			return nil, errors.New("invalid BAT_DATA response")
+		}
+
+		batSpec, ok := batData[1].Value.([]*rscp.Message)
+		if !ok && len(batSpec) > 0 {
+			return nil, errors.New("invalid BAT_SPECIFICATION response")
+		}
+
+		idx := slices.IndexFunc(batSpec, func(m *rscp.Message) bool {
+			return m.Tag == rscp.BAT_SPECIFIED_CAPACITY
+		})
+		if idx < 0 {
+			return nil, errors.New("missing BAT_SPECIFIED_CAPACITY")
+		}
+
+		cap, err := cast.ToFloat64E(batSpec[idx].Value)
 		if err != nil {
 			return nil, err
 		}
