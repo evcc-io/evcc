@@ -9,6 +9,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/templates"
+	"github.com/samber/lo"
 	"github.com/spali/go-rscp/rscp"
 	"github.com/spf13/cast"
 )
@@ -27,13 +28,13 @@ func init() {
 
 func NewE3dcFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
-		// capacity `mapstructure:",squash"`
 		Usage    templates.Usage
 		Address  string
 		Port     uint16
 		Username string
 		Password string
 		Key      string
+		Battery  uint16 // battery id
 		Timeout  time.Duration
 	}{
 		Timeout: request.Timeout,
@@ -54,10 +55,10 @@ func NewE3dcFromConfig(other map[string]interface{}) (api.Meter, error) {
 		ReceiveTimeout:    cc.Timeout,
 	}
 
-	return NewE3dc(cc.Usage, cfg)
+	return NewE3dc(cfg, cc.Usage, cc.Battery)
 }
 
-func NewE3dc(usage templates.Usage, cfg rscp.ClientConfig) (api.Meter, error) {
+func NewE3dc(cfg rscp.ClientConfig, usage templates.Usage, batteryId uint16) (api.Meter, error) {
 	// util.NewLogger("e3dc")
 	conn, err := rscp.NewClient(cfg)
 	if err != nil {
@@ -70,25 +71,30 @@ func NewE3dc(usage templates.Usage, cfg rscp.ClientConfig) (api.Meter, error) {
 	}
 
 	// decorate api.BatterySoc
-	var batterySoc func() (float64, error)
-	var batteryCapacity func() float64
+	var (
+		batterySoc      func() (float64, error)
+		batteryCapacity func() float64
+	)
+
 	if usage == templates.UsageBattery {
 		batterySoc = res.batterySoc
 		batteryCapacity = res.batteryCapacity
 
-		resp, err := res.conn.Send(
-			*rscp.NewMessage(rscp.BAT_REQ_DATA, []rscp.Message{
+		resp, err := res.conn.Send(rscp.Message{
+			Tag:      rscp.BAT_REQ_DATA,
+			DataType: rscp.Container,
+			Value: []rscp.Message{
 				{
 					Tag:      rscp.BAT_INDEX,
 					DataType: rscp.UInt16,
-					Value:    uint16(0),
+					Value:    uint16(batteryId),
 				},
 				{
 					Tag:      rscp.BAT_REQ_SPECIFICATION,
 					DataType: rscp.None,
 				},
-			}),
-		)
+			},
+		})
 		if err != nil {
 			return nil, err
 		}
@@ -132,6 +138,18 @@ func rscpContains(msg *rscp.Message, tag rscp.Tag) (rscp.Message, error) {
 	return slice[idx], nil
 }
 
+func rscpValues[T any](msg []rscp.Message, fun func(any) (T, err)) ([]T, error) {
+	res := make([]T, 0, len(msg))
+	for _, m := range msg {
+		v, err := fun(m.Value)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, v)
+	}
+	return res, nil
+}
+
 func (m *E3dc) CurrentPower() (float64, error) {
 	switch m.usage {
 	case templates.UsageGrid:
@@ -142,25 +160,17 @@ func (m *E3dc) CurrentPower() (float64, error) {
 		return cast.ToFloat64E(res.Value)
 
 	case templates.UsagePV:
-		pv, err := m.conn.Send(*rscp.NewMessage(rscp.EMS_REQ_POWER_PV, nil))
-		if err != nil {
-			return 0, err
-		}
-		pv2, err := cast.ToFloat64E(pv.Value)
+		res, err := m.conn.SendMultiple([]rscp.Message{*rscp.NewMessage(rscp.EMS_REQ_POWER_PV, nil), *rscp.NewMessage(rscp.EMS_REQ_POWER_ADD, nil)})
 		if err != nil {
 			return 0, err
 		}
 
-		add, err := m.conn.Send(*rscp.NewMessage(rscp.EMS_REQ_POWER_ADD, nil))
-		if err != nil {
-			return 0, err
-		}
-		add2, err := cast.ToFloat64E(add.Value)
+		values := rscpValues(res, cast.ToFloat64E)
 		if err != nil {
 			return 0, err
 		}
 
-		return pv2 + add2, nil
+		return lo.Sum(values), nil
 
 	case templates.UsageBattery:
 		res, err := m.conn.Send(*rscp.NewMessage(rscp.EMS_REQ_POWER_BAT, nil))
