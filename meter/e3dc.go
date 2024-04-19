@@ -110,12 +110,17 @@ func NewE3dc(usage templates.Usage, cfg rscp.ClientConfig) (api.Meter, error) {
 		// 	return nil, errors.New("missing BAT_SPECIFIED_CAPACITY")
 		// }
 
-		batSpec, err := rscpChild((resp.Value).(*rscp.Message), rscp.BAT_SPECIFICATION)
+		batData, ok := (resp.Value).(*rscp.Message)
+		if !ok {
+			return nil, errors.New("invalid BAT_DATA response")
+		}
+
+		batSpec, err := rscpChild(batData, rscp.BAT_SPECIFICATION)
 		if err != nil {
 			return nil, err
 		}
 
-		batCap, err := rscpChild((batSpec.Value).(*rscp.Message), rscp.BAT_SPECIFIED_CAPACITY)
+		batCap, err := rscpChild(batSpec, rscp.BAT_SPECIFIED_CAPACITY)
 		if err != nil {
 			return nil, err
 		}
