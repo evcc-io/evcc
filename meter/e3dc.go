@@ -138,7 +138,7 @@ func rscpContains(msg *rscp.Message, tag rscp.Tag) (rscp.Message, error) {
 	return slice[idx], nil
 }
 
-func rscpValues[T any](msg []rscp.Message, fun func(any) (T, err)) ([]T, error) {
+func rscpValues[T any](msg []rscp.Message, fun func(any) (T, error)) ([]T, error) {
 	res := make([]T, 0, len(msg))
 	for _, m := range msg {
 		v, err := fun(m.Value)
@@ -165,7 +165,7 @@ func (m *E3dc) CurrentPower() (float64, error) {
 			return 0, err
 		}
 
-		values := rscpValues(res, cast.ToFloat64E)
+		values, err := rscpValues(res, cast.ToFloat64E)
 		if err != nil {
 			return 0, err
 		}
