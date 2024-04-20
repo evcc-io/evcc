@@ -9,7 +9,7 @@
 		<p class="text-danger" v-if="error">{{ error }}</p>
 		<form ref="form" class="container mx-0 px-0">
 			<div class="editor-container" :style="{ height }">
-				<YamlEditor v-model="yaml" class="editor" />
+				<YamlEditor v-model="yaml" class="editor" :errorLine="errorLine" />
 			</div>
 
 			<div class="my-4 d-flex justify-content-between">
@@ -49,6 +49,7 @@ export default {
 		return {
 			saving: false,
 			error: "",
+			errorLine: undefined,
 			yaml: "",
 			serverYaml: "",
 		};
@@ -76,6 +77,7 @@ export default {
 			this.yaml = "";
 			this.error = "";
 			this.saving = false;
+			this.errorLine = undefined;
 		},
 		async open() {
 			this.reset();
@@ -93,6 +95,7 @@ export default {
 		async save() {
 			this.saving = true;
 			this.error = "";
+			this.errorLine = undefined;
 			try {
 				const data = this.yaml === this.defaultYaml ? "" : this.yaml;
 				const res = await api.post(this.endpoint, data, {
@@ -104,6 +107,7 @@ export default {
 				}
 				if (res.status === 400) {
 					this.error = res.data.error;
+					this.errorLine = res.data.line;
 				}
 			} catch (e) {
 				console.error(e);
