@@ -199,3 +199,5 @@ require (
 replace github.com/spf13/viper => github.com/spf13/viper v1.18.1
 
 replace github.com/mlnoga/rct => github.com/andig/rct v0.1.2-0.20240419102452-054695c3e7c2
+
+replace gopkg.in/yaml.v3 => github.com/andig/yaml v0.0.0-20240420065216-9dda66781a45

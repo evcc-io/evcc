@@ -20,6 +20,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/itchyny/gojq"
 	"golang.org/x/text/language"
+	"gopkg.in/yaml.v3"
 )
 
 var ignoreState = []string{"releaseNotes"} // excessive size
@@ -84,7 +85,20 @@ func jsonResult(w http.ResponseWriter, res interface{}) {
 
 func jsonError(w http.ResponseWriter, status int, err error) {
 	w.WriteHeader(status)
-	jsonWrite(w, map[string]interface{}{"error": err.Error()})
+
+	res := struct {
+		Error string `json:"error"`
+		Line  int    `json:"line,omitempty"`
+	}{
+		Error: err.Error(),
+	}
+
+	var ype *yaml.ParserError
+	if errors.As(err, &ype) {
+		res.Line = ype.Line
+	}
+
+	jsonWrite(w, res)
 }
 
 func handler[T any](conv func(string) (T, error), set func(T) error, get func() T) http.HandlerFunc {
