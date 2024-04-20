@@ -14,7 +14,7 @@ var (
 )
 
 func TestLog(t *testing.T) {
-	log := New(10)
+	log := New(3)
 
 	// old to new
 	log.Write([]byte(s1))

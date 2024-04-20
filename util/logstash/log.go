@@ -105,10 +105,10 @@ func (l *logger) All(areas []string, level jww.Threshold, count int) []string {
 
 	res := make([]string, 0, r.Len())
 	for range r.Len() {
-		r = r.Next()
 		if e, ok := r.Value.(element); ok && e != "" && (all || e.match(areas, level)) {
 			res = append(res, string(e))
 		}
+		r = r.Next()
 	}
 
 	if count > 0 && len(res) > count {
