@@ -5,15 +5,15 @@
 		role="alert"
 	>
 		<div v-if="needsRestart" class="d-flex align-items-center">
-			<Sync class="me-2" :class="{ spin: restarting }" />
-			{{ restarting ? $t("offline.waitForRestart") : $t("offline.needsRestart") }}
 			<button
-				class="btn btn-outline-primary ms-2 btn-sm"
+				class="btn btn-outline-primary me-2 btn-sm d-flex align-items-center"
 				:disabled="restarting"
 				@click="restarting = true"
 			>
-				{{ restarting ? $t("offline.restarting") : $t("offline.restart") }}
+				<Sync class="me-2" :class="{ spin: restarting }" />
+				{{ $t("offline.restart") }}
 			</button>
+			{{ restarting ? $t("offline.waitForRestart") : $t("offline.needsRestart") }}
 		</div>
 		<div v-else class="d-flex align-items-center">
 			<CloudOffline class="me-2" />

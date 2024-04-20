@@ -65,7 +65,7 @@ export default {
 			return `${docsPrefix()}${this.docs}`;
 		},
 		height() {
-			return Math.max(200, this.yaml.split("\n").length * 18) + 22 + "px";
+			return Math.max(150, this.yaml.split("\n").length * 18) + 22 + "px";
 		},
 		nothingChanged() {
 			return this.yaml === this.serverYaml;
@@ -103,7 +103,7 @@ export default {
 					this.$refs.modal.close();
 				}
 				if (res.status === 400) {
-					this.error = e.response.data.error;
+					this.error = res.data.error;
 				}
 			} catch (e) {
 				console.error(e);
@@ -118,9 +118,6 @@ export default {
 	margin-left: calc(var(--bs-gutter-x) * -0.5);
 	margin-right: calc(var(--bs-gutter-x) * -0.5);
 	padding-right: 0;
-}
-.editor {
-	height: 400px;
 }
 .editor-container {
 	margin: 0 -1rem 0 -1.25rem;

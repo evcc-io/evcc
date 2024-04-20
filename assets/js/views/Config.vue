@@ -214,6 +214,7 @@
 				<MessagingModal @changed="loadDirty" />
 				<TariffsModal @changed="loadDirty" />
 				<ModbusProxyModal @changed="loadDirty" />
+				<HemsModal @changed="loadDirty" />
 			</div>
 		</div>
 	</div>
@@ -224,13 +225,7 @@ import TopHeader from "../components/TopHeader.vue";
 import "@h2d2/shopicons/es/regular/sun";
 import "@h2d2/shopicons/es/regular/batterythreequarters";
 import "@h2d2/shopicons/es/regular/powersupply";
-import "@h2d2/shopicons/es/regular/money";
 import "@h2d2/shopicons/es/regular/receivepayment";
-import "@h2d2/shopicons/es/regular/eco1";
-import "@h2d2/shopicons/es/regular/fastdelivery1";
-import "@h2d2/shopicons/es/regular/sendit";
-import "@h2d2/shopicons/es/regular/diagram";
-import "@h2d2/shopicons/es/regular/polygon";
 import "@h2d2/shopicons/es/regular/cablecharge";
 import Modal from "bootstrap/js/dist/modal";
 import api from "../api";
@@ -254,6 +249,7 @@ import ModbusProxyIcon from "../components/MaterialIcon/ModbusProxy.vue";
 import NotificationIcon from "../components/MaterialIcon/Notification.vue";
 import MqttIcon from "../components/MaterialIcon/Mqtt.vue";
 import store from "../store";
+import HemsModal from "../components/Config/HemsModal.vue";
 
 export default {
 	name: "Config",
@@ -276,6 +272,7 @@ export default {
 		ModbusProxyIcon,
 		NotificationIcon,
 		MqttIcon,
+		HemsModal,
 	},
 	props: {
 		offline: Boolean,

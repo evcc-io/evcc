@@ -19,7 +19,7 @@ export default {
 	components: { YamlModal },
 	emits: ["changed"],
 	data() {
-		return { defaultYaml };
+		return { defaultYaml: defaultYaml.trim() };
 	},
 };
 </script>
