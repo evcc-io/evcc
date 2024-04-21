@@ -2,8 +2,8 @@ cloud.google.com/go v0.26.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMT
 cloud.google.com/go v0.34.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
 dario.cat/mergo v1.0.0 h1:AGCNq9Evsj31mOgNPcLyXc+4PNABt905YmuqPYYpBWk=
 dario.cat/mergo v1.0.0/go.mod h1:uNxQE+84aUszobStD9th8a29P2fMDhsBdgRYvZOxGmk=
-github.com/42atomys/sprout v0.0.0-20240403003052-d64a48ef7bae h1:997KCkMlF7NNKrEFn1uFyRKcLbxutBveYat1m6nF3E4=
-github.com/42atomys/sprout v0.0.0-20240403003052-d64a48ef7bae/go.mod h1:nTr5KxiTLYrnmEiZaJLuD/Ct+xod3KpHBmqhaZjQ1Lk=
+github.com/42atomys/sprout v0.2.0 h1:Fe8Wkc4xOI/z1pwaJffG2sElA+TtH2zgQGnvNNPbU8Q=
+github.com/42atomys/sprout v0.2.0/go.mod h1:nTr5KxiTLYrnmEiZaJLuD/Ct+xod3KpHBmqhaZjQ1Lk=
 github.com/AlecAivazis/survey/v2 v2.3.7 h1:6I/u8FvytdGsgonrYsVn2t8t4QiRnh6QSTqkkhIiSjQ=
 github.com/AlecAivazis/survey/v2 v2.3.7/go.mod h1:xUTIdE4KCOIjsBAE1JYsUPoCqYdZ1reCfTwbto0Fduo=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
