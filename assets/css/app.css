@@ -390,6 +390,10 @@ a:hover {
 	margin: 0;
 }
 
+html:has(.modal.show) {
+	overflow-y: hidden;
+}
+
 .cursor-pointer {
 	cursor: pointer;
 }
