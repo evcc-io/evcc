@@ -2,7 +2,9 @@ package meter
 
 import (
 	"errors"
+	"net"
 	"slices"
+	"strconv"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -21,7 +23,7 @@ type E3dc struct {
 }
 
 func init() {
-	registry.Add("e3dc-2", NewE3dcFromConfig)
+	registry.Add("e3dc-rscp", NewE3dcFromConfig)
 }
 
 //go:generate go run ../cmd/tools/decorate.go -f decorateE3dc -b *E3dc -r api.Meter -t "api.BatteryCapacity,Capacity,func() float64" -t "api.Battery,Soc,func() (float64, error)" -t "api.BatteryController,SetBatteryMode,func(api.BatteryMode) error"
@@ -29,8 +31,7 @@ func init() {
 func NewE3dcFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
 		Usage    templates.Usage
-		Host     string
-		Port     uint16
+		Uri      string
 		User     string
 		Password string
 		Key      string
@@ -44,9 +45,16 @@ func NewE3dcFromConfig(other map[string]interface{}) (api.Meter, error) {
 		return nil, err
 	}
 
+	host, port_, err := net.SplitHostPort(util.DefaultPort(cc.Uri, 5033))
+	if err != nil {
+		return nil, err
+	}
+
+	port, _ := strconv.Atoi(port_)
+
 	cfg := rscp.ClientConfig{
-		Address:           cc.Host,
-		Port:              cc.Port,
+		Address:           host,
+		Port:              uint16(port),
 		Username:          cc.User,
 		Password:          cc.Password,
 		Key:               cc.Key,
@@ -221,7 +229,7 @@ func (m *E3dc) setBatteryMode(mode api.BatteryMode) error {
 
 	case api.BatteryHold:
 		_, err := m.conn.Send(rscp.Message{
-			Tag:      rscp.BAT_REQ_DATA,
+			Tag:      rscp.EMS_REQ_SET_POWER_SETTINGS,
 			DataType: rscp.Container,
 			Value: []rscp.Message{
 				{
@@ -230,7 +238,7 @@ func (m *E3dc) setBatteryMode(mode api.BatteryMode) error {
 					Value:    1,
 				}, {
 					Tag:      rscp.EMS_MAX_DISCHARGE_POWER,
-					DataType: rscp.Uint32,
+					DataType: rscp.Int32,
 					Value:    0,
 				},
 			},
