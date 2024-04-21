@@ -1,0 +1,24 @@
+template: e3dc-rscp
+products:
+  - brand: E3/DC
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+    allinone: true
+  - name: host
+  - name: port
+  - name: user
+  - name: password
+  - name: key
+  - name: battery
+    type: number
+    advanced: true
+render: |
+  type: e3dc
+  usage: {{ .usage }}
+  host: {{ .host }}
+  port: {{ .port }}
+  user: {{ .user }}
+  password: {{ .password }}
+  key: {{ .key }}
+  battery: {{ .battery }}

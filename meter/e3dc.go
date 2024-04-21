@@ -29,9 +29,9 @@ func init() {
 func NewE3dcFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
 		Usage    templates.Usage
-		Address  string
+		Host     string
 		Port     uint16
-		Username string
+		User     string
 		Password string
 		Key      string
 		Battery  uint16 // battery id
@@ -45,9 +45,9 @@ func NewE3dcFromConfig(other map[string]interface{}) (api.Meter, error) {
 	}
 
 	cfg := rscp.ClientConfig{
-		Address:           cc.Address,
+		Address:           cc.Host,
 		Port:              cc.Port,
-		Username:          cc.Username,
+		Username:          cc.User,
 		Password:          cc.Password,
 		Key:               cc.Key,
 		ConnectionTimeout: cc.Timeout,
