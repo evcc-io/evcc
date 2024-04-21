@@ -147,11 +147,11 @@ export default {
 		vehicleSoc: Number,
 		vehicleName: String,
 		vehicleIcon: String,
-		vehicleTargetSoc: Number,
+		vehicleLimitSoc: Number,
 		vehicles: Array,
 		planActive: Boolean,
 		planProjectedStart: String,
-		planOverrun: Boolean,
+		planOverrun: Number,
 		planEnergy: Number,
 		planTime: String,
 		effectivePlanTime: String,
@@ -240,6 +240,10 @@ export default {
 			// online vehicle that was not reachable at startup
 			const features = this.vehicle?.features || [];
 			return features.includes("Offline") && features.includes("Retryable");
+		},
+		planTimeUnreachable: function () {
+			// 1 minute tolerance
+			return this.planOverrun > 60;
 		},
 		socBasedCharging: function () {
 			return this.vehicleHasSoc || this.vehicleSoc > 0;

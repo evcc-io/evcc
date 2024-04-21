@@ -13,7 +13,7 @@ legendTitle = "How should solar energy be used?"
 legendTopAutostart = "starts automatically"
 legendTopName = "battery supported charging"
 legendTopSubline = "without interruptions"
-modalTitle = "Battery Settings"
+modalTitle = "Home Battery"
 
 [batterySettings.bufferStart]
 above = "when above {soc}"
@@ -46,6 +46,10 @@ socLimit = "Limit"
 example = "Example"
 optional = "optional"
 
+[config.general]
+cancel = "Cancel"
+save = "Save"
+
 [config.grid]
 titleAdd = "Add Grid Meter"
 titleEdit = "Edit Grid Meter"
@@ -72,9 +76,22 @@ validateSave = "Validate & save"
 titleAdd = "Add Solar Meter"
 titleEdit = "Edit Solar Meter"
 
-[config.site]
-cancel = "Cancel"
-save = "Save"
+[config.section]
+general = "General"
+system = "System"
+
+[config.system]
+logs = "Logs"
+restart = "Restart"
+restartRequiredDescription = "Please restart to see the effect."
+restartRequiredMessage = "Configuration changed."
+restartingDescription = "Please wait…"
+restartingMessage = "Restarting evcc."
+
+[config.title]
+description = "Displayed on main screen and browser tab."
+label = "Title"
+title = "Edit Title"
 
 [config.validation]
 failed = "failed"
@@ -167,6 +184,7 @@ blog = "Blog"
 docs = "Documentation"
 github = "GitHub"
 login = "Vehicle Logins"
+logout = "Logout"
 nativeSettings = "Change Server"
 needHelp = "Need Help?"
 sessions = "Charging Sessions"
@@ -176,6 +194,8 @@ discussionsButton = "GitHub discussions"
 documentationButton = "Documentation"
 issueButton = "Report a bug"
 issueDescription = "Found a strange or wrong behavior?"
+logsButton = "View logs"
+logsDescription = "Check the logs for errors."
 modalTitle = "Need help?"
 primaryActions = "Something does not work the way it supposed to do? These are good places to get help."
 restartButton = "Restart"
@@ -188,6 +208,26 @@ confirm = "Yes, restart!"
 description = "Under normal circumstances restarting should not be necessary. Please consider filing a bug if you need to restart evcc on a regular basis."
 disclaimer = "Note: evcc will terminate and rely on the operating system to restart the service."
 modalTitle = "Are you sure you want to restart?"
+
+[log]
+areaLabel = "Filter by area"
+areas = "All areas"
+download = "Download complete log"
+levelLabel = "Filter by log level"
+noResults = "No matching log entries."
+search = "Search"
+showAll = "Show all entries"
+title = "Logs"
+update = "Auto update"
+
+[loginModal]
+cancel = "Cancel"
+error = "Login failed: "
+invalid = "Password is invalid."
+login = "Login"
+password = "Password"
+reset = "Reset password?"
+title = "Authentication"
 
 [main]
 vehicles = "Parking"
@@ -343,7 +383,7 @@ charging = "charging"
 connected = "connected"
 disconnected = "disconnected"
 ready = "ready"
-vehicleTarget = "Vehicle limit: {soc}%"
+vehicleLimit = "Vehicle limit: {soc}%"
 
 [main.vehicleStatus]
 charging = "Charging…"
@@ -357,20 +397,34 @@ pvDisable = "Not enough surplus. Pausing in {remaining}…"
 pvEnable = "Surplus available. Starting in {remaining}…"
 scale1p = "Reducing to 1-phase charging in {remaining}…"
 scale3p = "Increasing to 3-phase charging in {remaining}…"
-targetChargeActive = "Target charge active…"
-targetChargePlanned = "Target charging starts at {time}."
-targetChargeWaitForVehicle = "Target charge ready. Waiting for vehicle…"
+targetChargeActive = "Charging plan active…"
+targetChargePlanned = "Charging plan starts at {time}."
+targetChargeWaitForVehicle = "Charging plan ready. Waiting for vehicle…"
 unknown = ""
-vehicleTargetReached = "Vehicle limit {soc}% reached."
+vehicleLimitReached = "Vehicle limit {soc}% reached."
 waitForVehicle = "Ready. Waiting for vehicle…"
 
 [notifications]
 dismissAll = "Dismiss all"
+logs = "View full logs"
 modalTitle = "Notifications"
 
 [offline]
 message = "Not connected to a server."
 reload = "Reload?"
+
+[passwordModal]
+description = "Set a password to protect the configuration settings. Using the main screen is still possible without login."
+empty = "Password should not be empty"
+error = "Error: "
+labelCurrent = "Current password"
+labelNew = "New password"
+labelRepeat = "Repeat password"
+newPassword = "Create password"
+noMatch = "Passwords do not match"
+titleNew = "Set Administrator Password"
+titleUpdate = "Update Administrator Password"
+updatePassword = "Update password"
 
 [session]
 cancel = "Cancel"
@@ -422,7 +476,12 @@ allVehicles = "all vehicles"
 filter = "Filter"
 
 [settings]
-title = "General Settings"
+title = "User Interface"
+
+[settings.fullscreen]
+enter = "Enter fullscreen"
+exit = "Exit fullscreen"
+label = "Fullscreen"
 
 [settings.hiddenFeatures]
 label = "Experimental"

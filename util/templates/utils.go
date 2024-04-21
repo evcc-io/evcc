@@ -8,7 +8,7 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/Masterminds/sprig/v3"
+	"github.com/42atomys/sprout"
 	"gopkg.in/yaml.v3"
 )
 
@@ -67,5 +67,5 @@ func FuncMap(tmpl *template.Template) *template.Template {
 		},
 	}
 
-	return tmpl.Funcs(sprig.TxtFuncMap()).Funcs(funcMap)
+	return tmpl.Funcs(sprout.TxtFuncMap()).Funcs(funcMap)
 }

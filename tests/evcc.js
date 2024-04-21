@@ -9,10 +9,10 @@ const BASE_URL = playwrightConfig.use.baseURL;
 const DB_PATH = "./evcc.db";
 const BINARY = "./evcc";
 
-export async function start(config, database) {
+export async function start(config, sqlDumps) {
   await _clean();
-  if (database) {
-    await _restoreDatabase(database);
+  if (sqlDumps) {
+    await _restoreDatabase(sqlDumps);
   }
   await _start(config);
 }
@@ -27,15 +27,21 @@ export async function restart(config) {
   await _start(config);
 }
 
-export async function cleanRestart(config) {
+export async function cleanRestart(config, sqlDumps) {
   await _stop();
   await _clean();
+  if (sqlDumps) {
+    await _restoreDatabase(sqlDumps);
+  }
   await _start(config);
 }
 
-async function _restoreDatabase(database) {
-  console.log("loading database", { database });
-  execSync(`sqlite3 ${DB_PATH} < tests/${database}`);
+async function _restoreDatabase(sqlDumps) {
+  const dumps = Array.isArray(sqlDumps) ? sqlDumps : [sqlDumps];
+  for (const dump of dumps) {
+    console.log("loading database", dump);
+    execSync(`sqlite3 ${DB_PATH} < tests/${dump}`);
+  }
 }
 
 async function _start(config) {
@@ -53,7 +59,10 @@ async function _start(config) {
 
 async function _stop() {
   console.log("shutting down evcc");
-  await axios.post(BASE_URL + "/api/shutdown");
+  const res = await axios.post(BASE_URL + "/api/auth/login", { password: "secret" });
+  console.log(res.status, res.statusText);
+  const cookie = res.headers["set-cookie"];
+  await axios.post(BASE_URL + "/api/system/shutdown", {}, { headers: { cookie } });
 }
 
 async function _clean() {

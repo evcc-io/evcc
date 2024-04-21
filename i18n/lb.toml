@@ -169,7 +169,7 @@ charging = "oplueden"
 connected = "verbonne"
 disconnected = "deconnectéiert"
 ready = "bereet"
-vehicleTarget = "Gefier Limite: {soc}%"
+vehicleLimit = "Gefier Limite: {soc}%"
 
 [main.vehicleStatus]
 charging = "Laden ..."
@@ -184,7 +184,7 @@ targetChargeActive = "Zilladung aktiv ..."
 targetChargePlanned = "Zilladung fänkt um {time} un."
 targetChargeWaitForVehicle = "Ziel Charge prett. Waart op Gefier ..."
 unknown = ""
-vehicleTargetReached = "Gefier Limit {soc}% erreecht."
+vehicleLimitReached = "Gefier Limit {soc}% erreecht."
 waitForVehicle = "Prett. Waart op Gefier ..."
 
 [notifications]

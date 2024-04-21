@@ -1,0 +1,26 @@
+template: solax
+products:
+  - brand: Solax
+    description:
+      generic: X3-EVC
+  - brand: Tigo
+    description:
+      generic: GO EV Charger
+  - brand: Qcells
+    description:
+      generic: Q.HOME EDRIVE A
+capabilities: ["mA", "1p3p"]
+requirements:
+  evcc: ["sponsorship"]
+  description:
+    de: Die Wallbox muss sich im Modus "Schnell" befinden und vom Wechselrichtersystem entkoppelt sein.
+    en: The charger must be in “Fast” mode and decoupled from the inverter system.
+params:
+  - name: modbus
+    choice: ["rs485"]
+    baudrate: 9600
+    comset: 8N1
+    id: 70
+render: |
+  type: solax
+  {{- include "modbus" . }}

@@ -102,26 +102,48 @@ render: |
       switch:
       - case: 1 # normal
         set:
-          source: const
-          value: 1 # Normal operation mode
+          source: sequence
           set:
-            source: modbus
-            {{- include "modbus" . | indent 10 }}
-            register:
-              address: 47511 # EMSPowerMode
-              type: writesingle
-              encoding: uint16
-      - case: 2 # hold
+          - source: const
+            value: 1 # Normal operation mode
+            set: 
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 47511 # EMSPowerMode
+                type: writesingle
+                encoding: uint16
+          - source: const
+            value: 0 # Maximum allowed power from Grid in W. 
+            set: 
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 47512 # EMSPowerSet [0-10000]
+                type: writemultiple
+                encoding: uint16
+      - case: 2 # discharge hold
         set:
-          source: const
-          value: 8 # Battery standby
-          set: 
-            source: modbus
-            {{- include "modbus" . | indent 10 }}
-            register:
-              address: 47511 # EMSPowerMode
-              type: writesingle
-              encoding: uint16
+          source: sequence
+          set:
+          - source: const
+            value: 8 # EMSPowerMode 8 disables discharge. Charging possible. Charge from PV+AC according to the EMSPowerSet below
+            set: 
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 47511 # EMSPowerMode
+                type: writesingle
+                encoding: uint16
+          - source: const
+            value: 0 # Maximum allowed power from Grid in W. If >0 battery will be charged also from Grid in Standby mode.
+            set: 
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 47512 # EMSPowerSet [0-10000]
+                type: writemultiple
+                encoding: uint16
       - case: 3 # charge
         set:
           source: sequence

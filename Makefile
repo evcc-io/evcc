@@ -15,6 +15,7 @@ BUILD_ARGS := -trimpath -ldflags='$(LD_FLAGS)'
 
 # docker
 DOCKER_IMAGE := evcc/evcc
+DOCKER_TAG := testing
 PLATFORM := linux/amd64,linux/arm64,linux/arm/v6
 
 # gokrazy image
@@ -83,19 +84,15 @@ release::
 
 docker::
 	@echo Version: $(VERSION) $(SHA) $(BUILD_DATE)
-	docker buildx build --platform $(PLATFORM) --tag $(DOCKER_IMAGE):testing .
-
-publish-testing::
-	@echo Version: $(VERSION) $(SHA) $(BUILD_DATE)
-	docker buildx build --platform $(PLATFORM) --tag $(DOCKER_IMAGE):testing --push .
+	docker buildx build --platform $(PLATFORM) --tag $(DOCKER_IMAGE):$(DOCKER_TAG) --build-arg TESLA_CLIENT_ID=$(TESLA_CLIENT_ID) --push .
 
 publish-nightly::
 	@echo Version: $(VERSION) $(SHA) $(BUILD_DATE)
-	docker buildx build --platform $(PLATFORM) --tag $(DOCKER_IMAGE):nightly --push .
+	docker buildx build --platform $(PLATFORM) --tag $(DOCKER_IMAGE):nightly --build-arg TESLA_CLIENT_ID=$(TESLA_CLIENT_ID) --push .
 
 publish-release::
 	@echo Version: $(VERSION) $(SHA) $(BUILD_DATE)
-	docker buildx build --build-arg RELEASE=1 --platform $(PLATFORM) --tag $(DOCKER_IMAGE):latest --tag $(DOCKER_IMAGE):$(VERSION) --push .
+	docker buildx build --platform $(PLATFORM) --tag $(DOCKER_IMAGE):latest --tag $(DOCKER_IMAGE):$(VERSION) --build-arg TESLA_CLIENT_ID=$(TESLA_CLIENT_ID) --build-arg RELEASE=1 --push .
 
 apt-nightly::
 	$(foreach file, $(wildcard $(PACKAGES)/*.deb), \

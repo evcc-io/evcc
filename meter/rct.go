@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/cenkalti/backoff/v4"
@@ -74,8 +75,13 @@ func NewRCTFromConfig(other map[string]interface{}) (api.Meter, error) {
 	return NewRCT(cc.Uri, cc.Usage, cc.Cache, cc.capacity.Decorator())
 }
 
+var rctMu sync.Mutex
+
 // NewRCT creates an RCT meter
 func NewRCT(uri, usage string, cache time.Duration, capacity func() float64) (api.Meter, error) {
+	rctMu.Lock()
+	defer rctMu.Unlock()
+
 	conn, err := rct.NewConnection(uri, cache)
 	if err != nil {
 		return nil, err
@@ -110,8 +116,7 @@ func NewRCT(uri, usage string, cache time.Duration, capacity func() float64) (ap
 func (m *RCT) CurrentPower() (float64, error) {
 	switch m.usage {
 	case "grid":
-		res, err := m.queryFloat(rct.TotalGridPowerW)
-		return res, err
+		return m.queryFloat(rct.TotalGridPowerW)
 
 	case "pv":
 		a, err := m.queryFloat(rct.SolarGenAPowerW)
@@ -126,8 +131,7 @@ func (m *RCT) CurrentPower() (float64, error) {
 		return a + b + c, err
 
 	case "battery":
-		res, err := m.queryFloat(rct.BatteryPowerW)
-		return res, err
+		return m.queryFloat(rct.BatteryPowerW)
 
 	default:
 		return 0, fmt.Errorf("invalid usage: %s", m.usage)

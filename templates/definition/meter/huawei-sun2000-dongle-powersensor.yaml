@@ -235,7 +235,7 @@ render: |
               {{- include "modbus" . | indent 12 }}
               register:
                 address: 47087 # Charge from grid
-                type: writemultiple
-                encoding: uint32
+                type: writesingle
+                encoding: uint16
   capacity: {{ .capacity }} # kWh
   {{- end }}

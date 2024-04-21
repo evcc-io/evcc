@@ -14,6 +14,7 @@ import (
 
 	combinations "github.com/mxschmitt/golang-combinations"
 	"github.com/spf13/pflag"
+	"golang.org/x/tools/imports"
 )
 
 //go:embed decorate.tpl
@@ -177,8 +178,9 @@ func main() {
 		target = &gofile
 	}
 
+	var name string
 	if target != nil {
-		name := *target
+		name = *target
 		if !strings.HasSuffix(name, ".go") {
 			name += ".go"
 		}
@@ -196,6 +198,12 @@ func main() {
 	formatted, err := format.Source([]byte(generated))
 	if err != nil {
 		formatted = []byte(generated)
+	}
+
+	formatted, err = imports.Process(name, formatted, nil)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(3)
 	}
 
 	if _, err := out.Write(formatted); err != nil {

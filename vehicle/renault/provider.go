@@ -55,12 +55,15 @@ var _ api.Battery = (*Provider)(nil)
 // Soc implements the api.Vehicle interface
 func (v *Provider) Soc() (float64, error) {
 	res, err := v.batteryG()
-
-	if err == nil {
-		return float64(res.Data.Attributes.BatteryLevel), nil
+	if err != nil {
+		return 0, err
 	}
 
-	return 0, err
+	if res.Data.Attributes.BatteryLevel == nil {
+		return 0, api.ErrNotAvailable
+	}
+
+	return float64(*res.Data.Attributes.BatteryLevel), nil
 }
 
 var _ api.ChargeState = (*Provider)(nil)
@@ -171,16 +174,11 @@ func (v *Provider) Position() (float64, float64, error) {
 	return 0, 0, err
 }
 
-var _ api.VehicleChargeController = (*Provider)(nil)
+var _ api.ChargeController = (*Provider)(nil)
 
-// StartCharge implements the api.VehicleChargeController interface
-func (v *Provider) StartCharge() error {
-	_, err := v.action(kamereon.ActionStart)
-	return err
-}
-
-// StopCharge implements the api.VehicleChargeController interface
-func (v *Provider) StopCharge() error {
-	_, err := v.action(kamereon.ActionStop)
+// ChargeEnable implements the api.ChargeController interface
+func (v *Provider) ChargeEnable(enable bool) error {
+	action := map[bool]string{true: kamereon.ActionStart, false: kamereon.ActionStop}
+	_, err := v.action(action[enable])
 	return err
 }

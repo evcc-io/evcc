@@ -12,7 +12,7 @@ export default {
 	mixins: [formatter],
 	props: {
 		vehicleSoc: Number,
-		vehicleTargetSoc: Number,
+		vehicleLimitSoc: Number,
 		minSoc: Number,
 		enabled: Boolean,
 		connected: Boolean,
@@ -20,6 +20,7 @@ export default {
 		heating: Boolean,
 		effectivePlanTime: String,
 		planProjectedStart: String,
+		chargingPlanDisabled: Boolean,
 		planActive: Boolean,
 		phaseAction: String,
 		phaseRemainingInterpolated: Number,
@@ -67,7 +68,11 @@ export default {
 			}
 
 			// plan
-			if (this.effectivePlanTime && !this.targetChargeDisabled) {
+			if (
+				!this.chargingPlanDisabled &&
+				this.effectivePlanTime &&
+				!this.targetChargeDisabled
+			) {
 				if (this.planActive && this.charging) {
 					return t("targetChargeActive");
 				}
@@ -105,8 +110,8 @@ export default {
 			}
 
 			if (this.enabled && !this.charging) {
-				if (this.vehicleTargetSoc > 0 && this.vehicleSoc >= this.vehicleTargetSoc - 1) {
-					return t("vehicleTargetReached", { soc: this.vehicleTargetSoc });
+				if (this.vehicleLimitSoc > 0 && this.vehicleSoc >= this.vehicleLimitSoc - 1) {
+					return t("vehicleLimitReached", { soc: this.vehicleLimitSoc });
 				}
 				return t("waitForVehicle");
 			}

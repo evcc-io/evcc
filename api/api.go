@@ -82,6 +82,10 @@ type PhaseSwitcher interface {
 	Phases1p3p(phases int) error
 }
 
+type PhaseGetter interface {
+	GetPhases() (int, error)
+}
+
 // Diagnosis is a helper interface that allows to dump diagnostic data to console
 type Diagnosis interface {
 	Diagnose()
@@ -158,14 +162,12 @@ type CurrentLimiter interface {
 
 // SocLimiter returns the soc limit
 type SocLimiter interface {
-	// TODO rename LimitSoc
-	TargetSoc() (float64, error)
+	GetLimitSoc() (int64, error)
 }
 
-// VehicleChargeController allows to start/stop the charging session on the vehicle side
-type VehicleChargeController interface {
-	StartCharge() error
-	StopCharge() error
+// ChargeController allows to start/stop the charging session on the vehicle side
+type ChargeController interface {
+	ChargeEnable(bool) error
 }
 
 // Resurrector provides wakeup calls to the vehicle with an API call or a CP interrupt from the charger

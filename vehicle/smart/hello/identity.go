@@ -37,7 +37,7 @@ func NewIdentity(log *util.Logger, user, password string) (*Identity, error) {
 	return v, err
 }
 
-func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
+func (v *Identity) RefreshToken(_ *oauth2.Token) (*oauth2.Token, error) {
 	token, err := v.login()
 	if err != nil {
 		return nil, err
@@ -48,11 +48,9 @@ func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 		return nil, err
 	}
 
-	if err == nil {
-		v.userID = userID
-	}
+	v.userID = userID
 
-	return appToken, err
+	return appToken, nil
 }
 
 func (v *Identity) DeviceID() string {

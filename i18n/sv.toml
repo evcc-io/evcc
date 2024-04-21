@@ -16,7 +16,8 @@ legendTopSubline = "utan avbrott"
 modalTitle = "Batteri inställningar"
 
 [batterySettings.bufferStart]
-full = "när det är nästan fullt"
+above = "när den är över {soc}"
+full = "när det är {soc}"
 low = "när det är något fullt"
 medium = "när det är halvfullt"
 never = "bara med tillräckligt sol-överskott"
@@ -31,7 +32,7 @@ titleEdit = "Ändra batterimätare"
 capacity = "Kapacitet"
 chargeStatus = "Status"
 chargedEnergy = "Laddad"
-current = "Nuvarande"
+current = "Ström"
 enabled = "Aktiverad"
 energy = "Energi"
 odometer = "Mätarställning"
@@ -46,6 +47,10 @@ socLimit = "SoC gräns"
 [config.form]
 example = "Exempel"
 optional = "valfri"
+
+[config.general]
+cancel = "Avbryt"
+save = "Spara"
 
 [config.grid]
 titleAdd = "Lägg till elnätsmätare"
@@ -76,6 +81,11 @@ titleEdit = "Ändra solcellsmätare"
 [config.site]
 cancel = "Avbryt"
 save = "Spara"
+
+[config.title]
+description = "Visas på huvudskärm och tabbar."
+label = "Titel"
+title = "Ändra titel"
 
 [config.validation]
 failed = "misslyckades"
@@ -174,6 +184,8 @@ blog = "Blogg"
 docs = "Dokumentation"
 github = "GitHub"
 login = "Fordons inloggningar"
+logout = "Logga ut"
+nativeSettings = "Byt server"
 needHelp = "Behöver du hjälp?"
 sessions = "Laddningar"
 settings = "Inställningar"
@@ -196,6 +208,14 @@ description = "Normalt behövs inte en omstart. Rapportera ett fel om du behöve
 disclaimer = "Notera: evcc kommer stängas av och be operativsystemet starta om tjänsten."
 modalTitle = "Är du säker på att du vill starta om?"
 
+[loginModal]
+cancel = "Avbryt"
+error = "Inloggning misslyckades:"
+invalid = "Ogiltigt lösenord."
+login = "Logga in"
+password = "Lösenord"
+title = "Autentisering"
+
 [main]
 vehicles = "Parkering"
 
@@ -212,6 +232,7 @@ time = "Tid"
 title = "Plan"
 titleMinSoc = "Min. laddning"
 titleTargetCharge = "Avfärd"
+unsavedChanges = "Det finns ej sparade ändringar. Spara nu?"
 update = "Verkställ"
 
 [main.energyflow]
@@ -252,6 +273,8 @@ currents = "Laddström"
 default = "förvald"
 disclaimerHint = "Anmärkning:"
 onlyForSocBasedCharging = "Dessa inställningar är endast tillgängliga för fordon med känd laddnivå"
+smartCostCheap = "Billig laddning från nätet"
+smartCostClean = "Laddning med grön el"
 title = "Inställningar {0}"
 vehicle = "Fordon"
 
@@ -339,6 +362,7 @@ detectionActive = "Detekterar fordon..."
 fallbackName = "Fordon"
 moreActions = "Fler åtgärder"
 none = "Inget fordon"
+notReachable = "Fordonet kunde inte kontaktas. Prova att starta om evcc."
 targetSoc = "Gräns"
 temp = "Temp."
 tempLimit = "Temp-gräns"
@@ -350,7 +374,7 @@ charging = "laddar"
 connected = "ansluten"
 disconnected = "frånkopplad"
 ready = "redo"
-vehicleTarget = "Fordonsgräns: {soc}%"
+vehicleLimit = "Fordonsgräns: {soc}%"
 
 [main.vehicleStatus]
 charging = "Laddar..."
@@ -360,15 +384,15 @@ climating = "Förvärmning identifierad."
 connected = "Inkopplad."
 disconnected = "Frånkopplad."
 minCharge = "Minimiladdning till {soc}%."
-pvDisable = "Inte tillräckligt med överskott. Pausar i {remaining}..."
+pvDisable = "Inte tillräckligt med överskott. Pausar om {remaining}..."
 pvEnable = "Överskott tillgängligt. Börjar om {remaining}..."
 scale1p = "Minskar till 1-fas-laddning om {remaining}..."
 scale3p = "Ökar till 3-fas-laddning om {remaining}..."
-targetChargeActive = "Målladdning aktiv..."
-targetChargePlanned = "Målladdning startar {time}."
+targetChargeActive = "Laddplan aktiv..."
+targetChargePlanned = "Laddplan startar {time}."
 targetChargeWaitForVehicle = "Laddare beredd. Väntar på fordon..."
 unknown = ""
-vehicleTargetReached = "Fordonsgränsen {soc}% nådd."
+vehicleLimitReached = "Fordonsgränsen {soc}% nådd."
 waitForVehicle = "Redo. Väntar på fordon..."
 
 [notifications]
@@ -378,6 +402,19 @@ modalTitle = "Meddelanden"
 [offline]
 message = "Inte ansluten till en server."
 reload = "Ladda igen?"
+
+[passwordModal]
+description = "Använd lösenord för att skydda inställningarna. Huvudskärmen kan användas utan att logga in."
+empty = "Lösenordet får inte vara tomt"
+error = "Fel:"
+labelCurrent = "Nuvarande lösenord"
+labelNew = "Nytt lösenord"
+labelRepeat = "Upprepa lösenord"
+newPassword = "Skapa lösenord"
+noMatch = "Lösenorden är olika"
+titleNew = "Ange administratörslösenord"
+titleUpdate = "Ändra administratörslösenord"
+updatePassword = "Ändra lösenord"
 
 [session]
 cancel = "Avbryt"
@@ -467,6 +504,10 @@ mi = "miles"
 [smartCost]
 activeHours = "{charging} av {total}"
 activeHoursLabel = "Aktiva timmar"
+applyToAll = "Tillämpa överallt?"
+batteryDescription = "Laddar batteriet med el från nätet."
+cheapTitle = "Billig laddning från nätet"
+cleanTitle = "Laddar grön el från nätet"
 co2Label = "CO₂ utsläpp"
 co2Limit = "CO₂ gräns"
 loadpointDescription = "Ladda när priset är lågt (sol-läge)"
@@ -474,6 +515,7 @@ modalTitle = "Smartladdning elnät"
 none = "ingen"
 priceLabel = "Energipris"
 priceLimit = "Prisgräns"
+saved = "Sparad."
 
 [startupError]
 configFile = "Konfigurationsfil som används:"

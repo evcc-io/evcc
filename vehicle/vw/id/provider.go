@@ -146,31 +146,27 @@ func (v *Provider) Climater() (bool, error) {
 
 var _ api.SocLimiter = (*Provider)(nil)
 
-// TargetSoc implements the api.SocLimiter interface
-func (v *Provider) TargetSoc() (float64, error) {
+// GetLimitSoc implements the api.SocLimiter interface
+func (v *Provider) GetLimitSoc() (int64, error) {
 	res, err := v.statusG()
 	if err != nil || res.Charging == nil || res.Charging.ChargingSettings.Value.TargetSOCPct == nil {
 		return 0, api.ErrNotAvailable
 	}
 
-	return float64(*res.Charging.ChargingSettings.Value.TargetSOCPct), nil
+	return int64(*res.Charging.ChargingSettings.Value.TargetSOCPct), nil
 }
 
-var _ api.VehicleChargeController = (*Provider)(nil)
+var _ api.ChargeController = (*Provider)(nil)
 
-// StartCharge implements the api.VehicleChargeController interface
-func (v *Provider) StartCharge() error {
-	return v.action(ActionCharge, ActionChargeStart)
-}
-
-// StopCharge implements the api.VehicleChargeController interface
-func (v *Provider) StopCharge() error {
-	return v.action(ActionCharge, ActionChargeStop)
+// ChargeEnable implements the api.ChargeController interface
+func (v *Provider) ChargeEnable(enable bool) error {
+	action := map[bool]string{true: ActionChargeStart, false: ActionChargeStop}
+	return v.action(ActionCharge, action[enable])
 }
 
 var _ api.Resurrector = (*Provider)(nil)
 
 // WakeUp implements the api.Resurrector interface
 func (v *Provider) WakeUp() error {
-	return v.StartCharge()
+	return v.ChargeEnable(true)
 }

@@ -9,6 +9,7 @@ import (
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/server/assets"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/auth"
 	"github.com/evcc-io/evcc/util/telemetry"
 	"github.com/go-http-utils/etag"
 	"github.com/gorilla/handlers"
@@ -83,7 +84,7 @@ func (s *HTTPd) Router() *mux.Router {
 }
 
 // RegisterSiteHandlers connects the http handlers to the site
-func (s *HTTPd) RegisterSiteHandlers(site site.API, cache *util.Cache) {
+func (s *HTTPd) RegisterSiteHandlers(site site.API, auth auth.Auth, cache *util.Cache) {
 	router := s.Server.Handler.(*mux.Router)
 
 	// api
@@ -98,25 +99,12 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, cache *util.Cache) {
 	routes := map[string]route{
 		"health":                  {"GET", "/health", healthHandler(site)},
 		"state":                   {"GET", "/state", stateHandler(cache)},
-		"config":                  {"GET", "/config/templates/{class:[a-z]+}", templatesHandler},
-		"products":                {"GET", "/config/products/{class:[a-z]+}", productsHandler},
-		"devices":                 {"GET", "/config/devices/{class:[a-z]+}", devicesHandler},
-		"device":                  {"GET", "/config/devices/{class:[a-z]+}/{id:[0-9.]+}", deviceConfigHandler},
-		"devicestatus":            {"GET", "/config/devices/{class:[a-z]+}/{name:[a-zA-Z0-9_.:-]+}/status", deviceStatusHandler},
-		"site":                    {"GET", "/config/site", siteHandler(site)},
-		"dirty":                   {"GET", "/config/dirty", boolGetHandler(ConfigDirty)},
-		"updatesite":              {"PUT", "/config/site", updateSiteHandler(site)},
-		"newdevice":               {"POST", "/config/devices/{class:[a-z]+}", newDeviceHandler},
-		"updatedevice":            {"PUT", "/config/devices/{class:[a-z]+}/{id:[0-9.]+}", updateDeviceHandler},
-		"deletedevice":            {"DELETE", "/config/devices/{class:[a-z]+}/{id:[0-9.]+}", deleteDeviceHandler},
-		"testconfig":              {"POST", "/config/test/{class:[a-z]+}", testConfigHandler},
-		"testmerged":              {"POST", "/config/test/{class:[a-z]+}/merge/{id:[0-9.]+}", testConfigHandler},
 		"buffersoc":               {"POST", "/buffersoc/{value:[0-9.]+}", floatHandler(site.SetBufferSoc, site.GetBufferSoc)},
 		"bufferstartsoc":          {"POST", "/bufferstartsoc/{value:[0-9.]+}", floatHandler(site.SetBufferStartSoc, site.GetBufferStartSoc)},
 		"batterydischargecontrol": {"POST", "/batterydischargecontrol/{value:[a-z]+}", boolHandler(site.SetBatteryDischargeControl, site.GetBatteryDischargeControl)},
 		"prioritysoc":             {"POST", "/prioritysoc/{value:[0-9.]+}", floatHandler(site.SetPrioritySoc, site.GetPrioritySoc)},
-		"residualpower":           {"POST", "/residualpower/{value:[-0-9.]+}", floatHandler(site.SetResidualPower, site.GetResidualPower)},
-		"smartcost":               {"POST", "/smartcostlimit/{value:[-0-9.]+}", updateSmartCostLimit(site)},
+		"residualpower":           {"POST", "/residualpower/{value:-?[0-9.]+}", floatHandler(site.SetResidualPower, site.GetResidualPower)},
+		"smartcost":               {"POST", "/smartcostlimit/{value:-?[0-9.]+}", updateSmartCostLimit(site)},
 		"tariff":                  {"GET", "/tariff/{tariff:[a-z]+}", tariffHandler(site)},
 		"sessions":                {"GET", "/sessions", sessionHandler},
 		"updatesession":           {"PUT", "/session/{id:[0-9]+}", updateSessionHandler},
@@ -127,6 +115,30 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, cache *util.Cache) {
 
 	for _, r := range routes {
 		api.Methods(r.Methods()...).Path(r.Pattern).Handler(r.HandlerFunc)
+	}
+
+	// config ui (secured)
+	configApi := api.PathPrefix("/config").Subrouter()
+	configApi.Use(ensureAuthHandler(auth))
+
+	configRoutes := map[string]route{
+		"templates":    {"GET", "/templates/{class:[a-z]+}", templatesHandler},
+		"products":     {"GET", "/products/{class:[a-z]+}", productsHandler},
+		"devices":      {"GET", "/devices/{class:[a-z]+}", devicesHandler},
+		"device":       {"GET", "/devices/{class:[a-z]+}/{id:[0-9.]+}", deviceConfigHandler},
+		"devicestatus": {"GET", "/devices/{class:[a-z]+}/{name:[a-zA-Z0-9_.:-]+}/status", deviceStatusHandler},
+		"site":         {"GET", "/site", siteHandler(site)},
+		"dirty":        {"GET", "/dirty", boolGetHandler(ConfigDirty)},
+		"updatesite":   {"PUT", "/site", updateSiteHandler(site)},
+		"newdevice":    {"POST", "/devices/{class:[a-z]+}", newDeviceHandler},
+		"updatedevice": {"PUT", "/devices/{class:[a-z]+}/{id:[0-9.]+}", updateDeviceHandler},
+		"deletedevice": {"DELETE", "/devices/{class:[a-z]+}/{id:[0-9.]+}", deleteDeviceHandler},
+		"testconfig":   {"POST", "/test/{class:[a-z]+}", testConfigHandler},
+		"testmerged":   {"POST", "/test/{class:[a-z]+}/merge/{id:[0-9.]+}", testConfigHandler},
+	}
+
+	for _, r := range configRoutes {
+		configApi.Methods(r.Methods()...).Path(r.Pattern).Handler(r.HandlerFunc)
 	}
 
 	// vehicle api
@@ -168,7 +180,7 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, cache *util.Cache) {
 			"remotedemand":     {"POST", "/remotedemand/{demand:[a-z]+}/{source:[0-9a-zA-Z_-]+}", remoteDemandHandler(lp)},
 			"enableThreshold":  {"POST", "/enable/threshold/{value:-?[0-9.]+}", floatHandler(pass(lp.SetEnableThreshold), lp.GetEnableThreshold)},
 			"disableThreshold": {"POST", "/disable/threshold/{value:-?[0-9.]+}", floatHandler(pass(lp.SetDisableThreshold), lp.GetDisableThreshold)},
-			"smartCostLimit":   {"POST", "/smartcostlimit/{value:[0-9.]+}", floatHandler(pass(lp.SetSmartCostLimit), lp.GetSmartCostLimit)},
+			"smartCostLimit":   {"POST", "/smartcostlimit/{value:-?[0-9.]+}", floatHandler(pass(lp.SetSmartCostLimit), lp.GetSmartCostLimit)},
 			// "priority":         {"POST", "/priority/{value:[0-9.]+}", floatHandler(pass(lp.SetPriority), lp.GetPriority)},
 		}
 
@@ -178,22 +190,50 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, cache *util.Cache) {
 	}
 }
 
-// RegisterShutdownHandler connects the http handlers to the site
-func (s *HTTPd) RegisterShutdownHandler(callback func()) {
+// RegisterAuthHandlers provides authentication handlers
+func (s *HTTPd) RegisterAuthHandlers(auth auth.Auth) {
 	router := s.Server.Handler.(*mux.Router)
 
 	// api
-	api := router.PathPrefix("/api").Subrouter()
+	api := router.PathPrefix("/api/auth").Subrouter()
 	api.Use(jsonHandler)
 	api.Use(handlers.CompressHandler)
 	api.Use(handlers.CORS(
 		handlers.AllowedHeaders([]string{"Content-Type"}),
 	))
 
-	// site api
+	// auth api
 	routes := map[string]route{
+		"password": {"PUT", "/password", updatePasswordHandler(auth)},
+		"auth":     {"GET", "/status", authStatusHandler(auth)},
+		"login":    {"POST", "/login", loginHandler(auth)},
+		"logout":   {"POST", "/logout", logoutHandler},
+	}
+
+	for _, r := range routes {
+		api.Methods(r.Methods()...).Path(r.Pattern).Handler(r.HandlerFunc)
+	}
+}
+
+// RegisterSystemHandler provides system level handlers
+func (s *HTTPd) RegisterSystemHandler(auth auth.Auth, shutdown func()) {
+	router := s.Server.Handler.(*mux.Router)
+
+	// api
+	api := router.PathPrefix("/api/system").Subrouter()
+	api.Use(jsonHandler)
+	api.Use(ensureAuthHandler(auth))
+	api.Use(handlers.CompressHandler)
+	api.Use(handlers.CORS(
+		handlers.AllowedHeaders([]string{"Content-Type"}),
+	))
+
+	// system api
+	routes := map[string]route{
+		"log":      {"GET", "/log", logHandler},
+		"logareas": {"GET", "/log/areas", logAreasHandler},
 		"shutdown": {"POST", "/shutdown", func(w http.ResponseWriter, r *http.Request) {
-			callback()
+			shutdown()
 			w.WriteHeader(http.StatusNoContent)
 		}},
 	}
