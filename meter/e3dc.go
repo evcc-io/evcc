@@ -24,7 +24,7 @@ func init() {
 	registry.Add("e3dc-2", NewE3dcFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateE3dc -b *E3dc -r api.Meter -t "api.Battery,Soc,func() (float64, error)" -t "api.BatteryCapacity,Capacity,func() float64"
+//go:generate go run ../cmd/tools/decorate.go -f decorateE3dc -b *E3dc -r api.Meter -t "api.BatteryCapacity,Capacity,func() float64" -t "api.Battery,Soc,func() (float64, error)" -t "api.BatteryController,SetBatteryMode,func(api.BatteryMode) error"
 
 func NewE3dcFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
@@ -74,11 +74,13 @@ func NewE3dc(cfg rscp.ClientConfig, usage templates.Usage, batteryId uint16) (ap
 	var (
 		batterySoc      func() (float64, error)
 		batteryCapacity func() float64
+		batteryMode     func(api.BatteryMode) error
 	)
 
 	if usage == templates.UsageBattery {
 		batterySoc = res.batterySoc
 		batteryCapacity = res.batteryCapacity
+		batteryMode = res.setBatteryMode
 
 		resp, err := res.conn.Send(rscp.Message{
 			Tag:      rscp.BAT_REQ_DATA,
@@ -87,7 +89,7 @@ func NewE3dc(cfg rscp.ClientConfig, usage templates.Usage, batteryId uint16) (ap
 				{
 					Tag:      rscp.BAT_INDEX,
 					DataType: rscp.UInt16,
-					Value:    uint16(batteryId),
+					Value:    batteryId,
 				},
 				{
 					Tag:      rscp.BAT_REQ_SPECIFICATION,
@@ -117,7 +119,7 @@ func NewE3dc(cfg rscp.ClientConfig, usage templates.Usage, batteryId uint16) (ap
 		res.capacity = cap / 1e3
 	}
 
-	return decorateE3dc(res, batterySoc, batteryCapacity), nil
+	return decorateE3dc(res, batteryCapacity, batterySoc, batteryMode), nil
 }
 
 func rscpContains(msg *rscp.Message, tag rscp.Tag) (rscp.Message, error) {
@@ -199,4 +201,43 @@ func (m *E3dc) batterySoc() (float64, error) {
 		return 0, err
 	}
 	return cast.ToFloat64E(res.Value)
+}
+
+func (m *E3dc) setBatteryMode(mode api.BatteryMode) error {
+	switch mode {
+	case api.BatteryNormal:
+		_, err := m.conn.Send(rscp.Message{
+			Tag:      rscp.BAT_REQ_DATA,
+			DataType: rscp.Container,
+			Value: []rscp.Message{
+				{
+					Tag:      rscp.EMS_POWER_LIMITS_USED,
+					DataType: rscp.Bool,
+					Value:    0,
+				},
+			},
+		})
+		return err
+
+	case api.BatteryHold:
+		_, err := m.conn.Send(rscp.Message{
+			Tag:      rscp.BAT_REQ_DATA,
+			DataType: rscp.Container,
+			Value: []rscp.Message{
+				{
+					Tag:      rscp.EMS_POWER_LIMITS_USED,
+					DataType: rscp.Bool,
+					Value:    1,
+				}, {
+					Tag:      rscp.EMS_MAX_DISCHARGE_POWER,
+					DataType: rscp.Int16,
+					Value:    0,
+				},
+			},
+		})
+		return err
+
+	default:
+		return api.ErrNotAvailable
+	}
 }

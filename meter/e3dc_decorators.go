@@ -6,23 +6,12 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateE3dc(base *E3dc, battery func() (float64, error), batteryCapacity func() float64) api.Meter {
+func decorateE3dc(base *E3dc, batteryCapacity func() float64, battery func() (float64, error), batteryController func(api.BatteryMode) error) api.Meter {
 	switch {
-	case battery == nil && batteryCapacity == nil:
+	case battery == nil && batteryCapacity == nil && batteryController == nil:
 		return base
 
-	case battery != nil && batteryCapacity == nil:
-		return &struct {
-			*E3dc
-			api.Battery
-		}{
-			E3dc: base,
-			Battery: &decorateE3dcBatteryImpl{
-				battery: battery,
-			},
-		}
-
-	case battery == nil && batteryCapacity != nil:
+	case battery == nil && batteryCapacity != nil && batteryController == nil:
 		return &struct {
 			*E3dc
 			api.BatteryCapacity
@@ -33,7 +22,18 @@ func decorateE3dc(base *E3dc, battery func() (float64, error), batteryCapacity f
 			},
 		}
 
-	case battery != nil && batteryCapacity != nil:
+	case battery != nil && batteryCapacity == nil && batteryController == nil:
+		return &struct {
+			*E3dc
+			api.Battery
+		}{
+			E3dc: base,
+			Battery: &decorateE3dcBatteryImpl{
+				battery: battery,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController == nil:
 		return &struct {
 			*E3dc
 			api.Battery
@@ -45,6 +45,66 @@ func decorateE3dc(base *E3dc, battery func() (float64, error), batteryCapacity f
 			},
 			BatteryCapacity: &decorateE3dcBatteryCapacityImpl{
 				batteryCapacity: batteryCapacity,
+			},
+		}
+
+	case battery == nil && batteryCapacity == nil && batteryController != nil:
+		return &struct {
+			*E3dc
+			api.BatteryController
+		}{
+			E3dc: base,
+			BatteryController: &decorateE3dcBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+		}
+
+	case battery == nil && batteryCapacity != nil && batteryController != nil:
+		return &struct {
+			*E3dc
+			api.BatteryCapacity
+			api.BatteryController
+		}{
+			E3dc: base,
+			BatteryCapacity: &decorateE3dcBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryController: &decorateE3dcBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController != nil:
+		return &struct {
+			*E3dc
+			api.Battery
+			api.BatteryController
+		}{
+			E3dc: base,
+			Battery: &decorateE3dcBatteryImpl{
+				battery: battery,
+			},
+			BatteryController: &decorateE3dcBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController != nil:
+		return &struct {
+			*E3dc
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryController
+		}{
+			E3dc: base,
+			Battery: &decorateE3dcBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateE3dcBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryController: &decorateE3dcBatteryControllerImpl{
+				batteryController: batteryController,
 			},
 		}
 	}
@@ -66,4 +126,12 @@ type decorateE3dcBatteryCapacityImpl struct {
 
 func (impl *decorateE3dcBatteryCapacityImpl) Capacity() float64 {
 	return impl.batteryCapacity()
+}
+
+type decorateE3dcBatteryControllerImpl struct {
+	batteryController func(api.BatteryMode) error
+}
+
+func (impl *decorateE3dcBatteryControllerImpl) SetBatteryMode(p0 api.BatteryMode) error {
+	return impl.batteryController(p0)
 }
