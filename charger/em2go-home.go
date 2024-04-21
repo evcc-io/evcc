@@ -62,7 +62,7 @@ func init() {
 	registry.Add("em2go-home", NewEm2GoHomeFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateEm2GoHome -b *Em2GoHome -r api.Charger -t "api.PhaseController,Phases1p3p,func(int) error"
+//go:generate go run ../cmd/tools/decorate.go -f decorateEm2GoHome -b *Em2GoHome -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error"
 
 // NewEm2GoHomeFromConfig creates a Em2Go charger from generic config
 func NewEm2GoHomeFromConfig(other map[string]interface{}) (api.Charger, error) {
@@ -243,7 +243,7 @@ func (wb *Em2GoHome) ChargingTime() (time.Duration, error) {
 	return time.Duration(binary.BigEndian.Uint32(b)) * time.Second, nil
 }
 
-// phases1p3p implements the api.PhaseController interface
+// phases1p3p implements the api.PhaseSwitcher interface
 func (wb *Em2GoHome) phases1p3p(phases int) error {
 	b := make([]byte, 2)
 	binary.BigEndian.PutUint16(b, uint16(phases))

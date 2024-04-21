@@ -55,7 +55,7 @@ func init() {
 	registry.Add("alfen", NewAlfenFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateAlfen -b *Alfen -r api.Charger -t "api.PhaseController,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
+//go:generate go run ../cmd/tools/decorate.go -f decorateAlfen -b *Alfen -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
 
 // NewAlfenFromConfig creates a Alfen charger from generic config
 func NewAlfenFromConfig(other map[string]interface{}) (api.Charger, error) {
@@ -249,7 +249,7 @@ func (wb *Alfen) voltagesOrCurrents(reg uint16) (float64, float64, float64, erro
 	return res[0], res[1], res[2], nil
 }
 
-// phases1p3p implements the api.PhaseController interface
+// phases1p3p implements the api.PhaseSwitcher interface
 func (wb *Alfen) phases1p3p(phases int) error {
 	_, err := wb.conn.WriteSingleRegister(alfenRegPhases, uint16(phases))
 	return err

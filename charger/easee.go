@@ -739,9 +739,9 @@ func (c *Easee) TotalEnergy() (float64, error) {
 	return c.totalEnergy, nil
 }
 
-var _ api.PhaseController = (*Easee)(nil)
+var _ api.PhaseSwitcher = (*Easee)(nil)
 
-// Phases1p3p implements the api.PhaseController interface
+// Phases1p3p implements the api.PhaseSwitcher interface
 func (c *Easee) Phases1p3p(phases int) error {
 	var err error
 	if c.circuit != 0 {

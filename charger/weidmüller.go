@@ -220,9 +220,9 @@ func (wb *Weidmüller) Identify() (string, error) {
 	return bytesAsString(b), nil
 }
 
-var _ api.PhaseController = (*Weidmüller)(nil)
+var _ api.PhaseSwitcher = (*Weidmüller)(nil)
 
-// Phases1p3p implements the api.PhaseController interface
+// Phases1p3p implements the api.PhaseSwitcher interface
 func (wb *Weidmüller) Phases1p3p(phases int) error {
 	b := make([]byte, 2)
 

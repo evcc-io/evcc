@@ -50,7 +50,7 @@ func init() {
 	registry.Add("pulsares", NewPulsaresFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decoratePulsares -b *Pulsares -r api.Charger -t "api.PhaseController,Phases1p3p,func(int) error"
+//go:generate go run ../cmd/tools/decorate.go -f decoratePulsares -b *Pulsares -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error"
 
 // NewPulsaresFromConfig creates a Pulsares charger from generic config
 func NewPulsaresFromConfig(other map[string]interface{}) (api.Charger, error) {
@@ -231,7 +231,7 @@ func (wb *Pulsares) MaxCurrentMillis(current float64) error {
 	return err
 }
 
-// phases1p3p implements the api.PhaseController interface
+// phases1p3p implements the api.PhaseSwitcher interface
 func (wb *Pulsares) phases1p3p(phases int) error {
 	b := make([]byte, 2)
 	if phases == 3 {

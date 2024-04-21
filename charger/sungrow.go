@@ -228,9 +228,9 @@ func (wb *Sungrow) TotalEnergy() (float64, error) {
 	return rs485.RTUUint32ToFloat64Swapped(b) / 1e3, err
 }
 
-var _ api.PhaseController = (*Sungrow)(nil)
+var _ api.PhaseSwitcher = (*Sungrow)(nil)
 
-// Phases1p3p implements the api.PhaseController interface
+// Phases1p3p implements the api.PhaseSwitcher interface
 func (wb *Sungrow) Phases1p3p(phases int) error {
 	var u uint16
 

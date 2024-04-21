@@ -36,7 +36,7 @@ func init() {
 	registry.Add("warp-fw2", NewWarp2FromConfig) // deprecated
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateWarp2 -b *Warp2 -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.Identifier,Identify,func() (string, error)" -t "api.PhaseController,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
+//go:generate go run ../cmd/tools/decorate.go -f decorateWarp2 -b *Warp2 -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.Identifier,Identify,func() (string, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
 
 // NewWarpFromConfig creates a new configurable charger
 func NewWarp2FromConfig(other map[string]interface{}) (api.Charger, error) {
@@ -302,7 +302,7 @@ func (wb *Warp2) emLowLevelState() (warp.EmLowLevelState, error) {
 	return res, err
 }
 
-// phases1p3p implements the api.PhaseController interface
+// phases1p3p implements the api.PhaseSwitcher interface
 func (wb *Warp2) phases1p3p(phases int) error {
 	res, err := wb.emState()
 	if err != nil {

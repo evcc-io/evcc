@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-//go:generate mockgen -package api -destination mock.go github.com/evcc-io/evcc/api Charger,ChargeState,CurrentLimiter,PhaseController,Identifier,Meter,MeterEnergy,Vehicle,ChargeRater,Battery,Tariff,BatteryController
+//go:generate mockgen -package api -destination mock.go github.com/evcc-io/evcc/api Charger,ChargeState,CurrentLimiter,PhaseSwitcher,Identifier,Meter,MeterEnergy,Vehicle,ChargeRater,Battery,Tariff,BatteryController
 
 // Meter provides total active power in W
 type Meter interface {
@@ -77,8 +77,8 @@ type ChargerEx interface {
 	MaxCurrentMillis(current float64) error
 }
 
-// PhaseController provides 1p3p switching
-type PhaseController interface {
+// PhaseSwitcher provides 1p3p switching
+type PhaseSwitcher interface {
 	Phases1p3p(phases int) error
 }
 

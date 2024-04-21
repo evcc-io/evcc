@@ -64,7 +64,7 @@ func init() {
 	registry.Add("keba-modbus", NewKebaFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateKeba -b *Keba -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.Identifier,Identify,func() (string, error)" -t "api.PhaseController,Phases1p3p,func(int) error"
+//go:generate go run ../cmd/tools/decorate.go -f decorateKeba -b *Keba -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.Identifier,Identify,func() (string, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) error"
 
 // NewKebaFromConfig creates a new Keba ModbusTCP charger
 func NewKebaFromConfig(other map[string]interface{}) (api.Charger, error) {
@@ -273,7 +273,7 @@ func (wb *Keba) identify() (string, error) {
 	return id, nil
 }
 
-// phases1p3p implements the api.PhaseController interface
+// phases1p3p implements the api.PhaseSwitcher interface
 func (wb *Keba) phases1p3p(phases int) error {
 	var u uint16
 	if phases == 3 {

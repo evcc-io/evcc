@@ -259,9 +259,9 @@ func (wb *MennekesCompact) ChargingTime() (time.Duration, error) {
 }
 */
 
-var _ api.PhaseController = (*MennekesCompact)(nil)
+var _ api.PhaseSwitcher = (*MennekesCompact)(nil)
 
-// Phases1p3p implements the api.PhaseController interface
+// Phases1p3p implements the api.PhaseSwitcher interface
 func (wb *MennekesCompact) Phases1p3p(phases int) error {
 	var u uint16
 	if phases == 1 {
