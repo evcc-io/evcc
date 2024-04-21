@@ -198,19 +198,16 @@ var _ api.PhaseCurrents = (*Em2GoHome)(nil)
 // Currents implements the api.PhaseCurrents interface
 func (wb *Em2GoHome) Currents() (float64, float64, float64, error) {
 	b, err := wb.conn.ReadHoldingRegisters(em2GoHomeRegCurrent1, 1)
-
 	if err != nil {
 		return 0, 0, 0, err
 	}
 
 	c, err := wb.conn.ReadHoldingRegisters(em2GoHomeRegCurrent2, 1)
-
 	if err != nil {
 		return 0, 0, 0, err
 	}
 
 	d, err := wb.conn.ReadHoldingRegisters(em2GoHomeRegCurrent3, 1)
-
 	if err != nil {
 		return 0, 0, 0, err
 	}
@@ -225,19 +222,16 @@ var _ api.PhaseVoltages = (*Em2GoHome)(nil)
 // Currents implements the api.PhaseVoltages interface
 func (wb *Em2GoHome) Voltages() (float64, float64, float64, error) {
 	b, err := wb.conn.ReadHoldingRegisters(em2GoHomeRegVoltage1, 1)
-
 	if err != nil {
 		return 0, 0, 0, err
 	}
 
 	c, err := wb.conn.ReadHoldingRegisters(em2GoHomeRegVoltage2, 1)
-
 	if err != nil {
 		return 0, 0, 0, err
 	}
 
 	d, err := wb.conn.ReadHoldingRegisters(em2GoHomeRegVoltage3, 1)
-
 	if err != nil {
 		return 0, 0, 0, err
 	}
