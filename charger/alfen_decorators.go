@@ -6,23 +6,23 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateAlfen(base *Alfen, phaseController func(int) error, phaseGetter func() (int, error)) api.Charger {
+func decorateAlfen(base *Alfen, phaseSwitcher func(int) error, phaseGetter func() (int, error)) api.Charger {
 	switch {
-	case phaseController == nil && phaseGetter == nil:
+	case phaseGetter == nil && phaseSwitcher == nil:
 		return base
 
-	case phaseController != nil && phaseGetter == nil:
+	case phaseGetter == nil && phaseSwitcher != nil:
 		return &struct {
 			*Alfen
-			api.PhaseController
+			api.PhaseSwitcher
 		}{
 			Alfen: base,
-			PhaseController: &decorateAlfenPhaseControllerImpl{
-				phaseController: phaseController,
+			PhaseSwitcher: &decorateAlfenPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
 			},
 		}
 
-	case phaseController == nil && phaseGetter != nil:
+	case phaseGetter != nil && phaseSwitcher == nil:
 		return &struct {
 			*Alfen
 			api.PhaseGetter
@@ -33,31 +33,23 @@ func decorateAlfen(base *Alfen, phaseController func(int) error, phaseGetter fun
 			},
 		}
 
-	case phaseController != nil && phaseGetter != nil:
+	case phaseGetter != nil && phaseSwitcher != nil:
 		return &struct {
 			*Alfen
-			api.PhaseController
 			api.PhaseGetter
+			api.PhaseSwitcher
 		}{
 			Alfen: base,
-			PhaseController: &decorateAlfenPhaseControllerImpl{
-				phaseController: phaseController,
-			},
 			PhaseGetter: &decorateAlfenPhaseGetterImpl{
 				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateAlfenPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
 			},
 		}
 	}
 
 	return nil
-}
-
-type decorateAlfenPhaseControllerImpl struct {
-	phaseController func(int) error
-}
-
-func (impl *decorateAlfenPhaseControllerImpl) Phases1p3p(p0 int) error {
-	return impl.phaseController(p0)
 }
 
 type decorateAlfenPhaseGetterImpl struct {
@@ -66,4 +58,12 @@ type decorateAlfenPhaseGetterImpl struct {
 
 func (impl *decorateAlfenPhaseGetterImpl) GetPhases() (int, error) {
 	return impl.phaseGetter()
+}
+
+type decorateAlfenPhaseSwitcherImpl struct {
+	phaseSwitcher func(int) error
+}
+
+func (impl *decorateAlfenPhaseSwitcherImpl) Phases1p3p(p0 int) error {
+	return impl.phaseSwitcher(p0)
 }

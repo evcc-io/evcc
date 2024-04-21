@@ -6,12 +6,12 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateKeba(base *Keba, meter func() (float64, error), meterEnergy func() (float64, error), phaseCurrents func() (float64, float64, float64, error), identifier func() (string, error), phaseController func(int) error) api.Charger {
+func decorateKeba(base *Keba, meter func() (float64, error), meterEnergy func() (float64, error), phaseCurrents func() (float64, float64, float64, error), identifier func() (string, error), phaseSwitcher func(int) error) api.Charger {
 	switch {
-	case identifier == nil && meter == nil && meterEnergy == nil && phaseController == nil && phaseCurrents == nil:
+	case identifier == nil && meter == nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil:
 		return base
 
-	case identifier == nil && meter != nil && meterEnergy == nil && phaseController == nil && phaseCurrents == nil:
+	case identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil:
 		return &struct {
 			*Keba
 			api.Meter
@@ -22,7 +22,7 @@ func decorateKeba(base *Keba, meter func() (float64, error), meterEnergy func() 
 			},
 		}
 
-	case identifier == nil && meter == nil && meterEnergy != nil && phaseController == nil && phaseCurrents == nil:
+	case identifier == nil && meter == nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil:
 		return &struct {
 			*Keba
 			api.MeterEnergy
@@ -33,7 +33,7 @@ func decorateKeba(base *Keba, meter func() (float64, error), meterEnergy func() 
 			},
 		}
 
-	case identifier == nil && meter != nil && meterEnergy != nil && phaseController == nil && phaseCurrents == nil:
+	case identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil:
 		return &struct {
 			*Keba
 			api.Meter
@@ -48,7 +48,7 @@ func decorateKeba(base *Keba, meter func() (float64, error), meterEnergy func() 
 			},
 		}
 
-	case identifier == nil && meter == nil && meterEnergy == nil && phaseController == nil && phaseCurrents != nil:
+	case identifier == nil && meter == nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil:
 		return &struct {
 			*Keba
 			api.PhaseCurrents
@@ -59,7 +59,7 @@ func decorateKeba(base *Keba, meter func() (float64, error), meterEnergy func() 
 			},
 		}
 
-	case identifier == nil && meter != nil && meterEnergy == nil && phaseController == nil && phaseCurrents != nil:
+	case identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil:
 		return &struct {
 			*Keba
 			api.Meter
@@ -74,7 +74,7 @@ func decorateKeba(base *Keba, meter func() (float64, error), meterEnergy func() 
 			},
 		}
 
-	case identifier == nil && meter == nil && meterEnergy != nil && phaseController == nil && phaseCurrents != nil:
+	case identifier == nil && meter == nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil:
 		return &struct {
 			*Keba
 			api.MeterEnergy
@@ -89,7 +89,7 @@ func decorateKeba(base *Keba, meter func() (float64, error), meterEnergy func() 
 			},
 		}
 
-	case identifier == nil && meter != nil && meterEnergy != nil && phaseController == nil && phaseCurrents != nil:
+	case identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil:
 		return &struct {
 			*Keba
 			api.Meter
@@ -97,142 +97,6 @@ func decorateKeba(base *Keba, meter func() (float64, error), meterEnergy func() 
 			api.PhaseCurrents
 		}{
 			Keba: base,
-			Meter: &decorateKebaMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateKebaMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseCurrents: &decorateKebaPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-		}
-
-	case identifier != nil && meter == nil && meterEnergy == nil && phaseController == nil && phaseCurrents == nil:
-		return &struct {
-			*Keba
-			api.Identifier
-		}{
-			Keba: base,
-			Identifier: &decorateKebaIdentifierImpl{
-				identifier: identifier,
-			},
-		}
-
-	case identifier != nil && meter != nil && meterEnergy == nil && phaseController == nil && phaseCurrents == nil:
-		return &struct {
-			*Keba
-			api.Identifier
-			api.Meter
-		}{
-			Keba: base,
-			Identifier: &decorateKebaIdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decorateKebaMeterImpl{
-				meter: meter,
-			},
-		}
-
-	case identifier != nil && meter == nil && meterEnergy != nil && phaseController == nil && phaseCurrents == nil:
-		return &struct {
-			*Keba
-			api.Identifier
-			api.MeterEnergy
-		}{
-			Keba: base,
-			Identifier: &decorateKebaIdentifierImpl{
-				identifier: identifier,
-			},
-			MeterEnergy: &decorateKebaMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-		}
-
-	case identifier != nil && meter != nil && meterEnergy != nil && phaseController == nil && phaseCurrents == nil:
-		return &struct {
-			*Keba
-			api.Identifier
-			api.Meter
-			api.MeterEnergy
-		}{
-			Keba: base,
-			Identifier: &decorateKebaIdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decorateKebaMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateKebaMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-		}
-
-	case identifier != nil && meter == nil && meterEnergy == nil && phaseController == nil && phaseCurrents != nil:
-		return &struct {
-			*Keba
-			api.Identifier
-			api.PhaseCurrents
-		}{
-			Keba: base,
-			Identifier: &decorateKebaIdentifierImpl{
-				identifier: identifier,
-			},
-			PhaseCurrents: &decorateKebaPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-		}
-
-	case identifier != nil && meter != nil && meterEnergy == nil && phaseController == nil && phaseCurrents != nil:
-		return &struct {
-			*Keba
-			api.Identifier
-			api.Meter
-			api.PhaseCurrents
-		}{
-			Keba: base,
-			Identifier: &decorateKebaIdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decorateKebaMeterImpl{
-				meter: meter,
-			},
-			PhaseCurrents: &decorateKebaPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-		}
-
-	case identifier != nil && meter == nil && meterEnergy != nil && phaseController == nil && phaseCurrents != nil:
-		return &struct {
-			*Keba
-			api.Identifier
-			api.MeterEnergy
-			api.PhaseCurrents
-		}{
-			Keba: base,
-			Identifier: &decorateKebaIdentifierImpl{
-				identifier: identifier,
-			},
-			MeterEnergy: &decorateKebaMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseCurrents: &decorateKebaPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-		}
-
-	case identifier != nil && meter != nil && meterEnergy != nil && phaseController == nil && phaseCurrents != nil:
-		return &struct {
-			*Keba
-			api.Identifier
-			api.Meter
-			api.MeterEnergy
-			api.PhaseCurrents
-		}{
-			Keba: base,
-			Identifier: &decorateKebaIdentifierImpl{
-				identifier: identifier,
-			},
 			Meter: &decorateKebaMeterImpl{
 				meter: meter,
 			},
@@ -244,163 +108,22 @@ func decorateKeba(base *Keba, meter func() (float64, error), meterEnergy func() 
 			},
 		}
 
-	case identifier == nil && meter == nil && meterEnergy == nil && phaseController != nil && phaseCurrents == nil:
-		return &struct {
-			*Keba
-			api.PhaseController
-		}{
-			Keba: base,
-			PhaseController: &decorateKebaPhaseControllerImpl{
-				phaseController: phaseController,
-			},
-		}
-
-	case identifier == nil && meter != nil && meterEnergy == nil && phaseController != nil && phaseCurrents == nil:
-		return &struct {
-			*Keba
-			api.Meter
-			api.PhaseController
-		}{
-			Keba: base,
-			Meter: &decorateKebaMeterImpl{
-				meter: meter,
-			},
-			PhaseController: &decorateKebaPhaseControllerImpl{
-				phaseController: phaseController,
-			},
-		}
-
-	case identifier == nil && meter == nil && meterEnergy != nil && phaseController != nil && phaseCurrents == nil:
-		return &struct {
-			*Keba
-			api.MeterEnergy
-			api.PhaseController
-		}{
-			Keba: base,
-			MeterEnergy: &decorateKebaMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseController: &decorateKebaPhaseControllerImpl{
-				phaseController: phaseController,
-			},
-		}
-
-	case identifier == nil && meter != nil && meterEnergy != nil && phaseController != nil && phaseCurrents == nil:
-		return &struct {
-			*Keba
-			api.Meter
-			api.MeterEnergy
-			api.PhaseController
-		}{
-			Keba: base,
-			Meter: &decorateKebaMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateKebaMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseController: &decorateKebaPhaseControllerImpl{
-				phaseController: phaseController,
-			},
-		}
-
-	case identifier == nil && meter == nil && meterEnergy == nil && phaseController != nil && phaseCurrents != nil:
-		return &struct {
-			*Keba
-			api.PhaseController
-			api.PhaseCurrents
-		}{
-			Keba: base,
-			PhaseController: &decorateKebaPhaseControllerImpl{
-				phaseController: phaseController,
-			},
-			PhaseCurrents: &decorateKebaPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-		}
-
-	case identifier == nil && meter != nil && meterEnergy == nil && phaseController != nil && phaseCurrents != nil:
-		return &struct {
-			*Keba
-			api.Meter
-			api.PhaseController
-			api.PhaseCurrents
-		}{
-			Keba: base,
-			Meter: &decorateKebaMeterImpl{
-				meter: meter,
-			},
-			PhaseController: &decorateKebaPhaseControllerImpl{
-				phaseController: phaseController,
-			},
-			PhaseCurrents: &decorateKebaPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-		}
-
-	case identifier == nil && meter == nil && meterEnergy != nil && phaseController != nil && phaseCurrents != nil:
-		return &struct {
-			*Keba
-			api.MeterEnergy
-			api.PhaseController
-			api.PhaseCurrents
-		}{
-			Keba: base,
-			MeterEnergy: &decorateKebaMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseController: &decorateKebaPhaseControllerImpl{
-				phaseController: phaseController,
-			},
-			PhaseCurrents: &decorateKebaPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-		}
-
-	case identifier == nil && meter != nil && meterEnergy != nil && phaseController != nil && phaseCurrents != nil:
-		return &struct {
-			*Keba
-			api.Meter
-			api.MeterEnergy
-			api.PhaseController
-			api.PhaseCurrents
-		}{
-			Keba: base,
-			Meter: &decorateKebaMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateKebaMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseController: &decorateKebaPhaseControllerImpl{
-				phaseController: phaseController,
-			},
-			PhaseCurrents: &decorateKebaPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-		}
-
-	case identifier != nil && meter == nil && meterEnergy == nil && phaseController != nil && phaseCurrents == nil:
+	case identifier != nil && meter == nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil:
 		return &struct {
 			*Keba
 			api.Identifier
-			api.PhaseController
 		}{
 			Keba: base,
 			Identifier: &decorateKebaIdentifierImpl{
 				identifier: identifier,
 			},
-			PhaseController: &decorateKebaPhaseControllerImpl{
-				phaseController: phaseController,
-			},
 		}
 
-	case identifier != nil && meter != nil && meterEnergy == nil && phaseController != nil && phaseCurrents == nil:
+	case identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil:
 		return &struct {
 			*Keba
 			api.Identifier
 			api.Meter
-			api.PhaseController
 		}{
 			Keba: base,
 			Identifier: &decorateKebaIdentifierImpl{
@@ -409,17 +132,13 @@ func decorateKeba(base *Keba, meter func() (float64, error), meterEnergy func() 
 			Meter: &decorateKebaMeterImpl{
 				meter: meter,
 			},
-			PhaseController: &decorateKebaPhaseControllerImpl{
-				phaseController: phaseController,
-			},
 		}
 
-	case identifier != nil && meter == nil && meterEnergy != nil && phaseController != nil && phaseCurrents == nil:
+	case identifier != nil && meter == nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil:
 		return &struct {
 			*Keba
 			api.Identifier
 			api.MeterEnergy
-			api.PhaseController
 		}{
 			Keba: base,
 			Identifier: &decorateKebaIdentifierImpl{
@@ -428,18 +147,14 @@ func decorateKeba(base *Keba, meter func() (float64, error), meterEnergy func() 
 			MeterEnergy: &decorateKebaMeterEnergyImpl{
 				meterEnergy: meterEnergy,
 			},
-			PhaseController: &decorateKebaPhaseControllerImpl{
-				phaseController: phaseController,
-			},
 		}
 
-	case identifier != nil && meter != nil && meterEnergy != nil && phaseController != nil && phaseCurrents == nil:
+	case identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher == nil:
 		return &struct {
 			*Keba
 			api.Identifier
 			api.Meter
 			api.MeterEnergy
-			api.PhaseController
 		}{
 			Keba: base,
 			Identifier: &decorateKebaIdentifierImpl{
@@ -451,36 +166,28 @@ func decorateKeba(base *Keba, meter func() (float64, error), meterEnergy func() 
 			MeterEnergy: &decorateKebaMeterEnergyImpl{
 				meterEnergy: meterEnergy,
 			},
-			PhaseController: &decorateKebaPhaseControllerImpl{
-				phaseController: phaseController,
-			},
 		}
 
-	case identifier != nil && meter == nil && meterEnergy == nil && phaseController != nil && phaseCurrents != nil:
+	case identifier != nil && meter == nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil:
 		return &struct {
 			*Keba
 			api.Identifier
-			api.PhaseController
 			api.PhaseCurrents
 		}{
 			Keba: base,
 			Identifier: &decorateKebaIdentifierImpl{
 				identifier: identifier,
 			},
-			PhaseController: &decorateKebaPhaseControllerImpl{
-				phaseController: phaseController,
-			},
 			PhaseCurrents: &decorateKebaPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
 		}
 
-	case identifier != nil && meter != nil && meterEnergy == nil && phaseController != nil && phaseCurrents != nil:
+	case identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher == nil:
 		return &struct {
 			*Keba
 			api.Identifier
 			api.Meter
-			api.PhaseController
 			api.PhaseCurrents
 		}{
 			Keba: base,
@@ -490,20 +197,16 @@ func decorateKeba(base *Keba, meter func() (float64, error), meterEnergy func() 
 			Meter: &decorateKebaMeterImpl{
 				meter: meter,
 			},
-			PhaseController: &decorateKebaPhaseControllerImpl{
-				phaseController: phaseController,
-			},
 			PhaseCurrents: &decorateKebaPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
 		}
 
-	case identifier != nil && meter == nil && meterEnergy != nil && phaseController != nil && phaseCurrents != nil:
+	case identifier != nil && meter == nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil:
 		return &struct {
 			*Keba
 			api.Identifier
 			api.MeterEnergy
-			api.PhaseController
 			api.PhaseCurrents
 		}{
 			Keba: base,
@@ -513,21 +216,17 @@ func decorateKeba(base *Keba, meter func() (float64, error), meterEnergy func() 
 			MeterEnergy: &decorateKebaMeterEnergyImpl{
 				meterEnergy: meterEnergy,
 			},
-			PhaseController: &decorateKebaPhaseControllerImpl{
-				phaseController: phaseController,
-			},
 			PhaseCurrents: &decorateKebaPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
 		}
 
-	case identifier != nil && meter != nil && meterEnergy != nil && phaseController != nil && phaseCurrents != nil:
+	case identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher == nil:
 		return &struct {
 			*Keba
 			api.Identifier
 			api.Meter
 			api.MeterEnergy
-			api.PhaseController
 			api.PhaseCurrents
 		}{
 			Keba: base,
@@ -540,11 +239,312 @@ func decorateKeba(base *Keba, meter func() (float64, error), meterEnergy func() 
 			MeterEnergy: &decorateKebaMeterEnergyImpl{
 				meterEnergy: meterEnergy,
 			},
-			PhaseController: &decorateKebaPhaseControllerImpl{
-				phaseController: phaseController,
+			PhaseCurrents: &decorateKebaPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+		}
+
+	case identifier == nil && meter == nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher != nil:
+		return &struct {
+			*Keba
+			api.PhaseSwitcher
+		}{
+			Keba: base,
+			PhaseSwitcher: &decorateKebaPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher != nil:
+		return &struct {
+			*Keba
+			api.Meter
+			api.PhaseSwitcher
+		}{
+			Keba: base,
+			Meter: &decorateKebaMeterImpl{
+				meter: meter,
+			},
+			PhaseSwitcher: &decorateKebaPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case identifier == nil && meter == nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher != nil:
+		return &struct {
+			*Keba
+			api.MeterEnergy
+			api.PhaseSwitcher
+		}{
+			Keba: base,
+			MeterEnergy: &decorateKebaMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseSwitcher: &decorateKebaPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher != nil:
+		return &struct {
+			*Keba
+			api.Meter
+			api.MeterEnergy
+			api.PhaseSwitcher
+		}{
+			Keba: base,
+			Meter: &decorateKebaMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateKebaMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseSwitcher: &decorateKebaPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case identifier == nil && meter == nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher != nil:
+		return &struct {
+			*Keba
+			api.PhaseCurrents
+			api.PhaseSwitcher
+		}{
+			Keba: base,
+			PhaseCurrents: &decorateKebaPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseSwitcher: &decorateKebaPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher != nil:
+		return &struct {
+			*Keba
+			api.Meter
+			api.PhaseCurrents
+			api.PhaseSwitcher
+		}{
+			Keba: base,
+			Meter: &decorateKebaMeterImpl{
+				meter: meter,
 			},
 			PhaseCurrents: &decorateKebaPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
+			},
+			PhaseSwitcher: &decorateKebaPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case identifier == nil && meter == nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher != nil:
+		return &struct {
+			*Keba
+			api.MeterEnergy
+			api.PhaseCurrents
+			api.PhaseSwitcher
+		}{
+			Keba: base,
+			MeterEnergy: &decorateKebaMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateKebaPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseSwitcher: &decorateKebaPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher != nil:
+		return &struct {
+			*Keba
+			api.Meter
+			api.MeterEnergy
+			api.PhaseCurrents
+			api.PhaseSwitcher
+		}{
+			Keba: base,
+			Meter: &decorateKebaMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateKebaMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateKebaPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseSwitcher: &decorateKebaPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case identifier != nil && meter == nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher != nil:
+		return &struct {
+			*Keba
+			api.Identifier
+			api.PhaseSwitcher
+		}{
+			Keba: base,
+			Identifier: &decorateKebaIdentifierImpl{
+				identifier: identifier,
+			},
+			PhaseSwitcher: &decorateKebaPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher != nil:
+		return &struct {
+			*Keba
+			api.Identifier
+			api.Meter
+			api.PhaseSwitcher
+		}{
+			Keba: base,
+			Identifier: &decorateKebaIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateKebaMeterImpl{
+				meter: meter,
+			},
+			PhaseSwitcher: &decorateKebaPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case identifier != nil && meter == nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher != nil:
+		return &struct {
+			*Keba
+			api.Identifier
+			api.MeterEnergy
+			api.PhaseSwitcher
+		}{
+			Keba: base,
+			Identifier: &decorateKebaIdentifierImpl{
+				identifier: identifier,
+			},
+			MeterEnergy: &decorateKebaMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseSwitcher: &decorateKebaPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseSwitcher != nil:
+		return &struct {
+			*Keba
+			api.Identifier
+			api.Meter
+			api.MeterEnergy
+			api.PhaseSwitcher
+		}{
+			Keba: base,
+			Identifier: &decorateKebaIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateKebaMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateKebaMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseSwitcher: &decorateKebaPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case identifier != nil && meter == nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher != nil:
+		return &struct {
+			*Keba
+			api.Identifier
+			api.PhaseCurrents
+			api.PhaseSwitcher
+		}{
+			Keba: base,
+			Identifier: &decorateKebaIdentifierImpl{
+				identifier: identifier,
+			},
+			PhaseCurrents: &decorateKebaPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseSwitcher: &decorateKebaPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseSwitcher != nil:
+		return &struct {
+			*Keba
+			api.Identifier
+			api.Meter
+			api.PhaseCurrents
+			api.PhaseSwitcher
+		}{
+			Keba: base,
+			Identifier: &decorateKebaIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateKebaMeterImpl{
+				meter: meter,
+			},
+			PhaseCurrents: &decorateKebaPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseSwitcher: &decorateKebaPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case identifier != nil && meter == nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher != nil:
+		return &struct {
+			*Keba
+			api.Identifier
+			api.MeterEnergy
+			api.PhaseCurrents
+			api.PhaseSwitcher
+		}{
+			Keba: base,
+			Identifier: &decorateKebaIdentifierImpl{
+				identifier: identifier,
+			},
+			MeterEnergy: &decorateKebaMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateKebaPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseSwitcher: &decorateKebaPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseSwitcher != nil:
+		return &struct {
+			*Keba
+			api.Identifier
+			api.Meter
+			api.MeterEnergy
+			api.PhaseCurrents
+			api.PhaseSwitcher
+		}{
+			Keba: base,
+			Identifier: &decorateKebaIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decorateKebaMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateKebaMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateKebaPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseSwitcher: &decorateKebaPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
 			},
 		}
 	}
@@ -576,18 +576,18 @@ func (impl *decorateKebaMeterEnergyImpl) TotalEnergy() (float64, error) {
 	return impl.meterEnergy()
 }
 
-type decorateKebaPhaseControllerImpl struct {
-	phaseController func(int) error
-}
-
-func (impl *decorateKebaPhaseControllerImpl) Phases1p3p(p0 int) error {
-	return impl.phaseController(p0)
-}
-
 type decorateKebaPhaseCurrentsImpl struct {
 	phaseCurrents func() (float64, float64, float64, error)
 }
 
 func (impl *decorateKebaPhaseCurrentsImpl) Currents() (float64, float64, float64, error) {
 	return impl.phaseCurrents()
+}
+
+type decorateKebaPhaseSwitcherImpl struct {
+	phaseSwitcher func(int) error
+}
+
+func (impl *decorateKebaPhaseSwitcherImpl) Phases1p3p(p0 int) error {
+	return impl.phaseSwitcher(p0)
 }

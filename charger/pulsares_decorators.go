@@ -6,19 +6,19 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decoratePulsares(base *Pulsares, phaseController func(int) error) api.Charger {
+func decoratePulsares(base *Pulsares, phaseSwitcher func(int) error) api.Charger {
 	switch {
-	case phaseController == nil:
+	case phaseSwitcher == nil:
 		return base
 
-	case phaseController != nil:
+	case phaseSwitcher != nil:
 		return &struct {
 			*Pulsares
-			api.PhaseController
+			api.PhaseSwitcher
 		}{
 			Pulsares: base,
-			PhaseController: &decoratePulsaresPhaseControllerImpl{
-				phaseController: phaseController,
+			PhaseSwitcher: &decoratePulsaresPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
 			},
 		}
 	}
@@ -26,10 +26,10 @@ func decoratePulsares(base *Pulsares, phaseController func(int) error) api.Charg
 	return nil
 }
 
-type decoratePulsaresPhaseControllerImpl struct {
-	phaseController func(int) error
+type decoratePulsaresPhaseSwitcherImpl struct {
+	phaseSwitcher func(int) error
 }
 
-func (impl *decoratePulsaresPhaseControllerImpl) Phases1p3p(p0 int) error {
-	return impl.phaseController(p0)
+func (impl *decoratePulsaresPhaseSwitcherImpl) Phases1p3p(p0 int) error {
+	return impl.phaseSwitcher(p0)
 }
