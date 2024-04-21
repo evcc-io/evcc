@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math"
 	"reflect"
+	"slices"
 	"strings"
 	"sync"
 	"testing"
@@ -478,8 +479,28 @@ func (lp *Loadpoint) evVehicleConnectHandler() {
 	// immediately allow pv mode activity
 	lp.elapsePVTimer()
 
+	// kick-charge if any available vehicle requires it
+	// since kickCharge uses the PV timer it must be placed after elapsePVTimer
+	if vv := lp.availableVehicles(); len(vv) > 0 {
+		for _, v := range vv {
+			if slices.Contains(v.Features(), api.KickCharge) {
+				lp.kickCharge()
+				break
+			}
+		}
+	}
+
 	// create charging session
 	lp.createSession()
+}
+
+// kickCharge starts charging with min current in PV mode.
+// Disable limits and timers are used to disable charging.
+func (lp *Loadpoint) kickCharge() {
+	if lp.mode != api.ModePV && lp.mode != api.ModeMinPV {
+		return
+	}
+	lp.setLimit(lp.effectiveMinCurrent())
 }
 
 // evVehicleDisconnectHandler sends external start event

@@ -7,11 +7,11 @@ import (
 	"strings"
 )
 
-const _FeatureName = "OfflineCoarseCurrentIntegratedDeviceHeatingRetryable"
+const _FeatureName = "OfflineCoarseCurrentIntegratedDeviceHeatingRetryableKickCharge"
 
-var _FeatureIndex = [...]uint8{0, 7, 20, 36, 43, 52}
+var _FeatureIndex = [...]uint8{0, 7, 20, 36, 43, 52, 62}
 
-const _FeatureLowerName = "offlinecoarsecurrentintegrateddeviceheatingretryable"
+const _FeatureLowerName = "offlinecoarsecurrentintegrateddeviceheatingretryablekickcharge"
 
 func (i Feature) String() string {
 	i -= 1
@@ -30,9 +30,10 @@ func _FeatureNoOp() {
 	_ = x[IntegratedDevice-(3)]
 	_ = x[Heating-(4)]
 	_ = x[Retryable-(5)]
+	_ = x[KickCharge-(6)]
 }
 
-var _FeatureValues = []Feature{Offline, CoarseCurrent, IntegratedDevice, Heating, Retryable}
+var _FeatureValues = []Feature{Offline, CoarseCurrent, IntegratedDevice, Heating, Retryable, KickCharge}
 
 var _FeatureNameToValueMap = map[string]Feature{
 	_FeatureName[0:7]:        Offline,
@@ -45,6 +46,8 @@ var _FeatureNameToValueMap = map[string]Feature{
 	_FeatureLowerName[36:43]: Heating,
 	_FeatureName[43:52]:      Retryable,
 	_FeatureLowerName[43:52]: Retryable,
+	_FeatureName[52:62]:      KickCharge,
+	_FeatureLowerName[52:62]: KickCharge,
 }
 
 var _FeatureNames = []string{
@@ -53,6 +56,7 @@ var _FeatureNames = []string{
 	_FeatureName[20:36],
 	_FeatureName[36:43],
 	_FeatureName[43:52],
+	_FeatureName[52:62],
 }
 
 // FeatureString retrieves an enum value from the enum constants string name.
