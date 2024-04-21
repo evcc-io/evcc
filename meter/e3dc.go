@@ -230,7 +230,7 @@ func (m *E3dc) setBatteryMode(mode api.BatteryMode) error {
 					Value:    1,
 				}, {
 					Tag:      rscp.EMS_MAX_DISCHARGE_POWER,
-					DataType: rscp.Int16,
+					DataType: rscp.Uint32,
 					Value:    0,
 				},
 			},
