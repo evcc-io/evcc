@@ -98,3 +98,9 @@ export async function ensureCurrentLocaleMessages(i18n) {
     await loadLocaleMessages(i18n, locale);
   }
 }
+
+export function docsPrefix() {
+  const locale = getLocale();
+  const path = locale === "de" ? "" : `/en`;
+  return `https://docs.evcc.io${path}`;
+}

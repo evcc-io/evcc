@@ -8,6 +8,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/evcc-io/evcc/util/logstash"
 	jww "github.com/spf13/jwalterweatherman"
 )
 
@@ -18,10 +19,10 @@ var (
 	loggersMux sync.Mutex
 
 	// OutThreshold is the default console log level
-	OutThreshold = jww.LevelError
+	OutThreshold = jww.LevelWarn
 
 	// LogThreshold is the default log file level
-	LogThreshold = jww.LevelWarn
+	LogThreshold = jww.LevelTrace
 )
 
 // LogAreaPadding of log areas
@@ -57,9 +58,9 @@ func newLogger(area string, lp int) *Logger {
 		padded += " "
 	}
 
-	level := LogLevelForArea(area)
+	level := logLevelForArea(area)
 	redactor := new(Redactor)
-	notepad := jww.NewNotepad(level, level, redactor, io.Discard, padded, log.Ldate|log.Ltime)
+	notepad := jww.NewNotepad(level, level, redactor, logstash.DefaultHandler, padded, log.Ldate|log.Ltime)
 
 	logger := &Logger{
 		Notepad:  notepad,
@@ -90,11 +91,11 @@ func Loggers(cb func(string, *Logger)) {
 	}
 }
 
-// LogLevelForArea gets the log level for given log area
-func LogLevelForArea(area string) jww.Threshold {
+// logLevelForArea gets the log level for given log area
+func logLevelForArea(area string) jww.Threshold {
 	level, ok := levels[strings.ToLower(area)]
 	if !ok {
-		level = OutThreshold
+		level = LogThreshold
 	}
 	return level
 }
@@ -102,38 +103,17 @@ func LogLevelForArea(area string) jww.Threshold {
 // LogLevel sets log level for all loggers
 func LogLevel(defaultLevel string, areaLevels map[string]string) {
 	// default level
-	OutThreshold = LogLevelToThreshold(defaultLevel)
-	LogThreshold = OutThreshold
+	LogThreshold = logstash.LogLevelToThreshold(defaultLevel)
 
 	// area levels
 	for area, level := range areaLevels {
 		area = strings.ToLower(area)
-		levels[area] = LogLevelToThreshold(level)
+		levels[area] = logstash.LogLevelToThreshold(level)
 	}
 
 	Loggers(func(name string, logger *Logger) {
-		logger.SetStdoutThreshold(LogLevelForArea(name))
+		logger.SetStdoutThreshold(logLevelForArea(name))
 	})
-}
-
-// LogLevelToThreshold converts log level string to a jww Threshold
-func LogLevelToThreshold(level string) jww.Threshold {
-	switch strings.ToUpper(level) {
-	case "FATAL":
-		return jww.LevelFatal
-	case "ERROR":
-		return jww.LevelError
-	case "WARN":
-		return jww.LevelWarn
-	case "INFO":
-		return jww.LevelInfo
-	case "DEBUG":
-		return jww.LevelDebug
-	case "TRACE":
-		return jww.LevelTrace
-	default:
-		panic("invalid log level " + level)
-	}
 }
 
 var uiChan chan<- Param

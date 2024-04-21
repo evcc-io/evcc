@@ -542,8 +542,7 @@ func (site *Site) updateGridMeter() error {
 		return nil
 	}
 
-	res, err := backoff.RetryWithData(site.gridMeter.CurrentPower, bo())
-	if err == nil {
+	if res, err := backoff.RetryWithData(site.gridMeter.CurrentPower, bo()); err == nil {
 		site.gridPower = res
 		site.log.DEBUG.Printf("grid meter: %.0fW", res)
 		site.publish(keys.GridPower, res)
@@ -554,8 +553,7 @@ func (site *Site) updateGridMeter() error {
 	// grid phase powers
 	var p1, p2, p3 float64
 	if phaseMeter, ok := site.gridMeter.(api.PhasePowers); ok {
-		p1, p2, p3, err = phaseMeter.Powers()
-		if err == nil {
+		if p1, p2, p3, err := phaseMeter.Powers(); err == nil {
 			phases := []float64{p1, p2, p3}
 			site.log.DEBUG.Printf("grid powers: %.0fW", phases)
 			site.publish(keys.GridPowers, phases)
@@ -566,8 +564,7 @@ func (site *Site) updateGridMeter() error {
 
 	// grid phase currents (signed)
 	if phaseMeter, ok := site.gridMeter.(api.PhaseCurrents); ok {
-		i1, i2, i3, err := phaseMeter.Currents()
-		if err == nil {
+		if i1, i2, i3, err := phaseMeter.Currents(); err == nil {
 			phases := []float64{util.SignFromPower(i1, p1), util.SignFromPower(i2, p2), util.SignFromPower(i3, p3)}
 			site.log.DEBUG.Printf("grid currents: %.3gA", phases)
 			site.publish(keys.GridCurrents, phases)
@@ -578,8 +575,7 @@ func (site *Site) updateGridMeter() error {
 
 	// grid energy (import)
 	if energyMeter, ok := site.gridMeter.(api.MeterEnergy); ok {
-		f, err := energyMeter.TotalEnergy()
-		if err == nil {
+		if f, err := energyMeter.TotalEnergy(); err == nil {
 			site.publish(keys.GridEnergy, f)
 		} else {
 			site.log.ERROR.Printf("grid energy: %v", err)
@@ -902,6 +898,7 @@ func (site *Site) Run(stopC chan struct{}, interval time.Duration) {
 	go site.loopLoadpoints(loadpointChan)
 
 	ticker := time.NewTicker(interval)
+	site.publish(keys.Interval, interval.Seconds())
 	site.update(<-loadpointChan) // start immediately
 
 	for {

@@ -1282,28 +1282,21 @@ func (lp *Loadpoint) UpdateChargePower() {
 	bo := backoff.NewExponentialBackOff()
 	bo.MaxElapsedTime = time.Second
 
-	if err := backoff.Retry(func() error {
-		value, err := lp.chargeMeter.CurrentPower()
-		if err != nil {
-			return err
-		}
-
+	if power, err := backoff.RetryWithData(lp.chargeMeter.CurrentPower, bo); err == nil {
 		lp.Lock()
-		lp.chargePower = value // update value if no error
+		lp.chargePower = power // update value if no error
 		lp.Unlock()
 
-		lp.log.DEBUG.Printf("charge power: %.0fW", value)
-		lp.publish(keys.ChargePower, value)
+		lp.log.DEBUG.Printf("charge power: %.0fW", power)
+		lp.publish(keys.ChargePower, power)
 
 		// https://github.com/evcc-io/evcc/issues/2153
 		// https://github.com/evcc-io/evcc/issues/6986
 		// https://github.com/evcc-io/evcc/issues/13378
-		if lp.chargePower < -100 && lp.shouldBeConsistent() {
-			lp.log.WARN.Printf("charge power must not be negative: %.0f", lp.chargePower)
+		if power < -100 && lp.shouldBeConsistent() {
+			lp.log.WARN.Printf("charge power must not be negative: %.0f", power)
 		}
-
-		return nil
-	}, bo); err != nil {
+	} else {
 		lp.log.ERROR.Printf("charge meter: %v", err)
 	}
 }

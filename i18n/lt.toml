@@ -13,7 +13,7 @@ legendTitle = "Kaip naudoti saulės energiją?"
 legendTopAutostart = "startuoja automatiškai"
 legendTopName = "kaupiklis padeda įkrauti"
 legendTopSubline = "be pertraukų"
-modalTitle = "Kaupiklio nustatymai"
+modalTitle = "Namų kaupiklis"
 
 [batterySettings.bufferStart]
 above = "kai virš {soc}"
@@ -78,9 +78,21 @@ validateSave = "Patikrinti ir išsaugoti"
 titleAdd = "Pridėti saulės skaitiklį"
 titleEdit = "Redaguoti saulės skaitiklį"
 
+[config.section]
+general = "Pagrindiniai"
+system = "Sisteminiai"
+
 [config.site]
 cancel = "Atšaukti"
 save = "Išsaugoti"
+
+[config.system]
+logs = "Žurnalai"
+restart = "Paleisti iš naujo"
+restartRequiredDescription = "Paleiskite iš naujo, kad įsigaliotų pakeitimai"
+restartRequiredMessage = "Nustatymai pasikeitė"
+restartingDescription = "Palaukite..."
+restartingMessage = "Paleidžiama iš naujo"
 
 [config.title]
 description = "Rodoma pagrindiniame ekrane ir naršyklės kortelėje."
@@ -200,6 +212,8 @@ discussionsButton = "GitHub diskusijos"
 documentationButton = "Dokumentacija"
 issueButton = "Pranešti apie klaidą"
 issueDescription = "Pastebėjote keistą ar netinkamą veikimą?"
+logsButton = "Peržiūrėti žurnalus"
+logsDescription = "Patikrinkite ar žurnaluose nėra klaidų"
 modalTitle = "Reikia pagalbos?"
 primaryActions = "Kažkas veikia ne taip, kaip turėtų? Pagalbos ieškokite čia."
 restartButton = "Restartuoti"
@@ -213,12 +227,24 @@ description = "Įprastai restartavimas neturėtų būti reikalingas. Jei jums vi
 disclaimer = "Pastaba: evcc sustos, ir pasitikės operacinės sistemos pagalba paleidžiant iš naujo."
 modalTitle = "Ar tikrai norite restartuoti?"
 
+[log]
+areaLabel = "Filtruoti pagal sritis"
+areas = "Visos sritys"
+download = "Atsisiųsti visą žurnalą"
+levelLabel = "Filtruoti pagal žurnalo lygį"
+noResults = "Nėra atitinkančių žurnalo įrašų"
+search = "Ieškoti"
+showAll = "Rodyti visus įrašus"
+title = "Žurnalai"
+update = "Automatinis atnaujinimas"
+
 [loginModal]
 cancel = "Atšaukti"
 error = "Prisijungti nepavyko: "
 invalid = "Neteisingas slaptažodis."
 login = "Prisijungti"
 password = "Slaptažodis"
+reset = "Atstatyti slaptažodį?"
 title = "Autentifikavimas"
 
 [main]
@@ -402,6 +428,7 @@ waitForVehicle = "Paruošta. Laukiama automobilio..."
 
 [notifications]
 dismissAll = "Išvalyti visus"
+logs = "Peržiūrėti visus žurnalus"
 modalTitle = "Pranešimai"
 
 [offline]
@@ -471,7 +498,7 @@ allVehicles = "visi automobiliai"
 filter = "Filtruoti"
 
 [settings]
-title = "Bendrieji Nustatymai"
+title = "Vartotojo sąsaja"
 
 [settings.gridDetails]
 co2 = "CO₂"
