@@ -64,7 +64,7 @@ export default {
 		offline: function () {
 			updateAuthStatus();
 		},
-		startupErrors: function (now, prev) {
+		startupErrors: function (now) {
 			if (now) {
 				console.log("startup errors detected. redirecting to error page");
 				this.$router.push("/error");
