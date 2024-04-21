@@ -7,8 +7,8 @@ params:
     allinone: true
   - name: host
   - name: port
-  - name: user
     default: 5033
+  - name: user
   - name: password
   - name: key
   - name: battery
