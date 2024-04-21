@@ -310,7 +310,7 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 	case easee.PHASE_MODE:
 		c.phaseMode = value.(int)
 	case easee.OUTPUT_PHASE:
-		c.outputPhase = value.(int) / 10 //API gives 0,10,30 for 0,1,3p
+		c.outputPhase = value.(int) / 10 // API gives 0,10,30 for 0,1,3p
 	case easee.DYNAMIC_CHARGER_CURRENT:
 		c.dynamicChargerCurrent = value.(float64)
 
