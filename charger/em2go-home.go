@@ -40,9 +40,7 @@ const (
 	em2GoHomeRegStatus          = 0   // Uint16 RO ENUM
 	em2GoHomeRegConnectorState  = 2   // Uint16 RO ENUM
 	em2GoHomeRegErrorCode       = 4   // Uint16 RO ENUM
-	em2GoHomeRegCurrent1        = 6   // Uint16 RO 0.1A
-	em2GoHomeRegCurrent2        = 8   // Uint16 RO 0.1A
-	em2GoHomeRegCurrent3        = 10  // Uint16 RO 0.1A
+	em2GoHomeRegCurrents        = 6   // Uint16 RO 0.1A
 	em2GoHomeRegPower           = 12  // Uint32 RO 1W
 	em2GoHomeRegEnergy          = 28  // Uint16 RO 0.1KWh
 	em2GoHomeRegMaxCurrent      = 32  // Uint16 RO 0.1A
@@ -56,9 +54,7 @@ const (
 	em2GoHomeRegCurrentLimit    = 91  // Uint16 WR 0.1A
 	em2GoHomeRegChargeMode      = 93  // Uint16 WR ENUM
 	em2GoHomeRegChargeCommand   = 95  // Uint16 WR ENUM
-	em2GoHomeRegVoltage1        = 109 // Uint16 RO 0.1V
-	em2GoHomeRegVoltage2        = 111 // Uint16 RO 0.1V
-	em2GoHomeRegVoltage3        = 113 // Uint16 RO 0.1V
+	em2GoHomeRegVoltages        = 109 // Uint16 RO 0.1V
 	em2GoHomeRegPhases          = 200 // Set charging phase 1 unsigned
 )
 
@@ -193,52 +189,34 @@ func (wb *Em2GoHome) TotalEnergy() (float64, error) {
 	return rs485.RTUUint32ToFloat64(b) / 10, nil
 }
 
+// getPhaseValues returns 3 register values offset by 2
+func (wb *Em2GoHome) getPhaseValues(reg uint16) (float64, float64, float64, error) {
+	var res [3]float64
+
+	for i := range 3 {
+		b, err := wb.conn.ReadHoldingRegisters(reg+2*uint16(i), 1)
+		if err != nil {
+			return 0, 0, 0, err
+		}
+
+		res[i] = float64(binary.BigEndian.Uint16(b)) / 10
+	}
+
+	return res[0], res[1], res[2], nil
+}
+
 var _ api.PhaseCurrents = (*Em2GoHome)(nil)
 
 // Currents implements the api.PhaseCurrents interface
 func (wb *Em2GoHome) Currents() (float64, float64, float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(em2GoHomeRegCurrent1, 1)
-	if err != nil {
-		return 0, 0, 0, err
-	}
-
-	c, err := wb.conn.ReadHoldingRegisters(em2GoHomeRegCurrent2, 1)
-	if err != nil {
-		return 0, 0, 0, err
-	}
-
-	d, err := wb.conn.ReadHoldingRegisters(em2GoHomeRegCurrent3, 1)
-	if err != nil {
-		return 0, 0, 0, err
-	}
-
-	return float64(binary.BigEndian.Uint16(b)) / 10,
-		float64(binary.BigEndian.Uint16(c)) / 10,
-		float64(binary.BigEndian.Uint16(d)) / 10, nil
+	return wb.getPhaseValues(em2GoHomeRegCurrents)
 }
 
 var _ api.PhaseVoltages = (*Em2GoHome)(nil)
 
 // Currents implements the api.PhaseVoltages interface
 func (wb *Em2GoHome) Voltages() (float64, float64, float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(em2GoHomeRegVoltage1, 1)
-	if err != nil {
-		return 0, 0, 0, err
-	}
-
-	c, err := wb.conn.ReadHoldingRegisters(em2GoHomeRegVoltage2, 1)
-	if err != nil {
-		return 0, 0, 0, err
-	}
-
-	d, err := wb.conn.ReadHoldingRegisters(em2GoHomeRegVoltage3, 1)
-	if err != nil {
-		return 0, 0, 0, err
-	}
-
-	return float64(binary.BigEndian.Uint16(b)) / 10,
-		float64(binary.BigEndian.Uint16(c)) / 10,
-		float64(binary.BigEndian.Uint16(d)) / 10, nil
+	return wb.getPhaseValues(em2GoHomeRegVoltages)
 }
 
 var _ api.ChargeRater = (*Em2GoHome)(nil)
