@@ -336,6 +336,7 @@ a:hover {
 
 .modal-backdrop {
 	--bs-backdrop-bg: var(--evcc-backdrop);
+	-webkit-backdrop-filter: blur(8px);
 	backdrop-filter: blur(8px);
 }
 
@@ -360,6 +361,13 @@ a:hover {
 	padding: 1.25rem;
 	background-color: var(--evcc-box);
 	color: var(--evcc-default-text);
+}
+
+.modal-content h6 {
+	margin-top: 2rem;
+	margin-bottom: 1.5rem;
+	font-size: 1rem;
+	font-weight: bold;
 }
 
 /* breakpoint sm */

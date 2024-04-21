@@ -8,7 +8,7 @@
 		>
 			<div v-if="restarting" class="d-flex align-items-center">
 				<button
-					class="btn btn-outline-primary me-2 btn-sm d-flex align-items-center"
+					class="btn btn-secondary me-2 btn-sm d-flex align-items-center"
 					type="button"
 					disabled
 				>
@@ -23,11 +23,11 @@
 			</div>
 			<div v-else-if="restartNeeded" class="d-flex align-items-center">
 				<button
-					class="btn btn-outline-primary me-2 btn-sm d-flex align-items-center"
+					class="btn btn-secondary me-2 btn-sm d-flex align-items-center"
 					type="button"
 					@click="restart"
 				>
-					<Sync class="me-2" />
+					<Sync class="restart me-2" />
 					{{ $t("offline.restart") }}
 				</button>
 				{{ $t("offline.restartNeeded") }}
@@ -80,25 +80,15 @@ export default {
 };
 </script>
 <style scoped>
-.fixed-bottom {
-	/* $zindex-toast https://getbootstrap.com/docs/5.3/layout/z-index/ */
-	z-index: 1090 !important;
-}
-.spin {
-	animation: rotation 1s infinite cubic-bezier(0.37, 0, 0.63, 1);
-}
-@keyframes rotation {
-	from {
-		transform: rotate(0deg) scaleX(-1);
-	}
-	to {
-		transform: rotate(360deg) scaleX(-1);
-	}
+.restart {
+	transform: scaleX(-1);
 }
 .alert {
 	transform: translateY(100%);
 	transition: transform var(--evcc-transition-fast) ease-in;
 	min-height: 58px;
+	/* above backdrop, below modal https://getbootstrap.com/docs/5.3/layout/z-index/ */
+	z-index: 1054 !important;
 }
 .alert.visible {
 	transform: translateY(0);
