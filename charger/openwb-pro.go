@@ -199,9 +199,9 @@ func (wb *OpenWBPro) Soc() (float64, error) {
 	return float64(res.Soc), nil
 }
 
-var _ api.PhaseSwitcher = (*OpenWBPro)(nil)
+var _ api.PhaseController = (*OpenWBPro)(nil)
 
-// Phases1p3p implements the api.PhaseSwitcher interface
+// Phases1p3p implements the api.PhaseController interface
 func (wb *OpenWBPro) Phases1p3p(phases int) error {
 	return wb.set(fmt.Sprintf("phasetarget=%d", phases))
 }

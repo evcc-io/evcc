@@ -6,19 +6,19 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateCfos(base *CfosPowerBrain, phaseSwitcher func(int) error) api.Charger {
+func decorateCfos(base *CfosPowerBrain, phaseController func(int) error) api.Charger {
 	switch {
-	case phaseSwitcher == nil:
+	case phaseController == nil:
 		return base
 
-	case phaseSwitcher != nil:
+	case phaseController != nil:
 		return &struct {
 			*CfosPowerBrain
-			api.PhaseSwitcher
+			api.PhaseController
 		}{
 			CfosPowerBrain: base,
-			PhaseSwitcher: &decorateCfosPhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
+			PhaseController: &decorateCfosPhaseControllerImpl{
+				phaseController: phaseController,
 			},
 		}
 	}
@@ -26,10 +26,10 @@ func decorateCfos(base *CfosPowerBrain, phaseSwitcher func(int) error) api.Charg
 	return nil
 }
 
-type decorateCfosPhaseSwitcherImpl struct {
-	phaseSwitcher func(int) error
+type decorateCfosPhaseControllerImpl struct {
+	phaseController func(int) error
 }
 
-func (impl *decorateCfosPhaseSwitcherImpl) Phases1p3p(p0 int) error {
-	return impl.phaseSwitcher(p0)
+func (impl *decorateCfosPhaseControllerImpl) Phases1p3p(p0 int) error {
+	return impl.phaseController(p0)
 }

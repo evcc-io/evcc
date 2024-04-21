@@ -122,8 +122,7 @@ func (wb *Solax) Status() (api.ChargeStatus, error) {
 		7, // "SuspendedEV"
 		3: // "Finishing"
 		return api.StatusB, nil
-	case
-		2: // "Charging"
+	case 2: // "Charging"
 		return api.StatusC, nil
 	case
 		6, // "Reserved"
@@ -212,9 +211,9 @@ func (wb *Solax) Voltages() (float64, float64, float64, error) {
 	return wb.getPhaseValues(solaxRegVoltages)
 }
 
-var _ api.PhaseSwitcher = (*Solax)(nil)
+var _ api.PhaseController = (*Solax)(nil)
 
-// Phases1p3p implements the api.PhaseSwitcher interface
+// Phases1p3p implements the api.PhaseController interface
 func (wb *Solax) Phases1p3p(phases int) error {
 	var u uint16
 

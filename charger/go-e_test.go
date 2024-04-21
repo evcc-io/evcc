@@ -84,7 +84,7 @@ func TestGoEV2(t *testing.T) {
 		t.Error("missing MeterEnergy api")
 	}
 
-	if _, ok := wb.(api.PhaseSwitcher); !ok {
+	if _, ok := wb.(api.PhaseController); !ok {
 		t.Error("missing PhaseSwitcher api")
 	}
 }

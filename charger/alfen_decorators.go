@@ -6,19 +6,45 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateAlfen(base *Alfen, phaseSwitcher func(int) error) api.Charger {
+func decorateAlfen(base *Alfen, phaseController func(int) error, phaseGetter func() (int, error)) api.Charger {
 	switch {
-	case phaseSwitcher == nil:
+	case phaseController == nil && phaseGetter == nil:
 		return base
 
-	case phaseSwitcher != nil:
+	case phaseController != nil && phaseGetter == nil:
 		return &struct {
 			*Alfen
-			api.PhaseSwitcher
+			api.PhaseController
 		}{
 			Alfen: base,
-			PhaseSwitcher: &decorateAlfenPhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
+			PhaseController: &decorateAlfenPhaseControllerImpl{
+				phaseController: phaseController,
+			},
+		}
+
+	case phaseController == nil && phaseGetter != nil:
+		return &struct {
+			*Alfen
+			api.PhaseGetter
+		}{
+			Alfen: base,
+			PhaseGetter: &decorateAlfenPhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+		}
+
+	case phaseController != nil && phaseGetter != nil:
+		return &struct {
+			*Alfen
+			api.PhaseController
+			api.PhaseGetter
+		}{
+			Alfen: base,
+			PhaseController: &decorateAlfenPhaseControllerImpl{
+				phaseController: phaseController,
+			},
+			PhaseGetter: &decorateAlfenPhaseGetterImpl{
+				phaseGetter: phaseGetter,
 			},
 		}
 	}
@@ -26,10 +52,18 @@ func decorateAlfen(base *Alfen, phaseSwitcher func(int) error) api.Charger {
 	return nil
 }
 
-type decorateAlfenPhaseSwitcherImpl struct {
-	phaseSwitcher func(int) error
+type decorateAlfenPhaseControllerImpl struct {
+	phaseController func(int) error
 }
 
-func (impl *decorateAlfenPhaseSwitcherImpl) Phases1p3p(p0 int) error {
-	return impl.phaseSwitcher(p0)
+func (impl *decorateAlfenPhaseControllerImpl) Phases1p3p(p0 int) error {
+	return impl.phaseController(p0)
+}
+
+type decorateAlfenPhaseGetterImpl struct {
+	phaseGetter func() (int, error)
+}
+
+func (impl *decorateAlfenPhaseGetterImpl) GetPhases() (int, error) {
+	return impl.phaseGetter()
 }

@@ -6,23 +6,23 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateOpenWB(base *OpenWB, phaseSwitcher func(int) error, battery func() (float64, error)) api.Charger {
+func decorateOpenWB(base *OpenWB, phaseController func(int) error, battery func() (float64, error)) api.Charger {
 	switch {
-	case battery == nil && phaseSwitcher == nil:
+	case battery == nil && phaseController == nil:
 		return base
 
-	case battery == nil && phaseSwitcher != nil:
+	case battery == nil && phaseController != nil:
 		return &struct {
 			*OpenWB
-			api.PhaseSwitcher
+			api.PhaseController
 		}{
 			OpenWB: base,
-			PhaseSwitcher: &decorateOpenWBPhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
+			PhaseController: &decorateOpenWBPhaseControllerImpl{
+				phaseController: phaseController,
 			},
 		}
 
-	case battery != nil && phaseSwitcher == nil:
+	case battery != nil && phaseController == nil:
 		return &struct {
 			*OpenWB
 			api.Battery
@@ -33,18 +33,18 @@ func decorateOpenWB(base *OpenWB, phaseSwitcher func(int) error, battery func() 
 			},
 		}
 
-	case battery != nil && phaseSwitcher != nil:
+	case battery != nil && phaseController != nil:
 		return &struct {
 			*OpenWB
 			api.Battery
-			api.PhaseSwitcher
+			api.PhaseController
 		}{
 			OpenWB: base,
 			Battery: &decorateOpenWBBatteryImpl{
 				battery: battery,
 			},
-			PhaseSwitcher: &decorateOpenWBPhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
+			PhaseController: &decorateOpenWBPhaseControllerImpl{
+				phaseController: phaseController,
 			},
 		}
 	}
@@ -60,10 +60,10 @@ func (impl *decorateOpenWBBatteryImpl) Soc() (float64, error) {
 	return impl.battery()
 }
 
-type decorateOpenWBPhaseSwitcherImpl struct {
-	phaseSwitcher func(int) error
+type decorateOpenWBPhaseControllerImpl struct {
+	phaseController func(int) error
 }
 
-func (impl *decorateOpenWBPhaseSwitcherImpl) Phases1p3p(p0 int) error {
-	return impl.phaseSwitcher(p0)
+func (impl *decorateOpenWBPhaseControllerImpl) Phases1p3p(p0 int) error {
+	return impl.phaseController(p0)
 }

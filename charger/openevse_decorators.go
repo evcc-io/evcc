@@ -6,19 +6,19 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateOpenEVSE(base *OpenEVSE, phaseSwitcher func(int) error) api.Charger {
+func decorateOpenEVSE(base *OpenEVSE, phaseController func(int) error) api.Charger {
 	switch {
-	case phaseSwitcher == nil:
+	case phaseController == nil:
 		return base
 
-	case phaseSwitcher != nil:
+	case phaseController != nil:
 		return &struct {
 			*OpenEVSE
-			api.PhaseSwitcher
+			api.PhaseController
 		}{
 			OpenEVSE: base,
-			PhaseSwitcher: &decorateOpenEVSEPhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
+			PhaseController: &decorateOpenEVSEPhaseControllerImpl{
+				phaseController: phaseController,
 			},
 		}
 	}
@@ -26,10 +26,10 @@ func decorateOpenEVSE(base *OpenEVSE, phaseSwitcher func(int) error) api.Charger
 	return nil
 }
 
-type decorateOpenEVSEPhaseSwitcherImpl struct {
-	phaseSwitcher func(int) error
+type decorateOpenEVSEPhaseControllerImpl struct {
+	phaseController func(int) error
 }
 
-func (impl *decorateOpenEVSEPhaseSwitcherImpl) Phases1p3p(p0 int) error {
-	return impl.phaseSwitcher(p0)
+func (impl *decorateOpenEVSEPhaseControllerImpl) Phases1p3p(p0 int) error {
+	return impl.phaseController(p0)
 }

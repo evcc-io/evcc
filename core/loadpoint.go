@@ -1014,7 +1014,7 @@ func (lp *Loadpoint) scalePhasesRequired() bool {
 	return lp.hasPhaseSwitching() && lp.configuredPhases != 0 && lp.configuredPhases != lp.GetPhases()
 }
 
-// scalePhasesIfAvailable scales if api.PhaseSwitcher is available
+// scalePhasesIfAvailable scales if api.PhaseController is available
 func (lp *Loadpoint) scalePhasesIfAvailable(phases int) error {
 	if lp.configuredPhases != 0 {
 		phases = lp.configuredPhases
@@ -1028,11 +1028,11 @@ func (lp *Loadpoint) scalePhasesIfAvailable(phases int) error {
 }
 
 // scalePhases adjusts the number of active phases and returns the appropriate charging current.
-// Returns api.ErrNotAvailable if api.PhaseSwitcher is not available.
+// Returns api.ErrNotAvailable if api.PhaseController is not available.
 func (lp *Loadpoint) scalePhases(phases int) error {
-	cp, ok := lp.charger.(api.PhaseSwitcher)
+	cp, ok := lp.charger.(api.PhaseController)
 	if !ok {
-		panic("charger does not implement api.PhaseSwitcher")
+		panic("charger does not implement api.PhaseController")
 	}
 
 	if lp.GetPhases() != phases {

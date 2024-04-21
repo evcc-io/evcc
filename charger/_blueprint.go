@@ -116,9 +116,9 @@ func (wb *Blueprint) Identify() (string, error) {
 	return "", api.ErrNotAvailable
 }
 
-var _ api.PhaseSwitcher = (*Blueprint)(nil)
+var _ api.PhaseController = (*Blueprint)(nil)
 
-// Phases1p3p implements the api.PhaseSwitcher interface
+// Phases1p3p implements the api.PhaseController interface
 func (wb *Blueprint) Phases1p3p(phases int) error {
 	return api.ErrNotAvailable
 }

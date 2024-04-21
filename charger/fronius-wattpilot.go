@@ -133,9 +133,9 @@ func (c *Wattpilot) Identify() (string, error) {
 	return c.api.GetRFID()
 }
 
-var _ api.PhaseSwitcher = (*Wattpilot)(nil)
+var _ api.PhaseController = (*Wattpilot)(nil)
 
-// Phases1p3p implements the api.PhaseSwitcher interface
+// Phases1p3p implements the api.PhaseController interface
 func (c *Wattpilot) Phases1p3p(phases int) error {
 	if phases == 3 {
 		phases = 2

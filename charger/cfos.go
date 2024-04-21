@@ -31,7 +31,7 @@ func init() {
 	registry.Add("cfos", NewCfosPowerBrainFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateCfos -b *CfosPowerBrain -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error"
+//go:generate go run ../cmd/tools/decorate.go -f decorateCfos -b *CfosPowerBrain -r api.Charger -t "api.PhaseController,Phases1p3p,func(int) error"
 
 // NewCfosPowerBrainFromConfig creates a cFos charger from generic config
 func NewCfosPowerBrainFromConfig(other map[string]interface{}) (api.Charger, error) {
@@ -141,7 +141,7 @@ func (wb *CfosPowerBrain) MaxCurrentMillis(current float64) error {
 	return err
 }
 
-// phases1p3p implements the api.PhaseSwitcher interface
+// phases1p3p implements the api.PhaseController interface
 func (wb *CfosPowerBrain) phases1p3p(phases int) error {
 	if phases == 3 {
 		phases = 0

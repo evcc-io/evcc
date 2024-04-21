@@ -118,8 +118,7 @@ func (wb *Sungrow) Status() (api.ChargeStatus, error) {
 	}
 
 	switch s := binary.BigEndian.Uint16(b); s {
-	case
-		1: // "Idle"
+	case 1: // "Idle"
 		return api.StatusA, nil
 	case
 		2, // "Standby"
@@ -127,8 +126,7 @@ func (wb *Sungrow) Status() (api.ChargeStatus, error) {
 		5, // "SuspendedEV"
 		6: // "Completed"
 		return api.StatusB, nil
-	case
-		3: // "Charging"
+	case 3: // "Charging"
 		return api.StatusC, nil
 	case
 		7, // "Reserved"
@@ -230,9 +228,9 @@ func (wb *Sungrow) TotalEnergy() (float64, error) {
 	return rs485.RTUUint32ToFloat64Swapped(b) / 1e3, err
 }
 
-var _ api.PhaseSwitcher = (*Sungrow)(nil)
+var _ api.PhaseController = (*Sungrow)(nil)
 
-// Phases1p3p implements the api.PhaseSwitcher interface
+// Phases1p3p implements the api.PhaseController interface
 func (wb *Sungrow) Phases1p3p(phases int) error {
 	var u uint16
 

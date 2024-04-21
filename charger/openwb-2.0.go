@@ -201,9 +201,9 @@ func (wb *OpenWB20) Voltages() (float64, float64, float64, error) {
 	return wb.getPhaseValues(wb.base + openwbRegVoltages)
 }
 
-var _ api.PhaseSwitcher = (*OpenWB20)(nil)
+var _ api.PhaseController = (*OpenWB20)(nil)
 
-// Phases1p3p implements the api.PhaseSwitcher interface
+// Phases1p3p implements the api.PhaseController interface
 func (wb *OpenWB20) Phases1p3p(phases int) error {
 	if _, err := wb.conn.WriteSingleRegister(wb.base+openwbRegPhaseTarget, uint16(phases)); err != nil {
 		return err

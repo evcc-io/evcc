@@ -56,7 +56,7 @@ func init() {
 	registry.Add("amperfied", NewAmperfiedFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateAmperfied -b *Amperfied -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error"
+//go:generate go run ../cmd/tools/decorate.go -f decorateAmperfied -b *Amperfied -r api.Charger -t "api.PhaseController,Phases1p3p,func(int) error"
 
 // NewAmperfiedFromConfig creates a Amperfied charger from generic config
 func NewAmperfiedFromConfig(other map[string]interface{}) (api.Charger, error) {
@@ -335,7 +335,7 @@ func (wb *Amperfied) WakeUp() error {
 	return wb.set(ampRegRemoteLock, 1)
 }
 
-// phases1p3p implements the api.PhaseSwitcher interface
+// phases1p3p implements the api.PhaseController interface
 func (wb *Amperfied) phases1p3p(phases int) error {
 	b := make([]byte, 2)
 	binary.BigEndian.PutUint16(b, uint16(phases))

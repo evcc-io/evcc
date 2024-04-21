@@ -238,9 +238,9 @@ func (wb *ABB) Voltages() (float64, float64, float64, error) {
 	return wb.getPhaseValues(abbRegVoltages, 10)
 }
 
-// var _ api.PhaseSwitcher = (*ABB)(nil)
+// var _ api.PhaseController = (*ABB)(nil)
 
-// // Phases1p3p implements the api.PhaseSwitcher interface
+// // Phases1p3p implements the api.PhaseController interface
 // func (wb *ABB) Phases1p3p(phases int) error {
 // 	var b uint16 = 1
 // 	if phases != 1 {

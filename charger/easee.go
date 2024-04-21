@@ -310,7 +310,7 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 	case easee.PHASE_MODE:
 		c.phaseMode = value.(int)
 	case easee.OUTPUT_PHASE:
-		c.outputPhase = value.(int) / 10 //API gives 0,10,30 for 0,1,3p
+		c.outputPhase = value.(int) / 10 // API gives 0,10,30 for 0,1,3p
 	case easee.DYNAMIC_CHARGER_CURRENT:
 		c.dynamicChargerCurrent = value.(float64)
 
@@ -739,9 +739,9 @@ func (c *Easee) TotalEnergy() (float64, error) {
 	return c.totalEnergy, nil
 }
 
-var _ api.PhaseSwitcher = (*Easee)(nil)
+var _ api.PhaseController = (*Easee)(nil)
 
-// Phases1p3p implements the api.PhaseSwitcher interface
+// Phases1p3p implements the api.PhaseController interface
 func (c *Easee) Phases1p3p(phases int) error {
 	var err error
 	if c.circuit != 0 {

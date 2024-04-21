@@ -77,8 +77,8 @@ type ChargerEx interface {
 	MaxCurrentMillis(current float64) error
 }
 
-// PhaseSwitcher provides 1p3p switching
-type PhaseSwitcher interface {
+// PhaseController provides 1p3p switching
+type PhaseController interface {
 	Phases1p3p(phases int) error
 }
 

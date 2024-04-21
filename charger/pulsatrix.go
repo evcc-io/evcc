@@ -267,7 +267,7 @@ func (c *Pulsatrix) TotalEnergy() (float64, error) {
 	return res.EnergyImported, err
 }
 
-// Phases1p3p implements the api.PhaseSwitcher interface
+// Phases1p3p implements the api.PhaseController interface
 func (c *Pulsatrix) Phases1p3p(phases int) error {
 	return c.write("set1p3p\n" + strconv.FormatBool(phases == 1))
 }
