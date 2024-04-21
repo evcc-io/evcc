@@ -4,7 +4,7 @@ import Modal from "bootstrap/js/dist/modal";
 
 const auth = reactive({
   configured: true,
-  loggedIn: false,
+  loggedIn: null, // true / false / null (unknown)
   nextUrl: null,
 });
 
@@ -21,6 +21,7 @@ export async function updateAuthStatus() {
       auth.loggedIn = res.data === true;
     }
     if (res.status === 500) {
+      auth.loggedIn = null;
       console.log("unable to fetch auth status", res);
     }
   } catch (e) {
@@ -39,7 +40,11 @@ export async function logout() {
 }
 
 export function isLoggedIn() {
-  return auth.loggedIn;
+  return auth.loggedIn === true;
+}
+
+export function statusUnknown() {
+  return auth.loggedIn === null;
 }
 
 export function isConfigured() {

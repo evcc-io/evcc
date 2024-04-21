@@ -129,7 +129,12 @@ export default {
 				return {};
 			},
 		},
-		sponsor: Object,
+		sponsor: {
+			type: Object,
+			default: () => {
+				return {};
+			},
+		},
 		battery: Array,
 	},
 	data() {

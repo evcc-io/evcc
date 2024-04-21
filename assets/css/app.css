@@ -82,6 +82,7 @@
 	--bs-success: var(--evcc-primary);
 	--bs-success-rgb: var(--bs-primary-rgb);
 	--bs-code-color: var(--evcc-darkest-green);
+	--evcc-backdrop: #93949eaa; /* --bs-gray-medium + transparent */
 }
 
 :root.dark {
@@ -97,6 +98,7 @@
 	--bs-primary: var(--evcc-dark-green);
 	--bs-border-color-translucent: rgba(255, 255, 255, 0.175);
 	--bs-code-color: var(--evcc-dark-green);
+	--evcc-backdrop: #000000aa; /* black + transparent */
 	color-scheme: dark;
 }
 
@@ -329,7 +331,18 @@ a:hover {
 }
 
 .modal-backdrop.show {
-	opacity: 0.8;
+	opacity: 1;
+}
+
+.modal-backdrop {
+	--bs-backdrop-bg: var(--evcc-backdrop);
+	backdrop-filter: blur(8px);
+}
+
+.modal-backdrop.fade {
+	transition-property: opacity, backdrop-filter, background-color;
+	transition-duration: var(--evcc-transition-fast);
+	transition-timing-function: linear;
 }
 
 .modal-header {

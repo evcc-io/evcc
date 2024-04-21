@@ -186,17 +186,7 @@
 					<router-link to="/log" class="btn btn-outline-secondary">
 						{{ $t("config.system.logs") }}
 					</router-link>
-					<button
-						class="btn btn-outline-danger"
-						:disabled="restarting || offline"
-						@click="restart"
-					>
-						<span
-							v-if="restarting || offline"
-							class="spinner-border spinner-border-sm"
-							role="status"
-							aria-hidden="true"
-						></span>
+					<button class="btn btn-outline-danger" @click="restart">
 						{{ $t("config.system.restart") }}
 					</button>
 				</div>
@@ -248,8 +238,8 @@ import EebusIcon from "../components/MaterialIcon/Eebus.vue";
 import ModbusProxyIcon from "../components/MaterialIcon/ModbusProxy.vue";
 import NotificationIcon from "../components/MaterialIcon/Notification.vue";
 import MqttIcon from "../components/MaterialIcon/Mqtt.vue";
-import store from "../store";
 import HemsModal from "../components/Config/HemsModal.vue";
+import restart, { performRestart } from "../restart";
 
 export default {
 	name: "Config",
@@ -288,7 +278,6 @@ export default {
 			site: { grid: "", pv: [], battery: [] },
 			deviceValueTimeout: undefined,
 			deviceValues: {},
-			restarting: false,
 		};
 	},
 	mixins: [formatter, collector],
@@ -315,7 +304,6 @@ export default {
 	watch: {
 		offline() {
 			if (!this.offline) {
-				this.restarting = false;
 				this.loadAll();
 			}
 		},
@@ -336,7 +324,9 @@ export default {
 		},
 		async loadDirty() {
 			const response = await api.get("/config/dirty");
-			store.state.needsRestart = response.data?.result;
+			if (response.data?.result) {
+				restart.restartNeeded = true;
+			}
 		},
 		async loadVehicles() {
 			const response = await api.get("/config/devices/vehicle");
@@ -433,12 +423,7 @@ export default {
 			alert("not implemented yet");
 		},
 		async restart() {
-			try {
-				await api.post("/system/shutdown");
-				this.restarting = true;
-			} catch (e) {
-				alert("Unabled to restart server.");
-			}
+			await performRestart();
 		},
 		async updateDeviceValue(type, name) {
 			try {
