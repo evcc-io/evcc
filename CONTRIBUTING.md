@@ -94,6 +94,12 @@ make lint
 make lint-ui
 ```
 
+### Publishing docker images
+
+```sh
+make docker DOCKER_IMAGE=my/docker DOCKER_TAG=0815
+```
+
 ### Changing templates
 
 evcc supports a massive amount of different devices. To keep our documentation and website in sync with the latest software the core project (this repo) generates meta-data that's pushed to the `docs` and `evcc.io` repository. Make sure to update this meta-data every time you make changes to a templates.
