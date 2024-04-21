@@ -72,7 +72,7 @@ npm run playwright
 
 #### Simulating device state
 
-Since we dont want to run tests agains real devices or cloud services we've build a simple simulator that lets you emulated meters, vehicles and loadpoints. The simulators web interface runs on http://localhost:7072.
+Since we don't want to run tests against real devices or cloud services, we've build a simple simulator that lets you emulated meters, vehicles and loadpoints. The simulators web interface runs on http://localhost:7072.
 
 ```
 npm run simulator
