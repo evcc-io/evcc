@@ -471,6 +471,9 @@ func (lp *Loadpoint) evVehicleConnectHandler() {
 		lp.socEstimator.Reset()
 	}
 
+	// get pv mode before vehicle defaults are applied
+	pvMode := lp.GetMode() == api.ModePV || lp.GetMode() == api.ModeMinPV
+
 	// set default or start detection
 	if !lp.chargerHasFeature(api.IntegratedDevice) {
 		lp.vehicleDefaultOrDetect()
@@ -481,10 +484,11 @@ func (lp *Loadpoint) evVehicleConnectHandler() {
 
 	// kick-charge if any available vehicle requires it
 	// since kickCharge uses the PV timer it must be placed after elapsePVTimer
-	if vv := lp.availableVehicles(); len(vv) > 0 {
+	// TODO check is this doesn't conflict with vehicle defaults like mode: off
+	if vv := lp.availableVehicles(); pvMode {
 		for _, v := range vv {
 			if slices.Contains(v.Features(), api.KickCharge) {
-				lp.kickCharge()
+				lp.setLimit(lp.effectiveMinCurrent())
 				break
 			}
 		}
@@ -492,15 +496,6 @@ func (lp *Loadpoint) evVehicleConnectHandler() {
 
 	// create charging session
 	lp.createSession()
-}
-
-// kickCharge starts charging with min current in PV mode.
-// Disable limits and timers are used to disable charging.
-func (lp *Loadpoint) kickCharge() {
-	if lp.mode != api.ModePV && lp.mode != api.ModeMinPV {
-		return
-	}
-	lp.setLimit(lp.effectiveMinCurrent())
 }
 
 // evVehicleDisconnectHandler sends external start event
