@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	"github.com/evcc-io/evcc/util/encode"
+	"golang.org/x/exp/maps"
 )
 
 // Cache is a data store
@@ -52,10 +53,7 @@ func (c *Cache) Run(in <-chan Param) {
 
 // State provides a structured copy of the cached values.
 // Loadpoints are aggregated as loadpoints array.
-// Result values formatted similar to web socket, i.e.
-// - float NaN/Inf are converted to nil
-// - durations are converted to seconds
-// - fmt.Stringer are converted to string
+// Result values are formatted using encoder.
 func (c *Cache) State(enc encode.Encoder) map[string]any {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
@@ -91,12 +89,7 @@ func (c *Cache) All() []Param {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 
-	copy := make([]Param, 0, len(c.val))
-	for _, val := range c.val {
-		copy = append(copy, val)
-	}
-
-	return copy
+	return maps.Values(c.val)
 }
 
 // Add entry to cache

@@ -16,6 +16,12 @@ type Encoder interface {
 
 type EncoderOption func(*encoder)
 
+// NewEncoder creates a new encoder with the following default conversions:
+// - float NaN/Inf are converted to nil
+// - zero time.Time are converted to nil
+// - durations are converted to seconds using WithDuration()
+// - fmt.Stringer are converted to string
+// - time.Time are converted to RFC3339 string
 func NewEncoder(opt ...EncoderOption) Encoder {
 	res := new(encoder)
 	for _, o := range opt {
