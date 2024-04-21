@@ -13,7 +13,7 @@ func EncodeAny(v any) any {
 		if val.IsZero() {
 			return nil
 		}
-		return `"` + val.Format(time.RFC3339) + `"`
+		return val.Format(time.RFC3339)
 
 	case time.Duration:
 		// must be before stringer to convert to seconds instead of string

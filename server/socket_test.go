@@ -23,7 +23,7 @@ func TestEncode(t *testing.T) {
 		{time.Hour, "3600"},
 		{"minpv", "\"minpv\""},
 		{time.Time{}, "null"},
-		{now, "\"\\\"" + now.Format(time.RFC3339) + "\\\"\""},
+		{now, `"` + now.Format(time.RFC3339) + `"`},
 	}
 
 	for _, tc := range tc {
