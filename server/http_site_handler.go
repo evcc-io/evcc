@@ -15,6 +15,7 @@ import (
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/server/assets"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/encode"
 	"github.com/evcc-io/evcc/util/jq"
 	"github.com/evcc-io/evcc/util/logstash"
 	"github.com/gorilla/mux"
@@ -163,7 +164,7 @@ func updateSmartCostLimit(site site.API) http.HandlerFunc {
 // stateHandler returns the combined state
 func stateHandler(cache *util.Cache) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		res := cache.State()
+		res := cache.State(encode.NewEncoder(encode.WithDuration()))
 		for _, k := range ignoreState {
 			delete(res, k)
 		}

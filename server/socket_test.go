@@ -27,7 +27,7 @@ func TestEncode(t *testing.T) {
 	}
 
 	for _, tc := range tc {
-		out, err := encode(tc.in)
+		out, err := encodeAsString(tc.in)
 		require.NoError(t, err)
 		assert.Equal(t, tc.out, out)
 	}
@@ -44,7 +44,7 @@ func TestEncodeSlice(t *testing.T) {
 	}
 
 	for _, tc := range tc {
-		out, err := encodeSlice(tc.in)
+		out, err := encodeSliceAsString(tc.in)
 		require.NoError(t, err)
 		assert.Equal(t, tc.out, out)
 	}

@@ -3,6 +3,8 @@ package util
 import (
 	"fmt"
 	"sync"
+
+	"github.com/evcc-io/evcc/util/encode"
 )
 
 // Cache is a data store
@@ -54,7 +56,7 @@ func (c *Cache) Run(in <-chan Param) {
 // - float NaN/Inf are converted to nil
 // - durations are converted to seconds
 // - fmt.Stringer are converted to string
-func (c *Cache) State() map[string]any {
+func (c *Cache) State(enc encode.Encoder) map[string]any {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 
@@ -63,14 +65,14 @@ func (c *Cache) State() map[string]any {
 
 	for _, param := range c.val {
 		if param.Loadpoint == nil {
-			res[param.Key] = EncodeAny(param.Val)
+			res[param.Key] = enc.Encode(param.Val)
 		} else {
 			lp, ok := lps[*param.Loadpoint]
 			if !ok {
 				lp = make(map[string]any)
 				lps[*param.Loadpoint] = lp
 			}
-			lp[param.Key] = EncodeAny(param.Val)
+			lp[param.Key] = enc.Encode(param.Val)
 		}
 	}
 

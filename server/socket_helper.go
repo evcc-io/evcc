@@ -7,23 +7,23 @@ import (
 	"strings"
 
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/encode"
 )
 
-func encode(v any) (string, error) {
-	if b, err := json.Marshal(util.EncodeAny(v)); err == nil {
-		return string(b), nil
-	} else {
-		return "", err
-	}
+var enc = encode.NewEncoder(encode.WithDuration())
+
+func encodeAsString(v any) (string, error) {
+	b, err := json.Marshal(enc.Encode(v))
+	return string(b), err
 }
 
-func encodeSlice(v any) (string, error) {
+func encodeSliceAsString(v any) (string, error) {
 	rv := reflect.ValueOf(v)
 	res := make([]string, rv.Len())
 
 	for i := 0; i < rv.Len(); i++ {
 		var err error
-		if res[i], err = encode(rv.Index(i).Interface()); err != nil {
+		if res[i], err = encodeAsString(rv.Index(i).Interface()); err != nil {
 			return "", err
 		}
 	}
@@ -39,15 +39,9 @@ func kv(p util.Param) string {
 
 	// unwrap slices
 	if p.Val != nil && reflect.TypeOf(p.Val).Kind() == reflect.Slice {
-		val, err = encodeSlice(p.Val)
+		val, err = encodeSliceAsString(p.Val)
 	} else {
-		if p.Key == "interval" {
-			p.Key = "interval"
-		}
-		if p.Key == "chargeDuration" {
-			p.Key = "chargeDuration"
-		}
-		val, err = encode(p.Val)
+		val, err = encodeAsString(p.Val)
 	}
 
 	if err != nil {
