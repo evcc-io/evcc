@@ -142,33 +142,57 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, auth auth.Auth, cache *util.
 		"testmerged":   {"POST", "/test/{class:[a-z]+}/merge/{id:[0-9.]+}", testConfigHandler},
 
 		// new endpoints ⤵︎
-		"mqtt":               {"GET", "/mqtt", settingsGetJsonHandler("mqtt", new(globalconfig.Mqtt))},
-		"updatemqtt":         {"POST", "/mqtt", settingsSetJsonHandler("mqtt", new(globalconfig.Mqtt))},
-		"deletemqtt":         {"DELETE", "/mqtt", settingsDeleteHandler("mqtt")},
-		"influx":             {"GET", "/influx", settingsGetJsonHandler("influx", new(globalconfig.Influx))},
-		"updateinflux":       {"POST", "/influx", settingsSetJsonHandler("influx", new(globalconfig.Influx))},
-		"deleteinflux":       {"DELETE", "/influx", settingsDeleteHandler("influx")},
-		"hems":               {"GET", "/hems", settingsGetStringHandler("hems")},
-		"updatehems":         {"POST", "/hems", settingsSetYamlHandler("hems", new(config.Typed))},
-		"deletehems":         {"DELETE", "/hems", settingsDeleteHandler("hems")},
-		"eebus":              {"GET", "/eebus", settingsGetJsonHandler("eebus", new(eebus.Config))},
-		"updateeebus":        {"POST", "/eebus", settingsSetJsonHandler("eebus", new(eebus.Config))},
-		"deleteeebus":        {"DELETE", "/eebus", settingsDeleteHandler("eebus")},
-		"tariffs":            {"GET", "/tariffs", settingsGetStringHandler("tariffs")},
-		"updatetariffs":      {"POST", "/tariffs", settingsSetYamlHandler("tariffs", new(globalconfig.Tariffs))},
-		"deletetariffs":      {"DELETE", "/tariffs", settingsDeleteHandler("tariffs")},
-		"messaging":          {"GET", "/messaging", settingsGetStringHandler("messaging")},
-		"updatemessaging":    {"POST", "/messaging", settingsSetYamlHandler("messaging", new(globalconfig.Messaging))},
-		"deletemessaging":    {"DELETE", "/messaging", settingsDeleteHandler("messaging")},
-		"modbusproxy":        {"GET", "/modbusproxy", settingsGetStringHandler("modbusproxy")},
-		"updatemodbusproxy":  {"POST", "/modbusproxy", settingsSetYamlHandler("modbusproxy", new(globalconfig.ModbusProxy))},
-		"deletemodbusproxy":  {"DELETE", "/modbusproxy", settingsDeleteHandler("modbusproxy")},
-		"network":            {"GET", "/network", settingsGetJsonHandler("network", new(globalconfig.Network))},
-		"updatenetwork":      {"POST", "/network", settingsSetJsonHandler("network", new(globalconfig.Network))},
-		"deletenetwork":      {"DELETE", "/network", settingsDeleteHandler("network")},
+		// "hems":       {"GET", "/hems", settingsGetStringHandler("hems")},
+		// "updatehems": {"POST", "/hems", settingsSetYamlHandler("hems", new(config.Typed))},
+		// "deletehems": {"DELETE", "/hems", settingsDeleteHandler("hems")},
+		// "tariffs":           {"GET", "/tariffs", settingsGetStringHandler("tariffs")},
+		// "updatetariffs":     {"POST", "/tariffs", settingsSetYamlHandler("tariffs", new(globalconfig.Tariffs))},
+		// "deletetariffs":     {"DELETE", "/tariffs", settingsDeleteHandler("tariffs")},
+		// "messaging":         {"GET", "/messaging", settingsGetStringHandler("messaging")},
+		// "updatemessaging":   {"POST", "/messaging", settingsSetYamlHandler("messaging", new(globalconfig.Messaging))},
+		// "deletemessaging":   {"DELETE", "/messaging", settingsDeleteHandler("messaging")},
+		// "modbusproxy":       {"GET", "/modbusproxy", settingsGetStringHandler("modbusproxy")},
+		// "updatemodbusproxy": {"POST", "/modbusproxy", settingsSetYamlHandler("modbusproxy", new(globalconfig.ModbusProxy))},
+		// "deletemodbusproxy": {"DELETE", "/modbusproxy", settingsDeleteHandler("modbusproxy")},
+		// "mqtt":               {"GET", "/mqtt", settingsGetJsonHandler("mqtt", new(globalconfig.Mqtt))},
+		// "updatemqtt":         {"POST", "/mqtt", settingsSetJsonHandler("mqtt", new(globalconfig.Mqtt))},
+		// "deletemqtt":         {"DELETE", "/mqtt", settingsDeleteHandler("mqtt")},
+		// "influx":             {"GET", "/influx", settingsGetJsonHandler("influx", new(globalconfig.Influx))},
+		// "updateinflux":       {"POST", "/influx", settingsSetJsonHandler("influx", new(globalconfig.Influx))},
+		// "deleteinflux":       {"DELETE", "/influx", settingsDeleteHandler("influx")},
+		// "eebus":              {"GET", "/eebus", settingsGetJsonHandler("eebus", new(eebus.Config))},
+		// "updateeebus":        {"POST", "/eebus", settingsSetJsonHandler("eebus", new(eebus.Config))},
+		// "deleteeebus":        {"DELETE", "/eebus", settingsDeleteHandler("eebus")},
+		// "network":            {"GET", "/network", settingsGetJsonHandler("network", new(globalconfig.Network))},
+		// "updatenetwork":      {"POST", "/network", settingsSetJsonHandler("network", new(globalconfig.Network))},
+		// "deletenetwork":      {"DELETE", "/network", settingsDeleteHandler("network")},
 		"interval":           {"POST", "/interval/{value:[0-9.]+", settingsSetDurationHandler("interval")},
 		"updatesponsortoken": {"POST", "/sponsortoken/{token:[a-zA-Z0-9_-.]+}", updateSponsortokenHandler},
 		"deletesponsortoken": {"DELETE", "/sponsortoken", settingsDeleteHandler(keys.SponsorToken)},
+	}
+
+	// yaml handlers
+	for key, struc := range map[string]any{
+		"hems":        config.Typed{},
+		"tariffs":     globalconfig.Tariffs{},
+		"messaging":   globalconfig.Messaging{},
+		"modbusproxy": globalconfig.ModbusProxy{},
+	} {
+		configRoutes[key] = route{Method: "GET", Pattern: "/" + key, HandlerFunc: settingsGetStringHandler(key)}
+		configRoutes["update"+key] = route{Method: "POST", Pattern: "/" + key, HandlerFunc: settingsSetYamlHandler(key, struc)}
+		configRoutes["delete"+key] = route{Method: "DELETE", Pattern: "/" + key, HandlerFunc: settingsDeleteHandler(key)}
+	}
+
+	// json handlers
+	for key, struc := range map[string]any{
+		"mqtt":    globalconfig.Mqtt{},
+		"influx":  globalconfig.Influx{},
+		"eebus":   eebus.Config{},
+		"network": globalconfig.Network{},
+	} {
+		configRoutes[key] = route{Method: "GET", Pattern: "/" + key, HandlerFunc: settingsGetJsonHandler(key, struc)}
+		configRoutes["update"+key] = route{Method: "POST", Pattern: "/" + key, HandlerFunc: settingsSetJsonHandler(key, struc)}
+		configRoutes["delete"+key] = route{Method: "DELETE", Pattern: "/" + key, HandlerFunc: settingsDeleteHandler(key)}
 	}
 
 	for _, r := range configRoutes {
