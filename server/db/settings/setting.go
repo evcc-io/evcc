@@ -97,6 +97,14 @@ func SetJson(key string, val any) error {
 	return err
 }
 
+func Exists(key string) bool {
+	mu.RLock()
+	defer mu.RUnlock()
+
+	s, err := String(key)
+	return err == nil && len(s) > 0
+}
+
 func String(key string) (string, error) {
 	mu.RLock()
 	defer mu.RUnlock()

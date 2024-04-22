@@ -20,6 +20,7 @@ import (
 	"github.com/evcc-io/evcc/charger/eebus"
 	"github.com/evcc-io/evcc/cmd/shutdown"
 	"github.com/evcc-io/evcc/core"
+	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/hems"
 	"github.com/evcc-io/evcc/meter"
@@ -341,7 +342,7 @@ func configureEnvironment(cmd *cobra.Command, conf globalconfig.All) (err error)
 	}
 
 	// setup mqtt client listener
-	if err == nil && conf.Mqtt.Broker != "" {
+	if err == nil {
 		err = configureMQTT(conf.Mqtt)
 	}
 
@@ -398,7 +399,24 @@ func configureDatabase(conf globalconfig.DB) error {
 }
 
 // configureInflux configures influx database
-func configureInflux(conf globalconfig.Influx, site site.API, in <-chan util.Param) {
+func configureInflux(conf globalconfig.Influx, site site.API, in <-chan util.Param) error {
+	// migrate settings
+	if settings.Exists(keys.InfluxDB) {
+		if err := settings.Json(keys.InfluxDB, &conf); err != nil {
+			return err
+		}
+	}
+
+	if conf.URL == "" {
+		return nil
+	}
+
+	if !settings.Exists(keys.InfluxDB) {
+		if err := settings.SetJson(keys.InfluxDB, conf); err != nil {
+			return err
+		}
+	}
+
 	influx := server.NewInfluxClient(
 		conf.URL,
 		conf.Token,
@@ -413,10 +431,28 @@ func configureInflux(conf globalconfig.Influx, site site.API, in <-chan util.Par
 	in = dedupe.Pipe(in)
 
 	go influx.Run(site, in)
+	return nil
 }
 
 // setup mqtt
 func configureMQTT(conf globalconfig.Mqtt) error {
+	// migrate settings
+	if settings.Exists(keys.Mqtt) {
+		if err := settings.Json(keys.Mqtt, &conf); err != nil {
+			return err
+		}
+	}
+
+	if conf.Broker == "" {
+		return nil
+	}
+
+	if !settings.Exists(keys.Mqtt) {
+		if err := settings.SetJson(keys.Mqtt, conf); err != nil {
+			return err
+		}
+	}
+
 	log := util.NewLogger("mqtt")
 
 	instance, err := mqtt.RegisteredClient(log, conf.Broker, conf.User, conf.Password, conf.ClientID, 1, conf.Insecure, func(options *paho.ClientOptions) {
@@ -485,6 +521,23 @@ func configureMDNS(conf globalconfig.Network) error {
 
 // setup EEBus
 func configureEEBus(conf eebus.Config) error {
+	// migrate settings
+	if settings.Exists(keys.EEBus) {
+		if err := settings.Json(keys.EEBus, &conf); err != nil {
+			return err
+		}
+	}
+
+	if conf.URI == "" {
+		return nil
+	}
+
+	if !settings.Exists(keys.EEBus) {
+		if err := settings.SetJson(keys.EEBus, conf); err != nil {
+			return err
+		}
+	}
+
 	var err error
 	if eebus.Instance, err = eebus.NewServer(conf); err != nil {
 		return fmt.Errorf("failed configuring eebus: %w", err)

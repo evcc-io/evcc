@@ -22,6 +22,14 @@ func settingsGetStringHandler(key string) http.HandlerFunc {
 	}
 }
 
+func settingsDeleteHandler(key string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// using {} indicates valid JSON while marking the entry as existing
+		settings.SetString(key, "{}")
+		jsonResult(w, true)
+	}
+}
+
 func settingsSetDurationHandler(key string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
