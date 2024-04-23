@@ -221,8 +221,8 @@ func (wb *Em2Go) ChargedEnergy() (float64, error) {
 
 var _ api.ChargeTimer = (*Em2Go)(nil)
 
-// ChargingTime implements the api.ChargeTimer interface
-func (wb *Em2Go) ChargingTime() (time.Duration, error) {
+// ChargeDuration implements the api.ChargeTimer interface
+func (wb *Em2Go) ChargeDuration() (time.Duration, error) {
 	b, err := wb.conn.ReadHoldingRegisters(em2GoRegChargeDuration, 2)
 	if err != nil {
 		return 0, err

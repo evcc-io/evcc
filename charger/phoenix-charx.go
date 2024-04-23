@@ -180,8 +180,8 @@ func (wb *PhoenixCharx) MaxCurrent(current int64) error {
 
 var _ api.ChargeTimer = (*PhoenixCharx)(nil)
 
-// ChargingTime implements the api.ChargeTimer interface
-func (wb *PhoenixCharx) ChargingTime() (time.Duration, error) {
+// ChargeDuration implements the api.ChargeTimer interface
+func (wb *PhoenixCharx) ChargeDuration() (time.Duration, error) {
 	b, err := wb.conn.ReadHoldingRegisters(wb.register(charxRegChargeTime), 2)
 	if err != nil {
 		return 0, err

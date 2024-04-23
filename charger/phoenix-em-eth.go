@@ -128,8 +128,8 @@ func (wb *PhoenixEMEth) MaxCurrent(current int64) error {
 
 var _ api.ChargeTimer = (*PhoenixEMEth)(nil)
 
-// ChargingTime implements the api.ChargeTimer interface
-func (wb *PhoenixEMEth) ChargingTime() (time.Duration, error) {
+// ChargeDuration implements the api.ChargeTimer interface
+func (wb *PhoenixEMEth) ChargeDuration() (time.Duration, error) {
 	b, err := wb.conn.ReadInputRegisters(phxEMEthRegChargeTime, 2)
 	if err != nil {
 		return 0, err
