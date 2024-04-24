@@ -7,7 +7,7 @@
 			</a>
 		</p>
 		<p class="text-danger" v-if="error">{{ error }}</p>
-		<form ref="form" class="container mx-0 px-0">
+		<form ref="form" class="container mx-0 px-0" @submit.prevent="save">
 			<slot :values="values"></slot>
 
 			<div class="mt-4 d-flex justify-content-between gap-2 flex-column flex-sm-row">
@@ -37,7 +37,6 @@
 					type="submit"
 					class="btn btn-primary order-1 order-sm-2 flex-grow-1 flex-sm-grow-0 px-4"
 					:disabled="saving || nothingChanged"
-					@click.prevent="save"
 				>
 					<span
 						v-if="saving"

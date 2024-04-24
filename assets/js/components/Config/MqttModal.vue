@@ -14,7 +14,7 @@
 				:label="$t('config.mqtt.brokerLabel')"
 				example="localhost:1883"
 			>
-				<input id="mqttBroker" v-model="values.Broker" class="form-control" />
+				<input id="mqttBroker" v-model="values.Broker" class="form-control" required />
 			</FormRow>
 
 			<h6>{{ $t("config.mqtt.publishing") }}</h6>
@@ -45,6 +45,7 @@
 					v-model="values.Password"
 					class="form-control"
 					type="password"
+					autocomplete="off"
 				/>
 			</FormRow>
 			<FormRow id="mqttInsecure" :label="$t('config.mqtt.insecureLabel')">
