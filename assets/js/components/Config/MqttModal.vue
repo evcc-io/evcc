@@ -3,7 +3,7 @@
 		id="mqttModal"
 		:title="$t('config.mqtt.title')"
 		:description="$t('config.mqtt.description')"
-		docs="/docs/reference/configuration/mytt"
+		docs="/docs/reference/configuration/mqtt"
 		endpoint="/config/mqtt"
 		data-testid="mqtt-modal"
 		@changed="$emit('changed')"

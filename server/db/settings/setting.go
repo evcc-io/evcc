@@ -152,10 +152,13 @@ func Bool(key string) (bool, error) {
 
 func Json(key string, res any) error {
 	s, err := String(key)
-	if err == nil {
-		err = json.Unmarshal([]byte(s), &res)
+	if err != nil {
+		return err
 	}
-	return err
+	if s == "" {
+		return ErrNotFound
+	}
+	return json.Unmarshal([]byte(s), &res)
 }
 
 // wrapping Settings into a struct for better decoupling

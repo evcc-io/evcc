@@ -24,8 +24,7 @@ func settingsGetStringHandler(key string) http.HandlerFunc {
 
 func settingsDeleteHandler(key string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// using {} indicates valid JSON while marking the entry as existing
-		settings.SetString(key, "{}")
+		settings.SetString(key, "")
 		jsonResult(w, true)
 	}
 }
@@ -87,30 +86,32 @@ func settingsSetYamlHandler(key string, struc any) http.HandlerFunc {
 	}
 }
 
-func settingsGetJsonHandler(key string, struc any) http.HandlerFunc {
+func settingsGetJsonHandler(key string, struc func() interface{}) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if err := settings.Json(key, &struc); err != nil && err != settings.ErrNotFound {
+		res := struc()
+		if err := settings.Json(key, &res); err != nil && err != settings.ErrNotFound {
 			jsonError(w, http.StatusInternalServerError, err)
 			return
 		}
 
-		jsonResult(w, struc)
+		jsonResult(w, res)
 	}
 }
 
-func settingsSetJsonHandler(key string, struc any) http.HandlerFunc {
+func settingsSetJsonHandler(key string, struc func() interface{}) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		res := struc()
 		dec := json.NewDecoder(r.Body)
 		dec.DisallowUnknownFields()
-		if err := dec.Decode(&struc); err != nil {
+		if err := dec.Decode(&res); err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
 
-		settings.SetJson(key, struc)
+		settings.SetJson(key, res)
 		setConfigDirty()
 
 		w.WriteHeader(http.StatusOK)
-		jsonResult(w, struc)
+		jsonResult(w, res)
 	}
 }

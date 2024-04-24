@@ -158,11 +158,11 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, auth auth.Auth, cache *util.
 	}
 
 	// json handlers
-	for key, struc := range map[string]any{
-		"mqtt":    globalconfig.Mqtt{},
-		"influx":  globalconfig.Influx{},
-		"eebus":   eebus.Config{},
-		"network": globalconfig.Network{},
+	for key, struc := range map[string]func() interface{}{
+		"mqtt":    func() interface{} { return &globalconfig.Mqtt{} },
+		"influx":  func() interface{} { return &globalconfig.Influx{} },
+		"eebus":   func() interface{} { return &eebus.Config{} },
+		"network": func() interface{} { return &globalconfig.Network{} },
 	} {
 		configRoutes[key] = route{Method: "GET", Pattern: "/" + key, HandlerFunc: settingsGetJsonHandler(key, struc)}
 		configRoutes["update"+key] = route{Method: "POST", Pattern: "/" + key, HandlerFunc: settingsSetJsonHandler(key, struc)}
