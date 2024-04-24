@@ -201,6 +201,7 @@
 					@removed="removeMeterFromSite"
 				/>
 				<MqttModal @changed="loadDirty" />
+				<InfluxModal @changed="loadDirty" />
 				<MessagingModal @changed="loadDirty" />
 				<TariffsModal @changed="loadDirty" />
 				<ModbusProxyModal @changed="loadDirty" />
@@ -239,6 +240,7 @@ import ModbusProxyIcon from "../components/MaterialIcon/ModbusProxy.vue";
 import NotificationIcon from "../components/MaterialIcon/Notification.vue";
 import MqttIcon from "../components/MaterialIcon/Mqtt.vue";
 import HemsModal from "../components/Config/HemsModal.vue";
+import InfluxModal from "../components/Config/InfluxModal.vue";
 import restart, { performRestart } from "../restart";
 
 export default {
@@ -253,6 +255,7 @@ export default {
 		AddDeviceButton,
 		MeterModal,
 		MqttModal,
+		InfluxModal,
 		MessagingModal,
 		TariffsModal,
 		ModbusProxyModal,
