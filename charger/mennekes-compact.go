@@ -248,8 +248,8 @@ func (wb *MennekesCompact) ChargedEnergy() (float64, error) {
 
 var _ api.ChargeTimer = (*MennekesCompact)(nil)
 
-// ChargingTime implements the api.ChargeTimer interface
-func (wb *MennekesCompact) ChargingTime() (time.Duration, error) {
+// ChargeDuration implements the api.ChargeTimer interface
+func (wb *MennekesCompact) ChargeDuration() (time.Duration, error) {
 	b, err := wb.conn.ReadHoldingRegisters(mennekesRegDurationSession, 2)
 	if err != nil {
 		return 0, err

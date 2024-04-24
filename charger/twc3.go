@@ -168,8 +168,8 @@ func (v *Twc3) ChargedEnergy() (float64, error) {
 
 var _ api.ChargeTimer = (*Twc3)(nil)
 
-// ChargingTime implements the api.ChargeTimer interface
-func (v *Twc3) ChargingTime() (time.Duration, error) {
+// ChargeDuration implements the api.ChargeTimer interface
+func (v *Twc3) ChargeDuration() (time.Duration, error) {
 	res, err := v.vitalsG()
 	return time.Duration(res.SessionS) * time.Second, err
 }

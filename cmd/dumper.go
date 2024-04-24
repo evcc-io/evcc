@@ -133,7 +133,7 @@ func (d *dumper) Dump(name string, v interface{}) {
 	}
 
 	if v, ok := v.(api.ChargeTimer); ok {
-		if duration, err := v.ChargingTime(); err != nil {
+		if duration, err := v.ChargeDuration(); err != nil {
 			fmt.Fprintf(w, "Duration:\t%v\n", err)
 		} else {
 			fmt.Fprintf(w, "Duration:\t%v\n", duration.Truncate(time.Second))

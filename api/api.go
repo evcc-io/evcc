@@ -93,7 +93,7 @@ type Diagnosis interface {
 
 // ChargeTimer provides current charge cycle duration
 type ChargeTimer interface {
-	ChargingTime() (time.Duration, error)
+	ChargeDuration() (time.Duration, error)
 }
 
 // ChargeRater provides charged energy amount in kWh

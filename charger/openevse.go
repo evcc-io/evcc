@@ -205,7 +205,7 @@ func (c *OpenEVSE) ChargedEnergy() (float64, error) {
 
 var _ api.ChargeTimer = (*OpenEVSE)(nil)
 
-func (c *OpenEVSE) ChargingTime() (time.Duration, error) {
+func (c *OpenEVSE) ChargeDuration() (time.Duration, error) {
 	res, err := c.statusG.Get()
 	if err != nil {
 		return 0, err

@@ -182,8 +182,8 @@ func (wb *Vestel) MaxCurrent(current int64) error {
 
 var _ api.ChargeTimer = (*Vestel)(nil)
 
-// ChargingTime implements the api.ChargeTimer interface
-func (wb *Vestel) ChargingTime() (time.Duration, error) {
+// ChargeDuration implements the api.ChargeTimer interface
+func (wb *Vestel) ChargeDuration() (time.Duration, error) {
 	b, err := wb.conn.ReadInputRegisters(vestelRegChargeTime, 2)
 	if err != nil {
 		return 0, err
