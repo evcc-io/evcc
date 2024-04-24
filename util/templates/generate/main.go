@@ -53,11 +53,9 @@ func generateDocs(lang string) error {
 }
 
 func generateClass(class templates.Class, lang string) error {
-	tmpls := lo.Filter(templates.ByClass(class), func(t templates.Template, _ int) bool {
+	for _, tmpl := range lo.Filter(templates.ByClass(class), func(t templates.Template, _ int) bool {
 		return !t.Deprecated
-	})
-
-	for _, tmpl := range tmpls {
+	}) {
 		if err := tmpl.Validate(); err != nil {
 			return err
 		}

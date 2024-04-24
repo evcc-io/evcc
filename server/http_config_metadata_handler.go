@@ -34,10 +34,9 @@ func templatesHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res := lo.Filter(templates.ByClass(class), func(t templates.Template, _ int) bool {
+	jsonResult(w, lo.Filter(templates.ByClass(class), func(t templates.Template, _ int) bool {
 		return !t.Deprecated
-	})
-	jsonResult(w, res)
+	}))
 }
 
 // productsHandler returns the list of products by class
