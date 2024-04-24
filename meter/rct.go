@@ -3,7 +3,6 @@ package meter
 import (
 	"errors"
 	"fmt"
-	"strings"
 	"sync"
 	"time"
 
@@ -45,7 +44,7 @@ meters:
 type RCT struct {
 	bo    *backoff.ExponentialBackOff
 	conn  *rct.Connection // connection with the RCT device
-	usage string          // grid, pv, battery
+	usage api.Usage       // grid, pv, battery
 }
 
 func init() {
@@ -57,9 +56,10 @@ func init() {
 // NewRCTFromConfig creates an RCT from generic config
 func NewRCTFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
-		capacity   `mapstructure:",squash"`
-		Uri, Usage string
-		Cache      time.Duration
+		capacity `mapstructure:",squash"`
+		Uri      string
+		Usage    api.Usage
+		Cache    time.Duration
 	}{
 		Cache: time.Second,
 	}
@@ -68,7 +68,7 @@ func NewRCTFromConfig(other map[string]interface{}) (api.Meter, error) {
 		return nil, err
 	}
 
-	if cc.Usage == "" {
+	if !cc.Usage.IsAUsage() {
 		return nil, errors.New("missing usage")
 	}
 
@@ -78,7 +78,7 @@ func NewRCTFromConfig(other map[string]interface{}) (api.Meter, error) {
 var rctMu sync.Mutex
 
 // NewRCT creates an RCT meter
-func NewRCT(uri, usage string, cache time.Duration, capacity func() float64) (api.Meter, error) {
+func NewRCT(uri string, usage api.Usage, cache time.Duration, capacity func() float64) (api.Meter, error) {
 	rctMu.Lock()
 	defer rctMu.Unlock()
 
@@ -92,20 +92,20 @@ func NewRCT(uri, usage string, cache time.Duration, capacity func() float64) (ap
 	bo.MaxElapsedTime = time.Second
 
 	m := &RCT{
-		usage: strings.ToLower(usage),
+		usage: usage,
 		conn:  conn,
 		bo:    bo,
 	}
 
 	// decorate api.MeterEnergy
 	var totalEnergy func() (float64, error)
-	if usage == "grid" {
+	if usage == api.UsageGrid {
 		totalEnergy = m.totalEnergy
 	}
 
 	// decorate api.BatterySoc
 	var batterySoc func() (float64, error)
-	if usage == "battery" {
+	if usage == api.UsageBattery {
 		batterySoc = m.batterySoc
 	}
 
@@ -115,10 +115,10 @@ func NewRCT(uri, usage string, cache time.Duration, capacity func() float64) (ap
 // CurrentPower implements the api.Meter interface
 func (m *RCT) CurrentPower() (float64, error) {
 	switch m.usage {
-	case "grid":
+	case api.UsageGrid:
 		return m.queryFloat(rct.TotalGridPowerW)
 
-	case "pv":
+	case api.UsagePV:
 		a, err := m.queryFloat(rct.SolarGenAPowerW)
 		if err != nil {
 			return 0, err
@@ -130,7 +130,7 @@ func (m *RCT) CurrentPower() (float64, error) {
 		c, err := m.queryFloat(rct.S0ExternalPowerW)
 		return a + b + c, err
 
-	case "battery":
+	case api.UsageBattery:
 		return m.queryFloat(rct.BatteryPowerW)
 
 	default:
@@ -141,11 +141,11 @@ func (m *RCT) CurrentPower() (float64, error) {
 // totalEnergy implements the api.MeterEnergy interface
 func (m *RCT) totalEnergy() (float64, error) {
 	switch m.usage {
-	case "grid":
+	case api.UsageGrid:
 		res, err := m.queryFloat(rct.TotalEnergyGridWh)
 		return res / 1000, err
 
-	case "pv":
+	case api.UsagePV:
 		a, err := m.queryFloat(rct.TotalEnergySolarGenAWh)
 		if err != nil {
 			return 0, err
@@ -153,7 +153,7 @@ func (m *RCT) totalEnergy() (float64, error) {
 		b, err := m.queryFloat(rct.TotalEnergySolarGenBWh)
 		return (a + b) / 1000, err
 
-	case "battery":
+	case api.UsageBattery:
 		in, err := m.queryFloat(rct.TotalEnergyBattInWh)
 		if err != nil {
 			return 0, err

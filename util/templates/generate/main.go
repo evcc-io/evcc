@@ -8,6 +8,7 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util/templates"
 )
 
@@ -130,16 +131,20 @@ func generateBrandJSON() error {
 			}
 
 			for j := range tmpl.Params[i].Choice {
-				usage, _ := templates.UsageString(tmpl.Params[i].Choice[j])
+				usage, err := api.UsageString(tmpl.Params[i].Choice[j])
+				if err != nil {
+					return err
+				}
+
 				for _, product := range tmpl.Products {
 					if product.Brand == "" {
 						continue
 					}
 
 					switch usage {
-					case templates.UsageGrid, templates.UsageCharge, templates.UsageAux:
+					case api.UsageGrid, api.UsageCharge, api.UsageAux:
 						meters = append(meters, product.Brand)
-					case templates.UsagePV, templates.UsageBattery:
+					case api.UsagePV, api.UsageBattery:
 						pvBattery = append(pvBattery, product.Brand)
 					}
 				}

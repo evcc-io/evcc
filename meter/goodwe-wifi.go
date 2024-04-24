@@ -1,6 +1,7 @@
 package meter
 
 import (
+	"errors"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -10,7 +11,7 @@ import (
 )
 
 type goodWeWiFi struct {
-	usage    string
+	usage    api.Usage
 	inverter *util.Monitor[goodwe.Inverter]
 }
 
@@ -22,9 +23,10 @@ func init() {
 
 func NewGoodWeWifiFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
-		capacity   `mapstructure:",squash"`
-		URI, Usage string
-		Timeout    time.Duration
+		capacity `mapstructure:",squash"`
+		URI      string
+		Usage    api.Usage
+		Timeout  time.Duration
 	}{
 		Timeout: request.Timeout,
 	}
@@ -33,10 +35,14 @@ func NewGoodWeWifiFromConfig(other map[string]interface{}) (api.Meter, error) {
 		return nil, err
 	}
 
+	if !cc.Usage.IsAUsage() {
+		return nil, errors.New("missing usage")
+	}
+
 	return NewGoodWeWiFi(cc.URI, cc.Usage, cc.Timeout)
 }
 
-func NewGoodWeWiFi(uri, usage string, timeout time.Duration) (api.Meter, error) {
+func NewGoodWeWiFi(uri string, usage api.Usage, timeout time.Duration) (api.Meter, error) {
 	instance, err := goodwe.Instance(util.NewLogger("goodwe-wifi"))
 	if err != nil {
 		return nil, err
@@ -54,7 +60,7 @@ func NewGoodWeWiFi(uri, usage string, timeout time.Duration) (api.Meter, error) 
 
 	// decorate api.BatterySoc
 	var batterySoc func() (float64, error)
-	if usage == "battery" {
+	if usage == api.UsageBattery {
 		batterySoc = res.batterySoc
 	}
 
@@ -68,11 +74,11 @@ func (m *goodWeWiFi) CurrentPower() (float64, error) {
 	}
 
 	switch m.usage {
-	case "grid":
+	case api.UsageGrid:
 		return data.NetPower, nil
-	case "pv":
+	case api.UsagePV:
 		return data.PvPower, nil
-	case "battery":
+	case api.UsageBattery:
 		return data.BatteryPower, nil
 	}
 	return 0, api.ErrNotAvailable

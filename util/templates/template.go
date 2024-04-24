@@ -10,6 +10,7 @@ import (
 	"text/template"
 
 	"github.com/42atomys/sprout"
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 )
 
@@ -56,7 +57,7 @@ func (t *Template) Validate() error {
 		switch p.Name {
 		case ParamUsage:
 			for _, c := range p.Choice {
-				if !slices.Contains(UsageStrings(), c) {
+				if !slices.Contains(api.UsageStrings(), c) {
 					return fmt.Errorf("invalid usage choice '%s' in template %s", c, t.Template)
 				}
 			}

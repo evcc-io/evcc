@@ -37,11 +37,12 @@ func init() {
 // NewPowerWallFromConfig creates a PowerWall Powerwall Meter from generic config
 func NewPowerWallFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
-		URI, Usage, User, Password string
-		Cache                      time.Duration
-		RefreshToken               string
-		SiteId                     int64
-		battery                    `mapstructure:",squash"`
+		URI, User, Password string
+		Usage               api.Usage
+		Cache               time.Duration
+		RefreshToken        string
+		SiteId              int64
+		battery             `mapstructure:",squash"`
 	}{
 		Cache: time.Second,
 		battery: battery{
@@ -54,7 +55,7 @@ func NewPowerWallFromConfig(other map[string]interface{}) (api.Meter, error) {
 		return nil, err
 	}
 
-	if cc.Usage == "" {
+	if !cc.Usage.IsAUsage() {
 		return nil, errors.New("missing usage")
 	}
 
@@ -63,14 +64,15 @@ func NewPowerWallFromConfig(other map[string]interface{}) (api.Meter, error) {
 	}
 
 	// support default meter names
-	switch strings.ToLower(cc.Usage) {
-	case "grid":
-		cc.Usage = "site"
-	case "pv":
-		cc.Usage = "solar"
+	usage := cc.Usage.String()
+	switch cc.Usage {
+	case api.UsageGrid:
+		usage = "site"
+	case api.UsagePV:
+		usage = "solar"
 	}
 
-	return NewPowerWall(cc.URI, cc.Usage, cc.User, cc.Password, cc.Cache, cc.RefreshToken, cc.SiteId, cc.battery)
+	return NewPowerWall(cc.URI, usage, cc.User, cc.Password, cc.Cache, cc.RefreshToken, cc.SiteId, cc.battery)
 }
 
 // NewPowerWall creates a Tesla PowerWall Meter

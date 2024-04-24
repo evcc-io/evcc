@@ -3,7 +3,6 @@ package meter
 import (
 	"errors"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -41,7 +40,7 @@ same hardware instance is accessed with the different usages.
 
 // LgEss implements the api.Meter interface
 type LgEss struct {
-	usage string     // grid, pv, battery
+	usage api.Usage  // grid, pv, battery
 	lp    *lgpcs.Com // communication with the lgpcs device
 }
 
@@ -55,7 +54,8 @@ func init() {
 func NewLgEssFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
 		capacity               `mapstructure:",squash"`
-		URI, Usage             string
+		URI                    string
+		Usage                  api.Usage
 		Registration, Password string
 		Cache                  time.Duration
 	}{
@@ -66,7 +66,7 @@ func NewLgEssFromConfig(other map[string]interface{}) (api.Meter, error) {
 		return nil, err
 	}
 
-	if cc.Usage == "" {
+	if !cc.Usage.IsAUsage() {
 		return nil, errors.New("missing usage")
 	}
 
@@ -74,26 +74,26 @@ func NewLgEssFromConfig(other map[string]interface{}) (api.Meter, error) {
 }
 
 // NewLgEss creates an LgEss Meter
-func NewLgEss(uri, usage, registration, password string, cache time.Duration, capacity func() float64) (api.Meter, error) {
+func NewLgEss(uri string, usage api.Usage, registration, password string, cache time.Duration, capacity func() float64) (api.Meter, error) {
 	lp, err := lgpcs.GetInstance(uri, registration, password, cache)
 	if err != nil {
 		return nil, err
 	}
 
 	m := &LgEss{
-		usage: strings.ToLower(usage),
+		usage: usage,
 		lp:    lp,
 	}
 
 	// decorate api.MeterEnergy
 	var totalEnergy func() (float64, error)
-	if m.usage == "grid" {
+	if usage == api.UsageGrid {
 		totalEnergy = m.totalEnergy
 	}
 
 	// decorate api.BatterySoc
 	var batterySoc func() (float64, error)
-	if usage == "battery" {
+	if usage == api.UsageBattery {
 		batterySoc = m.batterySoc
 	}
 
@@ -108,11 +108,11 @@ func (m *LgEss) CurrentPower() (float64, error) {
 	}
 
 	switch m.usage {
-	case "grid":
+	case api.UsageGrid:
 		return data.GridPower, nil
-	case "pv":
+	case api.UsagePV:
 		return data.PvTotalPower, nil
-	case "battery":
+	case api.UsageBattery:
 		return data.BatConvPower, nil
 	default:
 		return 0, fmt.Errorf("invalid usage: %s", m.usage)
@@ -127,7 +127,7 @@ func (m *LgEss) totalEnergy() (float64, error) {
 	}
 
 	switch m.usage {
-	case "grid":
+	case api.UsageGrid:
 		return data.CurrentGridFeedInEnergy / 1e3, nil
 	default:
 		return 0, fmt.Errorf("invalid usage: %s", m.usage)

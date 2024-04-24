@@ -6,6 +6,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/provider/mqtt"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/sponsor"
@@ -253,7 +254,7 @@ func (c *CmdConfigure) askSponsortoken(required, feature bool) error {
 	return err
 }
 
-func (c *CmdConfigure) configureMQTT(templateItem templates.Template) (map[string]interface{}, error) {
+func (c *CmdConfigure) configureMQTT(_ templates.Template) (map[string]interface{}, error) {
 	fmt.Println()
 	fmt.Println("-- MQTT Broker ----------------------------")
 
@@ -400,8 +401,11 @@ func (c *CmdConfigure) processParams(templateItem *templates.Template, deviceCat
 				continue
 			}
 
-			if usageFilter != "" && len(param.Usages) > 0 && !slices.Contains(param.Usages, string(usageFilter)) {
-				continue
+			if usageFilter != "" && len(param.Usages) > 0 {
+				uf, err := api.UsageString(string(usageFilter))
+				if err != nil || !slices.Contains(param.Usages, uf) {
+					continue
+				}
 			}
 
 			switch param.Type {

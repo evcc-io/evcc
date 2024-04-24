@@ -8,8 +8,6 @@ const (
 	DefaultConfigFilename string = "evcc.yaml"
 )
 
-type UsageChoice string
-
 type DeviceCategory string
 
 func (c DeviceCategory) String() string {
@@ -17,7 +15,7 @@ func (c DeviceCategory) String() string {
 }
 
 const (
-	DeviceCategoryCharger      DeviceCategory = "wallbox"
+	DeviceCategoryCharger      DeviceCategory = "charger"
 	DeviceCategoryGridMeter    DeviceCategory = "grid"
 	DeviceCategoryPVMeter      DeviceCategory = "pv"
 	DeviceCategoryBatteryMeter DeviceCategory = "battery"
@@ -27,7 +25,7 @@ const (
 )
 
 const (
-	defaultNameCharger      = "wallbox"
+	defaultNameCharger      = "charger"
 	defaultNameGridMeter    = "grid"
 	defaultNamePVMeter      = "pv"
 	defaultNameBatteryMeter = "battery"

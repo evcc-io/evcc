@@ -3,7 +3,6 @@ package meter
 import (
 	"errors"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -23,7 +22,7 @@ func NewOpenWBFromConfig(other map[string]interface{}) (api.Meter, error) {
 		mqtt.Config `mapstructure:",squash"`
 		Topic       string
 		Timeout     time.Duration
-		Usage       string
+		Usage       api.Usage
 		capacity    `mapstructure:",squash"`
 	}{
 		Topic:   openwb.RootTopic,
@@ -57,8 +56,8 @@ func NewOpenWBFromConfig(other map[string]interface{}) (api.Meter, error) {
 	var soc func() (float64, error)
 	var capacity func() float64
 
-	switch strings.ToLower(cc.Usage) {
-	case "grid":
+	switch cc.Usage {
+	case api.UsageGrid:
 		power, err = to.FloatGetter(mq("%s/evu/%s", cc.Topic, openwb.PowerTopic))
 		if err != nil {
 			return nil, err
@@ -75,7 +74,7 @@ func NewOpenWBFromConfig(other map[string]interface{}) (api.Meter, error) {
 
 		currents = collectPhaseProviders(curr)
 
-	case "pv":
+	case api.UsagePV:
 		// first pv
 		configuredG, err := provider.NewMqtt(log, client, fmt.Sprintf("%s/pv/1/%s", cc.Topic, openwb.PvConfigured), cc.Timeout).BoolGetter()
 		if err != nil {
@@ -99,7 +98,7 @@ func NewOpenWBFromConfig(other map[string]interface{}) (api.Meter, error) {
 			return -f, err
 		}
 
-	case "battery":
+	case api.UsageBattery:
 		configuredG, err := provider.NewMqtt(log, client, fmt.Sprintf("%s/housebattery/%s", cc.Topic, openwb.BatteryConfigured), cc.Timeout).BoolGetter()
 		if err != nil {
 			return nil, err

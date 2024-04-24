@@ -7,17 +7,7 @@ import (
 	"strings"
 
 	"dario.cat/mergo"
-)
-
-type Usage int
-
-//go:generate enumer -type Usage -trimprefix Usage -transform=lower
-const (
-	UsageGrid Usage = iota
-	UsagePV
-	UsageBattery
-	UsageCharge
-	UsageAux
+	"github.com/evcc-io/evcc/api"
 )
 
 const (
@@ -150,9 +140,9 @@ type Requirements struct {
 // Linked Template
 type LinkedTemplate struct {
 	Template        string
-	Usage           string // usage: "grid", "pv", "battery"
-	Multiple        bool   // if true, multiple instances of this template can be added
-	ExcludeTemplate string // only consider this if no device of the named linked template was added
+	Usage           api.Usage // usage: "grid", "pv", "battery"
+	Multiple        bool      // if true, multiple instances of this template can be added
+	ExcludeTemplate string    // only consider this if no device of the named linked template was added
 }
 
 // Param is a proxy template parameter
@@ -181,7 +171,7 @@ type Param struct {
 	Example       string       `json:",omitempty"` // cli example value
 	Value         string       `json:"-"`          // user provided value via cli configuration
 	Values        []string     `json:",omitempty"` // user provided list of values e.g. for Type "stringlist"
-	Usages        []string     `json:",omitempty"` // restrict param to these usage types, e.g. "battery" for home battery capacity
+	Usages        []api.Usage  `json:",omitempty"` // restrict param to these usage types, e.g. "battery" for home battery capacity
 	Type          ParamType    // string representation of the value type, "string" is default
 	ValidValues   []string     `json:",omitempty"` // list of valid values the user can provide
 	Choice        []string     `json:",omitempty"` // defines a set of choices, e.g. "grid", "pv", "battery", "charge" for "usage"

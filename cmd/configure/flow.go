@@ -110,13 +110,13 @@ func (c *CmdConfigure) configureLinkedTypes(templateItem templates.Template) {
 			return
 		}
 
-		if len(linkedTemplateItem.Params) == 0 || linkedTemplate.Usage == "" {
+		if len(linkedTemplateItem.Params) == 0 || !linkedTemplate.Usage.IsAUsage() {
 			break
 		}
 
 		linkedTemplateItem.SetCombinedTitle(c.lang)
 
-		category := DeviceCategory(linkedTemplate.Usage)
+		category := DeviceCategory(linkedTemplate.Usage.String())
 		localizeMap := localizeMap{
 			"Linked":     linkedTemplateItem.Title(),
 			"Article":    DeviceCategories[category].article,

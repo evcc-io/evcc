@@ -14,7 +14,6 @@ package meter
 
 import (
 	"errors"
-	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -39,7 +38,7 @@ import (
 
 type BoschBpts5Hybrid struct {
 	api   *bosch.API
-	usage string
+	usage api.Usage
 }
 
 func init() {
@@ -52,7 +51,7 @@ func init() {
 func NewBoschBpts5HybridFromConfig(other map[string]interface{}) (api.Meter, error) {
 	var cc struct {
 		URI   string
-		Usage string
+		Usage api.Usage
 		Cache time.Duration
 	}
 
@@ -60,7 +59,7 @@ func NewBoschBpts5HybridFromConfig(other map[string]interface{}) (api.Meter, err
 		return nil, err
 	}
 
-	if cc.Usage == "" {
+	if !cc.Usage.IsAUsage() {
 		return nil, errors.New("missing usage")
 	}
 
@@ -68,7 +67,7 @@ func NewBoschBpts5HybridFromConfig(other map[string]interface{}) (api.Meter, err
 }
 
 // NewBoschBpts5Hybrid creates a Bosch BPT-S 5 Hybrid Meter
-func NewBoschBpts5Hybrid(uri, usage string, cache time.Duration) (api.Meter, error) {
+func NewBoschBpts5Hybrid(uri string, usage api.Usage, cache time.Duration) (api.Meter, error) {
 	log := util.NewLogger("bosch-bpt")
 
 	instance, exists := bosch.Instances.LoadOrStore(uri, bosch.NewLocal(log, uri, cache))
@@ -80,12 +79,12 @@ func NewBoschBpts5Hybrid(uri, usage string, cache time.Duration) (api.Meter, err
 
 	m := &BoschBpts5Hybrid{
 		api:   instance.(*bosch.API),
-		usage: strings.ToLower(usage),
+		usage: usage,
 	}
 
 	// decorate api.BatterySoc
 	var batterySoc func() (float64, error)
-	if usage == "battery" {
+	if usage == api.UsageBattery {
 		batterySoc = m.batterySoc
 	}
 
@@ -97,11 +96,11 @@ func (m *BoschBpts5Hybrid) CurrentPower() (float64, error) {
 	status, err := m.api.Status()
 
 	switch m.usage {
-	case "grid":
+	case api.UsageGrid:
 		return status.BuyFromGrid - status.SellToGrid, err
-	case "pv":
+	case api.UsagePV:
 		return status.PvPower, err
-	case "battery":
+	case api.UsageBattery:
 		return status.BatteryDischargePower - status.BatteryChargePower, err
 	default:
 		return 0, err
