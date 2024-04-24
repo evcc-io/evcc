@@ -104,8 +104,6 @@ require (
 	nhooyr.io/websocket v1.8.11
 )
 
-require github.com/cstockton/go-conv v1.0.0 // indirect
-
 require (
 	github.com/Masterminds/semver/v3 v3.2.1 // indirect
 	github.com/ahmetb/go-linq/v3 v3.2.0 // indirect
@@ -115,6 +113,7 @@ require (
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bitly/go-simplejson v0.5.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
+	github.com/cstockton/go-conv v1.0.0 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/fatih/color v1.16.0 // indirect
