@@ -22,9 +22,9 @@ import HelpModal from "../components/HelpModal.vue";
 import collector from "../mixins/collector";
 import { updateAuthStatus } from "../auth";
 
-// assume offline if not data received for 60 seconds
+// assume offline if not data received for 5 minutes
 let lastDataReceived = new Date();
-const maxDataAge = 60 * 1000;
+const maxDataAge = 60 * 1000 * 5;
 setInterval(() => {
 	if (new Date() - lastDataReceived > maxDataAge) {
 		console.log("no data received, assume we are offline");
