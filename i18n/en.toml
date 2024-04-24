@@ -42,6 +42,10 @@ range = "Range"
 soc = "SoC"
 socLimit = "Limit"
 
+[config.eebus]
+description = "Configuration that enables evcc to communicate with other EEBus devices."
+title = "EEBus 🧪"
+
 [config.form]
 example = "Example"
 optional = "optional"
@@ -64,6 +68,10 @@ title = "Title"
 [config.grid]
 titleAdd = "Add Grid Meter"
 titleEdit = "Edit Grid Meter"
+
+[config.hems]
+description = "Connect evcc to another home energy management system."
+title = "HEMS"
 
 [config.influx]
 description = "Writes charging data and other metrics to InfluxDB. Use Grafana or other tools to visualize the data."
@@ -98,6 +106,10 @@ save = "Save"
 template = "Manufacturer"
 titleChoice = "What Do You Want To Add?"
 validateSave = "Validate & save"
+
+[config.modbusproxy]
+description = "Allow multiple clients to access a single Modbus device."
+title = "Modbus Proxy"
 
 [config.mqtt]
 authentication = "Authentication"

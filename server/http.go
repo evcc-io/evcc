@@ -147,6 +147,7 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, auth auth.Auth, cache *util.
 
 	// yaml handlers
 	for key, struc := range map[string]any{
+		"eebus":       eebus.Config{},
 		"hems":        config.Typed{},
 		"tariffs":     globalconfig.Tariffs{},
 		"messaging":   globalconfig.Messaging{},
@@ -161,7 +162,6 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, auth auth.Auth, cache *util.
 	for key, struc := range map[string]func() interface{}{
 		"mqtt":    func() interface{} { return &globalconfig.Mqtt{} },
 		"influx":  func() interface{} { return &globalconfig.Influx{} },
-		"eebus":   func() interface{} { return &eebus.Config{} },
 		"network": func() interface{} { return &globalconfig.Network{} },
 	} {
 		configRoutes[key] = route{Method: "GET", Pattern: "/" + key, HandlerFunc: settingsGetJsonHandler(key, struc)}

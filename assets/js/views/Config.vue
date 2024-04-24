@@ -200,12 +200,13 @@
 					@updated="meterChanged"
 					@removed="removeMeterFromSite"
 				/>
-				<MqttModal @changed="loadDirty" />
+				<EebusModal @changed="loadDirty" />
+				<HemsModal @changed="loadDirty" />
 				<InfluxModal @changed="loadDirty" />
 				<MessagingModal @changed="loadDirty" />
-				<TariffsModal @changed="loadDirty" />
 				<ModbusProxyModal @changed="loadDirty" />
-				<HemsModal @changed="loadDirty" />
+				<MqttModal @changed="loadDirty" />
+				<TariffsModal @changed="loadDirty" />
 			</div>
 		</div>
 	</div>
@@ -220,27 +221,28 @@ import "@h2d2/shopicons/es/regular/receivepayment";
 import "@h2d2/shopicons/es/regular/cablecharge";
 import Modal from "bootstrap/js/dist/modal";
 import api from "../api";
-import VehicleIcon from "../components/VehicleIcon";
-import VehicleModal from "../components/Config/VehicleModal.vue";
+import GeneralConfig from "../components/Config/GeneralConfig.vue";
 import DeviceCard from "../components/Config/DeviceCard.vue";
 import DeviceTags from "../components/Config/DeviceTags.vue";
 import AddDeviceButton from "../components/Config/AddDeviceButton.vue";
-import MeterModal from "../components/Config/MeterModal.vue";
-import MqttModal from "../components/Config/MqttModal.vue";
-import MessagingModal from "../components/Config/MessagingModal.vue";
-import GeneralConfig from "../components/Config/GeneralConfig.vue";
-import formatter from "../mixins/formatter";
-import collector from "../mixins/collector";
-import TariffsModal from "../components/Config/TariffsModal.vue";
-import ModbusProxyModal from "../components/Config/ModbusProxyModal.vue";
-import HemsIcon from "../components/MaterialIcon/Hems.vue";
-import InfluxIcon from "../components/MaterialIcon/Influx.vue";
-import EebusIcon from "../components/MaterialIcon/Eebus.vue";
-import ModbusProxyIcon from "../components/MaterialIcon/ModbusProxy.vue";
-import NotificationIcon from "../components/MaterialIcon/Notification.vue";
-import MqttIcon from "../components/MaterialIcon/Mqtt.vue";
+import EebusModal from "../components/Config/EebusModal.vue";
 import HemsModal from "../components/Config/HemsModal.vue";
 import InfluxModal from "../components/Config/InfluxModal.vue";
+import MessagingModal from "../components/Config/MessagingModal.vue";
+import MeterModal from "../components/Config/MeterModal.vue";
+import ModbusProxyModal from "../components/Config/ModbusProxyModal.vue";
+import MqttModal from "../components/Config/MqttModal.vue";
+import TariffsModal from "../components/Config/TariffsModal.vue";
+import VehicleModal from "../components/Config/VehicleModal.vue";
+import EebusIcon from "../components/MaterialIcon/Eebus.vue";
+import HemsIcon from "../components/MaterialIcon/Hems.vue";
+import InfluxIcon from "../components/MaterialIcon/Influx.vue";
+import ModbusProxyIcon from "../components/MaterialIcon/ModbusProxy.vue";
+import MqttIcon from "../components/MaterialIcon/Mqtt.vue";
+import NotificationIcon from "../components/MaterialIcon/Notification.vue";
+import VehicleIcon from "../components/VehicleIcon";
+import formatter from "../mixins/formatter";
+import collector from "../mixins/collector";
 import restart, { performRestart } from "../restart";
 
 export default {
@@ -265,6 +267,7 @@ export default {
 		ModbusProxyIcon,
 		NotificationIcon,
 		MqttIcon,
+		EebusModal,
 		HemsModal,
 	},
 	props: {
