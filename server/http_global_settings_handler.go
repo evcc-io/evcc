@@ -89,7 +89,7 @@ func settingsSetYamlHandler(key string, struc any) http.HandlerFunc {
 
 func settingsGetJsonHandler(key string, struc any) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if err := settings.Json(key, &struc); err != nil {
+		if err := settings.Json(key, &struc); err != nil && err != settings.ErrNotFound {
 			jsonError(w, http.StatusInternalServerError, err)
 			return
 		}
