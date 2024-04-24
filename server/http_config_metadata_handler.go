@@ -7,6 +7,7 @@ import (
 
 	"github.com/evcc-io/evcc/util/templates"
 	"github.com/gorilla/mux"
+	"github.com/samber/lo"
 )
 
 // templatesHandler returns the list of templates by class
@@ -33,7 +34,10 @@ func templatesHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	jsonResult(w, templates.ByClass(class))
+	res := lo.Filter(templates.ByClass(class), func(t templates.Template, _ int) bool {
+		return !t.Deprecated
+	})
+	jsonResult(w, res)
 }
 
 // productsHandler returns the list of products by class

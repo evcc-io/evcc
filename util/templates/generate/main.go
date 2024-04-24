@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/evcc-io/evcc/util/templates"
+	"github.com/samber/lo"
 )
 
 const (
@@ -52,7 +53,11 @@ func generateDocs(lang string) error {
 }
 
 func generateClass(class templates.Class, lang string) error {
-	for _, tmpl := range templates.ByClass(class) {
+	tmpls := lo.Filter(templates.ByClass(class), func(t templates.Template, _ int) bool {
+		return !t.Deprecated
+	})
+
+	for _, tmpl := range tmpls {
 		if err := tmpl.Validate(); err != nil {
 			return err
 		}
