@@ -63,7 +63,7 @@ require (
 	github.com/mabunixda/wattpilot v1.6.6
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/mapstructure v1.5.0
-	github.com/mlnoga/rct v0.1.2-0.20230731074838-03eacb926f99
+	github.com/mlnoga/rct v0.1.2-0.20240421173556-1c5b75037e2f
 	github.com/muka/go-bluetooth v0.0.0-20240115085408-dfdf79b8f61d
 	github.com/mxschmitt/golang-combinations v1.1.0
 	github.com/nicksnyder/go-i18n/v2 v2.4.0

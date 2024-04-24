@@ -122,8 +122,7 @@ func (wb *Solax) Status() (api.ChargeStatus, error) {
 		7, // "SuspendedEV"
 		3: // "Finishing"
 		return api.StatusB, nil
-	case
-		2: // "Charging"
+	case 2: // "Charging"
 		return api.StatusC, nil
 	case
 		6, // "Reserved"

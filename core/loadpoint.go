@@ -1394,7 +1394,7 @@ func (lp *Loadpoint) publishChargeProgress() {
 		lp.log.ERROR.Printf("charge rater: %v", err)
 	}
 
-	if d, err := lp.chargeTimer.ChargingTime(); err == nil {
+	if d, err := lp.chargeTimer.ChargeDuration(); err == nil {
 		lp.chargeDuration = d.Round(time.Second)
 	} else {
 		lp.log.ERROR.Printf("charge timer: %v", err)

@@ -203,8 +203,8 @@ func (wb *BenderCC) MaxCurrent(current int64) error {
 
 var _ api.ChargeTimer = (*BenderCC)(nil)
 
-// ChargingTime implements the api.ChargeTimer interface
-func (wb *BenderCC) ChargingTime() (time.Duration, error) {
+// ChargeDuration implements the api.ChargeTimer interface
+func (wb *BenderCC) ChargeDuration() (time.Duration, error) {
 	if wb.legacy {
 		b, err := wb.conn.ReadHoldingRegisters(bendRegChargingDurationLegacy, 1)
 		if err != nil {

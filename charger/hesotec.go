@@ -154,8 +154,8 @@ func (wb *Hesotec) CurrentPower() (float64, error) {
 
 var _ api.ChargeTimer = (*Hesotec)(nil)
 
-// ChargingTime implements the api.ChargeTimer interface
-func (wb *Hesotec) ChargingTime() (time.Duration, error) {
+// ChargeDuration implements the api.ChargeTimer interface
+func (wb *Hesotec) ChargeDuration() (time.Duration, error) {
 	b, err := wb.conn.ReadHoldingRegisters(hesotecRegDuration, 2)
 	if err != nil {
 		return 0, err

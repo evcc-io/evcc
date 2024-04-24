@@ -3,6 +3,10 @@ products:
   - brand: Hyundai
     description:
       generic: Bluelink
+requirements:
+  description:
+    en: Some models (e.g. Kona) switch internally to 2 phases at low charging currents (< 8A). In cases where the wallbox also measures the phase currents, this leads to undesirable fluctuations in the charging power. The remedy here is to set the minimum charging current to 8A.
+    de: Manche Modelle (z.B. Kona) schalten bei geringen Ladeströmen (< 8A) intern auf 2 Phasen um. In den Fällen, in denen die Wallbox auch die Phasenströme misst, führt das zu unerwünschten Schwankungen der Ladeleistung. Abhilfe schafft hier, den Mindestladestrom auf 8A zu setzen.
 params:
   - preset: vehicle-base
   - preset: vehicle-language
