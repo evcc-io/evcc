@@ -22,7 +22,19 @@
 					required
 				/>
 			</FormRow>
-			<FormRow id="influxDatabase" :label="$t('config.influx.labelDatabase')" example="evcc">
+			<FormRow
+				v-if="!showV1(values)"
+				id="influxOrg"
+				:label="$t('config.influx.labelOrg')"
+				example="home"
+			>
+				<input id="influxOrg" v-model="values.Org" class="form-control" required />
+			</FormRow>
+			<FormRow
+				id="influxDatabase"
+				:label="$t(`config.influx.label${showV1(values) ? 'Database' : 'Bucket'}`)"
+				example="evcc"
+			>
 				<input
 					id="influxDatabase"
 					v-model="values.Database"
@@ -30,54 +42,61 @@
 					required
 				/>
 			</FormRow>
-			<div v-if="!showV1(values)">
-				<FormRow
-					id="influxToken"
-					:label="$t('config.influx.labelToken')"
-					:help="$t('config.influx.descriptionToken')"
+			<FormRow
+				v-if="!showV1(values)"
+				id="influxToken"
+				:label="$t('config.influx.labelToken')"
+				:help="$t('config.influx.descriptionToken')"
+			>
+				<input id="influxToken" v-model="values.Token" class="form-control" required />
+			</FormRow>
+			<FormRow
+				v-if="showV1(values)"
+				id="influxUser"
+				:label="$t('config.influx.labelUser')"
+				optional
+			>
+				<input id="influxUser" v-model="values.User" class="form-control" />
+			</FormRow>
+			<FormRow
+				v-if="showV1(values)"
+				id="influxPassword"
+				:label="$t('config.influx.labelPassword')"
+				optional
+			>
+				<input
+					id="influxPassword"
+					v-model="values.Password"
+					class="form-control"
+					type="password"
+					autocomplete="off"
+				/>
+			</FormRow>
+			<p>
+				<button
+					v-if="showV1(values)"
+					class="btn btn-link btn-sm text-primary px-0"
+					type="button"
+					@click="
+						values.User = '';
+						values.Password = '';
+						v1 = false;
+					"
 				>
-					<input id="influxToken" v-model="values.Token" class="form-control" required />
-				</FormRow>
-				<p>
-					<button
-						class="btn btn-link btn-sm text-primary px-0"
-						type="button"
-						@click="
-							values.Token = '';
-							v1 = true;
-						"
-					>
-						{{ $t("config.influx.v1Support") }}
-					</button>
-				</p>
-			</div>
-			<div v-else>
-				<FormRow id="influxUser" :label="$t('config.influx.labelUser')" optional>
-					<input id="influxUser" v-model="values.User" class="form-control" />
-				</FormRow>
-				<FormRow id="influxPassword" :label="$t('config.influx.labelPassword')" optional>
-					<input
-						id="influxPassword"
-						v-model="values.Password"
-						class="form-control"
-						type="password"
-						autocomplete="off"
-					/>
-				</FormRow>
-				<p>
-					<button
-						class="btn btn-link btn-sm text-primary px-0"
-						type="button"
-						@click="
-							values.User = '';
-							values.Password = '';
-							v1 = false;
-						"
-					>
-						{{ $t("config.influx.v2Support") }}
-					</button>
-				</p>
-			</div>
+					{{ $t("config.influx.v2Support") }}
+				</button>
+				<button
+					v-else
+					class="btn btn-link btn-sm text-primary px-0"
+					type="button"
+					@click="
+						values.Token = '';
+						v1 = true;
+					"
+				>
+					{{ $t("config.influx.v1Support") }}
+				</button>
+			</p>
 		</template>
 	</JsonModal>
 </template>

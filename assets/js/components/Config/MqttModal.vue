@@ -22,6 +22,7 @@
 				id="mqttTopic"
 				:label="$t('config.mqtt.labelTopic')"
 				:help="$t('config.mqtt.descriptionTopic')"
+				example="evcc"
 				optional
 			>
 				<input id="mqttTopic" v-model="values.Topic" class="form-control" />
