@@ -145,6 +145,10 @@ restartRequiredMessage = "Configuration changed."
 restartingDescription = "Please wait…"
 restartingMessage = "Restarting evcc."
 
+[config.tariffs]
+description = "Define your energy tariffs to calculate the costs of your charging sessions."
+title = "Tariffs"
+
 [config.title]
 description = "Displayed on main screen and browser tab."
 label = "Title"
