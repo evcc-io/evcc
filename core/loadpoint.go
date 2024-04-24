@@ -482,12 +482,12 @@ func (lp *Loadpoint) evVehicleConnectHandler() {
 	// immediately allow pv mode activity
 	lp.elapsePVTimer()
 
-	// kick-charge if any available vehicle requires it
-	// since kickCharge uses the PV timer it must be placed after elapsePVTimer
+	// Enable charging on connect if any available vehicle requires it. We're using the PV timer
+	// to disable after the welcome, hence this must be placed after elapsePVTimer.
 	// TODO check is this doesn't conflict with vehicle defaults like mode: off
 	if vv := lp.availableVehicles(); pvMode {
 		for _, v := range vv {
-			if slices.Contains(v.Features(), api.KickCharge) {
+			if slices.Contains(v.Features(), api.WelcomeCharge) {
 				lp.setLimit(lp.effectiveMinCurrent())
 				break
 			}

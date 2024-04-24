@@ -10,5 +10,5 @@ const (
 	IntegratedDevice
 	Heating
 	Retryable
-	KickCharge
+	WelcomeCharge
 )
