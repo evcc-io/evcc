@@ -5,6 +5,7 @@ import (
 	"net"
 	"slices"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -66,8 +67,14 @@ func NewE3dcFromConfig(other map[string]interface{}) (api.Meter, error) {
 	return NewE3dc(cfg, cc.Usage, cc.Battery)
 }
 
+var e3dcOnce sync.Once
+
 func NewE3dc(cfg rscp.ClientConfig, usage templates.Usage, batteryId uint16) (api.Meter, error) {
-	// util.NewLogger("e3dc")
+	e3dcOnce.Do(func() {
+		log := util.NewLogger("e3dc")
+		rscp.Log.SetOutput(log.TRACE.Writer())
+	})
+
 	conn, err := rscp.NewClient(cfg)
 	if err != nil {
 		return nil, err

@@ -612,8 +612,8 @@ github.com/soheilhy/cmux v0.1.4/go.mod h1:IM3LyeVVIOuxMH7sFAkER9+bJ4dT7Ms6E4xg4k
 github.com/sony/gobreaker v0.4.1/go.mod h1:ZKptC7FHNvhBz7dN2LGjPVBz2sZJmc0/PkyDJOjmxWY=
 github.com/sourcegraph/conc v0.3.0 h1:OQTbbt6P72L20UqAkXXuLOj79LfEanQ+YQFNpLA9ySo=
 github.com/sourcegraph/conc v0.3.0/go.mod h1:Sdozi7LEKbFPqYX2/J+iBAM6HpqSLTASQIKqDmF7Mt0=
-github.com/spali/go-rscp v0.2.0-beta3.0.20240418144705-a21b88401cf0 h1:ScpFV7/vfHITM7sWWcnjxigaZ7QSU22+uNVQ3AtLoTQ=
-github.com/spali/go-rscp v0.2.0-beta3.0.20240418144705-a21b88401cf0/go.mod h1:yPHx7clunJmpCLFDc60XL04/lp8p/DrrhfeBqM3J8cc=
+github.com/spali/go-rscp v0.2.0-beta4 h1:ct9YZTCmTW2IMg74O16nJu0QntGF26dxY5ZejRvl280=
+github.com/spali/go-rscp v0.2.0-beta4/go.mod h1:yPHx7clunJmpCLFDc60XL04/lp8p/DrrhfeBqM3J8cc=
 github.com/spali/go-slicereader v0.0.0-20201122145524-8e262e1a5127 h1:YDqvwAH/l3S4ZULmKlUYszPyLBjHq73CLuUPU+2jJeE=
 github.com/spali/go-slicereader v0.0.0-20201122145524-8e262e1a5127/go.mod h1:nf5bOq6n8UugtmQiD3l0BzkE5VP4NvyngFZVkH3ZzgM=
 github.com/spf13/afero v1.11.0 h1:WJQKhtpdm3v2IzqG8VMqrr6Rf3UYpEF239Jy9wNepM8=
