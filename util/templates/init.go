@@ -11,6 +11,7 @@ import (
 	"text/template"
 
 	"github.com/evcc-io/evcc/templates/definition"
+	"github.com/samber/lo"
 	"gopkg.in/yaml.v3"
 )
 
@@ -109,8 +110,28 @@ func EncoderLanguage(lang string) {
 	encoderLanguage = lang
 }
 
-func ByClass(class Class) []Template {
-	return templates[class]
+type filterFunc func([]Template) []Template
+
+// WithDeprecated returns a filterFunc that includes all templates
+func WithDeprecated() filterFunc {
+	return func(t []Template) []Template {
+		return t
+	}
+}
+
+func ByClass(class Class, opt ...filterFunc) []Template {
+	res := templates[class]
+	if len(opt) == 0 {
+		opt = append(opt, func(t []Template) []Template {
+			return lo.Filter(t, func(t Template, _ int) bool {
+				return !t.Deprecated
+			})
+		})
+	}
+	for _, o := range opt {
+		res = o(res)
+	}
+	return res
 }
 
 func ByName(class Class, name string) (Template, error) {
