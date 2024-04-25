@@ -13,6 +13,7 @@ import (
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/templates"
 	"github.com/samber/lo"
+	"github.com/sirupsen/logrus"
 	"github.com/spali/go-rscp/rscp"
 	"github.com/spf13/cast"
 )
@@ -72,6 +73,7 @@ var e3dcOnce sync.Once
 func NewE3dc(cfg rscp.ClientConfig, usage templates.Usage, batteryId uint16) (api.Meter, error) {
 	e3dcOnce.Do(func() {
 		log := util.NewLogger("e3dc")
+		rscp.Log.SetLevel(logrus.DebugLevel)
 		rscp.Log.SetOutput(log.TRACE.Writer())
 	})
 
