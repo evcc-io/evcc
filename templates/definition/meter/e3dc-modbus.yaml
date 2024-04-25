@@ -1,9 +1,7 @@
 template: e3dc
-# deprecated: true
+deprecated: true
 products:
   - brand: E3/DC
-    description:
-      generic: Legacy Modbus
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
