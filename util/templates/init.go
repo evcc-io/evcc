@@ -119,6 +119,7 @@ func WithDeprecated() filterFunc {
 	}
 }
 
+// ByClass returns templates for class excluding deprecated templates
 func ByClass(class Class, opt ...filterFunc) []Template {
 	res := templates[class]
 	if len(opt) == 0 {
@@ -134,6 +135,7 @@ func ByClass(class Class, opt ...filterFunc) []Template {
 	return res
 }
 
+// ByClass returns templates for class and name including deprecated templates
 func ByName(class Class, name string) (Template, error) {
 	for _, tmpl := range templates[class] {
 		if tmpl.Template == name || slices.Contains(tmpl.Covers, name) {
