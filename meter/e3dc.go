@@ -82,7 +82,7 @@ func NewE3dc(cfg rscp.ClientConfig, usage templates.Usage, batteryId uint16) (ap
 		return nil, err
 	}
 
-	res := &E3dc{
+	m := &E3dc{
 		usage: usage,
 		conn:  conn,
 	}
@@ -95,11 +95,11 @@ func NewE3dc(cfg rscp.ClientConfig, usage templates.Usage, batteryId uint16) (ap
 	)
 
 	if usage == templates.UsageBattery {
-		batterySoc = res.batterySoc
-		batteryCapacity = res.batteryCapacity
-		batteryMode = res.setBatteryMode
+		batterySoc = m.batterySoc
+		batteryCapacity = m.batteryCapacity
+		batteryMode = m.setBatteryMode
 
-		resp, err := res.conn.Send(rscp.Message{
+		res, err := m.conn.Send(rscp.Message{
 			Tag:      rscp.BAT_REQ_DATA,
 			DataType: rscp.Container,
 			Value: []rscp.Message{
@@ -118,7 +118,7 @@ func NewE3dc(cfg rscp.ClientConfig, usage templates.Usage, batteryId uint16) (ap
 			return nil, err
 		}
 
-		batSpec, err := rscpContains(resp, rscp.BAT_SPECIFICATION)
+		batSpec, err := rscpContains(res, rscp.BAT_SPECIFICATION)
 		if err != nil {
 			return nil, err
 		}
@@ -128,45 +128,15 @@ func NewE3dc(cfg rscp.ClientConfig, usage templates.Usage, batteryId uint16) (ap
 			return nil, err
 		}
 
-		cap, err := cast.ToFloat64E(batCap.Value)
+		cap, err := rscpValue(batCap, cast.ToFloat64E)
 		if err != nil {
 			return nil, err
 		}
 
-		res.capacity = cap / 1e3
+		m.capacity = cap / 1e3
 	}
 
-	return decorateE3dc(res, batteryCapacity, batterySoc, batteryMode), nil
-}
-
-func rscpContains(msg *rscp.Message, tag rscp.Tag) (rscp.Message, error) {
-	var zero rscp.Message
-
-	slice, ok := msg.Value.([]rscp.Message)
-	if !ok {
-		return zero, errors.New("not a slice looking for " + tag.String())
-	}
-
-	idx := slices.IndexFunc(slice, func(m rscp.Message) bool {
-		return m.Tag == tag
-	})
-	if idx < 0 {
-		return zero, errors.New("missing " + tag.String())
-	}
-
-	return slice[idx], nil
-}
-
-func rscpValues[T any](msg []rscp.Message, fun func(any) (T, error)) ([]T, error) {
-	res := make([]T, 0, len(msg))
-	for _, m := range msg {
-		v, err := fun(m.Value)
-		if err != nil {
-			return nil, err
-		}
-		res = append(res, v)
-	}
-	return res, nil
+	return decorateE3dc(m, batteryCapacity, batterySoc, batteryMode), nil
 }
 
 func (m *E3dc) CurrentPower() (float64, error) {
@@ -176,10 +146,13 @@ func (m *E3dc) CurrentPower() (float64, error) {
 		if err != nil {
 			return 0, err
 		}
-		return cast.ToFloat64E(res.Value)
+		return rscpValue(*res, cast.ToFloat64E)
 
 	case templates.UsagePV:
-		res, err := m.conn.SendMultiple([]rscp.Message{*rscp.NewMessage(rscp.EMS_REQ_POWER_PV, nil), *rscp.NewMessage(rscp.EMS_REQ_POWER_ADD, nil)})
+		res, err := m.conn.SendMultiple([]rscp.Message{
+			*rscp.NewMessage(rscp.EMS_REQ_POWER_PV, nil),
+			*rscp.NewMessage(rscp.EMS_REQ_POWER_ADD, nil),
+		})
 		if err != nil {
 			return 0, err
 		}
@@ -196,7 +169,7 @@ func (m *E3dc) CurrentPower() (float64, error) {
 		if err != nil {
 			return 0, err
 		}
-		pwr, err := cast.ToFloat64E(res.Value)
+		pwr, err := rscpValue(*res, cast.ToFloat64E)
 		if err != nil {
 			return 0, err
 		}
@@ -217,35 +190,42 @@ func (m *E3dc) batterySoc() (float64, error) {
 	if err != nil {
 		return 0, err
 	}
-	return cast.ToFloat64E(res.Value)
+	return rscpValue(*res, cast.ToFloat64E)
 }
 
 func (m *E3dc) setBatteryMode(mode api.BatteryMode) error {
+	var (
+		res []rscp.Message
+		err error
+	)
+
 	switch mode {
 	case api.BatteryNormal:
-		_, err := m.conn.SendMultiple([]rscp.Message{
+		res, err = m.conn.SendMultiple([]rscp.Message{
 			e3dcDischargeBatteryLimit(false, 0),
 			e3dcBatteryCharge(0),
 		})
-		return err
 
 	case api.BatteryHold:
-		_, err := m.conn.SendMultiple([]rscp.Message{
+		res, err = m.conn.SendMultiple([]rscp.Message{
 			e3dcDischargeBatteryLimit(true, 0),
 			e3dcBatteryCharge(0),
 		})
-		return err
 
 	case api.BatteryCharge:
-		_, err := m.conn.SendMultiple([]rscp.Message{
+		res, err = m.conn.SendMultiple([]rscp.Message{
 			e3dcDischargeBatteryLimit(true, 0),
 			e3dcBatteryCharge(10000), // 10kWh
 		})
-		return err
 
 	default:
 		return api.ErrNotAvailable
 	}
+
+	if err == nil {
+		err = rscpError(res...)
+	}
+	return err
 }
 
 func e3dcDischargeBatteryLimit(active bool, limit int) rscp.Message {
@@ -253,7 +233,7 @@ func e3dcDischargeBatteryLimit(active bool, limit int) rscp.Message {
 		{
 			Tag:      rscp.EMS_POWER_LIMITS_USED,
 			DataType: rscp.Bool,
-			Value:    cast.ToInt(active),
+			Value:    active,
 		},
 	}
 
@@ -278,4 +258,57 @@ func e3dcBatteryCharge(amount int) rscp.Message {
 		DataType: rscp.Uint32,
 		Value:    amount, // 10kWh
 	}
+}
+
+func rscpError(msg ...rscp.Message) error {
+	var errs []error
+	for _, m := range msg {
+		if m.DataType == rscp.Error {
+			errs = append(errs, errors.New(rscp.RscpError(cast.ToUint32(m.Value)).String()))
+		}
+	}
+	return errors.Join(errs...)
+}
+
+func rscpContains(msg *rscp.Message, tag rscp.Tag) (rscp.Message, error) {
+	var zero rscp.Message
+
+	slice, ok := msg.Value.([]rscp.Message)
+	if !ok {
+		return zero, errors.New("not a slice looking for " + tag.String())
+	}
+
+	idx := slices.IndexFunc(slice, func(m rscp.Message) bool {
+		return m.Tag == tag
+	})
+	if idx < 0 {
+		return zero, errors.New("missing " + tag.String())
+	}
+
+	res := slice[idx]
+	return res, rscpError(res)
+}
+
+func rscpValue[T any](msg rscp.Message, fun func(any) (T, error)) (T, error) {
+	var zero T
+	if err := rscpError(msg); err != nil {
+		return zero, err
+	}
+
+	return fun(msg.Value)
+}
+
+func rscpValues[T any](msg []rscp.Message, fun func(any) (T, error)) ([]T, error) {
+	res := make([]T, 0, len(msg))
+
+	for _, m := range msg {
+		v, err := rscpValue(m, fun)
+		if err != nil {
+			return nil, err
+		}
+
+		res = append(res, v)
+	}
+
+	return res, nil
 }
