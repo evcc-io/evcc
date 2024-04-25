@@ -86,32 +86,30 @@ func settingsSetYamlHandler(key string, struc any) http.HandlerFunc {
 	}
 }
 
-func settingsGetJsonHandler(key string, struc func() interface{}) http.HandlerFunc {
+func settingsGetJsonHandler(key string, struc any) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		res := struc()
-		if err := settings.Json(key, &res); err != nil && err != settings.ErrNotFound {
+		if err := settings.Json(key, &struc); err != nil && err != settings.ErrNotFound {
 			jsonError(w, http.StatusInternalServerError, err)
 			return
 		}
 
-		jsonResult(w, res)
+		jsonResult(w, struc)
 	}
 }
 
-func settingsSetJsonHandler(key string, struc func() interface{}) http.HandlerFunc {
+func settingsSetJsonHandler(key string, struc any) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		res := struc()
 		dec := json.NewDecoder(r.Body)
 		dec.DisallowUnknownFields()
-		if err := dec.Decode(&res); err != nil {
+		if err := dec.Decode(&struc); err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
 
-		settings.SetJson(key, res)
+		settings.SetJson(key, struc)
 		setConfigDirty()
 
 		w.WriteHeader(http.StatusOK)
-		jsonResult(w, res)
+		jsonResult(w, struc)
 	}
 }

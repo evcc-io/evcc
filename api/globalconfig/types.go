@@ -69,7 +69,6 @@ type Influx struct {
 	Org      string
 	User     string
 	Password string
-	Interval time.Duration
 }
 
 type DB struct {
