@@ -77,20 +77,26 @@
 import "@h2d2/shopicons/es/regular/car1";
 import api from "../api";
 import collector from "../mixins/collector";
+import store from "../store";
 
 export default {
 	name: "StartupError",
 	mixins: [collector],
 	props: {
-		fatal: Array,
-		config: String,
-		file: String,
-		line: Number,
 		offline: Boolean,
 	},
 	computed: {
 		errors() {
-			return this.fatal || [];
+			return store.state.fatal || [];
+		},
+		config() {
+			return store.state.config;
+		},
+		file() {
+			return store.state.file;
+		},
+		line() {
+			return store.state.line;
 		},
 	},
 	methods: {

@@ -4,7 +4,7 @@ go 1.22.0
 
 require (
 	dario.cat/mergo v1.0.0
-	github.com/42atomys/sprout v0.0.0-20240403003052-d64a48ef7bae
+	github.com/42atomys/sprout v0.2.0
 	github.com/AlecAivazis/survey/v2 v2.3.7
 	github.com/BurntSushi/toml v1.3.2
 	github.com/PuerkitoBio/goquery v1.9.1
@@ -63,7 +63,7 @@ require (
 	github.com/mabunixda/wattpilot v1.6.6
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/mapstructure v1.5.0
-	github.com/mlnoga/rct v0.1.2-0.20230731074838-03eacb926f99
+	github.com/mlnoga/rct v0.1.2-0.20240421173556-1c5b75037e2f
 	github.com/muka/go-bluetooth v0.0.0-20240115085408-dfdf79b8f61d
 	github.com/mxschmitt/golang-combinations v1.1.0
 	github.com/nicksnyder/go-i18n/v2 v2.4.0
@@ -201,5 +201,3 @@ require (
 )
 
 replace github.com/spf13/viper => github.com/spf13/viper v1.18.1
-
-replace github.com/mlnoga/rct => github.com/andig/rct v0.1.2-0.20240419102452-054695c3e7c2

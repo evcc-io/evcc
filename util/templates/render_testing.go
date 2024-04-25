@@ -36,7 +36,7 @@ func test(t *testing.T, tmpl Template, values map[string]interface{}, cb func(va
 func TestClass(t *testing.T, class Class, instantiate func(t *testing.T, values map[string]interface{})) {
 	t.Parallel()
 
-	for _, tmpl := range ByClass(class) {
+	for _, tmpl := range ByClass(class, WithDeprecated()) {
 		tmpl := tmpl
 
 		// set default values for all params

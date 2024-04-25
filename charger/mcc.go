@@ -340,8 +340,8 @@ func (mcc *MobileConnect) ChargedEnergy() (float64, error) {
 
 var _ api.ChargeTimer = (*MobileConnect)(nil)
 
-// ChargingTime implements the api.ChargeTimer interface
-func (mcc *MobileConnect) ChargingTime() (time.Duration, error) {
+// ChargeDuration implements the api.ChargeTimer interface
+func (mcc *MobileConnect) ChargeDuration() (time.Duration, error) {
 	var currentSession MCCCurrentSession
 	if err := mcc.getEscapedJSON(mcc.apiURL(mccAPICurrentSession), &currentSession); err != nil {
 		return 0, err

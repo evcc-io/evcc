@@ -253,7 +253,7 @@ func (c *CmdConfigure) askSponsortoken(required, feature bool) error {
 	return err
 }
 
-func (c *CmdConfigure) configureMQTT(templateItem templates.Template) (map[string]interface{}, error) {
+func (c *CmdConfigure) configureMQTT(_ templates.Template) (map[string]interface{}, error) {
 	fmt.Println()
 	fmt.Println("-- MQTT Broker ----------------------------")
 

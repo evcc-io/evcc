@@ -1,4 +1,5 @@
 template: wallbe
+deprecated: true
 products:
   - brand: Wallbe
     description:

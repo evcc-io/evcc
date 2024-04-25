@@ -2,8 +2,8 @@ cloud.google.com/go v0.26.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMT
 cloud.google.com/go v0.34.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
 dario.cat/mergo v1.0.0 h1:AGCNq9Evsj31mOgNPcLyXc+4PNABt905YmuqPYYpBWk=
 dario.cat/mergo v1.0.0/go.mod h1:uNxQE+84aUszobStD9th8a29P2fMDhsBdgRYvZOxGmk=
-github.com/42atomys/sprout v0.0.0-20240403003052-d64a48ef7bae h1:997KCkMlF7NNKrEFn1uFyRKcLbxutBveYat1m6nF3E4=
-github.com/42atomys/sprout v0.0.0-20240403003052-d64a48ef7bae/go.mod h1:nTr5KxiTLYrnmEiZaJLuD/Ct+xod3KpHBmqhaZjQ1Lk=
+github.com/42atomys/sprout v0.2.0 h1:Fe8Wkc4xOI/z1pwaJffG2sElA+TtH2zgQGnvNNPbU8Q=
+github.com/42atomys/sprout v0.2.0/go.mod h1:nTr5KxiTLYrnmEiZaJLuD/Ct+xod3KpHBmqhaZjQ1Lk=
 github.com/AlecAivazis/survey/v2 v2.3.7 h1:6I/u8FvytdGsgonrYsVn2t8t4QiRnh6QSTqkkhIiSjQ=
 github.com/AlecAivazis/survey/v2 v2.3.7/go.mod h1:xUTIdE4KCOIjsBAE1JYsUPoCqYdZ1reCfTwbto0Fduo=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
@@ -35,8 +35,6 @@ github.com/andig/gosunspec v0.0.0-20231205122018-1daccfa17912 h1:pphS+WUa9zK0ZH/
 github.com/andig/gosunspec v0.0.0-20231205122018-1daccfa17912/go.mod h1:c6P6szcR+ROkqZruOR4f6qbDKFjZX6OitPpj+yJ/r8k=
 github.com/andig/mbserver v0.0.0-20230310211055-1d29cbb5820e h1:m/NTP3JWpR7M0ljLxiQU4fzR25jjhe1LDtxLMNcoNJQ=
 github.com/andig/mbserver v0.0.0-20230310211055-1d29cbb5820e/go.mod h1:4VtYzTm//oUipwvO3yh0g/udTE7pYJM+U/kyAuFDsgM=
-github.com/andig/rct v0.1.2-0.20240419102452-054695c3e7c2 h1:hAQe9ESVfjlXi8NTyy+BnYtlIseP40GemlxTKmQCq4g=
-github.com/andig/rct v0.1.2-0.20240419102452-054695c3e7c2/go.mod h1:0lfd2mmBnBzIvuzYtdhG+2371u+cUfIxsYErm4P9KRI=
 github.com/andybalholm/cascadia v1.3.2 h1:3Xi6Dw5lHF15JtdcmAHD3i1+T8plmv7BQ/nsViSLyss=
 github.com/andybalholm/cascadia v1.3.2/go.mod h1:7gtRlve5FxPPgIgX36uWBX58OdBsSS6lUvCFb+h7KvU=
 github.com/apache/thrift v0.12.0/go.mod h1:cp2SuWMxlEZw2r+iP2GNCdIi4C1qmUzdZFSVb+bacwQ=
@@ -442,6 +440,8 @@ github.com/mitchellh/mapstructure v1.5.0 h1:jeMsZIYE/09sWLaz43PL7Gy6RuMjD2eJVyua
 github.com/mitchellh/mapstructure v1.5.0/go.mod h1:bFUtVrKA4DC2yAKiSyO/QUcy7e+RRV2QTWOzhPopBRo=
 github.com/mitchellh/reflectwalk v1.0.2 h1:G2LzWKi524PWgd3mLHV8Y5k7s6XUvT0Gef6zxSIeXaQ=
 github.com/mitchellh/reflectwalk v1.0.2/go.mod h1:mSTlrgnPZtwu0c4WaC2kGObEpuNDbx0jmZXqmk4esnw=
+github.com/mlnoga/rct v0.1.2-0.20240421173556-1c5b75037e2f h1:63hbvjkIpccli0EA60fqvzokvU1fH1ZPiNzlF/vUmvM=
+github.com/mlnoga/rct v0.1.2-0.20240421173556-1c5b75037e2f/go.mod h1:0lfd2mmBnBzIvuzYtdhG+2371u+cUfIxsYErm4P9KRI=
 github.com/modern-go/concurrent v0.0.0-20180228061459-e0a39a4cb421/go.mod h1:6dJC0mAP4ikYIbvyc7fijjWJddQyLn8Ig3JB5CqoB9Q=
 github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd h1:TRLaZ9cD/w8PVh93nsPXa1VrQ6jlwL5oN8l14QlcNfg=
 github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd/go.mod h1:6dJC0mAP4ikYIbvyc7fijjWJddQyLn8Ig3JB5CqoB9Q=

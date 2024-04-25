@@ -1,4 +1,5 @@
 template: daheimladen
+deprecated: true
 products:
   - brand: DaheimLaden
     description:

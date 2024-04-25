@@ -50,7 +50,6 @@ type Easee struct {
 	log                     *util.Logger
 	mux                     sync.RWMutex
 	lastEnergyPollMux       sync.Mutex
-	done                    chan struct{}
 	dynamicChargerCurrent   float64
 	current                 float64
 	chargerEnabled          bool
@@ -71,7 +70,7 @@ type Easee struct {
 	obsC       chan easee.Observation
 	obsTime    map[easee.ObservationID]time.Time
 	stopTicker chan struct{}
-	once       sync.Once
+	startDone  func()
 }
 
 func init() {
@@ -109,13 +108,15 @@ func NewEasee(user, password, charger string, timeout time.Duration, authorize b
 		return nil, api.ErrSponsorRequired
 	}
 
+	done := make(chan struct{})
+
 	c := &Easee{
 		Helper:    request.NewHelper(log),
 		charger:   charger,
 		authorize: authorize,
 		log:       log,
 		current:   6, // default current
-		done:      make(chan struct{}),
+		startDone: sync.OnceFunc(func() { close(done) }),
 		cmdC:      make(chan easee.SignalRCommandResponse),
 		obsC:      make(chan easee.Observation),
 		obsTime:   make(map[easee.ObservationID]time.Time),
@@ -187,7 +188,7 @@ func NewEasee(user, password, charger string, timeout time.Duration, authorize b
 
 	// wait for first update
 	select {
-	case <-c.done:
+	case <-done:
 	case <-time.After(request.Timeout):
 		err = os.ErrDeadlineExceeded
 	}
@@ -310,7 +311,7 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 	case easee.PHASE_MODE:
 		c.phaseMode = value.(int)
 	case easee.OUTPUT_PHASE:
-		c.outputPhase = value.(int) / 10 //API gives 0,10,30 for 0,1,3p
+		c.outputPhase = value.(int) / 10 // API gives 0,10,30 for 0,1,3p
 	case easee.DYNAMIC_CHARGER_CURRENT:
 		c.dynamicChargerCurrent = value.(float64)
 
@@ -364,7 +365,7 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 		c.opMode = opMode
 
 		// startup completed
-		c.once.Do(func() { close(c.done) })
+		c.startDone()
 
 	case easee.REASON_FOR_NO_CURRENT:
 		c.reasonForNoCurrent = value.(int)

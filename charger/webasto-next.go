@@ -181,8 +181,8 @@ func (wb *WebastoNext) MaxCurrent(current int64) error {
 
 var _ api.ChargeTimer = (*WebastoNext)(nil)
 
-// ChargingTime implements the api.ChargeTimer interface
-func (wb *WebastoNext) ChargingTime() (time.Duration, error) {
+// ChargeDuration implements the api.ChargeTimer interface
+func (wb *WebastoNext) ChargeDuration() (time.Duration, error) {
 	b, err := wb.conn.ReadHoldingRegisters(tqRegChargingTime, 2)
 	if err != nil {
 		return 0, err
