@@ -223,38 +223,59 @@ func (m *E3dc) batterySoc() (float64, error) {
 func (m *E3dc) setBatteryMode(mode api.BatteryMode) error {
 	switch mode {
 	case api.BatteryNormal:
-		_, err := m.conn.Send(rscp.Message{
-			Tag:      rscp.BAT_REQ_DATA,
-			DataType: rscp.Container,
-			Value: []rscp.Message{
-				{
-					Tag:      rscp.EMS_POWER_LIMITS_USED,
-					DataType: rscp.Bool,
-					Value:    0,
-				},
-			},
+		_, err := m.conn.SendMultiple([]rscp.Message{
+			e3dcDischargeBatteryLimit(false, 0),
+			e3dcBatteryCharge(0),
 		})
 		return err
 
 	case api.BatteryHold:
-		_, err := m.conn.Send(rscp.Message{
-			Tag:      rscp.EMS_REQ_SET_POWER_SETTINGS,
-			DataType: rscp.Container,
-			Value: []rscp.Message{
-				{
-					Tag:      rscp.EMS_POWER_LIMITS_USED,
-					DataType: rscp.Bool,
-					Value:    1,
-				}, {
-					Tag:      rscp.EMS_MAX_DISCHARGE_POWER,
-					DataType: rscp.Int32,
-					Value:    0,
-				},
-			},
+		_, err := m.conn.SendMultiple([]rscp.Message{
+			e3dcDischargeBatteryLimit(true, 0),
+			e3dcBatteryCharge(0),
+		})
+		return err
+
+	case api.BatteryCharge:
+		_, err := m.conn.SendMultiple([]rscp.Message{
+			e3dcDischargeBatteryLimit(true, 0),
+			e3dcBatteryCharge(10000), // 10kWh
 		})
 		return err
 
 	default:
 		return api.ErrNotAvailable
+	}
+}
+
+func e3dcDischargeBatteryLimit(active bool, limit int) rscp.Message {
+	container := []rscp.Message{
+		{
+			Tag:      rscp.EMS_POWER_LIMITS_USED,
+			DataType: rscp.Bool,
+			Value:    cast.ToInt(active),
+		},
+	}
+
+	if active {
+		container = append(container, rscp.Message{
+			Tag:      rscp.EMS_MAX_DISCHARGE_POWER,
+			DataType: rscp.Uint32,
+			Value:    limit,
+		})
+	}
+
+	return rscp.Message{
+		Tag:      rscp.EMS_REQ_SET_POWER_SETTINGS,
+		DataType: rscp.Container,
+		Value:    container,
+	}
+}
+
+func e3dcBatteryCharge(amount int) rscp.Message {
+	return rscp.Message{
+		Tag:      rscp.EMS_REQ_START_MANUAL_CHARGE,
+		DataType: rscp.Uint32,
+		Value:    amount, // 10kWh
 	}
 }
