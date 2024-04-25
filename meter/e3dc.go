@@ -229,35 +229,19 @@ func (m *E3dc) setBatteryMode(mode api.BatteryMode) error {
 }
 
 func e3dcDischargeBatteryLimit(active bool, limit int) rscp.Message {
-	container := []rscp.Message{
-		{
-			Tag:      rscp.EMS_POWER_LIMITS_USED,
-			DataType: rscp.Bool,
-			Value:    active,
-		},
+	contents := []rscp.Message{
+		*rscp.NewMessage(rscp.EMS_POWER_LIMITS_USED, active),
 	}
 
 	if active {
-		container = append(container, rscp.Message{
-			Tag:      rscp.EMS_MAX_DISCHARGE_POWER,
-			DataType: rscp.Uint32,
-			Value:    limit,
-		})
+		contents = append(contents, *rscp.NewMessage(rscp.EMS_MAX_DISCHARGE_POWER, limit))
 	}
 
-	return rscp.Message{
-		Tag:      rscp.EMS_REQ_SET_POWER_SETTINGS,
-		DataType: rscp.Container,
-		Value:    container,
-	}
+	return *rscp.NewMessage(rscp.EMS_REQ_SET_POWER_SETTINGS, contents)
 }
 
 func e3dcBatteryCharge(amount int) rscp.Message {
-	return rscp.Message{
-		Tag:      rscp.EMS_REQ_START_MANUAL_CHARGE,
-		DataType: rscp.Uint32,
-		Value:    amount, // 10kWh
-	}
+	return *rscp.NewMessage(rscp.EMS_REQ_START_MANUAL_CHARGE, amount)
 }
 
 func rscpError(msg ...rscp.Message) error {
