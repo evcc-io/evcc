@@ -30,7 +30,7 @@ func (c *Coordinator) GetVehicles(availableOnly bool) []api.Vehicle {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 
-	var res []api.Vehicle
+	res := make([]api.Vehicle, 0, len(c.vehicles))
 	for _, v := range c.vehicles {
 		if _, tracked := c.tracked[v]; !availableOnly || availableOnly && !tracked {
 			res = append(res, v)
