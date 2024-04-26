@@ -240,7 +240,7 @@ func e3dcDischargeBatteryLimit(active bool, limit uint32) rscp.Message {
 	return *rscp.NewMessage(rscp.EMS_REQ_SET_POWER_SETTINGS, contents)
 }
 
-func e3dcBatteryCharge(amount int) rscp.Message {
+func e3dcBatteryCharge(amount uint32) rscp.Message {
 	return *rscp.NewMessage(rscp.EMS_REQ_START_MANUAL_CHARGE, amount)
 }
 
