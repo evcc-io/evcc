@@ -1,7 +1,6 @@
 package vehicle
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -63,10 +62,11 @@ type PSA struct {
 // newPSA creates a new vehicle
 func newPSA(log *util.Logger, brand, realm, id, secret string, other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
-		embed               `mapstructure:",squash"`
-		Credentials         ClientCredentials
-		User, Password, VIN string
-		Cache               time.Duration
+		embed       `mapstructure:",squash"`
+		Credentials ClientCredentials
+		VIN         string
+		Tokens      Tokens
+		Cache       time.Duration
 	}{
 		Credentials: ClientCredentials{
 			ID:     id,
@@ -79,19 +79,19 @@ func newPSA(log *util.Logger, brand, realm, id, secret string, other map[string]
 		return nil, err
 	}
 
-	if cc.User == "" || cc.Password == "" {
-		return nil, api.ErrMissingCredentials
+	token, err := cc.Tokens.Token()
+	if err != nil {
+		return nil, err
 	}
 
 	v := &PSA{
 		embed: &cc.embed,
 	}
 
-	log.Redact(cc.User, cc.Password, cc.VIN)
-	identity := psa.NewIdentity(log, brand, cc.Credentials.ID, cc.Credentials.Secret)
-
-	if err := identity.Login(cc.User, cc.Password); err != nil {
-		return v, fmt.Errorf("login failed: %w", err)
+	log.Redact(cc.VIN, cc.Tokens.Access, cc.Tokens.Refresh)
+	identity, err := psa.NewIdentity(log, brand, realm, cc.VIN, cc.Credentials.ID, cc.Credentials.Secret, token)
+	if err != nil {
+		return nil, err
 	}
 
 	api := psa.NewAPI(log, identity, realm, cc.Credentials.ID)
