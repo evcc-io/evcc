@@ -228,7 +228,7 @@ func (m *E3dc) setBatteryMode(mode api.BatteryMode) error {
 	return err
 }
 
-func e3dcDischargeBatteryLimit(active bool, limit int) rscp.Message {
+func e3dcDischargeBatteryLimit(active bool, limit uint32) rscp.Message {
 	contents := []rscp.Message{
 		*rscp.NewMessage(rscp.EMS_POWER_LIMITS_USED, active),
 	}
