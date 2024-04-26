@@ -466,14 +466,16 @@ export default {
 		},
 		async updateValues() {
 			clearTimeout(this.deviceValueTimeout);
+			if (!this.offline) {
+				const promises = [
+					...this.meters.map((meter) => this.updateDeviceValue("meter", meter.name)),
+					...this.vehicles.map((vehicle) =>
+						this.updateDeviceValue("vehicle", vehicle.name)
+					),
+				];
 
-			const promises = [
-				...this.meters.map((meter) => this.updateDeviceValue("meter", meter.name)),
-				...this.vehicles.map((vehicle) => this.updateDeviceValue("vehicle", vehicle.name)),
-			];
-
-			await Promise.all(promises);
-
+				await Promise.all(promises);
+			}
 			this.deviceValueTimeout = setTimeout(this.updateValues, 10000);
 		},
 		deviceTags(type, id) {

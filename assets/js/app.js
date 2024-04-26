@@ -28,6 +28,7 @@ const app = createApp({
   },
   methods: {
     raise: function (msg) {
+      if (this.offline) return;
       if (!msg.level) msg.level = "error";
       const now = new Date();
       const latestMsg = this.notifications[0];

@@ -4,14 +4,14 @@ import Modal from "bootstrap/js/dist/modal";
 
 const auth = reactive({
   configured: true,
-  loggedIn: false,
+  loggedIn: null, // true / false / null (unknown)
   nextUrl: null,
 });
 
 export async function updateAuthStatus() {
   try {
     const res = await api.get("/auth/status", {
-      validateStatus: (code) => [200, 501].includes(code),
+      validateStatus: (code) => [200, 501, 500].includes(code),
     });
     if (res.status === 501) {
       auth.configured = false;
@@ -19,6 +19,10 @@ export async function updateAuthStatus() {
     if (res.status === 200) {
       auth.configured = true;
       auth.loggedIn = res.data === true;
+    }
+    if (res.status === 500) {
+      auth.loggedIn = null;
+      console.log("unable to fetch auth status", res);
     }
   } catch (e) {
     console.log("unable to fetch auth status", e);
@@ -36,7 +40,11 @@ export async function logout() {
 }
 
 export function isLoggedIn() {
-  return auth.loggedIn;
+  return auth.loggedIn === true;
+}
+
+export function statusUnknown() {
+  return auth.loggedIn === null;
 }
 
 export function isConfigured() {
