@@ -19,12 +19,11 @@ import (
 )
 
 type Octopus struct {
-	log    *util.Logger
-	region string
-	// Tariff is actually the Product Code
-	tariff string
-	apikey string
-	data   *util.Monitor[api.Rates]
+	log         *util.Logger
+	region      string
+	productCode string
+	apikey      string
+	data        *util.Monitor[api.Rates]
 }
 
 var _ api.Tariff = (*Octopus)(nil)
@@ -36,10 +35,15 @@ func init() {
 func NewOctopusFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	var cc struct {
 		Region string
-		// Tariff is actually the Product Code
+		// Tariff is DEPRECATED: use ProductCode
 		Tariff string
-		ApiKey string
+		// Productcode is formatted such because config parlence is to use lower case for keys -
+		// camelCased elsewhere.
+		Productcode string
+		ApiKey      string
 	}
+
+	logger := util.NewLogger("octopus")
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
@@ -51,12 +55,17 @@ func NewOctopusFromConfig(other map[string]interface{}) (api.Tariff, error) {
 			return nil, errors.New("missing region")
 		}
 		if cc.Tariff == "" {
-			return nil, errors.New("missing product / tariff code")
+			// deprecated - copy to correct slot and WARN
+			logger.WARN.Print("'tariff' is deprecated and will break in a future version - use 'productCode' instead")
+			cc.Productcode = cc.Tariff
+		}
+		if cc.Productcode == "" {
+			return nil, errors.New("missing product code")
 		}
 	} else {
 		// ApiKey validators
 		if cc.Region != "" || cc.Tariff != "" {
-			return nil, errors.New("cannot use apikey at same time as product / tariff code")
+			return nil, errors.New("cannot use apikey at same time as product code")
 		}
 		if len(cc.ApiKey) != 32 || !strings.HasPrefix(cc.ApiKey, "sk_live_") {
 			return nil, errors.New("invalid apikey format")
@@ -64,11 +73,11 @@ func NewOctopusFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	}
 
 	t := &Octopus{
-		log:    util.NewLogger("octopus"),
-		region: cc.Region,
-		tariff: cc.Tariff,
-		apikey: cc.ApiKey,
-		data:   util.NewMonitor[api.Rates](2 * time.Hour),
+		log:         logger,
+		region:      cc.Region,
+		productCode: cc.Productcode,
+		apikey:      cc.ApiKey,
+		data:        util.NewMonitor[api.Rates](2 * time.Hour),
 	}
 
 	done := make(chan error)
@@ -103,7 +112,7 @@ func (t *Octopus) run(done chan error) {
 		restQueryUri = octoRest.ConstructRatesAPIFromTariffCode(tariffCode)
 	} else {
 		// Construct Rest Query URI using tariff and region codes.
-		restQueryUri = octoRest.ConstructRatesAPIFromProductAndRegionCode(t.tariff, t.region)
+		restQueryUri = octoRest.ConstructRatesAPIFromProductAndRegionCode(t.productCode, t.region)
 	}
 
 	// TODO tick every 15 minutes if GraphQL is available to poll for Intelligent slots.
