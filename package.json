@@ -32,7 +32,7 @@
     "bootstrap": "^5.2.2",
     "canvas-confetti": "^1.4.0",
     "countup.js": "^2.3.2",
-    "eslint": "^8.27.0",
+    "eslint": "^8.57.0",
     "eslint-config-prettier": "^9.0.0",
     "eslint-plugin-import": "^2.25.3",
     "eslint-plugin-node": "^11.1.0",
