@@ -56,6 +56,9 @@ func runToken(cmd *cobra.Command, args []string) {
 		token, err = mercedesToken()
 	case "tronity":
 		token, err = tronityToken(conf, vehicleConf)
+	case "citroen", "ds", "opel", "peugeot":
+		token, err = psaToken(vehicleConf)
+
 	default:
 		log.FATAL.Fatalf("vehicle type '%s' does not support token authentication", vehicleConf.Type)
 	}
