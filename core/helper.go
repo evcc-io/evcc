@@ -30,6 +30,14 @@ func powerToCurrent(power float64, phases int) float64 {
 	return power / (float64(phases) * Voltage)
 }
 
+// currentToPower is a helper function to convert current to sum power
+func currentToPower(current float64, phases int) float64 {
+	if Voltage == 0 {
+		panic("Voltage is not set")
+	}
+	return current * float64(phases) * Voltage
+}
+
 // sitePower returns the available delta power that the charger might additionally consume
 // negative value: available power (grid export), positive value: grid import
 func sitePower(log *util.Logger, maxGrid, grid, battery, residual float64) float64 {

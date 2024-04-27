@@ -6,8 +6,11 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger"
+	"github.com/evcc-io/evcc/core"
 	"github.com/evcc-io/evcc/meter"
+	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/templates"
 	"github.com/evcc-io/evcc/vehicle"
@@ -50,6 +53,9 @@ func devicesHandler(w http.ResponseWriter, r *http.Request) {
 
 	case templates.Vehicle:
 		res, err = devicesConfig(class, config.Vehicles())
+
+	case templates.Circuit:
+		res, err = devicesConfig(class, config.Circuits())
 	}
 
 	if err != nil {
@@ -123,6 +129,9 @@ func deviceConfigHandler(w http.ResponseWriter, r *http.Request) {
 
 	case templates.Vehicle:
 		res, err = deviceConfig(class, id, config.Vehicles())
+
+	case templates.Circuit:
+		res, err = deviceConfig(class, id, config.Circuits())
 	}
 
 	if err != nil {
@@ -166,6 +175,9 @@ func deviceStatusHandler(w http.ResponseWriter, r *http.Request) {
 
 	case templates.Vehicle:
 		instance, err = deviceStatus(name, config.Vehicles())
+
+	case templates.Circuit:
+		instance, err = deviceStatus(name, config.Circuits())
 	}
 
 	if err != nil {
@@ -218,6 +230,11 @@ func newDeviceHandler(w http.ResponseWriter, r *http.Request) {
 
 	case templates.Vehicle:
 		conf, err = newDevice(class, req, vehicle.NewFromConfig, config.Vehicles())
+
+	case templates.Circuit:
+		conf, err = newDevice(class, req, func(_ string, other map[string]interface{}) (api.Circuit, error) {
+			return core.NewCircuitFromConfig(util.NewLogger("circuit"), other)
+		}, config.Circuits())
 	}
 
 	if err != nil {
@@ -284,6 +301,11 @@ func updateDeviceHandler(w http.ResponseWriter, r *http.Request) {
 
 	case templates.Vehicle:
 		err = updateDevice(id, class, req, vehicle.NewFromConfig, config.Vehicles())
+
+	case templates.Circuit:
+		err = updateDevice(id, class, req, func(_ string, other map[string]interface{}) (api.Circuit, error) {
+			return core.NewCircuitFromConfig(util.NewLogger("circuit"), other)
+		}, config.Circuits())
 	}
 
 	setConfigDirty()
@@ -347,6 +369,9 @@ func deleteDeviceHandler(w http.ResponseWriter, r *http.Request) {
 
 	case templates.Vehicle:
 		err = deleteDevice(id, config.Vehicles())
+
+	case templates.Circuit:
+		err = deleteDevice(id, config.Circuits())
 	}
 
 	setConfigDirty()
@@ -413,6 +438,9 @@ func testConfigHandler(w http.ResponseWriter, r *http.Request) {
 
 	case templates.Vehicle:
 		instance, err = testConfig(id, class, req, vehicle.NewFromConfig, config.Vehicles())
+
+	case templates.Circuit:
+		err = api.ErrNotAvailable
 	}
 
 	if err != nil {

@@ -7,14 +7,22 @@ import (
 
 var bus = evbus.New()
 
-var instance = struct {
+var instance struct {
 	meters   *handler[api.Meter]
 	chargers *handler[api.Charger]
 	vehicles *handler[api.Vehicle]
-}{
-	meters:   &handler[api.Meter]{topic: "meter"},
-	chargers: &handler[api.Charger]{topic: "charger"},
-	vehicles: &handler[api.Vehicle]{topic: "vehicle"},
+	circuits *handler[api.Circuit]
+}
+
+func init() {
+	Reset()
+}
+
+func Reset() {
+	instance.meters = &handler[api.Meter]{topic: "meter"}
+	instance.chargers = &handler[api.Charger]{topic: "charger"}
+	instance.vehicles = &handler[api.Vehicle]{topic: "vehicle"}
+	instance.circuits = &handler[api.Circuit]{topic: "circuit"}
 }
 
 type Handler[T any] interface {
@@ -35,6 +43,10 @@ func Chargers() Handler[api.Charger] {
 
 func Vehicles() Handler[api.Vehicle] {
 	return instance.vehicles
+}
+
+func Circuits() Handler[api.Circuit] {
+	return instance.circuits
 }
 
 // Instances returns the instances of the given devices
