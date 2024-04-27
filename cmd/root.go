@@ -18,6 +18,7 @@ import (
 	"github.com/evcc-io/evcc/server/modbus"
 	"github.com/evcc-io/evcc/server/updater"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/auth"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/pipe"
 	"github.com/evcc-io/evcc/util/sponsor"
@@ -246,11 +247,14 @@ func runRoot(cmd *cobra.Command, args []string) {
 		os.Exit(0)
 	}()
 
+	auth := auth.New()
+
 	// show main ui
 	if err == nil {
-		httpd.RegisterSiteHandlers(site, cache)
-		httpd.RegisterShutdownHandler(func() {
-			log.FATAL.Println("evcc was stopped by user. OS should restart the service. Or restart manually.")
+		httpd.RegisterSiteHandlers(site, auth, cache)
+		httpd.RegisterAuthHandlers(auth)
+		httpd.RegisterSystemHandler(auth, func() {
+			log.INFO.Println("evcc was stopped by user. OS should restart the service. Or restart manually.")
 			once.Do(func() { close(stopC) }) // signal loop to end
 		})
 
@@ -284,8 +288,9 @@ func runRoot(cmd *cobra.Command, args []string) {
 			site.Run(stopC, conf.Interval)
 		}()
 	} else {
-		httpd.RegisterShutdownHandler(func() {
-			log.FATAL.Println("evcc was stopped. OS should restart the service. Or restart manually.")
+		httpd.RegisterAuthHandlers(auth)
+		httpd.RegisterSystemHandler(auth, func() {
+			log.INFO.Println("evcc was stopped by user. OS should restart the service. Or restart manually.")
 			once.Do(func() { close(stopC) }) // signal loop to end
 		})
 

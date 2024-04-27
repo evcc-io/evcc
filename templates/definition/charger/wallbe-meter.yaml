@@ -1,4 +1,5 @@
 template: wallbe-meter
+deprecated: true
 products:
   - brand: Wallbe
     description:

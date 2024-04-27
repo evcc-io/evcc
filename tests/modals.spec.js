@@ -7,10 +7,9 @@ const SIMULATOR_CONFIG = "simulator.evcc.yaml";
 
 const UI_ROUTES = ["/", "/#/sessions", "/#/config"];
 
-async function login() {
-  // TODO: uncomment this once auth is released
-  // await page.locator("#loginPassword").fill("secret");
-  // await page.getByRole("button", { name: "Login" }).click();
+async function login(page) {
+  await page.locator("#loginPassword").fill("secret");
+  await page.getByRole("button", { name: "Login" }).click();
 }
 
 test.describe("Basics", async () => {
@@ -30,8 +29,8 @@ test.describe("Basics", async () => {
       }
 
       await page.getByTestId("topnavigation-button").click();
-      await expect(page.getByRole("button", { name: "General Settings" })).toBeVisible();
-      await expect(page.getByRole("button", { name: "Battery Settings" })).not.toBeVisible();
+      await expect(page.getByRole("button", { name: "User Interface" })).toBeVisible();
+      await expect(page.getByRole("button", { name: "Home Battery" })).not.toBeVisible();
       await expect(page.getByRole("button", { name: "Need help?" })).toBeVisible();
     }
   });
@@ -45,12 +44,12 @@ test.describe("Basics", async () => {
     await expect(page.getByRole("heading", { name: "Need help?" })).toBeVisible();
   });
 
-  test("General Settings", async ({ page }) => {
+  test("User Interface", async ({ page }) => {
     await page.goto("/");
     await page.getByTestId("topnavigation-button").click();
-    await page.getByRole("button", { name: "General Settings" }).click();
+    await page.getByRole("button", { name: "User Interface" }).click();
 
-    await expect(page.getByRole("heading", { name: "General Settings" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "User Interface" })).toBeVisible();
   });
 });
 
@@ -73,21 +72,21 @@ test.describe("Advanced", async () => {
       }
 
       await page.getByTestId("topnavigation-button").click();
-      await expect(page.getByRole("button", { name: "General Settings" })).toBeVisible();
-      await expect(page.getByRole("button", { name: "Battery Settings" })).toBeVisible();
+      await expect(page.getByRole("button", { name: "User Interface" })).toBeVisible();
+      await expect(page.getByRole("button", { name: "Home Battery" })).toBeVisible();
       await expect(page.getByRole("button", { name: "Need help?" })).toBeVisible();
     }
   });
 
-  test("Battery Settings from top navigation", async ({ page }) => {
+  test("Home Battery from top navigation", async ({ page }) => {
     await page.goto("/");
     await page.getByTestId("topnavigation-button").click();
-    await page.getByRole("button", { name: "Battery Settings" }).click();
+    await page.getByRole("button", { name: "Home Battery" }).click();
 
-    await expect(page.getByRole("heading", { name: "Battery Settings" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Home Battery" })).toBeVisible();
   });
 
-  test("Battery Settings from energyflow", async ({ page }) => {
+  test("Home Battery from energyflow", async ({ page }) => {
     await page.goto("/");
     await page.getByTestId("energyflow").click();
     await page
@@ -95,6 +94,6 @@ test.describe("Advanced", async () => {
       .getByTestId("energyflow-entry-details")
       .click();
 
-    await expect(page.getByRole("heading", { name: "Battery Settings" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Home Battery" })).toBeVisible();
   });
 });

@@ -1,0 +1,97 @@
+[batterySettings]
+batteryLevel = "Ποσοστό Μπαταρίας"
+capacity = "{ενέργεια} της {πλήρους φόρτισης}"
+control = "Έλεγχος Μπαταρίας"
+discharge = "Αποτροπή εκφόρτισης σε γρήγορη λειτουργία και προγραμματισμένη φόρτιση."
+disclaimerHint = "Σημείωση"
+disclaimerText = "Αυτές οι ρυθμίσεις επηρεάζουν μόνο την ηλιακή λειτουργία. Η συμπεριφορά φόρτισης προσαρμόζεται ανάλογα."
+legendBottomName = "προτεραιότητα οικίας"
+legendBottomSubline = "δεν αξιοποιείται για φόρτιση"
+legendMiddleName = "πρώτα το όχημα"
+legendMiddleSubline = "η οικία δεύτερη"
+legendTitle = "Πως θέλετε να αξιοποιηθεί η ηλιακή ενέργεια"
+legendTopAutostart = "ξεκινά αυτόματα"
+legendTopName = "φόρτιση υποστηριζόμενη από την μπαταρία"
+legendTopSubline = "χωρίς διακοπές"
+modalTitle = "Ρυθμίσεις Μπαταρίας"
+
+[batterySettings.bufferStart]
+above = "όταν ειναι πανω απο το επίπεδο φόρτισης της μπαταρίας {soc}"
+full = "όταν είναι στο επίπεδο φόρτισης της μπαταρίας {soc}"
+never = "μόνο με αρκετή περίσσεια"
+
+[config]
+
+[config.battery]
+titleAdd = "Πρόσθεσε Μετρητή Μπαταρίας"
+titleEdit = "Eπεξεργασία Mετρητή Mπαταρίας"
+
+[config.deviceValue]
+capacity = "Χωρητικότητα"
+chargeStatus = "Κατάσταση"
+chargedEnergy = "Φορτισμένο"
+current = "Ένταση"
+enabled = "Ενεργοποιημένο"
+energy = "Ενέργεια"
+odometer = "Οδόμετρο"
+phaseCurrents = "Ένταση L1..L3"
+phasePowers = "Ισχύς L1..L3"
+phaseVoltages = "Τάση L1..L3"
+power = "Ισχύς"
+range = "Αυτονομία"
+soc = "Κατάσταση φόρτισης (SoC)"
+socLimit = "Όριο"
+
+[config.form]
+example = "Παράδειγμα"
+optional = "προαιρετικό"
+
+[config.general]
+cancel = "Ακύρωση"
+save = "Αποθήκευση"
+
+[config.grid]
+titleAdd = "Προσθήκη Μετρητή Δικτύου"
+titleEdit = "Μεταβολή Μετρητή Δικτύου"
+
+[config.main]
+addLoadpoint = "Προσθήκη σημείου φόρτισης"
+addPvBattery = "Προσθήκη ηλιακής ενέργειας ή μπαταρίας"
+addVehicle = "Προσθήκη Οχήματος"
+edit = "επεξεργασία"
+title = "Διαμόρφωση"
+unconfigured = "δεν έχει ρυθμιστεί"
+vehicles = "Τα Οχήματα μου"
+yaml = "Ρύθμιση στο evcc.yaml. Δεν μεταβάλεται στο σύστημα διαπροσωπείας"
+
+[config.meter]
+cancel = "Ακύρωση"
+delete = "Διαγραφή"
+save = "Αποθήκευση"
+template = "Κατασκευαστής"
+titleChoice = "Τι θέλετε να προσθέσετε;"
+validateSave = "Επικύρωση & αποθήκευση"
+
+[config.pv]
+titleAdd = "Προσθήκη Ηλιακού Μετρητή"
+titleEdit = "Μεταβολή Ηλιακού Μετρητή"
+
+[config.title]
+description = "Προβάλλεται στην κεντρική οθόνη και στον φυλλομετρητή"
+label = "Τίτλος"
+title = "Επεξεργασία Τίτλου"
+
+[config.validation]
+failed = "απέτυχε"
+label = "Κατάσταση"
+running = "επικύρωση..."
+success = "επιτυχία"
+unknown = "απροσδιόριστο"
+validate = "επικύρωση"
+
+[config.vehicle]
+cancel = "Ακύρωση"
+save = "Αποθήκευση"
+scooter = "Σκούτερ"
+template = "Κατασκευαστής"
+titleAdd = "Προσθήκη Οχήματος"

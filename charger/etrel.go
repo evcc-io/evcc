@@ -221,8 +221,8 @@ func (wb *Etrel) Currents() (float64, float64, float64, error) {
 
 // var _ api.ChargeTimer = (*Etrel)(nil)
 //
-// // ChargingTime implements the api.ChargeTimer interface
-// func (wb *Etrel) ChargingTime() (time.Duration, error) {
+// // ChargeDuration implements the api.ChargeTimer interface
+// func (wb *Etrel) ChargeDuration() (time.Duration, error) {
 // 	b, err := wb.conn.ReadInputRegisters(wb.base+etrelRegChargeTime, 4)
 // 	if err != nil {
 // 		return 0, err

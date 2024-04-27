@@ -4,7 +4,7 @@ import (
 	"os"
 	"text/template"
 
-	"github.com/Masterminds/sprig/v3"
+	"github.com/42atomys/sprout"
 	"github.com/evcc-io/evcc/charger/eebus"
 	"github.com/spf13/cobra"
 )
@@ -42,7 +42,7 @@ func generateEEBUSCert() {
 		log.FATAL.Fatal("could not process generated certificate", err)
 	}
 
-	t := template.Must(template.New("out").Funcs(sprig.TxtFuncMap()).Parse(tmpl))
+	t := template.Must(template.New("out").Funcs(sprout.TxtFuncMap()).Parse(tmpl))
 	if err := t.Execute(os.Stdout, map[string]interface{}{
 		"public":  pubKey,
 		"private": privKey,

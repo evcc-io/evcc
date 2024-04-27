@@ -184,6 +184,7 @@ blog = "Blog"
 docs = "Documentación"
 github = "GitHub"
 login = "Registro de vehículos"
+logout = "Cerrar sesión"
 nativeSettings = "Cambiar el servidor"
 needHelp = "¿Necesitas ayuda?"
 sessions = "Sesiones de carga"
@@ -211,6 +212,14 @@ confirm = "¡Sí, reinicia!"
 description = "En circunstancias normales no debería ser necesario reiniciar. Por favor, considera la posibilidad de presentar un error si necesita reiniciar evcc de forma regular."
 disclaimer = "Nota: evcc terminará y dependerá del sistema operativo para reiniciar el servicio"
 modalTitle = "¿Seguro que quieres volver a empezar?"
+
+[loginModal]
+cancel = "Cancelar"
+error = "Error en el inicio de sesion: "
+invalid = "La contraseña no es válida."
+login = "Registro"
+password = "Contraseña"
+title = "Autenticación"
 
 [main]
 vehicles = "Estacionamiento"
@@ -398,6 +407,19 @@ modalTitle = "Notificaciónes"
 [offline]
 message = "No conectado con servidor."
 reload = "Actualizar?"
+
+[passwordModal]
+description = "Establezca una contraseña para proteger la configuración. La vista principal permanece accesible sin iniciar sesión"
+empty = "La contraseña no debe estar vacía"
+error = "Error: "
+labelCurrent = "Contraseña actual"
+labelNew = "Nueva contraseña"
+labelRepeat = "Repita la contraseña"
+newPassword = "Crear contraseña"
+noMatch = "Las contraseñas no coinciden"
+titleNew = "Establecer contraseña de administrador"
+titleUpdate = "Cambiar contraseña de administrador"
+updatePassword = "Cambiar la contraseña"
 
 [session]
 cancel = "Cancelar"

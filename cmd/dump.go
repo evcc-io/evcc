@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"text/template"
 
-	"github.com/Masterminds/sprig/v3"
+	"github.com/42atomys/sprout"
 	"github.com/evcc-io/evcc/core"
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/util/config"
@@ -70,7 +70,7 @@ func runDump(cmd *cobra.Command, args []string) {
 
 		tmpl := template.Must(
 			template.New("dump").
-				Funcs(sprig.TxtFuncMap()).
+				Funcs(sprout.TxtFuncMap()).
 				Parse(dumpTmpl))
 
 		out := new(bytes.Buffer)

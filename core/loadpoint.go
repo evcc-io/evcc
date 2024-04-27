@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math"
 	"reflect"
+	"slices"
 	"strings"
 	"sync"
 	"testing"
@@ -480,6 +481,9 @@ func (lp *Loadpoint) evVehicleConnectHandler() {
 		lp.socEstimator.Reset()
 	}
 
+	// get pv mode before vehicle defaults are applied
+	pvMode := lp.GetMode() == api.ModePV || lp.GetMode() == api.ModeMinPV
+
 	// set default or start detection
 	if !lp.chargerHasFeature(api.IntegratedDevice) {
 		lp.vehicleDefaultOrDetect()
@@ -487,6 +491,18 @@ func (lp *Loadpoint) evVehicleConnectHandler() {
 
 	// immediately allow pv mode activity
 	lp.elapsePVTimer()
+
+	// Enable charging on connect if any available vehicle requires it. We're using the PV timer
+	// to disable after the welcome, hence this must be placed after elapsePVTimer.
+	// TODO check is this doesn't conflict with vehicle defaults like mode: off
+	if pvMode {
+		for _, v := range lp.availableVehicles() {
+			if slices.Contains(v.Features(), api.WelcomeCharge) {
+				lp.setLimit(lp.effectiveMinCurrent())
+				break
+			}
+		}
+	}
 
 	// create charging session
 	lp.createSession()
@@ -676,7 +692,7 @@ func (lp *Loadpoint) syncCharger() error {
 		return fmt.Errorf("charger enabled: %w", err)
 	}
 
-	shouldBeConsistent := lp.chargerUpdateCompleted() && lp.phaseSwitchCompleted()
+	shouldBeConsistent := lp.shouldBeConsistent()
 
 	if shouldBeConsistent {
 		defer func() {
@@ -1083,8 +1099,8 @@ func (lp *Loadpoint) fastCharging() error {
 	return err
 }
 
-// pvScalePhases switches phases if necessary and returns if switch occurred
-func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64) bool {
+// pvScalePhases switches phases if necessary and returns number of phases switched to
+func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64) int {
 	phases := lp.GetPhases()
 
 	// observed phase state inconsistency
@@ -1093,7 +1109,7 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64) bo
 	// - https://github.com/evcc-io/evcc/issues/2613
 	measuredPhases := lp.getMeasuredPhases()
 	if phases > 0 && phases < measuredPhases {
-		if lp.chargerUpdateCompleted() {
+		if lp.chargerUpdateCompleted() && lp.phaseSwitchCompleted() {
 			lp.log.WARN.Printf("ignoring inconsistent phases: %dp < %dp observed active", phases, measuredPhases)
 		}
 		lp.resetMeasuredPhases()
@@ -1123,7 +1139,7 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64) bo
 			if err := lp.scalePhases(1); err != nil {
 				lp.log.ERROR.Println(err)
 			}
-			return true
+			return 1
 		}
 
 		waiting = true
@@ -1152,7 +1168,10 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64) bo
 			if err := lp.scalePhases(3); err != nil {
 				lp.log.ERROR.Println(err)
 			}
-			return true
+			if err := lp.scalePhases(3); err != nil {
+				lp.log.ERROR.Println(err)
+			}
+			return 3
 		}
 
 		waiting = true
@@ -1163,7 +1182,7 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64) bo
 		lp.resetPhaseTimer()
 	}
 
-	return false
+	return 0
 }
 
 // TODO move up to timer functions
@@ -1195,13 +1214,18 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batter
 	maxCurrent := lp.effectiveMaxCurrent()
 
 	// switch phases up/down
+	var scaledTo int
 	if lp.hasPhaseSwitching() && lp.phaseSwitchCompleted() {
-		_ = lp.pvScalePhases(sitePower, minCurrent, maxCurrent)
+		scaledTo = lp.pvScalePhases(sitePower, minCurrent, maxCurrent)
 	}
 
 	// calculate target charge current from delta power and actual current
-	effectiveCurrent := lp.effectiveCurrent()
 	activePhases := lp.ActivePhases()
+	effectiveCurrent := lp.effectiveCurrent()
+	if scaledTo == 3 {
+		// if we did scale, adjust the effective current to the new phase count
+		effectiveCurrent /= 3.0
+	}
 	deltaCurrent := powerToCurrent(-sitePower, activePhases)
 	targetCurrent := max(effectiveCurrent+deltaCurrent, 0)
 
@@ -1295,30 +1319,27 @@ func (lp *Loadpoint) UpdateChargePower() {
 	bo := backoff.NewExponentialBackOff()
 	bo.MaxElapsedTime = time.Second
 
-	if err := backoff.Retry(func() error {
-		value, err := lp.chargeMeter.CurrentPower()
-		if err != nil {
-			return err
-		}
-
+	if power, err := backoff.RetryWithData(lp.chargeMeter.CurrentPower, bo); err == nil {
 		lp.Lock()
-		lp.chargePower = value // update value if no error
+		lp.chargePower = power // update value if no error
 		lp.Unlock()
 
-		lp.log.DEBUG.Printf("charge power: %.0fW", value)
-		lp.publish(keys.ChargePower, value)
+		lp.log.DEBUG.Printf("charge power: %.0fW", power)
+		lp.publish(keys.ChargePower, power)
 
 		// https://github.com/evcc-io/evcc/issues/2153
 		// https://github.com/evcc-io/evcc/issues/6986
-		if lp.chargePower < -20 {
-			lp.log.WARN.Printf("charge power must not be negative: %.0f", lp.chargePower)
+		// https://github.com/evcc-io/evcc/issues/13378
+		if power < -100 && lp.shouldBeConsistent() {
+			lp.log.WARN.Printf("charge power must not be negative: %.0f", power)
 		}
-
-		return nil
-	}, bo); err != nil {
+	} else {
 		lp.log.ERROR.Printf("charge power: %v", err)
 	}
+}
 
+// updateChargeCurrents uses PhaseCurrents interface to count phases with current >=1A
+func (lp *Loadpoint) updateChargeCurrents() {
 	// update charge currents
 	lp.chargeCurrents = nil
 
@@ -1423,7 +1444,7 @@ func (lp *Loadpoint) publishChargeProgress() {
 		lp.log.ERROR.Printf("charge rater: %v", err)
 	}
 
-	if d, err := lp.chargeTimer.ChargingTime(); err == nil {
+	if d, err := lp.chargeTimer.ChargeDuration(); err == nil {
 		lp.chargeDuration = d.Round(time.Second)
 	} else {
 		lp.log.ERROR.Printf("charge timer: %v", err)
@@ -1481,7 +1502,8 @@ func (lp *Loadpoint) publishSocAndRange() {
 			if limit, err := vs.GetLimitSoc(); err == nil {
 				apiLimitSoc = int(limit)
 				lp.log.DEBUG.Printf("vehicle soc limit: %d%%", limit)
-				lp.publish(keys.VehicleLimitSoc, limit)
+				// https://github.com/evcc-io/evcc/issues/13349
+				lp.publish(keys.VehicleLimitSoc, float64(limit))
 			} else if !errors.Is(err, api.ErrNotAvailable) {
 				lp.log.ERROR.Printf("vehicle soc limit: %v", err)
 			}
@@ -1546,6 +1568,10 @@ func (lp *Loadpoint) startWakeUpTimer() {
 func (lp *Loadpoint) stopWakeUpTimer() {
 	lp.log.DEBUG.Printf("wake-up timer: stop")
 	lp.wakeUpTimer.Stop()
+}
+
+func (lp *Loadpoint) shouldBeConsistent() bool {
+	return lp.chargerUpdateCompleted() && lp.phaseSwitchCompleted()
 }
 
 // chargerUpdateCompleted returns true if enable command should be already processed by the charger (so we can try to sync charger and loadpoint)

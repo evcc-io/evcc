@@ -227,8 +227,8 @@ func (wb *Schneider) getPhaseValues(reg uint16) (float64, float64, float64, erro
 
 var _ api.ChargeTimer = (*Schneider)(nil)
 
-// ChargingTime implements the api.ChargeTimer interface
-func (wb *Schneider) ChargingTime() (time.Duration, error) {
+// ChargeDuration implements the api.ChargeTimer interface
+func (wb *Schneider) ChargeDuration() (time.Duration, error) {
 	b, err := wb.conn.ReadHoldingRegisters(schneiderRegSessionChargingTime, 2)
 	if err != nil {
 		return 0, err

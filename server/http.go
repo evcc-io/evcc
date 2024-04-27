@@ -84,7 +84,7 @@ func (s *HTTPd) Router() *mux.Router {
 }
 
 // RegisterSiteHandlers connects the http handlers to the site
-func (s *HTTPd) RegisterSiteHandlers(site site.API, cache *util.Cache) {
+func (s *HTTPd) RegisterSiteHandlers(site site.API, auth auth.Auth, cache *util.Cache) {
 	router := s.Server.Handler.(*mux.Router)
 
 	// api
@@ -95,8 +95,6 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, cache *util.Cache) {
 		handlers.AllowedHeaders([]string{"Content-Type"}),
 	))
 
-	auth := auth.New()
-
 	// site api
 	routes := map[string]route{
 		"health":                  {"GET", "/health", healthHandler(site)},
@@ -105,18 +103,14 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, cache *util.Cache) {
 		"bufferstartsoc":          {"POST", "/bufferstartsoc/{value:[0-9.]+}", floatHandler(site.SetBufferStartSoc, site.GetBufferStartSoc)},
 		"batterydischargecontrol": {"POST", "/batterydischargecontrol/{value:[a-z]+}", boolHandler(site.SetBatteryDischargeControl, site.GetBatteryDischargeControl)},
 		"prioritysoc":             {"POST", "/prioritysoc/{value:[0-9.]+}", floatHandler(site.SetPrioritySoc, site.GetPrioritySoc)},
-		"residualpower":           {"POST", "/residualpower/{value:[-0-9.]+}", floatHandler(site.SetResidualPower, site.GetResidualPower)},
-		"smartcost":               {"POST", "/smartcostlimit/{value:[-0-9.]+}", updateSmartCostLimit(site)},
+		"residualpower":           {"POST", "/residualpower/{value:-?[0-9.]+}", floatHandler(site.SetResidualPower, site.GetResidualPower)},
+		"smartcost":               {"POST", "/smartcostlimit/{value:-?[0-9.]+}", updateSmartCostLimit(site)},
 		"tariff":                  {"GET", "/tariff/{tariff:[a-z]+}", tariffHandler(site)},
 		"sessions":                {"GET", "/sessions", sessionHandler},
 		"updatesession":           {"PUT", "/session/{id:[0-9]+}", updateSessionHandler},
 		"deletesession":           {"DELETE", "/session/{id:[0-9]+}", deleteSessionHandler},
 		"telemetry":               {"GET", "/settings/telemetry", boolGetHandler(telemetry.Enabled)},
 		"telemetry2":              {"POST", "/settings/telemetry/{value:[a-z]+}", boolHandler(telemetry.Enable, telemetry.Enabled)},
-		"password":                {"PUT", "/auth/password", updatePasswordHandler(auth)},
-		"auth":                    {"GET", "/auth/status", authStatusHandler(auth)},
-		"login":                   {"POST", "/auth/login", loginHandler(auth)},
-		"logout":                  {"POST", "/auth/logout", logoutHandler},
 	}
 
 	for _, r := range routes {
@@ -186,7 +180,7 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, cache *util.Cache) {
 			"remotedemand":     {"POST", "/remotedemand/{demand:[a-z]+}/{source:[0-9a-zA-Z_-]+}", remoteDemandHandler(lp)},
 			"enableThreshold":  {"POST", "/enable/threshold/{value:-?[0-9.]+}", floatHandler(pass(lp.SetEnableThreshold), lp.GetEnableThreshold)},
 			"disableThreshold": {"POST", "/disable/threshold/{value:-?[0-9.]+}", floatHandler(pass(lp.SetDisableThreshold), lp.GetDisableThreshold)},
-			"smartCostLimit":   {"POST", "/smartcostlimit/{value:[0-9.]+}", floatHandler(pass(lp.SetSmartCostLimit), lp.GetSmartCostLimit)},
+			"smartCostLimit":   {"POST", "/smartcostlimit/{value:-?[0-9.]+}", floatHandler(pass(lp.SetSmartCostLimit), lp.GetSmartCostLimit)},
 			// "priority":         {"POST", "/priority/{value:[0-9.]+}", floatHandler(pass(lp.SetPriority), lp.GetPriority)},
 		}
 
@@ -196,22 +190,50 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, cache *util.Cache) {
 	}
 }
 
-// RegisterShutdownHandler connects the http handlers to the site
-func (s *HTTPd) RegisterShutdownHandler(callback func()) {
+// RegisterAuthHandlers provides authentication handlers
+func (s *HTTPd) RegisterAuthHandlers(auth auth.Auth) {
 	router := s.Server.Handler.(*mux.Router)
 
 	// api
-	api := router.PathPrefix("/api").Subrouter()
+	api := router.PathPrefix("/api/auth").Subrouter()
 	api.Use(jsonHandler)
 	api.Use(handlers.CompressHandler)
 	api.Use(handlers.CORS(
 		handlers.AllowedHeaders([]string{"Content-Type"}),
 	))
 
-	// site api
+	// auth api
 	routes := map[string]route{
+		"password": {"PUT", "/password", updatePasswordHandler(auth)},
+		"auth":     {"GET", "/status", authStatusHandler(auth)},
+		"login":    {"POST", "/login", loginHandler(auth)},
+		"logout":   {"POST", "/logout", logoutHandler},
+	}
+
+	for _, r := range routes {
+		api.Methods(r.Methods()...).Path(r.Pattern).Handler(r.HandlerFunc)
+	}
+}
+
+// RegisterSystemHandler provides system level handlers
+func (s *HTTPd) RegisterSystemHandler(auth auth.Auth, shutdown func()) {
+	router := s.Server.Handler.(*mux.Router)
+
+	// api
+	api := router.PathPrefix("/api/system").Subrouter()
+	api.Use(jsonHandler)
+	api.Use(ensureAuthHandler(auth))
+	api.Use(handlers.CompressHandler)
+	api.Use(handlers.CORS(
+		handlers.AllowedHeaders([]string{"Content-Type"}),
+	))
+
+	// system api
+	routes := map[string]route{
+		"log":      {"GET", "/log", logHandler},
+		"logareas": {"GET", "/log/areas", logAreasHandler},
 		"shutdown": {"POST", "/shutdown", func(w http.ResponseWriter, r *http.Request) {
-			callback()
+			shutdown()
 			w.WriteHeader(http.StatusNoContent)
 		}},
 	}
