@@ -1336,10 +1336,7 @@ func (lp *Loadpoint) UpdateChargePower() {
 	} else {
 		lp.log.ERROR.Printf("charge power: %v", err)
 	}
-}
 
-// updateChargeCurrents uses PhaseCurrents interface to count phases with current >=1A
-func (lp *Loadpoint) updateChargeCurrents() {
 	// update charge currents
 	lp.chargeCurrents = nil
 
