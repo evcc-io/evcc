@@ -19,9 +19,10 @@ import (
 )
 
 type E3dc struct {
-	capacity float64
-	usage    templates.Usage // TODO check if we really want to depend on templates
-	conn     *rscp.Client
+	capacity       float64
+	dischargeLimit uint32
+	usage          templates.Usage // TODO check if we really want to depend on templates
+	conn           *rscp.Client
 }
 
 func init() {
@@ -32,13 +33,14 @@ func init() {
 
 func NewE3dcFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
-		Usage    templates.Usage
-		Uri      string
-		User     string
-		Password string
-		Key      string
-		Battery  uint16 // battery id
-		Timeout  time.Duration
+		Usage          templates.Usage
+		Uri            string
+		User           string
+		Password       string
+		Key            string
+		Battery        uint16 // battery id
+		DischargeLimit uint32
+		Timeout        time.Duration
 	}{
 		Timeout: request.Timeout,
 	}
@@ -65,12 +67,12 @@ func NewE3dcFromConfig(other map[string]interface{}) (api.Meter, error) {
 		ReceiveTimeout:    cc.Timeout,
 	}
 
-	return NewE3dc(cfg, cc.Usage, cc.Battery)
+	return NewE3dc(cfg, cc.Usage, cc.Battery, cc.DischargeLimit)
 }
 
 var e3dcOnce sync.Once
 
-func NewE3dc(cfg rscp.ClientConfig, usage templates.Usage, batteryId uint16) (api.Meter, error) {
+func NewE3dc(cfg rscp.ClientConfig, usage templates.Usage, batteryId uint16, dischargeLimit uint32) (api.Meter, error) {
 	e3dcOnce.Do(func() {
 		log := util.NewLogger("e3dc")
 		rscp.Log.SetLevel(logrus.DebugLevel)
@@ -83,8 +85,9 @@ func NewE3dc(cfg rscp.ClientConfig, usage templates.Usage, batteryId uint16) (ap
 	}
 
 	m := &E3dc{
-		usage: usage,
-		conn:  conn,
+		usage:          usage,
+		conn:           conn,
+		dischargeLimit: dischargeLimit,
 	}
 
 	// decorate api.BatterySoc
@@ -208,13 +211,13 @@ func (m *E3dc) setBatteryMode(mode api.BatteryMode) error {
 
 	case api.BatteryHold:
 		res, err = m.conn.SendMultiple([]rscp.Message{
-			e3dcDischargeBatteryLimit(true, 0),
+			e3dcDischargeBatteryLimit(true, m.dischargeLimit),
 			e3dcBatteryCharge(0),
 		})
 
 	case api.BatteryCharge:
 		res, err = m.conn.SendMultiple([]rscp.Message{
-			e3dcDischargeBatteryLimit(true, 0),
+			e3dcDischargeBatteryLimit(false, 0),
 			e3dcBatteryCharge(10000), // 10kWh
 		})
 

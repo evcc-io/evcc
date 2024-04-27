@@ -14,6 +14,9 @@ params:
   - name: battery
     type: number
     advanced: true
+  - name: dischargelimit
+    type: number
+    advanced: true
 render: |
   type: e3dc-rscp
   usage: {{ .usage }}
@@ -22,3 +25,4 @@ render: |
   password: {{ .password }}
   key: {{ .key }}
   battery: {{ .battery }}
+  dischargelimit: {{ .dischargelimit }}
