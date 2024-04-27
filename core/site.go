@@ -553,7 +553,8 @@ func (site *Site) updateGridMeter() error {
 	// grid phase powers
 	var p1, p2, p3 float64
 	if phaseMeter, ok := site.gridMeter.(api.PhasePowers); ok {
-		if p1, p2, p3, err := phaseMeter.Powers(); err == nil {
+		var err error // phases needed for signed currents
+		if p1, p2, p3, err = phaseMeter.Powers(); err == nil {
 			phases := []float64{p1, p2, p3}
 			site.log.DEBUG.Printf("grid powers: %.0fW", phases)
 			site.publish(keys.GridPowers, phases)
