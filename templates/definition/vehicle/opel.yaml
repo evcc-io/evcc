@@ -1,12 +1,54 @@
-template: opel
+template: psa
 products:
+  - brand: Citroën
+  - brand: DS
   - brand: Opel
-params:
-  - preset: vehicle-base
-  - preset: vehicle-identify
-  - name: vin
-    example: WP0...
-render: |
-  type: opel
-  {{ include "vehicle-base" . }}
-  {{ include "vehicle-identify" . }}
+  - brand: Peugeot
+requirements:
+  description:
+    de: |
+      Die Konfiguration der PSA Integration ist nur im yaml Modus möglich.
+      Ablauf:
+        1. Konfiguration in die evcc.yaml hinzufügen (ohne Token)
+          ```
+          vehicles:
+            - name: my_car
+              type: # Marke (citroen, ds, opel, peugeot)
+              vin: V... # Erforderlich, wenn mehr als ein Fahrzeug im Account registriert ist
+              capacity: 46 # Akkukapazität in kWh (optional)
+          ```
+        2. Token Generierung: "evcc token [name]" ausführen und Anweisungen befolgen
+        3. Tokens in die evcc.yaml einfügen
+          ```
+          vehicles:
+            - name: my_car
+              type: # Marke (citroen, ds, opel, peugeot)
+              vin: V... # Erforderlich, wenn mehr als ein Fahrzeug im Account registriert ist
+              capacity: 46 # Akkukapazität in kWh (optional)
+              tokens:
+                access: token...
+                refresh: token...
+          ```
+    en: |
+      The configuration of the PSA integration is only possible in yaml mode.
+      Procedure:
+        1. add the configuration to evcc.yaml (without token)
+          ```
+          vehicles:
+            - name: my_car
+              type: # Brand (citroen, ds, opel, peugeot)
+              vin: V... # Required, if more then one car is registered in this account
+              capacity: 46 # capacity in kWh (optional)
+          ```
+        2. Token generation: execute "evcc token [name]" and follow instructions
+        3. insert the tokens into evcc.yaml
+          ```
+          vehicles:
+            - name: my_car
+              type: # Brand (citroen, ds, opel, peugeot)
+              vin: V... # Required, if more then one car is registered in this account
+              capacity: 46 # capacity in kWh (optional)
+              tokens:
+                access: token...
+                refresh: token...
+          ```
