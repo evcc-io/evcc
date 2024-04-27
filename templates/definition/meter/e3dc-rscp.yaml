@@ -1,0 +1,34 @@
+template: e3dc-rscp
+products:
+  - brand: E3/DC
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+    allinone: true
+  - name: host
+  - name: port
+    default: 5033
+  - name: user
+  - name: password
+  - name: key
+  - name: battery
+    type: number
+    advanced: true
+  - name: dischargelimit
+    description:
+      de: Entladelimit in W
+      en: Discharge limit in W
+    help:
+      de: Limitiert die Entladeleistung im 'Halten' Batteriemodus
+      en: Limits discharge power in 'Hold' battery mode
+    type: number
+    advanced: true
+render: |
+  type: e3dc-rscp
+  usage: {{ .usage }}
+  uri: {{ .host }}:{{ .port }}
+  user: {{ .user }}
+  password: {{ .password }}
+  key: {{ .key }}
+  battery: {{ .battery }}
+  dischargelimit: {{ .dischargelimit }}
