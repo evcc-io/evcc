@@ -1314,8 +1314,8 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batter
 	return targetCurrent
 }
 
-// UpdateChargePower updates charge meter power and currents for load management
-func (lp *Loadpoint) UpdateChargePower() {
+// UpdateChargePowerAndCurrents updates charge meter power and currents for load management
+func (lp *Loadpoint) UpdateChargePowerAndCurrents() {
 	bo := backoff.NewExponentialBackOff()
 	bo.MaxElapsedTime = time.Second
 

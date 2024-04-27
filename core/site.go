@@ -765,7 +765,7 @@ func (site *Site) update(lp updater) {
 	// update all loadpoint's charge power
 	var totalChargePower float64
 	for _, lp := range site.loadpoints {
-		lp.UpdateChargePower()
+		lp.UpdateChargePowerAndCurrents()
 		totalChargePower += lp.GetChargePower()
 
 		site.prioritizer.UpdateChargePowerFlexibility(lp)
