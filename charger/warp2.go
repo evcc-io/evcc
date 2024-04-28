@@ -258,10 +258,10 @@ func (wb *Warp2) meterValues() ([]float64, error) {
 	err := wb.meterDetailsG(&res)
 
 	if err == nil && len(res) <= 5 {
-		return nil, errors.New("invalid length")
+		err = errors.New("invalid length")
 	}
 
-	return res, nil
+	return res, err
 }
 
 // currents implements the api.MeterCurrrents interface
