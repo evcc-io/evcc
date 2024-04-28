@@ -13,7 +13,7 @@ legendTitle = "¿Cómo debería usarse la energía solar?"
 legendTopAutostart = "inicio automático"
 legendTopName = "carga soportada por bateria"
 legendTopSubline = "sin interrupciones"
-modalTitle = "Ajustes de la batería"
+modalTitle = "Batería doméstica"
 
 [batterySettings.bufferStart]
 above = "cuando esté por encima de {soc}"
@@ -205,6 +205,8 @@ primaryActions = "Si algo no funciona como debería, puedes obtener ayuda aqui."
 restartButton = "Reiniciar"
 restartDescription = "¿Has probado de apagar y volver a encender"
 secondaryActions = "¿Sigues sin poder resolver tu problema? Aquí tienes otras opciones más contundentes."
+logsDescription = "Compruebe los registros en busca de errores"
+logsButton = "Ver los registros"
 
 [help.restart]
 cancel = "Cancelar"
@@ -220,6 +222,7 @@ invalid = "La contraseña no es válida."
 login = "Registro"
 password = "Contraseña"
 title = "Autenticación"
+reset = "¿Restablecer la contraseña?"
 
 [main]
 vehicles = "Estacionamiento"
@@ -403,6 +406,7 @@ waitForVehicle = "Listo para cargar. Esperando vehículo."
 [notifications]
 dismissAll = "Eliminar notificaciones"
 modalTitle = "Notificaciónes"
+logs = "Ver registros completos"
 
 [offline]
 message = "No conectado con servidor."
@@ -471,7 +475,7 @@ allVehicles = "todos los vehiculos"
 filter = "Filtrar"
 
 [settings]
-title = "Ajustes generales"
+title = "Interfaz de usuario"
 
 [settings.gridDetails]
 co2 = "CO₂"
@@ -538,3 +542,32 @@ title = "Error al iniciar"
 cancel = "Cancelar"
 template = "Fabricante"
 test = "Prueba"
+
+
+[config.section]
+system = "Sistema"
+general = "General"
+
+[config.system]
+restartRequiredMessage = "La configuración cambió"
+logs = "Registros"
+restartingDescription = "Espere por favor…"
+restart = "Reiniciar"
+restartingMessage = "Reiniciando evcc"
+restartRequiredDescription = "Por favor, reinicie para aplicar los cambios"
+
+[log]
+areaLabel = "Filtrar por zona"
+areas = "Todas las areas"
+download = "Descargar registro completo"
+levelLabel = "Filtrar por nivel de registro"
+noResults = "No hay entradas en el registro coincidentes"
+search = "Buscar"
+showAll = "Mostrar todas las entradas"
+title = "Registros"
+update = "Actualización automática"
+
+[settings.fullscreen]
+label = "Pantalla completa"
+enter = "Iniciar a pantalla completa"
+exit = "Salir de la pantalla completa"
