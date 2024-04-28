@@ -315,12 +315,10 @@ export default {
 			api.delete(this.apiPath("vehicle"));
 		},
 		fmtPower(value) {
-			const inKw = value == 0 || value >= 1000;
-			return this.fmtKw(value, inKw);
+			return this.fmtKw(value, this.inKw(value));
 		},
 		fmtEnergy(value) {
-			const inKw = value == 0 || value >= 1000;
-			return this.fmtKWh(value, inKw);
+			return this.fmtKWh(value, this.inKw(value));
 		},
 	},
 };

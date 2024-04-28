@@ -18,7 +18,8 @@
 				:pvProduction="pvProduction"
 				:homePower="homePower"
 				:batterySoc="batterySoc"
-				:powerInKw="powerInKw"
+				:powerInKw="visualizationFormat.kw"
+				:powerDigits="visualizationFormat.digits"
 				:vehicleIcons="vehicleIcons"
 			/>
 		</div>
@@ -74,14 +75,16 @@
 							icon="sun"
 							:power="pvProduction"
 							:powerTooltip="pvTooltip"
-							:powerInKw="powerInKw"
+							:powerInKw="entryFormat.kw"
+							:powerDigits="entryFormat.digits"
 						/>
 						<EnergyflowEntry
 							v-if="batteryConfigured"
 							:name="batteryDischargeLabel"
 							icon="battery"
 							:power="batteryDischarge"
-							:powerInKw="powerInKw"
+							:powerInKw="entryFormat.kw"
+							:powerDigits="entryFormat.digits"
 							:soc="batterySoc"
 							:details="batterySoc"
 							:detailsFmt="batteryFmt"
@@ -93,7 +96,8 @@
 							:name="$t('main.energyflow.gridImport')"
 							icon="powersupply"
 							:power="gridImport"
-							:powerInKw="powerInKw"
+							:powerInKw="entryFormat.kw"
+							:powerDigits="entryFormat.digits"
 							:details="detailsValue(tariffGrid, tariffCo2)"
 							:detailsFmt="detailsFmt"
 							:detailsTooltip="detailsTooltip(tariffGrid, tariffCo2)"
@@ -115,7 +119,8 @@
 							:name="$t('main.energyflow.homePower')"
 							icon="home"
 							:power="homePower"
-							:powerInKw="powerInKw"
+							:powerInKw="entryFormat.kw"
+							:powerDigits="entryFormat.digits"
 							:details="detailsValue(tariffPriceHome, tariffCo2Home)"
 							:detailsFmt="detailsFmt"
 							:detailsTooltip="detailsTooltip(tariffPriceHome, tariffCo2Home)"
@@ -129,7 +134,8 @@
 							icon="vehicle"
 							:vehicleIcons="vehicleIcons"
 							:power="loadpointsPower"
-							:powerInKw="powerInKw"
+							:powerInKw="entryFormat.kw"
+							:powerDigits="entryFormat.digits"
 							:details="
 								activeLoadpointsCount
 									? detailsValue(tariffPriceLoadpoints, tariffCo2Loadpoints)
@@ -145,7 +151,8 @@
 							:name="batteryChargeLabel"
 							icon="battery"
 							:power="batteryCharge"
-							:powerInKw="powerInKw"
+							:powerInKw="entryFormat.kw"
+							:powerDigits="entryFormat.digits"
 							:soc="batterySoc"
 							:details="batterySoc"
 							:detailsFmt="batteryFmt"
@@ -156,7 +163,8 @@
 							:name="$t('main.energyflow.pvExport')"
 							icon="powersupply"
 							:power="pvExport"
-							:powerInKw="powerInKw"
+							:powerInKw="entryFormat.kw"
+							:powerDigits="entryFormat.digits"
 							:details="detailsValue(-tariffFeedIn)"
 							:detailsFmt="detailsFmt"
 							:detailsTooltip="detailsTooltip(-tariffFeedIn)"
@@ -269,8 +277,25 @@ export default {
 		pvExport: function () {
 			return Math.max(0, this.gridPower * -1);
 		},
-		powerInKw: function () {
-			return Math.max(this.gridImport, this.selfPv, this.selfBattery, this.pvExport) >= 1000;
+		visualizationFormat: function () {
+			const max = Math.max(this.gridImport, this.selfPv, this.selfBattery, this.pvExport);
+			const kw = this.inKw(max);
+			const digits = kw ? this.digitsKw(max) : 0;
+			return { kw, digits };
+		},
+		entryFormat: function () {
+			const max = Math.max(
+				this.gridImport,
+				this.pvProduction,
+				this.batteryDischarge,
+				this.homePower,
+				this.loadpointsPower,
+				this.pvExport,
+				this.batteryCharge
+			);
+			const kw = this.inKw(max);
+			const digits = kw ? this.digitsKw(max) : 0;
+			return { kw, digits };
 		},
 		inPower: function () {
 			return this.gridImport + this.pvProduction + this.batteryDischarge;
@@ -285,7 +310,9 @@ export default {
 			if (!Array.isArray(this.pv) || this.pv.length <= 1) {
 				return;
 			}
-			return this.pv.map(({ power }) => this.fmtKw(power, this.powerInKw));
+			return this.pv.map(({ power }) =>
+				this.fmtKw(power, this.entryFormat.kw, true, this.entryFormat.digits)
+			);
 		},
 		batteryFmt() {
 			return (soc) => `${Math.round(soc)}%`;
@@ -328,7 +355,7 @@ export default {
 			return this.fmtPricePerKWh(value, this.currency, true);
 		},
 		kw: function (watt) {
-			return this.fmtKw(watt, this.powerInKw);
+			return this.fmtKw(watt, this.entryFormat.kw, true, this.entryFormat.digits);
 		},
 		toggleDetails: function () {
 			this.updateHeight();
