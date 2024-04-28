@@ -26,12 +26,11 @@ type Identity struct {
 	mu    sync.Mutex
 	log   *util.Logger
 	brand string
-	realm string
 	vin   string
 }
 
 // NewIdentity creates PSA identity
-func NewIdentity(log *util.Logger, brand, realm, vin, id, secret string, token *oauth2.Token) (*Identity, error) {
+func NewIdentity(log *util.Logger, brand, vin, id, secret string, token *oauth2.Token) (*Identity, error) {
 	// serialise instance handling
 	mu.Lock()
 	defer mu.Unlock()
@@ -50,7 +49,6 @@ func NewIdentity(log *util.Logger, brand, realm, vin, id, secret string, token *
 			Scopes: []string{"openid profile"},
 		},
 		brand: brand,
-		realm: realm,
 		vin:   vin,
 	}
 

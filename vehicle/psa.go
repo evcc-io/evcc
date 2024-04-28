@@ -89,7 +89,7 @@ func newPSA(log *util.Logger, brand, realm, id, secret string, other map[string]
 	}
 
 	log.Redact(cc.VIN, cc.Tokens.Access, cc.Tokens.Refresh)
-	identity, err := psa.NewIdentity(log, brand, realm, cc.VIN, cc.Credentials.ID, cc.Credentials.Secret, token)
+	identity, err := psa.NewIdentity(log, brand, cc.VIN, cc.Credentials.ID, cc.Credentials.Secret, token)
 	if err != nil {
 		return nil, err
 	}
