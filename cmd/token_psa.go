@@ -1,15 +1,13 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
-	"net/http"
-	"net/url"
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
-	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
 	"github.com/evcc-io/evcc/vehicle/psa"
@@ -99,29 +97,39 @@ func psaToken(vehicleConf config.Named) (*oauth2.Token, error) {
 		return nil, err
 	}
 
-	// 	tok, err := oc.Exchange(context.Background(), code, oauth2.VerifierOption(cv))
-
-	headers := map[string]string{
-		"Authorization": transport.BasicAuthHeader(oc.ClientID, oc.ClientSecret),
-		"Content-type":  request.FormContent,
-	}
-	data := url.Values{
-		"grant_type":    []string{"authorization_code"},
-		"code":          []string{code},
-		"code_verifier": []string{cv},
-		"redirect_uri":  []string{oc.RedirectURL},
-	}
-
-	req, _ := request.New(http.MethodPost, oc.Endpoint.TokenURL, strings.NewReader(data.Encode()), headers)
-
 	log := util.NewLogger("psa")
-	client := request.NewHelper(log)
-	var res oauth.Token
-	if err := client.DoJSON(req, &res); err != nil {
-		return nil, err
+	client := request.NewClient(log)
+	client.Transport = &transport.Decorator{
+		Base: client.Transport,
+		Decorator: transport.DecorateHeaders(map[string]string{
+			"Authorization": transport.BasicAuthHeader(oc.ClientID, oc.ClientSecret),
+			"Content-type":  request.FormContent,
+		}),
 	}
 
-	tok := (*oauth2.Token)(&res)
+	ctx := context.WithValue(context.Background(), oauth2.HTTPClient, client)
+	return oc.Exchange(ctx, code, oauth2.VerifierOption(cv))
 
-	return tok, nil
+	// headers := map[string]string{
+	// 	"Authorization": transport.BasicAuthHeader(oc.ClientID, oc.ClientSecret),
+	// 	"Content-type":  request.FormContent,
+	// }
+	// data := url.Values{
+	// 	"grant_type":    []string{"authorization_code"},
+	// 	"code":          []string{code},
+	// 	"code_verifier": []string{cv},
+	// 	"redirect_uri":  []string{oc.RedirectURL},
+	// }
+
+	// req, _ := request.New(http.MethodPost, oc.Endpoint.TokenURL, strings.NewReader(data.Encode()), headers)
+
+	// client := request.NewHelper(log)
+	// var res oauth.Token
+	// if err := client.DoJSON(req, &res); err != nil {
+	// 	return nil, err
+	// }
+
+	// tok := (*oauth2.Token)(&res)
+
+	// return tok, nil
 }
