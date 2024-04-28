@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"encoding/base64"
 	"errors"
 	"fmt"
 	"net/http"
@@ -13,6 +12,7 @@ import (
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/evcc-io/evcc/util/transport"
 	"golang.org/x/oauth2"
 )
 
@@ -97,7 +97,7 @@ func psaToken(vehicleConf config.Named) (*oauth2.Token, error) {
 	}
 
 	headers := map[string]string{
-		"Authorization": "Basic " + base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", td.clientid, td.clientsecret))),
+		"Authorization": transport.BasicAuthHeader(td.clientid, td.clientsecret),
 		"Content-type":  request.FormContent,
 	}
 	data := url.Values{

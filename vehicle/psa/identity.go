@@ -1,7 +1,6 @@
 package psa
 
 import (
-	"encoding/base64"
 	"errors"
 	"fmt"
 	"net/http"
@@ -14,12 +13,11 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/evcc-io/evcc/util/transport"
 	"golang.org/x/oauth2"
 )
 
-var (
-	mu sync.Mutex
-)
+var mu sync.Mutex
 
 type Identity struct {
 	*request.Helper
@@ -94,7 +92,7 @@ func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 	defer v.mu.Unlock()
 
 	headers := map[string]string{
-		"Authorization": "Basic " + base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", v.oc.ClientID, v.oc.ClientSecret))),
+		"Authorization": transport.BasicAuthHeader(v.oc.ClientID, v.oc.ClientSecret),
 		"Content-type":  request.FormContent,
 	}
 	data := url.Values{
