@@ -13,7 +13,7 @@ legendTitle = "Hoe moet zonne-energie gebruikt worden?"
 legendTopAutostart = "start automatisch"
 legendTopName = "batterij-ondersteund opladen"
 legendTopSubline = "zonder onderbrekingen"
-modalTitle = "Batterij-instellingen"
+modalTitle = "Thuisaccu"
 
 [batterySettings.bufferStart]
 above = "Indien boven {soc}"
@@ -42,7 +42,7 @@ phaseVoltages = "Spanning L1..L3"
 power = "Vermogen"
 range = "Rijbereik"
 soc = "Batterijpercentage"
-socLimit = "Hoeveelheid"
+socLimit = "Limiet"
 
 [config.form]
 example = "Voorbeeld"
@@ -205,6 +205,8 @@ primaryActions = "Werkt iets niet naar behoren? Er zijn goede plaatsen om hulp t
 restartButton = "Herstart"
 restartDescription = "Geprobeerd het uit en terug aan te zetten?"
 secondaryActions = "Nog niet gelukt om je probleem op te lossen? Hier zijn enkele hardhandige opties."
+logsButton = "Bekijk logboeken"
+logsDescription = "Kijk in de logboeken voor foutmeldingen."
 
 [help.restart]
 cancel = "Annuleren"
@@ -392,6 +394,7 @@ waitForVehicle = "Klaar. Wachten op voertuig..."
 [notifications]
 dismissAll = "Alles verwijderen"
 modalTitle = "Notificaties"
+logs = "Volledige logboeken bekijken"
 
 [offline]
 message = "Niet verbonden met een server."
@@ -447,7 +450,7 @@ allVehicles = "alle voertuigen"
 filter = "Filter"
 
 [settings]
-title = "Algemene instellingen"
+title = "Gebruikersinterface"
 
 [settings.gridDetails]
 co2 = "CO₂"
@@ -514,3 +517,46 @@ title = "Start Error"
 cancel = "Annuleer"
 template = "Fabrikant"
 test = "Test"
+
+
+[passwordModal]
+empty = "Wachtwoord mag niet leeg zijn"
+updatePassword = "Wachtwoord bijwerken"
+description = "Stel een wachtwoord in voor het afschermen van de instellingen. Het hoofdscherm blijft beschikbaar zonder wachtwoord."
+error = "Fout: "
+labelCurrent = "Huidig wachtwoord"
+labelNew = "Nieuw wachtwoord"
+labelRepeat = "Wachtwoord herhalen"
+newPassword = "Wachtwoord aanmaken"
+titleNew = "Stel beheerderswachtwoord in"
+noMatch = "Wachtwoorden komen niet overeen"
+titleUpdate = "Beheerderswachtwoord bijwerken"
+
+[config.section]
+system = "Systeem"
+general = "Algemeen"
+
+[config.system]
+logs = "Logboeken"
+restart = "Herstart"
+restartRequiredDescription = "Herstart om het effect te zien"
+restartRequiredMessage = "Configuratie gewijzigd."
+restartingDescription = "Even geduld aub..."
+restartingMessage = "Evcc wordt herstart."
+
+[log]
+download = "Volledig logboek downloaden"
+levelLabel = "Filter op log level"
+noResults = "Geen overeenkomende log regels."
+search = "Zoeken"
+title = "Logboeken"
+update = "Automatisch updaten"
+
+[loginModal]
+cancel = "Annuleren"
+error = "Login mislukt: "
+invalid = "Wachtwoord onjuist."
+login = "Inloggen"
+password = "Wachtwoord"
+reset = "Wachtwoord resetten?"
+title = "Authenticatie"
