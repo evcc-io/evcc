@@ -69,8 +69,9 @@ func psaToken(vehicleConf config.Named) (*oauth2.Token, error) {
 		return nil, err
 	}
 
+	brand := strings.ToLower(vehicleConf.Type)
 	cv := oauth2.GenerateVerifier()
-	oc := psa.Oauth2Config(strings.ToLower(vehicleConf.Type), strings.ToLower(country))
+	oc := psa.Oauth2Config(brand, strings.ToLower(country))
 
 	// challenge := oauth2.S256ChallengeFromVerifier(cv)
 
@@ -97,13 +98,11 @@ func psaToken(vehicleConf config.Named) (*oauth2.Token, error) {
 		return nil, err
 	}
 
-	log := util.NewLogger("psa")
-	client := request.NewClient(log)
+	client := request.NewClient(util.NewLogger(brand))
 	client.Transport = &transport.Decorator{
 		Base: client.Transport,
 		Decorator: transport.DecorateHeaders(map[string]string{
 			"Authorization": transport.BasicAuthHeader(oc.ClientID, oc.ClientSecret),
-			"Content-type":  request.FormContent,
 		}),
 	}
 
