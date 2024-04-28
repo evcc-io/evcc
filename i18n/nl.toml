@@ -563,3 +563,8 @@ login = "Inloggen"
 password = "Wachtwoord"
 reset = "Wachtwoord resetten?"
 title = "Authenticatie"
+
+[settings.fullscreen]
+exit = "Volledig scherm afsluiten"
+enter = "Open volledig scherm"
+label = "Volledig scherm"
