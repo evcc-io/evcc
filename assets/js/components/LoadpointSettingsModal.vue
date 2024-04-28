@@ -220,7 +220,7 @@ export default {
 					return this.maxPowerPhases(this.phasesConfigured);
 				}
 			}
-			return this.fmtKw(this.maxCurrent * V * this.phasesActive);
+			return this.fmtKw(this.maxCurrent * V * this.phasesActive, true, true, 1);
 		},
 		minPower: function () {
 			if (this.chargerPhases1p3p) {
@@ -231,7 +231,7 @@ export default {
 					return this.minPowerPhases(this.phasesConfigured);
 				}
 			}
-			return this.fmtKw(this.minCurrent * V * this.phasesActive);
+			return this.fmtKw(this.minCurrent * V * this.phasesActive, true, true, 1);
 		},
 		minCurrentOptions: function () {
 			const opt1 = [...range(Math.floor(this.maxCurrent), 1), 0.5, 0.25, 0.125];
@@ -279,10 +279,10 @@ export default {
 	},
 	methods: {
 		maxPowerPhases: function (phases) {
-			return this.fmtKw(this.maxCurrent * V * phases);
+			return this.fmtKw(this.maxCurrent * V * phases, true, true, 1);
 		},
 		minPowerPhases: function (phases) {
-			return this.fmtKw(this.minCurrent * V * phases);
+			return this.fmtKw(this.minCurrent * V * phases, true, true, 1);
 		},
 		formId: function (name) {
 			return `loadpoint_${this.id}_${name}`;

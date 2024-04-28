@@ -48,6 +48,7 @@ export default {
 		power: { type: Number },
 		powerTooltip: { type: Array },
 		powerInKw: { type: Boolean },
+		powerDigits: { type: Number },
 		soc: { type: Number },
 		details: { type: Number },
 		detailsFmt: { type: Function },
@@ -86,6 +87,12 @@ export default {
 				this.$refs.powerNumber.forceUpdate();
 			}
 		},
+		powerDigits(newVal, oldVal) {
+			// force update if digits change but not the value
+			if (newVal !== oldVal) {
+				this.$refs.powerNumber.forceUpdate();
+			}
+		},
 	},
 	mounted: function () {
 		this.updatePowerTooltip();
@@ -93,7 +100,7 @@ export default {
 	},
 	methods: {
 		kw: function (watt) {
-			return this.fmtKw(watt, this.powerInKw);
+			return this.fmtKw(watt, this.powerInKw, true, this.powerDigits);
 		},
 		updatePowerTooltip() {
 			this.powerTooltipInstance = this.updateTooltip(
