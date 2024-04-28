@@ -27,7 +27,6 @@ import (
 	"encoding/binary"
 	"fmt"
 	"math"
-	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -201,26 +200,8 @@ func (wb *BenderCC) MaxCurrent(current int64) error {
 	return err
 }
 
-var _ api.ChargeTimer = (*BenderCC)(nil)
-
-// ChargeDuration implements the api.ChargeTimer interface
-func (wb *BenderCC) ChargeDuration() (time.Duration, error) {
-	if wb.legacy {
-		b, err := wb.conn.ReadHoldingRegisters(bendRegChargingDurationLegacy, 1)
-		if err != nil {
-			return 0, err
-		}
-
-		return time.Duration(binary.BigEndian.Uint16(b)) * time.Second, nil
-	}
-
-	b, err := wb.conn.ReadHoldingRegisters(bendRegChargingDuration, 2)
-	if err != nil {
-		return 0, err
-	}
-
-	return time.Duration(binary.BigEndian.Uint32(b)) * time.Second, nil
-}
+// removed: https://github.com/evcc-io/evcc/issues/13555
+// var _ api.ChargeTimer = (*BenderCC)(nil)
 
 // CurrentPower implements the api.Meter interface
 func (wb *BenderCC) currentPower() (float64, error) {

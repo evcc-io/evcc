@@ -166,13 +166,8 @@ func (v *Twc3) ChargedEnergy() (float64, error) {
 	return res.SessionEnergyWh / 1e3, err
 }
 
-var _ api.ChargeTimer = (*Twc3)(nil)
-
-// ChargeDuration implements the api.ChargeTimer interface
-func (v *Twc3) ChargeDuration() (time.Duration, error) {
-	res, err := v.vitalsG()
-	return time.Duration(res.SessionS) * time.Second, err
-}
+// removed: https://github.com/evcc-io/evcc/issues/13555
+// var _ api.ChargeTimer = (*Twc3)(nil)
 
 // Use workaround if voltageC_v is approximately half of grid_v
 //
