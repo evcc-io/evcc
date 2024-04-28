@@ -15,7 +15,7 @@ func Oauth2Config(brand, country string) *oauth2.Config {
 			Endpoint: oauth2.Endpoint{
 				AuthURL:   "https://idpcvs.citroen.com/am/oauth2/authorize",
 				TokenURL:  "https://idpcvs.citroen.com/am/oauth2/access_token",
-				AuthStyle: oauth2.AuthStyleInParams,
+				AuthStyle: oauth2.AuthStyleInHeader,
 			},
 			RedirectURL: fmt.Sprintf("mymacsdk://oauth2redirect/%s", country),
 			Scopes:      []string{"openid", "profile"},
@@ -28,7 +28,7 @@ func Oauth2Config(brand, country string) *oauth2.Config {
 			Endpoint: oauth2.Endpoint{
 				AuthURL:   "https://idpcvs.driveds.com/am/oauth2/authorize",
 				TokenURL:  "https://idpcvs.driveds.com/am/oauth2/access_token",
-				AuthStyle: oauth2.AuthStyleInParams,
+				AuthStyle: oauth2.AuthStyleInHeader,
 			},
 			RedirectURL: fmt.Sprintf("mymdssdk://oauth2redirect/%s", country),
 			Scopes:      []string{"openid", "profile"},
@@ -41,7 +41,7 @@ func Oauth2Config(brand, country string) *oauth2.Config {
 			Endpoint: oauth2.Endpoint{
 				AuthURL:   "https://idpcvs.opel.com/am/oauth2/authorize",
 				TokenURL:  "https://idpcvs.opel.com/am/oauth2/access_token",
-				AuthStyle: oauth2.AuthStyleInParams,
+				AuthStyle: oauth2.AuthStyleInHeader,
 			},
 			RedirectURL: fmt.Sprintf("mymopsdk://oauth2redirect/%s", country),
 			Scopes:      []string{"openid", "profile"},
@@ -54,7 +54,7 @@ func Oauth2Config(brand, country string) *oauth2.Config {
 			Endpoint: oauth2.Endpoint{
 				AuthURL:   "https://idpcvs.peugeot.com/am/oauth2/authorize",
 				TokenURL:  "https://idpcvs.peugeot.com/am/oauth2/access_token",
-				AuthStyle: oauth2.AuthStyleInParams,
+				AuthStyle: oauth2.AuthStyleInHeader,
 			},
 			RedirectURL: fmt.Sprintf("mymap://oauth2redirect/%s", country),
 			Scopes:      []string{"openid", "profile"},
