@@ -13,7 +13,7 @@ legendTitle = "Hur ska solenergin användas?"
 legendTopAutostart = "startar automatiskt"
 legendTopName = "laddning med batteristöd"
 legendTopSubline = "utan avbrott"
-modalTitle = "Batteri inställningar"
+modalTitle = "Hemmabatteri"
 
 [batterySettings.bufferStart]
 above = "när den är över {soc}"
@@ -200,6 +200,8 @@ primaryActions = "Fungerar det inte som tänkt? Här finns mycket hjälp att hit
 restartButton = "Omstart"
 restartDescription = "Har du testat att starta om?"
 secondaryActions = "Lyckas du inte lösa problemet? Här finns mer hjälp."
+logsButton = "Se loggar"
+logsDescription = "Felsök loggar"
 
 [help.restart]
 cancel = "Avbryt"
@@ -215,6 +217,7 @@ invalid = "Ogiltigt lösenord."
 login = "Logga in"
 password = "Lösenord"
 title = "Autentisering"
+reset = "Återställ lösenord?"
 
 [main]
 vehicles = "Parkering"
@@ -398,6 +401,7 @@ waitForVehicle = "Redo. Väntar på fordon..."
 [notifications]
 dismissAll = "Avvisa alla"
 modalTitle = "Meddelanden"
+logs = "Se kompletta loggar"
 
 [offline]
 message = "Inte ansluten till en server."
@@ -466,7 +470,7 @@ allVehicles = "alla fordon"
 filter = "Filter"
 
 [settings]
-title = "Allmänna inställningar"
+title = "Användargränssnitt"
 
 [settings.gridDetails]
 co2 = "CO₂"
@@ -533,3 +537,32 @@ title = "Startfel"
 cancel = "Avbryt"
 template = "Tillverkare"
 test = "Test"
+
+
+[config.system]
+logs = "Loggar"
+restart = "Omstart"
+restartingDescription = "Vänligen vänta..."
+restartRequiredMessage = "Inställningar ändrade."
+restartingMessage = "Startar om evcc."
+restartRequiredDescription = "Starta om för att de nya inställningarna ska börja gälla."
+
+[config.section]
+general = "Allmänna"
+system = "System"
+
+[log]
+areaLabel = "Filtrera per område"
+areas = "Alla områden"
+download = "Ladda hem alla loggar"
+levelLabel = "Filtrera på loggnivå"
+noResults = "Inga matchande loggposter."
+search = "Sök"
+showAll = "Visa allt"
+title = "Loggar"
+update = "Autouppdatera"
+
+[settings.fullscreen]
+exit = "Lämna helskärmsläge"
+label = "Helskärmsläge"
+enter = "Till helskärmsläge"
