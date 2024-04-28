@@ -116,6 +116,7 @@ export default {
 		homePower: { type: Number, default: 0 },
 		batterySoc: { type: Number, default: 0 },
 		powerInKw: { type: Boolean, default: false },
+		powerDigits: { type: Number, default: 0 },
 	},
 	data: function () {
 		return { width: 0 };
@@ -171,7 +172,7 @@ export default {
 				return "";
 			}
 			const withUnit = this.enoughSpaceForUnit(watt);
-			return this.fmtKw(watt, this.powerInKw, withUnit);
+			return this.fmtKw(watt, this.powerInKw, withUnit, this.powerDigits);
 		},
 		powerLabelAvailableSpace(power) {
 			if (this.totalAdjusted === 0) return 0;
@@ -182,7 +183,7 @@ export default {
 			return this.powerLabelAvailableSpace(power) > 40;
 		},
 		enoughSpaceForUnit(power) {
-			return this.powerLabelAvailableSpace(power) > 60;
+			return this.powerLabelAvailableSpace(power) > 80;
 		},
 		hideLabelIcon(power, minWidth = 32) {
 			if (this.totalAdjusted === 0) return true;
