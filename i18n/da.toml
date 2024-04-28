@@ -13,7 +13,7 @@ legendTitle = "Hvordan skal solenergi benyttes?"
 legendTopAutostart = "starter automatisk"
 legendTopName = "batteri understøttet opladning"
 legendTopSubline = "uden afbrydelser"
-modalTitle = "Batteri indstillinger"
+modalTitle = "Hus batteri"
 
 [batterySettings.bufferStart]
 above = "når den er over {soc}"
@@ -200,6 +200,8 @@ primaryActions = "Noget fungerer ikke, som det skulle? Disse er gode steder at f
 restartButton = "Genstart"
 restartDescription = "Har du prøvet at slukke og tænde den igen?"
 secondaryActions = "Stadig ikke i stand til at løse dit problem? Her er nogle mere ekstreme muligheder."
+logsDescription = "Check log for fejl"
+logsButton = "Se logfil"
 
 [help.restart]
 cancel = "Afbryd"
@@ -215,6 +217,7 @@ invalid = "Ugyldig adgangskode"
 login = "Log på"
 password = "Adgangskode"
 title = "Godkendelse"
+reset = "Nulstil adgangskode"
 
 [main]
 vehicles = "Parkering"
@@ -398,6 +401,7 @@ waitForVehicle = "Parat. Venter på køretøj ..."
 [notifications]
 dismissAll = "Afvis alle"
 modalTitle = "Underretninger"
+logs = "Se hele log filen"
 
 [offline]
 message = "Ikke forbundet til en server."
@@ -466,7 +470,7 @@ allVehicles = "alle køretøjer"
 filter = "Filter"
 
 [settings]
-title = "Generelle indstillinger"
+title = "Brugergrænseflade"
 
 [settings.hiddenFeatures]
 label = "Experimentalt"
@@ -527,3 +531,32 @@ title = "Fejl ved opstart"
 cancel = "Afbryd"
 template = "Producent"
 test = "Test"
+
+
+[config.system]
+restart = "Genstart"
+restartRequiredDescription = "Genstart for at se effekten"
+restartRequiredMessage = "Konfiguration er ændret"
+restartingDescription = "Vent venligst..."
+logs = "Log"
+restartingMessage = "Genstarter evcc."
+
+[log]
+showAll = "Vis alle poster"
+areas = "Alle områder"
+areaLabel = "Filtrer per område"
+levelLabel = "Filtrer på log niveau"
+noResults = "Ingen matchende logposter"
+title = "Log filer"
+update = "Opdater automatisk"
+download = "Hent hele log filen"
+search = "Søg"
+
+[settings.fullscreen]
+enter = "Gå til fuldskærmsvisning"
+label = "Fuldskærm"
+exit = "Afslut fuldskærm"
+
+[config.section]
+general = "Generelle"
+system = "System"
