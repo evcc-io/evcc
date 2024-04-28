@@ -287,12 +287,14 @@ func (wb *Keba) phases1p3p(phases int) error {
 
 // getPhases implements the api.PhaseGetter interface
 func (wb *Keba) getPhases() (int, error) {
-	b, err := wb.conn.ReadHoldingRegisters(kebaRegPhaseState, 1)
+	b, err := wb.conn.ReadHoldingRegisters(kebaRegPhaseState, 2)
 	if err != nil {
 		return 0, err
 	}
-
-	return int(binary.BigEndian.Uint16(b)), nil
+	if binary.BigEndian.Uint32(b) == 0 {
+		return 1, nil
+	}
+	return 3, nil
 }
 
 var _ api.Diagnosis = (*Keba)(nil)
