@@ -13,16 +13,16 @@ import (
 
 func init() {
 	registry.Add("citroen", func(other map[string]any) (api.Vehicle, error) {
-		return newPSA("citroen", other)
+		return newPSA("citroen", "clientsB2CCitroen", other)
 	})
 	registry.Add("ds", func(other map[string]any) (api.Vehicle, error) {
-		return newPSA("ds", other)
+		return newPSA("ds", "clientsB2CDS", other)
 	})
 	registry.Add("opel", func(other map[string]any) (api.Vehicle, error) {
-		return newPSA("opel", other)
+		return newPSA("opel", "clientsB2COpel", other)
 	})
 	registry.Add("peugeot", func(other map[string]any) (api.Vehicle, error) {
-		return newPSA("peugeot", other)
+		return newPSA("peugeot", "clientsB2CPeugeot", other)
 	})
 }
 
@@ -33,7 +33,7 @@ type PSA struct {
 }
 
 // newPSA creates a new vehicle
-func newPSA(brand string, other map[string]interface{}) (api.Vehicle, error) {
+func newPSA(brand, realm string, other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
 		embed   `mapstructure:",squash"`
 		VIN     string
@@ -67,7 +67,7 @@ func newPSA(brand string, other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	// TODO still needed?
-	api := psa.NewAPI(log, identity, "realm", oc.ClientID)
+	api := psa.NewAPI(log, identity, realm, oc.ClientID)
 
 	vehicle, err := ensureVehicleEx(
 		cc.VIN, api.Vehicles,
