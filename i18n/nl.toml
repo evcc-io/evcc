@@ -551,6 +551,9 @@ noResults = "Geen overeenkomende log regels."
 search = "Zoeken"
 title = "Logboeken"
 update = "Automatisch updaten"
+areaLabel = Filter op domain
+areas = Alle domainen
+showAll = Toon alles
 
 [loginModal]
 cancel = "Annuleren"
