@@ -5,6 +5,7 @@ import (
 	"net/netip"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/insomniacslk/tapo"
@@ -13,10 +14,16 @@ import (
 // Connection is the Tapo connection
 type Connection struct {
 	log             *util.Logger
+	user            string
+	password        string
 	plug            tapo.Plug
+	updated         time.Time
 	lasttodayenergy int64
 	energy          int64
 }
+
+// sessionTimeout is the duration until evcc asks for a new handshake
+const sessionTimeout = 6 * time.Hour
 
 // NewConnection creates a new Tapo device connection.
 // User is encoded by using MessageDigest of SHA1 which is afterwards B64 encoded.
@@ -39,13 +46,17 @@ func NewConnection(uri, user, password string) (*Connection, error) {
 	log := util.NewLogger("tapo").Redact(user, password)
 
 	plug := tapo.NewPlug(addr, nil)
+	log.DEBUG.Printf("Create %s session", addr)
 	if err := plug.Handshake(user, password); err != nil {
 		return nil, fmt.Errorf("login failed: %w", err)
 	}
 
 	conn := &Connection{
-		log:  log,
-		plug: *plug,
+		log:      log,
+		plug:     *plug,
+		user:     user,
+		password: password,
+		updated:  time.Now(),
 	}
 
 	res, err := conn.plug.GetDeviceInfo()
@@ -74,7 +85,18 @@ func (c *Connection) Enabled() (bool, error) {
 
 // CurrentPower provides current power consuption
 func (c *Connection) CurrentPower() (float64, error) {
+	// refresh Tapo session id
+	if time.Since(c.updated) >= sessionTimeout {
+		c.log.DEBUG.Printf("Refresh %s session", c.plug.Addr)
+		if err := c.plug.Handshake(c.user, c.password); err != nil {
+			return 0, fmt.Errorf("login failed: %w", err)
+		}
+		// update session timestamp
+		c.updated = time.Now()
+	}
+
 	resp, err := c.plug.GetEnergyUsage()
+
 	if err != nil {
 		if strings.Contains(err.Error(), "-1001") {
 			c.log.DEBUG.Printf("meter not available")
