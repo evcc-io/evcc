@@ -30,7 +30,7 @@ type Identity struct {
 }
 
 // NewIdentity creates PSA identity
-func NewIdentity(log *util.Logger, brand, vin, id, secret string, token *oauth2.Token) (*Identity, error) {
+func NewIdentity(log *util.Logger, brand, vin string, oc *oauth2.Config, token *oauth2.Token) (*Identity, error) {
 	// serialise instance handling
 	mu.Lock()
 	defer mu.Unlock()
@@ -38,18 +38,9 @@ func NewIdentity(log *util.Logger, brand, vin, id, secret string, token *oauth2.
 	v := &Identity{
 		Helper: request.NewHelper(log),
 		log:    log,
-		oc: &oauth2.Config{
-			ClientID:     id,
-			ClientSecret: secret,
-			Endpoint: oauth2.Endpoint{
-				AuthURL:   "https://api.mpsa.com/api/connectedcar/v2/oauth/authorize",
-				TokenURL:  fmt.Sprintf("https://idpcvs.%s/am/oauth2/access_token", brand),
-				AuthStyle: oauth2.AuthStyleInHeader,
-			},
-			Scopes: []string{"openid profile"},
-		},
-		brand: brand,
-		vin:   vin,
+		oc:     oc,
+		brand:  brand,
+		vin:    vin,
 	}
 
 	if !token.Valid() {
