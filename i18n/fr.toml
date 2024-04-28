@@ -205,6 +205,8 @@ primaryActions = "Quelque chose ne fonctionne pas comme ça devrait ? Voici o�
 restartButton = "Redémarrer"
 restartDescription = "Déjà essayé de redémarrer ?"
 secondaryActions = "Toujours pas de solution ? Voici quelques options plus avancées."
+logsButton = Voir les journaux
+logsDescription = Vérifiez s’il y a des erreurs dans les journaux.
 
 [help.restart]
 cancel = "Annuler"
@@ -220,6 +222,7 @@ invalid = "«Mot de passe invalide.»"
 login = "Identifiant"
 password = "Mot de passe"
 title = "Authentification"
+reset = Réinitialiser le mot de passe ?
 
 [main]
 vehicles = "Place de stationnement"
@@ -400,6 +403,7 @@ waitForVehicle = "Prêt à charger. Attente du véhicule…"
 [notifications]
 dismissAll = "Supprimer tout"
 modalTitle = "Notifications"
+logs = Voir les journaux complets
 
 [offline]
 message = "Pas de connexion au serveur."
@@ -529,3 +533,32 @@ title = "Erreur au démarrage"
 cancel = "Annuler"
 template = "Fabricant"
 test = "Test"
+
+
+[settings.fullscreen]
+exit = Quitter le plein écran
+label = Plein écran
+enter = Passer en plein écran
+
+[config.section]
+general = Général
+system = Système
+
+[config.system]
+logs = Journaux
+restart = Redémarrer
+restartRequiredDescription = Veuillez redémarrer pour appliquer les changements.
+restartRequiredMessage = La configuration a changé.
+restartingDescription = Veuillez patienter…
+restartingMessage = Redémarrage d’evcc en cours.
+
+[log]
+areaLabel = Filtrer par zone
+areas = Toutes les zones
+download = Télécharger les journaux complets
+levelLabel = Filtrer par niveau
+noResults = Aucune entrée de journal ne correspond.
+search = Rechercher
+showAll = Voir toutes les entrées
+title = Journaux
+update = Mise à jour automatique
