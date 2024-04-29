@@ -54,7 +54,7 @@ func NewIdentity(log *util.Logger, brand, vin string, oc *oauth2.Config, token *
 		}
 	}
 
-	if token.RefreshToken != "" {
+	if !token.Valid() && token.RefreshToken != "" {
 		v.log.DEBUG.Println("identity.NewIdentity - token not valid - refreshToken started")
 		if tok, err := v.RefreshToken(token); err == nil {
 			token = tok
