@@ -52,11 +52,11 @@ func NewClient(log *util.Logger, apikey string) (*OctopusGraphQLClient, error) {
 	}
 
 	// Future requests must have the appropriate Authorization header set.
-	reqMod := graphql.RequestModifier(
-		func(r *http.Request) {
-			r.Header.Add("Authorization", *gq.token)
-		})
-	gq.Client = gq.Client.WithRequestModifier(reqMod)
+	gq.Client = gq.Client.WithRequestModifier(func(r *http.Request) {
+		gq.tokenMtx.Lock()
+		defer gq.tokenMtx.Unlock()
+		r.Header.Add("Authorization", *gq.token)
+	})
 
 	return gq, nil
 }
