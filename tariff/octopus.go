@@ -31,12 +31,9 @@ func init() {
 
 func NewOctopusFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	var cc struct {
-		Region string
-		// Tariff is DEPRECATED: use ProductCode
-		Tariff string
-		// Productcode is formatted such because config parlence is to use lower case for keys -
-		// camelCased elsewhere.
-		Productcode string
+		Region      string
+		Tariff      string // DEPRECATED: use ProductCode
+		ProductCode string
 		ApiKey      string
 	}
 
@@ -54,9 +51,9 @@ func NewOctopusFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		if cc.Tariff == "" {
 			// deprecated - copy to correct slot and WARN
 			logger.WARN.Print("'tariff' is deprecated and will break in a future version - use 'productCode' instead")
-			cc.Productcode = cc.Tariff
+			cc.ProductCode = cc.Tariff
 		}
-		if cc.Productcode == "" {
+		if cc.ProductCode == "" {
 			return nil, errors.New("missing product code")
 		}
 	} else {
@@ -72,7 +69,7 @@ func NewOctopusFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	t := &Octopus{
 		log:         logger,
 		region:      cc.Region,
-		productCode: cc.Productcode,
+		productCode: cc.ProductCode,
 		apikey:      cc.ApiKey,
 		data:        util.NewMonitor[api.Rates](2 * time.Hour),
 	}
@@ -89,7 +86,6 @@ func (t *Octopus) run(done chan error) {
 	client := request.NewHelper(t.log)
 	bo := newBackoff()
 
-	tick := time.NewTicker(time.Hour)
 	var restQueryUri string
 
 	// If ApiKey is available, use GraphQL to get appropriate tariff code before entering execution loop.
@@ -113,6 +109,7 @@ func (t *Octopus) run(done chan error) {
 	}
 
 	// TODO tick every 15 minutes if GraphQL is available to poll for Intelligent slots.
+	tick := time.NewTicker(time.Hour)
 	for ; true; <-tick.C {
 		var res octoRest.UnitRates
 

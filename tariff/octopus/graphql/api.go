@@ -47,10 +47,10 @@ func NewClient(log *util.Logger, apikey string) (*OctopusGraphQLClient, error) {
 		apikey: apikey,
 	}
 
-	err := gq.refreshToken()
-	if err != nil {
+	if err := gq.refreshToken(); err != nil {
 		return nil, err
 	}
+
 	// Future requests must have the appropriate Authorization header set.
 	reqMod := graphql.RequestModifier(
 		func(r *http.Request) {
@@ -58,7 +58,7 @@ func NewClient(log *util.Logger, apikey string) (*OctopusGraphQLClient, error) {
 		})
 	gq.Client = gq.Client.WithRequestModifier(reqMod)
 
-	return gq, err
+	return gq, nil
 }
 
 // refreshToken updates the GraphQL token from the set apikey.
@@ -106,8 +106,7 @@ func (c *OctopusGraphQLClient) AccountNumber() (string, error) {
 	defer cancel()
 
 	var q krakenAccountLookup
-	err := c.Client.Query(ctx, &q, nil)
-	if err != nil {
+	if err := c.Client.Query(ctx, &q, nil); err != nil {
 		return "", err
 	}
 
@@ -138,8 +137,7 @@ func (c *OctopusGraphQLClient) TariffCode() (string, error) {
 	defer cancel()
 
 	var q krakenAccountElectricityAgreements
-	err = c.Client.Query(ctx, &q, map[string]interface{}{"accountNumber": acc})
-	if err != nil {
+	if err := c.Client.Query(ctx, &q, map[string]interface{}{"accountNumber": acc}); err != nil {
 		return "", err
 	}
 
