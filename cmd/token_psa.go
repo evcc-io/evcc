@@ -6,26 +6,34 @@ import (
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
+	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/request"
-	"github.com/evcc-io/evcc/util/transport"
 	"github.com/evcc-io/evcc/vehicle/psa"
 	"golang.org/x/oauth2"
 )
 
 func psaToken(vehicleConf config.Named) (*oauth2.Token, error) {
-	var country string
-	prompt_country := &survey.Input{
-		Message: "Please enter your contry code:",
-	}
-	if err := survey.AskOne(prompt_country, &country, survey.WithValidator(survey.Required)); err != nil {
-		return nil, err
-	}
+	cc := struct {
+		Account string
+		Country string
+	}{}
 
+	util.DecodeOther(vehicleConf.Other, &cc)
+
+	if cc.Country == "" {
+		prompt_country := &survey.Input{
+			Message: "Please enter your country code:",
+		}
+		if err := survey.AskOne(prompt_country, &cc.Country, survey.WithValidator(survey.Required)); err != nil {
+			return nil, err
+		}
+	}
 	brand := strings.ToLower(vehicleConf.Type)
+	sk := psa.SettingsKey(brand, cc.Account)
 	cv := oauth2.GenerateVerifier()
-	oc := psa.Oauth2Config(brand, strings.ToLower(country))
+	oc := psa.Oauth2Config(brand, strings.ToLower(cc.Country))
 
 	authorize_url := oc.AuthCodeURL("", oauth2.S256ChallengeOption(cv))
 
@@ -41,13 +49,22 @@ func psaToken(vehicleConf config.Named) (*oauth2.Token, error) {
 	}
 
 	client := request.NewClient(util.NewLogger(brand))
-	client.Transport = &transport.Decorator{
-		Base: client.Transport,
-		Decorator: transport.DecorateHeaders(map[string]string{
-			"Authorization": transport.BasicAuthHeader(oc.ClientID, oc.ClientSecret),
-		}),
+	ctx := context.WithValue(context.Background(), oauth2.HTTPClient, client)
+
+	// get token
+	tok, err := oc.Exchange(ctx, code, oauth2.VerifierOption(cv))
+	if err != nil {
+		return nil, err
 	}
 
-	ctx := context.WithValue(context.Background(), oauth2.HTTPClient, client)
-	return oc.Exchange(ctx, code, oauth2.VerifierOption(cv))
+	// save token in settings db
+	err = settings.SetJson(sk, tok)
+	if err != nil {
+		return nil, err
+	}
+
+	fmt.Println()
+	fmt.Println("Token successful retrieved and stored in settings DB!")
+
+	return nil, nil
 }
