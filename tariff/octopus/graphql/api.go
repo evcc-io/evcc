@@ -64,8 +64,11 @@ func NewClient(log *util.Logger, apikey string) (*OctopusGraphQLClient, error) {
 // refreshToken updates the GraphQL token from the set apikey.
 // Basic caching is provided - it will not update the token if it hasn't expired yet.
 func (c *OctopusGraphQLClient) refreshToken() error {
-	now := time.Now()
-	if !c.tokenExpiration.IsZero() && c.tokenExpiration.After(now) {
+	// take a lock against the token mutex for the refresh
+	c.tokenMtx.Lock()
+	defer c.tokenMtx.Unlock()
+
+	if time.Until(c.tokenExpiration) > 5*time.Minute {
 		c.log.TRACE.Print("using cached octopus token")
 		return nil
 	}
@@ -73,19 +76,13 @@ func (c *OctopusGraphQLClient) refreshToken() error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
-	// take a lock against the token mutex for the refresh
-	c.tokenMtx.Lock()
-	defer c.tokenMtx.Unlock()
-
 	var q krakenTokenAuthentication
-	err := c.Client.Mutate(ctx, &q, map[string]interface{}{"apiKey": c.apikey})
-	if err != nil {
+	if err := c.Client.Mutate(ctx, &q, map[string]interface{}{"apiKey": c.apikey}); err != nil {
 		return err
 	}
 	c.log.TRACE.Println("got GQL token from octopus")
 	c.token = &q.ObtainKrakenToken.Token
-	// Refresh in 55 minutes (the token lasts an hour, but just to be safe...)
-	c.tokenExpiration = time.Now().Add(time.Minute * 55)
+	c.tokenExpiration = time.Now().Add(time.Hour)
 	return nil
 }
 
