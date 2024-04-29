@@ -7,7 +7,6 @@ import (
 	"sync"
 	"time"
 
-	octoGql "github.com/evcc-io/evcc/tariff/octopus/graphql"
 	octoRest "github.com/evcc-io/evcc/tariff/octopus/rest"
 
 	"github.com/cenkalti/backoff/v4"
