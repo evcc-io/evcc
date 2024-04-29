@@ -21,7 +21,6 @@ const URI = BaseURI + "/v1/graphql/"
 // OctopusGraphQLClient provides an interface for communicating with Octopus Energy's Kraken platform.
 type OctopusGraphQLClient struct {
 	*graphql.Client
-	log *util.Logger
 
 	// apikey is the Octopus Energy API key (provided by user)
 	apikey string
@@ -43,7 +42,6 @@ func NewClient(log *util.Logger, apikey string) (*OctopusGraphQLClient, error) {
 
 	gq := &OctopusGraphQLClient{
 		Client: graphql.NewClient(URI, cli),
-		log:    log,
 		apikey: apikey,
 	}
 
@@ -69,7 +67,6 @@ func (c *OctopusGraphQLClient) refreshToken() error {
 	defer c.tokenMtx.Unlock()
 
 	if time.Until(c.tokenExpiration) > 5*time.Minute {
-		c.log.TRACE.Print("using cached octopus token")
 		return nil
 	}
 
@@ -80,7 +77,7 @@ func (c *OctopusGraphQLClient) refreshToken() error {
 	if err := c.Client.Mutate(ctx, &q, map[string]interface{}{"apiKey": c.apikey}); err != nil {
 		return err
 	}
-	c.log.TRACE.Println("got GQL token from octopus")
+
 	c.token = &q.ObtainKrakenToken.Token
 	c.tokenExpiration = time.Now().Add(time.Hour)
 	return nil
@@ -111,7 +108,7 @@ func (c *OctopusGraphQLClient) AccountNumber() (string, error) {
 		return "", errors.New("no account associated with given octopus api key")
 	}
 	if len(q.Viewer.Accounts) > 1 {
-		c.log.WARN.Print("more than one octopus account on this api key - picking the first one. please file an issue!")
+		return "", errors.New("more than one octopus account on this api key not supported")
 	}
 	c.accountNumber = q.Viewer.Accounts[0].Number
 	return c.accountNumber, nil
