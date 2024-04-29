@@ -10,5 +10,4 @@ const (
 	IntegratedDevice
 	Heating
 	Retryable
-	WelcomeCharge
 )
