@@ -1,6 +1,7 @@
 package coordinator
 
 import (
+	"slices"
 	"sync"
 
 	"github.com/evcc-io/evcc/api"
@@ -26,18 +27,11 @@ func New(log *util.Logger, vehicles []api.Vehicle) *Coordinator {
 }
 
 // GetVehicles returns the list of all vehicles
-func (c *Coordinator) GetVehicles(availableOnly bool) []api.Vehicle {
+func (c *Coordinator) GetVehicles() []api.Vehicle {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 
-	res := make([]api.Vehicle, 0, len(c.vehicles))
-	for _, v := range c.vehicles {
-		if _, tracked := c.tracked[v]; !availableOnly || availableOnly && !tracked {
-			res = append(res, v)
-		}
-	}
-
-	return res
+	return slices.Clone(c.vehicles)
 }
 
 // Owner returns the loadpoint that currently owns the vehicle
