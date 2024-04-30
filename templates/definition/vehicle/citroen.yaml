@@ -1,12 +1,12 @@
-template: opel
+template: citroen
 products:
-  - brand: Opel
+  - brand: Citroën
 requirements:
   description:
     de: |
       Benötigt `access` und `refresh` Tokens. Diese können über den Befehl "evcc token [name]" generiert werden.
     en: |
-      Opel `access` and `refresh` tokens are required. These can be generated with command "evcc token [name]".
+      Citroën `access` and `refresh` tokens are required. These can be generated with command "evcc token [name]".
 params:
   - name: title
   - name: icon
@@ -18,8 +18,8 @@ params:
     required: true
     mask: true
     help:
-      en: "See https://docs.evcc.io/en/docs/devices/vehicles#opel"
-      de: "Siehe https://docs.evcc.io/docs/devices/vehicles#opel"
+      en: "See https://docs.evcc.io/en/docs/devices/vehicles#citroen"
+      de: "Siehe https://docs.evcc.io/docs/devices/vehicles#citroen"
   - name: vin
     example: V...
   - name: capacity
@@ -29,7 +29,7 @@ params:
     deprecated: true
   - preset: vehicle-identify
 render: |
-  type: opel
+  type: citroen
   title: {{ .title }}
   icon: {{ .icon }}
   user: {{ .user }}
