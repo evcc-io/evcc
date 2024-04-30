@@ -33,15 +33,9 @@ export default {
       val = Math.abs(val);
       return val >= this.fmtLimit ? this.round(val / 1e3, this.fmtDigits) : this.round(val, 0);
     },
-    inKw: function (watt) {
-      return watt === 0 || watt >= 1000;
-    },
-    digitsKw: function (watt) {
-      return watt < 10000 ? 2 : 1;
-    },
     fmtKw: function (watt = 0, kw = true, withUnit = true, digits) {
       if (digits === undefined) {
-        digits = kw ? this.digitsKw(watt) : 0;
+        digits = kw ? 1 : 0;
       }
       const value = kw ? watt / 1000 : watt;
       let unit = "";
