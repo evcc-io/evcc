@@ -299,7 +299,7 @@ export default {
 					unit: "kWh",
 					total: this.chargedEnergy,
 					value: (session) => session.chargedEnergy,
-					format: (value) => this.fmtKWh(value * 1e3, true, false, 2),
+					format: (value) => this.fmtKWh(value * 1e3, true, false),
 				},
 				{
 					name: "solar",
