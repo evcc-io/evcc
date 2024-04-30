@@ -25,13 +25,13 @@ type Identity struct {
 }
 
 // NewIdentity creates PSA identity
-func NewIdentity(log *util.Logger, brand, account string, oc *oauth2.Config, token *oauth2.Token) (*Identity, error) {
+func NewIdentity(log *util.Logger, brand, user string, oc *oauth2.Config, token *oauth2.Token) (*Identity, error) {
 	// serialise instance handling
 	mu.Lock()
 	defer mu.Unlock()
 
 	// reuse identity instance
-	if instance := getInstance(brand, account); instance != nil {
+	if instance := getInstance(brand, user); instance != nil {
 		return instance, nil
 	}
 
@@ -39,7 +39,7 @@ func NewIdentity(log *util.Logger, brand, account string, oc *oauth2.Config, tok
 		Helper: request.NewHelper(log),
 		log:    log,
 		oc:     oc,
-		sk:     SettingsKey(brand, account),
+		sk:     SettingsKey(brand, user),
 	}
 
 	if !token.Valid() {
@@ -70,7 +70,7 @@ func NewIdentity(log *util.Logger, brand, account string, oc *oauth2.Config, tok
 	v.TokenSource = oauth.RefreshTokenSource(token, v)
 
 	// add instance
-	addInstance(brand, account, v)
+	addInstance(brand, user, v)
 
 	return v, nil
 }

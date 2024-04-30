@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
@@ -16,11 +17,15 @@ import (
 
 func psaToken(vehicleConf config.Named) (*oauth2.Token, error) {
 	cc := struct {
-		Account string
+		User    string
 		Country string
 	}{}
 
 	util.DecodeOther(vehicleConf.Other, &cc)
+
+	if cc.User == "" {
+		return nil, api.ErrMissingCredentials
+	}
 
 	if cc.Country == "" {
 		prompt_country := &survey.Input{
@@ -31,7 +36,7 @@ func psaToken(vehicleConf config.Named) (*oauth2.Token, error) {
 		}
 	}
 	brand := strings.ToLower(vehicleConf.Type)
-	sk := psa.SettingsKey(brand, cc.Account)
+	sk := psa.SettingsKey(brand, cc.User)
 	cv := oauth2.GenerateVerifier()
 	oc := psa.Oauth2Config(brand, strings.ToLower(cc.Country))
 

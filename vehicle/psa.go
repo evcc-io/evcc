@@ -37,7 +37,7 @@ func newPSA(brand, realm string, other map[string]interface{}) (api.Vehicle, err
 	cc := struct {
 		embed   `mapstructure:",squash"`
 		VIN     string
-		Account string
+		User    string
 		Country string
 		Tokens  Tokens
 		Cache   time.Duration
@@ -47,6 +47,10 @@ func newPSA(brand, realm string, other map[string]interface{}) (api.Vehicle, err
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
+	}
+
+	if cc.User == "" {
+		return nil, api.ErrMissingCredentials
 	}
 
 	token, err := cc.Tokens.Token()
@@ -59,10 +63,10 @@ func newPSA(brand, realm string, other map[string]interface{}) (api.Vehicle, err
 	}
 
 	log := util.NewLogger(brand)
-	log.Redact(cc.Account, cc.Tokens.Access, cc.Tokens.Refresh)
+	log.Redact(cc.User, cc.Tokens.Access, cc.Tokens.Refresh)
 
 	oc := psa.Oauth2Config(brand, strings.ToLower(cc.Country))
-	identity, err := psa.NewIdentity(log, brand, cc.Account, oc, token)
+	identity, err := psa.NewIdentity(log, brand, cc.User, oc, token)
 	if err != nil {
 		return nil, err
 	}
