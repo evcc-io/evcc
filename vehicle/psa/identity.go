@@ -28,7 +28,7 @@ func NewIdentity(log *util.Logger, brand, user string, oc *oauth2.Config, token 
 	defer mu.Unlock()
 
 	// reuse identity instance
-	subject := strings.ToLower(brand) + "." + strings.ToLower(user)
+	subject := "psa." + strings.ToLower(brand) + "." + strings.ToLower(user)
 	if instance := getInstance(subject); instance != nil {
 		return instance, nil
 	}
