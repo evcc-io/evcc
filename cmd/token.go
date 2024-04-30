@@ -28,11 +28,6 @@ func runToken(cmd *cobra.Command, args []string) {
 		log.FATAL.Fatal(err)
 	}
 
-	// setup environment
-	if err := configureEnvironment(cmd, conf); err != nil {
-		log.FATAL.Fatal(err)
-	}
-
 	var vehicleConf config.Named
 	if len(conf.Vehicles) == 1 {
 		vehicleConf = conf.Vehicles[0]
@@ -78,6 +73,4 @@ func runToken(cmd *cobra.Command, args []string) {
 	fmt.Println("    tokens:")
 	fmt.Println("      access:", token.AccessToken)
 	fmt.Println("      refresh:", token.RefreshToken)
-
-	<-shutdownDoneC()
 }
