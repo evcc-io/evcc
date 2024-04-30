@@ -1,0 +1,14 @@
+template: octopus-api
+products:
+  - brand: Octopus Energy
+    description:
+      en: Octopus Energy - API
+params:
+  - name: apiKey
+    type: string
+    required: true
+    description:
+      en: "Your Octopus Energy API Key. You can find it here: https://octopus.energy/dashboard/new/accounts/personal-details/api-access"
+render: |
+  type: octopusenergy
+  apikey: {{ .apikey }}
