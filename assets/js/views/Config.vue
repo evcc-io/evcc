@@ -7,6 +7,7 @@
 				<GeneralConfig @site-changed="siteChanged" />
 
 				<div v-if="$hiddenFeatures()">
+					<!--
 					<hr class="my-5" />
 
 					<div class="alert alert-danger my-4" role="alert">
@@ -14,7 +15,7 @@
 						if you know what you're doing. Otherwise you might have to reset or manually
 						repair your database.
 					</div>
-
+-->
 					<h2 class="my-4 mt-5">Grid, PV & Battery Systems</h2>
 					<ul class="p-0 config-list">
 						<DeviceCard
@@ -473,7 +474,7 @@ export default {
 .config-list {
 	display: grid;
 	grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-	grid-gap: 1rem;
+	grid-gap: 2rem;
 	margin-bottom: 5rem;
 }
 .wip {

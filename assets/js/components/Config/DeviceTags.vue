@@ -1,16 +1,12 @@
 <template>
-	<div v-if="tags" class="d-flex mb-2 flex-wrap">
+	<div v-if="tags" class="list mb-3">
 		<span
 			v-for="(entry, index) in entries"
 			:key="index"
-			class="badge text-bg-secondary me-2 mb-2"
-			:class="{
-				'text-bg-secondary': !entry.error,
-				'text-bg-danger': entry.error,
-			}"
+			class=" entry"
 		>
-			<strong>{{ $t(`config.deviceValue.${entry.name}`) }}:</strong>
-			{{ fmtDeviceValue(entry) }}
+		<div class="label ">{{ $t(`config.deviceValue.${entry.name}`) }}</div>
+		<div class="value">{{ fmtDeviceValue(entry) }}</div>
 		</span>
 	</div>
 </template>
@@ -61,4 +57,26 @@ export default {
 	},
 };
 </script>
-<style scoped></style>
+<style scoped>
+.list {
+	display: grid;
+	grid-template-columns: 1fr;
+	grid-gap: 0.5rem;
+}
+.entry {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	grid-gap: 1rem 1rem;
+}
+.value {
+	display: block;
+	font-weight: bold;
+	color: var(--bs-primary);
+	font-size: 14px;
+	text-align: right;
+}
+.label {
+	font-weight: normal;
+	font-size: 14px;
+}
+</style>

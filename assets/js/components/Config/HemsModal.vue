@@ -6,6 +6,7 @@
 		docs="/docs/reference/configuration/hems"
 		:defaultYaml="defaultYaml"
 		endpoint="/config/hems"
+		size="md"
 		@changed="$emit('changed')"
 	/>
 </template>

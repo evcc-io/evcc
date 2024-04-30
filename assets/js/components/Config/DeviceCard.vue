@@ -34,6 +34,7 @@
 				<shopicon-regular-adjust size="s"></shopicon-regular-adjust>
 			</button>
 		</div>
+		<hr class="my-3 divide" />
 		<div v-if="unconfigured" class="text-center py-3 evcc-gray">
 			{{ $t("config.main.unconfigured") }}
 		</div>
@@ -91,9 +92,7 @@ export default {
 	min-height: 9rem;
 	color: var(--evcc-default-text);
 	border-radius: 1rem;
-	border: 1px solid var(--evcc-gray-50);
 	padding: 1rem 1rem 0.5rem;
-	transition: border-color var(--evcc-transition-fast) linear;
 	background: var(--evcc-box);
 }
 .root:hover {
@@ -101,5 +100,9 @@ export default {
 }
 .icon:empty {
 	display: none;
+}
+.divide {
+	margin-left: -1.5rem;
+	margin-right: -1.5rem;
 }
 </style>

@@ -1,5 +1,5 @@
 <template>
-	<GenericModal ref="modal" size="xl" :title="title" @open="open">
+	<GenericModal ref="modal" :size="size" :title="title" @open="open">
 		<p v-if="description || docsLink">
 			<span v-if="description">{{ description + " " }}</span>
 			<a v-if="docsLink" :href="docsLink" target="_blank">
@@ -60,6 +60,7 @@ export default {
 		docs: String,
 		endpoint: String,
 		defaultYaml: String,
+		size: { type: String, default: "xl" },
 	},
 	computed: {
 		docsLink() {
