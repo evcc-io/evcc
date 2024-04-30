@@ -177,7 +177,7 @@ test.describe("meters", async () => {
     await expect(meterModal.getByRole("button", { name: "Validate & save" })).toBeVisible();
     await meterModal.getByRole("link", { name: "validate" }).click();
     await expect(meterModal.getByText("SoC: 75.0%")).toBeVisible();
-    await expect(meterModal.getByText("Power: -2.50 kW")).toBeVisible();
+    await expect(meterModal.getByText("Power: -2.5 kW")).toBeVisible();
     await meterModal.getByRole("button", { name: "Save" }).click();
     await expect(page.getByTestId("battery")).toBeVisible(1);
     await expect(page.getByTestId("battery")).toContainText("openems");
@@ -190,14 +190,14 @@ test.describe("meters", async () => {
     await expect(page.getByTestId("battery")).toBeVisible(1);
     await expect(page.getByTestId("battery")).toContainText("openems");
     await expect(page.getByTestId("battery").getByText("SoC: 75.0%")).toBeVisible();
-    await expect(page.getByTestId("battery").getByText("Power: -2.50 kW")).toBeVisible();
+    await expect(page.getByTestId("battery").getByText("Power: -2.5 kW")).toBeVisible();
     await expect(page.getByTestId("battery").getByText("Capacity: 20.0 kWh")).toBeVisible();
 
     // restart and check in main ui
     await restart(CONFIG_EMPTY);
     await page.goto("/");
     await page.getByTestId("visualization").click();
-    await expect(page.getByTestId("energyflow")).toContainText("Battery charging75%2.50 kW");
+    await expect(page.getByTestId("energyflow")).toContainText("Battery charging75%2.5 kW");
 
     // delete #1
     await page.goto("/#/config");

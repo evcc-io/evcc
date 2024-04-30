@@ -12,14 +12,14 @@ const fmt = mount({
 
 describe("fmtkW", () => {
   test("should format kW and W", () => {
-    expect(fmt.fmtKw(0, true)).eq("0,00 kW");
-    expect(fmt.fmtKw(1200, true)).eq("1,20 kW");
+    expect(fmt.fmtKw(0, true)).eq("0,0 kW");
+    expect(fmt.fmtKw(1200, true)).eq("1,2 kW");
     expect(fmt.fmtKw(0, false)).eq("0 W");
     expect(fmt.fmtKw(1200, false)).eq("1.200 W");
   });
   test("should format without unit", () => {
-    expect(fmt.fmtKw(0, true, false)).eq("0,00");
-    expect(fmt.fmtKw(1200, true, false)).eq("1,20");
+    expect(fmt.fmtKw(0, true, false)).eq("0,0");
+    expect(fmt.fmtKw(1200, true, false)).eq("1,2");
     expect(fmt.fmtKw(0, false, false)).eq("0");
     expect(fmt.fmtKw(1200, false, false)).eq("1.200");
   });
@@ -32,8 +32,8 @@ describe("fmtkW", () => {
 
 describe("fmtKWh", () => {
   test("should format with units", () => {
-    expect(fmt.fmtKWh(1200)).eq("1,20 kWh");
-    expect(fmt.fmtKWh(1200, true)).eq("1,20 kWh");
+    expect(fmt.fmtKWh(1200)).eq("1,2 kWh");
+    expect(fmt.fmtKWh(1200, true)).eq("1,2 kWh");
     expect(fmt.fmtKWh(1200, false)).eq("1.200 Wh");
     expect(fmt.fmtKWh(1200, false, false)).eq("1.200");
   });
