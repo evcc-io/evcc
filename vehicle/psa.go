@@ -35,12 +35,11 @@ type PSA struct {
 // newPSA creates a new vehicle
 func newPSA(brand, realm string, other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
-		embed   `mapstructure:",squash"`
-		VIN     string
-		User    string
-		Country string
-		Tokens  Tokens
-		Cache   time.Duration
+		embed  `mapstructure:",squash"`
+		VIN    string
+		User   string
+		Tokens Tokens
+		Cache  time.Duration
 	}{
 		Cache: interval,
 	}

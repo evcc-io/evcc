@@ -72,14 +72,12 @@ func runToken(cmd *cobra.Command, args []string) {
 		log.FATAL.Fatal(err)
 	}
 
-	if token != nil {
-		fmt.Println()
-		fmt.Println("Add the following tokens to the vehicle config:")
-		fmt.Println()
-		fmt.Println("    tokens:")
-		fmt.Println("      access:", token.AccessToken)
-		fmt.Println("      refresh:", token.RefreshToken)
-	}
+	fmt.Println()
+	fmt.Println("Add the following tokens to the vehicle config:")
+	fmt.Println()
+	fmt.Println("    tokens:")
+	fmt.Println("      access:", token.AccessToken)
+	fmt.Println("      refresh:", token.RefreshToken)
 
 	<-shutdownDoneC()
 }
