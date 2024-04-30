@@ -51,13 +51,18 @@ func runToken(cmd *cobra.Command, args []string) {
 	var token *oauth2.Token
 	var err error
 
-	switch strings.ToLower(vehicleConf.Type) {
+	vt := strings.ToLower(vehicleConf.Type)
+	if vt == "template" {
+		vt = strings.ToLower(vehicleConf.Other["template"].(string))
+	}
+
+	switch vt {
 	case "mercedes":
 		token, err = mercedesToken()
 	case "tronity":
 		token, err = tronityToken(conf, vehicleConf)
 	case "citroen", "ds", "opel", "peugeot":
-		token, err = psaToken(vehicleConf)
+		token, err = psaToken(vehicleConf, vt)
 
 	default:
 		log.FATAL.Fatalf("vehicle type '%s' does not support token authentication", vehicleConf.Type)
