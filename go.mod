@@ -202,4 +202,4 @@ replace github.com/mlnoga/rct => github.com/andig/rct v0.1.2-0.20240419102452-05
 
 replace github.com/grid-x/modbus => github.com/evcc-io/modbus v0.0.0-20240419133105-829633e7c6b0
 
-replace github.com/volkszaehler/mbmd => github.com/andig/mbmd v0.0.0-20240501150732-0d3415110922
+replace github.com/volkszaehler/mbmd => github.com/andig/mbmd v0.0.0-20240501153638-fe73629adf13

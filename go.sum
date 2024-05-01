@@ -33,8 +33,8 @@ github.com/andig/go-powerwall v0.2.1-0.20230808194509-dd70cdb6e140 h1:C93T8vg7CN
 github.com/andig/go-powerwall v0.2.1-0.20230808194509-dd70cdb6e140/go.mod h1:Xk09mD+7RTCuuHMX5RxlqgEUeh9oZdIX0rL0qiY6l/4=
 github.com/andig/gosunspec v0.0.0-20231205122018-1daccfa17912 h1:pphS+WUa9zK0ZH/Rt2JMEaOx0qz8dDzOzbr/W7BMiXQ=
 github.com/andig/gosunspec v0.0.0-20231205122018-1daccfa17912/go.mod h1:c6P6szcR+ROkqZruOR4f6qbDKFjZX6OitPpj+yJ/r8k=
-github.com/andig/mbmd v0.0.0-20240501150732-0d3415110922 h1:Sq1tOQ7ZmvPUUuRyZ9WkCVLhuS02rwvnhqlNo4m8Xhk=
-github.com/andig/mbmd v0.0.0-20240501150732-0d3415110922/go.mod h1:MA3vKWI4KozcpWvD9dwN6CL+WqwdK9XGXT5Iv49IsUM=
+github.com/andig/mbmd v0.0.0-20240501153638-fe73629adf13 h1:xDpNbz3CbjuyhRz29bkQ3SJ4KWk2WJxLyXrv8Wnr89U=
+github.com/andig/mbmd v0.0.0-20240501153638-fe73629adf13/go.mod h1:MA3vKWI4KozcpWvD9dwN6CL+WqwdK9XGXT5Iv49IsUM=
 github.com/andig/mbserver v0.0.0-20230310211055-1d29cbb5820e h1:m/NTP3JWpR7M0ljLxiQU4fzR25jjhe1LDtxLMNcoNJQ=
 github.com/andig/mbserver v0.0.0-20230310211055-1d29cbb5820e/go.mod h1:4VtYzTm//oUipwvO3yh0g/udTE7pYJM+U/kyAuFDsgM=
 github.com/andig/rct v0.1.2-0.20240419102452-054695c3e7c2 h1:hAQe9ESVfjlXi8NTyy+BnYtlIseP40GemlxTKmQCq4g=

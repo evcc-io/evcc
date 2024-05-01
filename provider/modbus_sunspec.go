@@ -55,9 +55,9 @@ func NewModbusSunspecFromConfig(other map[string]interface{}) (Provider, error) 
 	}
 
 	// set non-default delay
-	if cc.Delay > 0 {
-		conn.Delay(cc.Delay)
-	}
+	// if cc.Delay > 0 {
+	// 	conn.Delay(cc.Delay)
+	// }
 
 	// set non-default connect delay
 	if cc.ConnectDelay > 0 {
