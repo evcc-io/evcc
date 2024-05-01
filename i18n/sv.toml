@@ -78,9 +78,21 @@ validateSave = "Validera & spara"
 titleAdd = "Lägg till solcellsmätare"
 titleEdit = "Ändra solcellsmätare"
 
+[config.section]
+general = "Allmänna"
+system = "System"
+
 [config.site]
 cancel = "Avbryt"
 save = "Spara"
+
+[config.system]
+logs = "Loggar"
+restart = "Omstart"
+restartRequiredDescription = "Starta om för att de nya inställningarna ska börja gälla."
+restartRequiredMessage = "Inställningar ändrade."
+restartingDescription = "Vänligen vänta..."
+restartingMessage = "Startar om evcc."
 
 [config.title]
 description = "Visas på huvudskärm och tabbar."
@@ -195,13 +207,13 @@ discussionsButton = "GitHub diskussioner"
 documentationButton = "Dokumentation"
 issueButton = "Rapportera fel"
 issueDescription = "Hittat ett konstigt eller felaktigt beteende?"
+logsButton = "Se loggar"
+logsDescription = "Felsök loggar"
 modalTitle = "Behöver du hjälp?"
 primaryActions = "Fungerar det inte som tänkt? Här finns mycket hjälp att hitta."
 restartButton = "Omstart"
 restartDescription = "Har du testat att starta om?"
 secondaryActions = "Lyckas du inte lösa problemet? Här finns mer hjälp."
-logsButton = "Se loggar"
-logsDescription = "Felsök loggar"
 
 [help.restart]
 cancel = "Avbryt"
@@ -210,14 +222,25 @@ description = "Normalt behövs inte en omstart. Rapportera ett fel om du behöve
 disclaimer = "Notera: evcc kommer stängas av och be operativsystemet starta om tjänsten."
 modalTitle = "Är du säker på att du vill starta om?"
 
+[log]
+areaLabel = "Filtrera per område"
+areas = "Alla områden"
+download = "Ladda hem alla loggar"
+levelLabel = "Filtrera på loggnivå"
+noResults = "Inga matchande loggposter."
+search = "Sök"
+showAll = "Visa allt"
+title = "Loggar"
+update = "Autouppdatera"
+
 [loginModal]
 cancel = "Avbryt"
 error = "Inloggning misslyckades:"
 invalid = "Ogiltigt lösenord."
 login = "Logga in"
 password = "Lösenord"
-title = "Autentisering"
 reset = "Återställ lösenord?"
+title = "Autentisering"
 
 [main]
 vehicles = "Parkering"
@@ -400,8 +423,8 @@ waitForVehicle = "Redo. Väntar på fordon..."
 
 [notifications]
 dismissAll = "Avvisa alla"
-modalTitle = "Meddelanden"
 logs = "Se kompletta loggar"
+modalTitle = "Meddelanden"
 
 [offline]
 message = "Inte ansluten till en server."
@@ -472,6 +495,11 @@ filter = "Filter"
 [settings]
 title = "Användargränssnitt"
 
+[settings.fullscreen]
+enter = "Till helskärmsläge"
+exit = "Lämna helskärmsläge"
+label = "Helskärmsläge"
+
 [settings.gridDetails]
 co2 = "CO₂"
 label = "Detaljer om rutnätet"
@@ -537,32 +565,3 @@ title = "Startfel"
 cancel = "Avbryt"
 template = "Tillverkare"
 test = "Test"
-
-
-[config.system]
-logs = "Loggar"
-restart = "Omstart"
-restartingDescription = "Vänligen vänta..."
-restartRequiredMessage = "Inställningar ändrade."
-restartingMessage = "Startar om evcc."
-restartRequiredDescription = "Starta om för att de nya inställningarna ska börja gälla."
-
-[config.section]
-general = "Allmänna"
-system = "System"
-
-[log]
-areaLabel = "Filtrera per område"
-areas = "Alla områden"
-download = "Ladda hem alla loggar"
-levelLabel = "Filtrera på loggnivå"
-noResults = "Inga matchande loggposter."
-search = "Sök"
-showAll = "Visa allt"
-title = "Loggar"
-update = "Autouppdatera"
-
-[settings.fullscreen]
-exit = "Lämna helskärmsläge"
-label = "Helskärmsläge"
-enter = "Till helskärmsläge"

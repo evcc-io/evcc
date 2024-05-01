@@ -78,9 +78,21 @@ validateSave = "Validar y guardar"
 titleAdd = "Añadir contador solar"
 titleEdit = "Editar contador solar"
 
+[config.section]
+general = "General"
+system = "Sistema"
+
 [config.site]
 cancel = "Cancelar"
 save = "Guardar"
+
+[config.system]
+logs = "Registros"
+restart = "Reiniciar"
+restartRequiredDescription = "Por favor, reinicie para aplicar los cambios"
+restartRequiredMessage = "La configuración cambió"
+restartingDescription = "Espere por favor…"
+restartingMessage = "Reiniciando evcc"
 
 [config.title]
 description = "Se muestra en la pantalla principal y en la pestaña del navegador"
@@ -200,13 +212,13 @@ discussionsButton = "Debates en GitHub"
 documentationButton = "Documentación"
 issueButton = "Reportar un error"
 issueDescription = "¿Encontraste un comportamiento extraño o incorrecto?"
+logsButton = "Ver los registros"
+logsDescription = "Compruebe los registros en busca de errores"
 modalTitle = "¿Necesitas ayuda?"
 primaryActions = "Si algo no funciona como debería, puedes obtener ayuda aqui."
 restartButton = "Reiniciar"
 restartDescription = "¿Has probado de apagar y volver a encender"
 secondaryActions = "¿Sigues sin poder resolver tu problema? Aquí tienes otras opciones más contundentes."
-logsDescription = "Compruebe los registros en busca de errores"
-logsButton = "Ver los registros"
 
 [help.restart]
 cancel = "Cancelar"
@@ -215,14 +227,25 @@ description = "En circunstancias normales no debería ser necesario reiniciar. P
 disclaimer = "Nota: evcc terminará y dependerá del sistema operativo para reiniciar el servicio"
 modalTitle = "¿Seguro que quieres volver a empezar?"
 
+[log]
+areaLabel = "Filtrar por zona"
+areas = "Todas las areas"
+download = "Descargar registro completo"
+levelLabel = "Filtrar por nivel de registro"
+noResults = "No hay entradas en el registro coincidentes"
+search = "Buscar"
+showAll = "Mostrar todas las entradas"
+title = "Registros"
+update = "Actualización automática"
+
 [loginModal]
 cancel = "Cancelar"
 error = "Error en el inicio de sesion: "
 invalid = "La contraseña no es válida."
 login = "Registro"
 password = "Contraseña"
-title = "Autenticación"
 reset = "¿Restablecer la contraseña?"
+title = "Autenticación"
 
 [main]
 vehicles = "Estacionamiento"
@@ -405,8 +428,8 @@ waitForVehicle = "Listo para cargar. Esperando vehículo."
 
 [notifications]
 dismissAll = "Eliminar notificaciones"
-modalTitle = "Notificaciónes"
 logs = "Ver registros completos"
+modalTitle = "Notificaciónes"
 
 [offline]
 message = "No conectado con servidor."
@@ -477,6 +500,11 @@ filter = "Filtrar"
 [settings]
 title = "Interfaz de usuario"
 
+[settings.fullscreen]
+enter = "Iniciar a pantalla completa"
+exit = "Salir de la pantalla completa"
+label = "Pantalla completa"
+
 [settings.gridDetails]
 co2 = "CO₂"
 label = "Detalles de la cuadrícula"
@@ -542,32 +570,3 @@ title = "Error al iniciar"
 cancel = "Cancelar"
 template = "Fabricante"
 test = "Prueba"
-
-
-[config.section]
-system = "Sistema"
-general = "General"
-
-[config.system]
-restartRequiredMessage = "La configuración cambió"
-logs = "Registros"
-restartingDescription = "Espere por favor…"
-restart = "Reiniciar"
-restartingMessage = "Reiniciando evcc"
-restartRequiredDescription = "Por favor, reinicie para aplicar los cambios"
-
-[log]
-areaLabel = "Filtrar por zona"
-areas = "Todas las areas"
-download = "Descargar registro completo"
-levelLabel = "Filtrar por nivel de registro"
-noResults = "No hay entradas en el registro coincidentes"
-search = "Buscar"
-showAll = "Mostrar todas las entradas"
-title = "Registros"
-update = "Actualización automática"
-
-[settings.fullscreen]
-label = "Pantalla completa"
-enter = "Iniciar a pantalla completa"
-exit = "Salir de la pantalla completa"

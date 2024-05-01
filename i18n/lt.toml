@@ -500,6 +500,11 @@ filter = "Filtruoti"
 [settings]
 title = "Vartotojo sąsaja"
 
+[settings.fullscreen]
+enter = "Įjungti visą ekraną"
+exit = "Išjungti visą ekraną"
+label = "Visas ekranas"
+
 [settings.gridDetails]
 co2 = "CO₂"
 label = "Tinklas detaliau"
@@ -565,9 +570,3 @@ title = "Klaida startuojant"
 cancel = "Atšaukti"
 template = "Gamintojas"
 test = "Testuoti"
-
-
-[settings.fullscreen]
-exit = "Išjungti visą ekraną"
-enter = "Įjungti visą ekraną"
-label = "Visas ekranas"
