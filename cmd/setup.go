@@ -116,11 +116,11 @@ func configureMeters(static []config.Named, names ...string) error {
 
 		instance, err := meter.NewFromConfig(cc.Type, cc.Other)
 		if err != nil {
-			return fmt.Errorf("cannot create meter '%s': %w", cc.Name, err)
+			return &DeviceError{cc.Name, fmt.Errorf("cannot create meter '%s': %w", cc.Name, err)}
 		}
 
 		if err := config.Meters().Add(config.NewStaticDevice(cc, instance)); err != nil {
-			return err
+			return &DeviceError{cc.Name, err}
 		}
 	}
 
@@ -137,13 +137,15 @@ func configureMeters(static []config.Named, names ...string) error {
 			return nil
 		}
 
+		// TOTO add fake devices
+
 		instance, err := meter.NewFromConfig(cc.Type, cc.Other)
 		if err != nil {
-			return fmt.Errorf("cannot create meter '%s': %w", cc.Name, err)
+			return &DeviceError{cc.Name, fmt.Errorf("cannot create meter '%s': %w", cc.Name, err)}
 		}
 
 		if err := config.Meters().Add(config.NewConfigurableDevice(conf, instance)); err != nil {
-			return err
+			return &DeviceError{cc.Name, err}
 		}
 	}
 
@@ -169,10 +171,14 @@ func configureChargers(static []config.Named, names ...string) error {
 		g.Go(func() error {
 			instance, err := charger.NewFromConfig(cc.Type, cc.Other)
 			if err != nil {
-				return fmt.Errorf("cannot create charger '%s': %w", cc.Name, err)
+				return &DeviceError{cc.Name, fmt.Errorf("cannot create charger '%s': %w", cc.Name, err)}
 			}
 
-			return config.Chargers().Add(config.NewStaticDevice(cc, instance))
+			if err := config.Chargers().Add(config.NewStaticDevice(cc, instance)); err != nil {
+				return &DeviceError{cc.Name, err}
+			}
+
+			return nil
 		})
 	}
 
@@ -190,12 +196,18 @@ func configureChargers(static []config.Named, names ...string) error {
 				return nil
 			}
 
+			// TOTO add fake devices
+
 			instance, err := charger.NewFromConfig(cc.Type, cc.Other)
 			if err != nil {
 				return fmt.Errorf("cannot create charger '%s': %w", cc.Name, err)
 			}
 
-			return config.Chargers().Add(config.NewConfigurableDevice(conf, instance))
+			if err := config.Chargers().Add(config.NewConfigurableDevice(conf, instance)); err != nil {
+				return &DeviceError{cc.Name, err}
+			}
+
+			return nil
 		})
 	}
 
@@ -323,6 +335,7 @@ func configureEnvironment(cmd *cobra.Command, conf globalconfig.All) (err error)
 
 	// setup machine id
 	if conf.Plant != "" {
+		// TODO decide wrapping
 		err = machine.CustomID(conf.Plant)
 	}
 
@@ -333,36 +346,38 @@ func configureEnvironment(cmd *cobra.Command, conf globalconfig.All) (err error)
 
 	// setup translations
 	if err == nil {
+		// TODO decide wrapping
 		err = locale.Init()
 	}
 
 	// setup persistence
 	if err == nil && conf.Database.Dsn != "" {
-		err = configureDatabase(conf.Database)
+		err = wrapErrorWithClass(ClassDatabase, configureDatabase(conf.Database))
 	}
 
 	// setup mqtt client listener
 	if err == nil {
-		err = configureMQTT(conf.Mqtt)
-	}
-
-	// setup javascript VMs
-	if err == nil {
-		err = configureJavascript(conf.Javascript)
-	}
-
-	// setup go VMs
-	if err == nil {
-		err = configureGo(conf.Go)
+		err = wrapErrorWithClass(ClassMqtt, configureMqtt(conf.Mqtt))
 	}
 
 	// setup EEBus server
 	if err == nil && conf.EEBus != nil {
-		err = configureEEBus(*conf.EEBus)
+		err = wrapErrorWithClass(ClassEEBus, configureEEBus(*conf.EEBus))
+	}
+
+	// setup javascript VMs
+	if err == nil {
+		err = wrapErrorWithClass(ClassJavascript, configureJavascript(conf.Javascript))
+	}
+
+	// setup go VMs
+	if err == nil {
+		err = wrapErrorWithClass(ClassGo, configureGo(conf.Go))
 	}
 
 	// setup config database
 	if err == nil {
+		// TODO decide wrapping
 		err = config.Init(db.Instance)
 	}
 
@@ -435,7 +450,7 @@ func configureInflux(conf globalconfig.Influx, site site.API, in <-chan util.Par
 }
 
 // setup mqtt
-func configureMQTT(conf globalconfig.Mqtt) error {
+func configureMqtt(conf globalconfig.Mqtt) error {
 	// migrate settings
 	if settings.Exists(keys.Mqtt) {
 		if err := settings.Json(keys.Mqtt, &conf); err != nil {
@@ -578,6 +593,8 @@ func configureTariff(name string, conf config.Typed, t *api.Tariff, wg *sync.Wai
 		return
 	}
 
+	// TODO handle tariff errors
+
 	res, err := tariff.NewFromConfig(conf.Type, conf.Other)
 	if err != nil {
 		log.ERROR.Printf("failed configuring %s tariff: %v", name, err)
@@ -611,12 +628,15 @@ func configureTariffs(conf globalconfig.Tariffs) (*tariff.Tariffs, error) {
 
 func configureDevices(conf globalconfig.All) error {
 	if err := configureMeters(conf.Meters); err != nil {
-		return err
+		return &ClassError{ClassMeter, err}
 	}
 	if err := configureChargers(conf.Chargers); err != nil {
-		return err
+		return &ClassError{ClassCharger, err}
 	}
-	return configureVehicles(conf.Vehicles)
+	if err := configureVehicles(conf.Vehicles); err != nil {
+		return &ClassError{ClassVehicle, err}
+	}
+	return nil
 }
 
 func configureSiteAndLoadpoints(conf globalconfig.All) (*core.Site, error) {
@@ -631,15 +651,20 @@ func configureSiteAndLoadpoints(conf globalconfig.All) (*core.Site, error) {
 
 	tariffs, err := configureTariffs(conf.Tariffs)
 	if err != nil {
-		return nil, err
+		return nil, &ClassError{ClassTariff, err}
 	}
 
 	return configureSite(conf.Site, loadpoints, tariffs)
 }
 
 func configureSite(conf map[string]interface{}, loadpoints []*core.Loadpoint, tariffs *tariff.Tariffs) (*core.Site, error) {
-	site, err := core.NewSiteFromConfig(log, conf, loadpoints, tariffs)
+	site, err := core.NewSiteFromConfig(conf)
 	if err != nil {
+		// TODO proper handling
+		panic(err)
+	}
+
+	if err := site.Boot(log, loadpoints, tariffs); err != nil {
 		return nil, fmt.Errorf("failed configuring site: %w", err)
 	}
 

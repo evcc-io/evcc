@@ -99,7 +99,7 @@ type Site struct {
 	publishCache map[string]any // store last published values to avoid unnecessary republishing
 }
 
-// MetersConfig contains the loadpoint's meter configuration
+// MetersConfig contains the site's meter configuration
 type MetersConfig struct {
 	GridMeterRef     string   `mapstructure:"grid"`    // Grid usage meter
 	PVMetersRef      []string `mapstructure:"pv"`      // PV meter
@@ -108,18 +108,24 @@ type MetersConfig struct {
 }
 
 // NewSiteFromConfig creates a new site
-func NewSiteFromConfig(
-	log *util.Logger,
-	other map[string]interface{},
-	loadpoints []*Loadpoint,
-	tariffs *tariff.Tariffs,
-) (*Site, error) {
+func NewSiteFromConfig(other map[string]interface{}) (*Site, error) {
 	site := NewSite()
+
+	// TODO remove
 	if err := util.DecodeOther(other, site); err != nil {
 		return nil, err
 	}
 
+	// add meters from config
+	site.restoreMetersAndTitle()
+
+	// TODO title
 	Voltage = site.Voltage
+
+	return site, nil
+}
+
+func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tariff.Tariffs) error {
 	site.loadpoints = loadpoints
 	site.tariffs = tariffs
 
@@ -147,11 +153,11 @@ func NewSiteFromConfig(
 		if db.Instance != nil {
 			var err error
 			if lp.db, err = session.NewStore(lp.Title(), db.Instance); err != nil {
-				return nil, err
+				return err
 			}
 			// Fix any dangling history
 			if err := lp.db.ClosePendingSessionsInHistory(lp.chargeMeterTotal()); err != nil {
-				return nil, err
+				return err
 			}
 
 			// NOTE: this requires stopSession to respect async access
@@ -159,14 +165,11 @@ func NewSiteFromConfig(
 		}
 	}
 
-	// add meters from config
-	site.restoreMeters()
-
 	// grid meter
 	if site.Meters.GridMeterRef != "" {
 		dev, err := config.Meters().ByName(site.Meters.GridMeterRef)
 		if err != nil {
-			return nil, err
+			return err
 		}
 		site.gridMeter = dev.Instance()
 	}
@@ -175,7 +178,7 @@ func NewSiteFromConfig(
 	for _, ref := range site.Meters.PVMetersRef {
 		dev, err := config.Meters().ByName(ref)
 		if err != nil {
-			return nil, err
+			return err
 		}
 		site.pvMeters = append(site.pvMeters, dev.Instance())
 	}
@@ -184,7 +187,7 @@ func NewSiteFromConfig(
 	for _, ref := range site.Meters.BatteryMetersRef {
 		dev, err := config.Meters().ByName(ref)
 		if err != nil {
-			return nil, err
+			return err
 		}
 		site.batteryMeters = append(site.batteryMeters, dev.Instance())
 	}
@@ -197,14 +200,14 @@ func NewSiteFromConfig(
 	for _, ref := range site.Meters.AuxMetersRef {
 		dev, err := config.Meters().ByName(ref)
 		if err != nil {
-			return nil, err
+			return err
 		}
 		site.auxMeters = append(site.auxMeters, dev.Instance())
 	}
 
 	// configure meter from references
 	if site.gridMeter == nil && len(site.pvMeters) == 0 {
-		return nil, errors.New("missing either grid or pv meter")
+		return errors.New("missing either grid or pv meter")
 	}
 
 	// revert battery mode on shutdown
@@ -216,7 +219,7 @@ func NewSiteFromConfig(
 		}
 	})
 
-	return site, nil
+	return nil
 }
 
 // NewSite creates a Site with sane defaults
@@ -230,10 +233,13 @@ func NewSite() *Site {
 	return lp
 }
 
-// restoreMeters restores site meter configuration
-func (site *Site) restoreMeters() {
+// restoreMetersAndTitle restores site meter configuration
+func (site *Site) restoreMetersAndTitle() {
 	if testing.Testing() {
 		return
+	}
+	if v, err := settings.String(keys.Title); err == nil {
+		site.Title = v
 	}
 	if v, err := settings.String(keys.GridMeter); err == nil && v != "" {
 		site.Meters.GridMeterRef = v
@@ -253,9 +259,6 @@ func (site *Site) restoreMeters() {
 func (site *Site) restoreSettings() error {
 	if testing.Testing() {
 		return nil
-	}
-	if v, err := settings.String(keys.Title); err == nil {
-		site.Title = v
 	}
 	if v, err := settings.Float(keys.BufferSoc); err == nil {
 		if err := site.SetBufferSoc(v); err != nil {
