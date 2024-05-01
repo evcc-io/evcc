@@ -54,11 +54,6 @@ type redactWriter struct {
 	redactor *Redactor
 }
 
-func (l *redactWriter) Write(p []byte) (n int, err error) {
-	l.mu.Lock()
-	for _, s := range l.redact {
-		p = bytes.ReplaceAll(p, []byte(s), []byte(RedactReplacement))
-	}
-	l.mu.Unlock()
-	return l.Writer.Write(p)
+func (w *redactWriter) Write(p []byte) (n int, err error) {
+	return w.Writer.Write(w.redactor.redacted(p))
 }
