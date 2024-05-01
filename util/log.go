@@ -60,7 +60,7 @@ func newLogger(area string, lp int) *Logger {
 	redactor := new(Redactor)
 	notepad := jww.NewNotepad(
 		level, jww.LevelTrace,
-		&redactWriter{redactor: redactor, Writer: os.Stdout}, &redactWriter{redactor: redactor, Writer: logstash.DefaultHandler},
+		&redactWriter{os.Stdout, redactor}, &redactWriter{logstash.DefaultHandler, redactor},
 		padded, log.Ldate|log.Ltime)
 
 	logger := &Logger{

@@ -21,9 +21,8 @@ func RedactDefaultHook(s string) []string {
 	return []string{s, url.QueryEscape(s)}
 }
 
-// Redactor implements a redacting io.Writer
+// Redactor implements log redaction
 type Redactor struct {
-	io.Writer
 	mu     sync.Mutex
 	redact []string
 }
@@ -49,11 +48,12 @@ func (l *Redactor) redacted(p []byte) []byte {
 	return p
 }
 
+// redactWriter implements a redacting io.Writer
 type redactWriter struct {
-	io.Writer
-	redactor *Redactor
+	w io.Writer
+	r *Redactor
 }
 
 func (w *redactWriter) Write(p []byte) (n int, err error) {
-	return w.Writer.Write(w.redactor.redacted(p))
+	return w.w.Write(w.r.redacted(p))
 }
