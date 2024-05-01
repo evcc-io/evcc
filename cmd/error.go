@@ -1,5 +1,10 @@
 package cmd
 
+import (
+	"encoding/json"
+	"errors"
+)
+
 type Class int
 
 //go:generate enumer -type Class -trimprefix Class -transform=lower
@@ -35,6 +40,24 @@ type ClassError struct {
 
 func (e *ClassError) Error() string {
 	return e.err.Error()
+}
+
+func (e *ClassError) MarshalJSON() (out []byte, err error) {
+	res := struct {
+		Class  string `json:"class"`
+		Device string `json:"device,omitempty"`
+		Error  string `json:"error"`
+	}{
+		Class: e.Class.String(),
+		Error: e.err.Error(),
+	}
+
+	var de *DeviceError
+	if errors.As(e.err, &de) {
+		res.Device = de.Name
+	}
+
+	return json.Marshal(res)
 }
 
 func wrapErrorWithClass(class Class, err error) error {
