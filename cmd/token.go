@@ -51,12 +51,12 @@ func runToken(cmd *cobra.Command, args []string) {
 	var token *oauth2.Token
 	var err error
 
-	vt := strings.ToLower(vehicleConf.Type)
-	if vt == "template" {
-		vt = strings.ToLower(vehicleConf.Other["template"].(string))
+	typ := strings.ToLower(vehicleConf.Type)
+	if typ == "template" {
+		typ = strings.ToLower(vehicleConf.Other["template"].(string))
 	}
 
-	switch vt {
+	switch typ {
 	case "mercedes":
 		token, err = mercedesToken()
 	case "tronity":
