@@ -3,6 +3,7 @@ package util
 import (
 	"io"
 	"log"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -60,7 +61,9 @@ func newLogger(area string, lp int) *Logger {
 
 	level := logLevelForArea(area)
 	redactor := new(Redactor)
-	notepad := jww.NewNotepad(level, level, redactor, logstash.DefaultHandler, padded, log.Ldate|log.Ltime)
+	notepad := jww.NewNotepad(level, jww.LevelTrace,
+		redactWriter{Redactor: redactor, Writer: os.Stdout}, redactWriter{Redactor: redactor, Writer: logstash.DefaultHandler},
+		padded, log.Ldate|log.Ltime)
 
 	logger := &Logger{
 		Notepad:  notepad,
