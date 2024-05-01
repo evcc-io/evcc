@@ -134,7 +134,7 @@ jobs:
       - run: mkdir dist && touch dist/empty
 
       - name: Lint
-        uses: golangci/golangci-lint-action@v4
+        uses: golangci/golangci-lint-action@v5
         with:
           version: latest
           skip-pkg-cache: true
