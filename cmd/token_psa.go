@@ -7,13 +7,12 @@ import (
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/vehicle/psa"
 	"golang.org/x/oauth2"
 )
 
-func psaToken(vehicleConf config.Named, brand string) (*oauth2.Token, error) {
+func psaToken(brand string) (*oauth2.Token, error) {
 	var country string
 	prompt_country := &survey.Input{
 		Message: "Please enter your country code:",
