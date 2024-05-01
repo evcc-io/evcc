@@ -27,8 +27,6 @@ params:
   - name: capacity
   - name: phases
     advanced: true
-  - name: password
-    deprecated: true
   - preset: vehicle-identify
 render: |
   type: ds
