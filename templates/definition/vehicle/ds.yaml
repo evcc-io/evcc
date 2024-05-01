@@ -1,10 +1,44 @@
 template: ds
 products:
   - brand: DS
+requirements:
+  description:
+    de: |
+      Benötigt `access` und `refresh` Tokens. Diese können über den Befehl "evcc token [name]" generiert werden.
+    en: |
+      DS `access` and `refresh` tokens are required. These can be generated with command "evcc token [name]".
 params:
-  - preset: vehicle-base
+  - name: title
+  - name: icon
+    default: car
+    advanced: true
+  - name: user
+    required: true
+  - name: password
+    deprecated: true
+  - name: tokens
+    required: true
+    mask: true
+    help:
+      en: "See https://docs.evcc.io/en/docs/devices/vehicles#ds"
+      de: "Siehe https://docs.evcc.io/docs/devices/vehicles#ds"
+  - name: vin
+    example: V...
+  - name: capacity
+  - name: phases
+    advanced: true
+  - name: password
+    deprecated: true
   - preset: vehicle-identify
 render: |
   type: ds
-  {{ include "vehicle-base" . }}
+  title: {{ .title }}
+  icon: {{ .icon }}
+  user: {{ .user }}
+  tokens:
+    access: {{ .accessToken }}
+    refresh: {{ .refreshToken }}
+  capacity: {{ .capacity }}
+  phases: {{ .phases }}
+  vin: {{ .vin }}
   {{ include "vehicle-identify" . }}
