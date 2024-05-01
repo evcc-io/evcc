@@ -33,6 +33,8 @@ github.com/andig/go-powerwall v0.2.1-0.20230808194509-dd70cdb6e140 h1:C93T8vg7CN
 github.com/andig/go-powerwall v0.2.1-0.20230808194509-dd70cdb6e140/go.mod h1:Xk09mD+7RTCuuHMX5RxlqgEUeh9oZdIX0rL0qiY6l/4=
 github.com/andig/gosunspec v0.0.0-20231205122018-1daccfa17912 h1:pphS+WUa9zK0ZH/Rt2JMEaOx0qz8dDzOzbr/W7BMiXQ=
 github.com/andig/gosunspec v0.0.0-20231205122018-1daccfa17912/go.mod h1:c6P6szcR+ROkqZruOR4f6qbDKFjZX6OitPpj+yJ/r8k=
+github.com/andig/mbmd v0.0.0-20240501150732-0d3415110922 h1:Sq1tOQ7ZmvPUUuRyZ9WkCVLhuS02rwvnhqlNo4m8Xhk=
+github.com/andig/mbmd v0.0.0-20240501150732-0d3415110922/go.mod h1:MA3vKWI4KozcpWvD9dwN6CL+WqwdK9XGXT5Iv49IsUM=
 github.com/andig/mbserver v0.0.0-20230310211055-1d29cbb5820e h1:m/NTP3JWpR7M0ljLxiQU4fzR25jjhe1LDtxLMNcoNJQ=
 github.com/andig/mbserver v0.0.0-20230310211055-1d29cbb5820e/go.mod h1:4VtYzTm//oUipwvO3yh0g/udTE7pYJM+U/kyAuFDsgM=
 github.com/andig/rct v0.1.2-0.20240419102452-054695c3e7c2 h1:hAQe9ESVfjlXi8NTyy+BnYtlIseP40GemlxTKmQCq4g=
@@ -660,8 +662,6 @@ github.com/vmihailenco/msgpack/v5 v5.4.1 h1:cQriyiUvjTwOHg8QZaPihLWeRAAVoCpE00IU
 github.com/vmihailenco/msgpack/v5 v5.4.1/go.mod h1:GaZTsDaehaPpQVyxrf5mtQlH+pc21PIudVV/E3rRQok=
 github.com/vmihailenco/tagparser/v2 v2.0.0 h1:y09buUbR+b5aycVFQs/g70pqKVZNBmxwAhO7/IwNM9g=
 github.com/vmihailenco/tagparser/v2 v2.0.0/go.mod h1:Wri+At7QHww0WTrCBeu4J6bNtoV6mEfg5OIWRZA9qds=
-github.com/volkszaehler/mbmd v0.0.0-20240229124119-740c5c8ad344 h1:pxfwqAjssh3n0bz0WcR77sg7twlYdopTjTkBzsjcOSU=
-github.com/volkszaehler/mbmd v0.0.0-20240229124119-740c5c8ad344/go.mod h1:p1nUKfszvbZ+mMMsMi1vaKGA/eBAXC34VSKCk5slyG4=
 github.com/writeas/go-strip-markdown/v2 v2.1.1 h1:hAxUM21Uhznf/FnbVGiJciqzska6iLei22Ijc3q2e28=
 github.com/writeas/go-strip-markdown/v2 v2.1.1/go.mod h1:UvvgPJgn1vvN8nWuE5e7v/+qmDu3BSVnKAB6Gl7hFzA=
 github.com/xiang90/probing v0.0.0-20190116061207-43a291ad63a2/go.mod h1:UETIi67q53MR2AWcXfiuqkDkRtnGDLqkBTpCHuJHxtU=
@@ -704,8 +704,8 @@ golang.org/x/crypto v0.22.0/go.mod h1:vr6Su+7cTlO45qkww3VDJlzDn0ctJvRgYbC2NvXHt+
 golang.org/x/crypto/x509roots/fallback v0.0.0-20240404165943-d042a396a6de h1:C/4YHQ2Yo1mfk96afFDQ8hmky1PMCWwM9I96RB7GikA=
 golang.org/x/crypto/x509roots/fallback v0.0.0-20240404165943-d042a396a6de/go.mod h1:kNa9WdvYnzFwC79zRpLRMJbdEFlhyM5RPFBBZp/wWH8=
 golang.org/x/exp v0.0.0-20190121172915-509febef88a4/go.mod h1:CJ0aWSM057203Lf6IL+f9T1iT9GByDxfZKAQTCR3kQA=
-golang.org/x/exp v0.0.0-20240409090435-93d18d7e34b8 h1:ESSUROHIBHg7USnszlcdmjBEwdMj9VUvU+OPk4yl2mc=
-golang.org/x/exp v0.0.0-20240409090435-93d18d7e34b8/go.mod h1:/lliqkxwWAhPjf5oSOIJup2XcqJaw8RGS6k3TGEc7GI=
+golang.org/x/exp v0.0.0-20240416160154-fe59bbe5cc7f h1:99ci1mjWVBWwJiEKYY6jWa4d2nTQVIEhZIptnrVb1XY=
+golang.org/x/exp v0.0.0-20240416160154-fe59bbe5cc7f/go.mod h1:/lliqkxwWAhPjf5oSOIJup2XcqJaw8RGS6k3TGEc7GI=
 golang.org/x/lint v0.0.0-20181026193005-c67002cb31c3/go.mod h1:UVdnD1Gm6xHRNCYTkRU2/jEulfH38KcIWyp/GAMgvoE=
 golang.org/x/lint v0.0.0-20190227174305-5b3e6a55c961/go.mod h1:wehouNa3lNwaWXcvxsM5YxQ5yQlVC4a0KAMCusXpPoU=
 golang.org/x/lint v0.0.0-20190301231843-5614ed5bae6f/go.mod h1:UVdnD1Gm6xHRNCYTkRU2/jEulfH38KcIWyp/GAMgvoE=

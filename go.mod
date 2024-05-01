@@ -42,7 +42,7 @@ require (
 	github.com/gorilla/mux v1.8.1
 	github.com/gregdel/pushover v1.3.0
 	github.com/gregjones/httpcache v0.0.0-20190611155906-901d90724c79
-	github.com/grid-x/modbus v0.0.0-20240415045618-130d65d9f1cd
+	github.com/grid-x/modbus v0.0.0-20240429072715-02314cc902aa
 	github.com/hashicorp/go-version v1.6.0
 	github.com/hasura/go-graphql-client v0.12.1
 	github.com/influxdata/influxdb-client-go/v2 v2.13.0
@@ -91,7 +91,7 @@ require (
 	gitlab.com/bboehmke/sunny v0.16.0
 	go.uber.org/mock v0.4.0
 	golang.org/x/crypto/x509roots/fallback v0.0.0-20240404165943-d042a396a6de
-	golang.org/x/exp v0.0.0-20240409090435-93d18d7e34b8
+	golang.org/x/exp v0.0.0-20240416160154-fe59bbe5cc7f
 	golang.org/x/net v0.24.0
 	golang.org/x/oauth2 v0.19.0
 	golang.org/x/sync v0.7.0
@@ -201,3 +201,5 @@ replace github.com/spf13/viper => github.com/spf13/viper v1.18.1
 replace github.com/mlnoga/rct => github.com/andig/rct v0.1.2-0.20240419102452-054695c3e7c2
 
 replace github.com/grid-x/modbus => github.com/evcc-io/modbus v0.0.0-20240419133105-829633e7c6b0
+
+replace github.com/volkszaehler/mbmd => github.com/andig/mbmd v0.0.0-20240501150732-0d3415110922
