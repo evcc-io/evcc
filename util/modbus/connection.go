@@ -51,8 +51,8 @@ func (mb *Connection) ReadFIFOQueue(address uint16) (results []byte, err error) 
 	return mb.ModbusClient().ReadFIFOQueue(address)
 }
 
-func (c *Connection) Clone(slaveID uint8) meters.Connection {
+func (c *Connection) Clone(slaveID uint8) *Connection {
 	conn := *c
-	conn.Slave(slaveID)
+	conn.Connection = c.Connection.Clone(slaveID)
 	return &conn
 }

@@ -63,9 +63,9 @@ func NewModbusMbmdFromConfig(other map[string]interface{}) (api.Meter, error) {
 	}
 
 	// set non-default delay
-	if cc.Delay > 0 {
-		conn.Delay(cc.Delay)
-	}
+	// if cc.Delay > 0 {
+	// 	conn.Delay(cc.Delay)
+	// }
 
 	// set non-default timeout
 	if cc.Timeout > 0 {
