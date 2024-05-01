@@ -28,7 +28,7 @@ jobs:
         run: rm templates/evcc.io/.gitignore
 
       - name: Deploy to evcc.io repo
-        uses: peaceiris/actions-gh-pages@v3
+        uses: peaceiris/actions-gh-pages@v4
         with:
           personal_token: ${{ secrets.GH_TOKEN }}
           publish_dir: ./templates/evcc.io/
