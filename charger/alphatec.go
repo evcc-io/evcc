@@ -20,6 +20,7 @@ package charger
 import (
 	"encoding/binary"
 	"fmt"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -64,7 +65,7 @@ func NewAlphatec(uri, device, comset string, baudrate int, proto modbus.Protocol
 		return nil, err
 	}
 
-	// conn.Delay(20 * time.Millisecond)
+	conn.Delay(20 * time.Millisecond)
 
 	if !sponsor.IsAuthorized() {
 		return nil, api.ErrSponsorRequired

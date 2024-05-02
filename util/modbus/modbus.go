@@ -86,7 +86,12 @@ func NewConnection(uri, device, comset string, baudrate int, proto Protocol, sla
 		return nil, err
 	}
 
-	return &Connection{conn.Clone(slaveID)}, nil
+	res := &Connection{
+		Connection: conn.Clone(slaveID),
+		delay:      func() {}, // no delay
+	}
+
+	return res, nil
 }
 
 func physicalConnection(proto Protocol, cfg Settings) (meters.Connection, error) {
