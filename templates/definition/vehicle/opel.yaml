@@ -1,12 +1,42 @@
 template: opel
 products:
   - brand: Opel
+requirements:
+  description:
+    de: |
+      Benötigt `access` und `refresh` Tokens. Diese können über den Befehl "evcc token [name]" generiert werden.
+    en: |
+      Opel `access` and `refresh` tokens are required. These can be generated with command "evcc token [name]".
 params:
-  - preset: vehicle-base
-  - preset: vehicle-identify
+  - name: title
+  - name: icon
+    default: car
+    advanced: true
+  - name: user
+    required: true
+  - name: password
+    deprecated: true
+  - name: tokens
+    required: true
+    mask: true
+    help:
+      en: "See https://docs.evcc.io/en/docs/devices/vehicles#opel"
+      de: "Siehe https://docs.evcc.io/docs/devices/vehicles#opel"
   - name: vin
-    example: WP0...
+    example: V...
+  - name: capacity
+  - name: phases
+    advanced: true
+  - preset: vehicle-identify
 render: |
   type: opel
-  {{ include "vehicle-base" . }}
+  title: {{ .title }}
+  icon: {{ .icon }}
+  user: {{ .user }}
+  tokens:
+    access: {{ .accessToken }}
+    refresh: {{ .refreshToken }}
+  capacity: {{ .capacity }}
+  phases: {{ .phases }}
+  vin: {{ .vin }}
   {{ include "vehicle-identify" . }}

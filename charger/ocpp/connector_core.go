@@ -20,7 +20,7 @@ func (conn *Connector) timestampValid(t time.Time) bool {
 	}
 
 	// reject older values than we already have
-	return t.After(conn.status.Timestamp.Time)
+	return !t.Before(conn.status.Timestamp.Time)
 }
 
 func (conn *Connector) StatusNotification(request *core.StatusNotificationRequest) (*core.StatusNotificationConfirmation, error) {

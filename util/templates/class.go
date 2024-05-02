@@ -9,4 +9,5 @@ const (
 	Meter
 	Vehicle
 	Tariff
+	Circuit
 )
