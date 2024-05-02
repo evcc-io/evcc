@@ -184,6 +184,8 @@ func loadConfigFile(conf *globalConfig) error {
 }
 
 func configureMeters(static []config.Named, names ...string) error {
+	g, _ := errgroup.WithContext(context.Background())
+
 	for i, cc := range static {
 		if cc.Name == "" {
 			return fmt.Errorf("cannot create meter %d: missing name", i+1)
@@ -197,14 +199,14 @@ func configureMeters(static []config.Named, names ...string) error {
 			log.WARN.Printf("create meter %d: %v", i+1, err)
 		}
 
-		instance, err := meter.NewFromConfig(cc.Type, cc.Other)
-		if err != nil {
-			return fmt.Errorf("cannot create meter '%s': %w", cc.Name, err)
-		}
+		g.Go(func() error {
+			instance, err := meter.NewFromConfig(cc.Type, cc.Other)
+			if err != nil {
+				return fmt.Errorf("cannot create meter '%s': %w", cc.Name, err)
+			}
 
-		if err := config.Meters().Add(config.NewStaticDevice(cc, instance)); err != nil {
-			return err
-		}
+			return config.Meters().Add(config.NewStaticDevice(cc, instance))
+		})
 	}
 
 	// append devices from database
@@ -214,20 +216,20 @@ func configureMeters(static []config.Named, names ...string) error {
 	}
 
 	for _, conf := range configurable {
-		cc := conf.Named()
+		g.Go(func() error {
+			cc := conf.Named()
 
-		if len(names) > 0 && !slices.Contains(names, cc.Name) {
-			return nil
-		}
+			if len(names) > 0 && !slices.Contains(names, cc.Name) {
+				return nil
+			}
 
-		instance, err := meter.NewFromConfig(cc.Type, cc.Other)
-		if err != nil {
-			return fmt.Errorf("cannot create meter '%s': %w", cc.Name, err)
-		}
+			instance, err := meter.NewFromConfig(cc.Type, cc.Other)
+			if err != nil {
+				return fmt.Errorf("cannot create meter '%s': %w", cc.Name, err)
+			}
 
-		if err := config.Meters().Add(config.NewConfigurableDevice(conf, instance)); err != nil {
-			return err
-		}
+			return config.Meters().Add(config.NewConfigurableDevice(conf, instance))
+		})
 	}
 
 	return nil
