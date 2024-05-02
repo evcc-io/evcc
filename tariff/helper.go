@@ -2,6 +2,7 @@ package tariff
 
 import (
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/cenkalti/backoff/v4"
@@ -22,6 +23,9 @@ func backoffPermanentError(err error) error {
 		if code := se.StatusCode(); code >= 400 && code < 500 {
 			return backoff.Permanent(se)
 		}
+	}
+	if strings.HasPrefix(err.Error(), "jq: query failed") {
+		return backoff.Permanent(err)
 	}
 	return err
 }
