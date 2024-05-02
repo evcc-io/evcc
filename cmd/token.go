@@ -24,7 +24,7 @@ func init() {
 
 func runToken(cmd *cobra.Command, args []string) {
 	// load config
-	if err := loadConfigFile(&conf); err != nil {
+	if err := loadConfigFile(&conf, !cmd.Flag(flagIgnoreDatabase).Changed); err != nil {
 		log.FATAL.Fatal(err)
 	}
 

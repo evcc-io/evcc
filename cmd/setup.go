@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"os"
 	"regexp"
 	"slices"
 	"strconv"
@@ -162,7 +163,7 @@ func nameValid(name string) error {
 	return nil
 }
 
-func loadConfigFile(conf *globalConfig) error {
+func loadConfigFile(conf *globalConfig, checkDB bool) error {
 	err := viper.ReadInConfig()
 
 	if cfgFile = viper.ConfigFileUsed(); cfgFile == "" {
@@ -175,6 +176,19 @@ func loadConfigFile(conf *globalConfig) error {
 		if err = viper.UnmarshalExact(conf); err != nil {
 			err = fmt.Errorf("failed parsing config file: %w", err)
 		}
+	}
+
+	// check service database
+	if _, err := os.Stat(serviceDB); err == nil && conf.Database.Dsn != serviceDB && checkDB {
+		log.FATAL.Fatal(`
+
+Found systemd service database at "` + serviceDB + `", evcc has been invoked with database "` + conf.Database.Dsn + `".
+Running evcc with vehicles configured in evcc.yaml may lead to expiring the yaml configuration's vehicle tokens.
+This is due to the fact, that the token refresh will be saved to the local instead of the service's database.
+If you have vehicles with touchy tokens like PSA or Tesla, make sure to remove vehicle configuration from the yaml file.
+
+If you now what you're doing, you can run evcc ignoring the service database with the --ignore-db flag.
+`)
 	}
 
 	// parse log levels after reading config
