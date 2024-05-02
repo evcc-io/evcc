@@ -5,15 +5,13 @@ capabilities: ["battery-control"]
 requirements:
   description:
     de: |
-      Benutzername und Passwort sind identisch zum Web-Portal bzw. My E3/DC App. Key bzw. RSCP-Passwort wird im Hauskraftwerk unter Personalisieren/Benutzerprofil angelegt.
-      Bei aktiver Batteriesteuerung kann nicht nur eine Entladesperre gesetzt, sondern eine Leistung definiert werden, welche die Batterie im 'Halten' Batteriemodus dennoch liefert, z.B. um wenigstens noch den Hausverbrauch zu bedienen. So wird die Batterie weiterhin moderat entladen und hat damit die Möglichkeit am nächsten Tag mehr PV-Überschuß aufzunehmen.
+      Benutzername und Passwort sind identisch zum Web-Portal bzw. My E3/DC App. Key (=RSCP-Passwort) muss im Hauskraftwerk unter Personalisieren/Benutzerprofil angelegt werden.
 
-      **Achtung**: Die aktive Batteriesteuerung sollte nur verwendet werden, wenn keine weiteren Einstellungen im Smart-Power/Betriebsbereich getätigt wurden, denn bestehende Einstellungen werden überschrieben.
+      **Achtung**: Die aktive Batteriesteuerung überschreibt Einstellungen im Smart-Power/Betriebsbereich.
     en: |
-      Username and password are identical to Web Portal or My E3/DC App access. Key resp. RSCP-Password must be set in the E3/DC System at Personalize/User Profile.
-      With active battery control, not only can a discharge lock be set, but a power can be defined that the battery still delivers in 'hold' battery mode, e.g. to at least meet household consumption. This will continue to moderately discharge the battery, potentially allowing it to store more PV surplus the next day.
+      Username and password are identical to Web Portal or My E3/DC App access. Key (=RSCP-Password) must be set in the E3/DC System at Personalize/User Profile.
 
-      **Attention**: Active battery control should only be used if no other settings in Smart-Power/Operating Range have been set, as existing settings will be overwritten.
+      **Note**: Active battery control will override Smart-Power/Operating Range settings.
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
