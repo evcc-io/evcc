@@ -27,8 +27,8 @@ params:
     advanced: true
   - name: dischargelimit
     description:
-      de: Entladelimit in W (0=Entladesperre)
-      en: Discharge limit in W (0=Discharge lock)
+      de: Entladelimit in W
+      en: Discharge limit in W
     help:
       de: Limitiert die Entladeleistung im 'Halten' Batteriemodus
       en: Limits discharge power in 'Hold' battery mode
