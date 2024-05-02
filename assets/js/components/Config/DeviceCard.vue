@@ -1,5 +1,5 @@
 <template>
-	<li class="root py-2 px-4">
+	<li class="root round-box">
 		<div class="d-flex align-items-center mb-2">
 			<div class="icon me-2">
 				<slot name="icon" />
@@ -89,14 +89,9 @@ export default {
 .root {
 	display: block;
 	list-style-type: none;
-	min-height: 9rem;
-	color: var(--evcc-default-text);
 	border-radius: 1rem;
-	padding: 1rem 1rem 0.5rem;
-	background: var(--evcc-box);
-}
-.root:hover {
-	border-color: var(--evcc-gray);
+	padding: 1rem 1.5rem;
+	min-height: 8rem;
 }
 .icon:empty {
 	display: none;

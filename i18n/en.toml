@@ -41,6 +41,10 @@ power = "Power"
 range = "Range"
 soc = "SoC"
 socLimit = "Limit"
+currency = "Currency"
+gridPrice = "Grid price"
+feedinPrice = "Feed-in price"
+co2 = "Grid CO₂"
 
 [config.eebus]
 description = "Configuration that enables evcc to communicate with other EEBus devices."

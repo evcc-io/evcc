@@ -42,6 +42,9 @@
 							<template #icon>
 								<shopicon-regular-receivepayment></shopicon-regular-receivepayment>
 							</template>
+							<template #tags>
+								<DeviceTags :tags="tariffTags" />
+							</template>
 						</DeviceCard>
 						<DeviceCard
 							v-for="meter in pvMeters"
@@ -245,6 +248,7 @@ import VehicleIcon from "../components/VehicleIcon";
 import formatter from "../mixins/formatter";
 import collector from "../mixins/collector";
 import restart, { performRestart } from "../restart";
+import store from "../store";
 
 export default {
 	name: "Config",
@@ -306,6 +310,23 @@ export default {
 		},
 		selectedMeterName() {
 			return this.getMeterById(this.selectedMeterId)?.name;
+		},
+		tariffTags() {
+			const { currency, tariffGrid, tariffFeedIn, tariffCo2 } = store.state;
+			const tags = {};
+			if (currency) {
+				tags.currency = { value: currency };
+			}
+			if (tariffGrid) {
+				tags.gridPrice = { value: tariffGrid, options: { currency } };
+			}
+			if (tariffFeedIn) {
+				tags.feedinPrice = { value: tariffFeedIn * -1, options: { currency } };
+			}
+			if (tariffCo2) {
+				tags.co2 = { value: tariffCo2 };
+			}
+			return tags;
 		},
 	},
 	watch: {
