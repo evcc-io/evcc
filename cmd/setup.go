@@ -163,6 +163,22 @@ func nameValid(name string) error {
 	return nil
 }
 
+func tokenDanger(conf []config.Named) bool {
+	problematic := []string{"tesla", "psa", "opel", "citroen", "ds", "peugeot"}
+
+	for _, cc := range conf {
+		if slices.Contains(problematic, cc.Type) {
+			return true
+		}
+		template, ok := cc.Other["template"].(string)
+		if ok && cc.Type == "template" && slices.Contains(problematic, template) {
+			return true
+		}
+	}
+
+	return false
+}
+
 func loadConfigFile(conf *globalConfig, checkDB bool) error {
 	err := viper.ReadInConfig()
 
@@ -179,7 +195,7 @@ func loadConfigFile(conf *globalConfig, checkDB bool) error {
 	}
 
 	// check service database
-	if _, err := os.Stat(serviceDB); err == nil && conf.Database.Dsn != serviceDB && checkDB {
+	if _, err := os.Stat(serviceDB); err == nil && checkDB && conf.Database.Dsn != serviceDB && tokenDanger(conf.Vehicles) {
 		log.FATAL.Fatal(`
 
 Found systemd service database at "` + serviceDB + `", evcc has been invoked with database "` + conf.Database.Dsn + `".
