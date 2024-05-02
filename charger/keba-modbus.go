@@ -138,9 +138,6 @@ func NewKeba(uri string, slaveID uint8) (*Keba, error) {
 	log := util.NewLogger("keba")
 	conn.Logger(log.TRACE)
 
-	// per Keba docs
-	conn.Delay(500 * time.Millisecond)
-
 	wb := &Keba{
 		log:  log,
 		conn: conn,
