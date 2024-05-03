@@ -164,7 +164,7 @@ func (wb *Sungrow) Enable(enable bool) error {
 	_, err := wb.conn.WriteSingleRegister(sgRegRemoteControl, u)
 
 	if err == nil && enable {
-		_, err := wb.conn.WriteSingleRegister(sgRegSetOutI, wb.curr)
+		_, err = wb.conn.WriteSingleRegister(sgRegSetOutI, wb.curr)
 
 		return err
 	}
