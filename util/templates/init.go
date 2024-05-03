@@ -33,7 +33,7 @@ func init() {
 	baseTmpl = template.Must(template.ParseFS(includeFS, "includes/*.tpl"))
 
 	for _, class := range []Class{Charger, Meter, Vehicle, Tariff} {
-		loadTemplates(class)
+		templates[class] = load(class)
 	}
 }
 
@@ -65,7 +65,7 @@ func FromBytes(b []byte) (Template, error) {
 	return tmpl, err
 }
 
-func loadTemplates(class Class) {
+func load(class Class) (res []Template) {
 	err := fs.WalkDir(definition.YamlTemplates, class.String(), func(filepath string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
@@ -84,13 +84,15 @@ func loadTemplates(class Class) {
 			return fmt.Errorf("processing template '%s' failed: %w", filepath, err)
 		}
 
-		templates[class] = append(templates[class], tmpl)
+		res = append(res, tmpl)
 
 		return nil
 	})
 	if err != nil {
 		panic(err)
 	}
+
+	return res
 }
 
 // EncoderLanguage sets the template language for encoding json
