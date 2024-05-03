@@ -203,7 +203,7 @@ Running evcc with vehicles configured in evcc.yaml may lead to expiring the yaml
 This is due to the fact, that the token refresh will be saved to the local instead of the service's database.
 If you have vehicles with touchy tokens like PSA or Tesla, make sure to remove vehicle configuration from the yaml file.
 
-If you now what you're doing, you can run evcc ignoring the service database with the --ignore-db flag.
+If you know what you're doing, you can run evcc ignoring the service database with the --ignore-db flag.
 `)
 	}
 
