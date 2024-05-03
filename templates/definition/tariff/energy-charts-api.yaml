@@ -5,9 +5,11 @@ params:
   - name: bzn
     type: string
     required: true
-    help:
-      de: "Gebotszonen: AT (Austria), BE (Belgium), CH (Switzerland), CZ (Czech Republic), DE-LU (Germany, Luxembourg), DE-AT-LU (Germany, Austria, Luxembourg), DK1 (Denmark 1), DK2 (Denmark 2), FR (France), HU (Hungary), IT-NORTH (Italy North), NL (Netherlands), NO2 (Norway 2), PL (Poland), SE4 (Sweden 4), SI (Slovenia)"
-      en: "Bidding zones: DE-LU  AT (Austria), BE (Belgium), CH (Switzerland), CZ (Czech Republic), DE-LU (Germany, Luxembourg), DE-AT-LU (Germany, Austria, Luxembourg), DK1 (Denmark 1), DK2 (Denmark 2), FR (France), HU (Hungary), IT-NORTH (Italy North), NL (Netherlands), NO2 (Norway 2), PL (Poland), SE4 (Sweden 4), SI (Slovenia)"
+    validvalues: ["AT", "BE", "CH", "CZ", "DE-LU", "DE-At-LU", "DK1", "DK2", "FR", "HU", "IT-NORTH", "NL", "NO2", "PL", "SE4", "SI"]
+    default: DE-LU
+    description:
+      de: "Gebotszonen - https://api.energy-charts.info/#/prices/day_ahead_price_price_get"  
+      en: "Bidding zones - https://api.energy-charts.info/#/prices/day_ahead_price_price_get" 
   - preset: tariff-base
 render: |
   type: custom
