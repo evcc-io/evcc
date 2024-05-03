@@ -109,5 +109,4 @@ func (v *API) StatusPartial(vehicle Vehicle) (BluelinkVehicleStatus, error) {
 		}
 		return res, err
 	}
-
 }
