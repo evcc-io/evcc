@@ -32,7 +32,7 @@ func init() {
 
 	baseTmpl = template.Must(template.ParseFS(includeFS, "includes/*.tpl"))
 
-	for _, class := range ClassValues() {
+	for _, class := range []Class{Charger, Meter, Vehicle, Tariff} {
 		loadTemplates(class)
 	}
 }
@@ -66,10 +66,6 @@ func FromBytes(b []byte) (Template, error) {
 }
 
 func loadTemplates(class Class) {
-	if templates[class] != nil {
-		return
-	}
-
 	err := fs.WalkDir(definition.YamlTemplates, class.String(), func(filepath string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
@@ -92,7 +88,7 @@ func loadTemplates(class Class) {
 
 		return nil
 	})
-	if err != nil && class != Circuit {
+	if err != nil {
 		panic(err)
 	}
 }
