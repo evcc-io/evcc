@@ -266,7 +266,7 @@ selfConsumption = "Kendi tüketimi"
 charging = "Isıtılıyor…"
 cheapEnergyCharging = "Ucuz enerjiyle ısıtılıyor: {price} (limit {limit})"
 cleanEnergyCharging = "Temiz enerjiyle ısıtılıyor: {co2} (limit {limit})"
-waitForVehicle = "Hazır. Isıtıcıya bekleniyor…"
+waitForVehicle = "Hazır. Isıtıcı bekleniyor…"
 
 [main.loadpoint]
 avgPrice = "⌀ Fiyat"
