@@ -68,45 +68,45 @@ func (v *API) Vehicles() ([]Vehicle, error) {
 // StatusLatest retrieves the latest server-side status
 func (v *API) StatusLatest(vehicle Vehicle) (BluelinkVehicleStatusLatest, error) {
 	vid := vehicle.VehicleID
-	is_ccs2 := vehicle.CcuCCS2ProtocolSupport != 0
-	if is_ccs2 {
-		uri := fmt.Sprintf("%s/%s", v.baseURI, fmt.Sprintf(StatusLatestURLCCS2, vid))
+
+	if vehicle.CcuCCS2ProtocolSupport != 0 {
 		var res StatusLatestResponseCCS
-		err := v.GetJSON(uri, &res)
-		if err == nil && res.RetCode != resOK {
-			err = fmt.Errorf("unexpected response: %s", res.RetCode)
-		}
-		return res, err
-	} else {
-		uri := fmt.Sprintf("%s/%s", v.baseURI, fmt.Sprintf(StatusLatestURL, vid))
-		var res StatusLatestResponse
+		uri := fmt.Sprintf("%s/%s", v.baseURI, fmt.Sprintf(StatusLatestURLCCS2, vid))
 		err := v.GetJSON(uri, &res)
 		if err == nil && res.RetCode != resOK {
 			err = fmt.Errorf("unexpected response: %s", res.RetCode)
 		}
 		return res, err
 	}
+
+	var res StatusLatestResponse
+	uri := fmt.Sprintf("%s/%s", v.baseURI, fmt.Sprintf(StatusLatestURL, vid))
+	err := v.GetJSON(uri, &res)
+	if err == nil && res.RetCode != resOK {
+		err = fmt.Errorf("unexpected response: %s", res.RetCode)
+	}
+	return res, err
 }
 
 // StatusPartial refreshes the status
 func (v *API) StatusPartial(vehicle Vehicle) (BluelinkVehicleStatus, error) {
 	vid := vehicle.VehicleID
-	is_ccs2 := vehicle.CcuCCS2ProtocolSupport != 0
-	if is_ccs2 {
-		uri := fmt.Sprintf("%s/%s", v.baseURI, fmt.Sprintf(StatusLatestURLCCS2, vid))
+
+	if vehicle.CcuCCS2ProtocolSupport != 0 {
 		var res StatusLatestResponseCCS
-		err := v.GetJSON(uri, &res)
-		if err == nil && res.RetCode != resOK {
-			err = fmt.Errorf("unexpected response: %s", res.RetCode)
-		}
-		return res, err
-	} else {
-		uri := fmt.Sprintf("%s/%s", v.baseURI, fmt.Sprintf(StatusURL, vid))
-		var res StatusResponse
+		uri := fmt.Sprintf("%s/%s", v.baseURI, fmt.Sprintf(StatusLatestURLCCS2, vid))
 		err := v.GetJSON(uri, &res)
 		if err == nil && res.RetCode != resOK {
 			err = fmt.Errorf("unexpected response: %s", res.RetCode)
 		}
 		return res, err
 	}
+
+	var res StatusResponse
+	uri := fmt.Sprintf("%s/%s", v.baseURI, fmt.Sprintf(StatusURL, vid))
+	err := v.GetJSON(uri, &res)
+	if err == nil && res.RetCode != resOK {
+		err = fmt.Errorf("unexpected response: %s", res.RetCode)
+	}
+	return res, err
 }
