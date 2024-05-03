@@ -5,11 +5,29 @@ params:
   - name: bzn
     type: string
     required: true
-    validvalues: ["AT", "BE", "CH", "CZ", "DE-LU", "DE-AT-LU", "DK1", "DK2", "FR", "HU", "IT-NORTH", "NL", "NO2", "PL", "SE4", "SI"]
+    validvalues:
+      [
+        "AT",
+        "BE",
+        "CH",
+        "CZ",
+        "DE-LU",
+        "DE-AT-LU",
+        "DK1",
+        "DK2",
+        "FR",
+        "HU",
+        "IT-NORTH",
+        "NL",
+        "NO2",
+        "PL",
+        "SE4",
+        "SI",
+      ]
     default: DE-LU
     description:
-      de: "Gebotszonen - https://api.energy-charts.info/#/prices/day_ahead_price_price_get"  
-      en: "Bidding zones - https://api.energy-charts.info/#/prices/day_ahead_price_price_get" 
+      de: "Gebotszonen - https://api.energy-charts.info/#/prices/day_ahead_price_price_get"
+      en: "Bidding zones - https://api.energy-charts.info/#/prices/day_ahead_price_price_get"
   - preset: tariff-base
 render: |
   type: custom
