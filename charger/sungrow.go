@@ -32,27 +32,28 @@ import (
 type Sungrow struct {
 	log  *util.Logger
 	conn *modbus.Connection
+	curr uint16
 }
 
 const (
 	// input (read only)
-	sgRegPhase         = 21224 // uint16 [1: Single-phase,	3: Three-phase]
-	sgRegWorkMode      = 21262 // uint16 [0: Network, 2: Plug&Play, 6: EMS]
-	sgRegRemCtrlStatus = 21267 // uint16
-	sgRegPhasesState   = 21269 // uint16
-	sgRegTotalEnergy   = 21299 // uint32s 1Wh
-	sgRegActivePower   = 21307 // uint32s 1W
-	sgRegChargedEnergy = 21309 // uint32s 1Wh
-	sgRegStartMode     = 21313 // uint16 [1: Started by EMS, 2: Started by swiping card]
-	sgRegPowerRequest  = 21314 // uint16 [0: Enable, 1: Close]
-	sgRegPowerFlag     = 21315 // uint16 [0: Charging or power regulation is not allowed; 1: Charging or power regulation is allowed]
-	sgRegState         = 21316 // uint16
+	sgRegPhase             = 21224 // uint16 [1: Single-phase,	3: Three-phase]
+	sgRegWorkMode          = 21262 // uint16 [0: Network, 2: Plug&Play, 6: EMS]
+	sgRegRemCtrlStatus     = 21267 // uint16
+	sgRegPhaseSwitchStatus = 21269 // uint16
+	sgRegTotalEnergy       = 21299 // uint32s 1Wh
+	sgRegActivePower       = 21307 // uint32s 1W
+	sgRegChargedEnergy     = 21309 // uint32s 1Wh
+	sgRegStartMode         = 21313 // uint16 [1: Started by EMS, 2: Started by swiping card]
+	sgRegPowerRequest      = 21314 // uint16 [0: Enable, 1: Close]
+	sgRegPowerFlag         = 21315 // uint16 [0: Charging or power regulation is not allowed; 1: Charging or power regulation is allowed]
+	sgRegState             = 21316 // uint16
 
 	// holding
 	sgRegSetOutI       = 21202 // uint16 0.01A
 	sgRegPhaseSwitch   = 21203 // uint16
 	sgRegUnavailable   = 21210 // uint16
-	sgRegRemoteControl = 21211 // uint16
+	sgRegRemoteControl = 21211 // uint16 [0: Start, 1: Stop]
 )
 
 var (
@@ -94,6 +95,7 @@ func NewSungrow(uri, device, comset string, baudrate int, proto modbus.Protocol,
 	wb := &Sungrow{
 		log:  log,
 		conn: conn,
+		curr: 60,
 	}
 
 	return wb, err
@@ -122,20 +124,20 @@ func (wb *Sungrow) Status() (api.ChargeStatus, error) {
 	}
 
 	switch s := binary.BigEndian.Uint16(b); s {
-	case 1: // "Idle"
+	case 1: // Idle
 		return api.StatusA, nil
 	case
-		2, // "Standby"
-		4, // "SuspendedEVSE"
-		5, // "SuspendedEV"
-		6: // "Completed"
+		2, // Standby
+		4, // SuspendedEVSE
+		5, // SuspendedEV
+		6: // Completed
 		return api.StatusB, nil
-	case 3: // "Charging"
+	case 3: // Charging
 		return api.StatusC, nil
 	case
-		7, // "Reserved"
-		8, // "Disabled"
-		9: // "Faulted"
+		7, // Reserved
+		8, // Disabled
+		9: // Faulted
 		return api.StatusF, nil
 	default:
 		return api.StatusNone, fmt.Errorf("invalid status: %d", s)
@@ -144,12 +146,12 @@ func (wb *Sungrow) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *Sungrow) Enabled() (bool, error) {
-	b, err := wb.conn.ReadInputRegisters(sgRegRemCtrlStatus, 1)
+	b, err := wb.conn.ReadHoldingRegisters(sgRegSetOutI, 1)
 	if err != nil {
 		return false, err
 	}
 
-	return binary.BigEndian.Uint16(b) == 1, nil
+	return binary.BigEndian.Uint16(b) != 0, nil
 }
 
 // Enable implements the api.Charger interface
@@ -160,6 +162,12 @@ func (wb *Sungrow) Enable(enable bool) error {
 	}
 
 	_, err := wb.conn.WriteSingleRegister(sgRegRemoteControl, u)
+
+	if err == nil && enable {
+		_, err := wb.conn.WriteSingleRegister(sgRegSetOutI, wb.curr)
+
+		return err
+	}
 
 	return err
 }
@@ -177,7 +185,12 @@ func (wb *Sungrow) MaxCurrentMillis(current float64) error {
 		return fmt.Errorf("invalid current %.1f", current)
 	}
 
-	_, err := wb.conn.WriteSingleRegister(sgRegSetOutI, uint16(current*10))
+	curr := uint16(10 * current)
+
+	_, err := wb.conn.WriteSingleRegister(sgRegSetOutI, curr)
+	if err == nil {
+		wb.curr = curr
+	}
 
 	return err
 }
@@ -242,9 +255,37 @@ func (wb *Sungrow) Phases1p3p(phases int) error {
 		u = 1
 	}
 
-	_, err := wb.conn.WriteSingleRegister(sgRegPhaseSwitch, u)
+	enabled, err := wb.Enabled()
+	if err == nil && enabled {
+		err = wb.Enable(false)
+		if err != nil {
+			return err
+		}
+	}
+
+	_, err = wb.conn.WriteSingleRegister(sgRegPhaseSwitch, u)
+
+	if err == nil && enabled {
+		err = wb.Enable(true)
+	}
 
 	return err
+}
+
+var _ api.PhaseGetter = (*Sungrow)(nil)
+
+// GetPhases implements the api.PhaseGetter interface
+func (wb *Sungrow) GetPhases() (int, error) {
+	b, err := wb.conn.ReadInputRegisters(sgRegPhaseSwitchStatus, 1)
+	if err != nil {
+		return 0, err
+	}
+
+	if binary.BigEndian.Uint16(b) == 0 {
+		return 3, nil
+	}
+
+	return 1, nil
 }
 
 var _ api.Diagnosis = (*Sungrow)(nil)
@@ -269,7 +310,7 @@ func (wb *Sungrow) Diagnose() {
 	if b, err := wb.conn.ReadInputRegisters(sgRegPhase, 1); err == nil {
 		fmt.Printf("\tPhase:\t%d\n", binary.BigEndian.Uint16(b))
 	}
-	if b, err := wb.conn.ReadInputRegisters(sgRegPhasesState, 1); err == nil {
+	if b, err := wb.conn.ReadInputRegisters(sgRegPhaseSwitchStatus, 1); err == nil {
 		fmt.Printf("\tPhasesState:\t%d\n", binary.BigEndian.Uint16(b))
 	}
 	if b, err := wb.conn.ReadInputRegisters(sgRegStartMode, 1); err == nil {
