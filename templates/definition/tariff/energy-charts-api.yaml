@@ -1,0 +1,18 @@
+template: energy-charts-api
+products:
+  - brand: Fraunhofer ISE
+params:
+  - name: bzn
+    type: string
+    required: true
+    help:
+      de: "Gebotszonen: AT (Austria), BE (Belgium), CH (Switzerland), CZ (Czech Republic), DE-LU (Germany, Luxembourg), DE-AT-LU (Germany, Austria, Luxembourg), DK1 (Denmark 1), DK2 (Denmark 2), FR (France), HU (Hungary), IT-NORTH (Italy North), NL (Netherlands), NO2 (Norway 2), PL (Poland), SE4 (Sweden 4), SI (Slovenia)"
+      en: "Bidding zones: DE-LU  AT (Austria), BE (Belgium), CH (Switzerland), CZ (Czech Republic), DE-LU (Germany, Luxembourg), DE-AT-LU (Germany, Austria, Luxembourg), DK1 (Denmark 1), DK2 (Denmark 2), FR (France), HU (Hungary), IT-NORTH (Italy North), NL (Netherlands), NO2 (Norway 2), PL (Poland), SE4 (Sweden 4), SI (Slovenia)"
+  - preset: tariff-base
+render: |
+  type: custom
+  {{ include "tariff-base" . }}
+  forecast:
+    source: http
+    uri: https://api.energy-charts.info/price?bzn={{ .bzn }}
+    jq: '[.unix_seconds, .price] | transpose | map({ "start": (.[0] | todate), "end": ((.[0]+3600) | todate), "price": (.[1]/1000)}) | tostring'
