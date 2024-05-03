@@ -5,7 +5,6 @@ import (
 	"embed"
 	"fmt"
 	"io/fs"
-	"path"
 	"slices"
 	"sync"
 	"text/template"
@@ -71,7 +70,7 @@ func loadTemplates(class Class) {
 		return
 	}
 
-	err := fs.WalkDir(definition.YamlTemplates, ".", func(filepath string, d fs.DirEntry, err error) error {
+	err := fs.WalkDir(definition.YamlTemplates, class.String(), func(filepath string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
@@ -89,18 +88,11 @@ func loadTemplates(class Class) {
 			return fmt.Errorf("processing template '%s' failed: %w", filepath, err)
 		}
 
-		tplClass, err := ClassString(path.Dir(filepath))
-		if err != nil {
-			return fmt.Errorf("invalid template class: '%s'", err)
-		}
-
-		if tplClass == class {
-			templates[class] = append(templates[class], tmpl)
-		}
+		templates[class] = append(templates[class], tmpl)
 
 		return nil
 	})
-	if err != nil {
+	if err != nil && class != Circuit {
 		panic(err)
 	}
 }
