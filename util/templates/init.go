@@ -89,12 +89,14 @@ func loadTemplates(class Class) {
 			return fmt.Errorf("processing template '%s' failed: %w", filepath, err)
 		}
 
-		class, err := ClassString(path.Dir(filepath))
+		tplClass, err := ClassString(path.Dir(filepath))
 		if err != nil {
 			return fmt.Errorf("invalid template class: '%s'", err)
 		}
 
-		templates[class] = append(templates[class], tmpl)
+		if tplClass == class {
+			templates[class] = append(templates[class], tmpl)
+		}
 
 		return nil
 	})
