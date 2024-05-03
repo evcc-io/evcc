@@ -165,7 +165,6 @@ func (wb *Sungrow) Enable(enable bool) error {
 
 	if err == nil && enable {
 		_, err = wb.conn.WriteSingleRegister(sgRegSetOutI, wb.curr)
-		return err
 	}
 
 	return err
