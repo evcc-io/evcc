@@ -255,8 +255,7 @@ func (wb *Sungrow) Phases1p3p(phases int) error {
 
 	enabled, err := wb.Enabled()
 	if err == nil && enabled {
-		err = wb.Enable(false)
-		if err != nil {
+		if err = wb.Enable(false); err != nil {
 			return err
 		}
 	}
