@@ -118,7 +118,7 @@ func (d StatusResponse) SoC() (float64, error) {
 
 func (d StatusResponse) Status() (api.ChargeStatus, error) {
 	if d.ResMsg.EvStatus != nil {
-		var status = api.StatusA
+		status := api.StatusA
 		if d.ResMsg.EvStatus.BatteryPlugin > 0 || d.ResMsg.EvStatus.ChargePortDoorOpenStatus == 1 {
 			status = api.StatusB
 		}
@@ -126,21 +126,19 @@ func (d StatusResponse) Status() (api.ChargeStatus, error) {
 			status = api.StatusC
 		}
 		return status, nil
-	} else {
-		return api.StatusNone, api.ErrNotAvailable
 	}
+
+	return api.StatusNone, api.ErrNotAvailable
 }
 
 func (d StatusResponse) FinishTime() (time.Time, error) {
 	if d.ResMsg.EvStatus != nil {
 		remaining := d.ResMsg.EvStatus.RemainTime2.Atc.Value
 
-		if remaining == 0 {
-			return time.Time{}, api.ErrNotAvailable
+		if remaining != 0 {
+			ts, err := d.ResMsg.Updated()
+			return ts.Add(time.Duration(remaining) * time.Minute), err
 		}
-
-		ts, err := d.ResMsg.Updated()
-		return ts.Add(time.Duration(remaining) * time.Minute), err
 	}
 
 	return time.Time{}, api.ErrNotAvailable
@@ -275,11 +273,10 @@ type VehicleStatusCCS struct {
 
 func (d StatusLatestResponseCCS) Updated() (time.Time, error) {
 	epoch, err := strconv.ParseInt(d.ResMsg.LastUpdateTime, 10, 64)
-	if err == nil {
-		updated := time.UnixMilli(epoch)
-		return updated, err
+	if err != nil {
+		return time.Now(), err
 	}
-	return time.Now(), err
+	return time.UnixMilli(epoch), nil
 }
 
 func (d StatusLatestResponseCCS) SoC() (float64, error) {
@@ -311,9 +308,9 @@ func (d StatusLatestResponseCCS) FinishTime() (time.Time, error) {
 		}
 
 		ts, err := d.Updated()
-
 		return ts.Add(time.Duration(remaining) * time.Minute), err
 	}
+
 	return time.Now(), api.ErrNotAvailable
 }
 
