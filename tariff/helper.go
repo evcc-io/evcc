@@ -24,7 +24,7 @@ func backoffPermanentError(err error) error {
 			return backoff.Permanent(se)
 		}
 	}
-	if strings.HasPrefix(err.Error(), "jq: query failed") {
+	if err != nil && strings.HasPrefix(err.Error(), "jq: query failed") {
 		return backoff.Permanent(err)
 	}
 	return err
