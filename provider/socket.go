@@ -2,9 +2,11 @@ package provider
 
 import (
 	"context"
+	"fmt"
 	"math"
 	"net/http"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -86,20 +88,25 @@ func NewSocketProviderFromConfig(other map[string]interface{}) (Provider, error)
 		return nil, err
 	}
 
-	go p.listen()
+	errC := make(chan error, 1)
+	go p.run(errC)
 
 	if cc.Timeout > 0 {
 		select {
 		case <-p.val.Done():
 		case <-time.After(cc.Timeout):
 			return nil, api.ErrTimeout
+		case err := <-errC:
+			return nil, err
 		}
 	}
 
 	return p, nil
 }
 
-func (p *Socket) listen() {
+func (p *Socket) run(errC chan error) {
+	var once sync.Once
+
 	headers := make(http.Header)
 	for k, v := range p.headers {
 		headers.Set(k, v)
@@ -115,6 +122,9 @@ func (p *Socket) listen() {
 		cancel()
 
 		if err != nil {
+			// handle initial connection error immediately
+			once.Do(func() { errC <- err })
+
 			p.log.ERROR.Println(err)
 			time.Sleep(retryDelay)
 			continue
@@ -154,6 +164,7 @@ func (p *Socket) FloatGetter() (func() (float64, error), error) {
 	g, err := p.StringGetter()
 
 	return func() (float64, error) {
+		fmt.Println("FloatGetter")
 		s, err := g()
 		if err != nil {
 			return 0, err
