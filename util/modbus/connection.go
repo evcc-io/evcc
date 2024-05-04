@@ -21,12 +21,10 @@ func (c *Connection) Delay(delay time.Duration) {
 	c.delay = func() { time.Sleep(delay) }
 }
 
-func (c *Connection) prepare() {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	c.delay()
-	c.logger.Logger(c.logical)
+func (c *Connection) Clone(slaveID uint8) *Connection {
+	return &Connection{
+		Connection: c.Connection.Clone(slaveID),
+	}
 }
 
 func (c *Connection) Logger(l modbus.Logger) {
@@ -34,6 +32,14 @@ func (c *Connection) Logger(l modbus.Logger) {
 	defer c.mu.Unlock()
 
 	c.logical = l
+}
+
+func (c *Connection) prepare() {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	c.delay()
+	c.logger.Logger(c.logical)
 }
 
 func (c *Connection) ReadCoils(address, quantity uint16) ([]byte, error) {
