@@ -27,6 +27,15 @@ func (c *Connection) Clone(slaveID uint8) *Connection {
 	}
 }
 
+// TODO
+func (c *Connection) ConnectDelay(_ time.Duration) {
+}
+
+// TODO
+func (c *Connection) Timeout(_ time.Duration) time.Duration {
+	return 0
+}
+
 func (c *Connection) Logger(l modbus.Logger) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
