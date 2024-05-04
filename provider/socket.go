@@ -2,7 +2,6 @@ package provider
 
 import (
 	"context"
-	"fmt"
 	"math"
 	"net/http"
 	"strconv"
@@ -164,7 +163,6 @@ func (p *Socket) FloatGetter() (func() (float64, error), error) {
 	g, err := p.StringGetter()
 
 	return func() (float64, error) {
-		fmt.Println("FloatGetter")
 		s, err := g()
 		if err != nil {
 			return 0, err
