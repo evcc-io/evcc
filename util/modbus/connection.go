@@ -14,16 +14,17 @@ type Connection struct {
 	mu      sync.Mutex
 	logger  *logger
 	logical meters.Logger
-	delay   func()
+	delay   time.Duration
 }
 
 func (c *Connection) Delay(delay time.Duration) {
-	c.delay = func() { time.Sleep(delay) }
+	c.delay = delay
 }
 
 func (c *Connection) Clone(slaveID uint8) *Connection {
 	return &Connection{
 		Connection: c.Connection.Clone(slaveID),
+		logger:     c.logger,
 	}
 }
 
@@ -47,7 +48,7 @@ func (c *Connection) prepare() {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	c.delay()
+	time.Sleep(c.delay)
 	c.logger.Logger(c.logical)
 }
 
