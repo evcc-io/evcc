@@ -202,6 +202,6 @@ require (
 
 replace github.com/spf13/viper => github.com/spf13/viper v1.18.1
 
-replace github.com/grid-x/modbus => github.com/evcc-io/modbus v0.0.0-20240419133105-829633e7c6b0
+replace github.com/grid-x/modbus => github.com/evcc-io/modbus v0.0.0-20240503125516-9fd99fe0e438
 
 replace github.com/volkszaehler/mbmd => github.com/andig/mbmd v0.0.0-20240501153638-fe73629adf13
