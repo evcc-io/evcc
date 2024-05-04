@@ -1,0 +1,27 @@
+template: ngeso
+products:
+  - brand: National Grid ESO
+requirements:
+  description:
+    de: "Nur für Großbritannien verfügbar."
+    en: "Only available for the United Kingdom."
+group: co2
+params:
+  - name: region
+    type: string
+    required: false
+    example: 1
+    help:
+      de: "Ungenauer als die Verwendung eines Postleitzahl. Siehe https://carbon-intensity.github.io/api-definitions/#region-list"
+      en: "Coarser than using a postcode. See https://carbon-intensity.github.io/api-definitions/#region-list"
+  - name: postalcode
+    type: string
+    example: "SW1"
+    required: false
+    help:
+      de: "Postleitzahl z.B. RG41 oder SW1 oder TF8. Nicht die vollständige Postleitzahl, nur die ersten Stellen."
+      en: "Outward postcode i.e. RG41 or SW1 or TF8. Do not include full postcode, outward postcode only."
+render: |
+  type: ngeso
+  region: {{ .region }}
+  postalcode: {{ .postalcode }}

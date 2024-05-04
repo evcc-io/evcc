@@ -1,6 +1,11 @@
 template: allinpower
 products:
-  - brand: All in Power (NL)
+  - brand: All in Power
+requirements:
+  description:
+    de: "Nur für die Niederlande verfügbar."
+    en: "Only available for the Netherlands."
+group: price
 params:
   - preset: tariff-base
 render: |
