@@ -107,9 +107,12 @@ func (m *MQTT) publishComplex(topic string, retained bool, payload interface{}) 
 		}
 
 	case reflect.Pointer:
-		if reflect.ValueOf(payload).IsNil() {
-			payload = nil
+		if !reflect.ValueOf(payload).IsNil() {
+			m.publishComplex(topic, retained, reflect.Indirect(reflect.ValueOf(payload)).Interface())
+			return
 		}
+
+		payload = nil
 		fallthrough
 
 	default:
