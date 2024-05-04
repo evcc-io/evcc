@@ -1,6 +1,17 @@
 template: e3dc-rscp
 products:
   - brand: E3/DC
+capabilities: ["battery-control"]
+requirements:
+  description:
+    de: |
+      Benutzername und Passwort sind identisch zum Web-Portal bzw. My E3/DC App. Key (=RSCP-Passwort) muss im Hauskraftwerk unter Personalisieren/Benutzerprofil angelegt werden.
+
+      **Achtung**: Die aktive Batteriesteuerung überschreibt Einstellungen im Smart-Power/Betriebsbereich.
+    en: |
+      Username and password are identical to Web Portal or My E3/DC App access. Key (=RSCP-Password) must be set in the E3/DC System at Personalize/User Profile.
+
+      **Note**: Active battery control will override Smart-Power/Operating Range settings.
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]

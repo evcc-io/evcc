@@ -129,7 +129,8 @@ func updateSessionHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if txn := db.Instance.Table("sessions").Where("id = ?", id).Updates(&session); txn.Error != nil {
+	// https://github.com/evcc-io/evcc/issues/13738#issuecomment-2094070362
+	if txn := db.Instance.Table("sessions").Where("id = ?", id).Select("vehicle").Updates(&session); txn.Error != nil {
 		jsonError(w, http.StatusBadRequest, txn.Error)
 		return
 	}
