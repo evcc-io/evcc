@@ -64,7 +64,7 @@ type attributes struct {
 	ExternalTemperature float64 `json:"externalTemperature"`
 	HvacStatus          string  `json:"hvacStatus"`
 	// cockpit
-	TotalMileage float64 `json:"totalMileage"`
+	TotalMileage *float64 `json:"totalMileage"`
 	// position
 	Latitude  float64 `json:"gpsLatitude"`
 	Longitude float64 `json:"gpsLongitude"`
