@@ -89,6 +89,7 @@ func NewConnection(uri, device, comset string, baudrate int, proto Protocol, sla
 	res := &Connection{
 		Connection: conn.Clone(slaveID),
 		delay:      func() {}, // no delay
+		logger:     new(logger),
 	}
 
 	return res, nil
