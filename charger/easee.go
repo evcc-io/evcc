@@ -77,7 +77,7 @@ func init() {
 	registry.Add("easee", NewEaseeFromConfig)
 }
 
-// NewEaseeFromConfig creates a go-e charger from generic config
+// NewEaseeFromConfig creates a Easee charger from generic config
 func NewEaseeFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
 		User      string
