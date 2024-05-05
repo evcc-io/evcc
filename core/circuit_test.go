@@ -11,8 +11,10 @@ import (
 )
 
 type circuitTest struct {
-	p, c1, c2     float64
-	cur, req, res float64
+	// current values for parent, circuit 1, circuit 2
+	p, c1, c2 float64
+	// old/new demand values and allowed result
+	old, new, res float64
 }
 
 func circuitTests() []circuitTest {
@@ -26,6 +28,8 @@ func circuitTests() []circuitTest {
 		{0, 1, 0, 0, 0, 0}, // =
 		{0, 1, 0, 0, 1, 0}, // +
 		{0, 1, 0, 0, 2, 0}, // +
+		{0, 1, 0, 1, 1, 1}, // =
+		{0, 1, 0, 2, 1, 1}, // -
 
 		// c1 overloaded
 		{0, 2, 0, 0, 0, 0}, // =
@@ -39,6 +43,8 @@ func circuitTests() []circuitTest {
 		{1, 0, 0, 0, 0, 0}, // =
 		{1, 0, 0, 0, 1, 0}, // +
 		{1, 0, 0, 0, 2, 0}, // +
+		{1, 0, 0, 1, 1, 1}, // =
+		{1, 0, 0, 2, 1, 1}, // -
 
 		// p overloaded
 		{2, 0, 0, 0, 0, 0}, // =
@@ -46,6 +52,7 @@ func circuitTests() []circuitTest {
 		{2, 0, 0, 1, 1, 0}, // =
 		{2, 0, 0, 2, 2, 1}, // =
 		{2, 0, 0, 2, 3, 1}, // +
+		// {2, 0, 0, 2, 1, 1}, // -
 	}
 }
 
@@ -75,7 +82,7 @@ func TestCircuitPower(t *testing.T) {
 		cm2.EXPECT().CurrentPower().Return(tc.c2, nil)
 		require.NoError(t, pc.Update(nil))
 
-		assert.Equal(t, tc.res, c1.ValidatePower(tc.cur, tc.req), tc)
+		assert.Equal(t, tc.res, c1.ValidatePower(tc.old, tc.new), tc)
 
 		ctrl.Finish()
 	}
@@ -117,7 +124,7 @@ func TestCircuitCurrents(t *testing.T) {
 		cm2.MockPhaseCurrents.EXPECT().Currents().Return(tc.c2, tc.c2, tc.c2, nil)
 		require.NoError(t, pc.Update(nil))
 
-		assert.Equal(t, tc.res, c1.ValidateCurrent(tc.cur, tc.req), tc)
+		assert.Equal(t, tc.res, c1.ValidateCurrent(tc.old, tc.new), tc)
 
 		ctrl.Finish()
 	}
