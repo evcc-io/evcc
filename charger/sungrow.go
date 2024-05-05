@@ -262,10 +262,6 @@ func (wb *Sungrow) Phases1p3p(phases int) error {
 
 	_, err = wb.conn.WriteSingleRegister(sgRegPhaseSwitch, u)
 
-	if err == nil && enabled {
-		err = wb.Enable(true)
-	}
-
 	return err
 }
 
