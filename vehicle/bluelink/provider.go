@@ -30,7 +30,7 @@ func NewProvider(api *API, vehicle Vehicle, expiry, cache time.Duration) *Provid
 
 	v.statusG = provider.Cached(func() (BluelinkVehicleStatus, error) {
 		return v.status(
-			func() (BluelinkVehicleStatus, error) { return api.StatusPartial(vehicle) },
+			func() (BluelinkVehicleStatusLatest, error) { return api.StatusLatest(vehicle) },
 		)
 	}, cache)
 
@@ -42,20 +42,20 @@ func NewProvider(api *API, vehicle Vehicle, expiry, cache time.Duration) *Provid
 }
 
 // status wraps the api status call and adds status refresh
-func (v *Provider) status(statusG func() (BluelinkVehicleStatus, error)) (BluelinkVehicleStatus, error) {
+func (v *Provider) status(statusG func() (BluelinkVehicleStatusLatest, error)) (BluelinkVehicleStatus, error) {
 	res, err := statusG()
 
 	var ts time.Time
 	if err == nil {
-		ts, err = res.Updated()
+		ts, err = res.BluelinkVehicleStatus().Updated()
 		if err != nil {
-			return res, err
+			return res.BluelinkVehicleStatus(), err
 		}
 
 		// return the current value
 		if time.Since(ts) <= v.expiry {
 			v.refreshTime = time.Time{}
-			return res, nil
+			return res.BluelinkVehicleStatus(), nil
 		}
 	}
 
