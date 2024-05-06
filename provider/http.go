@@ -6,8 +6,8 @@ import (
 	"math"
 	"strconv"
 	"strings"
-	"time"
 	"text/template"
+	"time"
 
 	"github.com/evcc-io/evcc/provider/pipeline"
 	"github.com/evcc-io/evcc/util"
