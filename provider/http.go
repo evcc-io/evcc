@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"text/template"
 
 	"github.com/evcc-io/evcc/provider/pipeline"
 	"github.com/evcc-io/evcc/util"
