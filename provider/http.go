@@ -154,6 +154,7 @@ func (p *HTTP) WithAuth(typ, user, password string) (*HTTP, error) {
 	return p, nil
 }
 
+/*
 // request executes the configured request or returns the cached value
 func (p *HTTP) request(url string, body ...string) ([]byte, error) {
 	if time.Since(p.updated) >= p.cache {
@@ -164,6 +165,38 @@ func (p *HTTP) request(url string, body ...string) ([]byte, error) {
 
 		// empty method becomes GET
 		req, err := request.New(strings.ToUpper(p.method), url, b, p.headers)
+		if err != nil {
+			return []byte{}, err
+		}
+
+		p.val, p.err = p.DoBody(req)
+		p.updated = time.Now()
+	}
+
+	return p.val, p.err
+}
+*/
+
+// request executes the configured request or returns the cached value
+func (p *HTTP) request(url string, body ...string) ([]byte, error) {
+	if time.Since(p.updated) >= p.cache {
+		var b io.Reader
+		if len(body) == 1 {
+			b = strings.NewReader(body[0])
+		}
+
+		tmpl, err := template.New("url").Parse(url)
+		if err != nil {
+			return nil, err
+		}
+
+		builder := new(strings.Builder)
+		if err := tmpl.Execute(builder, nil); err != nil {
+			return nil, err
+		}
+
+		// empty method becomes GET
+		req, err := request.New(strings.ToUpper(p.method), builder.String(), b, p.headers)
 		if err != nil {
 			return []byte{}, err
 		}
