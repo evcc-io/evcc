@@ -2,7 +2,6 @@ package core
 
 import (
 	"fmt"
-	"math"
 	"sync"
 
 	"github.com/evcc-io/evcc/api"
@@ -176,16 +175,14 @@ func (c *Circuit) updateLoadpoints(loadpoints []api.CircuitLoad) {
 
 func (c *Circuit) updateMeters() error {
 	if f, err := c.meter.CurrentPower(); err == nil {
-		// TODO handle negative powers
-		c.power = math.Abs(f)
+		c.power = f
 	} else {
 		return fmt.Errorf("circuit power: %w", err)
 	}
 
 	if phaseMeter, ok := c.meter.(api.PhaseCurrents); ok {
 		if l1, l2, l3, err := phaseMeter.Currents(); err == nil {
-			// TODO handle negative currents
-			c.current = max(math.Abs(l1), math.Abs(l2), math.Abs(l3))
+			c.current = max(l1, l2, l3)
 		} else {
 			return fmt.Errorf("circuit currents: %w", err)
 		}
@@ -246,8 +243,9 @@ func (c *Circuit) ValidatePower(old, new float64) float64 {
 	delta := max(0, new-old)
 
 	if c.maxPower != 0 {
-		if c.power+delta > c.maxPower {
-			new = max(0, new-(c.power+delta-c.maxPower))
+		potential := c.maxPower - c.power
+		if delta > potential {
+			new = max(0, old+potential)
 			c.log.DEBUG.Printf("validate power: %gW -> %gW <= %gW at %gW: capped at %gW", old, new, c.maxPower, c.power, new)
 		} else {
 			c.log.TRACE.Printf("validate power: %gW -> %gW <= %gW at %gW: ok", old, new, c.maxPower, c.power)
@@ -270,8 +268,9 @@ func (c *Circuit) ValidateCurrent(old, new float64) float64 {
 	delta := max(0, new-old)
 
 	if c.maxCurrent != 0 {
-		if c.current+delta > c.maxCurrent {
-			new = max(0, new-(c.current+delta-c.maxCurrent))
+		potential := c.maxCurrent - c.current
+		if delta > potential {
+			new = max(0, old+potential)
 			c.log.DEBUG.Printf("validate current: %gA -> %gA <= %gA at %gA: capped at %gA", old, new, c.maxCurrent, c.current, new)
 		} else {
 			c.log.TRACE.Printf("validate current: %gA -> %gA <= %gA at %gA: ok", old, new, c.maxCurrent, c.current)
