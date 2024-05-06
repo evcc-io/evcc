@@ -1,2 +1,539 @@
 [batterySettings]
 batteryLevel = "Batarya seviyesi"
+capacity = "{total} içinde {energy}"
+control = "Pil kontrolü"
+discharge = "Hızlı modda ve planlanan şarjda deşarjı önleyin."
+disclaimerHint = "Not:"
+disclaimerText = "Bu ayarlar yalnızca güneş enerjisi modunu etkiler. Şarj davranışı buna göre ayarlanır."
+legendBottomName = "ev önceliği"
+legendBottomSubline = "şarj için kullanılmaz"
+legendMiddleName = "önce araç"
+legendMiddleSubline = "ev ikincil"
+legendTitle = "Güneş enerjisi nasıl kullanılmalıdır?"
+legendTopAutostart = "otomatik başlar"
+legendTopName = "batarya destekli şarj"
+legendTopSubline = "kesintisiz"
+modalTitle = "Batarya Ayarları"
+
+[batterySettings.bufferStart]
+above = "{soc} üzerinde olduğunda"
+full = "{soc} iken"
+never = "yalnızca yeterli fazlalık varsa"
+
+[config]
+
+[config.battery]
+titleAdd = "Batarya Ölçer Ekle"
+titleEdit = "Batarya Ölçeri Düzenle"
+
+[config.deviceValue]
+capacity = "Kapasite"
+chargeStatus = "Durum"
+chargedEnergy = "Şarj Edildi"
+current = "Akım"
+enabled = "Etkin"
+energy = "Enerji"
+odometer = "Kilometre Sayacı"
+phaseCurrents = "Faz Akımı L1..L3"
+phasePowers = "Faz Gücü L1..L3"
+phaseVoltages = "Faz Voltajı L1..L3"
+power = "Güç"
+range = "Menzil"
+soc = "SoC"
+socLimit = "Limit"
+
+[config.form]
+example = "Örnek"
+optional = "opsiyonel"
+
+[config.general]
+cancel = "İptal"
+save = "Kaydet"
+
+[config.grid]
+titleAdd = "Şebeke Ölçer Ekle"
+titleEdit = "Şebeke Ölçeri Düzenle"
+
+[config.main]
+addLoadpoint = "Şarj noktası ekle"
+addPvBattery = "Güneş enerjisi veya pil ekle"
+addVehicle = "Araç ekle"
+edit = "düzenle"
+title = "Konfigürasyon"
+unconfigured = "yapılandırılmadı"
+vehicles = "Araçlarım"
+yaml = "evcc.yaml içerisinde yapılandırıldı. Kullanıcı arayüzünde düzenlenemez."
+
+[config.meter]
+cancel = "İptal"
+delete = "Sil"
+save = "Kaydet"
+template = "Üretici"
+titleChoice = "Ne Eklemek İstersin:"
+validateSave = "Doğrula ve kaydet"
+
+[config.pv]
+titleAdd = "Helyograf Ekle"
+titleEdit = "Helyografı Düzenle"
+
+[config.section]
+general = "Genel"
+system = "Sistem"
+
+[config.system]
+logs = "Loglar"
+restart = "Yeniden Başlat"
+restartRequiredDescription = "Değişikliklerin yansıması için yeniden başlatma gereklidir."
+restartRequiredMessage = "Yapılandırma ayarları değiştirildi."
+restartingDescription = "Lütfen bekleyin…"
+restartingMessage = "Evcc yeniden başlatılıyor…"
+
+[config.title]
+description = "Ana ekranda ve tarayıcı sekmesinde görüntülenir."
+label = "Başlık"
+title = "Başlığı Düzenle"
+
+[config.validation]
+failed = "başarısız"
+label = "Durum"
+running = "doğrulanıyor..."
+success = "başarılı"
+unknown = "bilinmiyor"
+validate = "doğrula"
+
+[config.vehicle]
+cancel = "İptal"
+delete = "Sil"
+generic = "Diğer entegrasyonlar"
+offline = "Genel Araç"
+online = "Çevrimiçi API'ye sahip araçlar"
+save = "Kaydet"
+scooter = "Scooter"
+template = "Üretici"
+titleAdd = "Araç Ekle"
+titleEdit = "Aracı Düzenle"
+validateSave = "Doğrula ve kaydet"
+
+[footer]
+
+[footer.community]
+greenEnergy = "Güneş Enerjisi"
+greenEnergySub1 = "evcc ile şarj edildi"
+greenEnergySub2 = "Ekim 2022'den beri"
+greenShare = "Güneş enerjisi paylaşımı"
+greenShareSub1 = "tarafından sağlanan enerji"
+greenShareSub2 = "güneş enerjisi ve batarya deposu"
+power = "Şarj gücü"
+powerSub1 = "{activeClients}/{totalClients} katılımcı"
+powerSub2 = "şarj oluyor..."
+tabTitle = "Canlı topluluk"
+
+[footer.savings]
+co2Saved = "{value} kg CO₂ tasarruf edildi"
+co2Title = "CO₂ Emisyonu"
+configurePriceCo2 = "Fiyat ve CO₂ ayarlarını yapılandırmayı öğrenin."
+footerLong = "{percent}% güneş enerjisi"
+footerShort = "{percent}% güneş enerjisi"
+modalTitle = "Tasarruf"
+moneySaved = "{value} tasarruf edildi"
+percentGrid = "{grid} kWh şebeke"
+percentSelf = "{self} kWh kendi tüketimi"
+percentTitle = "Güneş Enerjisi Kullanımı"
+periodLabel = "Dönem"
+priceTitle = "Fiyat"
+referenceGrid = "Şebeke"
+referenceLabel = "Referans"
+tabTitle = "Tasarruf"
+
+[footer.savings.period]
+30d = "son 30 gün"
+365d = "son 365 gün"
+total = "toplam"
+
+[footer.sponsor]
+becomeSponsor = "Sponsor ol"
+confetti = "Konfeti için hazır mısınız?"
+confettiPromise = "Stickerlar ve dijital konfeti alırsınız."
+sticker = "… ya da evcc stickerlarımız?"
+supportUs = "Misyonumuz güneş enerjisini norm haline getirmektir. Evcc'ye değer verdiğiniz kadar ödeme yaparak yardımcı olun."
+thanks = "Teşekkürler {sponsor}! Katkınız evcc'yi daha iyi yapmamıza yardımcı oluyor."
+titleNoSponsor = "Bizi destekleyin"
+titleSponsor = "Sponsorsunuz"
+
+[footer.telemetry]
+optIn = "Telemetriye katıl"
+optInMoreDetails = "Daha fazla bilgi {0}."
+optInMoreDetailsLink = "buradan"
+optInSponsorship = "Sponsorluk gerekli"
+
+[footer.version]
+availableLong = "yeni versiyon mevcut"
+modalCancel = "İptal"
+modalDownload = "İndir"
+modalInstalledVersion = "Yüklü versiyon"
+modalNoReleaseNotes = "Yeni sürüm hakkında bilgi bulunamadı. Daha fazla bilgi:"
+modalTitle = "Yeni sürüm mevcut"
+modalUpdate = "Yükle"
+modalUpdateNow = "Şimdi yükle"
+modalUpdateStarted = "Yeni sürüm evcc başlatılıyor…"
+modalUpdateStatusStart = "Yükleme başladı:"
+
+[header]
+about = "Hakkında"
+blog = "Blog"
+docs = "Dökümanlar"
+github = "GitHub"
+login = "Araç Girişleri"
+logout = "Çıkış"
+nativeSettings = "Sunucu Değiştir"
+needHelp = "Yardıma mı ihtiyacınız var?"
+sessions = "Şarj Oturumları"
+
+[help]
+discussionsButton = "GitHub tartışmaları"
+documentationButton = "Dökümantasyon"
+issueButton = "Hata bildir"
+issueDescription = "Tuhaf veya yanlış bir durum mu buldunuz?"
+logsButton = "Logları görüntüle"
+logsDescription = "Hatalar için logları görüntüleyin."
+modalTitle = "Yardıma mı ihtiyacınız var?"
+primaryActions = "Bir şeyler beklediğiniz gibi çalışmıyor mu? Yardım alabileceğiniz iyi yerler bunlardır."
+restartButton = "Yeniden Başlat"
+restartDescription = "Kapatıp açmayı denediniz mi?"
+secondaryActions = "Sorununuzu hala çözemediniz mi? İşte daha fazla müdahaleci seçenekler."
+
+[help.restart]
+cancel = "İptal"
+confirm = "Evet, yeniden başlat!"
+description = "Normal koşullarda yeniden başlatma gerekli olmamalıdır. Eğer düzenli olarak evcc'yi yeniden başlatmanız gerekiyorsa, bir hata bildirimi yapmayı düşünün."
+disclaimer = "Not: evcc sonlandırılacak ve işletim sistemi yeniden başlatma işlemini gerçekleştirecektir."
+modalTitle = "Yeniden başlatmak istediğinizden emin misiniz?"
+
+[log]
+areaLabel = "Bölgeye göre filtrele"
+areas = "Tüm bölgeler"
+download = "Bütün logları indir"
+levelLabel = "Log seviyesine göre filtrele"
+noResults = "Sonuç yok"
+search = "Ara"
+showAll = "Tümünü göster"
+title = "Loglar"
+update = "Otomatik güncelle"
+
+[loginModal]
+cancel = "İptal"
+error = "Giriş başarısız: "
+invalid = "Hatalı giriş"
+login = "Giriş yap"
+password = "Şifre"
+reset = "Şifreyi sıfırla?"
+title = "Kimlik Doğrulama"
+
+[main]
+vehicles = "Park"
+
+[main.chargingPlan]
+active = "Aktif"
+arrivalTab = "Varış"
+day = "Gün"
+departureTab = "Ayrılış"
+goal = "Şarj hedefi"
+modalTitle = "Şarj Planı"
+none = "hiçbiri"
+remove = "Kaldır"
+time = "Zaman"
+title = "Plan"
+titleMinSoc = "Min şarj"
+titleTargetCharge = "Ayrılış"
+unsavedChanges = "Kaydedilmemiş değişiklikler var. Şimdi uygulansın mı?"
+update = "Uygula"
+
+[main.energyflow]
+battery = "Batarya"
+batteryCharge = "Batarya şarj oluyor"
+batteryDischarge = "Batarya deşarj oluyor"
+batteryHold = "Batarya (kilitli)"
+batteryTooltip = "{energy} / {total} ({soc})"
+gridImport = "Şebeke kullanımı"
+homePower = "Tüketim"
+loadpoints = "Şarj Cihazı| Şarj Cihazı | {count} şarj cihazı"
+noEnergy = "Ölçüm verisi yok"
+pvExport = "Şebeke ihracatı"
+pvProduction = "Üretim"
+selfConsumption = "Kendi tüketimi"
+
+[main.heatingStatus]
+charging = "Isıtılıyor…"
+cheapEnergyCharging = "Ucuz enerjiyle ısıtılıyor: {price} (limit {limit})"
+cleanEnergyCharging = "Temiz enerjiyle ısıtılıyor: {co2} (limit {limit})"
+waitForVehicle = "Hazır. Isıtıcı bekleniyor…"
+
+[main.loadpoint]
+avgPrice = "⌀ Fiyat"
+charged = "Şarj edildi"
+co2 = "⌀ CO₂"
+duration = "Süre"
+fallbackName = "Şarj noktası"
+power = "Güç"
+price = "Σ Fiyat"
+remaining = "Kalan"
+remoteDisabledHard = "{source}: kapatıldı"
+remoteDisabledSoft = "{source}: uyumlu güneş enerjili şarj kapatıldı"
+solar = "Güneş Enerjisi"
+
+[main.loadpointSettings]
+currents = "Şarj Akımı"
+default = "varsayılan"
+disclaimerHint = "Not:"
+onlyForSocBasedCharging = "Bu seçenekler, şarj seviyesi bilinen araçlar için kullanılabilir."
+smartCostCheap = "Ucuz Şebeke Şarjı"
+smartCostClean = "Temiz Şebeke Şarjı"
+title = "Ayarlar {0}"
+vehicle = "Araç"
+
+[main.loadpointSettings.limitSoc]
+description = "Bu araç bağlandığında kullanılan şarj limiti."
+label = "Varsayılan limit"
+
+[main.loadpointSettings.maxCurrent]
+label = "Maks. Akım"
+
+[main.loadpointSettings.minCurrent]
+label = "Min. Akım"
+
+[main.loadpointSettings.minSoc]
+description = "Araç, güneş enerjisi modunda {0}% hızlı şarj edilir. Ardından güneş enerjisinin fazlasıyla devam eder. Kötü havalarda bile minimum bir menzil sağlamak için kullanışlıdır."
+label = "Min. şarj %"
+
+[main.loadpointSettings.phasesConfigured]
+label = "Fazlar"
+no1p3pSupport = "Şarj cihazınız nasıl bağlı?"
+phases_0 = "otomatik geçiş"
+phases_1 = "1 faz"
+phases_1_hint = "({min} - {max})"
+phases_3 = "3 faz"
+phases_3_hint = "({min} - {max})"
+
+[main.mode]
+minpv = "Min+Güneş Enerjisi"
+now = "Hızlı"
+off = "Kapalı"
+pv = "Güneş Enerjisi"
+
+[main.provider]
+login = "giriş yap"
+logout = "çıkış yap"
+
+[main.targetCharge]
+activate = "Aktif Et"
+co2Limit = "{co2} CO₂ sınırı"
+costLimitIgnore = "Bu dönemde yapılandırılan {limit} yoksayılacak."
+currentPlan = "Aktif plan"
+descriptionEnergy = "{targetEnergy} ne zaman araca yüklenmelidir?"
+descriptionSoc = "Araç {targetSoc}% şarj edilmeli mi?"
+inactiveLabel = "Hedef zamanı"
+notReachableInTime = "Hedef zamanında ulaşılamaz. Tahmini bitiş: {endTime}."
+onlyInPvMode = "Şarj planı sadece güneş enerjisi modunda çalışır."
+planDuration = "Şarj süresi"
+planPeriodLabel = "Dönem"
+planPeriodValue = "{start} - {end}"
+planUnknown = "henüz bilinmiyor"
+preview = "Planı Önizle"
+priceLimit = "{price} fiyat sınırı"
+remove = "Kaldır"
+setTargetTime = "yok"
+targetIsAboveLimit = "Bu dönemde yapılandırılan {limit} şarj sınırı yoksayılacak."
+targetIsAboveVehicleLimit = "Şarj hedefine ulaşmak için araç limitini ({limit}) artırın."
+targetIsInThePast = "Gelecekte bir zaman seçin, Marty."
+targetIsTooFarInTheFuture = "Daha fazla bilgi edindiğimizde planı ayarlayacağız."
+title = "Hedef Zamanı"
+today = "bugün"
+tomorrow = "yarın"
+update = "Güncelle"
+vehicleCapacityDocs = "Nasıl yapılandırılacağını öğrenin."
+vehicleCapacityRequired = "Şarj süresini tahmin etmek için araç batarya kapasitesi gereklidir."
+
+[main.targetChargePlan]
+chargeDuration = "Şarj süresi"
+co2Label = "⌀ CO₂ emisyonu"
+priceLabel = "Enerji fiyatı"
+timeRange = "{day} {range} saat"
+unknownPrice = "henüz bilinmiyor"
+
+[main.targetEnergy]
+label = "Sınır"
+noLimit = "yok"
+
+[main.vehicle]
+addVehicle = "Araç Ekle"
+changeVehicle = "Araç Değiştir"
+detectionActive = "Araç algılanıyor…"
+fallbackName = "Araç"
+moreActions = "Daha Fazla İşlem"
+none = "Araç Yok"
+notReachable = "Araç ulaşılamadı. Evcc'yi yeniden başlatmayı deneyin."
+targetSoc = "Sınır"
+temp = "Sıcaklık"
+tempLimit = "Sıcaklık sınırı"
+unknown = "Misafir araç"
+vehicleSoc = "Şarj"
+
+[main.vehicleSoc]
+charging = "şarj oluyor"
+connected = "bağlı"
+disconnected = "bağlantı kesildi"
+ready = "hazır"
+vehicleTarget = "Araç sınırı: {soc}%"
+
+[main.vehicleStatus]
+charging = "Şarj oluyor…"
+cheapEnergyCharging = "Ucuz enerjiyle şarj oluyor: {price} (limit {limit})"
+cleanEnergyCharging = "Temiz enerjiyle şarj oluyor: {co2} (limit {limit})"
+climating = "Ön koşullandırma algılandı."
+connected = "Bağlı."
+disconnected = "Bağlantı kesildi."
+minCharge = "Minimum şarj {soc}%."
+pvDisable = "Yeterli fazla enerji yok. {remaining} içinde duraklatılıyor…"
+pvEnable = "Fazla enerji mevcut. {remaining} içinde başlatılıyor…"
+scale1p = "{remaining} içinde 1 fazlı şarja geçiliyor…"
+scale3p = "{remaining} içinde 3 fazlı şarja geçiliyor…"
+targetChargeActive = "Hedef şarj aktif…"
+targetChargePlanned = "Hedef şarj {time} başlıyor."
+targetChargeWaitForVehicle = "Hedef şarj hazır. Araç bekleniyor…"
+unknown = ""
+vehicleTargetReached = "Araç sınırı {soc}% ulaşıldı."
+waitForVehicle = "Hazır. Araç bekleniyor…"
+
+[notifications]
+dismissAll = "Tümünü Kapat"
+logs = "Bütün logları görüntüle"
+modalTitle = "Bildirimler"
+
+[offline]
+message = "Bir sunucuya bağlı değil."
+reload = "Tekrar yükle?"
+
+[passwordModal]
+description = "Yapılandırma ayarlarını korumak için bir parola belirleyin. Ana ekranı kullanmak oturum açmadan da mümkündür."
+empty = "Şifre boş olamaz."
+error = "Hata: "
+labelCurrent = "Mevcut şifre"
+labelNew = "Yeni şifre"
+labelRepeat = "Yeni şifre (tekrar)"
+newPassword = "Şifre oluştur"
+noMatch = "Şifreler eşleşmiyor."
+titleNew = "Admin Şifresi Oluştur"
+titleUpdate = "Admin Şifresini Güncelle"
+updatePassword = "Şifreyi güncelle"
+
+[session]
+cancel = "İptal"
+co2 = "CO₂"
+date = "Dönem"
+delete = "Sil"
+finished = "Tamamlandı"
+meter = "Sayaç"
+meterstart = "Sayaç başlangıcı"
+meterstop = "Sayaç bitişi"
+odometer = "Kilometre"
+price = "Fiyat"
+started = "Başladı"
+title = "Şarj Oturumu"
+
+[sessions]
+avgPower = "⌀ Güç"
+avgPrice = "⌀ Fiyat"
+chargeDuration = "Süre"
+co2 = "⌀ CO₂"
+csvMonth = "{month} CSV olarak indir"
+csvTotal = "Toplam CSV olarak indir"
+date = "Başlangıç"
+downloadCsv = "CSV olarak indir"
+energy = "Şarj edilen"
+loadpoint = "Şarj Noktası"
+noData = "Bu ay şarj oturumu yok."
+price = "Σ Fiyat"
+reallyDelete = "Bu oturumu gerçekten silmek istiyor musunuz?"
+solar = "Güneş Enerjisi"
+title = "Şarj Oturumları"
+total = "Toplam"
+vehicle = "Araç"
+
+[sessions.csv]
+chargedenergy = "Enerji (kWh)"
+created = "Oluşturuldu"
+finished = "Tamamlandı"
+identifier = "Kimlik"
+loadpoint = "Şarj Noktası"
+meterstart = "Sayaç başlangıcı (kWh)"
+meterstop = "Sayaç bitişi (kWh)"
+odometer = "Kilometre (km)"
+vehicle = "Araç"
+
+[sessions.filter]
+allLoadpoints = "tüm şarj noktaları"
+allVehicles = "tüm araçlar"
+filter = "Filtrele"
+
+[settings]
+title = "Genel Ayarlar"
+
+[settings.fullscreen]
+enter = "Tam ekrana geç"
+exit = "Tam ekrandan çık"
+label = "Tam ekran"
+
+[settings.hiddenFeatures]
+label = "Deneysel"
+value = "Deneysel kullanıcı arayüzü özelliklerini göster."
+
+[settings.language]
+auto = "Otomatik"
+label = "Dil"
+
+[settings.sponsorToken]
+expires = "Sponsor jetonunuz {inXDays} süre sonra sona erer. {getNewToken} ve yapılandırma dosyanızı güncelleyin."
+getNew = "Yeni bir tane alın"
+hint = "Not: Bunun otomatik hale getireceğiz."
+
+[settings.telemetry]
+label = "Telemetri"
+
+[settings.theme]
+auto = "sistem"
+dark = "koyu"
+label = "Tasarım"
+light = "açık"
+
+[settings.unit]
+km = "km"
+label = "Birimler"
+mi = "mil"
+
+[smartCost]
+activeHours = "{total} saat içinde {charging}"
+activeHoursLabel = "Aktif saatler"
+applyToAll = "Heryerde uygula?"
+batteryDescription = "Ev bataryasını şebeke enerjisiyle şarj eder."
+cheapTitle = "Ucuz Şebeke Şarjı"
+cleanTitle = "Temiz Şebeke Şarjı"
+co2Label = "CO₂ emisyonu"
+co2Limit = "CO₂ sınırı"
+loadpointDescription = "Güneş modunda geçici hızlı şarjı etkinleştirir."
+modalTitle = "Akıllı Şebeke Şarjı"
+none = "hiçbiri"
+priceLabel = "Enerji fiyatı"
+priceLimit = "Fiyat sınırı"
+saved = "Kaydedildi."
+
+[startupError]
+configFile = "Kullanılan yapılandırma dosyası:"
+configuration = "Yapılandırma"
+description = "Lütfen yapılandırma dosyanızı kontrol edin. Hata mesajı yardımcı olmazsa, {0}'e göz atın."
+discussions = "GitHub Tartışmaları"
+fixAndRestart = "Lütfen sorunu düzeltin ve sunucuyu yeniden başlatın."
+hint = "Not: Ayrıca hatalı bir cihazınızın (inverter, sayaç, …) olabileceği de olabilir. Ağ bağlantılarınızı kontrol edin."
+lineError = "{0} içinde hata."
+lineErrorLink = "{0}. satır"
+restartButton = "Yeniden Başlat"
+title = "Başlangıç Hatası"

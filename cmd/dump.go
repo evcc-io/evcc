@@ -45,7 +45,7 @@ func handle[T any](name string, h config.Handler[T]) config.Device[T] {
 
 func runDump(cmd *cobra.Command, args []string) {
 	// load config
-	err := loadConfigFile(&conf)
+	err := loadConfigFile(&conf, !cmd.Flag(flagIgnoreDatabase).Changed)
 
 	// setup environment
 	if err == nil {

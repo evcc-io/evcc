@@ -42,15 +42,25 @@ func TestPublishTypes(t *testing.T) {
 	}{
 		Foo: "bar",
 	})
-	require.Len(t, topics, 1)
-	assert.Equal(t, `test/foo`, topics[0], "struct mismatch")
-	assert.Equal(t, `bar`, payloads[0], "struct mismatch")
+	assert.Equal(t, []string{"test/foo"}, topics, "struct mismatch")
+	assert.Equal(t, []string{"bar"}, payloads, "struct mismatch")
+	reset()
+
+	i := 1
+	m.publish("test", false, struct {
+		Foo, Bar *int
+	}{
+		Foo: &i,
+		Bar: nil,
+	})
+	assert.Equal(t, []string{"test/foo", "test/bar"}, topics, "pointer mismatch")
+	assert.Equal(t, []string{"1", ""}, payloads, "pointer mismatch")
 	reset()
 
 	slice := []int{10, 20}
 	m.publish("test", false, slice)
 	require.Len(t, topics, 3)
-	assert.Equal(t, []string{`test`, `test/1`, `test/2`}, topics, "slice mismatch")
-	assert.Equal(t, []string{`2`, `10`, `20`}, payloads, "slice mismatch")
+	assert.Equal(t, []string{"test", "test/1", "test/2"}, topics, "slice mismatch")
+	assert.Equal(t, []string{"2", "10", "20"}, payloads, "slice mismatch")
 	reset()
 }

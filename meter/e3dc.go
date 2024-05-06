@@ -3,7 +3,6 @@ package meter
 import (
 	"errors"
 	"net"
-	"slices"
 	"strconv"
 	"sync"
 	"time"
@@ -19,7 +18,6 @@ import (
 )
 
 type E3dc struct {
-	capacity       float64
 	dischargeLimit uint32
 	usage          templates.Usage // TODO check if we really want to depend on templates
 	conn           *rscp.Client
@@ -33,12 +31,13 @@ func init() {
 
 func NewE3dcFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
+		capacity       `mapstructure:",squash"`
 		Usage          templates.Usage
 		Uri            string
 		User           string
 		Password       string
 		Key            string
-		Battery        uint16 // battery id
+		_              uint16 `mapstructure:"battery"` // deprecated
 		DischargeLimit uint32
 		Timeout        time.Duration
 	}{
@@ -67,12 +66,12 @@ func NewE3dcFromConfig(other map[string]interface{}) (api.Meter, error) {
 		ReceiveTimeout:    cc.Timeout,
 	}
 
-	return NewE3dc(cfg, cc.Usage, cc.Battery, cc.DischargeLimit)
+	return NewE3dc(cfg, cc.Usage, cc.DischargeLimit, cc.capacity.Decorator())
 }
 
 var e3dcOnce sync.Once
 
-func NewE3dc(cfg rscp.ClientConfig, usage templates.Usage, batteryId uint16, dischargeLimit uint32) (api.Meter, error) {
+func NewE3dc(cfg rscp.ClientConfig, usage templates.Usage, dischargeLimit uint32, capacity func() float64) (api.Meter, error) {
 	e3dcOnce.Do(func() {
 		log := util.NewLogger("e3dc")
 		rscp.Log.SetLevel(logrus.DebugLevel)
@@ -92,51 +91,15 @@ func NewE3dc(cfg rscp.ClientConfig, usage templates.Usage, batteryId uint16, dis
 
 	// decorate api.BatterySoc
 	var (
-		batterySoc      func() (float64, error)
 		batteryCapacity func() float64
+		batterySoc      func() (float64, error)
 		batteryMode     func(api.BatteryMode) error
 	)
 
 	if usage == templates.UsageBattery {
+		batteryCapacity = capacity
 		batterySoc = m.batterySoc
-		batteryCapacity = m.batteryCapacity
 		batteryMode = m.setBatteryMode
-
-		res, err := m.conn.Send(rscp.Message{
-			Tag:      rscp.BAT_REQ_DATA,
-			DataType: rscp.Container,
-			Value: []rscp.Message{
-				{
-					Tag:      rscp.BAT_INDEX,
-					DataType: rscp.UInt16,
-					Value:    batteryId,
-				},
-				{
-					Tag:      rscp.BAT_REQ_SPECIFICATION,
-					DataType: rscp.None,
-				},
-			},
-		})
-		if err != nil {
-			return nil, err
-		}
-
-		batSpec, err := rscpContains(res, rscp.BAT_SPECIFICATION)
-		if err != nil {
-			return nil, err
-		}
-
-		batCap, err := rscpContains(&batSpec, rscp.BAT_SPECIFIED_CAPACITY)
-		if err != nil {
-			return nil, err
-		}
-
-		cap, err := rscpValue(batCap, cast.ToFloat64E)
-		if err != nil {
-			return nil, err
-		}
-
-		m.capacity = cap / 1e3
 	}
 
 	return decorateE3dc(m, batteryCapacity, batterySoc, batteryMode), nil
@@ -182,10 +145,6 @@ func (m *E3dc) CurrentPower() (float64, error) {
 	default:
 		return 0, api.ErrNotAvailable
 	}
-}
-
-func (m *E3dc) batteryCapacity() float64 {
-	return m.capacity
 }
 
 func (m *E3dc) batterySoc() (float64, error) {
@@ -255,25 +214,6 @@ func rscpError(msg ...rscp.Message) error {
 		}
 	}
 	return errors.Join(errs...)
-}
-
-func rscpContains(msg *rscp.Message, tag rscp.Tag) (rscp.Message, error) {
-	var zero rscp.Message
-
-	slice, ok := msg.Value.([]rscp.Message)
-	if !ok {
-		return zero, errors.New("not a slice looking for " + tag.String())
-	}
-
-	idx := slices.IndexFunc(slice, func(m rscp.Message) bool {
-		return m.Tag == tag
-	})
-	if idx < 0 {
-		return zero, errors.New("missing " + tag.String())
-	}
-
-	res := slice[idx]
-	return res, rscpError(res)
 }
 
 func rscpValue[T any](msg rscp.Message, fun func(any) (T, error)) (T, error) {

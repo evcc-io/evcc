@@ -23,8 +23,7 @@ params:
   - name: password
   - name: key
   - name: battery
-    type: number
-    advanced: true
+    deprecated: true
   - name: dischargelimit
     description:
       de: Entladelimit in W
@@ -34,6 +33,8 @@ params:
       en: Limits discharge power in 'Hold' battery mode
     type: number
     advanced: true
+  - name: capacity
+    advanced: true
 render: |
   type: e3dc-rscp
   usage: {{ .usage }}
@@ -41,5 +42,7 @@ render: |
   user: {{ .user }}
   password: {{ .password }}
   key: {{ .key }}
-  battery: {{ .battery }}
+  {{- if eq .usage "battery" }}
   dischargelimit: {{ .dischargelimit }}
+  capacity: {{ .capacity }} # kWh
+  {{- end }}
