@@ -39,7 +39,7 @@ const (
 	// input (read only)
 	sgRegPhase             = 21224 // uint16 [1: Single-phase,	3: Three-phase]
 	sgRegWorkMode          = 21262 // uint16 [0: Network, 2: Plug&Play, 6: EMS]
-	sgRegRemCtrlStatus     = 21267 // uint16
+	sgRegRemCtrlStatus     = 21267 // uint16 [0: Disable, 1: Enable]
 	sgRegPhaseSwitchStatus = 21269 // uint16
 	sgRegTotalEnergy       = 21299 // uint32s 1Wh
 	sgRegActivePower       = 21307 // uint32s 1W
@@ -51,7 +51,7 @@ const (
 
 	// holding
 	sgRegSetOutI       = 21202 // uint16 0.01A
-	sgRegPhaseSwitch   = 21203 // uint16
+	sgRegPhaseSwitch   = 21203 // uint16 [0: Three-phase, 1: Single-phase]
 	sgRegUnavailable   = 21210 // uint16
 	sgRegRemoteControl = 21211 // uint16 [0: Start, 1: Stop]
 )
@@ -146,7 +146,7 @@ func (wb *Sungrow) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *Sungrow) Enabled() (bool, error) {
-	b, err := wb.conn.ReadHoldingRegisters(sgRegSetOutI, 1)
+	b, err := wb.conn.ReadInputRegisters(sgRegStartMode, 1)
 	if err != nil {
 		return false, err
 	}
@@ -260,7 +260,13 @@ func (wb *Sungrow) Phases1p3p(phases int) error {
 		}
 	}
 
+	// Switch phases
 	_, err = wb.conn.WriteSingleRegister(sgRegPhaseSwitch, u)
+
+	// Re-enable charging if it was previously enabled
+	if err == nil && enabled {
+		err = wb.Enable(true)
+	}
 
 	return err
 }
