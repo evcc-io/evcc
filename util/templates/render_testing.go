@@ -68,8 +68,6 @@ func TestClass(t *testing.T, class Class, instantiate func(t *testing.T, values 
 					instantiate(t, values)
 				})
 			})
-
-			return
 		}
 
 		for _, u := range usages {
