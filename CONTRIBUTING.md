@@ -1,4 +1,4 @@
-## Contribute
+## Contributing
 
 To build evcc from source, [Go][1] 1.22 and [Node][2] 18 are required.
 
@@ -15,8 +15,9 @@ make
 ### Debugging in VS Code
 
 #### evcc Core
+
 To debug a local evcc build in VS Code, add the following entry to your `launch.json`.
-You can adjust the referred configuration as needed to e.g. use your live configuration. 
+You can adjust the referred configuration as needed to e.g. use your live configuration.
 
 ```json
         {
@@ -30,7 +31,8 @@ You can adjust the referred configuration as needed to e.g. use your live config
         },
 ```
 
-#### Decorator
+#### Decorators
+
 Here's another `launch.json` configuration that can be used for specifically debugging the decorator.
 
 ```json
@@ -119,3 +121,5 @@ evcc already includes many translations for the UI. Weblate Hosted is used to ma
 
 https://hosted.weblate.org/projects/evcc/evcc/
 
+[1]: https://go.dev
+[2]: https://nodejs.org/

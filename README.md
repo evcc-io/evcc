@@ -40,9 +40,9 @@ evcc is an extensible EV Charge Controller and home energy management system. Fe
 
 You'll find everything you need in our [documentation](https://docs.evcc.io/).
 
-## Contribute
+## Contributing
 
-Technical details on how to build evcc and contribute can be found [here](CONTRIBUTING.md). 
+Technical details on how to contribute, how to add translations and how to build evcc from source can be found [here](CONTRIBUTING.md).
 
 ## Sponsorship
 
@@ -54,6 +54,3 @@ Maintaining evcc consumes time and effort. With the vast amount of different dev
 While evcc is open source, we would also like to encourage vendors to provide open source hardware devices, public documentation and support open source projects like ours that provide additional value to otherwise closed hardware. Where this is not the case, evcc requires "sponsor token" to finance ongoing development and support of evcc.
 
 The personal sponsor token requires a [Github Sponsorship](https://github.com/sponsors/evcc-io) and can be requested at [sponsor.evcc.io](https://sponsor.evcc.io/).
-
-[1]: https://go.dev
-[2]: https://nodejs.org/
