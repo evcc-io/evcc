@@ -44,6 +44,8 @@ You'll find everything you need in our [documentation](https://docs.evcc.io/).
 
 Technical details on how to contribute, how to add translations and how to build evcc from source can be found [here](CONTRIBUTING.md).
 
+[![Weblate Hosted](https://hosted.weblate.org/widgets/evcc/-/evcc/287x66-grey.png)](https://hosted.weblate.org/engage/evcc/)
+
 ## Sponsorship
 
 <img src="docs/logo.png" align="right" width="150" />
