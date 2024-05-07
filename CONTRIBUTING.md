@@ -61,11 +61,13 @@ make docker DOCKER_IMAGE=my/docker DOCKER_TAG=0815
 
 ### Debugging in VS Code
 
+#### evcc Core
+
 The `launch.json`-configurations listed below are available in [`.vscode/example.launch.json`](./.vscode/example.launch.json). Instructions for how to deploy them are in that file, too.
 
 After adding the configuration(s) to the actual `launch.json`, you can start the debugger from VS Code (default <kbd>F5</kbd>).
 
-#### Available Debug Configurations in example.launch.json:
+##### Available Debug Configurations in example.launch.json
 
 `"Debug local evcc demo"`:  
 Run a local instance of evcc (localhost:7070). You can adjust the referred yaml-configuration (default `cmd/demo.yaml`) to e.g. use your live configuration.
