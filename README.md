@@ -54,12 +54,6 @@ make
 ./evcc
 ```
 
-### Debugging with Visual Studio Code
-
-To enable a Debugger, follow the instructions in [`.vscode/example.launch.json`](./.vscode/example.launch.json); Remove the comment at the top of the file and rename it to launch.json.
-
-Afterwards, you can start the debugging from VS Code (<kbd>F5</kbd>)
-
 ### Cross Compile
 
 To compile a version for an ARM device like a Raspberry Pi set GO command variables as needed, eg:
@@ -67,6 +61,12 @@ To compile a version for an ARM device like a Raspberry Pi set GO command variab
 ```sh
 GOOS=linux GOARCH=arm GOARM=6 make
 ```
+
+### Backend development (VS Code)
+
+To enable a Debugger, follow the instructions in [`.vscode/example.launch.json`](./.vscode/example.launch.json); Remove the comment at the top of the file and rename it to launch.json.
+
+Afterwards, you can start the debugger from VS Code (default <kbd>F5</kbd>).
 
 ### UI development
 
