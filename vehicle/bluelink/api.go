@@ -108,5 +108,5 @@ func (v *API) StatusPartial(vehicle Vehicle) (BluelinkVehicleStatus, error) {
 	if err == nil && res.RetCode != resOK {
 		err = fmt.Errorf("unexpected response: %s", res.RetCode)
 	}
-	return res, err
+	return res.ResMsg, err
 }
