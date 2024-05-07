@@ -12,10 +12,10 @@ import (
 )
 
 var (
-	//go:embed dist
+	// go:embed dist
 	web embed.FS
 
-	//go:embed i18n/*.toml
+	// go:embed i18n/*.toml
 	i18n embed.FS
 )
 
