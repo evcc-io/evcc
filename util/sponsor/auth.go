@@ -16,19 +16,27 @@ var (
 	ExpiresAt      time.Time
 )
 
-const unavailable = "sponsorship unavailable"
+const (
+	unavailable = "sponsorship unavailable"
+	vendored    = "vendor-supported device"
+)
 
 func IsAuthorized() bool {
 	return len(Subject) > 0
 }
 
 func IsAuthorizedForApi() bool {
-	return IsAuthorized() && Subject != unavailable
+	return IsAuthorized() && Token != ""
 }
 
 // check and set sponsorship token
 func ConfigureSponsorship(token string) error {
 	if token == "" {
+		if isVictron() {
+			Subject = vendored
+			return nil
+		}
+
 		var err error
 		if token, err = readSerial(); token == "" || err != nil {
 			return err
