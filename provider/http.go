@@ -9,6 +9,7 @@ import (
 	"text/template"
 	"time"
 
+	"github.com/42atomys/sprout"
 	"github.com/evcc-io/evcc/provider/pipeline"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
@@ -186,7 +187,7 @@ func (p *HTTP) request(url string, body ...string) ([]byte, error) {
 			b = strings.NewReader(body[0])
 		}
 
-		tmpl, err := template.New("url").Parse(url)
+		tmpl, err := template.New("url").Funcs(sprout.TxtFuncMap()).Parse(url)
 		if err != nil {
 			return nil, err
 		}
