@@ -35,7 +35,6 @@ const (
 	igyRegManufacturer = 100  // Input
 	igyRegFirmware     = 200  // Input
 	igyRegStatus       = 275  // Input
-	igyRegEnergy       = 307  // Input
 	igyRegCurrents     = 1006 // current readings per phase
 )
 
@@ -162,18 +161,6 @@ func (wb *Innogy) CurrentPower() (float64, error) {
 	}
 	l1, l2, l3, err := wb.Currents()
 	return 230 * (l1 + l2 + l3), err
-}
-
-var _ api.MeterEnergy = (*Innogy)(nil)
-
-// TotalEnergy implements the api.MeterEnergy interface
-func (wb *Innogy) TotalEnergy() (float64, error) {
-	b, err := wb.conn.ReadInputRegisters(igyRegEnergy, 2)
-	if err != nil {
-		return 0, err
-	}
-
-	return float64(math.Float32frombits(binary.BigEndian.Uint32(b))), nil
 }
 
 var _ api.PhaseCurrents = (*Innogy)(nil)
