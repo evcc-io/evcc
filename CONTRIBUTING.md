@@ -25,16 +25,25 @@ If you miss one of the above steps Gitub Actions will likely trigger a **Porcela
 
 ### Building from source
 
-To build and run the evcc go backend use:
+Install prerequisites (once):
 
 ```sh
 make install-ui
 make install
+```
+
+Build and run:
+
+```sh
 make
 ./evcc
 ```
 
-The UI becomes available at http://127.0.0.1:7070/
+Open UI at http://127.0.0.1:7070
+
+To run without creating the `evcc` binary use:
+
+    go run ./...
 
 #### Cross Compiling
 
@@ -58,20 +67,20 @@ To debug a local evcc build in VS Code, add the following entry to your `launch.
 You can adjust the referred configuration as needed to e.g. use your live configuration.
 
 ```json
-        {
-            "name": "Launch evcc local build with demo config",
-            "type": "go",
-            "request": "launch",
-            "mode": "auto",
-            "program": "${workspaceFolder}",
-            "args": ["-c", "${workspaceFolder}/cmd/demo.yaml"],
-            "cwd": "${workspaceFolder}",
-        },
+{
+    "name": "Launch evcc local build with demo config",
+    "type": "go",
+    "request": "launch",
+    "mode": "auto",
+    "program": "${workspaceFolder}",
+    "args": ["-c", "${workspaceFolder}/cmd/demo.yaml"],
+    "cwd": "${workspaceFolder}",
+},
 ```
 
-### UI development
+#### UI
 
-For frontend development start the Vue toolchain in dev-mode. Open http://127.0.0.1:7071/ to get to the livelreloading development server. It pulls its data from port 7070 (see above).
+For frontend development start the Vue toolchain in dev-mode. Open http://127.0.0.1:7071/ to get to the live reloading development server. It pulls its data from port 7070 (see above).
 
 ```sh
 npm install
