@@ -9,7 +9,7 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/Masterminds/sprig/v3"
+	"github.com/42atomys/sprout"
 	"github.com/evcc-io/evcc/util"
 )
 
@@ -208,7 +208,7 @@ var proxyTmpl string
 
 // RenderProxyWithValues renders the proxy template
 func (t *Template) RenderProxyWithValues(values map[string]interface{}, lang string) ([]byte, error) {
-	tmpl, err := template.New("yaml").Funcs(sprig.TxtFuncMap()).Parse(proxyTmpl)
+	tmpl, err := template.New("yaml").Funcs(sprout.TxtFuncMap()).Parse(proxyTmpl)
 	if err != nil {
 		panic(err)
 	}

@@ -47,7 +47,7 @@ body:
       label: Log details
       render: text
       description: >
-        Show evcc log output by running with <code>evcc --log debug</code>. The evcc service **MUST** be stopped before running this command.
+        Show evcc log output of the issue, see https://docs.evcc.io/en/docs/faq#how-do-i-create-a-log-file-for-error-analysis for instructions.
 
   - type: dropdown
     validations:

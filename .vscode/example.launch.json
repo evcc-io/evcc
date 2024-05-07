@@ -3,20 +3,21 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "demo",
+            "name": "Debug local evcc demo",
             "type": "go",
             "request": "launch",
             "mode": "auto",
-            "trace": "error",
-            "program": "${workspaceFolder}/main.go",
-            "env": {},
-            "args": [
-                "--profile",
-                "--log",
-                "error,db:trace",
-                "-c",
-                "cmd/demo.yaml"
-            ]
-        }
+            "program": "${workspaceFolder}",
+            "args": ["-c", "${workspaceFolder}/cmd/demo.yaml"],
+            "cwd": "${workspaceFolder}",
+        },
+        {
+            "name": "Debug decorator",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "${workspaceFolder}/cmd/tools/decorate.go",
+            "args": ["-o", "decorator_test.go", "-p", "main", "-f", "decorateVehicle", "-b", "api.Vehicle", "-t", "api.VehicleChargeController,StartCharge,func() error", "-t", "api.VehicleChargeController,StopCharge,func() error"],
+        },
     ]
 }

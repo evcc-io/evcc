@@ -107,6 +107,7 @@ type Loadpoint struct {
 
 	Title_          string `mapstructure:"title"`    // UI title
 	Priority_       int    `mapstructure:"priority"` // Priority
+	CircuitRef      string `mapstructure:"circuit"`  // Circuit reference
 	ChargerRef      string `mapstructure:"charger"`  // Charger reference
 	VehicleRef      string `mapstructure:"vehicle"`  // Vehicle reference
 	MeterRef        string `mapstructure:"meter"`    // Charge meter reference
@@ -143,6 +144,7 @@ type Loadpoint struct {
 	chargeRater      api.ChargeRater
 	chargedAtStartup float64 // session energy at startup
 
+	circuit        api.Circuit // Circuit
 	chargeMeter    api.Meter   // Charger usage meter
 	vehicle        api.Vehicle // Currently active vehicle
 	defaultVehicle api.Vehicle // Default vehicle (disables detection)
@@ -200,6 +202,14 @@ func NewLoadpointFromConfig(log *util.Logger, settings *Settings, other map[stri
 			lp.log.WARN.Printf("invalid poll mode: %s", lp.Soc.Poll.Mode)
 		}
 		lp.Soc.Poll.Mode = pollCharging
+	}
+
+	if lp.CircuitRef != "" {
+		dev, err := config.Circuits().ByName(lp.CircuitRef)
+		if err != nil {
+			return nil, err
+		}
+		lp.circuit = dev.Instance()
 	}
 
 	if lp.MeterRef != "" {
@@ -745,6 +755,17 @@ func (lp *Loadpoint) setLimit(chargeCurrent float64) error {
 		chargeCurrent = math.Trunc(chargeCurrent)
 	}
 
+	// apply circuit limits
+	if lp.circuit != nil {
+		currentLimit := lp.circuit.ValidateCurrent(lp.chargeCurrent, chargeCurrent)
+
+		activePhases := lp.ActivePhases()
+		powerLimit := lp.circuit.ValidatePower(lp.chargePower, currentToPower(chargeCurrent, activePhases))
+		currentLimitViaPower := powerToCurrent(powerLimit, activePhases)
+
+		chargeCurrent = min(currentLimit, currentLimitViaPower)
+	}
+
 	// set current
 	if chargeCurrent != lp.chargeCurrent && chargeCurrent >= lp.effectiveMinCurrent() {
 		var err error
@@ -1277,8 +1298,8 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batter
 	return targetCurrent
 }
 
-// UpdateChargePower updates charge meter power
-func (lp *Loadpoint) UpdateChargePower() {
+// UpdateChargePowerAndCurrents updates charge meter power and currents for load management
+func (lp *Loadpoint) UpdateChargePowerAndCurrents() {
 	bo := backoff.NewExponentialBackOff()
 	bo.MaxElapsedTime = time.Second
 
@@ -1297,12 +1318,10 @@ func (lp *Loadpoint) UpdateChargePower() {
 			lp.log.WARN.Printf("charge power must not be negative: %.0f", power)
 		}
 	} else {
-		lp.log.ERROR.Printf("charge meter: %v", err)
+		lp.log.ERROR.Printf("charge power: %v", err)
 	}
-}
 
-// updateChargeCurrents uses PhaseCurrents interface to count phases with current >=1A
-func (lp *Loadpoint) updateChargeCurrents() {
+	// update charge currents
 	lp.chargeCurrents = nil
 
 	phaseMeter, ok := lp.chargeMeter.(api.PhaseCurrents)
@@ -1310,15 +1329,27 @@ func (lp *Loadpoint) updateChargeCurrents() {
 		return // don't guess
 	}
 
-	i1, i2, i3, err := phaseMeter.Currents()
-	if err != nil {
-		lp.log.ERROR.Printf("charge meter: %v", err)
+	if err := backoff.Retry(func() error {
+		i1, i2, i3, err := phaseMeter.Currents()
+		if err != nil {
+			return err
+		}
+
+		lp.chargeCurrents = []float64{i1, i2, i3}
+		lp.log.DEBUG.Printf("charge currents: %.3gA", lp.chargeCurrents)
+		lp.publish(keys.ChargeCurrents, lp.chargeCurrents)
+
+		return nil
+	}, bo); err != nil {
+		lp.log.ERROR.Printf("charge currents: %v", err)
+	}
+}
+
+// phasesFromChargeCurrents uses PhaseCurrents interface to count phases with current >=1A
+func (lp *Loadpoint) phasesFromChargeCurrents() {
+	if lp.chargeCurrents == nil {
 		return
 	}
-
-	lp.chargeCurrents = []float64{i1, i2, i3}
-	lp.log.DEBUG.Printf("charge currents: %.3gA", lp.chargeCurrents)
-	lp.publish(keys.ChargeCurrents, lp.chargeCurrents)
 
 	if lp.charging() && lp.phaseSwitchCompleted() {
 		var phases int
@@ -1394,7 +1425,7 @@ func (lp *Loadpoint) publishChargeProgress() {
 		lp.log.ERROR.Printf("charge rater: %v", err)
 	}
 
-	if d, err := lp.chargeTimer.ChargingTime(); err == nil {
+	if d, err := lp.chargeTimer.ChargeDuration(); err == nil {
 		lp.chargeDuration = d.Round(time.Second)
 	} else {
 		lp.log.ERROR.Printf("charge timer: %v", err)
@@ -1539,9 +1570,9 @@ func (lp *Loadpoint) Update(sitePower float64, autoCharge, batteryBuffered, batt
 	lp.publish(keys.SmartCostActive, autoCharge)
 	lp.processTasks()
 
-	// read and publish meters first- charge power has already been updated by the site
+	// read and publish meters first- charge power and currents have already been updated by the site
 	lp.updateChargeVoltages()
-	lp.updateChargeCurrents()
+	lp.phasesFromChargeCurrents()
 
 	lp.sessionEnergy.SetEnvironment(greenShare, effPrice, effCo2)
 

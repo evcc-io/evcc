@@ -13,7 +13,7 @@ var re = regexp.MustCompile(`^\[([a-zA-Z0-9-]+)\s*\] (\w+) `)
 
 func (e element) areaLevel() (string, jww.Threshold) {
 	m := re.FindAllStringSubmatch(string(e), 1)
-	if len(m) != 1 && len(m[0]) != 3 {
+	if len(m) != 1 || len(m[0]) != 3 {
 		return "", jww.LevelError
 	}
 	return m[0][1], LogLevelToThreshold(m[0][2])

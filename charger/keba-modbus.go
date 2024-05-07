@@ -64,7 +64,7 @@ func init() {
 	registry.Add("keba-modbus", NewKebaFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateKeba -b *Keba -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.Identifier,Identify,func() (string, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) error"
+//go:generate go run ../cmd/tools/decorate.go -f decorateKeba -b *Keba -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.Identifier,Identify,func() (string, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
 
 // NewKebaFromConfig creates a new Keba ModbusTCP charger
 func NewKebaFromConfig(other map[string]interface{}) (api.Charger, error) {
@@ -104,10 +104,14 @@ func NewKebaFromConfig(other map[string]interface{}) (api.Charger, error) {
 	}
 
 	// phases
-	var phases func(int) error
+	var (
+		phasesS func(int) error
+		phasesG func() (int, error)
+	)
 	if b, err := wb.conn.ReadHoldingRegisters(kebaRegPhaseSource, 2); err == nil {
 		if source := binary.BigEndian.Uint32(b); source == 3 {
-			phases = wb.phases1p3p
+			phasesS = wb.phases1p3p
+			phasesG = wb.getPhases
 		}
 	}
 
@@ -121,7 +125,7 @@ func NewKebaFromConfig(other map[string]interface{}) (api.Charger, error) {
 		go wb.heartbeat(time.Duration(u) * time.Second / 2)
 	}
 
-	return decorateKeba(wb, currentPower, totalEnergy, currents, identify, phases), nil
+	return decorateKeba(wb, currentPower, totalEnergy, currents, identify, phasesS, phasesG), nil
 }
 
 // NewKeba creates a new charger
@@ -137,9 +141,6 @@ func NewKeba(uri string, slaveID uint8) (*Keba, error) {
 
 	log := util.NewLogger("keba")
 	conn.Logger(log.TRACE)
-
-	// per Keba docs
-	// conn.Delay(500 * time.Millisecond)
 
 	wb := &Keba{
 		log:  log,
@@ -282,6 +283,18 @@ func (wb *Keba) phases1p3p(phases int) error {
 
 	_, err := wb.conn.WriteSingleRegister(kebaRegTriggerPhase, u)
 	return err
+}
+
+// getPhases implements the api.PhaseGetter interface
+func (wb *Keba) getPhases() (int, error) {
+	b, err := wb.conn.ReadHoldingRegisters(kebaRegPhaseState, 2)
+	if err != nil {
+		return 0, err
+	}
+	if binary.BigEndian.Uint32(b) == 0 {
+		return 1, nil
+	}
+	return 3, nil
 }
 
 var _ api.Diagnosis = (*Keba)(nil)

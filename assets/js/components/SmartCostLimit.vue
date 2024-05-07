@@ -111,7 +111,7 @@ export default {
 			for (let i = 1; i <= 100; i++) {
 				const value = this.optionStartValue + stepSize * i;
 				if (value != 0) {
-					values.push(value);
+					values.push(value.toFixed(2));
 				}
 			}
 			// add special entry if currently selected value is not in the scale
@@ -225,12 +225,12 @@ export default {
 			this.updateTariff();
 		},
 		smartCostLimit(limit) {
-			this.selectedSmartCostLimit = limit;
+			this.selectedSmartCostLimit = limit?.toFixed(2);
 		},
 	},
 	mounted() {
 		this.updateTariff();
-		this.selectedSmartCostLimit = this.smartCostLimit;
+		this.selectedSmartCostLimit = this.smartCostLimit?.toFixed(2);
 	},
 	methods: {
 		updateTariff: async function () {

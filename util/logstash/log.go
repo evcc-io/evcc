@@ -28,11 +28,13 @@ func Size() int64 {
 type logger struct {
 	mu   sync.RWMutex
 	data *ring.Ring
+	size int
 }
 
 func New(size int) *logger {
 	return &logger{
-		data: ring.New(size),
+		data: ring.New(1),
+		size: size,
 	}
 }
 
@@ -44,6 +46,12 @@ func (l *logger) Write(p []byte) (n int, err error) {
 
 	if !strings.HasPrefix(string(p), "[cache ]") {
 		l.data.Value = element(string(p))
+
+		// dynamically grow the ring
+		if l.data.Len() < l.size {
+			l.data.Link(ring.New(1))
+		}
+
 		l.data = l.data.Next()
 	}
 
@@ -95,15 +103,16 @@ func (l *logger) All(areas []string, level jww.Threshold, count int) []string {
 	r := l.data
 	all := len(areas) == 0 && level == jww.LevelTrace
 
-	var res []string
+	res := make([]string, 0, r.Len())
 	for range r.Len() {
-		r = r.Next()
 		if e, ok := r.Value.(element); ok && e != "" && (all || e.match(areas, level)) {
 			res = append(res, string(e))
-			if count > 0 && len(res) >= count {
-				break
-			}
 		}
+		r = r.Next()
+	}
+
+	if count > 0 && len(res) > count {
+		res = res[len(res)-count:]
 	}
 
 	return res

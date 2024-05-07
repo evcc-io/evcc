@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Masterminds/sprig/v3"
+	"github.com/42atomys/sprout"
 )
 
 var re = regexp.MustCompile(`\${(\w+)(:([a-zA-Z0-9%.]+))?}`)
@@ -52,7 +52,7 @@ func FormatValue(format string, val interface{}) string {
 func ReplaceFormatted(s string, kv map[string]interface{}) (string, error) {
 	// Enhanced golang template logic
 	tpl, err := template.New("base").
-		Funcs(sprig.FuncMap()).
+		Funcs(sprout.FuncMap()).
 		Funcs(map[string]any{
 			"timeRound": timeRound,
 		}).Parse(s)

@@ -5,7 +5,7 @@ import (
 	_ "embed"
 	"text/template"
 
-	"github.com/Masterminds/sprig/v3"
+	"github.com/42atomys/sprout"
 	"github.com/evcc-io/evcc/util/templates"
 )
 
@@ -116,7 +116,7 @@ var configTmpl string
 
 // RenderConfiguration creates a yaml configuration
 func (c *Configure) RenderConfiguration() ([]byte, error) {
-	tmpl, err := template.New("yaml").Funcs(sprig.TxtFuncMap()).Parse(configTmpl)
+	tmpl, err := template.New("yaml").Funcs(sprout.TxtFuncMap()).Parse(configTmpl)
 	if err != nil {
 		panic(err)
 	}

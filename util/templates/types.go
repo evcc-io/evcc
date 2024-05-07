@@ -9,17 +9,6 @@ import (
 	"dario.cat/mergo"
 )
 
-type Usage int
-
-//go:generate enumer -type Usage -trimprefix Usage -transform=lower
-const (
-	UsageGrid Usage = iota
-	UsagePV
-	UsageBattery
-	UsageCharge
-	UsageAux
-)
-
 const (
 	ParamUsage  = "usage"
 	ParamModbus = "modbus"
@@ -253,6 +242,7 @@ func (p Product) Title(lang string) string {
 // TemplateDefinition contains properties of a device template
 type TemplateDefinition struct {
 	Template     string
+	Deprecated   bool             `json:"-"`
 	Group        string           `json:",omitempty"` // the group this template belongs to, references groupList entries
 	Covers       []string         `json:",omitempty"` // list of covered outdated template names
 	Products     []Product        `json:",omitempty"` // list of products this template is compatible with
