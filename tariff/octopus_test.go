@@ -31,5 +31,4 @@ func TestOctopusConfigParse(t *testing.T) {
 	}
 	_, err = NewOctopusFromConfig(invalidApiAndProductCodeConfig)
 	require.Error(t, err)
-
 }
