@@ -43,7 +43,7 @@ func mercedesPinPrompt() (string, error) {
 }
 
 func mercedesToken() (*oauth2.Token, error) {
-	// Get username and region from user to initate the email process
+	// Get username and region from user to initiate the email process
 	username, region, err := mercedesUsernameAndRegionPrompt()
 	if err != nil {
 		return nil, err
@@ -55,17 +55,14 @@ func mercedesToken() (*oauth2.Token, error) {
 		return nil, err
 	}
 
-	if result {
-		pin, err := mercedesPinPrompt()
-		if err != nil {
-			return nil, err
-		}
-
-		token, err := api.RequestAccessToken(*nonce, pin)
-		if err == nil {
-			return token, nil
-		}
+	if !result {
+		return nil, errors.New("unknown PinResponse - 200, result empty")
 	}
 
-	return nil, errors.New("unknown PinResponse - 200, Email empty")
+	pin, err := mercedesPinPrompt()
+	if err != nil {
+		return nil, err
+	}
+
+	return api.RequestAccessToken(*nonce, pin)
 }
