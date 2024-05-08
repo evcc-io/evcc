@@ -72,6 +72,16 @@ template = "Manufacturer"
 titleChoice = "What Do You Want To Add?"
 validateSave = "Validate & save"
 
+[config.options]
+
+[config.options.endianness]
+big = "big-endian"
+little = "little-endian"
+
+[config.options.schema]
+http = "HTTP (unencrypted)"
+https = "HTTPS (encrypted)"
+
 [config.pv]
 titleAdd = "Add Solar Meter"
 titleEdit = "Edit Solar Meter"
