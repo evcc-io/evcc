@@ -11,15 +11,12 @@ import (
 	"github.com/spf13/viper"
 )
 
-const sample = `
-loadpoints:
-- mode: off
-`
-
 func TestYamlOff(t *testing.T) {
 	var conf globalconfig.All
 	viper.SetConfigType("yaml")
-	if err := viper.ReadConfig(strings.NewReader(sample)); err != nil {
+	if err := viper.ReadConfig(strings.NewReader(`loadpoints:
+- mode: off
+`)); err != nil {
 		t.Error(err)
 	}
 

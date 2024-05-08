@@ -38,6 +38,7 @@ type All struct {
 	Tariffs      Tariffs
 	Site         map[string]interface{}
 	Loadpoints   []map[string]interface{}
+	Circuits     []config.Named
 }
 
 type Javascript struct {

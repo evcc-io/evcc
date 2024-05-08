@@ -63,6 +63,9 @@ func (lp *Loadpoint) stopSession() {
 	}
 
 	if chargedEnergy := lp.getChargedEnergy() / 1e3; chargedEnergy > s.ChargedEnergy {
+		{ // TODO remove
+			lp.log.DEBUG.Printf("!! session: chargedEnergy=%.1f > chargedEnergy=%.1f", chargedEnergy, s.ChargedEnergy)
+		}
 		lp.sessionEnergy.Update(chargedEnergy)
 	}
 
@@ -73,6 +76,17 @@ func (lp *Loadpoint) stopSession() {
 	s.Co2PerKWh = lp.sessionEnergy.Co2PerKWh()
 	s.ChargedEnergy = lp.sessionEnergy.TotalWh() / 1e3
 	s.ChargeDuration = &lp.chargeDuration
+
+	{ // TODO remove
+		var meterStart, meterStop float64
+		if s.MeterStart != nil {
+			meterStart = *s.MeterStart
+		}
+		if s.MeterStop != nil {
+			meterStop = *s.MeterStop
+		}
+		lp.log.DEBUG.Printf("!! session: start=%.3f stop=%.3f chargedEnergy=%.3f", meterStart, meterStop, s.ChargedEnergy)
+	}
 
 	lp.db.Persist(s)
 }

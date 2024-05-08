@@ -393,7 +393,7 @@ detectionActive = "Bandome atpažinti automobilį ..."
 fallbackName = "Automobilis"
 moreActions = "Daugiau veiksmų"
 none = "Nėra automobilio"
-notReachable = "Automobilis buvo nepasiekiamas. Pabandykite restartuoti evcc."
+notReachable = "Automobilis nepasiekiamas. Pabandykite restartuoti evcc."
 targetSoc = "Limitas"
 temp = "t."
 tempLimit = "Temp. limitas"
@@ -499,6 +499,11 @@ filter = "Filtruoti"
 
 [settings]
 title = "Vartotojo sąsaja"
+
+[settings.fullscreen]
+enter = "Įjungti visą ekraną"
+exit = "Išjungti visą ekraną"
+label = "Visas ekranas"
 
 [settings.gridDetails]
 co2 = "CO₂"

@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"os"
 	"regexp"
 	"slices"
 	"strconv"
@@ -45,6 +46,7 @@ import (
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/libp2p/zeroconf/v2"
+	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"golang.org/x/sync/errgroup"
@@ -77,7 +79,23 @@ func nameValid(name string) error {
 	return nil
 }
 
-func loadConfigFile(conf *globalconfig.All) error {
+func tokenDanger(conf []config.Named) bool {
+	problematic := []string{"tesla", "psa", "opel", "citroen", "ds", "peugeot"}
+
+	for _, cc := range conf {
+		if slices.Contains(problematic, cc.Type) {
+			return true
+		}
+		template, ok := cc.Other["template"].(string)
+		if ok && cc.Type == "template" && slices.Contains(problematic, template) {
+			return true
+		}
+	}
+
+	return false
+}
+
+func loadConfigFile(conf *globalconfig.All, checkDB bool) error {
 	err := viper.ReadInConfig()
 
 	if cfgFile = viper.ConfigFileUsed(); cfgFile == "" {
@@ -92,12 +110,134 @@ func loadConfigFile(conf *globalconfig.All) error {
 		}
 	}
 
+	// check service database
+	if _, err := os.Stat(serviceDB); err == nil && checkDB && conf.Database.Dsn != serviceDB && tokenDanger(conf.Vehicles) {
+		log.FATAL.Fatal(`
+
+Found systemd service database at "` + serviceDB + `", evcc has been invoked with database "` + conf.Database.Dsn + `".
+Running evcc with vehicles configured in evcc.yaml may lead to expiring the yaml configuration's vehicle tokens.
+This is due to the fact, that the token refresh will be saved to the local instead of the service's database.
+If you have vehicles with touchy tokens like PSA or Tesla, make sure to remove vehicle configuration from the yaml file.
+
+If you know what you're doing, you can run evcc ignoring the service database with the --ignore-db flag.
+`)
+	}
+
 	// parse log levels after reading config
 	if err == nil {
 		parseLogLevels()
 	}
 
 	return err
+}
+
+func configureCircuits(static []config.Named, names ...string) error {
+	children := slices.Clone(static)
+
+	// TODO: check for circular references
+NEXT:
+	for i, cc := range children {
+		if cc.Name == "" {
+			return fmt.Errorf("cannot create circuit: missing name")
+		}
+
+		if err := nameValid(cc.Name); err != nil {
+			return fmt.Errorf("cannot create circuit: duplicate name: %s", cc.Name)
+		}
+
+		if parent := cast.ToString(cc.Property("parent")); parent != "" {
+			if _, err := config.Circuits().ByName(parent); err != nil {
+				continue
+			}
+		}
+
+		log := util.NewLogger("circuit-" + cc.Name)
+		instance, err := core.NewCircuitFromConfig(log, cc.Other)
+		if err != nil {
+			return fmt.Errorf("cannot create circuit '%s': %w", cc.Name, err)
+		}
+
+		// ensure config has title
+		if instance.GetTitle() == "" {
+			//lint:ignore SA1019 as Title is safe on ascii
+			instance.SetTitle(strings.Title(cc.Name))
+		}
+
+		if err := config.Circuits().Add(config.NewStaticDevice(cc, instance)); err != nil {
+			return err
+		}
+
+		children = slices.Delete(children, i, i+1)
+		goto NEXT
+	}
+
+	if len(children) > 0 {
+		return fmt.Errorf("circuit is missing parent: %s", children[0].Name)
+	}
+
+	// append devices from database
+	configurable, err := config.ConfigurationsByClass(templates.Circuit)
+	if err != nil {
+		return err
+	}
+
+	children2 := slices.Clone(configurable)
+
+NEXT2:
+	for i, conf := range children2 {
+		cc := conf.Named()
+
+		if len(names) > 0 && !slices.Contains(names, cc.Name) {
+			return nil
+		}
+
+		if parent := cast.ToString(cc.Property("parent")); parent != "" {
+			if _, err := config.Circuits().ByName(parent); err != nil {
+				continue
+			}
+		}
+
+		log := util.NewLogger("circuit-" + cc.Name)
+		instance, err := core.NewCircuitFromConfig(log, cc.Other)
+		if err != nil {
+			return fmt.Errorf("cannot create circuit '%s': %w", cc.Name, err)
+		}
+
+		// ensure config has title
+		if instance.GetTitle() == "" {
+			//lint:ignore SA1019 as Title is safe on ascii
+			instance.SetTitle(strings.Title(cc.Name))
+		}
+
+		if err := config.Circuits().Add(config.NewConfigurableDevice(conf, instance)); err != nil {
+			return err
+		}
+
+		children2 = slices.Delete(children2, i, i+1)
+		goto NEXT2
+	}
+
+	if len(children2) > 0 {
+		return fmt.Errorf("missing parent circuit: %s", children2[0].Named().Name)
+	}
+
+	var rootFound bool
+	for _, dev := range config.Circuits().Devices() {
+		c := dev.Instance()
+
+		if c.GetParent() == nil {
+			if rootFound {
+				return errors.New("cannot have multiple root circuits")
+			}
+			rootFound = true
+		}
+	}
+
+	if !rootFound && len(config.Circuits().Devices()) > 0 {
+		return errors.New("root circuit required")
+	}
+
+	return nil
 }
 
 func configureMeters(static []config.Named, names ...string) error {
@@ -636,6 +776,9 @@ func configureDevices(conf globalconfig.All) error {
 	if err := configureVehicles(conf.Vehicles); err != nil {
 		return &ClassError{ClassVehicle, err}
 	}
+	if err := configureCircuits(conf.Circuits); err != nil {
+		return &ClassError{ClassCircuit, err}
+	}
 	return nil
 }
 
@@ -654,7 +797,43 @@ func configureSiteAndLoadpoints(conf globalconfig.All) (*core.Site, error) {
 		return nil, &ClassError{ClassTariff, err}
 	}
 
-	return configureSite(conf.Site, loadpoints, tariffs)
+	site, err := configureSite(conf.Site, loadpoints, tariffs)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(config.Circuits().Devices()) > 0 {
+		if err := validateCircuits(site, loadpoints); err != nil {
+			return nil, err
+		}
+	}
+
+	return site, nil
+}
+
+func validateCircuits(site site.API, loadpoints []*core.Loadpoint) error {
+CONTINUE:
+	for _, dev := range config.Circuits().Devices() {
+		instance := dev.Instance()
+
+		if instance.HasMeter() || site.GetCircuit() == instance {
+			continue
+		}
+
+		for _, lp := range loadpoints {
+			if lp.GetCircuit() == instance {
+				continue CONTINUE
+			}
+		}
+
+		return fmt.Errorf("circuit %s has no meter or loadpoint assigned", dev.Config().Name)
+	}
+
+	if site.GetCircuit() == nil {
+		return errors.New("site has no circuit")
+	}
+
+	return nil
 }
 
 func configureSite(conf map[string]interface{}, loadpoints []*core.Loadpoint, tariffs *tariff.Tariffs) (*core.Site, error) {
@@ -668,19 +847,25 @@ func configureSite(conf map[string]interface{}, loadpoints []*core.Loadpoint, ta
 		return nil, fmt.Errorf("failed configuring site: %w", err)
 	}
 
+	if len(config.Circuits().Devices()) > 0 && site.GetCircuit() == nil {
+		return nil, errors.New("site has no circuit")
+	}
+
 	return site, nil
 }
 
-func configureLoadpoints(conf globalconfig.All) (loadpoints []*core.Loadpoint, err error) {
+func configureLoadpoints(conf globalconfig.All) ([]*core.Loadpoint, error) {
 	if len(conf.Loadpoints) == 0 {
 		return nil, errors.New("missing loadpoints")
 	}
 
-	for id, lpc := range conf.Loadpoints {
+	var loadpoints []*core.Loadpoint
+
+	for id, cfg := range conf.Loadpoints {
 		log := util.NewLoggerWithLoadpoint("lp-"+strconv.Itoa(id+1), id+1)
 		settings := &core.Settings{Key: "lp" + strconv.Itoa(id+1) + "."}
 
-		lp, err := core.NewLoadpointFromConfig(log, settings, lpc)
+		lp, err := core.NewLoadpointFromConfig(log, settings, cfg)
 		if err != nil {
 			return nil, fmt.Errorf("failed configuring loadpoint: %w", err)
 		}

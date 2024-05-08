@@ -138,6 +138,20 @@ func (mr *MockAPIMockRecorder) GetChargePowerFlexibility() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetChargePowerFlexibility", reflect.TypeOf((*MockAPI)(nil).GetChargePowerFlexibility))
 }
 
+// GetCircuit mocks base method.
+func (m *MockAPI) GetCircuit() api.Circuit {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetCircuit")
+	ret0, _ := ret[0].(api.Circuit)
+	return ret0
+}
+
+// GetCircuit indicates an expected call of GetCircuit.
+func (mr *MockAPIMockRecorder) GetCircuit() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCircuit", reflect.TypeOf((*MockAPI)(nil).GetCircuit))
+}
+
 // GetDisableThreshold mocks base method.
 func (m *MockAPI) GetDisableThreshold() float64 {
 	m.ctrl.T.Helper()
@@ -206,6 +220,20 @@ func (m *MockAPI) GetMaxCurrent() float64 {
 func (mr *MockAPIMockRecorder) GetMaxCurrent() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMaxCurrent", reflect.TypeOf((*MockAPI)(nil).GetMaxCurrent))
+}
+
+// GetMaxPhaseCurrent mocks base method.
+func (m *MockAPI) GetMaxPhaseCurrent() float64 {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetMaxPhaseCurrent")
+	ret0, _ := ret[0].(float64)
+	return ret0
+}
+
+// GetMaxPhaseCurrent indicates an expected call of GetMaxPhaseCurrent.
+func (mr *MockAPIMockRecorder) GetMaxPhaseCurrent() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMaxPhaseCurrent", reflect.TypeOf((*MockAPI)(nil).GetMaxPhaseCurrent))
 }
 
 // GetMinCurrent mocks base method.

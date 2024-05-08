@@ -1,0 +1,17 @@
+template: allinpower
+products:
+  - brand: All in Power
+requirements:
+  description:
+    de: "Nur für die Niederlande verfügbar."
+    en: "Only available for the Netherlands."
+group: price
+params:
+  - preset: tariff-base
+render: |
+  type: custom
+  {{ include "tariff-base" . }}
+  forecast:
+    source: http
+    uri: https://api.allinpower.nl/troodon/api/p/spot_market/prices/?product_type=ELK
+    jq: '[.timestamps, .prices] | transpose | map({ "start": (.[0] | strptime("%Y-%m-%dT%H:%M:%S.%f%z") | strftime("%Y-%m-%dT%H:%M:%SZ")), "end": (.[0] | strptime("%Y-%m-%dT%H:%M:%S.%f%z") | mktime + 3600 | strftime("%Y-%m-%dT%H:%M:%SZ")), "price": .[1] }) | tostring'

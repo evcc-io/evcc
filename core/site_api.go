@@ -10,6 +10,7 @@ import (
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/util/config"
+	"github.com/samber/lo"
 )
 
 var _ site.API = (*Site)(nil)
@@ -121,18 +122,28 @@ func (site *Site) SetAuxMeterRefs(ref []string) {
 	settings.SetString(keys.AuxMeters, strings.Join(filterConfigurable(ref), ","))
 }
 
-// Loadpoints returns the list loadpoints
+// Loadpoints returns the loadpoints as api interfaces
 func (site *Site) Loadpoints() []loadpoint.API {
-	res := make([]loadpoint.API, len(site.loadpoints))
-	for id, lp := range site.loadpoints {
-		res[id] = lp
-	}
-	return res
+	return lo.Map(site.loadpoints, func(lp *Loadpoint, _ int) loadpoint.API { return lp })
+}
+
+// loadpointsAsCircuitDevices returns the loadpoints as circuit devices
+func (site *Site) loadpointsAsCircuitDevices() []api.CircuitLoad {
+	return lo.Map(site.loadpoints, func(lp *Loadpoint, _ int) api.CircuitLoad { return lp })
 }
 
 // Vehicles returns the site vehicles
 func (site *Site) Vehicles() site.Vehicles {
 	return &vehicles{log: site.log}
+}
+
+// GetCircuit returns the circuit
+func (site *Site) GetCircuit() api.Circuit {
+	if site.circuit == nil {
+		// return untyped nil
+		return nil
+	}
+	return site.circuit
 }
 
 // GetPrioritySoc returns the PrioritySoc

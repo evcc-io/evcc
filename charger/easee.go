@@ -50,7 +50,6 @@ type Easee struct {
 	log                     *util.Logger
 	mux                     sync.RWMutex
 	lastEnergyPollMux       sync.Mutex
-	done                    chan struct{}
 	dynamicChargerCurrent   float64
 	current                 float64
 	chargerEnabled          bool
@@ -71,14 +70,14 @@ type Easee struct {
 	obsC       chan easee.Observation
 	obsTime    map[easee.ObservationID]time.Time
 	stopTicker chan struct{}
-	once       sync.Once
+	startDone  func()
 }
 
 func init() {
 	registry.Add("easee", NewEaseeFromConfig)
 }
 
-// NewEaseeFromConfig creates a go-e charger from generic config
+// NewEaseeFromConfig creates a Easee charger from generic config
 func NewEaseeFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
 		User      string
@@ -109,13 +108,15 @@ func NewEasee(user, password, charger string, timeout time.Duration, authorize b
 		return nil, api.ErrSponsorRequired
 	}
 
+	done := make(chan struct{})
+
 	c := &Easee{
 		Helper:    request.NewHelper(log),
 		charger:   charger,
 		authorize: authorize,
 		log:       log,
 		current:   6, // default current
-		done:      make(chan struct{}),
+		startDone: sync.OnceFunc(func() { close(done) }),
 		cmdC:      make(chan easee.SignalRCommandResponse),
 		obsC:      make(chan easee.Observation),
 		obsTime:   make(map[easee.ObservationID]time.Time),
@@ -187,7 +188,7 @@ func NewEasee(user, password, charger string, timeout time.Duration, authorize b
 
 	// wait for first update
 	select {
-	case <-c.done:
+	case <-done:
 	case <-time.After(request.Timeout):
 		err = os.ErrDeadlineExceeded
 	}
@@ -364,7 +365,7 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 		c.opMode = opMode
 
 		// startup completed
-		c.once.Do(func() { close(c.done) })
+		c.startDone()
 
 	case easee.REASON_FOR_NO_CURRENT:
 		c.reasonForNoCurrent = value.(int)

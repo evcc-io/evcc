@@ -68,9 +68,13 @@ type Site struct {
 	Title         string       `mapstructure:"title"`         // UI title
 	Voltage       float64      `mapstructure:"voltage"`       // Operating voltage. 230V for Germany.
 	ResidualPower float64      `mapstructure:"residualPower"` // PV meter only: household usage. Grid meter: household safety margin
-	Meters        MetersConfig // Meter references
+	Meters        MetersConfig `mapstructure:"meters"`        // Meter references
+	CircuitRef    string       `mapstructure:"circuit"`       // Circuit reference
+
+	MaxGridSupplyWhileBatteryCharging float64 `mapstructure:"maxGridSupplyWhileBatteryCharging"` // ignore battery charging if AC consumption is above this value
 
 	// meters
+	circuit       api.Circuit // Circuit
 	gridMeter     api.Meter   // Grid usage meter
 	pvMeters      []api.Meter // PV generation meters
 	batteryMeters []api.Meter // Battery charging meters
@@ -163,6 +167,15 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 			// NOTE: this requires stopSession to respect async access
 			shutdown.Register(lp.stopSession)
 		}
+	}
+
+	// circuit
+	if site.CircuitRef != "" {
+		dev, err := config.Circuits().ByName(site.CircuitRef)
+		if err != nil {
+			return err
+		}
+		site.circuit = dev.Instance()
 	}
 
 	// grid meter
@@ -558,7 +571,8 @@ func (site *Site) updateGridMeter() error {
 	// grid phase powers
 	var p1, p2, p3 float64
 	if phaseMeter, ok := site.gridMeter.(api.PhasePowers); ok {
-		if p1, p2, p3, err := phaseMeter.Powers(); err == nil {
+		var err error // phases needed for signed currents
+		if p1, p2, p3, err = phaseMeter.Powers(); err == nil {
 			phases := []float64{p1, p2, p3}
 			site.log.DEBUG.Printf("grid powers: %.0fW", phases)
 			site.publish(keys.GridPowers, phases)
@@ -757,10 +771,19 @@ func (site *Site) update(lp updater) {
 	// update all loadpoint's charge power
 	var totalChargePower float64
 	for _, lp := range site.loadpoints {
-		lp.UpdateChargePower()
+		lp.UpdateChargePowerAndCurrents()
 		totalChargePower += lp.GetChargePower()
 
 		site.prioritizer.UpdateChargePowerFlexibility(lp)
+	}
+
+	// update all circuits' power and currents
+	if site.circuit != nil {
+		if err := site.circuit.Update(site.loadpointsAsCircuitDevices()); err != nil {
+			site.log.ERROR.Println(err)
+		}
+
+		site.publishCircuits()
 	}
 
 	// prioritize if possible

@@ -3,6 +3,7 @@ package util
 import (
 	"io"
 	"log"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -19,10 +20,7 @@ var (
 	loggersMux sync.Mutex
 
 	// OutThreshold is the default console log level
-	OutThreshold = jww.LevelWarn
-
-	// LogThreshold is the default log file level
-	LogThreshold = jww.LevelTrace
+	OutThreshold = jww.LevelInfo
 )
 
 // LogAreaPadding of log areas
@@ -60,7 +58,10 @@ func newLogger(area string, lp int) *Logger {
 
 	level := logLevelForArea(area)
 	redactor := new(Redactor)
-	notepad := jww.NewNotepad(level, level, redactor, logstash.DefaultHandler, padded, log.Ldate|log.Ltime)
+	notepad := jww.NewNotepad(
+		level, jww.LevelTrace,
+		&redactWriter{os.Stdout, redactor}, &redactWriter{logstash.DefaultHandler, redactor},
+		padded, log.Ldate|log.Ltime)
 
 	logger := &Logger{
 		Notepad:  notepad,
@@ -95,7 +96,7 @@ func Loggers(cb func(string, *Logger)) {
 func logLevelForArea(area string) jww.Threshold {
 	level, ok := levels[strings.ToLower(area)]
 	if !ok {
-		level = LogThreshold
+		level = OutThreshold
 	}
 	return level
 }
@@ -103,7 +104,7 @@ func logLevelForArea(area string) jww.Threshold {
 // LogLevel sets log level for all loggers
 func LogLevel(defaultLevel string, areaLevels map[string]string) {
 	// default level
-	LogThreshold = logstash.LogLevelToThreshold(defaultLevel)
+	OutThreshold = logstash.LogLevelToThreshold(defaultLevel)
 
 	// area levels
 	for area, level := range areaLevels {

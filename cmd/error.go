@@ -14,6 +14,7 @@ const (
 	ClassCharger
 	ClassVehicle
 	ClassTariff
+	ClassCircuit
 	ClassSite
 	ClassMqtt
 	ClassDatabase

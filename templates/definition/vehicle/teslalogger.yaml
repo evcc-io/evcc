@@ -78,7 +78,7 @@ render: |
     uri: {{ .url }}:{{ .port }}/command/{{ .id }}/wake_up
   chargeEnable:
     source: http
-    uri: {{ .url }}:{{ .port }}/command/{{ .id }}/charge_start_stop?${enable}
+    uri: {{ .url }}:{{ .port }}/command/{{ .id }}/charge_start_stop?${chargeenable}
   maxcurrent:
     source: http
     uri: {{ .url }}:{{ .port }}/command/{{ .id }}/set_charging_amps?${maxcurrent}

@@ -1,14 +1,19 @@
 template: amber
 products:
-  - brand: Amber Electric (AU)
+  - brand: Amber Electric
+requirements:
+  description:
+    de: "Nur für Australien verfügbar."
+    en: "Only available for Australia."
+group: price
 params:
-  - preset: tariff-base
   - name: token
   - name: siteid
   - name: channel
+  - preset: tariff-base
 render: |
   type: amber
-  {{ include "tariff-base" . }}
   token: {{ .token }}
   siteid: {{ .siteid }}
   channel: {{ .channel }}
+  {{ include "tariff-base" . }}

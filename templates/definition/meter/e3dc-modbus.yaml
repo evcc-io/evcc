@@ -1,4 +1,5 @@
 template: e3dc
+deprecated: true
 products:
   - brand: E3/DC
 params:

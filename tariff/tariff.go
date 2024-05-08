@@ -90,8 +90,10 @@ func (t *Tariff) run(forecastG func() (string, error), done chan error) {
 			if err != nil {
 				return backoffPermanentError(err)
 			}
-
-			return json.Unmarshal([]byte(s), &data)
+			if err := json.Unmarshal([]byte(s), &data); err != nil {
+				return backoff.Permanent(err)
+			}
+			return nil
 		}, bo); err != nil {
 			once.Do(func() { done <- err })
 

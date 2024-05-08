@@ -7,11 +7,11 @@ import (
 	"strings"
 )
 
-const _ClassName = "meterchargervehicletariffsitemqttdatabaseeebusjavascriptgo"
+const _ClassName = "meterchargervehicletariffcircuitsitemqttdatabaseeebusjavascriptgo"
 
-var _ClassIndex = [...]uint8{0, 5, 12, 19, 25, 29, 33, 41, 46, 56, 58}
+var _ClassIndex = [...]uint8{0, 5, 12, 19, 25, 32, 36, 40, 48, 53, 63, 65}
 
-const _ClassLowerName = "meterchargervehicletariffsitemqttdatabaseeebusjavascriptgo"
+const _ClassLowerName = "meterchargervehicletariffcircuitsitemqttdatabaseeebusjavascriptgo"
 
 func (i Class) String() string {
 	i -= 1
@@ -29,15 +29,16 @@ func _ClassNoOp() {
 	_ = x[ClassCharger-(2)]
 	_ = x[ClassVehicle-(3)]
 	_ = x[ClassTariff-(4)]
-	_ = x[ClassSite-(5)]
-	_ = x[ClassMqtt-(6)]
-	_ = x[ClassDatabase-(7)]
-	_ = x[ClassEEBus-(8)]
-	_ = x[ClassJavascript-(9)]
-	_ = x[ClassGo-(10)]
+	_ = x[ClassCircuit-(5)]
+	_ = x[ClassSite-(6)]
+	_ = x[ClassMqtt-(7)]
+	_ = x[ClassDatabase-(8)]
+	_ = x[ClassEEBus-(9)]
+	_ = x[ClassJavascript-(10)]
+	_ = x[ClassGo-(11)]
 }
 
-var _ClassValues = []Class{ClassMeter, ClassCharger, ClassVehicle, ClassTariff, ClassSite, ClassMqtt, ClassDatabase, ClassEEBus, ClassJavascript, ClassGo}
+var _ClassValues = []Class{ClassMeter, ClassCharger, ClassVehicle, ClassTariff, ClassCircuit, ClassSite, ClassMqtt, ClassDatabase, ClassEEBus, ClassJavascript, ClassGo}
 
 var _ClassNameToValueMap = map[string]Class{
 	_ClassName[0:5]:        ClassMeter,
@@ -48,18 +49,20 @@ var _ClassNameToValueMap = map[string]Class{
 	_ClassLowerName[12:19]: ClassVehicle,
 	_ClassName[19:25]:      ClassTariff,
 	_ClassLowerName[19:25]: ClassTariff,
-	_ClassName[25:29]:      ClassSite,
-	_ClassLowerName[25:29]: ClassSite,
-	_ClassName[29:33]:      ClassMqtt,
-	_ClassLowerName[29:33]: ClassMqtt,
-	_ClassName[33:41]:      ClassDatabase,
-	_ClassLowerName[33:41]: ClassDatabase,
-	_ClassName[41:46]:      ClassEEBus,
-	_ClassLowerName[41:46]: ClassEEBus,
-	_ClassName[46:56]:      ClassJavascript,
-	_ClassLowerName[46:56]: ClassJavascript,
-	_ClassName[56:58]:      ClassGo,
-	_ClassLowerName[56:58]: ClassGo,
+	_ClassName[25:32]:      ClassCircuit,
+	_ClassLowerName[25:32]: ClassCircuit,
+	_ClassName[32:36]:      ClassSite,
+	_ClassLowerName[32:36]: ClassSite,
+	_ClassName[36:40]:      ClassMqtt,
+	_ClassLowerName[36:40]: ClassMqtt,
+	_ClassName[40:48]:      ClassDatabase,
+	_ClassLowerName[40:48]: ClassDatabase,
+	_ClassName[48:53]:      ClassEEBus,
+	_ClassLowerName[48:53]: ClassEEBus,
+	_ClassName[53:63]:      ClassJavascript,
+	_ClassLowerName[53:63]: ClassJavascript,
+	_ClassName[63:65]:      ClassGo,
+	_ClassLowerName[63:65]: ClassGo,
 }
 
 var _ClassNames = []string{
@@ -67,12 +70,13 @@ var _ClassNames = []string{
 	_ClassName[5:12],
 	_ClassName[12:19],
 	_ClassName[19:25],
-	_ClassName[25:29],
-	_ClassName[29:33],
-	_ClassName[33:41],
-	_ClassName[41:46],
-	_ClassName[46:56],
-	_ClassName[56:58],
+	_ClassName[25:32],
+	_ClassName[32:36],
+	_ClassName[36:40],
+	_ClassName[40:48],
+	_ClassName[48:53],
+	_ClassName[53:63],
+	_ClassName[63:65],
 }
 
 // ClassString retrieves an enum value from the enum constants string name.
