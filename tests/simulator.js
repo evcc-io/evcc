@@ -1,15 +1,36 @@
+import os from "os";
+import path from "path";
+import fs from "fs";
 import waitOn from "wait-on";
 import axios from "axios";
 import { exec } from "child_process";
 
-export const SIMULATOR_HOST = "localhost:7072";
-export const SIMULATOR_URL = `http://${SIMULATOR_HOST}/`;
-const HEALTH_URL = SIMULATOR_URL + "api/state";
-const SHUTDOWN_URL = SIMULATOR_URL + "api/shutdown";
+function port() {
+  const index = process.env.TEST_PARALLEL_INDEX * 1;
+  return 12000 + index;
+}
+
+export function simulatorHost() {
+  return `localhost:${port()}`;
+}
+
+export function simulatorUrl() {
+  return `http://${simulatorHost()}`;
+}
+
+export function simulatorConfig() {
+  const input = "./tests/simulator.evcc.yaml";
+  const content = fs.readFileSync(input, "utf8");
+  const result = content.replace(/localhost:7072/g, simulatorHost());
+  const resultName = "simulator.evcc.generated.yaml";
+  const resultPath = path.join(os.tmpdir(), resultName);
+  fs.writeFileSync(resultPath, result);
+  return resultPath;
+}
 
 export async function startSimulator() {
   console.log("starting simulator");
-  const instance = exec("npm run simulator");
+  const instance = exec(`npm run simulator -- --port ${port()}`);
   console.log("exec end");
   instance.stdout.pipe(process.stdout);
   instance.stderr.pipe(process.stderr);
@@ -20,10 +41,10 @@ export async function startSimulator() {
     }
   });
   console.log("waiton");
-  await waitOn({ resources: [HEALTH_URL], log: true });
+  await waitOn({ resources: [`${simulatorUrl()}/api/state`], log: true });
 }
 
 export async function stopSimulator() {
   console.log("shutting down simulator");
-  await axios.post(SHUTDOWN_URL);
+  await axios.post(`${simulatorUrl()}/api/shutdown`);
 }

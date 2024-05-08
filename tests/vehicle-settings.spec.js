@@ -1,6 +1,8 @@
 import { test, expect } from "@playwright/test";
-import { start, stop, restart } from "./evcc";
+import { start, stop, restart, baseUrl } from "./evcc";
 import { startSimulator, stopSimulator, SIMULATOR_URL } from "./simulator";
+
+test.use({ baseURL: baseUrl() });
 
 const CONFIG = "simulator.evcc.yaml";
 
