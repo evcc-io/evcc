@@ -1,11 +1,12 @@
 import { test, expect } from "@playwright/test";
-import { start, stop } from "./evcc";
-import { startSimulator, stopSimulator } from "./simulator";
+import { start, stop, baseUrl } from "./evcc";
+import { startSimulator, stopSimulator, simulatorConfig } from "./simulator";
 
 const BASICS_CONFIG = "basics.evcc.yaml";
-const SIMULATOR_CONFIG = "simulator.evcc.yaml";
 
 const UI_ROUTES = ["/", "/#/sessions", "/#/config"];
+
+test.use({ baseURL: baseUrl() });
 
 async function login(page) {
   await page.locator("#loginPassword").fill("secret");
@@ -55,7 +56,7 @@ test.describe("Basics", async () => {
 
 test.describe("Advanced", async () => {
   test.beforeAll(async () => {
-    await start(SIMULATOR_CONFIG, "password.sql");
+    await start(simulatorConfig(), "password.sql");
     await startSimulator();
   });
 
