@@ -1,5 +1,7 @@
 import { test, expect, devices } from "@playwright/test";
-import { start, stop } from "./evcc";
+import { start, stop, baseUrl } from "./evcc";
+
+test.use({ baseURL: baseUrl() });
 
 const mobile = devices["iPhone 12 Mini"].viewport;
 const desktop = devices["Desktop Chrome"].viewport;

@@ -2,8 +2,8 @@ package util
 
 import (
 	"bytes"
+	"io"
 	"net/url"
-	"os"
 	"sync"
 )
 
@@ -16,7 +16,12 @@ var (
 	RedactHook = RedactDefaultHook
 )
 
-// Redactor implements a redacting io.Writer
+// RedactDefaultHook expands a redaction item to include URL encoding
+func RedactDefaultHook(s string) []string {
+	return []string{s, url.QueryEscape(s)}
+}
+
+// Redactor implements log redaction
 type Redactor struct {
 	mu     sync.Mutex
 	redact []string
@@ -34,16 +39,21 @@ func (l *Redactor) Redact(redact ...string) {
 	}
 }
 
-func (l *Redactor) Write(p []byte) (n int, err error) {
+func (l *Redactor) redacted(p []byte) []byte {
 	l.mu.Lock()
 	for _, s := range l.redact {
 		p = bytes.ReplaceAll(p, []byte(s), []byte(RedactReplacement))
 	}
 	l.mu.Unlock()
-	return os.Stdout.Write(p)
+	return p
 }
 
-// RedactDefaultHook expands a redaction item to include URL encoding
-func RedactDefaultHook(s string) []string {
-	return []string{s, url.QueryEscape(s)}
+// redactWriter implements a redacting io.Writer
+type redactWriter struct {
+	w io.Writer
+	r *Redactor
+}
+
+func (w *redactWriter) Write(p []byte) (n int, err error) {
+	return w.w.Write(w.r.redacted(p))
 }

@@ -78,9 +78,21 @@ validateSave = "Valider et enregistrer"
 titleAdd = "Ajouter un compteur pour le solaire"
 titleEdit = "Modifier le compteur pour le solaire"
 
+[config.section]
+general = "Général"
+system = "Système"
+
 [config.site]
 cancel = "Annuler"
 save = "Enregistrer"
+
+[config.system]
+logs = "Journaux"
+restart = "Redémarrer"
+restartRequiredDescription = "Veuillez redémarrer pour appliquer les changements."
+restartRequiredMessage = "La configuration a changé."
+restartingDescription = "Veuillez patienter…"
+restartingMessage = "Redémarrage d’evcc en cours."
 
 [config.title]
 description = "«Affiché sur l’écran principal et l’onglet du navigateur.»"
@@ -200,6 +212,8 @@ discussionsButton = "Discussions GitHub"
 documentationButton = "Documentation"
 issueButton = "Signaler un bug"
 issueDescription = "Trouvé un comportement étrange ou erroné?"
+logsButton = "Voir les journaux"
+logsDescription = "Vérifiez s’il y a des erreurs dans les journaux."
 modalTitle = "Besoin d'aide?"
 primaryActions = "Quelque chose ne fonctionne pas comme ça devrait ? Voici où trouver de l'aide."
 restartButton = "Redémarrer"
@@ -213,12 +227,24 @@ description = "En temps normal, un redémarrage ne devrait pas être nécessaire
 disclaimer = "NB : evcc va s'arrêter et s'en remettre au système d'exploitation pour redémarrer le service."
 modalTitle = "Voulez-vous vraiment redémarrer ?"
 
+[log]
+areaLabel = "Filtrer par zone"
+areas = "Toutes les zones"
+download = "Télécharger les journaux complets"
+levelLabel = "Filtrer par niveau"
+noResults = "Aucune entrée de journal ne correspond."
+search = "Rechercher"
+showAll = "Voir toutes les entrées"
+title = "Journaux"
+update = "Mise à jour automatique"
+
 [loginModal]
 cancel = "Annuler"
 error = "«Connection échouée:»"
 invalid = "«Mot de passe invalide.»"
 login = "Identifiant"
 password = "Mot de passe"
+reset = "Réinitialiser le mot de passe ?"
 title = "Authentification"
 
 [main]
@@ -399,6 +425,7 @@ waitForVehicle = "Prêt à charger. Attente du véhicule…"
 
 [notifications]
 dismissAll = "Supprimer tout"
+logs = "Voir les journaux complets"
 modalTitle = "Notifications"
 
 [offline]
@@ -469,6 +496,11 @@ filter = "Filtrer"
 
 [settings]
 title = "Réglages généraux"
+
+[settings.fullscreen]
+enter = "Passer en plein écran"
+exit = "Quitter le plein écran"
+label = "Plein écran"
 
 [settings.hiddenFeatures]
 label = "Expérimental"

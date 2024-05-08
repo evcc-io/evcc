@@ -19,7 +19,7 @@ func init() {
 }
 
 func runConfigCheck(cmd *cobra.Command, args []string) {
-	err := loadConfigFile(&conf)
+	err := loadConfigFile(&conf, !cmd.Flag(flagIgnoreDatabase).Changed)
 
 	if err != nil {
 		log.FATAL.Println("config invalid:", err)

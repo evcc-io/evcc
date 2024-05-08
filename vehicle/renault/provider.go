@@ -103,12 +103,15 @@ var _ api.VehicleOdometer = (*Provider)(nil)
 // Odometer implements the api.VehicleOdometer interface
 func (v *Provider) Odometer() (float64, error) {
 	res, err := v.cockpitG()
-
-	if err == nil {
-		return res.Data.Attributes.TotalMileage, nil
+	if err != nil {
+		return 0, err
 	}
 
-	return 0, err
+	if res.Data.Attributes.TotalMileage != nil {
+		return *res.Data.Attributes.TotalMileage, nil
+	}
+
+	return 0, api.ErrNotAvailable
 }
 
 var _ api.VehicleFinishTimer = (*Provider)(nil)
