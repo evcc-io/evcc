@@ -1,13 +1,11 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, baseUrl } from "./evcc";
-import { startSimulator, stopSimulator, SIMULATOR_URL } from "./simulator";
+import { startSimulator, stopSimulator, simulatorUrl, simulatorConfig } from "./simulator";
 
 test.use({ baseURL: baseUrl() });
 
-const CONFIG = "simulator.evcc.yaml";
-
 test.beforeAll(async () => {
-  await start(CONFIG, "password.sql");
+  await start(simulatorConfig(), "password.sql");
   await startSimulator();
 });
 test.afterAll(async () => {
@@ -16,7 +14,7 @@ test.afterAll(async () => {
 });
 
 test.beforeEach(async ({ page }) => {
-  await page.goto(SIMULATOR_URL);
+  await page.goto(simulatorUrl());
   await page.getByLabel("PV Power").fill("6000");
   await page.getByTestId("loadpoint0").getByLabel("Power").fill("6000");
   await page.getByTestId("loadpoint0").getByText("C (charging)").click();

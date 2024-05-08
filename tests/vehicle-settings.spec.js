@@ -1,10 +1,8 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, restart, baseUrl } from "./evcc";
-import { startSimulator, stopSimulator, SIMULATOR_URL } from "./simulator";
+import { startSimulator, stopSimulator, simulatorUrl, simulatorConfig } from "./simulator";
 
 test.use({ baseURL: baseUrl() });
-
-const CONFIG = "simulator.evcc.yaml";
 
 test.beforeAll(async () => {
   await startSimulator();
@@ -14,9 +12,9 @@ test.afterAll(async () => {
 });
 
 test.beforeEach(async ({ page }) => {
-  await start(CONFIG, "password.sql");
+  await start(simulatorConfig(), "password.sql");
 
-  await page.goto(SIMULATOR_URL);
+  await page.goto(simulatorUrl());
   await page.getByLabel("Grid Power").fill("500");
   await page.getByTestId("vehicle0").getByLabel("SoC").fill("20");
   await page.getByTestId("loadpoint0").getByText("B (connected)").click();
