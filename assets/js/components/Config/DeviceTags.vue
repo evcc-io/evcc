@@ -3,6 +3,7 @@
 		<span
 			v-for="(entry, index) in entries"
 			:key="index"
+			:data-testid="`device-tag-${entry.name}`"
 			class="d-flex gap-2 overflow-hidden text-truncate"
 		>
 			<div class="label overflow-hidden text-truncate flex-shrink-1 flex-grow-1">
