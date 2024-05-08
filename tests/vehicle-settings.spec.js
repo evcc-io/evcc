@@ -36,7 +36,7 @@ test.describe("minSoc", async () => {
     await page.getByRole("combobox", { name: "Min. charge %" }).selectOption("20%");
     await expect(page.getByText("charged to 20% in solar mode")).toBeVisible();
 
-    await restart(CONFIG);
+    await restart(simulatorConfig());
     await page.reload();
 
     await page.getByTestId("charging-plan").getByRole("button", { name: "none" }).click();
@@ -75,7 +75,7 @@ test.describe("limitSoc", async () => {
     await page.getByRole("button", { name: "Close" }).click();
     await expect(page.getByTestId("limit-soc-value")).toContainText("80%");
 
-    await restart(CONFIG);
+    await restart(simulatorConfig());
     await page.reload();
 
     await expect(page.getByTestId("limit-soc-value")).toContainText("80%");
