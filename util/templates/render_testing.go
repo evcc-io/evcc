@@ -69,7 +69,7 @@ func TestClass(t *testing.T, class Class, instantiate func(t *testing.T, values 
 				})
 			})
 
-			return
+			continue
 		}
 
 		for _, u := range usages {
