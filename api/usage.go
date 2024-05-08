@@ -9,4 +9,5 @@ const (
 	UsageBattery
 	UsageCharge
 	UsageAux
+	UsageVehicle // maps parameter to class for defaults.yaml
 )
