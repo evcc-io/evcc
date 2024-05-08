@@ -1,5 +1,5 @@
 <template>
-	<div v-if="tags" class="list mb-3">
+	<div v-if="tags" class="list">
 		<span
 			v-for="(entry, index) in entries"
 			:key="index"
