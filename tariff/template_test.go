@@ -8,10 +8,10 @@ import (
 )
 
 var acceptable = []string{
-	"missing token",         //amber, tibber
-	"invalid zipcode",       //grünstromindex
-	"invalid apikey format", //octopusenergy
-	"missing region",        //octopusenergy
+	"missing token",         // amber, tibber
+	"invalid zipcode",       // grünstromindex
+	"invalid apikey format", // octopusenergy
+	"missing region",        // octopusenergy
 }
 
 func TestTemplates(t *testing.T) {
