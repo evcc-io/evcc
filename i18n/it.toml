@@ -1,6 +1,18 @@
 [batterySettings]
 batteryLevel = "Livello batteria"
 capacity = "{energy} di {total}"
+disclaimerHint = “Nota:”
+disclaimerText = “Queste impostazioni riguardano solamente la modalità solare. Il comportamento di ricarica è adattato di conseguenza.”
+legendBottomName = “priorità casa”
+legendBottomSubline = “Non usato per ricarica”
+legendMiddleName = “Priorità al veicolo”
+control = Controllo batteria
+legendMiddleSubline = “Casa seconda”
+legendTitle = “Come dovrebbe essere utilizzata l’energia solare?”
+legendTopAutostart = “Parte automaticamente”
+modalTitle = “Batteria di casa”
+legendTopName = “Ricarica supportata dalla batteria”
+legendTopSubline = “Senza interruzioni”
 
 [footer]
 
@@ -281,3 +293,9 @@ title = "Errore di avvio"
 cancel = "Cancella"
 template = "Produttore"
 test = "Test"
+
+
+[batterySettings.bufferStart]
+never = “Solo con abbastanza surplus”
+full = “Quando è a {soc}”
+above = “Quando supera {soc}”
