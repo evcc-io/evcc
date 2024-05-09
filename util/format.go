@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/42atomys/sprout"
+	"github.com/go-sprout/sprout"
 )
 
 var re = regexp.MustCompile(`(?i)\${(\w+)(:([a-zA-Z0-9%.]+))?}`)

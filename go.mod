@@ -4,7 +4,7 @@ go 1.22.0
 
 require (
 	dario.cat/mergo v1.0.0
-	github.com/42atomys/sprout v0.2.0
+	github.com/go-sprout/sprout v0.2.0
 	github.com/AlecAivazis/survey/v2 v2.3.7
 	github.com/BurntSushi/toml v1.3.2
 	github.com/PuerkitoBio/goquery v1.9.2

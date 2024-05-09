@@ -5,9 +5,9 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/42atomys/sprout"
 	"github.com/evcc-io/evcc/core/vehicle"
 	"github.com/evcc-io/evcc/util"
+	"github.com/go-sprout/sprout"
 )
 
 // Event is a notification event
