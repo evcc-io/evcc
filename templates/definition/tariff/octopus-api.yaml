@@ -2,13 +2,18 @@ template: octopus-api
 products:
   - brand: Octopus Energy
     description:
-      en: Octopus Energy - API
+      generic: API
+requirements:
+  description:
+    de: "Den API-Key bekommst du im Octopus Portal https://octopus.energy/dashboard/new/accounts/personal-details/api-access"
+    en: "You can get the API key in the Octopus portal https://octopus.energy/dashboard/new/accounts/personal-details/api-access"
+group: price
 params:
   - name: apiKey
     type: string
     required: true
-    description:
-      en: "Your Octopus Energy API Key. You can find it here: https://octopus.energy/dashboard/new/accounts/personal-details/api-access"
+    help:
+      generic: "Octopus Energy API Key."
 render: |
   type: octopusenergy
   apikey: {{ .apikey }}

@@ -72,6 +72,16 @@ template = "Hersteller"
 titleChoice = "Was möchtest du hinzufügen?"
 validateSave = "Überprüfen & speichern"
 
+[config.options]
+
+[config.options.endianness]
+big = "big-endian"
+little = "little-endian"
+
+[config.options.schema]
+http = "HTTP (unverschlüsselt)"
+https = "HTTPS (verschlüsselt)"
+
 [config.pv]
 titleAdd = "Zähler (PV) hinzufügen"
 titleEdit = "Zähler (PV) bearbeiten"

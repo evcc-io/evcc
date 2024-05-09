@@ -48,7 +48,7 @@ func NewOctopusFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		if cc.Region == "" {
 			return nil, errors.New("missing region")
 		}
-		if cc.Tariff == "" {
+		if cc.Tariff != "" {
 			// deprecated - copy to correct slot and WARN
 			logger.WARN.Print("'tariff' is deprecated and will break in a future version - use 'productCode' instead")
 			cc.ProductCode = cc.Tariff
