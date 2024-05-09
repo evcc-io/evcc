@@ -29,12 +29,17 @@ func (c *Connection) Clone(slaveID uint8) *Connection {
 }
 
 // TODO
-func (c *Connection) ConnectDelay(_ time.Duration) {
+func (c *Connection) ConnectDelay(delay time.Duration) {
+	if delay > 0 {
+		c.Connection.ConnectDelay(delay)
+	}
 }
 
 // TODO
-func (c *Connection) Timeout(_ time.Duration) time.Duration {
-	return 0
+func (c *Connection) Timeout(timeout time.Duration) {
+	if timeout > 0 {
+		_ = c.Connection.Timeout(timeout)
+	}
 }
 
 func (c *Connection) Logger(l modbus.Logger) {

@@ -55,9 +55,7 @@ func NewModbusFromConfig(other map[string]interface{}) (Provider, error) {
 	conn.Delay(cc.Delay)
 
 	// set non-default connect delay
-	if cc.ConnectDelay > 0 {
-		conn.ConnectDelay(cc.ConnectDelay)
-	}
+	conn.ConnectDelay(cc.ConnectDelay)
 
 	log := util.NewLogger("modbus")
 	conn.Logger(log.TRACE)

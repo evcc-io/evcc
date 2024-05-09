@@ -58,9 +58,7 @@ func NewModbusSunspecFromConfig(other map[string]interface{}) (Provider, error) 
 	conn.Delay(cc.Delay)
 
 	// set non-default connect delay
-	if cc.ConnectDelay > 0 {
-		conn.ConnectDelay(cc.ConnectDelay)
-	}
+	conn.ConnectDelay(cc.ConnectDelay)
 
 	log := util.NewLogger("sunspec")
 	conn.Logger(log.TRACE)
