@@ -570,3 +570,12 @@ title = "Error al iniciar"
 cancel = "Cancelar"
 template = "Fabricante"
 test = "Prueba"
+
+
+[config.options.endianness]
+little = "little endian"
+big = "big endian"
+
+[config.options.schema]
+http = "HTTP (sin cifrar)"
+https = "HTTPS (cifrado)"
