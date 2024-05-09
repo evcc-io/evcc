@@ -570,3 +570,12 @@ title = "Klaida startuojant"
 cancel = "Atšaukti"
 template = "Gamintojas"
 test = "Testuoti"
+
+
+[config.options.endianness]
+big = "mažėjantys baitai"
+little = "didėjantys baitai"
+
+[config.options.schema]
+http = "HTTP (nešifruotas)"
+https = "HTTPS (užšifruotas)"
