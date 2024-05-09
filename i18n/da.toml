@@ -13,7 +13,7 @@ legendTitle = "Hvordan skal solenergi benyttes?"
 legendTopAutostart = "starter automatisk"
 legendTopName = "batteri understøttet opladning"
 legendTopSubline = "uden afbrydelser"
-modalTitle = "Batteri indstillinger"
+modalTitle = "Hus batteri"
 
 [batterySettings.bufferStart]
 above = "når den er over {soc}"
@@ -78,9 +78,21 @@ validateSave = "Valider og gem"
 titleAdd = "Tilføj solmåler"
 titleEdit = "Rediger solmåler"
 
+[config.section]
+general = "Generelle"
+system = "System"
+
 [config.site]
 cancel = "Afbryd"
 save = "Gem"
+
+[config.system]
+logs = "Log"
+restart = "Genstart"
+restartRequiredDescription = "Genstart for at se effekten"
+restartRequiredMessage = "Konfiguration er ændret"
+restartingDescription = "Vent venligst..."
+restartingMessage = "Genstarter evcc."
 
 [config.title]
 description = "Vises på hovedskærm og på browserfane"
@@ -184,6 +196,7 @@ blog = "Blog"
 docs = "Dokumentation"
 github = "GitHub"
 login = "Login til køretøjer"
+logout = "Log ud"
 nativeSettings = "Skift server"
 needHelp = "Brug for hjælp?"
 sessions = "Opladnings sessioner"
@@ -194,6 +207,8 @@ discussionsButton = "GitHub diskussioner"
 documentationButton = "Dokumentation"
 issueButton = "Meld en fejl"
 issueDescription = "Fundet en mærkelig eller forkert adfærd?"
+logsButton = "Se logfil"
+logsDescription = "Check log for fejl"
 modalTitle = "Brug for hjælp?"
 primaryActions = "Noget fungerer ikke, som det skulle? Disse er gode steder at få hjælp."
 restartButton = "Genstart"
@@ -206,6 +221,26 @@ confirm = "Ja, genstart!"
 description = "Under normale omstændigheder bør genstart ikke være nødvendig. Overvej at indsende en fejlmelding, hvis du har brug for at genstarte evcc regelmæssigt."
 disclaimer = "Bemærk: evcc afsluttes og har brug for at operativsystemet genstarter tjenesten."
 modalTitle = "Er du sikker på, at du vil genstarte?"
+
+[log]
+areaLabel = "Filtrer per område"
+areas = "Alle områder"
+download = "Hent hele log filen"
+levelLabel = "Filtrer på log niveau"
+noResults = "Ingen matchende logposter"
+search = "Søg"
+showAll = "Vis alle poster"
+title = "Log filer"
+update = "Opdater automatisk"
+
+[loginModal]
+cancel = "Afbryd"
+error = "Login mislykkedes"
+invalid = "Ugyldig adgangskode"
+login = "Log på"
+password = "Adgangskode"
+reset = "Nulstil adgangskode"
+title = "Godkendelse"
 
 [main]
 vehicles = "Parkering"
@@ -228,7 +263,7 @@ update = "Anvend"
 
 [main.energyflow]
 battery = "Batteri"
-batteryCharge = "Battery opladning"
+batteryCharge = "Batteri opladning"
 batteryDischarge = "Batteriet aflades"
 batteryHold = "Batteri (låst)"
 batteryTooltip = "{energi} af {total} ({soc})"
@@ -236,7 +271,7 @@ gridImport = "Forbrug fra elnet"
 homePower = "Forbrug"
 loadpoints = "Oplader| Oplader | {count} opladere"
 noEnergy = "Ingen målerdata"
-pvExport = "Eksport til elnettet"
+pvExport = "Eksport til elnet"
 pvProduction = "Produktion"
 selfConsumption = "Eget forbrug"
 
@@ -388,11 +423,25 @@ waitForVehicle = "Parat. Venter på køretøj ..."
 
 [notifications]
 dismissAll = "Afvis alle"
+logs = "Se hele log filen"
 modalTitle = "Underretninger"
 
 [offline]
 message = "Ikke forbundet til en server."
 reload = "Genindlæs?"
+
+[passwordModal]
+description = "Angiv adgangskode for at beskytte konfigurations indstillinger. Det er stadig mulig at benytte hovedskærmen uden at logge på"
+empty = "Adgangskode må ikke være tomt"
+error = "Fejl:"
+labelCurrent = "Nuværende adgangskode"
+labelNew = "Ny adgangskode"
+labelRepeat = "Gentag adgangskoden"
+newPassword = "Opret adgangskode"
+noMatch = "Adgangskode stemmer ikke"
+titleNew = "Angiv Administrator adgangskode"
+titleUpdate = "Opdater Administrator adgangskode"
+updatePassword = "Opdater adgangskode"
 
 [session]
 cancel = "Afbryd"
@@ -444,7 +493,12 @@ allVehicles = "alle køretøjer"
 filter = "Filter"
 
 [settings]
-title = "Generelle indstillinger"
+title = "Brugergrænseflade"
+
+[settings.fullscreen]
+enter = "Gå til fuldskærmsvisning"
+exit = "Afslut fuldskærm"
+label = "Fuldskærm"
 
 [settings.hiddenFeatures]
 label = "Experimentalt"

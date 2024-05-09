@@ -2,7 +2,7 @@ package templates
 
 type Class int
 
-//go:generate enumer -type Class
+//go:generate enumer -type Class -transform=lower
 const (
 	_ Class = iota
 	Charger

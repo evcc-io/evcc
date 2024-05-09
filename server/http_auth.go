@@ -3,6 +3,7 @@ package server
 import (
 	"encoding/json"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/util/auth"
@@ -55,14 +56,18 @@ func updatePasswordHandler(auth auth.Auth) http.HandlerFunc {
 
 // read jwt from header and cookie
 func jwtFromRequest(r *http.Request) string {
-	tokenString := r.Header.Get("Authorization")
-	if tokenString == "" {
-		if cookie, _ := r.Cookie(authCookieName); cookie != nil {
-			tokenString = cookie.Value
-		}
+	// read from header
+	authHeader := r.Header.Get("Authorization")
+	if token, ok := strings.CutPrefix(authHeader, "Bearer "); ok {
+		return token
 	}
 
-	return tokenString
+	// read from cookie
+	if cookie, _ := r.Cookie(authCookieName); cookie != nil {
+		return cookie.Value
+	}
+
+	return ""
 }
 
 // authStatusHandler login status (true/false) based on jwt token. Error if admin password is not configured

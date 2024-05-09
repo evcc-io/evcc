@@ -6,6 +6,7 @@
 			data-bs-toggle="modal"
 			data-bs-target="#notificationModal"
 			class="btn btn-sm btn-link text-decoration-none link-light text-nowrap"
+			data-testid="notification-icon"
 		>
 			<shopicon-regular-exclamationtriangle
 				:class="iconClass"
@@ -65,12 +66,15 @@
 							</p>
 						</div>
 					</div>
-					<div class="modal-footer">
+					<div class="modal-footer d-flex justify-content-between gap-3">
+						<router-link to="/log" class="btn btn-outline-secondary">
+							{{ $t("notifications.logs") }}
+						</router-link>
 						<button
 							type="button"
 							data-bs-dismiss="modal"
 							aria-label="Close"
-							class="btn btn-outline-secondary"
+							class="btn btn-outline-primary"
 							@click="clear"
 						>
 							{{ $t("notifications.dismissAll") }}

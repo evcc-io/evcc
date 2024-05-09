@@ -3,6 +3,7 @@ package templates
 import (
 	_ "embed"
 	"fmt"
+	"strconv"
 	"strings"
 )
 
@@ -75,15 +76,15 @@ func (t *Template) ModbusValues(renderMode int, values map[string]interface{}) {
 			switch p.Name {
 			case ModbusParamNameId:
 				if modbusParam.ID != 0 {
-					defaultValue = fmt.Sprintf("%d", modbusParam.ID)
+					defaultValue = strconv.Itoa(modbusParam.ID)
 				}
 			case ModbusParamNamePort:
 				if modbusParam.Port != 0 {
-					defaultValue = fmt.Sprintf("%d", modbusParam.Port)
+					defaultValue = strconv.Itoa(modbusParam.Port)
 				}
 			case ModbusParamNameBaudrate:
 				if modbusParam.Baudrate != 0 {
-					defaultValue = fmt.Sprintf("%d", modbusParam.Baudrate)
+					defaultValue = strconv.Itoa(modbusParam.Baudrate)
 				}
 			case ModbusParamNameComset:
 				if modbusParam.Comset != "" {

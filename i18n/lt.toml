@@ -13,7 +13,7 @@ legendTitle = "Kaip naudoti saulės energiją?"
 legendTopAutostart = "startuoja automatiškai"
 legendTopName = "kaupiklis padeda įkrauti"
 legendTopSubline = "be pertraukų"
-modalTitle = "Kaupiklio nustatymai"
+modalTitle = "Namų kaupiklis"
 
 [batterySettings.bufferStart]
 above = "kai virš {soc}"
@@ -78,12 +78,24 @@ validateSave = "Patikrinti ir išsaugoti"
 titleAdd = "Pridėti saulės skaitiklį"
 titleEdit = "Redaguoti saulės skaitiklį"
 
+[config.section]
+general = "Pagrindiniai"
+system = "Sisteminiai"
+
 [config.site]
 cancel = "Atšaukti"
 save = "Išsaugoti"
 
+[config.system]
+logs = "Žurnalai"
+restart = "Paleisti iš naujo"
+restartRequiredDescription = "Paleiskite iš naujo, kad įsigaliotų pakeitimai"
+restartRequiredMessage = "Nustatymai pasikeitė"
+restartingDescription = "Palaukite..."
+restartingMessage = "Paleidžiama iš naujo"
+
 [config.title]
-description = "Rodoma pagrindiniame ekrane ir naršyklės skirtuke."
+description = "Rodoma pagrindiniame ekrane ir naršyklės kortelėje."
 label = "Pavadinimas"
 title = "Redaguoti pavadinimą"
 
@@ -184,6 +196,7 @@ blog = "Tinklaraštis"
 docs = "Dokumentacija (Vokiečių k.)"
 github = "GitHub"
 login = " Automobilių prisijungimai"
+logout = "Atsijungti"
 nativeSettings = "Pakeisti Serverį"
 needHelp = "Reikia Pagalbos?"
 sessions = "Įkrovimo sesijos "
@@ -199,6 +212,8 @@ discussionsButton = "GitHub diskusijos"
 documentationButton = "Dokumentacija"
 issueButton = "Pranešti apie klaidą"
 issueDescription = "Pastebėjote keistą ar netinkamą veikimą?"
+logsButton = "Peržiūrėti žurnalus"
+logsDescription = "Patikrinkite ar žurnaluose nėra klaidų"
 modalTitle = "Reikia pagalbos?"
 primaryActions = "Kažkas veikia ne taip, kaip turėtų? Pagalbos ieškokite čia."
 restartButton = "Restartuoti"
@@ -211,6 +226,26 @@ confirm = "Taip, restartuoti!"
 description = "Įprastai restartavimas neturėtų būti reikalingas. Jei jums vis reikia restartuoti, pasvarstykite, gal derėtų pranešti apie problemą."
 disclaimer = "Pastaba: evcc sustos, ir pasitikės operacinės sistemos pagalba paleidžiant iš naujo."
 modalTitle = "Ar tikrai norite restartuoti?"
+
+[log]
+areaLabel = "Filtruoti pagal sritis"
+areas = "Visos sritys"
+download = "Atsisiųsti visą žurnalą"
+levelLabel = "Filtruoti pagal žurnalo lygį"
+noResults = "Nėra atitinkančių žurnalo įrašų"
+search = "Ieškoti"
+showAll = "Rodyti visus įrašus"
+title = "Žurnalai"
+update = "Automatinis atnaujinimas"
+
+[loginModal]
+cancel = "Atšaukti"
+error = "Prisijungti nepavyko: "
+invalid = "Neteisingas slaptažodis."
+login = "Prisijungti"
+password = "Slaptažodis"
+reset = "Atstatyti slaptažodį?"
+title = "Autentifikavimas"
 
 [main]
 vehicles = "Autoparkas"
@@ -358,7 +393,7 @@ detectionActive = "Bandome atpažinti automobilį ..."
 fallbackName = "Automobilis"
 moreActions = "Daugiau veiksmų"
 none = "Nėra automobilio"
-notReachable = "Automobilis buvo nepasiekiamas. Pabandykite restartuoti evcc."
+notReachable = "Automobilis nepasiekiamas. Pabandykite restartuoti evcc."
 targetSoc = "Limitas"
 temp = "t."
 tempLimit = "Temp. limitas"
@@ -393,11 +428,25 @@ waitForVehicle = "Paruošta. Laukiama automobilio..."
 
 [notifications]
 dismissAll = "Išvalyti visus"
+logs = "Peržiūrėti visus žurnalus"
 modalTitle = "Pranešimai"
 
 [offline]
 message = "Nėra ryšio su serveriu."
 reload = "Perkrauti?"
+
+[passwordModal]
+description = "Nustatykite slaptažodį konfigūracijos apsaugai. Pagrindiniu ekranu galima naudotis ir neprisijungus."
+empty = "Slaptažodis negali būti tuščias"
+error = "Klaida: "
+labelCurrent = "Dabartinis slaptažodis"
+labelNew = "Naujas slaptažodis"
+labelRepeat = "Pakartoti slaptažodį"
+newPassword = "Sukurti slaptažodį"
+noMatch = "Slaptažodžiai nesutampa"
+titleNew = "Nustatyti Administratoriaus slaptažodį"
+titleUpdate = "Atnaujinti Administratoriaus slaptažodį"
+updatePassword = "Atnaujinti slaptažodį"
 
 [session]
 cancel = "Atšaukti"
@@ -449,7 +498,12 @@ allVehicles = "visi automobiliai"
 filter = "Filtruoti"
 
 [settings]
-title = "Bendrieji Nustatymai"
+title = "Vartotojo sąsaja"
+
+[settings.fullscreen]
+enter = "Įjungti visą ekraną"
+exit = "Išjungti visą ekraną"
+label = "Visas ekranas"
 
 [settings.gridDetails]
 co2 = "CO₂"

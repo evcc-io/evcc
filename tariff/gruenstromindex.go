@@ -97,7 +97,7 @@ func (t *GrünStromIndex) run(done chan error) {
 		var res gsiForecast
 
 		err := backoff.Retry(func() error {
-			return client.GetJSON(uri, &res)
+			return backoffPermanentError(client.GetJSON(uri, &res))
 		}, bo)
 
 		if err == nil && res.Err {

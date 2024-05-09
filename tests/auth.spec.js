@@ -1,5 +1,7 @@
 import { test, expect } from "@playwright/test";
-import { start, stop } from "./evcc";
+import { start, stop, baseUrl } from "./evcc";
+
+test.use({ baseURL: baseUrl() });
 
 test.beforeEach(async ({ page }) => {
   await start("basics.evcc.yaml");
@@ -10,8 +12,7 @@ test.afterEach(async () => {
   await stop();
 });
 
-// TODO: activate this once auth is released
-test.skip("set initial password", async ({ page }) => {
+test("set initial password", async ({ page }) => {
   const modal = page.getByTestId("password-modal");
 
   await expect(modal).toBeVisible();
@@ -34,7 +35,7 @@ test.skip("set initial password", async ({ page }) => {
   await expect(modal).not.toBeVisible();
 });
 
-test.skip("login", async ({ page }) => {
+test("login", async ({ page }) => {
   // set initial password
   const modal = page.getByTestId("password-modal");
   await modal.getByLabel("New password").fill("secret");
@@ -42,10 +43,6 @@ test.skip("login", async ({ page }) => {
   await modal.getByRole("button", { name: "Create Password" }).click();
 
   // go to config
-  await page.getByTestId("topnavigation-button").click();
-  await page.getByRole("button", { name: "Settings" }).click();
-  await page.getByLabel("Experimental 🧪").click();
-  await page.getByRole("button", { name: "Close" }).click();
   await page.getByTestId("topnavigation-button").click();
   await page.getByRole("link", { name: "Configuration" }).click();
 
@@ -66,7 +63,7 @@ test.skip("login", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "Configuration" })).toBeVisible();
 });
 
-test.skip("update password", async ({ page }) => {
+test("update password", async ({ page }) => {
   const oldPassword = "secret";
   const newPassword = "newsecret";
 
@@ -103,4 +100,12 @@ test.skip("update password", async ({ page }) => {
   await loginNew.getByLabel("Password").fill(newPassword);
   await loginNew.getByRole("button", { name: "Login" }).click();
   await expect(page.getByRole("heading", { name: "Configuration" })).toBeVisible();
+
+  // revert password
+  await page.getByTestId("generalconfig-password").getByRole("link", { name: "edit" }).click();
+  await modal.getByLabel("Current password").fill(newPassword);
+  await modal.getByLabel("New password").fill(oldPassword);
+  await modal.getByLabel("Repeat password").fill(oldPassword);
+  await modal.getByRole("button", { name: "Update Password" }).click();
+  await expect(page.getByTestId("password-modal")).not.toBeVisible();
 });

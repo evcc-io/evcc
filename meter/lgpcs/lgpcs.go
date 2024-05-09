@@ -156,7 +156,8 @@ func (m *Com) refreshData() (EssData, error) {
 
 	if err = m.DoJSON(req, &resp); err != nil {
 		// re-login if request returns 405-error
-		if err2, ok := err.(request.StatusError); ok && err2.HasStatus(http.StatusMethodNotAllowed) {
+		var se request.StatusError
+		if errors.As(err, &se) && se.StatusCode() == http.StatusMethodNotAllowed {
 			err = m.Login()
 
 			if err == nil {

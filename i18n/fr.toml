@@ -48,6 +48,10 @@ socLimit = "Limite"
 example = "Exemple"
 optional = "optionnel"
 
+[config.general]
+cancel = "Annuler"
+save = "Enregistrer"
+
 [config.grid]
 titleAdd = "Ajouter compteur pour réseau"
 titleEdit = "Modifier compteur pour réseau"
@@ -74,9 +78,26 @@ validateSave = "Valider et enregistrer"
 titleAdd = "Ajouter un compteur pour le solaire"
 titleEdit = "Modifier le compteur pour le solaire"
 
+[config.section]
+general = "Général"
+system = "Système"
+
 [config.site]
 cancel = "Annuler"
 save = "Enregistrer"
+
+[config.system]
+logs = "Journaux"
+restart = "Redémarrer"
+restartRequiredDescription = "Veuillez redémarrer pour appliquer les changements."
+restartRequiredMessage = "La configuration a changé."
+restartingDescription = "Veuillez patienter…"
+restartingMessage = "Redémarrage d’evcc en cours."
+
+[config.title]
+description = "«Affiché sur l’écran principal et l’onglet du navigateur.»"
+label = "Titre"
+title = "Modifier le titre"
 
 [config.validation]
 failed = "échec"
@@ -175,6 +196,7 @@ blog = "Blog"
 docs = "Documentation"
 github = "GitHub"
 login = "Connexions véhicule"
+logout = "Se déconnecter"
 nativeSettings = "Changer de serveur"
 needHelp = "Besoin d'aide?"
 sessions = "Sessions de recharge"
@@ -190,6 +212,8 @@ discussionsButton = "Discussions GitHub"
 documentationButton = "Documentation"
 issueButton = "Signaler un bug"
 issueDescription = "Trouvé un comportement étrange ou erroné?"
+logsButton = "Voir les journaux"
+logsDescription = "Vérifiez s’il y a des erreurs dans les journaux."
 modalTitle = "Besoin d'aide?"
 primaryActions = "Quelque chose ne fonctionne pas comme ça devrait ? Voici où trouver de l'aide."
 restartButton = "Redémarrer"
@@ -202,6 +226,26 @@ confirm = "Oui, redémarrer!"
 description = "En temps normal, un redémarrage ne devrait pas être nécessaire. Envisagez de signaler un bug si vous devez redémarrer evcc régulièrement."
 disclaimer = "NB : evcc va s'arrêter et s'en remettre au système d'exploitation pour redémarrer le service."
 modalTitle = "Voulez-vous vraiment redémarrer ?"
+
+[log]
+areaLabel = "Filtrer par zone"
+areas = "Toutes les zones"
+download = "Télécharger les journaux complets"
+levelLabel = "Filtrer par niveau"
+noResults = "Aucune entrée de journal ne correspond."
+search = "Rechercher"
+showAll = "Voir toutes les entrées"
+title = "Journaux"
+update = "Mise à jour automatique"
+
+[loginModal]
+cancel = "Annuler"
+error = "«Connection échouée:»"
+invalid = "«Mot de passe invalide.»"
+login = "Identifiant"
+password = "Mot de passe"
+reset = "Réinitialiser le mot de passe ?"
+title = "Authentification"
 
 [main]
 vehicles = "Place de stationnement"
@@ -372,20 +416,34 @@ pvDisable = "Pas assez de surplus. Pause dans {remaining}…"
 pvEnable = "Surplus disponible. Démarre dans {remaining}…"
 scale1p = "Réduction en monophasé dans {remaining}..."
 scale3p = "Augmentation en triphasé dans {remaining}…"
-targetChargeActive = "Charge cible active..."
-targetChargePlanned = "La charge cible démarre à {time}."
-targetChargeWaitForVehicle = "Charge cible prête. Attente du véhicule..."
+targetChargeActive = "Plan de charge actif..."
+targetChargePlanned = "Le plan de charge démarre à {time}."
+targetChargeWaitForVehicle = "Plan de charge prêt. Attente du véhicule..."
 unknown = ""
 vehicleLimitReached = "Limite de véhicule {soc}% atteinte."
 waitForVehicle = "Prêt à charger. Attente du véhicule…"
 
 [notifications]
 dismissAll = "Supprimer tout"
+logs = "Voir les journaux complets"
 modalTitle = "Notifications"
 
 [offline]
 message = "Pas de connexion au serveur."
 reload = "Recharger?"
+
+[passwordModal]
+description = "«Configurez un mot de passe pour protéger la configuration. L’utilisation de l’écran principal et toujours possible sans authentification.»"
+empty = "Le mot de passe ne doit pas être vide"
+error = "«Erreur:»"
+labelCurrent = "Mot de passe actuel"
+labelNew = "Nouveau mot de passe"
+labelRepeat = "Répétez le mot de passe"
+newPassword = "Créer un mot de passe"
+noMatch = "Les deux mots de passes ne correspondent pas"
+titleNew = "Définir un mot de passe administrateur"
+titleUpdate = "Mettre à jour le mot de passe administrateur"
+updatePassword = "Mettre à jour le mot de passe"
 
 [session]
 cancel = "Annuler"
@@ -439,6 +497,11 @@ filter = "Filtrer"
 [settings]
 title = "Réglages généraux"
 
+[settings.fullscreen]
+enter = "Passer en plein écran"
+exit = "Quitter le plein écran"
+label = "Plein écran"
+
 [settings.hiddenFeatures]
 label = "Expérimental"
 value = "Afficher les fonctions expérimentales."
@@ -484,7 +547,7 @@ saved = "Enregistré."
 
 [startupError]
 configFile = "Fichier de configuration utilisé:"
-configuration = "Configuration"
+configuration = "Config."
 description = "Veuillez vérifier votre fichier de configuration. Si le message d'erreur ne vous aide pas, recherchez une solution : {0}."
 discussions = "Discussions GitHub"
 fixAndRestart = "Corrigez le problème et redémarrez le serveur."

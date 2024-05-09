@@ -8,10 +8,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Masterminds/sprig/v3"
+	"github.com/42atomys/sprout"
 )
 
-var re = regexp.MustCompile(`\${(\w+)(:([a-zA-Z0-9%.]+))?}`)
+var re = regexp.MustCompile(`(?i)\${(\w+)(:([a-zA-Z0-9%.]+))?}`)
 
 // Truish returns true if value is truish (true/1/on)
 func Truish(s string) bool {
@@ -52,7 +52,7 @@ func FormatValue(format string, val interface{}) string {
 func ReplaceFormatted(s string, kv map[string]interface{}) (string, error) {
 	// Enhanced golang template logic
 	tpl, err := template.New("base").
-		Funcs(sprig.FuncMap()).
+		Funcs(sprout.FuncMap()).
 		Funcs(map[string]any{
 			"timeRound": timeRound,
 		}).Parse(s)
@@ -73,7 +73,7 @@ func ReplaceFormatted(s string, kv map[string]interface{}) (string, error) {
 		match, key, format := m[0], m[1], m[3]
 
 		// find key and replacement value
-		val, ok := kv[key]
+		val, ok := kv[strings.ToLower(key)]
 		if !ok {
 			wanted = append(wanted, key)
 			format = "%s"

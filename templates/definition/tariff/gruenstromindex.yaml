@@ -1,8 +1,14 @@
 template: grünstromindex
 products:
   - brand: Grünstromindex
+requirements:
+  description:
+    de: "Regionale Emissionsdaten von https://gruenstromindex.de. Nur für Deutschland verfügbar."
+    en: "Regional emission data from https://gruenstromindex.de. Only available for Germany."
+group: co2
 params:
   - name: zip
+    required: true
 render: |
   type: grünstromindex
   zip: {{ .zip }}

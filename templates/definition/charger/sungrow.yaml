@@ -2,16 +2,14 @@ template: sungrow
 products:
   - brand: Sungrow
     description:
-      generic: ACAC011E-01
-capabilities: ["mA"]
+      generic: AC011E-01
+capabilities: ["mA", "1p3p"]
 requirements:
-  description:
-    de: Die Wallbox muss auf EMS-Arbeitsmodus und auf EMS-Start eingestellt werden.
-    en: Charger needs to be set to EMS working mode and start by EMS.
   evcc: ["sponsorship"]
 params:
   - name: modbus
     choice: ["rs485", "tcpip"]
+    id: 248
 render: |
   type: sungrow
   {{- include "modbus" . }}

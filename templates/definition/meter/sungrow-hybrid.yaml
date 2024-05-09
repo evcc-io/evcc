@@ -7,8 +7,8 @@ products:
 capabilities: ["battery-control"]
 requirements:
   description:
-    de: Die Verbindung ist seriell (RS485) oder über die native (hintere) LAN-Buchse am Wechselrichter möglich. Verbindungen über das WiNet-S-Dongle (WiFi oder LAN) funktionieren NICHT korrekt.
-    en: The connection can be serial (RS485) or via the native (rear) LAN socket on the inverter. Connections via the WiNet-S dongle (WiFi or LAN) do NOT work correctly.
+    de: Verbindungen über das WiNet-S-Dongle (WiFi oder LAN) funktionieren nur mit aktueller Firmware.
+    en: Connections via the WiNet-S dongle (WiFi or LAN) only work with the latest firmware.
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]

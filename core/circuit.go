@@ -175,7 +175,6 @@ func (c *Circuit) updateLoadpoints(loadpoints []api.CircuitLoad) {
 
 func (c *Circuit) updateMeters() error {
 	if f, err := c.meter.CurrentPower(); err == nil {
-		// TODO handle negative powers
 		c.power = f
 	} else {
 		return fmt.Errorf("circuit power: %w", err)
@@ -183,7 +182,6 @@ func (c *Circuit) updateMeters() error {
 
 	if phaseMeter, ok := c.meter.(api.PhaseCurrents); ok {
 		if l1, l2, l3, err := phaseMeter.Currents(); err == nil {
-			// TODO handle negative currents
 			c.current = max(l1, l2, l3)
 		} else {
 			return fmt.Errorf("circuit currents: %w", err)
@@ -245,64 +243,39 @@ func (c *Circuit) ValidatePower(old, new float64) float64 {
 	delta := max(0, new-old)
 
 	if c.maxPower != 0 {
-		if c.power+delta > c.maxPower {
-			new = max(0, c.maxPower-c.power)
+		potential := c.maxPower - c.power
+		if delta > potential {
+			new = max(0, old+potential)
 			c.log.DEBUG.Printf("validate power: %gW -> %gW <= %gW at %gW: capped at %gW", old, new, c.maxPower, c.power, new)
 		} else {
 			c.log.TRACE.Printf("validate power: %gW -> %gW <= %gW at %gW: ok", old, new, c.maxPower, c.power)
 		}
 	}
 
-	if c.parent != nil {
-		res := c.parent.ValidatePower(c.power, new)
-		if res != new {
-			c.log.TRACE.Printf("validate power: %gW -> %gW at %gW: capped at %gW", old, new, c.power, new)
-		}
-		return res
+	if c.parent == nil {
+		return new
 	}
 
-	return new
+	return c.parent.ValidatePower(old, new)
 }
 
 // ValidateCurrent validates current request
-func (c *Circuit) ValidateCurrent(old, new float64) (res float64) {
+func (c *Circuit) ValidateCurrent(old, new float64) float64 {
 	delta := max(0, new-old)
 
 	if c.maxCurrent != 0 {
-		if c.current+delta > c.maxCurrent {
-			new = max(0, c.maxCurrent-c.current)
+		potential := c.maxCurrent - c.current
+		if delta > potential {
+			new = max(0, old+potential)
 			c.log.DEBUG.Printf("validate current: %gA -> %gA <= %gA at %gA: capped at %gA", old, new, c.maxCurrent, c.current, new)
 		} else {
 			c.log.TRACE.Printf("validate current: %gA -> %gA <= %gA at %gA: ok", old, new, c.maxCurrent, c.current)
 		}
 	}
 
-	if c.parent != nil {
-		res := c.parent.ValidateCurrent(c.current, new)
-		if res != new {
-			c.log.TRACE.Printf("validate current: %gA -> %gA at %gA: capped by parent at %gA", old, new, c.current, res)
-		}
-		return res
+	if c.parent == nil {
+		return new
 	}
 
-	return new
+	return c.parent.ValidateCurrent(old, new)
 }
-
-// func (c *Circuit) validate(typ string, current, old, new float64, parentFunc func(o, n float64) float64) float64 {
-// 	delta := max(0, new-old)
-
-// 	if c.maxPower != 0 {
-// 		if c.power+delta > c.maxPower {
-// 			new = max(0, c.maxPower-c.power)
-// 			c.log.TRACE.Printf("validate power: %g -> %g <= %g at %g: capped at %g", old, new, c.maxPower, c.power, new)
-// 		} else {
-// 			c.log.TRACE.Printf("validate power: %g -> %g <= %g at %g: ok", old, new, c.maxPower, c.power)
-// 		}
-// 	}
-
-// 	if c.parent != nil {
-// 		return c.parent.ValidatePower(c.power, new)
-// 	}
-
-// 	return new
-// }

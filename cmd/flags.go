@@ -9,6 +9,9 @@ const (
 	flagHeaders            = "log-headers"
 	flagHeadersDescription = "Log headers"
 
+	flagIgnoreDatabase            = "ignore-db"
+	flagIgnoreDatabaseDescription = "Run command ignoring service database"
+
 	flagBatteryMode                = "battery-mode"
 	flagBatteryModeDescription     = "Set battery mode (normal, hold, charge)"
 	flagBatteryModeWait            = "battery-mode-wait"
@@ -37,6 +40,9 @@ const (
 
 	flagStop            = "stop"
 	flagStopDescription = "Stop charging"
+
+	flagRepeat            = "repeat"
+	flagRepeatDescription = "Repeat until interrupted"
 
 	flagDigits = "digits"
 	flagDelay  = "delay"

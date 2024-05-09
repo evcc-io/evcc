@@ -30,6 +30,7 @@ const (
 	Vehicles              = "vehicles"
 	Circuits              = "circuits"
 	PasswordConfigured    = "passwordConfigured"
+	Interval              = "interval"
 
 	// meters
 	GridMeter     = "gridMeter"
