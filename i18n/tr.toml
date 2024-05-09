@@ -72,6 +72,16 @@ template = "Üretici"
 titleChoice = "Ne Eklemek İstersin:"
 validateSave = "Doğrula ve kaydet"
 
+[config.options]
+
+[config.options.endianness]
+big = "büyük uçlu"
+little = "küçük uçlu"
+
+[config.options.schema]
+http = "HTTP (şifrelenmemiş)"
+https = "HTTPS (şifrelenmiş)"
+
 [config.pv]
 titleAdd = "Güneş Enerjisi (GE) Sayacı Ekle"
 titleEdit = "Güneş Enerjisi (GE) Sayacını Düzenle"
@@ -179,7 +189,7 @@ modalUpdateStarted = "evcc'nin yeni sürümü başlatılıyor…"
 modalUpdateStatusStart = "Kurulum başladı:"
 
 [header]
-about = "evcc" "hakkında"
+about = "evcc hakkında"
 blog = "Blog"
 docs = "Belgelendirme"
 github = "GitHub"
@@ -383,8 +393,8 @@ charging = "şarj oluyor"
 connected = "bağlı"
 disconnected = "bağlantı kesildi"
 ready = "hazır"
-vehicleTarget = "Araç sınırı: {soc}%"
 vehicleLimit = "Araç sınırı: %{soc}"
+vehicleTarget = "Araç sınırı: {soc}%"
 
 [main.vehicleStatus]
 charging = "Şarj oluyor…"
@@ -402,9 +412,9 @@ targetChargeActive = "Hedef şarj aktif…"
 targetChargePlanned = "Hedef şarj {time} başlıyor."
 targetChargeWaitForVehicle = "Hedef şarj hazır. Araç bekleniyor…"
 unknown = ""
+vehicleLimitReached = "%{soc} araç sınırına ulaşıldı."
 vehicleTargetReached = "Araç sınırı {soc}% ulaşıldı."
 waitForVehicle = "Hazır. Araç bekleniyor…"
-vehicleLimitReached = "%{soc} araç sınırına ulaşıldı."
 
 [notifications]
 dismissAll = "Bildirimleri kaldır"
@@ -539,12 +549,3 @@ lineError = "{0} içinde hata bulundu."
 lineErrorLink = "{0}. satır"
 restartButton = "Yeniden Başlat"
 title = "Başlama Hatası"
-
-
-[config.options.schema]
-http = "HTTP (şifrelenmemiş)"
-https = "HTTPS (şifrelenmiş)"
-
-[config.options.endianness]
-big = "büyük uçlu"
-little = "küçük uçlu"

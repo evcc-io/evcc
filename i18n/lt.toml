@@ -74,6 +74,16 @@ template = "Gamintojas"
 titleChoice = "Ką norite pridėti?"
 validateSave = "Patikrinti ir išsaugoti"
 
+[config.options]
+
+[config.options.endianness]
+big = "mažėjantys baitai"
+little = "didėjantys baitai"
+
+[config.options.schema]
+http = "HTTP (nešifruotas)"
+https = "HTTPS (užšifruotas)"
+
 [config.pv]
 titleAdd = "Pridėti saulės skaitiklį"
 titleEdit = "Redaguoti saulės skaitiklį"
@@ -570,12 +580,3 @@ title = "Klaida startuojant"
 cancel = "Atšaukti"
 template = "Gamintojas"
 test = "Testuoti"
-
-
-[config.options.endianness]
-big = "mažėjantys baitai"
-little = "didėjantys baitai"
-
-[config.options.schema]
-http = "HTTP (nešifruotas)"
-https = "HTTPS (užšifruotas)"

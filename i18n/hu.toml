@@ -1,37 +1,3 @@
-
-
-
-[config.validation]
-failed = "sikertelen"
-label = "Státusz"
-running = "ellenőrzés…"
-success = "sikeres"
-unknown = "ismeretlen"
-validate = "ellenőrzés"
-
-[footer.sponsor]
-confetti = "Készen állsz a konfettire?"
-becomeSponsor = "Legyél Támogató"
-confettiPromise = "Kapsz matricákat és digitális konfettit"
-sticker = "… vagy evcc matricákat?"
-titleSponsor = "Te már támogató vagy"
-supportUs = "A küldetésünk az, hogy a napenergiát normává tegyük. Segítsd az evcc-t annyival, amennyit megér neked."
-thanks = "Köszönjük, {sponsor}! A hozzájárulásod segít tovább fejleszteni az evcc-t."
-titleNoSponsor = "Támogass minket"
-
-[help]
-logsButton = "Napló megtekintése"
-discussionsButton = "GitHub Közösségi oldalát"
-documentationButton = "Dokumentáció"
-issueButton = "Hibabejelentés"
-issueDescription = "Furcsa vagy hibás működést észleltél?"
-logsDescription = "Ellenőrizd a naplót hiba esetén."
-modalTitle = "Segítségre van szükséged?"
-primaryActions = "Valami nem úgy működik, ahogy működnie kellene? Ezek jó helyek, hogy választ kapj a problémádra."
-restartButton = "Újraindítás"
-restartDescription = "Próbáltad már be- és kikapcsolni?"
-secondaryActions = "Még mindíg nem oldódott meg a problémád? Itt van néhány keményebb lehetőség."
-
 [batterySettings]
 batteryLevel = "Akkumulátor szint"
 capacity = "{energy} / {total}"
@@ -50,9 +16,11 @@ legendTopSubline = "megszakítások nélkül"
 modalTitle = "Otthoni Akkumulátor"
 
 [batterySettings.bufferStart]
-full = "amikor {soc}-on van"
 above = "amikor {soc} felett van"
+full = "amikor {soc}-on van"
 never = "csak ha van elég többlet"
+
+[config]
 
 [config.battery]
 titleAdd = "Energiatároló Mérő Hozzáadása"
@@ -104,6 +72,16 @@ template = "Gyártó"
 titleChoice = "Mit szeretnél hozzáadni?"
 validateSave = "Ellenőrzés & mentés"
 
+[config.options]
+
+[config.options.endianness]
+big = "big-endian"
+little = "little-endian"
+
+[config.options.schema]
+http = "HTTP (titkosítatlan)"
+https = "HTTPS (titkosított)"
+
 [config.pv]
 titleAdd = "Napelemes Mérő Hozzáadása"
 titleEdit = "Napelemes Mérő Szerkesztése"
@@ -125,6 +103,14 @@ description = "Ez jelenik meg a főképernyőn és a böngésző címsorában.Di
 label = "Megnevezés"
 title = "Megnevezés Szerkesztése"
 
+[config.validation]
+failed = "sikertelen"
+label = "Státusz"
+running = "ellenőrzés…"
+success = "sikeres"
+unknown = "ismeretlen"
+validate = "ellenőrzés"
+
 [config.vehicle]
 cancel = "Mégse"
 delete = "Törlés"
@@ -134,9 +120,11 @@ online = "Járművek online API-val"
 save = "Mentés"
 scooter = "Roller"
 template = "Gyártó"
-titleEdit = "Jármű szerkesztése"
 titleAdd = "Jármű hozzáadása"
+titleEdit = "Jármű szerkesztése"
 validateSave = "Ellenőrzés & mentés"
+
+[footer]
 
 [footer.community]
 greenEnergy = "Napenergia"
@@ -172,6 +160,16 @@ tabTitle = "Az adataim"
 365d = "elmúlt 365 nap"
 total = "összesen"
 
+[footer.sponsor]
+becomeSponsor = "Legyél Támogató"
+confetti = "Készen állsz a konfettire?"
+confettiPromise = "Kapsz matricákat és digitális konfettit"
+sticker = "… vagy evcc matricákat?"
+supportUs = "A küldetésünk az, hogy a napenergiát normává tegyük. Segítsd az evcc-t annyival, amennyit megér neked."
+thanks = "Köszönjük, {sponsor}! A hozzájárulásod segít tovább fejleszteni az evcc-t."
+titleNoSponsor = "Támogass minket"
+titleSponsor = "Te már támogató vagy"
+
 [footer.telemetry]
 optIn = "Szeretnék hozzájárulni az adataimmal."
 optInMoreDetails = "Részletek {0}."
@@ -201,12 +199,25 @@ nativeSettings = "Szerver Váltás"
 needHelp = "Szükséged van segítségre?"
 sessions = "Töltési Munkamenetek"
 
+[help]
+discussionsButton = "GitHub Közösségi oldalát"
+documentationButton = "Dokumentáció"
+issueButton = "Hibabejelentés"
+issueDescription = "Furcsa vagy hibás működést észleltél?"
+logsButton = "Napló megtekintése"
+logsDescription = "Ellenőrizd a naplót hiba esetén."
+modalTitle = "Segítségre van szükséged?"
+primaryActions = "Valami nem úgy működik, ahogy működnie kellene? Ezek jó helyek, hogy választ kapj a problémádra."
+restartButton = "Újraindítás"
+restartDescription = "Próbáltad már be- és kikapcsolni?"
+secondaryActions = "Még mindíg nem oldódott meg a problémád? Itt van néhány keményebb lehetőség."
+
 [help.restart]
 cancel = "Mégse"
+confirm = "Igen, újraindítás!"
 description = "Normál körülmények között nem szükséges az újraindítás. Kérlek fontold meg a hibabejelentést, ha az evcc-t gyakran újra kell indítanod."
 disclaimer = "Megjegyzés: az evcc bezáródik és az operációs rendszertől függően újraindítja a szolgáltatást."
 modalTitle = "Biztosan újra szeretnéd indítani?"
-confirm = "Igen, újraindítás!"
 
 [log]
 areaLabel = "Szűrés terület alapján"
@@ -301,7 +312,7 @@ label = "Max. Áram"
 label = "Min. Áram"
 
 [main.loadpointSettings.minSoc]
-description = "A jármű "gyorstöltve" lesz {0}%-ra szolár üzemmódban. Ezután folytatódik a töltés a napelemes többletenergiával. Hasznos egy minimum tartományt megadni a felhősebb napokra."
+description = "A jármű gyorstöltve lesz {0}%-ra szolár üzemmódban. Ezután folytatódik a töltés a napelemes többletenergiával. Hasznos egy minimum tartományt megadni a felhősebb napokra."
 label = "Min. töltés %"
 
 [main.loadpointSettings.phasesConfigured]
@@ -328,6 +339,7 @@ activate = "Aktiválás"
 co2Limit = "CO₂ limit, ami {co2}"
 costLimitIgnore = "A konfigurált {limit} figyelmen kívűl lesz hagyva ezen időszakban."
 currentPlan = "Aktív terv"
+descriptionEnergy = "Meddig kell a {targetEnergy}-t tölteni a járműbe?"
 descriptionSoc = "Mikor legyen a jármű feltöltve {targetSoc}%-ra?"
 inactiveLabel = "Tervezett idő"
 notReachableInTime = "A tervezet nem teljesíthető a megadott időben. Várható befejezés: {endTime}."
@@ -338,6 +350,7 @@ planPeriodValue = "{start} to {end}"
 planUnknown = "még nem ismert"
 preview = "Terv előnézet"
 priceLimit = "ár limit: {price}"
+remove = "Eltávolítás"
 setTargetTime = "nincs"
 targetIsAboveLimit = "A konfigurált töltési limit, ami {limit} figyelmen kívül lesz hagyva ebben a periódusban."
 targetIsAboveVehicleLimit = "Növelje a jármű limitet ({limit}) hogy elérje a töltési célt."
@@ -349,8 +362,6 @@ tomorrow = "holnap"
 update = "Frissítés"
 vehicleCapacityDocs = "Ismerje meg, hogyan kell konfigurálni."
 vehicleCapacityRequired = "A jármű akkumulátor kapacitása szükséges a hozzávetőleges idő meghatározásához."
-descriptionEnergy = "Meddig kell a {targetEnergy}-t tölteni a járműbe?"
-remove = "Eltávolítás"
 
 [main.targetChargePlan]
 chargeDuration = "Töltési idő"
@@ -434,10 +445,10 @@ finished = "Befejeződött"
 meter = "Mérő"
 meterstart = "Mérő indítás"
 meterstop = "Mérő leállítás"
+odometer = "Futásteljesítmény"
 price = "Ár"
 started = "Elkezdődött"
 title = "Töltési munkamenet"
-odometer = "Futásteljesítmény"
 
 [sessions]
 avgPower = "⌀ Teljesítmény"
@@ -527,20 +538,12 @@ saved = "Elmentve."
 
 [startupError]
 configFile = "Konfigurációs fájl használatban:"
-fixAndRestart = "Kérlek javítsd ki a problémát és indítsd újra a szervert."
 configuration = "Konfiguráció"
 description = "Kérlek ellenőrizd a konfigurációs fájlodat. Ha a hibaüzenet nem segít, akkor nézd meg a {0}."
+discussions = "GitHub Közösségi oldalát"
+fixAndRestart = "Kérlek javítsd ki a problémát és indítsd újra a szervert."
 hint = "Megjegyzés: Lehet, hogy van egy hibás eszközöd (inverter, mérő, …) Ellenőrizd a hálózati kapcsolatokat."
 lineError = "Hiba a {0}."
-discussions = "GitHub Közösségi oldalát"
 lineErrorLink = "sor {0}"
 restartButton = "Újraindítás"
 title = "Indítási hiba"
-
-[config.options.endianness]
-big = "big-endian"
-little = "little-endian"
-
-[config.options.schema]
-http = "HTTP (titkosítatlan)"
-https = "HTTPS (titkosított)"
