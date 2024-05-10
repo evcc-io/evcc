@@ -13,7 +13,7 @@ legendTitle = "Comment l'énergie solaire doit-elle être utilisée?"
 legendTopAutostart = "démarre automatiquement"
 legendTopName = "recharge soutenue par la batterie"
 legendTopSubline = "sans interruption"
-modalTitle = "Réglages de la batterie"
+modalTitle = "Batterie domestique"
 
 [batterySettings.bufferStart]
 above = "lorsque chargé à plus que {soc}"
@@ -59,7 +59,7 @@ titleEdit = "Modifier compteur pour réseau"
 [config.main]
 addLoadpoint = "Ajouter un point de charge"
 addPvBattery = "Ajouter du solaire ou une batterie"
-addVehicle = "Ajouter le véhicule"
+addVehicle = "Ajouter un véhicule"
 edit = "éditer"
 title = "Configuration"
 unconfigured = "non configuré"
@@ -95,7 +95,7 @@ restartingDescription = "Veuillez patienter…"
 restartingMessage = "Redémarrage d’evcc en cours."
 
 [config.title]
-description = "«Affiché sur l’écran principal et l’onglet du navigateur.»"
+description = "Affiché sur l’écran principal et l’onglet du navigateur."
 label = "Titre"
 title = "Modifier le titre"
 
@@ -240,8 +240,8 @@ update = "Mise à jour automatique"
 
 [loginModal]
 cancel = "Annuler"
-error = "«Connection échouée:»"
-invalid = "«Mot de passe invalide.»"
+error = "Connection échouée:"
+invalid = "Mot de passe invalide."
 login = "Identifiant"
 password = "Mot de passe"
 reset = "Réinitialiser le mot de passe ?"
@@ -390,7 +390,7 @@ detectionActive = "Détection du véhicule…"
 fallbackName = "Véhicule"
 moreActions = "Plus d'actions"
 none = "Pas de véhicule"
-notReachable = "«Impossible d’atteindre le véhicule. Essayez de redémarrer evcc.»"
+notReachable = "Impossible d’atteindre le véhicule. Essayez de redémarrer evcc."
 targetSoc = "Limite"
 temp = "Temp."
 tempLimit = "Temp. limite"
@@ -433,9 +433,9 @@ message = "Pas de connexion au serveur."
 reload = "Recharger?"
 
 [passwordModal]
-description = "«Configurez un mot de passe pour protéger la configuration. L’utilisation de l’écran principal et toujours possible sans authentification.»"
+description = "Configurez un mot de passe pour protéger la configuration. L’utilisation de l’écran principal et toujours possible sans authentification."
 empty = "Le mot de passe ne doit pas être vide"
-error = "«Erreur:»"
+error = "Erreur:"
 labelCurrent = "Mot de passe actuel"
 labelNew = "Nouveau mot de passe"
 labelRepeat = "Répétez le mot de passe"
@@ -495,7 +495,7 @@ allVehicles = "tous les véhicules"
 filter = "Filtrer"
 
 [settings]
-title = "Réglages généraux"
+title = "Interface utilisateur"
 
 [settings.fullscreen]
 enter = "Passer en plein écran"
