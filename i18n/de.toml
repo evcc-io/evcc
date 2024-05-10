@@ -27,7 +27,7 @@ titleAdd = "Batterie Zähler hinzufügen"
 titleEdit = "Batterie Zähler bearbeiten"
 
 [config.circuits]
-description = "Stellt sicher, dass die Summe aller Ladepunkte, die an einen Stromkreis angeschlossen sind, die konfigurierten Leistungs- und Stromgrenzen nicht überschreitet. Stromkreise können verschachtelt werden, um eine Hierarchie aufzubauen."    
+description = "Stellt sicher, dass die Summe aller Ladepunkte, die an einen Stromkreis angeschlossen sind, die konfigurierten Leistungs- und Stromgrenzen nicht überschreitet. Stromkreise können verschachtelt werden, um eine Hierarchie aufzubauen."
 title = "Lastmanagement"
 
 [config.deviceValue]
