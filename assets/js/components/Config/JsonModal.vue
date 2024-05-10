@@ -18,6 +18,7 @@
 						{{ $t("config.general.cancel") }}
 					</button>
 					<button
+						v-if="!disableRemove"
 						type="button"
 						class="btn btn-link text-danger"
 						:disabled="removing"
@@ -74,10 +75,13 @@ export default {
 		description: String,
 		docs: String,
 		endpoint: String,
+		disableRemove: Boolean,
+		transformValues: Function,
+		saveMethod: { type: String, default: "post" },
 	},
 	computed: {
 		docsLink() {
-			return `${docsPrefix()}${this.docs}`;
+			return this.docs ? `${docsPrefix()}${this.docs}` : null;
 		},
 		nothingChanged() {
 			return JSON.stringify(this.values) === JSON.stringify(this.serverValues);
@@ -107,11 +111,12 @@ export default {
 		async save() {
 			this.saving = true;
 			this.error = "";
+			const payload = this.transformValues ? this.transformValues(this.values) : this.values;
 			try {
-				const res = await api.post(this.endpoint, this.values, {
-					validateStatus: (code) => [200, 400].includes(code),
+				const res = await api[this.saveMethod](this.endpoint, payload, {
+					validateStatus: (code) => [200, 202, 400].includes(code),
 				});
-				if (res.status === 200) {
+				if (res.status === 200 || res.status === 202) {
 					this.$emit("changed");
 					this.$refs.modal.close();
 				}

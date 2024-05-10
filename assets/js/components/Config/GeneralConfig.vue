@@ -6,6 +6,7 @@
 			<button
 				class="config-button btn btn-link text-secondary config-button"
 				type="button"
+				:title="$t('config.main.edit')"
 				@click.prevent="openModal('titleModal')"
 			>
 				<EditIcon size="xs" />
@@ -18,6 +19,7 @@
 			<button
 				class="config-button btn btn-link text-secondary"
 				type="button"
+				:title="$t('config.main.edit')"
 				@click.prevent="openModal('passwordModal')"
 			>
 				<EditIcon size="xs" />
@@ -31,6 +33,7 @@
 			<button
 				class="config-button btn btn-link text-secondary"
 				type="button"
+				:title="$t('config.main.edit')"
 				@click.prevent="openModal('globalSettingsModal')"
 			>
 				<EditIcon size="xs" />
@@ -44,6 +47,7 @@
 			<button
 				class="config-button btn btn-link text-secondary"
 				type="button"
+				:title="$t('config.main.edit')"
 				@click.prevent="openModal('globalSettingsModal')"
 			>
 				<EditIcon size="xs" />
@@ -55,6 +59,7 @@
 			<button
 				class="config-button btn btn-link text-secondary"
 				type="button"
+				:title="$t('config.main.edit')"
 				@click.prevent="todo"
 			>
 				<EditIcon size="xs" />
@@ -66,6 +71,7 @@
 			<button
 				class="config-button btn btn-link text-secondary"
 				type="button"
+				:title="$t('config.main.edit')"
 				@click.prevent="todo"
 			>
 				<EditIcon size="xs" />
@@ -77,6 +83,7 @@
 			<button
 				class="config-button btn btn-link text-secondary"
 				type="button"
+				:title="$t('config.main.edit')"
 				@click.prevent="todo"
 			>
 				<EditIcon size="xs" />

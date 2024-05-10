@@ -3,7 +3,7 @@ export default {
     size: {
       type: String,
       validator: function (value) {
-        return ["s", "m", "l", "xl"].includes(value);
+        return ["xs", "s", "m", "l", "xl"].includes(value);
       },
     },
   },
