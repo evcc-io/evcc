@@ -131,7 +131,7 @@
 
 						<ul class="p-0 config-list">
 							<DeviceCard
-								name="MQTT"
+								:name="$t('config.mqtt.title')"
 								editable
 								data-testid="mqtt"
 								@configure="openModal('mqttModal')"
@@ -140,7 +140,7 @@
 								<template #icon><MqttIcon /></template>
 							</DeviceCard>
 							<DeviceCard
-								name="Notifications"
+								:name="$t('config.messaging.title')"
 								editable
 								data-testid="messaging"
 								@edit="openModal('messagingModal')"
@@ -148,7 +148,7 @@
 								<template #icon><NotificationIcon /></template>
 							</DeviceCard>
 							<DeviceCard
-								name="InfluxDB"
+								:name="$t('config.influx.title')"
 								editable
 								data-testid="influx"
 								@edit="openModal('influxModal')"
@@ -156,7 +156,7 @@
 								<template #icon><InfluxIcon /></template>
 							</DeviceCard>
 							<DeviceCard
-								name="EEBus"
+								:name="$t('config.eebus.title')"
 								editable
 								data-testid="eebus"
 								@edit="openModal('eebusModal')"
@@ -164,7 +164,15 @@
 								<template #icon><EebusIcon /></template>
 							</DeviceCard>
 							<DeviceCard
-								name="Modbus-Proxy"
+								:name="$t('config.circuits.title')"
+								editable
+								data-testid="circuits"
+								@edit="openModal('circuitsModal')"
+							>
+								<template #icon><CircuitsIcon /></template>
+							</DeviceCard>
+							<DeviceCard
+								:name="$t('config.modbusproxy.title')"
 								editable
 								data-testid="modbusproxy"
 								@edit="openModal('modbusProxyModal')"
@@ -172,7 +180,7 @@
 								<template #icon><ModbusProxyIcon /></template>
 							</DeviceCard>
 							<DeviceCard
-								name="HEMS"
+								:name="$t('config.hems.title')"
 								editable
 								data-testid="hems"
 								@edit="openModal('hemsModal')"
@@ -209,6 +217,7 @@
 				<InfluxModal @changed="loadDirty" />
 				<MessagingModal @changed="loadDirty" />
 				<ModbusProxyModal @changed="loadDirty" />
+				<CircuitsModal @changed="loadDirty" />
 				<MqttModal @changed="loadDirty" />
 				<TariffsModal @changed="loadDirty" />
 			</div>
@@ -223,57 +232,61 @@ import "@h2d2/shopicons/es/regular/batterythreequarters";
 import "@h2d2/shopicons/es/regular/powersupply";
 import "@h2d2/shopicons/es/regular/receivepayment";
 import "@h2d2/shopicons/es/regular/cablecharge";
-import Modal from "bootstrap/js/dist/modal";
+import AddDeviceButton from "../components/Config/AddDeviceButton.vue";
 import api from "../api";
-import GeneralConfig from "../components/Config/GeneralConfig.vue";
+import CircuitsIcon from "../components/MaterialIcon/Circuits.vue";
+import CircuitsModal from "../components/Config/CircuitsModal.vue";
+import collector from "../mixins/collector";
 import DeviceCard from "../components/Config/DeviceCard.vue";
 import DeviceTags from "../components/Config/DeviceTags.vue";
-import AddDeviceButton from "../components/Config/AddDeviceButton.vue";
+import EebusIcon from "../components/MaterialIcon/Eebus.vue";
 import EebusModal from "../components/Config/EebusModal.vue";
+import formatter from "../mixins/formatter";
+import GeneralConfig from "../components/Config/GeneralConfig.vue";
+import HemsIcon from "../components/MaterialIcon/Hems.vue";
 import HemsModal from "../components/Config/HemsModal.vue";
+import InfluxIcon from "../components/MaterialIcon/Influx.vue";
 import InfluxModal from "../components/Config/InfluxModal.vue";
 import MessagingModal from "../components/Config/MessagingModal.vue";
 import MeterModal from "../components/Config/MeterModal.vue";
-import ModbusProxyModal from "../components/Config/ModbusProxyModal.vue";
-import MqttModal from "../components/Config/MqttModal.vue";
-import TariffsModal from "../components/Config/TariffsModal.vue";
-import VehicleModal from "../components/Config/VehicleModal.vue";
-import EebusIcon from "../components/MaterialIcon/Eebus.vue";
-import HemsIcon from "../components/MaterialIcon/Hems.vue";
-import InfluxIcon from "../components/MaterialIcon/Influx.vue";
+import Modal from "bootstrap/js/dist/modal";
 import ModbusProxyIcon from "../components/MaterialIcon/ModbusProxy.vue";
+import ModbusProxyModal from "../components/Config/ModbusProxyModal.vue";
 import MqttIcon from "../components/MaterialIcon/Mqtt.vue";
+import MqttModal from "../components/Config/MqttModal.vue";
 import NotificationIcon from "../components/MaterialIcon/Notification.vue";
-import VehicleIcon from "../components/VehicleIcon";
-import formatter from "../mixins/formatter";
-import collector from "../mixins/collector";
 import restart, { performRestart } from "../restart";
 import store from "../store";
+import TariffsModal from "../components/Config/TariffsModal.vue";
+import VehicleIcon from "../components/VehicleIcon";
+import VehicleModal from "../components/Config/VehicleModal.vue";
 
 export default {
 	name: "Config",
 	components: {
-		TopHeader,
-		GeneralConfig,
-		VehicleIcon,
-		VehicleModal,
+		AddDeviceButton,
+		CircuitsIcon,
+		CircuitsModal,
 		DeviceCard,
 		DeviceTags,
-		AddDeviceButton,
-		MeterModal,
-		MqttModal,
+		EebusIcon,
+		EebusModal,
+		GeneralConfig,
+		HemsIcon,
+		HemsModal,
+		InfluxIcon,
 		InfluxModal,
 		MessagingModal,
-		TariffsModal,
-		ModbusProxyModal,
-		HemsIcon,
-		InfluxIcon,
-		EebusIcon,
+		MeterModal,
 		ModbusProxyIcon,
-		NotificationIcon,
+		ModbusProxyModal,
 		MqttIcon,
-		EebusModal,
-		HemsModal,
+		MqttModal,
+		NotificationIcon,
+		TariffsModal,
+		TopHeader,
+		VehicleIcon,
+		VehicleModal,
 	},
 	props: {
 		offline: Boolean,

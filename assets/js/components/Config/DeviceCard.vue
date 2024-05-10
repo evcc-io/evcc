@@ -45,7 +45,6 @@
 <script>
 import "@h2d2/shopicons/es/regular/adjust";
 import "@h2d2/shopicons/es/regular/invoice";
-import "@h2d2/shopicons/es/regular/edit";
 import Tooltip from "bootstrap/js/dist/tooltip";
 
 export default {

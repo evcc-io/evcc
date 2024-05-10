@@ -10,6 +10,7 @@ export default {
   computed: {
     svgStyle() {
       const sizes = {
+        xs: "16px",
         s: "24px",
         m: "32px",
         l: "48px",

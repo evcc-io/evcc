@@ -26,13 +26,21 @@ never = "nur mit genug PV-Überschuss"
 titleAdd = "Batterie Zähler hinzufügen"
 titleEdit = "Batterie Zähler bearbeiten"
 
+[config.circuits]
+description = "Stellt sicher, dass die Summe aller Ladepunkte, die an einen Stromkreis angeschlossen sind, die konfigurierten Leistungs- und Stromgrenzen nicht überschreitet. Stromkreise können verschachtelt werden, um eine Hierarchie aufzubauen."    
+title = "Lastmanagement"
+
 [config.deviceValue]
 capacity = "Kapazität"
 chargeStatus = "Status"
 chargedEnergy = "Geladen"
+co2 = "Netz-CO₂"
+currency = "Währung"
 current = "Strom"
 enabled = "Aktiviert"
 energy = "Energie"
+feedinPrice = "Einspeisevergütung"
+gridPrice = "Netzpreis"
 odometer = "Kilometerstand"
 phaseCurrents = "Strom L1..L3"
 phasePowers = "Leistung L1..L3"
@@ -42,17 +50,47 @@ range = "Reichweite"
 soc = "SoC"
 socLimit = "SoC Begrenzung"
 
+[config.eebus]
+description = "Grundkonfiguration für die Kommunikation mit anderen EEBus-Geräten."
+title = "EEBus 🧪"
+
 [config.form]
 example = "Beispiel"
 optional = "optional"
 
 [config.general]
 cancel = "Abbrechen"
+docsLink = "Siehe Dokumentation."
+experimental = "Experimentell"
+off = "aus"
+on = "an"
+password = "Passwort"
+remove = "Entfernen"
 save = "Speichern"
+telemetry = "Telemetrie"
+title = "Titel"
 
 [config.grid]
-titleAdd = "Stromzähler (Netz) hinzufügen"
-titleEdit = "Stromzähler (Netz) bearbeiten"
+titleAdd = "Netzzähler hinzufügen"
+titleEdit = "Netzzähler bearbeiten"
+
+[config.hems]
+description = "Connect evcc to another home energy management system."
+title = "HEMS"
+
+[config.influx]
+description = "Schreibt Ladedaten und andere Metriken in InfluxDB. Verwende Grafana oder andere Tools, um die Daten zu visualisieren."
+descriptionToken = "Siehe die InfluxDB-Dokumentation, um zu erfahren, wie du einen erstellst. https://docs.influxdata.com/influxdb/v2/admin/"
+labelBucket = "Bucket"
+labelDatabase = "Datenbank"
+labelOrg = "Organisation"
+labelPassword = "Passwort"
+labelToken = "API-Token"
+labelUrl = "URL"
+labelUser = "Benutzer"
+title = "InfluxDB"
+v1Support = "Unterstützung für InfluxDB 1.x?"
+v2Support = "Zurück zu InfluxDB 2.x"
 
 [config.main]
 addLoadpoint = "Ladepunkt hinzufügen"
@@ -64,6 +102,10 @@ unconfigured = "nicht konfiguriert"
 vehicles = "Meine Fahrzeuge"
 yaml = "Konfiguration in evcc.yaml gefunden. Nicht per UI editierbar"
 
+[config.messaging]
+description = "Erhalte Benachrichtigungen über Ladevorgänge und andere Ereignisse."
+title = "Benachrichtigungen"
+
 [config.meter]
 cancel = "Abbrechen"
 delete = "Löschen"
@@ -71,6 +113,26 @@ save = "Speichern"
 template = "Hersteller"
 titleChoice = "Was möchtest du hinzufügen?"
 validateSave = "Überprüfen & speichern"
+
+[config.modbusproxy]
+description = "Erlaubt mehreren Clients den Zugriff auf ein einzelnes Modbus-Gerät."
+title = "Modbus-Proxy"
+
+[config.mqtt]
+authentication = "Authentifizierung"
+brokerLabel = "Server"
+description = "Verbinde evcc mit einem MQTT-Broker, um Daten mit anderen Systemen in deinem Netzwerk auszutauschen."
+descriptionClientId = "Autor der Nachrichten. Wenn leer, wird `evcc-[rand]` verwendet."
+descriptionTopic = "Leer lassen, um das Publizieren zu deaktivieren."
+labelBroker = "Broker"
+labelCheckInsecure = "Erlaube unsichere Verbindungen"
+labelClientId = "Client ID"
+labelInsecure = "Zertifikatüberprüfung"
+labelPassword = "Passwort"
+labelTopic = "Topic"
+labelUser = "Benutzer"
+publishing = "Veröffentlichen"
+title = "MQTT"
 
 [config.options]
 
@@ -97,6 +159,10 @@ restartRequiredDescription = "Bitte neu starten, um die Änderungen zu übernehm
 restartRequiredMessage = "Konfiguration geändert."
 restartingDescription = "Bitte warten …"
 restartingMessage = "evcc wird neu gestartet."
+
+[config.tariffs]
+description = "Hinterlege deine Stromtarife, um die Kosten zu berechnen."
+title = "Tarife"
 
 [config.title]
 description = "Wird in der Hauptansicht und im Browser-Tab angezeigt."

@@ -26,6 +26,10 @@ never = "only with enough surplus"
 titleAdd = "Add Battery Meter"
 titleEdit = "Edit Battery Meter"
 
+[config.circuits]
+description = "Ensures, that the sum of all loadpoints connected to a circuit does not exceed the configured power and current limits. Circuits can be nested to build a hierarchy."
+title = "Load Management"
+
 [config.deviceValue]
 capacity = "Capacity"
 chargeStatus = "Status"
@@ -56,10 +60,7 @@ optional = "optional"
 
 [config.general]
 cancel = "Cancel"
-change = "change"
 docsLink = "See documentation."
-edit = "edit"
-editEvccYaml = "Edit evcc.yaml"
 experimental = "Experimental"
 off = "off"
 on = "on"
@@ -131,7 +132,7 @@ labelPassword = "Password"
 labelTopic = "Topic"
 labelUser = "Username"
 publishing = "Publishing"
-title = "MQTT Integration"
+title = "MQTT"
 
 [config.options]
 
