@@ -21,9 +21,7 @@
 				class="mt-1 mt-sm-2 flex-grow-1"
 				:loadpoints="loadpoints"
 				:vehicles="vehicleList"
-				:smartCostLimit="smartCostLimit"
 				:smartCostType="smartCostType"
-				:smartCostActive="smartCostActive"
 				:tariffGrid="tariffGrid"
 				:tariffCo2="tariffCo2"
 				:currency="currency"
@@ -96,7 +94,6 @@ export default {
 		uploadMessage: String,
 		uploadProgress: Number,
 		sponsor: { type: Object, default: () => ({}) },
-		smartCostLimit: Number,
 		smartCostType: String,
 		smartCostActive: Boolean,
 	},
