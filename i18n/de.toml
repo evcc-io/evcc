@@ -134,6 +134,15 @@ labelUser = "Benutzer"
 publishing = "Veröffentlichen"
 title = "MQTT"
 
+[config.network]
+descriptionHost = "Verwende den .local-Suffix, um mDNS zu aktivieren. Wird zur Erkennung der mobilen App und einiger OCPP-Wallboxen benötigt."
+descriptionPort = "Port für die Web-Oberfläche und API. Du musst deine Browser-URL aktualisieren, wenn du dies änderst."
+descriptionSchema = "Beeinflusst nur die URL-Generierung. Die Auswahl von HTTPS aktiviert keine Verschlüsselung."
+labelHost = "Hostname"
+labelPort = "Port"
+labelSchema = "Schema"
+title = "Netzwerk"
+
 [config.options]
 
 [config.options.endianness]

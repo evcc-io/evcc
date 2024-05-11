@@ -220,6 +220,7 @@
 				<CircuitsModal @changed="loadDirty" />
 				<MqttModal @changed="loadDirty" />
 				<TariffsModal @changed="loadDirty" />
+				<NetworkModal @changed="loadDirty" />
 			</div>
 		</div>
 	</div>
@@ -254,6 +255,7 @@ import ModbusProxyIcon from "../components/MaterialIcon/ModbusProxy.vue";
 import ModbusProxyModal from "../components/Config/ModbusProxyModal.vue";
 import MqttIcon from "../components/MaterialIcon/Mqtt.vue";
 import MqttModal from "../components/Config/MqttModal.vue";
+import NetworkModal from "../components/Config/NetworkModal.vue";
 import NotificationIcon from "../components/MaterialIcon/Notification.vue";
 import restart, { performRestart } from "../restart";
 import store from "../store";
@@ -282,6 +284,7 @@ export default {
 		ModbusProxyModal,
 		MqttIcon,
 		MqttModal,
+		NetworkModal,
 		NotificationIcon,
 		TariffsModal,
 		TopHeader,

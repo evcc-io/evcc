@@ -65,14 +65,14 @@
 				<EditIcon size="xs" />
 			</button>
 		</div>
-		<div class="config-entry wip">
-			<strong class="config-label">Server</strong>
-			<div class="config-text">http://evcc.local:7070</div>
+		<div class="config-entry">
+			<strong class="config-label">{{ $t("config.network.title") }}</strong>
+			<div class="config-text"></div>
 			<button
 				class="config-button btn btn-link text-secondary"
 				type="button"
 				:title="$t('config.main.edit')"
-				@click.prevent="todo"
+				@click.prevent="openModal('networkModal')"
 			>
 				<EditIcon size="xs" />
 			</button>

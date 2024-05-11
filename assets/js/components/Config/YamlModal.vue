@@ -13,7 +13,11 @@
 			</div>
 
 			<div class="mt-4 d-flex justify-content-between">
-				<button type="button" class="btn btn-link text-muted" data-bs-dismiss="modal">
+				<button
+					type="button"
+					class="btn btn-link text-muted btn-cancel"
+					data-bs-dismiss="modal"
+				>
 					{{ $t("config.general.cancel") }}
 				</button>
 				<button
@@ -133,5 +137,9 @@ export default {
 	.editor-container {
 		margin: 0;
 	}
+}
+
+.btn-cancel {
+	margin-left: -0.75rem;
 }
 </style>

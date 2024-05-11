@@ -134,6 +134,15 @@ labelUser = "Username"
 publishing = "Publishing"
 title = "MQTT"
 
+[config.network]
+descriptionHost = "Use .local suffix to enable mDNS. Relevant for discovery of the mobile app and some OCPP chargers."
+descriptionPort = "Port for the web interface and API. You'll need to update your browser URL if you change this."
+descriptionSchema = "Only affects how URLs are generated. Selecting HTTPS will not enable encryption."
+labelHost = "Hostname"
+labelPort = "Port"
+labelSchema = "Schema"
+title = "Network"
+
 [config.options]
 
 [config.options.endianness]

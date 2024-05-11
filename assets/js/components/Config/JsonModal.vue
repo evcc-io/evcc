@@ -14,7 +14,11 @@
 				<div
 					class="d-flex justify-content-between order-2 order-sm-1 gap-2 flex-grow-1 flex-sm-grow-0"
 				>
-					<button type="button" class="btn btn-link text-muted" data-bs-dismiss="modal">
+					<button
+						type="button"
+						class="btn btn-link text-muted btn-cancel"
+						data-bs-dismiss="modal"
+					>
 						{{ $t("config.general.cancel") }}
 					</button>
 					<button
@@ -77,6 +81,7 @@ export default {
 		endpoint: String,
 		disableRemove: Boolean,
 		transformValues: Function,
+		defaultValues: { type: Object, default: () => ({}) },
 		saveMethod: { type: String, default: "post" },
 	},
 	computed: {
@@ -99,10 +104,19 @@ export default {
 			this.reset();
 			await this.load();
 		},
+		applyDefaults(values = {}) {
+			Object.keys(values).forEach((key) => {
+				const defaultVal = this.defaultValues[key];
+				if ((values[key] === "" || values[key] === 0) && defaultVal !== undefined) {
+					values[key] = defaultVal;
+				}
+			});
+			return values;
+		},
 		async load() {
 			try {
 				const { data } = await api.get(this.endpoint);
-				this.serverValues = data.result || { topic: "evcc" };
+				this.serverValues = this.applyDefaults(data.result);
 				this.values = { ...this.serverValues };
 			} catch (e) {
 				console.error(e);
@@ -155,5 +169,8 @@ export default {
 	margin-left: calc(var(--bs-gutter-x) * -0.5);
 	margin-right: calc(var(--bs-gutter-x) * -0.5);
 	padding-right: 0;
+}
+.btn-cancel {
+	margin-left: -0.75rem;
 }
 </style>
