@@ -2,6 +2,8 @@ package server
 
 import (
 	"strconv"
+
+	"github.com/spf13/cast"
 )
 
 type setter struct {
@@ -25,4 +27,10 @@ func floatSetter(set func(float64) error) func(string) error {
 
 func intSetter(set func(int) error) func(string) error {
 	return setterFunc(strconv.Atoi, set)
+}
+
+func boolSetter(set func(bool) error) func(string) error {
+	return setterFunc(func(v string) (bool, error) {
+		return cast.ToBoolE(v)
+	}, set)
 }
