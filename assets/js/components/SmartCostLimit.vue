@@ -85,7 +85,7 @@ export default {
 	components: { TariffChart },
 	mixins: [formatter],
 	props: {
-		smartCostLimit: { type: Number, default: 0 },
+		smartCostLimit: Number,
 		smartCostType: String,
 		tariffGrid: Number,
 		currency: String,
