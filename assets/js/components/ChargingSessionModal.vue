@@ -79,9 +79,8 @@
 										{{ $t("sessions.solar") }}
 									</th>
 									<td>
-										{{ fmtNumber(session.solarPercentage, 1) }}% ({{
-											fmtKWh(solarEnergy, solarEnergy >= 1e3)
-										}})
+										{{ fmtPercentage(session.solarPercentage, 1) }}
+										({{ fmtKWh(solarEnergy, solarEnergy >= 1e3) }})
 									</td>
 								</tr>
 								<tr v-if="session.price != null">
