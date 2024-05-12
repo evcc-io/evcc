@@ -4,10 +4,6 @@ products:
     description:
       generic: Highly Integrated EV Charger Controller from Tindie
 capabilities: ["1p3p"]
-requirements:
-  description:
-    de: Erfordert einen TCP oder RTU modbus adapter
-    en: Requires modbus
 params:
   - name: modbus
     choice: ["rs485"]
