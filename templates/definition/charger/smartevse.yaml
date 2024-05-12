@@ -2,7 +2,7 @@ template: smartevse
 products:
   - brand: Edgetech
     description:
-      generic: SmartEVSE
+      generic: Smart EVSE
 capabilities: ["1p3p"]
 params:
   - name: modbus
@@ -13,7 +13,7 @@ params:
   - name: cphwonlock
     default: false
     help:
-      de: Aktivieren falls ein Relais für die Unterbrechung der CP-Leitung ist am LOCK-Ausgang des Boards angeschlossen ist.
+      de: Aktivieren falls ein Relais für die Unterbrechung der CP-Leitung am LOCK-Ausgang des Boards angeschlossen ist.
       en: Activate if a relay for interrupting the CP line is connected to the LOCK output of the board.
   - name: cpwakeauto
     default: false
