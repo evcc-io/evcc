@@ -2,7 +2,7 @@ template: smartevse
 products:
   - brand: Edgetech
     description:
-      generic: Highly Integrated EV Charger Controller from Tindie
+      generic: SmartEVSE
 capabilities: ["1p3p"]
 params:
   - name: modbus
@@ -13,13 +13,13 @@ params:
   - name: cphwonlock
     default: false
     help:
-      de: ein Relais ist am LOCK Ausgang des Boards verbunden, und soll als CP Unterbrechung für den Wake-Up verwendet werden
-      en: a relais is connected to the lock connector and shall be used to implement the InterrupCP functionality for a wake-up of vehicles.
+      de: Aktivieren falls ein Relais für die Unterbrechung der CP-Leitung ist am LOCK-Ausgang des Boards angeschlossen ist.
+      en: Activate if a relay for interrupting the CP line is connected to the LOCK output of the board.
   - name: cpwakeauto
     default: false
     help:
-      de: das Board unterbricht selbst bei timeout CP (true) oder evcc soll then wakeup auslösen (false). Benötigt cphwonlock = true
-      en: the charger will interrupt CP autonomously in case of a car failing to wake up (true) vs evcc triggering the wakeup (false). Requires cphwonlock = true
+      de: Aktivieren falls das Board so konfiguriert ist, dass es selbsttätig versucht schlafende Fahrzeuge aufzuwecken.
+      en: Activate if the board is configured so that it automatically tries to wake up sleeping vehicles.
 render: |
   type: smartevse
   {{- include "modbus" . }}
