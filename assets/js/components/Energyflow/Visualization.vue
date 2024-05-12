@@ -202,7 +202,7 @@ export default {
 			return {
 				value,
 				hideIcon: this.hideLabelIcon(value, minWidth),
-				style: { width: this.widthTotal(value) },
+				style: { "flex-basis": this.widthTotal(value) },
 				[position]: true,
 			};
 		},
