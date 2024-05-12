@@ -32,7 +32,7 @@ test.describe("minSoc", async () => {
     await page.getByTestId("charging-plan").getByRole("button", { name: "none" }).click();
     await page.getByRole("link", { name: "Arrival" }).click();
 
-    await expect(page.getByText("charged to x% in solar mode")).toBeVisible();
+    await expect(page.getByText("charged to x in solar mode")).toBeVisible();
     await page.getByRole("combobox", { name: "Min. charge %" }).selectOption("20%");
     await expect(page.getByText("charged to 20% in solar mode")).toBeVisible();
 
