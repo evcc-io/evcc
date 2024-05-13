@@ -10,16 +10,6 @@ params:
     baudrate: 9600
     comset: 8N1
     id: 1
-  - name: cphwonlock
-    default: false
-    help:
-      de: Aktivieren falls ein Relais für die Unterbrechung der CP-Leitung am LOCK-Ausgang des Boards angeschlossen ist.
-      en: Activate if a relay for interrupting the CP line is connected to the LOCK output of the board.
-  - name: cpwakeauto
-    default: false
-    help:
-      de: Aktivieren falls das Board so konfiguriert ist, dass es selbsttätig versucht schlafende Fahrzeuge aufzuwecken.
-      en: Activate if the board is configured so that it automatically tries to wake up sleeping vehicles.
 render: |
   type: smartevse
   {{- include "modbus" . }}

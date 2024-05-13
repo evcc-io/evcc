@@ -22,21 +22,18 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
+	"github.com/volkszaehler/mbmd/meters/rs485"
 )
 
 // smartEVSE is an api.Charger implementation
 type smartEVSE struct {
-	log        *util.Logger
-	conn       *modbus.Connection
-	curr       uint16
-	cphwonlock bool
-	cpwakeauto bool
-	oldfw      bool
+	log  *util.Logger
+	conn *modbus.Connection
+	curr uint16
 }
 
 const (
@@ -49,15 +46,21 @@ const (
 	smartEVSERegDisconnectCP       = 0x0017
 	smartEVSERegMaxCurrentAdv      = 0x0102
 	smartEVSERegChargingState      = 0x0103
-	smartEVSERegTemp               = 0x0104 // 1 reg
-	smartEVSERegCurrents           = 0x0105 // 3 regs, 1/256A
-	smartEVSERegVoltages           = 0x0109 // 3 regs 1/256 V
-	smartEVSERegEnergy             = 0x010d // 1/256 KWh
-	smartEVSERegSessionEnergy      = 0x010f // 3 regs 1/256 KWh
-	smartEVSERegMaxCurrent         = 0x0201 // L byte max current A, Hbyte 1s max current
+	smartEVSERegTemp               = 0x0104 // 1 °C uint16
+	smartEVSERegCurrents           = 0x0105 // 1/256 A * 3 uint16
+	smartEVSERegSessionEnergy      = 0x0108 // 1/256 kWh uint16
+	smartEVSERegVoltages           = 0x0109 // 1/256 V * 3 uint16
+	smartEVSERegEnergy             = 0x010d // 1/256 kWh uint32s
+	smartEVSERegMaxCurrent         = 0x0201 // Lbyte max current 1 A, Hbyte 1s max current 1 A
 	smartEVSERegSettings           = 0x0204 // bits: 7: x, 6: x, 5: x, 4: CP_AUTO_DISCONNECT, 3: MISUSE_LOCKPORT_AS_CP_DISCONNECT, 2: DCL_MUST_BE_PRESENT, 1: LOCK_STATE, 0: PHASES
-	smartEVSERegCPDisconnectTime   = 0x0208 // CP interruption time
-	smartEVSERegTimeoutBeforeCPDis = 0x0209 // time the board waits before it disconnects CP
+	smartEVSERegCPDisconnectTime   = 0x0208 // CP interruption time 1 ms uint16
+	smartEVSERegTimeoutBeforeCPDis = 0x0209 // time the board waits before it disconnects CP 1 ms uint16
+
+	AUTO_CP_DISCONNECT                = 0x10
+	MISUSE_LOCK_PORT_AS_CP_DISCONNECT = 0x8
+	DCL_MUST_BE_PRESENT               = 0x4
+	LOCK_STATE                        = 0x2
+	PHASES                            = 0x1
 )
 
 func init() {
@@ -68,25 +71,21 @@ func init() {
 func NewsmartEVSEFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
 		modbus.Settings `mapstructure:",squash"`
-		CpHwOnLock      bool
-		CpWakeAuto      bool
 	}{
 		Settings: modbus.Settings{
 			ID: 1, // default
 		},
-		CpHwOnLock: false,
-		CpWakeAuto: false,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewsmartEVSE(cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.ID, cc.CpHwOnLock, cc.CpWakeAuto)
+	return NewsmartEVSE(cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.ID)
 }
 
 // NewsmartEVSE creates a new charger
-func NewsmartEVSE(uri string, device string, comset string, baudrate int, slaveID uint8, cphwonlock bool, cpwakeauto bool) (*smartEVSE, error) {
+func NewsmartEVSE(uri string, device string, comset string, baudrate int, slaveID uint8) (*smartEVSE, error) {
 	conn, err := modbus.NewConnection(uri, device, comset, baudrate, modbus.Tcp, slaveID)
 	if err != nil {
 		return nil, err
@@ -99,13 +98,6 @@ func NewsmartEVSE(uri string, device string, comset string, baudrate int, slaveI
 		log:  log,
 		conn: conn,
 		curr: 6,
-	}
-
-	wb.cphwonlock = cphwonlock
-	wb.cpwakeauto = cpwakeauto
-
-	if b, err := wb.conn.ReadInputRegisters(smartEVSERegFirmware, 1); err == nil {
-		wb.oldfw = binary.BigEndian.Uint16(b) <= 0x0290e
 	}
 
 	return wb, err
@@ -147,7 +139,7 @@ func (wb *smartEVSE) Enabled() (bool, error) {
 		return false, err
 	}
 
-	return (binary.BigEndian.Uint16(b) >> 8) > 0, nil
+	return (binary.BigEndian.Uint16(b) >> 8) != 0, nil
 }
 
 // Enable implements the api.Charger interface
@@ -179,17 +171,18 @@ var _ api.Meter = (*smartEVSE)(nil)
 // CurrentPower implements the api.Meter interface
 func (wb *smartEVSE) CurrentPower() (float64, error) {
 	var v1, v2, v3, i1, i2, i3 float64
+	var err error
 
-	v1, v2, v3, errv := wb.Voltages()
-	i1, i2, i3, errc := wb.Currents()
-
-	if errv != nil || errc != nil {
-		return 0, errv
+	v1, v2, v3, err = wb.Voltages()
+	if err != nil {
+		return 0, err
+	}
+	i1, i2, i3, err = wb.Currents()
+	if err != nil {
+		return 0, err
 	}
 
-	res := v1*i1 + v2*i2 + v3*i3
-
-	return res, nil
+	return v1*i1 + v2*i2 + v3*i3, nil
 }
 
 var _ api.MeterEnergy = (*smartEVSE)(nil)
@@ -201,107 +194,71 @@ func (wb *smartEVSE) TotalEnergy() (float64, error) {
 		return 0, err
 	}
 
-	return float64(uint32(b[2])<<24|uint32(b[3])<<16|uint32(b[0])<<8|uint32(b[1])) / 256.0, nil
-}
-
-func (wb *smartEVSE) tripple(regbase uint16) (float64, float64, float64, error) {
-	b, err := wb.conn.ReadInputRegisters(regbase, 3)
-
-	if err != nil {
-		return 0, 0, 0, err
-	}
-
-	x := float64(binary.BigEndian.Uint16(b[0:])) / 256.0
-	y := float64(binary.BigEndian.Uint16(b[2:])) / 256.0
-	z := float64(binary.BigEndian.Uint16(b[4:])) / 256.0
-
-	return x, y, z, err
+	return rs485.RTUUint32ToFloat64Swapped(b) / 256, err
 }
 
 var _ api.ChargeRater = (*smartEVSE)(nil)
 
 // ChargedEnergy implements the api.ChargeRater interface
 func (wb *smartEVSE) ChargedEnergy() (float64, error) {
-	e1, e2, e3, err := wb.tripple(smartEVSERegSessionEnergy)
-	return (e1 + e2 + e3), err
+	b, err := wb.conn.ReadInputRegisters(smartEVSERegSessionEnergy, 1)
+	if err != nil {
+		return 0, err
+	}
+
+	return float64(binary.BigEndian.Uint16(b)) / 256, err
+}
+
+// getPhaseValues returns 3 sequential register values
+func (wb *smartEVSE) getPhaseValues(reg uint16, divider float64) (float64, float64, float64, error) {
+	b, err := wb.conn.ReadInputRegisters(reg, 3)
+	if err != nil {
+		return 0, 0, 0, err
+	}
+
+	var res [3]float64
+	for i := range res {
+		res[i] = float64(binary.BigEndian.Uint16(b[2*i:])) / divider
+	}
+
+	return res[0], res[1], res[2], nil
 }
 
 var _ api.PhaseCurrents = (*smartEVSE)(nil)
 
 // Currents implements the api.PhaseCurrents interface
 func (wb *smartEVSE) Currents() (float64, float64, float64, error) {
-	return wb.tripple(smartEVSERegCurrents)
+	return wb.getPhaseValues(smartEVSERegCurrents, 256)
 }
 
 var _ api.PhaseVoltages = (*smartEVSE)(nil)
 
 // Voltages implements the api.PhaseVoltages interface
 func (wb *smartEVSE) Voltages() (float64, float64, float64, error) {
-	return wb.tripple(smartEVSERegVoltages)
+	return wb.getPhaseValues(smartEVSERegVoltages, 256)
 }
 
 var _ api.PhaseSwitcher = (*smartEVSE)(nil)
 
 // Phases1p3p implements the api.PhaseSwitcher interface
 func (wb *smartEVSE) Phases1p3p(phases int) error {
-	var b uint16
-
-	if phases == 3 {
-		b = 1
-	}
-
-	cfg, err := wb.conn.ReadHoldingRegisters(smartEVSERegSettings, 1)
+	b, err := wb.conn.ReadHoldingRegisters(smartEVSERegSettings, 1)
 	if err != nil {
 		return err
 	}
 
-	if _, err := wb.conn.WriteSingleRegister(smartEVSERegSettings, (binary.BigEndian.Uint16(cfg) | b)); err != nil {
+	settings := binary.BigEndian.Uint16(b) &^ PHASES
+
+	if phases == 3 {
+		settings |= 1
+	}
+
+	if _, err := wb.conn.WriteSingleRegister(smartEVSERegSettings, settings); err != nil {
 		return err
 	}
 
 	// we need to stop charging quickly for the setting to take effect
 	return wb.Enable(false)
-}
-
-var _ api.Resurrector = (*smartEVSE)(nil)
-
-// WakeUp implements the Resurrector interface
-func (wb *smartEVSE) WakeUp() error {
-	if wb.cphwonlock && !wb.cpwakeauto {
-		if wb.oldfw { // this includes that cp auto mode does not exist
-			cfg, err := wb.conn.ReadHoldingRegisters(smartEVSERegSettings, 1)
-			if err != nil {
-				return err
-			}
-
-			// set Lockbit
-			if _, err := wb.conn.WriteSingleRegister(smartEVSERegSettings, (binary.BigEndian.Uint16(cfg) | 0x2)); err != nil {
-				return err
-			}
-			// activate lock setting (or relais in our case) by reading
-			if _, err := wb.conn.ReadInputRegisters(smartEVSERegExternalLock, 1); err != nil {
-				return err
-			}
-
-			time.Sleep(3 * time.Second)
-
-			// reset Lockbit
-			if _, err := wb.conn.WriteSingleRegister(smartEVSERegSettings, (binary.BigEndian.Uint16(cfg) & 0xfffd)); err != nil {
-				return err
-			}
-
-			// activate lock setting (or relais in our case) by reading
-			if _, err := wb.conn.ReadInputRegisters(smartEVSERegExternalLock, 1); err != nil {
-				return err
-			}
-		} else {
-			if _, err := wb.conn.ReadInputRegisters(smartEVSERegDisconnectCP, 1); err != nil {
-				return err
-			}
-		}
-	}
-
-	return nil
 }
 
 var _ api.Diagnosis = (*smartEVSE)(nil)
@@ -327,7 +284,7 @@ func (wb *smartEVSE) Diagnose() {
 	if b, err := wb.conn.ReadHoldingRegisters(smartEVSERegSettings, 1); err == nil {
 		settings := binary.BigEndian.Uint16(b)
 		phasenum := 1
-		if settings&0x1 == 1 {
+		if settings&PHASES == 1 {
 			phasenum = 3
 		}
 		fmt.Printf("\tSettings:\n\t\tPhases:%d\n\t\tLockState:%t\n\t\tDCLMustbePresent:%t\n\t\tLockPortDrivingCPRelais:%t\n\t\tCPInterruptAuto:%t\n", phasenum, settings&0x2 != 0, settings&0x4 != 0, settings&0x8 != 0, settings&0x10 != 0)
