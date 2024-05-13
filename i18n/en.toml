@@ -471,6 +471,8 @@ vehicle = "Vehicle"
 
 [sessions.csv]
 chargedenergy = "Energy (kWh)"
+chargeduration = "Duration"
+co2perkwh = "CO₂/kWh"
 created = "Created"
 finished = "Finished"
 identifier = "Identifier"
@@ -478,6 +480,9 @@ loadpoint = "Charging point"
 meterstart = "Meter start (kWh)"
 meterstop = "Meter stop (kWh)"
 odometer = "Mileage (km)"
+price = "Price"
+priceperkwh = "Price/kWh"
+solarpercentage = "Solar (%)"
 vehicle = "Vehicle"
 
 [sessions.filter]
