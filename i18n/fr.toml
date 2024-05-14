@@ -561,3 +561,12 @@ title = "Erreur au démarrage"
 cancel = "Annuler"
 template = "Fabricant"
 test = "Test"
+
+
+[config.options.schema]
+https = HTTP (crypté)
+http = HTTP (non crypté)
+
+[config.options.endianness]
+big = gros-boutiste
+little = petit-boutiste
