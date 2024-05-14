@@ -30,6 +30,16 @@ titleEdit = "Edit Battery Meter"
 description = "Ensures, that the sum of all loadpoints connected to a circuit does not exceed the configured power and current limits. Circuits can be nested to build a hierarchy."
 title = "Load Management"
 
+[config.control]
+description = "These settings affect the control behavior. Usually the default values are fine. Only change them if you know what you are doing."
+descriptionInterval = "Control loop update cycle in seconds. Defines how often evcc reads meter data, adjusts charging power and updates the UI. Short intervals (< 30s) can cause oszillations and unwanted behavior."
+descriptionMaxGridSupply = "Only relevant for hybrid inverters that are not able to output the full DC generation power to the home via AC. This szenario can lead to unwanted grid use, since evcc assumes the full DC power is available. Use a value of at least 50 W to prevent this."
+descriptionResidualPower = "Shifts the operation point of the control loop. If you have a home battery it's recommended to set a value of 100 W. This way the battery will get slight priority over grid use."
+labelInterval = "Update interval"
+labelMaxGridSupply = "Max. grid supply while charging"
+labelResidualPower = "Residual power"
+title = "Control behavior"
+
 [config.deviceValue]
 capacity = "Capacity"
 chargeStatus = "Status"

@@ -221,6 +221,7 @@
 				<MqttModal @changed="loadDirty" />
 				<TariffsModal @changed="loadDirty" />
 				<NetworkModal @changed="loadDirty" />
+				<ControlModal @changed="loadDirty" />
 			</div>
 		</div>
 	</div>
@@ -237,6 +238,7 @@ import AddDeviceButton from "../components/Config/AddDeviceButton.vue";
 import api from "../api";
 import CircuitsIcon from "../components/MaterialIcon/Circuits.vue";
 import CircuitsModal from "../components/Config/CircuitsModal.vue";
+import ControlModal from "../components/Config/ControlModal.vue";
 import collector from "../mixins/collector";
 import DeviceCard from "../components/Config/DeviceCard.vue";
 import DeviceTags from "../components/Config/DeviceTags.vue";
@@ -269,6 +271,7 @@ export default {
 		AddDeviceButton,
 		CircuitsIcon,
 		CircuitsModal,
+		ControlModal,
 		DeviceCard,
 		DeviceTags,
 		EebusIcon,

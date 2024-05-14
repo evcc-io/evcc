@@ -53,7 +53,7 @@
 				<EditIcon size="xs" />
 			</button>
 		</div>
-		<div class="config-entry wip">
+		<div class="config-entry wip" data-testid="generalconfig-sponsoring">
 			<strong class="config-label">Sponsoring</strong>
 			<div class="config-text text-primary">valid</div>
 			<button
@@ -65,7 +65,7 @@
 				<EditIcon size="xs" />
 			</button>
 		</div>
-		<div class="config-entry">
+		<div class="config-entry" data-testid="generalconfig-network">
 			<strong class="config-label">{{ $t("config.network.title") }}</strong>
 			<div class="config-text"></div>
 			<button
@@ -77,14 +77,14 @@
 				<EditIcon size="xs" />
 			</button>
 		</div>
-		<div class="config-entry wip">
-			<strong class="config-label">Update Interval</strong>
-			<div class="config-text">30s</div>
+		<div class="config-entry" data-testid="generalconfig-control">
+			<strong class="config-label">{{ $t("config.control.title") }}</strong>
+			<div class="config-text"></div>
 			<button
 				class="config-button btn btn-link text-secondary"
 				type="button"
 				:title="$t('config.main.edit')"
-				@click.prevent="todo"
+				@click.prevent="openModal('controlModal')"
 			>
 				<EditIcon size="xs" />
 			</button>

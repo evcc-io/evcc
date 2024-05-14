@@ -545,6 +545,9 @@ input[type="time"]::-webkit-calendar-picker-indicator {
 	.w-sm-50 {
 		width: 50% !important;
 	}
+	.w-sm-25 {
+		width: 25% !important;
+	}
 }
 
 html.app .hide-in-app {
