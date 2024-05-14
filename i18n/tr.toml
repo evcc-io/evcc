@@ -473,6 +473,8 @@ vehicle = "Araç"
 
 [sessions.csv]
 chargedenergy = "Enerji (kWh)"
+chargeduration = "Doldurma süresi"
+co2perkwh = "CO₂/kWh"
 created = "Başlama zamanı"
 finished = "Bitiş zamanı"
 identifier = "Tanımlayıcı"
@@ -480,12 +482,10 @@ loadpoint = "Doldurma Noktası"
 meterstart = "Sayaç başlangıcı (kWh)"
 meterstop = "Sayaç bitişi (kWh)"
 odometer = "Kilometre (km)"
-vehicle = "Araç"
-chargeduration = "Doldurma süresi"
-solarpercentage = "Güneş (%)"
-co2perkwh = "CO₂/kWh"
 price = "Fiyat"
 priceperkwh = "Fiyat/kWh"
+solarpercentage = "Güneş (%)"
+vehicle = "Araç"
 
 [sessions.filter]
 allLoadpoints = "tüm doldurma noktaları"

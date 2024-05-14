@@ -493,6 +493,8 @@ vehicle = "Automobilis"
 
 [sessions.csv]
 chargedenergy = "Energija (kWh)"
+chargeduration = "Trukmė"
+co2perkwh = "CO₂/kWh"
 created = "Sukurta"
 finished = "Pabaigta"
 identifier = "Identifikatorius"
@@ -500,12 +502,10 @@ loadpoint = "Įkroviklis"
 meterstart = "Skaitiklis pradžia (kWh)"
 meterstop = "Skaitiklis pabaiga (kWh)"
 odometer = "Odometras (km)"
-vehicle = "Automobilis"
-chargeduration = "Trukmė"
-co2perkwh = "CO₂/kWh"
-priceperkwh = "Kaina/kWh"
 price = "Kaina"
+priceperkwh = "Kaina/kWh"
 solarpercentage = "Saulės (%)"
+vehicle = "Automobilis"
 
 [sessions.filter]
 allLoadpoints = "visi įkrovikliai"
