@@ -501,6 +501,11 @@ meterstart = "Skaitiklis pradžia (kWh)"
 meterstop = "Skaitiklis pabaiga (kWh)"
 odometer = "Odometras (km)"
 vehicle = "Automobilis"
+chargeduration = "Trukmė"
+co2perkwh = "CO₂/kWh"
+priceperkwh = "Kaina/kWh"
+price = "Kaina"
+solarpercentage = "Saulės (%)"
 
 [sessions.filter]
 allLoadpoints = "visi įkrovikliai"
