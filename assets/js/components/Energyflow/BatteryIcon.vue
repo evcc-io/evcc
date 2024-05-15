@@ -19,7 +19,7 @@ export default {
 	computed: {
 		socRect() {
 			const height = (this.soc / (100 / 22)).toFixed(2);
-			return `M30 38H17v-${height}h14v${height}z`;
+			return `M30 38H18v-${height}h12v${height}z`;
 		},
 	},
 	mixins: [icon],
