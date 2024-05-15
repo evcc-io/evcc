@@ -80,10 +80,11 @@ func (v *Identity) Login() error {
 
 // login authenticates with username/password to get new token
 func (v *Identity) login() (*oauth.Token, error) {
-	cv := oauth2.GenerateVerifier()
+	oc := oc
 
+	cv := oauth2.GenerateVerifier()
 	state := lo.RandomString(16, lo.AlphanumericCharset)
-	uri := NewOauth2Config(v.domain).AuthCodeURL(state, oauth2.S256ChallengeOption(cv),
+	uri := oc.AuthCodeURL(state, oauth2.S256ChallengeOption(cv),
 		oauth2.SetAuthURLParam("max_age", "3600"),
 		oauth2.SetAuthURLParam("ui_locales", "de-DE"),
 		oauth2.SetAuthURLParam("language_code", "de-DE"),
@@ -181,7 +182,7 @@ func (v *Identity) login() (*oauth.Token, error) {
 		return nil, errors.New("could not obtain auth code- check user and password")
 	}
 
-	tok, err := NewOauth2Config(v.domain).Exchange(ctx, code, oauth2.VerifierOption(cv))
+	tok, err := oc.Exchange(ctx, code, oauth2.VerifierOption(cv))
 
 	// exchange code for api token
 	var token oauth.Token
