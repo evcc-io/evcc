@@ -116,4 +116,7 @@ export default {
 .editor :global(.error) {
 	background-color: var(--bs-danger-50) !important;
 }
+.editor {
+	border: 1px solid var(--bs-border-color);
+}
 </style>

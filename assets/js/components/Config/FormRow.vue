@@ -12,9 +12,9 @@
 		</div>
 		<div class="form-text evcc-gray">
 			<div v-if="example">{{ $t("config.form.example") }}: {{ example }}</div>
-			<div v-if="help" class="text-gray">
-				<span v-html="helpHtml"></span>
-				<a class="ms-1" v-if="link" :href="link" target="_blank">
+			<div v-if="help">
+				<span class="text-gray" v-html="helpHtml"></span>
+				<a class="ms-1 text-gray" v-if="link" :href="link" target="_blank">
 					{{ $t("config.general.docsLink") }}
 				</a>
 			</div>

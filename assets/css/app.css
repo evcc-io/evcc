@@ -102,12 +102,6 @@
 	color-scheme: dark;
 }
 
-html {
-	/* prevents content jump when scrollbar is activate */
-	width: 100vw;
-	overflow-x: hidden;
-}
-
 html.no-transitions * {
 	transition: none !important;
 }

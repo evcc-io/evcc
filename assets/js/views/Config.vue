@@ -16,7 +16,7 @@
 						repair your database.
 					</div>
 -->
-					<h2 class="my-4 mt-5">Grid, PV & Battery Systems</h2>
+					<h2 class="my-4 mt-5">{{ $t("config.section.site") }}</h2>
 					<ul class="p-0 config-list">
 						<DeviceCard
 							:name="gridMeter?.config?.template || 'Grid meter'"
@@ -79,7 +79,7 @@
 						<AddDeviceButton :title="$t('config.main.addPvBattery')" @add="addMeter" />
 					</ul>
 
-					<h2 class="my-4 wip">Charge Points</h2>
+					<h2 class="my-4 wip">{{ $t("config.section.loadpoints") }}</h2>
 
 					<ul class="p-0 config-list wip">
 						<DeviceCard
@@ -102,7 +102,7 @@
 						/>
 					</ul>
 
-					<h2 class="my-4">Vehicles</h2>
+					<h2 class="my-4">{{ $t("config.section.vehicles") }}</h2>
 					<div>
 						<ul class="p-0 config-list">
 							<DeviceCard
@@ -127,7 +127,7 @@
 							/>
 						</ul>
 
-						<h2 class="my-4 mt-5">Integrations</h2>
+						<h2 class="my-4 mt-5">{{ $t("config.section.integrations") }}</h2>
 
 						<ul class="p-0 config-list">
 							<DeviceCard
