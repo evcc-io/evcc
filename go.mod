@@ -60,7 +60,7 @@ require (
 	github.com/libp2p/zeroconf/v2 v2.2.0
 	github.com/lorenzodonini/ocpp-go v0.18.0
 	github.com/lunixbochs/struc v0.0.0-20200707160740-784aaebc1d40
-	github.com/mabunixda/wattpilot v1.6.6-0.20240327174155-7cb4a82a238a
+	github.com/mabunixda/wattpilot v1.7.2
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/mlnoga/rct v0.1.2-0.20230731074838-03eacb926f99
@@ -92,7 +92,7 @@ require (
 	go.uber.org/mock v0.4.0
 	golang.org/x/crypto/x509roots/fallback v0.0.0-20240318092723-b91329d961d4
 	golang.org/x/exp v0.0.0-20240318143956-a85f2c67cd81
-	golang.org/x/net v0.22.0
+	golang.org/x/net v0.24.0
 	golang.org/x/oauth2 v0.18.0
 	golang.org/x/sync v0.6.0
 	golang.org/x/text v0.14.0
@@ -181,10 +181,10 @@ require (
 	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
 	gitlab.com/c0b/go-ordered-json v0.0.0-20201030195603-febf46534d5a // indirect
 	go.uber.org/multierr v1.11.0 // indirect
-	golang.org/x/crypto v0.21.0
+	golang.org/x/crypto v0.22.0
 	golang.org/x/mod v0.16.0 // indirect
-	golang.org/x/sys v0.18.0 // indirect
-	golang.org/x/term v0.18.0 // indirect
+	golang.org/x/sys v0.19.0 // indirect
+	golang.org/x/term v0.19.0 // indirect
 	golang.org/x/tools v0.19.0
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240318140521-94a12d6c2237 // indirect
