@@ -13,7 +13,7 @@ legendTitle = "Hvordan skal solenergi benyttes?"
 legendTopAutostart = "starter automatisk"
 legendTopName = "batteri understøttet opladning"
 legendTopSubline = "uden afbrydelser"
-modalTitle = "Batteri indstillinger"
+modalTitle = "Hus batteri"
 
 [batterySettings.bufferStart]
 above = "når den er over {soc}"
@@ -78,9 +78,21 @@ validateSave = "Valider og gem"
 titleAdd = "Tilføj solmåler"
 titleEdit = "Rediger solmåler"
 
+[config.section]
+general = "Generelle"
+system = "System"
+
 [config.site]
 cancel = "Afbryd"
 save = "Gem"
+
+[config.system]
+logs = "Log"
+restart = "Genstart"
+restartRequiredDescription = "Genstart for at se effekten"
+restartRequiredMessage = "Konfiguration er ændret"
+restartingDescription = "Vent venligst..."
+restartingMessage = "Genstarter evcc."
 
 [config.title]
 description = "Vises på hovedskærm og på browserfane"
@@ -195,6 +207,8 @@ discussionsButton = "GitHub diskussioner"
 documentationButton = "Dokumentation"
 issueButton = "Meld en fejl"
 issueDescription = "Fundet en mærkelig eller forkert adfærd?"
+logsButton = "Se logfil"
+logsDescription = "Check log for fejl"
 modalTitle = "Brug for hjælp?"
 primaryActions = "Noget fungerer ikke, som det skulle? Disse er gode steder at få hjælp."
 restartButton = "Genstart"
@@ -208,12 +222,24 @@ description = "Under normale omstændigheder bør genstart ikke være nødvendig
 disclaimer = "Bemærk: evcc afsluttes og har brug for at operativsystemet genstarter tjenesten."
 modalTitle = "Er du sikker på, at du vil genstarte?"
 
+[log]
+areaLabel = "Filtrer per område"
+areas = "Alle områder"
+download = "Hent hele log filen"
+levelLabel = "Filtrer på log niveau"
+noResults = "Ingen matchende logposter"
+search = "Søg"
+showAll = "Vis alle poster"
+title = "Log filer"
+update = "Opdater automatisk"
+
 [loginModal]
 cancel = "Afbryd"
 error = "Login mislykkedes"
 invalid = "Ugyldig adgangskode"
 login = "Log på"
 password = "Adgangskode"
+reset = "Nulstil adgangskode"
 title = "Godkendelse"
 
 [main]
@@ -397,6 +423,7 @@ waitForVehicle = "Parat. Venter på køretøj ..."
 
 [notifications]
 dismissAll = "Afvis alle"
+logs = "Se hele log filen"
 modalTitle = "Underretninger"
 
 [offline]
@@ -466,7 +493,12 @@ allVehicles = "alle køretøjer"
 filter = "Filter"
 
 [settings]
-title = "Generelle indstillinger"
+title = "Brugergrænseflade"
+
+[settings.fullscreen]
+enter = "Gå til fuldskærmsvisning"
+exit = "Afslut fuldskærm"
+label = "Fuldskærm"
 
 [settings.hiddenFeatures]
 label = "Experimentalt"

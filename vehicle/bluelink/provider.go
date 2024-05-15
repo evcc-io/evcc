@@ -12,50 +12,50 @@ const refreshTimeout = 2 * time.Minute
 // Provider implements the vehicle api.
 // Based on https://github.com/Hacksore/bluelinky.
 type Provider struct {
-	statusG     func() (VehicleStatus, error)
-	statusLG    func() (StatusLatestResponse, error)
-	refreshG    func() (StatusResponse, error)
+	statusG     func() (BluelinkVehicleStatus, error)
+	statusLG    func() (BluelinkVehicleStatusLatest, error)
+	refreshG    func() (BluelinkVehicleStatus, error)
 	expiry      time.Duration
 	refreshTime time.Time
 }
 
 // New creates a new BlueLink API
-func NewProvider(api *API, vid string, expiry, cache time.Duration) *Provider {
+func NewProvider(api *API, vehicle Vehicle, expiry, cache time.Duration) *Provider {
 	v := &Provider{
-		refreshG: func() (StatusResponse, error) {
-			return api.StatusPartial(vid)
+		refreshG: func() (BluelinkVehicleStatus, error) {
+			return api.StatusPartial(vehicle)
 		},
 		expiry: expiry,
 	}
 
-	v.statusG = provider.Cached(func() (VehicleStatus, error) {
+	v.statusG = provider.Cached(func() (BluelinkVehicleStatus, error) {
 		return v.status(
-			func() (StatusLatestResponse, error) { return api.StatusLatest(vid) },
+			func() (BluelinkVehicleStatusLatest, error) { return api.StatusLatest(vehicle) },
 		)
 	}, cache)
 
-	v.statusLG = provider.Cached(func() (StatusLatestResponse, error) {
-		return api.StatusLatest(vid)
+	v.statusLG = provider.Cached(func() (BluelinkVehicleStatusLatest, error) {
+		return api.StatusLatest(vehicle)
 	}, cache)
 
 	return v
 }
 
 // status wraps the api status call and adds status refresh
-func (v *Provider) status(statusG func() (StatusLatestResponse, error)) (VehicleStatus, error) {
+func (v *Provider) status(statusG func() (BluelinkVehicleStatusLatest, error)) (BluelinkVehicleStatus, error) {
 	res, err := statusG()
 
 	var ts time.Time
 	if err == nil {
-		ts, err = res.ResMsg.VehicleStatusInfo.VehicleStatus.Updated()
+		ts, err = res.BluelinkVehicleStatus().Updated()
 		if err != nil {
-			return res.ResMsg.VehicleStatusInfo.VehicleStatus, err
+			return res.BluelinkVehicleStatus(), err
 		}
 
 		// return the current value
 		if time.Since(ts) <= v.expiry {
 			v.refreshTime = time.Time{}
-			return res.ResMsg.VehicleStatusInfo.VehicleStatus, nil
+			return res.BluelinkVehicleStatus(), nil
 		}
 	}
 
@@ -66,15 +66,15 @@ func (v *Provider) status(statusG func() (StatusLatestResponse, error)) (Vehicle
 		// TODO async refresh
 		res, err := v.refreshG()
 		if err == nil {
-			if ts, err = res.ResMsg.Updated(); err == nil && time.Since(ts) <= v.expiry {
+			if ts, err = res.Updated(); err == nil && time.Since(ts) <= v.expiry {
 				v.refreshTime = time.Time{}
-				return res.ResMsg, nil
+				return res, nil
 			}
 
 			err = api.ErrMustRetry
 		}
 
-		return VehicleStatus{}, err
+		return nil, err
 	}
 
 	// refresh finally expired
@@ -88,7 +88,7 @@ func (v *Provider) status(statusG func() (StatusLatestResponse, error)) (Vehicle
 		err = api.ErrMustRetry
 	}
 
-	return VehicleStatus{}, err
+	return nil, err
 }
 
 var _ api.Battery = (*Provider)(nil)
@@ -99,12 +99,7 @@ func (v *Provider) Soc() (float64, error) {
 	if err != nil {
 		return 0, err
 	}
-
-	if res.EvStatus != nil {
-		return res.EvStatus.BatteryStatus, nil
-	}
-
-	return 0, api.ErrNotAvailable
+	return res.SoC()
 }
 
 var _ api.ChargeState = (*Provider)(nil)
@@ -112,25 +107,11 @@ var _ api.ChargeState = (*Provider)(nil)
 // Status implements the api.Battery interface
 func (v *Provider) Status() (api.ChargeStatus, error) {
 	status := api.StatusNone
-
 	res, err := v.statusG()
 	if err != nil {
 		return status, err
 	}
-
-	if res.EvStatus != nil {
-		status = api.StatusA
-		if res.EvStatus.BatteryPlugin > 0 || res.EvStatus.ChargePortDoorOpenStatus == 1 {
-			status = api.StatusB
-		}
-		if res.EvStatus.BatteryCharge {
-			status = api.StatusC
-		}
-	} else {
-		err = api.ErrNotAvailable
-	}
-
-	return status, err
+	return res.Status()
 }
 
 var _ api.VehicleFinishTimer = (*Provider)(nil)
@@ -141,19 +122,7 @@ func (v *Provider) FinishTime() (time.Time, error) {
 	if err != nil {
 		return time.Time{}, err
 	}
-
-	if res.EvStatus != nil {
-		remaining := res.EvStatus.RemainTime2.Atc.Value
-
-		if remaining == 0 {
-			return time.Time{}, api.ErrNotAvailable
-		}
-
-		ts, err := res.Updated()
-		return ts.Add(time.Duration(remaining) * time.Minute), err
-	}
-
-	return time.Time{}, api.ErrNotAvailable
+	return res.FinishTime()
 }
 
 var _ api.VehicleRange = (*Provider)(nil)
@@ -164,14 +133,7 @@ func (v *Provider) Range() (int64, error) {
 	if err != nil {
 		return 0, err
 	}
-
-	if res.EvStatus != nil {
-		if dist := res.EvStatus.DrvDistance; len(dist) == 1 {
-			return int64(dist[0].RangeByFuel.EvModeRange.Value), nil
-		}
-	}
-
-	return 0, api.ErrNotAvailable
+	return res.Range()
 }
 
 var _ api.VehicleOdometer = (*Provider)(nil)
@@ -182,12 +144,7 @@ func (v *Provider) Odometer() (float64, error) {
 	if err != nil {
 		return 0, err
 	}
-
-	if res.ResMsg.VehicleStatusInfo.Odometer != nil {
-		return res.ResMsg.VehicleStatusInfo.Odometer.Value, err
-	}
-
-	return 0, api.ErrNotAvailable
+	return res.Odometer()
 }
 
 var _ api.SocLimiter = (*Provider)(nil)
@@ -198,16 +155,7 @@ func (v *Provider) GetLimitSoc() (int64, error) {
 	if err != nil {
 		return 0, err
 	}
-
-	if res.EvStatus != nil {
-		for _, targetSOC := range res.EvStatus.ReservChargeInfos.TargetSocList {
-			if targetSOC.PlugType == plugTypeAC {
-				return int64(targetSOC.TargetSocLevel), nil
-			}
-		}
-	}
-
-	return 0, api.ErrNotAvailable
+	return res.GetLimitSoc()
 }
 
 var _ api.VehiclePosition = (*Provider)(nil)
@@ -218,13 +166,7 @@ func (v *Provider) Position() (float64, float64, error) {
 	if err != nil {
 		return 0, 0, err
 	}
-
-	if res.ResMsg.VehicleStatusInfo.VehicleLocation != nil {
-		coord := res.ResMsg.VehicleStatusInfo.VehicleLocation.Coord
-		return coord.Lat, coord.Lon, err
-	}
-
-	return 0, 0, api.ErrNotAvailable
+	return res.Position()
 }
 
 var _ api.Resurrector = (*Provider)(nil)

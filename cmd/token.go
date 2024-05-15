@@ -24,7 +24,7 @@ func init() {
 
 func runToken(cmd *cobra.Command, args []string) {
 	// load config
-	if err := loadConfigFile(&conf); err != nil {
+	if err := loadConfigFile(&conf, !cmd.Flag(flagIgnoreDatabase).Changed); err != nil {
 		log.FATAL.Fatal(err)
 	}
 
@@ -51,11 +51,19 @@ func runToken(cmd *cobra.Command, args []string) {
 	var token *oauth2.Token
 	var err error
 
-	switch strings.ToLower(vehicleConf.Type) {
+	typ := strings.ToLower(vehicleConf.Type)
+	if typ == "template" {
+		typ = strings.ToLower(vehicleConf.Other["template"].(string))
+	}
+
+	switch typ {
 	case "mercedes":
 		token, err = mercedesToken()
 	case "tronity":
 		token, err = tronityToken(conf, vehicleConf)
+	case "citroen", "ds", "opel", "peugeot":
+		token, err = psaToken(typ)
+
 	default:
 		log.FATAL.Fatalf("vehicle type '%s' does not support token authentication", vehicleConf.Type)
 	}

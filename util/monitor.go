@@ -75,6 +75,7 @@ func (m *Monitor[T]) GetFunc(get func(T)) error {
 
 			// mark as waited once
 			m.mu.Lock()
+			// TODO fix and test
 			m.updated.Add(time.Nanosecond)
 			m.mu.Unlock()
 

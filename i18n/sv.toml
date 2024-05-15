@@ -13,7 +13,7 @@ legendTitle = "Hur ska solenergin användas?"
 legendTopAutostart = "startar automatiskt"
 legendTopName = "laddning med batteristöd"
 legendTopSubline = "utan avbrott"
-modalTitle = "Batteri inställningar"
+modalTitle = "Hemmabatteri"
 
 [batterySettings.bufferStart]
 above = "när den är över {soc}"
@@ -78,9 +78,21 @@ validateSave = "Validera & spara"
 titleAdd = "Lägg till solcellsmätare"
 titleEdit = "Ändra solcellsmätare"
 
+[config.section]
+general = "Allmänna"
+system = "System"
+
 [config.site]
 cancel = "Avbryt"
 save = "Spara"
+
+[config.system]
+logs = "Loggar"
+restart = "Omstart"
+restartRequiredDescription = "Starta om för att de nya inställningarna ska börja gälla."
+restartRequiredMessage = "Inställningar ändrade."
+restartingDescription = "Vänligen vänta..."
+restartingMessage = "Startar om evcc."
 
 [config.title]
 description = "Visas på huvudskärm och tabbar."
@@ -195,6 +207,8 @@ discussionsButton = "GitHub diskussioner"
 documentationButton = "Dokumentation"
 issueButton = "Rapportera fel"
 issueDescription = "Hittat ett konstigt eller felaktigt beteende?"
+logsButton = "Se loggar"
+logsDescription = "Felsök loggar"
 modalTitle = "Behöver du hjälp?"
 primaryActions = "Fungerar det inte som tänkt? Här finns mycket hjälp att hitta."
 restartButton = "Omstart"
@@ -208,12 +222,24 @@ description = "Normalt behövs inte en omstart. Rapportera ett fel om du behöve
 disclaimer = "Notera: evcc kommer stängas av och be operativsystemet starta om tjänsten."
 modalTitle = "Är du säker på att du vill starta om?"
 
+[log]
+areaLabel = "Filtrera per område"
+areas = "Alla områden"
+download = "Ladda hem alla loggar"
+levelLabel = "Filtrera på loggnivå"
+noResults = "Inga matchande loggposter."
+search = "Sök"
+showAll = "Visa allt"
+title = "Loggar"
+update = "Autouppdatera"
+
 [loginModal]
 cancel = "Avbryt"
 error = "Inloggning misslyckades:"
 invalid = "Ogiltigt lösenord."
 login = "Logga in"
 password = "Lösenord"
+reset = "Återställ lösenord?"
 title = "Autentisering"
 
 [main]
@@ -384,7 +410,7 @@ climating = "Förvärmning identifierad."
 connected = "Inkopplad."
 disconnected = "Frånkopplad."
 minCharge = "Minimiladdning till {soc}%."
-pvDisable = "Inte tillräckligt med överskott. Pausar i {remaining}..."
+pvDisable = "Inte tillräckligt med överskott. Pausar om {remaining}..."
 pvEnable = "Överskott tillgängligt. Börjar om {remaining}..."
 scale1p = "Minskar till 1-fas-laddning om {remaining}..."
 scale3p = "Ökar till 3-fas-laddning om {remaining}..."
@@ -397,6 +423,7 @@ waitForVehicle = "Redo. Väntar på fordon..."
 
 [notifications]
 dismissAll = "Avvisa alla"
+logs = "Se kompletta loggar"
 modalTitle = "Meddelanden"
 
 [offline]
@@ -466,7 +493,12 @@ allVehicles = "alla fordon"
 filter = "Filter"
 
 [settings]
-title = "Allmänna inställningar"
+title = "Användargränssnitt"
+
+[settings.fullscreen]
+enter = "Till helskärmsläge"
+exit = "Lämna helskärmsläge"
+label = "Helskärmsläge"
 
 [settings.gridDetails]
 co2 = "CO₂"

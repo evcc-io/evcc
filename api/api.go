@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-//go:generate mockgen -package api -destination mock.go github.com/evcc-io/evcc/api Charger,ChargeState,CurrentLimiter,PhaseSwitcher,Identifier,Meter,MeterEnergy,Vehicle,ChargeRater,Battery,Tariff,BatteryController
+//go:generate mockgen -package api -destination mock.go github.com/evcc-io/evcc/api Charger,ChargeState,CurrentLimiter,PhaseSwitcher,Identifier,Meter,MeterEnergy,PhaseCurrents,Vehicle,ChargeRater,Battery,Tariff,BatteryController,Circuit
 
 // Meter provides total active power in W
 type Meter interface {
@@ -93,7 +93,7 @@ type Diagnosis interface {
 
 // ChargeTimer provides current charge cycle duration
 type ChargeTimer interface {
-	ChargingTime() (time.Duration, error)
+	ChargeDuration() (time.Duration, error)
 }
 
 // ChargeRater provides charged energy amount in kWh
@@ -201,4 +201,33 @@ type FeatureDescriber interface {
 // CsvWriter converts to csv
 type CsvWriter interface {
 	WriteCsv(context.Context, io.Writer) error
+}
+
+// CircuitMeasurements is the measurements a circuit or load must deliver
+type CircuitMeasurements interface {
+	GetChargePower() float64
+	GetMaxPhaseCurrent() float64
+}
+
+// CircuitLoad represents a loadpoint attached to a circuit
+type CircuitLoad interface {
+	CircuitMeasurements
+	GetCircuit() Circuit
+}
+
+// Circuit defines the load control domain
+type Circuit interface {
+	CircuitMeasurements
+	GetTitle() string
+	SetTitle(string)
+	GetParent() Circuit
+	RegisterChild(child Circuit)
+	HasMeter() bool
+	GetMaxPower() float64
+	GetMaxCurrent() float64
+	SetMaxPower(float64)
+	SetMaxCurrent(float64)
+	Update([]CircuitLoad) error
+	ValidateCurrent(old, new float64) float64
+	ValidatePower(old, new float64) float64
 }

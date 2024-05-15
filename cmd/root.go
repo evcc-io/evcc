@@ -18,6 +18,7 @@ import (
 	"github.com/evcc-io/evcc/server/modbus"
 	"github.com/evcc-io/evcc/server/updater"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/auth"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/pipe"
 	"github.com/evcc-io/evcc/util/sponsor"
@@ -28,7 +29,10 @@ import (
 	"github.com/spf13/viper"
 )
 
-const rebootDelay = 5 * time.Minute // delayed reboot on error
+const (
+	rebootDelay = 5 * time.Minute // delayed reboot on error
+	serviceDB   = "/var/lib/evcc/evcc.db"
+)
 
 var (
 	log     = util.NewLogger("main")
@@ -52,10 +56,9 @@ func init() {
 
 	// global options
 	rootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "Config file (default \"~/evcc.yaml\" or \"/etc/evcc.yaml\")")
-
 	rootCmd.PersistentFlags().BoolP("help", "h", false, "Help")
-
 	rootCmd.PersistentFlags().Bool(flagHeaders, false, flagHeadersDescription)
+	rootCmd.PersistentFlags().Bool(flagIgnoreDatabase, false, flagIgnoreDatabaseDescription)
 
 	// config file options
 	rootCmd.PersistentFlags().StringP("log", "l", "info", "Log level (fatal, error, warn, info, debug, trace)")
@@ -106,7 +109,7 @@ func Execute() {
 func runRoot(cmd *cobra.Command, args []string) {
 	// load config and re-configure logging after reading config file
 	var err error
-	if cfgErr := loadConfigFile(&conf); errors.As(cfgErr, &viper.ConfigFileNotFoundError{}) {
+	if cfgErr := loadConfigFile(&conf, !cmd.Flag(flagIgnoreDatabase).Changed); errors.As(cfgErr, &viper.ConfigFileNotFoundError{}) {
 		log.INFO.Println("missing config file - switching into demo mode")
 		if err := demoConfig(&conf); err != nil {
 			log.FATAL.Fatal(err)
@@ -246,11 +249,14 @@ func runRoot(cmd *cobra.Command, args []string) {
 		os.Exit(0)
 	}()
 
+	auth := auth.New()
+
 	// show main ui
 	if err == nil {
-		httpd.RegisterSiteHandlers(site, cache)
-		httpd.RegisterShutdownHandler(func() {
-			log.FATAL.Println("evcc was stopped by user. OS should restart the service. Or restart manually.")
+		httpd.RegisterSiteHandlers(site, auth, cache)
+		httpd.RegisterAuthHandlers(auth)
+		httpd.RegisterSystemHandler(auth, func() {
+			log.INFO.Println("evcc was stopped by user. OS should restart the service. Or restart manually.")
 			once.Do(func() { close(stopC) }) // signal loop to end
 		})
 
@@ -284,8 +290,9 @@ func runRoot(cmd *cobra.Command, args []string) {
 			site.Run(stopC, conf.Interval)
 		}()
 	} else {
-		httpd.RegisterShutdownHandler(func() {
-			log.FATAL.Println("evcc was stopped. OS should restart the service. Or restart manually.")
+		httpd.RegisterAuthHandlers(auth)
+		httpd.RegisterSystemHandler(auth, func() {
+			log.INFO.Println("evcc was stopped by user. OS should restart the service. Or restart manually.")
 			once.Do(func() { close(stopC) }) // signal loop to end
 		})
 

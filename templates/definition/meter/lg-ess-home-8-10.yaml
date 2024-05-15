@@ -15,7 +15,7 @@ params:
         Alteratively, use registration id for admin login.
       de: >
         Benutzerpasswort, siehe https://github.com/Morluktom/ioBroker.lg-ess-home/tree/master#getting-the-password.
-        Alterativ kann die Registriernummer für Administratorlogin verwendet werden.
+        Alternativ kann die Registriernummer für Administratorlogin verwendet werden.
   - name: registration
     advanced: true
     example: "DE200..."

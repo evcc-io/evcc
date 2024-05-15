@@ -1,6 +1,8 @@
 package tariff
 
 import (
+	"errors"
+	"strings"
 	"time"
 
 	"github.com/cenkalti/backoff/v4"
@@ -16,10 +18,14 @@ func newBackoff() backoff.BackOff {
 
 // backoffPermanentError returns a permanent error in case of HTTP 400
 func backoffPermanentError(err error) error {
-	if se, ok := err.(request.StatusError); ok {
+	var se request.StatusError
+	if errors.As(err, &se) {
 		if code := se.StatusCode(); code >= 400 && code < 500 {
 			return backoff.Permanent(se)
 		}
+	}
+	if err != nil && strings.HasPrefix(err.Error(), "jq: query failed") {
+		return backoff.Permanent(err)
 	}
 	return err
 }

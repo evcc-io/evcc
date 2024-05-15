@@ -27,6 +27,7 @@ var acceptable = []string{
 	"context deadline exceeded",                        // LG ESS
 	"no ping response for 192.0.2.2",                   // SMA
 	"no such network interface",                        // SMA
+	"missing config values: username, password, key",   // E3DC
 }
 
 func TestTemplates(t *testing.T) {

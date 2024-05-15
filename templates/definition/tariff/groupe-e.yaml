@@ -1,8 +1,13 @@
 template: groupe-e
 products:
-  - brand: Groupe E (CH)
+  - brand: Groupe E
     description:
       generic: Vario Plus
+requirements:
+  description:
+    de: "Nur für die Schweiz verfügbar."
+    en: "Only available for Switzerland."
+group: price
 params:
   - preset: tariff-base
 render: |

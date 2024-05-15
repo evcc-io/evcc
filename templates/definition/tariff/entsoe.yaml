@@ -1,0 +1,27 @@
+template: entsoe
+products:
+  - brand: ENTSO-E
+requirements:
+  description:
+    de: |
+      Day-ahead-Preise für den europäischen Strommarkt. Siehe https://transparency.entsoe.eu für weitere Informationen.
+      Basis für viele dynamische Tarife.
+    en: |
+      Day-ahead prices for the European electricity market. See https://transparency.entsoe.eu for more information.
+      Basis for many dynamic tariffs.
+group: price
+params:
+  - name: securitytoken
+    help:
+      de: "Registrierung und anschließende Helpdesk-Anfrage erforderlich. Details zum Ablauf gibts hier https://transparency.entsoe.eu/content/static_content/Static%20content/web%20api/Guide.html#_authentication_and_authorisation"
+      en: "Registration and subsequent helpdesk request required. Details on the process can be found here https://transparency.entsoe.eu/content/static_content/Static%20content/web%20api/Guide.html#_authentication_and_authorisation"
+  - name: domain
+    example: BZN|DE-LU
+    help:
+      de: "siehe https://transparency.entsoe.eu/content/static_content/Static%20content/web%20api/Guide.html#_areas"
+      en: "see https://transparency.entsoe.eu/content/static_content/Static%20content/web%20api/Guide.html#_areas"
+  - preset: tariff-base
+render: |
+  type: entsoe
+  region: {{ .region }}
+  {{ include "tariff-base" . }}

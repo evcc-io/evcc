@@ -235,9 +235,19 @@ export default {
 		modbusCapabilities() {
 			return this.modbus?.Choice || [];
 		},
+		modbusDefaults() {
+			const { ID, Comset, Baudrate, Port } = this.modbus || {};
+			return {
+				id: ID,
+				comset: Comset,
+				baudrate: Baudrate,
+				port: Port,
+			};
+		},
 		apiData() {
 			return {
 				template: this.templateName,
+				...this.modbusDefaults,
 				...this.values,
 				usage: this.meterType,
 			};
