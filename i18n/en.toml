@@ -172,6 +172,11 @@ general = "General"
 site = "Grid, PV & Battery Systems"
 system = "System"
 
+[config.sponsor]
+description = "Support evcc development by sponsoring the project. You will receive a sponsor token that unlocks additional features."
+labelToken = "Sponsor token"
+title = "Sponsorship"
+
 [config.system]
 logs = "Logs"
 restart = "Restart"

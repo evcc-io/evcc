@@ -222,6 +222,7 @@
 				<TariffsModal @changed="loadDirty" />
 				<NetworkModal @changed="loadDirty" />
 				<ControlModal @changed="loadDirty" />
+				<SponsorModal @changed="loadDirty" />
 			</div>
 		</div>
 	</div>
@@ -261,6 +262,7 @@ import NetworkModal from "../components/Config/NetworkModal.vue";
 import NotificationIcon from "../components/MaterialIcon/Notification.vue";
 import restart, { performRestart } from "../restart";
 import store from "../store";
+import SponsorModal from "../components/Config/SponsorModal.vue";
 import TariffsModal from "../components/Config/TariffsModal.vue";
 import VehicleIcon from "../components/VehicleIcon";
 import VehicleModal from "../components/Config/VehicleModal.vue";
@@ -289,6 +291,7 @@ export default {
 		MqttModal,
 		NetworkModal,
 		NotificationIcon,
+		SponsorModal,
 		TariffsModal,
 		TopHeader,
 		VehicleIcon,

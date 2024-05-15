@@ -4,7 +4,7 @@
 			<strong class="config-label">{{ $t("config.general.title") }}</strong>
 			<div class="config-text">{{ title || "---" }}</div>
 			<button
-				class="config-button btn btn-link text-secondary config-button"
+				class="config-button btn btn-link"
 				type="button"
 				:title="$t('config.main.edit')"
 				@click.prevent="openModal('titleModal')"
@@ -17,7 +17,7 @@
 			<strong class="config-label">Password</strong>
 			<div class="config-text">*******</div>
 			<button
-				class="config-button btn btn-link text-secondary"
+				class="config-button btn btn-link"
 				type="button"
 				:title="$t('config.main.edit')"
 				@click.prevent="openModal('passwordModal')"
@@ -31,7 +31,7 @@
 				{{ telemetryEnabled ? "on" : "off" }}
 			</div>
 			<button
-				class="config-button btn btn-link text-secondary"
+				class="config-button btn btn-link"
 				type="button"
 				:title="$t('config.main.edit')"
 				@click.prevent="openModal('globalSettingsModal')"
@@ -45,7 +45,7 @@
 				{{ hiddenFeatures ? "on" : "off" }}
 			</div>
 			<button
-				class="config-button btn btn-link text-secondary"
+				class="config-button btn btn-link"
 				type="button"
 				:title="$t('config.main.edit')"
 				@click.prevent="openModal('globalSettingsModal')"
@@ -54,13 +54,13 @@
 			</button>
 		</div>
 		<div class="config-entry wip" data-testid="generalconfig-sponsoring">
-			<strong class="config-label">Sponsoring</strong>
+			<strong class="config-label">{{ $t("config.sponsor.title") }}</strong>
 			<div class="config-text text-primary">valid</div>
 			<button
-				class="config-button btn btn-link text-secondary"
+				class="config-button btn btn-link"
 				type="button"
 				:title="$t('config.main.edit')"
-				@click.prevent="todo"
+				@click.prevent="openModal('sponsorModal')"
 			>
 				<EditIcon size="xs" />
 			</button>
@@ -69,7 +69,7 @@
 			<strong class="config-label">{{ $t("config.network.title") }}</strong>
 			<div class="config-text"></div>
 			<button
-				class="config-button btn btn-link text-secondary"
+				class="config-button btn btn-link"
 				type="button"
 				:title="$t('config.main.edit')"
 				@click.prevent="openModal('networkModal')"
@@ -81,7 +81,7 @@
 			<strong class="config-label">{{ $t("config.control.title") }}</strong>
 			<div class="config-text"></div>
 			<button
-				class="config-button btn btn-link text-secondary"
+				class="config-button btn btn-link"
 				type="button"
 				:title="$t('config.main.edit')"
 				@click.prevent="openModal('controlModal')"
@@ -183,5 +183,6 @@ export default {
 .config-button {
 	margin-right: -1rem;
 	flex-shrink: 0;
+	color: var(--evcc-text-default);
 }
 </style>
