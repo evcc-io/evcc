@@ -80,7 +80,7 @@ func (v *Identity) Login() error {
 
 // login authenticates with username/password to get new token
 func (v *Identity) login() (*oauth.Token, error) {
-	oc := oc
+	oc := NewOauth2Config(v.domain)
 
 	cv := oauth2.GenerateVerifier()
 	state := lo.RandomString(16, lo.AlphanumericCharset)
