@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/42atomys/sprout"
+	"github.com/go-sprout/sprout"
 	"golang.org/x/exp/maps"
 )
 

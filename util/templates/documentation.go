@@ -7,7 +7,7 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/42atomys/sprout"
+	"github.com/go-sprout/sprout"
 )
 
 //go:embed documentation.tpl
