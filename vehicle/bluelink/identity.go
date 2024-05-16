@@ -33,7 +33,8 @@ const (
 
 // Config is the bluelink API configuration
 type Config struct {
-	URI               string
+	AuthURI           string
+	APIURI            string
 	AuthClientID      string // v2
 	BrandAuthUrl      string // v2
 	BasicToken        string
@@ -93,7 +94,7 @@ func (v *Identity) getDeviceID() (string, error) {
 		}
 	}
 
-	req, err := request.New(http.MethodPost, v.config.URI+DeviceIdURL, request.MarshalJSON(data), headers)
+	req, err := request.New(http.MethodPost, v.config.APIURI+DeviceIdURL, request.MarshalJSON(data), headers)
 	if err == nil {
 		err = v.DoJSON(req, &res)
 	}
@@ -113,9 +114,9 @@ func (v *Identity) getCookies() (cookieClient *request.Helper, err error) {
 
 	uri := fmt.Sprintf(
 		"%s/api/v1/user/oauth2/authorize?response_type=code&state=test&client_id=%s&redirect_uri=%s/api/v1/user/oauth2/redirect",
-		v.config.URI,
+		v.config.AuthURI,
 		v.config.CCSPServiceID,
-		v.config.URI,
+		v.config.AuthURI,
 	)
 
 	resp, err := cookieClient.Get(uri)
@@ -131,7 +132,7 @@ func (v *Identity) setLanguage(cookieClient *request.Helper, language string) er
 		"lang": language,
 	}
 
-	req, err := request.New(http.MethodPost, v.config.URI+LanguageURL, request.MarshalJSON(data), request.JSONEncoding)
+	req, err := request.New(http.MethodPost, v.config.APIURI+LanguageURL, request.MarshalJSON(data), request.JSONEncoding)
 	if err == nil {
 		var resp *http.Response
 		if resp, err = cookieClient.Do(req); err == nil {
@@ -143,7 +144,7 @@ func (v *Identity) setLanguage(cookieClient *request.Helper, language string) er
 }
 
 func (v *Identity) brandLogin(cookieClient *request.Helper, user, password string) (string, error) {
-	req, err := request.New(http.MethodGet, v.config.URI+IntegrationInfoURL, nil, request.JSONEncoding)
+	req, err := request.New(http.MethodGet, v.config.AuthURI+IntegrationInfoURL, nil, request.JSONEncoding)
 
 	var info struct {
 		UserId    string `json:"userId"`
@@ -158,7 +159,7 @@ func (v *Identity) brandLogin(cookieClient *request.Helper, user, password strin
 	var resp *http.Response
 
 	if err == nil {
-		uri := fmt.Sprintf(v.config.BrandAuthUrl, v.config.AuthClientID, v.config.URI, "en", info.ServiceId, info.UserId)
+		uri := fmt.Sprintf(v.config.BrandAuthUrl, v.config.AuthClientID, v.config.AuthURI, "en", info.ServiceId, info.UserId)
 
 		req, err = request.New(http.MethodGet, uri, nil)
 		if err == nil {
@@ -223,7 +224,7 @@ func (v *Identity) brandLogin(cookieClient *request.Helper, user, password strin
 			"intUserId": "",
 		}
 
-		req, err = request.New(http.MethodPost, v.config.URI+SilentSigninURL, request.MarshalJSON(data), request.JSONEncoding)
+		req, err = request.New(http.MethodPost, v.config.AuthURI+SilentSigninURL, request.MarshalJSON(data), request.JSONEncoding)
 		if err == nil {
 			req.Header.Set("ccsp-service-id", v.config.CCSPServiceID)
 			cookieClient.CheckRedirect = request.DontFollow
@@ -252,7 +253,7 @@ func (v *Identity) bluelinkLogin(cookieClient *request.Helper, user, password st
 		"password": password,
 	}
 
-	req, err := request.New(http.MethodPost, v.config.URI+LoginURL, request.MarshalJSON(data), request.JSONEncoding)
+	req, err := request.New(http.MethodPost, v.config.AuthURI+LoginURL, request.MarshalJSON(data), request.JSONEncoding)
 	if err != nil {
 		return "", err
 	}
@@ -284,13 +285,13 @@ func (v *Identity) exchangeCode(accCode string) (oauth.Token, error) {
 
 	data := url.Values{
 		"grant_type":   {"authorization_code"},
-		"redirect_uri": {v.config.URI + "/api/v1/user/oauth2/redirect"},
+		"redirect_uri": {v.config.AuthURI + "/api/v1/user/oauth2/redirect"},
 		"code":         {accCode},
 	}
 
 	var token oauth.Token
 
-	req, err := request.New(http.MethodPost, v.config.URI+TokenURL, strings.NewReader(data.Encode()), headers)
+	req, err := request.New(http.MethodPost, v.config.AuthURI+TokenURL, strings.NewReader(data.Encode()), headers)
 	if err == nil {
 		err = v.DoJSON(req, &token)
 	}
@@ -312,7 +313,7 @@ func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 		"refresh_token": {token.RefreshToken},
 	}
 
-	req, err := request.New(http.MethodPost, v.config.URI+TokenURL, strings.NewReader(data.Encode()), headers)
+	req, err := request.New(http.MethodPost, v.config.AuthURI+TokenURL, strings.NewReader(data.Encode()), headers)
 
 	var res oauth.Token
 	if err == nil {

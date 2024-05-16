@@ -20,12 +20,14 @@ type Bluelink struct {
 func init() {
 	registry.Add("kia", NewKiaFromConfig)
 	registry.Add("hyundai", NewHyundaiFromConfig)
+	registry.Add("genesis", NewGenesisFromConfig)
 }
 
 // NewHyundaiFromConfig creates a new vehicle
 func NewHyundaiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	settings := bluelink.Config{
-		URI:               "https://prd.eu-ccapi.hyundai.com:8080",
+		AuthURI:           "https://prd.eu-ccapi.hyundai.com:8080",
+		APIURI:            "https://prd.eu-ccapi.hyundai.com:8080",
 		BasicToken:        "NmQ0NzdjMzgtM2NhNC00Y2YzLTk1NTctMmExOTI5YTk0NjU0OktVeTQ5WHhQekxwTHVvSzB4aEJDNzdXNlZYaG10UVI5aVFobUlGampvWTRJcHhzVg==",
 		CCSPServiceID:     "6d477c38-3ca4-4cf3-9557-2a1929a94654",
 		CCSPApplicationID: bluelink.HyundaiAppID,
@@ -41,7 +43,8 @@ func NewHyundaiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 // NewKiaFromConfig creates a new vehicle
 func NewKiaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	settings := bluelink.Config{
-		URI:               "https://prd.eu-ccapi.kia.com:8080",
+		AuthURI:           "https://prd.eu-ccapi.kia.com:8080",
+		APIURI:            "https://prd.eu-ccapi.kia.com:8080",
 		BasicToken:        "ZmRjODVjMDAtMGEyZi00YzY0LWJjYjQtMmNmYjE1MDA3MzBhOnNlY3JldA==",
 		CCSPServiceID:     "fdc85c00-0a2f-4c64-bcb4-2cfb1500730a",
 		CCSPApplicationID: bluelink.KiaAppID,
@@ -52,6 +55,23 @@ func NewKiaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	return newBluelinkFromConfig("kia", other, settings)
+}
+
+// NewGenesisFromConfig creates a new vehicle
+func NewGenesisFromConfig(other map[string]interface{}) (api.Vehicle, error) {
+	settings := bluelink.Config{
+		AuthURI:           "https://accounts-eu.genesis.com",
+		APIURI:            "https://prd-eu-ccapi.genesis.com",
+		BasicToken:        "NmQ0NzdjMzgtM2NhNC00Y2YzLTk1NTctMmExOTI5YTk0NjU0OktVeTQ5WHhQekxwTHVvSzB4aEJDNzdXNlZYaG10UVI5aVFobUlGampvWTRJcHhzVg==",
+		CCSPServiceID:     "3020afa2-30ff-412a-aa51-d28fbe901e10",
+		CCSPApplicationID: bluelink.GenesisAppID,
+		AuthClientID:      "f11f2b86-e0e7-4851-90df-5600b01d8b70",
+		BrandAuthUrl:      "https://accounts-eu.genesis.com/auth/realms/eukiaidm/protocol/openid-connect/auth?client_id=%s&scope=openid+profile+email+phone&response_type=code&hkid_session_reset=true&redirect_uri=%s/api/v1/user/integration/redirect/login&ui_locales=%s&state=%s:%s",
+		PushType:          "GCM",
+		Cfb:               "RFtoRq/vDXJmRndoZaZQyYo3/qFLtVReW8P7utRPcc0ZxOzOELm9mexvviBk/qqIp4A=",
+	}
+
+	return newBluelinkFromConfig("genesis", other, settings)
 }
 
 // newBluelinkFromConfig creates a new Vehicle
@@ -80,7 +100,7 @@ func newBluelinkFromConfig(brand string, other map[string]interface{}, settings 
 		return nil, err
 	}
 
-	api := bluelink.NewAPI(log, settings.URI, identity.Request)
+	api := bluelink.NewAPI(log, settings.APIURI, identity.Request)
 
 	vehicle, err := ensureVehicleEx(
 		cc.VIN, api.Vehicles,

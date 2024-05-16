@@ -27,7 +27,7 @@ const (
 // ErrAuthFail indicates authorization failure
 var ErrAuthFail = errors.New("authorization failed")
 
-// API implements the Kia/Hyundai bluelink api.
+// API implements the Kia/Hyundai/Genesis bluelink api.
 type API struct {
 	*request.Helper
 	baseURI string
