@@ -501,6 +501,11 @@ meterstart = "Inicio de metro (kWh)"
 meterstop = "Parón de metro (kWh)"
 odometer = "Kilometraje (km)"
 vehicle = "Vehículo"
+co2perkwh = "CO₂/kWh"
+chargeduration = «Duración»
+price = "Precio"
+priceperkwh = "Precio/kWh"
+solarpercentage = "Solar (%)"
 
 [sessions.filter]
 allLoadpoints = "todos los puntos de recarga"
