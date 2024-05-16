@@ -486,6 +486,11 @@ meterstart = "Målerstart (kWh)"
 meterstop = "Målerstop (kWh)"
 odometer = "Kilometertal (km)"
 vehicle = "Køretøj"
+chargeduration = "Varighed"
+co2perkwh = "CO₂/kWh"
+price = "Pris"
+priceperkwh = "Pris/kWh"
+solarpercentage = "Sol (%)"
 
 [sessions.filter]
 allLoadpoints = "alle ladepunkter"
@@ -559,3 +564,12 @@ title = "Fejl ved opstart"
 cancel = "Afbryd"
 template = "Producent"
 test = "Test"
+
+
+[config.options.endianness]
+big = "big-endian"
+little = "little-endian"
+
+[config.options.schema]
+http = "HTTP (ikke-krypteret)"
+https = "HTTPS (krypteret)"
