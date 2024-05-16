@@ -2,9 +2,10 @@
 	<svg :style="svgStyle" viewBox="0 0 48 48">
 		<path d="M0-.004h48v48H0v-48z" fill="none" />
 		<path
+			fill="currentColor"
 			d="M35 9.996h-3v-4a2 2 0 00-2-2H18a2 2 0 00-2 2v4h-3a2 2 0 00-2 2v30a2 2 0 002 2h22a2 2 0 002-2v-30a2 2 0 00-2-2zm-15-2h8v2h-8v-2zm13 32H15v-26h18v26z"
 		/>
-		<path :d="socRect" />
+		<path fill="currentColor" :d="socRect" />
 	</svg>
 </template>
 
