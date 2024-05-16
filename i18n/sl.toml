@@ -13,7 +13,7 @@ legendTitle = "Kako naj se uporablja sončna energija?"
 legendTopAutostart = "samodejno se zažene"
 legendTopName = "polnjenje, ki ga podpira baterija"
 legendTopSubline = "brez prekinitev"
-modalTitle = "Nastavitve baterije"
+modalTitle = "Domača baterija"
 
 [batterySettings.bufferStart]
 above = "ko je nad {soc}"
@@ -200,6 +200,8 @@ primaryActions = "Nekaj ne deluje tako, kot bi moralo? Na teh mestih lahko poiš
 restartButton = "Ponovni zagon"
 restartDescription = "Ste poskusili izklopiti in znova vklopiti?"
 secondaryActions = "Še vedno ne morete rešiti svoje težave? Tukaj je nekaj zahtevnejših možnosti."
+logsButton = "Prikaži loge"
+logsDescription = "Preveri loge za napake."
 
 [help.restart]
 cancel = "Prekliči"
@@ -215,6 +217,7 @@ invalid = "Geslo ni veljavno."
 login = "Prijava"
 password = "Geslo"
 title = "Avtentikacija"
+reset = "Ponastavi geslo?"
 
 [main]
 vehicles = "Parkiranje"
@@ -396,6 +399,7 @@ waitForVehicle = "Pripravljen. Čakam na vozilo..."
 [notifications]
 dismissAll = "Opusti vse"
 modalTitle = "Obvestila"
+logs = "Prikaži celotne loge"
 
 [offline]
 message = "Ni povezan s strežnikom."
@@ -457,6 +461,11 @@ meterstart = "Začetek merjenja (kWh)"
 meterstop = "Konec merjenja (kWh)"
 odometer = "Prevoženi kilometri (km)"
 vehicle = "Vozilo"
+chargeduration = "Trajanje"
+co2perkwh = "CO₂/kWh"
+priceperkwh = "Cena/kWh"
+price = "Cena"
+solarpercentage = "Sončna energija (%)"
 
 [sessions.filter]
 allLoadpoints = "vsa polnilna mesta"
@@ -464,7 +473,7 @@ allVehicles = "vsa vozila"
 filter = "Filter"
 
 [settings]
-title = "Splošne nastavitve"
+title = "Uporabniški vmesnik"
 
 [settings.gridDetails]
 co2 = "CO₂"
@@ -531,3 +540,40 @@ title = "Napaka pri zagonu"
 cancel = "Prekliči"
 template = "Proizvajalec"
 test = "Test"
+
+
+[config.system]
+restart = "Ponovni zagon"
+restartRequiredDescription = "Prosimo, ponovno zaženite, da vidite učinek."
+restartRequiredMessage = "Konfiguracija je bila spremenjena."
+restartingDescription = "Prosim počakajte..."
+restartingMessage = "Ponovni zagon evcc."
+logs = "Logi"
+
+[log]
+showAll = "Pokaži vse vnose"
+areaLabel = "Filtriraj glede na območje"
+areas = "Vsa območja"
+download = "Prenesi vse loge"
+levelLabel = "Filtriraj po ravni logov"
+noResults = "Ni ujemajočih vnosov v logih."
+search = "Iskanje"
+title = "Logi"
+update = "Samodejno posodabljanje"
+
+[config.options.endianness]
+big = "big-endian"
+little = "little-endian"
+
+[config.options.schema]
+http = "HTTP (nešifrirano)"
+https = "HTTPS (šifrirano)"
+
+[config.section]
+general = "Splošno"
+system = "Sistem"
+
+[settings.fullscreen]
+enter = "Vstopi v celozaslonski način"
+exit = "Izhod iz celozaslonskega načina"
+label = "Celozaslonski način"
