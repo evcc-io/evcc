@@ -7,9 +7,8 @@ params:
   - name: vin
     example: WF0FXX...
   - name: domain
-    default: de
+    default: com
     validvalues: ["de", "com"]
-    advanced: true
 render: |
   type: ford
   {{ include "vehicle-base" . }}
