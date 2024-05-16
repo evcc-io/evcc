@@ -83,8 +83,8 @@ http = "HTTP (şifrelenmemiş)"
 https = "HTTPS (şifrelenmiş)"
 
 [config.pv]
-titleAdd = "Güneş Enerjisi (GE) Sayacı Ekle"
-titleEdit = "Güneş Enerjisi (GE) Sayacını Düzenle"
+titleAdd = "GES Sayacı Ekle"
+titleEdit = "GES Sayacını Düzenle"
 
 [config.section]
 general = "Genel"
@@ -325,10 +325,10 @@ phases_3 = "3 fazlı"
 phases_3_hint = "({min}'dan {max}'a kadar)"
 
 [main.mode]
-minpv = "Asg.+Güneş"
+minpv = "Asg.+GES"
 now = "Hızlı"
 off = "Kapalı"
-pv = "Güneş"
+pv = "GES"
 
 [main.provider]
 login = "giriş yap"
@@ -404,8 +404,8 @@ climating = "Ön iklimlendirme algılandı."
 connected = "Bağlı."
 disconnected = "Bağlantı kesildi."
 minCharge = " %{soc} kadar asgari dolum."
-pvDisable = "Yeterli güneş enerjisi fazlalığı yok. {remaining} içinde duraklatılıyor…"
-pvEnable = "Güneş enerjisi fazlalığı mevcut. {remaining} içinde başlatılıyor…"
+pvDisable = "Yeterli fazlalık yok. {remaining} içinde duraklatılıyor…"
+pvEnable = "Fazlalık mevcut. {remaining} içinde başlatılıyor…"
 scale1p = "{remaining} içinde 1 faza düşürülüyor…"
 scale3p = "{remaining} içinde 3 faza yükseltiliyor…"
 targetChargeActive = "Doldurma planı aktif…"
