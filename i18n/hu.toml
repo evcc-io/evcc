@@ -479,6 +479,11 @@ meterstart = "Fogyasztásmérő kezdeti állás (kWh)"
 meterstop = "Fogyasztásmérő befejező állás (kWh)"
 odometer = "Óraállás (km)"
 vehicle = "Jármű"
+chargeduration = Időtartam
+co2perkwh = CO₂/kWh
+price = Ár
+priceperkwh = Ár/kWh
+solarpercentage = Napenergia (%)
 
 [sessions.filter]
 allLoadpoints = "minden töltőpont"
