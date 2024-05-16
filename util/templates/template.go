@@ -9,8 +9,8 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/42atomys/sprout"
 	"github.com/evcc-io/evcc/util"
+	"github.com/go-sprout/sprout"
 )
 
 // Template describes is a proxy device for use with cli and automated testing

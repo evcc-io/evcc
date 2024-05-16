@@ -9,11 +9,11 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/42atomys/sprout"
 	"github.com/evcc-io/evcc/provider/pipeline"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
+	"github.com/go-sprout/sprout"
 	"github.com/gregjones/httpcache"
 	"github.com/jpfielding/go-http-digest/pkg/digest"
 )

@@ -182,7 +182,7 @@ export default {
 		phaseRemaining: Number,
 		pvRemaining: Number,
 		pvAction: String,
-		smartCostLimit: Number,
+		smartCostLimit: { type: Number, default: 0 },
 		smartCostType: String,
 		smartCostActive: Boolean,
 		tariffGrid: Number,
