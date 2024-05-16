@@ -498,6 +498,11 @@ meterstart = "Compteur début (kWh)"
 meterstop = "Compteur fin (kWh)"
 odometer = "Kilométrage (km)"
 vehicle = "Véhicule"
+chargeduration = Durée
+co2perkwh = "CO₂/kWh"
+priceperkwh = Prix/kWh
+price = Prix
+solarpercentage = % solaire
 
 [sessions.filter]
 allLoadpoints = "tous les points de chargement"
