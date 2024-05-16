@@ -486,6 +486,11 @@ meterstart = "Mätare start (kWh)"
 meterstop = "Mätare slut (kWh)"
 odometer = "Mätarställning (km)"
 vehicle = "Fordon"
+chargeduration = "Varaktighet"
+co2perkwh = "CO₂/kWh"
+price = "Pris"
+priceperkwh = "Pris/kWh"
+solarpercentage = "Sol (%)"
 
 [sessions.filter]
 allLoadpoints = "alla laddplatser"
@@ -565,3 +570,12 @@ title = "Startfel"
 cancel = "Avbryt"
 template = "Tillverkare"
 test = "Test"
+
+
+[config.options.schema]
+http = "HTTP (okrypterad)"
+https = "HTTPS (krypterad)"
+
+[config.options.endianness]
+big = "big-endian"
+little = "little-endian"
