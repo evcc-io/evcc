@@ -35,6 +35,7 @@ const (
 type Config struct {
 	AuthURI           string
 	APIURI            string
+	RedirectPath      string
 	AuthClientID      string // v2
 	BrandAuthUrl      string // v2
 	BasicToken        string
@@ -114,7 +115,7 @@ func (v *Identity) getCookies() (cookieClient *request.Helper, err error) {
 
 	uri := fmt.Sprintf(
 		"%s/api/v1/user/oauth2/authorize?response_type=code&state=test&client_id=%s&redirect_uri=%s/api/v1/user/oauth2/redirect",
-		v.config.AuthURI,
+		v.config.APIURI,
 		v.config.CCSPServiceID,
 		v.config.AuthURI,
 	)
@@ -144,7 +145,7 @@ func (v *Identity) setLanguage(cookieClient *request.Helper, language string) er
 }
 
 func (v *Identity) brandLogin(cookieClient *request.Helper, user, password string) (string, error) {
-	req, err := request.New(http.MethodGet, v.config.AuthURI+IntegrationInfoURL, nil, request.JSONEncoding)
+	req, err := request.New(http.MethodGet, v.config.APIURI+IntegrationInfoURL, nil, request.JSONEncoding)
 
 	var info struct {
 		UserId    string `json:"userId"`
@@ -159,7 +160,7 @@ func (v *Identity) brandLogin(cookieClient *request.Helper, user, password strin
 	var resp *http.Response
 
 	if err == nil {
-		uri := fmt.Sprintf(v.config.BrandAuthUrl, v.config.AuthClientID, v.config.AuthURI, "en", info.ServiceId, info.UserId)
+		uri := fmt.Sprintf(v.config.BrandAuthUrl, v.config.AuthClientID, v.config.APIURI, "en", info.ServiceId, info.UserId)
 
 		req, err = request.New(http.MethodGet, uri, nil)
 		if err == nil {
@@ -253,7 +254,7 @@ func (v *Identity) bluelinkLogin(cookieClient *request.Helper, user, password st
 		"password": password,
 	}
 
-	req, err := request.New(http.MethodPost, v.config.AuthURI+LoginURL, request.MarshalJSON(data), request.JSONEncoding)
+	req, err := request.New(http.MethodPost, v.config.APIURI+LoginURL, request.MarshalJSON(data), request.JSONEncoding)
 	if err != nil {
 		return "", err
 	}
@@ -285,13 +286,14 @@ func (v *Identity) exchangeCode(accCode string) (oauth.Token, error) {
 
 	data := url.Values{
 		"grant_type":   {"authorization_code"},
-		"redirect_uri": {v.config.AuthURI + "/api/v1/user/oauth2/redirect"},
+		"redirect_uri": {v.config.AuthURI + v.config.RedirectPath},
 		"code":         {accCode},
+		"client_id":    {v.config.CCSPServiceID},
 	}
 
 	var token oauth.Token
 
-	req, err := request.New(http.MethodPost, v.config.AuthURI+TokenURL, strings.NewReader(data.Encode()), headers)
+	req, err := request.New(http.MethodPost, v.config.APIURI+TokenURL, strings.NewReader(data.Encode()), headers)
 	if err == nil {
 		err = v.DoJSON(req, &token)
 	}
@@ -311,9 +313,10 @@ func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 		"grant_type":    {"refresh_token"},
 		"redirect_uri":  {"https://www.getpostman.com/oauth2/callback"},
 		"refresh_token": {token.RefreshToken},
+		"client_id":     {v.config.CCSPServiceID},
 	}
 
-	req, err := request.New(http.MethodPost, v.config.AuthURI+TokenURL, strings.NewReader(data.Encode()), headers)
+	req, err := request.New(http.MethodPost, v.config.APIURI+TokenURL, strings.NewReader(data.Encode()), headers)
 
 	var res oauth.Token
 	if err == nil {
