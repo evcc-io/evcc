@@ -32,7 +32,7 @@ func NewFordFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		Domain              string
 		Cache               time.Duration
 	}{
-		Domain: "de",
+		Domain: "com",
 		Cache:  interval,
 	}
 
