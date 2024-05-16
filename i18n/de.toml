@@ -72,6 +72,16 @@ template = "Hersteller"
 titleChoice = "Was möchtest du hinzufügen?"
 validateSave = "Überprüfen & speichern"
 
+[config.options]
+
+[config.options.endianness]
+big = "big-endian"
+little = "little-endian"
+
+[config.options.schema]
+http = "HTTP (unverschlüsselt)"
+https = "HTTPS (verschlüsselt)"
+
 [config.pv]
 titleAdd = "Zähler (PV) hinzufügen"
 titleEdit = "Zähler (PV) bearbeiten"
@@ -462,6 +472,8 @@ vehicle = "Fahrzeug"
 
 [sessions.csv]
 chargedenergy = "Energie (kWh)"
+chargeduration = "Ladedauer"
+co2perkwh = "CO₂/kWh"
 created = "Startzeit"
 finished = "Endzeit"
 identifier = "Kennung"
@@ -469,6 +481,9 @@ loadpoint = "Ladepunkt"
 meterstart = "Anfangszählerstand (kWh)"
 meterstop = "Endzählerstand (kWh)"
 odometer = "Kilometerstand (km)"
+price = "Preis"
+priceperkwh = "Preis/kWh"
+solarpercentage = "Sonne (%)"
 vehicle = "Fahrzeug"
 
 [sessions.filter]

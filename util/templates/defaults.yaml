@@ -319,10 +319,14 @@ presets:
     params:
       - name: costs
         type: number
-        advanced: true
+        help:
+          de: Zusätzlicher fester Aufschlag pro kWh (z.B. 0.05 für 5 Cent)
+          en: Additional fixed charge per kWh (e.g. 0.05 for 5 cents)
       - name: tax
         type: number
-        advanced: true
+        help:
+          de: Zusätzlicher prozentualer Aufschlag (z.B. 0.2 für 20%)
+          en: Additional percentage charge (e.g. 0.2 for 20%)
   eebus:
     params:
       - name: ski
@@ -461,3 +465,9 @@ devicegroups:
   scooter:
     de: Scooter
     en: Scooter
+  price:
+    de: Dynamischer Strompreis
+    en: Dynamic electricity price
+  co2:
+    de: CO₂ Vorhersage
+    en: CO₂ forecast

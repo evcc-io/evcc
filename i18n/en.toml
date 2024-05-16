@@ -72,6 +72,16 @@ template = "Manufacturer"
 titleChoice = "What Do You Want To Add?"
 validateSave = "Validate & save"
 
+[config.options]
+
+[config.options.endianness]
+big = "big-endian"
+little = "little-endian"
+
+[config.options.schema]
+http = "HTTP (unencrypted)"
+https = "HTTPS (encrypted)"
+
 [config.pv]
 titleAdd = "Add Solar Meter"
 titleEdit = "Edit Solar Meter"
@@ -461,6 +471,8 @@ vehicle = "Vehicle"
 
 [sessions.csv]
 chargedenergy = "Energy (kWh)"
+chargeduration = "Duration"
+co2perkwh = "CO₂/kWh"
 created = "Created"
 finished = "Finished"
 identifier = "Identifier"
@@ -468,6 +480,9 @@ loadpoint = "Charging point"
 meterstart = "Meter start (kWh)"
 meterstop = "Meter stop (kWh)"
 odometer = "Mileage (km)"
+price = "Price"
+priceperkwh = "Price/kWh"
+solarpercentage = "Solar (%)"
 vehicle = "Vehicle"
 
 [sessions.filter]

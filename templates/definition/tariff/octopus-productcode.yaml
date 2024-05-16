@@ -2,17 +2,22 @@ template: octopus-productcode
 products:
   - brand: Octopus Energy
     description:
-      en: Octopus Energy - Product Code
+      generic: Product Code
+group: price
 params:
   - name: productCode
     type: string
     required: true
-    description:
-      en: "The tariff code for your energy contract. Make sure this is set to your import tariff code. It'll look something like this: AGILE-FLEX-22-11-25"
+    example: AGILE-FLEX-22-11-25
+    help:
+      de: "Der Tarifcode für Ihren Energievertrag. Stellen Sie sicher, dass dieser auf Ihren Importtarifcode eingestellt ist."
+      en: "The tariff code for your energy contract. Make sure this is set to your import tariff code."
   - name: region
     type: string
+    validvalues: ["A", "B", "C", "D", "E", "F", "G", "H", "J", "K", "L", "M", "N", "P"]
     required: true
-    description:
+    help:
+      de: "Die DNO-Region, in der Sie sich befinden. Weitere Informationen: https://www.energy-stats.uk/dno-region-codes-explained/"
       en: "The DNO region you are located in. More information: https://www.energy-stats.uk/dno-region-codes-explained/"
 render: |
   type: octopusenergy

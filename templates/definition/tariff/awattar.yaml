@@ -1,10 +1,17 @@
 template: awattar
 products:
   - brand: Awattar
+requirements:
+  description:
+    de: "Nur für Deutschland und Österreich verfügbar."
+    en: "Only available for Germany and Austria."
+group: price
 params:
-  - preset: tariff-base
   - name: region
+    example: AT
+    validvalues: ["DE", "AT"]
+  - preset: tariff-base
 render: |
   type: awattar
-  {{ include "tariff-base" . }}
   region: {{ .region }}
+  {{ include "tariff-base" . }}
