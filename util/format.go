@@ -8,7 +8,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/42atomys/sprout"
+	"github.com/go-sprout/sprout"
+	"golang.org/x/exp/maps"
 )
 
 var re = regexp.MustCompile(`(?i)\${(\w+)(:([a-zA-Z0-9%.]+))?}`)
@@ -73,27 +74,29 @@ func ReplaceFormatted(s string, kv map[string]interface{}) (string, error) {
 		match, key, format := m[0], m[1], m[3]
 
 		// find key and replacement value
-		val, ok := kv[strings.ToLower(key)]
-		if !ok {
+		var val *any
+		for k, v := range kv {
+			if strings.EqualFold(k, key) {
+				val = &v
+				break
+			}
+		}
+
+		if val == nil {
 			wanted = append(wanted, key)
 			format = "%s"
-			val = "?"
+			val = PtrTo(any("?"))
 		}
 
 		// update all literal matches
-		new := FormatValue(format, val)
+		new := FormatValue(format, *val)
 		s = strings.ReplaceAll(s, match, new)
 	}
 
 	// return missing keys
 	if len(wanted) > 0 {
-		got := make([]string, 0)
-		for k := range kv {
-			got = append(got, k)
-		}
-
-		err = fmt.Errorf("wanted: %v, got: %v", wanted, got)
+		return "", fmt.Errorf("wanted: %v, got: %v", wanted, maps.Keys(kv))
 	}
 
-	return s, err
+	return s, nil
 }

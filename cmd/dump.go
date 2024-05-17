@@ -8,10 +8,10 @@ import (
 	"path/filepath"
 	"text/template"
 
-	"github.com/42atomys/sprout"
 	"github.com/evcc-io/evcc/core"
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/util/config"
+	"github.com/go-sprout/sprout"
 	"github.com/spf13/cobra"
 )
 

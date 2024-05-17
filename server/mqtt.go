@@ -173,10 +173,17 @@ func (m *MQTT) Listen(site site.API) error {
 
 func (m *MQTT) listenSiteSetters(topic string, site site.API) error {
 	for _, s := range []setter{
-		{"/prioritySoc", floatSetter(site.SetPrioritySoc)},
 		{"/bufferSoc", floatSetter(site.SetBufferSoc)},
 		{"/bufferStartSoc", floatSetter(site.SetBufferStartSoc)},
+		{"/batteryDischargeControl", boolSetter(site.SetBatteryDischargeControl)},
+		{"/prioritySoc", floatSetter(site.SetPrioritySoc)},
 		{"/residualPower", floatSetter(site.SetResidualPower)},
+		{"/smartCostLimit", floatSetter(func(limit float64) error {
+			for _, lp := range site.Loadpoints() {
+				lp.SetSmartCostLimit(limit)
+			}
+			return nil
+		})},
 	} {
 		if err := m.Handler.ListenSetter(topic+s.topic, s.fun); err != nil {
 			return err

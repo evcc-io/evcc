@@ -4,7 +4,6 @@ go 1.22.0
 
 require (
 	dario.cat/mergo v1.0.0
-	github.com/42atomys/sprout v0.2.0
 	github.com/AlecAivazis/survey/v2 v2.3.7
 	github.com/BurntSushi/toml v1.3.2
 	github.com/PuerkitoBio/goquery v1.9.2
@@ -32,6 +31,7 @@ require (
 	github.com/glebarez/sqlite v1.11.0
 	github.com/go-http-utils/etag v0.0.0-20161124023236-513ea8f21eb1
 	github.com/go-playground/validator/v10 v10.20.0
+	github.com/go-sprout/sprout v0.3.1-0.20240510210334-9d4a544518d7
 	github.com/go-telegram-bot-api/telegram-bot-api/v5 v5.5.1
 	github.com/godbus/dbus/v5 v5.1.0
 	github.com/gokrazy/updater v0.0.0-20240113102150-4ac511a17e33
@@ -60,7 +60,7 @@ require (
 	github.com/libp2p/zeroconf/v2 v2.2.0
 	github.com/lorenzodonini/ocpp-go v0.18.0
 	github.com/lunixbochs/struc v0.0.0-20200707160740-784aaebc1d40
-	github.com/mabunixda/wattpilot v1.7.0
+	github.com/mabunixda/wattpilot v1.7.2
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/mlnoga/rct v0.1.2-0.20240421173556-1c5b75037e2f
@@ -128,16 +128,12 @@ require (
 	github.com/go-logfmt/logfmt v0.6.0 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
-	github.com/gobwas/httphead v0.1.0 // indirect
-	github.com/gobwas/pool v0.2.1 // indirect
-	github.com/gobwas/ws v1.4.0 // indirect
 	github.com/golang/mock v1.6.0 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/gorilla/websocket v1.5.1 // indirect
 	github.com/grid-x/serial v0.0.0-20211107191517-583c7356b3aa // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/holoplot/go-avahi v1.0.1 // indirect
-	github.com/huandu/xstrings v1.4.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/influxdata/line-protocol v0.0.0-20210922203350-b1ad95c89adf // indirect
 	github.com/insomniacslk/xjson v0.0.0-20240314172816-ab1449dc107f // indirect
@@ -174,7 +170,6 @@ require (
 	github.com/rogpeppe/go-internal v1.12.0 // indirect
 	github.com/sagikazarmark/locafero v0.4.0 // indirect
 	github.com/sagikazarmark/slog-shim v0.1.0 // indirect
-	github.com/shopspring/decimal v1.4.0 // indirect
 	github.com/sirupsen/logrus v1.9.3
 	github.com/sourcegraph/conc v0.3.0 // indirect
 	github.com/spali/go-slicereader v0.0.0-20201122145524-8e262e1a5127 // indirect

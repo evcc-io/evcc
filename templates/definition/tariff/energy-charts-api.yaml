@@ -30,7 +30,7 @@ params:
         "SI",
       ]
     default: DE-LU
-    description:
+    help:
       de: "Gebotszonen - https://api.energy-charts.info/#/prices/day_ahead_price_price_get"
       en: "Bidding zones - https://api.energy-charts.info/#/prices/day_ahead_price_price_get"
   - preset: tariff-base
