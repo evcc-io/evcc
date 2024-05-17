@@ -238,12 +238,22 @@ export default {
           return rtf.format(Math.round(elapsed / units[u]), u);
     },
     fmtSocOption: function (soc, rangePerSoc, distanceUnit, heating) {
-      let result = heating ? this.fmtTemperature(soc) : `${this.fmtNumber(soc, 0)}%`;
+      let result = heating ? this.fmtTemperature(soc) : `${this.fmtPercentage(soc)}`;
       if (rangePerSoc && distanceUnit) {
         const range = soc * rangePerSoc;
         result += ` (${this.fmtNumber(range, 0)} ${distanceUnit})`;
       }
       return result;
+    },
+    fmtPercentage: function (value, digits = 0) {
+      return new Intl.NumberFormat(this.$i18n?.locale, {
+        style: "percent",
+        minimumFractionDigits: digits,
+        maximumFractionDigits: digits,
+      }).format(value / 100);
+    },
+    hasLeadingPercentageSign: function () {
+      return ["tr", "ar"].includes(this.$i18n?.locale);
     },
     fmtTemperature: function (value) {
       // TODO: handle fahrenheit

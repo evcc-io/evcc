@@ -48,6 +48,12 @@ const (
 	solaxRegActivePower = 0x000B // uint16 1W
 	solaxRegTotalEnergy = 0x0010 // uint32s 0.1kWh
 	solaxRegState       = 0x001D // uint16
+
+	solaxCmdStop  = 3
+	solaxCmdStart = 4
+
+	solaxModeStop = 0
+	solaxModeFast = 1
 )
 
 func init() {
@@ -140,18 +146,17 @@ func (wb *Solax) Enabled() (bool, error) {
 		return false, err
 	}
 
-	return binary.BigEndian.Uint16(b) != 0, nil
+	return binary.BigEndian.Uint16(b) != solaxModeStop, nil
 }
 
 // Enable implements the api.Charger interface
 func (wb *Solax) Enable(enable bool) error {
-	var mode uint16 = 0 // "STOP"
+	var cmd uint16 = solaxCmdStop
 	if enable {
-		mode = 1 // "FAST"
+		cmd = solaxCmdStart
 	}
 
-	_, err := wb.conn.WriteSingleRegister(solaxRegDeviceMode, mode)
-
+	_, err := wb.conn.WriteSingleRegister(solaxRegCommandControl, cmd)
 	return err
 }
 

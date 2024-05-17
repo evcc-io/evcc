@@ -129,7 +129,7 @@ export default {
 	},
 	methods: {
 		fmtSoc(soc) {
-			return `${Math.round(soc)}%`;
+			return this.fmtPercentage(soc);
 		},
 	},
 };

@@ -1,6 +1,23 @@
 [batterySettings]
 batteryLevel = "Livello batteria"
 capacity = "{energy} di {total}"
+control = "Controllo batteria"
+disclaimerHint = "“Nota:”"
+disclaimerText = "“Queste impostazioni riguardano solamente la modalità solare. Il comportamento di ricarica è adattato di conseguenza.”"
+legendBottomName = "“priorità casa”"
+legendBottomSubline = "“Non usato per ricarica”"
+legendMiddleName = "“Priorità al veicolo”"
+legendMiddleSubline = "“Casa seconda”"
+legendTitle = "“Come dovrebbe essere utilizzata l’energia solare?”"
+legendTopAutostart = "“Parte automaticamente”"
+legendTopName = "“Ricarica supportata dalla batteria”"
+legendTopSubline = "“Senza interruzioni”"
+modalTitle = "“Batteria di casa”"
+
+[batterySettings.bufferStart]
+above = "“Quando supera {soc}”"
+full = "“Quando è a {soc}”"
+never = "“Solo con abbastanza surplus”"
 
 [footer]
 
@@ -17,8 +34,8 @@ powerSub2 = "in carica..."
 tabTitle = "Live community"
 
 [footer.savings]
-footerLong = "{percent}% di energia solare"
-footerShort = "{percent}% solare"
+footerLong = "{percent} di energia solare"
+footerShort = "{percent} solare"
 modalTitle = "Riepilogo energia caricata"
 percentGrid = "{grid} kWh rete"
 percentSelf = "{self} kWh solare"
@@ -112,7 +129,7 @@ label = "Corrente massima"
 label = "Corrente min."
 
 [main.loadpointSettings.minSoc]
-description = "Per le emergenze. Il veicolo viene caricato 'velocemente' al {0}% da tutto il solare disponibile, e poi continua con solo il surplus solare."
+description = "Per le emergenze. Il veicolo viene caricato 'velocemente' al {0} da tutto il solare disponibile, e poi continua con solo il surplus solare."
 label = "Carica min. %"
 
 [main.loadpointSettings.phasesConfigured]
@@ -136,7 +153,7 @@ logout = "log out"
 [main.targetCharge]
 activate = "Attivare"
 descriptionEnergy = "Fino a quando dovrebbero essere {targetEnergy} caricati nel veicolo?"
-descriptionSoc = "Quando dovrebbe essere caricato il veicolo al {targetSoc}%?"
+descriptionSoc = "Quando dovrebbe essere caricato il veicolo al {targetSoc}?"
 inactiveLabel = "Tempo target"
 modalTitle = "Imposta orario target"
 planDuration = "Tempo di carica"
@@ -178,13 +195,13 @@ charging = "In carica"
 connected = "collegato"
 disconnected = "disconnesso"
 ready = "pronto"
-vehicleLimit = "Limite veicolo: {soc}%"
+vehicleLimit = "Limite veicolo: {soc}"
 
 [main.vehicleStatus]
 charging = "In carica..."
 connected = "Collegato."
 disconnected = "Disconnesso."
-minCharge = "Ricarica minima a {soc}%."
+minCharge = "Ricarica minima a {soc}."
 pvDisable = "Eccedenza insufficiente. In pausa {remaining}…"
 pvEnable = "Eccedenza disponibile. Inizio in {remaining}…"
 scale1p = "Riduzione alla potenza monofase in {remaining}…"
@@ -193,7 +210,7 @@ targetChargeActive = "Carica target attiva..."
 targetChargePlanned = "Il target di ricarica inizia alle {time}."
 targetChargeWaitForVehicle = "Carica target pronta. In attesa del veicolo..."
 unknown = ""
-vehicleLimitReached = "Limite del veicolo {soc}% raggiunto."
+vehicleLimitReached = "Limite del veicolo {soc} raggiunto."
 waitForVehicle = "Pronto. In attesa del veicolo..."
 
 [notifications]

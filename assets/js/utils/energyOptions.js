@@ -22,7 +22,7 @@ export function estimatedSoc(energy, socPerKwh) {
   return Math.round(energy * socPerKwh);
 }
 
-export function energyOptions(fromEnergy, maxEnergy, socPerKwh, fmtKWh, zeroText) {
+export function energyOptions(fromEnergy, maxEnergy, socPerKwh, fmtKWh, fmtPercentage, zeroText) {
   const step = optionStep(maxEnergy);
   const result = [];
   for (let energy = 0; energy <= maxEnergy; energy += step) {
@@ -30,7 +30,7 @@ export function energyOptions(fromEnergy, maxEnergy, socPerKwh, fmtKWh, zeroText
     const disabled = energy < fromEnergy / 1e3 && energy !== 0;
     const soc = estimatedSoc(energy, socPerKwh);
     if (soc) {
-      text += ` (+${Math.round(soc)}%)`;
+      text += ` (+${fmtPercentage(soc)})`;
     }
     // prevent rounding errors
     const energyNormal = energy.toFixed(3) * 1;

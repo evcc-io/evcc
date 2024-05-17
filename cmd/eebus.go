@@ -4,8 +4,8 @@ import (
 	"os"
 	"text/template"
 
-	"github.com/42atomys/sprout"
 	"github.com/evcc-io/evcc/charger/eebus"
+	"github.com/go-sprout/sprout"
 	"github.com/spf13/cobra"
 )
 
