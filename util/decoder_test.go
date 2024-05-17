@@ -3,7 +3,6 @@ package util
 import (
 	"testing"
 
-	"github.com/evcc-io/evcc/api"
 	"github.com/mitchellh/mapstructure"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -35,16 +34,4 @@ func TestDecodeNil(t *testing.T) {
 	assert.Equal(t, struct {
 		User, Password string
 	}{}, dst)
-}
-
-func TestDecodeEnumer(t *testing.T) {
-	var cc struct {
-		Usage api.Usage
-	}
-
-	other := map[string]any{
-		"usage": "",
-	}
-
-	require.Error(t, DecodeOther(other, &cc))
 }

@@ -1,6 +1,7 @@
 package meter
 
 import (
+	"errors"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -32,6 +33,10 @@ func NewGoodWeWifiFromConfig(other map[string]interface{}) (api.Meter, error) {
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
+	}
+
+	if !cc.Usage.IsAUsage() {
+		return nil, errors.New("missing usage")
 	}
 
 	return NewGoodWeWiFi(cc.URI, cc.Usage, cc.Timeout)
