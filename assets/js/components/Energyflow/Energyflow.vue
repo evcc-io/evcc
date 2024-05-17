@@ -288,7 +288,7 @@ export default {
 			return this.pv.map(({ power }) => this.fmtKw(power, this.powerInKw));
 		},
 		batteryFmt() {
-			return (soc) => `${Math.round(soc)}%`;
+			return (soc) => this.fmtPercentage(soc, 0);
 		},
 		co2Available() {
 			return this.smartCostType === CO2_TYPE;

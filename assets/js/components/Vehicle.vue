@@ -163,7 +163,7 @@ export default {
 			if (this.heating) {
 				return this.fmtTemperature(this.vehicleSoc);
 			}
-			return `${Math.round(this.vehicleSoc)}%`;
+			return this.fmtPercentage(this.vehicleSoc);
 		},
 		vehicleSocTitle: function () {
 			if (this.heating) {
@@ -191,7 +191,7 @@ export default {
 		},
 		chargedSoc: function () {
 			const value = this.socPerKwh * (this.chargedEnergy / 1e3);
-			return value > 1 ? `+${Math.round(value)}%` : null;
+			return value > 1 ? `+${this.fmtPercentage(value)}` : null;
 		},
 		chargingPlanDisabled: function () {
 			if (!this.connected) {

@@ -76,6 +76,7 @@
 <script>
 import Tooltip from "bootstrap/js/dist/tooltip";
 import "@h2d2/shopicons/es/regular/clock";
+import formatter from "../mixins/formatter";
 
 export default {
 	name: "VehicleSoc",
@@ -96,6 +97,7 @@ export default {
 		socBasedCharging: Boolean,
 		socBasedPlanning: Boolean,
 	},
+	mixins: [formatter],
 	emits: ["limit-soc-drag", "limit-soc-updated", "plan-clicked"],
 	data: function () {
 		return {
@@ -259,7 +261,9 @@ export default {
 				this.tooltip = new Tooltip(this.$refs.vehicleLimitSoc);
 			}
 			const soc = this.vehicleLimitSoc;
-			const content = this.$t("main.vehicleSoc.vehicleLimit", { soc });
+			const content = this.$t("main.vehicleSoc.vehicleLimit", {
+				soc: this.fmtPercentage(soc),
+			});
 			this.tooltip.setContent({ ".tooltip-inner": content });
 		},
 	},
