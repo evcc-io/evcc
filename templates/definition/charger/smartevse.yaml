@@ -13,5 +13,3 @@ params:
 render: |
   type: smartevse
   {{- include "modbus" . }}
-  cphwonlock: {{ .cphwonlock }}
-  cpwakeauto: {{ .cpwakeauto }}
