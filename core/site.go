@@ -36,7 +36,7 @@ const standbyPower = 10 // consider less than 10W as charger in standby
 // updater abstracts the Loadpoint implementation for testing
 type updater interface {
 	loadpoint.API
-	Update(availablePower float64, autoCharge, batteryBuffered, batteryStart bool, greenShare float64, effectivePrice, effectiveCo2 *float64)
+	Update(availablePower float64, autoCharge, batteryBuffered, batteryStart bool, greenShare float64, effectivePrice, referencePrice, effectiveCo2, referenceCo2 *float64)
 }
 
 // meterMeasurement is used as slice element for publishing structured data
@@ -723,6 +723,22 @@ func (site *Site) effectivePrice(greenShare float64) *float64 {
 	return nil
 }
 
+// referencePrice calculates the reference grid price from all currently known rates
+func (site *Site) referencePrice() *float64 {
+	if price, err := site.tariffs.AverageGridPrice(); err == nil {
+		return &price
+	}
+	return nil
+}
+
+// referenceCo2 calculates the reference co2 from all currently known rates
+func (site *Site) referenceCo2() *float64 {
+	if co2, err := site.tariffs.AverageCo2(); err == nil {
+		return &co2
+	}
+	return nil
+}
+
 // effectiveCo2 calculates the amount of emitted co2 based on self-produced and grid-imported energy.
 func (site *Site) effectiveCo2(greenShare float64) *float64 {
 	if co2, err := site.tariffs.CurrentCo2(); err == nil {
@@ -805,7 +821,7 @@ func (site *Site) update(lp updater) {
 		greenShareHome := site.greenShare(0, homePower)
 		greenShareLoadpoints := site.greenShare(nonChargePower, nonChargePower+totalChargePower)
 
-		lp.Update(sitePower, smartCostActive, batteryBuffered, batteryStart, greenShareLoadpoints, site.effectivePrice(greenShareLoadpoints), site.effectiveCo2(greenShareLoadpoints))
+		lp.Update(sitePower, smartCostActive, batteryBuffered, batteryStart, greenShareLoadpoints, site.effectivePrice(greenShareLoadpoints), site.referencePrice(), site.effectiveCo2(greenShareLoadpoints), site.referenceCo2())
 
 		site.Health.Update()
 

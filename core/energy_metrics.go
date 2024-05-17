@@ -5,10 +5,14 @@ type EnergyMetrics struct {
 	totalKWh          float64  // Total amount of energy used (kWh)
 	solarKWh          float64  // Self-produced energy (kWh)
 	price             *float64 // Total cost (Currency)
+	priceSaved        *float64 // Total saved cost (Currency)
 	co2               *float64 // Amount of emitted CO2 (gCO2eq)
+	co2Saved          *float64 // Amount of saved CO2 (gCO2eq)
 	currentGreenShare float64  // Current share of solar energy of site (0-1)
 	currentPrice      *float64 // Current price per kWh
+	referencePrice    *float64 // Reference price per kWh
 	currentCo2        *float64 // Current co2 emissions
+	referenceCo2      *float64 // Reference co2 emissions
 }
 
 func NewEnergyMetrics() *EnergyMetrics {
@@ -19,10 +23,12 @@ func NewEnergyMetrics() *EnergyMetrics {
 }
 
 // SetEnvironment updates site information like solar share, price, co2 for use in later calculations
-func (em *EnergyMetrics) SetEnvironment(greenShare float64, effPrice, effCo2 *float64) {
+func (em *EnergyMetrics) SetEnvironment(greenShare float64, effPrice, refPrice, effCo2, refCo2 *float64) {
 	em.currentGreenShare = greenShare
 	em.currentPrice = effPrice
+	em.referencePrice = refPrice
 	em.currentCo2 = effCo2
+	em.referenceCo2 = refCo2
 }
 
 // Update sets the a new value for the total amount of charged energy and updated metrics based on environment values.
@@ -36,22 +42,21 @@ func (em *EnergyMetrics) Update(chargedKWh float64) (float64, float64) {
 	em.totalKWh = chargedKWh
 	addedGreen := added * em.currentGreenShare
 	em.solarKWh += addedGreen
-	// optional values
 	if em.currentPrice != nil {
-		addedPrice := *em.currentPrice * added
-		newPrice := addedPrice
-		if em.price != nil {
-			newPrice = *em.price + newPrice
+		if em.price == nil {
+			em.price = new(float64)
+			em.priceSaved = new(float64)
 		}
-		em.price = &newPrice
+		*em.price += *em.currentPrice * added
+		*em.priceSaved = (*em.referencePrice - *em.currentPrice) * added
 	}
 	if em.currentCo2 != nil {
-		addedCo2 := *em.currentCo2 * added
-		newCo2 := addedCo2
-		if em.co2 != nil {
-			newCo2 = *em.co2 + newCo2
+		if em.co2 == nil {
+			em.co2 = new(float64)
+			em.co2Saved = new(float64)
 		}
-		em.co2 = &newCo2
+		*em.co2 += *em.currentCo2 * added
+		*em.co2Saved = (*em.referenceCo2 - *em.currentCo2) * added
 	}
 	return added, addedGreen
 }
@@ -85,6 +90,14 @@ func (em *EnergyMetrics) Price() *float64 {
 	return em.price
 }
 
+// PriceSaved return the total amount of saved cost in Currency
+func (em *EnergyMetrics) PriceSaved() *float64 {
+	if em.totalKWh == 0 || em.priceSaved == nil {
+		return nil
+	}
+	return em.priceSaved
+}
+
 // PricePerKWh returns the average energy price in Currency
 func (em *EnergyMetrics) PricePerKWh() *float64 {
 	if em.totalKWh == 0 || em.price == nil {
@@ -103,11 +116,21 @@ func (em *EnergyMetrics) Co2PerKWh() *float64 {
 	return &co2
 }
 
+// Co2Saved returns the total amount of saved co2 emissions in gCO2eq
+func (em *EnergyMetrics) Co2Saved() *float64 {
+	if em.totalKWh == 0 || em.co2Saved == nil {
+		return nil
+	}
+	return em.co2Saved
+}
+
 // Publish publishes metrics with a given prefix
 func (em *EnergyMetrics) Publish(prefix string, p publisher) {
 	p.publish(prefix+"Energy", em.TotalWh())
 	p.publish(prefix+"SolarPercentage", em.SolarPercentage())
 	p.publish(prefix+"PricePerKWh", em.PricePerKWh())
 	p.publish(prefix+"Price", em.Price())
+	p.publish(prefix+"PriceSaved", em.PriceSaved())
 	p.publish(prefix+"Co2PerKWh", em.Co2PerKWh())
+	p.publish(prefix+"Co2Saved", em.Co2Saved())
 }

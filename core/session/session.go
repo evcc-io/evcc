@@ -33,8 +33,10 @@ type Session struct {
 	ChargeDuration  *time.Duration `json:"chargeDuration" csv:"Charge Duration" gorm:"column:charge_duration"`
 	SolarPercentage *float64       `json:"solarPercentage" csv:"Solar (%)" gorm:"column:solar_percentage"`
 	Price           *float64       `json:"price" csv:"Price" gorm:"column:price"`
+	PriceSaved      *float64       `json:"priceSaved" csv:"Price Saved" gorm:"column:price_saved"`
 	PricePerKWh     *float64       `json:"pricePerKWh" csv:"Price/kWh" gorm:"column:price_per_kwh"`
 	Co2PerKWh       *float64       `json:"co2PerKWh" csv:"CO2/kWh (gCO2eq)" gorm:"column:co2_per_kwh"`
+	Co2Saved        *float64       `json:"co2Saved" csv:"CO2 Saved (gCO2eq)" gorm:"column:co2_saved"`
 }
 
 // Sessions is a list of sessions

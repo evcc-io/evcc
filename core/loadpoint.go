@@ -1569,7 +1569,7 @@ func (lp *Loadpoint) phaseSwitchCompleted() bool {
 }
 
 // Update is the main control function. It reevaluates meters and charger state
-func (lp *Loadpoint) Update(sitePower float64, autoCharge, batteryBuffered, batteryStart bool, greenShare float64, effPrice, effCo2 *float64) {
+func (lp *Loadpoint) Update(sitePower float64, autoCharge, batteryBuffered, batteryStart bool, greenShare float64, effPrice, refPrice, effCo2, refCo2 *float64) {
 	lp.publish(keys.SmartCostActive, autoCharge)
 	lp.processTasks()
 
@@ -1577,7 +1577,7 @@ func (lp *Loadpoint) Update(sitePower float64, autoCharge, batteryBuffered, batt
 	lp.updateChargeVoltages()
 	lp.phasesFromChargeCurrents()
 
-	lp.sessionEnergy.SetEnvironment(greenShare, effPrice, effCo2)
+	lp.sessionEnergy.SetEnvironment(greenShare, effPrice, refPrice, effCo2, refCo2)
 
 	// update ChargeRater here to make sure initial meter update is caught
 	lp.bus.Publish(evChargeCurrent, lp.chargeCurrent)
