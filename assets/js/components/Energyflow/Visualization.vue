@@ -202,7 +202,7 @@ export default {
 			return {
 				value,
 				hideIcon: this.hideLabelIcon(value, minWidth),
-				style: { width: this.widthTotal(value) },
+				style: { "flex-basis": this.widthTotal(value) },
 				[position]: true,
 			};
 		},
@@ -269,7 +269,7 @@ html.dark .grid-import {
 	overflow: hidden;
 }
 .visualization--ready :deep(.label-bar) {
-	transition-property: width, opacity;
+	transition-property: flex-basis, opacity;
 	transition-duration: var(--evcc-transition-medium), var(--evcc-transition-fast);
 	transition-timing-function: linear, ease;
 }

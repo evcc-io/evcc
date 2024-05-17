@@ -74,6 +74,16 @@ template = "Fabricant"
 titleChoice = "Que voulez-vous ajouter ?"
 validateSave = "Valider et enregistrer"
 
+[config.options]
+
+[config.options.endianness]
+big = "gros-boutiste"
+little = "petit-boutiste"
+
+[config.options.schema]
+http = "HTTP (non crypté)"
+https = "HTTP (crypté)"
+
 [config.pv]
 titleAdd = "Ajouter un compteur pour le solaire"
 titleEdit = "Modifier le compteur pour le solaire"

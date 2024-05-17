@@ -6,9 +6,8 @@ import (
 	"net/url"
 	"strings"
 	"text/template"
-	"time"
 
-	"github.com/42atomys/sprout"
+	"github.com/go-sprout/sprout"
 	"gopkg.in/yaml.v3"
 )
 
@@ -58,13 +57,6 @@ func FuncMap(tmpl *template.Template) *template.Template {
 			return buf.String(), nil
 		},
 		"urlEncode": url.QueryEscape,
-		"toDuration": func(v string) time.Duration {
-			d, err := time.ParseDuration(v)
-			if err != nil {
-				panic(err)
-			}
-			return d
-		},
 	}
 
 	return tmpl.Funcs(sprout.TxtFuncMap()).Funcs(funcMap)
