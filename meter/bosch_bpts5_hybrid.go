@@ -13,7 +13,6 @@ package meter
 // SOFTWARE.
 
 import (
-	"errors"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -57,10 +56,6 @@ func NewBoschBpts5HybridFromConfig(other map[string]interface{}) (api.Meter, err
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
-	}
-
-	if !cc.Usage.IsAUsage() {
-		return nil, errors.New("missing usage")
 	}
 
 	return NewBoschBpts5Hybrid(cc.URI, cc.Usage, cc.Cache)

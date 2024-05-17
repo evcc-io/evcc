@@ -68,10 +68,6 @@ func NewRCTFromConfig(other map[string]interface{}) (api.Meter, error) {
 		return nil, err
 	}
 
-	if !cc.Usage.IsAUsage() {
-		return nil, errors.New("missing usage")
-	}
-
 	return NewRCT(cc.Uri, cc.Usage, cc.Cache, cc.capacity.Decorator())
 }
 

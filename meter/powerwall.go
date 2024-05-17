@@ -55,10 +55,6 @@ func NewPowerWallFromConfig(other map[string]interface{}) (api.Meter, error) {
 		return nil, err
 	}
 
-	if !cc.Usage.IsAUsage() {
-		return nil, errors.New("missing usage")
-	}
-
 	if cc.Password == "" {
 		return nil, errors.New("missing password")
 	}

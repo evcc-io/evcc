@@ -1,7 +1,6 @@
 package meter
 
 import (
-	"errors"
 	"fmt"
 	"time"
 
@@ -64,10 +63,6 @@ func NewLgEssFromConfig(other map[string]interface{}) (api.Meter, error) {
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
-	}
-
-	if !cc.Usage.IsAUsage() {
-		return nil, errors.New("missing usage")
 	}
 
 	return NewLgEss(cc.URI, cc.Usage, cc.Registration, cc.Password, cc.Cache, cc.capacity.Decorator())
