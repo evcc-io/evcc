@@ -11,7 +11,7 @@ import (
 	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
-	"github.com/joeshaw/carwings"
+	"github.com/docolli/carwings"
 )
 
 const (
