@@ -37,6 +37,7 @@ func TestReplace(t *testing.T) {
 		// regex tests
 		{"foo", true, "${foo}", "true"},
 		{"foo", true, "${Foo}", "true"},
+		{"Foo", true, "${foo}", "true"},
 		{"foo", "1", "abc${foo}${foo}", "abc11"},
 		{"foo", math.Pi, "${foo:%.2f}", "3.14"},
 		{"foo", math.Pi, "${foo:%.0f}%", "3%"},

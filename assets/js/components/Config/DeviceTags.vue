@@ -51,7 +51,8 @@ export default {
 				case "chargedEnergy":
 					return this.fmtKWh(value * 1e3);
 				case "soc":
-					return `${this.fmtNumber(value, 1)}%`;
+				case "socLimit":
+					return this.fmtPercentage(value, 1);
 				case "odometer":
 				case "range":
 					return `${this.fmtNumber(value, 0)} km`;
@@ -68,8 +69,6 @@ export default {
 					return this.fmtPricePerKWh(value, options.currency, true);
 				case "co2":
 					return this.fmtCo2Short(value);
-				case "socLimit":
-					return `${this.fmtNumber(value)}%`;
 			}
 			return value;
 		},

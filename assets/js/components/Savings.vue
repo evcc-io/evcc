@@ -227,7 +227,7 @@ export default {
 			return `${docsPrefix()}/docs/reference/configuration/tariffs`;
 		},
 		percent() {
-			return Math.round(this.solarPercentage) || 0;
+			return this.fmtPercentage(this.solarPercentage || 0);
 		},
 		regionOptions() {
 			return co2Reference.regions.map((r) => ({
