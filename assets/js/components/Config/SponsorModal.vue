@@ -42,7 +42,6 @@
 <script>
 import GenericModal from "./../GenericModal.vue";
 import FormRow from "./FormRow.vue";
-import store from "../../store";
 
 export default {
 	name: "SponsorModal",
