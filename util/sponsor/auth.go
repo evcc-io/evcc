@@ -18,7 +18,7 @@ var (
 
 const (
 	unavailable = "sponsorship unavailable"
-	vendored    = "vendor-supported device"
+	victron     = "victron-device"
 )
 
 func IsAuthorized() bool {
@@ -32,8 +32,11 @@ func IsAuthorizedForApi() bool {
 // check and set sponsorship token
 func ConfigureSponsorship(token string) error {
 	if token == "" {
-		if isVictron() {
-			Subject = vendored
+		if valid, err := isVictron(); valid && err == nil {
+			Subject = victron
+			return nil
+		} else if err != nil {
+			Subject = unavailable
 			return nil
 		}
 
