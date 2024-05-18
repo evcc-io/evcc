@@ -15,8 +15,8 @@ import (
 
 const (
 	APIVersion   = "protocol=1.0,resource=2.1"
-	ClientID     = "a-ncb-prod-android"
-	ClientSecret = "0sAcrtwvwEXXZp5nzQhPexSRhxUVKa0d76F4uqDvxvvKFHXpo4myoJwUuV4vuNqC"
+	ClientID     = "a-ncb-nc-android-prod"
+	ClientSecret = "6GKIax7fGT5yPHuNmWNVOc4q5POBw1WRSW39ubRA8WPBmQ7MOxhm75EsmKMKENem"
 	Scope        = "openid profile vehicles"
 	Realm        = "a-ncb-prod"
 	AuthURL      = "https://prod.eu2.auth.kamereon.org/kauth"
