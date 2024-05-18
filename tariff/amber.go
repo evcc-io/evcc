@@ -69,7 +69,7 @@ func NewAmberFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	t.Client.Transport = &transport.Decorator{
 		Base: t.Client.Transport,
 		Decorator: transport.DecorateHeaders(map[string]string{
-			"Authorization": fmt.Sprintf("Bearer %s", cc.Token),
+			"Authorization": "Bearer " + cc.Token,
 		}),
 	}
 

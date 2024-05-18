@@ -20,7 +20,11 @@
 				</select>
 			</div>
 			<small class="col-12 col-lg-6 ps-lg-4 col-form-label mb-4">
-				{{ $t("main.loadpointSettings.minSoc.description", [selectedMinSoc || "x"]) }}
+				{{
+					$t("main.loadpointSettings.minSoc.description", [
+						selectedMinSoc ? fmtPercentage(selectedMinSoc) : "x",
+					])
+				}}
 			</small>
 		</div>
 		<div class="row">

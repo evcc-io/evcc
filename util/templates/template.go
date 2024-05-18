@@ -9,8 +9,8 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/42atomys/sprout"
 	"github.com/evcc-io/evcc/util"
+	"github.com/go-sprout/sprout"
 )
 
 // Template describes is a proxy device for use with cli and automated testing
@@ -216,23 +216,22 @@ func (t *Template) RenderProxyWithValues(values map[string]interface{}, lang str
 	t.ModbusParams("", values)
 
 	for index, p := range t.Params {
-		for k, v := range values {
-			if p.Name != k {
-				continue
-			}
+		v, ok := values[p.Name]
+		if !ok {
+			continue
+		}
 
-			switch p.Type {
-			case TypeStringList:
-				for _, e := range v.([]string) {
-					t.Params[index].Values = append(p.Values, yamlQuote(e))
-				}
-			default:
-				switch v := v.(type) {
-				case string:
-					t.Params[index].Value = yamlQuote(v)
-				case int:
-					t.Params[index].Value = strconv.Itoa(v)
-				}
+		switch p.Type {
+		case TypeStringList:
+			for _, e := range v.([]string) {
+				t.Params[index].Values = append(p.Values, yamlQuote(e))
+			}
+		default:
+			switch v := v.(type) {
+			case string:
+				t.Params[index].Value = yamlQuote(v)
+			case int:
+				t.Params[index].Value = strconv.Itoa(v)
 			}
 		}
 	}

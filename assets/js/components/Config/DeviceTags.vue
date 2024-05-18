@@ -41,7 +41,8 @@ export default {
 				case "chargedEnergy":
 					return this.fmtKWh(value * 1e3);
 				case "soc":
-					return `${this.fmtNumber(value, 1)}%`;
+				case "socLimit":
+					return this.fmtPercentage(value, 1);
 				case "odometer":
 				case "range":
 					return `${this.fmtNumber(value, 0)} km`;
@@ -53,8 +54,6 @@ export default {
 					return value.map((v) => this.fmtKw(v)).join(", ");
 				case "chargeStatus":
 					return value;
-				case "socLimit":
-					return `${this.fmtNumber(value)}%`;
 			}
 			return value;
 		},

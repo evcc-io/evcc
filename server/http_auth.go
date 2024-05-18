@@ -114,6 +114,7 @@ func loginHandler(auth auth.Auth) http.HandlerFunc {
 			Path:     "/",
 			HttpOnly: true,
 			Expires:  time.Now().Add(lifetime),
+			SameSite: http.SameSiteStrictMode,
 		})
 	}
 }

@@ -28,7 +28,7 @@ describe("basics", () => {
 
 describe("min charge", () => {
   test("active when vehicle soc is below", () => {
-    expectStatus({ connected: true, minSoc: 20, vehicleSoc: 10 }, "minCharge", { soc: 20 });
+    expectStatus({ connected: true, minSoc: 20, vehicleSoc: 10 }, "minCharge", { soc: "20 %" });
   });
   test("not active when vehicle soc is above", () => {
     expectStatus({ connected: true, minSoc: 20, vehicleSoc: 21 }, "connected");
@@ -182,7 +182,7 @@ describe("vehicle target soc", () => {
         vehicleSoc: 70,
       },
       "vehicleLimitReached",
-      { soc: 70 }
+      { soc: "70 %" }
     );
   });
   test("show reached message even if vehicle is slightly below its limit", () => {
@@ -194,7 +194,7 @@ describe("vehicle target soc", () => {
         vehicleSoc: 69,
       },
       "vehicleLimitReached",
-      { soc: 70 }
+      { soc: "70 %" }
     );
   });
 });
