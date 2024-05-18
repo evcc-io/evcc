@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"time"
 
-	"dario.cat/mergo"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
@@ -29,7 +28,9 @@ func Headers(device string, headers map[string]string) map[string]string {
 		"x-App-Secret": "018dd168-6271-707f-9fd4-aed2bf76905e",
 	}
 
-	_ = mergo.Merge(&res, headers)
+	for k, v := range headers {
+		res[k] = v
+	}
 
 	return res
 }
