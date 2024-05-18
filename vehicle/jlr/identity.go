@@ -2,6 +2,7 @@ package jlr
 
 import (
 	"fmt"
+	"maps"
 	"net/http"
 	"time"
 
@@ -28,9 +29,7 @@ func Headers(device string, headers map[string]string) map[string]string {
 		"x-App-Secret": "018dd168-6271-707f-9fd4-aed2bf76905e",
 	}
 
-	for k, v := range headers {
-		res[k] = v
-	}
+	maps.Copy(res, headers)
 
 	return res
 }
