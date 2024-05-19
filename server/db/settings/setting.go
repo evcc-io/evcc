@@ -1,9 +1,11 @@
 package settings
 
 import (
+	"bytes"
 	"cmp"
 	"encoding/json"
 	"errors"
+	"io"
 	"slices"
 	"strconv"
 	"sync"
@@ -11,6 +13,8 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/server/db"
+	"github.com/evcc-io/evcc/util"
+	"gopkg.in/yaml.v3"
 )
 
 var ErrNotFound = errors.New("not found")
@@ -159,6 +163,27 @@ func Json(key string, res any) error {
 		return ErrNotFound
 	}
 	return json.Unmarshal([]byte(s), &res)
+}
+
+func Yaml(key string, res any) error {
+	s, err := String(key)
+	if err != nil {
+		return err
+	}
+	if s == "" {
+		return ErrNotFound
+	}
+
+	other := make(map[string]any)
+	if err := yaml.NewDecoder(bytes.NewBuffer([]byte(s))).Decode(&other); err != nil && err != io.EOF {
+		return err
+	}
+
+	if len(other) == 0 {
+		return nil
+	}
+
+	return util.DecodeOther(other, &res)
 }
 
 // wrapping Settings into a struct for better decoupling

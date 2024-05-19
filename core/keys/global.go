@@ -8,4 +8,6 @@ const (
 	Mqtt               = "mqtt"
 	Influx             = "influx"
 	EEBus              = "eeBus"
+	MessagingServices  = "messagingServices"
+	MessagingEvents    = "messagingEvents"
 )

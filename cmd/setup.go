@@ -1,12 +1,10 @@
 package cmd
 
 import (
-	"bytes"
 	"cmp"
 	"context"
 	"errors"
 	"fmt"
-	"io"
 	"net/http"
 	"os"
 	"regexp"
@@ -53,7 +51,6 @@ import (
 	"github.com/spf13/viper"
 	"golang.org/x/sync/errgroup"
 	"golang.org/x/text/currency"
-	"gopkg.in/yaml.v3"
 )
 
 var conf = globalconfig.All{
@@ -563,11 +560,6 @@ func configureInflux(conf globalconfig.Influx, site site.API, in <-chan util.Par
 		if err := settings.Json(keys.Influx, &conf); err != nil {
 			return err
 		}
-	} else {
-		// write defaults
-		if err := settings.SetJson(keys.Influx, conf); err != nil {
-			return err
-		}
 	}
 
 	if conf.URL == "" {
@@ -662,10 +654,12 @@ func configureHEMS(conf config.Typed, site *core.Site, httpd *server.HTTPd) erro
 }
 
 // networkSettings reads/migrates network settings
-func networkSettings(conf *globalconfig.Network) error { // migrate settings
+func networkSettings(conf *globalconfig.Network) error {
 	if settings.Exists(keys.Network) {
 		return settings.Json(keys.Network, &conf)
 	}
+
+	// migrate settings
 	return settings.SetJson(keys.Network, conf)
 }
 
@@ -685,24 +679,10 @@ func configureMDNS(conf globalconfig.Network) error {
 
 // setup EEBus
 func configureEEBus(conf eebus.Config) error {
-	// TODO yaml helper function
-
 	// migrate settings
 	if settings.Exists(keys.EEBus) {
-		yamlConf, err := settings.String(keys.EEBus)
-		if err != nil {
+		if err := settings.Yaml(keys.EEBus, &conf); err != nil {
 			return err
-		}
-
-		other := make(map[string]any)
-		if err := yaml.NewDecoder(bytes.NewBuffer([]byte(yamlConf))).Decode(&other); err != nil && err != io.EOF {
-			return err
-		}
-
-		if len(other) > 0 {
-			if err := util.DecodeOther(other, &conf); err != nil {
-				return err
-			}
 		}
 	}
 
@@ -723,7 +703,19 @@ func configureEEBus(conf eebus.Config) error {
 
 // setup messaging
 func configureMessengers(conf globalconfig.Messaging, vehicles push.Vehicles, valueChan chan<- util.Param, cache *util.Cache) (chan push.Event, error) {
-	// TODO yaml
+	// TODO connect yaml + ui @naltatis
+
+	// migrate settings
+	if settings.Exists(keys.MessagingServices) {
+		if err := settings.Yaml(keys.MessagingServices, &conf.Services); err != nil {
+			return nil, err
+		}
+	}
+	if settings.Exists(keys.MessagingEvents) {
+		if err := settings.Yaml(keys.MessagingEvents, &conf.Events); err != nil {
+			return nil, err
+		}
+	}
 
 	messageChan := make(chan push.Event, 1)
 
