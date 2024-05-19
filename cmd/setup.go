@@ -1,10 +1,12 @@
 package cmd
 
 import (
+	"bytes"
 	"cmp"
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"regexp"
@@ -51,6 +53,7 @@ import (
 	"github.com/spf13/viper"
 	"golang.org/x/sync/errgroup"
 	"golang.org/x/text/currency"
+	"gopkg.in/yaml.v3"
 )
 
 var conf = globalconfig.All{
@@ -682,14 +685,24 @@ func configureMDNS(conf globalconfig.Network) error {
 
 // setup EEBus
 func configureEEBus(conf eebus.Config) error {
+	// TODO yaml helper function
+
 	// migrate settings
 	if settings.Exists(keys.EEBus) {
-		if err := settings.Json(keys.EEBus, &conf); err != nil {
+		yamlConf, err := settings.String(keys.EEBus)
+		if err != nil {
 			return err
 		}
-	} else {
-		if err := settings.SetJson(keys.EEBus, conf); err != nil {
+
+		other := make(map[string]any)
+		if err := yaml.NewDecoder(bytes.NewBuffer([]byte(yamlConf))).Decode(&other); err != nil && err != io.EOF {
 			return err
+		}
+
+		if len(other) > 0 {
+			if err := util.DecodeOther(other, &conf); err != nil {
+				return err
+			}
 		}
 	}
 
@@ -709,7 +722,9 @@ func configureEEBus(conf eebus.Config) error {
 }
 
 // setup messaging
-func configureMessengers(conf globalconfig.Messaging, vehicles push.Vehicles, valueChan chan util.Param, cache *util.Cache) (chan push.Event, error) {
+func configureMessengers(conf globalconfig.Messaging, vehicles push.Vehicles, valueChan chan<- util.Param, cache *util.Cache) (chan push.Event, error) {
+	// TODO yaml
+
 	messageChan := make(chan push.Event, 1)
 
 	messageHub, err := push.NewHub(conf.Events, vehicles, cache)

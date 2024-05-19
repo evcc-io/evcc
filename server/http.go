@@ -150,7 +150,7 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, auth auth.Auth, valueChan ch
 		"eebus":       eebus.Config{},
 		"hems":        config.Typed{},
 		"tariffs":     globalconfig.Tariffs{},
-		"messaging":   globalconfig.Messaging{},
+		"messaging":   globalconfig.Messaging{}, // has default
 		"modbusproxy": globalconfig.ModbusProxy{},
 	} {
 		configRoutes[key] = route{Method: "GET", Pattern: "/" + key, HandlerFunc: settingsGetStringHandler(key)}
@@ -160,9 +160,9 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, auth auth.Auth, valueChan ch
 
 	// json handlers
 	for key, fun := range map[string]func() any{
-		keys.Mqtt:    func() any { return new(globalconfig.Mqtt) },
+		keys.Mqtt:    func() any { return new(globalconfig.Mqtt) }, // has default
 		keys.Influx:  func() any { return new(globalconfig.Influx) },
-		keys.Network: func() any { return new(globalconfig.Network) },
+		keys.Network: func() any { return new(globalconfig.Network) }, // has default
 	} {
 		// configRoutes[key] = route{Method: "GET", Pattern: "/" + key, HandlerFunc: settingsGetJsonHandler(key, fun())}
 		configRoutes["update"+key] = route{Method: "POST", Pattern: "/" + key, HandlerFunc: settingsSetJsonHandler(key, valueChan, fun())}
