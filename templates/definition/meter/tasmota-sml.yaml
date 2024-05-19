@@ -22,11 +22,12 @@ requirements:
       // highlight-next-line
       +1,3,s,16,9600,SML
       // highlight-next-line
-      1,77070100010800ff@1000,Gesamtverbrauch,KWh,Total_in,2
+      1,77070100010800ff@1000,Gesamtverbrauch,KWh,Total_in,4
       // highlight-next-line
-      1,77070100020800ff@1000,Gesamteinspeisung,KWh,Total_out,2
+      1,77070100020800ff@1000,Gesamteinspeisung,KWh,Total_out,4
       // highlight-next-line
-      1,77070100100700ff@1,Verbrauch,W,Power_curr,0
+      1,77070100100700ff@1,Verbrauch,W,Power_curr,2
+      1,77070100600100ff@#,Zählernummer,,Meter_Id,0
       #
       ```
     en: |
@@ -45,11 +46,12 @@ requirements:
       // highlight-next-line
       +1,3,s,16,9600,SML
       // highlight-next-line
-      1,77070100010800ff@1000,Gesamtverbrauch,KWh,Total_in,2
+      1,77070100010800ff@1000,Gesamtverbrauch,KWh,Total_in,4
       // highlight-next-line
-      1,77070100020800ff@1000,Gesamteinspeisung,KWh,Total_out,2
+      1,77070100020800ff@1000,Gesamteinspeisung,KWh,Total_out,4
       // highlight-next-line
-      1,77070100100700ff@1,Verbrauch,W,Power_curr,0
+      1,77070100100700ff@1,Verbrauch,W,Power_curr,2
+      1,77070100600100ff@#,Zählernummer,,Meter_Id,0
       #
       ```
 params:
