@@ -69,7 +69,7 @@ func init() {
 
 // NewsmartEVSEFromConfig creates a new smartEVSE ModbusTCP charger
 func NewsmartEVSEFromConfig(other map[string]interface{}) (api.Charger, error) {
-	cc := struct {
+	cc := modbus.Settings {
 		modbus.Settings `mapstructure:",squash"`
 	}{
 		Settings: modbus.Settings{
