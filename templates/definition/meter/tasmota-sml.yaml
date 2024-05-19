@@ -7,7 +7,7 @@ products:
 requirements:
   description:
     de: |
-      Um die Werte des Smartmeters für evcc korrekt auslesen zu können, muss das Lesekopf-Script so geändert, dass folgende JSON-Tags erzeugt werden:
+      Um die Werte des Smartmeters für evcc korrekt auslesen zu können, muss das Lesekopf-Script so geändert werden, dass folgende JSON-Tags erzeugt werden:
       - **SML** als Gruppenname der ausgelesenen Parameter
       - **Total_in** für den Gesamtverbrauch in KWh
       - **Total_out** für den Gesamteinspeisung in KWh
