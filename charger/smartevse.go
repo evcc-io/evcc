@@ -56,11 +56,11 @@ const (
 	smartEVSERegCPDisconnectTime   = 0x0208 // CP interruption time 1 ms uint16
 	smartEVSERegTimeoutBeforeCPDis = 0x0209 // time the board waits before it disconnects CP 1 ms uint16
 
-	smartEVSEConfAutoCPDisconnect                = 0x10
-	smartEVSEConfMisuseLockPortAsCPDisconnect    = 0x8
-	smartEVSEConfDCLMustBePresent                = 0x4
-	smartEVSEConfLockState                       = 0x2
-	smartEVSEConfPhases                          = 0x1
+	smartEVSEConfAutoCPDisconnect             = 0x10
+	smartEVSEConfMisuseLockPortAsCPDisconnect = 0x8
+	smartEVSEConfDCLMustBePresent             = 0x4
+	smartEVSEConfLockState                    = 0x2
+	smartEVSEConfPhases                       = 0x1
 )
 
 func init() {
