@@ -69,24 +69,20 @@ func init() {
 
 // NewsmartEVSEFromConfig creates a new smartEVSE ModbusTCP charger
 func NewsmartEVSEFromConfig(other map[string]interface{}) (api.Charger, error) {
-	cc := modbus.Settings {
-		modbus.Settings `mapstructure:",squash"`
-	}{
-		Settings: modbus.Settings{
-			ID: 1, // default
-		},
+	cc := modbus.Settings{
+		ID: 1,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewsmartEVSE(cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.ID)
+	return NewsmartEVSE(cc.URI, cc.Device, cc.Comset, cc.Baudrate, modbus.ProtocolFromRTU(cc.RTU), cc.ID)
 }
 
 // NewsmartEVSE creates a new charger
-func NewsmartEVSE(uri string, device string, comset string, baudrate int, slaveID uint8) (*smartEVSE, error) {
-	conn, err := modbus.NewConnection(uri, device, comset, baudrate, modbus.Tcp, slaveID)
+func NewsmartEVSE(uri, device, comset string, baudrate int, proto modbus.Protocol, slaveID uint8) (*smartEVSE, error) {
+	conn, err := modbus.NewConnection(uri, device, comset, baudrate, proto, slaveID)
 	if err != nil {
 		return nil, err
 	}
@@ -284,13 +280,7 @@ func (wb *smartEVSE) Diagnose() {
 		if settings&smartEVSEConfPhases == 1 {
 			phasenum = 3
 		}
-		fmt.Printf("\tSettings:\n
-			\t\tPhases: %d\n
-			\t\tLockState: %t\n
-			\t\tDCLMustbePresent: %t\n
-			\t\tLockPortDrivingCPRelais: %t\n
-			\t\tCPInterruptAuto: %t\n",
-			phasenum, settings&0x2 != 0, settings&0x4 != 0, settings&0x8 != 0, settings&0x10 != 0)
+		fmt.Printf("\tSettings:\n\t\tPhases: %d\n\t\tLockState: %t\n\t\tDCLMustbePresent: %t\n\t\tLockPortDrivingCPRelais: %t\n\t\tCPInterruptAuto: %t\n", phasenum, settings&0x2 != 0, settings&0x4 != 0, settings&0x8 != 0, settings&0x10 != 0)
 	}
 
 	if b, err := wb.conn.ReadHoldingRegisters(smartEVSERegTimeoutBeforeCPDis, 1); err == nil {
