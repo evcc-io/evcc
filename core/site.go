@@ -927,7 +927,6 @@ func (site *Site) Run(stopC chan struct{}, interval time.Duration) {
 	go site.loopLoadpoints(loadpointChan)
 
 	ticker := time.NewTicker(interval)
-	site.publish(keys.Interval, interval)
 	site.update(<-loadpointChan) // start immediately
 
 	for {

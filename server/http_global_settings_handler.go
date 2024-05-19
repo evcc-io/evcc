@@ -67,37 +67,26 @@ func settingsSetYamlHandler(key string, struc any) http.HandlerFunc {
 			}
 		}
 
-		// var res strings.Builder
-		// enc := yaml.NewEncoder(&res)
-		// enc.SetIndent(2)
-
-		// if err := enc.Encode(struc); err != nil {
-		// 	jsonError(w, http.StatusBadRequest, err)
-		// 	return
-		// }
-
-		// val := res.String()
 		val := strings.TrimSpace(string(b))
 		settings.SetString(key, val)
 		setConfigDirty()
 
-		w.WriteHeader(http.StatusOK)
 		jsonResult(w, val)
 	}
 }
 
-func settingsGetJsonHandler(key string, struc any) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if err := settings.Json(key, &struc); err != nil && err != settings.ErrNotFound {
-			jsonError(w, http.StatusInternalServerError, err)
-			return
-		}
+// func settingsGetJsonHandler(key string, struc any) http.HandlerFunc {
+// 	return func(w http.ResponseWriter, r *http.Request) {
+// 		if err := settings.Json(key, &struc); err != nil && err != settings.ErrNotFound {
+// 			jsonError(w, http.StatusInternalServerError, err)
+// 			return
+// 		}
 
-		jsonResult(w, struc)
-	}
-}
+// 		jsonResult(w, struc)
+// 	}
+// }
 
-func settingsSetJsonHandler(key string, struc any) http.HandlerFunc {
+func settingsSetJsonHandler(key string, valueChan chan<- util.Param, struc any) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		dec := json.NewDecoder(r.Body)
 		dec.DisallowUnknownFields()
@@ -109,7 +98,19 @@ func settingsSetJsonHandler(key string, struc any) http.HandlerFunc {
 		settings.SetJson(key, struc)
 		setConfigDirty()
 
-		w.WriteHeader(http.StatusOK)
-		jsonResult(w, struc)
+		valueChan <- util.Param{Key: key, Val: struc}
+
+		jsonResult(w, true)
+	}
+}
+
+func settingsDeleteJsonHandler(key string, valueChan chan<- util.Param, struc any) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		settings.SetString(key, "")
+		setConfigDirty()
+
+		valueChan <- util.Param{Key: key, Val: struc}
+
+		jsonResult(w, true)
 	}
 }

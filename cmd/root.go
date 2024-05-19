@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/core"
+	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/server/modbus"
@@ -161,6 +162,14 @@ func runRoot(cmd *cobra.Command, args []string) {
 	// publish to UI
 	go socketHub.Run(pipe.NewDropper(ignoreEmpty).Pipe(tee.Attach()), cache)
 
+	// publish initial settings
+	valueChan <- util.Param{Key: keys.Network, Val: conf.Network}
+	valueChan <- util.Param{Key: keys.Influx, Val: conf.Influx}
+	valueChan <- util.Param{Key: keys.Mqtt, Val: conf.Mqtt}
+	valueChan <- util.Param{Key: keys.Interval, Val: conf.Interval}
+	// TODO
+	// valueChan <- util.Param{Key: keys.Sponsor, Val: conf.Sponsor}
+
 	// capture log messages for UI
 	util.CaptureLogs(valueChan)
 
@@ -256,7 +265,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 	// show main ui
 	if err == nil {
-		httpd.RegisterSiteHandlers(site, auth, cache)
+		httpd.RegisterSiteHandlers(site, auth, valueChan, cache)
 		httpd.RegisterAuthHandlers(auth)
 		httpd.RegisterSystemHandler(auth, func() {
 			log.INFO.Println("evcc was stopped by user. OS should restart the service. Or restart manually.")
