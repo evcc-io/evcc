@@ -3,7 +3,6 @@ package sponsor
 import (
 	"context"
 	"errors"
-	"fmt"
 	"os/exec"
 	"runtime"
 	"strings"
@@ -17,13 +16,10 @@ import (
 
 // isVictron checks if the hardware is a victron device, only returns error if cloud check fails due to network issues
 func isVictron() (bool, error) {
-	fmt.Println("victron check")
-
 	vd, err := victronDeviceInfo()
 
 	// unable to retrieve all device info
 	if err != nil || vd.ProductId == "" || vd.VrmId == "" || vd.Serial == "" || vd.Board == "" {
-		fmt.Println("victron check failed", err, vd)
 		return false, nil
 	}
 
