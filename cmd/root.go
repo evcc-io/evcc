@@ -118,6 +118,16 @@ func runRoot(cmd *cobra.Command, args []string) {
 		err = cfgErr
 	}
 
+	// setup environment
+	if err == nil {
+		err = configureEnvironment(cmd, conf)
+	}
+
+	// configure network
+	if err == nil {
+		err = networkSettings(&conf.Network)
+	}
+
 	// network config
 	if viper.GetString("uri") != "" {
 		log.WARN.Println("`uri` is deprecated and will be ignored. Use `network` instead.")
@@ -153,11 +163,6 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 	// capture log messages for UI
 	util.CaptureLogs(valueChan)
-
-	// setup environment
-	if err == nil {
-		err = configureEnvironment(cmd, conf)
-	}
 
 	// setup telemetry
 	if err == nil {

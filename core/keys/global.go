@@ -4,7 +4,8 @@ const (
 	Interval           = "interval"
 	PasswordConfigured = "passwordConfigured"
 	SponsorToken       = "sponsorToken"
+	Network            = "network"
 	Mqtt               = "mqtt"
-	InfluxDB           = "influxDB"
+	Influx             = "influx"
 	EEBus              = "eeBus"
 )

@@ -556,20 +556,19 @@ func configureDatabase(conf globalconfig.DB) error {
 // configureInflux configures influx database
 func configureInflux(conf globalconfig.Influx, site site.API, in <-chan util.Param) error {
 	// migrate settings
-	if settings.Exists(keys.InfluxDB) {
-		if err := settings.Json(keys.InfluxDB, &conf); err != nil {
+	if settings.Exists(keys.Influx) {
+		if err := settings.Json(keys.Influx, &conf); err != nil {
+			return err
+		}
+	} else {
+		// write defaults
+		if err := settings.SetJson(keys.Influx, conf); err != nil {
 			return err
 		}
 	}
 
 	if conf.URL == "" {
 		return nil
-	}
-
-	if !settings.Exists(keys.InfluxDB) {
-		if err := settings.SetJson(keys.InfluxDB, conf); err != nil {
-			return err
-		}
 	}
 
 	influx := server.NewInfluxClient(
@@ -596,16 +595,15 @@ func configureMqtt(conf globalconfig.Mqtt) error {
 		if err := settings.Json(keys.Mqtt, &conf); err != nil {
 			return err
 		}
+	} else {
+		// write defaults
+		if err := settings.SetJson(keys.Mqtt, conf); err != nil {
+			return err
+		}
 	}
 
 	if conf.Broker == "" {
 		return nil
-	}
-
-	if !settings.Exists(keys.Mqtt) {
-		if err := settings.SetJson(keys.Mqtt, conf); err != nil {
-			return err
-		}
 	}
 
 	log := util.NewLogger("mqtt")
@@ -660,6 +658,14 @@ func configureHEMS(conf config.Typed, site *core.Site, httpd *server.HTTPd) erro
 	return nil
 }
 
+// networkSettings reads/migrates network settings
+func networkSettings(conf *globalconfig.Network) error { // migrate settings
+	if settings.Exists(keys.Network) {
+		return settings.Json(keys.Network, &conf)
+	}
+	return settings.SetJson(keys.Network, conf)
+}
+
 // setup MDNS
 func configureMDNS(conf globalconfig.Network) error {
 	host := strings.TrimSuffix(conf.Host, ".local")
@@ -681,16 +687,14 @@ func configureEEBus(conf eebus.Config) error {
 		if err := settings.Json(keys.EEBus, &conf); err != nil {
 			return err
 		}
+	} else {
+		if err := settings.SetJson(keys.EEBus, conf); err != nil {
+			return err
+		}
 	}
 
 	if conf.URI == "" {
 		return nil
-	}
-
-	if !settings.Exists(keys.EEBus) {
-		if err := settings.SetJson(keys.EEBus, conf); err != nil {
-			return err
-		}
 	}
 
 	var err error
