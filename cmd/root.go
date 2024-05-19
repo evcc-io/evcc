@@ -16,7 +16,6 @@ import (
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/server"
-	"github.com/evcc-io/evcc/server/modbus"
 	"github.com/evcc-io/evcc/server/updater"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/auth"
@@ -183,17 +182,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 	// setup modbus proxy
 	if err == nil {
-		for _, cfg := range conf.ModbusProxy {
-			var mode modbus.ReadOnlyMode
-			mode, err = modbus.ReadOnlyModeString(cfg.ReadOnly)
-			if err != nil {
-				break
-			}
-
-			if err = modbus.StartProxy(cfg.Port, cfg.Settings, mode); err != nil {
-				break
-			}
-		}
+		err = configureModbusProxy(conf.ModbusProxy)
 	}
 
 	// setup site and loadpoints

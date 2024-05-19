@@ -32,6 +32,7 @@ import (
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/server/db"
 	"github.com/evcc-io/evcc/server/db/settings"
+	"github.com/evcc-io/evcc/server/modbus"
 	"github.com/evcc-io/evcc/server/oauth2redirect"
 	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util"
@@ -566,6 +567,13 @@ func configureInflux(conf globalconfig.Influx, site site.API, in <-chan util.Par
 		return nil
 	}
 
+	// migrate settings
+	if !settings.Exists(keys.Influx) {
+		if err := settings.SetJson(keys.Influx, conf); err != nil {
+			return err
+		}
+	}
+
 	influx := server.NewInfluxClient(
 		conf.URL,
 		conf.Token,
@@ -643,6 +651,24 @@ func configureGo(conf []globalconfig.Go) error {
 
 // setup HEMS
 func configureHEMS(conf config.Typed, site *core.Site, httpd *server.HTTPd) error {
+	// migrate settings
+	if settings.Exists(keys.Hems) {
+		if err := settings.Yaml(keys.Hems, &conf); err != nil {
+			return err
+		}
+	}
+
+	if conf.Type == "" {
+		return nil
+	}
+
+	// migrate settings
+	if !settings.Exists(keys.Hems) {
+		if err := settings.SetYaml(keys.Hems, conf); err != nil {
+			return err
+		}
+	}
+
 	hems, err := hems.NewFromConfig(conf.Type, conf.Other, site, httpd)
 	if err != nil {
 		return fmt.Errorf("failed configuring hems: %w", err)
@@ -690,6 +716,13 @@ func configureEEBus(conf eebus.Config) error {
 		return nil
 	}
 
+	// migrate settings
+	if !settings.Exists(keys.EEBus) {
+		if err := settings.SetYaml(keys.EEBus, conf); err != nil {
+			return err
+		}
+	}
+
 	var err error
 	if eebus.Instance, err = eebus.NewServer(conf); err != nil {
 		return fmt.Errorf("failed configuring eebus: %w", err)
@@ -703,16 +736,13 @@ func configureEEBus(conf eebus.Config) error {
 
 // setup messaging
 func configureMessengers(conf globalconfig.Messaging, vehicles push.Vehicles, valueChan chan<- util.Param, cache *util.Cache) (chan push.Event, error) {
-	// TODO connect yaml + ui @naltatis
-
 	// migrate settings
-	if settings.Exists(keys.MessagingServices) {
-		if err := settings.Yaml(keys.MessagingServices, &conf.Services); err != nil {
+	if settings.Exists(keys.Messaging) {
+		if err := settings.Yaml(keys.Messaging, &conf); err != nil {
 			return nil, err
 		}
-	}
-	if settings.Exists(keys.MessagingEvents) {
-		if err := settings.Yaml(keys.MessagingEvents, &conf.Events); err != nil {
+	} else if len(conf.Services)+len(conf.Events) > 0 {
+		if err := settings.SetYaml(keys.Messaging, conf); err != nil {
 			return nil, err
 		}
 	}
@@ -756,6 +786,17 @@ func configureTariff(name string, conf config.Typed, t *api.Tariff, wg *sync.Wai
 }
 
 func configureTariffs(conf globalconfig.Tariffs) (*tariff.Tariffs, error) {
+	// migrate settings
+	if settings.Exists(keys.Tariffs) {
+		if err := settings.Yaml(keys.Tariffs, &conf); err != nil {
+			return nil, err
+		}
+	} else if conf.Grid.Type != "" || conf.FeedIn.Type != "" || conf.Co2.Type != "" || conf.Planner.Type != "" {
+		if err := settings.SetYaml(keys.Tariffs, conf); err != nil {
+			return nil, err
+		}
+	}
+
 	tariffs := tariff.Tariffs{
 		Currency: currency.EUR,
 	}
@@ -790,6 +831,33 @@ func configureDevices(conf globalconfig.All) error {
 	if err := configureCircuits(conf.Circuits); err != nil {
 		return &ClassError{ClassCircuit, err}
 	}
+	return nil
+}
+
+func configureModbusProxy(conf []globalconfig.ModbusProxy) error {
+	// migrate settings
+	if settings.Exists(keys.ModbusProxy) {
+		if err := settings.Yaml(keys.ModbusProxy, &conf); err != nil {
+			return err
+		}
+	} else if len(conf) > 0 {
+		if err := settings.SetYaml(keys.ModbusProxy, conf); err != nil {
+			return err
+		}
+	}
+
+	for _, cfg := range conf {
+		var mode modbus.ReadOnlyMode
+		mode, err := modbus.ReadOnlyModeString(cfg.ReadOnly)
+		if err != nil {
+			return err
+		}
+
+		if err = modbus.StartProxy(cfg.Port, cfg.Settings, mode); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 

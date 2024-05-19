@@ -147,11 +147,11 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, auth auth.Auth, valueChan ch
 
 	// yaml handlers
 	for key, struc := range map[string]any{
-		"eebus":       eebus.Config{},
-		"hems":        config.Typed{},
-		"tariffs":     globalconfig.Tariffs{},
-		"messaging":   globalconfig.Messaging{}, // has default
-		"modbusproxy": globalconfig.ModbusProxy{},
+		keys.EEBus:       eebus.Config{},
+		keys.Hems:        config.Typed{},
+		keys.Tariffs:     globalconfig.Tariffs{},
+		keys.Messaging:   globalconfig.Messaging{}, // has default
+		keys.ModbusProxy: globalconfig.ModbusProxy{},
 	} {
 		configRoutes[key] = route{Method: "GET", Pattern: "/" + key, HandlerFunc: settingsGetStringHandler(key)}
 		configRoutes["update"+key] = route{Method: "POST", Pattern: "/" + key, HandlerFunc: settingsSetYamlHandler(key, struc)}

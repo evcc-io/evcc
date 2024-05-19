@@ -8,6 +8,7 @@ import (
 	"io"
 	"slices"
 	"strconv"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -97,6 +98,15 @@ func SetJson(key string, val any) error {
 	b, err := json.Marshal(val)
 	if err == nil {
 		SetString(key, string(b))
+	}
+	return err
+}
+
+func SetYaml(key string, val any) error {
+	var b bytes.Buffer
+	err := yaml.NewEncoder(&b).Encode(val)
+	if err == nil {
+		SetString(key, strings.TrimSpace(b.String()))
 	}
 	return err
 }
