@@ -22,7 +22,7 @@ requirements:
       1,77070100010800ff@1000,Gesamtverbrauch,KWh,Total_in,2
       1,77070100020800ff@1000,Gesamteinspeisung,KWh,Total_out,2
       1,77070100100700ff@1,Verbrauch,W,Power_curr,0
-      # 
+      #
     en: |
       To be able to read the values of the smart meter for evcc correctly, the IR reader script must be changed so that the following JSON tags are generated:
       - **SML** as the group name of the read parameters
@@ -39,7 +39,7 @@ requirements:
       1,77070100010800ff@1000,Gesamtverbrauch,KWh,Total_in,2
       1,77070100020800ff@1000,Gesamteinspeisung,KWh,Total_out,2
       1,77070100100700ff@1,Verbrauch,W,Power_curr,0
-      # 
+      #
 params:
   - name: usage
     choice: ["grid"]
