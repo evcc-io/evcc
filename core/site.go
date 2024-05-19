@@ -205,7 +205,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 		site.batteryMeters = append(site.batteryMeters, dev.Instance())
 	}
 
-	if len(site.batteryMeters) > 0 && site.ResidualPower <= 0 {
+	if len(site.batteryMeters) > 0 && site.GetResidualPower() <= 0 {
 		site.log.WARN.Println("battery configured but residualPower is missing or <= 0 (add residualPower: 100 to site), see https://docs.evcc.io/en/docs/reference/configuration/site#residualpower")
 	}
 
@@ -296,6 +296,11 @@ func (site *Site) restoreSettings() error {
 	}
 	if v, err := settings.Bool(keys.BatteryDischargeControl); err == nil {
 		if err := site.SetBatteryDischargeControl(v); err != nil {
+			return err
+		}
+	}
+	if v, err := settings.Float(keys.ResidualPower); err == nil {
+		if err := site.SetResidualPower(v); err != nil {
 			return err
 		}
 	}
@@ -630,7 +635,7 @@ func (site *Site) sitePower(totalChargePower, flexiblePower float64) (float64, b
 
 	// allow using grid and charge as estimate for pv power
 	if site.pvMeters == nil {
-		site.pvPower = totalChargePower - site.gridPower + site.ResidualPower
+		site.pvPower = totalChargePower - site.gridPower + site.GetResidualPower()
 		if site.pvPower < 0 {
 			site.pvPower = 0
 		}
@@ -659,7 +664,7 @@ func (site *Site) sitePower(totalChargePower, flexiblePower float64) (float64, b
 		}
 	}
 
-	sitePower := sitePower(site.log, site.GetMaxGridSupplyWhileBatteryCharging(), site.gridPower, batteryPower, site.ResidualPower)
+	sitePower := sitePower(site.log, site.GetMaxGridSupplyWhileBatteryCharging(), site.gridPower, batteryPower, site.GetResidualPower())
 
 	// deduct smart loads
 	if len(site.auxMeters) > 0 {
@@ -848,7 +853,7 @@ func (site *Site) prepare() {
 	site.publish(keys.MaxGridSupplyWhileBatteryCharging, site.maxGridSupplyWhileBatteryCharging)
 	site.publish(keys.BatteryMode, site.batteryMode)
 	site.publish(keys.BatteryDischargeControl, site.batteryDischargeControl)
-	site.publish(keys.ResidualPower, site.ResidualPower)
+	site.publish(keys.ResidualPower, site.GetResidualPower())
 
 	site.publish(keys.Currency, site.tariffs.Currency)
 	if tariff := site.GetTariff(PlannerTariff); tariff != nil {
