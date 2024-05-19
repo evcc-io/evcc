@@ -56,11 +56,11 @@ const (
 	smartEVSERegCPDisconnectTime   = 0x0208 // CP interruption time 1 ms uint16
 	smartEVSERegTimeoutBeforeCPDis = 0x0209 // time the board waits before it disconnects CP 1 ms uint16
 
-	AUTO_CP_DISCONNECT                = 0x10
-	MISUSE_LOCK_PORT_AS_CP_DISCONNECT = 0x8
-	DCL_MUST_BE_PRESENT               = 0x4
-	LOCK_STATE                        = 0x2
-	PHASES                            = 0x1
+	smartEVSEConfAutoCPDisconnect                = 0x10
+	smartEVSEConfMisuseLockPortAsCPDisconnect    = 0x8
+	smartEVSEConfDCLMustBePresent                = 0x4
+	smartEVSEConfLockState                       = 0x2
+	smartEVSEConfPhases                          = 0x1
 )
 
 func init() {
@@ -170,14 +170,11 @@ var _ api.Meter = (*smartEVSE)(nil)
 
 // CurrentPower implements the api.Meter interface
 func (wb *smartEVSE) CurrentPower() (float64, error) {
-	var v1, v2, v3, i1, i2, i3 float64
-	var err error
-
-	v1, v2, v3, err = wb.Voltages()
+	v1, v2, v3, err := wb.Voltages()
 	if err != nil {
 		return 0, err
 	}
-	i1, i2, i3, err = wb.Currents()
+	i1, i2, i3, err := wb.Currents()
 	if err != nil {
 		return 0, err
 	}
@@ -247,10 +244,10 @@ func (wb *smartEVSE) Phases1p3p(phases int) error {
 		return err
 	}
 
-	settings := binary.BigEndian.Uint16(b) &^ PHASES
+	settings := binary.BigEndian.Uint16(b) &^ smartEVSEConfPhases // clear bit 0
 
 	if phases == 3 {
-		settings |= 1
+		settings |= 1 // set bit 0 (smartEVSEConfPhases)
 	}
 
 	if _, err := wb.conn.WriteSingleRegister(smartEVSERegSettings, settings); err != nil {
@@ -266,28 +263,34 @@ var _ api.Diagnosis = (*smartEVSE)(nil)
 // Diagnose implements the api.Diagnosis interface
 func (wb *smartEVSE) Diagnose() {
 	if b, err := wb.conn.ReadInputRegisters(smartEVSERegSerial, 5); err == nil {
-		fmt.Printf("\tSerial:\t%s\n", strings.TrimLeft(strconv.Itoa(int(binary.BigEndian.Uint32(b))), "0"))
+		fmt.Printf("\tSerial: %s\n", strings.TrimLeft(strconv.Itoa(int(binary.BigEndian.Uint32(b))), "0"))
 	}
 	if b, err := wb.conn.ReadInputRegisters(smartEVSERegFirmware, 1); err == nil {
-		fmt.Printf("\tFirmware:\t%d.%d.%d\n", b[0]>>4, b[0]&0x0f, b[1])
+		fmt.Printf("\tFirmware: %d.%d.%d\n", b[0]>>4, b[0]&0x0f, b[1])
 	}
 
 	if b, err := wb.conn.ReadInputRegisters(smartEVSERegTemp, 1); err == nil {
-		fmt.Printf("\tBoard Temp:\t%dC\n", binary.BigEndian.Uint16(b))
+		fmt.Printf("\tBoard Temp: %d°C\n", binary.BigEndian.Uint16(b))
 	}
 
 	if b, err := wb.conn.ReadInputRegisters(smartEVSERegTemp, 1); err == nil {
 		opt := binary.BigEndian.Uint16(b)
-		fmt.Printf("\tOptions:\t 32/16A:%d DCL:%d\n", opt&0x2, opt&0x1)
+		fmt.Printf("\tOptions: 32/16A: %d DCL: %d\n", opt&0x2, opt&0x1)
 	}
 
 	if b, err := wb.conn.ReadHoldingRegisters(smartEVSERegSettings, 1); err == nil {
 		settings := binary.BigEndian.Uint16(b)
 		phasenum := 1
-		if settings&PHASES == 1 {
+		if settings&smartEVSEConfPhases == 1 {
 			phasenum = 3
 		}
-		fmt.Printf("\tSettings:\n\t\tPhases:%d\n\t\tLockState:%t\n\t\tDCLMustbePresent:%t\n\t\tLockPortDrivingCPRelais:%t\n\t\tCPInterruptAuto:%t\n", phasenum, settings&0x2 != 0, settings&0x4 != 0, settings&0x8 != 0, settings&0x10 != 0)
+		fmt.Printf("\tSettings:\n
+			\t\tPhases: %d\n
+			\t\tLockState: %t\n
+			\t\tDCLMustbePresent: %t\n
+			\t\tLockPortDrivingCPRelais: %t\n
+			\t\tCPInterruptAuto: %t\n",
+			phasenum, settings&0x2 != 0, settings&0x4 != 0, settings&0x8 != 0, settings&0x10 != 0)
 	}
 
 	if b, err := wb.conn.ReadHoldingRegisters(smartEVSERegTimeoutBeforeCPDis, 1); err == nil {
