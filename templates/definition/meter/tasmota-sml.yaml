@@ -9,9 +9,9 @@ requirements:
     de: |
       Um die Werte des Smartmeters für evcc korrekt auslesen zu können, muss das Lesekopf-Script so geändert werden, dass folgende JSON-Tags erzeugt werden:
       - **SML** als Gruppenname der ausgelesenen Parameter
-      - **Total_in** für den Gesamtverbrauch in KWh
-      - **Total_out** für den Gesamteinspeisung in KWh
-      - **Power_curr** für den aktuellen Verbrauch bzw. die aktuelle Einspeisung in W
+      - **Total_in** für den Gesamtverbrauch in KWh (4 Nachkommastellen)
+      - **Total_out** für den Gesamteinspeisung in KWh mit (4 Nachkommastellen)
+      - **Power_curr** für den aktuellen Verbrauch bzw. die aktuelle Einspeisung (0 Nachkommastellen)
 
       Ein entsprechendes Lesekopf-Script sieht wie folgt aus:
       ```
@@ -26,16 +26,16 @@ requirements:
       // highlight-next-line
       1,77070100020800ff@1000,Gesamteinspeisung,KWh,Total_out,4
       // highlight-next-line
-      1,77070100100700ff@1,Verbrauch,W,Power_curr,2
+      1,77070100100700ff@1,Verbrauch,W,Power_curr,0
       1,77070100600100ff@#,Zählernummer,,Meter_Id,0
       #
       ```
     en: |
       To be able to read the values of the smart meter for evcc correctly, the IR reader script must be changed so that the following JSON tags are generated:
       - **SML** as the group name of the read parameters
-      - **Total_in** for the total consumption in KWh
-      - **Total_out** for the total feed-in in KWh
-      - **Power_curr** for the current consumption or the current feed-in in W
+      - **Total_in** for the total consumption in KWh (4 decimal places)
+      - **Total_out** for the total feed-in in KWh (4 decimal places)
+      - **Power_curr** for the current consumption or the current feed-in in W  (0 decimal places)
 
       A corresponding IR reader script looks like this:
       ```
@@ -50,7 +50,7 @@ requirements:
       // highlight-next-line
       1,77070100020800ff@1000,Gesamteinspeisung,KWh,Total_out,4
       // highlight-next-line
-      1,77070100100700ff@1,Verbrauch,W,Power_curr,2
+      1,77070100100700ff@1,Verbrauch,W,Power_curr,0
       1,77070100600100ff@#,Zählernummer,,Meter_Id,0
       #
       ```
