@@ -129,12 +129,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 		err = networkSettings(&conf.Network)
 	}
 
-	// network config
-	if viper.GetString("uri") != "" {
-		log.WARN.Println("`uri` is deprecated and will be ignored. Use `network` instead.")
-	}
-
-	log.INFO.Printf("starting ui and api at :%d", conf.Network.Port)
+	log.INFO.Printf("listening at :%d", conf.Network.Port)
 
 	// start broadcasting values
 	tee := new(util.Tee)
@@ -194,7 +189,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	}
 
 	// setup database
-	if err == nil && conf.Influx.URL != "" {
+	if err == nil {
 		err = wrapErrorWithClass(ClassInflux, configureInflux(conf.Influx, site, pipe.NewDropper(append(ignoreLogs, ignoreEmpty)...).Pipe(tee.Attach())))
 	}
 
