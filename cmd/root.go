@@ -256,8 +256,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	auth := auth.New()
 	httpd.RegisterAuthHandlers(auth)
 
-	// TODO move config to system handler
-	httpd.RegisterSystemHandler(auth, func() {
+	httpd.RegisterSystemHandler(auth, valueChan, func() {
 		log.INFO.Println("evcc was stopped by user. OS should restart the service. Or restart manually.")
 		once.Do(func() { close(stopC) }) // signal loop to end
 	})
