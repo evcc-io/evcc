@@ -211,7 +211,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	}
 
 	// start HEMS server
-	if err == nil && conf.HEMS.Type != "" {
+	if err == nil {
 		err = configureHEMS(conf.HEMS, site, httpd)
 	}
 
