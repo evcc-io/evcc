@@ -767,22 +767,18 @@ func configureMessengers(conf globalconfig.Messaging, vehicles push.Vehicles, va
 	return messageChan, nil
 }
 
-func configureTariff(name string, conf config.Typed, t *api.Tariff, wg *sync.WaitGroup) {
-	defer wg.Done()
-
+func configureTariff(name string, conf config.Typed, t *api.Tariff) error {
 	if conf.Type == "" {
-		return
+		return nil
 	}
-
-	// TODO handle tariff errors
 
 	res, err := tariff.NewFromConfig(conf.Type, conf.Other)
 	if err != nil {
-		log.ERROR.Printf("failed configuring %s tariff: %v", name, err)
-		return
+		return &DeviceError{name, err}
 	}
 
 	*t = res
+	return nil
 }
 
 func configureTariffs(conf globalconfig.Tariffs) (*tariff.Tariffs, error) {
@@ -805,15 +801,15 @@ func configureTariffs(conf globalconfig.Tariffs) (*tariff.Tariffs, error) {
 		tariffs.Currency = currency.MustParseISO(conf.Currency)
 	}
 
-	var wg sync.WaitGroup
-	wg.Add(4)
+	g, _ := errgroup.WithContext(context.Background())
+	g.Go(func() error { return configureTariff("grid", conf.Grid, &tariffs.Grid) })
+	g.Go(func() error { return configureTariff("feedin", conf.FeedIn, &tariffs.FeedIn) })
+	g.Go(func() error { return configureTariff("co2", conf.Co2, &tariffs.Co2) })
+	g.Go(func() error { return configureTariff("planner", conf.Planner, &tariffs.Planner) })
 
-	go configureTariff("grid", conf.Grid, &tariffs.Grid, &wg)
-	go configureTariff("feedin", conf.FeedIn, &tariffs.FeedIn, &wg)
-	go configureTariff("co2", conf.Co2, &tariffs.Co2, &wg)
-	go configureTariff("planner", conf.Planner, &tariffs.Planner, &wg)
-
-	wg.Wait()
+	if err := g.Wait(); err != nil {
+		return nil, &ClassError{ClassTariff, err}
+	}
 
 	return &tariffs, nil
 }
