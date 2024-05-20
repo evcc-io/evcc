@@ -67,7 +67,7 @@ export default {
 			return null;
 		},
 		formatSoc: function (value) {
-			return this.heating ? this.fmtTemperature(value) : `${Math.round(value)}%`;
+			return this.heating ? this.fmtTemperature(value) : this.fmtPercentage(value);
 		},
 		formatKm: function (value) {
 			return `${this.fmtNumber(value, 0)} ${distanceUnit()}`;

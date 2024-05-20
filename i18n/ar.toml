@@ -56,5 +56,5 @@ powerSub2 = "الشحن ..."
 tabTitle = "مجتمع مباشر"
 
 [footer.savings]
-footerLong = "{percent}٪ من الطاقة الشمسية"
-footerShort = "{percent}٪ شمسي\""
+footerLong = "{percent} من الطاقة الشمسية"
+footerShort = "{percent} شمسي\""

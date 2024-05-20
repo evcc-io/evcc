@@ -436,7 +436,7 @@ export default {
 			return { transform: `scale(${scale})` };
 		},
 		fmtSoc(soc) {
-			return `${Math.round(soc)}%`;
+			return this.fmtPercentage(soc);
 		},
 		async changeDischargeControl(e) {
 			try {

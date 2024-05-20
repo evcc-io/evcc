@@ -2,6 +2,7 @@ package jlr
 
 import (
 	"fmt"
+	"maps"
 	"net/http"
 	"time"
 
@@ -21,6 +22,18 @@ type Identity struct {
 	oauth2.TokenSource
 }
 
+func Headers(device string, headers map[string]string) map[string]string {
+	res := map[string]string{
+		"X-Device-Id":  device,
+		"x-App-Id":     "ICR_JAGUAR",
+		"x-App-Secret": "018dd168-6271-707f-9fd4-aed2bf76905e",
+	}
+
+	maps.Copy(res, headers)
+
+	return res
+}
+
 // NewIdentity creates Fiat identity
 func NewIdentity(log *util.Logger, user, password, device string) *Identity {
 	return &Identity{
@@ -32,15 +45,12 @@ func NewIdentity(log *util.Logger, user, password, device string) *Identity {
 }
 
 // Login authenticates with given payload
-func (v *Identity) login(data map[string]string) (Token, error) {
+func (v *Identity) login(data any) (Token, error) {
 	uri := fmt.Sprintf("%s/tokens", IFAS_BASE_URL)
-	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data), map[string]string{
+	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data), Headers(v.device, map[string]string{
 		"Authorization": "Basic YXM6YXNwYXNz",
 		"Content-type":  request.JSONContent,
-		"X-Device-Id":   v.device,
-		"x-App-Id":      "ICR_JAGUAR_ANDROID",
-		"x-App-Secret":  "7bf6f544-1926-4714-8066-ceceb40d538d",
-	})
+	}))
 
 	var token Token
 	if err == nil {

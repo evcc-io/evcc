@@ -67,8 +67,8 @@ powerSub2 = "зарежда..."
 tabTitle = "Общност"
 
 [footer.savings]
-footerLong = "{percent}% енергия от слънцето"
-footerShort = "{percent}% слънчева енергия"
+footerLong = "{percent} енергия от слънцето"
+footerShort = "{percent} слънчева енергия"
 modalTitle = "Информация за зареждането"
 percentGrid = "{grid} кВч от мрежата"
 percentSelf = "{self} кВч от фотоволтаици"

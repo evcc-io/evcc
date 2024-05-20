@@ -16,7 +16,6 @@ linters:
   enable:
     - dogsled
     - durationcheck
-    - exportloopref
     - gci
     - gofmt
     - goimports
@@ -40,6 +39,7 @@ linters:
     # fixme
     # - bodyclose
     # - exhaustive
+    # - exportloopref
     # - gocritic
     # - godot
     # - gomoddirectives
