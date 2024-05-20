@@ -11,14 +11,23 @@ import (
 	"fmt"
 	"net"
 	"strconv"
-	"strings"
 	"sync"
+	"time"
 
 	"dario.cat/mergo"
+	cemdapi "github.com/enbility/cemd/api"
 	"github.com/enbility/cemd/cem"
-	"github.com/enbility/cemd/emobility"
-	"github.com/enbility/eebus-go/service"
-	"github.com/enbility/eebus-go/spine/model"
+	"github.com/enbility/cemd/ucevcc"
+	"github.com/enbility/cemd/ucevcem"
+	"github.com/enbility/cemd/ucevsecc"
+	"github.com/enbility/cemd/ucevsoc"
+	"github.com/enbility/cemd/ucopev"
+	"github.com/enbility/cemd/ucoscev"
+	eebusapi "github.com/enbility/eebus-go/api"
+	shipapi "github.com/enbility/ship-go/api"
+	"github.com/enbility/ship-go/cert"
+	spineapi "github.com/enbility/spine-go/api"
+	"github.com/enbility/spine-go/model"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/machine"
 )
@@ -43,20 +52,32 @@ func (c Config) Configured() bool {
 	return len(c.Certificate.Public) > 0 && len(c.Certificate.Private) > 0
 }
 
-type EEBusClientCBs struct {
-	onConnect    func(string) // , ship.Conn) error
-	onDisconnect func(string)
+type EEBUSDeviceInterface interface {
+	DeviceConnect(device spineapi.DeviceRemoteInterface, event cemdapi.EventType)
+	UseCaseEventCB(device spineapi.DeviceRemoteInterface, entity spineapi.EntityRemoteInterface, event cemdapi.EventType)
+}
+
+// EVSE UseCases
+type UseCasesEVSE struct {
+	EvseCC ucevsecc.UCEVSECCInterface
+	EvCC   ucevcc.UCEVCCInterface
+	EvCem  ucevcem.UCEVCEMInterface
+	EVSoc  ucevsoc.UCEVSOCInterface
+	OpEV   ucopev.UCOPEVInterface
+	OscEV  ucoscev.UCOSCEVInterface
 }
 
 type EEBus struct {
-	Cem *cem.CemImpl
+	Cem *cem.Cem
+
+	evseUC *UseCasesEVSE
 
 	mux sync.Mutex
 	log *util.Logger
 
 	SKI string
 
-	clients map[string]EEBusClientCBs
+	clients map[string]EEBUSDeviceInterface
 }
 
 var Instance *EEBus
@@ -98,19 +119,20 @@ func NewServer(other Config) (*EEBus, error) {
 	}
 
 	// TODO: get the voltage from the site
-	configuration, err := service.NewConfiguration(
+	configuration, err := eebusapi.NewConfiguration(
 		EEBUSBrandName, EEBUSBrandName, EEBUSModel, serial,
-		model.DeviceTypeTypeEnergyManagementSystem, port, certificate, 230,
+		model.DeviceTypeTypeEnergyManagementSystem,
+		[]model.EntityTypeType{model.EntityTypeTypeCEM},
+		port, certificate, 230, time.Second*4,
 	)
 	if err != nil {
 		return nil, err
 	}
 
 	// for backward compatibility
-	configuration.SetAlternateMdnsServiceName("EVCC_HEMS_01")
+	configuration.SetAlternateMdnsServiceName(EEBUSDeviceCode)
 	configuration.SetAlternateIdentifier(serial)
 	configuration.SetInterfaces(cc.Interfaces)
-	configuration.SetRegisterAutoAccept(true)
 
 	ski, err := SkiFromCert(certificate)
 	if err != nil {
@@ -119,39 +141,59 @@ func NewServer(other Config) (*EEBus, error) {
 
 	c := &EEBus{
 		log:     log,
-		clients: make(map[string]EEBusClientCBs),
+		clients: make(map[string]EEBUSDeviceInterface),
 		SKI:     ski,
 	}
 
-	c.Cem = cem.NewCEM(configuration, c, c)
+	c.Cem = cem.NewCEM(configuration, c, c.deviceEventCB, c)
 	if err := c.Cem.Setup(); err != nil {
 		return nil, err
 	}
-	c.Cem.EnableEmobility(emobility.EmobilityConfiguration{
-		CoordinatedChargingEnabled: false,
-	})
+
+	evsecc := ucevsecc.NewUCEVSECC(c.Cem.Service, c.evseUsecaseCB)
+	c.Cem.AddUseCase(evsecc)
+
+	evcc := ucevcc.NewUCEVCC(c.Cem.Service, c.evseUsecaseCB)
+	c.Cem.AddUseCase(evcc)
+
+	evcem := ucevcem.NewUCEVCEM(c.Cem.Service, c.evseUsecaseCB)
+	c.Cem.AddUseCase(evcem)
+
+	opev := ucopev.NewUCOPEV(c.Cem.Service, c.evseUsecaseCB)
+	c.Cem.AddUseCase(opev)
+
+	oscev := ucoscev.NewUCOSCEV(c.Cem.Service, c.evseUsecaseCB)
+	c.Cem.AddUseCase(oscev)
+
+	evsoc := ucevsoc.NewUCEVSOC(c.Cem.Service, c.evseUsecaseCB)
+	c.Cem.AddUseCase(evsoc)
+
+	c.evseUC = &UseCasesEVSE{
+		EvseCC: evsecc,
+		EvCC:   evcc,
+		EvCem:  evcem,
+		OpEV:   opev,
+		OscEV:  oscev,
+		EVSoc:  evsoc,
+	}
 
 	return c, nil
 }
 
-func (c *EEBus) RegisterEVSE(ski, ip string, connectHandler func(string), disconnectHandler func(string), dataProvider emobility.EmobilityDataProvider) *emobility.EMobilityImpl {
-	ski = strings.ReplaceAll(ski, "-", "")
-	ski = strings.ReplaceAll(ski, " ", "")
-	ski = strings.ToLower(ski)
+func (c *EEBus) RegisterEVSE(ski string, device EEBUSDeviceInterface) *UseCasesEVSE {
 	c.log.TRACE.Printf("registering ski: %s", ski)
 
 	if ski == c.SKI {
 		c.log.FATAL.Fatal("The charger SKI can not be identical to the SKI of evcc!")
 	}
 
-	serviceDetails := service.NewServiceDetails(ski)
-	serviceDetails.SetIPv4(ip)
+	c.Cem.Service.RegisterRemoteSKI(ski)
 
 	c.mux.Lock()
 	defer c.mux.Unlock()
-	c.clients[ski] = EEBusClientCBs{onConnect: connectHandler, onDisconnect: disconnectHandler}
+	c.clients[ski] = device
 
-	return c.Cem.RegisterEmobilityRemoteDevice(serviceDetails, dataProvider)
+	return c.evseUC
 }
 
 func (c *EEBus) Run() {
@@ -162,38 +204,61 @@ func (c *EEBus) Shutdown() {
 	c.Cem.Shutdown()
 }
 
+// CEMd Callbacks
+func (c *EEBus) deviceEventCB(ski string, device spineapi.DeviceRemoteInterface, event cemdapi.EventType) {
+	c.mux.Lock()
+	defer c.mux.Unlock()
+
+	if client, ok := c.clients[ski]; ok {
+		client.DeviceConnect(device, event)
+	}
+}
+
+// EVSE/EV UseCase CB
+func (c *EEBus) evseUsecaseCB(ski string, device spineapi.DeviceRemoteInterface, entity spineapi.EntityRemoteInterface, event cemdapi.EventType) {
+	c.mux.Lock()
+	defer c.mux.Unlock()
+
+	if client, ok := c.clients[ski]; ok {
+		client.UseCaseEventCB(device, entity, event)
+	}
+}
+
 // EEBUSServiceHandler
 
-// report the Ship ID of a newly trusted connection
-func (c *EEBus) RemoteServiceShipIDReported(service *service.EEBUSService, ski string, shipID string) {
-	// we should associated the Ship ID with the SKI and store it
-	// so the next connection can start trusted
-	c.log.DEBUG.Println("SKI", ski, "has Ship ID:", shipID)
+// no implementation needed, handled in CEM events
+func (c *EEBus) RemoteSKIConnected(service eebusapi.ServiceInterface, ski string) {}
+
+// no implementation needed, handled in CEM events
+func (c *EEBus) RemoteSKIDisconnected(service eebusapi.ServiceInterface, ski string) {}
+
+// report all currently visible EEBUS services
+// this is needed to provide an UI for pairing with other devices
+// if not all incoming pairing requests should be accepted
+func (c *EEBus) VisibleRemoteServicesUpdated(service eebusapi.ServiceInterface, entries []shipapi.RemoteService) {
 }
 
-func (c *EEBus) RemoteSKIConnected(service *service.EEBUSService, ski string) {
+// Provides the SHIP ID the remote service reported during the handshake process
+// This needs to be persisted and passed on for future remote service connections
+// when using `PairRemoteService`
+func (c *EEBus) ServiceShipIDUpdate(ski string, shipdID string) {}
+
+// Provides the current pairing state for the remote service
+// This is called whenever the state changes and can be used to
+// provide user information for the pairing/connection process
+func (c *EEBus) ServicePairingDetailUpdate(ski string, detail *shipapi.ConnectionStateDetail) {
+	if detail.State() != shipapi.ConnectionStateReceivedPairingRequest {
+		return
+	}
+
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
-	client, exists := c.clients[ski]
-	if !exists {
-		return
+	if _, ok := c.clients[ski]; !ok {
+		// this is an unknown SKI, so deny pairing
+		c.Cem.Service.CancelPairingWithSKI(ski)
 	}
-	client.onConnect(ski)
 }
-
-func (c *EEBus) RemoteSKIDisconnected(service *service.EEBUSService, ski string) {
-	c.mux.Lock()
-	defer c.mux.Unlock()
-
-	client, exists := c.clients[ski]
-	if !exists {
-		return
-	}
-	client.onDisconnect(ski)
-}
-
-func (h *EEBus) ReportServiceShipID(ski string, shipdID string) {}
 
 // EEBUS Logging interface
 
@@ -233,7 +298,7 @@ func (c *EEBus) Errorf(format string, args ...interface{}) {
 
 // CreateCertificate returns a newly created EEBUS compatible certificate
 func CreateCertificate() (tls.Certificate, error) {
-	return service.CreateCertificate("", EEBUSBrandName, "DE", EEBUSDeviceCode)
+	return cert.CreateCertificate("", EEBUSBrandName, "DE", EEBUSDeviceCode)
 }
 
 // pemBlockForKey marshals private key into pem block
