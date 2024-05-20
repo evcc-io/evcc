@@ -127,14 +127,14 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, auth auth.Auth, valueChan ch
 	configApi.Use(ensureAuthHandler(auth))
 
 	configRoutes := map[string]route{
+		"site":               {"GET", "/site", siteHandler(site)},
+		"updatesite":         {"PUT", "/site", updateSiteHandler(site)},
 		"templates":          {"GET", "/templates/{class:[a-z]+}", templatesHandler},
 		"products":           {"GET", "/products/{class:[a-z]+}", productsHandler},
 		"devices":            {"GET", "/devices/{class:[a-z]+}", devicesHandler},
 		"device":             {"GET", "/devices/{class:[a-z]+}/{id:[0-9.]+}", deviceConfigHandler},
 		"devicestatus":       {"GET", "/devices/{class:[a-z]+}/{name:[a-zA-Z0-9_.:-]+}/status", deviceStatusHandler},
-		"site":               {"GET", "/site", siteHandler(site)},
 		"dirty":              {"GET", "/dirty", boolGetHandler(ConfigDirty)},
-		"updatesite":         {"PUT", "/site", updateSiteHandler(site)},
 		"newdevice":          {"POST", "/devices/{class:[a-z]+}", newDeviceHandler},
 		"updatedevice":       {"PUT", "/devices/{class:[a-z]+}/{id:[0-9.]+}", updateDeviceHandler},
 		"deletedevice":       {"DELETE", "/devices/{class:[a-z]+}/{id:[0-9.]+}", deleteDeviceHandler},
