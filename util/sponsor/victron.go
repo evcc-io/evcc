@@ -14,35 +14,39 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-// isVictron checks if the hardware is a victron device, only returns error if cloud check fails due to network issues
-func isVictron() (bool, error) {
+// checkVictron checks if the hardware is a supported victron device and returns sponsor subject
+func checkVictron() string {
 	vd, err := victronDeviceInfo()
-
-	// unable to retrieve all device info
-	if err != nil || vd.ProductId == "" || vd.VrmId == "" || vd.Serial == "" || vd.Board == "" {
-		return false, nil
+	if err != nil {
+		// unable to retrieve all device info
+		return ""
 	}
 
 	conn, err := cloud.Connection()
 	if err != nil {
-		return false, err
+		// unable to connect to cloud
+		return unavailable
 	}
 
 	client := pb.NewVictronClient(conn)
-	if res, err := client.IsValidDevice(context.Background(), &pb.VictronRequest{
+	res, err := client.IsValidDevice(context.Background(), &pb.VictronRequest{
 		ProductId: vd.ProductId,
 		VrmId:     vd.VrmId,
 		Serial:    vd.Serial,
 		Board:     vd.Board,
-	}); err == nil && res.Authorized {
-		return true, nil
-	} else {
-		if s, ok := status.FromError(err); ok && s.Code() != codes.Unknown {
-			return false, errors.New("unable to validate victron device")
-		}
+	})
+
+	if err == nil && res.Authorized {
+		// cloud check successful
+		return victron
 	}
 
-	return false, nil
+	if s, ok := status.FromError(err); ok && s.Code() != codes.Unknown {
+		// technical error during validation
+		return unavailable
+	}
+
+	return ""
 }
 
 type victronDevice struct {
@@ -63,7 +67,11 @@ func executeCommand(ctx context.Context, cmd string, args ...string) (string, er
 	if err != nil {
 		return "", err
 	}
-	return strings.TrimSpace(string(output)), nil
+	result := strings.TrimSpace(string(output))
+	if result == "" {
+		return "", errors.New("empty output")
+	}
+	return result, nil
 }
 
 func victronDeviceInfo() (victronDevice, error) {

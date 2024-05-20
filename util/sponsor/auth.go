@@ -32,11 +32,8 @@ func IsAuthorizedForApi() bool {
 // check and set sponsorship token
 func ConfigureSponsorship(token string) error {
 	if token == "" {
-		if valid, err := isVictron(); valid && err == nil {
-			Subject = victron
-			return nil
-		} else if err != nil {
-			Subject = unavailable
+		if sub := checkVictron(); sub != "" {
+			Subject = sub
 			return nil
 		}
 
