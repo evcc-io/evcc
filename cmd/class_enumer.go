@@ -7,11 +7,11 @@ import (
 	"strings"
 )
 
-const _ClassName = "meterchargervehicletariffcircuitsitemqttdatabaseeebusjavascriptgo"
+const _ClassName = "meterchargervehicletariffcircuitsitemqttdatabaseeebusjavascriptgohemsinflux"
 
-var _ClassIndex = [...]uint8{0, 5, 12, 19, 25, 32, 36, 40, 48, 53, 63, 65}
+var _ClassIndex = [...]uint8{0, 5, 12, 19, 25, 32, 36, 40, 48, 53, 63, 65, 69, 75}
 
-const _ClassLowerName = "meterchargervehicletariffcircuitsitemqttdatabaseeebusjavascriptgo"
+const _ClassLowerName = "meterchargervehicletariffcircuitsitemqttdatabaseeebusjavascriptgohemsinflux"
 
 func (i Class) String() string {
 	i -= 1
@@ -36,9 +36,11 @@ func _ClassNoOp() {
 	_ = x[ClassEEBus-(9)]
 	_ = x[ClassJavascript-(10)]
 	_ = x[ClassGo-(11)]
+	_ = x[ClassHEMS-(12)]
+	_ = x[ClassInflux-(13)]
 }
 
-var _ClassValues = []Class{ClassMeter, ClassCharger, ClassVehicle, ClassTariff, ClassCircuit, ClassSite, ClassMqtt, ClassDatabase, ClassEEBus, ClassJavascript, ClassGo}
+var _ClassValues = []Class{ClassMeter, ClassCharger, ClassVehicle, ClassTariff, ClassCircuit, ClassSite, ClassMqtt, ClassDatabase, ClassEEBus, ClassJavascript, ClassGo, ClassHEMS, ClassInflux}
 
 var _ClassNameToValueMap = map[string]Class{
 	_ClassName[0:5]:        ClassMeter,
@@ -63,6 +65,10 @@ var _ClassNameToValueMap = map[string]Class{
 	_ClassLowerName[53:63]: ClassJavascript,
 	_ClassName[63:65]:      ClassGo,
 	_ClassLowerName[63:65]: ClassGo,
+	_ClassName[65:69]:      ClassHEMS,
+	_ClassLowerName[65:69]: ClassHEMS,
+	_ClassName[69:75]:      ClassInflux,
+	_ClassLowerName[69:75]: ClassInflux,
 }
 
 var _ClassNames = []string{
@@ -77,6 +83,8 @@ var _ClassNames = []string{
 	_ClassName[48:53],
 	_ClassName[53:63],
 	_ClassName[63:65],
+	_ClassName[65:69],
+	_ClassName[69:75],
 }
 
 // ClassString retrieves an enum value from the enum constants string name.

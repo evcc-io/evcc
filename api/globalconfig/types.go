@@ -29,7 +29,7 @@ type All struct {
 	Javascript   []Javascript
 	Go           []Go
 	Influx       Influx
-	EEBus        *eebus.Config
+	EEBus        eebus.Config
 	HEMS         config.Typed
 	Messaging    Messaging
 	Meters       []config.Named

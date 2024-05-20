@@ -193,7 +193,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 	// setup database
 	if err == nil && conf.Influx.URL != "" {
-		err = configureInflux(conf.Influx, site, pipe.NewDropper(append(ignoreLogs, ignoreEmpty)...).Pipe(tee.Attach()))
+		err = wrapErrorWithClass(ClassInflux, configureInflux(conf.Influx, site, pipe.NewDropper(append(ignoreLogs, ignoreEmpty)...).Pipe(tee.Attach())))
 	}
 
 	// setup mqtt publisher
@@ -212,13 +212,14 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 	// start HEMS server
 	if err == nil {
-		err = configureHEMS(conf.HEMS, site, httpd)
+		err = wrapErrorWithClass(ClassHEMS, configureHEMS(conf.HEMS, site, httpd))
 	}
 
 	// setup messaging
 	var pushChan chan push.Event
 	if err == nil {
 		pushChan, err = configureMessengers(conf.Messaging, site.Vehicles(), valueChan, cache)
+		err = wrapErrorWithClass(ClassMessenger, err)
 	}
 
 	// run shutdown functions on stop

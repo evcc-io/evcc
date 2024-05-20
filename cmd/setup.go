@@ -502,8 +502,8 @@ func configureEnvironment(cmd *cobra.Command, conf globalconfig.All) (err error)
 	}
 
 	// setup EEBus server
-	if err == nil && conf.EEBus != nil {
-		err = wrapErrorWithClass(ClassEEBus, configureEEBus(*conf.EEBus))
+	if err == nil {
+		err = wrapErrorWithClass(ClassEEBus, configureEEBus(conf.EEBus))
 	}
 
 	// setup javascript VMs
@@ -883,7 +883,7 @@ func configureSiteAndLoadpoints(conf globalconfig.All) (*core.Site, error) {
 
 	if len(config.Circuits().Devices()) > 0 {
 		if err := validateCircuits(site, loadpoints); err != nil {
-			return nil, err
+			return nil, &ClassError{ClassCircuit, err}
 		}
 	}
 

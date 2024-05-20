@@ -21,6 +21,9 @@ const (
 	ClassEEBus
 	ClassJavascript
 	ClassGo
+	ClassHEMS
+	ClassInflux
+	ClassMessenger
 )
 
 // DeviceError indicates the specific device that failed
