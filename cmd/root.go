@@ -25,12 +25,13 @@ import (
 	"github.com/evcc-io/evcc/util/telemetry"
 	_ "github.com/joho/godotenv/autoload"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
 const (
-	rebootDelay = 5 * time.Minute // delayed reboot on error
+	rebootDelay = 15 * time.Minute // delayed reboot on error
 	serviceDB   = "/var/lib/evcc/evcc.db"
 )
 
@@ -162,12 +163,13 @@ func runRoot(cmd *cobra.Command, args []string) {
 	go socketHub.Run(pipe.NewDropper(ignoreEmpty).Pipe(tee.Attach()), cache)
 
 	// publish initial settings
+	valueChan <- util.Param{Key: keys.Fatal, Val: nil} // remove previous fatal startup errors
 	valueChan <- util.Param{Key: keys.Network, Val: conf.Network}
 	valueChan <- util.Param{Key: keys.Influx, Val: conf.Influx}
 	valueChan <- util.Param{Key: keys.Mqtt, Val: conf.Mqtt}
 	valueChan <- util.Param{Key: keys.Interval, Val: conf.Interval}
 	// TODO
-	// valueChan <- util.Param{Key: keys.Sponsor, Val: conf.Sponsor}
+	valueChan <- util.Param{Key: keys.Sponsor, Val: sponsor.Status()}
 
 	// capture log messages for UI
 	util.CaptureLogs(valueChan)
@@ -244,58 +246,47 @@ func runRoot(cmd *cobra.Command, args []string) {
 		case <-time.After(conf.Interval):
 		}
 
-		if err != nil {
-			os.Exit(1)
-		}
-
-		os.Exit(0)
+		// exit code 1 on error
+		os.Exit(cast.ToInt(err != nil))
 	}()
 
+	// allow web access for vehicles
+	configureAuth(conf.Network, config.Instances(config.Vehicles().Devices()), httpd.Router(), valueChan)
+
 	auth := auth.New()
+	httpd.RegisterAuthHandlers(auth)
 
-	// show main ui
+	// TODO move config to system handler
+	httpd.RegisterSystemHandler(auth, func() {
+		log.INFO.Println("evcc was stopped by user. OS should restart the service. Or restart manually.")
+		once.Do(func() { close(stopC) }) // signal loop to end
+	})
+
+	// show and check version, reduce api load during development
+	if server.Version != server.DevVersion {
+		valueChan <- util.Param{Key: keys.Version, Val: server.FormattedVersion()}
+		go updater.Run(log, httpd, valueChan)
+	}
+
+	// setup site
 	if err == nil {
-		httpd.RegisterSiteHandlers(site, auth, valueChan, cache)
-		httpd.RegisterAuthHandlers(auth)
-		httpd.RegisterSystemHandler(auth, func() {
-			log.INFO.Println("evcc was stopped by user. OS should restart the service. Or restart manually.")
-			once.Do(func() { close(stopC) }) // signal loop to end
-		})
-
 		// set channels
 		site.DumpConfig()
 		site.Prepare(valueChan, pushChan)
 
-		// show and check version, reduce api load during development
-		if server.Version != server.DevVersion {
-			valueChan <- util.Param{Key: "version", Val: server.FormattedVersion()}
-			go updater.Run(log, httpd, valueChan)
-		}
-
-		// remove previous fatal startup errors
-		valueChan <- util.Param{Key: "fatal", Val: nil}
-
-		// expose sponsor to UI
-		valueChan <- util.Param{Key: "sponsor", Val: sponsor.Status()}
-
-		// allow web access for vehicles
-		configureAuth(conf.Network, config.Instances(config.Vehicles().Devices()), httpd.Router(), valueChan)
+		httpd.RegisterSiteHandlers(site, auth, valueChan, cache)
 
 		go func() {
 			site.Run(stopC, conf.Interval)
 		}()
-	} else {
-		httpd.RegisterAuthHandlers(auth)
-		httpd.RegisterSystemHandler(auth, func() {
-			log.INFO.Println("evcc was stopped by user. OS should restart the service. Or restart manually.")
-			once.Do(func() { close(stopC) }) // signal loop to end
-		})
+	}
 
+	if err != nil {
 		// improve error message
 		err = wrapErrors(err)
+		valueChan <- util.Param{Key: keys.Fatal, Val: unwrap(err)}
 
-		publishErrorInfo(valueChan, cfgFile, err)
-
+		// TODO stop reboot loop if user updates config (or show countdown in UI)
 		log.FATAL.Println(err)
 		log.FATAL.Printf("will attempt restart in: %v", rebootDelay)
 

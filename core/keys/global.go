@@ -3,6 +3,7 @@ package keys
 const (
 	Interval           = "interval"
 	PasswordConfigured = "passwordConfigured"
+	Sponsor            = "sponsor"
 	SponsorToken       = "sponsorToken"
 	Network            = "network"
 	Mqtt               = "mqtt"
@@ -12,4 +13,6 @@ const (
 	Messaging          = "messaging"
 	ModbusProxy        = "modbusProxy"
 	Tariffs            = "tariffs"
+	Version            = "version"
+	Fatal              = "fatal"
 )
