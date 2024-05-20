@@ -111,6 +111,17 @@ func (cp *CP) StopTransaction(request *core.StopTransactionRequest) (*core.StopT
 
 	conn := cp.connectorByTransactionID(request.TransactionId)
 	if conn == nil {
+		if request.Timestamp != nil {
+			cp.log.ERROR.Printf("old StopTransaction received and rejecting it")
+			res := &core.StopTransactionConfirmation{
+				IdTagInfo: &types.IdTagInfo{
+					Status: types.AuthorizationStatusExpired, // reject
+				},
+			}
+
+			return res, nil
+		}
+
 		return nil, ErrInvalidTransaction
 	}
 
