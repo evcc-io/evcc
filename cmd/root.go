@@ -251,7 +251,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	auth := auth.New()
 	httpd.RegisterAuthHandlers(auth)
 
-	httpd.RegisterSystemHandler(auth, valueChan, func() {
+	httpd.RegisterSystemHandler(auth, valueChan, cache, func() {
 		log.INFO.Println("evcc was stopped by user. OS should restart the service. Or restart manually.")
 		once.Do(func() { close(stopC) }) // signal loop to end
 	})
@@ -268,7 +268,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 		site.DumpConfig()
 		site.Prepare(valueChan, pushChan)
 
-		httpd.RegisterSiteHandlers(site, auth, valueChan, cache)
+		httpd.RegisterSiteHandlers(site, auth, valueChan)
 
 		go func() {
 			site.Run(stopC, conf.Interval)

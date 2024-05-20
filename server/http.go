@@ -88,7 +88,7 @@ func (s *HTTPd) Router() *mux.Router {
 }
 
 // RegisterSiteHandlers connects the http handlers to the site
-func (s *HTTPd) RegisterSiteHandlers(site site.API, auth auth.Auth, valueChan chan<- util.Param, cache *util.Cache) {
+func (s *HTTPd) RegisterSiteHandlers(site site.API, auth auth.Auth, valueChan chan<- util.Param) {
 	router := s.Server.Handler.(*mux.Router)
 
 	// api
@@ -102,7 +102,6 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, auth auth.Auth, valueChan ch
 	// site api
 	routes := map[string]route{
 		"health":                  {"GET", "/health", healthHandler(site)},
-		"state":                   {"GET", "/state", stateHandler(cache)},
 		"buffersoc":               {"POST", "/buffersoc/{value:[0-9.]+}", floatHandler(site.SetBufferSoc, site.GetBufferSoc)},
 		"bufferstartsoc":          {"POST", "/bufferstartsoc/{value:[0-9.]+}", floatHandler(site.SetBufferStartSoc, site.GetBufferStartSoc)},
 		"batterydischargecontrol": {"POST", "/batterydischargecontrol/{value:[a-z]+}", boolHandler(site.SetBatteryDischargeControl, site.GetBatteryDischargeControl)},
@@ -210,17 +209,28 @@ func (s *HTTPd) RegisterAuthHandlers(auth auth.Auth) {
 }
 
 // RegisterSystemHandler provides system level handlers
-func (s *HTTPd) RegisterSystemHandler(auth auth.Auth, valueChan chan<- util.Param, shutdown func()) {
+func (s *HTTPd) RegisterSystemHandler(auth auth.Auth, valueChan chan<- util.Param, cache *util.Cache, shutdown func()) {
 	router := s.Server.Handler.(*mux.Router)
 
-	// config ui (secured)
-	configApi := router.PathPrefix("/api/config").Subrouter()
-	configApi.Use(ensureAuthHandler(auth))
-	configApi.Use(jsonHandler)
-	configApi.Use(handlers.CompressHandler)
-	configApi.Use(handlers.CORS(
+	// api
+	api := router.PathPrefix("/api").Subrouter()
+	api.Use(jsonHandler)
+	api.Use(handlers.CompressHandler)
+	api.Use(handlers.CORS(
 		handlers.AllowedHeaders([]string{"Content-Type"}),
 	))
+
+	routes := map[string]route{
+		"state": {"GET", "/state", stateHandler(cache)},
+	}
+
+	for _, r := range routes {
+		api.Methods(r.Methods()...).Path(r.Pattern).Handler(r.HandlerFunc)
+	}
+
+	// config ui (secured)
+	configApi := api.PathPrefix("/config").Subrouter()
+	configApi.Use(ensureAuthHandler(auth))
 
 	configRoutes := map[string]route{
 		"templates":          {"GET", "/templates/{class:[a-z]+}", templatesHandler},
@@ -268,16 +278,11 @@ func (s *HTTPd) RegisterSystemHandler(auth auth.Auth, valueChan chan<- util.Para
 	}
 
 	// api
-	api := router.PathPrefix("/api/system").Subrouter()
-	api.Use(ensureAuthHandler(auth))
-	api.Use(jsonHandler)
-	api.Use(handlers.CompressHandler)
-	api.Use(handlers.CORS(
-		handlers.AllowedHeaders([]string{"Content-Type"}),
-	))
+	systemApi := api.PathPrefix("/system").Subrouter()
+	systemApi.Use(ensureAuthHandler(auth))
 
 	// system api
-	routes := map[string]route{
+	systemRoutes := map[string]route{
 		"log":      {"GET", "/log", logHandler},
 		"logareas": {"GET", "/log/areas", logAreasHandler},
 		"shutdown": {"POST", "/shutdown", func(w http.ResponseWriter, r *http.Request) {
@@ -286,7 +291,7 @@ func (s *HTTPd) RegisterSystemHandler(auth auth.Auth, valueChan chan<- util.Para
 		}},
 	}
 
-	for _, r := range routes {
-		api.Methods(r.Methods()...).Path(r.Pattern).Handler(r.HandlerFunc)
+	for _, r := range systemRoutes {
+		systemApi.Methods(r.Methods()...).Path(r.Pattern).Handler(r.HandlerFunc)
 	}
 }
