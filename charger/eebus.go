@@ -565,7 +565,7 @@ var _ api.Battery = (*EEBus)(nil)
 
 // Soc implements the api.Vehicle interface
 func (c *EEBus) Soc() (float64, error) {
-	if ok, err := c.uc.EVSoc.IsUseCaseSupported(c.evEntity()); err != nil || ok {
+	if ok, err := c.uc.EVSoc.IsUseCaseSupported(c.evEntity()); err != nil || !ok {
 		return 0, api.ErrNotAvailable
 	}
 
