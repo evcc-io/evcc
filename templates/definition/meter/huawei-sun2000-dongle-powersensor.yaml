@@ -7,11 +7,11 @@ capabilities: ["battery-control"]
 requirements:
   description:
     de: |
-      Es kann notwendig sein, dass der Installateur mit Hilfe eines "Errichterzugangs" zunächst "Modbus/TCP" in den Kommunikationseinstellungen des Wechselrichters freischaltet. 
-      Eine Anleitung von Huawei ist hier zu finden: https://forum.huawei.com/enterprise/en/modbus-tcp-guide/thread/667250677153415168-667213868771979264
+      Erfordert "Modbus/TCP". Freischaltung via "Errichterzugang" in den Kommunikationseinstellungen des Wechselrichters. 
+      Siehe https://forum.huawei.com/enterprise/en/modbus-tcp-guide/thread/667250677153415168-667213868771979264
     en: |
-      It might be necessary to get "Modbus/TCP" activated within the communication settings of your inverter by your solar installer. 
-      A guide can be found here: https://forum.huawei.com/enterprise/en/modbus-tcp-guide/thread/667250677153415168-667213868771979264
+      Needs "Modbus/TCP". Activation using "maintenance access" within the communication settings of the inverter.
+      See https://forum.huawei.com/enterprise/en/modbus-tcp-guide/thread/667250677153415168-667213868771979264
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
