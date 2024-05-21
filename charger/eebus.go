@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"slices"
 	"sync"
 	"time"
 
@@ -42,6 +43,7 @@ type EEBus struct {
 	minMaxG func() (minMax, error)
 
 	communicationStandard model.DeviceConfigurationKeyValueStringType
+	vasVW                 bool // wether the EVSE supports VW VAS with ISO15118-2
 
 	expectedEnableUnpluggedState bool
 	current                      float64
@@ -71,6 +73,7 @@ func NewEEBusFromConfig(other map[string]interface{}) (api.Charger, error) {
 		Ski           string
 		Meter         bool
 		ChargedEnergy bool
+		VasVW         bool
 	}{
 		ChargedEnergy: true,
 	}
@@ -79,13 +82,13 @@ func NewEEBusFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	return NewEEBus(cc.Ski, cc.Meter, cc.ChargedEnergy)
+	return NewEEBus(cc.Ski, cc.Meter, cc.ChargedEnergy, cc.VasVW)
 }
 
 //go:generate go run ../cmd/tools/decorate.go -f decorateEEBus -b *EEBus -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.ChargeRater,ChargedEnergy,func() (float64, error)"
 
 // NewEEBus creates EEBus charger
-func NewEEBus(ski string, hasMeter, hasChargedEnergy bool) (api.Charger, error) {
+func NewEEBus(ski string, hasMeter, hasChargedEnergy, vasVW bool) (api.Charger, error) {
 	log := util.NewLogger("eebus")
 
 	if eebus.Instance == nil {
@@ -97,6 +100,7 @@ func NewEEBus(ski string, hasMeter, hasChargedEnergy bool) (api.Charger, error) 
 		log:        log,
 		connectedC: make(chan bool, 1),
 		current:    6,
+		vasVW:      vasVW,
 	}
 
 	c.uc = eebus.Instance.RegisterEVSE(ski, c)
@@ -392,26 +396,12 @@ func (c *EEBus) writeCurrentLimitData(currents []float64) error {
 		return errors.New("no ev connected")
 	}
 
-	comStandard, err := c.uc.EvCC.CommunicationStandard(c.evEntity())
+	_, maxLimits, _, err := c.uc.OpEV.CurrentLimits(c.evEntity())
 	if err != nil {
-		return err
+		return errors.New("no limits available")
 	}
 
-	// Only send currents smaller than 6A if the communication standard is known.
-	// Otherwise this could cause ISO15118 capable OBCs to stick with IEC61851 when plugging
-	// the charge cable in. Or even worse show an error and the cable then needs to be unplugged,
-	// wait for the car to go into sleep and plug it back in.
-	// So if there are currents smaller than 6A with unknown communication standard change them to 6A.
-	// Keep in mind that this will still confuse evcc as it thinks charging is stopped, but it hasn't yet.
-	minLimits, maxLimits, _, err := c.uc.OpEV.CurrentLimits(c.evEntity())
-	if err == nil && comStandard == ucevcc.UCEVCCCommunicationStandardUnknown {
-		for index, current := range currents {
-			if index < len(minLimits) && current < minLimits[index] {
-				currents[index] = minLimits[index]
-			}
-		}
-	}
-
+	// setup the limit data structure
 	limits := []cemdapi.LoadLimitsPhase{}
 	for phase, current := range currents {
 		if phase >= len(maxLimits) || phase >= len(cemdutil.PhaseNameMapping) {
@@ -424,10 +414,18 @@ func (c *EEBus) writeCurrentLimitData(currents []float64) error {
 			Value:    current,
 		}
 
-		// if the limit equals to the max allowed, then the limit is actually inactive
+		// if the limit equals to the max allowed, then the obligation limit is actually inactive
 		if current >= maxLimits[phase] {
 			limit.IsActive = false
 		}
+
+		limits = append(limits, limit)
+	}
+
+	// if VAS VW is available, limits are completely covered by it
+	// this way evcc can fully control the charging behaviour
+	if c.writeLoadControlLimitsVASVW(limits) {
+		return nil
 	}
 
 	// Set overload protection limits
@@ -435,13 +433,112 @@ func (c *EEBus) writeCurrentLimitData(currents []float64) error {
 		c.currentLimit = currents[0]
 	}
 
-	// Also set the self consumption limit if available, this makes sure the current behaviour is identical,
-	// but in the future this should be changed
-	if ok, err := c.uc.OscEV.IsUseCaseSupported(c.evEntity()); err == nil && ok {
-		_, _ = c.uc.OscEV.WriteLoadControlLimits(c.evEntity(), limits)
+	return err
+}
+
+// provides support for the special VW VAS ISO15118-2 charging behaviour if supported
+// will return false if it isn't supported or successful
+//
+// this functionality allows to fully control charging without the EV actually having a
+// charging demand by itself
+func (c *EEBus) writeLoadControlLimitsVASVW(limits []cemdapi.LoadLimitsPhase) bool {
+	// EVSE has to support VW VAS
+	if !c.vasVW {
+		return false
 	}
 
-	return err
+	evEntity := c.evEntity()
+	if evEntity == nil {
+		return false
+	}
+
+	// ISO15118-2 has to be used between EVSE and EV
+	comStandard, err := c.uc.EvCC.CommunicationStandard(evEntity)
+	if err != nil || comStandard != model.DeviceConfigurationKeyValueStringTypeISO151182ED2 {
+		return false
+	}
+
+	// SoC has to be available, otherwise it is plain ISO15118-2
+	_, err = c.Soc()
+	if err != nil {
+		return false
+	}
+
+	// Optimization of self consumption use case support has to be available
+	if ok, err := c.uc.OscEV.IsUseCaseSupported(evEntity); err != nil || !ok {
+		return false
+	}
+
+	// the use case has to be reported as active
+	// only then the EV has no active charging demand and will charge based on OSCEV recommendations
+	// this is a workaround for EVSE changing isActive to false, even though they should
+	// not announce the usecase at all in that case
+	isActive := false
+	ucs := evEntity.Device().UseCases()
+	for _, item := range ucs {
+		// check if the referenced entity address is identical to the ev entity address
+		// the address may not exist, as it only available since SPINE 1.3
+		if item.Address != nil &&
+			evEntity.Address() != nil &&
+			slices.Compare(item.Address.Entity, evEntity.Address().Entity) != 0 {
+			continue
+		}
+
+		for _, uc := range item.UseCaseSupport {
+			if uc.UseCaseName != nil &&
+				*uc.UseCaseName == model.UseCaseNameTypeOptimizationOfSelfConsumptionDuringEVCharging &&
+				uc.UseCaseAvailable != nil &&
+				*uc.UseCaseAvailable == true {
+				isActive = true
+				break
+			}
+		}
+
+		if isActive {
+			break
+		}
+	}
+
+	if !isActive {
+		return false
+	}
+
+	// on OSCEV all limits have to be active except they are set to the default value
+	minLimit, _, _, err := c.uc.OscEV.CurrentLimits(evEntity)
+	if err != nil {
+		return false
+	}
+
+	for index, item := range limits {
+		if item.Value >= minLimit[index] {
+			item.IsActive = true
+		} else {
+			item.IsActive = false
+		}
+	}
+
+	// send the write command
+	if _, err = c.uc.OscEV.WriteLoadControlLimits(evEntity, limits); err != nil {
+		return false
+	}
+
+	// make sure the obligations are inactive, otherwise the EV won't go to sleep
+	if obligations, err := c.uc.OpEV.LoadControlLimits(evEntity); err == nil {
+		writeNeeded := false
+
+		for _, item := range obligations {
+			if item.IsActive {
+				item.IsActive = false
+				writeNeeded = true
+			}
+		}
+
+		if writeNeeded {
+			_, _ = c.uc.OpEV.WriteLoadControlLimits(evEntity, obligations)
+		}
+	}
+
+	return true
 }
 
 // MaxCurrent implements the api.Charger interface
