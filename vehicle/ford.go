@@ -29,9 +29,11 @@ func NewFordFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
 		embed               `mapstructure:",squash"`
 		User, Password, VIN string
+		Domain              string
 		Cache               time.Duration
 	}{
-		Cache: interval,
+		Domain: "com",
+		Cache:  interval,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -47,7 +49,7 @@ func NewFordFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	log := util.NewLogger("ford").Redact(cc.User, cc.Password, cc.VIN)
-	identity := ford.NewIdentity(log, cc.User, cc.Password)
+	identity := ford.NewIdentity(log, cc.User, cc.Password, cc.Domain)
 
 	err := identity.Login()
 	if err != nil {

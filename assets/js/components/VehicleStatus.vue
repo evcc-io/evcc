@@ -64,7 +64,7 @@ export default {
 			}
 			// min charge active
 			if (this.minSoc > 0 && this.vehicleSoc < this.minSoc) {
-				return t("minCharge", { soc: this.minSoc });
+				return t("minCharge", { soc: this.fmtPercentage(this.minSoc) });
 			}
 
 			// plan
@@ -111,7 +111,9 @@ export default {
 
 			if (this.enabled && !this.charging) {
 				if (this.vehicleLimitSoc > 0 && this.vehicleSoc >= this.vehicleLimitSoc - 1) {
-					return t("vehicleLimitReached", { soc: this.vehicleLimitSoc });
+					return t("vehicleLimitReached", {
+						soc: this.fmtPercentage(this.vehicleLimitSoc),
+					});
 				}
 				return t("waitForVehicle");
 			}

@@ -20,7 +20,7 @@ import (
 
 const (
 	TokenURI      = "https://api.mps.ford.com"
-	LoginUri      = "https://login.ford.com/4566605f-43a7-400a-946e-89cc9fdb0bd7/B2C_1A_SignInSignUp_de-DE"
+	LoginUriTmpl  = "https://login.ford.%s/4566605f-43a7-400a-946e-89cc9fdb0bd7/B2C_1A_SignInSignUp_de-DE"
 	ClientID      = "09852200-05fd-41f6-8c21-d36d3497dc64"
 	ApplicationID = "1E8C7794-FF5F-49BC-9596-A1E0C86C5B19"
 )
@@ -31,14 +31,21 @@ var loginHeaders = map[string]string{
 	"User-Agent":      "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Mobile/15E148 Safari/604.1",
 }
 
-var OAuth2Config = &oauth2.Config{
-	ClientID: ClientID,
-	Endpoint: oauth2.Endpoint{
-		AuthURL:  fmt.Sprintf("%s/oauth2/v2.0/authorize", LoginUri),
-		TokenURL: fmt.Sprintf("%s/oauth2/v2.0/token", LoginUri),
-	},
-	RedirectURL: "fordapp://userauthorized",
-	Scopes:      []string{ClientID, "openid"},
+func NewOauth2Config(domain string) *oauth2.Config {
+	uri := loginUri(domain)
+	return &oauth2.Config{
+		ClientID: ClientID,
+		Endpoint: oauth2.Endpoint{
+			AuthURL:  fmt.Sprintf("%s/oauth2/v2.0/authorize", uri),
+			TokenURL: fmt.Sprintf("%s/oauth2/v2.0/token", uri),
+		},
+		RedirectURL: "fordapp://userauthorized",
+		Scopes:      []string{ClientID, "openid"},
+	}
+}
+
+func loginUri(domain string) string {
+	return fmt.Sprintf(LoginUriTmpl, domain)
 }
 
 type Settings struct {
@@ -48,16 +55,17 @@ type Settings struct {
 
 type Identity struct {
 	*request.Helper
-	user, password string
+	user, password, domain string
 	oauth2.TokenSource
 }
 
 // NewIdentity creates Ford identity
-func NewIdentity(log *util.Logger, user, password string) *Identity {
+func NewIdentity(log *util.Logger, user, password, domain string) *Identity {
 	return &Identity{
 		Helper:   request.NewHelper(log),
 		user:     user,
 		password: password,
+		domain:   domain,
 	}
 }
 
@@ -72,10 +80,11 @@ func (v *Identity) Login() error {
 
 // login authenticates with username/password to get new token
 func (v *Identity) login() (*oauth.Token, error) {
-	cv := oauth2.GenerateVerifier()
+	oc := NewOauth2Config(v.domain)
 
+	cv := oauth2.GenerateVerifier()
 	state := lo.RandomString(16, lo.AlphanumericCharset)
-	uri := OAuth2Config.AuthCodeURL(state, oauth2.S256ChallengeOption(cv),
+	uri := oc.AuthCodeURL(state, oauth2.S256ChallengeOption(cv),
 		oauth2.SetAuthURLParam("max_age", "3600"),
 		oauth2.SetAuthURLParam("ui_locales", "de-DE"),
 		oauth2.SetAuthURLParam("language_code", "de-DE"),
@@ -121,7 +130,7 @@ func (v *Identity) login() (*oauth.Token, error) {
 	}
 	defer func() { v.Client.CheckRedirect = nil }()
 
-	uri2 := fmt.Sprintf("%s/SelfAsserted?tx=%s&p=B2C_1A_SignInSignUp_de-DE", LoginUri, settings.TransId)
+	uri2 := fmt.Sprintf("%s/SelfAsserted?tx=%s&p=B2C_1A_SignInSignUp_de-DE", loginUri(v.domain), settings.TransId)
 	req, err = request.New(http.MethodPost, uri2, strings.NewReader(data.Encode()), request.URLEncoding, map[string]string{
 		"Accept":          "*/*",
 		"Accept-Language": "en-us",
@@ -142,7 +151,7 @@ func (v *Identity) login() (*oauth.Token, error) {
 		}
 	}
 
-	uri3 := fmt.Sprintf("%s/api/CombinedSigninAndSignup/confirmed?rememberMe=false&csrf_token=%s&tx=%s&p=B2C_1A_SignInSignUp_de-DE", LoginUri, settings.Csrf, settings.TransId)
+	uri3 := fmt.Sprintf("%s/api/CombinedSigninAndSignup/confirmed?rememberMe=false&csrf_token=%s&tx=%s&p=B2C_1A_SignInSignUp_de-DE", loginUri(v.domain), settings.Csrf, settings.TransId)
 	req, err = request.New(http.MethodGet, uri3, nil, request.URLEncoding, map[string]string{
 		"Origin":       "https://login.ford.com",
 		"Referer":      uri,
@@ -173,7 +182,7 @@ func (v *Identity) login() (*oauth.Token, error) {
 		return nil, errors.New("could not obtain auth code- check user and password")
 	}
 
-	tok, err := OAuth2Config.Exchange(ctx, code, oauth2.VerifierOption(cv))
+	tok, err := oc.Exchange(ctx, code, oauth2.VerifierOption(cv))
 
 	// exchange code for api token
 	var token oauth.Token

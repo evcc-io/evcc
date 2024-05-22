@@ -176,7 +176,7 @@ export default {
 			return this.targetChargeEnabled || this.minSocEnabled;
 		},
 		minSocLabel: function () {
-			return `${Math.round(this.minSoc)}%`;
+			return this.fmtPercentage(this.minSoc);
 		},
 		modalId: function () {
 			return `chargingPlanModal_${this.id}`;
@@ -204,7 +204,7 @@ export default {
 		},
 		targetSocLabel: function () {
 			if (this.socBasedPlanning) {
-				return `${Math.round(this.effectivePlanSoc)}%`;
+				return this.fmtPercentage(this.effectivePlanSoc);
 			}
 			return fmtEnergy(
 				this.planEnergy,
