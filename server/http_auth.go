@@ -124,7 +124,6 @@ func setCookie(w http.ResponseWriter, name, value string, expires time.Time) {
 		HttpOnly: true,
 		Expires:  expires,
 		SameSite: http.SameSiteNoneMode,
-		Secure:   true,
 	}).String()
 
 	// implement CHIPS to allow cookies in iframe context https://developers.google.com/privacy-sandbox/3pcd
