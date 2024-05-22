@@ -59,17 +59,17 @@ type ModbusProxy struct {
 
 type Mqtt struct {
 	mqtt.Config `mapstructure:",squash"`
-	Topic       string
+	Topic       string `json:"topic"`
 }
 
 // Influx is the influx db configuration
 type Influx struct {
-	URL      string
-	Database string
-	Token    string
-	Org      string
-	User     string
-	Password string
+	URL      string `json:"url,omitempty"`
+	Database string `json:"database,omitempty"`
+	Token    string `json:"token,omitempty"`
+	Org      string `json:"org,omitempty"`
+	User     string `json:"user,omitempty"`
+	Password string `json:"-"`
 }
 
 type DB struct {
@@ -91,9 +91,9 @@ type Tariffs struct {
 }
 
 type Network struct {
-	Schema string
-	Host   string
-	Port   int
+	Schema string `json:"schema"`
+	Host   string `json:"host"`
+	Port   int    `json:"port"`
 }
 
 func (c Network) HostPort() string {
