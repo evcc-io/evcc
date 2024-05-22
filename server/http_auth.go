@@ -108,23 +108,29 @@ func loginHandler(auth auth.Auth) http.HandlerFunc {
 			return
 		}
 
-		http.SetCookie(w, &http.Cookie{
-			Name:     authCookieName,
-			Value:    tokenString,
-			Path:     "/",
-			HttpOnly: true,
-			Expires:  time.Now().Add(lifetime),
-			SameSite: http.SameSiteStrictMode,
-		})
+		setCookie(w, authCookieName, tokenString, time.Now().Add(lifetime))
 	}
 }
 
 func logoutHandler(w http.ResponseWriter, r *http.Request) {
-	http.SetCookie(w, &http.Cookie{
-		Name:     authCookieName,
+	setCookie(w, authCookieName, "", time.Time{})
+}
+
+func setCookie(w http.ResponseWriter, name, value string, expires time.Time) {
+	cookieStr := (&http.Cookie{
+		Name:     name,
+		Value:    value,
 		Path:     "/",
 		HttpOnly: true,
-	})
+		Expires:  expires,
+		SameSite: http.SameSiteNoneMode,
+		Secure:   true,
+	}).String()
+
+	// implement CHIPS to allow cookies in iframe context https://developers.google.com/privacy-sandbox/3pcd
+	// replace with `partitioned: true` once implemented in Go https://github.com/golang/go/issues/62490
+	cookieStr += "; Partitioned"
+	w.Header().Add("Set-Cookie", cookieStr)
 }
 
 func ensureAuthHandler(auth auth.Auth) mux.MiddlewareFunc {
