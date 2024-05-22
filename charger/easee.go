@@ -227,9 +227,9 @@ func (c *Easee) connect(ts oauth2.TokenSource) func() (signalr.Connection, error
 
 		return signalr.NewHTTPConnection(ctx, "https://streams.easee.com/hubs/chargers",
 			signalr.WithHTTPClient(c.Client),
-			signalr.WithHTTPHeaders(func() (res http.Header) {
+			signalr.WithHTTPHeaders(func() http.Header {
 				return http.Header{
-					"Authorization": []string{fmt.Sprintf("Bearer %s", tok.AccessToken)},
+					"Authorization": []string{"Bearer " + tok.AccessToken},
 				}
 			}),
 		)
