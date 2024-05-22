@@ -2,8 +2,8 @@
 	<div>
 		<div class="modal-backdrop" v-if="offline" />
 		<div
-			class="fixed-bottom alert alert-secondary d-flex justify-content-center align-items-center mb-0 rounded-0 p-2"
-			:class="{ visible: visible }"
+			class="fixed-bottom alert d-flex justify-content-center align-items-center mb-0 rounded-0 p-2"
+			:class="{ visible: visible, 'alert-danger': showError, 'alert-secondary': !showError }"
 			role="alert"
 		>
 			<div v-if="restarting" class="d-flex align-items-center">
@@ -36,11 +36,35 @@
 				<CloudOffline class="m-2" />
 				{{ $t("offline.message") }}
 			</div>
+			<div
+				v-else-if="showError"
+				class="d-flex align-items-start container px-4 justify-content-center"
+			>
+				<shopicon-regular-car1
+					size="m"
+					class="fatal-icon flex-grow-0 flex-shrink-0"
+				></shopicon-regular-car1>
+				<div class="mx-4 mt-1">
+					<div>
+						<strong>
+							Error during startup. Check your configuration and restart.
+						</strong>
+					</div>
+					<div v-for="(error, index) in fatal" :key="index">{{ error }}</div>
+				</div>
+				<button
+					type="button"
+					class="btn-close mt-1"
+					aria-label="Close"
+					@click="dismissed = true"
+				></button>
+			</div>
 		</div>
 	</div>
 </template>
 
 <script>
+import "@h2d2/shopicons/es/regular/car1";
 import CloudOffline from "./MaterialIcon/CloudOffline.vue";
 import Sync from "./MaterialIcon/Sync.vue";
 import restart, { performRestart, restartComplete } from "../restart";
@@ -53,11 +77,16 @@ export default {
 	},
 	props: {
 		offline: Boolean,
+		fatal: { type: Array, default: () => [] },
+	},
+	data() {
+		return { dismissed: false };
 	},
 	watch: {
 		offline: function () {
 			if (!this.offline) {
 				restartComplete();
+				this.dismissed = false;
 			}
 		},
 	},
@@ -69,7 +98,16 @@ export default {
 			return restart.restarting;
 		},
 		visible() {
-			return this.offline || this.restartNeeded || this.restarting;
+			return this.offline || this.restartNeeded || this.restarting || this.showError;
+		},
+		showError() {
+			return (
+				!this.offline &&
+				!this.restartNeeded &&
+				!this.restarting &&
+				this.fatal?.length &&
+				!this.dismissed
+			);
 		},
 	},
 	methods: {
@@ -92,5 +130,22 @@ export default {
 }
 .alert.visible {
 	transform: translateY(0);
+}
+
+.fatal-icon {
+	transform-origin: 60% 40%;
+	animation: swinging 3.5s ease-in-out infinite;
+}
+
+@keyframes swinging {
+	0% {
+		transform: translateY(6px) rotate(170deg);
+	}
+	50% {
+		transform: translateY(6px) rotate(185deg);
+	}
+	100% {
+		transform: translateY(6px) rotate(170deg);
+	}
 }
 </style>

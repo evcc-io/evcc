@@ -5,6 +5,7 @@
 		:description="$t('config.mqtt.description')"
 		docs="/docs/reference/configuration/mqtt"
 		endpoint="/config/mqtt"
+		stateKey="mqtt"
 		data-testid="mqtt-modal"
 		@changed="$emit('changed')"
 	>
@@ -14,7 +15,7 @@
 				:label="$t('config.mqtt.labelBroker')"
 				example="localhost:1883"
 			>
-				<input id="mqttBroker" v-model="values.Broker" class="form-control" required />
+				<input id="mqttBroker" v-model="values.broker" class="form-control" required />
 			</FormRow>
 
 			<h6>{{ $t("config.mqtt.publishing") }}</h6>
@@ -25,7 +26,7 @@
 				example="evcc"
 				optional
 			>
-				<input id="mqttTopic" v-model="values.Topic" class="form-control" />
+				<input id="mqttTopic" v-model="values.topic" class="form-control" />
 			</FormRow>
 			<FormRow
 				id="mqttClientId"
@@ -33,17 +34,17 @@
 				:help="$t('config.mqtt.descriptionClientId')"
 				optional
 			>
-				<input id="mqttClientId" v-model="values.ClientID" class="form-control" />
+				<input id="mqttClientId" v-model="values.clientID" class="form-control" />
 			</FormRow>
 
 			<h6>{{ $t("config.mqtt.authentication") }}</h6>
 			<FormRow id="mqttUser" :label="$t('config.mqtt.labelUser')" optional>
-				<input id="mqttUser" v-model="values.User" class="form-control" />
+				<input id="mqttUser" v-model="values.user" class="form-control" />
 			</FormRow>
 			<FormRow id="mqttPassword" :label="$t('config.mqtt.labelPassword')" optional>
 				<input
 					id="mqttPassword"
-					v-model="values.Password"
+					v-model="values.password"
 					class="form-control"
 					type="password"
 					autocomplete="off"
@@ -55,7 +56,7 @@
 						class="form-check-input"
 						id="mqttInsecure"
 						type="checkbox"
-						v-model="values.Insecure"
+						v-model="values.insecure"
 					/>
 					<label class="form-check-label ms-2" for="mqttInsecure">
 						{{ $t("config.mqtt.labelCheckInsecure") }}

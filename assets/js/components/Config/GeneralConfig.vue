@@ -67,7 +67,7 @@
 		</div>
 		<div class="config-entry" data-testid="generalconfig-network">
 			<strong class="config-label">{{ $t("config.network.title") }}</strong>
-			<div class="config-text"></div>
+			<div class="config-text">{{ networkStatus }}</div>
 			<button
 				class="config-button btn btn-link"
 				type="button"
@@ -79,7 +79,7 @@
 		</div>
 		<div class="config-entry" data-testid="generalconfig-control">
 			<strong class="config-label">{{ $t("config.control.title") }}</strong>
-			<div class="config-text"></div>
+			<div class="config-text">{{ controlStatus }}</div>
 			<button
 				class="config-button btn btn-link"
 				type="button"
@@ -98,6 +98,8 @@ import TitleModal from "./TitleModal.vue";
 import EditIcon from "../MaterialIcon/Edit.vue";
 import api from "../../api";
 import settings from "../../settings";
+import store from "../../store";
+import formatter from "../../mixins/formatter";
 
 export default {
 	name: "GeneralConfig",
@@ -107,6 +109,7 @@ export default {
 		};
 	},
 	components: { TitleModal, EditIcon },
+	mixins: [formatter],
 	emits: ["site-changed"],
 	async mounted() {
 		await this.load();
@@ -117,6 +120,14 @@ export default {
 		},
 		hiddenFeatures() {
 			return settings.hiddenFeatures === true;
+		},
+		networkStatus() {
+			const { host, port } = store.state?.network || {};
+			return host ? `${host}:${port}` : `${port || ""}`;
+		},
+		controlStatus() {
+			const sec = store.state?.interval;
+			return sec ? this.fmtDuration(sec) : "";
 		},
 	},
 	methods: {

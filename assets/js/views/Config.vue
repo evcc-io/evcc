@@ -23,7 +23,6 @@
 							:unconfigured="!gridMeter"
 							:editable="!!gridMeter?.id"
 							data-testid="grid"
-							@configure="addMeter('grid')"
 							@edit="editMeter(gridMeter.id, 'grid')"
 						>
 							<template #icon>
@@ -133,11 +132,14 @@
 							<DeviceCard
 								:name="$t('config.mqtt.title')"
 								editable
+								:unconfigured="!mqttTags"
 								data-testid="mqtt"
-								@configure="openModal('mqttModal')"
 								@edit="openModal('mqttModal')"
 							>
 								<template #icon><MqttIcon /></template>
+								<template #tags>
+									<DeviceTags :tags="mqttTags" />
+								</template>
 							</DeviceCard>
 							<DeviceCard
 								:name="$t('config.messaging.title')"
@@ -150,10 +152,14 @@
 							<DeviceCard
 								:name="$t('config.influx.title')"
 								editable
+								:unconfigured="!influxTags"
 								data-testid="influx"
 								@edit="openModal('influxModal')"
 							>
 								<template #icon><InfluxIcon /></template>
+								<template #tags>
+									<DeviceTags :tags="influxTags" />
+								</template>
 							</DeviceCard>
 							<DeviceCard
 								:name="$t('config.eebus.title')"
@@ -349,6 +355,21 @@ export default {
 				tags.co2 = { value: tariffCo2 };
 			}
 			return tags;
+		},
+		mqttTags() {
+			const { broker, topic } = store.state?.mqtt || {};
+			if (!broker) return null;
+			return {
+				broker: { value: broker },
+				topic: { value: topic },
+			};
+		},
+		influxTags() {
+			const { host } = store.state?.influx || {};
+			if (!host) return null;
+			return {
+				host: { value: host },
+			};
 		},
 	},
 	watch: {

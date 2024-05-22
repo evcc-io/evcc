@@ -60,6 +60,7 @@
 import GenericModal from "../GenericModal.vue";
 import api from "../../api";
 import { docsPrefix } from "../../i18n";
+import store from "../../store";
 
 export default {
 	name: "JsonModal",
@@ -81,7 +82,7 @@ export default {
 		endpoint: String,
 		disableRemove: Boolean,
 		transformValues: Function,
-		defaultValues: { type: Object, default: () => ({}) },
+		stateKey: String,
 		saveMethod: { type: String, default: "post" },
 	},
 	computed: {
@@ -104,23 +105,9 @@ export default {
 			this.reset();
 			await this.load();
 		},
-		applyDefaults(values = {}) {
-			Object.keys(values).forEach((key) => {
-				const defaultVal = this.defaultValues[key];
-				if ((values[key] === "" || values[key] === 0) && defaultVal !== undefined) {
-					values[key] = defaultVal;
-				}
-			});
-			return values;
-		},
 		async load() {
-			try {
-				const { data } = await api.get(this.endpoint);
-				this.serverValues = this.applyDefaults(data.result);
-				this.values = { ...this.serverValues };
-			} catch (e) {
-				console.error(e);
-			}
+			this.serverValues = { ...store.state[this.stateKey] } || {};
+			this.values = { ...this.serverValues };
 		},
 		async save() {
 			this.saving = true;

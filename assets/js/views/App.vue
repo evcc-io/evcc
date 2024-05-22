@@ -64,15 +64,6 @@ export default {
 		offline: function () {
 			updateAuthStatus();
 		},
-		startupErrors: function (now) {
-			if (now) {
-				console.log("startup errors detected. redirecting to error page");
-				this.$router.push("/error");
-			} else {
-				console.log("startup errors resolved. redirecting to home page");
-				this.$router.push("/");
-			}
-		},
 	},
 	computed: {
 		version: function () {
@@ -89,9 +80,6 @@ export default {
 		},
 		offlineIndicatorProps() {
 			return this.collectProps(OfflineIndicator, store.state);
-		},
-		startupErrors: function () {
-			return store.state.fatal?.length > 0;
 		},
 	},
 	mounted: function () {

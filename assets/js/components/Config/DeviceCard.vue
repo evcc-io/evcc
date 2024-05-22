@@ -6,16 +6,7 @@
 			</div>
 			<strong class="flex-grow-1 text-nowrap text-truncate">{{ name }}</strong>
 			<button
-				v-if="unconfigured"
-				type="button"
-				class="btn btn-sm btn-outline-secondary position-relative border-0 p-2"
-				:title="$t('config.main.new')"
-				@click="$emit('configure')"
-			>
-				<shopicon-regular-adjust size="s"></shopicon-regular-adjust>
-			</button>
-			<button
-				v-else-if="editable"
+				v-if="editable"
 				type="button"
 				class="btn btn-sm btn-outline-secondary position-relative border-0 p-2"
 				:title="$t('config.main.edit')"
@@ -35,7 +26,7 @@
 			</button>
 		</div>
 		<hr class="my-3 divide" />
-		<div v-if="unconfigured" class="text-center py-3 evcc-gray">
+		<div v-if="unconfigured" class="text-center evcc-gray">
 			{{ $t("config.main.unconfigured") }}
 		</div>
 		<slot v-else name="tags" />
@@ -59,15 +50,12 @@ export default {
 			tooltip: null,
 		};
 	},
-	emits: ["edit", "configure"],
+	emits: ["edit"],
 	mounted() {
 		this.initTooltip();
 	},
 	watch: {
 		editable() {
-			this.initTooltip();
-		},
-		unconfigured() {
 			this.initTooltip();
 		},
 	},
