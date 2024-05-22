@@ -189,7 +189,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	}
 
 	// setup database
-	if err == nil {
+	if err == nil && conf.Influx.URL != "" {
 		err = wrapErrorWithClass(ClassInflux, configureInflux(conf.Influx, site, pipe.NewDropper(append(ignoreLogs, ignoreEmpty)...).Pipe(tee.Attach())))
 	}
 
