@@ -76,7 +76,7 @@ func shutdownDoneC() <-chan struct{} {
 	return doneC
 }
 
-func wrapErrors(err error) error {
+func wrapError(err error) error {
 	if err != nil {
 		var opErr *net.OpError
 		var pathErr *os.PathError

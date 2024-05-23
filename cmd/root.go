@@ -277,8 +277,8 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 	if err != nil {
 		// improve error message
-		err = wrapErrors(err)
-		valueChan <- util.Param{Key: keys.Fatal, Val: unwrap(err)}
+		err = wrapError(err)
+		valueChan <- util.Param{Key: keys.Fatal, Val: err}
 
 		// TODO stop reboot loop if user updates config (or show countdown in UI)
 		log.FATAL.Println(err)
@@ -293,5 +293,5 @@ func runRoot(cmd *cobra.Command, args []string) {
 	// uds health check listener
 	go server.HealthListener(site)
 
-	log.FATAL.Println(wrapErrors(httpd.ListenAndServe()))
+	log.FATAL.Println(wrapError(httpd.ListenAndServe()))
 }

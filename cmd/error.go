@@ -7,7 +7,7 @@ import (
 
 type Class int
 
-//go:generate enumer -type Class -trimprefix Class -transform=lower
+//go:generate enumer -type Class -trimprefix Class -transform=lower -text
 const (
 	_ Class = iota
 	ClassMeter
@@ -46,7 +46,7 @@ func (e *ClassError) Error() string {
 	return e.err.Error()
 }
 
-func (e *ClassError) MarshalJSON() (out []byte, err error) {
+func (e ClassError) MarshalJSON() ([]byte, error) {
 	res := struct {
 		Class  string `json:"class"`
 		Device string `json:"device,omitempty"`
