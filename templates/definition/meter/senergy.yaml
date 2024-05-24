@@ -5,10 +5,16 @@ products:
       generic: SE 4/5/6KTL-S1/G2 Inverter
   - brand: SolarMax
     description:
-      generic: SP Series Inverter
+      generic: SP/SMT Series Inverter
 params:
   - name: usage
     choice: ["pv"]
+  - name: scale
+    default: "1"
+    required: false
+    description:
+      de: PAC wird mit diesem Wert multipliziert, man muss z.B. 0.1 für SolarMax SMT Inverter setzen.
+      en: PAC will be multiplied by this value, e. g. set 0.1 for SolarMax SMT inverters.
   - name: modbus
     choice: ["tcpip"]
     id: 1
@@ -22,6 +28,7 @@ render: |
       address: 4151 # PAC
       type: holding
       decode: uint32
+    scale: {{ .scale }}
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
