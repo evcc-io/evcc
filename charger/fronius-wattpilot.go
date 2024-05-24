@@ -101,11 +101,21 @@ func (c *Wattpilot) CurrentPower() (float64, error) {
 	return c.api.GetPower()
 }
 
-var _ api.ChargeRater = (*Wattpilot)(nil)
+// var _ api.ChargeRater = (*Wattpilot)(nil)
 
-// ChargedEnergy implements the api.ChargeRater interface
-func (c *Wattpilot) ChargedEnergy() (float64, error) {
-	resp, err := c.api.GetProperty("wh")
+// // ChargedEnergy implements the api.ChargeRater interface
+// func (c *Wattpilot) ChargedEnergy() (float64, error) {
+// 	resp, err := c.api.GetProperty("wh")
+// 	if err != nil {
+// 		return 0, err
+// 	}
+// 	return resp.(float64) / 1e3, err
+// }
+
+var _ api.Meter = (*Wattpilot)(nil)
+/// TotalEnergy implements the api.MeterEnergy interface
+func (c *Wattpilot) TotalEnergy() (float64, error) {
+	resp, err := c.api.GetProperty("eto")
 	if err != nil {
 		return 0, err
 	}
