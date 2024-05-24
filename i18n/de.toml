@@ -234,6 +234,8 @@ update = "Aktualisieren"
 [loginModal]
 cancel = "Abbrechen"
 error = "Login fehlgeschlagen: "
+iframeHint = "Öffne evcc in einem neuen Tab."
+iframeIssue = "Das Passwort ist korrekt, aber dein Browser hat das Authentifizierungscookie abgelehnt. Dies kann passieren, wenn du evcc in einem iframe über HTTP verwendest."
 invalid = "Passwort ist ungültig."
 login = "Anmelden"
 password = "Passwort"
