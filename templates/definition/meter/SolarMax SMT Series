@@ -1,0 +1,31 @@
+template: SolarMax-SMT
+products:
+  - brand: SolarMax
+    description:
+      generic: SolarMax SMT Series Inverter series, based on Senergy, but with added scaling for power and energy values of 0.1
+params:
+  - name: usage
+    choice: ["pv"]
+  - name: modbus
+    choice: ["tcpip"]
+    id: 1
+render: |
+  type: custom
+  {{- if eq .usage "pv" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 4151 # PAC
+      type: holding
+      decode: uint32
+    scale: 0.1
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 4129 # Total
+      type: holding
+      decode: uint32
+    scale: 0.1
+  {{- end }}
