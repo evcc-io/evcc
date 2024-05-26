@@ -1,5 +1,4 @@
-template: ford
-deprecated: true
+template: ford-connect
 products:
   - brand: Ford
 params:
@@ -7,11 +6,7 @@ params:
   - preset: vehicle-identify
   - name: vin
     example: WF0FXX...
-  - name: domain
-    default: com
-    validvalues: ["de", "com"]
 render: |
-  type: ford
+  type: ford-connect
   {{ include "vehicle-base" . }}
   {{ include "vehicle-identify" . }}
-  domain: {{ .domain }}
