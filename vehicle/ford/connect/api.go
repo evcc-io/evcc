@@ -2,14 +2,13 @@ package connect
 
 import (
 	"fmt"
-	"net/http"
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"golang.org/x/oauth2"
 )
 
-const ApiURI = "https://usapi.cv.ford.com"
+const ApiURI = "https://api.mps.ford.com/api/fordconnect"
 
 // API is the Ford api client
 type API struct {
@@ -33,37 +32,24 @@ func NewAPI(log *util.Logger, ts oauth2.TokenSource) *API {
 const TokenURI = "https"
 
 // Vehicles returns the list of user vehicles
-func (v *API) Vehicles() ([]string, error) {
-	var res []string
+func (v *API) Vehicles() ([]Vehicle, error) {
+	var res VehiclesResponse
 
-	data := map[string]string{
-		"dashboardRefreshRequest": "All",
-	}
+	uri := fmt.Sprintf("%s/v3/vehicles", ApiURI)
+	err := v.GetJSON(uri, &res)
 
-	uri := fmt.Sprintf("%s/api/expdashboard/v1/details", TokenURI)
-
-	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
-	if err == nil {
-		var resp VehiclesResponse
-		if err = v.DoJSON(req, &resp); err == nil {
-			for _, v := range resp.UserVehicles.VehicleDetails {
-				res = append(res, v.VIN)
-			}
-		}
-	}
-
-	return res, err
+	return res.Vehicles, err
 }
 
-func (v *API) Status(vin string) (InformationResponse, error) {
+func (v *API) Status(vin string) (Vehicle, error) {
 	var res InformationResponse
 
-	uri := fmt.Sprintf("%s/api/vehicles/v4/%s/status", ApiURI, "VIN")
+	uri := fmt.Sprintf("%s/v3/vehicles/%s", ApiURI, vin)
+	err := v.GetJSON(uri, &res)
 
-	req, err := request.New(http.MethodGet, uri, nil, request.AcceptJSON)
-	if err == nil {
-		err = v.DoJSON(req, &res)
+	if err == nil && res.Status != StatusSuccess {
+		err = fmt.Errorf("status %s", res.Status)
 	}
 
-	return res, err
+	return res.Vehicle, err
 }

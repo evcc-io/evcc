@@ -5,8 +5,6 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/vehicle/ford"
-	"github.com/evcc-io/evcc/vehicle/ford/autonomic"
 	"github.com/evcc-io/evcc/vehicle/ford/connect"
 )
 
@@ -17,7 +15,7 @@ import (
 // FordConnect is an api.Vehicle implementation for Ford cars
 type FordConnect struct {
 	*embed
-	*ford.Provider
+	*connect.Provider
 }
 
 func init() {
@@ -56,17 +54,21 @@ func NewFordConnectFromConfig(other map[string]interface{}) (api.Vehicle, error)
 	log := util.NewLogger("ford").Redact(cc.VIN)
 	identity := connect.NewIdentity(log, cc.Credentials.ID, cc.Credentials.Secret, token)
 
-	api := ford.NewAPI(log, identity)
+	api := connect.NewAPI(log, identity)
 
-	cc.VIN, err = ensureVehicle(cc.VIN, api.Vehicles)
+	vehicle, err := ensureVehicleEx(cc.VIN, api.Vehicles, func(v connect.Vehicle) string {
+		return v.VehicleID
+	})
 	if err != nil {
 		return nil, err
 	}
 
-	autoIdentity, err := autonomic.NewIdentity(log, identity)
 	if err == nil {
-		api := autonomic.NewAPI(log, autoIdentity)
-		v.Provider = ford.NewProvider(api, cc.VIN, cc.Cache)
+		if v.Title_ == "" {
+			v.Title_ = vehicle.NickName
+		}
+
+		v.Provider = connect.NewProvider(api, cc.VIN, cc.Cache)
 	}
 
 	return v, err

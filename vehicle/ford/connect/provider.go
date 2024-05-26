@@ -8,13 +8,13 @@ import (
 )
 
 type Provider struct {
-	statusG func() (InformationResponse, error)
+	statusG func() (Vehicle, error)
 	// refreshG func() error
 }
 
 func NewProvider(api *API, vin string, cache time.Duration) *Provider {
 	impl := &Provider{
-		statusG: provider.Cached(func() (InformationResponse, error) {
+		statusG: provider.Cached(func() (Vehicle, error) {
 			return api.Status(vin)
 		}, cache),
 		// refreshG: func() error {
