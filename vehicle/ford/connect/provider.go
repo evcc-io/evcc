@@ -31,65 +31,54 @@ var _ api.Battery = (*Provider)(nil)
 // Soc implements the api.Battery interface
 func (v *Provider) Soc() (float64, error) {
 	res, err := v.statusG()
-	_ = res
-	if err == nil {
-		return 0, nil
-	}
-
-	return 0, err
+	return res.VehicleDetails.BatteryChargeLevel.Value, err
 }
 
-// var _ api.VehicleRange = (*Provider)(nil)
+var _ api.VehicleRange = (*Provider)(nil)
 
-// // Range implements the api.VehicleRange interface
-// func (v *Provider) Range() (int64, error) {
-// 	res, err := v.statusG()
-// 	if err == nil {
-// 		return int64(res.Metrics.XevBatteryRange.Value), nil
-// 	}
+// Range implements the api.VehicleRange interface
+func (v *Provider) Range() (int64, error) {
+	res, err := v.statusG()
+	return int64(res.VehicleDetails.BatteryChargeLevel.DistanceToEmpty), err
+}
 
-// 	return 0, err
-// }
+var _ api.ChargeState = (*Provider)(nil)
 
-// var _ api.ChargeState = (*Provider)(nil)
+// Status implements the api.ChargeState interface
+func (v *Provider) Status() (api.ChargeStatus, error) {
+	status := api.StatusNone
 
-// // Status implements the api.ChargeState interface
-// func (v *Provider) Status() (api.ChargeStatus, error) {
-// 	status := api.StatusNone
+	res, err := v.statusG()
+	if err != nil {
+		return status, err
+	}
 
-// 	res, err := v.statusG()
-// 	if err == nil {
-// 		switch res.Metrics.XevPlugChargerStatus.Value {
-// 		case "DISCONNECTED":
-// 			status = api.StatusA // disconnected
-// 		case "CONNECTED":
-// 			status = api.StatusB // connected, not charging
-// 		case "CHARGING", "CHARGINGAC":
-// 			status = api.StatusC // charging
-// 		default:
-// 			err = fmt.Errorf("unknown charge status: %s", res.Metrics.XevPlugChargerStatus.Value)
-// 		}
-// 	}
+	if res.VehicleStatus.PlugStatus.Value {
+		status = api.StatusB // plugged
 
-// 	return status, err
-// }
+		if res.VehicleStatus.ChargingStatus.Value == "Charging" {
+			status = api.StatusC // charging
+		}
+	}
 
-// var _ api.VehicleOdometer = (*Provider)(nil)
+	return status, nil
+}
 
-// // Odometer implements the api.VehicleOdometer interface
-// func (v *Provider) Odometer() (float64, error) {
-// 	res, err := v.statusG()
-// 	return res.Metrics.Odometer.Value, err
-// }
+var _ api.VehicleOdometer = (*Provider)(nil)
 
-// var _ api.VehiclePosition = (*Provider)(nil)
+// Odometer implements the api.VehicleOdometer interface
+func (v *Provider) Odometer() (float64, error) {
+	res, err := v.statusG()
+	return res.VehicleDetails.Odometer, err
+}
 
-// // Position implements the api.VehiclePosition interface
-// func (v *Provider) Position() (float64, float64, error) {
-// 	res, err := v.statusG()
-// 	loc := res.Metrics.Position.Value.Location
-// 	return loc.Lat, loc.Lon, err
-// }
+var _ api.VehiclePosition = (*Provider)(nil)
+
+// Position implements the api.VehiclePosition interface
+func (v *Provider) Position() (float64, float64, error) {
+	res, err := v.statusG()
+	return res.VehicleLocation.Latitude, res.VehicleLocation.Longitude, err
+}
 
 // var _ api.Resurrector = (*Provider)(nil)
 
