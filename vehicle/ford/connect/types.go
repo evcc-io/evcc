@@ -17,16 +17,16 @@ type InformationResponse struct {
 }
 
 type Vehicle struct {
-	VehicleID                     string `json:"vehicleId"`
-	Make                          string `json:"make"`
-	ModelName                     string `json:"modelName"`
-	ModelYear                     string `json:"modelYear"`
-	Color                         string `json:"color"`
-	NickName                      string `json:"nickName"`
-	LastUpdated                   string `json:"lastUpdated"`
-	VehicleAuthorizationIndicator int    `json:"vehicleAuthorizationIndicator"`
-	ServiceCompatible             bool   `json:"serviceCompatible"`
-	EngineType                    string `json:"engineType"`
+	VehicleID                     string
+	Make                          string
+	ModelName                     string
+	ModelYear                     string
+	Color                         string
+	NickName                      string
+	LastUpdated                   string
+	VehicleAuthorizationIndicator int
+	ServiceCompatible             bool
+	EngineType                    string
 	VehicleDetails                VehicleDetails
 	VehicleStatus                 VehicleStatus
 	VehicleLocation               VehicleLocation
