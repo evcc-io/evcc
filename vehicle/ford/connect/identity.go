@@ -8,11 +8,6 @@ import (
 	"golang.org/x/oauth2"
 )
 
-type Identity struct {
-	*request.Helper
-	oc *oauth2.Config
-}
-
 const baseURL = "https://dah2vb2cprod.b2clogin.com/914d88b1-3523-4bf6-9be4-1b96b4f6f919/oauth2/v2.0/token?p=B2C_1A_signup_signin_common"
 
 func Oauth2Config(id, secret string) *oauth2.Config {
@@ -28,8 +23,10 @@ func Oauth2Config(id, secret string) *oauth2.Config {
 	}
 }
 
-// NewIdentity creates autonomic token source
+// NewIdentity creates FordConnect token source
 func NewIdentity(log *util.Logger, id, secret string, token *oauth2.Token) oauth2.TokenSource {
 	oc := Oauth2Config(id, secret)
-	return oc.TokenSource(context.Background(), token)
+	client := request.NewClient(log)
+	ctx := context.WithValue(context.Background(), oauth2.HTTPClient, client)
+	return oc.TokenSource(ctx, token)
 }
