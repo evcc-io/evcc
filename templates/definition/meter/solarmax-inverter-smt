@@ -1,8 +1,8 @@
-template: solarmax-inverter-smt
+template: solarmax-smt
 products:
   - brand: SolarMax
     description:
-      generic: SolarMax SMT Series Inverter, based on  SP Series Inverter template, but with added scaling for power and energy values of 0.1
+      generic: SolarMax SMT
 params:
   - name: usage
     choice: ["pv"]
@@ -11,7 +11,6 @@ params:
     id: 1
 render: |
   type: custom
-  {{- if eq .usage "pv" }}
   power:
     source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -28,4 +27,3 @@ render: |
       type: holding
       decode: uint32
     scale: 0.1
-  {{- end }}
