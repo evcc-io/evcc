@@ -1,0 +1,22 @@
+template: fox-ess-cloud-h3
+products:
+  - brand: FoxESS
+    description:
+      generic: H3 Series Hybrid Inverter (FoxESS Cloud)
+capabilities: ["battery-control"]
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+  - name: key
+    help:
+      de: API Key (benötigt für FoxESS Cloud Zugriff)
+      en: API Key (required for FoxESS Cloud access)
+  - name: sn
+    help:
+      de: Seriennummer des Inverters
+      en: Inverter Serial number
+render: |
+  type: fox-ess-cloud-h3
+  usage: {{ .usage}}
+  key: {{ .key }}
+  sn: {{ .sn }}
