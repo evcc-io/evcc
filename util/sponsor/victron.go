@@ -10,6 +10,7 @@ import (
 
 	"github.com/evcc-io/evcc/api/proto/pb"
 	"github.com/evcc-io/evcc/util/cloud"
+	"github.com/evcc-io/evcc/util/request"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -28,8 +29,11 @@ func checkVictron() string {
 		return unavailable
 	}
 
+	ctx, cancel := context.WithTimeout(context.Background(), request.Timeout)
+	defer cancel()
+
 	client := pb.NewVictronClient(conn)
-	res, err := client.IsValidDevice(context.Background(), &pb.VictronRequest{
+	res, err := client.IsValidDevice(ctx, &pb.VictronRequest{
 		ProductId: vd.ProductId,
 		VrmId:     vd.VrmId,
 		Serial:    vd.Serial,
