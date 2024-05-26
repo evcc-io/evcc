@@ -8,9 +8,7 @@ import (
 	"github.com/evcc-io/evcc/vehicle/ford/connect"
 )
 
-// https://github.com/d4v3y0rk/ffpass-module
-// https://github.com/ianjwhite99/connected-car-node-sdk
-// https://github.com/TA2k/ioBroker.ford
+// https://developer.ford.com/apis/fordconnect
 
 // FordConnect is an api.Vehicle implementation for Ford cars
 type FordConnect struct {
