@@ -1,8 +1,8 @@
-template: SolarMax-SMT
+template: solarmax-inverter-smt
 products:
   - brand: SolarMax
     description:
-      generic: SolarMax SMT Series Inverter series, based on Senergy, but with added scaling for power and energy values of 0.1
+      generic: SolarMax SMT Series Inverter, based on  SP Series Inverter template, but with added scaling for power and energy values of 0.1
 params:
   - name: usage
     choice: ["pv"]
