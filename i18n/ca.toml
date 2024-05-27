@@ -12,15 +12,15 @@ legendTopAutostart = "s'inicia automaticament"
 legendTopName = "càrrega soportada per bateria"
 legendTopSubline = "sensa interrupcions"
 modalTitle = "Configuració bateria"
-control = 
-discharge = 
+control =
+discharge =
 
 [batterySettings.bufferStart]
 full = "quan gairebé ple"
 low = "quan una mica ple"
 medium = "quan mig ple"
 never = "només amb prous excedents"
-above = 
+above =
 
 [footer]
 
@@ -51,13 +51,13 @@ savingsTitle = "Estalvi"
 savingsTotalEnergy = "{total} kWh carregats"
 since = "desde {since}"
 tabTitle = "Les meves dades"
-referenceLabel = 
-referenceGrid = 
-configurePriceCo2 = 
-moneySaved = 
-periodLabel = 
-co2Saved = 
-co2Title = 
+referenceLabel =
+referenceGrid =
+configurePriceCo2 =
+moneySaved =
+periodLabel =
+co2Saved =
+co2Title =
 
 [footer.sponsor]
 becomeSponsor = "Convertir-se en patrocinador"
@@ -96,8 +96,8 @@ login = "Login de vehicle"
 needHelp = "Necessites ajuda?"
 sessions = "Processos de càrrega"
 settings = "Paràmetres"
-logout = 
-nativeSettings = 
+logout =
+nativeSettings =
 
 [help]
 discussionsButton = "Debats en GitHub"
@@ -109,8 +109,8 @@ primaryActions = "Si quelcom no funciona com hauria, podeu obtenir ajuda aqui."
 restartButton = "Reiniciar"
 restartDescription = "¿Has provat d'apagar i tornar a engegar?"
 secondaryActions = "¿Segeixes sense poder resoldre el teu problema? Aquí tens altres opcions més contundents."
-logsButton = 
-logsDescription = 
+logsButton =
+logsDescription =
 
 [help.restart]
 cancel = "Cancel·lar"
@@ -130,13 +130,13 @@ none = "no definit"
 title = "Plà"
 titleMinSoc = "Càrrega mínima"
 titleTargetCharge = "Sortides"
-active = 
-update = 
-time = 
-remove = 
-goal = 
-day = 
-unsavedChanges = 
+active =
+update =
+time =
+remove =
+goal =
+day =
+unsavedChanges =
 
 [main.energyflow]
 battery = "Bateria"
@@ -150,7 +150,7 @@ noEnergy = "Sense lectures"
 pvExport = "Excedent"
 pvProduction = "Producció"
 selfConsumption = "Autoconsum"
-batteryHold = 
+batteryHold =
 
 [main.loadpoint]
 avgPrice = "Preu ⌀"
@@ -161,19 +161,19 @@ fallbackName = "Punt de càrrega"
 power = "Potència"
 price = "Σ Preu"
 solar = "Solar"
-remoteDisabledSoft = 
-remaining = 
-remoteDisabledHard = 
+remoteDisabledSoft =
+remaining =
+remoteDisabledHard =
 
 [main.loadpointSettings]
 currents = "Corrent de càrrega"
 default = "defecte"
 title = "Configuracions {0}"
 vehicle = "Vehicle"
-onlyForSocBasedCharging = 
-disclaimerHint = 
-smartCostClean = 
-smartCostCheap = 
+onlyForSocBasedCharging =
+disclaimerHint =
+smartCostClean =
+smartCostCheap =
 
 [main.loadpointSettings.maxCurrent]
 label = "Corrent de carrega màxima "
@@ -192,7 +192,7 @@ phases_1 = "monofàsica"
 phases_1_hint = "({min} a {max})"
 phases_3 = "trifàsica"
 phases_3_hint = "({min} a {max})"
-no1p3pSupport = 
+no1p3pSupport =
 
 [main.mode]
 minpv = "Min+Sol"
@@ -223,15 +223,15 @@ title = "hora objectiu"
 today = "avui"
 tomorrow = "matí"
 update = "Actualitzar"
-preview = 
-remove = 
-currentPlan = 
-notReachableInTime = 
-vehicleCapacityDocs = 
-vehicleCapacityRequired = 
-onlyInPvMode = 
-targetIsAboveLimit = 
-targetIsAboveVehicleLimit = 
+preview =
+remove =
+currentPlan =
+notReachableInTime =
+vehicleCapacityDocs =
+vehicleCapacityRequired =
+onlyInPvMode =
+targetIsAboveLimit =
+targetIsAboveVehicleLimit =
 
 [main.targetChargePlan]
 chargeDuration = "Temps de càrrega"
@@ -254,9 +254,9 @@ none = "Cap vehicle"
 targetSoc = "Objectiu de càrrega"
 unknown = "Vehicle convidat"
 vehicleSoc = "Nivell de càrrega"
-temp = 
-notReachable = 
-tempLimit = 
+temp =
+notReachable =
+tempLimit =
 
 [main.vehicleSoc]
 charging = "carregant"
@@ -287,7 +287,7 @@ waitForVehicle = "A punt per carregar. Esperant vehicle."
 [notifications]
 dismissAll = "Eliminar notificacions"
 modalTitle = "Notificacions"
-logs = 
+logs =
 
 [offline]
 message = "No connectat amb servidor."
@@ -319,12 +319,12 @@ reallyDelete = "Realment vols esborrar aquesta sessió?"
 solar = "Solar"
 title = "Sessions de càrrega"
 vehicle = "Vehicle"
-noData = 
-csvMonth = 
-csvTotal = 
-chargeDuration = 
-total = 
-avgPower = 
+noData =
+csvMonth =
+csvTotal =
+chargeDuration =
+total =
+avgPower =
 
 [sessions.csv]
 chargedenergy = "Energia (kWh)"
@@ -336,11 +336,11 @@ meterstart = "Mesura inicial (kWh)"
 meterstop = "Mesura final (kWh)"
 odometer = "Kilometratge (km)"
 vehicle = "Vehicle"
-price = 
-chargeduration = 
-priceperkwh = 
-solarpercentage = 
-co2perkwh = 
+price =
+chargeduration =
+priceperkwh =
+solarpercentage =
+co2perkwh =
 
 [settings]
 title = "Configuració"
@@ -382,11 +382,11 @@ modalTitle = "Xarxa intel·ligent de càrrega"
 none = "cap"
 priceLabel = "Preu de l'energia"
 priceLimit = "Límit de preu"
-cheapTitle = 
-batteryDescription = 
-saved = 
-applyToAll = 
-cleanTitle = 
+cheapTitle =
+batteryDescription =
+saved =
+applyToAll =
+cleanTitle =
 
 [startupError]
 configFile = "Arxiu de configuració utilitzat:"
@@ -407,159 +407,159 @@ test = "Prova"
 
 
 [config.validation]
-validate = 
-failed = 
-unknown = 
-running = 
-label = 
-success = 
+validate =
+failed =
+unknown =
+running =
+label =
+success =
 
 [config.form]
-example = 
-optional = 
+example =
+optional =
 
 [config.main]
-edit = 
-vehicles = 
-addPvBattery = 
-unconfigured = 
-title = 
-addVehicle = 
-yaml = 
-addLoadpoint = 
+edit =
+vehicles =
+addPvBattery =
+unconfigured =
+title =
+addVehicle =
+yaml =
+addLoadpoint =
 
 [config.vehicle]
-scooter = 
-save = 
-delete = 
-offline = 
-validateSave = 
-titleAdd = 
-titleEdit = 
-online = 
-generic = 
-cancel = 
-template = 
+scooter =
+save =
+delete =
+offline =
+validateSave =
+titleAdd =
+titleEdit =
+online =
+generic =
+cancel =
+template =
 
 [footer.savings.period]
-30d = 
-365d = 
-total = 
+30d =
+365d =
+total =
 
 [main.loadpointSettings.limitSoc]
-label = 
-description = 
+label =
+description =
 
 [loginModal]
-cancel = 
-password = 
-title = 
-reset = 
-invalid = 
-error = 
-login = 
+cancel =
+password =
+title =
+reset =
+invalid =
+error =
+login =
 
 [main.heatingStatus]
-charging = 
-cleanEnergyCharging = 
-waitForVehicle = 
-cheapEnergyCharging = 
+charging =
+cleanEnergyCharging =
+waitForVehicle =
+cheapEnergyCharging =
 
 [config.deviceValue]
-range = 
-phaseVoltages = 
-power = 
-current = 
-energy = 
-phasePowers = 
-phaseCurrents = 
-odometer = 
-chargeStatus = 
-chargedEnergy = 
-capacity = 
-enabled = 
-socLimit = 
-soc = 
+range =
+phaseVoltages =
+power =
+current =
+energy =
+phasePowers =
+phaseCurrents =
+odometer =
+chargeStatus =
+chargedEnergy =
+capacity =
+enabled =
+socLimit =
+soc =
 
 [passwordModal]
-newPassword = 
-noMatch = 
-titleNew = 
-titleUpdate = 
-updatePassword = 
-labelNew = 
-labelRepeat = 
-empty = 
-description = 
-error = 
-labelCurrent = 
+newPassword =
+noMatch =
+titleNew =
+titleUpdate =
+updatePassword =
+labelNew =
+labelRepeat =
+empty =
+description =
+error =
+labelCurrent =
 
 [config.section]
-general = 
-system = 
+general =
+system =
 
 [config.system]
-restartRequiredMessage = 
-restart = 
-logs = 
-restartRequiredDescription = 
-restartingMessage = 
-restartingDescription = 
+restartRequiredMessage =
+restart =
+logs =
+restartRequiredDescription =
+restartingMessage =
+restartingDescription =
 
 [log]
-areaLabel = 
-areas = 
-download = 
-levelLabel = 
-noResults = 
-search = 
-showAll = 
-title = 
-update = 
+areaLabel =
+areas =
+download =
+levelLabel =
+noResults =
+search =
+showAll =
+title =
+update =
 
 [config.pv]
-titleAdd = 
-titleEdit = 
+titleAdd =
+titleEdit =
 
 [config.meter]
-validateSave = 
-template = 
-cancel = 
-delete = 
-titleChoice = 
-save = 
+validateSave =
+template =
+cancel =
+delete =
+titleChoice =
+save =
 
 [config.title]
-title = 
-label = 
-description = 
+title =
+label =
+description =
 
 [config.grid]
-titleEdit = 
-titleAdd = 
+titleEdit =
+titleAdd =
 
 [config.general]
-save = 
-cancel = 
+save =
+cancel =
 
 [config.battery]
-titleEdit = 
-titleAdd = 
+titleEdit =
+titleAdd =
 
 [config.options.endianness]
-big = 
-little = 
+big =
+little =
 
 [sessions.filter]
-allLoadpoints = 
-filter = 
-allVehicles = 
+allLoadpoints =
+filter =
+allVehicles =
 
 [settings.fullscreen]
-exit = 
-label = 
-enter = 
+exit =
+label =
+enter =
 
 [config.options.schema]
-http = 
-https = 
+http =
+https =
