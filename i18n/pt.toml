@@ -201,6 +201,8 @@ primaryActions = "Alguma coisa não funciona como deveria? Estes são bons lugar
 restartButton = "Reiniciar"
 restartDescription = "Tentou desligar e ligar de novo?"
 secondaryActions = "Ainda não conseguiu resolver o seu problema? Aqui estão algumas opções mais pesadas."
+logsDescription = 
+logsButton = 
 
 [help.restart]
 cancel = "Cancelar"
@@ -216,6 +218,7 @@ invalid = "A palavra-passe é inválida."
 login = "Entrar no sistema"
 password = "Palavra-passe"
 title = "Autenticação"
+reset = 
 
 [main]
 vehicles = "Estacionamento"
@@ -398,6 +401,7 @@ waitForVehicle = "Pronto. Esperando pelo veículo..."
 [notifications]
 dismissAll = "Recusar tudos"
 modalTitle = "Notícias"
+logs = 
 
 [offline]
 message = "Não conectado a um servidor."
@@ -460,6 +464,11 @@ meterstart = "Início do contador (kWh)"
 meterstop = "Contagem final (kWh)"
 odometer = "Quilometragem (km)"
 vehicle = "Veículo"
+solarpercentage = 
+priceperkwh = 
+co2perkwh = 
+price = 
+chargeduration = 
 
 [sessions.filter]
 allLoadpoints = "todos pontos de carregamento"
@@ -534,3 +543,40 @@ title = "Erro ao iniciar"
 cancel = "Cancelar"
 template = "Fabricante"
 test = "Teste"
+
+
+[settings.fullscreen]
+enter = 
+exit = 
+label = 
+
+[config.section]
+system = 
+general = 
+
+[config.system]
+restartingMessage = 
+logs = 
+restart = 
+restartRequiredMessage = 
+restartRequiredDescription = 
+restartingDescription = 
+
+[log]
+showAll = 
+download = 
+update = 
+levelLabel = 
+title = 
+search = 
+areas = 
+noResults = 
+areaLabel = 
+
+[config.options.endianness]
+little = 
+big = 
+
+[config.options.schema]
+http = 
+https = 
