@@ -84,8 +84,8 @@ func newBluelinkFromConfig(brand string, other map[string]interface{}, settings 
 
 	vehicle, err := ensureVehicleEx(
 		cc.VIN, api.Vehicles,
-		func(v bluelink.Vehicle) string {
-			return v.VIN
+		func(v bluelink.Vehicle) (string, error) {
+			return v.VIN, nil
 		},
 	)
 	if err != nil {

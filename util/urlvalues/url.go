@@ -20,7 +20,7 @@ func Copy(q url.Values) url.Values {
 func Merge(to url.Values, from ...url.Values) {
 	for _, vv := range from {
 		for k, v := range vv {
-			to[k] = append([]string{}, v...)
+			to[k] = append(to[k], v...)
 		}
 	}
 }

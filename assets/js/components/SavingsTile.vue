@@ -15,11 +15,13 @@
 			<div>
 				<p class="my-0 fw-bold text-truncate">{{ title }}</p>
 				<strong class="d-flex align-items-baseline lh-sm">
-					<span class="fs-1 value">
+					<span class="fs-1 value order-1">
 						<AnimatedNumber v-if="valueFmt" :to="value" :format="valueFmt" />
 						<span v-else>{{ value }}</span>
 					</span>
-					<span class="ms-1 unit">{{ unit }}</span>
+					<span class="unit" :class="leadingUnit ? 'order-0 me-1' : 'order-2 ms-1'">
+						{{ unit }}
+					</span>
 				</strong>
 			</div>
 			<small class="d-block mt-0 ms-3 ms-lg-0 text-end text-lg-start">
@@ -37,10 +39,12 @@ import "@h2d2/shopicons/es/regular/receivepayment";
 import "@h2d2/shopicons/es/regular/car3";
 import "@h2d2/shopicons/es/regular/eco1";
 import AnimatedNumber from "./AnimatedNumber.vue";
+import formatter from "../mixins/formatter";
 
 export default {
 	name: "SavingsTile",
 	components: { AnimatedNumber },
+	mixins: [formatter],
 	props: {
 		title: String,
 		icon: String,
@@ -49,6 +53,11 @@ export default {
 		unit: String,
 		sub1: String,
 		sub2: String,
+	},
+	computed: {
+		leadingUnit() {
+			return this.unit === "%" && this.hasLeadingPercentageSign();
+		},
 	},
 };
 </script>

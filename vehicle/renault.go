@@ -85,8 +85,8 @@ func NewRenaultDaciaFromConfig(brand string, other map[string]interface{}) (api.
 		func() ([]kamereon.Vehicle, error) {
 			return api.Vehicles(accountID)
 		},
-		func(v kamereon.Vehicle) string {
-			return v.VIN
+		func(v kamereon.Vehicle) (string, error) {
+			return v.VIN, nil
 		},
 	)
 

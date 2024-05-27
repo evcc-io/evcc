@@ -245,17 +245,27 @@ params:
     type: choice
     validvalues:
       - car
-      - bus
-      - van
-      - tractor
       - bike
-      - scooter
+      - bus
       - moped
       - motorcycle
-      - generic
-      - waterheater
+      - scooter
+      - tractor
+      - shuttle
+      - van
       - heater
+      - heatpump
+      - waterheater
+      - laundry
+      - dishwasher
+      - airpurifier
+      - climate
       - cooler
+      - generic
+      - device
+      - meter
+      - compute
+      - tool
   - name: ski
     required: true
     description:

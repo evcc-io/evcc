@@ -51,7 +51,7 @@ require (
 	github.com/jeremywohl/flatten v1.0.1
 	github.com/jinzhu/copier v0.4.0
 	github.com/jinzhu/now v1.1.5
-	github.com/joeshaw/carwings v0.0.0-20230425210048-195f7e10e966
+	github.com/joeshaw/carwings v0.0.0-20240517194654-cf29a185820c
 	github.com/joho/godotenv v1.5.1
 	github.com/jpfielding/go-http-digest v0.0.0-20240123121450-cffc47d5d6d8
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51
