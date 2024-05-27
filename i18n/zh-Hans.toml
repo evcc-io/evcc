@@ -11,33 +11,48 @@ legendTopName = "电池支持充电"
 legendTopSubline = "勿打扰"
 modalTitle = "电池配置"
 note = "注意:这些设置仅影响太阳能模式.充电行为会相应调整."
-disclaimerHint =
-disclaimerText =
-control =
-discharge =
 
 [batterySettings.bufferStart]
 full = "当快满的时候"
 low = "当有点满的时候"
 medium = "半满时"
 never = "只要有足够的剩余"
-above =
 
 [config]
+
+[config.battery]
+
+[config.deviceValue]
 
 [config.form]
 example = "示例"
 optional = "可选"
+
+[config.general]
+
+[config.grid]
 
 [config.main]
 addVehicle = "添加车辆"
 edit = "编辑"
 title = "配置"
 vehicles = "我的车辆"
-addLoadpoint =
-yaml =
-unconfigured =
-addPvBattery =
+
+[config.meter]
+
+[config.options]
+
+[config.options.endianness]
+
+[config.options.schema]
+
+[config.pv]
+
+[config.section]
+
+[config.system]
+
+[config.title]
 
 [config.validation]
 failed = "失败"
@@ -139,8 +154,6 @@ login = "车辆登录"
 needHelp = "需要帮助?"
 sessions = "充电期"
 settings = "设置"
-logout =
-nativeSettings =
 
 [help]
 discussionsButton = "GitHub 讨论"
@@ -152,8 +165,6 @@ primaryActions = "有些东西没有按照它应该的方式工作 ?这些都是
 restartButton = "重启"
 restartDescription = "试过关机再开?"
 secondaryActions = "仍然无法解决您的问题?这里有一些更严厉的选择."
-logsDescription =
-logsButton =
 
 [help.restart]
 cancel = "取消"
@@ -161,6 +172,10 @@ confirm = "是, 重启!"
 description = "在正常情况下,没有必要重新启动.如果您需要定期重新启动 evcc,请考虑提交错误."
 disclaimer = "注意: evcc 将终止并依靠操作系统重新启动服务."
 modalTitle = "你确定要重启吗?"
+
+[log]
+
+[loginModal]
 
 [main]
 vehicles = "停车中"
@@ -173,13 +188,6 @@ none = "无"
 title = "计划"
 titleMinSoc = "平均充电"
 titleTargetCharge = "离开"
-active =
-day =
-goal =
-remove =
-time =
-update =
-unsavedChanges =
 
 [main.energyflow]
 battery = "电池"
@@ -193,7 +201,8 @@ noEnergy = "无仪表数据"
 pvExport = "电网导出"
 pvProduction = "生产"
 selfConsumption = "内耗"
-batteryHold =
+
+[main.heatingStatus]
 
 [main.loadpoint]
 avgPrice = "⌀ 价格"
@@ -204,9 +213,6 @@ fallbackName = "充电积分"
 power = "电力"
 price = "Σ 价格"
 solar = "太阳能"
-remoteDisabledSoft =
-remoteDisabledHard =
-remaining =
 
 [main.loadpointSettings]
 currents = "充电货币"
@@ -214,9 +220,8 @@ default = "默认"
 disclaimerHint = "笔记:"
 title = "设置 {0}"
 vehicle = "车辆"
-onlyForSocBasedCharging =
-smartCostClean =
-smartCostCheap =
+
+[main.loadpointSettings.limitSoc]
 
 [main.loadpointSettings.maxCurrent]
 label = "最大电流"
@@ -235,7 +240,6 @@ phases_1 = "阶段1"
 phases_1_hint = "({min} -> {max})"
 phases_3 = "阶段3"
 phases_3_hint = "({min} -> {max})"
-no1p3pSupport =
 
 [main.mode]
 minpv = "最小太阳能"
@@ -269,12 +273,6 @@ tomorrow = "明天"
 update = "更新"
 vehicleCapacityDocs = "了解如何配置它."
 vehicleCapacityRequired = "需要车辆电池容量来估计充电时间."
-targetIsAboveLimit =
-notReachableInTime =
-remove =
-currentPlan =
-preview =
-targetIsAboveVehicleLimit =
 
 [main.targetChargePlan]
 chargeDuration = "充电时间"
@@ -299,7 +297,6 @@ temp = "临时."
 tempLimit = "临时限制"
 unknown = "来访车辆"
 vehicleSoc = "充电"
-notReachable =
 
 [main.vehicleSoc]
 charging = "充电中"
@@ -324,18 +321,18 @@ scale3p = "在{remaining}中增加到三相充电…"
 targetChargeActive = "目标充电激活…"
 targetChargePlanned = "目标充电从 {time}开始."
 targetChargeWaitForVehicle = "目标充电准备就绪. 等车…"
-unknown = ""
 vehicleLimitReached = "达到车辆限制 {soc} ."
 waitForVehicle = "准备好了. 等车…"
 
 [notifications]
 dismissAll = "全部解除"
 modalTitle = "通知"
-logs =
 
 [offline]
 message = "没有连接到服务器."
 reload = "重新加载?"
+
+[passwordModal]
 
 [session]
 cancel = "取消"
@@ -380,11 +377,6 @@ meterstart = "计量开始(kWh)"
 meterstop = "计量结束(kWh)"
 odometer = "里程 (km)"
 vehicle = "车辆"
-priceperkwh =
-solarpercentage =
-chargeduration =
-price =
-co2perkwh =
 
 [sessions.filter]
 allLoadpoints = "全部充电积分"
@@ -393,6 +385,8 @@ filter = "过滤"
 
 [settings]
 title = "设置"
+
+[settings.fullscreen]
 
 [settings.hiddenFeatures]
 label = "实验"
@@ -431,11 +425,6 @@ modalTitle = "智能电网充电"
 none = "无"
 priceLabel = "电价"
 priceLimit = "限价"
-cleanTitle =
-cheapTitle =
-batteryDescription =
-saved =
-applyToAll =
 
 [startupError]
 configFile = "使用的配置文件:"
@@ -448,117 +437,3 @@ lineError = "{0}错误."
 lineErrorLink = "行 {0}"
 restartButton = "重启"
 title = "启动错误"
-
-
-[loginModal]
-password =
-login =
-reset =
-error =
-title =
-invalid =
-cancel =
-
-[main.heatingStatus]
-waitForVehicle =
-cleanEnergyCharging =
-cheapEnergyCharging =
-charging =
-
-[main.loadpointSettings.limitSoc]
-description =
-label =
-
-[passwordModal]
-description =
-error =
-newPassword =
-noMatch =
-empty =
-labelCurrent =
-labelRepeat =
-labelNew =
-titleNew =
-updatePassword =
-titleUpdate =
-
-[settings.fullscreen]
-enter =
-exit =
-label =
-
-[config.deviceValue]
-phasePowers =
-capacity =
-range =
-odometer =
-energy =
-phaseVoltages =
-chargedEnergy =
-enabled =
-chargeStatus =
-power =
-phaseCurrents =
-soc =
-socLimit =
-current =
-
-[config.system]
-logs =
-restartRequiredDescription =
-restart =
-restartRequiredMessage =
-restartingDescription =
-restartingMessage =
-
-[config.section]
-general =
-system =
-
-[log]
-areaLabel =
-download =
-areas =
-update =
-title =
-search =
-showAll =
-noResults =
-levelLabel =
-
-[config.battery]
-titleAdd =
-titleEdit =
-
-[config.meter]
-titleChoice =
-save =
-validateSave =
-template =
-delete =
-cancel =
-
-[config.pv]
-titleAdd =
-titleEdit =
-
-[config.options.endianness]
-big =
-little =
-
-[config.grid]
-titleEdit =
-titleAdd =
-
-[config.title]
-description =
-label =
-title =
-
-[config.general]
-cancel =
-save =
-
-[config.options.schema]
-https =
-http =

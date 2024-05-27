@@ -48,6 +48,8 @@ socLimit = "Limită"
 example = "Exemplu"
 optional = "optional"
 
+[config.general]
+
 [config.grid]
 titleAdd = "Adăugați Contorul de Grilă"
 titleEdit = "Editați Contorul de bransament"
@@ -70,13 +72,25 @@ template = "Producător"
 titleChoice = "Ce vrei să adaugi?"
 validateSave = "Valideaza si salveaza"
 
+[config.options]
+
+[config.options.endianness]
+
+[config.options.schema]
+
 [config.pv]
 titleAdd = "Adauga SmartMeter"
 titleEdit = "Editeaza SmartMeter"
 
+[config.section]
+
 [config.site]
 cancel = "Anuleaza"
 save = "Salveaza"
+
+[config.system]
+
+[config.title]
 
 [config.validation]
 failed = "esuat"
@@ -178,8 +192,6 @@ login = "Login Masina"
 needHelp = "Ai nevoie de Ajutor ?"
 sessions = "Sesiuni de Incărcare"
 settings = "Configurare"
-nativeSettings =
-logout =
 
 [help]
 discussionsButton = "Discutii GitHub"
@@ -191,8 +203,6 @@ primaryActions = "Ceva nu functioneaza cum ar trebui? Aici este locul potrivit s
 restartButton = "Restart"
 restartDescription = "Ai incercat sa inchizi si sa deschizi din nou? "
 secondaryActions = "Inca nu ati rezolvat problema? Iata niste alte optiuni"
-logsButton =
-logsDescription =
 
 [help.restart]
 cancel = "Anuleaza"
@@ -200,6 +210,10 @@ confirm = "Da, reporneste!"
 description = "In mod normal, restarul nu ar trebui sa fie necesar. Te rog sa trimiti un raport daca trebuie sa restartezi des EVCC."
 disclaimer = "Nota: evcc se va inchide si se va baza pe OS sa restarteze serviciul sau."
 modalTitle = "Esti sigur ca vrei sa dai restart?"
+
+[log]
+
+[loginModal]
 
 [main]
 vehicles = "Parcare"
@@ -218,7 +232,6 @@ title = "Plan"
 titleMinSoc = "Incarcare minima"
 titleTargetCharge = "Plecare"
 update = "Aplica"
-unsavedChanges =
 
 [main.energyflow]
 battery = "Baterie"
@@ -260,8 +273,6 @@ disclaimerHint = "Nota:"
 onlyForSocBasedCharging = "Aceste optiuni sunt active doar pentru masini carora le cunoaste gradul de incarcare."
 title = "Setări {0}"
 vehicle = "Vehicul"
-smartCostCheap =
-smartCostClean =
 
 [main.loadpointSettings.limitSoc]
 description = "Limita de incarcare care e folosita cand e conectat a aceasta masina."
@@ -349,7 +360,6 @@ temp = "Temp."
 tempLimit = "Temp. limit"
 unknown = "Vehicul musafir"
 vehicleSoc = "Încărcare"
-notReachable =
 
 [main.vehicleSoc]
 charging = "încarcă"
@@ -374,18 +384,18 @@ scale3p = "Schimbam încărcarea la 3 faze în {remaining}…"
 targetChargeActive = "Încarcare țintă activă…"
 targetChargePlanned = "Încărcarea pornește la {time}."
 targetChargeWaitForVehicle = "Încărcare terminată. Aștept după vehicul…"
-unknown = ""
 vehicleLimitReached = "Limita {soc} a fost atinsă."
 waitForVehicle = "Pregătit. Aștept după vehicul…"
 
 [notifications]
 dismissAll = "Închide tot"
 modalTitle = "Notificări"
-logs =
 
 [offline]
 message = "Nu se poate conecta la server."
 reload = "Reîncarcă?"
+
+[passwordModal]
 
 [session]
 cancel = "Anulează"
@@ -430,11 +440,6 @@ meterstart = "Start contor (kWh)"
 meterstop = "Stop contor (kWh)"
 odometer = "Kilometraj (km)"
 vehicle = "Vehicul"
-chargeduration =
-co2perkwh =
-solarpercentage =
-price =
-priceperkwh =
 
 [sessions.filter]
 allLoadpoints = "toate punctele de incarcare"
@@ -443,6 +448,8 @@ filter = "Filtru"
 
 [settings]
 title = "Configuratie"
+
+[settings.fullscreen]
 
 [settings.gridDetails]
 co2 = "CO₂"
@@ -487,11 +494,6 @@ modalTitle = "Incarcare Smart Grid"
 none = "nimic"
 priceLabel = "Pretul energiei"
 priceLimit = "Limita de pret"
-applyToAll =
-cleanTitle =
-cheapTitle =
-saved =
-batteryDescription =
 
 [startupError]
 configFile = "Fișier configurare folosit:"
@@ -509,71 +511,3 @@ title = "Eroare la pornire încărcare"
 cancel = "Anulați"
 template = "Producător"
 test = "Test"
-
-
-[passwordModal]
-labelCurrent =
-updatePassword =
-noMatch =
-labelNew =
-error =
-newPassword =
-labelRepeat =
-empty =
-titleUpdate =
-titleNew =
-description =
-
-[settings.fullscreen]
-enter =
-exit =
-label =
-
-[config.system]
-restart =
-logs =
-restartRequiredDescription =
-restartingMessage =
-restartRequiredMessage =
-restartingDescription =
-
-[config.section]
-general =
-system =
-
-[config.general]
-save =
-cancel =
-
-[config.options.endianness]
-big =
-little =
-
-[log]
-areaLabel =
-areas =
-levelLabel =
-showAll =
-noResults =
-search =
-update =
-download =
-title =
-
-[loginModal]
-password =
-reset =
-cancel =
-error =
-login =
-invalid =
-title =
-
-[config.title]
-label =
-title =
-description =
-
-[config.options.schema]
-http =
-https =

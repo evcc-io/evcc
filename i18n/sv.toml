@@ -427,7 +427,6 @@ scale3p = "Ökar till 3-fas-laddning om {remaining}..."
 targetChargeActive = "Laddplan aktiv..."
 targetChargePlanned = "Laddplan startar {time}."
 targetChargeWaitForVehicle = "Laddare beredd. Väntar på fordon..."
-unknown = ""
 vehicleLimitReached = "Fordonsgränsen {soc} nådd."
 waitForVehicle = "Redo. Väntar på fordon..."
 
@@ -501,11 +500,6 @@ price = "Pris"
 priceperkwh = "Pris/kWh"
 solarpercentage = "Sol (%)"
 vehicle = "Fordon"
-chargeduration = "Varaktighet"
-co2perkwh = "CO₂/kWh"
-price = "Pris"
-priceperkwh = "Pris/kWh"
-solarpercentage = "Sol (%)"
 
 [sessions.filter]
 allLoadpoints = "alla laddplatser"
@@ -585,12 +579,3 @@ title = "Startfel"
 cancel = "Avbryt"
 template = "Tillverkare"
 test = "Test"
-
-
-[config.options.schema]
-http = "HTTP (okrypterad)"
-https = "HTTPS (krypterad)"
-
-[config.options.endianness]
-big = "big-endian"
-little = "little-endian"

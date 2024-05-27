@@ -427,7 +427,6 @@ scale3p = "Øger til 3-faset opladning om {remaining}..."
 targetChargeActive = "Plan for ladning er aktiv..."
 targetChargePlanned = "Opladningsplan starter kl. {time}."
 targetChargeWaitForVehicle = "Plan for opladning er klar. Venter på køretøj..."
-unknown = ""
 vehicleLimitReached = "Køretøjsgrænsen {soc} nået."
 waitForVehicle = "Parat. Venter på køretøj ..."
 
@@ -501,11 +500,6 @@ price = "Pris"
 priceperkwh = "Pris/kWh"
 solarpercentage = "Sol (%)"
 vehicle = "Køretøj"
-chargeduration = "Varighed"
-co2perkwh = "CO₂/kWh"
-price = "Pris"
-priceperkwh = "Pris/kWh"
-solarpercentage = "Sol (%)"
 
 [sessions.filter]
 allLoadpoints = "alle ladepunkter"
@@ -579,12 +573,3 @@ title = "Fejl ved opstart"
 cancel = "Afbryd"
 template = "Producent"
 test = "Test"
-
-
-[config.options.endianness]
-big = "big-endian"
-little = "little-endian"
-
-[config.options.schema]
-http = "HTTP (ikke-krypteret)"
-https = "HTTPS (krypteret)"

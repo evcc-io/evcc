@@ -74,6 +74,12 @@ template = "Fabrikant"
 titleChoice = "Wat wil je toevoegen?"
 validateSave = "Valideren en opslaan"
 
+[config.options]
+
+[config.options.endianness]
+
+[config.options.schema]
+
 [config.pv]
 titleAdd = "Voeg meter zonnepanelen toe"
 titleEdit = "Bewerk meter zonnepanelen"
@@ -419,7 +425,6 @@ scale3p = "Wisselen naar laden op 3 fasen over {remaining}..."
 targetChargeActive = "Laadplan actief..."
 targetChargePlanned = "Laadplan begint om {time}."
 targetChargeWaitForVehicle = "Laadplan gereed. Wachten op voertuig..."
-unknown = ""
 vehicleLimitReached = "Voertuiglimiet {soc} bereikt."
 waitForVehicle = "Klaar. Wachten op voertuig..."
 
@@ -488,11 +493,6 @@ meterstart = "Meter start (kWh)"
 meterstop = "Meter stop (kwh)"
 odometer = "Kilometerstand (km)"
 vehicle = "Voertuig"
-solarpercentage =
-price =
-co2perkwh =
-priceperkwh =
-chargeduration =
 
 [sessions.filter]
 allLoadpoints = "alle oplaadpunten"
@@ -572,12 +572,3 @@ title = "Start Error"
 cancel = "Annuleer"
 template = "Fabrikant"
 test = "Test"
-
-
-[config.options.endianness]
-little =
-big =
-
-[config.options.schema]
-https =
-http =

@@ -432,7 +432,6 @@ scale3p = "Aumentando a carga trifásica en {remaining}..."
 targetChargeActive = "Plan de carga activo..."
 targetChargePlanned = "El plan de carga comienza a las {time}"
 targetChargeWaitForVehicle = "Plan de carga listo. Esperando vehículo..."
-unknown = ""
 vehicleLimitReached = "Límite de vehículo {soc} alcanzado."
 waitForVehicle = "Listo para cargar. Esperando vehículo."
 
@@ -506,11 +505,6 @@ price = "Precio"
 priceperkwh = "Precio/kWh"
 solarpercentage = "Solar (%)"
 vehicle = "Vehículo"
-co2perkwh = "CO₂/kWh"
-chargeduration = «Duración»
-price = "Precio"
-priceperkwh = "Precio/kWh"
-solarpercentage = "Solar (%)"
 
 [sessions.filter]
 allLoadpoints = "todos los puntos de recarga"
