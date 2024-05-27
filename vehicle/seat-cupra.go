@@ -68,8 +68,8 @@ func NewCupraFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		cc.VIN, func() ([]cupra.Vehicle, error) {
 			return api.Vehicles(ui.Subject)
 		},
-		func(v cupra.Vehicle) string {
-			return v.VIN
+		func(v cupra.Vehicle) (string, error) {
+			return v.VIN, nil
 		},
 	)
 

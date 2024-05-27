@@ -55,8 +55,8 @@ func NewPolestarFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		ctx, cancel := context.WithTimeout(context.Background(), cc.Timeout)
 		defer cancel()
 		return api.Vehicles(ctx)
-	}, func(v polestar.ConsumerCar) string {
-		return v.VIN
+	}, func(v polestar.ConsumerCar) (string, error) {
+		return v.VIN, nil
 	})
 
 	if err == nil {

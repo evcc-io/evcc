@@ -66,8 +66,8 @@ func NewIDFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 	vehicle, err := ensureVehicleEx(
 		cc.VIN, api.Vehicles,
-		func(v id.Vehicle) string {
-			return v.VIN
+		func(v id.Vehicle) (string, error) {
+			return v.VIN, nil
 		},
 	)
 

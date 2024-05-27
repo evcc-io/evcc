@@ -432,7 +432,6 @@ scale3p = "Aumentando a carga trifásica en {remaining}..."
 targetChargeActive = "Plan de carga activo..."
 targetChargePlanned = "El plan de carga comienza a las {time}"
 targetChargeWaitForVehicle = "Plan de carga listo. Esperando vehículo..."
-unknown = ""
 vehicleLimitReached = "Límite de vehículo {soc} alcanzado."
 waitForVehicle = "Listo para cargar. Esperando vehículo."
 
@@ -493,6 +492,8 @@ vehicle = "Vehículo"
 
 [sessions.csv]
 chargedenergy = "Energía (kWh)"
+chargeduration = "«Duración»"
+co2perkwh = "CO₂/kWh"
 created = "Hora de inicio"
 finished = "Hora de finalización"
 identifier = "Identificador"
@@ -500,6 +501,9 @@ loadpoint = "Punto de carga"
 meterstart = "Inicio de metro (kWh)"
 meterstop = "Parón de metro (kWh)"
 odometer = "Kilometraje (km)"
+price = "Precio"
+priceperkwh = "Precio/kWh"
+solarpercentage = "Solar (%)"
 vehicle = "Vehículo"
 
 [sessions.filter]

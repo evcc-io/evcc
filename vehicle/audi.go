@@ -76,8 +76,8 @@ func NewAudiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 			defer cancel()
 			return api.Vehicles(ctx)
 		},
-		func(v etron.Vehicle) string {
-			return v.VIN
+		func(v etron.Vehicle) (string, error) {
+			return v.VIN, nil
 		},
 	)
 

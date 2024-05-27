@@ -72,9 +72,19 @@ template = "Κατασκευαστής"
 titleChoice = "Τι θέλετε να προσθέσετε;"
 validateSave = "Επικύρωση & αποθήκευση"
 
+[config.options]
+
+[config.options.endianness]
+
+[config.options.schema]
+
 [config.pv]
 titleAdd = "Προσθήκη Ηλιακού Μετρητή"
 titleEdit = "Μεταβολή Ηλιακού Μετρητή"
+
+[config.section]
+
+[config.system]
 
 [config.title]
 description = "Προβάλλεται στην κεντρική οθόνη και στον φυλλομετρητή"
@@ -95,3 +105,99 @@ save = "Αποθήκευση"
 scooter = "Σκούτερ"
 template = "Κατασκευαστής"
 titleAdd = "Προσθήκη Οχήματος"
+
+[footer]
+
+[footer.community]
+
+[footer.savings]
+
+[footer.savings.period]
+
+[footer.sponsor]
+
+[footer.telemetry]
+
+[footer.version]
+
+[header]
+
+[help]
+
+[help.restart]
+
+[log]
+
+[loginModal]
+
+[main]
+
+[main.chargingPlan]
+
+[main.energyflow]
+
+[main.heatingStatus]
+
+[main.loadpoint]
+
+[main.loadpointSettings]
+
+[main.loadpointSettings.limitSoc]
+
+[main.loadpointSettings.maxCurrent]
+
+[main.loadpointSettings.minCurrent]
+
+[main.loadpointSettings.minSoc]
+
+[main.loadpointSettings.phasesConfigured]
+
+[main.mode]
+
+[main.provider]
+
+[main.targetCharge]
+
+[main.targetChargePlan]
+
+[main.targetEnergy]
+
+[main.vehicle]
+
+[main.vehicleSoc]
+
+[main.vehicleStatus]
+
+[notifications]
+
+[offline]
+
+[passwordModal]
+
+[session]
+
+[sessions]
+
+[sessions.csv]
+
+[sessions.filter]
+
+[settings]
+
+[settings.fullscreen]
+
+[settings.hiddenFeatures]
+
+[settings.language]
+
+[settings.sponsorToken]
+
+[settings.telemetry]
+
+[settings.theme]
+
+[settings.unit]
+
+[smartCost]
+
+[startupError]

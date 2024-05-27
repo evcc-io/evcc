@@ -74,9 +74,19 @@ template = "Fabricante"
 titleChoice = "O que você quer adicionar?"
 validateSave = "Validar e guardar"
 
+[config.options]
+
+[config.options.endianness]
+
+[config.options.schema]
+
 [config.pv]
 titleAdd = "Adicionar Contador Solar"
 titleEdit = "Editar Contador Solar"
+
+[config.section]
+
+[config.system]
 
 [config.title]
 description = "Exibido no ecrã principal e na guia do navegador."
@@ -208,6 +218,8 @@ confirm = "Sim, reinicie!"
 description = "Em circunstâncias normais, a reinicialização não deve ser necessária. Considere registrar um erro se precisar reiniciar o evcc regularmente."
 disclaimer = "Nota: o evcc terminará e confiará no sistema operacional para reiniciar o serviço."
 modalTitle = "Tens a certeza que queres reiniciar"
+
+[log]
 
 [loginModal]
 cancel = "Cancelar"
@@ -391,7 +403,6 @@ scale3p = "Aumentando para carregamento trifásico em {remaining}…"
 targetChargeActive = "Plano de carregamento activo..."
 targetChargePlanned = "O plano de carregamento começa a {time}."
 targetChargeWaitForVehicle = "Plano de carregamento pronto. À espera do veículo..."
-unknown = ""
 vehicleLimitReached = "Limite de veículo {soc} atingido."
 waitForVehicle = "Pronto. Esperando pelo veículo..."
 
@@ -468,6 +479,8 @@ filter = "Filtro"
 
 [settings]
 title = "Configuração geral"
+
+[settings.fullscreen]
 
 [settings.gridDetails]
 co2 = "CO₂"
