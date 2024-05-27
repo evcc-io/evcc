@@ -471,6 +471,8 @@ vehicle = "Jármű"
 
 [sessions.csv]
 chargedenergy = "Energia (kWh)"
+chargeduration = "Időtartam"
+co2perkwh = "CO₂/kWh"
 created = "Elindítva"
 finished = "Befejezve"
 identifier = "Azonosító"
@@ -478,12 +480,10 @@ loadpoint = "Töltőpont"
 meterstart = "Fogyasztásmérő kezdeti állás (kWh)"
 meterstop = "Fogyasztásmérő befejező állás (kWh)"
 odometer = "Óraállás (km)"
+price = "Ár"
+priceperkwh = "Ár/kWh"
+solarpercentage = "Napenergia (%)"
 vehicle = "Jármű"
-chargeduration = Időtartam
-co2perkwh = CO₂/kWh
-price = Ár
-priceperkwh = Ár/kWh
-solarpercentage = Napenergia (%)
 
 [sessions.filter]
 allLoadpoints = "minden töltőpont"
