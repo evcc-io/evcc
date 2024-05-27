@@ -8,6 +8,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -30,6 +31,7 @@ const (
 	sempDeviceId     = "F-%s-%.12x-00" // 6 bytes
 	sempSerialNumber = "%s-%d"
 	sempCharger      = "EVCharger"
+	sempHeatPump     = "HeatPump"
 	basePath         = "/semp"
 	maxAge           = 1800
 )
@@ -366,6 +368,14 @@ func (s *SEMP) deviceID(id int) string {
 	// numerically add device number
 	did := append([]byte{0, 0}, s.did...)
 	return fmt.Sprintf(sempDeviceId, s.vid, ^uint64(0xffff<<48)&(binary.BigEndian.Uint64(did)+uint64(id)))
+}
+
+func (s *SEMP) deviceType(lp loadpoint.API) string {
+	charger := lp.GetCharger()
+	if charger != nil && slices.Contains(charger.Features(), api.Heating) {
+		return sempHeatPump
+	}
+	return sempCharger
 }
 
 func (s *SEMP) deviceInfo(id int, lp loadpoint.API) DeviceInfo {
