@@ -20,6 +20,7 @@ full = "когда почти полная"
 low = "когда около полная"
 medium = "когда на половину полная"
 never = "только при достаточном избытке"
+above =
 
 [config]
 
@@ -32,6 +33,10 @@ addVehicle = "Добавить транспортное средство"
 edit = "редактировать"
 title = "Конфигурация"
 vehicles = "Мои транспортные средства"
+unconfigured =
+yaml =
+addLoadpoint =
+addPvBattery =
 
 [footer]
 
@@ -62,6 +67,13 @@ savingsTitle = "Сэкономлено"
 savingsTotalEnergy = "{total} кВт/ч заряжено"
 since = "c {since}"
 tabTitle = "Мои данные"
+co2Title =
+referenceLabel =
+moneySaved =
+co2Saved =
+configurePriceCo2 =
+periodLabel =
+referenceGrid =
 
 [footer.sponsor]
 becomeSponsor = "Стать спонсором"
@@ -98,6 +110,10 @@ docs = "Документация"
 github = "GitHub"
 sessions = "Сеансы зарядки"
 settings = "Настройки"
+nativeSettings =
+needHelp =
+login =
+logout =
 
 [main]
 vehicles = "Парковка"
@@ -113,12 +129,21 @@ noEnergy = "Нет данных счетчика"
 pvExport = "Экспорт в сеть"
 pvProduction = "Генерация"
 selfConsumption = "Собственное потребление"
+batteryHold =
+batteryTooltip =
 
 [main.loadpoint]
 charged = "Заряжено"
 duration = "Длительность"
 fallbackName = "Зарядная станция"
 power = "Мощность"
+co2 =
+avgPrice =
+remoteDisabledSoft =
+remoteDisabledHard =
+remaining =
+solar =
+price =
 
 [main.loadpointSettings]
 currents = "Ток зарядки"
@@ -126,6 +151,9 @@ default = "по умолчанию"
 disclaimerHint = "Заметка:"
 title = "Настройки {0}"
 vehicle = "Транспортное средство"
+smartCostClean =
+smartCostCheap =
+onlyForSocBasedCharging =
 
 [main.loadpointSettings.maxCurrent]
 label = "Макс. ток"
@@ -135,6 +163,7 @@ label = "Мин. ток"
 
 [main.loadpointSettings.minSoc]
 label = "Мин. заряд %"
+description =
 
 [main.loadpointSettings.phasesConfigured]
 label = "Фазы"
@@ -143,6 +172,7 @@ phases_1 = "1 фаза"
 phases_1_hint = "({min} до {max})"
 phases_3 = "3 фазы"
 phases_3_hint = "({min} до {max})"
+no1p3pSupport =
 
 [main.mode]
 minpv = "Мин+солн. эн"
@@ -164,6 +194,25 @@ targetIsInThePast = "Выбери время в будущем."
 title = "Запланированное время"
 today = "сегодня"
 tomorrow = "завтра"
+onlyInPvMode =
+vehicleCapacityDocs =
+co2Limit =
+costLimitIgnore =
+planPeriodLabel =
+targetIsAboveLimit =
+planUnknown =
+priceLimit =
+planPeriodValue =
+vehicleCapacityRequired =
+remove =
+preview =
+targetIsAboveVehicleLimit =
+update =
+notReachableInTime =
+targetIsTooFarInTheFuture =
+currentPlan =
+planDuration =
+descriptionEnergy =
 
 [main.targetEnergy]
 label = "Лимит"
@@ -177,12 +226,18 @@ none = "Нет транспортного средства"
 targetSoc = "Лимит"
 unknown = "Гостевое транспортное средство"
 vehicleSoc = "Заряд"
+addVehicle =
+moreActions =
+tempLimit =
+temp =
+notReachable =
 
 [main.vehicleSoc]
 charging = "заряжается"
 connected = "подключено"
 disconnected = "отключено"
 ready = "готово"
+vehicleLimit =
 
 [main.vehicleStatus]
 charging = "Зарядка..."
@@ -198,10 +253,15 @@ targetChargePlanned = "Плановая зарядка начнется в {time
 targetChargeWaitForVehicle = "Плановая зарядка готова. Ожидаю транспортное средство..."
 unknown = ""
 waitForVehicle = "Готов. Ожидание транспортного средства..."
+cleanEnergyCharging =
+cheapEnergyCharging =
+climating =
+vehicleLimitReached =
 
 [notifications]
 dismissAll = "Отклонить все"
 modalTitle = "Уведомления"
+logs =
 
 [offline]
 message = "Не подключено к серверу."
@@ -215,6 +275,11 @@ meterstart = "Початок лічильника"
 meterstop = "Зупинка лічильника"
 odometer = "Пробіг"
 started = "Розпочато"
+date =
+title =
+meter =
+price =
+co2 =
 
 [sessions]
 date = "Период"
@@ -223,6 +288,17 @@ energy = "Заряжено"
 loadpoint = "Зарядная станция"
 title = "Сессии зарядки"
 vehicle = "Транспортное средство"
+noData =
+csvTotal =
+avgPower =
+price =
+avgPrice =
+csvMonth =
+co2 =
+chargeDuration =
+solar =
+total =
+reallyDelete =
 
 [sessions.csv]
 chargedenergy = "Электроэнергия (кВт/ч)"
@@ -232,6 +308,13 @@ identifier = "Идентификатор"
 loadpoint = "Зарядная станция"
 odometer = "Пробег (км)"
 vehicle = "Транспортное средство"
+meterstart =
+chargeduration =
+co2perkwh =
+meterstop =
+solarpercentage =
+price =
+priceperkwh =
 
 [settings]
 title = "Настройки"
@@ -265,3 +348,216 @@ lineError = "Ошибка в {0}."
 lineErrorLink = "линия {0}"
 restartButton = "Рестарт"
 title = "Ошибка запуска"
+
+
+[settings.fullscreen]
+enter =
+exit =
+label =
+
+[settings.hiddenFeatures]
+value =
+label =
+
+[config.validation]
+success =
+running =
+failed =
+label =
+unknown =
+validate =
+
+[config.vehicle]
+delete =
+generic =
+cancel =
+titleEdit =
+scooter =
+titleAdd =
+offline =
+template =
+online =
+save =
+validateSave =
+
+[footer.savings.period]
+30d =
+365d =
+total =
+
+[help]
+discussionsButton =
+documentationButton =
+issueButton =
+issueDescription =
+modalTitle =
+secondaryActions =
+restartButton =
+restartDescription =
+logsButton =
+logsDescription =
+primaryActions =
+
+[main.heatingStatus]
+cheapEnergyCharging =
+cleanEnergyCharging =
+waitForVehicle =
+charging =
+
+[sessions.filter]
+allLoadpoints =
+filter =
+allVehicles =
+
+[settings.sponsorToken]
+hint =
+getNew =
+expires =
+
+[smartCost]
+cheapTitle =
+co2Limit =
+saved =
+activeHoursLabel =
+activeHours =
+applyToAll =
+cleanTitle =
+batteryDescription =
+none =
+priceLabel =
+priceLimit =
+modalTitle =
+loadpointDescription =
+co2Label =
+
+[help.restart]
+cancel =
+disclaimer =
+description =
+confirm =
+modalTitle =
+
+[main.chargingPlan]
+arrivalTab =
+update =
+unsavedChanges =
+title =
+titleMinSoc =
+goal =
+titleTargetCharge =
+remove =
+day =
+time =
+modalTitle =
+departureTab =
+active =
+none =
+
+[loginModal]
+login =
+cancel =
+error =
+password =
+invalid =
+title =
+reset =
+
+[main.loadpointSettings.limitSoc]
+label =
+description =
+
+[main.targetChargePlan]
+timeRange =
+unknownPrice =
+priceLabel =
+co2Label =
+chargeDuration =
+
+[config.system]
+restartingMessage =
+logs =
+restartingDescription =
+restartRequiredDescription =
+restartRequiredMessage =
+restart =
+
+[config.meter]
+save =
+template =
+validateSave =
+titleChoice =
+delete =
+cancel =
+
+[config.general]
+save =
+cancel =
+
+[config.deviceValue]
+capacity =
+odometer =
+chargeStatus =
+phaseCurrents =
+enabled =
+range =
+soc =
+energy =
+phaseVoltages =
+power =
+current =
+chargedEnergy =
+socLimit =
+phasePowers =
+
+[config.grid]
+titleAdd =
+titleEdit =
+
+[log]
+areaLabel =
+title =
+noResults =
+update =
+download =
+areas =
+showAll =
+search =
+levelLabel =
+
+[passwordModal]
+newPassword =
+description =
+empty =
+labelRepeat =
+updatePassword =
+titleNew =
+error =
+labelNew =
+noMatch =
+labelCurrent =
+titleUpdate =
+
+[config.section]
+general =
+system =
+
+[config.title]
+label =
+description =
+title =
+
+[config.options.schema]
+https =
+http =
+
+[config.options.endianness]
+big =
+little =
+
+[config.battery]
+titleEdit =
+titleAdd =
+
+[config.pv]
+titleAdd =
+titleEdit =

@@ -10,12 +10,18 @@ legendTopName = "بطارية تدعم الشحن"
 legendTopSubline = "بدون انقطاع"
 modalTitle = "إعدادات البطارية"
 note = "ملحوظة: تؤثر هذه الإعدادات فقط على الوضع الشمسي. يتم تعديل سلوك الشحن وفقًا لذلك."
+disclaimerText =
+disclaimerHint =
+capacity =
+control =
+discharge =
 
 [batterySettings.bufferStart]
 full = "عندما أوشكت على الامتلاء"
 low = "عندما تكون ممتلئة إلى حد ما"
 medium = "عندما نصف ممتلئ"
 never = "فقط مع فائض كافٍ"
+above =
 
 [config]
 
@@ -28,6 +34,10 @@ addVehicle = "اضف عربة"
 edit = "عدّل"
 title = "الإعدادات"
 vehicles = "عرباتي"
+addLoadpoint =
+addPvBattery =
+yaml =
+unconfigured =
 
 [config.validation]
 failed = "أخفق"
@@ -40,6 +50,15 @@ validate = "تحقق من الصحة"
 [config.vehicle]
 cancel = "الغاء"
 delete = "احذف عربة"
+titleEdit =
+titleAdd =
+template =
+scooter =
+generic =
+offline =
+validateSave =
+save =
+online =
 
 [footer]
 

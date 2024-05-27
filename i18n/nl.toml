@@ -488,6 +488,11 @@ meterstart = "Meter start (kWh)"
 meterstop = "Meter stop (kwh)"
 odometer = "Kilometerstand (km)"
 vehicle = "Voertuig"
+solarpercentage =
+price =
+co2perkwh =
+priceperkwh =
+chargeduration =
 
 [sessions.filter]
 allLoadpoints = "alle oplaadpunten"
@@ -567,3 +572,12 @@ title = "Start Error"
 cancel = "Annuleer"
 template = "Fabrikant"
 test = "Test"
+
+
+[config.options.endianness]
+little =
+big =
+
+[config.options.schema]
+https =
+http =

@@ -20,6 +20,7 @@ full = "kad je skoro pun"
 low = "kad je donekle pun"
 medium = "kad je napola pun"
 never = "samo s dovoljno viška"
+above =
 
 [config]
 
@@ -32,6 +33,10 @@ addVehicle = "Dodaj vozilo"
 edit = "uredi"
 title = "Konfiguracija"
 vehicles = "Moja vozila"
+addPvBattery =
+yaml =
+addLoadpoint =
+unconfigured =
 
 [config.validation]
 failed = "nauspjelo"
@@ -134,6 +139,8 @@ login = "Prijave vozila"
 needHelp = "Trebaš pomoć?"
 sessions = "Sesije napajanja"
 settings = "Postavke"
+nativeSettings =
+logout =
 
 [help]
 discussionsButton = "GitHub rasprave"
@@ -145,6 +152,8 @@ primaryActions = "Nešto ne radi onako kako bi trebalo? Ovo su dobra mjesta za p
 restartButton = "Pokreni ponovo"
 restartDescription = "Jesi li pokušao/la isključiti i ponovo uključiti aplikaciju?"
 secondaryActions = "Još uvijek ne možeš riješiti problem? Evo još nekih opcija."
+logsButton =
+logsDescription =
 
 [help.restart]
 cancel = "Odustani"
@@ -170,6 +179,7 @@ title = "Plan"
 titleMinSoc = "Min. napajanje"
 titleTargetCharge = "Odlazak"
 update = "Primijeni"
+unsavedChanges =
 
 [main.energyflow]
 battery = "Baterija"
@@ -211,6 +221,8 @@ disclaimerHint = "Bilješka:"
 onlyForSocBasedCharging = "Ove su opcije dostupne samo za vozila s poznatom razinom napunjenosti."
 title = "Postavke {0}"
 vehicle = "Vozilo"
+smartCostCheap =
+smartCostClean =
 
 [main.loadpointSettings.limitSoc]
 description = "Ograničenje napajanja koje se koristi kada je ovo vozilo povezano."
@@ -233,6 +245,7 @@ phases_1 = "jednofazno"
 phases_1_hint = "({min} do {max})"
 phases_3 = "trofazno"
 phases_3_hint = "({min} do {max})"
+no1p3pSupport =
 
 [main.mode]
 minpv = "Min+Solarno"
@@ -297,6 +310,7 @@ temp = "Temperatura"
 tempLimit = "Granica temperature"
 unknown = "Vozilo gosta"
 vehicleSoc = "Napajanje"
+notReachable =
 
 [main.vehicleSoc]
 charging = "napajanje"
@@ -327,6 +341,7 @@ waitForVehicle = "Spremno. Čeka se na vozilo …"
 [notifications]
 dismissAll = "Odbaci sve"
 modalTitle = "Obavijesti"
+logs =
 
 [offline]
 message = "Ne postoji veza s poslužiteljam."
@@ -375,6 +390,11 @@ meterstart = "Početno stanje mjerača (kWh)"
 meterstop = "Završno stanje mjerača (kWh)"
 odometer = "Kilometraža (km)"
 vehicle = "Vozilo"
+price =
+chargeduration =
+solarpercentage =
+priceperkwh =
+co2perkwh =
 
 [sessions.filter]
 allLoadpoints = "sva mjesta napajanja"
@@ -427,6 +447,11 @@ modalTitle = "Smart Grid napajanje"
 none = "bez"
 priceLabel = "Cijena energije"
 priceLimit = "Ograničenje cijene"
+applyToAll =
+batteryDescription =
+saved =
+cleanTitle =
+cheapTitle =
 
 [startupError]
 configFile = "Korištena konfiguracijska datoteka:"
@@ -444,3 +469,107 @@ title = "Pogreška pri pokretanju"
 cancel = "Odustani"
 template = "Proizvođač"
 test = "Test"
+
+
+[settings.fullscreen]
+enter =
+exit =
+label =
+
+[passwordModal]
+empty =
+newPassword =
+labelRepeat =
+titleNew =
+updatePassword =
+titleUpdate =
+noMatch =
+labelNew =
+error =
+labelCurrent =
+description =
+
+[config.deviceValue]
+phaseVoltages =
+power =
+range =
+odometer =
+current =
+energy =
+soc =
+socLimit =
+enabled =
+chargedEnergy =
+capacity =
+phaseCurrents =
+chargeStatus =
+phasePowers =
+
+[log]
+areas =
+areaLabel =
+update =
+noResults =
+search =
+levelLabel =
+download =
+title =
+showAll =
+
+[loginModal]
+reset =
+password =
+login =
+title =
+invalid =
+cancel =
+error =
+
+[config.battery]
+titleEdit =
+titleAdd =
+
+[config.grid]
+titleAdd =
+titleEdit =
+
+[config.meter]
+validateSave =
+save =
+titleChoice =
+cancel =
+delete =
+template =
+
+[config.pv]
+titleAdd =
+titleEdit =
+
+[config.options.schema]
+https =
+http =
+
+[config.options.endianness]
+little =
+big =
+
+[config.section]
+general =
+system =
+
+[config.title]
+title =
+label =
+description =
+
+[config.system]
+logs =
+restartRequiredDescription =
+restartRequiredMessage =
+restartingDescription =
+restartingMessage =
+restart =
+
+[config.general]
+cancel =
+save =

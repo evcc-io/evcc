@@ -503,6 +503,11 @@ price = "Prix"
 priceperkwh = "Prix/kWh"
 solarpercentage = "% solaire"
 vehicle = "Véhicule"
+chargeduration = Durée
+co2perkwh = "CO₂/kWh"
+priceperkwh = Prix/kWh
+price = Prix
+solarpercentage = % solaire
 
 [sessions.filter]
 allLoadpoints = "tous les points de chargement"

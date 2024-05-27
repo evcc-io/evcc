@@ -184,6 +184,7 @@ nativeSettings = "Zmień serwer"
 needHelp = "Potrzebuję Pomocy?"
 sessions = "Sesje ładowania"
 settings = "Ustawienia"
+logout =
 
 [header.theme]
 auto = "Wygląd: system"
@@ -200,6 +201,8 @@ primaryActions = "Coś nie działa tak, jak powinno? To dobre miejsca, aby uzysk
 restartButton = "Uruchom ponownie"
 restartDescription = "Próbowałeś go wyłączyć i włączyć ponownie?"
 secondaryActions = "Nadal nie możesz rozwiązać swojego problemu? Oto kilka bardziej wymagających opcji."
+logsDescription =
+logsButton =
 
 [help.restart]
 cancel = "Anulować"
@@ -387,6 +390,7 @@ waitForVehicle = "Gotowe. Czekam na pojazd..."
 [notifications]
 dismissAll = "Odrzuć wszystkie"
 modalTitle = "Powiadomienia"
+logs =
 
 [offline]
 message = "Brak połączenia z serwerem."
@@ -435,6 +439,11 @@ meterstart = "Licznik początek (kWh)"
 meterstop = "Licznik koniec (kWh)"
 odometer = "Przebieg (km)"
 vehicle = "Pojazd"
+priceperkwh =
+price =
+chargeduration =
+co2perkwh =
+solarpercentage =
 
 [sessions.filter]
 allLoadpoints = "wszystkie punkty ładowania"
@@ -509,3 +518,67 @@ title = "Błąd uruchamiania"
 cancel = "Anulować"
 template = "Producent"
 test = "Test"
+
+
+[loginModal]
+error =
+cancel =
+login =
+password =
+title =
+invalid =
+reset =
+
+[passwordModal]
+description =
+newPassword =
+titleUpdate =
+updatePassword =
+labelRepeat =
+titleNew =
+noMatch =
+empty =
+labelCurrent =
+error =
+labelNew =
+
+[config.system]
+logs =
+restartRequiredMessage =
+restartRequiredDescription =
+restartingMessage =
+restartingDescription =
+restart =
+
+[config.title]
+label =
+title =
+description =
+
+[settings.fullscreen]
+label =
+exit =
+enter =
+
+[config.options.schema]
+https =
+http =
+
+[log]
+search =
+levelLabel =
+noResults =
+areas =
+download =
+title =
+areaLabel =
+update =
+showAll =
+
+[config.options.endianness]
+big =
+little =
+
+[config.section]
+system =
+general =
