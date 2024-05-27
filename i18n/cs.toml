@@ -48,6 +48,8 @@ socLimit = "Strop"
 example = "Příklad"
 optional = "volitelné"
 
+[config.general]
+
 [config.grid]
 titleAdd = "Přidat měřič spotřeby ze sítě"
 titleEdit = "Editovat měřič spotřeby ze sítě"
@@ -70,13 +72,25 @@ template = "Výrobce"
 titleChoice = "Co chcete přidat?"
 validateSave = "Zkontrolovat a uložit"
 
+[config.options]
+
+[config.options.endianness]
+
+[config.options.schema]
+
 [config.pv]
 titleAdd = "Přidat měřič solární energie"
 titleEdit = "Editovat měřič solární energie"
 
+[config.section]
+
 [config.site]
 cancel = "Zrušit"
 save = "Uložit"
+
+[config.system]
+
+[config.title]
 
 [config.validation]
 failed = "selhalo"
@@ -179,7 +193,6 @@ nativeSettings = "Změna serveru"
 needHelp = "Potřebujete poradit?"
 sessions = "Průběhy nabíjení"
 settings = "Nastavení"
-logout =
 
 [help]
 discussionsButton = "GitHub diskuse"
@@ -191,8 +204,6 @@ primaryActions = "Něco nefunguje, jak má? Tohle jsou dobrá místa, kde získa
 restartButton = "Restartovat"
 restartDescription = "Zkusili jste to restartovat?"
 secondaryActions = "Stále se vám nedaří vyřešit váš problém? Zde jsou některé další možnosti."
-logsButton =
-logsDescription =
 
 [help.restart]
 cancel = "Zrušit"
@@ -200,6 +211,10 @@ confirm = "Ano, restartovat!"
 description = "Za normálních okolností by restartování nemělo být nutné. Pokud musíte pravidelně restartovat evcc, zvažte prosím nahlášení chyby."
 disclaimer = "Poznámka: evcc se ukončí a spoléhá na to, že operační systém restartuje službu."
 modalTitle = "Opravdu chcete restartovat?"
+
+[log]
+
+[loginModal]
 
 [main]
 vehicles = "Parkoviště"
@@ -372,18 +387,18 @@ scale3p = "Zvyšuji na třífázové nabíjení za {remaining}…"
 targetChargeActive = "Nabíjení na cílovou hodnotu aktivní..."
 targetChargePlanned = "Nabíjení na cílovou hodnotu začne v {time}."
 targetChargeWaitForVehicle = "Cílové nabíjení připraveno. Čekám na vozidlo..."
-unknown = ""
 vehicleLimitReached = "Limit vozidla {soc} dosažen."
 waitForVehicle = "Připraveno. Čekám na vozidlo..."
 
 [notifications]
 dismissAll = "Zrušit vše"
 modalTitle = "Oznámení"
-logs =
 
 [offline]
 message = "Nepřipojeno na server."
 reload = "Obnovit?"
+
+[passwordModal]
 
 [session]
 cancel = "Zrušit"
@@ -428,11 +443,6 @@ meterstart = "Počáteční stav měřiče (kWh)"
 meterstop = "Konečný stav měřiče (kWh)"
 odometer = "Tachometr (km)"
 vehicle = "Vozidlo"
-price =
-co2perkwh =
-priceperkwh =
-chargeduration =
-solarpercentage =
 
 [sessions.filter]
 allLoadpoints = "všechny nabíjecí body"
@@ -441,6 +451,8 @@ filter = "Filtr"
 
 [settings]
 title = "Základní nastavení"
+
+[settings.fullscreen]
 
 [settings.hiddenFeatures]
 label = "Experimentální"
@@ -496,71 +508,3 @@ lineError = "Chyba v {0}."
 lineErrorLink = "řádek {0}."
 restartButton = "Restart"
 title = "Chyba při spuštění"
-
-
-[settings.fullscreen]
-enter =
-exit =
-label =
-
-[passwordModal]
-description =
-empty =
-labelNew =
-labelRepeat =
-newPassword =
-error =
-labelCurrent =
-noMatch =
-titleNew =
-titleUpdate =
-updatePassword =
-
-[config.section]
-general =
-system =
-
-[config.system]
-restartRequiredDescription =
-logs =
-restart =
-restartRequiredMessage =
-restartingDescription =
-restartingMessage =
-
-[log]
-areaLabel =
-areas =
-title =
-update =
-noResults =
-search =
-showAll =
-levelLabel =
-download =
-
-[loginModal]
-invalid =
-login =
-error =
-password =
-reset =
-cancel =
-title =
-
-[config.title]
-title =
-description =
-label =
-
-[config.general]
-cancel =
-save =
-
-[config.options.endianness]
-big =
-little =
-
-[config.options.schema]
-http =
-https =

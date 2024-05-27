@@ -429,7 +429,6 @@ scale3p = "Augmentation en triphasé dans {remaining}…"
 targetChargeActive = "Plan de charge actif..."
 targetChargePlanned = "Le plan de charge démarre à {time}."
 targetChargeWaitForVehicle = "Plan de charge prêt. Attente du véhicule..."
-unknown = ""
 vehicleLimitReached = "Limite de véhicule {soc} atteinte."
 waitForVehicle = "Prêt à charger. Attente du véhicule…"
 
@@ -503,11 +502,6 @@ price = "Prix"
 priceperkwh = "Prix/kWh"
 solarpercentage = "% solaire"
 vehicle = "Véhicule"
-chargeduration = Durée
-co2perkwh = "CO₂/kWh"
-priceperkwh = Prix/kWh
-price = Prix
-solarpercentage = % solaire
 
 [sessions.filter]
 allLoadpoints = "tous les points de chargement"

@@ -74,9 +74,19 @@ template = "Fabricante"
 titleChoice = "O que você quer adicionar?"
 validateSave = "Validar e guardar"
 
+[config.options]
+
+[config.options.endianness]
+
+[config.options.schema]
+
 [config.pv]
 titleAdd = "Adicionar Contador Solar"
 titleEdit = "Editar Contador Solar"
+
+[config.section]
+
+[config.system]
 
 [config.title]
 description = "Exibido no ecrã principal e na guia do navegador."
@@ -201,8 +211,6 @@ primaryActions = "Alguma coisa não funciona como deveria? Estes são bons lugar
 restartButton = "Reiniciar"
 restartDescription = "Tentou desligar e ligar de novo?"
 secondaryActions = "Ainda não conseguiu resolver o seu problema? Aqui estão algumas opções mais pesadas."
-logsDescription =
-logsButton =
 
 [help.restart]
 cancel = "Cancelar"
@@ -211,6 +219,8 @@ description = "Em circunstâncias normais, a reinicialização não deve ser nec
 disclaimer = "Nota: o evcc terminará e confiará no sistema operacional para reiniciar o serviço."
 modalTitle = "Tens a certeza que queres reiniciar"
 
+[log]
+
 [loginModal]
 cancel = "Cancelar"
 error = "Login falhou: "
@@ -218,7 +228,6 @@ invalid = "A palavra-passe é inválida."
 login = "Entrar no sistema"
 password = "Palavra-passe"
 title = "Autenticação"
-reset =
 
 [main]
 vehicles = "Estacionamento"
@@ -394,14 +403,12 @@ scale3p = "Aumentando para carregamento trifásico em {remaining}…"
 targetChargeActive = "Plano de carregamento activo..."
 targetChargePlanned = "O plano de carregamento começa a {time}."
 targetChargeWaitForVehicle = "Plano de carregamento pronto. À espera do veículo..."
-unknown = ""
 vehicleLimitReached = "Limite de veículo {soc} atingido."
 waitForVehicle = "Pronto. Esperando pelo veículo..."
 
 [notifications]
 dismissAll = "Recusar tudos"
 modalTitle = "Notícias"
-logs =
 
 [offline]
 message = "Não conectado a um servidor."
@@ -464,11 +471,6 @@ meterstart = "Início do contador (kWh)"
 meterstop = "Contagem final (kWh)"
 odometer = "Quilometragem (km)"
 vehicle = "Veículo"
-solarpercentage =
-priceperkwh =
-co2perkwh =
-price =
-chargeduration =
 
 [sessions.filter]
 allLoadpoints = "todos pontos de carregamento"
@@ -477,6 +479,8 @@ filter = "Filtro"
 
 [settings]
 title = "Configuração geral"
+
+[settings.fullscreen]
 
 [settings.gridDetails]
 co2 = "CO₂"
@@ -543,40 +547,3 @@ title = "Erro ao iniciar"
 cancel = "Cancelar"
 template = "Fabricante"
 test = "Teste"
-
-
-[settings.fullscreen]
-enter =
-exit =
-label =
-
-[config.section]
-system =
-general =
-
-[config.system]
-restartingMessage =
-logs =
-restart =
-restartRequiredMessage =
-restartRequiredDescription =
-restartingDescription =
-
-[log]
-showAll =
-download =
-update =
-levelLabel =
-title =
-search =
-areas =
-noResults =
-areaLabel =
-
-[config.options.endianness]
-little =
-big =
-
-[config.options.schema]
-http =
-https =

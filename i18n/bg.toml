@@ -12,31 +12,48 @@ legendTopAutostart = "автоматично стартиране"
 legendTopName = "зареждане използвайки батерия"
 legendTopSubline = "без прекъсвания"
 modalTitle = "Настройки на батерия"
-control =
-discharge =
 
 [batterySettings.bufferStart]
 full = "при почти заредена батерия"
 low = "при донякъде заредена батерия"
 medium = "при наполовина заредена батерия"
 never = "само при наличие на излишък"
-above =
 
 [config]
+
+[config.battery]
+
+[config.deviceValue]
 
 [config.form]
 example = "Пример"
 optional = "незадължителен"
+
+[config.general]
+
+[config.grid]
 
 [config.main]
 addVehicle = "Добави автомобил"
 edit = "редактирай"
 title = "Конфигурация"
 vehicles = "Моите Автомобили"
-addPvBattery =
-yaml =
-addLoadpoint =
-unconfigured =
+
+[config.meter]
+
+[config.options]
+
+[config.options.endianness]
+
+[config.options.schema]
+
+[config.pv]
+
+[config.section]
+
+[config.system]
+
+[config.title]
 
 [config.validation]
 failed = "неуспешен"
@@ -88,13 +105,8 @@ savingsTitle = "Спестявате"
 savingsTotalEnergy = "{total} kWh заредени"
 since = "от {since}"
 tabTitle = "Моите данни"
-periodLabel =
-moneySaved =
-referenceGrid =
-co2Saved =
-configurePriceCo2 =
-referenceLabel =
-co2Title =
+
+[footer.savings.period]
 
 [footer.sponsor]
 becomeSponsor = "Станете Спонсор"
@@ -124,438 +136,85 @@ modalUpdateNow = "Инсталирай сега"
 modalUpdateStarted = "Стартирай новата версия на evcc..."
 modalUpdateStatusStart = "Инсталацията започна:"
 
-[smartCost]
-activeHours = "{charging} от {total}"
-activeHoursLabel =
-cheapTitle =
-cleanTitle =
-co2Label =
-loadpointDescription =
-co2Limit =
-priceLabel =
-none =
-batteryDescription =
-modalTitle =
-priceLimit =
-applyToAll =
-saved =
-
-
-[startupError]
-description =
-fixAndRestart =
-lineErrorLink =
-configFile =
-discussions =
-hint =
-lineError =
-restartButton =
-title =
-configuration =
-
-[main.targetChargePlan]
-chargeDuration =
-unknownPrice =
-timeRange =
-priceLabel =
-co2Label =
-
-[main.energyflow]
-batteryDischarge =
-batteryTooltip =
-homePower =
-gridImport =
-selfConsumption =
-battery =
-batteryCharge =
-batteryHold =
-loadpoints =
-noEnergy =
-pvExport =
-pvProduction =
-
-[main.loadpoint]
-remoteDisabledHard =
-solar =
-remoteDisabledSoft =
-co2 =
-power =
-remaining =
-avgPrice =
-charged =
-duration =
-fallbackName =
-price =
-
-[main.loadpointSettings.limitSoc]
-label =
-description =
-
-[sessions]
-downloadCsv =
-title =
-avgPrice =
-reallyDelete =
-price =
-noData =
-vehicle =
-total =
-solar =
-date =
-chargeDuration =
-csvTotal =
-csvMonth =
-co2 =
-energy =
-loadpoint =
-avgPower =
-
 [header]
-github =
-nativeSettings =
-login =
-about =
-blog =
-docs =
-logout =
-sessions =
-needHelp =
 
 [help]
-issueDescription =
-modalTitle =
-restartButton =
-primaryActions =
-documentationButton =
-logsButton =
-issueButton =
-restartDescription =
-logsDescription =
-secondaryActions =
-discussionsButton =
-
-[main]
-vehicles =
-
-[main.chargingPlan]
-modalTitle =
-update =
-active =
-goal =
-day =
-arrivalTab =
-departureTab =
-none =
-titleMinSoc =
-time =
-title =
-remove =
-titleTargetCharge =
-unsavedChanges =
-
-[main.heatingStatus]
-waitForVehicle =
-cleanEnergyCharging =
-cheapEnergyCharging =
-charging =
-
-[main.loadpointSettings]
-currents =
-smartCostClean =
-onlyForSocBasedCharging =
-default =
-disclaimerHint =
-vehicle =
-smartCostCheap =
-title =
-
-[main.loadpointSettings.phasesConfigured]
-label =
-phases_1_hint =
-phases_3_hint =
-no1p3pSupport =
-phases_3 =
-phases_1 =
-phases_0 =
-
-[main.targetCharge]
-costLimitIgnore =
-activate =
-descriptionSoc =
-inactiveLabel =
-planPeriodLabel =
-planPeriodValue =
-targetIsAboveVehicleLimit =
-planUnknown =
-tomorrow =
-update =
-remove =
-co2Limit =
-currentPlan =
-today =
-notReachableInTime =
-onlyInPvMode =
-planDuration =
-title =
-preview =
-priceLimit =
-targetIsInThePast =
-vehicleCapacityDocs =
-setTargetTime =
-descriptionEnergy =
-vehicleCapacityRequired =
-targetIsTooFarInTheFuture =
-targetIsAboveLimit =
-
-[main.vehicle]
-addVehicle =
-changeVehicle =
-detectionActive =
-fallbackName =
-none =
-tempLimit =
-vehicleSoc =
-temp =
-notReachable =
-moreActions =
-unknown =
-targetSoc =
-
-[main.vehicleSoc]
-charging =
-ready =
-disconnected =
-vehicleLimit =
-connected =
-
-[main.vehicleStatus]
-charging =
-cleanEnergyCharging =
-minCharge =
-scale3p =
-targetChargePlanned =
-pvDisable =
-climating =
-cheapEnergyCharging =
-vehicleLimitReached =
-scale1p =
-disconnected =
-waitForVehicle =
-targetChargeWaitForVehicle =
-targetChargeActive =
-pvEnable =
-connected =
-unknown =
-
-[offline]
-message =
-reload =
-
-[session]
-finished =
-odometer =
-meterstop =
-date =
-delete =
-co2 =
-cancel =
-title =
-started =
-meterstart =
-price =
-meter =
-
-[sessions.csv]
-created =
-vehicle =
-finished =
-meterstart =
-chargedenergy =
-meterstop =
-price =
-identifier =
-priceperkwh =
-co2perkwh =
-loadpoint =
-odometer =
-solarpercentage =
-chargeduration =
-
-[settings.unit]
-label =
-km =
-mi =
-
-[main.mode]
-off =
-minpv =
-now =
-pv =
-
-[main.targetEnergy]
-label =
-noLimit =
-
-[sessions.filter]
-allLoadpoints =
-filter =
-allVehicles =
-
-[settings.theme]
-dark =
-label =
-light =
-auto =
-
-[settings.hiddenFeatures]
-label =
-value =
-
-[settings.sponsorToken]
-getNew =
-hint =
-expires =
-
-[main.loadpointSettings.minCurrent]
-label =
-
-[main.provider]
-login =
-logout =
-
-[notifications]
-dismissAll =
-modalTitle =
-logs =
-
-[config.system]
-restart =
-restartingMessage =
-restartingDescription =
-restartRequiredMessage =
-logs =
-restartRequiredDescription =
-
-[config.section]
-system =
-general =
 
 [help.restart]
-disclaimer =
-description =
-confirm =
-cancel =
-modalTitle =
 
 [log]
-areas =
-areaLabel =
-download =
-showAll =
-noResults =
-levelLabel =
-update =
-search =
-title =
 
 [loginModal]
-cancel =
-error =
-invalid =
-login =
-title =
-password =
-reset =
 
-[passwordModal]
-description =
-error =
-empty =
-labelCurrent =
-labelNew =
-labelRepeat =
-newPassword =
-noMatch =
-updatePassword =
-titleUpdate =
-titleNew =
+[main]
 
-[settings.language]
-auto =
-label =
+[main.chargingPlan]
 
-[config.pv]
-titleAdd =
-titleEdit =
+[main.energyflow]
 
-[config.general]
-save =
-cancel =
+[main.heatingStatus]
 
-[config.meter]
-save =
-validateSave =
-cancel =
-template =
-titleChoice =
-delete =
+[main.loadpoint]
 
-[config.deviceValue]
-current =
-odometer =
-phaseVoltages =
-range =
-phaseCurrents =
-power =
-chargeStatus =
-chargedEnergy =
-phasePowers =
-energy =
-enabled =
-capacity =
-socLimit =
-soc =
+[main.loadpointSettings]
 
-[config.battery]
-titleAdd =
-titleEdit =
-
-[config.grid]
-titleAdd =
-titleEdit =
-
-[config.options.schema]
-http =
-https =
-
-[config.options.endianness]
-little =
-big =
-
-[config.title]
-description =
-title =
-label =
-
-[main.loadpointSettings.minSoc]
-description =
-label =
-
-[settings.telemetry]
-label =
+[main.loadpointSettings.limitSoc]
 
 [main.loadpointSettings.maxCurrent]
-label =
 
-[footer.savings.period]
-total =
-365d =
-30d =
+[main.loadpointSettings.minCurrent]
+
+[main.loadpointSettings.minSoc]
+
+[main.loadpointSettings.phasesConfigured]
+
+[main.mode]
+
+[main.provider]
+
+[main.targetCharge]
+
+[main.targetChargePlan]
+
+[main.targetEnergy]
+
+[main.vehicle]
+
+[main.vehicleSoc]
+
+[main.vehicleStatus]
+
+[notifications]
+
+[offline]
+
+[passwordModal]
+
+[session]
+
+[sessions]
+
+[sessions.csv]
+
+[sessions.filter]
 
 [settings]
-title =
 
 [settings.fullscreen]
-label =
-exit =
-enter =
+
+[settings.hiddenFeatures]
+
+[settings.language]
+
+[settings.sponsorToken]
+
+[settings.telemetry]
+
+[settings.theme]
+
+[settings.unit]
+
+[smartCost]
+activeHours = "{charging} от {total}"
+
+[startupError]
