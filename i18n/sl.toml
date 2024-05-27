@@ -13,7 +13,7 @@ legendTitle = "Kako naj se uporablja sončna energija?"
 legendTopAutostart = "samodejno se zažene"
 legendTopName = "polnjenje, ki ga podpira baterija"
 legendTopSubline = "brez prekinitev"
-modalTitle = "Nastavitve baterije"
+modalTitle = "Domača baterija"
 
 [batterySettings.bufferStart]
 above = "ko je nad {soc}"
@@ -74,13 +74,35 @@ template = "Proizvajalec"
 titleChoice = "Kaj želite dodati?"
 validateSave = "Preveri in shrani"
 
+[config.options]
+
+[config.options.endianness]
+big = "big-endian"
+little = "little-endian"
+
+[config.options.schema]
+http = "HTTP (nešifrirano)"
+https = "HTTPS (šifrirano)"
+
 [config.pv]
 titleAdd = "Dodaj merilnik sončne energije"
 titleEdit = "Uredi merilnik sončne energije"
 
+[config.section]
+general = "Splošno"
+system = "Sistem"
+
 [config.site]
 cancel = "Prekliči"
 save = "Shrani"
+
+[config.system]
+logs = "Logi"
+restart = "Ponovni zagon"
+restartRequiredDescription = "Prosimo, ponovno zaženite, da vidite učinek."
+restartRequiredMessage = "Konfiguracija je bila spremenjena."
+restartingDescription = "Prosim počakajte..."
+restartingMessage = "Ponovni zagon evcc."
 
 [config.title]
 description = "Prikazano na glavnem zaslonu in na zavihku brskalnika."
@@ -195,6 +217,8 @@ discussionsButton = "GitHub razprave"
 documentationButton = "Dokumentacija"
 issueButton = "Prijavi napako"
 issueDescription = "Ste našli čudno ali napačno vedenje?"
+logsButton = "Prikaži loge"
+logsDescription = "Preveri loge za napake."
 modalTitle = "Potrebuješ pomoč?"
 primaryActions = "Nekaj ne deluje tako, kot bi moralo? Na teh mestih lahko poiščete pomoč."
 restartButton = "Ponovni zagon"
@@ -208,12 +232,24 @@ description = "V normalnih okoliščinah ponovni zagon ne bi smel biti potreben.
 disclaimer = "Opomba: evcc bo prenehal delovati in se bo za ponovni zagon storitve zanašal na operacijski sistem."
 modalTitle = "Ali ste prepričani, da želite znova zagnati?"
 
+[log]
+areaLabel = "Filtriraj glede na območje"
+areas = "Vsa območja"
+download = "Prenesi vse loge"
+levelLabel = "Filtriraj po ravni logov"
+noResults = "Ni ujemajočih vnosov v logih."
+search = "Iskanje"
+showAll = "Pokaži vse vnose"
+title = "Logi"
+update = "Samodejno posodabljanje"
+
 [loginModal]
 cancel = "Prekliči"
 error = "Prijava ni uspela: "
 invalid = "Geslo ni veljavno."
 login = "Prijava"
 password = "Geslo"
+reset = "Ponastavi geslo?"
 title = "Avtentikacija"
 
 [main]
@@ -395,6 +431,7 @@ waitForVehicle = "Pripravljen. Čakam na vozilo..."
 
 [notifications]
 dismissAll = "Opusti vse"
+logs = "Prikaži celotne loge"
 modalTitle = "Obvestila"
 
 [offline]
@@ -449,6 +486,8 @@ vehicle = "Vozilo"
 
 [sessions.csv]
 chargedenergy = "Energija (kWh)"
+chargeduration = "Trajanje"
+co2perkwh = "CO₂/kWh"
 created = "Ustvarjeno"
 finished = "Končano"
 identifier = "Identifikator"
@@ -456,6 +495,9 @@ loadpoint = "Polnilno mesto"
 meterstart = "Začetek merjenja (kWh)"
 meterstop = "Konec merjenja (kWh)"
 odometer = "Prevoženi kilometri (km)"
+price = "Cena"
+priceperkwh = "Cena/kWh"
+solarpercentage = "Sončna energija (%)"
 vehicle = "Vozilo"
 
 [sessions.filter]
@@ -464,7 +506,12 @@ allVehicles = "vsa vozila"
 filter = "Filter"
 
 [settings]
-title = "Splošne nastavitve"
+title = "Uporabniški vmesnik"
+
+[settings.fullscreen]
+enter = "Vstopi v celozaslonski način"
+exit = "Izhod iz celozaslonskega načina"
+label = "Celozaslonski način"
 
 [settings.gridDetails]
 co2 = "CO₂"

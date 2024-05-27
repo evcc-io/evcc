@@ -74,6 +74,16 @@ template = "Fabrikant"
 titleChoice = "Hvad ønsker du at tilføje?"
 validateSave = "Valider og gem"
 
+[config.options]
+
+[config.options.endianness]
+big = "big-endian"
+little = "little-endian"
+
+[config.options.schema]
+http = "HTTP (ikke-krypteret)"
+https = "HTTPS (krypteret)"
+
 [config.pv]
 titleAdd = "Tilføj solmåler"
 titleEdit = "Rediger solmåler"
@@ -478,6 +488,8 @@ vehicle = "Køretøj"
 
 [sessions.csv]
 chargedenergy = "Energi (kWh)"
+chargeduration = "Varighed"
+co2perkwh = "CO₂/kWh"
 created = "Oprettet"
 finished = "Færdig"
 identifier = "Identifikator"
@@ -485,6 +497,9 @@ loadpoint = "Ladepunkt"
 meterstart = "Målerstart (kWh)"
 meterstop = "Målerstop (kWh)"
 odometer = "Kilometertal (km)"
+price = "Pris"
+priceperkwh = "Pris/kWh"
+solarpercentage = "Sol (%)"
 vehicle = "Køretøj"
 
 [sessions.filter]
