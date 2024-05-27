@@ -12,12 +12,15 @@ legendTopAutostart = "starter automatisk"
 legendTopName = "batteriassistert lading"
 legendTopSubline = "uten avbrudd"
 modalTitle = "Batteriinnstillinger"
+control = 
+discharge = 
 
 [batterySettings.bufferStart]
 full = "når det er nesten fullt"
 low = "når det er noe fullt"
 medium = "når det er halvfullt"
 never = "bare med nok PV-overskudd"
+above = 
 
 [config]
 
@@ -30,6 +33,10 @@ addVehicle = "Legg til kjøretøy"
 edit = "rediger"
 title = "Oppsett"
 vehicles = "Mine kjøretøy"
+addPvBattery = 
+addLoadpoint = 
+unconfigured = 
+yaml = 
 
 [config.validation]
 failed = "mislykket"
@@ -81,6 +88,13 @@ savingsTitle = "Besparelser"
 savingsTotalEnergy = "{total} kWh ladet"
 since = "siden {since}"
 tabTitle = "Mine data"
+configurePriceCo2 = 
+co2Title = 
+moneySaved = 
+co2Saved = 
+referenceLabel = 
+referenceGrid = 
+periodLabel = 
 
 [footer.sponsor]
 becomeSponsor = "Bli sponsor"
@@ -119,6 +133,8 @@ login = "Kjøretøysinnlogginger"
 needHelp = "Trenger du hjelp?"
 sessions = "Ladeøkter"
 settings = "Innstillinger"
+nativeSettings = 
+logout = 
 
 [header.theme]
 auto = "Design: system"
@@ -135,6 +151,8 @@ primaryActions = "Er det noe som ikke virker som det skal? Dette er gode ressurs
 restartButton = "Start på ny"
 restartDescription = "Prøvd å slå av og på igjen?"
 secondaryActions = "Vedvarer problemet? Her har du mer drastiske tiltak."
+logsDescription = 
+logsButton = 
 
 [help.restart]
 cancel = "Avbryt"
@@ -154,6 +172,13 @@ none = "ingen"
 title = "Plan"
 titleMinSoc = "Min.-lading"
 titleTargetCharge = "Avgang"
+time = 
+goal = 
+active = 
+update = 
+remove = 
+unsavedChanges = 
+day = 
 
 [main.energyflow]
 battery = "Batteri"
@@ -167,6 +192,7 @@ noEnergy = "Ingen telleverksdata"
 pvExport = "Lysnetteksport"
 pvProduction = "Produksjon"
 selfConsumption = "Eget forbruk"
+batteryHold = 
 
 [main.loadpoint]
 avgPrice = "⌀-pris"
@@ -177,6 +203,9 @@ fallbackName = "Ladepunkt"
 power = "Effekt"
 price = "Σ-pris"
 solar = "Solenergi"
+remoteDisabledSoft = 
+remoteDisabledHard = 
+remaining = 
 
 [main.loadpointSettings]
 currents = "Ladestrøm"
@@ -184,6 +213,9 @@ default = "forvalg"
 disclaimerHint = "Merknad:"
 title = "Innstillinger for {0}"
 vehicle = "Kjøretøy"
+smartCostClean = 
+smartCostCheap = 
+onlyForSocBasedCharging = 
 
 [main.loadpointSettings.maxCurrent]
 label = "Maks. ladestrøm"
@@ -202,6 +234,7 @@ phases_1 = "1-fase"
 phases_1_hint = "({min} til {max})"
 phases_3 = "3-fase"
 phases_3_hint = "({min} til {max})"
+no1p3pSupport = 
 
 [main.mode]
 minpv = "Min+Sol-e."
@@ -234,6 +267,14 @@ title = "Mål-tid"
 today = "i dag"
 tomorrow = "i morgen"
 update = "Oppdater"
+vehicleCapacityDocs = 
+vehicleCapacityRequired = 
+targetIsAboveLimit = 
+preview = 
+currentPlan = 
+remove = 
+targetIsAboveVehicleLimit = 
+notReachableInTime = 
 
 [main.targetChargePlan]
 chargeDuration = "Ladetid"
@@ -258,6 +299,7 @@ temp = "Temp."
 tempLimit = "Temp.-grense"
 unknown = "Gjestekjøretøy"
 vehicleSoc = "Lade"
+notReachable = 
 
 [main.vehicleSoc]
 charging = "lader"
@@ -288,6 +330,7 @@ waitForVehicle = "Klar. Venter på kjøretøy..."
 [notifications]
 dismissAll = "Forkast alle"
 modalTitle = "Merknader"
+logs = 
 
 [offline]
 message = "Ikke koblet til en server."
@@ -336,6 +379,11 @@ meterstart = "Start-målerstand (kWh)"
 meterstop = "Stopp-målerstand (kWh)"
 odometer = "Kilometerstand"
 vehicle = "Kjøretøy"
+co2perkwh = 
+chargeduration = 
+solarpercentage = 
+price = 
+priceperkwh = 
 
 [sessions.filter]
 allLoadpoints = "alle ladepunkter"
@@ -382,6 +430,11 @@ modalTitle = "Smart lysnettlading"
 none = "ingen"
 priceLabel = "Energipris"
 priceLimit = "Prisgrense"
+batteryDescription = 
+cheapTitle = 
+cleanTitle = 
+saved = 
+applyToAll = 
 
 [startupError]
 configFile = "Brukt oppsettsfil:"
@@ -399,3 +452,122 @@ title = "Oppstartsfeil"
 cancel = "Avbryt"
 template = "Fabrikant"
 test = "Test"
+
+
+[settings.fullscreen]
+label = 
+exit = 
+enter = 
+
+[main.heatingStatus]
+charging = 
+cleanEnergyCharging = 
+cheapEnergyCharging = 
+waitForVehicle = 
+
+[loginModal]
+cancel = 
+invalid = 
+error = 
+title = 
+login = 
+reset = 
+password = 
+
+[main.loadpointSettings.limitSoc]
+description = 
+label = 
+
+[passwordModal]
+labelRepeat = 
+titleUpdate = 
+updatePassword = 
+error = 
+newPassword = 
+labelCurrent = 
+noMatch = 
+empty = 
+labelNew = 
+description = 
+titleNew = 
+
+[config.deviceValue]
+enabled = 
+capacity = 
+chargedEnergy = 
+phaseVoltages = 
+odometer = 
+phaseCurrents = 
+phasePowers = 
+soc = 
+power = 
+energy = 
+range = 
+current = 
+chargeStatus = 
+socLimit = 
+
+[config.battery]
+titleEdit = 
+titleAdd = 
+
+[log]
+areaLabel = 
+areas = 
+download = 
+showAll = 
+noResults = 
+update = 
+levelLabel = 
+title = 
+search = 
+
+[config.general]
+cancel = 
+save = 
+
+[config.grid]
+titleEdit = 
+titleAdd = 
+
+[config.meter]
+delete = 
+template = 
+cancel = 
+titleChoice = 
+save = 
+validateSave = 
+
+[config.pv]
+titleEdit = 
+titleAdd = 
+
+[config.options.schema]
+https = 
+http = 
+
+[config.title]
+description = 
+title = 
+label = 
+
+[config.system]
+logs = 
+restart = 
+restartRequiredDescription = 
+restartingDescription = 
+restartingMessage = 
+restartRequiredMessage = 
+
+[footer.savings.period]
+365d = 
+total = 
+30d = 
+
+[config.options.endianness]
+little = 
+big = 
+
+[config.section]
+general = 
+system = 
