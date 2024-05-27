@@ -30,8 +30,6 @@ const (
 	sempGateway      = "urn:schemas-simple-energy-management-protocol:device:Gateway:1"
 	sempDeviceId     = "F-%s-%.12x-00" // 6 bytes
 	sempSerialNumber = "%s-%d"
-	sempCharger      = "EVCharger"
-	sempHeatPump     = "HeatPump"
 	basePath         = "/semp"
 	maxAge           = 1800
 )
@@ -373,10 +371,10 @@ func (s *SEMP) deviceID(id int) string {
 func (s *SEMP) deviceType(lp loadpoint.API) string {
 	if c, ok := lp.GetCharger().(api.FeatureDescriber); ok {
 		if slices.Contains(c.Features(), api.Heating) {
-			return sempHeatPump
+			return HeatPump
 		}
 	}
-	return sempCharger
+	return EVCharger
 }
 
 func (s *SEMP) deviceInfo(id int, lp loadpoint.API) DeviceInfo {
@@ -389,7 +387,7 @@ func (s *SEMP) deviceInfo(id int, lp loadpoint.API) DeviceInfo {
 		Identification: Identification{
 			DeviceID:     s.deviceID(id),
 			DeviceName:   lp.Title(),
-			DeviceType:   sempCharger,
+			DeviceType:   s.deviceType(lp),
 			DeviceSerial: s.serialNumber(id),
 			DeviceVendor: "github.com/evcc-io/evcc",
 		},
