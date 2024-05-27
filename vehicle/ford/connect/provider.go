@@ -46,7 +46,7 @@ var _ api.ChargeState = (*Provider)(nil)
 
 // Status implements the api.ChargeState interface
 func (v *Provider) Status() (api.ChargeStatus, error) {
-	status := api.StatusNone
+	status := api.StatusA
 
 	res, err := v.statusG()
 	if err != nil {
