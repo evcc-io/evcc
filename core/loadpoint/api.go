@@ -118,6 +118,8 @@ type API interface {
 	// power and energy
 	//
 
+	// GetCharger gets the charger
+	GetCharger() api.Charger
 	// HasChargeMeter determines if a physical charge meter is attached
 	HasChargeMeter() bool
 	// GetChargePower returns the current charging power

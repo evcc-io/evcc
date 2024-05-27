@@ -138,6 +138,20 @@ func (mr *MockAPIMockRecorder) GetChargePowerFlexibility() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetChargePowerFlexibility", reflect.TypeOf((*MockAPI)(nil).GetChargePowerFlexibility))
 }
 
+// GetCharger mocks base method.
+func (m *MockAPI) GetCharger() api.Charger {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetCharger")
+	ret0, _ := ret[0].(api.Charger)
+	return ret0
+}
+
+// GetCharger indicates an expected call of GetCharger.
+func (mr *MockAPIMockRecorder) GetCharger() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCharger", reflect.TypeOf((*MockAPI)(nil).GetCharger))
+}
+
 // GetCircuit mocks base method.
 func (m *MockAPI) GetCircuit() api.Circuit {
 	m.ctrl.T.Helper()

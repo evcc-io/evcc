@@ -8,6 +8,13 @@ import (
 	"github.com/evcc-io/evcc/core/soc"
 )
 
+// GetCharger gets the charger
+func (lp *Loadpoint) GetCharger() api.Charger {
+	lp.Lock()
+	defer lp.Unlock()
+	return lp.charger
+}
+
 // chargerHasFeature checks availability of charger feature
 func (lp *Loadpoint) chargerHasFeature(f api.Feature) bool {
 	c, ok := lp.charger.(api.FeatureDescriber)
