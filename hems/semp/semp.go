@@ -371,9 +371,10 @@ func (s *SEMP) deviceID(id int) string {
 }
 
 func (s *SEMP) deviceType(lp loadpoint.API) string {
-	charger := lp.GetCharger()
-	if charger != nil && slices.Contains(charger.Features(), api.Heating) {
-		return sempHeatPump
+	if c, ok := lp.GetCharger().(api.FeatureDescriber); ok {
+		if slices.Contains(c.Features(), api.Heating) {
+			return sempHeatPump
+		}
 	}
 	return sempCharger
 }
