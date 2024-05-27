@@ -27,13 +27,13 @@ savingsTitle = "Spueren"
 savingsTotalEnergy = "{total} kWh gelueden"
 since = "zënter {since}"
 tabTitle = "Meng Daten"
-co2Saved = 
-moneySaved = 
-periodLabel = 
-configurePriceCo2 = 
-co2Title = 
-referenceGrid = 
-referenceLabel = 
+co2Saved =
+moneySaved =
+periodLabel =
+configurePriceCo2 =
+co2Title =
+referenceGrid =
+referenceLabel =
 
 [footer.sponsor]
 becomeSponsor = "Gitt e Sponsor"
@@ -71,9 +71,9 @@ github = "GitHub"
 login = "Gefier Login"
 sessions = "Opluedsessiounen"
 settings = "Astellungen"
-nativeSettings = 
-needHelp = 
-logout = 
+nativeSettings =
+needHelp =
+logout =
 
 [header.theme]
 auto = "Design: System"
@@ -94,21 +94,21 @@ noEnergy = "Keng Moossdaten"
 pvExport = "Stroumnetz Export"
 pvProduction = "Produktioun"
 selfConsumption = "eegene Konsum"
-batteryTooltip = 
-batteryHold = 
+batteryTooltip =
+batteryHold =
 
 [main.loadpoint]
 charged = "Belaascht"
 duration = "Dauer"
 fallbackName = "Opluedpunkt"
 power = "Leeschtung"
-remoteDisabledSoft = 
-co2 = 
-remoteDisabledHard = 
-price = 
-avgPrice = 
-remaining = 
-solar = 
+remoteDisabledSoft =
+co2 =
+remoteDisabledHard =
+price =
+avgPrice =
+remaining =
+solar =
 
 [main.loadpointSettings]
 currents = "Ladestroum"
@@ -116,9 +116,9 @@ default = "Standard"
 disclaimerHint = "Notiz:"
 title = "Astellungen {0}"
 vehicle = "Gefier"
-smartCostCheap = 
-onlyForSocBasedCharging = 
-smartCostClean = 
+smartCostCheap =
+onlyForSocBasedCharging =
+smartCostClean =
 
 [main.loadpointSettings.maxCurrent]
 label = "Max. Stroum"
@@ -137,7 +137,7 @@ phases_1 = "1 Phase"
 phases_1_hint = "({min} bis {max})"
 phases_3 = "3 Phasen"
 phases_3_hint = "({min} bis {max})"
-no1p3pSupport = 
+no1p3pSupport =
 
 [main.mode]
 minpv = "Min+PV"
@@ -166,18 +166,18 @@ title = "Zilzäit"
 today = "haut"
 tomorrow = "muer"
 update = "Aktualiséieren"
-costLimitIgnore = 
-currentPlan = 
-targetIsAboveVehicleLimit = 
-vehicleCapacityDocs = 
-priceLimit = 
-targetIsAboveLimit = 
-notReachableInTime = 
-onlyInPvMode = 
-co2Limit = 
-remove = 
-vehicleCapacityRequired = 
-preview = 
+costLimitIgnore =
+currentPlan =
+targetIsAboveVehicleLimit =
+vehicleCapacityDocs =
+priceLimit =
+targetIsAboveLimit =
+notReachableInTime =
+onlyInPvMode =
+co2Limit =
+remove =
+vehicleCapacityRequired =
+preview =
 
 [main.targetChargePlan]
 chargeDuration = "Opluedzäit"
@@ -198,11 +198,11 @@ none = "Keng Gefier"
 targetSoc = "Limite"
 unknown = "Gäscht Gefier"
 vehicleSoc = "Staat vun charge"
-addVehicle = 
-temp = 
-tempLimit = 
-moreActions = 
-notReachable = 
+addVehicle =
+temp =
+tempLimit =
+moreActions =
+notReachable =
 
 [main.vehicleSoc]
 charging = "oplueden"
@@ -226,14 +226,14 @@ targetChargeWaitForVehicle = "Ziel Charge prett. Waart op Gefier ..."
 unknown = ""
 vehicleLimitReached = "Gefier Limit {soc}% erreecht."
 waitForVehicle = "Prett. Waart op Gefier ..."
-climating = 
-cheapEnergyCharging = 
-cleanEnergyCharging = 
+climating =
+cheapEnergyCharging =
+cleanEnergyCharging =
 
 [notifications]
 dismissAll = "Alles entloossen"
 modalTitle = "Notifikatiounen"
-logs = 
+logs =
 
 [offline]
 message = "Keng Verbindung mam Server."
@@ -248,10 +248,10 @@ meterstop = "Last Meter Liesung"
 odometer = "Kilometerzähler"
 started = "Startzeit"
 title = "Charging Sessioun"
-price = 
-meter = 
-date = 
-co2 = 
+price =
+meter =
+date =
+co2 =
 
 [sessions]
 date = "Period"
@@ -261,16 +261,16 @@ loadpoint = "Opluedpunkt"
 reallyDelete = "Wëllt Dir dës Sessioun wierklech läschen?"
 title = "Opluedsessiounen"
 vehicle = "Gefier"
-price = 
-co2 = 
-avgPrice = 
-avgPower = 
-noData = 
-solar = 
-csvMonth = 
-chargeDuration = 
-csvTotal = 
-total = 
+price =
+co2 =
+avgPrice =
+avgPower =
+noData =
+solar =
+csvMonth =
+chargeDuration =
+csvTotal =
+total =
 
 [sessions.csv]
 chargedenergy = "Energie (kWh)"
@@ -282,11 +282,11 @@ meterstart = "Meter Start (kWh)"
 meterstop = "Meter Stop (kWh)"
 odometer = "Kilometerstand (km)"
 vehicle = "Gefier"
-co2perkwh = 
-chargeduration = 
-price = 
-solarpercentage = 
-priceperkwh = 
+co2perkwh =
+chargeduration =
+price =
+solarpercentage =
+priceperkwh =
 
 [settings]
 title = "Astellungen"
@@ -323,242 +323,242 @@ title = "Startup Feeler"
 
 
 [settings.fullscreen]
-enter = 
-label = 
-exit = 
+enter =
+label =
+exit =
 
 [smartCost]
-co2Limit = 
-saved = 
-applyToAll = 
-activeHoursLabel = 
-activeHours = 
-cleanTitle = 
-loadpointDescription = 
-none = 
-priceLabel = 
-priceLimit = 
-co2Label = 
-batteryDescription = 
-cheapTitle = 
-modalTitle = 
+co2Limit =
+saved =
+applyToAll =
+activeHoursLabel =
+activeHours =
+cleanTitle =
+loadpointDescription =
+none =
+priceLabel =
+priceLimit =
+co2Label =
+batteryDescription =
+cheapTitle =
+modalTitle =
 
 [batterySettings]
-disclaimerHint = 
-disclaimerText = 
-batteryLevel = 
-legendBottomSubline = 
-capacity = 
-legendBottomName = 
-legendMiddleName = 
-legendMiddleSubline = 
-legendTopAutostart = 
-legendTitle = 
-legendTopName = 
-modalTitle = 
-discharge = 
-control = 
-legendTopSubline = 
+disclaimerHint =
+disclaimerText =
+batteryLevel =
+legendBottomSubline =
+capacity =
+legendBottomName =
+legendMiddleName =
+legendMiddleSubline =
+legendTopAutostart =
+legendTitle =
+legendTopName =
+modalTitle =
+discharge =
+control =
+legendTopSubline =
 
 [config.vehicle]
-generic = 
-cancel = 
-save = 
-delete = 
-validateSave = 
-offline = 
-online = 
-titleAdd = 
-template = 
-scooter = 
-titleEdit = 
+generic =
+cancel =
+save =
+delete =
+validateSave =
+offline =
+online =
+titleAdd =
+template =
+scooter =
+titleEdit =
 
 [footer.savings.period]
-total = 
-30d = 
-365d = 
+total =
+30d =
+365d =
 
 [help]
-issueButton = 
-discussionsButton = 
-restartDescription = 
-restartButton = 
-logsDescription = 
-documentationButton = 
-logsButton = 
-issueDescription = 
-secondaryActions = 
-primaryActions = 
-modalTitle = 
+issueButton =
+discussionsButton =
+restartDescription =
+restartButton =
+logsDescription =
+documentationButton =
+logsButton =
+issueDescription =
+secondaryActions =
+primaryActions =
+modalTitle =
 
 [main.chargingPlan]
-active = 
-arrivalTab = 
-departureTab = 
-titleTargetCharge = 
-time = 
-goal = 
-day = 
-remove = 
-titleMinSoc = 
-unsavedChanges = 
-modalTitle = 
-update = 
-none = 
-title = 
+active =
+arrivalTab =
+departureTab =
+titleTargetCharge =
+time =
+goal =
+day =
+remove =
+titleMinSoc =
+unsavedChanges =
+modalTitle =
+update =
+none =
+title =
 
 [help.restart]
-description = 
-cancel = 
-confirm = 
-modalTitle = 
-disclaimer = 
+description =
+cancel =
+confirm =
+modalTitle =
+disclaimer =
 
 [main.loadpointSettings.limitSoc]
-description = 
-label = 
+description =
+label =
 
 [sessions.filter]
-allVehicles = 
-filter = 
-allLoadpoints = 
+allVehicles =
+filter =
+allLoadpoints =
 
 [settings.hiddenFeatures]
-value = 
-label = 
+value =
+label =
 
 [settings.sponsorToken]
-getNew = 
-expires = 
-hint = 
+getNew =
+expires =
+hint =
 
 [batterySettings.bufferStart]
-full = 
-never = 
-above = 
+full =
+never =
+above =
 
 [config.validation]
-unknown = 
-validate = 
-running = 
-success = 
-label = 
-failed = 
+unknown =
+validate =
+running =
+success =
+label =
+failed =
 
 [config.battery]
-titleAdd = 
-titleEdit = 
+titleAdd =
+titleEdit =
 
 [config.deviceValue]
-chargeStatus = 
-capacity = 
-phaseVoltages = 
-phaseCurrents = 
-phasePowers = 
-energy = 
-enabled = 
-power = 
-socLimit = 
-odometer = 
-chargedEnergy = 
-soc = 
-range = 
-current = 
+chargeStatus =
+capacity =
+phaseVoltages =
+phaseCurrents =
+phasePowers =
+energy =
+enabled =
+power =
+socLimit =
+odometer =
+chargedEnergy =
+soc =
+range =
+current =
 
 [config.form]
-example = 
-optional = 
+example =
+optional =
 
 [config.section]
-general = 
-system = 
+general =
+system =
 
 [config.general]
-save = 
-cancel = 
+save =
+cancel =
 
 [config.main]
-vehicles = 
-addVehicle = 
-title = 
-edit = 
-yaml = 
-addPvBattery = 
-unconfigured = 
-addLoadpoint = 
+vehicles =
+addVehicle =
+title =
+edit =
+yaml =
+addPvBattery =
+unconfigured =
+addLoadpoint =
 
 [config.meter]
-template = 
-cancel = 
-save = 
-titleChoice = 
-delete = 
-validateSave = 
+template =
+cancel =
+save =
+titleChoice =
+delete =
+validateSave =
 
 [config.options.endianness]
-little = 
-big = 
+little =
+big =
 
 [config.options.schema]
-https = 
-http = 
+https =
+http =
 
 [config.title]
-title = 
-description = 
-label = 
+title =
+description =
+label =
 
 [passwordModal]
-noMatch = 
-error = 
-titleNew = 
-updatePassword = 
-titleUpdate = 
-empty = 
-description = 
-labelRepeat = 
-labelNew = 
-newPassword = 
-labelCurrent = 
+noMatch =
+error =
+titleNew =
+updatePassword =
+titleUpdate =
+empty =
+description =
+labelRepeat =
+labelNew =
+newPassword =
+labelCurrent =
 
 [log]
-download = 
-areaLabel = 
-showAll = 
-areas = 
-title = 
-update = 
-levelLabel = 
-search = 
-noResults = 
+download =
+areaLabel =
+showAll =
+areas =
+title =
+update =
+levelLabel =
+search =
+noResults =
 
 [loginModal]
-cancel = 
-login = 
-invalid = 
-error = 
-reset = 
-title = 
-password = 
+cancel =
+login =
+invalid =
+error =
+reset =
+title =
+password =
 
 [main.heatingStatus]
-cleanEnergyCharging = 
-waitForVehicle = 
-cheapEnergyCharging = 
-charging = 
+cleanEnergyCharging =
+waitForVehicle =
+cheapEnergyCharging =
+charging =
 
 [config.pv]
-titleAdd = 
-titleEdit = 
+titleAdd =
+titleEdit =
 
 [config.grid]
-titleEdit = 
-titleAdd = 
+titleEdit =
+titleAdd =
 
 [config.system]
-restart = 
-restartRequiredDescription = 
-restartingDescription = 
-restartRequiredMessage = 
-restartingMessage = 
-logs = 
+restart =
+restartRequiredDescription =
+restartingDescription =
+restartRequiredMessage =
+restartingMessage =
+logs =
