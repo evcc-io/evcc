@@ -13,6 +13,7 @@ legendTopAutostart = "“Parte automaticamente”"
 legendTopName = "“Ricarica supportata dalla batteria”"
 legendTopSubline = "“Senza interruzioni”"
 modalTitle = "“Batteria di casa”"
+discharge = 
 
 [batterySettings.bufferStart]
 above = "“Quando supera {soc}”"
@@ -48,6 +49,13 @@ savingsTitle = "Risparmio"
 savingsTotalEnergy = "{total} kWh totali caricati"
 since = "da {since}"
 tabTitle = "I miei dati"
+co2Title = 
+co2Saved = 
+periodLabel = 
+moneySaved = 
+referenceGrid = 
+referenceLabel = 
+configurePriceCo2 = 
 
 [footer.sponsor]
 becomeSponsor = "Diventa uno sponsor"
@@ -85,6 +93,9 @@ github = "GitHub"
 login = "Iscrizioni"
 sessions = "Sessioni di ricarica"
 settings = "Impostazioni"
+logout = 
+needHelp = 
+nativeSettings = 
 
 [header.theme]
 auto = "Design: sistema"
@@ -106,6 +117,7 @@ noEnergy = "Nessun valore"
 pvExport = "Immissione in rete"
 pvProduction = "Produzione"
 selfConsumption = "Autoconsumo"
+batteryHold = 
 
 [main.loadpoint]
 charged = "Caricato"
@@ -114,6 +126,11 @@ fallbackName = "Punto di ricarica"
 power = "Potenza"
 remoteDisabledHard = "{source}: Disabilitato"
 remoteDisabledSoft = "{source}: Ricarica FV adattiva disabilitata"
+co2 = 
+remaining = 
+solar = 
+avgPrice = 
+price = 
 
 [main.loadpointSettings]
 currents = "Corrente di carica"
@@ -121,6 +138,9 @@ default = "default"
 disclaimerHint = "Nota:"
 title = "Impostazioni {0}"
 vehicle = "Veicolo"
+smartCostCheap = 
+smartCostClean = 
+onlyForSocBasedCharging = 
 
 [main.loadpointSettings.maxCurrent]
 label = "Corrente massima"
@@ -139,6 +159,7 @@ phases_1 = "1 fase"
 phases_1_hint = "({min} a {max})"
 phases_3 = "3 fasi"
 phases_3_hint = "({min} al {max})"
+no1p3pSupport = 
 
 [main.mode]
 minpv = "Min+Solare"
@@ -167,6 +188,18 @@ title = "Tempo target"
 today = "oggi"
 tomorrow = "domani"
 update = "Aggiornare"
+currentPlan = 
+remove = 
+co2Limit = 
+preview = 
+vehicleCapacityDocs = 
+costLimitIgnore = 
+targetIsAboveLimit = 
+notReachableInTime = 
+priceLimit = 
+onlyInPvMode = 
+targetIsAboveVehicleLimit = 
+vehicleCapacityRequired = 
 
 [main.targetChargePlan]
 chargeDuration = "Tempo di carica"
@@ -189,6 +222,9 @@ none = "Nessun veicolo"
 targetSoc = "Limite"
 unknown = "Veicolo ospite"
 vehicleSoc = "Carica"
+tempLimit = 
+notReachable = 
+temp = 
 
 [main.vehicleSoc]
 charging = "In carica"
@@ -212,10 +248,14 @@ targetChargeWaitForVehicle = "Carica target pronta. In attesa del veicolo..."
 unknown = ""
 vehicleLimitReached = "Limite del veicolo {soc}% raggiunto."
 waitForVehicle = "Pronto. In attesa del veicolo..."
+climating = 
+cheapEnergyCharging = 
+cleanEnergyCharging = 
 
 [notifications]
 dismissAll = "Rimuovi tutte"
 modalTitle = "Notifiche"
+logs = 
 
 [offline]
 message = "Non connesso a un server."
@@ -230,6 +270,10 @@ meterstop = "Meter stop"
 odometer = "Contachilometri"
 started = "Iniziato"
 title = "Sessione di carica"
+meter = 
+co2 = 
+date = 
+price = 
 
 [sessions]
 date = "Periodo"
@@ -239,6 +283,16 @@ loadpoint = "Punto di ricarica"
 reallyDelete = "Vuoi veramente eliminare questa sessione?"
 title = "Sessioni di ricarica"
 vehicle = "Veicolo"
+csvTotal = 
+avgPower = 
+solar = 
+total = 
+noData = 
+avgPrice = 
+chargeDuration = 
+csvMonth = 
+price = 
+co2 = 
 
 [sessions.csv]
 chargedenergy = "Energia (kWh)"
@@ -250,6 +304,11 @@ meterstart = "Inizio contatore (kWh)"
 meterstop = "Ferma contatore (kWh)"
 odometer = "Chilometraggio (km)"
 vehicle = "Veicolo"
+price = 
+chargeduration = 
+priceperkwh = 
+co2perkwh = 
+solarpercentage = 
 
 [settings]
 title = "Impostazioni"
@@ -298,3 +357,219 @@ title = "Errore di avvio"
 cancel = "Cancella"
 template = "Produttore"
 test = "Test"
+
+
+[help]
+modalTitle = 
+restartButton = 
+primaryActions = 
+documentationButton = 
+discussionsButton = 
+restartDescription = 
+issueDescription = 
+logsButton = 
+issueButton = 
+logsDescription = 
+secondaryActions = 
+
+[main.chargingPlan]
+time = 
+day = 
+goal = 
+update = 
+active = 
+remove = 
+unsavedChanges = 
+modalTitle = 
+titleTargetCharge = 
+none = 
+title = 
+titleMinSoc = 
+departureTab = 
+arrivalTab = 
+
+[main.heatingStatus]
+cheapEnergyCharging = 
+cleanEnergyCharging = 
+charging = 
+waitForVehicle = 
+
+[main.loadpointSettings.limitSoc]
+description = 
+label = 
+
+[settings.sponsorToken]
+hint = 
+getNew = 
+expires = 
+
+[smartCost]
+co2Label = 
+loadpointDescription = 
+saved = 
+priceLimit = 
+priceLabel = 
+cheapTitle = 
+modalTitle = 
+none = 
+cleanTitle = 
+batteryDescription = 
+co2Limit = 
+applyToAll = 
+activeHours = 
+activeHoursLabel = 
+
+[config.main]
+addVehicle = 
+edit = 
+addPvBattery = 
+unconfigured = 
+yaml = 
+vehicles = 
+addLoadpoint = 
+title = 
+
+[config.form]
+optional = 
+example = 
+
+[config.vehicle]
+cancel = 
+titleAdd = 
+template = 
+titleEdit = 
+validateSave = 
+save = 
+generic = 
+online = 
+offline = 
+scooter = 
+delete = 
+
+[loginModal]
+password = 
+title = 
+error = 
+invalid = 
+login = 
+reset = 
+cancel = 
+
+[footer.savings.period]
+total = 
+30d = 
+365d = 
+
+[config.pv]
+titleAdd = 
+titleEdit = 
+
+[config.validation]
+failed = 
+label = 
+success = 
+unknown = 
+validate = 
+running = 
+
+[config.meter]
+validateSave = 
+delete = 
+template = 
+titleChoice = 
+cancel = 
+save = 
+
+[passwordModal]
+updatePassword = 
+titleUpdate = 
+labelNew = 
+labelRepeat = 
+newPassword = 
+noMatch = 
+description = 
+labelCurrent = 
+error = 
+empty = 
+titleNew = 
+
+[help.restart]
+cancel = 
+description = 
+confirm = 
+disclaimer = 
+modalTitle = 
+
+[config.title]
+description = 
+title = 
+label = 
+
+[sessions.filter]
+allVehicles = 
+allLoadpoints = 
+filter = 
+
+[config.deviceValue]
+phaseVoltages = 
+socLimit = 
+power = 
+range = 
+soc = 
+chargedEnergy = 
+odometer = 
+enabled = 
+current = 
+chargeStatus = 
+phasePowers = 
+energy = 
+capacity = 
+phaseCurrents = 
+
+[config.options.schema]
+https = 
+http = 
+
+[config.system]
+restartingMessage = 
+restart = 
+logs = 
+restartRequiredMessage = 
+restartingDescription = 
+restartRequiredDescription = 
+
+[log]
+levelLabel = 
+areas = 
+download = 
+search = 
+showAll = 
+title = 
+noResults = 
+areaLabel = 
+update = 
+
+[settings.fullscreen]
+enter = 
+exit = 
+label = 
+
+[config.options.endianness]
+big = 
+little = 
+
+[config.section]
+system = 
+general = 
+
+[config.general]
+save = 
+cancel = 
+
+[config.grid]
+titleAdd = 
+titleEdit = 
+
+[config.battery]
+titleAdd = 
+titleEdit = 
