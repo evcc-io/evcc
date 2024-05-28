@@ -35,6 +35,7 @@ const (
 	igyRegManufacturer = 100  // Input
 	igyRegFirmware     = 200  // Input
 	igyRegStatus       = 275  // Input
+	igyRegEnergy       = 307  // Input
 	igyRegCurrents     = 1006 // current readings per phase
 )
 
@@ -54,16 +55,33 @@ func init() {
 
 // NewInnogyFromConfig creates a Innogy charger from generic config
 func NewInnogyFromConfig(other map[string]interface{}) (api.Charger, error) {
-	cc := modbus.TcpSettings{
-		ID: 1,
+	cc := struct {
+		modbus.TcpSettings `mapstructure:",squash"`
+		Meter              bool
+	}{
+		TcpSettings: modbus.TcpSettings{
+			ID: 1,
+		},
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewInnogy(cc.URI, cc.ID)
+	wb, err := NewInnogy(cc.URI, cc.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	var totalEnergy func() (float64, error)
+	if cc.Meter {
+		totalEnergy = wb.totalEnergy
+	}
+
+	return decorateInnogy(wb, totalEnergy), nil
 }
+
+//go:generate go run ../cmd/tools/decorate.go -f decorateInnogy -b *Innogy -r api.Charger -t "api.MeterEnergy,TotalEnergy,func() (float64, error)"
 
 // NewInnogy creates a Innogy charger
 func NewInnogy(uri string, id uint8) (*Innogy, error) {
@@ -161,6 +179,16 @@ func (wb *Innogy) CurrentPower() (float64, error) {
 	}
 	l1, l2, l3, err := wb.Currents()
 	return 230 * (l1 + l2 + l3), err
+}
+
+// totalEnergy implements the api.MeterEnergy interface
+func (wb *Innogy) totalEnergy() (float64, error) {
+	b, err := wb.conn.ReadInputRegisters(igyRegEnergy, 2)
+	if err != nil {
+		return 0, err
+	}
+
+	return float64(math.Float32frombits(binary.BigEndian.Uint32(b))), nil
 }
 
 var _ api.PhaseCurrents = (*Innogy)(nil)
