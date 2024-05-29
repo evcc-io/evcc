@@ -15,16 +15,6 @@ requirements:
 params:
   - name: modbus
     choice: ["tcpip"]
-  - name: meter
-    type: bool
-    description:
-      en: Charger is equipped with an internal energy meter
-      de: Die Wallbox enthält einen integrierten Energiezähler
-    advanced: true
-    default: false
 render: |
   type: innogy
   {{- include "modbus" . }}
-  {{- if ne .meter "false" }}
-  meter: true
-  {{- end }}
