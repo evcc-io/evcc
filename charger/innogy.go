@@ -72,10 +72,8 @@ func NewInnogyFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	var (
-		totalEnergy func() (float64, error)
-		voltages    func() (float64, float64, float64, error)
-	)
+	var totalEnergy func() (float64, error)
+	var voltages func() (float64, float64, float64, error)
 	if cc.Meter {
 		totalEnergy = wb.totalEnergy
 		voltages = wb.voltages
