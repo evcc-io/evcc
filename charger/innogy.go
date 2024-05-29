@@ -35,13 +35,12 @@ const (
 	igyRegManufacturer = 100  // Input
 	igyRegFirmware     = 200  // Input
 	igyRegStatus       = 275  // Input
+	igyRegVoltages     = 301  // Input
 	igyRegEnergy       = 307  // Input
-	igyRegCurrents     = 1006 // current readings per phase
+	igyRegCurrents     = 1006 // Input
 )
 
 var igyRegMaxCurrents = []uint16{1012, 1014, 1016} // max current per phase
-
-// https://www.innogy-emobility.com/content/dam/revu-global/emobility-solutions/neue-website-feb-2021/downloadcenter/digital-services/eld_instman_modbustcpde.pdf
 
 // Innogy is an api.Charger implementation for Innogy eBox wallboxes.
 type Innogy struct {
@@ -73,15 +72,19 @@ func NewInnogyFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	var totalEnergy func() (float64, error)
+	var (
+		totalEnergy func() (float64, error)
+		voltages    func() (float64, float64, float64, error)
+	)
 	if cc.Meter {
 		totalEnergy = wb.totalEnergy
+		voltages = wb.voltages
 	}
 
-	return decorateInnogy(wb, totalEnergy), nil
+	return decorateInnogy(wb, totalEnergy, voltages), nil
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateInnogy -b *Innogy -r api.Charger -t "api.MeterEnergy,TotalEnergy,func() (float64, error)"
+//go:generate go run ../cmd/tools/decorate.go -f decorateInnogy -b *Innogy -r api.Charger -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)"
 
 // NewInnogy creates a Innogy charger
 func NewInnogy(uri string, id uint8) (*Innogy, error) {
@@ -177,18 +180,10 @@ func (wb *Innogy) CurrentPower() (float64, error) {
 	if status, err := wb.Status(); status != api.StatusC || err != nil {
 		return 0, err
 	}
+	var u1, u2, u3 float64 = 230, 230, 230
+	// u1, u2, u3, err := wb.voltages()
 	l1, l2, l3, err := wb.Currents()
-	return 230 * (l1 + l2 + l3), err
-}
-
-// totalEnergy implements the api.MeterEnergy interface
-func (wb *Innogy) totalEnergy() (float64, error) {
-	b, err := wb.conn.ReadInputRegisters(igyRegEnergy, 2)
-	if err != nil {
-		return 0, err
-	}
-
-	return float64(math.Float32frombits(binary.BigEndian.Uint32(b))), nil
+	return (l1 * u1) + (l2 * u2) + (l3 * u3), err
 }
 
 var _ api.PhaseCurrents = (*Innogy)(nil)
@@ -206,6 +201,31 @@ func (wb *Innogy) Currents() (float64, float64, float64, error) {
 	}
 
 	return res[0], res[1], res[2], nil
+}
+
+// voltages implements the api.PhaseVoltages interface
+func (wb *Innogy) voltages() (float64, float64, float64, error) {
+	b, err := wb.conn.ReadInputRegisters(igyRegVoltages, 6)
+	if err != nil {
+		return 0, 0, 0, err
+	}
+
+	var res [3]float64
+	for i := range res {
+		res[i] = float64(math.Float32frombits(binary.BigEndian.Uint32(b[4*i:])))
+	}
+
+	return res[0], res[1], res[2], nil
+}
+
+// totalEnergy implements the api.MeterEnergy interface
+func (wb *Innogy) totalEnergy() (float64, error) {
+	b, err := wb.conn.ReadInputRegisters(igyRegEnergy, 2)
+	if err != nil {
+		return 0, err
+	}
+
+	return float64(math.Float32frombits(binary.BigEndian.Uint32(b))), nil
 }
 
 var _ api.Diagnosis = (*Innogy)(nil)
