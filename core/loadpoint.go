@@ -1466,7 +1466,7 @@ func (lp *Loadpoint) publishSocAndRange() {
 
 		f, err := lp.socEstimator.Soc(lp.getChargedEnergy())
 		if err != nil {
-			if errors.Is(err, api.ErrMustRetry) {
+			if loadpoint.AcceptableError(err) {
 				lp.socUpdated = time.Time{}
 			} else {
 				lp.log.ERROR.Printf("vehicle soc: %v", err)
