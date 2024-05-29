@@ -157,8 +157,6 @@ func runRoot(cmd *cobra.Command, args []string) {
 	// publish to UI
 	go socketHub.Run(pipe.NewDropper(ignoreEmpty).Pipe(tee.Attach()), cache)
 
-	fmt.Println("initial publish")
-
 	// publish initial settings
 	valueChan <- util.Param{Key: keys.Fatal, Val: nil} // remove previous fatal startup errors
 	valueChan <- util.Param{Key: keys.Network, Val: conf.Network}

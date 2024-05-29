@@ -64,12 +64,28 @@ type Mqtt struct {
 
 // Influx is the influx db configuration
 type Influx struct {
-	URL      string `json:"url,omitempty"`
-	Database string `json:"database,omitempty"`
-	Token    string `json:"token,omitempty"`
-	Org      string `json:"org,omitempty"`
-	User     string `json:"user,omitempty"`
-	Password string `json:"-"`
+	URL      string `json:"url"`
+	Database string `json:"database"`
+	Token    string `json:"token"`
+	Org      string `json:"org"`
+	User     string `json:"user"`
+	Password string `json:"password"`
+}
+
+// Redacted implements the redactor interface used by the tee publisher
+func (c Influx) Redacted() any {
+	// TODO add masked password
+	return struct {
+		URL      string `json:"url"`
+		Database string `json:"database"`
+		Org      string `json:"org"`
+		User     string `json:"user"`
+	}{
+		URL:      c.URL,
+		Database: c.Database,
+		Org:      c.Org,
+		User:     c.User,
+	}
 }
 
 type DB struct {

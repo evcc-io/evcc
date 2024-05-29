@@ -28,9 +28,25 @@ func ClientID() string {
 type Config struct {
 	Broker   string `json:"broker"`
 	User     string `json:"user"`
-	Password string `json:"password,omitempty"`
+	Password string `json:"password"`
 	ClientID string `json:"clientID"`
 	Insecure bool   `json:"insecure"`
+}
+
+// Redacted implements the redactor interface used by the tee publisher
+func (c Config) Redacted() any {
+	// TODO add masked password
+	return struct {
+		Broker   string `json:"broker"`
+		User     string `json:"user"`
+		ClientID string `json:"clientID"`
+		Insecure bool   `json:"insecure"`
+	}{
+		Broker:   c.Broker,
+		User:     c.User,
+		ClientID: c.ClientID,
+		Insecure: c.Insecure,
+	}
 }
 
 // Client encapsulates mqtt publish/subscribe functions
