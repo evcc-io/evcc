@@ -50,7 +50,7 @@
 							Error during startup. Check your configuration and restart.
 						</strong>
 					</div>
-					<div v-for="(error, index) in fatal" :key="index">{{ error }}</div>
+					<div v-if="fatal">{{ fatal.error }}</div>
 				</div>
 				<button
 					type="button"
@@ -77,7 +77,7 @@ export default {
 	},
 	props: {
 		offline: Boolean,
-		fatal: { type: Array, default: () => [] },
+		fatal: Object,
 	},
 	data() {
 		return { dismissed: false };
@@ -105,7 +105,7 @@ export default {
 				!this.offline &&
 				!this.restartNeeded &&
 				!this.restarting &&
-				this.fatal?.length &&
+				this.fatal?.error &&
 				!this.dismissed
 			);
 		},

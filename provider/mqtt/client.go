@@ -26,11 +26,11 @@ func ClientID() string {
 
 // Config is the public configuration
 type Config struct {
-	Broker   string `json:"broker,omitempty"`
-	User     string `json:"user,omitempty"`
-	Password string `json:"-"`
-	ClientID string `json:"clientID,omitempty"`
-	Insecure bool   `json:"insecure,omitempty"`
+	Broker   string `json:"broker"`
+	User     string `json:"user"`
+	Password string `json:"password,omitempty"`
+	ClientID string `json:"clientID"`
+	Insecure bool   `json:"insecure"`
 }
 
 // Client encapsulates mqtt publish/subscribe functions

@@ -1,5 +1,5 @@
 <template>
-	<div v-if="tags" class="list">
+	<div v-if="tags" class="tags">
 		<span
 			v-for="(entry, index) in entries"
 			:key="index"
@@ -76,7 +76,7 @@ export default {
 };
 </script>
 <style scoped>
-.list {
+.tags {
 	display: grid;
 	grid-template-columns: 1fr;
 	grid-gap: 0.5rem;

@@ -468,7 +468,7 @@ func configureVehicles(static []config.Named, names ...string) error {
 	return nil
 }
 
-func configureEnvironment(cmd *cobra.Command, conf globalconfig.All) (err error) {
+func configureEnvironment(cmd *cobra.Command, conf *globalconfig.All) (err error) {
 	// full http request log
 	if cmd.Flags().Lookup(flagHeaders).Changed {
 		request.LogHeaders = true
@@ -498,7 +498,7 @@ func configureEnvironment(cmd *cobra.Command, conf globalconfig.All) (err error)
 
 	// setup mqtt client listener
 	if err == nil {
-		err = wrapErrorWithClass(ClassMqtt, configureMqtt(conf.Mqtt))
+		err = wrapErrorWithClass(ClassMqtt, configureMqtt(&conf.Mqtt))
 	}
 
 	// setup EEBus server
@@ -592,7 +592,7 @@ func configureInflux(conf globalconfig.Influx, site site.API, in <-chan util.Par
 }
 
 // setup mqtt
-func configureMqtt(conf globalconfig.Mqtt) error {
+func configureMqtt(conf *globalconfig.Mqtt) error {
 	// migrate settings
 	if settings.Exists(keys.Mqtt) {
 		if err := settings.Json(keys.Mqtt, &conf); err != nil {

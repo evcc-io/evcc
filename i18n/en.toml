@@ -41,6 +41,7 @@ labelResidualPower = "Residual power"
 title = "Control behavior"
 
 [config.deviceValue]
+broker = "Broker"
 capacity = "Capacity"
 chargeStatus = "Status"
 chargedEnergy = "Charged"
@@ -59,6 +60,7 @@ power = "Power"
 range = "Range"
 soc = "SoC"
 socLimit = "Limit"
+topic = "Topic"
 
 [config.eebus]
 description = "Configuration that enables evcc to communicate with other EEBus devices."
@@ -130,7 +132,6 @@ title = "Modbus Proxy"
 
 [config.mqtt]
 authentication = "Authentication"
-brokerLabel = "Server"
 description = "Connect to an MQTT broker to exchange data with other systems on your network."
 descriptionClientId = "Author of the messages. If empty `evcc-[rand]` is used."
 descriptionTopic = "Leave empty to disable publishing."
@@ -169,8 +170,11 @@ titleEdit = "Edit Solar Meter"
 
 [config.section]
 general = "General"
+integrations = "Integrations"
+loadpoints = "Charging points"
 site = "Grid, PV & Battery Systems"
 system = "System"
+vehicles = "Vehicles"
 
 [config.sponsor]
 description = "Support evcc development by sponsoring the project. You will receive a sponsor token that unlocks additional features."

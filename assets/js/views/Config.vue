@@ -133,6 +133,7 @@
 								:name="$t('config.mqtt.title')"
 								editable
 								:unconfigured="!mqttTags"
+								:error="fatalClass === 'mqtt'"
 								data-testid="mqtt"
 								@edit="openModal('mqttModal')"
 							>
@@ -321,6 +322,9 @@ export default {
 	},
 	mixins: [formatter, collector],
 	computed: {
+		fatalClass() {
+			return store.state?.fatal?.class;
+		},
 		siteTitle() {
 			return this.site?.title;
 		},

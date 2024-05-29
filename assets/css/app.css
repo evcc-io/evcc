@@ -585,3 +585,12 @@ html.app .modal-dialog {
 	background: var(--evcc-box);
 	padding: 1rem;
 }
+
+.round-box--error {
+	box-shadow: 0 0 0.5rem var(--bs-danger);
+	border: 1px solid var(--bs-danger);
+}
+
+.round-box--error .tags * {
+	color: var(--bs-danger-text-emphasis) !important;
+}

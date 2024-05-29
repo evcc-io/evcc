@@ -1,5 +1,5 @@
 <template>
-	<li class="root round-box">
+	<li class="root round-box" :class="{ 'round-box--error': error }">
 		<div class="d-flex align-items-center mb-2">
 			<div class="icon me-2">
 				<slot name="icon" />
@@ -44,6 +44,7 @@ export default {
 		name: String,
 		editable: Boolean,
 		unconfigured: Boolean,
+		error: Boolean,
 	},
 	data() {
 		return {
