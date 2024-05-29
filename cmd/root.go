@@ -18,7 +18,6 @@ import (
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/server/updater"
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/auth"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/pipe"
 	"github.com/evcc-io/evcc/util/sponsor"
@@ -248,10 +247,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	// allow web access for vehicles
 	configureAuth(conf.Network, config.Instances(config.Vehicles().Devices()), httpd.Router(), valueChan)
 
-	auth := auth.New()
-	httpd.RegisterAuthHandlers(auth)
-
-	httpd.RegisterSystemHandler(auth, valueChan, cache, func() {
+	httpd.RegisterSystemHandler(valueChan, cache, func() {
 		log.INFO.Println("evcc was stopped by user. OS should restart the service. Or restart manually.")
 		once.Do(func() { close(stopC) }) // signal loop to end
 	})
@@ -268,7 +264,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 		site.DumpConfig()
 		site.Prepare(valueChan, pushChan)
 
-		httpd.RegisterSiteHandlers(site, auth, valueChan)
+		httpd.RegisterSiteHandlers(site, valueChan)
 
 		go func() {
 			site.Run(stopC, conf.Interval)

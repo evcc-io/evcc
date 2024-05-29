@@ -88,7 +88,7 @@ func (s *HTTPd) Router() *mux.Router {
 }
 
 // RegisterSiteHandlers connects the http handlers to the site
-func (s *HTTPd) RegisterSiteHandlers(site site.API, auth auth.Auth, valueChan chan<- util.Param) {
+func (s *HTTPd) RegisterSiteHandlers(site site.API, valueChan chan<- util.Param) {
 	router := s.Server.Handler.(*mux.Router)
 
 	// api
@@ -183,33 +183,8 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, auth auth.Auth, valueChan ch
 	}
 }
 
-// RegisterAuthHandlers provides authentication handlers
-func (s *HTTPd) RegisterAuthHandlers(auth auth.Auth) {
-	router := s.Server.Handler.(*mux.Router)
-
-	// api
-	api := router.PathPrefix("/api/auth").Subrouter()
-	api.Use(jsonHandler)
-	api.Use(handlers.CompressHandler)
-	api.Use(handlers.CORS(
-		handlers.AllowedHeaders([]string{"Content-Type"}),
-	))
-
-	// auth api
-	routes := map[string]route{
-		"password": {"PUT", "/password", updatePasswordHandler(auth)},
-		"auth":     {"GET", "/status", authStatusHandler(auth)},
-		"login":    {"POST", "/login", loginHandler(auth)},
-		"logout":   {"POST", "/logout", logoutHandler},
-	}
-
-	for _, r := range routes {
-		api.Methods(r.Methods()...).Path(r.Pattern).Handler(r.HandlerFunc)
-	}
-}
-
 // RegisterSystemHandler provides system level handlers
-func (s *HTTPd) RegisterSystemHandler(auth auth.Auth, valueChan chan<- util.Param, cache *util.Cache, shutdown func()) {
+func (s *HTTPd) RegisterSystemHandler(valueChan chan<- util.Param, cache *util.Cache, shutdown func()) {
 	router := s.Server.Handler.(*mux.Router)
 
 	// api
@@ -220,78 +195,102 @@ func (s *HTTPd) RegisterSystemHandler(auth auth.Auth, valueChan chan<- util.Para
 		handlers.AllowedHeaders([]string{"Content-Type"}),
 	))
 
-	routes := map[string]route{
-		"state": {"GET", "/state", stateHandler(cache)},
+	{ // /api
+
+		routes := map[string]route{
+			"state": {"GET", "/state", stateHandler(cache)},
+		}
+
+		for _, r := range routes {
+			api.Methods(r.Methods()...).Path(r.Pattern).Handler(r.HandlerFunc)
+		}
 	}
 
-	for _, r := range routes {
-		api.Methods(r.Methods()...).Path(r.Pattern).Handler(r.HandlerFunc)
+	auth := auth.New()
+
+	{
+		// api/auth
+		api := api.PathPrefix("/auth").Subrouter()
+
+		routes := map[string]route{
+			"password": {"PUT", "/password", updatePasswordHandler(auth)},
+			"auth":     {"GET", "/status", authStatusHandler(auth)},
+			"login":    {"POST", "/login", loginHandler(auth)},
+			"logout":   {"POST", "/logout", logoutHandler},
+		}
+
+		for _, r := range routes {
+			api.Methods(r.Methods()...).Path(r.Pattern).Handler(r.HandlerFunc)
+		}
+	}
+	{ // api/config
+
+		api := api.PathPrefix("/config").Subrouter()
+		api.Use(ensureAuthHandler(auth))
+
+		routes := map[string]route{
+			"templates":          {"GET", "/templates/{class:[a-z]+}", templatesHandler},
+			"products":           {"GET", "/products/{class:[a-z]+}", productsHandler},
+			"devices":            {"GET", "/devices/{class:[a-z]+}", devicesHandler},
+			"device":             {"GET", "/devices/{class:[a-z]+}/{id:[0-9.]+}", deviceConfigHandler},
+			"devicestatus":       {"GET", "/devices/{class:[a-z]+}/{name:[a-zA-Z0-9_.:-]+}/status", deviceStatusHandler},
+			"dirty":              {"GET", "/dirty", boolGetHandler(ConfigDirty)},
+			"newdevice":          {"POST", "/devices/{class:[a-z]+}", newDeviceHandler},
+			"updatedevice":       {"PUT", "/devices/{class:[a-z]+}/{id:[0-9.]+}", updateDeviceHandler},
+			"deletedevice":       {"DELETE", "/devices/{class:[a-z]+}/{id:[0-9.]+}", deleteDeviceHandler},
+			"testconfig":         {"POST", "/test/{class:[a-z]+}", testConfigHandler},
+			"testmerged":         {"POST", "/test/{class:[a-z]+}/merge/{id:[0-9.]+}", testConfigHandler},
+			"interval":           {"POST", "/interval/{value:[0-9.]+}", settingsSetDurationHandler("interval")},
+			"updatesponsortoken": {"POST", "/sponsortoken/{token:[a-zA-Z0-9_-.]+}", updateSponsortokenHandler},
+			"deletesponsortoken": {"DELETE", "/sponsortoken", settingsDeleteHandler(keys.SponsorToken)},
+		}
+
+		// yaml handlers
+		for key, struc := range map[string]any{
+			keys.EEBus:       eebus.Config{},
+			keys.Hems:        config.Typed{},
+			keys.Tariffs:     globalconfig.Tariffs{},
+			keys.Messaging:   globalconfig.Messaging{}, // has default
+			keys.ModbusProxy: globalconfig.ModbusProxy{},
+		} {
+			routes[key] = route{Method: "GET", Pattern: "/" + key, HandlerFunc: settingsGetStringHandler(key)}
+			routes["update"+key] = route{Method: "POST", Pattern: "/" + key, HandlerFunc: settingsSetYamlHandler(key, struc)}
+			routes["delete"+key] = route{Method: "DELETE", Pattern: "/" + key, HandlerFunc: settingsDeleteHandler(key)}
+		}
+
+		// json handlers
+		for key, fun := range map[string]func() any{
+			keys.Mqtt:    func() any { return new(globalconfig.Mqtt) }, // has default
+			keys.Influx:  func() any { return new(globalconfig.Influx) },
+			keys.Network: func() any { return new(globalconfig.Network) }, // has default
+		} {
+			// routes[key] = route{Method: "GET", Pattern: "/" + key, HandlerFunc: settingsGetJsonHandler(key, fun())}
+			routes["update"+key] = route{Method: "POST", Pattern: "/" + key, HandlerFunc: settingsSetJsonHandler(key, valueChan, fun())}
+			routes["delete"+key] = route{Method: "DELETE", Pattern: "/" + key, HandlerFunc: settingsDeleteJsonHandler(key, valueChan, fun())}
+		}
+
+		for _, r := range routes {
+			api.Methods(r.Methods()...).Path(r.Pattern).Handler(r.HandlerFunc)
+		}
 	}
 
-	// config ui (secured)
-	configApi := api.PathPrefix("/config").Subrouter()
-	configApi.Use(ensureAuthHandler(auth))
+	{ // api/system
 
-	configRoutes := map[string]route{
-		"templates":          {"GET", "/templates/{class:[a-z]+}", templatesHandler},
-		"products":           {"GET", "/products/{class:[a-z]+}", productsHandler},
-		"devices":            {"GET", "/devices/{class:[a-z]+}", devicesHandler},
-		"device":             {"GET", "/devices/{class:[a-z]+}/{id:[0-9.]+}", deviceConfigHandler},
-		"devicestatus":       {"GET", "/devices/{class:[a-z]+}/{name:[a-zA-Z0-9_.:-]+}/status", deviceStatusHandler},
-		"dirty":              {"GET", "/dirty", boolGetHandler(ConfigDirty)},
-		"newdevice":          {"POST", "/devices/{class:[a-z]+}", newDeviceHandler},
-		"updatedevice":       {"PUT", "/devices/{class:[a-z]+}/{id:[0-9.]+}", updateDeviceHandler},
-		"deletedevice":       {"DELETE", "/devices/{class:[a-z]+}/{id:[0-9.]+}", deleteDeviceHandler},
-		"testconfig":         {"POST", "/test/{class:[a-z]+}", testConfigHandler},
-		"testmerged":         {"POST", "/test/{class:[a-z]+}/merge/{id:[0-9.]+}", testConfigHandler},
-		"interval":           {"POST", "/interval/{value:[0-9.]+}", settingsSetDurationHandler("interval")},
-		"updatesponsortoken": {"POST", "/sponsortoken/{token:[a-zA-Z0-9_-.]+}", updateSponsortokenHandler},
-		"deletesponsortoken": {"DELETE", "/sponsortoken", settingsDeleteHandler(keys.SponsorToken)},
-	}
+		api := api.PathPrefix("/system").Subrouter()
+		api.Use(ensureAuthHandler(auth))
 
-	// yaml handlers
-	for key, struc := range map[string]any{
-		keys.EEBus:       eebus.Config{},
-		keys.Hems:        config.Typed{},
-		keys.Tariffs:     globalconfig.Tariffs{},
-		keys.Messaging:   globalconfig.Messaging{}, // has default
-		keys.ModbusProxy: globalconfig.ModbusProxy{},
-	} {
-		configRoutes[key] = route{Method: "GET", Pattern: "/" + key, HandlerFunc: settingsGetStringHandler(key)}
-		configRoutes["update"+key] = route{Method: "POST", Pattern: "/" + key, HandlerFunc: settingsSetYamlHandler(key, struc)}
-		configRoutes["delete"+key] = route{Method: "DELETE", Pattern: "/" + key, HandlerFunc: settingsDeleteHandler(key)}
-	}
+		// system api
+		routes := map[string]route{
+			"log":      {"GET", "/log", logHandler},
+			"logareas": {"GET", "/log/areas", logAreasHandler},
+			"shutdown": {"POST", "/shutdown", func(w http.ResponseWriter, r *http.Request) {
+				shutdown()
+				w.WriteHeader(http.StatusNoContent)
+			}},
+		}
 
-	// json handlers
-	for key, fun := range map[string]func() any{
-		keys.Mqtt:    func() any { return new(globalconfig.Mqtt) }, // has default
-		keys.Influx:  func() any { return new(globalconfig.Influx) },
-		keys.Network: func() any { return new(globalconfig.Network) }, // has default
-	} {
-		// configRoutes[key] = route{Method: "GET", Pattern: "/" + key, HandlerFunc: settingsGetJsonHandler(key, fun())}
-		configRoutes["update"+key] = route{Method: "POST", Pattern: "/" + key, HandlerFunc: settingsSetJsonHandler(key, valueChan, fun())}
-		configRoutes["delete"+key] = route{Method: "DELETE", Pattern: "/" + key, HandlerFunc: settingsDeleteJsonHandler(key, valueChan, fun())}
-	}
-
-	for _, r := range configRoutes {
-		configApi.Methods(r.Methods()...).Path(r.Pattern).Handler(r.HandlerFunc)
-	}
-
-	// api
-	systemApi := api.PathPrefix("/system").Subrouter()
-	systemApi.Use(ensureAuthHandler(auth))
-
-	// system api
-	systemRoutes := map[string]route{
-		"log":      {"GET", "/log", logHandler},
-		"logareas": {"GET", "/log/areas", logAreasHandler},
-		"shutdown": {"POST", "/shutdown", func(w http.ResponseWriter, r *http.Request) {
-			shutdown()
-			w.WriteHeader(http.StatusNoContent)
-		}},
-	}
-
-	for _, r := range systemRoutes {
-		systemApi.Methods(r.Methods()...).Path(r.Pattern).Handler(r.HandlerFunc)
+		for _, r := range routes {
+			api.Methods(r.Methods()...).Path(r.Pattern).Handler(r.HandlerFunc)
+		}
 	}
 }
