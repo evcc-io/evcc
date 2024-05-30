@@ -73,7 +73,7 @@ func NewInnogyFromConfig(other map[string]interface{}) (api.Charger, error) {
 	var voltages func() (float64, float64, float64, error)
 
 	// check presence of energy meter & voltages registers
-	if b, err := wb.conn.ReadInputRegisters(igyRegModbusTableVersion, 1); err == nil && binary.BigEndian.Uint16(b) >= 5 {
+	if b, err := wb.conn.ReadInputRegisters(igyRegModbusTableVersion, 1); err == nil && binary.BigEndian.Uint16(b) >= 6 {
 		totalEnergy = wb.totalEnergy
 		voltages = wb.voltages
 		wb.hasVoltages = true
