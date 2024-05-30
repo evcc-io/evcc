@@ -2,7 +2,7 @@ template: sma-sbs-modbus
 products:
   - brand: SMA
     description:
-      generic: Sunny Boy Storage (Modbus)
+      generic: Sunny Boy Storage 3.7/5.0/6.0 (Modbus)
 capabilities: ["battery-control"]
 params:
   - name: usage
