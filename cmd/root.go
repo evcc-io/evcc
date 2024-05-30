@@ -187,9 +187,22 @@ func runRoot(cmd *cobra.Command, args []string) {
 		site, err = configureSiteAndLoadpoints(conf)
 	}
 
-	// setup database
+	// setup influx
 	if err == nil {
-		err = wrapErrorWithClass(ClassInflux, configureInflux(conf.Influx, site, pipe.NewDropper(append(ignoreLogs, ignoreEmpty)...).Pipe(tee.Attach())))
+		influx, ierr := configureInflux(conf.Influx, site)
+		if ierr != nil {
+			err = wrapErrorWithClass(ClassInflux, ierr)
+		}
+
+		if influx != nil {
+			// eliminate duplicate values
+			dedupe := pipe.NewDeduplicator(30*time.Minute,
+				keys.VehicleSoc, keys.VehicleRange, keys.VehicleOdometer,
+				keys.ChargedEnergy, keys.ChargeRemainingEnergy)
+			go influx.Run(site, dedupe.Pipe(
+				pipe.NewDropper(append(ignoreLogs, ignoreEmpty)...).Pipe(tee.Attach()),
+			))
+		}
 	}
 
 	// setup mqtt publisher

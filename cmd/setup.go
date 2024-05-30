@@ -39,7 +39,6 @@ import (
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/locale"
 	"github.com/evcc-io/evcc/util/machine"
-	"github.com/evcc-io/evcc/util/pipe"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/evcc-io/evcc/util/templates"
@@ -555,22 +554,22 @@ func configureDatabase(conf globalconfig.DB) error {
 }
 
 // configureInflux configures influx database
-func configureInflux(conf globalconfig.Influx, site site.API, in <-chan util.Param) error {
+func configureInflux(conf globalconfig.Influx, site site.API) (*server.Influx, error) {
 	// migrate settings
 	if settings.Exists(keys.Influx) {
 		if err := settings.Json(keys.Influx, &conf); err != nil {
-			return err
+			return nil, err
 		}
 	}
 
 	if conf.URL == "" {
-		return nil
+		return nil, nil
 	}
 
 	// migrate settings
 	if !settings.Exists(keys.Influx) {
 		if err := settings.SetJson(keys.Influx, conf); err != nil {
-			return err
+			return nil, err
 		}
 	}
 
@@ -583,12 +582,7 @@ func configureInflux(conf globalconfig.Influx, site site.API, in <-chan util.Par
 		conf.Database,
 	)
 
-	// eliminate duplicate values
-	dedupe := pipe.NewDeduplicator(30*time.Minute, "vehicleCapacity", "vehicleSoc", "vehicleRange", "vehicleOdometer", "chargedEnergy", "chargeRemainingEnergy")
-	in = dedupe.Pipe(in)
-
-	go influx.Run(site, in)
-	return nil
+	return influx, nil
 }
 
 // setup mqtt
