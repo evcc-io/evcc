@@ -75,9 +75,6 @@ func NewCupraFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 	if err == nil {
 		v.fromVehicle(vehicle.VehicleNickname, 0)
-	}
-
-	if err == nil {
 		v.Provider = cupra.NewProvider(api, ui.Subject, vehicle.VIN, cc.Cache)
 	}
 

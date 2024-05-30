@@ -57,15 +57,11 @@ func NewFordConnectFromConfig(other map[string]interface{}) (api.Vehicle, error)
 	vehicle, err := ensureVehicleEx(cc.VIN, api.Vehicles, func(v connect.Vehicle) (string, error) {
 		return api.VIN(v.VehicleID)
 	})
-	if err != nil {
-		return nil, err
-	}
 
-	if v.Title_ == "" {
-		v.Title_ = vehicle.NickName
+	if err == nil {
+		v.fromVehicle(vehicle.NickName, 0)
+		v.Provider = connect.NewProvider(api, vehicle.VehicleID, cc.Cache)
 	}
-
-	v.Provider = connect.NewProvider(api, vehicle.VehicleID, cc.Cache)
 
 	return v, err
 }

@@ -71,11 +71,8 @@ func NewIDFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		},
 	)
 
-	if v.Title_ == "" {
-		v.Title_ = vehicle.Nickname
-	}
-
 	if err == nil {
+		v.fromVehicle(vehicle.Nickname, 0)
 		v.Provider = id.NewProvider(api, vehicle.VIN, cc.Cache)
 	}
 
