@@ -554,7 +554,7 @@ func configureDatabase(conf globalconfig.DB) error {
 }
 
 // configureInflux configures influx database
-func configureInflux(conf globalconfig.Influx, site site.API) (*server.Influx, error) {
+func configureInflux(conf *globalconfig.Influx) (*server.Influx, error) {
 	// migrate settings
 	if settings.Exists(keys.Influx) {
 		if err := settings.Json(keys.Influx, &conf); err != nil {

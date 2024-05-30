@@ -189,12 +189,12 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 	// setup influx
 	if err == nil {
-		influx, ierr := configureInflux(conf.Influx, site)
+		influx, ierr := configureInflux(&conf.Influx)
 		if ierr != nil {
 			err = wrapErrorWithClass(ClassInflux, ierr)
 		}
 
-		if influx != nil {
+		if err == nil && influx != nil {
 			// eliminate duplicate values
 			dedupe := pipe.NewDeduplicator(30*time.Minute,
 				keys.VehicleSoc, keys.VehicleRange, keys.VehicleOdometer,
