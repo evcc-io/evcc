@@ -5,6 +5,7 @@
 		:description="$t('config.influx.description')"
 		docs="/docs/reference/configuration/influx"
 		endpoint="/config/influx"
+		state-key="influx"
 		data-testid="influx-modal"
 		@changed="$emit('changed')"
 	>
@@ -16,7 +17,7 @@
 			>
 				<input
 					id="influxUrl"
-					v-model="values.URL"
+					v-model="values.url"
 					type="url"
 					class="form-control"
 					required
@@ -28,7 +29,7 @@
 				:label="$t('config.influx.labelOrg')"
 				example="home"
 			>
-				<input id="influxOrg" v-model="values.Org" class="form-control" required />
+				<input id="influxOrg" v-model="values.org" class="form-control" required />
 			</FormRow>
 			<FormRow
 				id="influxDatabase"
@@ -37,7 +38,7 @@
 			>
 				<input
 					id="influxDatabase"
-					v-model="values.Database"
+					v-model="values.database"
 					class="form-control"
 					required
 				/>
@@ -48,7 +49,7 @@
 				:label="$t('config.influx.labelToken')"
 				:help="$t('config.influx.descriptionToken')"
 			>
-				<input id="influxToken" v-model="values.Token" class="form-control" required />
+				<input id="influxToken" v-model="values.token" class="form-control" required />
 			</FormRow>
 			<FormRow
 				v-if="showV1(values)"
@@ -56,7 +57,7 @@
 				:label="$t('config.influx.labelUser')"
 				optional
 			>
-				<input id="influxUser" v-model="values.User" class="form-control" />
+				<input id="influxUser" v-model="values.user" class="form-control" />
 			</FormRow>
 			<FormRow
 				v-if="showV1(values)"
@@ -66,7 +67,7 @@
 			>
 				<input
 					id="influxPassword"
-					v-model="values.Password"
+					v-model="values.password"
 					class="form-control"
 					type="password"
 					autocomplete="off"
@@ -78,8 +79,8 @@
 					class="btn btn-link btn-sm text-primary px-0"
 					type="button"
 					@click="
-						values.User = '';
-						values.Password = '';
+						values.user = '';
+						values.password = '';
 						v1 = false;
 					"
 				>
@@ -90,7 +91,7 @@
 					class="btn btn-link btn-sm text-primary px-0"
 					type="button"
 					@click="
-						values.Token = '';
+						values.token = '';
 						v1 = true;
 					"
 				>
@@ -114,7 +115,7 @@ export default {
 	},
 	methods: {
 		showV1(values) {
-			return this.v1 || values.User || values.Password;
+			return this.v1 || values.user || values.password;
 		},
 	},
 };

@@ -159,7 +159,6 @@ func runRoot(cmd *cobra.Command, args []string) {
 	// publish initial settings
 	valueChan <- util.Param{Key: keys.Fatal, Val: nil} // remove previous fatal startup errors
 	valueChan <- util.Param{Key: keys.Network, Val: conf.Network}
-	valueChan <- util.Param{Key: keys.Influx, Val: conf.Influx}
 	valueChan <- util.Param{Key: keys.Mqtt, Val: conf.Mqtt}
 	valueChan <- util.Param{Key: keys.Interval, Val: conf.Interval}
 	// TODO
@@ -204,6 +203,8 @@ func runRoot(cmd *cobra.Command, args []string) {
 			))
 		}
 	}
+
+	valueChan <- util.Param{Key: keys.Influx, Val: conf.Influx}
 
 	// setup mqtt publisher
 	if err == nil && conf.Mqtt.Broker != "" {
