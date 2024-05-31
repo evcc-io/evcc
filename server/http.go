@@ -186,6 +186,7 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, valueChan chan<- util.Param)
 // RegisterSystemHandler provides system level handlers
 func (s *HTTPd) RegisterSystemHandler(valueChan chan<- util.Param, cache *util.Cache, shutdown func()) {
 	router := s.Server.Handler.(*mux.Router)
+	auth := auth.New()
 
 	// api
 	api := router.PathPrefix("/api").Subrouter()
@@ -205,8 +206,6 @@ func (s *HTTPd) RegisterSystemHandler(valueChan chan<- util.Param, cache *util.C
 		}
 	}
 
-	auth := auth.New()
-
 	{
 		// api/auth
 		api := api.PathPrefix("/auth").Subrouter()
@@ -222,6 +221,7 @@ func (s *HTTPd) RegisterSystemHandler(valueChan chan<- util.Param, cache *util.C
 			api.Methods(r.Methods()...).Path(r.Pattern).Handler(r.HandlerFunc)
 		}
 	}
+
 	{ // api/config
 		api := api.PathPrefix("/config").Subrouter()
 		api.Use(ensureAuthHandler(auth))
@@ -250,6 +250,7 @@ func (s *HTTPd) RegisterSystemHandler(valueChan chan<- util.Param, cache *util.C
 			keys.Tariffs:     globalconfig.Tariffs{},
 			keys.Messaging:   globalconfig.Messaging{}, // has default
 			keys.ModbusProxy: globalconfig.ModbusProxy{},
+			keys.Circuits:    []config.Named{},
 		} {
 			routes[key] = route{Method: "GET", Pattern: "/" + key, HandlerFunc: settingsGetStringHandler(key)}
 			routes["update"+key] = route{Method: "POST", Pattern: "/" + key, HandlerFunc: settingsSetYamlHandler(key, struc)}
@@ -258,9 +259,9 @@ func (s *HTTPd) RegisterSystemHandler(valueChan chan<- util.Param, cache *util.C
 
 		// json handlers
 		for key, fun := range map[string]func() any{
-			keys.Mqtt:    func() any { return new(globalconfig.Mqtt) }, // has default
-			keys.Influx:  func() any { return new(globalconfig.Influx) },
 			keys.Network: func() any { return new(globalconfig.Network) }, // has default
+			keys.Mqtt:    func() any { return new(globalconfig.Mqtt) },    // has default
+			keys.Influx:  func() any { return new(globalconfig.Influx) },
 		} {
 			// routes[key] = route{Method: "GET", Pattern: "/" + key, HandlerFunc: settingsGetJsonHandler(key, fun())}
 			routes["update"+key] = route{Method: "POST", Pattern: "/" + key, HandlerFunc: settingsSetJsonHandler(key, valueChan, fun())}
