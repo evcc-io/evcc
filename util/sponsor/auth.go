@@ -20,7 +20,7 @@ var (
 
 const (
 	unavailable = "sponsorship unavailable"
-	victron     = "victron-device"
+	victron     = "victron"
 )
 
 func IsAuthorized() bool {
@@ -41,6 +41,7 @@ func ConfigureSponsorship(token string) error {
 	defer mu.Unlock()
 
 	if token == "" {
+		Subject = victron
 		if sub := checkVictron(); sub != "" {
 			Subject = sub
 			return nil
@@ -84,7 +85,7 @@ func ConfigureSponsorship(token string) error {
 type StatusStruct struct {
 	Name        string    `json:"name,omitempty"`
 	ExpiresAt   time.Time `json:"expiresAt,omitempty"`
-	ExpiresSoon bool      `json:"expiresIn,omitempty"`
+	ExpiresSoon bool      `json:"expiresSoon,omitempty"`
 }
 
 // Status returns the sponsorship status

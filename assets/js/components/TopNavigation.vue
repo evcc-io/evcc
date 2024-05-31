@@ -10,7 +10,7 @@
 		>
 			<span
 				v-if="showBadge"
-				class="position-absolute top-0 start-100 translate-middle p-2 bg-danger border border-light rounded-circle"
+				class="position-absolute top-0 start-100 translate-middle p-2 bg-warning rounded-circle"
 			>
 				<span class="visually-hidden">action required</span>
 			</span>
@@ -34,10 +34,6 @@
 					data-testid="topnavigation-settings"
 					@click="openSettingsModal"
 				>
-					<span
-						v-if="sponsor.expiresSoon"
-						class="d-inline-block p-1 rounded-circle bg-danger border border-light rounded-circle"
-					></span>
 					{{ $t("settings.title") }}
 				</button>
 			</li>
@@ -53,6 +49,10 @@
 			</li>
 			<li>
 				<router-link class="dropdown-item" to="/config">
+					<span
+						v-if="sponsor.expiresSoon"
+						class="d-inline-block p-1 rounded-circle bg-warning rounded-circle"
+					></span>
 					{{ $t("config.main.title") }}
 				</router-link>
 			</li>

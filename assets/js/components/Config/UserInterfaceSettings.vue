@@ -1,5 +1,4 @@
 <template>
-	<SponsorTokenExpires v-bind="sponsor" />
 	<div class="container mx-0 px-0">
 		<FormRow id="settingsDesign" :label="$t('settings.theme.label')">
 			<SelectGroup
@@ -79,7 +78,6 @@
 
 <script>
 import TelemetrySettings from "../TelemetrySettings.vue";
-import SponsorTokenExpires from "../SponsorTokenExpires.vue";
 import FormRow from "../FormRow.vue";
 import SelectGroup from "../SelectGroup.vue";
 import {
@@ -95,7 +93,7 @@ import { isApp } from "../../utils/native";
 
 export default {
 	name: "UserInterfaceSettings",
-	components: { TelemetrySettings, FormRow, SelectGroup, SponsorTokenExpires },
+	components: { TelemetrySettings, FormRow, SelectGroup },
 	props: {
 		sponsor: Object,
 	},

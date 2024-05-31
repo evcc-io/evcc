@@ -183,6 +183,15 @@ meter = "PV & Batterie"
 system = "System"
 vehicles = "Fahrzeuge"
 
+[config.sponsor]
+addToken = "Sponsortoken eingeben"
+changeToken = "Sponsortoken ändern"
+description = "Das Sponsoring-Modell hilft uns, das Projekt zu pflegen und nachhaltig neue und spannende Funktionen zu entwickeln. Als Sponsor erhältst du Zugriff auf alle Wallbox-Implementierungen."
+descriptionToken = "Du erhältst das Token von {url}. Wir bieten auch ein Testtoken für Tests an."
+error = "Das Sponsortoken ist ungültig."
+labelToken = "Sponsortoken"
+title = "Sponsorship"
+
 [config.system]
 logs = "Logs"
 restart = "Neu starten"
@@ -612,7 +621,7 @@ auto = "Automatisch"
 label = "Sprache"
 
 [settings.sponsorToken]
-expires = "Dein Sponsortoken läuft {inXDays} ab. {getNewToken} und aktualisiere deine Konfigurationsdatei."
+expires = "Dein Sponsortoken läuft {inXDays} ab. {getNewToken} und aktualisiere es hier."
 getNew = "Hol dir ein Neues"
 hint = "Hinweis: Wir werden das zukünftig automatisieren."
 

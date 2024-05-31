@@ -6,11 +6,17 @@
 				{{ $t("config.general.docsLink") }}
 			</a>
 		</p>
-		<p class="text-danger" v-if="error">{{ error }}</p>
+		<p class="text-danger" v-if="error">
+			<span v-if="errorMessage" class="d-block">{{ errorMessage }}</span>
+			{{ error }}
+		</p>
 		<form ref="form" class="container mx-0 px-0" @submit.prevent="save">
 			<slot :values="values"></slot>
 
-			<div class="mt-4 d-flex justify-content-between gap-2 flex-column flex-sm-row">
+			<div
+				v-if="!noButtons"
+				class="mt-4 d-flex justify-content-between gap-2 flex-column flex-sm-row"
+			>
 				<div
 					class="d-flex justify-content-between order-2 order-sm-1 gap-2 flex-grow-1 flex-sm-grow-0"
 				>
@@ -65,7 +71,7 @@ import store from "../../store";
 export default {
 	name: "JsonModal",
 	components: { GenericModal },
-	emits: ["changed"],
+	emits: ["changed", "open"],
 	data() {
 		return {
 			saving: false,
@@ -78,9 +84,11 @@ export default {
 	props: {
 		title: String,
 		description: String,
+		errorMessage: String,
 		docs: String,
 		endpoint: String,
 		disableRemove: Boolean,
+		noButtons: Boolean,
 		transformReadValues: Function,
 		stateKey: String,
 		saveMethod: { type: String, default: "post" },
@@ -102,6 +110,7 @@ export default {
 			this.serverValues = "";
 		},
 		async open() {
+			this.$emit("open");
 			this.reset();
 			await this.load();
 		},

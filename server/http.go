@@ -239,7 +239,7 @@ func (s *HTTPd) RegisterSystemHandler(valueChan chan<- util.Param, cache *util.C
 			"testconfig":         {"POST", "/test/{class:[a-z]+}", testConfigHandler},
 			"testmerged":         {"POST", "/test/{class:[a-z]+}/merge/{id:[0-9.]+}", testConfigHandler},
 			"interval":           {"POST", "/interval/{value:[0-9.]+}", settingsSetDurationHandler(keys.Interval)},
-			"updatesponsortoken": {"POST", "/sponsortoken/{token:[a-zA-Z0-9_-.]+}", updateSponsortokenHandler},
+			"updatesponsortoken": {"POST", "/sponsortoken", updateSponsortokenHandler},
 			"deletesponsortoken": {"DELETE", "/sponsortoken", settingsDeleteHandler(keys.SponsorToken)},
 		}
 

@@ -55,8 +55,12 @@
 		</div>
 		<div class="config-entry" data-testid="generalconfig-sponsoring">
 			<strong class="config-label">{{ $t("config.sponsor.title") }}</strong>
-			<div class="config-text" :class="{ 'text-primary': sponsorStatus }">
-				{{ sponsorStatus || "---" }}
+			<div class="config-text" :class="sponsorStatus.cssClass">
+				<span
+					v-if="sponsorStatus.expiresSoon"
+					class="d-inline-block me-1 p-1 rounded-circle bg-warning rounded-circle"
+				></span>
+				{{ sponsorStatus.name || "---" }}
 			</div>
 			<button
 				class="config-button btn btn-link"
@@ -133,7 +137,15 @@ export default {
 		},
 		sponsorStatus() {
 			const sponsor = store.state?.sponsor || {};
-			return sponsor.name;
+			const { name, expiresSoon } = sponsor;
+			let cssClass = "";
+			if (expiresSoon) {
+				cssClass = "text-warning";
+			} else if (name) {
+				cssClass = "text-primary";
+			}
+
+			return { name, expiresSoon, cssClass };
 		},
 	},
 	methods: {

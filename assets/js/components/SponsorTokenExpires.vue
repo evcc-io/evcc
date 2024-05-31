@@ -1,6 +1,6 @@
 <template>
-	<div v-if="expiresSoon" class="alert alert-warning" role="alert">
-		<i18n-t tag="div" class="mb-2" keypath="settings.sponsorToken.expires">
+	<div v-if="expiresSoon" class="alert alert-warning my-4" role="alert">
+		<i18n-t tag="div" keypath="settings.sponsorToken.expires">
 			<template #inXDays>
 				{{ inXDays }}
 			</template>
@@ -11,7 +11,7 @@
 			</template>
 		</i18n-t>
 
-		<em>
+		<em class="d-block mt-2" v-if="!isTrial">
 			{{ $t("settings.sponsorToken.hint") }}
 		</em>
 	</div>
@@ -19,6 +19,7 @@
 
 <script>
 import formatter from "../mixins/formatter";
+import { TRIAL } from "./Sponsor.vue";
 
 export default {
 	name: "SponsorTokenExpires",
@@ -26,10 +27,14 @@ export default {
 	props: {
 		expiresSoon: Boolean,
 		expiresAt: String,
+		name: String,
 	},
 	computed: {
 		inXDays() {
 			return this.fmtTimeAgo(new Date(this.expiresAt) - new Date());
+		},
+		isTrial() {
+			return this.name === TRIAL;
 		},
 	},
 };
