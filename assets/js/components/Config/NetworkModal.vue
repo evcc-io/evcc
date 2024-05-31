@@ -3,7 +3,7 @@
 		id="networkModal"
 		:title="$t('config.network.title')"
 		endpoint="/config/network"
-		:default-values="{ Schema: 'http', Host: 'evcc.local', Port: 7070 }"
+		stateKey="network"
 		disable-remove
 		data-testid="network-modal"
 		@changed="$emit('changed')"
@@ -17,7 +17,7 @@
 				<div class="btn-group" role="group">
 					<input
 						id="networkSchemaHttp"
-						v-model="values.Schema"
+						v-model="values.schema"
 						type="radio"
 						class="btn-check"
 						name="networkSchema"
@@ -27,7 +27,7 @@
 					<label class="btn btn-outline-primary" for="networkSchemaHttp">HTTP</label>
 					<input
 						id="networkSchemaHttps"
-						v-model="values.Schema"
+						v-model="values.schema"
 						type="radio"
 						class="btn-check"
 						name="networkSchema"
@@ -44,7 +44,7 @@
 				:help="$t('config.network.descriptionHost')"
 				example="evcc.local"
 			>
-				<input id="networkHost" v-model="values.Host" class="form-control" />
+				<input id="networkHost" v-model="values.host" class="form-control" />
 			</FormRow>
 			<FormRow
 				id="networkPort"
@@ -53,7 +53,7 @@
 			>
 				<input
 					id="networkPort"
-					v-model="values.Port"
+					v-model="values.port"
 					class="form-control w-50 me-2 w-50"
 					type="number"
 					example="7070"
