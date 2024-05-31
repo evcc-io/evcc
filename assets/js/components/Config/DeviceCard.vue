@@ -26,10 +26,7 @@
 			</button>
 		</div>
 		<hr class="my-3 divide" />
-		<div v-if="unconfigured" class="text-center evcc-gray">
-			{{ $t("config.main.unconfigured") }}
-		</div>
-		<slot v-else name="tags" />
+		<slot name="tags" />
 	</li>
 </template>
 
@@ -43,7 +40,6 @@ export default {
 	props: {
 		name: String,
 		editable: Boolean,
-		unconfigured: Boolean,
 		error: Boolean,
 	},
 	data() {

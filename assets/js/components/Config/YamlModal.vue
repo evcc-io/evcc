@@ -74,7 +74,7 @@ export default {
 			return Math.max(150, this.yaml.split("\n").length * 18) + 22 + "px";
 		},
 		nothingChanged() {
-			return this.yaml === this.serverYaml;
+			return this.yaml === this.serverYaml && this.yaml !== "";
 		},
 	},
 	methods: {

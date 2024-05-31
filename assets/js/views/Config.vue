@@ -20,7 +20,6 @@
 					<ul class="p-0 config-list">
 						<DeviceCard
 							:name="$t('config.grid.title')"
-							:unconfigured="!gridMeter"
 							:editable="!!gridMeter?.id"
 							data-testid="grid"
 							@edit="editMeter(gridMeter.id, 'grid')"
@@ -135,7 +134,6 @@
 							<DeviceCard
 								:name="$t('config.mqtt.title')"
 								editable
-								:unconfigured="!mqttTags"
 								:error="fatalClass === 'mqtt'"
 								data-testid="mqtt"
 								@edit="openModal('mqttModal')"
@@ -152,11 +150,13 @@
 								@edit="openModal('messagingModal')"
 							>
 								<template #icon><NotificationIcon /></template>
+								<template #tags>
+									<DeviceTags :tags="yamlTags('messaging')" />
+								</template>
 							</DeviceCard>
 							<DeviceCard
 								:name="$t('config.influx.title')"
 								editable
-								:unconfigured="!influxTags"
 								data-testid="influx"
 								@edit="openModal('influxModal')"
 							>
@@ -172,6 +172,9 @@
 								@edit="openModal('eebusModal')"
 							>
 								<template #icon><EebusIcon /></template>
+								<template #tags>
+									<DeviceTags :tags="yamlTags('eebus')" />
+								</template>
 							</DeviceCard>
 							<DeviceCard
 								:name="`${$t('config.circuits.title')} 🧪`"
@@ -180,6 +183,9 @@
 								@edit="openModal('circuitsModal')"
 							>
 								<template #icon><CircuitsIcon /></template>
+								<template #tags>
+									<DeviceTags :tags="yamlTags('circuits')" />
+								</template>
 							</DeviceCard>
 							<DeviceCard
 								:name="$t('config.modbusproxy.title')"
@@ -188,6 +194,9 @@
 								@edit="openModal('modbusProxyModal')"
 							>
 								<template #icon><ModbusProxyIcon /></template>
+								<template #tags>
+									<DeviceTags :tags="yamlTags('modbusproxy')" />
+								</template>
 							</DeviceCard>
 							<DeviceCard
 								:name="$t('config.hems.title')"
@@ -196,6 +205,9 @@
 								@edit="openModal('hemsModal')"
 							>
 								<template #icon><HemsIcon /></template>
+								<template #tags>
+									<DeviceTags :tags="yamlTags('hems')" />
+								</template>
 							</DeviceCard>
 						</ul>
 					</div>
@@ -222,17 +234,17 @@
 					@updated="meterChanged"
 					@removed="removeMeterFromSite"
 				/>
-				<EebusModal @changed="loadDirty" />
-				<HemsModal @changed="loadDirty" />
 				<InfluxModal @changed="loadDirty" />
-				<MessagingModal @changed="loadDirty" />
-				<ModbusProxyModal @changed="loadDirty" />
-				<CircuitsModal @changed="loadDirty" />
 				<MqttModal @changed="loadDirty" />
-				<TariffsModal @changed="loadDirty" />
 				<NetworkModal @changed="loadDirty" />
 				<ControlModal @changed="loadDirty" />
 				<SponsorModal @changed="loadDirty" />
+				<HemsModal @changed="yamlChanged" />
+				<MessagingModal @changed="yamlChanged" />
+				<TariffsModal @changed="yamlChanged" />
+				<ModbusProxyModal @changed="yamlChanged" />
+				<CircuitsModal @changed="yamlChanged" />
+				<EebusModal @changed="yamlChanged" />
 			</div>
 		</div>
 	</div>
@@ -321,6 +333,13 @@ export default {
 			site: { grid: "", pv: [], battery: [] },
 			deviceValueTimeout: undefined,
 			deviceValues: {},
+			yamlConfigState: {
+				messaging: false,
+				eebus: false,
+				circuits: false,
+				modbusproxy: false,
+				hems: false,
+			},
 		};
 	},
 	mixins: [formatter, collector],
@@ -365,18 +384,19 @@ export default {
 		},
 		mqttTags() {
 			const { broker, topic } = store.state?.mqtt || {};
-			if (!broker) return null;
+			if (!broker) return { configured: { value: false } };
 			return {
 				broker: { value: broker },
 				topic: { value: topic },
 			};
 		},
 		influxTags() {
-			const { host } = store.state?.influx || {};
-			if (!host) return null;
-			return {
-				host: { value: host },
-			};
+			const { url, database, org } = store.state?.influx || {};
+			if (!url) return { configured: { value: false } };
+			const result = { url: { value: url } };
+			if (database) result.bucket = { value: database };
+			if (org) result.org = { value: org };
+			return result;
 		},
 	},
 	watch: {
@@ -399,6 +419,7 @@ export default {
 			await this.loadSite();
 			await this.loadDirty();
 			await this.updateValues();
+			await this.updateYamlConfigState();
 		},
 		async loadDirty() {
 			const response = await api.get("/config/dirty");
@@ -471,6 +492,10 @@ export default {
 		siteChanged() {
 			this.loadDirty();
 		},
+		yamlChanged() {
+			this.loadDirty();
+			this.updateYamlConfigState();
+		},
 		addMeterToSite(type, name) {
 			if (type === "grid") {
 				this.site.grid = name;
@@ -537,6 +562,16 @@ export default {
 			} else {
 				console.error(`modal ${id} not found`);
 			}
+		},
+		updateYamlConfigState() {
+			const keys = Object.keys(this.yamlConfigState);
+			keys.forEach(async (key) => {
+				const res = await api.get(`/config/${key}`);
+				this.yamlConfigState[key] = !!res.data.result;
+			});
+		},
+		yamlTags(key) {
+			return { configured: { value: this.yamlConfigState[key] } };
 		},
 	},
 };

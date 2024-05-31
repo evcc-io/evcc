@@ -10,8 +10,8 @@
 				{{ $t(`config.deviceValue.${entry.name}`) }}
 			</div>
 			<div
-				class="value overflow-hidden text-truncate flex-shrink-0"
-				:class="{ 'value--error': hasError(entry) }"
+				class="value overflow-hidden text-truncate"
+				:class="{ 'value--error': hasError(entry), 'value--muted': entry.value === false }"
 			>
 				{{ fmtDeviceValue(entry) }}
 			</div>
@@ -71,6 +71,10 @@ export default {
 					return this.fmtPricePerKWh(value, options.currency, true);
 				case "co2":
 					return this.fmtCo2Short(value);
+				case "configured":
+					return value
+						? this.$t("config.deviceValue.yes")
+						: this.$t("config.deviceValue.no");
 			}
 			return value;
 		},
@@ -83,6 +87,9 @@ export default {
 	grid-template-columns: 1fr;
 	grid-gap: 0.5rem;
 }
+.label {
+	min-width: 4rem;
+}
 .value {
 	font-weight: bold;
 	color: var(--bs-primary);
@@ -93,5 +100,8 @@ export default {
 }
 .value--error {
 	color: var(--bs-danger);
+}
+.value--muted {
+	color: var(--evcc-gray) !important;
 }
 </style>
