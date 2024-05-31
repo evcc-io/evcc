@@ -5,7 +5,7 @@
 			href="#"
 			data-bs-toggle="modal"
 			data-bs-target="#notificationModal"
-			class="btn btn-sm btn-link text-decoration-none link-light text-nowrap"
+			class="btn btn-sm btn-link text-decoration-none link-light border-0 text-nowrap"
 			data-testid="notification-icon"
 		>
 			<shopicon-regular-exclamationtriangle
@@ -74,7 +74,7 @@
 							type="button"
 							data-bs-dismiss="modal"
 							aria-label="Close"
-							class="btn btn-outline-primary"
+							class="btn btn-secondary"
 							@click="clear"
 						>
 							{{ $t("notifications.dismissAll") }}
