@@ -94,9 +94,15 @@ func jsonError(w http.ResponseWriter, status int, err error) {
 		Error: err.Error(),
 	}
 
-	var ype *yaml.ParserError
-	if errors.As(err, &ype) {
+	var (
+		ype *yaml.ParserError
+		yue yaml.UnmarshalError
+	)
+	switch {
+	case errors.As(err, &ype):
 		res.Line = ype.Line
+	case errors.As(err, &yue):
+		res.Line = yue.Line
 	}
 
 	jsonWrite(w, res)
