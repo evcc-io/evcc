@@ -70,7 +70,7 @@ topic = "Topic"
 
 [config.eebus]
 description = "Configuration that enables evcc to communicate with other EEBus devices."
-title = "EEBus 🧪"
+title = "EEBus"
 
 [config.form]
 example = "Example"

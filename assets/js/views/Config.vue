@@ -166,7 +166,7 @@
 								</template>
 							</DeviceCard>
 							<DeviceCard
-								:name="$t('config.eebus.title')"
+								:name="`${$t('config.eebus.title')} 🧪`"
 								editable
 								data-testid="eebus"
 								@edit="openModal('eebusModal')"
@@ -174,7 +174,7 @@
 								<template #icon><EebusIcon /></template>
 							</DeviceCard>
 							<DeviceCard
-								:name="$t('config.circuits.title')"
+								:name="`${$t('config.circuits.title')} 🧪`"
 								editable
 								data-testid="circuits"
 								@edit="openModal('circuitsModal')"

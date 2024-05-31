@@ -68,7 +68,7 @@ socLimit = "SoC Begrenzung"
 
 [config.eebus]
 description = "Grundkonfiguration für die Kommunikation mit anderen EEBus-Geräten."
-title = "EEBus 🧪"
+title = "EEBus"
 
 [config.form]
 example = "Beispiel"
