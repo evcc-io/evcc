@@ -16,10 +16,10 @@
 						repair your database.
 					</div>
 -->
-					<h2 class="my-4 mt-5">{{ $t("config.section.site") }}</h2>
+					<h2 class="my-4 mt-5">{{ $t("config.section.grid") }}</h2>
 					<ul class="p-0 config-list">
 						<DeviceCard
-							:name="gridMeter?.config?.template || 'Grid meter'"
+							:name="$t('config.grid.title')"
 							:unconfigured="!gridMeter"
 							:editable="!!gridMeter?.id"
 							data-testid="grid"
@@ -33,7 +33,7 @@
 							</template>
 						</DeviceCard>
 						<DeviceCard
-							name="Tariffs"
+							:name="$t('config.tariffs.title')"
 							editable
 							data-testid="tariffs"
 							@edit="openModal('tariffsModal')"
@@ -45,6 +45,9 @@
 								<DeviceTags :tags="tariffTags" />
 							</template>
 						</DeviceCard>
+					</ul>
+					<h2 class="my-4 mt-5">{{ $t("config.section.meter") }}</h2>
+					<ul class="p-0 config-list">
 						<DeviceCard
 							v-for="meter in pvMeters"
 							:key="!!meter.name"

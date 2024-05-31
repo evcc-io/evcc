@@ -81,6 +81,7 @@ telemetry = "Telemetrie"
 title = "Titel"
 
 [config.grid]
+title = "Netzzähler"
 titleAdd = "Netzzähler hinzufügen"
 titleEdit = "Netzzähler bearbeiten"
 
@@ -169,9 +170,10 @@ titleEdit = "Zähler (PV) bearbeiten"
 
 [config.section]
 general = "Allgemein"
+grid = "Netzanschluss"
 integrations = "Integrationen"
 loadpoints = "Ladepunkte"
-site = "Netzanschluss, PV & Batterie"
+meter = "PV & Batterie"
 system = "System"
 vehicles = "Fahrzeuge"
 

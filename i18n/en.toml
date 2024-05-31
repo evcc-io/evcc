@@ -83,6 +83,7 @@ telemetry = "Telemetry"
 title = "Title"
 
 [config.grid]
+title = "Grid meter"
 titleAdd = "Add Grid Meter"
 titleEdit = "Edit Grid Meter"
 
@@ -170,9 +171,10 @@ titleEdit = "Edit Solar Meter"
 
 [config.section]
 general = "General"
+grid = "Grid"
 integrations = "Integrations"
 loadpoints = "Charging points"
-site = "Grid, PV & Battery Systems"
+meter = "Solar & Battery"
 system = "System"
 vehicles = "Vehicles"
 
