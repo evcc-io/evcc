@@ -156,14 +156,6 @@ func runRoot(cmd *cobra.Command, args []string) {
 	// publish to UI
 	go socketHub.Run(pipe.NewDropper(ignoreEmpty).Pipe(tee.Attach()), cache)
 
-	// publish initial settings
-	valueChan <- util.Param{Key: keys.Fatal, Val: nil} // remove previous fatal startup errors
-	valueChan <- util.Param{Key: keys.Network, Val: conf.Network}
-	valueChan <- util.Param{Key: keys.Mqtt, Val: conf.Mqtt}
-	valueChan <- util.Param{Key: keys.Interval, Val: conf.Interval}
-	// TODO
-	valueChan <- util.Param{Key: keys.Sponsor, Val: sponsor.Status()}
-
 	// capture log messages for UI
 	util.CaptureLogs(valueChan)
 
@@ -183,7 +175,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	// setup site and loadpoints
 	var site *core.Site
 	if err == nil {
-		site, err = configureSiteAndLoadpoints(conf)
+		site, err = configureSiteAndLoadpoints(&conf)
 	}
 
 	// setup influx
@@ -204,7 +196,15 @@ func runRoot(cmd *cobra.Command, args []string) {
 		}
 	}
 
+	// remove previous fatal startup errors
+	valueChan <- util.Param{Key: keys.Fatal, Val: nil}
+	// publish initial settings
+	valueChan <- util.Param{Key: keys.Interval, Val: conf.Interval}
+	valueChan <- util.Param{Key: keys.Network, Val: conf.Network}
+	valueChan <- util.Param{Key: keys.Mqtt, Val: conf.Mqtt}
 	valueChan <- util.Param{Key: keys.Influx, Val: conf.Influx}
+	// TODO
+	valueChan <- util.Param{Key: keys.Sponsor, Val: sponsor.Status()}
 
 	// setup mqtt publisher
 	if err == nil && conf.Mqtt.Broker != "" {

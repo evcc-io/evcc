@@ -851,12 +851,23 @@ func configureModbusProxy(conf []globalconfig.ModbusProxy) error {
 	return nil
 }
 
-func configureSiteAndLoadpoints(conf globalconfig.All) (*core.Site, error) {
-	if err := configureDevices(conf); err != nil {
+func configureSiteAndLoadpoints(conf *globalconfig.All) (*core.Site, error) {
+	// migrate settings
+	if settings.Exists(keys.Interval) {
+		d, err := settings.Int(keys.Interval)
+		if err != nil {
+			return nil, err
+		}
+		conf.Interval = time.Duration(d)
+	} else if conf.Interval != 0 {
+		settings.SetInt(keys.Interval, int64(conf.Interval))
+	}
+
+	if err := configureDevices(*conf); err != nil {
 		return nil, err
 	}
 
-	loadpoints, err := configureLoadpoints(conf)
+	loadpoints, err := configureLoadpoints(*conf)
 	if err != nil {
 		return nil, fmt.Errorf("failed configuring loadpoints: %w", err)
 	}
