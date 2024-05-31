@@ -53,6 +53,8 @@ export default {
 				case "soc":
 				case "socLimit":
 					return this.fmtPercentage(value, 1);
+				case "temp":
+					return this.fmtTemperature(value);
 				case "odometer":
 				case "range":
 					return `${this.fmtNumber(value, 0)} km`;
