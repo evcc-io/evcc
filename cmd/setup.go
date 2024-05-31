@@ -467,6 +467,18 @@ func configureVehicles(static []config.Named, names ...string) error {
 	return nil
 }
 
+func configureSponsorship(token string) (err error) {
+	if settings.Exists(keys.SponsorToken) {
+		if token, err = settings.String(keys.SponsorToken); err != nil {
+			return err
+		}
+	}
+
+	// TODO migrate settings
+
+	return sponsor.ConfigureSponsorship(token)
+}
+
 func configureEnvironment(cmd *cobra.Command, conf *globalconfig.All) (err error) {
 	// full http request log
 	if cmd.Flags().Lookup(flagHeaders).Changed {
@@ -481,7 +493,8 @@ func configureEnvironment(cmd *cobra.Command, conf *globalconfig.All) (err error
 
 	// setup sponsorship (allow env override)
 	if err == nil {
-		err = sponsor.ConfigureSponsorship(conf.SponsorToken)
+		// TODO decide wrapping
+		err = configureSponsorship(conf.SponsorToken)
 	}
 
 	// setup translations

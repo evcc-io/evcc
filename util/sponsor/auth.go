@@ -82,20 +82,20 @@ func ConfigureSponsorship(token string) error {
 	return err
 }
 
-type StatusStruct struct {
-	Name        string    `json:"name,omitempty"`
+type sponsorStatus struct {
+	Name        string    `json:"name"`
 	ExpiresAt   time.Time `json:"expiresAt,omitempty"`
 	ExpiresSoon bool      `json:"expiresSoon,omitempty"`
 }
 
 // Status returns the sponsorship status
-func Status() StatusStruct {
+func Status() sponsorStatus {
 	var expiresSoon bool
 	if d := time.Until(ExpiresAt); d < 30*24*time.Hour && d > 0 {
 		expiresSoon = true
 	}
 
-	return StatusStruct{
+	return sponsorStatus{
 		Name:        Subject,
 		ExpiresAt:   ExpiresAt,
 		ExpiresSoon: expiresSoon,
