@@ -277,13 +277,14 @@ func (site *Site) GetResidualPower() float64 {
 
 // SetResidualPower sets the ResidualPower
 func (site *Site) SetResidualPower(power float64) error {
+	site.log.DEBUG.Println("set residual power:", power)
+
 	site.Lock()
 	defer site.Unlock()
 
-	site.log.DEBUG.Println("set residual power:", power)
-
 	if site.ResidualPower != power {
 		site.ResidualPower = power
+		settings.SetFloat(keys.ResidualPower, site.ResidualPower)
 		site.publish(keys.ResidualPower, site.ResidualPower)
 	}
 
@@ -337,16 +338,16 @@ func (site *Site) GetBatteryDischargeControl() bool {
 func (site *Site) SetBatteryDischargeControl(val bool) error {
 	site.log.DEBUG.Println("set battery discharge control:", val)
 
-	if site.GetBatteryDischargeControl() != val {
+	site.Lock()
+	defer site.Unlock()
+
+	if site.batteryDischargeControl != val {
 		// reset to normal when disabling
 		if mode := site.GetBatteryMode(); !val && batteryModeModified(mode) {
 			if err := site.applyBatteryMode(api.BatteryNormal); err != nil {
 				return err
 			}
 		}
-
-		site.Lock()
-		defer site.Unlock()
 
 		site.batteryDischargeControl = val
 		settings.SetBool(keys.BatteryDischargeControl, val)
