@@ -196,7 +196,6 @@ func (s *HTTPd) RegisterSystemHandler(valueChan chan<- util.Param, cache *util.C
 	))
 
 	{ // /api
-
 		routes := map[string]route{
 			"state": {"GET", "/state", stateHandler(cache)},
 		}
@@ -224,7 +223,6 @@ func (s *HTTPd) RegisterSystemHandler(valueChan chan<- util.Param, cache *util.C
 		}
 	}
 	{ // api/config
-
 		api := api.PathPrefix("/config").Subrouter()
 		api.Use(ensureAuthHandler(auth))
 
@@ -275,7 +273,6 @@ func (s *HTTPd) RegisterSystemHandler(valueChan chan<- util.Param, cache *util.C
 	}
 
 	{ // api/system
-
 		api := api.PathPrefix("/system").Subrouter()
 		api.Use(ensureAuthHandler(auth))
 

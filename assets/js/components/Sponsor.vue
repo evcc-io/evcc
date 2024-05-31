@@ -86,20 +86,6 @@ export default {
 			return `${docsPrefix()}/docs/sponsorship`;
 		},
 	},
-	computed: {
-		isTrial() {
-			return this.sponsor === "trial";
-		},
-		isVictronDevice() {
-			return this.sponsor === "victron-device";
-		},
-		isIndividual() {
-			return this.sponsor && !this.isTrial && !this.isVictronDevice;
-		},
-		sponsorLink() {
-			return `${docsPrefix()}/docs/sponsorship`;
-		},
-	},
 	methods: {
 		surprise: function () {
 			const $el = this.$refs.confetti;
