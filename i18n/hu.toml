@@ -410,7 +410,6 @@ scale3p = "3 Fázisú töltésre váltás ekkor: {remaining}…"
 targetChargeActive = "Töltési terv aktív…"
 targetChargePlanned = "A töltési tervezet ekkor keződik: {time}."
 targetChargeWaitForVehicle = "Töltési terv üzemkész. Várakozás járműre…"
-unknown = ""
 vehicleLimitReached = "Jármű limit {soc} elérve."
 waitForVehicle = "Üzemkész. Járműre várakozás…"
 
@@ -471,6 +470,8 @@ vehicle = "Jármű"
 
 [sessions.csv]
 chargedenergy = "Energia (kWh)"
+chargeduration = "Időtartam"
+co2perkwh = "CO₂/kWh"
 created = "Elindítva"
 finished = "Befejezve"
 identifier = "Azonosító"
@@ -478,6 +479,9 @@ loadpoint = "Töltőpont"
 meterstart = "Fogyasztásmérő kezdeti állás (kWh)"
 meterstop = "Fogyasztásmérő befejező állás (kWh)"
 odometer = "Óraállás (km)"
+price = "Ár"
+priceperkwh = "Ár/kWh"
+solarpercentage = "Napenergia (%)"
 vehicle = "Jármű"
 
 [sessions.filter]

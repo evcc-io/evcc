@@ -48,8 +48,8 @@ func NewPorscheFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 	vehicle, err := ensureVehicleEx(
 		cc.VIN, api.Vehicles,
-		func(v porsche.Vehicle) string {
-			return v.VIN
+		func(v porsche.Vehicle) (string, error) {
+			return v.VIN, nil
 		},
 	)
 	if err != nil {

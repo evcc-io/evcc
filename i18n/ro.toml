@@ -48,6 +48,8 @@ socLimit = "Limită"
 example = "Exemplu"
 optional = "optional"
 
+[config.general]
+
 [config.grid]
 titleAdd = "Adăugați Contorul de Grilă"
 titleEdit = "Editați Contorul de bransament"
@@ -70,13 +72,25 @@ template = "Producător"
 titleChoice = "Ce vrei să adaugi?"
 validateSave = "Valideaza si salveaza"
 
+[config.options]
+
+[config.options.endianness]
+
+[config.options.schema]
+
 [config.pv]
 titleAdd = "Adauga SmartMeter"
 titleEdit = "Editeaza SmartMeter"
 
+[config.section]
+
 [config.site]
 cancel = "Anuleaza"
 save = "Salveaza"
+
+[config.system]
+
+[config.title]
 
 [config.validation]
 failed = "esuat"
@@ -196,6 +210,10 @@ confirm = "Da, reporneste!"
 description = "In mod normal, restarul nu ar trebui sa fie necesar. Te rog sa trimiti un raport daca trebuie sa restartezi des EVCC."
 disclaimer = "Nota: evcc se va inchide si se va baza pe OS sa restarteze serviciul sau."
 modalTitle = "Esti sigur ca vrei sa dai restart?"
+
+[log]
+
+[loginModal]
 
 [main]
 vehicles = "Parcare"
@@ -366,7 +384,6 @@ scale3p = "Schimbam încărcarea la 3 faze în {remaining}…"
 targetChargeActive = "Încarcare țintă activă…"
 targetChargePlanned = "Încărcarea pornește la {time}."
 targetChargeWaitForVehicle = "Încărcare terminată. Aștept după vehicul…"
-unknown = ""
 vehicleLimitReached = "Limita {soc} a fost atinsă."
 waitForVehicle = "Pregătit. Aștept după vehicul…"
 
@@ -377,6 +394,8 @@ modalTitle = "Notificări"
 [offline]
 message = "Nu se poate conecta la server."
 reload = "Reîncarcă?"
+
+[passwordModal]
 
 [session]
 cancel = "Anulează"
@@ -429,6 +448,8 @@ filter = "Filtru"
 
 [settings]
 title = "Configuratie"
+
+[settings.fullscreen]
 
 [settings.gridDetails]
 co2 = "CO₂"

@@ -63,6 +63,35 @@ test("login", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "Configuration" })).toBeVisible();
 });
 
+test("http iframe hint", async ({ page }) => {
+  // set initial password
+  const modal = page.getByTestId("password-modal");
+  await modal.getByLabel("New password").fill("secret");
+  await modal.getByLabel("Repeat password").fill("secret");
+  await modal.getByRole("button", { name: "Create Password" }).click();
+
+  // go to config
+  await page.getByTestId("topnavigation-button").click();
+  await page.getByRole("link", { name: "Configuration" }).click();
+
+  // login modal
+  const login = page.getByTestId("login-modal");
+  await expect(login).toBeVisible();
+  await expect(login.getByRole("heading", { name: "Authentication" })).toBeVisible();
+
+  // rewrite api call to simulate lost auth cookie
+  await page.route("**/api/auth/status", (route) => {
+    route.fulfill({ status: 200, body: "false" });
+  });
+
+  // enter correct password
+  await login.getByLabel("Password").fill("secret");
+  await login.getByRole("button", { name: "Login" }).click();
+
+  // iframe hint visible (login-iframe-hint)
+  await expect(login.getByTestId("login-iframe-hint")).toBeVisible();
+});
+
 test("update password", async ({ page }) => {
   const oldPassword = "secret";
   const newPassword = "newsecret";

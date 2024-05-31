@@ -19,6 +19,40 @@ low = "quan una mica ple"
 medium = "quan mig ple"
 never = "només amb prous excedents"
 
+[config]
+
+[config.battery]
+
+[config.deviceValue]
+
+[config.form]
+
+[config.general]
+
+[config.grid]
+
+[config.main]
+
+[config.meter]
+
+[config.options]
+
+[config.options.endianness]
+
+[config.options.schema]
+
+[config.pv]
+
+[config.section]
+
+[config.system]
+
+[config.title]
+
+[config.validation]
+
+[config.vehicle]
+
 [footer]
 
 [footer.community]
@@ -48,6 +82,8 @@ savingsTitle = "Estalvi"
 savingsTotalEnergy = "{total} kWh carregats"
 since = "desde {since}"
 tabTitle = "Les meves dades"
+
+[footer.savings.period]
 
 [footer.sponsor]
 becomeSponsor = "Convertir-se en patrocinador"
@@ -105,6 +141,10 @@ description = "Sota circumstàncies normals no hauria de ser necessari reiniciar
 disclaimer = "Nota: evcc es pararà i dependrà del sistema operatiu per reiniciar el servei"
 modalTitle = "¿Segur que vols tornar començar?"
 
+[log]
+
+[loginModal]
+
 [main]
 vehicles = "Estacionament"
 
@@ -130,6 +170,8 @@ pvExport = "Excedent"
 pvProduction = "Producció"
 selfConsumption = "Autoconsum"
 
+[main.heatingStatus]
+
 [main.loadpoint]
 avgPrice = "Preu ⌀"
 charged = "Carregat"
@@ -145,6 +187,8 @@ currents = "Corrent de càrrega"
 default = "defecte"
 title = "Configuracions {0}"
 vehicle = "Vehicle"
+
+[main.loadpointSettings.limitSoc]
 
 [main.loadpointSettings.maxCurrent]
 label = "Corrent de carrega màxima "
@@ -238,7 +282,6 @@ scale3p = "Augmentant la càrrega trifàsica en {remaining}..."
 targetChargeActive = "Càrrega objectiu activa..."
 targetChargePlanned = "La càrrega objectiu comença a {time}."
 targetChargeWaitForVehicle = "Càrrega objectiu llesta. Esperar vehicle."
-unknown = ""
 vehicleLimitReached = "Límit de vehicle {soc} assolit."
 waitForVehicle = "A punt per carregar. Esperant vehicle."
 
@@ -249,6 +292,8 @@ modalTitle = "Notificacions"
 [offline]
 message = "No connectat amb servidor."
 reload = "Actualitzar?"
+
+[passwordModal]
 
 [session]
 cancel = "Cancelar"
@@ -288,8 +333,12 @@ meterstop = "Mesura final (kWh)"
 odometer = "Kilometratge (km)"
 vehicle = "Vehicle"
 
+[sessions.filter]
+
 [settings]
 title = "Configuració"
+
+[settings.fullscreen]
 
 [settings.hiddenFeatures]
 label = "En proves"

@@ -18,7 +18,10 @@ var (
 	ExpiresAt      time.Time
 )
 
-const unavailable = "sponsorship unavailable"
+const (
+	unavailable = "sponsorship unavailable"
+	victron     = "victron-device"
+)
 
 func IsAuthorized() bool {
 	mu.Lock()
@@ -29,7 +32,7 @@ func IsAuthorized() bool {
 func IsAuthorizedForApi() bool {
 	mu.Lock()
 	defer mu.Unlock()
-	return len(Subject) > 0 && Subject != unavailable
+	return IsAuthorized() && Subject != unavailable && Token != ""
 }
 
 // check and set sponsorship token
@@ -38,6 +41,11 @@ func ConfigureSponsorship(token string) error {
 	defer mu.Unlock()
 
 	if token == "" {
+		if sub := checkVictron(); sub != "" {
+			Subject = sub
+			return nil
+		}
+
 		var err error
 		if token, err = readSerial(); token == "" || err != nil {
 			return err
@@ -74,7 +82,6 @@ func ConfigureSponsorship(token string) error {
 }
 
 type StatusStruct struct {
-	Active      bool      `json:"active"`
 	Name        string    `json:"name,omitempty"`
 	ExpiresAt   time.Time `json:"expiresAt,omitempty"`
 	ExpiresSoon bool      `json:"expiresIn,omitempty"`
@@ -88,7 +95,6 @@ func Status() StatusStruct {
 	}
 
 	return StatusStruct{
-		Active:      IsAuthorized(),
 		Name:        Subject,
 		ExpiresAt:   ExpiresAt,
 		ExpiresSoon: expiresSoon,

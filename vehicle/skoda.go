@@ -61,8 +61,8 @@ func NewSkodaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 	vehicle, err := ensureVehicleEx(
 		cc.VIN, api.Vehicles,
-		func(v skoda.Vehicle) string {
-			return v.VIN
+		func(v skoda.Vehicle) (string, error) {
+			return v.VIN, nil
 		},
 	)
 

@@ -260,6 +260,7 @@ total = "gesamt"
 
 [footer.sponsor]
 becomeSponsor = "Sponsor werden"
+becomeSponsorExtended = "Unterstütze uns direkt. Es gibt auch Sticker."
 confetti = "Lust auf Konfetti?"
 confettiPromise = "Es gibt auch Sticker und digitales Konfetti"
 sticker = "… oder evcc Sticker?"
@@ -267,6 +268,10 @@ supportUs = "Unsere Mission: Sonne tanken zum Standard machen. Hilf uns und unte
 thanks = "Vielen Dank, {sponsor}! Dein Beitrag hilft, evcc weiterzuentwickeln."
 titleNoSponsor = "Unterstütze uns"
 titleSponsor = "Du bist Unterstützer"
+titleTrial = "Testmodus"
+titleVictron = "Unterstützt von Victron Energy"
+trial = "Du befindest dich im Testmodus und kannst alle Funktionen nutzen. Wir freuen uns, wenn du Sponsor wirst."
+victron = "Du verwendest evcc auf Victron Energy Hardware und hast Zugriff auf alle Funktionen."
 
 [footer.telemetry]
 optIn = "Ich möchte meine Ladedaten teilen."
@@ -331,6 +336,8 @@ update = "Aktualisieren"
 [loginModal]
 cancel = "Abbrechen"
 error = "Login fehlgeschlagen: "
+iframeHint = "Öffne evcc in einem neuen Tab."
+iframeIssue = "Das Passwort ist korrekt, aber dein Browser hat das Authentifizierungscookie abgelehnt. Dies kann passieren, wenn du evcc in einem iframe über HTTP verwendest."
 invalid = "Passwort ist ungültig."
 login = "Anmelden"
 password = "Passwort"
