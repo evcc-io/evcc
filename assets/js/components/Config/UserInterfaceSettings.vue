@@ -40,7 +40,7 @@
 			/>
 		</FormRow>
 		<FormRow id="telemetryEnabled" :label="$t('settings.telemetry.label')">
-			<TelemetrySettings :sponsorActive="sponsor.active" class="mt-1 mb-0" />
+			<TelemetrySettings :sponsorActive="!!sponsor.name" class="mt-1 mb-0" />
 		</FormRow>
 		<FormRow id="hiddenFeaturesEnabled" :label="`${$t('settings.hiddenFeatures.label')} 🧪`">
 			<div class="form-check form-switch my-1">

@@ -14,7 +14,7 @@
 			</button>
 		</div>
 		<div class="config-entry" data-testid="generalconfig-password">
-			<strong class="config-label">Password</strong>
+			<strong class="config-label">{{ $t("config.general.password") }}</strong>
 			<div class="config-text">*******</div>
 			<button
 				class="config-button btn btn-link"
@@ -26,9 +26,9 @@
 			</button>
 		</div>
 		<div class="config-entry" data-testid="generalconfig-telemetry">
-			<strong class="config-label">Telemetry</strong>
+			<strong class="config-label">{{ $t("config.general.telemetry") }}</strong>
 			<div class="config-text">
-				{{ telemetryEnabled ? "on" : "off" }}
+				{{ $t(`config.general.${telemetryEnabled ? "on" : "off"}`) }}
 			</div>
 			<button
 				class="config-button btn btn-link"
@@ -40,9 +40,9 @@
 			</button>
 		</div>
 		<div class="config-entry" data-testid="generalconfig-experimental">
-			<strong class="config-label">Experimental</strong>
+			<strong class="config-label">{{ $t("config.general.experimental") }}</strong>
 			<div class="config-text">
-				{{ hiddenFeatures ? "on" : "off" }}
+				{{ $t(`config.general.${hiddenFeatures ? "on" : "off"}`) }}
 			</div>
 			<button
 				class="config-button btn btn-link"
@@ -53,9 +53,11 @@
 				<EditIcon size="xs" />
 			</button>
 		</div>
-		<div class="config-entry wip" data-testid="generalconfig-sponsoring">
+		<div class="config-entry" data-testid="generalconfig-sponsoring">
 			<strong class="config-label">{{ $t("config.sponsor.title") }}</strong>
-			<div class="config-text text-primary">valid</div>
+			<div class="config-text" :class="{ 'text-primary': sponsorStatus }">
+				{{ sponsorStatus || "---" }}
+			</div>
 			<button
 				class="config-button btn btn-link"
 				type="button"
@@ -128,6 +130,10 @@ export default {
 		controlStatus() {
 			const sec = store.state?.interval;
 			return sec ? this.fmtDuration(sec) : "";
+		},
+		sponsorStatus() {
+			const sponsor = store.state?.sponsor || {};
+			return sponsor.name;
 		},
 	},
 	methods: {

@@ -179,7 +179,7 @@
 							</div>
 							<div v-else class="my-4">
 								<LiveCommunity />
-								<TelemetrySettings :sponsorActive="sponsor.active" />
+								<TelemetrySettings :sponsorActive="!!sponsor.name" />
 							</div>
 							<Sponsor v-bind="sponsor" />
 						</div>
