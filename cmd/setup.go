@@ -566,12 +566,13 @@ func configureInflux(conf *globalconfig.Influx) (*server.Influx, error) {
 		return nil, nil
 	}
 
-	// migrate settings
-	if !settings.Exists(keys.Influx) {
-		if err := settings.SetJson(keys.Influx, conf); err != nil {
-			return nil, err
-		}
-	}
+	// TODO remove yaml file
+	// // migrate settings
+	// if !settings.Exists(keys.Influx) {
+	// 	if err := settings.SetJson(keys.Influx, conf); err != nil {
+	// 		return nil, err
+	// 	}
+	// }
 
 	influx := server.NewInfluxClient(
 		conf.URL,
@@ -592,11 +593,13 @@ func configureMqtt(conf *globalconfig.Mqtt) error {
 		if err := settings.Json(keys.Mqtt, &conf); err != nil {
 			return err
 		}
-	} else {
-		// write defaults
-		if err := settings.SetJson(keys.Mqtt, conf); err != nil {
-			return err
-		}
+
+		// TODO remove yaml file
+		// } else {
+		// 	// migrate settings & write defaults
+		// 	if err := settings.SetJson(keys.Mqtt, conf); err != nil {
+		// 		return err
+		// 	}
 	}
 
 	if conf.Broker == "" {
@@ -656,12 +659,13 @@ func configureHEMS(conf config.Typed, site *core.Site, httpd *server.HTTPd) erro
 		return nil
 	}
 
-	// migrate settings
-	if !settings.Exists(keys.Hems) {
-		if err := settings.SetYaml(keys.Hems, conf); err != nil {
-			return err
-		}
-	}
+	// TODO remove yaml file
+	// // migrate settings
+	// if !settings.Exists(keys.Hems) {
+	// 	if err := settings.SetYaml(keys.Hems, conf); err != nil {
+	// 		return err
+	// 	}
+	// }
 
 	hems, err := hems.NewFromConfig(conf.Type, conf.Other, site, httpd)
 	if err != nil {
@@ -679,8 +683,11 @@ func networkSettings(conf *globalconfig.Network) error {
 		return settings.Json(keys.Network, &conf)
 	}
 
-	// migrate settings
-	return settings.SetJson(keys.Network, conf)
+	// TODO remove yaml file
+	// // migrate settings
+	// return settings.SetJson(keys.Network, conf)
+
+	return nil
 }
 
 // setup MDNS
@@ -710,12 +717,13 @@ func configureEEBus(conf eebus.Config) error {
 		return nil
 	}
 
-	// migrate settings
-	if !settings.Exists(keys.EEBus) {
-		if err := settings.SetYaml(keys.EEBus, conf); err != nil {
-			return err
-		}
-	}
+	// TODO remove yaml file
+	// // migrate settings
+	// if !settings.Exists(keys.EEBus) {
+	// 	if err := settings.SetYaml(keys.EEBus, conf); err != nil {
+	// 		return err
+	// 	}
+	// }
 
 	var err error
 	if eebus.Instance, err = eebus.NewServer(conf); err != nil {
@@ -735,10 +743,12 @@ func configureMessengers(conf globalconfig.Messaging, vehicles push.Vehicles, va
 		if err := settings.Yaml(keys.Messaging, &conf); err != nil {
 			return nil, err
 		}
-	} else if len(conf.Services)+len(conf.Events) > 0 {
-		if err := settings.SetYaml(keys.Messaging, conf); err != nil {
-			return nil, err
-		}
+
+		// TODO remove yaml file
+		// } else if len(conf.Services)+len(conf.Events) > 0 {
+		// 	if err := settings.SetYaml(keys.Messaging, conf); err != nil {
+		// 		return nil, err
+		// 	}
 	}
 
 	messageChan := make(chan push.Event, 1)
@@ -781,10 +791,12 @@ func configureTariffs(conf globalconfig.Tariffs) (*tariff.Tariffs, error) {
 		if err := settings.Yaml(keys.Tariffs, &conf); err != nil {
 			return nil, err
 		}
-	} else if conf.Grid.Type != "" || conf.FeedIn.Type != "" || conf.Co2.Type != "" || conf.Planner.Type != "" {
-		if err := settings.SetYaml(keys.Tariffs, conf); err != nil {
-			return nil, err
-		}
+
+		// TODO remove yaml file
+		// } else if conf.Grid.Type != "" || conf.FeedIn.Type != "" || conf.Co2.Type != "" || conf.Planner.Type != "" {
+		// 	if err := settings.SetYaml(keys.Tariffs, conf); err != nil {
+		// 		return nil, err
+		// 	}
 	}
 
 	tariffs := tariff.Tariffs{
@@ -830,10 +842,12 @@ func configureModbusProxy(conf []globalconfig.ModbusProxy) error {
 		if err := settings.Yaml(keys.ModbusProxy, &conf); err != nil {
 			return err
 		}
-	} else if len(conf) > 0 {
-		if err := settings.SetYaml(keys.ModbusProxy, conf); err != nil {
-			return err
-		}
+
+		// TODO remove yaml file
+		// } else if len(conf) > 0 {
+		// 	if err := settings.SetYaml(keys.ModbusProxy, conf); err != nil {
+		// 		return err
+		// 	}
 	}
 
 	for _, cfg := range conf {
@@ -859,8 +873,10 @@ func configureSiteAndLoadpoints(conf *globalconfig.All) (*core.Site, error) {
 			return nil, err
 		}
 		conf.Interval = time.Duration(d)
-	} else if conf.Interval != 0 {
-		settings.SetInt(keys.Interval, int64(conf.Interval))
+
+		// TODO remove yaml file
+		// } else if conf.Interval != 0 {
+		// settings.SetInt(keys.Interval, int64(conf.Interval))
 	}
 
 	if err := configureDevices(*conf); err != nil {
