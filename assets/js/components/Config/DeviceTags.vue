@@ -29,8 +29,8 @@ export default {
 	mixins: [formatter],
 	computed: {
 		entries() {
-			return Object.entries(this.tags).map(([name, { value, error }]) => {
-				return { name, value, error };
+			return Object.entries(this.tags).map(([name, { value, error, options }]) => {
+				return { name, value, error, options };
 			});
 		},
 	},
