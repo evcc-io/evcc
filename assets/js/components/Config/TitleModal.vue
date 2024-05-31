@@ -3,10 +3,11 @@
 		id="titleModal"
 		:title="$t('config.title.title')"
 		endpoint="/config/site"
+		state-key="siteTitle"
+		save-method="put"
+		:transform-read-values="transformReadValues"
 		data-testid="title-modal"
 		disable-remove
-		save-method="put"
-		:transform-values="transformValues"
 		@changed="$emit('changed')"
 	>
 		<template v-slot:default="{ values }">
@@ -30,9 +31,8 @@ export default {
 	components: { FormRow, JsonModal },
 	emits: ["changed"],
 	methods: {
-		transformValues(values) {
-			// only send the title, no meter refs
-			return { title: values.title };
+		transformReadValues(siteTitle) {
+			return { title: siteTitle };
 		},
 	},
 };

@@ -81,7 +81,7 @@ export default {
 		docs: String,
 		endpoint: String,
 		disableRemove: Boolean,
-		transformValues: Function,
+		transformReadValues: Function,
 		stateKey: String,
 		saveMethod: { type: String, default: "post" },
 	},
@@ -106,15 +106,17 @@ export default {
 			await this.load();
 		},
 		async load() {
-			this.serverValues = { ...store.state[this.stateKey] } || {};
+			this.serverValues = this.stateKey ? store.state[this.stateKey] : store.state;
+			if (this.transformReadValues) {
+				this.serverValues = this.transformReadValues(this.serverValues);
+			}
 			this.values = { ...this.serverValues };
 		},
 		async save() {
 			this.saving = true;
 			this.error = "";
-			const payload = this.transformValues ? this.transformValues(this.values) : this.values;
 			try {
-				const res = await api[this.saveMethod](this.endpoint, payload, {
+				const res = await api[this.saveMethod](this.endpoint, this.values, {
 					validateStatus: (code) => [200, 202, 400].includes(code),
 				});
 				if (res.status === 200 || res.status === 202) {

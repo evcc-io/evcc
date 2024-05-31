@@ -5,7 +5,7 @@
 		:description="$t('config.mqtt.description')"
 		docs="/docs/reference/configuration/mqtt"
 		endpoint="/config/mqtt"
-		stateKey="mqtt"
+		state-key="mqtt"
 		data-testid="mqtt-modal"
 		@changed="$emit('changed')"
 	>

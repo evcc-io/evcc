@@ -3,7 +3,7 @@
 		id="networkModal"
 		:title="$t('config.network.title')"
 		endpoint="/config/network"
-		stateKey="network"
+		state-key="network"
 		disable-remove
 		data-testid="network-modal"
 		@changed="$emit('changed')"
