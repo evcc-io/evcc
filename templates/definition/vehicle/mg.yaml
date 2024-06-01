@@ -2,11 +2,30 @@ template: mg
 products:
   - brand: MG
 params:
-  - preset: vehicle-base
-  - preset: vehicle-identify
+  - name: title
+  - name: icon
+    default: car
+    advanced: true
+  - name: user
+    required: true
+  - name: password
+    required: true
   - name: vin
     required: true
+    help:
+      de: Erforderlich
+      en: Required
+  - name: capacity
+  - name: phases
+    advanced: true
+  - preset: vehicle-identify
 render: |
   type: mg
-  {{ include "vehicle-base" . }}
+  title: {{ .title }}
+  icon: {{ .icon }}
+  user: {{ .user }}
+  password: {{ .password }}
+  capacity: {{ .capacity }}
+  phases: {{ .phases }}
+  vin: {{ .vin }}
   {{ include "vehicle-identify" . }}
