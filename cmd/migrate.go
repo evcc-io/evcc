@@ -26,8 +26,7 @@ func runMigrate(cmd *cobra.Command, args []string) {
 
 	// TODO remove yaml file
 	settings.SetInt(keys.Interval, int64(conf.Interval))
-
-	// TODO add remaining settings @naltatis (site? loadpoints? residualpower?)
+	settings.SetString(keys.SponsorToken, conf.SponsorToken)
 
 	err := settings.SetJson(keys.Mqtt, conf)
 
