@@ -21,11 +21,5 @@ params:
   - preset: vehicle-identify
 render: |
   type: mg
-  title: {{ .title }}
-  icon: {{ .icon }}
-  user: {{ .user }}
-  password: {{ .password }}
-  capacity: {{ .capacity }}
-  phases: {{ .phases }}
-  vin: {{ .vin }}
+  {{ include "vehicle-base" . }}
   {{ include "vehicle-identify" . }}
