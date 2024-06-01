@@ -5,9 +5,6 @@ params:
   - preset: vehicle-base
   - preset: vehicle-identify
   - name: vin
-    help:
-      de: Erforderlich
-      en: Required
     required: true
 render: |
   type: mg
