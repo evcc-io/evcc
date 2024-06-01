@@ -43,11 +43,8 @@ func DefaultScheme(uri, scheme string) string {
 	}
 
 	// do not use escaped Query, because it will break templating
-	newUrl, err := url.QueryUnescape(u.String())
-	if err != nil {
-		return uri
-	}
-	return newUrl
+	res, _ := url.QueryUnescape(u.String())
+	return res
 }
 
 // LocalIPs returns a slice of local IPv4 addresses
