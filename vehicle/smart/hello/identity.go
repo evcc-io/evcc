@@ -74,12 +74,18 @@ func (v *Identity) login() (*oauth2.Token, error) {
 	})
 
 	resp, err := v.Do(req)
+	if err == nil && resp.StatusCode != 200 {
+		err = fmt.Errorf("status: %d", resp.StatusCode)
+	}
 	if err != nil {
 		return nil, fmt.Errorf("authorize: %w", err)
 	}
 	defer resp.Body.Close()
 
-	u := resp.Request.URL
+	context := resp.Request.URL.Query().Get("context")
+	if context == "" {
+		return nil, fmt.Errorf("missing context: %s", resp.Request.URL.String())
+	}
 
 	data := url.Values{
 		"loginID":           {v.user},
@@ -131,7 +137,7 @@ func (v *Identity) login() (*oauth2.Token, error) {
 	var param request.InterceptResult
 	v.Client.CheckRedirect, param = request.InterceptRedirect("access_token", true)
 
-	uri = fmt.Sprintf("https://auth.smart.com/oidc/op/v1.0/%s/authorize/continue?context=%s&login_token=%s", ApiKey, u.Query().Get("context"), login.SessionInfo.LoginToken)
+	uri = fmt.Sprintf("https://auth.smart.com/oidc/op/v1.0/%s/authorize/continue?context=%s&login_token=%s", ApiKey, context, login.SessionInfo.LoginToken)
 	req, _ = request.New(http.MethodGet, uri, nil, map[string]string{
 		"user-agent":       userAgent,
 		"x-requested-with": "com.smart.hellosmart",
@@ -152,7 +158,7 @@ func (v *Identity) login() (*oauth2.Token, error) {
 		return nil, err
 	}
 
-	u, err = url.Parse(resp.Header.Get("location"))
+	u, err := url.Parse(resp.Header.Get("location"))
 	if err != nil {
 		return nil, err
 	}
