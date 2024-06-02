@@ -25,6 +25,7 @@ func runMigrate(cmd *cobra.Command, args []string) {
 	}
 
 	// TODO remove yaml file
+	log.DEBUG.Println("migrate global settings")
 	settings.SetInt(keys.Interval, int64(conf.Interval))
 	settings.SetString(keys.SponsorToken, conf.SponsorToken)
 

@@ -493,8 +493,7 @@ func configureEnvironment(cmd *cobra.Command, conf *globalconfig.All) (err error
 
 	// setup sponsorship (allow env override)
 	if err == nil {
-		// TODO decide wrapping
-		err = configureSponsorship(conf.SponsorToken)
+		err = wrapErrorWithClass(ClassSponsorship, configureSponsorship(conf.SponsorToken))
 	}
 
 	// setup translations

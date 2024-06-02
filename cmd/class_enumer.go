@@ -7,11 +7,11 @@ import (
 	"strings"
 )
 
-const _ClassName = "meterchargervehicletariffcircuitsitemqttdatabaseeebusjavascriptgohemsinfluxmessenger"
+const _ClassName = "meterchargervehicletariffcircuitsitemqttdatabasemodbusproxyeebusjavascriptgohemsinfluxmessengersponsorship"
 
-var _ClassIndex = [...]uint8{0, 5, 12, 19, 25, 32, 36, 40, 48, 53, 63, 65, 69, 75, 84}
+var _ClassIndex = [...]uint8{0, 5, 12, 19, 25, 32, 36, 40, 48, 59, 64, 74, 76, 80, 86, 95, 106}
 
-const _ClassLowerName = "meterchargervehicletariffcircuitsitemqttdatabaseeebusjavascriptgohemsinfluxmessenger"
+const _ClassLowerName = "meterchargervehicletariffcircuitsitemqttdatabasemodbusproxyeebusjavascriptgohemsinfluxmessengersponsorship"
 
 func (i Class) String() string {
 	i -= 1
@@ -33,45 +33,51 @@ func _ClassNoOp() {
 	_ = x[ClassSite-(6)]
 	_ = x[ClassMqtt-(7)]
 	_ = x[ClassDatabase-(8)]
-	_ = x[ClassEEBus-(9)]
-	_ = x[ClassJavascript-(10)]
-	_ = x[ClassGo-(11)]
-	_ = x[ClassHEMS-(12)]
-	_ = x[ClassInflux-(13)]
-	_ = x[ClassMessenger-(14)]
+	_ = x[ClassModbusProxy-(9)]
+	_ = x[ClassEEBus-(10)]
+	_ = x[ClassJavascript-(11)]
+	_ = x[ClassGo-(12)]
+	_ = x[ClassHEMS-(13)]
+	_ = x[ClassInflux-(14)]
+	_ = x[ClassMessenger-(15)]
+	_ = x[ClassSponsorship-(16)]
 }
 
-var _ClassValues = []Class{ClassMeter, ClassCharger, ClassVehicle, ClassTariff, ClassCircuit, ClassSite, ClassMqtt, ClassDatabase, ClassEEBus, ClassJavascript, ClassGo, ClassHEMS, ClassInflux, ClassMessenger}
+var _ClassValues = []Class{ClassMeter, ClassCharger, ClassVehicle, ClassTariff, ClassCircuit, ClassSite, ClassMqtt, ClassDatabase, ClassModbusProxy, ClassEEBus, ClassJavascript, ClassGo, ClassHEMS, ClassInflux, ClassMessenger, ClassSponsorship}
 
 var _ClassNameToValueMap = map[string]Class{
-	_ClassName[0:5]:        ClassMeter,
-	_ClassLowerName[0:5]:   ClassMeter,
-	_ClassName[5:12]:       ClassCharger,
-	_ClassLowerName[5:12]:  ClassCharger,
-	_ClassName[12:19]:      ClassVehicle,
-	_ClassLowerName[12:19]: ClassVehicle,
-	_ClassName[19:25]:      ClassTariff,
-	_ClassLowerName[19:25]: ClassTariff,
-	_ClassName[25:32]:      ClassCircuit,
-	_ClassLowerName[25:32]: ClassCircuit,
-	_ClassName[32:36]:      ClassSite,
-	_ClassLowerName[32:36]: ClassSite,
-	_ClassName[36:40]:      ClassMqtt,
-	_ClassLowerName[36:40]: ClassMqtt,
-	_ClassName[40:48]:      ClassDatabase,
-	_ClassLowerName[40:48]: ClassDatabase,
-	_ClassName[48:53]:      ClassEEBus,
-	_ClassLowerName[48:53]: ClassEEBus,
-	_ClassName[53:63]:      ClassJavascript,
-	_ClassLowerName[53:63]: ClassJavascript,
-	_ClassName[63:65]:      ClassGo,
-	_ClassLowerName[63:65]: ClassGo,
-	_ClassName[65:69]:      ClassHEMS,
-	_ClassLowerName[65:69]: ClassHEMS,
-	_ClassName[69:75]:      ClassInflux,
-	_ClassLowerName[69:75]: ClassInflux,
-	_ClassName[75:84]:      ClassMessenger,
-	_ClassLowerName[75:84]: ClassMessenger,
+	_ClassName[0:5]:         ClassMeter,
+	_ClassLowerName[0:5]:    ClassMeter,
+	_ClassName[5:12]:        ClassCharger,
+	_ClassLowerName[5:12]:   ClassCharger,
+	_ClassName[12:19]:       ClassVehicle,
+	_ClassLowerName[12:19]:  ClassVehicle,
+	_ClassName[19:25]:       ClassTariff,
+	_ClassLowerName[19:25]:  ClassTariff,
+	_ClassName[25:32]:       ClassCircuit,
+	_ClassLowerName[25:32]:  ClassCircuit,
+	_ClassName[32:36]:       ClassSite,
+	_ClassLowerName[32:36]:  ClassSite,
+	_ClassName[36:40]:       ClassMqtt,
+	_ClassLowerName[36:40]:  ClassMqtt,
+	_ClassName[40:48]:       ClassDatabase,
+	_ClassLowerName[40:48]:  ClassDatabase,
+	_ClassName[48:59]:       ClassModbusProxy,
+	_ClassLowerName[48:59]:  ClassModbusProxy,
+	_ClassName[59:64]:       ClassEEBus,
+	_ClassLowerName[59:64]:  ClassEEBus,
+	_ClassName[64:74]:       ClassJavascript,
+	_ClassLowerName[64:74]:  ClassJavascript,
+	_ClassName[74:76]:       ClassGo,
+	_ClassLowerName[74:76]:  ClassGo,
+	_ClassName[76:80]:       ClassHEMS,
+	_ClassLowerName[76:80]:  ClassHEMS,
+	_ClassName[80:86]:       ClassInflux,
+	_ClassLowerName[80:86]:  ClassInflux,
+	_ClassName[86:95]:       ClassMessenger,
+	_ClassLowerName[86:95]:  ClassMessenger,
+	_ClassName[95:106]:      ClassSponsorship,
+	_ClassLowerName[95:106]: ClassSponsorship,
 }
 
 var _ClassNames = []string{
@@ -83,12 +89,14 @@ var _ClassNames = []string{
 	_ClassName[32:36],
 	_ClassName[36:40],
 	_ClassName[40:48],
-	_ClassName[48:53],
-	_ClassName[53:63],
-	_ClassName[63:65],
-	_ClassName[65:69],
-	_ClassName[69:75],
-	_ClassName[75:84],
+	_ClassName[48:59],
+	_ClassName[59:64],
+	_ClassName[64:74],
+	_ClassName[74:76],
+	_ClassName[76:80],
+	_ClassName[80:86],
+	_ClassName[86:95],
+	_ClassName[95:106],
 }
 
 // ClassString retrieves an enum value from the enum constants string name.

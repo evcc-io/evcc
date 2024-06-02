@@ -18,12 +18,14 @@ const (
 	ClassSite
 	ClassMqtt
 	ClassDatabase
+	ClassModbusProxy
 	ClassEEBus
 	ClassJavascript
 	ClassGo
 	ClassHEMS
 	ClassInflux
 	ClassMessenger
+	ClassSponsorship
 )
 
 // DeviceError indicates the specific device that failed
