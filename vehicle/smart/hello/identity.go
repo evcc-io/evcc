@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"net/http/httputil"
 	"net/url"
 	"strings"
 	"time"
@@ -150,9 +149,6 @@ func (v *Identity) login() (*oauth2.Token, error) {
 		return nil, fmt.Errorf("token exchange: %w", err)
 	}
 	defer resp.Body.Close()
-
-	b, _ := httputil.DumpResponse(resp, true)
-	fmt.Println(string(b))
 
 	if _, err := param(); err != nil {
 		return nil, err
