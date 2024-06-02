@@ -31,24 +31,31 @@ func runMigrate(cmd *cobra.Command, args []string) {
 	err := settings.SetJson(keys.Mqtt, conf)
 
 	if err == nil {
+		log.DEBUG.Println("migrate network")
 		err = settings.SetJson(keys.Network, conf)
 	}
 	if err == nil {
+		log.DEBUG.Println("migrate influx")
 		err = settings.SetJson(keys.Influx, conf)
 	}
 	if err == nil {
+		log.DEBUG.Println("migrate hems")
 		err = settings.SetYaml(keys.Hems, conf)
 	}
 	if err == nil {
+		log.DEBUG.Println("migrate eebus")
 		err = settings.SetYaml(keys.EEBus, conf)
 	}
 	if err == nil {
+		log.DEBUG.Println("migrate modbusproxy")
 		err = settings.SetYaml(keys.ModbusProxy, conf)
 	}
 	if err == nil {
+		log.DEBUG.Println("migrate messaging")
 		err = settings.SetYaml(keys.Messaging, conf)
 	}
 	if err == nil {
+		log.DEBUG.Println("migrate tariffs")
 		err = settings.SetYaml(keys.Tariffs, conf)
 	}
 

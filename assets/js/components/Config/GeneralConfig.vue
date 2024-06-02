@@ -53,8 +53,8 @@
 				<EditIcon size="xs" />
 			</button>
 		</div>
-		<div class="config-entry" data-testid="generalconfig-sponsoring">
-			<strong class="config-label">{{ $t("config.sponsor.title") }}</strong>
+		<div v-if="$hiddenFeatures()" class="config-entry" data-testid="generalconfig-sponsoring">
+			<strong class="config-label">{{ $t("config.sponsor.title") }} 🧪</strong>
 			<div class="config-text" :class="sponsorStatus.cssClass">
 				<span
 					v-if="sponsorStatus.expiresSoon"
@@ -71,8 +71,8 @@
 				<EditIcon size="xs" />
 			</button>
 		</div>
-		<div class="config-entry" data-testid="generalconfig-network">
-			<strong class="config-label">{{ $t("config.network.title") }}</strong>
+		<div v-if="$hiddenFeatures()" class="config-entry" data-testid="generalconfig-network">
+			<strong class="config-label">{{ $t("config.network.title") }} 🧪</strong>
 			<div class="config-text">{{ networkStatus }}</div>
 			<button
 				class="config-button btn btn-link"
@@ -83,8 +83,8 @@
 				<EditIcon size="xs" />
 			</button>
 		</div>
-		<div class="config-entry" data-testid="generalconfig-control">
-			<strong class="config-label">{{ $t("config.control.title") }}</strong>
+		<div v-if="$hiddenFeatures()" class="config-entry" data-testid="generalconfig-control">
+			<strong class="config-label">{{ $t("config.control.title") }} 🧪</strong>
 			<div class="config-text">{{ controlStatus }}</div>
 			<button
 				class="config-button btn btn-link"

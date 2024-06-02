@@ -3,24 +3,46 @@
 		<div class="container px-4">
 			<TopHeader :title="$t('config.main.title')" />
 			<div class="wrapper pb-5">
+				<div class="alert alert-danger my-4 pb-0" role="alert" v-if="$hiddenFeatures()">
+					<p>
+						<strong>Experimental! 🧪</strong>
+						Only use these features if you are in the mood for adventure and not afraid
+						of debugging. Unexpected things and data loss may happen.
+					</p>
+					<p>
+						We are in the progress of replacing <code>evcc.yaml</code> with UI-based
+						configuration. Any changes made here will be written to the database. After
+						that, the corresponding <code>evcc.yaml</code>-values (e.g. network
+						settings) will be ignored.
+					</p>
+					<p class="mb-1"><strong>Missing features</strong></p>
+					<ul>
+						<li>grid meter</li>
+						<li>aux meters</li>
+						<li>loadpoints and chargers</li>
+						<li>custom/plugin meters and vehicles</li>
+						<li>migration for vehicles, chargers, meters, loadpoints</li>
+						<li>remove mixed mode (evcc.yaml + db) for meters and vehicles</li>
+					</ul>
+					<p>
+						<strong>Migration and repair.</strong> Run <code>evcc migrate</code> to copy
+						configuration from <code>evcc.yaml</code> to the database. Existing database
+						configurations will be overwritten. Session and statistics data will not be
+						touched. Run <code>evcc migrate --clean</code> to remove all database
+						configurations.
+					</p>
+				</div>
+
 				<h2 class="my-4 mt-5">{{ $t("config.section.general") }}</h2>
 				<GeneralConfig @site-changed="siteChanged" />
 
 				<div v-if="$hiddenFeatures()">
-					<!--
-					<hr class="my-5" />
-
-					<div class="alert alert-danger my-4" role="alert">
-						<strong>Highly experimental!</strong> Only play around with these settings
-						if you know what you're doing. Otherwise you might have to reset or manually
-						repair your database.
-					</div>
--->
-					<h2 class="my-4 mt-5">{{ $t("config.section.grid") }}</h2>
+					<h2 class="my-4 mt-5">{{ $t("config.section.grid") }} 🧪</h2>
 					<ul class="p-0 config-list">
 						<DeviceCard
 							:name="$t('config.grid.title')"
 							:editable="!!gridMeter?.id"
+							:error="fatalClass === 'meter'"
 							data-testid="grid"
 							@edit="editMeter(gridMeter.id, 'grid')"
 						>
@@ -34,6 +56,7 @@
 						<DeviceCard
 							:name="$t('config.tariffs.title')"
 							editable
+							:error="fatalClass === 'tariff'"
 							data-testid="tariffs"
 							@edit="openModal('tariffsModal')"
 						>
@@ -45,13 +68,14 @@
 							</template>
 						</DeviceCard>
 					</ul>
-					<h2 class="my-4 mt-5">{{ $t("config.section.meter") }}</h2>
+					<h2 class="my-4 mt-5">{{ $t("config.section.meter") }} 🧪</h2>
 					<ul class="p-0 config-list">
 						<DeviceCard
 							v-for="meter in pvMeters"
 							:key="!!meter.name"
 							:name="meter.config?.template || 'Solar system'"
 							:editable="!!meter.id"
+							:error="fatalClass === 'meter'"
 							data-testid="pv"
 							@edit="editMeter(meter.id, 'pv')"
 						>
@@ -67,6 +91,7 @@
 							:key="meter.name"
 							:name="meter.config?.template || 'Battery storage'"
 							:editable="!!meter.id"
+							:error="fatalClass === 'meter'"
 							data-testid="battery"
 							@edit="editMeter(meter.id, 'battery')"
 						>
@@ -80,12 +105,13 @@
 						<AddDeviceButton :title="$t('config.main.addPvBattery')" @add="addMeter" />
 					</ul>
 
-					<h2 class="my-4 wip">{{ $t("config.section.loadpoints") }}</h2>
+					<h2 class="my-4 wip">{{ $t("config.section.loadpoints") }} 🧪</h2>
 
 					<ul class="p-0 config-list wip">
 						<DeviceCard
 							name="Fake Carport"
 							editable
+							:error="fatalClass === 'charger'"
 							data-testid="chargepoint-1"
 							@edit="todo"
 						>
@@ -103,7 +129,7 @@
 						/>
 					</ul>
 
-					<h2 class="my-4">{{ $t("config.section.vehicles") }}</h2>
+					<h2 class="my-4">{{ $t("config.section.vehicles") }} 🧪</h2>
 					<div>
 						<ul class="p-0 config-list">
 							<DeviceCard
@@ -111,6 +137,7 @@
 								:key="vehicle.id"
 								:name="vehicle.config?.title || vehicle.name"
 								:editable="vehicle.id >= 0"
+								:error="fatalClass === 'vehicle'"
 								data-testid="vehicle"
 								@edit="editVehicle(vehicle.id)"
 							>
@@ -128,7 +155,7 @@
 							/>
 						</ul>
 
-						<h2 class="my-4 mt-5">{{ $t("config.section.integrations") }}</h2>
+						<h2 class="my-4 mt-5">{{ $t("config.section.integrations") }} 🧪</h2>
 
 						<ul class="p-0 config-list">
 							<DeviceCard
@@ -146,6 +173,7 @@
 							<DeviceCard
 								:name="$t('config.messaging.title')"
 								editable
+								:error="fatalClass === 'messenger'"
 								data-testid="messaging"
 								@edit="openModal('messagingModal')"
 							>
@@ -157,6 +185,7 @@
 							<DeviceCard
 								:name="$t('config.influx.title')"
 								editable
+								:error="fatalClass === 'influx'"
 								data-testid="influx"
 								@edit="openModal('influxModal')"
 							>
@@ -168,6 +197,7 @@
 							<DeviceCard
 								:name="`${$t('config.eebus.title')} 🧪`"
 								editable
+								:error="fatalClass === 'eebus'"
 								data-testid="eebus"
 								@edit="openModal('eebusModal')"
 							>
@@ -179,6 +209,7 @@
 							<DeviceCard
 								:name="`${$t('config.circuits.title')} 🧪`"
 								editable
+								:error="fatalClass === 'circuit'"
 								data-testid="circuits"
 								@edit="openModal('circuitsModal')"
 							>
@@ -190,6 +221,7 @@
 							<DeviceCard
 								:name="$t('config.modbusproxy.title')"
 								editable
+								:error="fatalClass === 'modbusproxy'"
 								data-testid="modbusproxy"
 								@edit="openModal('modbusProxyModal')"
 							>
@@ -201,6 +233,7 @@
 							<DeviceCard
 								:name="$t('config.hems.title')"
 								editable
+								:error="fatalClass === 'hems'"
 								data-testid="hems"
 								@edit="openModal('hemsModal')"
 							>

@@ -834,6 +834,7 @@ func configureTariffs(conf globalconfig.Tariffs) (*tariff.Tariffs, error) {
 }
 
 func configureDevices(conf globalconfig.All) error {
+	// TODO: add name/identifier to error for better highlighting in UI
 	if err := configureMeters(conf.Meters); err != nil {
 		return &ClassError{ClassMeter, err}
 	}
