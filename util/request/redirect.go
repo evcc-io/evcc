@@ -3,6 +3,7 @@ package request
 import (
 	"fmt"
 	"net/http"
+	"net/http/httputil"
 )
 
 // DontFollow is a redirect policy that does not follow redirects
@@ -16,6 +17,9 @@ type InterceptResult = func() (string, error)
 func InterceptRedirect(param string, stop bool) (func(req *http.Request, via []*http.Request) error, InterceptResult) {
 	var val string
 	return func(req *http.Request, via []*http.Request) error {
+			b, _ := httputil.DumpRequest(req, true)
+			fmt.Println("\n\n" + string(b) + "\n\n")
+
 			if val == "" {
 				if val = req.URL.Query().Get(param); val != "" && stop {
 					return http.ErrUseLastResponse

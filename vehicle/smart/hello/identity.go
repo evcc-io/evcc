@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/http/httputil"
 	"net/url"
 	"strings"
 	"time"
@@ -74,7 +75,7 @@ func (v *Identity) login() (*oauth2.Token, error) {
 
 	resp, err := v.Do(req)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("authorize: %w", err)
 	}
 	defer resp.Body.Close()
 
@@ -120,7 +121,7 @@ func (v *Identity) login() (*oauth2.Token, error) {
 	}
 
 	if err := v.DoJSON(req, &login); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("accounts.login: %w", err)
 	}
 	if login.ErrorCode != 0 {
 		return nil, fmt.Errorf("%s: %s", login.ErrorMessage, login.ErrorDetails)
@@ -140,9 +141,12 @@ func (v *Identity) login() (*oauth2.Token, error) {
 
 	resp, err = v.Do(req)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("token exchange: %w", err)
 	}
 	defer resp.Body.Close()
+
+	b, _ := httputil.DumpResponse(resp, true)
+	fmt.Println(string(b))
 
 	if _, err := param(); err != nil {
 		return nil, err
