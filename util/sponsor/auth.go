@@ -41,7 +41,6 @@ func ConfigureSponsorship(token string) error {
 	defer mu.Unlock()
 
 	if token == "" {
-		Subject = victron
 		if sub := checkVictron(); sub != "" {
 			Subject = sub
 			return nil
