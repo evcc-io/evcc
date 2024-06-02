@@ -25,6 +25,11 @@ func runMigrate(cmd *cobra.Command, args []string) {
 		log.FATAL.Fatal(err)
 	}
 
+	// setup persistence
+	if err := configureDatabase(conf.Database); err != nil {
+		log.FATAL.Fatal(err)
+	}
+
 	reset := cmd.Flags().Lookup(flagReset).Changed
 
 	// TODO remove yaml file
