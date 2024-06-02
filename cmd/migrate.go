@@ -16,6 +16,7 @@ var migrateCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(migrateCmd)
+	migrateCmd.Flags().BoolP(flagReset, "c", false, flagResetDescription)
 }
 
 func runMigrate(cmd *cobra.Command, args []string) {
@@ -24,44 +25,72 @@ func runMigrate(cmd *cobra.Command, args []string) {
 		log.FATAL.Fatal(err)
 	}
 
+	reset := cmd.Flags().Lookup(flagReset).Changed
+
 	// TODO remove yaml file
-	log.DEBUG.Println("migrate global settings")
-	settings.SetInt(keys.Interval, int64(conf.Interval))
-	settings.SetString(keys.SponsorToken, conf.SponsorToken)
+	if reset {
+		settings.Delete(keys.Interval)
+		settings.Delete(keys.SponsorToken)
+	} else {
+		log.DEBUG.Println("migrate global settings")
+		settings.SetInt(keys.Interval, int64(conf.Interval))
+		settings.SetString(keys.SponsorToken, conf.SponsorToken)
+	}
 
-	err := settings.SetJson(keys.Mqtt, conf)
-
-	if err == nil {
+	if reset {
+		settings.Delete(keys.Network)
+	} else {
 		log.DEBUG.Println("migrate network")
-		err = settings.SetJson(keys.Network, conf)
-	}
-	if err == nil {
-		log.DEBUG.Println("migrate influx")
-		err = settings.SetJson(keys.Influx, conf)
-	}
-	if err == nil {
-		log.DEBUG.Println("migrate hems")
-		err = settings.SetYaml(keys.Hems, conf)
-	}
-	if err == nil {
-		log.DEBUG.Println("migrate eebus")
-		err = settings.SetYaml(keys.EEBus, conf)
-	}
-	if err == nil {
-		log.DEBUG.Println("migrate modbusproxy")
-		err = settings.SetYaml(keys.ModbusProxy, conf)
-	}
-	if err == nil {
-		log.DEBUG.Println("migrate messaging")
-		err = settings.SetYaml(keys.Messaging, conf)
-	}
-	if err == nil {
-		log.DEBUG.Println("migrate tariffs")
-		err = settings.SetYaml(keys.Tariffs, conf)
+		_ = settings.SetJson(keys.Network, conf)
 	}
 
-	if err != nil {
-		log.FATAL.Fatal(err)
+	if reset {
+		settings.Delete(keys.Mqtt)
+	} else {
+		log.DEBUG.Println("migrate mqtt")
+		_ = settings.SetJson(keys.Mqtt, conf)
+	}
+
+	if reset {
+		settings.Delete(keys.Influx)
+	} else {
+		log.DEBUG.Println("migrate influx")
+		_ = settings.SetJson(keys.Influx, conf)
+	}
+
+	if reset {
+		settings.Delete(keys.Hems)
+	} else {
+		log.DEBUG.Println("migrate hems")
+		_ = settings.SetYaml(keys.Hems, conf)
+	}
+
+	if reset {
+		settings.Delete(keys.EEBus)
+	} else {
+		log.DEBUG.Println("migrate eebus")
+		_ = settings.SetYaml(keys.EEBus, conf)
+	}
+
+	if reset {
+		settings.Delete(keys.ModbusProxy)
+	} else {
+		log.DEBUG.Println("migrate modbusproxy")
+		_ = settings.SetYaml(keys.ModbusProxy, conf)
+	}
+
+	if reset {
+		settings.Delete(keys.Messaging)
+	} else {
+		log.DEBUG.Println("migrate messaging")
+		_ = settings.SetYaml(keys.Messaging, conf)
+	}
+
+	if reset {
+		settings.Delete(keys.Tariffs)
+	} else {
+		log.DEBUG.Println("migrate tariffs")
+		_ = settings.SetYaml(keys.Tariffs, conf)
 	}
 
 	// wait for shutdown

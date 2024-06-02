@@ -61,13 +61,24 @@ func All() []setting {
 	return res
 }
 
+func equal(key string) func(setting) bool {
+	return func(s setting) bool {
+		return s.Key == key
+	}
+}
+
+func Delete(key string) {
+	mu.Lock()
+	defer mu.Unlock()
+
+	settings = slices.DeleteFunc(settings, equal(key))
+}
+
 func SetString(key string, val string) {
 	mu.Lock()
 	defer mu.Unlock()
 
-	idx := slices.IndexFunc(settings, func(s setting) bool {
-		return s.Key == key
-	})
+	idx := slices.IndexFunc(settings, equal(key))
 
 	if idx < 0 {
 		settings = append(settings, setting{key, val})
@@ -123,9 +134,7 @@ func String(key string) (string, error) {
 	mu.RLock()
 	defer mu.RUnlock()
 
-	idx := slices.IndexFunc(settings, func(s setting) bool {
-		return s.Key == key
-	})
+	idx := slices.IndexFunc(settings, equal(key))
 	if idx < 0 {
 		return "", ErrNotFound
 	}
