@@ -181,6 +181,11 @@ supportUs = "Mūsų misija - siekti, kad įkrovimas saulės energija taptų įpr
 thanks = "Ačiū, {sponsor}! Jūs prisidedate prie evcc vystymo."
 titleNoSponsor = "Paremkite mus"
 titleSponsor = "Remiate projektą"
+trial = "Jūs naudojate bandomąjį režimą ir galite naudoti visas funkcijas. Apsvarstykite galimybę paremti projektą."
+becomeSponsorExtended = "Paremkite mus tiesiogiai ir gaukite lipdukų."
+titleTrial = "Bandomasis režimas"
+titleVictron = "Sponsorius - Victron Energy"
+victron = "Naudojate evcc Victron Energy aparatinėje įrangoje ir turite prieigą prie visų funkcijų."
 
 [footer.telemetry]
 optIn = "Noriu prisidėti savo duomenimis."
@@ -256,6 +261,8 @@ login = "Prisijungti"
 password = "Slaptažodis"
 reset = "Atstatyti slaptažodį?"
 title = "Autentifikavimas"
+iframeHint = "Atidaryti evcc naujame skirtuke."
+iframeIssue = "Jūsų slaptažodis teisingas, bet atrodo, kad jūsų naršyklė atsisakė autentifikavimo slapuko. Taip gali nutikti, jei paleidžiate evcc per iframe naudojant HTTP"
 
 [main]
 vehicles = "Autoparkas"
