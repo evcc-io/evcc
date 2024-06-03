@@ -13,7 +13,7 @@ legendTitle = "Como a energia solar deve ser usada?"
 legendTopAutostart = "inicio automatico"
 legendTopName = "carregamento suportado por bateria"
 legendTopSubline = "sem interrupções"
-modalTitle = "Configuraçao da bateria"
+modalTitle = "Bateria Doméstica"
 
 [batterySettings.bufferStart]
 above = "quando acima {soc}"
@@ -77,16 +77,28 @@ validateSave = "Validar e guardar"
 [config.options]
 
 [config.options.endianness]
+big = "big-endian"
+little = "little-endian"
 
 [config.options.schema]
+http = "HTTP (não criptografado)"
+https = "HTTPS (cripto)"
 
 [config.pv]
 titleAdd = "Adicionar Contador Solar"
 titleEdit = "Editar Contador Solar"
 
 [config.section]
+general = "Geral"
+system = "Sistema"
 
 [config.system]
+logs = "Registos"
+restart = "Reiniciar"
+restartRequiredDescription = "Por favor, reinicie para ver o efeito."
+restartRequiredMessage = "A configuração mudou."
+restartingDescription = "Espere, por favor..."
+restartingMessage = "Reiniciar evcc."
 
 [config.title]
 description = "Exibido no ecrã principal e na guia do navegador."
@@ -211,6 +223,8 @@ primaryActions = "Alguma coisa não funciona como deveria? Estes são bons lugar
 restartButton = "Reiniciar"
 restartDescription = "Tentou desligar e ligar de novo?"
 secondaryActions = "Ainda não conseguiu resolver o seu problema? Aqui estão algumas opções mais pesadas."
+logsButton = "Ver registos"
+logsDescription = "Verifique os registos para erros."
 
 [help.restart]
 cancel = "Cancelar"
@@ -220,6 +234,15 @@ disclaimer = "Nota: o evcc terminará e confiará no sistema operacional para re
 modalTitle = "Tens a certeza que queres reiniciar"
 
 [log]
+title = "Registos"
+areaLabel = "Filtrar por área"
+areas = "Todas as áreas"
+search = "Procurar"
+showAll = "Mostrar todas as entradas"
+update = "Atualização automática"
+noResults = "Sem entradas de registo correspondentes."
+levelLabel = "Filtrar por nível de registro"
+download = "Baixe o registo completo"
 
 [loginModal]
 cancel = "Cancelar"
@@ -228,6 +251,9 @@ invalid = "A palavra-passe é inválida."
 login = "Entrar no sistema"
 password = "Palavra-passe"
 title = "Autenticação"
+iframeHint = "Abrir evcc em uma nova aba."
+iframeIssue = "Sua senha está correta, mas seu navegador parece ter deixado cair o cookie de autenticação. Isso pode acontecer se você executar evcc em um iframe via HTTP."
+reset = "Repor senha?"
 
 [main]
 vehicles = "Estacionamento"
@@ -405,10 +431,12 @@ targetChargePlanned = "O plano de carregamento começa a {time}."
 targetChargeWaitForVehicle = "Plano de carregamento pronto. À espera do veículo..."
 vehicleLimitReached = "Limite de veículo {soc} atingido."
 waitForVehicle = "Pronto. Esperando pelo veículo..."
+unknown = ""
 
 [notifications]
 dismissAll = "Recusar tudos"
 modalTitle = "Notícias"
+logs = "Ver registos completos"
 
 [offline]
 message = "Não conectado a um servidor."
@@ -471,6 +499,11 @@ meterstart = "Início do contador (kWh)"
 meterstop = "Contagem final (kWh)"
 odometer = "Quilometragem (km)"
 vehicle = "Veículo"
+chargeduration = "Duração"
+co2perkwh = "CO₂/kWh"
+price = "Preço"
+priceperkwh = "Preço/kWh"
+solarpercentage = "Solar (%)"
 
 [sessions.filter]
 allLoadpoints = "todos pontos de carregamento"
@@ -478,9 +511,12 @@ allVehicles = "todos veículos"
 filter = "Filtro"
 
 [settings]
-title = "Configuração geral"
+title = "Interface de usuário"
 
 [settings.fullscreen]
+label = "tela cheia"
+exit = "Sair da tela cheia"
+enter = "Entrar em tela cheia"
 
 [settings.gridDetails]
 co2 = "CO₂"
