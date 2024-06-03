@@ -16,7 +16,7 @@ var migrateCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(migrateCmd)
-	migrateCmd.Flags().BoolP(flagReset, "c", false, flagResetDescription)
+	migrateCmd.Flags().BoolP(flagReset, "r", false, flagResetDescription)
 }
 
 func runMigrate(cmd *cobra.Command, args []string) {
@@ -34,68 +34,74 @@ func runMigrate(cmd *cobra.Command, args []string) {
 
 	// TODO remove yaml file
 	if reset {
+		log.WARN.Println("resetting:")
+	} else {
+		log.WARN.Println("migrating:")
+	}
+
+	log.DEBUG.Println("- global settings")
+	if reset {
 		settings.Delete(keys.Interval)
 		settings.Delete(keys.SponsorToken)
 	} else {
-		log.DEBUG.Println("migrate global settings")
 		settings.SetInt(keys.Interval, int64(conf.Interval))
 		settings.SetString(keys.SponsorToken, conf.SponsorToken)
 	}
 
+	log.DEBUG.Println("- network")
 	if reset {
 		settings.Delete(keys.Network)
 	} else {
-		log.DEBUG.Println("migrate network")
-		_ = settings.SetJson(keys.Network, conf)
+		_ = settings.SetJson(keys.Network, conf.Network)
 	}
 
+	log.DEBUG.Println("- mqtt")
 	if reset {
 		settings.Delete(keys.Mqtt)
 	} else {
-		log.DEBUG.Println("migrate mqtt")
-		_ = settings.SetJson(keys.Mqtt, conf)
+		_ = settings.SetJson(keys.Mqtt, conf.Mqtt)
 	}
 
+	log.DEBUG.Println("- influx")
 	if reset {
 		settings.Delete(keys.Influx)
 	} else {
-		log.DEBUG.Println("migrate influx")
-		_ = settings.SetJson(keys.Influx, conf)
+		_ = settings.SetJson(keys.Influx, conf.Influx)
 	}
 
+	log.DEBUG.Println("- hems")
 	if reset {
 		settings.Delete(keys.Hems)
 	} else {
-		log.DEBUG.Println("migrate hems")
-		_ = settings.SetYaml(keys.Hems, conf)
+		_ = settings.SetYaml(keys.Hems, conf.HEMS)
 	}
 
+	log.DEBUG.Println("- eebus")
 	if reset {
 		settings.Delete(keys.EEBus)
 	} else {
-		log.DEBUG.Println("migrate eebus")
-		_ = settings.SetYaml(keys.EEBus, conf)
+		_ = settings.SetYaml(keys.EEBus, conf.EEBus)
 	}
 
+	log.DEBUG.Println("- modbusproxy")
 	if reset {
 		settings.Delete(keys.ModbusProxy)
 	} else {
-		log.DEBUG.Println("migrate modbusproxy")
-		_ = settings.SetYaml(keys.ModbusProxy, conf)
+		_ = settings.SetYaml(keys.ModbusProxy, conf.ModbusProxy)
 	}
 
+	log.DEBUG.Println("- messaging")
 	if reset {
 		settings.Delete(keys.Messaging)
 	} else {
-		log.DEBUG.Println("migrate messaging")
-		_ = settings.SetYaml(keys.Messaging, conf)
+		_ = settings.SetYaml(keys.Messaging, conf.Messaging)
 	}
 
+	log.DEBUG.Println("- tariffs")
 	if reset {
 		settings.Delete(keys.Tariffs)
 	} else {
-		log.DEBUG.Println("migrate tariffs")
-		_ = settings.SetYaml(keys.Tariffs, conf)
+		_ = settings.SetYaml(keys.Tariffs, conf.Tariffs)
 	}
 
 	// wait for shutdown

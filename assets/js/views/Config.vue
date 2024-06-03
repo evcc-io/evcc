@@ -28,7 +28,7 @@
 						<strong>Migration and repair.</strong> Run <code>evcc migrate</code> to copy
 						configuration from <code>evcc.yaml</code> to the database. Existing database
 						configurations will be overwritten. Session and statistics data will not be
-						touched. Run <code>evcc migrate --clean</code> to remove all database
+						touched. Run <code>evcc migrate --reset</code> to remove all database
 						configurations.
 					</p>
 				</div>
