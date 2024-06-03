@@ -181,6 +181,11 @@ supportUs = "Naše poslanstvo je, da sončna energija postane norma. Pomagajte e
 thanks = "Hvala, {sponsor}! Vaš prispevek pomaga pri nadaljnjem razvoju evcc."
 titleNoSponsor = "Podprite nas"
 titleSponsor = "Ste podpornik"
+titleTrial = "Preizkusni način"
+becomeSponsorExtended = "Podprite nas direktno in pridobite nalepke."
+titleVictron = "Sponzorirano s strani Victron Energy"
+trial = "Ste v preskusnem načinu in lahko uporabljate vse funkcije. Razmislite o podpori projekta."
+victron = "Uporabljate evcc na strojni opremi Victron Energy in imate dostop do vseh funkcij."
 
 [footer.telemetry]
 optIn = "Želim prispevati svoje podatke."
@@ -251,6 +256,8 @@ login = "Prijava"
 password = "Geslo"
 reset = "Ponastavi geslo?"
 title = "Avtentikacija"
+iframeHint = "Odpri evcc v novem zavihku."
+iframeIssue = "Vaše geslo je pravilno, vendar se zdi, da je vaš brskalnik izpustil piškotek za preverjanje pristnosti. To se lahko zgodi, če zaženete evcc v iframe prek HTTP."
 
 [main]
 vehicles = "Parkiranje"
@@ -427,6 +434,7 @@ targetChargePlanned = "Ciljno polnjenje se začne ob {time}."
 targetChargeWaitForVehicle = "Ciljno polnjenje je pripravljeno. Čakam na vozilo ..."
 vehicleLimitReached = "Omejitev vozila {soc} dosežena."
 waitForVehicle = "Pripravljen. Čakam na vozilo..."
+unknown = ""
 
 [notifications]
 dismissAll = "Opusti vse"
