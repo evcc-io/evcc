@@ -77,8 +77,12 @@ validateSave = "Valideren en opslaan"
 [config.options]
 
 [config.options.endianness]
+big = "groot-endian"
+little = "klein-endian"
 
 [config.options.schema]
+https = "https (versleuteld)"
+http = "HTTP (niet-versleuteld)"
 
 [config.pv]
 titleAdd = "Voeg meter zonnepanelen toe"
@@ -169,14 +173,19 @@ tabTitle = "Mijn data"
 total = "aller tijden"
 
 [footer.sponsor]
-becomeSponsor = "Word sponsor"
+becomeSponsor = "Sponsor worden"
 confetti = "Klaar voor confetti?"
 confettiPromise = "Je krijgt stickers en digitale confetti"
 sticker = "... of evcc stickers?"
-supportUs = "Onze missie is om van zonne-energie de norm te maken. Help evcc door te betalen wat het u waard is."
+supportUs = "Onze missie is om van opladen via zonne-energie de norm te maken. Help evcc door te betalen wat het u waard is."
 thanks = "Bedankt, {sponsor}! Je bijdrage helpt evcc verder te ontwikkelen."
 titleNoSponsor = "Sponsor ons"
 titleSponsor = "U bent een sponsor!"
+titleTrial = "Testmodus"
+titleVictron = "Gesponsord door Victron Energy"
+victron = "Je gebruikt evcc op Victron Energy-hardware en hebt toegang tot alle functies."
+becomeSponsorExtended = "Steun ons direct om stickers te krijgen."
+trial = "U bevindt zich in de proefmodus en kunt alle functies gebruiken. Overweeg alstublieft om het project te steunen."
 
 [footer.telemetry]
 optIn = "Ik wil mijn gegevens delen."
@@ -252,6 +261,8 @@ login = "Inloggen"
 password = "Wachtwoord"
 reset = "Wachtwoord resetten?"
 title = "Authenticatie"
+iframeHint = "Open evcc in een nieuw tabblad."
+iframeIssue = "Uw wachtwoord is correct, maar het lijkt erop dat uw browser de authenticatiecookie heeft verwijderd. Dit kan gebeuren als u evcc via HTTP in een iframe uitvoert."
 
 [main]
 vehicles = "Parking"
@@ -427,6 +438,7 @@ targetChargePlanned = "Laadplan begint om {time}."
 targetChargeWaitForVehicle = "Laadplan gereed. Wachten op voertuig..."
 vehicleLimitReached = "Voertuiglimiet {soc} bereikt."
 waitForVehicle = "Klaar. Wachten op voertuig..."
+unknown = ""
 
 [notifications]
 dismissAll = "Alles verwijderen"
@@ -493,6 +505,11 @@ meterstart = "Meter start (kWh)"
 meterstop = "Meter stop (kwh)"
 odometer = "Kilometerstand (km)"
 vehicle = "Voertuig"
+co2perkwh = "CO₂/kWh"
+priceperkwh = "Prijs/kWh"
+chargeduration = "Duur"
+solarpercentage = "Zonne-energie (%)"
+price = "Prijs"
 
 [sessions.filter]
 allLoadpoints = "alle oplaadpunten"

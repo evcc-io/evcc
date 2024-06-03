@@ -181,6 +181,11 @@ supportUs = "Vårt uppdrag är att göra solenergi till norm. Hjälp evcc genom 
 thanks = "Tack, {sponsor}! Ditt bidrag hjälper oss att utveckla evcc ytterligare."
 titleNoSponsor = "Stöd oss"
 titleSponsor = "Du är en supporter"
+becomeSponsorExtended = "Stöd oss direkt för att få klistermärken."
+titleTrial = "Testläge"
+titleVictron = "Sponsras av Victron Energy"
+trial = "Du är i testläge och kan använda alla funktioner. Överväg att stödja projektet."
+victron = "Du använder evcc på Victron Energy-hårdvara och har tillgång till alla funktioner."
 
 [footer.telemetry]
 optIn = "Jag vill bidra med min data."
@@ -251,6 +256,8 @@ login = "Logga in"
 password = "Lösenord"
 reset = "Återställ lösenord?"
 title = "Autentisering"
+iframeHint = "Öppna evcc på en ny flik."
+iframeIssue = "Ditt lösenord är korrekt, men din webbläsare verkar ha tagit bort autentiseringscookien. Detta kan hända om du kör evcc i en iframe via HTTP."
 
 [main]
 vehicles = "Parkering"
@@ -429,6 +436,7 @@ targetChargePlanned = "Laddplan startar {time}."
 targetChargeWaitForVehicle = "Laddare beredd. Väntar på fordon..."
 vehicleLimitReached = "Fordonsgränsen {soc} nådd."
 waitForVehicle = "Redo. Väntar på fordon..."
+unknown = ""
 
 [notifications]
 dismissAll = "Avvisa alla"

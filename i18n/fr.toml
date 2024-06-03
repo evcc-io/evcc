@@ -181,6 +181,11 @@ supportUs = "Notre mission est de faire du solaire la norme. Aidez evcc en payan
 thanks = "Merci, {sponsor} ! Votre contribution permet de poursuivre le développement d'evcc."
 titleNoSponsor = "Soutenez-nous"
 titleSponsor = "Vous êtes un supporter"
+becomeSponsorExtended = "Soutenez-nous directement pour obtenir des autocollants."
+titleTrial = "Mode d'essai"
+titleVictron = "Commandité par Victron Energy"
+victron = "Vous utilisez evcc sur le matériel Victron Energy et avez accès à toutes les fonctionnalités."
+trial = "Vous êtes en mode essai et pouvez utiliser toutes les fonctionnalités. Pensez à soutenir le projet."
 
 [footer.telemetry]
 optIn = "Je souhaite partager mes données de chargement avec la communauté."

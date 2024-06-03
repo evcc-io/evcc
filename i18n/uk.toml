@@ -13,7 +13,7 @@ legendTitle = "Як використовувати сонячну енергію
 legendTopAutostart = "запускається автоматично"
 legendTopName = "заряджання з підтримкою батареї"
 legendTopSubline = "без перебоїв"
-modalTitle = "Налаштування батареї"
+modalTitle = "Домашня батарея"
 
 [batterySettings.bufferStart]
 above = "коли вище {soc}"
@@ -41,12 +41,16 @@ phaseVoltages = "Напруга L1..L3"
 power = "Потужність"
 range = "Дальність"
 socLimit = "Ліміт"
+odometer = "Одометр"
+soc = "SoC"
 
 [config.form]
 example = "Наприклад"
 optional = "необов'язково"
 
 [config.general]
+save = "зберегти"
+cancel = "Скасувати"
 
 [config.grid]
 titleAdd = "Додати лічильник електромережі"
@@ -60,6 +64,7 @@ title = "Конфігурація"
 unconfigured = "не налаштовано"
 vehicles = "Мій транспорт"
 yaml = "Налаштовано в evcc.yaml. Не можна редагувати в інтерфейсі користувача."
+addPvBattery = "Додати сонячну або батарею"
 
 [config.meter]
 cancel = "Скасувати"
@@ -67,12 +72,17 @@ delete = "Видалити"
 save = "Зберегти"
 template = "Виробник"
 titleChoice = "Що ви хочете додати?"
+validateSave = "Перевірте та збережіть"
 
 [config.options]
 
 [config.options.endianness]
+big = "великий байт"
+little = "маленький байт"
 
 [config.options.schema]
+http = "HTTP (незашифрований)"
+https = "HTTPS (зашифрований)"
 
 [config.pv]
 titleAdd = "Додати сонячний лічильник"
