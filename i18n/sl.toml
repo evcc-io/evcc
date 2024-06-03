@@ -174,6 +174,7 @@ total = "ves čas"
 
 [footer.sponsor]
 becomeSponsor = "Postanite sponzor"
+becomeSponsorExtended = "Podprite nas direktno in pridobite nalepke."
 confetti = "Ste pripravljeni na konfete?"
 confettiPromise = "Prejmete nalepke in digitalne konfete"
 sticker = "… ali nalepke evcc?"
@@ -181,6 +182,10 @@ supportUs = "Naše poslanstvo je, da sončna energija postane norma. Pomagajte e
 thanks = "Hvala, {sponsor}! Vaš prispevek pomaga pri nadaljnjem razvoju evcc."
 titleNoSponsor = "Podprite nas"
 titleSponsor = "Ste podpornik"
+titleTrial = "Preizkusni način"
+titleVictron = "Sponzorirano s strani Victron Energy"
+trial = "Ste v preskusnem načinu in lahko uporabljate vse funkcije. Razmislite o podpori projekta."
+victron = "Uporabljate evcc na strojni opremi Victron Energy in imate dostop do vseh funkcij."
 
 [footer.telemetry]
 optIn = "Želim prispevati svoje podatke."
@@ -246,6 +251,8 @@ update = "Samodejno posodabljanje"
 [loginModal]
 cancel = "Prekliči"
 error = "Prijava ni uspela: "
+iframeHint = "Odpri evcc v novem zavihku."
+iframeIssue = "Vaše geslo je pravilno, vendar se zdi, da je vaš brskalnik izpustil piškotek za preverjanje pristnosti. To se lahko zgodi, če zaženete evcc v iframe prek HTTP."
 invalid = "Geslo ni veljavno."
 login = "Prijava"
 password = "Geslo"
@@ -425,6 +432,7 @@ scale3p = "Povečanje na 3-fazno napajanje čez {remaining}..."
 targetChargeActive = "Ciljno polnjenje je aktivno..."
 targetChargePlanned = "Ciljno polnjenje se začne ob {time}."
 targetChargeWaitForVehicle = "Ciljno polnjenje je pripravljeno. Čakam na vozilo ..."
+unknown = ""
 vehicleLimitReached = "Omejitev vozila {soc} dosežena."
 waitForVehicle = "Pripravljen. Čakam na vozilo..."
 
