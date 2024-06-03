@@ -177,10 +177,15 @@ becomeSponsor = "Bliv sponsor"
 confetti = "Klar til konfetti?"
 confettiPromise = "Du får klistermærker og digital konfetti"
 sticker = "... eller evcc-klistermærker?"
-supportUs = "Vores mission er at gøre solenergi til normen. Hjælp evcc ved at betale, hvad det er værd for dig."
+supportUs = "Vores mission er at gøre solopladning til normen. Hjælp evcc ved at betale, hvad det er værd for dig."
 thanks = "Tak, {sponsor}! Dit bidrag hjælper med at udvikle evcc yderligere."
 titleNoSponsor = "Støt os"
 titleSponsor = "Du er en støtter"
+victron = "Du bruger evcc på Victron Energy udstyr og har adgang til alle funktioner."
+becomeSponsorExtended = "Støt os direkte for at få klistermærker."
+titleTrial = "Afprøvnings tilstand"
+titleVictron = "Sponsoreret af Victron Energy"
+trial = "Du er i afprøvningstilstand og kan bruge alle funktioner. Overvej venligst at støtte projektet."
 
 [footer.telemetry]
 optIn = "Jeg vil gerne bidrage med mine data."
@@ -251,6 +256,8 @@ login = "Log på"
 password = "Adgangskode"
 reset = "Nulstil adgangskode"
 title = "Godkendelse"
+iframeHint = "Åbn evcc i en ny fane."
+iframeIssue = "Dit kodeord er korrekt, men din browser ser ud til at have droppet godkendelses-cookien. Dette kan ske, hvis du kører evcc i en iframe via HTTP."
 
 [main]
 vehicles = "Parkering"
@@ -325,7 +332,7 @@ label = "Max. Nuværende"
 label = "Min. Nuværende"
 
 [main.loadpointSettings.minSoc]
-description = "Køretøjet bliver „hurtigt” opladet til {0} % i solar mode, og fortsætter derefter med solenergioverskuddet. Nyttig til at sikre en minimum rækkevidde selv på mørke dage"
+description = "Køretøjet bliver „hurtigt” opladet til {0} i solar mode, og fortsætter derefter med solenergioverskuddet. Nyttig til at sikre en minimum rækkevidde selv på mørke dage"
 label = "Min. opladning %"
 
 [main.loadpointSettings.phasesConfigured]
@@ -429,6 +436,7 @@ targetChargePlanned = "Opladningsplan starter kl. {time}."
 targetChargeWaitForVehicle = "Plan for opladning er klar. Venter på køretøj..."
 vehicleLimitReached = "Køretøjsgrænsen {soc} nået."
 waitForVehicle = "Parat. Venter på køretøj ..."
+unknown = ""
 
 [notifications]
 dismissAll = "Afvis alle"
