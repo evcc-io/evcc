@@ -170,6 +170,7 @@ total = "total"
 
 [footer.sponsor]
 becomeSponsor = "Torne-se um patrocinador"
+becomeSponsorExtended = "Apoie-nos diretamente para obter adesivos."
 confetti = "Pronto para confete?"
 confettiPromise = "Você recebe autocolantese e confete digital"
 sticker = "… ou autocolantes do evcc?"
@@ -177,11 +178,10 @@ supportUs = "Nossa missão é tornar a energia solar a norma. Ajude o evcc pagan
 thanks = "Obrigado, {sponsor}! Sua contribuição ajuda a desenvolver ainda mais o evcc."
 titleNoSponsor = "Apoie-nos"
 titleSponsor = "Você é um apoiador"
-becomeSponsorExtended = "Apoie-nos diretamente para obter adesivos."
-titleVictron = "Patrocinado pela Victron Energy"
-victron = "Você está usando o evcc no hardware Victron Energy e tem acesso a todos os recursos."
 titleTrial = "Modo de teste"
+titleVictron = "Patrocinado pela Victron Energy"
 trial = "Você está no modo de teste e pode usar todos os recursos. Por favor, considere apoiar o projeto."
+victron = "Você está usando o evcc no hardware Victron Energy e tem acesso a todos os recursos."
 
 [footer.telemetry]
 optIn = "Quero contribuir com meus dados."
@@ -223,13 +223,13 @@ discussionsButton = "Discussões no GitHub"
 documentationButton = "Documentação"
 issueButton = "Reportar um erro"
 issueDescription = "Encontrou um comportamento estranho ou errado?"
+logsButton = "Ver registos"
+logsDescription = "Verifique os registos para erros."
 modalTitle = "Precisa ajuda?"
 primaryActions = "Alguma coisa não funciona como deveria? Estes são bons lugares para obter ajuda."
 restartButton = "Reiniciar"
 restartDescription = "Tentou desligar e ligar de novo?"
 secondaryActions = "Ainda não conseguiu resolver o seu problema? Aqui estão algumas opções mais pesadas."
-logsButton = "Ver registos"
-logsDescription = "Verifique os registos para erros."
 
 [help.restart]
 cancel = "Cancelar"
@@ -239,26 +239,26 @@ disclaimer = "Nota: o evcc terminará e confiará no sistema operacional para re
 modalTitle = "Tens a certeza que queres reiniciar"
 
 [log]
-title = "Registos"
 areaLabel = "Filtrar por área"
 areas = "Todas as áreas"
+download = "Baixe o registo completo"
+levelLabel = "Filtrar por nível de registro"
+noResults = "Sem entradas de registo correspondentes."
 search = "Procurar"
 showAll = "Mostrar todas as entradas"
+title = "Registos"
 update = "Atualização automática"
-noResults = "Sem entradas de registo correspondentes."
-levelLabel = "Filtrar por nível de registro"
-download = "Baixe o registo completo"
 
 [loginModal]
 cancel = "Cancelar"
 error = "Login falhou: "
+iframeHint = "Abrir evcc em uma nova aba."
+iframeIssue = "Sua senha está correta, mas seu navegador parece ter deixado cair o cookie de autenticação. Isso pode acontecer se você executar evcc em um iframe via HTTP."
 invalid = "A palavra-passe é inválida."
 login = "Entrar no sistema"
 password = "Palavra-passe"
-title = "Autenticação"
-iframeHint = "Abrir evcc em uma nova aba."
-iframeIssue = "Sua senha está correta, mas seu navegador parece ter deixado cair o cookie de autenticação. Isso pode acontecer se você executar evcc em um iframe via HTTP."
 reset = "Repor senha?"
+title = "Autenticação"
 
 [main]
 vehicles = "Estacionamento"
@@ -434,14 +434,14 @@ scale3p = "Aumentando para carregamento trifásico em {remaining}…"
 targetChargeActive = "Plano de carregamento activo..."
 targetChargePlanned = "O plano de carregamento começa a {time}."
 targetChargeWaitForVehicle = "Plano de carregamento pronto. À espera do veículo..."
+unknown = ""
 vehicleLimitReached = "Limite de veículo {soc} atingido."
 waitForVehicle = "Pronto. Esperando pelo veículo..."
-unknown = ""
 
 [notifications]
 dismissAll = "Recusar tudos"
-modalTitle = "Notícias"
 logs = "Ver registos completos"
+modalTitle = "Notícias"
 
 [offline]
 message = "Não conectado a um servidor."
@@ -496,6 +496,8 @@ vehicle = "Veículo"
 
 [sessions.csv]
 chargedenergy = "Energia (kWh)"
+chargeduration = "Duração"
+co2perkwh = "CO₂/kWh"
 created = "Hora de início"
 finished = "Hora final"
 identifier = "Identificador"
@@ -503,12 +505,10 @@ loadpoint = "Ponto de carga"
 meterstart = "Início do contador (kWh)"
 meterstop = "Contagem final (kWh)"
 odometer = "Quilometragem (km)"
-vehicle = "Veículo"
-chargeduration = "Duração"
-co2perkwh = "CO₂/kWh"
 price = "Preço"
 priceperkwh = "Preço/kWh"
 solarpercentage = "Solar (%)"
+vehicle = "Veículo"
 
 [sessions.filter]
 allLoadpoints = "todos pontos de carregamento"
@@ -519,9 +519,9 @@ filter = "Filtro"
 title = "Interface de usuário"
 
 [settings.fullscreen]
-label = "tela cheia"
-exit = "Sair da tela cheia"
 enter = "Entrar em tela cheia"
+exit = "Sair da tela cheia"
+label = "tela cheia"
 
 [settings.gridDetails]
 co2 = "CO₂"

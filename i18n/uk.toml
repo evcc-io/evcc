@@ -35,22 +35,22 @@ chargedEnergy = "Заряджений"
 current = "Cтрум"
 enabled = "Ввімкнено"
 energy = "Енергія"
+odometer = "Одометр"
 phaseCurrents = "Cтрум L1..L3"
 phasePowers = "Потужність L1..L3"
 phaseVoltages = "Напруга L1..L3"
 power = "Потужність"
 range = "Дальність"
-socLimit = "Ліміт"
-odometer = "Одометр"
 soc = "SoC"
+socLimit = "Ліміт"
 
 [config.form]
 example = "Наприклад"
 optional = "необов'язково"
 
 [config.general]
-save = "зберегти"
 cancel = "Скасувати"
+save = "зберегти"
 
 [config.grid]
 titleAdd = "Додати лічильник електромережі"
@@ -58,13 +58,13 @@ titleEdit = "Редагувати лічильник електромережі"
 
 [config.main]
 addLoadpoint = "Додати точку зарядки"
+addPvBattery = "Додати сонячну або батарею"
 addVehicle = "Додати транспорт"
 edit = "редагувати"
 title = "Конфігурація"
 unconfigured = "не налаштовано"
 vehicles = "Мій транспорт"
 yaml = "Налаштовано в evcc.yaml. Не можна редагувати в інтерфейсі користувача."
-addPvBattery = "Додати сонячну або батарею"
 
 [config.meter]
 cancel = "Скасувати"

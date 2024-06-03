@@ -81,8 +81,8 @@ big = "groot-endian"
 little = "klein-endian"
 
 [config.options.schema]
-https = "https (versleuteld)"
 http = "HTTP (niet-versleuteld)"
+https = "HTTPS (versleuteld)"
 
 [config.pv]
 titleAdd = "Voeg meter zonnepanelen toe"
@@ -174,6 +174,7 @@ total = "aller tijden"
 
 [footer.sponsor]
 becomeSponsor = "Sponsor worden"
+becomeSponsorExtended = "Steun ons direct om stickers te krijgen."
 confetti = "Klaar voor confetti?"
 confettiPromise = "Je krijgt stickers en digitale confetti"
 sticker = "... of evcc stickers?"
@@ -183,9 +184,8 @@ titleNoSponsor = "Sponsor ons"
 titleSponsor = "U bent een sponsor!"
 titleTrial = "Testmodus"
 titleVictron = "Gesponsord door Victron Energy"
-victron = "Je gebruikt evcc op Victron Energy-hardware en hebt toegang tot alle functies."
-becomeSponsorExtended = "Steun ons direct om stickers te krijgen."
 trial = "U bevindt zich in de proefmodus en kunt alle functies gebruiken. Overweeg alstublieft om het project te steunen."
+victron = "Je gebruikt evcc op Victron Energy-hardware en hebt toegang tot alle functies."
 
 [footer.telemetry]
 optIn = "Ik wil mijn gegevens delen."
@@ -256,13 +256,13 @@ update = "Automatisch updaten"
 [loginModal]
 cancel = "Annuleren"
 error = "Login mislukt: "
+iframeHint = "Open evcc in een nieuw tabblad."
+iframeIssue = "Uw wachtwoord is correct, maar het lijkt erop dat uw browser de authenticatiecookie heeft verwijderd. Dit kan gebeuren als u evcc via HTTP in een iframe uitvoert."
 invalid = "Wachtwoord onjuist."
 login = "Inloggen"
 password = "Wachtwoord"
 reset = "Wachtwoord resetten?"
 title = "Authenticatie"
-iframeHint = "Open evcc in een nieuw tabblad."
-iframeIssue = "Uw wachtwoord is correct, maar het lijkt erop dat uw browser de authenticatiecookie heeft verwijderd. Dit kan gebeuren als u evcc via HTTP in een iframe uitvoert."
 
 [main]
 vehicles = "Parking"
@@ -436,9 +436,9 @@ scale3p = "Wisselen naar laden op 3 fasen over {remaining}..."
 targetChargeActive = "Laadplan actief..."
 targetChargePlanned = "Laadplan begint om {time}."
 targetChargeWaitForVehicle = "Laadplan gereed. Wachten op voertuig..."
+unknown = ""
 vehicleLimitReached = "Voertuiglimiet {soc} bereikt."
 waitForVehicle = "Klaar. Wachten op voertuig..."
-unknown = ""
 
 [notifications]
 dismissAll = "Alles verwijderen"
@@ -497,6 +497,8 @@ vehicle = "Voertuig"
 
 [sessions.csv]
 chargedenergy = "Energie (kWh)"
+chargeduration = "Duur"
+co2perkwh = "CO₂/kWh"
 created = "Aangemaakt"
 finished = "Beëindigd"
 identifier = "ID"
@@ -504,12 +506,10 @@ loadpoint = "Oplaadpunt"
 meterstart = "Meter start (kWh)"
 meterstop = "Meter stop (kwh)"
 odometer = "Kilometerstand (km)"
-vehicle = "Voertuig"
-co2perkwh = "CO₂/kWh"
-priceperkwh = "Prijs/kWh"
-chargeduration = "Duur"
-solarpercentage = "Zonne-energie (%)"
 price = "Prijs"
+priceperkwh = "Prijs/kWh"
+solarpercentage = "Zonne-energie (%)"
+vehicle = "Voertuig"
 
 [sessions.filter]
 allLoadpoints = "alle oplaadpunten"

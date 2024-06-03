@@ -162,6 +162,7 @@ total = "összesen"
 
 [footer.sponsor]
 becomeSponsor = "Legyél támogató"
+becomeSponsorExtended = "Támogass közvetlenül, hogy matricákat kapj."
 confetti = "Készen állsz a konfettire?"
 confettiPromise = "Kapsz matricákat és digitális konfettit"
 sticker = "… vagy evcc matricákat?"
@@ -169,11 +170,10 @@ supportUs = "A küldetésünk az, hogy a napelemes töltést normává tegyük. 
 thanks = "Köszönjük, {sponsor}! A hozzájárulásod segít tovább fejleszteni az evcc-t."
 titleNoSponsor = "Támogass minket"
 titleSponsor = "Te már támogató vagy"
-becomeSponsorExtended = Támogass közvetlenül, hogy matricákat kapj.
-titleTrial = Próbaverzió
-titleVictron = Szponzorálta a Victron Energy
-trial = Jelenleg próbaverziót használsz korlátlan funkciókkal. Kérlek fontold meg a projekt támogatását.
-victron = Jelenleg a Victron Energy hardverén használod az evcc-t korlátlan funkciókkal.
+titleTrial = "Próbaverzió"
+titleVictron = "Szponzorálta a Victron Energy"
+trial = "Jelenleg próbaverziót használsz korlátlan funkciókkal. Kérlek fontold meg a projekt támogatását."
+victron = "Jelenleg a Victron Energy hardverén használod az evcc-t korlátlan funkciókkal."
 
 [footer.telemetry]
 optIn = "Szeretnék hozzájárulni az adataimmal."
@@ -238,13 +238,13 @@ update = "Automatikus frissítés"
 [loginModal]
 cancel = "Mégse"
 error = "Sikertelen bejelentkezés: "
+iframeHint = "evcc megnyitása új lapon."
+iframeIssue = "A jelszavad helyes, de úgy tűnik, hogy a böngésződ elvetette a hitelesítési sütit. Ez akkor történhet meg, ha az az evcc-t iframe-ben futtatod HTTP-n."
 invalid = "A jelszó érvénytelen."
 login = "Bejelentkezés"
 password = "Jelszó"
 reset = "Jelszó Visszaállítás?"
 title = "Hitelesítés"
-iframeIssue = A jelszavad helyes, de úgy tűnik, hogy a böngésződ elvetette a hitelesítési sütit. Ez akkor történhet meg, ha az az evcc-t iframe-ben futtatod HTTP-n.
-iframeHint = evcc megnyitása új lapon.
 
 [main]
 vehicles = "Parkolás"
@@ -417,9 +417,9 @@ scale3p = "3 Fázisú töltésre váltás ekkor: {remaining}…"
 targetChargeActive = "Töltési terv aktív…"
 targetChargePlanned = "A töltési tervezet ekkor keződik: {time}."
 targetChargeWaitForVehicle = "Töltési terv üzemkész. Várakozás járműre…"
+unknown = ""
 vehicleLimitReached = "Jármű limit {soc} elérve."
 waitForVehicle = "Üzemkész. Járműre várakozás…"
-unknown = ""
 
 [notifications]
 dismissAll = "Összeset figyelmen kívül hagyja"

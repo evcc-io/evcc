@@ -174,6 +174,7 @@ total = "tout"
 
 [footer.sponsor]
 becomeSponsor = "Devenir parrain"
+becomeSponsorExtended = "Soutenez-nous directement pour obtenir des autocollants."
 confetti = "Prêt pour les confettis?"
 confettiPromise = "Vous obtenez des autocollants et des confettis numériques"
 sticker = "… ou autocollants evcc?"
@@ -181,11 +182,10 @@ supportUs = "Notre mission est de faire du solaire la norme. Aidez evcc en payan
 thanks = "Merci, {sponsor} ! Votre contribution permet de poursuivre le développement d'evcc."
 titleNoSponsor = "Soutenez-nous"
 titleSponsor = "Vous êtes un supporter"
-becomeSponsorExtended = "Soutenez-nous directement pour obtenir des autocollants."
 titleTrial = "Mode d'essai"
 titleVictron = "Commandité par Victron Energy"
-victron = "Vous utilisez evcc sur le matériel Victron Energy et avez accès à toutes les fonctionnalités."
 trial = "Vous êtes en mode essai et pouvez utiliser toutes les fonctionnalités. Pensez à soutenir le projet."
+victron = "Vous utilisez evcc sur le matériel Victron Energy et avez accès à toutes les fonctionnalités."
 
 [footer.telemetry]
 optIn = "Je souhaite partager mes données de chargement avec la communauté."
@@ -256,13 +256,13 @@ update = "Mise à jour automatique"
 [loginModal]
 cancel = "Annuler"
 error = "Connection échouée:"
+iframeHint = "Ouvrir evcc dans un nouvel onglet."
+iframeIssue = "Votre mot de passe est correct, mais votre navigateur n’a pas gardé le cookie d’authentification. Cela peut arriver si evcc est accédé dans un iframe via HTTP."
 invalid = "Mot de passe invalide."
 login = "Identifiant"
 password = "Mot de passe"
 reset = "Réinitialiser le mot de passe ?"
 title = "Authentification"
-iframeHint = Ouvrir evcc dans un nouvel onglet.
-iframeIssue = Votre mot de passe est correct, mais votre navigateur n’a pas gardé le cookie d’authentification. Cela peut arriver si evcc est accédé dans un iframe via HTTP.
 
 [main]
 vehicles = "Place de stationnement"
@@ -436,9 +436,9 @@ scale3p = "Augmentation en triphasé dans {remaining}…"
 targetChargeActive = "Plan de charge actif..."
 targetChargePlanned = "Le plan de charge démarre à {time}."
 targetChargeWaitForVehicle = "Plan de charge prêt. Attente du véhicule..."
+unknown = "-"
 vehicleLimitReached = "Limite de véhicule {soc} atteinte."
 waitForVehicle = "Prêt à charger. Attente du véhicule…"
-unknown = -
 
 [notifications]
 dismissAll = "Supprimer tout"

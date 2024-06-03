@@ -174,6 +174,7 @@ total = "hele tiden"
 
 [footer.sponsor]
 becomeSponsor = "Bliv sponsor"
+becomeSponsorExtended = "Støt os direkte for at få klistermærker."
 confetti = "Klar til konfetti?"
 confettiPromise = "Du får klistermærker og digital konfetti"
 sticker = "... eller evcc-klistermærker?"
@@ -181,11 +182,10 @@ supportUs = "Vores mission er at gøre solopladning til normen. Hjælp evcc ved 
 thanks = "Tak, {sponsor}! Dit bidrag hjælper med at udvikle evcc yderligere."
 titleNoSponsor = "Støt os"
 titleSponsor = "Du er en støtter"
-victron = "Du bruger evcc på Victron Energy udstyr og har adgang til alle funktioner."
-becomeSponsorExtended = "Støt os direkte for at få klistermærker."
 titleTrial = "Afprøvnings tilstand"
 titleVictron = "Sponsoreret af Victron Energy"
 trial = "Du er i afprøvningstilstand og kan bruge alle funktioner. Overvej venligst at støtte projektet."
+victron = "Du bruger evcc på Victron Energy udstyr og har adgang til alle funktioner."
 
 [footer.telemetry]
 optIn = "Jeg vil gerne bidrage med mine data."
@@ -251,13 +251,13 @@ update = "Opdater automatisk"
 [loginModal]
 cancel = "Afbryd"
 error = "Login mislykkedes"
+iframeHint = "Åbn evcc i en ny fane."
+iframeIssue = "Dit kodeord er korrekt, men din browser ser ud til at have droppet godkendelses-cookien. Dette kan ske, hvis du kører evcc i en iframe via HTTP."
 invalid = "Ugyldig adgangskode"
 login = "Log på"
 password = "Adgangskode"
 reset = "Nulstil adgangskode"
 title = "Godkendelse"
-iframeHint = "Åbn evcc i en ny fane."
-iframeIssue = "Dit kodeord er korrekt, men din browser ser ud til at have droppet godkendelses-cookien. Dette kan ske, hvis du kører evcc i en iframe via HTTP."
 
 [main]
 vehicles = "Parkering"
@@ -434,9 +434,9 @@ scale3p = "Øger til 3-faset opladning om {remaining}..."
 targetChargeActive = "Plan for ladning er aktiv..."
 targetChargePlanned = "Opladningsplan starter kl. {time}."
 targetChargeWaitForVehicle = "Plan for opladning er klar. Venter på køretøj..."
+unknown = ""
 vehicleLimitReached = "Køretøjsgrænsen {soc} nået."
 waitForVehicle = "Parat. Venter på køretøj ..."
-unknown = ""
 
 [notifications]
 dismissAll = "Afvis alle"

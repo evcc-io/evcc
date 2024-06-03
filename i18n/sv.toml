@@ -174,6 +174,7 @@ total = "totalt"
 
 [footer.sponsor]
 becomeSponsor = "Bli sponsor"
+becomeSponsorExtended = "Stöd oss direkt för att få klistermärken."
 confetti = "Är du redo för konfetti?"
 confettiPromise = "Du får klistermärken och digital konfetti"
 sticker = "... eller evcc-klistermärken?"
@@ -181,7 +182,6 @@ supportUs = "Vårt uppdrag är att göra solenergi till norm. Hjälp evcc genom 
 thanks = "Tack, {sponsor}! Ditt bidrag hjälper oss att utveckla evcc ytterligare."
 titleNoSponsor = "Stöd oss"
 titleSponsor = "Du är en supporter"
-becomeSponsorExtended = "Stöd oss direkt för att få klistermärken."
 titleTrial = "Testläge"
 titleVictron = "Sponsras av Victron Energy"
 trial = "Du är i testläge och kan använda alla funktioner. Överväg att stödja projektet."
@@ -251,13 +251,13 @@ update = "Autouppdatera"
 [loginModal]
 cancel = "Avbryt"
 error = "Inloggning misslyckades:"
+iframeHint = "Öppna evcc på en ny flik."
+iframeIssue = "Ditt lösenord är korrekt, men din webbläsare verkar ha tagit bort autentiseringscookien. Detta kan hända om du kör evcc i en iframe via HTTP."
 invalid = "Ogiltigt lösenord."
 login = "Logga in"
 password = "Lösenord"
 reset = "Återställ lösenord?"
 title = "Autentisering"
-iframeHint = "Öppna evcc på en ny flik."
-iframeIssue = "Ditt lösenord är korrekt, men din webbläsare verkar ha tagit bort autentiseringscookien. Detta kan hända om du kör evcc i en iframe via HTTP."
 
 [main]
 vehicles = "Parkering"
@@ -434,9 +434,9 @@ scale3p = "Ökar till 3-fas-laddning om {remaining}..."
 targetChargeActive = "Laddplan aktiv..."
 targetChargePlanned = "Laddplan startar {time}."
 targetChargeWaitForVehicle = "Laddare beredd. Väntar på fordon..."
+unknown = ""
 vehicleLimitReached = "Fordonsgränsen {soc} nådd."
 waitForVehicle = "Redo. Väntar på fordon..."
-unknown = ""
 
 [notifications]
 dismissAll = "Avvisa alla"
