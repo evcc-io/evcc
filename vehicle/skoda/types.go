@@ -9,7 +9,7 @@ type Vehicle struct {
 	ID, VIN       string
 	Name          string // user-given name
 	LastUpdatedAt string
-	Specification Specification
+	Specification Specification `json:"vehicleSpecification"`
 	// Connectivities
 	// Capabilities
 }
