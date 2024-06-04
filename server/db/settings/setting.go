@@ -67,11 +67,21 @@ func equal(key string) func(setting) bool {
 	}
 }
 
-func Delete(key string) {
+func Delete(key string) error {
 	mu.Lock()
 	defer mu.Unlock()
 
-	settings = slices.DeleteFunc(settings, equal(key))
+	if idx := slices.IndexFunc(settings, equal(key)); idx >= 0 {
+		if err := db.Instance.Delete(setting{
+			Key: settings[idx].Key,
+		}).Error; err != nil {
+			return err
+		}
+
+		settings = slices.Delete(settings, idx, 1)
+	}
+
+	return nil
 }
 
 func SetString(key string, val string) {
