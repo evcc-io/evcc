@@ -34,7 +34,7 @@ func NewAPI(log *util.Logger, ts oauth2.TokenSource) *API {
 func (v *API) Vehicles() ([]Vehicle, error) {
 	var res VehiclesResponse
 
-	uri := fmt.Sprintf("%s/v2/garage/initial-vehicle?connectivityGenerations=MOD3&connectivityGenerations=MOD4", BaseURI)
+	uri := fmt.Sprintf("%s/v2/garage", BaseURI)
 	err := v.GetJSON(uri, &res)
 
 	return res.Vehicles, err
@@ -43,7 +43,7 @@ func (v *API) Vehicles() ([]Vehicle, error) {
 // Status implements the /v2/vehicle-status/<vin> response
 func (v *API) Status(vin string) (StatusResponse, error) {
 	var res StatusResponse
-	uri := fmt.Sprintf("%s/v2/vehicle-status/%s", BaseURI, vin)
+	uri := fmt.Sprintf("%s/v1/vehicle-health-report/warning-lights/%s", BaseURI, vin)
 	err := v.GetJSON(uri, &res)
 	return res, err
 }

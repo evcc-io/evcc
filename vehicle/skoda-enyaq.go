@@ -50,8 +50,6 @@ func NewEnyaqFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	var err error
 	log := util.NewLogger("enyaq").Redact(cc.User, cc.Password, cc.VIN)
 
-	//TODO new garage endpoint - needs trace
-	/**
 	// use Skoda api to resolve list of vehicles
 	ts, err := service.TokenRefreshServiceTokenSource(log, skoda.TRSParams, connect.AuthParams, cc.User, cc.Password)
 	if err != nil {
@@ -71,9 +69,6 @@ func NewEnyaqFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	if err == nil {
 		v.fromVehicle(vehicle.Name, float64(vehicle.Specification.Battery.CapacityInKWh))
 	}
-	*/
-
-	v.fromVehicle(cc.Title_, cc.Capacity_)
 
 	// use Connect credentials to build provider
 	if err == nil {

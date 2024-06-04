@@ -43,7 +43,7 @@ var _ api.Battery = (*Provider)(nil)
 func (v *Provider) Soc() (float64, error) {
 	res, err := v.chargerG()
 	if err == nil {
-		return float64(res.Battery.StateOfChargeInPercent), nil
+		return float64(res.Status.Battery.StateOfChargeInPercent), nil
 	}
 
 	return 0, err
@@ -57,10 +57,10 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 
 	res, err := v.chargerG()
 	if err == nil {
-		if res.Plug.ConnectionState == "Connected" {
+		if res.Status.State == "CONNECTED" {
 			status = api.StatusB
 		}
-		if res.Charging.State == "Charging" {
+		if res.Status.State == "CHARGING" {
 			status = api.StatusC
 		}
 	}
@@ -74,14 +74,14 @@ var _ api.VehicleFinishTimer = (*Provider)(nil)
 func (v *Provider) FinishTime() (time.Time, error) {
 	res, err := v.chargerG()
 	if err == nil {
-		crg := res.Charging
+		crg := res.Status
 
 		// estimate not available
-		if crg.State == "Error" || crg.ChargingType == "Invalid" {
+		if crg.State == "Error" || crg.ChargeType == "Invalid" {
 			return time.Time{}, api.ErrNotAvailable
 		}
 
-		remaining := time.Duration(crg.RemainingToCompleteInSeconds) * time.Second
+		remaining := time.Duration(crg.RemainingTimeToFullyChargedInMinutes) * time.Minute
 		return time.Now().Add(remaining), err
 	}
 
@@ -93,7 +93,7 @@ var _ api.VehicleRange = (*Provider)(nil)
 // Range implements the api.VehicleRange interface
 func (v *Provider) Range() (rng int64, err error) {
 	res, err := v.chargerG()
-	return res.Battery.CruisingRangeElectricInMeters / 1e3, err
+	return res.Status.Battery.RemainingCruisingRangeInMeters / 1e3, err
 }
 
 var _ api.VehicleOdometer = (*Provider)(nil)
@@ -101,7 +101,7 @@ var _ api.VehicleOdometer = (*Provider)(nil)
 // Odometer implements the api.VehicleOdometer interface
 func (v *Provider) Odometer() (odo float64, err error) {
 	res, err := v.statusG()
-	return res.Remote.MileageInKm, err
+	return res.MileageInKm, err
 }
 
 // var _ api.VehicleClimater = (*Provider)(nil)
@@ -129,9 +129,9 @@ var _ api.SocLimiter = (*Provider)(nil)
 
 // GetLimitSoc implements the api.SocLimiter interface
 func (v *Provider) GetLimitSoc() (int64, error) {
-	res, err := v.settingsG()
+	res, err := v.chargerG()
 	if err == nil {
-		return int64(res.TargetStateOfChargeInPercent), nil
+		return int64(res.Settings.TargetStateOfChargeInPercent), nil
 	}
 
 	return 0, err
