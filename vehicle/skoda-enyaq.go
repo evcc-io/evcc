@@ -11,7 +11,7 @@ import (
 	"github.com/evcc-io/evcc/vehicle/skoda/service"
 )
 
-// https://github.com/lendy007/skodaconnect
+// https://gitlab.com/prior99/skoda
 
 // Enyaq is an api.Vehicle implementation for Skoda Enyaq cars
 type Enyaq struct {
