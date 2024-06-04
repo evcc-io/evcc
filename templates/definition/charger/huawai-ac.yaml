@@ -6,8 +6,8 @@ products:
 requirements:
   evcc: ["sponsorship"]
   description:
-    de: Achtung! Aktuell ist keine funktionierenende Konfiguration bekannt.
-    en: Attention!No working configuration is currently known.
+    de: Achtung! Aktuell ist keine funktionierende Konfiguration bekannt.
+    en: Attention! No working configuration is currently known.
   evcc: ["sponsorship"]
 params:
   - name: modbus
