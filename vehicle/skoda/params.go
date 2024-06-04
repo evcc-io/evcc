@@ -13,8 +13,8 @@ const (
 // Skoda native api
 var AuthParams = url.Values{
 	"response_type": {"code id_token"},
-	"client_id":     {"f9a2359a-b776-46d9-bd0c-db1904343117@apps_vw-dilab_com"},
-	"redirect_uri":  {"skodaconnect://oidc.login/"},
+	"client_id":     {"7f045eee-7003-4379-9968-9355ed2adb06@apps_vw-dilab_com"},
+	"redirect_uri":  {"myskoda://redirect/login/"},
 	"scope":         {"openid mbb profile"},
 }
 
