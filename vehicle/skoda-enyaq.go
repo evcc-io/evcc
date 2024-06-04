@@ -68,8 +68,7 @@ func NewEnyaqFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	)
 
 	if err == nil {
-		//		var res skoda.VehicleInformation
-		uri := fmt.Sprintf("%s/v1/vehicle-information/%s", skoda.BaseURI, vehicle.VIN)
+		uri := fmt.Sprintf("%s/v2/garage/vehicles/%s", skoda.BaseURI, vehicle.VIN)
 		err = api.GetJSON(uri, &vehicle)
 	}
 
