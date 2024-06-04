@@ -30,7 +30,7 @@ func NewAPI(log *util.Logger, ts oauth2.TokenSource) *API {
 	return v
 }
 
-// Vehicles implements the /v3/garage response
+// Vehicles implements the /v2/garage response
 func (v *API) Vehicles() ([]Vehicle, error) {
 	var res VehiclesResponse
 
