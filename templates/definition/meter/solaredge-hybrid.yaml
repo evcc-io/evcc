@@ -106,8 +106,8 @@ render: |
         {{- include "modbus" . | indent 6 }}
         timeout: {{ .timeout }}
         value: 
-          - 101:DCW
-          - 103:DCW
+          - 101:W
+          - 103:W
       - source: modbus
         {{- include "modbus" . | indent 6 }}
         timeout: {{ .timeout }}
