@@ -57,7 +57,7 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 
 	res, err := v.chargerG()
 	if err == nil {
-		if res.Status.State == "CONNECTED" {
+		if res.Status.State == "CONNECT_CABLE" {
 			status = api.StatusB
 		}
 		if res.Status.State == "CHARGING" {
