@@ -6,7 +6,7 @@
 				{{ $t("config.general.docsLink") }}
 			</a>
 		</p>
-		<p class="text-danger" v-if="error">{{ error }}</p>
+		<p class="text-danger" v-if="error" data-testid="error">{{ error }}</p>
 		<form ref="form" class="container mx-0 px-0">
 			<div class="editor-container" :style="{ height }">
 				<YamlEditor v-model="yaml" class="editor" :errorLine="errorLine" />

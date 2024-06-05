@@ -41,7 +41,7 @@ test.describe("tariffs", async () => {
     );
   });
 
-  test("configure tariff", async ({ page }) => {
+  test("tariffs via ui", async ({ page }) => {
     await start(CONFIG_EMPTY, "password.sql");
     await goToConfig(page);
 
@@ -52,19 +52,27 @@ test.describe("tariffs", async () => {
     // default content
     await expect(modal).toContainText("# currency: EUR");
 
-    await modal.locator(".monaco-editor").click();
-    // remove existing content
+    // clear and enter invalid yaml
+    await modal.locator(".monaco-editor .view-line").nth(0).click();
     await page.keyboard.press("Meta+KeyA");
     await page.keyboard.press("Backspace");
     await page.keyboard.press("Meta+KeyA");
     await page.keyboard.press("Backspace");
-    // enter new content
+    await page.keyboard.type("foo: bar\n");
+    await page.getByRole("button", { name: "Save" }).click();
+    await expect(modal.getByTestId("error")).toContainText("invalid keys: foo");
+
+    // clear and enter valid yaml
+    await modal.locator(".monaco-editor .view-line").nth(0).click();
+    await page.keyboard.press("Meta+KeyA");
+    await page.keyboard.press("Backspace");
     await page.keyboard.type("currency: CHF\n");
     await page.keyboard.type("grid:\n");
     await page.keyboard.type("  type: fixed\n");
     await page.keyboard.type("price: 0.123\n");
 
     await page.getByRole("button", { name: "Save" }).click();
+    await expect(modal.getByTestId("error")).not.toBeVisible();
 
     // modal closes
     await expect(modal).not.toBeVisible();
@@ -85,7 +93,7 @@ test.describe("tariffs", async () => {
     );
   });
 
-  test("show from evcc.yaml", async ({ page }) => {
+  test("tariffs from evcc.yaml", async ({ page }) => {
     await start(CONFIG_WITH_TARIFFS, "password.sql");
     await goToConfig(page);
 
