@@ -80,7 +80,7 @@ func NewEnyaqFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		api := skoda.NewAPI(log, ts)
 		api.Client.Timeout = cc.Timeout
 
-		v.Provider = skoda.NewProvider(api, cc.VIN, cc.Cache)
+		v.Provider = skoda.NewProvider(api, vehicle.VIN, cc.Cache)
 	}
 
 	return v, err
