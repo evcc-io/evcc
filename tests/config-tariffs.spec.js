@@ -10,6 +10,8 @@ test.afterEach(async () => {
   await stop();
 });
 
+const SELECT_ALL = "ControlOrMeta+KeyA";
+
 async function login(page) {
   await page.locator("#loginPassword").fill("secret");
   await page.getByRole("button", { name: "Login" }).click();
@@ -54,9 +56,9 @@ test.describe("tariffs", async () => {
 
     // clear and enter invalid yaml
     await modal.locator(".monaco-editor .view-line").nth(0).click();
-    await page.keyboard.press("Meta+KeyA");
+    await page.keyboard.press(SELECT_ALL);
     await page.keyboard.press("Backspace");
-    await page.keyboard.press("Meta+KeyA");
+    await page.keyboard.press(SELECT_ALL);
     await page.keyboard.press("Backspace");
     await page.keyboard.type("foo: bar\n");
     await page.getByRole("button", { name: "Save" }).click();
@@ -64,7 +66,7 @@ test.describe("tariffs", async () => {
 
     // clear and enter valid yaml
     await modal.locator(".monaco-editor .view-line").nth(0).click();
-    await page.keyboard.press("Meta+KeyA");
+    await page.keyboard.press(SELECT_ALL);
     await page.keyboard.press("Backspace");
     await page.keyboard.type("currency: CHF\n");
     await page.keyboard.type("grid:\n");
