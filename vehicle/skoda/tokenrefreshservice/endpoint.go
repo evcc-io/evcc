@@ -24,13 +24,6 @@ type Service struct {
 	data url.Values
 }
 
-func New(log *util.Logger, q url.Values) *Service {
-	return &Service{
-		Helper: request.NewHelper(log),
-		data:   q,
-	}
-}
-
 type skodaTokenResponse struct {
 	AccessToken  string `json:"accessToken"`
 	RefreshToken string `json:"refreshToken"`
@@ -42,6 +35,13 @@ func (s *skodaTokenResponse) toVagToken(v *vag.Token) {
 	v.RefreshToken = s.RefreshToken
 	v.IDToken = s.IdToken
 	v.Expiry = time.Now().Add(time.Minute * 60)
+}
+
+func New(log *util.Logger, q url.Values) *Service {
+	return &Service{
+		Helper: request.NewHelper(log),
+		data:   q,
+	}
 }
 
 func (v *Service) Exchange(q url.Values) (*vag.Token, error) {
