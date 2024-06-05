@@ -64,3 +64,10 @@ type SettingsResponse struct {
 	MaxChargeCurrentAc           string `json:"maxChargeCurrentAc"`
 	TargetStateOfChargeInPercent int    `json:"targetStateOfChargeInPercent"`
 }
+
+// ChargerResponse is the /v2/air-conditioning/<vin> api
+type ClimaterResponse struct {
+	State                  string `json:"state"`
+	ChargerConnectionState string `json:"chargerConnectionState"`
+	ChargerLockState       string `json:"chargerLockState"`
+}

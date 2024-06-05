@@ -48,7 +48,7 @@ func (v *API) Status(vin string) (StatusResponse, error) {
 	return res, err
 }
 
-// Charger implements the /v1/charging/<vin>/status response
+// Charger implements the /v1/charging/<vin> response
 func (v *API) Charger(vin string) (ChargerResponse, error) {
 	var res ChargerResponse
 	uri := fmt.Sprintf("%s/v1/charging/%s", BaseURI, vin)
@@ -59,7 +59,18 @@ func (v *API) Charger(vin string) (ChargerResponse, error) {
 // Settings implements the /v1/charging/<vin>/settings response
 func (v *API) Settings(vin string) (SettingsResponse, error) {
 	var res SettingsResponse
-	uri := fmt.Sprintf("%s/v1/charging/%s/settings", BaseURI, vin)
+
+	chrgRes, err := v.Charger(vin)
+	if err == nil {
+		res = chrgRes.Settings
+	}
+	return res, err
+}
+
+// Climater implements the /v2/air-conditioning/<vin> response
+func (v *API) Climater(vin string) (ClimaterResponse, error) {
+	var res ClimaterResponse
+	uri := fmt.Sprintf("%s/v2/air-conditioning/%s", BaseURI, vin)
 	err := v.GetJSON(uri, &res)
 	return res, err
 }

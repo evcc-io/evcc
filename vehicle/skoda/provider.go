@@ -12,6 +12,7 @@ type Provider struct {
 	statusG   func() (StatusResponse, error)
 	chargerG  func() (ChargerResponse, error)
 	settingsG func() (SettingsResponse, error)
+	climateG  func() (ClimaterResponse, error)
 	action    func(action, value string) error
 }
 
@@ -24,9 +25,9 @@ func NewProvider(api *API, vin string, cache time.Duration) *Provider {
 		chargerG: provider.Cached(func() (ChargerResponse, error) {
 			return api.Charger(vin)
 		}, cache),
-		// climateG: provider.Cached(func() (interface{}, error) {
-		// 	return api.Climater(vin)
-		// }, cache),
+		climateG: provider.Cached(func() (ClimaterResponse, error) {
+			return api.Climater(vin)
+		}, cache),
 		settingsG: provider.Cached(func() (SettingsResponse, error) {
 			return api.Settings(vin)
 		}, cache),
@@ -55,12 +56,16 @@ var _ api.ChargeState = (*Provider)(nil)
 func (v *Provider) Status() (api.ChargeStatus, error) {
 	status := api.StatusA // disconnected
 
-	res, err := v.chargerG()
+	res, err := v.climateG()
 	if err == nil {
-		if res.Status.State == "CONNECT_CABLE" {
+		if res.ChargerConnectionState == "CONNECTED" {
 			status = api.StatusB
 		}
-		if res.Status.State == "CHARGING" {
+	}
+
+	resChrg, err := v.chargerG()
+	if err == nil {
+		if resChrg.Status.State == "CHARGING" {
 			status = api.StatusC
 		}
 	}
