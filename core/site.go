@@ -829,7 +829,7 @@ func (site *Site) update(lp updater) {
 		site.log.ERROR.Println(err)
 	}
 
-	if site.batteryDischargeControl {
+	if site.GetBatteryDischargeControl() {
 		site.updateBatteryMode()
 	}
 

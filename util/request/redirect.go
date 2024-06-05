@@ -24,10 +24,9 @@ func InterceptRedirect(param string, stop bool) (func(req *http.Request, via []*
 			return nil
 		},
 		func() (string, error) {
-			var err error
 			if val == "" {
-				err = fmt.Errorf("%s not found", param)
+				return "", fmt.Errorf("%s not found", param)
 			}
-			return val, err
+			return val, nil
 		}
 }

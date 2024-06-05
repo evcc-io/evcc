@@ -61,7 +61,9 @@ func runToken(cmd *cobra.Command, args []string) {
 		vehicleConf.Other = instance.Other
 	}
 
-	switch typ := strings.ToLower(vehicleConf.Type); typ {
+	typ := strings.ToLower(vehicleConf.Type)
+
+	switch typ {
 	case "mercedes":
 		token, err = mercedesToken()
 	case "ford", "ford-connect":
@@ -82,6 +84,7 @@ func runToken(cmd *cobra.Command, args []string) {
 	fmt.Println()
 	fmt.Println("Add the following tokens to the vehicle config:")
 	fmt.Println()
+	fmt.Println("    type: " + typ)
 	fmt.Println("    tokens:")
 	fmt.Println("      access:", token.AccessToken)
 	fmt.Println("      refresh:", token.RefreshToken)
