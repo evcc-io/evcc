@@ -148,4 +148,7 @@ export default {
 		transform: translateY(6px) rotate(170deg);
 	}
 }
+.btn-close {
+	filter: none;
+}
 </style>
