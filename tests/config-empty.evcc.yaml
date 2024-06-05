@@ -3,8 +3,6 @@ site:
   meters:
     grid: grid
 
-log: trace
-
 meters:
   - name: grid
     type: custom

@@ -155,8 +155,14 @@ export default {
 		},
 		async load() {
 			try {
-				let res = await api.get("/config/site");
-				this.title = res.data.result.title;
+				let res = await api.get("/config/site", {
+					validateStatus: (code) => [200, 404].includes(code),
+				});
+				if (res.status === 200) {
+					this.title = res.data.result.title;
+				} else {
+					console.log("TODO: implement site endpoint in config error mode");
+				}
 			} catch (e) {
 				console.error(e);
 			}

@@ -62,6 +62,24 @@ type Mqtt struct {
 	Topic       string `json:"topic"`
 }
 
+// Redacted implements the redactor interface used by the tee publisher
+func (m Mqtt) Redacted() any {
+	// TODO add masked password
+	return struct {
+		Broker   string `json:"broker"`
+		Topic    string `json:"topic"`
+		User     string `json:"user"`
+		ClientID string `json:"clientID"`
+		Insecure bool   `json:"insecure"`
+	}{
+		Broker:   m.Broker,
+		Topic:    m.Topic,
+		User:     m.User,
+		ClientID: m.ClientID,
+		Insecure: m.Insecure,
+	}
+}
+
 // Influx is the influx db configuration
 type Influx struct {
 	URL      string `json:"url"`
