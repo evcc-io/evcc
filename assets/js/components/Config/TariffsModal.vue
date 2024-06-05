@@ -6,6 +6,7 @@
 		docs="/docs/reference/configuration/tariffs"
 		:defaultYaml="defaultYaml"
 		endpoint="/config/tariffs"
+		data-testid="tariffs-modal"
 		@changed="$emit('changed')"
 	/>
 </template>

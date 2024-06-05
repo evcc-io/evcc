@@ -8,7 +8,6 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   timeout: 15000, // 15s (default 30s)
-  expect: { timeout: 2500 }, // 2.5s (default 5s)
   workers: process.env.CI ? 3 : 8,
   reporter: "html",
   use: {

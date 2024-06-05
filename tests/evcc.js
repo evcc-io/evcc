@@ -78,6 +78,8 @@ async function _stop() {
   console.log(res.status, res.statusText);
   const cookie = res.headers["set-cookie"];
   await axios.post(`${baseUrl()}/api/system/shutdown`, {}, { headers: { cookie } });
+  // wait until network port is closed
+  await waitOn({ resources: [`tcp:localhost:${port()}`], reverse: true });
 }
 
 async function _clean() {

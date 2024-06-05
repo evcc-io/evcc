@@ -5,6 +5,7 @@
 			class="fixed-bottom alert d-flex justify-content-center align-items-center mb-0 rounded-0 p-2"
 			:class="{ visible: visible, 'alert-danger': showError, 'alert-secondary': !showError }"
 			role="alert"
+			data-testid="bottom-banner"
 		>
 			<div v-if="restarting" class="d-flex align-items-center">
 				<button
@@ -122,13 +123,17 @@ export default {
 	transform: scaleX(-1);
 }
 .alert {
+	opacity: 0;
 	transform: translateY(100%);
-	transition: transform var(--evcc-transition-fast) ease-in;
+	transition:
+		transform var(--evcc-transition-fast) ease-in,
+		opacity var(--evcc-transition-fast) ease-in;
 	min-height: 58px;
 	/* above backdrop, below modal https://getbootstrap.com/docs/5.3/layout/z-index/ */
 	z-index: 1054 !important;
 }
 .alert.visible {
+	opacity: 1;
 	transform: translateY(0);
 }
 
