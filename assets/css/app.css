@@ -596,3 +596,7 @@ html.app .modal-dialog {
 .round-box--error .tags * {
 	color: var(--bs-danger-text-emphasis) !important;
 }
+
+.alert-danger code {
+	color: var(--evcc-darkest-green);
+}

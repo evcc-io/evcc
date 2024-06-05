@@ -42,7 +42,7 @@
 						<DeviceCard
 							:name="$t('config.grid.title')"
 							:editable="!!gridMeter?.id"
-							:error="fatalClass === 'meter'"
+							:error="deviceError('meter', gridMeter?.name)"
 							data-testid="grid"
 							@edit="editMeter(gridMeter.id, 'grid')"
 						>
@@ -72,10 +72,10 @@
 					<ul class="p-0 config-list">
 						<DeviceCard
 							v-for="meter in pvMeters"
-							:key="!!meter.name"
+							:key="meter.name"
 							:name="meter.config?.template || 'Solar system'"
 							:editable="!!meter.id"
-							:error="fatalClass === 'meter'"
+							:error="deviceError('meter', meter.name)"
 							data-testid="pv"
 							@edit="editMeter(meter.id, 'pv')"
 						>
@@ -91,7 +91,7 @@
 							:key="meter.name"
 							:name="meter.config?.template || 'Battery storage'"
 							:editable="!!meter.id"
-							:error="fatalClass === 'meter'"
+							:error="deviceError('meter', meter.name)"
 							data-testid="battery"
 							@edit="editMeter(meter.id, 'battery')"
 						>
@@ -111,7 +111,7 @@
 						<DeviceCard
 							name="Fake Carport"
 							editable
-							:error="fatalClass === 'charger'"
+							:error="deviceError('charger', 'fake-charger')"
 							data-testid="chargepoint-1"
 							@edit="todo"
 						>
@@ -134,10 +134,10 @@
 						<ul class="p-0 config-list">
 							<DeviceCard
 								v-for="vehicle in vehicles"
-								:key="vehicle.id"
+								:key="vehicle.name"
 								:name="vehicle.config?.title || vehicle.name"
 								:editable="vehicle.id >= 0"
-								:error="fatalClass === 'vehicle'"
+								:error="deviceError('vehicle', vehicle.name)"
 								data-testid="vehicle"
 								@edit="editVehicle(vehicle.id)"
 							>
@@ -605,6 +605,10 @@ export default {
 		},
 		yamlTags(key) {
 			return { configured: { value: this.yamlConfigState[key] } };
+		},
+		deviceError(type, name) {
+			const fatal = store.state?.fatal || {};
+			return fatal.class === type && fatal.device === name;
 		},
 	},
 };
