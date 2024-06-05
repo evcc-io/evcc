@@ -70,7 +70,6 @@ func (v *Service) Exchange(q url.Values) (*vag.Token, error) {
 }
 
 func (v *Service) Refresh(token *vag.Token) (*vag.Token, error) {
-
 	var skTok skodaTokenResponse
 
 	data := map[string]string{"token": token.RefreshToken}
