@@ -31,10 +31,17 @@ func New(log *util.Logger, q url.Values) *Service {
 	}
 }
 
-type vwExchangeTokenResponse struct {
+type skodaTokenResponse struct {
 	AccessToken  string `json:"accessToken"`
 	RefreshToken string `json:"refreshToken"`
 	IdToken      string `json:"idToken"`
+}
+
+func (s *skodaTokenResponse) toVagToken(v *vag.Token) {
+	v.AccessToken = s.AccessToken
+	v.RefreshToken = s.RefreshToken
+	v.IDToken = s.IdToken
+	v.Expiry = time.Now().Add(time.Minute * 60)
 }
 
 func (v *Service) Exchange(q url.Values) (*vag.Token, error) {
@@ -42,74 +49,40 @@ func (v *Service) Exchange(q url.Values) (*vag.Token, error) {
 		return nil, err
 	}
 
-	type CodeExData struct {
-		Code        string `json:"code,omitempty"`
-		RedirectUri string `json:"redirectUri,omitempty"`
-		Verifier    string `json:"verifier,omitempty"`
+	var skTok skodaTokenResponse
+
+	data := map[string]string{
+		"code":        q.Get("code"),
+		"redirectUri": "myskoda://redirect/login/",
+		"verifier":    q.Get("code_verifier"),
 	}
-
-	data := CodeExData{
-		Code:        q.Get("code"),
-		RedirectUri: "myskoda://redirect/login/",
-		Verifier:    q.Get("code_verifier"),
-	}
-
-	//urlvalues.Merge(data, v.data, q)
-
-	var exchRes vwExchangeTokenResponse
 
 	resp, err := v.Post(CodeExchangeURL, request.JSONContent, request.MarshalJSON(data))
 
 	if err == nil {
 		defer resp.Body.Close()
-		json.NewDecoder(resp.Body).Decode(&exchRes)
+		json.NewDecoder(resp.Body).Decode(&skTok)
 	}
 
-	// req, err := request.New(http.MethodPost, CodeExchangeURL, strings.NewReader(data.Encode()), request.URLEncoding)
-	// if err == nil {
-	// 	err = v.DoJSON(req, &res)
-	// }
-
 	var res vag.Token
-
-	res.AccessToken = exchRes.AccessToken
-	res.RefreshToken = exchRes.RefreshToken
-	res.IDToken = exchRes.IdToken
-
+	skTok.toVagToken(&res)
 	return &res, err
 }
 
 func (v *Service) Refresh(token *vag.Token) (*vag.Token, error) {
 
-	type RefreshData struct {
-		Token string `json:"token"`
-	}
+	var skTok skodaTokenResponse
 
-	data := RefreshData{
-		Token: token.RefreshToken,
-	}
-
-	var refreshResp vwExchangeTokenResponse
-
+	data := map[string]string{"token": token.RefreshToken}
 	resp, err := v.Post(RefreshTokenURL, request.JSONContent, request.MarshalJSON(data))
 
 	if err == nil {
 		defer resp.Body.Close()
-		json.NewDecoder(resp.Body).Decode(&refreshResp)
+		json.NewDecoder(resp.Body).Decode(&skTok)
 	}
 
-	// req, err := request.New(http.MethodPost, CodeExchangeURL, strings.NewReader(data.Encode()), request.URLEncoding)
-	// if err == nil {
-	// 	err = v.DoJSON(req, &res)
-	// }
-
 	var res vag.Token
-
-	res.AccessToken = refreshResp.AccessToken
-	res.RefreshToken = refreshResp.RefreshToken
-	res.IDToken = refreshResp.IdToken
-	res.Expiry = time.Now().Add(time.Minute * 60)
-
+	skTok.toVagToken(&res)
 	return &res, err
 }
 
