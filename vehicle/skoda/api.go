@@ -77,22 +77,19 @@ func (v *API) Climater(vin string) (ClimaterResponse, error) {
 
 const (
 	ActionCharge      = "charging"
-	ActionChargeStart = "Start"
-	ActionChargeStop  = "Stop"
+	ActionChargeStart = "start"
+	ActionChargeStop  = "stop"
 )
 
 // Action executes a vehicle action
 func (v *API) Action(vin, action, value string) error {
 	var res map[string]interface{}
-	uri := fmt.Sprintf("%s/v1/%s/operation-requests?vin=%s", BaseURI, action, vin)
 
-	data := struct {
-		Typ string `json:"type"`
-	}{
-		Typ: value,
-	}
+	// @POST("api/v1/charging/{vin}/start")
+	// @POST("api/v1/charging/{vin}/stop")
+	uri := fmt.Sprintf("%s/v1/%s/%s/%s", BaseURI, action, vin, value)
 
-	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
+	req, err := request.New(http.MethodPost, uri, nil, request.JSONEncoding)
 	if err == nil {
 		// {"id":"61991908906fa40af9a5cba4","status":"InProgress","deeplink":""}
 		err = v.DoJSON(req, &res)
