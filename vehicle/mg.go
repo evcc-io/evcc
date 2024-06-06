@@ -36,7 +36,7 @@ func NewMGFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, api.ErrMissingCredentials
 	}
 
-	log := util.NewLogger("MG").Redact(cc.User, cc.Password, cc.VIN)
+	log := util.NewLogger("mg").Redact(cc.User, cc.Password, cc.VIN)
 	identity := saic.NewIdentity(log, cc.User, cc.Password)
 
 	if err := identity.Login(); err != nil {

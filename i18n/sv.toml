@@ -74,6 +74,16 @@ template = "Tillverkare"
 titleChoice = "Vad vill du lägga till?"
 validateSave = "Validera & spara"
 
+[config.options]
+
+[config.options.endianness]
+big = "big-endian"
+little = "little-endian"
+
+[config.options.schema]
+http = "HTTP (okrypterad)"
+https = "HTTPS (krypterad)"
+
 [config.pv]
 titleAdd = "Lägg till solcellsmätare"
 titleEdit = "Ändra solcellsmätare"
@@ -417,7 +427,6 @@ scale3p = "Ökar till 3-fas-laddning om {remaining}..."
 targetChargeActive = "Laddplan aktiv..."
 targetChargePlanned = "Laddplan startar {time}."
 targetChargeWaitForVehicle = "Laddare beredd. Väntar på fordon..."
-unknown = ""
 vehicleLimitReached = "Fordonsgränsen {soc} nådd."
 waitForVehicle = "Redo. Väntar på fordon..."
 
@@ -478,6 +487,8 @@ vehicle = "Fordon"
 
 [sessions.csv]
 chargedenergy = "Energi (kWh)"
+chargeduration = "Varaktighet"
+co2perkwh = "CO₂/kWh"
 created = "Starttid"
 finished = "Sluttid"
 identifier = "Identifierare"
@@ -485,6 +496,9 @@ loadpoint = "Laddplats"
 meterstart = "Mätare start (kWh)"
 meterstop = "Mätare slut (kWh)"
 odometer = "Mätarställning (km)"
+price = "Pris"
+priceperkwh = "Pris/kWh"
+solarpercentage = "Sol (%)"
 vehicle = "Fordon"
 
 [sessions.filter]

@@ -216,6 +216,7 @@ func (wb *Solax) Voltages() (float64, float64, float64, error) {
 	return wb.getPhaseValues(solaxRegVoltages)
 }
 
+/* https://github.com/evcc-io/evcc/pull/14108
 var _ api.PhaseSwitcher = (*Solax)(nil)
 
 // Phases1p3p implements the api.PhaseSwitcher interface
@@ -230,3 +231,4 @@ func (wb *Solax) Phases1p3p(phases int) error {
 
 	return err
 }
+*/

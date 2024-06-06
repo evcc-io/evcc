@@ -19,6 +19,40 @@ above = "“Quando supera {soc}”"
 full = "“Quando è a {soc}”"
 never = "“Solo con abbastanza surplus”"
 
+[config]
+
+[config.battery]
+
+[config.deviceValue]
+
+[config.form]
+
+[config.general]
+
+[config.grid]
+
+[config.main]
+
+[config.meter]
+
+[config.options]
+
+[config.options.endianness]
+
+[config.options.schema]
+
+[config.pv]
+
+[config.section]
+
+[config.system]
+
+[config.title]
+
+[config.validation]
+
+[config.vehicle]
+
 [footer]
 
 [footer.community]
@@ -48,6 +82,8 @@ savingsTitle = "Risparmio"
 savingsTotalEnergy = "{total} kWh totali caricati"
 since = "da {since}"
 tabTitle = "I miei dati"
+
+[footer.savings.period]
 
 [footer.sponsor]
 becomeSponsor = "Diventa uno sponsor"
@@ -91,8 +127,18 @@ auto = "Design: sistema"
 dark = "Design: scuro"
 light = "Design: luce"
 
+[help]
+
+[help.restart]
+
+[log]
+
+[loginModal]
+
 [main]
 vehicles = "Parcheggio"
+
+[main.chargingPlan]
 
 [main.energyflow]
 battery = "Batteria"
@@ -106,6 +152,8 @@ noEnergy = "Nessun valore"
 pvExport = "Immissione in rete"
 pvProduction = "Produzione"
 selfConsumption = "Autoconsumo"
+
+[main.heatingStatus]
 
 [main.loadpoint]
 charged = "Caricato"
@@ -121,6 +169,8 @@ default = "default"
 disclaimerHint = "Nota:"
 title = "Impostazioni {0}"
 vehicle = "Veicolo"
+
+[main.loadpointSettings.limitSoc]
 
 [main.loadpointSettings.maxCurrent]
 label = "Corrente massima"
@@ -209,7 +259,6 @@ scale3p = "Aumento a potenza trifase in {remaining}…"
 targetChargeActive = "Carica target attiva..."
 targetChargePlanned = "Il target di ricarica inizia alle {time}."
 targetChargeWaitForVehicle = "Carica target pronta. In attesa del veicolo..."
-unknown = ""
 vehicleLimitReached = "Limite del veicolo {soc} raggiunto."
 waitForVehicle = "Pronto. In attesa del veicolo..."
 
@@ -220,6 +269,8 @@ modalTitle = "Notifiche"
 [offline]
 message = "Non connesso a un server."
 reload = "Ricaricare?"
+
+[passwordModal]
 
 [session]
 cancel = "Cancella"
@@ -251,8 +302,12 @@ meterstop = "Ferma contatore (kWh)"
 odometer = "Chilometraggio (km)"
 vehicle = "Veicolo"
 
+[sessions.filter]
+
 [settings]
 title = "Impostazioni"
+
+[settings.fullscreen]
 
 [settings.gridDetails]
 co2 = "CO₂"
@@ -268,6 +323,8 @@ value = "Mostra caratteristiche sperimentali della UI"
 auto = "Automatico"
 label = "Lingua"
 
+[settings.sponsorToken]
+
 [settings.telemetry]
 label = "Telemetria"
 
@@ -281,6 +338,8 @@ light = "chiaro"
 km = "km"
 label = "Unità"
 mi = "miglia"
+
+[smartCost]
 
 [startupError]
 configFile = "File di configurazione utilizzato:"

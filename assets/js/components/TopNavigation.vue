@@ -22,7 +22,7 @@
 			data-testid="topnavigation-dropdown"
 		>
 			<li>
-				<router-link class="dropdown-item" to="/sessions">
+				<router-link class="dropdown-item" to="/sessions" active-class="active">
 					{{ $t("header.sessions") }}
 				</router-link>
 			</li>
@@ -52,17 +52,16 @@
 				</button>
 			</li>
 			<li>
-				<router-link class="dropdown-item" to="/config">
+				<router-link class="dropdown-item" to="/config" active-class="active">
 					{{ $t("config.main.title") }}
 				</router-link>
 			</li>
-			<li><hr class="dropdown-divider" /></li>
-
-			<li v-if="showLogout">
-				<button type="button" class="dropdown-item" @click="logout">
-					{{ $t("header.logout") }}
-				</button>
+			<li>
+				<router-link class="dropdown-item" to="/log" active-class="active">
+					{{ $t("log.title") }}
+				</router-link>
 			</li>
+			<li><hr class="dropdown-divider" /></li>
 			<template v-if="providerLogins.length > 0">
 				<li><hr class="dropdown-divider" /></li>
 				<li>
@@ -100,6 +99,11 @@
 			<li v-if="isApp">
 				<button type="button" class="dropdown-item" @click="openNativeSettings">
 					{{ $t("header.nativeSettings") }}
+				</button>
+			</li>
+			<li v-if="showLogout">
+				<button type="button" class="dropdown-item" @click="logout">
+					{{ $t("header.logout") }}
 				</button>
 			</li>
 		</ul>

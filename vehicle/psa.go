@@ -77,8 +77,8 @@ func newPSA(brand, realm string, other map[string]interface{}) (api.Vehicle, err
 
 	vehicle, err := ensureVehicleEx(
 		cc.VIN, api.Vehicles,
-		func(v psa.Vehicle) string {
-			return v.VIN
+		func(v psa.Vehicle) (string, error) {
+			return v.VIN, nil
 		},
 	)
 	if err != nil {

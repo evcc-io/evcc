@@ -49,6 +49,7 @@
 	--evcc-default-text: var(--bs-gray-dark);
 	--evcc-gray: var(--bs-gray-medium);
 	--evcc-gray-50: #93949e80;
+	--evcc-gray-25: #93949e40;
 
 	--evcc-accent1: var(--evcc-dark-yellow);
 	--evcc-accent2: var(--evcc-darker-green);
@@ -392,9 +393,10 @@ small {
 .dropdown-item {
 	color: var(--evcc-default-text);
 }
-.dropdown-item:active {
-	background-color: var(--bs-primary);
-	color: var(--bs-white);
+.dropdown-item:active,
+.dropdown-item.active {
+	background-color: var(--evcc-gray-25);
+	color: var(--evcc-default-text);
 }
 .form-select {
 	overflow: hidden;

@@ -161,14 +161,19 @@ tabTitle = "My data"
 total = "all time"
 
 [footer.sponsor]
-becomeSponsor = "Become a Sponsor"
+becomeSponsor = "Become a sponsor"
+becomeSponsorExtended = "Support us directly to get stickers."
 confetti = "Ready for confetti?"
 confettiPromise = "You get stickers and digital confetti"
 sticker = "… or evcc stickers?"
-supportUs = "Our mission is to make solar the norm. Help evcc by paying what it is worth to you."
+supportUs = "Our mission is to make solar charging the norm. Help evcc by paying what it is worth to you."
 thanks = "Thank you, {sponsor}! Your contribution helps develop evcc further."
 titleNoSponsor = "Support us"
 titleSponsor = "You are a supporter"
+titleTrial = "Trial mode"
+titleVictron = "Sponsored by Victron Energy"
+trial = "You are in trial mode and can use all features. Please consider supporting the project."
+victron = "You're using evcc on Victron Energy hardware and have access to all features."
 
 [footer.telemetry]
 optIn = "I want to contribute my data."
