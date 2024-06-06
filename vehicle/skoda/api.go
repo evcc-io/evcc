@@ -83,16 +83,43 @@ const (
 
 // Action executes a vehicle action
 func (v *API) Action(vin, action, value string) error {
-	var res map[string]interface{}
-
 	// @POST("api/v1/charging/{vin}/start")
 	// @POST("api/v1/charging/{vin}/stop")
 	uri := fmt.Sprintf("%s/v1/%s/%s/%s", BaseURI, action, vin, value)
 
 	req, err := request.New(http.MethodPost, uri, nil, request.JSONEncoding)
 	if err == nil {
-		// {"id":"61991908906fa40af9a5cba4","status":"InProgress","deeplink":""}
-		err = v.DoJSON(req, &res)
+		var resp *http.Response
+		resp, err = v.Do(req)
+		if err != nil {
+			return err
+		}
+
+		defer resp.Body.Close()
+		if resp.StatusCode != http.StatusAccepted {
+			err = fmt.Errorf("Vehicle Action %s[%s] failed with status code: %d", action, value, resp.StatusCode)
+		}
+	}
+
+	return err
+}
+
+func (v *API) WakeUp(vin string) error {
+	// @POST("api/v1/vehicle-wakeup/{vin}")
+	uri := fmt.Sprintf("%s/v1/vehicle-wakeup/%s", BaseURI, vin)
+
+	req, err := request.New(http.MethodPost, uri, nil, request.JSONEncoding)
+	if err == nil {
+		var resp *http.Response
+		resp, err = v.Do(req)
+		if err != nil {
+			return err
+		}
+
+		defer resp.Body.Close()
+		if resp.StatusCode != http.StatusAccepted {
+			err = fmt.Errorf("Vehicle wake up failed with status code: %d", resp.StatusCode)
+		}
 	}
 
 	return err

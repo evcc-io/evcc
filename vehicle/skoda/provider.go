@@ -14,6 +14,7 @@ type Provider struct {
 	settingsG func() (SettingsResponse, error)
 	climateG  func() (ClimaterResponse, error)
 	action    func(action, value string) error
+	wakeup    func() error
 }
 
 // NewProvider creates a vehicle api provider
@@ -33,6 +34,9 @@ func NewProvider(api *API, vin string, cache time.Duration) *Provider {
 		}, cache),
 		action: func(action, value string) error {
 			return api.Action(vin, action, value)
+		},
+		wakeup: func() error {
+			return api.WakeUp(vin)
 		},
 	}
 	return impl
@@ -148,4 +152,11 @@ var _ api.ChargeController = (*Provider)(nil)
 func (v *Provider) ChargeEnable(enable bool) error {
 	action := map[bool]string{true: ActionChargeStart, false: ActionChargeStop}
 	return v.action(ActionCharge, action[enable])
+}
+
+var _ api.Resurrector = (*Provider)(nil)
+
+// WakeUp implements the api.Resurrector interface
+func (v *Provider) WakeUp() error {
+	return v.wakeup()
 }
