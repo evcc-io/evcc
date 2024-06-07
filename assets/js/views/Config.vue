@@ -81,7 +81,7 @@
 					/>
 				</ul>
 
-        <div v-if="$hiddenFeatures()">
+				<div v-if="$hiddenFeatures()">
 					<hr class="my-5" />
 
 					<div class="alert alert-danger my-4" role="alert">
@@ -533,7 +533,9 @@ export default {
 					...this.vehicles.map((vehicle) =>
 						this.updateDeviceValue("vehicle", vehicle.name)
 					),
-          ...this.chargers.map((charger) => this.updateDeviceValue("charger", charger.name)),
+					...this.chargers.map((charger) =>
+						this.updateDeviceValue("charger", charger.name)
+					),
 				];
 
 				await Promise.all(promises);

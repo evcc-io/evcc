@@ -52,8 +52,6 @@ export default {
 					return value.map((v) => this.fmtNumber(v, 0)).join(" ") + " V";
 				case "phasePowers":
 					return value.map((v) => this.fmtKw(v)).join(", ");
-				case "socLimit":
-					return `${this.fmtNumber(value)}%`;
 			}
 			return value;
 		},
