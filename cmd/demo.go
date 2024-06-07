@@ -4,8 +4,6 @@ import (
 	_ "embed" // for yaml
 	"fmt"
 	"strings"
-
-	"github.com/spf13/viper"
 )
 
 //go:embed demo.yaml

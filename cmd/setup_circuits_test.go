@@ -10,7 +10,6 @@ import (
 	"github.com/evcc-io/evcc/server/db"
 	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util/config"
-	"github.com/spf13/viper"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 )

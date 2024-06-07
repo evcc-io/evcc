@@ -26,7 +26,7 @@ import (
 	_ "github.com/joho/godotenv/autoload"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
+	vpr "github.com/spf13/viper"
 )
 
 const (
@@ -41,6 +41,8 @@ var (
 	ignoreEmpty = ""                                      // ignore empty keys
 	ignoreLogs  = []string{"log"}                         // ignore log messages, including warn/error
 	ignoreMqtt  = []string{"log", "auth", "releaseNotes"} // excessive size may crash certain brokers
+
+	viper *vpr.Viper
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -52,6 +54,8 @@ var rootCmd = &cobra.Command{
 }
 
 func init() {
+	viper = vpr.NewWithOptions(vpr.ExperimentalBindStruct())
+
 	cobra.OnInitialize(initConfig)
 
 	// global options
@@ -109,7 +113,7 @@ func Execute() {
 func runRoot(cmd *cobra.Command, args []string) {
 	// load config and re-configure logging after reading config file
 	var err error
-	if cfgErr := loadConfigFile(&conf, !cmd.Flag(flagIgnoreDatabase).Changed); errors.As(cfgErr, &viper.ConfigFileNotFoundError{}) {
+	if cfgErr := loadConfigFile(&conf, !cmd.Flag(flagIgnoreDatabase).Changed); errors.As(cfgErr, &vpr.ConfigFileNotFoundError{}) {
 		log.INFO.Println("missing config file - switching into demo mode")
 		if err := demoConfig(&conf); err != nil {
 			log.FATAL.Fatal(err)

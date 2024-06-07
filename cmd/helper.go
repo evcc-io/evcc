@@ -12,7 +12,6 @@ import (
 
 	"github.com/evcc-io/evcc/cmd/shutdown"
 	"github.com/evcc-io/evcc/util"
-	"github.com/spf13/viper"
 )
 
 // parseLogLevels parses --log area:level[,...] switch into levels per log area

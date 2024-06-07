@@ -48,7 +48,6 @@ import (
 	"github.com/libp2p/zeroconf/v2"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"golang.org/x/sync/errgroup"
 	"golang.org/x/text/currency"
 )
