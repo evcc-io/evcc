@@ -48,7 +48,7 @@
     "smoothscroll-polyfill": "^0.4.4",
     "typescript": "^5.2.2",
     "vite": "^5.1.1",
-    "vite-plugin-toml": "^0.6.0",
+    "vite-plugin-toml": "^0.7.0",
     "vitest": "^1.1.0",
     "vue": "^3.2.29",
     "vue-eslint-parser": "^9.1.0",
