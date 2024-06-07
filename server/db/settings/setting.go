@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"reflect"
 	"slices"
 	"strconv"
 	"strings"
@@ -194,7 +195,22 @@ func Json(key string, res any) error {
 	return json.Unmarshal([]byte(s), &res)
 }
 
-func Yaml(key string, res any) error {
+func DecodeOtherSliceOrMap(other, res any) error {
+	var len int
+	if typ := reflect.TypeOf(other); typ.Kind() == reflect.Slice || typ.Kind() == reflect.Map {
+		len = reflect.ValueOf(other).Len()
+	} else {
+		panic("invalid kind: " + typ.Kind().String())
+	}
+
+	if len == 0 {
+		return nil
+	}
+
+	return util.DecodeOther(other, &res)
+}
+
+func Yaml(key string, other, res any) error {
 	s, err := String(key)
 	if err != nil {
 		return err
@@ -203,16 +219,11 @@ func Yaml(key string, res any) error {
 		return ErrNotFound
 	}
 
-	other := make(map[string]any)
 	if err := yaml.NewDecoder(bytes.NewBuffer([]byte(s))).Decode(&other); err != nil && err != io.EOF {
 		return err
 	}
 
-	if len(other) == 0 {
-		return nil
-	}
-
-	return util.DecodeOther(other, &res)
+	return DecodeOtherSliceOrMap(res, other)
 }
 
 // wrapping Settings into a struct for better decoupling

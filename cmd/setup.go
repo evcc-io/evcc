@@ -662,7 +662,7 @@ func configureGo(conf []globalconfig.Go) error {
 func configureHEMS(conf config.Typed, site *core.Site, httpd *server.HTTPd) error {
 	// migrate settings
 	if settings.Exists(keys.Hems) {
-		if err := settings.Yaml(keys.Hems, &conf); err != nil {
+		if err := settings.Yaml(keys.Hems, new(map[string]any), &conf); err != nil {
 			return err
 		}
 	}
@@ -720,7 +720,7 @@ func configureMDNS(conf globalconfig.Network) error {
 func configureEEBus(conf eebus.Config) error {
 	// migrate settings
 	if settings.Exists(keys.EEBus) {
-		if err := settings.Yaml(keys.EEBus, &conf); err != nil {
+		if err := settings.Yaml(keys.EEBus, new(map[string]any), &conf); err != nil {
 			return err
 		}
 	}
@@ -752,7 +752,7 @@ func configureEEBus(conf eebus.Config) error {
 func configureMessengers(conf globalconfig.Messaging, vehicles push.Vehicles, valueChan chan<- util.Param, cache *util.Cache) (chan push.Event, error) {
 	// migrate settings
 	if settings.Exists(keys.Messaging) {
-		if err := settings.Yaml(keys.Messaging, &conf); err != nil {
+		if err := settings.Yaml(keys.Messaging, new(map[string]any), &conf); err != nil {
 			return nil, err
 		}
 
@@ -800,7 +800,7 @@ func configureTariff(name string, conf config.Typed, t *api.Tariff) error {
 func configureTariffs(conf globalconfig.Tariffs) (*tariff.Tariffs, error) {
 	// migrate settings
 	if settings.Exists(keys.Tariffs) {
-		if err := settings.Yaml(keys.Tariffs, &conf); err != nil {
+		if err := settings.Yaml(keys.Tariffs, new(map[string]any), &conf); err != nil {
 			return nil, err
 		}
 
@@ -852,7 +852,7 @@ func configureDevices(conf globalconfig.All) error {
 func configureModbusProxy(conf []globalconfig.ModbusProxy) error {
 	// migrate settings
 	if settings.Exists(keys.ModbusProxy) {
-		if err := settings.Yaml(keys.ModbusProxy, &conf); err != nil {
+		if err := settings.Yaml(keys.ModbusProxy, new([]map[string]any), &conf); err != nil {
 			return err
 		}
 

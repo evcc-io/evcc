@@ -46,7 +46,7 @@ func settingsSetDurationHandler(key string) http.HandlerFunc {
 	}
 }
 
-func settingsSetYamlHandler(key string, struc any) http.HandlerFunc {
+func settingsSetYamlHandler(key string, other, struc any) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		b, err := io.ReadAll(r.Body)
 		if err != nil {
@@ -54,17 +54,14 @@ func settingsSetYamlHandler(key string, struc any) http.HandlerFunc {
 			return
 		}
 
-		other := make(map[string]any)
 		if err := yaml.NewDecoder(bytes.NewBuffer(b)).Decode(&other); err != nil && err != io.EOF {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
 
-		if len(other) > 0 {
-			if err := util.DecodeOther(other, &struc); err != nil {
-				jsonError(w, http.StatusBadRequest, err)
-				return
-			}
+		if err := settings.DecodeOtherSliceOrMap(other, &struc); err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
 		}
 
 		val := strings.TrimSpace(string(b))
