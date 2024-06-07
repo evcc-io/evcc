@@ -8,7 +8,6 @@ import (
 	"github.com/evcc-io/evcc/cmd/configure"
 	"github.com/evcc-io/evcc/util"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 // configureCmd represents the configure command
@@ -49,7 +48,7 @@ func runConfigure(cmd *cobra.Command, args []string) {
 		panic(err)
 	}
 
-	util.LogLevel(viper.GetString("log"), nil)
+	util.LogLevel(vpr.GetString("log"), nil)
 
 	// catch signals
 	go func() {

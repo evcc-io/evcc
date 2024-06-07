@@ -12,15 +12,14 @@ import (
 
 	"github.com/evcc-io/evcc/cmd/shutdown"
 	"github.com/evcc-io/evcc/util"
-	"github.com/spf13/viper"
 )
 
 // parseLogLevels parses --log area:level[,...] switch into levels per log area
 func parseLogLevels() {
-	levels := viper.GetStringMapString("levels")
+	levels := vpr.GetStringMapString("levels")
 
 	var level string
-	for _, kv := range strings.Split(viper.GetString("log"), ",") {
+	for _, kv := range strings.Split(vpr.GetString("log"), ",") {
 		areaLevel := strings.SplitN(kv, ":", 2)
 		if len(areaLevel) == 1 {
 			level = areaLevel[0]

@@ -41,6 +41,8 @@ var (
 	ignoreEmpty = ""                                      // ignore empty keys
 	ignoreLogs  = []string{"log"}                         // ignore log messages, including warn/error
 	ignoreMqtt  = []string{"log", "auth", "releaseNotes"} // excessive size may crash certain brokers
+
+	vpr *viper.Viper
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -52,6 +54,7 @@ var rootCmd = &cobra.Command{
 }
 
 func init() {
+	vpr = viper.NewWithOptions(viper.ExperimentalBindStruct())
 	cobra.OnInitialize(initConfig)
 
 	// global options
@@ -75,23 +78,23 @@ func init() {
 func initConfig() {
 	if cfgFile != "" {
 		// Use config file from the flag
-		viper.SetConfigFile(cfgFile)
+		vpr.SetConfigFile(cfgFile)
 	} else {
 		// Search for config in home directory if available
 		if home, err := os.UserHomeDir(); err == nil {
-			viper.AddConfigPath(home)
+			vpr.AddConfigPath(home)
 		}
 
 		// Search config in home directory with name "mbmd" (without extension).
-		viper.AddConfigPath(".")    // optionally look for config in the working directory
-		viper.AddConfigPath("/etc") // path to look for the config file in
+		vpr.AddConfigPath(".")    // optionally look for config in the working directory
+		vpr.AddConfigPath("/etc") // path to look for the config file in
 
-		viper.SetConfigName("evcc")
+		vpr.SetConfigName("evcc")
 	}
 
-	viper.SetEnvPrefix("evcc")
-	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
-	viper.AutomaticEnv() // read in environment variables that match
+	vpr.SetEnvPrefix("evcc")
+	vpr.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+	vpr.AutomaticEnv() // read in environment variables that match
 
 	// print version
 	util.LogLevel("info", nil)
@@ -109,7 +112,7 @@ func Execute() {
 func runRoot(cmd *cobra.Command, args []string) {
 	// load config and re-configure logging after reading config file
 	var err error
-	if cfgErr := loadConfigFile(&conf, !cmd.Flag(flagIgnoreDatabase).Changed); errors.As(cfgErr, &viper.ConfigFileNotFoundError{}) {
+	if cfgErr := loadConfigFile(&conf, !cmd.Flag(flagIgnoreDatabase).Changed); errors.As(cfgErr, &vpr.ConfigFileNotFoundError{}) {
 		log.INFO.Println("missing config file - switching into demo mode")
 		if err := demoConfig(&conf); err != nil {
 			log.FATAL.Fatal(err)
@@ -119,7 +122,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	}
 
 	// network config
-	if viper.GetString("uri") != "" {
+	if vpr.GetString("uri") != "" {
 		log.WARN.Println("`uri` is deprecated and will be ignored. Use `network` instead.")
 	}
 
@@ -137,12 +140,12 @@ func runRoot(cmd *cobra.Command, args []string) {
 	httpd := server.NewHTTPd(fmt.Sprintf(":%d", conf.Network.Port), socketHub)
 
 	// metrics
-	if viper.GetBool("metrics") {
+	if vpr.GetBool("metrics") {
 		httpd.Router().Handle("/metrics", promhttp.Handler())
 	}
 
 	// pprof
-	if viper.GetBool("profile") {
+	if vpr.GetBool("profile") {
 		httpd.Router().PathPrefix("/debug/").Handler(http.DefaultServeMux)
 	}
 

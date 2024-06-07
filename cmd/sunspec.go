@@ -11,7 +11,6 @@ import (
 	"github.com/andig/gosunspec/smdx"
 	"github.com/evcc-io/evcc/util"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"github.com/volkszaehler/mbmd/meters"
 	quirks "github.com/volkszaehler/mbmd/meters/sunspec"
 )
@@ -46,7 +45,7 @@ func modelName(m sunspec.Model) string {
 }
 
 func runSunspec(cmd *cobra.Command, args []string) {
-	util.LogLevel(viper.GetString("log"), nil)
+	util.LogLevel(vpr.GetString("log"), nil)
 
 	conn := meters.NewTCP(args[0])
 	conn.Slave(uint8(*slaveID))

@@ -48,7 +48,6 @@ import (
 	"github.com/libp2p/zeroconf/v2"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"golang.org/x/sync/errgroup"
 	"golang.org/x/text/currency"
 )
@@ -180,16 +179,16 @@ func tokenDanger(conf []config.Named) bool {
 }
 
 func loadConfigFile(conf *globalConfig, checkDB bool) error {
-	err := viper.ReadInConfig()
+	err := vpr.ReadInConfig()
 
-	if cfgFile = viper.ConfigFileUsed(); cfgFile == "" {
+	if cfgFile = vpr.ConfigFileUsed(); cfgFile == "" {
 		return err
 	}
 
 	log.INFO.Println("using config file:", cfgFile)
 
 	if err == nil {
-		if err = viper.UnmarshalExact(conf); err != nil {
+		if err = vpr.UnmarshalExact(conf); err != nil {
 			err = fmt.Errorf("failed parsing config file: %w", err)
 		}
 	}
