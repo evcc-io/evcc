@@ -28,7 +28,7 @@ describe("basics", () => {
 
 describe("min charge", () => {
   test("active when vehicle soc is below", () => {
-    expectStatus({ connected: true, minSoc: 20, vehicleSoc: 10 }, "minCharge", { soc: 20 });
+    expectStatus({ connected: true, minSoc: 20, vehicleSoc: 10 }, "minCharge", { soc: "20 %" });
   });
   test("not active when vehicle soc is above", () => {
     expectStatus({ connected: true, minSoc: 20, vehicleSoc: 21 }, "connected");
@@ -66,6 +66,32 @@ describe("plan", () => {
       {
         time: "Mo 03:00",
       }
+    );
+  });
+  test("dont show plan status if plan is disabled (e.g. off, fast mode)", () => {
+    expectStatus(
+      {
+        effectivePlanTime,
+        planActive: true,
+        charging: true,
+        connected: true,
+        chargingPlanDisabled: true,
+      },
+      "charging"
+    );
+    expectStatus(
+      {
+        effectivePlanTime,
+        planActive: true,
+        enabled: true,
+        connected: true,
+        chargingPlanDisabled: true,
+      },
+      "waitForVehicle"
+    );
+    expectStatus(
+      { effectivePlanTime, planProjectedStart, connected: true, chargingPlanDisabled: true },
+      "connected"
     );
   });
 });
@@ -156,7 +182,7 @@ describe("vehicle target soc", () => {
         vehicleSoc: 70,
       },
       "vehicleLimitReached",
-      { soc: 70 }
+      { soc: "70 %" }
     );
   });
   test("show reached message even if vehicle is slightly below its limit", () => {
@@ -168,7 +194,7 @@ describe("vehicle target soc", () => {
         vehicleSoc: 69,
       },
       "vehicleLimitReached",
-      { soc: 70 }
+      { soc: "70 %" }
     );
   });
 });

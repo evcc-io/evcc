@@ -1,0 +1,27 @@
+template: electricitymaps
+products:
+  - brand: Electricity Maps
+    description:
+      generic: Commercial API
+requirements:
+  description:
+    de: "CO₂-Daten für viele Länder von https://electricitymaps.com/. Der 'Free Personal Tier' beinhaltet leider keine Prognosedaten. Dafür benötigst du einen kommerziellen Account von https://api-portal.electricitymaps.com/. Kostenloser Testmonat verfügbar."
+    en: "CO₂ data for many countries from https://electricitymaps.com/. The 'Free Personal Tier' unfortunately does not include forecast data. You'll need a commercial account from https://api-portal.electricitymaps.com/. Free trial available."
+group: co2
+params:
+  - name: uri
+    required: true
+    example: "https://api-access.electricitymaps.com/2w...1g/"
+  - name: token
+    required: true
+  - name: zone
+    required: true
+    example: "DE"
+    help:
+      de: "siehe https://api.electricitymap.org/v3/zones"
+      en: "see https://api.electricitymap.org/v3/zones"
+render: |
+  type: electricitymaps
+  uri: {{ .uri }}
+  token: {{ .token }}
+  zone: {{ .zone }}

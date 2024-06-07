@@ -65,13 +65,16 @@ type Site struct {
 	log *util.Logger
 
 	// configuration
-	Title                             string       `mapstructure:"title"`         // UI title
-	Voltage                           float64      `mapstructure:"voltage"`       // Operating voltage. 230V for Germany.
-	ResidualPower                     float64      `mapstructure:"residualPower"` // PV meter only: household usage. Grid meter: household safety margin
-	Meters                            MetersConfig // Meter references
-	MaxGridSupplyWhileBatteryCharging float64      `mapstructure:"maxGridSupplyWhileBatteryCharging"` // ignore battery charging if AC consumption is above this value
+	Title         string       `mapstructure:"title"`         // UI title
+	Voltage       float64      `mapstructure:"voltage"`       // Operating voltage. 230V for Germany.
+	ResidualPower float64      `mapstructure:"residualPower"` // PV meter only: household usage. Grid meter: household safety margin
+	Meters        MetersConfig `mapstructure:"meters"`        // Meter references
+	CircuitRef    string       `mapstructure:"circuit"`       // Circuit reference
+
+	MaxGridSupplyWhileBatteryCharging float64 `mapstructure:"maxGridSupplyWhileBatteryCharging"` // ignore battery charging if AC consumption is above this value
 
 	// meters
+	circuit       api.Circuit // Circuit
 	gridMeter     api.Meter   // Grid usage meter
 	pvMeters      []api.Meter // PV generation meters
 	batteryMeters []api.Meter // Battery charging meters
@@ -161,6 +164,15 @@ func NewSiteFromConfig(
 
 	// add meters from config
 	site.restoreMeters()
+
+	// circuit
+	if site.CircuitRef != "" {
+		dev, err := config.Circuits().ByName(site.CircuitRef)
+		if err != nil {
+			return nil, err
+		}
+		site.circuit = dev.Instance()
+	}
 
 	// grid meter
 	if site.Meters.GridMeterRef != "" {
@@ -542,8 +554,7 @@ func (site *Site) updateGridMeter() error {
 		return nil
 	}
 
-	res, err := backoff.RetryWithData(site.gridMeter.CurrentPower, bo())
-	if err == nil {
+	if res, err := backoff.RetryWithData(site.gridMeter.CurrentPower, bo()); err == nil {
 		site.gridPower = res
 		site.log.DEBUG.Printf("grid meter: %.0fW", res)
 		site.publish(keys.GridPower, res)
@@ -554,8 +565,8 @@ func (site *Site) updateGridMeter() error {
 	// grid phase powers
 	var p1, p2, p3 float64
 	if phaseMeter, ok := site.gridMeter.(api.PhasePowers); ok {
-		p1, p2, p3, err = phaseMeter.Powers()
-		if err == nil {
+		var err error // phases needed for signed currents
+		if p1, p2, p3, err = phaseMeter.Powers(); err == nil {
 			phases := []float64{p1, p2, p3}
 			site.log.DEBUG.Printf("grid powers: %.0fW", phases)
 			site.publish(keys.GridPowers, phases)
@@ -566,8 +577,7 @@ func (site *Site) updateGridMeter() error {
 
 	// grid phase currents (signed)
 	if phaseMeter, ok := site.gridMeter.(api.PhaseCurrents); ok {
-		i1, i2, i3, err := phaseMeter.Currents()
-		if err == nil {
+		if i1, i2, i3, err := phaseMeter.Currents(); err == nil {
 			phases := []float64{util.SignFromPower(i1, p1), util.SignFromPower(i2, p2), util.SignFromPower(i3, p3)}
 			site.log.DEBUG.Printf("grid currents: %.3gA", phases)
 			site.publish(keys.GridCurrents, phases)
@@ -578,8 +588,7 @@ func (site *Site) updateGridMeter() error {
 
 	// grid energy (import)
 	if energyMeter, ok := site.gridMeter.(api.MeterEnergy); ok {
-		f, err := energyMeter.TotalEnergy()
-		if err == nil {
+		if f, err := energyMeter.TotalEnergy(); err == nil {
 			site.publish(keys.GridEnergy, f)
 		} else {
 			site.log.ERROR.Printf("grid energy: %v", err)
@@ -756,10 +765,19 @@ func (site *Site) update(lp updater) {
 	// update all loadpoints charge power
 	var totalChargePower float64
 	for _, lp := range site.loadpoints {
-		lp.UpdateChargePower()
+		lp.UpdateChargePowerAndCurrents()
 		totalChargePower += lp.GetChargePower()
 
 		site.prioritizer.UpdateChargePowerFlexibility(lp)
+	}
+
+	// update all circuits' power and currents
+	if site.circuit != nil {
+		if err := site.circuit.Update(site.loadpointsAsCircuitDevices()); err != nil {
+			site.log.ERROR.Println(err)
+		}
+
+		site.publishCircuits()
 	}
 
 	// prioritize if possible
@@ -800,7 +818,7 @@ func (site *Site) update(lp updater) {
 		site.log.ERROR.Println(err)
 	}
 
-	if site.batteryDischargeControl {
+	if site.GetBatteryDischargeControl() {
 		site.updateBatteryMode()
 	}
 
@@ -902,6 +920,7 @@ func (site *Site) Run(stopC chan struct{}, interval time.Duration) {
 	go site.loopLoadpoints(loadpointChan)
 
 	ticker := time.NewTicker(interval)
+	site.publish(keys.Interval, interval.Seconds())
 	site.update(<-loadpointChan) // start immediately
 
 	for {

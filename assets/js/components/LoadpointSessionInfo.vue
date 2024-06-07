@@ -117,7 +117,7 @@ export default {
 			return this.valueSm !== undefined;
 		},
 		solarFormatted() {
-			return `${this.fmtNumber(this.sessionSolarPercentage, 1)}%`;
+			return this.fmtPercentage(this.sessionSolarPercentage, 1);
 		},
 		priceFormatted() {
 			return `${this.fmtMoney(this.sessionPrice, this.currency)} ${this.fmtCurrencySymbol(

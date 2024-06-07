@@ -1,6 +1,6 @@
 <template>
-	<div class="container px-4">
-		<div class="d-flex justify-content-between align-items-center my-3">
+	<div class="container px-4 safe-area-inset">
+		<div class="d-flex justify-content-between align-items-center my-3 my-md-4">
 			<h1 class="d-block mt-0 d-flex">
 				{{ $t("startupError.title") }}
 				<shopicon-regular-car1 size="m" class="ms-2 icon"></shopicon-regular-car1>
@@ -41,6 +41,13 @@
 						:disabled="offline"
 						@click="shutdown"
 					>
+						<span
+							v-if="offline"
+							class="spinner-border spinner-border-sm"
+							role="status"
+							aria-hidden="true"
+						></span>
+
 						{{ $t("startupError.restartButton") }}
 					</button>
 				</p>
@@ -70,25 +77,31 @@
 import "@h2d2/shopicons/es/regular/car1";
 import api from "../api";
 import collector from "../mixins/collector";
+import store from "../store";
 
 export default {
 	name: "StartupError",
 	mixins: [collector],
 	props: {
-		fatal: Array,
-		config: String,
-		file: String,
-		line: Number,
 		offline: Boolean,
 	},
 	computed: {
 		errors() {
-			return this.fatal || [];
+			return store.state.fatal || [];
+		},
+		config() {
+			return store.state.config;
+		},
+		file() {
+			return store.state.file;
+		},
+		line() {
+			return store.state.line;
 		},
 	},
 	methods: {
 		shutdown() {
-			api.post("shutdown");
+			api.post("/system/shutdown");
 		},
 		scrollTo(e) {
 			const id = e.currentTarget.getAttribute("href").substring(1);

@@ -21,15 +21,39 @@ never = "само при наличие на излишък"
 
 [config]
 
+[config.battery]
+
+[config.deviceValue]
+
 [config.form]
 example = "Пример"
 optional = "незадължителен"
+
+[config.general]
+
+[config.grid]
 
 [config.main]
 addVehicle = "Добави автомобил"
 edit = "редактирай"
 title = "Конфигурация"
 vehicles = "Моите Автомобили"
+
+[config.meter]
+
+[config.options]
+
+[config.options.endianness]
+
+[config.options.schema]
+
+[config.pv]
+
+[config.section]
+
+[config.system]
+
+[config.title]
 
 [config.validation]
 failed = "неуспешен"
@@ -67,8 +91,8 @@ powerSub2 = "зарежда..."
 tabTitle = "Общност"
 
 [footer.savings]
-footerLong = "{percent}% енергия от слънцето"
-footerShort = "{percent}% слънчева енергия"
+footerLong = "{percent} енергия от слънцето"
+footerShort = "{percent} слънчева енергия"
 modalTitle = "Информация за зареждането"
 percentGrid = "{grid} кВч от мрежата"
 percentSelf = "{self} кВч от фотоволтаици"
@@ -81,6 +105,8 @@ savingsTitle = "Спестявате"
 savingsTotalEnergy = "{total} kWh заредени"
 since = "от {since}"
 tabTitle = "Моите данни"
+
+[footer.savings.period]
 
 [footer.sponsor]
 becomeSponsor = "Станете Спонсор"
@@ -110,5 +136,85 @@ modalUpdateNow = "Инсталирай сега"
 modalUpdateStarted = "Стартирай новата версия на evcc..."
 modalUpdateStatusStart = "Инсталацията започна:"
 
+[header]
+
+[help]
+
+[help.restart]
+
+[log]
+
+[loginModal]
+
+[main]
+
+[main.chargingPlan]
+
+[main.energyflow]
+
+[main.heatingStatus]
+
+[main.loadpoint]
+
+[main.loadpointSettings]
+
+[main.loadpointSettings.limitSoc]
+
+[main.loadpointSettings.maxCurrent]
+
+[main.loadpointSettings.minCurrent]
+
+[main.loadpointSettings.minSoc]
+
+[main.loadpointSettings.phasesConfigured]
+
+[main.mode]
+
+[main.provider]
+
+[main.targetCharge]
+
+[main.targetChargePlan]
+
+[main.targetEnergy]
+
+[main.vehicle]
+
+[main.vehicleSoc]
+
+[main.vehicleStatus]
+
+[notifications]
+
+[offline]
+
+[passwordModal]
+
+[session]
+
+[sessions]
+
+[sessions.csv]
+
+[sessions.filter]
+
+[settings]
+
+[settings.fullscreen]
+
+[settings.hiddenFeatures]
+
+[settings.language]
+
+[settings.sponsorToken]
+
+[settings.telemetry]
+
+[settings.theme]
+
+[settings.unit]
+
 [smartCost]
 activeHours = "{charging} от {total}"
+
+[startupError]

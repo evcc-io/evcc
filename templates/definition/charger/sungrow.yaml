@@ -1,0 +1,15 @@
+template: sungrow
+products:
+  - brand: Sungrow
+    description:
+      generic: AC011E-01
+capabilities: ["mA", "1p3p"]
+requirements:
+  evcc: ["sponsorship"]
+params:
+  - name: modbus
+    choice: ["rs485", "tcpip"]
+    id: 248
+render: |
+  type: sungrow
+  {{- include "modbus" . }}

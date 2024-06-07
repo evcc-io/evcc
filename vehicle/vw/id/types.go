@@ -310,7 +310,7 @@ func (f *FuelStatus) EngineRangeStatus(typ string) (EngineRangeStatus, error) {
 		return f.RangeStatus.Value.SecondaryEngine, nil
 	}
 
-	return EngineRangeStatus{}, fmt.Errorf("unknown engine type: %s", typ)
+	return EngineRangeStatus{}, fmt.Errorf("unknown engine type: %s, got [%s, %s]", typ, f.RangeStatus.Value.PrimaryEngine.Type, f.RangeStatus.Value.SecondaryEngine.Type)
 }
 
 // EngineRangeStatus is the engine range status

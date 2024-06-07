@@ -20,6 +20,7 @@ export default {
 		heating: Boolean,
 		effectivePlanTime: String,
 		planProjectedStart: String,
+		chargingPlanDisabled: Boolean,
 		planActive: Boolean,
 		phaseAction: String,
 		phaseRemainingInterpolated: Number,
@@ -63,11 +64,15 @@ export default {
 			}
 			// min charge active
 			if (this.minSoc > 0 && this.vehicleSoc < this.minSoc) {
-				return t("minCharge", { soc: this.minSoc });
+				return t("minCharge", { soc: this.fmtPercentage(this.minSoc) });
 			}
 
 			// plan
-			if (this.effectivePlanTime && !this.targetChargeDisabled) {
+			if (
+				!this.chargingPlanDisabled &&
+				this.effectivePlanTime &&
+				!this.targetChargeDisabled
+			) {
 				if (this.planActive && this.charging) {
 					return t("targetChargeActive");
 				}
@@ -106,7 +111,9 @@ export default {
 
 			if (this.enabled && !this.charging) {
 				if (this.vehicleLimitSoc > 0 && this.vehicleSoc >= this.vehicleLimitSoc - 1) {
-					return t("vehicleLimitReached", { soc: this.vehicleLimitSoc });
+					return t("vehicleLimitReached", {
+						soc: this.fmtPercentage(this.vehicleLimitSoc),
+					});
 				}
 				return t("waitForVehicle");
 			}

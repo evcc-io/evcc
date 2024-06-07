@@ -66,16 +66,13 @@ func NewIDFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 	vehicle, err := ensureVehicleEx(
 		cc.VIN, api.Vehicles,
-		func(v id.Vehicle) string {
-			return v.VIN
+		func(v id.Vehicle) (string, error) {
+			return v.VIN, nil
 		},
 	)
 
-	if v.Title_ == "" {
-		v.Title_ = vehicle.Nickname
-	}
-
 	if err == nil {
+		v.fromVehicle(vehicle.Nickname, 0)
 		v.Provider = id.NewProvider(api, vehicle.VIN, cc.Cache)
 	}
 

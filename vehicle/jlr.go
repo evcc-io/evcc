@@ -100,15 +100,12 @@ func (v *JLR) RegisterDevice(log *util.Logger, user, device string, t jlr.Token)
 
 	uri := fmt.Sprintf("%s/users/%s/clients", jlr.IFOP_BASE_URL, url.PathEscape(user))
 
-	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data), map[string]string{
+	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data), jlr.Headers(device, map[string]string{
 		"Authorization":           "Bearer " + t.AccessToken,
 		"Content-type":            "application/json",
 		"Accept":                  "application/json",
-		"X-Device-Id":             device,
 		"x-telematicsprogramtype": "jlrpy",
-		"x-App-Id":                "ICR_JAGUAR_ANDROID",
-		"x-App-Secret":            "7bf6f544-1926-4714-8066-ceceb40d538d",
-	})
+	}))
 	if err == nil {
 		_, err = c.DoBody(req)
 	}

@@ -42,11 +42,7 @@ render: |
   credentials:
     id: {{ .clientid }}
     secret: {{ .clientsecret }}
-  capacity: {{ .capacity }}
-  {{- if .phases }}
-  phases: {{ .phases }}
-  {{- end }}
-  {{- if .vin }}
   vin: {{ .vin }}
-  {{- end }}
+  capacity: {{ .capacity }}
+  phases: {{ .phases }}
   {{ include "vehicle-identify" . }}

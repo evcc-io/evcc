@@ -21,12 +21,13 @@ func init() {
 // NewMercedesFromConfig creates a new vehicle
 func NewMercedesFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
-		embed   `mapstructure:",squash"`
-		Tokens  Tokens
-		Account string
-		VIN     string
-		Cache   time.Duration
-		Region  string
+		embed    `mapstructure:",squash"`
+		Tokens   Tokens
+		User     string
+		Account_ string `mapstructure:"account"` // TODO deprecated
+		VIN      string
+		Cache    time.Duration
+		Region   string
 	}{
 		Cache: interval,
 	}
@@ -40,8 +41,12 @@ func NewMercedesFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, err
 	}
 
+	if cc.User == "" && cc.Account_ != "" {
+		cc.User = cc.Account_
+	}
+
 	log := util.NewLogger("mercedes").Redact(cc.Tokens.Access, cc.Tokens.Refresh)
-	identity, err := mercedes.NewIdentity(log, token, cc.Account, cc.Region)
+	identity, err := mercedes.NewIdentity(log, token, cc.User, cc.Region)
 	if err != nil {
 		return nil, err
 	}

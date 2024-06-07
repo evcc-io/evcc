@@ -149,3 +149,14 @@ func Json(key string, res any) error {
 	}
 	return err
 }
+
+// wrapping Settings into a struct for better decoupling
+type Settings struct{}
+
+func (s Settings) String(key string) (string, error) {
+	return String(key)
+}
+
+func (s Settings) SetString(key string, value string) {
+	SetString(key, value)
+}

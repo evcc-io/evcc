@@ -1,8 +1,10 @@
 import { test, expect } from "@playwright/test";
-import { start, stop } from "./evcc";
+import { start, stop, baseUrl } from "./evcc";
+
+test.use({ baseURL: baseUrl() });
 
 test.beforeAll(async () => {
-  await start("vehicle-error.evcc.yaml");
+  await start("vehicle-error.evcc.yaml", "password.sql");
 });
 test.afterAll(async () => {
   await stop();

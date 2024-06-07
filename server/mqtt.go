@@ -107,9 +107,12 @@ func (m *MQTT) publishComplex(topic string, retained bool, payload interface{}) 
 		}
 
 	case reflect.Pointer:
-		if reflect.ValueOf(payload).IsNil() {
-			payload = nil
+		if !reflect.ValueOf(payload).IsNil() {
+			m.publishComplex(topic, retained, reflect.Indirect(reflect.ValueOf(payload)).Interface())
+			return
 		}
+
+		payload = nil
 		fallthrough
 
 	default:
@@ -170,10 +173,17 @@ func (m *MQTT) Listen(site site.API) error {
 
 func (m *MQTT) listenSiteSetters(topic string, site site.API) error {
 	for _, s := range []setter{
-		{"/prioritySoc", floatSetter(site.SetPrioritySoc)},
 		{"/bufferSoc", floatSetter(site.SetBufferSoc)},
 		{"/bufferStartSoc", floatSetter(site.SetBufferStartSoc)},
+		{"/batteryDischargeControl", boolSetter(site.SetBatteryDischargeControl)},
+		{"/prioritySoc", floatSetter(site.SetPrioritySoc)},
 		{"/residualPower", floatSetter(site.SetResidualPower)},
+		{"/smartCostLimit", floatSetter(func(limit float64) error {
+			for _, lp := range site.Loadpoints() {
+				lp.SetSmartCostLimit(limit)
+			}
+			return nil
+		})},
 	} {
 		if err := m.Handler.ListenSetter(topic+s.topic, s.fun); err != nil {
 			return err

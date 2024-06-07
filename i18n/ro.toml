@@ -48,6 +48,8 @@ socLimit = "Limită"
 example = "Exemplu"
 optional = "optional"
 
+[config.general]
+
 [config.grid]
 titleAdd = "Adăugați Contorul de Grilă"
 titleEdit = "Editați Contorul de bransament"
@@ -70,13 +72,25 @@ template = "Producător"
 titleChoice = "Ce vrei să adaugi?"
 validateSave = "Valideaza si salveaza"
 
+[config.options]
+
+[config.options.endianness]
+
+[config.options.schema]
+
 [config.pv]
 titleAdd = "Adauga SmartMeter"
 titleEdit = "Editeaza SmartMeter"
 
+[config.section]
+
 [config.site]
 cancel = "Anuleaza"
 save = "Salveaza"
+
+[config.system]
+
+[config.title]
 
 [config.validation]
 failed = "esuat"
@@ -117,8 +131,8 @@ tabTitle = "Comunitate live"
 co2Saved = "{value} salvat"
 co2Title = "Emisii CO₂"
 configurePriceCo2 = "Invata cum sa configurezi pretul si datele despre CO₂"
-footerLong = "{percent}% energie solară"
-footerShort = "{percent}% solar"
+footerLong = "{percent} energie solară"
+footerShort = "{percent} solar"
 modalTitle = "Sumar energie încărcare"
 moneySaved = "{value} salvat"
 percentGrid = "{grid} kWh rețea"
@@ -197,6 +211,10 @@ description = "In mod normal, restarul nu ar trebui sa fie necesar. Te rog sa tr
 disclaimer = "Nota: evcc se va inchide si se va baza pe OS sa restarteze serviciul sau."
 modalTitle = "Esti sigur ca vrei sa dai restart?"
 
+[log]
+
+[loginModal]
+
 [main]
 vehicles = "Parcare"
 
@@ -267,7 +285,7 @@ label = "Amperaj maxim"
 label = "Amperaj minim"
 
 [main.loadpointSettings.minSoc]
-description = "Vehiculul primește încărcare rapida {0}% din toata energia solara disponibilă, apoi continua încărcarea cu surplusul solar."
+description = "Vehiculul primește încărcare rapida {0} din toata energia solara disponibilă, apoi continua încărcarea cu surplusul solar."
 label = "Min. încărcare %"
 
 [main.loadpointSettings.phasesConfigured]
@@ -295,7 +313,7 @@ co2Limit = "limita CO₂ de {co2}"
 costLimitIgnore = "{limit} configurata de va fi ingnorata in acest timp."
 currentPlan = "Plan activ"
 descriptionEnergy = "Pâna când ar trebui ca {targetEnergy} să fie încărcată in vehicul?"
-descriptionSoc = "Când ar trebui vehiculul să fie încărcat la {targetSoc}%?"
+descriptionSoc = "Când ar trebui vehiculul să fie încărcat la {targetSoc}?"
 inactiveLabel = "Timp dorit"
 modalTitle = "Programare ora dorită"
 notReachableInTime = "Telul nu a fost atins la timp. Estimare: {endTime}."
@@ -348,7 +366,7 @@ charging = "încarcă"
 connected = "conectat"
 disconnected = "deconectat"
 ready = "pregătit"
-vehicleLimit = "Limită vehicul: {soc}%"
+vehicleLimit = "Limită vehicul: {soc}"
 
 [main.vehicleStatus]
 charging = "Încarcă…"
@@ -358,7 +376,7 @@ climating = "Preconditionare detectata."
 connected = "Conectat."
 disconnected = "Deconectat."
 guard = "Incarcarea incepe in {remaining}…"
-minCharge = "Incarcare minima {soc}%."
+minCharge = "Incarcare minima {soc}."
 pvDisable = "Surplus insuficient FV. Pauza in {remaining}…"
 pvEnable = "Surplus FV disponibil. Pornesc în {remaining}…"
 scale1p = "Reduc încărcarea la faza 1 în {remaining}…"
@@ -366,8 +384,7 @@ scale3p = "Schimbam încărcarea la 3 faze în {remaining}…"
 targetChargeActive = "Încarcare țintă activă…"
 targetChargePlanned = "Încărcarea pornește la {time}."
 targetChargeWaitForVehicle = "Încărcare terminată. Aștept după vehicul…"
-unknown = ""
-vehicleLimitReached = "Limita {soc}% a fost atinsă."
+vehicleLimitReached = "Limita {soc} a fost atinsă."
 waitForVehicle = "Pregătit. Aștept după vehicul…"
 
 [notifications]
@@ -377,6 +394,8 @@ modalTitle = "Notificări"
 [offline]
 message = "Nu se poate conecta la server."
 reload = "Reîncarcă?"
+
+[passwordModal]
 
 [session]
 cancel = "Anulează"
@@ -429,6 +448,8 @@ filter = "Filtru"
 
 [settings]
 title = "Configuratie"
+
+[settings.fullscreen]
 
 [settings.gridDetails]
 co2 = "CO₂"

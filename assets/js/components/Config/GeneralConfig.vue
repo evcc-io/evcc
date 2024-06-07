@@ -1,5 +1,5 @@
 <template>
-	<div class="group pt-4 px-4 pb-1">
+	<div class="group round-box pt-4 px-4 pb-1">
 		<dl class="row" data-testid="generalconfig-title">
 			<dt class="col-sm-4">Title</dt>
 			<dd class="col-sm-8">
@@ -14,7 +14,19 @@
 				<TitleModal ref="titleModal" @changed="load" />
 			</dd>
 		</dl>
-		<dl class="row">
+		<dl class="row" data-testid="generalconfig-password">
+			<dt class="col-sm-4">Password</dt>
+			<dd class="col-sm-8">
+				*******
+				<a
+					href="#"
+					class="ms-2 d-inline-block text-muted"
+					@click.prevent="openModal('passwordModal')"
+					>edit</a
+				>
+			</dd>
+		</dl>
+		<dl class="row" data-testid="generalconfig-telemetry">
 			<dt class="col-sm-4">Telemetry</dt>
 			<dd class="col-sm-8">
 				{{ telemetryEnabled ? "on" : "off" }}
@@ -27,11 +39,17 @@
 				</a>
 			</dd>
 		</dl>
-		<dl class="row wip">
-			<dt class="col-sm-4">Password</dt>
+		<dl class="row" data-testid="generalconfig-experimental">
+			<dt class="col-sm-4">Experimental</dt>
 			<dd class="col-sm-8">
-				*******
-				<a href="#" class="ms-2 d-inline-block text-muted" @click.prevent="todo">edit</a>
+				{{ hiddenFeatures ? "on" : "off" }}
+				<a
+					href="#"
+					class="ms-2 d-inline-block text-muted"
+					@click.prevent="openModal('globalSettingsModal')"
+				>
+					change
+				</a>
 			</dd>
 		</dl>
 		<dl class="row wip">
@@ -87,6 +105,9 @@ export default {
 		telemetryEnabled() {
 			return settings.telemetry === true;
 		},
+		hiddenFeatures() {
+			return settings.hiddenFeatures === true;
+		},
 	},
 	methods: {
 		async changed() {
@@ -118,29 +139,13 @@ export default {
 
 <style scoped>
 .group {
-	border-radius: 1rem;
-	box-shadow: 0 0 0 0 var(--evcc-gray-50);
-	color: var(--evcc-default-text);
-	background: var(--evcc-box);
-	padding: 1rem;
 	display: grid;
 	grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-	min-height: 10rem;
 	margin-bottom: 5rem;
-	border: 1px solid var(--evcc-gray-50);
-	transition: box-shadow var(--evcc-transition-fast) linear;
 }
-
-.group:hover {
-	border-color: var(--evcc-gray);
-}
-
-.group:focus-within {
-	box-shadow: 0 0 1rem 0 var(--evcc-gray-50);
-}
-
 .wip {
 	opacity: 0.2;
+	display: none !important;
 }
 dt {
 	margin-bottom: 0.5rem;

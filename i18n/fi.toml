@@ -21,15 +21,39 @@ never = "ainoastaan kun riittävästi ylijäämää"
 
 [config]
 
+[config.battery]
+
+[config.deviceValue]
+
 [config.form]
 example = "Esimerkiksi"
 optional = "valinnainen"
+
+[config.general]
+
+[config.grid]
 
 [config.main]
 addVehicle = "Lisää ajoneuvo"
 edit = "muokkaa"
 title = "Määritykset"
 vehicles = "Minun ajoneuvot"
+
+[config.meter]
+
+[config.options]
+
+[config.options.endianness]
+
+[config.options.schema]
+
+[config.pv]
+
+[config.section]
+
+[config.system]
+
+[config.title]
 
 [config.validation]
 failed = "epäonnistui"
@@ -70,8 +94,8 @@ tabTitle = "Yhteisö"
 co2Saved = "{value} tallennettu"
 co2Title = "CO₂ Päästöt"
 configurePriceCo2 = "Opi kuinka voit muokata hinta ja CO₂ arvoja."
-footerLong = "{percent}% aurinkoenergiaa"
-footerShort = "{percent}% aurinkoenergiaa"
+footerLong = "{percent} aurinkoenergiaa"
+footerShort = "{percent} aurinkoenergiaa"
 modalTitle = "Latausenergian yhteenveto"
 moneySaved = "{value} tallennettu"
 percentGrid = "{grid} kWh verkosta"
@@ -150,6 +174,10 @@ description = "Normaaleissa olosuhteissa uudelleenkäynnistyksen ei pitäisi oll
 disclaimer = "Huomaa: evcc lopettaa toimintansa ja käynnistää palvelun uudelleen"
 modalTitle = "Oletko varma että haluat uudelleen käynnistää?"
 
+[log]
+
+[loginModal]
+
 [main]
 vehicles = "Pysäköinti"
 
@@ -175,6 +203,8 @@ pvExport = "Verkkoon vienti"
 pvProduction = "Tuotanto"
 selfConsumption = "Tuotannon kulutus"
 
+[main.heatingStatus]
+
 [main.loadpoint]
 avgPrice = "⌀ Hinta"
 charged = "Ladattu"
@@ -192,6 +222,8 @@ disclaimerHint = "Huomautus:"
 title = "Asetukset {0}"
 vehicle = "Ajoneuvo"
 
+[main.loadpointSettings.limitSoc]
+
 [main.loadpointSettings.maxCurrent]
 label = "Maksimivirta"
 
@@ -199,7 +231,7 @@ label = "Maksimivirta"
 label = "Minimivirta"
 
 [main.loadpointSettings.minSoc]
-description = "Ajoneuvo ladataan nopeasti {0}% asti huolimatta aurinkoenergian ylijäämästä, tämän jälkeen vain ylijäämäenergialla. Tämä on hyödyllinen takaamaan minimi toimintamatka myös pimeinä päivinä."
+description = "Ajoneuvo ladataan nopeasti {0} asti huolimatta aurinkoenergian ylijäämästä, tämän jälkeen vain ylijäämäenergialla. Tämä on hyödyllinen takaamaan minimi toimintamatka myös pimeinä päivinä."
 label = "Min. lataustaso %"
 
 [main.loadpointSettings.phasesConfigured]
@@ -225,7 +257,7 @@ activate = "Aktivoi"
 co2Limit = "Raja CO₂ / {co2}"
 costLimitIgnore = "Määritetty {limit} ohitetaan tänä aikana."
 descriptionEnergy = "Mihin mennessä {targetEnergy} tulisi ladata autoon?"
-descriptionSoc = "Milloin ajoneuvon tulee olla ladattu {targetSoc}%?"
+descriptionSoc = "Milloin ajoneuvon tulee olla ladattu {targetSoc}?"
 inactiveLabel = "Tavoiteaika"
 modalTitle = "Aseta tavoiteaika"
 onlyInPvMode = "Lataussuunnitelma toimii ainoastaan aurinkoenergiatilassa."
@@ -273,7 +305,7 @@ charging = "lataa"
 connected = "yhdistetty"
 disconnected = "irroitettu"
 ready = "valmis"
-vehicleLimit = "Ajoneuvon raja {soc}%"
+vehicleLimit = "Ajoneuvon raja {soc}"
 
 [main.vehicleStatus]
 charging = "Lataa…"
@@ -282,7 +314,7 @@ cleanEnergyCharging = "Lataa puhdasta energiaa: {co2} (limit {limit})"
 climating = "Esilämmitys/-viilennys havaittu."
 connected = "Yhdistetty."
 disconnected = "Irroitettu."
-minCharge = "Ladataan minimissään {soc}%."
+minCharge = "Ladataan minimissään {soc}."
 pvDisable = "Ei tarpeeksi ylijäämää. Tauko {remaining}…"
 pvEnable = "Ylijäämää saatavilla. Aloitus {remaining}…"
 scale1p = "Siirrytään 1-vaihe lataukseen {remaining}…"
@@ -290,8 +322,7 @@ scale3p = "Siirrytään 3-vaihe lataukseen {remaining}…"
 targetChargeActive = "Lataaminen käynnissä…"
 targetChargePlanned = "Lataaminen alkaa {time}."
 targetChargeWaitForVehicle = "Tavoite lataus valmis. Odotetaan ajoneuvoa…"
-unknown = ""
-vehicleLimitReached = "Ajoneuvon raja {soc}% saavutettu."
+vehicleLimitReached = "Ajoneuvon raja {soc} saavutettu."
 waitForVehicle = "Valmiina. Odotetaan ajoneuvoa…"
 
 [notifications]
@@ -301,6 +332,8 @@ modalTitle = "Ilmoitukset"
 [offline]
 message = "Ei yhteyttä serveriin"
 reload = "Lataa uudelleen?"
+
+[passwordModal]
 
 [session]
 cancel = "Peruuta"
@@ -353,6 +386,8 @@ filter = "Suodatin"
 
 [settings]
 title = "Asetukset"
+
+[settings.fullscreen]
 
 [settings.gridDetails]
 co2 = "CO₂"

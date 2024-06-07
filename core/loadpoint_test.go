@@ -30,7 +30,7 @@ func (n *Null) ChargedEnergy() (float64, error) {
 	return 0, nil
 }
 
-func (n *Null) ChargingTime() (time.Duration, error) {
+func (n *Null) ChargeDuration() (time.Duration, error) {
 	return 0, nil
 }
 

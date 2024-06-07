@@ -13,7 +13,7 @@ legendTitle = "Wie soll Sonnenstrom genutzt werden?"
 legendTopAutostart = "startet automatisch"
 legendTopName = "Batterieunterstütztes Laden"
 legendTopSubline = "ohne Unterbrechungen"
-modalTitle = "Batterieeinstellungen"
+modalTitle = "Hausbatterie"
 
 [batterySettings.bufferStart]
 above = "wenn über {soc}"
@@ -72,9 +72,31 @@ template = "Hersteller"
 titleChoice = "Was möchtest du hinzufügen?"
 validateSave = "Überprüfen & speichern"
 
+[config.options]
+
+[config.options.endianness]
+big = "big-endian"
+little = "little-endian"
+
+[config.options.schema]
+http = "HTTP (unverschlüsselt)"
+https = "HTTPS (verschlüsselt)"
+
 [config.pv]
 titleAdd = "Zähler (PV) hinzufügen"
 titleEdit = "Zähler (PV) bearbeiten"
+
+[config.section]
+general = "Allgemein"
+system = "System"
+
+[config.system]
+logs = "Logs"
+restart = "Neu starten"
+restartRequiredDescription = "Bitte neu starten, um die Änderungen zu übernehmen."
+restartRequiredMessage = "Konfiguration geändert."
+restartingDescription = "Bitte warten …"
+restartingMessage = "evcc wird neu gestartet."
 
 [config.title]
 description = "Wird in der Hauptansicht und im Browser-Tab angezeigt."
@@ -85,7 +107,6 @@ title = "Titel bearbeiten"
 failed = "fehlgeschlagen"
 label = "Status"
 running = "prüfe…"
-save = "Speichern"
 success = "erfolgreich"
 unknown = "unbekannt"
 validate = "prüfen"
@@ -98,11 +119,10 @@ generic = "Weitere Integrationen"
 offline = "Generisches Fahrzeug"
 online = "Fahrzeuge mit Schnittstelle"
 save = "Speichern"
-scooter = "Scooter"
+scooter = "Tretroller"
 template = "Hersteller"
 titleAdd = "Fahrzeug hinzufügen"
 titleEdit = "Fahrzeug bearbeiten"
-update = "Prüfen & speichern"
 validateSave = "Prüfen & speichern"
 
 [footer]
@@ -121,10 +141,10 @@ tabTitle = "Live-Community"
 
 [footer.savings]
 co2Saved = "{value} eingespart"
-co2Title = "CO₂ Emisson"
+co2Title = "CO₂ Emission"
 configurePriceCo2 = "Preis und CO₂-Emissionen konfigurieren"
-footerLong = "{percent}% Sonnenenergie"
-footerShort = "{percent}% Sonne"
+footerLong = "{percent} Sonnenenergie"
+footerShort = "{percent} Sonne"
 modalTitle = "Auswertung Ladeenergie"
 moneySaved = "{value} gespart"
 percentGrid = "{grid} kWh Netz"
@@ -143,6 +163,7 @@ total = "gesamt"
 
 [footer.sponsor]
 becomeSponsor = "Sponsor werden"
+becomeSponsorExtended = "Unterstütze uns direkt. Es gibt auch Sticker."
 confetti = "Lust auf Konfetti?"
 confettiPromise = "Es gibt auch Sticker und digitales Konfetti"
 sticker = "… oder evcc Sticker?"
@@ -150,6 +171,10 @@ supportUs = "Unsere Mission: Sonne tanken zum Standard machen. Hilf uns und unte
 thanks = "Vielen Dank, {sponsor}! Dein Beitrag hilft, evcc weiterzuentwickeln."
 titleNoSponsor = "Unterstütze uns"
 titleSponsor = "Du bist Unterstützer"
+titleTrial = "Testmodus"
+titleVictron = "Unterstützt von Victron Energy"
+trial = "Du befindest dich im Testmodus und kannst alle Funktionen nutzen. Wir freuen uns, wenn du Sponsor wirst."
+victron = "Du verwendest evcc auf Victron Energy Hardware und hast Zugriff auf alle Funktionen."
 
 [footer.telemetry]
 optIn = "Ich möchte meine Ladedaten teilen."
@@ -175,6 +200,7 @@ blog = "Blog"
 docs = "Dokumentation"
 github = "GitHub"
 login = "Fahrzeug-Logins"
+logout = "Abmelden"
 nativeSettings = "Server ändern"
 needHelp = "Hilfe benötigt?"
 sessions = "Ladevorgänge"
@@ -184,6 +210,8 @@ discussionsButton = "GitHub Discussions"
 documentationButton = "Dokumentation"
 issueButton = "Bug melden"
 issueDescription = "Komisches Verhalten gefunden?"
+logsButton = "Logs ansehen"
+logsDescription = "Überprüfe die Logs auf Fehler."
 modalTitle = "Hilfe benötigt?"
 primaryActions = "Funktioniert etwas nicht so, wie es soll? Dies sind gute Anlaufstellen, um Hilfe zu erhalten."
 restartButton = "Neu starten"
@@ -196,6 +224,28 @@ confirm = "Ja, neu starten!"
 description = "Unter normalen Umständen sollte ein Neustart nicht notwendig sein. Melde einen Bug, wenn du evcc regelmäßig neu starten musst."
 disclaimer = "Hinweis: evcc beendet sich und verlässt sich darauf, vom Betriebssystem neu gestartet zu werden."
 modalTitle = "Sicher, dass du neu starten möchtest?"
+
+[log]
+areaLabel = "Nach Bereich filtern"
+areas = "Alle Bereiche"
+download = "Komplettes Log herunterladen"
+levelLabel = "Nach Log-Level filtern"
+noResults = "Keine passenden Einträge gefunden."
+search = "Suchen"
+showAll = "Alle Einträge anzeigen"
+title = "Logs"
+update = "Aktualisieren"
+
+[loginModal]
+cancel = "Abbrechen"
+error = "Login fehlgeschlagen: "
+iframeHint = "Öffne evcc in einem neuen Tab."
+iframeIssue = "Das Passwort ist korrekt, aber dein Browser hat das Authentifizierungscookie abgelehnt. Dies kann passieren, wenn du evcc in einem iframe über HTTP verwendest."
+invalid = "Passwort ist ungültig."
+login = "Anmelden"
+password = "Passwort"
+reset = "Passwort zurücksetzen?"
+title = "Authentifizierung"
 
 [main]
 vehicles = "Parkplatz"
@@ -270,7 +320,7 @@ label = "Max. Ladestrom"
 label = "Min. Ladestrom"
 
 [main.loadpointSettings.minSoc]
-description = "Fahrzeug wird im PV-Modus „schnell“ auf {0}% geladen. Danach weiter mit PV-Überschuss. Nützlich, um auch an dunklen Tagen eine Mindestreichweite zu gewährleisten."
+description = "Fahrzeug wird im PV-Modus „schnell“ auf {0} geladen. Danach weiter mit PV-Überschuss. Nützlich, um auch an dunklen Tagen eine Mindestreichweite zu gewährleisten."
 label = "Min. Ladung %"
 
 [main.loadpointSettings.phasesConfigured]
@@ -298,7 +348,7 @@ co2Limit = "CO₂-Grenze von {co2}"
 costLimitIgnore = "Die eingestellte {limit} wird in diesem Zeitraum ignoriert."
 currentPlan = "Aktiver Plan"
 descriptionEnergy = "Bis wann sollen {targetEnergy} ins Fahrzeug geladen sein?"
-descriptionSoc = "Wann soll das Fahrzeug auf {targetSoc}% geladen sein?"
+descriptionSoc = "Wann soll das Fahrzeug auf {targetSoc} geladen sein?"
 inactiveLabel = "Zielzeit"
 notReachableInTime = "Zielzeit nicht erreichbar. Voraussichtliches Ende: {endTime}."
 onlyInPvMode = "Ladeplanung ist nur im PV-Modus aktiv."
@@ -351,7 +401,7 @@ charging = "lädt"
 connected = "verbunden"
 disconnected = "getrennt"
 ready = "bereit"
-vehicleLimit = "Fahrzeuglimit: {soc}%"
+vehicleLimit = "Fahrzeuglimit: {soc}"
 
 [main.vehicleStatus]
 charging = "Ladevorgang aktiv …"
@@ -360,25 +410,39 @@ cleanEnergyCharging = "Lade saubere Energie: {co2} (Grenze {limit})"
 climating = "Vorklimatisierung erkannt."
 connected = "Verbunden."
 disconnected = "Nicht verbunden."
-minCharge = "Mindestladung bis {soc}%."
+minCharge = "Mindestladung bis {soc}."
 pvDisable = "Zu wenig Überschuss. Pausiere in {remaining} …"
 pvEnable = "Überschuss verfügbar. Starte in {remaining} …"
 scale1p = "Reduziere auf einphasig in {remaining} …"
 scale3p = "Erhöhe auf dreiphasig in {remaining} …"
-targetChargeActive = "Zielladen aktiv …"
-targetChargePlanned = "Zielladen geplant. Ladung startet {time} Uhr."
-targetChargeWaitForVehicle = "Zielladen bereit. Warte auf Fahrzeug …"
+targetChargeActive = "Ladeplan aktiv …"
+targetChargePlanned = "Ladeplan startet {time} Uhr."
+targetChargeWaitForVehicle = "Ladeplan bereit. Warte auf Fahrzeug …"
 unknown = ""
-vehicleLimitReached = "Fahrzeuglimit {soc}% erreicht."
+vehicleLimitReached = "Fahrzeuglimit {soc} erreicht."
 waitForVehicle = "Ladebereit. Warte auf Fahrzeug …"
 
 [notifications]
 dismissAll = "Meldungen entfernen"
+logs = "Vollständiges Log ansehen"
 modalTitle = "Meldungen"
 
 [offline]
 message = "Keine Verbindung zum Server."
 reload = "Erneut laden?"
+
+[passwordModal]
+description = "Setze ein Passwort, um die Konfiguration zu schützen. Die Hauptansicht bleibt ohne Login zugänglich."
+empty = "Passwort darf nicht leer sein"
+error = "Fehler: "
+labelCurrent = "Aktuelles Passwort"
+labelNew = "Neues Passwort"
+labelRepeat = "Neues Passwort wiederholen"
+newPassword = "Passwort setzen"
+noMatch = "Passwörter stimmen nicht überein"
+titleNew = "Administrator Passwort setzen"
+titleUpdate = "Administrator Passwort ändern"
+updatePassword = "Passwort ändern"
 
 [session]
 cancel = "Abbrechen"
@@ -415,6 +479,8 @@ vehicle = "Fahrzeug"
 
 [sessions.csv]
 chargedenergy = "Energie (kWh)"
+chargeduration = "Ladedauer"
+co2perkwh = "CO₂/kWh"
 created = "Startzeit"
 finished = "Endzeit"
 identifier = "Kennung"
@@ -422,6 +488,9 @@ loadpoint = "Ladepunkt"
 meterstart = "Anfangszählerstand (kWh)"
 meterstop = "Endzählerstand (kWh)"
 odometer = "Kilometerstand (km)"
+price = "Preis"
+priceperkwh = "Preis/kWh"
+solarpercentage = "Sonne (%)"
 vehicle = "Fahrzeug"
 
 [sessions.filter]
@@ -430,7 +499,12 @@ allVehicles = "Alle Fahrzeuge"
 filter = "Filtern"
 
 [settings]
-title = "Allgemeine Einstellungen"
+title = "Darstellung"
+
+[settings.fullscreen]
+enter = "Vollbild starten"
+exit = "Vollbild beenden"
+label = "Vollbild"
 
 [settings.hiddenFeatures]
 label = "Experimentell"

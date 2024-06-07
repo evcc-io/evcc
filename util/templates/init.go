@@ -5,12 +5,12 @@ import (
 	"embed"
 	"fmt"
 	"io/fs"
-	"path"
 	"slices"
 	"sync"
 	"text/template"
 
 	"github.com/evcc-io/evcc/templates/definition"
+	"github.com/samber/lo"
 	"gopkg.in/yaml.v3"
 )
 
@@ -32,8 +32,8 @@ func init() {
 
 	baseTmpl = template.Must(template.ParseFS(includeFS, "includes/*.tpl"))
 
-	for _, class := range ClassValues() {
-		loadTemplates(class)
+	for _, class := range []Class{Charger, Meter, Vehicle, Tariff} {
+		templates[class] = load(class)
 	}
 }
 
@@ -65,12 +65,8 @@ func FromBytes(b []byte) (Template, error) {
 	return tmpl, err
 }
 
-func loadTemplates(class Class) {
-	if templates[class] != nil {
-		return
-	}
-
-	err := fs.WalkDir(definition.YamlTemplates, ".", func(filepath string, d fs.DirEntry, err error) error {
+func load(class Class) (res []Template) {
+	err := fs.WalkDir(definition.YamlTemplates, class.String(), func(filepath string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
@@ -88,18 +84,15 @@ func loadTemplates(class Class) {
 			return fmt.Errorf("processing template '%s' failed: %w", filepath, err)
 		}
 
-		class, err := ClassString(path.Dir(filepath))
-		if err != nil {
-			return fmt.Errorf("invalid template class: '%s'", err)
-		}
-
-		templates[class] = append(templates[class], tmpl)
+		res = append(res, tmpl)
 
 		return nil
 	})
 	if err != nil {
 		panic(err)
 	}
+
+	return res
 }
 
 // EncoderLanguage sets the template language for encoding json
@@ -109,10 +102,32 @@ func EncoderLanguage(lang string) {
 	encoderLanguage = lang
 }
 
-func ByClass(class Class) []Template {
-	return templates[class]
+type filterFunc func([]Template) []Template
+
+// WithDeprecated returns a filterFunc that includes all templates
+func WithDeprecated() filterFunc {
+	return func(t []Template) []Template {
+		return t
+	}
 }
 
+// ByClass returns templates for class excluding deprecated templates
+func ByClass(class Class, opt ...filterFunc) []Template {
+	res := templates[class]
+	if len(opt) == 0 {
+		opt = append(opt, func(t []Template) []Template {
+			return lo.Filter(t, func(t Template, _ int) bool {
+				return !t.Deprecated
+			})
+		})
+	}
+	for _, o := range opt {
+		res = o(res)
+	}
+	return res
+}
+
+// ByClass returns templates for class and name including deprecated templates
 func ByName(class Class, name string) (Template, error) {
 	for _, tmpl := range templates[class] {
 		if tmpl.Template == name || slices.Contains(tmpl.Covers, name) {

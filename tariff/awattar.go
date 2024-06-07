@@ -63,7 +63,7 @@ func (t *Awattar) run(done chan error) {
 		var res awattar.Prices
 
 		if err := backoff.Retry(func() error {
-			return client.GetJSON(t.uri, &res)
+			return backoffPermanentError(client.GetJSON(t.uri, &res))
 		}, bo); err != nil {
 			once.Do(func() { done <- err })
 

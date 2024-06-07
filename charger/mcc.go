@@ -148,7 +148,7 @@ func (mcc *MobileConnect) refresh() error {
 	}
 
 	req.Header.Set("Referer", fmt.Sprintf("%s/login", mcc.uri))
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", mcc.token))
+	req.Header.Set("Authorization", "Bearer "+mcc.token)
 
 	return mcc.fetchToken(req)
 }
@@ -181,7 +181,7 @@ func (mcc *MobileConnect) request(method, uri string) (*http.Request, error) {
 		return req, err
 	}
 
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", mcc.token))
+	req.Header.Set("Authorization", "Bearer "+mcc.token)
 	req.Header.Set("Referer", fmt.Sprintf("%s/dashboard", mcc.uri))
 
 	return req, nil
@@ -340,8 +340,8 @@ func (mcc *MobileConnect) ChargedEnergy() (float64, error) {
 
 var _ api.ChargeTimer = (*MobileConnect)(nil)
 
-// ChargingTime implements the api.ChargeTimer interface
-func (mcc *MobileConnect) ChargingTime() (time.Duration, error) {
+// ChargeDuration implements the api.ChargeTimer interface
+func (mcc *MobileConnect) ChargeDuration() (time.Duration, error) {
 	var currentSession MCCCurrentSession
 	if err := mcc.getEscapedJSON(mcc.apiURL(mccAPICurrentSession), &currentSession); err != nil {
 		return 0, err

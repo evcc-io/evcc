@@ -1,8 +1,8 @@
 import { test, expect } from "@playwright/test";
-import { start, stop, restart } from "./evcc";
-import { startSimulator, stopSimulator, SIMULATOR_URL } from "./simulator";
+import { start, stop, restart, baseUrl } from "./evcc";
+import { startSimulator, stopSimulator, simulatorUrl, simulatorConfig } from "./simulator";
 
-const CONFIG = "simulator.evcc.yaml";
+test.use({ baseURL: baseUrl() });
 
 test.beforeAll(async () => {
   await startSimulator();
@@ -12,9 +12,9 @@ test.afterAll(async () => {
 });
 
 test.beforeEach(async ({ page }) => {
-  await start(CONFIG);
+  await start(simulatorConfig(), "password.sql");
 
-  await page.goto(SIMULATOR_URL);
+  await page.goto(simulatorUrl());
   await page.getByLabel("Grid Power").fill("500");
   await page.getByTestId("vehicle0").getByLabel("SoC").fill("20");
   await page.getByTestId("loadpoint0").getByText("B (connected)").click();
@@ -32,11 +32,11 @@ test.describe("minSoc", async () => {
     await page.getByTestId("charging-plan").getByRole("button", { name: "none" }).click();
     await page.getByRole("link", { name: "Arrival" }).click();
 
-    await expect(page.getByText("charged to x% in solar mode")).toBeVisible();
+    await expect(page.getByText("charged to x in solar mode")).toBeVisible();
     await page.getByRole("combobox", { name: "Min. charge %" }).selectOption("20%");
     await expect(page.getByText("charged to 20% in solar mode")).toBeVisible();
 
-    await restart(CONFIG);
+    await restart(simulatorConfig());
     await page.reload();
 
     await page.getByTestId("charging-plan").getByRole("button", { name: "none" }).click();
@@ -75,7 +75,7 @@ test.describe("limitSoc", async () => {
     await page.getByRole("button", { name: "Close" }).click();
     await expect(page.getByTestId("limit-soc-value")).toContainText("80%");
 
-    await restart(CONFIG);
+    await restart(simulatorConfig());
     await page.reload();
 
     await expect(page.getByTestId("limit-soc-value")).toContainText("80%");

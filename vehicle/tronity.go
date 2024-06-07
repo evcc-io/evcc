@@ -19,6 +19,7 @@ package vehicle
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"slices"
@@ -110,8 +111,8 @@ func NewTronityFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 	vehicle, err := ensureVehicleEx(
 		cc.VIN, v.vehicles,
-		func(v tronity.Vehicle) string {
-			return v.VIN
+		func(v tronity.Vehicle) (string, error) {
+			return v.VIN, nil
 		},
 	)
 	if err != nil {
@@ -224,10 +225,9 @@ func (v *Tronity) post(uri string) error {
 	}
 
 	// ignore HTTP 405
-	if err != nil {
-		if err2, ok := err.(request.StatusError); ok && err2.HasStatus(http.StatusMethodNotAllowed) {
-			err = nil
-		}
+	var se request.StatusError
+	if errors.As(err, &se) && se.StatusCode() == http.StatusMethodNotAllowed {
+		err = nil
 	}
 
 	return err

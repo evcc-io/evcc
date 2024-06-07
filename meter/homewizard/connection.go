@@ -78,10 +78,8 @@ func (c *Connection) Enable(enable bool) error {
 		return err
 	}
 
-	if err == nil {
-		c.stateG.Reset()
-		c.dataG.Reset()
-	}
+	c.stateG.Reset()
+	c.dataG.Reset()
 
 	switch {
 	case enable && !res.PowerOn:
@@ -93,7 +91,7 @@ func (c *Connection) Enable(enable bool) error {
 	}
 }
 
-// Enabled reads the homewizard switch state true=on/false=off
+// Enabled implements the api.Charger interface
 func (c *Connection) Enabled() (bool, error) {
 	res, err := c.stateG.Get()
 	return res.PowerOn, err

@@ -2,8 +2,6 @@ package renault
 
 import (
 	"net/http"
-	"slices"
-	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -55,12 +53,15 @@ var _ api.Battery = (*Provider)(nil)
 // Soc implements the api.Vehicle interface
 func (v *Provider) Soc() (float64, error) {
 	res, err := v.batteryG()
-
-	if err == nil {
-		return float64(res.Data.Attributes.BatteryLevel), nil
+	if err != nil {
+		return 0, err
 	}
 
-	return 0, err
+	if res.Data.Attributes.BatteryLevel == nil {
+		return 0, api.ErrNotAvailable
+	}
+
+	return float64(*res.Data.Attributes.BatteryLevel), nil
 }
 
 var _ api.ChargeState = (*Provider)(nil)
@@ -100,12 +101,15 @@ var _ api.VehicleOdometer = (*Provider)(nil)
 // Odometer implements the api.VehicleOdometer interface
 func (v *Provider) Odometer() (float64, error) {
 	res, err := v.cockpitG()
-
-	if err == nil {
-		return res.Data.Attributes.TotalMileage, nil
+	if err != nil {
+		return 0, err
 	}
 
-	return 0, err
+	if res.Data.Attributes.TotalMileage != nil {
+		return *res.Data.Attributes.TotalMileage, nil
+	}
+
+	return 0, api.ErrNotAvailable
 }
 
 var _ api.VehicleFinishTimer = (*Provider)(nil)
@@ -132,23 +136,16 @@ var _ api.VehicleClimater = (*Provider)(nil)
 // Climater implements the api.VehicleClimater interface
 func (v *Provider) Climater() (bool, error) {
 	res, err := v.hvacG()
-
-	// Zoe Ph2, Megane e-tech
-	if err, ok := err.(request.StatusError); ok && err.HasStatus(http.StatusForbidden, http.StatusBadGateway) {
-		return false, api.ErrNotAvailable
-	}
-
-	if err == nil {
-		state := strings.ToLower(res.Data.Attributes.HvacStatus)
-		if state == "" {
+	if err != nil {
+		// Zoe Ph2, Megane e-tech
+		if err, ok := err.(request.StatusError); ok && err.HasStatus(http.StatusForbidden, http.StatusBadGateway) {
 			return false, api.ErrNotAvailable
 		}
 
-		active := !slices.Contains([]string{"off", "false", "invalid", "error"}, state)
-		return active, nil
+		return false, err
 	}
 
-	return false, err
+	return res.Data.Attributes.HvacStatus == 2, nil
 }
 
 var _ api.Resurrector = (*Provider)(nil)

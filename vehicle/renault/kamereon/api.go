@@ -118,7 +118,7 @@ func (v *API) Hvac(accountID string, vin string) (Response, error) {
 
 // Cockpit provides cockpit api response
 func (v *API) Cockpit(accountID string, vin string) (Response, error) {
-	uri := fmt.Sprintf("%s/commerce/v1/accounts/%s/kamereon/kca/car-adapter/v2/cars/%s/cockpit", v.keys.Target, accountID, vin)
+	uri := fmt.Sprintf("%s/commerce/v1/accounts/%s/kamereon/kca/car-adapter/v1/cars/%s/cockpit", v.keys.Target, accountID, vin)
 	return v.request(uri, nil)
 }
 

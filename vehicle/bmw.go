@@ -65,8 +65,8 @@ func NewBMWMiniFromConfig(brand string, other map[string]interface{}) (api.Vehic
 
 	vehicle, err := ensureVehicleEx(
 		cc.VIN, api.Vehicles,
-		func(v bmw.Vehicle) string {
-			return v.VIN
+		func(v bmw.Vehicle) (string, error) {
+			return v.VIN, nil
 		},
 	)
 

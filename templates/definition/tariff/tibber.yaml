@@ -1,12 +1,23 @@
 template: tibber
 products:
   - brand: Tibber
+requirements:
+  description:
+    en: "Get your API token from the Tibber developer portal: https://developer.tibber.com/"
+    de: "Hol dir deinen API-Token aus dem Tibber-Entwicklerportal: https://developer.tibber.com/"
+group: price
 params:
-  - preset: tariff-base
   - name: token
+    example: 476c477d8a039529478ebd690d35ddd80e3308ffc49b59c65b142321aee963a4
+    required: true
   - name: homeid
+    example: cc83e83e-8cbf-4595-9bf7-c3cf192f7d9c
+    help:
+      de: Nur erforderlich, wenn du mehrere Häuser in deinem Tibber-Konto hast.
+      en: Only required if you have multiple homes in your Tibber account.
+  - preset: tariff-base
 render: |
   type: tibber
-  {{ include "tariff-base" . }}
   token: {{ .token }}
   homeid: {{ .homeid }}
+  {{ include "tariff-base" . }}

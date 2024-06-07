@@ -23,15 +23,39 @@ never = "samo s dovoljno viška"
 
 [config]
 
+[config.battery]
+
+[config.deviceValue]
+
 [config.form]
 example = "Primjer"
 optional = "opcionalno"
+
+[config.general]
+
+[config.grid]
 
 [config.main]
 addVehicle = "Dodaj vozilo"
 edit = "uredi"
 title = "Konfiguracija"
 vehicles = "Moja vozila"
+
+[config.meter]
+
+[config.options]
+
+[config.options.endianness]
+
+[config.options.schema]
+
+[config.pv]
+
+[config.section]
+
+[config.system]
+
+[config.title]
 
 [config.validation]
 failed = "nauspjelo"
@@ -72,8 +96,8 @@ tabTitle = "Živa zajednica"
 co2Saved = "{value} ušteđeno"
 co2Title = "CO₂ emisija"
 configurePriceCo2 = "Nauči kako konfigurirati podatke o cijeni i CO₂."
-footerLong = "{percent} % solarna energija"
-footerShort = "{percent} % solarno"
+footerLong = "{percent} solarna energija"
+footerShort = "{percent} solarno"
 modalTitle = "Pregled napajanja energije"
 moneySaved = "{value} ušteđeno"
 percentGrid = "{grid} kWh mreža"
@@ -152,6 +176,10 @@ confirm = "Da, pokreni ponovo!"
 description = "U normalnim okolnostima ponovno pokretanje ne bi trebalo biti potrebno. Prijavi grešku ako redovito moraš ponovo pokretati evcc."
 disclaimer = "Napomena: evcc će prekinuti rad i osloniti se na operacijski sustav za ponovno pokretanje usluge."
 modalTitle = "Stvarno želiš ponovo pokrenuti aplikaciju?"
+
+[log]
+
+[loginModal]
 
 [main]
 vehicles = "Parkiranje"
@@ -320,7 +348,6 @@ scale3p = "Povećavanje na trofaznu napajanje za {remaining} …"
 targetChargeActive = "Ciljano napajanje je aktivno …"
 targetChargePlanned = "Ciljano napajanje počinje u {time}."
 targetChargeWaitForVehicle = "Ciljano napajanje je spremno. Čeka se na vozilo …"
-unknown = ""
 vehicleLimitReached = "Ograničenje vozila od {soc} % dosegnuto."
 waitForVehicle = "Spremno. Čeka se na vozilo …"
 
@@ -331,6 +358,8 @@ modalTitle = "Obavijesti"
 [offline]
 message = "Ne postoji veza s poslužiteljam."
 reload = "Ponovo učitati?"
+
+[passwordModal]
 
 [session]
 cancel = "Odustani"
@@ -383,6 +412,8 @@ filter = "Filtar"
 
 [settings]
 title = "Opće postavke"
+
+[settings.fullscreen]
 
 [settings.gridDetails]
 co2 = "CO₂"

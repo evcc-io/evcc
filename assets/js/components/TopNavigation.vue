@@ -22,7 +22,7 @@
 			data-testid="topnavigation-dropdown"
 		>
 			<li>
-				<router-link class="dropdown-item" to="/sessions">
+				<router-link class="dropdown-item" to="/sessions" active-class="active">
 					{{ $t("header.sessions") }}
 				</router-link>
 			</li>
@@ -51,9 +51,14 @@
 					{{ $t("batterySettings.modalTitle") }}
 				</button>
 			</li>
-			<li v-if="$hiddenFeatures()">
-				<router-link class="dropdown-item" to="/config">
-					Device Configuration 🧪
+			<li>
+				<router-link class="dropdown-item" to="/config" active-class="active">
+					{{ $t("config.main.title") }}
+				</router-link>
+			</li>
+			<li>
+				<router-link class="dropdown-item" to="/log" active-class="active">
+					{{ $t("log.title") }}
 				</router-link>
 			</li>
 			<li><hr class="dropdown-divider" /></li>
@@ -96,6 +101,11 @@
 					{{ $t("header.nativeSettings") }}
 				</button>
 			</li>
+			<li v-if="showLogout">
+				<button type="button" class="dropdown-item" @click="logout">
+					{{ $t("header.logout") }}
+				</button>
+			</li>
 		</ul>
 	</div>
 </template>
@@ -108,6 +118,7 @@ import "@h2d2/shopicons/es/regular/moonstars";
 import "@h2d2/shopicons/es/regular/menu";
 import "@h2d2/shopicons/es/regular/newtab";
 import collector from "../mixins/collector";
+import { logout, isLoggedIn, openLoginModal } from "../auth";
 
 import baseAPI from "../baseapi";
 import { isApp, sendToApp } from "../utils/native";
@@ -155,6 +166,9 @@ export default {
 		batteryModalAvailable() {
 			return this.batteryConfigured;
 		},
+		showLogout() {
+			return isLoggedIn();
+		},
 	},
 	mounted() {
 		const $el = document.getElementById("topNavigatonDropdown");
@@ -192,6 +206,13 @@ export default {
 		},
 		openNativeSettings() {
 			sendToApp({ type: "settings" });
+		},
+		async login() {
+			openLoginModal();
+		},
+		async logout() {
+			await logout();
+			this.$router.push({ path: "/" });
 		},
 	},
 };

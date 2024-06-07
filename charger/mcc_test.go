@@ -369,13 +369,13 @@ func TestMobileConnectChargingTime(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			mcc := NewTestMobileConnect(t, tc.responses)
 
-			got, err := mcc.ChargingTime()
+			got, err := mcc.ChargeDuration()
 			if (err != nil) != tc.wantErr {
-				t.Errorf("MobileConnect.ChargingTime() error = %v, wantErr %v", err, tc.wantErr)
+				t.Errorf("MobileConnect.ChargeDuration() error = %v, wantErr %v", err, tc.wantErr)
 				return
 			}
 			if got != tc.want {
-				t.Errorf("MobileConnect.ChargingTime() = %v, want %v", got, tc.want)
+				t.Errorf("MobileConnect.ChargeDuration() = %v, want %v", got, tc.want)
 			}
 		})
 	}

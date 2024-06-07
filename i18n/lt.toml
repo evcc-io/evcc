@@ -13,7 +13,7 @@ legendTitle = "Kaip naudoti saulės energiją?"
 legendTopAutostart = "startuoja automatiškai"
 legendTopName = "kaupiklis padeda įkrauti"
 legendTopSubline = "be pertraukų"
-modalTitle = "Kaupiklio nustatymai"
+modalTitle = "Namų kaupiklis"
 
 [batterySettings.bufferStart]
 above = "kai virš {soc}"
@@ -48,6 +48,10 @@ socLimit = "Limitas"
 example = "Pavyzdys"
 optional = "pasirinktinai"
 
+[config.general]
+cancel = "Atšaukti"
+save = "Išsaugoti"
+
 [config.grid]
 titleAdd = "Pridėti tinklo skaitiklį"
 titleEdit = "Redaguoti tinklo skaitiklį"
@@ -70,13 +74,40 @@ template = "Gamintojas"
 titleChoice = "Ką norite pridėti?"
 validateSave = "Patikrinti ir išsaugoti"
 
+[config.options]
+
+[config.options.endianness]
+big = "mažėjantys baitai"
+little = "didėjantys baitai"
+
+[config.options.schema]
+http = "HTTP (nešifruotas)"
+https = "HTTPS (užšifruotas)"
+
 [config.pv]
 titleAdd = "Pridėti saulės skaitiklį"
 titleEdit = "Redaguoti saulės skaitiklį"
 
+[config.section]
+general = "Pagrindiniai"
+system = "Sisteminiai"
+
 [config.site]
 cancel = "Atšaukti"
 save = "Išsaugoti"
+
+[config.system]
+logs = "Žurnalai"
+restart = "Paleisti iš naujo"
+restartRequiredDescription = "Paleiskite iš naujo, kad įsigaliotų pakeitimai"
+restartRequiredMessage = "Nustatymai pasikeitė"
+restartingDescription = "Palaukite..."
+restartingMessage = "Paleidžiama iš naujo"
+
+[config.title]
+description = "Rodoma pagrindiniame ekrane ir naršyklės kortelėje."
+label = "Pavadinimas"
+title = "Redaguoti pavadinimą"
 
 [config.validation]
 failed = "nepavyko"
@@ -117,8 +148,8 @@ tabTitle = "Bendruomenės"
 co2Saved = "{value} neišmesta"
 co2Title = "CO₂ Išmetimai"
 configurePriceCo2 = "Išmokite sukonfigūruoti kainą ir CO₂ duomenis."
-footerLong = "{percent}% saulės energija"
-footerShort = "{percent}% saulės"
+footerLong = "{percent} saulės energija"
+footerShort = "{percent} saulės"
 modalTitle = "Įkrovimo energijos apžvalga"
 moneySaved = "{value} sutaupyta"
 percentGrid = "{grid} kWh tinklo"
@@ -143,6 +174,7 @@ total = "Iš viso"
 
 [footer.sponsor]
 becomeSponsor = "Tapkite rėmėju"
+becomeSponsorExtended = "Paremkite mus tiesiogiai ir gaukite lipdukų."
 confetti = "Norite konfeti?"
 confettiPromise = "Gausite lipdukų ir skaitmeninių konfeti"
 sticker = "… ar evcc lipdukų?"
@@ -150,6 +182,10 @@ supportUs = "Mūsų misija - siekti, kad įkrovimas saulės energija taptų įpr
 thanks = "Ačiū, {sponsor}! Jūs prisidedate prie evcc vystymo."
 titleNoSponsor = "Paremkite mus"
 titleSponsor = "Remiate projektą"
+titleTrial = "Bandomasis režimas"
+titleVictron = "Sponsorius - Victron Energy"
+trial = "Jūs naudojate bandomąjį režimą ir galite naudoti visas funkcijas. Apsvarstykite galimybę paremti projektą."
+victron = "Naudojate evcc Victron Energy aparatinėje įrangoje ir turite prieigą prie visų funkcijų."
 
 [footer.telemetry]
 optIn = "Noriu prisidėti savo duomenimis."
@@ -175,6 +211,7 @@ blog = "Tinklaraštis"
 docs = "Dokumentacija (Vokiečių k.)"
 github = "GitHub"
 login = " Automobilių prisijungimai"
+logout = "Atsijungti"
 nativeSettings = "Pakeisti Serverį"
 needHelp = "Reikia Pagalbos?"
 sessions = "Įkrovimo sesijos "
@@ -190,6 +227,8 @@ discussionsButton = "GitHub diskusijos"
 documentationButton = "Dokumentacija"
 issueButton = "Pranešti apie klaidą"
 issueDescription = "Pastebėjote keistą ar netinkamą veikimą?"
+logsButton = "Peržiūrėti žurnalus"
+logsDescription = "Patikrinkite ar žurnaluose nėra klaidų"
 modalTitle = "Reikia pagalbos?"
 primaryActions = "Kažkas veikia ne taip, kaip turėtų? Pagalbos ieškokite čia."
 restartButton = "Restartuoti"
@@ -202,6 +241,28 @@ confirm = "Taip, restartuoti!"
 description = "Įprastai restartavimas neturėtų būti reikalingas. Jei jums vis reikia restartuoti, pasvarstykite, gal derėtų pranešti apie problemą."
 disclaimer = "Pastaba: evcc sustos, ir pasitikės operacinės sistemos pagalba paleidžiant iš naujo."
 modalTitle = "Ar tikrai norite restartuoti?"
+
+[log]
+areaLabel = "Filtruoti pagal sritis"
+areas = "Visos sritys"
+download = "Atsisiųsti visą žurnalą"
+levelLabel = "Filtruoti pagal žurnalo lygį"
+noResults = "Nėra atitinkančių žurnalo įrašų"
+search = "Ieškoti"
+showAll = "Rodyti visus įrašus"
+title = "Žurnalai"
+update = "Automatinis atnaujinimas"
+
+[loginModal]
+cancel = "Atšaukti"
+error = "Prisijungti nepavyko: "
+iframeHint = "Atidaryti evcc naujame skirtuke."
+iframeIssue = "Jūsų slaptažodis teisingas, bet atrodo, kad jūsų naršyklė atsisakė autentifikavimo slapuko. Taip gali nutikti, jei paleidžiate evcc per iframe naudojant HTTP"
+invalid = "Neteisingas slaptažodis."
+login = "Prisijungti"
+password = "Slaptažodis"
+reset = "Atstatyti slaptažodį?"
+title = "Autentifikavimas"
 
 [main]
 vehicles = "Autoparkas"
@@ -276,7 +337,7 @@ label = "Max. Srovė"
 label = "Min. Srovė"
 
 [main.loadpointSettings.minSoc]
-description = "Automobilis įkraunamas „Greitai” iki {0}% nustatyme „Saulė”, toliau įkraunamas tik saulės energijos pertekliumi. Padeda užtikrinti minimalią įkrovą dienomis, kai mažai saulės."
+description = "Automobilis įkraunamas „Greitai” iki {0} nustatyme „Saulė”, toliau įkraunamas tik saulės energijos pertekliumi. Padeda užtikrinti minimalią įkrovą dienomis, kai mažai saulės."
 label = "Minimali įkrova %"
 
 [main.loadpointSettings.phasesConfigured]
@@ -304,7 +365,7 @@ co2Limit = "CO₂ riba iš {co2}"
 costLimitIgnore = "Šiuo laikotarpiu sukonfigūruotas {limit} bus ignoruojamas."
 currentPlan = "Planas aktyvus"
 descriptionEnergy = "Iki kada {targetEnergy} turėtų būti įkrauta į automobilį?"
-descriptionSoc = "Kada automobilis turėtų būti įkrautas iki {targetSoc}%?"
+descriptionSoc = "Kada automobilis turėtų būti įkrautas iki {targetSoc}?"
 inactiveLabel = "Suplanuotas laikas"
 modalTitle = "Nustatyti įkrovimo pabaigos laiką"
 noActivePlan = "Nėra Aktyvaus Plano"
@@ -349,7 +410,7 @@ detectionActive = "Bandome atpažinti automobilį ..."
 fallbackName = "Automobilis"
 moreActions = "Daugiau veiksmų"
 none = "Nėra automobilio"
-notReachable = "Automobilis buvo nepasiekiamas. Pabandykite restartuoti evcc."
+notReachable = "Automobilis nepasiekiamas. Pabandykite restartuoti evcc."
 targetSoc = "Limitas"
 temp = "t."
 tempLimit = "Temp. limitas"
@@ -361,7 +422,7 @@ charging = "vyksta įkrovimas"
 connected = "automobilis prijungtas"
 disconnected = "neprijungtas"
 ready = "leidžiama įkrauti"
-vehicleLimit = "Automobilyje nustatytas limitas: {soc}%"
+vehicleLimit = "Automobilyje nustatytas limitas: {soc}"
 
 [main.vehicleStatus]
 charging = "Įkraunama..."
@@ -370,25 +431,39 @@ cleanEnergyCharging = "Įkraunama švaria energija: {co2} (limitas {limit})"
 climating = "Aptiktas išankstinis kondicionavimas."
 connected = "Prijungtas."
 disconnected = "Neprijungtas."
-minCharge = "Minimalus įkrovimas iki {soc}%."
+minCharge = "Minimalus įkrovimas iki {soc}."
 pvDisable = "Trūksta saulės. Pauzė už {remaining}..."
 pvEnable = "Saulės užtenka, įkrovimas už {remaining}..."
 scale1p = "Sumažinimas į vienfazį įkrovimą už {remaining}..."
 scale3p = "Padidinimas į trifazį įkrovimą už {remaining}..."
-targetChargeActive = "Planinis įkrovimas aktyvuotas..."
-targetChargePlanned = "Planinis įkrovimas prasidės {time}."
-targetChargeWaitForVehicle = "Planinis įkrovimas leidžiamas. Laukiama automobilio signalo..."
+targetChargeActive = "Įkrovimo planas aktyvuotas..."
+targetChargePlanned = "Suplanuotas įkrovimas prasidės {time}."
+targetChargeWaitForVehicle = "Įkrovimas pagal planą leidžiamas. Laukiama automobilio..."
 unknown = ""
-vehicleLimitReached = "Automobilyje nustatytas limitas {soc}% pasiektas."
+vehicleLimitReached = "Automobilyje nustatytas limitas {soc} pasiektas."
 waitForVehicle = "Paruošta. Laukiama automobilio..."
 
 [notifications]
 dismissAll = "Išvalyti visus"
+logs = "Peržiūrėti visus žurnalus"
 modalTitle = "Pranešimai"
 
 [offline]
 message = "Nėra ryšio su serveriu."
 reload = "Perkrauti?"
+
+[passwordModal]
+description = "Nustatykite slaptažodį konfigūracijos apsaugai. Pagrindiniu ekranu galima naudotis ir neprisijungus."
+empty = "Slaptažodis negali būti tuščias"
+error = "Klaida: "
+labelCurrent = "Dabartinis slaptažodis"
+labelNew = "Naujas slaptažodis"
+labelRepeat = "Pakartoti slaptažodį"
+newPassword = "Sukurti slaptažodį"
+noMatch = "Slaptažodžiai nesutampa"
+titleNew = "Nustatyti Administratoriaus slaptažodį"
+titleUpdate = "Atnaujinti Administratoriaus slaptažodį"
+updatePassword = "Atnaujinti slaptažodį"
 
 [session]
 cancel = "Atšaukti"
@@ -425,6 +500,8 @@ vehicle = "Automobilis"
 
 [sessions.csv]
 chargedenergy = "Energija (kWh)"
+chargeduration = "Trukmė"
+co2perkwh = "CO₂/kWh"
 created = "Sukurta"
 finished = "Pabaigta"
 identifier = "Identifikatorius"
@@ -432,6 +509,9 @@ loadpoint = "Įkroviklis"
 meterstart = "Skaitiklis pradžia (kWh)"
 meterstop = "Skaitiklis pabaiga (kWh)"
 odometer = "Odometras (km)"
+price = "Kaina"
+priceperkwh = "Kaina/kWh"
+solarpercentage = "Saulės (%)"
 vehicle = "Automobilis"
 
 [sessions.filter]
@@ -440,7 +520,12 @@ allVehicles = "visi automobiliai"
 filter = "Filtruoti"
 
 [settings]
-title = "Bendrieji Nustatymai"
+title = "Vartotojo sąsaja"
+
+[settings.fullscreen]
+enter = "Įjungti visą ekraną"
+exit = "Išjungti visą ekraną"
+label = "Visas ekranas"
 
 [settings.gridDetails]
 co2 = "CO₂"

@@ -4,6 +4,14 @@ products:
     description:
       generic: SUN2000 with SDongle & Power Sensor
 capabilities: ["battery-control"]
+requirements:
+  description:
+    de: |
+      Erfordert "Modbus/TCP". Freischaltung via "Errichterzugang" in den Kommunikationseinstellungen des Wechselrichters. 
+      Siehe https://forum.huawei.com/enterprise/en/modbus-tcp-guide/thread/667250677153415168-667213868771979264
+    en: |
+      Needs "Modbus/TCP". Activation using "maintenance access" within the communication settings of the inverter.
+      See https://forum.huawei.com/enterprise/en/modbus-tcp-guide/thread/667250677153415168-667213868771979264
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]

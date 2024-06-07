@@ -1,0 +1,561 @@
+[batterySettings]
+batteryLevel = "Akkumulátor szint"
+capacity = "{energy} / {total}"
+control = "Akkumulátor vezérlés"
+discharge = "Kisütés megakadályoza gyorstöltési és tervezett töltési üzemmódban."
+disclaimerHint = "Megjegyzés:"
+disclaimerText = "Ezek a beállítások csak a szolár üzemmódot érintik. A töltés módja ennek megfelelően kerül beállításra."
+legendBottomName = "otthoni prioritás"
+legendBottomSubline = "nincs töltésre használva"
+legendMiddleName = "jármű először"
+legendMiddleSubline = "otthon másodszor"
+legendTitle = "Hogyan használjuk fel a napenergiát?"
+legendTopAutostart = "automatikusan indul"
+legendTopName = "energiatárolóval támogatott töltés"
+legendTopSubline = "megszakítások nélkül"
+modalTitle = "Otthoni Akkumulátor"
+
+[batterySettings.bufferStart]
+above = "amikor {soc} felett van"
+full = "amikor {soc}-on van"
+never = "csak ha van elég többlet"
+
+[config]
+
+[config.battery]
+titleAdd = "Energiatároló Mérő Hozzáadása"
+titleEdit = "Energiatároló Mérő Szerkesztése"
+
+[config.deviceValue]
+capacity = "Kapacitás"
+chargeStatus = "Státusz"
+chargedEnergy = "Töltve"
+current = "Jelenlegi"
+enabled = "Engedélyezve"
+energy = "Energia"
+odometer = "Óraállás"
+phaseCurrents = "Áram L1..L3"
+phasePowers = "Teljesítmény L1..L3"
+phaseVoltages = "Feszültség L1..L3"
+power = "Teljesítmény"
+range = "Hatótáv"
+soc = "SoC"
+socLimit = "Limit"
+
+[config.form]
+example = "Példa"
+optional = "opcionális"
+
+[config.general]
+cancel = "Mégse"
+save = "Mentés"
+
+[config.grid]
+titleAdd = "Hálózati Mérő Hozzáadása"
+titleEdit = "Hálózati Mérő Szerkesztése"
+
+[config.main]
+addLoadpoint = "Töltőpont hozzáadása"
+addPvBattery = "Napelem vagy energiatároló hozzáadása"
+addVehicle = "Jármű hozzáadása"
+edit = "szerkesztés"
+title = "Konfiguráció"
+unconfigured = "nincs konfigurálva"
+vehicles = "Járműveim"
+yaml = "Az evcc.yaml fájlban konfigurálva. Nem szerkeszthető az UI-ról."
+
+[config.meter]
+cancel = "Mégse"
+delete = "Törlés"
+save = "Mentés"
+template = "Gyártó"
+titleChoice = "Mit szeretnél hozzáadni?"
+validateSave = "Ellenőrzés & mentés"
+
+[config.options]
+
+[config.options.endianness]
+big = "big-endian"
+little = "little-endian"
+
+[config.options.schema]
+http = "HTTP (titkosítatlan)"
+https = "HTTPS (titkosított)"
+
+[config.pv]
+titleAdd = "Napelemes Mérő Hozzáadása"
+titleEdit = "Napelemes Mérő Szerkesztése"
+
+[config.section]
+general = "Általános"
+system = "Rendszer"
+
+[config.system]
+logs = "Naplók"
+restart = "Újraindítás"
+restartRequiredDescription = "Kérlek indítsd újra a hatás eléréséhez."
+restartRequiredMessage = "A Konfiguráció megváltozott."
+restartingDescription = "Kérlek várj…"
+restartingMessage = "evcc újraindítása."
+
+[config.title]
+description = "Ez jelenik meg a főképernyőn és a böngésző címsorában."
+label = "Megnevezés"
+title = "Megnevezés Szerkesztése"
+
+[config.validation]
+failed = "sikertelen"
+label = "Státusz"
+running = "ellenőrzés…"
+success = "sikeres"
+unknown = "ismeretlen"
+validate = "ellenőrzés"
+
+[config.vehicle]
+cancel = "Mégse"
+delete = "Törlés"
+generic = "Egyéb integrációk"
+offline = "Általános jármű"
+online = "Járművek online API-val"
+save = "Mentés"
+scooter = "Roller"
+template = "Gyártó"
+titleAdd = "Jármű hozzáadása"
+titleEdit = "Jármű szerkesztése"
+validateSave = "Ellenőrzés & mentés"
+
+[footer]
+
+[footer.community]
+greenEnergy = "Napenergia"
+greenEnergySub1 = "lett töltve evcc-vel"
+greenEnergySub2 = "2022 Októbere óta"
+greenShare = "Napenergia aránya"
+greenShareSub1 = "energiát biztosított a"
+greenShareSub2 = "napenergia, és az akkumulátor tárolók"
+power = "Töltési energia"
+powerSub1 = "{activeClients} / {totalClients} résztvevőből"
+powerSub2 = "tölt éppen…"
+tabTitle = "Élő közösség"
+
+[footer.savings]
+co2Saved = "{value} megtakarítva"
+co2Title = "CO₂ Emisszió"
+configurePriceCo2 = "Ismerje meg az ár- és CO₂-adatok konfigurálását."
+footerLong = "{percent} napenergia"
+footerShort = "{percent} nap"
+modalTitle = "Töltési Energia Áttekintés"
+moneySaved = "{value} megtakarítva"
+percentGrid = "{grid} kWh hálózat"
+percentSelf = "{self} kWh napenergia"
+percentTitle = "Napenergia"
+periodLabel = "Periódus:"
+priceTitle = "Energia Ára"
+referenceGrid = "hálózat"
+referenceLabel = "Referencia adat:"
+tabTitle = "Az adataim"
+
+[footer.savings.period]
+30d = "elmúlt 30 nap"
+365d = "elmúlt 365 nap"
+total = "összesen"
+
+[footer.sponsor]
+becomeSponsor = "Legyél támogató"
+becomeSponsorExtended = "Támogass közvetlenül, hogy matricákat kapj."
+confetti = "Készen állsz a konfettire?"
+confettiPromise = "Kapsz matricákat és digitális konfettit"
+sticker = "… vagy evcc matricákat?"
+supportUs = "A küldetésünk az, hogy a napelemes töltést normává tegyük. Segítsd az evcc-t annyival, amennyit megér neked."
+thanks = "Köszönjük, {sponsor}! A hozzájárulásod segít tovább fejleszteni az evcc-t."
+titleNoSponsor = "Támogass minket"
+titleSponsor = "Te már támogató vagy"
+titleTrial = "Próbaverzió"
+titleVictron = "Szponzorálta a Victron Energy"
+trial = "Jelenleg próbaverziót használsz korlátlan funkciókkal. Kérlek fontold meg a projekt támogatását."
+victron = "Jelenleg a Victron Energy hardverén használod az evcc-t korlátlan funkciókkal."
+
+[footer.telemetry]
+optIn = "Szeretnék hozzájárulni az adataimmal."
+optInMoreDetails = "Részletek {0}."
+optInMoreDetailsLink = "itt"
+optInSponsorship = "Szponzorálás szükséges."
+
+[footer.version]
+availableLong = "új verzió elérhető"
+modalCancel = "Mégse"
+modalDownload = "Letöltés"
+modalInstalledVersion = "Telepített verzió"
+modalNoReleaseNotes = "Nem érhető el kiadási jegyzet. További információ az új verzióról:"
+modalTitle = "Új verzió elérhető"
+modalUpdate = "Telepítés"
+modalUpdateNow = "Telepítés most"
+modalUpdateStarted = "Az új evcc verzió indítása…"
+modalUpdateStatusStart = "A telepítés elkezdődött:"
+
+[header]
+about = "Névjegy"
+blog = "Blog"
+docs = "Dokumentáció"
+github = "GitHub"
+login = "Jármű Bejelentkezések"
+logout = "Kijelentkezés"
+nativeSettings = "Szerver Váltás"
+needHelp = "Szükséged van segítségre?"
+sessions = "Töltési Munkamenetek"
+
+[help]
+discussionsButton = "GitHub Közösségi oldalát"
+documentationButton = "Dokumentáció"
+issueButton = "Hibabejelentés"
+issueDescription = "Furcsa vagy hibás működést észleltél?"
+logsButton = "Napló megtekintése"
+logsDescription = "Ellenőrizd a naplót hiba esetén."
+modalTitle = "Segítségre van szükséged?"
+primaryActions = "Valami nem úgy működik, ahogy működnie kellene? Ezek jó helyek, hogy választ kapj a problémádra."
+restartButton = "Újraindítás"
+restartDescription = "Próbáltad már be- és kikapcsolni?"
+secondaryActions = "Még mindíg nem oldódott meg a problémád? Itt van néhány keményebb lehetőség."
+
+[help.restart]
+cancel = "Mégse"
+confirm = "Igen, újraindítás!"
+description = "Normál körülmények között nem szükséges az újraindítás. Kérlek fontold meg a hibabejelentést, ha az evcc-t gyakran újra kell indítanod."
+disclaimer = "Megjegyzés: az evcc bezáródik és az operációs rendszertől függően újraindítja a szolgáltatást."
+modalTitle = "Biztosan újra szeretnéd indítani?"
+
+[log]
+areaLabel = "Szűrés terület alapján"
+areas = "Minden terület"
+download = "Teljes napló letöltése"
+levelLabel = "Szűrés a napló szintje alapján"
+noResults = "Nincs egyező napló bejegyzés."
+search = "Keresés"
+showAll = "Az összes bejegyzés megjelenítése"
+title = "Naplók"
+update = "Automatikus frissítés"
+
+[loginModal]
+cancel = "Mégse"
+error = "Sikertelen bejelentkezés: "
+iframeHint = "evcc megnyitása új lapon."
+iframeIssue = "A jelszavad helyes, de úgy tűnik, hogy a böngésződ elvetette a hitelesítési sütit. Ez akkor történhet meg, ha az az evcc-t iframe-ben futtatod HTTP-n."
+invalid = "A jelszó érvénytelen."
+login = "Bejelentkezés"
+password = "Jelszó"
+reset = "Jelszó Visszaállítás?"
+title = "Hitelesítés"
+
+[main]
+vehicles = "Parkolás"
+
+[main.chargingPlan]
+active = "Aktív"
+arrivalTab = "Érkezés"
+day = "Nap"
+departureTab = "Indulás"
+goal = "Töltési cél"
+modalTitle = "Töltési Tervezet"
+none = "nincs"
+remove = "Törlés"
+time = "Idő"
+title = "Terv"
+titleMinSoc = "Min töltés"
+titleTargetCharge = "Indulás"
+unsavedChanges = "Vannak nem mentett módosítások. Alkalmazza most?"
+update = "Alkalmazás"
+
+[main.energyflow]
+battery = "Battery"
+batteryCharge = "Energiatároló töltés"
+batteryDischarge = "Energiatároló kisütés"
+batteryHold = "Energiatároló (lezárva)"
+batteryTooltip = "{energy} / {total} ({soc})"
+gridImport = "Hálózatból import"
+homePower = "Fogyasztás"
+loadpoints = "Töltő| Töltő | {count} töltők"
+noEnergy = "Nincs mérési adat"
+pvExport = "Hálózatba export"
+pvProduction = "Napelem termelés"
+selfConsumption = "Saját fogyasztás"
+
+[main.heatingStatus]
+charging = "Fűtés…"
+cheapEnergyCharging = "Fűtés olcsó energiával: {price} (limit {limit})"
+cleanEnergyCharging = "Fűtés tiszta energiával: {co2} (limit {limit})"
+waitForVehicle = "Üzemkész. Várakozás a fűtésre…"
+
+[main.loadpoint]
+avgPrice = "⌀ Ár"
+charged = "Töltve"
+co2 = "⌀ CO₂"
+duration = "Időtartam"
+fallbackName = "Töltőpont"
+power = "Teljesítmény"
+price = "Σ Ár"
+remaining = "Hátralévő"
+remoteDisabledHard = "{source}: kikapcsolva"
+remoteDisabledSoft = "{source}: kikapcsolva, adaptív napelemes töltés"
+solar = "Nap"
+
+[main.loadpointSettings]
+currents = "Töltőáram"
+default = "alapértelmezett"
+disclaimerHint = "Megjegyzés:"
+onlyForSocBasedCharging = "Ezek a beállítások csak olyan járművekre elérhetőek, amiknek ismert a töltési szintje."
+smartCostCheap = "Olcsó Hálózati Töltés"
+smartCostClean = "Tiszta Hálózati Töltés"
+title = "Beállítások {0}"
+vehicle = "Jármű"
+
+[main.loadpointSettings.limitSoc]
+description = "Töltési korlát, amikor a jármű csatlakoztatva van."
+label = "Alapértelmezett limit"
+
+[main.loadpointSettings.maxCurrent]
+label = "Max. Áram"
+
+[main.loadpointSettings.minCurrent]
+label = "Min. Áram"
+
+[main.loadpointSettings.minSoc]
+description = "A jármű gyorstöltve lesz {0}-ra szolár üzemmódban. Ezután folytatódik a töltés a napelemes többletenergiával. Hasznos egy minimum tartományt megadni a felhősebb napokra."
+label = "Min. töltés %"
+
+[main.loadpointSettings.phasesConfigured]
+label = "Fázis"
+no1p3pSupport = "Hogyan van csatlakoztatva a töltőd?"
+phases_0 = "auto kapcsolás"
+phases_1 = "1 fázis"
+phases_1_hint = "({min}-tól {max}-ig)"
+phases_3 = "3 fázis"
+phases_3_hint = "({min}-tól {max}-ig)"
+
+[main.mode]
+minpv = "Min+Szolár"
+now = "Gyors"
+off = "Ki"
+pv = "Szolár"
+
+[main.provider]
+login = "bejelentkezés"
+logout = "kijelentkezés"
+
+[main.targetCharge]
+activate = "Aktiválás"
+co2Limit = "CO₂ limit, ami {co2}"
+costLimitIgnore = "A konfigurált {limit} figyelmen kívűl lesz hagyva ezen időszakban."
+currentPlan = "Aktív terv"
+descriptionEnergy = "Meddig kell a {targetEnergy}-t tölteni a járműbe?"
+descriptionSoc = "Mikor legyen a jármű feltöltve {targetSoc}-ra?"
+inactiveLabel = "Tervezett idő"
+notReachableInTime = "A tervezet nem teljesíthető a megadott időben. Várható befejezés: {endTime}."
+onlyInPvMode = "A töltési idő csak napelemes üzemmódban működik."
+planDuration = "Töltési idő"
+planPeriodLabel = "Periódus"
+planPeriodValue = "{start} to {end}"
+planUnknown = "még nem ismert"
+preview = "Terv előnézet"
+priceLimit = "ár limit: {price}"
+remove = "Eltávolítás"
+setTargetTime = "nincs"
+targetIsAboveLimit = "A konfigurált töltési limit, ami {limit} figyelmen kívül lesz hagyva ebben a periódusban."
+targetIsAboveVehicleLimit = "Növelje a jármű limitet ({limit}) hogy elérje a töltési célt."
+targetIsInThePast = "Válassz egy időpontot a jövőben, Marty."
+targetIsTooFarInTheFuture = "Hozzáigazítjuk a tervet, amint többet tudunk a jövőről."
+title = "Cél Idő"
+today = "ma"
+tomorrow = "holnap"
+update = "Frissítés"
+vehicleCapacityDocs = "Ismerje meg, hogyan kell konfigurálni."
+vehicleCapacityRequired = "A jármű akkumulátor kapacitása szükséges a hozzávetőleges idő meghatározásához."
+
+[main.targetChargePlan]
+chargeDuration = "Töltési idő"
+co2Label = "CO₂ emisszió ⌀"
+priceLabel = "Energia ára"
+timeRange = "{day} {range} h"
+unknownPrice = "még ismeretlen"
+
+[main.targetEnergy]
+label = "Limit"
+noLimit = "nincs"
+
+[main.vehicle]
+addVehicle = "Jármű hozzáadása"
+changeVehicle = "Jármű cseréje"
+detectionActive = "Jármű detektálása…"
+fallbackName = "Jármű"
+moreActions = "További Műveletek"
+none = "Nincs jármű"
+notReachable = "A jármű nem elérhető. Próbálja meg újraindítani az evcc-t."
+targetSoc = "Limit"
+temp = "Hőm."
+tempLimit = "Hőm. limit"
+unknown = "Vendég jármű"
+vehicleSoc = "Töltés"
+
+[main.vehicleSoc]
+charging = "tölt"
+connected = "csatlakoztatva"
+disconnected = "lecsatlakoztatva"
+ready = "üzemkész"
+vehicleLimit = "Jármű limit: {soc}"
+
+[main.vehicleStatus]
+charging = "Töltés…"
+cheapEnergyCharging = "Olcsó energiával töltés: {price} (limit {limit})"
+cleanEnergyCharging = "Tiszta energiával töltés: {co2} (limit {limit})"
+climating = "Elő-kondícionálás érzékelve."
+connected = "Csatlakoztatva."
+disconnected = "Lecsatlakoztatva."
+minCharge = "Minimális töltés {soc}-ig."
+pvDisable = "Nincs elég többlet. Szüneteltetés ekkor: {remaining}…"
+pvEnable = "Többlet elérhető. Indítás ekkor: {remaining}…"
+scale1p = "1 Fázisú töltésre váltás ekkor: {remaining}…"
+scale3p = "3 Fázisú töltésre váltás ekkor: {remaining}…"
+targetChargeActive = "Töltési terv aktív…"
+targetChargePlanned = "A töltési tervezet ekkor keződik: {time}."
+targetChargeWaitForVehicle = "Töltési terv üzemkész. Várakozás járműre…"
+unknown = ""
+vehicleLimitReached = "Jármű limit {soc} elérve."
+waitForVehicle = "Üzemkész. Járműre várakozás…"
+
+[notifications]
+dismissAll = "Összeset figyelmen kívül hagyja"
+logs = "Teljes napló megtekintése"
+modalTitle = "Értesítések"
+
+[offline]
+message = "Nem csatlakozik a szerverhez."
+reload = "Újratöltés?"
+
+[passwordModal]
+description = "Állítson be egy jelszót a konfigurációs beállítások védelmére. A főképernyő használata továbbra is lehetséges bejelentkezés nélkül."
+empty = "A jelszó nem lehet üres"
+error = "Hiba: "
+labelCurrent = "Jelenlegi jelszó"
+labelNew = "Új jelszó"
+labelRepeat = "Jelszó megismétlése"
+newPassword = "Jelszó készítése"
+noMatch = "A jelszavak nem egyeznek"
+titleNew = "Adminisztrátor jelszó beállítása"
+titleUpdate = "Adminisztrátor jelszó módosítása"
+updatePassword = "Jelszó módosítás"
+
+[session]
+cancel = "Mégse"
+co2 = "CO₂"
+date = "Periódus"
+delete = "Törlés"
+finished = "Befejeződött"
+meter = "Mérő"
+meterstart = "Mérő indítás"
+meterstop = "Mérő leállítás"
+odometer = "Futásteljesítmény"
+price = "Ár"
+started = "Elkezdődött"
+title = "Töltési munkamenet"
+
+[sessions]
+avgPower = "⌀ Teljesítmény"
+avgPrice = "⌀ Ár"
+chargeDuration = "Időtartam"
+co2 = "⌀ CO₂"
+csvMonth = "Letöltés - {month} .CSV"
+csvTotal = "Letöltés - Összes időszak .CSV"
+date = "Indulás"
+downloadCsv = "Letöltés mint: CSV"
+energy = "Töltve"
+loadpoint = "Töltőpont"
+noData = "Nincs töltési munkamenet ebben a hónapban."
+price = "Σ Ár"
+reallyDelete = "Biztosan szeretné törölni ezt a munkamenetet?"
+solar = "Napenergia"
+title = "Töltési munkamenetek"
+total = "Összesen"
+vehicle = "Jármű"
+
+[sessions.csv]
+chargedenergy = "Energia (kWh)"
+chargeduration = "Időtartam"
+co2perkwh = "CO₂/kWh"
+created = "Elindítva"
+finished = "Befejezve"
+identifier = "Azonosító"
+loadpoint = "Töltőpont"
+meterstart = "Fogyasztásmérő kezdeti állás (kWh)"
+meterstop = "Fogyasztásmérő befejező állás (kWh)"
+odometer = "Óraállás (km)"
+price = "Ár"
+priceperkwh = "Ár/kWh"
+solarpercentage = "Napenergia (%)"
+vehicle = "Jármű"
+
+[sessions.filter]
+allLoadpoints = "minden töltőpont"
+allVehicles = "minden jármű"
+filter = "Szűrés"
+
+[settings]
+title = "Felhasználói felület"
+
+[settings.fullscreen]
+enter = "Teljes képernyő"
+exit = "Kilépés a teljes képernyőből"
+label = "Teljes képernyő"
+
+[settings.hiddenFeatures]
+label = "Kísérlet"
+value = "Kísérleti UI funkciók megjelenítése."
+
+[settings.language]
+auto = "Automatikus"
+label = "Nyelv"
+
+[settings.sponsorToken]
+expires = "A szponzor token-ed le fog járni {inXDays} nap múlva. {getNewToken} és frissítsd a konfigurációs fájlodat."
+getNew = "Kérj egy újat"
+hint = "Megjegyzés: Ezt a jövőben automatizálni fogjuk."
+
+[settings.telemetry]
+label = "Telemetria"
+
+[settings.theme]
+auto = "rendszer"
+dark = "sötét"
+label = "Megjelenés"
+light = "világos"
+
+[settings.unit]
+km = "km"
+label = "Mértékegység"
+mi = "mérföld"
+
+[smartCost]
+activeHours = "{charging} / {total}"
+activeHoursLabel = "Aktív órák"
+applyToAll = "Minenhol alkalmazás?"
+batteryDescription = "Az otthoni töltéstároló töltése a hálózatról."
+cheapTitle = "Olcsó Hálózati Töltés"
+cleanTitle = "Tiszta Hálózati Töltés"
+co2Label = "CO₂ emisszió"
+co2Limit = "CO₂ limit"
+loadpointDescription = "Engedélyezi az átmeneti gyorstöltést szolár üzemmódban."
+modalTitle = "Okos Hálózati Töltés"
+none = "nincs"
+priceLabel = "Energia ár"
+priceLimit = "Ár limit"
+saved = "Elmentve."
+
+[startupError]
+configFile = "Konfigurációs fájl használatban:"
+configuration = "Konfiguráció"
+description = "Kérlek ellenőrizd a konfigurációs fájlodat. Ha a hibaüzenet nem segít, akkor nézd meg a {0}."
+discussions = "GitHub Közösségi oldalát"
+fixAndRestart = "Kérlek javítsd ki a problémát és indítsd újra a szervert."
+hint = "Megjegyzés: Lehet, hogy van egy hibás eszközöd (inverter, mérő, …) Ellenőrizd a hálózati kapcsolatokat."
+lineError = "Hiba a {0}."
+lineErrorLink = "sor {0}"
+restartButton = "Újraindítás"
+title = "Indítási hiba"

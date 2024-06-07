@@ -1,3 +1,41 @@
+[batterySettings]
+
+[batterySettings.bufferStart]
+
+[config]
+
+[config.battery]
+
+[config.deviceValue]
+
+[config.form]
+
+[config.general]
+
+[config.grid]
+
+[config.main]
+
+[config.meter]
+
+[config.options]
+
+[config.options.endianness]
+
+[config.options.schema]
+
+[config.pv]
+
+[config.section]
+
+[config.system]
+
+[config.title]
+
+[config.validation]
+
+[config.vehicle]
+
 [footer]
 
 [footer.community]
@@ -13,8 +51,8 @@ powerSub2 = "gëtt elo gelueden…"
 tabTitle = "Live Gemeinschaft"
 
 [footer.savings]
-footerLong = "{percent}% Solarenergie"
-footerShort = "{percent}% Solar"
+footerLong = "{percent} Solarenergie"
+footerShort = "{percent} Solar"
 modalTitle = "Charge Energy Iwwersiicht"
 percentGrid = "{grid} kWh Stroumnetz"
 percentSelf = "{self} kWh Solar"
@@ -27,6 +65,8 @@ savingsTitle = "Spueren"
 savingsTotalEnergy = "{total} kWh gelueden"
 since = "zënter {since}"
 tabTitle = "Meng Daten"
+
+[footer.savings.period]
 
 [footer.sponsor]
 becomeSponsor = "Gitt e Sponsor"
@@ -70,8 +110,18 @@ auto = "Design: System"
 dark = "Design: donkel"
 light = "Design: Liicht"
 
+[help]
+
+[help.restart]
+
+[log]
+
+[loginModal]
+
 [main]
 vehicles = "Parking"
+
+[main.chargingPlan]
 
 [main.energyflow]
 battery = "Batterie"
@@ -84,6 +134,8 @@ noEnergy = "Keng Moossdaten"
 pvExport = "Stroumnetz Export"
 pvProduction = "Produktioun"
 selfConsumption = "eegene Konsum"
+
+[main.heatingStatus]
 
 [main.loadpoint]
 charged = "Belaascht"
@@ -98,6 +150,8 @@ disclaimerHint = "Notiz:"
 title = "Astellungen {0}"
 vehicle = "Gefier"
 
+[main.loadpointSettings.limitSoc]
+
 [main.loadpointSettings.maxCurrent]
 label = "Max. Stroum"
 
@@ -105,7 +159,7 @@ label = "Max. Stroum"
 label = "Min. Stroum"
 
 [main.loadpointSettings.minSoc]
-description = "Fir Noutfäll. D'Gefier gëtt „séier” gelueden op {0}% vun all verfügbare Solarenergie, a geet dann mat nëmmen dem Solariwwerschoss weider."
+description = "Fir Noutfäll. D'Gefier gëtt „séier” gelueden op {0} vun all verfügbare Solarenergie, a geet dann mat nëmmen dem Solariwwerschoss weider."
 label = "Minimum Staat vun charge"
 
 [main.loadpointSettings.phasesConfigured]
@@ -129,7 +183,7 @@ logout = "ausloggen"
 [main.targetCharge]
 activate = "Aktivéieren"
 descriptionEnergy = "Bis wéini soll {targetEnergy} an d'Gefier gelueden ginn?"
-descriptionSoc = "Wéini soll d'Gefier op {targetSoc}% gelueden ginn?"
+descriptionSoc = "Wéini soll d'Gefier op {targetSoc} gelueden ginn?"
 inactiveLabel = "Zilzäit"
 modalTitle = "Zielzäit setzen"
 planDuration = "Opluedzäit"
@@ -169,13 +223,13 @@ charging = "oplueden"
 connected = "verbonne"
 disconnected = "deconnectéiert"
 ready = "bereet"
-vehicleLimit = "Gefier Limite: {soc}%"
+vehicleLimit = "Gefier Limite: {soc}"
 
 [main.vehicleStatus]
 charging = "Laden ..."
 connected = "Verbonne."
 disconnected = "Deconnectéiert."
-minCharge = "Charge op d'mannst op {soc}%."
+minCharge = "Charge op d'mannst op {soc}."
 pvDisable = "Net genuch Iwwerschoss. Pausen an {remaining}…"
 pvEnable = "Iwwerschoss verfügbar. Vun {remaining}…"
 scale1p = "Reduktioun op eenzeg Phase am {remaining}…"
@@ -183,8 +237,7 @@ scale3p = "Erhéijung op dräi Phase am {remaining}…"
 targetChargeActive = "Zilladung aktiv ..."
 targetChargePlanned = "Zilladung fänkt um {time} un."
 targetChargeWaitForVehicle = "Ziel Charge prett. Waart op Gefier ..."
-unknown = ""
-vehicleLimitReached = "Gefier Limit {soc}% erreecht."
+vehicleLimitReached = "Gefier Limit {soc} erreecht."
 waitForVehicle = "Prett. Waart op Gefier ..."
 
 [notifications]
@@ -194,6 +247,8 @@ modalTitle = "Notifikatiounen"
 [offline]
 message = "Keng Verbindung mam Server."
 reload = "Reload?"
+
+[passwordModal]
 
 [session]
 cancel = "Ofbriechen"
@@ -225,12 +280,20 @@ meterstop = "Meter Stop (kWh)"
 odometer = "Kilometerstand (km)"
 vehicle = "Gefier"
 
+[sessions.filter]
+
 [settings]
 title = "Astellungen"
+
+[settings.fullscreen]
+
+[settings.hiddenFeatures]
 
 [settings.language]
 auto = "Automatesch"
 label = "Sprooch"
+
+[settings.sponsorToken]
 
 [settings.telemetry]
 label = "Telemetrie"
@@ -245,6 +308,8 @@ light = "liicht"
 km = "km"
 label = "Eenheeten"
 mi = "Meilen"
+
+[smartCost]
 
 [startupError]
 configFile = "Konfiguratiounsdatei benotzt:"

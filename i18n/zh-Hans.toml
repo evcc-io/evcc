@@ -20,15 +20,39 @@ never = "只要有足够的剩余"
 
 [config]
 
+[config.battery]
+
+[config.deviceValue]
+
 [config.form]
 example = "示例"
 optional = "可选"
+
+[config.general]
+
+[config.grid]
 
 [config.main]
 addVehicle = "添加车辆"
 edit = "编辑"
 title = "配置"
 vehicles = "我的车辆"
+
+[config.meter]
+
+[config.options]
+
+[config.options.endianness]
+
+[config.options.schema]
+
+[config.pv]
+
+[config.section]
+
+[config.system]
+
+[config.title]
 
 [config.validation]
 failed = "失败"
@@ -69,8 +93,8 @@ tabTitle = "Live社区"
 co2Saved = "节省 {value}"
 co2Title = "CO₂ 排放"
 configurePriceCo2 = "学习怎样配置价格和CO₂数据."
-footerLong = "{percent}% 太阳能"
-footerShort = "{percent}% 太阳能"
+footerLong = "{percent} 太阳能"
+footerShort = "{percent} 太阳能"
 modalTitle = "充电概览"
 moneySaved = "节省 {value}"
 percentGrid = "{grid} kWh 电网"
@@ -149,6 +173,10 @@ description = "在正常情况下,没有必要重新启动.如果您需要定期
 disclaimer = "注意: evcc 将终止并依靠操作系统重新启动服务."
 modalTitle = "你确定要重启吗?"
 
+[log]
+
+[loginModal]
+
 [main]
 vehicles = "停车中"
 
@@ -174,6 +202,8 @@ pvExport = "电网导出"
 pvProduction = "生产"
 selfConsumption = "内耗"
 
+[main.heatingStatus]
+
 [main.loadpoint]
 avgPrice = "⌀ 价格"
 charged = "已充"
@@ -191,6 +221,8 @@ disclaimerHint = "笔记:"
 title = "设置 {0}"
 vehicle = "车辆"
 
+[main.loadpointSettings.limitSoc]
+
 [main.loadpointSettings.maxCurrent]
 label = "最大电流"
 
@@ -198,7 +230,7 @@ label = "最大电流"
 label = "最小电流"
 
 [main.loadpointSettings.minSoc]
-description = "在太阳能模式下，车辆‘快速’充电至 {0}%. 然后继续利用太阳能剩余电量.即使在黑暗的日子里，也可确保最小行驶里程."
+description = "在太阳能模式下，车辆‘快速’充电至 {0}. 然后继续利用太阳能剩余电量.即使在黑暗的日子里，也可确保最小行驶里程."
 label = "最小充电 %"
 
 [main.loadpointSettings.phasesConfigured]
@@ -224,7 +256,7 @@ activate = "激活"
 co2Limit = "{co2} 的 CO2 限值"
 costLimitIgnore = "在此期间配置的{limit}将被忽略"
 descriptionEnergy = "{targetEnergy} 应该什么时候装载到车辆上?"
-descriptionSoc = "什么时候应该向车辆收取{targetSoc}%的费用?"
+descriptionSoc = "什么时候应该向车辆收取{targetSoc}的费用?"
 inactiveLabel = "目标时间"
 onlyInPvMode = "充电计划仅适用于太阳能模式."
 planDuration = "充电时间"
@@ -271,7 +303,7 @@ charging = "充电中"
 connected = "已连接"
 disconnected = "已断开"
 ready = "就绪"
-vehicleLimit = "车辆限制: {soc}%"
+vehicleLimit = "车辆限制: {soc}"
 
 [main.vehicleStatus]
 charging = "充电中…"
@@ -281,7 +313,7 @@ climating = "检测到预处理."
 connected = "已连接."
 disconnected = "已断开"
 guard = "“正在为{remaining}切换保护."
-minCharge = "最低收费为 {soc}%."
+minCharge = "最低收费为 {soc}."
 pvDisable = "盈余不足. 在{remaining}中暂停…"
 pvEnable = "有盈余. 从 {remaining}开始…"
 scale1p = "在{remaining}中减少到1相充电…"
@@ -289,8 +321,7 @@ scale3p = "在{remaining}中增加到三相充电…"
 targetChargeActive = "目标充电激活…"
 targetChargePlanned = "目标充电从 {time}开始."
 targetChargeWaitForVehicle = "目标充电准备就绪. 等车…"
-unknown = ""
-vehicleLimitReached = "达到车辆限制 {soc}% ."
+vehicleLimitReached = "达到车辆限制 {soc} ."
 waitForVehicle = "准备好了. 等车…"
 
 [notifications]
@@ -300,6 +331,8 @@ modalTitle = "通知"
 [offline]
 message = "没有连接到服务器."
 reload = "重新加载?"
+
+[passwordModal]
 
 [session]
 cancel = "取消"
@@ -352,6 +385,8 @@ filter = "过滤"
 
 [settings]
 title = "设置"
+
+[settings.fullscreen]
 
 [settings.hiddenFeatures]
 label = "实验"

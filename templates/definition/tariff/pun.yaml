@@ -1,6 +1,11 @@
 template: pun
 products:
-  - brand: PUN Orario (IT)
+  - brand: PUN Orario
+requirements:
+  description:
+    de: "Preisdaten von https://www.mercatoelettrico.org/it/. Wird oft zur Einspeisung ins Netz verwendet. Nur für Italien verfügbar."
+    en: "Price data from https://www.mercatoelettrico.org/it/. Often used for feeding into the grid. Only available for Italy."
+group: price
 params:
   - preset: tariff-base
 render: |

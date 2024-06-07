@@ -70,6 +70,10 @@ func NewScriptProviderFromConfig(other map[string]interface{}) (Provider, error)
 // NewScriptProvider creates a script provider.
 // Script execution is aborted after given timeout.
 func NewScriptProvider(script string, timeout time.Duration, scale float64, cache time.Duration) (*Script, error) {
+	if strings.TrimSpace(script) == "" {
+		return nil, errors.New("script is required")
+	}
+
 	s := &Script{
 		log:     util.NewLogger("script"),
 		script:  script,

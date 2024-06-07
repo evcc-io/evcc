@@ -171,11 +171,7 @@
 										</div>
 									</div>
 									<div v-if="!priceConfigured || !co2Configured">
-										<a
-											href="https://docs.evcc.io/en/docs/reference/configuration/tariffs/"
-											class="evcc-gray"
-											target="_blank"
-										>
+										<a :href="tariffLink" class="evcc-gray" target="_blank">
 											{{ $t("footer.savings.configurePriceCo2") }}
 										</a>
 									</div>
@@ -206,6 +202,7 @@ import CustomSelect from "./CustomSelect.vue";
 import co2Reference from "../co2Reference";
 import settings from "../settings";
 import api from "../api";
+import { docsPrefix } from "../i18n";
 
 export default {
 	name: "Savings",
@@ -227,8 +224,11 @@ export default {
 		};
 	},
 	computed: {
+		tariffLink() {
+			return `${docsPrefix()}/docs/reference/configuration/tariffs`;
+		},
 		percent() {
-			return Math.round(this.solarPercentage) || 0;
+			return this.fmtPercentage(this.solarPercentage || 0);
 		},
 		regionOptions() {
 			return co2Reference.regions.map((r) => ({

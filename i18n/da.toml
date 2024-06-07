@@ -13,7 +13,7 @@ legendTitle = "Hvordan skal solenergi benyttes?"
 legendTopAutostart = "starter automatisk"
 legendTopName = "batteri understøttet opladning"
 legendTopSubline = "uden afbrydelser"
-modalTitle = "Batteri indstillinger"
+modalTitle = "Hus batteri"
 
 [batterySettings.bufferStart]
 above = "når den er over {soc}"
@@ -48,6 +48,10 @@ socLimit = "Begrænsning"
 example = "Eksempel"
 optional = "valgfrit"
 
+[config.general]
+cancel = "Afbryd"
+save = "Gem"
+
 [config.grid]
 titleAdd = "Tilføj måler for elnettet"
 titleEdit = "Rediger måler for elnettet"
@@ -70,13 +74,40 @@ template = "Fabrikant"
 titleChoice = "Hvad ønsker du at tilføje?"
 validateSave = "Valider og gem"
 
+[config.options]
+
+[config.options.endianness]
+big = "big-endian"
+little = "little-endian"
+
+[config.options.schema]
+http = "HTTP (ikke-krypteret)"
+https = "HTTPS (krypteret)"
+
 [config.pv]
 titleAdd = "Tilføj solmåler"
 titleEdit = "Rediger solmåler"
 
+[config.section]
+general = "Generelle"
+system = "System"
+
 [config.site]
 cancel = "Afbryd"
 save = "Gem"
+
+[config.system]
+logs = "Log"
+restart = "Genstart"
+restartRequiredDescription = "Genstart for at se effekten"
+restartRequiredMessage = "Konfiguration er ændret"
+restartingDescription = "Vent venligst..."
+restartingMessage = "Genstarter evcc."
+
+[config.title]
+description = "Vises på hovedskærm og på browserfane"
+label = "Titel"
+title = "Rediger titel"
 
 [config.validation]
 failed = "mislykkedes"
@@ -117,8 +148,8 @@ tabTitle = "Live fællesskab"
 co2Saved = "{value} gemt"
 co2Title = "CO₂ Udledning"
 configurePriceCo2 = "Lær hvordan man indstiller pris og CO₂ data."
-footerLong = "{percent}% Solenergi"
-footerShort = "{percent}% Solenergi"
+footerLong = "{percent} Solenergi"
+footerShort = "{percent} Solenergi"
 modalTitle = "Oversigt over ladeenergi"
 moneySaved = "{value} gemt"
 percentGrid = "{grid} kWh elnettet"
@@ -143,13 +174,18 @@ total = "hele tiden"
 
 [footer.sponsor]
 becomeSponsor = "Bliv sponsor"
+becomeSponsorExtended = "Støt os direkte for at få klistermærker."
 confetti = "Klar til konfetti?"
 confettiPromise = "Du får klistermærker og digital konfetti"
 sticker = "... eller evcc-klistermærker?"
-supportUs = "Vores mission er at gøre solenergi til normen. Hjælp evcc ved at betale, hvad det er værd for dig."
+supportUs = "Vores mission er at gøre solopladning til normen. Hjælp evcc ved at betale, hvad det er værd for dig."
 thanks = "Tak, {sponsor}! Dit bidrag hjælper med at udvikle evcc yderligere."
 titleNoSponsor = "Støt os"
 titleSponsor = "Du er en støtter"
+titleTrial = "Afprøvnings tilstand"
+titleVictron = "Sponsoreret af Victron Energy"
+trial = "Du er i afprøvningstilstand og kan bruge alle funktioner. Overvej venligst at støtte projektet."
+victron = "Du bruger evcc på Victron Energy udstyr og har adgang til alle funktioner."
 
 [footer.telemetry]
 optIn = "Jeg vil gerne bidrage med mine data."
@@ -175,6 +211,7 @@ blog = "Blog"
 docs = "Dokumentation"
 github = "GitHub"
 login = "Login til køretøjer"
+logout = "Log ud"
 nativeSettings = "Skift server"
 needHelp = "Brug for hjælp?"
 sessions = "Opladnings sessioner"
@@ -185,6 +222,8 @@ discussionsButton = "GitHub diskussioner"
 documentationButton = "Dokumentation"
 issueButton = "Meld en fejl"
 issueDescription = "Fundet en mærkelig eller forkert adfærd?"
+logsButton = "Se logfil"
+logsDescription = "Check log for fejl"
 modalTitle = "Brug for hjælp?"
 primaryActions = "Noget fungerer ikke, som det skulle? Disse er gode steder at få hjælp."
 restartButton = "Genstart"
@@ -197,6 +236,28 @@ confirm = "Ja, genstart!"
 description = "Under normale omstændigheder bør genstart ikke være nødvendig. Overvej at indsende en fejlmelding, hvis du har brug for at genstarte evcc regelmæssigt."
 disclaimer = "Bemærk: evcc afsluttes og har brug for at operativsystemet genstarter tjenesten."
 modalTitle = "Er du sikker på, at du vil genstarte?"
+
+[log]
+areaLabel = "Filtrer per område"
+areas = "Alle områder"
+download = "Hent hele log filen"
+levelLabel = "Filtrer på log niveau"
+noResults = "Ingen matchende logposter"
+search = "Søg"
+showAll = "Vis alle poster"
+title = "Log filer"
+update = "Opdater automatisk"
+
+[loginModal]
+cancel = "Afbryd"
+error = "Login mislykkedes"
+iframeHint = "Åbn evcc i en ny fane."
+iframeIssue = "Dit kodeord er korrekt, men din browser ser ud til at have droppet godkendelses-cookien. Dette kan ske, hvis du kører evcc i en iframe via HTTP."
+invalid = "Ugyldig adgangskode"
+login = "Log på"
+password = "Adgangskode"
+reset = "Nulstil adgangskode"
+title = "Godkendelse"
 
 [main]
 vehicles = "Parkering"
@@ -219,7 +280,7 @@ update = "Anvend"
 
 [main.energyflow]
 battery = "Batteri"
-batteryCharge = "Battery opladning"
+batteryCharge = "Batteri opladning"
 batteryDischarge = "Batteriet aflades"
 batteryHold = "Batteri (låst)"
 batteryTooltip = "{energi} af {total} ({soc})"
@@ -227,7 +288,7 @@ gridImport = "Forbrug fra elnet"
 homePower = "Forbrug"
 loadpoints = "Oplader| Oplader | {count} opladere"
 noEnergy = "Ingen målerdata"
-pvExport = "Eksport til elnettet"
+pvExport = "Eksport til elnet"
 pvProduction = "Produktion"
 selfConsumption = "Eget forbrug"
 
@@ -271,7 +332,7 @@ label = "Max. Nuværende"
 label = "Min. Nuværende"
 
 [main.loadpointSettings.minSoc]
-description = "Køretøjet bliver „hurtigt” opladet til {0} % i solar mode, og fortsætter derefter med solenergioverskuddet. Nyttig til at sikre en minimum rækkevidde selv på mørke dage"
+description = "Køretøjet bliver „hurtigt” opladet til {0} i solar mode, og fortsætter derefter med solenergioverskuddet. Nyttig til at sikre en minimum rækkevidde selv på mørke dage"
 label = "Min. opladning %"
 
 [main.loadpointSettings.phasesConfigured]
@@ -299,7 +360,7 @@ co2Limit = "CO₂ grænse på {co2}"
 costLimitIgnore = "Den konfigurerede {limit} vil blive ignoreret i denne periode."
 currentPlan = "Aktiv plan"
 descriptionEnergy = "Hvornår skal {targetEnergy} være sendt til køretøjet?"
-descriptionSoc = "Hvornår skal køretøjet være opladet til {targetSoc} %?"
+descriptionSoc = "Hvornår skal køretøjet være opladet til {targetSoc}?"
 inactiveLabel = "Planlagt tid"
 modalTitle = "Sæt måltid"
 noActivePlan = "Ingen aktiv plan"
@@ -356,7 +417,7 @@ charging = "opladning"
 connected = "forbundet"
 disconnected = "afbrudt"
 ready = "parat"
-vehicleLimit = "Køretøjsgrænse: {soc}%"
+vehicleLimit = "Køretøjsgrænse: {soc}"
 
 [main.vehicleStatus]
 charging = "Oplader..."
@@ -365,25 +426,39 @@ cleanEnergyCharging = "Oplader med CO2 neutral energi: {co2} (limit {limit})"
 climating = "Forkonditionering registreret."
 connected = "Forbundet."
 disconnected = "Afbrudt."
-minCharge = "Minimum opladning til {soc} %."
+minCharge = "Minimum opladning til {soc}."
 pvDisable = "Ikke nok overskud. Pause i {remaining}..."
 pvEnable = "Overskud tilgængeligt. Starter om {remaining}..."
 scale1p = "Reducerer til 1-faset strøm i {remaining}..."
 scale3p = "Øger til 3-faset opladning om {remaining}..."
-targetChargeActive = "Målladning aktiv..."
-targetChargePlanned = "Målopladning starter kl. {time}."
-targetChargeWaitForVehicle = "Målladning klar. Venter på køretøj..."
+targetChargeActive = "Plan for ladning er aktiv..."
+targetChargePlanned = "Opladningsplan starter kl. {time}."
+targetChargeWaitForVehicle = "Plan for opladning er klar. Venter på køretøj..."
 unknown = ""
-vehicleLimitReached = "Køretøjsgrænsen {soc} % nået."
+vehicleLimitReached = "Køretøjsgrænsen {soc} nået."
 waitForVehicle = "Parat. Venter på køretøj ..."
 
 [notifications]
 dismissAll = "Afvis alle"
+logs = "Se hele log filen"
 modalTitle = "Underretninger"
 
 [offline]
 message = "Ikke forbundet til en server."
 reload = "Genindlæs?"
+
+[passwordModal]
+description = "Angiv adgangskode for at beskytte konfigurations indstillinger. Det er stadig mulig at benytte hovedskærmen uden at logge på"
+empty = "Adgangskode må ikke være tomt"
+error = "Fejl:"
+labelCurrent = "Nuværende adgangskode"
+labelNew = "Ny adgangskode"
+labelRepeat = "Gentag adgangskoden"
+newPassword = "Opret adgangskode"
+noMatch = "Adgangskode stemmer ikke"
+titleNew = "Angiv Administrator adgangskode"
+titleUpdate = "Opdater Administrator adgangskode"
+updatePassword = "Opdater adgangskode"
 
 [session]
 cancel = "Afbryd"
@@ -420,6 +495,8 @@ vehicle = "Køretøj"
 
 [sessions.csv]
 chargedenergy = "Energi (kWh)"
+chargeduration = "Varighed"
+co2perkwh = "CO₂/kWh"
 created = "Oprettet"
 finished = "Færdig"
 identifier = "Identifikator"
@@ -427,6 +504,9 @@ loadpoint = "Ladepunkt"
 meterstart = "Målerstart (kWh)"
 meterstop = "Målerstop (kWh)"
 odometer = "Kilometertal (km)"
+price = "Pris"
+priceperkwh = "Pris/kWh"
+solarpercentage = "Sol (%)"
 vehicle = "Køretøj"
 
 [sessions.filter]
@@ -435,7 +515,12 @@ allVehicles = "alle køretøjer"
 filter = "Filter"
 
 [settings]
-title = "Generelle indstillinger"
+title = "Brugergrænseflade"
+
+[settings.fullscreen]
+enter = "Gå til fuldskærmsvisning"
+exit = "Afslut fuldskærm"
+label = "Fuldskærm"
 
 [settings.hiddenFeatures]
 label = "Experimentalt"
