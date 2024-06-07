@@ -78,7 +78,7 @@ func Delete(key string) error {
 			return err
 		}
 
-		settings = slices.Delete(settings, idx, 1)
+		settings = slices.Delete(settings, idx, idx)
 	}
 
 	return nil
