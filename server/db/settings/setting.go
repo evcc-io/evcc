@@ -223,7 +223,7 @@ func Yaml(key string, other, res any) error {
 		return err
 	}
 
-	return DecodeOtherSliceOrMap(res, other)
+	return DecodeOtherSliceOrMap(other, res)
 }
 
 // wrapping Settings into a struct for better decoupling
