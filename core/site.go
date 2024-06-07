@@ -620,6 +620,7 @@ func (site *Site) sitePower(totalChargePower, flexiblePower float64) (float64, b
 	// allow using PV as estimate for grid power
 	if site.gridMeter == nil {
 		site.gridPower = totalChargePower - site.pvPower
+		site.publish(keys.GridPower, site.gridPower)
 	}
 
 	// allow using grid and charge as estimate for pv power
