@@ -10,7 +10,8 @@
 		>
 			<span
 				v-if="showBadge"
-				class="position-absolute top-0 start-100 translate-middle p-2 bg-warning rounded-circle"
+				class="position-absolute top-0 start-100 translate-middle p-2 rounded-circle"
+				:class="badgeClass"
 			>
 				<span class="visually-hidden">action required</span>
 			</span>
@@ -50,8 +51,9 @@
 			<li>
 				<router-link class="dropdown-item" to="/config" active-class="active">
 					<span
-						v-if="sponsor.expiresSoon"
+						v-if="showBadge"
 						class="d-inline-block p-1 rounded-circle bg-warning rounded-circle"
+						:class="badgeClass"
 					></span>
 					{{ $t("config.main.title") }}
 				</router-link>
@@ -75,7 +77,8 @@
 					>
 						<span
 							v-if="!login.loggedIn"
-							class="d-inline-block p-1 rounded-circle bg-danger border border-light rounded-circle"
+							class="d-inline-block p-1 rounded-circle border border-light rounded-circle"
+							:class="badgeClass"
 						></span>
 						{{ login.title }}
 						{{ $t(login.loggedIn ? "main.provider.logout" : "main.provider.login") }}
@@ -119,7 +122,6 @@ import "@h2d2/shopicons/es/regular/menu";
 import "@h2d2/shopicons/es/regular/newtab";
 import collector from "../mixins/collector";
 import { logout, isLoggedIn, openLoginModal } from "../auth";
-
 import baseAPI from "../baseapi";
 import { isApp, sendToApp } from "../utils/native";
 
@@ -140,6 +142,7 @@ export default {
 			},
 		},
 		battery: Array,
+		fatal: Object,
 	},
 	data() {
 		return {
@@ -165,7 +168,13 @@ export default {
 			return this.logoutCount > 0;
 		},
 		showBadge() {
-			return this.loginRequired || this.sponsor.expiresSoon;
+			return this.loginRequired || this.sponsor.expiresSoon || this.fatal?.error;
+		},
+		badgeClass() {
+			if (this.fatal?.error) {
+				return "bg-danger";
+			}
+			return "bg-warning";
 		},
 		batteryModalAvailable() {
 			return this.batteryConfigured;

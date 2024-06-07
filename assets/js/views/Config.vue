@@ -469,8 +469,12 @@ export default {
 			this.meters = response.data?.result || [];
 		},
 		async loadSite() {
-			const response = await api.get("/config/site");
-			this.site = response.data?.result;
+			const response = await api.get("/config/site", {
+				validateStatus: (status) => status < 500,
+			});
+			if (response.status === 200) {
+				this.site = response.data?.result;
+			}
 		},
 		getMetersByNames(names) {
 			if (!names || !this.meters) {
