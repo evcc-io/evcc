@@ -249,7 +249,7 @@ func (s *HTTPd) RegisterSystemHandler(valueChan chan<- util.Param, cache *util.C
 			keys.Hems:        config.Typed{},
 			keys.Tariffs:     globalconfig.Tariffs{},
 			keys.Messaging:   globalconfig.Messaging{}, // has default
-			keys.ModbusProxy: globalconfig.ModbusProxy{},
+			keys.ModbusProxy: []globalconfig.ModbusProxy{},
 			keys.Circuits:    []config.Named{},
 		} {
 			routes[key] = route{Method: "GET", Pattern: "/" + key, HandlerFunc: settingsGetStringHandler(key)}
