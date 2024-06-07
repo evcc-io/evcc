@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math"
 	"reflect"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -79,17 +80,13 @@ type Loadpoint struct {
 
 	vmu sync.RWMutex // guard vehicle
 
-	Title_          string `mapstructure:"title"`    // UI title
-	Priority_       int    `mapstructure:"priority"` // Priority
-	CircuitRef      string `mapstructure:"circuit"`  // Circuit reference
-	ChargerRef      string `mapstructure:"charger"`  // Charger reference
-	VehicleRef      string `mapstructure:"vehicle"`  // Vehicle reference
-	MeterRef        string `mapstructure:"meter"`    // Charge meter reference
+	CircuitRef string `mapstructure:"circuit"` // Circuit reference
+	ChargerRef string `mapstructure:"charger"` // Charger reference
+	VehicleRef string `mapstructure:"vehicle"` // Vehicle reference
+	MeterRef   string `mapstructure:"meter"`   // Charge meter reference
+
 	Soc             SocConfig
 	Enable, Disable ThresholdConfig
-
-	Soc                        loadpoint.SocConfig // Soc mode configuration
-	loadpoint.ThresholdsConfig                     // PV mode enable/ disable thresholds
 
 	// TODO deprecated
 	Mode_             api.ChargeMode `mapstructure:"mode"`          // Default charge mode, used for disconnect

@@ -44,7 +44,7 @@
     "markty-toml": "^0.1.1",
     "prettier": "^3.0.0",
     "prettier-plugin-toml": "^2.0.1",
-    "primevue": "^4.0.0-beta.1",
+    "primevue": "^4.0.0-beta.4",
     "rollup-plugin-visualizer": "^5.8.3",
     "smoothscroll-polyfill": "^0.4.4",
     "typescript": "^5.2.2",
