@@ -96,7 +96,7 @@ func display(res []tasks.Result) {
 }
 
 func runDetect(cmd *cobra.Command, args []string) {
-	util.LogLevel(vpr.GetString("log"), nil)
+	util.LogLevel(viper.GetString("log"), nil)
 
 	fmt.Println(`
 Auto detection will now start to scan the network for available devices.

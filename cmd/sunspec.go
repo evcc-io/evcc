@@ -45,7 +45,7 @@ func modelName(m sunspec.Model) string {
 }
 
 func runSunspec(cmd *cobra.Command, args []string) {
-	util.LogLevel(vpr.GetString("log"), nil)
+	util.LogLevel(viper.GetString("log"), nil)
 
 	conn := meters.NewTCP(args[0])
 	conn.Slave(uint8(*slaveID))

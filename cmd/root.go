@@ -26,7 +26,6 @@ import (
 	_ "github.com/joho/godotenv/autoload"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/cobra"
-	vpr "github.com/spf13/viper"
 )
 
 const (
@@ -42,7 +41,7 @@ var (
 	ignoreLogs  = []string{"log"}                         // ignore log messages, including warn/error
 	ignoreMqtt  = []string{"log", "auth", "releaseNotes"} // excessive size may crash certain brokers
 
-	viper *vpr.Viper
+	viper *viper.Viper
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -54,7 +53,7 @@ var rootCmd = &cobra.Command{
 }
 
 func init() {
-	viper = vpr.NewWithOptions(vpr.ExperimentalBindStruct())
+	viper = viper.NewWithOptions(viper.ExperimentalBindStruct())
 
 	cobra.OnInitialize(initConfig)
 

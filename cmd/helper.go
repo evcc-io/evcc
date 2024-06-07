@@ -16,10 +16,10 @@ import (
 
 // parseLogLevels parses --log area:level[,...] switch into levels per log area
 func parseLogLevels() {
-	levels := vpr.GetStringMapString("levels")
+	levels := viper.GetStringMapString("levels")
 
 	var level string
-	for _, kv := range strings.Split(vpr.GetString("log"), ",") {
+	for _, kv := range strings.Split(viper.GetString("log"), ",") {
 		areaLevel := strings.SplitN(kv, ":", 2)
 		if len(areaLevel) == 1 {
 			level = areaLevel[0]

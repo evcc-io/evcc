@@ -48,7 +48,7 @@ func runConfigure(cmd *cobra.Command, args []string) {
 		panic(err)
 	}
 
-	util.LogLevel(vpr.GetString("log"), nil)
+	util.LogLevel(viper.GetString("log"), nil)
 
 	// catch signals
 	go func() {

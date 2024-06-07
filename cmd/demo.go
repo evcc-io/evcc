@@ -10,12 +10,12 @@ import (
 var demoYaml string
 
 func demoConfig(conf *globalConfig) error {
-	vpr.SetConfigType("yaml")
-	if err := vpr.ReadConfig(strings.NewReader(demoYaml)); err != nil {
+	viper.SetConfigType("yaml")
+	if err := viper.ReadConfig(strings.NewReader(demoYaml)); err != nil {
 		return fmt.Errorf("failed decoding demo config: %w", err)
 	}
 
-	if err := vpr.UnmarshalExact(conf); err != nil {
+	if err := viper.UnmarshalExact(conf); err != nil {
 		return fmt.Errorf("failed loading demo config: %w", err)
 	}
 

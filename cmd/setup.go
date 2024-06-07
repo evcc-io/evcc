@@ -179,16 +179,16 @@ func tokenDanger(conf []config.Named) bool {
 }
 
 func loadConfigFile(conf *globalConfig, checkDB bool) error {
-	err := vpr.ReadInConfig()
+	err := viper.ReadInConfig()
 
-	if cfgFile = vpr.ConfigFileUsed(); cfgFile == "" {
+	if cfgFile = viper.ConfigFileUsed(); cfgFile == "" {
 		return err
 	}
 
 	log.INFO.Println("using config file:", cfgFile)
 
 	if err == nil {
-		if err = vpr.UnmarshalExact(conf); err != nil {
+		if err = viper.UnmarshalExact(conf); err != nil {
 			err = fmt.Errorf("failed parsing config file: %w", err)
 		}
 	}
