@@ -104,6 +104,13 @@ func runMigrate(cmd *cobra.Command, args []string) {
 		_ = settings.SetYaml(keys.Tariffs, conf.Tariffs)
 	}
 
+	log.DEBUG.Println("- circuits")
+	if reset {
+		settings.Delete(keys.Circuits)
+	} else {
+		_ = settings.SetYaml(keys.Circuits, conf.Circuits)
+	}
+
 	// wait for shutdown
 	<-shutdownDoneC()
 }
