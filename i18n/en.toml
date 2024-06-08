@@ -74,10 +74,6 @@ topic = "Topic"
 url = "URL"
 yes = "yes"
 
-[config.eebus]
-description = "Configuration that enables evcc to communicate with other EEBus devices."
-title = "EEBus"
-
 [config.deviceValueChargeStatus]
 A = "A (not connected)"
 B = "B (connected)"
@@ -85,6 +81,10 @@ C = "C (charging)"
 D = "D (charging with ventilation)"
 E = "E (no power)"
 F = "F (error)"
+
+[config.eebus]
+description = "Configuration that enables evcc to communicate with other EEBus devices."
+title = "EEBus"
 
 [config.form]
 example = "Example"
@@ -107,12 +107,6 @@ title = "Grid meter"
 titleAdd = "Add Grid Meter"
 titleEdit = "Edit Grid Meter"
 
-[config.loadpoint]
-cancel = "Cancel"
-delete = "Delete"
-save = "Save"
-titleEdit = "Edit Charge Point"
-
 [config.hems]
 description = "Connect evcc to another home energy management system."
 title = "HEMS"
@@ -130,6 +124,12 @@ labelUser = "Username"
 title = "InfluxDB"
 v1Support = "Need support for InfluxDB 1.x?"
 v2Support = "Back to InfluxDB 2.x"
+
+[config.loadpoint]
+cancel = "Cancel"
+delete = "Delete"
+save = "Save"
+titleEdit = "Edit Charge Point"
 
 [config.main]
 addLoadpoint = "Add charge point"
