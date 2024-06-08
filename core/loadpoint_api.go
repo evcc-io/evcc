@@ -304,11 +304,15 @@ func (lp *Loadpoint) SetSocConfig(soc loadpoint.SocConfig) {
 func (lp *Loadpoint) GetThresholds() loadpoint.ThresholdsConfig {
 	lp.RLock()
 	defer lp.RUnlock()
-	return lp.ThresholdsConfig
+	return loadpoint.ThresholdsConfig{
+		Enable:  lp.Enable,
+		Disable: lp.Disable,
+	}
 }
 
 func (lp *Loadpoint) setThresholds(thresholds loadpoint.ThresholdsConfig) {
-	lp.ThresholdsConfig = thresholds
+	lp.Enable = thresholds.Enable
+	lp.Disable = thresholds.Disable
 	lp.publish(keys.EnableThreshold, lp.Enable.Threshold)
 	lp.publish(keys.DisableThreshold, lp.Disable.Threshold)
 	lp.settings.SetJson(keys.Thresholds, thresholds)
@@ -342,7 +346,11 @@ func (lp *Loadpoint) SetEnableThreshold(threshold float64) {
 
 	if lp.Enable.Threshold != threshold {
 		lp.Enable.Threshold = threshold
-		lp.setThresholds(lp.ThresholdsConfig)
+		// TODO reduce APIs
+		lp.setThresholds(loadpoint.ThresholdsConfig{
+			Enable:  lp.Enable,
+			Disable: lp.Disable,
+		})
 	}
 }
 
@@ -362,7 +370,11 @@ func (lp *Loadpoint) SetDisableThreshold(threshold float64) {
 
 	if lp.Disable.Threshold != threshold {
 		lp.Disable.Threshold = threshold
-		lp.setThresholds(lp.ThresholdsConfig)
+		// TODO reduce APIs
+		lp.setThresholds(loadpoint.ThresholdsConfig{
+			Enable:  lp.Enable,
+			Disable: lp.Disable,
+		})
 	}
 }
 
