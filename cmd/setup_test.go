@@ -8,7 +8,6 @@ import (
 	"github.com/evcc-io/evcc/api/globalconfig"
 	"github.com/evcc-io/evcc/core"
 	"github.com/evcc-io/evcc/util"
-	"github.com/spf13/viper"
 )
 
 func TestYamlOff(t *testing.T) {

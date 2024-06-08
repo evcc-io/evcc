@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/evcc-io/evcc/api/globalconfig"
-	"github.com/spf13/viper"
 )
 
 //go:embed demo.yaml
