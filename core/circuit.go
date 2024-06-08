@@ -184,7 +184,7 @@ func (c *Circuit) updateLoadpoints(loadpoints []api.CircuitLoad) {
 }
 
 func (c *Circuit) overloadOnError(t time.Time, val *float64) {
-	if time.Since(t) > c.timeout {
+	if c.timeout > 0 && time.Since(t) > c.timeout {
 		*val = math.MaxFloat64
 	}
 }
