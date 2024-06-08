@@ -105,31 +105,31 @@
 						<AddDeviceButton :title="$t('config.main.addPvBattery')" @add="addMeter" />
 					</ul>
 
-          <h2 class="my-4">{{ $t("config.section.loadpoints") }} 🧪</h2>
+					<h2 class="my-4">{{ $t("config.section.loadpoints") }} 🧪</h2>
 
-          <ul class="p-0 config-list">
-            <DeviceCard
-              v-for="loadpoint in loadpoints"
-              :key="!!loadpoint.name"
-              :name="loadpoint.title"
-              :editable="true"
-              data-testid="loadpoint"
-              @edit="editLoadpoint(loadpoint.id)"
-            >
-              <template #tags>
-                <DeviceTags :tags="loadpointTags(loadpoint)" />
-              </template>
-              <template #icon>
-                <shopicon-regular-cablecharge></shopicon-regular-cablecharge>
-              </template>
-            </DeviceCard>
+					<ul class="p-0 config-list">
+						<DeviceCard
+							v-for="loadpoint in loadpoints"
+							:key="!!loadpoint.name"
+							:name="loadpoint.title"
+							:editable="true"
+							data-testid="loadpoint"
+							@edit="editLoadpoint(loadpoint.id)"
+						>
+							<template #tags>
+								<DeviceTags :tags="loadpointTags(loadpoint)" />
+							</template>
+							<template #icon>
+								<shopicon-regular-cablecharge></shopicon-regular-cablecharge>
+							</template>
+						</DeviceCard>
 
-            <AddDeviceButton
-              data-testid="add-loadpoint"
-              :title="$t('config.main.addLoadpoint')"
-              @click="todo"
-            />
-          </ul>
+						<AddDeviceButton
+							data-testid="add-loadpoint"
+							:title="$t('config.main.addLoadpoint')"
+							@click="todo"
+						/>
+					</ul>
 
 					<h2 class="my-4">{{ $t("config.section.vehicles") }} 🧪</h2>
 					<div>
@@ -298,19 +298,10 @@ import "@h2d2/shopicons/es/regular/receivepayment";
 import "@h2d2/shopicons/es/regular/cablecharge";
 import AddDeviceButton from "../components/Config/AddDeviceButton.vue";
 import api from "../api";
-import TopHeader from "../components/TopHeader.vue";
-import VehicleIcon from "../components/VehicleIcon";
-import VehicleModal from "../components/Config/VehicleModal.vue";
-import DeviceCard from "../components/Config/DeviceCard.vue";
-import DeviceTags from "../components/Config/DeviceTags.vue";
-import AddDeviceButton from "../components/Config/AddDeviceButton.vue";
-import MeterModal from "../components/Config/MeterModal.vue";
-import LoadpointModal from "../components/Config/LoadpointModal.vue";
-import GeneralConfig from "../components/Config/GeneralConfig.vue";
 import CircuitsIcon from "../components/MaterialIcon/Circuits.vue";
 import CircuitsModal from "../components/Config/CircuitsModal.vue";
-import ControlModal from "../components/Config/ControlModal.vue";
 import collector from "../mixins/collector";
+import ControlModal from "../components/Config/ControlModal.vue";
 import DeviceCard from "../components/Config/DeviceCard.vue";
 import DeviceTags from "../components/Config/DeviceTags.vue";
 import EebusIcon from "../components/MaterialIcon/Eebus.vue";
@@ -321,6 +312,7 @@ import HemsIcon from "../components/MaterialIcon/Hems.vue";
 import HemsModal from "../components/Config/HemsModal.vue";
 import InfluxIcon from "../components/MaterialIcon/Influx.vue";
 import InfluxModal from "../components/Config/InfluxModal.vue";
+import LoadpointModal from "../components/Config/LoadpointModal.vue";
 import MessagingModal from "../components/Config/MessagingModal.vue";
 import MeterModal from "../components/Config/MeterModal.vue";
 import Modal from "bootstrap/js/dist/modal";
@@ -331,9 +323,10 @@ import MqttModal from "../components/Config/MqttModal.vue";
 import NetworkModal from "../components/Config/NetworkModal.vue";
 import NotificationIcon from "../components/MaterialIcon/Notification.vue";
 import restart, { performRestart } from "../restart";
-import store from "../store";
 import SponsorModal from "../components/Config/SponsorModal.vue";
+import store from "../store";
 import TariffsModal from "../components/Config/TariffsModal.vue";
+import TopHeader from "../components/TopHeader.vue";
 import VehicleIcon from "../components/VehicleIcon";
 import VehicleModal from "../components/Config/VehicleModal.vue";
 
