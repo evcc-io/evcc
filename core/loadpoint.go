@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"math"
 	"reflect"
-	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -85,8 +84,8 @@ type Loadpoint struct {
 	VehicleRef string `mapstructure:"vehicle"` // Vehicle reference
 	MeterRef   string `mapstructure:"meter"`   // Charge meter reference
 
-	Soc             SocConfig
-	Enable, Disable ThresholdConfig
+	Soc             loadpoint.SocConfig
+	Enable, Disable loadpoint.ThresholdConfig
 
 	// TODO deprecated
 	Mode_             api.ChargeMode `mapstructure:"mode"`          // Default charge mode, used for disconnect
@@ -172,15 +171,12 @@ func NewLoadpointFromConfig(log *util.Logger, settings *Settings, other map[stri
 	}
 
 	// set vehicle polling mode
-	switch lp.Soc.Poll.Mode = strings.ToLower(lp.Soc.Poll.Mode); lp.Soc.Poll.Mode {
-	case pollCharging:
-	case pollConnected, pollAlways:
+	switch lp.Soc.Poll.Mode {
+	case loadpoint.PollCharging:
+	case loadpoint.PollConnected, loadpoint.PollAlways:
 		lp.log.WARN.Printf("poll mode '%s' may deplete your battery or lead to API misuse. USE AT YOUR OWN RISK.", lp.Soc.Poll)
 	default:
-		if lp.Soc.Poll.Mode != "" {
-			lp.log.WARN.Printf("invalid poll mode: %s", lp.Soc.Poll.Mode)
-		}
-		lp.Soc.Poll.Mode = pollCharging
+		lp.Soc.Poll.Mode = loadpoint.PollCharging
 	}
 
 	if lp.CircuitRef != "" {
@@ -262,10 +258,8 @@ func NewLoadpoint(log *util.Logger, settings *Settings) *Loadpoint {
 				Mode:     loadpoint.PollCharging,
 			},
 		},
-		ThresholdsConfig: loadpoint.ThresholdsConfig{
-			Enable:  loadpoint.ThresholdConfig{Delay: time.Minute, Threshold: 0},     // t, W
-			Disable: loadpoint.ThresholdConfig{Delay: 3 * time.Minute, Threshold: 0}, // t, W
-		},
+		Enable:        loadpoint.ThresholdConfig{Delay: time.Minute, Threshold: 0},     // t, W
+		Disable:       loadpoint.ThresholdConfig{Delay: 3 * time.Minute, Threshold: 0}, // t, W
 		sessionEnergy: NewEnergyMetrics(),
 		progress:      NewProgress(0, 10),     // soc progress indicator
 		coordinator:   coordinator.NewDummy(), // dummy vehicle coordinator
