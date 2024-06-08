@@ -38,8 +38,8 @@ params:
   - preset: vehicle-identify
 render: |
   type: mercedes
-  user: {{ .user }}
   {{ include "vehicle-common" . }}
+  user: {{ .user }}
   tokens:
     access: {{ .accessToken }}
     refresh: {{ .refreshToken }}

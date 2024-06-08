@@ -36,8 +36,8 @@ params:
   - preset: vehicle-identify
 render: |
   type: ds
-  user: {{ .user }}
   {{ include "vehicle-common" . }}
+  user: {{ .user }}
   tokens:
     access: {{ .accessToken }}
     refresh: {{ .refreshToken }}
