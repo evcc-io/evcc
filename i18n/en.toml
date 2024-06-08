@@ -26,14 +26,42 @@ never = "only with enough surplus"
 titleAdd = "Add Battery Meter"
 titleEdit = "Edit Battery Meter"
 
+[config.circuits]
+description = "Ensures, that the sum of all loadpoints connected to a circuit does not exceed the configured power and current limits. Circuits can be nested to build a hierarchy."
+title = "Load Management"
+
+[config.control]
+description = "Usually the default values are fine. Only change them if you know what you are doing."
+descriptionInterval = "Control loop update cycle in seconds. Defines how often evcc reads meter data, adjusts charging power and updates the UI. Short intervals (< 30s) can cause oszillations and unwanted behavior."
+descriptionMaxGridSupply = "Only relevant for hybrid inverters that are not able to output the full DC generation power to the home via AC. This szenario can lead to unwanted grid use, since evcc assumes the full DC power is available. Use a value of at least 50 W to prevent this."
+descriptionResidualPower = "Shifts the operation point of the control loop. If you have a home battery it's recommended to set a value of 100 W. This way the battery will get slight priority over grid use."
+labelInterval = "Update interval"
+labelMaxGridSupply = "Max. grid supply while charging"
+labelResidualPower = "Residual power"
+title = "Control behavior"
+
 [config.deviceValue]
+broker = "Broker"
+bucket = "Bucket"
 capacity = "Capacity"
 chargeStatus = "Status"
+chargeStatusA = "not connected"
+chargeStatusB = "connected"
+chargeStatusC = "charging"
+chargeStatusE = "no power"
+chargeStatusF = "error"
 chargedEnergy = "Charged"
+co2 = "Grid CO₂"
+configured = "Configured"
+currency = "Currency"
 current = "Current"
 enabled = "Enabled"
 energy = "Energy"
+feedinPrice = "Feed-in price"
+gridPrice = "Grid price"
+no = "no"
 odometer = "Odometer"
+org = "Organization"
 phaseCurrents = "Current L1..L3"
 phasePowers = "Power L1..L3"
 phaseVoltages = "Voltage L1..L3"
@@ -41,6 +69,14 @@ power = "Power"
 range = "Range"
 soc = "SoC"
 socLimit = "Limit"
+temp = "Temperature"
+topic = "Topic"
+url = "URL"
+yes = "yes"
+
+[config.eebus]
+description = "Configuration that enables evcc to communicate with other EEBus devices."
+title = "EEBus"
 
 [config.form]
 example = "Example"
@@ -48,21 +84,53 @@ optional = "optional"
 
 [config.general]
 cancel = "Cancel"
+docsLink = "See documentation."
+experimental = "Experimental"
+off = "off"
+on = "on"
+password = "Password"
+remove = "Remove"
 save = "Save"
+telemetry = "Telemetry"
+title = "Title"
 
 [config.grid]
+title = "Grid meter"
 titleAdd = "Add Grid Meter"
 titleEdit = "Edit Grid Meter"
+
+[config.hems]
+description = "Connect evcc to another home energy management system."
+title = "HEMS"
+
+[config.influx]
+description = "Writes charging data and other metrics to InfluxDB. Use Grafana or other tools to visualize the data."
+descriptionToken = "Check the InfluxDB documentation to learn how to create one. https://docs.influxdata.com/influxdb/v2/admin/"
+labelBucket = "Bucket"
+labelDatabase = "Database"
+labelOrg = "Organization"
+labelPassword = "Password"
+labelToken = "API Token"
+labelUrl = "URL"
+labelUser = "Username"
+title = "InfluxDB"
+v1Support = "Need support for InfluxDB 1.x?"
+v2Support = "Back to InfluxDB 2.x"
 
 [config.main]
 addLoadpoint = "Add charge point"
 addPvBattery = "Add solar or battery"
 addVehicle = "Add vehicle"
+configured = "configured"
 edit = "edit"
 title = "Configuration"
 unconfigured = "not configured"
 vehicles = "My Vehicles"
 yaml = "Configured in evcc.yaml. Not editable in the UI."
+
+[config.messaging]
+description = "Recieve messages about your charging sessions."
+title = "Notifications"
 
 [config.meter]
 cancel = "Cancel"
@@ -71,6 +139,34 @@ save = "Save"
 template = "Manufacturer"
 titleChoice = "What Do You Want To Add?"
 validateSave = "Validate & save"
+
+[config.modbusproxy]
+description = "Allow multiple clients to access a single Modbus device."
+title = "Modbus Proxy"
+
+[config.mqtt]
+authentication = "Authentication"
+description = "Connect to an MQTT broker to exchange data with other systems on your network."
+descriptionClientId = "Author of the messages. If empty `evcc-[rand]` is used."
+descriptionTopic = "Leave empty to disable publishing."
+labelBroker = "Broker"
+labelCheckInsecure = "Allow self-signed certificates"
+labelClientId = "Client ID"
+labelInsecure = "Certificate validation"
+labelPassword = "Password"
+labelTopic = "Topic"
+labelUser = "Username"
+publishing = "Publishing"
+title = "MQTT"
+
+[config.network]
+descriptionHost = "Use .local suffix to enable mDNS. Relevant for discovery of the mobile app and some OCPP chargers."
+descriptionPort = "Port for the web interface and API. You'll need to update your browser URL if you change this."
+descriptionSchema = "Only affects how URLs are generated. Selecting HTTPS will not enable encryption."
+labelHost = "Hostname"
+labelPort = "Port"
+labelSchema = "Schema"
+title = "Network"
 
 [config.options]
 
@@ -88,7 +184,21 @@ titleEdit = "Edit Solar Meter"
 
 [config.section]
 general = "General"
+grid = "Grid"
+integrations = "Integrations"
+loadpoints = "Charging points"
+meter = "Solar & Battery"
 system = "System"
+vehicles = "Vehicles"
+
+[config.sponsor]
+addToken = "Enter sponsor token"
+changeToken = "Change sponsor token"
+description = "The sponsoring model helps us to maintain the project and sustainably build new and exciting features. As a sponsor you get access to all charger implementations."
+descriptionToken = "You get the token from {url}. We also offer a trial token for testing."
+error = "The sponsor token is not valid."
+labelToken = "Sponsor token"
+title = "Sponsorship"
 
 [config.system]
 logs = "Logs"
@@ -97,6 +207,10 @@ restartRequiredDescription = "Please restart to see the effect."
 restartRequiredMessage = "Configuration changed."
 restartingDescription = "Please wait…"
 restartingMessage = "Restarting evcc."
+
+[config.tariffs]
+description = "Define your energy tariffs to calculate the costs of your charging sessions."
+title = "Tariffs"
 
 [config.title]
 description = "Displayed on main screen and browser tab."
@@ -428,7 +542,9 @@ modalTitle = "Notifications"
 
 [offline]
 message = "Not connected to a server."
-reload = "Reload?"
+restart = "Restart"
+restartNeeded = "Required to apply changes."
+restarting = "Server will be back in a moment."
 
 [passwordModal]
 description = "Set a password to protect the configuration settings. Using the main screen is still possible without login."
@@ -514,7 +630,7 @@ auto = "Automatic"
 label = "Language"
 
 [settings.sponsorToken]
-expires = "You sponsor token expires {inXDays}. {getNewToken} and update your configuration file."
+expires = "You sponsor token expires {inXDays}. {getNewToken} and update it here."
 getNew = "Grab a fresh one"
 hint = "Note: We will automate this in the future."
 

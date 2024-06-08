@@ -32,6 +32,10 @@ func (t *Tee) add(out chan<- Param) {
 	t.recv = append(t.recv, out)
 }
 
+type redactor interface {
+	Redacted() any
+}
+
 // Run starts parameter distribution
 func (t *Tee) Run(in <-chan Param) {
 	for msg := range in {
@@ -39,6 +43,10 @@ func (t *Tee) Run(in <-chan Param) {
 			if ptr := reflect.Indirect(val); ptr.IsValid() {
 				msg.Val = ptr.Addr().Elem().Interface()
 			}
+		}
+
+		if val, ok := (msg.Val).(redactor); ok {
+			msg.Val = val.Redacted()
 		}
 
 		t.mu.Lock()

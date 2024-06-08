@@ -109,7 +109,7 @@ test("update password", async ({ page }) => {
   await loginOld.getByRole("button", { name: "Login" }).click();
 
   // update password
-  await page.getByTestId("generalconfig-password").getByRole("link", { name: "edit" }).click();
+  await page.getByTestId("generalconfig-password").getByRole("button", { name: "edit" }).click();
   await expect(modal.getByRole("heading", { name: "Update Administrator Password" })).toBeVisible();
   await modal.getByLabel("Current password").fill(oldPassword);
   await modal.getByLabel("New password").fill(newPassword);
@@ -131,7 +131,7 @@ test("update password", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "Configuration" })).toBeVisible();
 
   // revert password
-  await page.getByTestId("generalconfig-password").getByRole("link", { name: "edit" }).click();
+  await page.getByTestId("generalconfig-password").getByRole("button", { name: "edit" }).click();
   await modal.getByLabel("Current password").fill(newPassword);
   await modal.getByLabel("New password").fill(oldPassword);
   await modal.getByLabel("Repeat password").fill(oldPassword);

@@ -49,12 +49,12 @@ func runDump(cmd *cobra.Command, args []string) {
 
 	// setup environment
 	if err == nil {
-		err = configureEnvironment(cmd, conf)
+		err = configureEnvironment(cmd, &conf)
 	}
 
 	var site *core.Site
 	if err == nil {
-		site, err = configureSiteAndLoadpoints(conf)
+		site, err = configureSiteAndLoadpoints(&conf)
 	}
 
 	if *dumpConfig {

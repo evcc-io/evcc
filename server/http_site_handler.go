@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
-	"math"
 	"net/http"
 	"strconv"
 	"strings"
@@ -16,11 +15,13 @@ import (
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/server/assets"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/encode"
 	"github.com/evcc-io/evcc/util/jq"
 	"github.com/evcc-io/evcc/util/logstash"
 	"github.com/gorilla/mux"
 	"github.com/itchyny/gojq"
 	"golang.org/x/text/language"
+	"gopkg.in/yaml.v3"
 )
 
 var ignoreState = []string{"releaseNotes"} // excessive size
@@ -85,7 +86,26 @@ func jsonResult(w http.ResponseWriter, res interface{}) {
 
 func jsonError(w http.ResponseWriter, status int, err error) {
 	w.WriteHeader(status)
-	jsonWrite(w, map[string]interface{}{"error": err.Error()})
+
+	res := struct {
+		Error string `json:"error"`
+		Line  int    `json:"line,omitempty"`
+	}{
+		Error: err.Error(),
+	}
+
+	var (
+		ype *yaml.ParserError
+		yue yaml.UnmarshalError
+	)
+	switch {
+	case errors.As(err, &ype):
+		res.Line = ype.Line
+	case errors.As(err, &yue):
+		res.Line = yue.Line
+	}
+
+	jsonWrite(w, res)
 }
 
 func handler[T any](conv func(string) (T, error), set func(T) error, get func() T) http.HandlerFunc {
@@ -128,19 +148,6 @@ func boolGetHandler(get func() bool) http.HandlerFunc {
 	}
 }
 
-// encodeFloats replaces NaN and Inf with nil
-// TODO handle hierarchical data
-func encodeFloats(data map[string]any) {
-	for k, v := range data {
-		switch v := v.(type) {
-		case float64:
-			if math.IsNaN(v) || math.IsInf(v, 0) {
-				data[k] = nil
-			}
-		}
-	}
-}
-
 // updateSmartCostLimit sets the smart cost limit globally
 func updateSmartCostLimit(site site.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -163,12 +170,10 @@ func updateSmartCostLimit(site site.API) http.HandlerFunc {
 // stateHandler returns the combined state
 func stateHandler(cache *util.Cache) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		res := cache.State()
+		res := cache.State(encode.NewEncoder(encode.WithDuration()))
 		for _, k := range ignoreState {
 			delete(res, k)
 		}
-
-		encodeFloats(res)
 
 		if q := r.URL.Query().Get("jq"); q != "" {
 			q = strings.TrimPrefix(q, ".result")

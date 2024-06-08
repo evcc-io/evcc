@@ -7,13 +7,14 @@
 			{{ $t(`footer.sponsor.${isVictronDevice ? "titleVictron" : "titleSponsor"}`) }}
 		</p>
 		<p class="mb-3">
-			{{ $t(`footer.sponsor.${isVictronDevice ? "victron" : "thanks"}`, { sponsor }) }}
+			{{ $t(`footer.sponsor.${isVictronDevice ? "victron" : "thanks"}`, { sponsor: name }) }}
 		</p>
 		<div
 			class="d-flex justify-content-center align-items-center flex-column flex-lg-row align-items-lg-baseline justify-content-lg-start"
 		>
 			<button
 				ref="confetti"
+				type="button"
 				class="btn btn btn-outline-primary mb-2 confetti-button bg-evcc rounded flex-shrink-0"
 				@click="surprise"
 			>
@@ -33,7 +34,7 @@
 			</a>
 		</div>
 	</div>
-	<div v-if="!sponsor || isTrial">
+	<div v-if="!name || isTrial">
 		<p class="fw-bold mb-1">
 			<shopicon-regular-clock
 				v-if="isTrial"
@@ -67,20 +68,25 @@ import "@h2d2/shopicons/es/regular/stars";
 import "@h2d2/shopicons/es/regular/clock";
 import { docsPrefix } from "../i18n";
 
+export const TRIAL = "trial";
+export const VICTRON_DEVICE = "victron";
+
 export default {
 	name: "Sponsor",
 	props: {
-		sponsor: String,
+		name: String,
+		expiresAt: String,
+		expiresSoon: Boolean,
 	},
 	computed: {
 		isTrial() {
-			return this.sponsor === "trial";
+			return this.name === TRIAL;
 		},
 		isVictronDevice() {
-			return this.sponsor === "victron-device";
+			return this.name === VICTRON_DEVICE;
 		},
 		isIndividual() {
-			return this.sponsor && !this.isTrial && !this.isVictronDevice;
+			return this.name && !this.isTrial && !this.isVictronDevice;
 		},
 		sponsorLink() {
 			return `${docsPrefix()}/docs/sponsorship`;

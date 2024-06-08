@@ -2,76 +2,48 @@
 	<div class="root safe-area-inset">
 		<div class="container px-4">
 			<TopHeader :title="$t('config.main.title')" />
-			<div class="wrapper">
-				<div
-					v-if="dirty || restarting"
-					class="alert alert-secondary d-flex justify-content-between align-items-center my-4"
-					role="alert"
-				>
-					<div v-if="restarting">
-						<strong>{{ $t("config.system.restartingMessage") }}</strong>
-						{{ $t("config.system.restartingDescription") }}
-					</div>
-					<div v-else>
-						<strong>{{ $t("config.system.restartRequiredMessage") }}</strong>
-						{{ $t("config.system.restartRequiredDescription") }}
-					</div>
-					<button
-						type="button"
-						class="btn btn-outline-dark btn-sm"
-						:disabled="restarting || offline"
-						@click="restart"
-					>
-						<span
-							v-if="restarting || offline"
-							class="spinner-border spinner-border-sm"
-							role="status"
-							aria-hidden="true"
-						></span>
-						<span v-else>{{ $t("config.system.restart") }}</span>
-					</button>
+			<div class="wrapper pb-5">
+				<div class="alert alert-danger my-4 pb-0" role="alert" v-if="$hiddenFeatures()">
+					<p>
+						<strong>Experimental! 🧪</strong>
+						Only use these features if you are in the mood for adventure and not afraid
+						of debugging. Unexpected things and data loss may happen.
+					</p>
+					<p>
+						We are in the progress of replacing <code>evcc.yaml</code> with UI-based
+						configuration. Any changes made here will be written to the database. After
+						that, the corresponding <code>evcc.yaml</code>-values (e.g. network
+						settings) will be ignored.
+					</p>
+					<p class="mb-1"><strong>Missing features</strong></p>
+					<ul>
+						<li>grid meter</li>
+						<li>aux meters</li>
+						<li>loadpoints and chargers</li>
+						<li>custom/plugin meters and vehicles</li>
+						<li>migration for vehicles, chargers, meters, loadpoints</li>
+						<li>remove mixed mode (evcc.yaml + db) for meters and vehicles</li>
+					</ul>
+					<p>
+						<strong>Migration and repair.</strong> Run <code>evcc migrate</code> to copy
+						configuration from <code>evcc.yaml</code> to the database. Existing database
+						configurations will be overwritten. Session and statistics data will not be
+						touched. Run <code>evcc migrate --reset</code> to remove all database
+						configurations.
+					</p>
 				</div>
 
 				<h2 class="my-4 mt-5">{{ $t("config.section.general") }}</h2>
 				<GeneralConfig @site-changed="siteChanged" />
 
-				<h2 class="my-4 mt-5">{{ $t("config.section.system") }}</h2>
-				<div class="round-box p-4 d-flex gap-4">
-					<router-link to="/log" class="btn btn-outline-secondary">
-						{{ $t("config.system.logs") }}
-					</router-link>
-					<button
-						class="btn btn-outline-danger"
-						:disabled="restarting || offline"
-						@click="restart"
-					>
-						<span
-							v-if="restarting || offline"
-							class="spinner-border spinner-border-sm"
-							role="status"
-							aria-hidden="true"
-						></span>
-						{{ $t("config.system.restart") }}
-					</button>
-				</div>
-
 				<div v-if="$hiddenFeatures()">
-					<hr class="my-5" />
-
-					<div class="alert alert-danger my-4" role="alert">
-						<strong>Highly experimental!</strong> Only play around with these settings
-						if you know what you're doing. Otherwise you might have to reset or manually
-						repair your database.
-					</div>
-
-					<h2 class="my-4 mt-5">Grid, PV & Battery Systems</h2>
+					<h2 class="my-4 mt-5">{{ $t("config.section.grid") }} 🧪</h2>
 					<ul class="p-0 config-list">
 						<DeviceCard
-							:name="gridMeter?.config?.template || 'Grid meter'"
-							:unconfigured="!gridMeter"
+							:name="$t('config.grid.title')"
 							:editable="!!gridMeter?.id"
+							:error="deviceError('meter', gridMeter?.name)"
 							data-testid="grid"
-							@configure="addMeter('grid')"
 							@edit="editMeter(gridMeter.id, 'grid')"
 						>
 							<template #icon>
@@ -82,10 +54,28 @@
 							</template>
 						</DeviceCard>
 						<DeviceCard
+							:name="$t('config.tariffs.title')"
+							editable
+							:error="fatalClass === 'tariff'"
+							data-testid="tariffs"
+							@edit="openModal('tariffsModal')"
+						>
+							<template #icon>
+								<shopicon-regular-receivepayment></shopicon-regular-receivepayment>
+							</template>
+							<template #tags>
+								<DeviceTags :tags="tariffTags" />
+							</template>
+						</DeviceCard>
+					</ul>
+					<h2 class="my-4 mt-5">{{ $t("config.section.meter") }} 🧪</h2>
+					<ul class="p-0 config-list">
+						<DeviceCard
 							v-for="meter in pvMeters"
-							:key="!!meter.name"
+							:key="meter.name"
 							:name="meter.config?.template || 'Solar system'"
 							:editable="!!meter.id"
+							:error="deviceError('meter', meter.name)"
 							data-testid="pv"
 							@edit="editMeter(meter.id, 'pv')"
 						>
@@ -101,6 +91,7 @@
 							:key="meter.name"
 							:name="meter.config?.template || 'Battery storage'"
 							:editable="!!meter.id"
+							:error="deviceError('meter', meter.name)"
 							data-testid="battery"
 							@edit="editMeter(meter.id, 'battery')"
 						>
@@ -114,47 +105,13 @@
 						<AddDeviceButton :title="$t('config.main.addPvBattery')" @add="addMeter" />
 					</ul>
 
-					<h2 class="my-4 wip">Tariffs</h2>
-
-					<ul class="p-0 config-list wip">
-						<DeviceCard
-							name="Grid"
-							unconfigured
-							data-testid="tariff-grid"
-							@configure="todo"
-						>
-							<template #icon>
-								<shopicon-regular-money></shopicon-regular-money>
-							</template>
-						</DeviceCard>
-						<DeviceCard
-							name="Feed-in"
-							unconfigured
-							data-testid="tariff-feedin"
-							@configure="todo"
-						>
-							<template #icon>
-								<shopicon-regular-receivepayment></shopicon-regular-receivepayment>
-							</template>
-						</DeviceCard>
-						<DeviceCard
-							name="CO₂ estimate"
-							unconfigured
-							data-testid="tariff-co2"
-							@configure="todo"
-						>
-							<template #icon>
-								<shopicon-regular-eco1></shopicon-regular-eco1>
-							</template>
-						</DeviceCard>
-					</ul>
-
-					<h2 class="my-4 wip">Charge Points</h2>
+					<h2 class="my-4 wip">{{ $t("config.section.loadpoints") }} 🧪</h2>
 
 					<ul class="p-0 config-list wip">
 						<DeviceCard
 							name="Fake Carport"
 							editable
+							:error="deviceError('charger', 'fake-charger')"
 							data-testid="chargepoint-1"
 							@edit="todo"
 						>
@@ -172,14 +129,15 @@
 						/>
 					</ul>
 
-					<h2 class="my-4">Vehicles</h2>
+					<h2 class="my-4">{{ $t("config.section.vehicles") }} 🧪</h2>
 					<div>
 						<ul class="p-0 config-list">
 							<DeviceCard
 								v-for="vehicle in vehicles"
-								:key="vehicle.id"
+								:key="vehicle.name"
 								:name="vehicle.config?.title || vehicle.name"
 								:editable="vehicle.id >= 0"
+								:error="deviceError('vehicle', vehicle.name)"
 								data-testid="vehicle"
 								@edit="editVehicle(vehicle.id)"
 							>
@@ -196,41 +154,108 @@
 								@click="addVehicle"
 							/>
 						</ul>
-					</div>
-					<h2 class="my-4 wip">Integrations</h2>
 
-					<ul class="p-0 config-list wip">
-						<DeviceCard name="MQTT" unconfigured data-testid="mqtt" @configure="todo">
-							<template #icon>
-								<shopicon-regular-fastdelivery1></shopicon-regular-fastdelivery1>
-							</template>
-						</DeviceCard>
-						<DeviceCard
-							name="Notifications"
-							unconfigured
-							data-testid="eebus"
-							@configure="todo"
-						>
-							<template #icon>
-								<shopicon-regular-sendit></shopicon-regular-sendit>
-							</template>
-						</DeviceCard>
-						<DeviceCard
-							name="InfluxDB"
-							unconfigured
-							data-testid="influx"
-							@configure="todo"
-						>
-							<template #icon>
-								<shopicon-regular-diagram></shopicon-regular-diagram>
-							</template>
-						</DeviceCard>
-						<DeviceCard name="EEBus" unconfigured data-testid="eebus" @configure="todo">
-							<template #icon>
-								<shopicon-regular-polygon></shopicon-regular-polygon>
-							</template>
-						</DeviceCard>
-					</ul>
+						<h2 class="my-4 mt-5">{{ $t("config.section.integrations") }} 🧪</h2>
+
+						<ul class="p-0 config-list">
+							<DeviceCard
+								:name="$t('config.mqtt.title')"
+								editable
+								:error="fatalClass === 'mqtt'"
+								data-testid="mqtt"
+								@edit="openModal('mqttModal')"
+							>
+								<template #icon><MqttIcon /></template>
+								<template #tags>
+									<DeviceTags :tags="mqttTags" />
+								</template>
+							</DeviceCard>
+							<DeviceCard
+								:name="$t('config.messaging.title')"
+								editable
+								:error="fatalClass === 'messenger'"
+								data-testid="messaging"
+								@edit="openModal('messagingModal')"
+							>
+								<template #icon><NotificationIcon /></template>
+								<template #tags>
+									<DeviceTags :tags="yamlTags('messaging')" />
+								</template>
+							</DeviceCard>
+							<DeviceCard
+								:name="$t('config.influx.title')"
+								editable
+								:error="fatalClass === 'influx'"
+								data-testid="influx"
+								@edit="openModal('influxModal')"
+							>
+								<template #icon><InfluxIcon /></template>
+								<template #tags>
+									<DeviceTags :tags="influxTags" />
+								</template>
+							</DeviceCard>
+							<DeviceCard
+								:name="`${$t('config.eebus.title')} 🧪`"
+								editable
+								:error="fatalClass === 'eebus'"
+								data-testid="eebus"
+								@edit="openModal('eebusModal')"
+							>
+								<template #icon><EebusIcon /></template>
+								<template #tags>
+									<DeviceTags :tags="yamlTags('eebus')" />
+								</template>
+							</DeviceCard>
+							<DeviceCard
+								:name="`${$t('config.circuits.title')} 🧪`"
+								editable
+								:error="fatalClass === 'circuit'"
+								data-testid="circuits"
+								@edit="openModal('circuitsModal')"
+							>
+								<template #icon><CircuitsIcon /></template>
+								<template #tags>
+									<DeviceTags :tags="yamlTags('circuits')" />
+								</template>
+							</DeviceCard>
+							<DeviceCard
+								:name="$t('config.modbusproxy.title')"
+								editable
+								:error="fatalClass === 'modbusproxy'"
+								data-testid="modbusproxy"
+								@edit="openModal('modbusProxyModal')"
+							>
+								<template #icon><ModbusProxyIcon /></template>
+								<template #tags>
+									<DeviceTags :tags="yamlTags('modbusproxy')" />
+								</template>
+							</DeviceCard>
+							<DeviceCard
+								:name="$t('config.hems.title')"
+								editable
+								:error="fatalClass === 'hems'"
+								data-testid="hems"
+								@edit="openModal('hemsModal')"
+							>
+								<template #icon><HemsIcon /></template>
+								<template #tags>
+									<DeviceTags :tags="yamlTags('hems')" />
+								</template>
+							</DeviceCard>
+						</ul>
+					</div>
+				</div>
+
+				<hr class="my-5" />
+
+				<h2 class="my-4 mt-5">{{ $t("config.section.system") }}</h2>
+				<div class="round-box p-4 d-flex gap-4 mb-5">
+					<router-link to="/log" class="btn btn-outline-secondary">
+						{{ $t("config.system.logs") }}
+					</router-link>
+					<button class="btn btn-outline-danger" @click="restart">
+						{{ $t("config.system.restart") }}
+					</button>
 				</div>
 
 				<VehicleModal :id="selectedVehicleId" @vehicle-changed="vehicleChanged" />
@@ -242,6 +267,17 @@
 					@updated="meterChanged"
 					@removed="removeMeterFromSite"
 				/>
+				<InfluxModal @changed="loadDirty" />
+				<MqttModal @changed="loadDirty" />
+				<NetworkModal @changed="loadDirty" />
+				<ControlModal @changed="loadDirty" />
+				<SponsorModal @changed="loadDirty" />
+				<HemsModal @changed="yamlChanged" />
+				<MessagingModal @changed="yamlChanged" />
+				<TariffsModal @changed="yamlChanged" />
+				<ModbusProxyModal @changed="yamlChanged" />
+				<CircuitsModal @changed="yamlChanged" />
+				<EebusModal @changed="yamlChanged" />
 			</div>
 		</div>
 	</div>
@@ -252,36 +288,69 @@ import TopHeader from "../components/TopHeader.vue";
 import "@h2d2/shopicons/es/regular/sun";
 import "@h2d2/shopicons/es/regular/batterythreequarters";
 import "@h2d2/shopicons/es/regular/powersupply";
-import "@h2d2/shopicons/es/regular/money";
 import "@h2d2/shopicons/es/regular/receivepayment";
-import "@h2d2/shopicons/es/regular/eco1";
-import "@h2d2/shopicons/es/regular/fastdelivery1";
-import "@h2d2/shopicons/es/regular/sendit";
-import "@h2d2/shopicons/es/regular/diagram";
-import "@h2d2/shopicons/es/regular/polygon";
 import "@h2d2/shopicons/es/regular/cablecharge";
-import Modal from "bootstrap/js/dist/modal";
+import AddDeviceButton from "../components/Config/AddDeviceButton.vue";
 import api from "../api";
-import VehicleIcon from "../components/VehicleIcon";
-import VehicleModal from "../components/Config/VehicleModal.vue";
+import CircuitsIcon from "../components/MaterialIcon/Circuits.vue";
+import CircuitsModal from "../components/Config/CircuitsModal.vue";
+import ControlModal from "../components/Config/ControlModal.vue";
+import collector from "../mixins/collector";
 import DeviceCard from "../components/Config/DeviceCard.vue";
 import DeviceTags from "../components/Config/DeviceTags.vue";
-import AddDeviceButton from "../components/Config/AddDeviceButton.vue";
-import MeterModal from "../components/Config/MeterModal.vue";
-import GeneralConfig from "../components/Config/GeneralConfig.vue";
+import EebusIcon from "../components/MaterialIcon/Eebus.vue";
+import EebusModal from "../components/Config/EebusModal.vue";
 import formatter from "../mixins/formatter";
+import GeneralConfig from "../components/Config/GeneralConfig.vue";
+import HemsIcon from "../components/MaterialIcon/Hems.vue";
+import HemsModal from "../components/Config/HemsModal.vue";
+import InfluxIcon from "../components/MaterialIcon/Influx.vue";
+import InfluxModal from "../components/Config/InfluxModal.vue";
+import MessagingModal from "../components/Config/MessagingModal.vue";
+import MeterModal from "../components/Config/MeterModal.vue";
+import Modal from "bootstrap/js/dist/modal";
+import ModbusProxyIcon from "../components/MaterialIcon/ModbusProxy.vue";
+import ModbusProxyModal from "../components/Config/ModbusProxyModal.vue";
+import MqttIcon from "../components/MaterialIcon/Mqtt.vue";
+import MqttModal from "../components/Config/MqttModal.vue";
+import NetworkModal from "../components/Config/NetworkModal.vue";
+import NotificationIcon from "../components/MaterialIcon/Notification.vue";
+import restart, { performRestart } from "../restart";
+import store from "../store";
+import SponsorModal from "../components/Config/SponsorModal.vue";
+import TariffsModal from "../components/Config/TariffsModal.vue";
+import VehicleIcon from "../components/VehicleIcon";
+import VehicleModal from "../components/Config/VehicleModal.vue";
 
 export default {
 	name: "Config",
 	components: {
-		TopHeader,
-		GeneralConfig,
-		VehicleIcon,
-		VehicleModal,
+		AddDeviceButton,
+		CircuitsIcon,
+		CircuitsModal,
+		ControlModal,
 		DeviceCard,
 		DeviceTags,
-		AddDeviceButton,
+		EebusIcon,
+		EebusModal,
+		GeneralConfig,
+		HemsIcon,
+		HemsModal,
+		InfluxIcon,
+		InfluxModal,
+		MessagingModal,
 		MeterModal,
+		ModbusProxyIcon,
+		ModbusProxyModal,
+		MqttIcon,
+		MqttModal,
+		NetworkModal,
+		NotificationIcon,
+		SponsorModal,
+		TariffsModal,
+		TopHeader,
+		VehicleIcon,
+		VehicleModal,
 	},
 	props: {
 		offline: Boolean,
@@ -289,8 +358,6 @@ export default {
 	},
 	data() {
 		return {
-			dirty: false,
-			restarting: false,
 			vehicles: [],
 			meters: [],
 			selectedVehicleId: undefined,
@@ -299,10 +366,20 @@ export default {
 			site: { grid: "", pv: [], battery: [] },
 			deviceValueTimeout: undefined,
 			deviceValues: {},
+			yamlConfigState: {
+				messaging: false,
+				eebus: false,
+				circuits: false,
+				modbusproxy: false,
+				hems: false,
+			},
 		};
 	},
-	mixins: [formatter],
+	mixins: [formatter, collector],
 	computed: {
+		fatalClass() {
+			return store.state?.fatal?.class;
+		},
 		siteTitle() {
 			return this.site?.title;
 		},
@@ -321,11 +398,43 @@ export default {
 		selectedMeterName() {
 			return this.getMeterById(this.selectedMeterId)?.name;
 		},
+		tariffTags() {
+			const { currency, tariffGrid, tariffFeedIn, tariffCo2 } = store.state;
+			const tags = {};
+			if (currency) {
+				tags.currency = { value: currency };
+			}
+			if (tariffGrid) {
+				tags.gridPrice = { value: tariffGrid, options: { currency } };
+			}
+			if (tariffFeedIn) {
+				tags.feedinPrice = { value: tariffFeedIn * -1, options: { currency } };
+			}
+			if (tariffCo2) {
+				tags.co2 = { value: tariffCo2 };
+			}
+			return tags;
+		},
+		mqttTags() {
+			const { broker, topic } = store.state?.mqtt || {};
+			if (!broker) return { configured: { value: false } };
+			return {
+				broker: { value: broker },
+				topic: { value: topic },
+			};
+		},
+		influxTags() {
+			const { url, database, org } = store.state?.influx || {};
+			if (!url) return { configured: { value: false } };
+			const result = { url: { value: url } };
+			if (database) result.bucket = { value: database };
+			if (org) result.org = { value: org };
+			return result;
+		},
 	},
 	watch: {
 		offline() {
 			if (!this.offline) {
-				this.restarting = false;
 				this.loadAll();
 			}
 		},
@@ -343,13 +452,12 @@ export default {
 			await this.loadSite();
 			await this.loadDirty();
 			await this.updateValues();
+			await this.updateYamlConfigState();
 		},
 		async loadDirty() {
-			try {
-				const response = await api.get("/config/dirty");
-				this.dirty = response.data?.result;
-			} catch (e) {
-				console.error(e);
+			const response = await api.get("/config/dirty");
+			if (response.data?.result) {
+				restart.restartNeeded = true;
 			}
 		},
 		async loadVehicles() {
@@ -361,8 +469,12 @@ export default {
 			this.meters = response.data?.result || [];
 		},
 		async loadSite() {
-			const response = await api.get("/config/site");
-			this.site = response.data?.result;
+			const response = await api.get("/config/site", {
+				validateStatus: (status) => status < 500,
+			});
+			if (response.status === 200) {
+				this.site = response.data?.result;
+			}
 		},
 		getMetersByNames(names) {
 			if (!names || !this.meters) {
@@ -417,6 +529,10 @@ export default {
 		siteChanged() {
 			this.loadDirty();
 		},
+		yamlChanged() {
+			this.loadDirty();
+			this.updateYamlConfigState();
+		},
 		addMeterToSite(type, name) {
 			if (type === "grid") {
 				this.site.grid = name;
@@ -447,12 +563,7 @@ export default {
 			alert("not implemented yet");
 		},
 		async restart() {
-			try {
-				await api.post("/system/shutdown");
-				this.restarting = true;
-			} catch (e) {
-				alert("Unabled to restart server.");
-			}
+			await performRestart();
 		},
 		async updateDeviceValue(type, name) {
 			try {
@@ -489,6 +600,20 @@ export default {
 				console.error(`modal ${id} not found`);
 			}
 		},
+		updateYamlConfigState() {
+			const keys = Object.keys(this.yamlConfigState);
+			keys.forEach(async (key) => {
+				const res = await api.get(`/config/${key}`);
+				this.yamlConfigState[key] = !!res.data.result;
+			});
+		},
+		yamlTags(key) {
+			return { configured: { value: this.yamlConfigState[key] } };
+		},
+		deviceError(type, name) {
+			const fatal = store.state?.fatal || {};
+			return fatal.class === type && fatal.device === name;
+		},
 	},
 };
 </script>
@@ -496,7 +621,7 @@ export default {
 .config-list {
 	display: grid;
 	grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-	grid-gap: 1rem;
+	grid-gap: 2rem;
 	margin-bottom: 5rem;
 }
 .wip {

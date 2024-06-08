@@ -14,6 +14,7 @@ import (
 	"strings"
 	"sync"
 
+	"dario.cat/mergo"
 	"github.com/enbility/cemd/cem"
 	"github.com/enbility/cemd/emobility"
 	"github.com/enbility/eebus-go/service"
@@ -27,6 +28,15 @@ const (
 	EEBUSModel      string = "HEMS"
 	EEBUSDeviceCode string = "EVCC_HEMS_01" // used as common name in cert generation
 )
+
+type Config struct {
+	URI         string
+	ShipID      string
+	Interfaces  []string
+	Certificate struct {
+		Public, Private []byte
+	}
+}
 
 type EEBusClientCBs struct {
 	onConnect    func(string) // , ship.Conn) error
@@ -46,25 +56,17 @@ type EEBus struct {
 
 var Instance *EEBus
 
-func NewServer(other map[string]interface{}) (*EEBus, error) {
-	cc := struct {
-		Uri         string
-		ShipID      string
-		Interfaces  []string
-		Certificate struct {
-			Public, Private []byte
-		}
-	}{
-		Uri: ":4712",
+func NewServer(other Config) (*EEBus, error) {
+	cc := Config{
+		URI: ":4712",
 	}
 
-	if err := util.DecodeOther(other, &cc); err != nil {
+	if err := mergo.Merge(&cc, other, mergo.WithOverride); err != nil {
 		return nil, err
 	}
 
 	log := util.NewLogger("eebus")
 
-	var err error
 	protectedID, err := machine.ProtectedID("evcc-eebus")
 	if err != nil {
 		return nil, err
@@ -80,7 +82,7 @@ func NewServer(other map[string]interface{}) (*EEBus, error) {
 		return nil, err
 	}
 
-	_, portValue, err := net.SplitHostPort(cc.Uri)
+	_, portValue, err := net.SplitHostPort(cc.URI)
 	if err != nil {
 		return nil, err
 	}

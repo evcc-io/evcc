@@ -194,3 +194,5 @@ require (
 	modernc.org/memory v1.8.0 // indirect
 	modernc.org/sqlite v1.29.9 // indirect
 )
+
+replace gopkg.in/yaml.v3 => github.com/andig/yaml v0.0.0-20240531135838-1ff5761ab467
