@@ -65,9 +65,7 @@ async function _start(config) {
   instance.stdout.pipe(process.stdout);
   instance.stderr.pipe(process.stderr);
   instance.on("exit", (code) => {
-    if (code !== 0) {
-      throw new Error("evcc terminated", code);
-    }
+    console.log("evcc terminated", code);
   });
   await waitOn({ resources: [baseUrl()] });
 }
@@ -78,6 +76,9 @@ async function _stop() {
   console.log(res.status, res.statusText);
   const cookie = res.headers["set-cookie"];
   await axios.post(`${baseUrl()}/api/system/shutdown`, {}, { headers: { cookie } });
+  console.log("wait until network port is closed");
+  await waitOn({ resources: [`tcp:localhost:${port()}`], reverse: true });
+  console.log("evcc is down");
 }
 
 async function _clean() {

@@ -26,13 +26,36 @@ never = "nur mit genug PV-Überschuss"
 titleAdd = "Batterie Zähler hinzufügen"
 titleEdit = "Batterie Zähler bearbeiten"
 
+[config.circuits]
+description = "Stellt sicher, dass die Summe aller Ladepunkte, die an einen Stromkreis angeschlossen sind, die konfigurierten Leistungs- und Stromgrenzen nicht überschreitet. Stromkreise können verschachtelt werden, um eine Hierarchie aufzubauen."
+title = "Lastmanagement"
+
+[config.control]
+description = "Normalerweise sind die Standardwerte in Ordnung. Ändere nur etwas, wenn du weißt, was du tust."
+descriptionInterval = "Regelkreis Aktualisierungszyklus in Sekunden. Definiert, wie oft evcc Messdaten liest, die Ladeleistung anpasst und die Benutzeroberfläche aktualisiert. Kurze Intervalle (< 30s) können zu Schwingungen und unerwünschtem Verhalten führen."
+descriptionMaxGridSupply = "Nur relevant für Hybrid-Wechselrichter, die nicht in der Lage sind, die volle DC-Erzeugungsleistung über AC an das Haus auszugeben. Dieses Szenario kann zu unerwünschtem Netzbezug führen, da evcc davon ausgeht, dass die volle DC-Leistung verfügbar ist. Verwende einen Wert von mindestens 50 W, um dies zu verhindern."
+descriptionResidualPower = "Verschiebt den Betriebspunkt des Regelkreises. Wenn du eine Hausbatterie hast, wird empfohlen, einen Wert von 100 W einzustellen. Auf diese Weise erhält die Batterie eine leichte Priorität gegenüber dem Netzbezug."
+labelInterval = "Aktualisierungsintervall"
+labelMaxGridSupply = "Max. Netzbezug während des Ladens"
+labelResidualPower = "Residualleistung"
+title = "Regelverhalten"
+
 [config.deviceValue]
 capacity = "Kapazität"
 chargeStatus = "Status"
+chargeStatusA = "nicht verbunden"
+chargeStatusB = "verbunden"
+chargeStatusC = "lädt"
+chargeStatusE = "keine Leistung"
+chargeStatusF = "Fehler"
 chargedEnergy = "Geladen"
+co2 = "Netz-CO₂"
+currency = "Währung"
 current = "Strom"
 enabled = "Aktiviert"
 energy = "Energie"
+feedinPrice = "Einspeisevergütung"
+gridPrice = "Netzpreis"
 odometer = "Kilometerstand"
 phaseCurrents = "Strom L1..L3"
 phasePowers = "Leistung L1..L3"
@@ -41,6 +64,11 @@ power = "Leistung"
 range = "Reichweite"
 soc = "SoC"
 socLimit = "SoC Begrenzung"
+temp = "Temperatur"
+
+[config.eebus]
+description = "Grundkonfiguration für die Kommunikation mit anderen EEBus-Geräten."
+title = "EEBus"
 
 [config.form]
 example = "Beispiel"
@@ -48,21 +76,53 @@ optional = "optional"
 
 [config.general]
 cancel = "Abbrechen"
+docsLink = "Siehe Dokumentation."
+experimental = "Experimentell"
+off = "aus"
+on = "an"
+password = "Passwort"
+remove = "Entfernen"
 save = "Speichern"
+telemetry = "Telemetrie"
+title = "Titel"
 
 [config.grid]
-titleAdd = "Stromzähler (Netz) hinzufügen"
-titleEdit = "Stromzähler (Netz) bearbeiten"
+title = "Netzzähler"
+titleAdd = "Netzzähler hinzufügen"
+titleEdit = "Netzzähler bearbeiten"
+
+[config.hems]
+description = "Connect evcc to another home energy management system."
+title = "HEMS"
+
+[config.influx]
+description = "Schreibt Ladedaten und andere Metriken in InfluxDB. Verwende Grafana oder andere Tools, um die Daten zu visualisieren."
+descriptionToken = "Siehe die InfluxDB-Dokumentation, um zu erfahren, wie du einen erstellst. https://docs.influxdata.com/influxdb/v2/admin/"
+labelBucket = "Bucket"
+labelDatabase = "Datenbank"
+labelOrg = "Organisation"
+labelPassword = "Passwort"
+labelToken = "API-Token"
+labelUrl = "URL"
+labelUser = "Benutzer"
+title = "InfluxDB"
+v1Support = "Unterstützung für InfluxDB 1.x?"
+v2Support = "Zurück zu InfluxDB 2.x"
 
 [config.main]
 addLoadpoint = "Ladepunkt hinzufügen"
 addPvBattery = "PV oder Speicher hinzufügen"
 addVehicle = "Fahrzeug hinzufügen"
+configured = "konfiguriert"
 edit = "bearbeiten"
 title = "Konfiguration"
 unconfigured = "nicht konfiguriert"
 vehicles = "Meine Fahrzeuge"
 yaml = "Konfiguration in evcc.yaml gefunden. Nicht per UI editierbar"
+
+[config.messaging]
+description = "Erhalte Benachrichtigungen über Ladevorgänge und andere Ereignisse."
+title = "Benachrichtigungen"
 
 [config.meter]
 cancel = "Abbrechen"
@@ -71,6 +131,35 @@ save = "Speichern"
 template = "Hersteller"
 titleChoice = "Was möchtest du hinzufügen?"
 validateSave = "Überprüfen & speichern"
+
+[config.modbusproxy]
+description = "Erlaubt mehreren Clients den Zugriff auf ein einzelnes Modbus-Gerät."
+title = "Modbus-Proxy"
+
+[config.mqtt]
+authentication = "Authentifizierung"
+brokerLabel = "Server"
+description = "Verbinde evcc mit einem MQTT-Broker, um Daten mit anderen Systemen in deinem Netzwerk auszutauschen."
+descriptionClientId = "Autor der Nachrichten. Wenn leer, wird `evcc-[rand]` verwendet."
+descriptionTopic = "Leer lassen, um das Publizieren zu deaktivieren."
+labelBroker = "Broker"
+labelCheckInsecure = "Erlaube unsichere Verbindungen"
+labelClientId = "Client ID"
+labelInsecure = "Zertifikatüberprüfung"
+labelPassword = "Passwort"
+labelTopic = "Topic"
+labelUser = "Benutzer"
+publishing = "Veröffentlichen"
+title = "MQTT"
+
+[config.network]
+descriptionHost = "Verwende den .local-Suffix, um mDNS zu aktivieren. Wird zur Erkennung der mobilen App und einiger OCPP-Wallboxen benötigt."
+descriptionPort = "Port für die Web-Oberfläche und API. Du musst deine Browser-URL aktualisieren, wenn du dies änderst."
+descriptionSchema = "Beeinflusst nur die URL-Generierung. Die Auswahl von HTTPS aktiviert keine Verschlüsselung."
+labelHost = "Hostname"
+labelPort = "Port"
+labelSchema = "Schema"
+title = "Netzwerk"
 
 [config.options]
 
@@ -88,7 +177,21 @@ titleEdit = "Zähler (PV) bearbeiten"
 
 [config.section]
 general = "Allgemein"
+grid = "Netzanschluss"
+integrations = "Integrationen"
+loadpoints = "Ladepunkte"
+meter = "PV & Batterie"
 system = "System"
+vehicles = "Fahrzeuge"
+
+[config.sponsor]
+addToken = "Sponsortoken eingeben"
+changeToken = "Sponsortoken ändern"
+description = "Das Sponsoring-Modell hilft uns, das Projekt zu pflegen und nachhaltig neue und spannende Funktionen zu entwickeln. Als Sponsor erhältst du Zugriff auf alle Wallbox-Implementierungen."
+descriptionToken = "Du erhältst das Token von {url}. Wir bieten auch ein Testtoken für Tests an."
+error = "Das Sponsortoken ist ungültig."
+labelToken = "Sponsortoken"
+title = "Sponsorship"
 
 [config.system]
 logs = "Logs"
@@ -97,6 +200,10 @@ restartRequiredDescription = "Bitte neu starten, um die Änderungen zu übernehm
 restartRequiredMessage = "Konfiguration geändert."
 restartingDescription = "Bitte warten …"
 restartingMessage = "evcc wird neu gestartet."
+
+[config.tariffs]
+description = "Hinterlege deine Stromtarife, um die Kosten zu berechnen."
+title = "Tarife"
 
 [config.title]
 description = "Wird in der Hauptansicht und im Browser-Tab angezeigt."
@@ -515,7 +622,7 @@ auto = "Automatisch"
 label = "Sprache"
 
 [settings.sponsorToken]
-expires = "Dein Sponsortoken läuft {inXDays} ab. {getNewToken} und aktualisiere deine Konfigurationsdatei."
+expires = "Dein Sponsortoken läuft {inXDays} ab. {getNewToken} und aktualisiere es hier."
 getNew = "Hol dir ein Neues"
 hint = "Hinweis: Wir werden das zukünftig automatisieren."
 
