@@ -83,10 +83,11 @@ type Site struct {
 	auxMeters     []api.Meter // Auxiliary meters
 
 	// battery settings
-	prioritySoc             float64 // prefer battery up to this Soc
-	bufferSoc               float64 // continue charging on battery above this Soc
-	bufferStartSoc          float64 // start charging on battery above this Soc
-	batteryDischargeControl bool    // prevent battery discharge for fast and planned charging
+	prioritySoc                       float64 // prefer battery up to this Soc
+	bufferSoc                         float64 // continue charging on battery above this Soc
+	bufferStartSoc                    float64 // start charging on battery above this Soc
+	maxGridSupplyWhileBatteryCharging float64 // ignore battery charging if AC consumption is above this value
+	batteryDischargeControl           bool    // prevent battery discharge for fast and planned charging
 
 	loadpoints  []*Loadpoint             // Loadpoints
 	tariffs     *tariff.Tariffs          // Tariffs
@@ -104,7 +105,7 @@ type Site struct {
 	publishCache map[string]any // store last published values to avoid unnecessary republishing
 }
 
-// MetersConfig contains the loadpoint's meter configuration
+// MetersConfig contains the site's meter configuration
 type MetersConfig struct {
 	GridMeterRef     string   `mapstructure:"grid"`    // Grid usage meter
 	PVMetersRef      []string `mapstructure:"pv"`      // PV meter
@@ -113,18 +114,24 @@ type MetersConfig struct {
 }
 
 // NewSiteFromConfig creates a new site
-func NewSiteFromConfig(
-	log *util.Logger,
-	other map[string]interface{},
-	loadpoints []*Loadpoint,
-	tariffs *tariff.Tariffs,
-) (*Site, error) {
+func NewSiteFromConfig(other map[string]interface{}) (*Site, error) {
 	site := NewSite()
+
+	// TODO remove
 	if err := util.DecodeOther(other, site); err != nil {
 		return nil, err
 	}
 
+	// add meters from config
+	site.restoreMetersAndTitle()
+
+	// TODO title
 	Voltage = site.Voltage
+
+	return site, nil
+}
+
+func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tariff.Tariffs) error {
 	site.loadpoints = loadpoints
 	site.tariffs = tariffs
 
@@ -152,20 +159,17 @@ func NewSiteFromConfig(
 		if db.Instance != nil {
 			var err error
 			if lp.db, err = session.NewStore(lp.Title(), db.Instance); err != nil {
-				return nil, err
+				return err
 			}
 			// Fix any dangling history
 			if err := lp.db.ClosePendingSessionsInHistory(lp.chargeMeterTotal()); err != nil {
-				return nil, err
+				return err
 			}
 
 			// NOTE: this requires stopSession to respect async access
 			shutdown.Register(lp.stopSession)
 		}
 	}
-
-	// add meters from config
-	site.restoreMeters()
 
 	// circuit
 	if c := circuit.Root(); c != nil {
@@ -176,7 +180,7 @@ func NewSiteFromConfig(
 	if site.Meters.GridMeterRef != "" {
 		dev, err := config.Meters().ByName(site.Meters.GridMeterRef)
 		if err != nil {
-			return nil, err
+			return err
 		}
 		site.gridMeter = dev.Instance()
 	}
@@ -185,7 +189,7 @@ func NewSiteFromConfig(
 	for _, ref := range site.Meters.PVMetersRef {
 		dev, err := config.Meters().ByName(ref)
 		if err != nil {
-			return nil, err
+			return err
 		}
 		site.pvMeters = append(site.pvMeters, dev.Instance())
 	}
@@ -194,12 +198,12 @@ func NewSiteFromConfig(
 	for _, ref := range site.Meters.BatteryMetersRef {
 		dev, err := config.Meters().ByName(ref)
 		if err != nil {
-			return nil, err
+			return err
 		}
 		site.batteryMeters = append(site.batteryMeters, dev.Instance())
 	}
 
-	if len(site.batteryMeters) > 0 && site.ResidualPower <= 0 {
+	if len(site.batteryMeters) > 0 && site.GetResidualPower() <= 0 {
 		site.log.WARN.Println("battery configured but residualPower is missing or <= 0 (add residualPower: 100 to site), see https://docs.evcc.io/en/docs/reference/configuration/site#residualpower")
 	}
 
@@ -207,14 +211,14 @@ func NewSiteFromConfig(
 	for _, ref := range site.Meters.AuxMetersRef {
 		dev, err := config.Meters().ByName(ref)
 		if err != nil {
-			return nil, err
+			return err
 		}
 		site.auxMeters = append(site.auxMeters, dev.Instance())
 	}
 
 	// configure meter from references
 	if site.gridMeter == nil && len(site.pvMeters) == 0 {
-		return nil, errors.New("missing either grid or pv meter")
+		return errors.New("missing either grid or pv meter")
 	}
 
 	// revert battery mode on shutdown
@@ -226,7 +230,7 @@ func NewSiteFromConfig(
 		}
 	})
 
-	return site, nil
+	return nil
 }
 
 // NewSite creates a Site with sane defaults
@@ -240,10 +244,13 @@ func NewSite() *Site {
 	return lp
 }
 
-// restoreMeters restores site meter configuration
-func (site *Site) restoreMeters() {
+// restoreMetersAndTitle restores site meter configuration
+func (site *Site) restoreMetersAndTitle() {
 	if testing.Testing() {
 		return
+	}
+	if v, err := settings.String(keys.Title); err == nil {
+		site.Title = v
 	}
 	if v, err := settings.String(keys.GridMeter); err == nil && v != "" {
 		site.Meters.GridMeterRef = v
@@ -264,9 +271,6 @@ func (site *Site) restoreSettings() error {
 	if testing.Testing() {
 		return nil
 	}
-	if v, err := settings.String(keys.Title); err == nil {
-		site.Title = v
-	}
 	if v, err := settings.Float(keys.BufferSoc); err == nil {
 		if err := site.SetBufferSoc(v); err != nil {
 			return err
@@ -277,6 +281,12 @@ func (site *Site) restoreSettings() error {
 			return err
 		}
 	}
+	// TODO migrate from YAML
+	if v, err := settings.Float(keys.MaxGridSupplyWhileBatteryCharging); err == nil {
+		if err := site.SetMaxGridSupplyWhileBatteryCharging(v); err != nil {
+			return err
+		}
+	}
 	if v, err := settings.Float(keys.PrioritySoc); err == nil {
 		if err := site.SetPrioritySoc(v); err != nil {
 			return err
@@ -284,6 +294,11 @@ func (site *Site) restoreSettings() error {
 	}
 	if v, err := settings.Bool(keys.BatteryDischargeControl); err == nil {
 		if err := site.SetBatteryDischargeControl(v); err != nil {
+			return err
+		}
+	}
+	if v, err := settings.Float(keys.ResidualPower); err == nil {
+		if err := site.SetResidualPower(v); err != nil {
 			return err
 		}
 	}
@@ -390,10 +405,6 @@ func (site *Site) publish(key string, val interface{}) {
 	// test helper
 	if site.uiChan == nil {
 		return
-	}
-
-	if s, ok := val.(fmt.Stringer); ok {
-		val = s.String()
 	}
 
 	site.uiChan <- util.Param{Key: key, Val: val}
@@ -623,7 +634,7 @@ func (site *Site) sitePower(totalChargePower, flexiblePower float64) (float64, b
 
 	// allow using grid and charge as estimate for pv power
 	if site.pvMeters == nil {
-		site.pvPower = totalChargePower - site.gridPower + site.ResidualPower
+		site.pvPower = totalChargePower - site.gridPower + site.GetResidualPower()
 		if site.pvPower < 0 {
 			site.pvPower = 0
 		}
@@ -652,7 +663,7 @@ func (site *Site) sitePower(totalChargePower, flexiblePower float64) (float64, b
 		}
 	}
 
-	sitePower := sitePower(site.log, site.MaxGridSupplyWhileBatteryCharging, site.gridPower, batteryPower, site.ResidualPower)
+	sitePower := sitePower(site.log, site.GetMaxGridSupplyWhileBatteryCharging(), site.gridPower, batteryPower, site.GetResidualPower())
 
 	// deduct smart loads
 	if len(site.auxMeters) > 0 {
@@ -835,12 +846,13 @@ func (site *Site) prepare() {
 	site.publish(keys.GridConfigured, site.gridMeter != nil)
 	site.publish(keys.Pv, make([]api.Meter, len(site.pvMeters)))
 	site.publish(keys.Battery, make([]api.Meter, len(site.batteryMeters)))
+	site.publish(keys.PrioritySoc, site.prioritySoc)
 	site.publish(keys.BufferSoc, site.bufferSoc)
 	site.publish(keys.BufferStartSoc, site.bufferStartSoc)
-	site.publish(keys.PrioritySoc, site.prioritySoc)
+	site.publish(keys.MaxGridSupplyWhileBatteryCharging, site.maxGridSupplyWhileBatteryCharging)
 	site.publish(keys.BatteryMode, site.batteryMode)
 	site.publish(keys.BatteryDischargeControl, site.batteryDischargeControl)
-	site.publish(keys.ResidualPower, site.ResidualPower)
+	site.publish(keys.ResidualPower, site.GetResidualPower())
 
 	site.publish(keys.Currency, site.tariffs.Currency)
 	if tariff := site.GetTariff(PlannerTariff); tariff != nil {
@@ -919,7 +931,6 @@ func (site *Site) Run(stopC chan struct{}, interval time.Duration) {
 	go site.loopLoadpoints(loadpointChan)
 
 	ticker := time.NewTicker(interval)
-	site.publish(keys.Interval, interval.Seconds())
 	site.update(<-loadpointChan) // start immediately
 
 	for {

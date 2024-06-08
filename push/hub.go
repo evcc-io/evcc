@@ -94,7 +94,7 @@ func (h *Hub) apply(ev Event, tmpl string) (string, error) {
 }
 
 // Run is the Hub's main publishing loop
-func (h *Hub) Run(events <-chan Event, valueChan chan util.Param) {
+func (h *Hub) Run(events <-chan Event, valueChan chan<- util.Param) {
 	log := util.NewLogger("push")
 
 	for ev := range events {

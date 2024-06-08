@@ -139,7 +139,7 @@
 <script>
 import Modal from "bootstrap/js/dist/modal";
 import { docsPrefix } from "../i18n";
-import api from "../api";
+import { performRestart } from "../restart";
 
 export default {
 	name: "HelpModal",
@@ -159,11 +159,7 @@ export default {
 			modal.show();
 		},
 		async restartConfirmed() {
-			try {
-				await api.post("/system/shutdown");
-			} catch (e) {
-				alert("Unabled to restart server.");
-			}
+			await performRestart();
 		},
 	},
 };

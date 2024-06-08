@@ -25,6 +25,9 @@ const (
 	flagCloud            = "cloud"
 	flagCloudDescription = "Use cloud service (requires sponsor token)"
 
+	flagReset            = "reset"
+	flagResetDescription = "Reset migrated settings"
+
 	flagEnable  = "enable"
 	flagDisable = "disable"
 

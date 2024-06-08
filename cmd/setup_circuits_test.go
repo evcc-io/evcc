@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/globalconfig"
 	"github.com/evcc-io/evcc/server/db"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/stretchr/testify/suite"
@@ -32,7 +33,7 @@ func (suite *circuitsTestSuite) SetupTest() {
 }
 
 func (suite *circuitsTestSuite) TestCircuitConf() {
-	var conf globalConfig
+	var conf globalconfig.All
 	viper.SetConfigType("yaml")
 
 	suite.Require().NoError(viper.ReadConfig(strings.NewReader(`circuits:
@@ -64,7 +65,7 @@ loadpoints:
 }
 
 func (suite *circuitsTestSuite) TestLoadpointMissingCircuitError() {
-	var conf globalConfig
+	var conf globalconfig.All
 	viper.SetConfigType("yaml")
 
 	suite.Require().NoError(viper.ReadConfig(strings.NewReader(`
@@ -104,7 +105,7 @@ loadpoints:
 }
 
 func (suite *circuitsTestSuite) TestLoadpointUsingRootCircuit() {
-	var conf globalConfig
+	var conf globalconfig.All
 	viper.SetConfigType("yaml")
 
 	suite.Require().NoError(viper.ReadConfig(strings.NewReader(`
