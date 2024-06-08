@@ -814,7 +814,7 @@ func configureSiteAndLoadpoints(conf globalConfig) (*core.Site, error) {
 	}
 
 	if len(config.Circuits().Devices()) > 0 {
-		if err := validateCircuits(site, loadpoints); err != nil {
+		if err := validateCircuits(loadpoints); err != nil {
 			return nil, err
 		}
 	}
@@ -822,26 +822,40 @@ func configureSiteAndLoadpoints(conf globalConfig) (*core.Site, error) {
 	return site, nil
 }
 
-func validateCircuits(site site.API, loadpoints []*core.Loadpoint) error {
+func validateCircuits(loadpoints []*core.Loadpoint) error {
+	var hasRoot bool
+
 CONTINUE:
 	for _, dev := range config.Circuits().Devices() {
 		instance := dev.Instance()
 
-		if instance.HasMeter() || site.GetCircuit() == instance {
-			continue
+		var isRoot bool
+		if instance.GetParent() == nil {
+			if hasRoot {
+				return errors.New("multiple root circuits")
+			}
+
+			isRoot = true
+			hasRoot = true
 		}
 
 		for _, lp := range loadpoints {
 			if lp.GetCircuit() == instance {
+				if isRoot {
+					return fmt.Errorf("root circuit %s cannot be assigned to loadpoint %s", dev.Config().Name, lp.Title())
+				}
+
 				continue CONTINUE
 			}
 		}
 
-		return fmt.Errorf("circuit %s has no meter or loadpoint assigned", dev.Config().Name)
+		if !instance.HasMeter() {
+			return fmt.Errorf("circuit %s has no meter or loadpoint assigned", dev.Config().Name)
+		}
 	}
 
-	if site.GetCircuit() == nil {
-		return errors.New("site has no circuit")
+	if !hasRoot {
+		return errors.New("missing root circuit")
 	}
 
 	return nil
@@ -851,10 +865,6 @@ func configureSite(conf map[string]interface{}, loadpoints []*core.Loadpoint, ta
 	site, err := core.NewSiteFromConfig(log, conf, loadpoints, tariffs)
 	if err != nil {
 		return nil, fmt.Errorf("failed configuring site: %w", err)
-	}
-
-	if len(config.Circuits().Devices()) > 0 && site.GetCircuit() == nil {
-		return nil, errors.New("site has no circuit")
 	}
 
 	return site, nil

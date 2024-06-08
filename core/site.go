@@ -13,6 +13,7 @@ import (
 	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/cmd/shutdown"
+	"github.com/evcc-io/evcc/core/circuit"
 	"github.com/evcc-io/evcc/core/coordinator"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/loadpoint"
@@ -69,7 +70,8 @@ type Site struct {
 	Voltage       float64      `mapstructure:"voltage"`       // Operating voltage. 230V for Germany.
 	ResidualPower float64      `mapstructure:"residualPower"` // PV meter only: household usage. Grid meter: household safety margin
 	Meters        MetersConfig `mapstructure:"meters"`        // Meter references
-	CircuitRef    string       `mapstructure:"circuit"`       // Circuit reference
+	// TODO deprecated
+	CircuitRef_ string `mapstructure:"circuit"` // Circuit reference
 
 	MaxGridSupplyWhileBatteryCharging float64 `mapstructure:"maxGridSupplyWhileBatteryCharging"` // ignore battery charging if AC consumption is above this value
 
@@ -166,12 +168,8 @@ func NewSiteFromConfig(
 	site.restoreMeters()
 
 	// circuit
-	if site.CircuitRef != "" {
-		dev, err := config.Circuits().ByName(site.CircuitRef)
-		if err != nil {
-			return nil, err
-		}
-		site.circuit = dev.Instance()
+	if c := circuit.Root(); c != nil {
+		site.circuit = c
 	}
 
 	// grid meter
