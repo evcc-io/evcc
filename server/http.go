@@ -237,7 +237,7 @@ func (s *HTTPd) RegisterSystemHandler(valueChan chan<- util.Param, cache *util.C
 		routes := map[string]route{
 			"templates":          {"GET", "/templates/{class:[a-z]+}", templatesHandler},
 			"products":           {"GET", "/products/{class:[a-z]+}", productsHandler},
-			"devices":            {"GET", "/devices/{class:[a-z]+}", devicesHandler},
+			"devices":            {"GET", "/devices/{class:[a-z]+}", devicesConfigHandler},
 			"device":             {"GET", "/devices/{class:[a-z]+}/{id:[0-9.]+}", deviceConfigHandler},
 			"devicestatus":       {"GET", "/devices/{class:[a-z]+}/{name:[a-zA-Z0-9_.:-]+}/status", deviceStatusHandler},
 			"dirty":              {"GET", "/dirty", boolGetHandler(ConfigDirty)},
