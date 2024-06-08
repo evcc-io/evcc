@@ -152,20 +152,6 @@ func (mr *MockAPIMockRecorder) GetCharger() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCharger", reflect.TypeOf((*MockAPI)(nil).GetCharger))
 }
 
-// GetDefaultVehicle mocks base method.
-func (m *MockAPI) GetDefaultVehicle() string {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetDefaultVehicle")
-	ret0, _ := ret[0].(string)
-	return ret0
-}
-
-// GetDefaultVehicle indicates an expected call of GetDefaultVehicle.
-func (mr *MockAPIMockRecorder) GetDefaultVehicle() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDefaultVehicle", reflect.TypeOf((*MockAPI)(nil).GetDefaultVehicle))
-}
-
 // GetCircuit mocks base method.
 func (m *MockAPI) GetCircuit() api.Circuit {
 	m.ctrl.T.Helper()
@@ -178,6 +164,20 @@ func (m *MockAPI) GetCircuit() api.Circuit {
 func (mr *MockAPIMockRecorder) GetCircuit() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCircuit", reflect.TypeOf((*MockAPI)(nil).GetCircuit))
+}
+
+// GetDefaultVehicle mocks base method.
+func (m *MockAPI) GetDefaultVehicle() string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDefaultVehicle")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// GetDefaultVehicle indicates an expected call of GetDefaultVehicle.
+func (mr *MockAPIMockRecorder) GetDefaultVehicle() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDefaultVehicle", reflect.TypeOf((*MockAPI)(nil).GetDefaultVehicle))
 }
 
 // GetDisableThreshold mocks base method.
@@ -250,20 +250,6 @@ func (mr *MockAPIMockRecorder) GetMaxCurrent() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMaxCurrent", reflect.TypeOf((*MockAPI)(nil).GetMaxCurrent))
 }
 
-// GetMeter mocks base method.
-func (m *MockAPI) GetMeter() string {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetMeter")
-	ret0, _ := ret[0].(string)
-	return ret0
-}
-
-// GetMeter indicates an expected call of GetMeter.
-func (mr *MockAPIMockRecorder) GetMeter() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMeter", reflect.TypeOf((*MockAPI)(nil).GetMeter))
-}
-
 // GetMaxPhaseCurrent mocks base method.
 func (m *MockAPI) GetMaxPhaseCurrent() float64 {
 	m.ctrl.T.Helper()
@@ -276,6 +262,20 @@ func (m *MockAPI) GetMaxPhaseCurrent() float64 {
 func (mr *MockAPIMockRecorder) GetMaxPhaseCurrent() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMaxPhaseCurrent", reflect.TypeOf((*MockAPI)(nil).GetMaxPhaseCurrent))
+}
+
+// GetMeter mocks base method.
+func (m *MockAPI) GetMeter() string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetMeter")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// GetMeter indicates an expected call of GetMeter.
+func (mr *MockAPIMockRecorder) GetMeter() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMeter", reflect.TypeOf((*MockAPI)(nil).GetMeter))
 }
 
 // GetMinCurrent mocks base method.
