@@ -72,42 +72,42 @@ func runMigrate(cmd *cobra.Command, args []string) {
 	log.DEBUG.Println("- hems")
 	if reset {
 		settings.Delete(keys.Hems)
-	} else {
+	} else if conf.HEMS.Type != "" {
 		_ = settings.SetYaml(keys.Hems, conf.HEMS)
 	}
 
 	log.DEBUG.Println("- eebus")
 	if reset {
 		settings.Delete(keys.EEBus)
-	} else {
+	} else if conf.EEBus.URI != "" {
 		_ = settings.SetYaml(keys.EEBus, conf.EEBus)
 	}
 
 	log.DEBUG.Println("- modbusproxy")
 	if reset {
 		settings.Delete(keys.ModbusProxy)
-	} else {
+	} else if len(conf.ModbusProxy) > 0 {
 		_ = settings.SetYaml(keys.ModbusProxy, conf.ModbusProxy)
 	}
 
 	log.DEBUG.Println("- messaging")
 	if reset {
 		settings.Delete(keys.Messaging)
-	} else {
+	} else if len(conf.Messaging.Services) > 0 {
 		_ = settings.SetYaml(keys.Messaging, conf.Messaging)
 	}
 
 	log.DEBUG.Println("- tariffs")
 	if reset {
 		settings.Delete(keys.Tariffs)
-	} else {
+	} else if conf.Tariffs.Grid.Type != "" || conf.Tariffs.FeedIn.Type != "" || conf.Tariffs.Co2.Type != "" || conf.Tariffs.Planner.Type != "" {
 		_ = settings.SetYaml(keys.Tariffs, conf.Tariffs)
 	}
 
 	log.DEBUG.Println("- circuits")
 	if reset {
 		settings.Delete(keys.Circuits)
-	} else {
+	} else if len(conf.Circuits) > 0 {
 		_ = settings.SetYaml(keys.Circuits, conf.Circuits)
 	}
 
