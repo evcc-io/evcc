@@ -829,13 +829,12 @@ CONTINUE:
 	for _, dev := range config.Circuits().Devices() {
 		instance := dev.Instance()
 
-		var isRoot bool
-		if instance.GetParent() == nil {
+		isRoot := instance.GetParent() == nil
+		if isRoot {
 			if hasRoot {
 				return errors.New("multiple root circuits")
 			}
 
-			isRoot = true
 			hasRoot = true
 		}
 
