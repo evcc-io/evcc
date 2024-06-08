@@ -317,15 +317,13 @@ func TestPVHysteresis(t *testing.T) {
 				maxCurrent:     maxA,
 				phases:         phases,
 				measuredPhases: phases,
-				ThresholdsConfig: loadpoint.ThresholdsConfig{
-					Enable: loadpoint.ThresholdConfig{
-						Threshold: tc.enable,
-						Delay:     dt,
-					},
-					Disable: loadpoint.ThresholdConfig{
-						Threshold: tc.disable,
-						Delay:     dt,
-					},
+				Enable: loadpoint.ThresholdConfig{
+					Threshold: tc.enable,
+					Delay:     dt,
+				},
+				Disable: loadpoint.ThresholdConfig{
+					Threshold: tc.disable,
+					Delay:     dt,
 				},
 			}
 
@@ -749,10 +747,8 @@ func TestPVHysteresisAfterPhaseSwitch(t *testing.T) {
 			charger:    charger,
 			minCurrent: minA,
 			maxCurrent: maxA,
-			ThresholdsConfig: loadpoint.ThresholdsConfig{
-				Disable: loadpoint.ThresholdConfig{
-					Delay: dt,
-				},
+			Disable: loadpoint.ThresholdConfig{
+				Delay: dt,
 			},
 			status:  api.StatusC,
 			enabled: true,
