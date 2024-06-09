@@ -1,44 +1,36 @@
 <template>
-	<div>
-		<div
-			:id="dropdownId"
-			role="button"
-			tabindex="0"
-			data-bs-toggle="dropdown"
-			aria-expanded="false"
-			data-testid="change-vehicle"
-		>
-			<slot />
-		</div>
-		<ul class="dropdown-menu dropdown-menu-start" :aria-labelledby="dropdownId">
-			<li>
-				<h6 class="dropdown-header">{{ $t("main.vehicle.changeVehicle") }}</h6>
-			</li>
-			<li v-for="vehicle in vehicles" :key="vehicle.name">
-				<button type="button" class="dropdown-item" @click="changeVehicle(vehicle.name)">
-					{{ vehicle.title }}
-				</button>
-			</li>
-			<li>
-				<button type="button" class="dropdown-item" @click="removeVehicle()">
-					<span v-if="connected">{{ $t("main.vehicle.unknown") }}</span>
-					<span v-else>{{ $t("main.vehicle.none") }}</span>
-				</button>
-			</li>
-		</ul>
-	</div>
+	<label
+		class="position-relative d-block"
+		:for="dropdownId"
+		role="button"
+		data-testid="change-vehicle"
+	>
+		<select :id="dropdownId" :value="selected" class="custom-select" @change="change">
+			<option
+				v-for="{ name, title } in vehicles"
+				:key="name"
+				:value="name"
+				:selected="name === selected"
+			>
+				{{ title }}
+			</option>
+			<hr />
+			<option value="" :selected="!selected">
+				{{ $t(`main.vehicle.${connected ? "unknown" : "none"}`) }}
+			</option>
+		</select>
+		<slot></slot>
+	</label>
 </template>
 
 <script>
-import "@h2d2/shopicons/es/filled/options";
-import Dropdown from "bootstrap/js/dist/dropdown";
-
 export default {
 	name: "VehicleOptions",
 	props: {
 		connected: Boolean,
 		id: [String, Number],
 		vehicles: Array,
+		selected: String,
 	},
 	emits: ["change-vehicle", "remove-vehicle"],
 	computed: {
@@ -46,21 +38,27 @@ export default {
 			return `vehicleOptionsDropdown${this.id}`;
 		},
 	},
-	mounted() {
-		this.dropdown = new Dropdown(document.getElementById(this.dropdownId));
-	},
-	unmounted() {
-		this.dropdown?.dispose();
-	},
 	methods: {
-		changeVehicle(name) {
-			this.$emit("change-vehicle", name);
-		},
-		removeVehicle() {
-			this.$emit("remove-vehicle");
+		change(event) {
+			const name = event.target.value;
+			if (name) {
+				this.$emit("change-vehicle", name);
+			} else {
+				this.$emit("remove-vehicle");
+			}
 		},
 	},
 };
 </script>
-
-<style></style>
+<style scoped>
+.custom-select {
+	left: 0;
+	top: 0;
+	bottom: 0;
+	width: 100%;
+	cursor: pointer;
+	position: absolute;
+	opacity: 0;
+	-webkit-appearance: menulist-button;
+}
+</style>
