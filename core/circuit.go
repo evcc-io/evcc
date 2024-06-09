@@ -2,7 +2,9 @@ package core
 
 import (
 	"fmt"
+	"math"
 	"sync"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -20,22 +22,29 @@ type Circuit struct {
 	parent   api.Circuit   // parent circuit
 	children []api.Circuit // child circuits
 	meter    api.Meter     // meter to determine current power
+	timeout  time.Duration
 
 	maxCurrent float64 // max allowed current
 	maxPower   float64 // max allowed power
 
 	current float64
 	power   float64
+
+	currentUpdated time.Time
+	powerUpdated   time.Time
 }
 
 // NewCircuitFromConfig creates a new Circuit
 func NewCircuitFromConfig(log *util.Logger, other map[string]interface{}) (api.Circuit, error) {
-	var cc struct {
-		Title      string  `mapstructure:"title"`      // title
-		ParentRef  string  `mapstructure:"parent"`     // parent circuit reference
-		MeterRef   string  `mapstructure:"meter"`      // meter reference
-		MaxCurrent float64 `mapstructure:"maxCurrent"` // the max allowed current
-		MaxPower   float64 `mapstructure:"maxPower"`   // the max allowed power
+	cc := struct {
+		Title      string        `mapstructure:"title"`      // title
+		ParentRef  string        `mapstructure:"parent"`     // parent circuit reference
+		MeterRef   string        `mapstructure:"meter"`      // meter reference
+		MaxCurrent float64       `mapstructure:"maxCurrent"` // the max allowed current
+		MaxPower   float64       `mapstructure:"maxPower"`   // the max allowed power
+		Timeout    time.Duration `mapstructure:"timeout"`    // timeout between meter updates
+	}{
+		Timeout: time.Minute,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -51,7 +60,7 @@ func NewCircuitFromConfig(log *util.Logger, other map[string]interface{}) (api.C
 		meter = dev.Instance()
 	}
 
-	circuit, err := NewCircuit(log, cc.Title, cc.MaxCurrent, cc.MaxPower, meter)
+	circuit, err := NewCircuit(log, cc.Title, cc.MaxCurrent, cc.MaxPower, meter, cc.Timeout)
 	if err != nil {
 		return nil, err
 	}
@@ -68,13 +77,14 @@ func NewCircuitFromConfig(log *util.Logger, other map[string]interface{}) (api.C
 }
 
 // NewCircuit creates a circuit
-func NewCircuit(log *util.Logger, title string, maxCurrent, maxPower float64, meter api.Meter) (*Circuit, error) {
+func NewCircuit(log *util.Logger, title string, maxCurrent, maxPower float64, meter api.Meter, timeout time.Duration) (*Circuit, error) {
 	c := &Circuit{
 		log:        log,
 		title:      title,
 		maxCurrent: maxCurrent,
 		maxPower:   maxPower,
 		meter:      meter,
+		timeout:    timeout,
 	}
 
 	if maxPower == 0 {
@@ -173,17 +183,27 @@ func (c *Circuit) updateLoadpoints(loadpoints []api.CircuitLoad) {
 	}
 }
 
+func (c *Circuit) overloadOnError(t time.Time, val *float64) {
+	if c.timeout > 0 && time.Since(t) > c.timeout {
+		*val = math.MaxFloat64
+	}
+}
+
 func (c *Circuit) updateMeters() error {
 	if f, err := c.meter.CurrentPower(); err == nil {
 		c.power = f
+		c.powerUpdated = time.Now()
 	} else {
+		c.overloadOnError(c.powerUpdated, &c.power)
 		return fmt.Errorf("circuit power: %w", err)
 	}
 
 	if phaseMeter, ok := c.meter.(api.PhaseCurrents); ok {
 		if l1, l2, l3, err := phaseMeter.Currents(); err == nil {
 			c.current = max(l1, l2, l3)
+			c.currentUpdated = time.Now()
 		} else {
+			c.overloadOnError(c.currentUpdated, &c.current)
 			return fmt.Errorf("circuit currents: %w", err)
 		}
 	}
