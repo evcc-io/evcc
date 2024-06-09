@@ -136,5 +136,5 @@ loadpoints:
 	circuit.EXPECT().GetParent().Return(nil)
 	err = validateCircuits(lps)
 	suite.Require().Error(err)
-	suite.Require().Equal("root circuit root cannot be assigned to loadpoint ", err.Error())
+	suite.Require().Equal("root circuit must not be assigned to loadpoint ", err.Error())
 }
