@@ -74,7 +74,7 @@
 								</div>
 							</FormRow>
 
-							<h4 class="mb-3 mt-5 text-evcc">Basics</h4>
+							<h6>Basics</h6>
 
 							<div class="row">
 								<FormRow
@@ -131,7 +131,7 @@
 								/>
 							</FormRow>
 
-							<h4 class="mb-3 mt-5 text-evcc">Solar behaviour</h4>
+							<h6>Solar behaviour</h6>
 
 							<div class="row">
 								<FormRow
@@ -190,7 +190,7 @@
 								<FormRow
 									id="loadpointEnableThreshold"
 									label="Enable Threshold"
-									class="col-sm-6"
+									class="col-sm-6 mb-sm-0"
 								>
 									<PropertyField
 										id="loadpointEnableThreshold"
@@ -206,7 +206,7 @@
 								<FormRow
 									id="loadpointDisableThreshold"
 									label="Disable Threshold"
-									class="col-sm-6"
+									class="col-sm-6 mb-sm-0"
 								>
 									<PropertyField
 										id="loadpointDisableThreshold"
@@ -220,7 +220,7 @@
 								</FormRow>
 							</div>
 
-							<h4 class="mb-3 mt-4 text-evcc">Vehicle</h4>
+							<h6>Vehicle</h6>
 
 							<FormRow
 								id="loadpointParamVehicle"
@@ -303,7 +303,7 @@
 							<div class="mt-5 mb-4 d-flex justify-content-between">
 								<button
 									type="button"
-									class="btn btn-link text-muted"
+									class="btn btn-link text-muted btn-cancel"
 									data-bs-dismiss="modal"
 								>
 									{{ $t("config.loadpoint.cancel") }}
@@ -465,5 +465,11 @@ export default {
 }
 .addButton {
 	min-height: auto;
+}
+.btn-cancel {
+	margin-left: -0.75rem;
+}
+h6 {
+	margin-top: 4rem;
 }
 </style>
