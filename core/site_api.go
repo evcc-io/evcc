@@ -343,7 +343,7 @@ func (site *Site) SetBatteryDischargeControl(val bool) error {
 
 	if site.batteryDischargeControl != val {
 		// reset to normal when disabling
-		if mode := site.GetBatteryMode(); !val && batteryModeModified(mode) {
+		if mode := site.batteryMode; !val && batteryModeModified(mode) {
 			if err := site.applyBatteryMode(api.BatteryNormal); err != nil {
 				return err
 			}
