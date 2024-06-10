@@ -1,7 +1,6 @@
 package vehicle
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -67,8 +66,7 @@ func NewEnyaqFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	)
 
 	if err == nil {
-		uri := fmt.Sprintf("%s/v2/garage/vehicles/%s", skoda.BaseURI, vehicle.VIN)
-		err = api.GetJSON(uri, &vehicle)
+		vehicle, err = api.VehicleDetails(vehicle.VIN)
 	}
 
 	if err == nil {

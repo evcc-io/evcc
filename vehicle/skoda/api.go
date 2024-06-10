@@ -40,6 +40,13 @@ func (v *API) Vehicles() ([]Vehicle, error) {
 	return res.Vehicles, err
 }
 
+func (v *API) VehicleDetails(vin string) (Vehicle, error) {
+	var res Vehicle
+	uri := fmt.Sprintf("%s/v2/garage/vehicles/%s", BaseURI, vin)
+	err := v.GetJSON(uri, &res)
+	return res, err
+}
+
 // Status implements the /v2/vehicle-status/<vin> response
 func (v *API) Status(vin string) (StatusResponse, error) {
 	var res StatusResponse
