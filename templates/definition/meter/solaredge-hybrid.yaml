@@ -49,19 +49,16 @@ render: |
       timeout: {{ .timeout }}
       subdevice: 1 # Metering device
       value: 203:AphA
-      scale: -1
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
       timeout: {{ .timeout }}
       subdevice: 1 # Metering device
       value: 203:AphB
-      scale: -1
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
       timeout: {{ .timeout }}
       subdevice: 1 # Metering device
       value: 203:AphC
-      scale: -1
   voltages:
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
@@ -106,8 +103,8 @@ render: |
         {{- include "modbus" . | indent 6 }}
         timeout: {{ .timeout }}
         value: 
-          - 101:W
-          - 103:W
+          - 101:DCW
+          - 103:DCW
       - source: modbus
         {{- include "modbus" . | indent 6 }}
         timeout: {{ .timeout }}
