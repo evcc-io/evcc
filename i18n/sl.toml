@@ -43,6 +43,12 @@ power = "Moč"
 range = "Doseg"
 soc = "SoC"
 socLimit = "Omejitev"
+bucket = "Bucket"
+chargeStatusA = "brez povezave"
+chargeStatusB = "povezan"
+chargeStatusE = "brez moči"
+chargeStatusF = "napaka"
+chargeStatusC = "polnjenje"
 
 [config.form]
 example = "Primer"
@@ -535,7 +541,7 @@ auto = "Samodejno"
 label = "Jezik"
 
 [settings.sponsorToken]
-expires = "Sponzorskemu žetonu poteče veljavnost čez {inXDays}. {getNewToken} in posodobite svojo konfiguracijsko datoteko."
+expires = "Sponzorskemu žetonu poteče veljavnost čez {inXDays}. {getNewToken} in ga posodobite tukaj."
 getNew = "Zgrabi svežega"
 hint = "Opomba: To bomo v prihodnosti avtomatizirali."
 
@@ -585,3 +591,12 @@ title = "Napaka pri zagonu"
 cancel = "Prekliči"
 template = "Proizvajalec"
 test = "Test"
+
+
+[config.circuits]
+title = "Upravljanje obremenitve"
+
+[config.control]
+labelInterval = "Interval posodabljanja"
+labelResidualPower = "Preostala moč"
+title = "Nadzor vedenja"
