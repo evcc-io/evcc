@@ -43,6 +43,24 @@ power = "Puissance"
 range = "Autonomie"
 soc = "Etat de Charge"
 socLimit = "Limite"
+broker = Courtier
+chargeStatusA = pas connecté
+bucket = "Bucket"
+chargeStatusE = pas de courant
+feedinPrice = Prix de revente
+no = non
+currency = Devise
+chargeStatusB = connecté
+chargeStatusC = en charge
+chargeStatusF = erreur
+co2 = "CO₂ du réseau"
+configured = Configuré
+gridPrice = Prix du réseau
+org = Organisation
+temp = Température
+topic = Sujet
+yes = oui
+url = URL
 
 [config.form]
 example = "Exemple"
@@ -51,10 +69,19 @@ optional = "optionnel"
 [config.general]
 cancel = "Annuler"
 save = "Enregistrer"
+off = désactivé
+on = activé
+password = Mot de passe
+remove = Supprimer
+docsLink = "Se référer à la documentation."
+telemetry = Télémétrie
+title = Titre
+experimental = Expérimental
 
 [config.grid]
 titleAdd = "Ajouter compteur pour réseau"
 titleEdit = "Modifier compteur pour réseau"
+title = Compteur du réseau
 
 [config.main]
 addLoadpoint = "Ajouter un point de charge"
@@ -65,6 +92,7 @@ title = "Configuration"
 unconfigured = "non configuré"
 vehicles = "Mes véhicules"
 yaml = "Configuré dans evcc.yaml. Non modifiable ici."
+configured = configuré
 
 [config.meter]
 cancel = "Annuler"
@@ -91,6 +119,11 @@ titleEdit = "Modifier le compteur pour le solaire"
 [config.section]
 general = "Général"
 system = "Système"
+meter = Solaire & Batterie
+vehicles = Véhicules
+grid = Réseau électrique
+integrations = Intégrations
+loadpoints = Points de charge
 
 [config.site]
 cancel = "Annuler"
@@ -448,6 +481,9 @@ modalTitle = "Notifications"
 [offline]
 message = "Pas de connexion au serveur."
 reload = "Recharger?"
+restart = Redémarrer
+restartNeeded = "Nécessaire afin de prendre en compte les modifications."
+restarting = "Le serveur se à nouveau disponible dans quelques instants."
 
 [passwordModal]
 description = "Configurez un mot de passe pour protéger la configuration. L’utilisation de l’écran principal et toujours possible sans authentification."
@@ -533,7 +569,7 @@ auto = "Automatique"
 label = "Langue"
 
 [settings.sponsorToken]
-expires = "Votre jeton de supporter expire dans {inXDays}. {getNewToken} et mettez à jour votre fichier de configuration."
+expires = "Votre jeton de sponsor expire dans {inXDays}. {getNewToken} et mettez-le à jour ici."
 getNew = "Obtenez-en un nouveau"
 hint = "Remarque : nous allons automatiser cela à l'avenir."
 
@@ -583,3 +619,85 @@ title = "Erreur au démarrage"
 cancel = "Annuler"
 template = "Fabricant"
 test = "Test"
+
+
+[config.circuits]
+title = Gestion de la charge
+description = "Vérifiez que la somme de tous les points de charges connectés à un circuit ne dépassent pas les limites de puissance et de courant. Les circuits peuvent être combinés pour construire une hiérarchie."
+
+[config.control]
+labelInterval = Intervalle de mise à jour
+labelMaxGridSupply = Utilisation max du réseau pendant la charge
+descriptionResidualPower = "Déplace le point d’opération de la boucle de contrôle. Si vous avez une batterie domestique, il est recommandé de définir une valeur de 100 W. Ainsi, la batterie aura une légère priorité par rapport à l’utilisation du réseau."
+labelResidualPower = Puissance résiduelle
+title = Comportement du contrôle
+description = "Les valeurs par défaut sont généralement bonnes. Ne faites des changements que si vous savez ce que vous faites."
+descriptionInterval = "Intervalle de mise à jour (en seconde) entre chaque cycle de control. Défini la fréquence à laquelle evcc va lire les valeurs des mesures, ajuster la puissance de charge et mettre à jour l’affichage. Une intervalle courte (< 30s) peut créer des oscillations et comportements indésirables."
+descriptionMaxGridSupply = "Uniquement pertinent pour les onduleurs hybrides qui ne sont pas capables de fournir la puissance totale en courant continu à destination du circuit domestique en courant alternatif. Ce scénario peut mener à une utilisation non désirée d’électricité du réseau, puisque evcc part du principe que l’intégralité du courant continu est disponible. Définir une valeur d’au moins 50 W pour éviter cela."
+
+[config.influx]
+description = "Écrit les données de charge et autres métriques dans InfluxDB. Utilise Grafana ou d’autres outils pour visualiser les données."
+labelOrg = Organisation
+labelPassword = Mot de passe
+labelToken = Jeton d’API
+v2Support = Revenir à InfluxDB 2.x
+v1Support = "Besoin d’aide pour InfluxDB 1x?"
+descriptionToken = "Se référer à la document InfluxDB pour apprendre comment en créer une. https://docs.influxdata.com/influxdb/v2/admin/"
+labelBucket = Seau
+labelDatabase = Base de données
+title = "InfluxDB"
+labelUrl = "URL"
+labelUser = Nom d’utilisateur
+
+[config.messaging]
+title = Notifications
+description = "Recevoir des messages à propos de vos sessions de charge."
+
+[config.modbusproxy]
+title = Proxy Modbus
+description = "Autoriser plusieurs clients à accéder à un appareil Modbus unique."
+
+[config.mqtt]
+authentication = Authentification
+description = "Connectez-vous à un courtier MQTT pour échanger des données avec d'autres systèmes de votre réseau."
+labelBroker = Courtier
+labelClientId = Identifiant client
+labelInsecure = Validation du certificat
+labelPassword = Mot de passe
+labelCheckInsecure = "Autoriser les certificats auto-signés"
+descriptionClientId = "Auteur des messages. `evcc-XXXX` sera utilisé si laissé vide."
+descriptionTopic = "Laisser vide pour désactiver la publication."
+labelTopic = Sujet
+labelUser = Nom d’utilisateur
+publishing = Publication
+title = "MQTT"
+
+[config.network]
+descriptionSchema = "Cela n'affecte que la façon dont les URL sont générées. La sélection de HTTPS n'activera pas le cryptage."
+labelPort = "Port"
+descriptionHost = "Utilisez le suffixe .local pour activer mDNS. Pertinent pour la découverte de l'application mobile et de certains chargeurs OCPP."
+labelHost = Nom d’hôte
+descriptionPort = "Port pour l'interface web et l'API. Vous devrez mettre à jour l'URL de votre navigateur si vous modifiez cela."
+labelSchema = "Schéma"
+title = Réseau
+
+[config.sponsor]
+description = "Le modèle de parrainage nous aide à maintenir le projet et à construire de manière durable de nouvelles fonctionnalités passionnantes. En tant que sponsor, vous avez accès à toutes les implémentations de chargeurs."
+descriptionToken = "Vous pouvez obtenir un jeton via {url}. Nous offrons également un jeton d’essai pour les tests."
+labelToken = Jeton de sponsor
+title = Sponsoring
+changeToken = Modifier le jeton de sponsor
+addToken = Entrer le jeton de sponsor
+error = "Le jeton de sponsor n’est pas valide."
+
+[config.tariffs]
+title = Tarifs
+description = "Définissez vos tarifs d'énergie pour calculer les coûts de vos sessions de recharge."
+
+[config.hems]
+title = SGED
+description = "Connecter evcc à un autre Système de Gestion d’Energie Domestique."
+
+[config.eebus]
+title = EEBus
+description = "Configuration permettant à evcc de communiquer avec d’autres appareils EEBus."
