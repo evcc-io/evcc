@@ -100,11 +100,13 @@ func NewKSE(uri, device, comset string, baudrate int, slaveID uint8) (api.Charge
 	// check presence of 1p3p switching
 	if b, err := wb.conn.ReadInputRegisters(kseRegFirmwareVersion, 1); err == nil && b[0] >= 0x52 { // >= HW Rev „R“
 		wb.has1p3p = true
+		phases1p3p = wb.phases1p3p
 	}
 
 	// check presence of rfid
 	if b, err := wb.conn.ReadDiscreteInputs(kseRegRFIDinstalled, 1); err == nil && b[0] != 0 {
 		wb.hasRfid = true
+		identify = wb.identify
 	}
 
 	return decorateKSE(wb, phases1p3p, identify), err
