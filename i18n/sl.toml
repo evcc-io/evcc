@@ -28,9 +28,23 @@ never = "le z dovolj presežka"
 titleAdd = "Dodaj merilnik baterije"
 titleEdit = "Uredi merilnik baterije"
 
+[config.circuits]
+title = "Upravljanje obremenitve"
+
+[config.control]
+labelInterval = "Interval posodabljanja"
+labelResidualPower = "Preostala moč"
+title = "Nadzor vedenja"
+
 [config.deviceValue]
+bucket = "Bucket"
 capacity = "Kapaciteta"
 chargeStatus = "Status"
+chargeStatusA = "brez povezave"
+chargeStatusB = "povezan"
+chargeStatusC = "polnjenje"
+chargeStatusE = "brez moči"
+chargeStatusF = "napaka"
 chargedEnergy = "Napolnjeno"
 current = "Tok"
 enabled = "Omogočeno"
@@ -43,12 +57,6 @@ power = "Moč"
 range = "Doseg"
 soc = "SoC"
 socLimit = "Omejitev"
-bucket = "Bucket"
-chargeStatusA = "brez povezave"
-chargeStatusB = "povezan"
-chargeStatusE = "brez moči"
-chargeStatusF = "napaka"
-chargeStatusC = "polnjenje"
 
 [config.form]
 example = "Primer"
@@ -591,12 +599,3 @@ title = "Napaka pri zagonu"
 cancel = "Prekliči"
 template = "Proizvajalec"
 test = "Test"
-
-
-[config.circuits]
-title = "Upravljanje obremenitve"
-
-[config.control]
-labelInterval = "Interval posodabljanja"
-labelResidualPower = "Preostala moč"
-title = "Nadzor vedenja"
