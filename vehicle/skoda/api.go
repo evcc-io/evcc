@@ -89,18 +89,8 @@ func (v *API) Action(vin, action, value string) error {
 
 	req, err := request.New(http.MethodPost, uri, nil, request.JSONEncoding)
 	if err == nil {
-		var resp *http.Response
-		resp, err = v.Do(req)
-		if err != nil {
-			return err
-		}
-
-		defer resp.Body.Close()
-		if resp.StatusCode != http.StatusAccepted {
-			err = fmt.Errorf("Vehicle Action %s[%s] failed with status code: %d", action, value, resp.StatusCode)
-		}
+		err = v.DoJSON(req, nil)
 	}
-
 	return err
 }
 
@@ -110,17 +100,7 @@ func (v *API) WakeUp(vin string) error {
 
 	req, err := request.New(http.MethodPost, uri, nil, request.JSONEncoding)
 	if err == nil {
-		var resp *http.Response
-		resp, err = v.Do(req)
-		if err != nil {
-			return err
-		}
-
-		defer resp.Body.Close()
-		if resp.StatusCode != http.StatusAccepted {
-			err = fmt.Errorf("Vehicle wake up failed with status code: %d", resp.StatusCode)
-		}
+		err = v.DoJSON(req, nil)
 	}
-
 	return err
 }
