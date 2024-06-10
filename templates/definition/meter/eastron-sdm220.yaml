@@ -1,8 +1,9 @@
-template: eastron-sdm220_230
+template: eastron-sdm220
+covers: ["eastron-sdm220_230"]
 products:
   - brand: Eastron
     description:
-      generic: SDM220/230
+      generic: SDM220
 params:
   - name: usage
     choice: ["grid", "charge"]
