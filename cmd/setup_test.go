@@ -8,6 +8,8 @@ import (
 	"github.com/evcc-io/evcc/api/globalconfig"
 	"github.com/evcc-io/evcc/core"
 	"github.com/evcc-io/evcc/util"
+	"github.com/stretchr/testify/require"
+	"gopkg.in/yaml.v3"
 )
 
 func TestYamlOff(t *testing.T) {
@@ -31,4 +33,23 @@ func TestYamlOff(t *testing.T) {
 	if lp.Mode_ != api.ModeOff {
 		t.Errorf("expected `off`, got %s", lp.Mode_)
 	}
+}
+
+func TestEEbusConfig(t *testing.T) {
+	conf := `
+eebus:
+  certificate:
+    private: |
+      -----BEGIN EC PRIVATE KEY-----
+      MHcCfoo==
+      -----END EC PRIVATE KEY-----
+    public: |
+      -----BEGIN CERTIFICATE-----
+      MIIBbar=
+      -----END CERTIFICATE-----
+`
+
+	var res globalconfig.All
+	err := yaml.Unmarshal([]byte(conf), &res)
+	require.NoError(t, err)
 }
