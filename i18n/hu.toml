@@ -26,14 +26,31 @@ never = "csak ha van elég többlet"
 titleAdd = "Energiatároló Mérő Hozzáadása"
 titleEdit = "Energiatároló Mérő Szerkesztése"
 
+[config.circuits]
+title = "Terhelés Menedzsment"
+
+[config.control]
+description = "Általában az alapértelmezett értékek működőképesek. Csak akkor változtasd meg őket, ha tudod, hogy mit csinálsz."
+labelInterval = "Frissítési intervallum"
+labelMaxGridSupply = "Max. hálózati ellátás töltés közben"
+
 [config.deviceValue]
 capacity = "Kapacitás"
 chargeStatus = "Státusz"
+chargeStatusA = "nincs csatlakoztatva"
+chargeStatusB = "csatlakoztatva"
+chargeStatusC = "töltés"
+chargeStatusF = "hiba"
 chargedEnergy = "Töltve"
+co2 = "Hálózat CO₂"
+configured = "Konfigurálva"
+currency = "Valuta"
 current = "Jelenlegi"
 enabled = "Engedélyezve"
 energy = "Energia"
+no = "nem"
 odometer = "Óraállás"
+org = "Szervezet"
 phaseCurrents = "Áram L1..L3"
 phasePowers = "Teljesítmény L1..L3"
 phaseVoltages = "Feszültség L1..L3"
@@ -41,6 +58,13 @@ power = "Teljesítmény"
 range = "Hatótáv"
 soc = "SoC"
 socLimit = "Limit"
+temp = "Hőmérséklet"
+topic = "Téma"
+url = "URL"
+yes = "igen"
+
+[config.eebus]
+title = "EEBus"
 
 [config.form]
 example = "Példa"
@@ -48,21 +72,43 @@ optional = "opcionális"
 
 [config.general]
 cancel = "Mégse"
+experimental = "Kísérleti"
+off = "ki"
+on = "be"
+password = "Jelszó"
+remove = "Eltávolítás"
 save = "Mentés"
+telemetry = "Telemetria"
 
 [config.grid]
 titleAdd = "Hálózati Mérő Hozzáadása"
 titleEdit = "Hálózati Mérő Szerkesztése"
 
+[config.hems]
+description = "Az evcc csatlakoztatása más otthoni energia menedzsment rendszerhez."
+
+[config.influx]
+labelDatabase = "Adatbázis"
+labelOrg = "Szervezet"
+labelPassword = "Jelszó"
+labelToken = "API Token"
+labelUrl = "URL"
+labelUser = "Felhasználónév"
+title = "InfluxDB"
+
 [config.main]
 addLoadpoint = "Töltőpont hozzáadása"
 addPvBattery = "Napelem vagy energiatároló hozzáadása"
 addVehicle = "Jármű hozzáadása"
+configured = "konfigurálva"
 edit = "szerkesztés"
 title = "Konfiguráció"
 unconfigured = "nincs konfigurálva"
 vehicles = "Járműveim"
 yaml = "Az evcc.yaml fájlban konfigurálva. Nem szerkeszthető az UI-ról."
+
+[config.messaging]
+title = "Értesítések"
 
 [config.meter]
 cancel = "Mégse"
@@ -71,6 +117,25 @@ save = "Mentés"
 template = "Gyártó"
 titleChoice = "Mit szeretnél hozzáadni?"
 validateSave = "Ellenőrzés & mentés"
+
+[config.modbusproxy]
+title = "Modbus Proxy"
+
+[config.mqtt]
+authentication = "Hitelesítés"
+labelCheckInsecure = "Önaláírt tanúsítványok engedélyezése"
+labelClientId = "Kliens ID"
+labelInsecure = "Tanúsítvány hitelesítés"
+labelPassword = "Jelszó"
+labelTopic = "Téma"
+labelUser = "Felhasználónév"
+title = "MQTT"
+
+[config.network]
+descriptionPort = "Port a webes felülethez és az API-hoz. Frissítened kell a böngésződ URL-jét, ha ezt megváltoztatod."
+labelPort = "Port"
+labelSchema = "Séma"
+title = "Hálózat"
 
 [config.options]
 
@@ -88,7 +153,16 @@ titleEdit = "Napelemes Mérő Szerkesztése"
 
 [config.section]
 general = "Általános"
+integrations = "Integrációk"
 system = "Rendszer"
+vehicles = "Járművek"
+
+[config.sponsor]
+addToken = "Szponzor token beírása"
+changeToken = "Szponzor token megváltoztatása"
+description = "A szponzorációs modell segít a projekt fenntartásában és az új izgalmas funkciók bevezetésében. Szponzorként teljes hozzáférést kapsz az összes töltőberendezés implementációjához."
+error = "A szponzor token nem érvényes."
+labelToken = "Szponzor token"
 
 [config.system]
 logs = "Naplók"
@@ -429,6 +503,7 @@ modalTitle = "Értesítések"
 [offline]
 message = "Nem csatlakozik a szerverhez."
 reload = "Újratöltés?"
+restart = "Újraindítás"
 
 [passwordModal]
 description = "Állítson be egy jelszót a konfigurációs beállítások védelmére. A főképernyő használata továbbra is lehetséges bejelentkezés nélkül."
