@@ -43,6 +43,24 @@ power = "Energia"
 range = "Distância"
 soc = "Nível de carga"
 socLimit = "Alvo de carga"
+broker = "Corretor"
+bucket = "Balde"
+chargeStatusA = "não ligado"
+chargeStatusE = "sem poder"
+configured = "Configurado"
+currency = "Curência"
+feedinPrice = "Preço de alimentação"
+gridPrice = "Preço da rede"
+no = "não"
+org = "Organização"
+chargeStatusB = "ligado"
+chargeStatusC = "carregando"
+co2 = "Rede CO₂"
+chargeStatusF = "erro"
+temp = "Temperatura"
+url = "URL"
+topic = "Tema"
+yes = "sim"
 
 [config.form]
 example = "Exemplo"
@@ -51,10 +69,19 @@ optional = "opcional"
 [config.general]
 cancel = "Cancelar"
 save = "Guardar"
+docsLink = "Ver documentação."
+experimental = "Experimental"
+off = "desligado"
+on = "ligado"
+password = "Palavra-passe"
+remove = "Remover"
+title = "Título"
+telemetry = "Telemetria"
 
 [config.grid]
 titleAdd = "Adicionar contador de rede"
 titleEdit = "Editar contator de rede"
+title = "Medidor de rede"
 
 [config.main]
 addLoadpoint = "Adicionar ponto de carga"
@@ -65,6 +92,7 @@ title = "Configuração"
 unconfigured = "não configurado"
 vehicles = "Meus Veículos"
 yaml = "Configurado em evcc.yaml. Não editável na UI."
+configured = "configurado"
 
 [config.meter]
 cancel = "Cancelar"
@@ -91,6 +119,11 @@ titleEdit = "Editar Contador Solar"
 [config.section]
 general = "Geral"
 system = "Sistema"
+grid = "Rede"
+meter = "Solar e Bateria"
+vehicles = "Veículos"
+integrations = "Integrações"
+loadpoints = "Pontos de partilha"
 
 [config.system]
 logs = "Registos"
@@ -410,7 +443,7 @@ targetSoc = "Alvo de carga"
 temp = "Temperatura"
 tempLimit = "Temperatura alvo"
 unknown = "Veículo convidado"
-vehicleSoc = "Nível de carga"
+vehicleSoc = "Cobrar"
 
 [main.vehicleSoc]
 charging = "carregando"
@@ -446,6 +479,9 @@ modalTitle = "Notícias"
 [offline]
 message = "Não conectado a um servidor."
 reload = "Iniciar de novo?"
+restarting = "Servidor vai voltar num momento."
+restartNeeded = "Obrigado a aplicar mudanças."
+restart = "Reiniciar"
 
 [passwordModal]
 description = "Defina uma palavra-passe para proteger as definições de configuração. Continua a ser possível utilizar o ecrã principal sem iniciar sessão."
@@ -538,7 +574,7 @@ auto = "Automático"
 label = "Língua"
 
 [settings.sponsorToken]
-expires = "Seu token de patrocinador expira em {inXDays}. {getNewToken} e atualize seu arquivo de configuração."
+expires = "Seu token patrocinador expira em {inXDays}. {getNewToken} e atualize-o aqui."
 getNew = "Pegue um novo"
 hint = "Nota: Vamos automatizar isso no futuro."
 
@@ -588,3 +624,85 @@ title = "Erro ao iniciar"
 cancel = "Cancelar"
 template = "Fabricante"
 test = "Teste"
+
+
+[config.control]
+description = "No geral, os valores padrão estão bem. Apenas mude-os se você sabe o que está fazendo."
+labelInterval = Intervalo actualizado
+labelMaxGridSupply = "Máx. rede de fornecimento enquanto carrega"
+labelResidualPower = "Poder real"
+descriptionInterval = "Ciclo de atualização de loop de controle em segundos. Define com que frequência o evcc lê dados do medidor, ajusta o poder de carregamento e atualiza a interface do usuário. Intervalos curtos (< 30s) podem causar aszilações e comportamento indesejado."
+descriptionMaxGridSupply = "Só relevante para inversores híbridos que não são capazes de produzir o poder de geração DC completo para a casa via AC. Este szenario pode levar ao uso indesejado da grade, uma vez que o evcc assume que a potência total DC está disponível. Use um valor de pelo menos 50 W para evitar isso."
+descriptionResidualPower = "Evita o ponto de operação do circuito de controle. Se você tem uma bateria em casa, é recomendável definir um valor de 100 W. Desta forma, a bateria terá uma leve prioridade sobre o uso da rede."
+title = "Comportamento de controle"
+
+[config.eebus]
+description = "Configuração que permite o evcc se comunicar com outros dispositivos EEBus."
+title = "EEBus"
+
+[config.hems]
+description = "Conecte evcc a outro sistema de gestão de energia doméstica."
+title = "HOM"
+
+[config.influx]
+description = "Escreve dados de carrega e outras métricas para o InfluxDB. Use Grafana ou outras ferramentas para visualizar os dados."
+labelBucket = "Balde"
+labelDatabase = "Base de dados"
+labelOrg = "Organização"
+labelPassword = "Palavra-passe"
+labelToken = "API Token"
+labelUrl = "URL"
+labelUser = "Nome de usuário"
+v1Support = "Apoio necessário para o InfluxDB 1.x?"
+v2Support = "Voltar ao InfluxDB 2.x"
+descriptionToken = "Verifique a documentação do InfluxDB para aprender a criar uma. https://docs.influxdata.com/influxdb/v2/admin/"
+title = "InfluxDB"
+
+[config.messaging]
+description = "Receba as mensagens sobre suas sessões de carregamento."
+title = Notificações
+
+[config.modbusproxy]
+description = "Permitir que vários clientes acessem um único dispositivo Modbus."
+title = "Modbus Proxy"
+
+[config.mqtt]
+authentication = "Autenticação"
+description = "Conecte-se a um corretor MQTT para trocar dados com outros sistemas em sua rede."
+descriptionClientId = "Autor das mensagens. Se o `evcc-[rand]` vazio é usado."
+descriptionTopic = "Deixe vazio para desativar a publicação."
+labelBroker = "Corretor"
+title = "MQTT"
+labelClientId = "ID do Cliente"
+labelCheckInsecure = "Permitir certificados auto-assinados"
+labelInsecure = "Validação de certificado"
+labelPassword = "Palavra-passe"
+publishing = "Publicação"
+labelTopic = "Tema"
+labelUser = "Nome de usuário"
+
+[config.circuits]
+description = "Assegura que a soma de todos os pontos de carga conectados a um circuito não exceda os limites de potência e corrente configurados. Circuitos podem ser aninhados para construir uma hierarquia."
+title = "Gerenciamento de carga"
+
+[config.network]
+descriptionHost = "Use sufixo .local para permitir mDNS. Relevante para a descoberta do aplicativo móvel e alguns carregadores OCPP."
+descriptionPort = "Port para a interface web e API. Você precisará atualizar sua URL do navegador se você mudar isso."
+labelHost = "Nome de anfitrião"
+title = "Rede"
+descriptionSchema = "Apenas afeta como as URLs são geradas. Selecionar HTTPS não permitirá criptografia."
+labelPort = "Porto"
+labelSchema = "Esquema"
+
+[config.sponsor]
+addToken = "Enter token patrocinador"
+changeToken = "Alterar token patrocinador"
+error = "O token patrocinador não é válido."
+labelToken = "Token patrocinador"
+description = "O modelo patrocinador nos ajuda a manter o projeto e a construir de forma sustentável novas e emocionantes características. Como patrocinador, você tem acesso a todas as implementações do carregador."
+descriptionToken = "Você obtém o token de {url}. Também oferecemos um token de avaliação para teste."
+title = "Patrocínio"
+
+[config.tariffs]
+title = "Tarifas"
+description = "Defina suas tarifas de energia para calcular os custos de suas sessões de carregamento."
