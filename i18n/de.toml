@@ -65,6 +65,13 @@ range = "Reichweite"
 soc = "SoC"
 socLimit = "SoC Begrenzung"
 temp = "Temperatur"
+broker = "Broker"
+no = "Nein"
+topic = "Thema"
+url = "URL"
+yes = "Ja"
+org = "Organisation"
+configured = "Konfiguriert"
 
 [config.eebus]
 description = "Grundkonfiguration für die Kommunikation mit anderen EEBus-Geräten."
@@ -537,6 +544,9 @@ modalTitle = "Meldungen"
 [offline]
 message = "Keine Verbindung zum Server."
 reload = "Erneut laden?"
+restart = "Neustart"
+restartNeeded = "Erforderlich, um Änderungen zu übernehmen"
+restarting = "Server ist gleich wieder verfügbar."
 
 [passwordModal]
 description = "Setze ein Passwort, um die Konfiguration zu schützen. Die Hauptansicht bleibt ohne Login zugänglich."
