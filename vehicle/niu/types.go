@@ -32,8 +32,8 @@ func (t *Token) UnmarshalJSON(data []byte) error {
 	err := json.Unmarshal(data, &res)
 	if err == nil {
 		if res.Data.Token == nil {
-			if res.Data.Desc != "" {
-				return errors.New(res.Data.Desc)
+			if msg := res.Data.Desc; msg != "" {
+				return errors.New(msg)
 			}
 			return errors.New("missing token")
 		}
