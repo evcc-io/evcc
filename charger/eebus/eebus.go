@@ -34,7 +34,7 @@ type Config struct {
 	ShipID      string
 	Interfaces  []string
 	Certificate struct {
-		Public, Private []byte
+		Public, Private string
 	}
 }
 
@@ -77,7 +77,7 @@ func NewServer(other Config) (*EEBus, error) {
 		serial = cc.ShipID
 	}
 
-	certificate, err := tls.X509KeyPair(cc.Certificate.Public, cc.Certificate.Private)
+	certificate, err := tls.X509KeyPair([]byte(cc.Certificate.Public), []byte(cc.Certificate.Private))
 	if err != nil {
 		return nil, err
 	}
