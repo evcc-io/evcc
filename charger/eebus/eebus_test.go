@@ -21,6 +21,5 @@ certificate:
 `
 
 	var res Config
-	err := yaml.Unmarshal([]byte(conf), &res)
-	require.NoError(t, err)
+	require.NoError(t, yaml.Unmarshal([]byte(conf), &res))
 }
