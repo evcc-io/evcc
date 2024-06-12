@@ -24,9 +24,66 @@ render: |
     source: sunspec
     {{- include "modbus" . | indent 2 }}
     timeout: {{ .timeout }}
-    subdevice: 1
+    subdevice: 1 # Metering device
     value: 203:W # sunspec 3-phase meter power reading
     scale: -1
+  energy:
+    source: sunspec
+    {{- include "modbus" . | indent 2 }}
+    timeout: {{ .timeout }}
+    subdevice: 1 # Metering device
+    value: 203:TotWhImp
+  currents:
+    - source: sunspec
+      {{- include "modbus" . | indent 4 }}
+      timeout: {{ .timeout }}
+      subdevice: 1 # Metering device
+      value: 203:AphA
+    - source: sunspec
+      {{- include "modbus" . | indent 4 }}
+      timeout: {{ .timeout }}
+      subdevice: 1 # Metering device
+      value: 203:AphB
+    - source: sunspec
+      {{- include "modbus" . | indent 4 }}
+      timeout: {{ .timeout }}
+      subdevice: 1 # Metering device
+      value: 203:AphC
+  voltages:
+    - source: sunspec
+      {{- include "modbus" . | indent 4 }}
+      timeout: {{ .timeout }}
+      subdevice: 1 # Metering device
+      value: 203:PhVphA
+    - source: sunspec
+      {{- include "modbus" . | indent 4 }}
+      timeout: {{ .timeout }}
+      subdevice: 1 # Metering device
+      value: 203:PhVphB
+    - source: sunspec
+      {{- include "modbus" . | indent 4 }}
+      timeout: {{ .timeout }}
+      subdevice: 1 # Metering device
+      value: 203:PhVphC
+  powers:
+    - source: sunspec
+      {{- include "modbus" . | indent 4 }}
+      timeout: {{ .timeout }}
+      subdevice: 1 # Metering device
+      value:  203:WphA
+      scale: -1
+    - source: sunspec
+      {{- include "modbus" . | indent 4 }}
+      timeout: {{ .timeout }}
+      subdevice: 1 # Metering device
+      value: 203:WphB
+      scale: -1
+    - source: sunspec
+      {{- include "modbus" . | indent 4 }}
+      timeout: {{ .timeout }}
+      subdevice: 1 # Metering device
+      value: 203:WphC
+      scale: -1
   {{- end }}
   {{- if eq .usage "pv" }}
   power:
