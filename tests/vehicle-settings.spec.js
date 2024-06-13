@@ -91,8 +91,7 @@ test.describe("minSoc and limitSoc", async () => {
     await page.goto("/");
 
     // switch to offline vehicle
-    await page.getByRole("button", { name: "blauer e-Golf" }).click();
-    await page.getByRole("button", { name: "grüner Honda e" }).click();
+    await page.getByTestId("change-vehicle").locator("select").selectOption("grüner Honda e");
 
     await page.getByTestId("charging-plan").getByRole("button", { name: "none" }).click();
     await page.getByRole("link", { name: "Arrival" }).click();
@@ -104,8 +103,7 @@ test.describe("minSoc and limitSoc", async () => {
     await page.goto("/");
 
     // switch to offline vehicle
-    await page.getByRole("button", { name: "blauer e-Golf" }).click();
-    await page.getByRole("button", { name: "Guest vehicle" }).click();
+    await page.getByTestId("change-vehicle").locator("select").selectOption("Guest vehicle");
 
     await page.getByTestId("charging-plan").getByRole("button", { name: "none" }).click();
     await page.getByRole("link", { name: "Arrival" }).click();

@@ -10,6 +10,7 @@ __debug_bin*
 !templates/**/*.yaml
 !templates/**/*-schema.json
 !util/templates/**/*.yaml
+!assets/js/**/*.yaml
 !package*.json
 !evcc.dist.yaml
 !tests/**/*.evcc.yaml

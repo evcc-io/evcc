@@ -1,0 +1,35 @@
+# events:
+#   start:
+#     title: Charge started
+#     msg: Started charging in "${mode}" mode
+#   stop:
+#     title: Charge finished
+#     msg: Finished charging ${chargedEnergy:%.1fk}kWh in ${chargeDuration}.
+#   connect:
+#     title: Car connected
+#     msg: "Car connected at ${pvPower:%.1fk}kW PV"
+#   disconnect:
+#     title: Car disconnected
+#     msg: Car disconnected after ${connectedDuration}
+#   soc:
+#     title: Soc updated
+#     msg: Battery charged to ${vehicleSoc:%.0f}%
+#   guest:
+#     title: Unknown vehicle
+#     msg: Unknown vehicle, guest connected?
+
+# services:
+# - type: pushover
+#   app: # app id
+#   recipients:
+#   - # list of recipient ids
+# - type: telegram
+#   token: # bot id
+#   chats:
+#   - # list of chat ids
+# - type: email
+#   uri: smtp://<user>:<password>@<host>:<port>/?fromAddress=<from>&toAddresses=<to>
+# - type: ntfy
+#   uri: https://<host>/<topics>
+#   priority: <priority>
+#   tags: <tags>

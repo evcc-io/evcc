@@ -54,10 +54,6 @@ export default function setupRouter(i18n) {
         component: () => import("./views/Log.vue"),
         beforeEnter: ensureAuth,
       },
-      {
-        path: "/error",
-        component: () => import("./views/StartupError.vue"),
-      },
     ],
   });
   router.beforeEach(async () => {

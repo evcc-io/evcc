@@ -126,8 +126,9 @@ func (suite *ocppTestSuite) TestConnect() {
 	{
 		expectedTxn := 99
 
+		// always accept stopping unknown transaction, see https://github.com/evcc-io/evcc/pull/13990
 		_, err := cp1.StopTransaction(0, types.NewDateTime(suite.clock.Now()), expectedTxn)
-		suite.Require().Error(err)
+		suite.Require().NoError(err)
 
 		_, err = cp1.MeterValues(1, []types.MeterValue{
 			{

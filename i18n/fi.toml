@@ -21,15 +21,39 @@ never = "ainoastaan kun riittävästi ylijäämää"
 
 [config]
 
+[config.battery]
+
+[config.deviceValue]
+
 [config.form]
 example = "Esimerkiksi"
 optional = "valinnainen"
+
+[config.general]
+
+[config.grid]
 
 [config.main]
 addVehicle = "Lisää ajoneuvo"
 edit = "muokkaa"
 title = "Määritykset"
 vehicles = "Minun ajoneuvot"
+
+[config.meter]
+
+[config.options]
+
+[config.options.endianness]
+
+[config.options.schema]
+
+[config.pv]
+
+[config.section]
+
+[config.system]
+
+[config.title]
 
 [config.validation]
 failed = "epäonnistui"
@@ -150,6 +174,10 @@ description = "Normaaleissa olosuhteissa uudelleenkäynnistyksen ei pitäisi oll
 disclaimer = "Huomaa: evcc lopettaa toimintansa ja käynnistää palvelun uudelleen"
 modalTitle = "Oletko varma että haluat uudelleen käynnistää?"
 
+[log]
+
+[loginModal]
+
 [main]
 vehicles = "Pysäköinti"
 
@@ -175,6 +203,8 @@ pvExport = "Verkkoon vienti"
 pvProduction = "Tuotanto"
 selfConsumption = "Tuotannon kulutus"
 
+[main.heatingStatus]
+
 [main.loadpoint]
 avgPrice = "⌀ Hinta"
 charged = "Ladattu"
@@ -191,6 +221,8 @@ default = "oletus"
 disclaimerHint = "Huomautus:"
 title = "Asetukset {0}"
 vehicle = "Ajoneuvo"
+
+[main.loadpointSettings.limitSoc]
 
 [main.loadpointSettings.maxCurrent]
 label = "Maksimivirta"
@@ -290,7 +322,6 @@ scale3p = "Siirrytään 3-vaihe lataukseen {remaining}…"
 targetChargeActive = "Lataaminen käynnissä…"
 targetChargePlanned = "Lataaminen alkaa {time}."
 targetChargeWaitForVehicle = "Tavoite lataus valmis. Odotetaan ajoneuvoa…"
-unknown = ""
 vehicleLimitReached = "Ajoneuvon raja {soc} saavutettu."
 waitForVehicle = "Valmiina. Odotetaan ajoneuvoa…"
 
@@ -301,6 +332,8 @@ modalTitle = "Ilmoitukset"
 [offline]
 message = "Ei yhteyttä serveriin"
 reload = "Lataa uudelleen?"
+
+[passwordModal]
 
 [session]
 cancel = "Peruuta"
@@ -353,6 +386,8 @@ filter = "Suodatin"
 
 [settings]
 title = "Asetukset"
+
+[settings.fullscreen]
 
 [settings.gridDetails]
 co2 = "CO₂"

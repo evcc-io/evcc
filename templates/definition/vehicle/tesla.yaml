@@ -9,7 +9,7 @@ requirements:
       Die Steuerung von Fahrzeugen im Zusammenspiel mit einem Tesla Wall Connector erfolgt über einen evcc Proxy-Server und benötigt ein Sponsor Token. Der virtuelle evcc Schlüssel muss auf dem Fahrzeug installiert sein.
       Siehe [tesla.evcc.io](https://tesla.evcc.io).
     en: |
-      Teska `access` and `refresh` tokens are required. These can be generated through [tesla.evcc.io](https://tesla.evcc.io).
+      Tesla `access` and `refresh` tokens are required. These can be generated through [tesla.evcc.io](https://tesla.evcc.io).
       Controlling vehicles in conjunction with a Tesla Wall Connector is done via an evcc proxy server and requires a sponsor token. The evcc virtual key must be installed on the vehicle.
       See [tesla.evcc.io](https://tesla.evcc.io).
   evcc: ["sponsorship"]
@@ -40,13 +40,9 @@ params:
   - preset: vehicle-identify
 render: |
   type: tesla
-  title: {{ .title }}
-  icon: {{ .icon }}
+  {{ include "vehicle-common" . }}
   tokens:
     access: {{ .accessToken }}
     refresh: {{ .refreshToken }}
-  capacity: {{ .capacity }}
-  phases: {{ .phases }}
-  vin: {{ .vin }}
   {{ include "vehicle-identify" . }}
   features: ["coarsecurrent"]

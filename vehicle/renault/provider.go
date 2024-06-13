@@ -2,8 +2,6 @@ package renault
 
 import (
 	"net/http"
-	"slices"
-	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -138,23 +136,16 @@ var _ api.VehicleClimater = (*Provider)(nil)
 // Climater implements the api.VehicleClimater interface
 func (v *Provider) Climater() (bool, error) {
 	res, err := v.hvacG()
-
-	// Zoe Ph2, Megane e-tech
-	if err, ok := err.(request.StatusError); ok && err.HasStatus(http.StatusForbidden, http.StatusBadGateway) {
-		return false, api.ErrNotAvailable
-	}
-
-	if err == nil {
-		state := strings.ToLower(res.Data.Attributes.HvacStatus)
-		if state == "" {
+	if err != nil {
+		// Zoe Ph2, Megane e-tech
+		if err, ok := err.(request.StatusError); ok && err.HasStatus(http.StatusForbidden, http.StatusBadGateway) {
 			return false, api.ErrNotAvailable
 		}
 
-		active := !slices.Contains([]string{"off", "false", "invalid", "error"}, state)
-		return active, nil
+		return false, err
 	}
 
-	return false, err
+	return res.Data.Attributes.HvacStatus == 2, nil
 }
 
 var _ api.Resurrector = (*Provider)(nil)

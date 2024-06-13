@@ -33,20 +33,8 @@ params:
   - preset: vehicle-identify
 render: |
   type: tronity
-  {{- if .title }}
-  title: {{ .title }}
-  {{- end }}
-  {{- if .icon }}
-  icon: {{ .icon }}
-  {{- end }}
+  {{ include "vehicle-common" . }}
   credentials:
     id: {{ .clientid }}
     secret: {{ .clientsecret }}
-  capacity: {{ .capacity }}
-  {{- if .phases }}
-  phases: {{ .phases }}
-  {{- end }}
-  {{- if .vin }}
-  vin: {{ .vin }}
-  {{- end }}
   {{ include "vehicle-identify" . }}

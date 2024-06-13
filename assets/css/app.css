@@ -35,9 +35,11 @@
 	--evcc-red-rgb: 252, 68, 15;
 	--bs-gray-deep: #010322;
 	--bs-gray-dark: #28293e;
+	--bs-gray-darker: #151630;
 	--bs-gray-medium: #93949e;
 	--bs-gray-light: #b5b6c3;
 	--bs-gray-bright: #f3f3f7;
+	--bs-gray-brighter: #f9f9fb;
 
 	--evcc-grid: var(--bs-gray-dark);
 	--evcc-self: var(--evcc-dark-green);
@@ -46,9 +48,11 @@
 	--evcc-export: var(--evcc-yellow);
 	--evcc-background: var(--bs-gray-bright);
 	--evcc-box: var(--bs-white);
+	--evcc-box-border: var(--bs-gray-brighter);
 	--evcc-default-text: var(--bs-gray-dark);
 	--evcc-gray: var(--bs-gray-medium);
 	--evcc-gray-50: #93949e80;
+	--evcc-gray-25: #93949e40;
 
 	--evcc-accent1: var(--evcc-dark-yellow);
 	--evcc-accent2: var(--evcc-darker-green);
@@ -64,6 +68,10 @@
 
 	--bs-warning: var(--evcc-orange);
 	--bs-warning-rgb: var(--evcc-orange-rgb);
+	--bs-danger-50: #dc354580;
+
+	--bs-danger: var(--evcc-red);
+	--bs-danger-rgb: var(--evcc-red-rgb);
 
 	--bs-danger: var(--evcc-red);
 	--bs-danger-rgb: var(--evcc-red-rgb);
@@ -75,12 +83,14 @@
 	--bs-success: var(--evcc-primary);
 	--bs-success-rgb: var(--bs-primary-rgb);
 	--bs-code-color: var(--evcc-darkest-green);
+	--evcc-backdrop: #93949eaa; /* --bs-gray-medium + transparent */
 }
 
 :root.dark {
 	--evcc-grid: var(--bs-gray-medium);
 	--evcc-background: var(--bs-gray-deep);
 	--evcc-box: var(--bs-gray-dark);
+	--evcc-box-border: var(--vs-gray-darker);
 	--evcc-default-text: var(--bs-white);
 	--evcc-gray: var(--bs-gray-light);
 	--evcc-accent1: var(--evcc-yellow);
@@ -89,13 +99,8 @@
 	--bs-primary: var(--evcc-dark-green);
 	--bs-border-color-translucent: rgba(255, 255, 255, 0.175);
 	--bs-code-color: var(--evcc-dark-green);
+	--evcc-backdrop: #000000aa; /* black + transparent */
 	color-scheme: dark;
-}
-
-html {
-	/* prevents content jump when scrollbar is activate */
-	width: 100vw;
-	overflow-x: hidden;
 }
 
 html.no-transitions * {
@@ -321,7 +326,19 @@ a:hover {
 }
 
 .modal-backdrop.show {
-	opacity: 0.8;
+	opacity: 1;
+}
+
+.modal-backdrop {
+	--bs-backdrop-bg: var(--evcc-backdrop);
+	-webkit-backdrop-filter: blur(8px);
+	backdrop-filter: blur(8px);
+}
+
+.modal-backdrop.fade {
+	transition-property: opacity, backdrop-filter, background-color;
+	transition-duration: var(--evcc-transition-fast);
+	transition-timing-function: linear;
 }
 
 .modal-header {
@@ -339,6 +356,13 @@ a:hover {
 	padding: 1.25rem;
 	background-color: var(--evcc-box);
 	color: var(--evcc-default-text);
+}
+
+.modal-content h6 {
+	margin-top: 2rem;
+	margin-bottom: 1.5rem;
+	font-size: 1rem;
+	font-weight: bold;
 }
 
 /* breakpoint sm */
@@ -359,6 +383,10 @@ a:hover {
 
 .modal-footer > * {
 	margin: 0;
+}
+
+html:has(.modal.show) {
+	overflow-y: hidden;
 }
 
 .cursor-pointer {
@@ -392,9 +420,10 @@ small {
 .dropdown-item {
 	color: var(--evcc-default-text);
 }
-.dropdown-item:active {
-	background-color: var(--bs-primary);
-	color: var(--bs-white);
+.dropdown-item:active,
+.dropdown-item.active {
+	background-color: var(--evcc-gray-25);
+	color: var(--evcc-default-text);
 }
 .form-select {
 	overflow: hidden;
@@ -512,6 +541,9 @@ input[type="time"]::-webkit-calendar-picker-indicator {
 	.w-sm-50 {
 		width: 50% !important;
 	}
+	.w-sm-25 {
+		width: 25% !important;
+	}
 }
 
 html.app .hide-in-app {
@@ -551,13 +583,20 @@ html.app .modal-dialog {
 
 .round-box {
 	border-radius: 1rem;
-	box-shadow: 0 0 0 0 var(--evcc-gray-50);
 	color: var(--evcc-default-text);
 	background: var(--evcc-box);
 	padding: 1rem;
-	border: 1px solid var(--evcc-gray-50);
-	transition: box-shadow var(--evcc-transition-fast) linear;
 }
-.round-box:hover {
-	border-color: var(--evcc-gray);
+
+.round-box--error {
+	box-shadow: 0 0 0.5rem var(--bs-danger);
+	border: 1px solid var(--bs-danger);
+}
+
+.round-box--error .tags * {
+	color: var(--bs-danger-text-emphasis) !important;
+}
+
+.alert-danger code {
+	color: var(--evcc-darkest-green);
 }

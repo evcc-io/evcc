@@ -3,6 +3,9 @@ products:
   - brand: SMA
     description:
       generic: Sunny Island (Modbus)
+  - brand: SMA
+    description:
+      generic: Sunny Boy Storage 1.5/2.0/2.5 (Modbus)
 capabilities: ["battery-control"]
 params:
   - name: usage

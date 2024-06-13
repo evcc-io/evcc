@@ -21,15 +21,39 @@ never = "bare med nok PV-overskudd"
 
 [config]
 
+[config.battery]
+
+[config.deviceValue]
+
 [config.form]
 example = "Eksempel"
 optional = "valgfritt"
+
+[config.general]
+
+[config.grid]
 
 [config.main]
 addVehicle = "Legg til kjøretøy"
 edit = "rediger"
 title = "Oppsett"
 vehicles = "Mine kjøretøy"
+
+[config.meter]
+
+[config.options]
+
+[config.options.endianness]
+
+[config.options.schema]
+
+[config.pv]
+
+[config.section]
+
+[config.system]
+
+[config.title]
 
 [config.validation]
 failed = "mislykket"
@@ -81,6 +105,8 @@ savingsTitle = "Besparelser"
 savingsTotalEnergy = "{total} kWh ladet"
 since = "siden {since}"
 tabTitle = "Mine data"
+
+[footer.savings.period]
 
 [footer.sponsor]
 becomeSponsor = "Bli sponsor"
@@ -143,6 +169,10 @@ description = "I normale fall bør ikke omstart være nødvendig. Overvei å sen
 disclaimer = "Merk: evcc vil avsluttes og be operativsystemet om å starte enheten på ny."
 modalTitle = "Er du sikker på at du vil utføre omstart?"
 
+[log]
+
+[loginModal]
+
 [main]
 vehicles = "Parkering"
 
@@ -168,6 +198,8 @@ pvExport = "Lysnetteksport"
 pvProduction = "Produksjon"
 selfConsumption = "Eget forbruk"
 
+[main.heatingStatus]
+
 [main.loadpoint]
 avgPrice = "⌀-pris"
 charged = "Oppladet"
@@ -184,6 +216,8 @@ default = "forvalg"
 disclaimerHint = "Merknad:"
 title = "Innstillinger for {0}"
 vehicle = "Kjøretøy"
+
+[main.loadpointSettings.limitSoc]
 
 [main.loadpointSettings.maxCurrent]
 label = "Maks. ladestrøm"
@@ -293,6 +327,8 @@ modalTitle = "Merknader"
 message = "Ikke koblet til en server."
 reload = "Last inn igjen?"
 
+[passwordModal]
+
 [session]
 cancel = "Avbryt"
 co2 = "CO₂"
@@ -344,6 +380,8 @@ filter = "Filter"
 
 [settings]
 title = "Innstillinger"
+
+[settings.fullscreen]
 
 [settings.hiddenFeatures]
 label = "Eksperimentelt"

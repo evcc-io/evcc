@@ -80,10 +80,10 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 0x020F # Battery Charge/Discharge current
+      address: 0x020D # Battery Charge/Discharge power
       type: holding
       decode: int16
-    scale: 0.01
+    scale: 10
   soc:
     source: modbus
     {{- include "modbus" . | indent 2 }}

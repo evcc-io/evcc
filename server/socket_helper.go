@@ -3,49 +3,27 @@ package server
 import (
 	"encoding/json"
 	"fmt"
-	"math"
 	"reflect"
 	"strings"
-	"time"
 
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/encode"
 )
 
-func encode(v interface{}) (string, error) {
-	var s string
-	switch val := v.(type) {
-	case time.Time:
-		if val.IsZero() {
-			s = "null"
-		} else {
-			s = fmt.Sprintf(`"%s"`, val.Format(time.RFC3339))
-		}
-	case time.Duration:
-		// must be before stringer to convert to seconds instead of string
-		s = fmt.Sprintf("%d", int64(val.Seconds()))
-	case float64:
-		if math.IsNaN(val) {
-			s = "null"
-		} else {
-			s = fmt.Sprintf("%.5g", val)
-		}
-	default:
-		if b, err := json.Marshal(v); err == nil {
-			s = string(b)
-		} else {
-			return "", err
-		}
-	}
-	return s, nil
+var enc = encode.NewEncoder(encode.WithDuration())
+
+func encodeAsString(v any) (string, error) {
+	b, err := json.Marshal(enc.Encode(v))
+	return string(b), err
 }
 
-func encodeSlice(v interface{}) (string, error) {
+func encodeSliceAsString(v any) (string, error) {
 	rv := reflect.ValueOf(v)
 	res := make([]string, rv.Len())
 
 	for i := 0; i < rv.Len(); i++ {
 		var err error
-		if res[i], err = encode(rv.Index(i).Interface()); err != nil {
+		if res[i], err = encodeAsString(rv.Index(i).Interface()); err != nil {
 			return "", err
 		}
 	}
@@ -61,9 +39,9 @@ func kv(p util.Param) string {
 
 	// unwrap slices
 	if p.Val != nil && reflect.TypeOf(p.Val).Kind() == reflect.Slice {
-		val, err = encodeSlice(p.Val)
+		val, err = encodeSliceAsString(p.Val)
 	} else {
-		val, err = encode(p.Val)
+		val, err = encodeAsString(p.Val)
 	}
 
 	if err != nil {

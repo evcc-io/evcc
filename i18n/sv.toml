@@ -28,6 +28,14 @@ never = "bara med tillräckligt sol-överskott"
 titleAdd = "Lägg till batterimätare"
 titleEdit = "Ändra batterimätare"
 
+[config.circuits]
+description = "Säkrar, att summan av laddpunkter kopplad till en krets inte överskrider den konfigurerade effektgränsen. Kretsar kan nästlas för att bygga en hierarki."
+title = "Belastningshantering"
+
+[config.control]
+description = "Standardvärdena är vanligtsvis ok. Ändra bara om du vet vad du gör."
+descriptionInterval = "Uppdateringsintervall i sekunder. Definierar hur ofta evcc läser in data, ändrar laddeffekt och uppdaterar UI. Korta intervall (<30s) kan orsaka självsvängning och andra felaktiga resultat."
+
 [config.deviceValue]
 capacity = "Kapacitet"
 chargeStatus = "Status"
@@ -73,6 +81,16 @@ save = "Spara"
 template = "Tillverkare"
 titleChoice = "Vad vill du lägga till?"
 validateSave = "Validera & spara"
+
+[config.options]
+
+[config.options.endianness]
+big = "big-endian"
+little = "little-endian"
+
+[config.options.schema]
+http = "HTTP (okrypterad)"
+https = "HTTPS (krypterad)"
 
 [config.pv]
 titleAdd = "Lägg till solcellsmätare"
@@ -164,6 +182,7 @@ total = "totalt"
 
 [footer.sponsor]
 becomeSponsor = "Bli sponsor"
+becomeSponsorExtended = "Stöd oss direkt för att få klistermärken."
 confetti = "Är du redo för konfetti?"
 confettiPromise = "Du får klistermärken och digital konfetti"
 sticker = "... eller evcc-klistermärken?"
@@ -171,6 +190,10 @@ supportUs = "Vårt uppdrag är att göra solenergi till norm. Hjälp evcc genom 
 thanks = "Tack, {sponsor}! Ditt bidrag hjälper oss att utveckla evcc ytterligare."
 titleNoSponsor = "Stöd oss"
 titleSponsor = "Du är en supporter"
+titleTrial = "Testläge"
+titleVictron = "Sponsras av Victron Energy"
+trial = "Du är i testläge och kan använda alla funktioner. Överväg att stödja projektet."
+victron = "Du använder evcc på Victron Energy-hårdvara och har tillgång till alla funktioner."
 
 [footer.telemetry]
 optIn = "Jag vill bidra med min data."
@@ -236,6 +259,8 @@ update = "Autouppdatera"
 [loginModal]
 cancel = "Avbryt"
 error = "Inloggning misslyckades:"
+iframeHint = "Öppna evcc på en ny flik."
+iframeIssue = "Ditt lösenord är korrekt, men din webbläsare verkar ha tagit bort autentiseringscookien. Detta kan hända om du kör evcc i en iframe via HTTP."
 invalid = "Ogiltigt lösenord."
 login = "Logga in"
 password = "Lösenord"
@@ -478,6 +503,8 @@ vehicle = "Fordon"
 
 [sessions.csv]
 chargedenergy = "Energi (kWh)"
+chargeduration = "Varaktighet"
+co2perkwh = "CO₂/kWh"
 created = "Starttid"
 finished = "Sluttid"
 identifier = "Identifierare"
@@ -485,6 +512,9 @@ loadpoint = "Laddplats"
 meterstart = "Mätare start (kWh)"
 meterstop = "Mätare slut (kWh)"
 odometer = "Mätarställning (km)"
+price = "Pris"
+priceperkwh = "Pris/kWh"
+solarpercentage = "Sol (%)"
 vehicle = "Fordon"
 
 [sessions.filter]

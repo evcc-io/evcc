@@ -68,16 +68,13 @@ func NewCupraFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		cc.VIN, func() ([]cupra.Vehicle, error) {
 			return api.Vehicles(ui.Subject)
 		},
-		func(v cupra.Vehicle) string {
-			return v.VIN
+		func(v cupra.Vehicle) (string, error) {
+			return v.VIN, nil
 		},
 	)
 
 	if err == nil {
 		v.fromVehicle(vehicle.VehicleNickname, 0)
-	}
-
-	if err == nil {
 		v.Provider = cupra.NewProvider(api, ui.Subject, vehicle.VIN, cc.Cache)
 	}
 

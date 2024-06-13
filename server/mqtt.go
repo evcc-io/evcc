@@ -62,7 +62,7 @@ func (m *MQTT) encode(v interface{}) string {
 		return strconv.FormatInt(val.Unix(), 10)
 	case time.Duration:
 		// must be before stringer to convert to seconds instead of string
-		return fmt.Sprintf("%d", int64(val.Seconds()))
+		return strconv.Itoa(int(val.Seconds()))
 	case fmt.Stringer:
 		return val.String()
 	default:

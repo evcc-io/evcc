@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"math"
+	"net/http"
 	"strconv"
 	"strings"
 	"text/template"
@@ -55,6 +56,7 @@ func NewHTTPProviderFromConfig(other map[string]interface{}) (Provider, error) {
 		Cache             time.Duration
 	}{
 		Headers: make(map[string]string),
+		Method:  http.MethodGet,
 		Scale:   1,
 		Timeout: request.Timeout,
 	}
@@ -66,7 +68,7 @@ func NewHTTPProviderFromConfig(other map[string]interface{}) (Provider, error) {
 	log := util.NewLogger("http")
 	http := NewHTTP(
 		log,
-		cc.Method,
+		strings.ToUpper(cc.Method),
 		cc.URI,
 		cc.Insecure,
 		cc.Scale,
@@ -157,11 +159,11 @@ func (p *HTTP) WithAuth(typ, user, password string) (*HTTP, error) {
 }
 
 // request executes the configured request or returns the cached value
-func (p *HTTP) request(url string, body ...string) ([]byte, error) {
+func (p *HTTP) request(url string, body string) ([]byte, error) {
 	if time.Since(p.updated) >= p.cache {
 		var b io.Reader
-		if len(body) == 1 {
-			b = strings.NewReader(body[0])
+		if p.method != http.MethodGet {
+			b = strings.NewReader(body)
 		}
 
 		tmpl, err := template.New("url").Funcs(sprout.TxtFuncMap()).Parse(url)
@@ -175,7 +177,7 @@ func (p *HTTP) request(url string, body ...string) ([]byte, error) {
 		}
 
 		// empty method becomes GET
-		req, err := request.New(strings.ToUpper(p.method), builder.String(), b, p.headers)
+		req, err := request.New(p.method, builder.String(), b, p.headers)
 		if err != nil {
 			return []byte{}, err
 		}

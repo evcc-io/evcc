@@ -88,8 +88,9 @@ test.describe("limitEnergy", async () => {
   test("survives a reload", async ({ page }) => {
     await page.goto("/");
 
-    await page.getByRole("button", { name: "blauer e-Golf" }).click();
-    await page.getByRole("button", { name: "grüner Honda e" }).click();
+    await expect(page.getByTestId("vehicle-status")).toHaveText("Connected.");
+
+    await page.getByTestId("change-vehicle").locator("select").selectOption("grüner Honda e");
 
     await expect(page.getByTestId("limit-energy-value")).toHaveText("none");
     await page.getByTestId("limit-energy").getByRole("combobox").selectOption("10 kWh (+35%)");
@@ -101,12 +102,10 @@ test.describe("limitEnergy", async () => {
   test("should not be reset on vehicle change", async ({ page }) => {
     await page.goto("/");
 
-    await page.getByRole("button", { name: "blauer e-Golf" }).click();
-    await page.getByRole("button", { name: "grüner Honda e" }).click();
+    await page.getByTestId("change-vehicle").locator("select").selectOption("grüner Honda e");
     await page.getByTestId("limit-energy").getByRole("combobox").selectOption("10 kWh (+35%)");
 
-    await page.getByRole("button", { name: "grüner Honda e" }).click();
-    await page.getByRole("button", { name: "Guest vehicle" }).click();
+    await page.getByTestId("change-vehicle").locator("select").selectOption("Guest vehicle");
     await expect(page.getByTestId("limit-energy-value")).toHaveText("10 kWh");
   });
 });
