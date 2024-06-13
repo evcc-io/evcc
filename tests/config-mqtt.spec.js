@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, restart, baseUrl } from "./evcc";
 
-const CONFIG = "config-empty.evcc.yaml";
+const CONFIG = "config-grid-only.evcc.yaml";
 
 test.use({ baseURL: baseUrl() });
 

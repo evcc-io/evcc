@@ -29,58 +29,48 @@ async function enableExperimental(page) {
   await page.getByRole("button", { name: "Close" }).click();
 }
 
-test.describe("meters", async () => {
-  test("create, edit and remove battery meter", async ({ page }) => {
+test.describe("grid meter", async () => {
+  test("create, edit and remove grid meter", async ({ page }) => {
     // setup test data for mock openems api
     await page.goto(simulatorUrl());
-    await page.getByLabel("Battery Power").fill("-2500");
-    await page.getByLabel("Battery SoC").fill("75");
+    await page.getByLabel("Grid Power").fill("5000");
     await page.getByRole("button", { name: "Apply changes" }).click();
 
     await page.goto("/#/config");
     await login(page);
     await enableExperimental(page);
 
-    await expect(page.getByTestId("battery")).toHaveCount(0);
+    await expect(page.getByTestId("grid")).toHaveCount(1);
+    await expect(page.getByTestId("grid").getByTestId("device-tag-configured")).toContainText("no");
 
     // create #1
-    await page.getByRole("button", { name: "Add solar or battery" }).click();
+    await page.getByTestId("grid").getByRole("button", { name: "edit" }).click();
 
     const meterModal = page.getByTestId("meter-modal");
-    await meterModal.getByRole("button", { name: "Add battery meter" }).click();
     await meterModal.getByLabel("Manufacturer").selectOption("OpenEMS");
     await meterModal.getByLabel("IP address or hostname").fill(simulatorHost());
     await expect(meterModal.getByRole("button", { name: "Validate & save" })).toBeVisible();
     await meterModal.getByRole("link", { name: "validate" }).click();
-    await expect(meterModal.getByTestId("device-tag-soc")).toContainText("75.0%");
-    await expect(meterModal.getByTestId("device-tag-power")).toContainText("-2.5 kW");
+    await expect(meterModal.getByTestId("device-tag-power")).toContainText("5.0 kW");
     await meterModal.getByRole("button", { name: "Save" }).click();
-    await expect(page.getByTestId("battery")).toBeVisible(1);
-    await expect(page.getByTestId("battery")).toContainText("openems");
+    await expect(meterModal).not.toBeVisible();
 
-    // edit #1
-    await page.getByTestId("battery").getByRole("button", { name: "edit" }).click();
-    await meterModal.getByLabel("Battery capacity in kWh").fill("20");
-    await meterModal.getByRole("button", { name: "Validate & save" }).click();
-
-    const battery = page.getByTestId("battery");
-    await expect(battery).toBeVisible(1);
-    await expect(battery).toContainText("openems");
-    await expect(battery.getByTestId("device-tag-soc")).toContainText("75.0%");
-    await expect(battery.getByTestId("device-tag-power")).toContainText("-2.5 kW");
-    await expect(battery.getByTestId("device-tag-capacity")).toContainText("20.0 kWh");
-
-    // restart and check in main ui
+    // restart
     await restart(CONFIG_EMPTY);
+    await expect(page.getByTestId("grid").getByTestId("device-tag-power")).toContainText("5.0 kW");
+
+    // check in main ui
     await page.goto("/");
     await page.getByTestId("visualization").click();
-    await expect(page.getByTestId("energyflow")).toContainText("Battery charging75%2.5 kW");
+    await expect(page.getByTestId("energyflow")).toContainText(["Grid use", "5.0 kW"].join(""));
 
     // delete #1
     await page.goto("/#/config");
-    await page.getByTestId("battery").getByRole("button", { name: "edit" }).click();
+    await page.getByTestId("grid").getByRole("button", { name: "edit" }).click();
     await meterModal.getByRole("button", { name: "Delete" }).click();
+    await expect(meterModal).not.toBeVisible();
 
-    await expect(page.getByTestId("battery")).toHaveCount(0);
+    await expect(page.getByTestId("grid")).toHaveCount(1);
+    await expect(page.getByTestId("grid").getByTestId("device-tag-configured")).toContainText("no");
   });
 });
