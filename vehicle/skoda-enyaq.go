@@ -7,10 +7,11 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/vehicle/skoda"
-	"github.com/evcc-io/evcc/vehicle/skoda/service"
+	"github.com/evcc-io/evcc/vehicle/skoda/connect"
+	"github.com/evcc-io/evcc/vehicle/vag/service"
 )
 
-// https://gitlab.com/prior99/skoda
+// https://github.com/lendy007/skodaconnect
 
 // Enyaq is an api.Vehicle implementation for Skoda Enyaq cars
 type Enyaq struct {
@@ -66,15 +67,16 @@ func NewEnyaqFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	)
 
 	if err == nil {
-		vehicle, err = api.VehicleDetails(vehicle.VIN)
-	}
-
-	if err == nil {
 		v.fromVehicle(vehicle.Name, float64(vehicle.Specification.Battery.CapacityInKWh))
 	}
 
-	// reuse tokenService to build provider
+	// use Connect credentials to build provider
 	if err == nil {
+		ts, err := service.TokenRefreshServiceTokenSource(log, skoda.TRSParams, connect.AuthParams, cc.User, cc.Password)
+		if err != nil {
+			return nil, err
+		}
+
 		api := skoda.NewAPI(log, ts)
 		api.Client.Timeout = cc.Timeout
 

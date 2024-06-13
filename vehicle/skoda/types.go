@@ -38,24 +38,29 @@ type Specification struct {
 
 // StatusResponse is the /v2/vehicle-status/<vin> api
 type StatusResponse struct {
-	MileageInKm float64
+	Remote struct {
+		MileageInKm float64
+	}
 }
 
-// ChargerResponse is the /v2/charging/<vin> api
+// ChargerResponse is the /v1/charging/<vin>/status api
 type ChargerResponse struct {
-	IsVehicleInSaveLocation bool
-	Status                  struct {
-		ChargingRateInKilometersPerHour      float64
-		ChargePowerInKw                      float64
-		RemainingTimeToFullyChargedInMinutes int64
-		State                                string
-		ChargeType                           string
-		Battery                              struct {
-			RemainingCruisingRangeInMeters int64
-			StateOfChargeInPercent         int
-		}
+	Plug struct {
+		ConnectionState string // Connected
+		LockState       string // Unlocked
 	}
-	Settings SettingsResponse
+	Charging struct {
+		State                           string // Error
+		RemainingToCompleteInSeconds    int64
+		ChargingPowerInWatts            float64
+		ChargingRateInKilometersPerHour float64
+		ChargingType                    string // Invalid
+		ChargeMode                      string // MANUAL
+	}
+	Battery struct {
+		CruisingRangeElectricInMeters int64
+		StateOfChargeInPercent        int
+	}
 }
 
 // SettingsResponse is the /v1/charging/<vin>/settings api
@@ -63,11 +68,4 @@ type SettingsResponse struct {
 	AutoUnlockPlugWhenCharged    string `json:"autoUnlockPlugWhenCharged"`
 	MaxChargeCurrentAc           string `json:"maxChargeCurrentAc"`
 	TargetStateOfChargeInPercent int    `json:"targetStateOfChargeInPercent"`
-}
-
-// ChargerResponse is the /v2/air-conditioning/<vin> api
-type ClimaterResponse struct {
-	State                  string `json:"state"`
-	ChargerConnectionState string `json:"chargerConnectionState"`
-	ChargerLockState       string `json:"chargerLockState"`
 }
