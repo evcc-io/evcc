@@ -944,8 +944,8 @@ CONTINUE:
 			}
 		}
 
-		if !instance.HasMeter() {
-			return fmt.Errorf("circuit %s has no meter or loadpoint assigned", dev.Config().Name)
+		if !isRoot && !instance.HasMeter() {
+			return fmt.Errorf("circuit %s has no meter and no loadpoint assigned", dev.Config().Name)
 		}
 	}
 
