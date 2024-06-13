@@ -6,8 +6,8 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
-	"github.com/evcc-io/evcc/vehicle/skoda"
-	"github.com/evcc-io/evcc/vehicle/skoda/service"
+	"github.com/evcc-io/evcc/vehicle/skoda/myskoda"
+	"github.com/evcc-io/evcc/vehicle/skoda/myskoda/service"
 )
 
 // https://gitlab.com/prior99/skoda
@@ -15,7 +15,7 @@ import (
 // Enyaq is an api.Vehicle implementation for Skoda Enyaq cars
 type Enyaq struct {
 	*embed
-	*skoda.Provider // provides the api implementations
+	*myskoda.Provider // provides the api implementations
 }
 
 func init() {
@@ -50,17 +50,17 @@ func NewEnyaqFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	log := util.NewLogger("enyaq").Redact(cc.User, cc.Password, cc.VIN)
 
 	// use Skoda api to resolve list of vehicles
-	ts, err := service.TokenRefreshServiceTokenSource(log, skoda.TRSParams, skoda.AuthParams, cc.User, cc.Password)
+	ts, err := service.TokenRefreshServiceTokenSource(log, myskoda.TRSParams, myskoda.AuthParams, cc.User, cc.Password)
 	if err != nil {
 		return nil, err
 	}
 
-	api := skoda.NewAPI(log, ts)
+	api := myskoda.NewAPI(log, ts)
 	api.Client.Timeout = cc.Timeout
 
 	vehicle, err := ensureVehicleEx(
 		cc.VIN, api.Vehicles,
-		func(v skoda.Vehicle) (string, error) {
+		func(v myskoda.Vehicle) (string, error) {
 			return v.VIN, nil
 		},
 	)
@@ -75,10 +75,10 @@ func NewEnyaqFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 	// reuse tokenService to build provider
 	if err == nil {
-		api := skoda.NewAPI(log, ts)
+		api := myskoda.NewAPI(log, ts)
 		api.Client.Timeout = cc.Timeout
 
-		v.Provider = skoda.NewProvider(api, vehicle.VIN, cc.Cache)
+		v.Provider = myskoda.NewProvider(api, vehicle.VIN, cc.Cache)
 	}
 
 	return v, err
