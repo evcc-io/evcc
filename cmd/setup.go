@@ -63,6 +63,9 @@ var conf = globalconfig.All{
 	Mqtt: globalconfig.Mqtt{
 		Topic: "evcc",
 	},
+	EEBus: eebus.Config{
+		URI: ":4712",
+	},
 	Database: globalconfig.DB{
 		Type: "sqlite",
 		Dsn:  "~/.evcc/evcc.db",
@@ -724,7 +727,7 @@ func configureEEBus(conf eebus.Config) error {
 		}
 	}
 
-	if conf.URI == "" {
+	if !conf.Configured() {
 		return nil
 	}
 
