@@ -70,7 +70,7 @@ func NewKSEFromConfig(other map[string]interface{}) (api.Charger, error) {
 	return NewKSE(cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.ID)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateKSE -b *KSE -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.Identifier,Identify,func() (string, error)"
+//go:generate go run ../cmd/tools/decorate.go -f decorateKSE -b *KSE -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)" -t "api.Identifier,Identify,func() (string, error)"
 
 // NewKSE creates KSE charger
 func NewKSE(uri, device, comset string, baudrate int, slaveID uint8) (api.Charger, error) {
@@ -94,6 +94,7 @@ func NewKSE(uri, device, comset string, baudrate int, slaveID uint8) (api.Charge
 
 	var (
 		phases1p3p func(int) error
+		getPhases  func() (int, error)
 		identify   func() (string, error)
 	)
 
@@ -101,6 +102,7 @@ func NewKSE(uri, device, comset string, baudrate int, slaveID uint8) (api.Charge
 	if b, err := wb.conn.ReadInputRegisters(kseRegFirmwareVersion, 1); err == nil && b[0] >= 0x52 { // >= HW Rev „R“
 		wb.has1p3p = true
 		phases1p3p = wb.phases1p3p
+		getPhases = wb.getPhases
 	}
 
 	// check presence of rfid
@@ -109,7 +111,7 @@ func NewKSE(uri, device, comset string, baudrate int, slaveID uint8) (api.Charge
 		identify = wb.identify
 	}
 
-	return decorateKSE(wb, phases1p3p, identify), err
+	return decorateKSE(wb, phases1p3p, getPhases, identify), err
 }
 
 // Status implements the api.Charger interface
@@ -252,6 +254,20 @@ func (wb *KSE) phases1p3p(phases int) error {
 
 	_, err := wb.conn.WriteSingleRegister(kseRegRelayMode, b)
 	return err
+}
+
+// getPhases implements the api.PhaseGetter interface
+func (wb *KSE) getPhases() (int, error) {
+	b, err := wb.conn.ReadHoldingRegisters(kseRegRelayMode, 1)
+	if err != nil {
+		return 0, err
+	}
+
+	if binary.BigEndian.Uint16(b) == 0 {
+		return 3, nil
+	}
+
+	return 1, nil
 }
 
 // Identify implements the api.Identifier interface
