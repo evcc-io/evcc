@@ -62,7 +62,7 @@ func init() {
 	registry.Add("em2go-home", NewEm2GoHomeFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateEm2GoHome -b *Em2GoHome -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error"
+//go:generate go run ../cmd/tools/decorate.go -f decorateEm2GoHome -b *Em2GoHome -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
 
 // NewEm2GoHomeFromConfig creates a Em2Go charger from generic config
 func NewEm2GoHomeFromConfig(other map[string]interface{}) (api.Charger, error) {
@@ -100,11 +100,13 @@ func NewEm2GoHome(uri string, slaveID uint8) (api.Charger, error) {
 	_, v2, v3, err := wb.Voltages()
 
 	var phases1p3p func(int) error
+	var getPhases func() (int, error)
 	if v2 != 0 && v3 != 0 {
 		phases1p3p = wb.phases1p3p
+		getPhases = wb.getPhases
 	}
 
-	return decorateEm2GoHome(wb, phases1p3p), err
+	return decorateEm2GoHome(wb, phases1p3p, getPhases), err
 }
 
 // Status implements the api.Charger interface
@@ -262,6 +264,16 @@ func (wb *Em2GoHome) phases1p3p(phases int) error {
 
 	_, err := wb.conn.WriteMultipleRegisters(em2GoHomeRegPhases, 1, b)
 	return err
+}
+
+// getPhases implements the api.PhaseGetter interface
+func (wb *Em2GoHome) getPhases() (int, error) {
+	b, err := wb.conn.ReadHoldingRegisters(em2GoHomeRegPhases, 1)
+	if err != nil {
+		return 0, err
+	}
+
+	return int(binary.BigEndian.Uint16(b)), nil
 }
 
 var _ api.Diagnosis = (*Em2GoHome)(nil)

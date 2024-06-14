@@ -6,12 +6,12 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateEm2GoHome(base *Em2GoHome, phaseSwitcher func(int) error) api.Charger {
+func decorateEm2GoHome(base *Em2GoHome, phaseSwitcher func(int) error, phaseGetter func() (int, error)) api.Charger {
 	switch {
-	case phaseSwitcher == nil:
+	case phaseGetter == nil && phaseSwitcher == nil:
 		return base
 
-	case phaseSwitcher != nil:
+	case phaseGetter == nil && phaseSwitcher != nil:
 		return &struct {
 			*Em2GoHome
 			api.PhaseSwitcher
@@ -21,9 +21,43 @@ func decorateEm2GoHome(base *Em2GoHome, phaseSwitcher func(int) error) api.Charg
 				phaseSwitcher: phaseSwitcher,
 			},
 		}
+
+	case phaseGetter != nil && phaseSwitcher == nil:
+		return &struct {
+			*Em2GoHome
+			api.PhaseGetter
+		}{
+			Em2GoHome: base,
+			PhaseGetter: &decorateEm2GoHomePhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+		}
+
+	case phaseGetter != nil && phaseSwitcher != nil:
+		return &struct {
+			*Em2GoHome
+			api.PhaseGetter
+			api.PhaseSwitcher
+		}{
+			Em2GoHome: base,
+			PhaseGetter: &decorateEm2GoHomePhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateEm2GoHomePhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
 	}
 
 	return nil
+}
+
+type decorateEm2GoHomePhaseGetterImpl struct {
+	phaseGetter func() (int, error)
+}
+
+func (impl *decorateEm2GoHomePhaseGetterImpl) GetPhases() (int, error) {
+	return impl.phaseGetter()
 }
 
 type decorateEm2GoHomePhaseSwitcherImpl struct {
