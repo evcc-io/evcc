@@ -29,20 +29,21 @@ titleAdd = "Dodaj merilnik baterije"
 titleEdit = "Uredi merilnik baterije"
 
 [config.circuits]
-title = "Upravljanje obremenitve"
 description = "Zagotavlja, da vsota vseh obremenitvenih točk, povezanih z vezjem, ne preseže konfiguriranih omejitev moči in toka. Vezja je mogoče ugnezditi za izgradnjo hierarhije."
+title = "Upravljanje obremenitve"
 
 [config.control]
-labelInterval = "Interval posodabljanja"
-labelResidualPower = "Preostala moč"
-title = "Nadzor vedenja"
-labelMaxGridSupply = "Največja napetost omrežja med polnjenjem"
 description = "Običajno so privzete vrednosti v redu. Spremenite jih le, če veste, kaj počnete."
 descriptionInterval = "Cikel posodabljanja krmilne zanke v sekundah. Določa, kako pogosto evcc bere podatke števca, prilagodi moč polnjenja in posodobi uporabniški vmesnik. Kratki intervali (< 30 s) lahko povzročijo nihanje in neželeno vedenje."
 descriptionMaxGridSupply = "Ustrezno samo za hibridne pretvornike, ki ne morejo oddajati celotne električne energije enosmernega toka v dom prek izmeničnega toka. Ta scenarij lahko povzroči neželeno uporabo omrežja, saj evcc predvideva, da je na voljo polna enosmerna moč. Uporabite vrednost najmanj 50 W da bi to preprečili."
 descriptionResidualPower = "Prestavi točko delovanja krmilne zanke. Če imate domačo baterijo, je priporočljivo, da nastavite vrednost 100 W. Na ta način bo baterija imela rahlo prednost pred uporabo omrežja."
+labelInterval = "Interval posodabljanja"
+labelMaxGridSupply = "Največja napetost omrežja med polnjenjem"
+labelResidualPower = "Preostala moč"
+title = "Nadzor vedenja"
 
 [config.deviceValue]
+broker = "Broker"
 bucket = "Bucket"
 capacity = "Kapaciteta"
 chargeStatus = "Status"
@@ -52,10 +53,17 @@ chargeStatusC = "polnjenje"
 chargeStatusE = "brez moči"
 chargeStatusF = "napaka"
 chargedEnergy = "Napolnjeno"
+co2 = "CO₂ iz omrežja"
+configured = "Konfigurirano"
+currency = "Valuta"
 current = "Tok"
 enabled = "Omogočeno"
 energy = "Energija"
+feedinPrice = "Cena prejete energije iz omrežja"
+gridPrice = "Cena omrežja"
+no = "ne"
 odometer = "Število kilometrov"
+org = "Organizacija"
 phaseCurrents = "Tok L1..L3"
 phasePowers = "Moč L1..L3"
 phaseVoltages = "Napetost L1..L3"
@@ -63,18 +71,14 @@ power = "Moč"
 range = "Doseg"
 soc = "SoC"
 socLimit = "Omejitev"
-broker = "Broker"
-co2 = "CO₂ iz omrežja"
-configured = "Konfigurirano"
-currency = "Valuta"
-feedinPrice = "Cena prejete energije iz omrežja"
-gridPrice = "Cena omrežja"
-org = "Organizacija"
-no = "ne"
 temp = "Temperatura"
 topic = "Topic"
 url = "URL"
 yes = "da"
+
+[config.eebus]
+description = "Konfiguracija, ki evcc omogoča komunikacijo z drugimi napravami EEBus."
+title = "EEBus"
 
 [config.form]
 example = "Primer"
@@ -82,31 +86,53 @@ optional = "neobvezno"
 
 [config.general]
 cancel = "Prekliči"
-save = "Shrani"
 docsLink = "Oglejte si dokumentacijo."
 experimental = "Eksperimentalno"
 off = "izklopljen"
 on = "vklopljen"
 password = "Geslo"
 remove = "Odstrani"
+save = "Shrani"
 telemetry = "Telemetrija"
 title = "Naslov"
 
 [config.grid]
+title = "Omrežni meter"
 titleAdd = "Dodaj števec električnega omrežja"
 titleEdit = "Uredi števec električnega omrežja"
-title = "Omrežni meter"
+
+[config.hems]
+description = "Povežite evcc z drugim sistemom za upravljanje z energijo doma."
+title = "HEMS"
+
+[config.influx]
+description = "Zapisuje podatke o polnjenju in druge meritve v InfluxDB. Za vizualizacijo podatkov uporabite Grafano ali druga orodja."
+descriptionToken = "Preverite dokumentacijo InfluxDB, če želite izvedeti, kako ga ustvariti. https://docs.influxdata.com/influxdb/v2/admin/"
+labelBucket = "Bucket"
+labelDatabase = "Baza podatkov"
+labelOrg = "Organization"
+labelPassword = "Geslo"
+labelToken = "API Žeton"
+labelUrl = "URL"
+labelUser = "Uporabniško ime"
+title = "InfluxDB"
+v1Support = "Potrebujete podporo za InfluxDB 1.x?"
+v2Support = "Nazaj na InfluxDB 2.x"
 
 [config.main]
 addLoadpoint = "Dodaj polnilno mesto"
 addPvBattery = "Dodaj sončne celice ali baterijo"
 addVehicle = "Dodaj vozilo"
+configured = "konfigurirano"
 edit = "uredi"
 title = "Konfiguracija"
 unconfigured = "ni konfigurirano"
 vehicles = "Moja vozila"
 yaml = "Konfigurirano v evcc.yaml. Ni mogoče urejati v uporabniškem vmesniku."
-configured = "konfigurirano"
+
+[config.messaging]
+description = "Prejemanje sporočil o vaših sejah polnjenja."
+title = "Obvestila"
 
 [config.meter]
 cancel = "Prekliči"
@@ -115,6 +141,9 @@ save = "Shrani"
 template = "Proizvajalec"
 titleChoice = "Kaj želite dodati?"
 validateSave = "Preveri in shrani"
+
+[config.modbusproxy]
+description = "Dovoli več odjemalcem dostop do ene naprave Modbus."
 
 [config.options]
 
@@ -627,33 +656,3 @@ title = "Napaka pri zagonu"
 cancel = "Prekliči"
 template = "Proizvajalec"
 test = "Test"
-
-
-[config.eebus]
-description = "Konfiguracija, ki evcc omogoča komunikacijo z drugimi napravami EEBus."
-title = "EEBus"
-
-[config.hems]
-description = "Povežite evcc z drugim sistemom za upravljanje z energijo doma."
-title = "HEMS"
-
-[config.influx]
-descriptionToken = "Preverite dokumentacijo InfluxDB, če želite izvedeti, kako ga ustvariti. https://docs.influxdata.com/influxdb/v2/admin/"
-labelDatabase = "Baza podatkov"
-labelOrg = "Organization"
-labelPassword = "Geslo"
-labelToken = "API Žeton"
-v2Support = "Nazaj na InfluxDB 2.x"
-labelBucket = "Bucket"
-description = "Zapisuje podatke o polnjenju in druge meritve v InfluxDB. Za vizualizacijo podatkov uporabite Grafano ali druga orodja."
-title = "InfluxDB"
-labelUrl = "URL"
-v1Support = "Potrebujete podporo za InfluxDB 1.x?"
-labelUser = "Uporabniško ime"
-
-[config.messaging]
-title = "Obvestila"
-description = "Prejemanje sporočil o vaših sejah polnjenja."
-
-[config.modbusproxy]
-description = "Dovoli več odjemalcem dostop do ene naprave Modbus."
