@@ -1,145 +1,121 @@
 <template>
-	<Teleport to="body">
-		<div
-			id="vehicleModal"
-			ref="modal"
-			class="modal fade text-dark"
-			data-bs-backdrop="true"
-			tabindex="-1"
-			role="dialog"
-			aria-hidden="true"
-			data-testid="vehicle-modal"
-		>
-			<div class="modal-dialog modal-dialog-centered" role="document">
-				<div class="modal-content">
-					<div class="modal-header">
-						<h5 class="modal-title">
-							{{ $t(`config.vehicle.${isNew ? "titleAdd" : "titleEdit"}`) }}
-						</h5>
-						<button
-							type="button"
-							class="btn-close"
-							data-bs-dismiss="modal"
-							aria-label="Close"
-						></button>
-					</div>
-					<div class="modal-body">
-						<form ref="form" class="container mx-0 px-0">
-							<FormRow id="vehicleTemplate" :label="$t('config.vehicle.template')">
-								<select
-									id="vehicleTemplate"
-									v-model="templateName"
-									@change="templateChanged"
-									:disabled="!isNew"
-									class="form-select w-100"
-								>
-									<option value="offline">
-										{{ $t("config.vehicle.offline") }}
-									</option>
-									<option disabled>----------</option>
-									<optgroup :label="$t('config.vehicle.online')">
-										<option
-											v-for="option in templateOptions.online"
-											:key="option.name"
-											:value="option.template"
-										>
-											{{ option.name }}
-										</option>
-									</optgroup>
-									<optgroup :label="$t('config.vehicle.scooter')">
-										<option
-											v-for="option in templateOptions.scooter"
-											:key="option.name"
-											:value="option.template"
-										>
-											{{ option.name }}
-										</option>
-									</optgroup>
-									<optgroup :label="$t('config.vehicle.generic')">
-										<option
-											v-for="option in templateOptions.generic"
-											:key="option.name"
-											:value="option.template"
-										>
-											{{ option.name }}
-										</option>
-									</optgroup>
-								</select>
-							</FormRow>
-							<FormRow
-								v-for="param in templateParams"
-								:id="`vehicleParam${param.Name}`"
-								:key="param.Name"
-								:optional="!param.Required"
-								:label="param.Description || `[${param.Name}]`"
-								:help="param.Description === param.Help ? undefined : param.Help"
-								:example="param.Example"
-							>
-								<PropertyField
-									:id="`vehicleParam${param.Name}`"
-									v-model="values[param.Name]"
-									:masked="param.Mask"
-									:property="param.Name"
-									:type="param.Type"
-									class="me-2"
-									:required="param.Required"
-									:validValues="param.ValidValues"
-								/>
-							</FormRow>
+	<GenericModal
+		id="vehicleModal"
+		:title="$t(`config.vehicle.${isNew ? 'titleAdd' : 'titleEdit'}`)"
+		data-testid="vehicle-modal"
+		@open="open"
+		@closed="closed"
+	>
+		<form ref="form" class="container mx-0 px-0">
+			<FormRow id="vehicleTemplate" :label="$t('config.vehicle.template')">
+				<select
+					id="vehicleTemplate"
+					v-model="templateName"
+					@change="templateChanged"
+					:disabled="!isNew"
+					class="form-select w-100"
+				>
+					<option value="offline">
+						{{ $t("config.vehicle.offline") }}
+					</option>
+					<option disabled>----------</option>
+					<optgroup :label="$t('config.vehicle.online')">
+						<option
+							v-for="option in templateOptions.online"
+							:key="option.name"
+							:value="option.template"
+						>
+							{{ option.name }}
+						</option>
+					</optgroup>
+					<optgroup :label="$t('config.vehicle.scooter')">
+						<option
+							v-for="option in templateOptions.scooter"
+							:key="option.name"
+							:value="option.template"
+						>
+							{{ option.name }}
+						</option>
+					</optgroup>
+					<optgroup :label="$t('config.vehicle.generic')">
+						<option
+							v-for="option in templateOptions.generic"
+							:key="option.name"
+							:value="option.template"
+						>
+							{{ option.name }}
+						</option>
+					</optgroup>
+				</select>
+			</FormRow>
+			<FormRow
+				v-for="param in templateParams"
+				:id="`vehicleParam${param.Name}`"
+				:key="param.Name"
+				:optional="!param.Required"
+				:label="param.Description || `[${param.Name}]`"
+				:help="param.Description === param.Help ? undefined : param.Help"
+				:example="param.Example"
+			>
+				<PropertyField
+					:id="`vehicleParam${param.Name}`"
+					v-model="values[param.Name]"
+					:masked="param.Mask"
+					:property="param.Name"
+					:type="param.Type"
+					class="me-2"
+					:required="param.Required"
+					:validValues="param.ValidValues"
+				/>
+			</FormRow>
 
-							<TestResult
-								v-if="templateName"
-								:success="testSuccess"
-								:failed="testFailed"
-								:unknown="testUnknown"
-								:running="testRunning"
-								:result="testResult"
-								:error="testError"
-								@test="testManually"
-							/>
+			<TestResult
+				v-if="templateName"
+				:success="testSuccess"
+				:failed="testFailed"
+				:unknown="testUnknown"
+				:running="testRunning"
+				:result="testResult"
+				:error="testError"
+				@test="testManually"
+			/>
 
-							<div v-if="templateName" class="my-4 d-flex justify-content-between">
-								<button
-									v-if="isDeletable"
-									type="button"
-									class="btn btn-link text-danger"
-									@click.prevent="remove"
-								>
-									{{ $t("config.vehicle.delete") }}
-								</button>
-								<button
-									v-else
-									type="button"
-									class="btn btn-link text-muted"
-									data-bs-dismiss="modal"
-								>
-									{{ $t("config.vehicle.cancel") }}
-								</button>
-								<button
-									type="submit"
-									class="btn btn-primary"
-									:disabled="testRunning || saving"
-									@click.prevent="isNew ? create() : update()"
-								>
-									<span
-										v-if="saving"
-										class="spinner-border spinner-border-sm"
-										role="status"
-										aria-hidden="true"
-									></span>
-									{{
-										testUnknown
-											? $t("config.vehicle.validateSave")
-											: $t("config.vehicle.save")
-									}}
-								</button>
-							</div>
-						</form>
-					</div>
-				</div>
+			<div v-if="templateName" class="my-4 d-flex justify-content-between">
+				<button
+					v-if="isDeletable"
+					type="button"
+					class="btn btn-link text-danger"
+					@click.prevent="remove"
+				>
+					{{ $t("config.vehicle.delete") }}
+				</button>
+				<button
+					v-else
+					type="button"
+					class="btn btn-link text-muted"
+					data-bs-dismiss="modal"
+				>
+					{{ $t("config.vehicle.cancel") }}
+				</button>
+				<button
+					type="submit"
+					class="btn btn-primary"
+					:disabled="testRunning || saving"
+					@click.prevent="isNew ? create() : update()"
+				>
+					<span
+						v-if="saving"
+						class="spinner-border spinner-border-sm"
+						role="status"
+						aria-hidden="true"
+					></span>
+					{{
+						testUnknown ? $t("config.vehicle.validateSave") : $t("config.vehicle.save")
+					}}
+				</button>
 			</div>
-		</div>
-	</Teleport>
+		</form>
+	</GenericModal>
 </template>
 
 <script>
@@ -148,6 +124,7 @@ import PropertyField from "./PropertyField.vue";
 import TestResult from "./TestResult.vue";
 import api from "../../api";
 import test from "./mixins/test";
+import GenericModal from "../GenericModal.vue";
 
 const initialValues = { type: "template", icon: "car" };
 
@@ -157,7 +134,7 @@ function sleep(ms) {
 
 export default {
 	name: "VehicleModal",
-	components: { FormRow, PropertyField, TestResult },
+	components: { FormRow, PropertyField, TestResult, GenericModal },
 	mixins: [test],
 	props: {
 		id: Number,
@@ -228,14 +205,6 @@ export default {
 			deep: true,
 		},
 	},
-	mounted() {
-		this.$refs.modal.addEventListener("show.bs.modal", this.modalVisible);
-		this.$refs.modal.addEventListener("hide.bs.modal", this.modalInvisible);
-	},
-	unmounted() {
-		this.$refs.modal?.removeEventListener("show.bs.modal", this.modalVisible);
-		this.$refs.modal?.removeEventListener("hide.bs.modal", this.modalInvisible);
-	},
 	methods: {
 		reset() {
 			this.values = { ...initialValues };
@@ -291,7 +260,7 @@ export default {
 			try {
 				await api.post("config/devices/vehicle", this.apiData);
 				this.$emit("vehicle-changed");
-				this.modalInvisible();
+				this.closed();
 			} catch (e) {
 				console.error(e);
 				alert("create failed");
@@ -318,7 +287,7 @@ export default {
 			try {
 				await api.put(`config/devices/vehicle/${this.id}`, this.apiData);
 				this.$emit("vehicle-changed");
-				this.modalInvisible();
+				this.closed();
 			} catch (e) {
 				console.error(e);
 				alert("update failed");
@@ -329,16 +298,16 @@ export default {
 			try {
 				await api.delete(`config/devices/vehicle/${this.id}`);
 				this.$emit("vehicle-changed");
-				this.modalInvisible();
+				this.closed();
 			} catch (e) {
 				console.error(e);
 				alert("delete failed");
 			}
 		},
-		modalVisible() {
+		open() {
 			this.isModalVisible = true;
 		},
-		modalInvisible() {
+		closed() {
 			this.isModalVisible = false;
 		},
 		templateChanged() {
