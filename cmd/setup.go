@@ -63,6 +63,9 @@ var conf = globalconfig.All{
 	Mqtt: globalconfig.Mqtt{
 		Topic: "evcc",
 	},
+	EEBus: eebus.Config{
+		URI: ":4712",
+	},
 	Database: globalconfig.DB{
 		Type: "sqlite",
 		Dsn:  "~/.evcc/evcc.db",
@@ -724,7 +727,7 @@ func configureEEBus(conf eebus.Config) error {
 		}
 	}
 
-	if conf.URI == "" {
+	if !conf.Configured() {
 		return nil
 	}
 
@@ -947,8 +950,7 @@ CONTINUE:
 func configureSite(conf map[string]interface{}, loadpoints []*core.Loadpoint, tariffs *tariff.Tariffs) (*core.Site, error) {
 	site, err := core.NewSiteFromConfig(conf)
 	if err != nil {
-		// TODO proper handling
-		panic(err)
+		return nil, err
 	}
 
 	if err := site.Boot(log, loadpoints, tariffs); err != nil {

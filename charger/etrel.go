@@ -190,6 +190,18 @@ func (wb *Etrel) MaxCurrentMillis(current float64) error {
 	return err
 }
 
+var _ api.CurrentGetter = (*Etrel)(nil)
+
+// GetMaxCurrent implements the api.CurrentGetter interface
+func (wb *Etrel) GetMaxCurrent() (float64, error) {
+	b, err := wb.conn.ReadHoldingRegisters(wb.base+etrelRegMaxCurrent, 2)
+	if err != nil {
+		return 0, err
+	}
+
+	return float64(math.Float32frombits(binary.BigEndian.Uint32(b))), nil
+}
+
 var _ api.Meter = (*Etrel)(nil)
 
 // CurrentPower implements the api.Meter interface

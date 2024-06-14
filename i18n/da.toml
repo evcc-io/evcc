@@ -28,14 +28,42 @@ never = "kun med nok solar overskud"
 titleAdd = "Tilføj batterimåler"
 titleEdit = "Rediger batterimåler"
 
+[config.circuits]
+description = "Sikrer, at summen af alle ladepunkter forbundet til et kredsløb ikke overstiger de konfigurerede effekt- og strømgrænser. Kredsløb kan indlejres for at opbygge et hierarki."
+title = "Belastningsstyring"
+
+[config.control]
+description = "Standardværdierne er normalt fine. Kun hvis du ved, hvad du gør, kan du ændre dem."
+descriptionInterval = "Opdateringscyklus i sekunder. Definerer, hvor ofte evcc læser målerdata, justerer ladeeffekt og opdaterer brugergrænsefladen. Korte intervaller (< 30s) kan forårsage store udsving og fejlagtigt resultat."
+descriptionMaxGridSupply = "Kun relevant for hybrid-invertere, der ikke er i stand til at udsende den fulde DC-effekt til hjemmet via AC. Dette scenario kan føre til uønsket netbrug, da evcc antager, at den fulde DC-effekt er tilgængelig. Brug en værdi på mindst 50 W for at forhindre dette."
+descriptionResidualPower = "Skifter driftspunktet for kontrolsløjfen. Hvis du har et hjemmebatteri, anbefales det at indstille en værdi på 100 W. På denne måde vil batteriet få en lille prioritet frem for netbrug."
+labelInterval = "Opdateringsinterval"
+labelMaxGridSupply = "Max. forsyning fra elnettet under opladning"
+labelResidualPower = "Tilbageværende effekt"
+title = "kontrol adfærd"
+
 [config.deviceValue]
+broker = "Broker"
+bucket = "Bucket"
 capacity = "Kapacitet"
 chargeStatus = "Status"
+chargeStatusA = "ikke tilsluttet"
+chargeStatusB = "tilsluttet"
+chargeStatusC = "oplader"
+chargeStatusE = "ingen strøm"
+chargeStatusF = "fejl"
 chargedEnergy = "Opladet"
+co2 = "Elnettet CO₂"
+configured = "Konfigureret"
+currency = "Møntenhed"
 current = "Ström"
 enabled = "Aktiveret"
 energy = "Energi"
+feedinPrice = "Indfødningstarif"
+gridPrice = "God pris"
+no = "nej"
 odometer = "Kilometertæller"
+org = "Organisation"
 phaseCurrents = "Strømstyrke L1..L3"
 phasePowers = "Effekt L1..L3"
 phaseVoltages = "Spænding L1..L3"
@@ -43,6 +71,14 @@ power = "Effekt"
 range = "Rækkevidde"
 soc = "SoC"
 socLimit = "Begrænsning"
+temp = "Temperatur"
+topic = "Emne"
+url = "URL"
+yes = "ja"
+
+[config.eebus]
+description = "Indstilling der tillader evcc at kommunikere med andre EEBus enheder."
+title = "EEBus"
 
 [config.form]
 example = "Eksempel"
@@ -50,21 +86,53 @@ optional = "valgfrit"
 
 [config.general]
 cancel = "Afbryd"
+docsLink = "Se dokumentation."
+experimental = "Eksperimentel"
+off = "slukket"
+on = "tændt"
+password = "Adgangskode"
+remove = "Fjern"
 save = "Gem"
+telemetry = "Telemetri"
+title = "Titel"
 
 [config.grid]
+title = "Elnet-måler"
 titleAdd = "Tilføj måler for elnettet"
 titleEdit = "Rediger måler for elnettet"
+
+[config.hems]
+description = "Tilslut evcc til et andet energistyringssystem i hjemmet."
+title = "HEMS"
+
+[config.influx]
+description = "Skriver opladningsdata og andre målinger til InfluxDB. Brug Grafana eller andre værktøjer til at visualisere data."
+descriptionToken = "Tjek InfluxDB-dokumentation for at lære, hvordan du opretter en. https://docs.influxdata.com/influxdb/v2/admin/"
+labelBucket = "Bucket"
+labelDatabase = "Database"
+labelOrg = "Organisation"
+labelPassword = "Adgangskode"
+labelToken = "API Token"
+labelUrl = "URL"
+labelUser = "Brugernavn"
+title = "InfluxDB"
+v1Support = "Har du brug for support til InfluxDB 1.x?"
+v2Support = "Tilbage til InfluxDB 2.x"
 
 [config.main]
 addLoadpoint = "Tilføj opladningspunkt"
 addPvBattery = "Tilføj solpanel eller batteri"
 addVehicle = "Tilføj køretøj"
+configured = "Konfigureret"
 edit = "rediger"
 title = "Opsætning"
 unconfigured = "ikke konfigureret"
 vehicles = "Mine køretøjer"
 yaml = "Konfigurer i evcc.yaml. Kan ikke ændres i UI"
+
+[config.messaging]
+description = "Modtag beskeder om dine opladningssessioner."
+title = "Beskeder"
 
 [config.meter]
 cancel = "Afbryd"
@@ -73,6 +141,34 @@ save = "Gem"
 template = "Fabrikant"
 titleChoice = "Hvad ønsker du at tilføje?"
 validateSave = "Valider og gem"
+
+[config.modbusproxy]
+description = "Tillad flere klienter at få adgang til en enkelt Modbus-enhed."
+title = "Modbus Proxy"
+
+[config.mqtt]
+authentication = "Godkendelse"
+description = "Opret forbindelse til en MQTT-broker for at udveksle data med andre systemer på dit netværk."
+descriptionClientId = "Afsender af meddelelserne. Hvis tom bruges `evcc-[rand]`."
+descriptionTopic = "Efterlades tom for at deaktivere udgivelse."
+labelBroker = "Broker"
+labelCheckInsecure = "Tillad selvsignerede certifikater"
+labelClientId = "Klient ID"
+labelInsecure = "Certifikatvalidering"
+labelPassword = "Adgangskode"
+labelTopic = "Emne"
+labelUser = "Brugernavn"
+publishing = "Udgivelser"
+title = "MQTT"
+
+[config.network]
+descriptionHost = "Brug .local suffiks for at aktivere mDNS. Relevant for opdagelse af mobilappen og nogle OCPP-opladere."
+descriptionPort = "Port til webgrænsefladen og API. Du skal opdatere din browser-URL, hvis du ændrer dette."
+descriptionSchema = "Påvirker kun, hvordan URL'er genereres. Valg af HTTPS vil ikke aktivere kryptering."
+labelHost = "Værtsnavn"
+labelPort = "port"
+labelSchema = "Skema"
+title = "Netværk"
 
 [config.options]
 
@@ -90,11 +186,25 @@ titleEdit = "Rediger solmåler"
 
 [config.section]
 general = "Generelle"
+grid = "Elnettet"
+integrations = "Integrationer"
+loadpoints = "Ladepunkter"
+meter = "Sol og batteri"
 system = "System"
+vehicles = "Køretøjer"
 
 [config.site]
 cancel = "Afbryd"
 save = "Gem"
+
+[config.sponsor]
+addToken = "Indtast sponsor token"
+changeToken = "Udskift sponsor token"
+description = "Sponsormodellen hjælper os med at vedligeholde projektet og bæredygtigt bygge nye og spændende funktioner. Som sponsor får du adgang til alle opladning mulighederne."
+descriptionToken = "Du får et token fra {url}. Vi tilbyder også et prøvetoken til test."
+error = "Dit Sponsortoken er ikke gyldigt."
+labelToken = "Sponsor token"
+title = "Sponsorat"
 
 [config.system]
 logs = "Log"
@@ -103,6 +213,10 @@ restartRequiredDescription = "Genstart for at se effekten"
 restartRequiredMessage = "Konfiguration er ændret"
 restartingDescription = "Vent venligst..."
 restartingMessage = "Genstarter evcc."
+
+[config.tariffs]
+description = "Definer dine energitakster for at beregne omkostningerne ved dine opladningssessioner."
+title = "Tariffer"
 
 [config.title]
 description = "Vises på hovedskærm og på browserfane"
@@ -446,6 +560,9 @@ modalTitle = "Underretninger"
 [offline]
 message = "Ikke forbundet til en server."
 reload = "Genindlæs?"
+restart = "Genstart"
+restartNeeded = "Påkrævet for at anvende ændringer."
+restarting = "Serveren kommer tilbage om et øjeblik."
 
 [passwordModal]
 description = "Angiv adgangskode for at beskytte konfigurations indstillinger. Det er stadig mulig at benytte hovedskærmen uden at logge på"
@@ -531,7 +648,7 @@ auto = "Automatisk"
 label = "Sprog"
 
 [settings.sponsorToken]
-expires = "Dit sponsor token udløber om {inXDays}. {getNewToken} og opdater din konfigurations fil."
+expires = "Din sponsortoken udløber {inXDays}. {getNewToken} og opdater det her."
 getNew = "Hent en ny"
 hint = "Note: Vi automatiserer dette i fremtiden."
 

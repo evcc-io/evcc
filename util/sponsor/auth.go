@@ -13,7 +13,7 @@ import (
 )
 
 var (
-	mu             sync.Mutex
+	mu             sync.RWMutex
 	Subject, Token string
 	ExpiresAt      time.Time
 )
@@ -24,14 +24,14 @@ const (
 )
 
 func IsAuthorized() bool {
-	mu.Lock()
-	defer mu.Unlock()
+	mu.RLock()
+	defer mu.RUnlock()
 	return len(Subject) > 0
 }
 
 func IsAuthorizedForApi() bool {
-	mu.Lock()
-	defer mu.Unlock()
+	mu.RLock()
+	defer mu.RUnlock()
 	return IsAuthorized() && Subject != unavailable && Token != ""
 }
 

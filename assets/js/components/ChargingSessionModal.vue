@@ -37,8 +37,9 @@
 										<VehicleOptions
 											:id="session.vehicle"
 											class="options"
-											:vehicles="vehicles"
+											:vehicles="vehicleOptions"
 											connected
+											:selected="session.vehicle"
 											@change-vehicle="changeVehicle"
 											@remove-vehicle="removeVehicle"
 										>
@@ -202,6 +203,12 @@ export default {
 		solarEnergy: function () {
 			return this.chargedEnergy * (this.session.solarPercentage / 100);
 		},
+		vehicleOptions: function () {
+			return this.vehicles.map((v) => ({
+				name: v.title,
+				title: v.title,
+			}));
+		},
 	},
 	methods: {
 		openSessionDetailsModal() {
@@ -217,15 +224,11 @@ export default {
 		formatKm: function (value) {
 			return `${this.fmtNumber(distanceValue(value), 0)} ${distanceUnit()}`;
 		},
-		async changeVehicle(name) {
-			await this.updateSession({
-				vehicle: this.vehicles.find((v) => v.name === name)?.title,
-			});
+		async changeVehicle(title) {
+			await this.updateSession({ vehicle: title });
 		},
 		async removeVehicle() {
-			await this.updateSession({
-				vehicle: null,
-			});
+			await this.updateSession({ vehicle: null });
 		},
 		async updateSession(data) {
 			try {

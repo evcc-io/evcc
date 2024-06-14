@@ -81,11 +81,10 @@ type Site struct {
 	auxMeters     []api.Meter // Auxiliary meters
 
 	// battery settings
-	prioritySoc                       float64 // prefer battery up to this Soc
-	bufferSoc                         float64 // continue charging on battery above this Soc
-	bufferStartSoc                    float64 // start charging on battery above this Soc
-	maxGridSupplyWhileBatteryCharging float64 // ignore battery charging if AC consumption is above this value
-	batteryDischargeControl           bool    // prevent battery discharge for fast and planned charging
+	prioritySoc             float64 // prefer battery up to this Soc
+	bufferSoc               float64 // continue charging on battery above this Soc
+	bufferStartSoc          float64 // start charging on battery above this Soc
+	batteryDischargeControl bool    // prevent battery discharge for fast and planned charging
 
 	loadpoints  []*Loadpoint             // Loadpoints
 	tariffs     *tariff.Tariffs          // Tariffs
@@ -851,7 +850,7 @@ func (site *Site) prepare() {
 	site.publish(keys.PrioritySoc, site.prioritySoc)
 	site.publish(keys.BufferSoc, site.bufferSoc)
 	site.publish(keys.BufferStartSoc, site.bufferStartSoc)
-	site.publish(keys.MaxGridSupplyWhileBatteryCharging, site.maxGridSupplyWhileBatteryCharging)
+	site.publish(keys.MaxGridSupplyWhileBatteryCharging, site.MaxGridSupplyWhileBatteryCharging)
 	site.publish(keys.BatteryMode, site.batteryMode)
 	site.publish(keys.BatteryDischargeControl, site.batteryDischargeControl)
 	site.publish(keys.ResidualPower, site.GetResidualPower())

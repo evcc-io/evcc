@@ -28,6 +28,14 @@ never = "bara med tillräckligt sol-överskott"
 titleAdd = "Lägg till batterimätare"
 titleEdit = "Ändra batterimätare"
 
+[config.circuits]
+description = "Säkrar, att summan av laddpunkter kopplad till en krets inte överskrider den konfigurerade effektgränsen. Kretsar kan nästlas för att bygga en hierarki."
+title = "Belastningshantering"
+
+[config.control]
+description = "Standardvärdena är vanligtsvis ok. Ändra bara om du vet vad du gör."
+descriptionInterval = "Uppdateringsintervall i sekunder. Definierar hur ofta evcc läser in data, ändrar laddeffekt och uppdaterar UI. Korta intervall (<30s) kan orsaka självsvängning och andra felaktiga resultat."
+
 [config.deviceValue]
 capacity = "Kapacitet"
 chargeStatus = "Status"

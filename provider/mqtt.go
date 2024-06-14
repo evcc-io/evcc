@@ -157,6 +157,20 @@ func (m *Mqtt) IntSetter(param string) (func(int64) error, error) {
 	}, nil
 }
 
+var _ SetFloatProvider = (*Mqtt)(nil)
+
+// FloatSetter publishes topic with parameter replaced by float value
+func (m *Mqtt) FloatSetter(param string) (func(float64) error, error) {
+	return func(v float64) error {
+		payload, err := setFormattedValue(m.payload, param, v)
+		if err != nil {
+			return err
+		}
+
+		return m.client.Publish(m.topic, m.retained, payload)
+	}, nil
+}
+
 var _ SetBoolProvider = (*Mqtt)(nil)
 
 // BoolSetter invokes script with parameter replaced by bool value
