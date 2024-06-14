@@ -443,6 +443,9 @@ export default {
 			if (org) result.org = { value: org };
 			return result;
 		},
+		vehicleOptions() {
+			return this.vehicles.map((v) => ({ key: v.name, name: v.config?.title || v.name }));
+		},
 	},
 	watch: {
 		offline() {

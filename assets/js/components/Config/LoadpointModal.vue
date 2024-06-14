@@ -255,9 +255,9 @@
 										size="w-75 w-min-200"
 										class="me-2"
 										:valid-values="[
-											{ key: 0, name: 'when charging' },
-											{ key: 1, name: 'when connected' },
-											{ key: 2, name: 'always' },
+											{ key: 'pollcharging', name: 'when charging' },
+											{ key: 'pollconnected', name: 'when connected' },
+											{ key: 'pollalways', name: 'always' },
 										]"
 										required
 									/>
@@ -282,22 +282,18 @@
 								</FormRow>
 							</div>
 
-							<FormRow
-								id="loadpointEstimate"
-								label="Estimate charge level"
-								help="If enabled, the charge level will be interpolated based on charge power and duration."
-							>
-								<PropertyField
-									id="loadpointEstimate"
-									v-model="values.soc.estimate"
-									type="Boolean"
-									class="me-2"
-									:valid-values="[
-										{ key: false, name: 'no (only use vehicle data)' },
-										{ key: true, name: 'yes (interpolate between updates)' },
-									]"
-									required
-								/>
+							<FormRow id="loadpointEstimate" label="Estimate charge level">
+								<div class="d-flex">
+									<input
+										class="form-check-input"
+										id="mqttInsecure"
+										type="checkbox"
+										v-model="values.soc.estimate"
+									/>
+									<label class="form-check-label ms-2" for="mqttInsecure">
+										Interpolate between API updates
+									</label>
+								</div>
 							</FormRow>
 
 							<div class="mt-5 mb-4 d-flex justify-content-between">
