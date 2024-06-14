@@ -18,10 +18,10 @@ const admin = "admin"
 type Auth interface {
 	RemoveAdminPassword()
 	SetAdminPassword(string) error
-	IsAdminPasswordValid(string) bool
+	IsAdminPasswordValid(string) (bool, error)
 	GenerateJwtToken(time.Duration) (string, error)
 	ValidateJwtToken(string) (bool, error)
-	IsAdminPasswordConfigured() bool
+	IsAdminPasswordConfigured() (bool, error)
 }
 
 type auth struct {
@@ -41,11 +41,8 @@ func (a *auth) hashPassword(password string) (string, error) {
 	return string(bytes), err
 }
 
-func (a *auth) getAdminPasswordHash() string {
-	if pw, err := a.settings.String(keys.AdminPassword); err == nil {
-		return pw
-	}
-	return ""
+func (a *auth) getAdminPasswordHash() (string, error) {
+	return a.settings.String(keys.AdminPassword)
 }
 
 // RemoveAdminPassword resets the admin password. For recovery mode via cli.
@@ -55,8 +52,15 @@ func (a *auth) RemoveAdminPassword() {
 }
 
 // IsAdminPasswordConfigured checks if the admin password is already set
-func (a *auth) IsAdminPasswordConfigured() bool {
-	return a.getAdminPasswordHash() != ""
+func (a *auth) IsAdminPasswordConfigured() (bool, error) {
+	if hash, err := a.getAdminPasswordHash(); err != nil {
+		if errors.Is(err, settings.ErrNotFound) {
+			return false, nil
+		}
+		return false, err
+	} else {
+		return hash != "", nil
+	}
 }
 
 // SetAdminPassword sets the admin password if not already set
@@ -75,13 +79,17 @@ func (a *auth) SetAdminPassword(password string) error {
 }
 
 // IsAdminPasswordValid checks if the given password matches the admin password
-func (a *auth) IsAdminPasswordValid(password string) bool {
-	adminHash := a.getAdminPasswordHash()
-	if adminHash == "" {
-		return false
+func (a *auth) IsAdminPasswordValid(password string) (bool, error) {
+	adminHash, err := a.getAdminPasswordHash()
+	if err != nil {
+		return false, err
 	}
 
-	return bcrypt.CompareHashAndPassword([]byte(adminHash), []byte(password)) == nil
+	if adminHash == "" {
+		return false, nil
+	}
+
+	return bcrypt.CompareHashAndPassword([]byte(adminHash), []byte(password)) == nil, nil
 }
 
 func (a *auth) generateRandomKey(length int) (string, error) {

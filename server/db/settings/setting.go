@@ -20,6 +20,7 @@ import (
 )
 
 var ErrNotFound = errors.New("not found")
+var ErrNotInitilized = errors.New("unable to read settings from database")
 
 // setting is a settings entry
 type setting struct {
@@ -28,15 +29,20 @@ type setting struct {
 }
 
 var (
-	mu       sync.RWMutex
-	settings []setting
-	dirty    int32
+	mu          sync.RWMutex
+	settings    []setting
+	dirty       int32
+	initialized bool
 )
 
 func Init() error {
 	err := db.Instance.AutoMigrate(new(setting))
 	if err == nil {
 		err = db.Instance.Find(&settings).Error
+	}
+
+	if err == nil {
+		initialized = true
 	}
 	return err
 }
@@ -144,6 +150,10 @@ func Exists(key string) bool {
 func String(key string) (string, error) {
 	mu.RLock()
 	defer mu.RUnlock()
+
+	if !initialized {
+		return "", ErrNotInitilized
+	}
 
 	idx := slices.IndexFunc(settings, equal(key))
 	if idx < 0 {

@@ -30,8 +30,13 @@ func updatePasswordHandler(auth auth.Auth) http.HandlerFunc {
 		}
 
 		// update password
-		if auth.IsAdminPasswordConfigured() {
-			if !auth.IsAdminPasswordValid(req.Current) {
+		if configured, err := auth.IsAdminPasswordConfigured(); err != nil && configured {
+			valid, err := auth.IsAdminPasswordValid(req.Current)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			if !valid {
 				http.Error(w, "Invalid password", http.StatusBadRequest)
 				return
 			}
@@ -42,6 +47,9 @@ func updatePasswordHandler(auth auth.Auth) http.HandlerFunc {
 			}
 
 			w.WriteHeader(http.StatusAccepted)
+			return
+		} else if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
@@ -73,7 +81,13 @@ func jwtFromRequest(r *http.Request) string {
 // authStatusHandler login status (true/false) based on jwt token. Error if admin password is not configured
 func authStatusHandler(auth auth.Auth) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if !auth.IsAdminPasswordConfigured() {
+		configured, err := auth.IsAdminPasswordConfigured()
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		if !configured {
 			http.Error(w, "Not implemented", http.StatusNotImplemented)
 			return
 		}
@@ -96,7 +110,12 @@ func loginHandler(auth auth.Auth) http.HandlerFunc {
 			return
 		}
 
-		if !auth.IsAdminPasswordValid(req.Password) {
+		valid, err := auth.IsAdminPasswordValid(req.Password)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		if !valid {
 			http.Error(w, "Invalid password", http.StatusUnauthorized)
 			return
 		}
