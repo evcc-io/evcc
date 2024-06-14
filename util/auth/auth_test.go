@@ -46,17 +46,23 @@ func TestIsAdminPasswordValid(t *testing.T) {
 
 	// password not set, reject
 	mock.EXPECT().String(keys.AdminPassword).Return("", nil).Times(1)
-	assert.False(t, auth.IsAdminPasswordValid(validPw))
+	valid, err := auth.IsAdminPasswordValid(validPw)
+	assert.NoError(t, err)
+	assert.False(t, valid)
 
 	// password set, accept
 	var storedHash string
 	mock.EXPECT().SetString(keys.AdminPassword, gomock.Not(gomock.Eq(""))).Do(func(_ string, hash string) { storedHash = hash })
 	auth.SetAdminPassword(validPw)
 	mock.EXPECT().String(keys.AdminPassword).Return(storedHash, nil).Times(2)
-	assert.True(t, auth.IsAdminPasswordValid(validPw))
+	valid, err = auth.IsAdminPasswordValid(validPw)
+	assert.NoError(t, err)
+	assert.True(t, valid)
 
 	// password set, wrong password
-	assert.False(t, auth.IsAdminPasswordValid(invalidPw))
+	valid, err = auth.IsAdminPasswordValid(invalidPw)
+	assert.NoError(t, err)
+	assert.False(t, valid)
 }
 
 func TestJwtToken(t *testing.T) {
