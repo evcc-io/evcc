@@ -68,11 +68,23 @@
 										disabled
 										required
 									/>
-									<button class="btn btn-link btn-sm evcc-default-text">
+									<button
+										class="btn btn-link btn-sm evcc-default-text"
+										@click.prevent="editMeter"
+									>
 										<shopicon-regular-adjust></shopicon-regular-adjust>
 									</button>
 								</div>
 							</FormRow>
+							<p>
+								<button
+									class="btn btn-link btn-sm text-primary px-0"
+									type="button"
+									@click="editMeter"
+								>
+									Add dedicated charger meter
+								</button>
+							</p>
 
 							<h6>Basics</h6>
 
@@ -286,11 +298,11 @@
 								<div class="d-flex">
 									<input
 										class="form-check-input"
-										id="mqttInsecure"
+										id="loadpointEstimate"
 										type="checkbox"
 										v-model="values.soc.estimate"
 									/>
-									<label class="form-check-label ms-2" for="mqttInsecure">
+									<label class="form-check-label ms-2" for="loadpointEstimate">
 										Interpolate between API updates
 									</label>
 								</div>
@@ -331,6 +343,7 @@
 import FormRow from "./FormRow.vue";
 import PropertyField from "./PropertyField.vue";
 import CurrentRange from "./CurrentRange.vue";
+import Modal from "bootstrap/js/dist/modal";
 import api from "../../api";
 
 const defaultValues = {
@@ -361,7 +374,7 @@ export default {
 		name: String,
 		vehicleOptions: { type: Array, default: () => [] },
 	},
-	emits: ["added", "updated", "removed"],
+	emits: ["added", "updated", "removed", "openMeterModal"],
 	data() {
 		return {
 			isModalVisible: false,
@@ -406,8 +419,12 @@ export default {
 	watch: {
 		isModalVisible(visible) {
 			if (visible) {
-				this.reset();
-				if (this.id !== undefined) {
+				if (this.id == undefined) {
+					// new loadpoint
+					this.reset();
+				} else if (this.values?.id !== this.id) {
+					// loadpoint changed
+					this.reset();
 					this.loadConfiguration();
 				}
 			}
@@ -449,6 +466,18 @@ export default {
 		},
 		modalInvisible() {
 			this.isModalVisible = false;
+		},
+		editMeter() {
+			this.$emit("openMeterModal", this.values.meter);
+		},
+		// called externally
+		setMeter(meter) {
+			console.log("setMeter", meter);
+			this.values.meter = meter;
+		},
+		// called externally
+		setCharger(charger) {
+			this.values.charger = charger;
 		},
 	},
 };

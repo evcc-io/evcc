@@ -25,12 +25,12 @@
 					</div>
 					<div class="modal-body">
 						<div v-if="!meterType">
-							<AddDeviceButton
+							<NewDeviceButton
 								title="Add solar meter"
 								class="mb-4 addButton"
 								@click="selectType('pv')"
 							/>
-							<AddDeviceButton
+							<NewDeviceButton
 								title="Add battery meter"
 								class="addButton"
 								@click="selectType('battery')"
@@ -162,7 +162,7 @@ import PropertyField from "./PropertyField.vue";
 import TestResult from "./TestResult.vue";
 import api from "../../api";
 import test from "./mixins/test";
-import AddDeviceButton from "./AddDeviceButton.vue";
+import NewDeviceButton from "./NewDeviceButton.vue";
 import Modbus from "./Modbus.vue";
 
 const initialValues = { type: "template" };
@@ -173,14 +173,14 @@ function sleep(ms) {
 
 export default {
 	name: "MeterModal",
-	components: { FormRow, PropertyField, Modbus, TestResult, AddDeviceButton },
+	components: { FormRow, PropertyField, Modbus, TestResult, NewDeviceButton },
 	mixins: [test],
 	props: {
 		id: Number,
 		name: String,
 		type: String,
 	},
-	emits: ["added", "updated", "removed"],
+	emits: ["added", "updated", "removed", "closed"],
 	data() {
 		return {
 			isModalVisible: false,
@@ -262,9 +262,9 @@ export default {
 	watch: {
 		isModalVisible(visible) {
 			if (visible) {
+				this.templateName = null;
 				this.selectedType = null;
 				this.reset();
-				this.resetTest();
 				this.loadProducts();
 				if (this.id !== undefined) {
 					this.loadConfiguration();
@@ -409,6 +409,7 @@ export default {
 			this.isModalVisible = true;
 		},
 		modalInvisible() {
+			this.$emit("closed");
 			this.isModalVisible = false;
 		},
 		selectType(type) {

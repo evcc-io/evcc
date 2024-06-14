@@ -102,7 +102,10 @@
 								<DeviceTags :tags="deviceTags('meter', meter.name)" />
 							</template>
 						</DeviceCard>
-						<AddDeviceButton :title="$t('config.main.addPvBattery')" @add="addMeter" />
+						<NewDeviceButton
+							:title="$t('config.main.addPvBattery')"
+							@click="newMeter"
+						/>
 					</ul>
 
 					<h2 class="my-4">{{ $t("config.section.loadpoints") }} 🧪</h2>
@@ -124,7 +127,7 @@
 							</template>
 						</DeviceCard>
 
-						<AddDeviceButton
+						<NewDeviceButton
 							data-testid="add-loadpoint"
 							:title="$t('config.main.addLoadpoint')"
 							@click="todo"
@@ -150,10 +153,10 @@
 									<DeviceTags :tags="deviceTags('vehicle', vehicle.name)" />
 								</template>
 							</DeviceCard>
-							<AddDeviceButton
+							<NewDeviceButton
 								data-testid="add-vehicle"
 								:title="$t('config.main.addVehicle')"
-								@click="addVehicle"
+								@click="newVehicle"
 							/>
 						</ul>
 
@@ -260,19 +263,22 @@
 					</button>
 				</div>
 
+				<LoadpointModal
+					:id="selectedLoadpointId"
+					:vehicleOptions="vehicleOptions"
+					ref="loadpointModal"
+					@updated="loadpointChanged"
+					@openMeterModal="editLoadpointMeter"
+				/>
 				<VehicleModal :id="selectedVehicleId" @vehicle-changed="vehicleChanged" />
 				<MeterModal
 					:id="selectedMeterId"
 					:name="selectedMeterName"
 					:type="selectedMeterType"
-					@added="addMeterToSite"
+					@added="addMeter"
 					@updated="meterChanged"
-					@removed="removeMeterFromSite"
-				/>
-				<LoadpointModal
-					:id="selectedLoadpointId"
-					:vehicleOptions="vehicleOptions"
-					@updated="loadpointChanged"
+					@removed="removeMeter"
+					@closed="meterModalClosed"
 				/>
 				<InfluxModal @changed="loadDirty" />
 				<MqttModal @changed="loadDirty" />
@@ -296,7 +302,7 @@ import "@h2d2/shopicons/es/regular/batterythreequarters";
 import "@h2d2/shopicons/es/regular/powersupply";
 import "@h2d2/shopicons/es/regular/receivepayment";
 import "@h2d2/shopicons/es/regular/cablecharge";
-import AddDeviceButton from "../components/Config/AddDeviceButton.vue";
+import NewDeviceButton from "../components/Config/NewDeviceButton.vue";
 import api from "../api";
 import CircuitsIcon from "../components/MaterialIcon/Circuits.vue";
 import CircuitsModal from "../components/Config/CircuitsModal.vue";
@@ -333,7 +339,7 @@ import VehicleModal from "../components/Config/VehicleModal.vue";
 export default {
 	name: "Config",
 	components: {
-		AddDeviceButton,
+		NewDeviceButton,
 		CircuitsIcon,
 		CircuitsModal,
 		ControlModal,
@@ -519,19 +525,29 @@ export default {
 		meterModal() {
 			return Modal.getOrCreateInstance(document.getElementById("meterModal"));
 		},
+		loadpointModal() {
+			return Modal.getOrCreateInstance(document.getElementById("loadpointModal"));
+		},
+		editLoadpointMeter(name) {
+			const meter = this.meters.find((m) => m.name === name);
+			if (meter && meter.id === undefined) {
+				alert("yaml configured meters can not be edited. Remove meter from yaml first.");
+				return;
+			}
+			this.loadpointModal().hide();
+			this.$nextTick(() => this.editMeter(meter?.id, "charge"));
+		},
 		editMeter(id, type) {
 			this.selectedMeterId = id;
 			this.selectedMeterType = type;
 			this.$nextTick(() => this.meterModal().show());
 		},
-		addMeter(type) {
+		newMeter(type) {
 			this.selectedMeterId = undefined;
 			this.selectedMeterType = type;
 			this.$nextTick(() => this.meterModal().show());
 		},
 		async meterChanged() {
-			this.selectedMeterId = undefined;
-			this.selectedMeterType = undefined;
 			await this.loadMeters();
 			this.meterModal().hide();
 			await this.loadDirty();
@@ -546,14 +562,11 @@ export default {
 			await this.loadLoadpoints();
 			this.loadpointModal().hide();
 		},
-		loadpointModal() {
-			return Modal.getOrCreateInstance(document.getElementById("loadpointModal"));
-		},
 		editVehicle(id) {
 			this.selectedVehicleId = id;
 			this.$nextTick(() => this.vehicleModal().show());
 		},
-		addVehicle() {
+		newVehicle() {
 			this.selectedVehicleId = undefined;
 			this.$nextTick(() => this.vehicleModal().show());
 		},
@@ -570,24 +583,42 @@ export default {
 			this.loadDirty();
 			this.updateYamlConfigState();
 		},
-		addMeterToSite(type, name) {
-			if (type === "grid") {
+		addMeter(type, name) {
+			if (type === "charge") {
+				// update loadpoint
+				this.$refs.loadpointModal?.setMeter(name);
+			} else if (type === "grid") {
+				// update site grid
 				this.site.grid = name;
+				this.saveSite(type);
 			} else {
+				// update site pv, battery, aux
 				if (!this.site[type]) {
 					this.site[type] = [];
 				}
 				this.site[type].push(name);
+				this.saveSite(type);
 			}
-			this.saveSite(type);
 		},
-		removeMeterFromSite(type, name) {
-			if (type === "grid") {
+		removeMeter(type, name) {
+			if (type === "charge") {
+				// update loadpoint
+				this.$refs.loadpointModal?.setMeter(undefined);
+			} else if (type === "grid") {
+				// update site grid
 				this.site.grid = "";
+				this.saveSite(type);
 			} else {
+				// update site pv, battery, aux
 				this.site[type] = this.site[type].filter((i) => i !== name);
+				this.saveSite(type);
 			}
-			this.saveSite(type);
+		},
+		meterModalClosed() {
+			if (this.selectedMeterType === "charge") {
+				// reopen loadpoint modal
+				this.loadpointModal().show();
+			}
 		},
 		async saveSite(key) {
 			const body = key ? { [key]: this.site[key] } : this.site;
