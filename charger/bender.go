@@ -54,6 +54,7 @@ const (
 	bendRegChargedEnergy          = 716  // Sum of charged energy for the current session (Wh)
 	bendRegChargingDuration       = 718  // Duration since beginning of charge (Seconds)
 	bendRegUserID                 = 720  // User ID (OCPP IdTag) from the current session. Bytes 0 to 19.
+	bendRegEVBatteryState         = 730  // EV Battery State (% 0-100)
 	bendRegEVCCID                 = 741  // ASCII representation of the Hex. Values corresponding to the EVCCID. Bytes 0 to 11.
 	bendRegHemsCurrentLimit       = 1000 // Current limit of the HEMS module (A)
 
@@ -309,6 +310,28 @@ func (wb *BenderCC) identify() (string, error) {
 	}
 
 	return bytesAsString(b), nil
+}
+
+var _ api.Battery = (*BenderCC)(nil)
+
+// Soc implements the api.Battery interface
+func (wb *BenderCC) Soc() (float64, error) {
+	if !wb.legacy {
+		b, err := wb.conn.ReadHoldingRegisters(bendRegSmartVehicleDetected, 1)
+		if err != nil {
+			return 0, err
+		}
+
+		if binary.BigEndian.Uint16(b) == 1 {
+			b, err = wb.conn.ReadHoldingRegisters(bendRegEVBatteryState, 1)
+			if err != nil {
+				return 0, err
+			}
+			return float64(binary.BigEndian.Uint16(b)), nil
+		}
+	}
+
+	return 0, api.ErrNotAvailable
 }
 
 var _ api.Diagnosis = (*BenderCC)(nil)
