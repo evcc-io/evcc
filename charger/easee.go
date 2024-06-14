@@ -172,6 +172,9 @@ func NewEasee(user, password, charger string, timeout time.Duration, authorize b
 
 	client, err := signalr.NewClient(context.Background(),
 		signalr.WithConnector(c.connect(ts)),
+		signalr.WithBackoff(func() backoff.BackOff {
+			return backoff.NewExponentialBackOff(backoff.WithMaxElapsedTime(0)) // prevents SignalR stack to silently give up after 15 mins
+		}),
 		signalr.WithReceiver(c),
 		signalr.Logger(easee.SignalrLogger(c.log.TRACE), false),
 	)

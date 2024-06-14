@@ -9,7 +9,7 @@ import (
 	"golang.org/x/oauth2"
 )
 
-const BaseURI = "https://mysmob.api.connect.skoda-auto.cz/api"
+const BaseURI = "https://api.connect.skoda-auto.cz/api"
 
 // API is the Skoda api client
 type API struct {
@@ -30,35 +30,28 @@ func NewAPI(log *util.Logger, ts oauth2.TokenSource) *API {
 	return v
 }
 
-// Vehicles implements the /v2/garage response
+// Vehicles implements the /v3/garage response
 func (v *API) Vehicles() ([]Vehicle, error) {
 	var res VehiclesResponse
 
-	uri := fmt.Sprintf("%s/v2/garage", BaseURI)
+	uri := fmt.Sprintf("%s/v3/garage", BaseURI)
 	err := v.GetJSON(uri, &res)
 
 	return res.Vehicles, err
 }
 
-func (v *API) VehicleDetails(vin string) (Vehicle, error) {
-	var res Vehicle
-	uri := fmt.Sprintf("%s/v2/garage/vehicles/%s", BaseURI, vin)
-	err := v.GetJSON(uri, &res)
-	return res, err
-}
-
 // Status implements the /v2/vehicle-status/<vin> response
 func (v *API) Status(vin string) (StatusResponse, error) {
 	var res StatusResponse
-	uri := fmt.Sprintf("%s/v1/vehicle-health-report/warning-lights/%s", BaseURI, vin)
+	uri := fmt.Sprintf("%s/v2/vehicle-status/%s", BaseURI, vin)
 	err := v.GetJSON(uri, &res)
 	return res, err
 }
 
-// Charger implements the /v1/charging/<vin> response
+// Charger implements the /v1/charging/<vin>/status response
 func (v *API) Charger(vin string) (ChargerResponse, error) {
 	var res ChargerResponse
-	uri := fmt.Sprintf("%s/v1/charging/%s", BaseURI, vin)
+	uri := fmt.Sprintf("%s/v1/charging/%s/status", BaseURI, vin)
 	err := v.GetJSON(uri, &res)
 	return res, err
 }
@@ -66,48 +59,33 @@ func (v *API) Charger(vin string) (ChargerResponse, error) {
 // Settings implements the /v1/charging/<vin>/settings response
 func (v *API) Settings(vin string) (SettingsResponse, error) {
 	var res SettingsResponse
-
-	chrgRes, err := v.Charger(vin)
-	if err == nil {
-		res = chrgRes.Settings
-	}
-	return res, err
-}
-
-// Climater implements the /v2/air-conditioning/<vin> response
-func (v *API) Climater(vin string) (ClimaterResponse, error) {
-	var res ClimaterResponse
-	uri := fmt.Sprintf("%s/v2/air-conditioning/%s", BaseURI, vin)
+	uri := fmt.Sprintf("%s/v1/charging/%s/settings", BaseURI, vin)
 	err := v.GetJSON(uri, &res)
 	return res, err
 }
 
 const (
 	ActionCharge      = "charging"
-	ActionChargeStart = "start"
-	ActionChargeStop  = "stop"
+	ActionChargeStart = "Start"
+	ActionChargeStop  = "Stop"
 )
 
 // Action executes a vehicle action
 func (v *API) Action(vin, action, value string) error {
-	// @POST("api/v1/charging/{vin}/start")
-	// @POST("api/v1/charging/{vin}/stop")
-	uri := fmt.Sprintf("%s/v1/%s/%s/%s", BaseURI, action, vin, value)
+	var res map[string]interface{}
+	uri := fmt.Sprintf("%s/v1/%s/operation-requests?vin=%s", BaseURI, action, vin)
 
-	req, err := request.New(http.MethodPost, uri, nil, request.JSONEncoding)
-	if err == nil {
-		err = v.DoJSON(req, nil)
+	data := struct {
+		Typ string `json:"type"`
+	}{
+		Typ: value,
 	}
-	return err
-}
 
-func (v *API) WakeUp(vin string) error {
-	// @POST("api/v1/vehicle-wakeup/{vin}")
-	uri := fmt.Sprintf("%s/v1/vehicle-wakeup/%s", BaseURI, vin)
-
-	req, err := request.New(http.MethodPost, uri, nil, request.JSONEncoding)
+	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
 	if err == nil {
-		err = v.DoJSON(req, nil)
+		// {"id":"61991908906fa40af9a5cba4","status":"InProgress","deeplink":""}
+		err = v.DoJSON(req, &res)
 	}
+
 	return err
 }
