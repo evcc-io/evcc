@@ -3,10 +3,10 @@ products:
   - brand: Eastron
     description:
       generic: SDM220/230
-  - band: Weidmüller
+  - brand: Weidmüller
     description:
       generic: EM110-RTU-2P
-  - band: Weidmüller
+  - brand: Weidmüller
     description:
       generic: EM111-RTU-2P
 params:
