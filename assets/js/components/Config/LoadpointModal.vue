@@ -343,7 +343,6 @@
 import FormRow from "./FormRow.vue";
 import PropertyField from "./PropertyField.vue";
 import CurrentRange from "./CurrentRange.vue";
-import Modal from "bootstrap/js/dist/modal";
 import api from "../../api";
 
 const defaultValues = {
