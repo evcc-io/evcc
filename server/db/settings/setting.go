@@ -47,6 +47,11 @@ func Init() error {
 	return err
 }
 
+// InitTest initializes the settings for testing only
+func InitTest() {
+	initialized = true
+}
+
 func Persist() error {
 	dirty := atomic.CompareAndSwapInt32(&dirty, 1, 0)
 	if !dirty || len(settings) == 0 {
