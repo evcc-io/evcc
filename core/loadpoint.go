@@ -752,11 +752,7 @@ func (lp *Loadpoint) syncCharger() error {
 func (lp *Loadpoint) setLimit(chargeCurrent float64) error {
 	// full amps only?
 	if _, ok := lp.charger.(api.ChargerEx); !ok || lp.vehicleHasFeature(api.CoarseCurrent) {
-		v := lp.GetVehicle().Title()
-		//rro
-		if v != "Boiler_ESP" {	
-			chargeCurrent = math.Trunc(chargeCurrent)
-		}
+		chargeCurrent = math.Trunc(chargeCurrent)
 	}
 
 	// apply circuit limits
@@ -776,14 +772,7 @@ func (lp *Loadpoint) setLimit(chargeCurrent float64) error {
 		if charger, ok := lp.charger.(api.ChargerEx); ok {
 			err = charger.MaxCurrentMillis(chargeCurrent)
 			} else {
-				//rro: hack, if boiler then current * 1000
-				v := lp.GetVehicle().Title()
-				if v != "Boiler_ESP" {
-					err = lp.charger.MaxCurrent(int64(chargeCurrent))
-				} else {
-					//lp.log.DEBUG.Printf("setLimit current Hack")
-					err = lp.charger.MaxCurrent(int64(chargeCurrent*1000))
-				}
+				err = lp.charger.MaxCurrent(int64(chargeCurrent))
 			}
 
 		if err != nil {
