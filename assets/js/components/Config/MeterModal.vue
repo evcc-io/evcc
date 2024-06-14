@@ -1,159 +1,131 @@
 <template>
-	<Teleport to="body">
-		<div
-			id="meterModal"
-			ref="modal"
-			class="modal fade text-dark"
-			data-bs-backdrop="true"
-			tabindex="-1"
-			role="dialog"
-			aria-hidden="true"
-			data-testid="meter-modal"
-		>
-			<div class="modal-dialog modal-dialog-centered" role="document">
-				<div class="modal-content">
-					<div class="modal-header">
-						<h5 class="modal-title">
-							{{ modalTitle }}
-						</h5>
-						<button
-							type="button"
-							class="btn-close"
-							data-bs-dismiss="modal"
-							aria-label="Close"
-						></button>
-					</div>
-					<div class="modal-body">
-						<div v-if="!meterType">
-							<NewDeviceButton
-								title="Add solar meter"
-								class="mb-4 addButton"
-								@click="selectType('pv')"
-							/>
-							<NewDeviceButton
-								title="Add battery meter"
-								class="addButton"
-								@click="selectType('battery')"
-							/>
-						</div>
-						<form v-else ref="form" class="container mx-0 px-0">
-							<FormRow id="meterTemplate" :label="$t('config.meter.template')">
-								<select
-									id="meterTemplate"
-									v-model="templateName"
-									@change="templateChanged"
-									:disabled="!isNew"
-									class="form-select w-100"
-								>
-									<option
-										v-for="option in genericOptions"
-										:key="option.name"
-										:value="option.template"
-									>
-										{{ option.name }}
-									</option>
-									<option v-if="genericOptions.length" disabled>
-										──────────
-									</option>
-									<option
-										v-for="option in templateOptions"
-										:key="option.name"
-										:value="option.template"
-									>
-										{{ option.name }}
-									</option>
-								</select>
-							</FormRow>
-							<p v-if="loadingTemplate">Loading ...</p>
-							<Modbus
-								v-if="modbus"
-								v-model:modbus="values.modbus"
-								v-model:id="values.id"
-								v-model:host="values.host"
-								v-model:port="values.port"
-								v-model:device="values.device"
-								v-model:baudrate="values.baudrate"
-								v-model:comset="values.comset"
-								:defaultId="modbus.ID"
-								:defaultComset="modbus.Comset"
-								:defaultBaudrate="modbus.Baudrate"
-								:defaultPort="modbus.Port"
-								:capabilities="modbusCapabilities"
-							/>
-							<FormRow
-								v-for="param in templateParams"
-								:id="`meterParam${param.Name}`"
-								:key="param.Name"
-								:optional="!param.Required"
-								:label="param.Description || `[${param.Name}]`"
-								:help="param.Description === param.Help ? undefined : param.Help"
-								:example="param.Example"
-							>
-								<PropertyField
-									:id="`meterParam${param.Name}`"
-									v-model="values[param.Name]"
-									:masked="param.Mask"
-									:property="param.Name"
-									:type="param.Type"
-									class="me-2"
-									:required="param.Required"
-									:validValues="param.ValidValues"
-								/>
-							</FormRow>
-
-							<TestResult
-								v-if="templateName"
-								:success="testSuccess"
-								:failed="testFailed"
-								:unknown="testUnknown"
-								:running="testRunning"
-								:result="testResult"
-								:error="testError"
-								@test="testManually"
-							/>
-
-							<div v-if="templateName" class="my-4 d-flex justify-content-between">
-								<button
-									v-if="isDeletable"
-									type="button"
-									class="btn btn-link text-danger"
-									@click.prevent="remove"
-								>
-									{{ $t("config.meter.delete") }}
-								</button>
-								<button
-									v-else
-									type="button"
-									class="btn btn-link text-muted"
-									data-bs-dismiss="modal"
-								>
-									{{ $t("config.meter.cancel") }}
-								</button>
-								<button
-									type="submit"
-									class="btn btn-primary"
-									:disabled="testRunning || saving"
-									@click.prevent="isNew ? create() : update()"
-								>
-									<span
-										v-if="saving"
-										class="spinner-border spinner-border-sm"
-										role="status"
-										aria-hidden="true"
-									></span>
-									{{
-										testUnknown
-											? $t("config.meter.validateSave")
-											: $t("config.meter.save")
-									}}
-								</button>
-							</div>
-						</form>
-					</div>
-				</div>
-			</div>
+	<GenericModal
+		id="meterModal"
+		:title="modalTitle"
+		data-testid="meter-modal"
+		@open="open"
+		@closed="closed"
+	>
+		<div v-if="!meterType">
+			<NewDeviceButton
+				title="Add solar meter"
+				class="mb-4 addButton"
+				@click="selectType('pv')"
+			/>
+			<NewDeviceButton
+				title="Add battery meter"
+				class="addButton"
+				@click="selectType('battery')"
+			/>
 		</div>
-	</Teleport>
+		<form v-else ref="form" class="container mx-0 px-0">
+			<FormRow id="meterTemplate" :label="$t('config.meter.template')">
+				<select
+					id="meterTemplate"
+					v-model="templateName"
+					@change="templateChanged"
+					:disabled="!isNew"
+					class="form-select w-100"
+				>
+					<option
+						v-for="option in genericOptions"
+						:key="option.name"
+						:value="option.template"
+					>
+						{{ option.name }}
+					</option>
+					<option v-if="genericOptions.length" disabled>──────────</option>
+					<option
+						v-for="option in templateOptions"
+						:key="option.name"
+						:value="option.template"
+					>
+						{{ option.name }}
+					</option>
+				</select>
+			</FormRow>
+			<p v-if="loadingTemplate">Loading ...</p>
+			<Modbus
+				v-if="modbus"
+				v-model:modbus="values.modbus"
+				v-model:id="values.id"
+				v-model:host="values.host"
+				v-model:port="values.port"
+				v-model:device="values.device"
+				v-model:baudrate="values.baudrate"
+				v-model:comset="values.comset"
+				:defaultId="modbus.ID"
+				:defaultComset="modbus.Comset"
+				:defaultBaudrate="modbus.Baudrate"
+				:defaultPort="modbus.Port"
+				:capabilities="modbusCapabilities"
+			/>
+			<FormRow
+				v-for="param in templateParams"
+				:id="`meterParam${param.Name}`"
+				:key="param.Name"
+				:optional="!param.Required"
+				:label="param.Description || `[${param.Name}]`"
+				:help="param.Description === param.Help ? undefined : param.Help"
+				:example="param.Example"
+			>
+				<PropertyField
+					:id="`meterParam${param.Name}`"
+					v-model="values[param.Name]"
+					:masked="param.Mask"
+					:property="param.Name"
+					:type="param.Type"
+					class="me-2"
+					:required="param.Required"
+					:validValues="param.ValidValues"
+				/>
+			</FormRow>
+
+			<TestResult
+				v-if="templateName"
+				:success="testSuccess"
+				:failed="testFailed"
+				:unknown="testUnknown"
+				:running="testRunning"
+				:result="testResult"
+				:error="testError"
+				@test="testManually"
+			/>
+
+			<div v-if="templateName" class="my-4 d-flex justify-content-between">
+				<button
+					v-if="isDeletable"
+					type="button"
+					class="btn btn-link text-danger"
+					@click.prevent="remove"
+				>
+					{{ $t("config.meter.delete") }}
+				</button>
+				<button
+					v-else
+					type="button"
+					class="btn btn-link text-muted"
+					data-bs-dismiss="modal"
+				>
+					{{ $t("config.meter.cancel") }}
+				</button>
+				<button
+					type="submit"
+					class="btn btn-primary"
+					:disabled="testRunning || saving"
+					@click.prevent="isNew ? create() : update()"
+				>
+					<span
+						v-if="saving"
+						class="spinner-border spinner-border-sm"
+						role="status"
+						aria-hidden="true"
+					></span>
+					{{ testUnknown ? $t("config.meter.validateSave") : $t("config.meter.save") }}
+				</button>
+			</div>
+		</form>
+	</GenericModal>
 </template>
 
 <script>
@@ -164,6 +136,7 @@ import api from "../../api";
 import test from "./mixins/test";
 import NewDeviceButton from "./NewDeviceButton.vue";
 import Modbus from "./Modbus.vue";
+import GenericModal from "../GenericModal.vue";
 
 const initialValues = { type: "template" };
 
@@ -173,7 +146,7 @@ function sleep(ms) {
 
 export default {
 	name: "MeterModal",
-	components: { FormRow, PropertyField, Modbus, TestResult, NewDeviceButton },
+	components: { FormRow, PropertyField, Modbus, TestResult, NewDeviceButton, GenericModal },
 	mixins: [test],
 	props: {
 		id: Number,
@@ -284,14 +257,6 @@ export default {
 			deep: true,
 		},
 	},
-	mounted() {
-		this.$refs.modal.addEventListener("show.bs.modal", this.modalVisible);
-		this.$refs.modal.addEventListener("hide.bs.modal", this.modalInvisible);
-	},
-	unmounted() {
-		this.$refs.modal?.removeEventListener("show.bs.modal", this.modalVisible);
-		this.$refs.modal?.removeEventListener("hide.bs.modal", this.modalInvisible);
-	},
 	methods: {
 		reset() {
 			this.values = { ...initialValues };
@@ -360,7 +325,7 @@ export default {
 				const { name } = response.data.result;
 				this.$emit("added", this.meterType, name);
 				this.$emit("updated");
-				this.modalInvisible();
+				this.closed();
 			} catch (e) {
 				console.error(e);
 				alert("create failed");
@@ -387,7 +352,7 @@ export default {
 			try {
 				await api.put(`config/devices/meter/${this.id}`, this.apiData);
 				this.$emit("updated");
-				this.modalInvisible();
+				this.closed();
 			} catch (e) {
 				console.error(e);
 				alert("update failed");
@@ -399,16 +364,16 @@ export default {
 				await api.delete(`config/devices/meter/${this.id}`);
 				this.$emit("removed", this.meterType, this.name);
 				this.$emit("updated");
-				this.modalInvisible();
+				this.closed();
 			} catch (e) {
 				console.error(e);
 				alert("delete failed");
 			}
 		},
-		modalVisible() {
+		open() {
 			this.isModalVisible = true;
 		},
-		modalInvisible() {
+		closed() {
 			this.$emit("closed");
 			this.isModalVisible = false;
 		},

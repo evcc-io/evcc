@@ -1,342 +1,305 @@
 <template>
-	<Teleport to="body">
-		<div
-			id="loadpointModal"
-			ref="modal"
-			class="modal fade text-dark"
-			data-bs-backdrop="true"
-			tabindex="-1"
-			role="dialog"
-			aria-hidden="true"
-			data-testid="loadpoint-modal"
-		>
-			<div class="modal-dialog modal-dialog-centered" role="document">
-				<div class="modal-content">
-					<div class="modal-header">
-						<h5 class="modal-title">
-							{{ modalTitle }}
-						</h5>
-						<button
-							type="button"
-							class="btn-close"
-							data-bs-dismiss="modal"
-							aria-label="Close"
-						></button>
-					</div>
-					<div class="modal-body">
-						<form ref="form" class="container mx-0 px-0">
-							<FormRow
-								id="loadpointParamTitle"
-								label="Title"
-								example="Garage, Carport, etc."
-							>
-								<PropertyField
-									id="loadpointParamTitle"
-									v-model="values.title"
-									type="String"
-									class="me-2"
-									required
-								/>
-							</FormRow>
-							<FormRow id="loadpointParamCharger" label="Charger">
-								<div class="d-flex">
-									<PropertyField
-										id="loadpointParamCharger"
-										v-model="values.charger"
-										type="String"
-										class="me-2 flex-grow-1"
-										disabled
-										required
-									/>
-									<button class="btn btn-link btn-sm evcc-default-text">
-										<shopicon-regular-adjust></shopicon-regular-adjust>
-									</button>
-								</div>
-							</FormRow>
-							<FormRow
-								v-if="values.meter"
-								id="loadpointParamMeter"
-								label="Energy meter"
-								help="Additional meter if the charger doesn't have an integrated one."
-							>
-								<div class="d-flex">
-									<PropertyField
-										id="loadpointParamMeter"
-										v-model="values.meter"
-										type="String"
-										class="me-2 flex-grow-1"
-										disabled
-										required
-									/>
-									<button
-										class="btn btn-link btn-sm evcc-default-text"
-										@click.prevent="editMeter"
-									>
-										<shopicon-regular-adjust></shopicon-regular-adjust>
-									</button>
-								</div>
-							</FormRow>
-							<p>
-								<button
-									class="btn btn-link btn-sm text-primary px-0"
-									type="button"
-									@click="editMeter"
-								>
-									Add dedicated charger meter
-								</button>
-							</p>
-
-							<h6>Basics</h6>
-
-							<div class="row">
-								<FormRow
-									id="loadpointMode"
-									label="Default mode"
-									help="Mode when connecting the vehicle."
-									class="col-md-6"
-								>
-									<PropertyField
-										id="loadpointMode"
-										v-model="values.mode"
-										type="Number"
-										size="w-75 w-min-200"
-										class="me-2"
-										:valid-values="[
-											{ key: '', name: 'use last' },
-											{ key: null, name: null },
-											{ key: 'off', name: $t('main.mode.off') },
-											{ key: 'pv', name: $t('main.mode.pv') },
-											{ key: 'minpv', name: $t('main.mode.minpv') },
-											{ key: 'now', name: $t('main.mode.off') },
-										]"
-										required
-									/>
-								</FormRow>
-								<FormRow
-									id="loadpointParamPhases"
-									label="Phases"
-									help="Electrical connection of the charger."
-									class="col-md-6"
-								>
-									<PropertyField
-										id="loadpointParamPhases"
-										v-model="values.phases"
-										type="Number"
-										size="w-75 w-min-200"
-										class="me-2"
-										:valid-values="[
-											{ key: 0, name: 'automatic switching' },
-											{ key: null, name: null },
-											{ key: 1, name: '1-phase' },
-											{ key: 2, name: '2-phase' },
-											{ key: 3, name: '3-phase' },
-										]"
-										required
-									/>
-								</FormRow>
-							</div>
-
-							<FormRow id="loadpointParamMaxCurrent" label="Current limits">
-								<CurrentRange
-									v-model:min="values.minCurrent"
-									v-model:max="values.maxCurrent"
-								/>
-							</FormRow>
-
-							<h6>Solar behaviour</h6>
-
-							<div class="row">
-								<FormRow
-									id="loadpointParamPriority"
-									label="Priority"
-									help="Relevant for multiple charge points. Higher priority charge points get preferred access to solar surplus."
-								>
-									<PropertyField
-										id="loadpointParamPriority"
-										v-model="values.priority"
-										type="Number"
-										size="w-100"
-										class="me-2"
-										:valid-values="priorityOptions"
-										required
-									/>
-								</FormRow>
-							</div>
-
-							<div class="row">
-								<FormRow
-									id="loadpointEnableDelay"
-									label="Enable Delay"
-									class="col-sm-6"
-								>
-									<PropertyField
-										id="loadpointEnableDelay"
-										v-model="values.thresholds.enable.delay"
-										type="Duration"
-										unit="min"
-										:scale="minuteScale"
-										size="w-25 w-min-200"
-										class="me-2"
-										required
-									/>
-								</FormRow>
-								<FormRow
-									id="loadpointDisableDelay"
-									label="Disable Delay"
-									class="col-sm-6"
-								>
-									<PropertyField
-										id="loadpointDisableDelay"
-										v-model="values.thresholds.disable.delay"
-										type="Duration"
-										unit="min"
-										:scale="minuteScale"
-										size="w-25 w-min-200"
-										class="me-2"
-										required
-									/>
-								</FormRow>
-							</div>
-
-							<div class="row">
-								<FormRow
-									id="loadpointEnableThreshold"
-									label="Enable Threshold"
-									class="col-sm-6 mb-sm-0"
-								>
-									<PropertyField
-										id="loadpointEnableThreshold"
-										v-model="values.thresholds.enable.threshold"
-										type="Number"
-										unit="kW"
-										size="w-25 w-min-200"
-										class="me-2"
-										required
-									/>
-								</FormRow>
-
-								<FormRow
-									id="loadpointDisableThreshold"
-									label="Disable Threshold"
-									class="col-sm-6 mb-sm-0"
-								>
-									<PropertyField
-										id="loadpointDisableThreshold"
-										v-model="values.thresholds.disable.threshold"
-										type="Number"
-										unit="kW"
-										size="w-25 w-min-200"
-										class="me-2"
-										required
-									/>
-								</FormRow>
-							</div>
-
-							<h6>Vehicle</h6>
-
-							<FormRow
-								id="loadpointParamVehicle"
-								label="Default vehicle"
-								:help="
-									values.defaultVehicle
-										? 'Always assume this vehicle is charging here. Auto-detection disabled. Manual override is possible.'
-										: 'Automatically selects the most plausible vehicle. Manual override is possible.'
-								"
-							>
-								<PropertyField
-									id="loadpointParamVehicle"
-									v-model="values.defaultVehicle"
-									type="String"
-									class="me-2"
-									:valid-values="allVehicleOptions"
-									required
-								/>
-							</FormRow>
-
-							<div class="row">
-								<FormRow
-									id="loadpointPollMode"
-									label="Poll Mode"
-									help="When to update vehicle status information."
-									class="col-md-6"
-								>
-									<PropertyField
-										id="loadpointPollMode"
-										v-model="values.soc.poll.mode"
-										type="Number"
-										size="w-75 w-min-200"
-										class="me-2"
-										:valid-values="[
-											{ key: 'pollcharging', name: 'when charging' },
-											{ key: 'pollconnected', name: 'when connected' },
-											{ key: 'pollalways', name: 'always' },
-										]"
-										required
-									/>
-								</FormRow>
-								<FormRow
-									v-if="values.soc.poll.mode > 0"
-									id="loadpointPollInterval"
-									label="Poll Interval"
-									help="Time between status updates. Short intervals may drain the vehicle battery."
-									class="col-md-6"
-								>
-									<PropertyField
-										id="loadpointPollInterval"
-										v-model="values.soc.poll.interval"
-										type="Duration"
-										unit="min"
-										:scale="minuteScale"
-										size="w-25 w-min-200"
-										class="me-2"
-										required
-									/>
-								</FormRow>
-							</div>
-
-							<FormRow id="loadpointEstimate" label="Estimate charge level">
-								<div class="d-flex">
-									<input
-										class="form-check-input"
-										id="loadpointEstimate"
-										type="checkbox"
-										v-model="values.soc.estimate"
-									/>
-									<label class="form-check-label ms-2" for="loadpointEstimate">
-										Interpolate between API updates
-									</label>
-								</div>
-							</FormRow>
-
-							<div class="mt-5 mb-4 d-flex justify-content-between">
-								<button
-									type="button"
-									class="btn btn-link text-muted btn-cancel"
-									data-bs-dismiss="modal"
-								>
-									{{ $t("config.loadpoint.cancel") }}
-								</button>
-								<button
-									type="submit"
-									class="btn btn-primary"
-									:disabled="saving"
-									@click.prevent="isNew ? create() : update()"
-								>
-									<span
-										v-if="saving"
-										class="spinner-border spinner-border-sm"
-										role="status"
-										aria-hidden="true"
-									></span>
-									{{ $t("config.loadpoint.save") }}
-								</button>
-							</div>
-						</form>
-					</div>
+	<GenericModal
+		id="loadpointModal"
+		:title="modalTitle"
+		data-testid="loadpoint-modal"
+		@open="open"
+		@closed="closed"
+	>
+		<form ref="form" class="container mx-0 px-0">
+			<FormRow id="loadpointParamTitle" label="Title" example="Garage, Carport, etc.">
+				<PropertyField
+					id="loadpointParamTitle"
+					v-model="values.title"
+					type="String"
+					class="me-2"
+					required
+				/>
+			</FormRow>
+			<FormRow id="loadpointParamCharger" label="Charger">
+				<div class="d-flex">
+					<PropertyField
+						id="loadpointParamCharger"
+						v-model="values.charger"
+						type="String"
+						class="me-2 flex-grow-1"
+						disabled
+						required
+					/>
+					<button class="btn btn-link btn-sm evcc-default-text">
+						<shopicon-regular-adjust></shopicon-regular-adjust>
+					</button>
 				</div>
+			</FormRow>
+			<FormRow
+				v-if="values.meter"
+				id="loadpointParamMeter"
+				label="Energy meter"
+				help="Additional meter if the charger doesn't have an integrated one."
+			>
+				<div class="d-flex">
+					<PropertyField
+						id="loadpointParamMeter"
+						v-model="values.meter"
+						type="String"
+						class="me-2 flex-grow-1"
+						disabled
+						required
+					/>
+					<button
+						class="btn btn-link btn-sm evcc-default-text"
+						@click.prevent="editMeter"
+					>
+						<shopicon-regular-adjust></shopicon-regular-adjust>
+					</button>
+				</div>
+			</FormRow>
+			<p v-else>
+				<button
+					class="btn btn-link btn-sm text-primary px-0"
+					type="button"
+					@click="editMeter"
+				>
+					Add dedicated charger meter
+				</button>
+			</p>
+
+			<h6>Basics</h6>
+
+			<div class="row">
+				<FormRow
+					id="loadpointMode"
+					label="Default mode"
+					help="Mode when connecting the vehicle."
+					class="col-md-6"
+				>
+					<PropertyField
+						id="loadpointMode"
+						v-model="values.mode"
+						type="Number"
+						size="w-75 w-min-200"
+						class="me-2"
+						:valid-values="[
+							{ key: '', name: 'use last' },
+							{ key: null, name: null },
+							{ key: 'off', name: $t('main.mode.off') },
+							{ key: 'pv', name: $t('main.mode.pv') },
+							{ key: 'minpv', name: $t('main.mode.minpv') },
+							{ key: 'now', name: $t('main.mode.off') },
+						]"
+						required
+					/>
+				</FormRow>
+				<FormRow
+					id="loadpointParamPhases"
+					label="Phases"
+					help="Electrical connection of the charger."
+					class="col-md-6"
+				>
+					<PropertyField
+						id="loadpointParamPhases"
+						v-model="values.phases"
+						type="Number"
+						size="w-75 w-min-200"
+						class="me-2"
+						:valid-values="[
+							{ key: 0, name: 'automatic switching' },
+							{ key: null, name: null },
+							{ key: 1, name: '1-phase' },
+							{ key: 2, name: '2-phase' },
+							{ key: 3, name: '3-phase' },
+						]"
+						required
+					/>
+				</FormRow>
 			</div>
-		</div>
-	</Teleport>
+
+			<FormRow id="loadpointParamMaxCurrent" label="Current limits">
+				<CurrentRange v-model:min="values.minCurrent" v-model:max="values.maxCurrent" />
+			</FormRow>
+
+			<h6>Solar behaviour</h6>
+
+			<div class="row">
+				<FormRow
+					id="loadpointParamPriority"
+					label="Priority"
+					help="Relevant for multiple charge points. Higher priority charge points get preferred access to solar surplus."
+				>
+					<PropertyField
+						id="loadpointParamPriority"
+						v-model="values.priority"
+						type="Number"
+						size="w-100"
+						class="me-2"
+						:valid-values="priorityOptions"
+						required
+					/>
+				</FormRow>
+			</div>
+
+			<div class="row">
+				<FormRow id="loadpointEnableDelay" label="Enable Delay" class="col-sm-6">
+					<PropertyField
+						id="loadpointEnableDelay"
+						v-model="values.thresholds.enable.delay"
+						type="Duration"
+						unit="min"
+						:scale="minuteScale"
+						size="w-25 w-min-200"
+						class="me-2"
+						required
+					/>
+				</FormRow>
+				<FormRow id="loadpointDisableDelay" label="Disable Delay" class="col-sm-6">
+					<PropertyField
+						id="loadpointDisableDelay"
+						v-model="values.thresholds.disable.delay"
+						type="Duration"
+						unit="min"
+						:scale="minuteScale"
+						size="w-25 w-min-200"
+						class="me-2"
+						required
+					/>
+				</FormRow>
+			</div>
+
+			<div class="row">
+				<FormRow
+					id="loadpointEnableThreshold"
+					label="Enable Threshold"
+					class="col-sm-6 mb-sm-0"
+				>
+					<PropertyField
+						id="loadpointEnableThreshold"
+						v-model="values.thresholds.enable.threshold"
+						type="Number"
+						unit="kW"
+						size="w-25 w-min-200"
+						class="me-2"
+						required
+					/>
+				</FormRow>
+
+				<FormRow
+					id="loadpointDisableThreshold"
+					label="Disable Threshold"
+					class="col-sm-6 mb-sm-0"
+				>
+					<PropertyField
+						id="loadpointDisableThreshold"
+						v-model="values.thresholds.disable.threshold"
+						type="Number"
+						unit="kW"
+						size="w-25 w-min-200"
+						class="me-2"
+						required
+					/>
+				</FormRow>
+			</div>
+
+			<h6>Vehicle</h6>
+
+			<FormRow
+				id="loadpointParamVehicle"
+				label="Default vehicle"
+				:help="
+					values.defaultVehicle
+						? 'Always assume this vehicle is charging here. Auto-detection disabled. Manual override is possible.'
+						: 'Automatically selects the most plausible vehicle. Manual override is possible.'
+				"
+			>
+				<PropertyField
+					id="loadpointParamVehicle"
+					v-model="values.defaultVehicle"
+					type="String"
+					class="me-2"
+					:valid-values="allVehicleOptions"
+					required
+				/>
+			</FormRow>
+
+			<div class="row">
+				<FormRow
+					id="loadpointPollMode"
+					label="Poll Mode"
+					help="When to update vehicle status information."
+					class="col-md-6"
+				>
+					<PropertyField
+						id="loadpointPollMode"
+						v-model="values.soc.poll.mode"
+						type="Number"
+						size="w-75 w-min-200"
+						class="me-2"
+						:valid-values="[
+							{ key: 'pollcharging', name: 'when charging' },
+							{ key: 'pollconnected', name: 'when connected' },
+							{ key: 'pollalways', name: 'always' },
+						]"
+						required
+					/>
+				</FormRow>
+				<FormRow
+					v-if="values.soc.poll.mode > 0"
+					id="loadpointPollInterval"
+					label="Poll Interval"
+					help="Time between status updates. Short intervals may drain the vehicle battery."
+					class="col-md-6"
+				>
+					<PropertyField
+						id="loadpointPollInterval"
+						v-model="values.soc.poll.interval"
+						type="Duration"
+						unit="min"
+						:scale="minuteScale"
+						size="w-25 w-min-200"
+						class="me-2"
+						required
+					/>
+				</FormRow>
+			</div>
+
+			<FormRow id="loadpointEstimate" label="Estimate charge level">
+				<div class="d-flex">
+					<input
+						class="form-check-input"
+						id="loadpointEstimate"
+						type="checkbox"
+						v-model="values.soc.estimate"
+					/>
+					<label class="form-check-label ms-2" for="loadpointEstimate">
+						Interpolate between API updates
+					</label>
+				</div>
+			</FormRow>
+
+			<div class="mt-5 mb-4 d-flex justify-content-between">
+				<button
+					type="button"
+					class="btn btn-link text-muted btn-cancel"
+					data-bs-dismiss="modal"
+				>
+					{{ $t("config.loadpoint.cancel") }}
+				</button>
+				<button
+					type="submit"
+					class="btn btn-primary"
+					:disabled="saving"
+					@click.prevent="isNew ? create() : update()"
+				>
+					<span
+						v-if="saving"
+						class="spinner-border spinner-border-sm"
+						role="status"
+						aria-hidden="true"
+					></span>
+					{{ $t("config.loadpoint.save") }}
+				</button>
+			</div>
+		</form>
+	</GenericModal>
 </template>
 
 <script>
@@ -344,6 +307,7 @@ import FormRow from "./FormRow.vue";
 import PropertyField from "./PropertyField.vue";
 import CurrentRange from "./CurrentRange.vue";
 import api from "../../api";
+import GenericModal from "../GenericModal.vue";
 
 const defaultValues = {
 	title: "",
@@ -367,7 +331,7 @@ const defaultValues = {
 
 export default {
 	name: "LoadpointModal",
-	components: { FormRow, PropertyField, CurrentRange },
+	components: { FormRow, PropertyField, CurrentRange, GenericModal },
 	props: {
 		id: Number,
 		name: String,
@@ -429,14 +393,6 @@ export default {
 			}
 		},
 	},
-	mounted() {
-		this.$refs.modal.addEventListener("show.bs.modal", this.modalVisible);
-		this.$refs.modal.addEventListener("hide.bs.modal", this.modalInvisible);
-	},
-	unmounted() {
-		this.$refs.modal?.removeEventListener("show.bs.modal", this.modalVisible);
-		this.$refs.modal?.removeEventListener("hide.bs.modal", this.modalInvisible);
-	},
 	methods: {
 		reset() {
 			this.values = defaultValues;
@@ -453,17 +409,17 @@ export default {
 			try {
 				await api.put(`config/loadpoints/${this.id}`, this.values);
 				this.$emit("updated");
-				this.modalInvisible();
+				this.closed();
 			} catch (e) {
 				console.error(e);
 				alert("update failed");
 			}
 			this.saving = false;
 		},
-		modalVisible() {
+		open() {
 			this.isModalVisible = true;
 		},
-		modalInvisible() {
+		closed() {
 			this.isModalVisible = false;
 		},
 		editMeter() {
@@ -471,7 +427,6 @@ export default {
 		},
 		// called externally
 		setMeter(meter) {
-			console.log("setMeter", meter);
 			this.values.meter = meter;
 		},
 		// called externally
