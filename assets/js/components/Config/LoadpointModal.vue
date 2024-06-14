@@ -106,7 +106,6 @@
 							{ key: 0, name: 'automatic switching' },
 							{ key: null, name: null },
 							{ key: 1, name: '1-phase' },
-							{ key: 2, name: '2-phase' },
 							{ key: 3, name: '3-phase' },
 						]"
 						required
