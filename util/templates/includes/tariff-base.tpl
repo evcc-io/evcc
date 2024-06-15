@@ -1,6 +1,6 @@
 {{ define "tariff-base" }}
-{{- if .charges }}
-charges: {{ .charges }}
+{{- if .costs }}
+charges: {{ .costs }}
 {{- end }}
 {{- if .tax }}
 tax: {{ .tax }}
