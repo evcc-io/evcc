@@ -37,8 +37,8 @@ func (site *Site) SetBatteryMode(batMode api.BatteryMode) {
 	}
 }
 
-// applyBatteryMode applies the mode to each battery and updates internal state
-// must hold lock when calling
+// applyBatteryMode applies the mode to each battery and updates
+// internal state if successful (requires lock)
 func (site *Site) applyBatteryMode(mode api.BatteryMode) error {
 	// update batteries
 	for _, meter := range site.batteryMeters {
