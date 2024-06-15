@@ -19,6 +19,10 @@ func DefaultPort(conn string, port int) string {
 
 // DefaultScheme prepends given scheme to uri if not specified
 func DefaultScheme(uri, scheme string) string {
+	return DefaultSchemeEscaped(uri, scheme, true)
+}
+
+func DefaultSchemeEscaped(uri, scheme string, escaped bool) string {
 	u, err := url.Parse(uri)
 	if err != nil {
 		if strings.HasSuffix(err.Error(), "first path segment in URL cannot contain colon") {
@@ -42,7 +46,12 @@ func DefaultScheme(uri, scheme string) string {
 		}
 	}
 
-	return u.String()
+	if escaped {
+		return u.String()
+	} else {
+		res, _ := url.QueryUnescape(u.String())
+		return res
+	}
 }
 
 // LocalIPs returns a slice of local IPv4 addresses
