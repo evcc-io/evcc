@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net"
 	"net/url"
+	"regexp"
 	"strconv"
 	"strings"
 )
@@ -42,7 +43,18 @@ func DefaultScheme(uri, scheme string) string {
 		}
 	}
 
-	return u.String()
+	// do not use escaped Query for the template strings
+	retUrl := u.String()
+	if templateRegex, err := regexp.Compile(`%7B%7Bif.*?end%7D%7D`); err == nil {
+		matches := templateRegex.FindAllString(retUrl, -1)
+		for _, match := range matches {
+			if matchUnescaped, err := url.QueryUnescape(match); err == nil {
+				retUrl = strings.Replace(retUrl, match, matchUnescaped, 1)
+			}
+		}
+	}
+
+	return retUrl
 }
 
 // LocalIPs returns a slice of local IPv4 addresses
