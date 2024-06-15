@@ -5,6 +5,7 @@ import (
 	"io"
 	"math"
 	"net/http"
+	neturl "net/url"
 	"strconv"
 	"strings"
 	"text/template"
@@ -95,7 +96,7 @@ func NewHTTPProviderFromConfig(other map[string]interface{}) (Provider, error) {
 
 // NewHTTP create HTTP provider
 func NewHTTP(log *util.Logger, method, uri string, insecure bool, scale float64, cache time.Duration) *HTTP {
-	url := util.DefaultScheme(uri, "http")
+	url := util.DefaultSchemeEscaped(uri, "http", false)
 	if strings.HasPrefix(url, "http") && !strings.HasPrefix(uri, "http") {
 		log.WARN.Printf("missing scheme for %s, assuming http", uri)
 	}
@@ -176,8 +177,16 @@ func (p *HTTP) request(url string, body string) ([]byte, error) {
 			return nil, err
 		}
 
+		//Escape URL
+		var u string
+		if tu, err := neturl.Parse(builder.String()); err == nil {
+			u = tu.String()
+		} else {
+			u = builder.String()
+		}
+
 		// empty method becomes GET
-		req, err := request.New(p.method, builder.String(), b, p.headers)
+		req, err := request.New(p.method, u, b, p.headers)
 		if err != nil {
 			return []byte{}, err
 		}
