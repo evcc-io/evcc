@@ -145,7 +145,7 @@ func (v *Provider) Climater() (bool, error) {
 		return false, err
 	}
 
-	return res.Data.Attributes.HvacStatus == 2, nil
+	return res.Data.Attributes.HvacStatus > 0, nil
 }
 
 var _ api.Resurrector = (*Provider)(nil)
