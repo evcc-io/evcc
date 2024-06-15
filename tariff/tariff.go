@@ -93,6 +93,9 @@ func (t *Tariff) run(forecastG func() (string, error), done chan error) {
 			if err := json.Unmarshal([]byte(s), &data); err != nil {
 				return backoff.Permanent(err)
 			}
+			for i, r := range data {
+				data[i].Price = t.totalPrice(r.Price)
+			}
 			return nil
 		}, bo); err != nil {
 			once.Do(func() { done <- err })
