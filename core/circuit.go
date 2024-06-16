@@ -214,9 +214,9 @@ func (c *Circuit) updateMeters() error {
 func (c *Circuit) Update(loadpoints []api.CircuitLoad) (err error) {
 	defer func() {
 		if c.maxPower != 0 && c.power > c.maxPower {
-			c.log.WARN.Printf("over power detected: %.3gW > %.3gW", c.power, c.maxPower)
+			c.log.WARN.Printf("over power detected: %.5gW > %.5gW", c.power, c.maxPower)
 		} else {
-			c.log.DEBUG.Printf("power: %.3gW", c.power)
+			c.log.DEBUG.Printf("power: %.5gW", c.power)
 		}
 
 		if c.maxCurrent != 0 && c.current > c.maxCurrent {
@@ -266,9 +266,9 @@ func (c *Circuit) ValidatePower(old, new float64) float64 {
 		potential := c.maxPower - c.power
 		if delta > potential {
 			new = max(0, old+potential)
-			c.log.DEBUG.Printf("validate power: %.3gW -> %.3gW <= %.3gW at %.3gW: capped at %.3gW", old, new, c.maxPower, c.power, new)
+			c.log.DEBUG.Printf("validate power: %.5gW -> %.5gW <= %.5gW at %.5gW: capped at %.5gW", old, new, c.maxPower, c.power, new)
 		} else {
-			c.log.TRACE.Printf("validate power: %.3gW -> %.3gW <= %.3gW at %.3gW: ok", old, new, c.maxPower, c.power)
+			c.log.TRACE.Printf("validate power: %.5gW -> %.5gW <= %.5gW at %.5gW: ok", old, new, c.maxPower, c.power)
 		}
 	}
 
