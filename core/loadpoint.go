@@ -1041,6 +1041,9 @@ func (lp *Loadpoint) scalePhasesIfAvailable(phases int) error {
 		phases = lp.configuredPhases
 	}
 
+	vehiclePhases := expect(lp.getVehiclePhases())
+	phases = min(phases, vehiclePhases)
+
 	if lp.hasPhaseSwitching() {
 		return lp.scalePhases(phases)
 	}

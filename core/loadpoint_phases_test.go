@@ -391,17 +391,24 @@ func TestScalePhasesIfAvailable(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
 	tc := []struct {
-		dflt, physical, maxExpected int
+		dflt, physical, maxExpected, vehiclePhases int
 	}{
-		{0, 0, 3},
-		{0, 1, 3},
-		{0, 3, 3},
-		{1, 0, 1},
-		{1, 1, 1},
-		{1, 3, 1},
-		{3, 0, 3},
-		{3, 1, 3},
-		{3, 3, 3},
+		{0, 0, 3, 0},
+		{0, 1, 3, 0},
+		{0, 3, 3, 0},
+		{1, 0, 1, 0},
+		{1, 1, 1, 0},
+		{1, 3, 1, 0},
+		{3, 0, 3, 0},
+		{3, 1, 3, 0},
+		{3, 3, 3, 0},
+		//vehicle limits to 1p
+		{0, 0, 1, 1},
+		{3, 0, 1, 1},
+		//vehicle limits to 3p, forcing 1p->3p
+		{0, 1, 3, 3},
+		//vehicle wants 3 but physical limit is 1
+		{1, 1, 1, 3},
 	}
 
 	for _, tc := range tc {
@@ -409,6 +416,8 @@ func TestScalePhasesIfAvailable(t *testing.T) {
 
 		plainCharger := api.NewMockCharger(ctrl)
 		phaseCharger := api.NewMockPhaseSwitcher(ctrl)
+
+		vehicle := api.NewMockVehicle(ctrl)
 
 		lp := &Loadpoint{
 			log:   util.NewLogger("foo"),
@@ -420,6 +429,7 @@ func TestScalePhasesIfAvailable(t *testing.T) {
 				plainCharger,
 				phaseCharger,
 			},
+			vehicle:          vehicle,
 			minCurrent:       minA,
 			configuredPhases: tc.dflt,     // fixed phases or default
 			phases:           tc.physical, // current phase status
@@ -429,6 +439,8 @@ func TestScalePhasesIfAvailable(t *testing.T) {
 		if tc.dflt == 0 || tc.dflt != tc.physical {
 			phaseCharger.EXPECT().Phases1p3p(tc.maxExpected).Return(nil)
 		}
+
+		vehicle.EXPECT().Phases().Return(tc.vehiclePhases).AnyTimes()
 
 		_ = lp.scalePhasesIfAvailable(3)
 
