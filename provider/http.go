@@ -180,7 +180,7 @@ func (p *HTTP) request(url string, body string) ([]byte, error) {
 		//Escape URL
 		var u string
 		if tu, err := neturl.Parse(builder.String()); err == nil {
-			u = tu.String()
+			u = fmt.Sprintf("%s://%s%s?%s", tu.Scheme, tu.Host, tu.Path, neturl.PathEscape(tu.RawQuery))
 		} else {
 			u = builder.String()
 		}
