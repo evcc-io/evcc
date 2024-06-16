@@ -95,14 +95,9 @@ func NewHTTPProviderFromConfig(other map[string]interface{}) (Provider, error) {
 
 // NewHTTP create HTTP provider
 func NewHTTP(log *util.Logger, method, uri string, insecure bool, scale float64, cache time.Duration) *HTTP {
-	url := util.DefaultScheme(uri, "http")
-	if strings.HasPrefix(url, "http") && !strings.HasPrefix(uri, "http") {
-		log.WARN.Printf("missing scheme for %s, assuming http", uri)
-	}
-
 	p := &HTTP{
 		Helper: request.NewHelper(log),
-		url:    url,
+		url:    uri,
 		method: method,
 		scale:  scale,
 		cache:  cache,
@@ -176,8 +171,10 @@ func (p *HTTP) request(url string, body string) ([]byte, error) {
 			return nil, err
 		}
 
+		uri := util.DefaultScheme(builder.String(), "http")
+
 		// empty method becomes GET
-		req, err := request.New(p.method, builder.String(), b, p.headers)
+		req, err := request.New(p.method, uri, b, p.headers)
 		if err != nil {
 			return []byte{}, err
 		}
