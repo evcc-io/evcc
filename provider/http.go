@@ -7,14 +7,12 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"text/template"
 	"time"
 
 	"github.com/evcc-io/evcc/provider/pipeline"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
-	"github.com/go-sprout/sprout"
 	"github.com/gregjones/httpcache"
 	"github.com/jpfielding/go-http-digest/pkg/digest"
 )
@@ -161,20 +159,10 @@ func (p *HTTP) request(url string, body string) ([]byte, error) {
 			b = strings.NewReader(body)
 		}
 
-		tmpl, err := template.New("url").Funcs(sprout.TxtFuncMap()).Parse(url)
-		if err != nil {
-			return nil, err
-		}
-
-		builder := new(strings.Builder)
-		if err := tmpl.Execute(builder, nil); err != nil {
-			return nil, err
-		}
-
-		uri := util.DefaultScheme(builder.String(), "http")
+		url := util.DefaultScheme(url, "http")
 
 		// empty method becomes GET
-		req, err := request.New(p.method, uri, b, p.headers)
+		req, err := request.New(p.method, url, b, p.headers)
 		if err != nil {
 			return []byte{}, err
 		}
