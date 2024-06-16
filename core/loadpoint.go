@@ -1152,9 +1152,6 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64) in
 			if err := lp.scalePhases(3); err != nil {
 				lp.log.ERROR.Println(err)
 			}
-			if err := lp.scalePhases(3); err != nil {
-				lp.log.ERROR.Println(err)
-			}
 			return 3
 		}
 
