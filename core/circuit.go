@@ -214,15 +214,15 @@ func (c *Circuit) updateMeters() error {
 func (c *Circuit) Update(loadpoints []api.CircuitLoad) (err error) {
 	defer func() {
 		if c.maxPower != 0 && c.power > c.maxPower {
-			c.log.WARN.Printf("over power detected: %gW > %gW", c.power, c.maxPower)
+			c.log.WARN.Printf("over power detected: %.3gW > %.3gW", c.power, c.maxPower)
 		} else {
-			c.log.DEBUG.Printf("power: %gW", c.power)
+			c.log.DEBUG.Printf("power: %.3gW", c.power)
 		}
 
 		if c.maxCurrent != 0 && c.current > c.maxCurrent {
-			c.log.WARN.Printf("over current detected: %gA > %gA", c.current, c.maxCurrent)
+			c.log.WARN.Printf("over current detected: %.3gA > %.3gA", c.current, c.maxCurrent)
 		} else {
-			c.log.DEBUG.Printf("current: %gA", c.current)
+			c.log.DEBUG.Printf("current: %.3gA", c.current)
 		}
 	}()
 
@@ -266,9 +266,9 @@ func (c *Circuit) ValidatePower(old, new float64) float64 {
 		potential := c.maxPower - c.power
 		if delta > potential {
 			new = max(0, old+potential)
-			c.log.DEBUG.Printf("validate power: %gW -> %gW <= %gW at %gW: capped at %gW", old, new, c.maxPower, c.power, new)
+			c.log.DEBUG.Printf("validate power: %.3gW -> %.3gW <= %.3gW at %.3gW: capped at %.3gW", old, new, c.maxPower, c.power, new)
 		} else {
-			c.log.TRACE.Printf("validate power: %gW -> %gW <= %gW at %gW: ok", old, new, c.maxPower, c.power)
+			c.log.TRACE.Printf("validate power: %.3gW -> %.3gW <= %.3gW at %.3gW: ok", old, new, c.maxPower, c.power)
 		}
 	}
 
@@ -287,9 +287,9 @@ func (c *Circuit) ValidateCurrent(old, new float64) float64 {
 		potential := c.maxCurrent - c.current
 		if delta > potential {
 			new = max(0, old+potential)
-			c.log.DEBUG.Printf("validate current: %gA -> %gA <= %gA at %gA: capped at %gA", old, new, c.maxCurrent, c.current, new)
+			c.log.DEBUG.Printf("validate current: %.3gA -> %.3gA <= %.3gA at %.3gA: capped at %.3gA", old, new, c.maxCurrent, c.current, new)
 		} else {
-			c.log.TRACE.Printf("validate current: %gA -> %gA <= %gA at %gA: ok", old, new, c.maxCurrent, c.current)
+			c.log.TRACE.Printf("validate current: %.3gA -> %.3gA <= %.3gA at %.3gA: ok", old, new, c.maxCurrent, c.current)
 		}
 	}
 
