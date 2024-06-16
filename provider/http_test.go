@@ -41,7 +41,7 @@ func (suite *httpTestSuite) TearDown() {
 }
 
 func (suite *httpTestSuite) TestGet() {
-	uri := suite.srv.URL + "/foo/bar"
+	uri := suite.srv.URL + "/foo/bar{{\"/baz\"}}"
 	p := NewHTTP(util.NewLogger("foo"), http.MethodGet, uri, false, 1, 0)
 
 	g, err := p.StringGetter()
@@ -49,7 +49,7 @@ func (suite *httpTestSuite) TestGet() {
 
 	res, err := g()
 	suite.Require().NoError(err)
-	suite.Require().Equal("/foo/bar", suite.h.req.URL.String())
+	suite.Require().Equal("/foo/bar/baz", suite.h.req.URL.String())
 	suite.Require().Equal(suite.h.val, res)
 }
 

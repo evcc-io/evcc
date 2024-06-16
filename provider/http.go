@@ -179,7 +179,12 @@ var _ StringProvider = (*HTTP)(nil)
 // StringGetter sends string request
 func (p *HTTP) StringGetter() (func() (string, error), error) {
 	return func() (string, error) {
-		b, err := p.request(p.url, p.body)
+		url, err := setFormattedValue(p.url, "", "")
+		if err != nil {
+			return "", err
+		}
+
+		b, err := p.request(url, p.body)
 
 		if err == nil && p.pipeline != nil {
 			b, err = p.pipeline.Process(b)
