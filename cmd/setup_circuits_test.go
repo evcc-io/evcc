@@ -36,7 +36,8 @@ func (suite *circuitsTestSuite) TestCircuitConf() {
 	var conf globalconfig.All
 	viper.SetConfigType("yaml")
 
-	suite.Require().NoError(viper.ReadConfig(strings.NewReader(`circuits:
+	suite.Require().NoError(viper.ReadConfig(strings.NewReader(`
+circuits:
 - name: master
   maxPower: 10000
 - name: slave
@@ -60,11 +61,43 @@ loadpoints:
 
 	lps, err := configureLoadpoints(conf)
 	suite.Require().NoError(err)
-	suite.Require().Len(lps, 1)
 	suite.Require().NotNil(lps[0].GetCircuit())
 }
 
-func (suite *circuitsTestSuite) TestLoadpointMissingCircuitError() {
+func (suite *circuitsTestSuite) TestCircuitMissingLoadpoint() {
+	var conf globalconfig.All
+	viper.SetConfigType("yaml")
+
+	suite.Require().NoError(viper.ReadConfig(strings.NewReader(`
+circuits:
+- name: master
+- name: slave
+  parent: master
+loadpoints:
+- charger: test
+`)))
+
+	suite.Require().NoError(viper.UnmarshalExact(&conf))
+
+	suite.Require().NoError(configureCircuits(conf.Circuits))
+	suite.Require().Len(config.Circuits().Devices(), 2)
+	suite.Require().False(config.Circuits().Devices()[0].Instance().HasMeter())
+
+	// empty charger
+	suite.Require().NoError(config.Chargers().Add(config.NewStaticDevice(config.Named{
+		Name: "test",
+	}, api.Charger(nil))))
+
+	lps, err := configureLoadpoints(conf)
+	suite.Require().NoError(err)
+
+	// circuit without device
+	err = validateCircuits(lps)
+	suite.Require().Error(err)
+	suite.Require().Equal("circuit slave has no meter and no loadpoint assigned", err.Error())
+}
+
+func (suite *circuitsTestSuite) TestMissingRootCircuit() {
 	var conf globalconfig.All
 	viper.SetConfigType("yaml")
 
@@ -98,7 +131,7 @@ loadpoints:
 
 	// no root circuit
 	circuit.EXPECT().GetParent().Return(circuit)
-	circuit.EXPECT().HasMeter().Return(true)
+	// circuit.EXPECT().HasMeter().Return(true)
 	err = validateCircuits(lps)
 	suite.Require().Error(err)
 	suite.Require().Equal("missing root circuit", err.Error())
