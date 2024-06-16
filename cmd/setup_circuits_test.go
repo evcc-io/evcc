@@ -131,7 +131,6 @@ loadpoints:
 
 	// no root circuit
 	circuit.EXPECT().GetParent().Return(circuit)
-	// circuit.EXPECT().HasMeter().Return(true)
 	err = validateCircuits(lps)
 	suite.Require().Error(err)
 	suite.Require().Equal("missing root circuit", err.Error())
