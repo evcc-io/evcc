@@ -708,6 +708,8 @@ func (lp *Loadpoint) syncCharger() error {
 		if charger, ok := lp.charger.(api.CurrentGetter); ok && enabled {
 			if current, err := charger.GetMaxCurrent(); err == nil {
 				// smallest adjustment most PWM-Controllers can do is: 100%÷256×0,6A = 0.234A
+				lp.log.TRACE.Printf("charger logic _rro_: current mismatch (got %.3gA, expected %.3gA)", current, lp.chargeCurrent)
+
 				if math.Abs(lp.chargeCurrent-current) > 0.23 {
 					if shouldBeConsistent {
 						lp.log.WARN.Printf("charger logic error: current mismatch (got %.3gA, expected %.3gA)", current, lp.chargeCurrent)
