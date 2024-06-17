@@ -183,6 +183,22 @@ func (wb *OpenWBPro) Currents() (float64, float64, float64, error) {
 	})
 }
 
+var _ api.Battery = (*OpenWBPro)(nil)
+
+// Soc implements the api.Battery interface
+func (wb *OpenWBPro) Soc() (float64, error) {
+	res, err := wb.statusG.Get()
+	if err != nil {
+		return 0, err
+	}
+
+	if time.Since(time.Unix(res.SocTimestamp, 0)) > 5*time.Minute {
+		return 0, api.ErrNotAvailable
+	}
+
+	return float64(res.Soc), nil
+}
+
 var _ api.PhaseSwitcher = (*OpenWBPro)(nil)
 
 // Phases1p3p implements the api.PhaseSwitcher interface
