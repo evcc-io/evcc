@@ -82,7 +82,7 @@ func NewBenderCCFromConfig(other map[string]interface{}) (api.Charger, error) {
 	return NewBenderCC(cc.URI, cc.ID)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateBenderCC -b *BenderCC -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.ChargeRater,ChargedEnergy,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Identifier,Identify,func() (string, error)"
+//go:generate go run ../cmd/tools/decorate.go -f decorateBenderCC -b *BenderCC -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.ChargeRater,ChargedEnergy,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Battery,Soc,func() (float64, error)" -t "api.Identifier,Identify,func() (string, error)"
 
 // NewBenderCC creates BenderCC charger
 func NewBenderCC(uri string, id uint8) (api.Charger, error) {
@@ -114,6 +114,7 @@ func NewBenderCC(uri string, id uint8) (api.Charger, error) {
 		voltages      func() (float64, float64, float64, error)
 		chargedEnergy func() (float64, error)
 		totalEnergy   func() (float64, error)
+		soc           func() (float64, error)
 		identify      func() (string, error)
 	)
 
@@ -133,6 +134,12 @@ func NewBenderCC(uri string, id uint8) (api.Charger, error) {
 		if b, err := wb.conn.ReadHoldingRegisters(bendRegVoltages, 2); err == nil && binary.BigEndian.Uint32(b) > 0 {
 			voltages = wb.voltages
 		}
+
+		if !wb.legacy {
+			if _, err := wb.conn.ReadHoldingRegisters(bendRegEVBatteryState, 1); err == nil {
+				soc = wb.soc
+			}
+		}
 	}
 
 	// check rfid
@@ -140,7 +147,7 @@ func NewBenderCC(uri string, id uint8) (api.Charger, error) {
 		identify = wb.identify
 	}
 
-	return decorateBenderCC(wb, currentPower, currents, voltages, chargedEnergy, totalEnergy, identify), nil
+	return decorateBenderCC(wb, currentPower, currents, voltages, chargedEnergy, totalEnergy, soc, identify), nil
 }
 
 // Status implements the api.Charger interface
@@ -312,23 +319,19 @@ func (wb *BenderCC) identify() (string, error) {
 	return bytesAsString(b), nil
 }
 
-var _ api.Battery = (*BenderCC)(nil)
+// soc implements the api.Battery interface
+func (wb *BenderCC) soc() (float64, error) {
+	b, err := wb.conn.ReadHoldingRegisters(bendRegSmartVehicleDetected, 1)
+	if err != nil {
+		return 0, err
+	}
 
-// Soc implements the api.Battery interface
-func (wb *BenderCC) Soc() (float64, error) {
-	if !wb.legacy {
-		b, err := wb.conn.ReadHoldingRegisters(bendRegSmartVehicleDetected, 1)
+	if binary.BigEndian.Uint16(b) == 1 {
+		b, err = wb.conn.ReadHoldingRegisters(bendRegEVBatteryState, 1)
 		if err != nil {
 			return 0, err
 		}
-
-		if binary.BigEndian.Uint16(b) == 1 {
-			b, err = wb.conn.ReadHoldingRegisters(bendRegEVBatteryState, 1)
-			if err != nil {
-				return 0, err
-			}
-			return float64(binary.BigEndian.Uint16(b)), nil
-		}
+		return float64(binary.BigEndian.Uint16(b)), nil
 	}
 
 	return 0, api.ErrNotAvailable
