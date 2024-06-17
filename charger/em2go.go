@@ -167,6 +167,17 @@ func (wb *Em2Go) CurrentPower() (float64, error) {
 	return rs485.RTUUint32ToFloat64(b), nil
 }
 
+var _ api.CurrentGetter = (*Em2Go)(nil)
+
+// GetMaxCurrent implements the api.CurrentGetter interface
+func (wb Em2Go) GetMaxCurrent() (float64, error) {
+	b, err := wb.conn.ReadHoldingRegisters(em2goRegCurrentLimit, 1)
+	if err != nil {
+		return 0, err
+	}
+	return float64(binary.BigEndian.Uint16(b)) / 10, err
+}
+
 var _ api.MeterEnergy = (*Em2Go)(nil)
 
 // TotalEnergy implements the api.MeterEnergy interface
