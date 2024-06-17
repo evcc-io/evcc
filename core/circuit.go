@@ -265,8 +265,9 @@ func (c *Circuit) ValidatePower(old, new float64) float64 {
 	if c.maxPower != 0 {
 		potential := c.maxPower - c.power
 		if delta > potential {
-			new = max(0, old+potential)
-			c.log.DEBUG.Printf("validate power: %.5gW -> %.5gW <= %.5gW at %.5gW: capped at %.5gW", old, new, c.maxPower, c.power, new)
+			capped := max(0, old+potential)
+			c.log.DEBUG.Printf("validate power: %.5gW -> %.5gW <= %.5gW at %.5gW: capped at %.5gW", old, new, c.maxPower, c.power, capped)
+			new = capped
 		} else {
 			c.log.TRACE.Printf("validate power: %.5gW -> %.5gW <= %.5gW at %.5gW: ok", old, new, c.maxPower, c.power)
 		}
@@ -286,8 +287,9 @@ func (c *Circuit) ValidateCurrent(old, new float64) float64 {
 	if c.maxCurrent != 0 {
 		potential := c.maxCurrent - c.current
 		if delta > potential {
-			new = max(0, old+potential)
-			c.log.DEBUG.Printf("validate current: %.3gA -> %.3gA <= %.3gA at %.3gA: capped at %.3gA", old, new, c.maxCurrent, c.current, new)
+			capped := max(0, old+potential)
+			c.log.DEBUG.Printf("validate current: %.3gA -> %.3gA <= %.3gA at %.3gA: capped at %.3gA", old, new, c.maxCurrent, c.current, capped)
+			new = capped
 		} else {
 			c.log.TRACE.Printf("validate current: %.3gA -> %.3gA <= %.3gA at %.3gA: ok", old, new, c.maxCurrent, c.current)
 		}
