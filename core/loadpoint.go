@@ -748,12 +748,18 @@ func (lp *Loadpoint) syncCharger() error {
 	return nil
 }
 
-// setLimit applies charger current limits and enables/disables accordingly
-func (lp *Loadpoint) setLimit(chargeCurrent float64) error {
+// roundedCurrent rounds current down to full amps if charger or vehicle require it
+func (lp *Loadpoint) roundedCurrent(chargeCurrent float64) float64 {
 	// full amps only?
 	if _, ok := lp.charger.(api.ChargerEx); !ok || lp.vehicleHasFeature(api.CoarseCurrent) {
 		chargeCurrent = math.Trunc(chargeCurrent)
 	}
+	return chargeCurrent
+}
+
+// setLimit applies charger current limits and enables/disables accordingly
+func (lp *Loadpoint) setLimit(chargeCurrent float64) error {
+	chargeCurrent = lp.roundedCurrent(chargeCurrent)
 
 	// apply circuit limits
 	if lp.circuit != nil {
@@ -763,7 +769,7 @@ func (lp *Loadpoint) setLimit(chargeCurrent float64) error {
 		powerLimit := lp.circuit.ValidatePower(lp.chargePower, currentToPower(chargeCurrent, activePhases))
 		currentLimitViaPower := powerToCurrent(powerLimit, activePhases)
 
-		chargeCurrent = min(currentLimit, currentLimitViaPower)
+		chargeCurrent = lp.roundedCurrent(min(currentLimit, currentLimitViaPower))
 	}
 
 	// set current
