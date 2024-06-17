@@ -102,7 +102,7 @@ render: |
       register:
         type: input
         address: 33149 # Battery power
-        decode: uint32
+        decode: int32
     - source: calc
       add:
       - source: modbus
