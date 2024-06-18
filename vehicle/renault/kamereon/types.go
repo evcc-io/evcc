@@ -62,7 +62,7 @@ type attributes struct {
 	RemainingTime      *int    `json:"chargingRemainingTime"`
 	// hvac-status
 	ExternalTemperature float64 `json:"externalTemperature"`
-	HvacStatus          int     `json:"hvacStatus"`
+	HvacStatus          string  `json:"hvacStatus"`
 	// cockpit
 	TotalMileage *float64 `json:"totalMileage"`
 	// position
