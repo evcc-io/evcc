@@ -3,7 +3,7 @@
 		id="circuitsModal"
 		:title="$t('config.circuits.title')"
 		:description="$t('config.circuits.description')"
-		docs="/docs/reference/configuration/circuits"
+		docs="/docs/features/loadmanagement"
 		:defaultYaml="defaultYaml"
 		endpoint="/config/circuits"
 		size="md"
