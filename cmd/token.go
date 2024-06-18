@@ -88,11 +88,11 @@ func runToken(cmd *cobra.Command, args []string) {
 
 	if isTemplate {
 		fmt.Println("    type: template")
-		fmt.Println("    template: " + typ)
+		fmt.Println("    template:", typ)
 		fmt.Println("    accesstoken:", token.AccessToken)
 		fmt.Println("    refreshtoken:", token.RefreshToken)
 	} else {
-		fmt.Println("    type: " + typ)
+		fmt.Println("    type:", typ)
 		fmt.Println("    tokens:")
 		fmt.Println("      access:", token.AccessToken)
 		fmt.Println("      refresh:", token.RefreshToken)
