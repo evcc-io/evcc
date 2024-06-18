@@ -22,6 +22,10 @@ params:
     default: 12
   - name: phases
     advanced: true
+  - name: server
+    default: dexters-web.de
+    advanced: true
+    required: true
   - preset: vehicle-identify
 render: |
   type: ovms
@@ -29,6 +33,5 @@ render: |
   user: {{ .user }}
   password: {{ .password }}
   vehicleid: {{ .vehicleid }} # vehicle id
-  capacity: {{ .capacity }}
-  server: dexters-web.de # used ovms server [dexters-web.de or api.openvehicles.com]
+  server: {{ .server }}
   {{ include "vehicle-identify" . }}
