@@ -327,7 +327,7 @@ presets:
       - name: language
   tariff-base:
     params:
-      - name: costs
+      - name: charges
         type: number
         help:
           de: Zusätzlicher fester Aufschlag pro kWh (z.B. 0.05 für 5 Cent)
