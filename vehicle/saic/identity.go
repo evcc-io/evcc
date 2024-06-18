@@ -38,6 +38,7 @@ func NewIdentity(log *util.Logger, user, password string) *Identity {
 		Decorator: requests.Decorate,
 		Base:      v.Client.Transport,
 	}
+	v.Client.Timeout = 15 * time.Second
 
 	return v
 }
