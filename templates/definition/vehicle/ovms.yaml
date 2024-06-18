@@ -25,18 +25,10 @@ params:
   - preset: vehicle-identify
 render: |
   type: ovms
-  {{- if .title }}
-  title: {{ .title }}
-  {{- end }}
-  {{- if .icon }}
-  icon: {{ .icon }}
-  {{- end }}
+  {{- include "vehicle-common" . }}
   user: {{ .user }}
   password: {{ .password }}
   vehicleid: {{ .vehicleid }} # vehicle id
   capacity: {{ .capacity }}
-  {{- if .phases }}
-  phases: {{ .phases }}
-  {{- end }}
   server: dexters-web.de # used ovms server [dexters-web.de or api.openvehicles.com]
   {{ include "vehicle-identify" . }}
