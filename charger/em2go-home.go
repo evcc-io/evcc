@@ -165,6 +165,18 @@ func (wb *Em2GoHome) MaxCurrentMillis(current float64) error {
 	return err
 }
 
+var _ api.CurrentGetter = (*Em2GoHome)(nil)
+
+// GetMaxCurrent implements the api.CurrentGetter interface
+func (wb Em2GoHome) GetMaxCurrent() (float64, error) {
+	b, err := wb.conn.ReadHoldingRegisters(em2GoHomeRegCurrentLimit, 1)
+	if err != nil {
+		return 0, err
+	}
+
+	return float64(binary.BigEndian.Uint16(b)) / 10, err
+}
+
 var _ api.Meter = (*Em2GoHome)(nil)
 
 // CurrentPower implements the api.Meter interface

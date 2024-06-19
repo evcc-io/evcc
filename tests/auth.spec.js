@@ -124,11 +124,14 @@ test("update password", async ({ page }) => {
   await page.getByRole("button", { name: "Logout" }).click();
 
   // login modal
-  page.goto("/#/config");
+  await page.getByTestId("topnavigation-button").click();
+  await expect(page.getByRole("button", { name: "Logout" })).not.toBeVisible();
+  await page.getByRole("link", { name: "Configuration" }).click();
   const loginNew = page.getByTestId("login-modal");
   await loginNew.getByLabel("Password").fill(newPassword);
   await loginNew.getByRole("button", { name: "Login" }).click();
   await expect(page.getByRole("heading", { name: "Configuration" })).toBeVisible();
+  await expect(loginNew).not.toBeVisible();
 
   // revert password
   await page.getByTestId("generalconfig-password").getByRole("button", { name: "edit" }).click();

@@ -40,6 +40,7 @@ render: |
   type: mercedes
   {{ include "vehicle-common" . }}
   user: {{ .user }}
+  region: {{ .region }}
   tokens:
     access: {{ .accessToken }}
     refresh: {{ .refreshToken }}
