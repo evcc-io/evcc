@@ -940,7 +940,7 @@ CONTINUE:
 		for _, lp := range loadpoints {
 			if lp.GetCircuit() == instance {
 				if isRoot {
-					return fmt.Errorf("root circuit must not be assigned to loadpoint %s", lp.Title())
+					return fmt.Errorf("root circuit must not be assigned to loadpoint %s", lp.GetTitle())
 				}
 
 				continue CONTINUE
