@@ -26,43 +26,50 @@
 						disabled
 						required
 					/>
-					<button class="btn btn-link btn-sm evcc-default-text">
-						<shopicon-regular-adjust></shopicon-regular-adjust>
-					</button>
-				</div>
-			</FormRow>
-			<FormRow
-				v-if="values.meter"
-				id="loadpointParamMeter"
-				label="Energy meter"
-				help="Additional meter if the charger doesn't have an integrated one."
-			>
-				<div class="d-flex">
-					<PropertyField
-						id="loadpointParamMeter"
-						v-model="values.meter"
-						type="String"
-						class="me-2 flex-grow-1"
-						disabled
-						required
-					/>
 					<button
 						class="btn btn-link btn-sm evcc-default-text"
-						@click.prevent="editMeter"
+						type="button"
+						@click.prevent="editCharger"
 					>
 						<shopicon-regular-adjust></shopicon-regular-adjust>
 					</button>
 				</div>
 			</FormRow>
-			<p v-else>
-				<button
-					class="btn btn-link btn-sm text-primary px-0"
-					type="button"
-					@click="editMeter"
+			<div v-if="values.charger">
+				<FormRow
+					v-if="values.meter"
+					id="loadpointParamMeter"
+					label="Energy meter"
+					help="Additional meter if the charger doesn't have an integrated one."
 				>
-					Add dedicated charger meter
-				</button>
-			</p>
+					<div class="d-flex">
+						<PropertyField
+							id="loadpointParamMeter"
+							v-model="values.meter"
+							type="String"
+							class="me-2 flex-grow-1"
+							disabled
+							required
+						/>
+						<button
+							class="btn btn-link btn-sm evcc-default-text"
+							type="button"
+							@click.prevent="editMeter"
+						>
+							<shopicon-regular-adjust></shopicon-regular-adjust>
+						</button>
+					</div>
+				</FormRow>
+				<p v-else>
+					<button
+						class="btn btn-link btn-sm text-primary px-0"
+						type="button"
+						@click="editMeter"
+					>
+						Add dedicated charger meter
+					</button>
+				</p>
+			</div>
 
 			<h6>Basics</h6>
 
@@ -113,7 +120,15 @@
 				</FormRow>
 			</div>
 
-			<FormRow id="loadpointParamMaxCurrent" label="Current limits">
+			<FormRow
+				id="loadpointParamMaxCurrent"
+				label="Current limits"
+				:help="
+					values.minCurrent < 6
+						? 'Currents below 6 A are not supported by electric vehicles. Only use lower values if you know what you are doing.'
+						: null
+				"
+			>
 				<CurrentRange v-model:min="values.minCurrent" v-model:max="values.maxCurrent" />
 			</FormRow>
 
@@ -341,7 +356,7 @@ export default {
 		name: String,
 		vehicleOptions: { type: Array, default: () => [] },
 	},
-	emits: ["updated", "openMeterModal"],
+	emits: ["updated", "openMeterModal", "openChargerModal"],
 	data() {
 		return {
 			isModalVisible: false,
@@ -380,20 +395,18 @@ export default {
 	watch: {
 		isModalVisible(visible) {
 			if (visible) {
-				if (this.id == undefined) {
-					// new loadpoint
-					this.reset();
-				} else if (this.values?.id !== this.id) {
+				if (this.values?.id !== this.id) {
 					// loadpoint changed
 					this.reset();
-					this.loadConfiguration();
+					if (this.id) {
+						this.loadConfiguration();
+					}
 				}
 			}
 		},
 	},
 	methods: {
 		reset() {
-			deepClone;
 			this.values = deepClone(defaultValues);
 		},
 		async loadConfiguration() {
@@ -444,6 +457,9 @@ export default {
 		},
 		closed() {
 			this.isModalVisible = false;
+		},
+		editCharger() {
+			this.$emit("openChargerModal", this.values.charger);
 		},
 		editMeter() {
 			this.$emit("openMeterModal", this.values.meter);

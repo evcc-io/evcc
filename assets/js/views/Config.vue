@@ -268,6 +268,7 @@
 					:vehicleOptions="vehicleOptions"
 					ref="loadpointModal"
 					@updated="loadpointChanged"
+					@openChargerModal="editLoadpointCharger"
 					@openMeterModal="editLoadpointMeter"
 				/>
 				<VehicleModal :id="selectedVehicleId" @vehicle-changed="vehicleChanged" />
@@ -279,6 +280,14 @@
 					@updated="meterChanged"
 					@removed="removeMeter"
 					@closed="meterModalClosed"
+				/>
+				<ChargerModal
+					:id="selectedChargerId"
+					:name="selectedChargerName"
+					@added="addCharger"
+					@updated="chargerChanged"
+					@removed="removeCharger"
+					@closed="chargerModalClosed"
 				/>
 				<InfluxModal @changed="loadDirty" />
 				<MqttModal @changed="loadDirty" />
@@ -304,6 +313,7 @@ import "@h2d2/shopicons/es/regular/receivepayment";
 import "@h2d2/shopicons/es/regular/cablecharge";
 import NewDeviceButton from "../components/Config/NewDeviceButton.vue";
 import api from "../api";
+import ChargerModal from "../components/Config/ChargerModal.vue";
 import CircuitsIcon from "../components/MaterialIcon/Circuits.vue";
 import CircuitsModal from "../components/Config/CircuitsModal.vue";
 import collector from "../mixins/collector";
@@ -340,6 +350,7 @@ export default {
 	name: "Config",
 	components: {
 		NewDeviceButton,
+		ChargerModal,
 		CircuitsIcon,
 		CircuitsModal,
 		ControlModal,
@@ -380,6 +391,7 @@ export default {
 			selectedVehicleId: undefined,
 			selectedMeterId: undefined,
 			selectedMeterType: undefined,
+			selectedChargerId: undefined,
 			selectedLoadpointId: undefined,
 			site: { grid: "", pv: [], battery: [], title: "" },
 			deviceValueTimeout: undefined,
@@ -415,6 +427,9 @@ export default {
 		},
 		selectedMeterName() {
 			return this.getMeterById(this.selectedMeterId)?.name;
+		},
+		selectedChargerName() {
+			return this.getChargerById(this.selectedChargerId)?.name;
 		},
 		tariffTags() {
 			const { currency, tariffGrid, tariffFeedIn, tariffCo2 } = store.state;
@@ -519,6 +534,12 @@ export default {
 			}
 			return this.meters.find((m) => m.id === id);
 		},
+		getChargerById(id) {
+			if (!id || !this.chargers) {
+				return undefined;
+			}
+			return this.chargers.find((c) => c.id === id);
+		},
 		vehicleModal() {
 			return Modal.getOrCreateInstance(document.getElementById("vehicleModal"));
 		},
@@ -527,6 +548,20 @@ export default {
 		},
 		loadpointModal() {
 			return Modal.getOrCreateInstance(document.getElementById("loadpointModal"));
+		},
+		chargerModal() {
+			return Modal.getOrCreateInstance(document.getElementById("chargerModal"));
+		},
+		editLoadpointCharger(name) {
+			const charger = this.chargers.find((c) => c.name === name);
+			if (charger && charger.id === undefined) {
+				alert(
+					"yaml configured chargers can not be edited. Remove charger from yaml first."
+				);
+				return;
+			}
+			this.loadpointModal().hide();
+			this.$nextTick(() => this.editCharger(charger?.id));
 		},
 		editLoadpointMeter(name) {
 			const meter = this.meters.find((m) => m.name === name);
@@ -547,9 +582,23 @@ export default {
 			this.selectedMeterType = type;
 			this.$nextTick(() => this.meterModal().show());
 		},
+		editCharger(id) {
+			this.selectedChargerId = id;
+			this.$nextTick(() => this.chargerModal().show());
+		},
+		newCharger() {
+			this.selectedChargerId = undefined;
+			this.$nextTick(() => this.chargerModal().show());
+		},
 		async meterChanged() {
 			await this.loadMeters();
 			this.meterModal().hide();
+			await this.loadDirty();
+			await this.updateValues();
+		},
+		async chargerChanged() {
+			await this.loadChargers();
+			this.chargerModal().hide();
 			await this.loadDirty();
 			await this.updateValues();
 		},
@@ -618,11 +667,21 @@ export default {
 				this.saveSite(type);
 			}
 		},
+		addCharger(name) {
+			this.$refs.loadpointModal?.setCharger(name);
+		},
+		removeCharger() {
+			this.$refs.loadpointModal?.setCharger(undefined);
+		},
 		meterModalClosed() {
 			if (this.selectedMeterType === "charge") {
 				// reopen loadpoint modal
 				this.loadpointModal().show();
 			}
+		},
+		chargerModalClosed() {
+			// reopen loadpoint modal
+			this.loadpointModal().show();
 		},
 		async saveSite(key) {
 			const body = key ? { [key]: this.site[key] } : this.site;

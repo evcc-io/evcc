@@ -92,6 +92,7 @@ remove = "Entfernen"
 save = "Speichern"
 telemetry = "Telemetrie"
 title = "Titel"
+validateSave = "Überprüfen & speichern"
 
 [config.grid]
 title = "Netzzähler"

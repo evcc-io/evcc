@@ -26,6 +26,11 @@ never = "only with enough surplus"
 titleAdd = "Add Battery Meter"
 titleEdit = "Edit Battery Meter"
 
+[config.charger]
+template = "Manufacturer"
+titleAdd = "Add Charger"
+titleEdit = "Edit Charger"
+
 [config.circuits]
 description = "Ensures, that the sum of all loadpoints connected to a circuit does not exceed the configured power and current limits. Circuits can be nested to build a hierarchy."
 title = "Load Management"
@@ -92,6 +97,7 @@ optional = "optional"
 
 [config.general]
 cancel = "Cancel"
+delete = "Delete"
 docsLink = "See documentation."
 experimental = "Experimental"
 off = "off"
@@ -101,6 +107,7 @@ remove = "Remove"
 save = "Save"
 telemetry = "Telemetry"
 title = "Title"
+validateSave = "Validate & save"
 
 [config.grid]
 title = "Grid meter"
@@ -129,6 +136,7 @@ v2Support = "Back to InfluxDB 2.x"
 cancel = "Cancel"
 delete = "Delete"
 save = "Save"
+titleAdd = "Add Charge Point"
 titleEdit = "Edit Charge Point"
 
 [config.main]

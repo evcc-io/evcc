@@ -1,27 +1,15 @@
 <template>
 	<GenericModal
-		id="meterModal"
+		id="chargerModal"
 		:title="modalTitle"
-		data-testid="meter-modal"
+		data-testid="charger-modal"
 		@open="open"
 		@closed="closed"
 	>
-		<div v-if="!meterType">
-			<NewDeviceButton
-				title="Add solar meter"
-				class="mb-4 addButton"
-				@click="selectType('pv')"
-			/>
-			<NewDeviceButton
-				title="Add battery meter"
-				class="addButton"
-				@click="selectType('battery')"
-			/>
-		</div>
-		<form v-else ref="form" class="container mx-0 px-0">
-			<FormRow id="meterTemplate" :label="$t('config.meter.template')">
+		<form ref="form" class="container mx-0 px-0">
+			<FormRow id="chargerTemplate" :label="$t('config.charger.template')">
 				<select
-					id="meterTemplate"
+					id="chargerTemplate"
 					v-model="templateName"
 					@change="templateChanged"
 					:disabled="!isNew"
@@ -62,7 +50,7 @@
 			/>
 			<FormRow
 				v-for="param in templateParams"
-				:id="`meterParam${param.Name}`"
+				:id="`chargerParam${param.Name}`"
 				:key="param.Name"
 				:optional="!param.Required"
 				:label="param.Description || `[${param.Name}]`"
@@ -70,7 +58,7 @@
 				:example="param.Example"
 			>
 				<PropertyField
-					:id="`meterParam${param.Name}`"
+					:id="`chargerParam${param.Name}`"
 					v-model="values[param.Name]"
 					:masked="param.Mask"
 					:property="param.Name"
@@ -136,7 +124,6 @@ import PropertyField from "./PropertyField.vue";
 import TestResult from "./TestResult.vue";
 import api from "../../api";
 import test from "./mixins/test";
-import NewDeviceButton from "./NewDeviceButton.vue";
 import Modbus from "./Modbus.vue";
 import GenericModal from "../GenericModal.vue";
 
@@ -147,13 +134,12 @@ function sleep(ms) {
 }
 
 export default {
-	name: "MeterModal",
-	components: { FormRow, PropertyField, Modbus, TestResult, NewDeviceButton, GenericModal },
+	name: "ChargerModal",
+	components: { FormRow, PropertyField, Modbus, TestResult, GenericModal },
 	mixins: [test],
 	props: {
 		id: Number,
 		name: String,
-		type: String,
 	},
 	emits: ["added", "updated", "removed", "closed"],
 	data() {
@@ -172,16 +158,9 @@ export default {
 	computed: {
 		modalTitle() {
 			if (this.isNew) {
-				if (this.meterType) {
-					return this.$t(`config.${this.meterType}.titleAdd`);
-				} else {
-					return this.$t("config.meter.titleChoice");
-				}
+				return this.$t(`config.charger.titleAdd`);
 			}
-			return this.$t(`config.${this.meterType}.titleEdit`);
-		},
-		meterType() {
-			return this.type || this.selectedType;
+			return this.$t(`config.charger.titleEdit`);
 		},
 		templateOptions() {
 			return this.products.filter((p) => p.group !== "generic");
@@ -195,12 +174,8 @@ export default {
 				params
 					// deprecated fields
 					.filter((p) => !p.Deprecated)
-					// remove usage option
-					.filter((p) => p.Name !== "usage")
 					// remove modbus, handles separately
 					.filter((p) => p.Name !== "modbus")
-					// capacity only for battery meters
-					.filter((p) => this.meterType === "battery" || p.Name !== "capacity")
 			);
 		},
 		modbus() {
@@ -224,7 +199,6 @@ export default {
 				template: this.templateName,
 				...this.modbusDefaults,
 				...this.values,
-				usage: this.meterType,
 			};
 		},
 		isNew() {
@@ -238,16 +212,12 @@ export default {
 		isModalVisible(visible) {
 			if (visible) {
 				this.templateName = null;
-				this.selectedType = null;
 				this.reset();
 				this.loadProducts();
 				if (this.id !== undefined) {
 					this.loadConfiguration();
 				}
 			}
-		},
-		meterType() {
-			this.loadProducts();
 		},
 		templateName() {
 			this.loadTemplate();
@@ -266,8 +236,8 @@ export default {
 		},
 		async loadConfiguration() {
 			try {
-				const meter = (await api.get(`config/devices/meter/${this.id}`)).data.result;
-				this.values = meter.config;
+				const charger = (await api.get(`config/devices/charger/${this.id}`)).data.result;
+				this.values = charger.config;
 				this.applyDefaultsFromTemplate();
 				this.templateName = this.values.template;
 			} catch (e) {
@@ -275,16 +245,11 @@ export default {
 			}
 		},
 		async loadProducts() {
-			if (!this.isModalVisible || !this.meterType) {
+			if (!this.isModalVisible) {
 				return;
 			}
 			try {
-				const opts = {
-					params: {
-						usage: this.meterType,
-					},
-				};
-				this.products = (await api.get("config/products/meter", opts)).data.result;
+				this.products = (await api.get("config/products/charger")).data.result;
 			} catch (e) {
 				console.error(e);
 			}
@@ -299,7 +264,7 @@ export default {
 						name: this.templateName,
 					},
 				};
-				const result = await api.get("config/templates/meter", opts);
+				const result = await api.get("config/templates/charger", opts);
 				this.template = result.data.result;
 				this.applyDefaultsFromTemplate();
 			} catch (e) {
@@ -317,15 +282,15 @@ export default {
 		},
 		async create() {
 			if (this.testUnknown) {
-				const success = await this.test(this.testMeter);
+				const success = await this.test(this.testCharger);
 				if (!success) return;
 				await sleep(100);
 			}
 			this.saving = true;
 			try {
-				const response = await api.post("config/devices/meter", this.apiData);
+				const response = await api.post("config/devices/charger", this.apiData);
 				const { name } = response.data.result;
-				this.$emit("added", this.meterType, name);
+				this.$emit("added", name);
 				this.$emit("updated");
 				this.closed();
 			} catch (e) {
@@ -335,10 +300,10 @@ export default {
 			this.saving = false;
 		},
 		async testManually() {
-			await this.test(this.testMeter);
+			await this.test(this.testCharger);
 		},
-		async testMeter() {
-			let url = "config/test/meter";
+		async testCharger() {
+			let url = "config/test/charger";
 			if (!this.isNew) {
 				url += `/merge/${this.id}`;
 			}
@@ -346,13 +311,13 @@ export default {
 		},
 		async update() {
 			if (this.testUnknown) {
-				const success = await this.test(this.testMeter);
+				const success = await this.test(this.testCharger);
 				if (!success) return;
 				await sleep(250);
 			}
 			this.saving = true;
 			try {
-				await api.put(`config/devices/meter/${this.id}`, this.apiData);
+				await api.put(`config/devices/charger/${this.id}`, this.apiData);
 				this.$emit("updated");
 				this.closed();
 			} catch (e) {
@@ -363,8 +328,8 @@ export default {
 		},
 		async remove() {
 			try {
-				await api.delete(`config/devices/meter/${this.id}`);
-				this.$emit("removed", this.meterType, this.name);
+				await api.delete(`config/devices/charger/${this.id}`);
+				this.$emit("removed", this.name);
 				this.$emit("updated");
 				this.closed();
 			} catch (e) {
@@ -378,9 +343,6 @@ export default {
 		closed() {
 			this.$emit("closed");
 			this.isModalVisible = false;
-		},
-		selectType(type) {
-			this.selectedType = type;
 		},
 		templateChanged() {
 			this.reset();
