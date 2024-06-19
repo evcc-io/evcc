@@ -6,18 +6,18 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateEm2GoHome(base *Em2GoHome, phaseSwitcher func(int) error) api.Charger {
+func decorateEm2Go(base *Em2Go, phaseSwitcher func(int) error) api.Charger {
 	switch {
 	case phaseSwitcher == nil:
 		return base
 
 	case phaseSwitcher != nil:
 		return &struct {
-			*Em2GoHome
+			*Em2Go
 			api.PhaseSwitcher
 		}{
-			Em2GoHome: base,
-			PhaseSwitcher: &decorateEm2GoHomePhaseSwitcherImpl{
+			Em2Go: base,
+			PhaseSwitcher: &decorateEm2GoPhaseSwitcherImpl{
 				phaseSwitcher: phaseSwitcher,
 			},
 		}
@@ -26,10 +26,10 @@ func decorateEm2GoHome(base *Em2GoHome, phaseSwitcher func(int) error) api.Charg
 	return nil
 }
 
-type decorateEm2GoHomePhaseSwitcherImpl struct {
+type decorateEm2GoPhaseSwitcherImpl struct {
 	phaseSwitcher func(int) error
 }
 
-func (impl *decorateEm2GoHomePhaseSwitcherImpl) Phases1p3p(p0 int) error {
+func (impl *decorateEm2GoPhaseSwitcherImpl) Phases1p3p(p0 int) error {
 	return impl.phaseSwitcher(p0)
 }
