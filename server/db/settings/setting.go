@@ -20,7 +20,7 @@ import (
 )
 
 var ErrNotFound = errors.New("not found")
-var ErrNotInitilized = errors.New("unable to read settings from database")
+var ErrNotInitialized = errors.New("unable to read settings from database")
 
 // setting is a settings entry
 type setting struct {
@@ -41,14 +41,12 @@ func Init() error {
 		err = db.Instance.Find(&settings).Error
 	}
 
-	if err == nil {
-		initialized = true
-	}
+	initialized = err == nil
 	return err
 }
 
-// InitTest initializes the settings for testing only
-func InitTest() {
+// initTest initializes the settings for testing only
+func initTest() {
 	initialized = true
 }
 
@@ -157,7 +155,7 @@ func String(key string) (string, error) {
 	defer mu.RUnlock()
 
 	if !initialized {
-		return "", ErrNotInitilized
+		return "", ErrNotInitialized
 	}
 
 	idx := slices.IndexFunc(settings, equal(key))

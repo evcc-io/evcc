@@ -9,7 +9,7 @@ import (
 )
 
 func TestString(t *testing.T) {
-	InitTest()
+	initTest()
 	v := "foo"
 	SetString("string", v)
 	res, err := String("string")
@@ -18,7 +18,7 @@ func TestString(t *testing.T) {
 }
 
 func TestInt(t *testing.T) {
-	InitTest()
+	initTest()
 	v := int64(math.MaxInt64)
 	SetInt("int64", v)
 	res, err := Int("int64")
@@ -27,7 +27,7 @@ func TestInt(t *testing.T) {
 }
 
 func TestFloat(t *testing.T) {
-	InitTest()
+	initTest()
 	v := 3.141
 	SetFloat("float64", v)
 	res, err := Float("float64")
