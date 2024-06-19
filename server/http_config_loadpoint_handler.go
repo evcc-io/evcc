@@ -68,6 +68,26 @@ func loadpointConfigHandler(id int, lp loadpoint.API) http.HandlerFunc {
 	}
 }
 
+// newLoadpointHandler creates a new loadpoint
+func newLoadpointHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var payload loadpointStruct
+
+		if err := jsonDecoder(r.Body).Decode(&payload); err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+		http.Error(w, "Not implemented", http.StatusNotImplemented)
+	}
+}
+
+// deleteLoadpointHandler deletes a loadpoint
+func deleteLoadpointHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		http.Error(w, "Not implemented", http.StatusNotImplemented)
+	}
+}
+
 // updateLoadpointHandler returns a device configurations by class
 func updateLoadpointHandler(lp loadpoint.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {

@@ -130,7 +130,7 @@
 						<NewDeviceButton
 							data-testid="add-loadpoint"
 							:title="$t('config.main.addLoadpoint')"
-							@click="todo"
+							@click="newLoadpoint"
 						/>
 					</ul>
 
@@ -555,6 +555,10 @@ export default {
 		},
 		editLoadpoint(id) {
 			this.selectedLoadpointId = id;
+			this.$nextTick(() => this.loadpointModal().show());
+		},
+		newLoadpoint() {
+			this.selectedLoadpointId = undefined;
 			this.$nextTick(() => this.loadpointModal().show());
 		},
 		async loadpointChanged() {

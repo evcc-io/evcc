@@ -103,7 +103,7 @@ export default {
 			if (this.masked) {
 				return "password";
 			}
-			if (["Number", "Float"].includes(this.type)) {
+			if (["Number", "Float", "Duration"].includes(this.type)) {
 				return "number";
 			}
 			return "text";
@@ -121,7 +121,7 @@ export default {
 			return ["Number", "Float", "Duration"].includes(this.type);
 		},
 		step() {
-			if (this.type === "Float") {
+			if (this.type === "Float" || this.type === "Duration") {
 				return "any";
 			}
 			return null;

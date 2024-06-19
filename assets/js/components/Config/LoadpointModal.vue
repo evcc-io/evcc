@@ -6,7 +6,7 @@
 		@open="open"
 		@closed="closed"
 	>
-		<form ref="form" class="container mx-0 px-0">
+		<form ref="form" class="container mx-0 px-0" @submit.prevent="isNew ? create() : update()">
 			<FormRow id="loadpointParamTitle" label="Title" example="Garage, Carport, etc.">
 				<PropertyField
 					id="loadpointParamTitle"
@@ -144,7 +144,6 @@
 						v-model="values.thresholds.enable.delay"
 						type="Duration"
 						unit="min"
-						:scale="minuteScale"
 						size="w-25 w-min-200"
 						class="me-2"
 						required
@@ -156,7 +155,6 @@
 						v-model="values.thresholds.disable.delay"
 						type="Duration"
 						unit="min"
-						:scale="minuteScale"
 						size="w-25 w-min-200"
 						class="me-2"
 						required
@@ -173,7 +171,7 @@
 					<PropertyField
 						id="loadpointEnableThreshold"
 						v-model="values.thresholds.enable.threshold"
-						type="Number"
+						type="Float"
 						unit="kW"
 						size="w-25 w-min-200"
 						class="me-2"
@@ -189,7 +187,7 @@
 					<PropertyField
 						id="loadpointDisableThreshold"
 						v-model="values.thresholds.disable.threshold"
-						type="Number"
+						type="Float"
 						unit="kW"
 						size="w-25 w-min-200"
 						class="me-2"
@@ -241,7 +239,7 @@
 					/>
 				</FormRow>
 				<FormRow
-					v-if="values.soc.poll.mode > 0"
+					v-if="values.soc.poll.mode !== 'pollcharging'"
 					id="loadpointPollInterval"
 					label="Poll Interval"
 					help="Time between status updates. Short intervals may drain the vehicle battery."
@@ -252,7 +250,6 @@
 						v-model="values.soc.poll.interval"
 						type="Duration"
 						unit="min"
-						:scale="minuteScale"
 						size="w-25 w-min-200"
 						class="me-2"
 						required
@@ -276,18 +273,22 @@
 
 			<div class="mt-5 mb-4 d-flex justify-content-between">
 				<button
+					v-if="isDeletable"
+					type="button"
+					class="btn btn-link text-danger"
+					@click.prevent="remove"
+				>
+					{{ $t("config.meter.delete") }}
+				</button>
+				<button
+					v-else
 					type="button"
 					class="btn btn-link text-muted btn-cancel"
 					data-bs-dismiss="modal"
 				>
 					{{ $t("config.loadpoint.cancel") }}
 				</button>
-				<button
-					type="submit"
-					class="btn btn-primary"
-					:disabled="saving"
-					@click.prevent="isNew ? create() : update()"
-				>
+				<button type="submit" class="btn btn-primary" :disabled="saving">
 					<span
 						v-if="saving"
 						class="spinner-border spinner-border-sm"
@@ -307,20 +308,24 @@ import PropertyField from "./PropertyField.vue";
 import CurrentRange from "./CurrentRange.vue";
 import api from "../../api";
 import GenericModal from "../GenericModal.vue";
+import deepClone from "../../utils/deepClone";
+
+const nsPerMin = 60 * 1e9;
+const wPerKw = 1e3;
 
 const defaultValues = {
 	title: "",
 	phases: 0,
-	minCurrent: 0,
-	maxCurrent: 0,
+	minCurrent: 6,
+	maxCurrent: 16,
 	priority: 0,
 	mode: "",
 	thresholds: {
-		enable: { delay: 0, threshold: 0 },
-		disable: { delay: 0, threshold: 0 },
+		enable: { delay: 1, threshold: 0 },
+		disable: { delay: 3, threshold: 0 },
 	},
 	soc: {
-		poll: { mode: 0, interval: 0 },
+		poll: { mode: "pollcharging", interval: 60 },
 		estimate: false,
 	},
 	defaultVehicle: "",
@@ -336,22 +341,16 @@ export default {
 		name: String,
 		vehicleOptions: { type: Array, default: () => [] },
 	},
-	emits: ["added", "updated", "removed", "openMeterModal"],
+	emits: ["updated", "openMeterModal"],
 	data() {
 		return {
 			isModalVisible: false,
 			saving: false,
 			selectedType: null,
-			values: defaultValues,
+			values: deepClone(defaultValues),
 		};
 	},
 	computed: {
-		minuteScale() {
-			return 1 / 60 / 1e9;
-		},
-		kWScale() {
-			return 1 / 1e3;
-		},
 		modalTitle() {
 			if (this.isNew) {
 				return this.$t(`config.loadpoint.titleAdd`);
@@ -394,11 +393,13 @@ export default {
 	},
 	methods: {
 		reset() {
-			this.values = defaultValues;
+			deepClone;
+			this.values = deepClone(defaultValues);
 		},
 		async loadConfiguration() {
 			try {
-				this.values = (await api.get(`config/loadpoints/${this.id}`)).data.result;
+				const res = await api.get(`config/loadpoints/${this.id}`);
+				this.values = this.transformAfterLoad(res.data.result);
 			} catch (e) {
 				console.error(e);
 			}
@@ -406,12 +407,35 @@ export default {
 		async update() {
 			this.saving = true;
 			try {
-				await api.put(`config/loadpoints/${this.id}`, this.values);
+				const values = this.transformBeforeSave(this.values);
+				await api.put(`config/loadpoints/${this.id}`, values);
 				this.$emit("updated");
 				this.closed();
 			} catch (e) {
 				console.error(e);
 				alert("update failed");
+			}
+			this.saving = false;
+		},
+		async remove() {
+			try {
+				await api.delete(`config/loadpoints/${this.id}`);
+				this.$emit("updated");
+				this.closed();
+			} catch (e) {
+				console.error(e);
+				alert("delete failed");
+			}
+		},
+		async create() {
+			this.saving = true;
+			try {
+				await api.post("config/loadpoints", this.values);
+				this.$emit("updated");
+				this.closed();
+			} catch (e) {
+				console.error(e);
+				alert("create failed");
 			}
 			this.saving = false;
 		},
@@ -431,6 +455,32 @@ export default {
 		// called externally
 		setCharger(charger) {
 			this.values.charger = charger;
+		},
+		scaleValueToInt(obj, key, scale) {
+			obj[key] = Math.round(obj[key] * scale);
+		},
+		transformBeforeSave(values) {
+			function scale(obj, key, scale) {
+				obj[key] = Math.round(obj[key] * scale);
+			}
+
+			const result = deepClone(values);
+			scale(result.thresholds.enable, "delay", nsPerMin);
+			scale(result.thresholds.disable, "delay", nsPerMin);
+			scale(result.thresholds.enable, "threshold", wPerKw);
+			scale(result.thresholds.disable, "threshold", wPerKw);
+			scale(result.soc.poll, "interval", nsPerMin);
+
+			return result;
+		},
+		transformAfterLoad(values) {
+			const result = deepClone(values);
+			result.thresholds.enable.delay /= nsPerMin;
+			result.thresholds.enable.threshold /= wPerKw;
+			result.thresholds.disable.delay /= nsPerMin;
+			result.thresholds.disable.threshold /= wPerKw;
+			result.soc.poll.interval /= nsPerMin;
+			return result;
 		},
 	},
 };

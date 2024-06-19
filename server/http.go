@@ -158,9 +158,13 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, valueChan chan<- util.Param)
 	for id, lp := range site.Loadpoints() {
 		// TODO any loadpoint
 		for _, r := range map[string]route{
-			"loadpoints": {"GET", "/config/loadpoints", loadpointsConfigHandler(site)},
-			"get":        {"GET", "/config/loadpoints/" + strconv.Itoa(id), loadpointConfigHandler(id, lp)},
-			"update":     {"PUT", "/config/loadpoints/" + strconv.Itoa(id), updateLoadpointHandler(lp)},
+			"loadpoints":      {"GET", "/config/loadpoints", loadpointsConfigHandler(site)},
+			"loadpoint":       {"GET", "/config/loadpoints/" + strconv.Itoa(id), loadpointConfigHandler(id, lp)},
+			"updateloadpoint": {"PUT", "/config/loadpoints/" + strconv.Itoa(id), updateLoadpointHandler(lp)},
+			// TODO implement
+			"deleteloadpoint": {"DELETE", "/config/loadpoints/" + strconv.Itoa(id), deleteLoadpointHandler()},
+			// TODO implement
+			"newloadpoint": {"POST", "/config/loadpoints", newLoadpointHandler()},
 		} {
 			api.Methods(r.Methods()...).Path(r.Pattern).Handler(r.HandlerFunc)
 		}
