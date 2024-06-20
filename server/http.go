@@ -3,6 +3,7 @@ package server
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 	"time"
 
 	eapi "github.com/evcc-io/evcc/api"
@@ -153,7 +154,21 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, valueChan chan<- util.Param)
 	}
 
 	// loadpoint api
+	// TODO move to `api/config` router for auth and consistency
 	for id, lp := range site.Loadpoints() {
+		// TODO any loadpoint
+		for _, r := range map[string]route{
+			"loadpoints":      {"GET", "/config/loadpoints", loadpointsConfigHandler(site)},
+			"loadpoint":       {"GET", "/config/loadpoints/" + strconv.Itoa(id), loadpointConfigHandler(id, lp)},
+			"updateloadpoint": {"PUT", "/config/loadpoints/" + strconv.Itoa(id), updateLoadpointHandler(lp)},
+			// TODO implement
+			"deleteloadpoint": {"DELETE", "/config/loadpoints/" + strconv.Itoa(id), deleteLoadpointHandler()},
+			// TODO implement
+			"newloadpoint": {"POST", "/config/loadpoints", newLoadpointHandler()},
+		} {
+			api.Methods(r.Methods()...).Path(r.Pattern).Handler(r.HandlerFunc)
+		}
+
 		api := api.PathPrefix(fmt.Sprintf("/loadpoints/%d", id+1)).Subrouter()
 
 		routes := map[string]route{
@@ -174,7 +189,7 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, valueChan chan<- util.Param)
 			"enableThreshold":  {"POST", "/enable/threshold/{value:-?[0-9.]+}", floatHandler(pass(lp.SetEnableThreshold), lp.GetEnableThreshold)},
 			"disableThreshold": {"POST", "/disable/threshold/{value:-?[0-9.]+}", floatHandler(pass(lp.SetDisableThreshold), lp.GetDisableThreshold)},
 			"smartCostLimit":   {"POST", "/smartcostlimit/{value:-?[0-9.]+}", floatHandler(pass(lp.SetSmartCostLimit), lp.GetSmartCostLimit)},
-			// "priority":         {"POST", "/priority/{value:[0-9.]+}", floatHandler(pass(lp.SetPriority), lp.GetPriority)},
+			"priority":         {"POST", "/priority/{value:[0-9.]+}", intHandler(pass(lp.SetPriority), lp.GetPriority)},
 		}
 
 		for _, r := range routes {
@@ -229,7 +244,7 @@ func (s *HTTPd) RegisterSystemHandler(valueChan chan<- util.Param, cache *util.C
 		routes := map[string]route{
 			"templates":          {"GET", "/templates/{class:[a-z]+}", templatesHandler},
 			"products":           {"GET", "/products/{class:[a-z]+}", productsHandler},
-			"devices":            {"GET", "/devices/{class:[a-z]+}", devicesHandler},
+			"devices":            {"GET", "/devices/{class:[a-z]+}", devicesConfigHandler},
 			"device":             {"GET", "/devices/{class:[a-z]+}/{id:[0-9.]+}", deviceConfigHandler},
 			"devicestatus":       {"GET", "/devices/{class:[a-z]+}/{name:[a-zA-Z0-9_.:-]+}/status", deviceStatusHandler},
 			"dirty":              {"GET", "/dirty", boolGetHandler(ConfigDirty)},

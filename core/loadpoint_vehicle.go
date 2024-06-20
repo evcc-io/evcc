@@ -9,6 +9,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/keys"
+	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/session"
 	"github.com/evcc-io/evcc/core/soc"
 	"github.com/evcc-io/evcc/core/vehicle"
@@ -305,9 +306,9 @@ func (lp *Loadpoint) vehicleOdometer() {
 // vehicleClimatePollAllowed determines if polling depending on mode and connection status
 func (lp *Loadpoint) vehicleClimatePollAllowed() bool {
 	switch {
-	case lp.Soc.Poll.Mode == pollCharging && lp.charging():
+	case lp.Soc.Poll.Mode == loadpoint.PollCharging && lp.charging():
 		return true
-	case (lp.Soc.Poll.Mode == pollConnected || lp.Soc.Poll.Mode == pollAlways) && lp.connected():
+	case (lp.Soc.Poll.Mode == loadpoint.PollConnected || lp.Soc.Poll.Mode == loadpoint.PollAlways) && lp.connected():
 		return true
 	default:
 		return false
@@ -328,8 +329,8 @@ func (lp *Loadpoint) vehicleSocPollAllowed() bool {
 
 	remaining := lp.Soc.Poll.Interval - lp.clock.Since(lp.socUpdated)
 
-	honourUpdateInterval := lp.Soc.Poll.Mode == pollAlways ||
-		lp.connected() && lp.Soc.Poll.Mode == pollConnected
+	honourUpdateInterval := lp.Soc.Poll.Mode == loadpoint.PollAlways ||
+		lp.connected() && lp.Soc.Poll.Mode == loadpoint.PollConnected
 
 	if honourUpdateInterval {
 		if remaining > 0 {

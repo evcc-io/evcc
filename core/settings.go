@@ -60,12 +60,12 @@ func (s *Settings) SetBool(key string, val bool) {
 	settings.SetBool(s.Key+key, val)
 }
 
-// func (s *Settings) SetJson(key string, val any) error {
-// 	if s == nil {
-// 		return nil
-// 	}
-// 	return settings.SetJson(s.Key+key, val)
-// }
+func (s *Settings) SetJson(key string, val any) error {
+	if s == nil {
+		return nil
+	}
+	return settings.SetJson(s.Key+key, val)
+}
 
 func (s *Settings) String(key string) (string, error) {
 	if s == nil {
@@ -102,6 +102,6 @@ func (s *Settings) Bool(key string) (bool, error) {
 	return settings.Bool(s.Key + key)
 }
 
-// func (s *Settings) Json(key string, res any) error {
-// 	return settings.Json(s.Key+key, &res)
-// }
+func (s *Settings) Json(key string, res any) error {
+	return settings.Json(s.Key+key, &res)
+}

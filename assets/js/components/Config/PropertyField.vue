@@ -1,5 +1,5 @@
 <template>
-	<div v-if="unit" class="input-group" :class="short ? 'w-50' : ''">
+	<div v-if="unitValue" class="input-group" :class="sizeClass">
 		<input
 			:id="id"
 			v-model="value"
@@ -9,8 +9,9 @@
 			:required="required"
 			:aria-describedby="id + '_unit'"
 			class="form-control"
+			:class="{ 'text-end': endAlign }"
 		/>
-		<span :id="id + '_unit'" class="input-group-text">{{ unit }}</span>
+		<span :id="id + '_unit'" class="input-group-text">{{ unitValue }}</span>
 	</div>
 	<div v-else-if="icons" class="d-flex flex-wrap">
 		<div
@@ -41,17 +42,21 @@
 			<a :id="id" class="text-muted" href="#" @click.prevent="toggleSelectMode">change</a>
 		</div>
 	</div>
-	<select v-else-if="select" :id="id" v-model="value" class="form-select">
+	<select v-else-if="select" :id="id" v-model="value" class="form-select" :class="sizeClass">
 		<option v-if="!required" value="">---</option>
-		<option v-for="{ key, name } in selectOptions" :key="key" :value="key">
-			{{ name }}
-		</option>
+		<template v-for="({ key, name }, idx) in selectOptions">
+			<option v-if="key !== null && name !== null" :key="key" :value="key">
+				{{ name }}
+			</option>
+			<hr v-else :key="idx" />
+		</template>
 	</select>
 	<textarea
 		v-else-if="textarea"
 		:id="id"
 		v-model="value"
 		class="form-control"
+		:class="sizeClass"
 		:type="inputType"
 		:placeholder="placeholder"
 		:required="required"
@@ -62,7 +67,7 @@
 		:id="id"
 		v-model="value"
 		class="form-control"
-		:class="short ? 'w-50' : ''"
+		:class="sizeClass"
 		:type="inputType"
 		:step="step"
 		:placeholder="placeholder"
@@ -82,6 +87,9 @@ export default {
 		masked: Boolean,
 		placeholder: String,
 		type: String,
+		unit: String,
+		size: String,
+		scale: Number,
 		required: Boolean,
 		validValues: { type: Array, default: () => [] },
 		modelValue: [String, Number, Boolean, Object],
@@ -95,21 +103,33 @@ export default {
 			if (this.masked) {
 				return "password";
 			}
-			if (["Number", "Float"].includes(this.type)) {
+			if (["Number", "Float", "Duration"].includes(this.type)) {
 				return "number";
 			}
 			return "text";
 		},
-		short() {
+		sizeClass() {
+			if (this.size) {
+				return this.size;
+			}
+			if (["Number", "Float", "Duration"].includes(this.type)) {
+				return "w-50 w-min-200";
+			}
+			return "";
+		},
+		endAlign() {
 			return ["Number", "Float", "Duration"].includes(this.type);
 		},
 		step() {
-			if (this.type === "Float") {
+			if (this.type === "Float" || this.type === "Duration") {
 				return "any";
 			}
 			return null;
 		},
-		unit() {
+		unitValue() {
+			if (this.unit) {
+				return this.unit;
+			}
 			if (this.property === "capacity") {
 				return "kWh";
 			}
@@ -126,7 +146,7 @@ export default {
 		},
 		selectOptions() {
 			// If the valid values are already in the correct format, return them
-			if (this.validValues[0].key && this.validValues[0].name) {
+			if (typeof this.validValues[0] === "object") {
 				return this.validValues;
 			}
 
@@ -138,10 +158,25 @@ export default {
 		},
 		value: {
 			get() {
+				// use first option if no value is set
+				if (this.selectOptions.length > 0 && !this.modelValue) {
+					return this.selectOptions[0].key;
+				}
+
+				if (this.scale) {
+					return this.modelValue * this.scale;
+				}
+
 				return this.modelValue;
 			},
 			set(value) {
-				this.$emit("update:modelValue", value);
+				let newValue = value;
+
+				if (this.scale) {
+					newValue = value / this.scale;
+				}
+
+				this.$emit("update:modelValue", newValue);
 			},
 		},
 	},
@@ -163,5 +198,14 @@ input[type="number"]::-webkit-outer-spin-button,
 input[type="number"]::-webkit-inner-spin-button {
 	-webkit-appearance: none;
 	margin: 0;
+}
+.w-min-100 {
+	min-width: min(100px, 100%);
+}
+.w-min-150 {
+	min-width: min(150px, 100%);
+}
+.w-min-200 {
+	min-width: min(200px, 100%);
 }
 </style>

@@ -26,6 +26,11 @@ never = "only with enough surplus"
 titleAdd = "Add Battery Meter"
 titleEdit = "Edit Battery Meter"
 
+[config.charger]
+template = "Manufacturer"
+titleAdd = "Add Charger"
+titleEdit = "Edit Charger"
+
 [config.circuits]
 description = "Ensures, that the sum of all loadpoints connected to a circuit does not exceed the configured power and current limits. Circuits can be nested to build a hierarchy."
 title = "Load Management"
@@ -74,6 +79,14 @@ topic = "Topic"
 url = "URL"
 yes = "yes"
 
+[config.deviceValueChargeStatus]
+A = "A (not connected)"
+B = "B (connected)"
+C = "C (charging)"
+D = "D (charging with ventilation)"
+E = "E (no power)"
+F = "F (error)"
+
 [config.eebus]
 description = "Configuration that enables evcc to communicate with other EEBus devices."
 title = "EEBus"
@@ -84,6 +97,7 @@ optional = "optional"
 
 [config.general]
 cancel = "Cancel"
+delete = "Delete"
 docsLink = "See documentation."
 experimental = "Experimental"
 off = "off"
@@ -93,6 +107,7 @@ remove = "Remove"
 save = "Save"
 telemetry = "Telemetry"
 title = "Title"
+validateSave = "Validate & save"
 
 [config.grid]
 title = "Grid meter"
@@ -116,6 +131,13 @@ labelUser = "Username"
 title = "InfluxDB"
 v1Support = "Need support for InfluxDB 1.x?"
 v2Support = "Back to InfluxDB 2.x"
+
+[config.loadpoint]
+cancel = "Cancel"
+delete = "Delete"
+save = "Save"
+titleAdd = "Add Charge Point"
+titleEdit = "Edit Charge Point"
 
 [config.main]
 addLoadpoint = "Add charge point"
