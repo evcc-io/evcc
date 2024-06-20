@@ -97,10 +97,8 @@ func NewEm2Go(uri string, slaveID uint8) (api.Charger, error) {
 		conn: conn,
 	}
 
-	_, v2, v3, err := wb.Voltages()
-
 	var phases1p3p func(int) error
-	if v2 != 0 && v3 != 0 {
+	if _, err := wb.conn.ReadHoldingRegisters(em2GoRegPhases, 1); err == nil {
 		phases1p3p = wb.phases1p3p
 	}
 
