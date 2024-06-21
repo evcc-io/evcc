@@ -64,12 +64,13 @@
 				>
 					<div class="d-flex justify-content-between align-items-end mb-4">
 						<h3 class="m-0">In</h3>
-						<span class="fw-bold">
+						<span v-if="pvPossible" class="fw-bold">
 							<AnimatedNumber :to="inPower" :format="kw" />
 						</span>
 					</div>
 					<div>
 						<EnergyflowEntry
+							v-if="pvPossible"
 							:name="$t('main.energyflow.pvProduction')"
 							icon="sun"
 							:power="pvProduction"
@@ -106,12 +107,13 @@
 				>
 					<div class="d-flex justify-content-between align-items-end mb-4">
 						<h3 class="m-0">Out</h3>
-						<span class="fw-bold">
+						<span v-if="pvPossible" class="fw-bold">
 							<AnimatedNumber :to="outPower" :format="kw" />
 						</span>
 					</div>
 					<div>
 						<EnergyflowEntry
+							v-if="pvPossible"
 							:name="$t('main.energyflow.homePower')"
 							icon="home"
 							:power="homePower"
@@ -153,6 +155,7 @@
 							@details-clicked="openBatterySettingsModal"
 						/>
 						<EnergyflowEntry
+							v-if="pvPossible"
 							:name="$t('main.energyflow.pvExport')"
 							icon="powersupply"
 							:power="pvExport"
@@ -292,6 +295,9 @@ export default {
 		},
 		co2Available() {
 			return this.smartCostType === CO2_TYPE;
+		},
+		pvPossible() {
+			return this.pvConfigured || this.gridConfigured;
 		},
 	},
 	mounted() {

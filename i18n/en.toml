@@ -450,6 +450,7 @@ minpv = "Min+Solar"
 now = "Fast"
 off = "Off"
 pv = "Solar"
+smart = "Smart"
 
 [main.provider]
 login = "log in"

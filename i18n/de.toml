@@ -451,6 +451,7 @@ minpv = "Min+PV"
 now = "Schnell"
 off = "Aus"
 pv = "PV"
+smart = "Smart"
 
 [main.provider]
 login = "anmelden"
