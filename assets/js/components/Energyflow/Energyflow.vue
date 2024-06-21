@@ -76,6 +76,7 @@
 							:power="pvProduction"
 							:powerTooltip="pvTooltip"
 							:powerInKw="powerInKw"
+							data-testid="energyflow-entry-production"
 						/>
 						<EnergyflowEntry
 							v-if="batteryConfigured"
@@ -121,6 +122,7 @@
 							:details="detailsValue(tariffPriceHome, tariffCo2Home)"
 							:detailsFmt="detailsFmt"
 							:detailsTooltip="detailsTooltip(tariffPriceHome, tariffCo2Home)"
+							data-testid="energyflow-entry-home"
 						/>
 						<EnergyflowEntry
 							:name="
@@ -141,6 +143,7 @@
 							:detailsTooltip="
 								detailsTooltip(tariffPriceLoadpoints, tariffCo2Loadpoints)
 							"
+							data-testid="energyflow-entry-loadpoints"
 						/>
 						<EnergyflowEntry
 							v-if="batteryConfigured"
@@ -163,6 +166,7 @@
 							:details="detailsValue(-tariffFeedIn)"
 							:detailsFmt="detailsFmt"
 							:detailsTooltip="detailsTooltip(-tariffFeedIn)"
+							data-testid="energyflow-entry-gridexport"
 						/>
 					</div>
 				</div>

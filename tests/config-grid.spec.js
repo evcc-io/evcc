@@ -29,6 +29,14 @@ async function enableExperimental(page) {
   await page.getByRole("button", { name: "Close" }).click();
 }
 
+test.describe("main screen", async () => {
+  test("modes", async ({ page }) => {
+    await page.goto("/");
+    await expect(page.getByRole("button", { name: "Off" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Fast" })).toBeVisible();
+  });
+});
+
 test.describe("grid meter", async () => {
   test("create, edit and remove grid meter", async ({ page }) => {
     // setup test data for mock openems api

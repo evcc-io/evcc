@@ -1,5 +1,5 @@
 <template>
-	<div class="mode-group border d-inline-flex" role="group">
+	<div class="mode-group border d-inline-flex" role="group" data-testid="mode">
 		<button
 			v-for="m in modes"
 			:key="m"
