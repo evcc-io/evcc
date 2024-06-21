@@ -12,7 +12,7 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 1081 # or 1000
+      address: 1000
       type: holding
       decode: uint16
   enabled:
