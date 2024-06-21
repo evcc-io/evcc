@@ -19,6 +19,12 @@ func (site *Site) GetBatteryMode() api.BatteryMode {
 	return site.batteryMode
 }
 
+// setBatteryMode sets the battery mode
+func (site *Site) setBatteryMode(batMode api.BatteryMode) {
+	site.batteryMode = batMode
+	site.publish(keys.BatteryMode, batMode)
+}
+
 // SetBatteryMode sets the battery mode
 func (site *Site) SetBatteryMode(batMode api.BatteryMode) {
 	site.Lock()
@@ -27,11 +33,12 @@ func (site *Site) SetBatteryMode(batMode api.BatteryMode) {
 	site.log.DEBUG.Println("set battery mode:", batMode)
 
 	if site.batteryMode != batMode {
-		site.batteryMode = batMode
-		site.publish(keys.BatteryMode, batMode)
+		site.setBatteryMode(batMode)
 	}
 }
 
+// applyBatteryMode applies the mode to each battery and updates
+// internal state if successful (requires lock)
 func (site *Site) applyBatteryMode(mode api.BatteryMode) error {
 	// update batteries
 	for _, meter := range site.batteryMeters {
@@ -43,7 +50,7 @@ func (site *Site) applyBatteryMode(mode api.BatteryMode) error {
 	}
 
 	// update state and publish
-	site.SetBatteryMode(mode)
+	site.setBatteryMode(mode)
 
 	return nil
 }
@@ -89,8 +96,10 @@ func (site *Site) updateBatteryMode() {
 	}
 
 	if batMode := site.GetBatteryMode(); mode != batMode {
+		site.Lock()
 		if err := site.applyBatteryMode(mode); err != nil {
 			site.log.ERROR.Println("battery mode:", err)
 		}
+		site.Unlock()
 	}
 }

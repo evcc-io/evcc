@@ -327,14 +327,14 @@ func (site *Site) GetTariff(tariff string) api.Tariff {
 	}
 }
 
-// GetBatteryControl returns the battery control mode
+// GetBatteryDischargeControl returns the battery control mode (no discharge only)
 func (site *Site) GetBatteryDischargeControl() bool {
 	site.RLock()
 	defer site.RUnlock()
 	return site.batteryDischargeControl
 }
 
-// SetBatteryControl sets the battery control mode
+// SetBatteryDischargeControl sets the battery control mode (no discharge only)
 func (site *Site) SetBatteryDischargeControl(val bool) error {
 	site.log.DEBUG.Println("set battery discharge control:", val)
 

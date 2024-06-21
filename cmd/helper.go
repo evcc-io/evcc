@@ -75,23 +75,25 @@ func shutdownDoneC() <-chan struct{} {
 	return doneC
 }
 
-func wrapError(err error) error {
-	if err != nil {
-		var opErr *net.OpError
-		var pathErr *os.PathError
+func wrapFatalError(err error) error {
+	if err == nil {
+		return nil
+	}
 
-		switch {
-		case errors.As(err, &opErr):
-			if opErr.Op == "listen" && strings.Contains(opErr.Error(), "address already in use") {
-				err = fmt.Errorf("could not open port- check that evcc is not already running (%w)", err)
-			}
+	var opErr *net.OpError
+	var pathErr *os.PathError
 
-		case errors.As(err, &pathErr):
-			if pathErr.Op == "remove" && strings.Contains(pathErr.Error(), "operation not permitted") {
-				err = fmt.Errorf("could not remove file- check that evcc is not already running (%w)", err)
-			}
+	switch {
+	case errors.As(err, &opErr):
+		if opErr.Op == "listen" && strings.Contains(opErr.Error(), "address already in use") {
+			err = fmt.Errorf("could not open port- check that evcc is not already running (%w)", err)
+		}
+
+	case errors.As(err, &pathErr):
+		if pathErr.Op == "remove" && strings.Contains(pathErr.Error(), "operation not permitted") {
+			err = fmt.Errorf("could not remove file- check that evcc is not already running (%w)", err)
 		}
 	}
 
-	return err
+	return &FatalError{err}
 }
