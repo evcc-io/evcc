@@ -6,6 +6,12 @@ products:
   - brand: Eastron
     description:
       generic: SDM72DM-V2
+  - brand: Weidmüller
+    description:
+      generic: EM120-RTU-2P
+  - brand: Weidmüller
+    description:
+      generic: EM122-RTU-2P
 params:
   - name: usage
     choice: ["grid", "charge"]

@@ -1,4 +1,4 @@
-package skoda
+package myskoda
 
 import (
 	"time"
@@ -12,7 +12,9 @@ type Provider struct {
 	statusG   func() (StatusResponse, error)
 	chargerG  func() (ChargerResponse, error)
 	settingsG func() (SettingsResponse, error)
+	climateG  func() (ClimaterResponse, error)
 	action    func(action, value string) error
+	wakeup    func() error
 }
 
 // NewProvider creates a vehicle api provider
@@ -24,14 +26,17 @@ func NewProvider(api *API, vin string, cache time.Duration) *Provider {
 		chargerG: provider.Cached(func() (ChargerResponse, error) {
 			return api.Charger(vin)
 		}, cache),
-		// climateG: provider.Cached(func() (interface{}, error) {
-		// 	return api.Climater(vin)
-		// }, cache),
+		climateG: provider.Cached(func() (ClimaterResponse, error) {
+			return api.Climater(vin)
+		}, cache),
 		settingsG: provider.Cached(func() (SettingsResponse, error) {
 			return api.Settings(vin)
 		}, cache),
 		action: func(action, value string) error {
 			return api.Action(vin, action, value)
+		},
+		wakeup: func() error {
+			return api.WakeUp(vin)
 		},
 	}
 	return impl
@@ -43,7 +48,7 @@ var _ api.Battery = (*Provider)(nil)
 func (v *Provider) Soc() (float64, error) {
 	res, err := v.chargerG()
 	if err == nil {
-		return float64(res.Battery.StateOfChargeInPercent), nil
+		return float64(res.Status.Battery.StateOfChargeInPercent), nil
 	}
 
 	return 0, err
@@ -55,12 +60,16 @@ var _ api.ChargeState = (*Provider)(nil)
 func (v *Provider) Status() (api.ChargeStatus, error) {
 	status := api.StatusA // disconnected
 
-	res, err := v.chargerG()
+	res, err := v.climateG()
 	if err == nil {
-		if res.Plug.ConnectionState == "Connected" {
+		if res.ChargerConnectionState == "CONNECTED" {
 			status = api.StatusB
 		}
-		if res.Charging.State == "Charging" {
+	}
+
+	resChrg, err := v.chargerG()
+	if err == nil {
+		if resChrg.Status.State == "CHARGING" {
 			status = api.StatusC
 		}
 	}
@@ -74,14 +83,14 @@ var _ api.VehicleFinishTimer = (*Provider)(nil)
 func (v *Provider) FinishTime() (time.Time, error) {
 	res, err := v.chargerG()
 	if err == nil {
-		crg := res.Charging
+		crg := res.Status
 
 		// estimate not available
-		if crg.State == "Error" || crg.ChargingType == "Invalid" {
+		if crg.State == "Error" || crg.ChargeType == "Invalid" {
 			return time.Time{}, api.ErrNotAvailable
 		}
 
-		remaining := time.Duration(crg.RemainingToCompleteInSeconds) * time.Second
+		remaining := time.Duration(crg.RemainingTimeToFullyChargedInMinutes) * time.Minute
 		return time.Now().Add(remaining), err
 	}
 
@@ -93,7 +102,7 @@ var _ api.VehicleRange = (*Provider)(nil)
 // Range implements the api.VehicleRange interface
 func (v *Provider) Range() (rng int64, err error) {
 	res, err := v.chargerG()
-	return res.Battery.CruisingRangeElectricInMeters / 1e3, err
+	return res.Status.Battery.RemainingCruisingRangeInMeters / 1e3, err
 }
 
 var _ api.VehicleOdometer = (*Provider)(nil)
@@ -101,7 +110,7 @@ var _ api.VehicleOdometer = (*Provider)(nil)
 // Odometer implements the api.VehicleOdometer interface
 func (v *Provider) Odometer() (odo float64, err error) {
 	res, err := v.statusG()
-	return res.Remote.MileageInKm, err
+	return res.MileageInKm, err
 }
 
 // var _ api.VehicleClimater = (*Provider)(nil)
@@ -129,9 +138,9 @@ var _ api.SocLimiter = (*Provider)(nil)
 
 // GetLimitSoc implements the api.SocLimiter interface
 func (v *Provider) GetLimitSoc() (int64, error) {
-	res, err := v.settingsG()
+	res, err := v.chargerG()
 	if err == nil {
-		return int64(res.TargetStateOfChargeInPercent), nil
+		return int64(res.Settings.TargetStateOfChargeInPercent), nil
 	}
 
 	return 0, err
@@ -143,4 +152,11 @@ var _ api.ChargeController = (*Provider)(nil)
 func (v *Provider) ChargeEnable(enable bool) error {
 	action := map[bool]string{true: ActionChargeStart, false: ActionChargeStop}
 	return v.action(ActionCharge, action[enable])
+}
+
+var _ api.Resurrector = (*Provider)(nil)
+
+// WakeUp implements the api.Resurrector interface
+func (v *Provider) WakeUp() error {
+	return v.wakeup()
 }

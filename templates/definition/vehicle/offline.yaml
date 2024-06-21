@@ -15,16 +15,7 @@ params:
 render: |
   type: custom
   features: ["offline"]
-  {{- if .title }}
-  title: {{ .title }}
-  {{- end }}
-  {{- if .icon }}
-  icon: {{ .icon }}
-  {{- end }}
-  capacity: {{ .capacity }} # kWh
-  {{- if .phases }}
-  phases: {{ .phases }}
-  {{- end }}
+  {{- include "vehicle-common" . }}
   soc:
     source: const
     value: 0

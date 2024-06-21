@@ -4,7 +4,7 @@ import (
 	"net/url"
 
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/vehicle/skoda/tokenrefreshservice"
+	"github.com/evcc-io/evcc/vehicle/skoda/myskoda/tokenrefreshservice"
 	"github.com/evcc-io/evcc/vehicle/vag"
 	"github.com/evcc-io/evcc/vehicle/vag/vwidentity"
 )

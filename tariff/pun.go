@@ -21,10 +21,8 @@ import (
 
 type Pun struct {
 	*embed
-	log     *util.Logger
-	charges float32
-	tax     float32
-	data    *util.Monitor[api.Rates]
+	log  *util.Logger
+	data *util.Monitor[api.Rates]
 }
 
 type NewDataSet struct {
@@ -51,23 +49,16 @@ func init() {
 }
 
 func NewPunFromConfig(other map[string]interface{}) (api.Tariff, error) {
-	cc := struct {
-		Charges float32
-		Tax     float32
-	}{
-		Charges: 0.0,
-		Tax:     0.0,
-	}
+	var cc embed
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
 	t := &Pun{
-		log:     util.NewLogger("pun"),
-		charges: cc.Charges,
-		tax:     cc.Tax,
-		data:    util.NewMonitor[api.Rates](2 * time.Hour),
+		log:   util.NewLogger("pun"),
+		embed: &cc,
+		data:  util.NewMonitor[api.Rates](2 * time.Hour),
 	}
 
 	done := make(chan error)
@@ -217,7 +208,7 @@ func (t *Pun) getData(day time.Time) (api.Rates, error) {
 		ar := api.Rate{
 			Start: start,
 			End:   end,
-			Price: (price/1000.0 + float64(t.charges)) * (1 + float64(t.tax)),
+			Price: t.totalPrice(price / 1e3),
 		}
 		data = append(data, ar)
 	}

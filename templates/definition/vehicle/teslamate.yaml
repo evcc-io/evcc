@@ -23,18 +23,7 @@ params:
   - preset: vehicle-identify
 render: |
   type: custom
-  {{- if .title }}
-  title: {{ .title }}
-  {{- end }}
-  {{- if .icon }}
-  icon: {{ .icon }}
-  {{- end }}
-  {{- if .capacity }}
-  capacity: {{ .capacity }}
-  {{- end }}
-  {{- if .phases }}
-  phases: {{ .phases }}
-  {{- end }}
+  {{- include "vehicle-common" . }}
   {{- include "vehicle-identify" . }}
   soc:
     source: mqtt

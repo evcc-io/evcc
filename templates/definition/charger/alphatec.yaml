@@ -6,6 +6,9 @@ products:
   - brand: Alphatec
     description:
       generic: Ladesäule Twin
+  - brand: LRT
+    description:
+      generic: HOME Essential+
 requirements:
   description:
     de: Die Hauptplatine benötigt eine aktuelle Firmware. Eine aktuelle Softwareversion kann man daran erkennen, dass die Seriennummer auf dem braunen Relais mit 2022 beginnt oder auf den kleinen weißen Relais eine 15 steht. Andernfalls bitte direkt an den Hersteller wenden.

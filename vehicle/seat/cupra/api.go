@@ -43,7 +43,7 @@ func (v *API) Vehicles(userID string) ([]Vehicle, error) {
 		Vehicles []Vehicle
 	}
 
-	uri := fmt.Sprintf("%s/v1/users/%s/garage/vehicles", BaseURL, userID)
+	uri := fmt.Sprintf("%s/v2/users/%s/garage/vehicles", BaseURL, userID)
 	err := v.GetJSON(uri, &res)
 
 	return res.Vehicles, err

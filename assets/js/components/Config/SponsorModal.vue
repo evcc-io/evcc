@@ -32,7 +32,7 @@
 					id="sponsorToken"
 					:label="sponsorTokenLabel"
 					:help="
-						$t('config.sponsor.descriptionToken', { url: 'https://sponsor.evcc.io' })
+						$t('config.sponsor.descriptionToken', { url: 'https://sponsor.evcc.io/' })
 					"
 					docs-link="/docs/sponsorship"
 					class="mt-4"

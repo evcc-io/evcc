@@ -83,7 +83,7 @@ render: |
       address: 0x020D # Battery Charge/Discharge power
       type: holding
       decode: int16
-    scale: 10
+    scale: -10
   soc:
     source: modbus
     {{- include "modbus" . | indent 2 }}

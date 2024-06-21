@@ -52,7 +52,8 @@ func runToken(cmd *cobra.Command, args []string) {
 	var token *oauth2.Token
 	var err error
 
-	if strings.ToLower(vehicleConf.Type) == "template" {
+	isTemplate := strings.ToLower(vehicleConf.Type) == "template"
+	if isTemplate {
 		instance, err := templates.RenderInstance(templates.Vehicle, vehicleConf.Other)
 		if err != nil {
 			log.FATAL.Fatalf("rendering template failed: %v", err)
@@ -84,8 +85,16 @@ func runToken(cmd *cobra.Command, args []string) {
 	fmt.Println()
 	fmt.Println("Add the following tokens to the vehicle config:")
 	fmt.Println()
-	fmt.Println("    type: " + typ)
-	fmt.Println("    tokens:")
-	fmt.Println("      access:", token.AccessToken)
-	fmt.Println("      refresh:", token.RefreshToken)
+
+	if isTemplate {
+		fmt.Println("    type: template")
+		fmt.Println("    template:", typ)
+		fmt.Println("    accesstoken:", token.AccessToken)
+		fmt.Println("    refreshtoken:", token.RefreshToken)
+	} else {
+		fmt.Println("    type:", typ)
+		fmt.Println("    tokens:")
+		fmt.Println("      access:", token.AccessToken)
+		fmt.Println("      refresh:", token.RefreshToken)
+	}
 }

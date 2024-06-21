@@ -38,6 +38,11 @@ type Config struct {
 	}
 }
 
+// Configured returns true if the EEbus server is configured
+func (c Config) Configured() bool {
+	return len(c.Certificate.Public) > 0 && len(c.Certificate.Private) > 0
+}
+
 type EEBusClientCBs struct {
 	onConnect    func(string) // , ship.Conn) error
 	onDisconnect func(string)
