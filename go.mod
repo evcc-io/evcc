@@ -61,7 +61,7 @@ require (
 	github.com/libp2p/zeroconf/v2 v2.2.0
 	github.com/lorenzodonini/ocpp-go v0.18.0
 	github.com/lunixbochs/struc v0.0.0-20200707160740-784aaebc1d40
-	github.com/mabunixda/wattpilot v1.7.3-0.20240613171533-f23a1467f10a
+	github.com/mabunixda/wattpilot v1.7.3-0.20240614060857-3090aa56f4d7
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mlnoga/rct v0.1.2-0.20240421173556-1c5b75037e2f
 	github.com/muka/go-bluetooth v0.0.0-20240115085408-dfdf79b8f61d

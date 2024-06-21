@@ -72,18 +72,29 @@ func (c *Wattpilot) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (c *Wattpilot) Enabled() (bool, error) {
+
+	if resp, err := c.api.GetProperty("trx"); err != nil || resp == nil {
+		return false, nil
+	}
+
 	resp, err := c.api.GetProperty("alw")
 	if err != nil {
 		return false, err
 	}
+
 	return resp.(bool), nil
 }
 
 // Enable implements the api.Charger interface
 func (c *Wattpilot) Enable(enable bool) error {
+
 	forceState := 0 // neutral; 2 = on
 	if !enable {
 		forceState = 1 // off
+	}
+
+	if resp, err := c.api.GetProperty("trx"); err != nil || resp == nil {
+		c.api.SetProperty("trx", 0)
 	}
 
 	return c.api.SetProperty("frc", forceState)
