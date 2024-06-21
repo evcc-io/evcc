@@ -25,7 +25,7 @@ render: |
   maxcurrent:
     source: go
     script: |
-      238 * maxcurrent
+      230 * maxcurrent
     out:
       - name: power
         type: int
