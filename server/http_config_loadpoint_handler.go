@@ -6,18 +6,34 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/site"
+	"github.com/evcc-io/evcc/util"
 )
+
+type loadpointStaticConfig struct {
+	// static config
+	Charger        *string `json:"charger,omitempty"`
+	Meter          *string `json:"meter,omitempty"`
+	Circuit        *string `json:"circuit,omitempty"`
+	DefaultVehicle *string `json:"defaultVehicle,omitempty"`
+	Title          string  `json:"title"`
+}
+
+func getLoadpointStaticConfig(lp loadpoint.API) loadpointStaticConfig {
+	return loadpointStaticConfig{
+		Charger:        util.PtrTo(lp.GetChargerName()),
+		Meter:          util.PtrTo(lp.GetMeterName()),
+		Circuit:        util.PtrTo(lp.GetCircuitName()),
+		DefaultVehicle: util.PtrTo(lp.GetDefaultVehicle()),
+		Title:          lp.GetTitle(),
+	}
+}
 
 type loadpointStruct struct {
 	ID   int    `json:"id,omitempty"` // db row id
 	Name string `json:"name"`         // either slice index (yaml) or db:<row id>
 
 	// static config
-	Charger        string `json:"charger"`
-	Meter          string `json:"meter"`
-	Circuit        string `json:"circuit"`
-	DefaultVehicle string `json:"defaultVehicle"`
-	Title          string `json:"title"`
+	loadpointStaticConfig
 
 	// dynamic config
 	Mode           string  `json:"mode"`
@@ -34,12 +50,10 @@ type loadpointStruct struct {
 // loadpointConfig returns a single loadpoint's configuration
 func loadpointConfig(id int, lp loadpoint.API) loadpointStruct {
 	res := loadpointStruct{
-		ID:             id,
-		Charger:        lp.GetChargerName(),
-		Meter:          lp.GetMeterName(),
-		Circuit:        lp.GetCircuitName(),
-		DefaultVehicle: lp.GetDefaultVehicle(),
-		Title:          lp.GetTitle(),
+		ID: id,
+
+		loadpointStaticConfig: getLoadpointStaticConfig(lp),
+
 		Mode:           string(lp.GetMode()),
 		Priority:       lp.GetPriority(),
 		Phases:         lp.GetPhases(),
@@ -84,14 +98,15 @@ func newLoadpointHandler() http.HandlerFunc {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
-		http.Error(w, "Not implemented", http.StatusNotImplemented)
+
+		http.Error(w, http.StatusText(http.StatusNotImplemented), http.StatusNotImplemented)
 	}
 }
 
 // deleteLoadpointHandler deletes a loadpoint
 func deleteLoadpointHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		http.Error(w, "Not implemented", http.StatusNotImplemented)
+		http.Error(w, http.StatusText(http.StatusNotImplemented), http.StatusNotImplemented)
 	}
 }
 
@@ -105,7 +120,7 @@ func updateLoadpointHandler(lp loadpoint.API) http.HandlerFunc {
 			return
 		}
 
-		// TODO: handle charger, meter, defaultVehicle
+		// TODO: handle charger, meter, circuit, defaultVehicle, title
 
 		var err error
 		if err == nil {
