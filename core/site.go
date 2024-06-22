@@ -564,21 +564,21 @@ func (site *Site) updateGridMeter() error {
 		return fmt.Errorf("grid meter: %v", err)
 	}
 
-	// grid phase powers
-	var p1, p2, p3 float64
-	if phaseMeter, ok := site.gridMeter.(api.PhasePowers); ok {
-		var err error // phases needed for signed currents
-		if p1, p2, p3, err = phaseMeter.Powers(); err == nil {
-			phases := []float64{p1, p2, p3}
-			site.log.DEBUG.Printf("grid powers: %.0fW", phases)
-			site.publish(keys.GridPowers, phases)
-		} else {
-			site.log.ERROR.Printf("grid powers: %v", err)
-		}
-	}
-
 	// grid phase currents (signed)
 	if phaseMeter, ok := site.gridMeter.(api.PhaseCurrents); ok {
+		// grid phase powers
+		var p1, p2, p3 float64
+		if phaseMeter, ok := site.gridMeter.(api.PhasePowers); ok {
+			var err error // phases needed for signed currents
+			if p1, p2, p3, err = phaseMeter.Powers(); err == nil {
+				phases := []float64{p1, p2, p3}
+				site.log.DEBUG.Printf("grid powers: %.0fW", phases)
+				site.publish(keys.GridPowers, phases)
+			} else {
+				site.log.ERROR.Printf("grid powers: %v", err)
+			}
+		}
+
 		if i1, i2, i3, err := phaseMeter.Currents(); err == nil {
 			phases := []float64{util.SignFromPower(i1, p1), util.SignFromPower(i2, p2), util.SignFromPower(i3, p3)}
 			site.log.DEBUG.Printf("grid currents: %.3gA", phases)
