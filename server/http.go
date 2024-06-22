@@ -3,7 +3,6 @@ package server
 import (
 	"fmt"
 	"net/http"
-	"strconv"
 	"time"
 
 	eapi "github.com/evcc-io/evcc/api"
@@ -154,21 +153,8 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, valueChan chan<- util.Param)
 	}
 
 	// loadpoint api
-	// TODO move to `api/config` router for auth and consistency
+	// TODO any loadpoint
 	for id, lp := range site.Loadpoints() {
-		// TODO any loadpoint
-		for _, r := range map[string]route{
-			"loadpoints":      {"GET", "/config/loadpoints", loadpointsConfigHandler(site)},
-			"loadpoint":       {"GET", "/config/loadpoints/" + strconv.Itoa(id), loadpointConfigHandler(id, lp)},
-			"updateloadpoint": {"PUT", "/config/loadpoints/" + strconv.Itoa(id), updateLoadpointHandler(lp)},
-			// TODO implement
-			"deleteloadpoint": {"DELETE", "/config/loadpoints/" + strconv.Itoa(id), deleteLoadpointHandler()},
-			// TODO implement
-			"newloadpoint": {"POST", "/config/loadpoints", newLoadpointHandler()},
-		} {
-			api.Methods(r.Methods()...).Path(r.Pattern).Handler(r.HandlerFunc)
-		}
-
 		api := api.PathPrefix(fmt.Sprintf("/loadpoints/%d", id+1)).Subrouter()
 
 		routes := map[string]route{
@@ -285,6 +271,17 @@ func (s *HTTPd) RegisterSystemHandler(valueChan chan<- util.Param, cache *util.C
 		}
 
 		for _, r := range routes {
+			api.Methods(r.Methods()...).Path(r.Pattern).Handler(r.HandlerFunc)
+		}
+
+		// loadpoints
+		for _, r := range map[string]route{
+			"loadpoints":      {"GET", "/loadpoints", loadpointsConfigHandler()},
+			"loadpoint":       {"GET", "/loadpoints/{id:[0-9.]+}", loadpointConfigHandler()},
+			"updateloadpoint": {"PUT", "/loadpoints/{id:[0-9.]+}", updateLoadpointHandler()},
+			"deleteloadpoint": {"DELETE", "/loadpoints/{id:[0-9.]+}", deleteLoadpointHandler()},
+			"newloadpoint":    {"POST", "/loadpoints", newLoadpointHandler()},
+		} {
 			api.Methods(r.Methods()...).Path(r.Pattern).Handler(r.HandlerFunc)
 		}
 	}
