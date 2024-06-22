@@ -28,7 +28,7 @@ func getLoadpointStaticConfig(lp loadpoint.API) loadpointStaticConfig {
 	}
 }
 
-type loadpointStruct struct {
+type loadpointFullConfig struct {
 	ID   int    `json:"id,omitempty"` // db row id
 	Name string `json:"name"`         // either slice index (yaml) or db:<row id>
 
@@ -48,8 +48,8 @@ type loadpointStruct struct {
 }
 
 // loadpointConfig returns a single loadpoint's configuration
-func loadpointConfig(id int, lp loadpoint.API) loadpointStruct {
-	res := loadpointStruct{
+func loadpointConfig(id int, lp loadpoint.API) loadpointFullConfig {
+	res := loadpointFullConfig{
 		ID: id,
 
 		loadpointStaticConfig: getLoadpointStaticConfig(lp),
@@ -70,7 +70,7 @@ func loadpointConfig(id int, lp loadpoint.API) loadpointStruct {
 // loadpointsConfigHandler returns a device configurations by class
 func loadpointsConfigHandler(site site.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var res []loadpointStruct
+		var res []loadpointFullConfig
 
 		for id, lp := range site.Loadpoints() {
 			res = append(res, loadpointConfig(id, lp))
@@ -92,7 +92,7 @@ func loadpointConfigHandler(id int, lp loadpoint.API) http.HandlerFunc {
 // newLoadpointHandler creates a new loadpoint
 func newLoadpointHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var payload loadpointStruct
+		var payload loadpointFullConfig
 
 		if err := jsonDecoder(r.Body).Decode(&payload); err != nil {
 			jsonError(w, http.StatusBadRequest, err)
@@ -113,7 +113,7 @@ func deleteLoadpointHandler() http.HandlerFunc {
 // updateLoadpointHandler returns a device configurations by class
 func updateLoadpointHandler(lp loadpoint.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var payload loadpointStruct
+		var payload loadpointFullConfig
 
 		if err := jsonDecoder(r.Body).Decode(&payload); err != nil {
 			jsonError(w, http.StatusBadRequest, err)
