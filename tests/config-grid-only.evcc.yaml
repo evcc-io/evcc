@@ -1,5 +1,15 @@
 site:
   title: Hello World
+  meters:
+    grid: grid
+
+meters:
+  - name: grid
+    type: custom
+    power:
+      source: js
+      script: |
+        1000
 
 loadpoints:
   - title: Carport

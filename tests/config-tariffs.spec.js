@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, restart, baseUrl } from "./evcc";
 
-const CONFIG_EMPTY = "config-empty.evcc.yaml";
+const CONFIG_GRID_ONLY = "config-grid-only.evcc.yaml";
 const CONFIG_WITH_TARIFFS = "config-with-tariffs.evcc.yaml";
 
 test.use({ baseURL: baseUrl() });
@@ -34,7 +34,7 @@ async function goToConfig(page) {
 
 test.describe("tariffs", async () => {
   test("tariffs not configured", async ({ page }) => {
-    await start(CONFIG_EMPTY, "password.sql");
+    await start(CONFIG_GRID_ONLY, "password.sql");
     await goToConfig(page);
 
     await expect(page.getByTestId("tariffs")).toBeVisible();
@@ -44,7 +44,7 @@ test.describe("tariffs", async () => {
   });
 
   test("tariffs via ui", async ({ page }) => {
-    await start(CONFIG_EMPTY, "password.sql");
+    await start(CONFIG_GRID_ONLY, "password.sql");
     await goToConfig(page);
 
     await page.getByTestId("tariffs").getByRole("button", { name: "edit" }).click();
@@ -85,7 +85,7 @@ test.describe("tariffs", async () => {
       .getByRole("button", { name: "Restart" });
     await expect(restartButton).toBeVisible();
 
-    await restart(CONFIG_EMPTY);
+    await restart(CONFIG_GRID_ONLY);
 
     // restart done
     await expect(restartButton).not.toBeVisible();

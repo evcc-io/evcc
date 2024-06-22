@@ -64,17 +64,19 @@
 				>
 					<div class="d-flex justify-content-between align-items-end mb-4">
 						<h3 class="m-0">In</h3>
-						<span class="fw-bold">
+						<span v-if="pvPossible" class="fw-bold">
 							<AnimatedNumber :to="inPower" :format="kw" />
 						</span>
 					</div>
 					<div>
 						<EnergyflowEntry
+							v-if="pvPossible"
 							:name="$t('main.energyflow.pvProduction')"
 							icon="sun"
 							:power="pvProduction"
 							:powerTooltip="pvTooltip"
 							:powerInKw="powerInKw"
+							data-testid="energyflow-entry-production"
 						/>
 						<EnergyflowEntry
 							v-if="batteryConfigured"
@@ -106,12 +108,13 @@
 				>
 					<div class="d-flex justify-content-between align-items-end mb-4">
 						<h3 class="m-0">Out</h3>
-						<span class="fw-bold">
+						<span v-if="pvPossible" class="fw-bold">
 							<AnimatedNumber :to="outPower" :format="kw" />
 						</span>
 					</div>
 					<div>
 						<EnergyflowEntry
+							v-if="pvPossible"
 							:name="$t('main.energyflow.homePower')"
 							icon="home"
 							:power="homePower"
@@ -119,6 +122,7 @@
 							:details="detailsValue(tariffPriceHome, tariffCo2Home)"
 							:detailsFmt="detailsFmt"
 							:detailsTooltip="detailsTooltip(tariffPriceHome, tariffCo2Home)"
+							data-testid="energyflow-entry-home"
 						/>
 						<EnergyflowEntry
 							:name="
@@ -139,6 +143,7 @@
 							:detailsTooltip="
 								detailsTooltip(tariffPriceLoadpoints, tariffCo2Loadpoints)
 							"
+							data-testid="energyflow-entry-loadpoints"
 						/>
 						<EnergyflowEntry
 							v-if="batteryConfigured"
@@ -153,6 +158,7 @@
 							@details-clicked="openBatterySettingsModal"
 						/>
 						<EnergyflowEntry
+							v-if="pvPossible"
 							:name="$t('main.energyflow.pvExport')"
 							icon="powersupply"
 							:power="pvExport"
@@ -160,6 +166,7 @@
 							:details="detailsValue(-tariffFeedIn)"
 							:detailsFmt="detailsFmt"
 							:detailsTooltip="detailsTooltip(-tariffFeedIn)"
+							data-testid="energyflow-entry-gridexport"
 						/>
 					</div>
 				</div>
@@ -292,6 +299,9 @@ export default {
 		},
 		co2Available() {
 			return this.smartCostType === CO2_TYPE;
+		},
+		pvPossible() {
+			return this.pvConfigured || this.gridConfigured;
 		},
 	},
 	mounted() {
