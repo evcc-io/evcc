@@ -27,9 +27,11 @@ type API interface {
 	//
 
 	// GetCharger returns the loadpoint charger
-	GetCharger() string
+	GetChargerName() string
 	// GetMeter returns the loadpoint meter
-	GetMeter() string
+	GetMeterName() string
+	// GetCircuit returns the loadpoint circuit
+	GetCircuitName() string
 	// GetDefaultVehicle returns the loadpoint default vehicle
 	GetDefaultVehicle() string
 

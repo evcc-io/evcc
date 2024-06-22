@@ -14,13 +14,18 @@ import (
 var _ loadpoint.API = (*Loadpoint)(nil)
 
 // GetCharger returns the loadpoint charger
-func (lp *Loadpoint) GetCharger() string {
+func (lp *Loadpoint) GetChargerName() string {
 	return lp.ChargerRef
 }
 
 // GetMeter returns the loadpoint meter
-func (lp *Loadpoint) GetMeter() string {
+func (lp *Loadpoint) GetMeterName() string {
 	return lp.MeterRef
+}
+
+// GetCircuitName returns the loadpoint circuit
+func (lp *Loadpoint) GetCircuitName() string {
+	return lp.CircuitRef
 }
 
 // GetDefaultVehicle returns the loadpoint default vehicle

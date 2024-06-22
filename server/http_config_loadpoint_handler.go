@@ -9,11 +9,17 @@ import (
 )
 
 type loadpointStruct struct {
-	ID             int     `json:"id"`
-	Charger        string  `json:"charger"`
-	Meter          string  `json:"meter"`
-	DefaultVehicle string  `json:"defaultVehicle"`
-	Title          string  `json:"title"`
+	ID   int    `json:"id,omitempty"` // db row id
+	Name string `json:"name"`         // either slice index (yaml) or db:<row id>
+
+	// static config
+	Charger        string `json:"charger"`
+	Meter          string `json:"meter"`
+	Circuit        string `json:"circuit"`
+	DefaultVehicle string `json:"defaultVehicle"`
+	Title          string `json:"title"`
+
+	// dynamic config
 	Mode           string  `json:"mode"`
 	Priority       int     `json:"priority"`
 	Phases         int     `json:"phases"`
@@ -29,8 +35,9 @@ type loadpointStruct struct {
 func loadpointConfig(id int, lp loadpoint.API) loadpointStruct {
 	res := loadpointStruct{
 		ID:             id,
-		Charger:        lp.GetCharger(),
-		Meter:          lp.GetMeter(),
+		Charger:        lp.GetChargerName(),
+		Meter:          lp.GetMeterName(),
+		Circuit:        lp.GetCircuitName(),
 		DefaultVehicle: lp.GetDefaultVehicle(),
 		Title:          lp.GetTitle(),
 		Mode:           string(lp.GetMode()),
@@ -101,10 +108,6 @@ func updateLoadpointHandler(lp loadpoint.API) http.HandlerFunc {
 		// TODO: handle charger, meter, defaultVehicle
 
 		var err error
-		if err == nil {
-			lp.SetTitle(payload.Title)
-		}
-
 		if err == nil {
 			lp.SetPriority(payload.Priority)
 		}
