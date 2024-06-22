@@ -61,7 +61,7 @@ func getLoadpointDynamicConfig(lp loadpoint.API) loadpointDynamicConfig {
 	}
 }
 
-func loadpointUpdateDynamicConfig(lp loadpoint.API, payload loadpointDynamicConfig) error {
+func loadpointUpdateDynamicConfig(payload loadpointDynamicConfig, lp loadpoint.API) error {
 	lp.SetPriority(payload.Priority)
 	lp.SetSmartCostLimit(payload.SmartCostLimit)
 	lp.SetThresholds(payload.Thresholds)
@@ -195,7 +195,7 @@ func newLoadpointHandler() http.HandlerFunc {
 			return
 		}
 
-		if err := loadpointUpdateDynamicConfig(instance, dynamic); err != nil {
+		if err := loadpointUpdateDynamicConfig(dynamic, instance); err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 		}
 
@@ -258,7 +258,7 @@ func updateLoadpointHandler() http.HandlerFunc {
 		}
 
 		// dynamic
-		if err := loadpointUpdateDynamicConfig(instance, dynamic); err != nil {
+		if err := loadpointUpdateDynamicConfig(dynamic, instance); err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
