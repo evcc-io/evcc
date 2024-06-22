@@ -120,7 +120,7 @@ func TestEnergyMetrics(t *testing.T) {
 		s := NewEnergyMetrics()
 
 		for _, tc := range tc.steps {
-			s.SetEnvironment(tc.greenShare, tc.effPrice, tc.effCo2)
+			s.SetEnvironment(tc.greenShare, tc.effPrice, nil, tc.effCo2, nil)
 			s.Update(tc.kWh)
 		}
 
