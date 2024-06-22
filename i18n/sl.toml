@@ -28,14 +28,42 @@ never = "le z dovolj presežka"
 titleAdd = "Dodaj merilnik baterije"
 titleEdit = "Uredi merilnik baterije"
 
+[config.circuits]
+description = "Zagotavlja, da vsota vseh obremenitvenih točk, povezanih z vezjem, ne preseže konfiguriranih omejitev moči in toka. Vezja je mogoče ugnezditi za izgradnjo hierarhije."
+title = "Upravljanje obremenitve"
+
+[config.control]
+description = "Običajno so privzete vrednosti v redu. Spremenite jih le, če veste, kaj počnete."
+descriptionInterval = "Cikel posodabljanja krmilne zanke v sekundah. Določa, kako pogosto evcc bere podatke števca, prilagodi moč polnjenja in posodobi uporabniški vmesnik. Kratki intervali (< 30 s) lahko povzročijo nihanje in neželeno vedenje."
+descriptionMaxGridSupply = "Ustrezno samo za hibridne pretvornike, ki ne morejo oddajati celotne električne energije enosmernega toka v dom prek izmeničnega toka. Ta scenarij lahko povzroči neželeno uporabo omrežja, saj evcc predvideva, da je na voljo polna enosmerna moč. Uporabite vrednost najmanj 50 W da bi to preprečili."
+descriptionResidualPower = "Prestavi točko delovanja krmilne zanke. Če imate domačo baterijo, je priporočljivo, da nastavite vrednost 100 W. Na ta način bo baterija imela rahlo prednost pred uporabo omrežja."
+labelInterval = "Interval posodabljanja"
+labelMaxGridSupply = "Največja napetost omrežja med polnjenjem"
+labelResidualPower = "Preostala moč"
+title = "Nadzor vedenja"
+
 [config.deviceValue]
+broker = "Broker"
+bucket = "Bucket"
 capacity = "Kapaciteta"
 chargeStatus = "Status"
+chargeStatusA = "brez povezave"
+chargeStatusB = "povezan"
+chargeStatusC = "polnjenje"
+chargeStatusE = "brez moči"
+chargeStatusF = "napaka"
 chargedEnergy = "Napolnjeno"
+co2 = "CO₂ iz omrežja"
+configured = "Konfigurirano"
+currency = "Valuta"
 current = "Tok"
 enabled = "Omogočeno"
 energy = "Energija"
+feedinPrice = "Cena prejete energije iz omrežja"
+gridPrice = "Cena omrežja"
+no = "ne"
 odometer = "Število kilometrov"
+org = "Organizacija"
 phaseCurrents = "Tok L1..L3"
 phasePowers = "Moč L1..L3"
 phaseVoltages = "Napetost L1..L3"
@@ -43,6 +71,14 @@ power = "Moč"
 range = "Doseg"
 soc = "SoC"
 socLimit = "Omejitev"
+temp = "Temperatura"
+topic = "Topic"
+url = "URL"
+yes = "da"
+
+[config.eebus]
+description = "Konfiguracija, ki evcc omogoča komunikacijo z drugimi napravami EEBus."
+title = "EEBus"
 
 [config.form]
 example = "Primer"
@@ -50,21 +86,53 @@ optional = "neobvezno"
 
 [config.general]
 cancel = "Prekliči"
+docsLink = "Oglejte si dokumentacijo."
+experimental = "Eksperimentalno"
+off = "izklopljen"
+on = "vklopljen"
+password = "Geslo"
+remove = "Odstrani"
 save = "Shrani"
+telemetry = "Telemetrija"
+title = "Naslov"
 
 [config.grid]
+title = "Omrežni meter"
 titleAdd = "Dodaj števec električnega omrežja"
 titleEdit = "Uredi števec električnega omrežja"
+
+[config.hems]
+description = "Povežite evcc z drugim sistemom za upravljanje z energijo doma."
+title = "HEMS"
+
+[config.influx]
+description = "Zapisuje podatke o polnjenju in druge meritve v InfluxDB. Za vizualizacijo podatkov uporabite Grafano ali druga orodja."
+descriptionToken = "Preverite dokumentacijo InfluxDB, če želite izvedeti, kako ga ustvariti. https://docs.influxdata.com/influxdb/v2/admin/"
+labelBucket = "Bucket"
+labelDatabase = "Baza podatkov"
+labelOrg = "Organization"
+labelPassword = "Geslo"
+labelToken = "API Žeton"
+labelUrl = "URL"
+labelUser = "Uporabniško ime"
+title = "InfluxDB"
+v1Support = "Potrebujete podporo za InfluxDB 1.x?"
+v2Support = "Nazaj na InfluxDB 2.x"
 
 [config.main]
 addLoadpoint = "Dodaj polnilno mesto"
 addPvBattery = "Dodaj sončne celice ali baterijo"
 addVehicle = "Dodaj vozilo"
+configured = "konfigurirano"
 edit = "uredi"
 title = "Konfiguracija"
 unconfigured = "ni konfigurirano"
 vehicles = "Moja vozila"
 yaml = "Konfigurirano v evcc.yaml. Ni mogoče urejati v uporabniškem vmesniku."
+
+[config.messaging]
+description = "Prejemanje sporočil o vaših sejah polnjenja."
+title = "Obvestila"
 
 [config.meter]
 cancel = "Prekliči"
@@ -73,6 +141,9 @@ save = "Shrani"
 template = "Proizvajalec"
 titleChoice = "Kaj želite dodati?"
 validateSave = "Preveri in shrani"
+
+[config.modbusproxy]
+description = "Dovoli več odjemalcem dostop do ene naprave Modbus."
 
 [config.options]
 
@@ -174,6 +245,7 @@ total = "ves čas"
 
 [footer.sponsor]
 becomeSponsor = "Postanite sponzor"
+becomeSponsorExtended = "Podprite nas direktno in pridobite nalepke."
 confetti = "Ste pripravljeni na konfete?"
 confettiPromise = "Prejmete nalepke in digitalne konfete"
 sticker = "… ali nalepke evcc?"
@@ -181,6 +253,10 @@ supportUs = "Naše poslanstvo je, da sončna energija postane norma. Pomagajte e
 thanks = "Hvala, {sponsor}! Vaš prispevek pomaga pri nadaljnjem razvoju evcc."
 titleNoSponsor = "Podprite nas"
 titleSponsor = "Ste podpornik"
+titleTrial = "Preizkusni način"
+titleVictron = "Sponzorirano s strani Victron Energy"
+trial = "Ste v preskusnem načinu in lahko uporabljate vse funkcije. Razmislite o podpori projekta."
+victron = "Uporabljate evcc na strojni opremi Victron Energy in imate dostop do vseh funkcij."
 
 [footer.telemetry]
 optIn = "Želim prispevati svoje podatke."
@@ -246,6 +322,8 @@ update = "Samodejno posodabljanje"
 [loginModal]
 cancel = "Prekliči"
 error = "Prijava ni uspela: "
+iframeHint = "Odpri evcc v novem zavihku."
+iframeIssue = "Vaše geslo je pravilno, vendar se zdi, da je vaš brskalnik izpustil piškotek za preverjanje pristnosti. To se lahko zgodi, če zaženete evcc v iframe prek HTTP."
 invalid = "Geslo ni veljavno."
 login = "Prijava"
 password = "Geslo"
@@ -425,6 +503,7 @@ scale3p = "Povečanje na 3-fazno napajanje čez {remaining}..."
 targetChargeActive = "Ciljno polnjenje je aktivno..."
 targetChargePlanned = "Ciljno polnjenje se začne ob {time}."
 targetChargeWaitForVehicle = "Ciljno polnjenje je pripravljeno. Čakam na vozilo ..."
+unknown = ""
 vehicleLimitReached = "Omejitev vozila {soc} dosežena."
 waitForVehicle = "Pripravljen. Čakam na vozilo..."
 
@@ -527,7 +606,7 @@ auto = "Samodejno"
 label = "Jezik"
 
 [settings.sponsorToken]
-expires = "Sponzorskemu žetonu poteče veljavnost čez {inXDays}. {getNewToken} in posodobite svojo konfiguracijsko datoteko."
+expires = "Sponzorskemu žetonu poteče veljavnost čez {inXDays}. {getNewToken} in ga posodobite tukaj."
 getNew = "Zgrabi svežega"
 hint = "Opomba: To bomo v prihodnosti avtomatizirali."
 

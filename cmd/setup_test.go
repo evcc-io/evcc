@@ -5,13 +5,13 @@ import (
 	"testing"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/globalconfig"
 	"github.com/evcc-io/evcc/core"
 	"github.com/evcc-io/evcc/util"
-	"github.com/spf13/viper"
 )
 
 func TestYamlOff(t *testing.T) {
-	var conf globalConfig
+	var conf globalconfig.All
 	viper.SetConfigType("yaml")
 	if err := viper.ReadConfig(strings.NewReader(`loadpoints:
 - mode: off

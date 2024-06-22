@@ -59,7 +59,7 @@ var registry providerRegistry = make(map[string]func(map[string]interface{}) (Pr
 // Config is the general provider config
 type Config struct {
 	Source string
-	Other  map[string]interface{} `mapstructure:",remain"`
+	Other  map[string]any `mapstructure:",remain" yaml:",inline"`
 }
 
 // NewIntGetterFromConfig creates a IntGetter from config

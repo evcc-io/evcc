@@ -13,7 +13,7 @@ legendTitle = "Як використовувати сонячну енергію
 legendTopAutostart = "запускається автоматично"
 legendTopName = "заряджання з підтримкою батареї"
 legendTopSubline = "без перебоїв"
-modalTitle = "Налаштування батареї"
+modalTitle = "Домашня батарея"
 
 [batterySettings.bufferStart]
 above = "коли вище {soc}"
@@ -35,11 +35,13 @@ chargedEnergy = "Заряджений"
 current = "Cтрум"
 enabled = "Ввімкнено"
 energy = "Енергія"
+odometer = "Одометр"
 phaseCurrents = "Cтрум L1..L3"
 phasePowers = "Потужність L1..L3"
 phaseVoltages = "Напруга L1..L3"
 power = "Потужність"
 range = "Дальність"
+soc = "SoC"
 socLimit = "Ліміт"
 
 [config.form]
@@ -47,6 +49,8 @@ example = "Наприклад"
 optional = "необов'язково"
 
 [config.general]
+cancel = "Скасувати"
+save = "зберегти"
 
 [config.grid]
 titleAdd = "Додати лічильник електромережі"
@@ -54,6 +58,7 @@ titleEdit = "Редагувати лічильник електромережі"
 
 [config.main]
 addLoadpoint = "Додати точку зарядки"
+addPvBattery = "Додати сонячну або батарею"
 addVehicle = "Додати транспорт"
 edit = "редагувати"
 title = "Конфігурація"
@@ -67,12 +72,17 @@ delete = "Видалити"
 save = "Зберегти"
 template = "Виробник"
 titleChoice = "Що ви хочете додати?"
+validateSave = "Перевірте та збережіть"
 
 [config.options]
 
 [config.options.endianness]
+big = "великий байт"
+little = "маленький байт"
 
 [config.options.schema]
+http = "HTTP (незашифрований)"
+https = "HTTPS (зашифрований)"
 
 [config.pv]
 titleAdd = "Додати сонячний лічильник"

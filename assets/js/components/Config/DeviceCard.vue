@@ -1,21 +1,12 @@
 <template>
-	<li class="root py-2 px-4">
+	<li class="root round-box" :class="{ 'round-box--error': error }">
 		<div class="d-flex align-items-center mb-2">
 			<div class="icon me-2">
 				<slot name="icon" />
 			</div>
 			<strong class="flex-grow-1 text-nowrap text-truncate">{{ name }}</strong>
 			<button
-				v-if="unconfigured"
-				type="button"
-				class="btn btn-sm btn-outline-secondary position-relative border-0 p-2"
-				:title="$t('config.main.new')"
-				@click="$emit('configure')"
-			>
-				<shopicon-regular-adjust size="s"></shopicon-regular-adjust>
-			</button>
-			<button
-				v-else-if="editable"
+				v-if="editable"
 				type="button"
 				class="btn btn-sm btn-outline-secondary position-relative border-0 p-2"
 				:title="$t('config.main.edit')"
@@ -34,17 +25,14 @@
 				<shopicon-regular-adjust size="s"></shopicon-regular-adjust>
 			</button>
 		</div>
-		<div v-if="unconfigured" class="text-center py-3 evcc-gray">
-			{{ $t("config.main.unconfigured") }}
-		</div>
-		<slot v-else name="tags" />
+		<hr class="my-3 divide" />
+		<slot name="tags" />
 	</li>
 </template>
 
 <script>
 import "@h2d2/shopicons/es/regular/adjust";
 import "@h2d2/shopicons/es/regular/invoice";
-import "@h2d2/shopicons/es/regular/edit";
 import Tooltip from "bootstrap/js/dist/tooltip";
 
 export default {
@@ -52,22 +40,19 @@ export default {
 	props: {
 		name: String,
 		editable: Boolean,
-		unconfigured: Boolean,
+		error: Boolean,
 	},
 	data() {
 		return {
 			tooltip: null,
 		};
 	},
-	emits: ["edit", "configure"],
+	emits: ["edit"],
 	mounted() {
 		this.initTooltip();
 	},
 	watch: {
 		editable() {
-			this.initTooltip();
-		},
-		unconfigured() {
 			this.initTooltip();
 		},
 	},
@@ -88,18 +73,15 @@ export default {
 .root {
 	display: block;
 	list-style-type: none;
-	min-height: 9rem;
-	color: var(--evcc-default-text);
 	border-radius: 1rem;
-	border: 1px solid var(--evcc-gray-50);
-	padding: 1rem 1rem 0.5rem;
-	transition: border-color var(--evcc-transition-fast) linear;
-	background: var(--evcc-box);
-}
-.root:hover {
-	border-color: var(--evcc-gray);
+	padding: 1rem 1.5rem;
+	min-height: 8rem;
 }
 .icon:empty {
 	display: none;
+}
+.divide {
+	margin-left: -1.5rem;
+	margin-right: -1.5rem;
 }
 </style>

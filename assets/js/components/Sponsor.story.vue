@@ -14,7 +14,7 @@ import Sponsor from "./Sponsor.vue";
 			<Sponsor sponsor="naltatis" />
 		</Variant>
 		<Variant title="victron device">
-			<Sponsor sponsor="victron-device" />
+			<Sponsor sponsor="victron" />
 		</Variant>
 	</Story>
 </template>

@@ -21,7 +21,7 @@ async function login(page) {
 async function enableExperimental(page) {
   await page
     .getByTestId("generalconfig-experimental")
-    .getByRole("link", { name: "change" })
+    .getByRole("button", { name: "edit" })
     .click();
   await page.getByLabel("Experimental 🧪").click();
   await page.getByRole("button", { name: "Close" }).click();
