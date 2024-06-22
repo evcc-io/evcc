@@ -19,17 +19,8 @@ params:
   - preset: vehicle-identify
 render: |
   type: custom
+  {{- include "vehicle-common" . }}
   features: ["offline"]
-  {{- if .title }}
-  title: {{ .title }}
-  {{- end }}
-  {{- if .icon }}
-  icon: {{ .icon }}
-  {{- end }}
-  capacity: {{ .capacity }} # kWh
-  {{- if .phases }}
-  phases: {{ .phases }}
-  {{- end }}
   soc:
     source: const
     value: 0

@@ -111,8 +111,8 @@ func NewTronityFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 	vehicle, err := ensureVehicleEx(
 		cc.VIN, v.vehicles,
-		func(v tronity.Vehicle) string {
-			return v.VIN
+		func(v tronity.Vehicle) (string, error) {
+			return v.VIN, nil
 		},
 	)
 	if err != nil {

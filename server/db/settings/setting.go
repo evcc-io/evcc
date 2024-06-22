@@ -1,16 +1,22 @@
 package settings
 
 import (
+	"bytes"
 	"cmp"
 	"encoding/json"
 	"errors"
+	"io"
+	"reflect"
 	"slices"
 	"strconv"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
 
 	"github.com/evcc-io/evcc/server/db"
+	"github.com/evcc-io/evcc/util"
+	"gopkg.in/yaml.v3"
 )
 
 var ErrNotFound = errors.New("not found")
@@ -56,13 +62,34 @@ func All() []setting {
 	return res
 }
 
+func equal(key string) func(setting) bool {
+	return func(s setting) bool {
+		return s.Key == key
+	}
+}
+
+func Delete(key string) error {
+	mu.Lock()
+	defer mu.Unlock()
+
+	if idx := slices.IndexFunc(settings, equal(key)); idx >= 0 {
+		if err := db.Instance.Delete(setting{
+			Key: settings[idx].Key,
+		}).Error; err != nil {
+			return err
+		}
+
+		settings = slices.Delete(settings, idx, idx)
+	}
+
+	return nil
+}
+
 func SetString(key string, val string) {
 	mu.Lock()
 	defer mu.Unlock()
 
-	idx := slices.IndexFunc(settings, func(s setting) bool {
-		return s.Key == key
-	})
+	idx := slices.IndexFunc(settings, equal(key))
 
 	if idx < 0 {
 		settings = append(settings, setting{key, val})
@@ -97,13 +124,28 @@ func SetJson(key string, val any) error {
 	return err
 }
 
+func SetYaml(key string, val any) error {
+	var b bytes.Buffer
+	err := yaml.NewEncoder(&b).Encode(val)
+	if err == nil {
+		SetString(key, strings.TrimSpace(b.String()))
+	}
+	return err
+}
+
+func Exists(key string) bool {
+	mu.RLock()
+	defer mu.RUnlock()
+
+	s, err := String(key)
+	return err == nil && len(s) > 0
+}
+
 func String(key string) (string, error) {
 	mu.RLock()
 	defer mu.RUnlock()
 
-	idx := slices.IndexFunc(settings, func(s setting) bool {
-		return s.Key == key
-	})
+	idx := slices.IndexFunc(settings, equal(key))
 	if idx < 0 {
 		return "", ErrNotFound
 	}
@@ -144,10 +186,44 @@ func Bool(key string) (bool, error) {
 
 func Json(key string, res any) error {
 	s, err := String(key)
-	if err == nil {
-		err = json.Unmarshal([]byte(s), &res)
+	if err != nil {
+		return err
 	}
-	return err
+	if s == "" {
+		return ErrNotFound
+	}
+	return json.Unmarshal([]byte(s), &res)
+}
+
+func DecodeOtherSliceOrMap(other, res any) error {
+	var len int
+	if typ := reflect.TypeOf(other); typ.Kind() == reflect.Slice || typ.Kind() == reflect.Map {
+		len = reflect.ValueOf(other).Len()
+	} else {
+		panic("invalid kind: " + typ.Kind().String())
+	}
+
+	if len == 0 {
+		return nil
+	}
+
+	return util.DecodeOther(other, &res)
+}
+
+func Yaml(key string, other, res any) error {
+	s, err := String(key)
+	if err != nil {
+		return err
+	}
+	if s == "" {
+		return ErrNotFound
+	}
+
+	if err := yaml.NewDecoder(bytes.NewBuffer([]byte(s))).Decode(&other); err != nil && err != io.EOF {
+		return err
+	}
+
+	return DecodeOtherSliceOrMap(other, res)
 }
 
 // wrapping Settings into a struct for better decoupling

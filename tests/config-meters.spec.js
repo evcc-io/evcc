@@ -23,7 +23,7 @@ async function login(page) {
 async function enableExperimental(page) {
   await page
     .getByTestId("generalconfig-experimental")
-    .getByRole("link", { name: "change" })
+    .getByRole("button", { name: "edit" })
     .click();
   await page.getByLabel("Experimental 🧪").click();
   await page.getByRole("button", { name: "Close" }).click();
@@ -52,8 +52,8 @@ test.describe("meters", async () => {
     await meterModal.getByLabel("IP address or hostname").fill(simulatorHost());
     await expect(meterModal.getByRole("button", { name: "Validate & save" })).toBeVisible();
     await meterModal.getByRole("link", { name: "validate" }).click();
-    await expect(meterModal.getByText("SoC: 75.0%")).toBeVisible();
-    await expect(meterModal.getByText("Power: -2.5 kW")).toBeVisible();
+    await expect(meterModal.getByTestId("device-tag-soc")).toContainText("75.0%");
+    await expect(meterModal.getByTestId("device-tag-power")).toContainText("-2.5 kW");
     await meterModal.getByRole("button", { name: "Save" }).click();
     await expect(page.getByTestId("battery")).toBeVisible(1);
     await expect(page.getByTestId("battery")).toContainText("openems");
@@ -63,11 +63,12 @@ test.describe("meters", async () => {
     await meterModal.getByLabel("Battery capacity in kWh").fill("20");
     await meterModal.getByRole("button", { name: "Validate & save" }).click();
 
-    await expect(page.getByTestId("battery")).toBeVisible(1);
-    await expect(page.getByTestId("battery")).toContainText("openems");
-    await expect(page.getByTestId("battery").getByText("SoC: 75.0%")).toBeVisible();
-    await expect(page.getByTestId("battery").getByText("Power: -2.5 kW")).toBeVisible();
-    await expect(page.getByTestId("battery").getByText("Capacity: 20.0 kWh")).toBeVisible();
+    const battery = page.getByTestId("battery");
+    await expect(battery).toBeVisible(1);
+    await expect(battery).toContainText("openems");
+    await expect(battery.getByTestId("device-tag-soc")).toContainText("75.0%");
+    await expect(battery.getByTestId("device-tag-power")).toContainText("-2.5 kW");
+    await expect(battery.getByTestId("device-tag-capacity")).toContainText("20.0 kWh");
 
     // restart and check in main ui
     await restart(CONFIG_EMPTY);

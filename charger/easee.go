@@ -172,6 +172,9 @@ func NewEasee(user, password, charger string, timeout time.Duration, authorize b
 
 	client, err := signalr.NewClient(context.Background(),
 		signalr.WithConnector(c.connect(ts)),
+		signalr.WithBackoff(func() backoff.BackOff {
+			return backoff.NewExponentialBackOff(backoff.WithMaxElapsedTime(0)) // prevents SignalR stack to silently give up after 15 mins
+		}),
 		signalr.WithReceiver(c),
 		signalr.Logger(easee.SignalrLogger(c.log.TRACE), false),
 	)
@@ -227,9 +230,9 @@ func (c *Easee) connect(ts oauth2.TokenSource) func() (signalr.Connection, error
 
 		return signalr.NewHTTPConnection(ctx, "https://streams.easee.com/hubs/chargers",
 			signalr.WithHTTPClient(c.Client),
-			signalr.WithHTTPHeaders(func() (res http.Header) {
+			signalr.WithHTTPHeaders(func() http.Header {
 				return http.Header{
-					"Authorization": []string{fmt.Sprintf("Bearer %s", tok.AccessToken)},
+					"Authorization": []string{"Bearer " + tok.AccessToken},
 				}
 			}),
 		)

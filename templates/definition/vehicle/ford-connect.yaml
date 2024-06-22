@@ -1,0 +1,51 @@
+template: ford-connect
+products:
+  - brand: Ford
+params:
+  - name: title
+  - name: icon
+    default: car
+    advanced: true
+  - name: clientid
+    description:
+      generic: FordConnect API Client ID
+    help:
+      de: Einrichtung unter https://developer.ford.com
+      en: Setup at https://developer.ford.com
+    required: true
+  - name: clientsecret
+    description:
+      generic: FordConnect API Client Secret
+    help:
+      de: Einrichtung unter https://developer.ford.com
+      en: Setup at https://developer.ford.com
+    required: true
+  - name: accessToken
+    required: true
+    mask: true
+    help:
+      en: "See https://docs.evcc.io/en/docs/devices/vehicles#ford-connect"
+      de: "Siehe https://docs.evcc.io/docs/devices/vehicles#ford-connect"
+  - name: refreshToken
+    required: true
+    mask: true
+    help:
+      en: "See https://docs.evcc.io/en/docs/devices/vehicles#ford-connect"
+      de: "Siehe https://docs.evcc.io/docs/devices/vehicles#ford-connect"
+  - name: vin
+    example: WF0FXX...
+  - name: capacity
+    default: 10
+  - name: phases
+    advanced: true
+  - preset: vehicle-identify
+render: |
+  type: ford-connect
+  {{ include "vehicle-common" . }}
+  credentials:
+    id: {{ .clientid }}
+    secret: {{ .clientsecret }}
+  tokens:
+    access: {{ .accessToken }}
+    refresh: {{ .refreshToken }}
+  {{ include "vehicle-identify" . }}

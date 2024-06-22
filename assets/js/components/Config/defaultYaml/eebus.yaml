@@ -1,0 +1,12 @@
+# shipid: EVCC-1234567890abcdef
+# interfaces:
+#   - eth0
+# certificate:
+#   public: |
+#     -----BEGIN CERTIFICATE-----
+#     1234567890abcdef==
+#     -----END CERTIFICATE-----
+#   private: |
+#     -----BEGIN EC PRIVATE KEY-----
+#     1234567890abcdef
+#     -----END EC PRIVATE KEY-----

@@ -38,13 +38,10 @@ params:
   - preset: vehicle-identify
 render: |
   type: mercedes
-  title: {{ .title }}
-  icon: {{ .icon }}
+  {{ include "vehicle-common" . }}
   user: {{ .user }}
+  region: {{ .region }}
   tokens:
     access: {{ .accessToken }}
     refresh: {{ .refreshToken }}
-  capacity: {{ .capacity }}
-  phases: {{ .phases }}
-  vin: {{ .vin }}
   {{ include "vehicle-identify" . }}

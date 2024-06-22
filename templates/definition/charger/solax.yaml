@@ -9,7 +9,7 @@ products:
   - brand: Qcells
     description:
       generic: Q.HOME EDRIVE A
-capabilities: ["mA", "1p3p"]
+capabilities: ["mA"]
 requirements:
   evcc: ["sponsorship"]
   description:

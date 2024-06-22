@@ -2,6 +2,7 @@ package server
 
 import (
 	"errors"
+	"slices"
 	"sync"
 
 	"github.com/evcc-io/evcc/api"
@@ -133,7 +134,11 @@ func testInstance(instance any) map[string]testResult {
 
 	if dev, ok := instance.(api.Battery); ok {
 		val, err := dev.Soc()
-		res["soc"] = makeResult(val, err)
+		key := "soc"
+		if fd, ok := instance.(api.FeatureDescriber); ok && slices.Contains(fd.Features(), api.Heating) {
+			key = "temp"
+		}
+		res[key] = makeResult(val, err)
 	}
 
 	if dev, ok := instance.(api.VehicleOdometer); ok {

@@ -1,4 +1,5 @@
 template: ford
+deprecated: true
 products:
   - brand: Ford
 params:

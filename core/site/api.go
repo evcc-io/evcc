@@ -30,12 +30,14 @@ type API interface {
 	// battery
 	//
 
+	GetPrioritySoc() float64
+	SetPrioritySoc(float64) error
 	GetBufferSoc() float64
 	SetBufferSoc(float64) error
 	GetBufferStartSoc() float64
 	SetBufferStartSoc(float64) error
-	GetPrioritySoc() float64
-	SetPrioritySoc(float64) error
+	GetMaxGridSupplyWhileBatteryCharging() float64
+	SetMaxGridSupplyWhileBatteryCharging(float64) error
 
 	//
 	// power and energy

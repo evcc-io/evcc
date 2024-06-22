@@ -96,7 +96,7 @@ brews:
     commit_author:
       name: andig
       email: cpuidle@gmx.de
-    folder: Formula
+    directory: Formula
     homepage: "https://evcc.io"
     description: "Sonne tanken ☀️🚘"
     license: "MIT"

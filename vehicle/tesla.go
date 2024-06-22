@@ -86,8 +86,8 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 	vehicle, err := ensureVehicleEx(
 		cc.VIN, tc.Vehicles,
-		func(v *tesla.Vehicle) string {
-			return v.Vin
+		func(v *tesla.Vehicle) (string, error) {
+			return v.Vin, nil
 		},
 	)
 	if err != nil {
@@ -115,9 +115,7 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		Controller: tesla.NewController(vehicle, vehicle.WithClient(tcc)),
 	}
 
-	if v.Title_ == "" {
-		v.Title_ = vehicle.DisplayName
-	}
+	v.fromVehicle(vehicle.DisplayName, 0)
 
 	return v, nil
 }

@@ -5,14 +5,14 @@ import (
 )
 
 type Typed struct {
-	Type  string                 `json:"type"`
-	Other map[string]interface{} `mapstructure:",remain"`
+	Type  string         `json:"type"`
+	Other map[string]any `mapstructure:",remain" yaml:",inline"`
 }
 
 type Named struct {
-	Name  string                 `json:"name"`
-	Type  string                 `json:"type"`
-	Other map[string]interface{} `mapstructure:",remain"`
+	Name  string         `json:"name"`
+	Type  string         `json:"type"`
+	Other map[string]any `mapstructure:",remain" yaml:",inline"`
 }
 
 // Property returns the value of the named property

@@ -48,6 +48,8 @@ socLimit = "Strop"
 example = "Příklad"
 optional = "volitelné"
 
+[config.general]
+
 [config.grid]
 titleAdd = "Přidat měřič spotřeby ze sítě"
 titleEdit = "Editovat měřič spotřeby ze sítě"
@@ -70,13 +72,25 @@ template = "Výrobce"
 titleChoice = "Co chcete přidat?"
 validateSave = "Zkontrolovat a uložit"
 
+[config.options]
+
+[config.options.endianness]
+
+[config.options.schema]
+
 [config.pv]
 titleAdd = "Přidat měřič solární energie"
 titleEdit = "Editovat měřič solární energie"
 
+[config.section]
+
 [config.site]
 cancel = "Zrušit"
 save = "Uložit"
+
+[config.system]
+
+[config.title]
 
 [config.validation]
 failed = "selhalo"
@@ -197,6 +211,10 @@ confirm = "Ano, restartovat!"
 description = "Za normálních okolností by restartování nemělo být nutné. Pokud musíte pravidelně restartovat evcc, zvažte prosím nahlášení chyby."
 disclaimer = "Poznámka: evcc se ukončí a spoléhá na to, že operační systém restartuje službu."
 modalTitle = "Opravdu chcete restartovat?"
+
+[log]
+
+[loginModal]
 
 [main]
 vehicles = "Parkoviště"
@@ -369,7 +387,6 @@ scale3p = "Zvyšuji na třífázové nabíjení za {remaining}…"
 targetChargeActive = "Nabíjení na cílovou hodnotu aktivní..."
 targetChargePlanned = "Nabíjení na cílovou hodnotu začne v {time}."
 targetChargeWaitForVehicle = "Cílové nabíjení připraveno. Čekám na vozidlo..."
-unknown = ""
 vehicleLimitReached = "Limit vozidla {soc} dosažen."
 waitForVehicle = "Připraveno. Čekám na vozidlo..."
 
@@ -380,6 +397,8 @@ modalTitle = "Oznámení"
 [offline]
 message = "Nepřipojeno na server."
 reload = "Obnovit?"
+
+[passwordModal]
 
 [session]
 cancel = "Zrušit"
@@ -432,6 +451,8 @@ filter = "Filtr"
 
 [settings]
 title = "Základní nastavení"
+
+[settings.fullscreen]
 
 [settings.hiddenFeatures]
 label = "Experimentální"

@@ -13,7 +13,6 @@ import (
 	"github.com/korylprince/ipnetgen"
 	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 // detectCmd represents the vehicle command

@@ -1,3 +1,41 @@
+[batterySettings]
+
+[batterySettings.bufferStart]
+
+[config]
+
+[config.battery]
+
+[config.deviceValue]
+
+[config.form]
+
+[config.general]
+
+[config.grid]
+
+[config.main]
+
+[config.meter]
+
+[config.options]
+
+[config.options.endianness]
+
+[config.options.schema]
+
+[config.pv]
+
+[config.section]
+
+[config.system]
+
+[config.title]
+
+[config.validation]
+
+[config.vehicle]
+
 [footer]
 
 [footer.community]
@@ -27,6 +65,8 @@ savingsTitle = "Spueren"
 savingsTotalEnergy = "{total} kWh gelueden"
 since = "zënter {since}"
 tabTitle = "Meng Daten"
+
+[footer.savings.period]
 
 [footer.sponsor]
 becomeSponsor = "Gitt e Sponsor"
@@ -70,8 +110,18 @@ auto = "Design: System"
 dark = "Design: donkel"
 light = "Design: Liicht"
 
+[help]
+
+[help.restart]
+
+[log]
+
+[loginModal]
+
 [main]
 vehicles = "Parking"
+
+[main.chargingPlan]
 
 [main.energyflow]
 battery = "Batterie"
@@ -85,6 +135,8 @@ pvExport = "Stroumnetz Export"
 pvProduction = "Produktioun"
 selfConsumption = "eegene Konsum"
 
+[main.heatingStatus]
+
 [main.loadpoint]
 charged = "Belaascht"
 duration = "Dauer"
@@ -97,6 +149,8 @@ default = "Standard"
 disclaimerHint = "Notiz:"
 title = "Astellungen {0}"
 vehicle = "Gefier"
+
+[main.loadpointSettings.limitSoc]
 
 [main.loadpointSettings.maxCurrent]
 label = "Max. Stroum"
@@ -183,7 +237,6 @@ scale3p = "Erhéijung op dräi Phase am {remaining}…"
 targetChargeActive = "Zilladung aktiv ..."
 targetChargePlanned = "Zilladung fänkt um {time} un."
 targetChargeWaitForVehicle = "Ziel Charge prett. Waart op Gefier ..."
-unknown = ""
 vehicleLimitReached = "Gefier Limit {soc} erreecht."
 waitForVehicle = "Prett. Waart op Gefier ..."
 
@@ -194,6 +247,8 @@ modalTitle = "Notifikatiounen"
 [offline]
 message = "Keng Verbindung mam Server."
 reload = "Reload?"
+
+[passwordModal]
 
 [session]
 cancel = "Ofbriechen"
@@ -225,12 +280,20 @@ meterstop = "Meter Stop (kWh)"
 odometer = "Kilometerstand (km)"
 vehicle = "Gefier"
 
+[sessions.filter]
+
 [settings]
 title = "Astellungen"
+
+[settings.fullscreen]
+
+[settings.hiddenFeatures]
 
 [settings.language]
 auto = "Automatesch"
 label = "Sprooch"
+
+[settings.sponsorToken]
 
 [settings.telemetry]
 label = "Telemetrie"
@@ -245,6 +308,8 @@ light = "liicht"
 km = "km"
 label = "Eenheeten"
 mi = "Meilen"
+
+[smartCost]
 
 [startupError]
 configFile = "Konfiguratiounsdatei benotzt:"

@@ -24,7 +24,7 @@
 				v-bind="vehicleOptionsProps"
 				:id="id"
 				class="options"
-				:vehicles="otherVehicles"
+				:selected="vehicleName"
 				@change-vehicle="changeVehicle"
 				@remove-vehicle="removeVehicle"
 			>
@@ -103,9 +103,6 @@ export default {
 		},
 		vehicleKnown() {
 			return !!this.vehicleName;
-		},
-		otherVehicles() {
-			return this.vehicles.filter((v) => v.name !== this.vehicleName);
 		},
 		showOptions() {
 			return this.vehicleKnown || this.vehicles.length;
