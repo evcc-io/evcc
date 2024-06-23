@@ -27,6 +27,10 @@ func (h *msgHandler) hasValue() (string, error) {
 		return "", err
 	}
 
+	if err := knownErrors([]byte(payload)); err != nil {
+		return "", err
+	}
+
 	if h.pipeline != nil {
 		b, err := h.pipeline.Process([]byte(payload))
 		return string(b), err
