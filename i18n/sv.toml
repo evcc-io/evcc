@@ -396,6 +396,7 @@ minpv = "Min+Sol"
 now = "Snabbt"
 off = "Av"
 pv = "Sol"
+smart = "Smart"
 
 [main.provider]
 login = "logga in"
