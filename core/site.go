@@ -2,7 +2,6 @@ package core
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"math"
 	"strings"
@@ -213,11 +212,6 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 			return err
 		}
 		site.auxMeters = append(site.auxMeters, dev.Instance())
-	}
-
-	// configure meter from references
-	if site.gridMeter == nil && len(site.pvMeters) == 0 {
-		return errors.New("missing either grid or pv meter")
 	}
 
 	// revert battery mode on shutdown

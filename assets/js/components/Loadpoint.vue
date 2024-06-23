@@ -15,7 +15,7 @@
 				<LoadpointSettingsButton :id="id" class="d-block d-sm-none" />
 			</div>
 			<div class="mb-3 d-flex align-items-center">
-				<Mode class="flex-grow-1" :mode="mode" @updated="setTargetMode" />
+				<Mode class="flex-grow-1" v-bind="modeProps" @updated="setTargetMode" />
 				<LoadpointSettingsButton :id="id" class="d-none d-sm-block ms-2" />
 			</div>
 		</div>
@@ -98,6 +98,7 @@ import LoadpointSettingsButton from "./LoadpointSettingsButton.vue";
 import LoadpointSettingsModal from "./LoadpointSettingsModal.vue";
 import VehicleIcon from "./VehicleIcon";
 import LoadpointSessionInfo from "./LoadpointSessionInfo.vue";
+import smartCostAvailable from "../utils/smartCostAvailable";
 
 export default {
 	name: "Loadpoint",
@@ -189,6 +190,8 @@ export default {
 		tariffCo2: Number,
 		currency: String,
 		multipleLoadpoints: Boolean,
+		gridConfigured: Boolean,
+		pvConfigured: Boolean,
 	},
 	data() {
 		return {
@@ -217,6 +220,9 @@ export default {
 		},
 		phasesProps: function () {
 			return this.collectProps(Phases);
+		},
+		modeProps: function () {
+			return this.collectProps(Mode);
 		},
 		sessionInfoProps: function () {
 			return this.collectProps(LoadpointSessionInfo);
@@ -250,6 +256,12 @@ export default {
 		},
 		socBasedPlanning: function () {
 			return this.socBasedCharging && this.vehicle?.capacity > 0;
+		},
+		pvPossible: function () {
+			return this.pvConfigured || this.gridConfigured;
+		},
+		hasSmartCost: function () {
+			return smartCostAvailable(this.smartCostType);
 		},
 	},
 	watch: {

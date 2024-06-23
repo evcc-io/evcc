@@ -29,6 +29,8 @@
 				:tariffGrid="tariffGrid"
 				:tariffCo2="tariffCo2"
 				:currency="currency"
+				:gridConfigured="gridConfigured"
+				:pvConfigured="pvConfigured"
 			/>
 			<Footer v-bind="footer"></Footer>
 		</div>
