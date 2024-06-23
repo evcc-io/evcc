@@ -11,49 +11,132 @@ legendTitle = "Kuinka aurinkoenergiaa pitäisi käyttää?"
 legendTopAutostart = "alkaa automaattisesti"
 legendTopName = "akkutuettu lataus"
 legendTopSubline = "keskeytyksettä"
-modalTitle = "Akun asetukset"
+modalTitle = "Talon akusto"
+discharge = "Vältä purkamista nopeassa tilassa ja suunnitellussa latauksessa."
+control = "Akun hallinta"
 
 [batterySettings.bufferStart]
-full = "kun melkein täynnä"
+full = "kun {soc}"
 low = "jos jonkin verran täynnä"
 medium = "kun puolillaan"
 never = "ainoastaan kun riittävästi ylijäämää"
+above = "kun ylittää {soc}"
 
 [config]
 
 [config.battery]
+titleAdd = "Lisää akun mittari"
+titleEdit = "Muokkaa akun mittaria"
 
 [config.deviceValue]
+capacity = "Kapasiteetti"
+chargeStatus = "Tila"
+current = "Virta"
+odometer = "Matkamittari"
+chargedEnergy = "Ladattu"
+enabled = "Käytössä"
+power = "Teho"
+energy = "Energia"
+phaseCurrents = "Virta L1..L3"
+phaseVoltages = "Jännite L1..L3"
+phasePowers = "Teho L1..L3"
+broker = "Välittäjä"
+bucket = "Bucket"
+chargeStatusA = "ei yhdistetty"
+chargeStatusB = "yhdistetty"
+chargeStatusC = "lataa"
+chargeStatusE = "ei virtaa"
+chargeStatusF = "häiriö"
+co2 = "Verkon CO₂"
+configured = "Määritetty"
+currency = "Valuutta"
+feedinPrice = "Verkkoon myyntihinta"
+gridPrice = "Verkosta ostohinta"
+no = "ei"
+org = "Organisaatio"
+temp = "Lämpötila"
+topic = "Aihe"
+url = "URL"
+yes = "kyllä"
+range = "Toimintasäde"
+soc = "SoC"
+socLimit = "Raja"
 
 [config.form]
 example = "Esimerkiksi"
 optional = "valinnainen"
 
 [config.general]
+save = "Tallenna"
+cancel = "Peruuta"
+docsLink = "Katso dokumentaatio"
+experimental = "Kokeellinen"
+off = "pois"
+on = "päällä"
+password = "Salasana"
+remove = "Poista"
+telemetry = "Telemetria"
+title = "Otsikko"
 
 [config.grid]
+title = "Verkon mittari"
+titleAdd = "Lisää verkon mittari"
+titleEdit = "Muokkaa verkon mittaria"
 
 [config.main]
 addVehicle = "Lisää ajoneuvo"
 edit = "muokkaa"
 title = "Määritykset"
 vehicles = "Minun ajoneuvot"
+addLoadpoint = "Lisää latauspiste"
+unconfigured = "ei konfiguroitu"
+addPvBattery = "Lisää aurinkoinvertteri tai akku"
+yaml = "Määritetty tiedostossa evcc.yaml. Ei muokattavissa käyttöliittymässä."
+configured = "konfiguroitu"
 
 [config.meter]
+cancel = "Peruuta"
+delete = "Poista"
+template = "Valmistaja"
+titleChoice = "Mitä haluat lisätä?"
+validateSave = "Vahvista ja tallenna"
+save = "Tallenna"
 
 [config.options]
 
 [config.options.endianness]
+big = "big-endian"
+little = "little-endian"
 
 [config.options.schema]
+https = "HTTPS (salattu)"
+http = "HTTP (salaamaton)"
 
 [config.pv]
+titleAdd = "Lisää aurinkoenergiamittari"
+titleEdit = "Muokkaa aurinkoenergiamittaria"
 
 [config.section]
+system = "Järjestelmä"
+general = "Yleinen"
+grid = "Verkko"
+integrations = "Integraatiot"
+loadpoints = "Latauspisteet"
+meter = "Aurinko & Akku"
+vehicles = "Ajoneuvot"
 
 [config.system]
+logs = "Logi"
+restartingDescription = "Ole hyvä ja odota..."
+restart = "Käynnistä uudelleen""
+restartRequiredDescription = "Ole hyvä ja käynnistä uudelleen, jotta näet muutoksen"
+restartingMessage = "Käynnistetään uudelleen evcc."
+restartRequiredMessage = "Määritykset muutettu."
 
 [config.title]
+title = "Muokkaa otsikkoa"
+label = "Otsikko"
+description = "Näytetään pääikkunassa ja selaimen välilehdessä."
 
 [config.validation]
 failed = "epäonnistui"
@@ -65,7 +148,7 @@ validate = "vahvista"
 
 [config.vehicle]
 cancel = "Peruuta"
-delete = "Poista ajoneuvo"
+delete = "Poista"
 generic = "Muut integraatiot"
 offline = "Yleinen ajoneuvo"
 online = "Ajoneuvot, joissa API-käyttöliittymä"
@@ -123,10 +206,15 @@ becomeSponsor = "Ryhdy sponsoriksi"
 confetti = "Valmiina konfetteihin?"
 confettiPromise = "Saat tarroja ja myös digitaali konfetteja"
 sticker = "… vai evcc tarroja?"
-supportUs = "Missiomme on tehdä aurinkoenergiasta normi. Auta evcc:tä maksamalla sen verran minkä arvoinen se on sinulle."
+supportUs = "Missiomme on tehdä aurinkoenergialla lataamisesta normi. Auta evcc:tä maksamalla sen verran minkä arvoinen se on sinulle."
 thanks = "Kiitos, {sponsor}! Panoksesi auttaa kehittämään evcc:tä myös jatkossa."
 titleNoSponsor = "Tue meitä"
 titleSponsor = "Olet kannattaja"
+becomeSponsorExtended = "Tue meitä suoraan saadaksesi tarroja."
+titleTrial = "Kokeilu tila"
+titleVictron = "Sponsored by Victron Energy"
+trial = "Olet kokeilutilassa ja voit käyttää kaikkia ominaisuuksia. Harkitse projektin tukemista."
+victron = "Käytät evcc:tä Victron Energy -laitteistossa ja sinulla on pääsy kaikkiin ominaisuuksiin."
 
 [footer.telemetry]
 optIn = "Haluan jakaa tietojani"
@@ -155,6 +243,8 @@ login = "Ajoneuvon kirjautumiset"
 needHelp = "Tarvitsetko apua?"
 sessions = "Lataustapahtumat"
 settings = "Asetukset"
+logout = "Kirjaudu ulos"
+nativeSettings = "Vaihda palvelin"
 
 [help]
 discussionsButton = "GitHub keskustelut"
@@ -166,6 +256,8 @@ primaryActions = "Jokin ei toimi niin kuin sen pitäisi toimia? Nämä ovat hyvi
 restartButton = "Uudelleen käynnistä"
 restartDescription = "Yrititkö sammuttaa ja uudelleen käynnistää sen?"
 secondaryActions = "Etkö vieläkään pysty ratkaisemaan ongelmaasi? Tässä on joitain raskaampia vaihtoehtoja."
+logsDescription = "Tarkasta logi virheiden varalta"
+logsButton = "Näytä logit"
 
 [help.restart]
 cancel = "Peruuta"
@@ -175,8 +267,26 @@ disclaimer = "Huomaa: evcc lopettaa toimintansa ja käynnistää palvelun uudell
 modalTitle = "Oletko varma että haluat uudelleen käynnistää?"
 
 [log]
+update = "Päivitä automaattisesti"
+areaLabel = "Rajaa alueella"
+areas = "Kaikki alueet"
+search = "Etsi"
+levelLabel = "Rajaa logi tasolla"
+download = "Lataa täydellinen logi"
+showAll = "Näytä kaikki"
+title = "Logi"
+noResults = "Ei vastaavia lokimerkintöjä."
 
 [loginModal]
+error = "Kirjautuminen epäonnistui: "
+invalid = "Salasana ei kelpaa"
+iframeHint = "Avaa evcc uudessa välilehdessä."
+title = "Vahvistus"
+cancel = "Peruuta"
+iframeIssue = "Salasanasi on oikea, mutta selaimesi näyttää pudonneen todennusevästeen. Näin voi käydä, jos suoritat evcc:n iframe-kehyksessä HTTP:n kautta."
+login = "Kirjaudu"
+password = "Salasana"
+reset = "Määritä salasana uudelleen?
 
 [main]
 vehicles = "Pysäköinti"
@@ -189,6 +299,13 @@ none = "ei mitään"
 title = "Suunnitelma"
 titleMinSoc = "Minimi lataus"
 titleTargetCharge = "Lähtö"
+time = "Aika"
+goal = "Lataus tavoite"
+active = "Aktiivinen"
+remove = "Poista"
+unsavedChanges = "On tallentamattomia muutoksia. Asetetaanko nyt?"
+update = "Aseta"
+day = "Päivä"
 
 [main.energyflow]
 battery = "Akku"
@@ -202,8 +319,13 @@ noEnergy = "Ei mittarin tietoja"
 pvExport = "Verkkoon vienti"
 pvProduction = "Tuotanto"
 selfConsumption = "Tuotannon kulutus"
+batteryHold = "Akku (lukittu)"
 
 [main.heatingStatus]
+cheapEnergyCharging = "Lataa halvalla energialla: {price} (raja {limit})"
+cleanEnergyCharging = "Lämmitä puhtaalla energialla: {co2} (raja {limit})"
+waitForVehicle = "Valmiina. Odottaa lämmitintä..."
+charging = "Lämmitys..."
 
 [main.loadpoint]
 avgPrice = "⌀ Hinta"
@@ -214,6 +336,9 @@ fallbackName = "Latauspiste"
 power = "Teho"
 price = "Σ Hinta"
 solar = "Aurinkoenergia"
+remaining = "Jäljellä"
+remoteDisabledHard = "{source}: sammui"
+remoteDisabledSoft = "{source}: sammutti adaptiivisen aurinkolatauksen"
 
 [main.loadpointSettings]
 currents = "Latausvirta"
@@ -221,8 +346,13 @@ default = "oletus"
 disclaimerHint = "Huomautus:"
 title = "Asetukset {0}"
 vehicle = "Ajoneuvo"
+onlyForSocBasedCharging = "Nämä vaihtoehdot ovat saatavilla vain ajoneuvoille, joiden lataustaso on tiedossa."
+smartCostCheap = "Halpa verkkolataus"
+smartCostClean = "Hiilineutraali verkkolataus"
 
 [main.loadpointSettings.limitSoc]
+description = "Latausraja, jota käytetään, kun tämä ajoneuvo on kytketty."
+label = "Oletus raja"
 
 [main.loadpointSettings.maxCurrent]
 label = "Maksimivirta"
@@ -241,6 +371,7 @@ phases_1 = "1-vaihe"
 phases_1_hint = "({min} - {max})"
 phases_3 = "3-vaihe"
 phases_3_hint = "({min} - {max})"
+no1p3pSupport = "Kuinka laturisi on kytketty?"
 
 [main.mode]
 minpv = "Minimi+PV"
@@ -275,6 +406,12 @@ tomorrow = "huomenna"
 update = "Päivittää"
 vehicleCapacityDocs = "Opi kuinka voit muokata sitä."
 vehicleCapacityRequired = "Ajoneuvon akun kapasiteetti tarvitaan latausajan arviota varten."
+preview = "Esikatsele suunnitelmaa"
+remove = "Poista"
+targetIsAboveVehicleLimit = "Nosta ajoneuvon latausrajaa ({limit}) päästäksesi lataus tavoitteeseen."
+notReachableInTime = "Tavoite ei saavutettavissa ajoissa. Arvioitu lopetus: {endTime}."
+targetIsAboveLimit = "Asetettu latausraja {limit} ohitetaan tänä aikana."
+currentPlan = "Aktiivinen suunnitelma"
 
 [main.targetChargePlan]
 chargeDuration = "Latausaika"
@@ -299,6 +436,7 @@ temp = "Lämpötila."
 tempLimit = "Lämpötila raja-arvo"
 unknown = "Vieras ajoneuvo"
 vehicleSoc = "Lataus"
+notReachable = "Ajoneuvo ei ollut saatavilla. Kokeile käynnistää evcc uudelleen."
 
 [main.vehicleSoc]
 charging = "lataa"
@@ -319,21 +457,37 @@ pvDisable = "Ei tarpeeksi ylijäämää. Tauko {remaining}…"
 pvEnable = "Ylijäämää saatavilla. Aloitus {remaining}…"
 scale1p = "Siirrytään 1-vaihe lataukseen {remaining}…"
 scale3p = "Siirrytään 3-vaihe lataukseen {remaining}…"
-targetChargeActive = "Lataaminen käynnissä…"
-targetChargePlanned = "Lataaminen alkaa {time}."
-targetChargeWaitForVehicle = "Tavoite lataus valmis. Odotetaan ajoneuvoa…"
+targetChargeActive = "Lataussuunnitelma aktiivinen..."
+targetChargePlanned = "Lataussuunnitelma alkaa {time}."
+targetChargeWaitForVehicle = "Lataussuunnitelma valmis. Odotetaan ajoneuvoa…"
 vehicleLimitReached = "Ajoneuvon raja {soc} saavutettu."
 waitForVehicle = "Valmiina. Odotetaan ajoneuvoa…"
+unknown = ""
 
 [notifications]
 dismissAll = "Hylkää kaikki"
 modalTitle = "Ilmoitukset"
+logs = "Näytä täydellinen logi"
 
 [offline]
 message = "Ei yhteyttä serveriin"
 reload = "Lataa uudelleen?"
+restart = "Käynnistä uudelleen"
+restartNeeded = "Tarvitaan muutosten käyttöönottamiseksi."
+restarting = "Palvelin tulee takaisin hetken kuluttua."
 
 [passwordModal]
+noMatch = "Salasanat eivät täsmää"
+titleNew = "Aseta Pääkäyttäjän salasana"
+empty = "Salasana ei tulisi olla tyhjä"
+error = "Virhe: "
+labelCurrent = "Nykyinen salasana"
+labelNew = "Uusi salasana"
+labelRepeat = "Toista salasana"
+newPassword = "Aseta salasana"
+titleUpdate = "Päivitä Pääkäyttäjän salasana"
+updatePassword = "Päivitä salasana"
+description = "Aseta salasana suojellaksesi määritys asetuksia. Pääikkunan käyttö on silti mahdollista ilman kirjautumista."
 
 [session]
 cancel = "Peruuta"
@@ -378,6 +532,11 @@ meterstart = "Mittarin alku (kWh)"
 meterstop = "Mittarin loppu (kWh)"
 odometer = "Ajokilometrit (km)"
 vehicle = "Ajoneuvo"
+co2perkwh = "CO₂/kWh"
+price = "Hinta"
+priceperkwh = "Hinta/kWh"
+chargeduration = "Kesto"
+solarpercentage = "Aurinkoenergia (%)"
 
 [sessions.filter]
 allLoadpoints = "kaikki latauspisteet"
@@ -385,9 +544,12 @@ allVehicles = "kaikki ajoneuvot"
 filter = "Suodatin"
 
 [settings]
-title = "Asetukset"
+title = "Käyttöliittymä"
 
 [settings.fullscreen]
+exit = "Poistu kokonäyttötilasta"
+enter = "Mene kokonäyttötilaan"
+label = "Kokonäyttö"
 
 [settings.gridDetails]
 co2 = "CO₂"
@@ -404,7 +566,7 @@ auto = "Automaattinen"
 label = "Kieli"
 
 [settings.sponsorToken]
-expires = "Sponsorointi tunnuksesi vanhenee {inXDays}. {getNewToken} ja päivitä määritystiedostosi"
+expires = "Sponsorointitunnuksesi vanhenee {inXDays}. {getNewToken} ja päivitä se tänne"
 getNew = "Ota uusi"
 hint = "Huomaa: automatisoimme tämän tulevaisuudessa."
 
@@ -432,6 +594,11 @@ modalTitle = "Älykäs lataus verkosta"
 none = "ei mitään"
 priceLabel = "Energian hinta"
 priceLimit = "Hintaraja"
+saved = "Tallenettu"
+cheapTitle = "Halpa verkkolataus"
+cleanTitle = "Viheränenergian lataminen verkosta"
+applyToAll = "Käytä kaikkialla?"
+batteryDescription = "Lataa kodin akun sähköverkosta."
 
 [startupError]
 configFile = "Käytetty määritystiedostoa:"
@@ -449,3 +616,85 @@ title = "Virhe käynnistyksessä"
 cancel = "Peruuta"
 template = "Valmistaja"
 test = "Testi"
+
+
+[config.circuits]
+description = "Varmistaa, että kaikkien piiriin kytkettyjen kuormituspisteiden summa ei ylitä määritettyjä teho- ja virtarajoja. Piirejä voi rakentaa sisäkäin hierarkiaan."
+title = "Kuormanhallinta"
+
+[config.control]
+description = "Yleensä oletusarvot ovat sopivat. Muuta vain jos tiedät mitä olet tekemässä."
+descriptionInterval = "Ohjaussilmukan päivitysjakso sekunneissa. Määrittää, kuinka usein evcc lukee mittaritietoja, säätää lataustehoa ja päivittää käyttöliittymän. Lyhyet välit alle (30 s) voivat aiheuttaa oskillaatiota ja ei-toivotua toimintaa"
+descriptionMaxGridSupply = "Sopii vain hybridi-inverttereille, jotka eivät pysty tuottamaan täyttä tasavirtaa kotiin AC:n kautta. Tämä skenaario voi johtaa ei toivottuun verkon käyttöön, koska evcc olettaa koko tasavirran olevan käytettävissä. Käytä vähintään 50 W:n arvoa tämän estämiseksi."
+descriptionResidualPower = "Siirtää ohjaussilmukan toimintapistettä. Jos sinulla on kodissa akku on suositeltavaa asettaa arvo 100 W. Näin akku on hieman etusijalla verkkokäyttöön nähden."
+labelInterval = "Päivitystiheys"
+labelMaxGridSupply = "Maksimi teho verkosta kun lataa"
+labelResidualPower = "Jäännösteho"
+title = "Hallitse käyttäytymistä"
+
+[config.influx]
+descriptionToken = "Tarkista InfluxDB-dokumentaatiosta, kuinka voit luoda sellaisen. https://docs.influxdata.com/influxdb/v2/admin/"
+description = "Kirjoittaa kulutustiedot ja muut mittaukset InfluxDB:hen. Käytä Grafanaa tai muita työkaluja tietojen visualisointiin."
+labelBucket = "Bucket"
+labelDatabase = "Tietokanta"
+labelOrg = "Organisaatio"
+labelPassword = "Salasana"
+labelToken = "API Token"
+labelUrl = "URL"
+labelUser = "Käyttäjänimi"
+title = "InfluxDB"
+v1Support = "Tarvitsetko tukea InfluxDB 1.x:lle?"
+v2Support = "Takaisin InfluxDB 2.x:ään"
+
+[config.eebus]
+description = "Konfiguraatio, jonka avulla evcc voi kommunikoida muiden EEBus-laitteiden kanssa."
+title = "EEBus"
+
+[config.hems]
+description = "Yhdistä evcc toiseen kodin energianhallintajärjestelmään."
+title = "HEMS"
+
+[config.messaging]
+description = "Vastaanota viestejä latausistunnoistasi."
+title = "Ilmoitukset"
+
+[config.modbusproxy]
+description = "Salli useiden asiakkaiden käyttää yhtä Modbus-laitetta."
+title = "Modbus Proxy"
+
+[config.mqtt]
+authentication = "Todennus"
+description = "Yhdistä MQTT-välittäjään vaihtaaksesi tietoja muiden verkossasi olevien järjestelmien kanssa."
+descriptionClientId = "Viestien kirjoittaja. Jos tyhjää `evcc-[rand]` käytetään."
+descriptionTopic = "Jätä tyhjäksi, jos haluat poistaa julkaisut käytöstä."
+labelBroker = "Broker"
+labelCheckInsecure = "Salli itse allekirjoitetut varmenteet"
+labelClientId = "Asiakas ID"
+labelInsecure = "Sertifikaatin vahvistaminen"
+labelPassword = "Salasana"
+labelTopic = "Aihe"
+labelUser = "Käyttäjätunnus"
+publishing = "Julkaise"
+title = "MQTT"
+
+[config.network]
+descriptionHost = "Ota mDNS käyttöön käyttämällä .local-liitettä. Olennaista mobiilisovelluksen ja joidenkin OCPP-laturien löytämisen kannalta."
+descriptionPort = "Portti verkkokäyttöliittymälle ja API:lle. Sinun on päivitettävä selaimesi URL-osoite, jos muutat tätä."
+descriptionSchema = "Vaikuttaa vain URL-osoitteiden luomiseen. HTTPS:n valitseminen ei ota salausta käyttöön."
+labelHost = "Isäntänimi"
+labelPort = "Portti"
+labelSchema = "Kaavio"
+title = "Verkko"
+
+[config.sponsor]
+addToken = "Anna sponsoritunnus"
+changeToken = "Vaihda sponsoritunnus"
+description = "Sponsorointi auttaa meitä ylläpitämään projektia ja rakentamaan kestävästi uusia ja jännittäviä ominaisuuksia. Sponsorina saat käyttöösi kaikki latureiden toteutukset."
+descriptionToken = "Saat tunnuksen osoitteesta {url}. Tarjoamme myös kokeilutunnuksen testausta varten."
+error = "Sponsoritunnus ei kelpaa."
+labelToken = "Sponsoritunnus"
+title = "Sponsorointi"
+
+[config.tariffs]
+description = "Määrittele energiatariffisi, jotta latausistuntojesi kustannukset lasketaan."
+title = "Tariffit"
