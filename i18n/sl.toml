@@ -144,6 +144,16 @@ validateSave = "Preveri in shrani"
 
 [config.modbusproxy]
 description = "Dovoli več odjemalcem dostop do ene naprave Modbus."
+title = "Modbus Proxy"
+
+[config.mqtt]
+authentication = "Avtentikacija"
+description = "Povežite se s posrednikom MQTT za izmenjavo podatkov z drugimi sistemi v vašem omrežju."
+
+[config.network]
+labelPort = "Port"
+labelSchema = "Shema"
+title = "Mreža"
 
 [config.options]
 
@@ -161,11 +171,18 @@ titleEdit = "Uredi merilnik sončne energije"
 
 [config.section]
 general = "Splošno"
+grid = "Omrežje"
+integrations = "Integracije"
 system = "Sistem"
+vehicles = "Vozila"
 
 [config.site]
 cancel = "Prekliči"
 save = "Shrani"
+
+[config.sponsor]
+addToken = "Vnesi sponzorski žeton"
+changeToken = "Spremeni sponzorski žeton"
 
 [config.system]
 logs = "Logi"
@@ -174,6 +191,9 @@ restartRequiredDescription = "Prosimo, ponovno zaženite, da vidite učinek."
 restartRequiredMessage = "Konfiguracija je bila spremenjena."
 restartingDescription = "Prosim počakajte..."
 restartingMessage = "Ponovni zagon evcc."
+
+[config.tariffs]
+title = "Tarife"
 
 [config.title]
 description = "Prikazano na glavnem zaslonu in na zavihku brskalnika."
@@ -268,9 +288,9 @@ optInSponsorship = "Potrebno je sponzoriranje."
 availableLong = "na voljo nova različica"
 modalCancel = "Prekliči"
 modalDownload = "Prenos"
-modalInstalledVersion = "Nameščena različica: "
+modalInstalledVersion = "Trenutno nameščena različica"
 modalNoReleaseNotes = "Opombe ob izdaji niso na voljo. Več informacij o novi različici:"
-modalTitle = "Na voljo nova različica"
+modalTitle = "Na voljo je nova različica"
 modalUpdate = "Namesti"
 modalUpdateNow = "Namesti zdaj"
 modalUpdateStarted = "Zagon nove različice evcc…"
@@ -355,11 +375,11 @@ batteryCharge = "Polnjenje baterije"
 batteryDischarge = "Praznjenje baterije"
 batteryHold = "Baterija (zaklenjena)"
 batteryTooltip = "{energy} od {total} ({soc})"
-gridImport = "Uporaba omrežja"
-homePower = "Poraba"
-loadpoints = "Polnilnik | Polnilnik | {count} polnilnih mest"
+gridImport = "Uvoz iz omrežja"
+homePower = "Poraba objekta"
+loadpoints = "Polnilnica | Polnilnici | {count} polnilnih mest"
 noEnergy = "Ni podatkov o merilniku"
-pvExport = "Izvoz v omreže"
+pvExport = "Izvoz v omrežje"
 pvProduction = "Proizvodnja"
 selfConsumption = "Samoporaba"
 
@@ -515,6 +535,8 @@ modalTitle = "Obvestila"
 [offline]
 message = "Ni povezan s strežnikom."
 reload = "Ponovno naloži?"
+restart = "Ponovni zagon"
+restarting = "Strežnik bo kmalu nazaj."
 
 [passwordModal]
 description = "Nastavite geslo za zaščito konfiguracijskih nastavitev. Uporaba glavnega vmesnika je še vedno možna brez prijave."
@@ -550,7 +572,7 @@ chargeDuration = "Trajanje"
 co2 = "⌀ CO₂"
 csvMonth = "Prenesi {month} CSV"
 csvTotal = "Prenesi celoten CSV"
-date = "Začni"
+date = "Začetek"
 downloadCsv = "Prenesi kot CSV"
 energy = "Napolnjeno"
 loadpoint = "Polnilno mesto"

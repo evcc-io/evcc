@@ -16,7 +16,8 @@ legendTopSubline = "bez prekida"
 modalTitle = "Postavke baterije"
 
 [batterySettings.bufferStart]
-full = "kad je skoro pun"
+above = "kada je iznad {soc}"
+full = "kad na {soc}"
 low = "kad je donekle pun"
 medium = "kad je napola pun"
 never = "samo s dovoljno viška"
@@ -24,8 +25,41 @@ never = "samo s dovoljno viška"
 [config]
 
 [config.battery]
+titleAdd = "Dodaj mjerač baterije"
+titleEdit = "Uredi mjerač baterije"
+
+[config.circuits]
+title = "Upravljanje opterećenjem"
+
+[config.control]
+labelInterval = "Interval ažuriranja"
+labelMaxGridSupply = "Maksimalna opskrba mreže tijekom punjenja"
+labelResidualPower = "Preostala snaga"
+title = "Kontrolno ponašanje"
 
 [config.deviceValue]
+broker = "Broker"
+bucket = "Bucket"
+capacity = "Kapacitet"
+chargeStatus = "Stanje"
+chargeStatusA = "nije povezano"
+chargeStatusB = "povezano"
+chargeStatusC = "napajanje"
+chargeStatusE = "bez snage"
+chargeStatusF = "greška"
+chargedEnergy = "Napojeno"
+co2 = "Mreža CO₂"
+configured = "Konfigurirano"
+currency = "Valuta"
+current = "Tok Struje"
+enabled = "Omogućeno"
+energy = "Energija"
+feedinPrice = "Cijena za nabavu"
+gridPrice = "Cijena mreže"
+no = "ne"
+odometer = "Odometar"
+org = "Organizacija"
+power = "Snaga"
 
 [config.form]
 example = "Primjer"
@@ -225,7 +259,7 @@ charged = "Napojeno"
 co2 = "⌀ CO₂"
 duration = "Trajanje"
 fallbackName = "Mjesto napajanja"
-power = "Energija"
+power = "Snaga"
 price = "Σ cijena"
 remaining = "Preostalo"
 remoteDisabledHard = "{source}: isključeno"
