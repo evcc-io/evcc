@@ -35,6 +35,12 @@ title = "Belastningshantering"
 [config.control]
 description = "Standardvärdena är vanligtsvis ok. Ändra bara om du vet vad du gör."
 descriptionInterval = "Uppdateringsintervall i sekunder. Definierar hur ofta evcc läser in data, ändrar laddeffekt och uppdaterar UI. Korta intervall (<30s) kan orsaka självsvängning och andra felaktiga resultat."
+labelInterval = "Uppdateringsintervall"
+labelMaxGridSupply = "Max. näteffekt vid laddning"
+labelResidualPower = "Kvarvarande effekt"
+title = "Kontrollera beteende"
+descriptionMaxGridSupply = "Endast relevant för hybridinverter som inte kan ge full DC-effekt för att försörja hemmet via AC. Detta scenario kan leda till oönskad nätanvändning eftersom evcc förutsätter att full DC-effekt är tillgänglig. Lägg in ett värde på minst 50W för att förhindra detta."
+descriptionResidualPower = "Flyttar fokuspunkt på kontrolloopen. Om du har ett hemmabatteri så rekommenderas att ha ett värde på minst 100 W. Då får batteriet lite högre prioritet jämfört med nätanvändning."
 
 [config.deviceValue]
 capacity = "Kapacitet"
@@ -51,6 +57,24 @@ power = "Effekt"
 range = "Räckvidd"
 soc = "SoC"
 socLimit = "SoC gräns"
+broker = "Broker"
+bucket = "Bucket"
+chargeStatusA = "ej ansluten"
+chargeStatusB = "ansluten"
+chargeStatusC = "laddar"
+chargeStatusE = "ingen ström"
+chargeStatusF = "fel"
+co2 = "Elnät CO₂"
+configured = "Konfigurerad"
+currency = "Valuta"
+feedinPrice = "Inmatningspris"
+gridPrice = "Nätpris"
+no = "nej"
+org = "Organisation"
+temp = "Temperatur"
+yes = "ja"
+topic = "Ämne"
+url = "URL"
 
 [config.form]
 example = "Exempel"
@@ -59,10 +83,19 @@ optional = "valfri"
 [config.general]
 cancel = "Avbryt"
 save = "Spara"
+docsLink = "Se dokumentation."
+experimental = "Experimentell"
+off = "av"
+on = "på"
+password = "Lösenord"
+title = "Titel"
+remove = "Ta bort"
+telemetry = "Telemetri"
 
 [config.grid]
 titleAdd = "Lägg till elnätsmätare"
 titleEdit = "Ändra elnätsmätare"
+title = "Elmätare"
 
 [config.main]
 addLoadpoint = "Lägg till laddbox"
@@ -73,6 +106,7 @@ title = "Inställningar"
 unconfigured = "ej konfigurerad"
 vehicles = "Mina fordon"
 yaml = "Konfigurera i evcc.yaml. Kan inte ändras i UI."
+configured = "konfigurerad"
 
 [config.meter]
 cancel = "Avbryt"
@@ -99,6 +133,11 @@ titleEdit = "Ändra solcellsmätare"
 [config.section]
 general = "Allmänna"
 system = "System"
+grid = "Elnät"
+integrations = "Integrationer"
+loadpoints = "Laddpunkter"
+meter = "Sol & batteri"
+vehicles = "Fordon"
 
 [config.site]
 cancel = "Avbryt"
@@ -454,6 +493,9 @@ modalTitle = "Meddelanden"
 [offline]
 message = "Inte ansluten till en server."
 reload = "Ladda igen?"
+restart = "Omstart"
+restartNeeded = "Krävs för att spara ändringar."
+restarting = "Servern är strax tillbaka."
 
 [passwordModal]
 description = "Använd lösenord för att skydda inställningarna. Huvudskärmen kan användas utan att logga in."
@@ -545,7 +587,7 @@ auto = "Automatisk"
 label = "Språk"
 
 [settings.sponsorToken]
-expires = "Din sponsortoken löper ut om {inXDays}. {getNewToken} och uppdatera din konfigurationsfil."
+expires = "Din sponsortoken löper ut om {inXDays}. {getNewToken} och uppdatera här."
 getNew = "Hämta en ny"
 hint = "Observera: Vi kommer att automatisera detta i framtiden."
 
@@ -595,3 +637,71 @@ title = "Startfel"
 cancel = "Avbryt"
 template = "Tillverkare"
 test = "Test"
+
+
+[config.eebus]
+description = "Inställning som tillåter evcc att kommunicera med andra EEBus-enheter."
+title = "EEBus"
+
+[config.hems]
+description = "Anslut evcc till annat energistyrningssystem i hemmet"
+title = "HEMS"
+
+[config.influx]
+description = "Skriver laddata och andra mätningar till InfluxDB. Använd Grafana eller andra verktyg för att visualisera data."
+descriptionToken = "Se dokumentationen för InfluxDB. https://docs.influxdata.com/influxdb/v2/admin/"
+labelToken = "API Token"
+v1Support = "Behöver du support till InfluxDB 1.x?"
+labelBucket = "Bucket"
+labelDatabase = "Databas"
+labelOrg = "Organisation"
+labelPassword = "Lösenord"
+labelUrl = "URL"
+labelUser = "Användarnamn"
+title = "InfluxDB"
+v2Support = "Tillbaka till InfluxDB 2.x"
+
+[config.messaging]
+description = "Mottag notiser om dina laddningar."
+title = "Notiser"
+
+[config.modbusproxy]
+description = "Tillåt flera klienter till en Modbus-enhet."
+title = "Modbus Proxy"
+
+[config.mqtt]
+authentication = "Autentisering"
+description = "Anslut till en MQTT-broker för att utbyta data med andra system på ditt nätverk."
+descriptionClientId = "Avsändare av notis. Om tomt används `evcc-[rand]` ."
+descriptionTopic = "Lämna tomt för att deaktivera publicering."
+labelClientId = "Klient ID"
+labelTopic = "Ämne"
+labelInsecure = "Certifikatkontroll"
+labelPassword = "Lösenord"
+publishing = "Publicerar"
+labelUser = "Användarnamn"
+labelBroker = "Broker"
+labelCheckInsecure = "Tillåt egensignerade certifikat"
+title = "MQTT"
+
+[config.network]
+descriptionHost = "Använd .local suffix för att aktivera mDNS. Relevant för upptäckt av mobilappen och vissa OCPP-laddare."
+descriptionPort = "Port för webinterface och API. Uppdatera webläsarens URL om du ändrar detta."
+descriptionSchema = "Påverkar endast hur URLer skapas. Val av HTTPS kommer ej att aktivera kryptering."
+labelHost = "Värdnamn"
+labelPort = "Port"
+labelSchema = "Schema"
+title = "Nätverk"
+
+[config.sponsor]
+addToken = "Ange sponsor-token"
+changeToken = "Ändra sponsor-token"
+description = "Sponsormodellen hjälper oss att underhålla projektet och hållbart bygga nya och spännande funktioner. Som sponsor får du tillgång till alla laddningsmöjligheter."
+descriptionToken = "Du får token från {url}. Vi erbjuder också en prov-token för testning."
+error = "Din sponsor-token är inte giltig."
+labelToken = "Sponsor-token"
+title = "Sponsor"
+
+[config.tariffs]
+description = "Lägg in din energitariff för att beräkna kostnaden för dina laddningar."
+title = "Tariffer"
