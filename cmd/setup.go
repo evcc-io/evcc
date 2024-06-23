@@ -937,14 +937,10 @@ CONTINUE:
 			hasRoot = true
 		}
 
-		for _, lp := range loadpoints {
-			if lp.GetCircuit() == instance {
-				if isRoot {
-					return fmt.Errorf("root circuit must not be assigned to loadpoint %s", lp.Title())
-				}
-
-				continue CONTINUE
-			}
+		if slices.ContainsFunc(loadpoints, func(lp *core.Loadpoint) bool {
+			return lp.GetCircuit() == instance
+		}) {
+			continue CONTINUE
 		}
 
 		if !isRoot && !instance.HasMeter() {
