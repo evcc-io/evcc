@@ -16,11 +16,11 @@ legendTopSubline = "bez prekida"
 modalTitle = "Postavke baterije"
 
 [batterySettings.bufferStart]
+above = "kada je iznad {soc}"
 full = "kad na {soc}"
 low = "kad je donekle pun"
 medium = "kad je napola pun"
 never = "samo s dovoljno viška"
-above = "kada je iznad {soc}"
 
 [config]
 
@@ -28,29 +28,38 @@ above = "kada je iznad {soc}"
 titleAdd = "Dodaj mjerač baterije"
 titleEdit = "Uredi mjerač baterije"
 
+[config.circuits]
+title = "Upravljanje opterećenjem"
+
+[config.control]
+labelInterval = "Interval ažuriranja"
+labelMaxGridSupply = "Maksimalna opskrba mreže tijekom punjenja"
+labelResidualPower = "Preostala snaga"
+title = "Kontrolno ponašanje"
+
 [config.deviceValue]
-chargeStatus = "Stanje"
-chargedEnergy = "Napojeno"
-enabled = "Omogućeno"
-energy = "Energija"
-odometer = "Odometar"
-power = "Snaga"
 broker = "Broker"
 bucket = "Bucket"
+capacity = "Kapacitet"
+chargeStatus = "Stanje"
 chargeStatusA = "nije povezano"
 chargeStatusB = "povezano"
 chargeStatusC = "napajanje"
 chargeStatusE = "bez snage"
+chargeStatusF = "greška"
+chargedEnergy = "Napojeno"
+co2 = "Mreža CO₂"
+configured = "Konfigurirano"
 currency = "Valuta"
 current = "Tok Struje"
+enabled = "Omogućeno"
+energy = "Energija"
 feedinPrice = "Cijena za nabavu"
 gridPrice = "Cijena mreže"
 no = "ne"
+odometer = "Odometar"
 org = "Organizacija"
-capacity = "Kapacitet"
-chargeStatusF = "greška"
-co2 = "Mreža CO₂"
-configured = "Konfigurirano"
+power = "Snaga"
 
 [config.form]
 example = "Primjer"
@@ -500,13 +509,3 @@ title = "Pogreška pri pokretanju"
 cancel = "Odustani"
 template = "Proizvođač"
 test = "Test"
-
-
-[config.circuits]
-title = "Upravljanje opterećenjem"
-
-[config.control]
-labelInterval = "Interval ažuriranja"
-labelMaxGridSupply = "Maksimalna opskrba mreže tijekom punjenja"
-labelResidualPower = "Preostala snaga"
-title = "Kontrolno ponašanje"
