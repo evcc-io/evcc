@@ -83,7 +83,7 @@ require (
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/jwalterweatherman v1.1.0
 	github.com/spf13/pflag v1.0.5
-	github.com/spf13/viper v1.20.0-alpha.2
+	github.com/spf13/viper v1.20.0-alpha.3
 	github.com/stretchr/testify v1.9.0
 	github.com/teslamotors/vehicle-command v0.0.2
 	github.com/traefik/yaegi v0.16.1
@@ -135,7 +135,6 @@ require (
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/gorilla/websocket v1.5.3 // indirect
 	github.com/grid-x/serial v0.0.0-20211107191517-583c7356b3aa // indirect
-	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/holoplot/go-avahi v1.0.1 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/influxdata/line-protocol v0.0.0-20210922203350-b1ad95c89adf // indirect
@@ -145,7 +144,6 @@ require (
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/leodido/go-urn v1.4.0 // indirect
-	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-runewidth v0.0.15 // indirect
@@ -186,7 +184,6 @@ require (
 	golang.org/x/term v0.21.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240617180043-68d350f18fd4 // indirect
 	gopkg.in/go-playground/validator.v9 v9.31.0 // indirect
-	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect
 	modernc.org/libc v1.53.3 // indirect
 	modernc.org/mathutil v1.6.0 // indirect
