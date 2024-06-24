@@ -133,6 +133,9 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Charger, error
 
 	// decorate measurements
 	powerG, energyG, currentsG, voltagesG, powersG, err := meter.BuildMeasurements(cc.Power, cc.Energy, cc.Currents, cc.Voltages, cc.Powers)
+	if err != nil {
+		return nil, err
+	}
 
 	return decorateCustom(c, maxcurrentmillis, identify, phases1p3p, wakeup, soc, powerG, energyG, currentsG, voltagesG, powersG), nil
 }

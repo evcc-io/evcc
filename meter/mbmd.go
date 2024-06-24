@@ -160,11 +160,9 @@ func (m *ModbusMbmd) buildPhaseProviders(readings []string) (func() (float64, fl
 			return nil, fmt.Errorf("invalid measurement [%d]: %s", idx, reading)
 		}
 
-		c := func() (float64, error) {
+		phases[idx] = func() (float64, error) {
 			return m.floatGetter(opCurrent)
 		}
-
-		phases[idx] = c
 	}
 
 	return CollectPhaseProviders(phases), nil
