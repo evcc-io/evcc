@@ -44,7 +44,7 @@ func (t *Template) RenderDocumentation(product Product, lang string) ([]byte, er
 	var modbusRender string
 	if modbusChoices := t.ModbusChoices(); len(modbusChoices) > 0 {
 		if i, _ := t.ParamByName(ParamModbus); i > -1 {
-			modbusTmpl, err := template.New("yaml").Funcs(sprout.TxtFuncMap()).Parse(documentationModbusTmpl)
+			modbusTmpl, err := template.New("yaml").Funcs(sprout.FuncMap()).Parse(documentationModbusTmpl)
 			if err != nil {
 				panic(err)
 			}
