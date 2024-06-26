@@ -41,11 +41,12 @@ params:
   - preset: vehicle-identify
 render: |
   type: ford-connect
-  {{ include "vehicle-common" . }}
+  vin: {{ .vin }}
   credentials:
     id: {{ .clientid }}
     secret: {{ .clientsecret }}
   tokens:
     access: {{ .accessToken }}
     refresh: {{ .refreshToken }}
+  {{ include "vehicle-common" . }}
   {{ include "vehicle-identify" . }}
