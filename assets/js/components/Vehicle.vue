@@ -109,6 +109,7 @@ export default {
 		planTimeUnreachable: Boolean,
 		pvAction: String,
 		pvRemainingInterpolated: Number,
+		sessionSolarPercentage: Number,
 		smartCostActive: Boolean,
 		smartCostLimit: Number,
 		smartCostType: String,
@@ -124,6 +125,7 @@ export default {
 		vehicleSoc: Number,
 		vehicleLimitSoc: Number,
 		vehicleNotReachable: Boolean,
+		greenShareLoadpoints: Number,
 	},
 	emits: ["limit-soc-updated", "limit-energy-updated", "change-vehicle", "remove-vehicle"],
 	data() {
@@ -201,6 +203,9 @@ export default {
 				return true;
 			}
 			return false;
+		},
+		smartCostDisabled: function () {
+			return ["off", "now"].includes(this.mode);
 		},
 	},
 	watch: {

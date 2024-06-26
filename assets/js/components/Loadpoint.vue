@@ -192,6 +192,7 @@ export default {
 		multipleLoadpoints: Boolean,
 		gridConfigured: Boolean,
 		pvConfigured: Boolean,
+		greenShareLoadpoints: Number,
 	},
 	data() {
 		return {

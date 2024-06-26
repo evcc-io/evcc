@@ -536,6 +536,8 @@ targetChargeWaitForVehicle = "Ladeplan bereit. Warte auf Fahrzeug …"
 unknown = ""
 vehicleLimitReached = "Fahrzeuglimit {soc} erreicht."
 waitForVehicle = "Ladebereit. Warte auf Fahrzeug …"
+finished = "Abgeschlossen."
+
 
 [notifications]
 dismissAll = "Meldungen entfernen"
