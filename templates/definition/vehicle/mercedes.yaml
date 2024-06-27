@@ -38,10 +38,11 @@ params:
   - preset: vehicle-identify
 render: |
   type: mercedes
-  {{ include "vehicle-common" . }}
+  vin: {{ .vin }}
   user: {{ .user }}
   region: {{ .region }}
   tokens:
     access: {{ .accessToken }}
     refresh: {{ .refreshToken }}
+  {{ include "vehicle-common" . }}
   {{ include "vehicle-identify" . }}

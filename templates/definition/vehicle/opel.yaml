@@ -36,9 +36,10 @@ params:
   - preset: vehicle-identify
 render: |
   type: opel
-  {{ include "vehicle-common" . }}
+  vin: {{ .vin }}
   user: {{ .user }}
   tokens:
     access: {{ .accessToken }}
     refresh: {{ .refreshToken }}
+  {{ include "vehicle-common" . }}
   {{ include "vehicle-identify" . }}

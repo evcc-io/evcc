@@ -208,7 +208,7 @@ var proxyTmpl string
 
 // RenderProxyWithValues renders the proxy template
 func (t *Template) RenderProxyWithValues(values map[string]interface{}, lang string) ([]byte, error) {
-	tmpl, err := template.New("yaml").Funcs(sprout.TxtFuncMap()).Parse(proxyTmpl)
+	tmpl, err := template.New("yaml").Funcs(sprout.FuncMap()).Parse(proxyTmpl)
 	if err != nil {
 		panic(err)
 	}

@@ -40,9 +40,10 @@ params:
   - preset: vehicle-identify
 render: |
   type: tesla
-  {{ include "vehicle-common" . }}
+  vin: {{ .vin }}
   tokens:
     access: {{ .accessToken }}
     refresh: {{ .refreshToken }}
+  {{ include "vehicle-common" . }}
   {{ include "vehicle-identify" . }}
   features: ["coarsecurrent"]
