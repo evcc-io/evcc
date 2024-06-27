@@ -4,7 +4,8 @@
 		<div class="d-flex flex-wrap justify-content-end gap-3">
 			<!-- pv/phase timer -->
 			<div v-if="pvTimerVisible" class="entry" :class="pvTimerClass">
-				<shopicon-regular-sun></shopicon-regular-sun>
+				<SunUpIcon v-if="pvAction === 'enable'" />
+				<SunDownIcon v-else />
 				<div class="tabular">{{ fmtDuration(pvRemainingInterpolated) }}</div>
 			</div>
 			<div v-else-if="phaseTimerVisible" class="entry gap-0 text-primary">
@@ -72,6 +73,8 @@ import ClimaterIcon from "./MaterialIcon/Climater.vue";
 import VehicleLimitReachedIcon from "./MaterialIcon/VehicleLimitReached.vue";
 import VehicleLimitWarningIcon from "./MaterialIcon/VehicleLimitWarning.vue";
 import VehicleLimitIcon from "./MaterialIcon/VehicleLimit.vue";
+import SunDownIcon from "./MaterialIcon/SunDown.vue";
+import SunUpIcon from "./MaterialIcon/SunUp.vue";
 
 export default {
 	name: "VehicleStatus",
@@ -81,6 +84,8 @@ export default {
 		PlanEndIcon,
 		ClimaterIcon,
 		VehicleLimitIcon,
+		SunDownIcon,
+		SunUpIcon,
 	},
 	mixins: [formatter],
 	props: {
