@@ -1,14 +1,23 @@
 <template>
 	<div class="d-flex justify-content-between gap-4 evcc-gray" data-testid="vehicle-status">
-		<div class="text-nowrap">{{ chargerStatus }}</div>
+		<div class="text-nowrap" data-testid="vehicle-status-charger">{{ chargerStatus }}</div>
 		<div class="d-flex flex-wrap justify-content-end gap-3">
 			<!-- pv/phase timer -->
-			<div v-if="pvTimerVisible" class="entry" :class="pvTimerClass">
+			<div
+				v-if="pvTimerVisible"
+				class="entry"
+				:class="pvTimerClass"
+				data-testid="vehicle-status-pvtimer"
+			>
 				<SunUpIcon v-if="pvAction === 'enable'" />
 				<SunDownIcon v-else />
 				<div class="tabular">{{ fmtDuration(pvRemainingInterpolated) }}</div>
 			</div>
-			<div v-else-if="phaseTimerVisible" class="entry gap-0 text-primary">
+			<div
+				v-else-if="phaseTimerVisible"
+				class="entry gap-0 text-primary"
+				data-testid="vehicle-status-phasetimer"
+			>
 				<shopicon-regular-sun></shopicon-regular-sun>
 				<shopicon-regular-angledoublerightsmall
 					:class="phaseIconClass"
@@ -16,25 +25,50 @@
 				></shopicon-regular-angledoublerightsmall>
 				<div class="tabular">{{ fmtDuration(phaseRemainingInterpolated) }}</div>
 			</div>
-			<div v-else-if="solarPercentageVisible" class="entry" :class="solarPercentageClass">
+			<div
+				v-else-if="solarPercentageVisible"
+				class="entry"
+				:class="solarPercentageClass"
+				data-testid="vehicle-status-solar"
+			>
 				<shopicon-regular-sun></shopicon-regular-sun>
 				{{ fmtPercentage(sessionSolarPercentage) }}
 			</div>
 
 			<!-- vehicle -->
-			<div v-if="vehicleClimaterActive" class="entry text-primary"><ClimaterIcon /> on</div>
-			<div v-if="minSocVisible" class="entry gap-0 text-danger">
+			<div
+				v-if="vehicleClimaterActive"
+				class="entry text-primary"
+				data-testid="vehicle-status-climater"
+			>
+				<ClimaterIcon /> on
+			</div>
+			<div
+				v-if="minSocVisible"
+				class="entry gap-0 text-danger"
+				data-testid="vehicle-status-minsoc"
+			>
 				<VehicleLimitIcon />
 				<shopicon-regular-angledoublerightsmall></shopicon-regular-angledoublerightsmall>
 				{{ fmtPercentage(minSoc) }}
 			</div>
-			<div v-else-if="vehicleLimitVisible" class="entry" :class="vehicleLimitClass">
+			<div
+				v-else-if="vehicleLimitVisible"
+				class="entry"
+				:class="vehicleLimitClass"
+				data-testid="vehicle-status-limit"
+			>
 				<component :is="vehicleLimitIconComponent" />
 				{{ fmtPercentage(vehicleLimitSoc) }}
 			</div>
 
 			<!-- smart cost -->
-			<div v-if="smartCostVisible" class="entry" :class="smartCostClass">
+			<div
+				v-if="smartCostVisible"
+				class="entry"
+				:class="smartCostClass"
+				data-testid="vehicle-status-smartcost"
+			>
 				<DynamicPriceIcon v-if="smartCostPrice" />
 				<shopicon-regular-eco1 v-else></shopicon-regular-eco1>
 				<div>
@@ -47,11 +81,15 @@
 			</div>
 
 			<!-- plan -->
-			<div v-if="planEndVisible" class="entry text-primary">
+			<div
+				v-if="planEndVisible"
+				class="entry text-primary"
+				data-testid="vehicle-status-planactive"
+			>
 				<PlanEndIcon />
 				{{ fmtAbsoluteDate(new Date(effectivePlanTime)) }}
 			</div>
-			<div v-else-if="planStartVisible" class="entry">
+			<div v-else-if="planStartVisible" class="entry" data-testid="vehicle-status-planstart">
 				<PlanStartIcon />
 				{{ fmtAbsoluteDate(new Date(planProjectedStart)) }}
 			</div>
@@ -153,7 +191,7 @@ export default {
 			return this.vehicleLimitSoc > 0 && this.vehicleLimitSoc <= limit;
 		},
 		minSocVisible() {
-			return this.minSoc > 0 && this.vehicleSoc <= this.minSoc && this.charging;
+			return this.minSoc > 0 && this.vehicleSoc < this.minSoc;
 		},
 		vehicleLimitReached() {
 			return (
@@ -188,9 +226,7 @@ export default {
 			return this.planProjectedStart && !this.planActive && !this.chargingPlanDisabled;
 		},
 		planEndVisible() {
-			return false;
-			// TODO: get projected finish time
-			//return this.effectivePlanTime && this.planActive && !this.chargingPlanDisabled;
+			return this.effectivePlanTime && this.planActive && !this.chargingPlanDisabled;
 		},
 		smartCostVisible() {
 			return !!this.smartCostLimit;
