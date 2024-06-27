@@ -232,22 +232,22 @@ export default {
 			return !!this.smartCostLimit;
 		},
 		smartCostPrice() {
-			return this.smartCostType === "price";
+			return this.smartCostType !== "co2";
 		},
 		smartCostNowVisible() {
-			if (this.smartCostType === "price") {
+			if (this.smartCostPrice) {
 				return this.tariffGrid <= this.smartCostLimit;
 			}
 			return this.tariffCo2 <= this.smartCostLimit;
 		},
 		smartCostNow() {
-			if (this.smartCostType === "price") {
+			if (this.smartCostPrice) {
 				return this.fmtPricePerKWh(this.tariffGrid, this.currency, true);
 			}
 			return this.fmtCo2Short(this.tariffCo2);
 		},
 		smartCostLimitFmt() {
-			if (this.smartCostType === "price") {
+			if (this.smartCostPrice) {
 				return this.fmtPricePerKWh(this.smartCostLimit, this.currency, true);
 			}
 			return this.fmtCo2Short(this.smartCostLimit);
