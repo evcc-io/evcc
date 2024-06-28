@@ -114,7 +114,6 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		tcc.SetBaseUrl(tesla.ProxyBaseUrl)
 	} else {
 		tcc.SetBaseUrl(cc.BleProxyBaseUrl)
-
 	}
 
 	v := &Tesla{
