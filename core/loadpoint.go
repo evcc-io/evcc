@@ -1100,7 +1100,12 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64) in
 	measuredPhases := lp.getMeasuredPhases()
 	if phases > 0 && phases < measuredPhases {
 		if lp.chargerUpdateCompleted() && lp.phaseSwitchCompleted() {
-			lp.log.WARN.Printf("ignoring inconsistent phases: %dp < %dp observed active", phases, measuredPhases)
+			lp.log.WARN.Printf("detected inconsistent phases: %dp < %dp observed active", phases, measuredPhases)
+			// sometimes the openwb hardware "forgets" to switch phases - fix by scaling phases up to enable recovery
+			if err := lp.scalePhases(3); err != nil {
+				lp.log.ERROR.Println(err)
+			}
+			return 3
 		}
 		lp.resetMeasuredPhases()
 	}
