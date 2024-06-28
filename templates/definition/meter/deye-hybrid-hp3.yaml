@@ -120,7 +120,7 @@ render: |
       address: 588 # "battery capacity"
       type: holding
       decode: uint16
-    scale: 10
+    scale: 1
   batterymode:
     source: switch
     switch:
