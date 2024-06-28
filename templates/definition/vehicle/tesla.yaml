@@ -52,4 +52,3 @@ render: |
   {{ include "vehicle-identify" . }}
   features: ["coarsecurrent"]
   bleProxyBaseUrl: {{ .bleProxyBaseUrl }}
-  
