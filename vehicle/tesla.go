@@ -37,11 +37,12 @@ func init() {
 // NewTeslaFromConfig creates a new vehicle
 func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
-		embed   `mapstructure:",squash"`
-		Tokens  Tokens
-		VIN     string
-		Timeout time.Duration
-		Cache   time.Duration
+		embed           `mapstructure:",squash"`
+		Tokens          Tokens
+		VIN             string
+		BleProxyBaseUrl string
+		Timeout         time.Duration
+		Cache           time.Duration
 	}{
 		Timeout: request.Timeout,
 		Cache:   interval,
@@ -107,7 +108,14 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	if err != nil {
 		return nil, err
 	}
-	tcc.SetBaseUrl(tesla.ProxyBaseUrl)
+
+	// use ble HTTP proxy if a custom base URL is provided, otherwise use the standard evcc proxy
+	if cc.BleProxyBaseUrl == "" {
+		tcc.SetBaseUrl(tesla.ProxyBaseUrl)
+	} else {
+		tcc.SetBaseUrl(cc.BleProxyBaseUrl)
+
+	}
 
 	v := &Tesla{
 		embed:      &cc.embed,

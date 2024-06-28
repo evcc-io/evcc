@@ -37,6 +37,10 @@ params:
     advanced: true
   - name: control
     deprecated: true
+  - name: bleProxyBaseUrl
+    example: http://192.168.X.Y:8080
+    required: false
+    advanced: true
   - preset: vehicle-identify
 render: |
   type: tesla
@@ -47,3 +51,4 @@ render: |
   {{ include "vehicle-common" . }}
   {{ include "vehicle-identify" . }}
   features: ["coarsecurrent"]
+  bleProxyBaseUrl: {{ .bleProxyBaseUrl }}
