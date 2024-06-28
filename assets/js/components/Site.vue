@@ -31,7 +31,6 @@
 				:currency="currency"
 				:gridConfigured="gridConfigured"
 				:pvConfigured="pvConfigured"
-				:greenShareLoadpoints="greenShareLoadpoints"
 			/>
 			<Footer v-bind="footer"></Footer>
 		</div>
@@ -94,7 +93,6 @@ export default {
 		tariffCo2Home: Number,
 		tariffPriceLoadpoints: Number,
 		tariffCo2Loadpoints: Number,
-		greenShareLoadpoints: Number,
 
 		availableVersion: String,
 		releaseNotes: String,

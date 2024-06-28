@@ -17,6 +17,16 @@ func Start(plan api.Rates) time.Time {
 	return start
 }
 
+func End(plan api.Rates) time.Time {
+	var end time.Time
+	for _, slot := range plan {
+		if end.IsZero() || slot.End.After(end) {
+			end = slot.End
+		}
+	}
+	return end
+}
+
 // Duration returns the sum of all slot's durations
 func Duration(plan api.Rates) time.Duration {
 	var duration time.Duration

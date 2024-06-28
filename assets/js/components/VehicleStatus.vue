@@ -25,15 +25,6 @@
 				></shopicon-regular-angledoublerightsmall>
 				<div class="tabular">{{ fmtDuration(phaseRemainingInterpolated) }}</div>
 			</div>
-			<div
-				v-else-if="solarPercentageVisible"
-				class="entry"
-				:class="solarPercentageClass"
-				data-testid="vehicle-status-solar"
-			>
-				<shopicon-regular-sun></shopicon-regular-sun>
-				{{ fmtPercentage(sessionSolarPercentage) }}
-			</div>
 
 			<!-- vehicle -->
 			<div
@@ -43,15 +34,17 @@
 			>
 				<ClimaterIcon /> on
 			</div>
-			<div
+			<button
 				v-if="minSocVisible"
-				class="entry gap-0 text-danger"
+				type="button"
+				class="entry gap-0 text-danger text-decoration-underline"
 				data-testid="vehicle-status-minsoc"
+				@click="openMinSocSettings"
 			>
 				<VehicleLimitIcon />
 				<shopicon-regular-angledoublerightsmall></shopicon-regular-angledoublerightsmall>
 				{{ fmtPercentage(minSoc) }}
-			</div>
+			</button>
 			<div
 				v-else-if="vehicleLimitVisible"
 				class="entry"
@@ -63,36 +56,56 @@
 			</div>
 
 			<!-- smart cost -->
-			<div
+			<button
 				v-if="smartCostVisible"
+				type="button"
 				class="entry"
 				:class="smartCostClass"
 				data-testid="vehicle-status-smartcost"
+				@click="openLoadpointSettings"
 			>
 				<DynamicPriceIcon v-if="smartCostPrice" />
 				<shopicon-regular-eco1 v-else></shopicon-regular-eco1>
 				<div>
 					<span v-if="smartCostNowVisible">{{ smartCostNow }}</span>
-					≤ {{ smartCostLimitFmt }}
-					<span v-if="smartCostNextStart"
-						>({{ fmtAbsoluteDate(new Date(smartCostNextStart)) }})</span
-					>
+					≤ <span class="text-decoration-underline">{{ smartCostLimitFmt }}</span>
+					<span v-if="smartCostNextStart">
+						({{ fmtAbsoluteDate(new Date(smartCostNextStart)) }})
+					</span>
 				</div>
-			</div>
+			</button>
 
 			<!-- plan -->
-			<div
-				v-if="planEndVisible"
-				class="entry text-primary"
+			<button
+				v-if="planActiveVisible"
+				ref="planActive"
+				type="button"
+				class="entry"
+				:class="planActiveClass"
 				data-testid="vehicle-status-planactive"
+				data-bs-toggle="tooltip"
+				@click="planActiveClicked"
 			>
 				<PlanEndIcon />
-				{{ fmtAbsoluteDate(new Date(effectivePlanTime)) }}
-			</div>
-			<div v-else-if="planStartVisible" class="entry" data-testid="vehicle-status-planstart">
+				<span class="tabular" v-if="planTimeUnreachable">
+					+ {{ fmtDuration(planOverrun) }}
+				</span>
+				<span v-else class="text-decoration-underline">
+					{{ fmtAbsoluteDate(new Date(planProjectedEnd)) }}
+				</span>
+			</button>
+			<button
+				v-else-if="planStartVisible"
+				ref="planStart"
+				type="button"
+				class="entry"
+				data-testid="vehicle-status-planstart"
+				data-bs-toggle="tooltip"
+				@click="planStartClicked"
+			>
 				<PlanStartIcon />
 				{{ fmtAbsoluteDate(new Date(planProjectedStart)) }}
-			</div>
+			</button>
 		</div>
 	</div>
 </template>
@@ -101,6 +114,7 @@
 import "@h2d2/shopicons/es/regular/sun";
 import "@h2d2/shopicons/es/regular/eco1";
 import "@h2d2/shopicons/es/regular/angledoublerightsmall";
+import "@h2d2/shopicons/es/regular/clock";
 import DynamicPriceIcon from "./MaterialIcon/DynamicPrice.vue";
 import { DEFAULT_LOCALE } from "../i18n";
 import formatter from "../mixins/formatter";
@@ -113,6 +127,7 @@ import VehicleLimitWarningIcon from "./MaterialIcon/VehicleLimitWarning.vue";
 import VehicleLimitIcon from "./MaterialIcon/VehicleLimit.vue";
 import SunDownIcon from "./MaterialIcon/SunDown.vue";
 import SunUpIcon from "./MaterialIcon/SunUp.vue";
+import Tooltip from "bootstrap/js/dist/tooltip";
 
 export default {
 	name: "VehicleStatus",
@@ -137,24 +152,49 @@ export default {
 		effectivePlanTime: String,
 		effectiveLimitSoc: Number,
 		planProjectedStart: String,
+		planProjectedEnd: String,
 		smartCostNextStart: String,
 		chargingPlanDisabled: Boolean,
 		smartCostDisabled: Boolean,
 		planActive: Boolean,
+		planTimeUnreachable: Boolean,
+		planOverrun: Number,
 		effectivePlanSoc: Number,
 		phaseAction: String,
 		phaseRemainingInterpolated: Number,
-		greenShareLoadpoints: Number,
 		pvAction: String,
 		pvRemainingInterpolated: Number,
 		vehicleClimaterActive: Boolean,
-		sessionSolarPercentage: Number,
 		smartCostLimit: Number,
 		smartCostType: String,
 		smartCostActive: Boolean,
 		tariffGrid: Number,
 		tariffCo2: Number,
 		currency: String,
+	},
+	emits: ["open-loadpoint-settings", "open-minsoc-settings", "open-plan-modal"],
+	data() {
+		return {
+			pvTooltip: null,
+			phaseTooltip: null,
+			planStartTooltip: null,
+			planActiveTooltip: null,
+		};
+	},
+	mounted() {
+		this.updatePlanStartTooltip();
+		this.updatePlanActiveTooltip();
+	},
+	watch: {
+		planProjectedEnd() {
+			this.updatePlanActiveTooltip();
+		},
+		planProjectedStart() {
+			this.updatePlanStartTooltip();
+		},
+		planTimeUnreachable() {
+			this.updatePlanActiveTooltip();
+		},
 	},
 	computed: {
 		phaseTimerActive() {
@@ -179,12 +219,6 @@ export default {
 		},
 		phaseIconClass() {
 			return this.phaseAction === "scale1p" ? "phaseUp" : "phaseDown";
-		},
-		solarPercentageVisible() {
-			return this.sessionSolarPercentage > 0;
-		},
-		solarPercentageClass() {
-			return this.charging && this.greenShareLoadpoints > 0 ? "text-primary" : "";
 		},
 		vehicleLimitVisible() {
 			const limit = Math.max(this.vehicleLimitSoc, this.effectiveLimitSoc) || 100;
@@ -225,8 +259,11 @@ export default {
 		planStartVisible() {
 			return this.planProjectedStart && !this.planActive && !this.chargingPlanDisabled;
 		},
-		planEndVisible() {
+		planActiveVisible() {
 			return this.effectivePlanTime && this.planActive && !this.chargingPlanDisabled;
+		},
+		planActiveClass() {
+			return this.planTimeUnreachable ? "text-warning" : "text-primary";
 		},
 		smartCostVisible() {
 			return !!this.smartCostLimit;
@@ -376,6 +413,64 @@ export default {
 			return t("connected");
 		},
 	},
+	methods: {
+		openLoadpointSettings() {
+			this.$emit("open-loadpoint-settings");
+		},
+		openMinSocSettings() {
+			this.$emit("open-minsoc-settings");
+		},
+		planStartClicked() {
+			this.planStartTooltip?.hide();
+			this.$emit("open-plan-modal");
+		},
+		planActiveClicked() {
+			this.planActiveTooltip?.hide();
+			this.$emit("open-plan-modal");
+		},
+		updatePlanStartTooltip() {
+			if (!this.planProjectedStart) {
+				return;
+			}
+			this.planStartTooltip = this.updateTooltip(
+				this.planStartTooltip,
+				this.$t("main.vehicleStatus.targetChargePlanned", {
+					time: this.fmtAbsoluteDate(new Date(this.planProjectedStart)),
+				}),
+				this.$refs.planStart,
+				true
+			);
+		},
+		updatePlanActiveTooltip() {
+			if (!this.planProjectedEnd) {
+				return;
+			}
+			const endTime = this.fmtAbsoluteDate(new Date(this.planProjectedEnd));
+			const content = this.planTimeUnreachable
+				? this.$t("main.targetCharge.notReachableInTime", { endTime })
+				: this.$t("main.vehicleStatus.targetChargeActive", { endTime });
+			this.planActiveTooltip = this.updateTooltip(
+				this.planActiveTooltip,
+				content,
+				this.$refs.planActive,
+				true
+			);
+		},
+		updateTooltip: function (instance, content, ref, hoverOnly = false) {
+			if (!content || !ref) {
+				if (instance) {
+					instance.dispose();
+				}
+				return;
+			}
+			if (!instance) {
+				const trigger = hoverOnly ? "hover" : undefined;
+				instance = new Tooltip(ref, { title: " ", trigger });
+			}
+			instance.setContent({ ".tooltip-inner": content });
+			return instance;
+		},
+	},
 };
 </script>
 
@@ -385,7 +480,14 @@ export default {
 	align-items: center;
 	flex-wrap: nowrap;
 	text-wrap: nowrap;
+	border: none;
+	color: inherit;
+	background: none;
+	padding: 0;
 	gap: 0.5rem;
+	transition:
+		color var(--evcc-transition-medium) linear,
+		opacity var(--evcc-transition-medium) linear;
 }
 .phaseUp {
 	transform: rotate(90deg);

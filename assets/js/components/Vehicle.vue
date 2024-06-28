@@ -6,7 +6,13 @@
 			@change-vehicle="changeVehicle"
 			@remove-vehicle="removeVehicle"
 		/>
-		<VehicleStatus v-bind="vehicleStatus" class="mb-2" />
+		<VehicleStatus
+			v-bind="vehicleStatus"
+			class="mb-2"
+			@open-loadpoint-settings="$emit('open-loadpoint-settings')"
+			@open-minsoc-settings="openMinSocSettings"
+			@open-plan-modal="openPlanModal"
+		/>
 		<VehicleSoc
 			v-bind="vehicleSocProps"
 			class="mt-2 mb-4"
@@ -105,8 +111,10 @@ export default {
 		planActive: Boolean,
 		planEnergy: Number,
 		planProjectedStart: String,
+		planProjectedEnd: String,
 		planTime: String,
 		planTimeUnreachable: Boolean,
+		planOverrun: Number,
 		pvAction: String,
 		pvRemainingInterpolated: Number,
 		sessionSolarPercentage: Number,
@@ -125,9 +133,14 @@ export default {
 		vehicleSoc: Number,
 		vehicleLimitSoc: Number,
 		vehicleNotReachable: Boolean,
-		greenShareLoadpoints: Number,
 	},
-	emits: ["limit-soc-updated", "limit-energy-updated", "change-vehicle", "remove-vehicle"],
+	emits: [
+		"limit-soc-updated",
+		"limit-energy-updated",
+		"change-vehicle",
+		"remove-vehicle",
+		"open-loadpoint-settings",
+	],
 	data() {
 		return {
 			displayLimitSoc: this.effectiveLimitSoc,
@@ -236,6 +249,9 @@ export default {
 		},
 		openPlanModal() {
 			this.$refs.chargingPlan.openPlanModal();
+		},
+		openMinSocSettings() {
+			this.$refs.chargingPlan.openPlanModal(true);
 		},
 	},
 };

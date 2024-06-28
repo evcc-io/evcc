@@ -23,7 +23,6 @@
 					:currency="currency"
 					:multipleLoadpoints="loadpoints.length > 1"
 					:gridConfigured="gridConfigured"
-					:greenShareLoadpoints="greenShareLoadpoints"
 					:pvConfigured="pvConfigured"
 					class="h-100"
 					:class="{ 'loadpoint-unselected': !selected(index) }"
@@ -72,7 +71,6 @@ export default {
 		currency: String,
 		gridConfigured: Boolean,
 		pvConfigured: Boolean,
-		greenShareLoadpoints: Number,
 	},
 	data() {
 		return { selectedIndex: 0, snapTimeout: null };
