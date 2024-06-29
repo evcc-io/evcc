@@ -33,6 +33,11 @@ params:
   - name: vin
     example: W...
   - name: capacity
+  - name: bleHost
+    help:
+      en: "If Ble-Proxy should be used instead of Tesla Fleet Api."
+      de: "Wenn ein BLE-Proxy anstatt der Tesla Fleet Api verwendet werden soll."
+  - name: blePort
   - name: phases
     advanced: true
   - name: control
@@ -44,6 +49,9 @@ render: |
   tokens:
     access: {{ .accessToken }}
     refresh: {{ .refreshToken }}
+  {{- if .bleHost }}
+  bleUri: http://{{ .bleHost }}:{{ .blePort }}
+  {{- end }}
   {{ include "vehicle-common" . }}
   {{ include "vehicle-identify" . }}
   features: ["coarsecurrent"]

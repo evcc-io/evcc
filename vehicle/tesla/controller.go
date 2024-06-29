@@ -15,19 +15,21 @@ const ProxyBaseUrl = "https://tesla.evcc.io"
 
 type Controller struct {
 	vehicle *tesla.Vehicle
+	ble     bool
 	current int64
 	dataG   provider.Cacheable[float64]
 }
 
 // NewController creates a vehicle current and charge controller
-func NewController(ro, rw *tesla.Vehicle) *Controller {
+func NewController(ro, rw *tesla.Vehicle, ble bool) *Controller {
 	v := &Controller{
 		vehicle: rw,
+		ble:     ble,
 	}
 
 	v.dataG = provider.ResettableCached(func() (float64, error) {
-		if v.current >= 6 {
-			// assume match above 6A to save API requests
+		if v.current >= 6 || v.ble {
+			// assume match above 6A to save API requests OR if bleVehicle is active
 			return float64(v.current), nil
 		}
 		res, err := ro.Data()
@@ -49,8 +51,10 @@ func (v *Controller) MaxCurrent(current int64) error {
 	}
 
 	v.current = current
-	v.dataG.Reset()
 
+	if !v.ble {
+		v.dataG.Reset()
+	}
 	return apiError(v.vehicle.SetChargingAmps(int(current)))
 }
 

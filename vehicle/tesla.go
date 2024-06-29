@@ -32,6 +32,7 @@ func init() {
 	if tesla.OAuth2Config.ClientID != "" {
 		registry.Add("tesla", NewTeslaFromConfig)
 	}
+	registry.Add("tesla", NewTeslaFromConfig)
 }
 
 // NewTeslaFromConfig creates a new vehicle
@@ -40,6 +41,7 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		embed   `mapstructure:",squash"`
 		Tokens  Tokens
 		VIN     string
+		BleURI  string
 		Timeout time.Duration
 		Cache   time.Duration
 	}{
@@ -94,25 +96,43 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, err
 	}
 
-	// proxy client
-	pc := request.NewClient(log)
-	pc.Transport = &transport.Decorator{
-		Decorator: transport.DecorateHeaders(map[string]string{
-			"X-Auth-Token": sponsor.Token,
-		}),
-		Base: hc.Transport,
-	}
+	// proxy or ble proxy
+	var proxyVehicle *teslaclient.Vehicle = nil
+	var ble bool
+	if cc.BleURI != "" {
+		bc := request.NewClient(log)
 
-	tcc, err := teslaclient.NewClient(context.Background(), teslaclient.WithClient(pc))
-	if err != nil {
-		return nil, err
+		tbc, err := teslaclient.NewClient(context.Background(), teslaclient.WithClient(bc))
+		if err != nil {
+			return nil, err
+		}
+		tbc.SetBaseUrl(cc.BleURI)
+
+		proxyVehicle = vehicle.WithClient(tbc)
+		ble = true
+	} else {
+		pc := request.NewClient(log)
+		pc.Transport = &transport.Decorator{
+			Decorator: transport.DecorateHeaders(map[string]string{
+				"X-Auth-Token": sponsor.Token,
+			}),
+			Base: hc.Transport,
+		}
+
+		tcc, err := teslaclient.NewClient(context.Background(), teslaclient.WithClient(pc))
+		if err != nil {
+			return nil, err
+		}
+		tcc.SetBaseUrl(tesla.ProxyBaseUrl)
+
+		proxyVehicle = vehicle.WithClient(tcc)
+		ble = false
 	}
-	tcc.SetBaseUrl(tesla.ProxyBaseUrl)
 
 	v := &Tesla{
 		embed:      &cc.embed,
 		Provider:   tesla.NewProvider(vehicle, cc.Cache),
-		Controller: tesla.NewController(vehicle, vehicle.WithClient(tcc)),
+		Controller: tesla.NewController(vehicle, proxyVehicle, ble),
 	}
 
 	v.fromVehicle(vehicle.DisplayName, 0)
