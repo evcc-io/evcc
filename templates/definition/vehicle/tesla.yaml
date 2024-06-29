@@ -39,7 +39,6 @@ params:
     deprecated: true
   - name: commandProxy
     default: https://tesla.evcc.io/
-    required: true
     advanced: true
     help:
       en: "When using a TWC3 (or other 'dumb' charger not capable of control), evcc can manage the charge directly by communicating with the vehicle through a Command Proxy. By default, the proxy provided by evcc is used. With this parameter, you set the base URL of a custom Command Proxy to use instead of the default evcc one. See for example https://github.com/wimaha/TeslaBleHttpProxy for a proxy sending commands via bluetooth."
