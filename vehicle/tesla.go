@@ -96,7 +96,7 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	// proxy or ble proxy
-	var proxyVehicle *teslaclient.Vehicle = nil
+	var proxyVehicle *teslaclient.Vehicle
 	var ble bool
 	if cc.BleURI != "" {
 		bc := request.NewClient(log)
