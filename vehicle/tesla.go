@@ -37,12 +37,13 @@ func init() {
 // NewTeslaFromConfig creates a new vehicle
 func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
-		embed        `mapstructure:",squash"`
-		Tokens       Tokens
-		VIN          string
-		CommandProxy string
-		Timeout      time.Duration
-		Cache        time.Duration
+		embed               `mapstructure:",squash"`
+		Tokens              Tokens
+		VIN                 string
+		Timeout             time.Duration
+		Cache               time.Duration
+		CommandProxy        string
+		DisableCurrentCheck bool
 	}{
 		Timeout: request.Timeout,
 		Cache:   interval,
@@ -114,7 +115,7 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	v := &Tesla{
 		embed:      &cc.embed,
 		Provider:   tesla.NewProvider(vehicle, cc.Cache),
-		Controller: tesla.NewController(vehicle, vehicle.WithClient(tcc)),
+		Controller: tesla.NewController(vehicle, vehicle.WithClient(tcc), cc.DisableCurrentCheck),
 	}
 
 	v.fromVehicle(vehicle.DisplayName, 0)

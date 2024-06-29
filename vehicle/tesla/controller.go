@@ -18,14 +18,14 @@ type Controller struct {
 }
 
 // NewController creates a vehicle current and charge controller
-func NewController(ro, rw *tesla.Vehicle) *Controller {
+func NewController(ro, rw *tesla.Vehicle, disableCurrentCheck) *Controller {
 	v := &Controller{
 		vehicle: rw,
 	}
 
 	v.dataG = provider.ResettableCached(func() (float64, error) {
-		if v.current >= 6 {
-			// assume match above 6A to save API requests
+		// assume match to save API requests
+		if disableCurrentCheck || v.current >= 6 {
 			return float64(v.current), nil
 		}
 		res, err := ro.Data()
