@@ -42,7 +42,8 @@ params:
     required: false
     advanced: true
     help:
-      en: "Set the base URL of a custom command proxy to use instead of the default evcc one. See https://github.com/wimaha/TeslaBleHttpProxy for a proxy sending commands via bluetooth."
+      en: "Set the base URL of a custom command proxy to use instead of the default evcc one. See for example https://github.com/wimaha/TeslaBleHttpProxy for a proxy sending commands via bluetooth."
+      de: "Setzt die Basis-URL eines benutzerdefinierten Kommando-Proxy, der anstelle des standardmäßigen evcc-Proxy verwendet werden soll. Siehe zum Beispiel https://github.com/wimaha/TeslaBleHttpProxy für einen Proxy, der Kommandos über Bluetooth sendet."
   - preset: vehicle-identify
 render: |
   type: tesla
