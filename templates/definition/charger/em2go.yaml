@@ -4,7 +4,7 @@ products:
   - brand: EM2GO
     description:
       generic: Home, Pro Power, OCPP/ONC
-capabilities: ["mA"]
+capabilities: ["mA", "1p3p"]
 requirements:
   description:
     de: "Aktuelle Firmware mit Modbus-Unterstützung notwendig (Home: E3C_V1.1, Pro Power: 1.01 bzw. OCPP/ONC: 3.15)"
