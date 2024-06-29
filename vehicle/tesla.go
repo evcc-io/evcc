@@ -32,7 +32,6 @@ func init() {
 	if tesla.OAuth2Config.ClientID != "" {
 		registry.Add("tesla", NewTeslaFromConfig)
 	}
-	registry.Add("tesla", NewTeslaFromConfig)
 }
 
 // NewTeslaFromConfig creates a new vehicle
