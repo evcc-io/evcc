@@ -40,7 +40,7 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		embed           `mapstructure:",squash"`
 		Tokens          Tokens
 		VIN             string
-		CommandProxy	string
+		CommandProxy    string
 		Timeout         time.Duration
 		Cache           time.Duration
 	}{
@@ -113,7 +113,7 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	if cc.CommandProxy == "" {
 		tcc.SetBaseUrl(tesla.ProxyBaseUrl)
 	} else {
-		tcc.SetBaseUrl(cc.CommandProxy)	
+		tcc.SetBaseUrl(cc.CommandProxy)
 	}
 
 	v := &Tesla{
