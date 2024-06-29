@@ -38,12 +38,12 @@ params:
   - name: control
     deprecated: true
   - name: commandProxy
-    example: http://192.168.X.Y:8080
-    required: false
+    default: https://tesla.evcc.io/
+    required: true
     advanced: true
     help:
-      en: "Set the base URL of a custom command proxy to use instead of the default evcc one. See for example https://github.com/wimaha/TeslaBleHttpProxy for a proxy sending commands via bluetooth."
-      de: "Setzt die Basis-URL eines benutzerdefinierten Kommando-Proxy, der anstelle des standardmäßigen evcc-Proxy verwendet werden soll. Siehe zum Beispiel https://github.com/wimaha/TeslaBleHttpProxy für einen Proxy, der Kommandos über Bluetooth sendet."
+      en: "When using a TWC3 (or other "dumb" charger not capable of control), evcc can manage the charge directly by communicating with the vehicle through a "Command Proxy". By default, the proxy provided by evcc is used. With this parameter, you set the base URL of a custom Command Proxy to use instead of the default evcc one. See for example https://github.com/wimaha/TeslaBleHttpProxy for a proxy sending commands via bluetooth."
+      de: "Bei Verwendung eines TWC3 (oder eines anderen "dummen" Ladegeräts, das nicht steuerbar ist) kann evcc die Ladung direkt verwalten, indem es über einen "Command Proxy" mit dem Fahrzeug kommuniziert. Standardmäßig wird der von evcc bereitgestellte Proxy verwendet. Dieses parameter setzt die Basis-URL eines benutzerdefinierten Command Proxy, der anstelle des standardmäßigen evcc-Proxy verwendet werden soll. Siehe zum Beispiel https://github.com/wimaha/TeslaBleHttpProxy für einen Proxy, der Kommandos über Bluetooth sendet."
   - preset: vehicle-identify
 render: |
   type: tesla
@@ -54,4 +54,4 @@ render: |
   {{ include "vehicle-common" . }}
   {{ include "vehicle-identify" . }}
   features: ["coarsecurrent"]
-  bleProxyBaseUrl: {{ .bleProxyBaseUrl }}
+  commandProxy: {{ .commandProxy }}

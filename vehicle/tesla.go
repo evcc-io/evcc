@@ -109,12 +109,7 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, err
 	}
 
-	// use ble HTTP proxy if a custom base URL is provided, otherwise use the standard evcc proxy
-	if cc.CommandProxy == "" {
-		tcc.SetBaseUrl(tesla.ProxyBaseUrl)
-	} else {
-		tcc.SetBaseUrl(cc.CommandProxy)
-	}
+	tcc.SetBaseUrl(cc.CommandProxy)
 
 	v := &Tesla{
 		embed:      &cc.embed,

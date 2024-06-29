@@ -11,8 +11,6 @@ import (
 	"github.com/evcc-io/tesla-proxy-client"
 )
 
-const ProxyBaseUrl = "https://tesla.evcc.io"
-
 type Controller struct {
 	vehicle *tesla.Vehicle
 	current int64
