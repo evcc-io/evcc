@@ -113,6 +113,7 @@ render: |
       address: 590 # "Battery output power"
       type: holding
       decode: int16
+    scale: 10
   soc:
     source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -254,6 +255,6 @@ render: |
     register:
       address: 518 # "Total discharge of the battery (Wh)"
       type: holding
-      decode: uint32
+      decode: uint32s
     scale: 0.1
   {{- end }}
