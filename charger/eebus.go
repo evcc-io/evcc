@@ -488,7 +488,7 @@ func (c *EEBus) hasActiveVASVW() bool {
 	}
 
 	// Optimization of self consumption use case support has to be available
-	if !c.uc.EVSoc.IsScenarioAvailableAtEntity(evEntity, 1) {
+	if !c.uc.EvSoc.IsScenarioAvailableAtEntity(evEntity, 1) {
 		return false
 	}
 
@@ -703,11 +703,11 @@ var _ api.Battery = (*EEBus)(nil)
 func (c *EEBus) Soc() (float64, error) {
 	evEntity := c.evEntity()
 
-	if !c.uc.EVSoc.IsScenarioAvailableAtEntity(evEntity, 1) {
+	if !c.uc.EvSoc.IsScenarioAvailableAtEntity(evEntity, 1) {
 		return 0, api.ErrNotAvailable
 	}
 
-	soc, err := c.uc.EVSoc.StateOfCharge(evEntity)
+	soc, err := c.uc.EvSoc.StateOfCharge(evEntity)
 	if err != nil {
 		return 0, api.ErrNotAvailable
 	}

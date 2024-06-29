@@ -64,7 +64,7 @@ type UseCasesEVSE struct {
 	EvseCC ucapi.CemEVSECCInterface
 	EvCC   ucapi.CemEVCCInterface
 	EvCem  ucapi.CemEVCEMInterface
-	EVSoc  ucapi.CemEVSOCInterface
+	EvSoc  ucapi.CemEVSOCInterface
 	OpEV   ucapi.CemOPEVInterface
 	OscEV  ucapi.CemOSCEVInterface
 }
@@ -154,31 +154,23 @@ func NewServer(other Config) (*EEBus, error) {
 	}
 
 	localEntity := c.service.LocalDevice().EntityForType(model.EntityTypeTypeCEM)
-	evsecc := evsecc.NewEVSECC(localEntity, c.evseUsecaseCB)
-	c.service.AddUseCase(evsecc)
-
-	evcc := evcc.NewEVCC(c.service, localEntity, c.evseUsecaseCB)
-	c.service.AddUseCase(evcc)
-
-	evcem := evcem.NewEVCEM(c.service, localEntity, c.evseUsecaseCB)
-	c.service.AddUseCase(evcem)
-
-	opev := opev.NewOPEV(localEntity, c.evseUsecaseCB)
-	c.service.AddUseCase(opev)
-
-	oscev := oscev.NewOSCEV(localEntity, c.evseUsecaseCB)
-	c.service.AddUseCase(oscev)
-
-	evsoc := evsoc.NewEVSOC(localEntity, c.evseUsecaseCB)
-	c.service.AddUseCase(evsoc)
 
 	c.evseUC = &UseCasesEVSE{
-		EvseCC: evsecc,
-		EvCC:   evcc,
-		EvCem:  evcem,
-		OpEV:   opev,
-		OscEV:  oscev,
-		EVSoc:  evsoc,
+		EvseCC: evsecc.NewEVSECC(localEntity, c.evseUsecaseCB),
+		EvCC:   evcc.NewEVCC(c.service, localEntity, c.evseUsecaseCB),
+		EvCem:  evcem.NewEVCEM(c.service, localEntity, c.evseUsecaseCB),
+		OpEV:   opev.NewOPEV(localEntity, c.evseUsecaseCB),
+		OscEV:  oscev.NewOSCEV(localEntity, c.evseUsecaseCB),
+		EvSoc:  evsoc.NewEVSOC(localEntity, c.evseUsecaseCB),
+	}
+
+	// register use cases
+	for _, uc := range []eebusapi.UseCaseInterface{
+		c.evseUC.EvseCC, c.evseUC.EvCC,
+		c.evseUC.EvCem, c.evseUC.OpEV,
+		c.evseUC.OscEV, c.evseUC.EvSoc,
+	} {
+		c.service.AddUseCase(uc)
 	}
 
 	return c, nil
