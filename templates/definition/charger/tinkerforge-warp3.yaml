@@ -11,7 +11,6 @@ requirements:
   description:
     de: Die automatische Phasenumschaltung bei 1p Fahrzeugen muss deaktiviert sein. Siehe https://docs.warp-charger.com/docs/mqtt_http/api_reference/evse#evse_phase_auto_switch_warp3.
     en: The automatic phase switching for 1p vehicles must be deactivated. Siehe https://docs.warp-charger.com/docs/mqtt_http/api_reference/evse#evse_phase_auto_switch_warp3.
-  uri: https://docs.evcc.io/docs/devices/chargers#tinkerforge
 params:
   - preset: mqtt
   - name: topic
