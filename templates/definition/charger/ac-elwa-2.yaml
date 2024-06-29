@@ -56,3 +56,4 @@ render: |
       decode: uint16
     scale: 0.1
   features: ["integrateddevice", "heating"]
+  icon: waterheater
