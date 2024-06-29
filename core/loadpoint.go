@@ -732,7 +732,10 @@ func (lp *Loadpoint) syncCharger() error {
 			if ps, ok := lp.charger.(api.PhaseGetter); ok {
 				if cp, err := ps.GetPhases(); err == nil {
 					chargerPhases = cp
-				} else if !errors.Is(err, api.ErrNotAvailable) {
+				} else {
+					if errors.Is(err, api.ErrNotAvailable) {
+						return nil
+					}
 					return fmt.Errorf("charger get phases: %w", err)
 				}
 			}
