@@ -719,7 +719,7 @@ func (lp *Loadpoint) syncCharger() error {
 				return fmt.Errorf("charger get max current: %w", err)
 			}
 		} else {
-			// use measured phases as fallback, validate if current too high by at least 1A
+			// use measured phase currents as fallback, validate if current too high by at least 1A
 			if current := lp.GetMaxPhaseCurrent(); current > lp.chargeCurrent+1.0 {
 				if shouldBeConsistent {
 					lp.log.WARN.Printf("charger logic error: current mismatch (got %.3gA measured, expected %.3gA)", current, lp.chargeCurrent)
