@@ -440,7 +440,7 @@ func (c *EEBus) writeCurrentLimitData(currents []float64) error {
 
 	// make sure the recommendations are inactive, otherwise the EV won't go to sleep
 	if recommendations, err := c.uc.OscEV.LoadControlLimits(evEntity); err == nil {
-		writeNeeded := false
+		var writeNeeded bool
 
 		for _, item := range recommendations {
 			if item.IsActive {
@@ -476,14 +476,12 @@ func (c *EEBus) hasActiveVASVW() bool {
 	}
 
 	// ISO15118-2 has to be used between EVSE and EV
-	comStandard, err := c.uc.EvCC.CommunicationStandard(evEntity)
-	if err != nil || comStandard != model.DeviceConfigurationKeyValueStringTypeISO151182ED2 {
+	if comStandard, err := c.uc.EvCC.CommunicationStandard(evEntity); err != nil || comStandard != model.DeviceConfigurationKeyValueStringTypeISO151182ED2 {
 		return false
 	}
 
 	// SoC has to be available, otherwise it is plain ISO15118-2
-	_, err = c.Soc()
-	if err != nil {
+	if _, err := c.Soc(); err != nil {
 		return false
 	}
 
@@ -533,6 +531,7 @@ func (c *EEBus) writeLoadControlLimitsVASVW(limits []ucapi.LoadLimitsPhase) bool
 	if evEntity == nil {
 		return false
 	}
+
 	// on OSCEV all limits have to be active except they are set to the default value
 	minLimit, _, _, err := c.uc.OscEV.CurrentLimits(evEntity)
 	if err != nil {
@@ -540,15 +539,11 @@ func (c *EEBus) writeLoadControlLimitsVASVW(limits []ucapi.LoadLimitsPhase) bool
 	}
 
 	for index, item := range limits {
-		if item.Value >= minLimit[index] {
-			limits[index].IsActive = true
-		} else {
-			limits[index].IsActive = false
-		}
+		limits[index].IsActive = item.Value >= minLimit[index]
 	}
 
 	// send the write command
-	if _, err = c.uc.OscEV.WriteLoadControlLimits(evEntity, limits, nil); err != nil {
+	if _, err := c.uc.OscEV.WriteLoadControlLimits(evEntity, limits, nil); err != nil {
 		return false
 	}
 	c.currentLimit = limits[0].Value
