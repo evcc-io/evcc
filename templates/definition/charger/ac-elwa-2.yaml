@@ -13,7 +13,7 @@ render: |
     {{- include "modbus" . | indent 2 }}
     register:
       address: 1000
-      type: holding
+      type: writeholding
       decode: uint16
   enabled:
     source: modbus
