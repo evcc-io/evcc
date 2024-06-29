@@ -18,7 +18,7 @@ type Controller struct {
 }
 
 // NewController creates a vehicle current and charge controller
-func NewController(ro, rw *tesla.Vehicle, disableCurrentCheck) *Controller {
+func NewController(ro, rw *tesla.Vehicle, disableCurrentCheck bool) *Controller {
 	v := &Controller{
 		vehicle: rw,
 	}
