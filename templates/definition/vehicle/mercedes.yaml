@@ -21,15 +21,9 @@ params:
   - name: accessToken
     required: true
     mask: true
-    help:
-      en: "See https://docs.evcc.io/en/docs/devices/vehicles#mercedes"
-      de: "Siehe https://docs.evcc.io/docs/devices/vehicles#mercedes"
   - name: refreshToken
     required: true
     mask: true
-    help:
-      en: "See https://docs.evcc.io/en/docs/devices/vehicles#mercedes"
-      de: "Siehe https://docs.evcc.io/docs/devices/vehicles#mercedes"
   - name: vin
     example: V...
   - name: capacity

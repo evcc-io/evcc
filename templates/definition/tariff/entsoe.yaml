@@ -23,5 +23,6 @@ params:
   - preset: tariff-base
 render: |
   type: entsoe
-  region: {{ .region }}
+  securitytoken: {{ .securitytoken }}
+  domain: {{ .domain }}
   {{ include "tariff-base" . }}

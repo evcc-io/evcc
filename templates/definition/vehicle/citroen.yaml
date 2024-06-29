@@ -19,15 +19,9 @@ params:
   - name: accessToken
     required: true
     mask: true
-    help:
-      en: "See https://docs.evcc.io/en/docs/devices/vehicles#citroen"
-      de: "Siehe https://docs.evcc.io/docs/devices/vehicles#citroen"
   - name: refreshToken
     required: true
     mask: true
-    help:
-      en: "See https://docs.evcc.io/en/docs/devices/vehicles#citroen"
-      de: "Siehe https://docs.evcc.io/docs/devices/vehicles#citroen"
   - name: vin
     example: V...
   - name: capacity
