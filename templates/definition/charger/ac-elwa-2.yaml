@@ -37,7 +37,7 @@ render: |
           decode: uint16
   status:
     source: combined
-    connected:
+    plugged:
       source: const
       value: 1
     charging:
