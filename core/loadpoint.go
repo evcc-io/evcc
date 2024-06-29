@@ -704,8 +704,6 @@ func (lp *Loadpoint) syncCharger() error {
 	// #2: sync charger
 	switch {
 	case enabled && lp.enabled:
-		lp.GetMaxPhaseCurrent()
-
 		// sync max current
 		if charger, ok := lp.charger.(api.CurrentGetter); ok {
 			if current, err := charger.GetMaxCurrent(); err == nil {
