@@ -67,6 +67,7 @@ func init() {
 func NewEEBusFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
 		Ski           string
+		Ip_           string `mapstructure:"ip"` // deprecated
 		Meter         bool
 		ChargedEnergy bool
 		VasVW         bool
