@@ -37,10 +37,12 @@ params:
     advanced: true
   - name: control
     deprecated: true
-  - name: bleProxyBaseUrl
+  - name: commandProxy
     example: http://192.168.X.Y:8080
     required: false
     advanced: true
+    help:
+      en: "Set the base URL of a custom command proxy to use instead of the default evcc one. See https://github.com/wimaha/TeslaBleHttpProxy for a proxy sending commands via bluetooth."
   - preset: vehicle-identify
 render: |
   type: tesla
