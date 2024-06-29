@@ -3,7 +3,7 @@ package charger
 import (
 	"testing"
 
-	"github.com/enbility/cemd/mocks"
+	"github.com/enbility/eebus-go/usecases/mocks"
 	spinemocks "github.com/enbility/spine-go/mocks"
 	"github.com/evcc-io/evcc/charger/eebus"
 	"go.uber.org/mock/gomock"
@@ -119,9 +119,9 @@ func TestEEBusIsCharging(t *testing.T) {
 			for index, m := range tc.measurements {
 				ctrl := gomock.NewController(t)
 
-				evcc := mocks.NewUCEVCCInterface(t)
-				evcem := mocks.NewUCEVCEMInterface(t)
-				opev := mocks.NewUCOPEVInterface(t)
+				evcc := mocks.NewCemEVCCInterface(t)
+				evcem := mocks.NewCemEVCEMInterface(t)
+				opev := mocks.NewCemOPEVInterface(t)
 
 				uc := &eebus.UseCasesEVSE{
 					EvCC:  evcc,

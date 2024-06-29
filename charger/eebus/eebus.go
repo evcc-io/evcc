@@ -15,17 +15,18 @@ import (
 	"time"
 
 	"dario.cat/mergo"
-	cemdapi "github.com/enbility/cemd/api"
-	"github.com/enbility/cemd/cem"
-	"github.com/enbility/cemd/ucevcc"
-	"github.com/enbility/cemd/ucevcem"
-	"github.com/enbility/cemd/ucevsecc"
-	"github.com/enbility/cemd/ucevsoc"
-	"github.com/enbility/cemd/ucopev"
-	"github.com/enbility/cemd/ucoscev"
 	eebusapi "github.com/enbility/eebus-go/api"
+	service "github.com/enbility/eebus-go/service"
+	ucapi "github.com/enbility/eebus-go/usecases/api"
+	"github.com/enbility/eebus-go/usecases/cem/evcc"
+	"github.com/enbility/eebus-go/usecases/cem/evcem"
+	"github.com/enbility/eebus-go/usecases/cem/evsecc"
+	"github.com/enbility/eebus-go/usecases/cem/evsoc"
+	"github.com/enbility/eebus-go/usecases/cem/opev"
+	"github.com/enbility/eebus-go/usecases/cem/oscev"
 	shipapi "github.com/enbility/ship-go/api"
 	"github.com/enbility/ship-go/cert"
+	shiputil "github.com/enbility/ship-go/util"
 	spineapi "github.com/enbility/spine-go/api"
 	"github.com/enbility/spine-go/model"
 	"github.com/evcc-io/evcc/util"
@@ -53,22 +54,23 @@ func (c Config) Configured() bool {
 }
 
 type EEBUSDeviceInterface interface {
-	DeviceConnect(device spineapi.DeviceRemoteInterface, event cemdapi.EventType)
-	UseCaseEventCB(device spineapi.DeviceRemoteInterface, entity spineapi.EntityRemoteInterface, event cemdapi.EventType)
+	DeviceConnect()
+	DeviceDisconnect()
+	UseCaseEventCB(device spineapi.DeviceRemoteInterface, entity spineapi.EntityRemoteInterface, event eebusapi.EventType)
 }
 
 // EVSE UseCases
 type UseCasesEVSE struct {
-	EvseCC ucevsecc.UCEVSECCInterface
-	EvCC   ucevcc.UCEVCCInterface
-	EvCem  ucevcem.UCEVCEMInterface
-	EVSoc  ucevsoc.UCEVSOCInterface
-	OpEV   ucopev.UCOPEVInterface
-	OscEV  ucoscev.UCOSCEVInterface
+	EvseCC ucapi.CemEVSECCInterface
+	EvCC   ucapi.CemEVCCInterface
+	EvCem  ucapi.CemEVCEMInterface
+	EVSoc  ucapi.CemEVSOCInterface
+	OpEV   ucapi.CemOPEVInterface
+	OscEV  ucapi.CemOSCEVInterface
 }
 
 type EEBus struct {
-	Cem *cem.Cem
+	service eebusapi.ServiceInterface
 
 	evseUC *UseCasesEVSE
 
@@ -145,28 +147,30 @@ func NewServer(other Config) (*EEBus, error) {
 		SKI:     ski,
 	}
 
-	c.Cem = cem.NewCEM(configuration, c, c.deviceEventCB, c)
-	if err := c.Cem.Setup(); err != nil {
+	c.service = service.NewService(configuration, c)
+	c.service.SetLogging(c)
+	if err := c.service.Setup(); err != nil {
 		return nil, err
 	}
 
-	evsecc := ucevsecc.NewUCEVSECC(c.Cem.Service, c.evseUsecaseCB)
-	c.Cem.AddUseCase(evsecc)
+	localEntity := c.service.LocalDevice().EntityForType(model.EntityTypeTypeCEM)
+	evsecc := evsecc.NewEVSECC(localEntity, c.evseUsecaseCB)
+	c.service.AddUseCase(evsecc)
 
-	evcc := ucevcc.NewUCEVCC(c.Cem.Service, c.evseUsecaseCB)
-	c.Cem.AddUseCase(evcc)
+	evcc := evcc.NewEVCC(c.service, localEntity, c.evseUsecaseCB)
+	c.service.AddUseCase(evcc)
 
-	evcem := ucevcem.NewUCEVCEM(c.Cem.Service, c.evseUsecaseCB)
-	c.Cem.AddUseCase(evcem)
+	evcem := evcem.NewEVCEM(c.service, localEntity, c.evseUsecaseCB)
+	c.service.AddUseCase(evcem)
 
-	opev := ucopev.NewUCOPEV(c.Cem.Service, c.evseUsecaseCB)
-	c.Cem.AddUseCase(opev)
+	opev := opev.NewOPEV(localEntity, c.evseUsecaseCB)
+	c.service.AddUseCase(opev)
 
-	oscev := ucoscev.NewUCOSCEV(c.Cem.Service, c.evseUsecaseCB)
-	c.Cem.AddUseCase(oscev)
+	oscev := oscev.NewOSCEV(localEntity, c.evseUsecaseCB)
+	c.service.AddUseCase(oscev)
 
-	evsoc := ucevsoc.NewUCEVSOC(c.Cem.Service, c.evseUsecaseCB)
-	c.Cem.AddUseCase(evsoc)
+	evsoc := evsoc.NewEVSOC(localEntity, c.evseUsecaseCB)
+	c.service.AddUseCase(evsoc)
 
 	c.evseUC = &UseCasesEVSE{
 		EvseCC: evsecc,
@@ -181,13 +185,14 @@ func NewServer(other Config) (*EEBus, error) {
 }
 
 func (c *EEBus) RegisterEVSE(ski string, device EEBUSDeviceInterface) *UseCasesEVSE {
+	ski = shiputil.NormalizeSKI(ski)
 	c.log.TRACE.Printf("registering ski: %s", ski)
 
 	if ski == c.SKI {
 		c.log.FATAL.Fatal("The charger SKI can not be identical to the SKI of evcc!")
 	}
 
-	c.Cem.Service.RegisterRemoteSKI(ski)
+	c.service.RegisterRemoteSKI(ski)
 
 	c.mux.Lock()
 	defer c.mux.Unlock()
@@ -197,25 +202,15 @@ func (c *EEBus) RegisterEVSE(ski string, device EEBUSDeviceInterface) *UseCasesE
 }
 
 func (c *EEBus) Run() {
-	c.Cem.Start()
+	c.service.Start()
 }
 
 func (c *EEBus) Shutdown() {
-	c.Cem.Shutdown()
-}
-
-// CEMd Callbacks
-func (c *EEBus) deviceEventCB(ski string, device spineapi.DeviceRemoteInterface, event cemdapi.EventType) {
-	c.mux.Lock()
-	defer c.mux.Unlock()
-
-	if client, ok := c.clients[ski]; ok {
-		client.DeviceConnect(device, event)
-	}
+	c.service.Shutdown()
 }
 
 // EVSE/EV UseCase CB
-func (c *EEBus) evseUsecaseCB(ski string, device spineapi.DeviceRemoteInterface, entity spineapi.EntityRemoteInterface, event cemdapi.EventType) {
+func (c *EEBus) evseUsecaseCB(ski string, device spineapi.DeviceRemoteInterface, entity spineapi.EntityRemoteInterface, event eebusapi.EventType) {
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
@@ -227,10 +222,24 @@ func (c *EEBus) evseUsecaseCB(ski string, device spineapi.DeviceRemoteInterface,
 // EEBUSServiceHandler
 
 // no implementation needed, handled in CEM events
-func (c *EEBus) RemoteSKIConnected(service eebusapi.ServiceInterface, ski string) {}
+func (c *EEBus) RemoteSKIConnected(service eebusapi.ServiceInterface, ski string) {
+	c.mux.Lock()
+	defer c.mux.Unlock()
+
+	if client, ok := c.clients[ski]; ok {
+		client.DeviceConnect()
+	}
+}
 
 // no implementation needed, handled in CEM events
-func (c *EEBus) RemoteSKIDisconnected(service eebusapi.ServiceInterface, ski string) {}
+func (c *EEBus) RemoteSKIDisconnected(service eebusapi.ServiceInterface, ski string) {
+	c.mux.Lock()
+	defer c.mux.Unlock()
+
+	if client, ok := c.clients[ski]; ok {
+		client.DeviceConnect()
+	}
+}
 
 // report all currently visible EEBUS services
 // this is needed to provide an UI for pairing with other devices
@@ -256,7 +265,7 @@ func (c *EEBus) ServicePairingDetailUpdate(ski string, detail *shipapi.Connectio
 
 	if _, ok := c.clients[ski]; !ok {
 		// this is an unknown SKI, so deny pairing
-		c.Cem.Service.CancelPairingWithSKI(ski)
+		c.service.CancelPairingWithSKI(ski)
 	}
 }
 
