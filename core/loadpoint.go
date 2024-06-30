@@ -755,6 +755,9 @@ func (lp *Loadpoint) syncCharger() error {
 			}
 		}
 
+	case enabled == lp.enabled:
+		// sync disabled state
+
 	case !enabled && !lp.phaseSwitchCompleted():
 		// some chargers (i.E. Easee in some configurations) disable themselves to be able to switch phases
 		// -> enable charger
