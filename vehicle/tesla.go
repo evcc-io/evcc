@@ -40,7 +40,7 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		embed        `mapstructure:",squash"`
 		Tokens       Tokens
 		VIN          string
-		Timeou       time.Duration
+		Timeout      time.Duration
 		Cache        time.Duration
 		CommandProxy string
 	}{
