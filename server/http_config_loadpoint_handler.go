@@ -18,20 +18,20 @@ import (
 
 type loadpointStaticConfig struct {
 	// static config
-	Charger        *string `json:"charger,omitempty"`
-	Meter          *string `json:"meter,omitempty"`
-	Circuit        *string `json:"circuit,omitempty"`
-	DefaultVehicle *string `json:"defaultVehicle,omitempty"`
-	Title          string  `json:"title"`
+	Charger *string `json:"charger,omitempty"`
+	Meter   *string `json:"meter,omitempty"`
+	Circuit *string `json:"circuit,omitempty"`
+	Vehicle *string `json:"vehicle,omitempty"`
+	Title   string  `json:"title"`
 }
 
 func getLoadpointStaticConfig(lp loadpoint.API) loadpointStaticConfig {
 	return loadpointStaticConfig{
-		Charger:        util.PtrTo(lp.GetChargerName()),
-		Meter:          util.PtrTo(lp.GetMeterName()),
-		Circuit:        util.PtrTo(lp.GetCircuitName()),
-		DefaultVehicle: util.PtrTo(lp.GetDefaultVehicle()),
-		Title:          lp.GetTitle(),
+		Charger: util.PtrTo(lp.GetChargerName()),
+		Meter:   util.PtrTo(lp.GetMeterName()),
+		Circuit: util.PtrTo(lp.GetCircuitName()),
+		Vehicle: util.PtrTo(lp.GetDefaultVehicle()),
+		Title:   lp.GetTitle(),
 	}
 }
 
