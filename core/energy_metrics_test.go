@@ -120,7 +120,7 @@ func TestEnergyMetrics(t *testing.T) {
 		s := NewEnergyMetrics()
 
 		for _, tc := range tc.steps {
-			s.SetEnvironment(tc.greenShare, tc.effPrice, tc.effCo2)
+			s.SetEnvironment(tc.greenShare, tc.effPrice, nil, tc.effCo2, nil)
 			s.Update(tc.kWh)
 		}
 
@@ -146,7 +146,7 @@ func TestEnergyMetrics(t *testing.T) {
 
 	// reset
 	s := NewEnergyMetrics()
-	s.SetEnvironment(1, f(1), f(1))
+	s.SetEnvironment(1, f(1), f(1), f(1), f(1))
 	s.Update(1)
 	s.Reset()
 	if s.TotalWh() != 0 || s.SolarPercentage() != 0 || s.Co2PerKWh() != nil || s.Price() != nil || s.PricePerKWh() != nil {

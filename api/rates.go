@@ -38,3 +38,17 @@ func (r Rates) Current(now time.Time) (Rate, error) {
 
 	return Rate{}, errors.New("no matching rate")
 }
+
+// Average return the average price of all currently known rates
+func (r Rates) Average() (float64, error) {
+	if len(r) == 0 {
+		return 0, errors.New("no rates available")
+	}
+
+	var sum float64
+	for _, rr := range r {
+		sum += rr.Price
+	}
+
+	return sum / float64(len(r)), nil
+}

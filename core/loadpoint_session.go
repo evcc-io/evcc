@@ -72,8 +72,10 @@ func (lp *Loadpoint) stopSession() {
 	solarPerc := lp.sessionEnergy.SolarPercentage()
 	s.SolarPercentage = &solarPerc
 	s.Price = lp.sessionEnergy.Price()
+	s.PriceSaved = lp.sessionEnergy.PriceSaved()
 	s.PricePerKWh = lp.sessionEnergy.PricePerKWh()
 	s.Co2PerKWh = lp.sessionEnergy.Co2PerKWh()
+	s.Co2Saved = lp.sessionEnergy.Co2Saved()
 	s.ChargedEnergy = lp.sessionEnergy.TotalWh() / 1e3
 	s.ChargeDuration = &lp.chargeDuration
 
