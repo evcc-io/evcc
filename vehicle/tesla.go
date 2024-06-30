@@ -43,7 +43,6 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		Timeout             time.Duration
 		Cache               time.Duration
 		CommandProxy        string
-		DisableCurrentCheck bool
 	}{
 		Timeout: request.Timeout,
 		Cache:   interval,
@@ -115,7 +114,7 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	v := &Tesla{
 		embed:      &cc.embed,
 		Provider:   tesla.NewProvider(vehicle, cc.Cache),
-		Controller: tesla.NewController(vehicle, vehicle.WithClient(tcc), cc.DisableCurrentCheck),
+		Controller: tesla.NewController(vehicle, vehicle.WithClient(tcc)),
 	}
 
 	v.fromVehicle(vehicle.DisplayName, 0)
