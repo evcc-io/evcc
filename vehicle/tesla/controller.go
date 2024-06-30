@@ -11,6 +11,8 @@ import (
 	"github.com/evcc-io/tesla-proxy-client"
 )
 
+const ProxyBaseUrl = "https://tesla.evcc.io"
+
 type Controller struct {
 	vehicle *tesla.Vehicle
 	current int64
@@ -24,8 +26,8 @@ func NewController(ro, rw *tesla.Vehicle) *Controller {
 	}
 
 	v.dataG = provider.ResettableCached(func() (float64, error) {
-		// assume match to save API requests
 		if v.current >= 6 {
+			// assume match to save API requests
 			return float64(v.current), nil
 		}
 		res, err := ro.Data()
