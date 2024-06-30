@@ -87,10 +87,7 @@
 				@click="planActiveClicked"
 			>
 				<PlanEndIcon />
-				<span class="tabular" v-if="planTimeUnreachable">
-					+ {{ fmtDuration(planOverrun) }}
-				</span>
-				<span v-else class="text-decoration-underline">
+				<span>
 					{{ fmtAbsoluteDate(new Date(planProjectedEnd)) }}
 				</span>
 			</button>

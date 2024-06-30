@@ -59,7 +59,6 @@ import VehicleStatus from "./VehicleStatus.vue";
 				planProjectedStart="2020-03-16T02:00:00Z"
 			/>
 		</Variant>
-		<!-- TODO: add projected plan end
 		<Variant title="plan: active">
 			<VehicleStatus
 				connected
@@ -67,9 +66,20 @@ import VehicleStatus from "./VehicleStatus.vue";
 				planActive
 				effectivePlanTime="2020-03-16T06:00:00Z"
 				planProjectedStart="2020-03-16T02:00:00Z"
+				planProjectedEnd="2020-03-16T05:12:00Z"
 			/>
 		</Variant>
-		-->
+		<Variant title="plan: active, not reachable">
+			<VehicleStatus
+				connected
+				charging
+				planActive
+				effectivePlanTime="2020-03-16T06:00:00Z"
+				planProjectedStart="2020-03-16T02:00:00Z"
+				planProjectedEnd="2020-03-16T07:12:00Z"
+				planTimeUnreachable
+			/>
+		</Variant>
 		<Variant title="vehicle: climating">
 			<VehicleStatus connected enabled vehicleClimaterActive />
 		</Variant>
@@ -177,13 +187,13 @@ import VehicleStatus from "./VehicleStatus.vue";
 			<VehicleStatus
 				connected
 				charging
-				phaseAction="scale3p"
-				:phaseRemainingInterpolated="181"
+				pvAction="disable"
+				:pvRemainingInterpolated="181"
 				effectivePlanTime="2020-03-26T08:12:00Z"
 				planProjectedStart="2020-03-26T04:44:00Z"
 			/>
 		</Variant>
-		<Variant title="combination: solar charging, vehicle limit, plan">
+		<Variant title="combination: vehicle limit, plan">
 			<VehicleStatus
 				connected
 				charging
