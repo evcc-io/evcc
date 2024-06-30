@@ -44,7 +44,7 @@ render: |
   tokens:
     access: {{ .accessToken }}
     refresh: {{ .refreshToken }}
+  commandProxy: {{ .commandProxy }}
   {{ include "vehicle-common" . }}
   {{ include "vehicle-identify" . }}
   features: ["coarsecurrent"]
-  commandProxy: {{ .commandProxy }}
