@@ -82,6 +82,7 @@ describe("min charge", () => {
 describe("plan", () => {
   const effectivePlanTime = "2020-03-16T06:00:00Z";
   const planProjectedStart = "2020-03-16T02:00:00Z";
+  const planProjectedEnd = "2020-03-16T05:00:00Z";
   test("charging if target time is set, status is charging but planned slot is not active", () => {
     expectEntries(
       { effectivePlanTime, charging: true, connected: true },
@@ -90,13 +91,13 @@ describe("plan", () => {
   });
   test("active if target time is set, status is charging and planned slot is active", () => {
     expectEntries(
-      { effectivePlanTime, planActive: true, charging: true, connected: true },
+      { planProjectedEnd, planActive: true, charging: true, connected: true },
       { charger: "main.vehicleStatus.charging", planactive: true }
     );
   });
   test("waiting for vehicle if a target time is set, the charger is enabled but not charging", () => {
     expectEntries(
-      { effectivePlanTime, planActive: true, enabled: true, connected: true },
+      { planProjectedEnd, planActive: true, enabled: true, connected: true },
       { charger: "main.vehicleStatus.waitForVehicle", planactive: true }
     );
   });
