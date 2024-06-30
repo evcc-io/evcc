@@ -5,6 +5,7 @@ import (
 	_ "embed"
 	"errors"
 	"fmt"
+	"maps"
 	"os"
 	"slices"
 	"strconv"
@@ -18,7 +19,6 @@ import (
 	"github.com/evcc-io/evcc/util/machine"
 	"github.com/evcc-io/evcc/util/templates"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
-	"golang.org/x/exp/maps"
 	"golang.org/x/text/language"
 )
 
@@ -107,7 +107,7 @@ func (c *CmdConfigure) Run(log *util.Logger, flagLang string, advancedMode, expa
 			}
 		}
 
-		log.FATAL.Fatalln("invalid category:", category, "have:", maps.Keys(DeviceCategories))
+		log.FATAL.Fatalln("invalid category:", category, "have:", slices.Collect(maps.Keys(DeviceCategories)))
 	}
 
 	fmt.Println()

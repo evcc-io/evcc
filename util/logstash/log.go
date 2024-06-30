@@ -3,12 +3,12 @@ package logstash
 import (
 	"container/ring"
 	"io"
+	"maps"
 	"slices"
 	"strings"
 	"sync"
 
 	jww "github.com/spf13/jwalterweatherman"
-	"golang.org/x/exp/maps"
 )
 
 var DefaultHandler = New(10000)
@@ -91,9 +91,7 @@ func (l *logger) Areas() []string {
 		}
 	}
 
-	keys := maps.Keys(areas)
-	slices.Sort(keys)
-	return keys
+	return slices.Sorted(maps.Keys(areas))
 }
 
 func (l *logger) All(areas []string, level jww.Threshold, count int) []string {
