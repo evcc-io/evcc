@@ -114,6 +114,14 @@ render: |
       type: holding
       decode: int16
     scale: 10
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 518 # "Total discharge of the battery (Wh)"
+      type: holding
+      decode: uint32s
+    scale: 0.1
   soc:
     source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -249,12 +257,4 @@ render: |
   {{- if .capacity }}
   capacity: {{ .capacity }} # kWh
   {{- end }}
-  energy:
-    source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: 518 # "Total discharge of the battery (Wh)"
-      type: holding
-      decode: uint32s
-    scale: 0.1
   {{- end }}
