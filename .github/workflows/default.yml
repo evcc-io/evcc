@@ -9,7 +9,8 @@ on:
       - master
   pull_request:
   workflow_call:
-
+  workflow_dispatch:
+  
 jobs:
   clean:
     name: Clean
