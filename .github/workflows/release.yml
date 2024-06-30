@@ -1,7 +1,7 @@
 name: Release
 
 env:
-  GO_VERSION: ^1.22
+  GO_VERSION: ^1.23
 
 on:
   push:
