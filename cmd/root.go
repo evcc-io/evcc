@@ -27,7 +27,6 @@ import (
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 	vpr "github.com/spf13/viper"
-	"gopkg.in/yaml.v3"
 )
 
 const (
@@ -120,14 +119,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 			log.FATAL.Fatal(err)
 		}
 	} else {
-		switch cfgErr.(type) {
-		case *yaml.ParserError, yaml.UnmarshalError:
-			// yaml errors can be duck-typed by checking for line information
-			err = cfgErr
-		default:
-			// all other errors will ger a config file class
-			err = wrapErrorWithClass(ClassConfigFile, cfgErr)
-		}
+		err = wrapErrorWithClass(ClassConfigFile, cfgErr)
 	}
 
 	// setup environment
