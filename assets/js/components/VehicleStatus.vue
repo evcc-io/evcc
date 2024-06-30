@@ -186,14 +186,11 @@ export default {
 		this.updatePlanActiveTooltip();
 	},
 	watch: {
-		planProjectedEnd() {
+		planActiveTooltipContent() {
 			this.updatePlanActiveTooltip();
 		},
-		planProjectedStart() {
+		planStartTooltipContent() {
 			this.updatePlanStartTooltip();
-		},
-		planTimeUnreachable() {
-			this.updatePlanActiveTooltip();
 		},
 	},
 	computed: {
@@ -259,11 +256,28 @@ export default {
 		planStartVisible() {
 			return this.planProjectedStart && !this.planActive && !this.chargingPlanDisabled;
 		},
+		planStartTooltipContent() {
+			if (!this.planStartVisible) {
+				return "";
+			}
+			const time = this.fmtAbsoluteDate(new Date(this.planProjectedStart));
+			return this.$t("main.vehicleStatus.targetChargePlanned", { time });
+		},
 		planActiveVisible() {
-			return this.effectivePlanTime && this.planActive && !this.chargingPlanDisabled;
+			return this.planProjectedEnd && this.planActive && !this.chargingPlanDisabled;
 		},
 		planActiveClass() {
 			return this.planTimeUnreachable ? "text-warning" : "text-primary";
+		},
+		planActiveTooltipContent() {
+			if (!this.planActiveVisible) {
+				return "";
+			}
+			const endTime = this.fmtAbsoluteDate(new Date(this.planProjectedEnd));
+			if (this.planTimeUnreachable) {
+				return this.$t("main.targetCharge.notReachableInTime", { endTime });
+			}
+			return this.$t("main.vehicleStatus.targetChargeActive", { endTime });
 		},
 		smartCostVisible() {
 			return !!this.smartCostLimit;
@@ -429,29 +443,17 @@ export default {
 			this.$emit("open-plan-modal");
 		},
 		updatePlanStartTooltip() {
-			if (!this.planProjectedStart) {
-				return;
-			}
 			this.planStartTooltip = this.updateTooltip(
 				this.planStartTooltip,
-				this.$t("main.vehicleStatus.targetChargePlanned", {
-					time: this.fmtAbsoluteDate(new Date(this.planProjectedStart)),
-				}),
+				this.planStartTooltipContent,
 				this.$refs.planStart,
 				true
 			);
 		},
 		updatePlanActiveTooltip() {
-			if (!this.planProjectedEnd) {
-				return;
-			}
-			const endTime = this.fmtAbsoluteDate(new Date(this.planProjectedEnd));
-			const content = this.planTimeUnreachable
-				? this.$t("main.targetCharge.notReachableInTime", { endTime })
-				: this.$t("main.vehicleStatus.targetChargeActive", { endTime });
 			this.planActiveTooltip = this.updateTooltip(
 				this.planActiveTooltip,
-				content,
+				this.planActiveTooltipContent,
 				this.$refs.planActive,
 				true
 			);
