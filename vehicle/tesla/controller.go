@@ -27,7 +27,7 @@ func NewController(ro, rw *tesla.Vehicle) *Controller {
 
 	v.dataG = provider.ResettableCached(func() (float64, error) {
 		if v.current >= 6 {
-			// assume match to save API requests
+			// assume match above 6A to save API requests
 			return float64(v.current), nil
 		}
 		res, err := ro.Data()
