@@ -182,7 +182,7 @@ func NewLoadpointFromConfig(log *util.Logger, settings *Settings, other map[stri
 	if lp.CircuitRef != "" {
 		dev, err := config.Circuits().ByName(lp.CircuitRef)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("circuit: %w", err)
 		}
 		lp.circuit = dev.Instance()
 	}
@@ -190,7 +190,7 @@ func NewLoadpointFromConfig(log *util.Logger, settings *Settings, other map[stri
 	if lp.MeterRef != "" {
 		dev, err := config.Meters().ByName(lp.MeterRef)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("meter: %w", err)
 		}
 		lp.chargeMeter = dev.Instance()
 	}
@@ -199,7 +199,7 @@ func NewLoadpointFromConfig(log *util.Logger, settings *Settings, other map[stri
 	if lp.VehicleRef != "" {
 		dev, err := config.Vehicles().ByName(lp.VehicleRef)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("vehicle: %w", err)
 		}
 		lp.defaultVehicle = dev.Instance()
 	}
@@ -209,7 +209,7 @@ func NewLoadpointFromConfig(log *util.Logger, settings *Settings, other map[stri
 	}
 	dev, err := config.Chargers().ByName(lp.ChargerRef)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("charger: %w", err)
 	}
 	lp.charger = dev.Instance()
 	lp.configureChargerType(lp.charger)
