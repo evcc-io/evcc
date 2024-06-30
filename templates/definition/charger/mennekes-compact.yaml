@@ -7,11 +7,14 @@ products:
   - brand: Mennekes
     description:
       generic: Amtron Start 2.0s
+  - brand: Kostal
+    description:
+      generic: Enector
 capabilities: ["1p3p", "mA"]
 requirements:
   description:
-    de: Die Wallbox muss mit Hilfe der DIP-Schalter auf der Hauptplatine als Satellit konfiguriert werden.
-    en: The charger needs to be configured as Satellite with help of the DIP-Switches on the baseboard.
+    de: "Die Wallbox muss mit Hilfe der DIP-Schalter auf der Hauptplatine als Satellit/Slave konfiguriert werden und Modbus RTU aktiviert sein (Bank S1: 4=ON, 5=ON, 7=OFF). Es sollte kein externes Meter direkt mit der Wallbox verbunden sein, da die Steuerung aller Funktionen direkt durch evcc erfolgt. Es ist keine Zusatzlizenz für das Kostal KSEM erforderlich."
+    en: "The charger needs to be configured as Satellite/Slave with help of the DIP-Switches on the baseboard (Bank S1: 4=ON, 5=ON, 7=OFF) and Modbus RTU enabled. No external meter should be connected directly to the charger as all control functions are managed by evcc. No additional license for Kostal KSEM is required."
   evcc: ["sponsorship"]
 params:
   - name: modbus
