@@ -199,6 +199,24 @@ func (d *dumper) Dump(name string, v interface{}) {
 		}
 	}
 
+	// currents and phases
+
+	if v, ok := v.(api.CurrentGetter); ok {
+		if f, err := v.GetMaxCurrent(); err != nil {
+			fmt.Fprintf(w, "Max Current:\t%v\n", err)
+		} else {
+			fmt.Fprintf(w, "Max Current:\t%.1fA\n", f)
+		}
+	}
+
+	if v, ok := v.(api.PhaseGetter); ok {
+		if f, err := v.GetPhases(); err != nil {
+			fmt.Fprintf(w, "Phases:\t%v\n", err)
+		} else {
+			fmt.Fprintf(w, "Phases:\t%d\n", f)
+		}
+	}
+
 	// Identity
 
 	if v, ok := v.(api.Identifier); ok {
