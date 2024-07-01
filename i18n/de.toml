@@ -72,6 +72,7 @@ temp = "Temperatur"
 topic = "Thema"
 url = "URL"
 yes = "Ja"
+bucket = Bucket
 
 [config.eebus]
 description = "Grundkonfiguration für die Kommunikation mit anderen EEBus-Geräten."
