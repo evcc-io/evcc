@@ -28,11 +28,16 @@ titleEdit = "Energiatároló Mérő Szerkesztése"
 
 [config.circuits]
 title = "Terhelés Menedzsment"
+description = Gondoskodik arról, hogy az áramkörhöz csatlakoztatott összes terhelési pont összege ne haladja meg a beállított teljesítmény- és áramkorlátokat. Az áramkörök egymásba ágyazhatók a hierarchia felépítéséhez.
 
 [config.control]
 description = "Általában az alapértelmezett értékek működőképesek. Csak akkor változtasd meg őket, ha tudod, hogy mit csinálsz."
 labelInterval = "Frissítési intervallum"
 labelMaxGridSupply = "Max. hálózati ellátás töltés közben"
+descriptionInterval = A vezérlőkör frissítési ciklusa másodpercekben. Meghatározza, hogy az evcc milyen gyakran olvassa ki a mérőadatokat, állítsa be a töltési teljesítményt és frissítse a felhasználói felületet. A rövid időközök (<30 s) oszllációt és nem kívánt viselkedést okozhatnak.
+descriptionResidualPower = Eltolja a vezérlőkör működési pontját. Ha otthoni akkumulátorral rendelkezik, javasoljuk, hogy 100 W-os értéket állítson be. Így az akkumulátor kismértékben élvez prioritást a hálózati használattal szemben.
+title = Vezérlési mód
+descriptionMaxGridSupply = Csak azokra a hibrid inverterekre vonatkozik, amelyek nem képesek váltakozó áramon keresztül a teljes egyenáramú áramot az otthonba kiadni. Ez a forgatókönyv nem kívánt hálózathasználathoz vezethet, mivel az evcc feltételezi, hogy a teljes egyenáram rendelkezésre áll. Ennek elkerülésére használjon legalább 50 W értéket.
 
 [config.deviceValue]
 capacity = "Kapacitás"
@@ -62,9 +67,14 @@ temp = "Hőmérséklet"
 topic = "Téma"
 url = "URL"
 yes = "igen"
+broker = Bróker
+bucket = Vödör
+gridPrice = Villamosenergia ára
+feedinPrice = Kötelező átvételi ár
 
 [config.eebus]
 title = "EEBus"
+description = Konfiguráció ami engedélyezi az evcc-nek, hogy kommunikáljon más EEBus eszközökkel.
 
 [config.form]
 example = "Példa"
@@ -79,13 +89,17 @@ password = "Jelszó"
 remove = "Eltávolítás"
 save = "Mentés"
 telemetry = "Telemetria"
+docsLink = Dokumentáció megtekintése
+title = Cím
 
 [config.grid]
 titleAdd = "Hálózati Mérő Hozzáadása"
 titleEdit = "Hálózati Mérő Szerkesztése"
+title = Hálózati mérő
 
 [config.hems]
 description = "Az evcc csatlakoztatása más otthoni energia menedzsment rendszerhez."
+title = HEMS
 
 [config.influx]
 labelDatabase = "Adatbázis"
@@ -95,6 +109,11 @@ labelToken = "API Token"
 labelUrl = "URL"
 labelUser = "Felhasználónév"
 title = "InfluxDB"
+description = Lementi a töltési adatokat és egyéb metrikákat az InfluxDB-be. Használd a Grafana-t vagy egyéb eszközöket az adatok vizualizálásához.
+descriptionToken = Ellenőrizd az InfluxDB dokumentációját, ha szeretnél létrehozni egyet. https://docs.influxdata.com/influxdb/v2/admin/
+labelBucket = Vödör (Bucket)
+v1Support = Szükséged van támogatásra az InfluxDB 1.x verzióhoz?
+v2Support = Vissza az InfluxDB 2.x verzióhoz
 
 [config.main]
 addLoadpoint = "Töltőpont hozzáadása"
@@ -109,6 +128,7 @@ yaml = "Az evcc.yaml fájlban konfigurálva. Nem szerkeszthető az UI-ról."
 
 [config.messaging]
 title = "Értesítések"
+description = Értesítési üzenetek beállítása a töltési folyamatokról.
 
 [config.meter]
 cancel = "Mégse"
@@ -120,6 +140,7 @@ validateSave = "Ellenőrzés & mentés"
 
 [config.modbusproxy]
 title = "Modbus Proxy"
+description = Több kliens csatlakozásának engedélyezése egy Modbus eszközhöz.
 
 [config.mqtt]
 authentication = "Hitelesítés"
@@ -130,12 +151,20 @@ labelPassword = "Jelszó"
 labelTopic = "Téma"
 labelUser = "Felhasználónév"
 title = "MQTT"
+description = Csatlakozás egy MQTT brókerhez az adatok cseréjéhez egy másik rendszerrel a hálózaton.
+descriptionTopic = Hagyd üresen a publikálás letiltásához.
+labelBroker = Bróker
+descriptionClientId = Az üzenetek szerzője. Ha üres, akkor az `evcc-[rand]` lesz használva.
+publishing = Közzététel
 
 [config.network]
 descriptionPort = "Port a webes felülethez és az API-hoz. Frissítened kell a böngésződ URL-jét, ha ezt megváltoztatod."
 labelPort = "Port"
 labelSchema = "Séma"
 title = "Hálózat"
+descriptionHost = Használd a .local utótagot az mDNS engedélyezéséhez. A mobilalkalmazás és egyes OCPP-töltők felfedezése szempontjából releváns.
+descriptionSchema = Csak az URL-ek létrehozásának módját érinti. A HTTPS kiválasztása nem engedélyezi a titkosítást.
+labelHost = Állomásnév
 
 [config.options]
 
@@ -156,6 +185,9 @@ general = "Általános"
 integrations = "Integrációk"
 system = "Rendszer"
 vehicles = "Járművek"
+grid = Hálózat
+loadpoints = Töltőpontok
+meter = Napelem és Akkumulátor
 
 [config.sponsor]
 addToken = "Szponzor token beírása"
@@ -163,6 +195,8 @@ changeToken = "Szponzor token megváltoztatása"
 description = "A szponzorációs modell segít a projekt fenntartásában és az új izgalmas funkciók bevezetésében. Szponzorként teljes hozzáférést kapsz az összes töltőberendezés implementációjához."
 error = "A szponzor token nem érvényes."
 labelToken = "Szponzor token"
+title = Szponzoráció
+descriptionToken = A tokent innen kapja: {url}. A teszteléshez próba tokent is kínálunk.
 
 [config.system]
 logs = "Naplók"
@@ -276,7 +310,7 @@ login = "Jármű Bejelentkezések"
 logout = "Kijelentkezés"
 nativeSettings = "Szerver Váltás"
 needHelp = "Szükséged van segítségre?"
-sessions = "Töltési Munkamenetek"
+sessions = "Töltési Folyamatok"
 
 [help]
 discussionsButton = "GitHub Közösségi oldalát"
@@ -410,6 +444,7 @@ minpv = "Min+Szolár"
 now = "Gyors"
 off = "Ki"
 pv = "Szolár"
+smart = Okos
 
 [main.provider]
 login = "bejelentkezés"
@@ -504,6 +539,8 @@ modalTitle = "Értesítések"
 message = "Nem csatlakozik a szerverhez."
 reload = "Újratöltés?"
 restart = "Újraindítás"
+restartNeeded = A módosítások végrehajtásához szükséges.
+restarting = A szerver egy pillanat múlva elérhető lesz.
 
 [passwordModal]
 description = "Állítson be egy jelszót a konfigurációs beállítások védelmére. A főképernyő használata továbbra is lehetséges bejelentkezés nélkül."
@@ -530,7 +567,7 @@ meterstop = "Mérő leállítás"
 odometer = "Futásteljesítmény"
 price = "Ár"
 started = "Elkezdődött"
-title = "Töltési munkamenet"
+title = "Töltési Folyamatok"
 
 [sessions]
 avgPower = "⌀ Teljesítmény"
@@ -539,15 +576,15 @@ chargeDuration = "Időtartam"
 co2 = "⌀ CO₂"
 csvMonth = "Letöltés - {month} .CSV"
 csvTotal = "Letöltés - Összes időszak .CSV"
-date = "Indulás"
+date = "Kezdés"
 downloadCsv = "Letöltés mint: CSV"
 energy = "Töltve"
 loadpoint = "Töltőpont"
-noData = "Nincs töltési munkamenet ebben a hónapban."
+noData = "Nincs töltési folyamat ebben a hónapban."
 price = "Σ Ár"
-reallyDelete = "Biztosan szeretné törölni ezt a munkamenetet?"
+reallyDelete = "Biztosan szeretné törölni ezt a folyamatot?"
 solar = "Napenergia"
-title = "Töltési munkamenetek"
+title = "Töltési Folyamatok"
 total = "Összesen"
 vehicle = "Jármű"
 
@@ -589,7 +626,7 @@ auto = "Automatikus"
 label = "Nyelv"
 
 [settings.sponsorToken]
-expires = "A szponzor token-ed le fog járni {inXDays} nap múlva. {getNewToken} és frissítsd a konfigurációs fájlodat."
+expires = "A szponzor token-ed le fog járni {inXDays}. {getNewToken} és frissítsd itt."
 getNew = "Kérj egy újat"
 hint = "Megjegyzés: Ezt a jövőben automatizálni fogjuk."
 
@@ -634,3 +671,8 @@ lineError = "Hiba a {0}."
 lineErrorLink = "sor {0}"
 restartButton = "Újraindítás"
 title = "Indítási hiba"
+
+
+[config.tariffs]
+description = Határozza meg energiatarifáját a töltési folyamatok költségeinek kiszámításához.
+title = Tarifák
