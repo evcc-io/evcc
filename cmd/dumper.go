@@ -233,8 +233,9 @@ func (d *dumper) Dump(name string, v interface{}) {
 	// features
 
 	if v, ok := v.(api.FeatureDescriber); ok {
-		ff := v.Features()
-		fmt.Fprintf(w, "Features:\t%v\n", ff)
+		if ff := v.Features(); len(ff) > 0 {
+			fmt.Fprintf(w, "Features:\t%v\n", ff)
+		}
 	}
 
 	w.Flush()
