@@ -23,15 +23,9 @@ params:
   - name: accessToken
     required: true
     mask: true
-    help:
-      en: "See https://docs.evcc.io/en/docs/devices/vehicles#ford-connect"
-      de: "Siehe https://docs.evcc.io/docs/devices/vehicles#ford-connect"
   - name: refreshToken
     required: true
     mask: true
-    help:
-      en: "See https://docs.evcc.io/en/docs/devices/vehicles#ford-connect"
-      de: "Siehe https://docs.evcc.io/docs/devices/vehicles#ford-connect"
   - name: vin
     example: WF0FXX...
   - name: capacity
@@ -41,11 +35,12 @@ params:
   - preset: vehicle-identify
 render: |
   type: ford-connect
-  {{ include "vehicle-common" . }}
+  vin: {{ .vin }}
   credentials:
     id: {{ .clientid }}
     secret: {{ .clientsecret }}
   tokens:
     access: {{ .accessToken }}
     refresh: {{ .refreshToken }}
+  {{ include "vehicle-common" . }}
   {{ include "vehicle-identify" . }}

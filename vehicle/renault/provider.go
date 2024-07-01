@@ -74,7 +74,7 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 
 	res, err := v.batteryG()
 	if err == nil {
-		if res.Data.Attributes.PlugStatus > 0 {
+		if res.Data.Attributes.PlugStatus == 1 {
 			status = api.StatusB
 		}
 		if res.Data.Attributes.ChargingStatus >= 1.0 {

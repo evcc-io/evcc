@@ -703,9 +703,9 @@ func (lp *Loadpoint) syncCharger() error {
 
 	// #2: sync charger
 	switch {
-	case enabled == lp.enabled:
+	case enabled && lp.enabled:
 		// sync max current
-		if charger, ok := lp.charger.(api.CurrentGetter); ok && enabled {
+		if charger, ok := lp.charger.(api.CurrentGetter); ok {
 			if current, err := charger.GetMaxCurrent(); err == nil {
 				// smallest adjustment most PWM-Controllers can do is: 100%÷256×0,6A = 0.234A
 				if math.Abs(lp.chargeCurrent-current) > 0.23 {
@@ -720,20 +720,45 @@ func (lp *Loadpoint) syncCharger() error {
 			} else if !errors.Is(err, api.ErrNotAvailable) {
 				return fmt.Errorf("charger get max current: %w", err)
 			}
+		} else {
+			// use measured phase currents as fallback, validate if current too high by at least 1A
+			if current := lp.GetMaxPhaseCurrent(); current > lp.chargeCurrent+1.0 {
+				if shouldBeConsistent {
+					lp.log.WARN.Printf("charger logic error: current mismatch (got %.3gA measured, expected %.3gA)", current, lp.chargeCurrent)
+				}
+				lp.chargeCurrent = current
+				lp.bus.Publish(evChargeCurrent, lp.chargeCurrent)
+			}
 		}
 
 		// sync phases
 		phases := lp.GetPhases()
-		if ps, ok := lp.charger.(api.PhaseGetter); ok && enabled && shouldBeConsistent && phases > 0 {
-			if chargerPhases, err := ps.GetPhases(); err == nil {
-				if chargerPhases != phases {
-					lp.log.WARN.Printf("charger logic error: phases mismatch (got %d, expected %d)", chargerPhases, phases)
-					lp.setPhases(chargerPhases)
+		if shouldBeConsistent && phases > 0 {
+			// fallback active phases from measured phases
+			chargerPhases := lp.measuredPhases
+			if chargerPhases == 2 {
+				chargerPhases = 3
+			}
+
+			if ps, ok := lp.charger.(api.PhaseGetter); ok {
+				if cp, err := ps.GetPhases(); err == nil {
+					chargerPhases = cp
+				} else {
+					if errors.Is(err, api.ErrNotAvailable) {
+						return nil
+					}
+					return fmt.Errorf("charger get phases: %w", err)
 				}
-			} else if !errors.Is(err, api.ErrNotAvailable) {
-				return fmt.Errorf("charger get phases: %w", err)
+			}
+
+			if chargerPhases > 0 && chargerPhases != phases {
+				lp.log.WARN.Printf("charger logic error: phases mismatch (got %d, expected %d)", chargerPhases, phases)
+				lp.setPhases(chargerPhases)
 			}
 		}
+
+	case enabled == lp.enabled:
+		// sync disabled state
 
 	case !enabled && !lp.phaseSwitchCompleted():
 		// some chargers (i.E. Easee in some configurations) disable themselves to be able to switch phases

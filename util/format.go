@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/go-sprout/sprout"
+	"github.com/samber/lo"
 	"golang.org/x/exp/maps"
 )
 
@@ -85,7 +86,7 @@ func ReplaceFormatted(s string, kv map[string]interface{}) (string, error) {
 		if val == nil {
 			wanted = append(wanted, key)
 			format = "%s"
-			val = PtrTo(any("?"))
+			val = lo.ToPtr(any("?"))
 		}
 
 		// update all literal matches

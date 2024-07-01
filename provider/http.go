@@ -168,6 +168,11 @@ func (p *HTTP) request(url string, body string) ([]byte, error) {
 		}
 
 		p.val, p.err = p.DoBody(req)
+		if p.err != nil {
+			if err := knownErrors(p.val); err != nil {
+				p.err = err
+			}
+		}
 		p.updated = time.Now()
 	}
 
