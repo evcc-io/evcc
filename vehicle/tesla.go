@@ -114,7 +114,7 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	v := &Tesla{
 		embed:      &cc.embed,
 		Provider:   tesla.NewProvider(vehicle, cc.Cache),
-		Controller: tesla.NewController(vehicle, vehicle.WithClient(tcc)),
+		Controller: tesla.NewController(vehicle.WithClient(tcc)),
 	}
 
 	v.fromVehicle(vehicle.DisplayName, 0)
