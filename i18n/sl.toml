@@ -149,11 +149,26 @@ title = "Modbus Proxy"
 [config.mqtt]
 authentication = "Avtentikacija"
 description = "Povežite se s posrednikom MQTT za izmenjavo podatkov z drugimi sistemi v vašem omrežju."
+descriptionClientId = "Avtor sporočil. Če se pusti prazno, se uporabi `evcc-[rand]`."
+descriptionTopic = "Pustite prazno, če želite onemogočiti objavljanje."
+labelBroker = "Posrednik"
+labelCheckInsecure = "Dovoli samopodpisane certifikate"
+labelInsecure = "Preverjanje certifikata"
+labelPassword = "Geslo"
+labelTopic = "Topic"
+labelUser = "Uporabniško ime"
+publishing = "Objavljanje"
+title = "MQTT"
+labelClientId = "ID Stranke"
 
 [config.network]
 labelPort = "Port"
 labelSchema = "Shema"
 title = "Mreža"
+descriptionHost = "Uporabite pripono .local, da omogočite mDNS. Pomembno za odkrivanje mobilne aplikacije in nekaterih polnilnikov OCPP."
+descriptionPort = "Vrata za spletni vmesnik in API. Če spremenite, boste morali posodobiti URL v brskalniku."
+labelHost = "Ime gostitelja"
+descriptionSchema = "Vpliva samo na to, kako so URL-ji ustvarjeni. Če izberete HTTPS, šifriranje ne bo omogočeno."
 
 [config.options]
 
@@ -175,6 +190,8 @@ grid = "Omrežje"
 integrations = "Integracije"
 system = "Sistem"
 vehicles = "Vozila"
+loadpoints = "Polnilne točke"
+meter = "Sončna energija in baterije"
 
 [config.site]
 cancel = "Prekliči"
@@ -183,6 +200,11 @@ save = "Shrani"
 [config.sponsor]
 addToken = "Vnesi sponzorski žeton"
 changeToken = "Spremeni sponzorski žeton"
+description = "Model sponzoriranja nam pomaga vzdrževati projekt in trajnostno graditi nove in vznemirljive funkcije. Kot sponzor dobite dostop do vseh izvedb polnilnikov."
+descriptionToken = "Žeton dobite na naslovu {url}. Ponujamo tudi poskusni žeton za testiranje."
+error = "Sponzorski žeton ni veljaven."
+labelToken = "Sponzorski žeton"
+title = "Sponzorstvo"
 
 [config.system]
 logs = "Logi"
@@ -194,6 +216,7 @@ restartingMessage = "Ponovni zagon evcc."
 
 [config.tariffs]
 title = "Tarife"
+description = "Določite svoje tarife za energijo, da izračunate stroške svojih polnilnih sej."
 
 [config.title]
 description = "Prikazano na glavnem zaslonu in na zavihku brskalnika."
@@ -440,6 +463,7 @@ minpv = "Min+Sonce"
 now = "Hitro"
 off = "Izklop"
 pv = "Sonce"
+smart = "Pametno"
 
 [main.provider]
 login = "prijava"
@@ -537,6 +561,7 @@ message = "Ni povezan s strežnikom."
 reload = "Ponovno naloži?"
 restart = "Ponovni zagon"
 restarting = "Strežnik bo kmalu nazaj."
+restartNeeded = "Potrebno za uveljavitev sprememb."
 
 [passwordModal]
 description = "Nastavite geslo za zaščito konfiguracijskih nastavitev. Uporaba glavnega vmesnika je še vedno možna brez prijave."
