@@ -42,10 +42,6 @@
 				v-show="planMarkerAvailable"
 				class="plan-marker"
 				data-bs-toggle="tooltip"
-				:class="{
-					'plan-marker--warning': planTimeUnreachable,
-					'plan-marker--error': planMarkerUnreachable,
-				}"
 				:style="{ left: `${planMarkerPosition}%` }"
 				data-testid="plan-marker"
 				@click="$emit('plan-clicked')"
@@ -92,7 +88,6 @@ export default {
 		effectiveLimitSoc: Number,
 		limitEnergy: Number,
 		planEnergy: Number,
-		planTimeUnreachable: Boolean,
 		chargedEnergy: Number,
 		socBasedCharging: Boolean,
 		socBasedPlanning: Boolean,
@@ -152,13 +147,6 @@ export default {
 				return false;
 			}
 			return this.planMarkerPosition > 0;
-		},
-		planMarkerUnreachable: function () {
-			if (this.socBasedPlanning) {
-				const vehicleLimit = this.vehicleLimitSoc || 100;
-				return this.effectivePlanSoc > vehicleLimit;
-			}
-			return false;
 		},
 		energyLimitMarkerPosition: function () {
 			if (this.socBasedCharging) {
@@ -391,19 +379,6 @@ export default {
 	border-color: transparent;
 	background-color: var(--evcc-darker-green);
 	transition: background-color var(--evcc-transition-fast) linear;
-}
-.plan-marker--warning {
-	color: var(--bs-warning);
-}
-.plan-marker--warning::before {
-	background-color: var(--bs-warning);
-}
-.plan-marker--error {
-	opacity: 1;
-	color: var(--bs-danger);
-}
-.plan-marker--error::before {
-	background-color: var(--bs-danger);
 }
 .energy-limit-marker {
 	position: absolute;

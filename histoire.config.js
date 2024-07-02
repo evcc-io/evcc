@@ -4,7 +4,7 @@ import { HstVue } from "@histoire/plugin-vue";
 export default defineConfig({
   plugins: [HstVue()],
   setupFile: "./histoire.setup.js",
-  viteNodeInlineDeps: [/!axios/],
+  viteNodeInlineDeps: [/!axios/, /shopicons/],
   routerMode: "hash",
   backgroundPresets: [
     {

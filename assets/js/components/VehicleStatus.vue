@@ -1,14 +1,142 @@
 <template>
-	<div class="d-block evcc-gray" data-testid="vehicle-status">{{ message }}&nbsp;</div>
+	<div class="d-flex justify-content-between gap-4 evcc-gray" data-testid="vehicle-status">
+		<div class="text-nowrap" data-testid="vehicle-status-charger">{{ chargerStatus }}</div>
+		<div class="d-flex flex-wrap justify-content-end gap-3">
+			<!-- pv/phase timer -->
+			<div
+				v-if="pvTimerVisible"
+				class="entry"
+				:class="pvTimerClass"
+				data-testid="vehicle-status-pvtimer"
+			>
+				<SunUpIcon v-if="pvAction === 'enable'" />
+				<SunDownIcon v-else />
+				<div class="tabular">{{ fmtDuration(pvRemainingInterpolated) }}</div>
+			</div>
+			<div
+				v-else-if="phaseTimerVisible"
+				class="entry gap-0 text-primary"
+				data-testid="vehicle-status-phasetimer"
+			>
+				<shopicon-regular-sun></shopicon-regular-sun>
+				<shopicon-regular-angledoublerightsmall
+					:class="phaseIconClass"
+					class="me-1"
+				></shopicon-regular-angledoublerightsmall>
+				<div class="tabular">{{ fmtDuration(phaseRemainingInterpolated) }}</div>
+			</div>
+
+			<!-- vehicle -->
+			<div
+				v-if="vehicleClimaterActive"
+				class="entry text-primary"
+				data-testid="vehicle-status-climater"
+			>
+				<ClimaterIcon /> on
+			</div>
+			<button
+				v-if="minSocVisible"
+				type="button"
+				class="entry gap-0 text-danger text-decoration-underline"
+				data-testid="vehicle-status-minsoc"
+				@click="openMinSocSettings"
+			>
+				<VehicleLimitIcon />
+				<shopicon-regular-angledoublerightsmall></shopicon-regular-angledoublerightsmall>
+				{{ fmtPercentage(minSoc) }}
+			</button>
+			<div
+				v-else-if="vehicleLimitVisible"
+				class="entry"
+				:class="vehicleLimitClass"
+				data-testid="vehicle-status-limit"
+			>
+				<component :is="vehicleLimitIconComponent" />
+				{{ fmtPercentage(vehicleLimitSoc) }}
+			</div>
+
+			<!-- smart cost -->
+			<button
+				v-if="smartCostVisible"
+				type="button"
+				class="entry"
+				:class="smartCostClass"
+				data-testid="vehicle-status-smartcost"
+				@click="openLoadpointSettings"
+			>
+				<DynamicPriceIcon v-if="smartCostPrice" />
+				<shopicon-regular-eco1 v-else></shopicon-regular-eco1>
+				<div>
+					<span v-if="smartCostNowVisible">{{ smartCostNow }}</span>
+					≤ <span class="text-decoration-underline">{{ smartCostLimitFmt }}</span>
+					<span v-if="smartCostNextStart">
+						({{ fmtAbsoluteDate(new Date(smartCostNextStart)) }})
+					</span>
+				</div>
+			</button>
+
+			<!-- plan -->
+			<button
+				v-if="planActiveVisible"
+				ref="planActive"
+				type="button"
+				class="entry"
+				:class="planActiveClass"
+				data-testid="vehicle-status-planactive"
+				data-bs-toggle="tooltip"
+				@click="planActiveClicked"
+			>
+				<PlanEndIcon />
+				<span>
+					{{ fmtAbsoluteDate(new Date(planProjectedEnd)) }}
+				</span>
+			</button>
+			<button
+				v-else-if="planStartVisible"
+				ref="planStart"
+				type="button"
+				class="entry"
+				data-testid="vehicle-status-planstart"
+				data-bs-toggle="tooltip"
+				@click="planStartClicked"
+			>
+				<PlanStartIcon />
+				{{ fmtAbsoluteDate(new Date(planProjectedStart)) }}
+			</button>
+		</div>
+	</div>
 </template>
 
 <script>
+import "@h2d2/shopicons/es/regular/sun";
+import "@h2d2/shopicons/es/regular/eco1";
+import "@h2d2/shopicons/es/regular/angledoublerightsmall";
+import "@h2d2/shopicons/es/regular/clock";
+import DynamicPriceIcon from "./MaterialIcon/DynamicPrice.vue";
 import { DEFAULT_LOCALE } from "../i18n";
 import formatter from "../mixins/formatter";
 import { CO2_TYPE } from "../units";
+import PlanStartIcon from "./MaterialIcon/PlanStart.vue";
+import PlanEndIcon from "./MaterialIcon/PlanEnd.vue";
+import ClimaterIcon from "./MaterialIcon/Climater.vue";
+import VehicleLimitReachedIcon from "./MaterialIcon/VehicleLimitReached.vue";
+import VehicleLimitWarningIcon from "./MaterialIcon/VehicleLimitWarning.vue";
+import VehicleLimitIcon from "./MaterialIcon/VehicleLimit.vue";
+import SunDownIcon from "./MaterialIcon/SunDown.vue";
+import SunUpIcon from "./MaterialIcon/SunUp.vue";
+import Tooltip from "bootstrap/js/dist/tooltip";
 
 export default {
 	name: "VehicleStatus",
+	components: {
+		DynamicPriceIcon,
+		PlanStartIcon,
+		PlanEndIcon,
+		ClimaterIcon,
+		VehicleLimitIcon,
+		SunDownIcon,
+		SunUpIcon,
+	},
 	mixins: [formatter],
 	props: {
 		vehicleSoc: Number,
@@ -19,14 +147,20 @@ export default {
 		charging: Boolean,
 		heating: Boolean,
 		effectivePlanTime: String,
+		effectiveLimitSoc: Number,
 		planProjectedStart: String,
+		planProjectedEnd: String,
+		smartCostNextStart: String,
 		chargingPlanDisabled: Boolean,
+		smartCostDisabled: Boolean,
 		planActive: Boolean,
+		planTimeUnreachable: Boolean,
+		planOverrun: Number,
+		effectivePlanSoc: Number,
 		phaseAction: String,
 		phaseRemainingInterpolated: Number,
 		pvAction: String,
 		pvRemainingInterpolated: Number,
-		targetChargeDisabled: Boolean,
 		vehicleClimaterActive: Boolean,
 		smartCostLimit: Number,
 		smartCostType: String,
@@ -34,6 +168,27 @@ export default {
 		tariffGrid: Number,
 		tariffCo2: Number,
 		currency: String,
+	},
+	emits: ["open-loadpoint-settings", "open-minsoc-settings", "open-plan-modal"],
+	data() {
+		return {
+			pvTooltip: null,
+			phaseTooltip: null,
+			planStartTooltip: null,
+			planActiveTooltip: null,
+		};
+	},
+	mounted() {
+		this.updatePlanStartTooltip();
+		this.updatePlanActiveTooltip();
+	},
+	watch: {
+		planActiveTooltipContent() {
+			this.updatePlanActiveTooltip();
+		},
+		planStartTooltipContent() {
+			this.updatePlanStartTooltip();
+		},
 	},
 	computed: {
 		phaseTimerActive() {
@@ -46,6 +201,142 @@ export default {
 			return (
 				this.pvRemainingInterpolated > 0 && ["enable", "disable"].includes(this.pvAction)
 			);
+		},
+		pvTimerVisible() {
+			return this.pvTimerActive;
+		},
+		pvTimerClass() {
+			return this.pvAction === "disable" ? "text-primary" : "";
+		},
+		phaseTimerVisible() {
+			return !this.pvTimerActive && this.charging && this.phaseTimerActive;
+		},
+		phaseIconClass() {
+			return this.phaseAction === "scale1p" ? "phaseUp" : "phaseDown";
+		},
+		vehicleLimitVisible() {
+			const limit = Math.max(this.vehicleLimitSoc, this.effectiveLimitSoc) || 100;
+			return this.vehicleLimitSoc > 0 && this.vehicleLimitSoc <= limit;
+		},
+		minSocVisible() {
+			return this.minSoc > 0 && this.vehicleSoc < this.minSoc;
+		},
+		vehicleLimitReached() {
+			return (
+				!this.charging &&
+				this.vehicleSoc &&
+				this.vehicleLimitSoc &&
+				this.vehicleSoc >= this.vehicleLimitSoc - 1
+			);
+		},
+		vehicleLimitWarning() {
+			return this.effectivePlanSoc > this.vehicleLimitSoc;
+		},
+		vehicleLimitClass() {
+			if (this.vehicleLimitReached) {
+				return "text-primary";
+			}
+			if (this.vehicleLimitWarning) {
+				return "text-warning";
+			}
+			return "";
+		},
+		vehicleLimitIconComponent() {
+			if (this.vehicleLimitReached) {
+				return VehicleLimitReachedIcon;
+			}
+			if (this.vehicleLimitWarning) {
+				return VehicleLimitWarningIcon;
+			}
+			return VehicleLimitIcon;
+		},
+		planStartVisible() {
+			return this.planProjectedStart && !this.planActive && !this.chargingPlanDisabled;
+		},
+		planStartTooltipContent() {
+			if (!this.planStartVisible) {
+				return "";
+			}
+			const time = this.fmtAbsoluteDate(new Date(this.planProjectedStart));
+			return this.$t("main.vehicleStatus.targetChargePlanned", { time });
+		},
+		planActiveVisible() {
+			return this.planProjectedEnd && this.planActive && !this.chargingPlanDisabled;
+		},
+		planActiveClass() {
+			return this.planTimeUnreachable ? "text-warning" : "text-primary";
+		},
+		planActiveTooltipContent() {
+			if (!this.planActiveVisible) {
+				return "";
+			}
+			const endTime = this.fmtAbsoluteDate(new Date(this.planProjectedEnd));
+			if (this.planTimeUnreachable) {
+				return this.$t("main.targetCharge.notReachableInTime", { endTime });
+			}
+			return this.$t("main.vehicleStatus.targetChargeActive", { endTime });
+		},
+		smartCostVisible() {
+			return !!this.smartCostLimit;
+		},
+		smartCostPrice() {
+			return this.smartCostType !== "co2";
+		},
+		smartCostNowVisible() {
+			if (this.smartCostPrice) {
+				return this.tariffGrid <= this.smartCostLimit;
+			}
+			return this.tariffCo2 <= this.smartCostLimit;
+		},
+		smartCostNow() {
+			if (this.smartCostPrice) {
+				return this.fmtPricePerKWh(this.tariffGrid, this.currency, true);
+			}
+			return this.fmtCo2Short(this.tariffCo2);
+		},
+		smartCostLimitFmt() {
+			if (this.smartCostPrice) {
+				return this.fmtPricePerKWh(this.smartCostLimit, this.currency, true);
+			}
+			return this.fmtCo2Short(this.smartCostLimit);
+		},
+		smartCostClass() {
+			if (this.smartCostDisabled) {
+				return "opacity-25";
+			}
+			if (this.smartCostActive) {
+				return "text-primary";
+			}
+			return "";
+		},
+		chargerStatus() {
+			const t = (key, data) => {
+				if (this.heating) {
+					// check for special heating status translation
+					const name = `main.heatingStatus.${key}`;
+					if (this.$te(name, DEFAULT_LOCALE)) {
+						return this.$t(name, data);
+					}
+				}
+				return this.$t(`main.vehicleStatus.${key}`, data);
+			};
+
+			if (!this.connected) {
+				return t("disconnected");
+			}
+
+			if (this.enabled && !this.charging) {
+				if (this.vehicleLimitReached) {
+					return t("finished");
+				}
+				return t("waitForVehicle");
+			}
+
+			if (this.charging) {
+				return t("charging");
+			}
+
+			return t("connected");
 		},
 		message: function () {
 			const t = (key, data) => {
@@ -68,11 +359,7 @@ export default {
 			}
 
 			// plan
-			if (
-				!this.chargingPlanDisabled &&
-				this.effectivePlanTime &&
-				!this.targetChargeDisabled
-			) {
+			if (!this.chargingPlanDisabled && this.effectivePlanTime) {
 				if (this.planActive && this.charging) {
 					return t("targetChargeActive");
 				}
@@ -137,5 +424,77 @@ export default {
 			return t("connected");
 		},
 	},
+	methods: {
+		openLoadpointSettings() {
+			this.$emit("open-loadpoint-settings");
+		},
+		openMinSocSettings() {
+			this.$emit("open-minsoc-settings");
+		},
+		planStartClicked() {
+			this.planStartTooltip?.hide();
+			this.$emit("open-plan-modal");
+		},
+		planActiveClicked() {
+			this.planActiveTooltip?.hide();
+			this.$emit("open-plan-modal");
+		},
+		updatePlanStartTooltip() {
+			this.planStartTooltip = this.updateTooltip(
+				this.planStartTooltip,
+				this.planStartTooltipContent,
+				this.$refs.planStart,
+				true
+			);
+		},
+		updatePlanActiveTooltip() {
+			this.planActiveTooltip = this.updateTooltip(
+				this.planActiveTooltip,
+				this.planActiveTooltipContent,
+				this.$refs.planActive,
+				true
+			);
+		},
+		updateTooltip: function (instance, content, ref, hoverOnly = false) {
+			if (!content || !ref) {
+				if (instance) {
+					instance.dispose();
+				}
+				return;
+			}
+			if (!instance) {
+				const trigger = hoverOnly ? "hover" : undefined;
+				instance = new Tooltip(ref, { title: " ", trigger });
+			}
+			instance.setContent({ ".tooltip-inner": content });
+			return instance;
+		},
+	},
 };
 </script>
+
+<style scoped>
+.entry {
+	display: flex;
+	align-items: center;
+	flex-wrap: nowrap;
+	text-wrap: nowrap;
+	border: none;
+	color: inherit;
+	background: none;
+	padding: 0;
+	gap: 0.5rem;
+	transition:
+		color var(--evcc-transition-medium) linear,
+		opacity var(--evcc-transition-medium) linear;
+}
+.phaseUp {
+	transform: rotate(90deg);
+}
+.phaseDown {
+	transform: rotate(-90deg);
+}
+.tabular {
+	font-variant-numeric: tabular-nums;
+}
+</style>

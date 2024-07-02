@@ -15,7 +15,7 @@
 		<span v-if="notReachableInTime" class="d-block text-warning mb-1">
 			{{ $t("main.targetCharge.notReachableInTime", { endTime: endTimeFmt }) }}
 		</span>
-		<span v-if="targetIsAboveVehicleLimit" class="d-block text-danger mb-1">
+		<span v-if="targetIsAboveVehicleLimit" class="d-block text-warning mb-1">
 			{{ $t("main.targetCharge.targetIsAboveVehicleLimit", { limit: vehicleLimitFmt }) }}
 		</span>
 	</p>
