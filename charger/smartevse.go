@@ -293,3 +293,42 @@ func (wb *smartEVSE) Diagnose() {
 		fmt.Printf("\tCP interruption time: %dms\n", cptime)
 	}
 }
+
+
+var _ api.Resurrector = (*smartEVSE)(nil)
+
+// WakeUp implements the Resurrector interface
+func (wb *smartEVSE) WakeUp() error {
+	if wb.cphwonlock {
+		if wb.oldfw { //this includes that cp auto mode does not exist
+			wb.log.DEBUG.Printf("old fw: requested switching to wakeup by interrupting CP")
+			cfg, err := wb.conn.ReadHoldingRegisters(smartEVSERegSettings, 1)
+			if err == nil {
+				wb.conn.WriteSingleRegister(smartEVSERegSettings, (binary.BigEndian.Uint16(cfg)&0xfffd)|2) //set Lockbit
+				wb.conn.ReadInputRegisters(smartEVSERegExternalLock, 1)                                    //active lock setting (or relais in our case) by reading
+				time.Sleep(3 * time.Second)
+				wb.conn.WriteSingleRegister(smartEVSERegSettings, (binary.BigEndian.Uint16(cfg) & 0xfffd)) //reset Lockbit
+				wb.conn.ReadInputRegisters(smartEVSERegExternalLock, 1)                                    //active lock setting (or relais in our case) by reading
+			}
+			return err
+		} else if !wb.cpwakeauto {
+			wb.log.DEBUG.Printf("requested switching to wakeup by interrupting CP")
+			dcp, err := wb.conn.ReadInputRegisters(smartEVSERegDisconnectCP, 1)
+			if (binary.BigEndian.Uint16(dcp) == 0xffff) && err == nil {
+				wb.log.WARN.Println("warning CpHWOnLock misconfiguration detected: board reports it has no CP hardware configured")
+			}
+		} else {
+			wb.log.DEBUG.Printf("skipping wakeup by CP interrupt as your HW is configured to do it by itself")
+			cfg, err := wb.conn.ReadHoldingRegisters(smartEVSERegSettings, 1)
+			if (binary.BigEndian.Uint16(cfg)&0x10) == 0 && err == nil {
+				wb.log.WARN.Println("warning CpWakeAuto misconfiguration detected: board hast automatic CP mode disabled")
+			}
+			if (binary.BigEndian.Uint16(cfg)&0x8) == 0 && err == nil {
+				wb.log.WARN.Println("warning CpHWOnLock misconfiguration detected: board reports it has no CP hardware configured")
+			}
+		}
+	} else {
+		wb.log.DEBUG.Printf("skipping wakeup by CP interrupt as respective HW has not been configured")
+	}
+	return nil
+}
