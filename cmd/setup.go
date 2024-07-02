@@ -486,6 +486,17 @@ func configureEnvironment(cmd *cobra.Command, conf *globalconfig.All) (err error
 		request.LogHeaders = true
 	}
 
+	// setup persistence
+	if err == nil {
+		err = wrapErrorWithClass(ClassDatabase, configureDatabase(conf.Database))
+	}
+
+	// setup translations
+	if err == nil {
+		// TODO decide wrapping
+		err = locale.Init()
+	}
+
 	// setup machine id
 	if conf.Plant != "" {
 		// TODO decide wrapping
@@ -495,17 +506,6 @@ func configureEnvironment(cmd *cobra.Command, conf *globalconfig.All) (err error
 	// setup sponsorship (allow env override)
 	if err == nil {
 		err = wrapErrorWithClass(ClassSponsorship, configureSponsorship(conf.SponsorToken))
-	}
-
-	// setup translations
-	if err == nil {
-		// TODO decide wrapping
-		err = locale.Init()
-	}
-
-	// setup persistence
-	if err == nil && conf.Database.Dsn != "" {
-		err = wrapErrorWithClass(ClassDatabase, configureDatabase(conf.Database))
 	}
 
 	// setup mqtt client listener
@@ -539,6 +539,10 @@ func configureEnvironment(cmd *cobra.Command, conf *globalconfig.All) (err error
 
 // configureDatabase configures session database
 func configureDatabase(conf globalconfig.DB) error {
+	if conf.Dsn == "" {
+		return errors.New("database dsn not configured")
+	}
+
 	if err := db.NewInstance(conf.Type, conf.Dsn); err != nil {
 		return err
 	}

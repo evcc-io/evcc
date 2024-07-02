@@ -119,7 +119,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 			log.FATAL.Fatal(err)
 		}
 	} else {
-		err = cfgErr
+		err = wrapErrorWithClass(ClassConfigFile, cfgErr)
 	}
 
 	// setup environment
