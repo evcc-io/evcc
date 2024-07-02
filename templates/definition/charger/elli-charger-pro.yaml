@@ -33,8 +33,6 @@ requirements:
       Important: A mostly flawless functionality can only be provided with an external energy meter and no usage of CT coils, due to sosftware bugs of the Wallbox.  Using a LAN connection is highly recommended.
 params:
   - preset: eebus
-  - name: ip
-    required: true
 render: |
   {{ include "eebus" . }}
   meter: true
