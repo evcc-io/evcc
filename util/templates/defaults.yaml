@@ -340,7 +340,9 @@ presets:
   eebus:
     params:
       - name: ski
-      - name: ip
+        help:
+          de: SKI (Subject Key Identifier)
+          en: SKI (Subject Key Identifier)
   switchsocket:
     params:
       - name: standbypower
