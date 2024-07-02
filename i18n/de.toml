@@ -42,6 +42,7 @@ title = "Regelverhalten"
 
 [config.deviceValue]
 broker = "Broker"
+bucket = "Bucket"
 capacity = "Kapazität"
 chargeStatus = "Status"
 chargeStatusA = "nicht verbunden"
@@ -72,7 +73,6 @@ temp = "Temperatur"
 topic = "Thema"
 url = "URL"
 yes = "Ja"
-bucket = Bucket
 
 [config.eebus]
 description = "Grundkonfiguration für die Kommunikation mit anderen EEBus-Geräten."

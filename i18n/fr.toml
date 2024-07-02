@@ -468,7 +468,7 @@ minpv = "Min+Sol"
 now = "Rapide"
 off = "Arrêté"
 pv = "Solaire"
-smart = Intelligent
+smart = "Intelligent"
 
 [main.provider]
 login = "connexion"
