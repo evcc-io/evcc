@@ -5,12 +5,14 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/site"
+	"github.com/evcc-io/evcc/core/vehicle"
 	"github.com/gorilla/mux"
 )
 
-// minSocHandler updates min soc
-func minSocHandler(site site.API) http.HandlerFunc {
+// vehicleHandler updates limit soc
+func vehicleHandler[T any](site site.API, h func(v vehicle.API) (func(string) (T, error), func(T) error, func() T)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
@@ -20,51 +22,30 @@ func minSocHandler(site site.API) http.HandlerFunc {
 			return
 		}
 
-		soc, err := strconv.Atoi(vars["value"])
+		conv, set, get := h(v)
+
+		val, err := conv(vars["value"])
+		if err == nil {
+			err = set(val)
+		}
+
 		if err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
 
-		v.SetMinSoc(soc)
-
-		res := struct {
-			Soc int `json:"soc"`
-		}{
-			Soc: v.GetMinSoc(),
-		}
-
-		jsonResult(w, res)
+		jsonResult(w, get())
 	}
 }
 
-// limitSocHandler updates limit soc
-func limitSocHandler(site site.API) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
+// vehicleMinSocHandler handles min soc
+func vehicleMinSocHandler(v vehicle.API) (func(string) (int, error), func(int) error, func() int) {
+	return strconv.Atoi, pass(v.SetMinSoc), v.GetMinSoc
+}
 
-		v, err := site.Vehicles().ByName(vars["name"])
-		if err != nil {
-			jsonError(w, http.StatusBadRequest, err)
-			return
-		}
-
-		soc, err := strconv.Atoi(vars["value"])
-		if err != nil {
-			jsonError(w, http.StatusBadRequest, err)
-			return
-		}
-
-		v.SetLimitSoc(soc)
-
-		res := struct {
-			Soc int `json:"soc"`
-		}{
-			Soc: v.GetLimitSoc(),
-		}
-
-		jsonResult(w, res)
-	}
+// vehicleLimitSocHandler handles limit soc
+func vehicleLimitSocHandler(v vehicle.API) (func(string) (int, error), func(int) error, func() int) {
+	return strconv.Atoi, pass(v.SetLimitSoc), v.GetLimitSoc
 }
 
 // planSocHandler updates plan soc and time
@@ -128,4 +109,24 @@ func planSocRemoveHandler(site site.API) http.HandlerFunc {
 		res := struct{}{}
 		jsonResult(w, res)
 	}
+}
+
+// vehicleModeHandler handles mode
+func vehicleModeHandler(v vehicle.API) (func(string) (api.ChargeMode, error), func(api.ChargeMode) error, func() api.ChargeMode) {
+	return api.ChargeModeString, pass(v.SetMode), v.GetMode
+}
+
+// vehiclePhasesHandler handles phases
+func vehiclePhasesHandler(v vehicle.API) (func(string) (int, error), func(int) error, func() int) {
+	return strconv.Atoi, pass(v.SetPhases), v.GetPhases
+}
+
+// vehicleMinCurrentHandler handles min current
+func vehicleMinCurrentHandler(v vehicle.API) (func(string) (float64, error), func(float64) error, func() float64) {
+	return parseFloat, pass(v.SetMinCurrent), v.GetMinCurrent
+}
+
+// vehicleMaxCurrentHandler handles max current
+func vehicleMaxCurrentHandler(v vehicle.API) (func(string) (float64, error), func(float64) error, func() float64) {
+	return parseFloat, pass(v.SetMaxCurrent), v.GetMaxCurrent
 }
