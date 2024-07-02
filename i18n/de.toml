@@ -42,6 +42,7 @@ title = "Regelverhalten"
 
 [config.deviceValue]
 broker = "Broker"
+bucket = "Bucket"
 capacity = "Kapazität"
 chargeStatus = "Status"
 chargeStatusA = "nicht verbunden"
