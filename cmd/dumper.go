@@ -140,6 +140,14 @@ func (d *dumper) Dump(name string, v interface{}) {
 		}
 	}
 
+	if v, ok := v.(api.CurrentLimiter); ok {
+		if min, max, err := v.GetMinMaxCurrent(); err != nil {
+			fmt.Fprintf(w, "Mix/Max Current:\t%v\n", err)
+		} else {
+			fmt.Fprintf(w, "Mix/Max Current:\t%.1f/%.1fA\n", min, max)
+		}
+	}
+
 	// vehicle
 
 	if v, ok := v.(api.VehicleRange); ok {
