@@ -158,3 +158,35 @@ func (v *API) Action(vin, pin, action, cmd string) (ActionResponse, error) {
 
 	return res, err
 }
+
+func (v *API) UpdateSchedule(vin, pin, scheduleJson string) (ActionResponse, error) {
+	var res ActionResponse
+
+	token, err := v.pinAuth(pin)
+	if err != nil {
+		return res, err
+	}
+
+	uri := fmt.Sprintf("%s/v2/accounts/%s/vehicles/%s/ev/schedule", ApiURI, v.identity.UID(), vin)
+
+	data := struct {
+		Command   string `json:"command"`
+		PinAuth   string `json:"pinAuth"`
+		Schedules string `json:"schedules"`
+	}{
+		Command: "CPPLUS",
+		PinAuth: token,
+		Schedules: scheduleJson
+	}
+
+	req, err := v.request(http.MethodPost, uri, request.MarshalJSON(data))
+	if err == nil {
+		err = v.DoJSON(req, &res)
+	}
+
+	if err == nil && res.Message != "" {
+		err = fmt.Errorf("action schedules: %s", res.Message)
+	}
+
+	return res, err
+}
