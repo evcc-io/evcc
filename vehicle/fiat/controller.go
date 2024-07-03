@@ -42,11 +42,12 @@ func (c *Controller) ChargeEnable(enable bool) error {
 			}
 		}
 		// update charge schedule to start now 
-		return ChangeScheduleCharge(time.Now(), nil);
+		// return ChangeScheduleCharge(time.Now(), nil);
 		 
 	} else {
 		// Simulate stop charging by updating charege schedule end time 
-		return ChangeScheduleCharge(nil, time.Now().add("2m"))
+		// return ChangeScheduleCharge(nil, time.Now().add("2m"))
+		err = api.ErrVehicleNotAvailable
 	}
 
 	return err
@@ -60,7 +61,7 @@ func (c *Controller) ChangeScheduleCharge(startTime Time, endTime Time) error {
 		schedule = stat.EvInfo.Schedules
 	}
 	if schedule == nil {
-		return api.ErrNotAvailable
+		return api.ErrVehicleNotAvailable
 	}
 	if endTime == nil {
 		endTime = schedule[0].EndTime
