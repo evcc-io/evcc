@@ -705,8 +705,15 @@ func (lp *Loadpoint) syncCharger() error {
 	switch {
 	case enabled && lp.enabled:
 		// sync max current
-		if charger, ok := lp.charger.(api.CurrentGetter); ok {
-			if current, err := charger.GetMaxCurrent(); err == nil {
+		var (
+			current float64
+			err     error
+		)
+
+		// use chargers actual set current if available
+		cg, ok := lp.charger.(api.CurrentGetter)
+		if ok {
+			if current, err = cg.GetMaxCurrent(); err == nil {
 				// smallest adjustment most PWM-Controllers can do is: 100%÷256×0,6A = 0.234A
 				if math.Abs(lp.chargeCurrent-current) > 0.23 {
 					if shouldBeConsistent {
@@ -718,8 +725,11 @@ func (lp *Loadpoint) syncCharger() error {
 			} else if !errors.Is(err, api.ErrNotAvailable) {
 				return fmt.Errorf("charger get max current: %w", err)
 			}
-		} else {
-			// use measured phase currents as fallback, validate if current too high by at least 1A
+		}
+
+		// use measured phase currents as fallback if charger does not provide max current or does not currently relay from vehicle (TWC3)
+		if !ok || errors.Is(err, api.ErrNotAvailable) {
+			// validate if current too high by at least 1A
 			if current := lp.GetMaxPhaseCurrent(); current > lp.chargeCurrent+1.0 {
 				if shouldBeConsistent {
 					lp.log.WARN.Printf("charger logic error: current mismatch (got %.3gA measured, expected %.3gA)", current, lp.chargeCurrent)
@@ -738,8 +748,8 @@ func (lp *Loadpoint) syncCharger() error {
 				chargerPhases = 3
 			}
 
-			if ps, ok := lp.charger.(api.PhaseGetter); ok {
-				if cp, err := ps.GetPhases(); err == nil {
+			if pg, ok := lp.charger.(api.PhaseGetter); ok {
+				if cp, err := pg.GetPhases(); err == nil {
 					chargerPhases = cp
 				} else {
 					if errors.Is(err, api.ErrNotAvailable) {
