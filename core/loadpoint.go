@@ -710,7 +710,7 @@ func (lp *Loadpoint) syncCharger() error {
 			err     error
 		)
 
-		// use charger set current if available
+		// use chargers actual set current if available
 		cg, ok := lp.charger.(api.CurrentGetter)
 		if ok {
 			if current, err = cg.GetMaxCurrent(); err == nil {
