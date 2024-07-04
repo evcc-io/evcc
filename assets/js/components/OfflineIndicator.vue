@@ -48,7 +48,7 @@
 				<div class="mx-4 mt-1">
 					<div>
 						<strong>
-							Error during startup. Check your configuration and restart.
+							{{ $t("offline.configurationError") }}
 						</strong>
 					</div>
 					<div v-if="fatal">{{ fatal.error }}</div>

@@ -546,6 +546,7 @@ message = "Not connected to a server."
 restart = "Restart"
 restartNeeded = "Required to apply changes."
 restarting = "Server will be back in a moment."
+configurationError = "Error during startup. Check your configuration and restart."
 
 [passwordModal]
 description = "Set a password to protect the configuration settings. Using the main screen is still possible without login."
