@@ -97,7 +97,7 @@ func ReplaceFormatted(s string, kv map[string]interface{}) (string, error) {
 
 	// return missing keys
 	if len(wanted) > 0 {
-		return "", fmt.Errorf("wanted: %v, got: %v", wanted, slices.Collect(maps.Keys(kv)))
+		return "", fmt.Errorf("wanted: %v, got: %v", slices.Sorted(slices.Values(wanted)), slices.Sorted(maps.Keys(kv)))
 	}
 
 	return s, nil
