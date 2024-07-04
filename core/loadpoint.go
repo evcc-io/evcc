@@ -740,8 +740,8 @@ func (lp *Loadpoint) syncCharger() error {
 		}
 
 		// sync phases
-		phases := lp.GetPhases()
-		if shouldBeConsistent && phases > 0 {
+		_, ps := lp.charger.(api.PhaseSwitcher)
+		if phases := lp.GetPhases(); ps && shouldBeConsistent && phases > 0 {
 			// fallback active phases from measured phases
 			chargerPhases := lp.measuredPhases
 			if chargerPhases == 2 {
