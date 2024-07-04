@@ -53,8 +53,9 @@ func TestSyncChargerCurrentsByGetter(t *testing.T) {
 	tc := []struct {
 		lpCurrent, actualCurrent, outCurrent float64
 	}{
-		{6, 5, 5}, // ignore
+		{6, 5, 5}, // force
 		{6, 6.1, 6},
+		{6, 6.5, 6.5},
 		{6, 7, 7},
 	}
 
@@ -99,6 +100,7 @@ func TestSyncChargerCurrentsByMeasurement(t *testing.T) {
 	}{
 		{6, []float64{5, 0, 0}, 6}, // ignore
 		{6, []float64{6.1, 0, 0}, 6},
+		{6, []float64{6.5, 0, 0}, 6},
 		{6, []float64{7, 0, 0}, 7},
 	}
 
