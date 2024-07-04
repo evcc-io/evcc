@@ -711,8 +711,8 @@ func (lp *Loadpoint) syncCharger() error {
 		)
 
 		// use chargers actual set current if available
-		cg, ok := lp.charger.(api.CurrentGetter)
-		if ok {
+		cg, isCg := lp.charger.(api.CurrentGetter)
+		if isCg {
 			if current, err = cg.GetMaxCurrent(); err == nil {
 				// smallest adjustment most PWM-Controllers can do is: 100%÷256×0,6A = 0.234A
 				if math.Abs(lp.chargeCurrent-current) > 0.23 {
@@ -728,9 +728,9 @@ func (lp *Loadpoint) syncCharger() error {
 		}
 
 		// use measured phase currents as fallback if charger does not provide max current or does not currently relay from vehicle (TWC3)
-		if !ok || errors.Is(err, api.ErrNotAvailable) {
+		if !isCg || errors.Is(err, api.ErrNotAvailable) {
 			// validate if current too high by at least 1A
-			if current := lp.GetMaxPhaseCurrent(); current > lp.chargeCurrent+1.0 {
+			if current := lp.GetMaxPhaseCurrent(); current >= lp.chargeCurrent+1.0 {
 				if shouldBeConsistent {
 					lp.log.WARN.Printf("charger logic error: current mismatch (got %.3gA measured, expected %.3gA)", current, lp.chargeCurrent)
 				}
@@ -740,17 +740,21 @@ func (lp *Loadpoint) syncCharger() error {
 		}
 
 		// sync phases
-		phases := lp.GetPhases()
-		if shouldBeConsistent && phases > 0 {
-			// fallback active phases from measured phases
+		_, isPs := lp.charger.(api.PhaseSwitcher)
+		if phases := lp.GetPhases(); isPs && shouldBeConsistent && phases > 0 {
+			// fallback to active phases from measured phases
 			chargerPhases := lp.measuredPhases
 			if chargerPhases == 2 {
 				chargerPhases = 3
 			}
 
-			if pg, ok := lp.charger.(api.PhaseGetter); ok {
-				if cp, err := pg.GetPhases(); err == nil {
-					chargerPhases = cp
+			pg, isPg := lp.charger.(api.PhaseGetter)
+			if isPg {
+				if chargerPhases, err = pg.GetPhases(); err == nil {
+					if chargerPhases > 0 && chargerPhases != phases {
+						lp.log.WARN.Printf("charger logic error: phases mismatch (got %d, expected %d)", chargerPhases, phases)
+						lp.setPhases(chargerPhases)
+					}
 				} else {
 					if errors.Is(err, api.ErrNotAvailable) {
 						return nil
@@ -759,9 +763,12 @@ func (lp *Loadpoint) syncCharger() error {
 				}
 			}
 
-			if chargerPhases > 0 && chargerPhases != phases {
-				lp.log.WARN.Printf("charger logic error: phases mismatch (got %d, expected %d)", chargerPhases, phases)
-				lp.setPhases(chargerPhases)
+			// use measured phase currents for active phases as fallback if charger does not provide phases
+			if !isPg || errors.Is(err, api.ErrNotAvailable) {
+				if chargerPhases > phases {
+					lp.log.WARN.Printf("charger logic error: phases mismatch (got %d measured, expected %d)", chargerPhases, phases)
+					lp.setPhases(chargerPhases)
+				}
 			}
 		}
 
