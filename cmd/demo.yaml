@@ -3,7 +3,7 @@ network:
 
 log: debug
 
-interval: 3s
+interval: 10s
 
 javascript:
   - vm: shared

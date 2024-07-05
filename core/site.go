@@ -825,6 +825,8 @@ func (site *Site) update(lp updater) {
 		site.updateBatteryMode()
 	}
 
+	site.publish(keys.Heartbeat, time.Now())
+
 	site.stats.Update(site)
 }
 
