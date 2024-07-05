@@ -74,7 +74,7 @@ func (d *dumper) Dump(name string, v interface{}) {
 		if p1, p2, p3, err := v.Powers(); err != nil {
 			fmt.Fprintf(w, "Power L1..L3:\t%v\n", err)
 		} else {
-			fmt.Fprintf(w, "Power L1..L3:\t%.3gW %.3gW %.3gW\n", p1, p2, p3)
+			fmt.Fprintf(w, "Power L1..L3:\t%.0fW %.0fW %.0fW\n", p1, p2, p3)
 		}
 	}
 
@@ -137,6 +137,14 @@ func (d *dumper) Dump(name string, v interface{}) {
 			fmt.Fprintf(w, "Duration:\t%v\n", err)
 		} else {
 			fmt.Fprintf(w, "Duration:\t%v\n", duration.Truncate(time.Second))
+		}
+	}
+
+	if v, ok := v.(api.CurrentLimiter); ok {
+		if min, max, err := v.GetMinMaxCurrent(); err != nil {
+			fmt.Fprintf(w, "Mix/Max Current:\t%v\n", err)
+		} else {
+			fmt.Fprintf(w, "Mix/Max Current:\t%.1f/%.1fA\n", min, max)
 		}
 	}
 
@@ -233,8 +241,9 @@ func (d *dumper) Dump(name string, v interface{}) {
 	// features
 
 	if v, ok := v.(api.FeatureDescriber); ok {
-		ff := v.Features()
-		fmt.Fprintf(w, "Features:\t%v\n", ff)
+		if ff := v.Features(); len(ff) > 0 {
+			fmt.Fprintf(w, "Features:\t%v\n", ff)
+		}
 	}
 
 	w.Flush()

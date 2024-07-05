@@ -149,8 +149,23 @@ title = "Modbus Proxy"
 [config.mqtt]
 authentication = "Avtentikacija"
 description = "Povežite se s posrednikom MQTT za izmenjavo podatkov z drugimi sistemi v vašem omrežju."
+descriptionClientId = "Avtor sporočil. Če se pusti prazno, se uporabi `evcc-[rand]`."
+descriptionTopic = "Pustite prazno, če želite onemogočiti objavljanje."
+labelBroker = "Posrednik"
+labelCheckInsecure = "Dovoli samopodpisane certifikate"
+labelClientId = "ID Stranke"
+labelInsecure = "Preverjanje certifikata"
+labelPassword = "Geslo"
+labelTopic = "Topic"
+labelUser = "Uporabniško ime"
+publishing = "Objavljanje"
+title = "MQTT"
 
 [config.network]
+descriptionHost = "Uporabite pripono .local, da omogočite mDNS. Pomembno za odkrivanje mobilne aplikacije in nekaterih polnilnikov OCPP."
+descriptionPort = "Vrata za spletni vmesnik in API. Če spremenite, boste morali posodobiti URL v brskalniku."
+descriptionSchema = "Vpliva samo na to, kako so URL-ji ustvarjeni. Če izberete HTTPS, šifriranje ne bo omogočeno."
+labelHost = "Ime gostitelja"
 labelPort = "Port"
 labelSchema = "Shema"
 title = "Mreža"
@@ -173,6 +188,8 @@ titleEdit = "Uredi merilnik sončne energije"
 general = "Splošno"
 grid = "Omrežje"
 integrations = "Integracije"
+loadpoints = "Polnilne točke"
+meter = "Sončna energija in baterije"
 system = "Sistem"
 vehicles = "Vozila"
 
@@ -183,6 +200,11 @@ save = "Shrani"
 [config.sponsor]
 addToken = "Vnesi sponzorski žeton"
 changeToken = "Spremeni sponzorski žeton"
+description = "Model sponzoriranja nam pomaga vzdrževati projekt in trajnostno graditi nove in vznemirljive funkcije. Kot sponzor dobite dostop do vseh izvedb polnilnikov."
+descriptionToken = "Žeton dobite na naslovu {url}. Ponujamo tudi poskusni žeton za testiranje."
+error = "Sponzorski žeton ni veljaven."
+labelToken = "Sponzorski žeton"
+title = "Sponzorstvo"
 
 [config.system]
 logs = "Logi"
@@ -193,6 +215,7 @@ restartingDescription = "Prosim počakajte..."
 restartingMessage = "Ponovni zagon evcc."
 
 [config.tariffs]
+description = "Določite svoje tarife za energijo, da izračunate stroške svojih polnilnih sej."
 title = "Tarife"
 
 [config.title]
@@ -440,6 +463,7 @@ minpv = "Min+Sonce"
 now = "Hitro"
 off = "Izklop"
 pv = "Sonce"
+smart = "Pametno"
 
 [main.provider]
 login = "prijava"
@@ -536,6 +560,7 @@ modalTitle = "Obvestila"
 message = "Ni povezan s strežnikom."
 reload = "Ponovno naloži?"
 restart = "Ponovni zagon"
+restartNeeded = "Potrebno za uveljavitev sprememb."
 restarting = "Strežnik bo kmalu nazaj."
 
 [passwordModal]
