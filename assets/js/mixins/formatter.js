@@ -75,6 +75,10 @@ export default {
     fmtNumberToLocale(val, pad = 0) {
       return val.toLocaleString(this.$i18n?.locale).padStart(pad, "0");
     },
+    fmtDurationToTime(date) {
+      const diff = date - new Date();
+      return this.fmtDuration(diff / 1000, true, "h");
+    },
     fmtDurationNs(duration = 0, withUnit = true, minUnit = "s") {
       return this.fmtDuration(duration / 1e9, withUnit, minUnit);
     },

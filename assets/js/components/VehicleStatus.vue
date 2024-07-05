@@ -30,13 +30,6 @@
 			</div>
 
 			<!-- vehicle -->
-			<div
-				v-if="vehicleClimaterActive"
-				class="entry text-primary"
-				data-testid="vehicle-status-climater"
-			>
-				<ClimaterIcon /> on
-			</div>
 			<button
 				v-if="minSocVisible"
 				ref="minSoc"
@@ -52,22 +45,37 @@
 			</button>
 			<div
 				v-else-if="vehicleLimitVisible"
+				ref="vehicleLimit"
 				class="entry"
 				:class="vehicleLimitClass"
+				data-bs-toggle="tooltip"
 				data-testid="vehicle-status-limit"
+				:role="vehicleLimitWarning ? 'button' : null"
+				@click="vehicleLimitClicked"
 			>
 				<component :is="vehicleLimitIconComponent" />
 				{{ fmtPercentage(vehicleLimitSoc) }}
+			</div>
+			<div
+				v-if="vehicleClimaterActive"
+				ref="vehicleClimater"
+				data-bs-toggle="tooltip"
+				class="entry"
+				data-testid="vehicle-status-climater"
+			>
+				<ClimaterIcon />
 			</div>
 
 			<!-- smart cost -->
 			<button
 				v-if="smartCostVisible"
+				ref="smartCost"
 				type="button"
 				class="entry"
 				:class="smartCostClass"
 				data-testid="vehicle-status-smartcost"
-				@click="openLoadpointSettings"
+				data-bs-toggle="tooltip"
+				@click="smartCostClicked"
 			>
 				<DynamicPriceIcon v-if="smartCostPrice" />
 				<shopicon-regular-eco1 v-else></shopicon-regular-eco1>
@@ -182,6 +190,9 @@ export default {
 			planStartTooltip: null,
 			planActiveTooltip: null,
 			minSocTooltip: null,
+			vehicleClimaterTooltip: null,
+			smartCostTooltip: null,
+			vehicleLimitTooltip: null,
 		};
 	},
 	mounted() {
@@ -190,22 +201,34 @@ export default {
 		this.updateMinSocTooltip();
 		this.updatePhaseTooltip();
 		this.updatePvTooltip();
+		this.updateVehicleClimaterTooltip();
+		this.updateSmartCostTooltip();
+		this.updateVehicleLimitTooltip();
 	},
 	watch: {
 		planActiveTooltipContent() {
-			this.updatePlanActiveTooltip();
+			this.$nextTick(this.updatePlanActiveTooltip);
 		},
 		planStartTooltipContent() {
-			this.updatePlanStartTooltip();
+			this.$nextTick(this.updatePlanStartTooltip);
 		},
 		minSocTooltipContent() {
-			this.updateMinSocTooltip();
+			this.$nextTick(this.updateMinSocTooltip);
 		},
 		phaseTimerContent() {
-			this.updatePhaseTooltip();
+			this.$nextTick(this.updatePhaseTooltip);
 		},
 		pvTimerContent() {
-			this.updatePvTooltip();
+			this.$nextTick(this.updatePvTooltip);
+		},
+		vehicleClimaterTooltipContent() {
+			this.$nextTick(this.updateVehicleClimaterTooltip);
+		},
+		smartCostTooltipContent() {
+			this.$nextTick(this.updateSmartCostTooltip);
+		},
+		vehicleLimitTooltipContent() {
+			this.$nextTick(this.updateVehicleLimitTooltip);
 		},
 	},
 	computed: {
@@ -246,6 +269,18 @@ export default {
 			const limit = Math.max(this.vehicleLimitSoc, this.effectiveLimitSoc) || 100;
 			return this.vehicleLimitSoc > 0 && this.vehicleLimitSoc <= limit;
 		},
+		vehicleLimitTooltipContent() {
+			if (!this.vehicleLimitVisible) {
+				return "";
+			}
+			if (this.vehicleLimitReached) {
+				return this.$t("main.vehicleStatus.vehicleLimitReached");
+			}
+			if (this.vehicleLimitWarning) {
+				return this.$t("main.targetCharge.targetIsAboveVehicleLimit");
+			}
+			return this.$t("main.vehicleStatus.vehicleLimit");
+		},
 		minSocVisible() {
 			return this.minSoc > 0 && this.vehicleSoc < this.minSoc;
 		},
@@ -269,9 +304,6 @@ export default {
 			return this.effectivePlanSoc > this.vehicleLimitSoc;
 		},
 		vehicleLimitClass() {
-			if (this.vehicleLimitReached) {
-				return "text-primary";
-			}
 			if (this.vehicleLimitWarning) {
 				return "text-warning";
 			}
@@ -293,8 +325,8 @@ export default {
 			if (!this.planStartVisible) {
 				return "";
 			}
-			const time = this.fmtAbsoluteDate(new Date(this.planProjectedStart));
-			return this.$t("main.vehicleStatus.targetChargePlanned", { time });
+			const duration = this.fmtDurationToTime(new Date(this.planProjectedStart));
+			return this.$t("main.vehicleStatus.targetChargePlanned", { duration });
 		},
 		planActiveVisible() {
 			return this.planProjectedEnd && this.planActive && !this.chargingPlanDisabled;
@@ -306,17 +338,35 @@ export default {
 			if (!this.planActiveVisible) {
 				return "";
 			}
-			const endTime = this.fmtAbsoluteDate(new Date(this.planProjectedEnd));
 			if (this.planTimeUnreachable) {
-				return this.$t("main.targetCharge.notReachableInTime", { endTime });
+				return this.$t("main.targetCharge.notReachableInTime", {
+					overrun: this.fmtDuration(this.planOverrun, true, "h"),
+				});
 			}
-			return this.$t("main.vehicleStatus.targetChargeActive", { endTime });
+			return this.$t("main.vehicleStatus.targetChargeActive", {
+				duration: this.fmtDurationToTime(new Date(this.planProjectedEnd)),
+			});
 		},
 		smartCostVisible() {
 			return !!this.smartCostLimit;
 		},
+		smartCostTooltipContent() {
+			if (!this.smartCostVisible) {
+				return "";
+			}
+			const prefix = `main.vehicleStatus.${this.smartCostPrice ? "cheap" : "clean"}`;
+			if (this.smartCostNowVisible) {
+				return this.$t(`${prefix}EnergyCharging`);
+			}
+			if (this.smartCostNextStart) {
+				return this.$t(`${prefix}EnergyNextStart`, {
+					duration: this.fmtDurationToTime(new Date(this.smartCostNextStart)),
+				});
+			}
+			return this.$t(`${prefix}EnergySet`);
+		},
 		smartCostPrice() {
-			return this.smartCostType !== "co2";
+			return this.smartCostType !== CO2_TYPE;
 		},
 		smartCostNowVisible() {
 			if (this.smartCostPrice) {
@@ -344,6 +394,9 @@ export default {
 				return "text-primary";
 			}
 			return "";
+		},
+		vehicleClimaterTooltipContent() {
+			return this.$t("main.vehicleStatus.climating");
 		},
 		chargerStatus() {
 			const t = (key, data) => {
@@ -476,6 +529,16 @@ export default {
 			this.planActiveTooltip?.hide();
 			this.$emit("open-plan-modal");
 		},
+		vehicleLimitClicked() {
+			if (this.vehicleLimitWarning) {
+				this.vehicleLimitTooltip?.hide();
+				this.$emit("open-plan-modal");
+			}
+		},
+		smartCostClicked() {
+			this.smartCostTooltip?.hide();
+			this.openLoadpointSettings();
+		},
 		updatePvTooltip() {
 			this.pvTooltip = this.updateTooltip(
 				this.pvTooltip,
@@ -514,7 +577,31 @@ export default {
 				true
 			);
 		},
+		updateVehicleClimaterTooltip() {
+			this.vehicleClimaterTooltip = this.updateTooltip(
+				this.vehicleClimaterTooltip,
+				this.vehicleClimaterTooltipContent,
+				this.$refs.vehicleClimater
+			);
+		},
+		updateSmartCostTooltip() {
+			this.smartCostTooltip = this.updateTooltip(
+				this.smartCostTooltip,
+				this.smartCostTooltipContent,
+				this.$refs.smartCost,
+				true
+			);
+		},
+		updateVehicleLimitTooltip() {
+			this.vehicleLimitTooltip = this.updateTooltip(
+				this.vehicleLimitTooltip,
+				this.vehicleLimitTooltipContent,
+				this.$refs.vehicleLimit,
+				true
+			);
+		},
 		updateTooltip: function (instance, content, ref, hoverOnly = false) {
+			console.log("updateTooltip", { instance, content, ref, hoverOnly });
 			if (!content || !ref) {
 				if (instance) {
 					instance.dispose();

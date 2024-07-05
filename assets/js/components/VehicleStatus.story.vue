@@ -1,5 +1,16 @@
 <script setup>
 import VehicleStatus from "./VehicleStatus.vue";
+
+function getFutureTime(hours, minutes) {
+	const now = new Date();
+	now.setHours(now.getHours() + hours);
+	now.setMinutes(now.getMinutes() + minutes);
+	return now.toISOString();
+}
+
+const planProjectedStart = getFutureTime(3, 21);
+const effectivePlanTime = getFutureTime(6, 54);
+const planProjectedEnd = getFutureTime(5, 43);
 </script>
 
 <template>
@@ -47,16 +58,16 @@ import VehicleStatus from "./VehicleStatus.vue";
 		<Variant title="plan: start soon">
 			<VehicleStatus
 				connected
-				effectivePlanTime="2020-03-16T06:00:00Z"
-				planProjectedStart="2020-03-16T02:00:00Z"
+				:effectivePlanTime="effectivePlanTime"
+				:planProjectedStart="planProjectedStart"
 			/>
 		</Variant>
 		<Variant title="plan: start soon, charging">
 			<VehicleStatus
 				connected
 				charging
-				effectivePlanTime="2020-03-16T06:00:00Z"
-				planProjectedStart="2020-03-16T02:00:00Z"
+				:effectivePlanTime="effectivePlanTime"
+				:planProjectedStart="planProjectedStart"
 			/>
 		</Variant>
 		<Variant title="plan: active">
@@ -64,9 +75,9 @@ import VehicleStatus from "./VehicleStatus.vue";
 				connected
 				charging
 				planActive
-				effectivePlanTime="2020-03-16T06:00:00Z"
-				planProjectedStart="2020-03-16T02:00:00Z"
-				planProjectedEnd="2020-03-16T05:12:00Z"
+				:effectivePlanTime="effectivePlanTime"
+				:planProjectedStart="planProjectedStart"
+				:planProjectedEnd="planProjectedEnd"
 			/>
 		</Variant>
 		<Variant title="plan: active, not reachable">
@@ -74,9 +85,10 @@ import VehicleStatus from "./VehicleStatus.vue";
 				connected
 				charging
 				planActive
-				effectivePlanTime="2020-03-16T06:00:00Z"
-				planProjectedStart="2020-03-16T02:00:00Z"
-				planProjectedEnd="2020-03-16T07:12:00Z"
+				:effectivePlanTime="effectivePlanTime"
+				:planProjectedStart="planProjectedStart"
+				:planProjectedEnd="planProjectedEnd"
+				:planOverrun="1829"
 				planTimeUnreachable
 			/>
 		</Variant>
@@ -115,7 +127,7 @@ import VehicleStatus from "./VehicleStatus.vue";
 				charging
 				:smartCostLimit="500"
 				smartCostType="co2"
-				smartCostNextStart="2024-06-26T19:00:00Z"
+				:smartCostNextStart="planProjectedStart"
 			/>
 		</Variant>
 		<Variant title="smart cost: clean energy active">
@@ -156,7 +168,7 @@ import VehicleStatus from "./VehicleStatus.vue";
 				currency="CHF"
 				:smartCostLimit="0.12"
 				smartCostType="price"
-				smartCostNextStart="2024-06-27T19:00:00Z"
+				:smartCostNextStart="planProjectedStart"
 			/>
 		</Variant>
 		<Variant title="smart cost: cheap energy active">
@@ -189,8 +201,8 @@ import VehicleStatus from "./VehicleStatus.vue";
 				charging
 				pvAction="disable"
 				:pvRemainingInterpolated="181"
-				effectivePlanTime="2020-03-26T08:12:00Z"
-				planProjectedStart="2020-03-26T04:44:00Z"
+				:effectivePlanTime="effectivePlanTime"
+				:planProjectedStart="planProjectedStart"
 			/>
 		</Variant>
 		<Variant title="combination: vehicle limit, plan">
@@ -200,8 +212,8 @@ import VehicleStatus from "./VehicleStatus.vue";
 				:sessionSolarPercentage="94"
 				:vehicleLimitSoc="80"
 				:effectiveLimitSoc="90"
-				effectivePlanTime="2020-03-16T06:00:00Z"
-				planProjectedStart="2020-03-16T02:00:00Z"
+				:effectivePlanTime="effectivePlanTime"
+				:planProjectedStart="planProjectedStart"
 			/>
 		</Variant>
 		<Variant title="combination: maximal">
@@ -214,9 +226,10 @@ import VehicleStatus from "./VehicleStatus.vue";
 				:tariffGrid="0.33"
 				:smartCostLimit="0.2"
 				smartCostType="price"
-				smartCostNextStart="2020-03-16T17:42:00Z"
-				effectivePlanTime="2020-03-16T06:00:00Z"
-				planProjectedStart="2020-03-16T02:00:00Z"
+				:smartCostNextStart="planProjectedStart"
+				:effectivePlanTime="effectivePlanTime"
+				:planProjectedStart="planProjectedStart"
+				vehicleClimaterActive
 			/>
 		</Variant>
 	</Story>

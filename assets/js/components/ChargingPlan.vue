@@ -123,6 +123,7 @@ export default {
 		planEnergy: Number,
 		planTime: String,
 		planTimeUnreachable: Boolean,
+		planOverrun: Number,
 		rangePerSoc: Number,
 		smartCostLimit: Number,
 		smartCostType: String,
