@@ -610,12 +610,12 @@ func (c *EEBus) currentPower() (float64, error) {
 
 	connectedPhases, err := c.uc.EvCem.PhasesConnected(evEntity)
 	if err != nil {
-		return 0, err
+		return 0, api.ErrNotAvailable
 	}
 
 	powers, err := c.uc.EvCem.PowerPerPhase(evEntity)
 	if err != nil {
-		return 0, err
+		return 0, api.ErrNotAvailable
 	}
 
 	var power float64
@@ -638,7 +638,7 @@ func (c *EEBus) chargedEnergy() (float64, error) {
 
 	energy, err := c.uc.EvCem.EnergyCharged(evEntity)
 	if err != nil {
-		return 0, err
+		return 0, api.ErrNotAvailable
 	}
 
 	return energy / 1e3, nil
