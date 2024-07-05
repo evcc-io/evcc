@@ -112,17 +112,17 @@ func (c *Connection) TotalEnergy() (float64, error) {
 // Currents implements the api.PhaseCurrents interface
 func (c *Connection) Currents() (float64, float64, float64, error) {
 	res, err := c.dataG.Get()
-	return res.ActiveCurrentL1A, res.ActiveCurrentL2A, res.ActiveCurrentL3A, nil
+	return res.ActiveCurrentL1A, res.ActiveCurrentL2A, res.ActiveCurrentL3A, err
 }
 
 // Voltages implements the api.PhaseVoltages interface
 func (c *Connection) Voltages() (float64, float64, float64, error) {
 	res, err := c.dataG.Get()
-	return res.ActiveVoltageL1V, res.ActiveVoltageL2V, res.ActiveVoltageL3V, nil
+	return res.ActiveVoltageL1V, res.ActiveVoltageL2V, res.ActiveVoltageL3V, err
 }
 
 // Powers implements the api.PhasePowers interface
 func (c *Connection) Powers() (float64, float64, float64, error) {
 	res, err := c.dataG.Get()
-	return res.ActivePowerL1W, res.ActivePowerL2W, res.ActivePowerL3W, nil
+	return res.ActivePowerL1W, res.ActivePowerL2W, res.ActivePowerL3W, err
 }
