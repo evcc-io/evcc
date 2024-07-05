@@ -74,7 +74,7 @@ func (d *dumper) Dump(name string, v interface{}) {
 		if p1, p2, p3, err := v.Powers(); err != nil {
 			fmt.Fprintf(w, "Power L1..L3:\t%v\n", err)
 		} else {
-			fmt.Fprintf(w, "Power L1..L3:\t%.3gW %.3gW %.3gW\n", p1, p2, p3)
+			fmt.Fprintf(w, "Power L1..L3:\t%.0fW %.0fW %.0fW\n", p1, p2, p3)
 		}
 	}
 
