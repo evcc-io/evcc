@@ -120,9 +120,3 @@ func (c *Connection) Voltages() (float64, float64, float64, error) {
 	res, err := c.dataG.Get()
 	return res.ActiveVoltageL1V, res.ActiveVoltageL2V, res.ActiveVoltageL3V, err
 }
-
-// Powers implements the api.PhasePowers interface
-func (c *Connection) Powers() (float64, float64, float64, error) {
-	res, err := c.dataG.Get()
-	return res.ActivePowerL1W, res.ActivePowerL2W, res.ActivePowerL3W, err
-}

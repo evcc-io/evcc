@@ -27,7 +27,4 @@ type DataResponse struct {
 	ActiveVoltageL1V      float64 `json:"active_voltage_l1_v"`
 	ActiveVoltageL2V      float64 `json:"active_voltage_l2_v"`
 	ActiveVoltageL3V      float64 `json:"active_voltage_l3_v"`
-	ActivePowerL1W        float64 `json:"active_power_l1_w"`
-	ActivePowerL2W        float64 `json:"active_power_l2_w"`
-	ActivePowerL3W        float64 `json:"active_power_l3_w"`
 }
