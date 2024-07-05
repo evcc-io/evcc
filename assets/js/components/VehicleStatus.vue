@@ -21,7 +21,6 @@
 				data-testid="vehicle-status-phasetimer"
 				data-bs-toggle="tooltip"
 			>
-				<shopicon-regular-sun></shopicon-regular-sun>
 				<shopicon-regular-angledoublerightsmall
 					:class="phaseIconClass"
 					class="me-1"
@@ -34,13 +33,12 @@
 				v-if="minSocVisible"
 				ref="minSoc"
 				type="button"
-				class="entry gap-0 text-danger text-decoration-underline"
+				class="entry text-danger text-decoration-underline"
 				data-testid="vehicle-status-minsoc"
 				data-bs-toggle="tooltip"
 				@click="openMinSocSettings"
 			>
-				<VehicleLimitIcon />
-				<shopicon-regular-angledoublerightsmall></shopicon-regular-angledoublerightsmall>
+				<VehicleMinSocIcon />
 				{{ fmtPercentage(minSoc) }}
 			</button>
 			<div
@@ -135,6 +133,7 @@ import ClimaterIcon from "./MaterialIcon/Climater.vue";
 import VehicleLimitReachedIcon from "./MaterialIcon/VehicleLimitReached.vue";
 import VehicleLimitWarningIcon from "./MaterialIcon/VehicleLimitWarning.vue";
 import VehicleLimitIcon from "./MaterialIcon/VehicleLimit.vue";
+import VehicleMinSocIcon from "./MaterialIcon/VehicleMinSoc.vue";
 import SunDownIcon from "./MaterialIcon/SunDown.vue";
 import SunUpIcon from "./MaterialIcon/SunUp.vue";
 import Tooltip from "bootstrap/js/dist/tooltip";
@@ -147,6 +146,7 @@ export default {
 		PlanEndIcon,
 		ClimaterIcon,
 		VehicleLimitIcon,
+		VehicleMinSocIcon,
 		SunDownIcon,
 		SunUpIcon,
 	},
