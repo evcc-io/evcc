@@ -108,3 +108,21 @@ func (c *Connection) TotalEnergy() (float64, error) {
 	res, err := c.dataG.Get()
 	return res.TotalPowerImportT1kWh + res.TotalPowerImportT2kWh + res.TotalPowerImportT3kWh + res.TotalPowerImportT4kWh, err
 }
+
+// Currents implements the api.PhaseCurrents interface
+func (c *Connection) Currents() (float64, float64, float64, error) {
+	res, err := c.dataG.Get()
+	return res.ActiveCurrentL1A, res.ActiveCurrentL2A, res.ActiveCurrentL3A, nil
+}
+
+// Voltages implements the api.PhaseVoltages interface
+func (c *Connection) Voltages() (float64, float64, float64, error) {
+	res, err := c.dataG.Get()
+	return res.ActiveVoltageL1V, res.ActiveVoltageL2V, res.ActiveVoltageL3V, nil
+}
+
+// Powers implements the api.PhasePowers interface
+func (c *Connection) Powers() (float64, float64, float64, error) {
+	res, err := c.dataG.Get()
+	return res.ActivePowerL1W, res.ActivePowerL2W, res.ActivePowerL3W, nil
+}
