@@ -544,6 +544,7 @@ logs = "Vollständiges Log ansehen"
 modalTitle = "Meldungen"
 
 [offline]
+configurationError = "Fehler beim Starten. Überprüfe deine Konfiguration und starte neu."
 message = "Keine Verbindung zum Server."
 reload = "Erneut laden?"
 restart = "Neustart"
