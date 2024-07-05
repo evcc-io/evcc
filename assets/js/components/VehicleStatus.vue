@@ -17,13 +17,12 @@
 			<div
 				v-else-if="phaseTimerVisible"
 				ref="phaseTimer"
-				class="entry gap-0"
+				class="entry"
 				data-testid="vehicle-status-phasetimer"
 				data-bs-toggle="tooltip"
 			>
 				<shopicon-regular-angledoublerightsmall
 					:class="phaseIconClass"
-					class="me-1"
 				></shopicon-regular-angledoublerightsmall>
 				<div class="tabular">{{ fmtDuration(phaseRemainingInterpolated) }}</div>
 			</div>
