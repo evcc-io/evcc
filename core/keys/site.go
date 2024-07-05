@@ -11,7 +11,6 @@ const (
 	GridEnergy            = "gridEnergy"
 	GridPower             = "gridPower"
 	GridPowers            = "gridPowers"
-	Heartbeat             = "heartbeat"
 	HomePower             = "homePower"
 	PrioritySoc           = "prioritySoc"
 	Pv                    = "pv"
