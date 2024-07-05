@@ -768,6 +768,11 @@ func (lp *Loadpoint) syncCharger() error {
 				if chargerPhases > phases {
 					lp.log.WARN.Printf("charger logic error: phases mismatch (got %d measured, expected %d)", chargerPhases, phases)
 					lp.setPhases(chargerPhases)
+					// switch charger phases according to charger's physical state
+					// this is necessary if charger hardware sometimes "forgets" to switch phases i.E. openWB
+					if err := lp.scalePhases(chargerPhases); err != nil {
+						lp.log.ERROR.Println(err)
+					}
 				}
 			}
 		}
