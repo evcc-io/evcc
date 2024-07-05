@@ -193,6 +193,7 @@ export default {
 		smartCostLimit: { type: Number, default: 0 },
 		smartCostType: String,
 		smartCostActive: Boolean,
+		smartCostNextStart: String,
 		tariffGrid: Number,
 		tariffCo2: Number,
 		currency: String,

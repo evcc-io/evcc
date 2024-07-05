@@ -5,9 +5,10 @@
 			<!-- pv/phase timer -->
 			<div
 				v-if="pvTimerVisible"
+				ref="pvTimer"
 				class="entry"
-				:class="pvTimerClass"
 				data-testid="vehicle-status-pvtimer"
+				data-bs-toggle="tooltip"
 			>
 				<SunUpIcon v-if="pvAction === 'enable'" />
 				<SunDownIcon v-else />
@@ -15,8 +16,10 @@
 			</div>
 			<div
 				v-else-if="phaseTimerVisible"
-				class="entry gap-0 text-primary"
+				ref="phaseTimer"
+				class="entry gap-0"
 				data-testid="vehicle-status-phasetimer"
+				data-bs-toggle="tooltip"
 			>
 				<shopicon-regular-sun></shopicon-regular-sun>
 				<shopicon-regular-angledoublerightsmall
@@ -36,9 +39,11 @@
 			</div>
 			<button
 				v-if="minSocVisible"
+				ref="minSoc"
 				type="button"
 				class="entry gap-0 text-danger text-decoration-underline"
 				data-testid="vehicle-status-minsoc"
+				data-bs-toggle="tooltip"
 				@click="openMinSocSettings"
 			>
 				<VehicleLimitIcon />
@@ -140,34 +145,34 @@ export default {
 	mixins: [formatter],
 	props: {
 		vehicleSoc: Number,
-		vehicleLimitSoc: Number,
-		minSoc: Number,
-		enabled: Boolean,
-		connected: Boolean,
 		charging: Boolean,
-		heating: Boolean,
-		effectivePlanTime: String,
-		effectiveLimitSoc: Number,
-		planProjectedStart: String,
-		planProjectedEnd: String,
-		smartCostNextStart: String,
 		chargingPlanDisabled: Boolean,
-		smartCostDisabled: Boolean,
-		planActive: Boolean,
-		planTimeUnreachable: Boolean,
-		planOverrun: Number,
+		connected: Boolean,
+		currency: String,
+		effectiveLimitSoc: Number,
 		effectivePlanSoc: Number,
+		effectivePlanTime: String,
+		enabled: Boolean,
+		heating: Boolean,
+		minSoc: Number,
 		phaseAction: String,
 		phaseRemainingInterpolated: Number,
+		planActive: Boolean,
+		planOverrun: Number,
+		planProjectedEnd: String,
+		planProjectedStart: String,
+		planTimeUnreachable: Boolean,
 		pvAction: String,
 		pvRemainingInterpolated: Number,
-		vehicleClimaterActive: Boolean,
-		smartCostLimit: Number,
-		smartCostType: String,
 		smartCostActive: Boolean,
-		tariffGrid: Number,
+		smartCostDisabled: Boolean,
+		smartCostLimit: Number,
+		smartCostNextStart: String,
+		smartCostType: String,
 		tariffCo2: Number,
-		currency: String,
+		tariffGrid: Number,
+		vehicleClimaterActive: Boolean,
+		vehicleLimitSoc: Number,
 	},
 	emits: ["open-loadpoint-settings", "open-minsoc-settings", "open-plan-modal"],
 	data() {
@@ -176,11 +181,15 @@ export default {
 			phaseTooltip: null,
 			planStartTooltip: null,
 			planActiveTooltip: null,
+			minSocTooltip: null,
 		};
 	},
 	mounted() {
 		this.updatePlanStartTooltip();
 		this.updatePlanActiveTooltip();
+		this.updateMinSocTooltip();
+		this.updatePhaseTooltip();
+		this.updatePvTooltip();
 	},
 	watch: {
 		planActiveTooltipContent() {
@@ -188,6 +197,15 @@ export default {
 		},
 		planStartTooltipContent() {
 			this.updatePlanStartTooltip();
+		},
+		minSocTooltipContent() {
+			this.updateMinSocTooltip();
+		},
+		phaseTimerContent() {
+			this.updatePhaseTooltip();
+		},
+		pvTimerContent() {
+			this.updatePvTooltip();
 		},
 	},
 	computed: {
@@ -205,8 +223,12 @@ export default {
 		pvTimerVisible() {
 			return this.pvTimerActive;
 		},
-		pvTimerClass() {
-			return this.pvAction === "disable" ? "text-primary" : "";
+		pvTimerContent() {
+			if (!this.pvTimerVisible) {
+				return "";
+			}
+			const key = this.pvAction === "enable" ? "pvEnable" : "pvDisable";
+			return this.$t(`main.vehicleStatus.${key}`);
 		},
 		phaseTimerVisible() {
 			return !this.pvTimerActive && this.charging && this.phaseTimerActive;
@@ -214,12 +236,26 @@ export default {
 		phaseIconClass() {
 			return this.phaseAction === "scale1p" ? "phaseUp" : "phaseDown";
 		},
+		phaseTimerContent() {
+			if (!this.phaseTimerVisible) {
+				return "";
+			}
+			return this.$t(`main.vehicleStatus.${this.phaseAction}`);
+		},
 		vehicleLimitVisible() {
 			const limit = Math.max(this.vehicleLimitSoc, this.effectiveLimitSoc) || 100;
 			return this.vehicleLimitSoc > 0 && this.vehicleLimitSoc <= limit;
 		},
 		minSocVisible() {
 			return this.minSoc > 0 && this.vehicleSoc < this.minSoc;
+		},
+		minSocTooltipContent() {
+			if (!this.minSocVisible) {
+				return "";
+			}
+			return this.$t("main.vehicleStatus.minCharge", {
+				soc: this.fmtPercentage(this.minSoc),
+			});
 		},
 		vehicleLimitReached() {
 			return (
@@ -429,6 +465,7 @@ export default {
 			this.$emit("open-loadpoint-settings");
 		},
 		openMinSocSettings() {
+			this.minSocTooltip?.hide();
 			this.$emit("open-minsoc-settings");
 		},
 		planStartClicked() {
@@ -438,6 +475,20 @@ export default {
 		planActiveClicked() {
 			this.planActiveTooltip?.hide();
 			this.$emit("open-plan-modal");
+		},
+		updatePvTooltip() {
+			this.pvTooltip = this.updateTooltip(
+				this.pvTooltip,
+				this.pvTimerContent,
+				this.$refs.pvTimer
+			);
+		},
+		updatePhaseTooltip() {
+			this.phaseTooltip = this.updateTooltip(
+				this.phaseTooltip,
+				this.phaseTimerContent,
+				this.$refs.phaseTimer
+			);
 		},
 		updatePlanStartTooltip() {
 			this.planStartTooltip = this.updateTooltip(
@@ -455,6 +506,14 @@ export default {
 				true
 			);
 		},
+		updateMinSocTooltip() {
+			this.minSocTooltip = this.updateTooltip(
+				this.minSocTooltip,
+				this.minSocTooltipContent,
+				this.$refs.minSoc,
+				true
+			);
+		},
 		updateTooltip: function (instance, content, ref, hoverOnly = false) {
 			if (!content || !ref) {
 				if (instance) {
@@ -463,7 +522,7 @@ export default {
 				return;
 			}
 			if (!instance) {
-				const trigger = hoverOnly ? "hover" : undefined;
+				const trigger = hoverOnly ? "hover" : "hover focus";
 				instance = new Tooltip(ref, { title: " ", trigger });
 			}
 			instance.setContent({ ".tooltip-inner": content });

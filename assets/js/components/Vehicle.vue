@@ -119,6 +119,7 @@ export default {
 		pvRemainingInterpolated: Number,
 		sessionSolarPercentage: Number,
 		smartCostActive: Boolean,
+		smartCostNextStart: String,
 		smartCostLimit: Number,
 		smartCostType: String,
 		socBasedCharging: Boolean,

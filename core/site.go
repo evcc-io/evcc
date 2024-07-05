@@ -36,7 +36,7 @@ const standbyPower = 10 // consider less than 10W as charger in standby
 // updater abstracts the Loadpoint implementation for testing
 type updater interface {
 	loadpoint.API
-	Update(availablePower float64, autoCharge, batteryBuffered, batteryStart bool, greenShare float64, effectivePrice, effectiveCo2 *float64)
+	Update(availablePower float64, smartCostActive bool, smartCostNextStart time.Time, batteryBuffered, batteryStart bool, greenShare float64, effectivePrice, effectiveCo2 *float64)
 }
 
 // meterMeasurement is used as slice element for publishing structured data
@@ -793,7 +793,16 @@ func (site *Site) update(lp updater) {
 	if rate, err := site.plannerRate(); err == nil {
 		smartCostActive = site.smartCostActive(lp, rate)
 	} else {
-		site.log.WARN.Println("smartCost:", err)
+		site.log.WARN.Println("smartCostActive:", err)
+	}
+
+	var smartCostNextStart time.Time
+	if !smartCostActive {
+		if rates, err := site.plannerRates(); err == nil {
+			smartCostNextStart = site.smartCostNextStart(lp, rates)
+		} else {
+			site.log.WARN.Println("smartCostNextStart:", err)
+		}
 	}
 
 	if sitePower, batteryBuffered, batteryStart, err := site.sitePower(totalChargePower, flexiblePower); err == nil {
@@ -808,7 +817,7 @@ func (site *Site) update(lp updater) {
 		greenShareHome := site.greenShare(0, homePower)
 		greenShareLoadpoints := site.greenShare(nonChargePower, nonChargePower+totalChargePower)
 
-		lp.Update(sitePower, smartCostActive, batteryBuffered, batteryStart, greenShareLoadpoints, site.effectivePrice(greenShareLoadpoints), site.effectiveCo2(greenShareLoadpoints))
+		lp.Update(sitePower, smartCostActive, smartCostNextStart, batteryBuffered, batteryStart, greenShareLoadpoints, site.effectivePrice(greenShareLoadpoints), site.effectiveCo2(greenShareLoadpoints))
 
 		site.Health.Update()
 
