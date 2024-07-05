@@ -543,6 +543,7 @@ logs = "View full logs"
 modalTitle = "Notifications"
 
 [offline]
+configurationError = "Error during startup. Check your configuration and restart."
 message = "Not connected to a server."
 restart = "Restart"
 restartNeeded = "Required to apply changes."
