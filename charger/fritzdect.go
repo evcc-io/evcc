@@ -57,14 +57,15 @@ func NewFritzDECT(embed embed, uri, ain, user, password string, standbypower flo
 // Status implements the api.Charger interface
 func (c *FritzDECT) Status() (api.ChargeStatus, error) {
 	resp, err := c.conn.ExecCmd("getswitchpresent")
-
-	if err == nil {
-		var present bool
-		present, err = strconv.ParseBool(resp)
-		if err == nil && !present {
-			err = api.ErrNotAvailable
-		}
+	if err != nil {
+		return api.StatusNone, err
 	}
+
+	present, err := strconv.ParseBool(resp)
+	if err == nil && !present {
+		err = api.ErrNotAvailable
+	}
+
 	if err != nil {
 		return api.StatusNone, err
 	}
@@ -91,13 +92,13 @@ func (c *FritzDECT) Enable(enable bool) error {
 
 	// on 0/1 - DECT Switch state off/on (empty if unknown or error)
 	resp, err := c.conn.ExecCmd(cmd)
+	if err != nil {
+		return err
+	}
 
-	var on bool
-	if err == nil {
-		on, err = strconv.ParseBool(resp)
-		if err == nil && enable != on {
-			err = errors.New("switch failed")
-		}
+	on, err := strconv.ParseBool(resp)
+	if err == nil && enable != on {
+		err = errors.New("switch failed")
 	}
 
 	return err

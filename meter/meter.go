@@ -1,7 +1,6 @@
 package meter
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/evcc-io/evcc/api"
@@ -41,39 +40,17 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Meter, error) 
 		return nil, err
 	}
 
-	power, err := provider.NewFloatGetterFromConfig(cc.Power)
+	powerG, energyG, err := BuildMeasurements(&cc.Power, cc.Energy)
 	if err != nil {
-		return nil, fmt.Errorf("power: %w", err)
+		return nil, err
 	}
 
-	m, _ := NewConfigurable(power)
-
-	// decorate energy
-	var totalEnergyG func() (float64, error)
-	if cc.Energy != nil {
-		totalEnergyG, err = provider.NewFloatGetterFromConfig(*cc.Energy)
-		if err != nil {
-			return nil, fmt.Errorf("energy: %w", err)
-		}
-	}
-
-	// decorate currents
-	currentsG, err := buildPhaseProviders(cc.Currents)
+	currentsG, voltagesG, powersG, err := BuildPhaseMeasurements(cc.Currents, cc.Voltages, cc.Powers)
 	if err != nil {
-		return nil, fmt.Errorf("currents: %w", err)
+		return nil, err
 	}
 
-	// decorate voltages
-	voltagesG, err := buildPhaseProviders(cc.Voltages)
-	if err != nil {
-		return nil, fmt.Errorf("voltages: %w", err)
-	}
-
-	// decorate powers
-	powersG, err := buildPhaseProviders(cc.Powers)
-	if err != nil {
-		return nil, fmt.Errorf("powers: %w", err)
-	}
+	m, _ := NewConfigurable(powerG)
 
 	// decorate soc
 	var socG func() (float64, error)
@@ -104,49 +81,9 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Meter, error) 
 		batModeS = cc.battery.ModeController(modeS)
 	}
 
-	res := m.Decorate(totalEnergyG, currentsG, voltagesG, powersG, socG, cc.capacity.Decorator(), batModeS)
+	res := m.Decorate(energyG, currentsG, voltagesG, powersG, socG, cc.capacity.Decorator(), batModeS)
 
 	return res, nil
-}
-
-func buildPhaseProviders(providers []provider.Config) (func() (float64, float64, float64, error), error) {
-	var res func() (float64, float64, float64, error)
-	if len(providers) > 0 {
-		if len(providers) != 3 {
-			return nil, errors.New("need one per phase, total three")
-		}
-
-		phases := make([]func() (float64, error), 0, 3)
-		for idx, prov := range providers {
-			c, err := provider.NewFloatGetterFromConfig(prov)
-			if err != nil {
-				return nil, fmt.Errorf("[%d] %w", idx, err)
-			}
-
-			phases = append(phases, c)
-		}
-
-		res = collectPhaseProviders(phases)
-	}
-
-	return res, nil
-}
-
-// collectPhaseProviders combines phase getters into currents api function
-func collectPhaseProviders(g []func() (float64, error)) func() (float64, float64, float64, error) {
-	return func() (float64, float64, float64, error) {
-		var res []float64
-		for _, currentG := range g {
-			c, err := currentG()
-			if err != nil {
-				return 0, 0, 0, err
-			}
-
-			res = append(res, c)
-		}
-
-		return res[0], res[1], res[2], nil
-	}
 }
 
 // NewConfigurable creates a new meter
