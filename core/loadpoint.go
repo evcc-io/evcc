@@ -1629,8 +1629,11 @@ func (lp *Loadpoint) Update(sitePower float64, autoCharge, batteryBuffered, batt
 	lp.bus.Publish(evChargeCurrent, lp.chargeCurrent)
 	lp.bus.Publish(evChargePower, lp.chargePower)
 
-	// update progress and soc before status is updated
-	lp.publishChargeProgress()
+	// update progress before status is updated
+	if lp.charging() {
+		lp.publishChargeProgress()
+	}
+
 	lp.PublishEffectiveValues()
 
 	// read and publish status

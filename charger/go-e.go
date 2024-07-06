@@ -149,17 +149,18 @@ func (c *GoE) CurrentPower() (float64, error) {
 	return resp.CurrentPower(), err
 }
 
-var _ api.ChargeRater = (*GoE)(nil)
+// removed due to https://github.com/evcc-io/evcc/issues/13726
+// var _ api.ChargeRater = (*GoE)(nil)
 
-// ChargedEnergy implements the api.ChargeRater interface
-func (c *GoE) ChargedEnergy() (float64, error) {
-	resp, err := c.api.Status()
-	if err != nil {
-		return 0, err
-	}
+// // ChargedEnergy implements the api.ChargeRater interface
+// func (c *GoE) ChargedEnergy() (float64, error) {
+// 	resp, err := c.api.Status()
+// 	if err != nil {
+// 		return 0, err
+// 	}
 
-	return resp.ChargedEnergy(), err
-}
+// 	return resp.ChargedEnergy(), err
+// }
 
 var _ api.PhaseCurrents = (*GoE)(nil)
 
