@@ -335,14 +335,15 @@ func (c *OCPP) Enabled() (bool, error) {
 	return c.enabled, nil
 }
 
-// enableAutostart controls standing session by current only
-func (c *OCPP) enableAutostart(enable bool) error {
-	var current float64
-	if enable {
-		current = c.current
+func (c *OCPP) Enable(enable bool) error {
+	var err error
+
+	if c.autoStart {
+		err = c.enableAutostart(enable)
+	} else {
+		err = c.enableRemote(enable)
 	}
 
-	err := c.updatePeriod(current)
 	if err == nil {
 		c.enabled = enable
 	}
@@ -350,23 +351,24 @@ func (c *OCPP) enableAutostart(enable bool) error {
 	return err
 }
 
-func (c *OCPP) Enable(enable bool) error {
-	if c.autoStart {
-		return c.enableAutostart(enable)
+// enableAutostart enables auto-started session
+func (c *OCPP) enableAutostart(enable bool) error {
+	var current float64
+	if enable {
+		current = c.current
 	}
 
-	rc := make(chan error, 1)
+	return c.updatePeriod(current)
+}
+
+// enableRemote enables session by using RemoteStart/Stop
+func (c *OCPP) enableRemote(enable bool) error {
 	txn, err := c.conn.TransactionID()
 	if err != nil {
 		return err
 	}
 
-	defer func() {
-		if err == nil {
-			c.enabled = enable
-		}
-	}()
-
+	rc := make(chan error, 1)
 	if enable {
 		if txn > 0 {
 			// we have the transaction id, treat as enabled
