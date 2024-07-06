@@ -266,6 +266,8 @@ func configureMeters(static []config.Named, names ...string) error {
 			if err := config.Meters().Add(config.NewStaticDevice(cc, instance)); err != nil {
 				return &DeviceError{cc.Name, err}
 			}
+
+			return nil
 		})
 	}
 
@@ -293,6 +295,8 @@ func configureMeters(static []config.Named, names ...string) error {
 			if err := config.Meters().Add(config.NewConfigurableDevice(conf, instance)); err != nil {
 				return &DeviceError{cc.Name, err}
 			}
+
+			return nil
 		})
 	}
 
