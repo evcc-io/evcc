@@ -44,15 +44,16 @@ func NewModbusSunspecFromConfig(other map[string]interface{}) (Provider, error) 
 		return nil, err
 	}
 
+	modbus.Lock()
+	defer modbus.Unlock()
+
 	conn, err := modbus.NewConnection(cc.URI, cc.Device, cc.Comset, cc.Baudrate, modbus.Tcp, cc.ID)
 	if err != nil {
 		return nil, err
 	}
 
 	// set non-default timeout
-	if cc.Timeout > 0 {
-		conn.Timeout(cc.Timeout)
-	}
+	conn.Timeout(cc.Timeout)
 
 	// set non-default delay
 	conn.Delay(cc.Delay)
