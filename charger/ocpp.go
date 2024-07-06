@@ -518,11 +518,10 @@ func (c *OCPP) phases1p3p(phases int) error {
 	return c.updatePeriod(c.current)
 }
 
-// // Identify implements the api.Identifier interface
-// Unless charger uses vehicle ID as idTag in authorize.req it is not possible to implement this in ocpp1.6
-// func (c *OCPP) Identify() (string, error) {
-// 	return "", errors.New("not implemented")
-// }
+// Identify implements the api.Identifier interface
+func (c *OCPP) Identify() (string, error) {
+	return c.conn.IdTag(), nil
+}
 
 var _ loadpoint.Controller = (*OCPP)(nil)
 
