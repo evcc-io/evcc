@@ -100,17 +100,8 @@ func (c *Wattpilot) CurrentPower() (float64, error) {
 	return c.api.GetPower()
 }
 
-// removed due to https://github.com/evcc-io/evcc/issues/13726
+// removed: https://github.com/evcc-io/evcc/issues/13726
 // var _ api.ChargeRater = (*Wattpilot)(nil)
-
-// // ChargedEnergy implements the api.ChargeRater interface
-// func (c *Wattpilot) ChargedEnergy() (float64, error) {
-// 	resp, err := c.api.GetProperty("wh")
-// 	if err != nil {
-// 		return 0, err
-// 	}
-// 	return resp.(float64) / 1e3, err
-// }
 
 var _ api.PhaseCurrents = (*Wattpilot)(nil)
 

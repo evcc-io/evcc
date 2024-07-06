@@ -43,26 +43,28 @@ type BenderCC struct {
 
 const (
 	// all holding type registers
-	bendRegChargePointState       = 122  // Vehicle (Control Pilot) state
-	bendRegPhaseEnergy            = 200  // Phase energy from primary meter (Wh)
-	bendRegCurrents               = 212  // Currents from primary meter (mA)
-	bendRegTotalEnergy            = 218  // Total Energy from primary meter (Wh)
-	bendRegActivePower            = 220  // Active Power from primary meter (W)
-	bendRegVoltages               = 222  // Voltages of the ocpp meter (V)
-	bendRegChargedEnergyLegacy    = 705  // Sum of charged energy for the current session (Wh)
-	bendRegChargingDurationLegacy = 709  // Duration since beginning of charge (Seconds)
-	bendRegChargedEnergy          = 716  // Sum of charged energy for the current session (Wh)
-	bendRegChargingDuration       = 718  // Duration since beginning of charge (Seconds)
-	bendRegUserID                 = 720  // User ID (OCPP IdTag) from the current session. Bytes 0 to 19.
-	bendRegEVBatteryState         = 730  // EV Battery State (% 0-100)
-	bendRegEVCCID                 = 741  // ASCII representation of the Hex. Values corresponding to the EVCCID. Bytes 0 to 11.
-	bendRegHemsCurrentLimit       = 1000 // Current limit of the HEMS module (A)
+	bendRegChargePointState = 122  // Vehicle (Control Pilot) state
+	bendRegPhaseEnergy      = 200  // Phase energy from primary meter (Wh)
+	bendRegCurrents         = 212  // Currents from primary meter (mA)
+	bendRegTotalEnergy      = 218  // Total Energy from primary meter (Wh)
+	bendRegActivePower      = 220  // Active Power from primary meter (W)
+	bendRegVoltages         = 222  // Voltages of the ocpp meter (V)
+	bendRegUserID           = 720  // User ID (OCPP IdTag) from the current session. Bytes 0 to 19.
+	bendRegEVBatteryState   = 730  // EV Battery State (% 0-100)
+	bendRegEVCCID           = 741  // ASCII representation of the Hex. Values corresponding to the EVCCID. Bytes 0 to 11.
+	bendRegHemsCurrentLimit = 1000 // Current limit of the HEMS module (A)
 
 	bendRegFirmware             = 100 // Application version number
 	bendRegOcppCpStatus         = 104 // Charge Point status according to the OCPP spec. enumaration
 	bendRegProtocolVersion      = 120 // Ebee Modbus TCP Server Protocol Version number
 	bendRegChargePointModel     = 142 // ChargePoint Model. Bytes 0 to 19.
 	bendRegSmartVehicleDetected = 740 // Returns 1 if an EV currently connected is a smart vehicle, or 0 if no EV connected or it is not a smart vehicle
+
+	// unused
+	// bendRegChargedEnergyLegacy    = 705 // Sum of charged energy for the current session (Wh)
+	// bendRegChargingDurationLegacy = 709 // Duration since beginning of charge (Seconds)
+	// bendRegChargedEnergy          = 716 // Sum of charged energy for the current session (Wh)
+	// bendRegChargingDuration       = 718 // Duration since beginning of charge (Seconds)
 )
 
 func init() {
@@ -224,26 +226,8 @@ func (wb *BenderCC) currentPower() (float64, error) {
 	return float64(binary.BigEndian.Uint32(b)), nil
 }
 
-// removed due to https://github.com/evcc-io/evcc/issues/13726
-
-// // ChargedEnergy implements the api.ChargeRater interface
-// func (wb *BenderCC) chargedEnergy() (float64, error) {
-// 	if wb.legacy {
-// 		b, err := wb.conn.ReadHoldingRegisters(bendRegChargedEnergyLegacy, 1)
-// 		if err != nil {
-// 			return 0, err
-// 		}
-
-// 		return float64(binary.BigEndian.Uint16(b)) / 1e3, nil
-// 	}
-
-// 	b, err := wb.conn.ReadHoldingRegisters(bendRegChargedEnergy, 2)
-// 	if err != nil {
-// 		return 0, err
-// 	}
-
-// 	return float64(binary.BigEndian.Uint32(b)) / 1e3, nil
-// }
+// removed: https://github.com/evcc-io/evcc/issues/13726
+// var _ api.ChargeRater = (*BenderCC)(nil)
 
 // TotalEnergy implements the api.MeterEnergy interface
 func (wb *BenderCC) totalEnergy() (float64, error) {
