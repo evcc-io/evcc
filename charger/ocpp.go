@@ -350,13 +350,16 @@ func (c *OCPP) enableAutostart(enable bool) error {
 	return err
 }
 
-func (c *OCPP) Enable(enable bool) (err error) {
+func (c *OCPP) Enable(enable bool) error {
 	if c.autoStart {
 		return c.enableAutostart(enable)
 	}
 
 	rc := make(chan error, 1)
 	txn, err := c.conn.TransactionID()
+	if err != nil {
+		return err
+	}
 
 	defer func() {
 		if err == nil {
