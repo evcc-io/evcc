@@ -1,7 +1,7 @@
 <template>
 	<div class="root safe-area-inset">
 		<div class="container d-flex h-100 flex-column px-0 pb-4">
-			<TopHeader showConfig :title="$t('log.title')" class="mx-4" />
+			<TopHeader :title="$t('log.title')" class="mx-4" />
 			<div class="logs d-flex flex-column overflow-hidden flex-grow-1 px-4 mx-2 mx-sm-4">
 				<div class="flex-grow-0 row py-4">
 					<div class="col-6 col-lg-3 mb-4 mb-lg-0 d-flex gap-2">

@@ -1,0 +1,43 @@
+template: energy-charts-api
+products:
+  - brand: Fraunhofer ISE
+requirements:
+  description:
+    de: "Day-ahead Energiepreise (je kWh) an der Börse. Kann ohne vorherige Anmeldung auf https://api.energy-charts.info/ abgerufen werden. Nutzbar u.a. für dynamische Stromtarife, wo der Anbieter bis dato auf der Kundenschnittstelle noch kein Preis-Vorhersagen anbietet."
+    en: "Day-ahead forecast of energy prices (per kWh) on the exchange. No prior registration for https://api.energy-charts.info/ necessary. Can be used for dynamic electricity tariffs, for example, where the supplier does not yet offer a price forecast on the customer interface."
+group: price
+params:
+  - name: bzn
+    type: string
+    required: true
+    validvalues:
+      [
+        "AT",
+        "BE",
+        "CH",
+        "CZ",
+        "DE-LU",
+        "DE-AT-LU",
+        "DK1",
+        "DK2",
+        "FR",
+        "HU",
+        "IT-NORTH",
+        "NL",
+        "NO2",
+        "PL",
+        "SE4",
+        "SI",
+      ]
+    default: DE-LU
+    help:
+      de: "Gebotszonen - https://api.energy-charts.info/#/prices/day_ahead_price_price_get"
+      en: "Bidding zones - https://api.energy-charts.info/#/prices/day_ahead_price_price_get"
+  - preset: tariff-base
+render: |
+  type: custom
+  {{ include "tariff-base" . }}
+  forecast:
+    source: http
+    uri: https://api.energy-charts.info/price?bzn={{ .bzn }}&end={{"{{"}} now | dateModify "+24h" | date "2006-01-02" {{"}}"}}
+    jq: '[.unix_seconds, .price] | transpose | map({ "start": (.[0] | todate), "end": ((.[0]+3600) | todate), "price": (.[1]/1000)}) | tostring'

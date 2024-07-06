@@ -1,5 +1,7 @@
 import { test, expect } from "@playwright/test";
-import { start, stop } from "./evcc";
+import { start, stop, baseUrl } from "./evcc";
+
+test.use({ baseURL: baseUrl() });
 
 test.beforeAll(async () => {
   await start("basics.evcc.yaml", "password.sql");
@@ -44,6 +46,6 @@ test.describe("features", async () => {
   test("content", async ({ page }) => {
     await page.goto("/#/log");
     await login(page);
-    await expect(page.getByTestId("log-content")).toContainText("starting ui and api at");
+    await expect(page.getByTestId("log-content")).toContainText("listening at");
   });
 });

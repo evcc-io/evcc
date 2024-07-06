@@ -60,11 +60,8 @@
 					:format="fmtBarValue"
 				/>
 			</div>
-			<div
-				v-if="totalAdjusted <= 0"
-				class="site-progress-bar bg-light border no-wrap w-100 text-dark"
-			>
-				<span>{{ $t("main.energyflow.noEnergy") }}</span>
+			<div v-if="totalAdjusted <= 0" class="site-progress-bar w-100 grid-import">
+				<span>{{ fmtKw(0, false, true) }}</span>
 			</div>
 		</div>
 		<div class="label-scale d-flex">
@@ -202,7 +199,7 @@ export default {
 			return {
 				value,
 				hideIcon: this.hideLabelIcon(value, minWidth),
-				style: { width: this.widthTotal(value) },
+				style: { "flex-basis": this.widthTotal(value) },
 				[position]: true,
 			};
 		},
@@ -269,7 +266,7 @@ html.dark .grid-import {
 	overflow: hidden;
 }
 .visualization--ready :deep(.label-bar) {
-	transition-property: width, opacity;
+	transition-property: flex-basis, opacity;
 	transition-duration: var(--evcc-transition-medium), var(--evcc-transition-fast);
 	transition-timing-function: linear, ease;
 }

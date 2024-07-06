@@ -8,10 +8,10 @@ import (
 	"path/filepath"
 	"text/template"
 
-	"github.com/42atomys/sprout"
 	"github.com/evcc-io/evcc/core"
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/util/config"
+	"github.com/go-sprout/sprout"
 	"github.com/spf13/cobra"
 )
 
@@ -49,12 +49,12 @@ func runDump(cmd *cobra.Command, args []string) {
 
 	// setup environment
 	if err == nil {
-		err = configureEnvironment(cmd, conf)
+		err = configureEnvironment(cmd, &conf)
 	}
 
 	var site *core.Site
 	if err == nil {
-		site, err = configureSiteAndLoadpoints(conf)
+		site, err = configureSiteAndLoadpoints(&conf)
 	}
 
 	if *dumpConfig {
@@ -70,7 +70,7 @@ func runDump(cmd *cobra.Command, args []string) {
 
 		tmpl := template.Must(
 			template.New("dump").
-				Funcs(sprout.TxtFuncMap()).
+				Funcs(sprout.FuncMap()).
 				Parse(dumpTmpl))
 
 		out := new(bytes.Buffer)

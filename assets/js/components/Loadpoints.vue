@@ -22,6 +22,8 @@
 					:tariffCo2="tariffCo2"
 					:currency="currency"
 					:multiple-loadpoints="loadpoints.length > 1"
+					:grid-configured="gridConfigured"
+					:pv-configured="pvConfigured"
 					class="h-100"
 					:class="{ 'loadpoint-unselected': !selected(index) }"
 					@click="scrollTo(index)"
@@ -63,12 +65,12 @@ export default {
 	props: {
 		loadpoints: Array,
 		vehicles: Array,
-		smartCostLimit: Number,
 		smartCostType: String,
-		smartCostActive: Boolean,
 		tariffGrid: Number,
 		tariffCo2: Number,
 		currency: String,
+		gridConfigured: Boolean,
+		pvConfigured: Boolean,
 	},
 	data() {
 		return { selectedIndex: 0, snapTimeout: null };

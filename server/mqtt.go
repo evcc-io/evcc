@@ -62,7 +62,7 @@ func (m *MQTT) encode(v interface{}) string {
 		return strconv.FormatInt(val.Unix(), 10)
 	case time.Duration:
 		// must be before stringer to convert to seconds instead of string
-		return fmt.Sprintf("%d", int64(val.Seconds()))
+		return strconv.Itoa(int(val.Seconds()))
 	case fmt.Stringer:
 		return val.String()
 	default:
@@ -173,10 +173,17 @@ func (m *MQTT) Listen(site site.API) error {
 
 func (m *MQTT) listenSiteSetters(topic string, site site.API) error {
 	for _, s := range []setter{
-		{"/prioritySoc", floatSetter(site.SetPrioritySoc)},
 		{"/bufferSoc", floatSetter(site.SetBufferSoc)},
 		{"/bufferStartSoc", floatSetter(site.SetBufferStartSoc)},
+		{"/batteryDischargeControl", boolSetter(site.SetBatteryDischargeControl)},
+		{"/prioritySoc", floatSetter(site.SetPrioritySoc)},
 		{"/residualPower", floatSetter(site.SetResidualPower)},
+		{"/smartCostLimit", floatSetter(func(limit float64) error {
+			for _, lp := range site.Loadpoints() {
+				lp.SetSmartCostLimit(limit)
+			}
+			return nil
+		})},
 	} {
 		if err := m.Handler.ListenSetter(topic+s.topic, s.fun); err != nil {
 			return err

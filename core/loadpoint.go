@@ -703,10 +703,17 @@ func (lp *Loadpoint) syncCharger() error {
 
 	// #2: sync charger
 	switch {
-	case enabled == lp.enabled:
+	case enabled && lp.enabled:
 		// sync max current
-		if charger, ok := lp.charger.(api.CurrentGetter); ok && enabled {
-			if current, err := charger.GetMaxCurrent(); err == nil {
+		var (
+			current float64
+			err     error
+		)
+
+		// use chargers actual set current if available
+		cg, isCg := lp.charger.(api.CurrentGetter)
+		if isCg {
+			if current, err = cg.GetMaxCurrent(); err == nil {
 				// smallest adjustment most PWM-Controllers can do is: 100%÷256×0,6A = 0.234A
 				if math.Abs(lp.chargeCurrent-current) > 0.23 {
 					if shouldBeConsistent {
@@ -720,18 +727,53 @@ func (lp *Loadpoint) syncCharger() error {
 			}
 		}
 
-		// sync phases
-		phases := lp.GetPhases()
-		if ps, ok := lp.charger.(api.PhaseGetter); ok && enabled && shouldBeConsistent && phases > 0 {
-			if chargerPhases, err := ps.GetPhases(); err == nil {
-				if chargerPhases != phases {
-					lp.log.WARN.Printf("charger logic error: phases mismatch (got %d, expected %d)", chargerPhases, phases)
-					lp.setPhases(chargerPhases)
+		// use measured phase currents as fallback if charger does not provide max current or does not currently relay from vehicle (TWC3)
+		if !isCg || errors.Is(err, api.ErrNotAvailable) {
+			// validate if current too high by more than 1A (https://github.com/evcc-io/evcc/issues/14731)
+			if current := lp.GetMaxPhaseCurrent(); current > lp.chargeCurrent+1.0 {
+				if shouldBeConsistent {
+					lp.log.WARN.Printf("charger logic error: current mismatch (got %.3gA measured, expected %.3gA)", current, lp.chargeCurrent)
 				}
-			} else if !errors.Is(err, api.ErrNotAvailable) {
-				return fmt.Errorf("charger get phases: %w", err)
+				lp.chargeCurrent = current
+				lp.bus.Publish(evChargeCurrent, lp.chargeCurrent)
 			}
 		}
+
+		// sync phases
+		_, isPs := lp.charger.(api.PhaseSwitcher)
+		if phases := lp.GetPhases(); isPs && shouldBeConsistent && phases > 0 {
+			// fallback to active phases from measured phases
+			chargerPhases := lp.measuredPhases
+			if chargerPhases == 2 {
+				chargerPhases = 3
+			}
+
+			pg, isPg := lp.charger.(api.PhaseGetter)
+			if isPg {
+				if chargerPhases, err = pg.GetPhases(); err == nil {
+					if chargerPhases > 0 && chargerPhases != phases {
+						lp.log.WARN.Printf("charger logic error: phases mismatch (got %d, expected %d)", chargerPhases, phases)
+						lp.setPhases(chargerPhases)
+					}
+				} else {
+					if errors.Is(err, api.ErrNotAvailable) {
+						return nil
+					}
+					return fmt.Errorf("charger get phases: %w", err)
+				}
+			}
+
+			// use measured phase currents for active phases as fallback if charger does not provide phases
+			if !isPg || errors.Is(err, api.ErrNotAvailable) {
+				if chargerPhases > phases {
+					lp.log.WARN.Printf("charger logic error: phases mismatch (got %d measured, expected %d)", chargerPhases, phases)
+					lp.setPhases(chargerPhases)
+				}
+			}
+		}
+
+	case enabled == lp.enabled:
+		// sync disabled state
 
 	case !enabled && !lp.phaseSwitchCompleted():
 		// some chargers (i.E. Easee in some configurations) disable themselves to be able to switch phases
@@ -748,12 +790,18 @@ func (lp *Loadpoint) syncCharger() error {
 	return nil
 }
 
-// setLimit applies charger current limits and enables/disables accordingly
-func (lp *Loadpoint) setLimit(chargeCurrent float64) error {
+// roundedCurrent rounds current down to full amps if charger or vehicle require it
+func (lp *Loadpoint) roundedCurrent(chargeCurrent float64) float64 {
 	// full amps only?
 	if _, ok := lp.charger.(api.ChargerEx); !ok || lp.vehicleHasFeature(api.CoarseCurrent) {
 		chargeCurrent = math.Trunc(chargeCurrent)
 	}
+	return chargeCurrent
+}
+
+// setLimit applies charger current limits and enables/disables accordingly
+func (lp *Loadpoint) setLimit(chargeCurrent float64) error {
+	chargeCurrent = lp.roundedCurrent(chargeCurrent)
 
 	// apply circuit limits
 	if lp.circuit != nil {
@@ -763,7 +811,7 @@ func (lp *Loadpoint) setLimit(chargeCurrent float64) error {
 		powerLimit := lp.circuit.ValidatePower(lp.chargePower, currentToPower(chargeCurrent, activePhases))
 		currentLimitViaPower := powerToCurrent(powerLimit, activePhases)
 
-		chargeCurrent = min(currentLimit, currentLimitViaPower)
+		chargeCurrent = lp.roundedCurrent(min(currentLimit, currentLimitViaPower))
 	}
 
 	// set current
@@ -1152,9 +1200,6 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64) in
 			if err := lp.scalePhases(3); err != nil {
 				lp.log.ERROR.Println(err)
 			}
-			if err := lp.scalePhases(3); err != nil {
-				lp.log.ERROR.Println(err)
-			}
 			return 3
 		}
 
@@ -1213,12 +1258,13 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batter
 	deltaCurrent := powerToCurrent(-sitePower, activePhases)
 	targetCurrent := max(effectiveCurrent+deltaCurrent, 0)
 
-	lp.log.DEBUG.Printf("pv charge current: %.3gA = %.3gA + %.3gA (%.0fW @ %dp)", targetCurrent, effectiveCurrent, deltaCurrent, sitePower, activePhases)
-
 	// in MinPV mode or under special conditions return at least minCurrent
-	if (mode == api.ModeMinPV || batteryStart || batteryBuffered && lp.charging()) && targetCurrent < minCurrent {
+	if battery := batteryStart || batteryBuffered && lp.charging(); (mode == api.ModeMinPV || battery) && targetCurrent < minCurrent {
+		lp.log.DEBUG.Printf("pv charge current: min %.3gA > %.3gA (%.0fW @ %dp, battery: %t)", minCurrent, targetCurrent, sitePower, activePhases, battery)
 		return minCurrent
 	}
+
+	lp.log.DEBUG.Printf("pv charge current: %.3gA = %.3gA + %.3gA (%.0fW @ %dp)", targetCurrent, effectiveCurrent, deltaCurrent, sitePower, activePhases)
 
 	if mode == api.ModePV && lp.enabled && targetCurrent < minCurrent {
 		projectedSitePower := sitePower
@@ -1416,6 +1462,9 @@ func (lp *Loadpoint) publishChargeProgress() {
 		// workaround for Go-E resetting during disconnect, see
 		// https://github.com/evcc-io/evcc/issues/5092
 		if f > lp.chargedAtStartup {
+			{ // TODO remove
+				lp.log.DEBUG.Printf("!! session: chargeRater.chargedEnergy=%.1f - chargedAtStartup=%.1f", f, lp.chargedAtStartup)
+			}
 			added, addedGreen := lp.sessionEnergy.Update(f - lp.chargedAtStartup)
 			if telemetry.Enabled() && added > 0 {
 				telemetry.UpdateEnergy(added, addedGreen)
@@ -1463,7 +1512,7 @@ func (lp *Loadpoint) publishSocAndRange() {
 
 		f, err := lp.socEstimator.Soc(lp.getChargedEnergy())
 		if err != nil {
-			if errors.Is(err, api.ErrMustRetry) {
+			if loadpoint.AcceptableError(err) {
 				lp.socUpdated = time.Time{}
 			} else {
 				lp.log.ERROR.Printf("vehicle soc: %v", err)

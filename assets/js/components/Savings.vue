@@ -179,10 +179,9 @@
 							</div>
 							<div v-else class="my-4">
 								<LiveCommunity />
-								<TelemetrySettings :sponsor="sponsor" />
+								<TelemetrySettings :sponsorActive="!!sponsor.name" />
 							</div>
-
-							<Sponsor :sponsor="sponsor" />
+							<Sponsor v-bind="sponsor" />
 						</div>
 					</div>
 				</div>
@@ -211,7 +210,7 @@ export default {
 	props: {
 		statistics: { type: Object, default: () => ({}) },
 		co2Configured: Boolean,
-		sponsor: String,
+		sponsor: Object,
 		currency: String,
 	},
 	data() {
@@ -228,7 +227,7 @@ export default {
 			return `${docsPrefix()}/docs/reference/configuration/tariffs`;
 		},
 		percent() {
-			return Math.round(this.solarPercentage) || 0;
+			return this.fmtPercentage(this.solarPercentage || 0);
 		},
 		regionOptions() {
 			return co2Reference.regions.map((r) => ({

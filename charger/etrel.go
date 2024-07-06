@@ -190,6 +190,9 @@ func (wb *Etrel) MaxCurrentMillis(current float64) error {
 	return err
 }
 
+// removed due to https://github.com/evcc-io/evcc/issues/14507
+// var _ api.CurrentGetter = (*Etrel)(nil)
+
 var _ api.Meter = (*Etrel)(nil)
 
 // CurrentPower implements the api.Meter interface

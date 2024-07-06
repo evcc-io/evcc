@@ -243,6 +243,31 @@ func (site *Site) SetBufferStartSoc(soc float64) error {
 	return nil
 }
 
+func (site *Site) GetMaxGridSupplyWhileBatteryCharging() float64 {
+	site.RLock()
+	defer site.RUnlock()
+	return site.MaxGridSupplyWhileBatteryCharging
+}
+
+func (site *Site) SetMaxGridSupplyWhileBatteryCharging(power float64) error {
+	site.Lock()
+	defer site.Unlock()
+
+	if len(site.batteryMeters) == 0 {
+		return ErrBatteryNotConfigured
+	}
+
+	site.log.DEBUG.Println("set max grid supply while battery charging:", power)
+
+	if site.MaxGridSupplyWhileBatteryCharging != power {
+		site.MaxGridSupplyWhileBatteryCharging = power
+		settings.SetFloat(keys.MaxGridSupplyWhileBatteryCharging, site.MaxGridSupplyWhileBatteryCharging)
+		site.publish(keys.MaxGridSupplyWhileBatteryCharging, site.MaxGridSupplyWhileBatteryCharging)
+	}
+
+	return nil
+}
+
 // GetResidualPower returns the ResidualPower
 func (site *Site) GetResidualPower() float64 {
 	site.RLock()
@@ -252,13 +277,14 @@ func (site *Site) GetResidualPower() float64 {
 
 // SetResidualPower sets the ResidualPower
 func (site *Site) SetResidualPower(power float64) error {
+	site.log.DEBUG.Println("set residual power:", power)
+
 	site.Lock()
 	defer site.Unlock()
 
-	site.log.DEBUG.Println("set residual power:", power)
-
 	if site.ResidualPower != power {
 		site.ResidualPower = power
+		settings.SetFloat(keys.ResidualPower, site.ResidualPower)
 		site.publish(keys.ResidualPower, site.ResidualPower)
 	}
 
@@ -301,27 +327,27 @@ func (site *Site) GetTariff(tariff string) api.Tariff {
 	}
 }
 
-// GetBatteryControl returns the battery control mode
+// GetBatteryDischargeControl returns the battery control mode (no discharge only)
 func (site *Site) GetBatteryDischargeControl() bool {
 	site.RLock()
 	defer site.RUnlock()
 	return site.batteryDischargeControl
 }
 
-// SetBatteryControl sets the battery control mode
+// SetBatteryDischargeControl sets the battery control mode (no discharge only)
 func (site *Site) SetBatteryDischargeControl(val bool) error {
 	site.log.DEBUG.Println("set battery discharge control:", val)
 
-	if site.GetBatteryDischargeControl() != val {
+	site.Lock()
+	defer site.Unlock()
+
+	if site.batteryDischargeControl != val {
 		// reset to normal when disabling
-		if mode := site.GetBatteryMode(); !val && batteryModeModified(mode) {
+		if mode := site.batteryMode; !val && batteryModeModified(mode) {
 			if err := site.applyBatteryMode(api.BatteryNormal); err != nil {
 				return err
 			}
 		}
-
-		site.Lock()
-		defer site.Unlock()
 
 		site.batteryDischargeControl = val
 		settings.SetBool(keys.BatteryDischargeControl, val)

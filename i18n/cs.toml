@@ -48,6 +48,8 @@ socLimit = "Strop"
 example = "Příklad"
 optional = "volitelné"
 
+[config.general]
+
 [config.grid]
 titleAdd = "Přidat měřič spotřeby ze sítě"
 titleEdit = "Editovat měřič spotřeby ze sítě"
@@ -70,13 +72,25 @@ template = "Výrobce"
 titleChoice = "Co chcete přidat?"
 validateSave = "Zkontrolovat a uložit"
 
+[config.options]
+
+[config.options.endianness]
+
+[config.options.schema]
+
 [config.pv]
 titleAdd = "Přidat měřič solární energie"
 titleEdit = "Editovat měřič solární energie"
 
+[config.section]
+
 [config.site]
 cancel = "Zrušit"
 save = "Uložit"
+
+[config.system]
+
+[config.title]
 
 [config.validation]
 failed = "selhalo"
@@ -117,8 +131,8 @@ tabTitle = "Komunita Live"
 co2Saved = "{value} uložena"
 co2Title = "CO₂ emise"
 configurePriceCo2 = "Zjistit jak nastavit cenu a CO₂ data"
-footerLong = "{percent}% solární energie"
-footerShort = "{percent}% solár"
+footerLong = "{percent} solární energie"
+footerShort = "{percent} solár"
 modalTitle = "Přehled energie"
 moneySaved = "{value} uložena"
 percentGrid = "{grid} kWh síť"
@@ -197,6 +211,10 @@ confirm = "Ano, restartovat!"
 description = "Za normálních okolností by restartování nemělo být nutné. Pokud musíte pravidelně restartovat evcc, zvažte prosím nahlášení chyby."
 disclaimer = "Poznámka: evcc se ukončí a spoléhá na to, že operační systém restartuje službu."
 modalTitle = "Opravdu chcete restartovat?"
+
+[log]
+
+[loginModal]
 
 [main]
 vehicles = "Parkoviště"
@@ -299,7 +317,7 @@ co2Limit = "CO₂ strop z {co2}"
 costLimitIgnore = "Nastavených {limit} bude během opakování ignorováno"
 currentPlan = "Aktivní plán"
 descriptionEnergy = "Dokud nebude {targetEnergy} nabito do vozidla?"
-descriptionSoc = "Kdy by mělo být vozidlo nabito na {targetSoc}%?"
+descriptionSoc = "Kdy by mělo být vozidlo nabito na {targetSoc}?"
 inactiveLabel = "Cílový čas"
 notReachableInTime = "Cíl není dosažitelný. Bude ukončeno: {endTime}."
 onlyInPvMode = "Nabíjecí plán funguje pouze v solárním režimu"
@@ -352,7 +370,7 @@ charging = "nabíjení"
 connected = "připojeno"
 disconnected = "odpojeno"
 ready = "připraveno"
-vehicleLimit = "Limit vozidla: {soc}%"
+vehicleLimit = "Limit vozidla: {soc}"
 
 [main.vehicleStatus]
 charging = "Nabíjení..."
@@ -361,7 +379,7 @@ cleanEnergyCharging = "Nabíjení čistou energií: {co2} (limit {limit})"
 climating = "Detekováno předehřívání."
 connected = "Připojeno."
 disconnected = "Odpojeno."
-minCharge = "Minimální nabití na {soc}%."
+minCharge = "Minimální nabití na {soc}."
 pvDisable = "Nedostatek energie ze slunce. Přerušuji za {remaining}…"
 pvEnable = "Energie ze slunce obnovena. Zahajuji za {remaining}…"
 scale1p = "Redukuji na jednofázové nabíjení za {remaining}…"
@@ -369,8 +387,7 @@ scale3p = "Zvyšuji na třífázové nabíjení za {remaining}…"
 targetChargeActive = "Nabíjení na cílovou hodnotu aktivní..."
 targetChargePlanned = "Nabíjení na cílovou hodnotu začne v {time}."
 targetChargeWaitForVehicle = "Cílové nabíjení připraveno. Čekám na vozidlo..."
-unknown = ""
-vehicleLimitReached = "Limit vozidla {soc}% dosažen."
+vehicleLimitReached = "Limit vozidla {soc} dosažen."
 waitForVehicle = "Připraveno. Čekám na vozidlo..."
 
 [notifications]
@@ -380,6 +397,8 @@ modalTitle = "Oznámení"
 [offline]
 message = "Nepřipojeno na server."
 reload = "Obnovit?"
+
+[passwordModal]
 
 [session]
 cancel = "Zrušit"
@@ -432,6 +451,8 @@ filter = "Filtr"
 
 [settings]
 title = "Základní nastavení"
+
+[settings.fullscreen]
 
 [settings.hiddenFeatures]
 label = "Experimentální"

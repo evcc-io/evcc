@@ -35,6 +35,9 @@ type Gen2StatusResponse struct {
 	Switch0 Gen2Switch `json:"switch:0"`
 	Switch1 Gen2Switch `json:"switch:1"`
 	Switch2 Gen2Switch `json:"switch:2"`
+	Pm0     Gen2Switch `json:"pm1:0"`
+	Pm1     Gen2Switch `json:"pm2:1"`
+	Pm2     Gen2Switch `json:"pm3:2"`
 }
 
 type Gen2EmStatusResponse struct {

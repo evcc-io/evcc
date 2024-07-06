@@ -37,14 +37,16 @@ func init() {
 // NewTeslaFromConfig creates a new vehicle
 func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
-		embed   `mapstructure:",squash"`
-		Tokens  Tokens
-		VIN     string
-		Timeout time.Duration
-		Cache   time.Duration
+		embed        `mapstructure:",squash"`
+		Tokens       Tokens
+		VIN          string
+		CommandProxy string
+		Cache        time.Duration
+		Timeout      time.Duration
 	}{
-		Timeout: request.Timeout,
-		Cache:   interval,
+		CommandProxy: tesla.ProxyBaseUrl,
+		Cache:        interval,
+		Timeout:      request.Timeout,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -86,8 +88,8 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 	vehicle, err := ensureVehicleEx(
 		cc.VIN, tc.Vehicles,
-		func(v *tesla.Vehicle) string {
-			return v.Vin
+		func(v *tesla.Vehicle) (string, error) {
+			return v.Vin, nil
 		},
 	)
 	if err != nil {
@@ -107,17 +109,15 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	if err != nil {
 		return nil, err
 	}
-	tcc.SetBaseUrl(tesla.ProxyBaseUrl)
+	tcc.SetBaseUrl(cc.CommandProxy)
 
 	v := &Tesla{
 		embed:      &cc.embed,
 		Provider:   tesla.NewProvider(vehicle, cc.Cache),
-		Controller: tesla.NewController(vehicle, vehicle.WithClient(tcc)),
+		Controller: tesla.NewController(vehicle.WithClient(tcc)),
 	}
 
-	if v.Title_ == "" {
-		v.Title_ = vehicle.DisplayName
-	}
+	v.fromVehicle(vehicle.DisplayName, 0)
 
 	return v, nil
 }

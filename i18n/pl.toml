@@ -75,13 +75,25 @@ template = "Producent"
 titleChoice = "Co chcesz dodać?"
 validateSave = "Sprawdź i zapisz"
 
+[config.options]
+
+[config.options.endianness]
+
+[config.options.schema]
+
 [config.pv]
 titleAdd = "Dodaj licznik energii słonecznej"
 titleEdit = "Edytuj licznik energii słonecznej"
 
+[config.section]
+
 [config.site]
 cancel = "Anulować"
 save = "Zapisz"
+
+[config.system]
+
+[config.title]
 
 [config.validation]
 failed = "nie udało się"
@@ -122,8 +134,8 @@ tabTitle = "Dane społeczności"
 co2Saved = "{value} zaoszczędziło"
 co2Title = "CO₂ Emisje"
 configurePriceCo2 = "Dowiedz się, jak skonfigurować dane dotyczące cen i emisji CO₂."
-footerLong = "{percent}% energii słonecznej"
-footerShort = "{percent}% słońce"
+footerLong = "{percent} energii słonecznej"
+footerShort = "{percent} słońce"
 modalTitle = "Przegląd energii ładowania"
 moneySaved = "{value} zaoszczędzone"
 percentGrid = "{grid} kWh sieć"
@@ -208,6 +220,10 @@ description = "Normalne ponowne uruchamianie nie powinno być konieczne. Rozważ
 disclaimer = "Uwaga: evcc zakończy działanie i będzie polegać na systemie operacyjnym w celu ponownego uruchomienia evcc."
 modalTitle = "Czy na pewno chcesz uruchomić ponownie?"
 
+[log]
+
+[loginModal]
+
 [main]
 vehicles = "Garaż"
 
@@ -281,7 +297,7 @@ label = "Maks. prąd"
 label = "Min. Prąd"
 
 [main.loadpointSettings.minSoc]
-description = "Pojazd jest „szybko” ładowany do {0}% w trybie „Słońce”. Następnie kontynuuje tylko z nadwyżką fotowoltaiczną. Przydatne, aby zapewnić minimalny zasięg nawet w ciemniejsze dni."
+description = "Pojazd jest „szybko” ładowany do {0} w trybie „Słońce”. Następnie kontynuuje tylko z nadwyżką fotowoltaiczną. Przydatne, aby zapewnić minimalny zasięg nawet w ciemniejsze dni."
 label = "Minimalne naładowanie %"
 
 [main.loadpointSettings.phasesConfigured]
@@ -309,7 +325,7 @@ co2Limit = "Limit CO₂ z {co2}"
 costLimitIgnore = "Skonfigurowany {limit} będzie ignorowany w tym okresie."
 currentPlan = "Plan aktywny"
 descriptionEnergy = "Do kiedy należy załadować {targetEnergy} do pojazdu?"
-descriptionSoc = "Kiedy pojazd powinien zostać naladowany do {targetSoc}%?"
+descriptionSoc = "Kiedy pojazd powinien zostać naladowany do {targetSoc}?"
 inactiveLabel = "Czas docelowy"
 modalTitle = "Ustaw docelowy czas"
 notReachableInTime = "Cel nieosiągalny na czas. Szacowane wykończenie: {endTime}."
@@ -363,7 +379,7 @@ charging = "ładuje się"
 connected = "połączony"
 disconnected = "odłączony"
 ready = "gotowy"
-vehicleLimit = "Limit pojazdu: {soc}%"
+vehicleLimit = "Limit pojazdu: {soc}"
 
 [main.vehicleStatus]
 charging = "Ładuje się..."
@@ -372,7 +388,7 @@ cleanEnergyCharging = "Ładowanie czystą energią: {co2} (ograniczenie {limit})
 climating = "Wykryto wstępne przygotowanie"
 connected = "Połączony."
 disconnected = "Rozłączony."
-minCharge = "Minimalne ładowanie do {soc}%."
+minCharge = "Minimalne ładowanie do {soc}."
 pvDisable = "Za mało nadwyżki. Pauza po {remaining}..."
 pvEnable = "Dostępna nadwyżka. Począwszy po {remaining}..."
 scale1p = "Zredukuje do jednej fazy po {remaining}..."
@@ -380,8 +396,7 @@ scale3p = "Zwiększie do trzech faz po {remaining}..."
 targetChargeActive = "Zaplanowane ładowanie aktywno..."
 targetChargePlanned = "Zaplanowane ładowanie zacznie się {time}."
 targetChargeWaitForVehicle = "Zaplanowane ładowanie. Czekajem na pojazd..."
-unknown = ""
-vehicleLimitReached = "Osiągnięto limit pojazdu {soc}%."
+vehicleLimitReached = "Osiągnięto limit pojazdu {soc}."
 waitForVehicle = "Gotowe. Czekam na pojazd..."
 
 [notifications]
@@ -391,6 +406,8 @@ modalTitle = "Powiadomienia"
 [offline]
 message = "Brak połączenia z serwerem."
 reload = "Przeładować?"
+
+[passwordModal]
 
 [session]
 cancel = "Anuluj"
@@ -443,6 +460,8 @@ filter = "Filtrować"
 
 [settings]
 title = "Ustawienia główne"
+
+[settings.fullscreen]
 
 [settings.gridDetails]
 co2 = "CO₂"

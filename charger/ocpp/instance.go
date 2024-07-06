@@ -1,6 +1,7 @@
 package ocpp
 
 import (
+	"net/http"
 	"sync"
 	"time"
 
@@ -31,6 +32,7 @@ func Instance() *CS {
 
 		server := ws.NewServer()
 		server.SetTimeoutConfig(timeoutConfig)
+		server.SetCheckOriginHandler(func(r *http.Request) bool { return true })
 
 		dispatcher := ocppj.NewDefaultServerDispatcher(ocppj.NewFIFOQueueMap(0))
 		dispatcher.SetTimeout(time.Minute)

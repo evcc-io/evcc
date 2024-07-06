@@ -7,28 +7,48 @@
 import "@h2d2/shopicons/es/regular/car3";
 import MultiIcon from "../MultiIcon";
 
+import airpurifier from "./Airpurifier.vue";
 import bike from "./Bike.vue";
 import bus from "./Bus.vue";
+import climate from "./Climate.vue";
+import compute from "./Compute.vue";
 import cooler from "./Cooler.vue";
+import device from "./Device.vue";
+import dishwasher from "./Dishwasher.vue";
 import generic from "./Generic.vue";
 import heater from "./Heater.vue";
+import heatpump from "./Heatpump.vue";
+import laundry from "./Laundry.vue";
+import meter from "./Meter.vue";
 import moped from "./Moped.vue";
 import motorcycle from "./Motorcycle.vue";
 import scooter from "./Scooter.vue";
+import shuttle from "./Shuttle.vue";
+import tool from "./Tool.vue";
 import tractor from "./Tractor.vue";
 import van from "./Van.vue";
 import waterheater from "./WaterHeater.vue";
 
 const icons = {
+	airpurifier,
 	bike,
 	bus,
 	car: "shopicon-regular-car3",
+	climate,
+	compute,
 	cooler,
+	device,
+	dishwasher,
 	generic,
 	heater,
+	heatpump,
+	laundry,
+	meter,
 	moped,
 	motorcycle,
 	scooter,
+	shuttle,
+	tool,
 	tractor,
 	van,
 	waterheater,

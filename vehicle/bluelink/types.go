@@ -17,6 +17,7 @@ type BluelinkVehicleStatus interface {
 }
 
 type BluelinkVehicleStatusLatest interface {
+	BluelinkVehicleStatus() BluelinkVehicleStatus
 	Odometer() (float64, error)
 	Position() (float64, float64, error)
 }
@@ -83,10 +84,6 @@ const (
 	plugTypeAC = 1
 )
 
-func (d *VehicleStatus) Updated() (time.Time, error) {
-	return time.Parse(timeFormat, d.Time+timeOffset)
-}
-
 type DrivingDistance struct {
 	RangeByFuel struct {
 		EvModeRange struct {
@@ -104,25 +101,25 @@ type TargetSoc struct {
 	PlugType       int
 }
 
-func (d StatusResponse) Updated() (time.Time, error) {
-	return time.Parse(timeFormat, d.ResMsg.Time+timeOffset)
+func (d VehicleStatus) Updated() (time.Time, error) {
+	return time.Parse(timeFormat, d.Time+timeOffset)
 }
 
-func (d StatusResponse) SoC() (float64, error) {
-	if d.ResMsg.EvStatus != nil {
-		return d.ResMsg.EvStatus.BatteryStatus, nil
+func (d VehicleStatus) SoC() (float64, error) {
+	if d.EvStatus != nil {
+		return d.EvStatus.BatteryStatus, nil
 	}
 
 	return 0, api.ErrNotAvailable
 }
 
-func (d StatusResponse) Status() (api.ChargeStatus, error) {
-	if d.ResMsg.EvStatus != nil {
+func (d VehicleStatus) Status() (api.ChargeStatus, error) {
+	if d.EvStatus != nil {
 		status := api.StatusA
-		if d.ResMsg.EvStatus.BatteryPlugin > 0 || d.ResMsg.EvStatus.ChargePortDoorOpenStatus == 1 {
+		if d.EvStatus.BatteryPlugin > 0 || d.EvStatus.ChargePortDoorOpenStatus == 1 {
 			status = api.StatusB
 		}
-		if d.ResMsg.EvStatus.BatteryCharge {
+		if d.EvStatus.BatteryCharge {
 			status = api.StatusC
 		}
 		return status, nil
@@ -131,12 +128,12 @@ func (d StatusResponse) Status() (api.ChargeStatus, error) {
 	return api.StatusNone, api.ErrNotAvailable
 }
 
-func (d StatusResponse) FinishTime() (time.Time, error) {
-	if d.ResMsg.EvStatus != nil {
-		remaining := d.ResMsg.EvStatus.RemainTime2.Atc.Value
+func (d VehicleStatus) FinishTime() (time.Time, error) {
+	if d.EvStatus != nil {
+		remaining := d.EvStatus.RemainTime2.Atc.Value
 
 		if remaining != 0 {
-			ts, err := d.ResMsg.Updated()
+			ts, err := d.Updated()
 			return ts.Add(time.Duration(remaining) * time.Minute), err
 		}
 	}
@@ -144,24 +141,28 @@ func (d StatusResponse) FinishTime() (time.Time, error) {
 	return time.Time{}, api.ErrNotAvailable
 }
 
-func (d StatusResponse) Range() (int64, error) {
-	if d.ResMsg.EvStatus != nil {
-		if dist := d.ResMsg.EvStatus.DrvDistance; len(dist) == 1 {
+func (d VehicleStatus) Range() (int64, error) {
+	if d.EvStatus != nil {
+		if dist := d.EvStatus.DrvDistance; len(dist) == 1 {
 			return int64(dist[0].RangeByFuel.EvModeRange.Value), nil
 		}
 	}
 	return 0, api.ErrNotAvailable
 }
 
-func (d StatusResponse) GetLimitSoc() (int64, error) {
-	if d.ResMsg.EvStatus != nil {
-		for _, targetSOC := range d.ResMsg.EvStatus.ReservChargeInfos.TargetSocList {
+func (d VehicleStatus) GetLimitSoc() (int64, error) {
+	if d.EvStatus != nil {
+		for _, targetSOC := range d.EvStatus.ReservChargeInfos.TargetSocList {
 			if targetSOC.PlugType == plugTypeAC {
 				return int64(targetSOC.TargetSocLevel), nil
 			}
 		}
 	}
 	return 0, api.ErrNotAvailable
+}
+
+func (d StatusLatestResponse) BluelinkVehicleStatus() BluelinkVehicleStatus {
+	return d.ResMsg.VehicleStatusInfo.VehicleStatus
 }
 
 func (d StatusLatestResponse) Odometer() (float64, error) {
@@ -269,6 +270,10 @@ type VehicleStatusCCS struct {
 			}
 		}
 	}
+}
+
+func (d StatusLatestResponseCCS) BluelinkVehicleStatus() BluelinkVehicleStatus {
+	return d
 }
 
 func (d StatusLatestResponseCCS) Updated() (time.Time, error) {

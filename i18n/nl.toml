@@ -74,6 +74,16 @@ template = "Fabrikant"
 titleChoice = "Wat wil je toevoegen?"
 validateSave = "Valideren en opslaan"
 
+[config.options]
+
+[config.options.endianness]
+big = "groot-endian"
+little = "klein-endian"
+
+[config.options.schema]
+http = "HTTP (niet-versleuteld)"
+https = "HTTPS (versleuteld)"
+
 [config.pv]
 titleAdd = "Voeg meter zonnepanelen toe"
 titleEdit = "Bewerk meter zonnepanelen"
@@ -138,8 +148,8 @@ tabTitle = "Live community"
 co2Saved = "{value} bespaard"
 co2Title = "CO₂-uitstoot"
 configurePriceCo2 = "Meer informatie rond het configureren van prijs en CO₂ gegevens"
-footerLong = "{percent}% zonne-energie"
-footerShort = "{percent}% zon"
+footerLong = "{percent} zonne-energie"
+footerShort = "{percent} zon"
 modalTitle = "Oplaadenergie-overzicht"
 moneySaved = "{value} opgeslagen"
 percentGrid = "{grid} kWh net"
@@ -163,14 +173,19 @@ tabTitle = "Mijn data"
 total = "aller tijden"
 
 [footer.sponsor]
-becomeSponsor = "Word sponsor"
+becomeSponsor = "Sponsor worden"
+becomeSponsorExtended = "Steun ons direct om stickers te krijgen."
 confetti = "Klaar voor confetti?"
 confettiPromise = "Je krijgt stickers en digitale confetti"
 sticker = "... of evcc stickers?"
-supportUs = "Onze missie is om van zonne-energie de norm te maken. Help evcc door te betalen wat het u waard is."
+supportUs = "Onze missie is om van opladen via zonne-energie de norm te maken. Help evcc door te betalen wat het u waard is."
 thanks = "Bedankt, {sponsor}! Je bijdrage helpt evcc verder te ontwikkelen."
 titleNoSponsor = "Sponsor ons"
 titleSponsor = "U bent een sponsor!"
+titleTrial = "Testmodus"
+titleVictron = "Gesponsord door Victron Energy"
+trial = "U bevindt zich in de proefmodus en kunt alle functies gebruiken. Overweeg alstublieft om het project te steunen."
+victron = "Je gebruikt evcc op Victron Energy-hardware en hebt toegang tot alle functies."
 
 [footer.telemetry]
 optIn = "Ik wil mijn gegevens delen."
@@ -241,6 +256,8 @@ update = "Automatisch updaten"
 [loginModal]
 cancel = "Annuleren"
 error = "Login mislukt: "
+iframeHint = "Open evcc in een nieuw tabblad."
+iframeIssue = "Uw wachtwoord is correct, maar het lijkt erop dat uw browser de authenticatiecookie heeft verwijderd. Dit kan gebeuren als u evcc via HTTP in een iframe uitvoert."
 invalid = "Wachtwoord onjuist."
 login = "Inloggen"
 password = "Wachtwoord"
@@ -320,7 +337,7 @@ label = "Max. Stroomsterkte"
 label = "Min. Stroomsterkte"
 
 [main.loadpointSettings.minSoc]
-description = "Het voertuig wordt „snel” opgeladen tot {0}% in deze modus. Het laden gaat daarna verder met zonneoverschot. Nuttig om een bepaald rijbereik te garanderen, ook gedurende periodes met weinig of geen zonnestroom."
+description = "Het voertuig wordt „snel” opgeladen tot {0} in deze modus. Het laden gaat daarna verder met zonneoverschot. Nuttig om een bepaald rijbereik te garanderen, ook gedurende periodes met weinig of geen zonnestroom."
 label = "Min. batterij %"
 
 [main.loadpointSettings.phasesConfigured]
@@ -348,7 +365,7 @@ co2Limit = "CO₂ limiet van {co2}"
 costLimitIgnore = "De geconfigureerde {limit} zal genegeerd worden tijdens deze periode."
 currentPlan = "Geactiveerd laadplan"
 descriptionEnergy = "Tegen wanneer moet {targetEnergy} in het voertuig geladen zijn?"
-descriptionSoc = "Wanneer moet het voertuig geladen zijn naar {targetSoc}%?"
+descriptionSoc = "Wanneer moet het voertuig geladen zijn naar {targetSoc}?"
 inactiveLabel = "Ingestelde tijd"
 modalTitle = "Stel tijd in"
 notReachableInTime = "Laaddoel niet haalbaar bij gevraagde eindtijd. Geschatte eindtijd: {endTime}."
@@ -402,7 +419,7 @@ charging = "laden"
 connected = "aangesloten"
 disconnected = "niet aangesloten"
 ready = "klaar"
-vehicleLimit = "Voertuiglimiet: {soc}%"
+vehicleLimit = "Voertuiglimiet: {soc}"
 
 [main.vehicleStatus]
 charging = "Opladen..."
@@ -411,7 +428,7 @@ cleanEnergyCharging = "Laden actief met schone energie. {co2} (limit {limit})"
 climating = "Voor-conditionering gedetecteerd."
 connected = "Verbonden."
 disconnected = "Niet verbonden."
-minCharge = "Minimaal opladen naar {soc}%."
+minCharge = "Minimaal opladen naar {soc}."
 pvDisable = "Onvoldoende PV overschot beschikbaar. Pauzeren over {remaining}..."
 pvEnable = "Voldoende PV overschot beschikbaar. Starten over {remaining}..."
 scale1p = "Wisselen naar laden op 1 fase over {remaining}..."
@@ -420,7 +437,7 @@ targetChargeActive = "Laadplan actief..."
 targetChargePlanned = "Laadplan begint om {time}."
 targetChargeWaitForVehicle = "Laadplan gereed. Wachten op voertuig..."
 unknown = ""
-vehicleLimitReached = "Voertuiglimiet {soc}% bereikt."
+vehicleLimitReached = "Voertuiglimiet {soc} bereikt."
 waitForVehicle = "Klaar. Wachten op voertuig..."
 
 [notifications]
@@ -480,6 +497,8 @@ vehicle = "Voertuig"
 
 [sessions.csv]
 chargedenergy = "Energie (kWh)"
+chargeduration = "Duur"
+co2perkwh = "CO₂/kWh"
 created = "Aangemaakt"
 finished = "Beëindigd"
 identifier = "ID"
@@ -487,6 +506,9 @@ loadpoint = "Oplaadpunt"
 meterstart = "Meter start (kWh)"
 meterstop = "Meter stop (kwh)"
 odometer = "Kilometerstand (km)"
+price = "Prijs"
+priceperkwh = "Prijs/kWh"
+solarpercentage = "Zonne-energie (%)"
 vehicle = "Voertuig"
 
 [sessions.filter]

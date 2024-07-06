@@ -1,4 +1,5 @@
 template: ford
+deprecated: true
 products:
   - brand: Ford
 params:
@@ -6,7 +7,11 @@ params:
   - preset: vehicle-identify
   - name: vin
     example: WF0FXX...
+  - name: domain
+    default: com
+    validvalues: ["de", "com"]
 render: |
   type: ford
   {{ include "vehicle-base" . }}
   {{ include "vehicle-identify" . }}
+  domain: {{ .domain }}

@@ -28,14 +28,42 @@ never = "tik su pakankamu pertekliumi"
 titleAdd = "Pridėti kaupiklio skaitiklį"
 titleEdit = "Redaguoti kaupiklio skaitiklį"
 
+[config.circuits]
+description = "Užtikrina, kad naudojant visus į grandinę sujungtus įkroviklius, neviršytumėte sukonfigūruotų galios ir srovės ribų. Grandines galima sudėlioti, kad būtų sukurta hierarchija."
+title = "Apkrovos valdymas"
+
+[config.control]
+description = "Paprastai numatytosios reikšmės yra pakankamos. Keiskite jas tik jei žinote, ką darote."
+descriptionInterval = "Valdymo ciklų intervalai, sekundėmis. Nurodo, kaip dažnai evcc nuskaito skaitiklių duomenis, koreguoja įkrovimo galią ir atnaujina vartotojo sąsają. Trumpi intervalai (< 30 s) gali sukelti svyravimus ir nepageidaujamus rezultatus."
+descriptionMaxGridSupply = "Aktualu tik hibridiniams inverteriams, kurie negali tiekti visos generuojamos nuolatinės srovės į namus per kintamąją srovę. Dėl to gali atsirasti nepageidaujamas tinklo energijos naudojimas, nes evcc daro prielaidą, kad visa nuolatinė srovė naudotina. Pasirinkite bent 50 W vertę, kad užkirsti tam kelią."
+descriptionResidualPower = "Pakeičia valdymo sistemos reguliavimo tašką. Jei turite namų kaupiklį, rekomenduojame nustatyti 100 W vertę. Tada kaupiklis turės nedidelį prioritetą, palyginus su tinklu."
+labelInterval = "Atnaujinimo intervalas"
+labelMaxGridSupply = "Maksimalus tiekimas iš tinklo įkraunant"
+labelResidualPower = "Likutinė galia"
+title = "Valdymo elgesys"
+
 [config.deviceValue]
+broker = "Broker sistema"
+bucket = "Bucket"
 capacity = "Talpa"
 chargeStatus = "Statusas"
+chargeStatusA = "neprijungta"
+chargeStatusB = "prijungtas"
+chargeStatusC = "įkraunama"
+chargeStatusE = "nėra elektros"
+chargeStatusF = "klaida"
 chargedEnergy = "Įkrauta"
+co2 = "Tinklo CO₂"
+configured = "Sukonfigūruota"
+currency = "Valiuta"
 current = "Srovė"
 enabled = "Aktyvuota"
 energy = "Energija"
+feedinPrice = "Tiekimo į tinklą kaina"
+gridPrice = "Energijos pirkimo kaina"
+no = "ne"
 odometer = "Odometras"
+org = "Organizacija"
 phaseCurrents = "Srovė L1..L3"
 phasePowers = "Galia L1..L3"
 phaseVoltages = "Įtampa L1..L3"
@@ -43,6 +71,14 @@ power = "Galia"
 range = "Nuvažiuojamas atstumas"
 soc = "Įkrova"
 socLimit = "Limitas"
+temp = "Temperatūra"
+topic = "Tema"
+url = "URL"
+yes = "taip"
+
+[config.eebus]
+description = "Konfigūracija, leidžianti evcc susisiekti su kitais EEBus įrenginiais."
+title = "EEBus"
 
 [config.form]
 example = "Pavyzdys"
@@ -50,21 +86,53 @@ optional = "pasirinktinai"
 
 [config.general]
 cancel = "Atšaukti"
+docsLink = "Žiūrėkite dokumentaciją"
+experimental = "Eksperimentinis"
+off = "išjungta"
+on = "Įjungta"
+password = "Slaptažodis"
+remove = "Pašalinti"
 save = "Išsaugoti"
+telemetry = "Telemetrija"
+title = "Pavadinimas"
 
 [config.grid]
+title = "Tinklo skaitiklis"
 titleAdd = "Pridėti tinklo skaitiklį"
 titleEdit = "Redaguoti tinklo skaitiklį"
+
+[config.hems]
+description = "Prijunkite evcc prie kitos namų energijos valdymo sistemos."
+title = "HEMS"
+
+[config.influx]
+description = "Įrašo įkrovimo ir kitus duomenis į InfluxDB. Duomenims vizualizuoti naudokite \"Grafana\" ar panašius įrankius."
+descriptionToken = "Patikrinkite InfluxDB dokumentaciją, kad sužinotumėte, kaip ją sukurti. https://docs.influxdata.com/influxdb/v2/admin/"
+labelBucket = "Bucket"
+labelDatabase = "Duomenų bazė"
+labelOrg = "Organizacija"
+labelPassword = "Slaptažodis"
+labelToken = "API Token'as"
+labelUrl = "URL"
+labelUser = "Vartotojo vardas"
+title = "InfluxDB"
+v1Support = "Reikia InfluxDB 1.x palaikymo?"
+v2Support = "Atgal į InfluxDB 2.x"
 
 [config.main]
 addLoadpoint = "Pridėti įkroviklį"
 addPvBattery = "Pridėti saulės ar kaupiklio skaitiklį"
 addVehicle = "Pridėti automobilį"
+configured = "sukonfigūruota"
 edit = "redaguoti"
 title = "Konfigūracija"
 unconfigured = "nesukonfigūruota"
 vehicles = "Mano automobiliai"
 yaml = "Čia redaguoti neina. Konfigūruokite evcc.yaml faile."
+
+[config.messaging]
+description = "Gaukite pranešimus apie įkrovimo sesijas."
+title = "Pranešimai"
 
 [config.meter]
 cancel = "Atšaukti"
@@ -74,17 +142,69 @@ template = "Gamintojas"
 titleChoice = "Ką norite pridėti?"
 validateSave = "Patikrinti ir išsaugoti"
 
+[config.modbusproxy]
+description = "Leisti keliems klientams pasiekti vieną „Modbus“ įrenginį."
+title = "Modbus Proxy"
+
+[config.mqtt]
+authentication = "Autentifikavimas"
+description = "Prisijunkite prie MQTT brokerio, kad keistumėtės duomenimis su kitomis tinklo sistemomis."
+descriptionClientId = "Pranešimų autorius. Jei naudojamas tuščias `evcc-[rand]` ."
+descriptionTopic = "Palikite tuščią, kad išjungtumėte publikavimą."
+labelBroker = "Broker"
+labelCheckInsecure = "Leisti savarankiškai pasirašytus sertifikatus"
+labelClientId = "Kliento ID"
+labelInsecure = "Sertifikato patvirtinimas"
+labelPassword = "Slaptažodis"
+labelTopic = "Tema"
+labelUser = "Vartotojo vardas"
+publishing = "Publikavimas"
+title = "MQTT"
+
+[config.network]
+descriptionHost = "Naudokite .local priesagą, kad įgalintumėte mDNS. Tai svarbu norint aptikti progrmėlę mobiliesiems ir kai kuriuos OCPP įkroviklius."
+descriptionPort = "Žiniatinklio sąsajos ir API prievadas. Jei tai pakeisite, turėsite atnaujinti naršyklės URL."
+descriptionSchema = "Turi įtakos tik URL generavimui. Pasirinkus HTTPS šifravimas nebus įjungtas."
+labelHost = "Hostname"
+labelPort = "Port"
+labelSchema = "Schema"
+title = "Tinklas"
+
+[config.options]
+
+[config.options.endianness]
+big = "mažėjantys baitai"
+little = "didėjantys baitai"
+
+[config.options.schema]
+http = "HTTP (nešifruotas)"
+https = "HTTPS (užšifruotas)"
+
 [config.pv]
 titleAdd = "Pridėti saulės skaitiklį"
 titleEdit = "Redaguoti saulės skaitiklį"
 
 [config.section]
 general = "Pagrindiniai"
+grid = "Elektros tinklas"
+integrations = "Integracijos"
+loadpoints = "Įkrovikliai"
+meter = "Saulės energijos ir kaupiklio"
 system = "Sisteminiai"
+vehicles = "Automobiliai"
 
 [config.site]
 cancel = "Atšaukti"
 save = "Išsaugoti"
+
+[config.sponsor]
+addToken = "Įveskite sponsor token"
+changeToken = "Pakeisti sponsor token"
+description = "Rėmimo modelis padeda mums išlaikyti projektą ir tvariai kurti naujas, įdomias funkcijas. Kaip rėmėjas jūs gaunate prieigą prie visų įkroviklių implementacijų."
+descriptionToken = "Tokeną gaunate iš {url}. Taip pat siūlome bandomąjį tokeną testavimui."
+error = "Sponsoriaus tokenas negaliojantis"
+labelToken = "Sponsoriaus tokenas"
+title = "Rėmimas"
 
 [config.system]
 logs = "Žurnalai"
@@ -93,6 +213,10 @@ restartRequiredDescription = "Paleiskite iš naujo, kad įsigaliotų pakeitimai"
 restartRequiredMessage = "Nustatymai pasikeitė"
 restartingDescription = "Palaukite..."
 restartingMessage = "Paleidžiama iš naujo"
+
+[config.tariffs]
+description = "Nustatykite savo energijos tarifus, kad apskaičiuotumėte įkrovimo sesijų išlaidas."
+title = "Tarifai"
 
 [config.title]
 description = "Rodoma pagrindiniame ekrane ir naršyklės kortelėje."
@@ -138,8 +262,8 @@ tabTitle = "Bendruomenės"
 co2Saved = "{value} neišmesta"
 co2Title = "CO₂ Išmetimai"
 configurePriceCo2 = "Išmokite sukonfigūruoti kainą ir CO₂ duomenis."
-footerLong = "{percent}% saulės energija"
-footerShort = "{percent}% saulės"
+footerLong = "{percent} saulės energija"
+footerShort = "{percent} saulės"
 modalTitle = "Įkrovimo energijos apžvalga"
 moneySaved = "{value} sutaupyta"
 percentGrid = "{grid} kWh tinklo"
@@ -164,6 +288,7 @@ total = "Iš viso"
 
 [footer.sponsor]
 becomeSponsor = "Tapkite rėmėju"
+becomeSponsorExtended = "Paremkite mus tiesiogiai ir gaukite lipdukų."
 confetti = "Norite konfeti?"
 confettiPromise = "Gausite lipdukų ir skaitmeninių konfeti"
 sticker = "… ar evcc lipdukų?"
@@ -171,6 +296,10 @@ supportUs = "Mūsų misija - siekti, kad įkrovimas saulės energija taptų įpr
 thanks = "Ačiū, {sponsor}! Jūs prisidedate prie evcc vystymo."
 titleNoSponsor = "Paremkite mus"
 titleSponsor = "Remiate projektą"
+titleTrial = "Bandomasis režimas"
+titleVictron = "Sponsorius - Victron Energy"
+trial = "Jūs naudojate bandomąjį režimą ir galite naudoti visas funkcijas. Apsvarstykite galimybę paremti projektą."
+victron = "Naudojate evcc Victron Energy aparatinėje įrangoje ir turite prieigą prie visų funkcijų."
 
 [footer.telemetry]
 optIn = "Noriu prisidėti savo duomenimis."
@@ -241,6 +370,8 @@ update = "Automatinis atnaujinimas"
 [loginModal]
 cancel = "Atšaukti"
 error = "Prisijungti nepavyko: "
+iframeHint = "Atidaryti evcc naujame skirtuke."
+iframeIssue = "Jūsų slaptažodis teisingas, bet atrodo, kad jūsų naršyklė atsisakė autentifikavimo slapuko. Taip gali nutikti, jei paleidžiate evcc per iframe naudojant HTTP"
 invalid = "Neteisingas slaptažodis."
 login = "Prisijungti"
 password = "Slaptažodis"
@@ -320,7 +451,7 @@ label = "Max. Srovė"
 label = "Min. Srovė"
 
 [main.loadpointSettings.minSoc]
-description = "Automobilis įkraunamas „Greitai” iki {0}% nustatyme „Saulė”, toliau įkraunamas tik saulės energijos pertekliumi. Padeda užtikrinti minimalią įkrovą dienomis, kai mažai saulės."
+description = "Automobilis įkraunamas „Greitai” iki {0} nustatyme „Saulė”, toliau įkraunamas tik saulės energijos pertekliumi. Padeda užtikrinti minimalią įkrovą dienomis, kai mažai saulės."
 label = "Minimali įkrova %"
 
 [main.loadpointSettings.phasesConfigured]
@@ -337,6 +468,7 @@ minpv = "Min+Saulė"
 now = "Greitas"
 off = "Stop"
 pv = "Saulė"
+smart = "Išmanus"
 
 [main.provider]
 login = "prisijungti"
@@ -348,7 +480,7 @@ co2Limit = "CO₂ riba iš {co2}"
 costLimitIgnore = "Šiuo laikotarpiu sukonfigūruotas {limit} bus ignoruojamas."
 currentPlan = "Planas aktyvus"
 descriptionEnergy = "Iki kada {targetEnergy} turėtų būti įkrauta į automobilį?"
-descriptionSoc = "Kada automobilis turėtų būti įkrautas iki {targetSoc}%?"
+descriptionSoc = "Kada automobilis turėtų būti įkrautas iki {targetSoc}?"
 inactiveLabel = "Suplanuotas laikas"
 modalTitle = "Nustatyti įkrovimo pabaigos laiką"
 noActivePlan = "Nėra Aktyvaus Plano"
@@ -405,7 +537,7 @@ charging = "vyksta įkrovimas"
 connected = "automobilis prijungtas"
 disconnected = "neprijungtas"
 ready = "leidžiama įkrauti"
-vehicleLimit = "Automobilyje nustatytas limitas: {soc}%"
+vehicleLimit = "Automobilyje nustatytas limitas: {soc}"
 
 [main.vehicleStatus]
 charging = "Įkraunama..."
@@ -414,7 +546,7 @@ cleanEnergyCharging = "Įkraunama švaria energija: {co2} (limitas {limit})"
 climating = "Aptiktas išankstinis kondicionavimas."
 connected = "Prijungtas."
 disconnected = "Neprijungtas."
-minCharge = "Minimalus įkrovimas iki {soc}%."
+minCharge = "Minimalus įkrovimas iki {soc}."
 pvDisable = "Trūksta saulės. Pauzė už {remaining}..."
 pvEnable = "Saulės užtenka, įkrovimas už {remaining}..."
 scale1p = "Sumažinimas į vienfazį įkrovimą už {remaining}..."
@@ -423,7 +555,7 @@ targetChargeActive = "Įkrovimo planas aktyvuotas..."
 targetChargePlanned = "Suplanuotas įkrovimas prasidės {time}."
 targetChargeWaitForVehicle = "Įkrovimas pagal planą leidžiamas. Laukiama automobilio..."
 unknown = ""
-vehicleLimitReached = "Automobilyje nustatytas limitas {soc}% pasiektas."
+vehicleLimitReached = "Automobilyje nustatytas limitas {soc} pasiektas."
 waitForVehicle = "Paruošta. Laukiama automobilio..."
 
 [notifications]
@@ -434,6 +566,9 @@ modalTitle = "Pranešimai"
 [offline]
 message = "Nėra ryšio su serveriu."
 reload = "Perkrauti?"
+restart = "Restartuoti"
+restartNeeded = "Būtina, kad pakeitimai įsigaliotų."
+restarting = "Serveris netrukus vėl veiks."
 
 [passwordModal]
 description = "Nustatykite slaptažodį konfigūracijos apsaugai. Pagrindiniu ekranu galima naudotis ir neprisijungus."
@@ -483,6 +618,8 @@ vehicle = "Automobilis"
 
 [sessions.csv]
 chargedenergy = "Energija (kWh)"
+chargeduration = "Trukmė"
+co2perkwh = "CO₂/kWh"
 created = "Sukurta"
 finished = "Pabaigta"
 identifier = "Identifikatorius"
@@ -490,6 +627,9 @@ loadpoint = "Įkroviklis"
 meterstart = "Skaitiklis pradžia (kWh)"
 meterstop = "Skaitiklis pabaiga (kWh)"
 odometer = "Odometras (km)"
+price = "Kaina"
+priceperkwh = "Kaina/kWh"
+solarpercentage = "Saulės (%)"
 vehicle = "Automobilis"
 
 [sessions.filter]
@@ -520,7 +660,7 @@ auto = "Automatiškai"
 label = "Kalba"
 
 [settings.sponsorToken]
-expires = "Jūsų rėmėjo tokenas baigiasi {inXDays}. {getNewToken} ir pakeiskite savo configūracinį failą."
+expires = "Jūsų rėmėjo tokenas baigsis {inXDays}. {getNewToken} ir išsaugokite jį čia."
 getNew = "Gaukite naują"
 hint = "Pastaba: ateityje šis procesas bus automatizuotas."
 

@@ -107,7 +107,7 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Vehicle, error
 	// decorate maxCurrent
 	var maxCurrent func(int64) error
 	if cc.MaxCurrent != nil {
-		maxCurrent, err = provider.NewIntSetterFromConfig("maxCurrent", *cc.MaxCurrent)
+		maxCurrent, err = provider.NewIntSetterFromConfig("maxcurrent", *cc.MaxCurrent)
 		if err != nil {
 			return nil, fmt.Errorf("maxCurrent: %w", err)
 		}
@@ -153,7 +153,7 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Vehicle, error
 	// decorate chargeEnable
 	var chargeEnable func(bool) error
 	if cc.ChargeEnable != nil {
-		chargeEnable, err = provider.NewBoolSetterFromConfig("chargeEnable", *cc.ChargeEnable)
+		chargeEnable, err = provider.NewBoolSetterFromConfig("chargeenable", *cc.ChargeEnable)
 		if err != nil {
 			return nil, fmt.Errorf("chargeEnable: %w", err)
 		}

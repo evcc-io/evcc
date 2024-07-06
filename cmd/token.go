@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/evcc-io/evcc/util/config"
+	"github.com/evcc-io/evcc/util/templates"
 	"github.com/samber/lo"
 	"github.com/spf13/cobra"
 	"golang.org/x/oauth2"
@@ -51,14 +52,23 @@ func runToken(cmd *cobra.Command, args []string) {
 	var token *oauth2.Token
 	var err error
 
-	typ := strings.ToLower(vehicleConf.Type)
-	if typ == "template" {
-		typ = strings.ToLower(vehicleConf.Other["template"].(string))
+	isTemplate := strings.ToLower(vehicleConf.Type) == "template"
+	if isTemplate {
+		instance, err := templates.RenderInstance(templates.Vehicle, vehicleConf.Other)
+		if err != nil {
+			log.FATAL.Fatalf("rendering template failed: %v", err)
+		}
+		vehicleConf.Type = instance.Type
+		vehicleConf.Other = instance.Other
 	}
+
+	typ := strings.ToLower(vehicleConf.Type)
 
 	switch typ {
 	case "mercedes":
 		token, err = mercedesToken()
+	case "ford", "ford-connect":
+		token, err = fordConnectToken(vehicleConf)
 	case "tronity":
 		token, err = tronityToken(conf, vehicleConf)
 	case "citroen", "ds", "opel", "peugeot":
@@ -75,7 +85,16 @@ func runToken(cmd *cobra.Command, args []string) {
 	fmt.Println()
 	fmt.Println("Add the following tokens to the vehicle config:")
 	fmt.Println()
-	fmt.Println("    tokens:")
-	fmt.Println("      access:", token.AccessToken)
-	fmt.Println("      refresh:", token.RefreshToken)
+
+	if isTemplate {
+		fmt.Println("    type: template")
+		fmt.Println("    template:", typ)
+		fmt.Println("    accesstoken:", token.AccessToken)
+		fmt.Println("    refreshtoken:", token.RefreshToken)
+	} else {
+		fmt.Println("    type:", typ)
+		fmt.Println("    tokens:")
+		fmt.Println("      access:", token.AccessToken)
+		fmt.Println("      refresh:", token.RefreshToken)
+	}
 }

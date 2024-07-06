@@ -7,7 +7,7 @@
 		<HelpModal />
 		<PasswordModal />
 		<LoginModal />
-		<OfflineIndicator v-if="offline" />
+		<OfflineIndicator v-bind="offlineIndicatorProps" />
 	</div>
 </template>
 
@@ -61,16 +61,10 @@ export default {
 				this.reload();
 			}
 		},
-		offline: function () {
+		offline: function (now, prev) {
 			updateAuthStatus();
-		},
-		startupErrors: function (now) {
-			if (now) {
-				console.log("startup errors detected. redirecting to error page");
-				this.$router.push("/error");
-			} else {
-				console.log("startup errors resolved. redirecting to home page");
-				this.$router.push("/");
+			if (now && !prev) {
+				this.reconnect();
 			}
 		},
 	},
@@ -87,8 +81,8 @@ export default {
 		batterySettingsProps() {
 			return this.collectProps(BatterySettingsModal, store.state);
 		},
-		startupErrors: function () {
-			return store.state.fatal?.length > 0;
+		offlineIndicatorProps() {
+			return this.collectProps(OfflineIndicator, store.state);
 		},
 	},
 	mounted: function () {
@@ -166,7 +160,6 @@ export default {
 			this.ws.onclose = () => {
 				console.log("websocket disconnected");
 				window.app.setOffline();
-				this.reconnect();
 			};
 			this.ws.onmessage = (evt) => {
 				try {

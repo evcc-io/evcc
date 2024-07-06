@@ -5,9 +5,9 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/42atomys/sprout"
 	"github.com/evcc-io/evcc/core/vehicle"
 	"github.com/evcc-io/evcc/util"
+	"github.com/go-sprout/sprout"
 )
 
 // Event is a notification event
@@ -38,10 +38,10 @@ type Hub struct {
 func NewHub(cc map[string]EventTemplateConfig, vv Vehicles, cache *util.Cache) (*Hub, error) {
 	// instantiate all event templates
 	for k, v := range cc {
-		if _, err := template.New("out").Funcs(sprout.TxtFuncMap()).Parse(v.Title); err != nil {
+		if _, err := template.New("out").Funcs(sprout.FuncMap()).Parse(v.Title); err != nil {
 			return nil, fmt.Errorf("invalid event title: %s (%w)", k, err)
 		}
-		if _, err := template.New("out").Funcs(sprout.TxtFuncMap()).Parse(v.Msg); err != nil {
+		if _, err := template.New("out").Funcs(sprout.FuncMap()).Parse(v.Msg); err != nil {
 			return nil, fmt.Errorf("invalid event message: %s (%w)", k, err)
 		}
 	}
@@ -94,7 +94,7 @@ func (h *Hub) apply(ev Event, tmpl string) (string, error) {
 }
 
 // Run is the Hub's main publishing loop
-func (h *Hub) Run(events <-chan Event, valueChan chan util.Param) {
+func (h *Hub) Run(events <-chan Event, valueChan chan<- util.Param) {
 	log := util.NewLogger("push")
 
 	for ev := range events {
@@ -124,12 +124,12 @@ func (h *Hub) Run(events <-chan Event, valueChan chan util.Param) {
 			continue
 		}
 
+		if strings.TrimSpace(msg) == "" {
+			continue
+		}
+
 		for _, sender := range h.sender {
-			if strings.TrimSpace(msg) != "" {
-				go sender.Send(title, msg)
-			} else {
-				log.DEBUG.Printf("did not send empty message template for %s: %v", ev.Event, err)
-			}
+			go sender.Send(title, msg)
 		}
 	}
 }

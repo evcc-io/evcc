@@ -1,6 +1,57 @@
 [batterySettings]
 batteryLevel = "Livello batteria"
 capacity = "{energy} di {total}"
+control = "Controllo batteria"
+disclaimerHint = "“Nota:”"
+disclaimerText = "“Queste impostazioni riguardano solamente la modalità solare. Il comportamento di ricarica è adattato di conseguenza.”"
+legendBottomName = "“priorità casa”"
+legendBottomSubline = "“Non usato per ricarica”"
+legendMiddleName = "“Priorità al veicolo”"
+legendMiddleSubline = "“Casa seconda”"
+legendTitle = "“Come dovrebbe essere utilizzata l’energia solare?”"
+legendTopAutostart = "“Parte automaticamente”"
+legendTopName = "“Ricarica supportata dalla batteria”"
+legendTopSubline = "“Senza interruzioni”"
+modalTitle = "“Batteria di casa”"
+
+[batterySettings.bufferStart]
+above = "“Quando supera {soc}”"
+full = "“Quando è a {soc}”"
+never = "“Solo con abbastanza surplus”"
+
+[config]
+
+[config.battery]
+
+[config.deviceValue]
+
+[config.form]
+
+[config.general]
+
+[config.grid]
+
+[config.main]
+
+[config.meter]
+
+[config.options]
+
+[config.options.endianness]
+
+[config.options.schema]
+
+[config.pv]
+
+[config.section]
+
+[config.system]
+
+[config.title]
+
+[config.validation]
+
+[config.vehicle]
 
 [footer]
 
@@ -17,8 +68,8 @@ powerSub2 = "in carica..."
 tabTitle = "Live community"
 
 [footer.savings]
-footerLong = "{percent}% di energia solare"
-footerShort = "{percent}% solare"
+footerLong = "{percent} di energia solare"
+footerShort = "{percent} solare"
 modalTitle = "Riepilogo energia caricata"
 percentGrid = "{grid} kWh rete"
 percentSelf = "{self} kWh solare"
@@ -31,6 +82,8 @@ savingsTitle = "Risparmio"
 savingsTotalEnergy = "{total} kWh totali caricati"
 since = "da {since}"
 tabTitle = "I miei dati"
+
+[footer.savings.period]
 
 [footer.sponsor]
 becomeSponsor = "Diventa uno sponsor"
@@ -74,8 +127,18 @@ auto = "Design: sistema"
 dark = "Design: scuro"
 light = "Design: luce"
 
+[help]
+
+[help.restart]
+
+[log]
+
+[loginModal]
+
 [main]
 vehicles = "Parcheggio"
+
+[main.chargingPlan]
 
 [main.energyflow]
 battery = "Batteria"
@@ -89,6 +152,8 @@ noEnergy = "Nessun valore"
 pvExport = "Immissione in rete"
 pvProduction = "Produzione"
 selfConsumption = "Autoconsumo"
+
+[main.heatingStatus]
 
 [main.loadpoint]
 charged = "Caricato"
@@ -105,6 +170,8 @@ disclaimerHint = "Nota:"
 title = "Impostazioni {0}"
 vehicle = "Veicolo"
 
+[main.loadpointSettings.limitSoc]
+
 [main.loadpointSettings.maxCurrent]
 label = "Corrente massima"
 
@@ -112,7 +179,7 @@ label = "Corrente massima"
 label = "Corrente min."
 
 [main.loadpointSettings.minSoc]
-description = "Per le emergenze. Il veicolo viene caricato 'velocemente' al {0}% da tutto il solare disponibile, e poi continua con solo il surplus solare."
+description = "Per le emergenze. Il veicolo viene caricato 'velocemente' al {0} da tutto il solare disponibile, e poi continua con solo il surplus solare."
 label = "Carica min. %"
 
 [main.loadpointSettings.phasesConfigured]
@@ -136,7 +203,7 @@ logout = "log out"
 [main.targetCharge]
 activate = "Attivare"
 descriptionEnergy = "Fino a quando dovrebbero essere {targetEnergy} caricati nel veicolo?"
-descriptionSoc = "Quando dovrebbe essere caricato il veicolo al {targetSoc}%?"
+descriptionSoc = "Quando dovrebbe essere caricato il veicolo al {targetSoc}?"
 inactiveLabel = "Tempo target"
 modalTitle = "Imposta orario target"
 planDuration = "Tempo di carica"
@@ -178,13 +245,13 @@ charging = "In carica"
 connected = "collegato"
 disconnected = "disconnesso"
 ready = "pronto"
-vehicleLimit = "Limite veicolo: {soc}%"
+vehicleLimit = "Limite veicolo: {soc}"
 
 [main.vehicleStatus]
 charging = "In carica..."
 connected = "Collegato."
 disconnected = "Disconnesso."
-minCharge = "Ricarica minima a {soc}%."
+minCharge = "Ricarica minima a {soc}."
 pvDisable = "Eccedenza insufficiente. In pausa {remaining}…"
 pvEnable = "Eccedenza disponibile. Inizio in {remaining}…"
 scale1p = "Riduzione alla potenza monofase in {remaining}…"
@@ -192,8 +259,7 @@ scale3p = "Aumento a potenza trifase in {remaining}…"
 targetChargeActive = "Carica target attiva..."
 targetChargePlanned = "Il target di ricarica inizia alle {time}."
 targetChargeWaitForVehicle = "Carica target pronta. In attesa del veicolo..."
-unknown = ""
-vehicleLimitReached = "Limite del veicolo {soc}% raggiunto."
+vehicleLimitReached = "Limite del veicolo {soc} raggiunto."
 waitForVehicle = "Pronto. In attesa del veicolo..."
 
 [notifications]
@@ -203,6 +269,8 @@ modalTitle = "Notifiche"
 [offline]
 message = "Non connesso a un server."
 reload = "Ricaricare?"
+
+[passwordModal]
 
 [session]
 cancel = "Cancella"
@@ -234,8 +302,12 @@ meterstop = "Ferma contatore (kWh)"
 odometer = "Chilometraggio (km)"
 vehicle = "Veicolo"
 
+[sessions.filter]
+
 [settings]
 title = "Impostazioni"
+
+[settings.fullscreen]
 
 [settings.gridDetails]
 co2 = "CO₂"
@@ -251,6 +323,8 @@ value = "Mostra caratteristiche sperimentali della UI"
 auto = "Automatico"
 label = "Lingua"
 
+[settings.sponsorToken]
+
 [settings.telemetry]
 label = "Telemetria"
 
@@ -264,6 +338,8 @@ light = "chiaro"
 km = "km"
 label = "Unità"
 mi = "miglia"
+
+[smartCost]
 
 [startupError]
 configFile = "File di configurazione utilizzato:"

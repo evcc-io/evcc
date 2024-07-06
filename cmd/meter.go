@@ -30,7 +30,7 @@ func runMeter(cmd *cobra.Command, args []string) {
 	}
 
 	// setup environment
-	if err := configureEnvironment(cmd, conf); err != nil {
+	if err := configureEnvironment(cmd, &conf); err != nil {
 		log.FATAL.Fatal(err)
 	}
 

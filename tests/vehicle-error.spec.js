@@ -1,5 +1,7 @@
 import { test, expect } from "@playwright/test";
-import { start, stop } from "./evcc";
+import { start, stop, baseUrl } from "./evcc";
+
+test.use({ baseURL: baseUrl() });
 
 test.beforeAll(async () => {
   await start("vehicle-error.evcc.yaml", "password.sql");
@@ -20,8 +22,7 @@ test.describe("vehicle startup error", async () => {
 
   test("guest vehicle: normal title and no icon", async ({ page }) => {
     // switch to offline vehicle
-    await page.getByRole("button", { name: "Broken Tesla" }).click();
-    await page.getByRole("button", { name: "Guest vehicle" }).click();
+    await page.getByTestId("change-vehicle").locator("select").selectOption("Guest vehicle");
 
     await expect(page.getByTestId("vehicle-name")).toHaveText("Guest vehicle");
     await expect(page.getByTestId("vehicle-not-reachable-icon")).not.toBeVisible();

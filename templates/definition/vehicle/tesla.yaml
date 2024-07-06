@@ -9,7 +9,7 @@ requirements:
       Die Steuerung von Fahrzeugen im Zusammenspiel mit einem Tesla Wall Connector erfolgt über einen evcc Proxy-Server und benötigt ein Sponsor Token. Der virtuelle evcc Schlüssel muss auf dem Fahrzeug installiert sein.
       Siehe [tesla.evcc.io](https://tesla.evcc.io).
     en: |
-      Teska `access` and `refresh` tokens are required. These can be generated through [tesla.evcc.io](https://tesla.evcc.io).
+      Tesla `access` and `refresh` tokens are required. These can be generated through [tesla.evcc.io](https://tesla.evcc.io).
       Controlling vehicles in conjunction with a Tesla Wall Connector is done via an evcc proxy server and requires a sponsor token. The evcc virtual key must be installed on the vehicle.
       See [tesla.evcc.io](https://tesla.evcc.io).
   evcc: ["sponsorship"]
@@ -21,15 +21,9 @@ params:
   - name: accessToken
     required: true
     mask: true
-    help:
-      en: "See https://docs.evcc.io/en/docs/devices/vehicles#tesla"
-      de: "Siehe https://docs.evcc.io/docs/devices/vehicles#tesla"
   - name: refreshToken
     required: true
     mask: true
-    help:
-      en: "See https://docs.evcc.io/en/docs/devices/vehicles#tesla"
-      de: "Siehe https://docs.evcc.io/docs/devices/vehicles#tesla"
   - name: vin
     example: W...
   - name: capacity
@@ -37,16 +31,20 @@ params:
     advanced: true
   - name: control
     deprecated: true
+  - name: commandProxy
+    default: https://tesla.evcc.io/
+    advanced: true
+    help:
+      en: "When using a TWC3 (or other 'dumb' charger not capable of control), evcc can manage the charge directly by communicating with the vehicle through a Command Proxy. By default, the proxy provided by evcc is used. With this parameter, you set the base URL of a custom Command Proxy to use instead of the default evcc one. See for example https://github.com/wimaha/TeslaBleHttpProxy for a proxy sending commands via bluetooth."
+      de: "Bei Verwendung eines TWC3 (oder eines anderen 'dummen' Ladegeräts, das nicht steuerbar ist) kann evcc die Ladung direkt verwalten, indem es über einen Command Proxy mit dem Fahrzeug kommuniziert. Standardmäßig wird der von evcc bereitgestellte Proxy verwendet. Dieses parameter setzt die Basis-URL eines benutzerdefinierten Command Proxy, der anstelle des standardmäßigen evcc-Proxy verwendet werden soll. Siehe zum Beispiel https://github.com/wimaha/TeslaBleHttpProxy für einen Proxy, der Kommandos über Bluetooth sendet."
   - preset: vehicle-identify
 render: |
   type: tesla
-  title: {{ .title }}
-  icon: {{ .icon }}
+  vin: {{ .vin }}
   tokens:
     access: {{ .accessToken }}
     refresh: {{ .refreshToken }}
-  capacity: {{ .capacity }}
-  phases: {{ .phases }}
-  vin: {{ .vin }}
+  commandProxy: {{ .commandProxy }}
+  {{ include "vehicle-common" . }}
   {{ include "vehicle-identify" . }}
   features: ["coarsecurrent"]

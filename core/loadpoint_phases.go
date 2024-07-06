@@ -69,6 +69,8 @@ func (lp *Loadpoint) ActivePhases() int {
 	// sanity check - we should not assume less active phases than actually measured
 	if measured > 0 && active < measured {
 		lp.log.WARN.Printf("phase mismatch between %dp measured for %dp vehicle and %dp charger", measured, vehicle, physical)
+	} else {
+		lp.log.DEBUG.Printf("!! active phases: %dp = min(%dp measured %dp vehicle %dp physical %dp charger)", active, measured, vehicle, physical, charger)
 	}
 
 	return active

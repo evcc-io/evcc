@@ -134,7 +134,7 @@ jobs:
       - run: mkdir dist && touch dist/empty
 
       - name: Lint
-        uses: golangci/golangci-lint-action@v5
+        uses: golangci/golangci-lint-action@v6
         with:
           version: latest
           args: --out-format=colored-line-number --timeout 5m
@@ -177,11 +177,6 @@ jobs:
   integration:
     name: Integration
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        shardIndex: [1, 2]
-        shardTotal: [2]
 
     steps:
       - uses: actions/checkout@v4
@@ -224,7 +219,7 @@ jobs:
         run: npx playwright install --with-deps chromium
 
       - name: Run tests
-        run: npx playwright test --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
+        run: npx playwright test
 
       # - name: Run tests
       #   uses: docker://mcr.microsoft.com/playwright:v1.34.3-jammy
@@ -234,6 +229,6 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
         with:
-          name: playwright-report-${{ matrix.shardIndex }}
+          name: playwright-report
           path: playwright-report/
           retention-days: 14

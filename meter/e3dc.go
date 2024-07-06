@@ -11,7 +11,6 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/templates"
-	"github.com/samber/lo"
 	"github.com/sirupsen/logrus"
 	"github.com/spali/go-rscp/rscp"
 	"github.com/spf13/cast"
@@ -128,7 +127,7 @@ func (m *E3dc) CurrentPower() (float64, error) {
 			return 0, err
 		}
 
-		return lo.Sum(values), nil
+		return values[0] - values[1], nil
 
 	case templates.UsageBattery:
 		res, err := m.conn.Send(*rscp.NewMessage(rscp.EMS_REQ_POWER_BAT, nil))

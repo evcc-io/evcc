@@ -57,6 +57,7 @@ export default {
 				this.capacity || 100,
 				this.socPerKwh,
 				this.fmtKWh,
+				this.fmtPercentage,
 				this.$t("main.targetEnergy.noLimit")
 			);
 		},
@@ -75,7 +76,7 @@ export default {
 			return fmtEnergy(value, this.step, this.fmtKWh, this.$t("main.targetEnergy.noLimit"));
 		},
 		fmtSoc: function (value) {
-			return `+${Math.round(value)}%`;
+			return `+${this.fmtPercentage(value)}`;
 		},
 	},
 };

@@ -85,7 +85,6 @@ func (c *Wattpilot) Enable(enable bool) error {
 	if !enable {
 		forceState = 1 // off
 	}
-
 	return c.api.SetProperty("frc", forceState)
 }
 

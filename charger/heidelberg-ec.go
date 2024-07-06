@@ -103,8 +103,8 @@ func NewHeidelbergEC(uri, device, comset string, baudrate int, proto modbus.Prot
 	if err != nil {
 		return nil, fmt.Errorf("failsafe timeout: %w", err)
 	}
-	if u := binary.BigEndian.Uint16(b); u > 0 {
-		go wb.heartbeat(time.Duration(u) * time.Millisecond / 2)
+	if u := binary.BigEndian.Uint16(b) / 4; u > 0 {
+		go wb.heartbeat(time.Duration(u) * time.Millisecond)
 	}
 
 	return wb, nil

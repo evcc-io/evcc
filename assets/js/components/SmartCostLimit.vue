@@ -85,7 +85,7 @@ export default {
 	components: { TariffChart },
 	mixins: [formatter],
 	props: {
-		smartCostLimit: { type: Number, default: 0 },
+		smartCostLimit: Number,
 		smartCostType: String,
 		tariffGrid: Number,
 		currency: String,
@@ -111,12 +111,12 @@ export default {
 			for (let i = 1; i <= 100; i++) {
 				const value = this.optionStartValue + stepSize * i;
 				if (value != 0) {
-					values.push(value.toFixed(2));
+					values.push(this.roundLimit(value));
 				}
 			}
 			// add special entry if currently selected value is not in the scale
 			const selected = this.selectedSmartCostLimit;
-			if (selected !== undefined && !values.includes(selected)) {
+			if (selected && !values.includes(selected)) {
 				values.push(selected);
 			}
 			values.sort((a, b) => a - b);
@@ -134,16 +134,18 @@ export default {
 				return 0;
 			}
 			const { min } = this.costRange(this.totalSlots);
-			const minValue = Math.min(0, min);
 			const stepSize = this.optionStepSize;
-			return Math.ceil(minValue / stepSize) * stepSize;
+			// always show some negative values for price
+			const start = this.isCo2 ? 0 : stepSize * -11;
+			const minValue = Math.min(start, min);
+			return Math.floor(minValue / stepSize) * stepSize;
 		},
 		optionStepSize() {
 			if (!this.tariff) {
 				return 1;
 			}
 			const { min, max } = this.costRange(this.totalSlots);
-			for (const scale of [0.1, 1, 10, 50, 100, 200, 500, 1000, 2000, 5000, 10000]) {
+			for (const scale of [0.1, 0.5, 1, 10, 50, 100, 200, 500, 1000, 2000, 5000, 10000]) {
 				if (max - Math.min(0, min) < scale) {
 					return scale / 100;
 				}
@@ -225,14 +227,17 @@ export default {
 			this.updateTariff();
 		},
 		smartCostLimit(limit) {
-			this.selectedSmartCostLimit = limit?.toFixed(2);
+			this.selectedSmartCostLimit = this.roundLimit(limit);
 		},
 	},
 	mounted() {
 		this.updateTariff();
-		this.selectedSmartCostLimit = this.smartCostLimit?.toFixed(2);
+		this.selectedSmartCostLimit = this.roundLimit(this.smartCostLimit);
 	},
 	methods: {
+		roundLimit(limit) {
+			return limit ? Math.round(limit * 1000) / 1000 : 0;
+		},
 		updateTariff: async function () {
 			try {
 				this.tariff = (await api.get(`tariff/planner`)).data.result;
