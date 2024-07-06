@@ -30,6 +30,7 @@ type OCPP struct {
 	meterValuesSample string
 	timeout           time.Duration
 	phaseSwitching    bool
+	autoStart         bool
 	chargingRateUnit  types.ChargingRateUnitType
 	lp                loadpoint.API
 }
@@ -53,6 +54,7 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 		BootNotification *bool
 		GetConfiguration *bool
 		ChargingRateUnit string
+		AutoStart        bool
 	}{
 		Connector:        1,
 		IdTag:            defaultIdTag,
@@ -70,7 +72,7 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 
 	c, err := NewOCPP(cc.StationId, cc.Connector, cc.IdTag,
 		cc.MeterValues, cc.MeterInterval,
-		boot, noConfig,
+		boot, noConfig, cc.AutoStart,
 		cc.ConnectTimeout, cc.Timeout, cc.ChargingRateUnit)
 	if err != nil {
 		return c, err
@@ -104,7 +106,7 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 // NewOCPP creates OCPP charger
 func NewOCPP(id string, connector int, idtag string,
 	meterValues string, meterInterval time.Duration,
-	boot, noConfig bool,
+	boot, noConfig, autoStart bool,
 	connectTimeout, timeout time.Duration,
 	chargingRateUnit string,
 ) (*OCPP, error) {
@@ -132,10 +134,11 @@ func NewOCPP(id string, connector int, idtag string,
 	}
 
 	c := &OCPP{
-		log:     log,
-		conn:    conn,
-		idtag:   idtag,
-		timeout: timeout,
+		log:       log,
+		conn:      conn,
+		idtag:     idtag,
+		autoStart: autoStart,
+		timeout:   timeout,
 	}
 
 	c.log.DEBUG.Printf("waiting for chargepoint: %v", connectTimeout)
@@ -287,6 +290,13 @@ func (c *OCPP) hasMeasurement(val types.Measurand) bool {
 	return slices.Contains(strings.Split(c.meterValuesSample, ","), string(val))
 }
 
+func (c *OCPP) effectiveIdTag() string {
+	if idtag := c.conn.IdTag(); idtag != "" {
+		return idtag
+	}
+	return c.idtag
+}
+
 // configure updates CP configuration
 func (c *OCPP) configure(key, val string) error {
 	rc := make(chan error, 1)
@@ -325,8 +335,26 @@ func (c *OCPP) Enabled() (bool, error) {
 	return c.enabled, nil
 }
 
-// Enable implements the api.Charger interface
+// enableAutostart controls standing session by current only
+func (c *OCPP) enableAutostart(enable bool) error {
+	var current float64
+	if enable {
+		current = c.current
+	}
+
+	err := c.updatePeriod(current)
+	if err == nil {
+		c.enabled = enable
+	}
+
+	return err
+}
+
 func (c *OCPP) Enable(enable bool) (err error) {
+	if c.autoStart {
+		return c.enableAutostart(enable)
+	}
+
 	rc := make(chan error, 1)
 	txn, err := c.conn.TransactionID()
 
@@ -348,7 +376,7 @@ func (c *OCPP) Enable(enable bool) (err error) {
 			}
 
 			rc <- err
-		}, c.idtag, func(request *core.RemoteStartTransactionRequest) {
+		}, c.effectiveIdTag(), func(request *core.RemoteStartTransactionRequest) {
 			connector := c.conn.ID()
 			request.ConnectorId = &connector
 			request.ChargingProfile = c.getTxChargingProfile(c.current, 0)
