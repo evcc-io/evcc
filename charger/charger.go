@@ -41,9 +41,7 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Charger, error
 		Energy *provider.Config
 
 		// phase values, currently not supported (https://github.com/evcc-io/evcc/pull/14546)
-		// Currents []provider.Config
-		// Voltages []provider.Config
-		// Powers   []provider.Config
+		// Currents, Voltages, Powers []provider.Config
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
