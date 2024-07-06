@@ -101,7 +101,8 @@ func TestSyncChargerCurrentsByMeasurement(t *testing.T) {
 		{6, 5, 6}, // ignore
 		{6, 6.1, 6},
 		{6, 6.5, 6},
-		{6, 7, 7},
+		{6, 7, 6}, // ignore
+		{6, 7.1, 7.1},
 	}
 
 	for _, tc := range tc {
