@@ -92,13 +92,13 @@ describe("plan", () => {
   test("active if target time is set, status is charging and planned slot is active", () => {
     expectEntries(
       { planProjectedEnd, planActive: true, charging: true, connected: true },
-      { charger: "main.vehicleStatus.charging", planactive: true }
+      { charger: "main.vehicleStatus.charging", planactive: "Mo 06:00" }
     );
   });
   test("waiting for vehicle if a target time is set, the charger is enabled but not charging", () => {
     expectEntries(
       { planProjectedEnd, planActive: true, enabled: true, connected: true },
-      { charger: "main.vehicleStatus.waitForVehicle", planactive: true }
+      { charger: "main.vehicleStatus.waitForVehicle", planactive: "Mo 06:00" }
     );
   });
   test("show projected start if not enabled yet", () => {
@@ -140,17 +140,17 @@ describe("climating", () => {
   test("show climating status", () => {
     expectEntries(
       { connected: true, enabled: true, vehicleClimaterActive: true, charging: true },
-      { charger: "main.vehicleStatus.charging", climater: "on" }
+      { charger: "main.vehicleStatus.charging", climater: true }
     );
     expectEntries(
       { connected: true, enabled: true, vehicleClimaterActive: true, charging: false },
-      { charger: "main.vehicleStatus.waitForVehicle", climater: "on" }
+      { charger: "main.vehicleStatus.waitForVehicle", climater: true }
     );
   });
   test("only show climating if enabled", () => {
     expectEntries(
       { connected: true, enabled: false, vehicleClimaterActive: true, charging: false },
-      { charger: "main.vehicleStatus.connected", climater: "on" }
+      { charger: "main.vehicleStatus.connected", climater: true }
     );
   });
 });

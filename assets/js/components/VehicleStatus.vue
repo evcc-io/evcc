@@ -1,5 +1,9 @@
 <template>
-	<div class="d-flex justify-content-between gap-4 evcc-gray" data-testid="vehicle-status">
+	<div
+		class="d-flex justify-content-between gap-4 evcc-gray"
+		style="min-height: 24px"
+		data-testid="vehicle-status"
+	>
 		<div class="text-nowrap" data-testid="vehicle-status-charger">{{ chargerStatus }}</div>
 		<div class="d-flex flex-wrap justify-content-end gap-3">
 			<!-- pv/phase timer -->
@@ -265,8 +269,8 @@ export default {
 			return this.$t(`main.vehicleStatus.${this.phaseAction}`);
 		},
 		vehicleLimitVisible() {
-			const limit = Math.max(this.vehicleLimitSoc, this.effectiveLimitSoc) || 100;
-			return this.vehicleLimitSoc > 0 && this.vehicleLimitSoc <= limit;
+			const limit = this.effectiveLimitSoc || 100;
+			return this.vehicleLimitSoc > 0 && this.vehicleLimitSoc < limit;
 		},
 		vehicleLimitTooltipContent() {
 			if (!this.vehicleLimitVisible) {
@@ -600,7 +604,6 @@ export default {
 			);
 		},
 		updateTooltip: function (instance, content, ref, hoverOnly = false) {
-			console.log("updateTooltip", { instance, content, ref, hoverOnly });
 			if (!content || !ref) {
 				if (instance) {
 					instance.dispose();
