@@ -23,7 +23,7 @@ func init() {
 	registry.Add(api.Custom, NewConfigurableFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateCustom -b *Charger -r api.Charger -t "api.ChargerEx,MaxCurrentMillis,func(float64) error" -t "api.Identifier,Identify,func() (string, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.Resurrector,WakeUp,func() error" -t "api.Battery,Soc,func() (float64, error)" -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.PhasePowers,Powers,func() (float64, float64, float64, error)"
+//go:generate go run ../cmd/tools/decorate.go -f decorateCustom -b *Charger -r api.Charger -t "api.ChargerEx,MaxCurrentMillis,func(float64) error" -t "api.Identifier,Identify,func() (string, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.Resurrector,WakeUp,func() error" -t "api.Battery,Soc,func() (float64, error)" -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)"
 
 // NewConfigurableFromConfig creates a new configurable charger
 func NewConfigurableFromConfig(other map[string]interface{}) (api.Charger, error) {
@@ -37,11 +37,13 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Charger, error
 		Tos                                 bool
 
 		// optional measurements
-		Power    *provider.Config
-		Energy   *provider.Config
-		Currents []provider.Config
-		Voltages []provider.Config
-		Powers   []provider.Config
+		Power  *provider.Config
+		Energy *provider.Config
+
+		// phase values, currently not supported (https://github.com/evcc-io/evcc/pull/14546)
+		// Currents []provider.Config
+		// Voltages []provider.Config
+		// Powers   []provider.Config
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -132,12 +134,12 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Charger, error
 	}
 
 	// decorate measurements
-	powerG, energyG, currentsG, voltagesG, powersG, err := meter.BuildMeasurements(cc.Power, cc.Energy, cc.Currents, cc.Voltages, cc.Powers)
+	powerG, energyG, _, _, _, err := meter.BuildMeasurements(cc.Power, cc.Energy, nil, nil, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	return decorateCustom(c, maxcurrentmillis, identify, phases1p3p, wakeup, soc, powerG, energyG, currentsG, voltagesG, powersG), nil
+	return decorateCustom(c, maxcurrentmillis, identify, phases1p3p, wakeup, soc, powerG, energyG), nil
 }
 
 // NewConfigurable creates a new charger

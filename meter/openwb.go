@@ -73,7 +73,7 @@ func NewOpenWBFromConfig(other map[string]interface{}) (api.Meter, error) {
 			curr[i] = current
 		}
 
-		currents = CollectPhaseProviders(curr)
+		currents = collectPhaseProviders(curr)
 
 	case "pv":
 		// first pv

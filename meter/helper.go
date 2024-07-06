@@ -40,17 +40,17 @@ func BuildMeasurements(
 		}
 	}
 
-	currentsG, err := BuildPhaseProviders(currents)
+	currentsG, err := buildPhaseProviders(currents)
 	if err != nil {
 		return nil, nil, nil, nil, nil, fmt.Errorf("currents: %w", err)
 	}
 
-	voltagesG, err := BuildPhaseProviders(voltages)
+	voltagesG, err := buildPhaseProviders(voltages)
 	if err != nil {
 		return nil, nil, nil, nil, nil, fmt.Errorf("voltages: %w", err)
 	}
 
-	powersG, err := BuildPhaseProviders(powers)
+	powersG, err := buildPhaseProviders(powers)
 	if err != nil {
 		return nil, nil, nil, nil, nil, fmt.Errorf("powers: %w", err)
 	}
@@ -58,8 +58,8 @@ func BuildMeasurements(
 	return powerG, energyG, currentsG, voltagesG, powersG, nil
 }
 
-// BuildPhaseProviders returns phases getter for given config
-func BuildPhaseProviders(providers []provider.Config) (func() (float64, float64, float64, error), error) {
+// buildPhaseProviders returns phases getter for given config
+func buildPhaseProviders(providers []provider.Config) (func() (float64, float64, float64, error), error) {
 	if len(providers) == 0 {
 		return nil, nil
 	}
@@ -78,11 +78,11 @@ func BuildPhaseProviders(providers []provider.Config) (func() (float64, float64,
 		phases[idx] = c
 	}
 
-	return CollectPhaseProviders(phases), nil
+	return collectPhaseProviders(phases), nil
 }
 
-// CollectPhaseProviders combines phase getters into combined api function
-func CollectPhaseProviders(g [3]func() (float64, error)) func() (float64, float64, float64, error) {
+// collectPhaseProviders combines phase getters into combined api function
+func collectPhaseProviders(g [3]func() (float64, error)) func() (float64, float64, float64, error) {
 	return func() (float64, float64, float64, error) {
 		var res [3]float64
 		for idx, currentG := range g {

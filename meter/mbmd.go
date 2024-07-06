@@ -165,7 +165,7 @@ func (m *ModbusMbmd) buildPhaseProviders(readings []string) (func() (float64, fl
 		}
 	}
 
-	return CollectPhaseProviders(phases), nil
+	return collectPhaseProviders(phases), nil
 }
 
 // floatGetter executes configured modbus read operation and implements func() (float64, error)
