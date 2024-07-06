@@ -8,26 +8,13 @@ import (
 )
 
 // BuildMeasurements returns typical meter measurement getters from config
-func BuildMeasurements(
-	power *provider.Config,
-	energy *provider.Config,
-	currents []provider.Config,
-	voltages []provider.Config,
-	powers []provider.Config,
-) (
-	func() (float64, error),
-	func() (float64, error),
-	func() (float64, float64, float64, error),
-	func() (float64, float64, float64, error),
-	func() (float64, float64, float64, error),
-	error,
-) {
+func BuildMeasurements(power, energy *provider.Config) (func() (float64, error), func() (float64, error), error) {
 	var powerG func() (float64, error)
 	if power != nil {
 		var err error
 		powerG, err = provider.NewFloatGetterFromConfig(*power)
 		if err != nil {
-			return nil, nil, nil, nil, nil, fmt.Errorf("power: %w", err)
+			return nil, nil, fmt.Errorf("power: %w", err)
 		}
 	}
 
@@ -36,26 +23,36 @@ func BuildMeasurements(
 		var err error
 		energyG, err = provider.NewFloatGetterFromConfig(*energy)
 		if err != nil {
-			return nil, nil, nil, nil, nil, fmt.Errorf("energy: %w", err)
+			return nil, nil, fmt.Errorf("energy: %w", err)
 		}
 	}
 
+	return powerG, energyG, nil
+}
+
+// BuildPhaseMeasurements returns typical meter measurement getters from config
+func BuildPhaseMeasurements(currents, voltages, powers []provider.Config) (
+	func() (float64, float64, float64, error),
+	func() (float64, float64, float64, error),
+	func() (float64, float64, float64, error),
+	error,
+) {
 	currentsG, err := buildPhaseProviders(currents)
 	if err != nil {
-		return nil, nil, nil, nil, nil, fmt.Errorf("currents: %w", err)
+		return nil, nil, nil, fmt.Errorf("currents: %w", err)
 	}
 
 	voltagesG, err := buildPhaseProviders(voltages)
 	if err != nil {
-		return nil, nil, nil, nil, nil, fmt.Errorf("voltages: %w", err)
+		return nil, nil, nil, fmt.Errorf("voltages: %w", err)
 	}
 
 	powersG, err := buildPhaseProviders(powers)
 	if err != nil {
-		return nil, nil, nil, nil, nil, fmt.Errorf("powers: %w", err)
+		return nil, nil, nil, fmt.Errorf("powers: %w", err)
 	}
 
-	return powerG, energyG, currentsG, voltagesG, powersG, nil
+	return currentsG, voltagesG, powersG, nil
 }
 
 // buildPhaseProviders returns phases getter for given config
