@@ -13,10 +13,10 @@
 			{{ $t("main.targetCharge.costLimitIgnore", { limit: costLimitText }) }}
 		</span>
 		<span v-if="notReachableInTime" class="d-block text-warning mb-1">
-			{{ $t("main.targetCharge.notReachableInTime", { endTime: endTimeFmt }) }}
+			{{ $t("main.targetCharge.notReachableInTime", { overrun: overrunFmt }) }}
 		</span>
-		<span v-if="targetIsAboveVehicleLimit" class="d-block text-danger mb-1">
-			{{ $t("main.targetCharge.targetIsAboveVehicleLimit", { limit: vehicleLimitFmt }) }}
+		<span v-if="targetIsAboveVehicleLimit" class="d-block text-warning mb-1">
+			{{ $t("main.targetCharge.targetIsAboveVehicleLimit") }}
 		</span>
 	</p>
 </template>
@@ -45,6 +45,7 @@ export default {
 		tariff: Object,
 		plan: Object,
 		vehicleLimitSoc: Number,
+		planOverrun: Number,
 	},
 	computed: {
 		endTime: function () {
@@ -54,11 +55,11 @@ export default {
 			const { plan } = this.plan;
 			return plan[plan.length - 1].end;
 		},
-		endTimeFmt: function () {
-			if (!this.endTime) {
+		overrunFmt: function () {
+			if (!this.planOverrun) {
 				return "";
 			}
-			return this.fmtAbsoluteDate(new Date(this.endTime));
+			return this.fmtDuration(this.planOverrun, true, "m");
 		},
 		timeTooFarInTheFuture: function () {
 			if (!this.effectivePlanTime) {
@@ -100,9 +101,6 @@ export default {
 				return this.fmtSoc(this.effectiveLimitSoc);
 			}
 			return this.fmtKWh(this.limitEnergy * 1e3);
-		},
-		vehicleLimitFmt: function () {
-			return this.fmtSoc(this.vehicleLimitSoc);
 		},
 		goalFmt: function () {
 			if (this.socBasedPlanning) {

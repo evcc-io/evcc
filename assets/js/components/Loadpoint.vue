@@ -12,11 +12,15 @@
 						{{ loadpointTitle }}
 					</div>
 				</h3>
-				<LoadpointSettingsButton :id="id" class="d-block d-sm-none" />
+				<LoadpointSettingsButton class="d-block d-sm-none" @click="openSettingsModal" />
 			</div>
 			<div class="mb-3 d-flex align-items-center">
 				<Mode class="flex-grow-1" v-bind="modeProps" @updated="setTargetMode" />
-				<LoadpointSettingsButton :id="id" class="d-none d-sm-block ms-2" />
+				<LoadpointSettingsButton
+					:id="id"
+					class="d-none d-sm-block ms-2"
+					@click="openSettingsModal"
+				/>
 			</div>
 		</div>
 		<LoadpointSettingsModal
@@ -80,6 +84,7 @@
 			@limit-energy-updated="setLimitEnergy"
 			@change-vehicle="changeVehicle"
 			@remove-vehicle="removeVehicle"
+			@open-loadpoint-settings="openSettingsModal"
 		/>
 	</div>
 </template>
@@ -99,6 +104,7 @@ import LoadpointSettingsModal from "./LoadpointSettingsModal.vue";
 import VehicleIcon from "./VehicleIcon";
 import LoadpointSessionInfo from "./LoadpointSessionInfo.vue";
 import smartCostAvailable from "../utils/smartCostAvailable";
+import Modal from "bootstrap/js/dist/modal";
 
 export default {
 	name: "Loadpoint",
@@ -152,6 +158,7 @@ export default {
 		vehicles: Array,
 		planActive: Boolean,
 		planProjectedStart: String,
+		planProjectedEnd: String,
 		planOverrun: Number,
 		planEnergy: Number,
 		planTime: String,
@@ -186,6 +193,7 @@ export default {
 		smartCostLimit: { type: Number, default: 0 },
 		smartCostType: String,
 		smartCostActive: Boolean,
+		smartCostNextStart: String,
 		tariffGrid: Number,
 		tariffCo2: Number,
 		currency: String,
@@ -333,6 +341,12 @@ export default {
 		fmtEnergy(value) {
 			const inKw = value == 0 || value >= 1000;
 			return this.fmtKWh(value, inKw);
+		},
+		openSettingsModal() {
+			const modal = Modal.getOrCreateInstance(
+				document.getElementById(`loadpointSettingsModal_${this.id}`)
+			);
+			modal.show();
 		},
 	},
 };
