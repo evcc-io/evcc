@@ -64,13 +64,13 @@ func NewOpenWBFromConfig(other map[string]interface{}) (api.Meter, error) {
 			return nil, err
 		}
 
-		var curr []func() (float64, error)
-		for i := 1; i <= 3; i++ {
-			current, err := to.FloatGetter(mq("%s/evu/%s%d", cc.Topic, openwb.CurrentTopic, i))
+		var curr [3]func() (float64, error)
+		for i := 0; i < 3; i++ {
+			current, err := to.FloatGetter(mq("%s/evu/%s%d", cc.Topic, openwb.CurrentTopic, i+1))
 			if err != nil {
 				return nil, err
 			}
-			curr = append(curr, current)
+			curr[i] = current
 		}
 
 		currents = collectPhaseProviders(curr)

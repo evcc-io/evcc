@@ -2,12 +2,12 @@ import { test, expect } from "@playwright/test";
 import { start, stop, restart, baseUrl } from "./evcc";
 import { startSimulator, stopSimulator, simulatorUrl, simulatorHost } from "./simulator";
 
-const CONFIG_EMPTY = "config-empty.evcc.yaml";
+const CONFIG_GRID_ONLY = "config-grid-only.evcc.yaml";
 
 test.use({ baseURL: baseUrl() });
 
 test.beforeAll(async () => {
-  await start(CONFIG_EMPTY, "password.sql");
+  await start(CONFIG_GRID_ONLY, "password.sql");
   await startSimulator();
 });
 test.afterAll(async () => {
@@ -29,7 +29,7 @@ async function enableExperimental(page) {
   await page.getByRole("button", { name: "Close" }).click();
 }
 
-test.describe("meters", async () => {
+test.describe("battery meter", async () => {
   test("create, edit and remove battery meter", async ({ page }) => {
     // setup test data for mock openems api
     await page.goto(simulatorUrl());
@@ -71,7 +71,7 @@ test.describe("meters", async () => {
     await expect(battery.getByTestId("device-tag-capacity")).toContainText("20.0 kWh");
 
     // restart and check in main ui
-    await restart(CONFIG_EMPTY);
+    await restart(CONFIG_GRID_ONLY);
     await page.goto("/");
     await page.getByTestId("visualization").click();
     await expect(page.getByTestId("energyflow")).toContainText("Battery charging75%2.5 kW");

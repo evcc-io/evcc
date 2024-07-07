@@ -63,7 +63,7 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Publish
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: .
           platforms: linux/amd64,linux/arm64,linux/arm/v6
@@ -103,7 +103,7 @@ jobs:
           key: ${{ runner.os }}-${{ github.sha }}-dist
 
       - name: Create nightly build
-        uses: goreleaser/goreleaser-action@v5
+        uses: goreleaser/goreleaser-action@v6
         with:
           version: latest
           args: --snapshot -f .goreleaser-nightly.yml --clean

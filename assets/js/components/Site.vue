@@ -29,6 +29,8 @@
 				:tariffGrid="tariffGrid"
 				:tariffCo2="tariffCo2"
 				:currency="currency"
+				:gridConfigured="gridConfigured"
+				:pvConfigured="pvConfigured"
 			/>
 			<Footer v-bind="footer"></Footer>
 		</div>
@@ -99,7 +101,6 @@ export default {
 		uploadProgress: Number,
 		sponsor: { type: Object, default: () => ({}) },
 		smartCostType: String,
-		smartCostActive: Boolean,
 		fatal: Object,
 	},
 	computed: {

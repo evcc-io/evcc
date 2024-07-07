@@ -88,6 +88,7 @@ func (conn *Connector) StartTransaction(request *core.StartTransactionRequest) (
 
 	conn.txnCount++
 	conn.txnId = conn.txnCount
+	conn.idTag = request.IdTag
 
 	res := &core.StartTransactionConfirmation{
 		IdTagInfo: &types.IdTagInfo{

@@ -12,6 +12,9 @@ products:
   - brand: Weidmüller
     description:
       generic: EM122-RTU-2P
+  - brand: Kostal
+    description:
+      generic: Energy Meter P (KEM-P)
 params:
   - name: usage
     choice: ["grid", "charge"]

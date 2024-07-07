@@ -463,6 +463,7 @@ minpv = "Min+Sol"
 now = "Hurtig"
 off = "Fra"
 pv = "Sol"
+smart = "Smart"
 
 [main.provider]
 login = "Log på"

@@ -703,10 +703,17 @@ func (lp *Loadpoint) syncCharger() error {
 
 	// #2: sync charger
 	switch {
-	case enabled == lp.enabled:
+	case enabled && lp.enabled:
 		// sync max current
-		if charger, ok := lp.charger.(api.CurrentGetter); ok && enabled {
-			if current, err := charger.GetMaxCurrent(); err == nil {
+		var (
+			current float64
+			err     error
+		)
+
+		// use chargers actual set current if available
+		cg, isCg := lp.charger.(api.CurrentGetter)
+		if isCg {
+			if current, err = cg.GetMaxCurrent(); err == nil {
 				// smallest adjustment most PWM-Controllers can do is: 100%÷256×0,6A = 0.234A
 				if math.Abs(lp.chargeCurrent-current) > 0.23 {
 					if shouldBeConsistent {
@@ -720,18 +727,53 @@ func (lp *Loadpoint) syncCharger() error {
 			}
 		}
 
-		// sync phases
-		phases := lp.GetPhases()
-		if ps, ok := lp.charger.(api.PhaseGetter); ok && enabled && shouldBeConsistent && phases > 0 {
-			if chargerPhases, err := ps.GetPhases(); err == nil {
-				if chargerPhases != phases {
-					lp.log.WARN.Printf("charger logic error: phases mismatch (got %d, expected %d)", chargerPhases, phases)
-					lp.setPhases(chargerPhases)
+		// use measured phase currents as fallback if charger does not provide max current or does not currently relay from vehicle (TWC3)
+		if !isCg || errors.Is(err, api.ErrNotAvailable) {
+			// validate if current too high by more than 1A (https://github.com/evcc-io/evcc/issues/14731)
+			if current := lp.GetMaxPhaseCurrent(); current > lp.chargeCurrent+1.0 {
+				if shouldBeConsistent {
+					lp.log.WARN.Printf("charger logic error: current mismatch (got %.3gA measured, expected %.3gA)", current, lp.chargeCurrent)
 				}
-			} else if !errors.Is(err, api.ErrNotAvailable) {
-				return fmt.Errorf("charger get phases: %w", err)
+				lp.chargeCurrent = current
+				lp.bus.Publish(evChargeCurrent, lp.chargeCurrent)
 			}
 		}
+
+		// sync phases
+		_, isPs := lp.charger.(api.PhaseSwitcher)
+		if phases := lp.GetPhases(); isPs && shouldBeConsistent && phases > 0 {
+			// fallback to active phases from measured phases
+			chargerPhases := lp.measuredPhases
+			if chargerPhases == 2 {
+				chargerPhases = 3
+			}
+
+			pg, isPg := lp.charger.(api.PhaseGetter)
+			if isPg {
+				if chargerPhases, err = pg.GetPhases(); err == nil {
+					if chargerPhases > 0 && chargerPhases != phases {
+						lp.log.WARN.Printf("charger logic error: phases mismatch (got %d, expected %d)", chargerPhases, phases)
+						lp.setPhases(chargerPhases)
+					}
+				} else {
+					if errors.Is(err, api.ErrNotAvailable) {
+						return nil
+					}
+					return fmt.Errorf("charger get phases: %w", err)
+				}
+			}
+
+			// use measured phase currents for active phases as fallback if charger does not provide phases
+			if !isPg || errors.Is(err, api.ErrNotAvailable) {
+				if chargerPhases > phases {
+					lp.log.WARN.Printf("charger logic error: phases mismatch (got %d measured, expected %d)", chargerPhases, phases)
+					lp.setPhases(chargerPhases)
+				}
+			}
+		}
+
+	case enabled == lp.enabled:
+		// sync disabled state
 
 	case !enabled && !lp.phaseSwitchCompleted():
 		// some chargers (i.E. Easee in some configurations) disable themselves to be able to switch phases
@@ -1573,8 +1615,9 @@ func (lp *Loadpoint) phaseSwitchCompleted() bool {
 }
 
 // Update is the main control function. It reevaluates meters and charger state
-func (lp *Loadpoint) Update(sitePower float64, autoCharge, batteryBuffered, batteryStart bool, greenShare float64, effPrice, effCo2 *float64) {
-	lp.publish(keys.SmartCostActive, autoCharge)
+func (lp *Loadpoint) Update(sitePower float64, smartCostActive bool, smartCostNextStart time.Time, batteryBuffered, batteryStart bool, greenShare float64, effPrice, effCo2 *float64) {
+	lp.publish(keys.SmartCostActive, smartCostActive)
+	lp.publish(keys.SmartCostNextStart, smartCostNextStart)
 	lp.processTasks()
 
 	// read and publish meters first- charge power and currents have already been updated by the site
@@ -1670,7 +1713,7 @@ func (lp *Loadpoint) Update(sitePower float64, autoCharge, batteryBuffered, batt
 
 	case mode == api.ModeMinPV || mode == api.ModePV:
 		// cheap tariff
-		if autoCharge && lp.EffectivePlanTime().IsZero() {
+		if smartCostActive && lp.EffectivePlanTime().IsZero() {
 			err = lp.fastCharging()
 			lp.resetPhaseTimer()
 			lp.elapsePVTimer() // let PV mode disable immediately afterwards

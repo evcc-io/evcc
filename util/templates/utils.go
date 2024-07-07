@@ -59,5 +59,5 @@ func FuncMap(tmpl *template.Template) *template.Template {
 		"urlEncode": url.QueryEscape,
 	}
 
-	return tmpl.Funcs(sprout.TxtFuncMap()).Funcs(funcMap)
+	return tmpl.Funcs(sprout.FuncMap()).Funcs(funcMap)
 }

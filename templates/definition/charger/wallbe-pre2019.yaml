@@ -9,7 +9,6 @@ requirements:
   description:
     en: DIP switch 10 must be set to 'ON'.
     de: Im Gerät muss der DIP Schalter 10 auf 'ON' gestellt sein.
-  uri: https://docs.evcc.io/docs/devices/chargers#eco-pro-vor-2019
 params:
   - name: host
   - name: port

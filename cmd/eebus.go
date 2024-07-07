@@ -42,7 +42,7 @@ func generateEEBUSCert() {
 		log.FATAL.Fatal("could not process generated certificate", err)
 	}
 
-	t := template.Must(template.New("out").Funcs(sprout.TxtFuncMap()).Parse(tmpl))
+	t := template.Must(template.New("out").Funcs(sprout.FuncMap()).Parse(tmpl))
 	if err := t.Execute(os.Stdout, map[string]interface{}{
 		"public":  pubKey,
 		"private": privKey,

@@ -468,6 +468,7 @@ minpv = "Min+Saulė"
 now = "Greitas"
 off = "Stop"
 pv = "Saulė"
+smart = "Išmanus"
 
 [main.provider]
 login = "prisijungti"

@@ -1,0 +1,60 @@
+template: ac-elwa-2
+products:
+  - brand: my-PV
+    description:
+      generic: AC ELWA 2
+params:
+  - name: modbus
+    choice: ["tcpip"]
+render: |
+  type: custom
+  enable:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 1000
+      type: writeholding
+      decode: uint16
+  enabled:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 1000
+      type: holding
+      decode: uint16
+  maxcurrent:
+    source: go
+    script: |
+      230 * maxcurrent
+    out:
+      - name: power
+        type: int
+        config:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 1000
+            type: writeholding
+            decode: uint16
+  status:
+    source: combined
+    plugged:
+      source: const
+      value: 1
+    charging:
+      source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 1074 # alternativ 1003 mit bit pattern
+        type: holding
+        decode: uint16
+  soc:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 1001
+      type: holding
+      decode: uint16
+    scale: 0.1
+  features: ["integrateddevice", "heating"]
+  icon: waterheater
