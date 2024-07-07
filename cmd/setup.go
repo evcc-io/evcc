@@ -300,7 +300,7 @@ func configureMeters(static []config.Named, names ...string) error {
 		})
 	}
 
-	return nil
+	return g.Wait()
 }
 
 func configureChargers(static []config.Named, names ...string) error {
