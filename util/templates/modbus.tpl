@@ -15,7 +15,7 @@ uri: {{ .host }}:{{ .port }}
 rtu: false
 {{- else if or (eq .modbus "udp") .udp }}
 # Modbus UDP
-uri: {{ .host }}:{{ .port }}
+uri: {{ .host }}:{{ if (ne .port "502") }}{{ .port }}{{ else }}8899{{ end }}
 udp: true
 rtu: true
 {{- else }}
