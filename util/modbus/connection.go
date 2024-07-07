@@ -28,14 +28,14 @@ func (c *Connection) Clone(slaveID uint8) *Connection {
 	}
 }
 
-// TODO
+// TODO resolve conflicts
 func (c *Connection) ConnectDelay(delay time.Duration) {
 	if delay > 0 {
 		c.Connection.ConnectDelay(delay)
 	}
 }
 
-// TODO
+// TODO resolve conflicts
 func (c *Connection) Timeout(timeout time.Duration) {
 	if timeout > 0 {
 		_ = c.Connection.Timeout(timeout)
