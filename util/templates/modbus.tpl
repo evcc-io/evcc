@@ -17,7 +17,7 @@ rtu: false
 # Modbus UDP
 uri: {{ .host }}:{{ .port }}
 udp: true
-rtu: false
+rtu: true
 {{- else }}
 # configuration error - should not happen
 modbusConnectionTypeNotDefined: {{ .modbus }}

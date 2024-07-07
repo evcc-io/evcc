@@ -18,6 +18,7 @@ const (
 	Tcp Protocol = iota
 	Rtu
 	Ascii
+	Udp
 
 	CoilOn uint16 = 0xFF00
 )
@@ -39,6 +40,18 @@ type Settings struct {
 	Baudrate            int
 	UDP                 bool
 	RTU                 *bool // indicates RTU over TCP if true
+}
+
+// Protocol identifies the wire format from the RTU setting
+func (s Settings) Protocol() Protocol {
+	switch {
+	case s.UDP:
+		return Udp
+	case s.RTU != nil && *s.RTU:
+		return Rtu
+	default:
+		return Tcp
+	}
 }
 
 func (s *Settings) String() string {
@@ -64,14 +77,6 @@ func registeredConnection(key string, newConn meters.Connection) meters.Connecti
 	connections[key] = newConn
 
 	return newConn
-}
-
-// ProtocolFromRTU identifies the wire format from the RTU setting
-func ProtocolFromRTU(rtu *bool) Protocol {
-	if rtu != nil && *rtu {
-		return Rtu
-	}
-	return Tcp
 }
 
 // NewConnection creates physical modbus device from config
@@ -125,12 +130,10 @@ func physicalConnection(proto Protocol, cfg Settings) (meters.Connection, error)
 		cfg.URI = util.DefaultPort(cfg.URI, 502)
 
 		switch proto {
+		case Udp:
+			conn = registeredConnection(cfg.URI, meters.NewRTUOverUDP(cfg.URI))
 		case Rtu:
-			if cfg.UDP {
-				conn = registeredConnection(cfg.URI, meters.NewRTUOverUDP(cfg.URI))
-			} else {
-				conn = registeredConnection(cfg.URI, meters.NewRTUOverTCP(cfg.URI))
-			}
+			conn = registeredConnection(cfg.URI, meters.NewRTUOverTCP(cfg.URI))
 		case Ascii:
 			conn = registeredConnection(cfg.URI, meters.NewASCIIOverTCP(cfg.URI))
 		default:

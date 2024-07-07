@@ -60,7 +60,7 @@ func NewModbusMbmdFromConfig(other map[string]interface{}) (api.Meter, error) {
 	modbus.Lock()
 	defer modbus.Unlock()
 
-	conn, err := modbus.NewConnection(cc.URI, cc.Device, cc.Comset, cc.Baudrate, modbus.ProtocolFromRTU(cc.RTU), cc.ID)
+	conn, err := modbus.NewConnection(cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Settings.Protocol(), cc.ID)
 	if err != nil {
 		return nil, err
 	}
