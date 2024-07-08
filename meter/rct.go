@@ -44,8 +44,9 @@ meters:
 // RCT implements the api.Meter interface
 type RCT struct {
 	bo    *backoff.ExponentialBackOff
-	conn  *rct.Connection // connection with the RCT device
-	usage string          // grid, pv, battery
+	usage string // grid, pv, battery
+	uri   string
+	cache time.Duration
 }
 
 func init() {
@@ -82,19 +83,15 @@ func NewRCT(uri, usage string, cache time.Duration, capacity func() float64) (ap
 	rctMu.Lock()
 	defer rctMu.Unlock()
 
-	conn, err := rct.NewConnection(uri, cache)
-	if err != nil {
-		return nil, err
-	}
-
 	bo := backoff.NewExponentialBackOff()
 	bo.InitialInterval = 10 * time.Millisecond
 	bo.MaxElapsedTime = time.Second
 
 	m := &RCT{
 		usage: strings.ToLower(usage),
-		conn:  conn,
 		bo:    bo,
+		uri:   uri,
+		cache: cache,
 	}
 
 	// decorate api.MeterEnergy
@@ -174,10 +171,15 @@ func (m *RCT) batterySoc() (float64, error) {
 
 // queryFloat adds retry logic of recoverable errors to QueryFloat32
 func (m *RCT) queryFloat(id rct.Identifier) (float64, error) {
+	conn, err := rct.NewConnection(m.uri, m.cache)
+	if err != nil {
+		return 0, err
+	}
+	defer conn.Close()
 	m.bo.Reset()
 
 	res, err := backoff.RetryWithData(func() (float32, error) {
-		res, err := m.conn.QueryFloat32(id)
+		res, err := conn.QueryFloat32(id)
 		if err != nil && !errors.As(err, new(rct.RecoverableError)) {
 			err = backoff.Permanent(err)
 		}
