@@ -407,6 +407,11 @@ func (c *EEBus) writeCurrentLimitData(currents []float64) error {
 		return errors.New("no ev connected")
 	}
 
+	// check if the EVSE supports overload protection limits
+	if !c.uc.OpEV.IsScenarioAvailableAtEntity(evEntity, 1) {
+		return api.ErrNotAvailable
+	}
+
 	_, maxLimits, _, err := c.uc.OpEV.CurrentLimits(evEntity)
 	if err != nil {
 		return errors.New("no limits available")
@@ -533,6 +538,11 @@ func (c *EEBus) writeLoadControlLimitsVASVW(limits []ucapi.LoadLimitsPhase) bool
 		return false
 	}
 
+	// check if the EVSE supports optimization of self consumption limits
+	if !c.uc.OscEV.IsScenarioAvailableAtEntity(evEntity, 1) {
+		return false
+	}
+
 	// on OSCEV all limits have to be active except they are set to the default value
 	minLimit, _, _, err := c.uc.OscEV.CurrentLimits(evEntity)
 	if err != nil {
@@ -610,12 +620,32 @@ func (c *EEBus) currentPower() (float64, error) {
 
 	connectedPhases, err := c.uc.EvCem.PhasesConnected(evEntity)
 	if err != nil {
-		return 0, err
+		return 0, api.ErrNotAvailable
 	}
 
-	powers, err := c.uc.EvCem.PowerPerPhase(evEntity)
-	if err != nil {
-		return 0, err
+	var powers []float64
+
+	// does the EVSE provide power data?
+	if c.uc.EvCem.IsScenarioAvailableAtEntity(evEntity, 2) {
+		// is power data available for real? Elli Gen1 says it supports it, but doesn't provide any data
+		if powerData, err := c.uc.EvCem.PowerPerPhase(evEntity); err == nil {
+			powers = powerData
+		}
+	}
+
+	// if no power data is available, and currents are reported to be supported, use currents
+	if len(powers) == 0 && c.uc.EvCem.IsScenarioAvailableAtEntity(evEntity, 1) {
+		// no power provided, calculate from current
+		if currents, err := c.uc.EvCem.CurrentPerPhase(evEntity); err == nil {
+			for _, current := range currents {
+				powers = append(powers, current*voltage)
+			}
+		}
+	}
+
+	// if still no power data is available, return an error
+	if len(powers) == 0 {
+		return 0, api.ErrNotAvailable
 	}
 
 	var power float64
@@ -636,9 +666,13 @@ func (c *EEBus) chargedEnergy() (float64, error) {
 		return 0, nil
 	}
 
+	if !c.uc.EvCem.IsScenarioAvailableAtEntity(evEntity, 3) {
+		return 0, api.ErrNotAvailable
+	}
+
 	energy, err := c.uc.EvCem.EnergyCharged(evEntity)
 	if err != nil {
-		return 0, err
+		return 0, api.ErrNotAvailable
 	}
 
 	return energy / 1e3, nil
@@ -649,6 +683,11 @@ func (c *EEBus) currents() (float64, float64, float64, error) {
 	evEntity := c.evEntity()
 	if evEntity == nil {
 		return 0, 0, 0, nil
+	}
+
+	// check if the EVSE supports currents
+	if !c.uc.EvCem.IsScenarioAvailableAtEntity(evEntity, 1) {
+		return 0, 0, 0, api.ErrNotAvailable
 	}
 
 	res, err := c.uc.EvCem.CurrentPerPhase(evEntity)

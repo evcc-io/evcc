@@ -94,14 +94,15 @@ func TestSyncChargerCurrentsByGetter(t *testing.T) {
 
 func TestSyncChargerCurrentsByMeasurement(t *testing.T) {
 	tc := []struct {
-		lpCurrent      float64
-		chargeCurrents []float64
-		outCurrent     float64
+		lpCurrent     float64
+		actualCurrent float64
+		outCurrent    float64
 	}{
-		{6, []float64{5, 0, 0}, 6}, // ignore
-		{6, []float64{6.1, 0, 0}, 6},
-		{6, []float64{6.5, 0, 0}, 6},
-		{6, []float64{7, 0, 0}, 7},
+		{6, 5, 6}, // ignore
+		{6, 6.1, 6},
+		{6, 6.5, 6},
+		{6, 7, 6}, // ignore
+		{6, 7.1, 7.1},
 	}
 
 	for _, tc := range tc {
@@ -120,7 +121,7 @@ func TestSyncChargerCurrentsByMeasurement(t *testing.T) {
 			enabled:        true,
 			phases:         3,
 			chargeCurrent:  tc.lpCurrent,
-			chargeCurrents: tc.chargeCurrents,
+			chargeCurrents: []float64{tc.actualCurrent, 0, 0},
 		}
 
 		require.NoError(t, lp.syncCharger())

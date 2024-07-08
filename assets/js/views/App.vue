@@ -61,8 +61,11 @@ export default {
 				this.reload();
 			}
 		},
-		offline: function () {
+		offline: function (now, prev) {
 			updateAuthStatus();
+			if (now && !prev) {
+				this.reconnect();
+			}
 		},
 	},
 	computed: {
@@ -157,7 +160,6 @@ export default {
 			this.ws.onclose = () => {
 				console.log("websocket disconnected");
 				window.app.setOffline();
-				this.reconnect();
 			};
 			this.ws.onmessage = (evt) => {
 				try {

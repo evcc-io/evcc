@@ -196,3 +196,7 @@ require (
 )
 
 replace gopkg.in/yaml.v3 => github.com/andig/yaml v0.0.0-20240531135838-1ff5761ab467
+
+replace github.com/enbility/eebus-go => github.com/enbility/eebus-go v0.0.0-20240705140947-e13aec8af1ba
+
+replace github.com/enbility/spine-go => github.com/enbility/spine-go v0.0.0-20240705075417-fb2969d753c1

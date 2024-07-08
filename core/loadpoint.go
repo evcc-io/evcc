@@ -731,8 +731,8 @@ func (lp *Loadpoint) syncCharger() error {
 
 		// use measured phase currents as fallback if charger does not provide max current or does not currently relay from vehicle (TWC3)
 		if !isCg || errors.Is(err, api.ErrNotAvailable) {
-			// validate if current too high by at least 1A
-			if current := lp.GetMaxPhaseCurrent(); current >= lp.chargeCurrent+1.0 {
+			// validate if current too high by more than 1A (https://github.com/evcc-io/evcc/issues/14731)
+			if current := lp.GetMaxPhaseCurrent(); current > lp.chargeCurrent+1.0 {
 				if shouldBeConsistent {
 					lp.log.WARN.Printf("charger logic error: current mismatch (got %.3gA measured, expected %.3gA)", current, lp.chargeCurrent)
 				}
@@ -1617,8 +1617,9 @@ func (lp *Loadpoint) phaseSwitchCompleted() bool {
 }
 
 // Update is the main control function. It reevaluates meters and charger state
-func (lp *Loadpoint) Update(sitePower float64, autoCharge, batteryBuffered, batteryStart bool, greenShare float64, effPrice, effCo2 *float64) {
-	lp.publish(keys.SmartCostActive, autoCharge)
+func (lp *Loadpoint) Update(sitePower float64, smartCostActive bool, smartCostNextStart time.Time, batteryBuffered, batteryStart bool, greenShare float64, effPrice, effCo2 *float64) {
+	lp.publish(keys.SmartCostActive, smartCostActive)
+	lp.publish(keys.SmartCostNextStart, smartCostNextStart)
 	lp.processTasks()
 
 	// read and publish meters first- charge power and currents have already been updated by the site
@@ -1714,7 +1715,7 @@ func (lp *Loadpoint) Update(sitePower float64, autoCharge, batteryBuffered, batt
 
 	case mode == api.ModeMinPV || mode == api.ModePV:
 		// cheap tariff
-		if autoCharge && lp.EffectivePlanTime().IsZero() {
+		if smartCostActive && lp.EffectivePlanTime().IsZero() {
 			err = lp.fastCharging()
 			lp.resetPhaseTimer()
 			lp.elapsePVTimer() // let PV mode disable immediately afterwards
