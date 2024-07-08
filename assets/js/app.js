@@ -19,7 +19,7 @@ if (!window.CSS.supports("scroll-behavior", "smooth")) {
 
 const app = createApp({
   data() {
-    return { notifications: [], offline: false };
+    return { notifications: [], offline: true };
   },
   watch: {
     offline: function (value) {
