@@ -12,6 +12,10 @@ function port() {
   return 11000 + index;
 }
 
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 export function baseUrl() {
   return `http://localhost:${port()}`;
 }
@@ -76,6 +80,7 @@ async function _stop(instance) {
     console.log("shutting down evcc hard");
     // hard kill, only use of normal shutdown doesn't work
     instance.kill("SIGKILL");
+    await sleep(300);
     return;
   }
   console.log("shutting down evcc");
