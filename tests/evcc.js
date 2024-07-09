@@ -26,11 +26,11 @@ export async function start(config, sqlDumps) {
   if (sqlDumps) {
     await _restoreDatabase(sqlDumps);
   }
-  await _start(config);
+  return await _start(config);
 }
 
-export async function stop() {
-  await _stop();
+export async function stop(instance) {
+  await _stop(instance);
   await _clean();
 }
 
@@ -68,14 +68,20 @@ async function _start(config) {
     console.log("evcc terminated", code);
   });
   await waitOn({ resources: [baseUrl()] });
+  return instance;
 }
 
-async function _stop() {
+async function _stop(instance) {
   console.log("shutting down evcc");
-  const res = await axios.post(`${baseUrl()}/api/auth/login`, { password: "secret" });
-  console.log(res.status, res.statusText);
-  const cookie = res.headers["set-cookie"];
-  await axios.post(`${baseUrl()}/api/system/shutdown`, {}, { headers: { cookie } });
+  if (instance) {
+    // hard kill, only use of normal shutdown doesn't work
+    instance.kill();
+  } else {
+    const res = await axios.post(`${baseUrl()}/api/auth/login`, { password: "secret" });
+    console.log(res.status, res.statusText);
+    const cookie = res.headers["set-cookie"];
+    await axios.post(`${baseUrl()}/api/system/shutdown`, {}, { headers: { cookie } });
+  }
   console.log("wait until network port is closed");
   await waitOn({ resources: [`tcp:localhost:${port()}`], reverse: true });
   console.log("evcc is down");

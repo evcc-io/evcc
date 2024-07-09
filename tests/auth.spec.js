@@ -41,6 +41,7 @@ test("login", async ({ page }) => {
   await modal.getByLabel("New password").fill("secret");
   await modal.getByLabel("Repeat password").fill("secret");
   await modal.getByRole("button", { name: "Create Password" }).click();
+  await expect(modal).not.toBeVisible();
 
   // go to config
   await page.getByTestId("topnavigation-button").click();
@@ -69,6 +70,7 @@ test("http iframe hint", async ({ page }) => {
   await modal.getByLabel("New password").fill("secret");
   await modal.getByLabel("Repeat password").fill("secret");
   await modal.getByRole("button", { name: "Create Password" }).click();
+  await expect(modal).not.toBeVisible();
 
   // go to config
   await page.getByTestId("topnavigation-button").click();
@@ -101,6 +103,7 @@ test("update password", async ({ page }) => {
   await modal.getByLabel("New password").fill(oldPassword);
   await modal.getByLabel("Repeat password").fill(oldPassword);
   await modal.getByRole("button", { name: "Create Password" }).click();
+  await expect(modal).not.toBeVisible();
 
   // login modal
   page.goto("/#/config");

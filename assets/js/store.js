@@ -19,7 +19,7 @@ function setProperty(obj, props, value) {
 }
 
 const state = reactive({
-  offline: true,
+  offline: false,
   loadpoints: [], // ensure array type
 });
 
