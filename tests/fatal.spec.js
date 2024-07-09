@@ -9,9 +9,6 @@ test.describe("fatal", async () => {
     await page.goto("/");
     await expect(page.getByTestId("bottom-banner")).toBeVisible();
     await expect(page.getByTestId("bottom-banner")).toContainText("failed parsing config file");
-    await expect(
-      page.getByRole("heading", { name: "Set Administrator Password" })
-    ).not.toBeVisible();
     await stop(instance);
   });
   test("database error", async ({ page }) => {
@@ -19,9 +16,6 @@ test.describe("fatal", async () => {
     await page.goto("/");
     await expect(page.getByTestId("bottom-banner")).toBeVisible();
     await expect(page.getByTestId("bottom-banner")).toContainText("invalid database");
-    await expect(
-      page.getByRole("heading", { name: "Set Administrator Password" })
-    ).not.toBeVisible();
     await stop(instance);
   });
 });

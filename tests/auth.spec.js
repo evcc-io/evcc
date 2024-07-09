@@ -110,6 +110,7 @@ test("update password", async ({ page }) => {
   const loginOld = page.getByTestId("login-modal");
   await loginOld.getByLabel("Password").fill(oldPassword);
   await loginOld.getByRole("button", { name: "Login" }).click();
+  await expect(loginOld).not.toBeVisible();
 
   // update password
   await page.getByTestId("generalconfig-password").getByRole("button", { name: "edit" }).click();
