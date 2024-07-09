@@ -29,11 +29,13 @@ const (
 	TariffPriceLoadpoints = "tariffPriceLoadpoints"
 	Vehicles              = "vehicles"
 	Circuits              = "circuits"
+	Log                   = "Log"
 
 	// meters
 	GridMeter     = "gridMeter"
 	PvMeters      = "pvMeters"
 	BatteryMeters = "batteryMeters"
+	LogMeters     = "logMeters"
 	AuxMeters     = "auxMeters"
 
 	// battery settings
