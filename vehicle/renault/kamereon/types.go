@@ -36,9 +36,10 @@ func (v *Vehicle) Available() error {
 		return errors.New("vehicle is not active")
 	}
 
-	if v.ConnectedDriver.Role == "" {
-		return errors.New("vehicle is not connected to driver")
-	}
+	// DEPRECATED
+	// if v.ConnectedDriver.Role == "" {
+	// 	return errors.New("vehicle is not connected to driver")
+	// }
 
 	return nil
 }
