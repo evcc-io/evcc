@@ -1,6 +1,8 @@
 import { reactive, watch } from "vue";
 import api from "./api";
+import store from "./store";
 import Modal from "bootstrap/js/dist/modal";
+import { isSystemError } from "./utils/fatal";
 
 const auth = reactive({
   configured: true,
@@ -9,6 +11,11 @@ const auth = reactive({
 });
 
 export async function updateAuthStatus() {
+  if (store.state.offline || isSystemError(store.state.fatal)) {
+    // system not ready, skip auth check
+    return;
+  }
+
   try {
     const res = await api.get("/auth/status", {
       validateStatus: (code) => [200, 501, 500].includes(code),
@@ -71,5 +78,16 @@ watch(
     configured ? modal.hide() : modal.show();
   }
 );
+
+let timeoutId = null;
+function debounedUpdateAuthStatus() {
+  clearTimeout(timeoutId);
+  timeoutId = setTimeout(() => {
+    updateAuthStatus();
+  }, 500);
+}
+
+watch(() => store.state.offline, debounedUpdateAuthStatus);
+watch(() => store.state.fatal, debounedUpdateAuthStatus);
 
 export default auth;

@@ -2,7 +2,7 @@ package charger
 
 // LICENSE
 
-// Copyright (c) 2019-2023 andig
+// Copyright (c) 2019-2024 andig
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -28,38 +28,41 @@ import (
 	"github.com/volkszaehler/mbmd/meters/rs485"
 )
 
-// https://files2.elv.com/public/25/2522/252210/Internet/252210_modbus_tcp_register.pdf
+// https://www.em2go.de/download2/ModBus TCP Registers EM2GO  Series.pdf
 
 // Em2Go charger implementation
 type Em2Go struct {
+	log  *util.Logger
 	conn *modbus.Connection
 }
 
 const (
 	em2GoRegStatus          = 0   // Uint16 RO ENUM
-	em2goRegConnectorState  = 2   // Uint16 RO ENUM
-	em2goRegErrorCode       = 4   // Uint16 RO ENUM
-	em2GoRegCurrents        = 6   // 3xUint16 RO 0.1A
+	em2GoRegConnectorState  = 2   // Uint16 RO ENUM
+	em2GoRegErrorCode       = 4   // Uint16 RO ENUM
+	em2GoRegCurrents        = 6   // Uint16 RO 0.1A
 	em2GoRegPower           = 12  // Uint32 RO 1W
-	em2GoRegPowers          = 16  // 3xUint16 RO 1W
 	em2GoRegEnergy          = 28  // Uint16 RO 0.1KWh
 	em2GoRegMaxCurrent      = 32  // Uint16 RO 0.1A
 	em2GoRegMinCurrent      = 34  // Uint16 RO 0.1A
-	em2goRegCableMaxCurrent = 36  // Uint16 RO 0.1A
+	em2GoRegCableMaxCurrent = 36  // Uint16 RO 0.1A
 	em2GoRegSerial          = 38  // Chr[16] RO UTF16
 	em2GoRegChargedEnergy   = 72  // Uint16 RO 0.1kWh
 	em2GoRegChargeDuration  = 78  // Uint32 RO 1s
-	em2goRegSafeCurrent     = 87  // Uint16 WR 0.1A
-	em2goRegCommTimeout     = 89  // Uint16 WR 1s
-	em2goRegCurrentLimit    = 91  // Uint16 WR 0.1A
+	em2GoRegSafeCurrent     = 87  // Uint16 WR 0.1A
+	em2GoRegCommTimeout     = 89  // Uint16 WR 1s
+	em2GoRegCurrentLimit    = 91  // Uint16 WR 0.1A
 	em2GoRegChargeMode      = 93  // Uint16 WR ENUM
 	em2GoRegChargeCommand   = 95  // Uint16 WR ENUM
-	em2goRegVoltages        = 109 // 3xUint16 RO 0.1V
+	em2GoRegVoltages        = 109 // Uint16 RO 0.1V
+	em2GoRegPhases          = 200 // Set charging phase 1 unsigned
 )
 
 func init() {
 	registry.Add("em2go", NewEm2GoFromConfig)
 }
+
+//go:generate go run ../cmd/tools/decorate.go -f decorateEm2Go -b *Em2Go -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
 
 // NewEm2GoFromConfig creates a Em2Go charger from generic config
 func NewEm2GoFromConfig(other map[string]interface{}) (api.Charger, error) {
@@ -83,18 +86,28 @@ func NewEm2Go(uri string, slaveID uint8) (api.Charger, error) {
 		return nil, err
 	}
 
+	// Add delay of 60 milliseconds between requests
+	conn.Delay(60 * time.Millisecond)
+
 	log := util.NewLogger("em2go")
 	conn.Logger(log.TRACE)
 
 	wb := &Em2Go{
+		log:  log,
 		conn: conn,
 	}
 
-	// set charge on command
-	// b := make([]byte, 2)
-	// _, err = wb.conn.WriteMultipleRegisters(em2GoRegChargeMode, 1,b)
+	var (
+		phases1p3p func(int) error
+		phasesG    func() (int, error)
+	)
 
-	return wb, err
+	if _, err := wb.conn.ReadHoldingRegisters(em2GoRegPhases, 1); err == nil {
+		phases1p3p = wb.phases1p3p
+		phasesG = wb.getPhases
+	}
+
+	return decorateEm2Go(wb, phases1p3p, phasesG), err
 }
 
 // Status implements the api.Charger interface
@@ -151,8 +164,20 @@ func (wb *Em2Go) MaxCurrentMillis(current float64) error {
 	b := make([]byte, 2)
 	binary.BigEndian.PutUint16(b, uint16(10*current))
 
-	_, err := wb.conn.WriteMultipleRegisters(em2goRegCurrentLimit, 1, b)
+	_, err := wb.conn.WriteMultipleRegisters(em2GoRegCurrentLimit, 1, b)
 	return err
+}
+
+var _ api.CurrentGetter = (*Em2Go)(nil)
+
+// GetMaxCurrent implements the api.CurrentGetter interface
+func (wb Em2Go) GetMaxCurrent() (float64, error) {
+	b, err := wb.conn.ReadHoldingRegisters(em2GoRegCurrentLimit, 1)
+	if err != nil {
+		return 0, err
+	}
+
+	return float64(binary.BigEndian.Uint16(b)) / 10, err
 }
 
 var _ api.Meter = (*Em2Go)(nil)
@@ -176,35 +201,37 @@ func (wb *Em2Go) TotalEnergy() (float64, error) {
 		return 0, err
 	}
 
-	return float64(binary.BigEndian.Uint16(b)) / 10, nil
+	return rs485.RTUUint32ToFloat64(b) / 10, nil
+}
+
+// getPhaseValues returns 3 register values offset by 2
+func (wb *Em2Go) getPhaseValues(reg uint16) (float64, float64, float64, error) {
+	var res [3]float64
+
+	for i := range 3 {
+		b, err := wb.conn.ReadHoldingRegisters(reg+2*uint16(i), 1)
+		if err != nil {
+			return 0, 0, 0, err
+		}
+
+		res[i] = float64(binary.BigEndian.Uint16(b)) / 10
+	}
+
+	return res[0], res[1], res[2], nil
 }
 
 var _ api.PhaseCurrents = (*Em2Go)(nil)
 
 // Currents implements the api.PhaseCurrents interface
 func (wb *Em2Go) Currents() (float64, float64, float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(em2GoRegCurrents, 6)
-	if err != nil {
-		return 0, 0, 0, err
-	}
-
-	return float64(binary.BigEndian.Uint16(b)) / 10,
-		float64(binary.BigEndian.Uint16(b[4:])) / 10,
-		float64(binary.BigEndian.Uint16(b[8:])) / 10, nil
+	return wb.getPhaseValues(em2GoRegCurrents)
 }
 
 var _ api.PhaseVoltages = (*Em2Go)(nil)
 
 // Currents implements the api.PhaseVoltages interface
 func (wb *Em2Go) Voltages() (float64, float64, float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(em2goRegVoltages, 6)
-	if err != nil {
-		return 0, 0, 0, err
-	}
-
-	return float64(binary.BigEndian.Uint16(b)) / 10,
-		float64(binary.BigEndian.Uint16(b[4:])) / 10,
-		float64(binary.BigEndian.Uint16(b[8:])) / 10, nil
+	return wb.getPhaseValues(em2GoRegVoltages)
 }
 
 var _ api.ChargeRater = (*Em2Go)(nil)
@@ -231,6 +258,25 @@ func (wb *Em2Go) ChargeDuration() (time.Duration, error) {
 	return time.Duration(binary.BigEndian.Uint32(b)) * time.Second, nil
 }
 
+// phases1p3p implements the api.PhaseSwitcher interface
+func (wb *Em2Go) phases1p3p(phases int) error {
+	b := make([]byte, 2)
+	binary.BigEndian.PutUint16(b, uint16(phases))
+
+	_, err := wb.conn.WriteMultipleRegisters(em2GoRegPhases, 1, b)
+	return err
+}
+
+// getPhases implements the api.PhaseGetter interface
+func (wb *Em2Go) getPhases() (int, error) {
+	b, err := wb.conn.ReadHoldingRegisters(em2GoRegPhases, 1)
+	if err != nil {
+		return 0, err
+	}
+
+	return int(binary.BigEndian.Uint16(b)), nil
+}
+
 var _ api.Diagnosis = (*Em2Go)(nil)
 
 // Diagnose implements the api.Diagnosis interface
@@ -238,19 +284,19 @@ func (wb *Em2Go) Diagnose() {
 	if b, err := wb.conn.ReadHoldingRegisters(em2GoRegStatus, 1); err == nil {
 		fmt.Printf("\tCharging Station Status:\t%d\n", binary.BigEndian.Uint16(b))
 	}
-	if b, err := wb.conn.ReadHoldingRegisters(em2goRegConnectorState, 1); err == nil {
+	if b, err := wb.conn.ReadHoldingRegisters(em2GoRegConnectorState, 1); err == nil {
 		fmt.Printf("\tConnector State:\t%d\n", binary.BigEndian.Uint16(b))
 	}
-	if b, err := wb.conn.ReadHoldingRegisters(em2goRegErrorCode, 1); err == nil {
+	if b, err := wb.conn.ReadHoldingRegisters(em2GoRegErrorCode, 1); err == nil {
 		fmt.Printf("\tError Code:\t%d\n", binary.BigEndian.Uint16(b))
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(em2GoRegMaxCurrent, 1); err == nil {
 		fmt.Printf("\tEVSE Max. Current:\t%.1fA\n", float64(binary.BigEndian.Uint16(b)/10))
 	}
-	if b, err := wb.conn.ReadHoldingRegisters(em2GoRegMinCurrent, 1); err == nil {
+	if b, err := wb.conn.ReadHoldingRegisters(em2GoRegMaxCurrent, 1); err == nil {
 		fmt.Printf("\tEVSE Min. Current:\t%.1fA\n", float64(binary.BigEndian.Uint16(b)/10))
 	}
-	if b, err := wb.conn.ReadHoldingRegisters(em2goRegCableMaxCurrent, 1); err == nil {
+	if b, err := wb.conn.ReadHoldingRegisters(em2GoRegCableMaxCurrent, 1); err == nil {
 		fmt.Printf("\tCable Max. Current:\t%.1fA\n", float64(binary.BigEndian.Uint16(b)/10))
 	}
 	var serial []byte
@@ -262,13 +308,13 @@ func (wb *Em2Go) Diagnose() {
 		serial = append(serial, b...)
 	}
 	fmt.Printf("\tSerial: %s\n", string(serial))
-	if b, err := wb.conn.ReadHoldingRegisters(em2goRegSafeCurrent, 1); err == nil {
+	if b, err := wb.conn.ReadHoldingRegisters(em2GoRegSafeCurrent, 1); err == nil {
 		fmt.Printf("\tSafe Current:\t%.1fA\n", float64(binary.BigEndian.Uint16(b)/10))
 	}
-	if b, err := wb.conn.ReadHoldingRegisters(em2goRegCommTimeout, 1); err == nil {
+	if b, err := wb.conn.ReadHoldingRegisters(em2GoRegCommTimeout, 1); err == nil {
 		fmt.Printf("\tConnection Timeout:\t%d\n", binary.BigEndian.Uint16(b))
 	}
-	if b, err := wb.conn.ReadHoldingRegisters(em2goRegCurrentLimit, 1); err == nil {
+	if b, err := wb.conn.ReadHoldingRegisters(em2GoRegCurrentLimit, 1); err == nil {
 		fmt.Printf("\tCurrent Limit:\t%.1fA\n", float64(binary.BigEndian.Uint16(b)/10))
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(em2GoRegChargeMode, 1); err == nil {

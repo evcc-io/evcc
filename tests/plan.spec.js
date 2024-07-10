@@ -62,7 +62,8 @@ test.describe("basic functionality", async () => {
       "tomorrow 9:30 AM80%"
     );
 
-    await expect(lp1.getByTestId("vehicle-status")).toContainText("Charging plan starts at");
+    await expect(lp1.getByTestId("vehicle-status-charger")).toHaveText("Connected.");
+    await expect(lp1.getByTestId("vehicle-status-planstart")).toHaveText(/tomorrow .* AM/);
     await expect(lp1.getByTestId("plan-marker")).toBeVisible();
     await expect(lp1.getByTestId("charging-plan").getByRole("button")).toHaveText(
       "tomorrow 9:30 AM80%"
@@ -277,9 +278,8 @@ test.describe("warnings", async () => {
 
     await page.getByTestId("plan-active").click();
 
-    await expect(page.getByTestId("plan-warnings")).toContainText(
-      "Goal not reachable in time. Estimated finish"
-    );
+    // match this text but with fuzzy date "getByText('Goal will be reached 52:10 h')"
+    await expect(page.getByTestId("plan-warnings")).toHaveText(/Goal will be reached .* later/);
   });
   test("time in the past", async ({ page }) => {
     await page.goto("/");

@@ -1,13 +1,13 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, restart, cleanRestart, baseUrl } from "./evcc";
 
-const CONFIG_EMPTY = "config-empty.evcc.yaml";
+const CONFIG_GRID_ONLY = "config-grid-only.evcc.yaml";
 const CONFIG_WITH_VEHICLE = "config-with-vehicle.evcc.yaml";
 
 test.use({ baseURL: baseUrl() });
 
 test.beforeAll(async () => {
-  await start(CONFIG_EMPTY, "password.sql");
+  await start(CONFIG_GRID_ONLY, "password.sql");
 });
 test.afterAll(async () => {
   await stop();
@@ -16,6 +16,7 @@ test.afterAll(async () => {
 async function login(page) {
   await page.locator("#loginPassword").fill("secret");
   await page.getByRole("button", { name: "Login" }).click();
+  await expect(page.locator("#loginPassword")).not.toBeVisible();
 }
 
 async function enableExperimental(page) {
@@ -101,7 +102,7 @@ test.describe("vehicles", async () => {
     await expect(page.getByTestId("vehicle")).toHaveCount(2);
 
     // restart evcc
-    await restart(CONFIG_EMPTY);
+    await restart(CONFIG_GRID_ONLY);
     await page.reload();
 
     await expect(page.getByTestId("vehicle")).toHaveCount(2);

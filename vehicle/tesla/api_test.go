@@ -40,5 +40,5 @@ func TestCommandResponse(t *testing.T) {
 	v, err := client.Vehicle("abc")
 	require.NoError(t, err)
 
-	require.ErrorIs(t, NewController(v, v).ChargeEnable(true), api.ErrAsleep)
+	require.ErrorIs(t, NewController(v).ChargeEnable(true), api.ErrAsleep)
 }

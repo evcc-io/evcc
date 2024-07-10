@@ -98,40 +98,22 @@ loadpoints:
 }
 
 func (suite *circuitsTestSuite) TestMissingRootCircuit() {
-	var conf globalconfig.All
-	viper.SetConfigType("yaml")
-
-	suite.Require().NoError(viper.ReadConfig(strings.NewReader(`
-loadpoints:
-- charger: test
-`)))
-
-	suite.Require().NoError(viper.UnmarshalExact(&conf))
-
 	ctrl := gomock.NewController(suite.T())
 	circuit := api.NewMockCircuit(ctrl)
 
-	// mock circuit
+	// circuit device
 	suite.Require().NoError(config.Circuits().Add(config.NewStaticDevice(config.Named{
-		Name: "test",
+		Name: "master",
 	}, api.Circuit(circuit))))
 
-	// mock charger
-	suite.Require().NoError(config.Chargers().Add(config.NewStaticDevice(config.Named{
-		Name: "test",
-	}, api.Charger(nil))))
-
-	lps, err := configureLoadpoints(conf)
-	suite.Require().NoError(err)
-
-	// root circuit
+	// root circuit present
 	circuit.EXPECT().GetParent().Return(nil)
 	circuit.EXPECT().HasMeter().Return(true)
-	suite.Require().NoError(validateCircuits(lps))
+	suite.Require().NoError(validateCircuits(nil))
 
-	// no root circuit
+	// root circuit missing
 	circuit.EXPECT().GetParent().Return(circuit)
-	err = validateCircuits(lps)
+	err := validateCircuits(nil)
 	suite.Require().Error(err)
 	suite.Require().Equal("missing root circuit", err.Error())
 }
@@ -141,20 +123,17 @@ func (suite *circuitsTestSuite) TestLoadpointUsingRootCircuit() {
 	viper.SetConfigType("yaml")
 
 	suite.Require().NoError(viper.ReadConfig(strings.NewReader(`
+circuits:
+- name: master
 loadpoints:
 - charger: test
-  circuit: root
+  circuit: master
 `)))
 
 	suite.Require().NoError(viper.UnmarshalExact(&conf))
 
-	ctrl := gomock.NewController(suite.T())
-	circuit := api.NewMockCircuit(ctrl)
-
-	// mock circuit
-	suite.Require().NoError(config.Circuits().Add(config.NewStaticDevice(config.Named{
-		Name: "root",
-	}, api.Circuit(circuit))))
+	suite.Require().NoError(configureCircuits(conf.Circuits))
+	suite.Require().Len(config.Circuits().Devices(), 1)
 
 	// mock charger
 	suite.Require().NoError(config.Chargers().Add(config.NewStaticDevice(config.Named{
@@ -164,9 +143,6 @@ loadpoints:
 	lps, err := configureLoadpoints(conf)
 	suite.Require().NoError(err)
 
-	// root circuit
-	circuit.EXPECT().GetParent().Return(nil)
-	err = validateCircuits(lps)
-	suite.Require().Error(err)
-	suite.Require().Equal("root circuit must not be assigned to loadpoint ", err.Error())
+	// lp using root circuit is valid
+	suite.Require().NoError(validateCircuits(lps))
 }

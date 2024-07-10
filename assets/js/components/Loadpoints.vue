@@ -21,7 +21,9 @@
 					:tariffGrid="tariffGrid"
 					:tariffCo2="tariffCo2"
 					:currency="currency"
-					:multiple-loadpoints="loadpoints.length > 1"
+					:multipleLoadpoints="loadpoints.length > 1"
+					:gridConfigured="gridConfigured"
+					:pvConfigured="pvConfigured"
 					class="h-100"
 					:class="{ 'loadpoint-unselected': !selected(index) }"
 					@click="scrollTo(index)"
@@ -67,6 +69,8 @@ export default {
 		tariffGrid: Number,
 		tariffCo2: Number,
 		currency: String,
+		gridConfigured: Boolean,
+		pvConfigured: Boolean,
 	},
 	data() {
 		return { selectedIndex: 0, snapTimeout: null };

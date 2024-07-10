@@ -3,16 +3,12 @@ import { start, stop, baseUrl } from "./evcc";
 
 test.use({ baseURL: baseUrl() });
 
-test.beforeEach(async ({ page }) => {
-  await start("basics.evcc.yaml");
-  await page.goto("/");
-});
-
-test.afterEach(async () => {
-  await stop();
-});
+const BASIC = "basics.evcc.yaml";
 
 test("set initial password", async ({ page }) => {
+  await start(BASIC);
+  await page.goto("/");
+
   const modal = page.getByTestId("password-modal");
 
   await expect(modal).toBeVisible();
@@ -33,14 +29,13 @@ test("set initial password", async ({ page }) => {
   await modal.getByLabel("Repeat password").fill("secret");
   await modal.getByRole("button", { name: "Create Password" }).click();
   await expect(modal).not.toBeVisible();
+
+  await stop();
 });
 
 test("login", async ({ page }) => {
-  // set initial password
-  const modal = page.getByTestId("password-modal");
-  await modal.getByLabel("New password").fill("secret");
-  await modal.getByLabel("Repeat password").fill("secret");
-  await modal.getByRole("button", { name: "Create Password" }).click();
+  await start(BASIC, "password.sql");
+  await page.goto("/");
 
   // go to config
   await page.getByTestId("topnavigation-button").click();
@@ -61,14 +56,13 @@ test("login", async ({ page }) => {
   await login.getByRole("button", { name: "Login" }).click();
   await expect(login).not.toBeVisible();
   await expect(page.getByRole("heading", { name: "Configuration" })).toBeVisible();
+
+  await stop();
 });
 
 test("http iframe hint", async ({ page }) => {
-  // set initial password
-  const modal = page.getByTestId("password-modal");
-  await modal.getByLabel("New password").fill("secret");
-  await modal.getByLabel("Repeat password").fill("secret");
-  await modal.getByRole("button", { name: "Create Password" }).click();
+  await start(BASIC, "password.sql");
+  await page.goto("/");
 
   // go to config
   await page.getByTestId("topnavigation-button").click();
@@ -90,26 +84,27 @@ test("http iframe hint", async ({ page }) => {
 
   // iframe hint visible (login-iframe-hint)
   await expect(login.getByTestId("login-iframe-hint")).toBeVisible();
+
+  await stop();
 });
 
 test("update password", async ({ page }) => {
+  const instance = await start(BASIC, "password.sql");
+  await page.goto("/");
+
   const oldPassword = "secret";
   const newPassword = "newsecret";
-
-  // set initial password
-  const modal = page.getByTestId("password-modal");
-  await modal.getByLabel("New password").fill(oldPassword);
-  await modal.getByLabel("Repeat password").fill(oldPassword);
-  await modal.getByRole("button", { name: "Create Password" }).click();
 
   // login modal
   page.goto("/#/config");
   const loginOld = page.getByTestId("login-modal");
   await loginOld.getByLabel("Password").fill(oldPassword);
   await loginOld.getByRole("button", { name: "Login" }).click();
+  await expect(loginOld).not.toBeVisible();
 
   // update password
   await page.getByTestId("generalconfig-password").getByRole("button", { name: "edit" }).click();
+  const modal = page.getByTestId("password-modal");
   await expect(modal.getByRole("heading", { name: "Update Administrator Password" })).toBeVisible();
   await modal.getByLabel("Current password").fill(oldPassword);
   await modal.getByLabel("New password").fill(newPassword);
@@ -133,11 +128,6 @@ test("update password", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "Configuration" })).toBeVisible();
   await expect(loginNew).not.toBeVisible();
 
-  // revert password
-  await page.getByTestId("generalconfig-password").getByRole("button", { name: "edit" }).click();
-  await modal.getByLabel("Current password").fill(newPassword);
-  await modal.getByLabel("New password").fill(oldPassword);
-  await modal.getByLabel("Repeat password").fill(oldPassword);
-  await modal.getByRole("button", { name: "Update Password" }).click();
-  await expect(page.getByTestId("password-modal")).not.toBeVisible();
+  // hard stop, since password is updated
+  await stop(instance);
 });

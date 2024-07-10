@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, restart, baseUrl } from "./evcc";
 
-const CONFIG = "config-empty.evcc.yaml";
+const CONFIG = "config-grid-only.evcc.yaml";
 
 test.use({ baseURL: baseUrl() });
 
@@ -19,6 +19,7 @@ test.afterEach(async () => {
 async function login(page) {
   await page.locator("#loginPassword").fill("secret");
   await page.getByRole("button", { name: "Login" }).click();
+  await expect(page.locator("#loginPassword")).not.toBeVisible();
 }
 
 async function enableExperimental(page) {

@@ -17,7 +17,6 @@
 					</p>
 					<p class="mb-1"><strong>Missing features</strong></p>
 					<ul>
-						<li>grid meter</li>
 						<li>aux meters</li>
 						<li>loadpoints and chargers</li>
 						<li>custom/plugin meters and vehicles</li>
@@ -41,16 +40,22 @@
 					<ul class="p-0 config-list">
 						<DeviceCard
 							:name="$t('config.grid.title')"
-							:editable="!!gridMeter?.id"
+							:editable="!gridMeter || !!gridMeter.id"
 							:error="deviceError('meter', gridMeter?.name)"
 							data-testid="grid"
-							@edit="editMeter(gridMeter.id, 'grid')"
+							@edit="gridMeter?.id ? editMeter(gridMeter.id, 'pv') : addMeter('grid')"
 						>
 							<template #icon>
 								<shopicon-regular-powersupply></shopicon-regular-powersupply>
 							</template>
 							<template #tags>
-								<DeviceTags :tags="deviceTags('meter', gridMeter?.name)" />
+								<DeviceTags
+									:tags="
+										gridMeter
+											? deviceTags('meter', gridMeter.name)
+											: { configured: { value: false } }
+									"
+								/>
 							</template>
 						</DeviceCard>
 						<DeviceCard

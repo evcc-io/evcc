@@ -2,16 +2,13 @@
 	<div class="text-center">
 		<LabelAndValue
 			class="root flex-grow-1"
-			:label="title"
+			:label="$t('main.chargingPlan.title')"
 			:class="disabled ? 'opacity-25' : 'opacity-100'"
 			data-testid="charging-plan"
 		>
 			<div class="value m-0 d-block align-items-baseline justify-content-center">
 				<button class="value-button p-0" :class="buttonColor" @click="openModal">
-					<strong v-if="minSocEnabled" class="text-decoration-underline">
-						{{ minSocLabel }}
-					</strong>
-					<strong v-else-if="targetChargeEnabled">
+					<strong v-if="enabled">
 						<span class="targetTimeLabel"> {{ targetTimeLabel() }}</span>
 						<div
 							class="extraValue text-nowrap"
@@ -126,6 +123,7 @@ export default {
 		planEnergy: Number,
 		planTime: String,
 		planTimeUnreachable: Boolean,
+		planOverrun: Number,
 		rangePerSoc: Number,
 		smartCostLimit: Number,
 		smartCostType: String,
@@ -169,26 +167,11 @@ export default {
 			}
 			return [];
 		},
-		targetChargeEnabled: function () {
-			return this.effectivePlanTime;
-		},
 		enabled: function () {
-			return this.targetChargeEnabled || this.minSocEnabled;
-		},
-		minSocLabel: function () {
-			return this.fmtPercentage(this.minSoc);
+			return this.effectivePlanTime;
 		},
 		modalId: function () {
 			return `chargingPlanModal_${this.id}`;
-		},
-		title: function () {
-			if (this.minSocEnabled) {
-				return this.$t("main.chargingPlan.titleMinSoc");
-			}
-			return this.$t("main.chargingPlan.title");
-		},
-		minSocEnabled: function () {
-			return this.minSoc > this.vehicleSoc;
 		},
 		departureTabActive: function () {
 			return this.activeTab === "departure";
@@ -248,13 +231,14 @@ export default {
 		},
 		openModal() {
 			this.showDeatureTab();
-			if (this.minSocEnabled) {
-				this.showArrivalTab();
-			}
 			this.modal.show();
 		},
-		openPlanModal() {
-			this.showDeatureTab();
+		openPlanModal(arrivalTab = false) {
+			if (arrivalTab) {
+				this.showArrivalTab();
+			} else {
+				this.showDeatureTab();
+			}
 			this.modal.show();
 		},
 		// not computed because it needs to update over time

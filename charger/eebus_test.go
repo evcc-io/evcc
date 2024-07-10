@@ -1,8 +1,15 @@
 package charger
 
 import (
+	"errors"
 	"testing"
 
+	"github.com/enbility/eebus-go/usecases/mocks"
+	spinemocks "github.com/enbility/spine-go/mocks"
+	"github.com/evcc-io/evcc/charger/eebus"
+	"github.com/evcc-io/evcc/util"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"go.uber.org/mock/gomock"
 )
 
@@ -116,9 +123,19 @@ func TestEEBusIsCharging(t *testing.T) {
 			for index, m := range tc.measurements {
 				ctrl := gomock.NewController(t)
 
-				emobilityMock := NewMockEmobilityI(ctrl)
+				evcc := mocks.NewCemEVCCInterface(t)
+				evcem := mocks.NewCemEVCEMInterface(t)
+				opev := mocks.NewCemOPEVInterface(t)
+
+				uc := &eebus.UseCasesEVSE{
+					EvCC:  evcc,
+					EvCem: evcem,
+					OpEV:  opev,
+				}
+				evEntity := spinemocks.NewEntityRemoteInterface(t)
 				eebus := &EEBus{
-					emobility: emobilityMock,
+					uc: uc,
+					ev: evEntity,
 				}
 
 				currents := make([]float64, 0)
@@ -127,8 +144,9 @@ func TestEEBusIsCharging(t *testing.T) {
 					currents = append(currents, d.current)
 				}
 
-				emobilityMock.EXPECT().EVCurrentsPerPhase().Return(currents, nil).AnyTimes()
-				emobilityMock.EXPECT().EVCurrentLimits().Return(limitsMin, limitsMax, limitsDefault, nil)
+				evcc.EXPECT().EVConnected(evEntity).Return(true)
+				evcem.EXPECT().CurrentPerPhase(evEntity).Return(currents, nil)
+				opev.EXPECT().CurrentLimits(evEntity).Return(limitsMin, limitsMax, limitsDefault, nil)
 
 				result := eebus.isCharging()
 				if result != m.expected {
@@ -138,4 +156,49 @@ func TestEEBusIsCharging(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestEEBusCurrentPower(t *testing.T) {
+	evcem := mocks.NewCemEVCEMInterface(t)
+
+	uc := &eebus.UseCasesEVSE{
+		EvCem: evcem,
+	}
+	evEntity := spinemocks.NewEntityRemoteInterface(t)
+	logger := util.NewLogger("test")
+	eebus := &EEBus{
+		uc:  uc,
+		ev:  evEntity,
+		log: logger,
+	}
+
+	evcem.EXPECT().IsScenarioAvailableAtEntity(evEntity, mock.Anything).Return(true)
+	evcem.EXPECT().PowerPerPhase(evEntity).Return([]float64{600, 600, 600}, nil)
+
+	power, err := eebus.currentPower()
+	assert.Nil(t, err)
+	assert.Equal(t, 1800.0, power)
+}
+
+func TestEEBusCurrentPower_Elli(t *testing.T) {
+	evcem := mocks.NewCemEVCEMInterface(t)
+
+	uc := &eebus.UseCasesEVSE{
+		EvCem: evcem,
+	}
+	evEntity := spinemocks.NewEntityRemoteInterface(t)
+	logger := util.NewLogger("test")
+	eebus := &EEBus{
+		uc:  uc,
+		ev:  evEntity,
+		log: logger,
+	}
+
+	evcem.EXPECT().IsScenarioAvailableAtEntity(evEntity, mock.Anything).Return(true)
+	evcem.EXPECT().PowerPerPhase(evEntity).Return(nil, errors.New("error"))
+	evcem.EXPECT().CurrentPerPhase(evEntity).Return([]float64{5.8, 5.8, 5.8}, nil)
+
+	power, err := eebus.currentPower()
+	assert.Nil(t, err)
+	assert.Equal(t, 4002.0, power)
 }
