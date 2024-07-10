@@ -16,7 +16,7 @@ type ZeroState struct {
 	Unitmodel        string  //"6",
 	Mileage          string  //"4382.46",
 	Software_version string  //"190430",
-	logic_state      string  //"2"
+	Logic_state      string  //"2"
 	Reason           string  //"2",
 	Response         string  //"0",
 	Driver           string  //"0",

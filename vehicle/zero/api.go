@@ -47,7 +47,6 @@ Vehicles implements returns the /user/vehicles api
 	}
 */
 func createRequest(params *url.Values) (*http.Request, error) {
-
 	req, err := http.NewRequest("GET", BASE_URL_P, nil)
 	if err != nil {
 		return nil, err
@@ -60,12 +59,14 @@ func createRequest(params *url.Values) (*http.Request, error) {
 }
 
 func handleResponse(resp *http.Response) (*[]byte, error) {
-
 	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
 	if resp.StatusCode != 200 {
 		var answer ErrorAnswer
-		err = json.Unmarshal(body, &answer)
-		if err != nil {
+
+		if json.Unmarshal(body, &answer) != nil {
 			return nil, err
 		}
 		return nil, fmt.Errorf(answer.Error)
@@ -85,7 +86,6 @@ func (v *API) Status() (ZeroState, error) {
 		"unitnumber":  {v.identity.UnitId},
 		"commandname": {"get_last_transmit"},
 	}
-
 	req, err := createRequest(&params)
 	if err != nil {
 		return dummy, err
