@@ -1,4 +1,5 @@
 template: nrgkick-bluetooth
+deprecated: true
 products:
   - brand: NRGKick
     description:
