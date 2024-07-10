@@ -82,7 +82,6 @@ func (v *Identity) retrievedeviceId() (string, error) {
 		if unit.Name == v.Vin {
 			return unit.Unitnumber, nil
 		}
-
 	}
 	return "", fmt.Errorf("VIN not found")
 }
