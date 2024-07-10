@@ -947,7 +947,7 @@ CONTINUE:
 			hasRoot = true
 		}
 
-    if slices.ContainsFunc(loadpoints, func(lp *core.Loadpoint) bool {
+		if slices.ContainsFunc(loadpoints, func(lp *core.Loadpoint) bool {
 			return lp.GetCircuit() == instance
 		}) {
 			continue CONTINUE
@@ -1009,6 +1009,10 @@ func configureLoadpoints(conf globalconfig.All) error {
 
 		log := util.NewLoggerWithLoadpoint(name, id+1)
 		settings := &core.Settings{Key: "lp" + cc.Name + "."}
+
+		// TODO: proper handling of id/name
+		delete(cc.Other, "id")
+		delete(cc.Other, "name")
 
 		instance, err := core.NewLoadpointFromConfig(log, settings, cc.Other)
 		if err != nil {

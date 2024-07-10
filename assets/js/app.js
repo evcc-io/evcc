@@ -2,7 +2,6 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "../css/app.css";
 import { createApp, h } from "vue";
 import { VueHeadMixin, createHead } from "@unhead/vue";
-import PrimeVue from "primevue/config";
 import App from "./views/App.vue";
 import setupRouter from "./router";
 import setupI18n from "./i18n";
@@ -71,7 +70,6 @@ app.use(i18n);
 app.use(setupRouter(i18n));
 app.use(featureflags);
 app.use(head);
-app.use(PrimeVue, { unstyled: true });
 app.mixin(VueHeadMixin);
 window.app = app.mount("#app");
 

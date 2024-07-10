@@ -18,25 +18,24 @@ import (
 
 type loadpointStaticConfig struct {
 	// static config
-	Charger *string `json:"charger,omitempty"`
-	Meter   *string `json:"meter,omitempty"`
-	Circuit *string `json:"circuit,omitempty"`
-	Vehicle *string `json:"vehicle,omitempty"`
-	Title   string  `json:"title"`
+	Charger string `json:"charger,omitempty"`
+	Meter   string `json:"meter,omitempty"`
+	Circuit string `json:"circuit,omitempty"`
+	Vehicle string `json:"vehicle,omitempty"`
 }
 
 func getLoadpointStaticConfig(lp loadpoint.API) loadpointStaticConfig {
 	return loadpointStaticConfig{
-		Charger: util.PtrTo(lp.GetChargerName()),
-		Meter:   util.PtrTo(lp.GetMeterName()),
-		Circuit: util.PtrTo(lp.GetCircuitName()),
-		Vehicle: util.PtrTo(lp.GetDefaultVehicle()),
-		Title:   lp.GetTitle(),
+		Charger: lp.GetChargerName(),
+		Meter:   lp.GetMeterName(),
+		Circuit: lp.GetCircuitName(),
+		Vehicle: lp.GetDefaultVehicle(),
 	}
 }
 
 type loadpointDynamicConfig struct {
 	// dynamic config
+	Title          string  `json:"title"`
 	Mode           string  `json:"mode"`
 	Priority       int     `json:"priority"`
 	Phases         int     `json:"phases"`
@@ -50,6 +49,7 @@ type loadpointDynamicConfig struct {
 
 func getLoadpointDynamicConfig(lp loadpoint.API) loadpointDynamicConfig {
 	return loadpointDynamicConfig{
+		Title:          lp.GetTitle(),
 		Mode:           string(lp.GetMode()),
 		Priority:       lp.GetPriority(),
 		Phases:         lp.GetPhases(),
@@ -62,6 +62,7 @@ func getLoadpointDynamicConfig(lp loadpoint.API) loadpointDynamicConfig {
 }
 
 func loadpointUpdateDynamicConfig(payload loadpointDynamicConfig, lp loadpoint.API) error {
+	lp.SetTitle(payload.Title)
 	lp.SetPriority(payload.Priority)
 	lp.SetSmartCostLimit(payload.SmartCostLimit)
 	lp.SetThresholds(payload.Thresholds)

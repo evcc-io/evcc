@@ -118,9 +118,9 @@
 					<ul class="p-0 config-list">
 						<DeviceCard
 							v-for="loadpoint in loadpoints"
-							:key="!!loadpoint.name"
+							:key="loadpoint.name"
 							:name="loadpoint.title"
-							:editable="true"
+							:editable="!!loadpoint.id"
 							data-testid="loadpoint"
 							@edit="editLoadpoint(loadpoint.id)"
 						>

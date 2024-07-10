@@ -265,14 +265,14 @@
 				id="loadpointParamVehicle"
 				label="Default vehicle"
 				:help="
-					values.defaultVehicle
+					values.vehicle
 						? 'Always assume this vehicle is charging here. Auto-detection disabled. Manual override is possible.'
 						: 'Automatically selects the most plausible vehicle. Manual override is possible.'
 				"
 			>
 				<PropertyField
 					id="loadpointParamVehicle"
-					v-model="values.defaultVehicle"
+					v-model="values.vehicle"
 					type="String"
 					class="me-2"
 					:valid-values="allVehicleOptions"
@@ -392,7 +392,7 @@ const defaultValues = {
 		poll: { mode: "pollcharging", interval: 60 },
 		estimate: false,
 	},
-	defaultVehicle: "",
+	vehicle: "",
 	charger: "",
 	meter: "",
 };
