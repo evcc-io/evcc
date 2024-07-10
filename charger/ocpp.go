@@ -30,7 +30,7 @@ type OCPP struct {
 	meterValuesSample string
 	timeout           time.Duration
 	phaseSwitching    bool
-	autoStart         bool
+	autoStart, noStop bool
 	chargingRateUnit  types.ChargingRateUnitType
 	lp                loadpoint.API
 }
@@ -55,6 +55,7 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 		GetConfiguration *bool
 		ChargingRateUnit string
 		AutoStart        bool
+		NoStop           bool
 	}{
 		Connector:        1,
 		IdTag:            defaultIdTag,
@@ -72,7 +73,7 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 
 	c, err := NewOCPP(cc.StationId, cc.Connector, cc.IdTag,
 		cc.MeterValues, cc.MeterInterval,
-		boot, noConfig, cc.AutoStart,
+		boot, noConfig, cc.AutoStart, cc.NoStop,
 		cc.ConnectTimeout, cc.Timeout, cc.ChargingRateUnit)
 	if err != nil {
 		return c, err
@@ -106,7 +107,7 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 // NewOCPP creates OCPP charger
 func NewOCPP(id string, connector int, idtag string,
 	meterValues string, meterInterval time.Duration,
-	boot, noConfig, autoStart bool,
+	boot, noConfig, autoStart, noStop bool,
 	connectTimeout, timeout time.Duration,
 	chargingRateUnit string,
 ) (*OCPP, error) {
@@ -138,6 +139,7 @@ func NewOCPP(id string, connector int, idtag string,
 		conn:      conn,
 		idtag:     idtag,
 		autoStart: autoStart,
+		noStop:    noStop,
 		timeout:   timeout,
 	}
 
@@ -338,7 +340,7 @@ func (c *OCPP) Enabled() (bool, error) {
 func (c *OCPP) Enable(enable bool) error {
 	var err error
 
-	if c.autoStart {
+	if c.autoStart || (c.noStop && !enable) {
 		err = c.enableAutostart(enable)
 	} else {
 		err = c.enableRemote(enable)
