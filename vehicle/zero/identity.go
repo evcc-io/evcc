@@ -3,7 +3,6 @@ package zero
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"net/url"
 
@@ -16,26 +15,23 @@ type Identity struct {
 	User     string
 	Password string
 	UnitId   string
+	Vin      string
 }
 
 // NewIdentity creates SAIC identity
-func NewIdentity(log *util.Logger, user, password string) *Identity {
+func NewIdentity(log *util.Logger, user, password, vin string) *Identity {
 	v := &Identity{
 		Helper:   request.NewHelper(log),
 		User:     user,
 		Password: password,
+		Vin:      vin,
 	}
 	return v
 }
 
 func (v *Identity) Login() error {
 	var err error
-	data := url.Values{
-		"user": {v.User},
-		"pass": {v.Password},
-	}
-
-	v.UnitId, err = v.retrievedeviceId(data)
+	v.UnitId, err = v.retrievedeviceId()
 	if err != nil {
 		return err
 	}
@@ -43,44 +39,50 @@ func (v *Identity) Login() error {
 	return nil
 }
 
-func (v *Identity) retrievedeviceId(params url.Values) (string, error) {
+func (v *Identity) retrievedeviceId() (string, error) {
 	var units UnitData
-
+	var resp *http.Response
 	var err error
 
-	params.Set("commandname", "get_units")
-	params.Set("format", "json")
+	params := url.Values{
+		"user":        {v.User},
+		"pass":        {v.Password}, // Shold be Sha1 encoded
+		"unitnumber":  {v.UnitId},
+		"commandname": {"get_units"},
+	}
 
-	req, err := http.NewRequest("GET", BASE_URL_P, nil)
-	// get charging status of vehicle
+	req, err := createRequest(&params)
 	if err != nil {
 		return "", err
 	}
 
-	req.URL.RawQuery = params.Encode()
-
-	resp, err := v.Do(req)
-	if err != nil {
-		return "", err
-	}
+	resp, err = v.Do(req)
 	defer resp.Body.Close()
 
-	var body []byte
+	if err != nil {
+		return "", err
+	}
 
-	body, err = io.ReadAll(resp.Body)
-
-	if resp.StatusCode != 200 {
-		var answer ErrorAnswer
-		err = json.Unmarshal(body, &answer)
+	var body *[]byte
+	body, err = handleResponse(resp)
+	if err != nil {
+		return "", err
+	} else {
+		err = json.Unmarshal(*body, &units)
 		if err != nil {
 			return "", err
 		}
-		return "", fmt.Errorf(answer.Error)
-	}
-	err = json.Unmarshal(body, &units)
-	if err != nil {
-		return "", err
 	}
 
-	return units[0].Unitnumber, err
+	if v.Vin == "" {
+		return units[0].Unitnumber, nil
+	}
+
+	for _, unit := range units {
+		if unit.Name == v.Vin {
+			return unit.Unitnumber, nil
+		}
+
+	}
+	return "", fmt.Errorf("VIN not found")
 }

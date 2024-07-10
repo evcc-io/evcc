@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
@@ -35,34 +36,60 @@ func NewAPI(log *util.Logger, identity *Identity) *API {
 	return v
 }
 
-/* Vehicles implements returns the /user/vehicles api
-func (v *API) Vehicles() ([]Vehicle, error) {
-	var res []Vehicle
-	uri := fmt.Sprintf("%s/eadrax-vcs/v4/vehicles?apptimezone=120&appDateTime=%d", regions[v.region].CocoApiURI, time.Now().UnixMilli())
-	err := v.GetJSON(uri, &res)
-	return res, err
-}
+/*
+Vehicles implements returns the /user/vehicles api
+
+	func (v *API) Vehicles() ([]Vehicle, error) {
+		var res []Vehicle
+		uri := fmt.Sprintf("%s/eadrax-vcs/v4/vehicles?apptimezone=120&appDateTime=%d", regions[v.region].CocoApiURI, time.Now().UnixMilli())
+		err := v.GetJSON(uri, &res)
+		return res, err
+	}
 */
+func createRequest(params *url.Values) (*http.Request, error) {
+
+	req, err := http.NewRequest("GET", BASE_URL_P, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	params.Set("format", "json")
+	req.URL.RawQuery = params.Encode()
+
+	return req, err
+}
+
+func handleResponse(resp *http.Response) (*[]byte, error) {
+
+	body, err := io.ReadAll(resp.Body)
+	if resp.StatusCode != 200 {
+		var answer ErrorAnswer
+		err = json.Unmarshal(body, &answer)
+		if err != nil {
+			return nil, err
+		}
+		return nil, fmt.Errorf(answer.Error)
+	}
+	return &body, nil
+}
 
 // Status implements the /user/vehicles/<vin>/status api
 func (v *API) Status() (ZeroState, error) {
 	var states []ZeroState
 	var dummy ZeroState
-
 	var resp *http.Response
 
-	req, err := http.NewRequest("GET", BASE_URL_P, nil)
+	params := url.Values{
+		"user":        {v.identity.User},
+		"pass":        {v.identity.Password}, // Shold be Sha1 encoded
+		"unitnumber":  {v.identity.UnitId},
+		"commandname": {"get_last_transmit"},
+	}
+
+	req, err := createRequest(&params)
 	if err != nil {
 		return dummy, err
 	}
-
-	params := req.URL.Query()
-	params.Set("user", v.identity.User)
-	params.Set("pass", v.identity.Password)
-	params.Set("unitnumber", v.identity.UnitId)
-	params.Set("commandname", "get_last_transmit")
-	params.Set("format", "json")
-	req.URL.RawQuery = params.Encode()
 
 	resp, err = v.Do(req)
 	defer resp.Body.Close()
@@ -71,21 +98,15 @@ func (v *API) Status() (ZeroState, error) {
 		return dummy, err
 	}
 
-	var body []byte
-
-	body, err = io.ReadAll(resp.Body)
-	if resp.StatusCode != 200 {
-		var answer ErrorAnswer
-		err = json.Unmarshal(body, &answer)
+	var body *[]byte
+	body, err = handleResponse(resp)
+	if err != nil {
+		return dummy, err
+	} else {
+		err = json.Unmarshal(*body, &states)
 		if err != nil {
 			return dummy, err
 		}
-		return dummy, fmt.Errorf(answer.Error)
 	}
-	err = json.Unmarshal(body, &states)
-	if err != nil {
-		return dummy, err
-	}
-
 	return states[0], err
 }
