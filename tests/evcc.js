@@ -87,7 +87,7 @@ async function _stop(instance) {
     return;
   }
   const port = workerPort();
-  console.log("shutting down evcc");
+  console.log("shutting down evcc", { port });
   const res = await axios.post(`${baseUrl()}/api/auth/login`, { password: "secret" });
   console.log(res.status, res.statusText);
   const cookie = res.headers["set-cookie"];
