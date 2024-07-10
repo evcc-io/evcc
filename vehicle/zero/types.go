@@ -2,6 +2,7 @@ package zero
 
 type UnitNumberAnswer struct {
 	Unitnumber string //"123456",
+	Name       string
 }
 
 type ErrorAnswer struct {

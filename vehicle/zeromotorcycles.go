@@ -37,7 +37,7 @@ func NewZeroFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	log := util.NewLogger("Zero").Redact(cc.User, cc.Password)
-	identity := zero.NewIdentity(log, cc.User, cc.Password)
+	identity := zero.NewIdentity(log, cc.User, cc.Password, cc.VIN)
 
 	if err := identity.Login(); err != nil {
 		return nil, err
