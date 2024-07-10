@@ -128,7 +128,11 @@
 								<DeviceTags :tags="loadpointTags(loadpoint)" />
 							</template>
 							<template #icon>
-								<shopicon-regular-cablecharge></shopicon-regular-cablecharge>
+								<VehicleIcon
+									v-if="chargerIcon(loadpoint.charger)"
+									:name="chargerIcon(loadpoint.charger)"
+								/>
+								<LoadpointIcon v-else />
 							</template>
 						</DeviceCard>
 
@@ -272,6 +276,7 @@
 					:id="selectedLoadpointId"
 					:vehicleOptions="vehicleOptions"
 					ref="loadpointModal"
+					:loadpointCount="loadpoints.length"
 					@updated="loadpointChanged"
 					@openChargerModal="editLoadpointCharger"
 					@openMeterModal="editLoadpointMeter"
@@ -315,7 +320,6 @@ import "@h2d2/shopicons/es/regular/sun";
 import "@h2d2/shopicons/es/regular/batterythreequarters";
 import "@h2d2/shopicons/es/regular/powersupply";
 import "@h2d2/shopicons/es/regular/receivepayment";
-import "@h2d2/shopicons/es/regular/cablecharge";
 import NewDeviceButton from "../components/Config/NewDeviceButton.vue";
 import api from "../api";
 import ChargerModal from "../components/Config/ChargerModal.vue";
@@ -334,6 +338,7 @@ import HemsModal from "../components/Config/HemsModal.vue";
 import InfluxIcon from "../components/MaterialIcon/Influx.vue";
 import InfluxModal from "../components/Config/InfluxModal.vue";
 import LoadpointModal from "../components/Config/LoadpointModal.vue";
+import LoadpointIcon from "../components/MaterialIcon/Loadpoint.vue";
 import MessagingModal from "../components/Config/MessagingModal.vue";
 import MeterModal from "../components/Config/MeterModal.vue";
 import Modal from "bootstrap/js/dist/modal";
@@ -371,6 +376,7 @@ export default {
 		MessagingModal,
 		MeterModal,
 		LoadpointModal,
+		LoadpointIcon,
 		ModbusProxyIcon,
 		ModbusProxyModal,
 		MqttIcon,
@@ -758,6 +764,10 @@ export default {
 		deviceError(type, name) {
 			const fatal = store.state?.fatal || {};
 			return fatal.class === type && fatal.device === name;
+		},
+		chargerIcon(chargerName) {
+			const charger = this.chargers.find((c) => c.name === chargerName);
+			return charger?.config?.icon;
 		},
 	},
 };

@@ -26,6 +26,10 @@ never = "only with enough surplus"
 titleAdd = "Add Battery Meter"
 titleEdit = "Edit Battery Meter"
 
+[config.charge]
+titleAdd = "Add Charge Meter"
+titleEdit = "Edit Charge Meter"
+
 [config.charger]
 template = "Manufacturer"
 titleAdd = "Add Charger"
@@ -191,6 +195,10 @@ labelSchema = "Schema"
 title = "Network"
 
 [config.options]
+
+[config.options.boolean]
+no = "no"
+yes = "yes"
 
 [config.options.endianness]
 big = "big-endian"

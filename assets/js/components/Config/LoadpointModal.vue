@@ -23,21 +23,23 @@
 						v-model="values.charger"
 						type="String"
 						class="me-2 flex-grow-1"
-						disabled
+						readonly
 						required
+						@click.prevent="editCharger"
 					/>
 					<button
 						class="btn btn-link btn-sm evcc-default-text"
 						type="button"
 						@click.prevent="editCharger"
 					>
-						<shopicon-regular-adjust></shopicon-regular-adjust>
+						<EditIcon />
 					</button>
 				</div>
 			</FormRow>
-			<div v-if="values.charger">
+			<div v-if="values.charger || !isNew">
 				<FormRow
 					v-if="values.meter"
+					class="offset-1 mb-5"
 					id="loadpointParamMeter"
 					label="Energy meter"
 					help="Additional meter if the charger doesn't have an integrated one."
@@ -48,21 +50,23 @@
 							v-model="values.meter"
 							type="String"
 							class="me-2 flex-grow-1"
-							disabled
 							required
+							readonly
+							@click="editMeter"
 						/>
 						<button
 							class="btn btn-link btn-sm evcc-default-text"
 							type="button"
 							@click.prevent="editMeter"
 						>
-							<shopicon-regular-adjust></shopicon-regular-adjust>
+							<EditIcon />
 						</button>
 					</div>
 				</FormRow>
 				<p v-else>
 					<button
-						class="btn btn-link btn-sm text-primary px-0"
+						class="btn btn-link btn-sm text-gray px-0"
+						style="margin-top: -1rem"
 						type="button"
 						@click="editMeter"
 					>
@@ -71,271 +75,308 @@
 				</p>
 			</div>
 
-			<FormRow
-				id="loadpointMode"
-				label="Default mode"
-				help="Mode when connecting the vehicle."
-			>
-				<SelectGroup
-					id="loadpointMode"
-					v-model="values.mode"
-					class="w-100"
-					:options="[
-						{ value: '', name: 'use last' },
-						{ value: 'off', name: $t('main.mode.off') },
-						{ value: 'pv', name: $t('main.mode.pv') },
-						{ value: 'minpv', name: $t('main.mode.minpv') },
-						{ value: 'now', name: $t('main.mode.now') },
-					]"
-				/>
-			</FormRow>
-			<FormRow
-				id="loadpointParamPhases"
-				label="Phases"
-				help="Electrical connection of the charger."
-			>
-				<SelectGroup
+			<div v-if="values.charger">
+				<FormRow id="loadpointMode" label="Mode" help="Mode when connecting the vehicle.">
+					<PropertyField
+						id="loadpointMode"
+						v-model="values.mode"
+						type="String"
+						class="w-100"
+						required
+						:valid-values="[
+							{ value: '', name: 'Keep last selection' },
+							{ value: 'off', name: $t('main.mode.off') },
+							{ value: 'pv', name: $t('main.mode.pv') },
+							{ value: 'minpv', name: $t('main.mode.minpv') },
+							{ value: 'now', name: $t('main.mode.now') },
+						]"
+					/>
+				</FormRow>
+				<FormRow
 					id="loadpointParamPhases"
-					v-model="values.phases"
-					class="w-100"
-					:options="[
-						{ value: 0, name: 'automatic' },
-						{ value: 1, name: '1-phase' },
-						{ value: 3, name: '3-phase' },
-					]"
-				/>
-			</FormRow>
+					label="Phases"
+					:help="
+						values.phases === 0
+							? `Select this if your charger supports automatic phase switching.`
+							: `Used for calculating the minimum charge power in solar mode.`
+					"
+				>
+					<SelectGroup
+						id="loadpointParamPhases"
+						v-model="values.phases"
+						class="w-100"
+						:options="[
+							{ value: 1, name: '1-phase' },
+							{ value: 3, name: '3-phase' },
+							{ value: 0, name: 'automatic' },
+						]"
+					/>
+				</FormRow>
 
-			<FormRow id="chargerPower" label="Charger type">
-				<SelectGroup
+				<FormRow
 					id="chargerPower"
-					v-model="chargerPower"
-					class="w-100"
-					:options="[
-						{ name: '11 kW', value: '11kw' },
-						{ name: '22 kW', value: '22kw' },
-						{ name: 'other', value: 'other' },
-					]"
-				/>
-			</FormRow>
-
-			<div v-if="chargerPower === 'other'" class="row mb-4">
-				<FormRow
-					id="loadpointMinCurrent"
-					label="Minimum current"
-					class="col-sm-6 mb-sm-0"
-					:help="
-						values.minCurrent < 6
-							? 'Only go below 6 A if you know what you\'re doing.'
-							: null
-					"
+					label="Charger type"
+					help="Defines the minimum and maximum current used for charging."
 				>
-					<PropertyField
+					<SelectGroup
+						id="chargerPower"
+						v-model="chargerPower"
+						class="w-100"
+						:options="[
+							{ name: '11 kW', value: '11kw' },
+							{ name: '22 kW', value: '22kw' },
+							{ name: 'other', value: 'other' },
+						]"
+					/>
+				</FormRow>
+
+				<div v-if="chargerPower === 'other'" class="row offset-1 mb-5">
+					<FormRow
 						id="loadpointMinCurrent"
-						v-model="values.minCurrent"
-						type="Float"
-						unit="A"
-						size="w-25 w-min-200"
-						class="me-2"
-						required
-					/>
-				</FormRow>
+						label="Minimum current"
+						class="col-sm-6 mb-sm-0"
+						:help="
+							values.minCurrent < 6
+								? 'Only go below 6 A if you know what you\'re doing.'
+								: null
+						"
+					>
+						<PropertyField
+							id="loadpointMinCurrent"
+							v-model="values.minCurrent"
+							type="Float"
+							unit="A"
+							size="w-25 w-min-200"
+							class="me-2"
+							required
+						/>
+					</FormRow>
+
+					<FormRow
+						id="loadpointMaxCurrent"
+						label="Maximum current"
+						class="col-sm-6 mb-sm-0"
+						:help="
+							values.maxCurrent < values.minCurrent
+								? 'Must be greater than minimum current.'
+								: null
+						"
+					>
+						<PropertyField
+							id="loadpointMaxCurrent"
+							v-model="values.maxCurrent"
+							type="Float"
+							unit="A"
+							size="w-25 w-min-200"
+							class="me-2"
+							required
+						/>
+					</FormRow>
+				</div>
 
 				<FormRow
-					id="loadpointMaxCurrent"
-					label="Maximum current"
-					class="col-sm-6 mb-sm-0"
+					id="loadpointSolarMode"
+					label="Solar behaviour"
 					:help="
-						values.maxCurrent < values.minCurrent
-							? 'Must be greater than minimum current.'
-							: null
+						solarMode === 'summer'
+							? `Only use solar surplus. Minimize grid use. Faster start (${fmtDuration(values.thresholds.enable.delay * 60)}) and stop (${fmtDuration(values.thresholds.disable.delay * 60)}).`
+							: solarMode === 'winter'
+								? `Use more solar surplus. Allow grid use. Slower start (${fmtDuration(values.thresholds.enable.delay * 60)}) and stop (${fmtDuration(values.thresholds.disable.delay * 60)}).`
+								: null
 					"
 				>
-					<PropertyField
-						id="loadpointMaxCurrent"
-						v-model="values.maxCurrent"
-						type="Float"
-						unit="A"
-						size="w-25 w-min-200"
-						class="me-2"
-						required
-					/>
-				</FormRow>
-			</div>
-
-			<FormRow
-				id="loadpointSolarMode"
-				label="Solar behaviour"
-				:help="
-					solarMode === 'summer'
-						? 'Minimize grid import. Allow export.'
-						: solarMode === 'winter'
-							? 'Use all available solar power. Minimize export.'
-							: null
-				"
-			>
-				<SelectGroup
-					id="loadpointSolarMode"
-					v-model="solarMode"
-					class="w-100"
-					:options="[
-						{ name: 'summer', value: 'summer' },
-						{ name: 'winter', value: 'winter' },
-						{ name: 'custom', value: 'custom' },
-					]"
-				/>
-			</FormRow>
-
-			<div v-show="solarMode === 'custom'" class="row">
-				<FormRow id="loadpointEnableDelay" label="Enable Delay" class="col-sm-6">
-					<PropertyField
-						id="loadpointEnableDelay"
-						v-model="values.thresholds.enable.delay"
-						type="Duration"
-						unit="min"
-						size="w-25 w-min-200"
-						class="me-2"
-						required
-					/>
-				</FormRow>
-				<FormRow id="loadpointDisableDelay" label="Disable Delay" class="col-sm-6">
-					<PropertyField
-						id="loadpointDisableDelay"
-						v-model="values.thresholds.disable.delay"
-						type="Duration"
-						unit="min"
-						size="w-25 w-min-200"
-						class="me-2"
-						required
-					/>
-				</FormRow>
-			</div>
-
-			<div v-show="solarMode === 'custom'" class="row mb-4">
-				<FormRow
-					id="loadpointEnableThreshold"
-					label="Enable Threshold"
-					class="col-sm-6 mb-sm-0"
-				>
-					<PropertyField
-						id="loadpointEnableThreshold"
-						v-model="values.thresholds.enable.threshold"
-						type="Float"
-						unit="kW"
-						size="w-25 w-min-200"
-						class="me-2"
-						required
+					<SelectGroup
+						id="loadpointSolarMode"
+						v-model="solarMode"
+						class="w-100"
+						:options="[
+							{ name: 'summer', value: 'summer' },
+							{ name: 'winter', value: 'winter' },
+							{ name: 'custom', value: 'custom' },
+						]"
 					/>
 				</FormRow>
 
-				<FormRow
-					id="loadpointDisableThreshold"
-					label="Disable Threshold"
-					class="col-sm-6 mb-sm-0"
-				>
-					<PropertyField
-						id="loadpointDisableThreshold"
-						v-model="values.thresholds.disable.threshold"
-						type="Float"
-						unit="kW"
-						size="w-25 w-min-200"
-						class="me-2"
-						required
-					/>
-				</FormRow>
-			</div>
-
-			<FormRow
-				id="loadpointParamPriority"
-				label="Priority"
-				help="Relevant for multiple charge points. Higher priority charge points get preferred access to solar surplus."
-			>
-				<PropertyField
-					id="loadpointParamPriority"
-					v-model="values.priority"
-					type="Number"
-					size="w-100"
-					class="me-2"
-					:valid-values="priorityOptions"
-					required
-				/>
-			</FormRow>
-
-			<FormRow
-				id="loadpointParamVehicle"
-				label="Default vehicle"
-				:help="
-					values.vehicle
-						? 'Always assume this vehicle is charging here. Auto-detection disabled. Manual override is possible.'
-						: 'Automatically selects the most plausible vehicle. Manual override is possible.'
-				"
-			>
-				<PropertyField
-					id="loadpointParamVehicle"
-					v-model="values.vehicle"
-					type="String"
-					class="me-2"
-					:valid-values="allVehicleOptions"
-					required
-				/>
-			</FormRow>
-
-			<FormRow
-				id="loadpointPollMode"
-				label="Vehicle update mode"
-				:help="
-					values.soc.poll.mode === 'pollcharging'
-						? 'Only request vehicle status updates when charging.'
-						: values.soc.poll.mode === 'pollconnected'
-							? 'Update vehicle status in regular intervals when connected.'
-							: values.soc.poll.mode === 'pollalways'
-								? 'Always request status updates in regular intervals.'
-								: null
-				"
-			>
-				<SelectGroup
-					id="loadpointPollMode"
-					v-model="values.soc.poll.mode"
-					class="w-100"
-					:options="[
-						{ value: 'pollcharging', name: 'charging' },
-						{ value: 'pollconnected', name: 'connected' },
-						{ value: 'pollalways', name: 'always' },
-					]"
-				/>
-			</FormRow>
-			<FormRow
-				v-if="values.soc.poll.mode !== 'pollcharging'"
-				id="loadpointPollInterval"
-				label="Vehicle update interval"
-				help="Time between status updates. Short intervals may drain the vehicle battery."
-			>
-				<PropertyField
-					id="loadpointPollInterval"
-					v-model="values.soc.poll.interval"
-					type="Duration"
-					unit="min"
-					size="w-25 w-min-200"
-					class="me-2"
-					required
-				/>
-			</FormRow>
-
-			<FormRow id="loadpointEstimate" label="Estimate charge level">
-				<div class="d-flex">
-					<input
-						class="form-check-input"
-						id="loadpointEstimate"
-						type="checkbox"
-						v-model="values.soc.estimate"
-					/>
-					<label class="form-check-label ms-2" for="loadpointEstimate">
-						Interpolate between API updates
-					</label>
+				<div v-show="solarMode === 'custom'" class="offset-1 mb-4">
+					<div class="d-flex flex-wrap flex-sm-nowrap gap-4 ps-1 ms-2">
+						<FormRow
+							id="loadpointEnableThreshold"
+							label="Enable grid power"
+							style="margin-bottom: 0 !important"
+						>
+							<PropertyField
+								id="loadpointEnableThreshold"
+								v-model="values.thresholds.enable.threshold"
+								type="Float"
+								unit="W"
+								size="w-25 w-min-200"
+								required
+							/>
+						</FormRow>
+						<FormRow
+							id="loadpointEnableDelay"
+							label="Enable delay"
+							style="margin-bottom: 0 !important"
+						>
+							<PropertyField
+								id="loadpointEnableDelay"
+								v-model="values.thresholds.enable.delay"
+								type="Duration"
+								unit="min"
+								size="w-25 w-min-200"
+								required
+							/>
+						</FormRow>
+					</div>
+					<div class="form-text evcc-gray ps-1 ms-2">
+						{{
+							values.thresholds.enable.threshold === 0
+								? `Start when minimum charge power surplus is available for ${fmtDuration(values.thresholds.enable.delay * 60)}.`
+								: values.thresholds.enable.threshold < 0
+									? `Start charging, when ${fmtKw(-1 * values.thresholds.enable.threshold, false)} surplus is available for ${fmtDuration(values.thresholds.enable.delay * 60)}.`
+									: `Please use a negative value.`
+						}}
+					</div>
 				</div>
-			</FormRow>
 
-			<div class="mt-5 mb-4 d-flex justify-content-between">
+				<div v-show="solarMode === 'custom'" class="offset-1 mb-5">
+					<div class="d-flex flex-wrap flex-sm-nowrap gap-4 ps-1 ms-2">
+						<FormRow
+							id="loadpointDisableThreshold"
+							label="Disable grid power"
+							style="margin-bottom: 0 !important"
+						>
+							<PropertyField
+								id="loadpointDisableThreshold"
+								v-model="values.thresholds.disable.threshold"
+								type="Float"
+								unit="W"
+								size="w-25 w-min-200"
+								required
+							/>
+						</FormRow>
+						<FormRow
+							id="loadpointDisableDelay"
+							label="Disable delay"
+							style="margin-bottom: 0 !important"
+						>
+							<PropertyField
+								id="loadpointDisableDelay"
+								v-model="values.thresholds.disable.delay"
+								type="Duration"
+								unit="min"
+								size="w-25 w-min-200"
+								required
+							/>
+						</FormRow>
+					</div>
+					<div class="form-text evcc-gray ps-1 ms-2">
+						{{
+							values.thresholds.disable.threshold === 0
+								? `Stop when minimum charge power can't be satisfied for ${fmtDuration(values.thresholds.disable.delay * 60)}.`
+								: values.thresholds.disable.threshold > 0
+									? `Stop charging, when more than ${fmtKw(values.thresholds.disable.threshold, false)} is used from the grid for ${fmtDuration(values.thresholds.disable.delay * 60)}.`
+									: `Please use a positive value.`
+						}}
+					</div>
+				</div>
+
+				<FormRow
+					v-if="showPriority"
+					id="loadpointParamPriority"
+					label="Priority"
+					help="Relevant for multiple charge points. Higher priority charge points get preferred access to solar surplus."
+				>
+					<PropertyField
+						id="loadpointParamPriority"
+						v-model="values.priority"
+						type="Number"
+						size="w-100"
+						class="me-2"
+						:valid-values="priorityOptions"
+						required
+					/>
+				</FormRow>
+
+				<div v-if="vehicleOptions.length">
+					<hr class="my-4" />
+
+					<FormRow
+						id="loadpointParamVehicle"
+						label="Vehicle"
+						:help="
+							values.vehicle
+								? 'Always assume this vehicle is charging here. Auto-detection disabled. Manual override is possible.'
+								: 'Automatically selects the most plausible vehicle. Manual override is possible.'
+						"
+					>
+						<PropertyField
+							id="loadpointParamVehicle"
+							v-model="values.vehicle"
+							type="String"
+							class="me-2"
+							:valid-values="allVehicleOptions"
+							required
+						/>
+					</FormRow>
+
+					<FormRow
+						id="loadpointPollMode"
+						label="Vehicle updates"
+						:help="
+							values.soc.poll.mode === 'pollcharging'
+								? 'Only request vehicle status updates when charging.'
+								: values.soc.poll.mode === 'pollconnected'
+									? 'Update vehicle status in regular intervals when connected.'
+									: values.soc.poll.mode === 'pollalways'
+										? 'Always request status updates in regular intervals.'
+										: null
+						"
+					>
+						<SelectGroup
+							id="loadpointPollMode"
+							v-model="values.soc.poll.mode"
+							class="w-100"
+							:options="[
+								{ value: 'pollcharging', name: 'charging' },
+								{ value: 'pollconnected', name: 'connected' },
+								{ value: 'pollalways', name: 'always' },
+							]"
+						/>
+					</FormRow>
+					<FormRow
+						v-if="values.soc.poll.mode !== 'pollcharging'"
+						class="offset-1"
+						id="loadpointPollInterval"
+						label="Vehicle update interval"
+						help="Time between status updates. Short intervals may drain the vehicle battery."
+					>
+						<PropertyField
+							id="loadpointPollInterval"
+							v-model="values.soc.poll.interval"
+							type="Duration"
+							unit="min"
+							size="w-25 w-min-200"
+							class="me-2"
+							required
+						/>
+					</FormRow>
+
+					<div class="d-flex offset-1 mb-5">
+						<input
+							class="form-check-input"
+							id="loadpointEstimate"
+							type="checkbox"
+							v-model="values.soc.estimate"
+						/>
+						<label class="form-check-label ms-2" for="loadpointEstimate">
+							Interpolate charge level between API updates
+						</label>
+					</div>
+				</div>
+			</div>
+
+			<div class="mb-4 d-flex justify-content-between">
 				<button
 					v-if="isDeletable"
 					type="button"
@@ -373,13 +414,16 @@ import SelectGroup from "../SelectGroup.vue";
 import api from "../../api";
 import GenericModal from "../GenericModal.vue";
 import deepClone from "../../utils/deepClone";
+import deepEqual from "../../utils/deepEqual";
+import formatter from "../../mixins/formatter";
+import EditIcon from "../MaterialIcon/Edit.vue";
 
 const nsPerMin = 60 * 1e9;
 const wPerKw = 1e3;
 
 const defaultValues = {
 	title: "",
-	phases: 0,
+	phases: 3,
 	minCurrent: 6,
 	maxCurrent: 16,
 	priority: 0,
@@ -397,14 +441,25 @@ const defaultValues = {
 	meter: "",
 };
 
+const summerThresholds = {
+	enable: { delay: 1, threshold: 0 },
+	disable: { delay: 3, threshold: 0 },
+};
+const winterThresholds = {
+	enable: { delay: 1, threshold: -2000 },
+	disable: { delay: 15, threshold: 2000 },
+};
+
 export default {
 	name: "LoadpointModal",
-	components: { FormRow, PropertyField, GenericModal, SelectGroup },
+	components: { FormRow, PropertyField, GenericModal, SelectGroup, EditIcon },
 	props: {
 		id: Number,
 		name: String,
 		vehicleOptions: { type: Array, default: () => [] },
+		loadpointCount: Number,
 	},
+	mixins: [formatter],
 	emits: ["updated", "openMeterModal", "openChargerModal"],
 	data() {
 		return {
@@ -428,6 +483,11 @@ export default {
 		},
 		isDeletable() {
 			return !this.isNew;
+		},
+		showPriority() {
+			let count = this.loadpointCount;
+			if (this.isNew) count++;
+			return count > 1;
 		},
 		priorityOptions() {
 			const result = Array.from({ length: 11 }, (_, i) => ({ key: i, name: `${i}` }));
@@ -465,18 +525,10 @@ export default {
 			}
 		},
 		solarMode(value) {
-			const { enable, disable } = this.values.thresholds;
-
 			if (value === "summer") {
-				enable.delay = 1;
-				enable.threshold = 0;
-				disable.delay = 3;
-				disable.threshold = 0;
+				this.values.thresholds = deepClone(summerThresholds);
 			} else if (value === "winter") {
-				enable.delay = 1;
-				enable.threshold = -2000;
-				disable.delay = 15;
-				disable.threshold = 2000;
+				this.values.thresholds = deepClone(winterThresholds);
 			}
 		},
 	},
@@ -489,6 +541,7 @@ export default {
 				const res = await api.get(`config/loadpoints/${this.id}`);
 				this.values = this.transformAfterLoad(res.data.result);
 				this.updateChargerPower();
+				this.updateSolarMode();
 			} catch (e) {
 				console.error(e);
 			}
@@ -519,7 +572,8 @@ export default {
 		async create() {
 			this.saving = true;
 			try {
-				await api.post("config/loadpoints", this.values);
+				const values = this.transformBeforeSave(this.values);
+				await api.post("config/loadpoints", values);
 				this.$emit("updated");
 				this.closed();
 			} catch (e) {
@@ -585,23 +639,13 @@ export default {
 			}
 		},
 		updateSolarMode() {
-			const { enable, disable } = this.values.thresholds;
-			if (
-				enable.threshold === 0 &&
-				disable.threshold === 0 &&
-				enable.delay === 1 &&
-				disable.delay === 3
-			) {
+			const { thresholds } = this.values;
+			if (deepEqual(thresholds, summerThresholds)) {
 				this.solarMode = "summer";
-			} else if (
-				enable.threshold === -2000 &&
-				disable.threshold === 2000 &&
-				enable.delay === 1 &&
-				disable.delay === 15
-			) {
+			} else if (deepEqual(thresholds, winterThresholds)) {
 				this.solarMode = "winter";
 			} else {
-				this.solarMode = "other";
+				this.solarMode = "custom";
 			}
 		},
 	},
@@ -623,3 +667,6 @@ h6 {
 	margin-top: 4rem;
 }
 </style>
+import formatter from "assets/js/mixins/formatter";import deepClone from
+"../../utils/deepClone";import deepEqual from "assets/js/utils/deepEqual";import deepEqual from
+"assets/js/utils/deepEqual";

@@ -35,13 +35,24 @@
 				:for="`icon_${key}`"
 				:aria-label="key"
 			>
-				<VehicleIcon :name="key" />
+				<VehicleIcon v-if="key" :name="key" />
+				<shopicon-regular-minus v-else></shopicon-regular-minus>
 			</label>
 		</div>
 		<div v-if="!selectMode" class="me-2 mb-2 d-flex align-items-end">
 			<a :id="id" class="text-muted" href="#" @click.prevent="toggleSelectMode">change</a>
 		</div>
 	</div>
+	<SelectGroup
+		v-else-if="boolean"
+		:id="id"
+		class="w-50"
+		v-model="value"
+		:options="[
+			{ value: false, name: $t('config.options.boolean.no') },
+			{ value: true, name: $t('config.options.boolean.yes') },
+		]"
+	/>
 	<select v-else-if="select" :id="id" v-model="value" class="form-select" :class="sizeClass">
 		<option v-if="!required" value="">---</option>
 		<template v-for="({ key, name }, idx) in selectOptions">
@@ -76,11 +87,13 @@
 </template>
 
 <script>
+import "@h2d2/shopicons/es/regular/minus";
 import VehicleIcon from "../VehicleIcon";
+import SelectGroup from "../SelectGroup.vue";
 
 export default {
 	name: "PropertyField",
-	components: { VehicleIcon },
+	components: { VehicleIcon, SelectGroup },
 	props: {
 		id: String,
 		property: String,
@@ -141,6 +154,9 @@ export default {
 		textarea() {
 			return ["accessToken", "refreshToken"].includes(this.property);
 		},
+		boolean() {
+			return this.type === "Bool";
+		},
 		select() {
 			return this.validValues.length > 0;
 		},
@@ -150,10 +166,16 @@ export default {
 				return this.validValues;
 			}
 
+			let values = [...this.validValues];
+
+			if (this.icons && !this.required) {
+				values = ["", ...values];
+			}
+
 			// Otherwise, convert them to the correct format
-			return this.validValues.map((value) => ({
+			return values.map((value) => ({
 				key: value,
-				name: this.$t(`config.options.${this.property}.${value}`),
+				name: this.$t(`config.options.${this.property}.${value || "none"}`),
 			}));
 		},
 		value: {
@@ -165,6 +187,10 @@ export default {
 
 				if (this.scale) {
 					return this.modelValue * this.scale;
+				}
+
+				if (this.boolean) {
+					return this.modelValue === true;
 				}
 
 				return this.modelValue;
