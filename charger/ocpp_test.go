@@ -196,12 +196,12 @@ WAIT_DISCONNECT:
 
 func (suite *ocppTestSuite) TestAutoStart() {
 	// 1st charge point- remote
-	cp1 := suite.startChargePoint("test-1", 1)
+	cp1 := suite.startChargePoint("test-3", 1)
 	suite.Require().NoError(cp1.Start(ocppTestUrl))
 	suite.Require().True(cp1.IsConnected())
 
 	// 1st charge point- local
-	c1, err := NewOCPP("test-1", 1, "", "", 0, false, false, true, true, ocppTestConnectTimeout, ocppTestTimeout, "A")
+	c1, err := NewOCPP("test-3", 1, "", "", 0, false, false, true, true, ocppTestConnectTimeout, ocppTestTimeout, "A")
 	suite.Require().NoError(err)
 
 	// status and meter values
@@ -212,9 +212,14 @@ func (suite *ocppTestSuite) TestAutoStart() {
 
 	// aquire
 	{
+		expectedIdTag := "tag"
 		// always accept stopping unknown transaction, see https://github.com/evcc-io/evcc/pull/13990
-		_, err := cp1.StartTransaction(1, "tag", 0, types.NewDateTime(suite.clock.Now()))
+		_, err := cp1.StartTransaction(1, expectedIdTag, 0, types.NewDateTime(suite.clock.Now()))
 		suite.Require().NoError(err)
+
+		id, err := c1.Identify()
+		suite.Require().NoError(err)
+		suite.Require().Equal(expectedIdTag, id)
 
 		conn1 := c1.Connector()
 		_, err = conn1.TransactionID()
