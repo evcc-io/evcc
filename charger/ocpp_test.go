@@ -45,6 +45,7 @@ func (suite *ocppTestSuite) startChargePoint(id string, connectorId int) ocpp16.
 	cp := ocpp16.NewChargePoint(id, nil, nil)
 	cp.SetCoreHandler(handler)
 	cp.SetRemoteTriggerHandler(handler)
+	cp.SetSmartChargingHandler(handler)
 
 	// let cs handle the trigger messages
 	go func() {
@@ -191,4 +192,38 @@ WAIT_DISCONNECT:
 			}
 		}
 	}
+}
+
+func (suite *ocppTestSuite) TestAutoStart() {
+	// 1st charge point- remote
+	cp1 := suite.startChargePoint("test-1", 1)
+	suite.Require().NoError(cp1.Start(ocppTestUrl))
+	suite.Require().True(cp1.IsConnected())
+
+	// 1st charge point- local
+	c1, err := NewOCPP("test-1", 1, "", "", 0, false, false, true, ocppTestConnectTimeout, ocppTestTimeout, "A")
+	suite.Require().NoError(err)
+
+	// status and meter values
+	{
+		suite.clock.Add(ocppTestTimeout)
+		c1.conn.TestClock(suite.clock)
+	}
+
+	// aquire
+	{
+		// always accept stopping unknown transaction, see https://github.com/evcc-io/evcc/pull/13990
+		_, err := cp1.StartTransaction(1, "tag", 0, types.NewDateTime(suite.clock.Now()))
+		suite.Require().NoError(err)
+
+		conn1 := c1.Connector()
+		_, err = conn1.TransactionID()
+		suite.Require().NoError(err)
+	}
+
+	err = c1.Enable(true)
+	suite.Require().NoError(err)
+
+	err = c1.Enable(false)
+	suite.Require().NoError(err)
 }
