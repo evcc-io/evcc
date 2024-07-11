@@ -213,6 +213,7 @@ func (suite *ocppTestSuite) TestAutoStart() {
 	// aquire
 	{
 		expectedIdTag := "tag"
+
 		// always accept stopping unknown transaction, see https://github.com/evcc-io/evcc/pull/13990
 		_, err := cp1.StartTransaction(1, expectedIdTag, 0, types.NewDateTime(suite.clock.Now()))
 		suite.Require().NoError(err)
