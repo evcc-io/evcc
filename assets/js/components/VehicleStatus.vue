@@ -270,7 +270,7 @@ export default {
 		},
 		vehicleLimitVisible() {
 			const limit = this.effectiveLimitSoc || 100;
-			return this.vehicleLimitSoc > 0 && this.vehicleLimitSoc < limit;
+			return this.connected && this.vehicleLimitSoc > 0 && this.vehicleLimitSoc < limit;
 		},
 		vehicleLimitTooltipContent() {
 			if (!this.vehicleLimitVisible) {
@@ -285,7 +285,7 @@ export default {
 			return this.$t("main.vehicleStatus.vehicleLimit");
 		},
 		minSocVisible() {
-			return this.minSoc > 0 && this.vehicleSoc < this.minSoc;
+			return this.connected && this.minSoc > 0 && this.vehicleSoc < this.minSoc;
 		},
 		minSocTooltipContent() {
 			if (!this.minSocVisible) {
@@ -539,8 +539,8 @@ export default {
 			}
 		},
 		smartCostClicked() {
-			this.smartCostTooltip?.hide();
 			this.openLoadpointSettings();
+			this.smartCostTooltip?.hide();
 		},
 		updatePvTooltip() {
 			this.pvTooltip = this.updateTooltip(

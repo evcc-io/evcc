@@ -10,6 +10,7 @@ type Class int
 //go:generate enumer -type Class -trimprefix Class -transform=lower -text
 const (
 	_ Class = iota
+	ClassConfigFile
 	ClassMeter
 	ClassCharger
 	ClassVehicle

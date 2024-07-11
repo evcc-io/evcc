@@ -62,7 +62,7 @@ require (
 	github.com/libp2p/zeroconf/v2 v2.2.0
 	github.com/lorenzodonini/ocpp-go v0.18.0
 	github.com/lunixbochs/struc v0.0.0-20200707160740-784aaebc1d40
-	github.com/mabunixda/wattpilot v1.8.0
+	github.com/mabunixda/wattpilot v1.8.1
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mlnoga/rct v0.1.2-0.20240421173556-1c5b75037e2f
 	github.com/muka/go-bluetooth v0.0.0-20240115085408-dfdf79b8f61d
@@ -197,6 +197,6 @@ require (
 
 replace gopkg.in/yaml.v3 => github.com/andig/yaml v0.0.0-20240531135838-1ff5761ab467
 
-replace github.com/enbility/eebus-go => github.com/enbility/eebus-go v0.0.0-20240705085643-aef0f7bf9e5d
+replace github.com/enbility/eebus-go => github.com/enbility/eebus-go v0.0.0-20240705140947-e13aec8af1ba
 
 replace github.com/enbility/spine-go => github.com/enbility/spine-go v0.0.0-20240705075417-fb2969d753c1
