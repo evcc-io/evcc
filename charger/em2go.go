@@ -154,13 +154,6 @@ func (wb *Em2Go) Enable(enable bool) error {
 
 // MaxCurrent implements the api.Charger interface
 func (wb *Em2Go) MaxCurrent(current int64) error {
-	return wb.MaxCurrentMillis(float64(current))
-}
-
-var _ api.ChargerEx = (*Em2Go)(nil)
-
-// MaxCurrentMillis implements the api.ChargerEx interface
-func (wb *Em2Go) MaxCurrentMillis(current float64) error {
 	b := make([]byte, 2)
 	binary.BigEndian.PutUint16(b, uint16(10*current))
 
