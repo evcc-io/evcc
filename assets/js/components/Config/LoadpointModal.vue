@@ -3,6 +3,7 @@
 		id="loadpointModal"
 		:title="modalTitle"
 		data-testid="loadpoint-modal"
+		fade="left"
 		@open="open"
 		@closed="closed"
 	>

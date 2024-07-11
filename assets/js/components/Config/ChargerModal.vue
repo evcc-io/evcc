@@ -3,6 +3,7 @@
 		id="chargerModal"
 		:title="modalTitle"
 		data-testid="charger-modal"
+		fade="right"
 		@open="open"
 		@closed="closed"
 	>

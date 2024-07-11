@@ -4,7 +4,7 @@
 			:id="id"
 			ref="modal"
 			class="modal fade text-dark"
-			:class="sizeClass"
+			:class="[sizeClass, fadeClass]"
 			tabindex="-1"
 			role="dialog"
 			aria-hidden="true"
@@ -45,6 +45,7 @@ export default {
 		title: String,
 		dataTestid: String,
 		uncloseable: Boolean,
+		fade: String,
 		size: String,
 	},
 	emits: ["open", "closed"],
@@ -59,6 +60,12 @@ export default {
 	computed: {
 		sizeClass() {
 			return this.size ? `modal-${this.size}` : "";
+		},
+		fadeClass() {
+			if (this.fade) {
+				return `fade-${this.fade}`;
+			}
+			return "";
 		},
 	},
 	methods: {
