@@ -201,7 +201,7 @@ func (suite *ocppTestSuite) TestAutoStart() {
 	suite.Require().True(cp1.IsConnected())
 
 	// 1st charge point- local
-	c1, err := NewOCPP("test-1", 1, "", "", 0, false, false, true, ocppTestConnectTimeout, ocppTestTimeout, "A")
+	c1, err := NewOCPP("test-1", 1, "", "", 0, false, false, true, true, ocppTestConnectTimeout, ocppTestTimeout, "A")
 	suite.Require().NoError(err)
 
 	// status and meter values
