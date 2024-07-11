@@ -210,7 +210,7 @@ func (suite *ocppTestSuite) TestAutoStart() {
 		c1.conn.TestClock(suite.clock)
 	}
 
-	// aquire
+	// acquire
 	{
 		expectedIdTag := "tag"
 
