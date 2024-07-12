@@ -44,8 +44,8 @@ test.describe("messaging", async () => {
 
     await modal.locator(".monaco-editor .view-line").nth(0).click();
     for (let i = 0; i < 4; i++) {
-      await page.keyboard.press(SELECT_ALL);
-      await page.keyboard.press("Backspace");
+      await page.keyboard.press(SELECT_ALL, { delay: 10 });
+      await page.keyboard.press("Backspace", { delay: 10 });
     }
     await page.keyboard.type("# hello world");
     await page.getByRole("button", { name: "Save" }).click();
