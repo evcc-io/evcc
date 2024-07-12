@@ -109,7 +109,7 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, valueChan chan<- util.Param)
 		"prioritysoc":             {"POST", "/prioritysoc/{value:[0-9.]+}", floatHandler(site.SetPrioritySoc, site.GetPrioritySoc)},
 		"residualpower":           {"POST", "/residualpower/{value:-?[0-9.]+}", floatHandler(site.SetResidualPower, site.GetResidualPower)},
 		"smartcost":               {"POST", "/smartcostlimit/{value:-?[0-9.]+}", updateGlobalSmartCostLimit(site)},
-		"smartcostdelete":         {"DELETE", "/smartcostlimit/{value:-?[0-9.]+}", updateGlobalSmartCostLimit(site)},
+		"smartcostdelete":         {"DELETE", "/smartcostlimit", updateGlobalSmartCostLimit(site)},
 		"gridcharge":              {"POST", "/gridchargelimit/{value:-?[0-9.]+}", updateGridChargeLimit(site)},
 		"gridchargedelete":        {"DELETE", "/gridchargelimit", updateGridChargeLimit(site)},
 		"tariff":                  {"GET", "/tariff/{tariff:[a-z]+}", tariffHandler(site)},
