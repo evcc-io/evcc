@@ -1,6 +1,8 @@
 package fiat
 
 import (
+	"time"
+
 	"github.com/evcc-io/evcc/api"
 )
 
@@ -9,6 +11,7 @@ type Controller struct {
 	vin              string
 	pin              string
 	requestedCurrent int64
+	lastStartCharge  time.Time
 }
 
 // NewController creates a vehicle current and charge controller
@@ -47,62 +50,55 @@ func (c *Controller) ChargeEnable(enable bool) error {
 	if c.pin == "" {
 		return api.ErrMissingCredentials
 	}
-	var err error
 
 	if enable {
-		// Force charge start
-		res, err := c.api.Action(c.vin, c.pin, "ev/chargenow", "CNOW")
-		if err == nil && res.ResponseStatus == "OK" {
-			// update charge schedule to start now
-			// return ChangeScheduleCharge(time.Now(), nil);
-		}
+		// update charge schedule to start now
+		c.lastStartCharge = time.Now()
+		return c.ChangeScheduleCharge(c.lastStartCharge, c.lastStartCharge.Add(time.Hour*12))
 	} else {
-		// Simulate stop charging by updating charege schedule end time
-		// return ChangeScheduleCharge(nil, time.Now().add("2m"))
-		err = api.ErrNotAvailable
+		// Simulate stop charging by updating charege schedule end time to 1 minute in the future
+		return c.ChangeScheduleCharge(c.lastStartCharge, time.Now().Add(time.Minute*1))
+	}
+}
+
+func (c *Controller) ChangeScheduleCharge(startTime time.Time, endTime time.Time) error {
+	// get current schedule
+	var schedules []ScheduleData
+	stat, err := c.api.Status(c.vin)
+	if err != nil && stat.EvInfo != nil {
+		schedules = stat.EvInfo.Schedules
+	}
+	if schedules == nil {
+		return api.ErrNotAvailable
+	}
+
+	// update schedule 1 and make sure it's active
+	// all values are set to be sure no manual change can lead to inconsistencies
+	schedules[0].CabinPriority = false
+	schedules[0].ChargeToFull = false
+	schedules[0].EnableScheduleType = true
+	schedules[0].EndTime = endTime.Format("hh:mm")
+	schedules[0].RepeatSchedule = true
+	schedules[0].ScheduleType = "CHARGE"
+	schedules[0].ScheduledDays.Friday = true
+	schedules[0].ScheduledDays.Monday = true
+	schedules[0].ScheduledDays.Saturday = true
+	schedules[0].ScheduledDays.Sunday = true
+	schedules[0].ScheduledDays.Thursday = true
+	schedules[0].ScheduledDays.Tuesday = true
+	schedules[0].ScheduledDays.Wednesday = true
+	schedules[0].StartTime = startTime.Format("hh:mm")
+
+	// make sure the other schedules are disabled in case user changed them
+	schedules[1].EnableScheduleType = false
+	schedules[2].EnableScheduleType = false
+
+	// post new schedule
+	res, err := c.api.UpdateSchedule(c.vin, c.pin, schedules)
+
+	if err == nil && res.ResponseStatus != "200" {
+		err = api.ErrMustRetry
 	}
 
 	return err
 }
-
-/*
-func (c *Controller) ChangeScheduleCharge(startTime TimeMillis, endTime TimeMillis) error {
-	// get current schedule
-	var schedule = nil
-	stat, err := c.api.Status(c.vin)
-	if err != nil && stat.EvInfo != nil {
-		schedule = stat.EvInfo.Schedules
-	}
-	if schedule == nil {
-		return api.ErrNotAvailable
-	}
-	if endTime == nil {
-		endTime = schedule[0].EndTime
-	}
-	if startTime == nil {
-		startTime = schedule[0].StartTime
-	}
-
-	// update schedule 1 and make sure it's active
-	schedule[0].CabinPriority = false
-	schedule[0].ChargeToFull = false
-	schedule[0].EnableScheduleType = true
-	schedule[0].EndTime = endTime
-	schedule[0].RepeatSchedule = true
-	schedule[0].ScheduleType = "CHARGE"
-	schedule[0].ScheduleDays.friday = true
-	schedule[0].ScheduleDays.monday = true
-	schedule[0].ScheduleDays.saturday = true
-	schedule[0].ScheduleDays.sunday = true
-	schedule[0].ScheduleDays.thursday = true
-	schedule[0].ScheduleDays.tuesday = true
-	schedule[0].ScheduleDays.wednesday = true
-	schedule[0].StartTime = startTime
-
-	// make sure the other schedules are disabled in case user changed them
-	schedule[1].EnableScheduleType = false
-	schedule[2].EnableScheduleType = false
-
-	// post new schedule
-	return apiError(c.api.UpdateSchedule(c.vin, c.pin, request.MarshalJSON(schedule)))
-}*/

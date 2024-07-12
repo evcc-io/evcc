@@ -159,7 +159,7 @@ func (v *API) Action(vin, pin, action, cmd string) (ActionResponse, error) {
 	return res, err
 }
 
-func (v *API) UpdateSchedule(vin, pin, scheduleJson string) (ActionResponse, error) {
+func (v *API) UpdateSchedule(vin, pin string, schedules []ScheduleData) (ActionResponse, error) {
 	var res ActionResponse
 
 	token, err := v.pinAuth(pin)
@@ -170,13 +170,13 @@ func (v *API) UpdateSchedule(vin, pin, scheduleJson string) (ActionResponse, err
 	uri := fmt.Sprintf("%s/v2/accounts/%s/vehicles/%s/ev/schedule", ApiURI, v.identity.UID(), vin)
 
 	data := struct {
-		Command   string `json:"command"`
-		PinAuth   string `json:"pinAuth"`
-		Schedules string `json:"schedules"`
+		Command   string         `json:"command"`
+		PinAuth   string         `json:"pinAuth"`
+		Schedules []ScheduleData `json:"schedules"`
 	}{
 		Command:   "CPPLUS",
 		PinAuth:   token,
-		Schedules: scheduleJson,
+		Schedules: schedules,
 	}
 
 	req, err := v.request(http.MethodPost, uri, request.MarshalJSON(data))
