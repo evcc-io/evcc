@@ -174,9 +174,9 @@ func (v *API) UpdateSchedule(vin, pin, scheduleJson string) (ActionResponse, err
 		PinAuth   string `json:"pinAuth"`
 		Schedules string `json:"schedules"`
 	}{
-		Command: "CPPLUS",
-		PinAuth: token,
-		Schedules: scheduleJson
+		Command:   "CPPLUS",
+		PinAuth:   token,
+		Schedules: scheduleJson,
 	}
 
 	req, err := v.request(http.MethodPost, uri, request.MarshalJSON(data))
