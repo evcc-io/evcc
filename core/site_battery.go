@@ -80,23 +80,28 @@ func (site *Site) plannerRate() (*api.Rate, error) {
 
 func (site *Site) smartCostActive(lp loadpoint.API, rate *api.Rate) bool {
 	limit := lp.GetSmartCostLimit()
-	return limit != 0 && rate != nil && rate.Price <= limit
+	return limit != nil && rate != nil && rate.Price <= *limit
 }
 
 func (site *Site) smartCostNextStart(lp loadpoint.API, rate api.Rates) time.Time {
 	limit := lp.GetSmartCostLimit()
-	if limit == 0 || rate == nil {
+	if limit == nil || rate == nil {
 		return time.Time{}
 	}
 
 	now := time.Now()
 	for _, slot := range rate {
-		if slot.Start.After(now) && slot.Price <= limit {
+		if slot.Start.After(now) && slot.Price <= *limit {
 			return slot.Start
 		}
 	}
 
 	return time.Time{}
+}
+
+func (site *Site) gridChargeActive(rate *api.Rate) bool {
+	limit := site.GetGridChargeLimit()
+	return limit != nil && rate != nil && rate.Price <= *limit
 }
 
 func (site *Site) updateBatteryMode() {

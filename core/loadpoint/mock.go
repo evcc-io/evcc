@@ -380,10 +380,10 @@ func (mr *MockAPIMockRecorder) GetRemainingEnergy() *gomock.Call {
 }
 
 // GetSmartCostLimit mocks base method.
-func (m *MockAPI) GetSmartCostLimit() float64 {
+func (m *MockAPI) GetSmartCostLimit() *float64 {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetSmartCostLimit")
-	ret0, _ := ret[0].(float64)
+	ret0, _ := ret[0].(*float64)
 	return ret0
 }
 
@@ -602,7 +602,7 @@ func (mr *MockAPIMockRecorder) SetPriority(arg0 any) *gomock.Call {
 }
 
 // SetSmartCostLimit mocks base method.
-func (m *MockAPI) SetSmartCostLimit(arg0 float64) {
+func (m *MockAPI) SetSmartCostLimit(arg0 *float64) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "SetSmartCostLimit", arg0)
 }

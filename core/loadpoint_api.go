@@ -9,6 +9,7 @@ import (
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/wrapper"
+	"github.com/evcc-io/evcc/server/db/settings"
 )
 
 var _ loadpoint.API = (*Loadpoint)(nil)
@@ -489,14 +490,14 @@ func (lp *Loadpoint) StartVehicleDetection() {
 }
 
 // GetSmartCostLimit gets the smart cost limit
-func (lp *Loadpoint) GetSmartCostLimit() float64 {
+func (lp *Loadpoint) GetSmartCostLimit() *float64 {
 	lp.RLock()
 	defer lp.RUnlock()
 	return lp.smartCostLimit
 }
 
 // SetSmartCostLimit sets the smart cost limit
-func (lp *Loadpoint) SetSmartCostLimit(val float64) {
+func (lp *Loadpoint) SetSmartCostLimit(val *float64) {
 	lp.Lock()
 	defer lp.Unlock()
 
@@ -504,8 +505,14 @@ func (lp *Loadpoint) SetSmartCostLimit(val float64) {
 
 	if lp.smartCostLimit != val {
 		lp.smartCostLimit = val
-		lp.settings.SetFloat(keys.SmartCostLimit, lp.smartCostLimit)
-		lp.publish(keys.SmartCostLimit, lp.smartCostLimit)
+
+		if val == nil {
+			settings.SetString(keys.SmartCostLimit, "")
+			lp.publish(keys.SmartCostLimit, "")
+		} else {
+			settings.SetFloat(keys.SmartCostLimit, *val)
+			lp.publish(keys.SmartCostLimit, *val)
+		}
 	}
 }
 

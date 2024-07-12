@@ -356,3 +356,28 @@ func (site *Site) SetBatteryDischargeControl(val bool) error {
 
 	return nil
 }
+
+func (site *Site) GetGridChargeLimit() *float64 {
+	site.RLock()
+	defer site.RUnlock()
+	return site.gridChargeLimit
+}
+
+func (site *Site) SetGridChargeLimit(val *float64) {
+	site.log.DEBUG.Println("set smart cost limit:", val)
+
+	site.Lock()
+	defer site.Unlock()
+
+	if site.gridChargeLimit != val {
+		site.gridChargeLimit = val
+
+		if val == nil {
+			settings.SetString(keys.GridChargeLimit, "")
+			site.publish(keys.GridChargeLimit, "")
+		} else {
+			settings.SetFloat(keys.GridChargeLimit, *val)
+			site.publish(keys.GridChargeLimit, *val)
+		}
+	}
+}

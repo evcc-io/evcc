@@ -43,6 +43,10 @@ const (
 	BufferStartSoc                    = "bufferStartSoc"
 	MaxGridSupplyWhileBatteryCharging = "maxGridSupplyWhileBatteryCharging"
 
+	// battery charging
+	GridChargeLimit  = "gridChargeLimit"
+	GridChargeActive = "gridChargeActive"
+
 	// battery status
 	Battery       = "battery"
 	BatteryEnergy = "batteryEnergy"

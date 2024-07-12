@@ -82,10 +82,11 @@ type Site struct {
 	auxMeters     []api.Meter // Auxiliary meters
 
 	// battery settings
-	prioritySoc             float64 // prefer battery up to this Soc
-	bufferSoc               float64 // continue charging on battery above this Soc
-	bufferStartSoc          float64 // start charging on battery above this Soc
-	batteryDischargeControl bool    // prevent battery discharge for fast and planned charging
+	prioritySoc             float64  // prefer battery up to this Soc
+	bufferSoc               float64  // continue charging on battery above this Soc
+	bufferStartSoc          float64  // start charging on battery above this Soc
+	batteryDischargeControl bool     // prevent battery discharge for fast and planned charging
+	gridChargeLimit         *float64 // grid charging limit
 
 	loadpoints  []*Loadpoint             // Loadpoints
 	tariffs     *tariff.Tariffs          // Tariffs
@@ -295,6 +296,15 @@ func (site *Site) restoreSettings() error {
 			return err
 		}
 	}
+
+	if v, err := settings.String(keys.GridChargeLimit); err == nil {
+		if v == "" {
+			site.SetGridChargeLimit(nil)
+		} else if v, err := settings.Float(keys.GridChargeLimit); err == nil {
+			site.SetGridChargeLimit(&v)
+		}
+	}
+
 	return nil
 }
 
@@ -792,8 +802,18 @@ func (site *Site) update(lp updater) {
 	var smartCostActive bool
 	if rate, err := site.plannerRate(); err == nil {
 		smartCostActive = site.smartCostActive(lp, rate)
+
+		gridChargeActive := site.gridChargeActive(rate)
+		site.publish(keys.GridChargeActive, gridChargeActive)
+
+		if gridChargeActive {
+			site.SetBatteryMode(api.BatteryCharge)
+		} else if mode := site.GetBatteryMode(); mode != api.BatteryNormal {
+			site.SetBatteryMode(api.BatteryNormal)
+		}
+
 	} else {
-		site.log.WARN.Println("smartCostActive:", err)
+		site.log.WARN.Println("smartCost:", err)
 	}
 
 	var smartCostNextStart time.Time

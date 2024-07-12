@@ -39,6 +39,11 @@ type API interface {
 	GetMaxGridSupplyWhileBatteryCharging() float64
 	SetMaxGridSupplyWhileBatteryCharging(float64) error
 
+	// GetGridChargeLimit get the grid charge limit
+	GetGridChargeLimit() *float64
+	// SetGridChargeLimit sets the grid charge limit
+	SetGridChargeLimit(limit *float64)
+
 	//
 	// power and energy
 	//
