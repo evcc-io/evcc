@@ -75,6 +75,10 @@ export default {
     fmtNumberToLocale(val, pad = 0) {
       return val.toLocaleString(this.$i18n?.locale).padStart(pad, "0");
     },
+    fmtDurationToTime(date) {
+      const diff = date - new Date();
+      return this.fmtDuration(diff / 1000, true, "h");
+    },
     fmtDurationNs(duration = 0, withUnit = true, minUnit = "s") {
       return this.fmtDuration(duration / 1e9, withUnit, minUnit);
     },
@@ -127,7 +131,7 @@ export default {
       const rtf = new Intl.RelativeTimeFormat(this.$i18n?.locale, { numeric: "auto" });
 
       if (this.isToday(date)) {
-        return rtf.formatToParts(0, "day")[0].value;
+        return ""; //rtf.formatToParts(0, "day")[0].value;
       }
       if (this.isTomorrow(date)) {
         return rtf.formatToParts(1, "day")[0].value;
@@ -155,7 +159,7 @@ export default {
         minute: "numeric",
       }).format(date);
 
-      return `${weekday} ${hour}`;
+      return `${weekday} ${hour}`.trim();
     },
     fmtFullDateTime: function (date, short) {
       return new Intl.DateTimeFormat(this.$i18n?.locale, {

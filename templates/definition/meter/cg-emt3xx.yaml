@@ -2,7 +2,22 @@ template: cg-emt3xx
 products:
   - brand: Carlo Gavazzi
     description:
-      generic: EM/ET 330/340
+      generic: ET330/ET340
+  - brand: Carlo Gavazzi
+    description:
+      generic: EM330/EM340
+  - brand: Carlo Gavazzi
+    description:
+      generic: EM530/EM540
+  - brand: Victron
+    description:
+      generic: ET340
+  - brand: Victron
+    description:
+      generic: EM530/EM540
+  - brand: Kostal
+    description:
+      generic: Energy Meter C (KEM-C)
 params:
   - name: usage
     choice: ["grid", "charge"]

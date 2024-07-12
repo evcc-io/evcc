@@ -101,7 +101,6 @@ export default {
 		uploadProgress: Number,
 		sponsor: { type: Object, default: () => ({}) },
 		smartCostType: String,
-		smartCostActive: Boolean,
 		fatal: Object,
 	},
 	computed: {

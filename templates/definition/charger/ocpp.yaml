@@ -38,6 +38,9 @@ requirements:
       * Local network connection
 params:
   - preset: ocpp
+  - name: autostart
+    advanced: true
+    type: bool
   - name: getconfiguration
     advanced: true
     type: bool
@@ -78,6 +81,7 @@ params:
       en: Unit for setting ChargingProfile values ("W" or "A")
 render: |
   {{ include "ocpp" . }}
+  autostart: {{ .autostart }}
   {{- if ne .getconfiguration "true" }}
   getconfiguration: {{ .getconfiguration }}
   {{- end }}

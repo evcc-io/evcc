@@ -29,12 +29,13 @@ render: |
     out:
       - name: power
         type: int
-        source: modbus
-        {{- include "modbus" . | indent 6 }}
-        register:
-          address: 1000
-          type: writeholding
-          decode: uint16
+        config:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 1000
+            type: writeholding
+            decode: uint16
   status:
     source: combined
     plugged:

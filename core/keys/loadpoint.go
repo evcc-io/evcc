@@ -28,8 +28,9 @@ const (
 	Charging  = "charging"  // charging
 
 	// smart charging
-	SmartCostActive = "smartCostActive" // smart cost active
-	SmartCostLimit  = "smartCostLimit"  // smart cost limit
+	SmartCostActive    = "smartCostActive"    // smart cost active
+	SmartCostLimit     = "smartCostLimit"     // smart cost limit
+	SmartCostNextStart = "smartCostNextStart" // smart cost next start
 
 	// effective values
 	EffectivePriority   = "effectivePriority"   // effective priority
@@ -59,6 +60,7 @@ const (
 	PlanSoc            = "planSoc"            // charge plan soc goal
 	PlanActive         = "planActive"         // charge plan has determined current slot to be an active slot
 	PlanProjectedStart = "planProjectedStart" // charge plan start time (earliest slot)
+	PlanProjectedEnd   = "planProjectedEnd"   //charge plan ends (end of last slot)
 	PlanOverrun        = "planOverrun"        // charge plan goal not reachable in time
 
 	// remote control

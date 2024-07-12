@@ -121,12 +121,12 @@ github.com/eapache/queue v1.1.0/go.mod h1:6eCeP0CKFpHLu8blIFXhExK/dRa7WDZfr6jVFP
 github.com/eclipse/paho.mqtt.golang v1.4.3 h1:2kwcUGn8seMUfWndX0hGbvH8r7crgcJguQNCyp70xik=
 github.com/eclipse/paho.mqtt.golang v1.4.3/go.mod h1:CSYvoAlsMkhYOXh/oKyxa8EcBci6dVkLCbo5tTC1RIE=
 github.com/edsrzf/mmap-go v1.0.0/go.mod h1:YO35OhQPt3KJa3ryjFM5Bs14WD66h8eGKpfaBNrHW5M=
-github.com/enbility/eebus-go v0.6.0 h1:TiX397ON3bCPnn49BqkzEd+GTWI4rj0USmRuWxbdr5s=
-github.com/enbility/eebus-go v0.6.0/go.mod h1:6ka3OsfqJDiXAWMMYO1LkKQa7xSIgqrhwOeP5kO/yao=
+github.com/enbility/eebus-go v0.0.0-20240705140947-e13aec8af1ba h1:wlfFa9joFrll4u3nqPc25q3QyNUxiYSa0l8sPiYMOCA=
+github.com/enbility/eebus-go v0.0.0-20240705140947-e13aec8af1ba/go.mod h1:6ka3OsfqJDiXAWMMYO1LkKQa7xSIgqrhwOeP5kO/yao=
 github.com/enbility/ship-go v0.5.1 h1:8Vax1MpyI/C+kQlMFAzQ7/h/xJ7fuumSLJy9FYgEkcE=
 github.com/enbility/ship-go v0.5.1/go.mod h1:jewJWYQ10jNhsnhS1C4jESx3CNmDa5HNWZjBhkTug5Y=
-github.com/enbility/spine-go v0.6.0 h1:sd5x9ZckvhI9b07HrdxKEZAcpF1Jt+xMC46o3VpuwoY=
-github.com/enbility/spine-go v0.6.0/go.mod h1:1SJ6+ihCkjzVALXXbB3xdjDGp2ITqq9gnJQiPsF3fb0=
+github.com/enbility/spine-go v0.0.0-20240705075417-fb2969d753c1 h1:H7Jvd7QOmA3IJtfswnoXY37WFSxYeMCIQemtmrN1pS8=
+github.com/enbility/spine-go v0.0.0-20240705075417-fb2969d753c1/go.mod h1:1SJ6+ihCkjzVALXXbB3xdjDGp2ITqq9gnJQiPsF3fb0=
 github.com/enbility/zeroconf/v2 v2.0.0-20240210101930-d0004078577b h1:sg3c6LJ4eWffwtt9SW0lgcIX4Oh274vwdJnNFNNrDco=
 github.com/enbility/zeroconf/v2 v2.0.0-20240210101930-d0004078577b/go.mod h1:BjzRRiYX6mWdOgku1xxDE+NsV8PijTby7Q7BkYVdfDU=
 github.com/envoyproxy/go-control-plane v0.6.9/go.mod h1:SBwIajubJHhxtWwsL9s8ss4safvEdbitLhGGK48rN6g=
@@ -395,8 +395,8 @@ github.com/lorenzodonini/ocpp-go v0.18.0/go.mod h1:ZynYDWGw6CslG3vyPuucLsy6AyE+h
 github.com/lunixbochs/struc v0.0.0-20200707160740-784aaebc1d40 h1:EnfXoSqDfSNJv0VBNqY/88RNnhSGYkrHaO0mmFGbVsc=
 github.com/lunixbochs/struc v0.0.0-20200707160740-784aaebc1d40/go.mod h1:vy1vK6wD6j7xX6O6hXe621WabdtNkou2h7uRtTfRMyg=
 github.com/lyft/protoc-gen-validate v0.0.13/go.mod h1:XbGvPuh87YZc5TdIa2/I4pLk0QoUACkjt2znoq26NVQ=
-github.com/mabunixda/wattpilot v1.8.0 h1:R9bBgcx/zvFpa8TPWUWc6yNaeVz2i2K6okCxmIhNabU=
-github.com/mabunixda/wattpilot v1.8.0/go.mod h1:6OpgbSSsd1LhlS0Se/F/iUP8RWIzcum+RRSy9h9V8wE=
+github.com/mabunixda/wattpilot v1.8.1 h1:XP+Udu1HrSTjBd4Odl0SNpSr12uvnGndoDg2vSNqcdI=
+github.com/mabunixda/wattpilot v1.8.1/go.mod h1:oXWlvKInaVt8FFSdEoNObEP5N8+4m6cbiF11M+8DAHY=
 github.com/mattn/go-colorable v0.0.9/go.mod h1:9vuHe8Xs5qXnSaW/c/ABM9alt+Vo+STaOChaDxuIBZU=
 github.com/mattn/go-colorable v0.1.2/go.mod h1:U0ppj6V5qS13XJ6of8GYAs25YV2eR4EVcfRqFIhoBtE=
 github.com/mattn/go-colorable v0.1.13 h1:fFA4WZxdEF4tXPZVKMLwD8oUnCTTo08duU7wxecdEvA=

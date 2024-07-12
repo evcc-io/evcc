@@ -45,7 +45,7 @@ func NewEleringFromConfig(other map[string]interface{}) (api.Tariff, error) {
 
 	t := &Elering{
 		embed:  &cc.embed,
-		log:    util.NewLogger("Elering"),
+		log:    util.NewLogger("elering"),
 		region: strings.ToLower(cc.Region),
 		data:   util.NewMonitor[api.Rates](2 * time.Hour),
 	}
