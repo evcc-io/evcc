@@ -108,6 +108,10 @@ func NewEm2Go(uri string, slaveID uint8, milli bool) (api.Charger, error) {
 		phasesG    func() (int, error)
 	)
 
+	if milli {
+		maxCurrent = wb.maxCurrentMillis
+	}
+
 	if _, err := wb.conn.ReadHoldingRegisters(em2GoRegPhases, 1); err == nil {
 		phases1p3p = wb.phases1p3p
 		phasesG = wb.getPhases
