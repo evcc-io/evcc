@@ -9,7 +9,6 @@ import (
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/wrapper"
-	"github.com/evcc-io/evcc/server/db/settings"
 )
 
 var _ loadpoint.API = (*Loadpoint)(nil)
@@ -507,10 +506,10 @@ func (lp *Loadpoint) SetSmartCostLimit(val *float64) {
 		lp.smartCostLimit = val
 
 		if val == nil {
-			settings.SetString(keys.SmartCostLimit, "")
+			lp.settings.SetString(keys.SmartCostLimit, "")
 			lp.publish(keys.SmartCostLimit, "")
 		} else {
-			settings.SetFloat(keys.SmartCostLimit, *val)
+			lp.settings.SetFloat(keys.SmartCostLimit, *val)
 			lp.publish(keys.SmartCostLimit, *val)
 		}
 	}
