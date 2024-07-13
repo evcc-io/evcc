@@ -345,7 +345,7 @@ func (c *OCPP) Enable(enable bool) error {
 
 	// if transaction is not running, disable is a no-op
 	if txn != 0 || enable {
-		if c.autoStart || (c.noStop && (enable && txn != 0 || !enable)) {
+		if c.autoStart || (c.noStop && txn != 0) {
 			err = c.enableAutostart(enable)
 		} else {
 			err = c.enableRemote(enable)
