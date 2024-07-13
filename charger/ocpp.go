@@ -339,7 +339,7 @@ func (c *OCPP) Enabled() (bool, error) {
 
 func (c *OCPP) Enable(enable bool) error {
 	txn, err := c.conn.TransactionID()
-	if err != nil {
+	if err != nil && enable {
 		return err
 	}
 
