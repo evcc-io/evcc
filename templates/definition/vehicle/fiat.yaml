@@ -8,13 +8,11 @@ params:
     example: ZFAE...
   - name: pin
     mask: true
-  - name: controlCharge
   - preset: vehicle-identify
 render: |
   type: fiat
   {{ include "vehicle-base" . }}
   {{- if .pin }}
   pin: {{ .pin }} # mandatory to deep refresh Soc & control
-  controlCharge: {{ .controlCharge }} # charge control can only work if pin is provided
   {{- end }}
   {{ include "vehicle-identify" . }}

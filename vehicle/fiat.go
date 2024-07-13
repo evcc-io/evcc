@@ -1,7 +1,6 @@
 package vehicle
 
 import (
-	"errors"
 	"fmt"
 	"time"
 
@@ -28,7 +27,6 @@ func NewFiatFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
 		embed                    `mapstructure:",squash"`
 		User, Password, VIN, PIN string
-		ControlCharge            bool
 		Expiry                   time.Duration
 		Cache                    time.Duration
 	}{
@@ -62,12 +60,7 @@ func NewFiatFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 	if err == nil {
 		v.Provider = fiat.NewProvider(api, cc.VIN, cc.PIN, cc.Expiry, cc.Cache)
-		if cc.ControlCharge {
-			if cc.PIN == "" {
-				return nil, errors.New("missing pin for charge control")
-			}
-			v.Controller = fiat.NewController(api, cc.VIN, cc.PIN)
-		}
+		v.Controller = fiat.NewController(api, cc.VIN, cc.PIN)
 	}
 
 	return v, err
