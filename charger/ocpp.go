@@ -444,8 +444,8 @@ func (c *OCPP) updatePeriod(current float64) error {
 	}
 
 	// current period can only be updated if transaction is active
-	if enabled, err := c.Enabled(); err != nil || !enabled || txn == 0 {
-		return err
+	if txn == 0 {
+		return nil
 	}
 
 	current = math.Trunc(10*current) / 10
