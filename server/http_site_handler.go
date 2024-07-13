@@ -151,48 +151,46 @@ func boolGetHandler(get func() bool) http.HandlerFunc {
 // updateGlobalSmartCostLimit sets the smart cost limit globally
 func updateGlobalSmartCostLimit(site site.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var valP *float64
+		vars := mux.Vars(r)
+		var val *float64
 
 		if r.Method != http.MethodDelete {
-			vars := mux.Vars(r)
-
-			val, err := parseFloat(vars["value"])
+			f, err := parseFloat(vars["value"])
 			if err != nil {
 				jsonError(w, http.StatusBadRequest, err)
 				return
 			}
 
-			valP = &val
+			val = &f
 		}
 
 		for _, lp := range site.Loadpoints() {
-			lp.SetSmartCostLimit(valP)
+			lp.SetSmartCostLimit(val)
 		}
 
-		jsonResult(w, valP)
+		jsonResult(w, val)
 	}
 }
 
 // updateGridChargeLimit sets the smart cost limit globally
 func updateGridChargeLimit(site site.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var valP *float64
+		vars := mux.Vars(r)
+		var val *float64
 
 		if r.Method != http.MethodDelete {
-			vars := mux.Vars(r)
-
-			val, err := parseFloat(vars["value"])
+			f, err := parseFloat(vars["value"])
 			if err != nil {
 				jsonError(w, http.StatusBadRequest, err)
 				return
 			}
 
-			valP = &val
+			val = &f
 		}
 
-		site.SetGridChargeLimit(valP)
+		site.SetGridChargeLimit(val)
 
-		jsonResult(w, valP)
+		jsonResult(w, val)
 	}
 }
 

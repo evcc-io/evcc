@@ -220,22 +220,21 @@ func vehicleDetectHandler(lp loadpoint.API) http.HandlerFunc {
 // updateSmartCostLimit sets the smart cost limit
 func updateSmartCostLimit(lp loadpoint.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var valP *float64
+		vars := mux.Vars(r)
+		var val *float64
 
 		if r.Method != http.MethodDelete {
-			vars := mux.Vars(r)
-
-			val, err := parseFloat(vars["value"])
+			f, err := parseFloat(vars["value"])
 			if err != nil {
 				jsonError(w, http.StatusBadRequest, err)
 				return
 			}
 
-			valP = &val
+			val = &f
 		}
 
-		lp.SetSmartCostLimit(valP)
+		lp.SetSmartCostLimit(val)
 
-		jsonResult(w, valP)
+		jsonResult(w, val)
 	}
 }
