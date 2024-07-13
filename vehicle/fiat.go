@@ -27,6 +27,7 @@ func NewFiatFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
 		embed                    `mapstructure:",squash"`
 		User, Password, VIN, PIN string
+		ControlCharge            bool
 		Expiry                   time.Duration
 		Cache                    time.Duration
 	}{
@@ -60,7 +61,12 @@ func NewFiatFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 	if err == nil {
 		v.Provider = fiat.NewProvider(api, cc.VIN, cc.PIN, cc.Expiry, cc.Cache)
-		v.Controller = fiat.NewController(api, cc.VIN, cc.PIN)
+		if cc.ControlCharge {
+			if cc.PIN == "" {
+				return nil, fmt.Errorf("Charge control cannot work without a PIN. Please provide the PIN", err)
+			}
+			v.Controller = fiat.NewController(api, cc.VIN, cc.PIN)
+		}
 	}
 
 	return v, err
