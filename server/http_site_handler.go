@@ -162,8 +162,8 @@ func boolGetHandler(get func() bool) http.HandlerFunc {
 	}
 }
 
-// updateGlobalSmartCostLimit sets the smart cost limit globally
-func updateGlobalSmartCostLimit(site site.API) http.HandlerFunc {
+// updateSmartCostLimit sets the smart cost limit globally
+func updateSmartCostLimit(site site.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		var val *float64
