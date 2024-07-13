@@ -8,7 +8,7 @@ import (
 func (cs *CS) print(s string) {
 	var ok bool
 	if s, ok = strings.CutPrefix(s, "sent JSON message to"); ok {
-		s = "sent" + s
+		s = "send" + s
 	} else if s, ok = strings.CutPrefix(s, "received JSON message from"); ok {
 		s = "recv" + s
 	}
