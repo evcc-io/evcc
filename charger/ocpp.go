@@ -339,17 +339,17 @@ func (c *OCPP) Enabled() (bool, error) {
 
 func (c *OCPP) Enable(enable bool) error {
 	txn, err := c.conn.TransactionID()
-	if err != nil && enable {
+	if err != nil {
 		return err
 	}
 
-	// if transaction is not running, disable is a no-op
-	if txn != 0 || enable {
-		if c.autoStart || (c.noStop && txn != 0) {
-			err = c.enableAutostart(enable)
-		} else {
-			err = c.enableRemote(enable)
+	if c.autoStart || (c.noStop && txn > 0) {
+		// if there is no transaction running, this is a no-op
+		if txn > 0 {
+			err = c.enableProfile(enable)
 		}
+	} else {
+		err = c.enableRemote(enable)
 	}
 
 	if err == nil {
@@ -359,8 +359,8 @@ func (c *OCPP) Enable(enable bool) error {
 	return err
 }
 
-// enableAutostart enables auto-started session
-func (c *OCPP) enableAutostart(enable bool) error {
+// enableProfile pauses/resumes existing transaction by profile update
+func (c *OCPP) enableProfile(enable bool) error {
 	var current float64
 	if enable {
 		current = c.current
@@ -369,7 +369,7 @@ func (c *OCPP) enableAutostart(enable bool) error {
 	return c.updatePeriod(current)
 }
 
-// enableRemote enables session by using RemoteStart/Stop
+// enableRemote starts and terminates transaction by RemoteStart/Stop
 func (c *OCPP) enableRemote(enable bool) error {
 	txn, err := c.conn.TransactionID()
 	if err != nil {
@@ -395,17 +395,8 @@ func (c *OCPP) enableRemote(enable bool) error {
 			request.ChargingProfile = c.getTxChargingProfile(c.current, 0)
 		})
 	} else {
-		// if no transaction is running, the vehicle may have stopped it (which is ok) or an unknown transaction is running
 		if txn == 0 {
-			// we cannot tell if a transaction is really running, so we check the status
-			status, err := c.Status()
-			if err != nil {
-				return err
-			}
-			if status == api.StatusC {
-				return errors.New("cannot disable: unknown transaction running")
-			}
-
+			// we have no transaction id, treat as disabled
 			return nil
 		}
 
