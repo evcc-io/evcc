@@ -438,18 +438,14 @@ func (c *OCPP) setChargingProfile(profile *types.ChargingProfile) error {
 
 // updatePeriod sets a single charging schedule period with given current
 func (c *OCPP) updatePeriod(current float64) error {
-	// current period can only be updated if transaction is active
-	if enabled, err := c.Enabled(); err != nil || !enabled {
-		return err
-	}
-
 	txn, err := c.conn.TransactionID()
 	if err != nil {
 		return err
 	}
 
-	if txn == 0 {
-		return errors.New("no transaction running")
+	// current period can only be updated if transaction is active
+	if enabled, err := c.Enabled(); err != nil || !enabled || txn == 0 {
+		return err
 	}
 
 	current = math.Trunc(10*current) / 10
