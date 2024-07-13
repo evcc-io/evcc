@@ -338,11 +338,18 @@ func (c *OCPP) Enabled() (bool, error) {
 }
 
 func (c *OCPP) Enable(enable bool) error {
-	var err error
-	if c.autoStart || (c.noStop && !enable) {
-		err = c.enableAutostart(enable)
-	} else {
-		err = c.enableRemote(enable)
+	txn, err := c.conn.TransactionID()
+	if err != nil && enable {
+		return err
+	}
+
+	// if transaction is not running, disable is a no-op
+	if txn != 0 || enable {
+		if c.autoStart || (c.noStop && !enable) {
+			err = c.enableAutostart(enable)
+		} else {
+			err = c.enableRemote(enable)
+		}
 	}
 
 	if err == nil {
