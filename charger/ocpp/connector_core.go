@@ -89,15 +89,19 @@ func (conn *Connector) StartTransaction(request *core.StartTransactionRequest) (
 		return res, nil
 	}
 
-	conn.txnCount++
-	conn.txnId = conn.txnCount
-	conn.idTag = request.IdTag
-
 	res := &core.StartTransactionConfirmation{
 		IdTagInfo: &types.IdTagInfo{
-			Status: types.AuthorizationStatusAccepted,
+			Status: types.AuthorizationStatusBlocked,
 		},
-		TransactionId: conn.txnId,
+	}
+
+	if conn.allowStart {
+		conn.txnCount++
+		conn.txnId = conn.txnCount
+		conn.idTag = request.IdTag
+
+		res.IdTagInfo.Status = types.AuthorizationStatusAccepted
+		res.TransactionId = conn.txnId
 	}
 
 	return res, nil
