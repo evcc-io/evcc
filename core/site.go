@@ -818,8 +818,6 @@ func (site *Site) update(lp updater) {
 		// disable charge mode, but don't interfere with hold mode
 		site.SetBatteryMode(api.BatteryNormal)
 	}
-
-	// TODO smart cost active
 	site.publish(keys.GridChargeActive, gridChargeActive)
 
 	var smartCostNextStart time.Time
