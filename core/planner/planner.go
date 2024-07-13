@@ -89,12 +89,12 @@ func (t *Planner) continuousPlan(rates api.Rates, start, end time.Time) api.Rate
 	res := make(api.Rates, 0, len(rates)+2)
 	for _, r := range rates {
 		// slot before continuous plan
-		if r.End.Before(start) || r.End.Equal(start) {
+		if !r.End.After(start) {
 			continue
 		}
 
 		// slot after continuous plan
-		if r.Start.After(end) || r.Start.Equal(end) {
+		if !r.Start.Before(end) {
 			continue
 		}
 

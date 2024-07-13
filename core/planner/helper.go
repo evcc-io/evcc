@@ -52,7 +52,7 @@ func AverageCost(plan api.Rates) float64 {
 // SlotAt returns the slot for the given time or an empty slot
 func SlotAt(time time.Time, plan api.Rates) api.Rate {
 	for _, slot := range plan {
-		if (slot.Start.Before(time) || slot.Start.Equal(time)) && slot.End.After(time) {
+		if !slot.Start.After(time) && slot.End.After(time) {
 			return slot
 		}
 	}
