@@ -1,6 +1,7 @@
 package vehicle
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
@@ -63,7 +64,7 @@ func NewFiatFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		v.Provider = fiat.NewProvider(api, cc.VIN, cc.PIN, cc.Expiry, cc.Cache)
 		if cc.ControlCharge {
 			if cc.PIN == "" {
-				return nil, fmt.Errorf("Charge control cannot work without a PIN. Please provide the PIN", err)
+				return nil, errors.New("missing pin for charge control")
 			}
 			v.Controller = fiat.NewController(api, cc.VIN, cc.PIN)
 		}
