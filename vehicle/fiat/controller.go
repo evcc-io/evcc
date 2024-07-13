@@ -8,16 +8,17 @@ import (
 )
 
 type Controller struct {
+	pvd              *Provider
 	api              *API
 	vin              string
 	pin              string
 	requestedCurrent int64
-	lastStartCharge  time.Time
 }
 
 // NewController creates a vehicle current and charge controller
-func NewController(api *API, vin string, pin string) *Controller {
+func NewController(provider *Provider, api *API, vin string, pin string) *Controller {
 	impl := &Controller{
+		pvd:              provider,
 		api:              api,
 		vin:              vin,
 		pin:              pin,
@@ -52,19 +53,8 @@ func (c *Controller) ChargeEnable(enable bool) error {
 		return api.ErrMissingCredentials
 	}
 
-	if enable {
-		// update charge schedule to start now
-		c.lastStartCharge = time.Now()
-		return c.ChangeScheduleCharge(c.lastStartCharge, c.lastStartCharge.Add(time.Hour*12))
-	} else {
-		// Simulate stop charging by updating charge schedule end time to now
-		return c.ChangeScheduleCharge(c.lastStartCharge, time.Now())
-	}
-}
-
-func (c *Controller) ChangeScheduleCharge(startTime time.Time, endTime time.Time) error {
-	// get current schedule
-	stat, err := c.api.Status(c.vin)
+	// get current schedule status from provider (cached)
+	stat, err := c.pvd.statusG()
 	if err != nil {
 		return err
 	}
@@ -72,30 +62,21 @@ func (c *Controller) ChangeScheduleCharge(startTime time.Time, endTime time.Time
 		return api.ErrNotAvailable
 	}
 
-	// update schedule 1 and make sure it's active
-	// all values are set to be sure no manual change can lead to inconsistencies
-	stat.EvInfo.Schedules[0].CabinPriority = false
-	stat.EvInfo.Schedules[0].ChargeToFull = false
-	stat.EvInfo.Schedules[0].EnableScheduleType = true
-	stat.EvInfo.Schedules[0].EndTime = endTime.Format("15:04") // only hour and minutes
-	stat.EvInfo.Schedules[0].RepeatSchedule = true
-	stat.EvInfo.Schedules[0].ScheduleType = "CHARGE"
-	stat.EvInfo.Schedules[0].ScheduledDays.Friday = true
-	stat.EvInfo.Schedules[0].ScheduledDays.Monday = true
-	stat.EvInfo.Schedules[0].ScheduledDays.Saturday = true
-	stat.EvInfo.Schedules[0].ScheduledDays.Sunday = true
-	stat.EvInfo.Schedules[0].ScheduledDays.Thursday = true
-	stat.EvInfo.Schedules[0].ScheduledDays.Tuesday = true
-	stat.EvInfo.Schedules[0].ScheduledDays.Wednesday = true
-	stat.EvInfo.Schedules[0].StartTime = startTime.Format("15:04") // only hour and minutes
+	// configure first schedule and make sure it's active
+	c.ConfigureChargeSchedule(&stat.EvInfo.Schedules[0])
+
+	if enable {
+		// start charging by updating active charge schedule to start now and end in 12h
+		stat.EvInfo.Schedules[0].StartTime = time.Now().Format("15:04")                   // only hour and minutes
+		stat.EvInfo.Schedules[0].EndTime = time.Now().Add(time.Hour * 12).Format("15:04") // only hour and minutes
+	} else {
+		// stop charging by updating active charge schedule end time to now
+		stat.EvInfo.Schedules[0].EndTime = time.Now().Format("15:04") // only hour and minutes
+	}
 
 	// make sure the other charge schedules are disabled in case user changed them
-	if stat.EvInfo.Schedules[1].ScheduleType == "CHARGE" {
-		stat.EvInfo.Schedules[1].EnableScheduleType = false
-	}
-	if stat.EvInfo.Schedules[2].ScheduleType == "CHARGE" {
-		stat.EvInfo.Schedules[2].EnableScheduleType = false
-	}
+	c.DisableConflictingChargeSchedule(&stat.EvInfo.Schedules[1])
+	c.DisableConflictingChargeSchedule(&stat.EvInfo.Schedules[2])
 
 	// post new schedule
 	res, err := c.api.UpdateSchedule(c.vin, c.pin, stat.EvInfo.Schedules)
@@ -104,4 +85,27 @@ func (c *Controller) ChangeScheduleCharge(startTime time.Time, endTime time.Time
 		err = fmt.Errorf("invalid response status: %s", res.ResponseStatus)
 	}
 	return err
+}
+
+func (c *Controller) ConfigureChargeSchedule(schedule *ScheduleData) {
+	// all values are set to be sure no manual change can lead to inconsistencies
+	schedule.CabinPriority = false
+	schedule.ChargeToFull = false
+	schedule.EnableScheduleType = true
+	schedule.RepeatSchedule = true
+	schedule.ScheduleType = "CHARGE"
+	schedule.ScheduledDays.Friday = true
+	schedule.ScheduledDays.Monday = true
+	schedule.ScheduledDays.Saturday = true
+	schedule.ScheduledDays.Sunday = true
+	schedule.ScheduledDays.Thursday = true
+	schedule.ScheduledDays.Tuesday = true
+	schedule.ScheduledDays.Wednesday = true
+}
+
+func (c *Controller) DisableConflictingChargeSchedule(schedule *ScheduleData) {
+	// make sure the other charge schedules are disabled in case user changed them
+	if schedule.ScheduleType == "CHARGE" && schedule.EnableScheduleType {
+		schedule.EnableScheduleType = false
+	}
 }
