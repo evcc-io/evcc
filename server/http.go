@@ -110,8 +110,8 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, valueChan chan<- util.Param)
 		"residualpower":           {"POST", "/residualpower/{value:-?[0-9.]+}", floatHandler(site.SetResidualPower, site.GetResidualPower)},
 		"smartcost":               {"POST", "/smartcostlimit/{value:-?[0-9.]+}", updateGlobalSmartCostLimit(site)},
 		"smartcostdelete":         {"DELETE", "/smartcostlimit", updateGlobalSmartCostLimit(site)},
-		"gridcharge":              {"POST", "/gridchargelimit/{value:-?[0-9.]+}", updateGridChargeLimit(site)},
-		"gridchargedelete":        {"DELETE", "/gridchargelimit", updateGridChargeLimit(site)},
+		"gridcharge":              {"POST", "/gridchargelimit/{value:-?[0-9.]+}", floatPtrHandler(pass(site.SetGridChargeLimit), site.GetGridChargeLimit)},
+		"gridchargedelete":        {"DELETE", "/gridchargelimit", floatPtrHandler(pass(site.SetGridChargeLimit), site.GetGridChargeLimit)},
 		"tariff":                  {"GET", "/tariff/{tariff:[a-z]+}", tariffHandler(site)},
 		"sessions":                {"GET", "/sessions", sessionHandler},
 		"updatesession":           {"PUT", "/session/{id:[0-9]+}", updateSessionHandler},
@@ -176,8 +176,8 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, valueChan chan<- util.Param)
 			"remotedemand":     {"POST", "/remotedemand/{demand:[a-z]+}/{source:[0-9a-zA-Z_-]+}", remoteDemandHandler(lp)},
 			"enableThreshold":  {"POST", "/enable/threshold/{value:-?[0-9.]+}", floatHandler(pass(lp.SetEnableThreshold), lp.GetEnableThreshold)},
 			"disableThreshold": {"POST", "/disable/threshold/{value:-?[0-9.]+}", floatHandler(pass(lp.SetDisableThreshold), lp.GetDisableThreshold)},
-			"smartCost":        {"POST", "/smartcostlimit/{value:-?[0-9.]+}", updateSmartCostLimit(lp)},
-			"smartCostDelete":  {"DELETE", "/smartcostlimit", updateSmartCostLimit(lp)},
+			"smartCost":        {"POST", "/smartcostlimit/{value:-?[0-9.]+}", floatPtrHandler(pass(lp.SetSmartCostLimit), lp.GetSmartCostLimit)},
+			"smartCostDelete":  {"DELETE", "/smartcostlimit", floatPtrHandler(pass(lp.SetSmartCostLimit), lp.GetSmartCostLimit)},
 			// "priority":         {"POST", "/priority/{value:[0-9.]+}", floatHandler(pass(lp.SetPriority), lp.GetPriority)},
 		}
 

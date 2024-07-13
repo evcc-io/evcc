@@ -131,6 +131,20 @@ func floatHandler(set func(float64) error, get func() float64) http.HandlerFunc 
 	return handler(parseFloat, set, get)
 }
 
+// floatPtrHandler updates float-pointer api
+func floatPtrHandler(set func(*float64) error, get func() *float64) http.HandlerFunc {
+	return handler(func(s string) (*float64, error) {
+		var val *float64
+		f, err := parseFloat(s)
+		if err == nil {
+			val = &f
+		} else if s == "" {
+			err = nil
+		}
+		return val, err
+	}, set, get)
+}
+
 // intHandler updates int-param api
 func intHandler(set func(int) error, get func() int) http.HandlerFunc {
 	return handler(strconv.Atoi, set, get)
@@ -167,28 +181,6 @@ func updateGlobalSmartCostLimit(site site.API) http.HandlerFunc {
 		for _, lp := range site.Loadpoints() {
 			lp.SetSmartCostLimit(val)
 		}
-
-		jsonResult(w, val)
-	}
-}
-
-// updateGridChargeLimit sets the smart cost limit globally
-func updateGridChargeLimit(site site.API) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-		var val *float64
-
-		if r.Method != http.MethodDelete {
-			f, err := parseFloat(vars["value"])
-			if err != nil {
-				jsonError(w, http.StatusBadRequest, err)
-				return
-			}
-
-			val = &f
-		}
-
-		site.SetGridChargeLimit(val)
 
 		jsonResult(w, val)
 	}
