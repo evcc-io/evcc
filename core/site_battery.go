@@ -64,33 +64,19 @@ func (site *Site) plannerRates() (api.Rates, error) {
 	return tariff.Rates()
 }
 
-func (site *Site) plannerRate() (*api.Rate, error) {
-	rates, err := site.plannerRates()
-	if rates == nil || err != nil {
-		return nil, err
-	}
-
-	rate, err := rates.Current(time.Now())
-	if err != nil {
-		return nil, err
-	}
-
-	return &rate, nil
+func (site *Site) smartCostActive(lp loadpoint.API, rate api.Rate) bool {
+	limit := lp.GetSmartCostLimit()
+	return limit != nil && !rate.IsEmpty() && rate.Price <= *limit
 }
 
-func (site *Site) smartCostActive(lp loadpoint.API, rate *api.Rate) bool {
+func (site *Site) smartCostNextStart(lp loadpoint.API, rates api.Rates) time.Time {
 	limit := lp.GetSmartCostLimit()
-	return limit != nil && rate != nil && rate.Price <= *limit
-}
-
-func (site *Site) smartCostNextStart(lp loadpoint.API, rate api.Rates) time.Time {
-	limit := lp.GetSmartCostLimit()
-	if limit == nil || rate == nil {
+	if limit == nil || rates == nil {
 		return time.Time{}
 	}
 
 	now := time.Now()
-	for _, slot := range rate {
+	for _, slot := range rates {
 		if slot.Start.After(now) && slot.Price <= *limit {
 			return slot.Start
 		}
@@ -99,18 +85,13 @@ func (site *Site) smartCostNextStart(lp loadpoint.API, rate api.Rates) time.Time
 	return time.Time{}
 }
 
-func (site *Site) gridChargeActive(rate *api.Rate) bool {
+func (site *Site) gridChargeActive(rate api.Rate) bool {
 	limit := site.GetGridChargeLimit()
-	return limit != nil && rate != nil && rate.Price <= *limit
+	return limit != nil && !rate.IsEmpty() && rate.Price <= *limit
 }
 
-func (site *Site) updateBatteryMode() {
+func (site *Site) updateBatteryMode(rate api.Rate) {
 	mode := api.BatteryNormal
-
-	rate, err := site.plannerRate()
-	if err != nil {
-		site.log.WARN.Println("smart cost:", err)
-	}
 
 	for _, lp := range site.Loadpoints() {
 		smartCostActive := site.smartCostActive(lp, rate)

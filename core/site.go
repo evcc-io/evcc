@@ -799,30 +799,37 @@ func (site *Site) update(lp updater) {
 		flexiblePower = site.prioritizer.GetChargePowerFlexibility(lp)
 	}
 
-	var smartCostActive bool
-	if rate, err := site.plannerRate(); err == nil {
-		smartCostActive = site.smartCostActive(lp, rate)
+	// smart cost
+	var smartCostActive, gridChargeActive bool
 
-		gridChargeActive := site.gridChargeActive(rate)
-		site.publish(keys.GridChargeActive, gridChargeActive)
-
-		if gridChargeActive {
-			site.SetBatteryMode(api.BatteryCharge)
-		} else if mode := site.GetBatteryMode(); mode != api.BatteryNormal {
-			site.SetBatteryMode(api.BatteryNormal)
-		}
-
-	} else {
-		site.log.WARN.Println("smartCost:", err)
+	rates, err := site.plannerRates()
+	if err != nil {
+		site.log.WARN.Println("planner:", err)
 	}
+
+	rate, err := rates.Current(time.Now())
+	if rates != nil && err != nil {
+		site.log.WARN.Println("planner:", err)
+	}
+
+	if !rate.IsEmpty() {
+		smartCostActive = site.smartCostActive(lp, rate)
+		gridChargeActive = site.gridChargeActive(rate)
+	}
+
+	if gridChargeActive {
+		site.SetBatteryMode(api.BatteryCharge)
+	} else if mode := site.GetBatteryMode(); mode == api.BatteryCharge {
+		// disable charge mode, but don't interfere with hold mode
+		site.SetBatteryMode(api.BatteryNormal)
+	}
+
+	// TODO smart cost active
+	site.publish(keys.GridChargeActive, gridChargeActive)
 
 	var smartCostNextStart time.Time
 	if !smartCostActive {
-		if rates, err := site.plannerRates(); err == nil {
-			smartCostNextStart = site.smartCostNextStart(lp, rates)
-		} else {
-			site.log.WARN.Println("smartCostNextStart:", err)
-		}
+		smartCostNextStart = site.smartCostNextStart(lp, rates)
 	}
 
 	if sitePower, batteryBuffered, batteryStart, err := site.sitePower(totalChargePower, flexiblePower); err == nil {
@@ -850,8 +857,8 @@ func (site *Site) update(lp updater) {
 		site.log.ERROR.Println(err)
 	}
 
-	if site.GetBatteryDischargeControl() {
-		site.updateBatteryMode()
+	if !gridChargeActive && site.GetBatteryDischargeControl() {
+		site.updateBatteryMode(rate)
 	}
 
 	site.stats.Update(site)
