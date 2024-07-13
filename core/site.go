@@ -296,13 +296,8 @@ func (site *Site) restoreSettings() error {
 			return err
 		}
 	}
-
-	if v, err := settings.String(keys.GridChargeLimit); err == nil {
-		if v == "" {
-			site.SetGridChargeLimit(nil)
-		} else if v, err := settings.Float(keys.GridChargeLimit); err == nil {
-			site.SetGridChargeLimit(&v)
-		}
+	if v, err := settings.Float(keys.GridChargeLimit); err == nil {
+		site.SetGridChargeLimit(&v)
 	}
 
 	return nil

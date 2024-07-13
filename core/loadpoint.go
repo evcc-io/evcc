@@ -335,13 +335,8 @@ func (lp *Loadpoint) restoreSettings() {
 	if v, err := lp.settings.Float(keys.LimitEnergy); err == nil && v > 0 {
 		lp.setLimitEnergy(v)
 	}
-
-	if v, err := lp.settings.String(keys.SmartCostLimit); err == nil {
-		if v == "" {
-			lp.SetSmartCostLimit(nil)
-		} else if v, err := lp.settings.Float(keys.SmartCostLimit); err == nil {
-			lp.SetSmartCostLimit(&v)
-		}
+	if v, err := lp.settings.Float(keys.SmartCostLimit); err == nil {
+		lp.SetSmartCostLimit(&v)
 	}
 
 	t, err1 := lp.settings.Time(keys.PlanTime)
