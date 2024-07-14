@@ -995,7 +995,7 @@ func statusEvents(prevStatus, status api.ChargeStatus) []string {
 
 // updateChargerStatus updates charger status and detects car connected/disconnected events
 func (lp *Loadpoint) updateChargerStatus() (bool, error) {
-	var connect bool
+	var welcomeCharge bool
 
 	status, err := lp.charger.Status()
 	if err != nil {
@@ -1014,7 +1014,16 @@ func (lp *Loadpoint) updateChargerStatus() (bool, error) {
 			if prevStatus != api.StatusNone {
 				switch ev {
 				case evVehicleConnect:
-					connect = true
+					// Enable charging on connect if any available vehicle requires it.
+					// We're using the PV timer to disable after the welcome
+					for _, v := range lp.availableVehicles() {
+						if slices.Contains(v.Features(), api.WelcomeCharge) {
+							welcomeCharge = true
+							lp.log.DEBUG.Printf("welcome charge: %s", v.Title())
+							break
+						}
+					}
+
 					lp.pushEvent(evVehicleConnect)
 				case evVehicleDisconnect:
 					lp.pushEvent(evVehicleDisconnect)
@@ -1026,7 +1035,7 @@ func (lp *Loadpoint) updateChargerStatus() (bool, error) {
 		lp.bus.Publish(evChargeCurrent, lp.chargeCurrent)
 	}
 
-	return connect, nil
+	return welcomeCharge, nil
 }
 
 // effectiveCurrent returns the currently effective charging current
@@ -1639,12 +1648,13 @@ func (lp *Loadpoint) Update(sitePower float64, smartCostActive bool, smartCostNe
 	lp.PublishEffectiveValues()
 
 	// read and publish status
-	connect, err := lp.updateChargerStatus()
+	welcomeCharge, err := lp.updateChargerStatus()
 	if err != nil {
 		lp.log.ERROR.Println(err)
 		return
 	}
 
+	lp.publish(keys.VehicleWelcomeActive, welcomeCharge)
 	lp.publish(keys.Connected, lp.connected())
 	lp.publish(keys.Charging, lp.charging())
 
@@ -1667,19 +1677,6 @@ func (lp *Loadpoint) Update(sitePower float64, smartCostActive bool, smartCostNe
 	if err := lp.syncCharger(); err != nil {
 		lp.log.ERROR.Println(err)
 		return
-	}
-
-	// Enable charging on connect if any available vehicle requires it.
-	// We're using the PV timer to disable after the welcome
-	if connect && isPV(lp.GetMode()) {
-		for _, v := range lp.availableVehicles() {
-			if slices.Contains(v.Features(), api.WelcomeCharge) {
-				lp.log.DEBUG.Printf("welcome charge required: %s", v.Title())
-				lp.resetPVTimer()
-				lp.setLimit(lp.effectiveMinCurrent())
-				return
-			}
-		}
 	}
 
 	// track if remote disabled is actually active
@@ -1706,7 +1703,11 @@ func (lp *Loadpoint) Update(sitePower float64, smartCostActive bool, smartCostNe
 		fallthrough
 
 	case mode == api.ModeOff:
-		err = lp.setLimit(0)
+		var current float64
+		if welcomeCharge {
+			current = lp.effectiveMinCurrent()
+		}
+		err = lp.setLimit(current)
 
 	// minimum or target charging
 	case lp.minSocNotReached() || plannerActive:
@@ -1739,6 +1740,11 @@ func (lp *Loadpoint) Update(sitePower float64, smartCostActive bool, smartCostNe
 
 		if targetCurrent == 0 && lp.vehicleClimateActive() {
 			targetCurrent = lp.effectiveMinCurrent()
+		}
+
+		if welcomeCharge {
+			targetCurrent = lp.effectiveMinCurrent()
+			lp.resetPVTimer()
 		}
 
 		// Sunny Home Manager
