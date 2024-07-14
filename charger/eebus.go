@@ -618,11 +618,6 @@ func (c *EEBus) currentPower() (float64, error) {
 		return 0, nil
 	}
 
-	connectedPhases, err := c.uc.EvCem.PhasesConnected(evEntity)
-	if err != nil {
-		return 0, api.ErrNotAvailable
-	}
-
 	var powers []float64
 
 	// does the EVSE provide power data?
@@ -649,10 +644,7 @@ func (c *EEBus) currentPower() (float64, error) {
 	}
 
 	var power float64
-	for index, phasePower := range powers {
-		if index >= int(connectedPhases) {
-			break
-		}
+	for _, phasePower := range powers {
 		power += phasePower
 	}
 
