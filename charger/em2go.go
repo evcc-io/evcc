@@ -60,10 +60,10 @@ const (
 
 func init() {
 	registry.Add("em2go", func(other map[string]any) (api.Charger, error) {
-		return NewEm2GoFromConfig(other, false)
+		return NewEm2GoFromConfig(other, true)
 	})
 	registry.Add("em2go-home", func(other map[string]any) (api.Charger, error) {
-		return NewEm2GoFromConfig(other, true)
+		return NewEm2GoFromConfig(other, false)
 	})
 }
 
