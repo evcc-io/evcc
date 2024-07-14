@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/cenkalti/backoff/v4"
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 )
 
@@ -50,4 +51,8 @@ func sitePower(log *util.Logger, maxGrid, grid, battery, residual float64) float
 	}
 
 	return grid + battery + residual
+}
+
+func isPV(mode api.ChargeMode) bool {
+	return mode == api.ModeMinPV || mode == api.ModePV
 }

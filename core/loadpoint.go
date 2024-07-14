@@ -481,9 +481,6 @@ func (lp *Loadpoint) evVehicleConnectHandler() {
 		lp.socEstimator.Reset()
 	}
 
-	// get pv mode before vehicle defaults are applied
-	pvMode := lp.GetMode() == api.ModePV || lp.GetMode() == api.ModeMinPV
-
 	// set default or start detection
 	if !lp.chargerHasFeature(api.IntegratedDevice) {
 		lp.vehicleDefaultOrDetect()
@@ -491,18 +488,6 @@ func (lp *Loadpoint) evVehicleConnectHandler() {
 
 	// immediately allow pv mode activity
 	lp.elapsePVTimer()
-
-	// Enable charging on connect if any available vehicle requires it. We're using the PV timer
-	// to disable after the welcome, hence this must be placed after elapsePVTimer.
-	// TODO check is this doesn't conflict with vehicle defaults like mode: off
-	if pvMode {
-		for _, v := range lp.availableVehicles() {
-			if slices.Contains(v.Features(), api.WelcomeCharge) {
-				lp.setLimit(lp.effectiveMinCurrent())
-				break
-			}
-		}
-	}
 
 	// create charging session
 	lp.createSession()
@@ -901,7 +886,7 @@ func (lp *Loadpoint) charging() bool {
 	return lp.GetStatus() == api.StatusC
 }
 
-// charging returns the EVs charging state
+// setStatus updates the internal charging state according to EV
 func (lp *Loadpoint) setStatus(status api.ChargeStatus) {
 	lp.Lock()
 	defer lp.Unlock()
@@ -1009,10 +994,12 @@ func statusEvents(prevStatus, status api.ChargeStatus) []string {
 }
 
 // updateChargerStatus updates charger status and detects car connected/disconnected events
-func (lp *Loadpoint) updateChargerStatus() error {
+func (lp *Loadpoint) updateChargerStatus() (bool, error) {
+	var connect bool
+
 	status, err := lp.charger.Status()
 	if err != nil {
-		return fmt.Errorf("charger status: %w", err)
+		return false, fmt.Errorf("charger status: %w", err)
 	}
 
 	lp.log.DEBUG.Printf("charger status: %s", status)
@@ -1027,6 +1014,7 @@ func (lp *Loadpoint) updateChargerStatus() error {
 			if prevStatus != api.StatusNone {
 				switch ev {
 				case evVehicleConnect:
+					connect = true
 					lp.pushEvent(evVehicleConnect)
 				case evVehicleDisconnect:
 					lp.pushEvent(evVehicleDisconnect)
@@ -1038,7 +1026,7 @@ func (lp *Loadpoint) updateChargerStatus() error {
 		lp.bus.Publish(evChargeCurrent, lp.chargeCurrent)
 	}
 
-	return nil
+	return connect, nil
 }
 
 // effectiveCurrent returns the currently effective charging current
@@ -1651,7 +1639,8 @@ func (lp *Loadpoint) Update(sitePower float64, smartCostActive bool, smartCostNe
 	lp.PublishEffectiveValues()
 
 	// read and publish status
-	if err := lp.updateChargerStatus(); err != nil {
+	connect, err := lp.updateChargerStatus()
+	if err != nil {
 		lp.log.ERROR.Println(err)
 		return
 	}
@@ -1680,8 +1669,18 @@ func (lp *Loadpoint) Update(sitePower float64, smartCostActive bool, smartCostNe
 		return
 	}
 
-	// check if car connected and ready for charging
-	var err error
+	// Enable charging on connect if any available vehicle requires it.
+	// We're using the PV timer to disable after the welcome
+	if connect && isPV(lp.GetMode()) {
+		for _, v := range lp.availableVehicles() {
+			if slices.Contains(v.Features(), api.WelcomeCharge) {
+				lp.log.DEBUG.Printf("welcome charge required: %s", v.Title())
+				lp.resetPVTimer()
+				lp.setLimit(lp.effectiveMinCurrent())
+				return
+			}
+		}
+	}
 
 	// track if remote disabled is actually active
 	remoteDisabled := loadpoint.RemoteEnable
@@ -1727,7 +1726,7 @@ func (lp *Loadpoint) Update(sitePower float64, smartCostActive bool, smartCostNe
 	case mode == api.ModeNow:
 		err = lp.fastCharging()
 
-	case mode == api.ModeMinPV || mode == api.ModePV:
+	case isPV(mode):
 		// cheap tariff
 		if smartCostActive && lp.EffectivePlanTime().IsZero() {
 			err = lp.fastCharging()
