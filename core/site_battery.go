@@ -37,6 +37,23 @@ func (site *Site) SetBatteryMode(batMode api.BatteryMode) {
 	}
 }
 
+// requiredBatteryMode determines required battery mode based on grid charge and rate
+func (site *Site) requiredBatteryMode(gridChargeActive bool, rate api.Rate) api.BatteryMode {
+	var res api.BatteryMode
+	batMode := site.GetBatteryMode()
+
+	switch {
+	case gridChargeActive && batMode != api.BatteryCharge:
+		res = api.BatteryCharge
+	case !gridChargeActive && site.GetBatteryDischargeControl() && site.dischargeControlActive(rate):
+		res = api.BatteryHold
+	case batteryModeModified(batMode):
+		res = api.BatteryNormal
+	}
+
+	return res
+}
+
 // applyBatteryMode applies the mode to each battery
 func (site *Site) applyBatteryMode(mode api.BatteryMode) error {
 	for _, meter := range site.batteryMeters {

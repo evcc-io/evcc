@@ -808,17 +808,7 @@ func (site *Site) update(lp updater) {
 	gridChargeActive := site.gridChargeActive(rate)
 	site.publish(keys.GridChargeActive, gridChargeActive)
 
-	var batteryMode api.BatteryMode
-	switch {
-	case gridChargeActive && site.GetBatteryMode() != api.BatteryCharge:
-		batteryMode = api.BatteryCharge
-	case !gridChargeActive && site.GetBatteryDischargeControl() && site.dischargeControlActive(rate):
-		batteryMode = api.BatteryHold
-	case batteryModeModified(site.GetBatteryMode()):
-		batteryMode = api.BatteryNormal
-	}
-
-	if batteryMode != api.BatteryUnknown {
+	if batteryMode := site.requiredBatteryMode(gridChargeActive, rate); batteryMode != api.BatteryUnknown {
 		if err := site.applyBatteryMode(batteryMode); err == nil {
 			site.SetBatteryMode(batteryMode)
 		} else {
