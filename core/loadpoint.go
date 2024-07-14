@@ -1742,7 +1742,7 @@ func (lp *Loadpoint) Update(sitePower float64, smartCostActive bool, smartCostNe
 			targetCurrent = lp.effectiveMinCurrent()
 		}
 
-		if welcomeCharge {
+		if targetCurrent == 0 && welcomeCharge {
 			targetCurrent = lp.effectiveMinCurrent()
 			lp.resetPVTimer()
 		}
