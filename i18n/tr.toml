@@ -26,14 +26,39 @@ never = "yalnızca yeterli güneş enerjisi fazlalığı ile"
 titleAdd = "Batarya Sayacı Ekle"
 titleEdit = "Batarya Sayacını Düzenle"
 
+[config.circuits]
+description = "Aynı elektrik devresine bağlı tüm doldurma noktalarının yekûnunun güç ve akım sınırını aşmadığından emin ol. Devreler aşama sılaralaması oluşturmak için iç içe geçebilirler."
+title = "Yük yönetimi"
+
+[config.control]
+description = "Genellikle varsayılan değerler iyidir. Bunları yalnızca ne yaptığını biliyorsan değiştir."
+labelInterval = "Güncelleme aralığı"
+labelMaxGridSupply = "Doldurma esnasında azami şebeke kullanımı"
+labelResidualPower = "Artık güç"
+title = "Kontrol davranışı"
+
 [config.deviceValue]
+broker = "Aracı"
+bucket = "Kova"
 capacity = "Kapasite"
 chargeStatus = "Durum"
+chargeStatusA = "bağlı değil"
+chargeStatusB = "bağlı"
+chargeStatusC = "dolduruyor"
+chargeStatusE = "elektrik yok"
+chargeStatusF = "hata"
 chargedEnergy = "Doldu"
+co2 = "Şebeke CO₂"
+configured = "Yapılandırıldı"
+currency = "Para Birimi"
 current = "Akım"
 enabled = "Etkin"
 energy = "Enerji"
+feedinPrice = "Satış fiyatı"
+gridPrice = "Alım fiyatı"
+no = "hayır"
 odometer = "Kilometre Sayacı"
+org = "Organizasyon"
 phaseCurrents = "Faz Akımı L1..L3"
 phasePowers = "Faz Gücü L1..L3"
 phaseVoltages = "Faz Voltajı L1..L3"
@@ -41,24 +66,14 @@ power = "Güç"
 range = "Menzil"
 soc = "Doluluk durumu"
 socLimit = "Doluluk Sınırlaması"
-broker = "Aracı"
-bucket = "Kova"
-chargeStatusB = "bağlı"
-chargeStatusF = "hata"
-configured = "Yapılandırıldı"
-currency = "Para Birimi"
-feedinPrice = "Satış fiyatı"
-org = "Organizasyon"
-chargeStatusE = "elektrik yok"
-chargeStatusA = "bağlı değil"
-chargeStatusC = "dolduruyor"
-co2 = "Şebeke CO₂"
-gridPrice = "Alım fiyatı"
-no = "hayır"
 temp = "Isı"
-yes = "evet"
 topic = "Konu"
 url = "URL"
+yes = "evet"
+
+[config.eebus]
+description = "evcc'nin diğer EEBus cihazlarıyla iletişim kurmasını sağlayan yapılandırma."
+title = "EEBus"
 
 [config.form]
 example = "Örnek"
@@ -66,20 +81,27 @@ optional = "isteğe bağlı"
 
 [config.general]
 cancel = "İptal"
-save = "Kaydet"
+docsLink = "Belgelere bak."
 experimental = "Deneysel"
+off = "kapalı"
 on = "açık"
 password = "Şifre"
-title = "Başlık"
-docsLink = "Belgelere bak."
-off = "kapalı"
 remove = "Kaldır"
+save = "Kaydet"
 telemetry = "Uzölçüm"
+title = "Başlık"
 
 [config.grid]
+title = "Elektrik sayacı"
 titleAdd = "Elektrik Sayacı Ekle"
 titleEdit = "Elektrik Sayacını Düzenle"
-title = "Elektrik sayacı"
+
+[config.hems]
+description = "evcc'yi başka bir ev enerji yönetim sistemine bağla."
+title = "HEMS"
+
+[config.influx]
+description = "Doldurma verilerini ve diğer ölçümleri InfluxDB'ye yazar. Verileri görselleştirmek için Grafana veya başka araçlar kullan."
 
 [config.main]
 addLoadpoint = "Doldurma noktası ekle"
@@ -581,26 +603,3 @@ lineError = "{0} içinde hata bulundu."
 lineErrorLink = "{0}. satır"
 restartButton = "Yeniden Başlat"
 title = "Başlama Hatası"
-
-
-[config.circuits]
-title = "Yük yönetimi"
-description = "Aynı elektrik devresine bağlı tüm doldurma noktalarının yekûnunun güç ve akım sınırını aşmadığından emin ol. Devreler aşama sılaralaması oluşturmak için iç içe geçebilirler."
-
-[config.control]
-description = "Genellikle varsayılan değerler iyidir. Bunları yalnızca ne yaptığını biliyorsan değiştir."
-labelInterval = "Güncelleme aralığı"
-labelMaxGridSupply = "Doldurma esnasında azami şebeke kullanımı"
-labelResidualPower = "Artık güç"
-title = "Kontrol davranışı"
-
-[config.eebus]
-description = "evcc'nin diğer EEBus cihazlarıyla iletişim kurmasını sağlayan yapılandırma."
-title = "EEBus"
-
-[config.hems]
-description = "evcc'yi başka bir ev enerji yönetim sistemine bağla."
-title = "HEMS"
-
-[config.influx]
-description = "Doldurma verilerini ve diğer ölçümleri InfluxDB'ye yazar. Verileri görselleştirmek için Grafana veya başka araçlar kullan."

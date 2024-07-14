@@ -47,6 +47,7 @@ chargeStatus = "Státusz"
 chargeStatusA = "nincs csatlakoztatva"
 chargeStatusB = "csatlakoztatva"
 chargeStatusC = "töltés"
+chargeStatusE = "nincs áram"
 chargeStatusF = "hiba"
 chargedEnergy = "Töltve"
 co2 = "Hálózat CO₂"
@@ -71,7 +72,6 @@ temp = "Hőmérséklet"
 topic = "Téma"
 url = "URL"
 yes = "igen"
-chargeStatusE = nincs áram
 
 [config.eebus]
 description = "Konfiguráció ami engedélyezi az evcc-nek, hogy kommunikáljon más EEBus eszközökkel."
@@ -519,10 +519,15 @@ vehicleLimit = "Jármű limit: {soc}"
 [main.vehicleStatus]
 charging = "Töltés…"
 cheapEnergyCharging = "Olcsó energia elérhető."
+cheapEnergyNextStart = "Olcsó energia {duration}."
+cheapEnergySet = "Ár limit beállítva."
 cleanEnergyCharging = "Tiszta energia elérhető."
+cleanEnergyNextStart = "Olcsó energia {duration}."
+cleanEnergySet = "CO₂ limit beállítva."
 climating = "Elő-kondícionálás érzékelve."
 connected = "Csatlakoztatva."
 disconnected = "Lecsatlakoztatva."
+finished = "Befejezve."
 minCharge = "Minimális töltés {soc}-ig."
 pvDisable = "Nincs elég többlet. Szüneteltetés hamarosan."
 pvEnable = "Többlet elérhető. Indítás hamarosan."
@@ -532,14 +537,9 @@ targetChargeActive = "Töltési terv aktív. Becsült befejezés {duration}."
 targetChargePlanned = "A töltési tervezet ekkor keződik: {duration}."
 targetChargeWaitForVehicle = "Töltési terv üzemkész. Várakozás járműre…"
 unknown = ""
+vehicleLimit = "Jármű limit."
 vehicleLimitReached = "Jármű limit elérve."
 waitForVehicle = "Üzemkész. Járműre várakozás…"
-cleanEnergyNextStart = Olcsó energia {duration}.
-cleanEnergySet = "CO₂ limit beállítva."
-vehicleLimit = "Jármű limit."
-cheapEnergyNextStart = Olcsó energia {duration}.
-cheapEnergySet = Ár limit beállítva.
-finished = Befejezve.
 
 [notifications]
 dismissAll = "Összeset figyelmen kívül hagyja"
@@ -547,12 +547,12 @@ logs = "Teljes napló megtekintése"
 modalTitle = "Értesítések"
 
 [offline]
+configurationError = "Hiba az indítás során. Ellenőrizd a konfigurációd és indítsd újra."
 message = "Nem csatlakozik a szerverhez."
 reload = "Újratöltés?"
 restart = "Újraindítás"
 restartNeeded = "A módosítások végrehajtásához szükséges."
 restarting = "A szerver egy pillanat múlva elérhető lesz."
-configurationError = "Hiba az indítás során. Ellenőrizd a konfigurációd és indítsd újra."
 
 [passwordModal]
 description = "Állítson be egy jelszót a konfigurációs beállítások védelmére. A főképernyő használata továbbra is lehetséges bejelentkezés nélkül."
