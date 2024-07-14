@@ -118,7 +118,7 @@ func NewServer(other Config) (*EEBus, error) {
 		EEBUSBrandName, EEBUSBrandName, EEBUSModel, serial,
 		model.DeviceTypeTypeEnergyManagementSystem,
 		[]model.EntityTypeType{model.EntityTypeTypeCEM},
-		port, certificate, 230, time.Second*4,
+		port, certificate, time.Second*4,
 	)
 	if err != nil {
 		return nil, err
@@ -206,7 +206,6 @@ func (c *EEBus) evseUsecaseCB(ski string, device spineapi.DeviceRemoteInterface,
 
 // EEBUSServiceHandler
 
-// no implementation needed, handled in CEM events
 func (c *EEBus) RemoteSKIConnected(service eebusapi.ServiceInterface, ski string) {
 	c.mux.Lock()
 	defer c.mux.Unlock()
@@ -216,7 +215,6 @@ func (c *EEBus) RemoteSKIConnected(service eebusapi.ServiceInterface, ski string
 	}
 }
 
-// no implementation needed, handled in CEM events
 func (c *EEBus) RemoteSKIDisconnected(service eebusapi.ServiceInterface, ski string) {
 	c.mux.Lock()
 	defer c.mux.Unlock()

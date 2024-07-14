@@ -66,7 +66,7 @@ func (site *Site) plannerRates() (api.Rates, error) {
 
 func (site *Site) plannerRate() (*api.Rate, error) {
 	rates, err := site.plannerRates()
-	if err != nil {
+	if rates == nil || err != nil {
 		return nil, err
 	}
 

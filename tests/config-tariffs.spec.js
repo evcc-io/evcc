@@ -15,6 +15,7 @@ const SELECT_ALL = "ControlOrMeta+KeyA";
 async function login(page) {
   await page.locator("#loginPassword").fill("secret");
   await page.getByRole("button", { name: "Login" }).click();
+  await expect(page.locator("#loginPassword")).not.toBeVisible();
 }
 
 async function enableExperimental(page) {
@@ -50,24 +51,30 @@ test.describe("tariffs", async () => {
     await page.getByTestId("tariffs").getByRole("button", { name: "edit" }).click();
     const modal = await page.getByTestId("tariffs-modal");
     await expect(modal).toBeVisible();
+    await page.waitForLoadState("networkidle");
 
     // default content
     await expect(modal).toContainText("# currency: EUR");
 
     // clear and enter invalid yaml
     await modal.locator(".monaco-editor .view-line").nth(0).click();
-    await page.keyboard.press(SELECT_ALL);
-    await page.keyboard.press("Backspace");
-    await page.keyboard.press(SELECT_ALL);
-    await page.keyboard.press("Backspace");
+
+    for (let i = 0; i < 4; i++) {
+      await page.keyboard.press(SELECT_ALL, { delay: 10 });
+      await page.keyboard.press("Backspace", { delay: 10 });
+    }
+
     await page.keyboard.type("foo: bar\n");
     await page.getByRole("button", { name: "Save" }).click();
     await expect(modal.getByTestId("error")).toContainText("invalid keys: foo");
 
     // clear and enter valid yaml
     await modal.locator(".monaco-editor .view-line").nth(0).click();
-    await page.keyboard.press(SELECT_ALL);
-    await page.keyboard.press("Backspace");
+    for (let i = 0; i < 4; i++) {
+      await page.keyboard.press(SELECT_ALL, { delay: 10 });
+      await page.keyboard.press("Backspace", { delay: 10 });
+    }
+
     await page.keyboard.type("currency: CHF\n");
     await page.keyboard.type("grid:\n");
     await page.keyboard.type("  type: fixed\n");

@@ -308,7 +308,7 @@ optInMoreDetailsLink = "tukaj"
 optInSponsorship = "Potrebno je sponzoriranje."
 
 [footer.version]
-availableLong = "na voljo nova različica"
+availableLong = "na voljo je nova različica"
 modalCancel = "Prekliči"
 modalDownload = "Prenos"
 modalInstalledVersion = "Trenutno nameščena različica"
@@ -557,7 +557,7 @@ logs = "Prikaži celotne loge"
 modalTitle = "Obvestila"
 
 [offline]
-message = "Ni povezan s strežnikom."
+message = "Ni povezave s strežnikom."
 reload = "Ponovno naloži?"
 restart = "Ponovni zagon"
 restartNeeded = "Potrebno za uveljavitev sprememb."

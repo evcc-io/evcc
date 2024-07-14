@@ -19,6 +19,7 @@ test.afterEach(async () => {
 async function login(page) {
   await page.locator("#loginPassword").fill("secret");
   await page.getByRole("button", { name: "Login" }).click();
+  await expect(page.locator("#loginPassword")).not.toBeVisible();
 }
 
 async function enableExperimental(page) {

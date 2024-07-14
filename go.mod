@@ -60,7 +60,7 @@ require (
 	github.com/korylprince/ipnetgen v1.0.1
 	github.com/libp2p/zeroconf/v2 v2.2.0
 	github.com/lorenzodonini/ocpp-go v0.18.0
-	github.com/mabunixda/wattpilot v1.8.0
+	github.com/mabunixda/wattpilot v1.8.1
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mlnoga/rct v0.1.2-0.20240421173556-1c5b75037e2f
 	github.com/mxschmitt/golang-combinations v1.1.0
@@ -194,6 +194,6 @@ require (
 
 replace gopkg.in/yaml.v3 => github.com/andig/yaml v0.0.0-20240531135838-1ff5761ab467
 
-replace github.com/enbility/eebus-go => github.com/enbility/eebus-go v0.0.0-20240705085643-aef0f7bf9e5d
+replace github.com/enbility/eebus-go => github.com/enbility/eebus-go v0.0.0-20240711202230-38f7be54ae45
 
 replace github.com/enbility/spine-go => github.com/enbility/spine-go v0.0.0-20240705075417-fb2969d753c1
