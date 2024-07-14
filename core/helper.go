@@ -1,6 +1,7 @@
 package core
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/cenkalti/backoff/v4"
@@ -50,4 +51,12 @@ func sitePower(log *util.Logger, maxGrid, grid, battery, residual float64) float
 	}
 
 	return grid + battery + residual
+}
+
+// printFloatPtr returns a string representation of a pointer value
+func printFloatPtr(format string, v *float64) string {
+	if v == nil {
+		return "<nil>"
+	}
+	return fmt.Sprintf(format, *v)
 }
