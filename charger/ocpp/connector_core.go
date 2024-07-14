@@ -140,6 +140,7 @@ func (conn *Connector) StopTransaction(request *core.StopTransactionRequest) (*c
 	}
 
 	conn.txnId = 0
+	conn.idTag = ""
 
 	res := &core.StopTransactionConfirmation{
 		IdTagInfo: &types.IdTagInfo{
