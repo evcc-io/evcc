@@ -346,7 +346,7 @@ func (c *OCPP) Enable(enable bool) error {
 			err = c.enableRemote(enable)
 		}
 	} else {
-		err = c.enableAutostart(enable)
+		err = c.enableProfile(enable)
 	}
 
 	if err == nil {
@@ -356,8 +356,8 @@ func (c *OCPP) Enable(enable bool) error {
 	return err
 }
 
-// enableAutostart enables auto-started session
-func (c *OCPP) enableAutostart(enable bool) error {
+// enableProfile pauses/resumes existing transaction by profile update
+func (c *OCPP) enableProfile(enable bool) error {
 	var current float64
 	if enable {
 		current = c.current
@@ -366,7 +366,7 @@ func (c *OCPP) enableAutostart(enable bool) error {
 	return c.updatePeriod(current)
 }
 
-// enableRemote enables session by using RemoteStart/Stop
+// enableRemote starts and stops transaction by RemoteStart/Stop
 func (c *OCPP) enableRemote(enable bool) error {
 	txn, err := c.conn.TransactionID()
 	if err != nil {
