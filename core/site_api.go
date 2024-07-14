@@ -342,13 +342,6 @@ func (site *Site) SetBatteryDischargeControl(val bool) error {
 	defer site.Unlock()
 
 	if site.batteryDischargeControl != val {
-		// reset to normal when disabling
-		if mode := site.batteryMode; !val && batteryModeModified(mode) {
-			if err := site.applyBatteryMode(api.BatteryNormal); err != nil {
-				return err
-			}
-		}
-
 		site.batteryDischargeControl = val
 		settings.SetBool(keys.BatteryDischargeControl, val)
 		site.publish(keys.BatteryDischargeControl, val)
