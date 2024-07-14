@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math"
 	"reflect"
+	"slices"
 	"strings"
 	"sync"
 	"testing"
@@ -480,6 +481,9 @@ func (lp *Loadpoint) evVehicleConnectHandler() {
 		lp.socEstimator.Reset()
 	}
 
+	// get pv mode before vehicle defaults are applied
+	pvMode := lp.GetMode() == api.ModePV || lp.GetMode() == api.ModeMinPV
+
 	// set default or start detection
 	if !lp.chargerHasFeature(api.IntegratedDevice) {
 		lp.vehicleDefaultOrDetect()
@@ -487,6 +491,18 @@ func (lp *Loadpoint) evVehicleConnectHandler() {
 
 	// immediately allow pv mode activity
 	lp.elapsePVTimer()
+
+	// Enable charging on connect if any available vehicle requires it. We're using the PV timer
+	// to disable after the welcome, hence this must be placed after elapsePVTimer.
+	// TODO check is this doesn't conflict with vehicle defaults like mode: off
+	if pvMode {
+		for _, v := range lp.availableVehicles() {
+			if slices.Contains(v.Features(), api.WelcomeCharge) {
+				lp.setLimit(lp.effectiveMinCurrent())
+				break
+			}
+		}
+	}
 
 	// create charging session
 	lp.createSession()
