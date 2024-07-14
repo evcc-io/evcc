@@ -30,7 +30,6 @@ type OCPP struct {
 	meterValuesSample string
 	timeout           time.Duration
 	phaseSwitching    bool
-	autoStart, noStop bool
 	chargingRateUnit  types.ChargingRateUnitType
 	lp                loadpoint.API
 }
@@ -73,7 +72,7 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 
 	c, err := NewOCPP(cc.StationId, cc.Connector, cc.IdTag,
 		cc.MeterValues, cc.MeterInterval,
-		boot, noConfig, cc.AutoStart, cc.NoStop,
+		boot, noConfig,
 		cc.ConnectTimeout, cc.Timeout, cc.ChargingRateUnit)
 	if err != nil {
 		return c, err
@@ -107,7 +106,7 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 // NewOCPP creates OCPP charger
 func NewOCPP(id string, connector int, idtag string,
 	meterValues string, meterInterval time.Duration,
-	boot, noConfig, autoStart, noStop bool,
+	boot, noConfig bool,
 	connectTimeout, timeout time.Duration,
 	chargingRateUnit string,
 ) (*OCPP, error) {
@@ -133,15 +132,12 @@ func NewOCPP(id string, connector int, idtag string,
 	if err != nil {
 		return nil, err
 	}
-	conn.AllowStart(autoStart)
 
 	c := &OCPP{
-		log:       log,
-		conn:      conn,
-		idtag:     idtag,
-		autoStart: autoStart,
-		noStop:    noStop,
-		timeout:   timeout,
+		log:     log,
+		conn:    conn,
+		idtag:   idtag,
+		timeout: timeout,
 	}
 
 	c.log.DEBUG.Printf("waiting for chargepoint: %v", connectTimeout)
@@ -345,12 +341,12 @@ func (c *OCPP) Enable(enable bool) error {
 	}
 
 	// if transaction is not running, disable is a no-op
-	if txn != 0 || enable {
-		if c.autoStart || (c.noStop && txn != 0) {
-			err = c.enableAutostart(enable)
-		} else {
+	if txn == 0 {
+		if enable {
 			err = c.enableRemote(enable)
 		}
+	} else {
+		err = c.enableAutostart(enable)
 	}
 
 	if err == nil {
@@ -375,11 +371,6 @@ func (c *OCPP) enableRemote(enable bool) error {
 	txn, err := c.conn.TransactionID()
 	if err != nil {
 		return err
-	}
-
-	if enable {
-		c.conn.AllowStart(true)
-		defer c.conn.AllowStart(false)
 	}
 
 	rc := make(chan error, 1)
