@@ -1727,7 +1727,7 @@ func (lp *Loadpoint) Update(sitePower float64, smartCostActive bool, smartCostNe
 	case mode == api.ModeNow:
 		err = lp.fastCharging()
 
-	case isPV(mode):
+	case mode == api.ModeMinPV || mode == api.ModePV:
 		// cheap tariff
 		if smartCostActive && lp.EffectivePlanTime().IsZero() {
 			err = lp.fastCharging()
