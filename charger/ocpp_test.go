@@ -67,7 +67,7 @@ func (suite *ocppTestSuite) handleTrigger(cp ocpp16.ChargePoint, connectorId int
 		}
 
 	case core.StatusNotificationFeatureName:
-		if res, err := cp.StatusNotification(connectorId, core.NoError, core.ChargePointStatusAvailable); err != nil {
+		if res, err := cp.StatusNotification(connectorId, core.NoError, core.ChargePointStatusCharging); err != nil {
 			suite.T().Log("StatusNotification:", err)
 		} else {
 			suite.T().Log("StatusNotification:", res)
