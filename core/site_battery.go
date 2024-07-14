@@ -45,7 +45,7 @@ func (site *Site) requiredBatteryMode(gridChargeActive bool, rate api.Rate) api.
 	switch {
 	case gridChargeActive && batMode != api.BatteryCharge:
 		res = api.BatteryCharge
-	case !gridChargeActive && site.GetBatteryDischargeControl() && site.dischargeControlActive(rate):
+	case !gridChargeActive && site.dischargeControlActive(rate) && batMode != api.BatteryHold:
 		res = api.BatteryHold
 	case batteryModeModified(batMode):
 		res = api.BatteryNormal
@@ -103,6 +103,10 @@ func (site *Site) gridChargeActive(rate api.Rate) bool {
 }
 
 func (site *Site) dischargeControlActive(rate api.Rate) bool {
+	if !site.GetBatteryDischargeControl() {
+		return false
+	}
+
 	for _, lp := range site.Loadpoints() {
 		smartCostActive := site.smartCostActive(lp, rate)
 		if lp.GetStatus() == api.StatusC && (smartCostActive || lp.IsFastChargingActive()) {
