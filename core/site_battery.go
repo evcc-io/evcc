@@ -37,10 +37,8 @@ func (site *Site) SetBatteryMode(batMode api.BatteryMode) {
 	}
 }
 
-// applyBatteryMode applies the mode to each battery and updates
-// internal state if successful (requires lock)
+// applyBatteryMode applies the mode to each battery
 func (site *Site) applyBatteryMode(mode api.BatteryMode) error {
-	// update batteries
 	for _, meter := range site.batteryMeters {
 		if batCtrl, ok := meter.(api.BatteryController); ok {
 			if err := batCtrl.SetBatteryMode(mode); err != nil {
@@ -48,9 +46,6 @@ func (site *Site) applyBatteryMode(mode api.BatteryMode) error {
 			}
 		}
 	}
-
-	// update state and publish
-	site.setBatteryMode(mode)
 
 	return nil
 }
@@ -90,22 +85,13 @@ func (site *Site) gridChargeActive(rate api.Rate) bool {
 	return limit != nil && !rate.IsEmpty() && rate.Price <= *limit
 }
 
-func (site *Site) updateBatteryMode(rate api.Rate) {
-	mode := api.BatteryNormal
-
+func (site *Site) dischargeControlActive(rate api.Rate) bool {
 	for _, lp := range site.Loadpoints() {
 		smartCostActive := site.smartCostActive(lp, rate)
 		if lp.GetStatus() == api.StatusC && (smartCostActive || lp.IsFastChargingActive()) {
-			mode = api.BatteryHold
-			break
+			return true
 		}
 	}
 
-	if batMode := site.GetBatteryMode(); mode != batMode {
-		site.Lock()
-		if err := site.applyBatteryMode(mode); err != nil {
-			site.log.ERROR.Println("battery mode:", err)
-		}
-		site.Unlock()
-	}
+	return false
 }
