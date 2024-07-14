@@ -1,8 +1,6 @@
 package core
 
 import (
-	"time"
-
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/loadpoint"
@@ -79,22 +77,6 @@ func (site *Site) plannerRates() (api.Rates, error) {
 func (site *Site) smartCostActive(lp loadpoint.API, rate api.Rate) bool {
 	limit := lp.GetSmartCostLimit()
 	return limit != nil && !rate.IsEmpty() && rate.Price <= *limit
-}
-
-func (site *Site) smartCostNextStart(lp loadpoint.API, rates api.Rates) time.Time {
-	limit := lp.GetSmartCostLimit()
-	if limit == nil || rates == nil {
-		return time.Time{}
-	}
-
-	now := time.Now()
-	for _, slot := range rates {
-		if slot.Start.After(now) && slot.Price <= *limit {
-			return slot.Start
-		}
-	}
-
-	return time.Time{}
 }
 
 func (site *Site) gridChargeActive(rate api.Rate) bool {
