@@ -133,6 +133,7 @@ func NewOCPP(id string, connector int, idtag string,
 	if err != nil {
 		return nil, err
 	}
+	conn.AllowStart(autoStart)
 
 	c := &OCPP{
 		log:       log,
@@ -374,6 +375,11 @@ func (c *OCPP) enableRemote(enable bool) error {
 	txn, err := c.conn.TransactionID()
 	if err != nil {
 		return err
+	}
+
+	if enable {
+		c.conn.AllowStart(true)
+		defer c.conn.AllowStart(false)
 	}
 
 	rc := make(chan error, 1)
