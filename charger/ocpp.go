@@ -34,7 +34,7 @@ type OCPP struct {
 	lp                loadpoint.API
 }
 
-const defaultIdTag = "evcc"
+const defaultIdTag = "evcc" // RemoteStartTransaction only
 
 func init() {
 	registry.Add("ocpp", NewOCPPFromConfig)
@@ -489,7 +489,7 @@ func (c *OCPP) phases1p3p(phases int) error {
 
 	// NOTE: this will currently _never_ do anything since
 	// loadpoint disabled the charger before switching so
-	// updatePeriod will short-circuit
+	// setCurrent will short-circuit
 	return c.setCurrent(c.current)
 }
 
