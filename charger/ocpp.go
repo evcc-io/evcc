@@ -362,63 +362,39 @@ func (c *OCPP) Enable(enable bool) error {
 	}
 
 	if c.remoteStart && needtxn {
-		c.enableRemote(enable)
+		err = c.initTransaction()
+		if err != nil {
+			return err
+		}
 	}
 
-	return c.enableProfile(enable)
-}
-
-// enableProfile pauses/resumes by TxDefaultProfile update
-func (c *OCPP) enableProfile(enable bool) error {
 	var current float64
 	if enable {
 		current = c.current
 	}
 
-	return c.setCurrent(current)
+	err = c.setCurrent(current)
+
+	return err
 }
 
-// enableRemote starts and terminates transaction by RemoteStart/Stop
-func (c *OCPP) enableRemote(enable bool) error {
-	txn, err := c.conn.TransactionID()
-	if err != nil {
-		return err
-	}
-
-	// we have the transaction id, treat as already enabled (no-op)
-	// we have no transaction id, treat as already disabled (no-op)
-	if txn > 0 == enable {
-		return nil
-	}
-
+func (c *OCPP) initTransaction() error {
 	rc := make(chan error, 1)
-	if enable {
-		err = ocpp.Instance().RemoteStartTransaction(c.conn.ChargePoint().ID(), func(resp *core.RemoteStartTransactionConfirmation, err error) {
-			if err == nil && resp != nil && resp.Status != types.RemoteStartStopStatusAccepted {
-				err = errors.New(string(resp.Status))
-			}
+	err := ocpp.Instance().RemoteStartTransaction(c.conn.ChargePoint().ID(), func(resp *core.RemoteStartTransactionConfirmation, err error) {
+		if err == nil && resp != nil && resp.Status != types.RemoteStartStopStatusAccepted {
+			err = errors.New(string(resp.Status))
+		}
 
-			rc <- err
-		}, c.effectiveIdTag(), func(request *core.RemoteStartTransactionRequest) {
-			connector := c.conn.ID()
-			request.ConnectorId = &connector
-		})
-	} else {
-		err = ocpp.Instance().RemoteStopTransaction(c.conn.ChargePoint().ID(), func(resp *core.RemoteStopTransactionConfirmation, err error) {
-			if err == nil && resp != nil && resp.Status != types.RemoteStartStopStatusAccepted {
-				err = errors.New(string(resp.Status))
-			}
-
-			rc <- err
-		}, txn)
-	}
+		rc <- err
+	}, c.effectiveIdTag(), func(request *core.RemoteStartTransactionRequest) {
+		connector := c.conn.ID()
+		request.ConnectorId = &connector
+	})
 
 	return c.wait(err, rc)
 }
 
 func (c *OCPP) setChargingProfile(profile *types.ChargingProfile) error {
-	connector := c.conn.ID()
-
 	rc := make(chan error, 1)
 	err := ocpp.Instance().SetChargingProfile(c.conn.ChargePoint().ID(), func(resp *smartcharging.SetChargingProfileConfirmation, err error) {
 		if err == nil && resp != nil && resp.Status != smartcharging.ChargingProfileStatusAccepted {
@@ -426,7 +402,7 @@ func (c *OCPP) setChargingProfile(profile *types.ChargingProfile) error {
 		}
 
 		rc <- err
-	}, connector, profile)
+	}, c.conn.ID(), profile)
 
 	return c.wait(err, rc)
 }
