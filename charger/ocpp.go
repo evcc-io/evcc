@@ -30,7 +30,7 @@ type OCPP struct {
 	meterValuesSample string
 	timeout           time.Duration
 	phaseSwitching    bool
-	autoStart         bool
+	autoStart, noStop bool
 	chargingRateUnit  types.ChargingRateUnitType
 	lp                loadpoint.API
 }
@@ -55,6 +55,7 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 		GetConfiguration *bool
 		ChargingRateUnit string
 		AutoStart        bool
+		NoStop           bool
 	}{
 		Connector:        1,
 		IdTag:            defaultIdTag,
@@ -72,7 +73,7 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 
 	c, err := NewOCPP(cc.StationId, cc.Connector, cc.IdTag,
 		cc.MeterValues, cc.MeterInterval,
-		boot, noConfig, cc.AutoStart,
+		boot, noConfig, cc.AutoStart, cc.NoStop,
 		cc.ConnectTimeout, cc.Timeout, cc.ChargingRateUnit)
 	if err != nil {
 		return c, err
@@ -106,7 +107,7 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 // NewOCPP creates OCPP charger
 func NewOCPP(id string, connector int, idtag string,
 	meterValues string, meterInterval time.Duration,
-	boot, noConfig, autoStart bool,
+	boot, noConfig, autoStart, noStop bool,
 	connectTimeout, timeout time.Duration,
 	chargingRateUnit string,
 ) (*OCPP, error) {
@@ -138,6 +139,7 @@ func NewOCPP(id string, connector int, idtag string,
 		conn:      conn,
 		idtag:     idtag,
 		autoStart: autoStart,
+		noStop:    noStop,
 		timeout:   timeout,
 	}
 
@@ -336,12 +338,18 @@ func (c *OCPP) Enabled() (bool, error) {
 }
 
 func (c *OCPP) Enable(enable bool) error {
-	var err error
+	txn, err := c.conn.TransactionID()
+	if err != nil && enable {
+		return err
+	}
 
-	if c.autoStart {
-		err = c.enableAutostart(enable)
-	} else {
-		err = c.enableRemote(enable)
+	// if transaction is not running, disable is a no-op
+	if txn != 0 || enable {
+		if c.autoStart || (c.noStop && txn != 0) {
+			err = c.enableAutostart(enable)
+		} else {
+			err = c.enableRemote(enable)
+		}
 	}
 
 	if err == nil {
@@ -430,14 +438,14 @@ func (c *OCPP) setChargingProfile(profile *types.ChargingProfile) error {
 
 // updatePeriod sets a single charging schedule period with given current
 func (c *OCPP) updatePeriod(current float64) error {
-	// current period can only be updated if transaction is active
-	if enabled, err := c.Enabled(); err != nil || !enabled {
-		return err
-	}
-
 	txn, err := c.conn.TransactionID()
 	if err != nil {
 		return err
+	}
+
+	// current period can only be updated if transaction is active
+	if txn == 0 {
+		return nil
 	}
 
 	current = math.Trunc(10*current) / 10
