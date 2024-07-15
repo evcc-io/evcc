@@ -26,7 +26,6 @@ type OCPP struct {
 	idtag             string
 	phases            int
 	current           float64
-	limit             float64
 	meterValuesSample string
 	timeout           time.Duration
 	phaseSwitching    bool
@@ -335,21 +334,27 @@ func (c *OCPP) Status() (api.ChargeStatus, error) {
 // Enabled implements the api.Charger interface
 func (c *OCPP) Enabled() (bool, error) {
 	connector := c.conn.ID()
+	txn, err := c.conn.TransactionID()
+	if err != nil {
+		return false, err
+	}
+
+	var limit float64 = 0
 
 	rc := make(chan error, 1)
-	err := ocpp.Instance().GetCompositeSchedule(c.conn.ChargePoint().ID(), func(resp *smartcharging.GetCompositeScheduleConfirmation, err error) {
+	err = ocpp.Instance().GetCompositeSchedule(c.conn.ChargePoint().ID(), func(resp *smartcharging.GetCompositeScheduleConfirmation, err error) {
 		if err == nil && resp != nil && resp.Status != smartcharging.GetCompositeScheduleStatusAccepted {
 			err = errors.New(string(resp.Status))
 		}
 
-		c.limit = resp.ChargingSchedule.ChargingSchedulePeriod[0].Limit
+		limit = resp.ChargingSchedule.ChargingSchedulePeriod[0].Limit
 
 		rc <- err
 	}, connector, 1)
 
 	err = c.wait(err, rc)
 
-	return c.limit > 0, err
+	return (limit > 0) && (txn > 0), err
 }
 
 func (c *OCPP) Enable(enable bool) error {
