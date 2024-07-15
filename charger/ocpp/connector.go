@@ -282,3 +282,41 @@ func (conn *Connector) Currents() (float64, float64, float64, error) {
 
 	return currents[0], currents[1], currents[2], nil
 }
+
+var _ api.PhaseVoltages = (*Connector)(nil)
+
+func (conn *Connector) Voltages() (float64, float64, float64, error) {
+	if !conn.cp.Connected() {
+		return 0, 0, 0, api.ErrTimeout
+	}
+
+	conn.mu.Lock()
+	defer conn.mu.Unlock()
+
+	// zero value on timeout when not charging
+	if conn.isMeterTimeout() {
+		if conn.txnId != 0 {
+			return 0, 0, 0, api.ErrTimeout
+		}
+
+		return 0, 0, 0, nil
+	}
+
+	voltages := make([]float64, 0, 3)
+
+	for phase := 1; phase <= 3; phase++ {
+		m, ok := conn.measurements[getPhaseKey(types.MeasurandVoltage, phase)]
+		if !ok {
+			return 0, 0, 0, api.ErrNotAvailable
+		}
+
+		f, err := strconv.ParseFloat(m.Value, 64)
+		if err != nil {
+			return 0, 0, 0, fmt.Errorf("invalid voltage for phase %d: %w", phase, err)
+		}
+
+		voltages = append(voltages, scale(f, m.Unit))
+	}
+
+	return voltages[0], voltages[1], voltages[2], nil
+}
