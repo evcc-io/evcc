@@ -326,56 +326,36 @@ func (c *OCPP) wait(err error, rc chan error) error {
 
 // Status implements the api.Charger interface
 func (c *OCPP) Status() (api.ChargeStatus, error) {
+	if c.remoteStart {
+		needtxn, err := c.conn.NeedsTransaction()
+		if err != nil {
+			return api.StatusNone, err
+		}
+
+		if needtxn {
+			if err := c.initTransaction(); err != nil {
+				return api.StatusNone, err
+			}
+		}
+	}
+
 	return c.conn.Status()
 }
 
 // Enabled implements the api.Charger interface
 func (c *OCPP) Enabled() (bool, error) {
-	connector := c.conn.ID()
-	txn, err := c.conn.TransactionID()
-	if err != nil {
-		return false, err
-	}
+	current, err := c.getCurrent()
 
-	var limit float64 = 0
-
-	rc := make(chan error, 1)
-	err = ocpp.Instance().GetCompositeSchedule(c.conn.ChargePoint().ID(), func(resp *smartcharging.GetCompositeScheduleConfirmation, err error) {
-		if err == nil && resp != nil && resp.Status != smartcharging.GetCompositeScheduleStatusAccepted {
-			err = errors.New(string(resp.Status))
-		}
-
-		limit = resp.ChargingSchedule.ChargingSchedulePeriod[0].Limit
-
-		rc <- err
-	}, connector, 1)
-
-	err = c.wait(err, rc)
-
-	return (limit > 0) && (txn > 0), err
+	return current > 0, err
 }
 
 func (c *OCPP) Enable(enable bool) error {
-	needtxn, err := c.conn.NeedsTransaction()
-	if err != nil {
-		return err
-	}
-
-	if c.remoteStart && needtxn {
-		err = c.initTransaction()
-		if err != nil {
-			return err
-		}
-	}
-
 	var current float64
 	if enable {
 		current = c.current
 	}
 
-	err = c.setCurrent(current)
-
-	return err
+	return c.setCurrent(current)
 }
 
 func (c *OCPP) initTransaction() error {
@@ -419,6 +399,26 @@ func (c *OCPP) setCurrent(current float64) error {
 	}
 
 	return err
+}
+
+// Enabled implements the api.Charger interface
+func (c *OCPP) getCurrent() (float64, error) {
+	var current float64
+
+	rc := make(chan error, 1)
+	err := ocpp.Instance().GetCompositeSchedule(c.conn.ChargePoint().ID(), func(resp *smartcharging.GetCompositeScheduleConfirmation, err error) {
+		if err == nil && resp != nil && resp.Status != smartcharging.GetCompositeScheduleStatusAccepted {
+			err = errors.New(string(resp.Status))
+		}
+
+		current = resp.ChargingSchedule.ChargingSchedulePeriod[0].Limit
+
+		rc <- err
+	}, c.conn.ID(), 1)
+
+	err = c.wait(err, rc)
+
+	return current, err
 }
 
 func (c *OCPP) createTxDefaultChargingProfile(current float64) *types.ChargingProfile {
