@@ -29,7 +29,7 @@ type OCPP struct {
 	meterValuesSample string
 	timeout           time.Duration
 	phaseSwitching    bool
-	autoStart, noStop bool
+	remoteStart       bool
 	chargingRateUnit  types.ChargingRateUnitType
 	lp                loadpoint.API
 }
@@ -53,8 +53,7 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 		BootNotification *bool
 		GetConfiguration *bool
 		ChargingRateUnit string
-		AutoStart        bool
-		NoStop           bool
+		RemoteStart      bool
 	}{
 		Connector:        1,
 		IdTag:            defaultIdTag,
@@ -72,7 +71,7 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 
 	c, err := NewOCPP(cc.StationId, cc.Connector, cc.IdTag,
 		cc.MeterValues, cc.MeterInterval,
-		boot, noConfig, cc.AutoStart, cc.NoStop,
+		boot, noConfig, cc.RemoteStart,
 		cc.ConnectTimeout, cc.Timeout, cc.ChargingRateUnit)
 	if err != nil {
 		return c, err
@@ -106,7 +105,7 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 // NewOCPP creates OCPP charger
 func NewOCPP(id string, connector int, idtag string,
 	meterValues string, meterInterval time.Duration,
-	boot, noConfig, autoStart, noStop bool,
+	boot, noConfig, remoteStart bool,
 	connectTimeout, timeout time.Duration,
 	chargingRateUnit string,
 ) (*OCPP, error) {
@@ -134,12 +133,11 @@ func NewOCPP(id string, connector int, idtag string,
 	}
 
 	c := &OCPP{
-		log:       log,
-		conn:      conn,
-		idtag:     idtag,
-		autoStart: autoStart,
-		noStop:    noStop,
-		timeout:   timeout,
+		log:         log,
+		conn:        conn,
+		idtag:       idtag,
+		remoteStart: remoteStart,
+		timeout:     timeout,
 	}
 
 	c.log.DEBUG.Printf("waiting for chargepoint: %v", connectTimeout)
@@ -358,19 +356,19 @@ func (c *OCPP) Enabled() (bool, error) {
 }
 
 func (c *OCPP) Enable(enable bool) error {
-	txn, err := c.conn.TransactionID()
+	needtxn, err := c.conn.NeedsTransaction()
 	if err != nil {
 		return err
 	}
 
-	if c.autoStart || (c.noStop && txn > 0) {
-		return c.enableProfile(enable)
+	if c.remoteStart && needtxn {
+		c.enableRemote(enable)
 	}
 
-	return c.enableRemote(enable)
+	return c.enableProfile(enable)
 }
 
-// enableProfile pauses/resumes existing transaction by profile update
+// enableProfile pauses/resumes by TxDefaultProfile update
 func (c *OCPP) enableProfile(enable bool) error {
 	var current float64
 	if enable {
