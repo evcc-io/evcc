@@ -24,7 +24,6 @@ type OCPP struct {
 	log               *util.Logger
 	conn              *ocpp.Connector
 	idtag             string
-	enabled           bool
 	phases            int
 	current           float64
 	limit             float64
@@ -354,19 +353,16 @@ func (c *OCPP) Enabled() (bool, error) {
 }
 
 func (c *OCPP) Enable(enable bool) error {
-	var err error
-
-	if c.autoStart || c.noStop {
-		err = c.enableProfile(enable)
-	} else {
-		err = c.enableRemote(enable)
+	txn, err := c.conn.TransactionID()
+	if err != nil {
+		return err
 	}
 
-	if err == nil {
-		c.enabled = enable
+	if c.autoStart || (c.noStop && txn > 0) {
+		return c.enableProfile(enable)
 	}
 
-	return err
+	return c.enableRemote(enable)
 }
 
 // enableProfile pauses/resumes existing transaction by profile update
@@ -376,7 +372,7 @@ func (c *OCPP) enableProfile(enable bool) error {
 		current = c.current
 	}
 
-	return c.updatePeriod(current)
+	return c.setCurrent(current)
 }
 
 // enableRemote starts and terminates transaction by RemoteStart/Stop
@@ -386,13 +382,14 @@ func (c *OCPP) enableRemote(enable bool) error {
 		return err
 	}
 
+	// we have the transaction id, treat as already enabled (no-op)
+	// we have no transaction id, treat as already disabled (no-op)
+	if txn > 0 == enable {
+		return nil
+	}
+
 	rc := make(chan error, 1)
 	if enable {
-		if txn > 0 {
-			// we have the transaction id, treat as enabled
-			return nil
-		}
-
 		err = ocpp.Instance().RemoteStartTransaction(c.conn.ChargePoint().ID(), func(resp *core.RemoteStartTransactionConfirmation, err error) {
 			if err == nil && resp != nil && resp.Status != types.RemoteStartStopStatusAccepted {
 				err = errors.New(string(resp.Status))
@@ -404,11 +401,6 @@ func (c *OCPP) enableRemote(enable bool) error {
 			request.ConnectorId = &connector
 		})
 	} else {
-		if txn == 0 {
-			// we have no transaction id, treat as disabled
-			return nil
-		}
-
 		err = ocpp.Instance().RemoteStopTransaction(c.conn.ChargePoint().ID(), func(resp *core.RemoteStopTransactionConfirmation, err error) {
 			if err == nil && resp != nil && resp.Status != types.RemoteStartStopStatusAccepted {
 				err = errors.New(string(resp.Status))
@@ -436,8 +428,8 @@ func (c *OCPP) setChargingProfile(profile *types.ChargingProfile) error {
 	return c.wait(err, rc)
 }
 
-// updatePeriod sets a single charging schedule period with given current
-func (c *OCPP) updatePeriod(current float64) error {
+// setCurrent sets the TxDefaultChargingProfile with given current
+func (c *OCPP) setCurrent(current float64) error {
 	var err error
 
 	current = math.Trunc(10*current) / 10
@@ -490,7 +482,7 @@ var _ api.ChargerEx = (*OCPP)(nil)
 
 // MaxCurrentMillis implements the api.ChargerEx interface
 func (c *OCPP) MaxCurrentMillis(current float64) error {
-	err := c.updatePeriod(current)
+	err := c.setCurrent(current)
 	if err == nil {
 		c.current = current
 	}
@@ -519,7 +511,7 @@ func (c *OCPP) phases1p3p(phases int) error {
 	// NOTE: this will currently _never_ do anything since
 	// loadpoint disabled the charger before switching so
 	// updatePeriod will short-circuit
-	return c.updatePeriod(c.current)
+	return c.setCurrent(c.current)
 }
 
 // Identify implements the api.Identifier interface
