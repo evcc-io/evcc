@@ -122,7 +122,7 @@ func NewPhoenixEVEth(uri string, slaveID uint8) (api.Charger, error) {
 		maxCurrentMillis = wb.maxCurrentMillis
 	}
 
-	return decoratePhoenixEVEth(wb, currentPower, totalEnergy, currents, voltages, maxCurrentMillis, identify), err
+	return decoratePhoenixEVEth(wb, currentPower, totalEnergy, currents, voltages, maxCurrentMillis, identify), nil
 }
 
 // Status implements the api.Charger interface
