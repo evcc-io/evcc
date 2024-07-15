@@ -27,6 +27,7 @@ type OCPP struct {
 	enabled           bool
 	phases            int
 	current           float64
+	limit             float64
 	meterValuesSample string
 	timeout           time.Duration
 	phaseSwitching    bool
@@ -334,20 +335,29 @@ func (c *OCPP) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (c *OCPP) Enabled() (bool, error) {
-	return c.enabled, nil
+	connector := c.conn.ID()
+
+	rc := make(chan error, 1)
+	err := ocpp.Instance().GetCompositeSchedule(c.conn.ChargePoint().ID(), func(resp *smartcharging.GetCompositeScheduleConfirmation, err error) {
+		if err == nil && resp != nil && resp.Status != smartcharging.GetCompositeScheduleStatusAccepted {
+			err = errors.New(string(resp.Status))
+		}
+
+		c.limit = resp.ChargingSchedule.ChargingSchedulePeriod[0].Limit
+
+		rc <- err
+	}, connector, 1)
+
+	err = c.wait(err, rc)
+
+	return c.limit > 0, err
 }
 
 func (c *OCPP) Enable(enable bool) error {
-	txn, err := c.conn.TransactionID()
-	if err != nil {
-		return err
-	}
+	var err error
 
-	if c.autoStart || (c.noStop && txn > 0) {
-		// if there is no transaction running, this is a no-op
-		if txn > 0 {
-			err = c.enableProfile(enable)
-		}
+	if c.autoStart || c.noStop {
+		err = c.enableProfile(enable)
 	} else {
 		err = c.enableRemote(enable)
 	}
@@ -392,7 +402,6 @@ func (c *OCPP) enableRemote(enable bool) error {
 		}, c.effectiveIdTag(), func(request *core.RemoteStartTransactionRequest) {
 			connector := c.conn.ID()
 			request.ConnectorId = &connector
-			request.ChargingProfile = c.getTxChargingProfile(c.current, 0)
 		})
 	} else {
 		if txn == 0 {
@@ -429,19 +438,11 @@ func (c *OCPP) setChargingProfile(profile *types.ChargingProfile) error {
 
 // updatePeriod sets a single charging schedule period with given current
 func (c *OCPP) updatePeriod(current float64) error {
-	txn, err := c.conn.TransactionID()
-	if err != nil {
-		return err
-	}
-
-	// current period can only be updated if transaction is active
-	if txn == 0 {
-		return nil
-	}
+	var err error
 
 	current = math.Trunc(10*current) / 10
 
-	err = c.setChargingProfile(c.getTxChargingProfile(current, txn))
+	err = c.setChargingProfile(c.createTxDefaultChargingProfile(current))
 	if err != nil {
 		err = fmt.Errorf("set charging profile: %w", err)
 	}
@@ -449,7 +450,7 @@ func (c *OCPP) updatePeriod(current float64) error {
 	return err
 }
 
-func (c *OCPP) getTxChargingProfile(current float64, transactionId int) *types.ChargingProfile {
+func (c *OCPP) createTxDefaultChargingProfile(current float64) *types.ChargingProfile {
 	phases := c.phases
 	period := types.NewChargingSchedulePeriod(0, current)
 	if c.chargingRateUnit == types.ChargingRateUnitWatts {
@@ -469,10 +470,9 @@ func (c *OCPP) getTxChargingProfile(current float64, transactionId int) *types.C
 	}
 
 	return &types.ChargingProfile{
-		ChargingProfileId:      1,
-		TransactionId:          transactionId,
+		ChargingProfileId:      0,
 		StackLevel:             0,
-		ChargingProfilePurpose: types.ChargingProfilePurposeTxProfile,
+		ChargingProfilePurpose: types.ChargingProfilePurposeTxDefaultProfile,
 		ChargingProfileKind:    types.ChargingProfileKindRelative,
 		ChargingSchedule: &types.ChargingSchedule{
 			ChargingRateUnit:       c.chargingRateUnit,
