@@ -1,0 +1,100 @@
+template: slimmelezerV2
+products:
+  - brand: Zuidwijk
+    description:
+      generic: SlimmeLezer(+) V2
+      en: SlimmeLezer(+) V2 with new endpoints
+      de: SlimmeLezer(+) V2 mit neuen Endpunkten
+params:
+  - name: usage
+    choice: ["grid"]
+  - name: host
+render: |
+  type: custom
+  power:
+    source: calc
+    add:
+    - source: http
+      uri: http://{{ .host }}/sensor/power_delivered
+      headers:
+      - content-type: application/json
+      jq: .value
+      scale: 1000
+    - source: http
+      uri: http://{{ .host }}/sensor/power_returned
+      headers:
+      - content-type: application/json
+      jq: .value
+      scale: -1000
+  energy:
+    source: calc
+    add:
+    - source: http
+      uri: http://{{ .host }}/sensor/energy_delivered_tariff1
+      headers:
+      - content-type: application/json
+      jq: .value
+    - source: http
+      uri: http://{{ .host }}/sensor/energy_delivered_tariff2
+      headers:
+      - content-type: application/json
+      jq: .value
+  currents:
+  - source: http
+    uri: http://{{ .host }}/sensor/current_l1
+    headers:
+    - content-type: application/json
+    jq: .value
+  - source: http
+    uri: http://{{ .host }}/sensor/current_l2
+    headers:
+    - content-type: application/json
+    jq: .value
+  - source: http
+    uri: http://{{ .host }}/sensor/current_l3
+    headers:
+    - content-type: application/json
+    jq: .value
+  powers:
+  - source: calc
+    add:
+    - source: http
+      uri: http://{{ .host }}/sensor/power_delivered_l1
+      headers:
+      - content-type: application/json
+      jq: .value
+      scale: 1000
+    - source: http
+      uri: http://{{ .host }}/sensor/power_returned_l1
+      headers:
+      - content-type: application/json
+      jq: .value
+      scale: -1000
+  - source: calc
+    add:
+    - source: http
+      uri: http://{{ .host }}/sensor/power_delivered_l2
+      headers:
+      - content-type: application/json
+      jq: .value
+      scale: 1000
+    - source: http
+      uri: http://{{ .host }}/sensor/power_returned_l2
+      headers:
+      - content-type: application/json
+      jq: .value
+      scale: -1000
+  - source: calc
+    add:
+    - source: http
+      uri: http://{{ .host }}/sensor/power_delivered_l3
+      headers:
+      - content-type: application/json
+      jq: .value
+      scale: 1000
+    - source: http
+      uri: http://{{ .host }}/sensor/power_returned_l3
+      headers:
+      - content-type: application/json
+      jq: .value
+      scale: -1000
