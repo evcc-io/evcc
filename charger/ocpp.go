@@ -411,7 +411,9 @@ func (c *OCPP) getCurrent() (float64, error) {
 			err = errors.New(string(resp.Status))
 		}
 
-		current = resp.ChargingSchedule.ChargingSchedulePeriod[0].Limit
+		if resp.ChargingSchedule != nil && len(resp.ChargingSchedule.ChargingSchedulePeriod) > 0 {
+			current = resp.ChargingSchedule.ChargingSchedulePeriod[0].Limit
+		}
 
 		rc <- err
 	}, c.conn.ID(), 1)
