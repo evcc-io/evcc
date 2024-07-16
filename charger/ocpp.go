@@ -411,6 +411,7 @@ func (c *OCPP) getCurrent() (float64, error) {
 			err = errors.New(string(resp.Status))
 		}
 
+		// TODO was falls nicht?
 		if resp.ChargingSchedule != nil && len(resp.ChargingSchedule.ChargingSchedulePeriod) > 0 {
 			current = resp.ChargingSchedule.ChargingSchedulePeriod[0].Limit
 		}
