@@ -24,9 +24,9 @@ require (
 	github.com/dmarkham/enumer v1.5.10
 	github.com/dylanmei/iso8601 v0.1.0
 	github.com/eclipse/paho.mqtt.golang v1.4.3
-	github.com/enbility/eebus-go v0.6.0
-	github.com/enbility/ship-go v0.5.1
-	github.com/enbility/spine-go v0.6.0
+	github.com/enbility/eebus-go v0.6.1
+	github.com/enbility/ship-go v0.5.2
+	github.com/enbility/spine-go v0.6.1
 	github.com/evcc-io/tesla-proxy-client v0.0.0-20240221194046-4168b3759701
 	github.com/fatih/structs v1.1.0
 	github.com/glebarez/sqlite v1.11.0
@@ -196,7 +196,3 @@ require (
 )
 
 replace gopkg.in/yaml.v3 => github.com/andig/yaml v0.0.0-20240531135838-1ff5761ab467
-
-replace github.com/enbility/eebus-go => github.com/enbility/eebus-go v0.0.0-20240711202230-38f7be54ae45
-
-replace github.com/enbility/spine-go => github.com/enbility/spine-go v0.0.0-20240705075417-fb2969d753c1
