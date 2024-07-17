@@ -5,14 +5,19 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/andig/wsp/client"
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/util"
 	"nhooyr.io/websocket"
 )
 
-func upstream(service string, ch <-chan util.Param) {
+func upstream(reverseProxyUrl, socketProxyUrl string, ch chan util.Param) {
+	conf := client.NewConfig()
+	conf.Targets = []string{reverseProxyUrl}
+	client.NewClient(conf).Start(context.Background())
+
 	for {
-		if err := connectService(service, ch); err != nil {
+		if err := connectService(socketProxyUrl, ch); err != nil {
 			time.Sleep(time.Second)
 			fmt.Println("ws connect:", err)
 		}

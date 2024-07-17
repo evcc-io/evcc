@@ -160,7 +160,11 @@ func runRoot(cmd *cobra.Command, args []string) {
 	// publish to UI
 	go socketHub.Run(pipe.NewDropper(ignoreEmpty).Pipe(tee.Attach()), cache)
 
-	go upstream("ws://localhost:8088/ws", tee.Attach())
+	reverseProxyUrl := "http://localhost:8080/register"
+	socketProxyUrl := "ws://localhost:8088/ws"
+
+	upstreamChan := tee.Attach()
+	go upstream(reverseProxyUrl, socketProxyUrl, upstreamChan)
 
 	// capture log messages for UI
 	util.CaptureLogs(valueChan)
@@ -267,7 +271,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	// allow web access for vehicles
 	configureAuth(conf.Network, config.Instances(config.Vehicles().Devices()), httpd.Router(), valueChan)
 
-	httpd.RegisterSystemHandler(valueChan, socketHub, cache, func() {
+	httpd.RegisterSystemHandler(valueChan, upstreamChan, cache, func() {
 		log.INFO.Println("evcc was stopped by user. OS should restart the service. Or restart manually.")
 		once.Do(func() { close(stopC) }) // signal loop to end
 	})

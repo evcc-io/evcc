@@ -153,12 +153,6 @@ func (h *SocketHub) broadcast(p util.Param) {
 	}
 }
 
-func (h *SocketHub) Refresh(cache *util.Cache) {
-	for _, p := range cache.All() {
-		h.broadcast(p)
-	}
-}
-
 // Run starts data and status distribution
 func (h *SocketHub) Run(in <-chan util.Param, cache *util.Cache) {
 	for {

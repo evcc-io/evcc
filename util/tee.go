@@ -17,7 +17,7 @@ type Tee struct {
 }
 
 // Attach creates a new receiver channel and attaches it to the tee
-func (t *Tee) Attach() <-chan Param {
+func (t *Tee) Attach() chan Param {
 	// TODO find better approach to prevent deadlocks
 	// this will buffer the receiver channel to prevent deadlocks when consumers use mutex-protected loadpoint api
 	out := make(chan Param, 128)

@@ -205,11 +205,11 @@ func stateHandler(cache *util.Cache) http.HandlerFunc {
 }
 
 // refreshHandler pushes the cached state to the upstream websocket
-func refreshHandler(socketHub *SocketHub, cache *util.Cache) http.HandlerFunc {
+func refreshHandler(ch chan<- util.Param, cache *util.Cache) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		time.AfterFunc(3*time.Second, func() {
-			socketHub.Refresh(cache)
-		})
+		for _, p := range cache.All() {
+			ch <- p
+		}
 		w.WriteHeader(http.StatusOK)
 	}
 }

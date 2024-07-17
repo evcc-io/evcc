@@ -33,6 +33,8 @@ github.com/andig/gosunspec v0.0.0-20231205122018-1daccfa17912 h1:pphS+WUa9zK0ZH/
 github.com/andig/gosunspec v0.0.0-20231205122018-1daccfa17912/go.mod h1:c6P6szcR+ROkqZruOR4f6qbDKFjZX6OitPpj+yJ/r8k=
 github.com/andig/mbserver v0.0.0-20230310211055-1d29cbb5820e h1:m/NTP3JWpR7M0ljLxiQU4fzR25jjhe1LDtxLMNcoNJQ=
 github.com/andig/mbserver v0.0.0-20230310211055-1d29cbb5820e/go.mod h1:4VtYzTm//oUipwvO3yh0g/udTE7pYJM+U/kyAuFDsgM=
+github.com/andig/wsp v0.0.0-20240717085241-32bf161c78ed h1:JGrOqy0QkWbp08sbQ/si9KFSYKN7V/1qoBzGysLW9lQ=
+github.com/andig/wsp v0.0.0-20240717085241-32bf161c78ed/go.mod h1:u2dRrNyccr/D6wXW9tX+d8RilyGSKgLC6Onkygf5waE=
 github.com/andig/yaml v0.0.0-20240531135838-1ff5761ab467 h1:JqIoHxsQSV39xaemvVRu3HOkSf5AbhQ1YEENJa2cL3Q=
 github.com/andig/yaml v0.0.0-20240531135838-1ff5761ab467/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=
 github.com/andybalholm/cascadia v1.3.2 h1:3Xi6Dw5lHF15JtdcmAHD3i1+T8plmv7BQ/nsViSLyss=
