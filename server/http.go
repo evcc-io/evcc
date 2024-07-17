@@ -184,7 +184,7 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, valueChan chan<- util.Param)
 }
 
 // RegisterSystemHandler provides system level handlers
-func (s *HTTPd) RegisterSystemHandler(valueChan chan<- util.Param, cache *util.Cache, shutdown func()) {
+func (s *HTTPd) RegisterSystemHandler(valueChan chan<- util.Param, socketHub *SocketHub, cache *util.Cache, shutdown func()) {
 	router := s.Server.Handler.(*mux.Router)
 	auth := auth.New()
 
@@ -198,7 +198,8 @@ func (s *HTTPd) RegisterSystemHandler(valueChan chan<- util.Param, cache *util.C
 
 	{ // /api
 		routes := map[string]route{
-			"state": {"GET", "/state", stateHandler(cache)},
+			"state":   {"GET", "/state", stateHandler(cache)},
+			"refresh": {"PATCH", "/refresh", refreshHandler(socketHub, cache)},
 		}
 
 		for _, r := range routes {

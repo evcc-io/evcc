@@ -23,8 +23,8 @@ type socketSubscriber struct {
 	closeSlow func()
 }
 
-func writeTimeout(ctx context.Context, timeout time.Duration, c *websocket.Conn, msg []byte) error {
-	ctx, cancel := context.WithTimeout(ctx, timeout)
+func writeWithTimeout(ctx context.Context, c *websocket.Conn, msg []byte) error {
+	ctx, cancel := context.WithTimeout(ctx, socketWriteTimeout)
 	defer cancel()
 	return c.Write(ctx, websocket.MessageText, msg)
 }
@@ -98,7 +98,7 @@ func (h *SocketHub) subscribe(ctx context.Context, conn *websocket.Conn) error {
 	for {
 		select {
 		case msg := <-s.send:
-			if err := writeTimeout(ctx, socketWriteTimeout, conn, msg); err != nil {
+			if err := writeWithTimeout(ctx, conn, msg); err != nil {
 				return err
 			}
 		case <-ctx.Done():
@@ -150,6 +150,12 @@ func (h *SocketHub) broadcast(p util.Param) {
 				s.closeSlow()
 			}
 		}
+	}
+}
+
+func (h *SocketHub) Refresh(cache *util.Cache) {
+	for _, p := range cache.All() {
+		h.broadcast(p)
 	}
 }
 

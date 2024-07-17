@@ -29,11 +29,8 @@ func connectService(service string, ch <-chan util.Param) error {
 	}
 	defer conn.CloseNow()
 
-	fmt.Println("ws connect")
-
 	for p := range ch {
 		msg := "{" + server.Kv(p) + "}"
-		fmt.Println("ws send:", msg)
 		if err := conn.Write(context.Background(), websocket.MessageText, []byte(msg)); err != nil {
 			return err
 		}

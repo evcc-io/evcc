@@ -267,7 +267,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	// allow web access for vehicles
 	configureAuth(conf.Network, config.Instances(config.Vehicles().Devices()), httpd.Router(), valueChan)
 
-	httpd.RegisterSystemHandler(valueChan, cache, func() {
+	httpd.RegisterSystemHandler(valueChan, socketHub, cache, func() {
 		log.INFO.Println("evcc was stopped by user. OS should restart the service. Or restart manually.")
 		once.Do(func() { close(stopC) }) // signal loop to end
 	})

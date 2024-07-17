@@ -204,6 +204,16 @@ func stateHandler(cache *util.Cache) http.HandlerFunc {
 	}
 }
 
+// refreshHandler pushes the cached state to the upstream websocket
+func refreshHandler(socketHub *SocketHub, cache *util.Cache) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		time.AfterFunc(3*time.Second, func() {
+			socketHub.Refresh(cache)
+		})
+		w.WriteHeader(http.StatusOK)
+	}
+}
+
 // healthHandler returns current charge mode
 func healthHandler(site site.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
