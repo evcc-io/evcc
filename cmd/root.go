@@ -160,6 +160,8 @@ func runRoot(cmd *cobra.Command, args []string) {
 	// publish to UI
 	go socketHub.Run(pipe.NewDropper(ignoreEmpty).Pipe(tee.Attach()), cache)
 
+	go upstream("ws://localhost:8088/ws", tee.Attach())
+
 	// capture log messages for UI
 	util.CaptureLogs(valueChan)
 

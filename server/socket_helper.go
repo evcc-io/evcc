@@ -31,6 +31,10 @@ func encodeSliceAsString(v any) (string, error) {
 	return fmt.Sprintf("[%s]", strings.Join(res, ",")), nil
 }
 
+func Kv(p util.Param) string {
+	return kv(p)
+}
+
 func kv(p util.Param) string {
 	var (
 		val string
