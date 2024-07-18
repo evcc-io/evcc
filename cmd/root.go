@@ -160,8 +160,9 @@ func runRoot(cmd *cobra.Command, args []string) {
 	// publish to UI
 	go socketHub.Run(pipe.NewDropper(ignoreEmpty).Pipe(tee.Attach()), cache)
 
-	reverseProxyUrl := "http://localhost:8080/register"
-	socketProxyUrl := "ws://localhost:8088/ws"
+	proxy := "localhost:8090"
+	reverseProxyUrl := fmt.Sprintf("http://%s/proxy/register", proxy)
+	socketProxyUrl := fmt.Sprintf("ws://%s/ws", proxy)
 
 	upstreamChan := tee.Attach()
 	go upstream(reverseProxyUrl, socketProxyUrl, upstreamChan)
