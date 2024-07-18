@@ -93,15 +93,30 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 		currentsG = c.currents
 	}
 
+	var voltagesG func() (float64, float64, float64, error)
+	if c.hasMeasurement(types.MeasurandVoltage + ".L3") {
+		voltagesG = c.voltages
+	}
+
 	var phasesS func(int) error
 	if c.phaseSwitching {
 		phasesS = c.phases1p3p
 	}
 
-	return decorateOCPP(c, powerG, totalEnergyG, currentsG, phasesS), nil
+	var socG func() (float64, error)
+	if c.hasMeasurement(types.MeasueandSoC) { // typo in ocpp-go
+		socG = c.soc
+	}
+
+	var currentG func() (float64, error)
+	if c.hasMeasurement(types.MeasurandCurrentOffered) {
+		currentG = c.getMaxCurrent
+	}
+
+	return decorateOCPP(c, powerG, totalEnergyG, currentsG, voltagesG, phasesS, socG, currentG), nil
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateOCPP -b *OCPP -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) error"
+//go:generate go run ../cmd/tools/decorate.go -f decorateOCPP -b *OCPP -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.Battery,Soc,func() (float64, error)" -t "api.CurrentGetter,GetMaxCurrent,func() (float64, error)"
 
 // NewOCPP creates OCPP charger
 func NewOCPP(id string, connector int, idtag string,
@@ -472,22 +487,32 @@ func (c *OCPP) MaxCurrentMillis(current float64) error {
 	return err
 }
 
-// CurrentPower implements the api.Meter interface
+// getMaxCurrent implements the api.CurrentGetter interface
+func (c *OCPP) getMaxCurrent() (float64, error) {
+	return c.conn.GetMaxCurrent()
+}
+
+// currentPower implements the api.Meter interface
 func (c *OCPP) currentPower() (float64, error) {
 	return c.conn.CurrentPower()
 }
 
-// TotalEnergy implements the api.MeterTotal interface
+// totalEnergy implements the api.MeterTotal interface
 func (c *OCPP) totalEnergy() (float64, error) {
 	return c.conn.TotalEnergy()
 }
 
-// Currents implements the api.PhaseCurrents interface
+// currents implements the api.PhaseCurrents interface
 func (c *OCPP) currents() (float64, float64, float64, error) {
 	return c.conn.Currents()
 }
 
-// Phases1p3p implements the api.PhaseSwitcher interface
+// voltages implements the api.PhaseVoltages interface
+func (c *OCPP) voltages() (float64, float64, float64, error) {
+	return c.conn.Voltages()
+}
+
+// phases1p3p implements the api.PhaseSwitcher interface
 func (c *OCPP) phases1p3p(phases int) error {
 	c.phases = phases
 
@@ -496,6 +521,13 @@ func (c *OCPP) phases1p3p(phases int) error {
 	// setCurrent will short-circuit
 	return c.setCurrent(c.current)
 }
+
+// soc implements the api.Battery interface
+func (c *OCPP) soc() (float64, error) {
+	return c.conn.Soc()
+}
+
+var _ api.Identifier = (*OCPP)(nil)
 
 // Identify implements the api.Identifier interface
 func (c *OCPP) Identify() (string, error) {
