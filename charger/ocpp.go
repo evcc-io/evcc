@@ -29,7 +29,6 @@ type OCPP struct {
 	meterValuesSample string
 	timeout           time.Duration
 	phaseSwitching    bool
-	autoStart         bool // deprecated, to be removed
 	remoteStart       bool
 	chargingRateUnit  types.ChargingRateUnitType
 	lp                loadpoint.API
@@ -54,6 +53,7 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 		BootNotification *bool
 		GetConfiguration *bool
 		ChargingRateUnit string
+		AutoStart        bool // deprecated, to be removed
 		RemoteStart      bool
 	}{
 		Connector:        1,
