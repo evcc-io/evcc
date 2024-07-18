@@ -44,6 +44,8 @@ requirements:
       * Local network connection
 params:
   - preset: ocpp
+  - name: autostart
+    deprecated: true
   - name: remotestart
     advanced: true
     type: bool
@@ -78,14 +80,14 @@ params:
     advanced: true
     type: duration
     description:
-      de: Zählerwerte nach Intervall anfordern
-      en: Interval for requesting meter values
+      de: Gewünschtes Übertragungsintervall der Zählerwerte
+      en: Desired transmission interval of meter values
   - name: metervalues
     advanced: true
     type: string
     description:
-      de: Liste der Zählerwerte
-      en: List of meter values
+      de: Kommaseparierte Liste der zu sendenden Zählerwerte ("measurand")
+      en: Comma-separated list of meter values to send ("measurand")
   - name: chargingrateunit
     advanced: true
     type: string
