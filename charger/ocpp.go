@@ -29,9 +29,9 @@ type OCPP struct {
 	meterValuesSample string
 	timeout           time.Duration
 	phaseSwitching    bool
+	autoStart         bool // deprecated, to be removed
+	remoteStart       bool
 	chargingRateUnit  types.ChargingRateUnitType
-	AutoStart         bool // deprecated, to be removed
-	RemoteStart       bool
 	lp                loadpoint.API
 }
 
@@ -152,7 +152,7 @@ func NewOCPP(id string, connector int, idtag string,
 		log:         log,
 		conn:        conn,
 		idtag:       idtag,
-		RemoteStart: remoteStart,
+		remoteStart: remoteStart,
 		timeout:     timeout,
 	}
 
@@ -342,7 +342,7 @@ func (c *OCPP) wait(err error, rc chan error) error {
 
 // Status implements the api.Charger interface
 func (c *OCPP) Status() (api.ChargeStatus, error) {
-	if c.RemoteStart {
+	if c.remoteStart {
 		needtxn, err := c.conn.NeedsTransaction()
 		if err != nil {
 			return api.StatusNone, err
