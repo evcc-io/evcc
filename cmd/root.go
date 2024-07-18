@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	_ "net/http/pprof" // pprof handler
+	"net/url"
 	"os"
 	"os/signal"
 	"strings"
@@ -160,9 +161,17 @@ func runRoot(cmd *cobra.Command, args []string) {
 	// publish to UI
 	go socketHub.Run(pipe.NewDropper(ignoreEmpty).Pipe(tee.Attach()), cache)
 
-	proxy := "localhost:8090"
-	reverseProxyUrl := fmt.Sprintf("http://%s/proxy/register", proxy)
-	socketProxyUrl := fmt.Sprintf("ws://%s/ws", proxy)
+	proxy := strings.TrimRight(util.Getenv("REMOTE_PROXY", "http://localhost:8090"), "/")
+	proxyUrl, err := url.Parse(proxy)
+	if err != nil {
+		log.FATAL.Fatal(err)
+	}
+	scheme := "ws"
+	if proxyUrl.Scheme == "https" {
+		scheme = "wss"
+	}
+	reverseProxyUrl := fmt.Sprintf("%s/proxy/register", proxyUrl)
+	socketProxyUrl := fmt.Sprintf("%s://%s/ws", scheme, proxyUrl.Host)
 
 	upstreamChan := tee.Attach()
 	go upstream(reverseProxyUrl, socketProxyUrl, upstreamChan)
