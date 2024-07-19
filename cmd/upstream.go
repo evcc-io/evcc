@@ -8,18 +8,22 @@ import (
 	"github.com/andig/wsp/client"
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/util"
+	"github.com/google/uuid"
 	"nhooyr.io/websocket"
 )
 
 func upstream(reverseProxyUrl, socketProxyUrl string, ch chan util.Param) {
-	conf := client.NewConfig()
-	conf.Targets = []string{reverseProxyUrl}
-	client.NewClient(conf).Start(context.Background())
+	client.NewClient(&client.Config{
+		ID:           uuid.NewString(),
+		Targets:      []string{reverseProxyUrl},
+		PoolIdleSize: 2,
+		PoolMaxSize:  10,
+	}).Start(context.Background())
 
 	for {
 		if err := connectService(socketProxyUrl, ch); err != nil {
-			time.Sleep(time.Second)
 			fmt.Println("ws connect:", err)
+			time.Sleep(time.Second)
 		}
 	}
 }
