@@ -1,0 +1,21 @@
+template: nrgkick-gen2
+products:
+  - brand: NRGKick
+    description:
+      generic: Gen2-JSON
+requirements:
+  description:
+    de: NRGkick Gen2 Ladeeinheit via lokale REST JSON API
+    en: NRGkick Gen2 charging unit via local REST JSON API
+params:
+  - name: host
+    required: true
+  - name: user
+    required: false
+  - name: password
+    required: false
+render: |
+  type: nrgkick-gen2
+  uri: http://{{ .host }}
+  user: {{ .user }}
+  password: {{ .password }}
