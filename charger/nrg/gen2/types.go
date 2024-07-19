@@ -71,7 +71,7 @@ type Powerflow struct {
 }
 
 type N struct {
-	Current int `json:"current"`
+	Current float64 `json:"current"`
 }
 
 type Phase struct {
