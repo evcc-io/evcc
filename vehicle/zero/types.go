@@ -20,8 +20,8 @@ type ZeroState struct {
 	Reason           string  //"2",
 	Response         string  //"0",
 	Driver           string  //"0",
-	Longitude        string  //"4.5000",
-	Latitude         string  //":"51.5000",
+	Longitude        float64 //"4.5000",
+	Latitude         float64 //":"51.5000",
 	Altitude         string  //:"0",
 	Gps_valid        string  //:"0",
 	Gps_connected    string  //:"1",
@@ -37,7 +37,9 @@ type ZeroState struct {
 	Water_temp       string  //:"",
 	Oil_pressure     string  //:"0",
 	Main_voltage     float64 //:13.08,
-	Analog1          string  //":"0.09",
+	Analog1          float64 //":"0.09",
+	Analog2          float64 //":"0.09",
+	Analog3          float64 //":"0.09",
 	Siren            string  //:"0",
 	Lock             string  //:"0",
 	Int_lights       string  //:"0",
@@ -52,6 +54,8 @@ type ZeroState struct {
 	Chargecomplete   int32   // 0,
 	Pluggedin        int32   //:1,
 	Chargingtimeleft int32   //:0
+	Storage          int32
+	Battery          int32
 }
 
 type UnitData []UnitNumberAnswer

@@ -1,6 +1,7 @@
 package zero
 
 import (
+	"fmt"
 	"strconv"
 	"time"
 
@@ -10,12 +11,14 @@ import (
 
 // Provider implements the vehicle api
 type Provider struct {
+	api    *API
 	status provider.Cacheable[ZeroState]
 }
 
 // NewProvider creates a vehicle api provider
 func NewProvider(api *API, cache time.Duration) *Provider {
 	impl := &Provider{
+		api: api,
 		status: provider.ResettableCached(func() (ZeroState, error) {
 			return api.Status()
 		}, cache),
@@ -64,10 +67,24 @@ var _ api.VehicleFinishTimer = (*Provider)(nil)
 
 // FinishTime implements the api.VehicleFinishTimer interface
 func (v *Provider) FinishTime() (time.Time, error) {
+	var t time.Time
 	res, err := v.status.Get()
 	if err == nil {
+		if len(res.Datetime_actual) == 14 {
+			convTime := fmt.Sprintf("%s-%s-%s %s:%s:%s",
+				res.Datetime_actual[0:4], res.Datetime_actual[4:6], res.Datetime_actual[6:8],
+				res.Datetime_actual[8:10], res.Datetime_actual[10:12], res.Datetime_actual[12:14])
+
+			// 2023-11-14 13:23:45
+			t, err = time.Parse(time.DateTime, convTime)
+
+		}
+		if err != nil {
+			t = time.Now()
+		}
+
 		ctr := res.Chargingtimeleft
-		return time.Now().Add(time.Duration(ctr) * time.Minute), err
+		return t.Add(time.Duration(ctr) * time.Minute), err
 	}
 
 	return time.Time{}, err
@@ -82,11 +99,11 @@ func (v *Provider) Odometer() (float64, error) {
 		return 0, err
 	}
 
-	var mileage int
-	mileage, err = strconv.Atoi(res.Mileage)
+	var mileage float64
+	mileage, err = strconv.ParseFloat(res.Mileage, 64)
 	if err != nil {
 		return 0, err
 	}
 
-	return float64(mileage), nil
+	return mileage, nil
 }
