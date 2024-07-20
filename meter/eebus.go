@@ -1,4 +1,4 @@
-package eebus
+package meter
 
 import (
 	"errors"
@@ -8,23 +8,13 @@ import (
 
 	eebusapi "github.com/enbility/eebus-go/api"
 	ucapi "github.com/enbility/eebus-go/usecases/api"
-	"github.com/enbility/eebus-go/usecases/cs/lpc"
+	"github.com/enbility/eebus-go/usecases/ma/mgcp"
 	spineapi "github.com/enbility/spine-go/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/evcc-io/evcc/util"
 )
-
-const (
-	maxIdRequestTimespan         = time.Second * 120
-	idleFactor                   = 0.6
-	voltage              float64 = 230
-)
-
-type minMax struct {
-	min, max float64
-}
 
 type EEBus struct {
 	ski string
@@ -110,8 +100,14 @@ func (c *EEBus) DeviceDisconnect() {
 // UseCase specific events
 func (c *EEBus) UseCaseEventCB(_ spineapi.DeviceRemoteInterface, entity spineapi.EntityRemoteInterface, event eebusapi.EventType) {
 	switch event {
-	case lpc.DataUpdateLimit:
-		c.dataUpdateLimit()
+	case mgcp.DataUpdatePower:
+		c.dataUpdatePower(entity)
+	case mgcp.DataUpdateEnergyConsumed:
+		c.dataUpdateEnergyConsumed(entity)
+	case mgcp.DataUpdateCurrentPerPhase:
+		c.dataUpdateCurrentPerPhase(entity)
+	case mgcp.DataUpdateVoltagePerPhase:
+		c.dataUpdateVoltagePerPhase(entity)
 	}
 }
 
@@ -141,12 +137,38 @@ func (c *EEBus) isConnected() bool {
 func (c *EEBus) Run() {
 }
 
-func (c *EEBus) dataUpdateLimit() {
-	limit, err := c.uc.LPC.ConsumptionLimit()
+func (c *EEBus) dataUpdatePower(entity spineapi.EntityRemoteInterface) {
+	data, err := c.uc.MGCP.Power(entity)
 	if err != nil {
 		c.log.ERROR.Println(err)
 		return
 	}
+	_ = data
+}
 
-	c.limit = limit
+func (c *EEBus) dataUpdateEnergyConsumed(entity spineapi.EntityRemoteInterface) {
+	data, err := c.uc.MGCP.EnergyConsumed(entity)
+	if err != nil {
+		c.log.ERROR.Println(err)
+		return
+	}
+	_ = data
+}
+
+func (c *EEBus) dataUpdateCurrentPerPhase(entity spineapi.EntityRemoteInterface) {
+	data, err := c.uc.MGCP.CurrentPerPhase(entity)
+	if err != nil {
+		c.log.ERROR.Println(err)
+		return
+	}
+	_ = data
+}
+
+func (c *EEBus) dataUpdateVoltagePerPhase(entity spineapi.EntityRemoteInterface) {
+	data, err := c.uc.MGCP.VoltagePerPhase(entity)
+	if err != nil {
+		c.log.ERROR.Println(err)
+		return
+	}
+	_ = data
 }

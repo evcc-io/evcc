@@ -20,7 +20,7 @@ import (
 	"github.com/enbility/eebus-go/usecases/cem/opev"
 	"github.com/enbility/eebus-go/usecases/cem/oscev"
 	"github.com/enbility/eebus-go/usecases/cs/lpc"
-	"github.com/enbility/eebus-go/usecases/ma/mpc"
+	"github.com/enbility/eebus-go/usecases/ma/mgcp"
 	shipapi "github.com/enbility/ship-go/api"
 	shiputil "github.com/enbility/ship-go/util"
 	spineapi "github.com/enbility/spine-go/api"
@@ -65,8 +65,8 @@ type UseCasesEVSE struct {
 	OscEV  ucapi.CemOSCEVInterface
 }
 type UseCasesCS struct {
-	LPC ucapi.CsLPCInterface
-	MPC ucapi.MaMPCInterface
+	LPC  ucapi.CsLPCInterface
+	MGCP ucapi.MaMGCPInterface
 }
 
 type EEBus struct {
@@ -168,8 +168,8 @@ func NewServer(other Config) (*EEBus, error) {
 
 	// controllable system
 	c.csUC = UseCasesCS{
-		LPC: lpc.NewLPC(localEntity, c.ucCallback),
-		MPC: mpc.NewMPC(localEntity, c.ucCallback),
+		LPC:  lpc.NewLPC(localEntity, c.ucCallback),
+		MGCP: mgcp.NewMGCP(localEntity, c.ucCallback),
 	}
 
 	// register use cases
@@ -177,7 +177,7 @@ func NewServer(other Config) (*EEBus, error) {
 		c.evseUC.EvseCC, c.evseUC.EvCC,
 		c.evseUC.EvCem, c.evseUC.OpEV,
 		c.evseUC.OscEV, c.evseUC.EvSoc,
-		c.csUC.LPC, c.csUC.MPC,
+		c.csUC.LPC, c.csUC.MGCP,
 	} {
 		c.service.AddUseCase(uc)
 	}
