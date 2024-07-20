@@ -144,7 +144,7 @@ func (c *EEBus) Run() {
 func (c *EEBus) dataUpdatePower(entity spineapi.EntityRemoteInterface) {
 	data, err := c.uc.MGCP.Power(entity)
 	if err != nil {
-		c.log.ERROR.Println(err)
+		c.log.ERROR.Println("MGCP.Power:", err)
 		return
 	}
 	c.power.Set(data)
@@ -153,7 +153,7 @@ func (c *EEBus) dataUpdatePower(entity spineapi.EntityRemoteInterface) {
 func (c *EEBus) dataUpdateEnergyConsumed(entity spineapi.EntityRemoteInterface) {
 	data, err := c.uc.MGCP.EnergyConsumed(entity)
 	if err != nil {
-		c.log.ERROR.Println(err)
+		c.log.ERROR.Println("MGCP.EnergyConsumed:", err)
 		return
 	}
 	c.energy.Set(data)
@@ -162,7 +162,7 @@ func (c *EEBus) dataUpdateEnergyConsumed(entity spineapi.EntityRemoteInterface) 
 func (c *EEBus) dataUpdateCurrentPerPhase(entity spineapi.EntityRemoteInterface) {
 	data, err := c.uc.MGCP.CurrentPerPhase(entity)
 	if err != nil {
-		c.log.ERROR.Println(err)
+		c.log.ERROR.Println("MGCP.CurrentPerPhase:", err)
 		return
 	}
 	c.currents.Set(data)
@@ -171,7 +171,7 @@ func (c *EEBus) dataUpdateCurrentPerPhase(entity spineapi.EntityRemoteInterface)
 func (c *EEBus) dataUpdateVoltagePerPhase(entity spineapi.EntityRemoteInterface) {
 	data, err := c.uc.MGCP.VoltagePerPhase(entity)
 	if err != nil {
-		c.log.ERROR.Println(err)
+		c.log.ERROR.Println("MGCP.VoltagePerPhase:", err)
 		return
 	}
 	c.voltages.Set(data)
