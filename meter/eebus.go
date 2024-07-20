@@ -12,6 +12,7 @@ import (
 	spineapi "github.com/enbility/spine-go/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/site"
+	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/evcc-io/evcc/util"
 )
@@ -29,6 +30,9 @@ type EEBus struct {
 
 	uc    *eebus.UseCasesCS
 	limit ucapi.LoadLimit
+
+	power, energy      provider.Value[float64]
+	voltages, currents provider.Value[[]float64]
 }
 
 // New creates an EEBus HEMS from generic config
@@ -143,7 +147,7 @@ func (c *EEBus) dataUpdatePower(entity spineapi.EntityRemoteInterface) {
 		c.log.ERROR.Println(err)
 		return
 	}
-	_ = data
+	c.power.Set(data)
 }
 
 func (c *EEBus) dataUpdateEnergyConsumed(entity spineapi.EntityRemoteInterface) {
@@ -152,7 +156,7 @@ func (c *EEBus) dataUpdateEnergyConsumed(entity spineapi.EntityRemoteInterface) 
 		c.log.ERROR.Println(err)
 		return
 	}
-	_ = data
+	c.energy.Set(data)
 }
 
 func (c *EEBus) dataUpdateCurrentPerPhase(entity spineapi.EntityRemoteInterface) {
@@ -161,7 +165,7 @@ func (c *EEBus) dataUpdateCurrentPerPhase(entity spineapi.EntityRemoteInterface)
 		c.log.ERROR.Println(err)
 		return
 	}
-	_ = data
+	c.currents.Set(data)
 }
 
 func (c *EEBus) dataUpdateVoltagePerPhase(entity spineapi.EntityRemoteInterface) {
@@ -170,5 +174,35 @@ func (c *EEBus) dataUpdateVoltagePerPhase(entity spineapi.EntityRemoteInterface)
 		c.log.ERROR.Println(err)
 		return
 	}
-	_ = data
+	c.voltages.Set(data)
+}
+
+func (c *EEBus) CurrentPower() (float64, error) {
+	return c.power.Get()
+}
+
+func (c *EEBus) TotalEnergy() (float64, error) {
+	return c.energy.Get()
+}
+
+func (c *EEBus) PhaseCurrents() (float64, float64, float64, error) {
+	res, err := c.currents.Get()
+	if err != nil {
+		return 0, 0, 0, err
+	}
+	if len(res) != 3 {
+		return 0, 0, 0, errors.New("invalid phase currents")
+	}
+	return res[0], res[1], res[2], nil
+}
+
+func (c *EEBus) PhaseVoltages() (float64, float64, float64, error) {
+	res, err := c.voltages.Get()
+	if err != nil {
+		return 0, 0, 0, err
+	}
+	if len(res) != 3 {
+		return 0, 0, 0, errors.New("invalid phase voltages")
+	}
+	return res[0], res[1], res[2], nil
 }

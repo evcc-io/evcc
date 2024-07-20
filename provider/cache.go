@@ -105,3 +105,32 @@ func (c *cached[T]) shouldRetryWithBackoff() bool {
 
 	return false
 }
+
+// Value is a cacheable value that can expire
+type Value[T any] struct {
+	mux     sync.RWMutex
+	clock   clock.Clock
+	updated time.Time
+	cache   time.Duration
+	val     T
+}
+
+func (v *Value[T]) Get() (T, error) {
+	v.mux.RLock()
+	defer v.mux.RUnlock()
+
+	if v.clock.Since(v.updated) > v.cache {
+		var zero T
+		return zero, api.ErrTimeout
+	}
+
+	return v.val, nil
+}
+
+func (v *Value[T]) Set(val T) {
+	v.mux.Lock()
+	defer v.mux.Unlock()
+
+	v.val = val
+	v.updated = v.clock.Now()
+}
