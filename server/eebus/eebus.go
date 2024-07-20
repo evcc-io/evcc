@@ -18,6 +18,8 @@ import (
 	"github.com/enbility/eebus-go/usecases/cem/evsoc"
 	"github.com/enbility/eebus-go/usecases/cem/opev"
 	"github.com/enbility/eebus-go/usecases/cem/oscev"
+	"github.com/enbility/eebus-go/usecases/cs/lpc"
+	"github.com/enbility/eebus-go/usecases/ma/mpc"
 	shipapi "github.com/enbility/ship-go/api"
 	shiputil "github.com/enbility/ship-go/util"
 	spineapi "github.com/enbility/spine-go/api"
@@ -61,11 +63,16 @@ type UseCasesEVSE struct {
 	OpEV   ucapi.CemOPEVInterface
 	OscEV  ucapi.CemOSCEVInterface
 }
+type UseCasesCS struct {
+	LPC ucapi.CsLPCInterface
+	MPC ucapi.MaMPCInterface
+}
 
 type EEBus struct {
 	service eebusapi.ServiceInterface
 
-	evseUC *UseCasesEVSE
+	evseUC UseCasesEVSE
+	csUC   UseCasesCS
 
 	mux sync.Mutex
 	log *util.Logger
@@ -148,13 +155,20 @@ func NewServer(other Config) (*EEBus, error) {
 
 	localEntity := c.service.LocalDevice().EntityForType(model.EntityTypeTypeCEM)
 
-	c.evseUC = &UseCasesEVSE{
-		EvseCC: evsecc.NewEVSECC(localEntity, c.evseUsecaseCB),
-		EvCC:   evcc.NewEVCC(c.service, localEntity, c.evseUsecaseCB),
-		EvCem:  evcem.NewEVCEM(c.service, localEntity, c.evseUsecaseCB),
-		OpEV:   opev.NewOPEV(localEntity, c.evseUsecaseCB),
-		OscEV:  oscev.NewOSCEV(localEntity, c.evseUsecaseCB),
-		EvSoc:  evsoc.NewEVSOC(localEntity, c.evseUsecaseCB),
+	// evse
+	c.evseUC = UseCasesEVSE{
+		EvseCC: evsecc.NewEVSECC(localEntity, c.ucCallback),
+		EvCC:   evcc.NewEVCC(c.service, localEntity, c.ucCallback),
+		EvCem:  evcem.NewEVCEM(c.service, localEntity, c.ucCallback),
+		OpEV:   opev.NewOPEV(localEntity, c.ucCallback),
+		OscEV:  oscev.NewOSCEV(localEntity, c.ucCallback),
+		EvSoc:  evsoc.NewEVSOC(localEntity, c.ucCallback),
+	}
+
+	// controllable system
+	c.csUC = UseCasesCS{
+		LPC: lpc.NewLPC(localEntity, c.ucCallback),
+		MPC: mpc.NewMPC(localEntity, c.ucCallback),
 	}
 
 	// register use cases
@@ -162,6 +176,7 @@ func NewServer(other Config) (*EEBus, error) {
 		c.evseUC.EvseCC, c.evseUC.EvCC,
 		c.evseUC.EvCem, c.evseUC.OpEV,
 		c.evseUC.OscEV, c.evseUC.EvSoc,
+		c.csUC.LPC, c.csUC.MPC,
 	} {
 		c.service.AddUseCase(uc)
 	}
@@ -183,7 +198,7 @@ func (c *EEBus) RegisterEVSE(ski string, device EEBUSDeviceInterface) *UseCasesE
 	defer c.mux.Unlock()
 	c.clients[ski] = device
 
-	return c.evseUC
+	return &c.evseUC
 }
 
 func (c *EEBus) Run() {
@@ -194,8 +209,8 @@ func (c *EEBus) Shutdown() {
 	c.service.Shutdown()
 }
 
-// EVSE/EV UseCase CB
-func (c *EEBus) evseUsecaseCB(ski string, device spineapi.DeviceRemoteInterface, entity spineapi.EntityRemoteInterface, event eebusapi.EventType) {
+// Use case callback
+func (c *EEBus) ucCallback(ski string, device spineapi.DeviceRemoteInterface, entity spineapi.EntityRemoteInterface, event eebusapi.EventType) {
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
