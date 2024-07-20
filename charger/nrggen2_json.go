@@ -193,7 +193,7 @@ func (nrg *NRGKickGen2) MaxCurrent(current int64) error {
 		return err
 	}
 
-	res.CurrentSet = int(current)
+	res.CurrentSet = float64(current)
 
 	return nrg.updateControl(res)
 }
@@ -205,7 +205,7 @@ func (nrg *NRGKickGen2) GetMaxCurrent() (float64, error) {
 		return 0, err
 	}
 
-	return float64(res.CurrentSet), nil
+	return res.CurrentSet, nil
 }
 
 var _ api.Meter = (*NRGKickGen2)(nil)

@@ -33,11 +33,11 @@ type Grid struct {
 }
 
 type Control struct {
-	CurrentSet  int    `json:"current_set,omitempty"`
-	ChargePause uint8  `json:"charge_pause,omitempty"`
-	EnergyLimit uint32 `json:"energy_limit,omitempty"`
-	PhaseCount  uint8  `json:"phase_count,omitempty"`
-	Response    string `json:"omitempty"` // api message if not ok
+	CurrentSet  float64 `json:"current_set,omitempty"`
+	ChargePause uint8   `json:"charge_pause,omitempty"`
+	EnergyLimit uint32  `json:"energy_limit,omitempty"`
+	PhaseCount  uint8   `json:"phase_count,omitempty"`
+	Response    string  `json:"omitempty"` // api message if not ok
 }
 
 // Values is Settings.Values
