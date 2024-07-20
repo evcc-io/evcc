@@ -230,7 +230,7 @@ func (nrg *NRGKickGen2) TotalEnergy() (float64, error) {
 		return 0, err
 	}
 
-	return float64(res.Energy.TotalChargedEnergy * 1e3), err
+	return float64(res.Energy.TotalChargedEnergy) * 1e-3, err
 }
 
 var _ api.PhaseCurrents = (*NRGKickGen2)(nil)
@@ -271,7 +271,7 @@ func (nrg *NRGKickGen2) ChargedEnergy() (float64, error) {
 		return 0, err
 	}
 
-	return float64(res.Energy.ChargedEnergy * 1e3), err
+	return float64(res.Energy.ChargedEnergy) * 1e-3, err
 }
 
 var _ api.PhaseSwitcher = (*NRGKickGen2)(nil)
