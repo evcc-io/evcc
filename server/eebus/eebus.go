@@ -80,7 +80,7 @@ type EEBus struct {
 
 	SKI string
 
-	clients map[string]EEBUSDeviceInterface
+	clients map[string][]EEBUSDeviceInterface
 }
 
 var Instance *EEBus
@@ -144,8 +144,8 @@ func NewServer(other Config) (*EEBus, error) {
 
 	c := &EEBus{
 		log:     log,
-		clients: make(map[string]EEBUSDeviceInterface),
 		SKI:     ski,
+		clients: make(map[string][]EEBUSDeviceInterface),
 	}
 
 	c.service = service.NewService(configuration, c)
@@ -197,7 +197,7 @@ func (c *EEBus) RegisterDevice(ski string, device EEBUSDeviceInterface) error {
 
 	c.mux.Lock()
 	defer c.mux.Unlock()
-	c.clients[ski] = device
+	c.clients[ski] = append(c.clients[ski], device)
 
 	return nil
 }
@@ -223,8 +223,10 @@ func (c *EEBus) ucCallback(ski string, device spineapi.DeviceRemoteInterface, en
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
-	if client, ok := c.clients[ski]; ok {
-		client.UseCaseEventCB(device, entity, event)
+	if clients, ok := c.clients[ski]; ok {
+		for _, client := range clients {
+			client.UseCaseEventCB(device, entity, event)
+		}
 	}
 }
 
@@ -234,8 +236,10 @@ func (c *EEBus) RemoteSKIConnected(service eebusapi.ServiceInterface, ski string
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
-	if client, ok := c.clients[ski]; ok {
-		client.DeviceConnect()
+	if clients, ok := c.clients[ski]; ok {
+		for _, client := range clients {
+			client.DeviceConnect()
+		}
 	}
 }
 
@@ -243,8 +247,10 @@ func (c *EEBus) RemoteSKIDisconnected(service eebusapi.ServiceInterface, ski str
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
-	if client, ok := c.clients[ski]; ok {
-		client.DeviceConnect()
+	if clients, ok := c.clients[ski]; ok {
+		for _, client := range clients {
+			client.DeviceConnect()
+		}
 	}
 }
 

@@ -10,8 +10,8 @@ import (
 	ucapi "github.com/enbility/eebus-go/usecases/api"
 	"github.com/enbility/eebus-go/usecases/ma/mgcp"
 	spineapi "github.com/enbility/spine-go/api"
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
-	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/evcc-io/evcc/util"
@@ -35,8 +35,12 @@ type EEBus struct {
 	voltages, currents provider.Value[[]float64]
 }
 
+func init() {
+	registry.Add("eebus", NewEEBusFromConfig)
+}
+
 // New creates an EEBus HEMS from generic config
-func New(other map[string]interface{}, site site.API) (*EEBus, error) {
+func NewEEBusFromConfig(other map[string]interface{}) (api.Meter, error) {
 	var cc struct {
 		Ski string
 	}
@@ -136,9 +140,6 @@ func (c *EEBus) isConnected() bool {
 	defer c.mux.Unlock()
 
 	return c.connected
-}
-
-func (c *EEBus) Run() {
 }
 
 func (c *EEBus) dataUpdatePower(entity spineapi.EntityRemoteInterface) {
