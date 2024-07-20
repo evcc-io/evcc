@@ -3,7 +3,6 @@ package charger
 import (
 	"errors"
 	"fmt"
-	"os"
 	"slices"
 	"sync"
 	"time"
@@ -52,8 +51,10 @@ type EEBus struct {
 	lastIsChargingCheck  time.Time
 	lastIsChargingResult bool
 
+	once     sync.Once
+	connectC chan struct{}
+
 	connected     bool
-	connectedC    chan bool
 	connectedTime time.Time
 }
 
@@ -91,11 +92,11 @@ func NewEEBus(ski string, hasMeter, hasChargedEnergy, vasVW bool) (api.Charger, 
 	}
 
 	c := &EEBus{
-		ski:        ski,
-		log:        log,
-		connectedC: make(chan bool, 1),
-		current:    6,
-		vasVW:      vasVW,
+		ski:      ski,
+		log:      log,
+		current:  6,
+		vasVW:    vasVW,
+		connectC: make(chan struct{}),
 	}
 
 	c.uc = eebus.Instance.RegisterEVSE(ski, c)
@@ -119,16 +120,11 @@ func NewEEBus(ski string, hasMeter, hasChargedEnergy, vasVW bool) (api.Charger, 
 
 // waitForConnection wait for initial connection and returns an error on failure
 func (c *EEBus) waitForConnection() error {
-	timeout := time.After(90 * time.Second)
-	for {
-		select {
-		case <-timeout:
-			return os.ErrDeadlineExceeded
-		case connected := <-c.connectedC:
-			if connected {
-				return nil
-			}
-		}
+	select {
+	case <-time.After(90 * time.Second):
+		return api.ErrTimeout
+	case <-c.connectC:
+		return nil
 	}
 }
 
@@ -172,6 +168,7 @@ func (c *EEBus) UseCaseEventCB(device spineapi.DeviceRemoteInterface, entity spi
 		c.log.TRACE.Println("EV Connected")
 		c.setEvEntity(entity)
 		c.currentLimit = -1
+		close(c.connectC)
 	case evcc.EvDisconnected:
 		c.log.TRACE.Println("EV Disconnected")
 		c.setEvEntity(nil)
@@ -190,16 +187,10 @@ func (c *EEBus) setConnected(connected bool) {
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
+	c.connected = connected
 	if connected && !c.connected {
 		c.connectedTime = time.Now()
 	}
-
-	select {
-	case c.connectedC <- connected:
-	default:
-	}
-
-	c.connected = connected
 }
 
 func (c *EEBus) isConnected() bool {
