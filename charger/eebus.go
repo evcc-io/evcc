@@ -14,9 +14,9 @@ import (
 	spineapi "github.com/enbility/spine-go/api"
 	"github.com/enbility/spine-go/model"
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/charger/eebus"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/provider"
+	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/evcc-io/evcc/util"
 )
 

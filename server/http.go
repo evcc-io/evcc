@@ -7,10 +7,10 @@ import (
 
 	eapi "github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/globalconfig"
-	"github.com/evcc-io/evcc/charger/eebus"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/server/assets"
+	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/auth"
 	"github.com/evcc-io/evcc/util/config"
