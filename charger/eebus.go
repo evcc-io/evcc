@@ -36,6 +36,7 @@ type EEBus struct {
 	uc *eebus.UseCasesEVSE
 	ev spineapi.EntityRemoteInterface
 
+	mux     sync.RWMutex
 	log     *util.Logger
 	lp      loadpoint.API
 	minMaxG func() (minMax, error)
@@ -54,9 +55,6 @@ type EEBus struct {
 	connected     bool
 	connectedC    chan bool
 	connectedTime time.Time
-
-	muxEntity sync.Mutex
-	mux       sync.Mutex
 }
 
 func init() {
@@ -135,15 +133,15 @@ func (c *EEBus) waitForConnection() error {
 }
 
 func (c *EEBus) setEvEntity(entity spineapi.EntityRemoteInterface) {
-	c.muxEntity.Lock()
-	defer c.muxEntity.Unlock()
+	c.mux.Lock()
+	defer c.mux.Unlock()
 
 	c.ev = entity
 }
 
 func (c *EEBus) evEntity() spineapi.EntityRemoteInterface {
-	c.muxEntity.Lock()
-	defer c.muxEntity.Unlock()
+	c.mux.RLock()
+	defer c.mux.RUnlock()
 
 	return c.ev
 }
