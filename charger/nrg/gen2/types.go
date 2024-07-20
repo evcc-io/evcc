@@ -12,15 +12,17 @@ type Info struct {
 }
 
 type Connector struct {
-	PhaseCount uint8   `json:"phase_count"`
-	MaxCurrent float64 `json:"max_current"`
+	PhaseCount uint8 `json:"phase_count"`
+	// Note: there is a bug in the notation in the API at the moment 'voltage:' with colon is expected here!
+	MaxCurrent float64 `json:"max_current:"`
 	Type       string  `json:"type"`
 	Serial     string  `json:"serial"`
 }
 
 type Grid struct {
-	Voltage   uint8 `json:"voltage"`
-	Frequency int   `json:"frequency"`
+	Voltage uint8 `json:"voltage"`
+	// Note: there is a bug in the notation in the API at the moment 'voltage:' with colon is expected here!
+	Frequency int `json:"frequency:"`
 	// 0 - "UNKNOWN",
 	// 1 - "L1",
 	// 2 - "L2",
@@ -75,7 +77,8 @@ type N struct {
 }
 
 type Phase struct {
-	Voltage       float64 `json:"voltage"`
+	// Note: there is a bug in the notation in the API at the moment 'voltage:' with colon is expected here!
+	Voltage       float64 `json:"voltage:"`
 	Current       float64 `json:"current"`
 	ActivePower   float64 `json:"active_power"`
 	ReactivePower float64 `json:"reactive_power"`
