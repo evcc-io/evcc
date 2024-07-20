@@ -146,16 +146,12 @@ func (c *EEBus) evEntity() spineapi.EntityRemoteInterface {
 
 func (c *EEBus) DeviceConnect() {
 	c.log.TRACE.Println("connect ski:", c.ski)
-
-	c.expectedEnableUnpluggedState = false
 	c.setDefaultValues()
 	c.setConnected(true)
 }
 
 func (c *EEBus) DeviceDisconnect() {
 	c.log.TRACE.Println("disconnect ski:", c.ski)
-
-	c.expectedEnableUnpluggedState = false
 	c.setConnected(false)
 	c.setDefaultValues()
 }
@@ -178,8 +174,9 @@ func (c *EEBus) UseCaseEventCB(device spineapi.DeviceRemoteInterface, entity spi
 
 func (c *EEBus) setDefaultValues() {
 	c.communicationStandard = evcc.EVCCCommunicationStandardUnknown
-	c.lastIsChargingCheck = time.Now().Add(-time.Hour * 1)
+	c.lastIsChargingCheck = time.Now().Add(-time.Hour)
 	c.lastIsChargingResult = false
+	c.expectedEnableUnpluggedState = false
 }
 
 // set wether the EVSE is connected
