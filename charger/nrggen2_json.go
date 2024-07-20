@@ -297,30 +297,11 @@ func (nrg *NRGKickGen2) Phases1p3p(phases int) error {
 var _ api.PhaseGetter = (*NRGKickGen2)(nil)
 
 func (nrg *NRGKickGen2) GetPhases() (int, error) {
-	res, err := nrg.infoG.Get()
+	res, err := nrg.controlG.Get()
 
 	if err != nil {
 		return 0, err
 	}
 
-	switch res.Grid.Phases {
-	case "UNKNOWN":
-		return 0, nil
-	case "L1":
-		fallthrough
-	case "L2":
-		fallthrough
-	case "L3":
-		return 1, nil
-	case "L1, L2":
-		fallthrough
-	case "L1, L3":
-		fallthrough
-	case "L2, L3":
-		return 2, nil
-	case "L1, L2, L3":
-		return 3, nil
-	default:
-		return 0, fmt.Errorf("unhandled phases value")
-	}
+	return int(res.PhaseCount), nil
 }
