@@ -149,7 +149,14 @@ func (nrg *NRGKickGen2) Status() (api.ChargeStatus, error) {
 	case "CHARGING":
 		return api.StatusC, nil
 	case "ERROR":
-		return api.StatusNone, fmt.Errorf("%s", res.General.ErrorCode)
+		switch res.General.ErrorCode {
+		case "CP_SIGNAL_VOLTAGE_ERROR":
+			fallthrough
+		case "CP_SIGNAL_IMPERMISSIBLE":
+			return api.StatusE, fmt.Errorf("%s", res.General.ErrorCode)
+		default:
+			return api.StatusF, fmt.Errorf("%s", res.General.ErrorCode)
+		}
 	case "WAKEUP":
 		return api.StatusNone, nil
 	default:
