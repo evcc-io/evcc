@@ -164,7 +164,7 @@ func (c *EEBus) UseCaseEventCB(device spineapi.DeviceRemoteInterface, entity spi
 		c.log.TRACE.Println("EV Connected")
 		c.setEvEntity(entity)
 		c.currentLimit = -1
-		close(c.connectC)
+		c.once.Do(func() { close(c.connectC) })
 	case evcc.EvDisconnected:
 		c.log.TRACE.Println("EV Disconnected")
 		c.setEvEntity(nil)
