@@ -144,6 +144,10 @@ func (p *Go) handleGetter() (any, error) {
 }
 
 func (p *Go) handleSetter(param string, val any) error {
+	if err := transformInputs(p.in, p.setParam); err != nil {
+		return err
+	}
+
 	if err := p.setParam(param, val); err != nil {
 		return err
 	}
