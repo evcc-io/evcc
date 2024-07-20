@@ -7,8 +7,8 @@ const CONFIG_GRID_ONLY = "config-grid-only.evcc.yaml";
 test.use({ baseURL: baseUrl() });
 
 test.beforeAll(async () => {
-  await start(CONFIG_GRID_ONLY, "password.sql");
   await startSimulator();
+  await start(CONFIG_GRID_ONLY, "password.sql");
 });
 test.afterAll(async () => {
   await stop();

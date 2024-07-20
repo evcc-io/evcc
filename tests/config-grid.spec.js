@@ -7,8 +7,8 @@ const CONFIG_EMPTY = "config-empty.evcc.yaml";
 test.use({ baseURL: baseUrl() });
 
 test.beforeAll(async () => {
-  await start(CONFIG_EMPTY, "password.sql");
   await startSimulator();
+  await start(CONFIG_EMPTY, "password.sql");
 });
 test.afterAll(async () => {
   await stop();

@@ -52,7 +52,10 @@ func (conn *Connector) MeterValues(request *core.MeterValuesRequest) (*core.Mete
 	conn.mu.Lock()
 	defer conn.mu.Unlock()
 
-	if request.TransactionId != nil && conn.txnId == 0 {
+	if request.TransactionId != nil && conn.txnId == 0 &&
+		(conn.status.Status == core.ChargePointStatusCharging ||
+			conn.status.Status == core.ChargePointStatusSuspendedEV ||
+			conn.status.Status == core.ChargePointStatusSuspendedEVSE) {
 		conn.log.DEBUG.Printf("hijacking transaction: %d", *request.TransactionId)
 		conn.txnId = *request.TransactionId
 	}
@@ -136,6 +139,7 @@ func (conn *Connector) StopTransaction(request *core.StopTransactionRequest) (*c
 	}
 
 	conn.txnId = 0
+	conn.idTag = ""
 
 	res := &core.StopTransactionConfirmation{
 		IdTagInfo: &types.IdTagInfo{
