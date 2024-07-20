@@ -77,7 +77,6 @@ func (v *Provider) FinishTime() (time.Time, error) {
 
 			// 2023-11-14 13:23:45
 			t, err = time.Parse(time.DateTime, convTime)
-
 		}
 		if err != nil {
 			t = time.Now()
