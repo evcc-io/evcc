@@ -97,16 +97,20 @@ func (nrg *NRGKickGen2) apiURL(api string) string {
 	return fmt.Sprintf("%s/%s", nrg.uri, api)
 }
 
-func (nrg *NRGKickGen2) updateControl(control gen2.Control) error {
+func (nrg *NRGKickGen2) updateControl(control gen2.Control, withPhaseSwitch bool) error {
+	// TODO: i am not sure if we can set current_set with decimals over the query parameter, so just in case i limit it to the integer value
 	uriWithQueryParams := fmt.Sprintf(
-		"%s?current_set=%d&charge_pause=%d&energy_limit=%d&phase_count=%d",
+		"%s?current_set=%.0f&charge_pause=%d&energy_limit=%d",
 		nrg.apiURL(gen2.ControlPath),
 		control.CurrentSet,
 		control.ChargePause,
-		control.EnergyLimit,
-		control.PhaseCount)
+		control.EnergyLimit)
 
-	req, err := request.New(http.MethodGet, uriWithQueryParams, nil, request.JSONEncoding)
+	if withPhaseSwitch {
+		uriWithQueryParams = fmt.Sprintf("%s&phase_count=%d", uriWithQueryParams, control.PhaseCount)
+	}
+
+	req, err := request.New(http.MethodGet, uriWithQueryParams, nil, request.AcceptJSON)
 	if err != nil {
 		return err
 	}
@@ -172,7 +176,7 @@ func (nrg *NRGKickGen2) Enable(enable bool) error {
 		res.ChargePause = 1
 	}
 
-	err = nrg.updateControl(res)
+	err = nrg.updateControl(res, false)
 
 	if err == nil {
 		nrg.enabled = enable
@@ -195,7 +199,7 @@ func (nrg *NRGKickGen2) MaxCurrent(current int64) error {
 
 	res.CurrentSet = float64(current)
 
-	return nrg.updateControl(res)
+	return nrg.updateControl(res, false)
 }
 
 func (nrg *NRGKickGen2) GetMaxCurrent() (float64, error) {
@@ -287,7 +291,7 @@ func (nrg *NRGKickGen2) Phases1p3p(phases int) error {
 	res.PhaseCount = uint8(phases)
 
 	// this can return an error, if phase switching isn't activated via the App
-	return nrg.updateControl(res)
+	return nrg.updateControl(res, true)
 }
 
 var _ api.PhaseGetter = (*NRGKickGen2)(nil)
