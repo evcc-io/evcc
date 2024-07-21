@@ -153,6 +153,33 @@ func (site *Site) GetPrioritySoc() float64 {
 	return site.prioritySoc
 }
 
+// GetGridCostGuardLimit returns the grid cost guard limit
+func (site *Site) GetGridCostGuardLimit() *float64 {
+	site.RLock()
+	defer site.RUnlock()
+	return site.gridCostGuardLimit
+}
+
+// SetGridCostGuardLimit returns the PrioritySoc
+func (site *Site) SetGridCostGuardLimit(val *float64) {
+	site.Lock()
+	defer site.Unlock()
+
+	site.log.DEBUG.Println("set grid cost guard limit:", printFloatPtr("%.1f", val))
+
+	if site.gridCostGuardLimit != val {
+		site.gridCostGuardLimit = val
+
+		if val == nil {
+			settings.SetString(keys.MaxGridSupplyWhileBatteryCharging, "")
+			site.publish(keys.MaxGridSupplyWhileBatteryCharging, "")
+		} else {
+			settings.SetFloat(keys.MaxGridSupplyWhileBatteryCharging, *val)
+			site.publish(keys.MaxGridSupplyWhileBatteryCharging, *val)
+		}
+	}
+}
+
 // SetPrioritySoc sets the PrioritySoc
 func (site *Site) SetPrioritySoc(soc float64) error {
 	site.Lock()

@@ -78,6 +78,11 @@ func (site *Site) plannerRate() (*api.Rate, error) {
 	return &rate, nil
 }
 
+func (site *Site) gridCostGuardActive(rate *api.Rate) bool {
+	limit := site.GetGridCostGuardLimit()
+	return limit != nil && rate != nil && rate.Price <= *limit
+}
+
 func (site *Site) smartCostActive(lp loadpoint.API, rate *api.Rate) bool {
 	limit := lp.GetSmartCostLimit()
 	return limit != 0 && rate != nil && rate.Price <= limit

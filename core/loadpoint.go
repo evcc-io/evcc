@@ -1614,8 +1614,8 @@ func (lp *Loadpoint) phaseSwitchCompleted() bool {
 	return time.Since(lp.phasesSwitched) > phaseSwitchDuration
 }
 
-// Update is the main control function. It reevaluates meters and charger state
-func (lp *Loadpoint) Update(sitePower float64, smartCostActive bool, smartCostNextStart time.Time, batteryBuffered, batteryStart bool, greenShare float64, effPrice, effCo2 *float64) {
+func (lp *Loadpoint) Update(sitePower float64, gridCostGuardActive, smartCostActive bool, smartCostNextStart time.Time, batteryBuffered, batteryStart bool, greenShare float64, effPrice, effCo2 *float64) {
+	lp.publish(keys.GridCostGuardActive, gridCostGuardActive)
 	lp.publish(keys.SmartCostActive, smartCostActive)
 	lp.publish(keys.SmartCostNextStart, smartCostNextStart)
 	lp.processTasks()
@@ -1694,7 +1694,7 @@ func (lp *Loadpoint) Update(sitePower float64, smartCostActive bool, smartCostNe
 		err = lp.setLimit(0)
 
 	// minimum or target charging
-	case lp.minSocNotReached() || plannerActive:
+	case !gridCostGuardActive && (lp.minSocNotReached() || plannerActive):
 		err = lp.fastCharging()
 		lp.resetPhaseTimer()
 		lp.elapsePVTimer() // let PV mode disable immediately afterwards

@@ -50,8 +50,9 @@ type API interface {
 	// tariffs and costs
 	//
 
-	// GetTariff returns the respective tariff
 	GetTariff(string) api.Tariff
+	GetGridCostGuardLimit() *float64
+	SetGridCostGuardLimit(*float64)
 
 	//
 	// battery control

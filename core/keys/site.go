@@ -18,7 +18,6 @@ const (
 	PvPower               = "pvPower"
 	ResidualPower         = "residualPower"
 	SiteTitle             = "siteTitle"
-	SmartCostType         = "smartCostType"
 	Statistics            = "statistics"
 	TariffCo2             = "tariffCo2"
 	TariffCo2Home         = "tariffCo2Home"
@@ -29,6 +28,10 @@ const (
 	TariffPriceLoadpoints = "tariffPriceLoadpoints"
 	Vehicles              = "vehicles"
 	Circuits              = "circuits"
+
+	// costs
+	SmartCostType      = "smartCostType"
+	GridCostGuardLimit = "gridCostGuardLimit"
 
 	// meters
 	GridMeter     = "gridMeter"

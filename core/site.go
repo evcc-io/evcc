@@ -36,7 +36,7 @@ const standbyPower = 10 // consider less than 10W as charger in standby
 // updater abstracts the Loadpoint implementation for testing
 type updater interface {
 	loadpoint.API
-	Update(availablePower float64, smartCostActive bool, smartCostNextStart time.Time, batteryBuffered, batteryStart bool, greenShare float64, effectivePrice, effectiveCo2 *float64)
+	Update(availablePower float64, gridCostGuardActive, smartCostActive bool, smartCostNextStart time.Time, batteryBuffered, batteryStart bool, greenShare float64, effectivePrice, effectiveCo2 *float64)
 }
 
 // meterMeasurement is used as slice element for publishing structured data
@@ -92,6 +92,9 @@ type Site struct {
 	coordinator *coordinator.Coordinator // Vehicles
 	prioritizer *prioritizer.Prioritizer // Power budgets
 	stats       *Stats                   // Stats
+
+	// cost settings
+	gridCostGuardLimit *float64
 
 	// cached state
 	gridPower    float64         // Grid power
@@ -294,6 +297,9 @@ func (site *Site) restoreSettings() error {
 		if err := site.SetResidualPower(v); err != nil {
 			return err
 		}
+	}
+	if v, err := settings.Float(keys.GridCostGuardLimit); err == nil {
+		site.SetGridCostGuardLimit(&v)
 	}
 	return nil
 }
@@ -789,8 +795,9 @@ func (site *Site) update(lp updater) {
 		flexiblePower = site.prioritizer.GetChargePowerFlexibility(lp)
 	}
 
-	var smartCostActive bool
+	var gridCostGuardActive, smartCostActive bool
 	if rate, err := site.plannerRate(); err == nil {
+		gridCostGuardActive = site.gridCostGuardActive(rate)
 		smartCostActive = site.smartCostActive(lp, rate)
 	} else {
 		site.log.WARN.Println("smartCostActive:", err)
@@ -817,7 +824,7 @@ func (site *Site) update(lp updater) {
 		greenShareHome := site.greenShare(0, homePower)
 		greenShareLoadpoints := site.greenShare(nonChargePower, nonChargePower+totalChargePower)
 
-		lp.Update(sitePower, smartCostActive, smartCostNextStart, batteryBuffered, batteryStart, greenShareLoadpoints, site.effectivePrice(greenShareLoadpoints), site.effectiveCo2(greenShareLoadpoints))
+		lp.Update(sitePower, gridCostGuardActive, smartCostActive, smartCostNextStart, batteryBuffered, batteryStart, greenShareLoadpoints, site.effectivePrice(greenShareLoadpoints), site.effectiveCo2(greenShareLoadpoints))
 
 		site.Health.Update()
 
