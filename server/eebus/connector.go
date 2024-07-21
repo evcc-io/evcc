@@ -7,14 +7,6 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-type DeviceConnector interface {
-	Connect(connected bool)
-	Connected() bool
-	Wait(timeout time.Duration) error
-}
-
-var _ DeviceConnector = (*Connector)(nil)
-
 type Connector struct {
 	cb func(connected bool)
 
