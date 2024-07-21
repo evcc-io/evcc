@@ -53,10 +53,23 @@ func sitePower(log *util.Logger, maxGrid, grid, battery, residual float64) float
 	return grid + battery + residual
 }
 
-// printFloatPtr returns a string representation of a pointer value
-func printFloatPtr(format string, v *float64) string {
+// printPtr returns a string representation of a pointer value
+func printPtr[T any](format string, v *T) string {
 	if v == nil {
 		return "<nil>"
 	}
 	return fmt.Sprintf(format, *v)
+}
+
+func ptrValueEqual[T comparable](a, b *T) bool {
+	switch {
+	case (a == nil) != (b == nil):
+		return false
+
+	case a == nil && b == nil:
+		return true
+
+	default:
+		return (*a) == (*b)
+	}
 }

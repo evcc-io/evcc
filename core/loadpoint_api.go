@@ -500,9 +500,9 @@ func (lp *Loadpoint) SetSmartCostLimit(val *float64) {
 	lp.Lock()
 	defer lp.Unlock()
 
-	lp.log.DEBUG.Println("set smart cost limit:", printFloatPtr("%.1f", val))
+	lp.log.DEBUG.Println("set smart cost limit:", printPtr("%.1f", val))
 
-	if lp.smartCostLimit != val {
+	if !ptrValueEqual(lp.smartCostLimit, val) {
 		lp.smartCostLimit = val
 
 		if val == nil {
