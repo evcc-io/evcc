@@ -41,6 +41,8 @@ type EEBus struct {
 	limit ucapi.LoadLimit
 }
 
+// LPC, LPP, MPC, MGCP
+
 // New creates an EEBus HEMS from generic config
 func New(other map[string]interface{}, site site.API) (*EEBus, error) {
 	var cc struct {
@@ -75,6 +77,22 @@ func NewEEBus(ski string) (*EEBus, error) {
 
 	if err := c.waitForConnection(); err != nil {
 		return c, err
+	}
+
+	for _, s := range c.uc.LPC.RemoteEntitiesScenarios() {
+		c.log.DEBUG.Println("LPC RemoteEntitiesScenarios:", s.Scenarios)
+	}
+
+	for _, s := range c.uc.LPP.RemoteEntitiesScenarios() {
+		c.log.DEBUG.Println("LPP RemoteEntitiesScenarios:", s.Scenarios)
+	}
+
+	for _, s := range c.uc.MPC.RemoteEntitiesScenarios() {
+		c.log.DEBUG.Println("MPC RemoteEntitiesScenarios:", s.Scenarios)
+	}
+
+	for _, s := range c.uc.MGCP.RemoteEntitiesScenarios() {
+		c.log.DEBUG.Println("MGCP RemoteEntitiesScenarios:", s.Scenarios)
 	}
 
 	return c, nil

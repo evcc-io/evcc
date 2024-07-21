@@ -115,6 +115,13 @@ type Value[T any] struct {
 	val     T
 }
 
+func NewValue[T any](cache time.Duration) *Value[T] {
+	return &Value[T]{
+		clock: clock.New(),
+		cache: cache,
+	}
+}
+
 func (v *Value[T]) Get() (T, error) {
 	v.mux.RLock()
 	defer v.mux.RUnlock()

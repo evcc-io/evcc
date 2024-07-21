@@ -31,8 +31,8 @@ type EEBus struct {
 	uc    *eebus.UseCasesCS
 	limit ucapi.LoadLimit
 
-	power, energy      provider.Value[float64]
-	voltages, currents provider.Value[[]float64]
+	power, energy      *provider.Value[float64]
+	voltages, currents *provider.Value[[]float64]
 }
 
 func init() {
@@ -41,19 +41,22 @@ func init() {
 
 // New creates an EEBus HEMS from generic config
 func NewEEBusFromConfig(other map[string]interface{}) (api.Meter, error) {
-	var cc struct {
-		Ski string
+	cc := struct {
+		Ski     string
+		Timeout time.Duration
+	}{
+		Timeout: 10 * time.Second,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewEEBus(cc.Ski)
+	return NewEEBus(cc.Ski, cc.Timeout)
 }
 
 // NewEEBus creates EEBus charger
-func NewEEBus(ski string) (*EEBus, error) {
+func NewEEBus(ski string, timeout time.Duration) (*EEBus, error) {
 	log := util.NewLogger("eebus")
 
 	if eebus.Instance == nil {
@@ -65,6 +68,10 @@ func NewEEBus(ski string) (*EEBus, error) {
 		log:        log,
 		connectedC: make(chan bool, 1),
 		uc:         eebus.Instance.ControllableSystem(),
+		power:      provider.NewValue[float64](timeout),
+		energy:     provider.NewValue[float64](timeout),
+		voltages:   provider.NewValue[[]float64](timeout),
+		currents:   provider.NewValue[[]float64](timeout),
 	}
 
 	if err := eebus.Instance.RegisterDevice(ski, c); err != nil {
