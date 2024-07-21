@@ -27,7 +27,7 @@ type Connector struct {
 func NewConnector(cb func(connected bool)) *Connector {
 	return &Connector{
 		cb:       cb,
-		connectC: make(chan bool, 1),
+		connectC: make(chan struct{}),
 	}
 }
 
