@@ -15,7 +15,7 @@ import (
 )
 
 type EEBus struct {
-	mux sync.Mutex
+	mux sync.RWMutex
 	log *util.Logger
 
 	*eebus.Connector
@@ -92,5 +92,7 @@ func (c *EEBus) dataUpdateLimit() {
 		return
 	}
 
+	c.mux.Lock()
+	defer c.mux.Unlock()
 	c.limit = limit
 }
