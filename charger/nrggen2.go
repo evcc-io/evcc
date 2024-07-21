@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"net/http"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -13,6 +12,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
+	"github.com/spf13/cast"
 )
 
 // https://www.nrgkick.com/wp-content/uploads/2024/07/local_api_docu_simulate.html
@@ -25,7 +25,6 @@ type NRGKickGen2 struct {
 	enabled  bool
 	controlG provider.Cacheable[gen2.Control]
 	valuesG  provider.Cacheable[gen2.Values]
-	infoG    provider.Cacheable[gen2.Info]
 }
 
 func init() {
@@ -82,14 +81,6 @@ func NewNRGKickGen2(uri, user, password string, cache time.Duration) (*NRGKickGe
 		return res, err
 	}, cache)
 
-	nrg.infoG = provider.ResettableCached(func() (gen2.Info, error) {
-		var res gen2.Info
-
-		err := nrg.GetJSON(nrg.apiURL(gen2.InfoPath), &res)
-
-		return res, err
-	}, cache)
-
 	return nrg, nil
 }
 
@@ -98,7 +89,10 @@ func (nrg *NRGKickGen2) apiURL(api string) string {
 }
 
 func (nrg *NRGKickGen2) updateControl(control gen2.Control, withPhaseSwitch bool) error {
-	// TODO: i am not sure if we can set current_set with decimals over the query parameter, so just in case i limit it to the integer value
+	// TODO: NRGKick Gen2 would support setting fractions of Ampere,
+	// but I am not sure if we can set current_set with decimals over the query parameter,
+	// and also Evcc doesn't support fractinos also at the moment
+	// so just in case limit it to the integer value
 	uriWithQueryParams := fmt.Sprintf(
 		"%s?current_set=%.0f&charge_pause=%d&energy_limit=%d",
 		nrg.apiURL(gen2.ControlPath),
@@ -110,14 +104,9 @@ func (nrg *NRGKickGen2) updateControl(control gen2.Control, withPhaseSwitch bool
 		uriWithQueryParams = fmt.Sprintf("%s&phase_count=%d", uriWithQueryParams, control.PhaseCount)
 	}
 
-	req, err := request.New(http.MethodGet, uriWithQueryParams, nil, request.AcceptJSON)
-	if err != nil {
-		return err
-	}
-
 	var res gen2.Control
 
-	if err := nrg.DoJSON(req, &res); err != nil {
+	if err := nrg.GetJSON(uriWithQueryParams, &res); err != nil {
 		switch {
 		case res.Response != "":
 			return errors.New(res.Response)
@@ -177,11 +166,7 @@ func (nrg *NRGKickGen2) Enable(enable bool) error {
 		return err
 	}
 
-	if enable {
-		res.ChargePause = 0
-	} else {
-		res.ChargePause = 1
-	}
+	res.ChargePause = cast.ToUint8(!enable)
 
 	err = nrg.updateControl(res, false)
 
@@ -229,7 +214,7 @@ func (nrg *NRGKickGen2) CurrentPower() (float64, error) {
 		return 0, err
 	}
 
-	return res.Powerflow.TotalActivePower, err
+	return res.Powerflow.TotalActivePower, nil
 }
 
 var _ api.MeterEnergy = (*NRGKickGen2)(nil)
@@ -241,7 +226,7 @@ func (nrg *NRGKickGen2) TotalEnergy() (float64, error) {
 		return 0, err
 	}
 
-	return float64(res.Energy.TotalChargedEnergy) * 1e-3, err
+	return float64(res.Energy.TotalChargedEnergy) * 1e-3, nil
 }
 
 var _ api.PhaseCurrents = (*NRGKickGen2)(nil)
@@ -256,7 +241,7 @@ func (nrg *NRGKickGen2) Currents() (float64, float64, float64, error) {
 	return res.Powerflow.L1.Current,
 		res.Powerflow.L1.Current,
 		res.Powerflow.L1.Current,
-		err
+		nil
 }
 
 var _ api.PhaseVoltages = (*NRGKickGen2)(nil)
@@ -271,7 +256,7 @@ func (nrg *NRGKickGen2) Voltages() (float64, float64, float64, error) {
 	return res.Powerflow.L1.Voltage,
 		res.Powerflow.L1.Voltage,
 		res.Powerflow.L1.Voltage,
-		err
+		nil
 }
 
 var _ api.ChargeRater = (*NRGKickGen2)(nil)
@@ -282,7 +267,7 @@ func (nrg *NRGKickGen2) ChargedEnergy() (float64, error) {
 		return 0, err
 	}
 
-	return float64(res.Energy.ChargedEnergy) * 1e-3, err
+	return float64(res.Energy.ChargedEnergy) * 1e-3, nil
 }
 
 var _ api.PhaseSwitcher = (*NRGKickGen2)(nil)

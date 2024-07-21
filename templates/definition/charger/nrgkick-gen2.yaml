@@ -2,11 +2,11 @@ template: nrgkick-gen2
 products:
   - brand: NRGKick
     description:
-      generic: Gen2-JSON
+      generic: Gen2
 requirements:
   description:
-    de: NRGkick Gen2 Ladeeinheit via lokale REST JSON API
-    en: NRGkick Gen2 charging unit via local REST JSON API
+    de: NRGkick Gen2 Ladeeinheit via REST API
+    en: NRGkick Gen2 charging unit via REST API
 params:
   - name: host
     required: true

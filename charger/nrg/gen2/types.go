@@ -44,10 +44,10 @@ type Control struct {
 
 // Values is Settings.Values
 type Values struct {
-	Energy       *Energy       `json:"energy"`
-	Powerflow    *Powerflow    `json:"powerflow"`
-	General      *General      `json:"general"`
-	Temperatures *Temperatures `json:"temperatures"`
+	Energy       Energy       `json:"energy"`
+	Powerflow    Powerflow    `json:"powerflow"`
+	General      General      `json:"general"`
+	Temperatures Temperatures `json:"temperatures"`
 }
 
 type Energy struct {
@@ -66,10 +66,10 @@ type Powerflow struct {
 	TotalReactivePower float64 `json:"total_reactive_power"`
 	TotalApparentPower float64 `json:"total_apparent_power"`
 	TotalPowerFactor   float64 `json:"total_power_factor"`
-	L1                 *Phase  `json:"l1"`
-	L2                 *Phase  `json:"l2"`
-	L3                 *Phase  `json:"l3"`
-	N                  *N      `json:"n"`
+	L1                 Phase   `json:"l1"`
+	L2                 Phase   `json:"l2"`
+	L3                 Phase   `json:"l3"`
+	N                  N       `json:"n"`
 }
 
 type N struct {
