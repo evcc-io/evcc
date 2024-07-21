@@ -97,9 +97,12 @@ func NewEEBus(ski string, hasMeter, hasChargedEnergy, vasVW bool) (api.Charger, 
 		current:  6,
 		vasVW:    vasVW,
 		connectC: make(chan struct{}),
+		uc:       eebus.Instance.Evse(),
 	}
 
-	c.uc = eebus.Instance.RegisterEVSE(ski, c)
+	if err := eebus.Instance.RegisterDevice(ski, c); err != nil {
+		return nil, err
+	}
 
 	c.minMaxG = provider.Cached(c.minMax, time.Second)
 

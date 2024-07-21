@@ -2,6 +2,7 @@ package eebus
 
 import (
 	"crypto/tls"
+	"errors"
 	"fmt"
 	"net"
 	"strconv"
@@ -184,12 +185,12 @@ func NewServer(other Config) (*EEBus, error) {
 	return c, nil
 }
 
-func (c *EEBus) RegisterEVSE(ski string, device EEBUSDeviceInterface) *UseCasesEVSE {
+func (c *EEBus) RegisterDevice(ski string, device EEBUSDeviceInterface) error {
 	ski = shiputil.NormalizeSKI(ski)
 	c.log.TRACE.Printf("registering ski: %s", ski)
 
 	if ski == c.SKI {
-		c.log.FATAL.Fatal("The charger SKI can not be identical to the SKI of evcc!")
+		return errors.New("device ski can not be identical to host ski")
 	}
 
 	c.service.RegisterRemoteSKI(ski)
@@ -198,7 +199,15 @@ func (c *EEBus) RegisterEVSE(ski string, device EEBUSDeviceInterface) *UseCasesE
 	defer c.mux.Unlock()
 	c.clients[ski] = device
 
+	return nil
+}
+
+func (c *EEBus) Evse() *UseCasesEVSE {
 	return &c.evseUC
+}
+
+func (c *EEBus) ControllableSystem() *UseCasesCS {
+	return &c.csUC
 }
 
 func (c *EEBus) Run() {
