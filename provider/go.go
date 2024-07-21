@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 
@@ -170,6 +171,10 @@ func (p *Go) evaluate() (res any, err error) {
 	v, err := p.vm.Eval(p.script)
 	if err != nil {
 		return nil, err
+	}
+
+	if !v.IsValid() {
+		return nil, errors.New("missing result")
 	}
 
 	if (v.Kind() == reflect.Pointer || v.Kind() == reflect.Interface) && v.IsNil() {

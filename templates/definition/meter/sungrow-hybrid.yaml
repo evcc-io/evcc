@@ -163,6 +163,7 @@ render: |
               type: writesingle
               decode: uint16
         - source: go
+          script: power
           in:
           - name: power
             type: int
