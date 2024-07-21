@@ -2,7 +2,6 @@ package eebus
 
 import (
 	"errors"
-	"os"
 	"sync"
 	"time"
 
@@ -16,16 +15,12 @@ import (
 )
 
 type EEBus struct {
-	ski string
-
 	mux sync.Mutex
 	log *util.Logger
 
-	connected     bool
-	connectedC    chan bool
-	connectedTime time.Time
+	*eebus.Connector
+	uc *eebus.UseCasesCS
 
-	uc    *eebus.UseCasesCS
 	limit ucapi.LoadLimit
 }
 
@@ -44,24 +39,21 @@ func New(other map[string]interface{}, site site.API) (*EEBus, error) {
 
 // NewEEBus creates EEBus charger
 func NewEEBus(ski string) (*EEBus, error) {
-	log := util.NewLogger("eebus")
-
 	if eebus.Instance == nil {
 		return nil, errors.New("eebus not configured")
 	}
 
 	c := &EEBus{
-		ski:        ski,
-		log:        log,
-		connectedC: make(chan bool, 1),
-		uc:         eebus.Instance.ControllableSystem(),
+		log:       util.NewLogger("eebus"),
+		uc:        eebus.Instance.ControllableSystem(),
+		Connector: eebus.NewConnector(nil),
 	}
 
 	if err := eebus.Instance.RegisterDevice(ski, c); err != nil {
 		return nil, err
 	}
 
-	if err := c.waitForConnection(); err != nil {
+	if err := c.Wait(90 * time.Second); err != nil {
 		return c, err
 	}
 
@@ -80,54 +72,13 @@ func NewEEBus(ski string) (*EEBus, error) {
 	return c, nil
 }
 
-// waitForConnection wait for initial connection and returns an error on failure
-func (c *EEBus) waitForConnection() error {
-	timeout := time.After(90 * time.Second)
-	for {
-		select {
-		case <-timeout:
-			return os.ErrDeadlineExceeded
-		case connected := <-c.connectedC:
-			if connected {
-				return nil
-			}
-		}
-	}
-}
+var _ eebus.Device = (*EEBus)(nil)
 
-// EEBUSDeviceInterface
-
-func (c *EEBus) DeviceConnect() {
-	c.log.TRACE.Println("connect ski:", c.ski)
-	c.setConnected(true)
-}
-
-func (c *EEBus) DeviceDisconnect() {
-	c.log.TRACE.Println("disconnect ski:", c.ski)
-	c.setConnected(false)
-}
-
-// UseCase specific events
-func (c *EEBus) UseCaseEventCB(_ spineapi.DeviceRemoteInterface, entity spineapi.EntityRemoteInterface, event eebusapi.EventType) {
+// UseCaseEvent implements the eebus.Device interface
+func (c *EEBus) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spineapi.EntityRemoteInterface, event eebusapi.EventType) {
 	switch event {
 	case lpc.DataUpdateLimit:
 		c.dataUpdateLimit()
-	}
-}
-
-// set wether the EVSE is connected
-func (c *EEBus) setConnected(connected bool) {
-	c.mux.Lock()
-	defer c.mux.Unlock()
-
-	c.connected = connected
-	if connected && !c.connected {
-		c.connectedTime = time.Now()
-	}
-
-	select {
-	case c.connectedC <- connected:
-	default:
 	}
 }
 

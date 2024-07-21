@@ -30,30 +30,9 @@ import (
 	"github.com/evcc-io/evcc/util/machine"
 )
 
-const (
-	BrandName  string = "EVCC"
-	Model      string = "HEMS"
-	DeviceCode string = "EVCC_HEMS_01" // used as common name in cert generation
-)
-
-type Config struct {
-	URI         string
-	ShipID      string
-	Interfaces  []string
-	Certificate struct {
-		Public, Private string
-	}
-}
-
-// Configured returns true if the EEbus server is configured
-func (c Config) Configured() bool {
-	return len(c.Certificate.Public) > 0 && len(c.Certificate.Private) > 0
-}
-
-type EEBUSDeviceInterface interface {
-	DeviceConnect()
-	DeviceDisconnect()
-	UseCaseEventCB(device spineapi.DeviceRemoteInterface, entity spineapi.EntityRemoteInterface, event eebusapi.EventType)
+type Device interface {
+	Connect(connected bool)
+	UseCaseEvent(device spineapi.DeviceRemoteInterface, entity spineapi.EntityRemoteInterface, event eebusapi.EventType)
 }
 
 // EVSE UseCases
@@ -82,7 +61,7 @@ type EEBus struct {
 
 	SKI string
 
-	clients map[string][]EEBUSDeviceInterface
+	clients map[string][]Device
 }
 
 var Instance *EEBus
@@ -147,7 +126,7 @@ func NewServer(other Config) (*EEBus, error) {
 	c := &EEBus{
 		log:     log,
 		SKI:     ski,
-		clients: make(map[string][]EEBUSDeviceInterface),
+		clients: make(map[string][]Device),
 	}
 
 	c.service = service.NewService(configuration, c)
@@ -188,7 +167,7 @@ func NewServer(other Config) (*EEBus, error) {
 	return c, nil
 }
 
-func (c *EEBus) RegisterDevice(ski string, device EEBUSDeviceInterface) error {
+func (c *EEBus) RegisterDevice(ski string, device Device) error {
 	ski = shiputil.NormalizeSKI(ski)
 	c.log.TRACE.Printf("registering ski: %s", ski)
 
@@ -228,33 +207,33 @@ func (c *EEBus) ucCallback(ski string, device spineapi.DeviceRemoteInterface, en
 
 	if clients, ok := c.clients[ski]; ok {
 		for _, client := range clients {
-			client.UseCaseEventCB(device, entity, event)
+			client.UseCaseEvent(device, entity, event)
 		}
 	}
 }
 
 // EEBUSServiceHandler
 
-func (c *EEBus) RemoteSKIConnected(service eebusapi.ServiceInterface, ski string) {
+func (c *EEBus) connect(ski string, connected bool) {
+	action := map[bool]string{true: "connected", false: "disconnected"}[connected]
+	c.log.DEBUG.Printf("ski %s %s", ski, action)
+
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
 	if clients, ok := c.clients[ski]; ok {
 		for _, client := range clients {
-			client.DeviceConnect()
+			client.Connect(connected)
 		}
 	}
 }
 
-func (c *EEBus) RemoteSKIDisconnected(service eebusapi.ServiceInterface, ski string) {
-	c.mux.Lock()
-	defer c.mux.Unlock()
+func (c *EEBus) RemoteSKIConnected(service eebusapi.ServiceInterface, ski string) {
+	c.connect(ski, true)
+}
 
-	if clients, ok := c.clients[ski]; ok {
-		for _, client := range clients {
-			client.DeviceConnect()
-		}
-	}
+func (c *EEBus) RemoteSKIDisconnected(service eebusapi.ServiceInterface, ski string) {
+	c.connect(ski, false)
 }
 
 // report all currently visible EEBUS services
