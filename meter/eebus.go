@@ -7,11 +7,9 @@ import (
 	"time"
 
 	eebusapi "github.com/enbility/eebus-go/api"
-	ucapi "github.com/enbility/eebus-go/usecases/api"
 	"github.com/enbility/eebus-go/usecases/ma/mgcp"
 	spineapi "github.com/enbility/spine-go/api"
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/evcc-io/evcc/util"
@@ -22,14 +20,12 @@ type EEBus struct {
 
 	mux sync.Mutex
 	log *util.Logger
-	lp  loadpoint.API
 
 	connected     bool
 	connectedC    chan bool
 	connectedTime time.Time
 
-	uc    *eebus.UseCasesCS
-	limit ucapi.LoadLimit
+	uc *eebus.UseCasesCS
 
 	power, energy      *provider.Value[float64]
 	voltages, currents *provider.Value[[]float64]
@@ -140,13 +136,6 @@ func (c *EEBus) setConnected(connected bool) {
 	case c.connectedC <- connected:
 	default:
 	}
-}
-
-func (c *EEBus) isConnected() bool {
-	c.mux.Lock()
-	defer c.mux.Unlock()
-
-	return c.connected
 }
 
 func (c *EEBus) dataUpdatePower(entity spineapi.EntityRemoteInterface) {

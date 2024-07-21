@@ -10,28 +10,16 @@ import (
 	ucapi "github.com/enbility/eebus-go/usecases/api"
 	"github.com/enbility/eebus-go/usecases/cs/lpc"
 	spineapi "github.com/enbility/spine-go/api"
-	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/evcc-io/evcc/util"
 )
-
-const (
-	maxIdRequestTimespan         = time.Second * 120
-	idleFactor                   = 0.6
-	voltage              float64 = 230
-)
-
-type minMax struct {
-	min, max float64
-}
 
 type EEBus struct {
 	ski string
 
 	mux sync.Mutex
 	log *util.Logger
-	lp  loadpoint.API
 
 	connected     bool
 	connectedC    chan bool
@@ -40,8 +28,6 @@ type EEBus struct {
 	uc    *eebus.UseCasesCS
 	limit ucapi.LoadLimit
 }
-
-// LPC, LPP, MPC, MGCP
 
 // New creates an EEBus HEMS from generic config
 func New(other map[string]interface{}, site site.API) (*EEBus, error) {
@@ -143,13 +129,6 @@ func (c *EEBus) setConnected(connected bool) {
 	case c.connectedC <- connected:
 	default:
 	}
-}
-
-func (c *EEBus) isConnected() bool {
-	c.mux.Lock()
-	defer c.mux.Unlock()
-
-	return c.connected
 }
 
 func (c *EEBus) Run() {
