@@ -7,8 +7,8 @@ import (
 
 // API is the coordinator API
 type API interface {
-	// GetVehicles returns the list of all vehicles
-	GetVehicles() []api.Vehicle
+	// GetVehicles returns the list of all vehicles, filtered by availability
+	GetVehicles(availableOnly bool) []api.Vehicle
 
 	// Owner returns the loadpoint that currently owns the vehicle
 	Owner(api.Vehicle) loadpoint.API

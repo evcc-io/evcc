@@ -27,9 +27,9 @@ import (
 )
 
 const (
-	EEBUSBrandName  string = "EVCC"
-	EEBUSModel      string = "HEMS"
-	EEBUSDeviceCode string = "EVCC_HEMS_01" // used as common name in cert generation
+	BrandName  string = "EVCC"
+	Model      string = "HEMS"
+	DeviceCode string = "EVCC_HEMS_01" // used as common name in cert generation
 )
 
 type Config struct {
@@ -115,7 +115,7 @@ func NewServer(other Config) (*EEBus, error) {
 
 	// TODO: get the voltage from the site
 	configuration, err := eebusapi.NewConfiguration(
-		EEBUSBrandName, EEBUSBrandName, EEBUSModel, serial,
+		BrandName, BrandName, Model, serial,
 		model.DeviceTypeTypeEnergyManagementSystem,
 		[]model.EntityTypeType{model.EntityTypeTypeCEM},
 		port, certificate, time.Second*4,
@@ -125,7 +125,7 @@ func NewServer(other Config) (*EEBus, error) {
 	}
 
 	// for backward compatibility
-	configuration.SetAlternateMdnsServiceName(EEBUSDeviceCode)
+	configuration.SetAlternateMdnsServiceName(DeviceCode)
 	configuration.SetAlternateIdentifier(serial)
 	configuration.SetInterfaces(cc.Interfaces)
 
