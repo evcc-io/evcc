@@ -62,14 +62,9 @@ func printPtr[T any](format string, v *T) string {
 }
 
 func ptrValueEqual[T comparable](a, b *T) bool {
-	switch {
-	case (a == nil) != (b == nil):
+	if (a == nil) != (b == nil) {
 		return false
-
-	case a == nil && b == nil:
-		return true
-
-	default:
-		return (*a) == (*b)
 	}
+
+	return a == nil && b == nil || (*a) == (*b)
 }
