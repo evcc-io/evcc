@@ -2,7 +2,6 @@ package meter
 
 import (
 	"errors"
-	"sync"
 	"time"
 
 	eebusapi "github.com/enbility/eebus-go/api"
@@ -15,7 +14,6 @@ import (
 )
 
 type EEBus struct {
-	mux sync.Mutex
 	log *util.Logger
 
 	*eebus.Connector
