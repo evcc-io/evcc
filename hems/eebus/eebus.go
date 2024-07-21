@@ -87,10 +87,6 @@ func NewEEBus(ski string) (*EEBus, error) {
 		c.log.DEBUG.Println("LPP RemoteEntitiesScenarios:", s.Scenarios)
 	}
 
-	for _, s := range c.uc.MPC.RemoteEntitiesScenarios() {
-		c.log.DEBUG.Println("MPC RemoteEntitiesScenarios:", s.Scenarios)
-	}
-
 	for _, s := range c.uc.MGCP.RemoteEntitiesScenarios() {
 		c.log.DEBUG.Println("MGCP RemoteEntitiesScenarios:", s.Scenarios)
 	}
