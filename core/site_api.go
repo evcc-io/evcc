@@ -357,12 +357,12 @@ func (site *Site) GetGridChargeLimit() *float64 {
 }
 
 func (site *Site) SetGridChargeLimit(val *float64) {
-	site.log.DEBUG.Println("set grid charge limit:", printFloatPtr("%.1f", val))
+	site.log.DEBUG.Println("set grid charge limit:", printPtr("%.1f", val))
 
 	site.Lock()
 	defer site.Unlock()
 
-	if site.gridChargeLimit != val {
+	if !ptrValueEqual(site.gridChargeLimit, val) {
 		site.gridChargeLimit = val
 
 		if val == nil {
