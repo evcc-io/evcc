@@ -164,7 +164,6 @@ func (c *EEBus) UseCaseEventCB(device spineapi.DeviceRemoteInterface, entity spi
 		c.log.TRACE.Println("EV Connected")
 		c.setEvEntity(entity)
 		c.currentLimit = -1
-		c.once.Do(func() { close(c.connectC) })
 	case evcc.EvDisconnected:
 		c.log.TRACE.Println("EV Disconnected")
 		c.setEvEntity(nil)
@@ -185,6 +184,7 @@ func (c *EEBus) setConnected(connected bool) {
 	defer c.mux.Unlock()
 
 	if connected && !c.connected {
+		c.once.Do(func() { close(c.connectC) })
 		c.connectedTime = time.Now()
 	}
 	c.connected = connected
