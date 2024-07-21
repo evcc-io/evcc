@@ -7,6 +7,7 @@ requirements:
   description:
     de: NRGkick Gen2 Ladeeinheit via REST API
     en: NRGkick Gen2 charging unit via REST API
+capabilities: ["1p3p", "mA"]
 params:
   - name: host
     required: true

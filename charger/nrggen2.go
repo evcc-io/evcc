@@ -89,12 +89,8 @@ func (nrg *NRGKickGen2) apiURL(api string) string {
 }
 
 func (nrg *NRGKickGen2) updateControl(control gen2.Control, withPhaseSwitch bool) error {
-	// TODO: NRGKick Gen2 would support setting fractions of Ampere,
-	// but I am not sure if we can set current_set with decimals over the query parameter,
-	// and also Evcc doesn't support fractinos also at the moment
-	// so just in case limit it to the integer value
 	uriWithQueryParams := fmt.Sprintf(
-		"%s?current_set=%.0f&charge_pause=%d&energy_limit=%d",
+		"%s?current_set=%.1f&charge_pause=%d&energy_limit=%d",
 		nrg.apiURL(gen2.ControlPath),
 		control.CurrentSet,
 		control.ChargePause,
@@ -190,6 +186,25 @@ func (nrg *NRGKickGen2) MaxCurrent(current int64) error {
 	}
 
 	res.CurrentSet = float64(current)
+
+	return nrg.updateControl(res, false)
+}
+
+var _ api.ChargerEx = (*OpenWBPro)(nil)
+
+// MaxCurrentMillis implements the api.ChargerEx interface
+func (nrg *NRGKickGen2) MaxCurrentMillis(current float64) error {
+	if current < 6 {
+		return fmt.Errorf("allowed range: 6.0 - rated_current (16.0A / 32.0A)")
+	}
+
+	res, err := nrg.controlG.Get()
+
+	if err != nil {
+		return err
+	}
+
+	res.CurrentSet = current
 
 	return nrg.updateControl(res, false)
 }
