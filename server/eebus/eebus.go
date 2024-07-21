@@ -260,7 +260,7 @@ func (c *EEBus) ServicePairingDetailUpdate(ski string, detail *shipapi.Connectio
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
-	if _, ok := c.clients[ski]; !ok {
+	if clients, ok := c.clients[ski]; !ok || len(clients) == 0 {
 		// this is an unknown SKI, so deny pairing
 		c.service.CancelPairingWithSKI(ski)
 	}

@@ -5,10 +5,7 @@ import (
 	"sync"
 	"time"
 
-	eebusapi "github.com/enbility/eebus-go/api"
 	ucapi "github.com/enbility/eebus-go/usecases/api"
-	"github.com/enbility/eebus-go/usecases/cs/lpc"
-	spineapi "github.com/enbility/spine-go/api"
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/evcc-io/evcc/util"
@@ -21,7 +18,11 @@ type EEBus struct {
 	*eebus.Connector
 	uc *eebus.UseCasesCS
 
-	limit ucapi.LoadLimit
+	limit        ucapi.LoadLimit
+	limitUpdated time.Time
+
+	failsafeLimit    float64
+	failsafeDuration time.Duration
 }
 
 // New creates an EEBus HEMS from generic config
@@ -72,27 +73,5 @@ func NewEEBus(ski string) (*EEBus, error) {
 	return c, nil
 }
 
-var _ eebus.Device = (*EEBus)(nil)
-
-// UseCaseEvent implements the eebus.Device interface
-func (c *EEBus) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spineapi.EntityRemoteInterface, event eebusapi.EventType) {
-	switch event {
-	case lpc.DataUpdateLimit:
-		c.dataUpdateLimit()
-	}
-}
-
 func (c *EEBus) Run() {
-}
-
-func (c *EEBus) dataUpdateLimit() {
-	limit, err := c.uc.LPC.ConsumptionLimit()
-	if err != nil {
-		c.log.ERROR.Println(err)
-		return
-	}
-
-	c.mux.Lock()
-	defer c.mux.Unlock()
-	c.limit = limit
 }
