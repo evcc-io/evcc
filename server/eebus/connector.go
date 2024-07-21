@@ -21,7 +21,7 @@ type Connector struct {
 	mu        sync.RWMutex
 	once      sync.Once
 	connected bool
-	connectC  chan bool
+	connectC  chan struct{}
 }
 
 func NewConnector(cb func(connected bool)) *Connector {
