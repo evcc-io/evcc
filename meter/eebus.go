@@ -132,22 +132,22 @@ func (c *EEBus) TotalEnergy() (float64, error) {
 
 func (c *EEBus) PhaseCurrents() (float64, float64, float64, error) {
 	res, err := c.currents.Get()
+	if err == nil && len(res) != 3 {
+		err = errors.New("invalid phase currents")
+	}
 	if err != nil {
 		return 0, 0, 0, err
-	}
-	if len(res) != 3 {
-		return 0, 0, 0, errors.New("invalid phase currents")
 	}
 	return res[0], res[1], res[2], nil
 }
 
 func (c *EEBus) PhaseVoltages() (float64, float64, float64, error) {
 	res, err := c.voltages.Get()
+	if err == nil && len(res) != 3 {
+		err = errors.New("invalid phase voltages")
+	}
 	if err != nil {
 		return 0, 0, 0, err
-	}
-	if len(res) != 3 {
-		return 0, 0, 0, errors.New("invalid phase voltages")
 	}
 	return res[0], res[1], res[2], nil
 }
