@@ -1,0 +1,15 @@
+template: mennekes-hcc3
+covers: ["amtron", "menneckes-hcc3"]
+products:
+  - brand: Mennekes
+    description:
+      generic: AMTRON XTRA, AMTRON PREMIUM
+requirements:
+  evcc: ["sponsorship"]
+params:
+  - name: modbus
+    choice: ["tcpip"]
+    id: 255
+render: |
+  type: mennekes-hcc3
+  {{- include "modbus" . }}

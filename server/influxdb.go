@@ -16,17 +16,6 @@ import (
 	influxlog "github.com/influxdata/influxdb-client-go/v2/log"
 )
 
-// InfluxConfig is the influx db configuration
-type InfluxConfig struct {
-	URL      string
-	Database string
-	Token    string
-	Org      string
-	User     string
-	Password string
-	Interval time.Duration
-}
-
 // Influx is a influx publisher
 type Influx struct {
 	sync.Mutex

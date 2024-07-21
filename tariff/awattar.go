@@ -58,11 +58,12 @@ func (t *Awattar) run(done chan error) {
 	bo := newBackoff()
 	client := request.NewHelper(t.log)
 
-	for ; true; <-time.Tick(time.Hour) {
+	tick := time.NewTicker(time.Hour)
+	for ; true; <-tick.C {
 		var res awattar.Prices
 
 		if err := backoff.Retry(func() error {
-			return client.GetJSON(t.uri, &res)
+			return backoffPermanentError(client.GetJSON(t.uri, &res))
 		}, bo); err != nil {
 			once.Do(func() { done <- err })
 

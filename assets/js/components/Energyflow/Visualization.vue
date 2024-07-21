@@ -19,14 +19,22 @@
 			<div class="label-scale-name">In</div>
 		</div>
 		<div ref="site_progress" class="site-progress">
+			<div class="site-progress-bar self-pv" :style="{ width: widthTotal(selfPvAdjusted) }">
+				<AnimatedNumber
+					v-if="selfPv && visualizationReady"
+					class="power"
+					:to="selfPv"
+					:format="fmtBarValue"
+				/>
+			</div>
 			<div
-				class="site-progress-bar self-consumption"
-				:style="{ width: widthTotal(selfConsumptionAdjusted) }"
+				class="site-progress-bar self-battery"
+				:style="{ width: widthTotal(selfBatteryAdjusted) }"
 			>
 				<AnimatedNumber
-					v-if="selfConsumption && visualizationReady"
+					v-if="selfBattery && visualizationReady"
 					class="power"
-					:to="selfConsumption"
+					:to="selfBattery"
 					:format="fmtBarValue"
 				/>
 			</div>
@@ -52,11 +60,8 @@
 					:format="fmtBarValue"
 				/>
 			</div>
-			<div
-				v-if="totalAdjusted <= 0"
-				class="site-progress-bar bg-light border no-wrap w-100 text-dark"
-			>
-				<span>{{ $t("main.energyflow.noEnergy") }}</span>
+			<div v-if="totalAdjusted <= 0" class="site-progress-bar w-100 grid-import">
+				<span>{{ fmtKw(0, false, true) }}</span>
 			</div>
 		</div>
 		<div class="label-scale d-flex">
@@ -98,7 +103,8 @@ export default {
 	mixins: [formatter],
 	props: {
 		gridImport: { type: Number, default: 0 },
-		selfConsumption: { type: Number, default: 0 },
+		selfPv: { type: Number, default: 0 },
+		selfBattery: { type: Number, default: 0 },
 		pvExport: { type: Number, default: 0 },
 		loadpoints: { type: Array, default: () => [] },
 		batteryCharge: { type: Number, default: 0 },
@@ -116,19 +122,27 @@ export default {
 			return this.applyThreshold(this.pvExport);
 		},
 		totalRaw: function () {
-			return this.gridImport + this.selfConsumption + this.pvExport;
+			return this.gridImport + this.selfPv + this.selfBattery + this.pvExport;
 		},
 		gridImportAdjusted: function () {
 			return this.applyThreshold(this.gridImport);
 		},
-		selfConsumptionAdjusted: function () {
-			return this.applyThreshold(this.selfConsumption);
+		selfPvAdjusted: function () {
+			return this.applyThreshold(this.selfPv);
+		},
+		selfBatteryAdjusted: function () {
+			return this.applyThreshold(this.selfBattery);
 		},
 		pvExportAdjusted: function () {
 			return this.applyThreshold(this.pvExport);
 		},
 		totalAdjusted: function () {
-			return this.gridImportAdjusted + this.selfConsumptionAdjusted + this.pvExportAdjusted;
+			return (
+				this.gridImportAdjusted +
+				this.selfPvAdjusted +
+				this.selfBatteryAdjusted +
+				this.pvExportAdjusted
+			);
 		},
 		visualizationReady: function () {
 			return this.totalAdjusted > 0 && this.width > 0;
@@ -150,7 +164,10 @@ export default {
 			return (100 / this.totalAdjusted) * power + "%";
 		},
 		fmtBarValue: function (watt) {
-			const withUnit = this.powerLabelEnoughSpace(watt);
+			if (!this.enoughSpaceForValue(watt)) {
+				return "";
+			}
+			const withUnit = this.enoughSpaceForUnit(watt);
 			return this.fmtKw(watt, this.powerInKw, withUnit);
 		},
 		powerLabelAvailableSpace(power) {
@@ -158,7 +175,10 @@ export default {
 			const percent = (100 / this.totalAdjusted) * power;
 			return (this.width / 100) * percent;
 		},
-		powerLabelEnoughSpace(power) {
+		enoughSpaceForValue(power) {
+			return this.powerLabelAvailableSpace(power) > 40;
+		},
+		enoughSpaceForUnit(power) {
 			return this.powerLabelAvailableSpace(power) > 60;
 		},
 		hideLabelIcon(power, minWidth = 32) {
@@ -179,7 +199,7 @@ export default {
 			return {
 				value,
 				hideIcon: this.hideLabelIcon(value, minWidth),
-				style: { width: this.widthTotal(value) },
+				style: { "flex-basis": this.widthTotal(value) },
 				[position]: true,
 			};
 		},
@@ -225,10 +245,16 @@ html.dark .grid-import {
 	color: var(--bs-dark);
 }
 
-.self-consumption {
-	background-color: var(--evcc-self);
+.self-pv {
+	background-color: var(--evcc-pv);
 	color: var(--bs-dark);
 }
+
+.self-battery {
+	background-color: var(--evcc-battery);
+	color: var(--bs-dark);
+}
+
 .pv-export {
 	background-color: var(--evcc-export);
 	color: var(--bs-dark);
@@ -240,7 +266,7 @@ html.dark .grid-import {
 	overflow: hidden;
 }
 .visualization--ready :deep(.label-bar) {
-	transition-property: width, opacity;
+	transition-property: flex-basis, opacity;
 	transition-duration: var(--evcc-transition-medium), var(--evcc-transition-fast);
 	transition-timing-function: linear, ease;
 }

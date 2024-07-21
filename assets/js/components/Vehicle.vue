@@ -6,7 +6,13 @@
 			@change-vehicle="changeVehicle"
 			@remove-vehicle="removeVehicle"
 		/>
-		<VehicleStatus v-bind="vehicleStatus" class="mb-2" />
+		<VehicleStatus
+			v-bind="vehicleStatus"
+			class="mb-2"
+			@open-loadpoint-settings="$emit('open-loadpoint-settings')"
+			@open-minsoc-settings="openMinSocSettings"
+			@open-plan-modal="openPlanModal"
+		/>
 		<VehicleSoc
 			v-bind="vehicleSocProps"
 			class="mt-2 mb-4"
@@ -20,7 +26,7 @@
 				class="flex-grow-1"
 				:label="vehicleSocTitle"
 				:value="formattedSoc"
-				:extraValue="range ? `${fmtNumber(range, 0)} ${rangeUnit}` : null"
+				:extraValue="range ? `${fmtNumber(range, 0)} ${rangeUnit}` : ''"
 				data-testid="current-soc"
 				align="start"
 			/>
@@ -29,7 +35,7 @@
 				class="flex-grow-1"
 				:label="$t('main.loadpoint.charged')"
 				:value="fmtEnergy(chargedEnergy)"
-				:extraValue="chargedSoc"
+				:extraValue="chargedSoc || ''"
 				data-testid="current-energy"
 				align="start"
 			/>
@@ -89,6 +95,7 @@ export default {
 		chargedEnergy: Number,
 		charging: Boolean,
 		vehicleClimaterActive: Boolean,
+		vehicleWelcomeActive: Boolean,
 		connected: Boolean,
 		currency: String,
 		effectiveLimitSoc: Number,
@@ -105,11 +112,15 @@ export default {
 		planActive: Boolean,
 		planEnergy: Number,
 		planProjectedStart: String,
+		planProjectedEnd: String,
 		planTime: String,
-		planOverrun: Boolean,
+		planTimeUnreachable: Boolean,
+		planOverrun: Number,
 		pvAction: String,
 		pvRemainingInterpolated: Number,
+		sessionSolarPercentage: Number,
 		smartCostActive: Boolean,
+		smartCostNextStart: String,
 		smartCostLimit: Number,
 		smartCostType: String,
 		socBasedCharging: Boolean,
@@ -122,9 +133,16 @@ export default {
 		vehicleRange: Number,
 		vehicles: Array,
 		vehicleSoc: Number,
-		vehicleTargetSoc: Number,
+		vehicleLimitSoc: Number,
+		vehicleNotReachable: Boolean,
 	},
-	emits: ["limit-soc-updated", "limit-energy-updated", "change-vehicle", "remove-vehicle"],
+	emits: [
+		"limit-soc-updated",
+		"limit-energy-updated",
+		"change-vehicle",
+		"remove-vehicle",
+		"open-loadpoint-settings",
+	],
 	data() {
 		return {
 			displayLimitSoc: this.effectiveLimitSoc,
@@ -162,7 +180,7 @@ export default {
 			if (this.heating) {
 				return this.fmtTemperature(this.vehicleSoc);
 			}
-			return `${Math.round(this.vehicleSoc)}%`;
+			return this.fmtPercentage(this.vehicleSoc);
 		},
 		vehicleSocTitle: function () {
 			if (this.heating) {
@@ -190,7 +208,7 @@ export default {
 		},
 		chargedSoc: function () {
 			const value = this.socPerKwh * (this.chargedEnergy / 1e3);
-			return value > 1 ? `+${Math.round(value)}%` : null;
+			return value > 1 ? `+${this.fmtPercentage(value)}` : null;
 		},
 		chargingPlanDisabled: function () {
 			if (!this.connected) {
@@ -200,6 +218,9 @@ export default {
 				return true;
 			}
 			return false;
+		},
+		smartCostDisabled: function () {
+			return ["off", "now"].includes(this.mode);
 		},
 	},
 	watch: {
@@ -230,6 +251,9 @@ export default {
 		},
 		openPlanModal() {
 			this.$refs.chargingPlan.openPlanModal();
+		},
+		openMinSocSettings() {
+			this.$refs.chargingPlan.openPlanModal(true);
 		},
 	},
 };

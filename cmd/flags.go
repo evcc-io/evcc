@@ -2,12 +2,14 @@ package cmd
 
 import (
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 const (
 	flagHeaders            = "log-headers"
 	flagHeadersDescription = "Log headers"
+
+	flagIgnoreDatabase            = "ignore-db"
+	flagIgnoreDatabaseDescription = "Run command ignoring service database"
 
 	flagBatteryMode                = "battery-mode"
 	flagBatteryModeDescription     = "Set battery mode (normal, hold, charge)"
@@ -23,6 +25,9 @@ const (
 	flagCloud            = "cloud"
 	flagCloudDescription = "Use cloud service (requires sponsor token)"
 
+	flagReset            = "reset"
+	flagResetDescription = "Reset migrated settings"
+
 	flagEnable  = "enable"
 	flagDisable = "disable"
 
@@ -37,6 +42,9 @@ const (
 
 	flagStop            = "stop"
 	flagStopDescription = "Stop charging"
+
+	flagRepeat            = "repeat"
+	flagRepeatDescription = "Repeat until interrupted"
 
 	flagDigits = "digits"
 	flagDelay  = "delay"

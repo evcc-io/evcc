@@ -1,0 +1,42 @@
+template: mercedes
+products:
+  - brand: Mercedes-Benz
+requirements:
+  description:
+    de: |
+      Benötigt `access` und `refresh` Tokens. Diese können über den Befehl `evcc token [name]` generiert werden.
+    en: |
+      Requires `access` and `refresh` tokens. These can be generated with command `evcc token [name]`.
+params:
+  - name: title
+  - name: icon
+    default: car
+    advanced: true
+  - name: user
+    required: true
+  - name: region
+    required: true
+    validvalues: [EMEA, APAC, NORAM]
+    default: EMEA
+  - name: accessToken
+    required: true
+    mask: true
+  - name: refreshToken
+    required: true
+    mask: true
+  - name: vin
+    example: V...
+  - name: capacity
+  - name: phases
+    advanced: true
+  - preset: vehicle-identify
+render: |
+  type: mercedes
+  vin: {{ .vin }}
+  user: {{ .user }}
+  region: {{ .region }}
+  tokens:
+    access: {{ .accessToken }}
+    refresh: {{ .refreshToken }}
+  {{ include "vehicle-common" . }}
+  {{ include "vehicle-identify" . }}

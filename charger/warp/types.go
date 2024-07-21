@@ -105,3 +105,7 @@ type EmState struct {
 	RelayState      bool            `json:"relay_state"`
 	ErrorFlags      int             `json:"error_flags"`
 }
+
+type EmLowLevelState struct {
+	Is3phase bool `json:"is_3phase"`
+}

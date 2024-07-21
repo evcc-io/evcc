@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	_ "embed"
-	"errors"
 	"fmt"
 	"go/format"
 	"io"
@@ -12,8 +11,10 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/go-sprout/sprout"
 	combinations "github.com/mxschmitt/golang-combinations"
 	"github.com/spf13/pflag"
+	"golang.org/x/tools/imports"
 )
 
 //go:embed decorate.tpl
@@ -32,22 +33,7 @@ func generate(out io.Writer, packageName, functionName, baseType string, dynamic
 	types := make(map[string]typeStruct, len(dynamicTypes))
 	combos := make([]string, 0)
 
-	tmpl, err := template.New("gen").Funcs(template.FuncMap{
-		// dict combines key value pairs for passing structs into templates
-		"dict": func(values ...interface{}) (map[string]interface{}, error) {
-			if len(values)%2 != 0 {
-				return nil, errors.New("invalid dict call")
-			}
-			dict := make(map[string]interface{}, len(values)/2)
-			for i := 0; i < len(values); i += 2 {
-				key, ok := values[i].(string)
-				if !ok {
-					return nil, errors.New("dict keys must be strings")
-				}
-				dict[key] = values[i+1]
-			}
-			return dict, nil
-		},
+	tmpl, err := template.New("gen").Funcs(sprout.FuncMap()).Funcs(template.FuncMap{
 		// contains checks if slice contains string
 		"contains": slices.Contains[[]string, string],
 		// ordered returns a slice of typeStructs ordered by dynamicType
@@ -177,8 +163,9 @@ func main() {
 		target = &gofile
 	}
 
+	var name string
 	if target != nil {
-		name := *target
+		name = *target
 		if !strings.HasSuffix(name, ".go") {
 			name += ".go"
 		}
@@ -196,6 +183,12 @@ func main() {
 	formatted, err := format.Source([]byte(generated))
 	if err != nil {
 		formatted = []byte(generated)
+	}
+
+	formatted, err = imports.Process(name, formatted, nil)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(3)
 	}
 
 	if _, err := out.Write(formatted); err != nil {

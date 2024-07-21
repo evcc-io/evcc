@@ -45,7 +45,7 @@ func NewEleringFromConfig(other map[string]interface{}) (api.Tariff, error) {
 
 	t := &Elering{
 		embed:  &cc.embed,
-		log:    util.NewLogger("Elering"),
+		log:    util.NewLogger("elering"),
 		region: strings.ToLower(cc.Region),
 		data:   util.NewMonitor[api.Rates](2 * time.Hour),
 	}
@@ -62,7 +62,8 @@ func (t *Elering) run(done chan error) {
 	client := request.NewHelper(t.log)
 	bo := newBackoff()
 
-	for ; true; <-time.Tick(time.Hour) {
+	tick := time.NewTicker(time.Hour)
+	for ; true; <-tick.C {
 		var res elering.NpsPrice
 
 		ts := time.Now().Truncate(time.Hour)
@@ -71,7 +72,7 @@ func (t *Elering) run(done chan error) {
 			url.QueryEscape(ts.Add(48*time.Hour).Format(time.RFC3339)))
 
 		if err := backoff.Retry(func() error {
-			return client.GetJSON(uri, &res)
+			return backoffPermanentError(client.GetJSON(uri, &res))
 		}, bo); err != nil {
 			once.Do(func() { done <- err })
 

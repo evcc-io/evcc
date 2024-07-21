@@ -10,6 +10,7 @@ import (
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/util/config"
+	"github.com/samber/lo"
 )
 
 var _ site.API = (*Site)(nil)
@@ -53,7 +54,7 @@ func (site *Site) SetTitle(title string) {
 	defer site.Unlock()
 
 	site.Title = title
-	site.publish("siteTitle", title)
+	site.publish(keys.SiteTitle, title)
 	settings.SetString(keys.Title, title)
 }
 
@@ -70,7 +71,6 @@ func (site *Site) SetGridMeterRef(ref string) {
 	defer site.Unlock()
 
 	site.Meters.GridMeterRef = ref
-	// site.publish("siteGridMeterRef", meter)
 	settings.SetString(keys.GridMeter, ref)
 }
 
@@ -122,18 +122,28 @@ func (site *Site) SetAuxMeterRefs(ref []string) {
 	settings.SetString(keys.AuxMeters, strings.Join(filterConfigurable(ref), ","))
 }
 
-// Loadpoints returns the list loadpoints
+// Loadpoints returns the loadpoints as api interfaces
 func (site *Site) Loadpoints() []loadpoint.API {
-	res := make([]loadpoint.API, len(site.loadpoints))
-	for id, lp := range site.loadpoints {
-		res[id] = lp
-	}
-	return res
+	return lo.Map(site.loadpoints, func(lp *Loadpoint, _ int) loadpoint.API { return lp })
+}
+
+// loadpointsAsCircuitDevices returns the loadpoints as circuit devices
+func (site *Site) loadpointsAsCircuitDevices() []api.CircuitLoad {
+	return lo.Map(site.loadpoints, func(lp *Loadpoint, _ int) api.CircuitLoad { return lp })
 }
 
 // Vehicles returns the site vehicles
 func (site *Site) Vehicles() site.Vehicles {
 	return &vehicles{log: site.log}
+}
+
+// GetCircuit returns the circuit
+func (site *Site) GetCircuit() api.Circuit {
+	if site.circuit == nil {
+		// return untyped nil
+		return nil
+	}
+	return site.circuit
 }
 
 // GetPrioritySoc returns the PrioritySoc
@@ -218,7 +228,7 @@ func (site *Site) SetBufferStartSoc(soc float64) error {
 		return ErrBatteryNotConfigured
 	}
 
-	if soc != 0 && soc <= site.bufferSoc {
+	if soc != 0 && soc < site.bufferSoc {
 		return errors.New("buffer start soc must be larger than buffer soc")
 	}
 
@@ -233,6 +243,31 @@ func (site *Site) SetBufferStartSoc(soc float64) error {
 	return nil
 }
 
+func (site *Site) GetMaxGridSupplyWhileBatteryCharging() float64 {
+	site.RLock()
+	defer site.RUnlock()
+	return site.MaxGridSupplyWhileBatteryCharging
+}
+
+func (site *Site) SetMaxGridSupplyWhileBatteryCharging(power float64) error {
+	site.Lock()
+	defer site.Unlock()
+
+	if len(site.batteryMeters) == 0 {
+		return ErrBatteryNotConfigured
+	}
+
+	site.log.DEBUG.Println("set max grid supply while battery charging:", power)
+
+	if site.MaxGridSupplyWhileBatteryCharging != power {
+		site.MaxGridSupplyWhileBatteryCharging = power
+		settings.SetFloat(keys.MaxGridSupplyWhileBatteryCharging, site.MaxGridSupplyWhileBatteryCharging)
+		site.publish(keys.MaxGridSupplyWhileBatteryCharging, site.MaxGridSupplyWhileBatteryCharging)
+	}
+
+	return nil
+}
+
 // GetResidualPower returns the ResidualPower
 func (site *Site) GetResidualPower() float64 {
 	site.RLock()
@@ -242,37 +277,15 @@ func (site *Site) GetResidualPower() float64 {
 
 // SetResidualPower sets the ResidualPower
 func (site *Site) SetResidualPower(power float64) error {
+	site.log.DEBUG.Println("set residual power:", power)
+
 	site.Lock()
 	defer site.Unlock()
-
-	site.log.DEBUG.Println("set residual power:", power)
 
 	if site.ResidualPower != power {
 		site.ResidualPower = power
+		settings.SetFloat(keys.ResidualPower, site.ResidualPower)
 		site.publish(keys.ResidualPower, site.ResidualPower)
-	}
-
-	return nil
-}
-
-// GetSmartCostLimit returns the smartCostLimit
-func (site *Site) GetSmartCostLimit() float64 {
-	site.RLock()
-	defer site.RUnlock()
-	return site.smartCostLimit
-}
-
-// SetSmartCostLimit sets the smartCostLimit
-func (site *Site) SetSmartCostLimit(val float64) error {
-	site.Lock()
-	defer site.Unlock()
-
-	site.log.DEBUG.Println("set smart cost limit:", val)
-
-	if site.smartCostLimit != val {
-		site.smartCostLimit = val
-		settings.SetFloat(keys.SmartCostLimit, site.smartCostLimit)
-		site.publish(keys.SmartCostLimit, site.smartCostLimit)
 	}
 
 	return nil
@@ -314,27 +327,27 @@ func (site *Site) GetTariff(tariff string) api.Tariff {
 	}
 }
 
-// GetBatteryControl returns the battery control mode
+// GetBatteryDischargeControl returns the battery control mode (no discharge only)
 func (site *Site) GetBatteryDischargeControl() bool {
 	site.RLock()
 	defer site.RUnlock()
 	return site.batteryDischargeControl
 }
 
-// SetBatteryControl sets the battery control mode
+// SetBatteryDischargeControl sets the battery control mode (no discharge only)
 func (site *Site) SetBatteryDischargeControl(val bool) error {
 	site.log.DEBUG.Println("set battery discharge control:", val)
 
-	if site.GetBatteryDischargeControl() != val {
+	site.Lock()
+	defer site.Unlock()
+
+	if site.batteryDischargeControl != val {
 		// reset to normal when disabling
-		if mode := site.GetBatteryMode(); !val && batteryModeModified(mode) {
-			if err := site.updateBatteryMode(api.BatteryNormal); err != nil {
+		if mode := site.batteryMode; !val && batteryModeModified(mode) {
+			if err := site.applyBatteryMode(api.BatteryNormal); err != nil {
 				return err
 			}
 		}
-
-		site.Lock()
-		defer site.Unlock()
 
 		site.batteryDischargeControl = val
 		settings.SetBool(keys.BatteryDischargeControl, val)

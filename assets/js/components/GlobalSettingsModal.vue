@@ -20,10 +20,7 @@
 						></button>
 					</div>
 					<div class="modal-body">
-						<UserInterfaceSettings
-							:sponsor="sponsor"
-							:sponsorTokenExpires="sponsorTokenExpires"
-						/>
+						<UserInterfaceSettings :sponsor="sponsor" />
 					</div>
 				</div>
 			</div>
@@ -38,8 +35,7 @@ export default {
 	name: "GlobalSettingsModal",
 	components: { UserInterfaceSettings },
 	props: {
-		sponsor: String,
-		sponsorTokenExpires: Number,
+		sponsor: { type: Object, default: () => ({}) },
 	},
 };
 </script>

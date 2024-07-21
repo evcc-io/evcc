@@ -1,0 +1,15 @@
+template: smartenergy
+products:
+  - brand: SmartEnergy
+    description:
+      generic: smartCONTROL
+requirements:
+  description:
+    de: Nur für Österreich verfügbar.
+    en: Only available for Austria.
+group: price
+params:
+  - preset: tariff-base
+render: |
+  type: smartenergy
+  {{ include "tariff-base" . }}

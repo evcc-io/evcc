@@ -2,9 +2,13 @@ import { createRouter, createWebHashHistory } from "vue-router";
 import Modal from "bootstrap/js/dist/modal";
 import Main from "./views/Main.vue";
 import { ensureCurrentLocaleMessages } from "./i18n";
+import { openLoginModal, statusUnknown, updateAuthStatus, isLoggedIn, isConfigured } from "./auth";
 
 function hideAllModals() {
   [...document.querySelectorAll(".modal.show")].forEach((modal) => {
+    // skip unclosable modals
+    if (modal.getAttribute("data-bs-backdrop") === "static") return;
+
     const modalInstance = Modal.getInstance(modal);
     if (modalInstance) {
       modalInstance.hide();
@@ -12,12 +16,29 @@ function hideAllModals() {
   });
 }
 
+async function ensureAuth(to) {
+  await updateAuthStatus();
+  if (!isConfigured()) {
+    return false;
+  }
+  if (!isLoggedIn() && !statusUnknown()) {
+    openLoginModal(to.path);
+    return false;
+  }
+  return true;
+}
+
 export default function setupRouter(i18n) {
   const router = createRouter({
     history: createWebHashHistory(),
     routes: [
       { path: "/", component: Main, props: true },
-      { path: "/config", component: () => import("./views/Config.vue"), props: true },
+      {
+        path: "/config",
+        component: () => import("./views/Config.vue"),
+        beforeEnter: ensureAuth,
+        props: true,
+      },
       {
         path: "/sessions",
         component: () => import("./views/ChargingSessions.vue"),
@@ -30,6 +51,11 @@ export default function setupRouter(i18n) {
             vehicleFilter: vehicle,
           };
         },
+      },
+      {
+        path: "/log",
+        component: () => import("./views/Log.vue"),
+        beforeEnter: ensureAuth,
       },
     ],
   });

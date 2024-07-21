@@ -323,6 +323,16 @@ func (lp *Loadpoint) GetChargePowerFlexibility() float64 {
 	return max(0, lp.GetChargePower()-lp.EffectiveMinPower())
 }
 
+// GetMaxPhaseCurrent returns the current charge power
+func (lp *Loadpoint) GetMaxPhaseCurrent() float64 {
+	lp.RLock()
+	defer lp.RUnlock()
+	if lp.chargeCurrents == nil {
+		return lp.chargeCurrent
+	}
+	return max(lp.chargeCurrents[0], lp.chargeCurrents[1], lp.chargeCurrents[2])
+}
+
 // GetMinCurrent returns the min loadpoint current
 func (lp *Loadpoint) GetMinCurrent() float64 {
 	lp.RLock()
@@ -471,9 +481,43 @@ func (lp *Loadpoint) StartVehicleDetection() {
 	// reset vehicle
 	lp.setActiveVehicle(nil)
 
-	lp.Lock()
-	defer lp.Unlock()
+	lp.vmu.Lock()
+	defer lp.vmu.Unlock()
 
 	// start auto-detect
 	lp.startVehicleDetection()
+}
+
+// GetSmartCostLimit gets the smart cost limit
+func (lp *Loadpoint) GetSmartCostLimit() float64 {
+	lp.RLock()
+	defer lp.RUnlock()
+	return lp.smartCostLimit
+}
+
+// SetSmartCostLimit sets the smart cost limit
+func (lp *Loadpoint) SetSmartCostLimit(val float64) {
+	lp.Lock()
+	defer lp.Unlock()
+
+	lp.log.DEBUG.Println("set smart cost limit:", val)
+
+	if lp.smartCostLimit != val {
+		lp.smartCostLimit = val
+		lp.settings.SetFloat(keys.SmartCostLimit, lp.smartCostLimit)
+		lp.publish(keys.SmartCostLimit, lp.smartCostLimit)
+	}
+}
+
+// GetCircuit returns the assigned circuit
+func (lp *Loadpoint) GetCircuit() api.Circuit {
+	lp.RLock()
+	defer lp.RUnlock()
+
+	// return untyped nil
+	if lp.circuit == nil {
+		return nil
+	}
+
+	return lp.circuit
 }

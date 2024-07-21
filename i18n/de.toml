@@ -13,12 +13,11 @@ legendTitle = "Wie soll Sonnenstrom genutzt werden?"
 legendTopAutostart = "startet automatisch"
 legendTopName = "Batterieunterstütztes Laden"
 legendTopSubline = "ohne Unterbrechungen"
-modalTitle = "Batterieeinstellungen"
+modalTitle = "Hausbatterie"
 
 [batterySettings.bufferStart]
-full = "wenn fast voll"
-low = "wenn etwas voll"
-medium = "wenn halbvoll"
+above = "wenn über {soc}"
+full = "wenn auf {soc}"
 never = "nur mit genug PV-Überschuss"
 
 [config]
@@ -27,14 +26,42 @@ never = "nur mit genug PV-Überschuss"
 titleAdd = "Batterie Zähler hinzufügen"
 titleEdit = "Batterie Zähler bearbeiten"
 
+[config.circuits]
+description = "Stellt sicher, dass die Summe aller Ladepunkte, die an einen Stromkreis angeschlossen sind, die konfigurierten Leistungs- und Stromgrenzen nicht überschreitet. Stromkreise können verschachtelt werden, um eine Hierarchie aufzubauen."
+title = "Lastmanagement"
+
+[config.control]
+description = "Normalerweise sind die Standardwerte in Ordnung. Ändere nur etwas, wenn du weißt, was du tust."
+descriptionInterval = "Regelkreis Aktualisierungszyklus in Sekunden. Definiert, wie oft evcc Messdaten liest, die Ladeleistung anpasst und die Benutzeroberfläche aktualisiert. Kurze Intervalle (< 30s) können zu Schwingungen und unerwünschtem Verhalten führen."
+descriptionMaxGridSupply = "Nur relevant für Hybrid-Wechselrichter, die nicht in der Lage sind, die volle DC-Erzeugungsleistung über AC an das Haus auszugeben. Dieses Szenario kann zu unerwünschtem Netzbezug führen, da evcc davon ausgeht, dass die volle DC-Leistung verfügbar ist. Verwende einen Wert von mindestens 50 W, um dies zu verhindern."
+descriptionResidualPower = "Verschiebt den Betriebspunkt des Regelkreises. Wenn du eine Hausbatterie hast, wird empfohlen, einen Wert von 100 W einzustellen. Auf diese Weise erhält die Batterie eine leichte Priorität gegenüber dem Netzbezug."
+labelInterval = "Aktualisierungsintervall"
+labelMaxGridSupply = "Max. Netzbezug während des Ladens"
+labelResidualPower = "Residualleistung"
+title = "Regelverhalten"
+
 [config.deviceValue]
+broker = "Broker"
+bucket = "Bucket"
 capacity = "Kapazität"
 chargeStatus = "Status"
+chargeStatusA = "nicht verbunden"
+chargeStatusB = "verbunden"
+chargeStatusC = "lädt"
+chargeStatusE = "keine Leistung"
+chargeStatusF = "Fehler"
 chargedEnergy = "Geladen"
-current = "Aktuell"
+co2 = "Netz-CO₂"
+configured = "Konfiguriert"
+currency = "Währung"
+current = "Strom"
 enabled = "Aktiviert"
 energy = "Energie"
+feedinPrice = "Einspeisevergütung"
+gridPrice = "Netzpreis"
+no = "Nein"
 odometer = "Kilometerstand"
+org = "Organisation"
 phaseCurrents = "Strom L1..L3"
 phasePowers = "Leistung L1..L3"
 phaseVoltages = "Spannung L1..L3"
@@ -42,24 +69,68 @@ power = "Leistung"
 range = "Reichweite"
 soc = "SoC"
 socLimit = "SoC Begrenzung"
+temp = "Temperatur"
+topic = "Thema"
+url = "URL"
+yes = "Ja"
+
+[config.eebus]
+description = "Grundkonfiguration für die Kommunikation mit anderen EEBus-Geräten."
+title = "EEBus"
 
 [config.form]
 example = "Beispiel"
 optional = "optional"
 
+[config.general]
+cancel = "Abbrechen"
+docsLink = "Siehe Dokumentation."
+experimental = "Experimentell"
+off = "aus"
+on = "an"
+password = "Passwort"
+remove = "Entfernen"
+save = "Speichern"
+telemetry = "Telemetrie"
+title = "Titel"
+
 [config.grid]
-titleAdd = "Stromzähler (Netz) hinzufügen"
-titleEdit = "Stromzähler (Netz) bearbeiten"
+title = "Netzzähler"
+titleAdd = "Netzzähler hinzufügen"
+titleEdit = "Netzzähler bearbeiten"
+
+[config.hems]
+description = "Connect evcc to another home energy management system."
+title = "HEMS"
+
+[config.influx]
+description = "Schreibt Ladedaten und andere Metriken in InfluxDB. Verwende Grafana oder andere Tools, um die Daten zu visualisieren."
+descriptionToken = "Siehe die InfluxDB-Dokumentation, um zu erfahren, wie du einen erstellst. https://docs.influxdata.com/influxdb/v2/admin/"
+labelBucket = "Bucket"
+labelDatabase = "Datenbank"
+labelOrg = "Organisation"
+labelPassword = "Passwort"
+labelToken = "API-Token"
+labelUrl = "URL"
+labelUser = "Benutzer"
+title = "InfluxDB"
+v1Support = "Unterstützung für InfluxDB 1.x?"
+v2Support = "Zurück zu InfluxDB 2.x"
 
 [config.main]
 addLoadpoint = "Ladepunkt hinzufügen"
 addPvBattery = "PV oder Speicher hinzufügen"
 addVehicle = "Fahrzeug hinzufügen"
+configured = "konfiguriert"
 edit = "bearbeiten"
 title = "Konfiguration"
 unconfigured = "nicht konfiguriert"
 vehicles = "Meine Fahrzeuge"
 yaml = "Konfiguration in evcc.yaml gefunden. Nicht per UI editierbar"
+
+[config.messaging]
+description = "Erhalte Benachrichtigungen über Ladevorgänge und andere Ereignisse."
+title = "Benachrichtigungen"
 
 [config.meter]
 cancel = "Abbrechen"
@@ -69,19 +140,88 @@ template = "Hersteller"
 titleChoice = "Was möchtest du hinzufügen?"
 validateSave = "Überprüfen & speichern"
 
+[config.modbusproxy]
+description = "Erlaubt mehreren Clients den Zugriff auf ein einzelnes Modbus-Gerät."
+title = "Modbus-Proxy"
+
+[config.mqtt]
+authentication = "Authentifizierung"
+brokerLabel = "Server"
+description = "Verbinde evcc mit einem MQTT-Broker, um Daten mit anderen Systemen in deinem Netzwerk auszutauschen."
+descriptionClientId = "Autor der Nachrichten. Wenn leer, wird `evcc-[rand]` verwendet."
+descriptionTopic = "Leer lassen, um das Publizieren zu deaktivieren."
+labelBroker = "Broker"
+labelCheckInsecure = "Erlaube unsichere Verbindungen"
+labelClientId = "Client ID"
+labelInsecure = "Zertifikatüberprüfung"
+labelPassword = "Passwort"
+labelTopic = "Topic"
+labelUser = "Benutzer"
+publishing = "Veröffentlichen"
+title = "MQTT"
+
+[config.network]
+descriptionHost = "Verwende den .local-Suffix, um mDNS zu aktivieren. Wird zur Erkennung der mobilen App und einiger OCPP-Wallboxen benötigt."
+descriptionPort = "Port für die Web-Oberfläche und API. Du musst deine Browser-URL aktualisieren, wenn du dies änderst."
+descriptionSchema = "Beeinflusst nur die URL-Generierung. Die Auswahl von HTTPS aktiviert keine Verschlüsselung."
+labelHost = "Hostname"
+labelPort = "Port"
+labelSchema = "Schema"
+title = "Netzwerk"
+
+[config.options]
+
+[config.options.endianness]
+big = "big-endian"
+little = "little-endian"
+
+[config.options.schema]
+http = "HTTP (unverschlüsselt)"
+https = "HTTPS (verschlüsselt)"
+
 [config.pv]
 titleAdd = "Zähler (PV) hinzufügen"
 titleEdit = "Zähler (PV) bearbeiten"
 
-[config.site]
-cancel = "Abbrechen"
-save = "Speichern"
+[config.section]
+general = "Allgemein"
+grid = "Netzanschluss"
+integrations = "Integrationen"
+loadpoints = "Ladepunkte"
+meter = "PV & Batterie"
+system = "System"
+vehicles = "Fahrzeuge"
+
+[config.sponsor]
+addToken = "Sponsortoken eingeben"
+changeToken = "Sponsortoken ändern"
+description = "Das Sponsoring-Modell hilft uns, das Projekt zu pflegen und nachhaltig neue und spannende Funktionen zu entwickeln. Als Sponsor erhältst du Zugriff auf alle Wallbox-Implementierungen."
+descriptionToken = "Du erhältst das Token von {url}. Wir bieten auch ein Testtoken für Tests an."
+error = "Das Sponsortoken ist ungültig."
+labelToken = "Sponsortoken"
+title = "Sponsorship"
+
+[config.system]
+logs = "Logs"
+restart = "Neu starten"
+restartRequiredDescription = "Bitte neu starten, um die Änderungen zu übernehmen."
+restartRequiredMessage = "Konfiguration geändert."
+restartingDescription = "Bitte warten …"
+restartingMessage = "evcc wird neu gestartet."
+
+[config.tariffs]
+description = "Hinterlege deine Stromtarife, um die Kosten zu berechnen."
+title = "Tarife"
+
+[config.title]
+description = "Wird in der Hauptansicht und im Browser-Tab angezeigt."
+label = "Titel"
+title = "Titel bearbeiten"
 
 [config.validation]
 failed = "fehlgeschlagen"
 label = "Status"
 running = "prüfe…"
-save = "Speichern"
 success = "erfolgreich"
 unknown = "unbekannt"
 validate = "prüfen"
@@ -94,11 +234,10 @@ generic = "Weitere Integrationen"
 offline = "Generisches Fahrzeug"
 online = "Fahrzeuge mit Schnittstelle"
 save = "Speichern"
-scooter = "Scooter"
+scooter = "Tretroller"
 template = "Hersteller"
 titleAdd = "Fahrzeug hinzufügen"
 titleEdit = "Fahrzeug bearbeiten"
-update = "Prüfen & speichern"
 validateSave = "Prüfen & speichern"
 
 [footer]
@@ -117,10 +256,10 @@ tabTitle = "Live-Community"
 
 [footer.savings]
 co2Saved = "{value} eingespart"
-co2Title = "CO₂ Emisson"
+co2Title = "CO₂ Emission"
 configurePriceCo2 = "Preis und CO₂-Emissionen konfigurieren"
-footerLong = "{percent}% Sonnenenergie"
-footerShort = "{percent}% Sonne"
+footerLong = "{percent} Sonnenenergie"
+footerShort = "{percent} Sonne"
 modalTitle = "Auswertung Ladeenergie"
 moneySaved = "{value} gespart"
 percentGrid = "{grid} kWh Netz"
@@ -139,6 +278,7 @@ total = "gesamt"
 
 [footer.sponsor]
 becomeSponsor = "Sponsor werden"
+becomeSponsorExtended = "Unterstütze uns direkt. Es gibt auch Sticker."
 confetti = "Lust auf Konfetti?"
 confettiPromise = "Es gibt auch Sticker und digitales Konfetti"
 sticker = "… oder evcc Sticker?"
@@ -146,6 +286,10 @@ supportUs = "Unsere Mission: Sonne tanken zum Standard machen. Hilf uns und unte
 thanks = "Vielen Dank, {sponsor}! Dein Beitrag hilft, evcc weiterzuentwickeln."
 titleNoSponsor = "Unterstütze uns"
 titleSponsor = "Du bist Unterstützer"
+titleTrial = "Testmodus"
+titleVictron = "Unterstützt von Victron Energy"
+trial = "Du befindest dich im Testmodus und kannst alle Funktionen nutzen. Wir freuen uns, wenn du Sponsor wirst."
+victron = "Du verwendest evcc auf Victron Energy Hardware und hast Zugriff auf alle Funktionen."
 
 [footer.telemetry]
 optIn = "Ich möchte meine Ladedaten teilen."
@@ -165,23 +309,14 @@ modalUpdateNow = "Jetzt installieren"
 modalUpdateStarted = "Starte die neue Version von evcc ..."
 modalUpdateStatusStart = "Installation gestartet:"
 
-[gridSettings]
-activeHours = "{charging} von {total}"
-activeHoursLabel = "Aktive Stunden"
-co2Label = "CO₂-Emission"
-co2Limit = "CO₂-Grenze"
-costLimitDescription = "Aktiviert vorübergehendes Schnellladen im PV-Modus."
-modalTitle = "Smartes Netzladen"
-none = "keine"
-priceLabel = "Energiepreis"
-priceLimit = "Preisgrenze"
-
 [header]
 about = "Über"
 blog = "Blog"
 docs = "Dokumentation"
 github = "GitHub"
 login = "Fahrzeug-Logins"
+logout = "Abmelden"
+nativeSettings = "Server ändern"
 needHelp = "Hilfe benötigt?"
 sessions = "Ladevorgänge"
 
@@ -190,6 +325,8 @@ discussionsButton = "GitHub Discussions"
 documentationButton = "Dokumentation"
 issueButton = "Bug melden"
 issueDescription = "Komisches Verhalten gefunden?"
+logsButton = "Logs ansehen"
+logsDescription = "Überprüfe die Logs auf Fehler."
 modalTitle = "Hilfe benötigt?"
 primaryActions = "Funktioniert etwas nicht so, wie es soll? Dies sind gute Anlaufstellen, um Hilfe zu erhalten."
 restartButton = "Neu starten"
@@ -202,6 +339,28 @@ confirm = "Ja, neu starten!"
 description = "Unter normalen Umständen sollte ein Neustart nicht notwendig sein. Melde einen Bug, wenn du evcc regelmäßig neu starten musst."
 disclaimer = "Hinweis: evcc beendet sich und verlässt sich darauf, vom Betriebssystem neu gestartet zu werden."
 modalTitle = "Sicher, dass du neu starten möchtest?"
+
+[log]
+areaLabel = "Nach Bereich filtern"
+areas = "Alle Bereiche"
+download = "Komplettes Log herunterladen"
+levelLabel = "Nach Log-Level filtern"
+noResults = "Keine passenden Einträge gefunden."
+search = "Suchen"
+showAll = "Alle Einträge anzeigen"
+title = "Logs"
+update = "Aktualisieren"
+
+[loginModal]
+cancel = "Abbrechen"
+error = "Login fehlgeschlagen: "
+iframeHint = "Öffne evcc in einem neuen Tab."
+iframeIssue = "Das Passwort ist korrekt, aber dein Browser hat das Authentifizierungscookie abgelehnt. Dies kann passieren, wenn du evcc in einem iframe über HTTP verwendest."
+invalid = "Passwort ist ungültig."
+login = "Anmelden"
+password = "Passwort"
+reset = "Passwort zurücksetzen?"
+title = "Authentifizierung"
 
 [main]
 vehicles = "Parkplatz"
@@ -219,6 +378,7 @@ time = "Zeit"
 title = "Plan"
 titleMinSoc = "Min. Ladung"
 titleTargetCharge = "Abfahrt"
+unsavedChanges = "Ungespeicherte Änderungen vorhanden. Jetzt anwenden?"
 update = "Anwenden"
 
 [main.energyflow]
@@ -237,8 +397,6 @@ selfConsumption = "Eigenverbrauch"
 
 [main.heatingStatus]
 charging = "Heize …"
-cheapEnergyCharging = "Heize mit günstiger Energie: {price} (Grenze {limit})"
-cleanEnergyCharging = "Heize mit sauberer Energie: {co2} (Grenze {limit})"
 waitForVehicle = "Bereit. Warte auf Heizung …"
 
 [main.loadpoint]
@@ -259,11 +417,13 @@ currents = "Ladestrom"
 default = "default"
 disclaimerHint = "Hinweis:"
 onlyForSocBasedCharging = "Diese Optionen sind nur für Fahrzeuge mit bekanntem Ladestand verfügbar."
+smartCostCheap = "Günstiges Netzladen"
+smartCostClean = "Grünes Netzladen"
 title = "Einstellungen {0}"
 vehicle = "Fahrzeug"
 
 [main.loadpointSettings.limitSoc]
-description = "Dieses Limit wird verwendet, wenn das Fahrzeug angeschlossen wird."
+description = "Dieses Ladelimit wird verwendet, wenn das Fahrzeug angeschlossen wird."
 label = "Standard Ladelimit"
 
 [main.loadpointSettings.maxCurrent]
@@ -273,7 +433,7 @@ label = "Max. Ladestrom"
 label = "Min. Ladestrom"
 
 [main.loadpointSettings.minSoc]
-description = "Fahrzeug wird im PV-Modus „schnell“ auf {0}% geladen. Danach weiter mit PV-Überschuss. Nützlich, um auch an dunklen Tagen eine Mindestreichweite zu gewährleisten."
+description = "Fahrzeug wird im PV-Modus „schnell“ auf {0} geladen. Danach weiter mit PV-Überschuss. Nützlich, um auch an dunklen Tagen eine Mindestreichweite zu gewährleisten."
 label = "Min. Ladung %"
 
 [main.loadpointSettings.phasesConfigured]
@@ -290,6 +450,7 @@ minpv = "Min+PV"
 now = "Schnell"
 off = "Aus"
 pv = "PV"
+smart = "Smart"
 
 [main.provider]
 login = "anmelden"
@@ -301,9 +462,9 @@ co2Limit = "CO₂-Grenze von {co2}"
 costLimitIgnore = "Die eingestellte {limit} wird in diesem Zeitraum ignoriert."
 currentPlan = "Aktiver Plan"
 descriptionEnergy = "Bis wann sollen {targetEnergy} ins Fahrzeug geladen sein?"
-descriptionSoc = "Wann soll das Fahrzeug auf {targetSoc}% geladen sein?"
+descriptionSoc = "Wann soll das Fahrzeug auf {targetSoc} geladen sein?"
 inactiveLabel = "Zielzeit"
-notReachableInTime = "Zielzeit nicht erreichbar. Voraussichtliches Ende: {endTime}."
+notReachableInTime = "Zielzeit wird {overrun} später erreicht."
 onlyInPvMode = "Ladeplanung ist nur im PV-Modus aktiv."
 planDuration = "Ladedauer"
 planPeriodLabel = "Zeitraum"
@@ -314,7 +475,7 @@ priceLimit = "Preisgrenze von {price}"
 remove = "Entfernen"
 setTargetTime = "keine"
 targetIsAboveLimit = "Das eingestellte Ladelimit von {limit} wird in diesem Zeitraum ignoriert."
-targetIsAboveVehicleLimit = "Erhöhe das Fahrzeuglimit ({limit}), um das Ladeziel zu erreichen."
+targetIsAboveVehicleLimit = "Fahrzeuglimit ist kleiner als das Ladeziel."
 targetIsInThePast = "Wähle einen Zeitpunkt in der Zukunft, Marty."
 targetIsTooFarInTheFuture = "Wir passen den Plan an, sobald wir mehr über die Zukunft wissen."
 title = "Zielzeit"
@@ -342,6 +503,7 @@ detectionActive = "Fahrzeugerkennung läuft …"
 fallbackName = "Fahrzeug"
 moreActions = "Weitere Aktionen"
 none = "Kein Fahrzeug"
+notReachable = "Fahrzeug war nicht erreichbar. Versuche evcc neu zu starten."
 targetSoc = "Ladelimit"
 temp = "Temperatur"
 tempLimit = "Zieltemp."
@@ -353,34 +515,59 @@ charging = "lädt"
 connected = "verbunden"
 disconnected = "getrennt"
 ready = "bereit"
-vehicleTarget = "Fahrzeuglimit: {soc}%"
+vehicleLimit = "Fahrzeuglimit: {soc}"
 
 [main.vehicleStatus]
 charging = "Ladevorgang aktiv …"
-cheapEnergyCharging = "Lade günstige Energie: {price} (Grenze {limit})"
-cleanEnergyCharging = "Lade saubere Energie: {co2} (Grenze {limit})"
+cheapEnergyCharging = "Günstige Energie verfügbar."
+cheapEnergyNextStart = "Günstige Energie in {duration}."
+cheapEnergySet = "Preislimit gesetzt."
+cleanEnergyCharging = "Saubere Energie verfügbar."
+cleanEnergyNextStart = "Saubere Energie in {duration}."
+cleanEnergySet = "CO₂-Limit gesetzt."
 climating = "Vorklimatisierung erkannt."
 connected = "Verbunden."
 disconnected = "Nicht verbunden."
-minCharge = "Mindestladung bis {soc}%."
-pvDisable = "Zu wenig Überschuss. Pausiere in {remaining} …"
-pvEnable = "Überschuss verfügbar. Starte in {remaining} …"
-scale1p = "Reduziere auf einphasig in {remaining} …"
-scale3p = "Erhöhe auf dreiphasig in {remaining} …"
-targetChargeActive = "Zielladen aktiv …"
-targetChargePlanned = "Zielladen geplant. Ladung startet {time} Uhr."
-targetChargeWaitForVehicle = "Zielladen bereit. Warte auf Fahrzeug …"
+finished = "Abgeschlossen."
+minCharge = "Mindestladung bis {soc}."
+pvDisable = "Zu wenig Überschuss. Ladung wird gleich pausiert."
+pvEnable = "Überschuss verfügbar. Ladung wird gleich fortgesetzt."
+scale1p = "Reduziere gleich auf einphasiges Laden."
+scale3p = "Erhöhe gleich auf dreiphasiges Laden."
+targetChargeActive = "Ladeplan aktiv. Geplantes Ende in {duration}."
+targetChargePlanned = "Ladeplan startet in {duration}."
+targetChargeWaitForVehicle = "Ladeplan bereit. Warte auf Fahrzeug …"
 unknown = ""
-vehicleTargetReached = "Fahrzeuglimit {soc}% erreicht."
+vehicleLimit = "Fahrzeuglimit."
+vehicleLimitReached = "Fahrzeuglimit erreicht."
 waitForVehicle = "Ladebereit. Warte auf Fahrzeug …"
+welcome = "Kurze initiale Ladung zur Bestätigung der Verbindung."
 
 [notifications]
 dismissAll = "Meldungen entfernen"
+logs = "Vollständiges Log ansehen"
 modalTitle = "Meldungen"
 
 [offline]
+configurationError = "Fehler beim Starten. Überprüfe deine Konfiguration und starte neu."
 message = "Keine Verbindung zum Server."
 reload = "Erneut laden?"
+restart = "Neustart"
+restartNeeded = "Erforderlich, um Änderungen zu übernehmen"
+restarting = "Server ist gleich wieder verfügbar."
+
+[passwordModal]
+description = "Setze ein Passwort, um die Konfiguration zu schützen. Die Hauptansicht bleibt ohne Login zugänglich."
+empty = "Passwort darf nicht leer sein"
+error = "Fehler: "
+labelCurrent = "Aktuelles Passwort"
+labelNew = "Neues Passwort"
+labelRepeat = "Neues Passwort wiederholen"
+newPassword = "Passwort setzen"
+noMatch = "Passwörter stimmen nicht überein"
+titleNew = "Administrator Passwort setzen"
+titleUpdate = "Administrator Passwort ändern"
+updatePassword = "Passwort ändern"
 
 [session]
 cancel = "Abbrechen"
@@ -417,6 +604,8 @@ vehicle = "Fahrzeug"
 
 [sessions.csv]
 chargedenergy = "Energie (kWh)"
+chargeduration = "Ladedauer"
+co2perkwh = "CO₂/kWh"
 created = "Startzeit"
 finished = "Endzeit"
 identifier = "Kennung"
@@ -424,6 +613,9 @@ loadpoint = "Ladepunkt"
 meterstart = "Anfangszählerstand (kWh)"
 meterstop = "Endzählerstand (kWh)"
 odometer = "Kilometerstand (km)"
+price = "Preis"
+priceperkwh = "Preis/kWh"
+solarpercentage = "Sonne (%)"
 vehicle = "Fahrzeug"
 
 [sessions.filter]
@@ -432,7 +624,12 @@ allVehicles = "Alle Fahrzeuge"
 filter = "Filtern"
 
 [settings]
-title = "Allgemeine Einstellungen"
+title = "Darstellung"
+
+[settings.fullscreen]
+enter = "Vollbild starten"
+exit = "Vollbild beenden"
+label = "Vollbild"
 
 [settings.hiddenFeatures]
 label = "Experimentell"
@@ -443,7 +640,7 @@ auto = "Automatisch"
 label = "Sprache"
 
 [settings.sponsorToken]
-expires = "Dein Sponsortoken läuft {inXDays} ab. {getNewToken} und aktualisiere deine Konfigurationsdatei."
+expires = "Dein Sponsortoken läuft {inXDays} ab. {getNewToken} und aktualisiere es hier."
 getNew = "Hol dir ein Neues"
 hint = "Hinweis: Wir werden das zukünftig automatisieren."
 
@@ -460,6 +657,22 @@ light = "Hell"
 km = "Kilometer"
 label = "Einheit"
 mi = "Meilen"
+
+[smartCost]
+activeHours = "{charging} von {total}"
+activeHoursLabel = "Aktive Stunden"
+applyToAll = "Überall anwenden?"
+batteryDescription = "Lädt die Hausbatterie aus dem Netz."
+cheapTitle = "Günstiges Netzladen"
+cleanTitle = "Sauberes Netzladen"
+co2Label = "CO₂-Emission"
+co2Limit = "CO₂-Grenze"
+loadpointDescription = "Aktiviert vorübergehendes Schnellladen im PV-Modus."
+modalTitle = "Smartes Netzladen"
+none = "keine"
+priceLabel = "Energiepreis"
+priceLimit = "Preisgrenze"
+saved = "Gepeichert."
 
 [startupError]
 configFile = "Verwendete Konfigurationsdatei:"

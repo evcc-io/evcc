@@ -92,11 +92,12 @@ func (t *GrünStromIndex) run(done chan error) {
 	bo := newBackoff()
 	uri := fmt.Sprintf("https://api.corrently.io/v2.0/gsi/prediction?zip=%s", t.zip)
 
-	for ; true; <-time.Tick(time.Hour) {
+	tick := time.NewTicker(time.Hour)
+	for ; true; <-tick.C {
 		var res gsiForecast
 
 		err := backoff.Retry(func() error {
-			return client.GetJSON(uri, &res)
+			return backoffPermanentError(client.GetJSON(uri, &res))
 		}, bo)
 
 		if err == nil && res.Err {

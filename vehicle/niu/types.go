@@ -2,6 +2,7 @@ package niu
 
 import (
 	"encoding/json"
+	"errors"
 	"time"
 
 	"golang.org/x/oauth2"
@@ -19,16 +20,24 @@ type Token oauth2.Token
 func (t *Token) UnmarshalJSON(data []byte) error {
 	var res struct {
 		Data struct {
-			Token struct {
+			Token *struct {
 				oauth2.Token
 				RefreshTokenExpiresIn int64 `json:"refresh_token_expires_in,omitempty"`
 				TokenExpiresIn        int64 `json:"token_expires_in,omitempty"`
 			}
+			Desc string
 		}
 	}
 
 	err := json.Unmarshal(data, &res)
 	if err == nil {
+		if res.Data.Token == nil {
+			if msg := res.Data.Desc; msg != "" {
+				return errors.New(msg)
+			}
+			return errors.New("missing token")
+		}
+
 		(*t) = (Token)(res.Data.Token.Token)
 
 		if res.Data.Token.Expiry.IsZero() && res.Data.Token.TokenExpiresIn != 0 {

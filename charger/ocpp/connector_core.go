@@ -1,6 +1,7 @@
 package ocpp
 
 import (
+	"strings"
 	"time"
 
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
@@ -20,7 +21,7 @@ func (conn *Connector) timestampValid(t time.Time) bool {
 	}
 
 	// reject older values than we already have
-	return t.After(conn.status.Timestamp.Time)
+	return !t.Before(conn.status.Timestamp.Time)
 }
 
 func (conn *Connector) StatusNotification(request *core.StatusNotificationRequest) (*core.StatusNotificationConfirmation, error) {
@@ -51,7 +52,10 @@ func (conn *Connector) MeterValues(request *core.MeterValuesRequest) (*core.Mete
 	conn.mu.Lock()
 	defer conn.mu.Unlock()
 
-	if request.TransactionId != nil && conn.txnId == 0 {
+	if request.TransactionId != nil && conn.txnId == 0 &&
+		(conn.status.Status == core.ChargePointStatusCharging ||
+			conn.status.Status == core.ChargePointStatusSuspendedEV ||
+			conn.status.Status == core.ChargePointStatusSuspendedEVSE) {
 		conn.log.DEBUG.Printf("hijacking transaction: %d", *request.TransactionId)
 		conn.txnId = *request.TransactionId
 	}
@@ -60,6 +64,7 @@ func (conn *Connector) MeterValues(request *core.MeterValuesRequest) (*core.Mete
 		// ignore old meter value requests
 		if meterValue.Timestamp.Time.After(conn.meterUpdated) {
 			for _, sample := range meterValue.SampledValue {
+				sample.Value = strings.TrimSpace(sample.Value)
 				conn.measurements[getSampleKey(sample)] = sample
 				conn.meterUpdated = conn.clock.Now()
 			}
@@ -86,6 +91,7 @@ func (conn *Connector) StartTransaction(request *core.StartTransactionRequest) (
 
 	conn.txnCount++
 	conn.txnId = conn.txnCount
+	conn.idTag = request.IdTag
 
 	res := &core.StartTransactionConfirmation{
 		IdTagInfo: &types.IdTagInfo{
@@ -133,6 +139,7 @@ func (conn *Connector) StopTransaction(request *core.StopTransactionRequest) (*c
 	}
 
 	conn.txnId = 0
+	conn.idTag = ""
 
 	res := &core.StopTransactionConfirmation{
 		IdTagInfo: &types.IdTagInfo{

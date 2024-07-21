@@ -20,16 +20,17 @@ func init() {
 	rootCmd.AddCommand(meterCmd)
 	meterCmd.Flags().StringP(flagBatteryMode, "b", "", flagBatteryModeDescription)
 	meterCmd.Flags().DurationP(flagBatteryModeWait, "w", 0, flagBatteryModeWaitDescription)
+	meterCmd.Flags().BoolP(flagRepeat, "r", false, flagRepeatDescription)
 }
 
 func runMeter(cmd *cobra.Command, args []string) {
 	// load config
-	if err := loadConfigFile(&conf); err != nil {
+	if err := loadConfigFile(&conf, !cmd.Flag(flagIgnoreDatabase).Changed); err != nil {
 		log.FATAL.Fatal(err)
 	}
 
 	// setup environment
-	if err := configureEnvironment(cmd, conf); err != nil {
+	if err := configureEnvironment(cmd, &conf); err != nil {
 		log.FATAL.Fatal(err)
 	}
 
@@ -68,10 +69,14 @@ func runMeter(cmd *cobra.Command, args []string) {
 
 	if !flagUsed {
 		d := dumper{len: len(meters)}
+	REPEAT:
 		for _, dev := range meters {
 			v := dev.Instance()
 
 			d.DumpWithHeader(dev.Config().Name, v)
+		}
+		if ok, _ := cmd.Flags().GetBool(flagRepeat); ok {
+			goto REPEAT
 		}
 	}
 

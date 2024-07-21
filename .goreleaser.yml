@@ -1,3 +1,5 @@
+version: 2
+
 dist: release
 release:
   github:
@@ -12,7 +14,7 @@ builds:
       - -trimpath
       - -tags=release
     ldflags:
-      - -X github.com/evcc-io/evcc/server.Version={{ .Version }} -X github.com/evcc-io/evcc/vehicle/tesla-vehicle-command.TESLA_CLIENT_ID={{ .Env.TESLA_CLIENT_ID }} -s -w
+      - -X github.com/evcc-io/evcc/server.Version={{ .Version }} -X github.com/evcc-io/evcc/vehicle/tesla.TESLA_CLIENT_ID={{ .Env.TESLA_CLIENT_ID }} -s -w
     env:
       - CGO_ENABLED=0
     goos:
@@ -96,7 +98,7 @@ brews:
     commit_author:
       name: andig
       email: cpuidle@gmx.de
-    folder: Formula
+    directory: Formula
     homepage: "https://evcc.io"
     description: "Sonne tanken ☀️🚘"
     license: "MIT"

@@ -4,7 +4,9 @@ package tronity
 
 const (
 	ReadCharge           = "tronity_charging" // Know whether vehicle is charging
+	ReadLocation         = "tronity_location" // Last known location
 	ReadOdometer         = "tronity_odometer" // Retrieve total distance traveled
+	ReadRange            = "tronity_range"    // Last known range information
 	WriteChargeStartStop = "tronity_control_charging"
 )
 
@@ -21,12 +23,13 @@ type Vehicle struct {
 }
 
 type Bulk struct {
-	Odometer float64
-	Range    float64
-	Level    float64
-	Charging string // Charging
-	// Latitude  float64/string
-	// Longitude float64/string
+	Odometer  float64
+	Range     float64
+	Level     float64
+	Charging  string
+	Plugged   bool
+	Latitude  float64
+	Longitude float64
 	Timestamp int64
 }
 

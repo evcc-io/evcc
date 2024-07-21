@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/spf13/viper"
+	"github.com/evcc-io/evcc/api/globalconfig"
 )
 
 //go:embed demo.yaml
 var demoYaml string
 
-func demoConfig(conf *globalConfig) error {
+func demoConfig(conf *globalconfig.All) error {
 	viper.SetConfigType("yaml")
 	if err := viper.ReadConfig(strings.NewReader(demoYaml)); err != nil {
 		return fmt.Errorf("failed decoding demo config: %w", err)

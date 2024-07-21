@@ -1,0 +1,260 @@
+template: deye-hybrid-hp3
+products:
+  - brand: Deye
+    description:
+      generic: hp3 hybrid inverter
+  - brand: Sunsynk
+    description:
+      generic: hp3 hybrid inverter
+capabilities: ["battery-control"]
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+    allinone: true
+  - name: modbus
+    choice: ["rs485", "tcpip"]
+    baudrate: 9600
+    id: 1
+  - name: capacity
+    advanced: true
+  - name: minsoc
+    type: number
+    advanced: true
+  - name: maxsoc
+    type: number
+    advanced: true
+render: |
+  type: custom
+  {{- if eq .usage "grid" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 625 # Grid side total power
+      type: holding
+      decode: int16
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 522 # "Total_GridBuy_Power Wh"
+      type: holding
+      decode: uint32s
+    scale: 0.1
+  currents:
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 613 # "Out-of-grid - current A"
+        type: holding
+        decode: int16
+      scale: 0.01
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 614 # "Out-of-grid - current B"
+        type: holding
+        decode: int16
+      scale: 0.01
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 615 # "Out-of-grid - current C"
+        type: holding
+        decode: int16
+      scale: 0.01
+  {{- end }}
+  {{- if eq .usage "pv" }}
+  power:
+    source: calc
+    add:
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 672 # "PV1 input power"
+        type: holding
+        decode: uint16
+      scale: 10
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 673 # "PV2 input power"
+        type: holding
+        decode: uint16
+      scale: 10
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 674 # "PV3 input power"
+        type: holding
+        decode: uint16
+      scale: 10
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 675 # "PV4 input power"
+        type: holding
+        decode: uint16
+      scale: 10
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 534 # "Total_PV_Power_Wh"
+      type: holding
+      decode: uint32s
+    scale: 0.1
+  {{- end }}
+  {{- if eq .usage "battery" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 590 # "Battery output power"
+      type: holding
+      decode: int16
+    scale: 10
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 518 # "Total discharge of the battery (Wh)"
+      type: holding
+      decode: uint32s
+    scale: 0.1
+  soc:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 588 # "battery capacity"
+      type: holding
+      decode: uint16
+  batterymode:
+    source: switch
+    switch:
+    - case: 1 # normal
+      set:
+        source: sequence
+        set: 
+        - source: const
+          value: {{ .minsoc }} 
+          set: 
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 166 
+              type: writemultiple
+              decode: int32s
+        - source: const
+          value: 0
+          set: 
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 148 
+              type: writemultiple
+              decode: int32s
+        - source: const
+          value: 2355 
+          set: 
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 149 
+              type: writemultiple
+              decode: int32s
+        - source: const
+          value: 0 
+          set: 
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 172 
+              type: writemultiple
+              decode: int32s  
+    - case: 2 # hold
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: {{ .maxsoc }}
+          set: 
+            source: modbus
+            {{- include "modbus" . | indent 10 }}        
+            register:
+              address: 166 
+              type: writemultiple
+              decode: int32s
+        - source: const
+          value: 0
+          set: 
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 148 # soc time of use 1
+              type: writemultiple
+              decode: int32s
+        - source: const
+          value: 2355 
+          set: 
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 149 # soc time of use 1
+              type: writemultiple
+              decode: int32s
+        - source: const
+          value: 0 
+          set: 
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 172 
+              type: writemultiple
+              decode: int32s  
+    - case: 3 # charge
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: {{ .maxsoc }}
+          set: 
+            source: modbus
+            {{- include "modbus" . | indent 10 }}        
+            register:
+              address: 166 
+              type: writemultiple
+              decode: int32s
+        - source: const
+          value: 0
+          set: 
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 148 # soc time of use 1
+              type: writemultiple
+              decode: int32s
+        - source: const
+          value: 2355 
+          set: 
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 149 # soc time of use 1
+              type: writemultiple
+              decode: int32s
+        - source: const
+          value: 1 
+          set: 
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 172 
+              type: writemultiple
+              decode: int32s  
+  minsoc: {{.minsoc}}
+  maxsoc: {{.maxsoc}}
+  {{- if .capacity }}
+  capacity: {{ .capacity }} # kWh
+  {{- end }}
+  {{- end }}

@@ -128,6 +128,8 @@ func (wb *WebastoNext) Status() (api.ChargeStatus, error) {
 		return api.StatusB, nil
 	case 3:
 		return api.StatusC, nil
+	case 7:
+		return api.StatusNone, fmt.Errorf("charging error: status %d", sb)
 	default:
 		return api.StatusNone, fmt.Errorf("invalid status: %d", sb)
 	}
@@ -179,8 +181,8 @@ func (wb *WebastoNext) MaxCurrent(current int64) error {
 
 var _ api.ChargeTimer = (*WebastoNext)(nil)
 
-// ChargingTime implements the api.ChargeTimer interface
-func (wb *WebastoNext) ChargingTime() (time.Duration, error) {
+// ChargeDuration implements the api.ChargeTimer interface
+func (wb *WebastoNext) ChargeDuration() (time.Duration, error) {
 	b, err := wb.conn.ReadHoldingRegisters(tqRegChargingTime, 2)
 	if err != nil {
 		return 0, err

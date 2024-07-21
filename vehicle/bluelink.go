@@ -84,8 +84,8 @@ func newBluelinkFromConfig(brand string, other map[string]interface{}, settings 
 
 	vehicle, err := ensureVehicleEx(
 		cc.VIN, api.Vehicles,
-		func(v bluelink.Vehicle) string {
-			return v.VIN
+		func(v bluelink.Vehicle) (string, error) {
+			return v.VIN, nil
 		},
 	)
 	if err != nil {
@@ -94,7 +94,7 @@ func newBluelinkFromConfig(brand string, other map[string]interface{}, settings 
 
 	v := &Bluelink{
 		embed:    &cc.embed,
-		Provider: bluelink.NewProvider(api, vehicle.VehicleID, cc.Expiry, cc.Cache),
+		Provider: bluelink.NewProvider(api, vehicle, cc.Expiry, cc.Cache),
 	}
 
 	return v, nil

@@ -106,6 +106,15 @@ type API interface {
 	RemoteControl(string, RemoteDemand)
 
 	//
+	// smart grid charging
+	//
+
+	// GetSmartChargingActive determines if smart charging is active
+	GetSmartCostLimit() float64
+	// SetSmartCostLimit sets the smart cost limit
+	SetSmartCostLimit(limit float64)
+
+	//
 	// power and energy
 	//
 
@@ -115,6 +124,8 @@ type API interface {
 	GetChargePower() float64
 	// GetChargePowerFlexibility returns the flexible amount of current charging power
 	GetChargePowerFlexibility() float64
+	// GetMaxPhaseCurrent returns max phase current
+	GetMaxPhaseCurrent() float64
 
 	//
 	// charge progress
@@ -137,4 +148,7 @@ type API interface {
 	SetVehicle(vehicle api.Vehicle)
 	// StartVehicleDetection allows triggering vehicle detection for debugging purposes
 	StartVehicleDetection()
+
+	// GetCircuit gets the assigned circuit
+	GetCircuit() api.Circuit
 }

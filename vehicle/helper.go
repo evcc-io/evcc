@@ -9,8 +9,8 @@ import (
 
 // ensureVehicle extracts VIN from list of VINs returned from `list` function
 func ensureVehicle(vin string, list func() ([]string, error)) (string, error) {
-	return ensureVehicleEx(vin, list, func(v string) string {
-		return v
+	return ensureVehicleEx(vin, list, func(v string) (string, error) {
+		return v, nil
 	})
 }
 
@@ -18,7 +18,7 @@ func ensureVehicle(vin string, list func() ([]string, error)) (string, error) {
 func ensureVehicleEx[T any](
 	vin string,
 	list func() ([]T, error),
-	extract func(T) string,
+	extract func(T) (string, error),
 ) (T, error) {
 	var zero T
 
@@ -30,7 +30,11 @@ func ensureVehicleEx[T any](
 	if vin := strings.ToUpper(vin); vin != "" {
 		// vin defined
 		for _, vehicle := range vehicles {
-			if vin == extract(vehicle) {
+			vv, err := extract(vehicle)
+			if err != nil {
+				return zero, err
+			}
+			if strings.ToUpper(vv) == vin {
 				return vehicle, nil
 			}
 		}
@@ -40,6 +44,7 @@ func ensureVehicleEx[T any](
 	}
 
 	return zero, fmt.Errorf("cannot find vehicle, got: %v", lo.Map(vehicles, func(v T, _ int) string {
-		return extract(v)
+		vin, _ := extract(v)
+		return vin
 	}))
 }

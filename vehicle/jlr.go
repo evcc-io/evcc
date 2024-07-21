@@ -54,8 +54,7 @@ func NewJLRFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	log := util.NewLogger("jlr").Redact(cc.User, cc.Password, cc.VIN, cc.DeviceID)
 
 	if cc.DeviceID == "" {
-		uid := uuid.New()
-		cc.DeviceID = uid.String()
+		cc.DeviceID = uuid.NewString()
 		log.WARN.Println("new device id generated, add `deviceid` to config:", cc.DeviceID)
 	}
 
@@ -100,13 +99,12 @@ func (v *JLR) RegisterDevice(log *util.Logger, user, device string, t jlr.Token)
 
 	uri := fmt.Sprintf("%s/users/%s/clients", jlr.IFOP_BASE_URL, url.PathEscape(user))
 
-	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data), map[string]string{
+	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data), jlr.Headers(device, map[string]string{
 		"Authorization":           "Bearer " + t.AccessToken,
 		"Content-type":            "application/json",
 		"Accept":                  "application/json",
-		"X-Device-Id":             device,
 		"x-telematicsprogramtype": "jlrpy",
-	})
+	}))
 	if err == nil {
 		_, err = c.DoBody(req)
 	}

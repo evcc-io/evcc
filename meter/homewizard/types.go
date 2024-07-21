@@ -21,4 +21,10 @@ type DataResponse struct {
 	TotalPowerImportT2kWh float64 `json:"total_power_import_t2_kwh"`
 	TotalPowerImportT3kWh float64 `json:"total_power_import_t3_kwh"`
 	TotalPowerImportT4kWh float64 `json:"total_power_import_t4_kwh"`
+	ActiveCurrentL1A      float64 `json:"active_current_l1_a"`
+	ActiveCurrentL2A      float64 `json:"active_current_l2_a"`
+	ActiveCurrentL3A      float64 `json:"active_current_l3_a"`
+	ActiveVoltageL1V      float64 `json:"active_voltage_l1_v"`
+	ActiveVoltageL2V      float64 `json:"active_voltage_l2_v"`
+	ActiveVoltageL3V      float64 `json:"active_voltage_l3_v"`
 }

@@ -26,11 +26,11 @@ func ClientID() string {
 
 // Config is the public configuration
 type Config struct {
-	Broker   string
-	User     string
-	Password string
-	ClientID string
-	Insecure bool
+	Broker   string `json:"broker"`
+	User     string `json:"user"`
+	Password string `json:"password"`
+	ClientID string `json:"clientID"`
+	Insecure bool   `json:"insecure"`
 }
 
 // Client encapsulates mqtt publish/subscribe functions
@@ -74,7 +74,6 @@ func NewClient(log *util.Logger, broker, user, password, clientID string, qos by
 	options.SetOnConnectHandler(mc.ConnectionHandler)
 	options.SetConnectionLostHandler(mc.ConnectionLostHandler)
 	options.SetConnectTimeout(request.Timeout)
-	options.SetOrderMatters(false)
 
 	if insecure {
 		options.SetTLSConfig(&tls.Config{InsecureSkipVerify: true})
@@ -119,6 +118,29 @@ func (m *Client) ConnectionHandler(client paho.Client) {
 		m.log.DEBUG.Printf("%s subscribe %s", m.broker, topic)
 		go m.listen(topic)
 	}
+}
+
+// Cleanup recursively removes a topic
+func (m *Client) Cleanup(topic string, retained bool) error {
+	statusTopic := topic + "/status"
+	if !m.Client.Subscribe(topic+"/#", m.Qos, func(c paho.Client, msg paho.Message) {
+		if len(msg.Payload()) == 0 || msg.Topic() == statusTopic {
+			return
+		}
+
+		m.log.TRACE.Printf("delete: %s", msg.Topic())
+		m.Client.Publish(msg.Topic(), m.Qos, true, []byte{})
+	}).WaitTimeout(request.Timeout) {
+		return api.ErrTimeout
+	}
+
+	time.Sleep(time.Second)
+
+	if !m.Client.Unsubscribe(topic + "/#").WaitTimeout(request.Timeout) {
+		return api.ErrTimeout
+	}
+
+	return nil
 }
 
 // Publish synchronously publishes payload using client qos

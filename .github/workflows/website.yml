@@ -1,12 +1,11 @@
 name: Deploy data to website
 
 env:
-  GO_VERSION: ^1.21
+  GO_VERSION: ^1.22
 
 on:
-  push:
-    branches: [master]
-    paths: ["templates/**"]
+  release:
+    types: [created]
   workflow_dispatch:
 
 jobs:
@@ -29,7 +28,7 @@ jobs:
         run: rm templates/evcc.io/.gitignore
 
       - name: Deploy to evcc.io repo
-        uses: peaceiris/actions-gh-pages@v3
+        uses: peaceiris/actions-gh-pages@v4
         with:
           personal_token: ${{ secrets.GH_TOKEN }}
           publish_dir: ./templates/evcc.io/
@@ -38,4 +37,4 @@ jobs:
           destination_dir: data
           allow_empty_commit: false
           commit_message: Brand data update
-        if: ${{ success() }}
+        if: success()

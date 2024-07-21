@@ -76,19 +76,16 @@ func NewAudiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 			defer cancel()
 			return api.Vehicles(ctx)
 		},
-		func(v etron.Vehicle) string {
-			return v.VIN
+		func(v etron.Vehicle) (string, error) {
+			return v.VIN, nil
 		},
 	)
 
 	if err == nil {
-		if v.Title_ == "" {
-			v.Title_ = vehicle.Nickname
-		}
-
 		api := id.NewAPI(log, its)
 		api.Client.Timeout = cc.Timeout
 
+		v.fromVehicle(vehicle.Nickname, 0)
 		v.Provider = id.NewProvider(api, vehicle.VIN, cc.Cache)
 	}
 

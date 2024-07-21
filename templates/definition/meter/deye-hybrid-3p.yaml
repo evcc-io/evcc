@@ -7,6 +7,7 @@ products:
   - brand: Sunsynk
     description:
       generic: 3p hybrid inverter
+capabilities: ["battery-control"]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -16,6 +17,12 @@ params:
     baudrate: 9600
     id: 1
   - name: capacity
+    advanced: true
+  - name: minsoc
+    type: number
+    advanced: true
+  - name: maxsoc
+    type: number
     advanced: true
 render: |
   type: custom
@@ -110,6 +117,131 @@ render: |
       address: 588 # "battery capacity"
       type: holding
       decode: uint16
+  batterymode:
+    source: switch
+    switch:
+    - case: 1 # normal
+      set:
+        source: sequence
+        set: 
+        - source: const
+          value: {{ .minsoc }} 
+          set: 
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 166 
+              type: writemultiple
+              decode: int32s
+        - source: const
+          value: 0
+          set: 
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 148 
+              type: writemultiple
+              decode: int32s
+        - source: const
+          value: 2355 
+          set: 
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 149 
+              type: writemultiple
+              decode: int32s
+        - source: const
+          value: 0 
+          set: 
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 172 
+              type: writemultiple
+              decode: int32s  
+    - case: 2 # hold
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: {{ .maxsoc }}
+          set: 
+            source: modbus
+            {{- include "modbus" . | indent 10 }}        
+            register:
+              address: 166 
+              type: writemultiple
+              decode: int32s
+        - source: const
+          value: 0
+          set: 
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 148 # soc time of use 1
+              type: writemultiple
+              decode: int32s
+        - source: const
+          value: 2355 
+          set: 
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 149 # soc time of use 1
+              type: writemultiple
+              decode: int32s
+        - source: const
+          value: 0 
+          set: 
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 172 
+              type: writemultiple
+              decode: int32s  
+    - case: 3 # charge
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: {{ .maxsoc }}
+          set: 
+            source: modbus
+            {{- include "modbus" . | indent 10 }}        
+            register:
+              address: 166 
+              type: writemultiple
+              decode: int32s
+        - source: const
+          value: 0
+          set: 
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 148 # soc time of use 1
+              type: writemultiple
+              decode: int32s
+        - source: const
+          value: 2355 
+          set: 
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 149 # soc time of use 1
+              type: writemultiple
+              decode: int32s
+        - source: const
+          value: 1 
+          set: 
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 172 
+              type: writemultiple
+              decode: int32s  
+  minsoc: {{.minsoc}}
+  maxsoc: {{.maxsoc}}
   {{- if .capacity }}
   capacity: {{ .capacity }} # kWh
   {{- end }}

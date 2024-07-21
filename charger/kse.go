@@ -2,7 +2,7 @@ package charger
 
 // LICENSE
 
-// Copyright (c) 2022 premultiply
+// Copyright (c) 2022-2024 premultiply
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -29,24 +29,26 @@ import (
 
 // KSE charger implementation
 type KSE struct {
-	log  *util.Logger
-	conn *modbus.Connection
-	curr uint16
-	rfid bool
+	log     *util.Logger
+	conn    *modbus.Connection
+	curr    uint16
+	hasRfid bool
+	has1p3p bool
 }
 
 const (
 	kseRegSetMaxCurrent       = 0x03 // Externe Stromvorgabe via Bussystem / Ladefreigabe
 	kseRegChargeMode          = 0x0E // Lademodus
 	kseRegVehicleState        = 0x10 // State der Statemachine
+	kseRegVoltages            = 0x11 // Phasenspannung (3)
 	kseRegCurrents            = 0x14 // Phasenstrom (3)
 	kseRegCurrentLoadedEnergy = 0x17 // Zwischen anstecken und abstecken geladene Energie (10 Wh)
 	kseRegActualPower         = 0x18 // Aktuelle Ladeleistung (W)
 	kseRegFirmwareVersion     = 0x30 // Firmware Version
 	kseRegRFIDinstalled       = 0x31 // RFID-Leser vorhanden
+	kseRegRelayMode           = 0x35 // Umschalten 1 phasiges oder 3 phasiges Laden
+	kseRegEnergy              = 0x60
 	kseRegNFCTransactionID    = 0x67 // Tag ID (8 Bytes)
-	// kseRegRelayMode           = 0x35 // Umschalten 1 phasiges oder 3 phasiges Laden
-
 )
 
 func init() {
@@ -68,7 +70,7 @@ func NewKSEFromConfig(other map[string]interface{}) (api.Charger, error) {
 	return NewKSE(cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.ID)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateKSE -b *KSE -r api.Charger -t "api.Identifier,Identify,func() (string, error)"
+//go:generate go run ../cmd/tools/decorate.go -f decorateKSE -b *KSE -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)" -t "api.Identifier,Identify,func() (string, error)"
 
 // NewKSE creates KSE charger
 func NewKSE(uri, device, comset string, baudrate int, slaveID uint8) (api.Charger, error) {
@@ -90,14 +92,26 @@ func NewKSE(uri, device, comset string, baudrate int, slaveID uint8) (api.Charge
 		curr: 6, // assume min current
 	}
 
-	// check presence of rfid
-	b, err := wb.conn.ReadDiscreteInputs(kseRegRFIDinstalled, 1)
-	if err == nil && b[0] != 0 {
-		wb.rfid = true
-		return decorateKSE(wb, wb.identify), err
+	var (
+		phases1p3p func(int) error
+		getPhases  func() (int, error)
+		identify   func() (string, error)
+	)
+
+	// check presence of 1p3p switching
+	if b, err := wb.conn.ReadInputRegisters(kseRegFirmwareVersion, 1); err == nil && b[0] >= 0x52 { // >= HW Rev „R“
+		wb.has1p3p = true
+		phases1p3p = wb.phases1p3p
+		getPhases = wb.getPhases
 	}
 
-	return wb, err
+	// check presence of rfid
+	if b, err := wb.conn.ReadDiscreteInputs(kseRegRFIDinstalled, 1); err == nil && b[0] != 0 {
+		wb.hasRfid = true
+		identify = wb.identify
+	}
+
+	return decorateKSE(wb, phases1p3p, getPhases, identify), err
 }
 
 // Status implements the api.Charger interface
@@ -185,6 +199,35 @@ func (wb *KSE) ChargedEnergy() (float64, error) {
 	return float64(binary.BigEndian.Uint16(b)) / 100, err
 }
 
+var _ api.MeterEnergy = (*KSE)(nil)
+
+// TotalEnergy implements the api.MeterEnergy interface
+func (wb *KSE) TotalEnergy() (float64, error) {
+	b, err := wb.conn.ReadInputRegisters(kseRegEnergy, 2)
+	if err != nil {
+		return 0, err
+	}
+
+	return float64(binary.BigEndian.Uint32(b)) / 1e3, nil
+}
+
+var _ api.PhaseVoltages = (*KSE)(nil)
+
+// Voltages implements the api.PhaseVoltages interface
+func (wb *KSE) Voltages() (float64, float64, float64, error) {
+	b, err := wb.conn.ReadInputRegisters(kseRegVoltages, 3)
+	if err != nil {
+		return 0, 0, 0, err
+	}
+
+	var res [3]float64
+	for i := range res {
+		res[i] = float64(binary.BigEndian.Uint16(b[2*i:]))
+	}
+
+	return res[0], res[1], res[2], nil
+}
+
 var _ api.PhaseCurrents = (*KSE)(nil)
 
 // Currents implements the api.PhaseCurrents interface
@@ -202,18 +245,30 @@ func (wb *KSE) Currents() (float64, float64, float64, error) {
 	return res[0], res[1], res[2], nil
 }
 
-// var _ api.PhaseSwitcher = (*KSE)(nil)
+// phases1p3p implements the api.PhaseSwitcher interface
+func (wb *KSE) phases1p3p(phases int) error {
+	var b uint16 = 0 // 3p
+	if phases == 1 {
+		b = 1 // 1p
+	}
 
-// // Phases1p3p implements the api.PhaseSwitcher interface
-// func (wb *KSE) Phases1p3p(phases int) error {
-// 	var b uint16 = 0
-// 	if phases == 1 {
-// 		b = 1 // 1p
-// 	}
+	_, err := wb.conn.WriteSingleRegister(kseRegRelayMode, b)
+	return err
+}
 
-// 	_, err := wb.conn.WriteSingleRegister(kseRegRelayMode, b)
-// 	return err
-// }
+// getPhases implements the api.PhaseGetter interface
+func (wb *KSE) getPhases() (int, error) {
+	b, err := wb.conn.ReadHoldingRegisters(kseRegRelayMode, 1)
+	if err != nil {
+		return 0, err
+	}
+
+	if binary.BigEndian.Uint16(b) == 0 {
+		return 3, nil
+	}
+
+	return 1, nil
+}
 
 // Identify implements the api.Identifier interface
 func (wb *KSE) identify() (string, error) {
@@ -230,7 +285,7 @@ var _ api.Diagnosis = (*KSE)(nil)
 // Diagnose implements the api.Diagnosis interface
 func (wb *KSE) Diagnose() {
 	if b, err := wb.conn.ReadInputRegisters(kseRegFirmwareVersion, 1); err == nil {
-		fmt.Printf("\tFirmware:\t%d.%d\n", b[0], b[1])
+		fmt.Printf("\tFirmware:\t%x\n", b)
 	}
 	if b, err := wb.conn.ReadInputRegisters(kseRegChargeMode, 1); err == nil {
 		fmt.Printf("\tCharge Mode:\t%d\n", binary.BigEndian.Uint16(b))
@@ -238,7 +293,12 @@ func (wb *KSE) Diagnose() {
 	if b, err := wb.conn.ReadInputRegisters(kseRegVehicleState, 1); err == nil {
 		fmt.Printf("\tState:\t%d\n", binary.BigEndian.Uint16(b))
 	}
-	if wb.rfid {
+	if wb.has1p3p {
+		if b, err := wb.conn.ReadHoldingRegisters(kseRegRelayMode, 1); err == nil {
+			fmt.Printf("\tPhases:\t%d\n", binary.BigEndian.Uint16(b))
+		}
+	}
+	if wb.hasRfid {
 		if b, err := wb.conn.ReadHoldingRegisters(kseRegNFCTransactionID, 4); err == nil {
 			fmt.Printf("\tNFC ID:\t%s\n", b)
 		}

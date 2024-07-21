@@ -4,8 +4,10 @@
 
 		<GlobalSettingsModal v-bind="globalSettingsProps" />
 		<BatterySettingsModal v-if="batteryModalAvailabe" v-bind="batterySettingsProps" />
-		<GridSettingsModal v-if="gridModalAvailable" v-bind="gridSettingsProps" />
 		<HelpModal />
+		<PasswordModal />
+		<LoginModal />
+		<OfflineIndicator v-bind="offlineIndicatorProps" />
 	</div>
 </template>
 
@@ -13,32 +15,64 @@
 import store from "../store";
 import GlobalSettingsModal from "../components/GlobalSettingsModal.vue";
 import BatterySettingsModal from "../components/BatterySettingsModal.vue";
-import GridSettingsModal from "../components/GridSettingsModal.vue";
+import OfflineIndicator from "../components/OfflineIndicator.vue";
+import PasswordModal from "../components/PasswordModal.vue";
+import LoginModal from "../components/LoginModal.vue";
 import HelpModal from "../components/HelpModal.vue";
 import collector from "../mixins/collector";
-import gridModalAvailable from "../utils/gridModalAvailable";
+
+// assume offline if not data received for 5 minutes
+let lastDataReceived = new Date();
+const maxDataAge = 60 * 1000 * 5;
+setInterval(() => {
+	if (new Date() - lastDataReceived > maxDataAge) {
+		console.log("no data received, assume we are offline");
+		window.app.setOffline();
+	}
+}, 1000);
 
 export default {
 	name: "App",
-	components: { GlobalSettingsModal, HelpModal, BatterySettingsModal, GridSettingsModal },
+	components: {
+		GlobalSettingsModal,
+		HelpModal,
+		BatterySettingsModal,
+		PasswordModal,
+		LoginModal,
+		OfflineIndicator,
+	},
 	mixins: [collector],
 	props: {
 		notifications: Array,
 		offline: Boolean,
 	},
 	data: () => {
-		return { reconnectTimeout: null, ws: null };
+		return { reconnectTimeout: null, ws: null, authNotConfigured: false };
 	},
 	head() {
 		const siteTitle = store.state.siteTitle;
 		return { title: siteTitle ? `${siteTitle} | evcc` : "evcc" };
 	},
+	watch: {
+		version: function (now, prev) {
+			if (!!prev && !!now) {
+				console.log("new version detected. reloading browser", { now, prev });
+				this.reload();
+			}
+		},
+		offline: function (offline) {
+			store.offline(offline);
+			if (offline) {
+				this.reconnect();
+			}
+		},
+	},
 	computed: {
-		gridModalAvailable: function () {
-			return gridModalAvailable(store.state.smartCostType);
+		version: function () {
+			return store.state.version;
 		},
 		batteryModalAvailabe: function () {
-			return store.state.batteryConfigured;
+			return store.state.battery?.length;
 		},
 		globalSettingsProps: function () {
 			return this.collectProps(GlobalSettingsModal, store.state);
@@ -46,8 +80,8 @@ export default {
 		batterySettingsProps() {
 			return this.collectProps(BatterySettingsModal, store.state);
 		},
-		gridSettingsProps() {
-			return this.collectProps(GridSettingsModal, store.state);
+		offlineIndicatorProps() {
+			return this.collectProps(OfflineIndicator, store.state);
 		},
 	},
 	mounted: function () {
@@ -76,7 +110,6 @@ export default {
 			}, 2500);
 		},
 		disconnect: function () {
-			console.log("websocket disconnecting");
 			if (this.ws) {
 				this.ws.onerror = null;
 				this.ws.onopen = null;
@@ -113,7 +146,7 @@ export default {
 
 			this.ws = new WebSocket(uri);
 			this.ws.onerror = () => {
-				console.error({ message: "Websocket error. Trying to reconnect." });
+				console.log({ message: "Websocket error. Trying to reconnect." });
 				this.ws.close();
 			};
 			this.ws.onopen = () => {
@@ -121,7 +154,6 @@ export default {
 				window.app.setOnline();
 			};
 			this.ws.onclose = () => {
-				console.log("websocket disconnected");
 				window.app.setOffline();
 				this.reconnect();
 			};
@@ -129,6 +161,7 @@ export default {
 				try {
 					var msg = JSON.parse(evt.data);
 					store.update(msg);
+					lastDataReceived = new Date();
 				} catch (error) {
 					window.app.raise({
 						message: `Failed to parse web socket data: ${error.message} [${evt.data}]`,
@@ -145,5 +178,6 @@ export default {
 <style scoped>
 .app {
 	min-height: 100vh;
+	min-height: 100dvh;
 }
 </style>

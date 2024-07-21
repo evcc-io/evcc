@@ -182,8 +182,8 @@ func (mb *Connection) ReadCoils(address, quantity uint16) ([]byte, error) {
 	return mb.ReadCoilsWithSlave(mb.slaveID, address, quantity)
 }
 
-func (mb *Connection) WriteSingleCoil(address, quantity uint16) ([]byte, error) {
-	return mb.WriteSingleCoilWithSlave(mb.slaveID, address, quantity)
+func (mb *Connection) WriteSingleCoil(address, value uint16) ([]byte, error) {
+	return mb.WriteSingleCoilWithSlave(mb.slaveID, address, value)
 }
 
 func (mb *Connection) ReadInputRegisters(address, quantity uint16) ([]byte, error) {

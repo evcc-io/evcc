@@ -6,7 +6,9 @@ import (
 	"sync"
 	"time"
 
+	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/util"
+	"golang.org/x/exp/maps"
 )
 
 var (
@@ -58,28 +60,28 @@ func (m *Server) GetInverter(ip string) *util.Monitor[Inverter] {
 }
 
 func (m *Server) readData() {
+	bo := backoff.NewExponentialBackOff()
+	bo.MaxInterval = time.Second
+	bo.MaxElapsedTime = 10 * time.Second
+
 	for {
 		mu.RLock()
-		ips := make([]string, 0, len(m.inverters))
-		for ip := range m.inverters {
-			ips = append(ips, ip)
-		}
+		ips := maps.Keys(m.inverters)
 		mu.RUnlock()
 
 		for _, ip := range ips {
-			addr, err := net.ResolveUDPAddr("udp", net.JoinHostPort(ip, "8899"))
-			if err != nil {
+			if err := backoff.Retry(func() error {
+				addr, err := net.ResolveUDPAddr("udp", net.JoinHostPort(ip, "8899"))
+				if err == nil {
+					_, err = m.conn.WriteToUDP([]byte{0xF7, 0x03, 0x89, 0x1C, 0x00, 0x7D, 0x7A, 0xE7}, addr)
+				}
+				if err == nil {
+					time.Sleep(5 * time.Second)
+					_, err = m.conn.WriteToUDP([]byte{0xF7, 0x03, 0x90, 0x88, 0x00, 0x0D, 0x3D, 0xB3}, addr)
+				}
+				return err
+			}, bo); err != nil {
 				m.log.ERROR.Println(err)
-				continue
-			}
-			if _, err := m.conn.WriteToUDP([]byte{0xF7, 0x03, 0x89, 0x1C, 0x00, 0x7D, 0x7A, 0xE7}, addr); err != nil {
-				m.log.ERROR.Println(err)
-				continue
-			}
-			time.Sleep(5 * time.Second)
-			if _, err := m.conn.WriteToUDP([]byte{0xF7, 0x03, 0x90, 0x88, 0x00, 0x0D, 0x3D, 0xB3}, addr); err != nil {
-				m.log.ERROR.Println(err)
-				continue
 			}
 		}
 	}
@@ -108,7 +110,7 @@ func (m *Server) listen() {
 					return float64(int16(binary.BigEndian.Uint16(buf[u:]))) *
 						float64(int16(binary.BigEndian.Uint16(buf[i:]))) / 100
 				}
-				inverter.PvPower = ui(11, 13) + ui(19, 21)
+				inverter.PvPower = ui(11, 13) + ui(19, 21) + ui(27, 29) + ui(35, 37)
 				inverter.BatteryPower = ui(165, 167)
 				inverter.NetPower = -float64(int32(binary.BigEndian.Uint32(buf[83:])))
 			}

@@ -7,7 +7,7 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/Masterminds/sprig/v3"
+	"github.com/go-sprout/sprout"
 )
 
 //go:embed documentation.tpl
@@ -21,23 +21,22 @@ func (t *Template) RenderDocumentation(product Product, lang string) ([]byte, er
 	values := t.Defaults(RenderModeDocs)
 
 	for index, p := range t.Params {
-		for k, v := range values {
-			if p.Name != k {
-				continue
-			}
+		v, ok := values[p.Name]
+		if !ok {
+			continue
+		}
 
-			switch p.Type {
-			case TypeStringList:
-				for _, e := range v.([]string) {
-					t.Params[index].Values = append(p.Values, yamlQuote(e))
-				}
-			default:
-				switch v := v.(type) {
-				case string:
-					t.Params[index].Value = yamlQuote(v)
-				case int:
-					t.Params[index].Value = strconv.Itoa(v)
-				}
+		switch p.Type {
+		case TypeStringList:
+			for _, e := range v.([]string) {
+				t.Params[index].Values = append(p.Values, yamlQuote(e))
+			}
+		default:
+			switch v := v.(type) {
+			case string:
+				t.Params[index].Value = yamlQuote(v)
+			case int:
+				t.Params[index].Value = strconv.Itoa(v)
 			}
 		}
 	}
@@ -45,7 +44,7 @@ func (t *Template) RenderDocumentation(product Product, lang string) ([]byte, er
 	var modbusRender string
 	if modbusChoices := t.ModbusChoices(); len(modbusChoices) > 0 {
 		if i, _ := t.ParamByName(ParamModbus); i > -1 {
-			modbusTmpl, err := template.New("yaml").Funcs(sprig.TxtFuncMap()).Parse(documentationModbusTmpl)
+			modbusTmpl, err := template.New("yaml").Funcs(sprout.FuncMap()).Parse(documentationModbusTmpl)
 			if err != nil {
 				panic(err)
 			}

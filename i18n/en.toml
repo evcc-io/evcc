@@ -13,12 +13,11 @@ legendTitle = "How should solar energy be used?"
 legendTopAutostart = "starts automatically"
 legendTopName = "battery supported charging"
 legendTopSubline = "without interruptions"
-modalTitle = "Battery Settings"
+modalTitle = "Home Battery"
 
 [batterySettings.bufferStart]
-full = "when nearly full"
-low = "when somewhat full"
-medium = "when half full"
+above = "when above {soc}"
+full = "when at {soc}"
 never = "only with enough surplus"
 
 [config]
@@ -27,14 +26,42 @@ never = "only with enough surplus"
 titleAdd = "Add Battery Meter"
 titleEdit = "Edit Battery Meter"
 
+[config.circuits]
+description = "Ensures, that the sum of all loadpoints connected to a circuit does not exceed the configured power and current limits. Circuits can be nested to build a hierarchy."
+title = "Load Management"
+
+[config.control]
+description = "Usually the default values are fine. Only change them if you know what you are doing."
+descriptionInterval = "Control loop update cycle in seconds. Defines how often evcc reads meter data, adjusts charging power and updates the UI. Short intervals (< 30s) can cause oszillations and unwanted behavior."
+descriptionMaxGridSupply = "Only relevant for hybrid inverters that are not able to output the full DC generation power to the home via AC. This szenario can lead to unwanted grid use, since evcc assumes the full DC power is available. Use a value of at least 50 W to prevent this."
+descriptionResidualPower = "Shifts the operation point of the control loop. If you have a home battery it's recommended to set a value of 100 W. This way the battery will get slight priority over grid use."
+labelInterval = "Update interval"
+labelMaxGridSupply = "Max. grid supply while charging"
+labelResidualPower = "Residual power"
+title = "Control behavior"
+
 [config.deviceValue]
+broker = "Broker"
+bucket = "Bucket"
 capacity = "Capacity"
 chargeStatus = "Status"
+chargeStatusA = "not connected"
+chargeStatusB = "connected"
+chargeStatusC = "charging"
+chargeStatusE = "no power"
+chargeStatusF = "error"
 chargedEnergy = "Charged"
+co2 = "Grid CO₂"
+configured = "Configured"
+currency = "Currency"
 current = "Current"
 enabled = "Enabled"
 energy = "Energy"
+feedinPrice = "Feed-in price"
+gridPrice = "Grid price"
+no = "no"
 odometer = "Odometer"
+org = "Organization"
 phaseCurrents = "Current L1..L3"
 phasePowers = "Power L1..L3"
 phaseVoltages = "Voltage L1..L3"
@@ -42,24 +69,68 @@ power = "Power"
 range = "Range"
 soc = "SoC"
 socLimit = "Limit"
+temp = "Temperature"
+topic = "Topic"
+url = "URL"
+yes = "yes"
+
+[config.eebus]
+description = "Configuration that enables evcc to communicate with other EEBus devices."
+title = "EEBus"
 
 [config.form]
 example = "Example"
 optional = "optional"
 
+[config.general]
+cancel = "Cancel"
+docsLink = "See documentation."
+experimental = "Experimental"
+off = "off"
+on = "on"
+password = "Password"
+remove = "Remove"
+save = "Save"
+telemetry = "Telemetry"
+title = "Title"
+
 [config.grid]
+title = "Grid meter"
 titleAdd = "Add Grid Meter"
 titleEdit = "Edit Grid Meter"
+
+[config.hems]
+description = "Connect evcc to another home energy management system."
+title = "HEMS"
+
+[config.influx]
+description = "Writes charging data and other metrics to InfluxDB. Use Grafana or other tools to visualize the data."
+descriptionToken = "Check the InfluxDB documentation to learn how to create one. https://docs.influxdata.com/influxdb/v2/admin/"
+labelBucket = "Bucket"
+labelDatabase = "Database"
+labelOrg = "Organization"
+labelPassword = "Password"
+labelToken = "API Token"
+labelUrl = "URL"
+labelUser = "Username"
+title = "InfluxDB"
+v1Support = "Need support for InfluxDB 1.x?"
+v2Support = "Back to InfluxDB 2.x"
 
 [config.main]
 addLoadpoint = "Add charge point"
 addPvBattery = "Add solar or battery"
 addVehicle = "Add vehicle"
+configured = "configured"
 edit = "edit"
 title = "Configuration"
 unconfigured = "not configured"
 vehicles = "My Vehicles"
 yaml = "Configured in evcc.yaml. Not editable in the UI."
+
+[config.messaging]
+description = "Recieve messages about your charging sessions."
+title = "Notifications"
 
 [config.meter]
 cancel = "Cancel"
@@ -69,13 +140,82 @@ template = "Manufacturer"
 titleChoice = "What Do You Want To Add?"
 validateSave = "Validate & save"
 
+[config.modbusproxy]
+description = "Allow multiple clients to access a single Modbus device."
+title = "Modbus Proxy"
+
+[config.mqtt]
+authentication = "Authentication"
+description = "Connect to an MQTT broker to exchange data with other systems on your network."
+descriptionClientId = "Author of the messages. If empty `evcc-[rand]` is used."
+descriptionTopic = "Leave empty to disable publishing."
+labelBroker = "Broker"
+labelCheckInsecure = "Allow self-signed certificates"
+labelClientId = "Client ID"
+labelInsecure = "Certificate validation"
+labelPassword = "Password"
+labelTopic = "Topic"
+labelUser = "Username"
+publishing = "Publishing"
+title = "MQTT"
+
+[config.network]
+descriptionHost = "Use .local suffix to enable mDNS. Relevant for discovery of the mobile app and some OCPP chargers."
+descriptionPort = "Port for the web interface and API. You'll need to update your browser URL if you change this."
+descriptionSchema = "Only affects how URLs are generated. Selecting HTTPS will not enable encryption."
+labelHost = "Hostname"
+labelPort = "Port"
+labelSchema = "Schema"
+title = "Network"
+
+[config.options]
+
+[config.options.endianness]
+big = "big-endian"
+little = "little-endian"
+
+[config.options.schema]
+http = "HTTP (unencrypted)"
+https = "HTTPS (encrypted)"
+
 [config.pv]
 titleAdd = "Add Solar Meter"
 titleEdit = "Edit Solar Meter"
 
-[config.site]
-cancel = "Cancel"
-save = "Save"
+[config.section]
+general = "General"
+grid = "Grid"
+integrations = "Integrations"
+loadpoints = "Charging points"
+meter = "Solar & Battery"
+system = "System"
+vehicles = "Vehicles"
+
+[config.sponsor]
+addToken = "Enter sponsor token"
+changeToken = "Change sponsor token"
+description = "The sponsoring model helps us to maintain the project and sustainably build new and exciting features. As a sponsor you get access to all charger implementations."
+descriptionToken = "You get the token from {url}. We also offer a trial token for testing."
+error = "The sponsor token is not valid."
+labelToken = "Sponsor token"
+title = "Sponsorship"
+
+[config.system]
+logs = "Logs"
+restart = "Restart"
+restartRequiredDescription = "Please restart to see the effect."
+restartRequiredMessage = "Configuration changed."
+restartingDescription = "Please wait…"
+restartingMessage = "Restarting evcc."
+
+[config.tariffs]
+description = "Define your energy tariffs to calculate the costs of your charging sessions."
+title = "Tariffs"
+
+[config.title]
+description = "Displayed on main screen and browser tab."
+label = "Title"
+title = "Edit Title"
 
 [config.validation]
 failed = "failed"
@@ -116,8 +256,8 @@ tabTitle = "Live community"
 co2Saved = "{value} saved"
 co2Title = "CO₂ Emissons"
 configurePriceCo2 = "Learn how to configure price and CO₂ data."
-footerLong = "{percent}% solar energy"
-footerShort = "{percent}% solar"
+footerLong = "{percent} solar energy"
+footerShort = "{percent} solar"
 modalTitle = "Charge Energy Overview"
 moneySaved = "{value} saved"
 percentGrid = "{grid} kWh grid"
@@ -135,14 +275,19 @@ tabTitle = "My data"
 total = "all time"
 
 [footer.sponsor]
-becomeSponsor = "Become a Sponsor"
+becomeSponsor = "Become a sponsor"
+becomeSponsorExtended = "Support us directly to get stickers."
 confetti = "Ready for confetti?"
 confettiPromise = "You get stickers and digital confetti"
 sticker = "… or evcc stickers?"
-supportUs = "Our mission is to make solar the norm. Help evcc by paying what it is worth to you."
+supportUs = "Our mission is to make solar charging the norm. Help evcc by paying what it is worth to you."
 thanks = "Thank you, {sponsor}! Your contribution helps develop evcc further."
 titleNoSponsor = "Support us"
 titleSponsor = "You are a supporter"
+titleTrial = "Trial mode"
+titleVictron = "Sponsored by Victron Energy"
+trial = "You are in trial mode and can use all features. Please consider supporting the project."
+victron = "You're using evcc on Victron Energy hardware and have access to all features."
 
 [footer.telemetry]
 optIn = "I want to contribute my data."
@@ -162,24 +307,15 @@ modalUpdateNow = "Install now"
 modalUpdateStarted = "Starting the new version of evcc…"
 modalUpdateStatusStart = "Installation started:"
 
-[gridSettings]
-activeHours = "{charging} of {total}"
-activeHoursLabel = "Active hours"
-co2Label = "CO₂ emission"
-co2Limit = "CO₂ limit"
-costLimitDescription = "Enables temporary fast-charging in solar mode."
-modalTitle = "Smart Grid Charging"
-none = "none"
-priceLabel = "Energy price"
-priceLimit = "Price limit"
-
 [header]
 about = "About"
 blog = "Blog"
 docs = "Documentation"
 github = "GitHub"
 login = "Vehicle Logins"
-needHelp = "Need help?"
+logout = "Logout"
+nativeSettings = "Change Server"
+needHelp = "Need Help?"
 sessions = "Charging Sessions"
 
 [help]
@@ -187,6 +323,8 @@ discussionsButton = "GitHub discussions"
 documentationButton = "Documentation"
 issueButton = "Report a bug"
 issueDescription = "Found a strange or wrong behavior?"
+logsButton = "View logs"
+logsDescription = "Check the logs for errors."
 modalTitle = "Need help?"
 primaryActions = "Something does not work the way it supposed to do? These are good places to get help."
 restartButton = "Restart"
@@ -199,6 +337,28 @@ confirm = "Yes, restart!"
 description = "Under normal circumstances restarting should not be necessary. Please consider filing a bug if you need to restart evcc on a regular basis."
 disclaimer = "Note: evcc will terminate and rely on the operating system to restart the service."
 modalTitle = "Are you sure you want to restart?"
+
+[log]
+areaLabel = "Filter by area"
+areas = "All areas"
+download = "Download complete log"
+levelLabel = "Filter by log level"
+noResults = "No matching log entries."
+search = "Search"
+showAll = "Show all entries"
+title = "Logs"
+update = "Auto update"
+
+[loginModal]
+cancel = "Cancel"
+error = "Login failed: "
+iframeHint = "Open evcc in a new tab."
+iframeIssue = "Your password is correct, but your browser seems to have dropped the authentication cookie. This can happen if you run evcc in an iframe via HTTP."
+invalid = "Password is invalid."
+login = "Login"
+password = "Password"
+reset = "Reset password?"
+title = "Authentication"
 
 [main]
 vehicles = "Parking"
@@ -216,6 +376,7 @@ time = "Time"
 title = "Plan"
 titleMinSoc = "Min charge"
 titleTargetCharge = "Departure"
+unsavedChanges = "There are unsaved changes. Apply now?"
 update = "Apply"
 
 [main.energyflow]
@@ -234,8 +395,6 @@ selfConsumption = "Self-consumption"
 
 [main.heatingStatus]
 charging = "Heating…"
-cheapEnergyCharging = "Heating with cheap energy: {price} (limit {limit})"
-cleanEnergyCharging = "Heating with clean energy: {co2} (limit {limit})"
 waitForVehicle = "Ready. Waiting for heater…"
 
 [main.loadpoint]
@@ -252,10 +411,12 @@ remoteDisabledSoft = "{source}: turned off adaptive solar-charging"
 solar = "Solar"
 
 [main.loadpointSettings]
-currents = "Charging current"
+currents = "Charging Current"
 default = "default"
 disclaimerHint = "Note:"
 onlyForSocBasedCharging = "These options are only available for vehicles with known charging level."
+smartCostCheap = "Cheap Grid Charging"
+smartCostClean = "Clean Grid Charging"
 title = "Settings {0}"
 vehicle = "Vehicle"
 
@@ -270,7 +431,7 @@ label = "Max. Current"
 label = "Min. Current"
 
 [main.loadpointSettings.minSoc]
-description = "The vehicle gets „fast” charged to {0}% in solar mode. Then continues with solar surplus. Useful to ensure a minimum range even for darker days."
+description = "The vehicle gets „fast” charged to {0} in solar mode. Then continues with solar surplus. Useful to ensure a minimum range even for darker days."
 label = "Min. charge %"
 
 [main.loadpointSettings.phasesConfigured]
@@ -287,6 +448,7 @@ minpv = "Min+Solar"
 now = "Fast"
 off = "Off"
 pv = "Solar"
+smart = "Smart"
 
 [main.provider]
 login = "log in"
@@ -298,9 +460,9 @@ co2Limit = "CO₂ limit of {co2}"
 costLimitIgnore = "The configured {limit} will be ignored during this period."
 currentPlan = "Active plan"
 descriptionEnergy = "Until when should {targetEnergy} be loaded into the vehicle?"
-descriptionSoc = "When should the vehicle be charged to {targetSoc}%?"
+descriptionSoc = "When should the vehicle be charged to {targetSoc}?"
 inactiveLabel = "Target time"
-notReachableInTime = "Goal not reachable in time. Estimated finish: {endTime}."
+notReachableInTime = "Goal will be reached {overrun} later."
 onlyInPvMode = "Charging plan only works in solar mode."
 planDuration = "Charging time"
 planPeriodLabel = "Period"
@@ -311,7 +473,7 @@ priceLimit = "price limit of {price}"
 remove = "Remove"
 setTargetTime = "none"
 targetIsAboveLimit = "The configured charging limit of {limit} will be ignored during this period."
-targetIsAboveVehicleLimit = "Increase vehicle limit ({limit}) to reach the charging goal."
+targetIsAboveVehicleLimit = "Vehicle limit is below charging goal."
 targetIsInThePast = "Pick a time in the future, Marty."
 targetIsTooFarInTheFuture = "We will adjust the plan as soon as we know more about the future."
 title = "Target Time"
@@ -339,6 +501,7 @@ detectionActive = "Detecting vehicle…"
 fallbackName = "Vehicle"
 moreActions = "More actions"
 none = "No vehicle"
+notReachable = "Vehicle was not reachable. Try restarting evcc."
 targetSoc = "Limit"
 temp = "Temp."
 tempLimit = "Temp. limit"
@@ -350,34 +513,58 @@ charging = "charging"
 connected = "connected"
 disconnected = "disconnected"
 ready = "ready"
-vehicleTarget = "Vehicle limit: {soc}%"
+vehicleLimit = "Vehicle limit: {soc}"
 
 [main.vehicleStatus]
 charging = "Charging…"
-cheapEnergyCharging = "Charging cheap energy: {price} (limit {limit})"
-cleanEnergyCharging = "Charging clean energy: {co2} (limit {limit})"
+cheapEnergyCharging = "Cheap energy available."
+cheapEnergyNextStart = "Cheap energy in {duration}."
+cheapEnergySet = "Price limit set."
+cleanEnergyCharging = "Clean energy available."
+cleanEnergyNextStart = "Clean energy in {duration}."
+cleanEnergySet = "CO₂ limit set."
 climating = "Pre-conditioning detected."
 connected = "Connected."
 disconnected = "Disconnected."
-minCharge = "Minimum charging to {soc}%."
-pvDisable = "Not enough surplus. Pausing in {remaining}…"
-pvEnable = "Surplus available. Starting in {remaining}…"
-scale1p = "Reducing to 1-phase charging in {remaining}…"
-scale3p = "Increasing to 3-phase charging in {remaining}…"
-targetChargeActive = "Target charge active…"
-targetChargePlanned = "Target charging starts at {time}."
-targetChargeWaitForVehicle = "Target charge ready. Waiting for vehicle…"
+finished = "Finished."
+minCharge = "Minimum charging to {soc}."
+pvDisable = "Not enough surplus. Pausing soon."
+pvEnable = "Surplus available. Starting soon."
+scale1p = "Reducing to 1-phase charging soon."
+scale3p = "Increasing to 3-phase charging soon."
+targetChargeActive = "Charging plan active. Estimated finish in {duration}."
+targetChargePlanned = "Charging plan starts in {duration}."
+targetChargeWaitForVehicle = "Charging plan ready. Waiting for vehicle…"
 unknown = ""
-vehicleTargetReached = "Vehicle limit {soc}% reached."
+vehicleLimit = "Vehicle limit."
+vehicleLimitReached = "Vehicle limit reached."
 waitForVehicle = "Ready. Waiting for vehicle…"
+welcome = "Short initial charge to confirm connection."
 
 [notifications]
 dismissAll = "Dismiss all"
+logs = "View full logs"
 modalTitle = "Notifications"
 
 [offline]
+configurationError = "Error during startup. Check your configuration and restart."
 message = "Not connected to a server."
-reload = "Reload?"
+restart = "Restart"
+restartNeeded = "Required to apply changes."
+restarting = "Server will be back in a moment."
+
+[passwordModal]
+description = "Set a password to protect the configuration settings. Using the main screen is still possible without login."
+empty = "Password should not be empty"
+error = "Error: "
+labelCurrent = "Current password"
+labelNew = "New password"
+labelRepeat = "Repeat password"
+newPassword = "Create password"
+noMatch = "Passwords do not match"
+titleNew = "Set Administrator Password"
+titleUpdate = "Update Administrator Password"
+updatePassword = "Update password"
 
 [session]
 cancel = "Cancel"
@@ -414,6 +601,8 @@ vehicle = "Vehicle"
 
 [sessions.csv]
 chargedenergy = "Energy (kWh)"
+chargeduration = "Duration"
+co2perkwh = "CO₂/kWh"
 created = "Created"
 finished = "Finished"
 identifier = "Identifier"
@@ -421,6 +610,9 @@ loadpoint = "Charging point"
 meterstart = "Meter start (kWh)"
 meterstop = "Meter stop (kWh)"
 odometer = "Mileage (km)"
+price = "Price"
+priceperkwh = "Price/kWh"
+solarpercentage = "Solar (%)"
 vehicle = "Vehicle"
 
 [sessions.filter]
@@ -429,7 +621,12 @@ allVehicles = "all vehicles"
 filter = "Filter"
 
 [settings]
-title = "General Settings"
+title = "User Interface"
+
+[settings.fullscreen]
+enter = "Enter fullscreen"
+exit = "Exit fullscreen"
+label = "Fullscreen"
 
 [settings.hiddenFeatures]
 label = "Experimental"
@@ -440,7 +637,7 @@ auto = "Automatic"
 label = "Language"
 
 [settings.sponsorToken]
-expires = "You sponsor token expires {inXDays}. {getNewToken} and update your configuration file."
+expires = "You sponsor token expires {inXDays}. {getNewToken} and update it here."
 getNew = "Grab a fresh one"
 hint = "Note: We will automate this in the future."
 
@@ -457,6 +654,22 @@ light = "light"
 km = "km"
 label = "Units"
 mi = "miles"
+
+[smartCost]
+activeHours = "{charging} of {total}"
+activeHoursLabel = "Active hours"
+applyToAll = "Apply everywhere?"
+batteryDescription = "Charges the home battery with energy from the grid."
+cheapTitle = "Cheap Grid Charging"
+cleanTitle = "Clean Grid Charging"
+co2Label = "CO₂ emission"
+co2Limit = "CO₂ limit"
+loadpointDescription = "Enables temporary fast-charging in solar mode."
+modalTitle = "Smart Grid Charging"
+none = "none"
+priceLabel = "Energy price"
+priceLimit = "Price limit"
+saved = "Saved."
 
 [startupError]
 configFile = "Configuration file used:"

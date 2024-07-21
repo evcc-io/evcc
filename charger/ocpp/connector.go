@@ -31,6 +31,7 @@ type Connector struct {
 
 	txnCount int // change initial value to the last known global transaction. Needs persistence
 	txnId    int
+	idTag    string
 }
 
 func NewConnector(log *util.Logger, id int, cp *CP, timeout time.Duration) (*Connector, error) {
@@ -61,6 +62,12 @@ func (conn *Connector) ID() int {
 	return conn.id
 }
 
+func (conn *Connector) IdTag() string {
+	conn.mu.Lock()
+	defer conn.mu.Unlock()
+	return conn.idTag
+}
+
 func (conn *Connector) TriggerMessageRequest(feature remotetrigger.MessageTrigger, f ...func(request *remotetrigger.TriggerMessageRequest)) {
 	Instance().TriggerMessageRequest(conn.cp.ID(), feature, func(request *remotetrigger.TriggerMessageRequest) {
 		request.ConnectorId = &conn.id
@@ -73,7 +80,8 @@ func (conn *Connector) TriggerMessageRequest(feature remotetrigger.MessageTrigge
 // WatchDog triggers meter values messages if older than timeout.
 // Must be wrapped in a goroutine.
 func (conn *Connector) WatchDog(timeout time.Duration) {
-	for ; true; <-time.Tick(timeout) {
+	tick := time.NewTicker(timeout)
+	for ; true; <-tick.C {
 		conn.mu.Lock()
 		update := conn.txnId != 0 && conn.clock.Since(conn.meterUpdated) > timeout
 		conn.mu.Unlock()

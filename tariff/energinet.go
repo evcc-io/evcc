@@ -61,7 +61,8 @@ func (t *Energinet) run(done chan error) {
 	client := request.NewHelper(t.log)
 	bo := newBackoff()
 
-	for ; true; <-time.Tick(time.Hour) {
+	tick := time.NewTicker(time.Hour)
+	for ; true; <-tick.C {
 		var res energinet.Prices
 
 		ts := time.Now().Truncate(time.Hour)
@@ -71,7 +72,7 @@ func (t *Energinet) run(done chan error) {
 			t.region)
 
 		if err := backoff.Retry(func() error {
-			return client.GetJSON(uri, &res)
+			return backoffPermanentError(client.GetJSON(uri, &res))
 		}, bo); err != nil {
 			once.Do(func() { done <- err })
 

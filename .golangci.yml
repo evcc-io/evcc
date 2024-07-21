@@ -1,5 +1,5 @@
 run:
-  go: "1.21"
+  go: "1.22"
 
 issues:
   exclude:
@@ -16,7 +16,6 @@ linters:
   enable:
     - dogsled
     - durationcheck
-    - exportloopref
     - gci
     - gofmt
     - goimports
@@ -40,6 +39,7 @@ linters:
     # fixme
     # - bodyclose
     # - exhaustive
+    # - exportloopref
     # - gocritic
     # - godot
     # - gomoddirectives

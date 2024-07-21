@@ -11,6 +11,9 @@ type API interface {
 	Loadpoints() []loadpoint.API
 	Vehicles() Vehicles
 
+	// GetCircuit returns the assigned circuit
+	GetCircuit() api.Circuit
+
 	// Meta
 	GetTitle() string
 	SetTitle(string)
@@ -27,12 +30,14 @@ type API interface {
 	// battery
 	//
 
+	GetPrioritySoc() float64
+	SetPrioritySoc(float64) error
 	GetBufferSoc() float64
 	SetBufferSoc(float64) error
 	GetBufferStartSoc() float64
 	SetBufferStartSoc(float64) error
-	GetPrioritySoc() float64
-	SetPrioritySoc(float64) error
+	GetMaxGridSupplyWhileBatteryCharging() float64
+	SetMaxGridSupplyWhileBatteryCharging(float64) error
 
 	//
 	// power and energy
@@ -47,8 +52,6 @@ type API interface {
 
 	// GetTariff returns the respective tariff
 	GetTariff(string) api.Tariff
-	GetSmartCostLimit() float64
-	SetSmartCostLimit(float64) error
 
 	//
 	// battery control

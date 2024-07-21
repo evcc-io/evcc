@@ -37,7 +37,5 @@ requirements:
       Note: If you've added an energy meter to your charger please use the Pro or Connected+ integration.
 params:
   - preset: eebus
-  - name: ip
-    required: true
 render: |
   {{ include "eebus" . }}

@@ -23,15 +23,43 @@ never = "только при достаточном избытке"
 
 [config]
 
+[config.battery]
+
+[config.deviceValue]
+
 [config.form]
 example = "Пример"
 optional = "опционально"
+
+[config.general]
+
+[config.grid]
 
 [config.main]
 addVehicle = "Добавить транспортное средство"
 edit = "редактировать"
 title = "Конфигурация"
 vehicles = "Мои транспортные средства"
+
+[config.meter]
+
+[config.options]
+
+[config.options.endianness]
+
+[config.options.schema]
+
+[config.pv]
+
+[config.section]
+
+[config.system]
+
+[config.title]
+
+[config.validation]
+
+[config.vehicle]
 
 [footer]
 
@@ -48,8 +76,8 @@ powerSub2 = "заряжаются..."
 tabTitle = "Данные комьюнити"
 
 [footer.savings]
-footerLong = "{percent}% солнечной энергии"
-footerShort = "{percent}% солнечной"
+footerLong = "{percent} солнечной энергии"
+footerShort = "{percent} солнечной"
 modalTitle = "Обзор потребленной электроэнергии"
 percentGrid = "{self} кВт/ч из сети"
 percentSelf = "{self} кВт/ч солнечной"
@@ -62,6 +90,8 @@ savingsTitle = "Сэкономлено"
 savingsTotalEnergy = "{total} кВт/ч заряжено"
 since = "c {since}"
 tabTitle = "Мои данные"
+
+[footer.savings.period]
 
 [footer.sponsor]
 becomeSponsor = "Стать спонсором"
@@ -99,8 +129,18 @@ github = "GitHub"
 sessions = "Сеансы зарядки"
 settings = "Настройки"
 
+[help]
+
+[help.restart]
+
+[log]
+
+[loginModal]
+
 [main]
 vehicles = "Парковка"
+
+[main.chargingPlan]
 
 [main.energyflow]
 battery = "Батарея"
@@ -114,6 +154,8 @@ pvExport = "Экспорт в сеть"
 pvProduction = "Генерация"
 selfConsumption = "Собственное потребление"
 
+[main.heatingStatus]
+
 [main.loadpoint]
 charged = "Заряжено"
 duration = "Длительность"
@@ -126,6 +168,8 @@ default = "по умолчанию"
 disclaimerHint = "Заметка:"
 title = "Настройки {0}"
 vehicle = "Транспортное средство"
+
+[main.loadpointSettings.limitSoc]
 
 [main.loadpointSettings.maxCurrent]
 label = "Макс. ток"
@@ -156,7 +200,7 @@ logout = "выйти"
 
 [main.targetCharge]
 activate = "Активировать"
-descriptionSoc = "Когда транспортное средство следует зарядить до {targetSoc}%?"
+descriptionSoc = "Когда транспортное средство следует зарядить до {targetSoc}?"
 inactiveLabel = "Запланированное время"
 modalTitle = "Установить запланированное время"
 setTargetTime = "ни одного"
@@ -164,6 +208,8 @@ targetIsInThePast = "Выбери время в будущем."
 title = "Запланированное время"
 today = "сегодня"
 tomorrow = "завтра"
+
+[main.targetChargePlan]
 
 [main.targetEnergy]
 label = "Лимит"
@@ -188,7 +234,7 @@ ready = "готово"
 charging = "Зарядка..."
 connected = "Подключено."
 disconnected = "Отключено."
-minCharge = "Минимальная зарядка до {soc}%."
+minCharge = "Минимальная зарядка до {soc}."
 pvDisable = "Недостаточно избытка. Пауза через {remaining}..."
 pvEnable = "Доступен избыток. Начинаю через {remaining}..."
 scale1p = "Снижаю до одной фазы через {remaining}..."
@@ -196,7 +242,6 @@ scale3p = "Увеличиваю до трех фаз через {remaining}..."
 targetChargeActive = "Плановая зарядка активна..."
 targetChargePlanned = "Плановая зарядка начнется в {time}."
 targetChargeWaitForVehicle = "Плановая зарядка готова. Ожидаю транспортное средство..."
-unknown = ""
 waitForVehicle = "Готов. Ожидание транспортного средства..."
 
 [notifications]
@@ -206,6 +251,8 @@ modalTitle = "Уведомления"
 [offline]
 message = "Не подключено к серверу."
 reload = "Перезагрузить?"
+
+[passwordModal]
 
 [session]
 cancel = "Скасувати"
@@ -233,12 +280,20 @@ loadpoint = "Зарядная станция"
 odometer = "Пробег (км)"
 vehicle = "Транспортное средство"
 
+[sessions.filter]
+
 [settings]
 title = "Настройки"
+
+[settings.fullscreen]
+
+[settings.hiddenFeatures]
 
 [settings.language]
 auto = "Автоматически"
 label = "Язык"
+
+[settings.sponsorToken]
 
 [settings.telemetry]
 label = "Телеметрия"
@@ -253,6 +308,8 @@ light = "светлый"
 km = "км"
 label = "Единицы измерения"
 mi = "мили"
+
+[smartCost]
 
 [startupError]
 configFile = "Используемый конфигурационный файл:"

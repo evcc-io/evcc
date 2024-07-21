@@ -44,8 +44,8 @@ func NewPolestarFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		embed: &cc.embed,
 	}
 
-	identity := polestar.NewIdentity(log)
-	if err := identity.Login(cc.User, cc.Password); err != nil {
+	identity, err := polestar.NewIdentity(log, cc.User, cc.Password)
+	if err != nil {
 		return v, fmt.Errorf("login failed: %w", err)
 	}
 
@@ -55,8 +55,8 @@ func NewPolestarFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		ctx, cancel := context.WithTimeout(context.Background(), cc.Timeout)
 		defer cancel()
 		return api.Vehicles(ctx)
-	}, func(v polestar.ConsumerCar) string {
-		return v.VIN
+	}, func(v polestar.ConsumerCar) (string, error) {
+		return v.VIN, nil
 	})
 
 	if err == nil {

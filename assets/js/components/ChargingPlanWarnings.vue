@@ -13,10 +13,10 @@
 			{{ $t("main.targetCharge.costLimitIgnore", { limit: costLimitText }) }}
 		</span>
 		<span v-if="notReachableInTime" class="d-block text-warning mb-1">
-			{{ $t("main.targetCharge.notReachableInTime", { endTime: endTimeFmt }) }}
+			{{ $t("main.targetCharge.notReachableInTime", { overrun: overrunFmt }) }}
 		</span>
-		<span v-if="targetIsAboveVehicleLimit" class="d-block text-danger mb-1">
-			{{ $t("main.targetCharge.targetIsAboveVehicleLimit", { limit: vehicleLimitFmt }) }}
+		<span v-if="targetIsAboveVehicleLimit" class="d-block text-warning mb-1">
+			{{ $t("main.targetCharge.targetIsAboveVehicleLimit") }}
 		</span>
 	</p>
 </template>
@@ -44,7 +44,8 @@ export default {
 		mode: String,
 		tariff: Object,
 		plan: Object,
-		vehicleTargetSoc: Number,
+		vehicleLimitSoc: Number,
+		planOverrun: Number,
 	},
 	computed: {
 		endTime: function () {
@@ -54,11 +55,11 @@ export default {
 			const { plan } = this.plan;
 			return plan[plan.length - 1].end;
 		},
-		endTimeFmt: function () {
-			if (!this.endTime) {
+		overrunFmt: function () {
+			if (!this.planOverrun) {
 				return "";
 			}
-			return this.fmtAbsoluteDate(new Date(this.endTime));
+			return this.fmtDuration(this.planOverrun, true, "m");
 		},
 		timeTooFarInTheFuture: function () {
 			if (!this.effectivePlanTime) {
@@ -76,7 +77,10 @@ export default {
 		notReachableInTime: function () {
 			const { planTime } = this.plan || {};
 			if (planTime && this.endTime) {
-				return new Date(planTime) < new Date(this.endTime);
+				const dateWanted = new Date(planTime);
+				const dateEstimated = new Date(this.endTime);
+				// 1 minute tolerance
+				return dateEstimated - dateWanted > 60 * 1e3;
 			}
 			return false;
 		},
@@ -88,7 +92,7 @@ export default {
 		},
 		targetIsAboveVehicleLimit: function () {
 			if (this.socBasedPlanning) {
-				return this.effectivePlanSoc > (this.vehicleTargetSoc || 100);
+				return this.effectivePlanSoc > (this.vehicleLimitSoc || 100);
 			}
 			return false;
 		},
@@ -97,9 +101,6 @@ export default {
 				return this.fmtSoc(this.effectiveLimitSoc);
 			}
 			return this.fmtKWh(this.limitEnergy * 1e3);
-		},
-		vehicleLimitFmt: function () {
-			return this.fmtSoc(this.vehicleTargetSoc);
 		},
 		goalFmt: function () {
 			if (this.socBasedPlanning) {
@@ -126,7 +127,7 @@ export default {
 	},
 	methods: {
 		fmtSoc(soc) {
-			return `${Math.round(soc)}%`;
+			return this.fmtPercentage(soc);
 		},
 	},
 };

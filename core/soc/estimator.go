@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/util"
 )
 
@@ -131,7 +132,7 @@ func (s *Estimator) Soc(chargedEnergy float64) (float64, error) {
 		f, err := Guard(s.vehicle.Soc())
 		if err != nil {
 			// required for online APIs with refreshkey
-			if errors.Is(err, api.ErrMustRetry) {
+			if loadpoint.AcceptableError(err) {
 				return 0, err
 			}
 

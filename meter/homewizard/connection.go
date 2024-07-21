@@ -78,10 +78,8 @@ func (c *Connection) Enable(enable bool) error {
 		return err
 	}
 
-	if err == nil {
-		c.stateG.Reset()
-		c.dataG.Reset()
-	}
+	c.stateG.Reset()
+	c.dataG.Reset()
 
 	switch {
 	case enable && !res.PowerOn:
@@ -93,7 +91,7 @@ func (c *Connection) Enable(enable bool) error {
 	}
 }
 
-// Enabled reads the homewizard switch state true=on/false=off
+// Enabled implements the api.Charger interface
 func (c *Connection) Enabled() (bool, error) {
 	res, err := c.stateG.Get()
 	return res.PowerOn, err
@@ -109,4 +107,16 @@ func (c *Connection) CurrentPower() (float64, error) {
 func (c *Connection) TotalEnergy() (float64, error) {
 	res, err := c.dataG.Get()
 	return res.TotalPowerImportT1kWh + res.TotalPowerImportT2kWh + res.TotalPowerImportT3kWh + res.TotalPowerImportT4kWh, err
+}
+
+// Currents implements the api.PhaseCurrents interface
+func (c *Connection) Currents() (float64, float64, float64, error) {
+	res, err := c.dataG.Get()
+	return res.ActiveCurrentL1A, res.ActiveCurrentL2A, res.ActiveCurrentL3A, err
+}
+
+// Voltages implements the api.PhaseVoltages interface
+func (c *Connection) Voltages() (float64, float64, float64, error) {
+	res, err := c.dataG.Get()
+	return res.ActiveVoltageL1V, res.ActiveVoltageL2V, res.ActiveVoltageL3V, err
 }

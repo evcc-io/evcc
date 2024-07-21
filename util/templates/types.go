@@ -9,17 +9,6 @@ import (
 	"dario.cat/mergo"
 )
 
-type Usage int
-
-//go:generate enumer -type Usage -trimprefix Usage -transform=lower
-const (
-	UsageGrid Usage = iota
-	UsagePV
-	UsageBattery
-	UsageCharge
-	UsageAux
-)
-
 const (
 	ParamUsage  = "usage"
 	ParamModbus = "modbus"
@@ -144,7 +133,6 @@ func (t *TextLanguage) MarshalJSON() (out []byte, err error) {
 type Requirements struct {
 	EVCC        []string     // EVCC requirements, e.g. sponsorship
 	Description TextLanguage // Description of requirements, e.g. how the device needs to be prepared
-	URI         string       // URI to a webpage with more details about the preparation requirements
 }
 
 // Linked Template
@@ -186,7 +174,6 @@ type Param struct {
 	ValidValues   []string     `json:",omitempty"` // list of valid values the user can provide
 	Choice        []string     `json:",omitempty"` // defines a set of choices, e.g. "grid", "pv", "battery", "charge" for "usage"
 	AllInOne      *bool        `json:"-"`          // defines if the defined usages can all be present in a single device
-	Requirements  Requirements `json:"-"`          // requirements for this param to be usable, only supported via Type "bool"
 
 	// TODO move somewhere else should not be part of the param definition
 	Baudrate int    `json:",omitempty"` // device specific default for modbus RS485 baudrate
@@ -253,6 +240,7 @@ func (p Product) Title(lang string) string {
 // TemplateDefinition contains properties of a device template
 type TemplateDefinition struct {
 	Template     string
+	Deprecated   bool             `json:"-"`
 	Group        string           `json:",omitempty"` // the group this template belongs to, references groupList entries
 	Covers       []string         `json:",omitempty"` // list of covered outdated template names
 	Products     []Product        `json:",omitempty"` // list of products this template is compatible with

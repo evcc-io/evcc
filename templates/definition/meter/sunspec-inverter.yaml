@@ -1,8 +1,8 @@
 template: sunspec-inverter
 products:
   - description:
-      de: Wechselrichter
-      en: Inverter
+      de: SunSpec Wechselrichter
+      en: SunSpec Inverter
 group: generic
 params:
   - name: usage
@@ -84,16 +84,34 @@ render: |
     value:
       - 101:W
       - 103:W
+      - 111:W
+      - 113:W
+      - 102:W
+      - 112:W
   energy:
     source: sunspec
     {{- include "modbus" . | indent 2 }}
     value:
       - 101:WH
       - 103:WH
+      - 111:WH
+      - 113:WH
+      - 102:WH
+      - 112:WH
     scale: 0.001
   {{- end }}
   {{- if eq .usage "battery" }}
   type: custom
+  power:
+    source: sunspec
+    {{- include "modbus" . | indent 2 }}
+    value:
+      - 101:W
+      - 103:W
+      - 111:W
+      - 113:W
+      - 102:W
+      - 112:W
   soc:
     source: sunspec
     {{- include "modbus" . | indent 2 }}

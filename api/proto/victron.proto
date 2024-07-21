@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+// protoc proto/victron.proto --go_out=. --go-grpc_out=.
+
+option go_package = "proto/pb";
+
+service Victron {
+	rpc IsValidDevice (VictronRequest) returns (VictronReply) {}
+}
+
+message VictronRequest {
+	string productId = 1;
+	string vrmId = 2;
+	string serial = 3;
+	string board = 4;
+}
+
+message VictronReply {
+	bool authorized = 1;
+	string subject = 2;
+}

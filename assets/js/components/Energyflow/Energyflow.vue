@@ -9,7 +9,8 @@
 			<Visualization
 				class="col-12 mb-3 mb-md-4"
 				:gridImport="gridImport"
-				:selfConsumption="selfConsumption"
+				:selfPv="selfPv"
+				:selfBattery="selfBattery"
 				:loadpoints="loadpointsCompact"
 				:pvExport="pvExport"
 				:batteryCharge="batteryCharge"
@@ -25,8 +26,14 @@
 			<div ref="detailsInner" class="details-inner row">
 				<div class="col-12 d-flex justify-content-between pt-2 mb-4">
 					<div class="d-flex flex-nowrap align-items-center text-truncate">
-						<span class="color-self me-2"
-							><shopicon-filled-square></shopicon-filled-square
+						<span class="me-2 legend-self"
+							><shopicon-filled-square
+								class="color-pv legend-pv"
+							></shopicon-filled-square>
+							<shopicon-filled-square
+								v-if="selfBattery > 0"
+								:class="`color-battery legend-battery legend-battery--${selfPv > 0 ? 'mixed' : 'only'}`"
+							></shopicon-filled-square
 						></span>
 						<span class="text-nowrap text-truncate">
 							{{ $t("main.energyflow.selfConsumption") }}
@@ -39,16 +46,16 @@
 						<span class="text-nowrap text-truncate">
 							{{ $t("main.energyflow.gridImport") }}
 						</span>
-						<span class="color-grid ms-2"
-							><shopicon-filled-square></shopicon-filled-square
+						<span class="ms-2"
+							><shopicon-filled-square class="legend-grid"></shopicon-filled-square
 						></span>
 					</div>
 					<div v-else class="d-flex flex-nowrap align-items-center text-truncate">
 						<span class="text-nowrap text-truncate">
 							{{ $t("main.energyflow.pvExport") }}
 						</span>
-						<span class="color-export ms-2"
-							><shopicon-filled-square></shopicon-filled-square
+						<span class="ms-2"
+							><shopicon-filled-square class="legend-export"></shopicon-filled-square
 						></span>
 					</div>
 				</div>
@@ -57,17 +64,19 @@
 				>
 					<div class="d-flex justify-content-between align-items-end mb-4">
 						<h3 class="m-0">In</h3>
-						<span class="fw-bold">
+						<span v-if="pvPossible" class="fw-bold">
 							<AnimatedNumber :to="inPower" :format="kw" />
 						</span>
 					</div>
 					<div>
 						<EnergyflowEntry
+							v-if="pvPossible"
 							:name="$t('main.energyflow.pvProduction')"
 							icon="sun"
 							:power="pvProduction"
 							:powerTooltip="pvTooltip"
 							:powerInKw="powerInKw"
+							data-testid="energyflow-entry-production"
 						/>
 						<EnergyflowEntry
 							v-if="batteryConfigured"
@@ -89,10 +98,8 @@
 							:powerInKw="powerInKw"
 							:details="detailsValue(tariffGrid, tariffCo2)"
 							:detailsFmt="detailsFmt"
-							:detailsClickable="gridModalAvailable"
 							:detailsTooltip="detailsTooltip(tariffGrid, tariffCo2)"
 							data-testid="energyflow-entry-gridimport"
-							@details-clicked="openGridSettingsModal"
 						/>
 					</div>
 				</div>
@@ -101,12 +108,13 @@
 				>
 					<div class="d-flex justify-content-between align-items-end mb-4">
 						<h3 class="m-0">Out</h3>
-						<span class="fw-bold">
+						<span v-if="pvPossible" class="fw-bold">
 							<AnimatedNumber :to="outPower" :format="kw" />
 						</span>
 					</div>
 					<div>
 						<EnergyflowEntry
+							v-if="pvPossible"
 							:name="$t('main.energyflow.homePower')"
 							icon="home"
 							:power="homePower"
@@ -114,6 +122,7 @@
 							:details="detailsValue(tariffPriceHome, tariffCo2Home)"
 							:detailsFmt="detailsFmt"
 							:detailsTooltip="detailsTooltip(tariffPriceHome, tariffCo2Home)"
+							data-testid="energyflow-entry-home"
 						/>
 						<EnergyflowEntry
 							:name="
@@ -134,6 +143,7 @@
 							:detailsTooltip="
 								detailsTooltip(tariffPriceLoadpoints, tariffCo2Loadpoints)
 							"
+							data-testid="energyflow-entry-loadpoints"
 						/>
 						<EnergyflowEntry
 							v-if="batteryConfigured"
@@ -148,6 +158,7 @@
 							@details-clicked="openBatterySettingsModal"
 						/>
 						<EnergyflowEntry
+							v-if="pvPossible"
 							:name="$t('main.energyflow.pvExport')"
 							icon="powersupply"
 							:power="pvExport"
@@ -155,6 +166,7 @@
 							:details="detailsValue(-tariffFeedIn)"
 							:detailsFmt="detailsFmt"
 							:detailsTooltip="detailsTooltip(-tariffFeedIn)"
+							data-testid="energyflow-entry-gridexport"
 						/>
 					</div>
 				</div>
@@ -173,7 +185,6 @@ import AnimatedNumber from "../AnimatedNumber.vue";
 import settings from "../../settings";
 import { CO2_TYPE } from "../../units";
 import collector from "../../mixins/collector";
-import gridModalAvailable from "../../utils/gridModalAvailable";
 
 export default {
 	name: "Energyflow",
@@ -204,7 +215,6 @@ export default {
 		tariffCo2Home: { type: Number },
 		tariffPriceLoadpoints: { type: Number },
 		tariffCo2Loadpoints: { type: Number },
-		smartCostLimit: { type: Number },
 		smartCostType: { type: String },
 		currency: { type: String },
 		prioritySoc: { type: Number },
@@ -212,12 +222,9 @@ export default {
 		bufferStartSoc: { type: Number },
 	},
 	data: () => {
-		return { detailsOpen: false, detailsCompleteHeight: null, gridSettingsModal: null };
+		return { detailsOpen: false, detailsCompleteHeight: null };
 	},
 	computed: {
-		gridModalAvailable: function () {
-			return gridModalAvailable(this.smartCostType);
-		},
 		gridImport: function () {
 			return Math.max(0, this.gridPower);
 		},
@@ -239,10 +246,14 @@ export default {
 		batteryHold: function () {
 			return this.batteryMode === "hold";
 		},
-		selfConsumption: function () {
-			const ownPower = this.batteryDischarge + this.pvProduction;
-			const consumption = this.homePower + this.batteryCharge + this.loadpointsPower;
-			return Math.min(ownPower, consumption);
+		consumption: function () {
+			return this.homePower + this.batteryCharge + this.loadpointsPower;
+		},
+		selfPv: function () {
+			return Math.min(this.pvProduction, this.consumption);
+		},
+		selfBattery: function () {
+			return Math.min(this.batteryDischarge, this.consumption - this.selfPv);
 		},
 		activeLoadpoints: function () {
 			return this.loadpointsCompact.filter((lp) => lp.charging);
@@ -266,7 +277,7 @@ export default {
 			return Math.max(0, this.gridPower * -1);
 		},
 		powerInKw: function () {
-			return Math.max(this.gridImport, this.selfConsumption, this.pvExport) >= 1000;
+			return Math.max(this.gridImport, this.selfPv, this.selfBattery, this.pvExport) >= 1000;
 		},
 		inPower: function () {
 			return this.gridImport + this.pvProduction + this.batteryDischarge;
@@ -284,10 +295,13 @@ export default {
 			return this.pv.map(({ power }) => this.fmtKw(power, this.powerInKw));
 		},
 		batteryFmt() {
-			return (soc) => `${Math.round(soc)}%`;
+			return (soc) => this.fmtPercentage(soc, 0);
 		},
 		co2Available() {
 			return this.smartCostType === CO2_TYPE;
+		},
+		pvPossible() {
+			return this.pvConfigured || this.gridConfigured;
 		},
 	},
 	mounted() {
@@ -334,10 +348,6 @@ export default {
 		updateHeight: function () {
 			this.detailsCompleteHeight = this.$refs.detailsInner.offsetHeight;
 		},
-		openGridSettingsModal() {
-			const modal = Modal.getOrCreateInstance(document.getElementById("gridSettingsModal"));
-			modal.show();
-		},
 		openBatterySettingsModal() {
 			const modal = Modal.getOrCreateInstance(
 				document.getElementById("batterySettingsModal")
@@ -364,10 +374,28 @@ export default {
 .color-grid {
 	color: var(--evcc-grid);
 }
-.color-self {
-	color: var(--evcc-self);
-}
 .color-export {
 	color: var(--evcc-export);
+}
+.legend-grid {
+	color: var(--evcc-grid);
+}
+.legend-export {
+	color: var(--evcc-export);
+}
+.legend-pv {
+	color: var(--evcc-pv);
+}
+.legend-self {
+	position: relative;
+}
+.legend-battery {
+	position: absolute;
+	top: 0;
+	left: 0;
+	color: var(--evcc-battery);
+}
+.legend-battery--mixed {
+	clip-path: polygon(100% 0, 100% 100%, 0 100%);
 }
 </style>

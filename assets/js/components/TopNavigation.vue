@@ -10,7 +10,8 @@
 		>
 			<span
 				v-if="showBadge"
-				class="position-absolute top-0 start-100 translate-middle p-2 bg-danger border border-light rounded-circle"
+				class="position-absolute top-0 start-100 translate-middle p-2 rounded-circle"
+				:class="badgeClass"
 			>
 				<span class="visually-hidden">action required</span>
 			</span>
@@ -22,33 +23,44 @@
 			data-testid="topnavigation-dropdown"
 		>
 			<li>
-				<router-link class="dropdown-item" to="/sessions">
+				<router-link class="dropdown-item" to="/sessions" active-class="active">
 					{{ $t("header.sessions") }}
 				</router-link>
 			</li>
 			<li><hr class="dropdown-divider" /></li>
 			<li>
-				<button type="button" class="dropdown-item" @click="openSettingsModal">
-					<span
-						v-if="sponsorTokenExpires"
-						class="d-inline-block p-1 rounded-circle bg-danger border border-light rounded-circle"
-					></span>
+				<button
+					type="button"
+					class="dropdown-item"
+					data-testid="topnavigation-settings"
+					@click="openSettingsModal"
+				>
 					{{ $t("settings.title") }}
 				</button>
 			</li>
 			<li v-if="batteryModalAvailable">
-				<button type="button" class="dropdown-item" @click="openBatterySettingsModal">
+				<button
+					type="button"
+					class="dropdown-item"
+					data-testid="topnavigation-battery"
+					@click="openBatterySettingsModal"
+				>
 					{{ $t("batterySettings.modalTitle") }}
 				</button>
 			</li>
-			<li v-if="gridModalAvailable">
-				<button type="button" class="dropdown-item" @click="openGridSettingsModal">
-					{{ $t("gridSettings.modalTitle") }}
-				</button>
+			<li>
+				<router-link class="dropdown-item" to="/config" active-class="active">
+					<span
+						v-if="showBadge"
+						class="d-inline-block p-1 rounded-circle bg-warning rounded-circle"
+						:class="badgeClass"
+					></span>
+					{{ $t("config.main.title") }}
+				</router-link>
 			</li>
-			<li v-if="$hiddenFeatures()">
-				<router-link class="dropdown-item" to="/config">
-					Device Configuration 🧪
+			<li>
+				<router-link class="dropdown-item" to="/log" active-class="active">
+					{{ $t("log.title") }}
 				</router-link>
 			</li>
 			<li><hr class="dropdown-divider" /></li>
@@ -65,7 +77,8 @@
 					>
 						<span
 							v-if="!login.loggedIn"
-							class="d-inline-block p-1 rounded-circle bg-danger border border-light rounded-circle"
+							class="d-inline-block p-1 rounded-circle border border-light rounded-circle"
+							:class="badgeClass"
 						></span>
 						{{ login.title }}
 						{{ $t(login.loggedIn ? "main.provider.logout" : "main.provider.login") }}
@@ -86,6 +99,16 @@
 					></shopicon-regular-newtab>
 				</a>
 			</li>
+			<li v-if="isApp">
+				<button type="button" class="dropdown-item" @click="openNativeSettings">
+					{{ $t("header.nativeSettings") }}
+				</button>
+			</li>
+			<li v-if="showLogout">
+				<button type="button" class="dropdown-item" @click="logout">
+					{{ $t("header.logout") }}
+				</button>
+			</li>
 		</ul>
 	</div>
 </template>
@@ -98,9 +121,10 @@ import "@h2d2/shopicons/es/regular/moonstars";
 import "@h2d2/shopicons/es/regular/menu";
 import "@h2d2/shopicons/es/regular/newtab";
 import collector from "../mixins/collector";
-import gridModalAvailable from "../utils/gridModalAvailable";
-
+import { logout, isLoggedIn, openLoginModal } from "../auth";
 import baseAPI from "../baseapi";
+import { isApp, sendToApp } from "../utils/native";
+import { isUserConfigError } from "../utils/fatal";
 
 export default {
 	name: "TopNavigation",
@@ -112,12 +136,24 @@ export default {
 				return {};
 			},
 		},
-		sponsor: String,
-		sponsorTokenExpires: Number,
-		batteryConfigured: Boolean,
-		smartCostType: String,
+		sponsor: {
+			type: Object,
+			default: () => {
+				return {};
+			},
+		},
+		battery: Array,
+		fatal: Object,
+	},
+	data() {
+		return {
+			isApp: isApp(),
+		};
 	},
 	computed: {
+		batteryConfigured: function () {
+			return this.battery?.length;
+		},
 		logoutCount() {
 			return this.providerLogins.filter((login) => !login.loggedIn).length;
 		},
@@ -133,13 +169,20 @@ export default {
 			return this.logoutCount > 0;
 		},
 		showBadge() {
-			return this.loginRequired || this.sponsorTokenExpires;
+			const userConfigError = isUserConfigError(this.fatal);
+			return this.loginRequired || this.sponsor.expiresSoon || userConfigError;
+		},
+		badgeClass() {
+			if (this.fatal?.error) {
+				return "bg-danger";
+			}
+			return "bg-warning";
 		},
 		batteryModalAvailable() {
 			return this.batteryConfigured;
 		},
-		gridModalAvailable: function () {
-			return gridModalAvailable(this.smartCostType);
+		showLogout() {
+			return isLoggedIn();
 		},
 	},
 	mounted() {
@@ -176,9 +219,15 @@ export default {
 			);
 			modal.show();
 		},
-		openGridSettingsModal() {
-			const modal = Modal.getOrCreateInstance(document.getElementById("gridSettingsModal"));
-			modal.show();
+		openNativeSettings() {
+			sendToApp({ type: "settings" });
+		},
+		async login() {
+			openLoginModal();
+		},
+		async logout() {
+			await logout();
+			this.$router.push({ path: "/" });
 		},
 	},
 };

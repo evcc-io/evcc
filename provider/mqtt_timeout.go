@@ -1,5 +1,7 @@
 package provider
 
+import "encoding/json"
+
 // TimeoutHandler is a wrapper for a Getter that times out after a given duration
 type TimeoutHandler struct {
 	ticker func() (string, error)
@@ -48,5 +50,23 @@ func (h *TimeoutHandler) StringGetter(p StringProvider) (func() (string, error),
 			_, err = h.ticker()
 		}
 		return val, err
+	}, nil
+}
+
+func (h *TimeoutHandler) JsonGetter(p StringProvider) (func(any) error, error) {
+	g, err := p.StringGetter()
+	if err != nil {
+		return nil, err
+	}
+
+	return func(res any) error {
+		val, err := g()
+		if err != nil {
+			return err
+		}
+		if _, err := h.ticker(); err != nil {
+			return err
+		}
+		return json.Unmarshal([]byte(val), res)
 	}, nil
 }

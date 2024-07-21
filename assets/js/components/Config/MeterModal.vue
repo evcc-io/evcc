@@ -41,9 +41,20 @@
 								<select
 									id="meterTemplate"
 									v-model="templateName"
+									@change="templateChanged"
 									:disabled="!isNew"
 									class="form-select w-100"
 								>
+									<option
+										v-for="option in genericOptions"
+										:key="option.name"
+										:value="option.template"
+									>
+										{{ option.name }}
+									</option>
+									<option v-if="genericOptions.length" disabled>
+										──────────
+									</option>
 									<option
 										v-for="option in templateOptions"
 										:key="option.name"
@@ -198,7 +209,10 @@ export default {
 			return this.type || this.selectedType;
 		},
 		templateOptions() {
-			return this.products;
+			return this.products.filter((p) => p.group !== "generic");
+		},
+		genericOptions() {
+			return this.products.filter((p) => p.group === "generic");
 		},
 		templateParams() {
 			const params = this.template?.Params || [];
@@ -221,9 +235,19 @@ export default {
 		modbusCapabilities() {
 			return this.modbus?.Choice || [];
 		},
+		modbusDefaults() {
+			const { ID, Comset, Baudrate, Port } = this.modbus || {};
+			return {
+				id: ID,
+				comset: Comset,
+				baudrate: Baudrate,
+				port: Port,
+			};
+		},
 		apiData() {
 			return {
 				template: this.templateName,
+				...this.modbusDefaults,
 				...this.values,
 				usage: this.meterType,
 			};
@@ -300,7 +324,6 @@ export default {
 		},
 		async loadTemplate() {
 			this.template = null;
-			this.reset();
 			this.loadingTemplate = true;
 			try {
 				const opts = {
@@ -390,6 +413,9 @@ export default {
 		},
 		selectType(type) {
 			this.selectedType = type;
+		},
+		templateChanged() {
+			this.reset();
 		},
 	},
 };

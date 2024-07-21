@@ -31,20 +31,28 @@
 	--evcc-dark-yellow: #bbb400;
 	--evcc-orange: #ff9000;
 	--evcc-orange-rgb: 255, 144, 0;
+	--evcc-red: #fc440f;
+	--evcc-red-rgb: 252, 68, 15;
 	--bs-gray-deep: #010322;
 	--bs-gray-dark: #28293e;
+	--bs-gray-darker: #151630;
 	--bs-gray-medium: #93949e;
 	--bs-gray-light: #b5b6c3;
 	--bs-gray-bright: #f3f3f7;
+	--bs-gray-brighter: #f9f9fb;
 
 	--evcc-grid: var(--bs-gray-dark);
 	--evcc-self: var(--evcc-dark-green);
+	--evcc-pv: var(--evcc-dark-green);
+	--evcc-battery: var(--evcc-darker-green);
 	--evcc-export: var(--evcc-yellow);
 	--evcc-background: var(--bs-gray-bright);
 	--evcc-box: var(--bs-white);
+	--evcc-box-border: var(--bs-gray-brighter);
 	--evcc-default-text: var(--bs-gray-dark);
 	--evcc-gray: var(--bs-gray-medium);
 	--evcc-gray-50: #93949e80;
+	--evcc-gray-25: #93949e40;
 
 	--evcc-accent1: var(--evcc-dark-yellow);
 	--evcc-accent2: var(--evcc-darker-green);
@@ -60,6 +68,13 @@
 
 	--bs-warning: var(--evcc-orange);
 	--bs-warning-rgb: var(--evcc-orange-rgb);
+	--bs-danger-50: #dc354580;
+
+	--bs-danger: var(--evcc-red);
+	--bs-danger-rgb: var(--evcc-red-rgb);
+
+	--bs-danger: var(--evcc-red);
+	--bs-danger-rgb: var(--evcc-red-rgb);
 
 	--bs-body-font-size: 14px;
 	--bs-font-sans-serif: Montserrat, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue",
@@ -67,12 +82,15 @@
 		"Segoe UI Symbol", "Noto Color Emoji";
 	--bs-success: var(--evcc-primary);
 	--bs-success-rgb: var(--bs-primary-rgb);
+	--bs-code-color: var(--evcc-darkest-green);
+	--evcc-backdrop: #93949eaa; /* --bs-gray-medium + transparent */
 }
 
 :root.dark {
 	--evcc-grid: var(--bs-gray-medium);
 	--evcc-background: var(--bs-gray-deep);
 	--evcc-box: var(--bs-gray-dark);
+	--evcc-box-border: var(--vs-gray-darker);
 	--evcc-default-text: var(--bs-white);
 	--evcc-gray: var(--bs-gray-light);
 	--evcc-accent1: var(--evcc-yellow);
@@ -80,12 +98,9 @@
 	--evcc-accent3: var(--evcc-darker-green);
 	--bs-primary: var(--evcc-dark-green);
 	--bs-border-color-translucent: rgba(255, 255, 255, 0.175);
-}
-
-html {
-	/* prevents content jump when scrollbar is activate */
-	width: 100vw;
-	overflow-x: hidden;
+	--bs-code-color: var(--evcc-dark-green);
+	--evcc-backdrop: #000000aa; /* black + transparent */
+	color-scheme: dark;
 }
 
 html.no-transitions * {
@@ -227,11 +242,20 @@ a:hover {
 	--bs-btn-line-height: 2;
 }
 
+.btn-outline-secondary {
+	--bs-btn-color: var(--evcc-default-text);
+	--bs-btn-border-color: var(--evcc-default-text);
+	--bs-btn-hover-bg: transparent;
+	--bs-btn-hover-color: var(--bs-gray-medium);
+	--bs-btn-hover-border-color: var(--bs-gray-medium);
+}
+
 .dark .btn-outline-secondary {
 	--bs-btn-color: var(--bs-gray-bright);
 	--bs-btn-border-color: var(--bs-gray-bright);
-	--bs-btn-hover-bg: var(--bs-gray-bright);
-	--bs-btn-hover-color: var(--bs-gray-dark);
+	--bs-btn-hover-bg: transparent;
+	--bs-btn-hover-color: var(--bs-gray-medium);
+	--bs-btn-hover-border-color: var(--bs-gray-medium);
 }
 
 .accordion {
@@ -296,10 +320,25 @@ a:hover {
 	.modal-xl {
 		--bs-modal-width: 850px;
 	}
+	.w-lg-auto {
+		width: auto !important;
+	}
 }
 
 .modal-backdrop.show {
-	opacity: 0.8;
+	opacity: 1;
+}
+
+.modal-backdrop {
+	--bs-backdrop-bg: var(--evcc-backdrop);
+	-webkit-backdrop-filter: blur(8px);
+	backdrop-filter: blur(8px);
+}
+
+.modal-backdrop.fade {
+	transition-property: opacity, backdrop-filter, background-color;
+	transition-duration: var(--evcc-transition-fast);
+	transition-timing-function: linear;
 }
 
 .modal-header {
@@ -317,6 +356,13 @@ a:hover {
 	padding: 1.25rem;
 	background-color: var(--evcc-box);
 	color: var(--evcc-default-text);
+}
+
+.modal-content h6 {
+	margin-top: 2rem;
+	margin-bottom: 1.5rem;
+	font-size: 1rem;
+	font-weight: bold;
 }
 
 /* breakpoint sm */
@@ -337,6 +383,10 @@ a:hover {
 
 .modal-footer > * {
 	margin: 0;
+}
+
+html:has(.modal.show) {
+	overflow-y: hidden;
 }
 
 .cursor-pointer {
@@ -370,9 +420,14 @@ small {
 .dropdown-item {
 	color: var(--evcc-default-text);
 }
-.dropdown-item:active {
-	background-color: var(--bs-primary);
-	color: var(--bs-white);
+.dropdown-item:active,
+.dropdown-item.active {
+	background-color: var(--evcc-gray-25);
+	color: var(--evcc-default-text);
+}
+.form-select {
+	overflow: hidden;
+	text-overflow: ellipsis;
 }
 
 .dark .dropdown-menu {
@@ -384,6 +439,10 @@ small {
 	background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><path fill='none' stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/></svg>");
 }
 
+.dark .text-muted {
+	color: var(--bs-gray-medium) !important;
+}
+
 .dark .form-select:disabled {
 	opacity: 0.5;
 }
@@ -392,6 +451,7 @@ small {
 	--bs-table-color: var(--evcc-default-text);
 	--bs-table-border-color: var(--evcc-gray);
 }
+
 .nav-tabs .nav-link {
 	color: var(--evcc-gray) !important;
 }
@@ -432,11 +492,19 @@ input::-webkit-datetime-edit {
 }
 
 .form-control {
-	background-color: var(--evcc-box);
 	color: var(--evcc-default-text);
 }
 .form-control:disabled {
 	color: var(--bs-gray-dark);
+}
+
+.dark .form-control {
+	background-color: var(--evcc-box);
+	color: var(--evcc-default-text);
+}
+
+.dark .form-control::placeholder {
+	color: var(--bs-gray-medium);
 }
 
 input[type="time"]::-webkit-calendar-picker-indicator {
@@ -459,4 +527,76 @@ input[type="time"]::-webkit-calendar-picker-indicator {
 	height: 1.1rem;
 	width: calc(1.2rem + 0.75rem);
 	border-radius: 3rem;
+}
+
+.form-switch .form-check-input + .form-check-label {
+	margin-top: 0.1rem;
+	padding-left: 0.5rem;
+}
+
+@media (min-width: 576px) {
+	.w-sm-100 {
+		width: 100% !important;
+	}
+	.w-sm-50 {
+		width: 50% !important;
+	}
+	.w-sm-25 {
+		width: 25% !important;
+	}
+}
+
+html.app .hide-in-app {
+	display: none !important;
+}
+
+html.app .safe-area-inset {
+	padding: max(1rem, env(safe-area-inset-top)) env(safe-area-inset-right)
+		calc(0.5 * env(safe-area-inset-bottom)) env(safe-area-inset-left);
+	position: relative;
+}
+
+html.app .safe-area-inset::before {
+	content: "";
+	display: block;
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	height: env(safe-area-inset-top);
+	z-index: 1000;
+	opacity: 0.9;
+	background-color: var(--evcc-background);
+}
+
+html.app .modal-dialog {
+	margin-top: env(safe-area-inset-top);
+	margin-bottom: env(safe-area-inset-bottom);
+}
+
+.btn-neutral {
+	all: unset;
+}
+.btn-neutral:hover {
+	outline: revert;
+}
+
+.round-box {
+	border-radius: 1rem;
+	color: var(--evcc-default-text);
+	background: var(--evcc-box);
+	padding: 1rem;
+}
+
+.round-box--error {
+	box-shadow: 0 0 0.5rem var(--bs-danger);
+	border: 1px solid var(--bs-danger);
+}
+
+.round-box--error .tags * {
+	color: var(--bs-danger-text-emphasis) !important;
+}
+
+.alert-danger code {
+	color: var(--evcc-darkest-green);
 }
