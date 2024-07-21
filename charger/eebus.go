@@ -184,10 +184,10 @@ func (c *EEBus) setConnected(connected bool) {
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
-	c.connected = connected
 	if connected && !c.connected {
 		c.connectedTime = time.Now()
 	}
+	c.connected = connected
 }
 
 func (c *EEBus) isConnected() bool {
