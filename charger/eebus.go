@@ -161,8 +161,6 @@ func (c *EEBus) setDefaultValues() {
 	c.expectedEnableUnpluggedState = false
 }
 
-// set wether the E
-
 var _ api.CurrentLimiter = (*EEBus)(nil)
 
 func (c *EEBus) minMax() (minMax, error) {
