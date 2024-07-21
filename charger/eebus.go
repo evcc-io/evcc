@@ -3,7 +3,6 @@ package charger
 import (
 	"errors"
 	"fmt"
-	"os"
 	"slices"
 	"sync"
 	"time"
@@ -14,9 +13,9 @@ import (
 	spineapi "github.com/enbility/spine-go/api"
 	"github.com/enbility/spine-go/model"
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/charger/eebus"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/provider"
+	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/evcc-io/evcc/util"
 )
 
@@ -36,6 +35,7 @@ type EEBus struct {
 	uc *eebus.UseCasesEVSE
 	ev spineapi.EntityRemoteInterface
 
+	mux     sync.RWMutex
 	log     *util.Logger
 	lp      loadpoint.API
 	minMaxG func() (minMax, error)
@@ -51,12 +51,11 @@ type EEBus struct {
 	lastIsChargingCheck  time.Time
 	lastIsChargingResult bool
 
-	connected     bool
-	connectedC    chan bool
-	connectedTime time.Time
+	once     sync.Once
+	connectC chan struct{}
 
-	muxEntity sync.Mutex
-	mux       sync.Mutex
+	connected     bool
+	connectedTime time.Time
 }
 
 func init() {
@@ -93,11 +92,11 @@ func NewEEBus(ski string, hasMeter, hasChargedEnergy, vasVW bool) (api.Charger, 
 	}
 
 	c := &EEBus{
-		ski:        ski,
-		log:        log,
-		connectedC: make(chan bool, 1),
-		current:    6,
-		vasVW:      vasVW,
+		ski:      ski,
+		log:      log,
+		current:  6,
+		vasVW:    vasVW,
+		connectC: make(chan struct{}),
 	}
 
 	c.uc = eebus.Instance.RegisterEVSE(ski, c)
@@ -121,29 +120,24 @@ func NewEEBus(ski string, hasMeter, hasChargedEnergy, vasVW bool) (api.Charger, 
 
 // waitForConnection wait for initial connection and returns an error on failure
 func (c *EEBus) waitForConnection() error {
-	timeout := time.After(90 * time.Second)
-	for {
-		select {
-		case <-timeout:
-			return os.ErrDeadlineExceeded
-		case connected := <-c.connectedC:
-			if connected {
-				return nil
-			}
-		}
+	select {
+	case <-time.After(90 * time.Second):
+		return api.ErrTimeout
+	case <-c.connectC:
+		return nil
 	}
 }
 
 func (c *EEBus) setEvEntity(entity spineapi.EntityRemoteInterface) {
-	c.muxEntity.Lock()
-	defer c.muxEntity.Unlock()
+	c.mux.Lock()
+	defer c.mux.Unlock()
 
 	c.ev = entity
 }
 
 func (c *EEBus) evEntity() spineapi.EntityRemoteInterface {
-	c.muxEntity.Lock()
-	defer c.muxEntity.Unlock()
+	c.mux.RLock()
+	defer c.mux.RUnlock()
 
 	return c.ev
 }
@@ -152,16 +146,12 @@ func (c *EEBus) evEntity() spineapi.EntityRemoteInterface {
 
 func (c *EEBus) DeviceConnect() {
 	c.log.TRACE.Println("connect ski:", c.ski)
-
-	c.expectedEnableUnpluggedState = false
 	c.setDefaultValues()
 	c.setConnected(true)
 }
 
 func (c *EEBus) DeviceDisconnect() {
 	c.log.TRACE.Println("disconnect ski:", c.ski)
-
-	c.expectedEnableUnpluggedState = false
 	c.setConnected(false)
 	c.setDefaultValues()
 }
@@ -174,6 +164,7 @@ func (c *EEBus) UseCaseEventCB(device spineapi.DeviceRemoteInterface, entity spi
 		c.log.TRACE.Println("EV Connected")
 		c.setEvEntity(entity)
 		c.currentLimit = -1
+		c.once.Do(func() { close(c.connectC) })
 	case evcc.EvDisconnected:
 		c.log.TRACE.Println("EV Disconnected")
 		c.setEvEntity(nil)
@@ -183,8 +174,9 @@ func (c *EEBus) UseCaseEventCB(device spineapi.DeviceRemoteInterface, entity spi
 
 func (c *EEBus) setDefaultValues() {
 	c.communicationStandard = evcc.EVCCCommunicationStandardUnknown
-	c.lastIsChargingCheck = time.Now().Add(-time.Hour * 1)
+	c.lastIsChargingCheck = time.Now().Add(-time.Hour)
 	c.lastIsChargingResult = false
+	c.expectedEnableUnpluggedState = false
 }
 
 // set wether the EVSE is connected
@@ -195,12 +187,6 @@ func (c *EEBus) setConnected(connected bool) {
 	if connected && !c.connected {
 		c.connectedTime = time.Now()
 	}
-
-	select {
-	case c.connectedC <- connected:
-	default:
-	}
-
 	c.connected = connected
 }
 
