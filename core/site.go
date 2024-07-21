@@ -296,8 +296,8 @@ func (site *Site) restoreSettings() error {
 			return err
 		}
 	}
-	if v, err := settings.Float(keys.GridChargeLimit); err == nil {
-		site.SetGridChargeLimit(&v)
+	if v, err := settings.Float(keys.BatteryGridChargeLimit); err == nil {
+		site.SetBatteryGridChargeLimit(&v)
 	}
 
 	return nil
@@ -806,7 +806,7 @@ func (site *Site) update(lp updater) {
 	}
 
 	gridChargeActive := site.gridChargeActive(rate)
-	site.publish(keys.GridChargeActive, gridChargeActive)
+	site.publish(keys.BatteryGridChargeActive, gridChargeActive)
 
 	if batteryMode := site.requiredBatteryMode(gridChargeActive, rate); batteryMode != api.BatteryUnknown {
 		if err := site.applyBatteryMode(batteryMode); err == nil {

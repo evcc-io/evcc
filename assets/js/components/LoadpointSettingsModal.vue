@@ -30,9 +30,9 @@
 								v-bind="smartCostLimitProps"
 								class="mt-2"
 							/>
-							<h4 class="d-flex align-items-center mb-3 mt-5 text-evcc">
+							<h6>
 								{{ $t("main.loadpointSettings.currents") }}
-							</h4>
+							</h6>
 							<div v-if="phasesOptions.length" class="mb-3 row">
 								<label
 									:for="formId(`phases_${phasesOptions[0]}`)"

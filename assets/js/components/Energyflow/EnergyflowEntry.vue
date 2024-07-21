@@ -1,29 +1,34 @@
 <template>
-	<div class="d-flex justify-content-between mb-2 entry" :class="{ 'evcc-gray': !active }">
-		<span class="d-flex flex-nowrap">
-			<BatteryIcon v-if="isBattery" :soc="soc" />
-			<VehicleIcon v-else-if="isVehicle" :names="vehicleIcons" />
-			<component :is="`shopicon-regular-${icon}`" v-else></component>
-		</span>
-		<span class="text-nowrap flex-grow-1 ms-3 text-truncate">
-			{{ name }}
-		</span>
-		<span class="text-end text-nowrap ps-1 fw-bold d-flex">
-			<div
-				ref="details"
-				class="fw-normal"
-				:class="{ 'text-decoration-underline': detailsClickable }"
-				data-testid="energyflow-entry-details"
-				data-bs-toggle="tooltip"
-				:tabindex="detailsClickable ? 0 : undefined"
-				@click="detailsClicked"
-			>
-				<AnimatedNumber v-if="!isNaN(details)" :to="details" :format="detailsFmt" />
+	<div class="mb-2 entry" :class="{ 'evcc-gray': !active }">
+		<div class="d-flex justify-content-between">
+			<span class="d-flex flex-nowrap">
+				<BatteryIcon v-if="isBattery" :soc="soc" />
+				<VehicleIcon v-else-if="isVehicle" :names="vehicleIcons" />
+				<component :is="`shopicon-regular-${icon}`" v-else></component>
+			</span>
+			<div class="d-block text-nowrap flex-grow-1 ms-3 text-truncate">
+				{{ name }}
 			</div>
-			<div ref="power" class="power" data-bs-toggle="tooltip" @click="powerClicked">
-				<AnimatedNumber ref="powerNumber" :to="power" :format="kw" />
-			</div>
-		</span>
+			<span class="text-end text-nowrap ps-1 fw-bold d-flex">
+				<div
+					ref="details"
+					class="fw-normal"
+					:class="{ 'text-decoration-underline': detailsClickable }"
+					data-testid="energyflow-entry-details"
+					data-bs-toggle="tooltip"
+					:tabindex="detailsClickable ? 0 : undefined"
+					@click="detailsClicked"
+				>
+					<AnimatedNumber v-if="!isNaN(details)" :to="details" :format="detailsFmt" />
+				</div>
+				<div ref="power" class="power" data-bs-toggle="tooltip" @click="powerClicked">
+					<AnimatedNumber ref="powerNumber" :to="power" :format="kw" />
+				</div>
+			</span>
+		</div>
+		<div v-if="$slots.subline" class="ms-4 ps-3">
+			<slot name="subline" />
+		</div>
 	</div>
 </template>
 

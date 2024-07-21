@@ -183,7 +183,7 @@ func (m *MQTT) listenSiteSetters(topic string, site site.API) error {
 				lp.SetSmartCostLimit(limit)
 			}
 		}))},
-		{"/gridChargeLimit", floatPtrSetter(pass(site.SetGridChargeLimit))},
+		{"/gridChargeLimit", floatPtrSetter(pass(site.SetBatteryGridChargeLimit))},
 	} {
 		if err := m.Handler.ListenSetter(topic+s.topic, s.fun); err != nil {
 			return err

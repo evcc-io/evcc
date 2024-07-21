@@ -350,13 +350,13 @@ func (site *Site) SetBatteryDischargeControl(val bool) error {
 	return nil
 }
 
-func (site *Site) GetGridChargeLimit() *float64 {
+func (site *Site) GetBatteryGridChargeLimit() *float64 {
 	site.RLock()
 	defer site.RUnlock()
 	return site.gridChargeLimit
 }
 
-func (site *Site) SetGridChargeLimit(val *float64) {
+func (site *Site) SetBatteryGridChargeLimit(val *float64) {
 	site.log.DEBUG.Println("set grid charge limit:", printPtr("%.1f", val))
 
 	site.Lock()
@@ -366,11 +366,11 @@ func (site *Site) SetGridChargeLimit(val *float64) {
 		site.gridChargeLimit = val
 
 		if val == nil {
-			settings.SetString(keys.GridChargeLimit, "")
-			site.publish(keys.GridChargeLimit, "")
+			settings.SetString(keys.BatteryGridChargeLimit, "")
+			site.publish(keys.BatteryGridChargeLimit, nil)
 		} else {
-			settings.SetFloat(keys.GridChargeLimit, *val)
-			site.publish(keys.GridChargeLimit, *val)
+			settings.SetFloat(keys.BatteryGridChargeLimit, *val)
+			site.publish(keys.BatteryGridChargeLimit, *val)
 		}
 	}
 }

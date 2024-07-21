@@ -80,7 +80,7 @@ func (site *Site) smartCostActive(lp loadpoint.API, rate api.Rate) bool {
 }
 
 func (site *Site) gridChargeActive(rate api.Rate) bool {
-	limit := site.GetGridChargeLimit()
+	limit := site.GetBatteryGridChargeLimit()
 	return limit != nil && !rate.IsEmpty() && rate.Price <= *limit
 }
 
