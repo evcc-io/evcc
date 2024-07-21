@@ -1,38 +1,10 @@
 package gen2
 
 const (
-	InfoPath    = "info"
 	ControlPath = "control"
-	ValuesPath  = "values"
+	// the query paramters limits the response values, this case omits the temperature values, which we don't use at the moment
+	ValuesPath = "values?energy&powerflow&general"
 )
-
-type Info struct {
-	Connector *Connector `json:"connector"`
-	Grid      *Grid      `json:"grid"`
-}
-
-type Connector struct {
-	PhaseCount uint8 `json:"phase_count"`
-	// Note: there is a bug in the notation in the API at the moment 'voltage:' with colon is expected here!
-	MaxCurrent float64 `json:"max_current:"`
-	Type       string  `json:"type"`
-	Serial     string  `json:"serial"`
-}
-
-type Grid struct {
-	Voltage uint8 `json:"voltage"`
-	// Note: there is a bug in the notation in the API at the moment 'voltage:' with colon is expected here!
-	Frequency int `json:"frequency:"`
-	// 0 - "UNKNOWN",
-	// 1 - "L1",
-	// 2 - "L2",
-	// 3 - "L1, L2",
-	// 4 - "L3",
-	// 5 - "L1, L3",
-	// 6 - "L2, L3",
-	// 7 - "L1, L2, L3"
-	Phases string `json:"phases"`
-}
 
 type Control struct {
 	CurrentSet  float64 `json:"current_set,omitempty"`
@@ -44,10 +16,9 @@ type Control struct {
 
 // Values is Settings.Values
 type Values struct {
-	Energy       Energy       `json:"energy"`
-	Powerflow    Powerflow    `json:"powerflow"`
-	General      General      `json:"general"`
-	Temperatures Temperatures `json:"temperatures"`
+	Energy    Energy    `json:"energy"`
+	Powerflow Powerflow `json:"powerflow"`
+	General   General   `json:"general"`
 }
 
 type Energy struct {
@@ -155,13 +126,4 @@ type General struct {
 	// 83 - "DOMESTIC_PLUG_OVERTEMPERATURE",
 	// x - "UNKNOWN"
 	ErrorCode string `json:"error_code"`
-}
-
-type Temperatures struct {
-	Housing       float64 `json:"housing"`
-	ConnectorL1   float64 `json:"connector_l1"`
-	ConnectorL2   float64 `json:"connector_l2"`
-	ConnectorL3   float64 `json:"connector_l3"`
-	DomesticPlug1 float64 `json:"domestic_plug_1"`
-	DomesticPlug2 float64 `json:"domestic_plug_2"`
 }
