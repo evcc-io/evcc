@@ -36,14 +36,14 @@ func (site *Site) SetBatteryMode(batMode api.BatteryMode) {
 }
 
 // requiredBatteryMode determines required battery mode based on grid charge and rate
-func (site *Site) requiredBatteryMode(gridChargeActive bool, rate api.Rate) api.BatteryMode {
+func (site *Site) requiredBatteryMode(batteryGridChargeActive bool, rate api.Rate) api.BatteryMode {
 	var res api.BatteryMode
 	batMode := site.GetBatteryMode()
 
 	switch {
-	case gridChargeActive && batMode != api.BatteryCharge:
+	case batteryGridChargeActive && batMode != api.BatteryCharge:
 		res = api.BatteryCharge
-	case !gridChargeActive && site.dischargeControlActive(rate) && batMode != api.BatteryHold:
+	case !batteryGridChargeActive && site.dischargeControlActive(rate) && batMode != api.BatteryHold:
 		res = api.BatteryHold
 	case batteryModeModified(batMode):
 		res = api.BatteryNormal
@@ -79,7 +79,7 @@ func (site *Site) smartCostActive(lp loadpoint.API, rate api.Rate) bool {
 	return limit != nil && !rate.IsEmpty() && rate.Price <= *limit
 }
 
-func (site *Site) gridChargeActive(rate api.Rate) bool {
+func (site *Site) batteryGridChargeActive(rate api.Rate) bool {
 	limit := site.GetBatteryGridChargeLimit()
 	return limit != nil && !rate.IsEmpty() && rate.Price <= *limit
 }

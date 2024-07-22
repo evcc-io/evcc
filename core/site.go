@@ -86,7 +86,7 @@ type Site struct {
 	bufferSoc               float64  // continue charging on battery above this Soc
 	bufferStartSoc          float64  // start charging on battery above this Soc
 	batteryDischargeControl bool     // prevent battery discharge for fast and planned charging
-	gridChargeLimit         *float64 // grid charging limit
+	batteryGridChargeLimit  *float64 // grid charging limit
 
 	loadpoints  []*Loadpoint             // Loadpoints
 	tariffs     *tariff.Tariffs          // Tariffs
@@ -805,10 +805,10 @@ func (site *Site) update(lp updater) {
 		site.log.WARN.Println("planner:", err)
 	}
 
-	gridChargeActive := site.gridChargeActive(rate)
-	site.publish(keys.BatteryGridChargeActive, gridChargeActive)
+	batteryGridChargeActive := site.batteryGridChargeActive(rate)
+	site.publish(keys.BatteryGridChargeActive, batteryGridChargeActive)
 
-	if batteryMode := site.requiredBatteryMode(gridChargeActive, rate); batteryMode != api.BatteryUnknown {
+	if batteryMode := site.requiredBatteryMode(batteryGridChargeActive, rate); batteryMode != api.BatteryUnknown {
 		if err := site.applyBatteryMode(batteryMode); err == nil {
 			site.SetBatteryMode(batteryMode)
 		} else {

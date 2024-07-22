@@ -1634,13 +1634,17 @@ func (lp *Loadpoint) phaseSwitchCompleted() bool {
 
 // Update is the main control function. It reevaluates meters and charger state
 func (lp *Loadpoint) Update(sitePower float64, rates api.Rates, batteryBuffered, batteryStart bool, greenShare float64, effPrice, effCo2 *float64) {
+	// smart cost
 	smartCostActive := lp.smartCostActive(rates)
+	lp.publish(keys.SmartCostActive, smartCostActive)
+
 	var smartCostNextStart time.Time
 	if !smartCostActive {
 		smartCostNextStart = lp.smartCostNextStart(rates)
 	}
-	lp.publish(keys.SmartCostActive, smartCostActive)
 	lp.publish(keys.SmartCostNextStart, smartCostNextStart)
+
+	// long-running tasks
 	lp.processTasks()
 
 	// read and publish meters first- charge power and currents have already been updated by the site

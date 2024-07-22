@@ -353,7 +353,7 @@ func (site *Site) SetBatteryDischargeControl(val bool) error {
 func (site *Site) GetBatteryGridChargeLimit() *float64 {
 	site.RLock()
 	defer site.RUnlock()
-	return site.gridChargeLimit
+	return site.batteryGridChargeLimit
 }
 
 func (site *Site) SetBatteryGridChargeLimit(val *float64) {
@@ -362,8 +362,8 @@ func (site *Site) SetBatteryGridChargeLimit(val *float64) {
 	site.Lock()
 	defer site.Unlock()
 
-	if !ptrValueEqual(site.gridChargeLimit, val) {
-		site.gridChargeLimit = val
+	if !ptrValueEqual(site.batteryGridChargeLimit, val) {
+		site.batteryGridChargeLimit = val
 
 		if val == nil {
 			settings.SetString(keys.BatteryGridChargeLimit, "")
