@@ -1,0 +1,59 @@
+template: mz2mqtt
+products:
+  - description:
+      generic: mz2mqtt
+group: generic
+requirements:
+  description:
+    en: myMazda to MQTT. Required MQTT broker configuration and a mz2mqtt installation https://github.com/C64Axel/mz2mqtt.
+    de: myMazda zu MQTT. Voraussetzung ist ein konfigurierter MQTT Broker und eine mz2mqtt Installation https://github.com/C64Axel/mz2mqtt.
+params:
+  - name: title
+  - name: vin
+    required: true
+    help:
+      de: Erforderlich
+      en: Required
+  - name: capacity
+  - name: phases
+    advanced: true
+  - name: icon
+    default: car
+    advanced: true
+  - name: timeout
+    default: 720h
+    advanced: true
+  - preset: vehicle-identify
+render: |
+  type: custom
+  {{- if .title }}
+  title: {{ .title }}
+  {{- end }}
+  {{- if .icon }}
+  icon: {{ .icon }}
+  {{- end }}
+  {{- if .capacity }}
+  capacity: {{ .capacity }}
+  {{- end }}
+  {{- if .phases }}
+  phases: {{ .phases }}
+  {{- end }}
+  {{- include "vehicle-identify" . }}
+  soc:
+    source: mqtt
+    topic: mz2mqtt/{{ .vin }}/chargeInfo/batteryLevelPercentage
+    timeout: {{ .timeout }}
+  status:
+    source: combined
+    plugged:
+      source: mqtt
+      topic: mz2mqtt/{{ .vin }}/chargeInfo/pluggedIn
+      timeout: {{ .timeout }}
+    charging:
+      source: mqtt
+      topic: mz2mqtt/{{ .vin }}/chargeInfo/charging
+      timeout: {{ .timeout }}
+  range:
+    source: mqtt
+    topic: mz2mqtt/{{ .vin }}/chargeInfo/drivingRangeKm
+    timeout: {{ .timeout }}
