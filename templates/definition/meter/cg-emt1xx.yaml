@@ -2,13 +2,7 @@ template: cg-emt1xx
 products:
   - brand: Carlo Gavazzi
     description:
-      generic: EM110
-  - brand: Carlo Gavazzi
-    description:
-      generic: EM111
-  - brand: Carlo Gavazzi
-    description:
-      generic: EM112
+      generic: EM110/111/112
   - brand: Carlo Gavazzi
     description:
       generic: ET112
@@ -26,11 +20,7 @@ render: |
       address: 0x4 # W
       type: input
       decode: int32
-    {{- if eq .usage "pv" }}
-    scale: -0.1
-    {{- else }}
-    scale: 0.1
-    {{- end }}
+    scale: {{- if eq .usage "pv" }} -0.1 {{- else }} 0.1 {{- end }}
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
