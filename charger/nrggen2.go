@@ -75,9 +75,7 @@ func NewNRGKickGen2(uri, user, password string, cache time.Duration) (*NRGKickGe
 
 	nrg.valuesG = provider.ResettableCached(func() (gen2.Values, error) {
 		var res gen2.Values
-
 		err := nrg.GetJSON(nrg.apiURL(gen2.ValuesPath), &res)
-
 		return res, err
 	}, cache)
 
@@ -101,7 +99,6 @@ func (nrg *NRGKickGen2) updateControl(control gen2.Control, withPhaseSwitch bool
 	}
 
 	var res gen2.Control
-
 	if err := nrg.GetJSON(uriWithQueryParams, &res); err != nil {
 		switch {
 		case res.Response != "":
