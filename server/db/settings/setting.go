@@ -198,8 +198,17 @@ func Json(key string, res any) error {
 
 func DecodeOtherSliceOrMap(other, res any) error {
 	var len int
-	if typ := reflect.TypeOf(other); typ.Kind() == reflect.Slice || typ.Kind() == reflect.Map {
-		len = reflect.ValueOf(other).Len()
+
+	val := reflect.ValueOf(other)
+	typ := reflect.TypeOf(other)
+
+	if typ.Kind() == reflect.Ptr {
+		typ = typ.Elem()
+		val = reflect.Indirect(val)
+	}
+
+	if typ.Kind() == reflect.Slice || typ.Kind() == reflect.Map {
+		len = val.Len()
 	} else {
 		return fmt.Errorf("cannot decode into slice or map: %v", other)
 	}
