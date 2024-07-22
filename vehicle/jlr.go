@@ -54,8 +54,7 @@ func NewJLRFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	log := util.NewLogger("jlr").Redact(cc.User, cc.Password, cc.VIN, cc.DeviceID)
 
 	if cc.DeviceID == "" {
-		uid := uuid.New()
-		cc.DeviceID = uid.String()
+		cc.DeviceID = uuid.NewString()
 		log.WARN.Println("new device id generated, add `deviceid` to config:", cc.DeviceID)
 	}
 

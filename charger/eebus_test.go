@@ -6,7 +6,7 @@ import (
 
 	"github.com/enbility/eebus-go/usecases/mocks"
 	spinemocks "github.com/enbility/spine-go/mocks"
-	"github.com/evcc-io/evcc/charger/eebus"
+	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/evcc-io/evcc/util"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
