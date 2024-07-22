@@ -29,9 +29,9 @@ const (
 	// EV Charger
 	// Read Input Registers (0x04)
 	deltaRegState   = 100 // Charger State - UINT16 0: not ready, 1: operational, 10: faulted, 255: not responding
-	deltaRegVersion = 101 // Charger Version - UINT16
+	deltaRegVersion = 101 // Charger Version* - UINT16
 	deltaRegCount   = 102 // Charger EVSE Count - UINT16
-	deltaRegError   = 103 // Charger Error - UINT16
+	deltaRegError   = 103 // Charger Error* - UINT16
 	deltaRegSerial  = 110 // Charger Serial - STRING20
 	deltaRegModel   = 130 // Charger Model - STRING20
 
@@ -43,14 +43,14 @@ const (
 	// EVSE - The following Register tables are defined as repeating blocks for each single EVSE
 	// Read Input Registers (0x04)
 	deltaRegEvseState                 = 0   // EVSE State - UINT16 0: Unavailable, 1: Available, 2: Occupied, 3: Preparing, 4: Charging, 5: Finishing, 6: Suspended EV, 7: Suspended EVSE, 8: Not ready, 9: Faulted
-	deltaRegEvseChargerState          = 1   // EVSE Charger State - UINT16 0: Charging process not started (no vehicle connected), 1: Connected, waiting for release (by RFID or local), 2: Charging process starts, 3: Charging, 4: Suspended (paused), 5: Charging process successfully completed (vehicle still plugged in), 6: Charging process completed by user (vehicle still plugged in), 7: Charging ended with error (vehicle still connected)
-	deltaRegEvseActualOutputVoltage   = 3   // EVSE Actual Output Voltage - FLOAT32 [V]
+	deltaRegEvseChargerState          = 1   // EVSE Charger State* - UINT16 0: Charging process not started (no vehicle connected), 1: Connected, waiting for release (by RFID or local), 2: Charging process starts, 3: Charging, 4: Suspended (paused), 5: Charging process successfully completed (vehicle still plugged in), 6: Charging process completed by user (vehicle still plugged in), 7: Charging ended with error (vehicle still connected)
+	deltaRegEvseActualOutputVoltage   = 3   // EVSE Actual Output Voltage* - FLOAT32 [V]
 	deltaRegEvseActualChargingPower   = 5   // EVSE Actual Charging Power - UINT32 [W]
-	deltaRegEvseActualChargingCurrent = 7   // EVSE Actual Charging Current - FLOAT32 [A]
-	deltaRegEvseActualOutputPower     = 9   // EVSE Actual Output Power - FLOAT32 [W]
+	deltaRegEvseActualChargingCurrent = 7   // EVSE Actual Charging Current* - FLOAT32 [A]
+	deltaRegEvseActualOutputPower     = 9   // EVSE Actual Output Power* - FLOAT32 [W]
 	deltaRegEvseSoc                   = 11  // EVSE SOC [%/10]
-	deltaRegEvseChargingTime          = 17  // EVSE Charging Time [s]
-	deltaRegEvseChargedEnergy         = 19  // EVSE Charged Energy [Wh]
+	deltaRegEvseChargingTime          = 17  // EVSE Charging Time* [s]
+	deltaRegEvseChargedEnergy         = 19  // EVSE Charged Energy* [Wh]
 	deltaRegEvseRfidUID               = 100 // EVSE Used Authentication ID - STRING
 
 	// Write Multiple Registers (0x10)
@@ -131,25 +131,27 @@ func (wb *Delta) heartbeat(timeout time.Duration) {
 
 // Status implements the api.Charger interface
 func (wb *Delta) Status() (api.ChargeStatus, error) {
-	b, err := wb.conn.ReadInputRegisters(wb.base+deltaRegEvseChargerState, 1)
+	b, err := wb.conn.ReadInputRegisters(wb.base+deltaRegEvseState, 1)
 	if err != nil {
 		return api.StatusNone, err
 	}
 
-	// 0: Charging process not started (no vehicle connected)
-	// 1: Connected, waiting for release (by RFID or local)
-	// 2: Charging process starts
-	// 3: Charging
-	// 4: Suspended (loading paused)
-	// 5: Charging process successfully completed (vehicle still plugged in)
-	// 6: Charging process completed by user (vehicle still plugged in)
-	// 7: Charging ended with error (vehicle still connected)
+	// 0: Unavailable
+	// 1: Available
+	// 2: Occupied
+	// 3: Preparing
+	// 4: Charging
+	// 5: Finishing
+	// 6: Suspended EV
+	// 7: Suspended EVSE
+	// 8: Not ready
+	// 9: Faulted
 	switch s := encoding.Uint16(b); s {
-	case 0:
+	case 0, 1:
 		return api.StatusA, nil
-	case 1, 2, 4, 5, 6, 7:
+	case 2, 3, 5, 6, 7:
 		return api.StatusB, nil
-	case 3:
+	case 4:
 		return api.StatusC, nil
 	default:
 		return api.StatusNone, fmt.Errorf("invalid status: %0x", s)
