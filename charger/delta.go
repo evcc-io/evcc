@@ -46,7 +46,7 @@ const (
 	deltaRegEvseActualChargingPower   = 5   // EVSE Actual Charging Power - UINT32 [W]
 	deltaRegEvseActualChargingCurrent = 7   // EVSE Actual Charging Current* - FLOAT32 [A]
 	deltaRegEvseActualOutputPower     = 9   // EVSE Actual Output Power* - FLOAT32 [W]
-	deltaRegEvseSoc                   = 11  // EVSE SOC [%/10]
+	deltaRegEvseSoc                   = 11  // EVSE SOC* [%/10]
 	deltaRegEvseChargingTime          = 17  // EVSE Charging Time* [s]
 	deltaRegEvseChargedEnergy         = 19  // EVSE Charged Energy* [Wh]
 	deltaRegEvseRfidUID               = 100 // EVSE Used Authentication ID - STRING
@@ -233,18 +233,6 @@ func (wb *Delta) CurrentPower() (float64, error) {
 	}
 
 	return float64(encoding.Uint32(b)), err
-}
-
-var _ api.ChargeRater = (*Delta)(nil)
-
-// ChargedEnergy implements the api.ChargeRater interface
-func (wb *Delta) ChargedEnergy() (float64, error) {
-	b, err := wb.conn.ReadInputRegisters(wb.base+deltaRegEvseChargedEnergy, 2)
-	if err != nil {
-		return 0, err
-	}
-
-	return float64(encoding.Uint32(b)) / 1e3, err
 }
 
 var _ api.Identifier = (*Delta)(nil)
