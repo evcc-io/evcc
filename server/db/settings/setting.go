@@ -5,6 +5,7 @@ import (
 	"cmp"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"reflect"
 	"slices"
@@ -200,7 +201,7 @@ func DecodeOtherSliceOrMap(other, res any) error {
 	if typ := reflect.TypeOf(other); typ.Kind() == reflect.Slice || typ.Kind() == reflect.Map {
 		len = reflect.ValueOf(other).Len()
 	} else {
-		panic("invalid kind: " + typ.Kind().String())
+		return fmt.Errorf("cannot decode into slice or map: %v", other)
 	}
 
 	if len == 0 {
