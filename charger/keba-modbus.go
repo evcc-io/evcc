@@ -70,8 +70,8 @@ func init() {
 // NewKebaFromConfig creates a new Keba ModbusTCP charger
 func NewKebaFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
-		embed `mapstructure:",squash"`
-		modbus.TcpSettings
+		embed              `mapstructure:",squash"`
+		modbus.TcpSettings `mapstructure:",squash"`
 	}{
 		TcpSettings: modbus.TcpSettings{
 			ID: 255,
