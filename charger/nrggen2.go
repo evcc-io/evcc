@@ -157,7 +157,6 @@ func (nrg *NRGKickGen2) Enabled() (bool, error) {
 // Enable implements the api.Charger interface
 func (nrg *NRGKickGen2) Enable(enable bool) error {
 	res, err := nrg.controlG.Get()
-
 	if err != nil {
 		return err
 	}
@@ -165,7 +164,6 @@ func (nrg *NRGKickGen2) Enable(enable bool) error {
 	res.ChargePause = cast.ToUint8(!enable)
 
 	err = nrg.updateControl(res, false)
-
 	if err == nil {
 		nrg.enabled = enable
 	}
@@ -180,7 +178,6 @@ func (nrg *NRGKickGen2) MaxCurrent(current int64) error {
 	}
 
 	res, err := nrg.controlG.Get()
-
 	if err != nil {
 		return err
 	}
@@ -199,7 +196,6 @@ func (nrg *NRGKickGen2) MaxCurrentMillis(current float64) error {
 	}
 
 	res, err := nrg.controlG.Get()
-
 	if err != nil {
 		return err
 	}
@@ -224,7 +220,6 @@ var _ api.Meter = (*NRGKickGen2)(nil)
 // CurrentPower implements the api.Meter interface
 func (nrg *NRGKickGen2) CurrentPower() (float64, error) {
 	res, err := nrg.valuesG.Get()
-
 	if err != nil {
 		return 0, err
 	}
@@ -290,7 +285,6 @@ var _ api.PhaseSwitcher = (*NRGKickGen2)(nil)
 // Phases1p3p implements the api.PhaseSwitcher interface
 func (nrg *NRGKickGen2) Phases1p3p(phases int) error {
 	res, err := nrg.controlG.Get()
-
 	if err != nil {
 		return err
 	}
@@ -305,7 +299,6 @@ var _ api.PhaseGetter = (*NRGKickGen2)(nil)
 
 func (nrg *NRGKickGen2) GetPhases() (int, error) {
 	res, err := nrg.controlG.Get()
-
 	if err != nil {
 		return 0, err
 	}
