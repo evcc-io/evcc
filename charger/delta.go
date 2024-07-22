@@ -28,12 +28,10 @@ type Delta struct {
 const (
 	// EV Charger
 	// Read Input Registers (0x04)
-	deltaRegState   = 100 // Charger State - UINT16 0: not ready, 1: operational, 10: faulted, 255: not responding
-	deltaRegVersion = 101 // Charger Version* - UINT16
-	deltaRegCount   = 102 // Charger EVSE Count - UINT16
-	deltaRegError   = 103 // Charger Error* - UINT16
-	deltaRegSerial  = 110 // Charger Serial - STRING20
-	deltaRegModel   = 130 // Charger Model - STRING20
+	deltaRegState  = 100 // Charger State - UINT16 0: not ready, 1: operational, 10: faulted, 255: not responding
+	deltaRegCount  = 102 // Charger EVSE Count - UINT16
+	deltaRegSerial = 110 // Charger Serial - STRING20
+	deltaRegModel  = 130 // Charger Model - STRING20
 
 	// Write Multiple Registers (0x10)
 	deltaRegCommunicationTimeoutEnabled = 201 // Communication Timeout Enabled 0/1
@@ -253,7 +251,7 @@ var _ api.Identifier = (*Delta)(nil)
 
 // Identify implements the api.Identifier interface
 func (wb *Delta) Identify() (string, error) {
-	b, err := wb.conn.ReadInputRegisters(wb.base+deltaRegEvseRfidUID, 6)
+	b, err := wb.conn.ReadInputRegisters(wb.base+deltaRegEvseRfidUID, 20)
 	if err != nil {
 		return "", err
 	}
@@ -268,14 +266,8 @@ func (wb *Delta) Diagnose() {
 	if b, err := wb.conn.ReadInputRegisters(deltaRegState, 1); err == nil {
 		fmt.Printf("\tState:\t%d\n", encoding.Uint16(b))
 	}
-	if b, err := wb.conn.ReadInputRegisters(deltaRegVersion, 1); err == nil {
-		fmt.Printf("\tVersion:\t%d\n", encoding.Uint16(b))
-	}
 	if b, err := wb.conn.ReadInputRegisters(deltaRegCount, 1); err == nil {
 		fmt.Printf("\tEVSE Count:\t%d\n", encoding.Uint16(b))
-	}
-	if b, err := wb.conn.ReadInputRegisters(deltaRegError, 1); err == nil {
-		fmt.Printf("\tError:\t%d\n", encoding.Uint16(b))
 	}
 	if b, err := wb.conn.ReadInputRegisters(deltaRegSerial, 20); err == nil {
 		fmt.Printf("\tSerial:\t%s\n", bytesAsString(b))
