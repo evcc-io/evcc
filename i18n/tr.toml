@@ -36,6 +36,9 @@ labelInterval = "Güncelleme aralığı"
 labelMaxGridSupply = "Doldurma esnasında azami şebeke kullanımı"
 labelResidualPower = "Artık güç"
 title = "Kontrol davranışı"
+descriptionMaxGridSupply = “Sadece DC üretim gücünün tamamını AC üzerinden eve veremeyen hibrit inverterler için geçerlidir. Bu senaryo istenmeyen şebeke kullanımına yol açabilir, çünkü evcc tüm DC gücünün mevcut olduğunu varsayar. Bunu önlemek için en az 50 W'lık bir değer kullanın.”
+descriptionInterval = “Saniye cinsinden denetim çevrimi güncelleme döngüsü. evcc'nin ölçüm verilerini ne sıklıkla okuyacağını, doldurma gücünü ayarlayacağını ve kullanıcı arayüzünü güncelleyeceğini tanımlar. Kısa aralıklar (<30s) salınımlara ve istenmeyen davranışlara yol açabilir.”
+descriptionResidualPower = “ Denetim çevriminin çalışma noktasını değiştirir. Eğer bir ev bataryan varsa 100 W değerini ayarlaman önerilir. Bu şekilde batarya, şebeke kullanımına göre hafif bir önceliğe sahip olacaktır.”
 
 [config.deviceValue]
 broker = "Aracı"
@@ -102,6 +105,17 @@ title = "HEMS"
 
 [config.influx]
 description = "Doldurma verilerini ve diğer ölçümleri InfluxDB'ye yazar. Verileri görselleştirmek için Grafana veya başka araçlar kullan."
+v1Support = “InfluxDB 1.x için desteğe mi ihtiyacın var?”
+labelToken = “API Jetonu”
+title = "InfluxDB"
+descriptionToken = “Nasıl oluşturulacağını öğrenmek için InfluxDB belgelerine göz at. https://docs.influxdata.com/influxdb/v2/admin/”
+labelBucket = "Kova"
+labelDatabase = “Veritabanı”
+labelOrg = "Organizasyon"
+labelPassword = "Parola"
+labelUrl = "URL"
+labelUser = “Kullanıcı Adı”
+v2Support = “InfluxDB 2.x'e geri dön”
 
 [config.main]
 addLoadpoint = "Doldurma noktası ekle"
@@ -112,6 +126,7 @@ title = "Yapılandırma"
 unconfigured = "yapılandırılmadı"
 vehicles = "Araçlarım"
 yaml = "evcc.yaml içerisinde yapılandırıldı. Kullanıcı arayüzünde düzenlenemez."
+configured = “yapılandırıldı”
 
 [config.meter]
 cancel = "İptal"
@@ -138,6 +153,11 @@ titleEdit = "GES Sayacını Düzenle"
 [config.section]
 general = "Genel"
 system = "Sistem"
+integrations = “ Bütünleştirmeler”
+grid = “Şebeke”
+loadpoints = “Dolum noktaları”
+meter = “GES ve Batarya”
+vehicles = “Araçlar”
 
 [config.system]
 logs = "Loglar"
@@ -218,6 +238,11 @@ supportUs = "Hedefimiz güneş enerjisi ile yakıt ikmalini gelenek haline getir
 thanks = "Teşekkürler {sponsor}! Katkın evcc'yi daha da geliştirmemize yardımcı oluyor."
 titleNoSponsor = "Bize destek ol"
 titleSponsor = "Destekçisin"
+becomeSponsorExtended = “Çıkartma almak için bizi doğrudan destekle.”
+titleTrial = “Deneme modu”
+titleVictron = “Victron Energy tarafından desteklenmektedir”
+trial = “Deneme modundasın ve tüm özellikleri kullanabilirsin. Destekçi olursan seviniriz.”
+victron = “Victron Energy donanımı üzerinde evcc kullanıyorsun ve tüm özelliklere erişebiliyorsun.”
 
 [footer.telemetry]
 optIn = "Doldurma verilerimi paylaşmak istiyorum."
@@ -287,6 +312,8 @@ login = "Giriş yap"
 password = "Şifre"
 reset = "Şifreyi sıfırla?"
 title = "Kimlik Doğrulama"
+iframeHint = “evcc'yi yeni bir sekmede aç.”
+iframeIssue = “Parolan doğru, ancak tarayıcın kimlik doğrulama çerezini reddetti. Bu, evcc'yi HTTP üzerinden bir iframe içinde çalıştırırsan meydana gelebilir.”
 
 [main]
 vehicles = "Park"
@@ -378,6 +405,7 @@ minpv = "Asg.+GES"
 now = "Hızlı"
 off = "Kapalı"
 pv = "GES"
+smart = “Akıllı”
 
 [main.provider]
 login = "giriş yap"
@@ -464,6 +492,13 @@ unknown = ""
 vehicleLimitReached = "Araç sınırına ulaşıldı."
 vehicleTargetReached = "Araç sınırı {soc} ulaşıldı."
 waitForVehicle = "Doldurmaya hazır. Araç bekleniyor…"
+welcome = “Bağlantıyı onaylamak için kısa ilk dolum.”
+vehicleLimit = “Araç sınırı.”
+cheapEnergyNextStart = “{duration} içinde ucuz enerji.”
+cheapEnergySet = “Fiyat sınırı belirlendi.”
+cleanEnergyNextStart = “{duration} içinde temiz enerji.”
+cleanEnergySet = “CO₂ sınırı belirlendi.”
+finished = “Tamamlandı.”
 
 [notifications]
 dismissAll = "Bildirimleri kaldır"
@@ -473,6 +508,10 @@ modalTitle = "Bildirimler"
 [offline]
 message = "Ana makineye bağlantı yok."
 reload = "Tekrar yüklensin mi?"
+restartNeeded = “Değişiklikleri uygulamak için gerekli.”
+configurationError = “Başlatma sırasında hata oluştu. Yapılandırmanı gözden geçir ve yeniden başlat.”
+restart = “Yeniden başlat”
+restarting = “Sunucu birazdan dönecek.”
 
 [passwordModal]
 description = "Yapılandırma ayarlarını korumak için bir şifre belirle. Ana görünüme erişim oturum açmadan da mümkün."
@@ -566,7 +605,7 @@ hint = "Not: İleride bunu otomatik hale getireceğiz."
 label = "Uzölçüm"
 
 [settings.theme]
-auto = "Sistem"
+auto = "sistem"
 dark = "Karanlık"
 label = "Görünüm"
 light = "Aydınlık"
@@ -603,3 +642,49 @@ lineError = "{0} içinde hata bulundu."
 lineErrorLink = "{0}. satır"
 restartButton = "Yeniden Başlat"
 title = "Başlama Hatası"
+
+
+[config.messaging]
+title = “Bildirimler”
+description = “Dolum oturumları ve diğer olaylar hakkında bildirimler al.”
+
+[config.modbusproxy]
+description = “Birden fazla istemcinin tek bir Modbus cihazına erişmesine izin verir.”
+title = “Modbus vekili”
+
+[config.mqtt]
+description = “Ağındaki diğer sistemlerle veri alışverişi yapmak için evcc'yi bir MQTT aracısına bağla.”
+descriptionClientId = “İletilerin yazarı. Eğer boşsa `evcc-[rand]` kullanılır.”
+authentication = “Kimlik Doğrulama”
+descriptionTopic = “Yayınlamayı devre dışı bırakmak için boş bırak.”
+labelBroker = “Aracı”
+labelCheckInsecure = “Güvenli olmayan bağlantılara izin ver”
+labelClientId = “Müşteri kimliği”
+labelInsecure = “Sertifika doğrulama”
+labelPassword = “Parola”
+labelTopic = “Konu”
+labelUser = “Kullanıcı Adı”
+publishing = “Yayınla"
+title = "MQTT"
+
+[config.network]
+descriptionHost = “mDNS'yi etkinleştirmek için .local sonekini kullan. Mobil uygulamanın ve bazı OCPP doldurma cihazlarının tanınması ile ilgili.”
+descriptionSchema = “Yalnızca URL'lerin oluşturuluşunu etkiler. HTTPS'nin seçilmesi şifrelemeyi etkinleştirmez.”
+title = “Ağ”
+descriptionPort = “Web arayüzü ve API için bağlantı noktası. Bunu değiştirirsen tarayıcının URL'sini güncellemen gerekir.”
+labelHost = “Ana makine adı”
+labelPort = "Port"
+labelSchema = “Şema”
+
+[config.sponsor]
+addToken = “Destekçi jetonunu gir”
+changeToken = “Destekçi jetonunu değiştir”
+description = “Destek modeli, projeyi sürdürmemize ve sürdürülebilir bir şekilde yeni ve heyecan verici özellikler geliştirmemize yardımcı oluyor. Destekçi olarak tüm doldurma cihazı uygulamalarına erişimin oluyor.”
+descriptionToken = “Jetonu {url} adresinden alabilirsiniz. Denemek için bir deneme jetonu da sunuyoruz.”
+error = “Destekçi jetonu geçerli değil.”
+labelToken = "Destekçi jetonu"
+title = “Destekçilik”
+
+[config.tariffs]
+description = “Doldurma oturumlarının maliyetlerini hesaplamak için elektrik tarifelerini gir.”
+title = “Tarifeler”
