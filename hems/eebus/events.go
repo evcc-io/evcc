@@ -103,14 +103,14 @@ func (c *EEBus) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spineapi.E
 func (c *EEBus) dataUpdateLimit() {
 	limit, err := c.uc.LPC.ConsumptionLimit()
 	if err != nil {
-		c.log.ERROR.Println(err)
+		c.log.ERROR.Println("LPC.ConsumptionLimit:", err)
 		return
 	}
 
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
-	c.limit = limit
+	c.limit = &limit
 	c.limitUpdated = time.Now()
 }
 
@@ -124,7 +124,7 @@ func (c *EEBus) writeApprovalRequired() {
 func (c *EEBus) dataUpdateFailsafeConsumptionActivePowerLimit() {
 	power, _, err := c.uc.LPC.FailsafeConsumptionActivePowerLimit()
 	if err != nil {
-		c.log.ERROR.Println(err)
+		c.log.ERROR.Println("LPC.FailsafeConsumptionActivePowerLimit:", err)
 		return
 	}
 
@@ -137,7 +137,7 @@ func (c *EEBus) dataUpdateFailsafeConsumptionActivePowerLimit() {
 func (c *EEBus) dataUpdateFailsafeDurationMinimum() {
 	duration, _, err := c.uc.LPC.FailsafeDurationMinimum()
 	if err != nil {
-		c.log.ERROR.Println(err)
+		c.log.ERROR.Println("LPC.FailsafeDurationMinimum:", err)
 		return
 	}
 
@@ -151,7 +151,7 @@ func (c *EEBus) dataUpdateHeartbeat() {
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
-	c.failsafeUpdated = time.Now()
+	c.heartbeat.Set(struct{}{})
 }
 
 // func (c *EEBus)dataUpdateLimit(){}
