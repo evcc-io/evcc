@@ -11,6 +11,11 @@ import (
 	"github.com/evcc-io/evcc/server"
 )
 
+// HEMS describes the HEMS system interface
+type HEMS interface {
+	Run()
+}
+
 // NewFromConfig creates new HEMS from config
 func NewFromConfig(typ string, other map[string]interface{}, site site.API, httpd *server.HTTPd) (api.HEMS, error) {
 	switch strings.ToLower(typ) {

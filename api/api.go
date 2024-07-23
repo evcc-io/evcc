@@ -231,8 +231,3 @@ type Circuit interface {
 	ValidateCurrent(old, new float64) float64
 	ValidatePower(old, new float64) float64
 }
-
-// HEMS describes the HEMS system interface
-type HEMS interface {
-	Run()
-}
