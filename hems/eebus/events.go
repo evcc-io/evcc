@@ -1,8 +1,6 @@
 package eebus
 
 import (
-	"time"
-
 	eebusapi "github.com/enbility/eebus-go/api"
 	"github.com/enbility/eebus-go/usecases/cs/lpc"
 	spineapi "github.com/enbility/spine-go/api"
@@ -111,7 +109,6 @@ func (c *EEBus) dataUpdateLimit() {
 	defer c.mux.Unlock()
 
 	c.limit = &limit
-	c.limitUpdated = time.Now()
 }
 
 func (c *EEBus) writeApprovalRequired() {
@@ -122,7 +119,7 @@ func (c *EEBus) writeApprovalRequired() {
 }
 
 func (c *EEBus) dataUpdateFailsafeConsumptionActivePowerLimit() {
-	power, _, err := c.uc.LPC.FailsafeConsumptionActivePowerLimit()
+	limit, _, err := c.uc.LPC.FailsafeConsumptionActivePowerLimit()
 	if err != nil {
 		c.log.ERROR.Println("LPC.FailsafeConsumptionActivePowerLimit:", err)
 		return
@@ -131,7 +128,7 @@ func (c *EEBus) dataUpdateFailsafeConsumptionActivePowerLimit() {
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
-	c.failsafeLimit = power
+	c.failsafeLimit = limit
 }
 
 func (c *EEBus) dataUpdateFailsafeDurationMinimum() {

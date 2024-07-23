@@ -22,9 +22,7 @@ type EEBus struct {
 	status        status
 	statusUpdated time.Time
 
-	limit        *ucapi.LoadLimit // LPC-041
-	limitUpdated time.Time
-
+	limit            *ucapi.LoadLimit // LPC-041
 	failsafeLimit    float64
 	failsafeDuration time.Duration
 
