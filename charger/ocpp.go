@@ -54,6 +54,7 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 		GetConfiguration *bool
 		ChargingRateUnit string
 		AutoStart        bool // deprecated, to be removed
+		NoStop           bool // deprecated, to be removed
 		RemoteStart      bool
 	}{
 		Connector:        1,
