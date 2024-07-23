@@ -426,19 +426,25 @@ func (c *OCPP) setCurrent(current float64) error {
 	return err
 }
 
-// Enabled implements the api.Charger interface
+// getCurrent returns the internal current offered by the chargepoint
 func (c *OCPP) getCurrent() (float64, error) {
 	var current float64
 
+	if c.hasMeasurement(types.MeasurandCurrentOffered) {
+		return c.getMaxCurrent()
+	}
+
+	// fallback to GetCompositeSchedule request
 	rc := make(chan error, 1)
 	err := ocpp.Instance().GetCompositeSchedule(c.conn.ChargePoint().ID(), func(resp *smartcharging.GetCompositeScheduleConfirmation, err error) {
 		if err == nil && resp != nil && resp.Status != smartcharging.GetCompositeScheduleStatusAccepted {
 			err = errors.New(string(resp.Status))
 		}
 
-		// TODO was falls nicht?
 		if resp.ChargingSchedule != nil && len(resp.ChargingSchedule.ChargingSchedulePeriod) > 0 {
 			current = resp.ChargingSchedule.ChargingSchedulePeriod[0].Limit
+		} else {
+			err = fmt.Errorf("invalid ChargingSchedule")
 		}
 
 		rc <- err
