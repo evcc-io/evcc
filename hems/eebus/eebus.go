@@ -22,6 +22,7 @@ type EEBus struct {
 	limitUpdated time.Time
 
 	failsafeLimit    float64
+	failsafeUpdated  time.Time
 	failsafeDuration time.Duration
 }
 
