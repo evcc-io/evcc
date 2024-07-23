@@ -22,7 +22,7 @@ type EEBus struct {
 	status        status
 	statusUpdated time.Time
 
-	limit        *ucapi.LoadLimit
+	limit        *ucapi.LoadLimit // LPC-041
 	limitUpdated time.Time
 
 	failsafeLimit    float64
@@ -54,7 +54,7 @@ func NewEEBus(ski string) (*EEBus, error) {
 		log:       util.NewLogger("eebus"),
 		uc:        eebus.Instance.ControllableSystem(),
 		Connector: eebus.NewConnector(nil),
-		heartbeat: provider.NewValue[struct{}](time.Minute), // TODO spec
+		heartbeat: provider.NewValue[struct{}](2 * time.Minute), // LPC-031
 	}
 
 	if err := eebus.Instance.RegisterDevice(ski, c); err != nil {
@@ -81,7 +81,6 @@ func NewEEBus(ski string) (*EEBus, error) {
 }
 
 func (c *EEBus) Run() {
-	// TODO check interval
 	for range time.Tick(10 * time.Second) {
 		if err := c.run(); err != nil {
 			c.log.ERROR.Println(err)
@@ -97,34 +96,49 @@ func (c *EEBus) run() error {
 	// check heartbeat
 	_, heartbeatErr := c.heartbeat.Get()
 	if heartbeatErr != nil && c.status != StatusFailsafe {
+		// LPC-914/2
 		c.log.WARN.Println("missing heartbeat- entering failsafe mode")
 		c.setStatusAndLimit(StatusFailsafe, c.failsafeLimit)
 
 		return nil
 	}
 
+	// TODO
+	// status init
+	// status Unlimited/controlled
+	// status Unlimited/autonomous
+
 	switch c.status {
-	case StatusOK:
-		if c.limit != nil {
+	case StatusUnlimited:
+		// LPC-914/1
+		if c.limit != nil && c.limit.IsActive {
 			c.log.WARN.Println("active consumption limit")
-			c.setStatusAndLimit(StatusLimit, c.limit.Value)
+			c.setStatusAndLimit(StatusLimited, c.limit.Value)
 		}
 
-	case StatusLimit:
+	case StatusLimited:
 		// limit updated?
+		if !c.limit.IsActive {
+			c.log.WARN.Println("inactive consumption limit")
+			c.setStatusAndLimit(StatusUnlimited, 0)
+			break
+		}
+
 		c.setLimit(c.limit.Value)
 
-		if d := c.limit.Duration; time.Since(c.statusUpdated) > d {
+		// LPC-914/1
+		if d := c.limit.Duration; d > 0 && time.Since(c.statusUpdated) > d {
 			c.limit = nil
 
 			c.log.DEBUG.Println("limit duration exceeded- return to normal")
-			c.setStatusAndLimit(StatusOK, 0)
+			c.setStatusAndLimit(StatusUnlimited, 0)
 		}
 
 	case StatusFailsafe:
+		// LPC-914/2
 		if d := c.failsafeDuration; heartbeatErr == nil && time.Since(c.statusUpdated) > d {
 			c.log.DEBUG.Println("heartbeat returned and failsafe duration exceeded- return to normal")
-			c.setStatusAndLimit(StatusOK, 0)
+			c.setStatusAndLimit(StatusUnlimited, 0)
 		}
 	}
 
