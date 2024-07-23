@@ -34,9 +34,9 @@ const (
 	deltaRegModel  = 130 // Charger Model - STRING20
 
 	// Write Multiple Registers (0x10)
-	deltaRegCommunicationTimeoutEnabled = 201 // Communication Timeout Enabled 0/1
-	deltaRegCommunicationTimeout        = 202 // Communication Timeout [s]
-	deltaRegFallbackPower               = 203 // Fallback Power [W]
+	deltaRegCommunicationTimeoutEnabled = 201 // Communication Timeout Enabled - UINT16 0: false, 1: true
+	deltaRegCommunicationTimeout        = 202 // Communication Timeout - UINT16 [s]
+	deltaRegFallbackPower               = 203 // Fallback Power - UINT32 [W]
 
 	// EVSE - The following Register tables are defined as repeating blocks for each single EVSE
 	// Read Input Registers (0x04)
@@ -53,7 +53,7 @@ const (
 
 	// Write Multiple Registers (0x10)
 	deltaRegEvseChargingPowerLimit = 600 // EVSE Charging Power Limit - UINT32 [W]
-	deltaRegEvseSuspendCharging    = 602 // EVSE Suspend Charging - UINT16 - 0: no pause, 1 charging pause (lock on)
+	deltaRegEvseSuspendCharging    = 602 // EVSE Suspend Charging - UINT16 0: no pause, 1 charging pause (lock on)
 )
 
 func init() {
@@ -101,16 +101,22 @@ func NewDelta(uri, device, comset string, baudrate int, proto modbus.Protocol, s
 
 	wb.base = connector * 1000
 
-	// get failsafe timeout from charger
-	b, err := wb.conn.ReadHoldingRegisters(deltaRegCommunicationTimeout, 1)
+	b, err := wb.conn.ReadHoldingRegisters(deltaRegCommunicationTimeoutEnabled, 1)
 	if err != nil {
-		return nil, fmt.Errorf("failsafe timeout: %w", err)
-	}
-	if u := encoding.Uint16(b); u > 0 {
-		go wb.heartbeat(time.Duration(u) * time.Second / 2)
+		return nil, fmt.Errorf("failsafe timeout enabled: %w", err)
 	}
 
-	return wb, err
+	if encoding.Uint16(b) != 0 {
+		b, err := wb.conn.ReadHoldingRegisters(deltaRegCommunicationTimeout, 1)
+		if err != nil {
+			return nil, fmt.Errorf("failsafe timeout: %w", err)
+		}
+		if u := encoding.Uint16(b); u > 0 {
+			go wb.heartbeat(time.Duration(u) * time.Second / 2)
+		}
+	}
+
+	return wb, nil
 }
 
 func (wb *Delta) heartbeat(timeout time.Duration) {
@@ -262,6 +268,15 @@ func (wb *Delta) Diagnose() {
 	}
 	if b, err := wb.conn.ReadInputRegisters(deltaRegModel, 20); err == nil {
 		fmt.Printf("\tModel:\t%s\n", bytesAsString(b))
+	}
+	if b, err := wb.conn.ReadHoldingRegisters(deltaRegCommunicationTimeoutEnabled, 1); err == nil {
+		fmt.Printf("\tCommunication Timeout Enabled:\t%d\n", encoding.Uint16(b))
+	}
+	if b, err := wb.conn.ReadHoldingRegisters(deltaRegCommunicationTimeout, 1); err == nil {
+		fmt.Printf("\tCommunication Timeout:\t%d\n", encoding.Uint16(b))
+	}
+	if b, err := wb.conn.ReadHoldingRegisters(deltaRegFallbackPower, 2); err == nil {
+		fmt.Printf("\tFallback Power:\t%d\n", encoding.Uint32(b))
 	}
 }
 
