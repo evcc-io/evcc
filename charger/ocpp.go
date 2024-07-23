@@ -35,6 +35,7 @@ type OCPP struct {
 }
 
 const defaultIdTag = "evcc" // RemoteStartTransaction only
+const defaultMeasurands = "Energy.Active.Import.Register,Power.Active.Import,Current.Import,Voltage,Current.Offered,SoC"
 
 func init() {
 	registry.Add("ocpp", NewOCPPFromConfig)
@@ -89,12 +90,12 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 	}
 
 	var currentsG func() (float64, float64, float64, error)
-	if c.hasMeasurement(types.MeasurandCurrentImport + ".L3") {
+	if c.hasMeasurement(types.MeasurandCurrentImport) {
 		currentsG = c.currents
 	}
 
 	var voltagesG func() (float64, float64, float64, error)
-	if c.hasMeasurement(types.MeasurandVoltage + ".L3") {
+	if c.hasMeasurement(types.MeasurandVoltage) {
 		voltagesG = c.voltages
 	}
 
@@ -264,13 +265,23 @@ func NewOCPP(id string, connector int, idtag string,
 		}
 	}
 
-	if meterValues != "" && meterValues != c.meterValuesSample {
-		if err := c.configure(ocpp.KeyMeterValuesSampledData, meterValues); err != nil {
+	// autodetect valid measurands
+	var acceptedMeasurands []string
+	for _, m := range strings.Split(defaultMeasurands, ",") {
+		if err := c.configure(ocpp.KeyMeterValuesSampledData, m); err == nil {
+			acceptedMeasurands = append(acceptedMeasurands, m)
+		}
+	}
+
+	if len(acceptedMeasurands) > 0 {
+		m := strings.Join(acceptedMeasurands, ",")
+		if err := c.configure(ocpp.KeyMeterValuesSampledData, m); err != nil {
 			return nil, err
 		}
 
 		// configuration activated
-		c.meterValuesSample = meterValues
+		c.meterValuesSample = m
+		c.log.DEBUG.Println("enabled meter measurands: ", m)
 	}
 
 	// get initial meter values and configure sample rate
@@ -289,8 +300,6 @@ func NewOCPP(id string, connector int, idtag string,
 			go conn.WatchDog(meterInterval)
 		}
 	}
-
-	// TODO: check for running transaction
 
 	return c, conn.Initialized()
 }
