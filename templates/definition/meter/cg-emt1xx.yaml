@@ -20,7 +20,7 @@ render: |
       address: 0x4 # W
       type: input
       decode: int32
-    scale: {{- if eq .usage "pv" }} -0.1 {{- else }} 0.1 {{- end }}
+    scale: {{ if eq .usage "pv" }}-{{ end }}0.1
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
