@@ -246,7 +246,7 @@ func NewOCPP(id string, connector int, idtag string,
 						}
 
 					case ocpp.KeyChargingScheduleAllowedChargingRateUnit:
-						if *opt.Value == "W" {
+						if *opt.Value == "W" || *opt.Value == "Power" {
 							c.chargingRateUnit = types.ChargingRateUnitWatts
 						}
 					}
