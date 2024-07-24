@@ -1,4 +1,4 @@
-package core
+package circuit
 
 import (
 	"fmt"
@@ -34,8 +34,8 @@ type Circuit struct {
 	powerUpdated   time.Time
 }
 
-// NewCircuitFromConfig creates a new Circuit
-func NewCircuitFromConfig(log *util.Logger, other map[string]interface{}) (api.Circuit, error) {
+// NewFromConfig creates a new Circuit
+func NewFromConfig(log *util.Logger, other map[string]interface{}) (api.Circuit, error) {
 	cc := struct {
 		Title      string        `mapstructure:"title"`      // title
 		ParentRef  string        `mapstructure:"parent"`     // parent circuit reference
@@ -60,7 +60,7 @@ func NewCircuitFromConfig(log *util.Logger, other map[string]interface{}) (api.C
 		meter = dev.Instance()
 	}
 
-	circuit, err := NewCircuit(log, cc.Title, cc.MaxCurrent, cc.MaxPower, meter, cc.Timeout)
+	circuit, err := New(log, cc.Title, cc.MaxCurrent, cc.MaxPower, meter, cc.Timeout)
 	if err != nil {
 		return nil, err
 	}
@@ -76,8 +76,8 @@ func NewCircuitFromConfig(log *util.Logger, other map[string]interface{}) (api.C
 	return circuit, err
 }
 
-// NewCircuit creates a circuit
-func NewCircuit(log *util.Logger, title string, maxCurrent, maxPower float64, meter api.Meter, timeout time.Duration) (*Circuit, error) {
+// New creates a circuit
+func New(log *util.Logger, title string, maxCurrent, maxPower float64, meter api.Meter, timeout time.Duration) (*Circuit, error) {
 	c := &Circuit{
 		log:        log,
 		title:      title,

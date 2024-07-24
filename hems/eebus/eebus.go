@@ -48,7 +48,19 @@ func New(other map[string]interface{}, site site.API) (*EEBus, error) {
 		return nil, errors.New("hems requires load management- please configure root circuit")
 	}
 
-	return NewEEBus(cc.Ski, root)
+	// create new root circuit for LPC
+	lpc, err := circuit.New(util.NewLogger("lpc"), "eebus", 0, 0, nil, time.Minute)
+	if err != nil {
+		return nil, err
+	}
+
+	// attach old root to new parent
+	root.SetParent(lpc)
+	site.SetCircuit(lpc)
+
+	// TODO root meter
+
+	return NewEEBus(cc.Ski, lpc)
 }
 
 // NewEEBus creates EEBus charger
@@ -163,6 +175,5 @@ func (c *EEBus) setStatusAndLimit(status status, limit float64) {
 }
 
 func (c *EEBus) setLimit(limit float64) {
-	// TODO update root circuit
 	c.root.SetMaxPower(limit)
 }

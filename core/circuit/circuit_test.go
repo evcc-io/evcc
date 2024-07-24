@@ -1,4 +1,4 @@
-package core
+package circuit
 
 import (
 	"testing"
@@ -61,7 +61,7 @@ func TestCircuitPower(t *testing.T) {
 
 	circ := func(t *testing.T, ctrl *gomock.Controller, maxP float64) (*Circuit, *api.MockMeter) {
 		m := api.NewMockMeter(ctrl)
-		c, err := NewCircuit(log, "foo", 0, maxP, m, 0)
+		c, err := New(log, "foo", 0, maxP, m, 0)
 		require.NoError(t, err)
 		return c, m
 	}
@@ -100,7 +100,7 @@ func TestCircuitCurrents(t *testing.T) {
 			api.NewMockMeter(ctrl),
 			api.NewMockPhaseCurrents(ctrl),
 		}
-		c, err := NewCircuit(log, "foo", maxC, 0, m, 0)
+		c, err := New(log, "foo", maxC, 0, m, 0)
 		require.NoError(t, err)
 		return c, m
 	}

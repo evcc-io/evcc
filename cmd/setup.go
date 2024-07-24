@@ -20,6 +20,7 @@ import (
 	"github.com/evcc-io/evcc/charger"
 	"github.com/evcc-io/evcc/cmd/shutdown"
 	"github.com/evcc-io/evcc/core"
+	"github.com/evcc-io/evcc/core/circuit"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/hems"
 	"github.com/evcc-io/evcc/meter"
@@ -153,7 +154,7 @@ NEXT:
 		}
 
 		log := util.NewLogger("circuit-" + cc.Name)
-		instance, err := core.NewCircuitFromConfig(log, cc.Other)
+		instance, err := circuit.NewFromConfig(log, cc.Other)
 		if err != nil {
 			return fmt.Errorf("cannot create circuit '%s': %w", cc.Name, err)
 		}
@@ -199,7 +200,7 @@ NEXT2:
 		}
 
 		log := util.NewLogger("circuit-" + cc.Name)
-		instance, err := core.NewCircuitFromConfig(log, cc.Other)
+		instance, err := circuit.NewFromConfig(log, cc.Other)
 		if err != nil {
 			return fmt.Errorf("cannot create circuit '%s': %w", cc.Name, err)
 		}
