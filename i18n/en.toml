@@ -539,6 +539,7 @@ unknown = ""
 vehicleLimit = "Vehicle limit."
 vehicleLimitReached = "Vehicle limit reached."
 waitForVehicle = "Ready. Waiting for vehicle…"
+welcome = "Short initial charge to confirm connection."
 
 [notifications]
 dismissAll = "Dismiss all"
