@@ -910,6 +910,18 @@ func (mr *MockCircuitMockRecorder) SetMaxPower(arg0 any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetMaxPower", reflect.TypeOf((*MockCircuit)(nil).SetMaxPower), arg0)
 }
 
+// SetParent mocks base method.
+func (m *MockCircuit) SetParent(arg0 Circuit) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetParent", arg0)
+}
+
+// SetParent indicates an expected call of SetParent.
+func (mr *MockCircuitMockRecorder) SetParent(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetParent", reflect.TypeOf((*MockCircuit)(nil).SetParent), arg0)
+}
+
 // SetTitle mocks base method.
 func (m *MockCircuit) SetTitle(arg0 string) {
 	m.ctrl.T.Helper()
