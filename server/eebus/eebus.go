@@ -19,9 +19,6 @@ import (
 	"github.com/enbility/eebus-go/usecases/cem/evsoc"
 	"github.com/enbility/eebus-go/usecases/cem/opev"
 	"github.com/enbility/eebus-go/usecases/cem/oscev"
-	"github.com/enbility/eebus-go/usecases/cs/lpc"
-	"github.com/enbility/eebus-go/usecases/cs/lpp"
-	"github.com/enbility/eebus-go/usecases/ma/mgcp"
 	shipapi "github.com/enbility/ship-go/api"
 	shiputil "github.com/enbility/ship-go/util"
 	spineapi "github.com/enbility/spine-go/api"
@@ -44,17 +41,11 @@ type UseCasesEVSE struct {
 	OpEV   ucapi.CemOPEVInterface
 	OscEV  ucapi.CemOSCEVInterface
 }
-type UseCasesCS struct {
-	LPC  ucapi.CsLPCInterface
-	LPP  ucapi.CsLPPInterface
-	MGCP ucapi.MaMGCPInterface
-}
 
 type EEBus struct {
 	service eebusapi.ServiceInterface
 
 	evseUC UseCasesEVSE
-	csUC   UseCasesCS
 
 	mux sync.Mutex
 	log *util.Logger
@@ -147,19 +138,11 @@ func NewServer(other Config) (*EEBus, error) {
 		EvSoc:  evsoc.NewEVSOC(localEntity, c.ucCallback),
 	}
 
-	// controllable system
-	c.csUC = UseCasesCS{
-		LPC:  lpc.NewLPC(localEntity, c.ucCallback),
-		LPP:  lpp.NewLPP(localEntity, c.ucCallback),
-		MGCP: mgcp.NewMGCP(localEntity, c.ucCallback),
-	}
-
 	// register use cases
 	for _, uc := range []eebusapi.UseCaseInterface{
 		c.evseUC.EvseCC, c.evseUC.EvCC,
 		c.evseUC.EvCem, c.evseUC.OpEV,
 		c.evseUC.OscEV, c.evseUC.EvSoc,
-		c.csUC.LPC, c.csUC.LPP, c.csUC.MGCP,
 	} {
 		c.service.AddUseCase(uc)
 	}
@@ -186,10 +169,6 @@ func (c *EEBus) RegisterDevice(ski string, device Device) error {
 
 func (c *EEBus) Evse() *UseCasesEVSE {
 	return &c.evseUC
-}
-
-func (c *EEBus) ControllableSystem() *UseCasesCS {
-	return &c.csUC
 }
 
 func (c *EEBus) Run() {
