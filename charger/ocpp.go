@@ -36,6 +36,7 @@ type OCPP struct {
 }
 
 const defaultIdTag = "evcc"
+const desiredMeasurands = "Energy.Active.Import.Register,Power.Active.Import,Current.Import,Voltage,Current.Offered,SoC"
 
 func init() {
 	registry.Add("ocpp", NewOCPPFromConfig)
@@ -249,6 +250,25 @@ func NewOCPP(id string, connector int, idtag string,
 		if err := c.wait(err, rc); err != nil {
 			return nil, err
 		}
+	}
+
+	// autodetect valid measurands
+	var acceptedMeasurands []string
+	for _, m := range strings.Split(desiredMeasurands, ",") {
+		if err := c.configure(ocpp.KeyMeterValuesSampledData, m); err == nil {
+			acceptedMeasurands = append(acceptedMeasurands, m)
+		}
+	}
+
+	if len(acceptedMeasurands) > 0 {
+		m := strings.Join(acceptedMeasurands, ",")
+		if err := c.configure(ocpp.KeyMeterValuesSampledData, m); err != nil {
+			return nil, err
+		}
+
+		// configuration activated
+		c.meterValuesSample = m
+		c.log.DEBUG.Println("enabled meter measurands: ", m)
 	}
 
 	if meterValues != "" && meterValues != c.meterValuesSample {
