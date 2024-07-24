@@ -168,7 +168,7 @@ func (c *EEBus) RegisterDevice(ski string, device Device) error {
 }
 
 func (c *EEBus) Evse() *UseCasesEVSE {
-	return &c.evseUC
+	return c.evseUC
 }
 
 func (c *EEBus) Run() {
