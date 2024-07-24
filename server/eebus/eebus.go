@@ -45,7 +45,7 @@ type UseCasesEVSE struct {
 type EEBus struct {
 	service eebusapi.ServiceInterface
 
-	evseUC UseCasesEVSE
+	evseUC *UseCasesEVSE
 
 	mux sync.Mutex
 	log *util.Logger
@@ -129,7 +129,7 @@ func NewServer(other Config) (*EEBus, error) {
 	localEntity := c.service.LocalDevice().EntityForType(model.EntityTypeTypeCEM)
 
 	// evse
-	c.evseUC = UseCasesEVSE{
+	c.evseUC = &UseCasesEVSE{
 		EvseCC: evsecc.NewEVSECC(localEntity, c.ucCallback),
 		EvCC:   evcc.NewEVCC(c.service, localEntity, c.ucCallback),
 		EvCem:  evcem.NewEVCEM(c.service, localEntity, c.ucCallback),
