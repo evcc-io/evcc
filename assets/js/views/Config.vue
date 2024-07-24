@@ -277,27 +277,31 @@
 					:vehicleOptions="vehicleOptions"
 					ref="loadpointModal"
 					:loadpointCount="loadpoints.length"
+					:fade="loadpointSubModalOpen ? 'left' : ''"
 					@updated="loadpointChanged"
 					@openChargerModal="editLoadpointCharger"
 					@openMeterModal="editLoadpointMeter"
+					@opened="loadpointSubModalOpen = false"
 				/>
 				<VehicleModal :id="selectedVehicleId" @vehicle-changed="vehicleChanged" />
 				<MeterModal
 					:id="selectedMeterId"
 					:name="selectedMeterName"
 					:type="selectedMeterType"
+					:fade="loadpointSubModalOpen ? 'right' : ''"
 					@added="addMeter"
 					@updated="meterChanged"
 					@removed="removeMeter"
-					@closed="meterModalClosed"
+					@close="meterModalClosed"
 				/>
 				<ChargerModal
 					:id="selectedChargerId"
 					:name="selectedChargerName"
+					:fade="loadpointSubModalOpen ? 'right' : ''"
 					@added="addCharger"
 					@updated="chargerChanged"
 					@removed="removeCharger"
-					@closed="chargerModalClosed"
+					@close="chargerModalClosed"
 				/>
 				<InfluxModal @changed="loadDirty" />
 				<MqttModal @changed="loadDirty" />
@@ -404,6 +408,7 @@ export default {
 			selectedMeterType: undefined,
 			selectedChargerId: undefined,
 			selectedLoadpointId: undefined,
+			loadpointSubModalOpen: false,
 			site: { grid: "", pv: [], battery: [], title: "" },
 			deviceValueTimeout: undefined,
 			deviceValues: {},
@@ -564,6 +569,7 @@ export default {
 			return Modal.getOrCreateInstance(document.getElementById("chargerModal"));
 		},
 		editLoadpointCharger(name) {
+			this.loadpointSubModalOpen = true;
 			const charger = this.chargers.find((c) => c.name === name);
 			if (charger && charger.id === undefined) {
 				alert(
@@ -575,6 +581,7 @@ export default {
 			this.$nextTick(() => this.editCharger(charger?.id));
 		},
 		editLoadpointMeter(name) {
+			this.loadpointSubModalOpen = true;
 			const meter = this.meters.find((m) => m.name === name);
 			if (meter && meter.id === undefined) {
 				alert("yaml configured meters can not be edited. Remove meter from yaml first.");

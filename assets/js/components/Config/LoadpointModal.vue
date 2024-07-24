@@ -3,9 +3,10 @@
 		id="loadpointModal"
 		:title="modalTitle"
 		data-testid="loadpoint-modal"
-		fade="left"
+		:fade="fade"
 		@open="open"
-		@closed="closed"
+		@opened="opened"
+		@close="close"
 	>
 		<form ref="form" class="container mx-0 px-0" @submit.prevent="isNew ? create() : update()">
 			<FormRow id="loadpointParamTitle" label="Title" example="Garage, Carport, etc.">
@@ -459,9 +460,10 @@ export default {
 		name: String,
 		vehicleOptions: { type: Array, default: () => [] },
 		loadpointCount: Number,
+		fade: String,
 	},
 	mixins: [formatter],
-	emits: ["updated", "openMeterModal", "openChargerModal"],
+	emits: ["updated", "openMeterModal", "openChargerModal", "close", "opened"],
 	data() {
 		return {
 			isModalVisible: false,
@@ -553,7 +555,7 @@ export default {
 				const values = this.transformBeforeSave(this.values);
 				await api.put(`config/loadpoints/${this.id}`, values);
 				this.$emit("updated");
-				this.closed();
+				this.close();
 			} catch (e) {
 				console.error(e);
 				alert("update failed");
@@ -564,7 +566,7 @@ export default {
 			try {
 				await api.delete(`config/loadpoints/${this.id}`);
 				this.$emit("updated");
-				this.closed();
+				this.close();
 			} catch (e) {
 				console.error(e);
 				alert("delete failed");
@@ -576,7 +578,7 @@ export default {
 				const values = this.transformBeforeSave(this.values);
 				await api.post("config/loadpoints", values);
 				this.$emit("updated");
-				this.closed();
+				this.close();
 			} catch (e) {
 				console.error(e);
 				alert("create failed");
@@ -586,7 +588,11 @@ export default {
 		open() {
 			this.isModalVisible = true;
 		},
-		closed() {
+		opened() {
+			this.$emit("opened");
+		},
+		close() {
+			this.$emit("close");
 			this.isModalVisible = false;
 		},
 		editCharger() {

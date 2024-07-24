@@ -3,8 +3,9 @@
 		id="meterModal"
 		:title="modalTitle"
 		data-testid="meter-modal"
+		:fade="fade"
 		@open="open"
-		@closed="closed"
+		@close="close"
 	>
 		<div v-if="!meterType">
 			<NewDeviceButton
@@ -154,8 +155,9 @@ export default {
 		id: Number,
 		name: String,
 		type: String,
+		fade: String,
 	},
-	emits: ["added", "updated", "removed", "closed"],
+	emits: ["added", "updated", "removed", "close"],
 	data() {
 		return {
 			isModalVisible: false,
@@ -327,7 +329,7 @@ export default {
 				const { name } = response.data.result;
 				this.$emit("added", this.meterType, name);
 				this.$emit("updated");
-				this.closed();
+				this.close();
 			} catch (e) {
 				console.error(e);
 				alert("create failed");
@@ -354,7 +356,7 @@ export default {
 			try {
 				await api.put(`config/devices/meter/${this.id}`, this.apiData);
 				this.$emit("updated");
-				this.closed();
+				this.close();
 			} catch (e) {
 				console.error(e);
 				alert("update failed");
@@ -366,7 +368,7 @@ export default {
 				await api.delete(`config/devices/meter/${this.id}`);
 				this.$emit("removed", this.meterType, this.name);
 				this.$emit("updated");
-				this.closed();
+				this.close();
 			} catch (e) {
 				console.error(e);
 				alert("delete failed");
@@ -375,9 +377,9 @@ export default {
 		open() {
 			this.isModalVisible = true;
 		},
-		closed() {
-			this.$emit("closed");
-			this.isModalVisible = false;
+		close() {
+			this.$emit("close");
+			his.isModalVisible = false;
 		},
 		selectType(type) {
 			this.selectedType = type;

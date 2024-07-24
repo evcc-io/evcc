@@ -191,5 +191,10 @@ func testInstance(instance any) map[string]testResult {
 		res["socLimit"] = makeResult(val, err)
 	}
 
+	if dev, ok := instance.(api.Identifier); ok {
+		val, err := dev.Identify()
+		res["identifier"] = makeResult(val, err)
+	}
+
 	return res
 }
