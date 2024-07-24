@@ -67,9 +67,9 @@
 								</select>
 							</FormRow>
 							<FormRow
-								v-for="param in templateParams"
-								:id="`vehicleParam${param.Name}`"
+								v-for="param in normalParams"
 								:key="param.Name"
+								:id="`vehicleParam${param.Name}`"
 								:optional="!param.Required"
 								:label="param.Description || `[${param.Name}]`"
 								:help="param.Description === param.Help ? undefined : param.Help"
@@ -86,6 +86,164 @@
 									:validValues="param.ValidValues"
 								/>
 							</FormRow>
+							<button
+								class="btn btn-link btn-sm text-gray px-0 border-0 d-flex align-items-center mb-2"
+								:class="showAdvanced ? 'text-primary' : ''"
+								type="button"
+								@click="toggleAdvanced"
+							>
+								<span v-if="showAdvanced">Hide advanced settings</span>
+								<span v-else>Show advanced settings</span>
+								<DropdownIcon
+									class="advancedIcon"
+									:class="{ advancedIconUp: showAdvanced }"
+								/>
+							</button>
+
+							<Transition>
+								<div v-if="showAdvanced" class="pt-2">
+									<!-- template specific fields -->
+									<FormRow
+										v-for="param in advancedParams"
+										:key="param.Name"
+										v-show="showAdvanced || !param.Advanced"
+										:id="`vehicleParam${param.Name}`"
+										:optional="!param.Required"
+										:label="param.Description || `[${param.Name}]`"
+										:help="
+											param.Description === param.Help
+												? undefined
+												: param.Help
+										"
+										:example="param.Example"
+									>
+										<PropertyField
+											:id="`vehicleParam${param.Name}`"
+											v-model="values[param.Name]"
+											:masked="param.Mask"
+											:property="param.Name"
+											:type="param.Type"
+											class="me-2"
+											:required="param.Required"
+											:validValues="param.ValidValues"
+										/>
+									</FormRow>
+
+									<hr v-if="advancedParams.length" class="my-5" />
+
+									<!-- standard vehicle fields -->
+									<h6 class="mt-3">Charging settings</h6>
+									<FormRow
+										id="vehicleParamMode"
+										label="Default mode"
+										help="Charging point mode when connecting this vehicle."
+									>
+										<PropertyField
+											id="vehicleParamMode"
+											v-model="values.mode"
+											type="String"
+											class="w-100"
+											:valid-values="[
+												{ key: 'off', name: $t('main.mode.off') },
+												{ key: 'pv', name: $t('main.mode.pv') },
+												{ key: 'minpv', name: $t('main.mode.minpv') },
+												{ key: 'now', name: $t('main.mode.now') },
+											]"
+										/>
+									</FormRow>
+									<FormRow
+										id="vehicleParamPhases"
+										label="Maximum phases"
+										help="How many phases can this vehicle charge with? Used to calculate required minimum solar surplus and plan duration."
+									>
+										<SelectGroup
+											id="vehicleParamPhases"
+											class="w-100"
+											v-model="values.phases"
+											:options="[
+												{ name: '1-phase', value: '1' },
+												{ name: '2-phases', value: '2' },
+												{ name: '3-phases', value: undefined },
+											]"
+										/>
+									</FormRow>
+									<div class="row mb-3">
+										<FormRow
+											id="vehicleParamMinCurrent"
+											label="Minimum current"
+											class="col-sm-6 mb-sm-0"
+											:help="
+												values.minCurrent && values.minCurrent < 6
+													? 'Only go below 6 A if you know what you\'re doing.'
+													: null
+											"
+										>
+											<PropertyField
+												id="vehicleParamMinCurrent"
+												v-model="values.minCurrent"
+												type="Float"
+												unit="A"
+												size="w-25 w-min-200"
+												class="me-2"
+											/>
+										</FormRow>
+
+										<FormRow
+											id="vehicleParamMaxCurrent"
+											label="Maximum current"
+											class="col-sm-6 mb-sm-0"
+											:help="
+												values.minCurrent &&
+												values.maxCurrent &&
+												values.maxCurrent < values.minCurrent
+													? 'Must be greater than minimum current.'
+													: null
+											"
+										>
+											<PropertyField
+												id="vehicleParamMaxCurrent"
+												v-model="values.maxCurrent"
+												type="Float"
+												unit="A"
+												size="w-25 w-min-200"
+												class="me-2"
+											/>
+										</FormRow>
+									</div>
+
+									<!-- todo: only show when multiple loadpoints exist -->
+									<FormRow
+										id="vehicleParamPriority"
+										label="Priority"
+										help="Changes the charging point priority when connecting this vehicle."
+									>
+										<PropertyField
+											id="vehicleParamPriority"
+											v-model="values.priority"
+											type="Number"
+											size="w-100"
+											class="me-2"
+											:valid-values="priorityOptions"
+											required
+										/>
+									</FormRow>
+
+									<FormRow
+										id="vehicleParamIdentifiers"
+										label="RFID identifiers"
+										help="List of RFID strings to identify the vehicle. One per line. See the current identifier on the configuration overview."
+									>
+										<PropertyField
+											id="vehicleParamIdentifiers"
+											v-model="values.identifiers"
+											type="StringList"
+											property="identifiers"
+											size="w-100"
+											class="me-2"
+										/>
+									</FormRow>
+								</div>
+							</Transition>
 
 							<TestResult
 								v-if="templateName"
@@ -143,9 +301,13 @@
 </template>
 
 <script>
+import "@h2d2/shopicons/es/regular/arrowdropup";
+import "@h2d2/shopicons/es/regular/arrowdropdown";
 import FormRow from "./FormRow.vue";
 import PropertyField from "./PropertyField.vue";
 import TestResult from "./TestResult.vue";
+import DropdownIcon from "../MaterialIcon/Dropdown.vue";
+import SelectGroup from "../SelectGroup.vue";
 import api from "../../api";
 import test from "./mixins/test";
 
@@ -155,9 +317,11 @@ function sleep(ms) {
 	return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+const CUSTOM_FIELDS = ["minCurrent", "maxCurrent", "priority", "identifiers", "phases", "mode"];
+
 export default {
 	name: "VehicleModal",
-	components: { FormRow, PropertyField, TestResult },
+	components: { FormRow, PropertyField, TestResult, SelectGroup, DropdownIcon },
 	mixins: [test],
 	props: {
 		id: Number,
@@ -171,6 +335,7 @@ export default {
 			saving: false,
 			templateName: null,
 			template: null,
+			showAdvanced: false,
 			values: { ...initialValues },
 		};
 	},
@@ -184,14 +349,20 @@ export default {
 		},
 		templateParams() {
 			const params = this.template?.Params || [];
-			const filteredParams = params.filter((p) => !p.Advanced || p.Name === "icon");
-			const adjustedParams = filteredParams.map((p) => {
+			const filteredParams = params.filter((p) => !CUSTOM_FIELDS.includes(p.Name));
+			return filteredParams.map((p) => {
 				if (p.Name === "title" || p.Name === "icon") {
 					p.Required = true;
+					p.Advanced = false;
 				}
 				return p;
 			});
-			return adjustedParams;
+		},
+		normalParams() {
+			return this.templateParams.filter((p) => !p.Advanced);
+		},
+		advancedParams() {
+			return this.templateParams.filter((p) => p.Advanced);
 		},
 		apiData() {
 			return {
@@ -204,6 +375,13 @@ export default {
 		},
 		isDeletable() {
 			return !this.isNew;
+		},
+		priorityOptions() {
+			const result = Array.from({ length: 11 }, (_, i) => ({ key: i, name: `${i}` }));
+			result[0].name = "0 (default)";
+			result[0].key = undefined;
+			result[10].name = "10 (highest)";
+			return result;
 		},
 	},
 	watch: {
@@ -240,6 +418,9 @@ export default {
 		reset() {
 			this.values = { ...initialValues };
 			this.resetTest();
+		},
+		toggleAdvanced() {
+			this.showAdvanced = !this.showAdvanced;
 		},
 		async loadConfiguration() {
 			try {
@@ -352,5 +533,25 @@ export default {
 	margin-left: calc(var(--bs-gutter-x) * -0.5);
 	margin-right: calc(var(--bs-gutter-x) * -0.5);
 	padding-right: 0;
+}
+.advancedIcon {
+	transform: rotate(0deg);
+	transition: transform var(--evcc-transition-medium) ease;
+}
+.advancedIconUp {
+	transform: rotate(-180deg);
+}
+.v-enter-active,
+.v-leave-active {
+	transition:
+		transform var(--evcc-transition-medium) ease,
+		opacity var(--evcc-transition-medium) ease;
+	transform: translateY(0);
+}
+
+.v-enter-from,
+.v-leave-to {
+	opacity: 0;
+	transform: translateY(-0.5rem);
 }
 </style>
