@@ -6,6 +6,8 @@ import (
 	"time"
 
 	ucapi "github.com/enbility/eebus-go/usecases/api"
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/circuit"
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/server/eebus"
@@ -18,6 +20,8 @@ type EEBus struct {
 
 	*eebus.Connector
 	uc *eebus.UseCasesCS
+
+	root api.Circuit
 
 	status        status
 	statusUpdated time.Time
@@ -39,17 +43,23 @@ func New(other map[string]interface{}, site site.API) (*EEBus, error) {
 		return nil, err
 	}
 
-	return NewEEBus(cc.Ski)
+	root := circuit.Root()
+	if root == nil {
+		return nil, errors.New("hems requires load management- please configure root circuit")
+	}
+
+	return NewEEBus(cc.Ski, root)
 }
 
 // NewEEBus creates EEBus charger
-func NewEEBus(ski string) (*EEBus, error) {
+func NewEEBus(ski string, root api.Circuit) (*EEBus, error) {
 	if eebus.Instance == nil {
 		return nil, errors.New("eebus not configured")
 	}
 
 	c := &EEBus{
 		log:       util.NewLogger("eebus"),
+		root:      root,
 		uc:        eebus.Instance.ControllableSystem(),
 		Connector: eebus.NewConnector(nil),
 		heartbeat: provider.NewValue[struct{}](2 * time.Minute), // LPC-031
@@ -90,6 +100,8 @@ func (c *EEBus) Run() {
 func (c *EEBus) run() error {
 	c.mux.RLock()
 	defer c.mux.RUnlock()
+
+	c.log.TRACE.Println("status:", c.status)
 
 	// check heartbeat
 	_, heartbeatErr := c.heartbeat.Get()
@@ -152,4 +164,5 @@ func (c *EEBus) setStatusAndLimit(status status, limit float64) {
 
 func (c *EEBus) setLimit(limit float64) {
 	// TODO update root circuit
+	c.root.SetMaxPower(limit)
 }
