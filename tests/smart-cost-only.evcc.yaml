@@ -40,5 +40,5 @@ tariffs:
     type: fixed
     price: 0.4 # EUR/kWh
     zones:
-      - hours: 1-6
+      - hours: 0-1
         price: 0.2
