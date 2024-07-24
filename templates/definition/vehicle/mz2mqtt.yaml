@@ -1,18 +1,14 @@
-template: mazda2mqtt
-deprecated: true
+template: mz2mqtt
 products:
   - description:
-      generic: mazda2mqtt
+      generic: mz2mqtt
 group: generic
 requirements:
   description:
-    en: Required MQTT broker configuration and a mazda2mqtt installation https://github.com/C64Axel/mazda2mqtt.
-    de: Voraussetzung ist ein konfigurierter MQTT Broker und eine mazda2mqtt Installation https://github.com/C64Axel/mazda2mqtt.
+    en: myMazda to MQTT. Required MQTT broker configuration and a mz2mqtt installation https://github.com/C64Axel/mz2mqtt.
+    de: myMazda zu MQTT. Voraussetzung ist ein konfigurierter MQTT Broker und eine mz2mqtt Installation https://github.com/C64Axel/mz2mqtt.
 params:
   - name: title
-  - name: icon
-    default: car
-    advanced: true
   - name: vin
     required: true
     help:
@@ -21,8 +17,12 @@ params:
   - name: capacity
   - name: phases
     advanced: true
+  - name: icon
+    default: car
+    advanced: true
   - name: timeout
     default: 720h
+    advanced: true
   - preset: vehicle-identify
 render: |
   type: custom
@@ -41,19 +41,19 @@ render: |
   {{- include "vehicle-identify" . }}
   soc:
     source: mqtt
-    topic: mazda2mqtt/{{ .vin }}/chargeInfo/batteryLevelPercentage
+    topic: mz2mqtt/{{ .vin }}/chargeInfo/batteryLevelPercentage
     timeout: {{ .timeout }}
   status:
     source: combined
     plugged:
       source: mqtt
-      topic: mazda2mqtt/{{ .vin }}/chargeInfo/pluggedIn
+      topic: mz2mqtt/{{ .vin }}/chargeInfo/pluggedIn
       timeout: {{ .timeout }}
     charging:
       source: mqtt
-      topic: mazda2mqtt/{{ .vin }}/chargeInfo/charging
+      topic: mz2mqtt/{{ .vin }}/chargeInfo/charging
       timeout: {{ .timeout }}
   range:
     source: mqtt
-    topic: mazda2mqtt/{{ .vin }}/chargeInfo/drivingRangeKm
+    topic: mz2mqtt/{{ .vin }}/chargeInfo/drivingRangeKm
     timeout: {{ .timeout }}
