@@ -46,6 +46,8 @@ params:
   - preset: ocpp
   - name: autostart
     deprecated: true
+  - name: nostop
+    deprecated: true
   - name: remotestart
     advanced: true
     type: bool
