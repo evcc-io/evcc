@@ -36,7 +36,7 @@ type OCPP struct {
 }
 
 const defaultIdTag = "evcc"
-const desiredMeasurands = "Energy.Active.Import.Register,Power.Active.Import,Current.Import,Voltage,Current.Offered,SoC"
+const desiredMeasurands = "Energy.Active.Import.Register,Power.Active.Import,SoC,Current.Offered,Power.Offered,Current.Import,Voltage"
 
 func init() {
 	registry.Add("ocpp", NewOCPPFromConfig)
