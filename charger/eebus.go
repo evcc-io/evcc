@@ -398,9 +398,9 @@ func (c *EEBus) writeCurrentLimitData(currents []float64) error {
 	if recommendations, err := c.uc.OscEV.LoadControlLimits(evEntity); err == nil {
 		var writeNeeded bool
 
-		for _, item := range recommendations {
+		for index, item := range recommendations {
 			if item.IsActive {
-				item.IsActive = false
+				recommendations[index].IsActive = false
 				writeNeeded = true
 			}
 		}
