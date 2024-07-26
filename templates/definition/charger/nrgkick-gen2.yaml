@@ -9,14 +9,9 @@ requirements:
     en: NRGkick Gen2 charging unit via REST API
 capabilities: ["1p3p", "mA"]
 params:
-  - name: host
-    required: true
-  - name: user
-    required: false
-  - name: password
-    required: false
+  - name: modbus
+    choice: ["tcpip"]
+    id: 255
 render: |
   type: nrgkick-gen2
-  uri: http://{{ .host }}
-  user: {{ .user }}
-  password: {{ .password }}
+  {{- include "modbus" . }}
