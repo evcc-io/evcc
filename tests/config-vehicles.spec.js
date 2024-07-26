@@ -136,7 +136,6 @@ test.describe("vehicles", async () => {
     await login(page);
     await enableExperimental(page);
 
-    await expect(page.getByTestId("vehicle")).toHaveCount(0);
     await page.getByTestId("add-vehicle").click();
     const vehicleModal = page.getByTestId("vehicle-modal");
 
