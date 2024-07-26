@@ -66,72 +66,27 @@
 									</optgroup>
 								</select>
 							</FormRow>
-							<FormRow
+
+							<PropertyEntry
 								v-for="param in normalParams"
 								:key="param.Name"
 								:id="`vehicleParam${param.Name}`"
-								:optional="!param.Required"
-								:label="param.Description || `[${param.Name}]`"
-								:help="param.Description === param.Help ? undefined : param.Help"
-								:example="param.Example"
-							>
-								<PropertyField
-									:id="`vehicleParam${param.Name}`"
-									v-model="values[param.Name]"
-									:masked="param.Mask"
-									:property="param.Name"
-									:type="param.Type"
-									class="me-2"
-									:required="param.Required"
-									:validValues="param.ValidValues"
-								/>
-							</FormRow>
-							<button
-								class="btn btn-link btn-sm text-gray px-0 border-0 d-flex align-items-center mb-2"
-								:class="showAdvanced ? 'text-primary' : ''"
-								type="button"
-								@click="toggleAdvanced"
-							>
-								<span v-if="showAdvanced">Hide advanced settings</span>
-								<span v-else>Show advanced settings</span>
-								<DropdownIcon
-									class="advancedIcon"
-									:class="{ advancedIconUp: showAdvanced }"
-								/>
-							</button>
+								v-bind="param"
+								v-model="values[param.Name]"
+							/>
 
-							<Transition>
-								<div v-if="showAdvanced" class="pt-2">
-									<!-- template specific fields -->
-									<FormRow
+							<PropertyCollapsible>
+								<template v-if="advancedParams.length" #advanced>
+									<PropertyEntry
 										v-for="param in advancedParams"
-										:key="param.Name"
 										v-show="showAdvanced || !param.Advanced"
+										:key="param.Name"
 										:id="`vehicleParam${param.Name}`"
-										:optional="!param.Required"
-										:label="param.Description || `[${param.Name}]`"
-										:help="
-											param.Description === param.Help
-												? undefined
-												: param.Help
-										"
-										:example="param.Example"
-									>
-										<PropertyField
-											:id="`vehicleParam${param.Name}`"
-											v-model="values[param.Name]"
-											:masked="param.Mask"
-											:property="param.Name"
-											:type="param.Type"
-											class="me-2"
-											:required="param.Required"
-											:validValues="param.ValidValues"
-										/>
-									</FormRow>
-
-									<hr v-if="advancedParams.length" class="my-5" />
-
-									<!-- standard vehicle fields -->
+										v-bind="param"
+										v-model="values[param.Name]"
+									/>
+								</template>
+								<template #more>
 									<h6 class="mt-3">Charging settings</h6>
 									<FormRow
 										id="vehicleParamMode"
@@ -242,8 +197,8 @@
 											class="me-2"
 										/>
 									</FormRow>
-								</div>
-							</Transition>
+								</template>
+							</PropertyCollapsible>
 
 							<TestResult
 								v-if="templateName"
@@ -301,13 +256,12 @@
 </template>
 
 <script>
-import "@h2d2/shopicons/es/regular/arrowdropup";
-import "@h2d2/shopicons/es/regular/arrowdropdown";
 import FormRow from "./FormRow.vue";
 import PropertyField from "./PropertyField.vue";
 import TestResult from "./TestResult.vue";
-import DropdownIcon from "../MaterialIcon/Dropdown.vue";
 import SelectGroup from "../SelectGroup.vue";
+import PropertyEntry from "./PropertyEntry.vue";
+import PropertyCollapsible from "./PropertyCollapsible.vue";
 import api from "../../api";
 import test from "./mixins/test";
 
@@ -321,7 +275,14 @@ const CUSTOM_FIELDS = ["minCurrent", "maxCurrent", "priority", "identifiers", "p
 
 export default {
 	name: "VehicleModal",
-	components: { FormRow, PropertyField, TestResult, SelectGroup, DropdownIcon },
+	components: {
+		FormRow,
+		PropertyField,
+		TestResult,
+		SelectGroup,
+		PropertyCollapsible,
+		PropertyEntry,
+	},
 	mixins: [test],
 	props: {
 		id: Number,
@@ -335,7 +296,6 @@ export default {
 			saving: false,
 			templateName: null,
 			template: null,
-			showAdvanced: false,
 			values: { ...initialValues },
 		};
 	},
@@ -418,9 +378,6 @@ export default {
 		reset() {
 			this.values = { ...initialValues };
 			this.resetTest();
-		},
-		toggleAdvanced() {
-			this.showAdvanced = !this.showAdvanced;
 		},
 		async loadConfiguration() {
 			try {
@@ -533,25 +490,5 @@ export default {
 	margin-left: calc(var(--bs-gutter-x) * -0.5);
 	margin-right: calc(var(--bs-gutter-x) * -0.5);
 	padding-right: 0;
-}
-.advancedIcon {
-	transform: rotate(0deg);
-	transition: transform var(--evcc-transition-medium) ease;
-}
-.advancedIconUp {
-	transform: rotate(-180deg);
-}
-.v-enter-active,
-.v-leave-active {
-	transition:
-		transform var(--evcc-transition-medium) ease,
-		opacity var(--evcc-transition-medium) ease;
-	transform: translateY(0);
-}
-
-.v-enter-from,
-.v-leave-to {
-	opacity: 0;
-	transform: translateY(-0.5rem);
 }
 </style>
