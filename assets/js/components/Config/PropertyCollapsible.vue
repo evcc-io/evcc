@@ -1,22 +1,24 @@
 <template>
-	<button
-		class="btn btn-link btn-sm text-gray px-0 border-0 d-flex align-items-center mb-2"
-		:class="open ? 'text-primary' : ''"
-		type="button"
-		@click="toggle"
-	>
-		<span v-if="open">Hide advanced settings</span>
-		<span v-else>Show advanced settings</span>
-		<DropdownIcon class="icon" :class="{ iconUp: open }" />
-	</button>
+	<div v-if="$slots.advanced || $slots.more">
+		<button
+			class="btn btn-link btn-sm text-gray px-0 border-0 d-flex align-items-center mb-2"
+			:class="open ? 'text-primary' : ''"
+			type="button"
+			@click="toggle"
+		>
+			<span v-if="open">Hide advanced settings</span>
+			<span v-else>Show advanced settings</span>
+			<DropdownIcon class="icon" :class="{ iconUp: open }" />
+		</button>
 
-	<Transition>
-		<div v-if="open" class="pt-2">
-			<slot name="advanced"></slot>
-			<hr v-if="$slots.advanced && $slots.more" class="my-5" />
-			<slot name="more"></slot>
-		</div>
-	</Transition>
+		<Transition>
+			<div v-if="open" class="pt-2">
+				<slot name="advanced"></slot>
+				<hr v-if="$slots.advanced && $slots.more" class="my-5" />
+				<slot name="more"></slot>
+			</div>
+		</Transition>
+	</div>
 </template>
 
 <script>

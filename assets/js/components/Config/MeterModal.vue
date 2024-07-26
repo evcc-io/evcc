@@ -80,26 +80,25 @@
 								:defaultPort="modbus.Port"
 								:capabilities="modbusCapabilities"
 							/>
-							<FormRow
-								v-for="param in templateParams"
-								:id="`meterParam${param.Name}`"
+							<PropertyEntry
+								v-for="param in normalParams"
 								:key="param.Name"
-								:optional="!param.Required"
-								:label="param.Description || `[${param.Name}]`"
-								:help="param.Description === param.Help ? undefined : param.Help"
-								:example="param.Example"
-							>
-								<PropertyField
-									:id="`meterParam${param.Name}`"
-									v-model="values[param.Name]"
-									:masked="param.Mask"
-									:property="param.Name"
-									:type="param.Type"
-									class="me-2"
-									:required="param.Required"
-									:validValues="param.ValidValues"
-								/>
-							</FormRow>
+								:id="`meterParam${param.Name}`"
+								v-bind="param"
+								v-model="values[param.Name]"
+							/>
+
+							<PropertyCollapsible>
+								<template v-if="advancedParams.length" #advanced>
+									<PropertyEntry
+										v-for="param in advancedParams"
+										:key="param.Name"
+										:id="`meterParam${param.Name}`"
+										v-bind="param"
+										v-model="values[param.Name]"
+									/>
+								</template>
+							</PropertyCollapsible>
 
 							<TestResult
 								v-if="templateName"
@@ -158,7 +157,8 @@
 
 <script>
 import FormRow from "./FormRow.vue";
-import PropertyField from "./PropertyField.vue";
+import PropertyEntry from "./PropertyEntry.vue";
+import PropertyCollapsible from "./PropertyCollapsible.vue";
 import TestResult from "./TestResult.vue";
 import api from "../../api";
 import test from "./mixins/test";
@@ -173,7 +173,14 @@ function sleep(ms) {
 
 export default {
 	name: "MeterModal",
-	components: { FormRow, PropertyField, Modbus, TestResult, AddDeviceButton },
+	components: {
+		FormRow,
+		PropertyEntry,
+		Modbus,
+		TestResult,
+		AddDeviceButton,
+		PropertyCollapsible,
+	},
 	mixins: [test],
 	props: {
 		id: Number,
@@ -218,8 +225,6 @@ export default {
 			const params = this.template?.Params || [];
 			return (
 				params
-					// deprecated fields
-					.filter((p) => !p.Deprecated)
 					// remove usage option
 					.filter((p) => p.Name !== "usage")
 					// remove modbus, handles separately
@@ -227,6 +232,12 @@ export default {
 					// capacity only for battery meters
 					.filter((p) => this.meterType === "battery" || p.Name !== "capacity")
 			);
+		},
+		normalParams() {
+			return this.templateParams.filter((p) => !p.Advanced);
+		},
+		advancedParams() {
+			return this.templateParams.filter((p) => p.Advanced);
 		},
 		modbus() {
 			const params = this.template?.Params || [];

@@ -79,7 +79,6 @@
 								<template v-if="advancedParams.length" #advanced>
 									<PropertyEntry
 										v-for="param in advancedParams"
-										v-show="showAdvanced || !param.Advanced"
 										:key="param.Name"
 										:id="`vehicleParam${param.Name}`"
 										v-bind="param"
