@@ -171,6 +171,8 @@ function sleep(ms) {
 	return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+const CUSTOM_FIELDS = ["usage", "modbus"];
+
 export default {
 	name: "MeterModal",
 	components: {
@@ -222,16 +224,14 @@ export default {
 			return this.products.filter((p) => p.group === "generic");
 		},
 		templateParams() {
-			const params = this.template?.Params || [];
-			return (
-				params
-					// remove usage option
-					.filter((p) => p.Name !== "usage")
-					// remove modbus, handles separately
-					.filter((p) => p.Name !== "modbus")
-					// capacity only for battery meters
-					.filter((p) => this.meterType === "battery" || p.Name !== "capacity")
-			);
+			return (this.template?.Params || [])
+				.filter((p) => !CUSTOM_FIELDS.includes(p.Name))
+				.map((p) => {
+					if (this.meterType === "battery" && p.Name === "capacity") {
+						p.Advanced = false;
+					}
+					return p;
+				});
 		},
 		normalParams() {
 			return this.templateParams.filter((p) => !p.Advanced);

@@ -307,15 +307,15 @@ export default {
 			};
 		},
 		templateParams() {
-			const params = this.template?.Params || [];
-			const filteredParams = params.filter((p) => !CUSTOM_FIELDS.includes(p.Name));
-			return filteredParams.map((p) => {
-				if (p.Name === "title" || p.Name === "icon") {
-					p.Required = true;
-					p.Advanced = false;
-				}
-				return p;
-			});
+			return (this.template?.Params || [])
+				.filter((p) => !CUSTOM_FIELDS.includes(p.Name))
+				.map((p) => {
+					if (p.Name === "title" || p.Name === "icon") {
+						p.Required = true;
+						p.Advanced = false;
+					}
+					return p;
+				});
 		},
 		normalParams() {
 			return this.templateParams.filter((p) => !p.Advanced);
