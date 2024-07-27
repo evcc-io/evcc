@@ -2,7 +2,7 @@ template: goodwe-dt
 products:
   - brand: GoodWe
     description:
-      generic: DT Inverter
+      generic: SDT/DT Inverter
 params:
   - name: usage
     choice: ["pv"]
