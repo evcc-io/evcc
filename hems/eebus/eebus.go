@@ -47,6 +47,9 @@ func New(other map[string]interface{}, site site.API) (*EEBus, error) {
 	if root == nil {
 		return nil, errors.New("hems requires load management- please configure root circuit")
 	}
+	if !root.HasMeter() {
+		return nil, errors.New("hems requires root circuit to have meter")
+	}
 
 	// create new root circuit for LPC
 	lpc, err := circuit.New(util.NewLogger("lpc"), "eebus", 0, 0, nil, time.Minute)
@@ -54,11 +57,11 @@ func New(other map[string]interface{}, site site.API) (*EEBus, error) {
 		return nil, err
 	}
 
-	// attach old root to new parent
-	root.SetParent(lpc)
+	// wrap old root with new pc parent
+	if err := root.Wrap(lpc); err != nil {
+		return nil, err
+	}
 	site.SetCircuit(lpc)
-
-	// TODO root meter
 
 	return NewEEBus(cc.Ski, lpc)
 }

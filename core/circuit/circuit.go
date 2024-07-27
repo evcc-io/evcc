@@ -120,13 +120,23 @@ func (c *Circuit) GetParent() api.Circuit {
 }
 
 // SetParent set parent circuit
-func (c *Circuit) SetParent(parent api.Circuit) {
+func (c *Circuit) SetParent(parent api.Circuit) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
+	if c.parent != nil {
+		return fmt.Errorf("circuit already has a parent")
+	}
 	c.parent = parent
 	if parent != nil {
 		parent.RegisterChild(c)
 	}
+	return nil
+}
+
+// Wrap wraps circuit with parent, keeping the original meter
+func (c *Circuit) Wrap(parent api.Circuit) error {
+	parent.(*Circuit).meter = c.meter
+	return c.SetParent(parent)
 }
 
 // HasMeter returns the max power setting

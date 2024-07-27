@@ -911,9 +911,11 @@ func (mr *MockCircuitMockRecorder) SetMaxPower(arg0 any) *gomock.Call {
 }
 
 // SetParent mocks base method.
-func (m *MockCircuit) SetParent(arg0 Circuit) {
+func (m *MockCircuit) SetParent(arg0 Circuit) error {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "SetParent", arg0)
+	ret := m.ctrl.Call(m, "SetParent", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
 // SetParent indicates an expected call of SetParent.
@@ -974,4 +976,18 @@ func (m *MockCircuit) ValidatePower(arg0, arg1 float64) float64 {
 func (mr *MockCircuitMockRecorder) ValidatePower(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidatePower", reflect.TypeOf((*MockCircuit)(nil).ValidatePower), arg0, arg1)
+}
+
+// Wrap mocks base method.
+func (m *MockCircuit) Wrap(arg0 Circuit) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Wrap", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Wrap indicates an expected call of Wrap.
+func (mr *MockCircuitMockRecorder) Wrap(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Wrap", reflect.TypeOf((*MockCircuit)(nil).Wrap), arg0)
 }
