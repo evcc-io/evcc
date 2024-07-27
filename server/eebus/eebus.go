@@ -23,6 +23,7 @@ import (
 	"github.com/enbility/eebus-go/usecases/cs/lpp"
 	"github.com/enbility/eebus-go/usecases/ma/mgcp"
 	shipapi "github.com/enbility/ship-go/api"
+	"github.com/enbility/ship-go/mdns"
 	shiputil "github.com/enbility/ship-go/util"
 	spineapi "github.com/enbility/spine-go/api"
 	"github.com/enbility/spine-go/model"
@@ -112,6 +113,9 @@ func NewServer(other Config) (*EEBus, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	// use avahi if available, otherwise use go based zeroconf
+	configuration.SetMdnsProviderSelection(mdns.MdnsProviderSelectionAll)
 
 	// for backward compatibility
 	configuration.SetAlternateMdnsServiceName(DeviceCode)

@@ -295,12 +295,8 @@ params:
       en: Charge on connection
       de: Laden bei Verbindung
     help:
-      en: |
-        Charger will enable charging for short time when vehicle is connected, irrespective of configured charge mode. 
-        This is useful for vehicles that require power supply when connecting.
-      de: |
-        Wallbox gibt kurzzeitige Ladefreigabe bei Fahrzeugverbindung. Das ermöglicht es Fahrzeugen, die eine Stromversorgung beim Anschließen benötigen, 
-        einen Fehlerzustand zu vermeiden.
+      en: Charger will enable charging for short time when vehicle is connected, irrespective of configured charge mode. This is useful for vehicles that require power supply when connecting.
+      de: Wallbox gibt kurzzeitige Ladefreigabe bei Fahrzeugverbindung. Das ermöglicht es Fahrzeugen, die eine Stromversorgung beim Anschließen benötigen, einen Fehlerzustand zu vermeiden.
 
 presets:
   vehicle-base:

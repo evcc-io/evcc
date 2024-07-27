@@ -133,8 +133,15 @@ If you know what you're doing, you can run evcc ignoring the service database wi
 	return err
 }
 
-func configureCircuits(static []config.Named, names ...string) error {
-	children := slices.Clone(static)
+func configureCircuits(conf []config.Named, names ...string) error {
+	// migrate settings
+	if settings.Exists(keys.Circuits) {
+		if err := settings.Yaml(keys.Circuits, new([]map[string]any), &conf); err != nil {
+			return err
+		}
+	}
+
+	children := slices.Clone(conf)
 
 	// TODO: check for circular references
 NEXT:
@@ -175,52 +182,6 @@ NEXT:
 
 	if len(children) > 0 {
 		return fmt.Errorf("circuit is missing parent: %s", children[0].Name)
-	}
-
-	// append devices from database
-	configurable, err := config.ConfigurationsByClass(templates.Circuit)
-	if err != nil {
-		return err
-	}
-
-	children2 := slices.Clone(configurable)
-
-NEXT2:
-	for i, conf := range children2 {
-		cc := conf.Named()
-
-		if len(names) > 0 && !slices.Contains(names, cc.Name) {
-			return nil
-		}
-
-		if parent := cast.ToString(cc.Property("parent")); parent != "" {
-			if _, err := config.Circuits().ByName(parent); err != nil {
-				continue
-			}
-		}
-
-		log := util.NewLogger("circuit-" + cc.Name)
-		instance, err := circuit.NewFromConfig(log, cc.Other)
-		if err != nil {
-			return fmt.Errorf("cannot create circuit '%s': %w", cc.Name, err)
-		}
-
-		// ensure config has title
-		if instance.GetTitle() == "" {
-			//lint:ignore SA1019 as Title is safe on ascii
-			instance.SetTitle(strings.Title(cc.Name))
-		}
-
-		if err := config.Circuits().Add(config.NewConfigurableDevice(conf, instance)); err != nil {
-			return err
-		}
-
-		children2 = slices.Delete(children2, i, i+1)
-		goto NEXT2
-	}
-
-	if len(children2) > 0 {
-		return fmt.Errorf("missing parent circuit: %s", children2[0].Named().Name)
 	}
 
 	var rootFound bool
