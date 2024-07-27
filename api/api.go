@@ -221,7 +221,6 @@ type Circuit interface {
 	GetTitle() string
 	SetTitle(string)
 	GetParent() Circuit
-	SetParent(Circuit) error
 	RegisterChild(child Circuit)
 	Wrap(parent Circuit) error
 	HasMeter() bool

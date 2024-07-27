@@ -70,7 +70,7 @@ func NewFromConfig(log *util.Logger, other map[string]interface{}) (api.Circuit,
 		if err != nil {
 			return nil, err
 		}
-		circuit.SetParent(dev.Instance())
+		circuit.setParent(dev.Instance())
 	}
 
 	return circuit, err
@@ -119,8 +119,8 @@ func (c *Circuit) GetParent() api.Circuit {
 	return c.parent
 }
 
-// SetParent set parent circuit
-func (c *Circuit) SetParent(parent api.Circuit) error {
+// setParent set parent circuit
+func (c *Circuit) setParent(parent api.Circuit) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	if c.parent != nil {
@@ -136,7 +136,7 @@ func (c *Circuit) SetParent(parent api.Circuit) error {
 // Wrap wraps circuit with parent, keeping the original meter
 func (c *Circuit) Wrap(parent api.Circuit) error {
 	parent.(*Circuit).meter = c.meter
-	return c.SetParent(parent)
+	return c.setParent(parent)
 }
 
 // HasMeter returns the max power setting
