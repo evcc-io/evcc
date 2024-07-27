@@ -31,8 +31,6 @@ github.com/andig/go-powerwall v0.2.1-0.20230808194509-dd70cdb6e140 h1:C93T8vg7CN
 github.com/andig/go-powerwall v0.2.1-0.20230808194509-dd70cdb6e140/go.mod h1:Xk09mD+7RTCuuHMX5RxlqgEUeh9oZdIX0rL0qiY6l/4=
 github.com/andig/gosunspec v0.0.0-20231205122018-1daccfa17912 h1:pphS+WUa9zK0ZH/Rt2JMEaOx0qz8dDzOzbr/W7BMiXQ=
 github.com/andig/gosunspec v0.0.0-20231205122018-1daccfa17912/go.mod h1:c6P6szcR+ROkqZruOR4f6qbDKFjZX6OitPpj+yJ/r8k=
-github.com/andig/mbmd v0.0.0-20240501153638-fe73629adf13 h1:xDpNbz3CbjuyhRz29bkQ3SJ4KWk2WJxLyXrv8Wnr89U=
-github.com/andig/mbmd v0.0.0-20240501153638-fe73629adf13/go.mod h1:MA3vKWI4KozcpWvD9dwN6CL+WqwdK9XGXT5Iv49IsUM=
 github.com/andig/mbserver v0.0.0-20230310211055-1d29cbb5820e h1:m/NTP3JWpR7M0ljLxiQU4fzR25jjhe1LDtxLMNcoNJQ=
 github.com/andig/mbserver v0.0.0-20230310211055-1d29cbb5820e/go.mod h1:4VtYzTm//oUipwvO3yh0g/udTE7pYJM+U/kyAuFDsgM=
 github.com/andig/yaml v0.0.0-20240531135838-1ff5761ab467 h1:JqIoHxsQSV39xaemvVRu3HOkSf5AbhQ1YEENJa2cL3Q=
@@ -662,6 +660,8 @@ github.com/vmihailenco/msgpack/v5 v5.4.1 h1:cQriyiUvjTwOHg8QZaPihLWeRAAVoCpE00IU
 github.com/vmihailenco/msgpack/v5 v5.4.1/go.mod h1:GaZTsDaehaPpQVyxrf5mtQlH+pc21PIudVV/E3rRQok=
 github.com/vmihailenco/tagparser/v2 v2.0.0 h1:y09buUbR+b5aycVFQs/g70pqKVZNBmxwAhO7/IwNM9g=
 github.com/vmihailenco/tagparser/v2 v2.0.0/go.mod h1:Wri+At7QHww0WTrCBeu4J6bNtoV6mEfg5OIWRZA9qds=
+github.com/volkszaehler/mbmd v0.0.0-20240727104742-3191c0dbfb9e h1:d0KoYuIPXTI/vn85axsoD7w616oUalAzmDLZwv9yB9Q=
+github.com/volkszaehler/mbmd v0.0.0-20240727104742-3191c0dbfb9e/go.mod h1:MA3vKWI4KozcpWvD9dwN6CL+WqwdK9XGXT5Iv49IsUM=
 github.com/writeas/go-strip-markdown/v2 v2.1.1 h1:hAxUM21Uhznf/FnbVGiJciqzska6iLei22Ijc3q2e28=
 github.com/writeas/go-strip-markdown/v2 v2.1.1/go.mod h1:UvvgPJgn1vvN8nWuE5e7v/+qmDu3BSVnKAB6Gl7hFzA=
 github.com/xiang90/probing v0.0.0-20190116061207-43a291ad63a2/go.mod h1:UETIi67q53MR2AWcXfiuqkDkRtnGDLqkBTpCHuJHxtU=
