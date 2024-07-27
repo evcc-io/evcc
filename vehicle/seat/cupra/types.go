@@ -10,13 +10,45 @@ type Vehicle struct {
 type Engine struct {
 	Type     string
 	FuelType string
-	Range    struct {
-		Value float64
-		Unit  string
-	}
-	Level float64
+	RangeKm  float64
+	LevelPct float64
 }
 
+//	{
+//	    "engines": {
+//	        "primary": {
+//	            "fuelType": "electric",
+//	            "rangeKm": 298.0,
+//	            "levelPct": 80.0
+//	        }
+//	    },
+//	    "services": {
+//	        "charging": {
+//	            "status": "ChargePurposeReachedAndNotConservationCharging",
+//	            "targetPct": 80,
+//	            "currentPct": 80,
+//	            "chargeSettings": "default",
+//	            "chargeMode": "manual",
+//	            "preferredChargeMode": "manual",
+//	            "active": false,
+//	            "remainingTime": 0,
+//	            "progressBarPct": 100.0
+//	        },
+//	        "climatisation": {
+//	            "status": "Off",
+//	            "targetTemperatureCelsius": 20.0,
+//	            "targetTemperatureFahrenheit": 68.0,
+//	            "climatisationTrigger": "off",
+//	            "active": false,
+//	            "remainingTime": 0,
+//	            "progressBarPct": 0.0
+//	        },
+//	        "windowHeating": {
+//	            "status": "Off",
+//	            "active": false
+//	        }
+//	    }
+//	}
 type Status struct {
 	Engines struct {
 		Primary, Secondary Engine
@@ -28,6 +60,7 @@ type Status struct {
 			ChargeMode     string
 			Active         bool
 			RemainingTime  int64
+			CurrentPct     float64
 			ProgressBarPct float64
 		}
 		Climatisation struct {
@@ -40,4 +73,12 @@ type Status struct {
 	Measurements struct {
 		MileageKm float64
 	}
+}
+
+type Mileage struct {
+	MileageKm float64
+}
+
+type Position struct {
+	Lat, Lon float64
 }

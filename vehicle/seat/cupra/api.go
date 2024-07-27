@@ -52,7 +52,23 @@ func (v *API) Vehicles(userID string) ([]Vehicle, error) {
 // Status implements the /status response
 func (v *API) Status(userID, vin string) (Status, error) {
 	var res Status
-	uri := fmt.Sprintf("%s/v2/users/%s/vehicles/%s/mycar", BaseURL, userID, vin)
+	uri := fmt.Sprintf("%s/v5/users/%s/vehicles/%s/mycar", BaseURL, userID, vin)
+	err := v.GetJSON(uri, &res)
+	return res, err
+}
+
+// ParkingPosition implements the /parkingposition response
+func (v *API) ParkingPosition(vin string) (Position, error) {
+	var res Position
+	uri := fmt.Sprintf("%s/v1/vehicles/%s/parkingposition", BaseURL, vin)
+	err := v.GetJSON(uri, &res)
+	return res, err
+}
+
+// Mileage implements the /mileage response
+func (v *API) Mileage(vin string) (Mileage, error) {
+	var res Mileage
+	uri := fmt.Sprintf("%s/v1/vehicles/%s/mileage", BaseURL, vin)
 	err := v.GetJSON(uri, &res)
 	return res, err
 }
