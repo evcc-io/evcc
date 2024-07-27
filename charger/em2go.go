@@ -59,13 +59,18 @@ const (
 )
 
 func init() {
-	registry.Add("em2go", NewEm2GoFromConfig)
+	registry.Add("em2go", func(other map[string]any) (api.Charger, error) {
+		return NewEm2GoFromConfig(other, true)
+	})
+	registry.Add("em2go-home", func(other map[string]any) (api.Charger, error) {
+		return NewEm2GoFromConfig(other, false)
+	})
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateEm2Go -b *Em2Go -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
+//go:generate go run ../cmd/tools/decorate.go -f decorateEm2Go -b *Em2Go -r api.Charger -t "api.ChargerEx,MaxCurrentMillis,func(float64) error" -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
 
 // NewEm2GoFromConfig creates a Em2Go charger from generic config
-func NewEm2GoFromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewEm2GoFromConfig(other map[string]interface{}, milli bool) (api.Charger, error) {
 	cc := modbus.TcpSettings{
 		ID: 255,
 	}
@@ -74,11 +79,11 @@ func NewEm2GoFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	return NewEm2Go(cc.URI, cc.ID)
+	return NewEm2Go(cc.URI, cc.ID, milli)
 }
 
 // NewEm2Go creates Em2Go charger
-func NewEm2Go(uri string, slaveID uint8) (api.Charger, error) {
+func NewEm2Go(uri string, slaveID uint8, milli bool) (api.Charger, error) {
 	uri = util.DefaultPort(uri, 502)
 
 	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, slaveID)
@@ -98,16 +103,21 @@ func NewEm2Go(uri string, slaveID uint8) (api.Charger, error) {
 	}
 
 	var (
+		maxCurrent func(float64) error
 		phases1p3p func(int) error
 		phasesG    func() (int, error)
 	)
+
+	if milli {
+		maxCurrent = wb.maxCurrentMillis
+	}
 
 	if _, err := wb.conn.ReadHoldingRegisters(em2GoRegPhases, 1); err == nil {
 		phases1p3p = wb.phases1p3p
 		phasesG = wb.getPhases
 	}
 
-	return decorateEm2Go(wb, phases1p3p, phasesG), err
+	return decorateEm2Go(wb, maxCurrent, phases1p3p, phasesG), err
 }
 
 // Status implements the api.Charger interface
@@ -154,13 +164,11 @@ func (wb *Em2Go) Enable(enable bool) error {
 
 // MaxCurrent implements the api.Charger interface
 func (wb *Em2Go) MaxCurrent(current int64) error {
-	return wb.MaxCurrentMillis(float64(current))
+	return wb.maxCurrentMillis(float64(current))
 }
 
-var _ api.ChargerEx = (*Em2Go)(nil)
-
-// MaxCurrentMillis implements the api.ChargerEx interface
-func (wb *Em2Go) MaxCurrentMillis(current float64) error {
+// maxCurrentMillis implements the api.ChargerEx interface
+func (wb *Em2Go) maxCurrentMillis(current float64) error {
 	b := make([]byte, 2)
 	binary.BigEndian.PutUint16(b, uint16(10*current))
 

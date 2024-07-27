@@ -3,7 +3,6 @@ package charger
 import (
 	"errors"
 	"fmt"
-	"os"
 	"slices"
 	"sync"
 	"time"
@@ -14,9 +13,9 @@ import (
 	spineapi "github.com/enbility/spine-go/api"
 	"github.com/enbility/spine-go/model"
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/charger/eebus"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/provider"
+	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/evcc-io/evcc/util"
 )
 
@@ -31,11 +30,10 @@ type minMax struct {
 }
 
 type EEBus struct {
-	ski string
-
 	uc *eebus.UseCasesEVSE
 	ev spineapi.EntityRemoteInterface
 
+	mux     sync.RWMutex
 	log     *util.Logger
 	lp      loadpoint.API
 	minMaxG func() (minMax, error)
@@ -48,15 +46,8 @@ type EEBus struct {
 
 	currentLimit float64
 
-	lastIsChargingCheck  time.Time
-	lastIsChargingResult bool
-
-	connected     bool
-	connectedC    chan bool
+	*eebus.Connector
 	connectedTime time.Time
-
-	muxEntity sync.Mutex
-	mux       sync.Mutex
 }
 
 func init() {
@@ -86,25 +77,25 @@ func NewEEBusFromConfig(other map[string]interface{}) (api.Charger, error) {
 
 // NewEEBus creates EEBus charger
 func NewEEBus(ski string, hasMeter, hasChargedEnergy, vasVW bool) (api.Charger, error) {
-	log := util.NewLogger("eebus")
-
 	if eebus.Instance == nil {
 		return nil, errors.New("eebus not configured")
 	}
 
 	c := &EEBus{
-		ski:        ski,
-		log:        log,
-		connectedC: make(chan bool, 1),
-		current:    6,
-		vasVW:      vasVW,
+		log:     util.NewLogger("eebus"),
+		current: 6,
+		vasVW:   vasVW,
+		uc:      eebus.Instance.Evse(),
 	}
 
-	c.uc = eebus.Instance.RegisterEVSE(ski, c)
-
+	c.Connector = eebus.NewConnector(c.connectEvent)
 	c.minMaxG = provider.Cached(c.minMax, time.Second)
 
-	if err := c.waitForConnection(); err != nil {
+	if err := eebus.Instance.RegisterDevice(ski, c); err != nil {
+		return nil, err
+	}
+
+	if err := c.Wait(90 * time.Second); err != nil {
 		return c, err
 	}
 
@@ -119,55 +110,34 @@ func NewEEBus(ski string, hasMeter, hasChargedEnergy, vasVW bool) (api.Charger, 
 	return c, nil
 }
 
-// waitForConnection wait for initial connection and returns an error on failure
-func (c *EEBus) waitForConnection() error {
-	timeout := time.After(90 * time.Second)
-	for {
-		select {
-		case <-timeout:
-			return os.ErrDeadlineExceeded
-		case connected := <-c.connectedC:
-			if connected {
-				return nil
-			}
-		}
-	}
-}
-
 func (c *EEBus) setEvEntity(entity spineapi.EntityRemoteInterface) {
-	c.muxEntity.Lock()
-	defer c.muxEntity.Unlock()
+	c.mux.Lock()
+	defer c.mux.Unlock()
 
 	c.ev = entity
 }
 
 func (c *EEBus) evEntity() spineapi.EntityRemoteInterface {
-	c.muxEntity.Lock()
-	defer c.muxEntity.Unlock()
+	c.mux.RLock()
+	defer c.mux.RUnlock()
 
 	return c.ev
 }
 
-// EEBUSDeviceInterface
+func (c *EEBus) connectEvent(connected bool) {
+	if connected && !c.Connected() {
+		c.mux.Lock()
+		c.connectedTime = time.Now()
+		c.mux.Unlock()
+	}
 
-func (c *EEBus) DeviceConnect() {
-	c.log.TRACE.Println("connect ski:", c.ski)
-
-	c.expectedEnableUnpluggedState = false
-	c.setDefaultValues()
-	c.setConnected(true)
-}
-
-func (c *EEBus) DeviceDisconnect() {
-	c.log.TRACE.Println("disconnect ski:", c.ski)
-
-	c.expectedEnableUnpluggedState = false
-	c.setConnected(false)
 	c.setDefaultValues()
 }
 
-// UseCase specific events
-func (c *EEBus) UseCaseEventCB(device spineapi.DeviceRemoteInterface, entity spineapi.EntityRemoteInterface, event eebusapi.EventType) {
+var _ eebus.Device = (*EEBus)(nil)
+
+// UseCaseEvent implements the eebus.Device interface
+func (c *EEBus) UseCaseEvent(device spineapi.DeviceRemoteInterface, entity spineapi.EntityRemoteInterface, event eebusapi.EventType) {
 	switch event {
 	// EV
 	case evcc.EvConnected:
@@ -183,32 +153,7 @@ func (c *EEBus) UseCaseEventCB(device spineapi.DeviceRemoteInterface, entity spi
 
 func (c *EEBus) setDefaultValues() {
 	c.communicationStandard = evcc.EVCCCommunicationStandardUnknown
-	c.lastIsChargingCheck = time.Now().Add(-time.Hour * 1)
-	c.lastIsChargingResult = false
-}
-
-// set wether the EVSE is connected
-func (c *EEBus) setConnected(connected bool) {
-	c.mux.Lock()
-	defer c.mux.Unlock()
-
-	if connected && !c.connected {
-		c.connectedTime = time.Now()
-	}
-
-	select {
-	case c.connectedC <- connected:
-	default:
-	}
-
-	c.connected = connected
-}
-
-func (c *EEBus) isConnected() bool {
-	c.mux.Lock()
-	defer c.mux.Unlock()
-
-	return c.connected
+	c.expectedEnableUnpluggedState = false
 }
 
 var _ api.CurrentLimiter = (*EEBus)(nil)
@@ -250,16 +195,7 @@ func (c *EEBus) isCharging() bool {
 	// we only want this for configured meters and not for internal meters!
 	// right now it works as expected
 	if c.lp != nil && c.lp.HasChargeMeter() {
-		// we only check ever 10 seconds, maybe we can use the config interval duration
-		if time.Since(c.lastIsChargingCheck) >= 10*time.Second {
-			c.lastIsChargingCheck = time.Now()
-			c.lastIsChargingResult = false
-			// compare charge power for all phases to 0.6 * min. charge power of a single phase
-			if c.lp.GetChargePower() > c.lp.EffectiveMinPower()*idleFactor {
-				c.lastIsChargingResult = true
-				return true
-			}
-		} else if c.lastIsChargingResult {
+		if c.lp.GetChargePower() > c.lp.EffectiveMinPower()*idleFactor {
 			return true
 		}
 	}
@@ -288,11 +224,11 @@ func (c *EEBus) isCharging() bool {
 
 // Status implements the api.Charger interface
 func (c *EEBus) Status() (api.ChargeStatus, error) {
-	evEntity := c.evEntity()
-	if !c.isConnected() {
+	if !c.Connected() {
 		return api.StatusNone, api.ErrTimeout
 	}
 
+	evEntity := c.evEntity()
 	if !c.uc.EvCC.EVConnected(evEntity) {
 		c.expectedEnableUnpluggedState = false
 		return api.StatusA, nil
@@ -317,7 +253,7 @@ func (c *EEBus) Status() (api.ChargeStatus, error) {
 	case ucapi.EVChargeStateTypeError: // Error
 		return api.StatusF, nil
 	default:
-		return api.StatusNone, fmt.Errorf("%s properties unknown result: %s", c.ski, currentState)
+		return api.StatusNone, fmt.Errorf("properties unknown result: %s", currentState)
 	}
 }
 
@@ -407,6 +343,11 @@ func (c *EEBus) writeCurrentLimitData(currents []float64) error {
 		return errors.New("no ev connected")
 	}
 
+	// check if the EVSE supports overload protection limits
+	if !c.uc.OpEV.IsScenarioAvailableAtEntity(evEntity, 1) {
+		return api.ErrNotAvailable
+	}
+
 	_, maxLimits, _, err := c.uc.OpEV.CurrentLimits(evEntity)
 	if err != nil {
 		return errors.New("no limits available")
@@ -443,9 +384,9 @@ func (c *EEBus) writeCurrentLimitData(currents []float64) error {
 	if recommendations, err := c.uc.OscEV.LoadControlLimits(evEntity); err == nil {
 		var writeNeeded bool
 
-		for _, item := range recommendations {
+		for index, item := range recommendations {
 			if item.IsActive {
-				item.IsActive = false
+				recommendations[index].IsActive = false
 				writeNeeded = true
 			}
 		}
@@ -533,6 +474,11 @@ func (c *EEBus) writeLoadControlLimitsVASVW(limits []ucapi.LoadLimitsPhase) bool
 		return false
 	}
 
+	// check if the EVSE supports optimization of self consumption limits
+	if !c.uc.OscEV.IsScenarioAvailableAtEntity(evEntity, 1) {
+		return false
+	}
+
 	// on OSCEV all limits have to be active except they are set to the default value
 	minLimit, _, _, err := c.uc.OscEV.CurrentLimits(evEntity)
 	if err != nil {
@@ -577,7 +523,7 @@ var _ api.ChargerEx = (*EEBus)(nil)
 
 // MaxCurrentMillis implements the api.ChargerEx interface
 func (c *EEBus) MaxCurrentMillis(current float64) error {
-	if !c.connected || c.evEntity() == nil {
+	if !c.Connected() || c.evEntity() == nil {
 		return errors.New("can't set new current as ev is unplugged")
 	}
 
@@ -608,21 +554,33 @@ func (c *EEBus) currentPower() (float64, error) {
 		return 0, nil
 	}
 
-	connectedPhases, err := c.uc.EvCem.PhasesConnected(evEntity)
-	if err != nil {
-		return 0, api.ErrNotAvailable
+	var powers []float64
+
+	// does the EVSE provide power data?
+	if c.uc.EvCem.IsScenarioAvailableAtEntity(evEntity, 2) {
+		// is power data available for real? Elli Gen1 says it supports it, but doesn't provide any data
+		if powerData, err := c.uc.EvCem.PowerPerPhase(evEntity); err == nil {
+			powers = powerData
+		}
 	}
 
-	powers, err := c.uc.EvCem.PowerPerPhase(evEntity)
-	if err != nil {
+	// if no power data is available, and currents are reported to be supported, use currents
+	if len(powers) == 0 && c.uc.EvCem.IsScenarioAvailableAtEntity(evEntity, 1) {
+		// no power provided, calculate from current
+		if currents, err := c.uc.EvCem.CurrentPerPhase(evEntity); err == nil {
+			for _, current := range currents {
+				powers = append(powers, current*voltage)
+			}
+		}
+	}
+
+	// if still no power data is available, return an error
+	if len(powers) == 0 {
 		return 0, api.ErrNotAvailable
 	}
 
 	var power float64
-	for index, phasePower := range powers {
-		if index >= int(connectedPhases) {
-			break
-		}
+	for _, phasePower := range powers {
 		power += phasePower
 	}
 
@@ -634,6 +592,10 @@ func (c *EEBus) chargedEnergy() (float64, error) {
 	evEntity := c.evEntity()
 	if evEntity == nil {
 		return 0, nil
+	}
+
+	if !c.uc.EvCem.IsScenarioAvailableAtEntity(evEntity, 3) {
+		return 0, api.ErrNotAvailable
 	}
 
 	energy, err := c.uc.EvCem.EnergyCharged(evEntity)
@@ -649,6 +611,11 @@ func (c *EEBus) currents() (float64, float64, float64, error) {
 	evEntity := c.evEntity()
 	if evEntity == nil {
 		return 0, 0, 0, nil
+	}
+
+	// check if the EVSE supports currents
+	if !c.uc.EvCem.IsScenarioAvailableAtEntity(evEntity, 1) {
+		return 0, 0, 0, api.ErrNotAvailable
 	}
 
 	res, err := c.uc.EvCem.CurrentPerPhase(evEntity)
@@ -672,7 +639,7 @@ var _ api.Identifier = (*EEBus)(nil)
 // Identify implements the api.Identifier interface
 func (c *EEBus) Identify() (string, error) {
 	evEntity := c.evEntity()
-	if !c.isConnected() || evEntity == nil {
+	if !c.Connected() || evEntity == nil {
 		return "", nil
 	}
 
@@ -685,6 +652,9 @@ func (c *EEBus) Identify() (string, error) {
 	if comStandard, _ := c.uc.EvCC.CommunicationStandard(evEntity); comStandard == model.DeviceConfigurationKeyValueStringTypeIEC61851 {
 		return "", nil
 	}
+
+	c.mux.RLock()
+	defer c.mux.RUnlock()
 
 	if time.Since(c.connectedTime) < maxIdRequestTimespan {
 		return "", api.ErrMustRetry

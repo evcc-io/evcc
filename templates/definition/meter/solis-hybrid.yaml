@@ -2,7 +2,7 @@ template: solis-hybrid
 products:
   - brand: Ginlong
     description:
-      generic: Solis Hybrid Inverter
+      generic: Solis Hybrid Inverter (RHI series)
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -101,6 +101,7 @@ render: |
       type: input
       address: 33149 # Battery power
       decode: int32
+    scale: -1
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}

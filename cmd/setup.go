@@ -18,7 +18,6 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/globalconfig"
 	"github.com/evcc-io/evcc/charger"
-	"github.com/evcc-io/evcc/charger/eebus"
 	"github.com/evcc-io/evcc/cmd/shutdown"
 	"github.com/evcc-io/evcc/core"
 	"github.com/evcc-io/evcc/core/keys"
@@ -31,6 +30,7 @@ import (
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/server/db"
 	"github.com/evcc-io/evcc/server/db/settings"
+	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/evcc-io/evcc/server/modbus"
 	"github.com/evcc-io/evcc/server/oauth2redirect"
 	"github.com/evcc-io/evcc/tariff"
@@ -496,6 +496,17 @@ func configureEnvironment(cmd *cobra.Command, conf *globalconfig.All) (err error
 		request.LogHeaders = true
 	}
 
+	// setup persistence
+	if err == nil {
+		err = wrapErrorWithClass(ClassDatabase, configureDatabase(conf.Database))
+	}
+
+	// setup translations
+	if err == nil {
+		// TODO decide wrapping
+		err = locale.Init()
+	}
+
 	// setup machine id
 	if conf.Plant != "" {
 		// TODO decide wrapping
@@ -505,17 +516,6 @@ func configureEnvironment(cmd *cobra.Command, conf *globalconfig.All) (err error
 	// setup sponsorship (allow env override)
 	if err == nil {
 		err = wrapErrorWithClass(ClassSponsorship, configureSponsorship(conf.SponsorToken))
-	}
-
-	// setup translations
-	if err == nil {
-		// TODO decide wrapping
-		err = locale.Init()
-	}
-
-	// setup persistence
-	if err == nil && conf.Database.Dsn != "" {
-		err = wrapErrorWithClass(ClassDatabase, configureDatabase(conf.Database))
 	}
 
 	// setup mqtt client listener
@@ -549,6 +549,10 @@ func configureEnvironment(cmd *cobra.Command, conf *globalconfig.All) (err error
 
 // configureDatabase configures session database
 func configureDatabase(conf globalconfig.DB) error {
+	if conf.Dsn == "" {
+		return errors.New("database dsn not configured")
+	}
+
 	if err := db.NewInstance(conf.Type, conf.Dsn); err != nil {
 		return err
 	}

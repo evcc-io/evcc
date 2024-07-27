@@ -6,7 +6,13 @@
 			@change-vehicle="changeVehicle"
 			@remove-vehicle="removeVehicle"
 		/>
-		<VehicleStatus v-bind="vehicleStatus" class="mb-2" />
+		<VehicleStatus
+			v-bind="vehicleStatus"
+			class="mb-2"
+			@open-loadpoint-settings="$emit('open-loadpoint-settings')"
+			@open-minsoc-settings="openMinSocSettings"
+			@open-plan-modal="openPlanModal"
+		/>
 		<VehicleSoc
 			v-bind="vehicleSocProps"
 			class="mt-2 mb-4"
@@ -89,6 +95,7 @@ export default {
 		chargedEnergy: Number,
 		charging: Boolean,
 		vehicleClimaterActive: Boolean,
+		vehicleWelcomeActive: Boolean,
 		connected: Boolean,
 		currency: String,
 		effectiveLimitSoc: Number,
@@ -105,11 +112,15 @@ export default {
 		planActive: Boolean,
 		planEnergy: Number,
 		planProjectedStart: String,
+		planProjectedEnd: String,
 		planTime: String,
 		planTimeUnreachable: Boolean,
+		planOverrun: Number,
 		pvAction: String,
 		pvRemainingInterpolated: Number,
+		sessionSolarPercentage: Number,
 		smartCostActive: Boolean,
+		smartCostNextStart: String,
 		smartCostLimit: Number,
 		smartCostType: String,
 		socBasedCharging: Boolean,
@@ -125,7 +136,13 @@ export default {
 		vehicleLimitSoc: Number,
 		vehicleNotReachable: Boolean,
 	},
-	emits: ["limit-soc-updated", "limit-energy-updated", "change-vehicle", "remove-vehicle"],
+	emits: [
+		"limit-soc-updated",
+		"limit-energy-updated",
+		"change-vehicle",
+		"remove-vehicle",
+		"open-loadpoint-settings",
+	],
 	data() {
 		return {
 			displayLimitSoc: this.effectiveLimitSoc,
@@ -202,6 +219,9 @@ export default {
 			}
 			return false;
 		},
+		smartCostDisabled: function () {
+			return ["off", "now"].includes(this.mode);
+		},
 	},
 	watch: {
 		effectiveLimitSoc: function () {
@@ -231,6 +251,9 @@ export default {
 		},
 		openPlanModal() {
 			this.$refs.chargingPlan.openPlanModal();
+		},
+		openMinSocSettings() {
+			this.$refs.chargingPlan.openPlanModal(true);
 		},
 	},
 };

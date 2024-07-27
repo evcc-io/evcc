@@ -11,6 +11,7 @@ test.use({ baseURL: baseUrl() });
 async function login(page) {
   await page.locator("#loginPassword").fill("secret");
   await page.getByRole("button", { name: "Login" }).click();
+  await expect(page.locator("#loginPassword")).not.toBeVisible();
 }
 
 test.describe("Basics", async () => {
@@ -56,13 +57,13 @@ test.describe("Basics", async () => {
 
 test.describe("Advanced", async () => {
   test.beforeAll(async () => {
-    await start(simulatorConfig(), "password.sql");
     await startSimulator();
+    await start(simulatorConfig(), "password.sql");
   });
 
   test.afterAll(async () => {
-    await stopSimulator();
     await stop();
+    await stopSimulator();
   });
 
   test("Menu options. All available.", async ({ page }) => {

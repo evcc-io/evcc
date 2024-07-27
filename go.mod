@@ -24,9 +24,9 @@ require (
 	github.com/dmarkham/enumer v1.5.10
 	github.com/dylanmei/iso8601 v0.1.0
 	github.com/eclipse/paho.mqtt.golang v1.4.3
-	github.com/enbility/eebus-go v0.6.0
-	github.com/enbility/ship-go v0.5.1
-	github.com/enbility/spine-go v0.6.0
+	github.com/enbility/eebus-go v0.6.1
+	github.com/enbility/ship-go v0.5.2
+	github.com/enbility/spine-go v0.6.1
 	github.com/evcc-io/tesla-proxy-client v0.0.0-20240221194046-4168b3759701
 	github.com/fatih/structs v1.1.0
 	github.com/glebarez/sqlite v1.11.0
@@ -62,7 +62,7 @@ require (
 	github.com/libp2p/zeroconf/v2 v2.2.0
 	github.com/lorenzodonini/ocpp-go v0.18.0
 	github.com/lunixbochs/struc v0.0.0-20200707160740-784aaebc1d40
-	github.com/mabunixda/wattpilot v1.8.0
+	github.com/mabunixda/wattpilot v1.8.1
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mlnoga/rct v0.1.2-0.20240421173556-1c5b75037e2f
 	github.com/muka/go-bluetooth v0.0.0-20240115085408-dfdf79b8f61d
@@ -197,10 +197,8 @@ require (
 
 replace gopkg.in/yaml.v3 => github.com/andig/yaml v0.0.0-20240531135838-1ff5761ab467
 
-replace github.com/enbility/eebus-go => github.com/enbility/eebus-go v0.0.0-20240705085643-aef0f7bf9e5d
-
-replace github.com/enbility/spine-go => github.com/enbility/spine-go v0.0.0-20240705075417-fb2969d753c1
-
 replace github.com/grid-x/modbus => github.com/evcc-io/modbus v0.0.0-20240503125516-9fd99fe0e438
 
 replace github.com/volkszaehler/mbmd => github.com/andig/mbmd v0.0.0-20240501153638-fe73629adf13
+
+replace github.com/enbility/spine-go => github.com/enbility/spine-go v0.0.0-20240726200332-a983de1e34b8

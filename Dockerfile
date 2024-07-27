@@ -84,13 +84,15 @@ COPY packaging/docker/bin/* /app/
 
 # mDNS
 EXPOSE 5353/udp
+# EEBus
+EXPOSE 4712/tcp
 # UI and /api
 EXPOSE 7070/tcp
 # KEBA charger
 EXPOSE 7090/udp
 # OCPP charger
 EXPOSE 8887/tcp
-# GoodWe Wifi Inverter
+# Modbus UDP
 EXPOSE 8899/udp
 # SMA Energy Manager
 EXPOSE 9522/udp

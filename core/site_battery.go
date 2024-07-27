@@ -55,14 +55,18 @@ func (site *Site) applyBatteryMode(mode api.BatteryMode) error {
 	return nil
 }
 
-func (site *Site) plannerRate() (*api.Rate, error) {
+func (site *Site) plannerRates() (api.Rates, error) {
 	tariff := site.GetTariff(PlannerTariff)
 	if tariff == nil || tariff.Type() == api.TariffTypePriceStatic {
 		return nil, nil
 	}
 
-	rates, err := tariff.Rates()
-	if err != nil {
+	return tariff.Rates()
+}
+
+func (site *Site) plannerRate() (*api.Rate, error) {
+	rates, err := site.plannerRates()
+	if rates == nil || err != nil {
 		return nil, err
 	}
 
@@ -77,6 +81,22 @@ func (site *Site) plannerRate() (*api.Rate, error) {
 func (site *Site) smartCostActive(lp loadpoint.API, rate *api.Rate) bool {
 	limit := lp.GetSmartCostLimit()
 	return limit != 0 && rate != nil && rate.Price <= limit
+}
+
+func (site *Site) smartCostNextStart(lp loadpoint.API, rate api.Rates) time.Time {
+	limit := lp.GetSmartCostLimit()
+	if limit == 0 || rate == nil {
+		return time.Time{}
+	}
+
+	now := time.Now()
+	for _, slot := range rate {
+		if slot.Start.After(now) && slot.Price <= limit {
+			return slot.Start
+		}
+	}
+
+	return time.Time{}
 }
 
 func (site *Site) updateBatteryMode() {

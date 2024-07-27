@@ -36,6 +36,7 @@ import (
 
 // Keba is an api.Charger implementation
 type Keba struct {
+	*embed
 	log  *util.Logger
 	conn *modbus.Connection
 }
@@ -68,15 +69,20 @@ func init() {
 
 // NewKebaFromConfig creates a new Keba ModbusTCP charger
 func NewKebaFromConfig(other map[string]interface{}) (api.Charger, error) {
-	cc := modbus.TcpSettings{
-		ID: 255,
+	cc := struct {
+		embed              `mapstructure:",squash"`
+		modbus.TcpSettings `mapstructure:",squash"`
+	}{
+		TcpSettings: modbus.TcpSettings{
+			ID: 255,
+		},
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	wb, err := NewKeba(cc.URI, cc.ID)
+	wb, err := NewKeba(cc.embed, cc.URI, cc.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -129,7 +135,7 @@ func NewKebaFromConfig(other map[string]interface{}) (api.Charger, error) {
 }
 
 // NewKeba creates a new charger
-func NewKeba(uri string, slaveID uint8) (*Keba, error) {
+func NewKeba(embed embed, uri string, slaveID uint8) (*Keba, error) {
 	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, slaveID)
 	if err != nil {
 		return nil, err
@@ -143,8 +149,9 @@ func NewKeba(uri string, slaveID uint8) (*Keba, error) {
 	conn.Logger(log.TRACE)
 
 	wb := &Keba{
-		log:  log,
-		conn: conn,
+		embed: &embed,
+		log:   log,
+		conn:  conn,
 	}
 
 	return wb, err

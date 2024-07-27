@@ -2,7 +2,7 @@ import { createRouter, createWebHashHistory } from "vue-router";
 import Modal from "bootstrap/js/dist/modal";
 import Main from "./views/Main.vue";
 import { ensureCurrentLocaleMessages } from "./i18n";
-import { openLoginModal, statusUnknown, updateAuthStatus, isLoggedIn } from "./auth";
+import { openLoginModal, statusUnknown, updateAuthStatus, isLoggedIn, isConfigured } from "./auth";
 
 function hideAllModals() {
   [...document.querySelectorAll(".modal.show")].forEach((modal) => {
@@ -18,6 +18,9 @@ function hideAllModals() {
 
 async function ensureAuth(to) {
   await updateAuthStatus();
+  if (!isConfigured()) {
+    return false;
+  }
   if (!isLoggedIn() && !statusUnknown()) {
     openLoginModal(to.path);
     return false;
