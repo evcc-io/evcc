@@ -73,8 +73,8 @@ func TestCircuitPower(t *testing.T) {
 		c1, cm1 := circ(t, ctrl, 1)
 		c2, cm2 := circ(t, ctrl, 1)
 
-		c1.SetParent(pc)
-		c2.SetParent(pc)
+		c1.setParent(pc)
+		c2.setParent(pc)
 
 		// update meters
 		pm.EXPECT().CurrentPower().Return(tc.p, nil)
@@ -112,8 +112,8 @@ func TestCircuitCurrents(t *testing.T) {
 		c1, cm1 := circ(t, ctrl, 1)
 		c2, cm2 := circ(t, ctrl, 1)
 
-		c1.SetParent(pc)
-		c2.SetParent(pc)
+		c1.setParent(pc)
+		c2.setParent(pc)
 
 		// update meters
 		pm.MockMeter.EXPECT().CurrentPower().AnyTimes().Return(0.0, nil)
