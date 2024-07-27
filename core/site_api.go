@@ -171,11 +171,11 @@ func (site *Site) SetGridCostGuardLimit(val *float64) {
 		site.gridCostGuardLimit = val
 
 		if val == nil {
-			settings.SetString(keys.MaxGridSupplyWhileBatteryCharging, "")
-			site.publish(keys.MaxGridSupplyWhileBatteryCharging, "")
+			settings.SetString(keys.GridCostGuardLimit, "")
+			site.publish(keys.GridCostGuardLimit, "")
 		} else {
-			settings.SetFloat(keys.MaxGridSupplyWhileBatteryCharging, *val)
-			site.publish(keys.MaxGridSupplyWhileBatteryCharging, *val)
+			settings.SetFloat(keys.GridCostGuardLimit, *val)
+			site.publish(keys.GridCostGuardLimit, *val)
 		}
 	}
 }
