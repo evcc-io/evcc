@@ -137,13 +137,18 @@ func (site *Site) Vehicles() site.Vehicles {
 	return &vehicles{log: site.log}
 }
 
-// GetCircuit returns the circuit
+// GetCircuit returns the root circuit
 func (site *Site) GetCircuit() api.Circuit {
-	if site.circuit == nil {
-		// return untyped nil
-		return nil
-	}
+	site.RLock()
+	defer site.RUnlock()
 	return site.circuit
+}
+
+// SetCircuit sets the root circuit
+func (site *Site) SetCircuit(circuit api.Circuit) {
+	site.Lock()
+	defer site.Unlock()
+	site.circuit = circuit
 }
 
 // GetPrioritySoc returns the PrioritySoc
