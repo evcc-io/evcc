@@ -14,8 +14,8 @@ render: |
   type: custom
   {{- if eq .usage "pv" }}
   power:
-  - source: modbus
-    {{- include "modbus" . | indent 4 }}
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
     register: # manual non-sunspec register configuration
       address: 781 # Actual Power
       type: holding
