@@ -43,6 +43,7 @@ func New(other map[string]interface{}, site site.API) (*EEBus, error) {
 		return nil, err
 	}
 
+	// get root circuit
 	root := circuit.Root()
 	if root == nil {
 		return nil, errors.New("hems requires load management- please configure root circuit")
