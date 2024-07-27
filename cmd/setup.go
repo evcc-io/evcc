@@ -133,7 +133,7 @@ If you know what you're doing, you can run evcc ignoring the service database wi
 	return err
 }
 
-func configureCircuits(conf []config.Named, names ...string) error {
+func configureCircuits(conf []config.Named) error {
 	// migrate settings
 	if settings.Exists(keys.Circuits) {
 		if err := settings.Yaml(keys.Circuits, new([]map[string]any), &conf); err != nil {
