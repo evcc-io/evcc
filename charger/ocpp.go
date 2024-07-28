@@ -168,13 +168,17 @@ func NewOCPP(id string, connector int, idtag string,
 	}
 
 	var (
-		rc                              = make(chan error, 1)
-		MeterValuesSampledData          bool
-		MeterValuesSampledDataMaxLength int
-		MeterValuesAlignedData          bool
-		MeterValuesAlignedDataMaxLength int
-		StopTxnSampledData              bool
-		StopTxnSampledDataMaxLength     int
+		rc = make(chan error, 1)
+
+		MeterValuesSampledData bool
+		MeterValuesAlignedData bool
+		StopTxnSampledData     bool
+
+		// If a key value is defined as a CSL, it MAY be accompanied with a [KeyName]MaxLength key, indicating the
+		// max length of the CSL in items. If this key is not set, a safe value of 1 (one) item SHOULD be assumed.
+		MeterValuesSampledDataMaxLength int = 1
+		MeterValuesAlignedDataMaxLength int = 1
+		StopTxnSampledDataMaxLength     int = 1
 	)
 
 	c.chargingRateUnit = types.ChargingRateUnitType(chargingRateUnit)
@@ -284,8 +288,8 @@ func NewOCPP(id string, connector int, idtag string,
 		// configuration activated
 		c.meterValuesSample = meterValues
 	} else {
-		// autodetect accepted measurands
-		if MeterValuesSampledData {
+		// autodetect and set measurands
+		if MeterValuesSampledData && MeterValuesSampledDataMaxLength > 0 {
 			sampledMeasurands := c.tryMeasurands(desiredMeasurands, ocpp.KeyMeterValuesSampledData)
 			if len(sampledMeasurands) > 0 {
 				m := c.constrainedJoin(sampledMeasurands, MeterValuesSampledDataMaxLength)
@@ -299,7 +303,7 @@ func NewOCPP(id string, connector int, idtag string,
 			}
 		}
 
-		if MeterValuesAlignedData {
+		if MeterValuesAlignedData && MeterValuesAlignedDataMaxLength > 0 {
 			clockAlignedMeasurands := c.tryMeasurands(desiredMeasurands, ocpp.KeyMeterValuesAlignedData)
 			if len(clockAlignedMeasurands) > 0 {
 				m := c.constrainedJoin(clockAlignedMeasurands, MeterValuesAlignedDataMaxLength)
@@ -309,7 +313,7 @@ func NewOCPP(id string, connector int, idtag string,
 			}
 		}
 
-		if StopTxnSampledData {
+		if StopTxnSampledData && StopTxnSampledDataMaxLength > 0 {
 			stopTxnSampledMeasurands := c.tryMeasurands(desiredMeasurands, ocpp.KeyStopTxnSampledData)
 			if len(stopTxnSampledMeasurands) > 0 {
 				m := c.constrainedJoin(stopTxnSampledMeasurands, StopTxnSampledDataMaxLength)
