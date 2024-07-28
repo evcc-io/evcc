@@ -2,6 +2,7 @@ package ocpp
 
 const (
 	// Core profile keys
+	KeyGetConfigurationMaxKeys           = "GetConfigurationMaxKeys"
 	KeyNumberOfConnectors                = "NumberOfConnectors"
 	KeySupportedFeatureProfiles          = "SupportedFeatureProfiles"
 	KeyWebSocketPingInterval             = "WebSocketPingInterval"

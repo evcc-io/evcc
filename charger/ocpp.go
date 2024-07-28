@@ -181,6 +181,21 @@ func NewOCPP(id string, connector int, idtag string,
 		StopTxnSampledDataMaxLength     int = 1
 	)
 
+	keys := []string{
+		ocpp.KeyGetConfigurationMaxKeys,
+		ocpp.KeyNumberOfConnectors,
+		ocpp.KeySupportedFeatureProfiles,
+		ocpp.KeyConnectorSwitch3to1PhaseSupported,
+		ocpp.KeyChargingScheduleAllowedChargingRateUnit,
+		ocpp.KeyMeterValuesSampledData,
+		ocpp.KeyMeterValuesAlignedData,
+		ocpp.KeyStopTxnSampledData,
+		ocpp.KeyMeterValuesSampledDataMaxLength, // optional
+		ocpp.KeyMeterValuesAlignedDataMaxLength, // optional
+		ocpp.KeyStopTxnSampledDataMaxLength,     // optional
+	}
+	_ = keys
+
 	c.chargingRateUnit = types.ChargingRateUnitType(chargingRateUnit)
 
 	// noConfig mode disables GetConfiguration
@@ -235,20 +250,17 @@ func NewOCPP(id string, connector int, idtag string,
 						StopTxnSampledData = !opt.Readonly
 
 					case ocpp.KeyMeterValuesSampledDataMaxLength:
-						var val int
-						if val, err = strconv.Atoi(*opt.Value); err == nil {
+						if val, err := strconv.Atoi(*opt.Value); err == nil {
 							MeterValuesSampledDataMaxLength = val
 						}
 
 					case ocpp.KeyMeterValuesAlignedDataMaxLength:
-						var val int
-						if val, err = strconv.Atoi(*opt.Value); err == nil {
+						if val, err := strconv.Atoi(*opt.Value); err == nil {
 							MeterValuesAlignedDataMaxLength = val
 						}
 
 					case ocpp.KeyStopTxnSampledDataMaxLength:
-						var val int
-						if val, err = strconv.Atoi(*opt.Value); err == nil {
+						if val, err := strconv.Atoi(*opt.Value); err == nil {
 							StopTxnSampledDataMaxLength = val
 						}
 
