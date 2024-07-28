@@ -153,25 +153,10 @@ func NewOCPP(id string, connector int, idtag string,
 	case <-cp.HasConnected():
 	}
 
-	// see who's there
-	if boot {
-		conn.TriggerMessageRequest(core.BootNotificationFeatureName)
-	}
-
 	var (
 		rc                              = make(chan error, 1)
 		MeterValuesSampledDataMaxLength int
 	)
-
-	keys := []string{
-		ocpp.KeyNumberOfConnectors,
-		ocpp.KeySupportedFeatureProfiles,
-		ocpp.KeyWebSocketPingInterval,
-		ocpp.KeyConnectorSwitch3to1PhaseSupported,
-		ocpp.KeyChargingScheduleAllowedChargingRateUnit,
-		ocpp.KeyMeterValuesSampledDataMaxLength,
-	}
-	_ = keys
 
 	c.chargingRateUnit = types.ChargingRateUnitType(chargingRateUnit)
 
@@ -182,11 +167,6 @@ func NewOCPP(id string, connector int, idtag string,
 
 		err := ocpp.Instance().GetConfiguration(cp.ID(), func(resp *core.GetConfigurationConfirmation, err error) {
 			if err == nil {
-				// log unsupported configuration keys
-				if len(resp.UnknownKey) > 0 {
-					c.log.ERROR.Printf("unsupported keys: %v", resp.UnknownKey)
-				}
-
 				// sort configuration keys for printing
 				slices.SortFunc(resp.ConfigurationKey, func(i, j core.ConfigurationKey) int {
 					return cmp.Compare(i.Key, j.Key)
@@ -248,6 +228,11 @@ func NewOCPP(id string, connector int, idtag string,
 		if err := c.wait(err, rc); err != nil {
 			return nil, err
 		}
+	}
+
+	// see who's there
+	if c.hasRemoteTriggerFeature || boot {
+		conn.TriggerMessageRequest(core.BootNotificationFeatureName)
 	}
 
 	if meterValues != "" {

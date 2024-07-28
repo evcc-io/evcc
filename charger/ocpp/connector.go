@@ -83,7 +83,7 @@ func (conn *Connector) WatchDog(timeout time.Duration) {
 	tick := time.NewTicker(timeout)
 	for ; true; <-tick.C {
 		conn.mu.Lock()
-		update := conn.txnId != 0 && conn.clock.Since(conn.meterUpdated) > timeout
+		update := conn.clock.Since(conn.meterUpdated) > timeout
 		conn.mu.Unlock()
 
 		if update {
