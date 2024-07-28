@@ -637,8 +637,7 @@ export default {
 			return { configured: { value: this.yamlConfigState[key] } };
 		},
 		circuitTags(circuit) {
-			const { name, config } = circuit;
-			const data = store.state?.circuits[name] || {};
+			const data = store.state?.circuits[circuit.name] || {};
 			const result = {};
 
 			if (data.maxCurrent) {
