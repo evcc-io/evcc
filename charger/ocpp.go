@@ -21,18 +21,19 @@ import (
 
 // OCPP charger implementation
 type OCPP struct {
-	log               *util.Logger
-	conn              *ocpp.Connector
-	idtag             string
-	enabled           bool
-	phases            int
-	current           float64
-	meterValuesSample string
-	timeout           time.Duration
-	phaseSwitching    bool
-	autoStart, noStop bool
-	chargingRateUnit  types.ChargingRateUnitType
-	lp                loadpoint.API
+	log                      *util.Logger
+	conn                     *ocpp.Connector
+	idtag                    string
+	enabled                  bool
+	phases                   int
+	current                  float64
+	meterValuesSample        string
+	timeout                  time.Duration
+	phaseSwitching           bool
+	autoStart, noStop        bool
+	chargingRateUnit         types.ChargingRateUnitType
+	supportedFeatureProfiles string
+	lp                       loadpoint.API
 }
 
 const defaultIdTag = "evcc"
@@ -158,16 +159,18 @@ func NewOCPP(id string, connector int, idtag string,
 	}
 
 	var (
-		rc                  = make(chan error, 1)
-		meterSampleInterval time.Duration
+		rc                              = make(chan error, 1)
+		meterSampleInterval             time.Duration
+		MeterValuesSampledDataMaxLength int
 	)
 
 	keys := []string{
 		ocpp.KeyNumberOfConnectors,
-		ocpp.KeyMeterValuesSampledData,
-		ocpp.KeyMeterValueSampleInterval,
+		ocpp.KeySupportedFeatureProfiles,
+		ocpp.KeyWebSocketPingInterval,
 		ocpp.KeyConnectorSwitch3to1PhaseSupported,
 		ocpp.KeyChargingScheduleAllowedChargingRateUnit,
+		ocpp.KeyMeterValuesSampledDataMaxLength,
 	}
 	_ = keys
 
@@ -211,14 +214,8 @@ func NewOCPP(id string, connector int, idtag string,
 							err = fmt.Errorf("connector %d exceeds max available connectors: %d", connector, val)
 						}
 
-					case ocpp.KeyMeterValuesSampledData:
-						c.meterValuesSample = *opt.Value
-
-					case ocpp.KeyMeterValueSampleInterval:
-						var val int
-						if val, err = strconv.Atoi(*opt.Value); err == nil {
-							meterSampleInterval = time.Duration(val) * time.Second
-						}
+					case ocpp.KeySupportedFeatureProfiles:
+						c.supportedFeatureProfiles = *opt.Value
 
 					case ocpp.KeyConnectorSwitch3to1PhaseSupported:
 						var val bool
@@ -226,15 +223,22 @@ func NewOCPP(id string, connector int, idtag string,
 							c.phaseSwitching = val
 						}
 
+					case ocpp.KeyChargingScheduleAllowedChargingRateUnit:
+						if *opt.Value == "W" {
+							c.chargingRateUnit = types.ChargingRateUnitWatts
+						}
+
+					case ocpp.KeyMeterValuesSampledDataMaxLength:
+						var val int
+						if val, err = strconv.Atoi(*opt.Value); err == nil {
+							MeterValuesSampledDataMaxLength = val
+						}
+
+					// vendor-specific keys
 					case ocpp.KeyAlfenPlugAndChargeIdentifier:
 						if c.idtag == defaultIdTag {
 							c.idtag = *opt.Value
 							c.log.DEBUG.Printf("overriding default `idTag` with Alfen-specific value: %s", c.idtag)
-						}
-
-					case ocpp.KeyChargingScheduleAllowedChargingRateUnit:
-						if *opt.Value == "W" {
-							c.chargingRateUnit = types.ChargingRateUnitWatts
 						}
 					}
 
@@ -252,32 +256,35 @@ func NewOCPP(id string, connector int, idtag string,
 		}
 	}
 
-	// autodetect valid measurands
-	var acceptedMeasurands []string
-	for _, m := range strings.Split(desiredMeasurands, ",") {
-		if err := c.configure(ocpp.KeyMeterValuesSampledData, m); err == nil {
-			acceptedMeasurands = append(acceptedMeasurands, m)
-		}
-	}
-
-	if len(acceptedMeasurands) > 0 {
-		m := strings.Join(acceptedMeasurands, ",")
-		if err := c.configure(ocpp.KeyMeterValuesSampledData, m); err != nil {
-			return nil, err
-		}
-
-		// configuration activated
-		c.meterValuesSample = m
-		c.log.DEBUG.Println("enabled meter measurands: ", m)
-	}
-
-	if meterValues != "" && meterValues != c.meterValuesSample {
+	if meterValues != "" {
+		// manually override measurands
 		if err := c.configure(ocpp.KeyMeterValuesSampledData, meterValues); err != nil {
 			return nil, err
 		}
 
 		// configuration activated
 		c.meterValuesSample = meterValues
+	} else {
+		// autodetect valid measurands
+		var acceptedMeasurands []string
+		for _, m := range strings.Split(desiredMeasurands, ",") {
+			if err := c.configure(ocpp.KeyMeterValuesSampledData, m); err == nil {
+				if MeterValuesSampledDataMaxLength > 0 && len(acceptedMeasurands) < MeterValuesSampledDataMaxLength {
+					acceptedMeasurands = append(acceptedMeasurands, m)
+				}
+			}
+		}
+
+		if len(acceptedMeasurands) > 0 {
+			m := strings.Join(acceptedMeasurands, ",")
+			if err := c.configure(ocpp.KeyMeterValuesSampledData, m); err != nil {
+				return nil, err
+			}
+
+			// configuration activated
+			c.meterValuesSample = m
+			c.log.DEBUG.Println("enabled meter measurands: ", m)
+		}
 	}
 
 	// get initial meter values and configure sample rate
