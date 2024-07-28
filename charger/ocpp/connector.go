@@ -158,7 +158,7 @@ func (conn *Connector) Status() (api.ChargeStatus, error) {
 	return res, nil
 }
 
-// NeedsTransaction checks if if initial RemoteStart of a transaction is required
+// NeedsTransaction checks if an initial RemoteStart of a transaction is required
 func (conn *Connector) NeedsTransaction() (bool, error) {
 	conn.mu.Lock()
 	defer conn.mu.Unlock()
@@ -167,11 +167,7 @@ func (conn *Connector) NeedsTransaction() (bool, error) {
 		return false, api.ErrTimeout
 	}
 
-	if conn.txnId == 0 && conn.status.Status == core.ChargePointStatusPreparing {
-		return true, nil
-	}
-
-	return false, nil
+	return conn.txnId == 0 && conn.status.Status == core.ChargePointStatusPreparing, nil
 }
 
 // isMeterTimeout checks if meter values are outdated.
@@ -180,7 +176,6 @@ func (conn *Connector) isMeterTimeout() bool {
 	return conn.timeout > 0 && conn.clock.Since(conn.meterUpdated) > conn.timeout
 }
 
-var _ api.CurrentGetter = (*Connector)(nil)
 
 func (conn *Connector) GetMaxCurrent() (float64, error) {
 	if !conn.cp.Connected() {
@@ -253,7 +248,6 @@ func (conn *Connector) TotalEnergy() (float64, error) {
 	return 0, api.ErrNotAvailable
 }
 
-var _ api.Battery = (*Connector)(nil)
 
 func (conn *Connector) Soc() (float64, error) {
 	if !conn.cp.Connected() {
@@ -329,7 +323,6 @@ func (conn *Connector) Currents() (float64, float64, float64, error) {
 	return currents[0], currents[1], currents[2], nil
 }
 
-var _ api.PhaseVoltages = (*Connector)(nil)
 
 func (conn *Connector) Voltages() (float64, float64, float64, error) {
 	if !conn.cp.Connected() {

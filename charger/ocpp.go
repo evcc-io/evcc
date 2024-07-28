@@ -406,11 +406,10 @@ func (c *OCPP) setChargingProfile(profile *types.ChargingProfile) error {
 
 // setCurrent sets the TxDefaultChargingProfile with given current
 func (c *OCPP) setCurrent(current float64) error {
-	var err error
 
 	current = math.Trunc(10*current) / 10
 
-	err = c.setChargingProfile(c.createTxDefaultChargingProfile(current))
+	err := c.setChargingProfile(c.createTxDefaultChargingProfile(current))
 	if err != nil {
 		err = fmt.Errorf("set charging profile: %w", err)
 	}
@@ -523,9 +522,6 @@ func (c *OCPP) voltages() (float64, float64, float64, error) {
 func (c *OCPP) phases1p3p(phases int) error {
 	c.phases = phases
 
-	// NOTE: this will currently _never_ do anything since
-	// loadpoint disabled the charger before switching so
-	// setCurrent will short-circuit
 	return c.setCurrent(c.current)
 }
 
