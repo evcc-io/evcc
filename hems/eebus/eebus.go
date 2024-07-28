@@ -33,10 +33,25 @@ type EEBus struct {
 	heartbeat *provider.Value[struct{}]
 }
 
+type Limits struct {
+	ContractualConsumptionNominalMax    float64
+	ConsumptionLimit                    float64
+	FailsafeConsumptionActivePowerLimit float64
+	FailsafeDurationMinimum             time.Duration
+}
+
 // New creates an EEBus HEMS from generic config
 func New(other map[string]interface{}, site site.API) (*EEBus, error) {
-	var cc struct {
-		Ski string
+	cc := struct {
+		Ski    string
+		Limits `mapstructure:",squash"`
+	}{
+		Limits: Limits{
+			ContractualConsumptionNominalMax:    24800,
+			ConsumptionLimit:                    0,
+			FailsafeConsumptionActivePowerLimit: 4200,
+			FailsafeDurationMinimum:             2 * time.Hour,
+		},
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -64,11 +79,11 @@ func New(other map[string]interface{}, site site.API) (*EEBus, error) {
 	}
 	site.SetCircuit(lpc)
 
-	return NewEEBus(cc.Ski, lpc)
+	return NewEEBus(cc.Ski, cc.Limits, lpc)
 }
 
 // NewEEBus creates EEBus charger
-func NewEEBus(ski string, root api.Circuit) (*EEBus, error) {
+func NewEEBus(ski string, limits Limits, root api.Circuit) (*EEBus, error) {
 	if eebus.Instance == nil {
 		return nil, errors.New("eebus not configured")
 	}
@@ -99,6 +114,23 @@ func NewEEBus(ski string, root api.Circuit) (*EEBus, error) {
 
 	for _, s := range c.uc.MGCP.RemoteEntitiesScenarios() {
 		c.log.DEBUG.Println("MGCP RemoteEntitiesScenarios:", s.Scenarios)
+	}
+
+	// set initial values
+	if err := c.uc.LPC.SetContractualConsumptionNominalMax(limits.ContractualConsumptionNominalMax); err != nil {
+		c.log.ERROR.Println("LPC SetContractualConsumptionNominalMax:", err)
+	}
+	if err := c.uc.LPC.SetConsumptionLimit(ucapi.LoadLimit{
+		Value:        limits.ConsumptionLimit,
+		IsChangeable: true,
+	}); err != nil {
+		c.log.ERROR.Println("LPC SetConsumptionLimit:", err)
+	}
+	if err := c.uc.LPC.SetFailsafeConsumptionActivePowerLimit(limits.FailsafeConsumptionActivePowerLimit, true); err != nil {
+		c.log.ERROR.Println("LPC SetFailsafeConsumptionActivePowerLimit:", err)
+	}
+	if err := c.uc.LPC.SetFailsafeDurationMinimum(limits.FailsafeDurationMinimum, true); err != nil {
+		c.log.ERROR.Println("LPC SetFailsafeDurationMinimum:", err)
 	}
 
 	return c, nil
