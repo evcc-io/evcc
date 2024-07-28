@@ -104,17 +104,18 @@ func NewEEBus(ski string, limits Limits, root api.Circuit) (*EEBus, error) {
 		return c, err
 	}
 
+	// scenarios
 	for _, s := range c.uc.LPC.RemoteEntitiesScenarios() {
 		c.log.DEBUG.Println("LPC RemoteEntitiesScenarios:", s.Scenarios)
 	}
-
 	for _, s := range c.uc.LPP.RemoteEntitiesScenarios() {
 		c.log.DEBUG.Println("LPP RemoteEntitiesScenarios:", s.Scenarios)
 	}
-
 	for _, s := range c.uc.MGCP.RemoteEntitiesScenarios() {
 		c.log.DEBUG.Println("MGCP RemoteEntitiesScenarios:", s.Scenarios)
 	}
+
+	// TODO apply limits
 
 	// set initial values
 	if err := c.uc.LPC.SetContractualConsumptionNominalMax(limits.ContractualConsumptionNominalMax); err != nil {
