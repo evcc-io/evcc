@@ -79,7 +79,6 @@ func (c *Steuerbox) Run() {
 	}
 }
 
-// TODO check state machine against spec
 func (c *Steuerbox) run() error {
 	c.mux.RLock()
 	defer c.mux.RUnlock()
