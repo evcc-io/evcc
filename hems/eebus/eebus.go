@@ -26,7 +26,7 @@ type EEBus struct {
 	status        status
 	statusUpdated time.Time
 
-	limit            *ucapi.LoadLimit // LPC-041
+	consumptionLimit *ucapi.LoadLimit // LPC-041
 	failsafeLimit    float64
 	failsafeDuration time.Duration
 
@@ -94,6 +94,14 @@ func NewEEBus(ski string, limits Limits, root api.Circuit) (*EEBus, error) {
 		uc:        eebus.Instance.ControllableSystem(),
 		Connector: eebus.NewConnector(nil),
 		heartbeat: provider.NewValue[struct{}](2 * time.Minute), // LPC-031
+
+		consumptionLimit: &ucapi.LoadLimit{
+			Value:        limits.ConsumptionLimit,
+			IsChangeable: true,
+		},
+
+		failsafeLimit:    limits.FailsafeConsumptionActivePowerLimit,
+		failsafeDuration: limits.FailsafeDurationMinimum,
 	}
 
 	if err := eebus.Instance.RegisterDevice(ski, c); err != nil {
@@ -115,22 +123,17 @@ func NewEEBus(ski string, limits Limits, root api.Circuit) (*EEBus, error) {
 		c.log.DEBUG.Println("MGCP RemoteEntitiesScenarios:", s.Scenarios)
 	}
 
-	// TODO apply limits
-
 	// set initial values
 	if err := c.uc.LPC.SetContractualConsumptionNominalMax(limits.ContractualConsumptionNominalMax); err != nil {
 		c.log.ERROR.Println("LPC SetContractualConsumptionNominalMax:", err)
 	}
-	if err := c.uc.LPC.SetConsumptionLimit(ucapi.LoadLimit{
-		Value:        limits.ConsumptionLimit,
-		IsChangeable: true,
-	}); err != nil {
+	if err := c.uc.LPC.SetConsumptionLimit(*c.consumptionLimit); err != nil {
 		c.log.ERROR.Println("LPC SetConsumptionLimit:", err)
 	}
-	if err := c.uc.LPC.SetFailsafeConsumptionActivePowerLimit(limits.FailsafeConsumptionActivePowerLimit, true); err != nil {
+	if err := c.uc.LPC.SetFailsafeConsumptionActivePowerLimit(c.failsafeLimit, true); err != nil {
 		c.log.ERROR.Println("LPC SetFailsafeConsumptionActivePowerLimit:", err)
 	}
-	if err := c.uc.LPC.SetFailsafeDurationMinimum(limits.FailsafeDurationMinimum, true); err != nil {
+	if err := c.uc.LPC.SetFailsafeDurationMinimum(c.failsafeDuration, true); err != nil {
 		c.log.ERROR.Println("LPC SetFailsafeDurationMinimum:", err)
 	}
 
@@ -170,24 +173,24 @@ func (c *EEBus) run() error {
 	switch c.status {
 	case StatusUnlimited:
 		// LPC-914/1
-		if c.limit != nil && c.limit.IsActive {
+		if c.consumptionLimit != nil && c.consumptionLimit.IsActive {
 			c.log.WARN.Println("active consumption limit")
-			c.setStatusAndLimit(StatusLimited, c.limit.Value)
+			c.setStatusAndLimit(StatusLimited, c.consumptionLimit.Value)
 		}
 
 	case StatusLimited:
 		// limit updated?
-		if !c.limit.IsActive {
+		if !c.consumptionLimit.IsActive {
 			c.log.WARN.Println("inactive consumption limit")
 			c.setStatusAndLimit(StatusUnlimited, 0)
 			break
 		}
 
-		c.setLimit(c.limit.Value)
+		c.setLimit(c.consumptionLimit.Value)
 
 		// LPC-914/1
-		if d := c.limit.Duration; d > 0 && time.Since(c.statusUpdated) > d {
-			c.limit = nil
+		if d := c.consumptionLimit.Duration; d > 0 && time.Since(c.statusUpdated) > d {
+			c.consumptionLimit = nil
 
 			c.log.DEBUG.Println("limit duration exceeded- return to normal")
 			c.setStatusAndLimit(StatusUnlimited, 0)
