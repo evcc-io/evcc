@@ -8,7 +8,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger"
-	"github.com/evcc-io/evcc/core"
+	"github.com/evcc-io/evcc/core/circuit"
 	"github.com/evcc-io/evcc/meter"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
@@ -233,7 +233,7 @@ func newDeviceHandler(w http.ResponseWriter, r *http.Request) {
 
 	case templates.Circuit:
 		conf, err = newDevice(class, req, func(_ string, other map[string]interface{}) (api.Circuit, error) {
-			return core.NewCircuitFromConfig(util.NewLogger("circuit"), other)
+			return circuit.NewFromConfig(util.NewLogger("circuit"), other)
 		}, config.Circuits())
 	}
 
@@ -304,7 +304,7 @@ func updateDeviceHandler(w http.ResponseWriter, r *http.Request) {
 
 	case templates.Circuit:
 		err = updateDevice(id, class, req, func(_ string, other map[string]interface{}) (api.Circuit, error) {
-			return core.NewCircuitFromConfig(util.NewLogger("circuit"), other)
+			return circuit.NewFromConfig(util.NewLogger("circuit"), other)
 		}, config.Circuits())
 	}
 

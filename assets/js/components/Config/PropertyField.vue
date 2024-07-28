@@ -83,6 +83,7 @@
 		:step="step"
 		:placeholder="placeholder"
 		:required="required"
+		:autocomplete="masked ? 'off' : null"
 	/>
 </template>
 
@@ -152,10 +153,13 @@ export default {
 			return this.property === "icon";
 		},
 		textarea() {
-			return ["accessToken", "refreshToken"].includes(this.property);
+			return ["accessToken", "refreshToken", "identifiers"].includes(this.property);
 		},
 		boolean() {
 			return this.type === "Bool";
+		},
+		array() {
+			return this.type === "StringList";
 		},
 		select() {
 			return this.validValues.length > 0;
@@ -182,7 +186,7 @@ export default {
 			get() {
 				// use first option if no value is set
 				if (this.selectOptions.length > 0 && !this.modelValue) {
-					return this.selectOptions[0].key;
+					return this.required ? this.selectOptions[0].key : "";
 				}
 
 				if (this.scale) {
@@ -193,6 +197,10 @@ export default {
 					return this.modelValue === true;
 				}
 
+				if (this.array) {
+					return Array.isArray(this.modelValue) ? this.modelValue.join("\n") : "";
+				}
+
 				return this.modelValue;
 			},
 			set(value) {
@@ -200,6 +208,10 @@ export default {
 
 				if (this.scale) {
 					newValue = value / this.scale;
+				}
+
+				if (this.array) {
+					newValue = value ? value.split("\n") : [];
 				}
 
 				this.$emit("update:modelValue", newValue);

@@ -46,9 +46,6 @@ type EEBus struct {
 
 	currentLimit float64
 
-	lastIsChargingCheck  time.Time
-	lastIsChargingResult bool
-
 	*eebus.Connector
 	connectedTime time.Time
 }
@@ -156,8 +153,6 @@ func (c *EEBus) UseCaseEvent(device spineapi.DeviceRemoteInterface, entity spine
 
 func (c *EEBus) setDefaultValues() {
 	c.communicationStandard = evcc.EVCCCommunicationStandardUnknown
-	c.lastIsChargingCheck = time.Now().Add(-time.Hour)
-	c.lastIsChargingResult = false
 	c.expectedEnableUnpluggedState = false
 }
 
@@ -200,16 +195,7 @@ func (c *EEBus) isCharging() bool {
 	// we only want this for configured meters and not for internal meters!
 	// right now it works as expected
 	if c.lp != nil && c.lp.HasChargeMeter() {
-		// we only check ever 10 seconds, maybe we can use the config interval duration
-		if time.Since(c.lastIsChargingCheck) >= 10*time.Second {
-			c.lastIsChargingCheck = time.Now()
-			c.lastIsChargingResult = false
-			// compare charge power for all phases to 0.6 * min. charge power of a single phase
-			if c.lp.GetChargePower() > c.lp.EffectiveMinPower()*idleFactor {
-				c.lastIsChargingResult = true
-				return true
-			}
-		} else if c.lastIsChargingResult {
+		if c.lp.GetChargePower() > c.lp.EffectiveMinPower()*idleFactor {
 			return true
 		}
 	}
@@ -398,9 +384,9 @@ func (c *EEBus) writeCurrentLimitData(currents []float64) error {
 	if recommendations, err := c.uc.OscEV.LoadControlLimits(evEntity); err == nil {
 		var writeNeeded bool
 
-		for _, item := range recommendations {
+		for index, item := range recommendations {
 			if item.IsActive {
-				item.IsActive = false
+				recommendations[index].IsActive = false
 				writeNeeded = true
 			}
 		}

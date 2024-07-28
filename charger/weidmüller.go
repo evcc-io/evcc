@@ -25,6 +25,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/sponsor"
+	"github.com/volkszaehler/mbmd/encoding"
 )
 
 // Weidmüller charger implementation
@@ -122,7 +123,7 @@ func (wb *Weidmüller) getPhaseValues(reg uint16) (float64, float64, float64, er
 
 	var res [3]float64
 	for i := range res {
-		res[i] = float64(binary.BigEndian.Uint32(b[4*i:])) / 1e3
+		res[i] = float64(encoding.Uint32LswFirst(b[4*i:])) / 1e3
 	}
 
 	return res[0], res[1], res[2], nil
@@ -135,7 +136,7 @@ func (wb *Weidmüller) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	switch s := string(b[0]); s {
+	switch s := string(b); s {
 	case "A", "B", "C":
 		return api.ChargeStatus(s), nil
 	default:
@@ -180,7 +181,7 @@ func (wb *Weidmüller) CurrentPower() (float64, error) {
 		return 0, err
 	}
 
-	return float64(binary.BigEndian.Uint32(b)) / 1e3, err
+	return float64(encoding.Uint32LswFirst(b)) / 1e3, err
 }
 
 var _ api.MeterEnergy = (*Weidmüller)(nil)
@@ -192,7 +193,7 @@ func (wb *Weidmüller) TotalEnergy() (float64, error) {
 		return 0, err
 	}
 
-	return float64(binary.BigEndian.Uint32(b)) / 1e3, err
+	return float64(encoding.Uint32LswFirst(b)) / 1e3, err
 }
 
 var _ api.PhaseCurrents = (*Weidmüller)(nil)
