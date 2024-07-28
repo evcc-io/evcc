@@ -63,9 +63,6 @@ func New(other map[string]interface{}, site site.API) (*EEBus, error) {
 	if root == nil {
 		return nil, errors.New("hems requires load management- please configure root circuit")
 	}
-	if !root.HasMeter() {
-		return nil, errors.New("hems requires root circuit to have meter")
-	}
 
 	// create new root circuit for LPC
 	lpc, err := circuit.New(util.NewLogger("lpc"), "eebus", 0, 0, nil, time.Minute)
