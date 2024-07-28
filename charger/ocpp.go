@@ -155,7 +155,12 @@ func NewOCPP(id string, connector int, idtag string,
 
 	var (
 		rc                              = make(chan error, 1)
+		MeterValuesSampledData          bool
 		MeterValuesSampledDataMaxLength int
+		MeterValuesAlignedData          bool
+		MeterValuesAlignedDataMaxLength int
+		StopTxnSampledData              bool
+		StopTxnSampledDataMaxLength     int
 	)
 
 	c.chargingRateUnit = types.ChargingRateUnitType(chargingRateUnit)
@@ -179,7 +184,7 @@ func NewOCPP(id string, connector int, idtag string,
 						continue
 					}
 
-					c.log.TRACE.Printf("%s (%s): %s", opt.Key, rw[opt.Readonly], *opt.Value)
+					c.log.DEBUG.Printf("%s (%s): %s", opt.Key, rw[opt.Readonly], *opt.Value)
 
 					switch opt.Key {
 					case ocpp.KeyNumberOfConnectors:
@@ -202,10 +207,31 @@ func NewOCPP(id string, connector int, idtag string,
 							c.chargingRateUnit = types.ChargingRateUnitWatts
 						}
 
+					case ocpp.KeyMeterValuesSampledData:
+						MeterValuesSampledData = !opt.Readonly
+
+					case ocpp.KeyMeterValuesAlignedData:
+						MeterValuesAlignedData = !opt.Readonly
+
+					case ocpp.KeyStopTxnSampledData:
+						StopTxnSampledData = !opt.Readonly
+
 					case ocpp.KeyMeterValuesSampledDataMaxLength:
 						var val int
 						if val, err = strconv.Atoi(*opt.Value); err == nil {
 							MeterValuesSampledDataMaxLength = val
+						}
+
+					case ocpp.KeyMeterValuesAlignedDataMaxLength:
+						var val int
+						if val, err = strconv.Atoi(*opt.Value); err == nil {
+							MeterValuesAlignedDataMaxLength = val
+						}
+
+					case ocpp.KeyStopTxnSampledDataMaxLength:
+						var val int
+						if val, err = strconv.Atoi(*opt.Value); err == nil {
+							StopTxnSampledDataMaxLength = val
 						}
 
 					// vendor-specific keys
@@ -244,25 +270,39 @@ func NewOCPP(id string, connector int, idtag string,
 		// configuration activated
 		c.meterValuesSample = meterValues
 	} else {
-		// autodetect valid measurands
-		var acceptedMeasurands []string
-		for _, m := range strings.Split(desiredMeasurands, ",") {
-			if err := c.configure(ocpp.KeyMeterValuesSampledData, m); err == nil {
-				if MeterValuesSampledDataMaxLength > 0 && len(acceptedMeasurands) < MeterValuesSampledDataMaxLength {
-					acceptedMeasurands = append(acceptedMeasurands, m)
+		// autodetect accepted measurands
+		if MeterValuesSampledData {
+			sampledMeasurands := c.tryMeasurands(desiredMeasurands, ocpp.KeyMeterValuesSampledData)
+			if len(sampledMeasurands) > 0 {
+				m := c.constrainedJoin(sampledMeasurands, MeterValuesSampledDataMaxLength)
+				if err := c.configure(ocpp.KeyMeterValuesSampledData, m); err != nil {
+					return nil, err
+				}
+
+				// configuration activated
+				c.meterValuesSample = m
+				c.log.DEBUG.Println("enabled MeterValuesSampledData measurands: ", m)
+			}
+		}
+
+		if MeterValuesAlignedData {
+			clockAlignedMeasurands := c.tryMeasurands(desiredMeasurands, ocpp.KeyMeterValuesAlignedData)
+			if len(clockAlignedMeasurands) > 0 {
+				m := c.constrainedJoin(clockAlignedMeasurands, MeterValuesAlignedDataMaxLength)
+				if err := c.configure(ocpp.KeyMeterValuesAlignedData, m); err == nil {
+					c.log.DEBUG.Println("enabled MeterValuesAlignedData measurands: ", m)
 				}
 			}
 		}
 
-		if len(acceptedMeasurands) > 0 {
-			m := strings.Join(acceptedMeasurands, ",")
-			if err := c.configure(ocpp.KeyMeterValuesSampledData, m); err != nil {
-				return nil, err
+		if StopTxnSampledData {
+			stopTxnSampledMeasurands := c.tryMeasurands(desiredMeasurands, ocpp.KeyStopTxnSampledData)
+			if len(stopTxnSampledMeasurands) > 0 {
+				m := c.constrainedJoin(stopTxnSampledMeasurands, StopTxnSampledDataMaxLength)
+				if err := c.configure(ocpp.KeyStopTxnSampledData, m); err == nil {
+					c.log.DEBUG.Println("enabled MeterValuesAlignedData measurands: ", m)
+				}
 			}
-
-			// configuration activated
-			c.meterValuesSample = m
-			c.log.DEBUG.Println("enabled meter measurands: ", m)
 		}
 	}
 
@@ -281,6 +321,10 @@ func NewOCPP(id string, connector int, idtag string,
 			if err := c.configure(ocpp.KeyMeterValueSampleInterval, strconv.Itoa(int(meterInterval.Seconds()))); err != nil {
 				return nil, err
 			}
+		}
+
+		if MeterValuesAlignedData {
+			_ = c.configure(ocpp.KeyClockAlignedDataInterval, "60")
 		}
 
 		// HACK: setup watchdog for meter values if not happy with config
@@ -308,6 +352,23 @@ func (c *OCPP) effectiveIdTag() string {
 		return idtag
 	}
 	return c.idtag
+}
+
+func (c *OCPP) tryMeasurands(measurands string, key string) []string {
+	var accepted []string
+	for _, m := range strings.Split(measurands, ",") {
+		if err := c.configure(key, m); err == nil {
+			accepted = append(accepted, m)
+		}
+	}
+	return accepted
+}
+
+func (c *OCPP) constrainedJoin(m []string, limit int) string {
+	if limit > 0 && len(m) > limit {
+		m = m[:limit]
+	}
+	return strings.Join(m, ",")
 }
 
 // configure updates CP configuration
