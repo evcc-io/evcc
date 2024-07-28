@@ -136,7 +136,7 @@ func (wb *Weidmüller) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	switch s := string(b); s {
+	switch s := string(b[1]); s {
 	case "A", "B", "C":
 		return api.ChargeStatus(s), nil
 	default:
