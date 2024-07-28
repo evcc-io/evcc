@@ -21,19 +21,19 @@ import (
 
 // OCPP charger implementation
 type OCPP struct {
-	log                      *util.Logger
-	conn                     *ocpp.Connector
-	idtag                    string
-	enabled                  bool
-	phases                   int
-	current                  float64
-	meterValuesSample        string
-	timeout                  time.Duration
-	phaseSwitching           bool
-	autoStart, noStop        bool
-	chargingRateUnit         types.ChargingRateUnitType
-	supportedFeatureProfiles string
-	lp                       loadpoint.API
+	log                     *util.Logger
+	conn                    *ocpp.Connector
+	idtag                   string
+	enabled                 bool
+	phases                  int
+	current                 float64
+	meterValuesSample       string
+	timeout                 time.Duration
+	phaseSwitching          bool
+	autoStart, noStop       bool
+	chargingRateUnit        types.ChargingRateUnitType
+	hasRemoteTriggerFeature bool
+	lp                      loadpoint.API
 }
 
 const defaultIdTag = "evcc"
@@ -160,7 +160,6 @@ func NewOCPP(id string, connector int, idtag string,
 
 	var (
 		rc                              = make(chan error, 1)
-		meterSampleInterval             time.Duration
 		MeterValuesSampledDataMaxLength int
 	)
 
@@ -177,12 +176,7 @@ func NewOCPP(id string, connector int, idtag string,
 	c.chargingRateUnit = types.ChargingRateUnitType(chargingRateUnit)
 
 	// noConfig mode disables GetConfiguration
-	if noConfig {
-		c.meterValuesSample = meterValues
-		if meterInterval == 0 {
-			meterInterval = 10 * time.Second
-		}
-	} else {
+	if !noConfig {
 		// fix timing issue in EVBox when switching OCPP protocol version
 		time.Sleep(time.Second)
 
@@ -215,7 +209,7 @@ func NewOCPP(id string, connector int, idtag string,
 						}
 
 					case ocpp.KeySupportedFeatureProfiles:
-						c.supportedFeatureProfiles = *opt.Value
+						c.hasRemoteTriggerFeature = strings.Contains(*opt.Value, "RemoteTrigger")
 
 					case ocpp.KeyConnectorSwitch3to1PhaseSupported:
 						var val bool
@@ -287,24 +281,29 @@ func NewOCPP(id string, connector int, idtag string,
 		}
 	}
 
+	// set default meter interval
+	if meterInterval == 0 {
+		meterInterval = 10 * time.Second
+	}
+
 	// get initial meter values and configure sample rate
 	if c.hasMeasurement(types.MeasurandPowerActiveImport) || c.hasMeasurement(types.MeasurandEnergyActiveImportRegister) {
-		conn.TriggerMessageRequest(core.MeterValuesFeatureName)
+		if c.hasRemoteTriggerFeature {
+			conn.TriggerMessageRequest(core.MeterValuesFeatureName)
+		}
 
-		if meterInterval > 0 && meterInterval != meterSampleInterval {
+		if meterInterval > 0 {
 			if err := c.configure(ocpp.KeyMeterValueSampleInterval, strconv.Itoa(int(meterInterval.Seconds()))); err != nil {
 				return nil, err
 			}
 		}
 
 		// HACK: setup watchdog for meter values if not happy with config
-		if meterInterval > 0 {
+		if c.hasRemoteTriggerFeature && meterInterval > 0 {
 			c.log.DEBUG.Println("enabling meter watchdog")
 			go conn.WatchDog(meterInterval)
 		}
 	}
-
-	// TODO: check for running transaction
 
 	return c, conn.Initialized()
 }
