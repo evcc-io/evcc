@@ -2,7 +2,6 @@ package steuerbox
 
 import (
 	"errors"
-	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -13,7 +12,6 @@ import (
 )
 
 type Steuerbox struct {
-	mux sync.RWMutex
 	log *util.Logger
 
 	root     api.Circuit
@@ -80,9 +78,6 @@ func (c *Steuerbox) Run() {
 }
 
 func (c *Steuerbox) run() error {
-	c.mux.RLock()
-	defer c.mux.RUnlock()
-
 	limit, err := c.limit()
 	if err != nil {
 		return err
