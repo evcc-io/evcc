@@ -350,6 +350,7 @@ func (c *OCPP) Status() (api.ChargeStatus, error) {
 		}
 
 		if needtxn {
+			// lock the cable by starting remote transaction after vehicle connected
 			if err := c.initTransaction(); err != nil {
 				return api.StatusNone, err
 			}
@@ -406,10 +407,7 @@ func (c *OCPP) setChargingProfile(profile *types.ChargingProfile) error {
 
 // setCurrent sets the TxDefaultChargingProfile with given current
 func (c *OCPP) setCurrent(current float64) error {
-
-	current = math.Trunc(10*current) / 10
-
-	err := c.setChargingProfile(c.createTxDefaultChargingProfile(current))
+	err := c.setChargingProfile(c.createTxDefaultChargingProfile(math.Trunc(10*current) / 10))
 	if err != nil {
 		err = fmt.Errorf("set charging profile: %w", err)
 	}
@@ -432,10 +430,12 @@ func (c *OCPP) getCurrent() (float64, error) {
 			err = errors.New(string(resp.Status))
 		}
 
-		if resp.ChargingSchedule != nil && len(resp.ChargingSchedule.ChargingSchedulePeriod) > 0 {
-			current = resp.ChargingSchedule.ChargingSchedulePeriod[0].Limit
-		} else {
-			err = fmt.Errorf("invalid ChargingSchedule")
+		if err == nil {
+			if resp.ChargingSchedule != nil && len(resp.ChargingSchedule.ChargingSchedulePeriod) > 0 {
+				current = resp.ChargingSchedule.ChargingSchedulePeriod[0].Limit
+			} else {
+				err = fmt.Errorf("invalid ChargingSchedule")
+			}
 		}
 
 		rc <- err
