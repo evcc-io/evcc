@@ -31,7 +31,7 @@ type OCPP struct {
 	phaseSwitching          bool
 	remoteStart             bool
 	chargingRateUnit        types.ChargingRateUnitType
-  hasRemoteTriggerFeature bool
+	hasRemoteTriggerFeature bool
 	lp                      loadpoint.API
 }
 
