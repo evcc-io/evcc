@@ -12,8 +12,11 @@ requirements:
       Standardmäßig wird die erste eingehende Verbindung mit einer beliebigen Ladepunktkennung verwendet.
       Um mehrere Ladepunkte eindeutig zuordnen zu können müssen die jeweilige Stationskennung (`stationid: `) und Anschlussnummer (`connector: `) hinterlegt werden.
       Viele Wallboxen fügen die `stationid` automatisch der Backend-URL hinzu, bei manchen muss dies händisch geschehen `ws://<evcc>:8887/<stationid>`.
-      Gegebenenfalls benötigt der Ladepunkt eine vorkonfigurierte (virtuelle) Token-ID/RFID-Kennung (`idtag: `) mit der die Ladevorgänge ohne Authentifizierung gestartet werden können.
       Für Zählermesswerte sollte in der Wallbox ein kurzes Zeitintervall konfiguriert werden.
+      Nutzen Sie Ihre RFID-Tags (dies ermöglicht z.B. eine Fahrzeugidentifizierung) oder setzen Sie Ihre Wallbox auf "freies Laden" oder "Autostart" um die jeweils für die Ladefreigabe benötigte Transaktion zu erzeugen.
+
+      Falls die Wallbox keinerlei Option bietet die Transaktionen lokal zu starten, kann die Option `remotetransaction` genutzt werden um automatisch eine Transaktion zu starten sobald ein Ladekabel angeschlossen wird.
+      Dies sollte nur in Ausnahmefällen erforderlich sein.
 
       Voraussetzungen:
       * Ggf. zuvor konfigurierte OCPP-Profile (z.B. durch eine andere Backend-Anbindung) in der Wallboxkonfiguration entfernen
@@ -27,8 +30,11 @@ requirements:
       By default, the first incoming connection with any station identifier is used.
       In order to be able to clearly assign several charging points, the respective station identifier (`stationid: `) and connector number (`connector: `) must be configured.
       Many wallboxes automatically add the `station id` to the backend URL, some have to do this manually `ws://<evcc>:8887/<stationid>`.
-      The charger may need a pre-configured (virtual) token ID/RFID identifier (`idtag: `) with which the charging sessions can be started without authorization.
       If the charger supports sending metering values try to adjust the interval to a short time span.
+      Use your RFID tags (this allows e.g. vehicle identification) or set your charger to "free charging" or "autostart" to generate the transaction required for charging release.
+
+      If the charger does not offer any option to start transactions locally, the `remotetransaction` option can be used to automatically start a transaction as soon as a cable is connected.
+      This should only be necessary in exceptional cases.
 
       Requirements:
       * If necessary, remove previously configured OCPP profiles (e.g. used for a different backend connection) in the charger configuration
@@ -39,11 +45,19 @@ requirements:
 params:
   - preset: ocpp
   - name: autostart
-    advanced: true
-    type: bool
+    deprecated: true
   - name: nostop
+    deprecated: true
+  - name: remotestart
     advanced: true
     type: bool
+    default: false
+    description:
+      de: Automatisch eine für die Ladefreigabe benötigte Transaktion starten (RemoteStartTransaction) sobald ein Ladekabel mit der Wallbox verbunden wird
+      en: Automatically start a transaction required for charging release (RemoteStartTransaction) as soon as a cable is connected to the charger
+    help:
+      de: Nur verwenden wenn keinerlei Möglichkeit besteht Transaktionen seitens des Ladepunktes zu starten
+      en: Only use if there is no other way to start transactions from the charger
   - name: getconfiguration
     advanced: true
     type: bool
@@ -68,14 +82,14 @@ params:
     advanced: true
     type: duration
     description:
-      de: Zählerwerte nach Intervall anfordern
-      en: Interval for requesting meter values
+      de: Gewünschtes Übertragungsintervall der Zählerwerte
+      en: Desired transmission interval of meter values
   - name: metervalues
     advanced: true
     type: string
     description:
-      de: Liste der Zählerwerte
-      en: List of meter values
+      de: Kommaseparierte Liste der zu sendenden Zählerwerte ("measurand")
+      en: Comma-separated list of meter values to send ("measurand")
   - name: chargingrateunit
     advanced: true
     type: string
@@ -84,8 +98,7 @@ params:
       en: Unit for setting ChargingProfile values ("W" or "A")
 render: |
   {{ include "ocpp" . }}
-  autostart: {{ .autostart }}
-  nostop: {{ .nostop }}
+  remotestart: {{ .remotestart }}
   {{- if ne .getconfiguration "true" }}
   getconfiguration: {{ .getconfiguration }}
   {{- end }}
