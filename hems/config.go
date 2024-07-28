@@ -7,6 +7,7 @@ import (
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/hems/eebus"
 	"github.com/evcc-io/evcc/hems/semp"
+	"github.com/evcc-io/evcc/hems/steuerbox"
 	"github.com/evcc-io/evcc/server"
 )
 
@@ -22,6 +23,8 @@ func NewFromConfig(typ string, other map[string]interface{}, site site.API, http
 		return semp.New(other, site, httpd)
 	case "eebus":
 		return eebus.New(other, site)
+	case "steuerbox":
+		return steuerbox.New(other, site)
 	default:
 		return nil, errors.New("unknown hems: " + typ)
 	}
