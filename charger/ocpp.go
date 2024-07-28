@@ -24,19 +24,18 @@ type OCPP struct {
 	log                     *util.Logger
 	conn                    *ocpp.Connector
 	idtag                   string
-	enabled                 bool
 	phases                  int
 	current                 float64
 	meterValuesSample       string
 	timeout                 time.Duration
 	phaseSwitching          bool
-	autoStart, noStop       bool
+	remoteStart             bool
 	chargingRateUnit        types.ChargingRateUnitType
-	hasRemoteTriggerFeature bool
+  hasRemoteTriggerFeature bool
 	lp                      loadpoint.API
 }
 
-const defaultIdTag = "evcc"
+const defaultIdTag = "evcc" // RemoteStartTransaction only
 const desiredMeasurands = "Energy.Active.Import.Register,Power.Active.Import,SoC,Current.Offered,Power.Offered,Current.Import,Voltage"
 
 func init() {
@@ -56,8 +55,9 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 		BootNotification *bool
 		GetConfiguration *bool
 		ChargingRateUnit string
-		AutoStart        bool
-		NoStop           bool
+		AutoStart        bool // deprecated, to be removed
+		NoStop           bool // deprecated, to be removed
+		RemoteStart      bool
 	}{
 		Connector:        1,
 		IdTag:            defaultIdTag,
@@ -75,7 +75,7 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 
 	c, err := NewOCPP(cc.StationId, cc.Connector, cc.IdTag,
 		cc.MeterValues, cc.MeterInterval,
-		boot, noConfig, cc.AutoStart, cc.NoStop,
+		boot, noConfig, cc.RemoteStart,
 		cc.ConnectTimeout, cc.Timeout, cc.ChargingRateUnit)
 	if err != nil {
 		return c, err
@@ -96,20 +96,35 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 		currentsG = c.currents
 	}
 
+	var voltagesG func() (float64, float64, float64, error)
+	if c.hasMeasurement(types.MeasurandVoltage + ".L3") {
+		voltagesG = c.voltages
+	}
+
 	var phasesS func(int) error
 	if c.phaseSwitching {
 		phasesS = c.phases1p3p
 	}
 
-	return decorateOCPP(c, powerG, totalEnergyG, currentsG, phasesS), nil
+	var socG func() (float64, error)
+	if c.hasMeasurement(types.MeasueandSoC) { // typo in ocpp-go
+		socG = c.soc
+	}
+
+	//var currentG func() (float64, error)
+	//if c.hasMeasurement(types.MeasurandCurrentOffered) {
+	//	currentG = c.getMaxCurrent
+	//}
+
+	return decorateOCPP(c, powerG, totalEnergyG, currentsG, voltagesG, phasesS, socG), nil
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateOCPP -b *OCPP -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) error"
+//go:generate go run ../cmd/tools/decorate.go -f decorateOCPP -b *OCPP -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.Battery,Soc,func() (float64, error)"
 
 // NewOCPP creates OCPP charger
 func NewOCPP(id string, connector int, idtag string,
 	meterValues string, meterInterval time.Duration,
-	boot, noConfig, autoStart, noStop bool,
+	boot, noConfig, remoteStart bool,
 	connectTimeout, timeout time.Duration,
 	chargingRateUnit string,
 ) (*OCPP, error) {
@@ -137,12 +152,11 @@ func NewOCPP(id string, connector int, idtag string,
 	}
 
 	c := &OCPP{
-		log:       log,
-		conn:      conn,
-		idtag:     idtag,
-		autoStart: autoStart,
-		noStop:    noStop,
-		timeout:   timeout,
+		log:         log,
+		conn:        conn,
+		idtag:       idtag,
+		remoteStart: remoteStart,
+		timeout:     timeout,
 	}
 
 	c.log.DEBUG.Printf("waiting for chargepoint: %v", connectTimeout)
@@ -203,7 +217,7 @@ func NewOCPP(id string, connector int, idtag string,
 						}
 
 					case ocpp.KeyChargingScheduleAllowedChargingRateUnit:
-						if *opt.Value == "W" {
+						if *opt.Value == "W" || *opt.Value == "Power" {
 							c.chargingRateUnit = types.ChargingRateUnitWatts
 						}
 
@@ -401,92 +415,56 @@ func (c *OCPP) wait(err error, rc chan error) error {
 
 // Status implements the api.Charger interface
 func (c *OCPP) Status() (api.ChargeStatus, error) {
+	if c.remoteStart {
+		needtxn, err := c.conn.NeedsTransaction()
+		if err != nil {
+			return api.StatusNone, err
+		}
+
+		if needtxn {
+			// lock the cable by starting remote transaction after vehicle connected
+			if err := c.initTransaction(); err != nil {
+				return api.StatusNone, err
+			}
+		}
+	}
+
 	return c.conn.Status()
 }
 
 // Enabled implements the api.Charger interface
 func (c *OCPP) Enabled() (bool, error) {
-	return c.enabled, nil
+	current, err := c.getCurrent()
+
+	return current > 0, err
 }
 
 func (c *OCPP) Enable(enable bool) error {
-	txn, err := c.conn.TransactionID()
-	if err != nil {
-		return err
-	}
-
-	if c.autoStart || (c.noStop && txn > 0) {
-		// if there is no transaction running, this is a no-op
-		if txn > 0 {
-			err = c.enableProfile(enable)
-		}
-	} else {
-		err = c.enableRemote(enable)
-	}
-
-	if err == nil {
-		c.enabled = enable
-	}
-
-	return err
-}
-
-// enableProfile pauses/resumes existing transaction by profile update
-func (c *OCPP) enableProfile(enable bool) error {
 	var current float64
 	if enable {
 		current = c.current
 	}
 
-	return c.updatePeriod(current)
+	return c.setCurrent(current)
 }
 
-// enableRemote starts and terminates transaction by RemoteStart/Stop
-func (c *OCPP) enableRemote(enable bool) error {
-	txn, err := c.conn.TransactionID()
-	if err != nil {
-		return err
-	}
-
+func (c *OCPP) initTransaction() error {
 	rc := make(chan error, 1)
-	if enable {
-		if txn > 0 {
-			// we have the transaction id, treat as enabled
-			return nil
+	err := ocpp.Instance().RemoteStartTransaction(c.conn.ChargePoint().ID(), func(resp *core.RemoteStartTransactionConfirmation, err error) {
+		if err == nil && resp != nil && resp.Status != types.RemoteStartStopStatusAccepted {
+			err = errors.New(string(resp.Status))
 		}
 
-		err = ocpp.Instance().RemoteStartTransaction(c.conn.ChargePoint().ID(), func(resp *core.RemoteStartTransactionConfirmation, err error) {
-			if err == nil && resp != nil && resp.Status != types.RemoteStartStopStatusAccepted {
-				err = errors.New(string(resp.Status))
-			}
-
-			rc <- err
-		}, c.effectiveIdTag(), func(request *core.RemoteStartTransactionRequest) {
-			connector := c.conn.ID()
-			request.ConnectorId = &connector
-			request.ChargingProfile = c.getTxChargingProfile(c.current, 0)
-		})
-	} else {
-		if txn == 0 {
-			// we have no transaction id, treat as disabled
-			return nil
-		}
-
-		err = ocpp.Instance().RemoteStopTransaction(c.conn.ChargePoint().ID(), func(resp *core.RemoteStopTransactionConfirmation, err error) {
-			if err == nil && resp != nil && resp.Status != types.RemoteStartStopStatusAccepted {
-				err = errors.New(string(resp.Status))
-			}
-
-			rc <- err
-		}, txn)
-	}
+		rc <- err
+	}, c.effectiveIdTag(), func(request *core.RemoteStartTransactionRequest) {
+		connector := c.conn.ID()
+		request.ConnectorId = &connector
+	})
 
 	return c.wait(err, rc)
 }
 
 func (c *OCPP) setChargingProfile(profile *types.ChargingProfile) error {
-	connector := c.conn.ID()
-
 	rc := make(chan error, 1)
 	err := ocpp.Instance().SetChargingProfile(c.conn.ChargePoint().ID(), func(resp *smartcharging.SetChargingProfileConfirmation, err error) {
 		if err == nil && resp != nil && resp.Status != smartcharging.ChargingProfileStatusAccepted {
@@ -494,26 +472,14 @@ func (c *OCPP) setChargingProfile(profile *types.ChargingProfile) error {
 		}
 
 		rc <- err
-	}, connector, profile)
+	}, c.conn.ID(), profile)
 
 	return c.wait(err, rc)
 }
 
-// updatePeriod sets a single charging schedule period with given current
-func (c *OCPP) updatePeriod(current float64) error {
-	txn, err := c.conn.TransactionID()
-	if err != nil {
-		return err
-	}
-
-	// current period can only be updated if transaction is active
-	if txn == 0 {
-		return nil
-	}
-
-	current = math.Trunc(10*current) / 10
-
-	err = c.setChargingProfile(c.getTxChargingProfile(current, txn))
+// setCurrent sets the TxDefaultChargingProfile with given current
+func (c *OCPP) setCurrent(current float64) error {
+	err := c.setChargingProfile(c.createTxDefaultChargingProfile(math.Trunc(10*current) / 10))
 	if err != nil {
 		err = fmt.Errorf("set charging profile: %w", err)
 	}
@@ -521,7 +487,38 @@ func (c *OCPP) updatePeriod(current float64) error {
 	return err
 }
 
-func (c *OCPP) getTxChargingProfile(current float64, transactionId int) *types.ChargingProfile {
+// getCurrent returns the internal current offered by the chargepoint
+func (c *OCPP) getCurrent() (float64, error) {
+	var current float64
+
+	if c.hasMeasurement(types.MeasurandCurrentOffered) {
+		return c.getMaxCurrent()
+	}
+
+	// fallback to GetCompositeSchedule request
+	rc := make(chan error, 1)
+	err := ocpp.Instance().GetCompositeSchedule(c.conn.ChargePoint().ID(), func(resp *smartcharging.GetCompositeScheduleConfirmation, err error) {
+		if err == nil && resp != nil && resp.Status != smartcharging.GetCompositeScheduleStatusAccepted {
+			err = errors.New(string(resp.Status))
+		}
+
+		if err == nil {
+			if resp.ChargingSchedule != nil && len(resp.ChargingSchedule.ChargingSchedulePeriod) > 0 {
+				current = resp.ChargingSchedule.ChargingSchedulePeriod[0].Limit
+			} else {
+				err = fmt.Errorf("invalid ChargingSchedule")
+			}
+		}
+
+		rc <- err
+	}, c.conn.ID(), 1)
+
+	err = c.wait(err, rc)
+
+	return current, err
+}
+
+func (c *OCPP) createTxDefaultChargingProfile(current float64) *types.ChargingProfile {
 	phases := c.phases
 	period := types.NewChargingSchedulePeriod(0, current)
 	if c.chargingRateUnit == types.ChargingRateUnitWatts {
@@ -541,10 +538,9 @@ func (c *OCPP) getTxChargingProfile(current float64, transactionId int) *types.C
 	}
 
 	return &types.ChargingProfile{
-		ChargingProfileId:      1,
-		TransactionId:          transactionId,
+		ChargingProfileId:      0,
 		StackLevel:             0,
-		ChargingProfilePurpose: types.ChargingProfilePurposeTxProfile,
+		ChargingProfilePurpose: types.ChargingProfilePurposeTxDefaultProfile,
 		ChargingProfileKind:    types.ChargingProfileKindRelative,
 		ChargingSchedule: &types.ChargingSchedule{
 			ChargingRateUnit:       c.chargingRateUnit,
@@ -562,37 +558,51 @@ var _ api.ChargerEx = (*OCPP)(nil)
 
 // MaxCurrentMillis implements the api.ChargerEx interface
 func (c *OCPP) MaxCurrentMillis(current float64) error {
-	err := c.updatePeriod(current)
+	err := c.setCurrent(current)
 	if err == nil {
 		c.current = current
 	}
 	return err
 }
 
-// CurrentPower implements the api.Meter interface
+// getMaxCurrent implements the api.CurrentGetter interface
+func (c *OCPP) getMaxCurrent() (float64, error) {
+	return c.conn.GetMaxCurrent()
+}
+
+// currentPower implements the api.Meter interface
 func (c *OCPP) currentPower() (float64, error) {
 	return c.conn.CurrentPower()
 }
 
-// TotalEnergy implements the api.MeterTotal interface
+// totalEnergy implements the api.MeterTotal interface
 func (c *OCPP) totalEnergy() (float64, error) {
 	return c.conn.TotalEnergy()
 }
 
-// Currents implements the api.PhaseCurrents interface
+// currents implements the api.PhaseCurrents interface
 func (c *OCPP) currents() (float64, float64, float64, error) {
 	return c.conn.Currents()
 }
 
-// Phases1p3p implements the api.PhaseSwitcher interface
+// voltages implements the api.PhaseVoltages interface
+func (c *OCPP) voltages() (float64, float64, float64, error) {
+	return c.conn.Voltages()
+}
+
+// phases1p3p implements the api.PhaseSwitcher interface
 func (c *OCPP) phases1p3p(phases int) error {
 	c.phases = phases
 
-	// NOTE: this will currently _never_ do anything since
-	// loadpoint disabled the charger before switching so
-	// updatePeriod will short-circuit
-	return c.updatePeriod(c.current)
+	return c.setCurrent(c.current)
 }
+
+// soc implements the api.Battery interface
+func (c *OCPP) soc() (float64, error) {
+	return c.conn.Soc()
+}
+
+var _ api.Identifier = (*OCPP)(nil)
 
 // Identify implements the api.Identifier interface
 func (c *OCPP) Identify() (string, error) {

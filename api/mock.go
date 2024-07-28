@@ -963,3 +963,17 @@ func (mr *MockCircuitMockRecorder) ValidatePower(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidatePower", reflect.TypeOf((*MockCircuit)(nil).ValidatePower), arg0, arg1)
 }
+
+// Wrap mocks base method.
+func (m *MockCircuit) Wrap(arg0 Circuit) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Wrap", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Wrap indicates an expected call of Wrap.
+func (mr *MockCircuitMockRecorder) Wrap(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Wrap", reflect.TypeOf((*MockCircuit)(nil).Wrap), arg0)
+}
