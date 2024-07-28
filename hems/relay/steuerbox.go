@@ -1,4 +1,4 @@
-package steuerbox
+package relay
 
 import (
 	"errors"
@@ -11,7 +11,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 )
 
-type Steuerbox struct {
+type Relay struct {
 	log *util.Logger
 
 	root     api.Circuit
@@ -19,8 +19,8 @@ type Steuerbox struct {
 	maxPower float64
 }
 
-// New creates an Steuerbox HEMS from generic config
-func New(other map[string]interface{}, site site.API) (*Steuerbox, error) {
+// New creates an Relay HEMS from generic config
+func New(other map[string]interface{}, site site.API) (*Relay, error) {
 	var cc struct {
 		MaxPower float64
 		Limit    provider.Config
@@ -37,7 +37,7 @@ func New(other map[string]interface{}, site site.API) (*Steuerbox, error) {
 	}
 
 	// create new root circuit for LPC
-	lpc, err := circuit.New(util.NewLogger("lpc"), "steuerbox", 0, 0, nil, time.Minute)
+	lpc, err := circuit.New(util.NewLogger("lpc"), "relay", 0, 0, nil, time.Minute)
 	if err != nil {
 		return nil, err
 	}
@@ -54,13 +54,13 @@ func New(other map[string]interface{}, site site.API) (*Steuerbox, error) {
 		return nil, err
 	}
 
-	return NewSteuerbox(lpc, limitG, cc.MaxPower)
+	return NewRelay(lpc, limitG, cc.MaxPower)
 }
 
-// NewSteuerbox creates Steuerbox charger
-func NewSteuerbox(root api.Circuit, limit func() (bool, error), maxPower float64) (*Steuerbox, error) {
-	c := &Steuerbox{
-		log:      util.NewLogger("steuerbox"),
+// NewRelay creates Relay HEMS
+func NewRelay(root api.Circuit, limit func() (bool, error), maxPower float64) (*Relay, error) {
+	c := &Relay{
+		log:      util.NewLogger("relay"),
 		root:     root,
 		maxPower: maxPower,
 		limit:    limit,
@@ -69,7 +69,7 @@ func NewSteuerbox(root api.Circuit, limit func() (bool, error), maxPower float64
 	return c, nil
 }
 
-func (c *Steuerbox) Run() {
+func (c *Relay) Run() {
 	for range time.Tick(10 * time.Second) {
 		if err := c.run(); err != nil {
 			c.log.ERROR.Println(err)
@@ -77,7 +77,7 @@ func (c *Steuerbox) Run() {
 	}
 }
 
-func (c *Steuerbox) run() error {
+func (c *Relay) run() error {
 	limit, err := c.limit()
 	if err != nil {
 		return err

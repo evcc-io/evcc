@@ -64,7 +64,7 @@ func New(other map[string]interface{}, site site.API) (*EEBus, error) {
 	return NewEEBus(cc.Ski, lpc)
 }
 
-// NewEEBus creates EEBus charger
+// NewEEBus creates EEBus HEMS
 func NewEEBus(ski string, root api.Circuit) (*EEBus, error) {
 	if eebus.Instance == nil {
 		return nil, errors.New("eebus not configured")
