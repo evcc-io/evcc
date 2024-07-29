@@ -58,25 +58,9 @@ params:
       de: Nur verwenden wenn keinerlei Möglichkeit besteht Transaktionen seitens des Ladepunktes zu starten
       en: Only use if there is no other way to start transactions from the charger
   - name: getconfiguration
-    advanced: true
-    type: bool
-    default: true
-    description:
-      de: GetConfiguration zur Konfiguration benutzen
-      en: Use GetConfiguration for configuration
-    help:
-      de: Deaktivierung kann bei einigen Chargern hilfreich sein, die sich nicht an die OCPP-Spezifikation halten
-      en: Deactivation can be helpful for some chargers that do not comply with the OCPP specification
+    deprecated: true
   - name: bootnotification
-    advanced: true
-    type: bool
-    default: false
-    description:
-      de: BootNotification gezielt anfragen
-      en: Request BootNotification explicitly
-    help:
-      de: Aktivierung kann in seltenen Fällen hilfreich sein
-      en: Activation can be helpful in rare cases
+    deprecated: true
   - name: meterinterval
     advanced: true
     type: duration
@@ -90,26 +74,13 @@ params:
       de: Kommaseparierte Liste der zu sendenden Zählerwerte ("measurand")
       en: Comma-separated list of meter values to send ("measurand")
   - name: chargingrateunit
-    advanced: true
-    type: string
-    description:
-      de: Einheit, in der ChargingProfile-Werte gesetzt werden ("W" oder "A")
-      en: Unit for setting ChargingProfile values ("W" or "A")
+    deprecated: true
 render: |
   {{ include "ocpp" . }}
   remotestart: {{ .remotestart }}
-  {{- if ne .getconfiguration "true" }}
-  getconfiguration: {{ .getconfiguration }}
-  {{- end }}
-  {{- if ne .bootnotification "false" }}
-  bootnotification: {{ .bootnotification }}
-  {{- end }}
   {{- if .meterinterval }}
   meterinterval: {{ .meterinterval }}
   {{- end }}
   {{- if .metervalues }}
   metervalues: {{ .metervalues }}
-  {{- end }}
-  {{- if .chargingrateunit }}
-  chargingrateunit: {{ .chargingrateunit }}
   {{- end }}

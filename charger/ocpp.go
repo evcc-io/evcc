@@ -56,11 +56,11 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 		MeterValues      string
 		ConnectTimeout   time.Duration
 		Timeout          time.Duration
-		BootNotification *bool
-		GetConfiguration *bool
-		ChargingRateUnit string
-		AutoStart        bool // deprecated, to be removed
-		NoStop           bool // deprecated, to be removed
+		BootNotification *bool  // deprecated, to be removed
+		GetConfiguration *bool  // deprecated, to be removed
+		ChargingRateUnit string // deprecated, to be removed
+		AutoStart        bool   // deprecated, to be removed
+		NoStop           bool   // deprecated, to be removed
 		RemoteStart      bool
 	}{
 		Connector:        1,
