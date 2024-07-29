@@ -197,6 +197,27 @@ func (conn *Connector) GetMaxCurrent() (float64, error) {
 	return 0, api.ErrNotAvailable
 }
 
+func (conn *Connector) GetMaxPower() (float64, error) {
+	if !conn.cp.Connected() {
+		return 0, api.ErrTimeout
+	}
+
+	conn.mu.Lock()
+	defer conn.mu.Unlock()
+
+	// fallthrough for last value on timeout when no transaction is running
+	if conn.txnId != 0 && conn.isMeterTimeout() {
+		return 0, api.ErrTimeout
+	}
+
+	if m, ok := conn.measurements[types.MeasurandPowerOffered]; ok {
+		f, err := strconv.ParseFloat(m.Value, 64)
+		return scale(f, m.Unit), err
+	}
+
+	return 0, api.ErrNotAvailable
+}
+
 var _ api.Meter = (*Connector)(nil)
 
 func (conn *Connector) CurrentPower() (float64, error) {
@@ -261,8 +282,7 @@ func (conn *Connector) Soc() (float64, error) {
 	}
 
 	if m, ok := conn.measurements[types.MeasueandSoC]; ok { // typo in ocpp-go
-		f, err := strconv.ParseFloat(m.Value, 64)
-		return scale(f, m.Unit) / 1e3, err
+		return strconv.ParseFloat(m.Value, 64)
 	}
 
 	return 0, api.ErrNotAvailable
