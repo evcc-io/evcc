@@ -23,6 +23,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/volkszaehler/mbmd/meters/rs485"
@@ -32,8 +33,11 @@ import (
 
 // Em2Go charger implementation
 type Em2Go struct {
-	log  *util.Logger
-	conn *modbus.Connection
+	log     *util.Logger
+	conn    *modbus.Connection
+	current int64
+	phases  int
+	lp      loadpoint.API
 }
 
 const (
@@ -98,8 +102,9 @@ func NewEm2Go(uri string, slaveID uint8, milli bool) (api.Charger, error) {
 	conn.Logger(log.TRACE)
 
 	wb := &Em2Go{
-		log:  log,
-		conn: conn,
+		log:     log,
+		conn:    conn,
+		current: 6, // assume min current
 	}
 
 	var (
@@ -158,8 +163,30 @@ func (wb *Em2Go) Enable(enable bool) error {
 	b := make([]byte, 2)
 	binary.BigEndian.PutUint16(b, map[bool]uint16{true: 1, false: 2}[enable])
 
-	_, err := wb.conn.WriteMultipleRegisters(em2GoRegChargeCommand, 1, b)
-	return err
+	if _, err := wb.conn.WriteMultipleRegisters(em2GoRegChargeCommand, 1, b); err != nil {
+		return err
+	}
+
+	// Workaround get phases set in evcc and send to charger
+	var phases int
+	if wb.lp != nil {
+		phases = wb.lp.GetPhases()
+	}
+	if phases == 0 {
+		phases = 3
+	}
+	c := make([]byte, 2)
+	binary.BigEndian.PutUint16(c, uint16(phases))
+	if _, err := wb.conn.WriteMultipleRegisters(em2GoRegPhases, 1, c); err != nil {
+		return err
+	}
+
+	//Workaround send default current to charger
+	var current int64
+	current = wb.current
+	wb.MaxCurrent(current)
+
+	return nil
 }
 
 // MaxCurrent implements the api.Charger interface
@@ -271,8 +298,29 @@ func (wb *Em2Go) phases1p3p(phases int) error {
 	b := make([]byte, 2)
 	binary.BigEndian.PutUint16(b, uint16(phases))
 
-	_, err := wb.conn.WriteMultipleRegisters(em2GoRegPhases, 1, b)
-	return err
+	// Workaround when enabled, stop charging wait 10 seconds, enable and set phases
+	enabled, err := wb.Enabled()
+	if err != nil {
+		return err
+	}
+
+	if enabled {
+		if err := wb.Enable(false); err != nil {
+			return err
+		}
+		time.Sleep(10 * time.Second)
+
+		if err := wb.Enable(true); err != nil {
+			return err
+		}
+
+		if _, err := wb.conn.WriteMultipleRegisters(em2GoRegPhases, 1, b); err != nil {
+			return err
+		}
+
+	}
+
+	return nil
 }
 
 // getPhases implements the api.PhaseGetter interface
@@ -331,4 +379,11 @@ func (wb *Em2Go) Diagnose() {
 	if b, err := wb.conn.ReadHoldingRegisters(em2GoRegChargeCommand, 1); err == nil {
 		fmt.Printf("\tCharge Command:\t%d\n", binary.BigEndian.Uint16(b))
 	}
+}
+
+var _ loadpoint.Controller = (*Em2Go)(nil)
+
+// LoadpointControl implements loadpoint.Controller
+func (wb *Em2Go) LoadpointControl(lp loadpoint.API) {
+	wb.lp = lp
 }
