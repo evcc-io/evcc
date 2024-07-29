@@ -494,18 +494,16 @@ func (site *Site) updateLogMeters() {
 	for i, meter := range site.logMeters {
 		// log power
 		power, err := backoff.RetryWithData(meter.CurrentPower, bo())
-		if err == nil {
-		} else {
-			site.log.ERROR.Printf("logMeter %d power: %v", i+1, err)
+		if err != nil {
+			site.log.ERROR.Printf("log meter %d power: %v", i+1, err)
 		}
 
 		// log energy
 		var energy float64
 		if m, ok := meter.(api.MeterEnergy); err == nil && ok {
 			energy, err = m.TotalEnergy()
-			if err == nil {
-			} else {
-				site.log.ERROR.Printf("logMeter %d energy: %v", i+1, err)
+			if err != nil {
+				site.log.ERROR.Printf("log meter %d energy: %v", i+1, err)
 			}
 		}
 
