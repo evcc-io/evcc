@@ -11,7 +11,7 @@ capabilities: ["1p3p", "mA"]
 params:
   - name: modbus
     choice: ["tcpip"]
-    id: 255
+    id: 1
 render: |
   type: nrgkick-gen2
   {{- include "modbus" . }}
