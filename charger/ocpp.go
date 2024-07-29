@@ -32,6 +32,8 @@ type OCPP struct {
 	remoteStart             bool
 	chargingRateUnit        types.ChargingRateUnitType
 	hasRemoteTriggerFeature bool
+	chargingProfileId       int
+	stackLevel              int
 	lp                      loadpoint.API
 }
 
@@ -182,17 +184,19 @@ func NewOCPP(id string, connector int, idtag string,
 	)
 
 	keys := []string{
-		ocpp.KeyGetConfigurationMaxKeys,
-		ocpp.KeyNumberOfConnectors,
-		ocpp.KeySupportedFeatureProfiles,
-		ocpp.KeyConnectorSwitch3to1PhaseSupported,
+		ocpp.KeyChargeProfileMaxStackLevel,
 		ocpp.KeyChargingScheduleAllowedChargingRateUnit,
-		ocpp.KeyMeterValuesSampledData,
+		ocpp.KeyGetConfigurationMaxKeys,
+		ocpp.KeyMaxChargingProfilesInstalled,
 		ocpp.KeyMeterValuesAlignedData,
+		ocpp.KeyMeterValuesSampledData,
+		ocpp.KeyNumberOfConnectors,
 		ocpp.KeyStopTxnSampledData,
-		ocpp.KeyMeterValuesSampledDataMaxLength, // optional
-		ocpp.KeyMeterValuesAlignedDataMaxLength, // optional
-		ocpp.KeyStopTxnSampledDataMaxLength,     // optional
+		ocpp.KeySupportedFeatureProfiles,
+		ocpp.KeyConnectorSwitch3to1PhaseSupported, // optional
+		ocpp.KeyMeterValuesAlignedDataMaxLength,   // optional
+		ocpp.KeyMeterValuesSampledDataMaxLength,   // optional
+		ocpp.KeyStopTxnSampledDataMaxLength,       // optional
 	}
 	_ = keys
 
@@ -220,49 +224,48 @@ func NewOCPP(id string, connector int, idtag string,
 					c.log.DEBUG.Printf("%s (%s): %s", opt.Key, rw[opt.Readonly], *opt.Value)
 
 					switch opt.Key {
-					case ocpp.KeyNumberOfConnectors:
-						var val int
-						if val, err = strconv.Atoi(*opt.Value); err == nil && connector > val {
-							err = fmt.Errorf("connector %d exceeds max available connectors: %d", connector, val)
+					case ocpp.KeyChargeProfileMaxStackLevel:
+						if val, err := strconv.Atoi(*opt.Value); err == nil {
+							c.stackLevel = val
 						}
-
-					case ocpp.KeySupportedFeatureProfiles:
-						c.hasRemoteTriggerFeature = strings.Contains(*opt.Value, "RemoteTrigger")
-
+					case ocpp.KeyChargingScheduleAllowedChargingRateUnit:
+						if *opt.Value == "W" || *opt.Value == "Power" {
+							c.chargingRateUnit = types.ChargingRateUnitWatts
+						}
 					case ocpp.KeyConnectorSwitch3to1PhaseSupported:
 						var val bool
 						if val, err = strconv.ParseBool(*opt.Value); err == nil {
 							c.phaseSwitching = val
 						}
-
-					case ocpp.KeyChargingScheduleAllowedChargingRateUnit:
-						if *opt.Value == "W" || *opt.Value == "Power" {
-							c.chargingRateUnit = types.ChargingRateUnitWatts
+					case ocpp.KeyMaxChargingProfilesInstalled:
+						if val, err := strconv.Atoi(*opt.Value); err == nil {
+							c.chargingProfileId = val
 						}
-
-					case ocpp.KeyMeterValuesSampledData:
-						MeterValuesSampledData = !opt.Readonly
-
 					case ocpp.KeyMeterValuesAlignedData:
 						MeterValuesAlignedData = !opt.Readonly
-
-					case ocpp.KeyStopTxnSampledData:
-						StopTxnSampledData = !opt.Readonly
-
-					case ocpp.KeyMeterValuesSampledDataMaxLength:
-						if val, err := strconv.Atoi(*opt.Value); err == nil {
-							MeterValuesSampledDataMaxLength = val
-						}
-
 					case ocpp.KeyMeterValuesAlignedDataMaxLength:
 						if val, err := strconv.Atoi(*opt.Value); err == nil {
 							MeterValuesAlignedDataMaxLength = val
 						}
-
+					case ocpp.KeyMeterValuesSampledData:
+						MeterValuesSampledData = !opt.Readonly
+					case ocpp.KeyMeterValuesSampledDataMaxLength:
+						if val, err := strconv.Atoi(*opt.Value); err == nil {
+							MeterValuesSampledDataMaxLength = val
+						}
+					case ocpp.KeyNumberOfConnectors:
+						var val int
+						if val, err = strconv.Atoi(*opt.Value); err == nil && connector > val {
+							err = fmt.Errorf("connector %d exceeds max available connectors: %d", connector, val)
+						}
+					case ocpp.KeyStopTxnSampledData:
+						StopTxnSampledData = !opt.Readonly
 					case ocpp.KeyStopTxnSampledDataMaxLength:
 						if val, err := strconv.Atoi(*opt.Value); err == nil {
 							StopTxnSampledDataMaxLength = val
 						}
+					case ocpp.KeySupportedFeatureProfiles:
+						c.hasRemoteTriggerFeature = strings.Contains(*opt.Value, "RemoteTrigger")
 
 					// vendor-specific keys
 					case ocpp.KeyAlfenPlugAndChargeIdentifier:
@@ -527,7 +530,7 @@ func (c *OCPP) getCurrent() (float64, error) {
 		}
 
 		rc <- err
-	}, c.conn.ID(), 1)
+	}, c.conn.ID(), 60)
 
 	err = c.wait(err, rc)
 
@@ -554,8 +557,8 @@ func (c *OCPP) createTxDefaultChargingProfile(current float64) *types.ChargingPr
 	}
 
 	return &types.ChargingProfile{
-		ChargingProfileId:      0,
-		StackLevel:             0,
+		ChargingProfileId:      c.chargingProfileId,
+		StackLevel:             c.stackLevel,
 		ChargingProfilePurpose: types.ChargingProfilePurposeTxDefaultProfile,
 		ChargingProfileKind:    types.ChargingProfileKindRelative,
 		ChargingSchedule: &types.ChargingSchedule{
