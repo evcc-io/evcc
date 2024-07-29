@@ -51,7 +51,6 @@ params:
   - name: remotestart
     advanced: true
     type: bool
-    default: false
     description:
       de: Automatisch eine für die Ladefreigabe benötigte Transaktion starten (RemoteStartTransaction) sobald ein Ladekabel mit der Wallbox verbunden wird
       en: Automatically start a transaction required for charging release (RemoteStartTransaction) as soon as a cable is connected to the charger
@@ -63,21 +62,21 @@ params:
     type: bool
     default: true
     description:
-      de: GetConfiguration benutzen
-      en: Use GetConfiguration request
+      de: GetConfiguration zur Konfiguration benutzen
+      en: Use GetConfiguration for configuration
     help:
-      de: Deaktivierung kann bei einigen Chargern hilfreich sein
-      en: Deactivating can help with certain chargers
+      de: Deaktivierung kann bei einigen Chargern hilfreich sein, die sich nicht an die OCPP-Spezifikation halten
+      en: Deactivation can be helpful for some chargers that do not comply with the OCPP specification
   - name: bootnotification
     advanced: true
     type: bool
     default: false
     description:
-      de: BootNotification benutzen
-      en: Use BootNotification request
+      de: BootNotification gezielt anfragen
+      en: Request BootNotification explicitly
     help:
-      de: Aktivierung kann bei einigen Chargern hilfreich sein
-      en: Activating can help with certain chargers
+      de: Aktivierung kann in seltenen Fällen hilfreich sein
+      en: Activation can be helpful in rare cases
   - name: meterinterval
     advanced: true
     type: duration
