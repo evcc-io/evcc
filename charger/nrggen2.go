@@ -21,8 +21,9 @@ type NRGKickGen2 struct {
 const (
 	// All register use LittleEndian
 	// Read only (0x03)
-	nrgKickGen2Serial            = 0   // 11 regs
-	nrgKickGen2ModelType         = 11  // 16 regs
+	nrgKickGen2Serial            = 0  // 11 regs
+	nrgKickGen2ModelType         = 11 // 16 regs
+	nrgKickGen2MaxPhases         = 36
 	nrgKickGen2SoftwareVersionSM = 122 // 8 regs
 	// Read (0x03) / Write (0x06, 0x16) Registers
 	nrgKickGen2ChargingCurrent = 194 // A, factor 10
@@ -45,6 +46,8 @@ func init() {
 	registry.Add("nrgkick-gen2", NewNRGKickGen2FromConfig)
 }
 
+//go:generate go run ../cmd/tools/decorate.go -f decorateNRGKickGen2 -b *NRGKickGen2 -r api.Charger -t "api.ChargerEx,MaxCurrentMillis,func(float64) (error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) error"
+
 // NewNRGKickGen2FromConfig creates a NRGKickGen2 charger from generic config
 func NewNRGKickGen2FromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := modbus.TcpSettings{
@@ -55,7 +58,56 @@ func NewNRGKickGen2FromConfig(other map[string]interface{}) (api.Charger, error)
 		return nil, err
 	}
 
-	return NewNRGKickGen2(cc.URI, cc.ID)
+	nrg, err := NewNRGKickGen2(cc.URI, cc.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	// detect configurable features
+	var (
+		chargerEx func(float64) error
+		phasesS   func(int) error
+	)
+
+	enabled, err := nrg.Enabled()
+	if err != nil {
+		return nil, err
+	}
+
+	err = nrg.Enable(false)
+	if err != nil {
+		return nil, err
+	}
+
+	if current, err := nrg.GetMaxCurrent(); err == nil {
+		if err := nrg.maxCurrentMillis(6.1); err == nil {
+			chargerEx = nrg.maxCurrentMillis
+		}
+
+		if chargerEx != nil {
+			nrg.maxCurrentMillis(current)
+		} else {
+			nrg.MaxCurrent(int64(current))
+		}
+	}
+
+	if b, err := nrg.conn.ReadHoldingRegisters(nrgKickGen2MaxPhases, 1); err == nil {
+		if maxPhases := encoding.Uint16(b); maxPhases > 1 {
+			if currentPhases, err := nrg.GetPhases(); err == nil {
+				if err := nrg.phases1p3p(2); err == nil {
+					phasesS = nrg.phases1p3p
+				}
+
+				if phasesS != nil {
+					nrg.phases1p3p(currentPhases)
+				}
+			}
+		}
+	}
+
+	nrg.Enable(enabled)
+
+	return decorateNRGKickGen2(nrg, chargerEx, phasesS), nil
 }
 
 // NewNRGKickGen2 creates NRGKickGen2 charger
@@ -168,13 +220,11 @@ func (nrg *NRGKickGen2) Enable(enable bool) error {
 
 // MaxCurrent implements the api.Charger interface
 func (nrg *NRGKickGen2) MaxCurrent(current int64) error {
-	return nrg.MaxCurrentMillis(float64(current))
+	return nrg.maxCurrentMillis(float64(current))
 }
 
-var _ api.ChargerEx = (*NRGKickGen2)(nil)
-
 // MaxCurrentMillis implements the api.ChargerEx interface
-func (nrg *NRGKickGen2) MaxCurrentMillis(current float64) error {
+func (nrg *NRGKickGen2) maxCurrentMillis(current float64) error {
 	if current < 6 {
 		return fmt.Errorf("allowed range: 6.0 - rated_current (16.0A / 32.0A)")
 	}
@@ -261,10 +311,8 @@ func (nrg *NRGKickGen2) ChargedEnergy() (float64, error) {
 	return float64(encoding.Uint32LswFirst(b)) * 1e-3, nil
 }
 
-var _ api.PhaseSwitcher = (*NRGKickGen2)(nil)
-
 // Phases1p3p implements the api.PhaseSwitcher interface
-func (nrg *NRGKickGen2) Phases1p3p(phases int) error {
+func (nrg *NRGKickGen2) phases1p3p(phases int) error {
 	// this can return an error, if phase switching isn't activated via the App
 	_, err := nrg.conn.WriteSingleRegister(nrgKickGen2Phases, uint16(phases))
 	return err
