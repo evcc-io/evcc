@@ -1,4 +1,4 @@
-package core
+package circuit
 
 import (
 	"fmt"
@@ -34,8 +34,8 @@ type Circuit struct {
 	powerUpdated   time.Time
 }
 
-// NewCircuitFromConfig creates a new Circuit
-func NewCircuitFromConfig(log *util.Logger, other map[string]interface{}) (api.Circuit, error) {
+// NewFromConfig creates a new Circuit
+func NewFromConfig(log *util.Logger, other map[string]interface{}) (api.Circuit, error) {
 	cc := struct {
 		Title      string        `mapstructure:"title"`      // title
 		ParentRef  string        `mapstructure:"parent"`     // parent circuit reference
@@ -60,7 +60,7 @@ func NewCircuitFromConfig(log *util.Logger, other map[string]interface{}) (api.C
 		meter = dev.Instance()
 	}
 
-	circuit, err := NewCircuit(log, cc.Title, cc.MaxCurrent, cc.MaxPower, meter, cc.Timeout)
+	circuit, err := New(log, cc.Title, cc.MaxCurrent, cc.MaxPower, meter, cc.Timeout)
 	if err != nil {
 		return nil, err
 	}
@@ -70,14 +70,14 @@ func NewCircuitFromConfig(log *util.Logger, other map[string]interface{}) (api.C
 		if err != nil {
 			return nil, err
 		}
-		circuit.SetParent(dev.Instance())
+		circuit.setParent(dev.Instance())
 	}
 
 	return circuit, err
 }
 
-// NewCircuit creates a circuit
-func NewCircuit(log *util.Logger, title string, maxCurrent, maxPower float64, meter api.Meter, timeout time.Duration) (*Circuit, error) {
+// New creates a circuit
+func New(log *util.Logger, title string, maxCurrent, maxPower float64, meter api.Meter, timeout time.Duration) (*Circuit, error) {
 	c := &Circuit{
 		log:        log,
 		title:      title,
@@ -119,14 +119,26 @@ func (c *Circuit) GetParent() api.Circuit {
 	return c.parent
 }
 
-// SetParent set parent circuit
-func (c *Circuit) SetParent(parent api.Circuit) {
+// setParent set parent circuit
+func (c *Circuit) setParent(parent api.Circuit) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
+	if c.parent != nil {
+		return fmt.Errorf("circuit already has a parent")
+	}
 	c.parent = parent
 	if parent != nil {
 		parent.RegisterChild(c)
 	}
+	return nil
+}
+
+// Wrap wraps circuit with parent, keeping the original meter
+func (c *Circuit) Wrap(parent api.Circuit) error {
+	if c.meter != nil {
+		parent.(*Circuit).meter = c.meter
+	}
+	return c.setParent(parent)
 }
 
 // HasMeter returns the max power setting

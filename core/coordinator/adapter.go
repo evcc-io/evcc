@@ -19,8 +19,8 @@ func NewAdapter(lp loadpoint.API, c *Coordinator) API {
 	}
 }
 
-func (a *adapter) GetVehicles() []api.Vehicle {
-	return a.c.GetVehicles()
+func (a *adapter) GetVehicles(availableOnly bool) []api.Vehicle {
+	return a.c.GetVehicles(availableOnly)
 }
 
 func (a *adapter) Owner(v api.Vehicle) loadpoint.API {

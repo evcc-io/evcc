@@ -5,6 +5,8 @@ import (
 	"strings"
 
 	"github.com/evcc-io/evcc/core/site"
+	"github.com/evcc-io/evcc/hems/eebus"
+	"github.com/evcc-io/evcc/hems/relay"
 	"github.com/evcc-io/evcc/hems/semp"
 	"github.com/evcc-io/evcc/server"
 )
@@ -19,8 +21,10 @@ func NewFromConfig(typ string, other map[string]interface{}, site site.API, http
 	switch strings.ToLower(typ) {
 	case "sma", "shm", "semp":
 		return semp.New(other, site, httpd)
-	// case "ocpp":
-	// 	return ocpp.New(other, site)
+	case "eebus":
+		return eebus.New(other, site)
+	case "relay":
+		return relay.New(other, site)
 	default:
 		return nil, errors.New("unknown hems: " + typ)
 	}

@@ -170,6 +170,10 @@ title = "Network"
 
 [config.options]
 
+[config.options.boolean]
+no = "no"
+yes = "yes"
+
 [config.options.endianness]
 big = "big-endian"
 little = "little-endian"
@@ -539,6 +543,7 @@ unknown = ""
 vehicleLimit = "Vehicle limit."
 vehicleLimitReached = "Vehicle limit reached."
 waitForVehicle = "Ready. Waiting for vehicle…"
+welcome = "Short initial charge to confirm connection."
 
 [notifications]
 dismissAll = "Dismiss all"

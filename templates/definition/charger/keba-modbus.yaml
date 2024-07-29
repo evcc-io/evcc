@@ -19,6 +19,11 @@ params:
   - name: modbus
     choice: ["tcpip"]
     id: 255
+  - name: welcomecharge
+    advanced: true
 render: |
   type: keba-modbus
   {{- include "modbus" . }}
+  {{- if .welcomecharge }}
+  features: ["welcomecharge"]
+  {{- end }}

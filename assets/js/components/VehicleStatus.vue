@@ -66,6 +66,15 @@
 			>
 				<ClimaterIcon />
 			</div>
+			<div
+				v-if="vehicleWelcomeActive"
+				ref="vehicleWelcome"
+				data-bs-toggle="tooltip"
+				class="entry"
+				data-testid="vehicle-status-welcome"
+			>
+				<WelcomeIcon />
+			</div>
 
 			<!-- smart cost -->
 			<button
@@ -140,6 +149,7 @@ import VehicleMinSocIcon from "./MaterialIcon/VehicleMinSoc.vue";
 import SunDownIcon from "./MaterialIcon/SunDown.vue";
 import SunUpIcon from "./MaterialIcon/SunUp.vue";
 import Tooltip from "bootstrap/js/dist/tooltip";
+import WelcomeIcon from "./MaterialIcon/Welcome.vue";
 
 export default {
 	name: "VehicleStatus",
@@ -152,6 +162,7 @@ export default {
 		VehicleMinSocIcon,
 		SunDownIcon,
 		SunUpIcon,
+		WelcomeIcon,
 	},
 	mixins: [formatter],
 	props: {
@@ -183,6 +194,7 @@ export default {
 		tariffCo2: Number,
 		tariffGrid: Number,
 		vehicleClimaterActive: Boolean,
+		vehicleWelcomeActive: Boolean,
 		vehicleLimitSoc: Number,
 	},
 	emits: ["open-loadpoint-settings", "open-minsoc-settings", "open-plan-modal"],
@@ -194,6 +206,7 @@ export default {
 			planActiveTooltip: null,
 			minSocTooltip: null,
 			vehicleClimaterTooltip: null,
+			vehicleWelcomeTooltip: null,
 			smartCostTooltip: null,
 			vehicleLimitTooltip: null,
 		};
@@ -205,6 +218,7 @@ export default {
 		this.updatePhaseTooltip();
 		this.updatePvTooltip();
 		this.updateVehicleClimaterTooltip();
+		this.updateVehicleWelcomeTooltip();
 		this.updateSmartCostTooltip();
 		this.updateVehicleLimitTooltip();
 	},
@@ -226,6 +240,9 @@ export default {
 		},
 		vehicleClimaterTooltipContent() {
 			this.$nextTick(this.updateVehicleClimaterTooltip);
+		},
+		vehicleWelcomeTooltipContent() {
+			this.$nextTick(this.updateVehicleWelcomeTooltip);
 		},
 		smartCostTooltipContent() {
 			this.$nextTick(this.updateSmartCostTooltip);
@@ -399,7 +416,16 @@ export default {
 			return "";
 		},
 		vehicleClimaterTooltipContent() {
+			if (!this.vehicleClimaterActive) {
+				return "";
+			}
 			return this.$t("main.vehicleStatus.climating");
+		},
+		vehicleWelcomeTooltipContent() {
+			if (!this.vehicleWelcomeActive) {
+				return "";
+			}
+			return this.$t("main.vehicleStatus.welcome");
 		},
 		chargerStatus() {
 			const t = (key, data) => {
@@ -422,91 +448,6 @@ export default {
 					return t("finished");
 				}
 				return t("waitForVehicle");
-			}
-
-			if (this.charging) {
-				return t("charging");
-			}
-
-			return t("connected");
-		},
-		message: function () {
-			const t = (key, data) => {
-				if (this.heating) {
-					// check for special heating status translation
-					const name = `main.heatingStatus.${key}`;
-					if (this.$te(name, DEFAULT_LOCALE)) {
-						return this.$t(name, data);
-					}
-				}
-				return this.$t(`main.vehicleStatus.${key}`, data);
-			};
-
-			if (!this.connected) {
-				return t("disconnected");
-			}
-			// min charge active
-			if (this.minSoc > 0 && this.vehicleSoc < this.minSoc) {
-				return t("minCharge", { soc: this.fmtPercentage(this.minSoc) });
-			}
-
-			// plan
-			if (!this.chargingPlanDisabled && this.effectivePlanTime) {
-				if (this.planActive && this.charging) {
-					return t("targetChargeActive");
-				}
-				if (this.planActive && this.enabled) {
-					return t("targetChargeWaitForVehicle");
-				}
-				if (this.planProjectedStart) {
-					return t("targetChargePlanned", {
-						time: this.fmtAbsoluteDate(new Date(this.planProjectedStart)),
-					});
-				}
-			}
-
-			// clean or cheap energy
-			if (this.charging && this.smartCostActive) {
-				return this.smartCostType === CO2_TYPE
-					? t("cleanEnergyCharging", {
-							co2: this.fmtCo2Short(this.tariffCo2),
-							limit: this.fmtCo2Short(this.smartCostLimit),
-						})
-					: t("cheapEnergyCharging", {
-							price: this.fmtPricePerKWh(this.tariffGrid, this.currency, true),
-							limit: this.fmtPricePerKWh(this.smartCostLimit, this.currency, true),
-						});
-			}
-
-			if (this.pvTimerActive && !this.enabled && this.pvAction === "enable") {
-				return t("pvEnable", {
-					remaining: this.fmtDuration(this.pvRemainingInterpolated),
-				});
-			}
-
-			if (this.enabled && this.vehicleClimaterActive) {
-				return t("climating");
-			}
-
-			if (this.enabled && !this.charging) {
-				if (this.vehicleLimitSoc > 0 && this.vehicleSoc >= this.vehicleLimitSoc - 1) {
-					return t("vehicleLimitReached", {
-						soc: this.fmtPercentage(this.vehicleLimitSoc),
-					});
-				}
-				return t("waitForVehicle");
-			}
-
-			if (this.pvTimerActive && this.charging && this.pvAction === "disable") {
-				return t("pvDisable", {
-					remaining: this.fmtDuration(this.pvRemainingInterpolated),
-				});
-			}
-
-			if (this.phaseTimerActive) {
-				return t(this.phaseAction, {
-					remaining: this.fmtDuration(this.phaseRemainingInterpolated),
-				});
 			}
 
 			if (this.charging) {
@@ -585,6 +526,13 @@ export default {
 				this.vehicleClimaterTooltip,
 				this.vehicleClimaterTooltipContent,
 				this.$refs.vehicleClimater
+			);
+		},
+		updateVehicleWelcomeTooltip() {
+			this.vehicleWelcomeTooltip = this.updateTooltip(
+				this.vehicleWelcomeTooltip,
+				this.vehicleWelcomeTooltipContent,
+				this.$refs.vehicleWelcome
 			);
 		},
 		updateSmartCostTooltip() {
