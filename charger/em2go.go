@@ -36,7 +36,6 @@ type Em2Go struct {
 	log     *util.Logger
 	conn    *modbus.Connection
 	current int64
-	phases  int
 	lp      loadpoint.API
 }
 
@@ -317,7 +316,6 @@ func (wb *Em2Go) phases1p3p(phases int) error {
 		if _, err := wb.conn.WriteMultipleRegisters(em2GoRegPhases, 1, b); err != nil {
 			return err
 		}
-
 	}
 
 	return nil
