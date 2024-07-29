@@ -560,8 +560,9 @@ func (c *OCPP) createTxDefaultChargingProfile(current float64) *types.ChargingPr
 		ChargingProfileId:      c.chargingProfileId,
 		StackLevel:             c.stackLevel,
 		ChargingProfilePurpose: types.ChargingProfilePurposeTxDefaultProfile,
-		ChargingProfileKind:    types.ChargingProfileKindRelative,
+		ChargingProfileKind:    types.ChargingProfileKindAbsolute,
 		ChargingSchedule: &types.ChargingSchedule{
+			StartSchedule:          types.Now(),
 			ChargingRateUnit:       c.chargingRateUnit,
 			ChargingSchedulePeriod: []types.ChargingSchedulePeriod{period},
 		},
