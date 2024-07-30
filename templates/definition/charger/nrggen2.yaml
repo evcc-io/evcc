@@ -1,4 +1,4 @@
-template: nrgkick-gen2
+template: nrggen2
 products:
   - brand: NRGKick
     description:
@@ -14,5 +14,5 @@ params:
     choice: ["tcpip"]
     id: 1
 render: |
-  type: nrgkick-gen2
+  type: nrggen2
   {{- include "modbus" . }}

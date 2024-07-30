@@ -45,7 +45,7 @@ const (
 )
 
 func init() {
-	registry.Add("nrgkick-gen2", NewNRGKickGen2FromConfig)
+	registry.Add("nrggen2", NewNRGKickGen2FromConfig)
 }
 
 //go:generate go run ../cmd/tools/decorate.go -f decorateNRGKickGen2 -b *NRGKickGen2 -r api.Charger -t "api.ChargerEx,MaxCurrentMillis,func(float64) (error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) error"
