@@ -14,7 +14,7 @@
 				:class="{
 					'value--error': !!entry.error,
 					'value--warning': entry.warning,
-					'value--muted': entry.value === false,
+					'value--muted': entry.muted || entry.value === false,
 				}"
 			>
 				{{ fmtDeviceValue(entry) }}
@@ -33,9 +33,11 @@ export default {
 	mixins: [formatter],
 	computed: {
 		entries() {
-			return Object.entries(this.tags).map(([name, { value, error, warning, options }]) => {
-				return { name, value, error, warning, options };
-			});
+			return Object.entries(this.tags).map(
+				([name, { value, error, warning, muted, options }]) => {
+					return { name, value, error, warning, muted, options };
+				}
+			);
 		},
 	},
 	methods: {

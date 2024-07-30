@@ -639,18 +639,20 @@ export default {
 		circuitTags(circuit) {
 			const data = store.state?.circuits[circuit.name] || {};
 			const result = {};
-
-			if (data.maxCurrent) {
-				const now = data.current || 0;
-				const max = data.maxCurrent;
-				result["currentRange"] = { value: [now, max], warning: now >= max };
-			}
 			if (data.maxPower) {
-				const now = data.power || 0;
-				const max = data.maxPower;
-				result["powerRange"] = { value: [now, max], warning: now >= max };
+				result.powerRange = {
+					value: [data.power || 0, data.maxPower],
+					warning: data.power >= data.maxPower,
+				};
+			} else {
+				result.power = { value: data.power || 0, muted: true };
 			}
-
+			if (data.maxCurrent) {
+				result.currentRange = {
+					value: [data.current || 0, data.maxCurrent],
+					warning: data.current >= data.maxCurrent,
+				};
+			}
 			return result;
 		},
 		deviceError(type, name) {
