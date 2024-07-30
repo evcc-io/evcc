@@ -33,7 +33,7 @@ func (cp *CP) Authorize(request *core.AuthorizeRequest) (*core.AuthorizeConfirma
 func (cp *CP) BootNotification(request *core.BootNotificationRequest) (*core.BootNotificationConfirmation, error) {
 	res := &core.BootNotificationConfirmation{
 		CurrentTime: types.Now(),
-		Interval:    10,
+		Interval:    60,
 		Status:      core.RegistrationStatusAccepted,
 	}
 
