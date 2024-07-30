@@ -105,7 +105,7 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 	}
 
 	var socG func() (float64, error)
-	if c.hasMeasurement(types.MeasueandSoC) { // typo in ocpp-go
+	if c.hasMeasurement(types.MeasurandSoC) {
 		socG = c.soc
 	}
 
