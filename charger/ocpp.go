@@ -208,7 +208,7 @@ func NewOCPP(id string, connector int, idtag string,
 					}
 
 				case ocpp.KeyChargingScheduleAllowedChargingRateUnit:
-					if *opt.Value == "W" || *opt.Value == "Power" {
+					if *opt.Value == "Power" || *opt.Value == "W" { // "W" is not allowed by spec but used by some CPs
 						c.chargingRateUnit = types.ChargingRateUnitWatts
 					}
 
@@ -384,6 +384,8 @@ func (c *OCPP) Status() (api.ChargeStatus, error) {
 		}
 	}
 
+	// TODO: use cache
+	// update meter in sync
 	if c.hasRemoteTriggerFeature {
 		c.conn.TriggerMessageRequest(core.MeterValuesFeatureName)
 	}
