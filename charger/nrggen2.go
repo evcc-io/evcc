@@ -1,6 +1,7 @@
 package charger
 
 import (
+	"encoding/binary"
 	"fmt"
 	"math"
 
@@ -145,7 +146,7 @@ func (nrg *NRGKickGen2) Status() (api.ChargeStatus, error) {
 	// 3 - "CHARGING",
 	// 6 - "ERROR",
 	// 7 - "WAKEUP"
-	switch status := encoding.Uint16(b); status {
+	switch status := binary.BigEndian.Uint16(b); status {
 	case 0:
 		return api.StatusNone, nil
 	case 1:
@@ -192,11 +193,11 @@ func (nrg *NRGKickGen2) Status() (api.ChargeStatus, error) {
 			return api.StatusNone, err
 		}
 
-		switch error := encoding.Uint16(b); error {
+		switch error := binary.BigEndian.Uint16(b); error {
 		case 32:
 			fallthrough
 		case 33:
-			return api.StatusE, fmt.Errorf("%d", error)
+			return api.StatusF, fmt.Errorf("%d", error)
 		default:
 			return api.StatusF, fmt.Errorf("%d", error)
 		}
@@ -214,7 +215,8 @@ func (nrg *NRGKickGen2) Enabled() (bool, error) {
 		return false, err
 	}
 
-	return !cast.ToBool(encoding.Uint16(b)), nil
+	// 0 = no charge pause, 1 = charge pause
+	return binary.BigEndian.Uint16(b) == 0, nil
 }
 
 // Enable implements the api.Charger interface
@@ -231,7 +233,7 @@ func (nrg *NRGKickGen2) MaxCurrent(current int64) error {
 // MaxCurrentMillis implements the api.ChargerEx interface
 func (nrg *NRGKickGen2) maxCurrentMillis(current float64) error {
 	if current < 6 {
-		return fmt.Errorf("allowed range: 6.0 - rated_current (16.0A / 32.0A)")
+		return fmt.Errorf("invalid current %.1f", current)
 	}
 
 	_, err := nrg.conn.WriteSingleRegister(nrgKickGen2ChargingCurrent, uint16(math.Trunc(current*10)))
@@ -244,7 +246,7 @@ func (nrg *NRGKickGen2) GetMaxCurrent() (float64, error) {
 		return 0, err
 	}
 
-	return float64(encoding.Uint16(b)) / 10, nil
+	return float64(binary.BigEndian.Uint16(b)) / 10, nil
 }
 
 var _ api.Meter = (*NRGKickGen2)(nil)
@@ -282,7 +284,7 @@ func (nrg *NRGKickGen2) Currents() (float64, float64, float64, error) {
 
 	var res [3]float64
 	for i := range res {
-		res[i] = float64(encoding.Uint16(b[2*i:])) * 1e-3
+		res[i] = float64(binary.BigEndian.Uint16(b[2*i:])) * 1e-3
 	}
 
 	return res[0], res[1], res[2], nil
@@ -299,7 +301,7 @@ func (nrg *NRGKickGen2) Voltages() (float64, float64, float64, error) {
 
 	var res [3]float64
 	for i := range res {
-		res[i] = float64(encoding.Uint16(b[2*i:])) * 1e-2
+		res[i] = float64(binary.BigEndian.Uint16(b[2*i:])) * 1e-2
 	}
 
 	return res[0], res[1], res[2], nil
@@ -331,7 +333,7 @@ func (nrg *NRGKickGen2) GetPhases() (int, error) {
 		return 0, err
 	}
 
-	return int(encoding.Uint16(b)), nil
+	return int(binary.BigEndian.Uint16(b)), nil
 }
 
 var _ api.Diagnosis = (*NRGKickGen2)(nil)
@@ -348,18 +350,18 @@ func (nrg *NRGKickGen2) Diagnose() {
 		fmt.Printf("\tSmartModule Version:\t%s\n", bytesAsString(b))
 	}
 	if b, err := nrg.conn.ReadHoldingRegisters(nrgKickGen2RegStatus, 1); err == nil {
-		fmt.Printf("\tStatus:\t%d\n", encoding.Uint16(b))
+		fmt.Printf("\tStatus:\t%d\n", binary.BigEndian.Uint16(b))
 	}
 	if b, err := nrg.conn.ReadHoldingRegisters(nrgKickGen2RegRelais, 1); err == nil {
-		fmt.Printf("\tRelais Switching:\t%d\n", encoding.Uint16(b))
+		fmt.Printf("\tRelais Switching:\t%d\n", binary.BigEndian.Uint16(b))
 	}
 	if b, err := nrg.conn.ReadHoldingRegisters(nrgKickGen2RegRCD, 1); err == nil {
-		fmt.Printf("\tRCD:\t%d\n", encoding.Uint16(b))
+		fmt.Printf("\tRCD:\t%d\n", binary.BigEndian.Uint16(b))
 	}
 	if b, err := nrg.conn.ReadHoldingRegisters(nrgKickGen2RegWarning, 1); err == nil {
-		fmt.Printf("\tWarning:\t%d\n", encoding.Uint16(b))
+		fmt.Printf("\tWarning:\t%d\n", binary.BigEndian.Uint16(b))
 	}
 	if b, err := nrg.conn.ReadHoldingRegisters(nrgKickGen2RegError, 1); err == nil {
-		fmt.Printf("\tError:\t%d\n", encoding.Uint16(b))
+		fmt.Printf("\tError:\t%d\n", binary.BigEndian.Uint16(b))
 	}
 }
