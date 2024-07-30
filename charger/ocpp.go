@@ -461,6 +461,15 @@ func (c *OCPP) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (c *OCPP) Enabled() (bool, error) {
+	if s, err := c.conn.StatusOCPP(); err == nil {
+		switch s {
+		case core.ChargePointStatusSuspendedEVSE:
+			return false, nil
+		case core.ChargePointStatusCharging, core.ChargePointStatusSuspendedEV:
+			return true, nil
+		}
+	}
+
 	if c.hasMeasurement(types.MeasurandCurrentOffered) {
 		v, err := c.getMaxCurrent()
 		return v > 0, err
@@ -485,7 +494,7 @@ func (c *OCPP) Enable(enable bool) error {
 		current = c.current
 	}
 
-	// cache enabled state as fallback
+	// cache enabled state as last fallback option
 	c.enabled = enable
 
 	return c.setCurrent(current)

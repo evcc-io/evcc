@@ -122,6 +122,21 @@ func (conn *Connector) TransactionID() (int, error) {
 	return conn.txnId, nil
 }
 
+func (conn *Connector) StatusOCPP() (core.ChargePointStatus, error) {
+	conn.mu.Lock()
+	defer conn.mu.Unlock()
+
+	if !conn.cp.Connected() {
+		return "", api.ErrTimeout
+	}
+
+	if conn.status.ErrorCode != core.NoError {
+		return "", fmt.Errorf("%s: %s", conn.status.ErrorCode, conn.status.Info)
+	}
+
+	return conn.status.Status, nil
+}
+
 func (conn *Connector) Status() (api.ChargeStatus, error) {
 	conn.mu.Lock()
 	defer conn.mu.Unlock()
