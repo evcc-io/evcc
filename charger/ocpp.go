@@ -268,15 +268,7 @@ func NewOCPP(id string, connector int, idtag string,
 		conn.TriggerMessageRequest(core.BootNotificationFeatureName)
 	}
 
-	if meterValues != "" {
-		// manually override measurands
-		if err := c.configure(ocpp.KeyMeterValuesSampledData, meterValues); err != nil {
-			return nil, err
-		}
-
-		// configuration activated
-		c.meterValuesSample = meterValues
-	} else {
+	if meterValues == "" {
 		// autodetect and set measurands
 		if MeterValuesSampledData && MeterValuesSampledDataMaxLength > 0 {
 			sampledMeasurands := c.tryMeasurands(desiredMeasurands, ocpp.KeyMeterValuesSampledData)
@@ -291,30 +283,24 @@ func NewOCPP(id string, connector int, idtag string,
 				c.log.DEBUG.Println("enabled MeterValuesSampledData measurands: ", m)
 			}
 		}
+	} else {
+		// manually override measurands
+		if err := c.configure(ocpp.KeyMeterValuesSampledData, meterValues); err != nil {
+			return nil, err
+		}
+
+		// configuration activated
+		c.meterValuesSample = meterValues
 	}
 
-	// set default meter interval
-	if meterInterval == 0 {
-		meterInterval = 10 * time.Second
+	// get initial meter values
+	if c.hasRemoteTriggerFeature {
+		conn.TriggerMessageRequest(core.MeterValuesFeatureName)
 	}
 
-	// get initial meter values and configure sample rate
-	if c.hasMeasurement(types.MeasurandPowerActiveImport) || c.hasMeasurement(types.MeasurandEnergyActiveImportRegister) {
-		if c.hasRemoteTriggerFeature {
-			conn.TriggerMessageRequest(core.MeterValuesFeatureName)
-		}
-
-		if meterInterval > 0 {
-			if err := c.configure(ocpp.KeyMeterValueSampleInterval, strconv.Itoa(int(meterInterval.Seconds()))); err != nil {
-				return nil, err
-			}
-		}
-
-		// HACK: setup watchdog for meter values if not happy with config
-		if c.hasRemoteTriggerFeature && meterInterval > 0 {
-			c.log.DEBUG.Println("enabling meter watchdog")
-			go conn.WatchDog(meterInterval * 2)
-		}
+	// configure sample rate
+	if err := c.configure(ocpp.KeyMeterValueSampleInterval, strconv.Itoa(int(meterInterval.Seconds()))); err != nil {
+		return nil, err
 	}
 
 	return c, conn.Initialized()
@@ -396,6 +382,10 @@ func (c *OCPP) Status() (api.ChargeStatus, error) {
 				return api.StatusNone, err
 			}
 		}
+	}
+
+	if c.hasRemoteTriggerFeature {
+		c.conn.TriggerMessageRequest(core.MeterValuesFeatureName)
 	}
 
 	return c.conn.Status()
