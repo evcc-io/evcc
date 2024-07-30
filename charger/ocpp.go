@@ -33,7 +33,6 @@ type OCPP struct {
 	remoteStart             bool
 	chargingRateUnit        types.ChargingRateUnitType
 	hasRemoteTriggerFeature bool
-	hasSmartChargingFeature bool
 	chargingProfileId       int
 	stackLevel              int
 	lp                      loadpoint.API
@@ -175,131 +174,98 @@ func NewOCPP(id string, connector int, idtag string,
 		rc = make(chan error, 1)
 
 		MeterValuesSampledData bool
-		MeterValuesAlignedData bool
-		StopTxnSampledData     bool
 
 		// If a key value is defined as a CSL, it MAY be accompanied with a [KeyName]MaxLength key, indicating the
 		// max length of the CSL in items. If this key is not set, a safe value of 1 (one) item SHOULD be assumed.
 		MeterValuesSampledDataMaxLength int = 1
-		MeterValuesAlignedDataMaxLength int = 1
-		StopTxnSampledDataMaxLength     int = 1
 	)
-
-	keys := []string{
-		ocpp.KeyChargeProfileMaxStackLevel,
-		ocpp.KeyChargingScheduleAllowedChargingRateUnit,
-		ocpp.KeyGetConfigurationMaxKeys,
-		ocpp.KeyMaxChargingProfilesInstalled,
-		ocpp.KeyMeterValuesAlignedData,
-		ocpp.KeyMeterValuesSampledData,
-		ocpp.KeyNumberOfConnectors,
-		ocpp.KeyStopTxnSampledData,
-		ocpp.KeySupportedFeatureProfiles,
-		ocpp.KeyConnectorSwitch3to1PhaseSupported, // optional
-		ocpp.KeyMeterValuesAlignedDataMaxLength,   // optional
-		ocpp.KeyMeterValuesSampledDataMaxLength,   // optional
-		ocpp.KeyStopTxnSampledDataMaxLength,       // optional
-	}
-	_ = keys
 
 	c.chargingRateUnit = types.ChargingRateUnitType(chargingRateUnit)
 
-	// noConfig mode disables GetConfiguration
-	if !noConfig {
-		// fix timing issue in EVBox when switching OCPP protocol version
-		time.Sleep(time.Second)
+	// fix timing issue in EVBox when switching OCPP protocol version
+	time.Sleep(time.Second)
 
-		err := ocpp.Instance().GetConfiguration(cp.ID(), func(resp *core.GetConfigurationConfirmation, err error) {
-			if err == nil {
-				// sort configuration keys for printing
-				slices.SortFunc(resp.ConfigurationKey, func(i, j core.ConfigurationKey) int {
-					return cmp.Compare(i.Key, j.Key)
-				})
+	err = ocpp.Instance().GetConfiguration(cp.ID(), func(resp *core.GetConfigurationConfirmation, err error) {
+		if err == nil {
+			// sort configuration keys for printing
+			slices.SortFunc(resp.ConfigurationKey, func(i, j core.ConfigurationKey) int {
+				return cmp.Compare(i.Key, j.Key)
+			})
 
-				rw := map[bool]string{false: "r/w", true: "r/o"}
+			rw := map[bool]string{false: "r/w", true: "r/o"}
 
-				for _, opt := range resp.ConfigurationKey {
-					if opt.Value == nil {
-						continue
+			for _, opt := range resp.ConfigurationKey {
+				if opt.Value == nil {
+					continue
+				}
+
+				c.log.DEBUG.Printf("%s (%s): %s", opt.Key, rw[opt.Readonly], *opt.Value)
+
+				switch opt.Key {
+				case ocpp.KeyChargeProfileMaxStackLevel:
+					if val, err := strconv.Atoi(*opt.Value); err == nil {
+						c.stackLevel = val
 					}
 
-					c.log.DEBUG.Printf("%s (%s): %s", opt.Key, rw[opt.Readonly], *opt.Value)
-
-					switch opt.Key {
-					case ocpp.KeyChargeProfileMaxStackLevel:
-						if val, err := strconv.Atoi(*opt.Value); err == nil {
-							c.stackLevel = val
-						}
-					case ocpp.KeyChargingScheduleAllowedChargingRateUnit:
-						if *opt.Value == "W" || *opt.Value == "Power" {
-							c.chargingRateUnit = types.ChargingRateUnitWatts
-						}
-					case ocpp.KeyConnectorSwitch3to1PhaseSupported:
-						var val bool
-						if val, err = strconv.ParseBool(*opt.Value); err == nil {
-							c.phaseSwitching = val
-						}
-					case ocpp.KeyMaxChargingProfilesInstalled:
-						if val, err := strconv.Atoi(*opt.Value); err == nil {
-							c.chargingProfileId = val
-						}
-					case ocpp.KeyMeterValuesAlignedData:
-						MeterValuesAlignedData = !opt.Readonly
-					case ocpp.KeyMeterValuesAlignedDataMaxLength:
-						if val, err := strconv.Atoi(*opt.Value); err == nil {
-							MeterValuesAlignedDataMaxLength = val
-						}
-					case ocpp.KeyMeterValuesSampledData:
-						MeterValuesSampledData = !opt.Readonly
-					case ocpp.KeyMeterValuesSampledDataMaxLength:
-						if val, err := strconv.Atoi(*opt.Value); err == nil {
-							MeterValuesSampledDataMaxLength = val
-						}
-					case ocpp.KeyNumberOfConnectors:
-						var val int
-						if val, err = strconv.Atoi(*opt.Value); err == nil && connector > val {
-							err = fmt.Errorf("connector %d exceeds max available connectors: %d", connector, val)
-						}
-					case ocpp.KeyStopTxnSampledData:
-						StopTxnSampledData = !opt.Readonly
-					case ocpp.KeyStopTxnSampledDataMaxLength:
-						if val, err := strconv.Atoi(*opt.Value); err == nil {
-							StopTxnSampledDataMaxLength = val
-						}
-					case ocpp.KeySupportedFeatureProfiles:
-						c.hasSmartChargingFeature = strings.Contains(*opt.Value, "SmartCharging")
-						c.hasRemoteTriggerFeature = strings.Contains(*opt.Value, "RemoteTrigger")
-
-					// vendor-specific keys
-					case ocpp.KeyAlfenPlugAndChargeIdentifier:
-						if c.idtag == defaultIdTag {
-							c.idtag = *opt.Value
-							c.log.DEBUG.Printf("overriding default `idTag` with Alfen-specific value: %s", c.idtag)
-						}
+				case ocpp.KeyChargingScheduleAllowedChargingRateUnit:
+					if *opt.Value == "W" || *opt.Value == "Power" {
+						c.chargingRateUnit = types.ChargingRateUnitWatts
 					}
 
-					if err != nil {
-						break
+				case ocpp.KeyConnectorSwitch3to1PhaseSupported:
+					var val bool
+					if val, err = strconv.ParseBool(*opt.Value); err == nil {
+						c.phaseSwitching = val
+					}
+
+				case ocpp.KeyMaxChargingProfilesInstalled:
+					if val, err := strconv.Atoi(*opt.Value); err == nil {
+						c.chargingProfileId = val
+					}
+
+				case ocpp.KeyMeterValuesSampledData:
+					MeterValuesSampledData = !opt.Readonly
+				case ocpp.KeyMeterValuesSampledDataMaxLength:
+					if val, err := strconv.Atoi(*opt.Value); err == nil {
+						MeterValuesSampledDataMaxLength = val
+					}
+
+				case ocpp.KeyNumberOfConnectors:
+					var val int
+					if val, err = strconv.Atoi(*opt.Value); err == nil && connector > val {
+						err = fmt.Errorf("connector %d exceeds max available connectors: %d", connector, val)
+					}
+
+				case ocpp.KeySupportedFeatureProfiles:
+					if !strings.Contains(*opt.Value, "SmartCharging") {
+						err = fmt.Errorf("the mandatory SmartCharing profile is not supported")
+					}
+					c.hasRemoteTriggerFeature = strings.Contains(*opt.Value, "RemoteTrigger")
+
+				// vendor-specific keys
+				case ocpp.KeyAlfenPlugAndChargeIdentifier:
+					if c.idtag == defaultIdTag {
+						c.idtag = *opt.Value
+						c.log.DEBUG.Printf("overriding default `idTag` with Alfen-specific value: %s", c.idtag)
 					}
 				}
+
+				if err != nil {
+					break
+				}
 			}
-
-			rc <- err
-		}, nil)
-
-		if err := c.wait(err, rc); err != nil {
-			return nil, err
 		}
+
+		rc <- err
+	}, nil)
+
+	if err := c.wait(err, rc); err != nil {
+		return nil, err
 	}
 
 	// see who's there
-	if c.hasRemoteTriggerFeature || boot {
+	if c.hasRemoteTriggerFeature {
 		conn.TriggerMessageRequest(core.BootNotificationFeatureName)
-	}
-
-	if c.hasSmartChargingFeature {
-		// ignore errors
-		_ = c.clearChargingProfiles()
 	}
 
 	if meterValues != "" {
@@ -325,26 +291,6 @@ func NewOCPP(id string, connector int, idtag string,
 				c.log.DEBUG.Println("enabled MeterValuesSampledData measurands: ", m)
 			}
 		}
-
-		if MeterValuesAlignedData && MeterValuesAlignedDataMaxLength > 0 {
-			clockAlignedMeasurands := c.tryMeasurands(desiredMeasurands, ocpp.KeyMeterValuesAlignedData)
-			if len(clockAlignedMeasurands) > 0 {
-				m := c.constrainedJoin(clockAlignedMeasurands, MeterValuesAlignedDataMaxLength)
-				if err := c.configure(ocpp.KeyMeterValuesAlignedData, m); err == nil {
-					c.log.DEBUG.Println("enabled MeterValuesAlignedData measurands: ", m)
-				}
-			}
-		}
-
-		if StopTxnSampledData && StopTxnSampledDataMaxLength > 0 {
-			stopTxnSampledMeasurands := c.tryMeasurands(desiredMeasurands, ocpp.KeyStopTxnSampledData)
-			if len(stopTxnSampledMeasurands) > 0 {
-				m := c.constrainedJoin(stopTxnSampledMeasurands, StopTxnSampledDataMaxLength)
-				if err := c.configure(ocpp.KeyStopTxnSampledData, m); err == nil {
-					c.log.DEBUG.Println("enabled MeterValuesAlignedData measurands: ", m)
-				}
-			}
-		}
 	}
 
 	// set default meter interval
@@ -364,14 +310,10 @@ func NewOCPP(id string, connector int, idtag string,
 			}
 		}
 
-		if MeterValuesAlignedData {
-			_ = c.configure(ocpp.KeyClockAlignedDataInterval, "60")
-		}
-
 		// HACK: setup watchdog for meter values if not happy with config
 		if c.hasRemoteTriggerFeature && meterInterval > 0 {
 			c.log.DEBUG.Println("enabling meter watchdog")
-			go conn.WatchDog(meterInterval)
+			go conn.WatchDog(meterInterval * 2)
 		}
 	}
 
@@ -595,23 +537,6 @@ func (c *OCPP) createTxDefaultChargingProfile(current float64) *types.ChargingPr
 			ChargingSchedulePeriod: []types.ChargingSchedulePeriod{period},
 		},
 	}
-}
-
-// clearChargingProfiles wipes all installed charging profiles on the connector
-func (c *OCPP) clearChargingProfiles() error {
-	rc := make(chan error, 1)
-	err := ocpp.Instance().ClearChargingProfile(c.conn.ChargePoint().ID(), func(resp *smartcharging.ClearChargingProfileConfirmation, err error) {
-		if err == nil && resp != nil && resp.Status != smartcharging.ClearChargingProfileStatusAccepted {
-			err = errors.New(string(resp.Status))
-		}
-
-		rc <- err
-	}, func(request *smartcharging.ClearChargingProfileRequest) {
-		connector := c.conn.ID()
-		request.ConnectorId = &connector
-	})
-
-	return c.wait(err, rc)
 }
 
 // MaxCurrent implements the api.Charger interface
