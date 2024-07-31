@@ -24,7 +24,7 @@
 						></button>
 					</div>
 					<div class="modal-body pt-2">
-						<ul class="nav nav-tabs mb-4">
+						<ul v-if="gridChargePossible" class="nav nav-tabs mb-4">
 							<li class="nav-item">
 								<a
 									class="nav-link"
