@@ -386,11 +386,27 @@ presets:
           en: Connector number, usually 1 for first connector.
         advanced: true
         default: 1
+      - name: remotestart
+        type: bool
+        description:
+          de: Immer automatisch eine für die Ladefreigabe benötigte Transaktion starten (RemoteStartTransaction) sobald ein Fahrzeug verbunden wird
+          en: Always automatically start a transaction required for charging release (RemoteStartTransaction) as soon as a vehicle is connected
+        help:
+          de: |
+            Diese Option nur aktivieren wenn keinerlei Möglichkeit besteht Transaktionen seitens des Ladepunktes zu initiieren!
+            Das ist nur der Fall wenn z. B. kein RFID-Lesegerät vorhanden ist und Ladevorgänge grundsätzlich einzeln per App freigeschaltet werden müssten.
+            Normalerweise sollte der Ladepunkt am Gerät immer so konfiguriert werden, dass entweder eine RFID-Karte zur Freischaltung verwendet wird oder der Ladepunkt auf "Autostart", "Freies Laden" o.ä. eingestellt ist.
+            Zunächst die Dokumentation und die Konfigurationsmöglichkeiten des Ladepunktes prüfen, ggf. beim Hersteller nachfragen!
+          en: |
+            Only enable this option if there is no way to initiate transactions from the charger side!
+            This is only the case if e.g. no RFID reader is available and charging processes would have to be released individually via app.
+            Normally, the charger should always be configured at the device so that either an RFID card is used for activation or the charger is set to "Autostart", "Free Charging" or similar.
+            First check the documentation and configuration possibilities of the charger, ask the manufacturer if necessary!
       - name: idtag
         type: string
         help:
-          en: Token-ID returned to the charger for authorisation of charging sessions
-          de: Token-ID welche für die Freischaltung der Ladevorgänge an den Ladepunkt zurückgesendet wird
+          en: Token-ID returned to the charger for external authorisation of charging sessions
+          de: Token-ID welche für die externe Freischaltung der Ladevorgänge an den Ladepunkt zurückgesendet wird
         advanced: true
         example: 04E6B78921BBA0
       - name: connecttimeout

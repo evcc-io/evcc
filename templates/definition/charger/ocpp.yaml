@@ -48,15 +48,6 @@ params:
     deprecated: true
   - name: nostop
     deprecated: true
-  - name: remotestart
-    advanced: true
-    type: bool
-    description:
-      de: Automatisch eine für die Ladefreigabe benötigte Transaktion starten (RemoteStartTransaction) sobald ein Ladekabel mit der Wallbox verbunden wird
-      en: Automatically start a transaction required for charging release (RemoteStartTransaction) as soon as a cable is connected to the charger
-    help:
-      de: Nur verwenden wenn keinerlei Möglichkeit besteht Transaktionen seitens des Ladepunktes zu starten
-      en: Only use if there is no other way to start transactions from the charger
   - name: getconfiguration
     deprecated: true
   - name: bootnotification
@@ -76,8 +67,6 @@ params:
   - name: chargingrateunit
     deprecated: true
 render: |
-  {{ include "ocpp" . }}
-  remotestart: {{ .remotestart }}
   {{- if .meterinterval }}
   meterinterval: {{ .meterinterval }}
   {{- end }}
