@@ -167,8 +167,7 @@
 									class="btn-reset d-flex justify-content-between"
 									@click.stop="openBatterySettingsModal"
 								>
-									{{ batteryGridChargeText }} ({{ batteryGridChargeNow }} ≤
-									{{ batteryGridChargeLimitFmt }})
+									{{ batteryGridChargeText }} (≤ {{ batteryGridChargeLimitFmt }})
 								</button>
 							</template>
 						</EnergyflowEntry>

@@ -57,11 +57,7 @@
 				</div>
 			</div>
 		</FormRow>
-		<FormRow
-			v-if="fullscreenAvailable"
-			id="settingsFullscreen"
-			:label="$t('settings.fullscreen.label')"
-		>
+		<FormRow v-if="fullscreenAvailable" :label="$t('settings.fullscreen.label')">
 			<button
 				v-if="fullscreenActive"
 				class="btn btn-sm btn-outline-secondary"
