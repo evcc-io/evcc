@@ -540,6 +540,7 @@ unknown = ""
 vehicleLimit = "Jármű limit."
 vehicleLimitReached = "Jármű limit elérve."
 waitForVehicle = "Üzemkész. Járműre várakozás…"
+welcome = "Rövid kezdeti töltés a csatlakozás megerősítéséhez."
 
 [notifications]
 dismissAll = "Összeset figyelmen kívül hagyja"

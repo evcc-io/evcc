@@ -30,8 +30,6 @@ type minMax struct {
 }
 
 type EEBus struct {
-	ski string
-
 	uc *eebus.UseCasesEVSE
 	ev spineapi.EntityRemoteInterface
 
@@ -48,13 +46,7 @@ type EEBus struct {
 
 	currentLimit float64
 
-	lastIsChargingCheck  time.Time
-	lastIsChargingResult bool
-
-	once     sync.Once
-	connectC chan struct{}
-
-	connected     bool
+	*eebus.Connector
 	connectedTime time.Time
 }
 
@@ -85,25 +77,25 @@ func NewEEBusFromConfig(other map[string]interface{}) (api.Charger, error) {
 
 // NewEEBus creates EEBus charger
 func NewEEBus(ski string, hasMeter, hasChargedEnergy, vasVW bool) (api.Charger, error) {
-	log := util.NewLogger("eebus")
-
 	if eebus.Instance == nil {
 		return nil, errors.New("eebus not configured")
 	}
 
 	c := &EEBus{
-		ski:      ski,
-		log:      log,
-		current:  6,
-		vasVW:    vasVW,
-		connectC: make(chan struct{}),
+		log:     util.NewLogger("eebus"),
+		current: 6,
+		vasVW:   vasVW,
+		uc:      eebus.Instance.Evse(),
 	}
 
-	c.uc = eebus.Instance.RegisterEVSE(ski, c)
-
+	c.Connector = eebus.NewConnector(c.connectEvent)
 	c.minMaxG = provider.Cached(c.minMax, time.Second)
 
-	if err := c.waitForConnection(); err != nil {
+	if err := eebus.Instance.RegisterDevice(ski, c); err != nil {
+		return nil, err
+	}
+
+	if err := c.Wait(90 * time.Second); err != nil {
 		return c, err
 	}
 
@@ -116,16 +108,6 @@ func NewEEBus(ski string, hasMeter, hasChargedEnergy, vasVW bool) (api.Charger, 
 	}
 
 	return c, nil
-}
-
-// waitForConnection wait for initial connection and returns an error on failure
-func (c *EEBus) waitForConnection() error {
-	select {
-	case <-time.After(90 * time.Second):
-		return api.ErrTimeout
-	case <-c.connectC:
-		return nil
-	}
 }
 
 func (c *EEBus) setEvEntity(entity spineapi.EntityRemoteInterface) {
@@ -142,22 +124,20 @@ func (c *EEBus) evEntity() spineapi.EntityRemoteInterface {
 	return c.ev
 }
 
-// EEBUSDeviceInterface
+func (c *EEBus) connectEvent(connected bool) {
+	if connected && !c.Connected() {
+		c.mux.Lock()
+		c.connectedTime = time.Now()
+		c.mux.Unlock()
+	}
 
-func (c *EEBus) DeviceConnect() {
-	c.log.TRACE.Println("connect ski:", c.ski)
-	c.setDefaultValues()
-	c.setConnected(true)
-}
-
-func (c *EEBus) DeviceDisconnect() {
-	c.log.TRACE.Println("disconnect ski:", c.ski)
-	c.setConnected(false)
 	c.setDefaultValues()
 }
 
-// UseCase specific events
-func (c *EEBus) UseCaseEventCB(device spineapi.DeviceRemoteInterface, entity spineapi.EntityRemoteInterface, event eebusapi.EventType) {
+var _ eebus.Device = (*EEBus)(nil)
+
+// UseCaseEvent implements the eebus.Device interface
+func (c *EEBus) UseCaseEvent(device spineapi.DeviceRemoteInterface, entity spineapi.EntityRemoteInterface, event eebusapi.EventType) {
 	switch event {
 	// EV
 	case evcc.EvConnected:
@@ -173,28 +153,7 @@ func (c *EEBus) UseCaseEventCB(device spineapi.DeviceRemoteInterface, entity spi
 
 func (c *EEBus) setDefaultValues() {
 	c.communicationStandard = evcc.EVCCCommunicationStandardUnknown
-	c.lastIsChargingCheck = time.Now().Add(-time.Hour)
-	c.lastIsChargingResult = false
 	c.expectedEnableUnpluggedState = false
-}
-
-// set wether the EVSE is connected
-func (c *EEBus) setConnected(connected bool) {
-	c.mux.Lock()
-	defer c.mux.Unlock()
-
-	if connected && !c.connected {
-		c.once.Do(func() { close(c.connectC) })
-		c.connectedTime = time.Now()
-	}
-	c.connected = connected
-}
-
-func (c *EEBus) isConnected() bool {
-	c.mux.Lock()
-	defer c.mux.Unlock()
-
-	return c.connected
 }
 
 var _ api.CurrentLimiter = (*EEBus)(nil)
@@ -236,16 +195,7 @@ func (c *EEBus) isCharging() bool {
 	// we only want this for configured meters and not for internal meters!
 	// right now it works as expected
 	if c.lp != nil && c.lp.HasChargeMeter() {
-		// we only check ever 10 seconds, maybe we can use the config interval duration
-		if time.Since(c.lastIsChargingCheck) >= 10*time.Second {
-			c.lastIsChargingCheck = time.Now()
-			c.lastIsChargingResult = false
-			// compare charge power for all phases to 0.6 * min. charge power of a single phase
-			if c.lp.GetChargePower() > c.lp.EffectiveMinPower()*idleFactor {
-				c.lastIsChargingResult = true
-				return true
-			}
-		} else if c.lastIsChargingResult {
+		if c.lp.GetChargePower() > c.lp.EffectiveMinPower()*idleFactor {
 			return true
 		}
 	}
@@ -274,11 +224,11 @@ func (c *EEBus) isCharging() bool {
 
 // Status implements the api.Charger interface
 func (c *EEBus) Status() (api.ChargeStatus, error) {
-	evEntity := c.evEntity()
-	if !c.isConnected() {
+	if !c.Connected() {
 		return api.StatusNone, api.ErrTimeout
 	}
 
+	evEntity := c.evEntity()
 	if !c.uc.EvCC.EVConnected(evEntity) {
 		c.expectedEnableUnpluggedState = false
 		return api.StatusA, nil
@@ -303,7 +253,7 @@ func (c *EEBus) Status() (api.ChargeStatus, error) {
 	case ucapi.EVChargeStateTypeError: // Error
 		return api.StatusF, nil
 	default:
-		return api.StatusNone, fmt.Errorf("%s properties unknown result: %s", c.ski, currentState)
+		return api.StatusNone, fmt.Errorf("properties unknown result: %s", currentState)
 	}
 }
 
@@ -434,9 +384,9 @@ func (c *EEBus) writeCurrentLimitData(currents []float64) error {
 	if recommendations, err := c.uc.OscEV.LoadControlLimits(evEntity); err == nil {
 		var writeNeeded bool
 
-		for _, item := range recommendations {
+		for index, item := range recommendations {
 			if item.IsActive {
-				item.IsActive = false
+				recommendations[index].IsActive = false
 				writeNeeded = true
 			}
 		}
@@ -573,7 +523,7 @@ var _ api.ChargerEx = (*EEBus)(nil)
 
 // MaxCurrentMillis implements the api.ChargerEx interface
 func (c *EEBus) MaxCurrentMillis(current float64) error {
-	if !c.connected || c.evEntity() == nil {
+	if !c.Connected() || c.evEntity() == nil {
 		return errors.New("can't set new current as ev is unplugged")
 	}
 
@@ -689,7 +639,7 @@ var _ api.Identifier = (*EEBus)(nil)
 // Identify implements the api.Identifier interface
 func (c *EEBus) Identify() (string, error) {
 	evEntity := c.evEntity()
-	if !c.isConnected() || evEntity == nil {
+	if !c.Connected() || evEntity == nil {
 		return "", nil
 	}
 
@@ -702,6 +652,9 @@ func (c *EEBus) Identify() (string, error) {
 	if comStandard, _ := c.uc.EvCC.CommunicationStandard(evEntity); comStandard == model.DeviceConfigurationKeyValueStringTypeIEC61851 {
 		return "", nil
 	}
+
+	c.mux.RLock()
+	defer c.mux.RUnlock()
 
 	if time.Since(c.connectedTime) < maxIdRequestTimespan {
 		return "", api.ErrMustRetry
