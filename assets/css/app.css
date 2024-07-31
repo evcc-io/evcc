@@ -345,6 +345,16 @@ a:hover {
 	transition-timing-function: linear;
 }
 
+.modal.fade-left .modal-dialog {
+	transform: translate(-50px, 0);
+}
+.modal.fade-right .modal-dialog {
+	transform: translate(50px, 0);
+}
+.modal.show .modal-dialog {
+	transform: none;
+}
+
 .modal-header {
 	padding: 0 0 1rem 0;
 	border: none;
@@ -498,8 +508,13 @@ input::-webkit-datetime-edit {
 .form-control {
 	color: var(--evcc-default-text);
 }
-.form-control:disabled {
+.form-control:disabled,
+.form-control:read-only,
+.dark .form-control:disabled,
+.dark .form-control:read-only {
+	background-color: var(--bs-secondary-bg);
 	color: var(--bs-gray-dark);
+	opacity: 1;
 }
 
 .dark .form-control {
