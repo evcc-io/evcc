@@ -3,21 +3,13 @@ package ocpp
 const (
 	// Core profile keys
 	KeyGetConfigurationMaxKeys           = "GetConfigurationMaxKeys"
+	KeyMeterValueSampleInterval          = "MeterValueSampleInterval"
+	KeyMeterValuesSampledData            = "MeterValuesSampledData"
+	KeyMeterValuesSampledDataMaxLength   = "MeterValuesSampledDataMaxLength"
 	KeyNumberOfConnectors                = "NumberOfConnectors"
+	KeyStopTransactionOnEVSideDisconnect = "StopTransactionOnEVSideDisconnect"
 	KeySupportedFeatureProfiles          = "SupportedFeatureProfiles"
 	KeyWebSocketPingInterval             = "WebSocketPingInterval"
-	KeyStopTransactionOnEVSideDisconnect = "StopTransactionOnEVSideDisconnect"
-
-	KeyMeterValuesSampledData          = "MeterValuesSampledData"
-	KeyMeterValuesSampledDataMaxLength = "MeterValuesSampledDataMaxLength"
-	KeyMeterValueSampleInterval        = "MeterValueSampleInterval"
-	KeyMeterValuesAlignedData          = "MeterValuesAlignedData"
-	KeyMeterValuesAlignedDataMaxLength = "MeterValuesAlignedDataMaxLength"
-	KeyClockAlignedDataInterval        = "ClockAlignedDataInterval"
-	KeyStopTxnSampledData              = "StopTxnSampledData"
-	KeyStopTxnSampledDataMaxLength     = "StopTxnSampledDataMaxLength"
-	KeyStopTxnAlignedData              = "StopTxnAlignedData"
-	KeyStopTxnAlignedDataMaxLength     = "StopTxnAlignedDataMaxLength"
 
 	// SmartCharging profile keys
 	KeyChargeProfileMaxStackLevel              = "ChargeProfileMaxStackLevel"
