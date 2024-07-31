@@ -15,6 +15,7 @@ import (
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/util"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
+	"github.com/lorenzodonini/ocpp-go/ocpp1.6/remotetrigger"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/smartcharging"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/types"
 )
@@ -237,10 +238,10 @@ func NewOCPP(id string, connector int, idtag string,
 					}
 
 				case ocpp.KeySupportedFeatureProfiles:
-					if !strings.Contains(*opt.Value, "SmartCharging") {
+					if !c.hasProperty(*opt.Value, smartcharging.ProfileName) {
 						err = fmt.Errorf("the mandatory SmartCharing profile is not supported")
 					}
-					c.hasRemoteTriggerFeature = strings.Contains(*opt.Value, "RemoteTrigger")
+					c.hasRemoteTriggerFeature = c.hasProperty(*opt.Value, remotetrigger.ProfileName)
 
 				// vendor-specific keys
 				case ocpp.KeyAlfenPlugAndChargeIdentifier:
@@ -313,7 +314,16 @@ func (c *OCPP) Connector() *ocpp.Connector {
 
 // hasMeasurement checks if meterValuesSample contains given measurement
 func (c *OCPP) hasMeasurement(val types.Measurand) bool {
-	return slices.Contains(strings.Split(c.meterValuesSample, ","), string(val))
+	return c.hasProperty(c.meterValuesSample, string(val))
+}
+
+// hasProperty checks if comma-separated string contains given string ignoring whitespaces
+func (c *OCPP) hasProperty(props string, prop string) bool {
+	p := strings.Split(props, ",")
+	for i := range p {
+		p[i] = strings.TrimSpace(p[i])
+	}
+	return slices.Contains(p, prop)
 }
 
 func (c *OCPP) effectiveIdTag() string {
