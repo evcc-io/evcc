@@ -25,9 +25,10 @@ type Connector struct {
 	status  *core.StatusNotificationRequest
 	statusC chan struct{}
 
-	meterUpdated time.Time
-	measurements map[types.Measurand]types.SampledValue
-	timeout      time.Duration
+	meterUpdated   time.Time
+	meterRequested time.Time
+	measurements   map[types.Measurand]types.SampledValue
+	timeout        time.Duration
 
 	txnCount int // change initial value to the last known global transaction. Needs persistence
 	txnId    int
@@ -75,21 +76,6 @@ func (conn *Connector) TriggerMessageRequest(feature remotetrigger.MessageTrigge
 			f(request)
 		}
 	})
-}
-
-// WatchDog triggers meter values messages if older than timeout.
-// Must be wrapped in a goroutine.
-func (conn *Connector) WatchDog(timeout time.Duration) {
-	tick := time.NewTicker(timeout)
-	for ; true; <-tick.C {
-		conn.mu.Lock()
-		update := conn.clock.Since(conn.meterUpdated) > timeout
-		conn.mu.Unlock()
-
-		if update {
-			conn.TriggerMessageRequest(core.MeterValuesFeatureName)
-		}
-	}
 }
 
 // Initialized waits for initial charge point status notification
@@ -185,10 +171,22 @@ func (conn *Connector) NeedsTransaction() (bool, error) {
 	return conn.txnId == 0 && conn.status.Status == core.ChargePointStatusPreparing, nil
 }
 
-// isMeterTimeout checks if meter values are outdated.
-// Must only be called while holding lock.
+// isMeterTimeout checks if meter values are outdated
+// Must only be called while holding lock
 func (conn *Connector) isMeterTimeout() bool {
-	return conn.timeout > 0 && conn.clock.Since(conn.meterUpdated) > conn.timeout
+	return conn.timeout > 0 && conn.clock.Since(conn.meterUpdated) > 5*time.Second
+}
+
+// PollMeter triggers meter values messages if older than timeout
+func (conn *Connector) PollMeter(force bool) {
+	conn.mu.Lock()
+	defer conn.mu.Unlock()
+
+	if (force || conn.isMeterTimeout()) && conn.meterUpdated.Compare(conn.meterRequested) >= 0 {
+		conn.meterRequested = conn.clock.Now()
+		conn.TriggerMessageRequest(core.MeterValuesFeatureName)
+		// TODO: Wait for meter values updated
+	}
 }
 
 func (conn *Connector) GetMaxCurrent() (float64, error) {
