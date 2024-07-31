@@ -411,13 +411,15 @@ func (c *OCPP) Enabled() (bool, error) {
 	}
 
 	if c.hasMeasurement(types.MeasurandCurrentOffered) {
-		v, err := c.getMaxCurrent()
-		return v > 0, err
+		if v, err := c.getMaxCurrent(); err == nil {
+			return v > 0, nil
+		}
 	}
 
 	if c.hasMeasurement(types.MeasurandPowerOffered) {
-		v, err := c.getMaxPower()
-		return v > 0, err
+		if v, err := c.getMaxPower(); err == nil {
+			return v > 0, err
+		}
 	}
 
 	if v, err := c.getScheduleLimit(); err == nil {
