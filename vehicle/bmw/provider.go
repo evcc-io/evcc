@@ -105,7 +105,7 @@ func (v *Provider) GetLimitSoc() (int64, error) {
 		return 0, err
 	}
 
-	return int64(res.State.ElectricChargingState.ChargingTarget), nil
+	return res.State.ElectricChargingState.ChargingTarget, nil
 }
 
 var _ api.Resurrector = (*Provider)(nil)
