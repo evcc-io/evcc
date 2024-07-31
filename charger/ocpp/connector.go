@@ -260,7 +260,7 @@ func (conn *Connector) Soc() (float64, error) {
 		return 0, api.ErrTimeout
 	}
 
-	if m, ok := conn.measurements[types.MeasueandSoC]; ok { // typo in ocpp-go
+	if m, ok := conn.measurements[types.MeasurandSoC]; ok {
 		f, err := strconv.ParseFloat(m.Value, 64)
 		return scale(f, m.Unit) / 1e3, err
 	}
