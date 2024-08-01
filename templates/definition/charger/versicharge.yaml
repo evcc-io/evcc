@@ -6,8 +6,8 @@ products:
 requirements:
   evcc: ["sponsorship"]
   description:
-    de: Erfordert Firmware >= 2.121.5
-    en: Requires firmware >= 2.121.5
+    de: Erfordert Firmware >= 2.135, RFID und mA Steuerung nicht implementiert
+    en: Requires firmware >= 2.135, RFID and mA Control not implemented
 params:
   - name: modbus
     choice: ["tcpip"]
