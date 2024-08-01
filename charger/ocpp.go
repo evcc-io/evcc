@@ -174,8 +174,6 @@ func NewOCPP(id string, connector int, idtag string,
 	var (
 		rc = make(chan error, 1)
 
-		MeterValuesSampledData bool
-
 		// If a key value is defined as a CSL, it MAY be accompanied with a [KeyName]MaxLength key, indicating the
 		// max length of the CSL in items. If this key is not set, a safe value of 1 (one) item SHOULD be assumed.
 		MeterValuesSampledDataMaxLength int = 1
@@ -224,8 +222,6 @@ func NewOCPP(id string, connector int, idtag string,
 						c.chargingProfileId = val
 					}
 
-				case ocpp.KeyMeterValuesSampledData:
-					MeterValuesSampledData = !opt.Readonly
 				case ocpp.KeyMeterValuesSampledDataMaxLength:
 					if val, err := strconv.Atoi(*opt.Value); err == nil {
 						MeterValuesSampledDataMaxLength = val
@@ -271,7 +267,7 @@ func NewOCPP(id string, connector int, idtag string,
 
 	if meterValues == "" {
 		// autodetect and set measurands
-		if MeterValuesSampledData && MeterValuesSampledDataMaxLength > 0 {
+		if MeterValuesSampledDataMaxLength > 0 {
 			sampledMeasurands := c.tryMeasurands(desiredMeasurands, ocpp.KeyMeterValuesSampledData)
 			if len(sampledMeasurands) > 0 {
 				m := c.constrainedJoin(sampledMeasurands, MeterValuesSampledDataMaxLength)
@@ -284,7 +280,7 @@ func NewOCPP(id string, connector int, idtag string,
 				c.log.DEBUG.Println("enabled MeterValuesSampledData measurands: ", m)
 			}
 		}
-	} else {
+	} else { // manual configuration will be deprecated in the future?
 		// manually override measurands
 		if err := c.configure(ocpp.KeyMeterValuesSampledData, meterValues); err != nil {
 			return nil, err
