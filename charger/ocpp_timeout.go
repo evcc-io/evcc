@@ -6,13 +6,13 @@ import (
 )
 
 var (
-	ocppConnectTimeout = 5 * time.Minute
-	ocppTimeout        = 2 * time.Minute
+	ocppInitialStatusTimeout = 5 * time.Minute
+	ocppMessageTimeout       = 30 * time.Second
 )
 
 func init() {
 	if testing.Testing() {
-		ocppConnectTimeout = 1 * time.Second
-		ocppTimeout = 1 * time.Second
+		ocppInitialStatusTimeout = 1 * time.Second
+		ocppMessageTimeout = 1 * time.Second
 	}
 }

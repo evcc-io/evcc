@@ -27,8 +27,11 @@ type Connector struct {
 
 	meterUpdated   time.Time
 	meterRequested time.Time
+	meterCache     time.Duration
+	meterTimeout   time.Duration
 	measurements   map[types.Measurand]types.SampledValue
-	timeout        time.Duration
+
+	initTimeout time.Duration // inital timeout for status notification
 
 	txnCount int // change initial value to the last known global transaction. Needs persistence
 	txnId    int
@@ -43,7 +46,9 @@ func NewConnector(log *util.Logger, id int, cp *CP, timeout time.Duration) (*Con
 		clock:        clock.New(),
 		statusC:      make(chan struct{}),
 		measurements: make(map[types.Measurand]types.SampledValue),
-		timeout:      timeout,
+		initTimeout:  timeout,
+		meterCache:   4 * time.Second,
+		meterTimeout: 30 * time.Second,
 	}
 
 	err := cp.registerConnector(id, conn)
@@ -80,8 +85,8 @@ func (conn *Connector) TriggerMessageRequest(feature remotetrigger.MessageTrigge
 
 // Initialized waits for initial charge point status notification
 func (conn *Connector) Initialized() error {
-	trigger := time.After(conn.timeout / 2)
-	timeout := time.After(conn.timeout)
+	trigger := time.After(conn.initTimeout / 2)
+	timeout := time.After(conn.initTimeout)
 	for {
 		select {
 		case <-conn.statusC:
@@ -174,7 +179,7 @@ func (conn *Connector) NeedsTransaction() (bool, error) {
 // isMeterTimeout checks if meter values are outdated
 // Must only be called while holding lock
 func (conn *Connector) isMeterTimeout() bool {
-	return conn.timeout > 0 && conn.clock.Since(conn.meterUpdated) > 5*time.Second
+	return conn.meterTimeout > 0 && conn.clock.Since(conn.meterUpdated) > conn.meterTimeout
 }
 
 // PollMeter triggers meter values messages if older than timeout
@@ -182,7 +187,7 @@ func (conn *Connector) PollMeter(force bool) {
 	conn.mu.Lock()
 	defer conn.mu.Unlock()
 
-	if (force || conn.isMeterTimeout()) && conn.meterUpdated.Compare(conn.meterRequested) >= 0 {
+	if (force || conn.clock.Since(conn.meterUpdated) > conn.meterCache) && conn.meterUpdated.Compare(conn.meterRequested) >= 0 {
 		conn.meterRequested = conn.clock.Now()
 		conn.TriggerMessageRequest(core.MeterValuesFeatureName)
 		// TODO: Wait for meter values updated

@@ -29,7 +29,7 @@ type OCPP struct {
 	current                 float64
 	enabled                 bool
 	meterValuesSample       string
-	timeout                 time.Duration
+	messageTimeout          time.Duration // messageTimeout
 	phaseSwitching          bool
 	remoteStart             bool
 	chargingRateUnit        types.ChargingRateUnitType
@@ -54,19 +54,19 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 		Connector        int
 		MeterInterval    time.Duration
 		MeterValues      string
-		ConnectTimeout   time.Duration
-		Timeout          time.Duration
-		BootNotification *bool  // deprecated, to be removed
-		GetConfiguration *bool  // deprecated, to be removed
-		ChargingRateUnit string // deprecated, to be removed
-		AutoStart        bool   // deprecated, to be removed
-		NoStop           bool   // deprecated, to be removed
+		ConnectTimeout   time.Duration // Initial Status Timeout
+		Timeout          time.Duration // Message Timeout
+		BootNotification *bool         // deprecated, to be removed
+		GetConfiguration *bool         // deprecated, to be removed
+		ChargingRateUnit string        // deprecated, to be removed
+		AutoStart        bool          // deprecated, to be removed
+		NoStop           bool          // deprecated, to be removed
 		RemoteStart      bool
 	}{
 		Connector:        1,
 		IdTag:            defaultIdTag,
-		ConnectTimeout:   ocppConnectTimeout,
-		Timeout:          ocppTimeout,
+		ConnectTimeout:   ocppInitialStatusTimeout,
+		Timeout:          ocppMessageTimeout,
 		ChargingRateUnit: "A",
 	}
 
@@ -129,7 +129,7 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 func NewOCPP(id string, connector int, idtag string,
 	meterValues string, meterInterval time.Duration,
 	boot, noConfig, remoteStart bool,
-	connectTimeout, timeout time.Duration,
+	initTimeout, messageTimeout time.Duration,
 	chargingRateUnit string,
 ) (*OCPP, error) {
 	unit := "ocpp"
@@ -150,23 +150,23 @@ func NewOCPP(id string, connector int, idtag string,
 		}
 	}
 
-	conn, err := ocpp.NewConnector(log, connector, cp, timeout)
+	conn, err := ocpp.NewConnector(log, connector, cp, initTimeout)
 	if err != nil {
 		return nil, err
 	}
 
 	c := &OCPP{
-		log:         log,
-		conn:        conn,
-		idtag:       idtag,
-		remoteStart: remoteStart,
-		timeout:     timeout,
+		log:            log,
+		conn:           conn,
+		idtag:          idtag,
+		remoteStart:    remoteStart,
+		messageTimeout: messageTimeout,
 	}
 
-	c.log.DEBUG.Printf("waiting for chargepoint: %v", connectTimeout)
+	c.log.DEBUG.Printf("waiting for chargepoint: %v", initTimeout)
 
 	select {
-	case <-time.After(connectTimeout):
+	case <-time.After(initTimeout):
 		return nil, api.ErrTimeout
 	case <-cp.HasConnected():
 	}
@@ -372,7 +372,7 @@ func (c *OCPP) wait(err error, rc chan error) error {
 		select {
 		case err = <-rc:
 			close(rc)
-		case <-time.After(c.timeout):
+		case <-time.After(c.messageTimeout):
 			err = api.ErrTimeout
 		}
 	}
