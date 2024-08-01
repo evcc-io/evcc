@@ -294,13 +294,18 @@ func NewOCPP(id string, connector int, idtag string,
 		c.meterValuesSample = meterValues
 	}
 
-	// get initial meter values
+	// trigger initial meter values
 	if c.hasRemoteTriggerFeature {
 		conn.PollMeter(true)
 	}
 
 	// configure sample rate
 	if err := c.configure(ocpp.KeyMeterValueSampleInterval, strconv.Itoa(int(meterInterval.Seconds()))); err != nil {
+		return nil, err
+	}
+
+	// configure ping interval
+	if err := c.configure(ocpp.KeyWebSocketPingInterval, "10"); err != nil {
 		return nil, err
 	}
 
