@@ -29,7 +29,7 @@ type OCPP struct {
 	current                 float64
 	enabled                 bool
 	meterValuesSample       string
-	messageTimeout          time.Duration // messageTimeout
+	messageTimeout          time.Duration
 	phaseSwitching          bool
 	remoteStart             bool
 	chargingRateUnit        types.ChargingRateUnitType
@@ -74,13 +74,7 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	boot := cc.BootNotification != nil && *cc.BootNotification
-	noConfig := cc.GetConfiguration != nil && !*cc.GetConfiguration
-
-	c, err := NewOCPP(cc.StationId, cc.Connector, cc.IdTag,
-		cc.MeterValues, cc.MeterInterval,
-		boot, noConfig, cc.RemoteStart,
-		cc.ConnectTimeout, cc.Timeout, cc.ChargingRateUnit)
+	c, err := NewOCPP(cc.StationId, cc.Connector, cc.IdTag, cc.MeterValues, cc.MeterInterval, cc.RemoteStart, cc.ConnectTimeout, cc.Timeout, cc.ChargingRateUnit)
 	if err != nil {
 		return c, err
 	}
@@ -126,12 +120,7 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 //go:generate go run ../cmd/tools/decorate.go -f decorateOCPP -b *OCPP -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.Battery,Soc,func() (float64, error)"
 
 // NewOCPP creates OCPP charger
-func NewOCPP(id string, connector int, idtag string,
-	meterValues string, meterInterval time.Duration,
-	boot, noConfig, remoteStart bool,
-	initTimeout, messageTimeout time.Duration,
-	chargingRateUnit string,
-) (*OCPP, error) {
+func NewOCPP(id string, connector int, idtag string, meterValues string, meterInterval time.Duration, remoteStart bool, initTimeout, messageTimeout time.Duration, chargingRateUnit string) (*OCPP, error) {
 	unit := "ocpp"
 	if id != "" {
 		unit = id
