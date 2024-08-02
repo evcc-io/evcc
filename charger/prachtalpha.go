@@ -66,7 +66,7 @@ func NewPrachtAlphaFromConfig(other map[string]interface{}) (api.Charger, error)
 		return nil, err
 	}
 
-	return NewPrachtAlpha(cc.URI, cc.Device, cc.Comset, cc.Baudrate, modbus.ProtocolFromRTU(cc.RTU), cc.ID, cc.Timeout, cc.Connector)
+	return NewPrachtAlpha(cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Settings.Protocol(), cc.ID, cc.Timeout, cc.Connector)
 }
 
 // NewPrachtAlpha creates PrachtAlpha charger

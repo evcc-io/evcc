@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/volkszaehler/mbmd/meters"
@@ -19,6 +18,7 @@ const (
 	Tcp Protocol = iota
 	Rtu
 	Ascii
+	Udp
 
 	CoilOn uint16 = 0xFF00
 )
@@ -38,7 +38,20 @@ type Settings struct {
 	SubDevice           int
 	URI, Device, Comset string
 	Baudrate            int
+	UDP                 bool
 	RTU                 *bool // indicates RTU over TCP if true
+}
+
+// Protocol identifies the wire format from the RTU setting
+func (s Settings) Protocol() Protocol {
+	switch {
+	case s.UDP:
+		return Udp
+	case s.RTU != nil && *s.RTU:
+		return Rtu
+	default:
+		return Tcp
+	}
 }
 
 func (s *Settings) String() string {
@@ -46,180 +59,6 @@ func (s *Settings) String() string {
 		return s.URI
 	}
 	return s.Device
-}
-
-// Connection decorates a meters.Connection with transparent slave id and error handling
-type Connection struct {
-	slaveID uint8
-	mu      sync.Mutex
-	conn    meters.Connection
-	delay   time.Duration
-}
-
-func (mb *Connection) prepare(slaveID uint8) {
-	mb.conn.Slave(slaveID)
-	if mb.delay > 0 {
-		time.Sleep(mb.delay)
-	}
-}
-
-func (mb *Connection) handle(res []byte, err error) ([]byte, error) {
-	if err != nil {
-		mb.conn.Close()
-	}
-	return res, err
-}
-
-// Delay sets delay so use between subsequent modbus operations
-func (mb *Connection) Delay(delay time.Duration) {
-	mb.delay = delay
-}
-
-// ConnectDelay sets the initial delay after connecting before starting communication
-func (mb *Connection) ConnectDelay(delay time.Duration) {
-	mb.conn.ConnectDelay(delay)
-}
-
-// Logger sets logger implementation
-func (mb *Connection) Logger(logger meters.Logger) {
-	mb.conn.Logger(logger)
-}
-
-// Timeout sets the connection timeout (not idle timeout)
-func (mb *Connection) Timeout(timeout time.Duration) {
-	mb.conn.Timeout(timeout)
-}
-
-// ReadCoils wraps the underlying implementation
-func (mb *Connection) ReadCoilsWithSlave(slaveID uint8, address, quantity uint16) ([]byte, error) {
-	mb.mu.Lock()
-	defer mb.mu.Unlock()
-	mb.prepare(slaveID)
-	return mb.handle(mb.conn.ModbusClient().ReadCoils(address, quantity))
-}
-
-// WriteSingleCoil wraps the underlying implementation
-func (mb *Connection) WriteSingleCoilWithSlave(slaveID uint8, address, value uint16) ([]byte, error) {
-	mb.mu.Lock()
-	defer mb.mu.Unlock()
-	mb.prepare(slaveID)
-	return mb.handle(mb.conn.ModbusClient().WriteSingleCoil(address, value))
-}
-
-// ReadInputRegisters wraps the underlying implementation
-func (mb *Connection) ReadInputRegistersWithSlave(slaveID uint8, address, quantity uint16) ([]byte, error) {
-	mb.mu.Lock()
-	defer mb.mu.Unlock()
-	mb.prepare(slaveID)
-	return mb.handle(mb.conn.ModbusClient().ReadInputRegisters(address, quantity))
-}
-
-// ReadHoldingRegisters wraps the underlying implementation
-func (mb *Connection) ReadHoldingRegistersWithSlave(slaveID uint8, address, quantity uint16) ([]byte, error) {
-	mb.mu.Lock()
-	defer mb.mu.Unlock()
-	mb.prepare(slaveID)
-	return mb.handle(mb.conn.ModbusClient().ReadHoldingRegisters(address, quantity))
-}
-
-// WriteSingleRegister wraps the underlying implementation
-func (mb *Connection) WriteSingleRegisterWithSlave(slaveID uint8, address, value uint16) ([]byte, error) {
-	mb.mu.Lock()
-	defer mb.mu.Unlock()
-	mb.prepare(slaveID)
-	return mb.handle(mb.conn.ModbusClient().WriteSingleRegister(address, value))
-}
-
-// WriteMultipleRegisters wraps the underlying implementation
-func (mb *Connection) WriteMultipleRegistersWithSlave(slaveID uint8, address, quantity uint16, value []byte) ([]byte, error) {
-	mb.mu.Lock()
-	defer mb.mu.Unlock()
-	mb.prepare(slaveID)
-	return mb.handle(mb.conn.ModbusClient().WriteMultipleRegisters(address, quantity, value))
-}
-
-// ReadDiscreteInputs wraps the underlying implementation
-func (mb *Connection) ReadDiscreteInputsWithSlave(slaveID uint8, address, quantity uint16) (results []byte, err error) {
-	mb.mu.Lock()
-	defer mb.mu.Unlock()
-	mb.prepare(slaveID)
-	return mb.handle(mb.conn.ModbusClient().ReadDiscreteInputs(address, quantity))
-}
-
-// WriteMultipleCoils wraps the underlying implementation
-func (mb *Connection) WriteMultipleCoilsWithSlave(slaveID uint8, address, quantity uint16, value []byte) (results []byte, err error) {
-	mb.mu.Lock()
-	defer mb.mu.Unlock()
-	mb.prepare(slaveID)
-	return mb.handle(mb.conn.ModbusClient().WriteMultipleCoils(address, quantity, value))
-}
-
-// ReadWriteMultipleRegisters wraps the underlying implementation
-func (mb *Connection) ReadWriteMultipleRegistersWithSlave(slaveID uint8, readAddress, readQuantity, writeAddress, writeQuantity uint16, value []byte) (results []byte, err error) {
-	mb.mu.Lock()
-	defer mb.mu.Unlock()
-	mb.prepare(slaveID)
-	return mb.handle(mb.conn.ModbusClient().ReadWriteMultipleRegisters(readAddress, readQuantity, writeAddress, writeQuantity, value))
-}
-
-// MaskWriteRegister wraps the underlying implementation
-func (mb *Connection) MaskWriteRegisterWithSlave(slaveID uint8, address, andMask, orMask uint16) (results []byte, err error) {
-	mb.mu.Lock()
-	defer mb.mu.Unlock()
-	mb.prepare(slaveID)
-	return mb.handle(mb.conn.ModbusClient().MaskWriteRegister(address, andMask, orMask))
-}
-
-// ReadFIFOQueue wraps the underlying implementation
-func (mb *Connection) ReadFIFOQueueWithSlave(slaveID uint8, address uint16) (results []byte, err error) {
-	mb.mu.Lock()
-	defer mb.mu.Unlock()
-	mb.prepare(slaveID)
-	return mb.handle(mb.conn.ModbusClient().ReadFIFOQueue(address))
-}
-
-func (mb *Connection) ReadCoils(address, quantity uint16) ([]byte, error) {
-	return mb.ReadCoilsWithSlave(mb.slaveID, address, quantity)
-}
-
-func (mb *Connection) WriteSingleCoil(address, value uint16) ([]byte, error) {
-	return mb.WriteSingleCoilWithSlave(mb.slaveID, address, value)
-}
-
-func (mb *Connection) ReadInputRegisters(address, quantity uint16) ([]byte, error) {
-	return mb.ReadInputRegistersWithSlave(mb.slaveID, address, quantity)
-}
-
-func (mb *Connection) ReadHoldingRegisters(address, quantity uint16) ([]byte, error) {
-	return mb.ReadHoldingRegistersWithSlave(mb.slaveID, address, quantity)
-}
-
-func (mb *Connection) WriteSingleRegister(address, value uint16) ([]byte, error) {
-	return mb.WriteSingleRegisterWithSlave(mb.slaveID, address, value)
-}
-
-func (mb *Connection) WriteMultipleRegisters(address, quantity uint16, value []byte) ([]byte, error) {
-	return mb.WriteMultipleRegistersWithSlave(mb.slaveID, address, quantity, value)
-}
-
-func (mb *Connection) ReadDiscreteInputs(address, quantity uint16) (results []byte, err error) {
-	return mb.ReadDiscreteInputsWithSlave(mb.slaveID, address, quantity)
-}
-
-func (mb *Connection) WriteMultipleCoils(address, quantity uint16, value []byte) (results []byte, err error) {
-	return mb.WriteMultipleCoilsWithSlave(mb.slaveID, address, quantity, value)
-}
-
-func (mb *Connection) ReadWriteMultipleRegisters(readAddress, readQuantity, writeAddress, writeQuantity uint16, value []byte) (results []byte, err error) {
-	return mb.ReadWriteMultipleRegistersWithSlave(mb.slaveID, readAddress, readQuantity, writeAddress, writeQuantity, value)
-}
-
-func (mb *Connection) MaskWriteRegister(address, andMask, orMask uint16) (results []byte, err error) {
-	return mb.MaskWriteRegisterWithSlave(mb.slaveID, address, andMask, orMask)
-}
-
-func (mb *Connection) ReadFIFOQueue(address uint16) (results []byte, err error) {
-	return mb.ReadFIFOQueueWithSlave(mb.slaveID, address)
 }
 
 var (
@@ -240,65 +79,69 @@ func registeredConnection(key string, newConn meters.Connection) meters.Connecti
 	return newConn
 }
 
-// ProtocolFromRTU identifies the wire format from the RTU setting
-func ProtocolFromRTU(rtu *bool) Protocol {
-	if rtu != nil && *rtu {
-		return Rtu
-	}
-	return Tcp
-}
-
 // NewConnection creates physical modbus device from config
 func NewConnection(uri, device, comset string, baudrate int, proto Protocol, slaveID uint8) (*Connection, error) {
-	var conn meters.Connection
-
-	if device != "" && uri != "" {
-		return nil, errors.New("invalid modbus configuration: can only have either uri or device")
+	conn, err := physicalConnection(proto, Settings{
+		URI:      uri,
+		Device:   device,
+		Comset:   comset,
+		Baudrate: baudrate,
+	})
+	if err != nil {
+		return nil, err
 	}
 
-	if device != "" {
-		switch strings.ToUpper(comset) {
+	res := &Connection{
+		Connection: conn.Clone(slaveID),
+		logger:     new(logger),
+	}
+
+	return res, nil
+}
+
+func physicalConnection(proto Protocol, cfg Settings) (meters.Connection, error) {
+	var conn meters.Connection
+
+	if (cfg.Device != "") == (cfg.URI != "") {
+		return nil, errors.New("invalid modbus configuration: must have either uri or device")
+	}
+
+	if cfg.Device != "" {
+		switch strings.ToUpper(cfg.Comset) {
 		case "8N1", "8E1", "8N2":
 		case "80":
-			comset = "8E1"
+			cfg.Comset = "8E1"
 		default:
-			return nil, fmt.Errorf("invalid comset: %s", comset)
+			return nil, fmt.Errorf("invalid comset: %s", cfg.Comset)
 		}
 
-		if baudrate == 0 {
+		if cfg.Baudrate == 0 {
 			return nil, errors.New("invalid modbus configuration: need baudrate and comset")
 		}
 
 		if proto == Ascii {
-			conn = registeredConnection(device, meters.NewASCII(device, baudrate, comset))
+			conn = registeredConnection(cfg.Device, meters.NewASCII(cfg.Device, cfg.Baudrate, cfg.Comset))
 		} else {
-			conn = registeredConnection(device, meters.NewRTU(device, baudrate, comset))
+			conn = registeredConnection(cfg.Device, meters.NewRTU(cfg.Device, cfg.Baudrate, cfg.Comset))
 		}
 	}
 
-	if uri != "" {
-		uri = util.DefaultPort(uri, 502)
+	if cfg.URI != "" {
+		cfg.URI = util.DefaultPort(cfg.URI, 502)
 
 		switch proto {
+		case Udp:
+			conn = registeredConnection(cfg.URI, meters.NewRTUOverUDP(cfg.URI))
 		case Rtu:
-			conn = registeredConnection(uri, meters.NewRTUOverTCP(uri))
+			conn = registeredConnection(cfg.URI, meters.NewRTUOverTCP(cfg.URI))
 		case Ascii:
-			conn = registeredConnection(uri, meters.NewASCIIOverTCP(uri))
+			conn = registeredConnection(cfg.URI, meters.NewASCIIOverTCP(cfg.URI))
 		default:
-			conn = registeredConnection(uri, meters.NewTCP(uri))
+			conn = registeredConnection(cfg.URI, meters.NewTCP(cfg.URI))
 		}
 	}
 
-	if conn == nil {
-		return nil, errors.New("invalid modbus configuration: need either uri or device")
-	}
-
-	slaveConn := &Connection{
-		slaveID: slaveID,
-		conn:    conn,
-	}
-
-	return slaveConn, nil
+	return conn, nil
 }
 
 // NewDevice creates physical modbus device from config
