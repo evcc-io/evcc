@@ -387,9 +387,12 @@ func (conn *Connector) Voltages() (float64, float64, float64, error) {
 	voltages := make([]float64, 0, 3)
 
 	for phase := 1; phase <= 3; phase++ {
-		m, ok := conn.measurements[getPhaseKey(types.MeasurandVoltage, phase)]
+		m, ok := conn.measurements[getPhaseKey(types.MeasurandVoltage, phase)+"-N"]
 		if !ok {
-			return 0, 0, 0, api.ErrNotAvailable
+			m, ok = conn.measurements[getPhaseKey(types.MeasurandVoltage, phase)]
+			if !ok {
+				return 0, 0, 0, api.ErrNotAvailable
+			}
 		}
 
 		f, err := strconv.ParseFloat(m.Value, 64)
