@@ -3,6 +3,7 @@ package templates
 import (
 	"bytes"
 	_ "embed"
+	"slices"
 	"strconv"
 	"strings"
 	"text/template"
@@ -76,6 +77,17 @@ func (t *Template) RenderDocumentation(product Product, lang string) ([]byte, er
 
 		filteredParams = append(filteredParams, param)
 	}
+
+	// all advanced params should be sorted to the end
+	slices.SortStableFunc(filteredParams, func(i, j Param) int {
+		if i.IsAdvanced() && !j.IsAdvanced() {
+			return 1
+		}
+		if !i.IsAdvanced() && j.IsAdvanced() {
+			return -1
+		}
+		return 0
+	})
 
 	data := map[string]interface{}{
 		"Template":               t.Template,
