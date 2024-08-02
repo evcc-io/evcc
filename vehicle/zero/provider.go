@@ -36,9 +36,7 @@ func (v *Provider) Soc() (float64, error) {
 		return 0, err
 	}
 
-	val := res.Soc
-
-	return float64(val), nil
+	return float64(res.Soc), nil
 }
 
 var _ api.ChargeState = (*Provider)(nil)
@@ -46,18 +44,17 @@ var _ api.ChargeState = (*Provider)(nil)
 // Status implements the api.ChargeState interface
 func (v *Provider) Status() (api.ChargeStatus, error) {
 	res, err := v.status.Get()
+	var status api.ChargeStatus
 	if err != nil {
 		return api.StatusNone, err
 	}
 
-	status := api.StatusA // disconnected
-
-	if res.Pluggedin != 0 {
-		if (res.Charging) == 0 {
-			status = api.StatusB
-		} else {
-			status = api.StatusC
-		}
+	if res.Charging != 0 {
+		status = api.StatusC // Charging
+	} else if res.Pluggedin != 0 {
+		status = api.StatusB // Plugged in
+	} else {
+		status = api.StatusA // disconnected
 	}
 
 	return status, nil

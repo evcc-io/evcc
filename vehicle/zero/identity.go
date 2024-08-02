@@ -1,9 +1,7 @@
 package zero
 
 import (
-	"encoding/json"
 	"fmt"
-	"net/http"
 	"net/url"
 
 	"github.com/evcc-io/evcc/util"
@@ -12,74 +10,53 @@ import (
 
 type Identity struct {
 	*request.Helper
-	User     string
-	Password string
-	UnitId   string
-	Vin      string
+	user     string
+	password string
+	unitId   string
+	vin      string
 }
 
 // NewIdentity creates SAIC identity
 func NewIdentity(log *util.Logger, user, password, vin string) *Identity {
 	v := &Identity{
 		Helper:   request.NewHelper(log),
-		User:     user,
-		Password: password,
-		Vin:      vin,
+		user:     user,
+		password: password,
+		vin:      vin,
 	}
 	return v
 }
 
 func (v *Identity) Login() error {
 	var err error
-	v.UnitId, err = v.retrievedeviceId()
-	if err != nil {
-		return err
-	}
+	v.unitId, err = v.retrievedeviceId()
 
-	return nil
+	return err
 }
 
 func (v *Identity) retrievedeviceId() (string, error) {
 	var units UnitData
-	var resp *http.Response
-	var err error
 
 	params := url.Values{
-		"user":        {v.User},
-		"pass":        {v.Password}, // Shold be Sha1 encoded
-		"unitnumber":  {v.UnitId},
+		"user":        {v.user},
+		"pass":        {v.password},
+		"unitnumber":  {v.unitId},
 		"commandname": {"get_units"},
+		"format":      {"json"},
 	}
 
-	req, err := createRequest(&params)
+	uri := fmt.Sprintf("%s?%s", BaseUrl, params.Encode())
+	err := v.GetJSON(uri, &units)
 	if err != nil {
 		return "", err
 	}
 
-	resp, err = v.Do(req)
-	defer resp.Body.Close()
-
-	if err != nil {
-		return "", err
-	}
-
-	var body *[]byte
-	body, err = handleResponse(resp)
-	if err != nil {
-		return "", err
-	} else {
-		err = json.Unmarshal(*body, &units)
-		if err != nil {
-			return "", err
-		}
-	}
-
-	if v.Vin == "" {
+	if v.vin == "" {
 		return units[0].Unitnumber, nil
 	}
 
 	for _, unit := range units {
-		if unit.Name == v.Vin {
+		if unit.Name == v.vin {
 			return unit.Unitnumber, nil
 		}
 	}

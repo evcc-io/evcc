@@ -1,10 +1,7 @@
 package zero
 
 import (
-	"encoding/json"
 	"fmt"
-	"io"
-	"net/http"
 	"net/url"
 
 	"github.com/evcc-io/evcc/util"
@@ -18,11 +15,11 @@ import (
 // 2 Query last dataset
 // https://mongol.brono.com/mongol/api.php?commandname=get_last_transmit&format=json&user=yourusername&pass=yourpass&unitnumber=0000000
 
-// API is an api.Vehicle implementation for SAIC cars
+// API is an api.Vehicle implementation for Zero Motorcycles
 type API struct {
 	*request.Helper
 	identity *Identity
-	Logger   *util.Logger
+	log      *util.Logger
 }
 
 // NewAPI creates a new vehicle
@@ -30,7 +27,7 @@ func NewAPI(log *util.Logger, identity *Identity) *API {
 	v := &API{
 		Helper:   request.NewHelper(log),
 		identity: identity,
-		Logger:   log,
+		log:      log,
 	}
 
 	return v
@@ -46,67 +43,24 @@ Vehicles implements returns the /user/vehicles api
 		return res, err
 	}
 */
-func createRequest(params *url.Values) (*http.Request, error) {
-	req, err := http.NewRequest("GET", BASE_URL_P, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	params.Set("format", "json")
-	req.URL.RawQuery = params.Encode()
-
-	return req, err
-}
-
-func handleResponse(resp *http.Response) (*[]byte, error) {
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-	if resp.StatusCode != 200 {
-		var answer ErrorAnswer
-
-		if json.Unmarshal(body, &answer) != nil {
-			return nil, err
-		}
-		return nil, fmt.Errorf(answer.Error)
-	}
-	return &body, nil
-}
 
 // Status implements the /user/vehicles/<vin>/status api
 func (v *API) Status() (ZeroState, error) {
 	var states []ZeroState
-	var dummy ZeroState
-	var resp *http.Response
+	var res ZeroState
 
 	params := url.Values{
-		"user":        {v.identity.User},
-		"pass":        {v.identity.Password}, // Shold be Sha1 encoded
-		"unitnumber":  {v.identity.UnitId},
+		"user":        {v.identity.user},
+		"pass":        {v.identity.password},
+		"unitnumber":  {v.identity.unitId},
 		"commandname": {"get_last_transmit"},
-	}
-	req, err := createRequest(&params)
-	if err != nil {
-		return dummy, err
+		"format":      {"json"},
 	}
 
-	resp, err = v.Do(req)
-	defer resp.Body.Close()
-
-	if err != nil {
-		return dummy, err
+	uri := fmt.Sprintf("%s?%s", BaseUrl, params.Encode())
+	err := v.GetJSON(uri, &states)
+	if err == nil {
+		return states[0], nil
 	}
-
-	var body *[]byte
-	body, err = handleResponse(resp)
-	if err != nil {
-		return dummy, err
-	} else {
-		err = json.Unmarshal(*body, &states)
-		if err != nil {
-			return dummy, err
-		}
-	}
-	return states[0], err
+	return res, err
 }
