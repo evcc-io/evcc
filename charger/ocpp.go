@@ -39,8 +39,10 @@ type OCPP struct {
 	lp                      loadpoint.API
 }
 
-const defaultIdTag = "evcc" // RemoteStartTransaction only
-const desiredMeasurands = "Energy.Active.Import.Register,Power.Active.Import,SoC,Current.Offered,Power.Offered,Current.Import,Voltage"
+const (
+	defaultIdTag      = "evcc" // RemoteStartTransaction only
+	desiredMeasurands = "Energy.Active.Import.Register,Power.Active.Import,SoC,Current.Offered,Power.Offered,Current.Import,Voltage"
+)
 
 func init() {
 	registry.Add("ocpp", NewOCPPFromConfig)
@@ -224,7 +226,7 @@ func NewOCPP(id string, connector int, idtag string, meterValues string, meterIn
 
 				case ocpp.KeySupportedFeatureProfiles:
 					if !c.hasProperty(*opt.Value, smartcharging.ProfileName) {
-						err = fmt.Errorf("the mandatory SmartCharing profile is not supported")
+						err = fmt.Errorf("the mandatory SmartCharging profile is not supported")
 					}
 					c.hasRemoteTriggerFeature = c.hasProperty(*opt.Value, remotetrigger.ProfileName)
 
