@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/samber/lo"
+	"golang.org/x/exp/maps"
 )
 
 type (
@@ -38,7 +38,7 @@ func (r registry[T]) Get(name string) (factoryFunc[T], error) {
 }
 
 func (r registry[T]) Types() []string {
-	return lo.Keys(r.data)
+	return maps.Keys(r.data)
 }
 
 func New[T any](typ string) registry[T] {
