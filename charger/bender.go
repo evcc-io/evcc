@@ -315,7 +315,9 @@ func (wb *BenderCC) soc() (float64, error) {
 		if err != nil {
 			return 0, err
 		}
-		return float64(binary.BigEndian.Uint16(b)), nil
+		if soc := binary.BigEndian.Uint16(b); soc <= 100 {
+			return float64(soc), nil
+		}
 	}
 
 	return 0, api.ErrNotAvailable

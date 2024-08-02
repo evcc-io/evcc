@@ -170,6 +170,7 @@ export default {
 
 		// details
 		vehicleClimaterActive: Boolean,
+		vehicleWelcomeActive: Boolean,
 		chargePower: Number,
 		chargedEnergy: Number,
 		chargeRemainingDuration: Number,

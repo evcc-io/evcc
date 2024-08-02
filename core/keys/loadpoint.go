@@ -60,7 +60,7 @@ const (
 	PlanSoc            = "planSoc"            // charge plan soc goal
 	PlanActive         = "planActive"         // charge plan has determined current slot to be an active slot
 	PlanProjectedStart = "planProjectedStart" // charge plan start time (earliest slot)
-	PlanProjectedEnd   = "planProjectedEnd"   //charge plan ends (end of last slot)
+	PlanProjectedEnd   = "planProjectedEnd"   // charge plan ends (end of last slot)
 	PlanOverrun        = "planOverrun"        // charge plan goal not reachable in time
 
 	// remote control
@@ -76,4 +76,5 @@ const (
 	VehicleSoc             = "vehicleSoc"             // vehicle soc
 	VehicleLimitSoc        = "vehicleLimitSoc"        // vehicle api soc limit
 	VehicleClimaterActive  = "vehicleClimaterActive"  // vehicle climater active
+	VehicleWelcomeActive   = "vehicleWelcomeActive"   // vehicle might need welcome charge
 )

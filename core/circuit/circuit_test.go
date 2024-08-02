@@ -1,4 +1,4 @@
-package core
+package circuit
 
 import (
 	"testing"
@@ -61,7 +61,7 @@ func TestCircuitPower(t *testing.T) {
 
 	circ := func(t *testing.T, ctrl *gomock.Controller, maxP float64) (*Circuit, *api.MockMeter) {
 		m := api.NewMockMeter(ctrl)
-		c, err := NewCircuit(log, "foo", 0, maxP, m, 0)
+		c, err := New(log, "foo", 0, maxP, m, 0)
 		require.NoError(t, err)
 		return c, m
 	}
@@ -73,8 +73,8 @@ func TestCircuitPower(t *testing.T) {
 		c1, cm1 := circ(t, ctrl, 1)
 		c2, cm2 := circ(t, ctrl, 1)
 
-		c1.SetParent(pc)
-		c2.SetParent(pc)
+		c1.setParent(pc)
+		c2.setParent(pc)
 
 		// update meters
 		pm.EXPECT().CurrentPower().Return(tc.p, nil)
@@ -100,7 +100,7 @@ func TestCircuitCurrents(t *testing.T) {
 			api.NewMockMeter(ctrl),
 			api.NewMockPhaseCurrents(ctrl),
 		}
-		c, err := NewCircuit(log, "foo", maxC, 0, m, 0)
+		c, err := New(log, "foo", maxC, 0, m, 0)
 		require.NoError(t, err)
 		return c, m
 	}
@@ -112,8 +112,8 @@ func TestCircuitCurrents(t *testing.T) {
 		c1, cm1 := circ(t, ctrl, 1)
 		c2, cm2 := circ(t, ctrl, 1)
 
-		c1.SetParent(pc)
-		c2.SetParent(pc)
+		c1.setParent(pc)
+		c2.setParent(pc)
 
 		// update meters
 		pm.MockMeter.EXPECT().CurrentPower().AnyTimes().Return(0.0, nil)

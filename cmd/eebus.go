@@ -4,7 +4,7 @@ import (
 	"os"
 	"text/template"
 
-	"github.com/evcc-io/evcc/charger/eebus"
+	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/go-sprout/sprout"
 	"github.com/spf13/cobra"
 )

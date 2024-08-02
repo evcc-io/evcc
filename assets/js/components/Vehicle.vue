@@ -94,6 +94,7 @@ export default {
 		chargedEnergy: Number,
 		charging: Boolean,
 		vehicleClimaterActive: Boolean,
+		vehicleWelcomeActive: Boolean,
 		connected: Boolean,
 		currency: String,
 		effectiveLimitSoc: Number,

@@ -96,6 +96,18 @@ func (v *Provider) Odometer() (float64, error) {
 	return float64(res.State.CurrentMileage), nil
 }
 
+var _ api.SocLimiter = (*Provider)(nil)
+
+// GetLimitSoc implements the api.SocLimiter interface
+func (v *Provider) GetLimitSoc() (int64, error) {
+	res, err := v.statusG()
+	if err != nil {
+		return 0, err
+	}
+
+	return res.State.ElectricChargingState.ChargingTarget, nil
+}
+
 var _ api.Resurrector = (*Provider)(nil)
 
 func (v *Provider) WakeUp() error {

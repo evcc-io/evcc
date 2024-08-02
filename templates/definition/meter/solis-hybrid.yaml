@@ -2,7 +2,7 @@ template: solis-hybrid
 products:
   - brand: Ginlong
     description:
-      generic: Solis Hybrid Inverter
+      generic: Solis Hybrid Inverter (RHI series)
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]

@@ -12,7 +12,7 @@ func NewDummy() API {
 	return new(dummy)
 }
 
-func (a *dummy) GetVehicles() []api.Vehicle {
+func (a *dummy) GetVehicles(_ bool) []api.Vehicle {
 	return nil
 }
 
