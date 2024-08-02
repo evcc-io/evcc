@@ -114,12 +114,12 @@ func (conn *Connector) TransactionID() (int, error) {
 }
 
 func (conn *Connector) StatusOCPP() (core.ChargePointStatus, error) {
-	conn.mu.Lock()
-	defer conn.mu.Unlock()
-
 	if !conn.cp.Connected() {
 		return "", api.ErrTimeout
 	}
+
+	conn.mu.Lock()
+	defer conn.mu.Unlock()
 
 	if conn.status.ErrorCode != core.NoError {
 		return "", fmt.Errorf("%s: %s", conn.status.ErrorCode, conn.status.Info)
@@ -129,14 +129,14 @@ func (conn *Connector) StatusOCPP() (core.ChargePointStatus, error) {
 }
 
 func (conn *Connector) Status() (api.ChargeStatus, error) {
+	if !conn.cp.Connected() {
+		return api.StatusNone, api.ErrTimeout
+	}
+
 	conn.mu.Lock()
 	defer conn.mu.Unlock()
 
 	res := api.StatusNone
-
-	if !conn.cp.Connected() {
-		return res, api.ErrTimeout
-	}
 
 	if conn.status.ErrorCode != core.NoError {
 		return res, fmt.Errorf("%s: %s", conn.status.ErrorCode, conn.status.Info)
@@ -182,8 +182,12 @@ func (conn *Connector) isMeterTimeout() bool {
 	return conn.meterTimeout > 0 && conn.clock.Since(conn.meterUpdated) > conn.meterTimeout
 }
 
-// PollMeter triggers meter values messages if older than timeout
+// PollMeter triggers MeterValues.req if the meter readings should be refreshed
 func (conn *Connector) PollMeter(force bool) {
+	if !conn.cp.Connected() {
+		return
+	}
+
 	conn.mu.Lock()
 	defer conn.mu.Unlock()
 
@@ -194,6 +198,9 @@ func (conn *Connector) PollMeter(force bool) {
 	}
 }
 
+var _ api.CurrentGetter = (*Connector)(nil)
+
+// GetMaxCurrent returns the maximum phase current the charge point is set to offer
 func (conn *Connector) GetMaxCurrent() (float64, error) {
 	if !conn.cp.Connected() {
 		return 0, api.ErrTimeout
@@ -215,6 +222,7 @@ func (conn *Connector) GetMaxCurrent() (float64, error) {
 	return 0, api.ErrNotAvailable
 }
 
+// GetMaxPower returns the maximum power the charge point is set to offer
 func (conn *Connector) GetMaxPower() (float64, error) {
 	if !conn.cp.Connected() {
 		return 0, api.ErrTimeout
@@ -285,6 +293,8 @@ func (conn *Connector) TotalEnergy() (float64, error) {
 
 	return 0, api.ErrNotAvailable
 }
+
+var _ api.Battery = (*Connector)(nil)
 
 func (conn *Connector) Soc() (float64, error) {
 	if !conn.cp.Connected() {
@@ -358,6 +368,8 @@ func (conn *Connector) Currents() (float64, float64, float64, error) {
 
 	return currents[0], currents[1], currents[2], nil
 }
+
+var _ api.PhaseVoltages = (*Connector)(nil)
 
 func (conn *Connector) Voltages() (float64, float64, float64, error) {
 	if !conn.cp.Connected() {
