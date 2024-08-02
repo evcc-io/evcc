@@ -65,21 +65,20 @@ func NewIdentity(log *util.Logger, token *oauth2.Token, account string, region s
 	}
 
 	if !token.Valid() {
-		v.log.DEBUG.Println("identity.NewIdentity - token not valid - Add expiry")
 		token.Expiry = time.Now().Add(time.Duration(10) * time.Second)
 	}
 
 	// database token
 	if !token.Valid() {
-		v.log.DEBUG.Println("identity.NewIdentity - token not valid - database token check started")
 		var tok oauth2.Token
 		if err := settings.Json(v.settingsKey(), &tok); err == nil {
+			v.log.DEBUG.Println("identity.NewIdentity - database token found")
 			token = &tok
 		}
 	}
 
 	if !token.Valid() && token.RefreshToken != "" {
-		v.log.DEBUG.Println("identity.NewIdentity - token not valid - refreshToken started")
+		v.log.DEBUG.Println("identity.NewIdentity - refreshToken started")
 		if tok, err := v.RefreshToken(token); err == nil {
 			token = tok
 		}

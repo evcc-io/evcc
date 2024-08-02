@@ -1,12 +1,14 @@
 package vehicle
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
+	reg "github.com/evcc-io/evcc/util/registry"
 )
 
 const (
@@ -14,32 +16,11 @@ const (
 	interval = 15 * time.Minute // refresh interval when charging
 )
 
-type vehicleRegistry map[string]func(map[string]interface{}) (api.Vehicle, error)
+var registry = reg.New[api.Vehicle]("vehicle")
 
-func (r vehicleRegistry) Add(name string, factory func(map[string]interface{}) (api.Vehicle, error)) {
-	if _, exists := r[name]; exists {
-		panic(fmt.Sprintf("cannot register duplicate vehicle type: %s", name))
-	}
-	r[name] = factory
-}
-
-func (r vehicleRegistry) Get(name string) (func(map[string]interface{}) (api.Vehicle, error), error) {
-	factory, exists := r[name]
-	if !exists {
-		return nil, fmt.Errorf("invalid vehicle type: %s", name)
-	}
-	return factory, nil
-}
-
-var registry vehicleRegistry = make(map[string]func(map[string]interface{}) (api.Vehicle, error))
-
-// Types returns the list of vehicle types
+// Types returns the list of types
 func Types() []string {
-	var res []string
-	for typ := range registry {
-		res = append(res, typ)
-	}
-	return res
+	return registry.Types()
 }
 
 // NewFromConfig creates vehicle from configuration
@@ -63,7 +44,7 @@ func NewFromConfig(typ string, other map[string]interface{}) (api.Vehicle, error
 		return nil, err
 	}
 
-	v, err := factory(cc.Other)
+	v, err := factory(context.TODO(), cc.Other)
 	if err != nil {
 		err = fmt.Errorf("cannot create vehicle type '%s': %w", typ, err)
 	}

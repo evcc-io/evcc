@@ -6,9 +6,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/evcc-io/evcc/charger/eebus"
 	"github.com/evcc-io/evcc/provider/mqtt"
 	"github.com/evcc-io/evcc/push"
+	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/modbus"
 )

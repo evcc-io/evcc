@@ -10,17 +10,9 @@ import (
 
 func (cs *CS) TriggerResetRequest(id string, resetType core.ResetType) {
 	if err := cs.Reset(id, func(request *core.ResetConfirmation, err error) {
-		log := cs.log.TRACE
 		if err == nil && request != nil && request.Status != core.ResetStatusAccepted {
-			log = cs.log.ERROR
+			cs.log.ERROR.Printf("TriggerReset for %s: %+v", id, request.Status)
 		}
-
-		var status core.ResetStatus
-		if request != nil {
-			status = request.Status
-		}
-
-		log.Printf("TriggerReset for %s: %+v", id, status)
 	}, resetType); err != nil {
 		cs.log.ERROR.Printf("send TriggerReset for %s failed: %v", id, err)
 	}
@@ -28,17 +20,9 @@ func (cs *CS) TriggerResetRequest(id string, resetType core.ResetType) {
 
 func (cs *CS) TriggerMessageRequest(id string, requestedMessage remotetrigger.MessageTrigger, props ...func(request *remotetrigger.TriggerMessageRequest)) {
 	if err := cs.TriggerMessage(id, func(request *remotetrigger.TriggerMessageConfirmation, err error) {
-		log := cs.log.TRACE
 		if err == nil && request != nil && request.Status != remotetrigger.TriggerMessageStatusAccepted {
-			log = cs.log.ERROR
+			cs.log.ERROR.Printf("TriggerMessage %s for %s: %+v", requestedMessage, id, request.Status)
 		}
-
-		var status remotetrigger.TriggerMessageStatus
-		if request != nil {
-			status = request.Status
-		}
-
-		log.Printf("TriggerMessage %s for %s: %+v", requestedMessage, id, status)
 	}, requestedMessage, props...); err != nil {
 		cs.log.ERROR.Printf("send TriggerMessage %s for %s failed: %v", requestedMessage, id, err)
 	}

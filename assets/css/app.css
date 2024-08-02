@@ -250,6 +250,10 @@ a:hover {
 	--bs-btn-hover-border-color: var(--bs-gray-medium);
 }
 
+.btn-link:hover {
+	color: var(--bs-primary);
+}
+
 .dark .btn-outline-secondary {
 	--bs-btn-color: var(--bs-gray-bright);
 	--bs-btn-border-color: var(--bs-gray-bright);

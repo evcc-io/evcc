@@ -11,9 +11,6 @@ type API interface {
 	Loadpoints() []loadpoint.API
 	Vehicles() Vehicles
 
-	// GetCircuit returns the assigned circuit
-	GetCircuit() api.Circuit
-
 	// Meta
 	GetTitle() string
 	SetTitle(string)
@@ -25,6 +22,10 @@ type API interface {
 	SetPVMeterRefs([]string)
 	GetBatteryMeterRefs() []string
 	SetBatteryMeterRefs([]string)
+
+	// circuits
+	GetCircuit() api.Circuit
+	SetCircuit(api.Circuit)
 
 	//
 	// battery

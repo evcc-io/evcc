@@ -232,5 +232,8 @@ const planProjectedEnd = getFutureTime(5, 43);
 				vehicleClimaterActive
 			/>
 		</Variant>
+		<Variant title="welcome charge">
+			<VehicleStatus connected charging vehicleWelcomeActive />
+		</Variant>
 	</Story>
 </template>

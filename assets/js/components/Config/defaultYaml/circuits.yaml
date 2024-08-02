@@ -1,12 +1,12 @@
 # - name: main # unique name, used as reference, e.g. as parent in other circuits
 #   title: Main Circuit # used in the UI
-#   maxCurrent: 63 # 63A main circuit breaker (optional)
+#   maxcurrent: 63 # 63A main circuit breaker (optional)
 #   maxPower: 30000 # 30kW (optional)
 #   meter: grid # associated meter to monitor the power consumption (optional)
 #   parent: # no parent, this is the root circuit
 # - name: garage # unique name, used as reference, e.g. to associate loadpoints
 #   title: Garage # used in the UI
-#   maxCurrent: 24 # allow individual phase use up to 24A
+#   maxcurrent: 24 # allow individual phase use up to 24A
 #   maxPower: 11000 # limit total power to 11kW
 #   meter: garage # dedicated meter for the garage
 #   parent: main # parent to the main circuit

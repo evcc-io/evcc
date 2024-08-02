@@ -15,7 +15,7 @@ import (
 
 // CreateCertificate returns a newly created EEBUS compatible certificate
 func CreateCertificate() (tls.Certificate, error) {
-	return cert.CreateCertificate("", EEBUSBrandName, "DE", EEBUSDeviceCode)
+	return cert.CreateCertificate("", BrandName, "DE", DeviceCode)
 }
 
 // pemBlockForKey marshals private key into pem block

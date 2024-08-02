@@ -22,7 +22,11 @@
 				:vehicleIcons="vehicleIcons"
 			/>
 		</div>
-		<div class="details" :style="{ height: detailsHeight }">
+		<div
+			class="details"
+			:style="{ height: detailsHeight }"
+			:class="{ 'details--ready': ready }"
+		>
 			<div ref="detailsInner" class="details-inner row">
 				<div class="col-12 d-flex justify-content-between pt-2 mb-4">
 					<div class="d-flex flex-nowrap align-items-center text-truncate">
@@ -222,7 +226,7 @@ export default {
 		bufferStartSoc: { type: Number },
 	},
 	data: () => {
-		return { detailsOpen: false, detailsCompleteHeight: null };
+		return { detailsOpen: false, detailsCompleteHeight: null, ready: false };
 	},
 	computed: {
 		gridImport: function () {
@@ -304,12 +308,24 @@ export default {
 			return this.pvConfigured || this.gridConfigured;
 		},
 	},
+	watch: {
+		pvConfigured() {
+			this.$nextTick(this.updateHeight);
+		},
+		gridConfigured() {
+			this.$nextTick(this.updateHeight);
+		},
+		batteryConfigured() {
+			this.$nextTick(this.updateHeight);
+		},
+	},
 	mounted() {
 		window.addEventListener("resize", this.updateHeight);
 		// height must be calculated in case of initially open details
 		if (settings.energyflowDetails) {
-			setTimeout(this.toggleDetails, 100);
+			this.toggleDetails();
 		}
+		setTimeout(() => (this.ready = true), 200);
 	},
 	unmounted() {
 		window.removeEventListener("resize", this.updateHeight);
@@ -363,9 +379,12 @@ export default {
 	opacity: 0;
 	transform: scale(0.98);
 	overflow: visible;
-	transition: height, opacity, transform;
-	transition-duration: var(--evcc-transition-medium);
+	transition-property: height, opacity, transform;
+	transition-duration: 0;
 	transition-timing-function: cubic-bezier(0.5, 0.5, 0.5, 1.15);
+}
+.details--ready {
+	transition-duration: var(--evcc-transition-medium);
 }
 .energyflow--open .details {
 	opacity: 1;
