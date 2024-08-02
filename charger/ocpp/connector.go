@@ -31,7 +31,7 @@ type Connector struct {
 	meterTimeout   time.Duration
 	measurements   map[types.Measurand]types.SampledValue
 
-	initTimeout time.Duration // inital timeout for status notification
+	initTimeout time.Duration // initial timeout for status notification
 
 	txnCount int // change initial value to the last known global transaction. Needs persistence
 	txnId    int
