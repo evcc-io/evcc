@@ -30,8 +30,10 @@ type API interface {
 	GetChargerName() string
 	// GetMeter returns the loadpoint meter
 	GetMeterName() string
-	// GetCircuit returns the loadpoint circuit
+	// GetCircuitName returns the loadpoint circuit name
 	GetCircuitName() string
+	// GetCircuit returns the loadpoint circuit
+	GetCircuit() api.Circuit
 	// GetDefaultVehicle returns the loadpoint default vehicle
 	GetDefaultVehicle() string
 
@@ -172,7 +174,4 @@ type API interface {
 	SetVehicle(vehicle api.Vehicle)
 	// StartVehicleDetection allows triggering vehicle detection for debugging purposes
 	StartVehicleDetection()
-
-	// GetCircuit gets the assigned circuit
-	GetCircuit() api.Circuit
 }
