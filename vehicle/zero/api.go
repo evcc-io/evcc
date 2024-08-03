@@ -34,7 +34,6 @@ func NewAPI(log *util.Logger, user string, password string, vin string) (*API, e
 		user:     user,
 		password: password,
 		vin:      vin,
-		unitId:   "",
 	}
 
 	v.unitId, err = v.retrievedeviceId()
