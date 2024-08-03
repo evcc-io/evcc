@@ -23,6 +23,7 @@ import (
 	"github.com/evcc-io/evcc/core/circuit"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/loadpoint"
+	coresettings "github.com/evcc-io/evcc/core/settings"
 	"github.com/evcc-io/evcc/hems"
 	"github.com/evcc-io/evcc/meter"
 	"github.com/evcc-io/evcc/provider/golang"
@@ -945,7 +946,7 @@ func configureLoadpoints(conf globalconfig.All) error {
 		cc.Name = "lp-" + strconv.Itoa(id+1)
 
 		log := util.NewLoggerWithLoadpoint(cc.Name, id+1)
-		settings := &core.Settings{Key: "lp" + strconv.Itoa(id+1) + "."}
+		settings := coresettings.NewDatabaseSettingsAdapter(fmt.Sprintf("lp%d.", id+1))
 
 		instance, err := core.NewLoadpointFromConfig(log, settings, cc.Other)
 		if err != nil {
@@ -970,7 +971,9 @@ func configureLoadpoints(conf globalconfig.All) error {
 		name := "lp-" + strconv.Itoa(id+1)
 
 		log := util.NewLoggerWithLoadpoint(name, id+1)
-		settings := &core.Settings{Key: "lp" + cc.Name + "."}
+
+		dev := config.BlankConfigurableDevice[loadpoint.API]()
+		settings := coresettings.NewDeviceSettingsAdapter(dev)
 
 		// TODO: proper handling of id/name
 		delete(cc.Other, "id")
@@ -980,8 +983,9 @@ func configureLoadpoints(conf globalconfig.All) error {
 		if err != nil {
 			return fmt.Errorf("failed configuring loadpoint: %w", err)
 		}
+		dev.Update(cc.Other, instance)
 
-		if err := config.Loadpoints().Add(config.NewConfigurableDevice(conf, loadpoint.API(instance))); err != nil {
+		if err := config.Loadpoints().Add(dev); err != nil {
 			return err
 		}
 	}

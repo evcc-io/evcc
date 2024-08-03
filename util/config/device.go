@@ -23,6 +23,10 @@ func NewConfigurableDevice[T any](config Config, instance T) ConfigurableDevice[
 	}
 }
 
+func BlankConfigurableDevice[T any]() ConfigurableDevice[T] {
+	return new(configurableDevice[T])
+}
+
 func (d *configurableDevice[T]) Config() Named {
 	return d.config.Named()
 }

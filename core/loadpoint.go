@@ -19,6 +19,7 @@ import (
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/planner"
 	"github.com/evcc-io/evcc/core/session"
+	"github.com/evcc-io/evcc/core/settings"
 	"github.com/evcc-io/evcc/core/soc"
 	"github.com/evcc-io/evcc/core/vehicle"
 	"github.com/evcc-io/evcc/core/wrapper"
@@ -159,13 +160,13 @@ type Loadpoint struct {
 	db      *session.DB
 	session *session.Session
 
-	settings *Settings
+	settings settings.Settings
 
 	tasks *util.Queue[Task] // tasks to be executed
 }
 
 // NewLoadpointFromConfig creates a new loadpoint
-func NewLoadpointFromConfig(log *util.Logger, settings *Settings, other map[string]interface{}) (*Loadpoint, error) {
+func NewLoadpointFromConfig(log *util.Logger, settings settings.Settings, other map[string]interface{}) (*Loadpoint, error) {
 	lp := NewLoadpoint(log, settings)
 	if err := util.DecodeOther(other, lp); err != nil {
 		return nil, err
@@ -240,7 +241,7 @@ func NewLoadpointFromConfig(log *util.Logger, settings *Settings, other map[stri
 }
 
 // NewLoadpoint creates a Loadpoint with sane defaults
-func NewLoadpoint(log *util.Logger, settings *Settings) *Loadpoint {
+func NewLoadpoint(log *util.Logger, settings settings.Settings) *Loadpoint {
 	clock := clock.New()
 	bus := evbus.New()
 
