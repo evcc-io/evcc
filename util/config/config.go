@@ -82,6 +82,7 @@ func (d *Config) Delete() error {
 var db *gorm.DB
 
 func Init(instance *gorm.DB) error {
+	db = instance
 	m := db.Migrator()
 
 	for old, new := range map[string]string{
@@ -142,7 +143,6 @@ func Init(instance *gorm.DB) error {
 		err = m.DropTable("config_details")
 	}
 
-	db = instance
 	return err
 }
 
