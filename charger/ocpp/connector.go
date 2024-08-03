@@ -56,7 +56,7 @@ func (conn *Connector) TestClock(clock clock.Clock) {
 	conn.clock = clock
 }
 
-func (conn *Connector) MeterValues() <-chan map[types.Measurand]types.SampledValue {
+func (conn *Connector) MeterSampled() <-chan map[types.Measurand]types.SampledValue {
 	return conn.meterC
 }
 
