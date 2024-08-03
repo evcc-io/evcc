@@ -53,7 +53,6 @@ func (v *API) Vehicles() (UnitData, error) {
 
 	uri := fmt.Sprintf("%s?%s", BaseUrl, params.Encode())
 	if err := v.GetJSON(uri, &res); err != nil {
-
 		return UnitData{}, err
 	}
 	return res, nil
