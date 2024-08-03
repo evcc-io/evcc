@@ -98,7 +98,7 @@ LOOP:
 
 func (h *handler) HandleDiscreteInputs(req *mbserver.DiscreteInputsRequest) ([]bool, error) {
 	h.log.TRACE.Printf("read discrete: id %d addr %d qty %d", req.UnitId, req.Addr, req.Quantity)
-	b, err := h.conn.ReadDiscreteInputsWithSlave(req.UnitId, req.Addr, req.Quantity)
+	b, err := h.conn.Clone(req.UnitId).ReadDiscreteInputs(req.Addr, req.Quantity)
 	return h.bytesToBoolResult("read discrete", req.Quantity, b, err)
 }
 
@@ -120,24 +120,24 @@ func (h *handler) HandleCoils(req *mbserver.CoilsRequest) ([]bool, error) {
 				u = 0xFF00
 			}
 
-			b, err := h.conn.WriteSingleCoilWithSlave(req.UnitId, req.Addr, u)
+			b, err := h.conn.Clone(req.UnitId).WriteSingleCoil(req.Addr, u)
 			return h.bytesToBoolResult("write coil", req.Quantity, b, err)
 		}
 
 		h.log.TRACE.Printf("write coils: id %d addr %d qty %d val %v", req.UnitId, req.Addr, req.Quantity, req.Args)
 		args := coilsToBytes(req.Args)
-		b, err := h.conn.WriteMultipleCoilsWithSlave(req.UnitId, req.Addr, req.Quantity, args)
+		b, err := h.conn.Clone(req.UnitId).WriteMultipleCoils(req.Addr, req.Quantity, args)
 		return h.bytesToBoolResult("write coils", req.Quantity, b, err)
 	}
 
 	h.log.TRACE.Printf("read coils: id %d addr %d qty %d", req.UnitId, req.Addr, req.Quantity)
-	b, err := h.conn.ReadCoilsWithSlave(req.UnitId, req.Addr, req.Quantity)
+	b, err := h.conn.Clone(req.UnitId).ReadCoils(req.Addr, req.Quantity)
 	return h.bytesToBoolResult("read coils", req.Quantity, b, err)
 }
 
 func (h *handler) HandleInputRegisters(req *mbserver.InputRegistersRequest) ([]uint16, error) {
 	h.log.TRACE.Printf("read input: id %d addr %d qty %d", req.UnitId, req.Addr, req.Quantity)
-	b, err := h.conn.ReadInputRegistersWithSlave(req.UnitId, req.Addr, req.Quantity)
+	b, err := h.conn.Clone(req.UnitId).ReadInputRegisters(req.Addr, req.Quantity)
 	return h.exceptionToUint16AndError("read input", b, err)
 }
 
@@ -154,16 +154,16 @@ func (h *handler) HandleHoldingRegisters(req *mbserver.HoldingRegistersRequest) 
 
 		if req.WriteFuncCode == gridx.FuncCodeWriteSingleRegister {
 			h.log.TRACE.Printf("write holding: id %d addr %d val %04x", req.UnitId, req.Addr, req.Args[0])
-			b, err := h.conn.WriteSingleRegisterWithSlave(req.UnitId, req.Addr, req.Args[0])
+			b, err := h.conn.Clone(req.UnitId).WriteSingleRegister(req.Addr, req.Args[0])
 			return h.exceptionToUint16AndError("write holding", b, err)
 		}
 
 		h.log.TRACE.Printf("write holdings: id %d addr %d qty %d val %0x", req.UnitId, req.Addr, req.Quantity, asBytes(req.Args))
-		b, err := h.conn.WriteMultipleRegistersWithSlave(req.UnitId, req.Addr, req.Quantity, asBytes(req.Args))
+		b, err := h.conn.Clone(req.UnitId).WriteMultipleRegisters(req.Addr, req.Quantity, asBytes(req.Args))
 		return h.exceptionToUint16AndError("write multiple holding", b, err)
 	}
 
 	h.log.TRACE.Printf("read holdings: id %d addr %d qty %d", req.UnitId, req.Addr, req.Quantity)
-	b, err := h.conn.ReadHoldingRegistersWithSlave(req.UnitId, req.Addr, req.Quantity)
+	b, err := h.conn.Clone(req.UnitId).ReadHoldingRegisters(req.Addr, req.Quantity)
 	return h.exceptionToUint16AndError("read holding", b, err)
 }
