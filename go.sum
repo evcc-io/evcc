@@ -123,8 +123,8 @@ github.com/eclipse/paho.mqtt.golang v1.4.3/go.mod h1:CSYvoAlsMkhYOXh/oKyxa8EcBci
 github.com/edsrzf/mmap-go v1.0.0/go.mod h1:YO35OhQPt3KJa3ryjFM5Bs14WD66h8eGKpfaBNrHW5M=
 github.com/enbility/eebus-go v0.6.1 h1:2xKf3+tuScfV0ZWK/spPzoc2ekix6oZdZ0mjmcS9rdQ=
 github.com/enbility/eebus-go v0.6.1/go.mod h1:XulY17uTjq65MWG4LQh28C/D6ogXBUa1e8nNNKssPg4=
-github.com/enbility/ship-go v0.5.2 h1:T9+YuP5ZpofKd463PLKq78fAaPAcGMnRAcv8c8aD5yU=
-github.com/enbility/ship-go v0.5.2/go.mod h1:jewJWYQ10jNhsnhS1C4jESx3CNmDa5HNWZjBhkTug5Y=
+github.com/enbility/ship-go v0.0.0-20240731093131-37b1302bca66 h1:xyyTo5DD8RMegL1ztiCZ93TVG1hogrKMVh1bvbayY6g=
+github.com/enbility/ship-go v0.0.0-20240731093131-37b1302bca66/go.mod h1:jewJWYQ10jNhsnhS1C4jESx3CNmDa5HNWZjBhkTug5Y=
 github.com/enbility/spine-go v0.0.0-20240726200332-a983de1e34b8 h1:hDJgZKbRE2b3wQmjr/5LG1C4YaU5Xy3hrZVxWKOeHIE=
 github.com/enbility/spine-go v0.0.0-20240726200332-a983de1e34b8/go.mod h1:pRGS+C5rZ5rhxTAA1whU8fC9p7lH5ixyut++yEZe470=
 github.com/enbility/zeroconf/v2 v2.0.0-20240210101930-d0004078577b h1:sg3c6LJ4eWffwtt9SW0lgcIX4Oh274vwdJnNFNNrDco=
@@ -132,6 +132,8 @@ github.com/enbility/zeroconf/v2 v2.0.0-20240210101930-d0004078577b/go.mod h1:Bjz
 github.com/envoyproxy/go-control-plane v0.6.9/go.mod h1:SBwIajubJHhxtWwsL9s8ss4safvEdbitLhGGK48rN6g=
 github.com/envoyproxy/go-control-plane v0.9.1-0.20191026205805-5f8ba28d4473/go.mod h1:YTl/9mNaCwkRvm6d1a2C3ymFceY/DCBVvsKhRF0iEA4=
 github.com/envoyproxy/protoc-gen-validate v0.1.0/go.mod h1:iSmxcyjqTsJpI2R4NaDN7+kN2VEUnK/pcBlmesArF7c=
+github.com/evcc-io/modbus v0.0.0-20240503125516-9fd99fe0e438 h1:I14MN2UauarS2Lo+prnNXEj31MxJS1mEfLUrEnOUBsw=
+github.com/evcc-io/modbus v0.0.0-20240503125516-9fd99fe0e438/go.mod h1:WpbUAyptAAi0VAriSRopZa6uhiJOJCTz7KFvgGtNRXc=
 github.com/evcc-io/ocpp-go v0.0.0-20240730071053-d69e53b0fce9 h1:FLv1vmLnfc8DanI5U1qOTe1Zr0OgZ/tuOvHALtZ2sOI=
 github.com/evcc-io/ocpp-go v0.0.0-20240730071053-d69e53b0fce9/go.mod h1:ZynYDWGw6CslG3vyPuucLsy6AyE+h3XXYlr39jhNiQY=
 github.com/evcc-io/tesla-proxy-client v0.0.0-20240221194046-4168b3759701 h1:3JplY3KS6KMDVDNAU+3+KWmSWmoHIU34qwuIpW6SiHk=
@@ -276,10 +278,6 @@ github.com/gregdel/pushover v1.3.1 h1:4bMLITOZ15+Zpi6qqoGqOPuVHCwSUvMCgVnN5Xhilf
 github.com/gregdel/pushover v1.3.1/go.mod h1:EcaO66Nn1StkpEm1iKtBTV3d2A16SoMsVER1PthX7to=
 github.com/gregjones/httpcache v0.0.0-20190611155906-901d90724c79 h1:+ngKgrYPPJrOjhax5N+uePQ0Fh1Z7PheYoUI/0nzkPA=
 github.com/gregjones/httpcache v0.0.0-20190611155906-901d90724c79/go.mod h1:FecbI9+v66THATjSRHfNgh1IVFe/9kFxbXtjV0ctIMA=
-github.com/grid-x/modbus v0.0.0-20210714071042-7af2b65ec03b/go.mod h1:YaK0rKJenZ74vZFcSSLlAQqtG74PMI68eDjpDCDDmTw=
-github.com/grid-x/modbus v0.0.0-20240503115206-582f2ab60a18 h1:8V5xRtdD70kGC4/IHqFq+kcBSWr4k6nscAUgWwJ6A5k=
-github.com/grid-x/modbus v0.0.0-20240503115206-582f2ab60a18/go.mod h1:WpbUAyptAAi0VAriSRopZa6uhiJOJCTz7KFvgGtNRXc=
-github.com/grid-x/serial v0.0.0-20191104121038-e24bc9bf6f08/go.mod h1:kdOd86/VGFWRrtkNwf1MPk0u1gIjc4Y7R2j7nhwc7Rk=
 github.com/grid-x/serial v0.0.0-20211107191517-583c7356b3aa h1:Rsn6ARgNkXrsXJIzhkE4vQr5Gbx2LvtEMv4BJOK4LyU=
 github.com/grid-x/serial v0.0.0-20211107191517-583c7356b3aa/go.mod h1:kdOd86/VGFWRrtkNwf1MPk0u1gIjc4Y7R2j7nhwc7Rk=
 github.com/grpc-ecosystem/go-grpc-middleware v1.0.1-0.20190118093823-f849b5445de4/go.mod h1:FiyG127CGDf3tlThmgyCl78X/SZQqEOJBCDaAfeWzPs=
@@ -662,8 +660,8 @@ github.com/vmihailenco/msgpack/v5 v5.4.1 h1:cQriyiUvjTwOHg8QZaPihLWeRAAVoCpE00IU
 github.com/vmihailenco/msgpack/v5 v5.4.1/go.mod h1:GaZTsDaehaPpQVyxrf5mtQlH+pc21PIudVV/E3rRQok=
 github.com/vmihailenco/tagparser/v2 v2.0.0 h1:y09buUbR+b5aycVFQs/g70pqKVZNBmxwAhO7/IwNM9g=
 github.com/vmihailenco/tagparser/v2 v2.0.0/go.mod h1:Wri+At7QHww0WTrCBeu4J6bNtoV6mEfg5OIWRZA9qds=
-github.com/volkszaehler/mbmd v0.0.0-20240611142726-33463eb0324e h1:1iAo0qalenDcyo9ySgRWjDuMTpfyA/rBDKklMMNahZk=
-github.com/volkszaehler/mbmd v0.0.0-20240611142726-33463eb0324e/go.mod h1:p1nUKfszvbZ+mMMsMi1vaKGA/eBAXC34VSKCk5slyG4=
+github.com/volkszaehler/mbmd v0.0.0-20240727104742-3191c0dbfb9e h1:d0KoYuIPXTI/vn85axsoD7w616oUalAzmDLZwv9yB9Q=
+github.com/volkszaehler/mbmd v0.0.0-20240727104742-3191c0dbfb9e/go.mod h1:MA3vKWI4KozcpWvD9dwN6CL+WqwdK9XGXT5Iv49IsUM=
 github.com/writeas/go-strip-markdown/v2 v2.1.1 h1:hAxUM21Uhznf/FnbVGiJciqzska6iLei22Ijc3q2e28=
 github.com/writeas/go-strip-markdown/v2 v2.1.1/go.mod h1:UvvgPJgn1vvN8nWuE5e7v/+qmDu3BSVnKAB6Gl7hFzA=
 github.com/xiang90/probing v0.0.0-20190116061207-43a291ad63a2/go.mod h1:UETIi67q53MR2AWcXfiuqkDkRtnGDLqkBTpCHuJHxtU=

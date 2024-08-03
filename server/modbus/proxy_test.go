@@ -27,21 +27,21 @@ func TestConcurrentRead(t *testing.T) {
 	require.NoError(t, srv.Start(l))
 	defer func() { _ = srv.Stop() }()
 
-	// client
-	conn, err := modbus.NewConnection(l.Addr().String(), "", "", 0, modbus.Tcp, 1)
-	require.NoError(t, err)
-
 	var wg sync.WaitGroup
 
 	for i := 1; i <= 10; i++ {
 		wg.Add(1)
 
 		go func(id int) {
+			// client
+			conn, err := modbus.NewConnection(l.Addr().String(), "", "", 0, modbus.Tcp, uint8(id))
+			require.NoError(t, err)
+
 			for i := 0; i < 50; i++ {
 				addr := uint16(rand.Int31n(200) + 1)
 				qty := uint16(rand.Int31n(32) + 1)
 
-				b, err := conn.ReadInputRegistersWithSlave(uint8(id), addr, qty)
+				b, err := conn.ReadInputRegisters(addr, qty)
 				require.NoError(t, err)
 
 				if err == nil {
@@ -94,24 +94,24 @@ func TestReadCoils(t *testing.T) {
 		require.NoError(t, err)
 
 		{ // read
-			b, err := conn.ReadCoilsWithSlave(1, 1, 1)
+			b, err := conn.ReadCoils(1, 1)
 			require.NoError(t, err)
 			assert.Equal(t, []byte{0x01}, b)
 
-			b, err = conn.ReadCoilsWithSlave(1, 1, 2)
+			b, err = conn.ReadCoils(1, 2)
 			require.NoError(t, err)
 			assert.Equal(t, []byte{0x03}, b)
 
-			b, err = conn.ReadCoilsWithSlave(1, 1, 9)
+			b, err = conn.ReadCoils(1, 9)
 			require.NoError(t, err)
 			assert.Equal(t, []byte{0xFF, 0x01}, b)
 		}
 		{ // write
-			b, err := conn.WriteSingleCoilWithSlave(1, 1, 0xFF00)
+			b, err := conn.WriteSingleCoil(1, 0xFF00)
 			require.NoError(t, err)
 			assert.Equal(t, []byte{0xFF, 0x00}, b)
 
-			b, err = conn.WriteMultipleCoilsWithSlave(1, 1, 9, []byte{0xFF, 0x01})
+			b, err = conn.WriteMultipleCoils(1, 9, []byte{0xFF, 0x01})
 			require.NoError(t, err)
 			assert.Equal(t, []byte{0x00, 0x09}, b)
 		}

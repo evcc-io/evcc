@@ -37,7 +37,7 @@ const standbyPower = 10 // consider less than 10W as charger in standby
 // updater abstracts the Loadpoint implementation for testing
 type updater interface {
 	loadpoint.API
-	Update(availablePower float64, smartCostActive bool, smartCostNextStart time.Time, batteryBuffered, batteryStart bool, greenShare float64, effectivePrice, effectiveCo2 *float64)
+	Update(availablePower float64, rates api.Rates, batteryBuffered, batteryStart bool, greenShare float64, effectivePrice, effectiveCo2 *float64)
 }
 
 // meterMeasurement is used as slice element for publishing structured data
@@ -85,10 +85,11 @@ type Site struct {
 	auxMeters     []api.Meter // Auxiliary meters
 
 	// battery settings
-	prioritySoc             float64 // prefer battery up to this Soc
-	bufferSoc               float64 // continue charging on battery above this Soc
-	bufferStartSoc          float64 // start charging on battery above this Soc
-	batteryDischargeControl bool    // prevent battery discharge for fast and planned charging
+	prioritySoc             float64  // prefer battery up to this Soc
+	bufferSoc               float64  // continue charging on battery above this Soc
+	bufferStartSoc          float64  // start charging on battery above this Soc
+	batteryDischargeControl bool     // prevent battery discharge for fast and planned charging
+	batteryGridChargeLimit  *float64 // grid charging limit
 
 	loadpoints  []*Loadpoint             // Loadpoints
 	tariffs     *tariff.Tariffs          // Tariffs
@@ -298,6 +299,10 @@ func (site *Site) restoreSettings() error {
 			return err
 		}
 	}
+	if v, err := settings.Float(keys.BatteryGridChargeLimit); err == nil {
+		site.SetBatteryGridChargeLimit(&v)
+	}
+
 	return nil
 }
 
@@ -792,19 +797,25 @@ func (site *Site) update(lp updater) {
 		flexiblePower = site.prioritizer.GetChargePowerFlexibility(lp)
 	}
 
-	var smartCostActive bool
-	if rate, err := site.plannerRate(); err == nil {
-		smartCostActive = site.smartCostActive(lp, rate)
-	} else {
-		site.log.WARN.Println("smartCostActive:", err)
+	// battery mode handling
+	rates, err := site.plannerRates()
+	if err != nil {
+		site.log.WARN.Println("planner:", err)
 	}
 
-	var smartCostNextStart time.Time
-	if !smartCostActive {
-		if rates, err := site.plannerRates(); err == nil {
-			smartCostNextStart = site.smartCostNextStart(lp, rates)
+	rate, err := rates.Current(time.Now())
+	if rates != nil && err != nil {
+		site.log.WARN.Println("planner:", err)
+	}
+
+	batteryGridChargeActive := site.batteryGridChargeActive(rate)
+	site.publish(keys.BatteryGridChargeActive, batteryGridChargeActive)
+
+	if batteryMode := site.requiredBatteryMode(batteryGridChargeActive, rate); batteryMode != api.BatteryUnknown {
+		if err := site.applyBatteryMode(batteryMode); err == nil {
+			site.SetBatteryMode(batteryMode)
 		} else {
-			site.log.WARN.Println("smartCostNextStart:", err)
+			site.log.ERROR.Println("battery mode:", err)
 		}
 	}
 
@@ -820,7 +831,7 @@ func (site *Site) update(lp updater) {
 		greenShareHome := site.greenShare(0, homePower)
 		greenShareLoadpoints := site.greenShare(nonChargePower, nonChargePower+totalChargePower)
 
-		lp.Update(sitePower, smartCostActive, smartCostNextStart, batteryBuffered, batteryStart, greenShareLoadpoints, site.effectivePrice(greenShareLoadpoints), site.effectiveCo2(greenShareLoadpoints))
+		lp.Update(sitePower, rates, batteryBuffered, batteryStart, greenShareLoadpoints, site.effectivePrice(greenShareLoadpoints), site.effectiveCo2(greenShareLoadpoints))
 
 		site.Health.Update()
 
@@ -831,10 +842,6 @@ func (site *Site) update(lp updater) {
 		}
 	} else {
 		site.log.ERROR.Println(err)
-	}
-
-	if site.GetBatteryDischargeControl() {
-		site.updateBatteryMode()
 	}
 
 	site.stats.Update(site)
