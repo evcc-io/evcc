@@ -8,7 +8,7 @@ import (
 	"github.com/evcc-io/evcc/vehicle/zero"
 )
 
-// MG is an api.Vehicle implementation for probably all SAIC cars
+// MG is an api.Vehicle implementation for probably all ZERO Motorcycles
 type ZeroMotorcycle struct {
 	*embed
 	*zero.Provider // provides the api implementations
@@ -18,7 +18,7 @@ func init() {
 	registry.Add("zero", NewZeroFromConfig)
 }
 
-// NewBMWFromConfig creates a new vehicle
+// NewZeroFromConfig creates a new vehicle
 func NewZeroFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	var res *zero.API
 	var err error

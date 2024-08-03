@@ -60,7 +60,7 @@ func (v *Provider) FinishTime() (time.Time, error) {
 		return time.Time{}, err
 	}
 
-	t, err := time.Parse("20060102150405", res.DatetimeUtc)
+	t, err := time.Parse("20060102150405", res.DatetimeActual)
 	if err != nil {
 		t = time.Now()
 	}
