@@ -167,4 +167,34 @@ test.describe("vehicles", async () => {
     await expect(vehicleModal.getByLabel("Cache optional")).toBeVisible();
     await expect(vehicleModal.getByLabel("Default mode")).toBeVisible();
   });
+
+  test("save and restore rfid identifiers", async ({ page }) => {
+    await page.goto("/#/config");
+    await login(page);
+    await enableExperimental(page);
+
+    await page.getByTestId("add-vehicle").click();
+    const vehicleModal = page.getByTestId("vehicle-modal");
+
+    // generic
+    await vehicleModal.getByLabel("Manufacturer").selectOption("Generic vehicle");
+    await vehicleModal.getByLabel("Title").fill("RFID Car");
+    await page.getByRole("button", { name: "Show advanced settings" }).click();
+    await vehicleModal.getByLabel("RFID identifiers").fill("aaa\nbbb \n ccc\n\nddd\n");
+    await vehicleModal.getByRole("button", { name: "Validate & save" }).click();
+    await expect(page.getByTestId("restart-needed")).toBeVisible();
+
+    // restart evcc
+    await restart(CONFIG_GRID_ONLY);
+    await page.reload();
+
+    await expect(page.getByTestId("vehicle")).toHaveCount(1);
+    await expect(page.getByTestId("fatal-error")).not.toBeVisible();
+    await page
+      .locator(`[data-testid="vehicle"]:has-text("RFID Car")`)
+      .getByRole("button", { name: "edit" })
+      .click();
+    await page.getByRole("button", { name: "Show advanced settings" }).click();
+    await expect(vehicleModal.getByLabel("RFID identifiers")).toHaveValue("aaa\nbbb\nccc\nddd");
+  });
 });
