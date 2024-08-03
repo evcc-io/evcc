@@ -246,12 +246,12 @@ func NewOCPP(id string, connector int, idtag string, meterValues string, meterIn
 
 	// see who's there
 	if c.hasRemoteTriggerFeature {
-		if err := conn.TriggerMessageRequest(core.BootNotificationFeatureName); err != nil {
+		if err := conn.TriggerMessageRequest(core.BootNotificationFeatureName); err == nil {
 			select {
-			case <-time.After(messageTimeout):
+			case <-time.After(60 * time.Second):
 				c.log.DEBUG.Printf("BootNotification timeout")
 			case res := <-cp.BootNotificationRequest():
-				c.bootMessages = res
+				c.log.DEBUG.Printf("BootNotification: %s", res.FirmwareVersion)
 			}
 		}
 	}
@@ -611,15 +611,15 @@ var _ api.Diagnosis = (*OCPP)(nil)
 func (c *OCPP) Diagnose() {
 	fmt.Printf("\tBoot Messages:\n")
 
-	fmt.Printf("\t\tChargeBoxSerialNumber: %s\n", c.bootMessages.ChargeBoxSerialNumber)
-	fmt.Printf("\t\tChargePointModel: %s\n", c.bootMessages.ChargePointModel)
-	fmt.Printf("\t\tChargePointSerialNumber: %s\n", c.bootMessages.ChargePointSerialNumber)
-	fmt.Printf("\t\tChargePointVendor: %s\n", c.bootMessages.ChargePointVendor)
-	fmt.Printf("\t\tFirmwareVersion: %s\n", c.bootMessages.FirmwareVersion)
-	fmt.Printf("\t\tIccid: %s\n", c.bootMessages.Iccid)
-	fmt.Printf("\t\tImsi: %s\n", c.bootMessages.Imsi)
-	fmt.Printf("\t\tMeterSerialNumber: %s\n", c.bootMessages.MeterSerialNumber)
-	fmt.Printf("\t\tMeterType: %s\n", c.bootMessages.MeterType)
+	// fmt.Printf("\t\tChargeBoxSerialNumber: %s\n", c.bootMessages.ChargeBoxSerialNumber)
+	// fmt.Printf("\t\tChargePointModel: %s\n", c.bootMessages.ChargePointModel)
+	// fmt.Printf("\t\tChargePointSerialNumber: %s\n", c.bootMessages.ChargePointSerialNumber)
+	// fmt.Printf("\t\tChargePointVendor: %s\n", c.bootMessages.ChargePointVendor)
+	// fmt.Printf("\t\tFirmwareVersion: %s\n", c.bootMessages.FirmwareVersion)
+	// fmt.Printf("\t\tIccid: %s\n", c.bootMessages.Iccid)
+	// fmt.Printf("\t\tImsi: %s\n", c.bootMessages.Imsi)
+	// fmt.Printf("\t\tMeterSerialNumber: %s\n", c.bootMessages.MeterSerialNumber)
+	// fmt.Printf("\t\tMeterType: %s\n", c.bootMessages.MeterType)
 
 	fmt.Printf("\tConfiguration:\n")
 
