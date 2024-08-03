@@ -553,37 +553,31 @@ func (c *OCPP) MaxCurrentMillis(current float64) error {
 
 // getMaxCurrent implements the api.CurrentGetter interface
 func (c *OCPP) getMaxCurrent() (float64, error) {
-
 	return c.conn.GetMaxCurrent()
 }
 
 // getMaxPower implements the api.PowerGetter interface
 func (c *OCPP) getMaxPower() (float64, error) {
-
 	return c.conn.GetMaxPower()
 }
 
 // currentPower implements the api.Meter interface
 func (c *OCPP) currentPower() (float64, error) {
-
 	return c.conn.CurrentPower()
 }
 
 // totalEnergy implements the api.MeterTotal interface
 func (c *OCPP) totalEnergy() (float64, error) {
-
 	return c.conn.TotalEnergy()
 }
 
 // currents implements the api.PhaseCurrents interface
 func (c *OCPP) currents() (float64, float64, float64, error) {
-
 	return c.conn.Currents()
 }
 
 // voltages implements the api.PhaseVoltages interface
 func (c *OCPP) voltages() (float64, float64, float64, error) {
-
 	return c.conn.Voltages()
 }
 
@@ -596,7 +590,6 @@ func (c *OCPP) phases1p3p(phases int) error {
 
 // soc implements the api.Battery interface
 func (c *OCPP) soc() (float64, error) {
-
 	return c.conn.Soc()
 }
 
