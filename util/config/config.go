@@ -1,6 +1,7 @@
 package config
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/evcc-io/evcc/util/templates"
@@ -8,13 +9,14 @@ import (
 )
 
 type Config struct {
-	ID      int `gorm:"primarykey"`
-	Class   templates.Class
-	Type    string
-	Details []ConfigDetail `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	ID    int `gorm:"primarykey"`
+	Class templates.Class
+	Type  string
+	Value string
 }
 
-type ConfigDetail struct {
+// TODO remove- migration only
+type ConfigDetails struct {
 	ConfigID int    `gorm:"index:idx_unique"`
 	Key      string `gorm:"index:idx_unique"`
 	Value    string
@@ -41,20 +43,17 @@ func (d *Config) Typed() Typed {
 
 // detailsAsMap converts device details to map
 func (d *Config) detailsAsMap() map[string]any {
-	res := make(map[string]any, len(d.Details))
-	for _, detail := range d.Details {
-		res[detail.Key] = detail.Value
+	res := make(map[string]any)
+	if err := json.Unmarshal([]byte(d.Value), &res); err != nil {
+		panic(err)
 	}
 	return res
 }
 
 // detailsFromMap converts map to device details
-func detailsFromMap(config map[string]any) []ConfigDetail {
-	res := make([]ConfigDetail, 0, len(config))
-	for k, v := range config {
-		res = append(res, ConfigDetail{Key: k, Value: fmt.Sprintf("%v", v)})
-	}
-	return res
+func detailsFromMap(config map[string]any) (string, error) {
+	b, err := json.Marshal(config)
+	return string(b), err
 }
 
 // Update updates a config's details to the database
@@ -65,11 +64,11 @@ func (d *Config) Update(conf map[string]any) error {
 			return err
 		}
 
-		if err := tx.Delete(new(ConfigDetail), ConfigDetail{ConfigID: d.ID}).Error; err != nil {
+		val, err := detailsFromMap(conf)
+		if err != nil {
 			return err
 		}
-
-		d.Details = detailsFromMap(conf)
+		d.Value = val
 
 		return tx.Save(&d).Error
 	})
@@ -77,13 +76,7 @@ func (d *Config) Update(conf map[string]any) error {
 
 // Delete deletes a config from the database
 func (d *Config) Delete() error {
-	return db.Transaction(func(tx *gorm.DB) error {
-		if err := tx.Delete(new(ConfigDetail), ConfigDetail{ConfigID: d.ID}).Error; err != nil {
-			return err
-		}
-
-		return tx.Delete(Config{ID: d.ID}).Error
-	})
+	return db.Delete(Config{ID: d.ID}).Error
 }
 
 var db *gorm.DB
@@ -102,13 +95,36 @@ func Init(instance *gorm.DB) error {
 		}
 	}
 
-	err := db.AutoMigrate(new(Config), new(ConfigDetail))
+	err := db.AutoMigrate(new(Config))
 
-	if err == nil && db.Migrator().HasConstraint(new(ConfigDetail), "fk_devices_details") {
-		err = db.Migrator().DropConstraint(new(ConfigDetail), "fk_devices_details")
-	}
-	if err == nil && db.Migrator().HasColumn(new(ConfigDetail), "device_id") {
-		err = db.Migrator().DropColumn(new(ConfigDetail), "device_id")
+	if err == nil && db.Migrator().HasTable("config_details") {
+		var devices []Config
+		db.Where(&Config{}).Find(&devices)
+
+		// migrate ConfigDetails into Config.Value
+		for _, dev := range devices {
+			var details []ConfigDetails
+			db.Where(&ConfigDetails{ConfigID: dev.ID}).Find(&details)
+
+			res := make(map[string]any)
+			for _, detail := range details {
+				res[detail.Key] = detail.Value
+			}
+
+			if len(res) > 0 {
+				val, err := detailsFromMap(res)
+				if err != nil {
+					return err
+				}
+				dev.Value = val
+
+				if err := db.Save(&dev).Error; err != nil {
+					return err
+				}
+			}
+		}
+
+		err = db.Migrator().DropTable("config_details")
 	}
 
 	return err
@@ -122,12 +138,12 @@ func NameForID(id int) string {
 // ConfigurationsByClass returns devices by class from the database
 func ConfigurationsByClass(class templates.Class) ([]Config, error) {
 	var devices []Config
-	tx := db.Where(&Config{Class: class}).Preload("Details").Order("id").Find(&devices)
+	tx := db.Where(&Config{Class: class}).Find(&devices)
 
 	// remove devices without details
 	res := make([]Config, 0, len(devices))
 	for _, dev := range devices {
-		if len(dev.Details) > 0 {
+		if len(dev.Value) > 0 {
 			res = append(res, dev)
 		}
 	}
@@ -138,21 +154,24 @@ func ConfigurationsByClass(class templates.Class) ([]Config, error) {
 // ConfigByID returns device by id from the database
 func ConfigByID(id int) (Config, error) {
 	var config Config
-	tx := db.Where(&Config{ID: id}).Preload("Details").First(&config)
+	tx := db.Where(&Config{ID: id}).First(&config)
 	return config, tx.Error
 }
 
 // AddConfig adds a new config to the database
 func AddConfig(class templates.Class, typ string, conf map[string]any) (Config, error) {
-	config := Config{
-		Class:   class,
-		Type:    typ,
-		Details: detailsFromMap(conf),
+	val, err := detailsFromMap(conf)
+	if err != nil {
+		return Config{}, err
 	}
 
-	err := db.Transaction(func(tx *gorm.DB) error {
-		return tx.Create(&config).Error
-	})
+	config := Config{
+		Class: class,
+		Type:  typ,
+		Value: val,
+	}
+
+	err = db.Create(&config).Error
 
 	return config, err
 }
