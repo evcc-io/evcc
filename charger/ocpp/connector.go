@@ -47,7 +47,6 @@ func NewConnector(log *util.Logger, id int, cp *CP, timeout time.Duration) (*Con
 		statusC:      make(chan struct{}),
 		measurements: make(map[types.Measurand]types.SampledValue),
 		initTimeout:  timeout,
-		meterCache:   4 * time.Second,
 		meterTimeout: 30 * time.Second,
 	}
 
@@ -81,6 +80,21 @@ func (conn *Connector) TriggerMessageRequest(feature remotetrigger.MessageTrigge
 			f(request)
 		}
 	})
+}
+
+// WatchDog triggers meter values messages if older than timeout.
+// Must be wrapped in a goroutine.
+func (conn *Connector) WatchDog(timeout time.Duration) {
+	tick := time.NewTicker(timeout)
+	for ; true; <-tick.C {
+		conn.mu.Lock()
+		update := conn.clock.Since(conn.meterUpdated) > timeout
+		conn.mu.Unlock()
+
+		if update {
+			conn.TriggerMessageRequest(core.MeterValuesFeatureName)
+		}
+	}
 }
 
 // Initialized waits for initial charge point status notification
@@ -180,24 +194,6 @@ func (conn *Connector) NeedsTransaction() (bool, error) {
 // Must only be called while holding lock
 func (conn *Connector) isMeterTimeout() bool {
 	return conn.meterTimeout > 0 && conn.clock.Since(conn.meterUpdated) > conn.meterTimeout
-}
-
-// PollMeter triggers MeterValues.req if the meter readings should be refreshed
-func (conn *Connector) PollMeter(force bool) {
-	if !conn.cp.Connected() {
-		return
-	}
-
-	conn.mu.Lock()
-	defer conn.mu.Unlock()
-
-	if (force || conn.clock.Since(conn.meterUpdated) > conn.meterCache ||
-		conn.clock.Since(conn.meterRequested) > conn.meterTimeout) &&
-		conn.meterUpdated.Compare(conn.meterRequested) >= 0 {
-		conn.meterRequested = conn.clock.Now()
-		conn.TriggerMessageRequest(core.MeterValuesFeatureName)
-		// TODO: Wait for meter values updated
-	}
 }
 
 var _ api.CurrentGetter = (*Connector)(nil)

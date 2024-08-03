@@ -67,6 +67,7 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 	}{
 		Connector:        1,
 		IdTag:            defaultIdTag,
+		MeterInterval:    4 * time.Second,
 		ConnectTimeout:   ocppInitialStatusTimeout,
 		Timeout:          ocppMessageTimeout,
 		ChargingRateUnit: "A",
@@ -274,12 +275,18 @@ func NewOCPP(id string, connector int, idtag string, meterValues string, meterIn
 
 	// trigger initial meter values
 	if c.hasRemoteTriggerFeature {
-		conn.PollMeter(true)
+		conn.TriggerMessageRequest(core.MeterValuesFeatureName)
+		// TODO: Wait for initial meter values to arrive
 	}
 
 	// configure sample rate
 	if err := c.configure(ocpp.KeyMeterValueSampleInterval, strconv.Itoa(int(meterInterval.Seconds()))); err != nil {
 		return nil, err
+	}
+
+	if c.hasRemoteTriggerFeature && meterInterval > 0 {
+		c.log.DEBUG.Println("enabling meter watchdog")
+		go conn.WatchDog(meterInterval + time.Second)
 	}
 
 	// configure ping interval
@@ -376,8 +383,6 @@ func (c *OCPP) Status() (api.ChargeStatus, error) {
 			}
 		}
 	}
-
-	c.pollMeter()
 
 	return c.conn.Status()
 }
@@ -544,46 +549,39 @@ func (c *OCPP) MaxCurrentMillis(current float64) error {
 	return err
 }
 
-// pollMeter triggers a meter update if the RemoteTrigger feature is supported and the values are outdated
-func (c *OCPP) pollMeter() {
-	if c.hasRemoteTriggerFeature {
-		c.conn.PollMeter(false)
-	}
-}
-
 // getMaxCurrent implements the api.CurrentGetter interface
 func (c *OCPP) getMaxCurrent() (float64, error) {
-	c.pollMeter()
+
 	return c.conn.GetMaxCurrent()
 }
 
 // getMaxPower implements the api.PowerGetter interface
 func (c *OCPP) getMaxPower() (float64, error) {
-	c.pollMeter()
+
 	return c.conn.GetMaxPower()
 }
 
 // currentPower implements the api.Meter interface
 func (c *OCPP) currentPower() (float64, error) {
-	c.pollMeter()
+
 	return c.conn.CurrentPower()
 }
 
 // totalEnergy implements the api.MeterTotal interface
 func (c *OCPP) totalEnergy() (float64, error) {
-	c.pollMeter()
+
 	return c.conn.TotalEnergy()
 }
 
 // currents implements the api.PhaseCurrents interface
 func (c *OCPP) currents() (float64, float64, float64, error) {
-	c.pollMeter()
+
 	return c.conn.Currents()
 }
 
 // voltages implements the api.PhaseVoltages interface
 func (c *OCPP) voltages() (float64, float64, float64, error) {
-	c.pollMeter()
+
 	return c.conn.Voltages()
 }
 
@@ -596,7 +594,7 @@ func (c *OCPP) phases1p3p(phases int) error {
 
 // soc implements the api.Battery interface
 func (c *OCPP) soc() (float64, error) {
-	c.pollMeter()
+
 	return c.conn.Soc()
 }
 
