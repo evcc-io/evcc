@@ -22,8 +22,6 @@ type API struct {
 	*request.Helper
 	user     string
 	password string
-	unitId   string
-	vin      string
 }
 
 // NewAPI creates a new vehicle
