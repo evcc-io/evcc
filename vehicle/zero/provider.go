@@ -1,7 +1,6 @@
 package zero
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -59,15 +58,7 @@ func (v *Provider) FinishTime() (time.Time, error) {
 	var t time.Time
 	res, err := v.status.Get()
 	if err == nil {
-		if len(res.Datetime_actual) == 14 {
-			convTime := fmt.Sprintf("%s-%s-%s %s:%s:%s",
-				res.Datetime_actual[0:4], res.Datetime_actual[4:6], res.Datetime_actual[6:8],
-				res.Datetime_actual[8:10], res.Datetime_actual[10:12], res.Datetime_actual[12:14])
-
-			// 2023-11-14 13:23:45
-			t, err = time.Parse(time.DateTime, convTime)
-		}
-		if err != nil {
+		if t, err = time.Parse("20060102150405", res.Datetime_actual); err != nil {
 			t = time.Now()
 		}
 
