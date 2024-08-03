@@ -8,7 +8,7 @@ import (
 	"github.com/evcc-io/evcc/vehicle/zero"
 )
 
-// MG is an api.Vehicle implementation for probably all ZERO Motorcycles
+// Zero is an api.Vehicle implementation for probably all ZERO Motorcycles
 type ZeroMotorcycle struct {
 	*embed
 	*zero.Provider // provides the api implementations
