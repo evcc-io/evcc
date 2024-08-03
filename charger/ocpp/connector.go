@@ -191,7 +191,9 @@ func (conn *Connector) PollMeter(force bool) {
 	conn.mu.Lock()
 	defer conn.mu.Unlock()
 
-	if (force || conn.clock.Since(conn.meterUpdated) > conn.meterCache) && conn.meterUpdated.Compare(conn.meterRequested) >= 0 {
+	if (force || conn.clock.Since(conn.meterUpdated) > conn.meterCache ||
+		conn.clock.Since(conn.meterRequested) > conn.meterTimeout) &&
+		conn.meterUpdated.Compare(conn.meterRequested) >= 0 {
 		conn.meterRequested = conn.clock.Now()
 		conn.TriggerMessageRequest(core.MeterValuesFeatureName)
 		// TODO: Wait for meter values updated
