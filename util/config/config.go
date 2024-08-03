@@ -84,27 +84,29 @@ var db *gorm.DB
 func Init(instance *gorm.DB) error {
 	db = instance
 
+	m := db.Migrator()
+
 	for old, new := range map[string]string{
 		"devices":        "configs",
 		"device_details": "config_details",
 	} {
-		if m := db.Migrator(); m.HasTable(old) {
+		if m.HasTable(old) {
 			if err := m.RenameTable(old, new); err != nil {
 				return err
 			}
 		}
 	}
 
-	err := db.AutoMigrate(new(Config))
+	err := m.AutoMigrate(new(Config))
 
-	if err == nil && db.Migrator().HasTable("config_details") {
-		err = db.AutoMigrate(new(ConfigDetails))
+	if err == nil && m.HasTable("config_details") {
+		err = m.AutoMigrate(new(ConfigDetails))
 
-		if err == nil && db.Migrator().HasConstraint(new(ConfigDetails), "fk_devices_details") {
-			err = db.Migrator().DropConstraint(new(ConfigDetails), "fk_devices_details")
+		if err == nil && m.HasConstraint(new(ConfigDetails), "fk_devices_details") {
+			err = m.DropConstraint(new(ConfigDetails), "fk_devices_details")
 		}
-		if err == nil && db.Migrator().HasColumn(new(ConfigDetails), "device_id") {
-			err = db.Migrator().DropColumn(new(ConfigDetails), "device_id")
+		if err == nil && m.HasColumn(new(ConfigDetails), "device_id") {
+			err = m.DropColumn(new(ConfigDetails), "device_id")
 		}
 
 		var devices []Config
@@ -133,7 +135,7 @@ func Init(instance *gorm.DB) error {
 			}
 		}
 
-		err = db.Migrator().DropTable("config_details")
+		err = m.DropTable("config_details")
 	}
 
 	return err
