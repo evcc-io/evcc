@@ -14,10 +14,10 @@ type Provider struct {
 }
 
 // NewProvider creates a vehicle api provider
-func NewProvider(api *API, cache time.Duration) *Provider {
+func NewProvider(api *API, unitId string, cache time.Duration) *Provider {
 	impl := &Provider{
 		status: provider.ResettableCached(func() (ZeroState, error) {
-			return api.Status()
+			return api.Status(unitId)
 		}, cache),
 	}
 
