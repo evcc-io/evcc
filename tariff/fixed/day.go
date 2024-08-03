@@ -110,11 +110,7 @@ func ParseDays(s string) ([]Day, error) {
 		return nil, errors.New("too many days")
 	}
 
-	sorted := make([]Day, len(res))
-	copy(sorted, res)
-	slices.Sort(sorted)
-
-	if len(slices.Compact(sorted)) < len(res) {
+	if len(slices.Compact(slices.Sorted(slices.Values(res)))) < len(res) {
 		return nil, errors.New("duplicate days")
 	}
 

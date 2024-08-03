@@ -49,8 +49,7 @@ func runDevice(cmd *cobra.Command, args []string) {
 		for _, d := range devs {
 			fmt.Printf("%d. %s\n", d.ID, d.Type)
 
-			details := d.Details
-			slices.SortFunc(details, func(i, j config.ConfigDetail) int {
+			details := slices.SortedFunc(slices.Values(d.Details), func(i, j config.ConfigDetail) int {
 				return cmp.Compare(i.Key, j.Key)
 			})
 
