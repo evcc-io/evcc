@@ -173,9 +173,7 @@ func NewOCPP(id string, connector int, idtag string,
 		case <-time.After(timeout):
 			c.log.DEBUG.Printf("BootNotification timeout")
 		case res := <-cp.BootNotificationRequest():
-			if res != nil {
-				c.bootNotification = res
-			}
+			c.bootNotification = res
 		}
 	}
 
@@ -544,6 +542,45 @@ var _ api.Identifier = (*OCPP)(nil)
 // Identify implements the api.Identifier interface
 func (c *OCPP) Identify() (string, error) {
 	return c.conn.IdTag(), nil
+}
+
+var _ api.Diagnosis = (*OCPP)(nil)
+
+// Diagnose implements the api.Diagnosis interface
+func (c *OCPP) Diagnose() {
+	fmt.Printf("\tCharge Point ID: %s\n", c.conn.ChargePoint().ID())
+
+	if c.bootNotification != nil {
+		fmt.Printf("\tBoot Notification:\n")
+		fmt.Printf("\t\tChargePointVendor: %s\n", c.bootNotification.ChargePointVendor)
+		fmt.Printf("\t\tChargePointModel: %s\n", c.bootNotification.ChargePointModel)
+		fmt.Printf("\t\tChargePointSerialNumber: %s\n", c.bootNotification.ChargePointSerialNumber)
+		fmt.Printf("\t\tFirmwareVersion: %s\n", c.bootNotification.FirmwareVersion)
+	}
+
+	fmt.Printf("\tConfiguration:\n")
+	rc := make(chan error, 1)
+	err := ocpp.Instance().GetConfiguration(c.conn.ChargePoint().ID(), func(resp *core.GetConfigurationConfirmation, err error) {
+		if err == nil {
+			// sort configuration keys for printing
+			slices.SortFunc(resp.ConfigurationKey, func(i, j core.ConfigurationKey) int {
+				return cmp.Compare(i.Key, j.Key)
+			})
+
+			rw := map[bool]string{false: "r/w", true: "r/o"}
+
+			for _, opt := range resp.ConfigurationKey {
+				if opt.Value == nil {
+					continue
+				}
+
+				fmt.Printf("\t\t%s (%s): %s\n", opt.Key, rw[opt.Readonly], *opt.Value)
+			}
+		}
+
+		rc <- err
+	}, nil)
+	c.wait(err, rc)
 }
 
 var _ loadpoint.Controller = (*OCPP)(nil)
