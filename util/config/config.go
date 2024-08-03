@@ -98,6 +98,15 @@ func Init(instance *gorm.DB) error {
 	err := db.AutoMigrate(new(Config))
 
 	if err == nil && db.Migrator().HasTable("config_details") {
+		err = db.AutoMigrate(new(ConfigDetails))
+
+		if err == nil && db.Migrator().HasConstraint(new(ConfigDetails), "fk_devices_details") {
+			err = db.Migrator().DropConstraint(new(ConfigDetails), "fk_devices_details")
+		}
+		if err == nil && db.Migrator().HasColumn(new(ConfigDetails), "device_id") {
+			err = db.Migrator().DropColumn(new(ConfigDetails), "device_id")
+		}
+
 		var devices []Config
 		db.Where(&Config{}).Find(&devices)
 
