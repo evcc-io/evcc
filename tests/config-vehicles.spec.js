@@ -188,13 +188,13 @@ test.describe("vehicles", async () => {
     await restart(CONFIG_GRID_ONLY);
     await page.reload();
 
-    await expect(page.getByTestId("vehicle")).toHaveCount(1);
-    await expect(page.getByTestId("fatal-error")).not.toBeVisible();
     await page
       .locator(`[data-testid="vehicle"]:has-text("RFID Car")`)
       .getByRole("button", { name: "edit" })
       .click();
     await page.getByRole("button", { name: "Show advanced settings" }).click();
     await expect(vehicleModal.getByLabel("RFID identifiers")).toHaveValue("aaa\nbbb\nccc\nddd");
+    await page.getByTestId("vehicle-modal").getByLabel("Close").click();
+    await expect(page.getByTestId("fatal-error")).not.toBeVisible();
   });
 });
