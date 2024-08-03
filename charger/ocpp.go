@@ -173,9 +173,7 @@ func NewOCPP(id string, connector int, idtag string,
 		case <-time.After(timeout):
 			c.log.DEBUG.Printf("BootNotification timeout")
 		case res := <-cp.BootNotificationRequest():
-			if res != nil {
-				c.bootNotification = res
-			}
+			c.bootNotification = res
 		}
 	}
 
