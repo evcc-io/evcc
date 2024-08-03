@@ -106,7 +106,9 @@ func Init(instance *gorm.DB) error {
 		if err == nil && m.HasColumn(new(ConfigDetails), "device_id") {
 			err = m.DropColumn(new(ConfigDetails), "device_id")
 		}
+	}
 
+	if err == nil && m.HasTable("config_details") {
 		var devices []Config
 		if err := db.Where(&Config{}).Find(&devices).Error; err != nil {
 			return err
