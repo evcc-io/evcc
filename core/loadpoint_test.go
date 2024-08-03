@@ -448,7 +448,7 @@ func TestDisableAndEnableAtTargetSoc(t *testing.T) {
 	lp.Update(-5000, false, time.Time{}, false, false, 0, nil, nil)
 	ctrl.Finish()
 
-	t.Log("soc has fallen below target - soc update prevented by timer")
+	t.Log("soc has risen below target - soc update prevented by timer")
 	clock.Add(5 * time.Minute)
 	charger.EXPECT().Status().Return(api.StatusB, nil)
 	charger.EXPECT().Enabled().Return(lp.enabled, nil)
@@ -460,6 +460,7 @@ func TestDisableAndEnableAtTargetSoc(t *testing.T) {
 	vehicle.EXPECT().Soc().Return(85.0, nil)
 	charger.EXPECT().Status().Return(api.StatusB, nil)
 	charger.EXPECT().Enabled().Return(lp.enabled, nil)
+	charger.EXPECT().MaxCurrent(int64(maxA)).Return(nil)
 	charger.EXPECT().Enable(true).Return(nil)
 	lp.Update(-5000, false, time.Time{}, false, false, 0, nil, nil)
 	ctrl.Finish()

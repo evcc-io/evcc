@@ -862,6 +862,11 @@ func (lp *Loadpoint) setLimit(chargeCurrent float64) error {
 		lp.setAndPublishEnabled(enabled)
 		lp.chargerSwitched = lp.clock.Now()
 
+		// ensure we always re-set current when enabling charger
+		if !enabled {
+			lp.chargeCurrent = 0
+		}
+
 		lp.bus.Publish(evChargeCurrent, chargeCurrent)
 
 		// start/stop vehicle wake-up timer
