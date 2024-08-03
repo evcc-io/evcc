@@ -10,13 +10,13 @@ import (
 
 // Provider implements the vehicle api
 type Provider struct {
-	status provider.Cacheable[ZeroState]
+	status provider.Cacheable[State]
 }
 
 // NewProvider creates a vehicle api provider
 func NewProvider(api *API, unitId string, cache time.Duration) *Provider {
 	impl := &Provider{
-		status: provider.ResettableCached(func() (ZeroState, error) {
+		status: provider.ResettableCached(func() (State, error) {
 			return api.Status(unitId)
 		}, cache),
 	}
