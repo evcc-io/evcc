@@ -37,7 +37,7 @@ type OCPP struct {
 	chargingProfileId       int
 	stackLevel              int
 	lp                      loadpoint.API
-	bootMessages            *core.BootNotificationRequest
+	bootNotification        *core.BootNotificationRequest
 }
 
 const (
@@ -248,10 +248,12 @@ func NewOCPP(id string, connector int, idtag string, meterValues string, meterIn
 	if c.hasRemoteTriggerFeature {
 		if err := conn.TriggerMessageRequest(core.BootNotificationFeatureName); err == nil {
 			select {
-			case <-time.After(60 * time.Second):
+			case <-time.After(messageTimeout):
 				c.log.DEBUG.Printf("BootNotification timeout")
 			case res := <-cp.BootNotificationRequest():
-				c.log.DEBUG.Printf("BootNotification: %s", res.FirmwareVersion)
+				if res != nil {
+					c.bootNotification = res
+				}
 			}
 		}
 	}
@@ -609,22 +611,18 @@ var _ api.Diagnosis = (*OCPP)(nil)
 
 // Diagnose implements the api.Diagnosis interface
 func (c *OCPP) Diagnose() {
-	fmt.Printf("\tBoot Messages:\n")
+	fmt.Printf("\tCharge Point ID: %s\n", c.conn.ChargePoint().ID())
 
-	// fmt.Printf("\t\tChargeBoxSerialNumber: %s\n", c.bootMessages.ChargeBoxSerialNumber)
-	// fmt.Printf("\t\tChargePointModel: %s\n", c.bootMessages.ChargePointModel)
-	// fmt.Printf("\t\tChargePointSerialNumber: %s\n", c.bootMessages.ChargePointSerialNumber)
-	// fmt.Printf("\t\tChargePointVendor: %s\n", c.bootMessages.ChargePointVendor)
-	// fmt.Printf("\t\tFirmwareVersion: %s\n", c.bootMessages.FirmwareVersion)
-	// fmt.Printf("\t\tIccid: %s\n", c.bootMessages.Iccid)
-	// fmt.Printf("\t\tImsi: %s\n", c.bootMessages.Imsi)
-	// fmt.Printf("\t\tMeterSerialNumber: %s\n", c.bootMessages.MeterSerialNumber)
-	// fmt.Printf("\t\tMeterType: %s\n", c.bootMessages.MeterType)
+	if c.bootNotification != nil {
+		fmt.Printf("\tBoot Notification:\n")
+		fmt.Printf("\t\tChargePointVendor: %s\n", c.bootNotification.ChargePointVendor)
+		fmt.Printf("\t\tChargePointModel: %s\n", c.bootNotification.ChargePointModel)
+		fmt.Printf("\t\tChargePointSerialNumber: %s\n", c.bootNotification.ChargePointSerialNumber)
+		fmt.Printf("\t\tFirmwareVersion: %s\n", c.bootNotification.FirmwareVersion)
+	}
 
 	fmt.Printf("\tConfiguration:\n")
-
 	rc := make(chan error, 1)
-
 	err := ocpp.Instance().GetConfiguration(c.conn.ChargePoint().ID(), func(resp *core.GetConfigurationConfirmation, err error) {
 		if err == nil {
 			// sort configuration keys for printing
@@ -645,7 +643,6 @@ func (c *OCPP) Diagnose() {
 
 		rc <- err
 	}, nil)
-
 	c.wait(err, rc)
 }
 
