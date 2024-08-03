@@ -231,7 +231,7 @@
 									>
 										<hr v-if="idx > 0" />
 										<p class="my-2 fw-bold">
-											{{ circuit.config.title }}
+											{{ circuit.config?.title }}
 											<code>({{ circuit.name }})</code>
 										</p>
 										<DeviceTags :tags="circuitTags(circuit)" />
