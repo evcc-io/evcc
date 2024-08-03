@@ -2,7 +2,6 @@ package zero
 
 import (
 	"fmt"
-	"strconv"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -11,14 +10,12 @@ import (
 
 // Provider implements the vehicle api
 type Provider struct {
-	api    *API
 	status provider.Cacheable[ZeroState]
 }
 
 // NewProvider creates a vehicle api provider
 func NewProvider(api *API, cache time.Duration) *Provider {
 	impl := &Provider{
-		api: api,
 		status: provider.ResettableCached(func() (ZeroState, error) {
 			return api.Status()
 		}, cache),
@@ -32,11 +29,7 @@ var _ api.Battery = (*Provider)(nil)
 // Soc implements the api.Vehicle interface
 func (v *Provider) Soc() (float64, error) {
 	res, err := v.status.Get()
-	if err != nil {
-		return 0, err
-	}
-
-	return float64(res.Soc), nil
+	return float64(res.Soc), err
 }
 
 var _ api.ChargeState = (*Provider)(nil)
@@ -44,17 +37,16 @@ var _ api.ChargeState = (*Provider)(nil)
 // Status implements the api.ChargeState interface
 func (v *Provider) Status() (api.ChargeStatus, error) {
 	res, err := v.status.Get()
-	var status api.ChargeStatus
 	if err != nil {
 		return api.StatusNone, err
 	}
 
+	status := api.StatusA
+	if res.Pluggedin != 0 {
+		status = api.StatusB
+	}
 	if res.Charging != 0 {
-		status = api.StatusC // Charging
-	} else if res.Pluggedin != 0 {
-		status = api.StatusB // Plugged in
-	} else {
-		status = api.StatusA // disconnected
+		status = api.StatusC
 	}
 
 	return status, nil
@@ -95,11 +87,5 @@ func (v *Provider) Odometer() (float64, error) {
 		return 0, err
 	}
 
-	var mileage float64
-	mileage, err = strconv.ParseFloat(res.Mileage, 64)
-	if err != nil {
-		return 0, err
-	}
-
-	return mileage, nil
+	return res.Mileage, nil
 }
