@@ -35,7 +35,7 @@ func NewAPI(log *util.Logger, user, password string) (*API, error) {
 	return v, err
 }
 
-func (v *API) Vehicles() (UnitData, error) {
+func (v *API) Vehicles() ([]UnitNumberAnswer, error) {
 	var res UnitData
 
 	params := url.Values{
