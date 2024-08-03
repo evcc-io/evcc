@@ -365,15 +365,7 @@ func (c *OCPP) configure(key, val string) error {
 
 // wait waits for a CP roundtrip with timeout
 func (c *OCPP) wait(err error, rc chan error) error {
-	if err == nil {
-		select {
-		case err = <-rc:
-			close(rc)
-		case <-time.After(c.messageTimeout):
-			err = api.ErrTimeout
-		}
-	}
-	return err
+	return ocpp.Wait(err, rc, c.messageTimeout)
 }
 
 // Status implements the api.Charger interface
