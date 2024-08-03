@@ -30,12 +30,11 @@ func NewIdentity(log *util.Logger, user, password, vin string) *Identity {
 func (v *Identity) Login() error {
 	var err error
 	v.unitId, err = v.retrievedeviceId()
-
 	return err
 }
 
 func (v *Identity) retrievedeviceId() (string, error) {
-	var units UnitData
+	var res UnitData
 
 	params := url.Values{
 		"user":        {v.user},
@@ -46,19 +45,19 @@ func (v *Identity) retrievedeviceId() (string, error) {
 	}
 
 	uri := fmt.Sprintf("%s?%s", BaseUrl, params.Encode())
-	err := v.GetJSON(uri, &units)
-	if err != nil {
+	if err := v.GetJSON(uri, &res); err != nil {
 		return "", err
 	}
 
 	if v.vin == "" {
-		return units[0].Unitnumber, nil
+		return res[0].Unitnumber, nil
 	}
 
-	for _, unit := range units {
+	for _, unit := range res {
 		if unit.Name == v.vin {
 			return unit.Unitnumber, nil
 		}
 	}
-	return "", fmt.Errorf("VIN not found")
+
+	return "", fmt.Errorf("vin not found")
 }

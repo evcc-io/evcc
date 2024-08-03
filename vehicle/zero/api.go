@@ -8,6 +8,8 @@ import (
 	"github.com/evcc-io/evcc/util/request"
 )
 
+const BaseUrl = "https://mongol.brono.com/mongol/api.php"
+
 // See https://www.electricmotorcycleforum.com/boards/index.php?topic=9520.0
 // API is quite simple
 // 1 Acquire unit id(s) by calling
@@ -19,7 +21,6 @@ import (
 type API struct {
 	*request.Helper
 	identity *Identity
-	log      *util.Logger
 }
 
 // NewAPI creates a new vehicle
@@ -27,27 +28,14 @@ func NewAPI(log *util.Logger, identity *Identity) *API {
 	v := &API{
 		Helper:   request.NewHelper(log),
 		identity: identity,
-		log:      log,
 	}
 
 	return v
 }
 
-/*
-Vehicles implements returns the /user/vehicles api
-
-	func (v *API) Vehicles() ([]Vehicle, error) {
-		var res []Vehicle
-		uri := fmt.Sprintf("%s/eadrax-vcs/v4/vehicles?apptimezone=120&appDateTime=%d", regions[v.region].CocoApiURI, time.Now().UnixMilli())
-		err := v.GetJSON(uri, &res)
-		return res, err
-	}
-*/
-
 // Status implements the /user/vehicles/<vin>/status api
 func (v *API) Status() (ZeroState, error) {
-	var states []ZeroState
-	var res ZeroState
+	var res []ZeroState
 
 	params := url.Values{
 		"user":        {v.identity.user},
@@ -58,9 +46,9 @@ func (v *API) Status() (ZeroState, error) {
 	}
 
 	uri := fmt.Sprintf("%s?%s", BaseUrl, params.Encode())
-	err := v.GetJSON(uri, &states)
-	if err == nil {
-		return states[0], nil
+	if err := v.GetJSON(uri, &res); err != nil {
+		return ZeroState{}, err
 	}
-	return res, err
+
+	return res[0], nil
 }
