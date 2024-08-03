@@ -55,18 +55,17 @@ var _ api.VehicleFinishTimer = (*Provider)(nil)
 
 // FinishTime implements the api.VehicleFinishTimer interface
 func (v *Provider) FinishTime() (time.Time, error) {
-	var t time.Time
 	res, err := v.status.Get()
-	if err == nil {
-		if t, err = time.Parse("20060102150405", res.Datetime_actual); err != nil {
-			t = time.Now()
-		}
-
-		ctr := res.Chargingtimeleft
-		return t.Add(time.Duration(ctr) * time.Minute), err
+	if err != nil {
+		return time.Time{}, err
 	}
 
-	return time.Time{}, err
+	t, err := time.Parse("20060102150405", res.DatetimeUtc)
+	if err != nil {
+		t = time.Now()
+	}
+
+	return t.Add(time.Duration(res.Chargingtimeleft) * time.Minute), nil
 }
 
 var _ api.VehicleOdometer = (*Provider)(nil)

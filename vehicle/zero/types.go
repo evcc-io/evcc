@@ -43,8 +43,8 @@ type State struct {
 	Siren            string  //:"0",
 	Lock             string  //:"0",
 	Int_lights       string  //:"0",
-	Datetime_utc     string  //:"20191030162309",
-	Datetime_actual  string  //:"20191102113548"
+	DatetimeUtc      string  `json:"datetime_utc"`    //:"20191030162309",
+	DatetimeActual   string  `json:"datetime_actual"` //:"20191102113548"
 	Address          string  //:"YourCity, YourStreet",
 	Perimeter        string  //:"",
 	Color            int     //:2,
