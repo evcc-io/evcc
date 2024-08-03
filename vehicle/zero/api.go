@@ -33,10 +33,7 @@ func NewAPI(log *util.Logger, user, password string) (*API, error) {
 		Helper:   request.NewHelper(log),
 		user:     user,
 		password: password,
-		vin:      vin,
 	}
-
-	v.unitId, err = v.retrievedeviceId()
 	return v, err
 }
 
@@ -56,13 +53,13 @@ func (v *API) Vehicles() (UnitData, error) {
 }
 
 // Status implements the /user/vehicles/<vin>/status api
-func (v *API) Status() (ZeroState, error) {
+func (v *API) Status(unitId string) (ZeroState, error) {
 	var res []ZeroState
 
 	params := url.Values{
 		"user":        {v.user},
 		"pass":        {v.password},
-		"unitnumber":  {v.unitId},
+		"unitnumber":  {unitId},
 		"commandname": {"get_last_transmit"},
 		"format":      {"json"},
 	}
@@ -73,24 +70,4 @@ func (v *API) Status() (ZeroState, error) {
 	}
 
 	return res[0], nil
-}
-
-func (v *API) retrievedeviceId() (string, error) {
-	var res UnitData
-	var err error
-	if res, err = v.Vehicles(); err != nil {
-		return "", err
-	}
-
-	if v.vin == "" {
-		return res[0].Unitnumber, nil
-	}
-
-	for _, unit := range res {
-		if unit.Name == v.vin {
-			return unit.Unitnumber, nil
-		}
-	}
-
-	return "", fmt.Errorf("vin not found")
 }

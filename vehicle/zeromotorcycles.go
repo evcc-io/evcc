@@ -1,6 +1,7 @@
 package vehicle
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -22,6 +23,8 @@ func init() {
 func NewZeroFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	var res *zero.API
 	var err error
+	var unitId string
+
 	cc := struct {
 		embed               `mapstructure:",squash"`
 		User, Password, VIN string
@@ -40,14 +43,38 @@ func NewZeroFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 	log := util.NewLogger("Zero").Redact(cc.User, cc.Password)
 
-	if res, err = zero.NewAPI(log, cc.User, cc.Password, cc.VIN); err != nil {
+	if res, err = zero.NewAPI(log, cc.User, cc.Password); err != nil {
+		return nil, err
+	}
+
+	if unitId, err = retrievedeviceId(res, cc.VIN); err != nil {
 		return nil, err
 	}
 
 	v := &ZeroMotorcycle{
 		embed:    &cc.embed,
-		Provider: zero.NewProvider(res, cc.Cache),
+		Provider: zero.NewProvider(res, unitId, cc.Cache),
 	}
 
 	return v, nil
+}
+
+func retrievedeviceId(v *zero.API, vin string) (string, error) {
+	var res zero.UnitData
+	var err error
+	if res, err = v.Vehicles(); err != nil {
+		return "", err
+	}
+
+	if vin == "" {
+		return res[0].Unitnumber, nil
+	}
+
+	for _, unit := range res {
+		if unit.Name == vin {
+			return unit.Unitnumber, nil
+		}
+	}
+
+	return "", fmt.Errorf("vin not found")
 }
