@@ -32,6 +32,7 @@ type OCPP struct {
 	remoteStart       bool
 	chargingRateUnit  types.ChargingRateUnitType
 	lp                loadpoint.API
+	bootNotification  *core.BootNotificationRequest
 }
 
 const defaultIdTag = "evcc" // RemoteStartTransaction only
@@ -168,13 +169,13 @@ func NewOCPP(id string, connector int, idtag string,
 	// see who's there
 	if boot {
 		conn.TriggerMessageRequest(core.BootNotificationFeatureName)
-
-		// TODO implement
 		select {
 		case <-time.After(timeout):
-			// ?
+			c.log.DEBUG.Printf("BootNotification timeout")
 		case res := <-cp.BootNotificationRequest():
-			// res...
+			if res != nil {
+				c.bootNotification = res
+			}
 		}
 	}
 
