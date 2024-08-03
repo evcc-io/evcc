@@ -1,7 +1,7 @@
 package zero
 
-type UnitNumberAnswer struct {
-	Unitnumber string //"123456",
+type Unit struct {
+	UnitNumber string //"123456",
 	Name       string
 }
 
@@ -9,7 +9,7 @@ type ErrorAnswer struct {
 	Error string
 }
 
-type ZeroState struct {
+type State struct {
 	Unitnumber       string  //"123456",
 	Name             string  //"538ZFAZ76LCK00000",
 	Unittype         string  //"5",
@@ -20,8 +20,8 @@ type ZeroState struct {
 	Reason           string  //"2",
 	Response         string  //"0",
 	Driver           string  //"0",
-	Latitude         float64 //51.5000,
-	Longitude        float64 //4.5000,
+	Latitude         float64 // 51.5000,
+	Longitude        float64 // 4.5000,
 	Altitude         string  //:"0",
 	Gps_valid        string  //:"0",
 	Gps_connected    string  //:"1",
@@ -57,5 +57,3 @@ type ZeroState struct {
 	Storage          int
 	Battery          int
 }
-
-type UnitData []UnitNumberAnswer

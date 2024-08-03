@@ -35,8 +35,8 @@ func NewAPI(log *util.Logger, user, password string) (*API, error) {
 	return v, err
 }
 
-func (v *API) Vehicles() ([]UnitNumberAnswer, error) {
-	var res UnitData
+func (v *API) Vehicles() ([]Unit, error) {
+	var res []Unit
 
 	params := url.Values{
 		"user":        {v.user},
@@ -51,8 +51,8 @@ func (v *API) Vehicles() ([]UnitNumberAnswer, error) {
 }
 
 // Status implements the /user/vehicles/<vin>/status api
-func (v *API) Status(unitId string) (ZeroState, error) {
-	var res []ZeroState
+func (v *API) Status(unitId string) (State, error) {
+	var res []State
 
 	params := url.Values{
 		"user":        {v.user},
@@ -64,7 +64,7 @@ func (v *API) Status(unitId string) (ZeroState, error) {
 
 	uri := fmt.Sprintf("%s?%s", BaseUrl, params.Encode())
 	if err := v.GetJSON(uri, &res); err != nil {
-		return ZeroState{}, err
+		return State{}, err
 	}
 
 	return res[0], nil

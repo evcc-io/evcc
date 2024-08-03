@@ -46,7 +46,7 @@ func NewZeroFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	vehicle, err := ensureVehicleEx(cc.VIN, res.Vehicles,
-		func(v zero.UnitNumberAnswer) (string, error) {
+		func(v zero.Unit) (string, error) {
 			return v.Name, nil
 		},
 	)
@@ -56,7 +56,7 @@ func NewZeroFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 	v := &ZeroMotorcycle{
 		embed:    &cc.embed,
-		Provider: zero.NewProvider(res, vehicle.Unitnumber, cc.Cache),
+		Provider: zero.NewProvider(res, vehicle.UnitNumber, cc.Cache),
 	}
 
 	return v, nil
