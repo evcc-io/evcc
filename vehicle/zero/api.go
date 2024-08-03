@@ -27,7 +27,7 @@ type API struct {
 }
 
 // NewAPI creates a new vehicle
-func NewAPI(log *util.Logger, user string, password string, vin string) (*API, error) {
+func NewAPI(log *util.Logger, user, password string) (*API, error) {
 	var err error
 	v := &API{
 		Helper:   request.NewHelper(log),
