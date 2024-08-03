@@ -37,6 +37,10 @@ func (cp *CP) BootNotification(request *core.BootNotificationRequest) (*core.Boo
 		Status:      core.RegistrationStatusAccepted,
 	}
 
+	cp.onceBoot.Do(func() {
+		cp.bootNotificationRequestC <- request
+	})
+
 	return res, nil
 }
 

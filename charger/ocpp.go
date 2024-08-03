@@ -246,6 +246,14 @@ func NewOCPP(id string, connector int, idtag string, meterValues string, meterIn
 	// see who's there
 	if c.hasRemoteTriggerFeature {
 		conn.TriggerMessageRequest(core.BootNotificationFeatureName)
+
+		// TODO implement
+		select {
+		case <-time.After(messageTimeout):
+			// ?
+		case res := <-cp.BootNotificationRequest():
+			// res...
+		}
 	}
 
 	if meterValues == "" {
