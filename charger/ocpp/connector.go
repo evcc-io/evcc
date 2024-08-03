@@ -25,11 +25,9 @@ type Connector struct {
 	status  *core.StatusNotificationRequest
 	statusC chan struct{}
 
-	meterUpdated   time.Time
-	meterRequested time.Time
-	meterCache     time.Duration
-	meterTimeout   time.Duration
-	measurements   map[types.Measurand]types.SampledValue
+	meterUpdated time.Time
+	meterTimeout time.Duration
+	measurements map[types.Measurand]types.SampledValue
 
 	initTimeout time.Duration // initial timeout for status notification
 
