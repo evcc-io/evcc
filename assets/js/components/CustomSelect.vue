@@ -19,7 +19,7 @@ export default {
 	name: "CustomSelect",
 	props: {
 		options: { type: Array },
-		selected: { type: String },
+		selected: { type: [String, Number] },
 		id: { type: String },
 	},
 	emits: ["change"],
