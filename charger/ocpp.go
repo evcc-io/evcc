@@ -177,19 +177,10 @@ func NewOCPP(id string, connector int, idtag string, meterValues string, meterIn
 
 	err = ocpp.Instance().GetConfiguration(cp.ID(), func(resp *core.GetConfigurationConfirmation, err error) {
 		if err == nil {
-			// sort configuration keys for printing
-			slices.SortFunc(resp.ConfigurationKey, func(i, j core.ConfigurationKey) int {
-				return cmp.Compare(i.Key, j.Key)
-			})
-
-			rw := map[bool]string{false: "r/w", true: "r/o"}
-
 			for _, opt := range resp.ConfigurationKey {
 				if opt.Value == nil {
 					continue
 				}
-
-				c.log.DEBUG.Printf("%s (%s): %s", opt.Key, rw[opt.Readonly], *opt.Value)
 
 				switch opt.Key {
 				case ocpp.KeyChargeProfileMaxStackLevel:
@@ -607,6 +598,36 @@ var _ api.Identifier = (*OCPP)(nil)
 // Identify implements the api.Identifier interface
 func (c *OCPP) Identify() (string, error) {
 	return c.conn.IdTag(), nil
+}
+
+var _ api.Diagnosis = (*OCPP)(nil)
+
+// Diagnose implements the api.Diagnosis interface
+func (c *OCPP) Diagnose() {
+	var rc = make(chan error, 1)
+
+	err := ocpp.Instance().GetConfiguration(c.conn.ChargePoint().ID(), func(resp *core.GetConfigurationConfirmation, err error) {
+		if err == nil {
+			// sort configuration keys for printing
+			slices.SortFunc(resp.ConfigurationKey, func(i, j core.ConfigurationKey) int {
+				return cmp.Compare(i.Key, j.Key)
+			})
+
+			rw := map[bool]string{false: "r/w", true: "r/o"}
+
+			for _, opt := range resp.ConfigurationKey {
+				if opt.Value == nil {
+					continue
+				}
+
+				fmt.Printf("\t%s (%s): %s\n", opt.Key, rw[opt.Readonly], *opt.Value)
+			}
+		}
+
+		rc <- err
+	}, nil)
+
+	c.wait(err, rc)
 }
 
 var _ loadpoint.Controller = (*OCPP)(nil)
