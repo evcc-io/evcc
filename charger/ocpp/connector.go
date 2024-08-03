@@ -391,6 +391,7 @@ func (conn *Connector) Voltages() (float64, float64, float64, error) {
 	for phase := 1; phase <= 3; phase++ {
 		m, ok := conn.measurements[getPhaseKey(types.MeasurandVoltage, phase)+"-N"]
 		if !ok {
+			// fallback for wrong voltage phase labeling
 			m, ok = conn.measurements[getPhaseKey(types.MeasurandVoltage, phase)]
 			if !ok {
 				return 0, 0, 0, api.ErrNotAvailable

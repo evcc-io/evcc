@@ -413,6 +413,7 @@ func (c *OCPP) Enabled() (bool, error) {
 	return c.enabled, nil
 }
 
+// Enable implements the api.Charger interface
 func (c *OCPP) Enable(enable bool) error {
 	var current float64
 	if enable {
@@ -425,6 +426,7 @@ func (c *OCPP) Enable(enable bool) error {
 	return c.setCurrent(current)
 }
 
+// initTransaction remotely starts a transaction
 func (c *OCPP) initTransaction() error {
 	rc := make(chan error, 1)
 	err := ocpp.Instance().RemoteStartTransaction(c.conn.ChargePoint().ID(), func(resp *core.RemoteStartTransactionConfirmation, err error) {
@@ -441,6 +443,7 @@ func (c *OCPP) initTransaction() error {
 	return c.wait(err, rc)
 }
 
+// setChargingProfile applies the given charging profile
 func (c *OCPP) setChargingProfile(profile *types.ChargingProfile) error {
 	rc := make(chan error, 1)
 	err := ocpp.Instance().SetChargingProfile(c.conn.ChargePoint().ID(), func(resp *smartcharging.SetChargingProfileConfirmation, err error) {
@@ -464,8 +467,10 @@ func (c *OCPP) setCurrent(current float64) error {
 	return err
 }
 
-// getScheduleLimit returns the maximum current or power the connector is allowed to consume
+// getScheduleLimit querys the current or power limit the charge point is currently set to offer
 func (c *OCPP) getScheduleLimit() (float64, error) {
+	const duration int = 60 // duration of requested schedule in seconds
+
 	var limit float64
 
 	rc := make(chan error, 1)
@@ -483,13 +488,14 @@ func (c *OCPP) getScheduleLimit() (float64, error) {
 		}
 
 		rc <- err
-	}, c.conn.ID(), 60)
+	}, c.conn.ID(), duration)
 
 	err = c.wait(err, rc)
 
 	return limit, err
 }
 
+// createTxDefaultChargingProfile returns a TxDefaultChargingProfile with given current
 func (c *OCPP) createTxDefaultChargingProfile(current float64) *types.ChargingProfile {
 	phases := c.phases
 	period := types.NewChargingSchedulePeriod(0, current)
@@ -538,6 +544,7 @@ func (c *OCPP) MaxCurrentMillis(current float64) error {
 	return err
 }
 
+// pollMeter triggers a meter update if the RemoteTrigger feature is supported and the values are outdated
 func (c *OCPP) pollMeter() {
 	if c.hasRemoteTriggerFeature {
 		c.conn.PollMeter(false)
