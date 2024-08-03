@@ -49,6 +49,7 @@ func Instance() *CS {
 			log:           log,
 			cps:           make(map[string]*CP),
 			CentralSystem: cs,
+			timeout:       30 * time.Second,
 		}
 
 		ocppj.SetLogger(instance)

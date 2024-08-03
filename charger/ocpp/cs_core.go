@@ -1,6 +1,8 @@
 package ocpp
 
 import (
+	"errors"
+
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/firmware"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/remotetrigger"
@@ -8,24 +10,32 @@ import (
 
 // cs actions
 
-func (cs *CS) TriggerResetRequest(id string, resetType core.ResetType) {
-	if err := cs.Reset(id, func(request *core.ResetConfirmation, err error) {
+func (cs *CS) TriggerResetRequest(id string, resetType core.ResetType) error {
+	rc := make(chan error, 1)
+
+	err := cs.Reset(id, func(request *core.ResetConfirmation, err error) {
 		if err == nil && request != nil && request.Status != core.ResetStatusAccepted {
-			cs.log.ERROR.Printf("TriggerReset for %s: %+v", id, request.Status)
+			err = errors.New(string(request.Status))
 		}
-	}, resetType); err != nil {
-		cs.log.ERROR.Printf("send TriggerReset for %s failed: %v", id, err)
-	}
+
+		rc <- err
+	}, resetType)
+
+	return Wait(err, rc, cs.timeout)
 }
 
-func (cs *CS) TriggerMessageRequest(id string, requestedMessage remotetrigger.MessageTrigger, props ...func(request *remotetrigger.TriggerMessageRequest)) {
-	if err := cs.TriggerMessage(id, func(request *remotetrigger.TriggerMessageConfirmation, err error) {
+func (cs *CS) TriggerMessageRequest(id string, requestedMessage remotetrigger.MessageTrigger, props ...func(request *remotetrigger.TriggerMessageRequest)) error {
+	rc := make(chan error, 1)
+
+	err := cs.TriggerMessage(id, func(request *remotetrigger.TriggerMessageConfirmation, err error) {
 		if err == nil && request != nil && request.Status != remotetrigger.TriggerMessageStatusAccepted {
-			cs.log.ERROR.Printf("TriggerMessage %s for %s: %+v", requestedMessage, id, request.Status)
+			err = errors.New(string(request.Status))
 		}
-	}, requestedMessage, props...); err != nil {
-		cs.log.ERROR.Printf("send TriggerMessage %s for %s failed: %v", requestedMessage, id, err)
-	}
+
+		rc <- err
+	}, requestedMessage, props...)
+
+	return Wait(err, rc, cs.timeout)
 }
 
 // cp actions
