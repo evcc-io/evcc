@@ -37,6 +37,7 @@ type OCPP struct {
 	chargingProfileId       int
 	stackLevel              int
 	lp                      loadpoint.API
+	bootMessages            *core.BootNotificationRequest
 }
 
 const (
@@ -245,14 +246,13 @@ func NewOCPP(id string, connector int, idtag string, meterValues string, meterIn
 
 	// see who's there
 	if c.hasRemoteTriggerFeature {
-		conn.TriggerMessageRequest(core.BootNotificationFeatureName)
-
-		// TODO implement
-		select {
-		case <-time.After(messageTimeout):
-			// ?
-		case res := <-cp.BootNotificationRequest():
-			// res...
+		if err := conn.TriggerMessageRequest(core.BootNotificationFeatureName); err != nil {
+			select {
+			case <-time.After(messageTimeout):
+				c.log.DEBUG.Printf("BootNotification timeout")
+			case res := <-cp.BootNotificationRequest():
+				c.bootMessages = res
+			}
 		}
 	}
 
@@ -609,6 +609,20 @@ var _ api.Diagnosis = (*OCPP)(nil)
 
 // Diagnose implements the api.Diagnosis interface
 func (c *OCPP) Diagnose() {
+	fmt.Printf("\tBoot Messages:\n")
+
+	fmt.Printf("\t\tChargeBoxSerialNumber: %s\n", c.bootMessages.ChargeBoxSerialNumber)
+	fmt.Printf("\t\tChargePointModel: %s\n", c.bootMessages.ChargePointModel)
+	fmt.Printf("\t\tChargePointSerialNumber: %s\n", c.bootMessages.ChargePointSerialNumber)
+	fmt.Printf("\t\tChargePointVendor: %s\n", c.bootMessages.ChargePointVendor)
+	fmt.Printf("\t\tFirmwareVersion: %s\n", c.bootMessages.FirmwareVersion)
+	fmt.Printf("\t\tIccid: %s\n", c.bootMessages.Iccid)
+	fmt.Printf("\t\tImsi: %s\n", c.bootMessages.Imsi)
+	fmt.Printf("\t\tMeterSerialNumber: %s\n", c.bootMessages.MeterSerialNumber)
+	fmt.Printf("\t\tMeterType: %s\n", c.bootMessages.MeterType)
+
+	fmt.Printf("\tConfiguration:\n")
+
 	rc := make(chan error, 1)
 
 	err := ocpp.Instance().GetConfiguration(c.conn.ChargePoint().ID(), func(resp *core.GetConfigurationConfirmation, err error) {
@@ -625,7 +639,7 @@ func (c *OCPP) Diagnose() {
 					continue
 				}
 
-				fmt.Printf("\t%s (%s): %s\n", opt.Key, rw[opt.Readonly], *opt.Value)
+				fmt.Printf("\t\t%s (%s): %s\n", opt.Key, rw[opt.Readonly], *opt.Value)
 			}
 		}
 
