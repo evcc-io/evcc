@@ -47,15 +47,15 @@ type ZeroState struct {
 	Datetime_actual  string  //:"20191102113548"
 	Address          string  //:"YourCity, YourStreet",
 	Perimeter        string  //:"",
-	Color            int32   //:2,
-	Soc              int32   //:91,
-	Tipover          int32   //:0,
-	Charging         int32   //:1,
-	Chargecomplete   int32   // 0,
-	Pluggedin        int32   //:1,
-	Chargingtimeleft int32   //:0
-	Storage          int32
-	Battery          int32
+	Color            int     //:2,
+	Soc              int     //:91,
+	Tipover          int     //:0,
+	Charging         int     //:1,
+	Chargecomplete   int     // 0,
+	Pluggedin        int     //:1,
+	Chargingtimeleft int     //:0
+	Storage          int
+	Battery          int
 }
 
 type UnitData []UnitNumberAnswer
