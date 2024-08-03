@@ -20,6 +20,8 @@ func init() {
 
 // NewBMWFromConfig creates a new vehicle
 func NewZeroFromConfig(other map[string]interface{}) (api.Vehicle, error) {
+	var res *zero.API
+	var err error
 	cc := struct {
 		embed               `mapstructure:",squash"`
 		User, Password, VIN string
@@ -28,7 +30,7 @@ func NewZeroFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		Cache: interval,
 	}
 
-	if err := util.DecodeOther(other, &cc); err != nil {
+	if err = util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
@@ -37,17 +39,14 @@ func NewZeroFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	log := util.NewLogger("Zero").Redact(cc.User, cc.Password)
-	identity := zero.NewIdentity(log, cc.User, cc.Password, cc.VIN)
 
-	if err := identity.Login(); err != nil {
+	if res, err = zero.NewAPI(log, cc.User, cc.Password, cc.VIN); err != nil {
 		return nil, err
 	}
 
-	api := zero.NewAPI(log, identity)
-
 	v := &ZeroMotorcycle{
 		embed:    &cc.embed,
-		Provider: zero.NewProvider(api, cc.Cache),
+		Provider: zero.NewProvider(res, cc.Cache),
 	}
 
 	return v, nil

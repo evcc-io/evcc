@@ -20,17 +20,43 @@ const BaseUrl = "https://mongol.brono.com/mongol/api.php"
 // API is an api.Vehicle implementation for Zero Motorcycles
 type API struct {
 	*request.Helper
-	identity *Identity
+	user     string
+	password string
+	unitId   string
+	vin      string
 }
 
 // NewAPI creates a new vehicle
-func NewAPI(log *util.Logger, identity *Identity) *API {
+func NewAPI(log *util.Logger, user string, password string, vin string) (*API, error) {
+	var err error
 	v := &API{
 		Helper:   request.NewHelper(log),
-		identity: identity,
+		user:     user,
+		password: password,
+		vin:      vin,
+		unitId:   "",
 	}
 
-	return v
+	v.unitId, err = v.retrievedeviceId()
+	return v, err
+}
+
+func (v *API) Vehicles() (UnitData, error) {
+	var res UnitData
+
+	params := url.Values{
+		"user":        {v.user},
+		"pass":        {v.password},
+		"commandname": {"get_units"},
+		"format":      {"json"},
+	}
+
+	uri := fmt.Sprintf("%s?%s", BaseUrl, params.Encode())
+	if err := v.GetJSON(uri, &res); err != nil {
+
+		return UnitData{}, err
+	}
+	return res, nil
 }
 
 // Status implements the /user/vehicles/<vin>/status api
@@ -38,9 +64,9 @@ func (v *API) Status() (ZeroState, error) {
 	var res []ZeroState
 
 	params := url.Values{
-		"user":        {v.identity.user},
-		"pass":        {v.identity.password},
-		"unitnumber":  {v.identity.unitId},
+		"user":        {v.user},
+		"pass":        {v.password},
+		"unitnumber":  {v.unitId},
 		"commandname": {"get_last_transmit"},
 		"format":      {"json"},
 	}
@@ -51,4 +77,24 @@ func (v *API) Status() (ZeroState, error) {
 	}
 
 	return res[0], nil
+}
+
+func (v *API) retrievedeviceId() (string, error) {
+	var res UnitData
+	var err error
+	if res, err = v.Vehicles(); err != nil {
+		return "", err
+	}
+
+	if v.vin == "" {
+		return res[0].Unitnumber, nil
+	}
+
+	for _, unit := range res {
+		if unit.Name == v.vin {
+			return unit.Unitnumber, nil
+		}
+	}
+
+	return "", fmt.Errorf("vin not found")
 }
