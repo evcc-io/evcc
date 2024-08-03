@@ -278,6 +278,12 @@ func NewOCPP(id string, connector int, idtag string,
 	if c.hasMeasurement(types.MeasurandPowerActiveImport) || c.hasMeasurement(types.MeasurandEnergyActiveImportRegister) {
 		conn.TriggerMessageRequest(core.MeterValuesFeatureName)
 
+		// wait for meter values
+		select {
+		case <-time.After(timeout):
+		case <-c.conn.MeterValues():
+		}
+
 		if meterInterval > 0 && meterInterval != meterSampleInterval {
 			if err := c.configure(ocpp.KeyMeterValueSampleInterval, strconv.Itoa(int(meterInterval.Seconds()))); err != nil {
 				return nil, err
