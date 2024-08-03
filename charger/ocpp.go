@@ -611,7 +611,7 @@ var _ api.Diagnosis = (*OCPP)(nil)
 
 // Diagnose implements the api.Diagnosis interface
 func (c *OCPP) Diagnose() {
-	var rc = make(chan error, 1)
+	rc := make(chan error, 1)
 
 	err := ocpp.Instance().GetConfiguration(c.conn.ChargePoint().ID(), func(resp *core.GetConfigurationConfirmation, err error) {
 		if err == nil {
