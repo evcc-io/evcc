@@ -108,12 +108,16 @@ func Init(instance *gorm.DB) error {
 		}
 
 		var devices []Config
-		db.Where(&Config{}).Find(&devices)
+		if err := db.Where(&Config{}).Find(&devices).Error; err != nil {
+			return err
+		}
 
 		// migrate ConfigDetails into Config.Value
 		for _, dev := range devices {
 			var details []ConfigDetails
-			db.Where(&ConfigDetails{ConfigID: dev.ID}).Find(&details)
+			if err := db.Where(&ConfigDetails{ConfigID: dev.ID}).Find(&details).Error; err != nil {
+				return err
+			}
 
 			res := make(map[string]any)
 			for _, detail := range details {
