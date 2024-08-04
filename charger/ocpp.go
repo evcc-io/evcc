@@ -286,7 +286,13 @@ func NewOCPP(id string, connector int, idtag string, meterValues string, meterIn
 	// trigger initial meter values
 	if c.hasRemoteTriggerFeature {
 		conn.TriggerMessageRequest(core.MeterValuesFeatureName)
-		// TODO: Wait for initial meter values to arrive
+
+    // wait for meter values
+		select {
+		case <-time.After(messageTimeout):
+			c.log.WARN.Println("meter timeout")
+		case <-c.conn.MeterSampled():
+		}
 	}
 
 	// configure sample rate
