@@ -67,6 +67,7 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 	}{
 		Connector:        1,
 		IdTag:            defaultIdTag,
+		MeterInterval:    10 * time.Second,
 		ConnectTimeout:   ocppConnectTimeout,
 		Timeout:          ocppTimeout,
 		ChargingRateUnit: "A",
@@ -282,8 +283,7 @@ func NewOCPP(id string, connector int, idtag string,
 				c.log.DEBUG.Println("enabled MeterValuesSampledData measurands: ", m)
 			}
 		}
-	} else { // manual configuration will be deprecated in the future?
-		// manually override measurands
+	} else { // manually override measurands - may be deprecated in the future?
 		if err := c.configure(ocpp.KeyMeterValuesSampledData, meterValues); err != nil {
 			return nil, err
 		}
@@ -309,16 +309,9 @@ func NewOCPP(id string, connector int, idtag string,
 		if err := c.configure(ocpp.KeyMeterValueSampleInterval, strconv.Itoa(int(meterInterval.Seconds()))); err != nil {
 			return nil, err
 		}
-	} else {
-		for _, interval := range []int{4, 5, 10, 30, 45, 60} { // try known vendor constraints
-			if err := c.configure(ocpp.KeyMeterValueSampleInterval, strconv.Itoa(interval)); err == nil {
-				break
-			}
-		}
 	}
 
 	if c.hasRemoteTriggerFeature {
-		c.log.DEBUG.Println("enabling meter watchdog")
 		go conn.WatchDog(10 * time.Second)
 	}
 
