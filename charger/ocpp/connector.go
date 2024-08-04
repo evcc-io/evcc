@@ -24,13 +24,13 @@ type Connector struct {
 
 	status  *core.StatusNotificationRequest
 	statusC chan struct{}
-	meterC  chan map[types.Measurand]types.SampledValue
 
-	meterUpdated time.Time
-	meterTimeout time.Duration
 	measurements map[types.Measurand]types.SampledValue
+	meterUpdated time.Time
+	meterC       chan map[types.Measurand]types.SampledValue
 
-	initTimeout time.Duration // initial timeout for status notification
+	initTimeout  time.Duration // initial timeout for status notification
+	meterTimeout time.Duration // timeout for incoming meter values until they are considered invalid
 
 	txnCount int // change initial value to the last known global transaction. Needs persistence
 	txnId    int
@@ -39,15 +39,17 @@ type Connector struct {
 
 func NewConnector(log *util.Logger, id int, cp *CP, timeout time.Duration) (*Connector, error) {
 	conn := &Connector{
-		log:          log,
-		cp:           cp,
-		id:           id,
-		clock:        clock.New(),
+		log:   log,
+		cp:    cp,
+		id:    id,
+		clock: clock.New(),
+
 		statusC:      make(chan struct{}),
 		measurements: make(map[types.Measurand]types.SampledValue),
+		meterC:       make(chan map[types.Measurand]types.SampledValue),
+
 		initTimeout:  timeout,
 		meterTimeout: 30 * time.Second,
-		meterC:       make(chan map[types.Measurand]types.SampledValue),
 	}
 
 	err := cp.registerConnector(id, conn)
