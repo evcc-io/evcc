@@ -9,6 +9,11 @@ params:
   - name: host
 render: |
   type: custom
+    energy:
+    source: http
+    uri: http://{{ .host }}/api/dxs.json?dxsEntries=251658753 # total yield
+    #   | ---------------------------- Total Yiel W ------------- |
+    jq: (.dxsEntries[] | select(.dxsId==251658753) | .value )
   power:
   {{- if eq .usage "grid" }}
     # Grid
@@ -24,3 +29,4 @@ render: |
     #   | ---------------------------- PAC W ------------- |
     jq: (.dxsEntries[] | select(.dxsId==67109120) | .value )
   {{- end -}}
+
