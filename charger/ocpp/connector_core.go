@@ -71,6 +71,11 @@ func (conn *Connector) MeterValues(request *core.MeterValuesRequest) (*core.Mete
 		}
 	}
 
+	select {
+	case conn.meterC <- conn.measurements:
+	default:
+	}
+
 	return new(core.MeterValuesConfirmation), nil
 }
 
