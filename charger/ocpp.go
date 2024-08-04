@@ -281,6 +281,7 @@ func NewOCPP(id string, connector int, idtag string,
 		// wait for meter values
 		select {
 		case <-time.After(timeout):
+		    c.log.WARN.Println("meter value timeout")
 		case <-c.conn.MeterSampled():
 		}
 
