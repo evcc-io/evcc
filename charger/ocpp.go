@@ -171,7 +171,7 @@ func NewOCPP(id string, connector int, idtag string,
 		conn.TriggerMessageRequest(core.BootNotificationFeatureName)
 		select {
 		case <-time.After(timeout):
-			c.log.DEBUG.Printf("BootNotification timeout")
+			c.log.WARN.Printf("boot notification timeout")
 		case res := <-cp.BootNotificationRequest():
 			c.bootNotification = res
 		}
@@ -288,7 +288,7 @@ func NewOCPP(id string, connector int, idtag string,
 		// wait for meter values
 		select {
 		case <-time.After(timeout):
-		    c.log.WARN.Println("meter value timeout")
+			c.log.WARN.Println("meter value timeout")
 		case <-c.conn.MeterSampled():
 		}
 
