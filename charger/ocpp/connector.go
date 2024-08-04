@@ -203,8 +203,6 @@ func (conn *Connector) GetMaxCurrent() (float64, error) {
 	return 0, api.ErrNotAvailable
 }
 
-var _ api.Meter = (*Connector)(nil)
-
 func (conn *Connector) CurrentPower() (float64, error) {
 	if !conn.cp.Connected() {
 		return 0, api.ErrTimeout
@@ -230,8 +228,6 @@ func (conn *Connector) CurrentPower() (float64, error) {
 	return 0, api.ErrNotAvailable
 }
 
-var _ api.MeterEnergy = (*Connector)(nil)
-
 func (conn *Connector) TotalEnergy() (float64, error) {
 	if !conn.cp.Connected() {
 		return 0, api.ErrTimeout
@@ -252,8 +248,6 @@ func (conn *Connector) TotalEnergy() (float64, error) {
 
 	return 0, api.ErrNotAvailable
 }
-
-var _ api.Battery = (*Connector)(nil)
 
 func (conn *Connector) Soc() (float64, error) {
 	if !conn.cp.Connected() {
@@ -290,8 +284,6 @@ func getPhaseKey(key types.Measurand, phase int) types.Measurand {
 	return key + types.Measurand(".L"+strconv.Itoa(phase))
 }
 
-var _ api.PhaseCurrents = (*Connector)(nil)
-
 func (conn *Connector) Currents() (float64, float64, float64, error) {
 	if !conn.cp.Connected() {
 		return 0, 0, 0, api.ErrTimeout
@@ -327,8 +319,6 @@ func (conn *Connector) Currents() (float64, float64, float64, error) {
 
 	return currents[0], currents[1], currents[2], nil
 }
-
-var _ api.PhaseVoltages = (*Connector)(nil)
 
 func (conn *Connector) Voltages() (float64, float64, float64, error) {
 	if !conn.cp.Connected() {
