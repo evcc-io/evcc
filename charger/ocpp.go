@@ -68,7 +68,6 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 	}{
 		Connector:        1,
 		IdTag:            defaultIdTag,
-		MeterInterval:    4 * time.Second,
 		ConnectTimeout:   ocppInitialStatusTimeout,
 		Timeout:          ocppMessageTimeout,
 		ChargingRateUnit: "A",
@@ -285,19 +284,28 @@ func NewOCPP(id string, connector int, idtag string, meterValues string, meterIn
 
 	// trigger initial meter values
 	if c.hasRemoteTriggerFeature {
-		conn.TriggerMessageRequest(core.MeterValuesFeatureName)
-
-    // wait for meter values
-		select {
-		case <-time.After(messageTimeout):
-			c.log.WARN.Println("meter timeout")
-		case <-c.conn.MeterSampled():
+		if err := conn.TriggerMessageRequest(core.MeterValuesFeatureName); err == nil {
+			// wait for meter values
+			select {
+			case <-time.After(messageTimeout):
+				c.log.WARN.Println("meter timeout")
+			case <-c.conn.MeterSampled():
+			}
 		}
 	}
 
 	// configure sample rate
-	if err := c.configure(ocpp.KeyMeterValueSampleInterval, strconv.Itoa(int(meterInterval.Seconds()))); err != nil {
-		return nil, err
+	if meterInterval > 0 {
+		if err := c.configure(ocpp.KeyMeterValueSampleInterval, strconv.Itoa(int(meterInterval.Seconds()))); err != nil {
+			return nil, err
+		}
+	} else {
+		for interval := range []int{4, 5, 10, 30, 45, 60} { // try known vendor constraints
+			if err := c.configure(ocpp.KeyMeterValueSampleInterval, strconv.Itoa(interval)); err == nil {
+				meterInterval = time.Duration(interval) * time.Second
+				break
+			}
+		}
 	}
 
 	if c.hasRemoteTriggerFeature && meterInterval > 0 {
