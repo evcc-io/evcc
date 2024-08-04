@@ -452,6 +452,7 @@ func (c *OCPP) getCurrent() (float64, error) {
 	return current, err
 }
 
+// createTxDefaultChargingProfile returns a TxDefaultChargingProfile with given current
 func (c *OCPP) createTxDefaultChargingProfile(current float64) *types.ChargingProfile {
 	phases := c.phases
 	period := types.NewChargingSchedulePeriod(0, current)
@@ -475,8 +476,9 @@ func (c *OCPP) createTxDefaultChargingProfile(current float64) *types.ChargingPr
 		ChargingProfileId:      0,
 		StackLevel:             0,
 		ChargingProfilePurpose: types.ChargingProfilePurposeTxDefaultProfile,
-		ChargingProfileKind:    types.ChargingProfileKindRelative,
+		ChargingProfileKind:    types.ChargingProfileKindAbsolute,
 		ChargingSchedule: &types.ChargingSchedule{
+			StartSchedule:          types.Now(),
 			ChargingRateUnit:       c.chargingRateUnit,
 			ChargingSchedulePeriod: []types.ChargingSchedulePeriod{period},
 		},
