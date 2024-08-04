@@ -144,7 +144,7 @@ func (conn *Connector) StatusOCPP() (core.ChargePointStatus, error) {
 	return conn.status.Status, nil
 }
 
-// Status implements the api.ChargeStatus interface
+// Status implements the api.Charger interface
 func (conn *Connector) Status() (api.ChargeStatus, error) {
 	conn.mu.Lock()
 	defer conn.mu.Unlock()
