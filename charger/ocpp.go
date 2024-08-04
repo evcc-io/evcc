@@ -406,10 +406,13 @@ func (c *OCPP) Enable(enable bool) error {
 		current = c.current
 	}
 
-	// cache enabled state as last fallback option
-	c.enabled = enable
+	err := c.setCurrent(current)
+	if err == nil {
+		// cache enabled state as last fallback option
+		c.enabled = enable
+	}
 
-	return c.setCurrent(current)
+	return err
 }
 
 func (c *OCPP) initTransaction() error {
