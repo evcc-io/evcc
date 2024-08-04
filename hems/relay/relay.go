@@ -1,14 +1,14 @@
 package relay
 
 import (
-	"errors"
+	"fmt"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/core/circuit"
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/config"
 )
 
 type Relay struct {
@@ -23,6 +23,7 @@ type Relay struct {
 func New(other map[string]interface{}, site site.API) (*Relay, error) {
 	var cc struct {
 		MaxPower float64
+		Circuit  string
 		Limit    provider.Config
 	}
 
@@ -30,23 +31,10 @@ func New(other map[string]interface{}, site site.API) (*Relay, error) {
 		return nil, err
 	}
 
-	// get root circuit
-	root := circuit.Root()
-	if root == nil {
-		return nil, errors.New("hems requires load management- please configure root circuit")
-	}
-
-	// create new root circuit for LPC
-	lpc, err := circuit.New(util.NewLogger("lpc"), "relay", 0, 0, nil, time.Minute)
+	circuit, err := config.Circuits().ByName(cc.Circuit)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("circuit: %w", err)
 	}
-
-	// wrap old root with new pc parent
-	if err := root.Wrap(lpc); err != nil {
-		return nil, err
-	}
-	site.SetCircuit(lpc)
 
 	// limit getter
 	limitG, err := provider.NewBoolGetterFromConfig(cc.Limit)
@@ -54,7 +42,7 @@ func New(other map[string]interface{}, site site.API) (*Relay, error) {
 		return nil, err
 	}
 
-	return NewRelay(lpc, limitG, cc.MaxPower)
+	return NewRelay(circuit.Instance(), limitG, cc.MaxPower)
 }
 
 // NewRelay creates Relay HEMS

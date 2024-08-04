@@ -2,16 +2,17 @@ package eebus
 
 import (
 	"errors"
+	"fmt"
 	"sync"
 	"time"
 
 	ucapi "github.com/enbility/eebus-go/usecases/api"
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/core/circuit"
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/config"
 )
 
 type EEBus struct {
@@ -43,8 +44,9 @@ type Limits struct {
 // New creates an EEBus HEMS from generic config
 func New(other map[string]interface{}, site site.API) (*EEBus, error) {
 	cc := struct {
-		Ski    string
-		Limits `mapstructure:",squash"`
+		Ski     string
+		Circuit string
+		Limits  `mapstructure:",squash"`
 	}{
 		Limits: Limits{
 			ContractualConsumptionNominalMax:    24800,
@@ -58,25 +60,12 @@ func New(other map[string]interface{}, site site.API) (*EEBus, error) {
 		return nil, err
 	}
 
-	// get root circuit
-	root := circuit.Root()
-	if root == nil {
-		return nil, errors.New("hems requires load management- please configure root circuit")
-	}
-
-	// create new root circuit for LPC
-	lpc, err := circuit.New(util.NewLogger("lpc"), "eebus", 0, 0, nil, time.Minute)
+	circuit, err := config.Circuits().ByName(cc.Circuit)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("circuit: %w", err)
 	}
 
-	// wrap old root with new pc parent
-	if err := root.Wrap(lpc); err != nil {
-		return nil, err
-	}
-	site.SetCircuit(lpc)
-
-	return NewEEBus(cc.Ski, cc.Limits, lpc)
+	return NewEEBus(cc.Ski, cc.Limits, circuit.Instance())
 }
 
 // NewEEBus creates EEBus charger

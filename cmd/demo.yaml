@@ -242,15 +242,34 @@ site:
 
 loadpoints:
   - title: Carport
+    circuit: lpc
     charger: charger_1
     mode: pv
     meter: meter_charger_1
     vehicle: vehicle_1
   - title: Garage
+    circuit: root
     charger: charger_2
     mode: "off"
     meter: meter_charger_2
     vehicle: vehicle_2
+
+circuits:
+  - name: root
+    title: Grid
+    meter: grid
+  - name: lpc
+    Title: Limitation of Grid Consumption
+    parent: root
+
+hems:
+  type: relay
+  circuit: lpc
+  maxPower: 4200 # single SteuVE
+  limit:
+    source: go
+    script: |
+      true
 
 tariffs:
   currency: EUR # three letter ISO-4217 currency code (default EUR)
