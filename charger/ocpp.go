@@ -454,7 +454,7 @@ func (c *OCPP) setCurrent(current float64) error {
 	return err
 }
 
-// getScheduleLimit querys the current or power limit the charge point is currently set to offer
+// getScheduleLimit queries the current or power limit the charge point is currently set to offer
 func (c *OCPP) getScheduleLimit() (float64, error) {
 	const duration int = 60 // duration of requested schedule in seconds
 
