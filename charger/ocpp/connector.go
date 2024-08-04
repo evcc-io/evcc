@@ -128,6 +128,23 @@ func (conn *Connector) TransactionID() (int, error) {
 	return conn.txnId, nil
 }
 
+// StatusOCPP returns the unmapped charge point status
+func (conn *Connector) StatusOCPP() (core.ChargePointStatus, error) {
+	if !conn.cp.Connected() {
+		return "", api.ErrTimeout
+	}
+
+	conn.mu.Lock()
+	defer conn.mu.Unlock()
+
+	if conn.status.ErrorCode != core.NoError {
+		return "", fmt.Errorf("%s: %s", conn.status.ErrorCode, conn.status.Info)
+	}
+
+	return conn.status.Status, nil
+}
+
+// Status implements the api.ChargeStatus interface
 func (conn *Connector) Status() (api.ChargeStatus, error) {
 	conn.mu.Lock()
 	defer conn.mu.Unlock()
@@ -182,6 +199,9 @@ func (conn *Connector) isMeterTimeout() bool {
 	return conn.timeout > 0 && conn.clock.Since(conn.meterUpdated) > conn.timeout
 }
 
+var _ api.CurrentGetter = (*Connector)(nil)
+
+// GetMaxCurrent returns the maximum phase current the charge point is set to offer
 func (conn *Connector) GetMaxCurrent() (float64, error) {
 	if !conn.cp.Connected() {
 		return 0, api.ErrTimeout
@@ -198,6 +218,28 @@ func (conn *Connector) GetMaxCurrent() (float64, error) {
 	if m, ok := conn.measurements[types.MeasurandCurrentOffered]; ok {
 		f, err := strconv.ParseFloat(m.Value, 64)
 		return scale(f, m.Unit) / 1e3, err
+	}
+
+	return 0, api.ErrNotAvailable
+}
+
+// GetMaxPower returns the maximum power the charge point is set to offer
+func (conn *Connector) GetMaxPower() (float64, error) {
+	if !conn.cp.Connected() {
+		return 0, api.ErrTimeout
+	}
+
+	conn.mu.Lock()
+	defer conn.mu.Unlock()
+
+	// fallthrough for last value on timeout when no transaction is running
+	if conn.txnId != 0 && conn.isMeterTimeout() {
+		return 0, api.ErrTimeout
+	}
+
+	if m, ok := conn.measurements[types.MeasurandPowerOffered]; ok {
+		f, err := strconv.ParseFloat(m.Value, 64)
+		return scale(f, m.Unit), err
 	}
 
 	return 0, api.ErrNotAvailable

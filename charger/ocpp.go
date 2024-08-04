@@ -26,6 +26,7 @@ type OCPP struct {
 	idtag             string
 	phases            int
 	current           float64
+	enabled           bool
 	meterValuesSample string
 	timeout           time.Duration
 	phaseSwitching    bool
@@ -368,16 +369,45 @@ func (c *OCPP) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (c *OCPP) Enabled() (bool, error) {
-	current, err := c.getCurrent()
+	if s, err := c.conn.StatusOCPP(); err == nil {
+		switch s {
+		case core.ChargePointStatusSuspendedEVSE:
+			return false, nil
+		case core.ChargePointStatusCharging, core.ChargePointStatusSuspendedEV:
+			return true, nil
+		}
+	}
 
-	return current > 0, err
+	// fallback to the "offered" measurands
+	if c.hasMeasurement(types.MeasurandCurrentOffered) {
+		if v, err := c.getMaxCurrent(); err == nil {
+			return v > 0, nil
+		}
+	}
+	if c.hasMeasurement(types.MeasurandPowerOffered) {
+		if v, err := c.getMaxPower(); err == nil {
+			return v > 0, err
+		}
+	}
+
+	// fallback to querying the active charging profile schedule limit
+	if v, err := c.getScheduleLimit(); err == nil {
+		return v > 0, nil
+	}
+
+	// fallback to cached value as last resort
+	return c.enabled, nil
 }
 
+// Enable implements the api.Charger interface
 func (c *OCPP) Enable(enable bool) error {
 	var current float64
 	if enable {
 		current = c.current
 	}
+
+	// cache enabled state as last fallback option
+	c.enabled = enable
 
 	return c.setCurrent(current)
 }
@@ -421,15 +451,12 @@ func (c *OCPP) setCurrent(current float64) error {
 	return err
 }
 
-// getCurrent returns the internal current offered by the chargepoint
-func (c *OCPP) getCurrent() (float64, error) {
-	var current float64
+// getScheduleLimit querys the current or power limit the charge point is currently set to offer
+func (c *OCPP) getScheduleLimit() (float64, error) {
+	const duration int = 60 // duration of requested schedule in seconds
 
-	if c.hasMeasurement(types.MeasurandCurrentOffered) {
-		return c.getMaxCurrent()
-	}
+	var limit float64
 
-	// fallback to GetCompositeSchedule request
 	rc := make(chan error, 1)
 	err := ocpp.Instance().GetCompositeSchedule(c.conn.ChargePoint().ID(), func(resp *smartcharging.GetCompositeScheduleConfirmation, err error) {
 		if err == nil && resp != nil && resp.Status != smartcharging.GetCompositeScheduleStatusAccepted {
@@ -438,18 +465,19 @@ func (c *OCPP) getCurrent() (float64, error) {
 
 		if err == nil {
 			if resp.ChargingSchedule != nil && len(resp.ChargingSchedule.ChargingSchedulePeriod) > 0 {
-				current = resp.ChargingSchedule.ChargingSchedulePeriod[0].Limit
+				// return first (current) period limit
+				limit = resp.ChargingSchedule.ChargingSchedulePeriod[0].Limit
 			} else {
 				err = fmt.Errorf("invalid ChargingSchedule")
 			}
 		}
 
 		rc <- err
-	}, c.conn.ID(), 1)
+	}, c.conn.ID(), duration)
 
 	err = c.wait(err, rc)
 
-	return current, err
+	return limit, err
 }
 
 func (c *OCPP) createTxDefaultChargingProfile(current float64) *types.ChargingProfile {
@@ -502,6 +530,11 @@ func (c *OCPP) MaxCurrentMillis(current float64) error {
 // getMaxCurrent implements the api.CurrentGetter interface
 func (c *OCPP) getMaxCurrent() (float64, error) {
 	return c.conn.GetMaxCurrent()
+}
+
+// getMaxPower implements the api.PowerGetter interface
+func (c *OCPP) getMaxPower() (float64, error) {
+	return c.conn.GetMaxPower()
 }
 
 // currentPower implements the api.Meter interface
