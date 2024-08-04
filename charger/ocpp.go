@@ -300,7 +300,7 @@ func NewOCPP(id string, connector int, idtag string, meterValues string, meterIn
 			return nil, err
 		}
 	} else {
-		for interval := range []int{4, 5, 10, 30, 45, 60} { // try known vendor constraints
+		for _, interval := range []int{4, 5, 10, 30, 45, 60} { // try known vendor constraints
 			if err := c.configure(ocpp.KeyMeterValueSampleInterval, strconv.Itoa(interval)); err == nil {
 				meterInterval = time.Duration(interval) * time.Second
 				break
