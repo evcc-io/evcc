@@ -86,7 +86,7 @@ func (conn *Connector) TriggerMessageRequest(feature remotetrigger.MessageTrigge
 // WatchDog triggers meter values messages if older than timeout.
 // Must be wrapped in a goroutine.
 func (conn *Connector) WatchDog(timeout time.Duration) {
-	tick := time.NewTicker(timeout)
+	tick := time.NewTicker(2 * time.Second)
 	for ; true; <-tick.C {
 		conn.mu.Lock()
 		update := conn.txnId != 0 && conn.clock.Since(conn.meterUpdated) > timeout
