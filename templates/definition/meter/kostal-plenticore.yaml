@@ -59,9 +59,19 @@ render: |
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
       value: 160:3:DCW # string 3
+  energy:
+    source: sunspec
+    {{- include "modbus" . | indent 2 }}
+    value: 103:WH # total yield
+    scale: 0.001
   {{- end }}
   {{- if eq .usage "battery" }}
   type: custom
+  energy:
+    source: sunspec
+    {{- include "modbus" . | indent 2 }}
+    value: 103:WH # total yield
+    scale: 0.001
   power:
     source: sunspec
     {{- include "modbus" . | indent 2 }}
