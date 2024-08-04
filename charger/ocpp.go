@@ -171,7 +171,7 @@ func NewOCPP(id string, connector int, idtag string,
 		conn.TriggerMessageRequest(core.BootNotificationFeatureName)
 		select {
 		case <-time.After(timeout):
-			c.log.DEBUG.Printf("BootNotification timeout")
+			c.log.WARN.Printf("boot notification timeout")
 		case res := <-cp.BootNotificationRequest():
 			c.bootNotification = res
 		}
@@ -284,6 +284,13 @@ func NewOCPP(id string, connector int, idtag string,
 	// get initial meter values and configure sample rate
 	if c.hasMeasurement(types.MeasurandPowerActiveImport) || c.hasMeasurement(types.MeasurandEnergyActiveImportRegister) {
 		conn.TriggerMessageRequest(core.MeterValuesFeatureName)
+
+		// wait for meter values
+		select {
+		case <-time.After(timeout):
+			c.log.WARN.Println("meter value timeout")
+		case <-c.conn.MeterSampled():
+		}
 
 		if meterInterval > 0 && meterInterval != meterSampleInterval {
 			if err := c.configure(ocpp.KeyMeterValueSampleInterval, strconv.Itoa(int(meterInterval.Seconds()))); err != nil {
