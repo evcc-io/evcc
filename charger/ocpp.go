@@ -535,7 +535,6 @@ func (c *OCPP) getMaxCurrent() (float64, error) {
 	return c.conn.GetMaxCurrent()
 }
 
-// getMaxPower implements the api.PowerGetter interface
 func (c *OCPP) getMaxPower() (float64, error) {
 	return c.conn.GetMaxPower()
 }
