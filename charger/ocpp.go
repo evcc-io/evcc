@@ -272,8 +272,8 @@ func NewOCPP(id string, connector int, idtag string,
 	// autodetect measurands
 	if meterValues == "" && MeterValuesSampledDataMaxLength > 0 {
 		sampledMeasurands := c.tryMeasurands(desiredMeasurands, ocpp.KeyMeterValuesSampledData)
-		if len(sampledMeasurands) > 0 {
-			meterValues = c.constrainedJoin(sampledMeasurands, MeterValuesSampledDataMaxLength)
+		if len(sampledMeasurands) > MeterValuesSampledDataMaxLength {
+			meterValues = sampledMeasurands[:MeterValuesSampledDataMaxLength]
 		}
 	}
 
