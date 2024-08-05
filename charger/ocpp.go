@@ -349,13 +349,6 @@ func (c *OCPP) tryMeasurands(measurands string, key string) []string {
 	return accepted
 }
 
-func (c *OCPP) constrainedJoin(m []string, limit int) string {
-	if limit > 0 && len(m) > limit {
-		m = m[:limit]
-	}
-	return strings.Join(m, ",")
-}
-
 // configure updates CP configuration
 func (c *OCPP) configure(key, val string) error {
 	rc := make(chan error, 1)
