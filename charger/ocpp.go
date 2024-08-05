@@ -431,7 +431,7 @@ func (c *OCPP) Enabled() (bool, error) {
 	}
 	if c.hasMeasurement(types.MeasurandPowerOffered) {
 		if v, err := c.getMaxPower(); err == nil {
-			return v > 0, err
+			return v > 0, nil
 		}
 	}
 
