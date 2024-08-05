@@ -65,6 +65,9 @@ func (m *Telegram) trackChats() {
 	conf.Timeout = 1000
 
 	for update := range m.bot.GetUpdatesChan(conf) {
+		if update.Message == nil || update.Message.Chat == nil {
+			continue
+		}
 		m.Lock()
 		if _, ok := m.chats[update.Message.Chat.ID]; !ok {
 			m.log.INFO.Printf("new chat id: %d", update.Message.Chat.ID)
