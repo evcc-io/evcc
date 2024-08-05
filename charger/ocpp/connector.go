@@ -128,8 +128,8 @@ func (conn *Connector) TransactionID() (int, error) {
 	return conn.txnId, nil
 }
 
-// StatusOCPP returns the unmapped charge point status
-func (conn *Connector) StatusOCPP() (core.ChargePointStatus, error) {
+// Status returns the unmapped charge point status
+func (conn *Connector) Status() (core.ChargePointStatus, error) {
 	if !conn.cp.Connected() {
 		return "", api.ErrTimeout
 	}
@@ -137,48 +137,15 @@ func (conn *Connector) StatusOCPP() (core.ChargePointStatus, error) {
 	conn.mu.Lock()
 	defer conn.mu.Unlock()
 
+	if conn.status == nil {
+		return core.ChargePointStatusUnavailable, nil
+	}
+
 	if conn.status.ErrorCode != core.NoError {
 		return "", fmt.Errorf("%s: %s", conn.status.ErrorCode, conn.status.Info)
 	}
 
 	return conn.status.Status, nil
-}
-
-// Status implements the api.Charger interface
-func (conn *Connector) Status() (api.ChargeStatus, error) {
-	conn.mu.Lock()
-	defer conn.mu.Unlock()
-
-	res := api.StatusNone
-
-	if !conn.cp.Connected() {
-		return res, api.ErrTimeout
-	}
-
-	if conn.status.ErrorCode != core.NoError {
-		return res, fmt.Errorf("%s: %s", conn.status.ErrorCode, conn.status.Info)
-	}
-
-	switch conn.status.Status {
-	case core.ChargePointStatusAvailable, // "Available"
-		core.ChargePointStatusUnavailable: // "Unavailable"
-		res = api.StatusA
-	case
-		core.ChargePointStatusPreparing,     // "Preparing"
-		core.ChargePointStatusSuspendedEVSE, // "SuspendedEVSE"
-		core.ChargePointStatusSuspendedEV,   // "SuspendedEV"
-		core.ChargePointStatusFinishing:     // "Finishing"
-		res = api.StatusB
-	case core.ChargePointStatusCharging: // "Charging"
-		res = api.StatusC
-	case core.ChargePointStatusReserved, // "Reserved"
-		core.ChargePointStatusFaulted: // "Faulted"
-		return api.StatusF, fmt.Errorf("chargepoint status: %s", conn.status.ErrorCode)
-	default:
-		return api.StatusNone, fmt.Errorf("invalid chargepoint status: %s", conn.status.Status)
-	}
-
-	return res, nil
 }
 
 // NeedsTransaction checks if an initial RemoteStart of a transaction is required

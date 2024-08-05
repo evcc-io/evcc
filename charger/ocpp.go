@@ -364,12 +364,38 @@ func (c *OCPP) Status() (api.ChargeStatus, error) {
 		}
 	}
 
-	return c.conn.Status()
+	status, err := c.conn.Status()
+	if err != nil {
+		return api.StatusNone, err
+	}
+
+	var res api.ChargeStatus
+
+	switch status {
+	case core.ChargePointStatusAvailable, // "Available"
+		core.ChargePointStatusUnavailable: // "Unavailable"
+		res = api.StatusA
+	case
+		core.ChargePointStatusPreparing,     // "Preparing"
+		core.ChargePointStatusSuspendedEVSE, // "SuspendedEVSE"
+		core.ChargePointStatusSuspendedEV,   // "SuspendedEV"
+		core.ChargePointStatusFinishing:     // "Finishing"
+		res = api.StatusB
+	case core.ChargePointStatusCharging: // "Charging"
+		res = api.StatusC
+	case core.ChargePointStatusReserved, // "Reserved"
+		core.ChargePointStatusFaulted: // "Faulted"
+		return api.StatusF, fmt.Errorf("chargepoint status: %s", status)
+	default:
+		return api.StatusNone, fmt.Errorf("invalid chargepoint status: %s", status)
+	}
+
+	return res, nil
 }
 
 // Enabled implements the api.Charger interface
 func (c *OCPP) Enabled() (bool, error) {
-	if s, err := c.conn.StatusOCPP(); err == nil {
+	if s, err := c.conn.Status(); err == nil {
 		switch s {
 		case core.ChargePointStatusSuspendedEVSE:
 			return false, nil
