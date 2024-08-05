@@ -160,11 +160,12 @@ func NewOCPP(id string, connector int, idtag string,
 	}
 
 	c := &OCPP{
-		log:         log,
-		conn:        conn,
-		idtag:       idtag,
-		remoteStart: remoteStart,
-		timeout:     timeout,
+		log:              log,
+		conn:             conn,
+		idtag:            idtag,
+		remoteStart:      remoteStart,
+		chargingRateUnit: types.ChargingRateUnitType(chargingRateUnit),
+		timeout:          timeout,
 	}
 
 	c.log.DEBUG.Printf("waiting for chargepoint: %v", connectTimeout)
@@ -175,6 +176,9 @@ func NewOCPP(id string, connector int, idtag string,
 	case <-cp.HasConnected():
 	}
 
+	// fix timing issue in EVBox when switching OCPP protocol version
+	time.Sleep(time.Second)
+
 	var (
 		rc = make(chan error, 1)
 
@@ -182,11 +186,6 @@ func NewOCPP(id string, connector int, idtag string,
 		// max length of the CSL in items. If this key is not set, a safe value of 1 (one) item SHOULD be assumed.
 		meterValuesSampledDataMaxLength = 1
 	)
-
-	c.chargingRateUnit = types.ChargingRateUnitType(chargingRateUnit)
-
-	// fix timing issue in EVBox when switching OCPP protocol version
-	time.Sleep(time.Second)
 
 	err = ocpp.Instance().GetConfiguration(cp.ID(), func(resp *core.GetConfigurationConfirmation, err error) {
 		if err == nil {
