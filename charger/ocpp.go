@@ -350,50 +350,44 @@ func (c *OCPP) wait(err error, rc chan error) error {
 
 // Status implements the api.Charger interface
 func (c *OCPP) Status() (api.ChargeStatus, error) {
-	if c.remoteStart {
-		needtxn, err := c.conn.NeedsTransaction()
-		if err != nil {
-			return api.StatusNone, err
-		}
-
-		if needtxn {
-			// lock the cable by starting remote transaction after vehicle connected
-			if err := c.initTransaction(); err != nil {
-				return api.StatusNone, err
-			}
-		}
-	}
-
 	status, err := c.conn.Status()
 	if err != nil {
 		return api.StatusNone, err
 	}
 
-	var res api.ChargeStatus
+	if c.conn.NeedsAuthentication() {
+		if c.remoteStart {
+			// lock the cable by starting remote transaction after vehicle connected
+			if err := c.initTransaction(); err != nil {
+				c.log.WARN.Printf("failed to start remote transaction: %v", err)
+			}
+		} else {
+			// TODO: bring this status to UI
+			c.log.WARN.Printf("waiting for local authentication")
+		}
+	}
 
 	switch status {
 	case
 		core.ChargePointStatusAvailable,   // "Available"
 		core.ChargePointStatusUnavailable: // "Unavailable"
-		res = api.StatusA
+		return api.StatusA, nil
 	case
 		core.ChargePointStatusPreparing,     // "Preparing"
 		core.ChargePointStatusSuspendedEVSE, // "SuspendedEVSE"
 		core.ChargePointStatusSuspendedEV,   // "SuspendedEV"
 		core.ChargePointStatusFinishing:     // "Finishing"
-		res = api.StatusB
+		return api.StatusB, nil
 	case
 		core.ChargePointStatusCharging: // "Charging"
-		res = api.StatusC
+		return api.StatusC, nil
 	case
 		core.ChargePointStatusReserved, // "Reserved"
 		core.ChargePointStatusFaulted:  // "Faulted"
 		return api.StatusF, fmt.Errorf("chargepoint status: %s", status)
-	default:
-		return api.StatusNone, fmt.Errorf("invalid chargepoint status: %s", status)
 	}
 
-	return res, nil
+	return api.StatusNone, fmt.Errorf("invalid chargepoint status: %s", status)
 }
 
 // Enabled implements the api.Charger interface

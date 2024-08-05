@@ -148,16 +148,16 @@ func (conn *Connector) Status() (core.ChargePointStatus, error) {
 	return conn.status.Status, nil
 }
 
-// NeedsTransaction checks if an initial RemoteStart of a transaction is required
-func (conn *Connector) NeedsTransaction() (bool, error) {
+// NeedsAuthentication checks if local authentication or an initial RemoteStartTransaction is required
+func (conn *Connector) NeedsAuthentication() bool {
 	if !conn.cp.Connected() {
-		return false, api.ErrTimeout
+		return false
 	}
 
 	conn.mu.Lock()
 	defer conn.mu.Unlock()
 
-	return conn.txnId == 0 && conn.status.Status == core.ChargePointStatusPreparing, nil
+	return conn.status != nil && conn.txnId == 0 && conn.status.Status == core.ChargePointStatusPreparing
 }
 
 // isMeterTimeout checks if meter values are outdated.
