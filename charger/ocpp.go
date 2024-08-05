@@ -99,12 +99,12 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 	}
 
 	var currentsG func() (float64, float64, float64, error)
-	if c.hasMeasurement(types.MeasurandCurrentImport + ".L3") {
+	if c.hasMeasurement(types.MeasurandCurrentImport) {
 		currentsG = c.currents
 	}
 
 	var voltagesG func() (float64, float64, float64, error)
-	if c.hasMeasurement(types.MeasurandVoltage + ".L3") {
+	if c.hasMeasurement(types.MeasurandVoltage) {
 		voltagesG = c.voltages
 	}
 
