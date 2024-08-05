@@ -372,7 +372,8 @@ func (c *OCPP) Status() (api.ChargeStatus, error) {
 	var res api.ChargeStatus
 
 	switch status {
-	case core.ChargePointStatusAvailable, // "Available"
+	case
+		core.ChargePointStatusAvailable,   // "Available"
 		core.ChargePointStatusUnavailable: // "Unavailable"
 		res = api.StatusA
 	case
@@ -381,10 +382,12 @@ func (c *OCPP) Status() (api.ChargeStatus, error) {
 		core.ChargePointStatusSuspendedEV,   // "SuspendedEV"
 		core.ChargePointStatusFinishing:     // "Finishing"
 		res = api.StatusB
-	case core.ChargePointStatusCharging: // "Charging"
+	case
+		core.ChargePointStatusCharging: // "Charging"
 		res = api.StatusC
-	case core.ChargePointStatusReserved, // "Reserved"
-		core.ChargePointStatusFaulted: // "Faulted"
+	case
+		core.ChargePointStatusReserved, // "Reserved"
+		core.ChargePointStatusFaulted:  // "Faulted"
 		return api.StatusF, fmt.Errorf("chargepoint status: %s", status)
 	default:
 		return api.StatusNone, fmt.Errorf("invalid chargepoint status: %s", status)
@@ -397,9 +400,12 @@ func (c *OCPP) Status() (api.ChargeStatus, error) {
 func (c *OCPP) Enabled() (bool, error) {
 	if s, err := c.conn.Status(); err == nil {
 		switch s {
-		case core.ChargePointStatusSuspendedEVSE:
+		case
+			core.ChargePointStatusSuspendedEVSE:
 			return false, nil
-		case core.ChargePointStatusCharging, core.ChargePointStatusSuspendedEV:
+		case
+			core.ChargePointStatusCharging,
+			core.ChargePointStatusSuspendedEV:
 			return true, nil
 		}
 	}
