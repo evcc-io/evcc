@@ -273,7 +273,7 @@ func NewOCPP(id string, connector int, idtag string,
 	if meterValues == "" && MeterValuesSampledDataMaxLength > 0 {
 		sampledMeasurands := c.tryMeasurands(desiredMeasurands, ocpp.KeyMeterValuesSampledData)
 		if len(sampledMeasurands) > MeterValuesSampledDataMaxLength {
-			meterValues = sampledMeasurands[:MeterValuesSampledDataMaxLength]
+			meterValues = strings.Join(sampledMeasurands[:MeterValuesSampledDataMaxLength], ",")
 		}
 	}
 
@@ -325,8 +325,8 @@ func (c *OCPP) hasMeasurement(val types.Measurand) bool {
 
 // hasProperty checks if comma-separated string contains given string ignoring whitespaces
 func (c *OCPP) hasProperty(props string, prop string) bool {
-	return slices.ContainsFunc(props, func(s string) bool {
-	  return prop == slices.TrimSpace(s)
+	return slices.ContainsFunc(strings.Split(props, ","), func(s string) bool {
+		return prop == strings.TrimSpace(s)
 	})
 }
 
