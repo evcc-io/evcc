@@ -268,29 +268,20 @@ func NewOCPP(id string, connector int, idtag string,
 		}
 	}
 
-	if meterValues == "" {
-		// autodetect and set measurands
-		if MeterValuesSampledDataMaxLength > 0 {
-			sampledMeasurands := c.tryMeasurands(desiredMeasurands, ocpp.KeyMeterValuesSampledData)
-			if len(sampledMeasurands) > 0 {
-				m := c.constrainedJoin(sampledMeasurands, MeterValuesSampledDataMaxLength)
-				if err := c.configure(ocpp.KeyMeterValuesSampledData, m); err != nil {
-					return nil, err
-				}
-
-				// configuration activated
-				c.meterValuesSample = m
-				c.log.DEBUG.Println("enabled MeterValuesSampledData measurands: ", m)
-			}
+	// autodetect measurands
+	if meterValues == "" && MeterValuesSampledDataMaxLength > 0 {
+		sampledMeasurands := c.tryMeasurands(desiredMeasurands, ocpp.KeyMeterValuesSampledData)
+		if len(sampledMeasurands) > 0 {
+			meterValues = c.constrainedJoin(sampledMeasurands, MeterValuesSampledDataMaxLength)
 		}
-	} else { // manually override measurands - may be deprecated in the future?
-		if err := c.configure(ocpp.KeyMeterValuesSampledData, meterValues); err != nil {
-			return nil, err
-		}
-
-		// configuration activated
-		c.meterValuesSample = meterValues
 	}
+
+	// configure measurands
+	if err := c.configure(ocpp.KeyMeterValuesSampledData, meterValues); err != nil {
+		return nil, err
+	}
+
+	c.meterValuesSample = meterValues
 
 	// trigger initial meter values
 	if c.hasRemoteTriggerFeature {
@@ -316,9 +307,7 @@ func NewOCPP(id string, connector int, idtag string,
 	}
 
 	// configure ping interval
-	if err := c.configure(ocpp.KeyWebSocketPingInterval, "10"); err != nil {
-		return nil, err
-	}
+	c.configure(ocpp.KeyWebSocketPingInterval, "30")
 
 	return c, conn.Initialized()
 }
