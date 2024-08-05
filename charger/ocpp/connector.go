@@ -86,7 +86,7 @@ func (conn *Connector) TriggerMessageRequest(feature remotetrigger.MessageTrigge
 // WatchDog triggers meter values messages if older than timeout.
 // Must be wrapped in a goroutine.
 func (conn *Connector) WatchDog(timeout time.Duration) {
-	tick := time.NewTicker(timeout)
+	tick := time.NewTicker(2 * time.Second)
 	for ; true; <-tick.C {
 		conn.mu.Lock()
 		update := conn.txnId != 0 && conn.clock.Since(conn.meterUpdated) > timeout
@@ -128,52 +128,36 @@ func (conn *Connector) TransactionID() (int, error) {
 	return conn.txnId, nil
 }
 
-func (conn *Connector) Status() (api.ChargeStatus, error) {
+// Status returns the unmapped charge point status
+func (conn *Connector) Status() (core.ChargePointStatus, error) {
+	if !conn.cp.Connected() {
+		return "", api.ErrTimeout
+	}
+
 	conn.mu.Lock()
 	defer conn.mu.Unlock()
 
-	res := api.StatusNone
-
-	if !conn.cp.Connected() {
-		return res, api.ErrTimeout
+	if conn.status == nil {
+		return core.ChargePointStatusUnavailable, nil
 	}
 
 	if conn.status.ErrorCode != core.NoError {
-		return res, fmt.Errorf("%s: %s", conn.status.ErrorCode, conn.status.Info)
+		return "", fmt.Errorf("%s: %s", conn.status.ErrorCode, conn.status.Info)
 	}
 
-	switch conn.status.Status {
-	case core.ChargePointStatusAvailable, // "Available"
-		core.ChargePointStatusUnavailable: // "Unavailable"
-		res = api.StatusA
-	case
-		core.ChargePointStatusPreparing,     // "Preparing"
-		core.ChargePointStatusSuspendedEVSE, // "SuspendedEVSE"
-		core.ChargePointStatusSuspendedEV,   // "SuspendedEV"
-		core.ChargePointStatusFinishing:     // "Finishing"
-		res = api.StatusB
-	case core.ChargePointStatusCharging: // "Charging"
-		res = api.StatusC
-	case core.ChargePointStatusReserved, // "Reserved"
-		core.ChargePointStatusFaulted: // "Faulted"
-		return api.StatusF, fmt.Errorf("chargepoint status: %s", conn.status.ErrorCode)
-	default:
-		return api.StatusNone, fmt.Errorf("invalid chargepoint status: %s", conn.status.Status)
-	}
-
-	return res, nil
+	return conn.status.Status, nil
 }
 
-// NeedsTransaction checks if an initial RemoteStart of a transaction is required
-func (conn *Connector) NeedsTransaction() (bool, error) {
+// NeedsAuthentication checks if local authentication or an initial RemoteStartTransaction is required
+func (conn *Connector) NeedsAuthentication() bool {
 	if !conn.cp.Connected() {
-		return false, api.ErrTimeout
+		return false
 	}
 
 	conn.mu.Lock()
 	defer conn.mu.Unlock()
 
-	return conn.txnId == 0 && conn.status.Status == core.ChargePointStatusPreparing, nil
+	return conn.status != nil && conn.txnId == 0 && conn.status.Status == core.ChargePointStatusPreparing
 }
 
 // isMeterTimeout checks if meter values are outdated.
@@ -182,6 +166,9 @@ func (conn *Connector) isMeterTimeout() bool {
 	return conn.timeout > 0 && conn.clock.Since(conn.meterUpdated) > conn.timeout
 }
 
+var _ api.CurrentGetter = (*Connector)(nil)
+
+// GetMaxCurrent returns the maximum phase current the charge point is set to offer
 func (conn *Connector) GetMaxCurrent() (float64, error) {
 	if !conn.cp.Connected() {
 		return 0, api.ErrTimeout
@@ -202,6 +189,30 @@ func (conn *Connector) GetMaxCurrent() (float64, error) {
 
 	return 0, api.ErrNotAvailable
 }
+
+// GetMaxPower returns the maximum power the charge point is set to offer
+func (conn *Connector) GetMaxPower() (float64, error) {
+	if !conn.cp.Connected() {
+		return 0, api.ErrTimeout
+	}
+
+	conn.mu.Lock()
+	defer conn.mu.Unlock()
+
+	// fallthrough for last value on timeout when no transaction is running
+	if conn.txnId != 0 && conn.isMeterTimeout() {
+		return 0, api.ErrTimeout
+	}
+
+	if m, ok := conn.measurements[types.MeasurandPowerOffered]; ok {
+		f, err := strconv.ParseFloat(m.Value, 64)
+		return scale(f, m.Unit), err
+	}
+
+	return 0, api.ErrNotAvailable
+}
+
+var _ api.Meter = (*Connector)(nil)
 
 func (conn *Connector) CurrentPower() (float64, error) {
 	if !conn.cp.Connected() {
