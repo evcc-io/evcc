@@ -78,7 +78,7 @@ type Site struct {
 	gridMeter     api.Meter   // Grid usage meter
 	pvMeters      []api.Meter // PV generation meters
 	batteryMeters []api.Meter // Battery charging meters
-	logMeters     []api.Meter // Meters used only for logging
+	extMeters     []api.Meter // Meters used only for monitoring
 	auxMeters     []api.Meter // Auxiliary meters
 
 	// battery settings
@@ -108,7 +108,7 @@ type MetersConfig struct {
 	GridMeterRef     string   `mapstructure:"grid"`    // Grid usage meter
 	PVMetersRef      []string `mapstructure:"pv"`      // PV meter
 	BatteryMetersRef []string `mapstructure:"battery"` // Battery charging meter
-	LogMetersRef     []string `mapstructure:"log"`     // Meters used only for logging
+	ExtMetersRef     []string `mapstructure:"ext"`     // Meters used only for logging
 	AuxMetersRef     []string `mapstructure:"aux"`     // Auxiliary meters
 }
 
@@ -211,12 +211,12 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 	}
 
 	//Meters used only for logging
-	for _, ref := range site.Meters.LogMetersRef {
+	for _, ref := range site.Meters.ExtMetersRef {
 		dev, err := config.Meters().ByName(ref)
 		if err != nil {
 			return err
 		}
-		site.logMeters = append(site.logMeters, dev.Instance())
+		site.extMeters = append(site.extMeters, dev.Instance())
 	}
 
 	// auxiliary meters
@@ -273,8 +273,8 @@ func (site *Site) restoreMetersAndTitle() {
 	if v, err := settings.String(keys.BatteryMeters); err == nil && v != "" {
 		site.Meters.BatteryMetersRef = append(site.Meters.BatteryMetersRef, filterConfigurable(strings.Split(v, ","))...)
 	}
-	if v, err := settings.String(keys.LogMeters); err == nil && v != "" {
-		site.Meters.LogMetersRef = append(site.Meters.LogMetersRef, filterConfigurable(strings.Split(v, ","))...)
+	if v, err := settings.String(keys.ExtMeters); err == nil && v != "" {
+		site.Meters.ExtMetersRef = append(site.Meters.ExtMetersRef, filterConfigurable(strings.Split(v, ","))...)
 	}
 	if v, err := settings.String(keys.AuxMeters); err == nil && v != "" {
 		site.Meters.AuxMetersRef = append(site.Meters.AuxMetersRef, filterConfigurable(strings.Split(v, ","))...)
@@ -483,15 +483,15 @@ func (site *Site) updatePvMeters() {
 	site.publish(keys.Pv, mm)
 }
 
-// updateLogMeters updates log meters. All measurements are optional.
-func (site *Site) updateLogMeters() {
-	if len(site.logMeters) == 0 {
+// updateExtMeters updates log meters. All measurements are optional.
+func (site *Site) updateExtMeters() {
+	if len(site.extMeters) == 0 {
 		return
 	}
 
-	mm := make([]meterMeasurement, len(site.logMeters))
+	mm := make([]meterMeasurement, len(site.extMeters))
 
-	for i, meter := range site.logMeters {
+	for i, meter := range site.extMeters {
 		// log power
 		power, err := backoff.RetryWithData(meter.CurrentPower, bo())
 		if err != nil {
@@ -513,7 +513,7 @@ func (site *Site) updateLogMeters() {
 		}
 	}
 
-	site.publish(keys.Log, mm)
+	// Publishing will be done in separate PR
 }
 
 // updateBatteryMeters updates battery meters. Power is retried, other measurements are optional.
@@ -662,7 +662,7 @@ func (site *Site) updateMeters() error {
 	if err := site.updateBatteryMeters(); err != nil {
 		return err
 	}
-	site.updateLogMeters()
+	site.updateExtMeters()
 	return site.updateGridMeter()
 }
 
