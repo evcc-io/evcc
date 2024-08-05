@@ -41,8 +41,8 @@ func (site *Site) requiredBatteryMode(batteryGridChargeActive bool, rate api.Rat
 	batMode := site.GetBatteryMode()
 
 	switch {
-	case batteryGridChargeActive && batMode != api.BatteryCharge:
-		res = api.BatteryCharge
+	case batteryGridChargeActive:
+		res = map[bool]api.BatteryMode{false: api.BatteryCharge, true: api.BatteryUnknown}[batMode == api.BatteryCharge]
 	case !batteryGridChargeActive && site.dischargeControlActive(rate) && batMode != api.BatteryHold:
 		res = api.BatteryHold
 	case batteryModeModified(batMode):
