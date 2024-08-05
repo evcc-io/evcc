@@ -163,7 +163,7 @@ func TestRequiredBatteryMode(t *testing.T) {
 	}
 
 	for _, tc := range tc {
-		t.Logf("%+vv", tc)
+		t.Logf("%+v", tc)
 
 		s := &Site{
 			batteryMode: tc.mode,
