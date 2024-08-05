@@ -42,7 +42,7 @@ func (conn *Connector) StatusNotification(request *core.StatusNotificationReques
 
 func getSampleKey(s types.SampledValue) types.Measurand {
 	if s.Phase != "" {
-		return s.Measurand + types.Measurand("@"+string(s.Phase))
+		return s.Measurand + types.Measurand("."+string(s.Phase))
 	}
 
 	return s.Measurand

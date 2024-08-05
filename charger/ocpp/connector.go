@@ -272,8 +272,6 @@ func (conn *Connector) CurrentPower() (float64, error) {
 	return 0, api.ErrNotAvailable
 }
 
-var _ api.MeterEnergy = (*Connector)(nil)
-
 func (conn *Connector) TotalEnergy() (float64, error) {
 	if !conn.cp.Connected() {
 		return 0, api.ErrTimeout
@@ -309,8 +307,7 @@ func (conn *Connector) Soc() (float64, error) {
 	}
 
 	if m, ok := conn.measurements[types.MeasurandSoC]; ok {
-		f, err := strconv.ParseFloat(m.Value, 64)
-		return scale(f, m.Unit) / 1e3, err
+		return strconv.ParseFloat(m.Value, 64)
 	}
 
 	return 0, api.ErrNotAvailable
@@ -328,10 +325,8 @@ func scale(f float64, scale types.UnitOfMeasure) float64 {
 }
 
 func getPhaseKey(key types.Measurand, phase int) types.Measurand {
-	return key + types.Measurand("@L"+strconv.Itoa(phase))
+	return key + types.Measurand(".L"+strconv.Itoa(phase))
 }
-
-var _ api.PhaseCurrents = (*Connector)(nil)
 
 func (conn *Connector) Currents() (float64, float64, float64, error) {
 	if !conn.cp.Connected() {
@@ -385,9 +380,13 @@ func (conn *Connector) Voltages() (float64, float64, float64, error) {
 	voltages := make([]float64, 0, 3)
 
 	for phase := 1; phase <= 3; phase++ {
-		m, ok := conn.measurements[getPhaseKey(types.MeasurandVoltage, phase)]
+		m, ok := conn.measurements[getPhaseKey(types.MeasurandVoltage, phase)+"-N"]
 		if !ok {
-			return 0, 0, 0, api.ErrNotAvailable
+			// fallback for wrong voltage phase labeling
+			m, ok = conn.measurements[getPhaseKey(types.MeasurandVoltage, phase)]
+			if !ok {
+				return 0, 0, 0, api.ErrNotAvailable
+			}
 		}
 
 		f, err := strconv.ParseFloat(m.Value, 64)

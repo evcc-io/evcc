@@ -92,12 +92,12 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 	}
 
 	var currentsG func() (float64, float64, float64, error)
-	if c.hasMeasurement(types.MeasurandCurrentImport + ".L3") {
+	if c.hasMeasurement(types.MeasurandCurrentImport) {
 		currentsG = c.currents
 	}
 
 	var voltagesG func() (float64, float64, float64, error)
-	if c.hasMeasurement(types.MeasurandVoltage + ".L3") {
+	if c.hasMeasurement(types.MeasurandVoltage) {
 		voltagesG = c.voltages
 	}
 
@@ -483,6 +483,7 @@ func (c *OCPP) getScheduleLimit() (float64, error) {
 	return limit, err
 }
 
+// createTxDefaultChargingProfile returns a TxDefaultChargingProfile with given current
 func (c *OCPP) createTxDefaultChargingProfile(current float64) *types.ChargingProfile {
 	phases := c.phases
 	period := types.NewChargingSchedulePeriod(0, current)
@@ -503,11 +504,12 @@ func (c *OCPP) createTxDefaultChargingProfile(current float64) *types.ChargingPr
 	}
 
 	return &types.ChargingProfile{
-		ChargingProfileId:      0,
+		ChargingProfileId:      1,
 		StackLevel:             0,
 		ChargingProfilePurpose: types.ChargingProfilePurposeTxDefaultProfile,
-		ChargingProfileKind:    types.ChargingProfileKindRelative,
+		ChargingProfileKind:    types.ChargingProfileKindAbsolute,
 		ChargingSchedule: &types.ChargingSchedule{
+			StartSchedule:          types.Now(),
 			ChargingRateUnit:       c.chargingRateUnit,
 			ChargingSchedulePeriod: []types.ChargingSchedulePeriod{period},
 		},
