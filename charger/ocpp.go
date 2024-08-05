@@ -385,9 +385,9 @@ func (c *OCPP) Status() (api.ChargeStatus, error) {
 		core.ChargePointStatusReserved, // "Reserved"
 		core.ChargePointStatusFaulted:  // "Faulted"
 		return api.StatusF, fmt.Errorf("chargepoint status: %s", status)
+	default:
+	    return api.StatusNone, fmt.Errorf("invalid chargepoint status: %s", status)
 	}
-
-	return api.StatusNone, fmt.Errorf("invalid chargepoint status: %s", status)
 }
 
 // Enabled implements the api.Charger interface
