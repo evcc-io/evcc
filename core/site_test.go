@@ -162,8 +162,8 @@ func TestRequiredBatteryMode(t *testing.T) {
 		{true, api.BatteryCharge, api.BatteryUnknown}, // ignore
 	}
 
-	for i, tc := range tc {
-		t.Logf("test %d: %+v", i, tc)
+	for _, tc := range tc {
+		t.Logf("%+vv", tc)
 
 		s := &Site{
 			batteryMode: tc.mode,
