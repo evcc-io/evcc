@@ -270,6 +270,7 @@ func (c *EEBus) Enabled() (bool, error) {
 
 	// if the EV is charging
 	if state == api.StatusC {
+		c.log.DEBUG.Println("!! api.StatusC")
 		return true, nil
 	}
 
