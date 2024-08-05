@@ -180,7 +180,7 @@ func NewOCPP(id string, connector int, idtag string,
 
 		// If a key value is defined as a CSL, it MAY be accompanied with a [KeyName]MaxLength key, indicating the
 		// max length of the CSL in items. If this key is not set, a safe value of 1 (one) item SHOULD be assumed.
-		MeterValuesSampledDataMaxLength int = 1
+		meterValuesSampledDataMaxLength = 1
 	)
 
 	c.chargingRateUnit = types.ChargingRateUnitType(chargingRateUnit)
@@ -219,7 +219,7 @@ func NewOCPP(id string, connector int, idtag string,
 
 				case ocpp.KeyMeterValuesSampledDataMaxLength:
 					if val, err := strconv.Atoi(*opt.Value); err == nil {
-						MeterValuesSampledDataMaxLength = val
+						meterValuesSampledDataMaxLength = val
 					}
 
 				case ocpp.KeyNumberOfConnectors:
@@ -270,10 +270,10 @@ func NewOCPP(id string, connector int, idtag string,
 	}
 
 	// autodetect measurands
-	if meterValues == "" && MeterValuesSampledDataMaxLength > 0 {
+	if meterValues == "" && meterValuesSampledDataMaxLength > 0 {
 		sampledMeasurands := c.tryMeasurands(desiredMeasurands, ocpp.KeyMeterValuesSampledData)
-		if len(sampledMeasurands) > MeterValuesSampledDataMaxLength {
-			meterValues = strings.Join(sampledMeasurands[:MeterValuesSampledDataMaxLength], ",")
+		if len(sampledMeasurands) > meterValuesSampledDataMaxLength {
+			meterValues = strings.Join(sampledMeasurands[:meterValuesSampledDataMaxLength], ",")
 		}
 	}
 
