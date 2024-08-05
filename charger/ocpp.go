@@ -473,7 +473,7 @@ func (c *OCPP) createTxDefaultChargingProfile(current float64) *types.ChargingPr
 	}
 
 	return &types.ChargingProfile{
-		ChargingProfileId:      0,
+		ChargingProfileId:      1,
 		StackLevel:             0,
 		ChargingProfilePurpose: types.ChargingProfilePurposeTxDefaultProfile,
 		ChargingProfileKind:    types.ChargingProfileKindAbsolute,
