@@ -108,7 +108,7 @@ type MetersConfig struct {
 	GridMeterRef     string   `mapstructure:"grid"`    // Grid usage meter
 	PVMetersRef      []string `mapstructure:"pv"`      // PV meter
 	BatteryMetersRef []string `mapstructure:"battery"` // Battery charging meter
-	ExtMetersRef     []string `mapstructure:"ext"`     // Meters used only for logging
+	ExtMetersRef     []string `mapstructure:"ext"`     // Meters used only for monitoring
 	AuxMetersRef     []string `mapstructure:"aux"`     // Auxiliary meters
 }
 
@@ -210,7 +210,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 		site.log.WARN.Println("battery configured but residualPower is missing or <= 0 (add residualPower: 100 to site), see https://docs.evcc.io/en/docs/reference/configuration/site#residualpower")
 	}
 
-	//Meters used only for logging
+	//Meters used only for monitoring
 	for _, ref := range site.Meters.ExtMetersRef {
 		dev, err := config.Meters().ByName(ref)
 		if err != nil {
@@ -483,7 +483,7 @@ func (site *Site) updatePvMeters() {
 	site.publish(keys.Pv, mm)
 }
 
-// updateExtMeters updates log meters. All measurements are optional.
+// updateExtMeters updates ext meters. All measurements are optional.
 func (site *Site) updateExtMeters() {
 	if len(site.extMeters) == 0 {
 		return
@@ -492,18 +492,18 @@ func (site *Site) updateExtMeters() {
 	mm := make([]meterMeasurement, len(site.extMeters))
 
 	for i, meter := range site.extMeters {
-		// log power
+		// ext power
 		power, err := backoff.RetryWithData(meter.CurrentPower, bo())
 		if err != nil {
-			site.log.ERROR.Printf("log meter %d power: %v", i+1, err)
+			site.log.ERROR.Printf("ext meter %d power: %v", i+1, err)
 		}
 
-		// log energy
+		// ext energy
 		var energy float64
 		if m, ok := meter.(api.MeterEnergy); err == nil && ok {
 			energy, err = m.TotalEnergy()
 			if err != nil {
-				site.log.ERROR.Printf("log meter %d energy: %v", i+1, err)
+				site.log.ERROR.Printf("ext meter %d energy: %v", i+1, err)
 			}
 		}
 
