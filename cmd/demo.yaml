@@ -259,7 +259,7 @@ circuits:
     title: Grid
     meter: grid
   - name: lpc
-    Title: Limitation of Grid Consumption
+    title: Limitation of Power Consumption
     parent: root
 
 hems:
