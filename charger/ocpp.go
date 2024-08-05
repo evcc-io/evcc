@@ -424,12 +424,12 @@ func (c *OCPP) Enabled() (bool, error) {
 
 	// fallback to the "offered" measurands
 	if c.hasMeasurement(types.MeasurandCurrentOffered) {
-		if v, err := c.getMaxCurrent(); err == nil {
+		if v, err := c.conn.GetMaxCurrent(); err == nil {
 			return v > 0, nil
 		}
 	}
 	if c.hasMeasurement(types.MeasurandPowerOffered) {
-		if v, err := c.getMaxPower(); err == nil {
+		if v, err := c.conn.GetMaxPower(); err == nil {
 			return v > 0, nil
 		}
 	}
