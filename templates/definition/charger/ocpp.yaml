@@ -15,7 +15,7 @@ requirements:
       Für Zählermesswerte sollte in der Wallbox ein kurzes Zeitintervall konfiguriert werden.
       Nutzen Sie Ihre RFID-Tags (dies ermöglicht z.B. eine Fahrzeugidentifizierung) oder setzen Sie Ihre Wallbox auf "freies Laden" oder "Autostart" um die jeweils für die Ladefreigabe benötigte Transaktion zu erzeugen.
 
-      Falls die Wallbox keinerlei Option bietet die Transaktionen lokal zu starten, kann die Option `remotestart` genutzt werden um automatisch eine Transaktion zu starten sobald ein Fahrzeug angeschlossen wird.
+      Falls die Wallbox keinerlei Option bietet die Transaktionen lokal zu starten, kann die erweiterte Option `remotestart` genutzt werden um automatisch eine Transaktion zu starten sobald ein Fahrzeug angeschlossen wird.
       Dies sollte nur in Ausnahmefällen erforderlich sein.
 
       Voraussetzungen:
@@ -33,7 +33,7 @@ requirements:
       If the charger supports sending metering values try to adjust the interval to a short time span.
       Use your RFID tags (this allows e.g. vehicle identification) or set your charger to "free charging" or "autostart" to generate the transaction required for charging release.
 
-      If the charger does not offer any option to start transactions locally, the `remotestart` option can be used to automatically start a transaction as soon as a vehicle is connected.
+      If the charger does not offer any option to start transactions locally, the `remotestart` advanced option can be used to automatically start a transaction as soon as a vehicle is connected.
       This should only be necessary in exceptional cases.
 
       Requirements:
@@ -52,18 +52,6 @@ params:
     deprecated: true
   - name: bootnotification
     deprecated: true
-  - name: meterinterval
-    advanced: true
-    type: duration
-    description:
-      de: Gewünschtes Übertragungsintervall der Zählerwerte
-      en: Desired transmission interval of meter values
-  - name: metervalues
-    advanced: true
-    type: string
-    description:
-      de: Kommaseparierte Liste der zu sendenden Zählerwerte ("measurand")
-      en: Comma-separated list of meter values to send ("measurand")
   - name: chargingrateunit
     deprecated: true
 render: |
