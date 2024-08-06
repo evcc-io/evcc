@@ -56,9 +56,3 @@ params:
     deprecated: true
 render: |
   {{ include "ocpp" . }}
-  {{- if .meterinterval }}
-  meterinterval: {{ .meterinterval }}
-  {{- end }}
-  {{- if .metervalues }}
-  metervalues: {{ .metervalues }}
-  {{- end }}

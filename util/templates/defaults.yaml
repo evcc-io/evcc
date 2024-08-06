@@ -409,7 +409,7 @@ presets:
         advanced: true
         type: string
         default: evcc
-        help:
+        description:
           en: Identifier used for external authentication of transactions (RemoteStartTransaction)
           de: Identifikator zur externen Authentifizierung von Transaktionen (RemoteStartTransaction)
         help:
