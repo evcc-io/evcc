@@ -199,8 +199,10 @@ replace gopkg.in/yaml.v3 => github.com/andig/yaml v0.0.0-20240531135838-1ff5761a
 
 replace github.com/grid-x/modbus => github.com/evcc-io/modbus v0.0.0-20240503125516-9fd99fe0e438
 
-replace github.com/enbility/spine-go => github.com/enbility/spine-go v0.0.0-20240726200332-a983de1e34b8
+replace github.com/enbility/eebus-go => github.com/enbility/eebus-go v0.0.0-20240805145658-631be103100a
 
-replace github.com/enbility/ship-go => github.com/enbility/ship-go v0.0.0-20240731093131-37b1302bca66
+replace github.com/enbility/spine-go => github.com/enbility/spine-go v0.0.0-20240806132249-c994673d74e4
+
+replace github.com/enbility/ship-go => github.com/enbility/ship-go v0.0.0-20240806195332-a545a1063e94
 
 replace github.com/lorenzodonini/ocpp-go => github.com/evcc-io/ocpp-go v0.0.0-20240730071053-d69e53b0fce9
