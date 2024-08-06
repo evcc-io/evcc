@@ -394,8 +394,8 @@ presets:
         advanced: true
         type: bool
         description:
-          de: Immer eine für die Ladefreigabe erforderliche Remote-Transaktion starten (RemoteStartTransaction) sobald ein Fahrzeug angeschlossen wird
-          en: Always start a remote transaction required for charging release (RemoteStartTransaction) as soon as a vehicle is connected
+          de: Immer eine Remote-Transaktion starten (RemoteStartTransaction) sobald ein Fahrzeug angeschlossen wird
+          en: Always start a remote transaction (RemoteStartTransaction) as soon as a vehicle is connected
         help:
           de: |
             Diese Option nur aktivieren wenn keinerlei Möglichkeit besteht Transaktionen seitens des Ladepunktes zu initiieren!
@@ -410,16 +410,15 @@ presets:
       - name: idtag
         advanced: true
         type: string
-        default: evcc
         description:
-          en: Identifier used for external authentication of transactions (RemoteStartTransaction)
-          de: Identifikator zur externen Authentifizierung von Transaktionen (RemoteStartTransaction)
+          en: Identifier used for authentication of external transactions (RemoteStartTransaction)
+          de: Identifikator zur Authentifizierung von externen Transaktionen (RemoteStartTransaction)
         help:
           de: |
             Diese Option ist nur in Ausnahmefällen erforderlich wenn der Ladepunkt für die Annahme externer Transaktionen einen spezifischen Token erfordert.
           en: |
             This option is only required in exceptional cases if the charger requires a specific token for accepting external transactions.
-        example: REMOTEAUTH
+        example: evcc
       - name: connecttimeout
         advanced: true
         type: duration
