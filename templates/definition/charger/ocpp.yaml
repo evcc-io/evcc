@@ -15,7 +15,7 @@ requirements:
       Für Zählermesswerte sollte in der Wallbox ein kurzes Zeitintervall konfiguriert werden.
       Nutzen Sie Ihre RFID-Tags (dies ermöglicht z.B. eine Fahrzeugidentifizierung) oder setzen Sie Ihre Wallbox auf "freies Laden" oder "Autostart" um die jeweils für die Ladefreigabe benötigte Transaktion zu erzeugen.
 
-      Falls die Wallbox keinerlei Option bietet die Transaktionen lokal zu starten, kann die Option `remotetransaction` genutzt werden um automatisch eine Transaktion zu starten sobald ein Ladekabel angeschlossen wird.
+      Falls die Wallbox keinerlei Option bietet die Transaktionen lokal zu starten, kann die erweiterte Option `remotestart` genutzt werden um automatisch eine Transaktion zu starten sobald ein Fahrzeug angeschlossen wird.
       Dies sollte nur in Ausnahmefällen erforderlich sein.
 
       Voraussetzungen:
@@ -33,7 +33,7 @@ requirements:
       If the charger supports sending metering values try to adjust the interval to a short time span.
       Use your RFID tags (this allows e.g. vehicle identification) or set your charger to "free charging" or "autostart" to generate the transaction required for charging release.
 
-      If the charger does not offer any option to start transactions locally, the `remotetransaction` option can be used to automatically start a transaction as soon as a cable is connected.
+      If the charger does not offer any option to start transactions locally, the `remotestart` advanced option can be used to automatically start a transaction as soon as a vehicle is connected.
       This should only be necessary in exceptional cases.
 
       Requirements:
@@ -48,69 +48,17 @@ params:
     deprecated: true
   - name: nostop
     deprecated: true
-  - name: remotestart
-    advanced: true
-    type: bool
-    default: false
-    description:
-      de: Automatisch eine für die Ladefreigabe benötigte Transaktion starten (RemoteStartTransaction) sobald ein Ladekabel mit der Wallbox verbunden wird
-      en: Automatically start a transaction required for charging release (RemoteStartTransaction) as soon as a cable is connected to the charger
-    help:
-      de: Nur verwenden wenn keinerlei Möglichkeit besteht Transaktionen seitens des Ladepunktes zu starten
-      en: Only use if there is no other way to start transactions from the charger
   - name: getconfiguration
-    advanced: true
-    type: bool
-    default: true
-    description:
-      de: GetConfiguration benutzen
-      en: Use GetConfiguration request
-    help:
-      de: Deaktivierung kann bei einigen Chargern hilfreich sein
-      en: Deactivating can help with certain chargers
+    deprecated: true
   - name: bootnotification
-    advanced: true
-    type: bool
-    default: false
-    description:
-      de: BootNotification benutzen
-      en: Use BootNotification request
-    help:
-      de: Aktivierung kann bei einigen Chargern hilfreich sein
-      en: Activating can help with certain chargers
-  - name: meterinterval
-    advanced: true
-    type: duration
-    description:
-      de: Gewünschtes Übertragungsintervall der Zählerwerte
-      en: Desired transmission interval of meter values
-  - name: metervalues
-    advanced: true
-    type: string
-    description:
-      de: Kommaseparierte Liste der zu sendenden Zählerwerte ("measurand")
-      en: Comma-separated list of meter values to send ("measurand")
+    deprecated: true
   - name: chargingrateunit
-    advanced: true
-    type: string
-    description:
-      de: Einheit, in der ChargingProfile-Werte gesetzt werden ("W" oder "A")
-      en: Unit for setting ChargingProfile values ("W" or "A")
+    deprecated: true
 render: |
   {{ include "ocpp" . }}
-  remotestart: {{ .remotestart }}
-  {{- if ne .getconfiguration "true" }}
-  getconfiguration: {{ .getconfiguration }}
-  {{- end }}
-  {{- if ne .bootnotification "false" }}
-  bootnotification: {{ .bootnotification }}
-  {{- end }}
   {{- if .meterinterval }}
   meterinterval: {{ .meterinterval }}
   {{- end }}
   {{- if .metervalues }}
   metervalues: {{ .metervalues }}
-  {{- end }}
-  {{- if .chargingrateunit }}
-  chargingrateunit: {{ .chargingrateunit }}
   {{- end }}
