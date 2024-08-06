@@ -271,8 +271,8 @@ func NewOCPP(id string, connector int, idtag string,
 	// autodetect measurands
 	if meterValues == "" && meterValuesSampledDataMaxLength > 0 {
 		sampledMeasurands := c.tryMeasurands(desiredMeasurands, ocpp.KeyMeterValuesSampledData)
-		if len(sampledMeasurands) > meterValuesSampledDataMaxLength {
-			meterValues = strings.Join(sampledMeasurands[:meterValuesSampledDataMaxLength], ",")
+		if l := len(sampledMeasurands); l > 0 {
+			meterValues = strings.Join(sampledMeasurands[:min(l, meterValuesSampledDataMaxLength)], ",")
 		}
 	}
 
