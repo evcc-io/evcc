@@ -111,16 +111,6 @@ func (suite *ocppTestSuite) TestConnect() {
 		// status
 		_, err = c1.Status()
 		suite.Require().NoError(err)
-
-		// power
-		f, err := c1.currentPower()
-		suite.Require().NoError(err)
-		suite.Equal(1e3, f)
-
-		// energy
-		f, err = c1.totalEnergy()
-		suite.Require().NoError(err)
-		suite.Equal(1.2, f)
 	}
 
 	// takeover

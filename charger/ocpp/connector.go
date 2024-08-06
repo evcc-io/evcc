@@ -91,7 +91,7 @@ func (conn *Connector) TriggerMessageRequest(feature remotetrigger.MessageTrigge
 // WatchDog triggers meter values messages if older than timeout.
 // Must be wrapped in a goroutine.
 func (conn *Connector) WatchDog(timeout time.Duration) {
-	tick := time.NewTicker(time.Second)
+	tick := time.NewTicker(2 * time.Second)
 	for ; true; <-tick.C {
 		conn.mu.Lock()
 		update := conn.clock.Since(conn.meterUpdated) > timeout
@@ -133,7 +133,8 @@ func (conn *Connector) TransactionID() (int, error) {
 	return conn.txnId, nil
 }
 
-func (conn *Connector) StatusOCPP() (core.ChargePointStatus, error) {
+// Status returns the unmapped charge point status
+func (conn *Connector) Status() (core.ChargePointStatus, error) {
 	if !conn.cp.Connected() {
 		return "", api.ErrTimeout
 	}
@@ -141,16 +142,8 @@ func (conn *Connector) StatusOCPP() (core.ChargePointStatus, error) {
 	conn.mu.Lock()
 	defer conn.mu.Unlock()
 
-	if conn.status.ErrorCode != core.NoError {
-		return "", fmt.Errorf("%s: %s", conn.status.ErrorCode, conn.status.Info)
-	}
-
-	return conn.status.Status, nil
-}
-
-func (conn *Connector) Status() (api.ChargeStatus, error) {
-	if !conn.cp.Connected() {
-		return api.StatusNone, api.ErrTimeout
+	if conn.status == nil {
+		return core.ChargePointStatusUnavailable, nil
 	}
 
 	conn.mu.Lock()
@@ -159,41 +152,22 @@ func (conn *Connector) Status() (api.ChargeStatus, error) {
 	res := api.StatusNone
 
 	if conn.status.ErrorCode != core.NoError {
-		return res, fmt.Errorf("%s: %s", conn.status.ErrorCode, conn.status.Info)
+		return "", fmt.Errorf("%s: %s", conn.status.ErrorCode, conn.status.Info)
 	}
 
-	switch conn.status.Status {
-	case core.ChargePointStatusAvailable, // "Available"
-		core.ChargePointStatusUnavailable: // "Unavailable"
-		res = api.StatusA
-	case
-		core.ChargePointStatusPreparing,     // "Preparing"
-		core.ChargePointStatusSuspendedEVSE, // "SuspendedEVSE"
-		core.ChargePointStatusSuspendedEV,   // "SuspendedEV"
-		core.ChargePointStatusFinishing:     // "Finishing"
-		res = api.StatusB
-	case core.ChargePointStatusCharging: // "Charging"
-		res = api.StatusC
-	case core.ChargePointStatusReserved, // "Reserved"
-		core.ChargePointStatusFaulted: // "Faulted"
-		return api.StatusF, fmt.Errorf("chargepoint status: %s", conn.status.ErrorCode)
-	default:
-		return api.StatusNone, fmt.Errorf("invalid chargepoint status: %s", conn.status.Status)
-	}
-
-	return res, nil
+	return conn.status.Status, nil
 }
 
-// NeedsTransaction checks if an initial RemoteStart of a transaction is required
-func (conn *Connector) NeedsTransaction() (bool, error) {
+// NeedsAuthentication checks if local authentication or an initial RemoteStartTransaction is required
+func (conn *Connector) NeedsAuthentication() bool {
 	if !conn.cp.Connected() {
-		return false, api.ErrTimeout
+		return false
 	}
 
 	conn.mu.Lock()
 	defer conn.mu.Unlock()
 
-	return conn.txnId == 0 && conn.status.Status == core.ChargePointStatusPreparing, nil
+	return conn.status != nil && conn.txnId == 0 && conn.status.Status == core.ChargePointStatusPreparing
 }
 
 // isMeterTimeout checks if meter values are outdated
@@ -275,8 +249,6 @@ func (conn *Connector) CurrentPower() (float64, error) {
 	return 0, api.ErrNotAvailable
 }
 
-var _ api.MeterEnergy = (*Connector)(nil)
-
 func (conn *Connector) TotalEnergy() (float64, error) {
 	if !conn.cp.Connected() {
 		return 0, api.ErrTimeout
@@ -332,10 +304,8 @@ func scale(f float64, scale types.UnitOfMeasure) float64 {
 }
 
 func getPhaseKey(key types.Measurand, phase int) types.Measurand {
-	return key + types.Measurand("@L"+strconv.Itoa(phase))
+	return key + types.Measurand(".L"+strconv.Itoa(phase))
 }
-
-var _ api.PhaseCurrents = (*Connector)(nil)
 
 func (conn *Connector) Currents() (float64, float64, float64, error) {
 	if !conn.cp.Connected() {

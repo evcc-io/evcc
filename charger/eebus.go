@@ -264,11 +264,13 @@ func (c *EEBus) Enabled() (bool, error) {
 	evEntity := c.evEntity()
 	state, err := c.Status()
 	if err != nil || state == api.StatusA || evEntity == nil {
+		c.log.DEBUG.Println("!! EV unplugged or status unknown")
 		return c.expectedEnableUnpluggedState, nil
 	}
 
 	// if the EV is charging
 	if state == api.StatusC {
+		c.log.DEBUG.Println("!! api.StatusC")
 		return true, nil
 	}
 
@@ -276,6 +278,7 @@ func (c *EEBus) Enabled() (bool, error) {
 	if c.hasActiveVASVW() {
 		limits, err := c.uc.OscEV.LoadControlLimits(evEntity)
 		if err != nil {
+			c.log.DEBUG.Println("!! OscEV.LoadControlLimits error", err)
 			// there are no limits available, e.g. because the data was not received yet
 			return true, nil
 		}
@@ -283,6 +286,7 @@ func (c *EEBus) Enabled() (bool, error) {
 		for _, limit := range limits {
 			// check if there is an active limit set
 			if limit.IsActive && limit.Value >= 1 {
+				c.log.DEBUG.Println("!! OscEV.LoadControlLimits active", limit)
 				return true, nil
 			}
 		}
@@ -293,6 +297,7 @@ func (c *EEBus) Enabled() (bool, error) {
 	limits, err := c.uc.OpEV.LoadControlLimits(evEntity)
 	if err != nil {
 		// there are limits available, e.g. because the data was not received yet
+		c.log.DEBUG.Println("!! OpEV.LoadControlLimits error", err)
 		return true, nil
 	}
 
@@ -303,6 +308,7 @@ func (c *EEBus) Enabled() (bool, error) {
 		// if the limit is not active, then the maximum possible current is permitted
 		if (limit.IsActive && limit.Value >= 1) ||
 			!limit.IsActive {
+			c.log.DEBUG.Println("!! OpEV.LoadControlLimits active", limit)
 			return true, nil
 		}
 	}
