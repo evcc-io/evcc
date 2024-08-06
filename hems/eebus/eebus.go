@@ -121,8 +121,8 @@ func NewEEBus(ski string, limits Limits, root api.Circuit) (*EEBus, error) {
 	}
 
 	// set initial values
-	if err := c.uc.LPC.SetContractualConsumptionNominalMax(limits.ContractualConsumptionNominalMax); err != nil {
-		c.log.ERROR.Println("LPC SetContractualConsumptionNominalMax:", err)
+	if err := c.uc.LPC.SetConsumptionNominalMax(limits.ContractualConsumptionNominalMax); err != nil {
+		c.log.ERROR.Println("LPC SetConsumptionNominalMax:", err)
 	}
 	if err := c.uc.LPC.SetConsumptionLimit(*c.consumptionLimit); err != nil {
 		c.log.ERROR.Println("LPC SetConsumptionLimit:", err)
