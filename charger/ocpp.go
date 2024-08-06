@@ -271,14 +271,14 @@ func NewOCPP(id string, connector int, idtag string,
 	// autodetect measurands
 	if meterValues == "" && meterValuesSampledDataMaxLength > 0 {
 		sampledMeasurands := c.tryMeasurands(desiredMeasurands, ocpp.KeyMeterValuesSampledData)
-		if l := len(sampledMeasurands); l > 0 {
-			meterValues = strings.Join(sampledMeasurands[:min(l, meterValuesSampledDataMaxLength)], ",")
-		}
+		meterValues = strings.Join(sampledMeasurands[:min(len(sampledMeasurands), meterValuesSampledDataMaxLength)], ",")
 	}
 
 	// configure measurands
-	if err := c.configure(ocpp.KeyMeterValuesSampledData, meterValues); err != nil {
-		return nil, err
+	if meterValues != "" {
+		if err := c.configure(ocpp.KeyMeterValuesSampledData, meterValues); err != nil {
+			return nil, err
+		}
 	}
 
 	c.meterValuesSample = meterValues
