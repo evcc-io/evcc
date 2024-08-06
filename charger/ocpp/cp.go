@@ -5,15 +5,19 @@ import (
 	"sync"
 
 	"github.com/evcc-io/evcc/util"
+	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
 )
 
 // TODO support multiple connectors
 // Since ocpp-go interfaces at charge point level, we need to manage multiple connector separately
 
 type CP struct {
-	mu   sync.RWMutex
-	once sync.Once
-	log  *util.Logger
+	mu          sync.RWMutex
+	log         *util.Logger
+	onceConnect sync.Once
+	onceBoot    sync.Once
+
+	bootNotificationRequestC chan *core.BootNotificationRequest
 
 	id string
 
@@ -30,6 +34,8 @@ func NewChargePoint(log *util.Logger, id string) *CP {
 
 		connectC:   make(chan struct{}),
 		connectors: make(map[int]*Connector),
+
+		bootNotificationRequestC: make(chan *core.BootNotificationRequest, 1),
 	}
 }
 
@@ -65,6 +71,10 @@ func (cp *CP) connectorByTransactionID(id int) *Connector {
 	return nil
 }
 
+func (cp *CP) BootNotificationRequest() <-chan *core.BootNotificationRequest {
+	return cp.bootNotificationRequestC
+}
+
 func (cp *CP) ID() string {
 	cp.mu.RLock()
 	defer cp.mu.RUnlock()
@@ -90,7 +100,7 @@ func (cp *CP) connect(connect bool) {
 	cp.connected = connect
 
 	if connect {
-		cp.once.Do(func() {
+		cp.onceConnect.Do(func() {
 			close(cp.connectC)
 		})
 	}
