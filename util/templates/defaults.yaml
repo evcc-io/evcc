@@ -372,6 +372,8 @@ presets:
       - name: icon
         advanced: true
   ocpp:
+    requirements:
+      evcc: ["sponsorship"]
     params:
       - name: stationid
         type: string

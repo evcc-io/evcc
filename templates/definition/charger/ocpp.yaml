@@ -4,6 +4,7 @@ products:
       de: OCPP 1.6J kompatible Wallbox mit Smart Charging Profil
       en: OCPP 1.6J compatible charger with Smart Charging Profile
 group: generic
+capabilities: ["mA", "rfid", "1p3p"]
 requirements:
   description:
     de: |
