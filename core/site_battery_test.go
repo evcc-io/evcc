@@ -26,7 +26,7 @@ func TestUpdateBatteryMode(t *testing.T) {
 
 	s := &Site{
 		log:           util.NewLogger("foo"),
-		batteryMeters: []api.Meter{batCtrl},
+		batteryMeters: map[string]api.Meter{"bat": batCtrl},
 		batteryMode:   api.BatteryNormal,
 	}
 
