@@ -149,8 +149,6 @@ func (conn *Connector) Status() (core.ChargePointStatus, error) {
 	conn.mu.Lock()
 	defer conn.mu.Unlock()
 
-	res := api.StatusNone
-
 	if conn.status.ErrorCode != core.NoError {
 		return "", fmt.Errorf("%s: %s", conn.status.ErrorCode, conn.status.Info)
 	}

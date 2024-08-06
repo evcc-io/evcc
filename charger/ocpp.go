@@ -154,7 +154,7 @@ func NewOCPP(id string, connector int, idtag string, meterValues string, meterIn
 		idtag:            idtag,
 		remoteStart:      remoteStart,
 		chargingRateUnit: types.ChargingRateUnitType(chargingRateUnit),
-		messageTimeout: messageTimeout,
+		messageTimeout:   messageTimeout,
 	}
 
 	c.log.DEBUG.Printf("waiting for chargepoint: %v", initTimeout)
@@ -247,7 +247,7 @@ func NewOCPP(id string, connector int, idtag string, meterValues string, meterIn
 	if c.hasRemoteTriggerFeature {
 		if err := conn.TriggerMessageRequest(core.BootNotificationFeatureName); err == nil {
 			select {
-			case <-time.After(timeout):
+			case <-time.After(messageTimeout):
 				c.log.DEBUG.Printf("BootNotification timeout")
 			case res := <-cp.BootNotificationRequest():
 				if res != nil {
@@ -277,7 +277,7 @@ func NewOCPP(id string, connector int, idtag string, meterValues string, meterIn
 		if err := conn.TriggerMessageRequest(core.MeterValuesFeatureName); err == nil {
 			// wait for meter values
 			select {
-			case <-time.After(timeout):
+			case <-time.After(messageTimeout):
 				c.log.WARN.Println("meter timeout")
 			case <-c.conn.MeterSampled():
 			}
