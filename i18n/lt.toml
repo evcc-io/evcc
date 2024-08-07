@@ -5,22 +5,24 @@ control = "Kaupiklio valdymas"
 discharge = "Neleisti kaupiklio iškrovimo režime Greitas ir planiniame įkrovime."
 disclaimerHint = "Pastaba:"
 disclaimerText = "Šie nustatymai paveikia tik įkrovimą Saulė. Įkrovimo algoritmas atitinkamai pakeičiamas."
-legendBottomName = "namo pirmumas"
-legendBottomSubline = "nenaudojama įkrovimui"
-legendMiddleName = "pirmiau automobilis"
-legendMiddleSubline = "namas po to"
+legendBottomName = "Prioritetas namo kaupiklio įkrovimui"
+legendBottomSubline = "kol pasieks {soc}."
+legendMiddleName = "Prioritetas automobilio įkrovimui"
+legendMiddleSubline = "kai namo kaupiklis yra virš {soc}."
 legendTitle = "Kaip naudoti saulės energiją?"
-legendTopAutostart = "startuoja automatiškai"
-legendTopName = "kaupiklis padeda įkrauti"
-legendTopSubline = "be pertraukų"
+legendTopAutostart = "Startuoti automatiškai"
+legendTopName = "Automobilio įkrovimas su kaupiklio pagalba"
+legendTopSubline = "kai kaupiklis yra virš {soc}."
 modalTitle = "Namų kaupiklis"
+usageTab = "Kaupiklio naudojimas"
+gridChargeTab = "Įkrovimas iš tinklo"
 
 [batterySettings.bufferStart]
-above = "kai virš {soc}"
-full = "kai {soc}"
+above = "kai virš {soc}."
+full = "kai {soc}."
 low = "kai nevisai pilnas"
 medium = "kai puspilnis"
-never = "tik su pakankamu pertekliumi"
+never = "tik su pakankamu pertekliumi."
 
 [config]
 
@@ -75,6 +77,8 @@ temp = "Temperatūra"
 topic = "Tema"
 url = "URL"
 yes = "taip"
+currentRange = "Srovė"
+powerRange = "Galia"
 
 [config.eebus]
 description = "Konfigūracija, leidžianti evcc susisiekti su kitais EEBus įrenginiais."
@@ -410,6 +414,8 @@ noEnergy = "Nėra skaitiklių duomenų"
 pvExport = "Tinklo eksportas"
 pvProduction = "Gamyba"
 selfConsumption = "Sunaudojama iškart"
+cleanBatteryGridCharge = "švari tinklo energija"
+cheapBatteryGridCharge = "pigi tinklo energija"
 
 [main.heatingStatus]
 charging = "Šildoma…"
@@ -563,6 +569,7 @@ unknown = ""
 vehicleLimit = "Automobilyje nustatytas limitas."
 vehicleLimitReached = "Automobilyje nustatytas limitas pasiektas."
 waitForVehicle = "Paruošta. Laukiama automobilio..."
+welcome = "Trumpas pirminis įkrovimas jungties patikrinimui."
 
 [notifications]
 dismissAll = "Išvalyti visus"
@@ -717,3 +724,8 @@ title = "Klaida startuojant"
 cancel = "Atšaukti"
 template = "Gamintojas"
 test = "Testuoti"
+
+
+[config.options.boolean]
+yes = "taip"
+no = "ne"

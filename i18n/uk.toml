@@ -43,6 +43,9 @@ power = "Потужність"
 range = "Дальність"
 soc = "SoC"
 socLimit = "Ліміт"
+url = "URL"
+currency = "Валюта"
+yes = "так"
 
 [config.form]
 example = "Наприклад"
@@ -51,6 +54,9 @@ optional = "необов'язково"
 [config.general]
 cancel = "Скасувати"
 save = "зберегти"
+experimental = "Експериментальний"
+off = "вимкнено"
+telemetry = "Телеметрія"
 
 [config.grid]
 titleAdd = "Додати лічильник електромережі"
@@ -436,9 +442,11 @@ allVehicles = "всі транспортні засоби"
 filter = "Фільтр"
 
 [settings]
-title = "Загальні налаштування"
+title = "Інтерфейс користувача"
 
 [settings.fullscreen]
+exit = "Вийти з повноекранного режиму"
+label = "Повноекранний"
 
 [settings.gridDetails]
 co2 = "CO₂"
@@ -455,7 +463,7 @@ auto = "Автоматично"
 label = "Мова"
 
 [settings.sponsorToken]
-expires = "Термін дії вашого спонсорського токена закінчується {вXDays}. {getNewToken} та оновіть свій конфігураційний файл."
+expires = "Термін дії вашого спонсорського токена закінчується {inXDays}. {getNewToken} і оновіть його тут."
 getNew = "Візьми свіжий"
 hint = "Примітка: Ми автоматизуємо це в майбутньому."
 
@@ -501,3 +509,19 @@ title = "Помилка запуску"
 cancel = "Скасувати"
 template = "Виробник"
 test = "Тест"
+
+
+[config.eebus]
+title = "EEBus"
+
+[config.influx]
+labelUrl = "URL"
+labelDatabase = "База даних"
+labelToken = "API Token"
+title = "InfluxDB"
+
+[config.control]
+labelInterval = "Інтервал оновлення"
+
+[config.hems]
+title = "HEMS"

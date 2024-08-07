@@ -13,7 +13,7 @@ legendTitle = "Jak należy wykorzystać energię słoneczną?"
 legendTopAutostart = "uruchamia się automatycznie"
 legendTopName = "ładowanie wspomagane bateryjnie"
 legendTopSubline = "bez przerw"
-modalTitle = "Ustawienia baterii"
+modalTitle = "Bateria domowa"
 notControllable = "Sterowanie baterią nie jest dostępne dla tej baterii."
 
 [batterySettings.bufferStart]
@@ -44,6 +44,12 @@ power = "Moc"
 range = "Zasięg"
 soc = "Stan naładowania"
 socLimit = "Limit"
+chargeStatusA = "nie połączony"
+chargeStatusB = "połączony"
+chargeStatusC = "ładowanie"
+configured = "Skonfigurowany"
+currency = "Waluta"
+url = "URL"
 
 [config.form]
 example = "Przykład"
@@ -52,6 +58,8 @@ optional = "opcjonalny"
 [config.general]
 cancel = "Anulować"
 save = "Zapisz"
+experimental = "Eksperymentalny"
+telemetry = "Telemetria"
 
 [config.grid]
 titleAdd = "Dodaj licznik sieci"
@@ -78,6 +86,8 @@ validateSave = "Sprawdź i zapisz"
 [config.options]
 
 [config.options.endianness]
+big = "big-endian"
+little = "little-endian"
 
 [config.options.schema]
 
@@ -478,7 +488,7 @@ auto = "Automatyczny"
 label = "Język"
 
 [settings.sponsorToken]
-expires = "Twój token sponsora wygasa {inXDays}. {getNewToken} i zaktualizuj swój plik konfiguracyjny."
+expires = "Twój token sponsora wygasa {inXDays}. {getNewToken} i zaktualizuj tutaj."
 getNew = "Weź świeżego"
 hint = "Uwaga: zautomatyzujemy to w przyszłości."
 
@@ -528,3 +538,30 @@ title = "Błąd uruchamiania"
 cancel = "Anulować"
 template = "Producent"
 test = "Test"
+
+
+[config.control]
+labelInterval = "Interwał aktualizacji"
+labelResidualPower = "Moc resztkowa"
+
+[config.eebus]
+title = "EEBus"
+
+[config.influx]
+labelBucket = "Bucket"
+labelDatabase = "Baza danych"
+labelPassword = "Hasło"
+labelToken = "API Token"
+labelUrl = "URL"
+title = "InfluxDB"
+
+[config.modbusproxy]
+title = "Modbus Proxy"
+
+[config.mqtt]
+labelClientId = "Client ID"
+labelPassword = "Hasło"
+title = "MQTT"
+
+[config.network]
+labelPort = "Port"
