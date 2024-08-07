@@ -5,22 +5,24 @@ control = "Akun hallinta"
 discharge = "Vältä purkamista nopeassa tilassa ja suunnitellussa latauksessa."
 disclaimerHint = "Huomaa:"
 disclaimerText = "Nämä asetukset vaikuttavat vain aurinkotilaan. Latauskäyttäytymistä säädetään vastaavasti."
-legendBottomName = "koti on etusijalla"
-legendBottomSubline = "ei käytetty lataukseen"
-legendMiddleName = "ajoneuvo ensin"
-legendMiddleSubline = "koti on toissijainen"
+legendBottomName = "Priorisoi kodin akun lataus"
+legendBottomSubline = "kunnes saavutetaan {soc}."
+legendMiddleName = "Priorisoi ajoneuvon lataus"
+legendMiddleSubline = "kun kodin akku on yli {soc}."
 legendTitle = "Kuinka aurinkoenergiaa tulisi käyttää?"
-legendTopAutostart = "alkaa automaattisesti"
-legendTopName = "akkutuettu lataus"
-legendTopSubline = "keskeytyksettä"
+legendTopAutostart = "Aloita automaattisesti"
+legendTopName = "Akulla tuettu ajoneuvon lataus"
+legendTopSubline = "kun kodin akku on yli {soc}."
 modalTitle = "Kodin akku"
+gridChargeTab = "Lataus verkosta"
+usageTab = "Akun käyttö"
 
 [batterySettings.bufferStart]
-above = "kun ylittää {soc}"
-full = "kun {soc}"
+above = "kun ylittää {soc}."
+full = "kun {soc}."
 low = "jos jonkin verran täynnä"
 medium = "kun puolillaan"
-never = "ainoastaan kun riittävästi ylijäämää"
+never = "ainoastaan kun riittävästi ylijäämää."
 
 [config]
 
@@ -75,6 +77,8 @@ temp = "Lämpötila"
 topic = "Aihe"
 url = "URL"
 yes = "kyllä"
+currentRange = "Virta"
+powerRange = "Teho"
 
 [config.eebus]
 description = "Konfiguraatio, jonka avulla evcc voi kommunikoida muiden EEBus-laitteiden kanssa."
@@ -401,6 +405,8 @@ noEnergy = "Ei mittarin tietoja"
 pvExport = "Verkkoon vienti"
 pvProduction = "Tuotanto"
 selfConsumption = "Tuotannon kulutus"
+cheapBatteryGridCharge = "halpaa energiaa verkosta"
+cleanBatteryGridCharge = "puhdasta energiaa verkosta"
 
 [main.heatingStatus]
 charging = "Lämmitys..."
@@ -551,6 +557,7 @@ unknown = ""
 vehicleLimit = "Ajoneuvon latausraja"
 vehicleLimitReached = "Ajoneuvon raja saavutettu."
 waitForVehicle = "Valmiina. Odotetaan ajoneuvoa…"
+welcome = "Lyhyt aloitus lataus yhteyden vahvistamiseksi."
 
 [notifications]
 dismissAll = "Hylkää kaikki"
@@ -705,3 +712,8 @@ title = "Virhe käynnistyksessä"
 cancel = "Peruuta"
 template = "Valmistaja"
 test = "Testi"
+
+
+[config.options.boolean]
+no = "ei"
+yes = "kyllä"
