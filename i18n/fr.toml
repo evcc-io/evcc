@@ -560,6 +560,7 @@ unknown = "-"
 vehicleLimit = "Limit du véhicule."
 vehicleLimitReached = "Limite du véhicule atteinte."
 waitForVehicle = "Prêt à charger. Attente du véhicule…"
+welcome = "Courte charge initiale pour confirmer la connexion."
 
 [notifications]
 dismissAll = "Supprimer tout"
@@ -708,3 +709,8 @@ title = "Erreur au démarrage"
 cancel = "Annuler"
 template = "Fabricant"
 test = "Test"
+
+
+[config.options.boolean]
+no = "non"
+yes = "oui"
