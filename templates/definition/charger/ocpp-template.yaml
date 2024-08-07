@@ -1,0 +1,14 @@
+template: ocpp-
+products:
+  - brand: Vendor
+    description:
+      generic: Model
+group: ocpp
+capabilities: ["mA", "rfid", "1p3p"]
+requirements:
+  description:
+    de:
+    en:
+  evcc: ["sponsorship"]
+render: |
+  {{ include "ocpp" . }}

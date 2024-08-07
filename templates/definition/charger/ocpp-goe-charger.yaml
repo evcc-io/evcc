@@ -1,0 +1,17 @@
+template: ocpp-goe-charger
+products:
+  - brand: go-e
+    description:
+      generic: Charger V3 [OCPP]
+  - brand: go-e
+    description:
+      generic: Charger Gemini [OCPP]
+  - brand: go-e
+    description:
+      generic: Charger PRO [OCPP]
+group: ocpp
+capabilities: ["rfid", "1p3p"]
+requirements:
+  evcc: ["sponsorship"]
+render: |
+  {{ include "ocpp" . }}

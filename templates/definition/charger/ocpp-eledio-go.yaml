@@ -1,0 +1,17 @@
+template: ocpp-enercab-smart
+products:
+  - brand: enercab
+    description:
+      generic: smart [OCPP]
+  - brand: eledio
+    description:
+      generic: go [OCPP]
+group: ocpp
+capabilities: ["1p3p"]
+requirements:
+  description:
+    generic: |
+      https://www.enercab.at/index.php?controller=attachment&id_attachment=311
+  evcc: ["sponsorship"]
+render: |
+  {{ include "ocpp" . }}

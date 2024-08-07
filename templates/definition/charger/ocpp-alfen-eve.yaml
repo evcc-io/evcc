@@ -1,0 +1,11 @@
+template: ocpp-alfen-eve
+products:
+  - brand: Alfen
+    description:
+      generic: Eve [OCPP]
+group: ocpp
+capabilities: ["mA", "rfid", "1p3p"]
+requirements:
+  evcc: ["sponsorship"]
+render: |
+  {{ include "ocpp" . }}
