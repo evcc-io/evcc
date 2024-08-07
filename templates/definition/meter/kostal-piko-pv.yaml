@@ -29,3 +29,4 @@ render: |
     #   | ---------------------------- Total Yiel W ------------- |
     jq: (.dxsEntries[] | select(.dxsId==251658753) | .value )
   {{- end -}}
+  
