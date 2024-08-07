@@ -32,6 +32,8 @@ titleEdit = "Upravit měřič baterie"
 capacity = "Kapacita"
 chargeStatus = "Stav"
 chargedEnergy = "Nabito"
+configured = "Nastaveno"
+currency = "Měna"
 current = "Proud"
 enabled = "Zapnuto"
 energy = "Energie"
@@ -43,17 +45,18 @@ power = "Výkon"
 range = "Rozsah"
 soc = "SoC"
 socLimit = "Strop"
-configured = "Nastaveno"
-currency = "Měna"
+
+[config.eebus]
+description = "Nastavení, které umožňuje evcc komunikovat s dalšími EEBus zařízeními."
 
 [config.form]
 example = "Příklad"
 optional = "volitelné"
 
 [config.general]
-save = "Uložit"
 password = "Heslo"
 remove = "Odebrat"
+save = "Uložit"
 
 [config.grid]
 titleAdd = "Přidat měřič spotřeby ze sítě"
@@ -63,12 +66,12 @@ titleEdit = "Editovat měřič spotřeby ze sítě"
 addLoadpoint = "Přidat nabíjecí bod"
 addPvBattery = "Přidat solar nebo baterii"
 addVehicle = "Přidat vozidlo"
+configured = "nastaveno"
 edit = "editace"
 title = "Konfigurace"
 unconfigured = "není konfigurováno"
 vehicles = "Má vozidla"
 yaml = "Konfigurováno v evcc.yaml. Není editovatelné v UI."
-configured = "nastaveno"
 
 [config.meter]
 cancel = "Zrušit"
@@ -514,7 +517,3 @@ lineError = "Chyba v {0}."
 lineErrorLink = "řádek {0}."
 restartButton = "Restart"
 title = "Chyba při spuštění"
-
-
-[config.eebus]
-description = "Nastavení, které umožňuje evcc komunikovat s dalšími EEBus zařízeními."

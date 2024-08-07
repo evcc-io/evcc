@@ -1,19 +1,19 @@
 [batterySettings]
+batteryLevel = "Luedstand vun der Batterie"
 capacity = "{energy} vun {total}"
-legendBottomSubline = "bis et {soc} erreecht."
-legendMiddleName = "Prioritéit fir d'Lueden vum Gefier "
-legendBottomName = "Prioritéit fir d'Lueden vun der Haus Batterie"
-legendTopName = "Batterie-ënnerstëtzt Lueden vum Gefier"
-legendTopSubline = "wann d'Hausbatterie iwwer {soc} ass."
-modalTitle = "Haus Batterie"
 control = "Batterie steieren"
 discharge = "D'Entlueden am schnelle Modus a geplangte Lueden verhënneren."
 disclaimerHint = "Notiz:"
 disclaimerText = "Dës Astellunge beaflossen nëmmen de Solarmodus. D'Luedeverhalen gëtt deementspriechend ugepasst."
-batteryLevel = "Luedstand vun der Batterie"
+gridChargeTab = "Vum Réseau oplueden"
+legendBottomName = "Prioritéit fir d'Lueden vun der Haus Batterie"
+legendBottomSubline = "bis et {soc} erreecht."
+legendMiddleName = "Prioritéit fir d'Lueden vum Gefier"
 legendMiddleSubline = "wann d'Hausbatterie iwwer {soc} ass."
 legendTopAutostart = "Automatesch starten"
-gridChargeTab = "Vum Réseau oplueden"
+legendTopName = "Batterie-ënnerstëtzt Lueden vum Gefier"
+legendTopSubline = "wann d'Hausbatterie iwwer {soc} ass."
+modalTitle = "Haus Batterie"
 usageTab = "Batterieverbrauch"
 
 [batterySettings.bufferStart]
@@ -24,8 +24,15 @@ never = "nëmme mat genuch Iwwerschoss."
 [config]
 
 [config.battery]
-titleEdit = "Batterie-Meter upassen"
 titleAdd = "Batterie-Meter derbäi fügen"
+titleEdit = "Batterie-Meter upassen"
+
+[config.circuits]
+description = "Sécherstellen, datt d'Zomm vun all den Luedpunkten déi mam Circuit verbonne sinn net déi konfiguréiert Leeschtung an aktuell Grenzen iwwerschreit. Circuiten kënnen agenist ginn fir eng Hierarchie opzebauen."
+title = "Management vun der Belaaschtung"
+
+[config.control]
+description = "Normalerweis sinn d'Standardwäerter gutt. Verännert se nëmmen wann Dir wësst wat Dir maacht."
 
 [config.deviceValue]
 
@@ -49,6 +56,9 @@ titleAdd = "Batterie-Meter derbäi fügen"
 
 [config.section]
 
+[config.sponsor]
+title = "Patronage"
+
 [config.system]
 logs = "Logs"
 restart = "Neistart"
@@ -57,31 +67,35 @@ restartRequiredMessage = "Configuratioun geännert."
 restartingDescription = "Wgl. waarden…"
 restartingMessage = "evcc gëtt nei gestart."
 
+[config.tariffs]
+description = "Definéiert Är Energietariffer fir d'Käschte vun Ären Opluedsessiounen ze berechnen."
+title = "Tariffer"
+
 [config.title]
+description = "Um Haaptbildschierm an am Browser Tab ugewisen."
 label = "Titel"
 title = "Titel beaarbechten"
-description = "Um Haaptbildschierm an am Browser Tab ugewisen."
 
 [config.validation]
-success = "erfollegräich"
 failed = "feelgeschloen"
 label = "Status"
-validate = "validéieren"
 running = "validéiert…"
+success = "erfollegräich"
 unknown = "onbekannt"
+validate = "validéieren"
 
 [config.vehicle]
-scooter = "Scooter"
-save = "Späicheren"
-delete = "Läschen"
 cancel = "Ofbriechen"
+delete = "Läschen"
 generic = "Aner Integratiounen"
-validateSave = "Validéieren & späicheren"
-titleEdit = "Auto beaarbechten"
 offline = "Genereschen Auto"
 online = "Autoe mat online API"
+save = "Späicheren"
+scooter = "Scooter"
 template = "Hiersteller"
 titleAdd = "Auto derbäi fügen"
+titleEdit = "Auto beaarbechten"
+validateSave = "Validéieren & späicheren"
 
 [footer]
 
@@ -104,6 +118,7 @@ modalTitle = "Iwwersiicht vum geluedenen Stroum"
 percentGrid = "{grid} kWh Stroumnetz"
 percentSelf = "{self} kWh Solar"
 percentTitle = "Solarenergie"
+periodLabel = "Period:"
 priceFeedIn = "{feedInPrice} fidderen"
 priceGrid = "{gridPrice} Stroumnetz"
 priceTitle = "Energiepräis"
@@ -112,7 +127,6 @@ savingsTitle = "Spueren"
 savingsTotalEnergy = "{total} kWh gelueden"
 since = "zënter {since}"
 tabTitle = "Meng Daten"
-periodLabel = "Period:"
 
 [footer.savings.period]
 
@@ -370,18 +384,3 @@ lineError = "Mir hunn e Feeler am {0} fonnt."
 lineErrorLink = "Linn {0}"
 restartButton = "Neistart"
 title = "Startup Feeler"
-
-
-[config.circuits]
-title = "Management vun der Belaaschtung"
-description = "Sécherstellen, datt d'Zomm vun all den Luedpunkten déi mam Circuit verbonne sinn net déi konfiguréiert Leeschtung an aktuell Grenzen iwwerschreit. Circuiten kënnen agenist ginn fir eng Hierarchie opzebauen."
-
-[config.control]
-description = "Normalerweis sinn d'Standardwäerter gutt. Verännert se nëmmen wann Dir wësst wat Dir maacht."
-
-[config.sponsor]
-title = "Patronage"
-
-[config.tariffs]
-title = "Tariffer"
-description = "Definéiert Är Energietariffer fir d'Käschte vun Ären Opluedsessiounen ze berechnen."

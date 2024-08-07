@@ -5,7 +5,8 @@ control = "Control de la batería"
 discharge = "Evitar la descarga en modo rápido y la carga planificada"
 disclaimerHint = "Nota:"
 disclaimerText = "Estos parámetros solo afectan al modo solar. El comportamiento de carga se ajusta correspondientemente."
-legendBottomName = “Priorizar la batería de casa”
+gridChargeTab = "Carga de red"
+legendBottomName = "Priorizar la batería de casa"
 legendBottomSubline = "hasta alcanzar {soc}"
 legendMiddleName = "Priorizar la carga de vehículos"
 legendMiddleSubline = "cuando la batería de casa sobrepasa {soc}."
@@ -15,7 +16,6 @@ legendTopName = "Carga de vehículos asistida por baterías"
 legendTopSubline = "cuando la batería de casa sobrepasa {soc}."
 modalTitle = "Batería doméstica"
 usageTab = "Uso de la batería"
-gridChargeTab = "Carga de red"
 
 [batterySettings.bufferStart]
 above = "cuando esté por encima de {soc}."
@@ -45,40 +45,44 @@ labelResidualPower = "Fuerza residual"
 title = "Controlar la conducta"
 
 [config.deviceValue]
-capacity = "Capacidad"
-chargeStatus = "Estado"
-chargedEnergy = "Cargado"
-current = "Corriente "
-enabled = "Activado"
-energy = "Energía"
-odometer = "Cuentakilómetros"
-phaseCurrents = "Actual L1..L3"
-phasePowers = "Potencia L1..L3"
-phaseVoltages = "Voltaje L1..L3"
-power = "Potencia"
-range = "Alcance"
-soc = "SoC"
-socLimit = "Límite"
 broker = "Broker"
 bucket = "Bucket"
+capacity = "Capacidad"
+chargeStatus = "Estado"
 chargeStatusA = "no conectado"
 chargeStatusB = "conectad@"
 chargeStatusC = "cargando"
 chargeStatusE = "sin energía"
 chargeStatusF = "error"
+chargedEnergy = "Cargado"
 co2 = "Red de CO₂"
 configured = "Configurado"
 currency = "Divisa"
+current = "Corriente"
+currentRange = "Corriente"
+enabled = "Activado"
+energy = "Energía"
 feedinPrice = "Precio de entrada"
 gridPrice = "Precio de red"
 no = "no"
+odometer = "Cuentakilómetros"
 org = "Organización"
+phaseCurrents = "Actual L1..L3"
+phasePowers = "Potencia L1..L3"
+phaseVoltages = "Voltaje L1..L3"
+power = "Potencia"
+powerRange = "Potencia"
+range = "Alcance"
+soc = "SoC"
+socLimit = "Límite"
 temp = "Temperatura"
 topic = "Tema"
 url = "URL"
 yes = "sí"
-currentRange = "Corriente "
-powerRange = "Potencia"
+
+[config.eebus]
+description = "Configuración que permite a evcc comunicarse con otros dispositivos EEBus"
+title = "EEBus"
 
 [config.form]
 example = "Ejemplo"
@@ -86,31 +90,53 @@ optional = "opcional"
 
 [config.general]
 cancel = "Cancelar"
-save = "Guardar"
 docsLink = "Ver documentación."
 experimental = "Experimental"
 off = "apagar"
 on = "encender"
 password = "Contraseña"
 remove = "Quitar"
+save = "Guardar"
 telemetry = "Telemetría"
 title = "Título"
 
 [config.grid]
+title = "Contador de red"
 titleAdd = "Añadir medidor de cuadrícula"
 titleEdit = "Editar medidor de cuadrícula"
-title = "Contador de red"
+
+[config.hems]
+description = "Conecta evcc a otro sistema de gestión de energía del hogar"
+title = "HEMS"
+
+[config.influx]
+description = "Escribe datos de cobro y otras métricas en InfluxDB. Utiliza Grafana u otras herramientas para visualizar los datos"
+descriptionToken = "Consulta la documentación de InfluxDB para saber cómo crear uno. https://docs.influxdata.com/influxdb/v2/admin/"
+labelBucket = "Bucket"
+labelDatabase = "Base de datos"
+labelOrg = "Organización"
+labelPassword = "Contraseña"
+labelToken = "Token de la API"
+labelUrl = "URL"
+labelUser = "Nombre de usuario"
+title = "InfluxDB"
+v1Support = "¿Necesitas soporte para InfluxDB 1.x?"
+v2Support = "Volver a InfluxDB 2.x"
 
 [config.main]
 addLoadpoint = "Añadir un punto de carga"
 addPvBattery = "Añadir solar o batería"
 addVehicle = "Añadir un vehículo"
+configured = "configurado"
 edit = "editar"
 title = "Configuración"
 unconfigured = "no configurado"
 vehicles = "Mis vehículos"
 yaml = "Configurado en evcc.yaml. No editable en la interfaz de usuario"
-configured = "configurado"
+
+[config.messaging]
+description = "Recibe mensajes sobre tus sesiones de carga."
+title = "Notificaciónes"
 
 [config.meter]
 cancel = "Cancelar"
@@ -120,7 +146,39 @@ template = "Fabricante"
 titleChoice = "¿Qué quieres añadir?"
 validateSave = "Validar y guardar"
 
+[config.modbusproxy]
+description = "Permite que varios clientes accedan a un único dispositivo Modbus"
+title = "Proxy Modbus"
+
+[config.mqtt]
+authentication = "Autenticación"
+description = "Conéctate a un agente MQTT para intercambiar datos con otros sistemas en tu red"
+descriptionClientId = "Autor del mensaje. Si se deja en blanco, se utiliza `evcc-[rand]`"
+descriptionTopic = "Déjelo en blanco para desactivar la publicación"
+labelBroker = "Broker"
+labelCheckInsecure = "Permitir certificados autofirmados"
+labelClientId = "ID del cliente"
+labelInsecure = "Verificación de certificado"
+labelPassword = "Contraseña"
+labelTopic = "Tema"
+labelUser = "Nombre de usuario"
+publishing = "Publicación"
+title = "MQTT"
+
+[config.network]
+descriptionHost = "Utiliza el sufijo .local para habilitar mDNS. Se requiere para detectar la aplicación móvil y algunos cargadores de pared OCPP"
+descriptionPort = "Puerto para la interfaz web y API. Deberá actualizar la URL desde tu navegador si cambias esto"
+descriptionSchema = "Solo afecta la forma en que se generan las URL. Seleccionar HTTPS no habilitará el cifrado"
+labelHost = "Hostname"
+labelPort = "Puerto"
+labelSchema = "Esquema"
+title = "Red"
+
 [config.options]
+
+[config.options.boolean]
+no = "no"
+yes = "sí"
 
 [config.options.endianness]
 big = "big endian"
@@ -136,16 +194,25 @@ titleEdit = "Editar contador solar"
 
 [config.section]
 general = "General"
-system = "Sistema"
 grid = "Red eléctrica"
 integrations = "Integraciones"
 loadpoints = "Puntos de carga"
 meter = "Solar y Batería"
+system = "Sistema"
 vehicles = "Vehículos"
 
 [config.site]
 cancel = "Cancelar"
 save = "Guardar"
+
+[config.sponsor]
+addToken = "Ingresa el token del patrocinador"
+changeToken = "Cambiar el token de patrocinador"
+description = "El modelo de patrocinio nos ayuda a mantener el proyecto y a desarrollar de forma sostenible nuevas y emocionantes funciones. Como patrocinador, obtienes acceso a todas las implementaciones de cargadores"
+descriptionToken = "Obtienes el token desde {url}. También ofrecemos un token de prueba para probar"
+error = "El token de patrocinador no es válido"
+labelToken = "Token del patrocinador"
+title = "Patrocinio"
 
 [config.system]
 logs = "Registros"
@@ -154,6 +221,10 @@ restartRequiredDescription = "Por favor, reinicie para aplicar los cambios"
 restartRequiredMessage = "La configuración cambió"
 restartingDescription = "Espere por favor…"
 restartingMessage = "Reiniciando evcc"
+
+[config.tariffs]
+description = "Define tus tarifas energéticas para calcular los costes de tus sesiones de carga."
+title = "Tarifas"
 
 [config.title]
 description = "Se muestra en la pantalla principal y en la pestaña del navegador"
@@ -340,6 +411,8 @@ batteryCharge = "Cargar la batería"
 batteryDischarge = "Descargar la batería"
 batteryHold = "Batería (bloqueada)"
 batteryTooltip = "{energy} de {total} ({soc})"
+cheapBatteryGridCharge = "Energía de red barata"
+cleanBatteryGridCharge = "Energía de red limpia"
 gridImport = "Consumo de red"
 homePower = "Consumo"
 loadpoints = "Punto de carga | Punto de carga | {count} Puntos de carga"
@@ -347,8 +420,6 @@ noEnergy = "Sin lecturas"
 pvExport = "Excedente"
 pvProduction = "Producción"
 selfConsumption = "Autoconsumo"
-cheapBatteryGridCharge = "Energía de red barata"
-cleanBatteryGridCharge = "Energía de red limpia"
 
 [main.heatingStatus]
 charging = "Calefacción..."
@@ -481,10 +552,15 @@ vehicleLimit = "límite de vehículo: {soc}"
 [main.vehicleStatus]
 charging = "Cargando ..."
 cheapEnergyCharging = "Energía barata disponible."
+cheapEnergyNextStart = "Energía barata durante {duration}"
+cheapEnergySet = "Límite de precio establecido"
 cleanEnergyCharging = "Energía limpia disponible."
+cleanEnergyNextStart = "Energía limpia durante {duration}"
+cleanEnergySet = "Límite de CO₂ establecido."
 climating = "Preacondicionamiento detectado."
 connected = "Conectado."
 disconnected = "Desconectado."
+finished = "Finalizado."
 minCharge = "Carga mínima hasta {soc}."
 pvDisable = "No hay suficientes excedentes. Haremos una pausa pronto"
 pvEnable = "Excedente disponible. La carga se reanudará en breve."
@@ -494,14 +570,9 @@ targetChargeActive = "Plan de carga activo. Finalización estimada en {duration}
 targetChargePlanned = "El plan de carga comienza en {duration}"
 targetChargeWaitForVehicle = "Plan de carga listo. Esperando vehículo..."
 unknown = ""
+vehicleLimit = "Límite de vehículos."
 vehicleLimitReached = "Límite del vehículos alcanzado"
 waitForVehicle = "Listo para cargar. Esperando vehículo."
-cheapEnergyNextStart = "Energía barata durante {duration}"
-vehicleLimit = "Límite de vehículos."
-cleanEnergyNextStart = "Energía limpia durante {duration}"
-finished = "Finalizado."
-cheapEnergySet = "Límite de precio establecido"
-cleanEnergySet = "Límite de CO₂ establecido."
 welcome = "Breve carga inicial para confirmar la conexión."
 
 [notifications]
@@ -510,9 +581,9 @@ logs = "Ver registros completos"
 modalTitle = "Notificaciónes"
 
 [offline]
+configurationError = "Error durante el inicio. Verifica tu configuración y reinicia"
 message = "No conectado con servidor."
 reload = "Actualizar?"
-configurationError = "Error durante el inicio. Verifica tu configuración y reinicia"
 restart = "Reanudar"
 restartNeeded = "Requerido para aplicar cambios"
 restarting = "El servidor volverá a estar disponible pronto"
@@ -657,75 +728,3 @@ title = "Error al iniciar"
 cancel = "Cancelar"
 template = "Fabricante"
 test = "Prueba"
-
-
-[config.eebus]
-description = "Configuración que permite a evcc comunicarse con otros dispositivos EEBus"
-title = "EEBus"
-
-[config.hems]
-description = "Conecta evcc a otro sistema de gestión de energía del hogar"
-title = "HEMS"
-
-[config.network]
-descriptionHost = "Utiliza el sufijo .local para habilitar mDNS. Se requiere para detectar la aplicación móvil y algunos cargadores de pared OCPP"
-descriptionPort = "Puerto para la interfaz web y API. Deberá actualizar la URL desde tu navegador si cambias esto"
-descriptionSchema = "Solo afecta la forma en que se generan las URL. Seleccionar HTTPS no habilitará el cifrado"
-labelHost = "Hostname"
-labelPort = "Puerto"
-labelSchema = "Esquema"
-title = "Red"
-
-[config.sponsor]
-addToken = "Ingresa el token del patrocinador"
-changeToken = "Cambiar el token de patrocinador"
-description = "El modelo de patrocinio nos ayuda a mantener el proyecto y a desarrollar de forma sostenible nuevas y emocionantes funciones. Como patrocinador, obtienes acceso a todas las implementaciones de cargadores"
-descriptionToken = "Obtienes el token desde {url}. También ofrecemos un token de prueba para probar"
-error = "El token de patrocinador no es válido"
-labelToken = "Token del patrocinador"
-title = "Patrocinio"
-
-[config.tariffs]
-description = "Define tus tarifas energéticas para calcular los costes de tus sesiones de carga."
-title = "Tarifas"
-
-[config.influx]
-description = "Escribe datos de cobro y otras métricas en InfluxDB. Utiliza Grafana u otras herramientas para visualizar los datos"
-descriptionToken = "Consulta la documentación de InfluxDB para saber cómo crear uno. https://docs.influxdata.com/influxdb/v2/admin/"
-labelBucket = "Bucket"
-labelDatabase = "Base de datos"
-labelOrg = "Organización"
-labelPassword = "Contraseña"
-labelToken = "Token de la API"
-labelUrl = "URL"
-labelUser = "Nombre de usuario"
-title = "InfluxDB"
-v1Support = "¿Necesitas soporte para InfluxDB 1.x?"
-v2Support = "Volver a InfluxDB 2.x"
-
-[config.messaging]
-description = "Recibe mensajes sobre tus sesiones de carga."
-title = "Notificaciónes"
-
-[config.modbusproxy]
-description = "Permite que varios clientes accedan a un único dispositivo Modbus"
-title = "Proxy Modbus"
-
-[config.mqtt]
-authentication = "Autenticación"
-description = "Conéctate a un agente MQTT para intercambiar datos con otros sistemas en tu red"
-descriptionClientId = "Autor del mensaje. Si se deja en blanco, se utiliza `evcc-[rand]`"
-descriptionTopic = "Déjelo en blanco para desactivar la publicación"
-labelBroker = "Broker"
-labelCheckInsecure = "Permitir certificados autofirmados"
-labelClientId = "ID del cliente"
-labelInsecure = "Verificación de certificado"
-labelPassword = "Contraseña"
-labelTopic = "Tema"
-labelUser = "Nombre de usuario"
-publishing = "Publicación"
-title = "MQTT"
-
-[config.options.boolean]
-no = "no"
-yes = "sí"

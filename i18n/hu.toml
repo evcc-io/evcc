@@ -169,6 +169,10 @@ title = "Hálózat"
 
 [config.options]
 
+[config.options.boolean]
+no = "nem"
+yes = "igen"
+
 [config.options.endianness]
 big = "big-endian"
 little = "little-endian"
@@ -684,8 +688,3 @@ lineError = "Hiba a {0}."
 lineErrorLink = "sor {0}"
 restartButton = "Újraindítás"
 title = "Indítási hiba"
-
-
-[config.options.boolean]
-no = nem
-yes = igen

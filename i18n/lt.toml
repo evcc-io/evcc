@@ -5,6 +5,7 @@ control = "Kaupiklio valdymas"
 discharge = "Neleisti kaupiklio iškrovimo režime Greitas ir planiniame įkrovime."
 disclaimerHint = "Pastaba:"
 disclaimerText = "Šie nustatymai paveikia tik įkrovimą Saulė. Įkrovimo algoritmas atitinkamai pakeičiamas."
+gridChargeTab = "Įkrovimas iš tinklo"
 legendBottomName = "Prioritetas namo kaupiklio įkrovimui"
 legendBottomSubline = "kol pasieks {soc}."
 legendMiddleName = "Prioritetas automobilio įkrovimui"
@@ -15,7 +16,6 @@ legendTopName = "Automobilio įkrovimas su kaupiklio pagalba"
 legendTopSubline = "kai kaupiklis yra virš {soc}."
 modalTitle = "Namų kaupiklis"
 usageTab = "Kaupiklio naudojimas"
-gridChargeTab = "Įkrovimas iš tinklo"
 
 [batterySettings.bufferStart]
 above = "kai virš {soc}."
@@ -59,6 +59,7 @@ co2 = "Tinklo CO₂"
 configured = "Sukonfigūruota"
 currency = "Valiuta"
 current = "Srovė"
+currentRange = "Srovė"
 enabled = "Aktyvuota"
 energy = "Energija"
 feedinPrice = "Tiekimo į tinklą kaina"
@@ -70,6 +71,7 @@ phaseCurrents = "Srovė L1..L3"
 phasePowers = "Galia L1..L3"
 phaseVoltages = "Įtampa L1..L3"
 power = "Galia"
+powerRange = "Galia"
 range = "Nuvažiuojamas atstumas"
 soc = "Įkrova"
 socLimit = "Limitas"
@@ -77,8 +79,6 @@ temp = "Temperatūra"
 topic = "Tema"
 url = "URL"
 yes = "taip"
-currentRange = "Srovė"
-powerRange = "Galia"
 
 [config.eebus]
 description = "Konfigūracija, leidžianti evcc susisiekti su kitais EEBus įrenginiais."
@@ -175,6 +175,10 @@ labelSchema = "Schema"
 title = "Tinklas"
 
 [config.options]
+
+[config.options.boolean]
+no = "ne"
+yes = "taip"
 
 [config.options.endianness]
 big = "mažėjantys baitai"
@@ -407,6 +411,8 @@ batteryCharge = "Kaupiklis įkraunamas"
 batteryDischarge = "Kaupiklis iškraunamas"
 batteryHold = "Kaupiklis (užblokuotas)"
 batteryTooltip = "{energy} iš {total} ({soc})"
+cheapBatteryGridCharge = "pigi tinklo energija"
+cleanBatteryGridCharge = "švari tinklo energija"
 gridImport = "Iš tinklo"
 homePower = "Namo suvartojimas"
 loadpoints = "Įkroviklis | Įkroviklis | {count} įkrovikliai"
@@ -414,8 +420,6 @@ noEnergy = "Nėra skaitiklių duomenų"
 pvExport = "Tinklo eksportas"
 pvProduction = "Gamyba"
 selfConsumption = "Sunaudojama iškart"
-cleanBatteryGridCharge = "švari tinklo energija"
-cheapBatteryGridCharge = "pigi tinklo energija"
 
 [main.heatingStatus]
 charging = "Šildoma…"
@@ -724,8 +728,3 @@ title = "Klaida startuojant"
 cancel = "Atšaukti"
 template = "Gamintojas"
 test = "Testuoti"
-
-
-[config.options.boolean]
-yes = "taip"
-no = "ne"

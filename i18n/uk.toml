@@ -28,10 +28,14 @@ never = "тільки з достатнім надлишком"
 titleAdd = "Додати лічильник батареї"
 titleEdit = "Редагувати лічильник батареї"
 
+[config.control]
+labelInterval = "Інтервал оновлення"
+
 [config.deviceValue]
 capacity = "Ємність"
 chargeStatus = "Статус"
 chargedEnergy = "Заряджений"
+currency = "Валюта"
 current = "Cтрум"
 enabled = "Ввімкнено"
 energy = "Енергія"
@@ -44,8 +48,10 @@ range = "Дальність"
 soc = "SoC"
 socLimit = "Ліміт"
 url = "URL"
-currency = "Валюта"
 yes = "так"
+
+[config.eebus]
+title = "EEBus"
 
 [config.form]
 example = "Наприклад"
@@ -53,14 +59,23 @@ optional = "необов'язково"
 
 [config.general]
 cancel = "Скасувати"
-save = "зберегти"
 experimental = "Експериментальний"
 off = "вимкнено"
+save = "зберегти"
 telemetry = "Телеметрія"
 
 [config.grid]
 titleAdd = "Додати лічильник електромережі"
 titleEdit = "Редагувати лічильник електромережі"
+
+[config.hems]
+title = "HEMS"
+
+[config.influx]
+labelDatabase = "База даних"
+labelToken = "API Token"
+labelUrl = "URL"
+title = "InfluxDB"
 
 [config.main]
 addLoadpoint = "Додати точку зарядки"
@@ -509,19 +524,3 @@ title = "Помилка запуску"
 cancel = "Скасувати"
 template = "Виробник"
 test = "Тест"
-
-
-[config.eebus]
-title = "EEBus"
-
-[config.influx]
-labelUrl = "URL"
-labelDatabase = "База даних"
-labelToken = "API Token"
-title = "InfluxDB"
-
-[config.control]
-labelInterval = "Інтервал оновлення"
-
-[config.hems]
-title = "HEMS"

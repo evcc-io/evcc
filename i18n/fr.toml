@@ -5,6 +5,7 @@ control = "Contrôle batterie"
 discharge = "Empêcher la décharge en mode rapide et charge planifiée."
 disclaimerHint = "NB :"
 disclaimerText = "ces réglages n'affectent que le mode solaire. Le comportement de charge est adapté en conséquence."
+gridChargeTab = "Chargement réseau"
 legendBottomName = "Priorité chargement batterie maison"
 legendBottomSubline = "Jusqu'à ce que le {soc} soit atteint."
 legendMiddleName = "Priorité chargement du véhicule"
@@ -15,7 +16,6 @@ legendTopName = "Recharge soutenue par la batterie"
 legendTopSubline = "lorsque la batterie maison est au-dessus du {soc}."
 modalTitle = "Batterie domestique"
 usageTab = "Utilisation batterie"
-gridChargeTab = "Chargement réseau"
 
 [batterySettings.bufferStart]
 above = "lorsque chargé à plus que {soc}"
@@ -59,6 +59,7 @@ co2 = "CO₂ du réseau"
 configured = "Configuré"
 currency = "Devise"
 current = "Courant"
+currentRange = "Courant"
 enabled = "Activé"
 energy = "Énergie"
 feedinPrice = "Prix de revente"
@@ -70,6 +71,7 @@ phaseCurrents = "Courant L1..L3"
 phasePowers = "Puissance L1..L3"
 phaseVoltages = "Voltage L1..L3"
 power = "Puissance"
+powerRange = "Fourchette puissance"
 range = "Autonomie"
 soc = "Etat de Charge"
 socLimit = "Limite"
@@ -77,8 +79,6 @@ temp = "Température"
 topic = "Sujet"
 url = "URL"
 yes = "oui"
-currentRange = "Courant"
-powerRange = "Fourchette puissance"
 
 [config.eebus]
 description = "Configuration permettant à evcc de communiquer avec d’autres appareils EEBus."
@@ -175,6 +175,10 @@ labelSchema = "Schéma"
 title = "Réseau"
 
 [config.options]
+
+[config.options.boolean]
+no = "non"
+yes = "oui"
 
 [config.options.endianness]
 big = "gros-boutiste"
@@ -407,6 +411,8 @@ batteryCharge = "Batterie en charge"
 batteryDischarge = "Décharge de la batterie"
 batteryHold = "Batterie (verrouillée)"
 batteryTooltip = "{energy} sur {total} ({soc})"
+cheapBatteryGridCharge = "énergie réseau bon marché"
+cleanBatteryGridCharge = "énergie réseau verte"
 gridImport = "Utilisation du réseau"
 homePower = "Consommation"
 loadpoints = "Recharge| Recharge | {count} chargeurs"
@@ -414,8 +420,6 @@ noEnergy = "Aucune donnée de compteur"
 pvExport = "Injection"
 pvProduction = "Production"
 selfConsumption = "Consommation propre"
-cheapBatteryGridCharge = "énergie réseau bon marché"
-cleanBatteryGridCharge = "énergie réseau verte"
 
 [main.heatingStatus]
 charging = "Chauffage… "
@@ -715,8 +719,3 @@ title = "Erreur au démarrage"
 cancel = "Annuler"
 template = "Fabricant"
 test = "Test"
-
-
-[config.options.boolean]
-no = "non"
-yes = "oui"

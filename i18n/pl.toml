@@ -29,10 +29,19 @@ never = "tylko z wystarczającą nadwyżką"
 titleAdd = "Dodaj miernik baterii"
 titleEdit = "Edytuj miernik baterii"
 
+[config.control]
+labelInterval = "Interwał aktualizacji"
+labelResidualPower = "Moc resztkowa"
+
 [config.deviceValue]
 capacity = "Pojemność"
 chargeStatus = "Status"
+chargeStatusA = "nie połączony"
+chargeStatusB = "połączony"
+chargeStatusC = "ładowanie"
 chargedEnergy = "Naładowany"
+configured = "Skonfigurowany"
+currency = "Waluta"
 current = "Prąd"
 enabled = "Włączony"
 energy = "Energia"
@@ -44,12 +53,10 @@ power = "Moc"
 range = "Zasięg"
 soc = "Stan naładowania"
 socLimit = "Limit"
-chargeStatusA = "nie połączony"
-chargeStatusB = "połączony"
-chargeStatusC = "ładowanie"
-configured = "Skonfigurowany"
-currency = "Waluta"
 url = "URL"
+
+[config.eebus]
+title = "EEBus"
 
 [config.form]
 example = "Przykład"
@@ -57,13 +64,21 @@ optional = "opcjonalny"
 
 [config.general]
 cancel = "Anulować"
-save = "Zapisz"
 experimental = "Eksperymentalny"
+save = "Zapisz"
 telemetry = "Telemetria"
 
 [config.grid]
 titleAdd = "Dodaj licznik sieci"
 titleEdit = "Edytuj licznik sieci"
+
+[config.influx]
+labelBucket = "Bucket"
+labelDatabase = "Baza danych"
+labelPassword = "Hasło"
+labelToken = "API Token"
+labelUrl = "URL"
+title = "InfluxDB"
 
 [config.main]
 addLoadpoint = "Dodaj ładowarkę"
@@ -82,6 +97,17 @@ save = "Zapisz"
 template = "Producent"
 titleChoice = "Co chcesz dodać?"
 validateSave = "Sprawdź i zapisz"
+
+[config.modbusproxy]
+title = "Modbus Proxy"
+
+[config.mqtt]
+labelClientId = "Client ID"
+labelPassword = "Hasło"
+title = "MQTT"
+
+[config.network]
+labelPort = "Port"
 
 [config.options]
 
@@ -538,30 +564,3 @@ title = "Błąd uruchamiania"
 cancel = "Anulować"
 template = "Producent"
 test = "Test"
-
-
-[config.control]
-labelInterval = "Interwał aktualizacji"
-labelResidualPower = "Moc resztkowa"
-
-[config.eebus]
-title = "EEBus"
-
-[config.influx]
-labelBucket = "Bucket"
-labelDatabase = "Baza danych"
-labelPassword = "Hasło"
-labelToken = "API Token"
-labelUrl = "URL"
-title = "InfluxDB"
-
-[config.modbusproxy]
-title = "Modbus Proxy"
-
-[config.mqtt]
-labelClientId = "Client ID"
-labelPassword = "Hasło"
-title = "MQTT"
-
-[config.network]
-labelPort = "Port"
