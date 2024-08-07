@@ -20,7 +20,7 @@ render: |
     uri: http://{{ .host }}/api/dxs.json?dxsEntries=83886336&dxsEntries=83886848&dxsEntries=83886592&dxsEntries=67109120 # Home PV Power + Home Grid Power + Home Bat Power - PV/Bat Inverter Power
     #   | ----------------------------- Home PV W -------- | + | --------------------------- Home Grid W -------- | + | --------------------------- Home Bat W --------- | - | --------------------------- PV/BAT Inv W ------- |
     jq: (.dxsEntries[] | select(.dxsId==83886336) | .value ) + (.dxsEntries[] | select(.dxsId==83886848) | .value ) + (.dxsEntries[] | select(.dxsId==83886592) | .value ) - (.dxsEntries[] | select(.dxsId==67109120) | .value )
-  {{- end -}}
+  {{- end }}
   {{- if eq .usage "pv" }}
   type: custom
   power:
@@ -34,7 +34,7 @@ render: |
     uri: http://{{ .host }}/api/dxs.json?dxsEntries=251658753 # total yield
     #   | ---------------------------- Total Yiel W ------------- |
     jq: (.dxsEntries[] | select(.dxsId==251658753) | .value )  
-  {{- end -}}
+  {{- end }}
   {{- if eq .usage "battery" }}
   type: custom
   power:
@@ -51,5 +51,4 @@ render: |
   {{- if .capacity }}
   capacity: {{ .capacity }} # kWh
   {{- end }}
-  {{- end -}}
-  
+  {{- end }}
