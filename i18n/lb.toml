@@ -1,10 +1,31 @@
 [batterySettings]
+capacity = "{energy} vun {total}"
+legendBottomSubline = "bis et {soc} erreecht."
+legendMiddleName = "Prioritéit fir d'Lueden vum Gefier "
+legendBottomName = "Prioritéit fir d'Lueden vun der Haus Batterie"
+legendTopName = "Batterie-ënnerstëtzt Lueden vum Gefier"
+legendTopSubline = "wann d'Hausbatterie iwwer {soc} ass."
+modalTitle = "Haus Batterie"
+control = "Batterie steieren"
+discharge = "D'Entlueden am schnelle Modus a geplangte Lueden verhënneren."
+disclaimerHint = "Notiz:"
+disclaimerText = "Dës Astellunge beaflossen nëmmen de Solarmodus. D'Luedeverhalen gëtt deementspriechend ugepasst."
+batteryLevel = "Luedstand vun der Batterie"
+legendMiddleSubline = "wann d'Hausbatterie iwwer {soc} ass."
+legendTopAutostart = "Automatesch starten"
+gridChargeTab = "Vum Réseau oplueden"
+usageTab = "Batterieverbrauch"
 
 [batterySettings.bufferStart]
+above = "wann iwwer {soc}."
+full = "wann op {soc}."
+never = "nëmme mat genuch Iwwerschoss."
 
 [config]
 
 [config.battery]
+titleEdit = "Batterie-Meter upassen"
+titleAdd = "Batterie-Meter derbäi fügen"
 
 [config.deviceValue]
 
@@ -29,12 +50,38 @@
 [config.section]
 
 [config.system]
+logs = "Logs"
+restart = "Neistart"
+restartRequiredDescription = "Wgl. neistarten fir d'Ännerungen ze gesinn."
+restartRequiredMessage = "Configuratioun geännert."
+restartingDescription = "Wgl. waarden…"
+restartingMessage = "evcc gëtt nei gestart."
 
 [config.title]
+label = "Titel"
+title = "Titel beaarbechten"
+description = "Um Haaptbildschierm an am Browser Tab ugewisen."
 
 [config.validation]
+success = "erfollegräich"
+failed = "feelgeschloen"
+label = "Status"
+validate = "validéieren"
+running = "validéiert…"
+unknown = "onbekannt"
 
 [config.vehicle]
+scooter = "Scooter"
+save = "Späicheren"
+delete = "Läschen"
+cancel = "Ofbriechen"
+generic = "Aner Integratiounen"
+validateSave = "Validéieren & späicheren"
+titleEdit = "Auto beaarbechten"
+offline = "Genereschen Auto"
+online = "Autoe mat online API"
+template = "Hiersteller"
+titleAdd = "Auto derbäi fügen"
 
 [footer]
 
@@ -44,16 +91,16 @@ greenEnergySub1 = "opgelueden mat evcc"
 greenEnergySub2 = "zënter Oktober 2022"
 greenShare = "Solar deelen"
 greenShareSub1 = "Kraaft ass geliwwert vun"
-greenShareSub2 = "PV & Batterie"
-power = "Ladekraaft"
-powerSub1 = "{activeClients} vun {totalClients} Participanten"
+greenShareSub2 = "Solar- & Batteriespäicher"
+power = "Luedekraaft"
+powerSub1 = "{activeClients} vu {totalClients} Participanten"
 powerSub2 = "gëtt elo gelueden…"
 tabTitle = "Live Gemeinschaft"
 
 [footer.savings]
 footerLong = "{percent} Solarenergie"
 footerShort = "{percent} Solar"
-modalTitle = "Charge Energy Iwwersiicht"
+modalTitle = "Iwwersiicht vum geluedenen Stroum"
 percentGrid = "{grid} kWh Stroumnetz"
 percentSelf = "{self} kWh Solar"
 percentTitle = "Solarenergie"
@@ -65,16 +112,17 @@ savingsTitle = "Spueren"
 savingsTotalEnergy = "{total} kWh gelueden"
 since = "zënter {since}"
 tabTitle = "Meng Daten"
+periodLabel = "Period:"
 
 [footer.savings.period]
 
 [footer.sponsor]
 becomeSponsor = "Gitt e Sponsor"
-confetti = "Prett fir Konfetti?"
-confettiPromise = "Et ginn Stickeren an digital Konfetti"
+confetti = "Prett fir de Konfetti?"
+confettiPromise = "Dir kritt Stickeren an digitale Konfetti"
 sticker = "… oder evcc Stickeren?"
 supportUs = "Eis Missioun: Solarladung de Standard maachen. Hëllef evcc andeems Dir bezuelt wat et Iech wäert ass."
-thanks = "Merci, {sponsor}! Äre Bäitrag hëlleft evcc weider ze entwéckelen."
+thanks = "Merci, {sponsor}! Däi Bäitrag hëlleft evcc weider ze entwéckelen."
 titleNoSponsor = "Ënnerstëtzt eis"
 titleSponsor = "Dir sidd e Supporter"
 
@@ -322,3 +370,18 @@ lineError = "Mir hunn e Feeler am {0} fonnt."
 lineErrorLink = "Linn {0}"
 restartButton = "Neistart"
 title = "Startup Feeler"
+
+
+[config.circuits]
+title = "Management vun der Belaaschtung"
+description = "Sécherstellen, datt d'Zomm vun all den Luedpunkten déi mam Circuit verbonne sinn net déi konfiguréiert Leeschtung an aktuell Grenzen iwwerschreit. Circuiten kënnen agenist ginn fir eng Hierarchie opzebauen."
+
+[config.control]
+description = "Normalerweis sinn d'Standardwäerter gutt. Verännert se nëmmen wann Dir wësst wat Dir maacht."
+
+[config.sponsor]
+title = "Patronage"
+
+[config.tariffs]
+title = "Tariffer"
+description = "Definéiert Är Energietariffer fir d'Käschte vun Ären Opluedsessiounen ze berechnen."
