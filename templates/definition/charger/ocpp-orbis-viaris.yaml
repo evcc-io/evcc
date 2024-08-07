@@ -3,6 +3,8 @@ products:
   - brand: Orbis
     description:
       generic: Viaris
+requirements:
+  evcc: ["sponsorship"]
 params:
   - preset: ocpp
 render: |

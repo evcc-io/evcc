@@ -3,6 +3,8 @@ products:
   - brand: EVBox
     description:
       generic: Elvi
+requirements:
+  evcc: ["sponsorship"]
 params:
   - preset: ocpp
   - name: meter
