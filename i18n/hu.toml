@@ -352,7 +352,7 @@ update = "Automatikus frissítés"
 cancel = "Mégse"
 error = "Sikertelen bejelentkezés: "
 iframeHint = "evcc megnyitása új lapon."
-iframeIssue = "A jelszavad helyes, de úgy tűnik, hogy a böngésződ elvetette a hitelesítési sütit. Ez akkor történhet meg, ha az az evcc-t iframe-ben futtatod HTTP-n."
+iframeIssue = "A jelszavad helyes, de úgy tűnik, hogy a böngésződ elvetette a hitelesítési sütit. Ez akkor történhet meg, ha az evcc-t iframe-ben futtatod HTTP-n."
 invalid = "A jelszó érvénytelen."
 login = "Bejelentkezés"
 password = "Jelszó"
@@ -684,3 +684,8 @@ lineError = "Hiba a {0}."
 lineErrorLink = "sor {0}"
 restartButton = "Újraindítás"
 title = "Indítási hiba"
+
+
+[config.options.boolean]
+no = nem
+yes = igen
