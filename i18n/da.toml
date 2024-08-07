@@ -5,22 +5,24 @@ control = "Batteri indstillinger"
 discharge = "Forhindrer afladning ved planlagt opladning og i hurtig mode"
 disclaimerHint = "OBS:"
 disclaimerText = "Disse indstillinger gælder kun for solar modus. Indstillingerne ændres tilsvarende."
-legendBottomName = "Prioritér hjemmet"
-legendBottomSubline = "Anvendes ikke til opladning"
-legendMiddleName = "Køretøj først"
-legendMiddleSubline = "Hjem efterfølgende"
+legendBottomName = "Prioritér opladning af husbatteriet"
+legendBottomSubline = "Indtil der opnås {soc}."
+legendMiddleName = "Prioriter opladning af køretøj"
+legendMiddleSubline = "Når husbatteriet er over {soc}."
 legendTitle = "Hvordan skal solenergi benyttes?"
-legendTopAutostart = "starter automatisk"
-legendTopName = "batteri understøttet opladning"
-legendTopSubline = "uden afbrydelser"
+legendTopAutostart = "Starter automatisk"
+legendTopName = "Batteri-understøttet opladning af køretøj"
+legendTopSubline = "når husbatteriet er over uden {soc}."
 modalTitle = "Hus batteri"
+usageTab = "Batteri anvendelse"
+gridChargeTab = "Opladning fra elnettet"
 
 [batterySettings.bufferStart]
-above = "når den er over {soc}"
-full = "når den er på {soc}"
+above = "når den er over {soc}."
+full = "når den er på {soc}."
 low = "en smule fyldt"
 medium = "halv fyldt"
-never = "kun med nok solar overskud"
+never = "kun med nok overskud."
 
 [config]
 
@@ -75,6 +77,8 @@ temp = "Temperatur"
 topic = "Emne"
 url = "URL"
 yes = "ja"
+powerRange = "Effekt"
+currentRange = "Strømstyrke"
 
 [config.eebus]
 description = "Indstilling der tillader evcc at kommunikere med andre EEBus enheder."
@@ -405,6 +409,8 @@ noEnergy = "Ingen målerdata"
 pvExport = "Eksport til elnet"
 pvProduction = "Produktion"
 selfConsumption = "Eget forbrug"
+cleanBatteryGridCharge = "Grøn strøm på elnettet"
+cheapBatteryGridCharge = "billig strøm på elnettet"
 
 [main.heatingStatus]
 charging = "Opvarmer..."
@@ -558,6 +564,7 @@ unknown = ""
 vehicleLimit = "Køretøjets grænse"
 vehicleLimitReached = "Køretøjets grænse er nået."
 waitForVehicle = "Parat. Venter på køretøj ..."
+welcome = "Kort indledende opladning for at bekræfte forbindelsen."
 
 [notifications]
 dismissAll = "Afvis alle"
@@ -706,3 +713,8 @@ title = "Fejl ved opstart"
 cancel = "Afbryd"
 template = "Producent"
 test = "Test"
+
+
+[config.options.boolean]
+no = "nej"
+yes = "ja"
