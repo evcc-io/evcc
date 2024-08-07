@@ -32,7 +32,7 @@ render: |
   energy:
     source: http
     uri: http://{{ .host }}/api/dxs.json?dxsEntries=251658753 # total yield
-    #   | -----------------------otal Yield W ------------- |
+    #   | ----------------------Total Yield W ------------- |
     jq: (.dxsEntries[] | select(.dxsId==251658753) | .value )  
   {{- end }}
   {{- if eq .usage "battery" }}
