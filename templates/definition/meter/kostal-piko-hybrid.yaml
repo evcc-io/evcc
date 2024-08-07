@@ -12,14 +12,9 @@ params:
   - name: capacity
     advanced: true
 render: |
-  type: custom
-  energy:
-    source: http
-    uri: http://{{ .host }}/api/dxs.json?dxsEntries=251658753 # total yield
-    #   | ---------------------------- Total Yiel W ------------- |
-    jq: (.dxsEntries[] | select(.dxsId==251658753) | .value )  
-  power:
   {{- if eq .usage "grid" }}
+  type: custom
+  power:
     # Grid
     source: http
     uri: http://{{ .host }}/api/dxs.json?dxsEntries=83886336&dxsEntries=83886848&dxsEntries=83886592&dxsEntries=67109120 # Home PV Power + Home Grid Power + Home Bat Power - PV/Bat Inverter Power
@@ -27,13 +22,22 @@ render: |
     jq: (.dxsEntries[] | select(.dxsId==83886336) | .value ) + (.dxsEntries[] | select(.dxsId==83886848) | .value ) + (.dxsEntries[] | select(.dxsId==83886592) | .value ) - (.dxsEntries[] | select(.dxsId==67109120) | .value )
   {{- end -}}
   {{- if eq .usage "pv" }}
+  type: custom
+  power:
     # PV
     source: http
     uri: http://{{ .host }}/api/dxs.json?dxsEntries=33556736 # PV Power (all strings)
     #   | ----------------------------- PV W ------------- |
     jq: (.dxsEntries[] | select(.dxsId==33556736) | .value )
+  energy:
+    source: http
+    uri: http://{{ .host }}/api/dxs.json?dxsEntries=251658753 # total yield
+    #   | ---------------------------- Total Yiel W ------------- |
+    jq: (.dxsEntries[] | select(.dxsId==251658753) | .value )  
   {{- end -}}
   {{- if eq .usage "battery" }}
+  type: custom
+  power:
     # Battery
     source: http
     uri: http://{{ .host }}/api/dxs.json?dxsEntries=33556225&dxsEntries=33556226 # Battery Current A * Battery Voltage
@@ -48,4 +52,3 @@ render: |
   capacity: {{ .capacity }} # kWh
   {{- end }}
   {{- end -}}
-
