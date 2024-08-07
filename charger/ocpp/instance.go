@@ -25,7 +25,7 @@ func Instance() *CS {
 		log := util.NewLogger("ocpp")
 
 		timeoutConfig := ws.NewServerTimeoutConfig()
-		timeoutConfig.PingWait = 90 * time.Second
+		timeoutConfig.PingWait = 30 * time.Second
 
 		server := ws.NewServer()
 		server.SetTimeoutConfig(timeoutConfig)

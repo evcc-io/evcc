@@ -17,5 +17,4 @@ params:
   - preset: ocpp
 render: |
   {{ include "ocpp" . }}
-  getconfiguration: false
   chargingrateunit: W

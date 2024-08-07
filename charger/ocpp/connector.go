@@ -24,11 +24,13 @@ type Connector struct {
 
 	status  *core.StatusNotificationRequest
 	statusC chan struct{}
-	meterC  chan map[types.Measurand]types.SampledValue
 
-	meterUpdated time.Time
 	measurements map[types.Measurand]types.SampledValue
-	timeout      time.Duration
+	meterUpdated time.Time
+	meterC       chan map[types.Measurand]types.SampledValue
+
+	initTimeout  time.Duration // initial timeout for status notification
+	meterTimeout time.Duration // timeout for incoming meter values until they are considered invalid
 
 	txnCount int // change initial value to the last known global transaction. Needs persistence
 	txnId    int
@@ -37,14 +39,17 @@ type Connector struct {
 
 func NewConnector(log *util.Logger, id int, cp *CP, timeout time.Duration) (*Connector, error) {
 	conn := &Connector{
-		log:          log,
-		cp:           cp,
-		id:           id,
-		clock:        clock.New(),
+		log:   log,
+		cp:    cp,
+		id:    id,
+		clock: clock.New(),
+
 		statusC:      make(chan struct{}),
 		measurements: make(map[types.Measurand]types.SampledValue),
 		meterC:       make(chan map[types.Measurand]types.SampledValue),
-		timeout:      timeout,
+
+		initTimeout:  timeout,
+		meterTimeout: 30 * time.Second,
 	}
 
 	err := cp.registerConnector(id, conn)
@@ -89,7 +94,7 @@ func (conn *Connector) WatchDog(timeout time.Duration) {
 	tick := time.NewTicker(2 * time.Second)
 	for ; true; <-tick.C {
 		conn.mu.Lock()
-		update := conn.txnId != 0 && conn.clock.Since(conn.meterUpdated) > timeout
+		update := conn.clock.Since(conn.meterUpdated) > timeout
 		conn.mu.Unlock()
 
 		if update {
@@ -100,8 +105,8 @@ func (conn *Connector) WatchDog(timeout time.Duration) {
 
 // Initialized waits for initial charge point status notification
 func (conn *Connector) Initialized() error {
-	trigger := time.After(conn.timeout / 2)
-	timeout := time.After(conn.timeout)
+	trigger := time.After(conn.initTimeout / 2)
+	timeout := time.After(conn.initTimeout)
 	for {
 		select {
 		case <-conn.statusC:
@@ -141,6 +146,9 @@ func (conn *Connector) Status() (core.ChargePointStatus, error) {
 		return core.ChargePointStatusUnavailable, nil
 	}
 
+	conn.mu.Lock()
+	defer conn.mu.Unlock()
+
 	if conn.status.ErrorCode != core.NoError {
 		return "", fmt.Errorf("%s: %s", conn.status.ErrorCode, conn.status.Info)
 	}
@@ -160,10 +168,10 @@ func (conn *Connector) NeedsAuthentication() bool {
 	return conn.status != nil && conn.txnId == 0 && conn.status.Status == core.ChargePointStatusPreparing
 }
 
-// isMeterTimeout checks if meter values are outdated.
-// Must only be called while holding lock.
+// isMeterTimeout checks if meter values are outdated
+// Must only be called while holding lock
 func (conn *Connector) isMeterTimeout() bool {
-	return conn.timeout > 0 && conn.clock.Since(conn.meterUpdated) > conn.timeout
+	return conn.meterTimeout > 0 && conn.clock.Since(conn.meterUpdated) > conn.meterTimeout
 }
 
 var _ api.CurrentGetter = (*Connector)(nil)
@@ -260,6 +268,8 @@ func (conn *Connector) TotalEnergy() (float64, error) {
 	return 0, api.ErrNotAvailable
 }
 
+var _ api.Battery = (*Connector)(nil)
+
 func (conn *Connector) Soc() (float64, error) {
 	if !conn.cp.Connected() {
 		return 0, api.ErrTimeout
@@ -330,6 +340,8 @@ func (conn *Connector) Currents() (float64, float64, float64, error) {
 
 	return currents[0], currents[1], currents[2], nil
 }
+
+var _ api.PhaseVoltages = (*Connector)(nil)
 
 func (conn *Connector) Voltages() (float64, float64, float64, error) {
 	if !conn.cp.Connected() {

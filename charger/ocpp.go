@@ -26,14 +26,14 @@ type OCPP struct {
 	conn                    *ocpp.Connector
 	idtag                   string
 	phases                  int
-	enabled                 bool
 	current                 float64
+	enabled                 bool
 	meterValuesSample       string
-	timeout                 time.Duration
+	messageTimeout          time.Duration
 	phaseSwitching          bool
 	remoteStart             bool
-	hasRemoteTriggerFeature bool
 	chargingRateUnit        types.ChargingRateUnitType
+	hasRemoteTriggerFeature bool
 	chargingProfileId       int
 	stackLevel              int
 	lp                      loadpoint.API
@@ -57,20 +57,20 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 		Connector        int
 		MeterInterval    time.Duration
 		MeterValues      string
-		ConnectTimeout   time.Duration
-		Timeout          time.Duration
-		BootNotification *bool
-		GetConfiguration *bool
-		ChargingRateUnit string
-		AutoStart        bool // deprecated, to be removed
-		NoStop           bool // deprecated, to be removed
+		ConnectTimeout   time.Duration // Initial Status Timeout
+		Timeout          time.Duration // Message Timeout
+		BootNotification *bool         // TODO deprecated
+		GetConfiguration *bool         // TODO deprecated
+		ChargingRateUnit string        // TODO deprecated
+		AutoStart        bool          // TODO deprecated
+		NoStop           bool          // TODO deprecated
 		RemoteStart      bool
 	}{
 		Connector:        1,
 		IdTag:            defaultIdTag,
 		MeterInterval:    10 * time.Second,
-		ConnectTimeout:   ocppConnectTimeout,
-		Timeout:          ocppTimeout,
+		ConnectTimeout:   ocppInitialStatusTimeout,
+		Timeout:          ocppMessageTimeout,
 		ChargingRateUnit: "A",
 	}
 
@@ -78,13 +78,7 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	boot := cc.BootNotification != nil && *cc.BootNotification
-	noConfig := cc.GetConfiguration != nil && !*cc.GetConfiguration
-
-	c, err := NewOCPP(cc.StationId, cc.Connector, cc.IdTag,
-		cc.MeterValues, cc.MeterInterval,
-		boot, noConfig, cc.RemoteStart,
-		cc.ConnectTimeout, cc.Timeout, cc.ChargingRateUnit)
+	c, err := NewOCPP(cc.StationId, cc.Connector, cc.IdTag, cc.MeterValues, cc.MeterInterval, cc.RemoteStart, cc.ConnectTimeout, cc.Timeout, cc.ChargingRateUnit)
 	if err != nil {
 		return c, err
 	}
@@ -130,12 +124,7 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 //go:generate go run ../cmd/tools/decorate.go -f decorateOCPP -b *OCPP -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.Battery,Soc,func() (float64, error)"
 
 // NewOCPP creates OCPP charger
-func NewOCPP(id string, connector int, idtag string,
-	meterValues string, meterInterval time.Duration,
-	boot, noConfig, remoteStart bool,
-	connectTimeout, timeout time.Duration,
-	chargingRateUnit string,
-) (*OCPP, error) {
+func NewOCPP(id string, connector int, idtag string, meterValues string, meterInterval time.Duration, remoteStart bool, initTimeout, messageTimeout time.Duration, chargingRateUnit string) (*OCPP, error) {
 	unit := "ocpp"
 	if id != "" {
 		unit = id
@@ -154,7 +143,7 @@ func NewOCPP(id string, connector int, idtag string,
 		}
 	}
 
-	conn, err := ocpp.NewConnector(log, connector, cp, timeout)
+	conn, err := ocpp.NewConnector(log, connector, cp, initTimeout)
 	if err != nil {
 		return nil, err
 	}
@@ -165,13 +154,13 @@ func NewOCPP(id string, connector int, idtag string,
 		idtag:            idtag,
 		remoteStart:      remoteStart,
 		chargingRateUnit: types.ChargingRateUnitType(chargingRateUnit),
-		timeout:          timeout,
+		messageTimeout:   messageTimeout,
 	}
 
-	c.log.DEBUG.Printf("waiting for chargepoint: %v", connectTimeout)
+	c.log.DEBUG.Printf("waiting for chargepoint: %v", initTimeout)
 
 	select {
-	case <-time.After(connectTimeout):
+	case <-time.After(initTimeout):
 		return nil, api.ErrTimeout
 	case <-cp.HasConnected():
 	}
@@ -258,7 +247,7 @@ func NewOCPP(id string, connector int, idtag string,
 	if c.hasRemoteTriggerFeature {
 		if err := conn.TriggerMessageRequest(core.BootNotificationFeatureName); err == nil {
 			select {
-			case <-time.After(timeout):
+			case <-time.After(messageTimeout):
 				c.log.DEBUG.Printf("BootNotification timeout")
 			case res := <-cp.BootNotificationRequest():
 				if res != nil {
@@ -288,7 +277,7 @@ func NewOCPP(id string, connector int, idtag string,
 		if err := conn.TriggerMessageRequest(core.MeterValuesFeatureName); err == nil {
 			// wait for meter values
 			select {
-			case <-time.After(timeout):
+			case <-time.After(messageTimeout):
 				c.log.WARN.Println("meter timeout")
 			case <-c.conn.MeterSampled():
 			}
@@ -363,7 +352,7 @@ func (c *OCPP) configure(key, val string) error {
 
 // wait waits for a CP roundtrip with timeout
 func (c *OCPP) wait(err error, rc chan error) error {
-	return ocpp.Wait(err, rc, c.timeout)
+	return ocpp.Wait(err, rc, c.messageTimeout)
 }
 
 // Status implements the api.Charger interface
@@ -459,6 +448,7 @@ func (c *OCPP) Enable(enable bool) error {
 	return err
 }
 
+// initTransaction remotely starts a transaction
 func (c *OCPP) initTransaction() error {
 	rc := make(chan error, 1)
 	err := ocpp.Instance().RemoteStartTransaction(c.conn.ChargePoint().ID(), func(resp *core.RemoteStartTransactionConfirmation, err error) {
@@ -475,6 +465,7 @@ func (c *OCPP) initTransaction() error {
 	return c.wait(err, rc)
 }
 
+// setChargingProfile applies the given charging profile
 func (c *OCPP) setChargingProfile(profile *types.ChargingProfile) error {
 	rc := make(chan error, 1)
 	err := ocpp.Instance().SetChargingProfile(c.conn.ChargePoint().ID(), func(resp *smartcharging.SetChargingProfileConfirmation, err error) {
