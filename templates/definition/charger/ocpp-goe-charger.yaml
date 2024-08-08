@@ -9,7 +9,9 @@ products:
   - brand: go-e
     description:
       generic: Charger PRO [OCPP]
-group: ocpp
+  - brand: Fronius
+    description:
+      generic: Wattpilot [OCPP]
 capabilities: ["rfid", "1p3p"]
 requirements:
   evcc: ["sponsorship"]
