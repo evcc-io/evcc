@@ -24,7 +24,6 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
-	"github.com/evcc-io/evcc/util/sponsor"
 )
 
 // KSE charger implementation
@@ -75,10 +74,6 @@ func NewKSE(uri, device, comset string, baudrate int, slaveID uint8) (api.Charge
 	conn, err := modbus.NewConnection(uri, device, comset, baudrate, modbus.Rtu, slaveID)
 	if err != nil {
 		return nil, err
-	}
-
-	if !sponsor.IsAuthorized() {
-		return nil, api.ErrSponsorRequired
 	}
 
 	log := util.NewLogger("kse")

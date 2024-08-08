@@ -3,6 +3,7 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	"github.com/evcc-io/evcc/util/sponsor"
 	"net/http"
 	_ "net/http/pprof" // pprof handler
 	"os"
@@ -20,8 +21,6 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/pipe"
-	"github.com/evcc-io/evcc/util/sponsor"
-	"github.com/evcc-io/evcc/util/telemetry"
 	"github.com/fatih/structs"
 	"github.com/jeremywohl/flatten"
 	"golang.org/x/exp/maps"
@@ -166,14 +165,6 @@ func runRoot(cmd *cobra.Command, args []string) {
 	// setup environment
 	if err == nil {
 		err = configureEnvironment(cmd, conf)
-	}
-
-	// setup telemetry
-	if err == nil {
-		telemetry.Create(conf.Plant)
-		if conf.Telemetry {
-			err = telemetry.Enable(true)
-		}
 	}
 
 	// setup modbus proxy

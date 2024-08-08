@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/evcc-io/evcc/util/sponsor"
 	"net/http"
 	"sync"
 	"time"
@@ -12,7 +13,6 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/machine"
 	"github.com/evcc-io/evcc/util/request"
-	"github.com/evcc-io/evcc/util/sponsor"
 )
 
 const (
@@ -29,15 +29,11 @@ var (
 )
 
 func Enabled() bool {
-	enabled, _ := settings.Bool(enabledSetting)
-	return enabled && sponsor.IsAuthorizedForApi() && instanceID != ""
+	return false
 }
 
 func Enable(enable bool) error {
 	if enable {
-		if !sponsor.IsAuthorized() {
-			return errors.New("telemetry requires sponsorship")
-		}
 		if instanceID == "" {
 			return fmt.Errorf("using docker? Telemetry requires a unique instance ID. Add this to your config: `plant: %s`", machine.RandomID())
 		}

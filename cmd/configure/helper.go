@@ -2,13 +2,13 @@ package configure
 
 import (
 	"fmt"
+	"github.com/evcc-io/evcc/util/sponsor"
 	"slices"
 	"sort"
 	"strings"
 
 	"github.com/evcc-io/evcc/provider/mqtt"
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/evcc-io/evcc/util/templates"
 	stripmd "github.com/writeas/go-strip-markdown/v2"
 	"gopkg.in/yaml.v3"

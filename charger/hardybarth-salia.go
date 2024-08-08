@@ -32,7 +32,6 @@ import (
 	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
-	"github.com/evcc-io/evcc/util/sponsor"
 )
 
 // https://github.com/evcc-io/evcc/discussions/778
@@ -86,10 +85,6 @@ func NewSalia(uri string, cache time.Duration) (api.Charger, error) {
 		err := wb.GetJSON(wb.uri, &res)
 		return res, err
 	}, cache)
-
-	if !sponsor.IsAuthorized() {
-		return nil, api.ErrSponsorRequired
-	}
 
 	// set chargemode manual
 	res, err := wb.apiG.Get()

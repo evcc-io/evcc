@@ -20,7 +20,7 @@ var (
 const unavailable = "sponsorship unavailable"
 
 func IsAuthorized() bool {
-	return len(Subject) > 0
+	return true
 }
 
 func IsAuthorizedForApi() bool {

@@ -5,20 +5,14 @@ import (
 	"net"
 
 	"github.com/andig/mbserver"
-	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
-	"github.com/evcc-io/evcc/util/sponsor"
 )
 
 func StartProxy(port int, config modbus.Settings, readOnly bool) error {
 	conn, err := modbus.NewConnection(config.URI, config.Device, config.Comset, config.Baudrate, modbus.ProtocolFromRTU(config.RTU), config.ID)
 	if err != nil {
 		return err
-	}
-
-	if !sponsor.IsAuthorized() {
-		return api.ErrSponsorRequired
 	}
 
 	h := &handler{

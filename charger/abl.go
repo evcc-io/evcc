@@ -26,7 +26,6 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
-	"github.com/evcc-io/evcc/util/sponsor"
 )
 
 // ABLeMH charger implementation
@@ -107,10 +106,6 @@ func NewABLeMH(uri, device, comset string, baudrate int, slaveID uint8, timeout 
 
 	if timeout > 0 {
 		conn.Timeout(timeout)
-	}
-
-	if !sponsor.IsAuthorized() {
-		return nil, api.ErrSponsorRequired
 	}
 
 	log := util.NewLogger("abl")

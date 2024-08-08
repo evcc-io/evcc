@@ -38,7 +38,6 @@ import (
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/pipe"
 	"github.com/evcc-io/evcc/util/request"
-	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/evcc-io/evcc/util/templates"
 	"github.com/evcc-io/evcc/vehicle"
 	"github.com/evcc-io/evcc/vehicle/wrapper"
@@ -69,31 +68,30 @@ var conf = globalConfig{
 }
 
 type globalConfig struct {
-	URI          interface{} // TODO deprecated
-	Network      networkConfig
-	Log          string
-	SponsorToken string
-	Plant        string // telemetry plant id
-	Telemetry    bool
-	Metrics      bool
-	Profile      bool
-	Levels       map[string]string
-	Interval     time.Duration
-	Database     dbConfig
-	Mqtt         mqttConfig
-	ModbusProxy  []proxyConfig
-	Javascript   []javascriptConfig
-	Go           []goConfig
-	Influx       server.InfluxConfig
-	EEBus        map[string]interface{}
-	HEMS         config.Typed
-	Messaging    messagingConfig
-	Meters       []config.Named
-	Chargers     []config.Named
-	Vehicles     []config.Named
-	Tariffs      tariffConfig
-	Site         map[string]interface{}
-	Loadpoints   []map[string]interface{}
+	URI         interface{} // TODO deprecated
+	Network     networkConfig
+	Log         string
+	Plant       string // telemetry plant id
+	Telemetry   bool
+	Metrics     bool
+	Profile     bool
+	Levels      map[string]string
+	Interval    time.Duration
+	Database    dbConfig
+	Mqtt        mqttConfig
+	ModbusProxy []proxyConfig
+	Javascript  []javascriptConfig
+	Go          []goConfig
+	Influx      server.InfluxConfig
+	EEBus       map[string]interface{}
+	HEMS        config.Typed
+	Messaging   messagingConfig
+	Meters      []config.Named
+	Chargers    []config.Named
+	Vehicles    []config.Named
+	Tariffs     tariffConfig
+	Site        map[string]interface{}
+	Loadpoints  []map[string]interface{}
 }
 
 type mqttConfig struct {
@@ -365,11 +363,6 @@ func configureEnvironment(cmd *cobra.Command, conf globalConfig) (err error) {
 	// setup machine id
 	if conf.Plant != "" {
 		err = machine.CustomID(conf.Plant)
-	}
-
-	// setup sponsorship (allow env override)
-	if err == nil && conf.SponsorToken != "" {
-		err = sponsor.ConfigureSponsorship(conf.SponsorToken)
 	}
 
 	// setup translations

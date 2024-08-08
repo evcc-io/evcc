@@ -10,7 +10,6 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/evcc-io/evcc/vehicle"
 )
 
@@ -51,8 +50,6 @@ func main() {
 			action = arg
 			key = ""
 		case "token":
-			sponsor.Subject = arg // TODO placeholder
-			sponsor.Token = arg
 			key = ""
 		default:
 			params[key] = arg

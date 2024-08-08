@@ -2,6 +2,7 @@ package vehicle
 
 import (
 	"context"
+	"github.com/evcc-io/evcc/util/sponsor"
 	"strings"
 	"time"
 
@@ -11,7 +12,6 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/cloud"
 	"github.com/evcc-io/evcc/util/request"
-	"github.com/evcc-io/evcc/util/sponsor"
 )
 
 // Cloud is an api.Vehicle implementation
@@ -42,10 +42,6 @@ func NewCloudFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
-	}
-
-	if !sponsor.IsAuthorized() {
-		return nil, api.ErrSponsorRequired
 	}
 
 	host := util.Getenv("GRPC_URI", cloud.Host)
