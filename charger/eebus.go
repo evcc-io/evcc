@@ -42,6 +42,7 @@ type EEBus struct {
 	vasVW                 bool // wether the EVSE supports VW VAS with ISO15118-2
 
 	expectedEnableUnpluggedState bool
+	reconnect                    bool
 	current                      float64
 
 	currentLimit float64
@@ -141,11 +142,11 @@ func (c *EEBus) UseCaseEvent(device spineapi.DeviceRemoteInterface, entity spine
 	switch event {
 	// EV
 	case evcc.EvConnected:
-		c.log.TRACE.Println("EV Connected")
 		c.setEvEntity(entity)
+		c.reconnect = true
 		c.currentLimit = -1
+
 	case evcc.EvDisconnected:
-		c.log.TRACE.Println("EV Disconnected")
 		c.setEvEntity(nil)
 		c.currentLimit = -1
 	}
@@ -223,10 +224,24 @@ func (c *EEBus) isCharging() bool {
 }
 
 // Status implements the api.Charger interface
-func (c *EEBus) Status() (api.ChargeStatus, error) {
+func (c *EEBus) Status() (res api.ChargeStatus, err error) {
 	if !c.Connected() {
 		return api.StatusNone, api.ErrTimeout
 	}
+
+	// re-set current limit after reconnect
+	defer func() {
+		if err == nil {
+			c.mux.Lock()
+			if c.reconnect {
+				c.reconnect = false
+				c.mux.Unlock()
+				err = c.MaxCurrentMillis(c.current)
+			} else {
+				c.mux.Unlock()
+			}
+		}
+	}()
 
 	evEntity := c.evEntity()
 	if !c.uc.EvCC.EVConnected(evEntity) {
