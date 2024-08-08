@@ -781,7 +781,7 @@ func (c *Easee) Phases1p3p(phases int) error {
 	} else {
 		// charger level
 		if phases == 3 {
-			phases = 2 // mode 2 means 3p
+			phases = 2 // mode 2 means auto
 		}
 
 		// change phaseMode only if necessary
@@ -796,9 +796,9 @@ func (c *Easee) Phases1p3p(phases int) error {
 				return err
 			}
 
-			// disable charger to activate changed settings (loadpoint will reenable it)
-			err = c.Enable(false)
 		}
+		// disable charger to activate changed settings (loadpoint will reenable it)
+		err = c.Enable(false)
 	}
 
 	return err
