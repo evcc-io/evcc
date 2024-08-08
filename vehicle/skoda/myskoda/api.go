@@ -107,7 +107,7 @@ func (v *API) WakeUp(vin string) error {
 
 	req, err := request.New(http.MethodPost, uri, nil, request.JSONEncoding)
 	if err == nil {
-		err = v.DoJSON(req, nil)
+		_, err = v.DoBody(req) // this returns 202 and a empty reponse body
 	}
 	return err
 }
