@@ -6,7 +6,6 @@ products:
   - brand: eledio
     description:
       generic: go [OCPP]
-group: ocpp
 capabilities: ["1p3p"]
 requirements:
   description:
