@@ -115,7 +115,6 @@ func (c *EEBus) setEvEntity(entity spineapi.EntityRemoteInterface) {
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
-	c.reconnect = true
 	c.ev = entity
 }
 
@@ -145,6 +144,7 @@ func (c *EEBus) UseCaseEvent(device spineapi.DeviceRemoteInterface, entity spine
 	case evcc.EvConnected:
 		c.log.TRACE.Println("EV Connected")
 		c.setEvEntity(entity)
+		c.reconnect = true
 		c.currentLimit = -1
 	case evcc.EvDisconnected:
 		c.log.TRACE.Println("EV Disconnected")
