@@ -12,7 +12,7 @@ requirements:
       im Fahrzeug erforderlich. Dafür muss ein aktives Ortsbezogenes Ladeprofil mit der niedrigsten Minimalladung (25%) 
       angelegt sein und Direktladen deaktiviert. Anderenfalls kann das Fahrzeug nicht in den Schalfmodus übergeben.
     en: |
-      Only supported if the vehicle can provided the state of charge (Soc) to the connected wallbox.
+      Only supported if the vehicle can provide the state of charge (Soc) to the connected charger.
       Using ISO15118 with some VW group vehicles, e.g. Porsche Taycan, requires additional configuration in the vehicle.
       This requires an active location-based charging profile with the lowest minimum charge (25%) and direct charging disabled.
       Otherwise the vehicle cannot be put into sleep mode.
