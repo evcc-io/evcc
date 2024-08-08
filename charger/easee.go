@@ -795,7 +795,6 @@ func (c *Easee) Phases1p3p(phases int) error {
 			if _, err = c.postJSONAndWait(uri, data); err != nil {
 				return err
 			}
-
 		}
 		// disable charger to activate changed settings (loadpoint will reenable it)
 		err = c.Enable(false)
