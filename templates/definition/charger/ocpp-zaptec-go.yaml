@@ -3,7 +3,6 @@ products:
   - brand: Zaptec
     description:
       generic: Go [OCPP]
-group: ocpp
 capabilities: ["rfid"]
 requirements:
   description:
