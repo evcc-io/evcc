@@ -34,7 +34,7 @@ func NewPhoenixEVSerFromConfig(other map[string]interface{}) (api.Charger, error
 		return nil, err
 	}
 
-	return NewPhoenixEVSer(cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Protocol(), cc.ID)
+	return NewPhoenixEVSer(cc.URI, cc.Device, cc.Comset, cc.Baudrate, modbus.ProtocolFromRTU(cc.RTU), cc.ID)
 }
 
 // NewPhoenixEVSer creates a Phoenix charger

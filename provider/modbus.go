@@ -41,22 +41,25 @@ func NewModbusFromConfig(other map[string]interface{}) (Provider, error) {
 		return nil, err
 	}
 
-	modbus.Lock()
-	defer modbus.Unlock()
-
-	conn, err := modbus.NewConnection(cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Settings.Protocol(), cc.ID)
+	conn, err := modbus.NewConnection(cc.URI, cc.Device, cc.Comset, cc.Baudrate, modbus.ProtocolFromRTU(cc.RTU), cc.ID)
 	if err != nil {
 		return nil, err
 	}
 
 	// set non-default timeout
-	conn.Timeout(cc.Timeout)
+	if cc.Timeout > 0 {
+		conn.Timeout(cc.Timeout)
+	}
 
 	// set non-default delay
-	conn.Delay(cc.Delay)
+	if cc.Delay > 0 {
+		conn.Delay(cc.Delay)
+	}
 
 	// set non-default connect delay
-	conn.ConnectDelay(cc.ConnectDelay)
+	if cc.ConnectDelay > 0 {
+		conn.ConnectDelay(cc.ConnectDelay)
+	}
 
 	log := util.NewLogger("modbus")
 	conn.Logger(log.TRACE)

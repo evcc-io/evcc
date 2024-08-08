@@ -48,8 +48,6 @@ func TestClass(t *testing.T, class Class, instantiate func(t *testing.T, values 
 			// we only test one modbus setup
 			if slices.Contains(modbusChoices, ModbusChoiceTCPIP) {
 				values[ModbusKeyTCPIP] = true
-			} else if slices.Contains(modbusChoices, ModbusChoiceUDP) {
-				values[ModbusKeyUDP] = true
 			} else {
 				values[ModbusKeyRS485TCPIP] = true
 			}

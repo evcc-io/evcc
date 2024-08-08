@@ -478,7 +478,6 @@ modbus:
   interfaces:
     rs485: ["rs485serial", "rs485tcpip"]
     tcpip: ["tcpip"]
-    udp: ["udp"]
   types:
     rs485serial:
       description:
@@ -511,18 +510,6 @@ modbus:
     tcpip:
       description:
         generic: TCP/IP
-      params:
-        - reference: true
-          referencename: modbusid
-          name: id
-        - reference: true
-          name: host
-        - reference: true
-          name: port
-          default: 502
-    udp:
-      description:
-        generic: UDP
       params:
         - reference: true
           referencename: modbusid

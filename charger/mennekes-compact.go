@@ -83,7 +83,7 @@ func NewMennekesCompactFromConfig(other map[string]interface{}) (api.Charger, er
 		return nil, err
 	}
 
-	return NewMennekesCompact(cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Settings.Protocol(), cc.ID, cc.Timeout)
+	return NewMennekesCompact(cc.URI, cc.Device, cc.Comset, cc.Baudrate, modbus.ProtocolFromRTU(cc.RTU), cc.ID, cc.Timeout)
 }
 
 // NewMennekesCompact creates Mennekes charger

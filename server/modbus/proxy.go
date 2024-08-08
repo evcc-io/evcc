@@ -12,7 +12,7 @@ import (
 )
 
 func StartProxy(port int, config modbus.Settings, readOnly ReadOnlyMode) error {
-	conn, err := modbus.NewConnection(config.URI, config.Device, config.Comset, config.Baudrate, config.Protocol(), config.ID)
+	conn, err := modbus.NewConnection(config.URI, config.Device, config.Comset, config.Baudrate, modbus.ProtocolFromRTU(config.RTU), config.ID)
 	if err != nil {
 		return err
 	}
