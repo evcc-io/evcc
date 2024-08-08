@@ -356,13 +356,13 @@ func (c *EEBus) writeCurrentLimitData(currents []float64) error {
 
 	_, maxLimits, _, err := c.uc.OpEV.CurrentLimits(evEntity)
 	if err != nil {
-		return errors.New("no limits available")
+		c.log.DEBUG.Println("no limits from the EVSE are provided:", err)
 	}
 
 	// setup the limit data structure
 	limits := []ucapi.LoadLimitsPhase{}
 	for phase, current := range currents {
-		if phase >= len(maxLimits) || phase >= len(ucapi.PhaseNameMapping) {
+		if phase >= len(ucapi.PhaseNameMapping) {
 			continue
 		}
 
@@ -373,7 +373,7 @@ func (c *EEBus) writeCurrentLimitData(currents []float64) error {
 		}
 
 		// if the limit equals to the max allowed, then the obligation limit is actually inactive
-		if current >= maxLimits[phase] {
+		if phase < len(maxLimits) && current >= maxLimits[phase] {
 			limit.IsActive = false
 		}
 
