@@ -61,17 +61,12 @@ func (s *Settings) String() string {
 	return s.Device
 }
 
-type meterConnection struct {
-	meters.Connection
-	*logger
-}
-
 var (
-	connections = make(map[string]*meterConnection)
+	connections = make(map[string]meters.Connection)
 	mu          sync.Mutex
 )
 
-func registeredConnection(key string, newConn meters.Connection) *meterConnection {
+func registeredConnection(key string, newConn meters.Connection) meters.Connection {
 	mu.Lock()
 	defer mu.Unlock()
 
@@ -79,15 +74,9 @@ func registeredConnection(key string, newConn meters.Connection) *meterConnectio
 		return conn
 	}
 
-	connection := &meterConnection{
-		Connection: newConn,
-		logger:     new(logger),
-	}
+	connections[key] = newConn
 
-	newConn.Logger(connection.logger)
-	connections[key] = connection
-
-	return connection
+	return newConn
 }
 
 // NewConnection creates physical modbus device from config
@@ -104,14 +93,14 @@ func NewConnection(uri, device, comset string, baudrate int, proto Protocol, sla
 
 	res := &Connection{
 		Connection: conn.Clone(slaveID),
-		logger:     conn.logger,
+		logger:     new(logger),
 	}
 
 	return res, nil
 }
 
-func physicalConnection(proto Protocol, cfg Settings) (*meterConnection, error) {
-	var conn *meterConnection
+func physicalConnection(proto Protocol, cfg Settings) (meters.Connection, error) {
+	var conn meters.Connection
 
 	if (cfg.Device != "") == (cfg.URI != "") {
 		return nil, errors.New("invalid modbus configuration: must have either uri or device")
