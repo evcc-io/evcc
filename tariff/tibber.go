@@ -103,9 +103,8 @@ func (t *Tibber) run(done chan error) {
 
 		pi := res.Viewer.Home.CurrentSubscription.PriceInfo
 		data := append(t.rates(pi.Today), t.rates(pi.Tomorrow)...)
-		data.Sort()
 
-		t.data.Set(data)
+		mergeRates(t.data, data)
 		once.Do(func() { close(done) })
 	}
 }

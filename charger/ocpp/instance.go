@@ -9,10 +9,7 @@ import (
 	"github.com/lorenzodonini/ocpp-go/ocpp"
 	ocpp16 "github.com/lorenzodonini/ocpp-go/ocpp1.6"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
-	"github.com/lorenzodonini/ocpp-go/ocpp1.6/firmware"
-	"github.com/lorenzodonini/ocpp-go/ocpp1.6/localauth"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/remotetrigger"
-	"github.com/lorenzodonini/ocpp-go/ocpp1.6/reservation"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/smartcharging"
 	"github.com/lorenzodonini/ocpp-go/ocppj"
 	"github.com/lorenzodonini/ocpp-go/ws"
@@ -37,7 +34,7 @@ func Instance() *CS {
 		dispatcher := ocppj.NewDefaultServerDispatcher(ocppj.NewFIFOQueueMap(0))
 		dispatcher.SetTimeout(time.Minute)
 
-		endpoint := ocppj.NewServer(server, dispatcher, nil, core.Profile, localauth.Profile, firmware.Profile, reservation.Profile, remotetrigger.Profile, smartcharging.Profile)
+		endpoint := ocppj.NewServer(server, dispatcher, nil, core.Profile, remotetrigger.Profile, smartcharging.Profile)
 		endpoint.SetInvalidMessageHook(func(client ws.Channel, err *ocpp.Error, rawMessage string, parsedFields []interface{}) *ocpp.Error {
 			log.ERROR.Printf("%v (%s)", err, rawMessage)
 			return nil
@@ -49,6 +46,7 @@ func Instance() *CS {
 			log:           log,
 			cps:           make(map[string]*CP),
 			CentralSystem: cs,
+			timeout:       30 * time.Second,
 		}
 
 		ocppj.SetLogger(instance)
@@ -56,7 +54,6 @@ func Instance() *CS {
 		cs.SetCoreHandler(instance)
 		cs.SetNewChargePointHandler(instance.NewChargePoint)
 		cs.SetChargePointDisconnectedHandler(instance.ChargePointDisconnected)
-		cs.SetFirmwareManagementHandler(instance)
 
 		go instance.errorHandler(cs.Errors())
 		go cs.Start(8887, "/{ws}")

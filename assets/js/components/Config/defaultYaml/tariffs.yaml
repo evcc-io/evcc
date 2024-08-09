@@ -1,13 +1,13 @@
-# currency: EUR
+#currency: EUR
 
-# grid: # price using energy from the grid
-#   type: fixed
-#   price: 0.294 # EUR/kWh
+#grid: # price using energy from the grid
+#  type: fixed
+#  price: 0.294 # EUR/kWh
 
-# feedin: # price for feeding solar energy to the grid
-#   type: fixed
-#   price: 0.08 # EUR/kWh
+#feedin: # price for feeding solar energy to the grid
+#  type: fixed
+#  price: 0.08 # EUR/kWh
 
-# co2: # carbon intensity forecast data
-#   type: grünstromindex
-#   zip: <zip>
+#co2: # carbon intensity forecast data
+#  type: grünstromindex
+#  zip: <zip>

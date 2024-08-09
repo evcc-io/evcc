@@ -42,7 +42,7 @@ func (conn *Connector) StatusNotification(request *core.StatusNotificationReques
 
 func getSampleKey(s types.SampledValue) types.Measurand {
 	if s.Phase != "" {
-		return s.Measurand + types.Measurand("@"+string(s.Phase))
+		return s.Measurand + types.Measurand("."+string(s.Phase))
 	}
 
 	return s.Measurand
@@ -69,6 +69,11 @@ func (conn *Connector) MeterValues(request *core.MeterValuesRequest) (*core.Mete
 				conn.meterUpdated = conn.clock.Now()
 			}
 		}
+	}
+
+	select {
+	case conn.meterC <- conn.measurements:
+	default:
 	}
 
 	return new(core.MeterValuesConfirmation), nil

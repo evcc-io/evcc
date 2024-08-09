@@ -54,7 +54,7 @@ test.describe("tariffs", async () => {
     await page.waitForLoadState("networkidle");
 
     // default content
-    await expect(modal).toContainText("# currency: EUR");
+    await expect(modal).toContainText("#currency: EUR");
 
     // clear and enter invalid yaml
     await modal.locator(".monaco-editor .view-line").nth(0).click();

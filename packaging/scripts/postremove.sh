@@ -23,7 +23,7 @@ fi
 # else: Ask user if he wants to keep the old version (working) or the new version (not working) 
 # Remember the choice with /tmp/.evccrollback and fail new-postrm failed-upgrade old-version new-version to initiate dpkg's rollback
 if [ "$1" = "upgrade" ] && [ -t 0 ]; then
-	if ! /usr/bin/evcc checkconfig > /dev/null; then
+	if ! EVCC_DATABASE_DSN=/var/lib/evcc/evcc.db /usr/bin/evcc checkconfig > /dev/null; then
 		echo "--------------------------------------------------------------------------------"
 		echo "ERROR: your configuration is not compatible with the new version:"
 		/usr/bin/evcc checkconfig --log error || true

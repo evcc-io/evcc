@@ -23,4 +23,4 @@ render: |
       password: {{ .password }}
     regex: '(?s)aktuell</td>\s+<td[^>]+>\s+(\d+)</td>'
     default: 0
-  {{- end -}}
+  {{- end }}
