@@ -557,6 +557,9 @@ var _ api.CurrentGetter = (*EEBus)(nil)
 
 // GetMaxCurrent implements the api.CurrentGetter interface
 func (c *EEBus) GetMaxCurrent() (float64, error) {
+	c.mux.RLock()
+	defer c.mux.RUnlock()
+
 	if c.currentLimit == -1 {
 		return 0, api.ErrNotAvailable
 	}
