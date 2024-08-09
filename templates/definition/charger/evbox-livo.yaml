@@ -9,11 +9,9 @@ requirements:
     de: |
       Dem Gerät muss eine feste IP Adresse zugewiesen sein (Manuell oder per DHCP).
 
-      Wichtig: Wenn EEBUS über Home Assistant genutzt wird, muss unbedingt das Interface "end0" angegeben und die IP-Adresse von Home Assistant im URI (192.168.1.216:4712) eingetragen werden. Sehe [Issue](https://github.com/evcc-io/hassio-addon/issues/99)
     en: |
       The device has to have a fix IP address (manuall or via DHCP).
 
-      Important: If EEBUS is used with Home Assistant, the "end0" interface must be specified, and the IP address of Home Assistant (192.168.1.216:4712) must be entered in the URI. See [Issue](https://github.com/evcc-io/hassio-addon/issues/99)
 params:
   - preset: eebus
 render: |
