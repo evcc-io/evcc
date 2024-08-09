@@ -133,14 +133,6 @@ func (c *Circuit) setParent(parent api.Circuit) error {
 	return nil
 }
 
-// Wrap wraps circuit with parent, keeping the original meter
-func (c *Circuit) Wrap(parent api.Circuit) error {
-	if c.meter != nil {
-		parent.(*Circuit).meter = c.meter
-	}
-	return c.setParent(parent)
-}
-
 // HasMeter returns the max power setting
 func (c *Circuit) HasMeter() bool {
 	c.mu.RLock()
