@@ -111,13 +111,6 @@ func NewEEBus(ski string, hasMeter, hasChargedEnergy, vasVW bool) (api.Charger, 
 	return c, nil
 }
 
-func (c *EEBus) setEvEntity(entity spineapi.EntityRemoteInterface) {
-	c.mux.Lock()
-	defer c.mux.Unlock()
-
-	c.ev = entity
-}
-
 func (c *EEBus) evEntity() spineapi.EntityRemoteInterface {
 	c.mux.RLock()
 	defer c.mux.RUnlock()
@@ -139,15 +132,18 @@ var _ eebus.Device = (*EEBus)(nil)
 
 // UseCaseEvent implements the eebus.Device interface
 func (c *EEBus) UseCaseEvent(device spineapi.DeviceRemoteInterface, entity spineapi.EntityRemoteInterface, event eebusapi.EventType) {
-	switch event {
+	c.mux.Lock()
+	defer c.mux.Unlock()
+
 	// EV
+	switch event {
 	case evcc.EvConnected:
-		c.setEvEntity(entity)
+		c.ev = entity
 		c.reconnect = true
 		c.currentLimit = -1
 
 	case evcc.EvDisconnected:
-		c.setEvEntity(nil)
+		c.ev = nil
 		c.currentLimit = -1
 	}
 }
