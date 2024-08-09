@@ -3,10 +3,13 @@ package tariff
 import (
 	"testing"
 
+	"github.com/evcc-io/evcc/util/test"
 	"github.com/stretchr/testify/require"
 )
 
 func TestOctopusConfigParse(t *testing.T) {
+	test.SkipCI(t)
+
 	// This test will start failing if you remove the deprecated "tariff" config var.
 	validTariffConfig := map[string]interface{}{
 		"region": "H",

@@ -38,6 +38,10 @@ func (cp *CP) BootNotification(request *core.BootNotificationRequest) (*core.Boo
 		Status:      core.RegistrationStatusAccepted,
 	}
 
+	cp.onceBoot.Do(func() {
+		cp.bootNotificationRequestC <- request
+	})
+
 	return res, nil
 }
 
@@ -52,6 +56,10 @@ func (cp *CP) FirmwareStatusNotification(request *firmware.FirmwareStatusNotific
 func (cp *CP) StatusNotification(request *core.StatusNotificationRequest) (*core.StatusNotificationConfirmation, error) {
 	if request == nil {
 		return nil, ErrInvalidRequest
+	}
+
+	if request.ConnectorId == 0 {
+		return new(core.StatusNotificationConfirmation), nil
 	}
 
 	conn := cp.connectorByID(request.ConnectorId)

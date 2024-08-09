@@ -73,7 +73,7 @@ export default {
 	},
 	beforeMount() {
 		loader.config({
-			paths: { vs: "https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs" },
+			paths: { vs: "https://cdn.jsdelivr.net/npm/monaco-editor@0.50.0/min/vs" },
 		});
 		loader.init();
 	},

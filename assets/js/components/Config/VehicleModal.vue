@@ -324,10 +324,15 @@ export default {
 			return this.templateParams.filter((p) => p.Advanced);
 		},
 		apiData() {
-			return {
+			const data = {
 				template: this.templateName,
 				...this.values,
 			};
+			// trim and remove empty lines
+			if (Array.isArray(data.identifiers)) {
+				data.identifiers = data.identifiers.map((i) => i.trim()).filter((i) => i);
+			}
+			return data;
 		},
 		isNew() {
 			return this.id === undefined;
