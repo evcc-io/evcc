@@ -3,27 +3,13 @@ products:
   - brand: EVBox
     description:
       generic: Elvi
+requirements:
+  evcc: ["sponsorship"]
 params:
   - preset: ocpp
   - name: meter
-    type: bool
-    default: true
-    description:
-      de: Hat die Wallbox einen integrierten Zähler verbaut?
-      en: The charger has an integrated metering device installed?
-    help:
-      de: Deaktiveren wenn die Wallbox keinen integrierten Zähler verbaut hat
-      en: Deactivate if the charger has no integrated metering device installed
+    deprecated: true
   - name: meterinterval
-    advanced: true
-    type: duration
-    description:
-      de: Zählerwerte im Intervall anfordern
-      en: Interval for requesting metering values
-    default: 4s
+    deprecated: true
 render: |
   {{ include "ocpp" . }}
-  {{- if ne .meter "false" }}
-  metervalues: Current.Import,Energy.Active.Import.Register,Power.Active.Import,Voltage
-  meterinterval: {{ .meterinterval }}
-  {{- end }}

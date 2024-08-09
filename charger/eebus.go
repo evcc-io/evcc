@@ -42,6 +42,7 @@ type EEBus struct {
 	vasVW                 bool // wether the EVSE supports VW VAS with ISO15118-2
 
 	expectedEnableUnpluggedState bool
+	reconnect                    bool
 	current                      float64
 
 	currentLimit float64
@@ -110,13 +111,6 @@ func NewEEBus(ski string, hasMeter, hasChargedEnergy, vasVW bool) (api.Charger, 
 	return c, nil
 }
 
-func (c *EEBus) setEvEntity(entity spineapi.EntityRemoteInterface) {
-	c.mux.Lock()
-	defer c.mux.Unlock()
-
-	c.ev = entity
-}
-
 func (c *EEBus) evEntity() spineapi.EntityRemoteInterface {
 	c.mux.RLock()
 	defer c.mux.RUnlock()
@@ -138,15 +132,18 @@ var _ eebus.Device = (*EEBus)(nil)
 
 // UseCaseEvent implements the eebus.Device interface
 func (c *EEBus) UseCaseEvent(device spineapi.DeviceRemoteInterface, entity spineapi.EntityRemoteInterface, event eebusapi.EventType) {
-	switch event {
+	c.mux.Lock()
+	defer c.mux.Unlock()
+
 	// EV
+	switch event {
 	case evcc.EvConnected:
-		c.log.TRACE.Println("EV Connected")
-		c.setEvEntity(entity)
+		c.ev = entity
+		c.reconnect = true
 		c.currentLimit = -1
+
 	case evcc.EvDisconnected:
-		c.log.TRACE.Println("EV Disconnected")
-		c.setEvEntity(nil)
+		c.ev = nil
 		c.currentLimit = -1
 	}
 }
@@ -223,10 +220,24 @@ func (c *EEBus) isCharging() bool {
 }
 
 // Status implements the api.Charger interface
-func (c *EEBus) Status() (api.ChargeStatus, error) {
+func (c *EEBus) Status() (res api.ChargeStatus, err error) {
 	if !c.Connected() {
 		return api.StatusNone, api.ErrTimeout
 	}
+
+	// re-set current limit after reconnect
+	defer func() {
+		if err == nil {
+			c.mux.Lock()
+			if c.reconnect {
+				c.reconnect = false
+				c.mux.Unlock()
+				err = c.MaxCurrentMillis(c.current)
+			} else {
+				c.mux.Unlock()
+			}
+		}
+	}()
 
 	evEntity := c.evEntity()
 	if !c.uc.EvCC.EVConnected(evEntity) {
@@ -356,13 +367,13 @@ func (c *EEBus) writeCurrentLimitData(currents []float64) error {
 
 	_, maxLimits, _, err := c.uc.OpEV.CurrentLimits(evEntity)
 	if err != nil {
-		return errors.New("no limits available")
+		c.log.DEBUG.Println("no limits from the EVSE are provided:", err)
 	}
 
 	// setup the limit data structure
 	limits := []ucapi.LoadLimitsPhase{}
 	for phase, current := range currents {
-		if phase >= len(maxLimits) || phase >= len(ucapi.PhaseNameMapping) {
+		if phase >= len(ucapi.PhaseNameMapping) {
 			continue
 		}
 
@@ -373,7 +384,7 @@ func (c *EEBus) writeCurrentLimitData(currents []float64) error {
 		}
 
 		// if the limit equals to the max allowed, then the obligation limit is actually inactive
-		if current >= maxLimits[phase] {
+		if phase < len(maxLimits) && current >= maxLimits[phase] {
 			limit.IsActive = false
 		}
 
@@ -546,6 +557,9 @@ var _ api.CurrentGetter = (*EEBus)(nil)
 
 // GetMaxCurrent implements the api.CurrentGetter interface
 func (c *EEBus) GetMaxCurrent() (float64, error) {
+	c.mux.RLock()
+	defer c.mux.RUnlock()
+
 	if c.currentLimit == -1 {
 		return 0, api.ErrNotAvailable
 	}

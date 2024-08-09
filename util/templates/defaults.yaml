@@ -380,32 +380,75 @@ presets:
       - name: stationid
         type: string
         help:
-          en: The chargers unique station id (or chargepoint id). This id must also be part of the charger OCPP configuration ws://<evcc-address>:8887/<stationid>.
-          de: Die Stations-ID der Wallbox (oder des Ladepunkts). Diese ID muss auch Teil der Wallboxkonfiguration für OCPP sein ws://<evcc-address>:8887/<stationid>.
-        advanced: true
+          en: |
+            Station ID of the charging point. Only required if multiple OCPP charging stations are set up to assign them correctly. A single OCPP charging station can also be automatically assigned.
+            Note: In exceptional cases, it may be necessary to manually append this ID to the OCPP URL of the charging station in the form ws://<evcc-address>:8887/<stationid>. Most charging stations automatically add the ID internally.
+          de: |
+            Station ID des Ladepunktes. Nur erforderlich wenn mehrere OCPP-Ladestationen eingerichtet sind um diese korrekt zuzuweisen. Eine einzelne OCPP-Ladestation kann auch automatisch zugeordnet werden.
+            Hinweis: In Ausnahmefällen kann es erforderlich sein, diese ID manuell an die OCPP-URL der Ladestation in der Form ws://<evcc-adresse>:8887/<stationid> anzuhängen. Die meisten Ladestationen fügen die ID intern automatisch hinzu.
         example: EVB-P12354
       - name: connector
         help:
-          de: Ladepunkt, normalerweise 1 für den ersten Anschluss.
-          en: Connector number, usually 1 for first connector.
-        advanced: true
+          de: Anschlussnummer bei Ladestationen mit mehreren Anschlüssen. Die Zählung beginnt bei 1 für den ersten Anschluss.
+          en: Connector number for charging stations with multiple connectors. Counting starts at 1 for the first connector.
         default: 1
-      - name: idtag
-        type: string
-        help:
-          en: Token-ID returned to the charger for authorisation of charging sessions
-          de: Token-ID welche für die Freischaltung der Ladevorgänge an den Ladepunkt zurückgesendet wird
+      - name: remotestart
         advanced: true
-        example: 04E6B78921BBA0
-      - name: connecttimeout
+        type: bool
         description:
-          de: Zeitlimit für Registrierung des Ladepunktes
-          en: Timeout for initial connection
+          de: Immer eine Remote-Transaktion starten (RemoteStartTransaction) sobald ein Fahrzeug angeschlossen wird
+          en: Always start a remote transaction (RemoteStartTransaction) as soon as a vehicle is connected
+        help:
+          de: |
+            Diese Option nur aktivieren wenn keinerlei Möglichkeit besteht Transaktionen seitens des Ladepunktes zu initiieren!
+            Das ist nur der Fall wenn z. B. kein RFID-Lesegerät vorhanden ist und Ladevorgänge grundsätzlich einzeln per App freigeschaltet werden müssten.
+            Normalerweise sollte der Ladepunkt am Gerät immer so konfiguriert werden, dass entweder eine RFID-Karte zur Freischaltung verwendet wird oder der Ladepunkt auf "Autostart", "Freies Laden" o.ä. eingestellt ist.
+            Zunächst die Dokumentation und die Konfigurationsmöglichkeiten des Ladepunktes prüfen, ggf. beim Hersteller nachfragen!
+          en: |
+            Only enable this option if there is no way to initiate transactions from the charger side!
+            This is only the case if e.g. no RFID reader is available and charging processes would have to be released individually via app.
+            Normally, the charger should always be configured at the device so that either an RFID card is used for activation or the charger is set to "Autostart", "Free Charging" or similar.
+            First check the documentation and configuration possibilities of the charger, ask the manufacturer if necessary!
+      - name: idtag
+        advanced: true
+        type: string
+        description:
+          en: Identifier used for authentication of external transactions (RemoteStartTransaction)
+          de: Identifikator zur Authentifizierung von externen Transaktionen (RemoteStartTransaction)
+        help:
+          de: |
+            Diese Option ist nur in Ausnahmefällen erforderlich wenn der Ladepunkt für die Annahme externer Transaktionen einen spezifischen Token erfordert.
+          en: |
+            This option is only required in exceptional cases if the charger requires a specific token for accepting external transactions.
+        example: evcc
+      - name: connecttimeout
         advanced: true
         type: duration
         default: 5m
+        description:
+          de: Zeitlimit für die Registrierung des Ladepunktes
+          en: Timeout for the registration of the charging point
       - name: timeout
-        default: 2m
+        advanced: true
+        type: duration
+        default: 30s
+        description:
+          de: Zeitlimit für die Beantwortung von einzelnen OCPP-Nachrichten
+          en: Timeout for individual OCPP messages
+      - name: meterinterval
+        advanced: true
+        type: duration
+        default: 10s
+        description:
+          de: Übertragungsintervall der Zählerwerte (MeterValueSampleInterval)
+          en: Transmission interval of meter values (MeterValueSampleInterval)
+      - name: metervalues
+        advanced: true
+        type: string
+        description:
+          de: Manuelle Vorgabe der zu konfigurierenden Zählerwerte (MeterValuesSampledData)
+          en: Manual specification of the meter values to be configured (MeterValuesSampledData)
+        example: Energy.Active.Import.Register,Power.Active.Import,SoC,Current.Offered,Power.Offered,Current.Import,Voltage
 
   mqtt:
     protocol: mqtt
