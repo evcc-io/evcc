@@ -12,11 +12,12 @@ type logger struct {
 	logger meters.Logger
 }
 
-func (l *logger) Logger(logger modbus.Logger) {
+func (l *logger) WithLogger(logger modbus.Logger, fun func() ([]byte, error)) ([]byte, error) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 
 	l.logger = logger
+	return fun()
 }
 
 func (l *logger) Printf(format string, v ...interface{}) {
