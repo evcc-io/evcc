@@ -15,6 +15,13 @@ params:
     choice: ["tcpip"]
     port: 1502
     id: 71
+  - name: endianness
+    description:
+      de: Byte-Reihenfolge (Little/Big)
+      en: Endianness (Little/Big)
+    validvalues: ["big", "little"]
+    default: little
+    advanced: true
 render: |
   type: custom
   power:
@@ -23,4 +30,4 @@ render: |
     register: # manual non-sunspec register configuration
       address: 252 # (see ba_kostal_interface_modbus-tcp_sunspec.pdf)
       type: holding
-      decode: float32s # may be float32 on specific firmware/devices
+      decode: {{ if (eq .endianness "big") }}float32{{ else }}float32s{{ end }}
