@@ -42,14 +42,18 @@ func (t *Template) UpdateParamsWithDefaults() error {
 func (t *Template) Validate() error {
 	for _, c := range t.Capabilities {
 		if !slices.Contains(ValidCapabilities, c) {
-			return fmt.Errorf("invalid capability '%s' in template %s", c, t.Template)
+			return fmt.Errorf("invalid capability '%s' in template %s. valid options: %s", c, t.Template, ValidCapabilities)
 		}
 	}
 
 	for _, r := range t.Requirements.EVCC {
 		if !slices.Contains(ValidRequirements, r) {
-			return fmt.Errorf("invalid requirement '%s' in template %s", r, t.Template)
+			return fmt.Errorf("invalid requirement '%s' in template %s. valid options: %s", r, t.Template, ValidCapabilities)
 		}
+	}
+
+	if t.Protocol != "" && !slices.Contains(ValidProtocols, t.Protocol) {
+		return fmt.Errorf("invalid protocol '%s' in template %s. valid options: %s", t.Protocol, t.Template, ValidProtocols)
 	}
 
 	for _, p := range t.Params {
@@ -119,7 +123,26 @@ func (t *Template) ResolvePresets() error {
 				return fmt.Errorf("could not find preset definition: %s", p.Preset)
 			}
 
+			// add preset params
 			t.Params = append(t.Params, base.Params...)
+
+			// apply protocol if not already set
+			if t.Protocol == "" && base.Protocol != "" {
+				t.Protocol = base.Protocol
+			}
+
+			// set description if not already set
+			if t.Requirements.Description.DE == "" && t.Requirements.Description.EN == "" && t.Requirements.Description.Generic == "" {
+				t.Requirements.Description = base.Requirements.Description
+			}
+
+			// append requirements if not already present
+			for _, r := range base.Requirements.EVCC {
+				if !slices.Contains(t.Requirements.EVCC, r) {
+					t.Requirements.EVCC = append(t.Requirements.EVCC, r)
+				}
+			}
+
 			continue
 		}
 

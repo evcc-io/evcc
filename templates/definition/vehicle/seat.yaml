@@ -2,7 +2,13 @@ template: seat
 products:
   - brand: Seat
     description:
-      generic: CupraConnect Gen3 (Ateca, Leon, Formentor)
+      generic: Ateca
+  - brand: Seat
+    description:
+      generic: Leon
+  - brand: Seat
+    description:
+      generic: Formentor
 params:
   - preset: vehicle-base
   - preset: vehicle-identify

@@ -346,6 +346,7 @@ presets:
           de: Zusätzlicher prozentualer Aufschlag (z.B. 0.2 für 20%)
           en: Additional percentage charge (e.g. 0.2 for 20%)
   eebus:
+    protocol: eebus
     params:
       - name: ski
         help:
@@ -372,6 +373,9 @@ presets:
       - name: icon
         advanced: true
   ocpp:
+    protocol: ocpp
+    requirements:
+      evcc: ["sponsorship"]
     params:
       - name: stationid
         type: string
@@ -404,6 +408,7 @@ presets:
         default: 2m
 
   mqtt:
+    protocol: mqtt
     params:
       - name: host
         help:

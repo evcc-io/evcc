@@ -82,6 +82,7 @@ func productsHandler(w http.ResponseWriter, r *http.Request) {
 					Name:     p.Title(lang),
 					Template: t.TemplateDefinition.Template,
 					Group:    t.Group,
+					Protocol: t.Protocol,
 				})
 			}
 		}

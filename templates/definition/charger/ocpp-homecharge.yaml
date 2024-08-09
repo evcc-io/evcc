@@ -2,7 +2,7 @@ template: homecharge
 products:
   - brand: Homecharge
     description:
-      generic: Homecharger HC11L, HC22L
+      generic: HC11L, HC22L
 requirements:
   description:
     de: |

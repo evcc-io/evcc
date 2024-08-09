@@ -2,13 +2,15 @@ template: ocpp-zaptec-go
 products:
   - brand: Zaptec
     description:
-      generic: Go [OCPP]
+      generic: Go
 capabilities: ["rfid"]
 requirements:
   description:
     generic: |
-      * OCPP Native mode
+      OCPP Native mode
+
       https://help.zaptec.com/hc/en-001/articles/22330328601489-Zaptec-Go-OCPP-Native-configuration-guide#h_01HP261F5NP6Z9VY0MVHJCZEBJ
-  evcc: ["sponsorship"]
+params:
+  - preset: ocpp
 render: |
   {{ include "ocpp" . }}

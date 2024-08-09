@@ -2,9 +2,9 @@ template: ocpp-sungrow-ac
 products:
   - brand: Sungrow
     description:
-      generic: AC011E [OCPP]
+      generic: AC011E
 capabilities: ["mA", "rfid"]
-requirements:
-  evcc: ["sponsorship"]
+params:
+  - preset: ocpp
 render: |
   {{ include "ocpp" . }}

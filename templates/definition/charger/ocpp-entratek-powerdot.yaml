@@ -2,12 +2,12 @@ template: ocpp-entratek-powerdot
 products:
   - brand: EntraTek
     description:
-      generic: Power Dot Fix [OCPP]
+      generic: Power Dot Fix
   - brand: EntraTek
     description:
-      generic: Power Dot Pro 2 [OCPP]
+      generic: Power Dot Pro 2
 capabilities: ["rfid"]
-requirements:
-  evcc: ["sponsorship"]
+params:
+  - preset: ocpp
 render: |
   {{ include "ocpp" . }}
