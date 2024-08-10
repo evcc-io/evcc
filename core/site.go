@@ -380,6 +380,11 @@ func (site *Site) DumpConfig() {
 		site.log.INFO.Println(meterCapabilities(fmt.Sprintf("aux %s", ref), pv))
 	}
 
+	// TODO go 1.23 use sorted
+	for ref, ext := range site.extMeters {
+		site.log.INFO.Println(meterCapabilities(fmt.Sprintf("ext %s", ref), ext))
+	}
+
 	if vehicles := site.Vehicles().Instances(); len(vehicles) > 0 {
 		site.log.INFO.Println("  vehicles:")
 
@@ -495,13 +500,13 @@ func (site *Site) updateExtMeters() {
 		return
 	}
 
-	mm := make([]meterMeasurement, len(site.extMeters))
+	mm := make(map[string]meterMeasurement, len(site.extMeters))
 
-	for i, meter := range site.extMeters {
+	for ref, meter := range site.extMeters {
 		// ext power
 		power, err := backoff.RetryWithData(meter.CurrentPower, bo())
 		if err != nil {
-			site.log.ERROR.Printf("ext meter %d power: %v", i+1, err)
+			site.log.ERROR.Printf("ext meter %s power: %v", ref, err)
 		}
 
 		// ext energy
@@ -509,11 +514,11 @@ func (site *Site) updateExtMeters() {
 		if m, ok := meter.(api.MeterEnergy); err == nil && ok {
 			energy, err = m.TotalEnergy()
 			if err != nil {
-				site.log.ERROR.Printf("ext meter %d energy: %v", i+1, err)
+				site.log.ERROR.Printf("ext meter %s energy: %v", ref, err)
 			}
 		}
 
-		mm[i] = meterMeasurement{
+		mm[ref] = meterMeasurement{
 			Power:  power,
 			Energy: energy,
 		}
