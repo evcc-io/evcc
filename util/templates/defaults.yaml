@@ -128,16 +128,6 @@ params:
     advanced: true
     type: duration
     example: 5m
-  - name: cloud
-    description:
-      de: evcc Cloud
-      en: evcc Cloud
-    help:
-      de: "Anstatt auf die Online API des Fahrzeugherstellers von der lokalen Installation zuzugreifen, wird dies über die evcc Cloud gemacht. Die Zugangsdaten und VIN werden sicher und verschlüsselt übertragen und in der Cloud nicht gespeichert. Die Vorteile sind: - Falls sich etwas an der Online API des Fahrzeugherstellers ändert, können Updates für alle Benutzer viel schneller zur Verfügung gestellt werden - Man muss nicht auf eine neue Version von evcc warten und dann ein lokales Update von evcc durchführen"
-      en: "Instead of connecting to the vehicle manufacturers online API from your local installation, this will use the evcc Cloud instead. Your credentials and VIN will be transfered encrypted and securely and won't be stored in the cloud. The benefits are: - If the vehicles online API changes, we can update this for all users more quickly - No waiting for a new evcc version in this case and then requiring an update"
-    requirements:
-      evcc: ["sponsorship"]
-    type: bool
   - name: timeout
     description:
       de: Zeitüberschreitung
