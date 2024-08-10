@@ -70,12 +70,14 @@
 									selectedAreas.length === 0
 								"
 							>
-								Alle Bereich
+								{{ $t("log.areas") }}
 							</template>
 							<template v-else-if="selectedAreas.length === 1">
 								{{ selectedAreas[0] }}
 							</template>
-							<template v-else> {{ selectedAreas.length }} Bereiche </template>
+							<template v-else>
+								{{ $t("log.nAreas", { count: selectedAreas.lenth }) }}
+							</template>
 						</MultiSelect>
 					</div>
 				</div>
