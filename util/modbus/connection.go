@@ -1,6 +1,7 @@
 package modbus
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/volkszaehler/mbmd/meters"
@@ -40,11 +41,14 @@ func (c *Connection) Timeout(timeout time.Duration) {
 }
 
 func (c *Connection) exec(fun func() ([]byte, error)) ([]byte, error) {
-	time.Sleep(c.delay)
 	return c.WithLogger(c.logical, func() ([]byte, error) {
+		time.Sleep(c.delay)
+		start := time.Now()
+
 		b, err := fun()
 		if err != nil {
 			c.Connection.Close()
+			fmt.Println("!!", time.Since(start), err)
 		}
 		return b, err
 	})
