@@ -82,7 +82,7 @@ type Site struct {
 	gridMeter     api.Meter            // Grid usage meter
 	pvMeters      map[string]api.Meter // PV generation meters
 	batteryMeters map[string]api.Meter // Battery charging meters
-  extMeters     map[string]api.Meter // External meters - for monitoring only
+    extMeters     map[string]api.Meter // External meters - for monitoring only
 	auxMeters     map[string]api.Meter // Auxiliary meters
 
 	// battery settings
