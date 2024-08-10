@@ -6,12 +6,8 @@ products:
 requirements:
   evcc: ["eebus"]
   description:
-    de: |
-      Dem Gerät muss eine feste IP Adresse zugewiesen sein (Manuell oder per DHCP).
-
-    en: |
-      The device has to have a fix IP address (manuall or via DHCP).
-
+    de: Das Gerät benötigt eine feste IP Adresse.
+    en: The device requires a fixed IP addres.
 params:
   - preset: eebus
 render: |
