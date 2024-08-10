@@ -58,6 +58,10 @@ func (cp *CP) StatusNotification(request *core.StatusNotificationRequest) (*core
 		return nil, ErrInvalidRequest
 	}
 
+	if request.ConnectorId == 0 {
+		return new(core.StatusNotificationConfirmation), nil
+	}
+
 	conn := cp.connectorByID(request.ConnectorId)
 	if conn == nil {
 		return nil, ErrInvalidConnector

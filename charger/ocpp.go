@@ -57,13 +57,13 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 		Connector        int
 		MeterInterval    time.Duration
 		MeterValues      string
-		ConnectTimeout   time.Duration
-		Timeout          time.Duration
-		BootNotification *bool
-		GetConfiguration *bool
-		ChargingRateUnit string
-		AutoStart        bool // deprecated, to be removed
-		NoStop           bool // deprecated, to be removed
+		ConnectTimeout   time.Duration // Initial Timeout
+		Timeout          time.Duration // Message Timeout
+		BootNotification *bool         // TODO deprecated
+		GetConfiguration *bool         // TODO deprecated
+		ChargingRateUnit string        // TODO deprecated
+		AutoStart        bool          // TODO deprecated
+		NoStop           bool          // TODO deprecated
 		RemoteStart      bool
 	}{
 		Connector:        1,
@@ -271,14 +271,14 @@ func NewOCPP(id string, connector int, idtag string,
 	// autodetect measurands
 	if meterValues == "" && meterValuesSampledDataMaxLength > 0 {
 		sampledMeasurands := c.tryMeasurands(desiredMeasurands, ocpp.KeyMeterValuesSampledData)
-		if len(sampledMeasurands) > meterValuesSampledDataMaxLength {
-			meterValues = strings.Join(sampledMeasurands[:meterValuesSampledDataMaxLength], ",")
-		}
+		meterValues = strings.Join(sampledMeasurands[:min(len(sampledMeasurands), meterValuesSampledDataMaxLength)], ",")
 	}
 
 	// configure measurands
-	if err := c.configure(ocpp.KeyMeterValuesSampledData, meterValues); err != nil {
-		return nil, err
+	if meterValues != "" {
+		if err := c.configure(ocpp.KeyMeterValuesSampledData, meterValues); err != nil {
+			return nil, err
+		}
 	}
 
 	c.meterValuesSample = meterValues

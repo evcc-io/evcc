@@ -82,6 +82,7 @@ type Site struct {
 	gridMeter     api.Meter            // Grid usage meter
 	pvMeters      map[string]api.Meter // PV generation meters
 	batteryMeters map[string]api.Meter // Battery charging meters
+  extMeters     map[string]api.Meter // External meters - for monitoring only
 	auxMeters     map[string]api.Meter // Auxiliary meters
 
 	// battery settings
@@ -112,6 +113,7 @@ type MetersConfig struct {
 	GridMeterRef     string   `mapstructure:"grid"`    // Grid usage meter
 	PVMetersRef      []string `mapstructure:"pv"`      // PV meter
 	BatteryMetersRef []string `mapstructure:"battery"` // Battery charging meter
+	ExtMetersRef     []string `mapstructure:"ext"`     // Meters used only for monitoring
 	AuxMetersRef     []string `mapstructure:"aux"`     // Auxiliary meters
 }
 
@@ -211,6 +213,15 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 		site.log.WARN.Println("battery configured but residualPower is missing or <= 0 (add residualPower: 100 to site), see https://docs.evcc.io/en/docs/reference/configuration/site#residualpower")
 	}
 
+	// ext meters
+	for _, ref := range site.Meters.ExtMetersRef {
+		dev, err := config.Meters().ByName(ref)
+		if err != nil {
+			return err
+		}
+		site.extMeters[ref] = dev.Instance()
+	}
+
 	// auxiliary meters
 	site.auxMeters = make(map[string]api.Meter)
 	for _, ref := range site.Meters.AuxMetersRef {
@@ -260,6 +271,9 @@ func (site *Site) restoreMetersAndTitle() {
 	}
 	if v, err := settings.String(keys.BatteryMeters); err == nil && v != "" {
 		site.Meters.BatteryMetersRef = append(site.Meters.BatteryMetersRef, filterConfigurable(strings.Split(v, ","))...)
+	}
+	if v, err := settings.String(keys.ExtMeters); err == nil && v != "" {
+		site.Meters.ExtMetersRef = append(site.Meters.ExtMetersRef, filterConfigurable(strings.Split(v, ","))...)
 	}
 	if v, err := settings.String(keys.AuxMeters); err == nil && v != "" {
 		site.Meters.AuxMetersRef = append(site.Meters.AuxMetersRef, filterConfigurable(strings.Split(v, ","))...)
@@ -475,6 +489,39 @@ func (site *Site) updatePvMeters() {
 	site.publish(keys.Pv, mm)
 }
 
+// updateExtMeters updates ext meters. All measurements are optional.
+func (site *Site) updateExtMeters() {
+	if len(site.extMeters) == 0 {
+		return
+	}
+
+	mm := make([]meterMeasurement, len(site.extMeters))
+
+	for i, meter := range site.extMeters {
+		// ext power
+		power, err := backoff.RetryWithData(meter.CurrentPower, bo())
+		if err != nil {
+			site.log.ERROR.Printf("ext meter %d power: %v", i+1, err)
+		}
+
+		// ext energy
+		var energy float64
+		if m, ok := meter.(api.MeterEnergy); err == nil && ok {
+			energy, err = m.TotalEnergy()
+			if err != nil {
+				site.log.ERROR.Printf("ext meter %d energy: %v", i+1, err)
+			}
+		}
+
+		mm[i] = meterMeasurement{
+			Power:  power,
+			Energy: energy,
+		}
+	}
+
+	// Publishing will be done in separate PR
+}
+
 // updateBatteryMeters updates battery meters. Power is retried, other measurements are optional.
 func (site *Site) updateBatteryMeters() error {
 	if len(site.batteryMeters) == 0 {
@@ -621,6 +668,7 @@ func (site *Site) updateMeters() error {
 	if err := site.updateBatteryMeters(); err != nil {
 		return err
 	}
+	site.updateExtMeters()
 	return site.updateGridMeter()
 }
 

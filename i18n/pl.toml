@@ -13,7 +13,7 @@ legendTitle = "Jak należy wykorzystać energię słoneczną?"
 legendTopAutostart = "uruchamia się automatycznie"
 legendTopName = "ładowanie wspomagane bateryjnie"
 legendTopSubline = "bez przerw"
-modalTitle = "Ustawienia baterii"
+modalTitle = "Bateria domowa"
 notControllable = "Sterowanie baterią nie jest dostępne dla tej baterii."
 
 [batterySettings.bufferStart]
@@ -29,10 +29,19 @@ never = "tylko z wystarczającą nadwyżką"
 titleAdd = "Dodaj miernik baterii"
 titleEdit = "Edytuj miernik baterii"
 
+[config.control]
+labelInterval = "Interwał aktualizacji"
+labelResidualPower = "Moc resztkowa"
+
 [config.deviceValue]
 capacity = "Pojemność"
 chargeStatus = "Status"
+chargeStatusA = "nie połączony"
+chargeStatusB = "połączony"
+chargeStatusC = "ładowanie"
 chargedEnergy = "Naładowany"
+configured = "Skonfigurowany"
+currency = "Waluta"
 current = "Prąd"
 enabled = "Włączony"
 energy = "Energia"
@@ -44,6 +53,10 @@ power = "Moc"
 range = "Zasięg"
 soc = "Stan naładowania"
 socLimit = "Limit"
+url = "URL"
+
+[config.eebus]
+title = "EEBus"
 
 [config.form]
 example = "Przykład"
@@ -51,11 +64,21 @@ optional = "opcjonalny"
 
 [config.general]
 cancel = "Anulować"
+experimental = "Eksperymentalny"
 save = "Zapisz"
+telemetry = "Telemetria"
 
 [config.grid]
 titleAdd = "Dodaj licznik sieci"
 titleEdit = "Edytuj licznik sieci"
+
+[config.influx]
+labelBucket = "Bucket"
+labelDatabase = "Baza danych"
+labelPassword = "Hasło"
+labelToken = "API Token"
+labelUrl = "URL"
+title = "InfluxDB"
 
 [config.main]
 addLoadpoint = "Dodaj ładowarkę"
@@ -75,9 +98,22 @@ template = "Producent"
 titleChoice = "Co chcesz dodać?"
 validateSave = "Sprawdź i zapisz"
 
+[config.modbusproxy]
+title = "Modbus Proxy"
+
+[config.mqtt]
+labelClientId = "Client ID"
+labelPassword = "Hasło"
+title = "MQTT"
+
+[config.network]
+labelPort = "Port"
+
 [config.options]
 
 [config.options.endianness]
+big = "big-endian"
+little = "little-endian"
 
 [config.options.schema]
 
@@ -478,7 +514,7 @@ auto = "Automatyczny"
 label = "Język"
 
 [settings.sponsorToken]
-expires = "Twój token sponsora wygasa {inXDays}. {getNewToken} i zaktualizuj swój plik konfiguracyjny."
+expires = "Twój token sponsora wygasa {inXDays}. {getNewToken} i zaktualizuj tutaj."
 getNew = "Weź świeżego"
 hint = "Uwaga: zautomatyzujemy to w przyszłości."
 
