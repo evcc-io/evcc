@@ -111,7 +111,7 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 	tcc.SetBaseUrl(cc.CommandProxy)
 
-	log.INFO.Println("!! tesla proxy for %s:", vehicle.DisplayName, cc.CommandProxy)
+	log.INFO.Printf("!! tesla proxy for %s:", vehicle.DisplayName, cc.CommandProxy)
 
 	v := &Tesla{
 		embed:      &cc.embed,
