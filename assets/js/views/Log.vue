@@ -57,19 +57,26 @@
 						</select>
 					</div>
 					<div class="filterAreas col-6 col-lg-2">
-						<select
-							class="form-select"
-							v-model="area"
-							:aria-label="$t('log.areaLabel')"
-							@focus="updateAreas()"
-							@change="updateLogs()"
+						<MultiSelect
+							id="logAreasSelect"
+							v-model="selectedAreas"
+							:options="areaOptions"
+							placeholder="Select Items"
+							@open="updateAreas()"
 						>
-							<option value="">{{ $t("log.areas") }}</option>
-							<hr />
-							<option v-for="area in areas" :key="area" :value="area">
-								{{ area }}
-							</option>
-						</select>
+							<template
+								v-if="
+									selectedAreas.length === areaOptions.length ||
+									selectedAreas.length === 0
+								"
+							>
+								Alle Bereich
+							</template>
+							<template v-else-if="selectedAreas.length === 1">
+								{{ selectedAreas[0] }}
+							</template>
+							<template v-else> {{ selectedAreas.length }} Bereiche </template>
+						</MultiSelect>
 					</div>
 				</div>
 				<hr class="my-0" />
@@ -112,6 +119,7 @@ import "@h2d2/shopicons/es/regular/download";
 import TopHeader from "../components/TopHeader.vue";
 import Play from "../components/MaterialIcon/Play.vue";
 import Record from "../components/MaterialIcon/Record.vue";
+import MultiSelect from "../components/MultiSelect.vue";
 import api from "../api";
 import store from "../store";
 
@@ -127,6 +135,7 @@ export default {
 		TopHeader,
 		Play,
 		Record,
+		MultiSelect,
 	},
 	data() {
 		return {
@@ -134,7 +143,7 @@ export default {
 			areas: [],
 			search: "",
 			level: DEFAULT_LEVEL,
-			area: "",
+			selectedAreas: [],
 			timeout: null,
 			levels: LEVELS,
 			busy: false,
@@ -168,6 +177,9 @@ export default {
 				return { key, className, line };
 			});
 		},
+		areaOptions() {
+			return this.areas.map((area) => ({ name: area, value: area }));
+		},
 		showMoreButton() {
 			return this.lines.length === DEFAULT_COUNT;
 		},
@@ -179,14 +191,22 @@ export default {
 			if (this.level) {
 				params.append("level", this.level);
 			}
-			if (this.area) {
-				params.append("area", this.area);
-			}
+			this.selectedAreas.forEach((area) => {
+				params.append("area", area);
+			});
 			params.append("format", "txt");
 			return `./api/system/log?${params.toString()}`;
 		},
 		autoFollow() {
 			return this.timeout !== null;
+		},
+	},
+	watch: {
+		selectedAreas() {
+			this.updateLogs();
+		},
+		level() {
+			this.updateLogs();
 		},
 	},
 	methods: {
@@ -199,7 +219,7 @@ export default {
 				const response = await api.get("/system/log", {
 					params: {
 						level: this.level?.toLocaleLowerCase() || null,
-						area: this.area || null,
+						area: this.selectedAreas.length ? this.selectedAreas : null,
 						count: showAll ? null : DEFAULT_COUNT,
 					},
 				});
