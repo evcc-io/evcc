@@ -194,15 +194,13 @@ func (nrg *NRGKickGen2) Status() (api.ChargeStatus, error) {
 		}
 
 		switch error := binary.BigEndian.Uint16(b); error {
-		case 32:
-			fallthrough
-		case 33:
+		case 32, 33:
 			return api.StatusF, fmt.Errorf("%d", error)
 		default:
 			return api.StatusF, fmt.Errorf("%d", error)
 		}
 	case 7:
-		return api.StatusNone, nil
+		return api.StatusB, nil
 	default:
 		return api.StatusNone, fmt.Errorf("unhandled status type")
 	}
