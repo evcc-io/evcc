@@ -18,6 +18,7 @@ require (
 	github.com/bogosj/tesla v1.3.1
 	github.com/cenkalti/backoff/v4 v4.3.0
 	github.com/cloudfoundry/jibber_jabber v0.0.0-20151120183258-bcc4c8345a21
+	github.com/coder/websocket v1.8.12
 	github.com/containrrr/shoutrrr v0.8.0
 	github.com/coreos/go-oidc/v3 v3.10.0
 	github.com/denisbrodbeck/machineid v1.0.1
@@ -105,7 +106,6 @@ require (
 	google.golang.org/protobuf v1.34.2
 	gopkg.in/yaml.v3 v3.0.1
 	gorm.io/gorm v1.25.10
-	nhooyr.io/websocket v1.8.11
 )
 
 require (
@@ -193,6 +193,7 @@ require (
 	modernc.org/mathutil v1.6.0 // indirect
 	modernc.org/memory v1.8.0 // indirect
 	modernc.org/sqlite v1.30.1 // indirect
+	nhooyr.io/websocket v1.8.17 // indirect
 )
 
 replace gopkg.in/yaml.v3 => github.com/andig/yaml v0.0.0-20240531135838-1ff5761ab467
