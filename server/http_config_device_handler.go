@@ -141,6 +141,8 @@ func deviceConfigHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// TODO return application/yaml content type if type != template
+
 	jsonResult(w, res)
 }
 
@@ -214,6 +216,8 @@ func newDeviceHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// TODO add application/yaml content type, reject type==template
+
 	var req map[string]any
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		jsonError(w, http.StatusBadRequest, err)
@@ -286,6 +290,8 @@ func updateDeviceHandler(w http.ResponseWriter, r *http.Request) {
 		jsonError(w, http.StatusBadRequest, err)
 		return
 	}
+
+	// TODO add application/yaml content type, reject type==template
 
 	var req map[string]any
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
