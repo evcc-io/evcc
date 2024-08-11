@@ -229,7 +229,22 @@
 							>
 								<template #icon><CircuitsIcon /></template>
 								<template #tags>
-									<DeviceTags :tags="yamlTags('circuits')" />
+									<DeviceTags
+										v-if="circuits.length == 0"
+										:tags="yamlTags('circuits')"
+									/>
+									<template
+										v-else
+										v-for="(circuit, idx) in circuits"
+										:key="circuit.name"
+									>
+										<hr v-if="idx > 0" />
+										<p class="my-2 fw-bold">
+											{{ circuit.config?.title }}
+											<code>({{ circuit.name }})</code>
+										</p>
+										<DeviceTags :tags="circuitTags(circuit)" />
+									</template>
 								</template>
 							</DeviceCard>
 							<DeviceCard
@@ -403,6 +418,7 @@ export default {
 			meters: [],
 			loadpoints: [],
 			chargers: [],
+			circuits: [],
 			selectedVehicleId: undefined,
 			selectedMeterId: undefined,
 			selectedMeterType: undefined,
@@ -504,6 +520,7 @@ export default {
 			await this.loadSite();
 			await this.loadChargers();
 			await this.loadLoadpoints();
+			await this.loadCircuits();
 			await this.loadDirty();
 			await this.updateValues();
 			await this.updateYamlConfigState();
@@ -525,6 +542,10 @@ export default {
 		async loadMeters() {
 			const response = await api.get("/config/devices/meter");
 			this.meters = response.data?.result || [];
+		},
+		async loadCircuits() {
+			const response = await api.get("/config/devices/circuit");
+			this.circuits = response.data?.result || [];
 		},
 		async loadSite() {
 			const response = await api.get("/config/site", {
@@ -767,6 +788,25 @@ export default {
 		},
 		yamlTags(key) {
 			return { configured: { value: this.yamlConfigState[key] } };
+		},
+		circuitTags(circuit) {
+			const data = store.state?.circuits[circuit.name] || {};
+			const result = {};
+			if (data.maxPower) {
+				result.powerRange = {
+					value: [data.power || 0, data.maxPower],
+					warning: data.power >= data.maxPower,
+				};
+			} else {
+				result.power = { value: data.power || 0, muted: true };
+			}
+			if (data.maxCurrent) {
+				result.currentRange = {
+					value: [data.current || 0, data.maxCurrent],
+					warning: data.current >= data.maxCurrent,
+				};
+			}
+			return result;
 		},
 		deviceError(type, name) {
 			const fatal = store.state?.fatal || {};

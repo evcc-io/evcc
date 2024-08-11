@@ -135,7 +135,9 @@ func (c *Circuit) setParent(parent api.Circuit) error {
 
 // Wrap wraps circuit with parent, keeping the original meter
 func (c *Circuit) Wrap(parent api.Circuit) error {
-	parent.(*Circuit).meter = c.meter
+	if c.meter != nil {
+		parent.(*Circuit).meter = c.meter
+	}
 	return c.setParent(parent)
 }
 

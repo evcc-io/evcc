@@ -98,14 +98,14 @@ type Loadpoint struct {
 	MinCurrent_       float64        `mapstructure:"minCurrent"`
 	MaxCurrent_       float64        `mapstructure:"maxCurrent"`
 
-	title            string  // UI title
-	priority         int     // Priority
-	minCurrent       float64 // PV mode: start current	Min+PV mode: min current
-	maxCurrent       float64 // Max allowed current. Physically ensured by the charger
-	configuredPhases int     // Charger configured phase mode 0/1/3
-	limitSoc         int     // Session limit for soc
-	limitEnergy      float64 // Session limit for energy
-	smartCostLimit   float64 // always charge if cost is below this value
+	title            string   // UI title
+	priority         int      // Priority
+	minCurrent       float64  // PV mode: start current	Min+PV mode: min current
+	maxCurrent       float64  // Max allowed current. Physically ensured by the charger
+	configuredPhases int      // Charger configured phase mode 0/1/3
+	limitSoc         int      // Session limit for soc
+	limitEnergy      float64  // Session limit for energy
+	smartCostLimit   *float64 // always charge if cost is below this value
 
 	mode                api.ChargeMode
 	enabled             bool      // Charger enabled state
@@ -349,7 +349,7 @@ func (lp *Loadpoint) restoreSettings() {
 		lp.setLimitEnergy(v)
 	}
 	if v, err := lp.settings.Float(keys.SmartCostLimit); err == nil {
-		lp.SetSmartCostLimit(v)
+		lp.SetSmartCostLimit(&v)
 	}
 
 	var thresholds loadpoint.ThresholdsConfig
@@ -889,6 +889,11 @@ func (lp *Loadpoint) setLimit(chargeCurrent float64) error {
 
 		lp.setAndPublishEnabled(enabled)
 		lp.chargerSwitched = lp.clock.Now()
+
+		// ensure we always re-set current when enabling charger
+		if !enabled {
+			lp.chargeCurrent = 0
+		}
 
 		lp.bus.Publish(evChargeCurrent, chargeCurrent)
 
@@ -1660,9 +1665,18 @@ func (lp *Loadpoint) phaseSwitchCompleted() bool {
 }
 
 // Update is the main control function. It reevaluates meters and charger state
-func (lp *Loadpoint) Update(sitePower float64, smartCostActive bool, smartCostNextStart time.Time, batteryBuffered, batteryStart bool, greenShare float64, effPrice, effCo2 *float64) {
+func (lp *Loadpoint) Update(sitePower float64, rates api.Rates, batteryBuffered, batteryStart bool, greenShare float64, effPrice, effCo2 *float64) {
+	// smart cost
+	smartCostActive := lp.smartCostActive(rates)
 	lp.publish(keys.SmartCostActive, smartCostActive)
+
+	var smartCostNextStart time.Time
+	if !smartCostActive {
+		smartCostNextStart = lp.smartCostNextStart(rates)
+	}
 	lp.publish(keys.SmartCostNextStart, smartCostNextStart)
+
+	// long-running tasks
 	lp.processTasks()
 
 	// read and publish meters first- charge power and currents have already been updated by the site

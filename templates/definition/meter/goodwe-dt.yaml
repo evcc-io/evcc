@@ -1,0 +1,31 @@
+template: goodwe-dt
+products:
+  - brand: GoodWe
+    description:
+      generic: SDT/DT Inverter
+params:
+  - name: usage
+    choice: ["pv"]
+  - name: modbus
+    choice: ["rs485", "tcpip"]
+    baudrate: 9600
+    id: 247
+render: |
+  type: custom
+  {{- if eq .usage "pv" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register: # manual non-sunspec register configuration
+      address: 781 # Actual Power
+      type: holding
+      decode: uint16
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register: # manual non-sunspec register configuration
+      address: 786 # PV Energy-Total
+      type: holding
+      decode: uint32
+    scale: 0.1
+  {{- end }}

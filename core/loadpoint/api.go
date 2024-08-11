@@ -136,9 +136,9 @@ type API interface {
 	//
 
 	// GetSmartChargingActive determines if smart charging is active
-	GetSmartCostLimit() float64
+	GetSmartCostLimit() *float64
 	// SetSmartCostLimit sets the smart cost limit
-	SetSmartCostLimit(limit float64)
+	SetSmartCostLimit(limit *float64)
 
 	//
 	// power and energy

@@ -184,6 +184,13 @@ a:hover {
 	--bs-btn-border-width: 2px;
 }
 
+.btn-reset {
+	border: none;
+	background: none;
+	padding: 0;
+	color: inherit;
+}
+
 .btn-primary,
 .btn-primary:focus {
 	background-color: var(--bs-primary);

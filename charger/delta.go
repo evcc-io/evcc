@@ -76,7 +76,7 @@ func NewDeltaFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	return NewDelta(cc.URI, cc.Device, cc.Comset, cc.Baudrate, modbus.ProtocolFromRTU(cc.RTU), cc.ID, cc.Connector)
+	return NewDelta(cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Settings.Protocol(), cc.ID, cc.Connector)
 }
 
 // NewDelta creates Delta charger
@@ -151,9 +151,9 @@ func (wb *Delta) Status() (api.ChargeStatus, error) {
 	// 8: Not ready
 	// 9: Faulted
 	switch s := encoding.Uint16(b); s {
-	case 0, 1:
+	case 0, 1, 2, 3:
 		return api.StatusA, nil
-	case 2, 3, 5, 6, 7:
+	case 5, 6, 7:
 		return api.StatusB, nil
 	case 4:
 		return api.StatusC, nil

@@ -207,6 +207,8 @@ NEXT:
 }
 
 func configureMeters(static []config.Named, names ...string) error {
+	g, _ := errgroup.WithContext(context.Background())
+
 	for i, cc := range static {
 		if cc.Name == "" {
 			return fmt.Errorf("cannot create meter %d: missing name", i+1)
@@ -220,14 +222,18 @@ func configureMeters(static []config.Named, names ...string) error {
 			log.WARN.Printf("create meter %d: %v", i+1, err)
 		}
 
-		instance, err := meter.NewFromConfig(cc.Type, cc.Other)
-		if err != nil {
-			return &DeviceError{cc.Name, fmt.Errorf("cannot create meter '%s': %w", cc.Name, err)}
-		}
+		g.Go(func() error {
+			instance, err := meter.NewFromConfig(cc.Type, cc.Other)
+			if err != nil {
+				return &DeviceError{cc.Name, fmt.Errorf("cannot create meter '%s': %w", cc.Name, err)}
+			}
 
-		if err := config.Meters().Add(config.NewStaticDevice(cc, instance)); err != nil {
-			return &DeviceError{cc.Name, err}
-		}
+			if err := config.Meters().Add(config.NewStaticDevice(cc, instance)); err != nil {
+				return &DeviceError{cc.Name, err}
+			}
+
+			return nil
+		})
 	}
 
 	// append devices from database
@@ -237,25 +243,29 @@ func configureMeters(static []config.Named, names ...string) error {
 	}
 
 	for _, conf := range configurable {
-		cc := conf.Named()
+		g.Go(func() error {
+			cc := conf.Named()
 
-		if len(names) > 0 && !slices.Contains(names, cc.Name) {
+			if len(names) > 0 && !slices.Contains(names, cc.Name) {
+				return nil
+			}
+
+			// TODO add fake devices
+
+			instance, err := meter.NewFromConfig(cc.Type, cc.Other)
+			if err != nil {
+				return &DeviceError{cc.Name, fmt.Errorf("cannot create meter '%s': %w", cc.Name, err)}
+			}
+
+			if err := config.Meters().Add(config.NewConfigurableDevice(conf, instance)); err != nil {
+				return &DeviceError{cc.Name, err}
+			}
+
 			return nil
-		}
-
-		// TOTO add fake devices
-
-		instance, err := meter.NewFromConfig(cc.Type, cc.Other)
-		if err != nil {
-			return &DeviceError{cc.Name, fmt.Errorf("cannot create meter '%s': %w", cc.Name, err)}
-		}
-
-		if err := config.Meters().Add(config.NewConfigurableDevice(conf, instance)); err != nil {
-			return &DeviceError{cc.Name, err}
-		}
+		})
 	}
 
-	return nil
+	return g.Wait()
 }
 
 func configureChargers(static []config.Named, names ...string) error {
@@ -302,7 +312,7 @@ func configureChargers(static []config.Named, names ...string) error {
 				return nil
 			}
 
-			// TOTO add fake devices
+			// TODO add fake devices
 
 			instance, err := charger.NewFromConfig(cc.Type, cc.Other)
 			if err != nil {
@@ -527,7 +537,7 @@ func configureDatabase(conf globalconfig.DB) error {
 
 	// persist unsaved settings every 30 minutes
 	go func() {
-		for range time.Tick(30 * time.Minute) {
+		for range time.Tick(time.Minute) {
 			persistSettings()
 		}
 	}()

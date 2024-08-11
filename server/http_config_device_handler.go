@@ -71,7 +71,9 @@ func deviceConfigMap[T any](class templates.Class, dev config.Device[T]) (map[st
 
 	dc := map[string]any{
 		"name": conf.Name,
-		"type": conf.Type,
+	}
+	if conf.Type != "" {
+		dc["type"] = conf.Type
 	}
 
 	if configurable, ok := dev.(config.ConfigurableDevice[T]); ok {

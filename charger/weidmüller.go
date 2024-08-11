@@ -38,7 +38,7 @@ type Weidmüller struct {
 const (
 	wmRegCarStatus    = 301  // GD_ID_EVCC_CAR_STATE CHAR
 	wmRegEvccStatus   = 302  // GD_ID_EVCC_EVSE_STATE UINT16
-	wmRegPhases       = 317  // GD_ID_EVCC_PHASES UINT16
+	wmRegPhases       = 318  // GD_ID_EVCC_PHASES_LLM UINT16
 	wmRegVoltages     = 400  // GD_ID_CM_VOLTAGE_PHASE UINT32
 	wmRegCurrents     = 406  // GD_ID_CM_CURRENT_PHASE UINT32
 	wmRegActivePower  = 418  // GD_ID_CM_ACTIVE_POWER UINT32
@@ -136,7 +136,7 @@ func (wb *Weidmüller) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	switch s := string(b); s {
+	switch s := string(b[1]); s {
 	case "A", "B", "C":
 		return api.ChargeStatus(s), nil
 	default:
@@ -167,7 +167,7 @@ func (wb *Weidmüller) MaxCurrent(current int64) error {
 		return fmt.Errorf("invalid current %d", current)
 	}
 
-	wb.curr = uint16(current * 10)
+	wb.curr = uint16(current)
 
 	return wb.setCurrent(wb.curr)
 }

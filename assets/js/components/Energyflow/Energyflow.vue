@@ -22,7 +22,11 @@
 				:vehicleIcons="vehicleIcons"
 			/>
 		</div>
-		<div class="details" :style="{ height: detailsHeight }">
+		<div
+			class="details"
+			:style="{ height: detailsHeight }"
+			:class="{ 'details--ready': ready }"
+		>
 			<div ref="detailsInner" class="details-inner row">
 				<div class="col-12 d-flex justify-content-between pt-2 mb-4">
 					<div class="d-flex flex-nowrap align-items-center text-truncate">
@@ -156,7 +160,17 @@
 							:detailsFmt="batteryFmt"
 							detailsClickable
 							@details-clicked="openBatterySettingsModal"
-						/>
+						>
+							<template v-if="batteryGridChargeActive" #subline>
+								<button
+									type="button"
+									class="btn-reset d-flex justify-content-between"
+									@click.stop="openBatterySettingsModal"
+								>
+									{{ batteryGridChargeText }} (≤ {{ batteryGridChargeLimitFmt }})
+								</button>
+							</template>
+						</EnergyflowEntry>
 						<EnergyflowEntry
 							v-if="pvPossible"
 							:name="$t('main.energyflow.pvExport')"
@@ -207,6 +221,8 @@ export default {
 		batteryPower: { type: Number, default: 0 },
 		batterySoc: { type: Number, default: 0 },
 		batteryDischargeControl: { type: Boolean },
+		batteryGridChargeLimit: { type: Number },
+		batteryGridChargeActive: { type: Boolean },
 		batteryMode: { type: String },
 		tariffGrid: { type: Number },
 		tariffFeedIn: { type: Number },
@@ -222,7 +238,7 @@ export default {
 		bufferStartSoc: { type: Number },
 	},
 	data: () => {
-		return { detailsOpen: false, detailsCompleteHeight: null };
+		return { detailsOpen: false, detailsCompleteHeight: null, ready: false };
 	},
 	computed: {
 		gridImport: function () {
@@ -303,13 +319,45 @@ export default {
 		pvPossible() {
 			return this.pvConfigured || this.gridConfigured;
 		},
+		batteryGridChargeText() {
+			return this.$t(
+				`main.energyflow.${this.co2Available ? "clean" : "cheap"}BatteryGridCharge`
+			);
+		},
+		batteryGridChargeNow() {
+			if (this.co2Available) {
+				return this.fmtCo2Short(this.tariffCo2);
+			}
+			return this.fmtPricePerKWh(this.tariffGrid, this.currency, true);
+		},
+		batteryGridChargeLimitFmt() {
+			if (this.batteryGridChargeLimit === null || this.batteryGridChargeLimit === undefined) {
+				return;
+			}
+			if (this.co2Available) {
+				return this.fmtCo2Short(this.batteryGridChargeLimit);
+			}
+			return this.fmtPricePerKWh(this.batteryGridChargeLimit, this.currency, true);
+		},
+	},
+	watch: {
+		pvConfigured() {
+			this.$nextTick(this.updateHeight);
+		},
+		gridConfigured() {
+			this.$nextTick(this.updateHeight);
+		},
+		batteryConfigured() {
+			this.$nextTick(this.updateHeight);
+		},
 	},
 	mounted() {
 		window.addEventListener("resize", this.updateHeight);
 		// height must be calculated in case of initially open details
 		if (settings.energyflowDetails) {
-			setTimeout(this.toggleDetails, 100);
+			this.toggleDetails();
 		}
+		setTimeout(() => (this.ready = true), 200);
 	},
 	unmounted() {
 		window.removeEventListener("resize", this.updateHeight);
@@ -363,9 +411,12 @@ export default {
 	opacity: 0;
 	transform: scale(0.98);
 	overflow: visible;
-	transition: height, opacity, transform;
-	transition-duration: var(--evcc-transition-medium);
+	transition-property: height, opacity, transform;
+	transition-duration: 0;
 	transition-timing-function: cubic-bezier(0.5, 0.5, 0.5, 1.15);
+}
+.details--ready {
+	transition-duration: var(--evcc-transition-medium);
 }
 .energyflow--open .details {
 	opacity: 1;

@@ -178,12 +178,12 @@ func (m *MQTT) listenSiteSetters(topic string, site site.API) error {
 		{"/batteryDischargeControl", boolSetter(site.SetBatteryDischargeControl)},
 		{"/prioritySoc", floatSetter(site.SetPrioritySoc)},
 		{"/residualPower", floatSetter(site.SetResidualPower)},
-		{"/smartCostLimit", floatSetter(func(limit float64) error {
+		{"/smartCostLimit", floatPtrSetter(pass(func(limit *float64) {
 			for _, lp := range site.Loadpoints() {
 				lp.SetSmartCostLimit(limit)
 			}
-			return nil
-		})},
+		}))},
+		{"/batteryGridChargeLimit", floatPtrSetter(pass(site.SetBatteryGridChargeLimit))},
 	} {
 		if err := m.Handler.ListenSetter(topic+s.topic, s.fun); err != nil {
 			return err
@@ -204,7 +204,7 @@ func (m *MQTT) listenLoadpointSetters(topic string, site site.API, lp loadpoint.
 		{"/limitEnergy", floatSetter(pass(lp.SetLimitEnergy))},
 		{"/enableThreshold", floatSetter(pass(lp.SetEnableThreshold))},
 		{"/disableThreshold", floatSetter(pass(lp.SetDisableThreshold))},
-		{"/smartCostLimit", floatSetter(pass(lp.SetSmartCostLimit))},
+		{"/smartCostLimit", floatPtrSetter(pass(lp.SetSmartCostLimit))},
 		{"/planEnergy", func(payload string) error {
 			var plan struct {
 				Time  time.Time `json:"time"`
