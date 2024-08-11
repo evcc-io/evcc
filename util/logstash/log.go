@@ -125,7 +125,12 @@ func (l *logger) AllIter(areas []string, level jww.Threshold, count int) iter.Se
 	all := len(areas) == 0 && level == jww.LevelTrace
 
 	return func(yield func(string) bool) {
-		for range r.Len() {
+		len := min(count, r.Len())
+		if len < r.Len() {
+			r = r.Move(r.Len() - len)
+		}
+
+		for range len {
 			if e, ok := r.Value.(element); ok && e != "" && (all || e.match(areas, level)) {
 				if !yield(string(e)) {
 					return
