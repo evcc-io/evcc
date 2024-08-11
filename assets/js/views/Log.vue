@@ -47,37 +47,25 @@
 					<div class="filterLevel col-6 col-lg-2">
 						<select
 							class="form-select"
-							v-model="level"
 							:aria-label="$t('log.levelLabel')"
-							@change="updateLogs()"
+							:value="level"
+							@input="changeLevel"
 						>
-							<option v-for="level in levels" :key="level" :value="level">
-								{{ level }}
+							<option v-for="l in levels" :key="l" :value="l">
+								{{ l.toUpperCase() }}
 							</option>
 						</select>
 					</div>
 					<div class="filterAreas col-6 col-lg-2">
 						<MultiSelect
 							id="logAreasSelect"
-							v-model="selectedAreas"
+							:modelValue="areas"
 							:options="areaOptions"
-							placeholder="Select Items"
+							:selectAllLabel="$t('log.selectAll')"
+							@update:modelValue="changeAreas"
 							@open="updateAreas()"
 						>
-							<template
-								v-if="
-									selectedAreas.length === areaOptions.length ||
-									selectedAreas.length === 0
-								"
-							>
-								{{ $t("log.areas") }}
-							</template>
-							<template v-else-if="selectedAreas.length === 1">
-								{{ selectedAreas[0] }}
-							</template>
-							<template v-else>
-								{{ $t("log.nAreas", { count: selectedAreas.lenth }) }}
-							</template>
+							{{ areasLabel }}
 						</MultiSelect>
 					</div>
 				</div>
@@ -125,11 +113,11 @@ import MultiSelect from "../components/MultiSelect.vue";
 import api from "../api";
 import store from "../store";
 
-const LEVELS = ["FATAL", "ERROR", "WARN", "INFO", "DEBUG", "TRACE"];
-const DEFAULT_LEVEL = "DEBUG";
+const LEVELS = ["fatal", "error", "warn", "info", "debug", "trace"];
+const DEFAULT_LEVEL = "debug";
 const DEFAULT_COUNT = 1000;
 
-const levelMatcher = new RegExp(`\\[.*?\\] (${LEVELS.join("|")})`);
+const levelMatcher = new RegExp(`\\[.*?\\] (${LEVELS.map((l) => l.toUpperCase()).join("|")})`);
 
 export default {
 	name: "Log",
@@ -139,13 +127,15 @@ export default {
 		Record,
 		MultiSelect,
 	},
+	props: {
+		areas: { type: Array, default: () => [] },
+		level: { type: String, default: DEFAULT_LEVEL },
+	},
 	data() {
 		return {
 			lines: [],
-			areas: [],
+			availableAreas: [],
 			search: "",
-			level: DEFAULT_LEVEL,
-			selectedAreas: [],
 			timeout: null,
 			levels: LEVELS,
 			busy: false,
@@ -180,7 +170,16 @@ export default {
 			});
 		},
 		areaOptions() {
-			return this.areas.map((area) => ({ name: area, value: area }));
+			return this.availableAreas.map((area) => ({ name: area, value: area }));
+		},
+		areasLabel() {
+			if (this.areas.length === 0) {
+				return this.$t("log.areas");
+			} else if (this.areas.length === 1) {
+				return this.areas[0];
+			} else {
+				return this.$t("log.nAreas", { count: this.areas.length });
+			}
 		},
 		showMoreButton() {
 			return this.lines.length === DEFAULT_COUNT;
@@ -193,7 +192,7 @@ export default {
 			if (this.level) {
 				params.append("level", this.level);
 			}
-			this.selectedAreas.forEach((area) => {
+			this.areas.forEach((area) => {
 				params.append("area", area);
 			});
 			params.append("format", "txt");
@@ -220,8 +219,8 @@ export default {
 				this.busy = true;
 				const response = await api.get("/system/log", {
 					params: {
-						level: this.level?.toLocaleLowerCase() || null,
-						area: this.selectedAreas.length ? this.selectedAreas : null,
+						level: this.level || null,
+						area: this.areas.length ? this.areas : null,
 						count: showAll ? null : DEFAULT_COUNT,
 					},
 				});
@@ -254,7 +253,7 @@ export default {
 		async updateAreas() {
 			try {
 				const response = await api.get("/system/log/areas");
-				this.areas = response.data?.result || [];
+				this.availableAreas = response.data?.result || [];
 			} catch (e) {
 				console.error(e);
 			}
@@ -281,6 +280,22 @@ export default {
 				this.scrollToBottom();
 				this.startInterval();
 			}
+		},
+		updateQuery({ level, areas }) {
+			let newLevel = level || this.level;
+			let newAreas = areas || this.areas;
+			// reset to default level
+			if (newLevel === DEFAULT_LEVEL) newLevel = undefined;
+			newAreas = newAreas.length ? newAreas.join(",") : undefined;
+			this.$router.push({
+				query: { level: newLevel, areas: newAreas },
+			});
+		},
+		changeLevel(event) {
+			this.updateQuery({ level: event.target.value });
+		},
+		changeAreas(areas) {
+			this.updateQuery({ areas });
 		},
 	},
 };
