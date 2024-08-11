@@ -52,8 +52,15 @@ func init() {
 
 // NewNRGKickGen2FromConfig creates a NRGKickGen2 charger from generic config
 func NewNRGKickGen2FromConfig(other map[string]interface{}) (api.Charger, error) {
-	cc := modbus.TcpSettings{
-		ID: 1,
+	cc := struct {
+		modbus.TcpSettings       `mapstructure:",squash"`
+		MARegulation, Phases1p3p bool
+	}{
+		TcpSettings: modbus.TcpSettings{
+			ID: 1, // default
+		},
+		MARegulation: false,
+		Phases1p3p:   false,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -65,49 +72,23 @@ func NewNRGKickGen2FromConfig(other map[string]interface{}) (api.Charger, error)
 		return nil, err
 	}
 
-	// detect configurable features
 	var (
 		chargerEx func(float64) error
 		phasesS   func(int) error
 	)
 
-	enabled, err := nrg.Enabled()
-	if err != nil {
-		return nil, err
+	if cc.MARegulation {
+		chargerEx = nrg.maxCurrentMillis
 	}
 
-	err = nrg.Enable(false)
-	if err != nil {
-		return nil, err
-	}
-
-	if current, err := nrg.GetMaxCurrent(); err == nil {
-		if err := nrg.maxCurrentMillis(6.1); err == nil {
-			chargerEx = nrg.maxCurrentMillis
-		}
-
-		if chargerEx != nil {
-			nrg.maxCurrentMillis(current)
-		} else {
-			nrg.MaxCurrent(int64(current))
-		}
-	}
-
-	if b, err := nrg.conn.ReadHoldingRegisters(nrgKickGen2MaxPhases, 1); err == nil {
-		if maxPhases := encoding.Uint16(b); maxPhases > 1 {
-			if currentPhases, err := nrg.GetPhases(); err == nil {
-				if err := nrg.phases1p3p(2); err == nil {
-					phasesS = nrg.phases1p3p
-				}
-
-				if phasesS != nil {
-					nrg.phases1p3p(currentPhases)
-				}
+	if cc.Phases1p3p {
+		// user could have an adapter plug which doesn't support 3 phases
+		if b, err := nrg.conn.ReadHoldingRegisters(nrgKickGen2MaxPhases, 1); err == nil {
+			if maxPhases := encoding.Uint16(b); maxPhases > 1 {
+				phasesS = nrg.phases1p3p
 			}
 		}
 	}
-
-	nrg.Enable(enabled)
 
 	return decorateNRGKickGen2(nrg, chargerEx, phasesS), nil
 }
