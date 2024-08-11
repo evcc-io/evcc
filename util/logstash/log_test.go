@@ -1,6 +1,7 @@
 package logstash
 
 import (
+	"slices"
 	"testing"
 
 	jww "github.com/spf13/jwalterweatherman"
@@ -31,6 +32,29 @@ func TestLog(t *testing.T) {
 	assert.Equal(t, []string{s3}, log.All(nil, jww.LevelTrace, 1))
 
 	assert.Equal(t, []string{}, log.All(nil, jww.LevelFatal, 0))
+
+	assert.Equal(t, idx, log.data, "data should not be changed after All() call")
+	assert.Equal(t, []string{"test1", "test2"}, log.Areas())
+}
+
+func TestLogIter(t *testing.T) {
+	log := New(3)
+
+	// old to new
+	log.Write([]byte(s1))
+	log.Write([]byte(s2))
+	log.Write([]byte(s3))
+
+	idx := log.data
+
+	assert.Equal(t, []string{s1, s2, s3}, slices.Collect(log.AllIter(nil, jww.LevelTrace, 0)))
+	assert.Equal(t, []string{s1, s2, s3}, slices.Collect(log.AllIter([]string{}, jww.LevelTrace, 0)))
+
+	assert.Equal(t, []string{s1, s3}, slices.Collect(log.AllIter([]string{"test1"}, jww.LevelTrace, 0)))
+	assert.Equal(t, []string{s1, s2, s3}, slices.Collect(log.AllIter(nil, jww.LevelTrace, 0)))
+	assert.Equal(t, []string{s3}, slices.Collect(log.AllIter(nil, jww.LevelTrace, 1)))
+
+	assert.Equal(t, []string{}, slices.Collect(log.AllIter(nil, jww.LevelFatal, 0)))
 
 	assert.Equal(t, idx, log.data, "data should not be changed after All() call")
 	assert.Equal(t, []string{"test1", "test2"}, log.Areas())

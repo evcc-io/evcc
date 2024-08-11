@@ -3,6 +3,7 @@ package logstash
 import (
 	"container/ring"
 	"io"
+	"iter"
 	"maps"
 	"slices"
 	"strings"
@@ -114,4 +115,27 @@ func (l *logger) All(areas []string, level jww.Threshold, count int) []string {
 	}
 
 	return res
+}
+
+func (l *logger) AllIter(areas []string, level jww.Threshold, count int) iter.Seq[string] {
+	l.mu.RLock()
+	defer l.mu.RUnlock()
+
+	r := l.data
+	all := len(areas) == 0 && level == jww.LevelTrace
+
+	return func(yield func(string) bool) {
+		for range r.Len() {
+			if e, ok := r.Value.(element); ok && e != "" && (all || e.match(areas, level)) {
+				if !yield(string(e)) {
+					return
+				}
+			}
+			r = r.Next()
+		}
+
+		// if count > 0 && len(res) > count {
+		// 	res = res[len(res)-count:]
+		// }
+	}
 }
