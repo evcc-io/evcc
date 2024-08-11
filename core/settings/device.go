@@ -1,6 +1,7 @@
 package settings
 
 import (
+	"encoding/json"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -112,9 +113,9 @@ func (s *DeviceSettings[T]) Bool(key string) (bool, error) {
 }
 
 func (s *DeviceSettings[T]) Json(key string, res any) error {
-	if s == nil {
-		return nil
+	str, err := s.String(key)
+	if str == "" || err != nil {
+		return err
 	}
-	res = s.get(key)
-	return nil
+	return json.Unmarshal([]byte(str), &res)
 }

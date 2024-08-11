@@ -182,6 +182,10 @@ func newLoadpointHandler() http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		dynamic, static, err := loadpointSplitConfig(r.Body)
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
 
 		id := len(h.Devices())
 		name := "lp-" + strconv.Itoa(id+1)
