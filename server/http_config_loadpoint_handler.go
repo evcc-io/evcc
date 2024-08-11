@@ -35,13 +35,13 @@ func getLoadpointStaticConfig(lp loadpoint.API) loadpointStaticConfig {
 
 type loadpointDynamicConfig struct {
 	// dynamic config
-	Title          string  `json:"title"`
-	Mode           string  `json:"mode"`
-	Priority       int     `json:"priority"`
-	Phases         int     `json:"phases"`
-	MinCurrent     float64 `json:"minCurrent"`
-	MaxCurrent     float64 `json:"maxCurrent"`
-	SmartCostLimit float64 `json:"smartCostLimit"`
+	Title          string   `json:"title"`
+	Mode           string   `json:"mode"`
+	Priority       int      `json:"priority"`
+	Phases         int      `json:"phases"`
+	MinCurrent     float64  `json:"minCurrent"`
+	MaxCurrent     float64  `json:"maxCurrent"`
+	SmartCostLimit *float64 `json:"smartCostLimit"`
 
 	Thresholds loadpoint.ThresholdsConfig `json:"thresholds"`
 	Soc        loadpoint.SocConfig        `json:"soc"`
