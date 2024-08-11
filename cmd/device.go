@@ -1,9 +1,7 @@
 package cmd
 
 import (
-	"cmp"
 	"fmt"
-	"slices"
 	"strings"
 
 	"github.com/evcc-io/evcc/util/config"
@@ -48,15 +46,7 @@ func runDevice(cmd *cobra.Command, args []string) {
 
 		for _, d := range devs {
 			fmt.Printf("%d. %s\n", d.ID, d.Type)
-
-			details := slices.SortedFunc(slices.Values(d.Details), func(i, j config.ConfigDetail) int {
-				return cmp.Compare(i.Key, j.Key)
-			})
-
-			for _, d := range details {
-				fmt.Printf("%s: %s\n", d.Key, d.Value)
-			}
-
+			fmt.Println(d.Value)
 			fmt.Println()
 		}
 	}

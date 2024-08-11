@@ -97,5 +97,22 @@ func (v *API) Status(vin string) (StatusResponse, error) {
 		res.EvInfo.Battery.ChargingStatus = 3
 	}
 
+	if val, ok := message.Attributes["maxSoc"]; ok && val != nil {
+		res.EvInfo.Battery.SocLimit = int(val.GetIntValue())
+	}
+
+	if val, ok := message.Attributes["selectedChargeProgram"]; ok && val != nil {
+		selectedChargeProgram := val.GetIntValue()
+		res.EvInfo.Battery.SelectedChargeProgram = int(selectedChargeProgram)
+
+		if cps, ok := message.Attributes["chargePrograms"]; ok && cps != nil {
+			if cpVal := cps.GetChargeProgramsValue(); cpVal != nil && res.EvInfo.Battery.SelectedChargeProgram < len(cpVal.ChargeProgramParameters) {
+				if chargeProgramParam := cpVal.ChargeProgramParameters[res.EvInfo.Battery.SelectedChargeProgram]; chargeProgramParam != nil {
+					res.EvInfo.Battery.SocLimit = int(chargeProgramParam.GetMaxSoc())
+				}
+			}
+		}
+	}
+
 	return res, err
 }

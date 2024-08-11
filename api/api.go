@@ -222,6 +222,7 @@ type Circuit interface {
 	SetTitle(string)
 	GetParent() Circuit
 	RegisterChild(child Circuit)
+	Wrap(parent Circuit) error
 	HasMeter() bool
 	GetMaxPower() float64
 	GetMaxCurrent() float64

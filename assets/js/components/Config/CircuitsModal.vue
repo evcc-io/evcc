@@ -6,7 +6,6 @@
 		docs="/docs/features/loadmanagement"
 		:defaultYaml="defaultYaml"
 		endpoint="/config/circuits"
-		size="md"
 		@changed="$emit('changed')"
 	/>
 </template>

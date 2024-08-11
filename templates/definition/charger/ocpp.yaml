@@ -4,6 +4,7 @@ products:
       de: OCPP 1.6J kompatible Wallbox mit Smart Charging Profil
       en: OCPP 1.6J compatible charger with Smart Charging Profile
 group: generic
+capabilities: ["mA", "rfid", "1p3p"]
 requirements:
   description:
     de: |
@@ -12,8 +13,11 @@ requirements:
       Standardmäßig wird die erste eingehende Verbindung mit einer beliebigen Ladepunktkennung verwendet.
       Um mehrere Ladepunkte eindeutig zuordnen zu können müssen die jeweilige Stationskennung (`stationid: `) und Anschlussnummer (`connector: `) hinterlegt werden.
       Viele Wallboxen fügen die `stationid` automatisch der Backend-URL hinzu, bei manchen muss dies händisch geschehen `ws://<evcc>:8887/<stationid>`.
-      Gegebenenfalls benötigt der Ladepunkt eine vorkonfigurierte (virtuelle) Token-ID/RFID-Kennung (`idtag: `) mit der die Ladevorgänge ohne Authentifizierung gestartet werden können.
-      Für Zählermesswerte sollte in der Wallbox ein kurzes Zeitintervall konfiguriert werden.
+      Für Zählermesswerte sollte in der Wallbox wenn möglich ein kurzes Zeitintervall (< 10s) konfiguriert werden.
+      Nutzen Sie Ihre RFID-Tags (dies ermöglicht z.B. eine Fahrzeugidentifizierung) oder setzen Sie Ihre Wallbox auf "freies Laden" oder "Autostart" um die jeweils für die Ladefreigabe benötigte Transaktion zu erzeugen.
+
+      Falls die Wallbox keinerlei Option bietet die Transaktionen lokal zu starten, kann die erweiterte Option `remotestart` genutzt werden um automatisch eine Transaktion zu starten sobald ein Fahrzeug angeschlossen wird.
+      Dies sollte nur in Ausnahmefällen erforderlich sein.
 
       Voraussetzungen:
       * Ggf. zuvor konfigurierte OCPP-Profile (z.B. durch eine andere Backend-Anbindung) in der Wallboxkonfiguration entfernen
@@ -21,14 +25,19 @@ requirements:
       * Protokoll: OCPP-J v1.6, ocpp16j, JSON, Websocket, ws:// o.ä.
       * Keine Verschlüsselung, keine Authentifizierung, kein Passwort
       * Verbindung über das lokale Netzwerk
+
+      Die konkrete Konfiguration und der tatsächliche nutzbare Funktionsumfang hängen vom Wallbox-Modell und dessen Software ab.
     en: |
       With OCPP the connection will be established from charger (client) to evcc (server).
       The charger needs to be able to reach evcc via the host name (functioning DNS resolution required!) or via the IP address on port 8887.
       By default, the first incoming connection with any station identifier is used.
       In order to be able to clearly assign several charging points, the respective station identifier (`stationid: `) and connector number (`connector: `) must be configured.
       Many wallboxes automatically add the `station id` to the backend URL, some have to do this manually `ws://<evcc>:8887/<stationid>`.
-      The charger may need a pre-configured (virtual) token ID/RFID identifier (`idtag: `) with which the charging sessions can be started without authorization.
-      If the charger supports sending metering values try to adjust the interval to a short time span.
+      If the charger supports sending metering values try to adjust the interval to a short time span (< 10s) .
+      Use your RFID tags (this allows e.g. vehicle identification) or set your charger to "free charging" or "autostart" to generate the transaction required for charging release.
+
+      If the charger does not offer any option to start transactions locally, the `remotestart` advanced option can be used to automatically start a transaction as soon as a vehicle is connected.
+      This should only be necessary in exceptional cases.
 
       Requirements:
       * If necessary, remove previously configured OCPP profiles (e.g. used for a different backend connection) in the charger configuration
@@ -36,68 +45,20 @@ requirements:
       * Protocol: OCPP-J v1.6, ocpp16j, JSON, Websocket, ws:// or similar
       * No encryption, no authentication, no password
       * Local network connection
+
+      The specific configuration and the actual usable functionality depend on the charger model and its software.
+  evcc: ["sponsorship"]
 params:
   - preset: ocpp
   - name: autostart
-    advanced: true
-    type: bool
+    deprecated: true
   - name: nostop
-    advanced: true
-    type: bool
+    deprecated: true
   - name: getconfiguration
-    advanced: true
-    type: bool
-    default: true
-    description:
-      de: GetConfiguration benutzen
-      en: Use GetConfiguration request
-    help:
-      de: Deaktivierung kann bei einigen Chargern hilfreich sein
-      en: Deactivating can help with certain chargers
+    deprecated: true
   - name: bootnotification
-    advanced: true
-    type: bool
-    default: false
-    description:
-      de: BootNotification benutzen
-      en: Use BootNotification request
-    help:
-      de: Aktivierung kann bei einigen Chargern hilfreich sein
-      en: Activating can help with certain chargers
-  - name: meterinterval
-    advanced: true
-    type: duration
-    description:
-      de: Zählerwerte nach Intervall anfordern
-      en: Interval for requesting meter values
-  - name: metervalues
-    advanced: true
-    type: string
-    description:
-      de: Liste der Zählerwerte
-      en: List of meter values
+    deprecated: true
   - name: chargingrateunit
-    advanced: true
-    type: string
-    description:
-      de: Einheit, in der ChargingProfile-Werte gesetzt werden ("W" oder "A")
-      en: Unit for setting ChargingProfile values ("W" or "A")
+    deprecated: true
 render: |
   {{ include "ocpp" . }}
-  autostart: {{ .autostart }}
-  nostop: {{ .nostop }}
-  {{- if ne .getconfiguration "true" }}
-  getconfiguration: {{ .getconfiguration }}
-  {{- end }}
-  {{- if ne .bootnotification "false" }}
-  bootnotification: {{ .bootnotification }}
-  {{- end }}
-  {{- if .meterinterval }}
-  meterinterval: {{ .meterinterval }}
-  {{- end }}
-  {{- if .metervalues }}
-  metervalues: {{ .metervalues }}
-  {{- end }}
-  {{- if .chargingrateunit }}
-  chargingrateunit: {{ .chargingrateunit }}
-  {{- end }}

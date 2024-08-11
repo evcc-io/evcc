@@ -100,8 +100,8 @@ func (t *Pun) run(done chan error) {
 
 		// merge today and tomorrow data
 		data := append(today, res...)
-		t.data.Set(data)
 
+		mergeRates(t.data, data)
 		once.Do(func() { close(done) })
 	}
 }

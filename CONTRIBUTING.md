@@ -115,6 +115,13 @@ make ui build
 
 evcc already includes many translations for the UI. We're using [Weblate](https://hosted.weblate.org/projects/evcc/evcc/) to maintain translations. Feel free to add more languages or verify and edit existing translations. Weblate will automatically push all modifications to the evcc repository where they get reviewed and merged.
 
+If you find a text that is not yet translatable in [Weblate](https://hosted.weblate.org/projects/evcc/evcc/), you can help us by making it translatable. To do this, you can simply find the missing translation text in the code and apply similar changes as in these two Pull Requests:
+
+- [UI: Add missing translation for Error during startup](https://github.com/evcc-io/evcc/pull/14695)
+- [Translation: kein Plan, keine Grenze](https://github.com/evcc-io/evcc/pull/7461/)
+
+Note: To ensure the build succeeds after creating new translations, make sure to include your new translations in both the [de.toml](i18n/de.toml) and [en.toml](i18n/en.toml) files.
+
 [![Languages](https://hosted.weblate.org/widgets/evcc/-/evcc/multi-auto.svg)](https://hosted.weblate.org/engage/evcc/)
 
 [1]: https://go.dev

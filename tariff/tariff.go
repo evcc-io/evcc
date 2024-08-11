@@ -104,9 +104,7 @@ func (t *Tariff) run(forecastG func() (string, error), done chan error) {
 			continue
 		}
 
-		data.Sort()
-
-		t.data.Set(data)
+		mergeRates(t.data, data)
 		once.Do(func() { close(done) })
 	}
 }

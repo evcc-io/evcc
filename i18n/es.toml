@@ -5,22 +5,24 @@ control = "Control de la batería"
 discharge = "Evitar la descarga en modo rápido y la carga planificada"
 disclaimerHint = "Nota:"
 disclaimerText = "Estos parámetros solo afectan al modo solar. El comportamiento de carga se ajusta correspondientemente."
-legendBottomName = "prioridad de la casa"
-legendBottomSubline = "no se usa para la carga"
-legendMiddleName = "primero el vehículo"
-legendMiddleSubline = "segundo la casa"
+gridChargeTab = "Carga de red"
+legendBottomName = "Priorizar la batería de casa"
+legendBottomSubline = "hasta alcanzar {soc}"
+legendMiddleName = "Priorizar la carga de vehículos"
+legendMiddleSubline = "cuando la batería de casa sobrepasa {soc}."
 legendTitle = "¿Cómo debería usarse la energía solar?"
-legendTopAutostart = "inicio automático"
-legendTopName = "carga soportada por bateria"
-legendTopSubline = "sin interrupciones"
+legendTopAutostart = "Inicio automático"
+legendTopName = "Carga de vehículos asistida por baterías"
+legendTopSubline = "cuando la batería de casa sobrepasa {soc}."
 modalTitle = "Batería doméstica"
+usageTab = "Uso de la batería"
 
 [batterySettings.bufferStart]
-above = "cuando esté por encima de {soc}"
-full = "si está en {soc}"
+above = "cuando esté por encima de {soc}."
+full = "si está en {soc}."
 low = "cuando está algo llena"
 medium = "cuando está medio llena"
-never = "cuando hay suficiente excedente"
+never = "cuando hay suficiente excedente."
 
 [config]
 
@@ -28,21 +30,59 @@ never = "cuando hay suficiente excedente"
 titleAdd = "Añadir medidor de batería"
 titleEdit = "Editar el medidor de batería"
 
+[config.circuits]
+description = "Se asegura que la suma de todos los puntos de carga conectados a un circuito no exceda la potencia configurada y los límites actuales. Los circuitos pueden ser anidados para construir una jerarquía"
+title = "Gestión de carga"
+
+[config.control]
+description = "Usualmente los valores predeterminados están bien. Solo cámbialos si sabes lo que estás haciendo."
+descriptionInterval = "El ciclo de actualización del circuito de control en segundos. Define con qué frecuencia evcc lee los datos del medidor, ajusta la potencia de carga y actualiza la UI. Los intervalos cortos ( 30s) pueden causar oscillaciones y comportamiento no deseado."
+descriptionMaxGridSupply = "Solo relevante para inversores híbridos que no son capaces de producir la fuerza completa de generación DC al hogar a través de AC. Este szenario puede llevar al uso no deseado de la red, ya que evcc asume que la potencia DC completa está disponible. Utilice un valor de al menos 50 W para prevenir esto."
+descriptionResidualPower = "Cambia el punto de funcionamiento del circuito de control. Si tienes una batería doméstica, se recomienda establecer un valor de 100 W. De esta manera, la batería tendrá una ligera prioridad sobre el uso de la red eléctrica"
+labelInterval = "Intervalo de actualización"
+labelMaxGridSupply = "Suministro máximo de red durante la carga"
+labelResidualPower = "Fuerza residual"
+title = "Controlar la conducta"
+
 [config.deviceValue]
+broker = "Broker"
+bucket = "Bucket"
 capacity = "Capacidad"
 chargeStatus = "Estado"
+chargeStatusA = "no conectado"
+chargeStatusB = "conectad@"
+chargeStatusC = "cargando"
+chargeStatusE = "sin energía"
+chargeStatusF = "error"
 chargedEnergy = "Cargado"
-current = "Corriente "
+co2 = "Red de CO₂"
+configured = "Configurado"
+currency = "Divisa"
+current = "Corriente"
+currentRange = "Corriente"
 enabled = "Activado"
 energy = "Energía"
+feedinPrice = "Precio de entrada"
+gridPrice = "Precio de red"
+no = "no"
 odometer = "Cuentakilómetros"
+org = "Organización"
 phaseCurrents = "Actual L1..L3"
 phasePowers = "Potencia L1..L3"
 phaseVoltages = "Voltaje L1..L3"
 power = "Potencia"
+powerRange = "Potencia"
 range = "Alcance"
 soc = "SoC"
 socLimit = "Límite"
+temp = "Temperatura"
+topic = "Tema"
+url = "URL"
+yes = "sí"
+
+[config.eebus]
+description = "Configuración que permite a evcc comunicarse con otros dispositivos EEBus"
+title = "EEBus"
 
 [config.form]
 example = "Ejemplo"
@@ -50,21 +90,53 @@ optional = "opcional"
 
 [config.general]
 cancel = "Cancelar"
+docsLink = "Ver documentación."
+experimental = "Experimental"
+off = "apagar"
+on = "encender"
+password = "Contraseña"
+remove = "Quitar"
 save = "Guardar"
+telemetry = "Telemetría"
+title = "Título"
 
 [config.grid]
+title = "Contador de red"
 titleAdd = "Añadir medidor de cuadrícula"
 titleEdit = "Editar medidor de cuadrícula"
+
+[config.hems]
+description = "Conecta evcc a otro sistema de gestión de energía del hogar"
+title = "HEMS"
+
+[config.influx]
+description = "Escribe datos de cobro y otras métricas en InfluxDB. Utiliza Grafana u otras herramientas para visualizar los datos"
+descriptionToken = "Consulta la documentación de InfluxDB para saber cómo crear uno. https://docs.influxdata.com/influxdb/v2/admin/"
+labelBucket = "Bucket"
+labelDatabase = "Base de datos"
+labelOrg = "Organización"
+labelPassword = "Contraseña"
+labelToken = "Token de la API"
+labelUrl = "URL"
+labelUser = "Nombre de usuario"
+title = "InfluxDB"
+v1Support = "¿Necesitas soporte para InfluxDB 1.x?"
+v2Support = "Volver a InfluxDB 2.x"
 
 [config.main]
 addLoadpoint = "Añadir un punto de carga"
 addPvBattery = "Añadir solar o batería"
 addVehicle = "Añadir un vehículo"
+configured = "configurado"
 edit = "editar"
 title = "Configuración"
 unconfigured = "no configurado"
 vehicles = "Mis vehículos"
 yaml = "Configurado en evcc.yaml. No editable en la interfaz de usuario"
+
+[config.messaging]
+description = "Recibe mensajes sobre tus sesiones de carga."
+title = "Notificaciónes"
 
 [config.meter]
 cancel = "Cancelar"
@@ -74,7 +146,39 @@ template = "Fabricante"
 titleChoice = "¿Qué quieres añadir?"
 validateSave = "Validar y guardar"
 
+[config.modbusproxy]
+description = "Permite que varios clientes accedan a un único dispositivo Modbus"
+title = "Proxy Modbus"
+
+[config.mqtt]
+authentication = "Autenticación"
+description = "Conéctate a un agente MQTT para intercambiar datos con otros sistemas en tu red"
+descriptionClientId = "Autor del mensaje. Si se deja en blanco, se utiliza `evcc-[rand]`"
+descriptionTopic = "Déjelo en blanco para desactivar la publicación"
+labelBroker = "Broker"
+labelCheckInsecure = "Permitir certificados autofirmados"
+labelClientId = "ID del cliente"
+labelInsecure = "Verificación de certificado"
+labelPassword = "Contraseña"
+labelTopic = "Tema"
+labelUser = "Nombre de usuario"
+publishing = "Publicación"
+title = "MQTT"
+
+[config.network]
+descriptionHost = "Utiliza el sufijo .local para habilitar mDNS. Se requiere para detectar la aplicación móvil y algunos cargadores de pared OCPP"
+descriptionPort = "Puerto para la interfaz web y API. Deberá actualizar la URL desde tu navegador si cambias esto"
+descriptionSchema = "Solo afecta la forma en que se generan las URL. Seleccionar HTTPS no habilitará el cifrado"
+labelHost = "Hostname"
+labelPort = "Puerto"
+labelSchema = "Esquema"
+title = "Red"
+
 [config.options]
+
+[config.options.boolean]
+no = "no"
+yes = "sí"
 
 [config.options.endianness]
 big = "big endian"
@@ -90,11 +194,25 @@ titleEdit = "Editar contador solar"
 
 [config.section]
 general = "General"
+grid = "Red eléctrica"
+integrations = "Integraciones"
+loadpoints = "Puntos de carga"
+meter = "Solar y Batería"
 system = "Sistema"
+vehicles = "Vehículos"
 
 [config.site]
 cancel = "Cancelar"
 save = "Guardar"
+
+[config.sponsor]
+addToken = "Ingresa el token del patrocinador"
+changeToken = "Cambiar el token de patrocinador"
+description = "El modelo de patrocinio nos ayuda a mantener el proyecto y a desarrollar de forma sostenible nuevas y emocionantes funciones. Como patrocinador, obtienes acceso a todas las implementaciones de cargadores"
+descriptionToken = "Obtienes el token desde {url}. También ofrecemos un token de prueba para probar"
+error = "El token de patrocinador no es válido"
+labelToken = "Token del patrocinador"
+title = "Patrocinio"
 
 [config.system]
 logs = "Registros"
@@ -103,6 +221,10 @@ restartRequiredDescription = "Por favor, reinicie para aplicar los cambios"
 restartRequiredMessage = "La configuración cambió"
 restartingDescription = "Espere por favor…"
 restartingMessage = "Reiniciando evcc"
+
+[config.tariffs]
+description = "Define tus tarifas energéticas para calcular los costes de tus sesiones de carga."
+title = "Tarifas"
 
 [config.title]
 description = "Se muestra en la pantalla principal y en la pestaña del navegador"
@@ -289,6 +411,8 @@ batteryCharge = "Cargar la batería"
 batteryDischarge = "Descargar la batería"
 batteryHold = "Batería (bloqueada)"
 batteryTooltip = "{energy} de {total} ({soc})"
+cheapBatteryGridCharge = "Energía de red barata"
+cleanBatteryGridCharge = "Energía de red limpia"
 gridImport = "Consumo de red"
 homePower = "Consumo"
 loadpoints = "Punto de carga | Punto de carga | {count} Puntos de carga"
@@ -354,6 +478,7 @@ minpv = "Min+Sol"
 now = "Rápido"
 off = "Apagado"
 pv = "Solar"
+smart = "Inteligente"
 
 [main.provider]
 login = "iniciar sesión"
@@ -369,7 +494,7 @@ descriptionSoc = "¿Hasta cuándo debe haberse cargarse el vehículo al {targetS
 inactiveLabel = "Tiempo objetivo"
 modalTitle = "Establecer el tiempo objetivo"
 noActivePlan = "Ningún plan activo"
-notReachableInTime = "Objetivo no alcanzable en el tiempo. Fin estimado: {endTime}"
+notReachableInTime = "El objetivo se alcanzará {overrun} más tarde"
 onlyInPvMode = "El plan de carga sólo funciona en modo solar"
 planDescription = "Introduzca una hora de salida y evcc cargará el vehículo de la forma más económica o ecológica posible"
 planDuration = "Tiempo de carga"
@@ -382,7 +507,7 @@ remove = "retirar"
 setPlan = "Establecer un plan de carga"
 setTargetTime = "niguno"
 targetIsAboveLimit = "El límite de carga configurado de {limit} se ignorará durante este periodo"
-targetIsAboveVehicleLimit = "Aumentar el límite de vehículos ({limit}) para alcanzar el objetivo de carga"
+targetIsAboveVehicleLimit = "El límite del vehículo está por debajo del objetivo de carga"
 targetIsInThePast = "Elige un tiempo en el futuro, Marty."
 targetIsTooFarInTheFuture = "Ajustaremos el plan en cuanto sepamos más sobre el futuro."
 title = "Tiempo objetivo"
@@ -426,22 +551,29 @@ vehicleLimit = "límite de vehículo: {soc}"
 
 [main.vehicleStatus]
 charging = "Cargando ..."
-cheapEnergyCharging = "Cargando con energía barata: {price} (limit {limit})"
-cleanEnergyCharging = "Cargando con energía limpia: {co2} (límite {limit})"
+cheapEnergyCharging = "Energía barata disponible."
+cheapEnergyNextStart = "Energía barata durante {duration}"
+cheapEnergySet = "Límite de precio establecido"
+cleanEnergyCharging = "Energía limpia disponible."
+cleanEnergyNextStart = "Energía limpia durante {duration}"
+cleanEnergySet = "Límite de CO₂ establecido."
 climating = "Preacondicionamiento detectado."
 connected = "Conectado."
 disconnected = "Desconectado."
+finished = "Finalizado."
 minCharge = "Carga mínima hasta {soc}."
-pvDisable = "Excedente insuficiente. Pausa en {remaining}..."
-pvEnable = "Excedente disponibile. Empezar en {remaining}..."
-scale1p = "Reduciendo a carga monofásica en {remaining}..."
-scale3p = "Aumentando a carga trifásica en {remaining}..."
-targetChargeActive = "Plan de carga activo..."
-targetChargePlanned = "El plan de carga comienza a las {time}"
+pvDisable = "No hay suficientes excedentes. Haremos una pausa pronto"
+pvEnable = "Excedente disponible. La carga se reanudará en breve."
+scale1p = "Pronto se reducirá a carga monofásica"
+scale3p = "Pronto pasaremos a carga trifásica"
+targetChargeActive = "Plan de carga activo. Finalización estimada en {duration}"
+targetChargePlanned = "El plan de carga comienza en {duration}"
 targetChargeWaitForVehicle = "Plan de carga listo. Esperando vehículo..."
 unknown = ""
-vehicleLimitReached = "Límite de vehículo {soc} alcanzado."
+vehicleLimit = "Límite de vehículos."
+vehicleLimitReached = "Límite del vehículos alcanzado"
 waitForVehicle = "Listo para cargar. Esperando vehículo."
+welcome = "Breve carga inicial para confirmar la conexión."
 
 [notifications]
 dismissAll = "Eliminar notificaciones"
@@ -449,8 +581,12 @@ logs = "Ver registros completos"
 modalTitle = "Notificaciónes"
 
 [offline]
+configurationError = "Error durante el inicio. Verifica tu configuración y reinicia"
 message = "No conectado con servidor."
 reload = "Actualizar?"
+restart = "Reanudar"
+restartNeeded = "Requerido para aplicar cambios"
+restarting = "El servidor volverá a estar disponible pronto"
 
 [passwordModal]
 description = "Establezca una contraseña para proteger la configuración. La vista principal permanece accesible sin iniciar sesión"
@@ -542,7 +678,7 @@ auto = "Automático"
 label = "Idioma"
 
 [settings.sponsorToken]
-expires = "Tu token de patrocinador expira en {inXDays}. {getNewToken} y actualiza tu archivo de configuración."
+expires = "Tu token de patrocinador expira en {inXDays}. {getNewToken} y puedes renovarlo aquí."
 getNew = "Coge uno nuevo"
 hint = "Nota: automatizaremos esto en el futuro."
 

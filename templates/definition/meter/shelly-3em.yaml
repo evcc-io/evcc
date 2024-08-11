@@ -13,7 +13,7 @@ params:
     advanced: true
 render: |
   {{- define "uri" -}}
-  http://{{ if .user }}{{ .user }}:{{ .password }}@{{ end }}{{ .host }}
+  http://{{ if .user }}{{ urlEncode .user }}:{{ urlEncode .password }}@{{ end }}{{ .host }}
   {{- end }}
   type: custom
   power:

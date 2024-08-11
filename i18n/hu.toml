@@ -169,6 +169,10 @@ title = "Hálózat"
 
 [config.options]
 
+[config.options.boolean]
+no = "nem"
+yes = "igen"
+
 [config.options.endianness]
 big = "big-endian"
 little = "little-endian"
@@ -352,7 +356,7 @@ update = "Automatikus frissítés"
 cancel = "Mégse"
 error = "Sikertelen bejelentkezés: "
 iframeHint = "evcc megnyitása új lapon."
-iframeIssue = "A jelszavad helyes, de úgy tűnik, hogy a böngésződ elvetette a hitelesítési sütit. Ez akkor történhet meg, ha az az evcc-t iframe-ben futtatod HTTP-n."
+iframeIssue = "A jelszavad helyes, de úgy tűnik, hogy a böngésződ elvetette a hitelesítési sütit. Ez akkor történhet meg, ha az evcc-t iframe-ben futtatod HTTP-n."
 invalid = "A jelszó érvénytelen."
 login = "Bejelentkezés"
 password = "Jelszó"
@@ -540,6 +544,7 @@ unknown = ""
 vehicleLimit = "Jármű limit."
 vehicleLimitReached = "Jármű limit elérve."
 waitForVehicle = "Üzemkész. Járműre várakozás…"
+welcome = "Rövid kezdeti töltés a csatlakozás megerősítéséhez."
 
 [notifications]
 dismissAll = "Összeset figyelmen kívül hagyja"

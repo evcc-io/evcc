@@ -100,7 +100,7 @@ func (suite *ocppTestSuite) TestConnect() {
 	suite.Require().True(cp1.IsConnected())
 
 	// 1st charge point- local
-	c1, err := NewOCPP("test-1", 1, "", "", 0, false, false, false, false, ocppTestConnectTimeout, ocppTestTimeout, "A")
+	c1, err := NewOCPP("test-1", 1, "", "", 0, false, false, true, ocppTestConnectTimeout, ocppTestTimeout, "A")
 	suite.Require().NoError(err)
 
 	// status and meter values
@@ -111,16 +111,6 @@ func (suite *ocppTestSuite) TestConnect() {
 		// status
 		_, err = c1.Status()
 		suite.Require().NoError(err)
-
-		// power
-		f, err := c1.currentPower()
-		suite.Require().NoError(err)
-		suite.Equal(1e3, f)
-
-		// energy
-		f, err = c1.totalEnergy()
-		suite.Require().NoError(err)
-		suite.Equal(1.2, f)
 	}
 
 	// takeover
@@ -159,7 +149,7 @@ func (suite *ocppTestSuite) TestConnect() {
 	suite.Require().True(cp2.IsConnected())
 
 	// 2nd charge point - local
-	c2, err := NewOCPP("test-2", 1, "", "", 0, false, false, false, false, ocppTestConnectTimeout, ocppTestTimeout, "A")
+	c2, err := NewOCPP("test-2", 1, "", "", 0, false, false, true, ocppTestConnectTimeout, ocppTestTimeout, "A")
 	suite.Require().NoError(err)
 
 	{
@@ -201,7 +191,7 @@ func (suite *ocppTestSuite) TestAutoStart() {
 	suite.Require().True(cp1.IsConnected())
 
 	// 1st charge point- local
-	c1, err := NewOCPP("test-3", 1, "", "", 0, false, false, true, true, ocppTestConnectTimeout, ocppTestTimeout, "A")
+	c1, err := NewOCPP("test-3", 1, "", "", 0, false, false, false, ocppTestConnectTimeout, ocppTestTimeout, "A")
 	suite.Require().NoError(err)
 
 	// status and meter values

@@ -123,9 +123,8 @@ func (t *GrünStromIndex) run(done chan error) {
 				End:   time.UnixMilli(r.Timeframe.End).Local(),
 			})
 		}
-		data.Sort()
 
-		t.data.Set(data)
+		mergeRates(t.data, data)
 		once.Do(func() { close(done) })
 	}
 }
