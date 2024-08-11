@@ -1,0 +1,26 @@
+template: nrggen2
+products:
+  - brand: NRGKick
+    description:
+      generic: Gen2
+requirements:
+  evcc: ["sponsorship"]
+capabilities: ["1p3p", "mA"]
+params:
+  - name: modbus
+    choice: ["tcpip"]
+    id: 1
+  - name: phases1p3p
+    type: bool
+    default: false
+    advanced: true
+    help:
+      de: Aktiviert Phasenumschaltung. Erweiterte Funktion "Phasenumschaltung" muss in der NRGkick App aktiviert sein.
+      en: Activates phase switching. Extended feature "Phase Switching" must be activated in the NRGKick app.
+render: |
+  type: nrggen2
+  {{- include "modbus" . }}
+  {{- if ne .phases1p3p "false" }}
+  phases1p3p: true
+  {{- end }}
+
