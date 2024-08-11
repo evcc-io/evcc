@@ -18,6 +18,7 @@ func TestMergeMaps(t *testing.T) {
 		"Nested": map[string]any{
 			"Bar": 2,
 		},
+		"baz": 3,
 	}
 
 	require.NoError(t, mergeMaps(other, target))
@@ -26,5 +27,6 @@ func TestMergeMaps(t *testing.T) {
 		"nested": map[string]any{
 			"bar": 2,
 		},
+		"baz": 3,
 	}, target)
 }
