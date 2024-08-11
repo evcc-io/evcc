@@ -13,8 +13,8 @@ var checkconfig = &cobra.Command{
 	Short: "Check config file for errors",
 	Long: `Check the (specified or default) config file for errors. Note that
 	       checkconfig only checks the config file for parsing errors and does
-		   not check that individual key or values are valid.`,
-	Run:   runConfigCheck,
+		   not check that individual device configurations are valid.`,
+	Run: runConfigCheck,
 }
 
 func init() {
