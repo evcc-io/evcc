@@ -71,10 +71,7 @@ func NewNRGKickGen2FromConfig(other map[string]interface{}) (api.Charger, error)
 		return nil, err
 	}
 
-	var (
-		phasesS func(int) error
-	)
-
+	var phasesS func(int) error
 	if cc.Phases1p3p {
 		// user could have an adapter plug which doesn't support 3 phases
 		if b, err := nrg.conn.ReadHoldingRegisters(nrgKickGen2MaxPhases, 1); err == nil {
@@ -167,7 +164,7 @@ func (nrg *NRGKickGen2) Status() (api.ChargeStatus, error) {
 		if err != nil {
 			return api.StatusNone, err
 		}
-		return api.StatusF, fmt.Errorf("%d", error)
+		return api.StatusF, fmt.Errorf("%d", binary.BigEndian.Uint16(b))
 	case 7:
 		return api.StatusB, nil
 	default:
