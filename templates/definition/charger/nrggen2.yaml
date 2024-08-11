@@ -23,4 +23,3 @@ render: |
   {{- if ne .phases1p3p "false" }}
   phases1p3p: true
   {{- end }}
-
