@@ -17,9 +17,11 @@ const (
 
 	ModbusChoiceRS485    = "rs485"
 	ModbusChoiceTCPIP    = "tcpip"
+	ModbusChoiceUDP      = "udp"
 	ModbusKeyRS485Serial = "rs485serial"
 	ModbusKeyRS485TCPIP  = "rs485tcpip"
 	ModbusKeyTCPIP       = "tcpip"
+	ModbusKeyUDP         = "udp"
 
 	ModbusParamNameId       = "id"
 	ModbusParamNameDevice   = "device"
@@ -37,7 +39,7 @@ const (
 	RenderModeInstance
 )
 
-var ValidModbusChoices = []string{ModbusChoiceRS485, ModbusChoiceTCPIP}
+var ValidModbusChoices = []string{ModbusChoiceRS485, ModbusChoiceTCPIP, ModbusChoiceUDP}
 
 const (
 	CapabilityISO151182      = "iso151182"       // ISO 15118-2 support
@@ -62,7 +64,7 @@ var predefinedTemplateProperties = []string{
 	"type", "template", "name",
 	ModbusParamNameId, ModbusParamNameDevice, ModbusParamNameBaudrate, ModbusParamNameComset,
 	ModbusParamNameURI, ModbusParamNameHost, ModbusParamNamePort, ModbusParamNameRTU,
-	ModbusKeyTCPIP, ModbusKeyRS485Serial, ModbusKeyRS485TCPIP,
+	ModbusKeyTCPIP, ModbusKeyUDP, ModbusKeyRS485Serial, ModbusKeyRS485TCPIP,
 }
 
 // TextLanguage contains language-specific texts

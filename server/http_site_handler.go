@@ -131,6 +131,20 @@ func floatHandler(set func(float64) error, get func() float64) http.HandlerFunc 
 	return handler(parseFloat, set, get)
 }
 
+// floatPtrHandler updates float-pointer api
+func floatPtrHandler(set func(*float64) error, get func() *float64) http.HandlerFunc {
+	return handler(func(s string) (*float64, error) {
+		var val *float64
+		f, err := parseFloat(s)
+		if err == nil {
+			val = &f
+		} else if s == "" {
+			err = nil
+		}
+		return val, err
+	}, set, get)
+}
+
 // intHandler updates int-param api
 func intHandler(set func(int) error, get func() int) http.HandlerFunc {
 	return handler(strconv.Atoi, set, get)
@@ -152,11 +166,16 @@ func boolGetHandler(get func() bool) http.HandlerFunc {
 func updateSmartCostLimit(site site.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
+		var val *float64
 
-		val, err := parseFloat(vars["value"])
-		if err != nil {
-			jsonError(w, http.StatusBadRequest, err)
-			return
+		if r.Method != http.MethodDelete {
+			f, err := parseFloat(vars["value"])
+			if err != nil {
+				jsonError(w, http.StatusBadRequest, err)
+				return
+			}
+
+			val = &f
 		}
 
 		for _, lp := range site.Loadpoints() {

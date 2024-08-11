@@ -347,17 +347,35 @@ func (site *Site) SetBatteryDischargeControl(val bool) error {
 	defer site.Unlock()
 
 	if site.batteryDischargeControl != val {
-		// reset to normal when disabling
-		if mode := site.batteryMode; !val && batteryModeModified(mode) {
-			if err := site.applyBatteryMode(api.BatteryNormal); err != nil {
-				return err
-			}
-		}
-
 		site.batteryDischargeControl = val
 		settings.SetBool(keys.BatteryDischargeControl, val)
 		site.publish(keys.BatteryDischargeControl, val)
 	}
 
 	return nil
+}
+
+func (site *Site) GetBatteryGridChargeLimit() *float64 {
+	site.RLock()
+	defer site.RUnlock()
+	return site.batteryGridChargeLimit
+}
+
+func (site *Site) SetBatteryGridChargeLimit(val *float64) {
+	site.log.DEBUG.Println("set grid charge limit:", printPtr("%.1f", val))
+
+	site.Lock()
+	defer site.Unlock()
+
+	if !ptrValueEqual(site.batteryGridChargeLimit, val) {
+		site.batteryGridChargeLimit = val
+
+		if val == nil {
+			settings.SetString(keys.BatteryGridChargeLimit, "")
+			site.publish(keys.BatteryGridChargeLimit, nil)
+		} else {
+			settings.SetFloat(keys.BatteryGridChargeLimit, *val)
+			site.publish(keys.BatteryGridChargeLimit, *val)
+		}
+	}
 }

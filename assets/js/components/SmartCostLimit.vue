@@ -1,6 +1,6 @@
 <template>
 	<div>
-		<h4 class="text-evcc mb-3">{{ title }}</h4>
+		<h6 class="mt-0" v-if="isLoadpoint">{{ title }}</h6>
 		<p>
 			{{ description }}
 		</p>
@@ -15,7 +15,7 @@
 					class="form-select form-select-sm mb-1"
 					@change="changeSmartCostLimit"
 				>
-					<option value="0">{{ $t("smartCost.none") }}</option>
+					<option value="null">{{ $t("smartCost.none") }}</option>
 					<option v-for="{ value, name } in costOptions" :key="value" :value="value">
 						{{ name }}
 					</option>
@@ -94,7 +94,7 @@ export default {
 	},
 	data: function () {
 		return {
-			selectedSmartCostLimit: 0,
+			selectedSmartCostLimit: null,
 			tariff: null,
 			startTime: null,
 			activeIndex: null,
@@ -110,9 +110,7 @@ export default {
 			const stepSize = this.optionStepSize;
 			for (let i = 1; i <= 100; i++) {
 				const value = this.optionStartValue + stepSize * i;
-				if (value != 0) {
-					values.push(this.roundLimit(value));
-				}
+				values.push(this.roundLimit(value));
 			}
 			// add special entry if currently selected value is not in the scale
 			const selected = this.selectedSmartCostLimit;
@@ -172,7 +170,7 @@ export default {
 				// TODO: handle multiple matching time slots
 				const price = this.findSlotInRange(start, end, rates)?.price;
 				const charging =
-					price <= this.selectedSmartCostLimit && this.selectedSmartCostLimit !== 0;
+					price <= this.selectedSmartCostLimit && this.selectedSmartCostLimit !== null;
 				const selectable = price !== undefined;
 				result.push({ day, price, startHour, endHour, charging, selectable });
 			}
@@ -221,6 +219,9 @@ export default {
 		formId() {
 			return `smartCostLimit-${this.loadpointId || "battery"}`;
 		},
+		isLoadpoint() {
+			return !!this.loadpointId;
+		},
 	},
 	watch: {
 		tariffGrid() {
@@ -236,7 +237,7 @@ export default {
 	},
 	methods: {
 		roundLimit(limit) {
-			return limit ? Math.round(limit * 1000) / 1000 : 0;
+			return limit === null ? null : Math.round(limit * 1000) / 1000;
 		},
 		updateTariff: async function () {
 			try {
@@ -288,10 +289,6 @@ export default {
 			this.activeIndex = index;
 		},
 		setSelectedSmartCostLimit(limit) {
-			if (limit === 0) {
-				this.selectedSmartCostLimit = 0;
-				return;
-			}
 			const nextOption = this.costOptions.find(({ value }) => value >= limit);
 			if (nextOption) {
 				this.selectedSmartCostLimit = nextOption.value;
@@ -308,13 +305,18 @@ export default {
 			this.saveSmartCostLimit($event.target.value);
 		},
 		async saveSmartCostLimit(limit) {
-			const isLoadpoint = !!this.loadpointId;
-			const url = isLoadpoint
+			const url = this.isLoadpoint
 				? `loadpoints/${this.loadpointId}/smartcostlimit`
-				: "batterysmartcostlimit"; // currently not implemented
+				: "batterygridchargelimit";
+
+			// delete
 			try {
-				await api.post(`${url}/${encodeURIComponent(limit)}`);
-				if (isLoadpoint && this.multipleLoadpoints) {
+				if (limit === "null") {
+					await api.delete(url);
+				} else {
+					await api.post(`${url}/${encodeURIComponent(limit)}`);
+				}
+				if (this.isLoadpoint && this.multipleLoadpoints) {
 					this.applyToAllVisible = true;
 				}
 			} catch (err) {
@@ -323,7 +325,13 @@ export default {
 		},
 		async applyToAll() {
 			try {
-				await api.post(`smartcostlimit/${encodeURIComponent(this.selectedSmartCostLimit)}`);
+				if (this.selectedSmartCostLimit === null) {
+					await api.delete("smartcostlimit");
+				} else {
+					await api.post(
+						`smartcostlimit/${encodeURIComponent(this.selectedSmartCostLimit)}`
+					);
+				}
 				this.applyToAllVisible = false;
 			} catch (err) {
 				console.error(err);

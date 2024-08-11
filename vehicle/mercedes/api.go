@@ -97,6 +97,10 @@ func (v *API) Status(vin string) (StatusResponse, error) {
 		res.EvInfo.Battery.ChargingStatus = 3
 	}
 
+	if val, ok := message.Attributes["maxSoc"]; ok && val != nil {
+		res.EvInfo.Battery.SocLimit = int(val.GetIntValue())
+	}
+
 	if val, ok := message.Attributes["selectedChargeProgram"]; ok && val != nil {
 		selectedChargeProgram := val.GetIntValue()
 		res.EvInfo.Battery.SelectedChargeProgram = int(selectedChargeProgram)
@@ -108,10 +112,7 @@ func (v *API) Status(vin string) (StatusResponse, error) {
 				}
 			}
 		}
-	} else {
-		if val, ok := message.Attributes["maxSoc"]; ok && val != nil {
-			res.EvInfo.Battery.SocLimit = int(val.GetIntValue())
-		}
 	}
+
 	return res, err
 }

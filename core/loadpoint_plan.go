@@ -100,7 +100,9 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 	if planTime.IsZero() {
 		return false
 	}
-	if lp.clock.Until(planTime) < 0 && !lp.planActive {
+	// keep overrunning plans as long as a vehicle is connected
+	if lp.clock.Until(planTime) < 0 && (!lp.planActive || !lp.connected()) {
+		lp.log.DEBUG.Println("plan: deleting expired plan")
 		lp.deletePlan()
 		return false
 	}
