@@ -48,19 +48,18 @@ func init() {
 	registry.Add("nrggen2", NewNRGKickGen2FromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateNRGKickGen2 -b *NRGKickGen2 -r api.Charger -t "api.ChargerEx,MaxCurrentMillis,func(float64) (error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) error"
+//go:generate go run ../cmd/tools/decorate.go -f decorateNRGKickGen2 -b *NRGKickGen2 -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error"
 
 // NewNRGKickGen2FromConfig creates a NRGKickGen2 charger from generic config
 func NewNRGKickGen2FromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
-		modbus.TcpSettings       `mapstructure:",squash"`
-		MARegulation, Phases1p3p bool
+		modbus.TcpSettings `mapstructure:",squash"`
+		Phases1p3p         bool
 	}{
 		TcpSettings: modbus.TcpSettings{
 			ID: 1, // default
 		},
-		MARegulation: false,
-		Phases1p3p:   false,
+		Phases1p3p: false,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -73,13 +72,8 @@ func NewNRGKickGen2FromConfig(other map[string]interface{}) (api.Charger, error)
 	}
 
 	var (
-		chargerEx func(float64) error
-		phasesS   func(int) error
+		phasesS func(int) error
 	)
-
-	if cc.MARegulation {
-		chargerEx = nrg.maxCurrentMillis
-	}
 
 	if cc.Phases1p3p {
 		// user could have an adapter plug which doesn't support 3 phases
@@ -90,7 +84,7 @@ func NewNRGKickGen2FromConfig(other map[string]interface{}) (api.Charger, error)
 		}
 	}
 
-	return decorateNRGKickGen2(nrg, chargerEx, phasesS), nil
+	return decorateNRGKickGen2(nrg, phasesS), nil
 }
 
 // NewNRGKickGen2 creates NRGKickGen2 charger
@@ -206,11 +200,13 @@ func (nrg *NRGKickGen2) Enable(enable bool) error {
 
 // MaxCurrent implements the api.Charger interface
 func (nrg *NRGKickGen2) MaxCurrent(current int64) error {
-	return nrg.maxCurrentMillis(float64(current))
+	return nrg.MaxCurrentMillis(float64(current))
 }
 
+var _ api.ChargerEx = (*NRGKickGen2)(nil)
+
 // MaxCurrentMillis implements the api.ChargerEx interface
-func (nrg *NRGKickGen2) maxCurrentMillis(current float64) error {
+func (nrg *NRGKickGen2) MaxCurrentMillis(current float64) error {
 	if current < 6 {
 		return fmt.Errorf("invalid current %.1f", current)
 	}

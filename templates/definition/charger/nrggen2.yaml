@@ -13,13 +13,6 @@ params:
   - name: modbus
     choice: ["tcpip"]
     id: 1
-  - name: mARegulation
-    type: bool
-    default: false
-    advanced: true
-    help:
-      de: Aktiviert mA Regelung. Erweiterte Funktion "Ladestrom Dezimalmodus" muss in der NRGkick App aktiviert sein.
-      en: Activates mA regulation. Extended feature "Charging Current Decimal Mode" must be activated in the NRGKick app.
   - name: phases1p3p
     type: bool
     default: false
@@ -33,6 +26,4 @@ render: |
   {{- if ne .phases1p3p "false" }}
   phases1p3p: true
   {{- end }}
-  {{- if ne .mARegulation "false" }}
-  mARegulation: true
-  {{- end }}
+

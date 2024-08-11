@@ -6,43 +6,17 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateNRGKickGen2(base *NRGKickGen2, chargerEx func(float64) error, phaseSwitcher func(int) error) api.Charger {
+func decorateNRGKickGen2(base *NRGKickGen2, phaseSwitcher func(int) error) api.Charger {
 	switch {
-	case chargerEx == nil && phaseSwitcher == nil:
+	case phaseSwitcher == nil:
 		return base
 
-	case chargerEx != nil && phaseSwitcher == nil:
-		return &struct {
-			*NRGKickGen2
-			api.ChargerEx
-		}{
-			NRGKickGen2: base,
-			ChargerEx: &decorateNRGKickGen2ChargerExImpl{
-				chargerEx: chargerEx,
-			},
-		}
-
-	case chargerEx == nil && phaseSwitcher != nil:
+	case phaseSwitcher != nil:
 		return &struct {
 			*NRGKickGen2
 			api.PhaseSwitcher
 		}{
 			NRGKickGen2: base,
-			PhaseSwitcher: &decorateNRGKickGen2PhaseSwitcherImpl{
-				phaseSwitcher: phaseSwitcher,
-			},
-		}
-
-	case chargerEx != nil && phaseSwitcher != nil:
-		return &struct {
-			*NRGKickGen2
-			api.ChargerEx
-			api.PhaseSwitcher
-		}{
-			NRGKickGen2: base,
-			ChargerEx: &decorateNRGKickGen2ChargerExImpl{
-				chargerEx: chargerEx,
-			},
 			PhaseSwitcher: &decorateNRGKickGen2PhaseSwitcherImpl{
 				phaseSwitcher: phaseSwitcher,
 			},
@@ -50,14 +24,6 @@ func decorateNRGKickGen2(base *NRGKickGen2, chargerEx func(float64) error, phase
 	}
 
 	return nil
-}
-
-type decorateNRGKickGen2ChargerExImpl struct {
-	chargerEx func(float64) error
-}
-
-func (impl *decorateNRGKickGen2ChargerExImpl) MaxCurrentMillis(p0 float64) error {
-	return impl.chargerEx(p0)
 }
 
 type decorateNRGKickGen2PhaseSwitcherImpl struct {
