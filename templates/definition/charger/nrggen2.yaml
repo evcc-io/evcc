@@ -5,9 +5,6 @@ products:
       generic: Gen2
 requirements:
   evcc: ["sponsorship"]
-  description:
-    de: NRGkick Gen2 Ladeeinheit via Modbus TCP
-    en: NRGkick Gen2 charging unit via Modbus TCP
 capabilities: ["1p3p", "mA"]
 params:
   - name: modbus

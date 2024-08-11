@@ -167,13 +167,7 @@ func (nrg *NRGKickGen2) Status() (api.ChargeStatus, error) {
 		if err != nil {
 			return api.StatusNone, err
 		}
-
-		switch error := binary.BigEndian.Uint16(b); error {
-		case 32, 33:
-			return api.StatusF, fmt.Errorf("%d", error)
-		default:
-			return api.StatusF, fmt.Errorf("%d", error)
-		}
+		return api.StatusF, fmt.Errorf("%d", error)
 	case 7:
 		return api.StatusB, nil
 	default:
