@@ -30,8 +30,7 @@ func TestUpdateBatteryMode(t *testing.T) {
 		batteryMode:   api.BatteryNormal,
 	}
 
-	err := s.applyBatteryMode(expBatMode)
-	require.NoError(t, err)
+	require.NoError(t, s.applyBatteryMode(expBatMode))
 	assert.Equal(t, expBatMode, s.GetBatteryMode())
 }
 
