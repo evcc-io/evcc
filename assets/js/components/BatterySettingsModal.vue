@@ -271,7 +271,7 @@ export default {
 		batterySoc: Number,
 		bufferStartSoc: Number,
 		batteryDischargeControl: Boolean,
-		battery: { type: Array, default: () => [] },
+		battery: Object,
 		batteryGridChargeLimit: Number,
 		smartCostType: String,
 		tariffGrid: Number,
@@ -302,7 +302,7 @@ export default {
 			return options;
 		},
 		controllable() {
-			return this.battery.some(({ controllable }) => controllable);
+			return Object.values(this.battery || {}).some(({ controllable }) => controllable);
 		},
 		gridChargePossible() {
 			return (
@@ -356,13 +356,13 @@ export default {
 			return this.prioritySoc;
 		},
 		batteryDetails() {
-			if (!Array.isArray(this.battery)) {
-				return;
-			}
-			return this.battery
+			const batteries = Object.values(this.battery || {});
+			if (batteries.length === 0) return;
+
+			return batteries
 				.filter(({ capacity }) => capacity > 0)
 				.map(({ soc, capacity }) => {
-					const multipleBatteries = this.battery.length > 1;
+					const multipleBatteries = batteries.length > 1;
 					const energy = this.fmtKWh(
 						(capacity / 100) * soc * 1e3,
 						true,

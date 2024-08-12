@@ -142,7 +142,7 @@ export default {
 				return {};
 			},
 		},
-		battery: Array,
+		battery: Object,
 		fatal: Object,
 	},
 	data() {
@@ -152,7 +152,7 @@ export default {
 	},
 	computed: {
 		batteryConfigured: function () {
-			return this.battery?.length;
+			return Object.keys(this.battery || {}).length > 0;
 		},
 		logoutCount() {
 			return this.providerLogins.filter((login) => !login.loggedIn).length;

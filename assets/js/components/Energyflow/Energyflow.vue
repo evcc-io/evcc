@@ -198,7 +198,6 @@ import formatter from "../../mixins/formatter";
 import AnimatedNumber from "../AnimatedNumber.vue";
 import settings from "../../settings";
 import { CO2_TYPE } from "../../units";
-import collector from "../../mixins/collector";
 
 export default {
 	name: "Energyflow",
@@ -207,17 +206,16 @@ export default {
 		EnergyflowEntry,
 		AnimatedNumber,
 	},
-	mixins: [formatter, collector],
+	mixins: [formatter],
 	props: {
 		gridConfigured: Boolean,
 		gridPower: { type: Number, default: 0 },
 		homePower: { type: Number, default: 0 },
 		pvConfigured: Boolean,
-		pv: { type: Array },
+		pv: { type: Object },
 		pvPower: { type: Number, default: 0 },
 		loadpointsCompact: { type: Array, default: () => [] },
 		batteryConfigured: { type: Boolean },
-		battery: { type: Array },
 		batteryPower: { type: Number, default: 0 },
 		batterySoc: { type: Number, default: 0 },
 		batteryDischargeControl: { type: Boolean },
@@ -305,10 +303,9 @@ export default {
 			return this.detailsOpen ? this.detailsCompleteHeight + "px" : 0;
 		},
 		pvTooltip() {
-			if (!Array.isArray(this.pv) || this.pv.length <= 1) {
-				return;
-			}
-			return this.pv.map(({ power }) => this.fmtKw(power, this.powerInKw));
+			const pvs = Object.values(this.pv || {});
+			if (pvs.length <= 1) return;
+			return pvs.map(({ power }) => this.fmtKw(power, this.powerInKw));
 		},
 		batteryFmt() {
 			return (soc) => this.fmtPercentage(soc, 0);

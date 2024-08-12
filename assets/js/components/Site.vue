@@ -68,14 +68,14 @@ export default {
 		gridPower: Number,
 		homePower: Number,
 		pvPower: Number,
-		pv: Array,
+		pv: Object,
 		batteryPower: Number,
 		batterySoc: Number,
 		batteryDischargeControl: Boolean,
 		batteryGridChargeLimit: Number,
 		batteryGridChargeActive: Boolean,
 		batteryMode: String,
-		battery: Array,
+		battery: Object,
 		gridCurrents: Array,
 		prioritySoc: Number,
 		bufferSoc: Number,
@@ -106,10 +106,10 @@ export default {
 	},
 	computed: {
 		batteryConfigured: function () {
-			return this.battery?.length > 0;
+			return Object.keys(this.battery || {}).length > 0;
 		},
 		pvConfigured: function () {
-			return this.pv?.length > 0;
+			return Object.keys(this.pv || {}).length > 0;
 		},
 		energyflow: function () {
 			return this.collectProps(Energyflow);

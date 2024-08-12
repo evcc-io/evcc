@@ -72,7 +72,7 @@ export default {
 			return store.state.version;
 		},
 		batteryModalAvailabe: function () {
-			return store.state.battery?.length;
+			return Object.keys(store.state.battery || {}).length > 0;
 		},
 		globalSettingsProps: function () {
 			return this.collectProps(GlobalSettingsModal, store.state);
