@@ -5,20 +5,22 @@ control = "Akkumulátor vezérlés"
 discharge = "Kisütés megakadályoza gyorstöltési és tervezett töltési üzemmódban."
 disclaimerHint = "Megjegyzés:"
 disclaimerText = "Ezek a beállítások csak a szolár üzemmódot érintik. A töltés módja ennek megfelelően kerül beállításra."
-legendBottomName = "otthoni prioritás"
-legendBottomSubline = "nincs töltésre használva"
-legendMiddleName = "jármű először"
-legendMiddleSubline = "otthon másodszor"
+legendBottomName = "Otthoni akkumulátoros töltés priorizálása"
+legendBottomSubline = ameddig eléri {soc}-ot.
+legendMiddleName = Jármű töltésének priorizálása
+legendMiddleSubline = amikor az otthoni akkumulátor {soc} felett van.
 legendTitle = "Hogyan használjuk fel a napenergiát?"
-legendTopAutostart = "automatikusan indul"
-legendTopName = "energiatárolóval támogatott töltés"
-legendTopSubline = "megszakítások nélkül"
+legendTopAutostart = "Automatikusan indul"
+legendTopName = "Energiatárolóval támogatott töltés"
+legendTopSubline = amikor az otthoni akkumulátor {soc} felett van.
 modalTitle = "Otthoni Akkumulátor"
+gridChargeTab = Hálózati töltés
+usageTab = Akkumulátor használat
 
 [batterySettings.bufferStart]
-above = "amikor {soc} felett van"
-full = "amikor {soc}-on van"
-never = "csak ha van elég többlet"
+above = "amikor {soc} felett van."
+full = "amikor {soc}-on van."
+never = "csak ha van elég többlet."
 
 [config]
 
@@ -72,6 +74,8 @@ temp = "Hőmérséklet"
 topic = "Téma"
 url = "URL"
 yes = "igen"
+powerRange = Teljesítmény
+currentRange = Áram
 
 [config.eebus]
 description = "Konfiguráció ami engedélyezi az evcc-nek, hogy kommunikáljon más EEBus eszközökkel."
@@ -204,7 +208,7 @@ labelToken = "Szponzor token"
 title = "Szponzoráció"
 
 [config.system]
-logs = "Naplók"
+logs = "Napló"
 restart = "Újraindítás"
 restartRequiredDescription = "Kérlek indítsd újra a hatás eléréséhez."
 restartRequiredMessage = "A Konfiguráció megváltozott."
@@ -349,7 +353,7 @@ levelLabel = "Szűrés a napló szintje alapján"
 noResults = "Nincs egyező napló bejegyzés."
 search = "Keresés"
 showAll = "Az összes bejegyzés megjelenítése"
-title = "Naplók"
+title = "Napló"
 update = "Automatikus frissítés"
 
 [loginModal]
@@ -390,11 +394,13 @@ batteryHold = "Energiatároló (lezárva)"
 batteryTooltip = "{energy} / {total} ({soc})"
 gridImport = "Hálózatból import"
 homePower = "Fogyasztás"
-loadpoints = "Töltő| Töltő | {count} töltők"
+loadpoints = "Töltő| Töltő | {count} töltő"
 noEnergy = "Nincs mérési adat"
 pvExport = "Hálózatba export"
 pvProduction = "Napelem termelés"
 selfConsumption = "Saját fogyasztás"
+cleanBatteryGridCharge = tiszta hálózati energia
+cheapBatteryGridCharge = olcsó hálózati energia
 
 [main.heatingStatus]
 charging = "Fűtés…"
@@ -441,7 +447,7 @@ label = "Min. töltés %"
 
 [main.loadpointSettings.phasesConfigured]
 label = "Fázis"
-no1p3pSupport = "Hogyan van csatlakoztatva a töltőd?"
+no1p3pSupport = "Milyen módon van csatlakoztatva a töltőd?"
 phases_0 = "auto kapcsolás"
 phases_1 = "1 fázis"
 phases_1_hint = "({min}-tól {max}-ig)"
