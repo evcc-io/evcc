@@ -350,7 +350,7 @@ func (c *EEBus) Enable(enable bool) error {
 		current = c.current
 	}
 
-	return c.writeCurrentLimitData([]float64{current, current, current})
+	return c.MaxCurrentMillis(current)
 }
 
 // send current charging power limits to the EV
