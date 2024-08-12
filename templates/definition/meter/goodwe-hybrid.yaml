@@ -11,6 +11,11 @@ params:
     choice: ["rs485", "tcpip", "udp"]
     baudrate: 9600
     id: 247
+  - name: battery
+    default: 1
+    validvalues:
+      - 1
+      - 2
   - name: capacity
     advanced: true
 render: |
@@ -75,16 +80,17 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register: # manual non-sunspec register configuration
-      address: 35182 # Battery1 Power
+      address: {{ if eq .battery "1" }}35182{{ else }}35265{{ end }} # Battery1/2 Power
       type: holding
       decode: int32
   soc:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register: # manual non-sunspec register configuration
-      address: 37007 # SOC
+      address: {{ if eq .battery "1" }}37007{{ else }}39005{{ end }} # Battery1/2 Soc
       type: holding
       decode: uint16
+  {{- if eq .battery "1" }}
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -93,6 +99,7 @@ render: |
       type: holding
       decode: uint32
     scale: 0.1
+  {{- end }}
   batterymode:
     source: watchdog
     timeout: 30s
