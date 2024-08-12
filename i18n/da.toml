@@ -369,6 +369,8 @@ search = "Søg"
 showAll = "Vis alle poster"
 title = "Log filer"
 update = "Opdater automatisk"
+nAreas = "{count} områder"
+selectAll = "vælg alt"
 
 [loginModal]
 cancel = "Afbryd"
