@@ -369,6 +369,8 @@ search = "Sök"
 showAll = "Visa allt"
 title = "Loggar"
 update = "Autouppdatera"
+nAreas = "{count} områden"
+selectAll = "välj alla"
 
 [loginModal]
 cancel = "Avbryt"
