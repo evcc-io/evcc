@@ -6,6 +6,10 @@ products:
   - brand: Fronius
     description:
       generic: Primo GEN24 Plus
+requirements:
+  description:
+    de: Für aktive Batteriesteuerung muss die Batterie über das `SunSpec Batterie (Model 124)` Template konfiguriert werden.
+    en: For active battery control, the battery needs to be configured using the `SunSpec Battery (Model 124)` template.
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
