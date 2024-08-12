@@ -3,6 +3,7 @@ package templates
 import (
 	"errors"
 	"fmt"
+	"os"
 
 	"github.com/evcc-io/evcc/util"
 	"gopkg.in/yaml.v3"
@@ -33,6 +34,10 @@ func RenderInstance(class Class, other map[string]interface{}) (*Instance, error
 	b, _, err := tmpl.RenderResult(RenderModeInstance, other)
 	if err != nil {
 		return nil, util.NewConfigError(err)
+	}
+
+	if os.Getenv("EVCC_TEMPLATE_RENDER") == cc.Template {
+		fmt.Println(string(b))
 	}
 
 	var instance Instance
