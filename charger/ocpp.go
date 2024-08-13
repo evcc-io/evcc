@@ -179,13 +179,23 @@ func NewOCPP(id string, connector int, idtag string,
 	// fix timing issue in EVBox when switching OCPP protocol version
 	time.Sleep(time.Second)
 
-	var (
-		rc = make(chan error, 1)
+	rc := make(chan error, 1)
 
-		// If a key value is defined as a CSL, it MAY be accompanied with a [KeyName]MaxLength key, indicating the
-		// max length of the CSL in items. If this key is not set, a safe value of 1 (one) item SHOULD be assumed.
-		meterValuesSampledDataMaxLength = 1
-	)
+	err = ocpp.Instance().ChangeAvailability(cp.ID(), func(resp *core.ChangeAvailabilityConfirmation, err error) {
+		if err == nil && resp != nil && resp.Status != core.AvailabilityStatusAccepted {
+			err = errors.New(string(resp.Status))
+		}
+
+		rc <- err
+	}, connector, core.AvailabilityTypeOperative)
+
+	if err := c.wait(err, rc); err != nil {
+		return nil, err
+	}
+
+	// If a key value is defined as a CSL, it MAY be accompanied with a [KeyName]MaxLength key, indicating the
+	// max length of the CSL in items. If this key is not set, a safe value of 1 (one) item SHOULD be assumed.
+	meterValuesSampledDataMaxLength := 1
 
 	err = ocpp.Instance().GetConfiguration(cp.ID(), func(resp *core.GetConfigurationConfirmation, err error) {
 		if err == nil {
