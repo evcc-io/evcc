@@ -98,7 +98,7 @@ func (t *GrünStromIndex) run(done chan error) {
 
 		err := backoff.Retry(func() error {
 			return backoffPermanentError(client.GetJSON(uri, &res))
-		}, bo)
+		}, bo())
 
 		if err == nil && res.Err {
 			if s, ok := res.Message.(string); ok {

@@ -90,7 +90,7 @@ func (t *Pun) run(done chan error) {
 		res, err := backoff.RetryWithData(func() (api.Rates, error) {
 			res, err := t.getData(time.Now().AddDate(0, 0, 1))
 			return res, backoffPermanentError(err)
-		}, bo)
+		}, bo())
 		if err != nil {
 			once.Do(func() { done <- err })
 			t.log.ERROR.Println(err)

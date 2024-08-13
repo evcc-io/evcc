@@ -78,7 +78,7 @@ func (t *Ngeso) run(done chan error) {
 		res, err := backoff.RetryWithData(func() (ngeso.CarbonForecastResponse, error) {
 			res, err := tReq.DoRequest(client)
 			return res, backoffPermanentError(err)
-		}, bo)
+		}, bo())
 		if err != nil {
 			once.Do(func() { done <- err })
 
