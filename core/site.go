@@ -827,24 +827,28 @@ func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints fl
 
 // updateLoadpoints updates all loadpoint's charge power
 func (site *Site) updateLoadpoints() float64 {
-	var wg sync.WaitGroup
+	var (
+		wg  sync.WaitGroup
+		mu  sync.Mutex
+		sum float64
+	)
+
 	wg.Add(len(site.loadpoints))
 	for _, lp := range site.loadpoints {
 		go func() {
-			lp.UpdateChargePowerAndCurrents()
+			power := lp.UpdateChargePowerAndCurrents()
+			site.prioritizer.UpdateChargePowerFlexibility(lp)
+
+			mu.Lock()
+			sum += power
+			mu.Unlock()
+
 			wg.Done()
 		}()
 	}
 	wg.Wait()
 
-	var totalChargePower float64
-	for _, lp := range site.loadpoints {
-		lp.UpdateChargePowerAndCurrents()
-		totalChargePower += lp.GetChargePower()
-		site.prioritizer.UpdateChargePowerFlexibility(lp)
-	}
-
-	return totalChargePower
+	return sum
 }
 
 func (site *Site) update(lp updater) {
