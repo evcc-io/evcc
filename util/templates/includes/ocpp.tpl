@@ -9,6 +9,9 @@ connector: {{ .connector }}
 {{- if .idtag }}
 idtag: {{ .idtag }}
 {{- end }}
+{{- if ne .remotestart "false"}}
+remotestart: {{ .remotestart }}
+{{- end }}
 {{- if ne .connecttimeout "5m" }}
 connecttimeout: {{ .connecttimeout }}
 {{- end }}
