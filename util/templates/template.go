@@ -9,7 +9,6 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/evcc-io/evcc/util"
 	"github.com/go-sprout/sprout"
 )
 
@@ -290,9 +289,9 @@ func (t *Template) RenderProxyWithValues(values map[string]interface{}, lang str
 }
 
 // RenderResult renders the result template to instantiate the proxy
-func (t *Template) RenderResult(renderMode int, other map[string]interface{}) ([]byte, map[string]interface{}, error) {
+func (t *Template) RenderResult(renderMode int, other map[string]any) ([]byte, map[string]any, error) {
 	values := t.Defaults(renderMode)
-	if err := util.DecodeOther(other, &values); err != nil {
+	if err := mergeMaps(other, values); err != nil {
 		return nil, values, err
 	}
 

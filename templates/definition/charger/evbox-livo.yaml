@@ -1,0 +1,14 @@
+template: livo
+products:
+  - brand: EVBox
+    description:
+      generic: Livo
+requirements:
+  evcc: ["eebus"]
+  description:
+    de: Das Gerät benötigt eine feste IP Adresse.
+    en: The device requires a fixed IP addres.
+params:
+  - preset: eebus
+render: |
+  {{ include "eebus" . }}

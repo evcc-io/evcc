@@ -35,5 +35,3 @@ params:
   - preset: eebus
 render: |
   {{ include "eebus" . }}
-  meter: true
-  chargedEnergy: false
