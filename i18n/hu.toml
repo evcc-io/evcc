@@ -5,17 +5,17 @@ control = "Akkumulátor vezérlés"
 discharge = "Kisütés megakadályoza gyorstöltési és tervezett töltési üzemmódban."
 disclaimerHint = "Megjegyzés:"
 disclaimerText = "Ezek a beállítások csak a szolár üzemmódot érintik. A töltés módja ennek megfelelően kerül beállításra."
+gridChargeTab = "Hálózati töltés"
 legendBottomName = "Otthoni akkumulátoros töltés priorizálása"
-legendBottomSubline = ameddig eléri {soc}-ot.
-legendMiddleName = Jármű töltésének priorizálása
-legendMiddleSubline = amikor az otthoni akkumulátor {soc} felett van.
+legendBottomSubline = "ameddig eléri {soc}-ot."
+legendMiddleName = "Jármű töltésének priorizálása"
+legendMiddleSubline = "amikor az otthoni akkumulátor {soc} felett van."
 legendTitle = "Hogyan használjuk fel a napenergiát?"
 legendTopAutostart = "Automatikusan indul"
 legendTopName = "Energiatárolóval támogatott töltés"
-legendTopSubline = amikor az otthoni akkumulátor {soc} felett van.
+legendTopSubline = "amikor az otthoni akkumulátor {soc} felett van."
 modalTitle = "Otthoni Akkumulátor"
-gridChargeTab = Hálózati töltés
-usageTab = Akkumulátor használat
+usageTab = "Akkumulátor használat"
 
 [batterySettings.bufferStart]
 above = "amikor {soc} felett van."
@@ -56,6 +56,7 @@ co2 = "Hálózat CO₂"
 configured = "Konfigurálva"
 currency = "Valuta"
 current = "Jelenlegi"
+currentRange = "Áram"
 enabled = "Engedélyezve"
 energy = "Energia"
 feedinPrice = "Kötelező átvételi ár"
@@ -67,6 +68,7 @@ phaseCurrents = "Áram L1..L3"
 phasePowers = "Teljesítmény L1..L3"
 phaseVoltages = "Feszültség L1..L3"
 power = "Teljesítmény"
+powerRange = "Teljesítmény"
 range = "Hatótáv"
 soc = "SoC"
 socLimit = "Limit"
@@ -74,8 +76,6 @@ temp = "Hőmérséklet"
 topic = "Téma"
 url = "URL"
 yes = "igen"
-powerRange = Teljesítmény
-currentRange = Áram
 
 [config.eebus]
 description = "Konfiguráció ami engedélyezi az evcc-nek, hogy kommunikáljon más EEBus eszközökkel."
@@ -392,6 +392,8 @@ batteryCharge = "Energiatároló töltés"
 batteryDischarge = "Energiatároló kisütés"
 batteryHold = "Energiatároló (lezárva)"
 batteryTooltip = "{energy} / {total} ({soc})"
+cheapBatteryGridCharge = "olcsó hálózati energia"
+cleanBatteryGridCharge = "tiszta hálózati energia"
 gridImport = "Hálózatból import"
 homePower = "Fogyasztás"
 loadpoints = "Töltő| Töltő | {count} töltő"
@@ -399,8 +401,6 @@ noEnergy = "Nincs mérési adat"
 pvExport = "Hálózatba export"
 pvProduction = "Napelem termelés"
 selfConsumption = "Saját fogyasztás"
-cleanBatteryGridCharge = tiszta hálózati energia
-cheapBatteryGridCharge = olcsó hálózati energia
 
 [main.heatingStatus]
 charging = "Fűtés…"
