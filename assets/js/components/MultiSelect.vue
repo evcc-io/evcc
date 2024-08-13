@@ -27,7 +27,7 @@
 				<li><hr class="dropdown-divider" /></li>
 			</template>
 			<li v-for="option in options" :key="option.value" class="dropdown-item p-0">
-				<label class="form-check px-3 py-2" :for="option.value">
+				<label class="form-check px-3 py-2 d-flex" :for="option.value">
 					<input
 						class="form-check-input ms-0 me-2"
 						type="checkbox"
