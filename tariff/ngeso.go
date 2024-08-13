@@ -57,7 +57,6 @@ func NewNgesoFromConfig(other map[string]interface{}) (api.Tariff, error) {
 func (t *Ngeso) run(done chan error) {
 	var once sync.Once
 	client := request.NewHelper(t.log)
-	bo := newBackoff()
 
 	// Use national results by default.
 	var tReq ngeso.CarbonForecastRequest

@@ -70,7 +70,6 @@ func NewPunFromConfig(other map[string]interface{}) (api.Tariff, error) {
 
 func (t *Pun) run(done chan error) {
 	var once sync.Once
-	bo := newBackoff()
 
 	tick := time.NewTicker(time.Hour)
 	for ; true; <-tick.C {
@@ -81,7 +80,7 @@ func (t *Pun) run(done chan error) {
 			today, err = t.getData(time.Now())
 
 			return err
-		}, bo); err != nil {
+		}, bo()); err != nil {
 			once.Do(func() { done <- err })
 
 			t.log.ERROR.Println(err)

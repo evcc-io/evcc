@@ -208,8 +208,7 @@ func (c *Easee) chargerSite(charger string) (easee.Site, error) {
 
 // connect creates an HTTP connection to the signalR hub
 func (c *Easee) connect(ts oauth2.TokenSource) func() (signalr.Connection, error) {
-	bo := backoff.NewExponentialBackOff()
-	bo.MaxInterval = time.Minute
+	bo := backoff.NewExponentialBackOff(backoff.WithMaxInterval(time.Minute))
 
 	return func() (conn signalr.Connection, err error) {
 		defer func() {
