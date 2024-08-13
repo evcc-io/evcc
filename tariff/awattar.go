@@ -55,7 +55,7 @@ func NewAwattarFromConfig(other map[string]interface{}) (api.Tariff, error) {
 
 func (t *Awattar) run(done chan error) {
 	var once sync.Once
-	bo := newBackoff()
+
 	client := request.NewHelper(t.log)
 
 	tick := time.NewTicker(time.Hour)
@@ -64,7 +64,7 @@ func (t *Awattar) run(done chan error) {
 
 		if err := backoff.Retry(func() error {
 			return backoffPermanentError(client.GetJSON(t.uri, &res))
-		}, bo); err != nil {
+		}, bo()); err != nil {
 			once.Do(func() { done <- err })
 
 			t.log.ERROR.Println(err)
