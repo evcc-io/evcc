@@ -61,7 +61,8 @@ render: |
       value: 160:4:DCW # mppt 4 discharge
   energy:
     source: sunspec
-    {{- include "modbus" . | indent 2 }}
+    uri: {{ .host }}:{{ .port }}
+    id: 1
     value: 160:4:DCWH # mppt 4 (discharge)
     scale: 0.001
   soc:
