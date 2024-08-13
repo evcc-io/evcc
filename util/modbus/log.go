@@ -2,7 +2,6 @@ package modbus
 
 import (
 	"sync"
-	"time"
 
 	"github.com/grid-x/modbus"
 	"github.com/volkszaehler/mbmd/meters"
@@ -17,12 +16,7 @@ func (l *logger) WithLogger(logger modbus.Logger, fun func() ([]byte, error)) ([
 	l.mu.Lock()
 	defer l.mu.Unlock()
 
-	if l.logger != logger {
-		// small delay when switching logger/ slave id to mimic mbmd behavior
-		time.Sleep(10 * time.Millisecond)
-		l.logger = logger
-	}
-
+	l.logger = logger
 	return fun()
 }
 
