@@ -219,6 +219,11 @@ func (c *EEBus) isCharging() bool {
 	return phasesCurrent > limitMin*idleFactor
 }
 
+func (c *EEBus) isEvConnected() (spineapi.EntityRemoteInterface, bool) {
+	evEntity := c.evEntity()
+	return evEntity, evEntity != nil && c.uc.EvCC.EVConnected(evEntity)
+}
+
 // Status implements the api.Charger interface
 func (c *EEBus) Status() (res api.ChargeStatus, err error) {
 	if !c.Connected() {
@@ -239,9 +244,8 @@ func (c *EEBus) Status() (res api.ChargeStatus, err error) {
 		}
 	}()
 
-	evEntity := c.evEntity()
-	if !c.uc.EvCC.EVConnected(evEntity) {
-		c.expectedEnableUnpluggedState = false
+	evEntity, ok := c.isEvConnected()
+	if !ok {
 		return api.StatusA, nil
 	}
 
@@ -272,21 +276,13 @@ func (c *EEBus) Status() (res api.ChargeStatus, err error) {
 // should return true if the charger allows the EV to draw power
 func (c *EEBus) Enabled() (bool, error) {
 	// when unplugged there is no overload limit data available
-	evEntity := c.evEntity()
-	state, err := c.Status()
-	if err != nil || state == api.StatusA || evEntity == nil {
-		c.log.DEBUG.Println("!! EV unplugged or status unknown")
+	evEntity, ok := c.isEvConnected()
+	if !ok {
 		return c.expectedEnableUnpluggedState, nil
 	}
 
-	// if the EV is charging
-	if state == api.StatusC {
-		c.log.DEBUG.Println("!! api.StatusC")
-		return true, nil
-	}
-
 	// if the VW VAS PV mode is active, use PV limits
-	if c.hasActiveVASVW() {
+	if c.hasActiveVASVW(evEntity) {
 		limits, err := c.uc.OscEV.LoadControlLimits(evEntity)
 		if err != nil {
 			c.log.DEBUG.Println("!! OscEV.LoadControlLimits error", err)
@@ -330,7 +326,8 @@ func (c *EEBus) Enabled() (bool, error) {
 // Enable implements the api.Charger interface
 func (c *EEBus) Enable(enable bool) error {
 	// if the ev is unplugged or the state is unknown, there is nothing to be done
-	if state, err := c.Status(); err != nil || state == api.StatusA {
+	evEntity, ok := c.isEvConnected()
+	if !ok {
 		c.expectedEnableUnpluggedState = enable
 		return nil
 	}
@@ -338,28 +335,27 @@ func (c *EEBus) Enable(enable bool) error {
 	// if we disable charging with a potential but not yet known communication standard ISO15118
 	// this would set allowed A value to be 0. And this would trigger ISO connections to switch to IEC!
 	if !enable {
-		comStandard, err := c.uc.EvCC.CommunicationStandard(c.evEntity())
+		comStandard, err := c.uc.EvCC.CommunicationStandard(evEntity)
 		if err != nil || comStandard == evcc.EVCCCommunicationStandardUnknown {
 			return api.ErrMustRetry
 		}
 	}
 
 	var current float64
-
 	if enable {
 		current = c.current
 	}
 
-	return c.writeCurrentLimitData([]float64{current, current, current})
+	err := c.writeCurrentLimitData(evEntity, []float64{current, current, current})
+	if err == nil {
+		c.expectedEnableUnpluggedState = enable
+	}
+
+	return err
 }
 
 // send current charging power limits to the EV
-func (c *EEBus) writeCurrentLimitData(currents []float64) error {
-	evEntity := c.evEntity()
-	if !c.uc.EvCC.EVConnected(evEntity) {
-		return errors.New("no ev connected")
-	}
-
+func (c *EEBus) writeCurrentLimitData(evEntity spineapi.EntityRemoteInterface, currents []float64) error {
 	// check if the EVSE supports overload protection limits
 	if !c.uc.OpEV.IsScenarioAvailableAtEntity(evEntity, 1) {
 		return api.ErrNotAvailable
@@ -393,7 +389,7 @@ func (c *EEBus) writeCurrentLimitData(currents []float64) error {
 
 	// if VAS VW is available, limits are completely covered by it
 	// this way evcc can fully control the charging behaviour
-	if c.writeLoadControlLimitsVASVW(limits) {
+	if c.writeLoadControlLimitsVASVW(evEntity, limits) {
 		return nil
 	}
 
@@ -423,14 +419,9 @@ func (c *EEBus) writeCurrentLimitData(currents []float64) error {
 
 // returns if the connected EV has an active VW PV mode
 // in this mode, the EV does not have an active charging demand
-func (c *EEBus) hasActiveVASVW() bool {
+func (c *EEBus) hasActiveVASVW(evEntity spineapi.EntityRemoteInterface) bool {
 	// EVSE has to support VW VAS
 	if !c.vasVW {
-		return false
-	}
-
-	evEntity := c.evEntity()
-	if evEntity == nil {
 		return false
 	}
 
@@ -481,13 +472,8 @@ func (c *EEBus) hasActiveVASVW() bool {
 //
 // this functionality allows to fully control charging without the EV actually having a
 // charging demand by itself
-func (c *EEBus) writeLoadControlLimitsVASVW(limits []ucapi.LoadLimitsPhase) bool {
-	if !c.hasActiveVASVW() {
-		return false
-	}
-
-	evEntity := c.evEntity()
-	if evEntity == nil {
+func (c *EEBus) writeLoadControlLimitsVASVW(evEntity spineapi.EntityRemoteInterface, limits []ucapi.LoadLimitsPhase) bool {
+	if !c.hasActiveVASVW(evEntity) {
 		return false
 	}
 
@@ -540,15 +526,16 @@ var _ api.ChargerEx = (*EEBus)(nil)
 
 // MaxCurrentMillis implements the api.ChargerEx interface
 func (c *EEBus) MaxCurrentMillis(current float64) error {
-	if !c.Connected() || c.evEntity() == nil {
-		return errors.New("can't set new current as ev is unplugged")
+	evEntity, ok := c.isEvConnected()
+	if !ok {
+		c.current = current
+		return nil
 	}
 
-	if err := c.writeCurrentLimitData([]float64{current, current, current}); err != nil {
-		return err
+	err := c.writeCurrentLimitData(evEntity, []float64{current, current, current})
+	if err == nil {
+		c.current = current
 	}
-
-	c.current = current
 
 	return nil
 }
@@ -569,8 +556,8 @@ func (c *EEBus) GetMaxCurrent() (float64, error) {
 
 // CurrentPower implements the api.Meter interface
 func (c *EEBus) currentPower() (float64, error) {
-	evEntity := c.evEntity()
-	if evEntity == nil {
+	evEntity, ok := c.isEvConnected()
+	if !ok {
 		return 0, nil
 	}
 
@@ -609,8 +596,8 @@ func (c *EEBus) currentPower() (float64, error) {
 
 // ChargedEnergy implements the api.ChargeRater interface
 func (c *EEBus) chargedEnergy() (float64, error) {
-	evEntity := c.evEntity()
-	if evEntity == nil {
+	evEntity, ok := c.isEvConnected()
+	if !ok {
 		return 0, nil
 	}
 
@@ -628,8 +615,8 @@ func (c *EEBus) chargedEnergy() (float64, error) {
 
 // Currents implements the api.PhaseCurrents interface
 func (c *EEBus) currents() (float64, float64, float64, error) {
-	evEntity := c.evEntity()
-	if evEntity == nil {
+	evEntity, ok := c.isEvConnected()
+	if !ok {
 		return 0, 0, 0, nil
 	}
 
@@ -658,8 +645,8 @@ var _ api.Identifier = (*EEBus)(nil)
 
 // Identify implements the api.Identifier interface
 func (c *EEBus) Identify() (string, error) {
-	evEntity := c.evEntity()
-	if !c.Connected() || evEntity == nil {
+	evEntity, ok := c.isEvConnected()
+	if !ok {
 		return "", nil
 	}
 
