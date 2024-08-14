@@ -168,12 +168,7 @@ func (c *EEBus) GetMinMaxCurrent() (float64, float64, error) {
 }
 
 // we assume that if any phase current value is > idleFactor * min Current, then charging is active and enabled is true
-func (c *EEBus) isCharging() bool {
-	evEntity := c.evEntity()
-	if !c.uc.EvCC.EVConnected(evEntity) {
-		return false
-	}
-
+func (c *EEBus) isCharging(evEntity spineapi.EntityRemoteInterface) bool {
 	// check if an external physical meter is assigned
 	// we only want this for configured meters and not for internal meters!
 	// right now it works as expected
@@ -247,7 +242,7 @@ func (c *EEBus) Status() (res api.ChargeStatus, err error) {
 	case ucapi.EVChargeStateTypeFinished, ucapi.EVChargeStateTypePaused: // Finished, Paused
 		return api.StatusB, nil
 	case ucapi.EVChargeStateTypeActive: // Active
-		if c.isCharging() {
+		if c.isCharging(evEntity) {
 			return api.StatusC, nil
 		}
 		return api.StatusB, nil
