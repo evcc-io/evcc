@@ -249,6 +249,11 @@ func NewOCPP(id string, connector int, idtag string,
 						c.idtag = *opt.Value
 						c.log.DEBUG.Printf("overriding default `idTag` with Alfen-specific value: %s", c.idtag)
 					}
+
+				case ocpp.KeyEvBoxSupportedMeasurands:
+					if meterValues == "" {
+						meterValues = *opt.Value
+					}
 				}
 
 				if err != nil {
