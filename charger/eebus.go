@@ -265,7 +265,7 @@ func (c *EEBus) Enabled() (bool, error) {
 		limits, err := c.uc.OscEV.LoadControlLimits(evEntity)
 		if err != nil {
 			// there are no limits available, e.g. because the data was not received yet
-			c.log.DEBUG.Println("!! OscEV.LoadControlLimits error:", err)
+			c.log.ERROR.Println("!! OscEV.LoadControlLimits:", err)
 			return c.enabled, nil
 		}
 
@@ -283,7 +283,7 @@ func (c *EEBus) Enabled() (bool, error) {
 	limits, err := c.uc.OpEV.LoadControlLimits(evEntity)
 	if err != nil {
 		// there are no limits available, e.g. because the data was not received yet
-		c.log.DEBUG.Println("!! OpEV.LoadControlLimits error:", err)
+		c.log.ERROR.Println("!! OpEV.LoadControlLimits:", err)
 		return c.enabled, nil
 	}
 
@@ -372,7 +372,7 @@ func (c *EEBus) writeCurrentLimitData(evEntity spineapi.EntityRemoteInterface, c
 		return err
 	}
 
-	// Set overload protection limits
+	// set overload protection limits
 	_, err = c.uc.OpEV.WriteLoadControlLimits(evEntity, limits, nil)
 
 	return err
@@ -465,6 +465,7 @@ func (c *EEBus) writeLoadControlLimitsVASVW(evEntity spineapi.EntityRemoteInterf
 	// on OSCEV all limits have to be active except they are set to the default value
 	minLimits, _, _, err := c.uc.OscEV.CurrentLimits(evEntity)
 	if err != nil {
+		c.log.ERROR.Println("!! OscEV.CurrentLimits:", err)
 		return false
 	}
 
@@ -472,8 +473,9 @@ func (c *EEBus) writeLoadControlLimitsVASVW(evEntity spineapi.EntityRemoteInterf
 		limits[index].IsActive = item.Value >= minLimits[index]
 	}
 
-	// send the write command
+	// set overload protection limits
 	if _, err := c.uc.OscEV.WriteLoadControlLimits(evEntity, limits, nil); err != nil {
+		c.log.ERROR.Println("!! OscEV.WriteLoadControlLimits:", err)
 		return false
 	}
 
