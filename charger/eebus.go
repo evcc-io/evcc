@@ -44,8 +44,6 @@ type EEBus struct {
 	reconnect                    bool
 	current                      float64
 
-	currentLimit float64
-
 	*eebus.Connector
 }
 
@@ -133,11 +131,9 @@ func (c *EEBus) UseCaseEvent(device spineapi.DeviceRemoteInterface, entity spine
 	case evcc.EvConnected:
 		c.ev = entity
 		c.reconnect = true
-		c.currentLimit = -1
 
 	case evcc.EvDisconnected:
 		c.ev = nil
-		c.currentLimit = -1
 	}
 }
 
@@ -398,9 +394,7 @@ func (c *EEBus) writeCurrentLimitData(evEntity spineapi.EntityRemoteInterface, c
 	}
 
 	// Set overload protection limits
-	if _, err = c.uc.OpEV.WriteLoadControlLimits(evEntity, limits, nil); err == nil {
-		c.currentLimit = currents[0]
-	}
+	_, err = c.uc.OpEV.WriteLoadControlLimits(evEntity, limits, nil)
 
 	return err
 }
@@ -484,7 +478,6 @@ func (c *EEBus) writeLoadControlLimitsVASVW(evEntity spineapi.EntityRemoteInterf
 	if _, err := c.uc.OscEV.WriteLoadControlLimits(evEntity, limits, nil); err != nil {
 		return false
 	}
-	c.currentLimit = limits[0].Value
 
 	// make sure the obligations are inactive, otherwise the EV won't go to sleep
 	if obligations, err := c.uc.OpEV.LoadControlLimits(evEntity); err == nil {
@@ -526,20 +519,6 @@ func (c *EEBus) MaxCurrentMillis(current float64) error {
 	}
 
 	return nil
-}
-
-var _ api.CurrentGetter = (*EEBus)(nil)
-
-// GetMaxCurrent implements the api.CurrentGetter interface
-func (c *EEBus) GetMaxCurrent() (float64, error) {
-	c.mux.RLock()
-	defer c.mux.RUnlock()
-
-	if c.currentLimit == -1 {
-		return 0, api.ErrNotAvailable
-	}
-
-	return c.currentLimit, nil
 }
 
 // CurrentPower implements the api.Meter interface
