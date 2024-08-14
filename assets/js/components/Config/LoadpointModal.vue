@@ -78,28 +78,28 @@
 				</p>
 			</div>
 
-			<FormRow
-				id="loadpointMode"
-				label="Mode"
-				help="Charging mode when connecting the vehicle."
-			>
-				<PropertyField
-					id="loadpointMode"
-					v-model="values.mode"
-					type="String"
-					class="w-100"
-					required
-					:valid-values="[
-						{ value: '', name: 'Keep last selection' },
-						{ value: 'off', name: $t('main.mode.off') },
-						{ value: 'pv', name: $t('main.mode.pv') },
-						{ value: 'minpv', name: $t('main.mode.minpv') },
-						{ value: 'now', name: $t('main.mode.now') },
-					]"
-				/>
-			</FormRow>
-
 			<div v-if="values.charger">
+				<FormRow
+					id="loadpointMode"
+					label="Mode"
+					help="Charging mode when connecting the vehicle."
+				>
+					<PropertyField
+						id="loadpointMode"
+						v-model="values.mode"
+						type="String"
+						class="w-100"
+						required
+						:valid-values="[
+							{ value: '', name: 'Keep last selection' },
+							{ value: 'off', name: $t('main.mode.off') },
+							{ value: 'pv', name: $t('main.mode.pv') },
+							{ value: 'minpv', name: $t('main.mode.minpv') },
+							{ value: 'now', name: $t('main.mode.now') },
+						]"
+					/>
+				</FormRow>
+
 				<ul class="nav nav-tabs nav-justified mt-5 mb-4">
 					<li class="nav-item">
 						<a
@@ -135,23 +135,6 @@
 
 				<div v-if="tab === 'solar'">
 					<FormRow
-						v-if="showPriority"
-						id="loadpointParamPriority"
-						label="Priority"
-						help="Relevant for multiple charge points. Higher priority charge points get preferred access to solar surplus."
-					>
-						<PropertyField
-							id="loadpointParamPriority"
-							v-model="values.priority"
-							type="Number"
-							size="w-100"
-							class="me-2"
-							:valid-values="priorityOptions"
-							required
-						/>
-					</FormRow>
-
-					<FormRow
 						id="loadpointSolarMode"
 						label="Solar behaviour"
 						:help="
@@ -174,89 +157,108 @@
 						/>
 					</FormRow>
 
-					<div v-show="solarMode === 'custom'" class="mb-4">
-						<div class="d-flex flex-wrap flex-sm-nowrap gap-4">
-							<FormRow
-								id="loadpointEnableThreshold"
-								label="Enable grid power"
-								style="margin-bottom: 0 !important"
-							>
-								<PropertyField
+					<div v-show="solarMode === 'custom'" class="ms-3 mb-5">
+						<div class="mb-4">
+							<div class="d-flex flex-wrap flex-sm-nowrap gap-4">
+								<FormRow
 									id="loadpointEnableThreshold"
-									v-model="values.thresholds.enable.threshold"
-									type="Float"
-									unit="W"
-									size="w-25 w-min-200"
-									required
-								/>
-							</FormRow>
-							<FormRow
-								id="loadpointEnableDelay"
-								label="Enable delay"
-								style="margin-bottom: 0 !important"
-							>
-								<PropertyField
+									label="Enable grid power"
+									style="margin-bottom: 0 !important"
+								>
+									<PropertyField
+										id="loadpointEnableThreshold"
+										v-model="values.thresholds.enable.threshold"
+										type="Float"
+										unit="W"
+										size="w-25 w-min-200"
+										required
+									/>
+								</FormRow>
+								<FormRow
 									id="loadpointEnableDelay"
-									v-model="values.thresholds.enable.delay"
-									type="Duration"
-									unit="min"
-									size="w-25 w-min-200"
-									required
-								/>
-							</FormRow>
+									label="Enable delay"
+									style="margin-bottom: 0 !important"
+								>
+									<PropertyField
+										id="loadpointEnableDelay"
+										v-model="values.thresholds.enable.delay"
+										type="Duration"
+										unit="min"
+										size="w-25 w-min-200"
+										required
+									/>
+								</FormRow>
+							</div>
+							<div class="form-text evcc-gray">
+								{{
+									values.thresholds.enable.threshold === 0
+										? `Start when minimum charge power surplus is available for ${fmtDuration(values.thresholds.enable.delay * 60)}.`
+										: values.thresholds.enable.threshold < 0
+											? `Start charging, when ${fmtKw(-1 * values.thresholds.enable.threshold, false)} surplus is available for ${fmtDuration(values.thresholds.enable.delay * 60)}.`
+											: `Please use a negative value.`
+								}}
+							</div>
 						</div>
-						<div class="form-text evcc-gray">
-							{{
-								values.thresholds.enable.threshold === 0
-									? `Start when minimum charge power surplus is available for ${fmtDuration(values.thresholds.enable.delay * 60)}.`
-									: values.thresholds.enable.threshold < 0
-										? `Start charging, when ${fmtKw(-1 * values.thresholds.enable.threshold, false)} surplus is available for ${fmtDuration(values.thresholds.enable.delay * 60)}.`
-										: `Please use a negative value.`
-							}}
+
+						<div>
+							<div class="d-flex flex-wrap flex-sm-nowrap gap-4">
+								<FormRow
+									id="loadpointDisableThreshold"
+									label="Disable grid power"
+									style="margin-bottom: 0 !important"
+								>
+									<PropertyField
+										id="loadpointDisableThreshold"
+										v-model="values.thresholds.disable.threshold"
+										type="Float"
+										unit="W"
+										size="w-25 w-min-200"
+										required
+									/>
+								</FormRow>
+								<FormRow
+									id="loadpointDisableDelay"
+									label="Disable delay"
+									style="margin-bottom: 0 !important"
+								>
+									<PropertyField
+										id="loadpointDisableDelay"
+										v-model="values.thresholds.disable.delay"
+										type="Duration"
+										unit="min"
+										size="w-25 w-min-200"
+										required
+									/>
+								</FormRow>
+							</div>
+							<div class="form-text evcc-gray">
+								{{
+									values.thresholds.disable.threshold === 0
+										? `Stop when minimum charge power can't be satisfied for ${fmtDuration(values.thresholds.disable.delay * 60)}.`
+										: values.thresholds.disable.threshold > 0
+											? `Stop charging, when more than ${fmtKw(values.thresholds.disable.threshold, false)} is used from the grid for ${fmtDuration(values.thresholds.disable.delay * 60)}.`
+											: `Please use a positive value.`
+								}}
+							</div>
 						</div>
 					</div>
 
-					<div v-show="solarMode === 'custom'" class="mb-6">
-						<div class="d-flex flex-wrap flex-sm-nowrap gap-4">
-							<FormRow
-								id="loadpointDisableThreshold"
-								label="Disable grid power"
-								style="margin-bottom: 0 !important"
-							>
-								<PropertyField
-									id="loadpointDisableThreshold"
-									v-model="values.thresholds.disable.threshold"
-									type="Float"
-									unit="W"
-									size="w-25 w-min-200"
-									required
-								/>
-							</FormRow>
-							<FormRow
-								id="loadpointDisableDelay"
-								label="Disable delay"
-								style="margin-bottom: 0 !important"
-							>
-								<PropertyField
-									id="loadpointDisableDelay"
-									v-model="values.thresholds.disable.delay"
-									type="Duration"
-									unit="min"
-									size="w-25 w-min-200"
-									required
-								/>
-							</FormRow>
-						</div>
-						<div class="form-text evcc-gray">
-							{{
-								values.thresholds.disable.threshold === 0
-									? `Stop when minimum charge power can't be satisfied for ${fmtDuration(values.thresholds.disable.delay * 60)}.`
-									: values.thresholds.disable.threshold > 0
-										? `Stop charging, when more than ${fmtKw(values.thresholds.disable.threshold, false)} is used from the grid for ${fmtDuration(values.thresholds.disable.delay * 60)}.`
-										: `Please use a positive value.`
-							}}
-						</div>
-					</div>
+					<FormRow
+						v-if="showPriority"
+						id="loadpointParamPriority"
+						label="Priority"
+						help="Relevant for multiple charge points. Higher priority charge points get preferred access to solar surplus."
+					>
+						<PropertyField
+							id="loadpointParamPriority"
+							v-model="values.priority"
+							type="Number"
+							size="w-100"
+							class="me-2"
+							:valid-values="priorityOptions"
+							required
+						/>
+					</FormRow>
 				</div>
 
 				<div v-if="tab === 'electrical'">
@@ -284,7 +286,13 @@
 					<FormRow
 						id="chargerPower"
 						label="Charger type"
-						help="Defines the minimum and maximum current used for charging."
+						:help="
+							chargerPower === '11kw'
+								? 'Will use a current range of 6 to 16 A.'
+								: chargerPower === '22kw'
+									? 'Will use a current range of 6 to 32 A.'
+									: 'Define a custom current range.'
+						"
 					>
 						<SelectGroup
 							id="chargerPower"
@@ -298,7 +306,7 @@
 						/>
 					</FormRow>
 
-					<div v-if="chargerPower === 'other'" class="row mb-6">
+					<div v-if="chargerPower === 'other'" class="row ms-3 mb-5">
 						<FormRow
 							id="loadpointMinCurrent"
 							label="Minimum current"
@@ -341,6 +349,22 @@
 							/>
 						</FormRow>
 					</div>
+
+					<FormRow
+						v-if="showCircuit"
+						id="loadpointParamCircuit"
+						label="Circuit"
+						help="Select load management circuit for this charge point."
+					>
+						<PropertyField
+							id="loadpointParamCircuit"
+							v-model="values.circuit"
+							type="String"
+							class="me-2"
+							:valid-values="circuitOptions"
+							required
+						/>
+					</FormRow>
 				</div>
 
 				<div v-if="tab === 'vehicle'">
@@ -389,9 +413,10 @@
 					</FormRow>
 					<FormRow
 						v-if="values.soc.poll.mode !== 'charging'"
+						class="ms-3 mb-5"
 						id="loadpointPollInterval"
-						label="Vehicle update interval"
-						help="Time between status updates. Short intervals may drain the vehicle battery."
+						label="Udate interval"
+						help="Time between vehicle API updates. Short intervals may drain the vehicle battery."
 					>
 						<PropertyField
 							id="loadpointPollInterval"
@@ -481,6 +506,7 @@ const defaultValues = {
 	},
 	vehicle: "",
 	charger: "",
+	circuit: "",
 	meter: "",
 };
 
@@ -504,6 +530,7 @@ export default {
 		fade: String,
 		chargers: { type: Array, default: () => [] },
 		meters: { type: Array, default: () => [] },
+		circuits: { type: Array, default: () => [] },
 	},
 	mixins: [formatter],
 	emits: ["updated", "openMeterModal", "openChargerModal", "close", "opened"],
@@ -555,6 +582,16 @@ export default {
 			result[0].name = "0 (default)";
 			result[10].name = "10 (highest)";
 			return result;
+		},
+		showCircuit() {
+			return this.circuits.length > 0;
+		},
+		circuitOptions() {
+			const options = this.circuits.map((c) => ({
+				key: c.name,
+				name: `${c.config?.title || ""} [${c.name}]`.trim(),
+			}));
+			return [{ key: "", name: "unassigned" }, ...options];
 		},
 		allVehicleOptions() {
 			return [

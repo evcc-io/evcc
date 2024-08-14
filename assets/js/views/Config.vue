@@ -294,6 +294,7 @@
 					:loadpointCount="loadpoints.length"
 					:chargers="chargers"
 					:meters="meters"
+					:circuits="circuits"
 					:fade="loadpointSubModalOpen ? 'left' : ''"
 					@updated="loadpointChanged"
 					@openChargerModal="editLoadpointCharger"
@@ -792,7 +793,8 @@ export default {
 			return { configured: { value: this.yamlConfigState[key] } };
 		},
 		circuitTags(circuit) {
-			const data = store.state?.circuits[circuit.name] || {};
+			const circuits = store.state?.circuits || {};
+			const data = circuits[circuit.name] || {};
 			const result = {};
 			if (data.maxPower) {
 				result.powerRange = {
