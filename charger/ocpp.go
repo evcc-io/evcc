@@ -413,6 +413,16 @@ func (c *OCPP) Status() (api.ChargeStatus, error) {
 	}
 }
 
+var _ api.StatusReasoner = (*OCPP)(nil)
+
+func (c *OCPP) StatusReason() (api.Reason, error) {
+	var res api.Reason
+	if c.conn.NeedsAuthentication() {
+		res = api.ReasonWaitingForAuthorization
+	}
+	return res, nil
+}
+
 // Enabled implements the api.Charger interface
 func (c *OCPP) Enabled() (bool, error) {
 	if s, err := c.conn.Status(); err == nil {
