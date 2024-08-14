@@ -169,24 +169,33 @@ func (c *EEBus) Status() (res api.ChargeStatus, err error) {
 		return api.StatusNone, api.ErrTimeout
 	}
 
-	// re-set current limit after reconnect
-	defer func() {
-		if err == nil {
-			c.mux.Lock()
-			if c.reconnect {
-				c.reconnect = false
-				c.mux.Unlock()
-				err = c.MaxCurrentMillis(c.current)
-			} else {
-				c.mux.Unlock()
-			}
-		}
-	}()
-
 	evEntity, ok := c.isEvConnected()
 	if !ok {
 		return api.StatusA, nil
 	}
+
+	// re-set current limit after reconnect
+	defer func() {
+		if err != nil {
+			return
+		}
+
+		c.mux.Lock()
+		if !c.reconnect {
+			c.mux.Unlock()
+			return
+		}
+
+		c.reconnect = false
+		c.mux.Unlock()
+
+		var current float64
+		if c.enabled {
+			current = c.current
+		}
+
+		err = c.writeCurrentLimitData(evEntity, current)
+	}()
 
 	currentState, err := c.uc.EvCC.ChargeState(evEntity)
 	if err != nil {
