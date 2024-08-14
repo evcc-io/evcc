@@ -40,9 +40,9 @@ type EEBus struct {
 	communicationStandard model.DeviceConfigurationKeyValueStringType
 	vasVW                 bool // wether the EVSE supports VW VAS with ISO15118-2
 
-	expectedEnableUnpluggedState bool
-	reconnect                    bool
-	current                      float64
+	enabled   bool
+	reconnect bool
+	current   float64
 
 	*eebus.Connector
 }
@@ -116,7 +116,6 @@ func (c *EEBus) evEntity() spineapi.EntityRemoteInterface {
 
 func (c *EEBus) connectEvent(connected bool) {
 	c.communicationStandard = evcc.EVCCCommunicationStandardUnknown
-	c.expectedEnableUnpluggedState = false
 }
 
 var _ eebus.Device = (*EEBus)(nil)
@@ -237,7 +236,6 @@ func (c *EEBus) Status() (res api.ChargeStatus, err error) {
 
 	switch currentState {
 	case ucapi.EVChargeStateTypeUnknown, ucapi.EVChargeStateTypeUnplugged: // Unplugged
-		c.expectedEnableUnpluggedState = false
 		return api.StatusA, nil
 	case ucapi.EVChargeStateTypeFinished, ucapi.EVChargeStateTypePaused: // Finished, Paused
 		return api.StatusB, nil
@@ -259,7 +257,7 @@ func (c *EEBus) Enabled() (bool, error) {
 	// when unplugged there is no overload limit data available
 	evEntity, ok := c.isEvConnected()
 	if !ok {
-		return c.expectedEnableUnpluggedState, nil
+		return c.enabled, nil
 	}
 
 	// if the VW VAS PV mode is active, use PV limits
@@ -309,7 +307,7 @@ func (c *EEBus) Enable(enable bool) error {
 	// if the ev is unplugged or the state is unknown, there is nothing to be done
 	evEntity, ok := c.isEvConnected()
 	if !ok {
-		c.expectedEnableUnpluggedState = enable
+		c.enabled = enable
 		return nil
 	}
 
@@ -329,7 +327,7 @@ func (c *EEBus) Enable(enable bool) error {
 
 	err := c.writeCurrentLimitData(evEntity, []float64{current, current, current})
 	if err == nil {
-		c.expectedEnableUnpluggedState = enable
+		c.enabled = enable
 	}
 
 	return err
