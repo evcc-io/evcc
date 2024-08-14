@@ -37,6 +37,7 @@ type OCPP struct {
 	chargingProfileId       int
 	stackLevel              int
 	lp                      loadpoint.API
+	bootNotification        *core.BootNotificationRequest
 }
 
 const (
@@ -261,6 +262,20 @@ func NewOCPP(id string, connector int, idtag string,
 
 	if err := c.wait(err, rc); err != nil {
 		return nil, err
+	}
+
+	// see who's there
+	if c.hasRemoteTriggerFeature {
+		if err := conn.TriggerMessageRequest(core.BootNotificationFeatureName); err == nil {
+			select {
+			case <-time.After(timeout):
+				c.log.DEBUG.Printf("BootNotification timeout")
+			case res := <-cp.BootNotificationRequest():
+				if res != nil {
+					c.bootNotification = res
+				}
+			}
+		}
 	}
 
 	// autodetect measurands
@@ -590,6 +605,14 @@ var _ api.Diagnosis = (*OCPP)(nil)
 // Diagnose implements the api.Diagnosis interface
 func (c *OCPP) Diagnose() {
 	fmt.Printf("\tCharge Point ID: %s\n", c.conn.ChargePoint().ID())
+
+	if c.bootNotification != nil {
+		fmt.Printf("\tBoot Notification:\n")
+		fmt.Printf("\t\tChargePointVendor: %s\n", c.bootNotification.ChargePointVendor)
+		fmt.Printf("\t\tChargePointModel: %s\n", c.bootNotification.ChargePointModel)
+		fmt.Printf("\t\tChargePointSerialNumber: %s\n", c.bootNotification.ChargePointSerialNumber)
+		fmt.Printf("\t\tFirmwareVersion: %s\n", c.bootNotification.FirmwareVersion)
+	}
 
 	fmt.Printf("\tConfiguration:\n")
 	rc := make(chan error, 1)
