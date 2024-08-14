@@ -49,26 +49,25 @@
 				:defaultPort="modbus.Port"
 				:capabilities="modbusCapabilities"
 			/>
-			<FormRow
-				v-for="param in templateParams"
-				:id="`chargerParam${param.Name}`"
+			<PropertyEntry
+				v-for="param in normalParams"
 				:key="param.Name"
-				:optional="!param.Required"
-				:label="param.Description || `[${param.Name}]`"
-				:help="param.Description === param.Help ? undefined : param.Help"
-				:example="param.Example"
-			>
-				<PropertyField
-					:id="`chargerParam${param.Name}`"
-					v-model="values[param.Name]"
-					:masked="param.Mask"
-					:property="param.Name"
-					:type="param.Type"
-					class="me-2"
-					:required="param.Required"
-					:validValues="param.ValidValues"
-				/>
-			</FormRow>
+				:id="`chargerParam${param.Name}`"
+				v-bind="param"
+				v-model="values[param.Name]"
+			/>
+
+			<PropertyCollapsible>
+				<template v-if="advancedParams.length" #advanced>
+					<PropertyEntry
+						v-for="param in advancedParams"
+						:key="param.Name"
+						:id="`chargerParam${param.Name}`"
+						v-bind="param"
+						v-model="values[param.Name]"
+					/>
+				</template>
+			</PropertyCollapsible>
 
 			<TestResult
 				v-if="templateName"
@@ -121,7 +120,8 @@
 
 <script>
 import FormRow from "./FormRow.vue";
-import PropertyField from "./PropertyField.vue";
+import PropertyEntry from "./PropertyEntry.vue";
+import PropertyCollapsible from "./PropertyCollapsible.vue";
 import TestResult from "./TestResult.vue";
 import api from "../../api";
 import test from "./mixins/test";
@@ -134,9 +134,11 @@ function sleep(ms) {
 	return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+const CUSTOM_FIELDS = ["modbus"];
+
 export default {
 	name: "ChargerModal",
-	components: { FormRow, PropertyField, Modbus, TestResult, GenericModal },
+	components: { FormRow, PropertyEntry, PropertyCollapsible, Modbus, TestResult, GenericModal },
 	mixins: [test],
 	props: {
 		id: Number,
@@ -172,13 +174,13 @@ export default {
 		},
 		templateParams() {
 			const params = this.template?.Params || [];
-			return (
-				params
-					// deprecated fields
-					.filter((p) => !p.Deprecated)
-					// remove modbus, handles separately
-					.filter((p) => p.Name !== "modbus")
-			);
+			return params.filter((p) => !CUSTOM_FIELDS.includes(p.Name));
+		},
+		normalParams() {
+			return this.templateParams.filter((p) => !p.Advanced);
+		},
+		advancedParams() {
+			return this.templateParams.filter((p) => p.Advanced);
 		},
 		modbus() {
 			const params = this.template?.Params || [];
