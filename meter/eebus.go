@@ -52,7 +52,7 @@ func NewEEBus(ski string, timeout time.Duration) (*EEBus, error) {
 	c := &EEBus{
 		log:       util.NewLogger("eebus"),
 		uc:        eebus.Instance.ControllableSystem(),
-		Connector: eebus.NewConnector(nil),
+		Connector: eebus.NewConnector(),
 		power:     provider.NewValue[float64](timeout),
 		energy:    provider.NewValue[float64](timeout),
 		voltages:  provider.NewValue[[]float64](timeout),
