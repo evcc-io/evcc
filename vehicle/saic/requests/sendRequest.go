@@ -2,7 +2,7 @@ package requests
 
 import (
 	"bytes"
-	"fmt"
+	"errors"
 	"io"
 	"net/http"
 	"strconv"
