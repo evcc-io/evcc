@@ -373,23 +373,34 @@ func (c *EEBus) writeCurrentLimitData(evEntity spineapi.EntityRemoteInterface, c
 	}
 
 	// make sure the recommendations are inactive, otherwise the EV won't go to sleep
-	if recommendations, err := c.uc.OscEV.LoadControlLimits(evEntity); err == nil {
-		var writeNeeded bool
-
-		for index, item := range recommendations {
-			if item.IsActive {
-				recommendations[index].IsActive = false
-				writeNeeded = true
-			}
-		}
-
-		if writeNeeded {
-			_, _ = c.uc.OscEV.WriteLoadControlLimits(evEntity, recommendations, nil)
-		}
+	if c.disableRecommendations(evEntity); err != nil {
+		return err
 	}
 
 	// Set overload protection limits
 	_, err = c.uc.OpEV.WriteLoadControlLimits(evEntity, limits, nil)
+
+	return err
+}
+
+// make sure the recommendations are inactive, otherwise the EV won't go to sleep
+func (c *EEBus) disableRecommendations(evEntity spineapi.EntityRemoteInterface) error {
+	recommendations, err := c.uc.OscEV.LoadControlLimits(evEntity)
+	if err != nil {
+		return err
+	}
+
+	var writeNeeded bool
+	for index, item := range recommendations {
+		if item.IsActive {
+			recommendations[index].IsActive = false
+			writeNeeded = true
+		}
+	}
+
+	if writeNeeded {
+		_, err = c.uc.OscEV.WriteLoadControlLimits(evEntity, recommendations, nil)
+	}
 
 	return err
 }
@@ -474,23 +485,33 @@ func (c *EEBus) writeLoadControlLimitsVASVW(evEntity spineapi.EntityRemoteInterf
 		return false
 	}
 
-	// make sure the obligations are inactive, otherwise the EV won't go to sleep
-	if obligations, err := c.uc.OpEV.LoadControlLimits(evEntity); err == nil {
-		writeNeeded := false
-
-		for index, item := range obligations {
-			if item.IsActive {
-				obligations[index].IsActive = false
-				writeNeeded = true
-			}
-		}
-
-		if writeNeeded {
-			_, _ = c.uc.OpEV.WriteLoadControlLimits(evEntity, obligations, nil)
-		}
+	if err := c.disableObligations(evEntity); err != nil {
+		return false
 	}
 
 	return true
+}
+
+// make sure the obligations are inactive, otherwise the EV won't go to sleep
+func (c *EEBus) disableObligations(evEntity spineapi.EntityRemoteInterface) error {
+	obligations, err := c.uc.OpEV.LoadControlLimits(evEntity)
+	if err != nil {
+		return err
+	}
+
+	var writeNeeded bool
+	for index, item := range obligations {
+		if item.IsActive {
+			obligations[index].IsActive = false
+			writeNeeded = true
+		}
+	}
+
+	if writeNeeded {
+		_, err = c.uc.OpEV.WriteLoadControlLimits(evEntity, obligations, nil)
+	}
+
+	return err
 }
 
 // MaxCurrent implements the api.Charger interface
