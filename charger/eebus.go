@@ -165,10 +165,6 @@ func (c *EEBus) isCharging(evEntity spineapi.EntityRemoteInterface) bool {
 
 // Status implements the api.Charger interface
 func (c *EEBus) Status() (res api.ChargeStatus, err error) {
-	if !c.Connected() {
-		return api.StatusNone, api.ErrTimeout
-	}
-
 	evEntity, ok := c.isEvConnected()
 	if !ok {
 		return api.StatusA, nil
