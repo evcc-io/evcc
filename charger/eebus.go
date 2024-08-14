@@ -325,7 +325,7 @@ func (c *EEBus) Enable(enable bool) error {
 		current = c.current
 	}
 
-	err := c.writeCurrentLimitData(evEntity, []float64{current, current, current})
+	err := c.writeCurrentLimitData(evEntity, current)
 	if err == nil {
 		c.enabled = enable
 	}
@@ -334,7 +334,7 @@ func (c *EEBus) Enable(enable bool) error {
 }
 
 // send current charging power limits to the EV
-func (c *EEBus) writeCurrentLimitData(evEntity spineapi.EntityRemoteInterface, currents []float64) error {
+func (c *EEBus) writeCurrentLimitData(evEntity spineapi.EntityRemoteInterface, current float64) error {
 	// check if the EVSE supports overload protection limits
 	if !c.uc.OpEV.IsScenarioAvailableAtEntity(evEntity, 1) {
 		return api.ErrNotAvailable
@@ -347,11 +347,7 @@ func (c *EEBus) writeCurrentLimitData(evEntity spineapi.EntityRemoteInterface, c
 
 	// setup the limit data structure
 	limits := []ucapi.LoadLimitsPhase{}
-	for phase, current := range currents {
-		if phase >= len(ucapi.PhaseNameMapping) {
-			continue
-		}
-
+	for phase := range len(ucapi.PhaseNameMapping) {
 		limit := ucapi.LoadLimitsPhase{
 			Phase:    ucapi.PhaseNameMapping[phase],
 			IsActive: true,
@@ -529,7 +525,7 @@ func (c *EEBus) MaxCurrentMillis(current float64) error {
 		return nil
 	}
 
-	err := c.writeCurrentLimitData(evEntity, []float64{current, current, current})
+	err := c.writeCurrentLimitData(evEntity, current)
 	if err == nil {
 		c.current = current
 	}
