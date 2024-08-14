@@ -529,6 +529,7 @@ ready = "bereit"
 vehicleLimit = "Fahrzeuglimit: {soc}"
 
 [main.vehicleStatus]
+awaitingAuthorization = "Warte auf Autorisierung."
 charging = "Ladevorgang aktiv …"
 cheapEnergyCharging = "Günstige Energie verfügbar."
 cheapEnergyNextStart = "Günstige Energie in {duration}."
