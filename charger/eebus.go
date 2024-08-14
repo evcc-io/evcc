@@ -20,9 +20,8 @@ import (
 )
 
 const (
-	maxIdRequestTimespan         = time.Second * 120
-	idleFactor                   = 0.6
-	voltage              float64 = 230
+	idleFactor         = 0.6
+	voltage    float64 = 230
 )
 
 type minMax struct {
@@ -48,7 +47,6 @@ type EEBus struct {
 	currentLimit float64
 
 	*eebus.Connector
-	connectedTime time.Time
 }
 
 func init() {
@@ -119,12 +117,6 @@ func (c *EEBus) evEntity() spineapi.EntityRemoteInterface {
 }
 
 func (c *EEBus) connectEvent(connected bool) {
-	if connected && !c.Connected() {
-		c.mux.Lock()
-		c.connectedTime = time.Now()
-		c.mux.Unlock()
-	}
-
 	c.setDefaultValues()
 }
 
@@ -654,17 +646,6 @@ func (c *EEBus) Identify() (string, error) {
 		// return the first identification for now
 		// later this could be multiple, e.g. MAC Address and PCID
 		return identification[0].Value, nil
-	}
-
-	if comStandard, _ := c.uc.EvCC.CommunicationStandard(evEntity); comStandard == model.DeviceConfigurationKeyValueStringTypeIEC61851 {
-		return "", nil
-	}
-
-	c.mux.RLock()
-	defer c.mux.RUnlock()
-
-	if time.Since(c.connectedTime) < maxIdRequestTimespan {
-		return "", api.ErrMustRetry
 	}
 
 	return "", nil
