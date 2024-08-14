@@ -37,9 +37,7 @@ type EEBus struct {
 	lp      loadpoint.API
 	minMaxG func() (minMax, error)
 
-	communicationStandard model.DeviceConfigurationKeyValueStringType
-	vasVW                 bool // wether the EVSE supports VW VAS with ISO15118-2
-
+	vasVW     bool // wether the EVSE supports VW VAS with ISO15118-2
 	enabled   bool
 	reconnect bool
 	current   float64
@@ -85,7 +83,7 @@ func NewEEBus(ski string, hasMeter, hasChargedEnergy, vasVW bool) (api.Charger, 
 		uc:      eebus.Instance.Evse(),
 	}
 
-	c.Connector = eebus.NewConnector(c.connectEvent)
+	c.Connector = eebus.NewConnector(nil)
 	c.minMaxG = provider.Cached(c.minMax, time.Second)
 
 	if err := eebus.Instance.RegisterDevice(ski, c); err != nil {
@@ -112,10 +110,6 @@ func (c *EEBus) evEntity() spineapi.EntityRemoteInterface {
 	defer c.mux.RUnlock()
 
 	return c.ev
-}
-
-func (c *EEBus) connectEvent(connected bool) {
-	c.communicationStandard = evcc.EVCCCommunicationStandardUnknown
 }
 
 var _ eebus.Device = (*EEBus)(nil)
