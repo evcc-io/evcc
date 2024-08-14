@@ -24,8 +24,8 @@ never = "only with enough surplus."
 [config]
 
 [config.battery]
-titleAdd = "Add Battery Meter"
-titleEdit = "Edit Battery Meter"
+titleAdd = "Add Battery"
+titleEdit = "Edit Battery"
 
 [config.circuits]
 description = "Ensures, that the sum of all loadpoints connected to a circuit does not exceed the configured power and current limits. Circuits can be nested to build a hierarchy."

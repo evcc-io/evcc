@@ -24,8 +24,8 @@ never = "nur mit genug PV-Überschuss."
 [config]
 
 [config.battery]
-titleAdd = "Batterie Zähler hinzufügen"
-titleEdit = "Batterie Zähler bearbeiten"
+titleAdd = "Batterie hinzufügen"
+titleEdit = "Batterie bearbeiten"
 
 [config.circuits]
 description = "Stellt sicher, dass die Summe aller Ladepunkte, die an einen Stromkreis angeschlossen sind, die konfigurierten Leistungs- und Stromgrenzen nicht überschreitet. Stromkreise können verschachtelt werden, um eine Hierarchie aufzubauen."
