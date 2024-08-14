@@ -346,28 +346,6 @@ func (c *EEBus) writeCurrentLimitData(evEntity spineapi.EntityRemoteInterface, c
 	return err
 }
 
-// make sure the recommendations are inactive, otherwise the EV won't go to sleep
-func (c *EEBus) disableRecommendations(evEntity spineapi.EntityRemoteInterface) error {
-	recommendations, err := c.uc.OscEV.LoadControlLimits(evEntity)
-	if err != nil {
-		return err
-	}
-
-	var writeNeeded bool
-	for index, item := range recommendations {
-		if item.IsActive {
-			recommendations[index].IsActive = false
-			writeNeeded = true
-		}
-	}
-
-	if writeNeeded {
-		_, err = c.uc.OscEV.WriteLoadControlLimits(evEntity, recommendations, nil)
-	}
-
-	return err
-}
-
 // returns if the connected EV has an active VW PV mode
 // in this mode, the EV does not have an active charging demand
 func (c *EEBus) hasActiveVASVW(evEntity spineapi.EntityRemoteInterface) bool {
@@ -454,23 +432,45 @@ func (c *EEBus) writeLoadControlLimitsVASVW(evEntity spineapi.EntityRemoteInterf
 	return true
 }
 
-// make sure the obligations are inactive, otherwise the EV won't go to sleep
-func (c *EEBus) disableObligations(evEntity spineapi.EntityRemoteInterface) error {
-	obligations, err := c.uc.OpEV.LoadControlLimits(evEntity)
+// make sure the recommendations are inactive, otherwise the EV won't go to sleep
+func (c *EEBus) disableRecommendations(evEntity spineapi.EntityRemoteInterface) error {
+	limits, err := c.uc.OscEV.LoadControlLimits(evEntity)
 	if err != nil {
 		return err
 	}
 
 	var writeNeeded bool
-	for index, item := range obligations {
+	for index, item := range limits {
 		if item.IsActive {
-			obligations[index].IsActive = false
+			limits[index].IsActive = false
 			writeNeeded = true
 		}
 	}
 
 	if writeNeeded {
-		_, err = c.uc.OpEV.WriteLoadControlLimits(evEntity, obligations, nil)
+		_, err = c.uc.OscEV.WriteLoadControlLimits(evEntity, limits, nil)
+	}
+
+	return err
+}
+
+// make sure the obligations are inactive, otherwise the EV won't go to sleep
+func (c *EEBus) disableObligations(evEntity spineapi.EntityRemoteInterface) error {
+	limits, err := c.uc.OpEV.LoadControlLimits(evEntity)
+	if err != nil {
+		return err
+	}
+
+	var writeNeeded bool
+	for index, item := range limits {
+		if item.IsActive {
+			limits[index].IsActive = false
+			writeNeeded = true
+		}
+	}
+
+	if writeNeeded {
+		_, err = c.uc.OpEV.WriteLoadControlLimits(evEntity, limits, nil)
 	}
 
 	return err
