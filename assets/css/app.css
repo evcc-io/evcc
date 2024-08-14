@@ -626,3 +626,9 @@ html.app .modal-dialog {
 .alert-danger code {
 	color: var(--evcc-darkest-green);
 }
+
+.hyphenate {
+	overflow-wrap: break-word;
+	word-wrap: break-word;
+	hyphens: auto;
+}

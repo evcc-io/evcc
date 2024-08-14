@@ -22,7 +22,7 @@
 				<div class="d-flex">
 					<PropertyField
 						id="loadpointParamCharger"
-						v-model="values.charger"
+						:value="chargerTitle"
 						type="String"
 						class="me-2 flex-grow-1"
 						readonly
@@ -34,14 +34,15 @@
 						type="button"
 						@click.prevent="editCharger"
 					>
-						<EditIcon />
+						<EditIcon v-if="values.charger" />
+						<AddIcon v-else />
 					</button>
 				</div>
 			</FormRow>
 			<div v-if="values.charger || !isNew">
 				<FormRow
 					v-if="values.meter"
-					class="offset-1 mb-5"
+					class="mb-6"
 					id="loadpointParamMeter"
 					label="Energy meter"
 					help="Additional meter if the charger doesn't have an integrated one."
@@ -49,7 +50,7 @@
 					<div class="d-flex">
 						<PropertyField
 							id="loadpointParamMeter"
-							v-model="values.meter"
+							:value="meterTitle"
 							type="String"
 							class="me-2 flex-grow-1"
 							required
@@ -77,235 +78,275 @@
 				</p>
 			</div>
 
+			<FormRow
+				id="loadpointMode"
+				label="Mode"
+				help="Charging mode when connecting the vehicle."
+			>
+				<PropertyField
+					id="loadpointMode"
+					v-model="values.mode"
+					type="String"
+					class="w-100"
+					required
+					:valid-values="[
+						{ value: '', name: 'Keep last selection' },
+						{ value: 'off', name: $t('main.mode.off') },
+						{ value: 'pv', name: $t('main.mode.pv') },
+						{ value: 'minpv', name: $t('main.mode.minpv') },
+						{ value: 'now', name: $t('main.mode.now') },
+					]"
+				/>
+			</FormRow>
+
 			<div v-if="values.charger">
-				<FormRow id="loadpointMode" label="Mode" help="Mode when connecting the vehicle.">
-					<PropertyField
-						id="loadpointMode"
-						v-model="values.mode"
-						type="String"
-						class="w-100"
-						required
-						:valid-values="[
-							{ value: '', name: 'Keep last selection' },
-							{ value: 'off', name: $t('main.mode.off') },
-							{ value: 'pv', name: $t('main.mode.pv') },
-							{ value: 'minpv', name: $t('main.mode.minpv') },
-							{ value: 'now', name: $t('main.mode.now') },
-						]"
-					/>
-				</FormRow>
-				<FormRow
-					id="loadpointParamPhases"
-					label="Phases"
-					:help="
-						values.phases === 0
-							? `Select this if your charger supports automatic phase switching.`
-							: `Used for calculating the minimum charge power in solar mode.`
-					"
-				>
-					<SelectGroup
-						id="loadpointParamPhases"
-						v-model="values.phases"
-						class="w-100"
-						:options="[
-							{ value: 1, name: '1-phase' },
-							{ value: 3, name: '3-phase' },
-							{ value: 0, name: 'automatic' },
-						]"
-					/>
-				</FormRow>
+				<ul class="nav nav-tabs nav-justified mt-5 mb-4">
+					<li class="nav-item">
+						<a
+							class="nav-link"
+							:class="{ active: tab === 'solar' }"
+							href="#"
+							@click.prevent="tab = 'solar'"
+						>
+							Solar Surplus
+						</a>
+					</li>
+					<li v-if="vehicleOptions.length" class="nav-item">
+						<a
+							class="nav-link"
+							:class="{ active: tab === 'vehicle' }"
+							href="#"
+							@click.prevent="tab = 'vehicle'"
+						>
+							Vehicle
+						</a>
+					</li>
+					<li class="nav-item">
+						<a
+							class="nav-link"
+							:class="{ active: tab === 'electrical' }"
+							href="#"
+							@click.prevent="tab = 'electrical'"
+						>
+							Electrical
+						</a>
+					</li>
+				</ul>
 
-				<FormRow
-					id="chargerPower"
-					label="Charger type"
-					help="Defines the minimum and maximum current used for charging."
-				>
-					<SelectGroup
-						id="chargerPower"
-						v-model="chargerPower"
-						class="w-100"
-						:options="[
-							{ name: '11 kW', value: '11kw' },
-							{ name: '22 kW', value: '22kw' },
-							{ name: 'other', value: 'other' },
-						]"
-					/>
-				</FormRow>
-
-				<div v-if="chargerPower === 'other'" class="row offset-1 mb-5">
+				<div v-if="tab === 'solar'">
 					<FormRow
-						id="loadpointMinCurrent"
-						label="Minimum current"
-						class="col-sm-6 mb-sm-0"
-						:help="
-							values.minCurrent < 6
-								? 'Only go below 6 A if you know what you\'re doing.'
-								: null
-						"
-					>
-						<PropertyField
-							id="loadpointMinCurrent"
-							v-model="values.minCurrent"
-							type="Float"
-							unit="A"
-							size="w-25 w-min-200"
-							class="me-2"
-							required
-						/>
-					</FormRow>
-
-					<FormRow
-						id="loadpointMaxCurrent"
-						label="Maximum current"
-						class="col-sm-6 mb-sm-0"
-						:help="
-							values.maxCurrent < values.minCurrent
-								? 'Must be greater than minimum current.'
-								: null
-						"
-					>
-						<PropertyField
-							id="loadpointMaxCurrent"
-							v-model="values.maxCurrent"
-							type="Float"
-							unit="A"
-							size="w-25 w-min-200"
-							class="me-2"
-							required
-						/>
-					</FormRow>
-				</div>
-
-				<FormRow
-					id="loadpointSolarMode"
-					label="Solar behaviour"
-					:help="
-						solarMode === 'summer'
-							? `Only use solar surplus. Minimize grid use. Faster start (${fmtDuration(values.thresholds.enable.delay * 60)}) and stop (${fmtDuration(values.thresholds.disable.delay * 60)}).`
-							: solarMode === 'winter'
-								? `Use more solar surplus. Allow grid use. Slower start (${fmtDuration(values.thresholds.enable.delay * 60)}) and stop (${fmtDuration(values.thresholds.disable.delay * 60)}).`
-								: null
-					"
-				>
-					<SelectGroup
-						id="loadpointSolarMode"
-						v-model="solarMode"
-						class="w-100"
-						:options="[
-							{ name: 'summer', value: 'summer' },
-							{ name: 'winter', value: 'winter' },
-							{ name: 'custom', value: 'custom' },
-						]"
-					/>
-				</FormRow>
-
-				<div v-show="solarMode === 'custom'" class="offset-1 mb-4">
-					<div class="d-flex flex-wrap flex-sm-nowrap gap-4 ps-1 ms-2">
-						<FormRow
-							id="loadpointEnableThreshold"
-							label="Enable grid power"
-							style="margin-bottom: 0 !important"
-						>
-							<PropertyField
-								id="loadpointEnableThreshold"
-								v-model="values.thresholds.enable.threshold"
-								type="Float"
-								unit="W"
-								size="w-25 w-min-200"
-								required
-							/>
-						</FormRow>
-						<FormRow
-							id="loadpointEnableDelay"
-							label="Enable delay"
-							style="margin-bottom: 0 !important"
-						>
-							<PropertyField
-								id="loadpointEnableDelay"
-								v-model="values.thresholds.enable.delay"
-								type="Duration"
-								unit="min"
-								size="w-25 w-min-200"
-								required
-							/>
-						</FormRow>
-					</div>
-					<div class="form-text evcc-gray ps-1 ms-2">
-						{{
-							values.thresholds.enable.threshold === 0
-								? `Start when minimum charge power surplus is available for ${fmtDuration(values.thresholds.enable.delay * 60)}.`
-								: values.thresholds.enable.threshold < 0
-									? `Start charging, when ${fmtKw(-1 * values.thresholds.enable.threshold, false)} surplus is available for ${fmtDuration(values.thresholds.enable.delay * 60)}.`
-									: `Please use a negative value.`
-						}}
-					</div>
-				</div>
-
-				<div v-show="solarMode === 'custom'" class="offset-1 mb-5">
-					<div class="d-flex flex-wrap flex-sm-nowrap gap-4 ps-1 ms-2">
-						<FormRow
-							id="loadpointDisableThreshold"
-							label="Disable grid power"
-							style="margin-bottom: 0 !important"
-						>
-							<PropertyField
-								id="loadpointDisableThreshold"
-								v-model="values.thresholds.disable.threshold"
-								type="Float"
-								unit="W"
-								size="w-25 w-min-200"
-								required
-							/>
-						</FormRow>
-						<FormRow
-							id="loadpointDisableDelay"
-							label="Disable delay"
-							style="margin-bottom: 0 !important"
-						>
-							<PropertyField
-								id="loadpointDisableDelay"
-								v-model="values.thresholds.disable.delay"
-								type="Duration"
-								unit="min"
-								size="w-25 w-min-200"
-								required
-							/>
-						</FormRow>
-					</div>
-					<div class="form-text evcc-gray ps-1 ms-2">
-						{{
-							values.thresholds.disable.threshold === 0
-								? `Stop when minimum charge power can't be satisfied for ${fmtDuration(values.thresholds.disable.delay * 60)}.`
-								: values.thresholds.disable.threshold > 0
-									? `Stop charging, when more than ${fmtKw(values.thresholds.disable.threshold, false)} is used from the grid for ${fmtDuration(values.thresholds.disable.delay * 60)}.`
-									: `Please use a positive value.`
-						}}
-					</div>
-				</div>
-
-				<FormRow
-					v-if="showPriority"
-					id="loadpointParamPriority"
-					label="Priority"
-					help="Relevant for multiple charge points. Higher priority charge points get preferred access to solar surplus."
-				>
-					<PropertyField
+						v-if="showPriority"
 						id="loadpointParamPriority"
-						v-model="values.priority"
-						type="Number"
-						size="w-100"
-						class="me-2"
-						:valid-values="priorityOptions"
-						required
-					/>
-				</FormRow>
+						label="Priority"
+						help="Relevant for multiple charge points. Higher priority charge points get preferred access to solar surplus."
+					>
+						<PropertyField
+							id="loadpointParamPriority"
+							v-model="values.priority"
+							type="Number"
+							size="w-100"
+							class="me-2"
+							:valid-values="priorityOptions"
+							required
+						/>
+					</FormRow>
 
-				<div v-if="vehicleOptions.length">
-					<hr class="my-4" />
+					<FormRow
+						id="loadpointSolarMode"
+						label="Solar behaviour"
+						:help="
+							solarMode === 'summer'
+								? `Only use solar surplus. Minimize grid use. Faster start (${fmtDuration(values.thresholds.enable.delay * 60)}) and stop (${fmtDuration(values.thresholds.disable.delay * 60)}).`
+								: solarMode === 'winter'
+									? `Use more solar surplus. Allow grid use. Slower start (${fmtDuration(values.thresholds.enable.delay * 60)}) and stop (${fmtDuration(values.thresholds.disable.delay * 60)}).`
+									: null
+						"
+					>
+						<SelectGroup
+							id="loadpointSolarMode"
+							v-model="solarMode"
+							class="w-100"
+							:options="[
+								{ name: 'summer', value: 'summer' },
+								{ name: 'winter', value: 'winter' },
+								{ name: 'custom', value: 'custom' },
+							]"
+						/>
+					</FormRow>
 
+					<div v-show="solarMode === 'custom'" class="mb-4">
+						<div class="d-flex flex-wrap flex-sm-nowrap gap-4">
+							<FormRow
+								id="loadpointEnableThreshold"
+								label="Enable grid power"
+								style="margin-bottom: 0 !important"
+							>
+								<PropertyField
+									id="loadpointEnableThreshold"
+									v-model="values.thresholds.enable.threshold"
+									type="Float"
+									unit="W"
+									size="w-25 w-min-200"
+									required
+								/>
+							</FormRow>
+							<FormRow
+								id="loadpointEnableDelay"
+								label="Enable delay"
+								style="margin-bottom: 0 !important"
+							>
+								<PropertyField
+									id="loadpointEnableDelay"
+									v-model="values.thresholds.enable.delay"
+									type="Duration"
+									unit="min"
+									size="w-25 w-min-200"
+									required
+								/>
+							</FormRow>
+						</div>
+						<div class="form-text evcc-gray">
+							{{
+								values.thresholds.enable.threshold === 0
+									? `Start when minimum charge power surplus is available for ${fmtDuration(values.thresholds.enable.delay * 60)}.`
+									: values.thresholds.enable.threshold < 0
+										? `Start charging, when ${fmtKw(-1 * values.thresholds.enable.threshold, false)} surplus is available for ${fmtDuration(values.thresholds.enable.delay * 60)}.`
+										: `Please use a negative value.`
+							}}
+						</div>
+					</div>
+
+					<div v-show="solarMode === 'custom'" class="mb-6">
+						<div class="d-flex flex-wrap flex-sm-nowrap gap-4">
+							<FormRow
+								id="loadpointDisableThreshold"
+								label="Disable grid power"
+								style="margin-bottom: 0 !important"
+							>
+								<PropertyField
+									id="loadpointDisableThreshold"
+									v-model="values.thresholds.disable.threshold"
+									type="Float"
+									unit="W"
+									size="w-25 w-min-200"
+									required
+								/>
+							</FormRow>
+							<FormRow
+								id="loadpointDisableDelay"
+								label="Disable delay"
+								style="margin-bottom: 0 !important"
+							>
+								<PropertyField
+									id="loadpointDisableDelay"
+									v-model="values.thresholds.disable.delay"
+									type="Duration"
+									unit="min"
+									size="w-25 w-min-200"
+									required
+								/>
+							</FormRow>
+						</div>
+						<div class="form-text evcc-gray">
+							{{
+								values.thresholds.disable.threshold === 0
+									? `Stop when minimum charge power can't be satisfied for ${fmtDuration(values.thresholds.disable.delay * 60)}.`
+									: values.thresholds.disable.threshold > 0
+										? `Stop charging, when more than ${fmtKw(values.thresholds.disable.threshold, false)} is used from the grid for ${fmtDuration(values.thresholds.disable.delay * 60)}.`
+										: `Please use a positive value.`
+							}}
+						</div>
+					</div>
+				</div>
+
+				<div v-if="tab === 'electrical'">
+					<FormRow
+						id="loadpointParamPhases"
+						label="Phases"
+						:help="
+							values.phases === 0
+								? `Select this if your charger supports automatic phase switching.`
+								: `Used for calculating the minimum charge power in solar mode.`
+						"
+					>
+						<SelectGroup
+							id="loadpointParamPhases"
+							v-model="values.phases"
+							class="w-100"
+							:options="[
+								{ value: 1, name: '1-phase' },
+								{ value: 3, name: '3-phase' },
+								{ value: 0, name: 'automatic' },
+							]"
+						/>
+					</FormRow>
+
+					<FormRow
+						id="chargerPower"
+						label="Charger type"
+						help="Defines the minimum and maximum current used for charging."
+					>
+						<SelectGroup
+							id="chargerPower"
+							v-model="chargerPower"
+							class="w-100"
+							:options="[
+								{ name: '11 kW', value: '11kw' },
+								{ name: '22 kW', value: '22kw' },
+								{ name: 'other', value: 'other' },
+							]"
+						/>
+					</FormRow>
+
+					<div v-if="chargerPower === 'other'" class="row mb-6">
+						<FormRow
+							id="loadpointMinCurrent"
+							label="Minimum current"
+							class="col-sm-6 mb-sm-0"
+							:help="
+								values.minCurrent < 6
+									? 'Only go below 6 A if you know what you\'re doing.'
+									: null
+							"
+						>
+							<PropertyField
+								id="loadpointMinCurrent"
+								v-model="values.minCurrent"
+								type="Float"
+								unit="A"
+								size="w-25 w-min-200"
+								class="me-2"
+								required
+							/>
+						</FormRow>
+
+						<FormRow
+							id="loadpointMaxCurrent"
+							label="Maximum current"
+							class="col-sm-6 mb-sm-0"
+							:help="
+								values.maxCurrent < values.minCurrent
+									? 'Must be greater than minimum current.'
+									: null
+							"
+						>
+							<PropertyField
+								id="loadpointMaxCurrent"
+								v-model="values.maxCurrent"
+								type="Float"
+								unit="A"
+								size="w-25 w-min-200"
+								class="me-2"
+								required
+							/>
+						</FormRow>
+					</div>
+				</div>
+
+				<div v-if="tab === 'vehicle'">
 					<FormRow
 						id="loadpointParamVehicle"
-						label="Vehicle"
+						label="Default vehicle"
 						:help="
 							values.vehicle
 								? 'Always assume this vehicle is charging here. Auto-detection disabled. Manual override is possible.'
@@ -324,7 +365,7 @@
 
 					<FormRow
 						id="loadpointPollMode"
-						label="Vehicle updates"
+						label="Update behaviour"
 						:help="
 							values.soc.poll.mode === 'charging'
 								? 'Only request vehicle status updates when charging.'
@@ -348,7 +389,6 @@
 					</FormRow>
 					<FormRow
 						v-if="values.soc.poll.mode !== 'charging'"
-						class="offset-1"
 						id="loadpointPollInterval"
 						label="Vehicle update interval"
 						help="Time between status updates. Short intervals may drain the vehicle battery."
@@ -364,7 +404,7 @@
 						/>
 					</FormRow>
 
-					<div class="d-flex offset-1 mb-5">
+					<div class="d-flex mb-4">
 						<input
 							class="form-check-input"
 							id="loadpointEstimate"
@@ -419,6 +459,7 @@ import deepClone from "../../utils/deepClone";
 import deepEqual from "../../utils/deepEqual";
 import formatter from "../../mixins/formatter";
 import EditIcon from "../MaterialIcon/Edit.vue";
+import AddIcon from "../MaterialIcon/Add.vue";
 
 const nsPerMin = 60 * 1e9;
 const wPerKw = 1e3;
@@ -454,13 +495,15 @@ const winterThresholds = {
 
 export default {
 	name: "LoadpointModal",
-	components: { FormRow, PropertyField, GenericModal, SelectGroup, EditIcon },
+	components: { FormRow, PropertyField, GenericModal, SelectGroup, AddIcon, EditIcon },
 	props: {
 		id: Number,
 		name: String,
 		vehicleOptions: { type: Array, default: () => [] },
 		loadpointCount: Number,
 		fade: String,
+		chargers: { type: Array, default: () => [] },
+		meters: { type: Array, default: () => [] },
 	},
 	mixins: [formatter],
 	emits: ["updated", "openMeterModal", "openChargerModal", "close", "opened"],
@@ -472,6 +515,7 @@ export default {
 			values: deepClone(defaultValues),
 			chargerPower: "11kw",
 			solarMode: "summer",
+			tab: "solar",
 		};
 	},
 	computed: {
@@ -483,6 +527,20 @@ export default {
 		},
 		isNew() {
 			return this.id === undefined;
+		},
+		chargerTitle() {
+			const name = this.values.charger;
+			if (!name) return "";
+			const charger = this.chargers.find((c) => c.name === name);
+			const title = charger?.config?.template || "unknown";
+			return `${title} [${name}]`;
+		},
+		meterTitle() {
+			const name = this.values.meter;
+			if (!name) return "";
+			const meter = this.meters.find((m) => m.name === name);
+			const title = meter?.config?.template || "unknown";
+			return `${title} [${name}]`;
 		},
 		isDeletable() {
 			return !this.isNew;
@@ -676,4 +734,4 @@ h6 {
 </style>
 import formatter from "assets/js/mixins/formatter";import deepClone from
 "../../utils/deepClone";import deepEqual from "assets/js/utils/deepEqual";import deepEqual from
-"assets/js/utils/deepEqual";
+"assets/js/utils/deepEqual";import type ConfigVue from "assets/js/views/Config.vue";

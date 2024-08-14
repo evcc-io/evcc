@@ -292,6 +292,8 @@
 					:vehicleOptions="vehicleOptions"
 					ref="loadpointModal"
 					:loadpointCount="loadpoints.length"
+					:chargers="chargers"
+					:meters="meters"
 					:fade="loadpointSubModalOpen ? 'left' : ''"
 					@updated="loadpointChanged"
 					@openChargerModal="editLoadpointCharger"
