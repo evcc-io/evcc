@@ -18,9 +18,7 @@ var (
 
 // bo returns an exponential backoff for reading meter power quickly
 func bo() *backoff.ExponentialBackOff {
-	bo := backoff.NewExponentialBackOff()
-	bo.MaxElapsedTime = time.Second
-	return bo
+	return backoff.NewExponentialBackOff(backoff.WithMaxElapsedTime(time.Second))
 }
 
 // powerToCurrent is a helper function to convert power to per-phase current

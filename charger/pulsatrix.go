@@ -35,11 +35,11 @@ import (
 	"time"
 
 	"github.com/cenkalti/backoff/v4"
+	"github.com/coder/websocket"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/sponsor"
-	"nhooyr.io/websocket"
 )
 
 // pulsatrix charger implementation
@@ -124,10 +124,10 @@ func (c *Pulsatrix) connectWs() error {
 
 // ReconnectWs reconnects to a pulsatrix SECC websocket
 func (c *Pulsatrix) reconnectWs() {
-	bo := backoff.NewExponentialBackOff()
-	bo.InitialInterval = time.Second
-	bo.MaxInterval = 1 * time.Minute
-	bo.MaxElapsedTime = 0 * time.Second // retry forever; default is 15 min
+	bo := backoff.NewExponentialBackOff(
+		backoff.WithInitialInterval(time.Second),
+		backoff.WithMaxInterval(time.Minute),
+		backoff.WithMaxElapsedTime(0)) // retry forever; default is 15 min
 	if err := backoff.Retry(c.connectWs, bo); err != nil {
 		c.log.ERROR.Println(err)
 	}

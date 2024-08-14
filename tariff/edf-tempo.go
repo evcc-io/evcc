@@ -102,7 +102,6 @@ func (t *EdfTempo) RefreshToken(_ *oauth2.Token) (*oauth2.Token, error) {
 
 func (t *EdfTempo) run(done chan error) {
 	var once sync.Once
-	bo := newBackoff()
 
 	tick := time.NewTicker(time.Hour)
 	for ; true; <-tick.C {
@@ -125,7 +124,7 @@ func (t *EdfTempo) run(done chan error) {
 
 		if err := backoff.Retry(func() error {
 			return backoffPermanentError(t.GetJSON(uri, &res))
-		}, bo); err != nil {
+		}, bo()); err != nil {
 			once.Do(func() { done <- err })
 
 			t.log.ERROR.Println(err)

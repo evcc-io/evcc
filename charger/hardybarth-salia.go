@@ -132,9 +132,9 @@ func NewSalia(uri string, cache time.Duration) (api.Charger, error) {
 }
 
 func (wb *Salia) heartbeat() {
-	bo := backoff.NewExponentialBackOff()
-	bo.InitialInterval = 5 * time.Second
-	bo.MaxInterval = time.Minute
+	bo := backoff.NewExponentialBackOff(
+		backoff.WithInitialInterval(5*time.Second),
+		backoff.WithMaxInterval(time.Minute))
 
 	for range time.Tick(30 * time.Second) {
 		if err := backoff.Retry(func() error {

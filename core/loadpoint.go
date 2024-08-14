@@ -1396,10 +1396,7 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batter
 
 // UpdateChargePowerAndCurrents updates charge meter power and currents for load management
 func (lp *Loadpoint) UpdateChargePowerAndCurrents() {
-	bo := backoff.NewExponentialBackOff()
-	bo.MaxElapsedTime = time.Second
-
-	if power, err := backoff.RetryWithData(lp.chargeMeter.CurrentPower, bo); err == nil {
+	if power, err := backoff.RetryWithData(lp.chargeMeter.CurrentPower, bo()); err == nil {
 		lp.Lock()
 		lp.chargePower = power // update value if no error
 		lp.Unlock()
@@ -1436,7 +1433,7 @@ func (lp *Loadpoint) UpdateChargePowerAndCurrents() {
 		lp.publish(keys.ChargeCurrents, lp.chargeCurrents)
 
 		return nil
-	}, bo); err != nil {
+	}, bo()); err != nil {
 		lp.log.ERROR.Printf("charge currents: %v", err)
 	}
 }
