@@ -1,6 +1,6 @@
 module github.com/evcc-io/evcc
 
-go 1.23rc1
+go 1.23
 
 require (
 	dario.cat/mergo v1.0.0
