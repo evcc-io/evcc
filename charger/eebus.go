@@ -467,13 +467,13 @@ func (c *EEBus) writeLoadControlLimitsVASVW(evEntity spineapi.EntityRemoteInterf
 	}
 
 	// on OSCEV all limits have to be active except they are set to the default value
-	minLimit, _, _, err := c.uc.OscEV.CurrentLimits(evEntity)
+	minLimits, _, _, err := c.uc.OscEV.CurrentLimits(evEntity)
 	if err != nil {
 		return false
 	}
 
 	for index, item := range limits {
-		limits[index].IsActive = item.Value >= minLimit[index]
+		limits[index].IsActive = item.Value >= minLimits[index]
 	}
 
 	// send the write command
