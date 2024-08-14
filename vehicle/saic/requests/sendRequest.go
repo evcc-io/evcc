@@ -88,7 +88,7 @@ func DecryptAnswer(resp *http.Response) ([]byte, error) {
 			body = string(bodyRaw)
 		}
 	} else {
-		err = fmt.Errorf(resp.Status)
+		err = errors.New(resp.Status)
 	}
 
 	return []byte(body), err
