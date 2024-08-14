@@ -187,7 +187,7 @@ func NewOCPP(id string, connector int, idtag string,
 		}
 
 		rc <- err
-	}, connector, core.AvailabilityTypeOperative)
+	}, 0, core.AvailabilityTypeOperative)
 
 	if err := c.wait(err, rc); err != nil {
 		return nil, err
