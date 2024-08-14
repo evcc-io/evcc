@@ -373,7 +373,7 @@ func (c *EEBus) writeCurrentLimitData(evEntity spineapi.EntityRemoteInterface, c
 	}
 
 	// make sure the recommendations are inactive, otherwise the EV won't go to sleep
-	if c.disableRecommendations(evEntity); err != nil {
+	if err := c.disableRecommendations(evEntity); err != nil {
 		return err
 	}
 
