@@ -1,4 +1,5 @@
 template: ocpp-goe-charger
+covers: ["ocpp-fronius-wattpilot"]
 products:
   - brand: go-e
     description:
