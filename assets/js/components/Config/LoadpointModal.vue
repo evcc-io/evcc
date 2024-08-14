@@ -326,11 +326,11 @@
 						id="loadpointPollMode"
 						label="Vehicle updates"
 						:help="
-							values.soc.poll.mode === 'pollcharging'
+							values.soc.poll.mode === 'charging'
 								? 'Only request vehicle status updates when charging.'
-								: values.soc.poll.mode === 'pollconnected'
+								: values.soc.poll.mode === 'connected'
 									? 'Update vehicle status in regular intervals when connected.'
-									: values.soc.poll.mode === 'pollalways'
+									: values.soc.poll.mode === 'always'
 										? 'Always request status updates in regular intervals.'
 										: null
 						"
@@ -340,14 +340,14 @@
 							v-model="values.soc.poll.mode"
 							class="w-100"
 							:options="[
-								{ value: 'pollcharging', name: 'charging' },
-								{ value: 'pollconnected', name: 'connected' },
-								{ value: 'pollalways', name: 'always' },
+								{ value: 'charging', name: 'charging' },
+								{ value: 'connected', name: 'connected' },
+								{ value: 'always', name: 'always' },
 							]"
 						/>
 					</FormRow>
 					<FormRow
-						v-if="values.soc.poll.mode !== 'pollcharging'"
+						v-if="values.soc.poll.mode !== 'charging'"
 						class="offset-1"
 						id="loadpointPollInterval"
 						label="Vehicle update interval"
@@ -435,7 +435,7 @@ const defaultValues = {
 		disable: { delay: 3, threshold: 0 },
 	},
 	soc: {
-		poll: { mode: "pollcharging", interval: 60 },
+		poll: { mode: "charging", interval: 60 },
 		estimate: false,
 	},
 	vehicle: "",

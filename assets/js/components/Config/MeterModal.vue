@@ -391,7 +391,7 @@ export default {
 		},
 		close() {
 			this.$emit("close");
-			his.isModalVisible = false;
+			this.isModalVisible = false;
 		},
 		selectType(type) {
 			this.selectedType = type;
