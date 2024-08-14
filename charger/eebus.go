@@ -105,13 +105,6 @@ func NewEEBus(ski string, hasMeter, hasChargedEnergy, vasVW bool) (api.Charger, 
 	return c, nil
 }
 
-func (c *EEBus) evEntity() spineapi.EntityRemoteInterface {
-	c.mux.RLock()
-	defer c.mux.RUnlock()
-
-	return c.ev
-}
-
 var _ eebus.Device = (*EEBus)(nil)
 
 // UseCaseEvent implements the eebus.Device interface
@@ -130,34 +123,11 @@ func (c *EEBus) UseCaseEvent(device spineapi.DeviceRemoteInterface, entity spine
 	}
 }
 
-var _ api.CurrentLimiter = (*EEBus)(nil)
+func (c *EEBus) isEvConnected() (spineapi.EntityRemoteInterface, bool) {
+	c.mux.RLock()
+	defer c.mux.RUnlock()
 
-func (c *EEBus) minMax() (minMax, error) {
-	var zero minMax
-
-	evEntity, ok := c.isEvConnected()
-	if !ok {
-		return zero, nil
-	}
-
-	minLimits, maxLimits, _, err := c.uc.OpEV.CurrentLimits(evEntity)
-	if err != nil {
-		if err == eebusapi.ErrDataNotAvailable {
-			err = api.ErrNotAvailable
-		}
-		return zero, err
-	}
-
-	if len(minLimits) == 0 || len(maxLimits) == 0 {
-		return zero, api.ErrNotAvailable
-	}
-
-	return minMax{minLimits[0], maxLimits[0]}, nil
-}
-
-func (c *EEBus) GetMinMaxCurrent() (float64, float64, error) {
-	minMax, err := c.minMaxG()
-	return minMax.min, minMax.max, err
+	return c.ev, c.ev != nil && c.uc.EvCC.EVConnected(c.ev)
 }
 
 // we assume that if any phase current value is > idleFactor * min Current, then charging is active and enabled is true
@@ -191,11 +161,6 @@ func (c *EEBus) isCharging(evEntity spineapi.EntityRemoteInterface) bool {
 	// reported 600W, even tough the car was not charging
 	limitMin := limitsMin[0]
 	return phasesCurrent > limitMin*idleFactor
-}
-
-func (c *EEBus) isEvConnected() (spineapi.EntityRemoteInterface, bool) {
-	evEntity := c.evEntity()
-	return evEntity, evEntity != nil && c.uc.EvCC.EVConnected(evEntity)
 }
 
 // Status implements the api.Charger interface
@@ -649,6 +614,36 @@ func (c *EEBus) Soc() (float64, error) {
 	}
 
 	return soc, nil
+}
+
+var _ api.CurrentLimiter = (*EEBus)(nil)
+
+func (c *EEBus) minMax() (minMax, error) {
+	var zero minMax
+
+	evEntity, ok := c.isEvConnected()
+	if !ok {
+		return zero, nil
+	}
+
+	minLimits, maxLimits, _, err := c.uc.OpEV.CurrentLimits(evEntity)
+	if err != nil {
+		if err == eebusapi.ErrDataNotAvailable {
+			err = api.ErrNotAvailable
+		}
+		return zero, err
+	}
+
+	if len(minLimits) == 0 || len(maxLimits) == 0 {
+		return zero, api.ErrNotAvailable
+	}
+
+	return minMax{minLimits[0], maxLimits[0]}, nil
+}
+
+func (c *EEBus) GetMinMaxCurrent() (float64, float64, error) {
+	minMax, err := c.minMaxG()
+	return minMax.min, minMax.max, err
 }
 
 var _ loadpoint.Controller = (*EEBus)(nil)
