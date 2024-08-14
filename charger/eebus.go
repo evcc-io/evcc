@@ -117,7 +117,8 @@ func (c *EEBus) evEntity() spineapi.EntityRemoteInterface {
 }
 
 func (c *EEBus) connectEvent(connected bool) {
-	c.setDefaultValues()
+	c.communicationStandard = evcc.EVCCCommunicationStandardUnknown
+	c.expectedEnableUnpluggedState = false
 }
 
 var _ eebus.Device = (*EEBus)(nil)
@@ -138,11 +139,6 @@ func (c *EEBus) UseCaseEvent(device spineapi.DeviceRemoteInterface, entity spine
 		c.ev = nil
 		c.currentLimit = -1
 	}
-}
-
-func (c *EEBus) setDefaultValues() {
-	c.communicationStandard = evcc.EVCCCommunicationStandardUnknown
-	c.expectedEnableUnpluggedState = false
 }
 
 var _ api.CurrentLimiter = (*EEBus)(nil)
