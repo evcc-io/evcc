@@ -140,9 +140,11 @@ func (c *EEBus) UseCaseEvent(device spineapi.DeviceRemoteInterface, entity spine
 var _ api.CurrentLimiter = (*EEBus)(nil)
 
 func (c *EEBus) minMax() (minMax, error) {
-	evEntity := c.evEntity()
-	if !c.uc.EvCC.EVConnected(evEntity) {
-		return minMax{}, errors.New("no ev connected")
+	var zero minMax
+
+	evEntity, ok := c.isEvConnected()
+	if !ok {
+		return zero, nil
 	}
 
 	minLimits, maxLimits, _, err := c.uc.OpEV.CurrentLimits(evEntity)
@@ -150,11 +152,11 @@ func (c *EEBus) minMax() (minMax, error) {
 		if err == eebusapi.ErrDataNotAvailable {
 			err = api.ErrNotAvailable
 		}
-		return minMax{}, err
+		return zero, err
 	}
 
 	if len(minLimits) == 0 || len(maxLimits) == 0 {
-		return minMax{}, api.ErrNotAvailable
+		return zero, api.ErrNotAvailable
 	}
 
 	return minMax{minLimits[0], maxLimits[0]}, nil
@@ -630,7 +632,10 @@ var _ api.Battery = (*EEBus)(nil)
 
 // Soc implements the api.Vehicle interface
 func (c *EEBus) Soc() (float64, error) {
-	evEntity := c.evEntity()
+	evEntity, ok := c.isEvConnected()
+	if !ok {
+		return 0, nil
+	}
 
 	if !c.uc.EvSoc.IsScenarioAvailableAtEntity(evEntity, 1) {
 		return 0, api.ErrNotAvailable
