@@ -427,21 +427,18 @@ func (c *EEBus) hasActiveVASVW(evEntity spineapi.EntityRemoteInterface) bool {
 	// only then the EV has no active charging demand and will charge based on OSCEV recommendations
 	// this is a workaround for EVSE changing isActive to false, even though they should
 	// not announce the usecase at all in that case
-	ucs := evEntity.Device().UseCases()
-	for _, item := range ucs {
+	for _, uci := range evEntity.Device().UseCases() {
 		// check if the referenced entity address is identical to the ev entity address
 		// the address may not exist, as it only available since SPINE 1.3
-		if item.Address != nil &&
+		if uci.Address != nil &&
 			evEntity.Address() != nil &&
-			slices.Compare(item.Address.Entity, evEntity.Address().Entity) != 0 {
+			slices.Compare(uci.Address.Entity, evEntity.Address().Entity) != 0 {
 			continue
 		}
 
-		for _, uc := range item.UseCaseSupport {
-			if uc.UseCaseName != nil &&
-				*uc.UseCaseName == model.UseCaseNameTypeOptimizationOfSelfConsumptionDuringEVCharging &&
-				uc.UseCaseAvailable != nil &&
-				*uc.UseCaseAvailable == true {
+		for _, uc := range uci.UseCaseSupport {
+			if uc.UseCaseName != nil && *uc.UseCaseName == model.UseCaseNameTypeOptimizationOfSelfConsumptionDuringEVCharging &&
+				uc.UseCaseAvailable != nil && *uc.UseCaseAvailable {
 				return true
 			}
 		}
