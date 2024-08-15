@@ -148,9 +148,8 @@ func TestEEBusIsCharging(t *testing.T) {
 				evcem.EXPECT().CurrentPerPhase(evEntity).Return(currents, nil)
 				opev.EXPECT().CurrentLimits(evEntity).Return(limitsMin, limitsMax, limitsDefault, nil)
 
-				result := eebus.isCharging()
-				if result != m.expected {
-					t.Errorf("Failure: test %s, series %d, expected %v, got %v", tc.name, index, m.expected, result)
+				if res := eebus.isCharging(evEntity); res != m.expected {
+					t.Errorf("Failure: test %s, series %d, expected %v, got %v", tc.name, index, m.expected, res)
 				}
 				ctrl.Finish()
 			}
