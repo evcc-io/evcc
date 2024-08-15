@@ -303,7 +303,7 @@ func NewOCPP(id string, connector int, idtag string,
 	// configure sample rate
 	if meterInterval > 0 {
 		if err := c.configure(ocpp.KeyMeterValueSampleInterval, strconv.Itoa(int(meterInterval.Seconds()))); err != nil {
-			return nil, err
+			c.log.WARN.Printf("failed configuring MeterValueSampleInterval: %v", err)
 		}
 	}
 
