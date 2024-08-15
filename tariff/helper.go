@@ -11,11 +11,11 @@ import (
 	"github.com/evcc-io/evcc/util/request"
 )
 
-func newBackoff() backoff.BackOff {
-	bo := backoff.NewExponentialBackOff()
-	bo.InitialInterval = time.Second
-	bo.MaxElapsedTime = time.Minute
-	return bo
+func bo() backoff.BackOff {
+	return backoff.NewExponentialBackOff(
+		backoff.WithInitialInterval(time.Second),
+		backoff.WithMaxElapsedTime(time.Minute),
+	)
 }
 
 // backoffPermanentError returns a permanent error in case of HTTP 400

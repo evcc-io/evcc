@@ -61,9 +61,9 @@ func (m *Server) GetInverter(ip string) *util.Monitor[Inverter] {
 }
 
 func (m *Server) readData() {
-	bo := backoff.NewExponentialBackOff()
-	bo.MaxInterval = time.Second
-	bo.MaxElapsedTime = 10 * time.Second
+	bo := backoff.NewExponentialBackOff(
+		backoff.WithMaxInterval(time.Second),
+		backoff.WithMaxElapsedTime(10*time.Second))
 
 	for {
 		mu.RLock()

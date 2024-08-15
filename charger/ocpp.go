@@ -239,6 +239,11 @@ func NewOCPP(id string, connector int, idtag string,
 						c.idtag = *opt.Value
 						c.log.DEBUG.Printf("overriding default `idTag` with Alfen-specific value: %s", c.idtag)
 					}
+
+				case ocpp.KeyEvBoxSupportedMeasurands:
+					if meterValues == "" {
+						meterValues = *opt.Value
+					}
 				}
 
 				if err != nil {
@@ -256,7 +261,7 @@ func NewOCPP(id string, connector int, idtag string,
 
 	// see who's there
 	if c.hasRemoteTriggerFeature {
-		if err := conn.TriggerMessageRequest(core.BootNotificationFeatureName); err == nil {
+		if err := ocpp.Instance().TriggerMessageRequest(cp.ID(), core.BootNotificationFeatureName); err == nil {
 			select {
 			case <-time.After(timeout):
 				c.log.DEBUG.Printf("BootNotification timeout")

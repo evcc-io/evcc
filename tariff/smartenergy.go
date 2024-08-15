@@ -49,7 +49,6 @@ func NewSmartEnergyFromConfig(other map[string]interface{}) (api.Tariff, error) 
 func (t *SmartEnergy) run(done chan error) {
 	var once sync.Once
 	client := request.NewHelper(t.log)
-	bo := newBackoff()
 
 	tick := time.NewTicker(time.Hour)
 	for ; true; <-tick.C {
@@ -57,7 +56,7 @@ func (t *SmartEnergy) run(done chan error) {
 
 		if err := backoff.Retry(func() error {
 			return backoffPermanentError(client.GetJSON(smartenergy.URI, &res))
-		}, bo); err != nil {
+		}, bo()); err != nil {
 			once.Do(func() { done <- err })
 
 			t.log.ERROR.Println(err)
