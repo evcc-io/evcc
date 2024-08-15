@@ -3,8 +3,8 @@ package registry
 import (
 	"context"
 	"fmt"
-
-	"golang.org/x/exp/maps"
+	"maps"
+	"slices"
 )
 
 type (
@@ -38,7 +38,7 @@ func (r registry[T]) Get(name string) (factoryFunc[T], error) {
 }
 
 func (r registry[T]) Types() []string {
-	return maps.Keys(r.data)
+	return slices.Collect(maps.Keys(r.data))
 }
 
 func New[T any](typ string) registry[T] {
