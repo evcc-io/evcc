@@ -10,7 +10,7 @@ import (
 
 // cs actions
 
-func (cs *CS) TriggerResetRequest(id string, resetType core.ResetType) error {
+func (cs *CS) ResetRequest(id string, resetType core.ResetType) error {
 	rc := make(chan error, 1)
 
 	err := cs.Reset(id, func(request *core.ResetConfirmation, err error) {
@@ -34,6 +34,20 @@ func (cs *CS) TriggerMessageRequest(id string, requestedMessage remotetrigger.Me
 
 		rc <- err
 	}, requestedMessage, props...)
+
+	return Wait(err, rc, cs.timeout)
+}
+
+func (cs *CS) ChangeAvailabilityRequest(id string, connector int, availabilityType core.AvailabilityType) error {
+	rc := make(chan error, 1)
+
+	err := cs.ChangeAvailability(id, func(request *core.ChangeAvailabilityConfirmation, err error) {
+		if err == nil && request != nil && request.Status != core.AvailabilityStatusAccepted {
+			err = errors.New(string(request.Status))
+		}
+
+		rc <- err
+	}, connector, availabilityType)
 
 	return Wait(err, rc, cs.timeout)
 }

@@ -100,15 +100,16 @@ func (conn *Connector) WatchDog(timeout time.Duration) {
 
 // Initialized waits for initial charge point status notification
 func (conn *Connector) Initialized() error {
-	trigger := time.After(conn.timeout / 2)
+	request := time.After(conn.timeout / 2)
 	timeout := time.After(conn.timeout)
 	for {
 		select {
 		case <-conn.statusC:
 			return nil
 
-		case <-trigger:
-			conn.TriggerMessageRequest(core.StatusNotificationFeatureName)
+		case <-request:
+			// we can't use trigger here as at this time it is not clear if the charge point supports the feature
+			Instance().ChangeAvailabilityRequest(conn.cp.ID(), 0, core.AvailabilityTypeOperative)
 
 		case <-timeout:
 			return api.ErrTimeout
