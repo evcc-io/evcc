@@ -2,13 +2,14 @@ package goodwe
 
 import (
 	"encoding/binary"
+	"maps"
 	"net"
+	"slices"
 	"sync"
 	"time"
 
 	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/util"
-	"golang.org/x/exp/maps"
 )
 
 var (
@@ -66,7 +67,7 @@ func (m *Server) readData() {
 
 	for {
 		mu.RLock()
-		ips := maps.Keys(m.inverters)
+		ips := slices.Collect(maps.Keys(m.inverters))
 		mu.RUnlock()
 
 		for _, ip := range ips {
