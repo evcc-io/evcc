@@ -3,6 +3,9 @@ products:
   - brand: Carlo Gavazzi
     description:
       generic: EM24
+  - brand: Victron
+    description:
+      generic: EM24
 params:
   - name: usage
     choice: ["grid", "charge"]

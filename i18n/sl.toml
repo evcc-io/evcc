@@ -149,13 +149,32 @@ title = "Modbus Proxy"
 [config.mqtt]
 authentication = "Avtentikacija"
 description = "Povežite se s posrednikom MQTT za izmenjavo podatkov z drugimi sistemi v vašem omrežju."
+descriptionClientId = "Avtor sporočil. Če se pusti prazno, se uporabi `evcc-[rand]`."
+descriptionTopic = "Pustite prazno, če želite onemogočiti objavljanje."
+labelBroker = "Posrednik"
+labelCheckInsecure = "Dovoli samopodpisane certifikate"
+labelClientId = "ID Stranke"
+labelInsecure = "Preverjanje certifikata"
+labelPassword = "Geslo"
+labelTopic = "Topic"
+labelUser = "Uporabniško ime"
+publishing = "Objavljanje"
+title = "MQTT"
 
 [config.network]
+descriptionHost = "Uporabite pripono .local, da omogočite mDNS. Pomembno za odkrivanje mobilne aplikacije in nekaterih polnilnikov OCPP."
+descriptionPort = "Vrata za spletni vmesnik in API. Če spremenite, boste morali posodobiti URL v brskalniku."
+descriptionSchema = "Vpliva samo na to, kako so URL-ji ustvarjeni. Če izberete HTTPS, šifriranje ne bo omogočeno."
+labelHost = "Ime gostitelja"
 labelPort = "Port"
 labelSchema = "Shema"
 title = "Mreža"
 
 [config.options]
+
+[config.options.boolean]
+no = "ne"
+yes = "da"
 
 [config.options.endianness]
 big = "big-endian"
@@ -173,6 +192,8 @@ titleEdit = "Uredi merilnik sončne energije"
 general = "Splošno"
 grid = "Omrežje"
 integrations = "Integracije"
+loadpoints = "Polnilne točke"
+meter = "Sončna energija in baterije"
 system = "Sistem"
 vehicles = "Vozila"
 
@@ -183,6 +204,11 @@ save = "Shrani"
 [config.sponsor]
 addToken = "Vnesi sponzorski žeton"
 changeToken = "Spremeni sponzorski žeton"
+description = "Model sponzoriranja nam pomaga vzdrževati projekt in trajnostno graditi nove in vznemirljive funkcije. Kot sponzor dobite dostop do vseh izvedb polnilnikov."
+descriptionToken = "Žeton dobite na naslovu {url}. Ponujamo tudi poskusni žeton za testiranje."
+error = "Sponzorski žeton ni veljaven."
+labelToken = "Sponzorski žeton"
+title = "Sponzorstvo"
 
 [config.system]
 logs = "Logi"
@@ -193,6 +219,7 @@ restartingDescription = "Prosim počakajte..."
 restartingMessage = "Ponovni zagon evcc."
 
 [config.tariffs]
+description = "Določite svoje tarife za energijo, da izračunate stroške svojih polnilnih sej."
 title = "Tarife"
 
 [config.title]
@@ -285,7 +312,7 @@ optInMoreDetailsLink = "tukaj"
 optInSponsorship = "Potrebno je sponzoriranje."
 
 [footer.version]
-availableLong = "na voljo nova različica"
+availableLong = "na voljo je nova različica"
 modalCancel = "Prekliči"
 modalDownload = "Prenos"
 modalInstalledVersion = "Trenutno nameščena različica"
@@ -440,6 +467,7 @@ minpv = "Min+Sonce"
 now = "Hitro"
 off = "Izklop"
 pv = "Sonce"
+smart = "Pametno"
 
 [main.provider]
 login = "prijava"
@@ -454,7 +482,7 @@ descriptionEnergy = "Do kdaj želite da se vozilo napolni za {targetEnergy}?"
 descriptionSoc = "Kdaj želite, da je vozilo napolnjeno na {targetSoc}?"
 inactiveLabel = "Ciljni čas"
 modalTitle = "Nastavite ciljni čas"
-notReachableInTime = "Cilja ni mogoče doseči pravočasno. Predvideni cilj: {endTime}."
+notReachableInTime = "Cilj bo dosežen {overrun} pozneje."
 onlyInPvMode = "Načrt polnjenja deluje samo v solarnem načinu."
 planDuration = "Čas polnjenja"
 planPeriodLabel = "Obdobje"
@@ -465,7 +493,7 @@ priceLimit = "cenovna omejitev {price}"
 remove = "Odstrani"
 setTargetTime = "brez"
 targetIsAboveLimit = "Konfigurirana omejitev polnjenja {limit} se ne bo upoštevala v tem obdobju."
-targetIsAboveVehicleLimit = "Povečaj omejitev vozila ({limit}), da dosežeš cilj polnjenja."
+targetIsAboveVehicleLimit = "Omejitev vozila je pod ciljem polnjenja."
 targetIsInThePast = "Izberi čas v prihodnosti, Marty."
 targetIsTooFarInTheFuture = "Načrt bomo prilagodili takoj, ko bomo izvedeli več o novi funkcionalnosti."
 title = "Ciljni čas"
@@ -509,23 +537,30 @@ vehicleLimit = "Omejitev vozila: {soc}"
 
 [main.vehicleStatus]
 charging = "Polnjenje…"
-cheapEnergyCharging = "Polnjenje s poceni energijo: {price} (omejitev {limit})"
-cleanEnergyCharging = "Polnjenje s čisto energijo: {co2} (omejitev {limit})"
+cheapEnergyCharging = "Poceni energija je na voljo."
+cheapEnergyNextStart = "Poceni energija čez {duration}."
+cheapEnergySet = "Nastavljena je omejitev cene."
+cleanEnergyCharging = "Čista energija je na voljo."
+cleanEnergyNextStart = "Čista energija na voljo čez {duration}."
+cleanEnergySet = "Omejitev CO₂ je nastavljena."
 climating = "Zaznano predkondicioniranje."
 connected = "Povezan."
 disconnected = "Odklopljen."
+finished = "Končano."
 guard = "Zaščita preklopa je aktivna za {remaining}."
 minCharge = "Minimalno polnjenje na {soc}."
-pvDisable = "Premalo presežka. Prekinitev čez {remaining}..."
-pvEnable = "Na voljo so presežki. Začetek čez {remaining}..."
-scale1p = "Zmanjšanje na 1-fazno napajanje čez {remaining} ..."
-scale3p = "Povečanje na 3-fazno napajanje čez {remaining}..."
-targetChargeActive = "Ciljno polnjenje je aktivno..."
+pvDisable = "Premalo presežka. Prekinitev polnjenja se bo izvedla kmalu."
+pvEnable = "Na voljo so presežki. Začetek polnjenja se bo izvedel kmalu."
+scale1p = "Zmanjšanje na 1-fazno napajanje kmalu..."
+scale3p = "Povečanje na 3-fazno napajanje kmalu..."
+targetChargeActive = "Ciljno polnjenje je aktivno, predviden konec {duration}."
 targetChargePlanned = "Ciljno polnjenje se začne ob {time}."
 targetChargeWaitForVehicle = "Ciljno polnjenje je pripravljeno. Čakam na vozilo ..."
 unknown = ""
-vehicleLimitReached = "Omejitev vozila {soc} dosežena."
+vehicleLimit = "Omejitev vozila."
+vehicleLimitReached = "Omejitev vozila dosežena."
 waitForVehicle = "Pripravljen. Čakam na vozilo..."
+welcome = "Kratko začetno polnjenje za potrditev povezave."
 
 [notifications]
 dismissAll = "Opusti vse"
@@ -533,9 +568,11 @@ logs = "Prikaži celotne loge"
 modalTitle = "Obvestila"
 
 [offline]
-message = "Ni povezan s strežnikom."
+configurationError = "Napaka med zagonom. Preverite konfiguracijo in znova zaženite."
+message = "Ni povezave s strežnikom."
 reload = "Ponovno naloži?"
 restart = "Ponovni zagon"
+restartNeeded = "Potrebno za uveljavitev sprememb."
 restarting = "Strežnik bo kmalu nazaj."
 
 [passwordModal]

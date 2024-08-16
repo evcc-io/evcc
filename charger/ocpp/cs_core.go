@@ -1,6 +1,8 @@
 package ocpp
 
 import (
+	"errors"
+
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/firmware"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/remotetrigger"
@@ -8,40 +10,32 @@ import (
 
 // cs actions
 
-func (cs *CS) TriggerResetRequest(id string, resetType core.ResetType) {
-	if err := cs.Reset(id, func(request *core.ResetConfirmation, err error) {
-		log := cs.log.TRACE
+func (cs *CS) TriggerResetRequest(id string, resetType core.ResetType) error {
+	rc := make(chan error, 1)
+
+	err := cs.Reset(id, func(request *core.ResetConfirmation, err error) {
 		if err == nil && request != nil && request.Status != core.ResetStatusAccepted {
-			log = cs.log.ERROR
+			err = errors.New(string(request.Status))
 		}
 
-		var status core.ResetStatus
-		if request != nil {
-			status = request.Status
-		}
+		rc <- err
+	}, resetType)
 
-		log.Printf("TriggerReset for %s: %+v", id, status)
-	}, resetType); err != nil {
-		cs.log.ERROR.Printf("send TriggerReset for %s failed: %v", id, err)
-	}
+	return Wait(err, rc, cs.timeout)
 }
 
-func (cs *CS) TriggerMessageRequest(id string, requestedMessage remotetrigger.MessageTrigger, props ...func(request *remotetrigger.TriggerMessageRequest)) {
-	if err := cs.TriggerMessage(id, func(request *remotetrigger.TriggerMessageConfirmation, err error) {
-		log := cs.log.TRACE
+func (cs *CS) TriggerMessageRequest(id string, requestedMessage remotetrigger.MessageTrigger, props ...func(request *remotetrigger.TriggerMessageRequest)) error {
+	rc := make(chan error, 1)
+
+	err := cs.TriggerMessage(id, func(request *remotetrigger.TriggerMessageConfirmation, err error) {
 		if err == nil && request != nil && request.Status != remotetrigger.TriggerMessageStatusAccepted {
-			log = cs.log.ERROR
+			err = errors.New(string(request.Status))
 		}
 
-		var status remotetrigger.TriggerMessageStatus
-		if request != nil {
-			status = request.Status
-		}
+		rc <- err
+	}, requestedMessage, props...)
 
-		log.Printf("TriggerMessage %s for %s: %+v", requestedMessage, id, status)
-	}, requestedMessage, props...); err != nil {
-		cs.log.ERROR.Printf("send TriggerMessage %s for %s failed: %v", requestedMessage, id, err)
-	}
+	return Wait(err, rc, cs.timeout)
 }
 
 // cp actions

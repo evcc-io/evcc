@@ -1,4 +1,5 @@
 template: goodwe-wifi
+deprecated: true
 products:
   - brand: GoodWe
     description:

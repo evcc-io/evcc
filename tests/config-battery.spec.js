@@ -7,8 +7,8 @@ const CONFIG_GRID_ONLY = "config-grid-only.evcc.yaml";
 test.use({ baseURL: baseUrl() });
 
 test.beforeAll(async () => {
-  await start(CONFIG_GRID_ONLY, "password.sql");
   await startSimulator();
+  await start(CONFIG_GRID_ONLY, "password.sql");
 });
 test.afterAll(async () => {
   await stop();
@@ -18,6 +18,7 @@ test.afterAll(async () => {
 async function login(page) {
   await page.locator("#loginPassword").fill("secret");
   await page.getByRole("button", { name: "Login" }).click();
+  await expect(page.locator("#loginPassword")).not.toBeVisible();
 }
 
 async function enableExperimental(page) {
@@ -82,5 +83,22 @@ test.describe("battery meter", async () => {
     await meterModal.getByRole("button", { name: "Delete" }).click();
 
     await expect(page.getByTestId("battery")).toHaveCount(0);
+  });
+
+  test("advanced fields", async ({ page }) => {
+    await page.goto("/#/config");
+    await login(page);
+    await enableExperimental(page);
+
+    await page.getByRole("button", { name: "Add solar or battery" }).click();
+
+    const meterModal = page.getByTestId("meter-modal");
+    await meterModal.getByRole("button", { name: "Add battery meter" }).click();
+    await meterModal.getByLabel("Manufacturer").selectOption("OpenEMS");
+    await expect(meterModal.getByLabel("Password optional")).not.toBeVisible();
+    await page.getByRole("button", { name: "Show advanced settings" }).click();
+    await expect(meterModal.getByLabel("Password optional")).toBeVisible();
+    await page.getByRole("button", { name: "Hide advanced settings" }).click();
+    await expect(meterModal.getByLabel("Password optional")).not.toBeVisible();
   });
 });

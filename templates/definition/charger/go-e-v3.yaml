@@ -19,7 +19,6 @@ requirements:
       For 1P/3P-Phase switching the HTTP API v2 in the charger setup needs to be activated.
 
       The “simulate unplugging” option should be activated in the Go-E app ("Car" menu item).
-  uri: https://docs.evcc.io/docs/devices/chargers#go-e
   evcc: ["sponsorship"]
 params:
   - name: host

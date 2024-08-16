@@ -1,0 +1,9 @@
+template: ocpp-fronius-wattpilot
+products:
+  - brand: Fronius
+    description:
+      generic: Wattpilot (OCPP)
+params:
+  - preset: ocpp
+render: |
+  {{ include "ocpp" . }}

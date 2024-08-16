@@ -6,9 +6,5 @@ type embed struct {
 }
 
 func (t *embed) totalPrice(price float64) float64 {
-	total := price + t.Charges
-	if total > 0 {
-		total *= 1 + t.Tax
-	}
-	return total
+	return (price + t.Charges) * (1 + t.Tax)
 }

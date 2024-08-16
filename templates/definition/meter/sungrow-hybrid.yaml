@@ -107,23 +107,23 @@ render: |
         source: sequence
         set:
         - source: const
-          value: 0 # self consumption
+          value: 0 # Self-consumption mode (Default)
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
             timeout: {{ .timeout }}
             register:
-              address: 13049 # EMS mode
+              address: 13049 # EMS mode selection
               type: writesingle
               decode: uint16
         - source: const
-          value: 0xCC # stop
+          value: 0xCC # Stop (Default)
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
             timeout: {{ .timeout }}
             register:
-              address: 13050 # Forced mode
+              address: 13050 # Charge/discharge command
               type: writesingle
               decode: uint16
     - case: 2 # hold
@@ -131,23 +131,23 @@ render: |
         source: sequence
         set:
         - source: const
-          value: 2 # forced mode
+          value: 2 # Forced mode (charge/discharge/stop)
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
             timeout: {{ .timeout }}
             register:
-              address: 13049 # EMS mode
+              address: 13049 # EMS mode selection
               type: writesingle
               decode: uint16
         - source: const
-          value: 0xCC
+          value: 0xCC # Stop (Default)
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
             timeout: {{ .timeout }}
             register:
-              address: 13050 # Forced mode
+              address: 13050 # Charge/discharge command
               type: writesingle
               decode: uint16
     - case: 3 # charge
@@ -155,7 +155,7 @@ render: |
         source: sequence
         set:
         - source: const
-          value: 2 # forced mode
+          value: 2 # Forced mode (charge/discharge/stop)
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
@@ -165,15 +165,40 @@ render: |
               type: writesingle
               decode: uint16
         - source: const
-          value: 0xAA
+          value: 0xAA # Charge
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
             timeout: {{ .timeout }}
             register:
-              address: 13050 # Forced mode
+              address: 13050 # Charge/discharge command
               type: writesingle
               decode: uint16
+        - source: go
+          script: power
+          in:
+          - name: power
+            type: int
+            config:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              timeout: {{ .timeout }}
+              register:
+                address: 5627 # BDC rated power
+                type: input
+                decode: uint16
+              scale: 100
+          out:
+          - name: power
+            type: int
+            config:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              timeout: {{ .timeout }}
+              register:
+                address: 13051 # Charge/discharge power
+                type: writesingle
+                decode: uint16
   {{- if .capacity }}
   capacity: {{ .capacity }} # kWh
   {{- end }}

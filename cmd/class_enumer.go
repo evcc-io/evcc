@@ -7,11 +7,11 @@ import (
 	"strings"
 )
 
-const _ClassName = "meterchargervehicletariffcircuitsitemqttdatabasemodbusproxyeebusjavascriptgohemsinfluxmessengersponsorship"
+const _ClassName = "configfilemeterchargervehicletariffcircuitsitemqttdatabasemodbusproxyeebusjavascriptgohemsinfluxmessengersponsorship"
 
-var _ClassIndex = [...]uint8{0, 5, 12, 19, 25, 32, 36, 40, 48, 59, 64, 74, 76, 80, 86, 95, 106}
+var _ClassIndex = [...]uint8{0, 10, 15, 22, 29, 35, 42, 46, 50, 58, 69, 74, 84, 86, 90, 96, 105, 116}
 
-const _ClassLowerName = "meterchargervehicletariffcircuitsitemqttdatabasemodbusproxyeebusjavascriptgohemsinfluxmessengersponsorship"
+const _ClassLowerName = "configfilemeterchargervehicletariffcircuitsitemqttdatabasemodbusproxyeebusjavascriptgohemsinfluxmessengersponsorship"
 
 func (i Class) String() string {
 	i -= 1
@@ -25,78 +25,82 @@ func (i Class) String() string {
 // Re-run the stringer command to generate them again.
 func _ClassNoOp() {
 	var x [1]struct{}
-	_ = x[ClassMeter-(1)]
-	_ = x[ClassCharger-(2)]
-	_ = x[ClassVehicle-(3)]
-	_ = x[ClassTariff-(4)]
-	_ = x[ClassCircuit-(5)]
-	_ = x[ClassSite-(6)]
-	_ = x[ClassMqtt-(7)]
-	_ = x[ClassDatabase-(8)]
-	_ = x[ClassModbusProxy-(9)]
-	_ = x[ClassEEBus-(10)]
-	_ = x[ClassJavascript-(11)]
-	_ = x[ClassGo-(12)]
-	_ = x[ClassHEMS-(13)]
-	_ = x[ClassInflux-(14)]
-	_ = x[ClassMessenger-(15)]
-	_ = x[ClassSponsorship-(16)]
+	_ = x[ClassConfigFile-(1)]
+	_ = x[ClassMeter-(2)]
+	_ = x[ClassCharger-(3)]
+	_ = x[ClassVehicle-(4)]
+	_ = x[ClassTariff-(5)]
+	_ = x[ClassCircuit-(6)]
+	_ = x[ClassSite-(7)]
+	_ = x[ClassMqtt-(8)]
+	_ = x[ClassDatabase-(9)]
+	_ = x[ClassModbusProxy-(10)]
+	_ = x[ClassEEBus-(11)]
+	_ = x[ClassJavascript-(12)]
+	_ = x[ClassGo-(13)]
+	_ = x[ClassHEMS-(14)]
+	_ = x[ClassInflux-(15)]
+	_ = x[ClassMessenger-(16)]
+	_ = x[ClassSponsorship-(17)]
 }
 
-var _ClassValues = []Class{ClassMeter, ClassCharger, ClassVehicle, ClassTariff, ClassCircuit, ClassSite, ClassMqtt, ClassDatabase, ClassModbusProxy, ClassEEBus, ClassJavascript, ClassGo, ClassHEMS, ClassInflux, ClassMessenger, ClassSponsorship}
+var _ClassValues = []Class{ClassConfigFile, ClassMeter, ClassCharger, ClassVehicle, ClassTariff, ClassCircuit, ClassSite, ClassMqtt, ClassDatabase, ClassModbusProxy, ClassEEBus, ClassJavascript, ClassGo, ClassHEMS, ClassInflux, ClassMessenger, ClassSponsorship}
 
 var _ClassNameToValueMap = map[string]Class{
-	_ClassName[0:5]:         ClassMeter,
-	_ClassLowerName[0:5]:    ClassMeter,
-	_ClassName[5:12]:        ClassCharger,
-	_ClassLowerName[5:12]:   ClassCharger,
-	_ClassName[12:19]:       ClassVehicle,
-	_ClassLowerName[12:19]:  ClassVehicle,
-	_ClassName[19:25]:       ClassTariff,
-	_ClassLowerName[19:25]:  ClassTariff,
-	_ClassName[25:32]:       ClassCircuit,
-	_ClassLowerName[25:32]:  ClassCircuit,
-	_ClassName[32:36]:       ClassSite,
-	_ClassLowerName[32:36]:  ClassSite,
-	_ClassName[36:40]:       ClassMqtt,
-	_ClassLowerName[36:40]:  ClassMqtt,
-	_ClassName[40:48]:       ClassDatabase,
-	_ClassLowerName[40:48]:  ClassDatabase,
-	_ClassName[48:59]:       ClassModbusProxy,
-	_ClassLowerName[48:59]:  ClassModbusProxy,
-	_ClassName[59:64]:       ClassEEBus,
-	_ClassLowerName[59:64]:  ClassEEBus,
-	_ClassName[64:74]:       ClassJavascript,
-	_ClassLowerName[64:74]:  ClassJavascript,
-	_ClassName[74:76]:       ClassGo,
-	_ClassLowerName[74:76]:  ClassGo,
-	_ClassName[76:80]:       ClassHEMS,
-	_ClassLowerName[76:80]:  ClassHEMS,
-	_ClassName[80:86]:       ClassInflux,
-	_ClassLowerName[80:86]:  ClassInflux,
-	_ClassName[86:95]:       ClassMessenger,
-	_ClassLowerName[86:95]:  ClassMessenger,
-	_ClassName[95:106]:      ClassSponsorship,
-	_ClassLowerName[95:106]: ClassSponsorship,
+	_ClassName[0:10]:         ClassConfigFile,
+	_ClassLowerName[0:10]:    ClassConfigFile,
+	_ClassName[10:15]:        ClassMeter,
+	_ClassLowerName[10:15]:   ClassMeter,
+	_ClassName[15:22]:        ClassCharger,
+	_ClassLowerName[15:22]:   ClassCharger,
+	_ClassName[22:29]:        ClassVehicle,
+	_ClassLowerName[22:29]:   ClassVehicle,
+	_ClassName[29:35]:        ClassTariff,
+	_ClassLowerName[29:35]:   ClassTariff,
+	_ClassName[35:42]:        ClassCircuit,
+	_ClassLowerName[35:42]:   ClassCircuit,
+	_ClassName[42:46]:        ClassSite,
+	_ClassLowerName[42:46]:   ClassSite,
+	_ClassName[46:50]:        ClassMqtt,
+	_ClassLowerName[46:50]:   ClassMqtt,
+	_ClassName[50:58]:        ClassDatabase,
+	_ClassLowerName[50:58]:   ClassDatabase,
+	_ClassName[58:69]:        ClassModbusProxy,
+	_ClassLowerName[58:69]:   ClassModbusProxy,
+	_ClassName[69:74]:        ClassEEBus,
+	_ClassLowerName[69:74]:   ClassEEBus,
+	_ClassName[74:84]:        ClassJavascript,
+	_ClassLowerName[74:84]:   ClassJavascript,
+	_ClassName[84:86]:        ClassGo,
+	_ClassLowerName[84:86]:   ClassGo,
+	_ClassName[86:90]:        ClassHEMS,
+	_ClassLowerName[86:90]:   ClassHEMS,
+	_ClassName[90:96]:        ClassInflux,
+	_ClassLowerName[90:96]:   ClassInflux,
+	_ClassName[96:105]:       ClassMessenger,
+	_ClassLowerName[96:105]:  ClassMessenger,
+	_ClassName[105:116]:      ClassSponsorship,
+	_ClassLowerName[105:116]: ClassSponsorship,
 }
 
 var _ClassNames = []string{
-	_ClassName[0:5],
-	_ClassName[5:12],
-	_ClassName[12:19],
-	_ClassName[19:25],
-	_ClassName[25:32],
-	_ClassName[32:36],
-	_ClassName[36:40],
-	_ClassName[40:48],
-	_ClassName[48:59],
-	_ClassName[59:64],
-	_ClassName[64:74],
-	_ClassName[74:76],
-	_ClassName[76:80],
-	_ClassName[80:86],
-	_ClassName[86:95],
-	_ClassName[95:106],
+	_ClassName[0:10],
+	_ClassName[10:15],
+	_ClassName[15:22],
+	_ClassName[22:29],
+	_ClassName[29:35],
+	_ClassName[35:42],
+	_ClassName[42:46],
+	_ClassName[46:50],
+	_ClassName[50:58],
+	_ClassName[58:69],
+	_ClassName[69:74],
+	_ClassName[74:84],
+	_ClassName[84:86],
+	_ClassName[86:90],
+	_ClassName[90:96],
+	_ClassName[96:105],
+	_ClassName[105:116],
 }
 
 // ClassString retrieves an enum value from the enum constants string name.

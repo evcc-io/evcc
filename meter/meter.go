@@ -40,7 +40,12 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Meter, error) 
 		return nil, err
 	}
 
-	powerG, energyG, currentsG, voltagesG, powersG, err := BuildMeasurements(&cc.Power, cc.Energy, cc.Currents, cc.Voltages, cc.Powers)
+	powerG, energyG, err := BuildMeasurements(&cc.Power, cc.Energy)
+	if err != nil {
+		return nil, err
+	}
+
+	currentsG, voltagesG, powersG, err := BuildPhaseMeasurements(cc.Currents, cc.Voltages, cc.Powers)
 	if err != nil {
 		return nil, err
 	}

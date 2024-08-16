@@ -42,7 +42,7 @@ func (conn *Connector) StatusNotification(request *core.StatusNotificationReques
 
 func getSampleKey(s types.SampledValue) types.Measurand {
 	if s.Phase != "" {
-		return s.Measurand + types.Measurand("@"+string(s.Phase))
+		return s.Measurand + types.Measurand("."+string(s.Phase))
 	}
 
 	return s.Measurand
@@ -52,7 +52,10 @@ func (conn *Connector) MeterValues(request *core.MeterValuesRequest) (*core.Mete
 	conn.mu.Lock()
 	defer conn.mu.Unlock()
 
-	if request.TransactionId != nil && conn.txnId == 0 {
+	if request.TransactionId != nil && conn.txnId == 0 && conn.status != nil &&
+		(conn.status.Status == core.ChargePointStatusCharging ||
+			conn.status.Status == core.ChargePointStatusSuspendedEV ||
+			conn.status.Status == core.ChargePointStatusSuspendedEVSE) {
 		conn.log.DEBUG.Printf("hijacking transaction: %d", *request.TransactionId)
 		conn.txnId = *request.TransactionId
 	}
@@ -66,6 +69,11 @@ func (conn *Connector) MeterValues(request *core.MeterValuesRequest) (*core.Mete
 				conn.meterUpdated = conn.clock.Now()
 			}
 		}
+	}
+
+	select {
+	case conn.meterC <- conn.measurements:
+	default:
 	}
 
 	return new(core.MeterValuesConfirmation), nil
@@ -88,6 +96,7 @@ func (conn *Connector) StartTransaction(request *core.StartTransactionRequest) (
 
 	conn.txnCount++
 	conn.txnId = conn.txnCount
+	conn.idTag = request.IdTag
 
 	res := &core.StartTransactionConfirmation{
 		IdTagInfo: &types.IdTagInfo{
@@ -135,6 +144,7 @@ func (conn *Connector) StopTransaction(request *core.StopTransactionRequest) (*c
 	}
 
 	conn.txnId = 0
+	conn.idTag = ""
 
 	res := &core.StopTransactionConfirmation{
 		IdTagInfo: &types.IdTagInfo{

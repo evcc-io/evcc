@@ -1,4 +1,5 @@
 template: mazda2mqtt
+deprecated: true
 products:
   - description:
       generic: mazda2mqtt

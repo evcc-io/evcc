@@ -39,6 +39,7 @@ func New(log *util.Logger, keys keys.ConfigServer, identity *gigya.Identity, log
 func (v *API) request_(uri string, body io.Reader) (Response, error) {
 	params := url.Values{"country": []string{"DE"}}
 	headers := map[string]string{
+		"content-type":     "application/vnd.api+json",
 		"x-gigya-id_token": v.identity.Token,
 		"apikey":           v.keys.APIKey,
 	}

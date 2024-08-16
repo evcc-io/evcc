@@ -123,9 +123,6 @@ func (c *CmdConfigure) processDeviceRequirements(templateItem templates.Template
 		fmt.Println("-------------------------------------------------")
 		fmt.Println(c.localizedString("Requirements_Title"))
 		fmt.Println(requirementDescription)
-		if len(templateItem.Requirements.URI) > 0 {
-			fmt.Println("  " + c.localizedString("Requirements_More") + " " + templateItem.Requirements.URI)
-		}
 		fmt.Println("-------------------------------------------------")
 	}
 
@@ -181,30 +178,6 @@ func (c *CmdConfigure) processDeviceRequirements(templateItem templates.Template
 		fmt.Println()
 		fmt.Println(c.localizedString("Requirements_EEBUS_Pairing"))
 		fmt.Scanln()
-	}
-
-	return nil
-}
-
-// processParamRequirements handles param requirements
-func (c *CmdConfigure) processParamRequirements(param templates.Param) error {
-	requirementDescription := stripmd.Strip(param.Requirements.Description.String(c.lang))
-	if len(requirementDescription) > 0 {
-		fmt.Println()
-		fmt.Println("-------------------------------------------------")
-		fmt.Println(c.localizedString("Requirements_Title"))
-		fmt.Println(requirementDescription)
-		if len(param.Requirements.URI) > 0 {
-			fmt.Println("  " + c.localizedString("Requirements_More") + " " + param.Requirements.URI)
-		}
-		fmt.Println("-------------------------------------------------")
-	}
-
-	// check if sponsorship is required
-	if slices.Contains(param.Requirements.EVCC, templates.RequirementSponsorship) && c.configuration.config.SponsorToken == "" {
-		if err := c.askSponsortoken(true, true); err != nil {
-			return err
-		}
 	}
 
 	return nil
@@ -456,27 +429,16 @@ func (c *CmdConfigure) processInputConfig(param templates.Param) string {
 		label = langLabel
 	}
 
-	help := param.Help.ShortString(c.lang)
-	if slices.Contains(param.Requirements.EVCC, templates.RequirementSponsorship) {
-		help = fmt.Sprintf("%s\n\n%s", help, c.localizedString("Requirements_Sponsorship_Feature_Title"))
-	}
-
 	value := c.askValue(question{
 		label:        label,
 		defaultValue: param.Default,
 		exampleValue: param.Example,
-		help:         help,
+		help:         param.Help.ShortString(c.lang),
 		valueType:    param.Type,
 		validValues:  param.ValidValues,
 		mask:         param.IsMasked(),
 		required:     param.IsRequired(),
 	})
-
-	if param.Type == templates.TypeBool && value == "true" {
-		if err := c.processParamRequirements(param); err != nil {
-			return "false"
-		}
-	}
 
 	return value
 }

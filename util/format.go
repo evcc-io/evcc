@@ -4,12 +4,14 @@ import (
 	"bytes"
 	"fmt"
 	"html/template"
+	"maps"
 	"regexp"
+	"slices"
 	"strings"
 	"time"
 
 	"github.com/go-sprout/sprout"
-	"golang.org/x/exp/maps"
+	"github.com/samber/lo"
 )
 
 var re = regexp.MustCompile(`(?i)\${(\w+)(:([a-zA-Z0-9%.]+))?}`)
@@ -85,7 +87,7 @@ func ReplaceFormatted(s string, kv map[string]interface{}) (string, error) {
 		if val == nil {
 			wanted = append(wanted, key)
 			format = "%s"
-			val = PtrTo(any("?"))
+			val = lo.ToPtr(any("?"))
 		}
 
 		// update all literal matches
@@ -95,7 +97,7 @@ func ReplaceFormatted(s string, kv map[string]interface{}) (string, error) {
 
 	// return missing keys
 	if len(wanted) > 0 {
-		return "", fmt.Errorf("wanted: %v, got: %v", wanted, maps.Keys(kv))
+		return "", fmt.Errorf("wanted: %v, got: %v", slices.Sorted(slices.Values(wanted)), slices.Sorted(maps.Keys(kv)))
 	}
 
 	return s, nil

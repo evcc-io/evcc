@@ -12,11 +12,11 @@ let state = {
 
 const stateApiMiddleware = (req, res, next) => {
   if (req.method === "POST" && req.originalUrl === "/api/state") {
-    console.log("POST /api/state", req.body);
+    console.log("[simulator] POST /api/state", req.body);
     state = req.body;
     res.end();
   } else if (req.method === "POST" && req.originalUrl === "/api/shutdown") {
-    console.log("POST /api/shutdown", req.body);
+    console.log("[simulator] POST /api/shutdown", req.body);
     res.end();
     process.exit();
   } else if (req.originalUrl === "/api/state") {
@@ -35,7 +35,7 @@ const openemsMiddleware = (req, res, next) => {
   };
   const endpoint = endpoints[req.originalUrl];
   if (req.method === "GET" && endpoint) {
-    console.log("GET", req.originalUrl, endpoint);
+    console.log("[simulator] GET", req.originalUrl, endpoint);
     res.end(JSON.stringify(endpoint));
   } else {
     next();
@@ -46,7 +46,7 @@ export default () => ({
   name: "api",
   enforce: "pre",
   configureServer(server) {
-    console.log("configureServer");
+    console.log("[simulator] configured");
     return () => {
       server.middlewares.use(bodyParser.json());
       server.middlewares.use(stateApiMiddleware);

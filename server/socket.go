@@ -8,8 +8,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/coder/websocket"
 	"github.com/evcc-io/evcc/util"
-	"nhooyr.io/websocket"
 )
 
 const (

@@ -13,7 +13,6 @@ requirements:
   description:
     en: WARP Firmware v2 required. Automatic phase switching requires the additional WARP Energy Manager.
     de: WARP Firmware v2 erforderlich. Für automatische Phasenumschaltung wird zusätzlich der WARP Energy Manager benötigt.
-  uri: https://docs.evcc.io/docs/devices/chargers#tinkerforge
 params:
   - preset: mqtt
   - name: topic

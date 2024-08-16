@@ -124,6 +124,7 @@ import collector from "../mixins/collector";
 import { logout, isLoggedIn, openLoginModal } from "../auth";
 import baseAPI from "../baseapi";
 import { isApp, sendToApp } from "../utils/native";
+import { isUserConfigError } from "../utils/fatal";
 
 export default {
 	name: "TopNavigation",
@@ -168,7 +169,8 @@ export default {
 			return this.logoutCount > 0;
 		},
 		showBadge() {
-			return this.loginRequired || this.sponsor.expiresSoon || this.fatal?.error;
+			const userConfigError = isUserConfigError(this.fatal);
+			return this.loginRequired || this.sponsor.expiresSoon || userConfigError;
 		},
 		badgeClass() {
 			if (this.fatal?.error) {

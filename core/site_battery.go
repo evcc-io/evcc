@@ -1,8 +1,6 @@
 package core
 
 import (
-	"time"
-
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/loadpoint"
@@ -37,10 +35,29 @@ func (site *Site) SetBatteryMode(batMode api.BatteryMode) {
 	}
 }
 
-// applyBatteryMode applies the mode to each battery and updates
-// internal state if successful (requires lock)
+// requiredBatteryMode determines required battery mode based on grid charge and rate
+func (site *Site) requiredBatteryMode(batteryGridChargeActive bool, rate api.Rate) api.BatteryMode {
+	var res api.BatteryMode
+	batMode := site.GetBatteryMode()
+
+	mapper := func(s api.BatteryMode) api.BatteryMode {
+		return map[bool]api.BatteryMode{false: s, true: api.BatteryUnknown}[batMode == s]
+	}
+
+	switch {
+	case batteryGridChargeActive:
+		res = mapper(api.BatteryCharge)
+	case site.dischargeControlActive(rate):
+		res = mapper(api.BatteryHold)
+	case batteryModeModified(batMode):
+		res = api.BatteryNormal
+	}
+
+	return res
+}
+
+// applyBatteryMode applies the mode to each battery
 func (site *Site) applyBatteryMode(mode api.BatteryMode) error {
-	// update batteries
 	for _, meter := range site.batteryMeters {
 		if batCtrl, ok := meter.(api.BatteryController); ok {
 			if err := batCtrl.SetBatteryMode(mode); err != nil {
@@ -49,57 +66,39 @@ func (site *Site) applyBatteryMode(mode api.BatteryMode) error {
 		}
 	}
 
-	// update state and publish
-	site.setBatteryMode(mode)
-
 	return nil
 }
 
-func (site *Site) plannerRate() (*api.Rate, error) {
+func (site *Site) plannerRates() (api.Rates, error) {
 	tariff := site.GetTariff(PlannerTariff)
 	if tariff == nil || tariff.Type() == api.TariffTypePriceStatic {
 		return nil, nil
 	}
 
-	rates, err := tariff.Rates()
-	if err != nil {
-		return nil, err
-	}
-
-	rate, err := rates.Current(time.Now())
-	if err != nil {
-		return nil, err
-	}
-
-	return &rate, nil
+	return tariff.Rates()
 }
 
-func (site *Site) smartCostActive(lp loadpoint.API, rate *api.Rate) bool {
+func (site *Site) smartCostActive(lp loadpoint.API, rate api.Rate) bool {
 	limit := lp.GetSmartCostLimit()
-	return limit != 0 && rate != nil && rate.Price <= limit
+	return limit != nil && !rate.IsEmpty() && rate.Price <= *limit
 }
 
-func (site *Site) updateBatteryMode() {
-	mode := api.BatteryNormal
+func (site *Site) batteryGridChargeActive(rate api.Rate) bool {
+	limit := site.GetBatteryGridChargeLimit()
+	return limit != nil && !rate.IsEmpty() && rate.Price <= *limit
+}
 
-	rate, err := site.plannerRate()
-	if err != nil {
-		site.log.WARN.Println("smart cost:", err)
+func (site *Site) dischargeControlActive(rate api.Rate) bool {
+	if !site.GetBatteryDischargeControl() {
+		return false
 	}
 
 	for _, lp := range site.Loadpoints() {
 		smartCostActive := site.smartCostActive(lp, rate)
 		if lp.GetStatus() == api.StatusC && (smartCostActive || lp.IsFastChargingActive()) {
-			mode = api.BatteryHold
-			break
+			return true
 		}
 	}
 
-	if batMode := site.GetBatteryMode(); mode != batMode {
-		site.Lock()
-		if err := site.applyBatteryMode(mode); err != nil {
-			site.log.ERROR.Println("battery mode:", err)
-		}
-		site.Unlock()
-	}
+	return false
 }

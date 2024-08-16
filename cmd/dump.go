@@ -70,7 +70,7 @@ func runDump(cmd *cobra.Command, args []string) {
 
 		tmpl := template.Must(
 			template.New("dump").
-				Funcs(sprout.TxtFuncMap()).
+				Funcs(sprout.FuncMap()).
 				Parse(dumpTmpl))
 
 		out := new(bytes.Buffer)

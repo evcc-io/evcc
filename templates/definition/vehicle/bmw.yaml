@@ -15,10 +15,15 @@ params:
     #   - EU
     default: EU
     advanced: true
+  - name: welcomecharge
+    advanced: true
 render: |
   type: bmw
   {{ include "vehicle-base" . }}
   {{ include "vehicle-identify" . }}
   {{- if ne .region "EU" }}
   region: {{ .region }}
+  {{- end }}
+  {{- if .welcomecharge }}
+  features: ["welcomecharge"]
   {{- end }}

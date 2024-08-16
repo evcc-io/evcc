@@ -84,7 +84,6 @@ func NewOctopusFromConfig(other map[string]interface{}) (api.Tariff, error) {
 func (t *Octopus) run(done chan error) {
 	var once sync.Once
 	client := request.NewHelper(t.log)
-	bo := newBackoff()
 
 	var restQueryUri string
 
@@ -115,7 +114,7 @@ func (t *Octopus) run(done chan error) {
 
 		if err := backoff.Retry(func() error {
 			return backoffPermanentError(client.GetJSON(restQueryUri, &res))
-		}, bo); err != nil {
+		}, bo()); err != nil {
 			once.Do(func() { done <- err })
 
 			t.log.ERROR.Println(err)
@@ -132,9 +131,8 @@ func (t *Octopus) run(done chan error) {
 			}
 			data = append(data, ar)
 		}
-		data.Sort()
 
-		t.data.Set(data)
+		mergeRates(t.data, data)
 		once.Do(func() { close(done) })
 	}
 }

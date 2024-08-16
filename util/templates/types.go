@@ -17,9 +17,11 @@ const (
 
 	ModbusChoiceRS485    = "rs485"
 	ModbusChoiceTCPIP    = "tcpip"
+	ModbusChoiceUDP      = "udp"
 	ModbusKeyRS485Serial = "rs485serial"
 	ModbusKeyRS485TCPIP  = "rs485tcpip"
 	ModbusKeyTCPIP       = "tcpip"
+	ModbusKeyUDP         = "udp"
 
 	ModbusParamNameId       = "id"
 	ModbusParamNameDevice   = "device"
@@ -37,7 +39,7 @@ const (
 	RenderModeInstance
 )
 
-var ValidModbusChoices = []string{ModbusChoiceRS485, ModbusChoiceTCPIP}
+var ValidModbusChoices = []string{ModbusChoiceRS485, ModbusChoiceTCPIP, ModbusChoiceUDP}
 
 const (
 	CapabilityISO151182      = "iso151182"       // ISO 15118-2 support
@@ -62,7 +64,7 @@ var predefinedTemplateProperties = []string{
 	"type", "template", "name",
 	ModbusParamNameId, ModbusParamNameDevice, ModbusParamNameBaudrate, ModbusParamNameComset,
 	ModbusParamNameURI, ModbusParamNameHost, ModbusParamNamePort, ModbusParamNameRTU,
-	ModbusKeyTCPIP, ModbusKeyRS485Serial, ModbusKeyRS485TCPIP,
+	ModbusKeyTCPIP, ModbusKeyUDP, ModbusKeyRS485Serial, ModbusKeyRS485TCPIP,
 }
 
 // TextLanguage contains language-specific texts
@@ -133,7 +135,6 @@ func (t *TextLanguage) MarshalJSON() (out []byte, err error) {
 type Requirements struct {
 	EVCC        []string     // EVCC requirements, e.g. sponsorship
 	Description TextLanguage // Description of requirements, e.g. how the device needs to be prepared
-	URI         string       // URI to a webpage with more details about the preparation requirements
 }
 
 // Linked Template
@@ -175,7 +176,6 @@ type Param struct {
 	ValidValues   []string     `json:",omitempty"` // list of valid values the user can provide
 	Choice        []string     `json:",omitempty"` // defines a set of choices, e.g. "grid", "pv", "battery", "charge" for "usage"
 	AllInOne      *bool        `json:"-"`          // defines if the defined usages can all be present in a single device
-	Requirements  Requirements `json:"-"`          // requirements for this param to be usable, only supported via Type "bool"
 
 	// TODO move somewhere else should not be part of the param definition
 	Baudrate int    `json:",omitempty"` // device specific default for modbus RS485 baudrate

@@ -2,17 +2,14 @@
 	<div class="text-center">
 		<LabelAndValue
 			class="root flex-grow-1"
-			:label="title"
+			:label="$t('main.chargingPlan.title')"
 			:class="disabled ? 'opacity-25' : 'opacity-100'"
 			data-testid="charging-plan"
 		>
 			<div class="value m-0 d-block align-items-baseline justify-content-center">
 				<button class="value-button p-0" :class="buttonColor" @click="openModal">
-					<strong v-if="minSocEnabled" class="text-decoration-underline">
-						{{ minSocLabel }}
-					</strong>
-					<strong v-else-if="targetChargeEnabled">
-						<span class="targetTimeLabel"> {{ targetTimeLabel() }}</span>
+					<strong v-if="enabled">
+						<span class="targetTimeLabel"> {{ targetTimeLabel }}</span>
 						<div
 							class="extraValue text-nowrap"
 							:class="{ 'text-warning': planTimeUnreachable }"
@@ -109,6 +106,8 @@ import collector from "../mixins/collector";
 import api from "../api";
 import { optionStep, fmtEnergy } from "../utils/energyOptions";
 
+const ONE_MINUTE = 60 * 1000;
+
 export default {
 	name: "ChargingPlan",
 	components: { LabelAndValue, ChargingPlanSettings, ChargingPlanArrival },
@@ -126,6 +125,7 @@ export default {
 		planEnergy: Number,
 		planTime: String,
 		planTimeUnreachable: Boolean,
+		planOverrun: Number,
 		rangePerSoc: Number,
 		smartCostLimit: Number,
 		smartCostType: String,
@@ -142,6 +142,8 @@ export default {
 			modal: null,
 			isModalVisible: false,
 			activeTab: "departure",
+			targetTimeLabel: "",
+			interval: null,
 		};
 	},
 	computed: {
@@ -169,26 +171,11 @@ export default {
 			}
 			return [];
 		},
-		targetChargeEnabled: function () {
-			return this.effectivePlanTime;
-		},
 		enabled: function () {
-			return this.targetChargeEnabled || this.minSocEnabled;
-		},
-		minSocLabel: function () {
-			return this.fmtPercentage(this.minSoc);
+			return this.effectivePlanTime;
 		},
 		modalId: function () {
 			return `chargingPlanModal_${this.id}`;
-		},
-		title: function () {
-			if (this.minSocEnabled) {
-				return this.$t("main.chargingPlan.titleMinSoc");
-			}
-			return this.$t("main.chargingPlan.title");
-		},
-		minSocEnabled: function () {
-			return this.minSoc > this.vehicleSoc;
 		},
 		departureTabActive: function () {
 			return this.activeTab === "departure";
@@ -220,16 +207,24 @@ export default {
 			return `loadpoints/${this.id}/`;
 		},
 	},
+	watch: {
+		effectivePlanTime() {
+			this.updateTargetTimeLabel();
+		},
+	},
 	mounted() {
 		this.modal = Modal.getOrCreateInstance(this.$refs.modal);
 		this.$refs.modal.addEventListener("show.bs.modal", this.modalVisible);
 		this.$refs.modal.addEventListener("hidden.bs.modal", this.modalInvisible);
 		this.$refs.modal.addEventListener("hide.bs.modal", this.checkUnsavedOnClose);
+		this.interval = setInterval(this.updateTargetTimeLabel, ONE_MINUTE);
+		this.updateTargetTimeLabel();
 	},
 	unmounted() {
 		this.$refs.modal?.removeEventListener("show.bs.modal", this.modalVisible);
 		this.$refs.modal?.removeEventListener("hidden.bs.modal", this.modalInvisible);
 		this.$refs.modal?.removeEventListener("hide.bs.modal", this.checkUnsavedOnClose);
+		clearInterval(this.interval);
 	},
 	methods: {
 		checkUnsavedOnClose: function () {
@@ -248,19 +243,19 @@ export default {
 		},
 		openModal() {
 			this.showDeatureTab();
-			if (this.minSocEnabled) {
+			this.modal.show();
+		},
+		openPlanModal(arrivalTab = false) {
+			if (arrivalTab) {
 				this.showArrivalTab();
+			} else {
+				this.showDeatureTab();
 			}
 			this.modal.show();
 		},
-		openPlanModal() {
-			this.showDeatureTab();
-			this.modal.show();
-		},
-		// not computed because it needs to update over time
-		targetTimeLabel: function () {
+		updateTargetTimeLabel: function () {
 			const targetDate = new Date(this.effectivePlanTime);
-			return this.fmtAbsoluteDate(targetDate);
+			this.targetTimeLabel = this.fmtAbsoluteDate(targetDate);
 		},
 		showDeatureTab: function () {
 			this.activeTab = "departure";

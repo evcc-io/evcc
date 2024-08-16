@@ -1,8 +1,14 @@
 template: obo
 products:
+  - brand: EcoHarmony
+    description:
+      generic: EVSE EPC 2.0 Plus
   - brand: OBO Bettermann
     description:
       generic: Ion
+  - brand: Viridian EV
+    description:
+      generic: EVSE EPC 2.0 Plus
 params:
   - name: modbus
     choice: ["rs485", "tcpip"]

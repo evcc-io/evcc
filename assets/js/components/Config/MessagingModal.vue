@@ -6,6 +6,7 @@
 		docs="/docs/reference/configuration/messaging"
 		:defaultYaml="defaultYaml"
 		endpoint="/config/messaging"
+		data-testid="messaging-modal"
 		@changed="$emit('changed')"
 	/>
 </template>

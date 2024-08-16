@@ -12,6 +12,8 @@ var acceptable = []string{
 	"invalid zipcode",       // grünstromindex
 	"invalid apikey format", // octopusenergy
 	"missing region",        // octopusenergy
+	"missing securitytoken", // entsoe
+	"cannot define region and postcode simultaneously", // ngeso
 }
 
 func TestTemplates(t *testing.T) {

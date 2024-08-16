@@ -61,6 +61,7 @@ export default {
 		capacity: Number,
 		vehicle: Object,
 		vehicleLimitSoc: Number,
+		planOverrun: Number,
 	},
 	emits: ["plan-removed", "plan-updated"],
 	data: function () {

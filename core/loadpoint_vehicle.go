@@ -20,12 +20,20 @@ const (
 	vehicleDetectDuration = 10 * time.Minute
 )
 
+// availableVehicles is the slice of vehicles from the coordinator that are available
+func (lp *Loadpoint) availableVehicles() []api.Vehicle {
+	if lp.coordinator == nil {
+		return nil
+	}
+	return lp.coordinator.GetVehicles(true)
+}
+
 // coordinatedVehicles is the slice of vehicles from the coordinator
 func (lp *Loadpoint) coordinatedVehicles() []api.Vehicle {
 	if lp.coordinator == nil {
 		return nil
 	}
-	return lp.coordinator.GetVehicles()
+	return lp.coordinator.GetVehicles(false)
 }
 
 // setVehicleIdentifier updated the vehicle id as read from the charger

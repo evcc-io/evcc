@@ -33,7 +33,20 @@ func templatesHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	jsonResult(w, templates.ByClass(class))
+	// filter deprecated properties
+	res := make([]templates.Template, 0)
+	for _, t := range templates.ByClass(class) {
+		params := make([]templates.Param, 0, len(t.Params))
+		for _, p := range t.Params {
+			if p.Deprecated == nil || !*p.Deprecated {
+				params = append(params, p)
+			}
+		}
+		t.Params = params
+		res = append(res, t)
+	}
+
+	jsonResult(w, res)
 }
 
 // productsHandler returns the list of products by class

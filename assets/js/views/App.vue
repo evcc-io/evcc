@@ -20,7 +20,6 @@ import PasswordModal from "../components/PasswordModal.vue";
 import LoginModal from "../components/LoginModal.vue";
 import HelpModal from "../components/HelpModal.vue";
 import collector from "../mixins/collector";
-import { updateAuthStatus } from "../auth";
 
 // assume offline if not data received for 5 minutes
 let lastDataReceived = new Date();
@@ -61,8 +60,11 @@ export default {
 				this.reload();
 			}
 		},
-		offline: function () {
-			updateAuthStatus();
+		offline: function (offline) {
+			store.offline(offline);
+			if (offline) {
+				this.reconnect();
+			}
 		},
 	},
 	computed: {
@@ -85,7 +87,6 @@ export default {
 	mounted: function () {
 		this.connect();
 		document.addEventListener("visibilitychange", this.pageVisibilityChanged, false);
-		updateAuthStatus();
 	},
 	unmounted: function () {
 		this.disconnect();
@@ -99,7 +100,6 @@ export default {
 				this.disconnect();
 			} else {
 				this.connect();
-				updateAuthStatus();
 			}
 		},
 		reconnect: function () {
@@ -110,7 +110,6 @@ export default {
 			}, 2500);
 		},
 		disconnect: function () {
-			console.log("websocket disconnecting");
 			if (this.ws) {
 				this.ws.onerror = null;
 				this.ws.onopen = null;
@@ -147,7 +146,7 @@ export default {
 
 			this.ws = new WebSocket(uri);
 			this.ws.onerror = () => {
-				console.error({ message: "Websocket error. Trying to reconnect." });
+				console.log({ message: "Websocket error. Trying to reconnect." });
 				this.ws.close();
 			};
 			this.ws.onopen = () => {
@@ -155,7 +154,6 @@ export default {
 				window.app.setOnline();
 			};
 			this.ws.onclose = () => {
-				console.log("websocket disconnected");
 				window.app.setOffline();
 				this.reconnect();
 			};

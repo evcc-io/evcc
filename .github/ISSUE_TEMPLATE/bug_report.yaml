@@ -48,6 +48,7 @@ body:
       render: text
       description: >
         Show evcc log output of the issue, see https://docs.evcc.io/en/docs/faq#how-do-i-create-a-log-file-for-error-analysis for instructions.
+        In case of issues with physical devices like chargers, meters or vehicles, make sure that the log file has level `trace` enabled for the device.
 
   - type: dropdown
     validations:

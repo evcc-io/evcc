@@ -72,6 +72,11 @@ meters:
         if (state.batterySoc > 90) state.batterySoc = 10;
         state.batterySoc;
     capacity: 13.4
+    batterymode:
+      source: js
+      vm: shared
+      script: |
+        1
 
   - name: meter_charger_1
     type: custom
@@ -208,6 +213,9 @@ vehicles:
       script: |
         "B"
     capacity: 80
+    limitsoc:
+      source: const
+      value: 90
   - name: vehicle_3
     type: template
     template: offline
@@ -248,7 +256,14 @@ tariffs:
   currency: EUR # three letter ISO-4217 currency code (default EUR)
   grid:
     type: fixed
-    price: 0.399 # EUR/kWh
+    price: 0.2 # EUR/kWh
+    zones:
+      - hours: 5-7
+        price: 0.6
+      - hours: 11-14
+        price: 0.05
+      - hours: 17-21
+        price: 0.5
   feedin:
     type: fixed
     price: 0.08 # EUR/kWh

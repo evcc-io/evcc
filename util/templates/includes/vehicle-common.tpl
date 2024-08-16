@@ -8,9 +8,6 @@ icon: {{ .icon }}
 {{- if .capacity }}
 capacity: {{ .capacity }}
 {{- end }}
-{{- if .vin }}
-vin: {{ .vin }}
-{{- end }}
 {{- if .phases }}
 phases: {{ .phases }}
 {{- end }}

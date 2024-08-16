@@ -7,8 +7,8 @@ const CONFIG_EMPTY = "config-empty.evcc.yaml";
 test.use({ baseURL: baseUrl() });
 
 test.beforeAll(async () => {
-  await start(CONFIG_EMPTY, "password.sql");
   await startSimulator();
+  await start(CONFIG_EMPTY, "password.sql");
 });
 test.afterAll(async () => {
   await stop();
@@ -18,6 +18,7 @@ test.afterAll(async () => {
 async function login(page) {
   await page.locator("#loginPassword").fill("secret");
   await page.getByRole("button", { name: "Login" }).click();
+  await expect(page.locator("#loginPassword")).not.toBeVisible();
 }
 
 async function enableExperimental(page) {

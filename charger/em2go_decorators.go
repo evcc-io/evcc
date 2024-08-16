@@ -6,12 +6,23 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateEm2Go(base *Em2Go, phaseSwitcher func(int) error, phaseGetter func() (int, error)) api.Charger {
+func decorateEm2Go(base *Em2Go, chargerEx func(float64) error, phaseSwitcher func(int) error, phaseGetter func() (int, error)) api.Charger {
 	switch {
-	case phaseGetter == nil && phaseSwitcher == nil:
+	case chargerEx == nil && phaseGetter == nil && phaseSwitcher == nil:
 		return base
 
-	case phaseGetter == nil && phaseSwitcher != nil:
+	case chargerEx != nil && phaseGetter == nil && phaseSwitcher == nil:
+		return &struct {
+			*Em2Go
+			api.ChargerEx
+		}{
+			Em2Go: base,
+			ChargerEx: &decorateEm2GoChargerExImpl{
+				chargerEx: chargerEx,
+			},
+		}
+
+	case chargerEx == nil && phaseGetter == nil && phaseSwitcher != nil:
 		return &struct {
 			*Em2Go
 			api.PhaseSwitcher
@@ -22,7 +33,22 @@ func decorateEm2Go(base *Em2Go, phaseSwitcher func(int) error, phaseGetter func(
 			},
 		}
 
-	case phaseGetter != nil && phaseSwitcher == nil:
+	case chargerEx != nil && phaseGetter == nil && phaseSwitcher != nil:
+		return &struct {
+			*Em2Go
+			api.ChargerEx
+			api.PhaseSwitcher
+		}{
+			Em2Go: base,
+			ChargerEx: &decorateEm2GoChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			PhaseSwitcher: &decorateEm2GoPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case chargerEx == nil && phaseGetter != nil && phaseSwitcher == nil:
 		return &struct {
 			*Em2Go
 			api.PhaseGetter
@@ -33,13 +59,47 @@ func decorateEm2Go(base *Em2Go, phaseSwitcher func(int) error, phaseGetter func(
 			},
 		}
 
-	case phaseGetter != nil && phaseSwitcher != nil:
+	case chargerEx != nil && phaseGetter != nil && phaseSwitcher == nil:
+		return &struct {
+			*Em2Go
+			api.ChargerEx
+			api.PhaseGetter
+		}{
+			Em2Go: base,
+			ChargerEx: &decorateEm2GoChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			PhaseGetter: &decorateEm2GoPhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+		}
+
+	case chargerEx == nil && phaseGetter != nil && phaseSwitcher != nil:
 		return &struct {
 			*Em2Go
 			api.PhaseGetter
 			api.PhaseSwitcher
 		}{
 			Em2Go: base,
+			PhaseGetter: &decorateEm2GoPhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+			PhaseSwitcher: &decorateEm2GoPhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case chargerEx != nil && phaseGetter != nil && phaseSwitcher != nil:
+		return &struct {
+			*Em2Go
+			api.ChargerEx
+			api.PhaseGetter
+			api.PhaseSwitcher
+		}{
+			Em2Go: base,
+			ChargerEx: &decorateEm2GoChargerExImpl{
+				chargerEx: chargerEx,
+			},
 			PhaseGetter: &decorateEm2GoPhaseGetterImpl{
 				phaseGetter: phaseGetter,
 			},
@@ -50,6 +110,14 @@ func decorateEm2Go(base *Em2Go, phaseSwitcher func(int) error, phaseGetter func(
 	}
 
 	return nil
+}
+
+type decorateEm2GoChargerExImpl struct {
+	chargerEx func(float64) error
+}
+
+func (impl *decorateEm2GoChargerExImpl) MaxCurrentMillis(p0 float64) error {
+	return impl.chargerEx(p0)
 }
 
 type decorateEm2GoPhaseGetterImpl struct {

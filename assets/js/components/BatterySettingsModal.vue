@@ -1,252 +1,270 @@
 <template>
-	<Teleport to="body">
-		<div
-			id="batterySettingsModal"
-			ref="modal"
-			class="modal fade text-dark modal-l"
-			data-bs-backdrop="true"
-			tabindex="-1"
-			role="dialog"
-			aria-hidden="true"
-		>
-			<div class="modal-dialog modal-dialog-centered" role="document">
-				<div class="modal-content">
-					<div class="modal-header">
-						<h5 class="modal-title">
-							{{ $t("batterySettings.modalTitle") }}
-						</h5>
-						<button
-							type="button"
-							class="btn-close"
-							data-bs-dismiss="modal"
-							aria-label="Close"
-						></button>
+	<GenericModal
+		id="batterySettingsModal"
+		:title="$t('batterySettings.modalTitle')"
+		size="xl"
+		data-testid="battery-settings-modal"
+		@open="modalVisible"
+		@closed="modalInvisible"
+	>
+		<ul v-if="gridChargePossible" class="nav nav-tabs mb-4">
+			<li class="nav-item">
+				<a
+					class="nav-link"
+					:class="{ active: usageTabActive }"
+					href="#"
+					@click.prevent="showUsageTab"
+				>
+					{{ $t("batterySettings.usageTab") }}
+				</a>
+			</li>
+			<li class="nav-item">
+				<a
+					class="nav-link"
+					:class="{ active: gridTabActive }"
+					href="#"
+					@click.prevent="showGridTab"
+				>
+					{{ $t("batterySettings.gridChargeTab") }} 🧪
+				</a>
+			</li>
+		</ul>
+
+		<div class="row" v-show="usageTabActive">
+			<p class="text-center text-md-start col-md-6 order-md-2 col-lg-3 order-lg-3 pt-lg-2">
+				{{ $t("batterySettings.batteryLevel") }}:
+				<strong>{{ fmtSoc(batterySoc) }}</strong>
+				<small v-for="(line, index) in batteryDetails" :key="index" class="d-block">
+					{{ line }}
+				</small>
+			</p>
+			<div
+				class="col-md-6 order-md-1 col-lg-3 order-lg-2 mb-5 mb-lg-0 battery justify-content-center justify-content-md-start"
+			>
+				<div class="batteryLimits">
+					<CustomSelect
+						id="batterySettingsBuffer"
+						:options="bufferOptions"
+						:selected="selectedBufferSoc"
+						class="bufferSoc p-2 end-0"
+						:class="{
+							'bufferSoc--hidden': selectedBufferSoc === selectedPrioritySoc,
+						}"
+						:style="{ top: `${topHeight}%` }"
+						@change="changeBufferSoc"
+					>
+						<span class="text-decoration-underline text-nowrap pe-none">
+							{{ fmtSoc(selectedBufferSoc) }}
+						</span>
+					</CustomSelect>
+
+					<CustomSelect
+						id="batterySettingsPriority"
+						:options="priorityOptions"
+						:selected="selectedPrioritySoc"
+						class="prioritySoc p-2 end-0"
+						:style="{ top: `${100 - bottomHeight}%` }"
+						@change="changePrioritySoc"
+					>
+						<span class="text-decoration-underline text-nowrap pe-none">
+							{{ fmtSoc(selectedPrioritySoc) }}
+						</span>
+					</CustomSelect>
+				</div>
+				<div class="progress me-md-0">
+					<div
+						class="bg-dark-green progress-bar text-light align-items-center"
+						role="button"
+						:style="{ height: `${topHeight}%` }"
+						@click="toggleBufferStart"
+					>
+						<shopicon-regular-lightning
+							size="m"
+							class="icon"
+							:style="iconStyle(topHeight)"
+						></shopicon-regular-lightning>
 					</div>
-					<div class="modal-body">
-						<div
-							class="d-flex justify-content-between align-items-center align-items-sm-start pb-2 flex-column flex-sm-row-reverse"
+					<div
+						class="bg-darker-green progress-bar text-light align-items-center"
+						:style="{ height: `${middleHeight}%` }"
+					>
+						<shopicon-regular-car3
+							size="m"
+							class="icon"
+							:style="iconStyle(middleHeight)"
+						></shopicon-regular-car3>
+					</div>
+					<div
+						class="bg-darkest-green progress-bar text-light align-items-center"
+						:style="{ height: `${bottomHeight}%` }"
+					>
+						<shopicon-regular-home
+							size="m"
+							class="icon"
+							:style="iconStyle(bottomHeight)"
+						></shopicon-regular-home>
+					</div>
+					<div
+						class="batterySoc ps-0 bg-white pe-none"
+						:style="{ top: `${100 - batterySoc}%` }"
+					></div>
+					<div
+						class="bufferStartIndicator pe-none"
+						:class="{
+							'bufferStartIndicator--hidden':
+								!selectedBufferStartSoc || selectedBufferSoc === 100,
+						}"
+						:style="{ top: `${bufferStartTop}%` }"
+					>
+						<div class="bufferStartIndicator__left"></div>
+						<div class="bufferStartIndicator__right"></div>
+					</div>
+				</div>
+			</div>
+			<div class="col-md-12 order-md-3 col-lg-6 order-lg-1 legend pt-lg-2">
+				<p class="d-flex">
+					<shopicon-regular-lightning
+						size="s"
+						class="flex-shrink-0 me-2"
+					></shopicon-regular-lightning>
+					<span class="d-block">
+						{{ $t("batterySettings.legendTopName") }}
+						<i18n-t
+							keypath="batterySettings.legendTopSubline"
+							tag="small"
+							class="d-block"
+							scope="global"
 						>
-							<div class="battery mb-5 mb-sm-3 me-5 me-sm-0 w-sm-50">
-								<div class="batteryLimits">
-									<label
-										class="bufferSoc p-2 end-0"
-										role="button"
-										:class="{
-											'bufferSoc--hidden':
-												selectedBufferSoc === selectedPrioritySoc,
-										}"
-										:style="{ top: `${topHeight}%` }"
-									>
-										<select
-											:value="selectedBufferSoc"
-											class="custom-select"
-											@change="changeBufferSoc"
-										>
-											<option
-												v-for="{ value, name, disabled } in bufferOptions"
-												:key="value"
-												:value="value"
-												:disabled="disabled"
-											>
-												{{ name }}
-											</option>
-										</select>
-										<span class="text-decoration-underline text-nowrap pe-none">
-											{{ fmtSoc(selectedBufferSoc) }}
-										</span>
-									</label>
-									<label
-										class="prioritySoc p-2 end-0"
-										role="button"
-										:style="{ top: `${100 - bottomHeight}%` }"
-									>
-										<select
-											:value="selectedPrioritySoc"
-											class="custom-select"
-											@change="changePrioritySoc"
-										>
-											<option
-												v-for="{ value, name, disabled } in priorityOptions"
-												:key="value"
-												:value="value"
-												:disabled="disabled"
-											>
-												{{ name }}
-											</option>
-										</select>
-										<span class="text-decoration-underline text-nowrap pe-none">
-											{{ fmtSoc(selectedPrioritySoc) }}
-										</span>
-									</label>
-								</div>
-								<div class="progress">
-									<div
-										class="bg-dark-green progress-bar text-light align-items-center"
-										role="button"
-										:style="{ height: `${topHeight}%` }"
-										@click="toggleBufferStart"
-									>
-										<shopicon-regular-lightning
-											size="m"
-											class="icon"
-											:style="iconStyle(topHeight)"
-										></shopicon-regular-lightning>
-									</div>
-									<div
-										class="bg-darker-green progress-bar text-light align-items-center"
-										:style="{ height: `${middleHeight}%` }"
-									>
-										<shopicon-regular-car3
-											size="m"
-											class="icon"
-											:style="iconStyle(middleHeight)"
-										></shopicon-regular-car3>
-									</div>
-									<div
-										class="bg-darkest-green progress-bar text-light align-items-center"
-										:style="{ height: `${bottomHeight}%` }"
-									>
-										<shopicon-regular-home
-											size="m"
-											class="icon"
-											:style="iconStyle(bottomHeight)"
-										></shopicon-regular-home>
-									</div>
-									<div
-										class="batterySoc ps-0 bg-white pe-none"
-										:style="{ top: `${100 - batterySoc}%` }"
-									></div>
-									<div
-										class="bufferStartIndicator pe-none"
-										:class="{
-											'bufferStartIndicator--hidden':
-												!selectedBufferStartSoc ||
-												selectedBufferSoc === 100,
-										}"
-										:style="{ top: `${bufferStartTop}%` }"
-									>
-										<div class="bufferStartIndicator__left"></div>
-										<div class="bufferStartIndicator__right"></div>
-									</div>
-								</div>
-							</div>
-							<div class="legend me-sm-4 align-self-start w-sm-50">
-								<p>
-									{{ $t("batterySettings.batteryLevel") }}:
-									<strong>{{ fmtSoc(batterySoc) }}</strong>
-									<small
-										v-for="(line, index) in batteryDetails"
-										:key="index"
-										class="d-block"
-									>
-										{{ line }}
-									</small>
-								</p>
-								<p>{{ $t("batterySettings.legendTitle") }}</p>
-								<p class="d-flex">
-									<shopicon-regular-lightning
-										size="s"
-										class="flex-shrink-0 me-2"
-									></shopicon-regular-lightning>
-									<span class="d-block">
-										{{ $t("batterySettings.legendTopName") }}
-										<small v-if="selectedBufferSoc == 100" class="d-block">
-											{{ $t("batterySettings.legendTopSubline") }}
-										</small>
-										<small v-else class="d-block">
-											{{ $t("batterySettings.legendTopAutostart") }}
-											<label
-												for="bufferStartSelect"
-												class="position-relative d-block"
-											>
-												<select
-													id="bufferStartSelect"
-													class="custom-select"
-													:value="selectedBufferStartSoc"
-													@change="changeBufferStart"
-												>
-													<option
-														v-for="option in bufferStartOptions"
-														:key="option.value"
-														:value="option.value"
-													>
-														{{ option.name }}
-													</option>
-												</select>
-												<span class="text-decoration-underline">
-													{{ bufferStartOption.name }}
-												</span>
-											</label>
-										</small>
+							<template #soc>
+								<CustomSelect
+									id="batterySettingsBufferTop"
+									class="custom-select-inline"
+									:options="bufferOptions"
+									:selected="selectedBufferSoc"
+									@change="changeBufferSoc"
+								>
+									<span class="text-decoration-underline">
+										{{ fmtSoc(selectedBufferSoc) }}
 									</span>
-								</p>
-								<p class="d-flex">
-									<shopicon-regular-car3
-										size="s"
-										class="flex-shrink-0 me-2"
-									></shopicon-regular-car3>
-									<span class="d-block">
-										{{ $t("batterySettings.legendMiddleName") }}
-										<small class="d-block">
-											{{ $t("batterySettings.legendMiddleSubline") }}
-										</small>
+								</CustomSelect>
+							</template>
+						</i18n-t>
+
+						<small class="d-block">
+							{{ $t("batterySettings.legendTopAutostart") }}
+							<CustomSelect
+								id="batterySettingsBufferStart"
+								class="custom-select-inline"
+								:selected="selectedBufferStartSoc"
+								:options="bufferStartOptions"
+								@change="changeBufferStart"
+							>
+								<span class="text-decoration-underline">
+									{{ bufferStartOption.name }}
+								</span>
+							</CustomSelect>
+						</small>
+					</span>
+				</p>
+				<p class="d-flex">
+					<shopicon-regular-car3
+						size="s"
+						class="flex-shrink-0 me-2"
+					></shopicon-regular-car3>
+					<span class="d-block">
+						{{ $t("batterySettings.legendMiddleName") }}
+						<i18n-t
+							keypath="batterySettings.legendMiddleSubline"
+							tag="small"
+							class="d-block"
+							scope="global"
+						>
+							<template #soc>
+								<CustomSelect
+									id="batterySettingsPriorityMiddle"
+									class="custom-select-inline"
+									:options="priorityOptions"
+									:selected="selectedPrioritySoc"
+									@change="changePrioritySoc"
+								>
+									<span class="text-decoration-underline">
+										{{ fmtSoc(selectedPrioritySoc) }}
 									</span>
-								</p>
-								<p class="d-flex">
-									<shopicon-regular-home
-										size="s"
-										class="flex-shrink-0 me-2"
-									></shopicon-regular-home>
-									<span class="d-block">
-										{{ $t("batterySettings.legendBottomName") }}
-										<small class="d-block">
-											{{ $t("batterySettings.legendBottomSubline") }}
-										</small>
+								</CustomSelect>
+							</template>
+						</i18n-t>
+					</span>
+				</p>
+				<p class="d-flex">
+					<shopicon-regular-home
+						size="s"
+						class="flex-shrink-0 me-2"
+					></shopicon-regular-home>
+					<span class="d-block">
+						{{ $t("batterySettings.legendBottomName") }}
+						<i18n-t
+							keypath="batterySettings.legendBottomSubline"
+							tag="small"
+							class="d-block"
+							scope="global"
+						>
+							<template #soc>
+								<CustomSelect
+									id="batterySettingsPriorityBottom"
+									class="custom-select-inline"
+									:options="priorityOptions"
+									:selected="selectedPrioritySoc"
+									@change="changePrioritySoc"
+								>
+									<span class="text-decoration-underline">
+										{{ fmtSoc(selectedPrioritySoc) }}
 									</span>
-								</p>
-								<p class="small text-muted">
-									<strong class="text-evcc">
-										{{ $t("batterySettings.disclaimerHint") }}
-									</strong>
-									{{ $t("batterySettings.disclaimerText") }}
-								</p>
-							</div>
-						</div>
-						<div v-if="controllable">
-							<div class="form-check form-switch">
-								<input
-									id="batteryDischargeControl"
-									:checked="batteryDischargeControl"
-									class="form-check-input"
-									type="checkbox"
-									role="switch"
-									@change="changeDischargeControl"
-								/>
-								<div class="form-check-label">
-									<label for="batteryDischargeControl">
-										{{ $t("batterySettings.discharge") }}
-									</label>
-								</div>
-							</div>
-						</div>
+								</CustomSelect>
+							</template>
+						</i18n-t>
+					</span>
+				</p>
+				<div class="form-check form-switch mt-4" v-if="controllable">
+					<input
+						id="batteryDischargeControl"
+						:checked="batteryDischargeControl"
+						class="form-check-input"
+						type="checkbox"
+						role="switch"
+						@change="changeDischargeControl"
+					/>
+					<div class="form-check-label">
+						<label for="batteryDischargeControl">
+							{{ $t("batterySettings.discharge") }}
+						</label>
 					</div>
 				</div>
 			</div>
 		</div>
-	</Teleport>
+		<SmartCostLimit
+			v-if="gridChargePossible"
+			v-show="gridTabActive"
+			v-bind="smartCostLimitProps"
+		/>
+	</GenericModal>
 </template>
 
 <script>
 import "@h2d2/shopicons/es/regular/lightning";
 import "@h2d2/shopicons/es/regular/car3";
 import "@h2d2/shopicons/es/regular/home";
+import SmartCostLimit from "./SmartCostLimit.vue";
+import CustomSelect from "./CustomSelect.vue";
+import GenericModal from "./GenericModal.vue";
 import formatter from "../mixins/formatter";
 import collector from "../mixins/collector";
 import api from "../api";
+import smartCostAvailable from "../utils/smartCostAvailable";
 
 export default {
 	name: "BatterySettingsModal",
 	mixins: [formatter, collector],
+	components: { SmartCostLimit, CustomSelect, GenericModal },
 	props: {
 		bufferSoc: Number,
 		prioritySoc: Number,
@@ -254,6 +272,10 @@ export default {
 		bufferStartSoc: Number,
 		batteryDischargeControl: Boolean,
 		battery: { type: Array, default: () => [] },
+		batteryGridChargeLimit: Number,
+		smartCostType: String,
+		tariffGrid: Number,
+		currency: String,
 	},
 	data: function () {
 		return {
@@ -261,9 +283,13 @@ export default {
 			selectedBufferSoc: 100,
 			selectedPrioritySoc: 0,
 			selectedBufferStartSoc: 0,
+			gridTabActive: false,
 		};
 	},
 	computed: {
+		usageTabActive() {
+			return !this.gridTabActive;
+		},
 		priorityOptions() {
 			const options = [];
 			for (let i = 100; i >= 0; i -= 5) {
@@ -277,6 +303,14 @@ export default {
 		},
 		controllable() {
 			return this.battery.some(({ controllable }) => controllable);
+		},
+		gridChargePossible() {
+			return (
+				this.controllable &&
+				this.isModalVisible &&
+				this.smartCostAvailable &&
+				this.$hiddenFeatures()
+			);
 		},
 		bufferOptions() {
 			const options = [];
@@ -345,6 +379,15 @@ export default {
 					return `${name}${formattedEnergy}${formattedSoc}`;
 				});
 		},
+		smartCostLimitProps() {
+			return {
+				...this.collectProps(SmartCostLimit),
+				smartCostLimit: this.batteryGridChargeLimit,
+			};
+		},
+		smartCostAvailable() {
+			return smartCostAvailable(this.smartCostType);
+		},
 	},
 	watch: {
 		prioritySoc(soc) {
@@ -361,14 +404,14 @@ export default {
 		this.selectedBufferSoc = this.bufferSoc || 100;
 		this.selectedPrioritySoc = this.prioritySoc;
 		this.selectedBufferStartSoc = this.bufferStartSoc;
-		this.$refs.modal.addEventListener("show.bs.modal", this.modalVisible);
-		this.$refs.modal.addEventListener("hidden.bs.modal", this.modalInvisible);
-	},
-	unmounted() {
-		this.$refs.modal?.removeEventListener("show.bs.modal", this.modalVisible);
-		this.$refs.modal?.removeEventListener("hidden.bs.modal", this.modalInvisible);
 	},
 	methods: {
+		showGridTab() {
+			this.gridTabActive = true;
+		},
+		showUsageTab() {
+			this.gridTabActive = false;
+		},
 		modalVisible: function () {
 			this.isModalVisible = true;
 		},
@@ -451,12 +494,8 @@ export default {
 
 <style scoped>
 .battery {
-	height: 300px;
+	height: 285px;
 	display: flex;
-}
-
-.legend {
-	min-width: 260px;
 }
 
 .batteryLimits {
@@ -467,7 +506,7 @@ export default {
 .bufferStart,
 .bufferSoc,
 .prioritySoc {
-	position: absolute;
+	position: absolute !important;
 	transform: translateY(-50%);
 	transition-property: top, opacity;
 	transition-timing-function: linear;
@@ -523,7 +562,8 @@ export default {
 	flex: 1;
 	height: 100%;
 	min-width: 100px;
-	max-width: 150px;
+	max-width: 130px;
+	margin-right: 50px;
 	flex-direction: column;
 	position: relative;
 	border-radius: 1rem;
@@ -537,14 +577,7 @@ export default {
 	z-index: 1;
 	border-radius: 0.5rem;
 }
-.custom-select {
-	left: 0;
-	top: 0;
-	bottom: 0;
-	right: 0;
-	cursor: pointer;
-	position: absolute;
-	opacity: 0;
-	-webkit-appearance: menulist-button;
+.custom-select-inline {
+	display: inline-block !important;
 }
 </style>

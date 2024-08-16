@@ -125,6 +125,10 @@ func (p *Javascript) handleGetter() (any, error) {
 }
 
 func (p *Javascript) handleSetter(param string, val any) error {
+	if err := transformInputs(p.in, p.setParamSync); err != nil {
+		return err
+	}
+
 	javascript.Lock()
 	if err := p.setParam(param, val); err != nil {
 		javascript.Unlock()

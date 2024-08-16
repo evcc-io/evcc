@@ -61,3 +61,17 @@ var _ api.MeterEnergy = (*HomeWizard)(nil)
 func (c *HomeWizard) TotalEnergy() (float64, error) {
 	return c.conn.TotalEnergy()
 }
+
+var _ api.PhaseCurrents = (*HomeWizard)(nil)
+
+// Currents implements the api.PhaseCurrents interface
+func (c *HomeWizard) Currents() (float64, float64, float64, error) {
+	return c.conn.Currents()
+}
+
+var _ api.PhaseVoltages = (*HomeWizard)(nil)
+
+// Voltages implements the api.PhaseVoltages interface
+func (c *HomeWizard) Voltages() (float64, float64, float64, error) {
+	return c.conn.Voltages()
+}

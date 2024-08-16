@@ -1,4 +1,5 @@
 template: porsche
+deprecated: true
 products:
   - brand: Porsche
 params:

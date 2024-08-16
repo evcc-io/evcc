@@ -22,7 +22,11 @@
 				</button>
 				{{ $t("offline.restarting") }}
 			</div>
-			<div v-else-if="restartNeeded" class="d-flex align-items-center">
+			<div
+				v-else-if="restartNeeded"
+				class="d-flex align-items-center"
+				data-testid="restart-needed"
+			>
 				<button
 					class="btn btn-secondary me-2 btn-sm d-flex align-items-center"
 					type="button"
@@ -40,6 +44,7 @@
 			<div
 				v-else-if="showError"
 				class="d-flex align-items-start container px-4 justify-content-center"
+				data-testid="fatal-error"
 			>
 				<shopicon-regular-car1
 					size="m"
@@ -48,7 +53,7 @@
 				<div class="mx-4 mt-1">
 					<div>
 						<strong>
-							Error during startup. Check your configuration and restart.
+							{{ $t("offline.configurationError") }}
 						</strong>
 					</div>
 					<div v-if="fatal">{{ fatal.error }}</div>

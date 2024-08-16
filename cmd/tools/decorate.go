@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	_ "embed"
-	"errors"
 	"fmt"
 	"go/format"
 	"io"
@@ -12,6 +11,7 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/go-sprout/sprout"
 	combinations "github.com/mxschmitt/golang-combinations"
 	"github.com/spf13/pflag"
 	"golang.org/x/tools/imports"
@@ -33,22 +33,7 @@ func generate(out io.Writer, packageName, functionName, baseType string, dynamic
 	types := make(map[string]typeStruct, len(dynamicTypes))
 	combos := make([]string, 0)
 
-	tmpl, err := template.New("gen").Funcs(template.FuncMap{
-		// dict combines key value pairs for passing structs into templates
-		"dict": func(values ...interface{}) (map[string]interface{}, error) {
-			if len(values)%2 != 0 {
-				return nil, errors.New("invalid dict call")
-			}
-			dict := make(map[string]interface{}, len(values)/2)
-			for i := 0; i < len(values); i += 2 {
-				key, ok := values[i].(string)
-				if !ok {
-					return nil, errors.New("dict keys must be strings")
-				}
-				dict[key] = values[i+1]
-			}
-			return dict, nil
-		},
+	tmpl, err := template.New("gen").Funcs(sprout.FuncMap()).Funcs(template.FuncMap{
 		// contains checks if slice contains string
 		"contains": slices.Contains[[]string, string],
 		// ordered returns a slice of typeStructs ordered by dynamicType

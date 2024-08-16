@@ -126,3 +126,23 @@ func (o *watchdogProvider) FloatSetter(param string) (func(float64) error, error
 
 	return setter(o, set, reset), nil
 }
+
+var _ SetBoolProvider = (*watchdogProvider)(nil)
+
+func (o *watchdogProvider) BoolSetter(param string) (func(bool) error, error) {
+	set, err := NewBoolSetterFromConfig(param, o.set)
+	if err != nil {
+		return nil, err
+	}
+
+	var reset *bool
+	if o.reset != nil {
+		val, err := strconv.ParseBool(*o.reset)
+		if err != nil {
+			return nil, err
+		}
+		reset = &val
+	}
+
+	return setter(o, set, reset), nil
+}

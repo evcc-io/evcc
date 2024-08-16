@@ -2,8 +2,8 @@ package core
 
 import (
 	"github.com/evcc-io/evcc/core/keys"
-	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
+	"github.com/samber/lo"
 )
 
 type circuitStruct struct {
@@ -28,7 +28,7 @@ func (site *Site) publishCircuits() {
 		}
 
 		if instance.GetMaxCurrent() > 0 {
-			data.Current = util.PtrTo(instance.GetMaxPhaseCurrent())
+			data.Current = lo.EmptyableToPtr(instance.GetMaxPhaseCurrent())
 		}
 
 		res[c.Config().Name] = data

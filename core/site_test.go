@@ -3,7 +3,9 @@ package core
 import (
 	"testing"
 
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestSitePower(t *testing.T) {
@@ -120,7 +122,7 @@ func TestGreenShare(t *testing.T) {
 	}
 
 	for _, tc := range tc {
-		t.Logf(tc.title)
+		t.Log(tc.title)
 
 		s := &Site{
 			gridPower:    tc.grid,
@@ -141,5 +143,33 @@ func TestGreenShare(t *testing.T) {
 		if greenShareLoadpoints != tc.greenShareLoadpoints {
 			t.Errorf("greenShareLoadpoints wanted %.3f, got %.3f", tc.greenShareLoadpoints, greenShareLoadpoints)
 		}
+	}
+}
+
+func TestRequiredBatteryMode(t *testing.T) {
+	tc := []struct {
+		gridChargeActive bool
+		mode, res        api.BatteryMode
+	}{
+		{false, api.BatteryUnknown, api.BatteryUnknown}, // ignore
+		{false, api.BatteryNormal, api.BatteryUnknown},  // ignore
+		{false, api.BatteryHold, api.BatteryNormal},
+		{false, api.BatteryCharge, api.BatteryNormal},
+
+		{true, api.BatteryUnknown, api.BatteryCharge},
+		{true, api.BatteryNormal, api.BatteryCharge},
+		{true, api.BatteryHold, api.BatteryCharge},
+		{true, api.BatteryCharge, api.BatteryUnknown}, // ignore
+	}
+
+	for _, tc := range tc {
+		t.Logf("%+v", tc)
+
+		s := &Site{
+			batteryMode: tc.mode,
+		}
+
+		res := s.requiredBatteryMode(tc.gridChargeActive, api.Rate{})
+		assert.Equal(t, tc.res, res, "expected %s, got %s", tc.res, res)
 	}
 }

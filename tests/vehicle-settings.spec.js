@@ -44,7 +44,7 @@ test.describe("minSoc", async () => {
     await expect(page.getByText("charged to 20% in solar mode")).toBeVisible();
   });
 
-  test("show minsoc instead of plan when minsoc is active", async ({ page }) => {
+  test("show minsoc indicator when minsoc is active", async ({ page }) => {
     await page.goto("/");
 
     await expect(page.getByTestId("charging-plan")).toContainText("Plan");
@@ -53,14 +53,14 @@ test.describe("minSoc", async () => {
     await page.getByRole("combobox", { name: "Min. charge %" }).selectOption("50%");
     await page.getByRole("button", { name: "Close" }).click();
 
-    await expect(page.getByTestId("charging-plan")).toContainText("Min charge");
-    await expect(page.getByTestId("vehicle-status")).toHaveText("Minimum charging to 50%.");
-    await page.getByTestId("charging-plan").getByRole("button", { name: "50%" }).click();
+    await expect(page.getByTestId("vehicle-status-minsoc")).toBeVisible();
+    await expect(page.getByTestId("vehicle-status-minsoc")).toHaveText("50%");
 
+    await page.getByTestId("vehicle-status-minsoc").click();
     await page.getByRole("combobox", { name: "Min. charge %" }).selectOption("---");
     await page.getByRole("button", { name: "Close" }).click();
-    await expect(page.getByTestId("charging-plan")).toContainText("Plan");
-    await expect(page.getByTestId("charging-plan").getByRole("button")).toHaveText("none");
+
+    await expect(page.getByTestId("vehicle-status-minsoc")).not.toBeVisible();
   });
 });
 
