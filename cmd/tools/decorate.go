@@ -11,6 +11,7 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/go-andiamo/splitter"
 	"github.com/go-sprout/sprout"
 	combinations "github.com/mxschmitt/golang-combinations"
 	"github.com/spf13/pflag"
@@ -20,13 +21,21 @@ import (
 //go:embed decorate.tpl
 var srcTmpl string
 
+type functionTypeSignature struct {
+	function, signature string
+}
 type dynamicType struct {
-	typ, function, signature string
+	typ                string
+	functionSignatures []functionTypeSignature
 }
 
+type functionStruct struct {
+	Signature, Function, VarName, ReturnTypes string
+	Params                                    []string
+}
 type typeStruct struct {
-	Type, ShortType, Signature, Function, VarName, ReturnTypes string
-	Params                                                     []string
+	Type, ShortType string
+	Functions       []functionStruct
 }
 
 func generate(out io.Writer, packageName, functionName, baseType string, dynamicTypes ...dynamicType) error {
@@ -53,29 +62,42 @@ func generate(out io.Writer, packageName, functionName, baseType string, dynamic
 	for _, dt := range dynamicTypes {
 		parts := strings.SplitN(dt.typ, ".", 2)
 
-		openingBrace := strings.Index(dt.signature, "(")
-		closingBrace := strings.Index(dt.signature, ")")
-		paramsStr := dt.signature[openingBrace+1 : closingBrace]
-
-		paramsStr = strings.TrimSpace(paramsStr)
-
-		var params []string
-		if len(paramsStr) > 0 {
-			params = strings.Split(paramsStr, ",")
+		typ := typeStruct{
+			Type:      dt.typ,
+			ShortType: parts[len(parts)-1],
 		}
 
-		returnValuesStr := dt.signature[closingBrace+1:]
+		fmt.Println("")
+		fmt.Println(parts)
+		// fmt.Println(typ)
 
-		types[dt.typ] = typeStruct{
-			Type:        dt.typ,
-			ShortType:   parts[1],
-			VarName:     strings.ToLower(parts[1][:1]) + parts[1][1:],
-			Signature:   dt.signature,
-			Function:    dt.function,
-			Params:      params,
-			ReturnTypes: returnValuesStr,
+		for _, fs := range dt.functionSignatures {
+			openingBrace := strings.Index(fs.signature, "(")
+			closingBrace := strings.Index(fs.signature, ")")
+			paramsStr := fs.signature[openingBrace+1 : closingBrace]
+
+			// paramsStr = strings.TrimSpace(paramsStr)
+
+			// var params []string
+			// if len(paramsStr) > 0 {
+			// 	params = strings.Split(paramsStr, ",")
+			// }
+
+			returnValuesStr := fs.signature[closingBrace+1:]
+
+			function := functionStruct{
+				VarName:     strings.ToLower(typ.ShortType[:1]) + typ.ShortType[1:],
+				Signature:   fs.signature,
+				Function:    fs.function,
+				Params:      strings.Split(paramsStr, ","),
+				ReturnTypes: returnValuesStr,
+			}
+			fmt.Println(function)
+
+			typ.Functions = append(typ.Functions, function)
 		}
 
+		types[dt.typ] = typ
 		combos = append(combos, dt.typ)
 	}
 
@@ -127,6 +149,12 @@ func Usage() {
 	pflag.PrintDefaults()
 }
 
+func splitSignatures(s string) []string {
+	split, _ := splitter.NewSplitter(',', splitter.Parenthesis)
+	res, _ := split.Split(s)
+	return res
+}
+
 func main() {
 	pflag.Usage = Usage
 	pflag.Parse()
@@ -143,10 +171,31 @@ func main() {
 
 	var dynamicTypes []dynamicType
 	for _, v := range *types {
-		split := strings.SplitN(v, ",", 3)
-		dt := dynamicType{split[0], split[1], split[2]}
+		split := strings.SplitN(v, ",", 2)
+		// dt := dynamicType{split[0], split[1], split[2]}
+		// dynamicTypes = append(dynamicTypes, dt)
+
+		dt := dynamicType{typ: split[0]}
+
+		// fmt.Println("")
+		remainder := split[1]
+		for len(remainder) > 0 {
+			split2 := strings.SplitN(remainder, ",", 2)
+
+			iface := split2[0]
+			signatures := splitSignatures(split2[1])
+			signature := signatures[0]
+			// fmt.Println(iface, signature)
+			remainder = strings.Join(signatures[1:], ",")
+
+			dt.functionSignatures = append(dt.functionSignatures, functionTypeSignature{iface, signature})
+		}
+
 		dynamicTypes = append(dynamicTypes, dt)
 	}
+
+	fmt.Println(dynamicTypes)
+	// os.Exit(1)
 
 	var buf bytes.Buffer
 	if err := generate(&buf, *pkg, *function, *base, dynamicTypes...); err != nil {
