@@ -103,21 +103,14 @@ func generate(out io.Writer, packageName, functionName, baseType string, dynamic
 	}
 
 	validCombos := make([][]string, 0)
+COMBO:
 	for _, c := range combinations.All(combos) {
-		var exclude bool
 		for master, details := range dependents {
-			// if slices.Contains(c, master) || !slices.Contains(c, master) && intersection(c, details) == nil {
-			// 	validCombos = append(validCombos, c)
-			// 	break
-			// }
 			if !slices.Contains(c, master) && intersection(c, details) != nil {
-				exclude = true
-				break
+				continue COMBO
 			}
 		}
-		if !exclude {
-			validCombos = append(validCombos, c)
-		}
+		validCombos = append(validCombos, c)
 	}
 
 	vars := struct {
