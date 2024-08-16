@@ -30,12 +30,12 @@ type dynamicType struct {
 }
 
 type functionStruct struct {
-	Signature, Function, VarName, ReturnTypes string
-	Params                                    []string
+	Signature, Function, ReturnTypes string
+	Params                           []string
 }
 type typeStruct struct {
-	Type, ShortType string
-	Functions       []functionStruct
+	Type, ShortType, VarName string
+	Functions                []functionStruct
 }
 
 func generate(out io.Writer, packageName, functionName, baseType string, dynamicTypes ...dynamicType) error {
@@ -61,10 +61,12 @@ func generate(out io.Writer, packageName, functionName, baseType string, dynamic
 
 	for _, dt := range dynamicTypes {
 		parts := strings.SplitN(dt.typ, ".", 2)
+		lastPart := parts[len(parts)-1]
 
 		typ := typeStruct{
 			Type:      dt.typ,
-			ShortType: parts[len(parts)-1],
+			ShortType: lastPart,
+			VarName:   strings.ToLower(lastPart[:1]) + lastPart[1:],
 		}
 
 		fmt.Println("")
@@ -86,7 +88,6 @@ func generate(out io.Writer, packageName, functionName, baseType string, dynamic
 			returnValuesStr := fs.signature[closingBrace+1:]
 
 			function := functionStruct{
-				VarName:     strings.ToLower(typ.ShortType[:1]) + typ.ShortType[1:],
 				Signature:   fs.signature,
 				Function:    fs.function,
 				Params:      strings.Split(paramsStr, ","),
@@ -233,6 +234,8 @@ func main() {
 	if err != nil {
 		formatted = []byte(generated)
 	}
+
+	fmt.Println(string(formatted))
 
 	formatted, err = imports.Process(name, formatted, nil)
 	if err != nil {
