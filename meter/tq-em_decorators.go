@@ -10,17 +10,6 @@ func decorateTqEm(base api.Meter, phaseCurrents func() (float64, float64, float6
 	switch {
 	case phaseCurrents == nil:
 		return base
-
-	case phaseCurrents != nil:
-		return &struct {
-			api.Meter
-			api.PhaseCurrents
-		}{
-			Meter: base,
-			PhaseCurrents: &decorateTqEmPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-		}
 	}
 
 	return nil

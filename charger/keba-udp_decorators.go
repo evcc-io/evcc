@@ -22,17 +22,6 @@ func decorateKebaUdp(base *KebaUdp, meter func() (float64, error), meterEnergy f
 			},
 		}
 
-	case meter == nil && meterEnergy != nil && phaseCurrents == nil:
-		return &struct {
-			*KebaUdp
-			api.MeterEnergy
-		}{
-			KebaUdp: base,
-			MeterEnergy: &decorateKebaUdpMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-		}
-
 	case meter != nil && meterEnergy != nil && phaseCurrents == nil:
 		return &struct {
 			*KebaUdp
@@ -48,17 +37,6 @@ func decorateKebaUdp(base *KebaUdp, meter func() (float64, error), meterEnergy f
 			},
 		}
 
-	case meter == nil && meterEnergy == nil && phaseCurrents != nil:
-		return &struct {
-			*KebaUdp
-			api.PhaseCurrents
-		}{
-			KebaUdp: base,
-			PhaseCurrents: &decorateKebaUdpPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-		}
-
 	case meter != nil && meterEnergy == nil && phaseCurrents != nil:
 		return &struct {
 			*KebaUdp
@@ -68,21 +46,6 @@ func decorateKebaUdp(base *KebaUdp, meter func() (float64, error), meterEnergy f
 			KebaUdp: base,
 			Meter: &decorateKebaUdpMeterImpl{
 				meter: meter,
-			},
-			PhaseCurrents: &decorateKebaUdpPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-		}
-
-	case meter == nil && meterEnergy != nil && phaseCurrents != nil:
-		return &struct {
-			*KebaUdp
-			api.MeterEnergy
-			api.PhaseCurrents
-		}{
-			KebaUdp: base,
-			MeterEnergy: &decorateKebaUdpMeterEnergyImpl{
-				meterEnergy: meterEnergy,
 			},
 			PhaseCurrents: &decorateKebaUdpPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,

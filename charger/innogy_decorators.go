@@ -10,43 +10,6 @@ func decorateInnogy(base *Innogy, meterEnergy func() (float64, error), phaseVolt
 	switch {
 	case meterEnergy == nil && phaseVoltages == nil:
 		return base
-
-	case meterEnergy != nil && phaseVoltages == nil:
-		return &struct {
-			*Innogy
-			api.MeterEnergy
-		}{
-			Innogy: base,
-			MeterEnergy: &decorateInnogyMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-		}
-
-	case meterEnergy == nil && phaseVoltages != nil:
-		return &struct {
-			*Innogy
-			api.PhaseVoltages
-		}{
-			Innogy: base,
-			PhaseVoltages: &decorateInnogyPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-		}
-
-	case meterEnergy != nil && phaseVoltages != nil:
-		return &struct {
-			*Innogy
-			api.MeterEnergy
-			api.PhaseVoltages
-		}{
-			Innogy: base,
-			MeterEnergy: &decorateInnogyMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseVoltages: &decorateInnogyPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-		}
 	}
 
 	return nil

@@ -29,6 +29,22 @@ type typeStruct struct {
 	Params                                                     []string
 }
 
+var dependents = map[string][]string{
+	"api.Meter":         {"api.MeterEnergy", "api.PhaseCurrents", "api.PhaseVoltages", "api.PhasePowers"},
+	"api.PhaseSwitcher": {"api.PhaseGetter"},
+}
+
+// intersection returns the intersection of two slices
+func intersection[T comparable](a, b []T) []T {
+	var res []T
+	for _, el := range a {
+		if slices.Contains(b, el) {
+			res = append(res, el)
+		}
+	}
+	return slices.Compact(res)
+}
+
 func generate(out io.Writer, packageName, functionName, baseType string, dynamicTypes ...dynamicType) error {
 	types := make(map[string]typeStruct, len(dynamicTypes))
 	combos := make([]string, 0)
@@ -52,28 +68,25 @@ func generate(out io.Writer, packageName, functionName, baseType string, dynamic
 
 	for _, dt := range dynamicTypes {
 		parts := strings.SplitN(dt.typ, ".", 2)
+		lastPart := parts[len(parts)-1]
 
 		openingBrace := strings.Index(dt.signature, "(")
 		closingBrace := strings.Index(dt.signature, ")")
 		paramsStr := dt.signature[openingBrace+1 : closingBrace]
 
-		paramsStr = strings.TrimSpace(paramsStr)
-
 		var params []string
-		if len(paramsStr) > 0 {
+		if paramsStr = strings.TrimSpace(paramsStr); len(paramsStr) > 0 {
 			params = strings.Split(paramsStr, ",")
 		}
 
-		returnValuesStr := dt.signature[closingBrace+1:]
-
 		types[dt.typ] = typeStruct{
 			Type:        dt.typ,
-			ShortType:   parts[1],
-			VarName:     strings.ToLower(parts[1][:1]) + parts[1][1:],
+			ShortType:   lastPart,
+			VarName:     strings.ToLower(lastPart[:1]) + lastPart[1:],
 			Signature:   dt.signature,
 			Function:    dt.function,
 			Params:      params,
-			ReturnTypes: returnValuesStr,
+			ReturnTypes: dt.signature[closingBrace+1:],
 		}
 
 		combos = append(combos, dt.typ)
@@ -87,6 +100,24 @@ func generate(out io.Writer, packageName, functionName, baseType string, dynamic
 	shortBase := strings.TrimLeft(baseType, "*")
 	if baseTypeParts := strings.SplitN(baseType, ".", 2); len(baseTypeParts) > 1 {
 		shortBase = baseTypeParts[1]
+	}
+
+	validCombos := make([][]string, 0)
+	for _, c := range combinations.All(combos) {
+		var exclude bool
+		for master, details := range dependents {
+			// if slices.Contains(c, master) || !slices.Contains(c, master) && intersection(c, details) == nil {
+			// 	validCombos = append(validCombos, c)
+			// 	break
+			// }
+			if !slices.Contains(c, master) && intersection(c, details) != nil {
+				exclude = true
+				break
+			}
+		}
+		if !exclude {
+			validCombos = append(validCombos, c)
+		}
 	}
 
 	vars := struct {
@@ -104,7 +135,7 @@ func generate(out io.Writer, packageName, functionName, baseType string, dynamic
 		ShortBase:    shortBase,
 		ReturnType:   returnType,
 		Types:        types,
-		Combinations: combinations.All(combos),
+		Combinations: validCombos,
 	}
 
 	return tmpl.Execute(out, vars)

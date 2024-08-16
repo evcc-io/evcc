@@ -10,43 +10,6 @@ func decorateDsmr(base api.Meter, meterEnergy func() (float64, error), phaseCurr
 	switch {
 	case meterEnergy == nil && phaseCurrents == nil:
 		return base
-
-	case meterEnergy != nil && phaseCurrents == nil:
-		return &struct {
-			api.Meter
-			api.MeterEnergy
-		}{
-			Meter: base,
-			MeterEnergy: &decorateDsmrMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-		}
-
-	case meterEnergy == nil && phaseCurrents != nil:
-		return &struct {
-			api.Meter
-			api.PhaseCurrents
-		}{
-			Meter: base,
-			PhaseCurrents: &decorateDsmrPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-		}
-
-	case meterEnergy != nil && phaseCurrents != nil:
-		return &struct {
-			api.Meter
-			api.MeterEnergy
-			api.PhaseCurrents
-		}{
-			Meter: base,
-			MeterEnergy: &decorateDsmrMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseCurrents: &decorateDsmrPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-		}
 	}
 
 	return nil
