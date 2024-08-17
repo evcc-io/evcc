@@ -7,10 +7,12 @@ import (
 	"go/format"
 	"io"
 	"os"
+	"reflect"
 	"slices"
 	"strings"
 	"text/template"
 
+	"github.com/evcc-io/evcc/api"
 	"github.com/go-sprout/sprout"
 	combinations "github.com/mxschmitt/golang-combinations"
 	"github.com/spf13/pflag"
@@ -29,20 +31,53 @@ type typeStruct struct {
 	Params                                                     []string
 }
 
-var dependents = map[string][]string{
-	"api.Meter":         {"api.MeterEnergy", "api.PhaseCurrents", "api.PhaseVoltages", "api.PhasePowers"},
-	"api.PhaseSwitcher": {"api.PhaseGetter"},
+var dependents map[string][]string
+
+func reflectName(v any) string {
+	fmt.Println(reflect.TypeOf(&v).Elem().String())
+	fmt.Println(reflect.TypeOf(v).Elem().String())
+	return reflect.TypeOf(v).String()
 }
 
-// intersection returns the intersection of two slices
-func intersection[T comparable](a, b []T) []T {
-	var res []T
+func init() {
+	var deps struct {
+		api.Meter
+		api.MeterEnergy
+		api.PhaseCurrents
+		api.PhaseVoltages
+		api.PhasePowers
+
+		api.PhaseSwitcher
+		api.PhaseGetter
+
+		api.Battery
+		api.BatteryController
+	}
+
+	dependents = map[string][]string{
+		reflectName(deps.Meter): {
+			reflectName(deps.MeterEnergy),
+			reflectName(deps.PhaseCurrents),
+			reflectName(deps.PhaseVoltages),
+			reflectName(deps.PhasePowers),
+		},
+		reflectName(deps.PhaseSwitcher): {
+			reflectName(deps.PhaseGetter),
+		},
+		reflectName(deps.Battery): {
+			reflectName(deps.BatteryController),
+		},
+	}
+}
+
+// hasIntersection returns if the slices intersect
+func hasIntersection[T comparable](a, b []T) bool {
 	for _, el := range a {
 		if slices.Contains(b, el) {
-			res = append(res, el)
+			return true
 		}
 	}
-	return slices.Compact(res)
+	return false
 }
 
 func generate(out io.Writer, packageName, functionName, baseType string, dynamicTypes ...dynamicType) error {
@@ -106,7 +141,7 @@ func generate(out io.Writer, packageName, functionName, baseType string, dynamic
 COMBO:
 	for _, c := range combinations.All(combos) {
 		for master, details := range dependents {
-			if !slices.Contains(c, master) && intersection(c, details) != nil {
+			if !slices.Contains(c, master) && hasIntersection(c, details) {
 				continue COMBO
 			}
 		}
