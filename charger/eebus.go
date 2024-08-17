@@ -310,7 +310,7 @@ func (c *EEBus) writeCurrentLimitData(evEntity spineapi.EntityRemoteInterface, c
 	}
 
 	// setup the limit data structure
-	limits := []ucapi.LoadLimitsPhase{}
+	var limits []ucapi.LoadLimitsPhase
 	for phase := range len(ucapi.PhaseNameMapping) {
 		limit := ucapi.LoadLimitsPhase{
 			Phase:    ucapi.PhaseNameMapping[phase],
@@ -423,6 +423,7 @@ func (c *EEBus) writeLoadControlLimitsVASVW(evEntity spineapi.EntityRemoteInterf
 	}
 
 	if err := c.disableLimits(evEntity, c.uc.OpEV); err != nil {
+		c.log.ERROR.Println("!! OpEV.Load/WriteLoadControlLimits:", err)
 		return false
 	}
 
