@@ -2,6 +2,7 @@ package server
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -97,6 +98,7 @@ func loginHandler(auth auth.Auth) http.HandlerFunc {
 		}
 
 		if !auth.IsAdminPasswordValid(req.Password) {
+			fmt.Println("auth: invalid password", req.Password)
 			http.Error(w, "Invalid password", http.StatusUnauthorized)
 			return
 		}
@@ -133,6 +135,7 @@ func ensureAuthHandler(auth auth.Auth) mux.MiddlewareFunc {
 			// check jwt token
 			ok, err := auth.ValidateJwtToken(jwtFromRequest(r))
 			if !ok || err != nil {
+				fmt.Println("auth: invalid auth token", jwtFromRequest(r))
 				http.Error(w, "Unauthorized", http.StatusUnauthorized)
 				return
 			}
