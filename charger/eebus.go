@@ -177,7 +177,7 @@ func (c *EEBus) Status() (res api.ChargeStatus, err error) {
 		}
 
 		c.mux.Lock()
-		if !c.reconnect {
+		if !c.reconnect && (res == api.StatusB || res == api.StatusC) {
 			c.mux.Unlock()
 			return
 		}
@@ -195,7 +195,7 @@ func (c *EEBus) Status() (res api.ChargeStatus, err error) {
 
 	currentState, err := c.uc.EvCC.ChargeState(evEntity)
 	if err != nil {
-		return api.StatusNone, err
+		return api.StatusA, nil
 	}
 
 	switch currentState {
