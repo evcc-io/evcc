@@ -12,10 +12,6 @@ function workerPort() {
   return 11000 + index;
 }
 
-function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
 export function baseUrl() {
   return `http://localhost:${workerPort()}`;
 }
@@ -64,7 +60,13 @@ async function _start(config) {
   const configFile = config.includes("/") ? config : `tests/${config}`;
   const port = workerPort();
   console.log(`wait until port ${port} is available`);
-  await waitOn({ resources: [`tcp:localhost:${port}`], reverse: true });
+  // wait for port to be available
+  await waitOn({
+    resources: [`tcp:${port}`],
+    reverse: true,
+    log: true,
+    timeout: 20000, // 20s
+  });
   console.log("starting evcc", { config, port });
   const instance = exec(
     `EVCC_NETWORK_PORT=${port} EVCC_DATABASE_DSN=${dbPath()} ${BINARY} --config ${configFile}`
@@ -74,7 +76,7 @@ async function _start(config) {
   instance.on("exit", (code) => {
     console.log("evcc terminated", { code, port, config });
   });
-  await waitOn({ resources: [baseUrl()] });
+  await waitOn({ resources: [baseUrl()], log: true });
   return instance;
 }
 
@@ -94,7 +96,12 @@ async function _stop(instance) {
     await axios.post(`${baseUrl()}/api/system/shutdown`, {}, { headers: { cookie } });
   }
   console.log(`wait until port ${port} is closed`);
-  await waitOn({ resources: [`tcp:localhost:${port}`], reverse: true });
+  await waitOn({
+    resources: [`tcp:${port}`],
+    reverse: true,
+    log: true,
+    timeout: 20000, // 20s
+  });
   console.log("evcc is down", { port });
 }
 
