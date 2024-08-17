@@ -17,6 +17,7 @@ import (
 	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/evcc-io/evcc/util"
+	"github.com/samber/lo"
 )
 
 const (
@@ -156,16 +157,11 @@ func (c *EEBus) isCharging(evEntity spineapi.EntityRemoteInterface) bool {
 		limitsMin = []float64{c.lp.GetMinCurrent()}
 	}
 
-	var phasesCurrent float64
-	for _, phaseCurrent := range currents {
-		phasesCurrent += phaseCurrent
-	}
-
 	// require sum of all phase currents to be > 0.6 * a single phase minimum
 	// in some scenarios, e.g. Cayenne Hybrid, sometimes the meter of a PMCC device
 	// reported 600W, even tough the car was not charging
 	limitMin := limitsMin[0]
-	return phasesCurrent > limitMin*idleFactor
+	return lo.Sum(currents) > limitMin*idleFactor
 }
 
 // Status implements the api.Charger interface
@@ -373,7 +369,7 @@ func (c *EEBus) hasActiveVASVW(evEntity spineapi.EntityRemoteInterface) bool {
 	// the use case has to be reported as active
 	// only then the EV has no active charging demand and will charge based on OSCEV recommendations
 	// this is a workaround for EVSE changing isActive to false, even though they should
-	// not announce the usecase at all in that case
+	// not announce the use case at all in that case
 	for _, uci := range evEntity.Device().UseCases() {
 		// check if the referenced entity address is identical to the ev entity address
 		// the address may not exist, as it only available since SPINE 1.3
@@ -490,9 +486,8 @@ func (c *EEBus) currentPower() (float64, error) {
 		return 0, nil
 	}
 
-	var powers []float64
-
 	// does the EVSE provide power data?
+	var powers []float64
 	if c.uc.EvCem.IsScenarioAvailableAtEntity(evEntity, 2) {
 		// is power data available for real? Elli Gen1 says it supports it, but doesn't provide any data
 		if powerData, err := c.uc.EvCem.PowerPerPhase(evEntity); err == nil {
@@ -515,12 +510,7 @@ func (c *EEBus) currentPower() (float64, error) {
 		return 0, api.ErrNotAvailable
 	}
 
-	var power float64
-	for _, phasePower := range powers {
-		power += phasePower
-	}
-
-	return power, nil
+	return lo.Sum(powers), nil
 }
 
 // ChargedEnergy implements the api.ChargeRater interface
