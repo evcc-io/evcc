@@ -32,17 +32,17 @@ type typeStruct struct {
 var dependents = map[string][]string{
 	"api.Meter":         {"api.MeterEnergy", "api.PhaseCurrents", "api.PhaseVoltages", "api.PhasePowers"},
 	"api.PhaseSwitcher": {"api.PhaseGetter"},
+	"api.Battery":       {"api.BatteryCapacity", "api.BatteryController"},
 }
 
-// intersection returns the intersection of two slices
-func intersection[T comparable](a, b []T) []T {
-	var res []T
+// hasIntersection returns if the slices intersect
+func hasIntersection[T comparable](a, b []T) bool {
 	for _, el := range a {
 		if slices.Contains(b, el) {
-			res = append(res, el)
+			return true
 		}
 	}
-	return slices.Compact(res)
+	return false
 }
 
 func generate(out io.Writer, packageName, functionName, baseType string, dynamicTypes ...dynamicType) error {
@@ -106,7 +106,7 @@ func generate(out io.Writer, packageName, functionName, baseType string, dynamic
 COMBO:
 	for _, c := range combinations.All(combos) {
 		for master, details := range dependents {
-			if !slices.Contains(c, master) && intersection(c, details) != nil {
+			if !slices.Contains(c, master) && hasIntersection(c, details) {
 				continue COMBO
 			}
 		}

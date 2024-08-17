@@ -22,17 +22,6 @@ func decorateModbusMbmd(base api.Meter, meterEnergy func() (float64, error), pha
 			},
 		}
 
-	case battery == nil && batteryCapacity != nil && meterEnergy == nil && phaseCurrents == nil && phasePowers == nil && phaseVoltages == nil:
-		return &struct {
-			api.Meter
-			api.BatteryCapacity
-		}{
-			Meter: base,
-			BatteryCapacity: &decorateModbusMbmdBatteryCapacityImpl{
-				batteryCapacity: batteryCapacity,
-			},
-		}
-
 	case battery != nil && batteryCapacity != nil && meterEnergy == nil && phaseCurrents == nil && phasePowers == nil && phaseVoltages == nil:
 		return &struct {
 			api.Meter

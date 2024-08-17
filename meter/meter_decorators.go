@@ -22,17 +22,6 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			},
 		}
 
-	case battery == nil && batteryCapacity != nil && batteryController == nil && meterEnergy == nil && phaseCurrents == nil && phasePowers == nil && phaseVoltages == nil:
-		return &struct {
-			api.Meter
-			api.BatteryCapacity
-		}{
-			Meter: base,
-			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
-				batteryCapacity: batteryCapacity,
-			},
-		}
-
 	case battery != nil && batteryCapacity != nil && batteryController == nil && meterEnergy == nil && phaseCurrents == nil && phasePowers == nil && phaseVoltages == nil:
 		return &struct {
 			api.Meter
@@ -48,17 +37,6 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			},
 		}
 
-	case battery == nil && batteryCapacity == nil && batteryController != nil && meterEnergy == nil && phaseCurrents == nil && phasePowers == nil && phaseVoltages == nil:
-		return &struct {
-			api.Meter
-			api.BatteryController
-		}{
-			Meter: base,
-			BatteryController: &decorateMeterBatteryControllerImpl{
-				batteryController: batteryController,
-			},
-		}
-
 	case battery != nil && batteryCapacity == nil && batteryController != nil && meterEnergy == nil && phaseCurrents == nil && phasePowers == nil && phaseVoltages == nil:
 		return &struct {
 			api.Meter
@@ -68,21 +46,6 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			Meter: base,
 			Battery: &decorateMeterBatteryImpl{
 				battery: battery,
-			},
-			BatteryController: &decorateMeterBatteryControllerImpl{
-				batteryController: batteryController,
-			},
-		}
-
-	case battery == nil && batteryCapacity != nil && batteryController != nil && meterEnergy == nil && phaseCurrents == nil && phasePowers == nil && phaseVoltages == nil:
-		return &struct {
-			api.Meter
-			api.BatteryCapacity
-			api.BatteryController
-		}{
-			Meter: base,
-			BatteryCapacity: &decorateMeterBatteryCapacityImpl{
-				batteryCapacity: batteryCapacity,
 			},
 			BatteryController: &decorateMeterBatteryControllerImpl{
 				batteryController: batteryController,
