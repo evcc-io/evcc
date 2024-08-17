@@ -146,9 +146,14 @@ func (c *EEBus) isCharging(evEntity spineapi.EntityRemoteInterface) bool {
 	if err != nil {
 		return false
 	}
+
 	limitsMin, _, _, err := c.uc.OpEV.CurrentLimits(evEntity)
-	if err != nil || limitsMin == nil || len(limitsMin) == 0 {
-		return false
+	if err != nil || len(limitsMin) == 0 {
+		// sometimes a min limit is not provided by the EVSE, so take the limit defined for the loadpoint
+		if c.lp == nil {
+			return false
+		}
+		limitsMin = []float64{c.lp.GetMinCurrent()}
 	}
 
 	var phasesCurrent float64
