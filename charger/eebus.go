@@ -332,7 +332,7 @@ func (c *EEBus) writeCurrentLimitData(evEntity spineapi.EntityRemoteInterface, c
 	}
 
 	// make sure the recommendations are inactive, otherwise the EV won't go to sleep
-	if err := c.disableRecommendations(evEntity); err != nil {
+	if err := c.disableLimits(evEntity, c.uc.OscEV); err != nil {
 		return err
 	}
 
@@ -421,38 +421,21 @@ func (c *EEBus) writeLoadControlLimitsVASVW(evEntity spineapi.EntityRemoteInterf
 		return false
 	}
 
-	if err := c.disableObligations(evEntity); err != nil {
+	if err := c.disableLimits(evEntity, c.uc.OpEV); err != nil {
 		return false
 	}
 
 	return true
 }
 
-// make sure the recommendations are inactive, otherwise the EV won't go to sleep
-func (c *EEBus) disableRecommendations(evEntity spineapi.EntityRemoteInterface) error {
-	limits, err := c.uc.OscEV.LoadControlLimits(evEntity)
-	if err != nil {
-		return err
-	}
-
-	var writeNeeded bool
-	for index, item := range limits {
-		if item.IsActive {
-			limits[index].IsActive = false
-			writeNeeded = true
-		}
-	}
-
-	if writeNeeded {
-		_, err = c.uc.OscEV.WriteLoadControlLimits(evEntity, limits, nil)
-	}
-
-	return err
+type eebusLimitController interface {
+	LoadControlLimits(spineapi.EntityRemoteInterface) ([]ucapi.LoadLimitsPhase, error)
+	WriteLoadControlLimits(spineapi.EntityRemoteInterface, []ucapi.LoadLimitsPhase, func(result model.ResultDataType)) (*model.MsgCounterType, error)
 }
 
-// make sure the obligations are inactive, otherwise the EV won't go to sleep
-func (c *EEBus) disableObligations(evEntity spineapi.EntityRemoteInterface) error {
-	limits, err := c.uc.OpEV.LoadControlLimits(evEntity)
+// make sure the limits are inactive, otherwise the EV won't go to sleep
+func (c *EEBus) disableLimits(evEntity spineapi.EntityRemoteInterface, uc eebusLimitController) error {
+	limits, err := uc.LoadControlLimits(evEntity)
 	if err != nil {
 		return err
 	}
@@ -466,7 +449,7 @@ func (c *EEBus) disableObligations(evEntity spineapi.EntityRemoteInterface) erro
 	}
 
 	if writeNeeded {
-		_, err = c.uc.OpEV.WriteLoadControlLimits(evEntity, limits, nil)
+		_, err = uc.WriteLoadControlLimits(evEntity, limits, nil)
 	}
 
 	return err
