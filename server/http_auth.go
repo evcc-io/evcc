@@ -135,7 +135,6 @@ func ensureAuthHandler(auth auth.Auth) mux.MiddlewareFunc {
 			// check jwt token
 			ok, err := auth.ValidateJwtToken(jwtFromRequest(r))
 			if !ok || err != nil {
-				fmt.Println("auth: invalid auth token", jwtFromRequest(r))
 				http.Error(w, "Unauthorized", http.StatusUnauthorized)
 				return
 			}

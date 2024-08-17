@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/evcc-io/evcc/core/keys"
@@ -81,6 +82,7 @@ func (a *auth) IsAdminPasswordValid(password string) bool {
 		return false
 	}
 
+	fmt.Println("auth: admin password hash:", adminHash, " pw:", password)
 	return bcrypt.CompareHashAndPassword([]byte(adminHash), []byte(password)) == nil
 }
 
