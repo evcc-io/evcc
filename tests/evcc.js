@@ -88,10 +88,14 @@ async function _stop(instance) {
   }
   const port = workerPort();
   console.log("shutting down evcc", { port });
-  const res = await axios.post(`${baseUrl()}/api/auth/login`, { password: "secret" });
-  console.log(res.status, res.statusText);
-  const cookie = res.headers["set-cookie"];
-  await axios.post(`${baseUrl()}/api/system/shutdown`, {}, { headers: { cookie } });
+  try {
+    const res = await axios.post(`${baseUrl()}/api/auth/login`, { password: "secret" });
+    console.log(res.status, res.statusText);
+    const cookie = res.headers["set-cookie"];
+    await axios.post(`${baseUrl()}/api/system/shutdown`, {}, { headers: { cookie } });
+  } catch (err) {
+    console.error(err);
+  }
   console.log(`wait until port ${port} is closed`);
   await waitOn({ resources: [`tcp:localhost:${port}`], reverse: true });
   console.log("evcc is down", { port });
