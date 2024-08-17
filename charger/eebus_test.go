@@ -16,18 +16,12 @@ import (
 
 func TestEEBusIsCharging(t *testing.T) {
 	type limitStruct struct {
-		phase           uint
 		min, max, pause float64
 	}
 
-	type measurementStruct struct {
-		phase   uint
-		current float64
-	}
-
 	type testMeasurementStruct struct {
-		expected bool
-		data     []measurementStruct
+		charging bool
+		currents []float64
 	}
 
 	tests := []struct {
@@ -38,72 +32,52 @@ func TestEEBusIsCharging(t *testing.T) {
 		{
 			"3 phase IEC",
 			[]limitStruct{
-				{1, 6, 16, 0},
-				{2, 6, 16, 0},
-				{3, 6, 16, 0},
+				{6, 16, 0},
+				{6, 16, 0},
+				{6, 16, 0},
 			},
 			[]testMeasurementStruct{
 				{
 					false,
-					[]measurementStruct{
-						{1, 0},
-						{2, 3},
-						{3, 0},
-					},
+					[]float64{0, 3, 0},
 				},
 				{
 					true,
-					[]measurementStruct{
-						{1, 6},
-						{2, 0},
-						{3, 1},
-					},
+					[]float64{6, 0, 1},
 				},
 			},
 		},
 		{
 			"1 phase IEC",
 			[]limitStruct{
-				{1, 6, 16, 0},
+				{6, 16, 0},
 			},
 			[]testMeasurementStruct{
 				{
 					false,
-					[]measurementStruct{
-						{1, 2},
-					},
+					[]float64{2},
 				},
 				{
 					true,
-					[]measurementStruct{
-						{1, 6},
-					},
+					[]float64{6},
 				},
 			},
 		},
 		{
 			"3 phase ISO",
 			[]limitStruct{
-				{1, 2.2, 16, 0.1},
-				{2, 2.2, 16, 0.1},
-				{3, 2.2, 16, 0.1},
+				{2.2, 16, 0.1},
+				{2.2, 16, 0.1},
+				{2.2, 16, 0.1},
 			},
 			[]testMeasurementStruct{
 				{
 					false,
-					[]measurementStruct{
-						{1, 1},
-						{2, 0},
-						{3, 0},
-					},
+					[]float64{1, 0, 0},
 				},
 				{
 					true,
-					[]measurementStruct{
-						{1, 1.8},
-						{2, 1},
-						{3, 3},
-					},
+					[]float64{1.8, 1, 3},
 				},
 			},
 		},
@@ -136,15 +110,10 @@ func TestEEBusIsCharging(t *testing.T) {
 					ev: evEntity,
 				}
 
-				var currents []float64
-				for _, d := range m.data {
-					currents = append(currents, d.current)
-				}
-
-				evcem.EXPECT().CurrentPerPhase(evEntity).Return(currents, nil)
+				evcem.EXPECT().CurrentPerPhase(evEntity).Return(m.currents, nil)
 				opev.EXPECT().CurrentLimits(evEntity).Return(limitsMin, limitsMax, limitsDefault, nil)
 
-				require.Equal(t, m.expected, eebus.isCharging(evEntity))
+				require.Equal(t, m.charging, eebus.isCharging(evEntity))
 
 				ctrl.Finish()
 			}
