@@ -10,7 +10,7 @@ import (
 
 // cs actions
 
-func (cs *CS) ResetRequest(id string, resetType core.ResetType) error {
+func (cs *CS) TriggerResetRequest(id string, resetType core.ResetType) error {
 	rc := make(chan error, 1)
 
 	err := cs.Reset(id, func(request *core.ResetConfirmation, err error) {
