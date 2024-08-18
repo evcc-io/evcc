@@ -56,18 +56,16 @@ func (cp *handler[T]) Add(dev Device[T]) error {
 
 // Delete deletes device
 func (cp *handler[T]) Delete(name string) error {
-	cp.mu.Lock()
+	cp.mu.RLock()
+	defer cp.mu.RUnlock()
 
 	for i, dev := range cp.devices {
 		if name == dev.Config().Name {
 			cp.devices = append(cp.devices[:i], cp.devices[i+1:]...)
-			cp.mu.Unlock()
-
 			bus.Publish(cp.topic, OpDelete, dev)
 			return nil
 		}
 	}
-	cp.mu.Unlock()
 
 	return fmt.Errorf("not found: %s", name)
 }
