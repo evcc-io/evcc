@@ -20,7 +20,7 @@ package charger
 import (
 	"encoding/binary"
 	"fmt"
-	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -31,10 +31,9 @@ import (
 
 // MyPvElwa2 charger implementation
 type MyPvElwa2 struct {
-	mu    sync.Mutex
 	log   *util.Logger
 	conn  *modbus.Connection
-	power uint16
+	power uint32
 }
 
 const (
@@ -104,11 +103,7 @@ func (wb *MyPvElwa2) Features() []api.Feature {
 
 func (wb *MyPvElwa2) heartbeat(timeout time.Duration) {
 	for range time.Tick(timeout) {
-		wb.mu.Lock()
-		power := wb.power
-		wb.mu.Unlock()
-
-		if power > 0 {
+		if power := uint16(atomic.LoadUint32(&wb.power)); power > 0 {
 			if err := wb.setPower(power); err != nil {
 				wb.log.ERROR.Println("heartbeat:", err)
 			}
@@ -154,9 +149,7 @@ func (wb *MyPvElwa2) setPower(power uint16) error {
 func (wb *MyPvElwa2) Enable(enable bool) error {
 	var power uint16
 	if enable {
-		wb.mu.Lock()
-		power = wb.power
-		wb.mu.Unlock()
+		power = uint16(atomic.LoadUint32(&wb.power))
 	}
 
 	return wb.setPower(power)
@@ -182,9 +175,7 @@ func (wb *MyPvElwa2) MaxCurrentMillis(current float64) error {
 
 	_, err := wb.conn.WriteMultipleRegisters(elwaRegSetPower, 1, b)
 	if err == nil {
-		wb.mu.Lock()
-		wb.power = power
-		wb.mu.Unlock()
+		atomic.StoreUint32(&wb.power, uint32(power))
 	}
 
 	return err
