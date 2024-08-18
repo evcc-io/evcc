@@ -42,7 +42,7 @@ type OCPP struct {
 
 const (
 	defaultIdTag      = "evcc" // RemoteStartTransaction only
-	desiredMeasurands = "Energy.Active.Import.Register,Power.Active.Import,SoC,Current.Offered,Power.Offered,Current.Import,Voltage"
+	desiredMeasurands = "Power.Active.Import,Energy.Active.Import.Register,SoC,Current.Offered,Power.Offered,Current.Import,Voltage"
 )
 
 func init() {
@@ -214,6 +214,11 @@ func NewOCPP(id string, connector int, idtag string,
 				case ocpp.KeyMaxChargingProfilesInstalled:
 					if val, err := strconv.Atoi(*opt.Value); err == nil {
 						c.chargingProfileId = val
+					}
+
+				case ocpp.KeyMeterValuesSampledData:
+					if opt.Readonly {
+						meterValuesSampledDataMaxLength = 0
 					}
 
 				case ocpp.KeyMeterValuesSampledDataMaxLength:
