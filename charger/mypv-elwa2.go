@@ -31,11 +31,10 @@ import (
 
 // MyPvElwa2 charger implementation
 type MyPvElwa2 struct {
-	mu     sync.Mutex
-	log    *util.Logger
-	conn   *modbus.Connection
-	power  uint16
-	wakeup bool
+	mu    sync.Mutex
+	log   *util.Logger
+	conn  *modbus.Connection
+	power uint16
 }
 
 const (
