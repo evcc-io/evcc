@@ -31,6 +31,7 @@ type typeStruct struct {
 
 var dependents = map[string][]string{
 	"api.Meter":         {"api.MeterEnergy", "api.PhaseCurrents", "api.PhaseVoltages", "api.PhasePowers"},
+	"api.PhaseCurrents": {"api.PhasePowers"}, // phase powers are only used to determine currents sign
 	"api.PhaseSwitcher": {"api.PhaseGetter"},
 	"api.Battery":       {"api.BatteryCapacity", "api.BatteryController"},
 }
