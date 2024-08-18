@@ -56,8 +56,8 @@ func (cp *handler[T]) Add(dev Device[T]) error {
 
 // Delete deletes device
 func (cp *handler[T]) Delete(name string) error {
-	cp.mu.RLock()
-	defer cp.mu.RUnlock()
+	cp.mu.Lock()
+	defer cp.mu.Unlock()
 
 	for i, dev := range cp.devices {
 		if name == dev.Config().Name {
