@@ -15452,7 +15452,7 @@ type decorateCustomPhasePowersImpl struct {
 	phasePowers func() (float64, float64, float64, error)
 }
 
-func (impl *decorateCustomPhasePowersImpl) Voltages() (float64, float64, float64, error) {
+func (impl *decorateCustomPhasePowersImpl) Powers() (float64, float64, float64, error) {
 	return impl.phasePowers()
 }
 
