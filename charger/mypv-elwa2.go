@@ -40,9 +40,10 @@ type MyPvElwa2 struct {
 
 const (
 	elwaRegSetPower  = 1000
-	elwaRegPower     = 1074
 	elwaRegTemp      = 1001
 	elwaRegTempLimit = 1002
+	elwaRegStatus    = 1003
+	elwaRegPower     = 1074
 )
 
 func init() {
@@ -119,13 +120,13 @@ func (wb *MyPvElwa2) heartbeat(timeout time.Duration) {
 // Status implements the api.Charger interface
 func (wb *MyPvElwa2) Status() (api.ChargeStatus, error) {
 	res := api.StatusA
-	b, err := wb.conn.ReadInputRegisters(elwaRegPower, 1)
+	b, err := wb.conn.ReadInputRegisters(elwaRegStatus, 1)
 	if err != nil {
 		return res, err
 	}
 
 	res = api.StatusB
-	if binary.BigEndian.Uint16(b) > 0 {
+	if binary.BigEndian.Uint16(b) == 2 {
 		res = api.StatusC
 	}
 
