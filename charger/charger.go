@@ -40,7 +40,7 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Charger, error
 		Power  *provider.Config
 		Energy *provider.Config
 
-		Currents, Voltages []provider.Config
+		Currents, Voltages, Powers []provider.Config
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -136,7 +136,7 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Charger, error
 		return nil, err
 	}
 
-	currentsG, voltagesG, powersG, err := meter.BuildPhaseMeasurements(cc.Currents, cc.Voltages, nil)
+	currentsG, voltagesG, powersG, err := meter.BuildPhaseMeasurements(cc.Currents, cc.Voltages, cc.Powers)
 	if err != nil {
 		return nil, err
 	}
