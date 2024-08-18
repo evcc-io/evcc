@@ -8,7 +8,7 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/go-sprout/sprout/sprigin"
+	"github.com/go-sprout/sprout"
 )
 
 //go:embed documentation.tpl
@@ -45,7 +45,7 @@ func (t *Template) RenderDocumentation(product Product, lang string) ([]byte, er
 	var modbusRender string
 	if modbusChoices := t.ModbusChoices(); len(modbusChoices) > 0 {
 		if i, _ := t.ParamByName(ParamModbus); i > -1 {
-			modbusTmpl, err := template.New("yaml").Funcs(sprigin.FuncMap()).Parse(documentationModbusTmpl)
+			modbusTmpl, err := template.New("yaml").Funcs(sprout.FuncMap()).Parse(documentationModbusTmpl)
 			if err != nil {
 				panic(err)
 			}

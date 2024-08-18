@@ -11,7 +11,7 @@ import (
 	"github.com/evcc-io/evcc/core"
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/util/config"
-	"github.com/go-sprout/sprout/sprigin"
+	"github.com/go-sprout/sprout"
 	"github.com/spf13/cobra"
 )
 
@@ -70,7 +70,7 @@ func runDump(cmd *cobra.Command, args []string) {
 
 		tmpl := template.Must(
 			template.New("dump").
-				Funcs(sprigin.FuncMap()).
+				Funcs(sprout.FuncMap()).
 				Parse(dumpTmpl))
 
 		out := new(bytes.Buffer)
