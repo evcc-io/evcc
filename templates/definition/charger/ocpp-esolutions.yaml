@@ -1,0 +1,10 @@
+template: ocpp-esolutions
+products:
+  - brand: Free2move eSolutions
+    description:
+      generic: eProWallbox
+capabilities: ["rfid"]
+params:
+  - preset: ocpp
+render: |
+  {{ include "ocpp" . }}

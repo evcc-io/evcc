@@ -1,4 +1,5 @@
-template: pulsarplus
+template: ocpp-wallbox
+covers: ["pulsarplus"]
 products:
   - brand: wallbox
     description:
@@ -30,7 +31,6 @@ requirements:
       * URL: ws://[evcc-adresse]:8887/ (local network connection)
       * Charge Point Identity: Custom value (e.g. serial number of charger) which is reused in configuration as *stationid*
       * Password: leave empty
-  evcc: ["sponsorship"]
 params:
   - preset: ocpp
 render: |

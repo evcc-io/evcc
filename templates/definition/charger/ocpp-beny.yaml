@@ -1,8 +1,8 @@
-template: ocpp-chargeamps-halo
+template: ocpp-beny
 products:
-  - brand: Charge Amps
+  - brand: ZJ Beny
     description:
-      generic: Halo
+      generic: BCP EV charger
 capabilities: ["rfid"]
 params:
   - preset: ocpp

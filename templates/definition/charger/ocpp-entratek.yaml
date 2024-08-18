@@ -1,4 +1,4 @@
-template: ocpp-entratek-powerdot
+template: ocpp-entratek
 products:
   - brand: EntraTek
     description:
