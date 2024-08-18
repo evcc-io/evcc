@@ -11,17 +11,6 @@ func decorateE3dc(base *E3dc, batteryCapacity func() float64, battery func() (fl
 	case battery == nil && batteryCapacity == nil && batteryController == nil:
 		return base
 
-	case battery == nil && batteryCapacity != nil && batteryController == nil:
-		return &struct {
-			*E3dc
-			api.BatteryCapacity
-		}{
-			E3dc: base,
-			BatteryCapacity: &decorateE3dcBatteryCapacityImpl{
-				batteryCapacity: batteryCapacity,
-			},
-		}
-
 	case battery != nil && batteryCapacity == nil && batteryController == nil:
 		return &struct {
 			*E3dc
@@ -45,32 +34,6 @@ func decorateE3dc(base *E3dc, batteryCapacity func() float64, battery func() (fl
 			},
 			BatteryCapacity: &decorateE3dcBatteryCapacityImpl{
 				batteryCapacity: batteryCapacity,
-			},
-		}
-
-	case battery == nil && batteryCapacity == nil && batteryController != nil:
-		return &struct {
-			*E3dc
-			api.BatteryController
-		}{
-			E3dc: base,
-			BatteryController: &decorateE3dcBatteryControllerImpl{
-				batteryController: batteryController,
-			},
-		}
-
-	case battery == nil && batteryCapacity != nil && batteryController != nil:
-		return &struct {
-			*E3dc
-			api.BatteryCapacity
-			api.BatteryController
-		}{
-			E3dc: base,
-			BatteryCapacity: &decorateE3dcBatteryCapacityImpl{
-				batteryCapacity: batteryCapacity,
-			},
-			BatteryController: &decorateE3dcBatteryControllerImpl{
-				batteryController: batteryController,
 			},
 		}
 

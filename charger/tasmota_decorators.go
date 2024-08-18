@@ -10,43 +10,6 @@ func decorateTasmota(base *Tasmota, phaseVoltages func() (float64, float64, floa
 	switch {
 	case phaseCurrents == nil && phaseVoltages == nil:
 		return base
-
-	case phaseCurrents == nil && phaseVoltages != nil:
-		return &struct {
-			*Tasmota
-			api.PhaseVoltages
-		}{
-			Tasmota: base,
-			PhaseVoltages: &decorateTasmotaPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-		}
-
-	case phaseCurrents != nil && phaseVoltages == nil:
-		return &struct {
-			*Tasmota
-			api.PhaseCurrents
-		}{
-			Tasmota: base,
-			PhaseCurrents: &decorateTasmotaPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-		}
-
-	case phaseCurrents != nil && phaseVoltages != nil:
-		return &struct {
-			*Tasmota
-			api.PhaseCurrents
-			api.PhaseVoltages
-		}{
-			Tasmota: base,
-			PhaseCurrents: &decorateTasmotaPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhaseVoltages: &decorateTasmotaPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-		}
 	}
 
 	return nil

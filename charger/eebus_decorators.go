@@ -22,17 +22,6 @@ func decorateEEBus(base *EEBus, meter func() (float64, error), phaseCurrents fun
 			},
 		}
 
-	case chargeRater == nil && meter == nil && phaseCurrents != nil:
-		return &struct {
-			*EEBus
-			api.PhaseCurrents
-		}{
-			EEBus: base,
-			PhaseCurrents: &decorateEEBusPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-		}
-
 	case chargeRater == nil && meter != nil && phaseCurrents != nil:
 		return &struct {
 			*EEBus
@@ -71,21 +60,6 @@ func decorateEEBus(base *EEBus, meter func() (float64, error), phaseCurrents fun
 			},
 			Meter: &decorateEEBusMeterImpl{
 				meter: meter,
-			},
-		}
-
-	case chargeRater != nil && meter == nil && phaseCurrents != nil:
-		return &struct {
-			*EEBus
-			api.ChargeRater
-			api.PhaseCurrents
-		}{
-			EEBus: base,
-			ChargeRater: &decorateEEBusChargeRaterImpl{
-				chargeRater: chargeRater,
-			},
-			PhaseCurrents: &decorateEEBusPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
 			},
 		}
 

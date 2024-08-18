@@ -1,0 +1,89 @@
+template: demo-battery
+group: generic
+products:
+  - description:
+      de: Demobatterie
+      en: Demo battery
+requirements:
+  description:
+    en: For demonstration purposes. Battery with a fixed set of values.
+    de: Zu Demonstrationszwecken. Hausbatterie mit festen Werten.
+params:
+  - name: usage
+    choice: ["battery"]
+  - name: power
+    description:
+      de: Leistung (W)
+      en: Power (W)
+    type: number
+  - name: soc
+    description:
+      de: Ladestand (%)
+      en: Charge (%)
+    type: number
+  - name: controllable
+    description:
+      de: Steuerbar
+      en: Controllable
+    type: bool
+    help:
+      de: "Unterstützt aktive Batteriesteuerung"
+      en: "Supports active battery control"
+  - name: energy
+    description:
+      de: Zählerstand (kWh)
+      en: Meter reading (kWh)
+    type: number
+    advanced: true
+  - name: currentL1
+    description:
+      de: L1 Stromstärke (A)
+      en: L1 current (A)
+    type: number
+    advanced: true
+  - name: currentL2
+    description:
+      de: L2 Stromstärke (A)
+      en: L2 current (A)
+    type: number
+    advanced: true
+  - name: currentL3
+    description:
+      de: L3 Stromstärke (A)
+      en: L3 current (A)
+    type: number
+    advanced: true
+
+render: |
+  type: custom
+  power:
+    source: const
+    value: {{ .power }}
+  {{- if .energy }}
+  energy:
+    source: const
+    value: {{ .energy}}
+  {{- end }}
+  soc:
+    source: const
+    value: {{ .soc }}
+  {{- if .controllable }}
+  batterymode:
+    source: js
+    vm: shared
+    script: |
+      1
+  {{- end }}
+  {{- if .currentL1 }}
+  currents:
+    - source: const
+      value: {{ .currentL1 }}
+    {{- if .currentL2 }}
+    - source: const
+      value: {{ .currentL2 }}
+    {{- end }}
+    {{- if .currentL3 }}
+    - source: const
+      value: {{ .currentL3 }}
+    {{- end }}
+  {{- end }}
