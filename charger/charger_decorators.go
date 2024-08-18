@@ -6,14 +6,14 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier func() (string, error), phaseSwitcher func(int) error, resurrector func() error, battery func() (float64, error), meter func() (float64, error), meterEnergy func() (float64, error)) api.Charger {
+func decorateCustom(base *Charger, chargerEx func(float64) error, identifier func() (string, error), phaseSwitcher func(int) error, resurrector func() error, battery func() (float64, error), meter func() (float64, error), meterEnergy func() (float64, error)) api.Charger {
 	switch {
 	case battery == nil && chargerEx == nil && identifier == nil && meter == nil && meterEnergy == nil && phaseSwitcher == nil && resurrector == nil:
 		return base
 
 	case battery == nil && chargerEx != nil && identifier == nil && meter == nil && meterEnergy == nil && phaseSwitcher == nil && resurrector == nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.ChargerEx
 		}{
 			Charger: base,
@@ -24,7 +24,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery == nil && chargerEx == nil && identifier != nil && meter == nil && meterEnergy == nil && phaseSwitcher == nil && resurrector == nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.Identifier
 		}{
 			Charger: base,
@@ -35,7 +35,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery == nil && chargerEx != nil && identifier != nil && meter == nil && meterEnergy == nil && phaseSwitcher == nil && resurrector == nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.ChargerEx
 			api.Identifier
 		}{
@@ -50,7 +50,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery == nil && chargerEx == nil && identifier == nil && meter == nil && meterEnergy == nil && phaseSwitcher != nil && resurrector == nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.PhaseSwitcher
 		}{
 			Charger: base,
@@ -61,7 +61,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery == nil && chargerEx != nil && identifier == nil && meter == nil && meterEnergy == nil && phaseSwitcher != nil && resurrector == nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.ChargerEx
 			api.PhaseSwitcher
 		}{
@@ -76,7 +76,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery == nil && chargerEx == nil && identifier != nil && meter == nil && meterEnergy == nil && phaseSwitcher != nil && resurrector == nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.Identifier
 			api.PhaseSwitcher
 		}{
@@ -91,7 +91,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery == nil && chargerEx != nil && identifier != nil && meter == nil && meterEnergy == nil && phaseSwitcher != nil && resurrector == nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.ChargerEx
 			api.Identifier
 			api.PhaseSwitcher
@@ -110,7 +110,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery == nil && chargerEx == nil && identifier == nil && meter == nil && meterEnergy == nil && phaseSwitcher == nil && resurrector != nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.Resurrector
 		}{
 			Charger: base,
@@ -121,7 +121,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery == nil && chargerEx != nil && identifier == nil && meter == nil && meterEnergy == nil && phaseSwitcher == nil && resurrector != nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.ChargerEx
 			api.Resurrector
 		}{
@@ -136,7 +136,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery == nil && chargerEx == nil && identifier != nil && meter == nil && meterEnergy == nil && phaseSwitcher == nil && resurrector != nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.Identifier
 			api.Resurrector
 		}{
@@ -151,7 +151,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery == nil && chargerEx != nil && identifier != nil && meter == nil && meterEnergy == nil && phaseSwitcher == nil && resurrector != nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.ChargerEx
 			api.Identifier
 			api.Resurrector
@@ -170,7 +170,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery == nil && chargerEx == nil && identifier == nil && meter == nil && meterEnergy == nil && phaseSwitcher != nil && resurrector != nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.PhaseSwitcher
 			api.Resurrector
 		}{
@@ -185,7 +185,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery == nil && chargerEx != nil && identifier == nil && meter == nil && meterEnergy == nil && phaseSwitcher != nil && resurrector != nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.ChargerEx
 			api.PhaseSwitcher
 			api.Resurrector
@@ -204,7 +204,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery == nil && chargerEx == nil && identifier != nil && meter == nil && meterEnergy == nil && phaseSwitcher != nil && resurrector != nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.Identifier
 			api.PhaseSwitcher
 			api.Resurrector
@@ -223,7 +223,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery == nil && chargerEx != nil && identifier != nil && meter == nil && meterEnergy == nil && phaseSwitcher != nil && resurrector != nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.ChargerEx
 			api.Identifier
 			api.PhaseSwitcher
@@ -246,7 +246,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery != nil && chargerEx == nil && identifier == nil && meter == nil && meterEnergy == nil && phaseSwitcher == nil && resurrector == nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.Battery
 		}{
 			Charger: base,
@@ -257,7 +257,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery != nil && chargerEx != nil && identifier == nil && meter == nil && meterEnergy == nil && phaseSwitcher == nil && resurrector == nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.Battery
 			api.ChargerEx
 		}{
@@ -272,7 +272,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery != nil && chargerEx == nil && identifier != nil && meter == nil && meterEnergy == nil && phaseSwitcher == nil && resurrector == nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.Battery
 			api.Identifier
 		}{
@@ -287,7 +287,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery != nil && chargerEx != nil && identifier != nil && meter == nil && meterEnergy == nil && phaseSwitcher == nil && resurrector == nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.Battery
 			api.ChargerEx
 			api.Identifier
@@ -306,7 +306,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery != nil && chargerEx == nil && identifier == nil && meter == nil && meterEnergy == nil && phaseSwitcher != nil && resurrector == nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.Battery
 			api.PhaseSwitcher
 		}{
@@ -321,7 +321,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery != nil && chargerEx != nil && identifier == nil && meter == nil && meterEnergy == nil && phaseSwitcher != nil && resurrector == nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.Battery
 			api.ChargerEx
 			api.PhaseSwitcher
@@ -340,7 +340,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery != nil && chargerEx == nil && identifier != nil && meter == nil && meterEnergy == nil && phaseSwitcher != nil && resurrector == nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.Battery
 			api.Identifier
 			api.PhaseSwitcher
@@ -359,7 +359,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery != nil && chargerEx != nil && identifier != nil && meter == nil && meterEnergy == nil && phaseSwitcher != nil && resurrector == nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.Battery
 			api.ChargerEx
 			api.Identifier
@@ -382,7 +382,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery != nil && chargerEx == nil && identifier == nil && meter == nil && meterEnergy == nil && phaseSwitcher == nil && resurrector != nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.Battery
 			api.Resurrector
 		}{
@@ -397,7 +397,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery != nil && chargerEx != nil && identifier == nil && meter == nil && meterEnergy == nil && phaseSwitcher == nil && resurrector != nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.Battery
 			api.ChargerEx
 			api.Resurrector
@@ -416,7 +416,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery != nil && chargerEx == nil && identifier != nil && meter == nil && meterEnergy == nil && phaseSwitcher == nil && resurrector != nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.Battery
 			api.Identifier
 			api.Resurrector
@@ -435,7 +435,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery != nil && chargerEx != nil && identifier != nil && meter == nil && meterEnergy == nil && phaseSwitcher == nil && resurrector != nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.Battery
 			api.ChargerEx
 			api.Identifier
@@ -458,7 +458,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery != nil && chargerEx == nil && identifier == nil && meter == nil && meterEnergy == nil && phaseSwitcher != nil && resurrector != nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.Battery
 			api.PhaseSwitcher
 			api.Resurrector
@@ -477,7 +477,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery != nil && chargerEx != nil && identifier == nil && meter == nil && meterEnergy == nil && phaseSwitcher != nil && resurrector != nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.Battery
 			api.ChargerEx
 			api.PhaseSwitcher
@@ -500,7 +500,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery != nil && chargerEx == nil && identifier != nil && meter == nil && meterEnergy == nil && phaseSwitcher != nil && resurrector != nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.Battery
 			api.Identifier
 			api.PhaseSwitcher
@@ -523,7 +523,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery != nil && chargerEx != nil && identifier != nil && meter == nil && meterEnergy == nil && phaseSwitcher != nil && resurrector != nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.Battery
 			api.ChargerEx
 			api.Identifier
@@ -550,7 +550,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseSwitcher == nil && resurrector == nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.Meter
 		}{
 			Charger: base,
@@ -561,7 +561,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseSwitcher == nil && resurrector == nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.ChargerEx
 			api.Meter
 		}{
@@ -576,7 +576,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseSwitcher == nil && resurrector == nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.Identifier
 			api.Meter
 		}{
@@ -591,7 +591,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseSwitcher == nil && resurrector == nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.ChargerEx
 			api.Identifier
 			api.Meter
@@ -610,7 +610,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseSwitcher != nil && resurrector == nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.Meter
 			api.PhaseSwitcher
 		}{
@@ -625,7 +625,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseSwitcher != nil && resurrector == nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.ChargerEx
 			api.Meter
 			api.PhaseSwitcher
@@ -644,7 +644,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseSwitcher != nil && resurrector == nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.Identifier
 			api.Meter
 			api.PhaseSwitcher
@@ -663,7 +663,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseSwitcher != nil && resurrector == nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.ChargerEx
 			api.Identifier
 			api.Meter
@@ -686,7 +686,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseSwitcher == nil && resurrector != nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.Meter
 			api.Resurrector
 		}{
@@ -701,7 +701,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseSwitcher == nil && resurrector != nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.ChargerEx
 			api.Meter
 			api.Resurrector
@@ -720,7 +720,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseSwitcher == nil && resurrector != nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.Identifier
 			api.Meter
 			api.Resurrector
@@ -739,7 +739,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseSwitcher == nil && resurrector != nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.ChargerEx
 			api.Identifier
 			api.Meter
@@ -762,7 +762,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseSwitcher != nil && resurrector != nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.Meter
 			api.PhaseSwitcher
 			api.Resurrector
@@ -781,7 +781,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseSwitcher != nil && resurrector != nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.ChargerEx
 			api.Meter
 			api.PhaseSwitcher
@@ -804,7 +804,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseSwitcher != nil && resurrector != nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.Identifier
 			api.Meter
 			api.PhaseSwitcher
@@ -827,7 +827,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseSwitcher != nil && resurrector != nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.ChargerEx
 			api.Identifier
 			api.Meter
@@ -854,7 +854,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery != nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseSwitcher == nil && resurrector == nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.Battery
 			api.Meter
 		}{
@@ -869,7 +869,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery != nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseSwitcher == nil && resurrector == nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.Battery
 			api.ChargerEx
 			api.Meter
@@ -888,7 +888,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery != nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseSwitcher == nil && resurrector == nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.Battery
 			api.Identifier
 			api.Meter
@@ -907,7 +907,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery != nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseSwitcher == nil && resurrector == nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.Battery
 			api.ChargerEx
 			api.Identifier
@@ -930,7 +930,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery != nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseSwitcher != nil && resurrector == nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.Battery
 			api.Meter
 			api.PhaseSwitcher
@@ -949,7 +949,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery != nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseSwitcher != nil && resurrector == nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.Battery
 			api.ChargerEx
 			api.Meter
@@ -972,7 +972,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery != nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseSwitcher != nil && resurrector == nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.Battery
 			api.Identifier
 			api.Meter
@@ -995,7 +995,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery != nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseSwitcher != nil && resurrector == nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.Battery
 			api.ChargerEx
 			api.Identifier
@@ -1022,7 +1022,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery != nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseSwitcher == nil && resurrector != nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.Battery
 			api.Meter
 			api.Resurrector
@@ -1041,7 +1041,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery != nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseSwitcher == nil && resurrector != nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.Battery
 			api.ChargerEx
 			api.Meter
@@ -1064,7 +1064,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery != nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseSwitcher == nil && resurrector != nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.Battery
 			api.Identifier
 			api.Meter
@@ -1087,7 +1087,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery != nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseSwitcher == nil && resurrector != nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.Battery
 			api.ChargerEx
 			api.Identifier
@@ -1114,7 +1114,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery != nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseSwitcher != nil && resurrector != nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.Battery
 			api.Meter
 			api.PhaseSwitcher
@@ -1137,7 +1137,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery != nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseSwitcher != nil && resurrector != nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.Battery
 			api.ChargerEx
 			api.Meter
@@ -1164,7 +1164,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery != nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseSwitcher != nil && resurrector != nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.Battery
 			api.Identifier
 			api.Meter
@@ -1191,7 +1191,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery != nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseSwitcher != nil && resurrector != nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.Battery
 			api.ChargerEx
 			api.Identifier
@@ -1222,7 +1222,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseSwitcher == nil && resurrector == nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.Meter
 			api.MeterEnergy
 		}{
@@ -1237,7 +1237,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseSwitcher == nil && resurrector == nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.ChargerEx
 			api.Meter
 			api.MeterEnergy
@@ -1256,7 +1256,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseSwitcher == nil && resurrector == nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.Identifier
 			api.Meter
 			api.MeterEnergy
@@ -1275,7 +1275,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseSwitcher == nil && resurrector == nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.ChargerEx
 			api.Identifier
 			api.Meter
@@ -1298,7 +1298,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseSwitcher != nil && resurrector == nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.Meter
 			api.MeterEnergy
 			api.PhaseSwitcher
@@ -1317,7 +1317,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseSwitcher != nil && resurrector == nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.ChargerEx
 			api.Meter
 			api.MeterEnergy
@@ -1340,7 +1340,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseSwitcher != nil && resurrector == nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.Identifier
 			api.Meter
 			api.MeterEnergy
@@ -1363,7 +1363,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseSwitcher != nil && resurrector == nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.ChargerEx
 			api.Identifier
 			api.Meter
@@ -1390,7 +1390,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseSwitcher == nil && resurrector != nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.Meter
 			api.MeterEnergy
 			api.Resurrector
@@ -1409,7 +1409,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseSwitcher == nil && resurrector != nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.ChargerEx
 			api.Meter
 			api.MeterEnergy
@@ -1432,7 +1432,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseSwitcher == nil && resurrector != nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.Identifier
 			api.Meter
 			api.MeterEnergy
@@ -1455,7 +1455,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseSwitcher == nil && resurrector != nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.ChargerEx
 			api.Identifier
 			api.Meter
@@ -1482,7 +1482,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseSwitcher != nil && resurrector != nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.Meter
 			api.MeterEnergy
 			api.PhaseSwitcher
@@ -1505,7 +1505,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseSwitcher != nil && resurrector != nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.ChargerEx
 			api.Meter
 			api.MeterEnergy
@@ -1532,7 +1532,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseSwitcher != nil && resurrector != nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.Identifier
 			api.Meter
 			api.MeterEnergy
@@ -1559,7 +1559,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseSwitcher != nil && resurrector != nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.ChargerEx
 			api.Identifier
 			api.Meter
@@ -1590,7 +1590,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery != nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseSwitcher == nil && resurrector == nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.Battery
 			api.Meter
 			api.MeterEnergy
@@ -1609,7 +1609,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery != nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseSwitcher == nil && resurrector == nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.Battery
 			api.ChargerEx
 			api.Meter
@@ -1632,7 +1632,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery != nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseSwitcher == nil && resurrector == nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.Battery
 			api.Identifier
 			api.Meter
@@ -1655,7 +1655,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery != nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseSwitcher == nil && resurrector == nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.Battery
 			api.ChargerEx
 			api.Identifier
@@ -1682,7 +1682,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery != nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseSwitcher != nil && resurrector == nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.Battery
 			api.Meter
 			api.MeterEnergy
@@ -1705,7 +1705,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery != nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseSwitcher != nil && resurrector == nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.Battery
 			api.ChargerEx
 			api.Meter
@@ -1732,7 +1732,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery != nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseSwitcher != nil && resurrector == nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.Battery
 			api.Identifier
 			api.Meter
@@ -1759,7 +1759,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery != nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseSwitcher != nil && resurrector == nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.Battery
 			api.ChargerEx
 			api.Identifier
@@ -1790,7 +1790,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery != nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseSwitcher == nil && resurrector != nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.Battery
 			api.Meter
 			api.MeterEnergy
@@ -1813,7 +1813,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery != nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseSwitcher == nil && resurrector != nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.Battery
 			api.ChargerEx
 			api.Meter
@@ -1840,7 +1840,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery != nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseSwitcher == nil && resurrector != nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.Battery
 			api.Identifier
 			api.Meter
@@ -1867,7 +1867,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery != nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseSwitcher == nil && resurrector != nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.Battery
 			api.ChargerEx
 			api.Identifier
@@ -1898,7 +1898,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery != nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseSwitcher != nil && resurrector != nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.Battery
 			api.Meter
 			api.MeterEnergy
@@ -1925,7 +1925,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery != nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseSwitcher != nil && resurrector != nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.Battery
 			api.ChargerEx
 			api.Meter
@@ -1956,7 +1956,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery != nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseSwitcher != nil && resurrector != nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.Battery
 			api.Identifier
 			api.Meter
@@ -1987,7 +1987,7 @@ func decorateCustom(base api.Charger, chargerEx func(float64) error, identifier 
 
 	case battery != nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseSwitcher != nil && resurrector != nil:
 		return &struct {
-			api.Charger
+			*Charger
 			api.Battery
 			api.ChargerEx
 			api.Identifier

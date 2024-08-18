@@ -11,6 +11,17 @@ func decorateRCT(base *RCT, meterEnergy func() (float64, error), battery func() 
 	case battery == nil && batteryCapacity == nil && meterEnergy == nil:
 		return base
 
+	case battery == nil && batteryCapacity == nil && meterEnergy != nil:
+		return &struct {
+			*RCT
+			api.MeterEnergy
+		}{
+			RCT: base,
+			MeterEnergy: &decorateRCTMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+		}
+
 	case battery != nil && batteryCapacity == nil && meterEnergy == nil:
 		return &struct {
 			*RCT
@@ -19,6 +30,21 @@ func decorateRCT(base *RCT, meterEnergy func() (float64, error), battery func() 
 			RCT: base,
 			Battery: &decorateRCTBatteryImpl{
 				battery: battery,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && meterEnergy != nil:
+		return &struct {
+			*RCT
+			api.Battery
+			api.MeterEnergy
+		}{
+			RCT: base,
+			Battery: &decorateRCTBatteryImpl{
+				battery: battery,
+			},
+			MeterEnergy: &decorateRCTMeterEnergyImpl{
+				meterEnergy: meterEnergy,
 			},
 		}
 
@@ -34,6 +60,25 @@ func decorateRCT(base *RCT, meterEnergy func() (float64, error), battery func() 
 			},
 			BatteryCapacity: &decorateRCTBatteryCapacityImpl{
 				batteryCapacity: batteryCapacity,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && meterEnergy != nil:
+		return &struct {
+			*RCT
+			api.Battery
+			api.BatteryCapacity
+			api.MeterEnergy
+		}{
+			RCT: base,
+			Battery: &decorateRCTBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateRCTBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			MeterEnergy: &decorateRCTMeterEnergyImpl{
+				meterEnergy: meterEnergy,
 			},
 		}
 	}

@@ -106,7 +106,7 @@ func generate(out io.Writer, packageName, functionName, baseType string, dynamic
 COMBO:
 	for _, c := range combinations.All(combos) {
 		for master, details := range dependents {
-			if !slices.Contains(c, master) && hasIntersection(c, details) {
+			if returnType != master && !slices.Contains(c, master) && hasIntersection(c, details) {
 				continue COMBO
 			}
 		}
