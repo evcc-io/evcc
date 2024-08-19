@@ -232,7 +232,7 @@ func NewOCPP(id string, connector int, idtag string,
 
 				case ocpp.KeySupportedFeatureProfiles:
 					if !c.hasProperty(*opt.Value, smartcharging.ProfileName) {
-						err = fmt.Errorf("the mandatory SmartCharging profile is not supported")
+						c.log.WARN.Printf("the required SmartCharging feature profile is not indicated as supported")
 					}
 					c.hasRemoteTriggerFeature = c.hasProperty(*opt.Value, remotetrigger.ProfileName)
 
