@@ -52,7 +52,7 @@ docs::
 	go generate github.com/evcc-io/evcc/util/templates/...
 
 lint::
-	golangci-lint run --timeout 1200s
+	golangci-lint run --timeout 400s
 
 lint-ui::
 	npm run lint
