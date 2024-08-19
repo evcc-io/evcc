@@ -179,13 +179,10 @@ func NewOCPP(id string, connector int, idtag string,
 	// fix timing issue in EVBox when switching OCPP protocol version
 	time.Sleep(time.Second)
 
-	var (
-		rc = make(chan error, 1)
+	var rc = make(chan error, 1)
 
-		// If a key value is defined as a CSL, it MAY be accompanied with a [KeyName]MaxLength key, indicating the
-		// max length of the CSL in items. If this key is not set, a safe value of 1 (one) item SHOULD be assumed.
-		meterValuesSampledDataMaxLength = 1
-	)
+	meterValuesSampledData := ""
+	meterValuesSampledDataMaxLength := len(strings.Split(desiredMeasurands, ","))
 
 	err = ocpp.Instance().GetConfiguration(cp.ID(), func(resp *core.GetConfigurationConfirmation, err error) {
 		if err == nil {
@@ -220,6 +217,7 @@ func NewOCPP(id string, connector int, idtag string,
 					if opt.Readonly {
 						meterValuesSampledDataMaxLength = 0
 					}
+					meterValuesSampledData = *opt.Value
 
 				case ocpp.KeyMeterValuesSampledDataMaxLength:
 					if val, err := strconv.Atoi(*opt.Value); err == nil {
@@ -286,12 +284,12 @@ func NewOCPP(id string, connector int, idtag string,
 
 	// configure measurands
 	if meterValues != "" {
-		if err := c.configure(ocpp.KeyMeterValuesSampledData, meterValues); err != nil {
-			return nil, err
+		if err := c.configure(ocpp.KeyMeterValuesSampledData, meterValues); err == nil {
+			meterValuesSampledData = meterValues
 		}
 	}
 
-	c.meterValuesSample = meterValues
+	c.meterValuesSample = meterValuesSampledData
 
 	// trigger initial meter values
 	if c.hasRemoteTriggerFeature {
