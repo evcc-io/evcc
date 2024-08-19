@@ -1,6 +1,6 @@
 module github.com/evcc-io/evcc
 
-go 1.22.0
+go 1.23.0
 
 require (
 	dario.cat/mergo v1.0.0
@@ -18,15 +18,16 @@ require (
 	github.com/bogosj/tesla v1.3.1
 	github.com/cenkalti/backoff/v4 v4.3.0
 	github.com/cloudfoundry/jibber_jabber v0.0.0-20151120183258-bcc4c8345a21
+	github.com/coder/websocket v1.8.12
 	github.com/containrrr/shoutrrr v0.8.0
 	github.com/coreos/go-oidc/v3 v3.10.0
 	github.com/denisbrodbeck/machineid v1.0.1
 	github.com/dmarkham/enumer v1.5.10
 	github.com/dylanmei/iso8601 v0.1.0
 	github.com/eclipse/paho.mqtt.golang v1.4.3
-	github.com/enbility/eebus-go v0.6.1
-	github.com/enbility/ship-go v0.5.2
-	github.com/enbility/spine-go v0.6.1
+	github.com/enbility/eebus-go v0.6.2
+	github.com/enbility/ship-go v0.5.3
+	github.com/enbility/spine-go v0.6.2
 	github.com/evcc-io/tesla-proxy-client v0.0.0-20240221194046-4168b3759701
 	github.com/fatih/structs v1.1.0
 	github.com/glebarez/sqlite v1.11.0
@@ -89,7 +90,7 @@ require (
 	github.com/teslamotors/vehicle-command v0.0.2
 	github.com/traefik/yaegi v0.16.1
 	github.com/tv42/httpunix v0.0.0-20191220191345-2ba4b9c3382c
-	github.com/volkszaehler/mbmd v0.0.0-20240611142726-33463eb0324e
+	github.com/volkszaehler/mbmd v0.0.0-20240727104742-3191c0dbfb9e
 	github.com/writeas/go-strip-markdown/v2 v2.1.1
 	gitlab.com/bboehmke/sunny v0.16.0
 	go.uber.org/mock v0.4.0
@@ -105,7 +106,6 @@ require (
 	google.golang.org/protobuf v1.34.2
 	gopkg.in/yaml.v3 v3.0.1
 	gorm.io/gorm v1.25.10
-	nhooyr.io/websocket v1.8.11
 )
 
 require (
@@ -193,12 +193,11 @@ require (
 	modernc.org/mathutil v1.6.0 // indirect
 	modernc.org/memory v1.8.0 // indirect
 	modernc.org/sqlite v1.30.1 // indirect
+	nhooyr.io/websocket v1.8.17 // indirect
 )
 
 replace gopkg.in/yaml.v3 => github.com/andig/yaml v0.0.0-20240531135838-1ff5761ab467
 
-replace github.com/enbility/spine-go => github.com/enbility/spine-go v0.0.0-20240726200332-a983de1e34b8
-
-replace github.com/enbility/ship-go => github.com/enbility/ship-go v0.0.0-20240731093131-37b1302bca66
+replace github.com/grid-x/modbus => github.com/evcc-io/modbus v0.0.0-20240503125516-9fd99fe0e438
 
 replace github.com/lorenzodonini/ocpp-go => github.com/evcc-io/ocpp-go v0.0.0-20240730071053-d69e53b0fce9

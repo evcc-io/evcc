@@ -208,8 +208,7 @@ func (c *Easee) chargerSite(charger string) (easee.Site, error) {
 
 // connect creates an HTTP connection to the signalR hub
 func (c *Easee) connect(ts oauth2.TokenSource) func() (signalr.Connection, error) {
-	bo := backoff.NewExponentialBackOff()
-	bo.MaxInterval = time.Minute
+	bo := backoff.NewExponentialBackOff(backoff.WithMaxInterval(time.Minute))
 
 	return func() (conn signalr.Connection, err error) {
 		defer func() {
@@ -781,7 +780,7 @@ func (c *Easee) Phases1p3p(phases int) error {
 	} else {
 		// charger level
 		if phases == 3 {
-			phases = 2 // mode 2 means 3p
+			phases = 2 // mode 2 means auto
 		}
 
 		// change phaseMode only if necessary
@@ -795,10 +794,9 @@ func (c *Easee) Phases1p3p(phases int) error {
 			if _, err = c.postJSONAndWait(uri, data); err != nil {
 				return err
 			}
-
-			// disable charger to activate changed settings (loadpoint will reenable it)
-			err = c.Enable(false)
 		}
+		// disable charger to activate changed settings (loadpoint will reenable it)
+		err = c.Enable(false)
 	}
 
 	return err

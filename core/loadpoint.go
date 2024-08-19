@@ -121,12 +121,12 @@ type Loadpoint struct {
 	MinCurrent_       float64       `mapstructure:"minCurrent"`
 	MaxCurrent_       float64       `mapstructure:"maxCurrent"`
 
-	minCurrent       float64 // PV mode: start current	Min+PV mode: min current
-	maxCurrent       float64 // Max allowed current. Physically ensured by the charger
-	configuredPhases int     // Charger configured phase mode 0/1/3
-	limitSoc         int     // Session limit for soc
-	limitEnergy      float64 // Session limit for energy
-	smartCostLimit   float64 // always charge if cost is below this value
+	minCurrent       float64  // PV mode: start current	Min+PV mode: min current
+	maxCurrent       float64  // Max allowed current. Physically ensured by the charger
+	configuredPhases int      // Charger configured phase mode 0/1/3
+	limitSoc         int      // Session limit for soc
+	limitEnergy      float64  // Session limit for energy
+	smartCostLimit   *float64 // always charge if cost is below this value
 
 	mode                api.ChargeMode
 	enabled             bool      // Charger enabled state
@@ -337,8 +337,9 @@ func (lp *Loadpoint) restoreSettings() {
 		lp.setLimitEnergy(v)
 	}
 	if v, err := lp.settings.Float(keys.SmartCostLimit); err == nil {
-		lp.SetSmartCostLimit(v)
+		lp.SetSmartCostLimit(&v)
 	}
+
 	t, err1 := lp.settings.Time(keys.PlanTime)
 	v, err2 := lp.settings.Float(keys.PlanEnergy)
 	if err1 == nil && err2 == nil {
@@ -864,6 +865,11 @@ func (lp *Loadpoint) setLimit(chargeCurrent float64) error {
 		lp.setAndPublishEnabled(enabled)
 		lp.chargerSwitched = lp.clock.Now()
 
+		// ensure we always re-set current when enabling charger
+		if !enabled {
+			lp.chargeCurrent = 0
+		}
+
 		lp.bus.Publish(evChargeCurrent, chargeCurrent)
 
 		// start/stop vehicle wake-up timer
@@ -1081,7 +1087,7 @@ func (lp *Loadpoint) resetPVTimer(typ ...string) {
 	if len(typ) == 1 {
 		msg = fmt.Sprintf("pv %s timer reset", typ[0])
 	}
-	lp.log.DEBUG.Printf(msg)
+	lp.log.DEBUG.Println(msg)
 
 	lp.pvTimer = time.Time{}
 	lp.publishTimer(pvTimer, 0, timerInactive)
@@ -1365,10 +1371,7 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batter
 
 // UpdateChargePowerAndCurrents updates charge meter power and currents for load management
 func (lp *Loadpoint) UpdateChargePowerAndCurrents() {
-	bo := backoff.NewExponentialBackOff()
-	bo.MaxElapsedTime = time.Second
-
-	if power, err := backoff.RetryWithData(lp.chargeMeter.CurrentPower, bo); err == nil {
+	if power, err := backoff.RetryWithData(lp.chargeMeter.CurrentPower, bo()); err == nil {
 		lp.Lock()
 		lp.chargePower = power // update value if no error
 		lp.Unlock()
@@ -1405,7 +1408,7 @@ func (lp *Loadpoint) UpdateChargePowerAndCurrents() {
 		lp.publish(keys.ChargeCurrents, lp.chargeCurrents)
 
 		return nil
-	}, bo); err != nil {
+	}, bo()); err != nil {
 		lp.log.ERROR.Printf("charge currents: %v", err)
 	}
 }
@@ -1634,9 +1637,18 @@ func (lp *Loadpoint) phaseSwitchCompleted() bool {
 }
 
 // Update is the main control function. It reevaluates meters and charger state
-func (lp *Loadpoint) Update(sitePower float64, smartCostActive bool, smartCostNextStart time.Time, batteryBuffered, batteryStart bool, greenShare float64, effPrice, effCo2 *float64) {
+func (lp *Loadpoint) Update(sitePower float64, rates api.Rates, batteryBuffered, batteryStart bool, greenShare float64, effPrice, effCo2 *float64) {
+	// smart cost
+	smartCostActive := lp.smartCostActive(rates)
 	lp.publish(keys.SmartCostActive, smartCostActive)
+
+	var smartCostNextStart time.Time
+	if !smartCostActive {
+		smartCostNextStart = lp.smartCostNextStart(rates)
+	}
 	lp.publish(keys.SmartCostNextStart, smartCostNextStart)
+
+	// long-running tasks
 	lp.processTasks()
 
 	// read and publish meters first- charge power and currents have already been updated by the site

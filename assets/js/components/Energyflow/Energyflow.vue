@@ -160,7 +160,17 @@
 							:detailsFmt="batteryFmt"
 							detailsClickable
 							@details-clicked="openBatterySettingsModal"
-						/>
+						>
+							<template v-if="batteryGridChargeActive" #subline>
+								<button
+									type="button"
+									class="btn-reset d-flex justify-content-between"
+									@click.stop="openBatterySettingsModal"
+								>
+									{{ batteryGridChargeText }} (≤ {{ batteryGridChargeLimitFmt }})
+								</button>
+							</template>
+						</EnergyflowEntry>
 						<EnergyflowEntry
 							v-if="pvPossible"
 							:name="$t('main.energyflow.pvExport')"
@@ -211,6 +221,8 @@ export default {
 		batteryPower: { type: Number, default: 0 },
 		batterySoc: { type: Number, default: 0 },
 		batteryDischargeControl: { type: Boolean },
+		batteryGridChargeLimit: { type: Number },
+		batteryGridChargeActive: { type: Boolean },
 		batteryMode: { type: String },
 		tariffGrid: { type: Number },
 		tariffFeedIn: { type: Number },
@@ -306,6 +318,26 @@ export default {
 		},
 		pvPossible() {
 			return this.pvConfigured || this.gridConfigured;
+		},
+		batteryGridChargeText() {
+			return this.$t(
+				`main.energyflow.${this.co2Available ? "clean" : "cheap"}BatteryGridCharge`
+			);
+		},
+		batteryGridChargeNow() {
+			if (this.co2Available) {
+				return this.fmtCo2Short(this.tariffCo2);
+			}
+			return this.fmtPricePerKWh(this.tariffGrid, this.currency, true);
+		},
+		batteryGridChargeLimitFmt() {
+			if (this.batteryGridChargeLimit === null || this.batteryGridChargeLimit === undefined) {
+				return;
+			}
+			if (this.co2Available) {
+				return this.fmtCo2Short(this.batteryGridChargeLimit);
+			}
+			return this.fmtPricePerKWh(this.batteryGridChargeLimit, this.currency, true);
 		},
 	},
 	watch: {

@@ -86,7 +86,7 @@ type VehicleStatus struct {
 			ChargeLevel                    int     `json:"chargeLevel,string"`                    // "76",
 			StatusOfChargerConnection      int     `json:"statusOfChargerConnection,string"`      // "0",
 			DcDcActvd                      int     `json:"dcDcActvd,string"`                      // "0",
-			IndPowerConsumption            int     `json:"indPowerConsumption,string"`            // "1000",
+			IndPowerConsumption            float64 `json:"indPowerConsumption,string"`            // "1000",
 			DcDcConnectStatus              int     `json:"dcDcConnectStatus,string"`              // "0",
 			DisChargeIAct                  float64 `json:"disChargeIAct,string"`                  // "0.0",
 			DcChargeIAct                   float64 `json:"dcChargeIAct,string"`                   // "0.0",

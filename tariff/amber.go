@@ -82,7 +82,6 @@ func NewAmberFromConfig(other map[string]interface{}) (api.Tariff, error) {
 
 func (t *Amber) run(done chan error) {
 	var once sync.Once
-	bo := newBackoff()
 
 	tick := time.NewTicker(time.Minute)
 	for ; true; <-tick.C {
@@ -91,7 +90,7 @@ func (t *Amber) run(done chan error) {
 
 		if err := backoff.Retry(func() error {
 			return backoffPermanentError(t.GetJSON(uri, &res))
-		}, bo); err != nil {
+		}, bo()); err != nil {
 			once.Do(func() { done <- err })
 
 			t.log.ERROR.Println(err)
@@ -112,9 +111,8 @@ func (t *Amber) run(done chan error) {
 				data = append(data, ar)
 			}
 		}
-		data.Sort()
 
-		t.data.Set(data)
+		mergeRates(t.data, data)
 		once.Do(func() { close(done) })
 	}
 }

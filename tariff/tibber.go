@@ -72,7 +72,6 @@ func NewTibberFromConfig(other map[string]interface{}) (api.Tariff, error) {
 
 func (t *Tibber) run(done chan error) {
 	var once sync.Once
-	bo := newBackoff()
 
 	v := map[string]interface{}{
 		"id": graphql.ID(t.homeID),
@@ -94,7 +93,7 @@ func (t *Tibber) run(done chan error) {
 			ctx, cancel := context.WithTimeout(context.Background(), request.Timeout)
 			defer cancel()
 			return t.client.Query(ctx, &res, v)
-		}, bo); err != nil {
+		}, bo()); err != nil {
 			once.Do(func() { done <- err })
 
 			t.log.ERROR.Println(err)
@@ -103,9 +102,8 @@ func (t *Tibber) run(done chan error) {
 
 		pi := res.Viewer.Home.CurrentSubscription.PriceInfo
 		data := append(t.rates(pi.Today), t.rates(pi.Tomorrow)...)
-		data.Sort()
 
-		t.data.Set(data)
+		mergeRates(t.data, data)
 		once.Do(func() { close(done) })
 	}
 }
