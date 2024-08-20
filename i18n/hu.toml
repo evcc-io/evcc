@@ -25,8 +25,8 @@ never = "csak ha van elég többlet."
 [config]
 
 [config.battery]
-titleAdd = "Energiatároló Mérő Hozzáadása"
-titleEdit = "Energiatároló Mérő Szerkesztése"
+titleAdd = "Akkumulátor Hozzáadása"
+titleEdit = "Akkumulátor Szerkesztése"
 
 [config.circuits]
 description = "Gondoskodik arról, hogy az áramkörhöz csatlakoztatott összes terhelési pont összege ne haladja meg a beállított teljesítmény- és áramkorlátokat. Az áramkörök egymásba ágyazhatók a hierarchia felépítéséhez."
@@ -40,6 +40,7 @@ descriptionResidualPower = "Eltolja a vezérlőkör működési pontját. Ha ott
 labelInterval = "Frissítési intervallum"
 labelMaxGridSupply = "Max. hálózati ellátás töltés közben"
 title = "Vezérlési mód"
+labelResidualPower = Tartalék energia
 
 [config.deviceValue]
 broker = "Bróker"
@@ -76,6 +77,7 @@ temp = "Hőmérséklet"
 topic = "Téma"
 url = "URL"
 yes = "igen"
+controllable = Vezérelhető
 
 [config.eebus]
 description = "Konfiguráció ami engedélyezi az evcc-nek, hogy kommunikáljon más EEBus eszközökkel."
@@ -355,6 +357,8 @@ search = "Keresés"
 showAll = "Az összes bejegyzés megjelenítése"
 title = "Napló"
 update = "Automatikus frissítés"
+selectAll = összes kiválasztása
+nAreas = {count} terület
 
 [loginModal]
 cancel = "Mégse"
