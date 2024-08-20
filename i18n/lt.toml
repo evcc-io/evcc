@@ -27,8 +27,8 @@ never = "tik su pakankamu pertekliumi."
 [config]
 
 [config.battery]
-titleAdd = "Pridėti kaupiklio skaitiklį"
-titleEdit = "Redaguoti kaupiklio skaitiklį"
+titleAdd = "Pridėti kaupiklį"
+titleEdit = "Redaguoti kaupiklį"
 
 [config.circuits]
 description = "Užtikrina, kad naudojant visus į grandinę sujungtus įkroviklius, neviršytumėte sukonfigūruotų galios ir srovės ribų. Grandines galima sudėlioti, kad būtų sukurta hierarchija."
@@ -79,6 +79,7 @@ temp = "Temperatūra"
 topic = "Tema"
 url = "URL"
 yes = "taip"
+controllable = "Valdomas"
 
 [config.eebus]
 description = "Konfigūracija, leidžianti evcc susisiekti su kitais EEBus įrenginiais."
@@ -374,6 +375,8 @@ search = "Ieškoti"
 showAll = "Rodyti visus įrašus"
 title = "Žurnalai"
 update = "Automatinis atnaujinimas"
+nAreas = "{count} sritys"
+selectAll = "pasirinkti visus"
 
 [loginModal]
 cancel = "Atšaukti"
