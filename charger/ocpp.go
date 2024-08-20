@@ -42,7 +42,7 @@ type OCPP struct {
 
 const (
 	defaultIdTag      = "evcc" // RemoteStartTransaction only
-	desiredMeasurands = "Power.Active.Import,Energy.Active.Import.Register,SoC,Current.Offered,Power.Offered,Current.Import,Voltage"
+	desiredMeasurands = "Power.Active.Import,Energy.Active.Import.Register,Current.Import,Voltage,Current.Offered,Power.Offered,SoC"
 )
 
 func init() {
