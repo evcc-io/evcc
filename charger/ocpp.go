@@ -332,7 +332,9 @@ func (c *OCPP) hasMeasurement(val types.Measurand) bool {
 
 // hasProperty checks if comma-separated string contains given string ignoring whitespaces
 func (c *OCPP) hasProperty(props string, prop string) bool {
-	return strings.Contains(strings.ReplaceAll(props, " ", ""), prop)
+	return slices.ContainsFunc(strings.Split(props, ","), func(s string) bool {
+		return strings.HasPrefix(strings.ReplaceAll(s, " ", ""), prop)
+	})
 }
 
 func (c *OCPP) effectiveIdTag() string {
