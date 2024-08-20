@@ -48,32 +48,6 @@ func decorateLgEss(base *LgEss, meterEnergy func() (float64, error), battery fun
 			},
 		}
 
-	case battery == nil && batteryCapacity != nil && meterEnergy == nil:
-		return &struct {
-			*LgEss
-			api.BatteryCapacity
-		}{
-			LgEss: base,
-			BatteryCapacity: &decorateLgEssBatteryCapacityImpl{
-				batteryCapacity: batteryCapacity,
-			},
-		}
-
-	case battery == nil && batteryCapacity != nil && meterEnergy != nil:
-		return &struct {
-			*LgEss
-			api.BatteryCapacity
-			api.MeterEnergy
-		}{
-			LgEss: base,
-			BatteryCapacity: &decorateLgEssBatteryCapacityImpl{
-				batteryCapacity: batteryCapacity,
-			},
-			MeterEnergy: &decorateLgEssMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-		}
-
 	case battery != nil && batteryCapacity != nil && meterEnergy == nil:
 		return &struct {
 			*LgEss

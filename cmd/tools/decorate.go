@@ -7,10 +7,12 @@ import (
 	"go/format"
 	"io"
 	"os"
+	"reflect"
 	"slices"
 	"strings"
 	"text/template"
 
+	"github.com/evcc-io/evcc/api"
 	"github.com/go-sprout/sprout"
 	combinations "github.com/mxschmitt/golang-combinations"
 	"github.com/spf13/pflag"
@@ -27,6 +29,34 @@ type dynamicType struct {
 type typeStruct struct {
 	Type, ShortType, Signature, Function, VarName, ReturnTypes string
 	Params                                                     []string
+}
+
+var apii struct {
+	api.Meter
+	api.PhaseCurrents
+	api.PhaseSwitcher
+	api.Battery
+}
+
+func rType(i any) string {
+	return reflect.TypeOf(i).Elem().String()
+}
+
+var dependents = map[string][]string{
+	rType(&apii.Meter):         {"api.MeterEnergy", "api.PhaseCurrents", "api.PhaseVoltages", "api.PhasePowers"},
+	rType(&apii.PhaseCurrents): {"api.PhasePowers"}, // phase powers are only used to determine currents sign
+	rType(&apii.PhaseSwitcher): {"api.PhaseGetter"},
+	rType(&apii.Battery):       {"api.BatteryCapacity", "api.BatteryController"},
+}
+
+// hasIntersection returns if the slices intersect
+func hasIntersection[T comparable](a, b []T) bool {
+	for _, el := range a {
+		if slices.Contains(b, el) {
+			return true
+		}
+	}
+	return false
 }
 
 func generate(out io.Writer, packageName, functionName, baseType string, dynamicTypes ...dynamicType) error {
@@ -52,28 +82,25 @@ func generate(out io.Writer, packageName, functionName, baseType string, dynamic
 
 	for _, dt := range dynamicTypes {
 		parts := strings.SplitN(dt.typ, ".", 2)
+		lastPart := parts[len(parts)-1]
 
 		openingBrace := strings.Index(dt.signature, "(")
 		closingBrace := strings.Index(dt.signature, ")")
 		paramsStr := dt.signature[openingBrace+1 : closingBrace]
 
-		paramsStr = strings.TrimSpace(paramsStr)
-
 		var params []string
-		if len(paramsStr) > 0 {
+		if paramsStr = strings.TrimSpace(paramsStr); len(paramsStr) > 0 {
 			params = strings.Split(paramsStr, ",")
 		}
 
-		returnValuesStr := dt.signature[closingBrace+1:]
-
 		types[dt.typ] = typeStruct{
 			Type:        dt.typ,
-			ShortType:   parts[1],
-			VarName:     strings.ToLower(parts[1][:1]) + parts[1][1:],
+			ShortType:   lastPart,
+			VarName:     strings.ToLower(lastPart[:1]) + lastPart[1:],
 			Signature:   dt.signature,
 			Function:    dt.function,
 			Params:      params,
-			ReturnTypes: returnValuesStr,
+			ReturnTypes: dt.signature[closingBrace+1:],
 		}
 
 		combos = append(combos, dt.typ)
@@ -87,6 +114,17 @@ func generate(out io.Writer, packageName, functionName, baseType string, dynamic
 	shortBase := strings.TrimLeft(baseType, "*")
 	if baseTypeParts := strings.SplitN(baseType, ".", 2); len(baseTypeParts) > 1 {
 		shortBase = baseTypeParts[1]
+	}
+
+	validCombos := make([][]string, 0)
+COMBO:
+	for _, c := range combinations.All(combos) {
+		for master, details := range dependents {
+			if returnType != master && !slices.Contains(c, master) && hasIntersection(c, details) {
+				continue COMBO
+			}
+		}
+		validCombos = append(validCombos, c)
 	}
 
 	vars := struct {
@@ -104,7 +142,7 @@ func generate(out io.Writer, packageName, functionName, baseType string, dynamic
 		ShortBase:    shortBase,
 		ReturnType:   returnType,
 		Types:        types,
-		Combinations: combinations.All(combos),
+		Combinations: validCombos,
 	}
 
 	return tmpl.Execute(out, vars)
