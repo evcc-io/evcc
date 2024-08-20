@@ -40,7 +40,7 @@ render: |
     register:
       address: 522 # "Total_GridBuy_Power Wh"
       type: holding
-      decode: uint32
+      decode: uint32s
     scale: 0.1
   currents:
     - source: modbus
@@ -99,7 +99,7 @@ render: |
     register:
       address: 534 # "Total_PV_Power_Wh"
       type: holding
-      decode: uint32
+      decode: uint32s
     scale: 0.1
   {{- end }}
   {{- if eq .usage "battery" }}
@@ -251,6 +251,6 @@ render: |
     register:
       address: 518 # "Total discharge of the battery (Wh)"
       type: holding
-      decode: uint32
+      decode: uint32s
     scale: 0.1
   {{- end }}
