@@ -47,6 +47,40 @@ render: |
         address: 822 # L3 grid power
         type: input
         decode: int16
+  currents:
+    - source: calc
+      div: # values in modbus registers are multiplied by 10 
+      - source: modbus
+        uri: {{ .host }}:{{ .port }}
+        id: 30
+        register:
+          address: 2617 # L1 grid current
+          type: input
+          decode: int16
+      - source: const
+        value: 10
+    - source: calc
+      div:
+      - source: modbus
+        uri: {{ .host }}:{{ .port }}
+        id: 30
+        register:
+          address: 2619 # L2 grid current
+          type: input
+          decode: int16
+      - source: const
+        value: 10
+    - source: calc
+      div:
+      - source: modbus
+        uri: {{ .host }}:{{ .port }}
+        id: 30
+        register:
+          address: 2621 # L3 grid current
+          type: input
+          decode: int16
+      - source: const
+        value: 10
   {{- end }}
   {{- if eq .usage "pv" }}
   power:
