@@ -27,8 +27,8 @@ never = "kun med nok overskud."
 [config]
 
 [config.battery]
-titleAdd = "Tilføj batterimåler"
-titleEdit = "Rediger batterimåler"
+titleAdd = "Tilføj batteri"
+titleEdit = "Rediger batteri"
 
 [config.circuits]
 description = "Sikrer, at summen af alle ladepunkter forbundet til et kredsløb ikke overstiger de konfigurerede effekt- og strømgrænser. Kredsløb kan indlejres for at opbygge et hierarki."
@@ -57,6 +57,7 @@ chargeStatusF = "fejl"
 chargedEnergy = "Opladet"
 co2 = "Elnettet CO₂"
 configured = "Konfigureret"
+controllable = "Kan styres"
 currency = "Møntenhed"
 current = "Ström"
 currentRange = "Strømstyrke"
