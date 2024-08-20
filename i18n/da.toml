@@ -27,8 +27,8 @@ never = "kun med nok overskud."
 [config]
 
 [config.battery]
-titleAdd = "Tilføj batterimåler"
-titleEdit = "Rediger batterimåler"
+titleAdd = "Tilføj batteri"
+titleEdit = "Rediger batteri"
 
 [config.circuits]
 description = "Sikrer, at summen af alle ladepunkter forbundet til et kredsløb ikke overstiger de konfigurerede effekt- og strømgrænser. Kredsløb kan indlejres for at opbygge et hierarki."
@@ -79,6 +79,7 @@ temp = "Temperatur"
 topic = "Emne"
 url = "URL"
 yes = "ja"
+controllable = "Kan styres"
 
 [config.eebus]
 description = "Indstilling der tillader evcc at kommunikere med andre EEBus enheder."
