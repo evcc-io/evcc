@@ -22,6 +22,17 @@ func decoratePCE(base *PCElectric, meter func() (float64, error), meterEnergy fu
 			},
 		}
 
+	case meter == nil && meterEnergy != nil && phaseCurrents == nil:
+		return &struct {
+			*PCElectric
+			api.MeterEnergy
+		}{
+			PCElectric: base,
+			MeterEnergy: &decoratePCEMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+		}
+
 	case meter != nil && meterEnergy != nil && phaseCurrents == nil:
 		return &struct {
 			*PCElectric
@@ -37,6 +48,17 @@ func decoratePCE(base *PCElectric, meter func() (float64, error), meterEnergy fu
 			},
 		}
 
+	case meter == nil && meterEnergy == nil && phaseCurrents != nil:
+		return &struct {
+			*PCElectric
+			api.PhaseCurrents
+		}{
+			PCElectric: base,
+			PhaseCurrents: &decoratePCEPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+		}
+
 	case meter != nil && meterEnergy == nil && phaseCurrents != nil:
 		return &struct {
 			*PCElectric
@@ -46,6 +68,21 @@ func decoratePCE(base *PCElectric, meter func() (float64, error), meterEnergy fu
 			PCElectric: base,
 			Meter: &decoratePCEMeterImpl{
 				meter: meter,
+			},
+			PhaseCurrents: &decoratePCEPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+		}
+
+	case meter == nil && meterEnergy != nil && phaseCurrents != nil:
+		return &struct {
+			*PCElectric
+			api.MeterEnergy
+			api.PhaseCurrents
+		}{
+			PCElectric: base,
+			MeterEnergy: &decoratePCEMeterEnergyImpl{
+				meterEnergy: meterEnergy,
 			},
 			PhaseCurrents: &decoratePCEPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
