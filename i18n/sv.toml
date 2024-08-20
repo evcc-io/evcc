@@ -27,8 +27,8 @@ never = "bara med tillräckligt sol-överskott."
 [config]
 
 [config.battery]
-titleAdd = "Lägg till batterimätare"
-titleEdit = "Ändra batterimätare"
+titleAdd = "Lägg till batteri"
+titleEdit = "Ändra batteri"
 
 [config.circuits]
 description = "Säkrar, att summan av laddpunkter kopplad till en krets inte överskrider den konfigurerade effektgränsen. Kretsar kan nästlas för att bygga en hierarki."
@@ -79,6 +79,7 @@ temp = "Temperatur"
 topic = "Ämne"
 url = "URL"
 yes = "ja"
+controllable = "Kontrollerbar"
 
 [config.eebus]
 description = "Inställning som tillåter evcc att kommunicera med andra EEBus-enheter."
