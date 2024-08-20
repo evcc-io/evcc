@@ -27,8 +27,8 @@ never = "cuando hay suficiente excedente."
 [config]
 
 [config.battery]
-titleAdd = "Añadir medidor de batería"
-titleEdit = "Editar el medidor de batería"
+titleAdd = "Añadir batería"
+titleEdit = "Editar batería"
 
 [config.circuits]
 description = "Se asegura que la suma de todos los puntos de carga conectados a un circuito no exceda la potencia configurada y los límites actuales. Los circuitos pueden ser anidados para construir una jerarquía"
@@ -79,6 +79,7 @@ temp = "Temperatura"
 topic = "Tema"
 url = "URL"
 yes = "sí"
+controllable = "Controlable"
 
 [config.eebus]
 description = "Configuración que permite a evcc comunicarse con otros dispositivos EEBus"
@@ -374,6 +375,8 @@ search = "Buscar"
 showAll = "Mostrar todas las entradas"
 title = "Registros"
 update = "Actualización automática"
+selectAll = "seleccionar todo"
+nAreas = "{count} áreas"
 
 [loginModal]
 cancel = "Cancelar"
