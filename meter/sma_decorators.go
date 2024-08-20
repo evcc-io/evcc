@@ -22,6 +22,17 @@ func decorateSMA(base *SMA, battery func() (float64, error), batteryCapacity fun
 			},
 		}
 
+	case battery == nil && batteryCapacity != nil:
+		return &struct {
+			*SMA
+			api.BatteryCapacity
+		}{
+			SMA: base,
+			BatteryCapacity: &decorateSMABatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+		}
+
 	case battery != nil && batteryCapacity != nil:
 		return &struct {
 			*SMA
