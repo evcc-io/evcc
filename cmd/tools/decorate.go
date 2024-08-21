@@ -128,6 +128,10 @@ func generate(out io.Writer, packageName, functionName, baseType string, dynamic
 COMBO:
 	for _, c := range combinations.All(combos) {
 		for master, details := range dependents {
+			// exclude combinations where ...
+			// - master is part of the decorators
+			// - master is not part of the currently evaluated combination
+			// - details are not part of the currently evaluated combination
 			if slices.Contains(combos, master) && !slices.Contains(c, master) && hasIntersection(c, details) {
 				continue COMBO
 			}
