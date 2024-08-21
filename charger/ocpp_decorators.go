@@ -721,7 +721,7 @@ func decorateOCPP(base *OCPP, meter func() (float64, error), meterEnergy func() 
 		}
 	}
 
-	return nil
+	panic("invalid combination of decorators")
 }
 
 type decorateOCPPBatteryImpl struct {

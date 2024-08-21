@@ -72,7 +72,7 @@ func decorateE3dc(base *E3dc, batteryCapacity func() float64, battery func() (fl
 		}
 	}
 
-	return nil
+	panic("invalid combination of decorators")
 }
 
 type decorateE3dcBatteryImpl struct {

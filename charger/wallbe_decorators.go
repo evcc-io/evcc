@@ -159,7 +159,7 @@ func decorateWallbe(base *Wallbe, meter func() (float64, error), meterEnergy fun
 		}
 	}
 
-	return nil
+	panic("invalid combination of decorators")
 }
 
 type decorateWallbeChargerExImpl struct {

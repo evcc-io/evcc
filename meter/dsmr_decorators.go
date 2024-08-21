@@ -49,7 +49,7 @@ func decorateDsmr(base api.Meter, meterEnergy func() (float64, error), phaseCurr
 		}
 	}
 
-	return nil
+	panic("invalid combination of decorators")
 }
 
 type decorateDsmrMeterEnergyImpl struct {

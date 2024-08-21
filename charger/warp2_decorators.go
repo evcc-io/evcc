@@ -1187,7 +1187,7 @@ func decorateWarp2(base *Warp2, meter func() (float64, error), meterEnergy func(
 		}
 	}
 
-	return nil
+	panic("invalid combination of decorators")
 }
 
 type decorateWarp2IdentifierImpl struct {

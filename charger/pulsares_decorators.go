@@ -23,7 +23,7 @@ func decoratePulsares(base *Pulsares, phaseSwitcher func(int) error) api.Charger
 		}
 	}
 
-	return nil
+	panic("invalid combination of decorators")
 }
 
 type decoratePulsaresPhaseSwitcherImpl struct {

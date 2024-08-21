@@ -721,7 +721,7 @@ func decoratePhoenixEVEth(base *PhoenixEVEth, meter func() (float64, error), met
 		}
 	}
 
-	return nil
+	panic("invalid combination of decorators")
 }
 
 type decoratePhoenixEVEthChargerExImpl struct {

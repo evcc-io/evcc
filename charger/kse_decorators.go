@@ -83,7 +83,7 @@ func decorateKSE(base *KSE, phaseSwitcher func(int) error, phaseGetter func() (i
 		}
 	}
 
-	return nil
+	panic("invalid combination of decorators")
 }
 
 type decorateKSEIdentifierImpl struct {

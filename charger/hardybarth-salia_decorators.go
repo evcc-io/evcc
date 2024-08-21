@@ -72,7 +72,7 @@ func decorateSalia(base *Salia, meter func() (float64, error), meterEnergy func(
 		}
 	}
 
-	return nil
+	panic("invalid combination of decorators")
 }
 
 type decorateSaliaMeterImpl struct {

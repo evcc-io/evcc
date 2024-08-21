@@ -83,7 +83,7 @@ func decorateEEBus(base *EEBus, meter func() (float64, error), phaseCurrents fun
 		}
 	}
 
-	return nil
+	panic("invalid combination of decorators")
 }
 
 type decorateEEBusChargeRaterImpl struct {

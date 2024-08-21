@@ -587,7 +587,7 @@ func decorateKeba(base *Keba, meter func() (float64, error), meterEnergy func() 
 		}
 	}
 
-	return nil
+	panic("invalid combination of decorators")
 }
 
 type decorateKebaIdentifierImpl struct {

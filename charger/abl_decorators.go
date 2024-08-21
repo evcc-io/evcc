@@ -38,7 +38,7 @@ func decorateABLeMH(base *ABLeMH, meter func() (float64, error), phaseCurrents f
 		}
 	}
 
-	return nil
+	panic("invalid combination of decorators")
 }
 
 type decorateABLeMHMeterImpl struct {

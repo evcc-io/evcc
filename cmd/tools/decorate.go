@@ -19,6 +19,8 @@ import (
 	"golang.org/x/tools/imports"
 )
 
+//go:generate go run ./decorate.go -f decorateTest -b api.Charger -t "api.MeterEnergy,TotalEnergy,func() (float64, error)"
+
 //go:embed decorate.tpl
 var srcTmpl string
 
@@ -131,7 +133,7 @@ COMBO:
 			// exclude combinations where ...
 			// - master is part of the decorators
 			// - master is not part of the currently evaluated combination
-			// - details are not part of the currently evaluated combination
+			// - details are part of the currently evaluated combination
 			if slices.Contains(combos, master) && !slices.Contains(c, master) && hasIntersection(c, details) {
 				continue COMBO
 			}

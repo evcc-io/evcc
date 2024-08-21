@@ -83,7 +83,7 @@ func decorateEm2Go(base *Em2Go, chargerEx func(float64) error, phaseSwitcher fun
 		}
 	}
 
-	return nil
+	panic("invalid combination of decorators")
 }
 
 type decorateEm2GoChargerExImpl struct {

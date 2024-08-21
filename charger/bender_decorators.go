@@ -721,7 +721,7 @@ func decorateBenderCC(base *BenderCC, meter func() (float64, error), phaseCurren
 		}
 	}
 
-	return nil
+	panic("invalid combination of decorators")
 }
 
 type decorateBenderCCBatteryImpl struct {

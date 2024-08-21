@@ -109,7 +109,7 @@ func decorateTronity(base *Tronity, chargeState func() (api.ChargeStatus, error)
 		}
 	}
 
-	return nil
+	panic("invalid combination of decorators")
 }
 
 type decorateTronityChargeControllerImpl struct {

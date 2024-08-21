@@ -23,7 +23,7 @@ func decorateBoschBpts5Hybrid(base api.Meter, battery func() (float64, error)) a
 		}
 	}
 
-	return nil
+	panic("invalid combination of decorators")
 }
 
 type decorateBoschBpts5HybridBatteryImpl struct {

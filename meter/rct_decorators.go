@@ -83,7 +83,7 @@ func decorateRCT(base *RCT, meterEnergy func() (float64, error), battery func() 
 		}
 	}
 
-	return nil
+	panic("invalid combination of decorators")
 }
 
 type decorateRCTBatteryImpl struct {

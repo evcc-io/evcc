@@ -23,7 +23,7 @@ func decorateOpenWB20(base *OpenWB20, identifier func() (string, error)) api.Cha
 		}
 	}
 
-	return nil
+	panic("invalid combination of decorators")
 }
 
 type decorateOpenWB20IdentifierImpl struct {

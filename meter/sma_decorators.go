@@ -38,7 +38,7 @@ func decorateSMA(base *SMA, battery func() (float64, error), batteryCapacity fun
 		}
 	}
 
-	return nil
+	panic("invalid combination of decorators")
 }
 
 type decorateSMABatteryImpl struct {

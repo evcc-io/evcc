@@ -23,7 +23,7 @@ func decorateAmperfied(base *Amperfied, phaseSwitcher func(int) error) api.Charg
 		}
 	}
 
-	return nil
+	panic("invalid combination of decorators")
 }
 
 type decorateAmperfiedPhaseSwitcherImpl struct {

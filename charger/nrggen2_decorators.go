@@ -23,7 +23,7 @@ func decorateNRGKickGen2(base *NRGKickGen2, phaseSwitcher func(int) error) api.C
 		}
 	}
 
-	return nil
+	panic("invalid combination of decorators")
 }
 
 type decorateNRGKickGen2PhaseSwitcherImpl struct {

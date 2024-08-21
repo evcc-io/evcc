@@ -159,7 +159,7 @@ func decorateCfos(base *CfosPowerBrain, meter func() (float64, error), meterEner
 		}
 	}
 
-	return nil
+	panic("invalid combination of decorators")
 }
 
 type decorateCfosMeterImpl struct {

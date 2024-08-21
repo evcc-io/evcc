@@ -7461,7 +7461,7 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 		}
 	}
 
-	return nil
+	panic("invalid combination of decorators")
 }
 
 type decorateCustomBatteryImpl struct {

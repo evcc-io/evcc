@@ -23,7 +23,7 @@ func decorateGoE(base *GoE, phaseSwitcher func(int) error) api.Charger {
 		}
 	}
 
-	return nil
+	panic("invalid combination of decorators")
 }
 
 type decorateGoEPhaseSwitcherImpl struct {

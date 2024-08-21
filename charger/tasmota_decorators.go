@@ -49,7 +49,7 @@ func decorateTasmota(base *Tasmota, phaseVoltages func() (float64, float64, floa
 		}
 	}
 
-	return nil
+	panic("invalid combination of decorators")
 }
 
 type decorateTasmotaPhaseCurrentsImpl struct {

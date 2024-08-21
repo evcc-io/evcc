@@ -38,7 +38,7 @@ func decorateAlfen(base *Alfen, phaseSwitcher func(int) error, phaseGetter func(
 		}
 	}
 
-	return nil
+	panic("invalid combination of decorators")
 }
 
 type decorateAlfenPhaseGetterImpl struct {

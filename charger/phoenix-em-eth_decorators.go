@@ -148,7 +148,7 @@ func decoratePhoenixEMEth(base *PhoenixEMEth, meter func() (float64, error), met
 		}
 	}
 
-	return nil
+	panic("invalid combination of decorators")
 }
 
 type decoratePhoenixEMEthMeterImpl struct {
