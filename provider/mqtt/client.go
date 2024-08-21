@@ -2,6 +2,7 @@ package mqtt
 
 import (
 	"crypto/tls"
+	"crypto/x509"
 	"fmt"
 	"math/rand"
 	"strings"
@@ -26,11 +27,14 @@ func ClientID() string {
 
 // Config is the public configuration
 type Config struct {
-	Broker   string `json:"broker"`
-	User     string `json:"user"`
-	Password string `json:"password"`
-	ClientID string `json:"clientID"`
-	Insecure bool   `json:"insecure"`
+	Broker     string `json:"broker"`
+	User       string `json:"user"`
+	Password   string `json:"password"`
+	ClientID   string `json:"clientID"`
+	Insecure   bool   `json:"insecure"`
+	CaCert     string `json:"caCert"`
+	ClientCert string `json:"clientCert"`
+	ClientKey  string `json:"clientKey"`
 }
 
 // Client encapsulates mqtt publish/subscribe functions
@@ -49,7 +53,7 @@ type Option func(*paho.ClientOptions)
 const secure = "tls://"
 
 // NewClient creates new Mqtt publisher
-func NewClient(log *util.Logger, broker, user, password, clientID string, qos byte, insecure bool, opts ...Option) (*Client, error) {
+func NewClient(log *util.Logger, broker, user, password, clientID string, qos byte, insecure bool, caCertString string, clientCertString string, clientKeyString string, opts ...Option) (*Client, error) {
 	broker, isSecure := strings.CutPrefix(broker, secure)
 
 	// strip schema as it breaks net.SplitHostPort
@@ -75,9 +79,24 @@ func NewClient(log *util.Logger, broker, user, password, clientID string, qos by
 	options.SetConnectionLostHandler(mc.ConnectionLostHandler)
 	options.SetConnectTimeout(request.Timeout)
 
-	if insecure {
-		options.SetTLSConfig(&tls.Config{InsecureSkipVerify: true})
+	tlsConfig := &tls.Config{
+		InsecureSkipVerify: insecure,
 	}
+	if caCertString != "" {
+		caCertPool := x509.NewCertPool()
+		if ok := caCertPool.AppendCertsFromPEM([]byte(caCertString)); !ok {
+			return nil, fmt.Errorf("failed to add ca cert to cert pool")
+		}
+		tlsConfig.RootCAs = caCertPool
+	}
+	if clientCertString != "" && clientKeyString != "" {
+		clientCert, err := tls.X509KeyPair([]byte(clientCertString), []byte(clientKeyString))
+		if err != nil {
+			return nil, fmt.Errorf("failed to add client cert: %w", err)
+		}
+		tlsConfig.Certificates = []tls.Certificate{clientCert}
+	}
+	options.SetTLSConfig(tlsConfig)
 
 	// additional options
 	for _, o := range opts {
