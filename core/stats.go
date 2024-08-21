@@ -62,7 +62,7 @@ func (s *Stats) calculate(days int) map[string]float64 {
 	fromDate := time.Now().AddDate(0, 0, -days)
 	var solarPercentage, chargedKWh, avgPrice, avgCo2 float64
 	executeQuery("SUM(charged_kwh * solar_percentage) / SUM(charged_kwh)", "AND solar_percentage IS NOT NULL", fromDate, &solarPercentage)
-	executeQuery("SUM(charged_kwh)", "", fromDate, &chargedKWh)
+	executeQuery("SUM(charged_kwh)", "AND solar_percentage IS NOT NULL", fromDate, &chargedKWh)
 	executeQuery("SUM(charged_kwh * price_per_kwh) / SUM(charged_kwh)", "AND price_per_kwh IS NOT NULL", fromDate, &avgPrice)
 	executeQuery("SUM(charged_kwh * co2_per_kwh) / SUM(charged_kwh)", "AND co2_per_kwh IS NOT NULL", fromDate, &avgCo2)
 
