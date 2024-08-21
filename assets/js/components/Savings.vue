@@ -248,7 +248,7 @@ export default {
 			return co2Reference.regions[0];
 		},
 		periodOptions() {
-			return ["30d", "365d", "total"].map((p) => ({
+			return ["30d", "365d", "thisYear", "total"].map((p) => ({
 				value: p,
 				name: this.$t(`footer.savings.period.${p}`),
 			}));

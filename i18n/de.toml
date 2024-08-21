@@ -282,6 +282,7 @@ tabTitle = "Meine Daten"
 [footer.savings.period]
 30d = "letzte 30 Tage"
 365d = "letzte 365 Tage"
+thisYear = "dieses Jahr"
 total = "gesamt"
 
 [footer.sponsor]
