@@ -47,6 +47,31 @@ render: |
         address: 822 # L3 grid power
         type: input
         decode: int16
+  currents:
+    - source: modbus
+      uri: {{ .host }}:{{ .port }}
+      id: 30
+      register:
+        address: 2617 # L1 grid current
+        type: input
+        decode: int16
+      scale: 0.1
+    - source: modbus
+      uri: {{ .host }}:{{ .port }}
+      id: 30
+      register:
+        address: 2619 # L2 grid current
+        type: input
+        decode: int16
+      scale: 0.1
+    - source: modbus
+      uri: {{ .host }}:{{ .port }}
+      id: 30
+      register:
+        address: 2621 # L3 grid current
+        type: input
+        decode: int16
+      scale: 0.1
   {{- end }}
   {{- if eq .usage "pv" }}
   power:
