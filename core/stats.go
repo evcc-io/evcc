@@ -33,9 +33,10 @@ func (s *Stats) Update(p publisher) {
 	}
 
 	stats := map[string]map[string]float64{
-		"30d":   s.calculate(30),
-		"365d":  s.calculate(365),
-		"total": s.calculate(365 * 100), // 100 years
+		"30d":      s.calculate(30),
+		"365d":     s.calculate(365),
+		"thisYear": s.calculate(time.Now().YearDay()),
+		"total":    s.calculate(365 * 100), // 100 years
 	}
 	p.publish(keys.Statistics, stats)
 
