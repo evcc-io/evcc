@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"regexp"
+	"strconv"
 	"strings"
 
 	xj "github.com/basgys/goxml2json"
@@ -140,7 +141,7 @@ func (p *Pipeline) unpackValue(value []byte) (string, error) {
 
 // decode a hex string to a proper value
 // TODO reuse similar code from Modbus
-func (p *Pipeline) decodeValue(value []byte) (interface{}, error) {
+func (p *Pipeline) decodeValue(value []byte) (float64, error) {
 	switch p.decode {
 	case "float32", "ieee754":
 		return rs485.RTUIeee754ToFloat64(value), nil
@@ -164,7 +165,7 @@ func (p *Pipeline) decodeValue(value []byte) (interface{}, error) {
 		return rs485.RTUInt32ToFloat64Swapped(value), nil
 	}
 
-	return nil, fmt.Errorf("invalid decoding: %s", p.decode)
+	return 0, fmt.Errorf("invalid decoding: %s", p.decode)
 }
 
 func (p *Pipeline) Process(in []byte) ([]byte, error) {
@@ -202,7 +203,7 @@ func (p *Pipeline) Process(in []byte) ([]byte, error) {
 		if err != nil {
 			return b, err
 		}
-		b = []byte(fmt.Sprintf("%v", v))
+		b = []byte(strconv.FormatFloat(v, 'f', -1, 64))
 	}
 
 	return b, nil

@@ -42,7 +42,7 @@ type OCPP struct {
 
 const (
 	defaultIdTag      = "evcc" // RemoteStartTransaction only
-	desiredMeasurands = "Energy.Active.Import.Register,Power.Active.Import,SoC,Current.Offered,Power.Offered,Current.Import,Voltage"
+	desiredMeasurands = "Power.Active.Import,Energy.Active.Import.Register,Current.Import,Voltage,Current.Offered,Power.Offered,SoC"
 )
 
 func init() {
@@ -179,13 +179,10 @@ func NewOCPP(id string, connector int, idtag string,
 	// fix timing issue in EVBox when switching OCPP protocol version
 	time.Sleep(time.Second)
 
-	var (
-		rc = make(chan error, 1)
+	var rc = make(chan error, 1)
 
-		// If a key value is defined as a CSL, it MAY be accompanied with a [KeyName]MaxLength key, indicating the
-		// max length of the CSL in items. If this key is not set, a safe value of 1 (one) item SHOULD be assumed.
-		meterValuesSampledDataMaxLength = 1
-	)
+	meterValuesSampledData := ""
+	meterValuesSampledDataMaxLength := len(strings.Split(desiredMeasurands, ","))
 
 	err = ocpp.Instance().GetConfiguration(cp.ID(), func(resp *core.GetConfigurationConfirmation, err error) {
 		if err == nil {
@@ -216,6 +213,12 @@ func NewOCPP(id string, connector int, idtag string,
 						c.chargingProfileId = val
 					}
 
+				case ocpp.KeyMeterValuesSampledData:
+					if opt.Readonly {
+						meterValuesSampledDataMaxLength = 0
+					}
+					meterValuesSampledData = *opt.Value
+
 				case ocpp.KeyMeterValuesSampledDataMaxLength:
 					if val, err := strconv.Atoi(*opt.Value); err == nil {
 						meterValuesSampledDataMaxLength = val
@@ -229,7 +232,7 @@ func NewOCPP(id string, connector int, idtag string,
 
 				case ocpp.KeySupportedFeatureProfiles:
 					if !c.hasProperty(*opt.Value, smartcharging.ProfileName) {
-						err = fmt.Errorf("the mandatory SmartCharging profile is not supported")
+						c.log.WARN.Printf("the required SmartCharging feature profile is not indicated as supported")
 					}
 					c.hasRemoteTriggerFeature = c.hasProperty(*opt.Value, remotetrigger.ProfileName)
 
@@ -261,7 +264,7 @@ func NewOCPP(id string, connector int, idtag string,
 
 	// see who's there
 	if c.hasRemoteTriggerFeature {
-		if err := conn.TriggerMessageRequest(core.BootNotificationFeatureName); err == nil {
+		if err := ocpp.Instance().TriggerMessageRequest(cp.ID(), core.BootNotificationFeatureName); err == nil {
 			select {
 			case <-time.After(timeout):
 				c.log.DEBUG.Printf("BootNotification timeout")
@@ -281,12 +284,12 @@ func NewOCPP(id string, connector int, idtag string,
 
 	// configure measurands
 	if meterValues != "" {
-		if err := c.configure(ocpp.KeyMeterValuesSampledData, meterValues); err != nil {
-			return nil, err
+		if err := c.configure(ocpp.KeyMeterValuesSampledData, meterValues); err == nil {
+			meterValuesSampledData = meterValues
 		}
 	}
 
-	c.meterValuesSample = meterValues
+	c.meterValuesSample = meterValuesSampledData
 
 	// trigger initial meter values
 	if c.hasRemoteTriggerFeature {
@@ -303,7 +306,7 @@ func NewOCPP(id string, connector int, idtag string,
 	// configure sample rate
 	if meterInterval > 0 {
 		if err := c.configure(ocpp.KeyMeterValueSampleInterval, strconv.Itoa(int(meterInterval.Seconds()))); err != nil {
-			return nil, err
+			c.log.WARN.Printf("failed configuring MeterValueSampleInterval: %v", err)
 		}
 	}
 
@@ -330,7 +333,7 @@ func (c *OCPP) hasMeasurement(val types.Measurand) bool {
 // hasProperty checks if comma-separated string contains given string ignoring whitespaces
 func (c *OCPP) hasProperty(props string, prop string) bool {
 	return slices.ContainsFunc(strings.Split(props, ","), func(s string) bool {
-		return prop == strings.TrimSpace(s)
+		return strings.HasPrefix(strings.ReplaceAll(s, " ", ""), prop)
 	})
 }
 
