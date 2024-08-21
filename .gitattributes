@@ -1,0 +1,7 @@
+# configure automatic crlf conversion to ensure Windows <-> DevEnv compatibility
+* text eol=lf
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.woff binary
+*.woff2 binary
