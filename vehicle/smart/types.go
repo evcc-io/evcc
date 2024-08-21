@@ -13,8 +13,7 @@ type StatusResponse struct {
 			ChargingStatus IntValue
 		} `json:"data"`
 	}
-	ChargeOpt struct{}
-	Status    struct {
+	Status struct {
 		Data struct {
 			Odo           FloatValue
 			RangeElectric FloatValue
