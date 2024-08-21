@@ -40,7 +40,7 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Charger, error
 		Power  *provider.Config
 		Energy *provider.Config
 
-		Currents, Voltages, Powers []provider.Config
+		Currents, Voltages []provider.Config
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
