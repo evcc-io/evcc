@@ -34,7 +34,7 @@ test.describe("footer", async () => {
   });
 });
 
-test.describe.skip("statistics values", async () => {
+test.describe("statistics values", async () => {
   test("last 30 days", async ({ page }) => {
     await page.goto("/");
     await page.getByTestId("savings-button").click();
