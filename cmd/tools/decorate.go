@@ -31,22 +31,30 @@ type typeStruct struct {
 	Params                                                     []string
 }
 
-var apii struct {
+var a struct {
 	api.Meter
+	api.MeterEnergy
 	api.PhaseCurrents
+	api.PhaseVoltages
+	api.PhasePowers
+
 	api.PhaseSwitcher
+	api.PhaseGetter
+
 	api.Battery
+	api.BatteryCapacity
+	api.BatteryController
 }
 
-func rType(i any) string {
+func typ(i any) string {
 	return reflect.TypeOf(i).Elem().String()
 }
 
 var dependents = map[string][]string{
-	rType(&apii.Meter):         {"api.MeterEnergy", "api.PhaseCurrents", "api.PhaseVoltages", "api.PhasePowers"},
-	rType(&apii.PhaseCurrents): {"api.PhasePowers"}, // phase powers are only used to determine currents sign
-	rType(&apii.PhaseSwitcher): {"api.PhaseGetter"},
-	rType(&apii.Battery):       {"api.BatteryCapacity", "api.BatteryController"},
+	typ(&a.Meter):         {typ(&a.MeterEnergy), typ(&a.PhaseCurrents), typ(&a.PhaseVoltages), typ(&a.PhasePowers)},
+	typ(&a.PhaseCurrents): {typ(&a.PhasePowers)}, // phase powers are only used to determine currents sign
+	typ(&a.PhaseSwitcher): {typ(&a.PhaseGetter)},
+	typ(&a.Battery):       {typ(&a.BatteryCapacity), typ(&a.BatteryController)},
 }
 
 // hasIntersection returns if the slices intersect
@@ -120,7 +128,7 @@ func generate(out io.Writer, packageName, functionName, baseType string, dynamic
 COMBO:
 	for _, c := range combinations.All(combos) {
 		for master, details := range dependents {
-			if returnType != master && !slices.Contains(c, master) && hasIntersection(c, details) {
+			if slices.Contains(combos, master) && !slices.Contains(c, master) && hasIntersection(c, details) {
 				continue COMBO
 			}
 		}
