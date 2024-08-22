@@ -137,7 +137,7 @@ require (
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/gorilla/websocket v1.5.3 // indirect
 	github.com/grid-x/serial v0.0.0-20211107191517-583c7356b3aa // indirect
-	github.com/holoplot/go-avahi v1.0.1 // indirect
+	github.com/holoplot/go-avahi v0.0.0-20240210093433-b8dc0fc11e7e // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/influxdata/line-protocol v0.0.0-20210922203350-b1ad95c89adf // indirect
 	github.com/insomniacslk/xjson v0.0.0-20240624131953-2ef5f14e6a74 // indirect
