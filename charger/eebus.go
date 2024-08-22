@@ -413,10 +413,14 @@ func (c *EEBus) writeLoadControlLimitsVASVW(evEntity spineapi.EntityRemoteInterf
 	}
 
 	for index, item := range limits {
-		limits[index].IsActive = item.Value >= minLimits[index]
+		// if the limit is equal or bigger than the min allowed, then the recommendation limit is active, otherwise it is not
+		limits[index].IsActive = false
+		if index < len(minLimits) {
+			limits[index].IsActive = item.Value >= minLimits[index]
+		}
 	}
 
-	// set overload protection limits
+	// set recommendation limits
 	if _, err := c.uc.OscEV.WriteLoadControlLimits(evEntity, limits, nil); err != nil {
 		c.log.ERROR.Println("!! OscEV.WriteLoadControlLimits:", err)
 		return false
