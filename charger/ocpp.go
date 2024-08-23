@@ -33,6 +33,7 @@ type OCPP struct {
 	phaseSwitching          bool
 	remoteStart             bool
 	hasRemoteTriggerFeature bool
+	getScheduleLimitFailed  bool
 	chargingRateUnit        types.ChargingRateUnitType
 	chargingProfileId       int
 	stackLevel              int
@@ -179,7 +180,7 @@ func NewOCPP(id string, connector int, idtag string,
 	// fix timing issue in EVBox when switching OCPP protocol version
 	time.Sleep(time.Second)
 
-	var rc = make(chan error, 1)
+	rc := make(chan error, 1)
 
 	meterValuesSampledData := ""
 	meterValuesSampledDataMaxLength := len(strings.Split(desiredMeasurands, ","))
@@ -443,8 +444,11 @@ func (c *OCPP) Enabled() (bool, error) {
 	}
 
 	// fallback to querying the active charging profile schedule limit
-	if v, err := c.getScheduleLimit(); err == nil {
-		return v > 0, nil
+	if !c.getScheduleLimitFailed {
+		if v, err := c.getScheduleLimit(); err == nil {
+			return v > 0, nil
+		}
+		c.getScheduleLimitFailed = true
 	}
 
 	// fallback to cached value as last resort
