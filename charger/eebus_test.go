@@ -22,6 +22,7 @@ func TestEEBusIsCharging(t *testing.T) {
 	type testMeasurementStruct struct {
 		charging bool
 		currents []float64
+		powers   []float64
 	}
 
 	tests := []struct {
@@ -40,10 +41,12 @@ func TestEEBusIsCharging(t *testing.T) {
 				{
 					false,
 					[]float64{0, 3, 0},
+					[]float64{0, 690, 0},
 				},
 				{
 					true,
 					[]float64{6, 0, 1},
+					[]float64{1380, 0, 230},
 				},
 			},
 		},
@@ -56,10 +59,12 @@ func TestEEBusIsCharging(t *testing.T) {
 				{
 					false,
 					[]float64{2},
+					[]float64{460},
 				},
 				{
 					true,
 					[]float64{6},
+					[]float64{1380},
 				},
 			},
 		},
@@ -74,10 +79,12 @@ func TestEEBusIsCharging(t *testing.T) {
 				{
 					false,
 					[]float64{1, 0, 0},
+					[]float64{230, 0, 0},
 				},
 				{
 					true,
 					[]float64{1.8, 1, 3},
+					[]float64{414, 230, 690},
 				},
 			},
 		},
@@ -110,7 +117,9 @@ func TestEEBusIsCharging(t *testing.T) {
 					ev: evEntity,
 				}
 
-				evcem.EXPECT().CurrentPerPhase(evEntity).Return(m.currents, nil)
+				evcc.EXPECT().EVConnected(evEntity).Return(true)
+				evcem.EXPECT().IsScenarioAvailableAtEntity(evEntity, mock.Anything).Return(true)
+				evcem.EXPECT().PowerPerPhase(evEntity).Return(m.powers, nil)
 				opev.EXPECT().CurrentLimits(evEntity).Return(limitsMin, limitsMax, limitsDefault, nil)
 
 				require.Equal(t, m.charging, eebus.isCharging(evEntity))

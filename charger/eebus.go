@@ -136,32 +136,33 @@ func (c *EEBus) isCharging(evEntity spineapi.EntityRemoteInterface) bool {
 	// check if an external physical meter is assigned
 	// we only want this for configured meters and not for internal meters!
 	// right now it works as expected
-	if c.lp != nil && c.lp.HasChargeMeter() {
-		if c.lp.GetChargePower() > c.lp.EffectiveMinPower()*idleFactor {
-			return true
+	var minPower float64
+	if c.lp != nil {
+		minPower = c.lp.EffectiveMinPower()
+
+		if c.lp.HasChargeMeter() {
+			return c.lp.GetChargePower() > minPower*idleFactor
 		}
 	}
 
 	// The above doesn't (yet) work for built in meters, so check the EEBUS measurements also
-	currents, err := c.uc.EvCem.CurrentPerPhase(evEntity)
+
+	// use power data if available, otherwise the method will calculate the power from the current data
+	power, err := c.currentPower()
 	if err != nil {
 		return false
 	}
 
-	limitsMin, _, _, err := c.uc.OpEV.CurrentLimits(evEntity)
-	if err != nil || len(limitsMin) == 0 {
-		// sometimes a min limit is not provided by the EVSE, so take the limit defined for the loadpoint
-		if c.lp == nil {
+	if c.lp == nil {
+		limitsMin, _, _, err := c.uc.OpEV.CurrentLimits(evEntity)
+		if err != nil || len(limitsMin) == 0 {
+			// sometimes a min limit is not provided by the EVSE, and we can't take it from the loadpoint
 			return false
 		}
-		limitsMin = []float64{c.lp.GetMinCurrent()}
+		minPower = limitsMin[0] * voltage
 	}
 
-	// require sum of all phase currents to be > 0.6 * a single phase minimum
-	// in some scenarios, e.g. Cayenne Hybrid, sometimes the meter of a PMCC device
-	// reported 600W, even tough the car was not charging
-	limitMin := limitsMin[0]
-	return lo.Sum(currents) > limitMin*idleFactor
+	return power > minPower*idleFactor
 }
 
 // Status implements the api.Charger interface
@@ -357,7 +358,8 @@ func (c *EEBus) hasActiveVASVW(evEntity spineapi.EntityRemoteInterface) bool {
 	}
 
 	// SoC has to be available, otherwise it is plain ISO15118-2
-	if _, err := c.Soc(); err != nil {
+	// SoC has to be >= 25%, because the Taycan can't be setup with a Min SoC below 25%, oherwise obligations have to be used
+	if soc, err := c.Soc(); err != nil || soc < 25 {
 		return false
 	}
 
