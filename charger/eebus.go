@@ -136,8 +136,13 @@ func (c *EEBus) isCharging(evEntity spineapi.EntityRemoteInterface) bool {
 	// check if an external physical meter is assigned
 	// we only want this for configured meters and not for internal meters!
 	// right now it works as expected
-	if c.lp != nil && c.lp.HasChargeMeter() {
-		return c.lp.GetChargePower() > c.lp.EffectiveMinPower()*idleFactor
+	var minPower float64
+	if c.lp != nil {
+		minPower = c.lp.EffectiveMinPower()
+
+		if c.lp.HasChargeMeter() {
+			return c.lp.GetChargePower() > minPower*idleFactor
+		}
 	}
 
 	// The above doesn't (yet) work for built in meters, so check the EEBUS measurements also
@@ -148,10 +153,7 @@ func (c *EEBus) isCharging(evEntity spineapi.EntityRemoteInterface) bool {
 		return false
 	}
 
-	var minPower float64
-	if c.lp != nil {
-		minPower = c.lp.EffectiveMinPower()
-	} else {
+	if c.lp == nil {
 		limitsMin, _, _, err := c.uc.OpEV.CurrentLimits(evEntity)
 		if err != nil || len(limitsMin) == 0 {
 			// sometimes a min limit is not provided by the EVSE, and we can't take it from the loadpoint
