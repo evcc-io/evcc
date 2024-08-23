@@ -13,6 +13,11 @@ params:
     default: 502
   - name: capacity
     advanced: true
+  - name: meterid # grid meter VRM instance
+    default: 30
+    help:
+      de: "Grid-Energiezähler VRM instance - Kann im VRM Portal oder im RemoteUI ausgelesen werden"
+      en: "Grid-Meter VRM instance - can be read out in VRM portal or via remoteUI."
   # battery control
   - name: minsoc
     type: number
@@ -50,7 +55,7 @@ render: |
   currents:
     - source: modbus
       uri: {{ .host }}:{{ .port }}
-      id: 30
+      id: {{ .meterid }}
       register:
         address: 2617 # L1 grid current
         type: input
@@ -58,7 +63,7 @@ render: |
       scale: 0.1
     - source: modbus
       uri: {{ .host }}:{{ .port }}
-      id: 30
+      id: {{ .meterid }}
       register:
         address: 2619 # L2 grid current
         type: input
@@ -66,7 +71,7 @@ render: |
       scale: 0.1
     - source: modbus
       uri: {{ .host }}:{{ .port }}
-      id: 30
+      id: {{ .meterid }}
       register:
         address: 2621 # L3 grid current
         type: input
