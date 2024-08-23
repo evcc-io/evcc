@@ -182,7 +182,7 @@ func NewOCPP(id string, connector int, idtag string,
 
 	rc := make(chan error, 1)
 
-	meterValuesSampledData := ""
+	var meterValuesSampledData string
 	meterValuesSampledDataMaxLength := len(strings.Split(desiredMeasurands, ","))
 
 	err = ocpp.Instance().GetConfiguration(cp.ID(), func(resp *core.GetConfigurationConfirmation, err error) {
