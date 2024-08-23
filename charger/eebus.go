@@ -154,11 +154,8 @@ func (c *EEBus) isCharging(evEntity spineapi.EntityRemoteInterface) bool {
 	} else {
 		limitsMin, _, _, err := c.uc.OpEV.CurrentLimits(evEntity)
 		if err != nil || len(limitsMin) == 0 {
-			// sometimes a min limit is not provided by the EVSE, so take the limit defined for the loadpoint
-			if c.lp == nil {
-				return false
-			}
-			limitsMin = []float64{c.lp.GetMinCurrent()}
+			// sometimes a min limit is not provided by the EVSE, and we can't take it from the loadpoint
+			return false
 		}
 		minPower = limitsMin[0] * voltage
 	}
