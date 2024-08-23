@@ -14,7 +14,7 @@ params:
   - name: capacity
     advanced: true
   - name: meterid # grid meter VRM instance
-    usage: grid
+    usages: ["grid"]
     default: 30
     help:
       de: "Grid-Energiezähler VRM instance- kann im VRM Portal oder im RemoteUI ausgelesen werden."
