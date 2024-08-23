@@ -203,7 +203,12 @@ NEXT:
 	return nil
 }
 
+func isSeq() bool {
+	return os.Getenv("EVCC_SEQUENTIAL") == "1"
+}
+
 func configureMeters(static []config.Named, names ...string) error {
+	var mu sync.Mutex
 	g, _ := errgroup.WithContext(context.Background())
 
 	for i, cc := range static {
@@ -220,6 +225,11 @@ func configureMeters(static []config.Named, names ...string) error {
 		}
 
 		g.Go(func() error {
+			if isSeq() {
+				mu.Lock()
+				defer mu.Unlock()
+			}
+
 			instance, err := meter.NewFromConfig(cc.Type, cc.Other)
 			if err != nil {
 				return &DeviceError{cc.Name, fmt.Errorf("cannot create meter '%s': %w", cc.Name, err)}
@@ -241,6 +251,11 @@ func configureMeters(static []config.Named, names ...string) error {
 
 	for _, conf := range configurable {
 		g.Go(func() error {
+			if isSeq() {
+				mu.Lock()
+				defer mu.Unlock()
+			}
+
 			cc := conf.Named()
 
 			if len(names) > 0 && !slices.Contains(names, cc.Name) {
@@ -266,9 +281,15 @@ func configureMeters(static []config.Named, names ...string) error {
 }
 
 func configureChargers(static []config.Named, names ...string) error {
+	var mu sync.Mutex
 	g, _ := errgroup.WithContext(context.Background())
 
 	for i, cc := range static {
+		if isSeq() {
+			mu.Lock()
+			defer mu.Unlock()
+		}
+
 		if cc.Name == "" {
 			return fmt.Errorf("cannot create charger %d: missing name", i+1)
 		}
@@ -303,6 +324,11 @@ func configureChargers(static []config.Named, names ...string) error {
 
 	for _, conf := range configurable {
 		g.Go(func() error {
+			if isSeq() {
+				mu.Lock()
+				defer mu.Unlock()
+			}
+
 			cc := conf.Named()
 
 			if len(names) > 0 && !slices.Contains(names, cc.Name) {
