@@ -7,8 +7,8 @@ products:
 capabilities: ["battery-control"]
 requirements:
   description:
-    de: Verbindungen über das WiNet-S-Dongle (WiFi oder LAN) funktionieren nur mit aktueller Firmware.
-    en: Connections via the WiNet-S dongle (WiFi or LAN) only work with the latest firmware.
+    de: Verbindungen über das WiNet-S-Dongle (WiFi oder LAN) funktionieren nur mit aktueller Firmware. Ältere Versionen liefern nicht alle benötigten Daten (Leistung, Ladestand).
+    en: Connections via the WiNet-S dongle (WiFi or LAN) only work with the latest firmware. Older versions do not provide all required data (power, state of charge).
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
