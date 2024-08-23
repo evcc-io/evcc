@@ -49,7 +49,7 @@ func (s *Stats) calculate(days int) map[string]float64 {
 
 	executeQuery := func(selectClause string, whereClause string, fromDate time.Time, dest interface{}) {
 		query := fmt.Sprintf(`
-		SELECT %s
+		SELECT COALESCE(%s, 0)
 		FROM sessions
 		WHERE finished >= ? 
 		AND charged_kwh > 0 
