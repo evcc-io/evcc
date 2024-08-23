@@ -37,7 +37,7 @@ test.describe("footer", async () => {
 test.describe("statistics values", async () => {
   test("last 30 days", async ({ page }) => {
     await page.goto("/");
-    await page.getByTestId("savings-button").click();
+    await page.getByRole("button", { name: "60% solar energy" }).click();
     await page
       .getByTestId("savings-period-select")
       .getByRole("combobox")
@@ -59,7 +59,7 @@ test.describe("statistics values", async () => {
 
   test("last 365 days", async ({ page }) => {
     await page.goto("/");
-    await page.getByTestId("savings-button").click();
+    await page.getByRole("button", { name: "60% solar energy" }).click();
     await page
       .getByTestId("savings-period-select")
       .getByRole("combobox")
@@ -81,7 +81,7 @@ test.describe("statistics values", async () => {
 
   test("reference data", async ({ page }) => {
     await page.goto("/");
-    await page.getByTestId("savings-button").click();
+    await page.getByRole("button", { name: "60% solar energy" }).click();
 
     const reference = await page.getByTestId("savings-reference");
     expect(reference).toContainText("Reference data:");

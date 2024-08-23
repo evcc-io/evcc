@@ -188,10 +188,7 @@ test.describe("vehicles", async () => {
     await restart(CONFIG_GRID_ONLY);
     await page.reload();
 
-    await page
-      .locator(`[data-testid="vehicle"]:has-text("RFID Car")`)
-      .getByRole("button", { name: "edit" })
-      .click();
+    await page.getByTestId("vehicle").last().getByRole("button", { name: "edit" }).click();
     await page.getByRole("button", { name: "Show advanced settings" }).click();
     await expect(vehicleModal.getByLabel("RFID identifiers")).toHaveValue("aaa\nbbb\nccc\nddd");
     await page.getByTestId("vehicle-modal").getByLabel("Close").click();
