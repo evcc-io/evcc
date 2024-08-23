@@ -177,7 +177,8 @@ jobs:
   integration:
     name: Integration
     runs-on: ubuntu-latest
-
+    container:
+      image: mcr.microsoft.com/playwright:v1.46.0-jammy
     steps:
       - uses: actions/checkout@v4
 
