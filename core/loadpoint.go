@@ -784,8 +784,8 @@ func (lp *Loadpoint) syncCharger() error {
 			return fmt.Errorf("charger enable: %w", err)
 		}
 
-	case shouldBeConsistent && (enabled || lp.connected()):
-		// ignore disabled state if vehicle was disconnected (!lp.enabled && !lp.connected)
+	case shouldBeConsistent && (!enabled || lp.connected()):
+		// ignore disabled state if vehicle was disconnected !(lp.enabled && !lp.connected)
 		lp.log.WARN.Printf("charger out of sync: expected %vd, got %vd", status[lp.enabled], status[enabled])
 	}
 
