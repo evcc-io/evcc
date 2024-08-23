@@ -17,8 +17,8 @@ params:
     usage: grid
     default: 30
     help:
-      de: "Grid-Energiezähler VRM instance - Kann im VRM Portal oder im RemoteUI ausgelesen werden"
-      en: "Grid-Meter VRM instance - can be read out in VRM portal or via remoteUI."
+      de: "Grid-Energiezähler VRM instance- kann im VRM Portal oder im RemoteUI ausgelesen werden."
+      en: "Grid-Meter VRM instance- can be read out in VRM portal or via remoteUI."
   # battery control
   - name: minsoc
     type: number
