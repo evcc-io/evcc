@@ -184,6 +184,8 @@ func NewOCPP(id string, connector int, idtag string,
 	meterValuesSampledData := ""
 	meterValuesSampledDataMaxLength := len(strings.Split(desiredMeasurands, ","))
 
+	c.hasRemoteTriggerFeature = true // assume remote trigger feature is available
+
 	err = ocpp.Instance().GetConfiguration(cp.ID(), func(resp *core.GetConfigurationConfirmation, err error) {
 		if err == nil {
 			for _, opt := range resp.ConfigurationKey {
@@ -234,7 +236,10 @@ func NewOCPP(id string, connector int, idtag string,
 					if !c.hasProperty(*opt.Value, smartcharging.ProfileName) {
 						c.log.WARN.Printf("the required SmartCharging feature profile is not indicated as supported")
 					}
-					c.hasRemoteTriggerFeature = c.hasProperty(*opt.Value, remotetrigger.ProfileName)
+					// correct the availability assumption of RemoteTrigger only in case of a valid looking FeatureProfile list
+					if c.hasProperty(*opt.Value, core.ProfileName) {
+						c.hasRemoteTriggerFeature = c.hasProperty(*opt.Value, remotetrigger.ProfileName)
+					}
 
 				// vendor-specific keys
 				case ocpp.KeyAlfenPlugAndChargeIdentifier:
