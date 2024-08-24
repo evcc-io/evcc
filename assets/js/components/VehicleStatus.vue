@@ -75,6 +75,15 @@
 			>
 				<WelcomeIcon />
 			</div>
+			<div
+				v-if="awaitingAuthorizationVisible"
+				ref="awaitingAuthorization"
+				data-bs-toggle="tooltip"
+				class="entry"
+				data-testid="vehicle-status-awaiting-authorization"
+			>
+				<RfidWaitIcon />
+			</div>
 
 			<!-- smart cost -->
 			<button
@@ -141,6 +150,7 @@ import formatter from "../mixins/formatter";
 import { CO2_TYPE } from "../units";
 import PlanStartIcon from "./MaterialIcon/PlanStart.vue";
 import PlanEndIcon from "./MaterialIcon/PlanEnd.vue";
+import RfidWaitIcon from "./MaterialIcon/RfidWait.vue";
 import ClimaterIcon from "./MaterialIcon/Climater.vue";
 import VehicleLimitReachedIcon from "./MaterialIcon/VehicleLimitReached.vue";
 import VehicleLimitWarningIcon from "./MaterialIcon/VehicleLimitWarning.vue";
@@ -157,6 +167,7 @@ export default {
 		DynamicPriceIcon,
 		PlanStartIcon,
 		PlanEndIcon,
+		RfidWaitIcon,
 		ClimaterIcon,
 		VehicleLimitIcon,
 		VehicleMinSocIcon,
@@ -169,6 +180,7 @@ export default {
 		vehicleSoc: Number,
 		charging: Boolean,
 		chargingPlanDisabled: Boolean,
+		chargerAwaitingAuthorization: Boolean,
 		connected: Boolean,
 		currency: String,
 		effectiveLimitSoc: Number,
@@ -209,6 +221,7 @@ export default {
 			vehicleWelcomeTooltip: null,
 			smartCostTooltip: null,
 			vehicleLimitTooltip: null,
+			awaitingAuthorizationTooltip: null,
 		};
 	},
 	mounted() {
@@ -221,6 +234,7 @@ export default {
 		this.updateVehicleWelcomeTooltip();
 		this.updateSmartCostTooltip();
 		this.updateVehicleLimitTooltip();
+		this.updateAwaitingAuthorizationTooltip();
 	},
 	watch: {
 		planActiveTooltipContent() {
@@ -249,6 +263,9 @@ export default {
 		},
 		vehicleLimitTooltipContent() {
 			this.$nextTick(this.updateVehicleLimitTooltip);
+		},
+		awaitingAuthorizationTooltipContent() {
+			this.$nextTick(this.updateAwaitingAuthorizationTooltip);
 		},
 	},
 	computed: {
@@ -288,6 +305,15 @@ export default {
 		vehicleLimitVisible() {
 			const limit = this.effectiveLimitSoc || 100;
 			return this.connected && this.vehicleLimitSoc > 0 && this.vehicleLimitSoc < limit;
+		},
+		awaitingAuthorizationVisible() {
+			return this.chargerAwaitingAuthorization;
+		},
+		awaitingAuthorizationTooltipContent() {
+			if (!this.awaitingAuthorizationVisible) {
+				return "";
+			}
+			return this.$t("main.vehicleStatus.awaitingAuthorization");
 		},
 		vehicleLimitTooltipContent() {
 			if (!this.vehicleLimitVisible) {
@@ -549,6 +575,13 @@ export default {
 				this.vehicleLimitTooltipContent,
 				this.$refs.vehicleLimit,
 				true
+			);
+		},
+		updateAwaitingAuthorizationTooltip() {
+			this.awaitingAuthorizationTooltip = this.updateTooltip(
+				this.awaitingAuthorizationTooltip,
+				this.awaitingAuthorizationTooltipContent,
+				this.$refs.awaitingAuthorization
 			);
 		},
 		updateTooltip: function (instance, content, ref, hoverOnly = false) {
