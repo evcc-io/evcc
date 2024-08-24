@@ -212,6 +212,32 @@ func (conn *Connector) GetMaxPower() (float64, error) {
 	return 0, api.ErrNotAvailable
 }
 
+func (conn *Connector) phaseMeasurements(measurement, suffix types.Measurand) ([3]float64, bool, error) {
+	var (
+		res   [3]float64
+		found bool
+	)
+
+	for i := range res {
+		key := getPhaseKey(measurement, i+1) + suffix
+
+		m, ok := conn.measurements[key]
+		if !ok {
+			continue
+		}
+		found = true
+
+		f, err := strconv.ParseFloat(m.Value, 64)
+		if err != nil {
+			return res, found, fmt.Errorf("invalid phase value %s: %w", key, err)
+		}
+
+		res[i] = scale(f, m.Unit)
+	}
+
+	return res, found, nil
+}
+
 var _ api.Meter = (*Connector)(nil)
 
 func (conn *Connector) CurrentPower() (float64, error) {
@@ -237,22 +263,13 @@ func (conn *Connector) CurrentPower() (float64, error) {
 	}
 
 	// fallback for missing total power
-	var res float64
-	for phase := 1; phase <= 3; phase++ {
-		m, ok := conn.measurements[getPhaseKey(types.MeasurandPowerActiveImport, phase)]
-		if !ok {
-			return 0, api.ErrNotAvailable
-		}
 
-		f, err := strconv.ParseFloat(m.Value, 64)
-		if err != nil {
-			return 0, fmt.Errorf("invalid power for phase %d: %w", phase, err)
-		}
-
-		res += scale(f, m.Unit)
+	res, found, err := conn.phaseMeasurements(types.MeasurandPowerActiveImport, "")
+	if found {
+		return res[0] + res[1] + res[2], err
 	}
 
-	return res, nil
+	return 0, api.ErrNotAvailable
 }
 
 func (conn *Connector) TotalEnergy() (float64, error) {
@@ -328,23 +345,12 @@ func (conn *Connector) Currents() (float64, float64, float64, error) {
 		return 0, 0, 0, nil
 	}
 
-	currents := make([]float64, 0, 3)
-
-	for phase := 1; phase <= 3; phase++ {
-		m, ok := conn.measurements[getPhaseKey(types.MeasurandCurrentImport, phase)]
-		if !ok {
-			return 0, 0, 0, api.ErrNotAvailable
-		}
-
-		f, err := strconv.ParseFloat(m.Value, 64)
-		if err != nil {
-			return 0, 0, 0, fmt.Errorf("invalid current for phase %d: %w", phase, err)
-		}
-
-		currents = append(currents, scale(f, m.Unit))
+	res, found, err := conn.phaseMeasurements(types.MeasurandCurrentImport, "")
+	if found {
+		return res[0], res[1], res[2], err
 	}
 
-	return currents[0], currents[1], currents[2], nil
+	return 0, 0, 0, api.ErrNotAvailable
 }
 
 func (conn *Connector) Voltages() (float64, float64, float64, error) {
@@ -360,25 +366,15 @@ func (conn *Connector) Voltages() (float64, float64, float64, error) {
 		return 0, 0, 0, api.ErrTimeout
 	}
 
-	voltages := make([]float64, 0, 3)
-
-	for phase := 1; phase <= 3; phase++ {
-		m, ok := conn.measurements[getPhaseKey(types.MeasurandVoltage, phase)+"-N"]
-		if !ok {
-			// fallback for wrong voltage phase labeling
-			m, ok = conn.measurements[getPhaseKey(types.MeasurandVoltage, phase)]
-			if !ok {
-				return 0, 0, 0, api.ErrNotAvailable
-			}
-		}
-
-		f, err := strconv.ParseFloat(m.Value, 64)
-		if err != nil {
-			return 0, 0, 0, fmt.Errorf("invalid voltage for phase %d: %w", phase, err)
-		}
-
-		voltages = append(voltages, scale(f, m.Unit))
+	res, found, err := conn.phaseMeasurements(types.MeasurandVoltage, "-N")
+	if found {
+		return res[0], res[1], res[2], err
 	}
 
-	return voltages[0], voltages[1], voltages[2], nil
+	res, found, err = conn.phaseMeasurements(types.MeasurandVoltage, "")
+	if found {
+		return res[0], res[1], res[2], err
+	}
+
+	return 0, 0, 0, api.ErrNotAvailable
 }
