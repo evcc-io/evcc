@@ -88,9 +88,7 @@ func (conn *Connector) SetChargingProfile(profile *types.ChargingProfile) error 
 }
 
 // getScheduleLimit queries the current or power limit the charge point is currently set to offer
-func (conn *Connector) GetScheduleLimit() (float64, error) {
-	const duration = 60 // duration of requested schedule in seconds
-
+func (conn *Connector) GetScheduleLimit(duration int) (float64, error) {
 	var limit float64
 	schedule, err := Instance().GetCompositeScheduleRequest(conn.cp.ID(), conn.ID(), duration)
 

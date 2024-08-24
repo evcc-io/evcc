@@ -374,7 +374,7 @@ func (c *OCPP) Enabled() (bool, error) {
 	}
 
 	// fallback to querying the active charging profile schedule limit
-	if v, err := c.conn.GetScheduleLimit(); err == nil {
+	if v, err := c.conn.GetScheduleLimit(60); err == nil {
 		return v > 0, nil
 	}
 
