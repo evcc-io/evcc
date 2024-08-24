@@ -328,23 +328,25 @@ func (conn *Connector) Currents() (float64, float64, float64, error) {
 		return 0, 0, 0, nil
 	}
 
-	currents := make([]float64, 0, 3)
-
-	for phase := 1; phase <= 3; phase++ {
-		m, ok := conn.measurements[getPhaseKey(types.MeasurandCurrentImport, phase)]
+	var res [3]float64
+	for i := range res {
+		m, ok := conn.measurements[getPhaseKey(types.MeasurandCurrentImport, i+1)]
 		if !ok {
-			return 0, 0, 0, api.ErrNotAvailable
+			if i == 0 {
+				return 0, 0, 0, api.ErrNotAvailable
+			}
+			continue
 		}
 
 		f, err := strconv.ParseFloat(m.Value, 64)
 		if err != nil {
-			return 0, 0, 0, fmt.Errorf("invalid current for phase %d: %w", phase, err)
+			return 0, 0, 0, fmt.Errorf("invalid current for phase %d: %w", i+1, err)
 		}
 
-		currents = append(currents, scale(f, m.Unit))
+		res[i] = scale(f, m.Unit)
 	}
 
-	return currents[0], currents[1], currents[2], nil
+	return res[0], res[1], res[2], nil
 }
 
 func (conn *Connector) Voltages() (float64, float64, float64, error) {
@@ -360,25 +362,27 @@ func (conn *Connector) Voltages() (float64, float64, float64, error) {
 		return 0, 0, 0, api.ErrTimeout
 	}
 
-	voltages := make([]float64, 0, 3)
-
-	for phase := 1; phase <= 3; phase++ {
-		m, ok := conn.measurements[getPhaseKey(types.MeasurandVoltage, phase)+"-N"]
+	var res [3]float64
+	for i := range res {
+		m, ok := conn.measurements[getPhaseKey(types.MeasurandVoltage, i+1)+"-N"]
 		if !ok {
 			// fallback for wrong voltage phase labeling
-			m, ok = conn.measurements[getPhaseKey(types.MeasurandVoltage, phase)]
+			m, ok = conn.measurements[getPhaseKey(types.MeasurandVoltage, i+1)]
 			if !ok {
-				return 0, 0, 0, api.ErrNotAvailable
+				if i == 0 {
+					return 0, 0, 0, api.ErrNotAvailable
+				}
+				continue
 			}
 		}
 
 		f, err := strconv.ParseFloat(m.Value, 64)
 		if err != nil {
-			return 0, 0, 0, fmt.Errorf("invalid voltage for phase %d: %w", phase, err)
+			return 0, 0, 0, fmt.Errorf("invalid voltage for phase %d: %w", i+1, err)
 		}
 
-		voltages = append(voltages, scale(f, m.Unit))
+		res[i] = scale(f, m.Unit)
 	}
 
-	return voltages[0], voltages[1], voltages[2], nil
+	return res[0], res[1], res[2], nil
 }
