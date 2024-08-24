@@ -6,6 +6,8 @@ import (
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/firmware"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/remotetrigger"
+	"github.com/lorenzodonini/ocpp-go/ocpp1.6/smartcharging"
+	"github.com/lorenzodonini/ocpp-go/ocpp1.6/types"
 )
 
 // cs actions
@@ -13,7 +15,8 @@ import (
 func (cs *CS) TriggerResetRequest(id string, resetType core.ResetType) error {
 	rc := make(chan error, 1)
 
-	err := cs.Reset(id, func(request *core.ResetConfirmation, err error) {
+	err := cs.Reset(id, func(request *core.ResetConfirmation, protoErr error) {
+		err := protoErr
 		if err == nil && request != nil && request.Status != core.ResetStatusAccepted {
 			err = errors.New(string(request.Status))
 		}
@@ -27,7 +30,8 @@ func (cs *CS) TriggerResetRequest(id string, resetType core.ResetType) error {
 func (cs *CS) TriggerMessageRequest(id string, requestedMessage remotetrigger.MessageTrigger, props ...func(request *remotetrigger.TriggerMessageRequest)) error {
 	rc := make(chan error, 1)
 
-	err := cs.TriggerMessage(id, func(request *remotetrigger.TriggerMessageConfirmation, err error) {
+	err := cs.TriggerMessage(id, func(request *remotetrigger.TriggerMessageConfirmation, protoErr error) {
+		err := protoErr
 		if err == nil && request != nil && request.Status != remotetrigger.TriggerMessageStatusAccepted {
 			err = errors.New(string(request.Status))
 		}
@@ -36,6 +40,41 @@ func (cs *CS) TriggerMessageRequest(id string, requestedMessage remotetrigger.Me
 	}, requestedMessage, props...)
 
 	return Wait(err, rc, cs.timeout)
+}
+
+func (cs *CS) SetChargingProfileRequest(id string, connector int, profile *types.ChargingProfile) error {
+	rc := make(chan error, 1)
+
+	err := cs.SetChargingProfile(id, func(request *smartcharging.SetChargingProfileConfirmation, protoErr error) {
+		err := protoErr
+		if err == nil && request != nil && request.Status != smartcharging.ChargingProfileStatusAccepted {
+			err = errors.New(string(request.Status))
+		}
+
+		rc <- err
+	}, connector, profile)
+
+	return Wait(err, rc, cs.timeout)
+}
+
+func (cs *CS) GetCompositeScheduleRequest(id string, connector int, duration int) (*types.ChargingSchedule, error) {
+	var schedule *types.ChargingSchedule
+	rc := make(chan error, 1)
+
+	err := Instance().GetCompositeSchedule(id, func(request *smartcharging.GetCompositeScheduleConfirmation, protoErr error) {
+		err := protoErr
+		if err == nil && request != nil && request.Status != smartcharging.GetCompositeScheduleStatusAccepted {
+			err = errors.New(string(request.Status))
+		} else {
+			schedule = request.ChargingSchedule
+		}
+
+		rc <- err
+	}, connector, duration)
+
+	err = Wait(err, rc, cs.timeout)
+
+	return schedule, err
 }
 
 // cp actions

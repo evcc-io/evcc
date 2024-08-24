@@ -15,7 +15,6 @@ import (
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/util"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
-	"github.com/lorenzodonini/ocpp-go/ocpp1.6/smartcharging"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/types"
 )
 
@@ -375,7 +374,7 @@ func (c *OCPP) Enabled() (bool, error) {
 	}
 
 	// fallback to querying the active charging profile schedule limit
-	if v, err := c.getScheduleLimit(); err == nil {
+	if v, err := c.conn.GetScheduleLimit(); err == nil {
 		return v > 0, nil
 	}
 
@@ -415,56 +414,14 @@ func (c *OCPP) initTransaction() error {
 	return c.wait(err, rc)
 }
 
-func (c *OCPP) setChargingProfile(profile *types.ChargingProfile) error {
-	rc := make(chan error, 1)
-	err := ocpp.Instance().SetChargingProfile(c.conn.ChargePoint().ID(), func(resp *smartcharging.SetChargingProfileConfirmation, err error) {
-		if err == nil && resp != nil && resp.Status != smartcharging.ChargingProfileStatusAccepted {
-			err = errors.New(string(resp.Status))
-		}
-
-		rc <- err
-	}, c.conn.ID(), profile)
-
-	return c.wait(err, rc)
-}
-
 // setCurrent sets the TxDefaultChargingProfile with given current
 func (c *OCPP) setCurrent(current float64) error {
-	err := c.setChargingProfile(c.createTxDefaultChargingProfile(math.Trunc(10*current) / 10))
+	err := c.conn.SetChargingProfile(c.createTxDefaultChargingProfile(math.Trunc(10*current) / 10))
 	if err != nil {
 		err = fmt.Errorf("set charging profile: %w", err)
 	}
 
 	return err
-}
-
-// getScheduleLimit queries the current or power limit the charge point is currently set to offer
-func (c *OCPP) getScheduleLimit() (float64, error) {
-	const duration = 60 // duration of requested schedule in seconds
-
-	var limit float64
-
-	rc := make(chan error, 1)
-	err := ocpp.Instance().GetCompositeSchedule(c.conn.ChargePoint().ID(), func(resp *smartcharging.GetCompositeScheduleConfirmation, err error) {
-		if err == nil && resp != nil && resp.Status != smartcharging.GetCompositeScheduleStatusAccepted {
-			err = errors.New(string(resp.Status))
-		}
-
-		if err == nil {
-			if resp.ChargingSchedule != nil && len(resp.ChargingSchedule.ChargingSchedulePeriod) > 0 {
-				// return first (current) period limit
-				limit = resp.ChargingSchedule.ChargingSchedulePeriod[0].Limit
-			} else {
-				err = fmt.Errorf("invalid ChargingSchedule")
-			}
-		}
-
-		rc <- err
-	}, c.conn.ID(), duration)
-
-	err = c.wait(err, rc)
-
-	return limit, err
 }
 
 // createTxDefaultChargingProfile returns a TxDefaultChargingProfile with given current
