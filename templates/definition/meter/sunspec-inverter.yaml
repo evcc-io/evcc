@@ -27,7 +27,6 @@ render: |
     value: 
       - 203:TotWhImp
       - 213:TotWhImp
-    scale: 0.001
   currents:
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
