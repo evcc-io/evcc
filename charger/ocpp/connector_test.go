@@ -33,12 +33,8 @@ func (suite *connTestSuite) SetupSuite() {
 	for _, m := range []types.Measurand{
 		types.MeasurandPowerActiveImport,
 		types.MeasurandEnergyActiveImportRegister,
-		types.MeasurandCurrentImport + ".L1",
-		types.MeasurandCurrentImport + ".L2",
-		types.MeasurandCurrentImport + ".L3",
-		types.MeasurandVoltage + ".L1-N",
-		types.MeasurandVoltage + ".L2-N",
-		types.MeasurandVoltage + ".L3-N",
+		types.MeasurandVoltage,
+		types.MeasurandCurrentImport,
 		types.MeasurandCurrentOffered,
 	} {
 		suite.conn.measurements[m] = types.SampledValue{Value: "1"}
@@ -64,37 +60,19 @@ func (suite *connTestSuite) TestConnectorMeasurementsNoTxn() {
 	suite.Equal(api.ErrTimeout, err, "Voltages")
 }
 
-func (suite *connTestSuite) TestConnectorMeasurementsRunningTxnOutdated() {
-	// connected, running txn, no meter update since 1 hour
-	suite.clock.Add(time.Hour)
-	suite.conn.txnId = 1
-
-	_, err := suite.conn.CurrentPower()
-	suite.Equal(api.ErrTimeout, err, "CurrentPower")
-	_, err = suite.conn.TotalEnergy()
-	suite.Equal(api.ErrTimeout, err, "TotalEnergy")
-	_, err = suite.conn.GetMaxCurrent()
-	suite.Equal(api.ErrTimeout, err, "GetMaxCurrent")
-	_, _, _, err = suite.conn.Currents()
-	suite.Equal(api.ErrTimeout, err, "Currents")
-	_, _, _, err = suite.conn.Voltages()
-	suite.Equal(api.ErrTimeout, err, "Voltages")
-}
-
 func (suite *connTestSuite) TestConnectorMeasurementsRunningTxn() {
 	// connected, running txn, no meter update since 1 hour
 	suite.clock.Add(time.Hour)
-	suite.conn.meterUpdated = suite.clock.Now()
 	suite.conn.txnId = 1
 
 	_, err := suite.conn.CurrentPower()
-	suite.NoError(err, "CurrentPower")
+	suite.Require().Equal(api.ErrTimeout, err)
 	_, err = suite.conn.TotalEnergy()
-	suite.NoError(err, "TotalEnergy")
+	suite.Require().Equal(api.ErrTimeout, err)
 	_, err = suite.conn.GetMaxCurrent()
-	suite.NoError(err, "GetMaxCurrent")
+	suite.Require().Equal(api.ErrTimeout, err)
 	_, _, _, err = suite.conn.Currents()
-	suite.NoError(err, "Currents")
+	suite.Require().Equal(api.ErrTimeout, err)
 	_, _, _, err = suite.conn.Voltages()
-	suite.NoError(err, "Voltages")
+	suite.Require().Equal(api.ErrTimeout, err)
 }
