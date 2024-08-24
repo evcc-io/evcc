@@ -1,6 +1,7 @@
 package ocpp
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -166,10 +167,7 @@ func (conn *Connector) isMeterTimeout() bool {
 	return conn.timeout > 0 && conn.clock.Since(conn.meterUpdated) > conn.timeout
 }
 
-var _ api.CurrentGetter = (*Connector)(nil)
-
-// GetMaxCurrent returns the maximum phase current the charge point is set to offer
-func (conn *Connector) GetMaxCurrent() (float64, error) {
+func (conn *Connector) singleMeasurement(key types.Measurand) (float64, error) {
 	if !conn.cp.Connected() {
 		return 0, api.ErrTimeout
 	}
@@ -182,7 +180,7 @@ func (conn *Connector) GetMaxCurrent() (float64, error) {
 		return 0, api.ErrTimeout
 	}
 
-	if m, ok := conn.measurements[types.MeasurandCurrentOffered]; ok {
+	if m, ok := conn.measurements[key]; ok {
 		f, err := strconv.ParseFloat(m.Value, 64)
 		return scale(f, m.Unit) / 1e3, err
 	}
@@ -190,33 +188,23 @@ func (conn *Connector) GetMaxCurrent() (float64, error) {
 	return 0, api.ErrNotAvailable
 }
 
+var _ api.CurrentGetter = (*Connector)(nil)
+
+// GetMaxCurrent returns the maximum phase current the charge point is set to offer
+func (conn *Connector) GetMaxCurrent() (float64, error) {
+	return conn.singleMeasurement(types.MeasurandCurrentOffered)
+}
+
 // GetMaxPower returns the maximum power the charge point is set to offer
 func (conn *Connector) GetMaxPower() (float64, error) {
-	if !conn.cp.Connected() {
-		return 0, api.ErrTimeout
-	}
-
-	conn.mu.Lock()
-	defer conn.mu.Unlock()
-
-	// fallthrough for last value on timeout when no transaction is running
-	if conn.txnId != 0 && conn.isMeterTimeout() {
-		return 0, api.ErrTimeout
-	}
-
-	if m, ok := conn.measurements[types.MeasurandPowerOffered]; ok {
-		f, err := strconv.ParseFloat(m.Value, 64)
-		return scale(f, m.Unit), err
-	}
-
-	return 0, api.ErrNotAvailable
+	return conn.singleMeasurement(types.MeasurandPowerOffered)
 }
 
 var _ api.Meter = (*Connector)(nil)
 
 func (conn *Connector) CurrentPower() (float64, error) {
-	if !conn.cp.Connected() {
-		return 0, api.ErrTimeout
+	if f, err := conn.singleMeasurement(types.MeasurandPowerActiveImport); err == nil || !errors.Is(err, api.ErrNotAvailable) {
+		return f, err
 	}
 
 	conn.mu.Lock()
@@ -256,44 +244,11 @@ func (conn *Connector) CurrentPower() (float64, error) {
 }
 
 func (conn *Connector) TotalEnergy() (float64, error) {
-	if !conn.cp.Connected() {
-		return 0, api.ErrTimeout
-	}
-
-	conn.mu.Lock()
-	defer conn.mu.Unlock()
-
-	// fallthrough for last value on timeout when no transaction is running
-	if conn.txnId != 0 && conn.isMeterTimeout() {
-		return 0, api.ErrTimeout
-	}
-
-	if m, ok := conn.measurements[types.MeasurandEnergyActiveImportRegister]; ok {
-		f, err := strconv.ParseFloat(m.Value, 64)
-		return scale(f, m.Unit) / 1e3, err
-	}
-
-	return 0, api.ErrNotAvailable
+	return conn.singleMeasurement(types.MeasurandEnergyActiveImportRegister)
 }
 
 func (conn *Connector) Soc() (float64, error) {
-	if !conn.cp.Connected() {
-		return 0, api.ErrTimeout
-	}
-
-	conn.mu.Lock()
-	defer conn.mu.Unlock()
-
-	// fallthrough for last value on timeout when no transaction is running
-	if conn.txnId != 0 && conn.isMeterTimeout() {
-		return 0, api.ErrTimeout
-	}
-
-	if m, ok := conn.measurements[types.MeasurandSoC]; ok {
-		return strconv.ParseFloat(m.Value, 64)
-	}
-
-	return 0, api.ErrNotAvailable
+	return conn.singleMeasurement(types.MeasurandSoC)
 }
 
 func scale(f float64, scale types.UnitOfMeasure) float64 {
