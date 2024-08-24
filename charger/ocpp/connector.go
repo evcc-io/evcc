@@ -212,6 +212,30 @@ func (conn *Connector) GetMaxPower() (float64, error) {
 	return 0, api.ErrNotAvailable
 }
 
+func (conn *Connector) phaseMeasurements(measurement, suffix types.Measurand) ([3]float64, bool, error) {
+	var (
+		res   [3]float64
+		found bool
+	)
+
+	for i := range res {
+		m, ok := conn.measurements[getPhaseKey(measurement, i+1)+suffix]
+		if !ok {
+			continue
+		}
+		found = true
+
+		f, err := strconv.ParseFloat(m.Value, 64)
+		if err != nil {
+			return res, found, fmt.Errorf("invalid phase value %d: %w", i+1, err)
+		}
+
+		res[i] = scale(f, m.Unit)
+	}
+
+	return res, found, nil
+}
+
 var _ api.Meter = (*Connector)(nil)
 
 func (conn *Connector) CurrentPower() (float64, error) {
@@ -238,31 +262,12 @@ func (conn *Connector) CurrentPower() (float64, error) {
 
 	// fallback for missing total power
 
-	var (
-		res   float64
-		found bool
-	)
-
-	for phase := 1; phase <= 3; phase++ {
-		m, ok := conn.measurements[getPhaseKey(types.MeasurandPowerActiveImport, phase)]
-		if !ok {
-			continue
-		}
-		found = true
-
-		f, err := strconv.ParseFloat(m.Value, 64)
-		if err != nil {
-			return 0, fmt.Errorf("invalid power for phase %d: %w", phase, err)
-		}
-
-		res += scale(f, m.Unit)
+	res, found, err := conn.phaseMeasurements(types.MeasurandPowerActiveImport, "")
+	if found {
+		return res[0] + res[1] + res[2], err
 	}
 
-	if !found {
-		return 0, api.ErrNotAvailable
-	}
-
-	return res, nil
+	return 0, api.ErrNotAvailable
 }
 
 func (conn *Connector) TotalEnergy() (float64, error) {
@@ -319,30 +324,6 @@ func scale(f float64, scale types.UnitOfMeasure) float64 {
 
 func getPhaseKey(key types.Measurand, phase int) types.Measurand {
 	return key + types.Measurand(".L"+strconv.Itoa(phase))
-}
-
-func (conn *Connector) phaseMeasurements(measurement, suffix types.Measurand) ([3]float64, bool, error) {
-	var (
-		res   [3]float64
-		found bool
-	)
-
-	for i := range res {
-		m, ok := conn.measurements[getPhaseKey(measurement, i+1)+suffix]
-		if !ok {
-			continue
-		}
-		found = true
-
-		f, err := strconv.ParseFloat(m.Value, 64)
-		if err != nil {
-			return res, found, fmt.Errorf("invalid current for phase %d: %w", i+1, err)
-		}
-
-		res[i] = scale(f, m.Unit)
-	}
-
-	return res, found, nil
 }
 
 func (conn *Connector) Currents() (float64, float64, float64, error) {
