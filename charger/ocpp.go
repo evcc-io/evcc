@@ -179,7 +179,7 @@ func NewOCPP(id string, connector int, idtag string,
 	// fix timing issue in EVBox when switching OCPP protocol version
 	time.Sleep(time.Second)
 
-	var rc = make(chan error, 1)
+	rc := make(chan error, 1)
 
 	meterValuesSampledData := ""
 	meterValuesSampledDataMaxLength := len(strings.Split(desiredMeasurands, ","))
@@ -425,9 +425,20 @@ var _ api.StatusReasoner = (*OCPP)(nil)
 
 func (c *OCPP) StatusReason() (api.Reason, error) {
 	var res api.Reason
-	if c.conn.NeedsAuthentication() {
-		res = api.ReasonWaitingForAuthorization
+
+	s, err := c.conn.Status()
+	if err != nil {
+		return res, err
 	}
+
+	switch {
+	case c.conn.NeedsAuthentication():
+		res = api.ReasonWaitingForAuthorization
+
+	case s == core.ChargePointStatusFinishing:
+		res = api.ReasonDisconnectRequired
+	}
+
 	return res, nil
 }
 
