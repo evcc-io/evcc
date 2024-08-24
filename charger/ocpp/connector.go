@@ -328,15 +328,17 @@ func (conn *Connector) Currents() (float64, float64, float64, error) {
 		return 0, 0, 0, nil
 	}
 
-	var res [3]float64
+	var (
+		res   [3]float64
+		found bool
+	)
+
 	for i := range res {
 		m, ok := conn.measurements[getPhaseKey(types.MeasurandCurrentImport, i+1)]
 		if !ok {
-			if i == 0 {
-				return 0, 0, 0, api.ErrNotAvailable
-			}
 			continue
 		}
+		found = true
 
 		f, err := strconv.ParseFloat(m.Value, 64)
 		if err != nil {
@@ -344,6 +346,10 @@ func (conn *Connector) Currents() (float64, float64, float64, error) {
 		}
 
 		res[i] = scale(f, m.Unit)
+	}
+
+	if !found {
+		return 0, 0, 0, api.ErrNotAvailable
 	}
 
 	return res[0], res[1], res[2], nil
@@ -362,19 +368,21 @@ func (conn *Connector) Voltages() (float64, float64, float64, error) {
 		return 0, 0, 0, api.ErrTimeout
 	}
 
-	var res [3]float64
+	var (
+		res   [3]float64
+		found bool
+	)
+
 	for i := range res {
 		m, ok := conn.measurements[getPhaseKey(types.MeasurandVoltage, i+1)+"-N"]
 		if !ok {
 			// fallback for wrong voltage phase labeling
 			m, ok = conn.measurements[getPhaseKey(types.MeasurandVoltage, i+1)]
 			if !ok {
-				if i == 0 {
-					return 0, 0, 0, api.ErrNotAvailable
-				}
 				continue
 			}
 		}
+		found = true
 
 		f, err := strconv.ParseFloat(m.Value, 64)
 		if err != nil {
@@ -382,6 +390,10 @@ func (conn *Connector) Voltages() (float64, float64, float64, error) {
 		}
 
 		res[i] = scale(f, m.Unit)
+	}
+
+	if !found {
+		return 0, 0, 0, api.ErrNotAvailable
 	}
 
 	return res[0], res[1], res[2], nil
