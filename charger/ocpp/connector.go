@@ -237,12 +237,18 @@ func (conn *Connector) CurrentPower() (float64, error) {
 	}
 
 	// fallback for missing total power
-	var res float64
+
+	var (
+		res   float64
+		found bool
+	)
+
 	for phase := 1; phase <= 3; phase++ {
 		m, ok := conn.measurements[getPhaseKey(types.MeasurandPowerActiveImport, phase)]
 		if !ok {
-			return 0, api.ErrNotAvailable
+			continue
 		}
+		found = true
 
 		f, err := strconv.ParseFloat(m.Value, 64)
 		if err != nil {
@@ -250,6 +256,10 @@ func (conn *Connector) CurrentPower() (float64, error) {
 		}
 
 		res += scale(f, m.Unit)
+	}
+
+	if !found {
+		return 0, api.ErrNotAvailable
 	}
 
 	return res, nil
