@@ -321,6 +321,30 @@ func getPhaseKey(key types.Measurand, phase int) types.Measurand {
 	return key + types.Measurand(".L"+strconv.Itoa(phase))
 }
 
+func (conn *Connector) phaseMeasurements(measurement, suffix types.Measurand) ([3]float64, bool, error) {
+	var (
+		res   [3]float64
+		found bool
+	)
+
+	for i := range res {
+		m, ok := conn.measurements[getPhaseKey(measurement, i+1)+suffix]
+		if !ok {
+			continue
+		}
+		found = true
+
+		f, err := strconv.ParseFloat(m.Value, 64)
+		if err != nil {
+			return res, found, fmt.Errorf("invalid current for phase %d: %w", i+1, err)
+		}
+
+		res[i] = scale(f, m.Unit)
+	}
+
+	return res, found, nil
+}
+
 func (conn *Connector) Currents() (float64, float64, float64, error) {
 	if !conn.cp.Connected() {
 		return 0, 0, 0, api.ErrTimeout
@@ -338,31 +362,12 @@ func (conn *Connector) Currents() (float64, float64, float64, error) {
 		return 0, 0, 0, nil
 	}
 
-	var (
-		res   [3]float64
-		found bool
-	)
-
-	for i := range res {
-		m, ok := conn.measurements[getPhaseKey(types.MeasurandCurrentImport, i+1)]
-		if !ok {
-			continue
-		}
-		found = true
-
-		f, err := strconv.ParseFloat(m.Value, 64)
-		if err != nil {
-			return 0, 0, 0, fmt.Errorf("invalid current for phase %d: %w", i+1, err)
-		}
-
-		res[i] = scale(f, m.Unit)
+	res, found, err := conn.phaseMeasurements(types.MeasurandCurrentImport, "")
+	if found {
+		return res[0], res[1], res[2], err
 	}
 
-	if !found {
-		return 0, 0, 0, api.ErrNotAvailable
-	}
-
-	return res[0], res[1], res[2], nil
+	return 0, 0, 0, api.ErrNotAvailable
 }
 
 func (conn *Connector) Voltages() (float64, float64, float64, error) {
@@ -378,33 +383,15 @@ func (conn *Connector) Voltages() (float64, float64, float64, error) {
 		return 0, 0, 0, api.ErrTimeout
 	}
 
-	var (
-		res   [3]float64
-		found bool
-	)
-
-	for i := range res {
-		m, ok := conn.measurements[getPhaseKey(types.MeasurandVoltage, i+1)+"-N"]
-		if !ok {
-			// fallback for wrong voltage phase labeling
-			m, ok = conn.measurements[getPhaseKey(types.MeasurandVoltage, i+1)]
-			if !ok {
-				continue
-			}
-		}
-		found = true
-
-		f, err := strconv.ParseFloat(m.Value, 64)
-		if err != nil {
-			return 0, 0, 0, fmt.Errorf("invalid voltage for phase %d: %w", i+1, err)
-		}
-
-		res[i] = scale(f, m.Unit)
+	res, found, err := conn.phaseMeasurements(types.MeasurandVoltage, "-N")
+	if found {
+		return res[0], res[1], res[2], err
 	}
 
-	if !found {
-		return 0, 0, 0, api.ErrNotAvailable
+	res, found, err = conn.phaseMeasurements(types.MeasurandVoltage, "")
+	if found {
+		return res[0], res[1], res[2], err
 	}
 
-	return res[0], res[1], res[2], nil
+	return 0, 0, 0, api.ErrNotAvailable
 }
