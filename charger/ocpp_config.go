@@ -3,6 +3,7 @@ package charger
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/evcc-io/evcc/charger/ocpp"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
@@ -11,12 +12,11 @@ import (
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/types"
 )
 
-func (c *OCPP) getConfiguration(id string, connector int) (int, error) {
-	rc := make(chan error, 1)
+func (c *OCPP) getConfiguration(id string, connector int) (string, int, error) {
+	var meterValuesSampledData string
+	meterValuesSampledDataMaxLength := len(strings.Split(desiredMeasurands, ","))
 
-	// If a key value is defined as a CSL, it MAY be accompanied with a [KeyName]MaxLength key, indicating the
-	// max length of the CSL in items. If this key is not set, a safe value of 1 (one) item SHOULD be assumed.
-	meterValuesSampledDataMaxLength := 1
+	rc := make(chan error, 1)
 
 	err := ocpp.Instance().GetConfiguration(id, func(resp *core.GetConfigurationConfirmation, err error) {
 		if err == nil {
@@ -46,6 +46,12 @@ func (c *OCPP) getConfiguration(id string, connector int) (int, error) {
 					if val, err := strconv.Atoi(*opt.Value); err == nil {
 						c.chargingProfileId = val
 					}
+
+				case ocpp.KeyMeterValuesSampledData:
+					if opt.Readonly {
+						meterValuesSampledDataMaxLength = 0
+					}
+					meterValuesSampledData = *opt.Value
 
 				case ocpp.KeyMeterValuesSampledDataMaxLength:
 					if val, err := strconv.Atoi(*opt.Value); err == nil {
@@ -81,5 +87,5 @@ func (c *OCPP) getConfiguration(id string, connector int) (int, error) {
 		rc <- err
 	}, nil)
 
-	return meterValuesSampledDataMaxLength, c.wait(err, rc)
+	return meterValuesSampledData, meterValuesSampledDataMaxLength, c.wait(err, rc)
 }
