@@ -22,6 +22,10 @@ type connTestSuite struct {
 	clock *clock.Mock
 }
 
+func (suite *connTestSuite) wipe() {
+	suite.conn.measurements = make(map[types.Measurand]types.SampledValue)
+}
+
 func (suite *connTestSuite) SetupSuite() {
 	suite.cp = NewChargePoint(util.NewLogger("foo"), "abc")
 	suite.conn, _ = NewConnector(util.NewLogger("foo"), 1, suite.cp, time.Minute)
@@ -40,9 +44,32 @@ func (suite *connTestSuite) SetupSuite() {
 		types.MeasurandVoltage + ".L2-N",
 		types.MeasurandVoltage + ".L3-N",
 		types.MeasurandCurrentOffered,
+		types.MeasurandSoC,
 	} {
 		suite.conn.measurements[m] = types.SampledValue{Value: "1"}
 	}
+}
+
+func (suite *connTestSuite) TestConnectorNoMeasurements() {
+	// connected, no txn, no meter update since 1 hour
+	suite.clock.Add(time.Hour)
+	suite.wipe()
+
+	// intentionally no error
+	_, err := suite.conn.CurrentPower()
+	suite.NoError(err, "CurrentPower")
+	_, _, _, err = suite.conn.Currents()
+	suite.NoError(err, "Currents")
+
+	// api.ErrNotAvailable
+	_, err = suite.conn.TotalEnergy()
+	suite.Equal(api.ErrNotAvailable, err, "TotalEnergy")
+	_, err = suite.conn.GetMaxCurrent()
+	suite.Equal(api.ErrNotAvailable, err, "GetMaxCurrent")
+	_, err = suite.conn.Soc()
+	suite.Equal(api.ErrNotAvailable, err, "Soc")
+	_, _, _, err = suite.conn.Voltages()
+	suite.Equal(api.ErrNotAvailable, err, "Voltages")
 }
 
 func (suite *connTestSuite) TestConnectorMeasurementsNoTxn() {
@@ -55,11 +82,13 @@ func (suite *connTestSuite) TestConnectorMeasurementsNoTxn() {
 	_, _, _, err = suite.conn.Currents()
 	suite.NoError(err, "Currents")
 
-	// intentionally no error ???
+	// api.ErrTimeout
 	_, err = suite.conn.TotalEnergy()
 	suite.Equal(api.ErrTimeout, err, "TotalEnergy")
 	_, err = suite.conn.GetMaxCurrent()
 	suite.Equal(api.ErrTimeout, err, "GetMaxCurrent")
+	_, err = suite.conn.Soc()
+	suite.Equal(api.ErrTimeout, err, "Soc")
 	_, _, _, err = suite.conn.Voltages()
 	suite.Equal(api.ErrTimeout, err, "Voltages")
 }
@@ -75,6 +104,8 @@ func (suite *connTestSuite) TestConnectorMeasurementsRunningTxnOutdated() {
 	suite.Equal(api.ErrTimeout, err, "TotalEnergy")
 	_, err = suite.conn.GetMaxCurrent()
 	suite.Equal(api.ErrTimeout, err, "GetMaxCurrent")
+	_, err = suite.conn.Soc()
+	suite.Equal(api.ErrTimeout, err, "Soc")
 	_, _, _, err = suite.conn.Currents()
 	suite.Equal(api.ErrTimeout, err, "Currents")
 	_, _, _, err = suite.conn.Voltages()
@@ -93,6 +124,8 @@ func (suite *connTestSuite) TestConnectorMeasurementsRunningTxn() {
 	suite.NoError(err, "TotalEnergy")
 	_, err = suite.conn.GetMaxCurrent()
 	suite.NoError(err, "GetMaxCurrent")
+	_, err = suite.conn.Soc()
+	suite.NoError(err, "Soc")
 	_, _, _, err = suite.conn.Currents()
 	suite.NoError(err, "Currents")
 	_, _, _, err = suite.conn.Voltages()
