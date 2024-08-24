@@ -22,10 +22,6 @@ type connTestSuite struct {
 	clock *clock.Mock
 }
 
-func (suite *connTestSuite) wipe() {
-	suite.conn.measurements = make(map[types.Measurand]types.SampledValue)
-}
-
 func (suite *connTestSuite) SetupSuite() {
 	suite.cp = NewChargePoint(util.NewLogger("foo"), "abc")
 	suite.conn, _ = NewConnector(util.NewLogger("foo"), 1, suite.cp, time.Minute)
@@ -33,7 +29,9 @@ func (suite *connTestSuite) SetupSuite() {
 	suite.clock = clock.NewMock()
 	suite.conn.clock = suite.clock
 	suite.conn.cp.connected = true
+}
 
+func (suite *connTestSuite) addMeasurements() {
 	for _, m := range []types.Measurand{
 		types.MeasurandPowerActiveImport,
 		types.MeasurandEnergyActiveImportRegister,
@@ -53,9 +51,9 @@ func (suite *connTestSuite) SetupSuite() {
 func (suite *connTestSuite) TestConnectorNoMeasurements() {
 	// connected, no txn, no meter update since 1 hour
 	suite.clock.Add(time.Hour)
-	suite.wipe()
 
 	// intentionally no error
+	// TODO fix
 	_, err := suite.conn.CurrentPower()
 	suite.NoError(err, "CurrentPower")
 	_, _, _, err = suite.conn.Currents()
@@ -74,6 +72,7 @@ func (suite *connTestSuite) TestConnectorNoMeasurements() {
 
 func (suite *connTestSuite) TestConnectorMeasurementsNoTxn() {
 	// connected, no txn, no meter update since 1 hour
+	suite.addMeasurements()
 	suite.clock.Add(time.Hour)
 
 	// intentionally no error
@@ -95,6 +94,7 @@ func (suite *connTestSuite) TestConnectorMeasurementsNoTxn() {
 
 func (suite *connTestSuite) TestConnectorMeasurementsRunningTxnOutdated() {
 	// connected, running txn, no meter update since 1 hour
+	suite.addMeasurements()
 	suite.clock.Add(time.Hour)
 	suite.conn.txnId = 1
 
@@ -114,6 +114,7 @@ func (suite *connTestSuite) TestConnectorMeasurementsRunningTxnOutdated() {
 
 func (suite *connTestSuite) TestConnectorMeasurementsRunningTxn() {
 	// connected, running txn, no meter update since 1 hour
+	suite.addMeasurements()
 	suite.clock.Add(time.Hour)
 	suite.conn.meterUpdated = suite.clock.Now()
 	suite.conn.txnId = 1
