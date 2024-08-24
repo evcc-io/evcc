@@ -92,7 +92,7 @@ func (suite *connTestSuite) TestConnectorMeasurementsNoTxn() {
 	suite.Equal(res3, 0.0)
 
 	// api.ErrTimeout
-	res, err = suite.conn.GetMaxCurrent()
+	_, err = suite.conn.GetMaxCurrent()
 	suite.Equal(api.ErrTimeout, err, "GetMaxCurrent")
 
 	// keep old values
