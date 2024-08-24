@@ -42,7 +42,7 @@ func (conn *Connector) StatusNotification(request *core.StatusNotificationReques
 
 func getSampleKey(s types.SampledValue) types.Measurand {
 	if s.Phase != "" {
-		return s.Measurand + types.Measurand("."+string(s.Phase))
+		s.Measurand += types.Measurand("." + string(s.Phase))
 	}
 
 	return s.Measurand
@@ -72,7 +72,7 @@ func (conn *Connector) MeterValues(request *core.MeterValuesRequest) (*core.Mete
 	}
 
 	select {
-	case conn.meterC <- conn.measurements:
+	case conn.meterC <- struct{}{}:
 	default:
 	}
 
@@ -108,6 +108,8 @@ func (conn *Connector) StartTransaction(request *core.StartTransactionRequest) (
 	return res, nil
 }
 
+// assumeMeterStopped sets all active measurements to 0
+// caller must hold lock
 func (conn *Connector) assumeMeterStopped() {
 	conn.meterUpdated = conn.clock.Now()
 
