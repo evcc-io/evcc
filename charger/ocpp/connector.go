@@ -219,7 +219,9 @@ func (conn *Connector) phaseMeasurements(measurement, suffix types.Measurand) ([
 	)
 
 	for i := range res {
-		m, ok := conn.measurements[getPhaseKey(measurement, i+1)+suffix]
+		key := getPhaseKey(measurement, i+1) + suffix
+
+		m, ok := conn.measurements[key]
 		if !ok {
 			continue
 		}
@@ -227,7 +229,7 @@ func (conn *Connector) phaseMeasurements(measurement, suffix types.Measurand) ([
 
 		f, err := strconv.ParseFloat(m.Value, 64)
 		if err != nil {
-			return res, found, fmt.Errorf("invalid phase value %d: %w", i+1, err)
+			return res, found, fmt.Errorf("invalid phase value %s: %w", key, err)
 		}
 
 		res[i] = scale(f, m.Unit)
