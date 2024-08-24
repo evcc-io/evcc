@@ -190,7 +190,7 @@ test.describe("vehicles", async () => {
 
     await page.getByTestId("vehicle").last().getByRole("button", { name: "edit" }).click();
     await page.getByRole("button", { name: "Show advanced settings" }).click();
-    await expect(vehicleModal.getByLabel("RFID identifiers")).toHaveValue("aaa\nbbb\nccc\nddd");
+    await expect(page.getByLabel("RFID identifiers")).toHaveValue("aaa\nbbb\nccc\nddd");
     await page.getByTestId("vehicle-modal").getByLabel("Close").click();
     await expect(page.getByTestId("fatal-error")).not.toBeVisible();
   });
