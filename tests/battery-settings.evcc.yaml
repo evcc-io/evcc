@@ -64,7 +64,7 @@ tariffs:
     price: 0.2 # EUR/kWh
     zones:
       - hours: 5-7
-        price: 0.6
+        price: 0.45
       - hours: 11-14
         price: 0.05
       - hours: 17-21

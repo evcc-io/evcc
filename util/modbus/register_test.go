@@ -63,3 +63,23 @@ func TestEncoding(t *testing.T) {
 		require.Equal(t, tc.out, res, tc)
 	}
 }
+
+func TestDecoding(t *testing.T) {
+	tc := []struct {
+		r   Register
+		in  []byte
+		out float64
+	}{
+		{Register{Decode: "float32"}, []byte{0x4b, 0x3c, 0x61, 0x4e}, 12345678},
+		{Register{Decode: "float32"}, []byte{0xff, 0xff, 0xff, 0x7f}, 0}, // NaN
+		{Register{Decode: "float32s"}, []byte{0x61, 0x4e, 0x4b, 0x3c}, 12345678},
+		{Register{Decode: "float32s"}, []byte{0xff, 0x7f, 0xff, 0xff}, 0},    // NaN swapped
+		{Register{Decode: "float32nans"}, []byte{0xff, 0xff, 0xff, 0x7f}, 0}, // NaN
+	}
+
+	for _, tc := range tc {
+		fun, err := tc.r.DecodeFunc()
+		require.NoError(t, err, tc)
+		require.Equal(t, tc.out, fun(tc.in), tc)
+	}
+}

@@ -6,14 +6,14 @@ discharge = "D'Entlueden am schnelle Modus a geplangte Lueden verhënneren."
 disclaimerHint = "Notiz:"
 disclaimerText = "Dës Astellunge beaflossen nëmmen de Solarmodus. D'Luedeverhalen gëtt deementspriechend ugepasst."
 gridChargeTab = "Vum Réseau oplueden"
-legendBottomName = "Prioritéit fir d'Lueden vun der Haus Batterie"
-legendBottomSubline = "bis et {soc} erreecht."
+legendBottomName = "Prioritéit fir d'Lueden vun der Hausbatterie"
+legendBottomSubline = "bis {soc} erreecht sinn."
 legendMiddleName = "Prioritéit fir d'Lueden vum Gefier"
 legendMiddleSubline = "wann d'Hausbatterie iwwer {soc} ass."
 legendTopAutostart = "Automatesch starten"
-legendTopName = "Batterie-ënnerstëtzt Lueden vum Gefier"
+legendTopName = "Batterie-ënnerstëtzt Luede vum Gefier"
 legendTopSubline = "wann d'Hausbatterie iwwer {soc} ass."
-modalTitle = "Haus Batterie"
+modalTitle = "Hausbatterie"
 usageTab = "Batterieverbrauch"
 
 [batterySettings.bufferStart]
@@ -24,8 +24,8 @@ never = "nëmme mat genuch Iwwerschoss."
 [config]
 
 [config.battery]
-titleAdd = "Batterie-Meter derbäi fügen"
-titleEdit = "Batterie-Meter upassen"
+titleAdd = "Batterie bäisetzen"
+titleEdit = "Batterie upassen"
 
 [config.circuits]
 description = "Sécherstellen, datt d'Zomm vun all den Luedpunkten déi mam Circuit verbonne sinn net déi konfiguréiert Leeschtung an aktuell Grenzen iwwerschreit. Circuiten kënnen agenist ginn fir eng Hierarchie opzebauen."
@@ -54,6 +54,7 @@ chargeStatusF = "Feeler"
 chargedEnergy = "Opgelueden"
 co2 = "Netz CO₂"
 configured = "Konfiguréiert"
+controllable = "Kontrolléierbar"
 currency = "Wärung"
 current = "Stroum"
 currentRange = "Stroum"

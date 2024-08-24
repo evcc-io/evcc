@@ -15,6 +15,7 @@ import (
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/util"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
+	"github.com/lorenzodonini/ocpp-go/ocpp1.6/remotetrigger"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/smartcharging"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/types"
 )
@@ -41,7 +42,7 @@ type OCPP struct {
 
 const (
 	defaultIdTag      = "evcc" // RemoteStartTransaction only
-	desiredMeasurands = "Energy.Active.Import.Register,Power.Active.Import,SoC,Current.Offered,Power.Offered,Current.Import,Voltage"
+	desiredMeasurands = "Power.Active.Import,Energy.Active.Import.Register,Current.Import,Voltage,Current.Offered,Power.Offered,SoC"
 )
 
 func init() {
@@ -178,14 +179,97 @@ func NewOCPP(id string, connector int, idtag string,
 	// fix timing issue in EVBox when switching OCPP protocol version
 	time.Sleep(time.Second)
 
-	meterValuesSampledDataMaxLength, err := c.getConfiguration(id, connector)
-	if err != nil {
+	rc := make(chan error, 1)
+
+	meterValuesSampledData := ""
+	meterValuesSampledDataMaxLength := len(strings.Split(desiredMeasurands, ","))
+
+	c.hasRemoteTriggerFeature = true // assume remote trigger feature is available
+
+	err = ocpp.Instance().GetConfiguration(cp.ID(), func(resp *core.GetConfigurationConfirmation, err error) {
+		if err == nil {
+			for _, opt := range resp.ConfigurationKey {
+				if opt.Value == nil {
+					continue
+				}
+
+				switch opt.Key {
+				case ocpp.KeyChargeProfileMaxStackLevel:
+					if val, err := strconv.Atoi(*opt.Value); err == nil {
+						c.stackLevel = val
+					}
+
+				case ocpp.KeyChargingScheduleAllowedChargingRateUnit:
+					if *opt.Value == "Power" || *opt.Value == "W" { // "W" is not allowed by spec but used by some CPs
+						c.chargingRateUnit = types.ChargingRateUnitWatts
+					}
+
+				case ocpp.KeyConnectorSwitch3to1PhaseSupported:
+					var val bool
+					if val, err = strconv.ParseBool(*opt.Value); err == nil {
+						c.phaseSwitching = val
+					}
+
+				case ocpp.KeyMaxChargingProfilesInstalled:
+					if val, err := strconv.Atoi(*opt.Value); err == nil {
+						c.chargingProfileId = val
+					}
+
+				case ocpp.KeyMeterValuesSampledData:
+					if opt.Readonly {
+						meterValuesSampledDataMaxLength = 0
+					}
+					meterValuesSampledData = *opt.Value
+
+				case ocpp.KeyMeterValuesSampledDataMaxLength:
+					if val, err := strconv.Atoi(*opt.Value); err == nil {
+						meterValuesSampledDataMaxLength = val
+					}
+
+				case ocpp.KeyNumberOfConnectors:
+					var val int
+					if val, err = strconv.Atoi(*opt.Value); err == nil && connector > val {
+						err = fmt.Errorf("connector %d exceeds max available connectors: %d", connector, val)
+					}
+
+				case ocpp.KeySupportedFeatureProfiles:
+					if !c.hasProperty(*opt.Value, smartcharging.ProfileName) {
+						c.log.WARN.Printf("the required SmartCharging feature profile is not indicated as supported")
+					}
+					// correct the availability assumption of RemoteTrigger only in case of a valid looking FeatureProfile list
+					if c.hasProperty(*opt.Value, core.ProfileName) {
+						c.hasRemoteTriggerFeature = c.hasProperty(*opt.Value, remotetrigger.ProfileName)
+					}
+
+				// vendor-specific keys
+				case ocpp.KeyAlfenPlugAndChargeIdentifier:
+					if c.idtag == defaultIdTag {
+						c.idtag = *opt.Value
+						c.log.DEBUG.Printf("overriding default `idTag` with Alfen-specific value: %s", c.idtag)
+					}
+
+				case ocpp.KeyEvBoxSupportedMeasurands:
+					if meterValues == "" {
+						meterValues = *opt.Value
+					}
+				}
+
+				if err != nil {
+					break
+				}
+			}
+		}
+
+		rc <- err
+	}, nil)
+
+	if err := c.wait(err, rc); err != nil {
 		return nil, err
 	}
 
 	// see who's there
 	if c.hasRemoteTriggerFeature {
-		if err := conn.TriggerMessageRequest(core.BootNotificationFeatureName); err == nil {
+		if err := ocpp.Instance().TriggerMessageRequest(cp.ID(), core.BootNotificationFeatureName); err == nil {
 			select {
 			case <-time.After(timeout):
 				c.log.DEBUG.Printf("BootNotification timeout")
@@ -205,12 +289,12 @@ func NewOCPP(id string, connector int, idtag string,
 
 	// configure measurands
 	if meterValues != "" {
-		if err := c.configure(ocpp.KeyMeterValuesSampledData, meterValues); err != nil {
-			return nil, err
+		if err := c.configure(ocpp.KeyMeterValuesSampledData, meterValues); err == nil {
+			meterValuesSampledData = meterValues
 		}
 	}
 
-	c.meterValuesSample = meterValues
+	c.meterValuesSample = meterValuesSampledData
 
 	// trigger initial meter values
 	if c.hasRemoteTriggerFeature {
@@ -227,7 +311,7 @@ func NewOCPP(id string, connector int, idtag string,
 	// configure sample rate
 	if meterInterval > 0 {
 		if err := c.configure(ocpp.KeyMeterValueSampleInterval, strconv.Itoa(int(meterInterval.Seconds()))); err != nil {
-			return nil, err
+			c.log.WARN.Printf("failed configuring MeterValueSampleInterval: %v", err)
 		}
 	}
 
@@ -254,7 +338,7 @@ func (c *OCPP) hasMeasurement(val types.Measurand) bool {
 // hasProperty checks if comma-separated string contains given string ignoring whitespaces
 func (c *OCPP) hasProperty(props string, prop string) bool {
 	return slices.ContainsFunc(strings.Split(props, ","), func(s string) bool {
-		return prop == strings.TrimSpace(s)
+		return strings.HasPrefix(strings.ReplaceAll(s, " ", ""), prop)
 	})
 }
 
@@ -335,6 +419,16 @@ func (c *OCPP) Status() (api.ChargeStatus, error) {
 	default:
 		return api.StatusNone, fmt.Errorf("invalid chargepoint status: %s", status)
 	}
+}
+
+var _ api.StatusReasoner = (*OCPP)(nil)
+
+func (c *OCPP) StatusReason() (api.Reason, error) {
+	var res api.Reason
+	if c.conn.NeedsAuthentication() {
+		res = api.ReasonWaitingForAuthorization
+	}
+	return res, nil
 }
 
 // Enabled implements the api.Charger interface

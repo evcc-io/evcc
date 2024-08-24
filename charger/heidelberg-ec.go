@@ -93,6 +93,9 @@ func NewHeidelbergEC(uri, device, comset string, baudrate int, proto modbus.Prot
 		current: 60, // assume min current
 	}
 
+	// https://github.com/evcc-io/evcc/issues/15437
+	conn.Delay(100 * time.Millisecond)
+
 	// disable standby to prevent comm loss
 	if err := wb.set(hecRegStandbyConfig, hecStandbyDisabled); err != nil {
 		return nil, err

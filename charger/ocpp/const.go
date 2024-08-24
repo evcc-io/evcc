@@ -17,4 +17,5 @@ const (
 
 	// Vendor specific keys
 	KeyAlfenPlugAndChargeIdentifier = "PlugAndChargeIdentifier"
+	KeyEvBoxSupportedMeasurands     = "evb_SupportedMeasurands"
 )

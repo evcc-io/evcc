@@ -24,7 +24,7 @@ type Connector struct {
 
 	status  *core.StatusNotificationRequest
 	statusC chan struct{}
-	meterC  chan map[types.Measurand]types.SampledValue
+	meterC  chan struct{}
 
 	meterUpdated time.Time
 	measurements map[types.Measurand]types.SampledValue
@@ -41,9 +41,9 @@ func NewConnector(log *util.Logger, id int, cp *CP, timeout time.Duration) (*Con
 		cp:           cp,
 		id:           id,
 		clock:        clock.New(),
-		statusC:      make(chan struct{}),
+		statusC:      make(chan struct{}, 1),
+		meterC:       make(chan struct{}, 1),
 		measurements: make(map[types.Measurand]types.SampledValue),
-		meterC:       make(chan map[types.Measurand]types.SampledValue),
 		timeout:      timeout,
 	}
 
@@ -56,7 +56,7 @@ func (conn *Connector) TestClock(clock clock.Clock) {
 	conn.clock = clock
 }
 
-func (conn *Connector) MeterSampled() <-chan map[types.Measurand]types.SampledValue {
+func (conn *Connector) MeterSampled() <-chan struct{} {
 	return conn.meterC
 }
 
@@ -89,7 +89,7 @@ func (conn *Connector) WatchDog(timeout time.Duration) {
 	tick := time.NewTicker(2 * time.Second)
 	for ; true; <-tick.C {
 		conn.mu.Lock()
-		update := conn.txnId != 0 && conn.clock.Since(conn.meterUpdated) > timeout
+		update := conn.clock.Since(conn.meterUpdated) > timeout
 		conn.mu.Unlock()
 
 		if update {
@@ -236,7 +236,23 @@ func (conn *Connector) CurrentPower() (float64, error) {
 		return scale(f, m.Unit), err
 	}
 
-	return 0, api.ErrNotAvailable
+	// fallback for missing total power
+	var res float64
+	for phase := 1; phase <= 3; phase++ {
+		m, ok := conn.measurements[getPhaseKey(types.MeasurandPowerActiveImport, phase)]
+		if !ok {
+			return 0, api.ErrNotAvailable
+		}
+
+		f, err := strconv.ParseFloat(m.Value, 64)
+		if err != nil {
+			return 0, fmt.Errorf("invalid power for phase %d: %w", phase, err)
+		}
+
+		res += scale(f, m.Unit)
+	}
+
+	return res, nil
 }
 
 func (conn *Connector) TotalEnergy() (float64, error) {
