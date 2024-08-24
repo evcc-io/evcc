@@ -41,8 +41,8 @@ func NewConnector(log *util.Logger, id int, cp *CP, timeout time.Duration) (*Con
 		cp:           cp,
 		id:           id,
 		clock:        clock.New(),
-		statusC:      make(chan struct{}),
-		meterC:       make(chan struct{}),
+		statusC:      make(chan struct{}, 1),
+		meterC:       make(chan struct{}, 1),
 		measurements: make(map[types.Measurand]types.SampledValue),
 		timeout:      timeout,
 	}
