@@ -178,7 +178,7 @@ func (conn *Connector) GetMaxCurrent() (float64, error) {
 	defer conn.mu.Unlock()
 
 	// fallthrough for last value on timeout when no transaction is running
-	if conn.txnId != 0 && conn.isMeterTimeout() {
+	if conn.isMeterTimeout() {
 		return 0, api.ErrTimeout
 	}
 
