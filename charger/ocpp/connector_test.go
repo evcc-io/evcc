@@ -54,9 +54,9 @@ func (suite *connTestSuite) TestConnectorMeasurementsNoTxn() {
 	suite.NoError(err, "CurrentPower")
 	_, _, _, err = suite.conn.Currents()
 	suite.NoError(err, "Currents")
-	_, err = suite.conn.TotalEnergy()
 
 	// intentionally no error ???
+	_, err = suite.conn.TotalEnergy()
 	suite.Equal(api.ErrTimeout, err, "TotalEnergy")
 	_, err = suite.conn.GetMaxCurrent()
 	suite.Equal(api.ErrTimeout, err, "GetMaxCurrent")
