@@ -14,6 +14,10 @@ type Connection struct {
 	delay   time.Duration
 }
 
+func (c *Connection) Logger(logger meters.Logger) {
+	c.logical = logger
+}
+
 func (c *Connection) Delay(delay time.Duration) {
 	c.delay = delay
 }

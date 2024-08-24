@@ -89,7 +89,7 @@ func (conn *Connector) WatchDog(timeout time.Duration) {
 	tick := time.NewTicker(2 * time.Second)
 	for ; true; <-tick.C {
 		conn.mu.Lock()
-		update := conn.txnId != 0 && conn.clock.Since(conn.meterUpdated) > timeout
+		update := conn.clock.Since(conn.meterUpdated) > timeout
 		conn.mu.Unlock()
 
 		if update {
@@ -236,7 +236,23 @@ func (conn *Connector) CurrentPower() (float64, error) {
 		return scale(f, m.Unit), err
 	}
 
-	return 0, api.ErrNotAvailable
+	// fallback for missing total power
+	var res float64
+	for phase := 1; phase <= 3; phase++ {
+		m, ok := conn.measurements[getPhaseKey(types.MeasurandPowerActiveImport, phase)]
+		if !ok {
+			return 0, api.ErrNotAvailable
+		}
+
+		f, err := strconv.ParseFloat(m.Value, 64)
+		if err != nil {
+			return 0, fmt.Errorf("invalid power for phase %d: %w", phase, err)
+		}
+
+		res += scale(f, m.Unit)
+	}
+
+	return res, nil
 }
 
 func (conn *Connector) TotalEnergy() (float64, error) {

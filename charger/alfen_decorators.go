@@ -22,6 +22,17 @@ func decorateAlfen(base *Alfen, phaseSwitcher func(int) error, phaseGetter func(
 			},
 		}
 
+	case phaseGetter != nil && phaseSwitcher == nil:
+		return &struct {
+			*Alfen
+			api.PhaseGetter
+		}{
+			Alfen: base,
+			PhaseGetter: &decorateAlfenPhaseGetterImpl{
+				phaseGetter: phaseGetter,
+			},
+		}
+
 	case phaseGetter != nil && phaseSwitcher != nil:
 		return &struct {
 			*Alfen

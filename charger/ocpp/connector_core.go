@@ -60,9 +60,9 @@ func (conn *Connector) MeterValues(request *core.MeterValuesRequest) (*core.Mete
 		conn.txnId = *request.TransactionId
 	}
 
-	for _, meterValue := range request.MeterValue {
+	for _, meterValue := range sortByAge(request.MeterValue) {
 		// ignore old meter value requests
-		if meterValue.Timestamp.Time.After(conn.meterUpdated) {
+		if !meterValue.Timestamp.Time.Before(conn.meterUpdated) {
 			for _, sample := range meterValue.SampledValue {
 				sample.Value = strings.TrimSpace(sample.Value)
 				conn.measurements[getSampleKey(sample)] = sample

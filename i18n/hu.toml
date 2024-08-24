@@ -25,8 +25,8 @@ never = "csak ha van elég többlet."
 [config]
 
 [config.battery]
-titleAdd = "Energiatároló Mérő Hozzáadása"
-titleEdit = "Energiatároló Mérő Szerkesztése"
+titleAdd = "Akkumulátor Hozzáadása"
+titleEdit = "Akkumulátor Szerkesztése"
 
 [config.circuits]
 description = "Gondoskodik arról, hogy az áramkörhöz csatlakoztatott összes terhelési pont összege ne haladja meg a beállított teljesítmény- és áramkorlátokat. Az áramkörök egymásba ágyazhatók a hierarchia felépítéséhez."
@@ -39,6 +39,7 @@ descriptionMaxGridSupply = "Csak azokra a hibrid inverterekre vonatkozik, amelye
 descriptionResidualPower = "Eltolja a vezérlőkör működési pontját. Ha otthoni akkumulátorral rendelkezik, javasoljuk, hogy 100 W-os értéket állítson be. Így az akkumulátor kismértékben élvez prioritást a hálózati használattal szemben."
 labelInterval = "Frissítési intervallum"
 labelMaxGridSupply = "Max. hálózati ellátás töltés közben"
+labelResidualPower = "Tartalék energia"
 title = "Vezérlési mód"
 
 [config.deviceValue]
@@ -54,6 +55,7 @@ chargeStatusF = "hiba"
 chargedEnergy = "Töltve"
 co2 = "Hálózat CO₂"
 configured = "Konfigurálva"
+controllable = "Vezérelhető"
 currency = "Valuta"
 current = "Jelenlegi"
 currentRange = "Áram"
@@ -350,8 +352,10 @@ areaLabel = "Szűrés terület alapján"
 areas = "Minden terület"
 download = "Teljes napló letöltése"
 levelLabel = "Szűrés a napló szintje alapján"
+nAreas = "{count} terület"
 noResults = "Nincs egyező napló bejegyzés."
 search = "Keresés"
+selectAll = "összes kiválasztása"
 showAll = "Az összes bejegyzés megjelenítése"
 title = "Napló"
 update = "Automatikus frissítés"
