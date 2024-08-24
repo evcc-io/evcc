@@ -15,6 +15,11 @@ import (
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/types"
 )
 
+type measurement struct {
+	Timestamp time.Time
+	types.SampledValue
+}
+
 type Connector struct {
 	log   *util.Logger
 	mu    sync.Mutex
@@ -24,10 +29,10 @@ type Connector struct {
 
 	status  *core.StatusNotificationRequest
 	statusC chan struct{}
-	meterC  chan map[types.Measurand]types.SampledValue
+	meterC  chan struct{}
 
 	meterUpdated time.Time
-	measurements map[types.Measurand]types.SampledValue
+	measurements map[types.Measurand]measurement
 	timeout      time.Duration
 
 	txnCount int // change initial value to the last known global transaction. Needs persistence
@@ -42,8 +47,8 @@ func NewConnector(log *util.Logger, id int, cp *CP, timeout time.Duration) (*Con
 		id:           id,
 		clock:        clock.New(),
 		statusC:      make(chan struct{}),
-		measurements: make(map[types.Measurand]types.SampledValue),
-		meterC:       make(chan map[types.Measurand]types.SampledValue),
+		measurements: make(map[types.Measurand]measurement),
+		meterC:       make(chan struct{}),
 		timeout:      timeout,
 	}
 
@@ -56,7 +61,7 @@ func (conn *Connector) TestClock(clock clock.Clock) {
 	conn.clock = clock
 }
 
-func (conn *Connector) MeterSampled() <-chan map[types.Measurand]types.SampledValue {
+func (conn *Connector) MeterSampled() <-chan struct{} {
 	return conn.meterC
 }
 
@@ -168,6 +173,13 @@ func (conn *Connector) isMeterTimeout() bool {
 
 var _ api.CurrentGetter = (*Connector)(nil)
 
+func (conn *Connector) measurementTimeout(m measurement, err error) error {
+	if conn.timeout > 0 && conn.clock.Since(m.Timestamp) > conn.timeout {
+		return api.ErrTimeout
+	}
+	return err
+}
+
 // GetMaxCurrent returns the maximum phase current the charge point is set to offer
 func (conn *Connector) GetMaxCurrent() (float64, error) {
 	if !conn.cp.Connected() {
@@ -184,7 +196,7 @@ func (conn *Connector) GetMaxCurrent() (float64, error) {
 
 	if m, ok := conn.measurements[types.MeasurandCurrentOffered]; ok {
 		f, err := strconv.ParseFloat(m.Value, 64)
-		return scale(f, m.Unit) / 1e3, err
+		return scale(f, m.Unit) / 1e3, conn.measurementTimeout(m, err)
 	}
 
 	return 0, api.ErrNotAvailable
@@ -206,7 +218,7 @@ func (conn *Connector) GetMaxPower() (float64, error) {
 
 	if m, ok := conn.measurements[types.MeasurandPowerOffered]; ok {
 		f, err := strconv.ParseFloat(m.Value, 64)
-		return scale(f, m.Unit), err
+		return scale(f, m.Unit), conn.measurementTimeout(m, err)
 	}
 
 	return 0, api.ErrNotAvailable
@@ -233,7 +245,7 @@ func (conn *Connector) CurrentPower() (float64, error) {
 
 	if m, ok := conn.measurements[types.MeasurandPowerActiveImport]; ok {
 		f, err := strconv.ParseFloat(m.Value, 64)
-		return scale(f, m.Unit), err
+		return scale(f, m.Unit), conn.measurementTimeout(m, err)
 	}
 
 	// fallback for missing total power
@@ -242,6 +254,10 @@ func (conn *Connector) CurrentPower() (float64, error) {
 		m, ok := conn.measurements[getPhaseKey(types.MeasurandPowerActiveImport, phase)]
 		if !ok {
 			return 0, api.ErrNotAvailable
+		}
+
+		if err := conn.measurementTimeout(m, nil); err != nil {
+			return 0, err
 		}
 
 		f, err := strconv.ParseFloat(m.Value, 64)
@@ -270,7 +286,7 @@ func (conn *Connector) TotalEnergy() (float64, error) {
 
 	if m, ok := conn.measurements[types.MeasurandEnergyActiveImportRegister]; ok {
 		f, err := strconv.ParseFloat(m.Value, 64)
-		return scale(f, m.Unit) / 1e3, err
+		return scale(f, m.Unit) / 1e3, conn.measurementTimeout(m, err)
 	}
 
 	return 0, api.ErrNotAvailable
@@ -290,7 +306,8 @@ func (conn *Connector) Soc() (float64, error) {
 	}
 
 	if m, ok := conn.measurements[types.MeasurandSoC]; ok {
-		return strconv.ParseFloat(m.Value, 64)
+		f, err := strconv.ParseFloat(m.Value, 64)
+		return f, conn.measurementTimeout(m, err)
 	}
 
 	return 0, api.ErrNotAvailable
@@ -336,6 +353,10 @@ func (conn *Connector) Currents() (float64, float64, float64, error) {
 			return 0, 0, 0, api.ErrNotAvailable
 		}
 
+		if err := conn.measurementTimeout(m, nil); err != nil {
+			return 0, 0, 0, err
+		}
+
 		f, err := strconv.ParseFloat(m.Value, 64)
 		if err != nil {
 			return 0, 0, 0, fmt.Errorf("invalid current for phase %d: %w", phase, err)
@@ -370,6 +391,10 @@ func (conn *Connector) Voltages() (float64, float64, float64, error) {
 			if !ok {
 				return 0, 0, 0, api.ErrNotAvailable
 			}
+		}
+
+		if err := conn.measurementTimeout(m, nil); err != nil {
+			return 0, 0, 0, err
 		}
 
 		f, err := strconv.ParseFloat(m.Value, 64)

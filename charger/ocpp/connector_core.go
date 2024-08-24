@@ -42,7 +42,7 @@ func (conn *Connector) StatusNotification(request *core.StatusNotificationReques
 
 func getSampleKey(s types.SampledValue) types.Measurand {
 	if s.Phase != "" {
-		return s.Measurand + types.Measurand("."+string(s.Phase))
+		s.Measurand += types.Measurand("." + string(s.Phase))
 	}
 
 	return s.Measurand
@@ -65,14 +65,17 @@ func (conn *Connector) MeterValues(request *core.MeterValuesRequest) (*core.Mete
 		if meterValue.Timestamp.Time.After(conn.meterUpdated) {
 			for _, sample := range meterValue.SampledValue {
 				sample.Value = strings.TrimSpace(sample.Value)
-				conn.measurements[getSampleKey(sample)] = sample
+				conn.measurements[getSampleKey(sample)] = measurement{
+					Timestamp:    meterValue.Timestamp.Time,
+					SampledValue: sample,
+				}
 				conn.meterUpdated = conn.clock.Now()
 			}
 		}
 	}
 
 	select {
-	case conn.meterC <- conn.measurements:
+	case conn.meterC <- struct{}{}:
 	default:
 	}
 
@@ -108,21 +111,29 @@ func (conn *Connector) StartTransaction(request *core.StartTransactionRequest) (
 	return res, nil
 }
 
+// assumeMeterStopped sets all active measurements to 0
+// caller must hold lock
 func (conn *Connector) assumeMeterStopped() {
 	conn.meterUpdated = conn.clock.Now()
 
 	if _, ok := conn.measurements[types.MeasurandPowerActiveImport]; ok {
-		conn.measurements[types.MeasurandPowerActiveImport] = types.SampledValue{
-			Value: "0",
-			Unit:  types.UnitOfMeasureW,
+		conn.measurements[types.MeasurandPowerActiveImport] = measurement{
+			Timestamp: conn.meterUpdated,
+			SampledValue: types.SampledValue{
+				Value: "0",
+				Unit:  types.UnitOfMeasureW,
+			},
 		}
 	}
 
 	for phase := 1; phase <= 3; phase++ {
 		if _, ok := conn.measurements[getPhaseKey(types.MeasurandCurrentImport, phase)]; ok {
-			conn.measurements[getPhaseKey(types.MeasurandCurrentImport, phase)] = types.SampledValue{
-				Value: "0",
-				Unit:  types.UnitOfMeasureA,
+			conn.measurements[getPhaseKey(types.MeasurandCurrentImport, phase)] = measurement{
+				Timestamp: conn.meterUpdated,
+				SampledValue: types.SampledValue{
+					Value: "0",
+					Unit:  types.UnitOfMeasureA,
+				},
 			}
 		}
 	}
