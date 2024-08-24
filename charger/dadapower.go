@@ -21,6 +21,7 @@ const (
 	dadapowerRegActivePhases        = 1002
 	dadapowerRegCurrents            = 1006
 	dadapowerRegActiveEnergy        = 1009
+	dadapowerRegChargingPortState   = 1015
 	dadapowerRegPlugState           = 1016
 	dadapowerRegEnergyImportSession = 1017
 	dadapowerRegEnergyImportTotal   = 1025
@@ -108,6 +109,20 @@ func (wb *Dadapower) Status() (api.ChargeStatus, error) {
 	default:
 		return api.StatusNone, errors.New("invalid response")
 	}
+}
+
+var _ api.StatusReasoner = (*Dadapower)(nil)
+
+// StatusReason implements the api.StatusReasoner interface
+func (wb *Dadapower) StatusReason() (api.Reason, error) {
+	res := api.ReasonUnknown
+
+	b, err := wb.conn.ReadHoldingRegisters(dadapowerRegChargingPortState, 2)
+	if err == nil && binary.BigEndian.Uint16(b) == 3 {
+		res = api.ReasonWaitingForAuthorization
+	}
+
+	return res, err
 }
 
 // Enabled implements the api.Charger interface
