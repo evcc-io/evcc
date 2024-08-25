@@ -6,4 +6,5 @@ type Reason int
 const (
 	ReasonUnknown Reason = iota
 	ReasonWaitingForAuthorization
+	ReasonDisconnectRequired
 )

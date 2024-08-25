@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/go-sprout/sprout"
+	"github.com/go-sprout/sprout/sprigin"
 	"github.com/samber/lo"
 )
 
@@ -55,7 +55,7 @@ func FormatValue(format string, val interface{}) string {
 func ReplaceFormatted(s string, kv map[string]interface{}) (string, error) {
 	// Enhanced golang template logic
 	tpl, err := template.New("base").
-		Funcs(sprout.FuncMap()).
+		Funcs(sprigin.FuncMap()).
 		Funcs(map[string]any{
 			"timeRound": timeRound,
 		}).Parse(s)

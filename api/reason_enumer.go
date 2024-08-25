@@ -7,11 +7,11 @@ import (
 	"strings"
 )
 
-const _ReasonName = "unknownwaitingforauthorization"
+const _ReasonName = "unknownwaitingforauthorizationdisconnectrequired"
 
-var _ReasonIndex = [...]uint8{0, 7, 30}
+var _ReasonIndex = [...]uint8{0, 7, 30, 48}
 
-const _ReasonLowerName = "unknownwaitingforauthorization"
+const _ReasonLowerName = "unknownwaitingforauthorizationdisconnectrequired"
 
 func (i Reason) String() string {
 	if i < 0 || i >= Reason(len(_ReasonIndex)-1) {
@@ -26,20 +26,24 @@ func _ReasonNoOp() {
 	var x [1]struct{}
 	_ = x[ReasonUnknown-(0)]
 	_ = x[ReasonWaitingForAuthorization-(1)]
+	_ = x[ReasonDisconnectRequired-(2)]
 }
 
-var _ReasonValues = []Reason{ReasonUnknown, ReasonWaitingForAuthorization}
+var _ReasonValues = []Reason{ReasonUnknown, ReasonWaitingForAuthorization, ReasonDisconnectRequired}
 
 var _ReasonNameToValueMap = map[string]Reason{
-	_ReasonName[0:7]:       ReasonUnknown,
-	_ReasonLowerName[0:7]:  ReasonUnknown,
-	_ReasonName[7:30]:      ReasonWaitingForAuthorization,
-	_ReasonLowerName[7:30]: ReasonWaitingForAuthorization,
+	_ReasonName[0:7]:        ReasonUnknown,
+	_ReasonLowerName[0:7]:   ReasonUnknown,
+	_ReasonName[7:30]:       ReasonWaitingForAuthorization,
+	_ReasonLowerName[7:30]:  ReasonWaitingForAuthorization,
+	_ReasonName[30:48]:      ReasonDisconnectRequired,
+	_ReasonLowerName[30:48]: ReasonDisconnectRequired,
 }
 
 var _ReasonNames = []string{
 	_ReasonName[0:7],
 	_ReasonName[7:30],
+	_ReasonName[30:48],
 }
 
 // ReasonString retrieves an enum value from the enum constants string name.

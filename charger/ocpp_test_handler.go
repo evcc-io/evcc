@@ -16,6 +16,7 @@ type ChargePointHandler struct {
 // core
 
 func (handler *ChargePointHandler) OnChangeAvailability(request *core.ChangeAvailabilityRequest) (confirmation *core.ChangeAvailabilityConfirmation, err error) {
+	defer func() { handler.triggerC <- core.ChangeAvailabilityFeatureName }()
 	fmt.Printf("%T %+v\n", request, request)
 	return core.NewChangeAvailabilityConfirmation(core.AvailabilityStatusAccepted), nil
 }
@@ -71,15 +72,8 @@ func (handler *ChargePointHandler) OnUnlockConnector(request *core.UnlockConnect
 }
 
 func (handler *ChargePointHandler) OnTriggerMessage(request *remotetrigger.TriggerMessageRequest) (confirmation *remotetrigger.TriggerMessageConfirmation, err error) {
+	defer func() { handler.triggerC <- request.RequestedMessage }()
 	fmt.Printf("%T %+v\n", request, request)
-
-	if c := handler.triggerC; request != nil && c != nil {
-		select {
-		case c <- request.RequestedMessage:
-		default:
-		}
-	}
-
 	return remotetrigger.NewTriggerMessageConfirmation(remotetrigger.TriggerMessageStatusAccepted), nil
 }
 

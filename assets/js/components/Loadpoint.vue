@@ -141,7 +141,7 @@ export default {
 		sessionSolarPercentage: Number,
 
 		// charger
-		chargerAwaitingAuthorization: Boolean,
+		chargerStatusReason: String,
 		chargerFeatureIntegratedDevice: Boolean,
 		chargerFeatureHeating: Boolean,
 		chargerIcon: String,
