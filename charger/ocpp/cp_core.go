@@ -38,10 +38,9 @@ func (cp *CP) BootNotification(request *core.BootNotificationRequest) (*core.Boo
 		Status:      core.RegistrationStatusAccepted,
 	}
 
-	select {
-	case cp.bootNotificationRequestC <- request:
-	default:
-	}
+	cp.onceBoot.Do(func() {
+		cp.bootNotificationRequestC <- request
+	})
 
 	return res, nil
 }

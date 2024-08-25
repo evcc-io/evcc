@@ -24,7 +24,7 @@ type Connector struct {
 
 	status  *core.StatusNotificationRequest
 	statusC chan struct{}
-	meterC  chan struct{}
+	meterC  chan map[types.Measurand]types.SampledValue
 
 	meterUpdated time.Time
 	measurements map[types.Measurand]types.SampledValue
@@ -41,9 +41,9 @@ func NewConnector(log *util.Logger, id int, cp *CP, timeout time.Duration) (*Con
 		cp:           cp,
 		id:           id,
 		clock:        clock.New(),
-		statusC:      make(chan struct{}, 1),
-		meterC:       make(chan struct{}, 1),
+		statusC:      make(chan struct{}),
 		measurements: make(map[types.Measurand]types.SampledValue),
+		meterC:       make(chan map[types.Measurand]types.SampledValue),
 		timeout:      timeout,
 	}
 
@@ -56,7 +56,7 @@ func (conn *Connector) TestClock(clock clock.Clock) {
 	conn.clock = clock
 }
 
-func (conn *Connector) MeterSampled() <-chan struct{} {
+func (conn *Connector) MeterSampled() <-chan map[types.Measurand]types.SampledValue {
 	return conn.meterC
 }
 

@@ -77,7 +77,7 @@ func (conn *Connector) MeterValues(request *core.MeterValuesRequest) (*core.Mete
 	}
 
 	select {
-	case conn.meterC <- struct{}{}:
+	case conn.meterC <- conn.measurements:
 	default:
 	}
 
