@@ -14,7 +14,6 @@ linters-settings:
 linters:
   disable-all: true
   enable:
-    - dogsled
     - durationcheck
     - gci
     - gofmt
@@ -37,6 +36,7 @@ linters:
     - whitespace
 
     # fixme
+    # - dogsled
     # - bodyclose
     # - exhaustive
     # - exportloopref

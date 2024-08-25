@@ -282,6 +282,7 @@ tabTitle = "Meine Daten"
 [footer.savings.period]
 30d = "letzte 30 Tage"
 365d = "letzte 365 Tage"
+thisYear = "dieses Jahr"
 total = "gesamt"
 
 [footer.sponsor]
@@ -530,6 +531,7 @@ ready = "bereit"
 vehicleLimit = "Fahrzeuglimit: {soc}"
 
 [main.vehicleStatus]
+awaitingAuthorization = "Warte auf Autorisierung."
 charging = "Ladevorgang aktiv …"
 cheapEnergyCharging = "Günstige Energie verfügbar."
 cheapEnergyNextStart = "Günstige Energie in {duration}."
@@ -539,6 +541,7 @@ cleanEnergyNextStart = "Saubere Energie in {duration}."
 cleanEnergySet = "CO₂-Limit gesetzt."
 climating = "Vorklimatisierung erkannt."
 connected = "Verbunden."
+disconnectRequired = "Vorgang abgebrochen. Erneut verbinden."
 disconnected = "Nicht verbunden."
 finished = "Abgeschlossen."
 minCharge = "Mindestladung bis {soc}."
