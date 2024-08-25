@@ -19,17 +19,22 @@ test.describe("footer", async () => {
 
     // last 365 days
     await page.getByTestId("savings-button").click();
+    const savingsModal = await page.getByTestId("savings-modal");
+    await expect(savingsModal).toBeVisible();
     await page
       .getByTestId("savings-period-select")
       .getByRole("combobox")
       .selectOption("last 365 days");
     await page.getByRole("button", { name: "Close" }).click();
+    await expect(savingsModal).not.toBeVisible();
     await expect(page.getByTestId("savings-button")).toContainText("30% solar energy");
 
     // all time
     await page.getByTestId("savings-button").click();
+    await expect(savingsModal).toBeVisible();
     await page.getByTestId("savings-period-select").getByRole("combobox").selectOption("all time");
     await page.getByRole("button", { name: "Close" }).click();
+    await expect(savingsModal).not.toBeVisible();
     await expect(page.getByTestId("savings-button")).toContainText("50% solar energy");
   });
 });
@@ -38,6 +43,8 @@ test.describe("statistics values", async () => {
   test("last 30 days", async ({ page }) => {
     await page.goto("/");
     await page.getByRole("button", { name: "60% solar energy" }).click();
+    await expect(page.getByTestId("savings-modal")).toBeVisible();
+
     await page
       .getByTestId("savings-period-select")
       .getByRole("combobox")
@@ -57,6 +64,7 @@ test.describe("statistics values", async () => {
   test("last 365 days", async ({ page }) => {
     await page.goto("/");
     await page.getByRole("button", { name: "60% solar energy" }).click();
+    await expect(page.getByTestId("savings-modal")).toBeVisible();
     await page
       .getByTestId("savings-period-select")
       .getByRole("combobox")
@@ -76,6 +84,7 @@ test.describe("statistics values", async () => {
   test("reference data", async ({ page }) => {
     await page.goto("/");
     await page.getByRole("button", { name: "60% solar energy" }).click();
+    await expect(page.getByTestId("savings-modal")).toBeVisible();
 
     await expect(page.getByTestId("savings-reference")).toContainText("Reference data:");
     await expect(page.getByTestId("savings-reference")).toContainText("30.0 rp/kWh (grid)");
