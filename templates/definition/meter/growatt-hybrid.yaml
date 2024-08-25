@@ -3,6 +3,7 @@ products:
   - brand: Growatt
     description:
       generic: Hybrid Inverter
+capabilities: ["battery-control"]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -94,3 +95,74 @@ render: |
       decode: uint32
     scale: 0.1
   {{- end }}
+  batterymode:
+    source: switch
+    switch:
+    - case: 1 # normal -> disable "battery first" and "ac charge enabled"
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 0
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 1102
+              type: writemultiple
+              decode: uint16
+        - source: const
+          value: 0
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 1092
+              type: writemultiple
+              decode: uint16
+
+    - case: 2 # hold -> enable "battery first" and disable "ac charge enabled"
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 1
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 1102
+              type: writemultiple
+              decode: uint16
+        - source: const
+          value: 0
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 1092
+              type: writemultiple
+              decode: uint16
+
+    - case: 3 # charge -> enable "battery first" and "ac charge enabled"
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 1
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 1102
+              type: writemultiple
+              decode: uint16
+        - source: const
+          value: 1
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 1092
+              type: writemultiple
+              decode: uint16
