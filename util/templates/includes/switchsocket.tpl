@@ -1,10 +1,10 @@
 {{ define "switchsocket" }}
 standbypower: {{ .standbypower }}
 features:
-{{- if ne .integrateddevice "false" }}
+{{- if and .integrateddevice (ne .integrateddevice "false") }}
 - integrateddevice
 {{- end }}
-{{- if ne .heating "false" }}
+{{- if and .heating (ne .heating "false") }}
 - heating
 {{- end }}
 {{- if .icon }}
