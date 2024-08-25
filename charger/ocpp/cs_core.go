@@ -58,7 +58,7 @@ func (cs *CS) GetCompositeScheduleRequest(id string, connector int, duration int
 	var schedule *types.ChargingSchedule
 	rc := make(chan error, 1)
 
-	err := Instance().GetCompositeSchedule(id, func(request *smartcharging.GetCompositeScheduleConfirmation, err error) {
+	err := cs.GetCompositeSchedule(id, func(request *smartcharging.GetCompositeScheduleConfirmation, err error) {
 		if err == nil && request != nil && request.Status != smartcharging.GetCompositeScheduleStatusAccepted {
 			err = errors.New(string(request.Status))
 		} else {
