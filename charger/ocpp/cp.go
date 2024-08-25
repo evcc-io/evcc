@@ -12,14 +12,17 @@ import (
 // Since ocpp-go interfaces at charge point level, we need to manage multiple connector separately
 
 type CP struct {
-	mu  sync.RWMutex
-	log *util.Logger
+	mu          sync.RWMutex
+	log         *util.Logger
+	onceConnect sync.Once
+	onceBoot    sync.Once
+
+	bootNotificationRequestC chan *core.BootNotificationRequest
 
 	id string
 
-	connected                bool
-	connectC                 chan struct{}
-	bootNotificationRequestC chan *core.BootNotificationRequest
+	connected bool
+	connectC  chan struct{}
 
 	connectors map[int]*Connector
 }
@@ -29,10 +32,10 @@ func NewChargePoint(log *util.Logger, id string) *CP {
 		log: log,
 		id:  id,
 
-		connectC:                 make(chan struct{}, 1),
-		bootNotificationRequestC: make(chan *core.BootNotificationRequest, 1),
-
+		connectC:   make(chan struct{}),
 		connectors: make(map[int]*Connector),
+
+		bootNotificationRequestC: make(chan *core.BootNotificationRequest, 1),
 	}
 }
 
@@ -97,10 +100,9 @@ func (cp *CP) connect(connect bool) {
 	cp.connected = connect
 
 	if connect {
-		select {
-		case cp.connectC <- struct{}{}:
-		default:
-		}
+		cp.onceConnect.Do(func() {
+			close(cp.connectC)
+		})
 	}
 }
 
