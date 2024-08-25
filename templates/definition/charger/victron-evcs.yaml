@@ -3,8 +3,6 @@ products:
   - brand: Victron
     description:
       generic: EV Charging Station
-requirements:
-  evcc: ["sponsorship"]
   description:
     en: Enter the host of the charger (not the GX device) and ensure that the charger is in manual mode.
     de: Trage den Host der Wallbox (nicht des GX-Geräts) ein und stelle sicher, dass die Wallbox sich im Modus "Manual" befindet.
