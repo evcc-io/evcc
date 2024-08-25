@@ -15,8 +15,7 @@ import (
 func (cs *CS) TriggerResetRequest(id string, resetType core.ResetType) error {
 	rc := make(chan error, 1)
 
-	err := cs.Reset(id, func(request *core.ResetConfirmation, protoErr error) {
-		err := protoErr
+	err := cs.Reset(id, func(request *core.ResetConfirmation, err error) {
 		if err == nil && request != nil && request.Status != core.ResetStatusAccepted {
 			err = errors.New(string(request.Status))
 		}
@@ -30,8 +29,7 @@ func (cs *CS) TriggerResetRequest(id string, resetType core.ResetType) error {
 func (cs *CS) TriggerMessageRequest(id string, requestedMessage remotetrigger.MessageTrigger, props ...func(request *remotetrigger.TriggerMessageRequest)) error {
 	rc := make(chan error, 1)
 
-	err := cs.TriggerMessage(id, func(request *remotetrigger.TriggerMessageConfirmation, protoErr error) {
-		err := protoErr
+	err := cs.TriggerMessage(id, func(request *remotetrigger.TriggerMessageConfirmation, err error) {
 		if err == nil && request != nil && request.Status != remotetrigger.TriggerMessageStatusAccepted {
 			err = errors.New(string(request.Status))
 		}
@@ -45,8 +43,7 @@ func (cs *CS) TriggerMessageRequest(id string, requestedMessage remotetrigger.Me
 func (cs *CS) SetChargingProfileRequest(id string, connector int, profile *types.ChargingProfile) error {
 	rc := make(chan error, 1)
 
-	err := cs.SetChargingProfile(id, func(request *smartcharging.SetChargingProfileConfirmation, protoErr error) {
-		err := protoErr
+	err := cs.SetChargingProfile(id, func(request *smartcharging.SetChargingProfileConfirmation, err error) {
 		if err == nil && request != nil && request.Status != smartcharging.ChargingProfileStatusAccepted {
 			err = errors.New(string(request.Status))
 		}
@@ -61,8 +58,7 @@ func (cs *CS) GetCompositeScheduleRequest(id string, connector int, duration int
 	var schedule *types.ChargingSchedule
 	rc := make(chan error, 1)
 
-	err := Instance().GetCompositeSchedule(id, func(request *smartcharging.GetCompositeScheduleConfirmation, protoErr error) {
-		err := protoErr
+	err := Instance().GetCompositeSchedule(id, func(request *smartcharging.GetCompositeScheduleConfirmation, err error) {
 		if err == nil && request != nil && request.Status != smartcharging.GetCompositeScheduleStatusAccepted {
 			err = errors.New(string(request.Status))
 		} else {
