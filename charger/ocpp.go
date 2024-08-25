@@ -179,6 +179,10 @@ func NewOCPP(id string, connector int, idtag string,
 	// fix timing issue in EVBox when switching OCPP protocol version
 	time.Sleep(time.Second)
 
+	if err := ocpp.Instance().ChangeAvailabilityRequest(cp.ID(), 0, core.AvailabilityTypeOperative); err != nil {
+		return nil, err
+	}
+
 	meterValuesSampledData, meterValuesSampledDataMaxLength, err := c.getConfiguration(cp.ID(), connector)
 	if err != nil {
 		return nil, err

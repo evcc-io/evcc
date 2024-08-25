@@ -38,6 +38,20 @@ func (cs *CS) TriggerMessageRequest(id string, requestedMessage remotetrigger.Me
 	return Wait(err, rc, cs.timeout)
 }
 
+func (cs *CS) ChangeAvailabilityRequest(id string, connector int, availabilityType core.AvailabilityType) error {
+	rc := make(chan error, 1)
+
+	err := cs.ChangeAvailability(id, func(request *core.ChangeAvailabilityConfirmation, err error) {
+		if err == nil && request != nil && request.Status != core.AvailabilityStatusAccepted {
+			err = errors.New(string(request.Status))
+		}
+
+		rc <- err
+	}, connector, availabilityType)
+
+	return Wait(err, rc, cs.timeout)
+}
+
 // cp actions
 
 func (cs *CS) OnAuthorize(id string, request *core.AuthorizeRequest) (*core.AuthorizeConfirmation, error) {
