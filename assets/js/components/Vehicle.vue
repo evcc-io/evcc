@@ -107,7 +107,7 @@ export default {
 		integratedDevice: Boolean,
 		limitEnergy: Number,
 		mode: String,
-		chargerAwaitingAuthorization: Boolean,
+		chargerStatusReason: String,
 		phaseAction: String,
 		phaseRemainingInterpolated: Number,
 		planActive: Boolean,

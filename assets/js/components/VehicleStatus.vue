@@ -84,6 +84,15 @@
 			>
 				<RfidWaitIcon />
 			</div>
+			<div
+				v-if="disconnectRequiredVisible"
+				ref="disconnectRequired"
+				class="entry text-warning"
+				data-bs-toggle="tooltip"
+				data-testid="vehicle-status-disconnect-required"
+			>
+				<ReconnectIcon />
+			</div>
 
 			<!-- smart cost -->
 			<button
@@ -148,31 +157,36 @@ import DynamicPriceIcon from "./MaterialIcon/DynamicPrice.vue";
 import { DEFAULT_LOCALE } from "../i18n";
 import formatter from "../mixins/formatter";
 import { CO2_TYPE } from "../units";
-import PlanStartIcon from "./MaterialIcon/PlanStart.vue";
-import PlanEndIcon from "./MaterialIcon/PlanEnd.vue";
-import RfidWaitIcon from "./MaterialIcon/RfidWait.vue";
 import ClimaterIcon from "./MaterialIcon/Climater.vue";
-import VehicleLimitReachedIcon from "./MaterialIcon/VehicleLimitReached.vue";
-import VehicleLimitWarningIcon from "./MaterialIcon/VehicleLimitWarning.vue";
-import VehicleLimitIcon from "./MaterialIcon/VehicleLimit.vue";
-import VehicleMinSocIcon from "./MaterialIcon/VehicleMinSoc.vue";
+import PlanEndIcon from "./MaterialIcon/PlanEnd.vue";
+import PlanStartIcon from "./MaterialIcon/PlanStart.vue";
+import ReconnectIcon from "./MaterialIcon/Reconnect.vue";
+import RfidWaitIcon from "./MaterialIcon/RfidWait.vue";
 import SunDownIcon from "./MaterialIcon/SunDown.vue";
 import SunUpIcon from "./MaterialIcon/SunUp.vue";
 import Tooltip from "bootstrap/js/dist/tooltip";
+import VehicleLimitIcon from "./MaterialIcon/VehicleLimit.vue";
+import VehicleLimitReachedIcon from "./MaterialIcon/VehicleLimitReached.vue";
+import VehicleLimitWarningIcon from "./MaterialIcon/VehicleLimitWarning.vue";
+import VehicleMinSocIcon from "./MaterialIcon/VehicleMinSoc.vue";
 import WelcomeIcon from "./MaterialIcon/Welcome.vue";
+
+const REASON_AUTH = "waitingforauthorization";
+const REASON_DISCONNECT = "disconnectrequired";
 
 export default {
 	name: "VehicleStatus",
 	components: {
-		DynamicPriceIcon,
-		PlanStartIcon,
-		PlanEndIcon,
-		RfidWaitIcon,
 		ClimaterIcon,
-		VehicleLimitIcon,
-		VehicleMinSocIcon,
+		DynamicPriceIcon,
+		PlanEndIcon,
+		PlanStartIcon,
+		ReconnectIcon,
+		RfidWaitIcon,
 		SunDownIcon,
 		SunUpIcon,
+		VehicleLimitIcon,
+		VehicleMinSocIcon,
 		WelcomeIcon,
 	},
 	mixins: [formatter],
@@ -180,7 +194,7 @@ export default {
 		vehicleSoc: Number,
 		charging: Boolean,
 		chargingPlanDisabled: Boolean,
-		chargerAwaitingAuthorization: Boolean,
+		chargerStatusReason: String,
 		connected: Boolean,
 		currency: String,
 		effectiveLimitSoc: Number,
@@ -222,6 +236,7 @@ export default {
 			smartCostTooltip: null,
 			vehicleLimitTooltip: null,
 			awaitingAuthorizationTooltip: null,
+			disconnectRequiredTooltip: null,
 		};
 	},
 	mounted() {
@@ -235,6 +250,7 @@ export default {
 		this.updateSmartCostTooltip();
 		this.updateVehicleLimitTooltip();
 		this.updateAwaitingAuthorizationTooltip();
+		this.updateDisconnectRequiredTooltip();
 	},
 	watch: {
 		planActiveTooltipContent() {
@@ -266,6 +282,9 @@ export default {
 		},
 		awaitingAuthorizationTooltipContent() {
 			this.$nextTick(this.updateAwaitingAuthorizationTooltip);
+		},
+		disconnectRequiredTooltipContent() {
+			this.$nextTick(this.updateDisconnectRequiredTooltip);
 		},
 	},
 	computed: {
@@ -307,13 +326,22 @@ export default {
 			return this.connected && this.vehicleLimitSoc > 0 && this.vehicleLimitSoc < limit;
 		},
 		awaitingAuthorizationVisible() {
-			return this.chargerAwaitingAuthorization;
+			return this.chargerStatusReason === REASON_AUTH;
 		},
 		awaitingAuthorizationTooltipContent() {
 			if (!this.awaitingAuthorizationVisible) {
 				return "";
 			}
 			return this.$t("main.vehicleStatus.awaitingAuthorization");
+		},
+		disconnectRequiredVisible() {
+			return this.chargerStatusReason === REASON_DISCONNECT;
+		},
+		disconnectRequiredTooltipContent() {
+			if (!this.disconnectRequiredVisible) {
+				return "";
+			}
+			return this.$t("main.vehicleStatus.disconnectRequired");
 		},
 		vehicleLimitTooltipContent() {
 			if (!this.vehicleLimitVisible) {
@@ -582,6 +610,13 @@ export default {
 				this.awaitingAuthorizationTooltip,
 				this.awaitingAuthorizationTooltipContent,
 				this.$refs.awaitingAuthorization
+			);
+		},
+		updateDisconnectRequiredTooltip() {
+			this.updateTooltip(
+				this.disconnectRequiredTooltip,
+				this.disconnectRequiredTooltipContent,
+				this.$refs.disconnectRequired
 			);
 		},
 		updateTooltip: function (instance, content, ref, hoverOnly = false) {

@@ -1676,7 +1676,7 @@ func (lp *Loadpoint) Update(sitePower float64, rates api.Rates, batteryBuffered,
 
 	if sr, ok := lp.charger.(api.StatusReasoner); ok && lp.GetStatus() == api.StatusB {
 		if r, err := sr.StatusReason(); err == nil {
-			lp.publish(keys.ChargerAwaitingAuthorization, r == api.ReasonWaitingForAuthorization)
+			lp.publish(keys.ChargerStatusReason, r)
 		} else {
 			lp.log.ERROR.Printf("charger status reason: %v", err)
 		}

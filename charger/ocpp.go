@@ -342,9 +342,20 @@ var _ api.StatusReasoner = (*OCPP)(nil)
 
 func (c *OCPP) StatusReason() (api.Reason, error) {
 	var res api.Reason
-	if c.conn.NeedsAuthentication() {
-		res = api.ReasonWaitingForAuthorization
+
+	s, err := c.conn.Status()
+	if err != nil {
+		return res, err
 	}
+
+	switch {
+	case c.conn.NeedsAuthentication():
+		res = api.ReasonWaitingForAuthorization
+
+	case s == core.ChargePointStatusFinishing:
+		res = api.ReasonDisconnectRequired
+	}
+
 	return res, nil
 }
 
