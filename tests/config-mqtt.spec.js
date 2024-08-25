@@ -4,6 +4,7 @@ import { start, stop, restart, baseUrl } from "./evcc";
 const CONFIG = "config-grid-only.evcc.yaml";
 
 test.use({ baseURL: baseUrl() });
+test.describe.configure({ mode: "parallel" });
 
 test.beforeEach(async ({ page }) => {
   await start(CONFIG, "password.sql");
