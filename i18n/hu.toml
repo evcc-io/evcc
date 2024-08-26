@@ -281,8 +281,8 @@ tabTitle = "Az adataim"
 [footer.savings.period]
 30d = "elmúlt 30 nap"
 365d = "elmúlt 365 nap"
+thisYear = "idén"
 total = "összesen"
-thisYear = idén
 
 [footer.sponsor]
 becomeSponsor = "Legyél támogató"
@@ -532,6 +532,7 @@ ready = "üzemkész"
 vehicleLimit = "Jármű limit: {soc}"
 
 [main.vehicleStatus]
+awaitingAuthorization = "Hitelesítésre várakozás."
 charging = "Töltés…"
 cheapEnergyCharging = "Olcsó energia elérhető."
 cheapEnergyNextStart = "Olcsó energia {duration}."
@@ -541,6 +542,7 @@ cleanEnergyNextStart = "Olcsó energia {duration}."
 cleanEnergySet = "CO₂ limit beállítva."
 climating = "Elő-kondícionálás érzékelve."
 connected = "Csatlakoztatva."
+disconnectRequired = "A munkamenet megszakadt. Kérjük, csatlakozzon újra."
 disconnected = "Lecsatlakoztatva."
 finished = "Befejezve."
 minCharge = "Minimális töltés {soc}-ig."
@@ -556,8 +558,6 @@ vehicleLimit = "Jármű limit."
 vehicleLimitReached = "Jármű limit elérve."
 waitForVehicle = "Üzemkész. Járműre várakozás…"
 welcome = "Rövid kezdeti töltés a csatlakozás megerősítéséhez."
-awaitingAuthorization = Hitelesítésre várakozás.
-disconnectRequired = A munkamenet megszakadt. Kérjük, csatlakozzon újra.
 
 [notifications]
 dismissAll = "Összeset figyelmen kívül hagyja"

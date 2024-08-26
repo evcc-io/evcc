@@ -293,8 +293,8 @@ tabTitle = "Mine data"
 [footer.savings.period]
 30d = "seneste 30 dage"
 365d = "seneste 365 dage"
-total = "hele tiden"
 thisYear = "dette år"
+total = "hele tiden"
 
 [footer.sponsor]
 becomeSponsor = "Bliv sponsor"
@@ -549,6 +549,7 @@ ready = "parat"
 vehicleLimit = "Køretøjsgrænse: {soc}"
 
 [main.vehicleStatus]
+awaitingAuthorization = "Venter på godkendelse."
 charging = "Oplader..."
 cheapEnergyCharging = "Billig energi er tilgængelig."
 cheapEnergyNextStart = "Billig energi i {duration}."
@@ -558,6 +559,7 @@ cleanEnergyNextStart = "Grøn energi i {duration}."
 cleanEnergySet = "CO₂ grænse fastsat."
 climating = "Forkonditionering registreret."
 connected = "Forbundet."
+disconnectRequired = "Opladning afbrudt, Prøv at forbinde igen"
 disconnected = "Afbrudt."
 finished = "Færdig."
 minCharge = "Minimum opladning til {soc}."
@@ -573,8 +575,6 @@ vehicleLimit = "Køretøjets grænse"
 vehicleLimitReached = "Køretøjets grænse er nået."
 waitForVehicle = "Parat. Venter på køretøj ..."
 welcome = "Kort indledende opladning for at bekræfte forbindelsen."
-awaitingAuthorization = "Venter på godkendelse."
-disconnectRequired = "Opladning afbrudt, Prøv at forbinde igen"
 
 [notifications]
 dismissAll = "Afvis alle"
