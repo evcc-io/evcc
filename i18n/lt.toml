@@ -294,6 +294,7 @@ tabTitle = "Mano"
 30d = "paskutinės 30 dienų"
 365d = "paskutinės 365 dienos"
 total = "Iš viso"
+thisYear = "šiais metais"
 
 [footer.sponsor]
 becomeSponsor = "Tapkite rėmėju"
@@ -577,6 +578,7 @@ vehicleLimit = "Automobilyje nustatytas limitas."
 vehicleLimitReached = "Automobilyje nustatytas limitas pasiektas."
 waitForVehicle = "Paruošta. Laukiama automobilio..."
 welcome = "Trumpas pirminis įkrovimas jungties patikrinimui."
+awaitingAuthorization = "Laukiama autorizacijos."
 
 [notifications]
 dismissAll = "Išvalyti visus"
