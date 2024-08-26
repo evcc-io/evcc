@@ -2,31 +2,33 @@
 batteryLevel = "Batterij-niveau"
 capacity = "{energy} van {total}"
 control = "Batterijsturing"
-discharge = "Voorkom ontladen in de snelle modus en bij gepland laden"
+discharge = "Voorkom ontladen in de snelle modus en bij gepland laden."
 disclaimerHint = "Opgelet:"
 disclaimerText = "Deze instellingen beïnvloeden enkel de zonnemodus. Oplaadgedrag wordt overeenkomstig aangepast."
-legendBottomName = "huis heeft prioriteit"
-legendBottomSubline = "niet gebruikt voor opladen"
-legendMiddleName = "eerst voertuig"
-legendMiddleSubline = "dan het huis"
+legendBottomName = "Thuisaccu heeft prioriteit"
+legendBottomSubline = "tot {soc} bereikt is."
+legendMiddleName = "Voertuig laden heeft prioriteit"
+legendMiddleSubline = "wanneer de thuisaccu boven {soc} is."
 legendTitle = "Hoe moet zonne-energie gebruikt worden?"
-legendTopAutostart = "start automatisch"
-legendTopName = "batterij-ondersteund opladen"
-legendTopSubline = "zonder onderbrekingen"
+legendTopAutostart = "Start automatisch"
+legendTopName = "Batterij-ondersteund opladen"
+legendTopSubline = "wanneer de thuisaccu boven {soc} is."
 modalTitle = "Thuisaccu"
+usageTab = "Batterijgebruik"
+gridChargeTab = "Netladen"
 
 [batterySettings.bufferStart]
-above = "Indien boven {soc}"
-full = "Wanneer op {soc}"
+above = "indien boven {soc}."
+full = "wanneer op {soc}"
 low = "indien beetje vol"
 medium = "indien half vol"
-never = "enkel bij voldoende overschot"
+never = "enkel bij voldoende overschot."
 
 [config]
 
 [config.battery]
-titleAdd = "Voeg meter voor batterijsysteem toe"
-titleEdit = "Bewerk meter voor batterijsysteem"
+titleAdd = "Voeg accu toe"
+titleEdit = "Accu aanpassen"
 
 [config.deviceValue]
 capacity = "Capaciteit"
@@ -40,9 +42,30 @@ phaseCurrents = "Stroomsterkte L1..L3"
 phasePowers = "Vermogen L1..L3"
 phaseVoltages = "Spanning L1..L3"
 power = "Vermogen"
-range = "Rijbereik"
+range = "Actieradius"
 soc = "Batterijpercentage"
 socLimit = "Limiet"
+controllable = "Stuurbaar"
+bucket = "Bucket"
+chargeStatusA = "niet verbonden"
+chargeStatusB = "verbonden"
+chargeStatusC = "aan het opladen"
+chargeStatusF = "error"
+co2 = "Net-CO₂"
+configured = "Geconfigureerd"
+feedinPrice = "Terugleververgoeding"
+gridPrice = "Netprijs"
+org = "Organisatie"
+temp = "Temperatuur"
+topic = "Onderwerp"
+url = "URL"
+yes = "ja"
+broker = "Broker"
+chargeStatusE = "geen vermogen"
+currency = "Valuta"
+no = "nee"
+currentRange = "Stroomsterkte"
+powerRange = "Vermogen"
 
 [config.form]
 example = "Voorbeeld"
@@ -51,10 +74,19 @@ optional = "optioneel"
 [config.general]
 cancel = "Annuleren"
 save = "Opslaan"
+docsLink = "Zie documentatie."
+experimental = "Experimenteel"
+off = "uit"
+on = "aan"
+password = "Wachtwoord"
+remove = "Verwijderen"
+title = "Titel"
+telemetry = "Telemetrie"
 
 [config.grid]
-titleAdd = "Voeg net meter toe"
-titleEdit = "Bewerk net meter"
+titleAdd = "Voeg netmeter toe"
+titleEdit = "Bewerk netmeter"
+title = "Netmeter"
 
 [config.main]
 addLoadpoint = "Voeg laadpunt toe"
@@ -64,7 +96,8 @@ edit = "bewerken"
 title = "Configuratie"
 unconfigured = "Niet geconfigureerd"
 vehicles = "Mijn voertuigen"
-yaml = "Geconfigureerd in evcc.yml. Niet aanpasbaar in de interface"
+yaml = "Geconfigureerd in evcc.yml. Niet aanpasbaar in de interface."
+configured = "geconfigureerd"
 
 [config.meter]
 cancel = "Annuleren"
@@ -91,6 +124,11 @@ titleEdit = "Bewerk meter zonnepanelen"
 [config.section]
 general = "Algemeen"
 system = "Systeem"
+grid = "Netaansluiting"
+integrations = "Integraties"
+meter = "Zonnepanelen & accu"
+loadpoints = "Laadpunten"
+vehicles = "Voertuigen"
 
 [config.site]
 cancel = "Annuleren"
@@ -99,7 +137,7 @@ save = "Opslaan"
 [config.system]
 logs = "Logboeken"
 restart = "Herstart"
-restartRequiredDescription = "Herstart om het effect te zien"
+restartRequiredDescription = "Herstart om het effect te zien."
 restartRequiredMessage = "Configuratie gewijzigd."
 restartingDescription = "Even geduld aub..."
 restartingMessage = "Evcc wordt herstart."
@@ -171,6 +209,7 @@ tabTitle = "Mijn data"
 30d = "laatste 30 dagen"
 365d = "laatste 365 dagen"
 total = "aller tijden"
+thisYear = "dit jaar"
 
 [footer.sponsor]
 becomeSponsor = "Sponsor worden"
@@ -252,6 +291,8 @@ search = "Zoeken"
 showAll = "Toon alles"
 title = "Logboeken"
 update = "Automatisch updaten"
+selectAll = "alles selecteren"
+nAreas = "{count} gebieden"
 
 [loginModal]
 cancel = "Annuleren"
@@ -296,6 +337,8 @@ noEnergy = "Geen meter data"
 pvExport = "Netinjectie"
 pvProduction = "Productie"
 selfConsumption = "Zelfverbruik"
+cheapBatteryGridCharge = "goedkope net-energie"
+cleanBatteryGridCharge = "schone net-energie"
 
 [main.heatingStatus]
 charging = "Bezig met verwarmen..."
@@ -354,6 +397,7 @@ minpv = "Min+PV"
 now = "Snel"
 off = "Uit"
 pv = "PV"
+smart = "Slim"
 
 [main.provider]
 login = "log in"
@@ -368,7 +412,7 @@ descriptionEnergy = "Tegen wanneer moet {targetEnergy} in het voertuig geladen z
 descriptionSoc = "Wanneer moet het voertuig geladen zijn naar {targetSoc}?"
 inactiveLabel = "Ingestelde tijd"
 modalTitle = "Stel tijd in"
-notReachableInTime = "Laaddoel niet haalbaar bij gevraagde eindtijd. Geschatte eindtijd: {endTime}."
+notReachableInTime = "Laaddoel zal {overrun} later bereikt zijn."
 onlyInPvMode = "Laadplan werkt alleen in PV modus"
 planDuration = "Oplaadtijd"
 planPeriodLabel = "Periode"
@@ -379,7 +423,7 @@ priceLimit = "prijslimiet van {price}"
 remove = "Verwijder"
 setTargetTime = "geen"
 targetIsAboveLimit = "De ingestelde laadlimiet {limit} wordt genegeerd gedurende deze periode."
-targetIsAboveVehicleLimit = "Verhoog de limiet ({limit}) om het laaddoel te halen"
+targetIsAboveVehicleLimit = "Voertuiglimiet is lager dan het laaddoel."
 targetIsInThePast = "Kies een tijd in de toekomst, Marty."
 targetIsTooFarInTheFuture = "We passen het plan aan zodra we meer weten over de toekomst."
 title = "Doeltijd"
@@ -423,22 +467,29 @@ vehicleLimit = "Voertuiglimiet: {soc}"
 
 [main.vehicleStatus]
 charging = "Opladen..."
-cheapEnergyCharging = "Laden actief met goedkope energie"
-cleanEnergyCharging = "Laden actief met schone energie. {co2} (limit {limit})"
+cheapEnergyCharging = "Goedkope energie beschikbaar."
+cleanEnergyCharging = "Schone energie beschikbaar."
 climating = "Voor-conditionering gedetecteerd."
 connected = "Verbonden."
 disconnected = "Niet verbonden."
 minCharge = "Minimaal opladen naar {soc}."
-pvDisable = "Onvoldoende PV overschot beschikbaar. Pauzeren over {remaining}..."
-pvEnable = "Voldoende PV overschot beschikbaar. Starten over {remaining}..."
-scale1p = "Wisselen naar laden op 1 fase over {remaining}..."
-scale3p = "Wisselen naar laden op 3 fasen over {remaining}..."
-targetChargeActive = "Laadplan actief..."
-targetChargePlanned = "Laadplan begint om {time}."
+pvDisable = "Onvoldoende PV overschot. Laden wordt gepauzeerd."
+pvEnable = "Voldoende PV overschot beschikbaar. Laden wordt gestart."
+scale1p = "Wordt gereduceerd naar laden op 1 fase."
+scale3p = "Wordt verhoogd naar laden op 3 fasen."
+targetChargeActive = "Laadplan actief. Geschatte beëindiging over {duration}."
+targetChargePlanned = "Laadplan begint over {duration}."
 targetChargeWaitForVehicle = "Laadplan gereed. Wachten op voertuig..."
 unknown = ""
-vehicleLimitReached = "Voertuiglimiet {soc} bereikt."
+vehicleLimitReached = "Voertuiglimiet bereikt."
 waitForVehicle = "Klaar. Wachten op voertuig..."
+cheapEnergyNextStart = "Goedkope energie in {duration}."
+cheapEnergySet = "Prijslimit ingesteld."
+cleanEnergyNextStart = "Schone energie in {duration}."
+cleanEnergySet = "CO₂ limiet ingesteld."
+finished = "Geëindigd."
+vehicleLimit = "Voertuiglimiet."
+welcome = "Verkort initiële lading om de verbinding te bevestigen."
 
 [notifications]
 dismissAll = "Alles verwijderen"
@@ -448,6 +499,10 @@ modalTitle = "Notificaties"
 [offline]
 message = "Niet verbonden met een server."
 reload = "Verversen?"
+restart = "Herstart"
+restartNeeded = "Benodigd om aanpassingen door te voeren."
+configurationError = "Fout tijdens opstarten. Controleer de configuratie en start opnieuw."
+restarting = "Server is binnenkort weer beschikbaar."
 
 [passwordModal]
 description = "Stel een wachtwoord in voor het afschermen van de instellingen. Het hoofdscherm blijft beschikbaar zonder wachtwoord."
@@ -539,7 +594,7 @@ auto = "Automatisch"
 label = "Taal"
 
 [settings.sponsorToken]
-expires = "Je sponsortoken vervalt {inXDays}. {getNewToken} en update je configuratiebestand."
+expires = "Je sponsortoken vervalt {inXDays}. {getNewToken} en update het hier."
 getNew = "Vraag een nieuwe aan"
 hint = "Nota: We zullen dit in de toekomst automatiseren."
 
@@ -589,3 +644,85 @@ title = "Start Error"
 cancel = "Annuleer"
 template = "Fabrikant"
 test = "Test"
+
+
+[config.control]
+description = "Normaalgesproken zijn de standaardwaardes in orde. Pas deze alleen aan als je weet wat je doet."
+title = "Regelgedrag"
+labelMaxGridSupply = "Max. netgebruik tijdens het laden"
+labelInterval = "Update interval"
+labelResidualPower = "Vermogensoverschot"
+
+[config.eebus]
+description = "Configuratie voor communicatie met andere EEBus apparaten."
+title = "EEBus"
+
+[config.hems]
+description = "Verbind evcc met een ander thuis-energie managementsysteem."
+title = "HEMS"
+
+[config.influx]
+labelBucket = "Bucket"
+labelOrg = "Organisatie"
+labelUrl = "URL"
+labelUser = "Gebruikersnaam"
+v1Support = "Hulp nodig voor InfluxDB 1.x?"
+title = "InfluxDB"
+v2Support = "Terug naar InfluxDB 2.x"
+description = "Schrijft laad-data en andere cijfers naar InfluxDB. Gebruik Grafana of andere tools om de data te visualiseren."
+descriptionToken = "Bekijk de InfluxDB documentatie om te zien hoe je er een maakt. https://docs.influxdata.com/influxdb/v2/admin/"
+labelToken = "API Token"
+labelDatabase = "Database"
+labelPassword = "Wachtwoord"
+
+[config.messaging]
+title = "Notificaties"
+description = "Ontvang berichten over de voortgang van het laden."
+
+[config.modbusproxy]
+description = "Sta meerdere clients de toegang tot één Modbus apparaat toe."
+title = "Modbus Proxy"
+
+[config.mqtt]
+authentication = "Authenticatie"
+description = "Verbind met een MQTT broker om data met andere netwerksystemen uit te wisselen."
+descriptionClientId = "Auteur van de berichten. Wanneer leeg wordt `evcc-[rand]` gebruikt."
+descriptionTopic = "Laat leeg om publicatie te deactiveren."
+labelBroker = "Broker"
+labelCheckInsecure = "Sta self-signed certificaten toe"
+labelInsecure = "Certificaat validatie"
+labelClientId = "Client ID"
+labelPassword = "Wachtwoord"
+title = "MQTT"
+labelTopic = "Onderwerp"
+labelUser = "Gebruikersnaam"
+publishing = "Publiceren"
+
+[config.network]
+descriptionHost = "Gebruik de .local toevoeging om mDNS te activeren. Voor toegang vanuit de mobiele app en sommige OCPP laders van belang."
+labelHost = "Hostname"
+descriptionPort = "Poort voor de web interface en API. Update de browser url wanneer je dit aanpast."
+labelPort = "Poort"
+labelSchema = "Schema"
+title = "Netwerk"
+descriptionSchema = "Beïnvloedt enkel hoe URLs gegenereerd worden. HTTPS selecteren activeert geen encryptie."
+
+[config.sponsor]
+addToken = "Sponsortoken invoeren"
+error = "De sponsortoken is ongeldig."
+descriptionToken = "Haal de token op vanaf {url}. We bieden ook een trial-token aan om te testen."
+labelToken = "Sponsortoken"
+title = "Sponsorship"
+changeToken = "Sponsortoken bewerken"
+description = "Het sponsormodel helpt ons het project te onderhouden en nieuwe toffe functies te ontwikkelen. Als sponsor krijg je toegang tot de implementaties voor alle laadpunten."
+
+[config.tariffs]
+description = "Voer jouw energietarief in om de kosten van het laden te berekenen."
+title = "Tarieven"
+
+[config.options.boolean]
+no = "nee"
+yes = "ja"
+
+[config.circuits]
+title = "Belastingbeheer"
