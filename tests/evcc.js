@@ -8,6 +8,11 @@ import { Transform } from "stream";
 
 const BINARY = "./evcc";
 
+const waitOpts = {
+  timeout: 20000,
+  log: true,
+};
+
 function workerPort() {
   const index = process.env.TEST_WORKER_INDEX * 1;
   return 11000 + index;
@@ -82,12 +87,7 @@ async function _start(config) {
   const port = workerPort();
   log(`wait until port ${port} is available`);
   // wait for port to be available
-  await waitOn({
-    resources: [`tcp:${port}`],
-    reverse: true,
-    log: true,
-    timeout: 20000, // 20s
-  });
+  await waitOn({ resources: [`tcp:${port}`], reverse: true, ...waitOpts });
   log("starting evcc", { config, port });
   const instance = exec(
     `EVCC_NETWORK_PORT=${port} EVCC_DATABASE_DSN=${dbPath()} ${BINARY} --config ${configFile}`
@@ -99,7 +99,7 @@ async function _start(config) {
     log("evcc terminated", { code, port, config });
     steamLog.end();
   });
-  await waitOn({ resources: [baseUrl()], log: true });
+  await waitOn({ resources: [baseUrl()], ...waitOpts });
   return instance;
 }
 
@@ -109,12 +109,8 @@ async function _stop(instance) {
     log("shutting down evcc hard", { port });
     // hard kill, only use of normal shutdown doesn't work
     instance.kill("SIGKILL");
-    await waitOn({
-      resources: [`tcp:localhost:${port}`],
-      reverse: true,
-      log: true,
-      timeout: 20000,
-    });
+    await waitOn({ resources: [`tcp:${port}`], reverse: true, ...waitOpts });
+
     log("evcc is down", { port });
     return;
   }
@@ -124,12 +120,7 @@ async function _stop(instance) {
   const cookie = res.headers["set-cookie"];
   await axios.post(`${baseUrl()}/api/system/shutdown`, {}, { headers: { cookie } });
   log(`wait until port ${port} is closed`);
-  await waitOn({
-    resources: [`tcp:${port}`],
-    reverse: true,
-    log: true,
-    timeout: 20000,
-  });
+  await waitOn({ resources: [`tcp:${port}`], reverse: true, ...waitOpts });
   log("evcc is down", { port });
 }
 
