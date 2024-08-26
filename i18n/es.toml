@@ -36,7 +36,7 @@ title = "Gestión de carga"
 
 [config.control]
 description = "Usualmente los valores predeterminados están bien. Solo cámbialos si sabes lo que estás haciendo."
-descriptionInterval = "El ciclo de actualización del circuito de control en segundos. Define con qué frecuencia evcc lee los datos del medidor, ajusta la potencia de carga y actualiza la UI. Los intervalos cortos ( 30s) pueden causar oscillaciones y comportamiento no deseado."
+descriptionInterval = " Ciclo de actualización del bucle de control en segundos. Define la frecuencia con la que evcc lee los datos del contador, ajusta la potencia de carga y actualiza la interfaz de usuario. Los intervalos cortos (< 30s) pueden causar oscilaciones y comportamientos no deseados."
 descriptionMaxGridSupply = "Solo relevante para inversores híbridos que no son capaces de producir la fuerza completa de generación DC al hogar a través de AC. Este szenario puede llevar al uso no deseado de la red, ya que evcc asume que la potencia DC completa está disponible. Utilice un valor de al menos 50 W para prevenir esto."
 descriptionResidualPower = "Cambia el punto de funcionamiento del circuito de control. Si tienes una batería doméstica, se recomienda establecer un valor de 100 W. De esta manera, la batería tendrá una ligera prioridad sobre el uso de la red eléctrica"
 labelInterval = "Intervalo de actualización"
@@ -294,6 +294,7 @@ tabTitle = "Mis datos"
 30d = "últimos 30 días"
 365d = "último año"
 total = "desde siempre"
+thisYear = "este año"
 
 [footer.sponsor]
 becomeSponsor = "Conviértete en patrocinador"
@@ -577,6 +578,8 @@ vehicleLimit = "Límite de vehículos."
 vehicleLimitReached = "Límite del vehículos alcanzado"
 waitForVehicle = "Listo para cargar. Esperando vehículo."
 welcome = "Breve carga inicial para confirmar la conexión."
+awaitingAuthorization = "Esperando autorización"
+disconnectRequired = "Sesión terminada. Por favor, vuelve a conectarte"
 
 [notifications]
 dismissAll = "Eliminar notificaciones"
