@@ -53,7 +53,7 @@ type Option func(*paho.ClientOptions)
 const secure = "tls://"
 
 // NewClient creates new Mqtt publisher
-func NewClient(log *util.Logger, broker, user, password, clientID string, qos byte, insecure bool, caCertString string, clientCertString string, clientKeyString string, opts ...Option) (*Client, error) {
+func NewClient(log *util.Logger, broker, user, password, clientID string, qos byte, insecure bool, caCert string, clientCert string, clientKey string, opts ...Option) (*Client, error) {
 	broker, isSecure := strings.CutPrefix(broker, secure)
 
 	// strip schema as it breaks net.SplitHostPort
@@ -82,19 +82,19 @@ func NewClient(log *util.Logger, broker, user, password, clientID string, qos by
 	tlsConfig := &tls.Config{
 		InsecureSkipVerify: insecure,
 	}
-	if caCertString != "" {
+	if caCert != "" {
 		caCertPool := x509.NewCertPool()
-		if ok := caCertPool.AppendCertsFromPEM([]byte(caCertString)); !ok {
+		if ok := caCertPool.AppendCertsFromPEM([]byte(caCert)); !ok {
 			return nil, fmt.Errorf("failed to add ca cert to cert pool")
 		}
 		tlsConfig.RootCAs = caCertPool
 	}
-	if clientCertString != "" && clientKeyString != "" {
-		clientCert, err := tls.X509KeyPair([]byte(clientCertString), []byte(clientKeyString))
+	if clientCert != "" && clientKey != "" {
+		clientKeyPair, err := tls.X509KeyPair([]byte(clientCert), []byte(clientKey))
 		if err != nil {
 			return nil, fmt.Errorf("failed to add client cert: %w", err)
 		}
-		tlsConfig.Certificates = []tls.Certificate{clientCert}
+		tlsConfig.Certificates = []tls.Certificate{clientKeyPair}
 	}
 	options.SetTLSConfig(tlsConfig)
 
