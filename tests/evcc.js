@@ -108,7 +108,7 @@ async function _stop(instance) {
   if (instance) {
     log("shutting down evcc hard", { port });
     // hard kill, only use of normal shutdown doesn't work
-    instance.kill("SIGKILL");
+    instance.kill("SIGTERM");
     await waitOn({ resources: [`tcp:${port}`], reverse: true, ...waitOpts });
 
     log("evcc is down", { port });
