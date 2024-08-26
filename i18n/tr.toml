@@ -5,26 +5,28 @@ control = "Batarya kontrolü"
 discharge = "Hızlı modda ve planlanan doldurmada boşalmayı önle."
 disclaimerHint = "Not:"
 disclaimerText = "Bu ayarlar yalnızca güneş enerjisi yöntemini etkiler. Doldurma davranışı buna göre ayarlanır."
-legendBottomName = "Evin önceliği var"
-legendBottomSubline = "doldurmak için kullanma"
-legendMiddleName = "Önce araç"
-legendMiddleSubline = "sonra ev"
+legendBottomName = “Ev bataryasına öncelik ver”
+legendBottomSubline = “{soc} seviyesine ulaşana kadar.”
+legendMiddleName = “Aracın doldurulmasına öncelik ver”
+legendMiddleSubline = “ev bataryası {soc} seviyesinin üzerindeyse.”
 legendTitle = "Güneş enerjisi nasıl kullanılsın?"
-legendTopAutostart = "otomatik olarak başlar"
-legendTopName = "Enerji deposu destekli doldurma"
-legendTopSubline = "kesintisiz"
+legendTopAutostart = "Otomatik olarak başla"
+legendTopName = "Batarya destekli araç doldurma"
+legendTopSubline = “ev bataryası {soc} seviyesinin üzerindeyse.”
 modalTitle = "Ev enerji deposu"
+gridChargeTab = “Şebekeden doldurma”
+usageTab = “Batarya kullanımı”
 
 [batterySettings.bufferStart]
-above = "{soc} üzerinde olduğunda"
-full = "{soc} iken"
-never = "yalnızca yeterli güneş enerjisi fazlalığı ile"
+above = “{soc} seviyesinin üzerindeyken.”
+full = "{soc} seviyesindeyken"
+never = "yalnızca yeterli fazlalık ile."
 
 [config]
 
 [config.battery]
-titleAdd = "Batarya Sayacı Ekle"
-titleEdit = "Batarya Sayacını Düzenle"
+titleAdd = "Batarya Ekle"
+titleEdit = "Bataryayı Düzenle"
 
 [config.circuits]
 description = "Aynı elektrik devresine bağlı tüm doldurma noktalarının yekûnunun güç ve akım sınırını aşmadığından emin ol. Devreler aşama sılaralaması oluşturmak için iç içe geçebilirler."
@@ -73,6 +75,9 @@ temp = "Isı"
 topic = "Konu"
 url = "URL"
 yes = "evet"
+controllable = “Kontrol edilebilir”
+powerRange = “Güç”
+currentRange = “Akım”
 
 [config.eebus]
 description = "evcc'nin diğer EEBus cihazlarıyla iletişim kurmasını sağlayan yapılandırma."
@@ -273,6 +278,7 @@ tabTitle = "Verilerim"
 30d = "son 30 gün"
 365d = "son 365 gün"
 total = "tüm zaman"
+thisYear = “bu yıl”
 
 [footer.sponsor]
 becomeSponsor = "Destekçi ol"
@@ -348,6 +354,8 @@ search = "Ara"
 showAll = "Tüm kayıtları göster"
 title = "Loglar"
 update = "Otomatik güncelle"
+nAreas = "{count} alanlar”
+selectAll = “hepsini seç”
 
 [loginModal]
 cancel = "İptal"
@@ -392,6 +400,8 @@ noEnergy = "Ölçüm verisi yok"
 pvExport = "Şebekeye ihracat"
 pvProduction = "Üretim"
 selfConsumption = "Öz tüketim"
+cheapBatteryGridCharge = “ucuz şebeke enerjisi”
+cleanBatteryGridCharge = “temiz şebeke enerjisi”
 
 [main.heatingStatus]
 charging = "Isıtılıyor…"
@@ -687,3 +697,8 @@ lineError = "{0} içinde hata bulundu."
 lineErrorLink = "{0}. satır"
 restartButton = "Yeniden Başlat"
 title = "Başlama Hatası"
+
+
+[config.options.boolean]
+no = “hayır”
+yes = "evet"
