@@ -182,7 +182,7 @@ func NewOCPP(id string, connector int, idtag string,
 	time.Sleep(time.Second)
 
 	if err := ocpp.Instance().ChangeAvailabilityRequest(cp.ID(), 0, core.AvailabilityTypeOperative); err != nil {
-		return nil, err
+		c.log.DEBUG.Printf("failed configuring availability: %v", err)
 	}
 
 	var meterValuesSampledData string
