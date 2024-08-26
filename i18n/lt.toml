@@ -293,6 +293,7 @@ tabTitle = "Mano"
 [footer.savings.period]
 30d = "paskutinės 30 dienų"
 365d = "paskutinės 365 dienos"
+thisYear = "šiais metais"
 total = "Iš viso"
 
 [footer.sponsor]
@@ -553,6 +554,7 @@ ready = "leidžiama įkrauti"
 vehicleLimit = "Automobilyje nustatytas limitas: {soc}"
 
 [main.vehicleStatus]
+awaitingAuthorization = "Laukiama autorizacijos."
 charging = "Įkraunama..."
 cheapEnergyCharging = "Šiuo metu energija yra pigi."
 cheapEnergyNextStart = "Pigi energija už {duration}."
