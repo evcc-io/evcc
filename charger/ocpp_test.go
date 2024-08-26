@@ -59,12 +59,8 @@ func (suite *ocppTestSuite) startChargePoint(id string, connectorId int) ocpp16.
 
 func (suite *ocppTestSuite) handleTrigger(cp ocpp16.ChargePoint, connectorId int, msg remotetrigger.MessageTrigger) {
 	switch msg {
-	case core.BootNotificationFeatureName:
-		if res, err := cp.BootNotification("demo", "evcc"); err != nil {
-			suite.T().Log("BootNotification:", err)
-		} else {
-			suite.T().Log("BootNotification:", res)
-		}
+	case core.ChangeAvailabilityFeatureName:
+		fallthrough
 
 	case core.StatusNotificationFeatureName:
 		if res, err := cp.StatusNotification(connectorId, core.NoError, core.ChargePointStatusCharging); err != nil {

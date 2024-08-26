@@ -160,12 +160,14 @@ func NewOCPP(id string, connector int, idtag string,
 	}
 
 	c := &OCPP{
-		log:              log,
-		conn:             conn,
-		idtag:            idtag,
-		remoteStart:      remoteStart,
-		chargingRateUnit: types.ChargingRateUnitType(chargingRateUnit),
-		timeout:          timeout,
+		log:         log,
+		conn:        conn,
+		idtag:       idtag,
+		remoteStart: remoteStart,
+
+		chargingRateUnit:        types.ChargingRateUnitType(chargingRateUnit),
+		hasRemoteTriggerFeature: true, // assume remote trigger feature is available
+		timeout:                 timeout,
 	}
 
 	c.log.DEBUG.Printf("waiting for chargepoint: %v", connectTimeout)
@@ -179,10 +181,14 @@ func NewOCPP(id string, connector int, idtag string,
 	// fix timing issue in EVBox when switching OCPP protocol version
 	time.Sleep(time.Second)
 
-	var rc = make(chan error, 1)
+	if err := ocpp.Instance().ChangeAvailabilityRequest(cp.ID(), 0, core.AvailabilityTypeOperative); err != nil {
+		c.log.DEBUG.Printf("failed configuring availability: %v", err)
+	}
 
-	meterValuesSampledData := ""
+	var meterValuesSampledData string
 	meterValuesSampledDataMaxLength := len(strings.Split(desiredMeasurands, ","))
+
+	rc := make(chan error, 1)
 
 	err = ocpp.Instance().GetConfiguration(cp.ID(), func(resp *core.GetConfigurationConfirmation, err error) {
 		if err == nil {
@@ -234,7 +240,10 @@ func NewOCPP(id string, connector int, idtag string,
 					if !c.hasProperty(*opt.Value, smartcharging.ProfileName) {
 						c.log.WARN.Printf("the required SmartCharging feature profile is not indicated as supported")
 					}
-					c.hasRemoteTriggerFeature = c.hasProperty(*opt.Value, remotetrigger.ProfileName)
+					// correct the availability assumption of RemoteTrigger only in case of a valid looking FeatureProfile list
+					if c.hasProperty(*opt.Value, core.ProfileName) {
+						c.hasRemoteTriggerFeature = c.hasProperty(*opt.Value, remotetrigger.ProfileName)
+					}
 
 				// vendor-specific keys
 				case ocpp.KeyAlfenPlugAndChargeIdentifier:
@@ -414,6 +423,27 @@ func (c *OCPP) Status() (api.ChargeStatus, error) {
 	default:
 		return api.StatusNone, fmt.Errorf("invalid chargepoint status: %s", status)
 	}
+}
+
+var _ api.StatusReasoner = (*OCPP)(nil)
+
+func (c *OCPP) StatusReason() (api.Reason, error) {
+	var res api.Reason
+
+	s, err := c.conn.Status()
+	if err != nil {
+		return res, err
+	}
+
+	switch {
+	case c.conn.NeedsAuthentication():
+		res = api.ReasonWaitingForAuthorization
+
+	case s == core.ChargePointStatusFinishing:
+		res = api.ReasonDisconnectRequired
+	}
+
+	return res, nil
 }
 
 // Enabled implements the api.Charger interface
