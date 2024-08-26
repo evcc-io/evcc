@@ -27,8 +27,8 @@ never = "seulement quand surplus suffisant."
 [config]
 
 [config.battery]
-titleAdd = "Ajouter compteur pour une batterie domestique"
-titleEdit = "Modifier compteur pour batterie"
+titleAdd = "Ajouter une batterie domestique"
+titleEdit = "Modifier batterie"
 
 [config.circuits]
 description = "Vérifiez que la somme de tous les points de charges connectés à un circuit ne dépassent pas les limites de puissance et de courant. Les circuits peuvent être combinés pour construire une hiérarchie."
@@ -36,7 +36,7 @@ title = "Gestion de la charge"
 
 [config.control]
 description = "Les valeurs par défaut sont généralement bonnes. Ne faites des changements que si vous savez ce que vous faites."
-descriptionInterval = "Intervalle de mise à jour (en seconde) entre chaque cycle de control. Défini la fréquence à laquelle evcc va lire les valeurs des mesures, ajuster la puissance de charge et mettre à jour l’affichage. Une intervalle courte (< 30s) peut créer des oscillations et comportements indésirables."
+descriptionInterval = "Intervalle de mise à jour (en seconde) entre chaque cycle de contrôle. Défini la fréquence à laquelle evcc va lire les valeurs des mesures, ajuster la puissance de charge et mettre à jour l’affichage. Une intervalle courte (< 30s) peut créer des oscillations et comportements indésirables."
 descriptionMaxGridSupply = "Uniquement pertinent pour les onduleurs hybrides qui ne sont pas capables de fournir la puissance totale en courant continu à destination du circuit domestique en courant alternatif. Ce scénario peut mener à une utilisation non désirée d’électricité du réseau, puisque evcc part du principe que l’intégralité du courant continu est disponible. Définir une valeur d’au moins 50 W pour éviter cela."
 descriptionResidualPower = "Déplace le point d’opération de la boucle de contrôle. Si vous avez une batterie domestique, il est recommandé de définir une valeur de 100 W. Ainsi, la batterie aura une légère priorité par rapport à l’utilisation du réseau."
 labelInterval = "Intervalle de mise à jour"
@@ -79,6 +79,7 @@ temp = "Température"
 topic = "Sujet"
 url = "URL"
 yes = "oui"
+controllable = "Contrôlable"
 
 [config.eebus]
 description = "Configuration permettant à evcc de communiquer avec d’autres appareils EEBus."
@@ -293,6 +294,7 @@ tabTitle = "Mes données"
 30d = "30 derniers jours"
 365d = "365 derniers jours"
 total = "tout"
+thisYear = "cette année"
 
 [footer.sponsor]
 becomeSponsor = "Devenir parrain"
@@ -573,6 +575,8 @@ vehicleLimit = "Limit du véhicule."
 vehicleLimitReached = "Limite du véhicule atteinte."
 waitForVehicle = "Prêt à charger. Attente du véhicule…"
 welcome = "Courte charge initiale pour confirmer la connexion."
+awaitingAuthorization = "En attente d’autorisation."
+disconnectRequired = "Session terminée. Veuillez vous reconnecter."
 
 [notifications]
 dismissAll = "Supprimer tout"
