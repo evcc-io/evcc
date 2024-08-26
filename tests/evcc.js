@@ -4,12 +4,33 @@ import axios from "axios";
 import { exec, execSync } from "child_process";
 import os from "os";
 import path from "path";
+import { Transform } from "stream";
 
 const BINARY = "./evcc";
 
 function workerPort() {
   const index = process.env.TEST_WORKER_INDEX * 1;
   return 11000 + index;
+}
+
+function logPrefix() {
+  return `[worker:${process.env.TEST_WORKER_INDEX}]`;
+}
+
+function createSteamLog() {
+  return new Transform({
+    transform(chunk, encoding, callback) {
+      const lines = chunk.toString().split("\n");
+      lines.forEach((line) => {
+        if (line.trim()) log(line);
+      });
+      callback();
+    },
+  });
+}
+
+function log(...args) {
+  console.log(logPrefix(), ...args);
 }
 
 export function baseUrl() {
@@ -51,7 +72,7 @@ export async function cleanRestart(config, sqlDumps) {
 async function _restoreDatabase(sqlDumps) {
   const dumps = Array.isArray(sqlDumps) ? sqlDumps : [sqlDumps];
   for (const dump of dumps) {
-    console.log("loading database", dbPath(), dump);
+    log("loading database", dbPath(), dump);
     execSync(`sqlite3 ${dbPath()} < tests/${dump}`);
   }
 }
@@ -59,7 +80,7 @@ async function _restoreDatabase(sqlDumps) {
 async function _start(config) {
   const configFile = config.includes("/") ? config : `tests/${config}`;
   const port = workerPort();
-  console.log(`wait until port ${port} is available`);
+  log(`wait until port ${port} is available`);
   // wait for port to be available
   await waitOn({
     resources: [`tcp:${port}`],
@@ -67,14 +88,16 @@ async function _start(config) {
     log: true,
     timeout: 20000, // 20s
   });
-  console.log("starting evcc", { config, port });
+  log("starting evcc", { config, port });
   const instance = exec(
     `EVCC_NETWORK_PORT=${port} EVCC_DATABASE_DSN=${dbPath()} ${BINARY} --config ${configFile}`
   );
-  instance.stdout.pipe(process.stdout);
-  instance.stderr.pipe(process.stderr);
+  const steamLog = createSteamLog();
+  instance.stdout.pipe(steamLog);
+  instance.stderr.pipe(steamLog);
   instance.on("exit", (code) => {
-    console.log("evcc terminated", { code, port, config });
+    log("evcc terminated", { code, port, config });
+    steamLog.end();
   });
   await waitOn({ resources: [baseUrl()], log: true });
   return instance;
@@ -83,32 +106,37 @@ async function _start(config) {
 async function _stop(instance) {
   const port = workerPort();
   if (instance) {
+    log("shutting down evcc hard", { port });
     // hard kill, only use of normal shutdown doesn't work
-    console.log("shutting down evcc hard");
     instance.kill("SIGKILL");
+    await waitOn({
+      resources: [`tcp:localhost:${port}`],
+      reverse: true,
+      log: true,
+      timeout: 20000,
+    });
+    log("evcc is down", { port });
     return;
-  } else {
-    // shutdown via API
-    console.log("shutting down evcc", { port });
-    const res = await axios.post(`${baseUrl()}/api/auth/login`, { password: "secret" });
-    console.log(res.status, res.statusText);
-    const cookie = res.headers["set-cookie"];
-    await axios.post(`${baseUrl()}/api/system/shutdown`, {}, { headers: { cookie } });
   }
-  console.log(`wait until port ${port} is closed`);
+  log("shutting down evcc", { port });
+  const res = await axios.post(`${baseUrl()}/api/auth/login`, { password: "secret" });
+  log(res.status, res.statusText);
+  const cookie = res.headers["set-cookie"];
+  await axios.post(`${baseUrl()}/api/system/shutdown`, {}, { headers: { cookie } });
+  log(`wait until port ${port} is closed`);
   await waitOn({
     resources: [`tcp:${port}`],
     reverse: true,
     log: true,
-    timeout: 20000, // 20s
+    timeout: 20000,
   });
-  console.log("evcc is down", { port });
+  log("evcc is down", { port });
 }
 
 async function _clean() {
   const db = dbPath();
   if (fs.existsSync(db)) {
-    console.log("delete database", db);
+    log("delete database", db);
     fs.unlinkSync(db);
   }
 }
