@@ -34,7 +34,7 @@ title = "Terhelés Menedzsment"
 
 [config.control]
 description = "Általában az alapértelmezett értékek működőképesek. Csak akkor változtasd meg őket, ha tudod, hogy mit csinálsz."
-descriptionInterval = "A vezérlőkör frissítési ciklusa másodpercekben. Meghatározza, hogy az evcc milyen gyakran olvassa ki a mérőadatokat, állítsa be a töltési teljesítményt és frissítse a felhasználói felületet. A rövid időközök (<30 s) oszllációt és nem kívánt viselkedést okozhatnak."
+descriptionInterval = "A vezérlőkör frissítési ciklusa másodpercekben. Meghatározza, hogy az evcc milyen gyakran olvassa ki a mérőadatokat, állítsa be a töltési teljesítményt és frissítse a felhasználói felületet. A rövid időközök (<30 s) oszcillációt és nem kívánt viselkedést okozhatnak."
 descriptionMaxGridSupply = "Csak azokra a hibrid inverterekre vonatkozik, amelyek nem képesek váltakozó áramon keresztül a teljes egyenáramú áramot az otthonba kiadni. Ez a forgatókönyv nem kívánt hálózathasználathoz vezethet, mivel az evcc feltételezi, hogy a teljes egyenáram rendelkezésre áll. Ennek elkerülésére használjon legalább 50 W értéket."
 descriptionResidualPower = "Eltolja a vezérlőkör működési pontját. Ha otthoni akkumulátorral rendelkezik, javasoljuk, hogy 100 W-os értéket állítson be. Így az akkumulátor kismértékben élvez prioritást a hálózati használattal szemben."
 labelInterval = "Frissítési intervallum"
@@ -282,6 +282,7 @@ tabTitle = "Az adataim"
 30d = "elmúlt 30 nap"
 365d = "elmúlt 365 nap"
 total = "összesen"
+thisYear = idén
 
 [footer.sponsor]
 becomeSponsor = "Legyél támogató"
@@ -410,7 +411,7 @@ selfConsumption = "Saját fogyasztás"
 charging = "Fűtés…"
 cheapEnergyCharging = "Fűtés olcsó energiával: {price} (limit {limit})"
 cleanEnergyCharging = "Fűtés tiszta energiával: {co2} (limit {limit})"
-waitForVehicle = "Üzemkész. Várakozás a fűtésre…"
+waitForVehicle = "Üzemkész. Fűtésre várakozás…"
 
 [main.loadpoint]
 avgPrice = "⌀ Ár"
@@ -549,12 +550,14 @@ scale1p = "1 Fázisú töltésre váltás hamarosan."
 scale3p = "3 Fázisú töltésre váltás hamarosan."
 targetChargeActive = "Töltési terv aktív. Becsült befejezés {duration}."
 targetChargePlanned = "A töltési tervezet ekkor keződik: {duration}."
-targetChargeWaitForVehicle = "Töltési terv üzemkész. Várakozás járműre…"
+targetChargeWaitForVehicle = "Töltési terv üzemkész. Járműre várakozás…"
 unknown = ""
 vehicleLimit = "Jármű limit."
 vehicleLimitReached = "Jármű limit elérve."
 waitForVehicle = "Üzemkész. Járműre várakozás…"
 welcome = "Rövid kezdeti töltés a csatlakozás megerősítéséhez."
+awaitingAuthorization = Hitelesítésre várakozás.
+disconnectRequired = A munkamenet megszakadt. Kérjük, csatlakozzon újra.
 
 [notifications]
 dismissAll = "Összeset figyelmen kívül hagyja"
