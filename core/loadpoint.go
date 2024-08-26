@@ -1674,6 +1674,14 @@ func (lp *Loadpoint) Update(sitePower float64, rates api.Rates, batteryBuffered,
 	lp.publish(keys.Connected, lp.connected())
 	lp.publish(keys.Charging, lp.charging())
 
+	if sr, ok := lp.charger.(api.StatusReasoner); ok && lp.GetStatus() == api.StatusB {
+		if r, err := sr.StatusReason(); err == nil {
+			lp.publish(keys.ChargerAwaitingAuthorization, r == api.ReasonWaitingForAuthorization)
+		} else {
+			lp.log.ERROR.Printf("charger status reason: %v", err)
+		}
+	}
+
 	// identify connected vehicle
 	if lp.connected() && !lp.chargerHasFeature(api.IntegratedDevice) {
 		// read identity and run associated action
