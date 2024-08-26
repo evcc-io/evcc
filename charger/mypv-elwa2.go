@@ -19,7 +19,6 @@ package charger
 
 import (
 	"encoding/binary"
-	"fmt"
 	"sync/atomic"
 	"time"
 
@@ -164,10 +163,6 @@ var _ api.ChargerEx = (*MyPvElwa2)(nil)
 
 // MaxCurrentMillis implements the api.ChargerEx interface
 func (wb *MyPvElwa2) MaxCurrentMillis(current float64) error {
-	if current < 6 {
-		return fmt.Errorf("invalid current %.1f", current)
-	}
-
 	power := uint16(230 * current)
 
 	b := make([]byte, 2)
