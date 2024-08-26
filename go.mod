@@ -204,4 +204,4 @@ replace github.com/grid-x/modbus => github.com/evcc-io/modbus v0.0.0-20240503125
 
 replace github.com/lorenzodonini/ocpp-go => github.com/evcc-io/ocpp-go v0.0.0-20240730071053-d69e53b0fce9
 
-replace modernc.org/sqlite => modernc.org/sqlite v1.28.0
+replace modernc.org/libc => modernc.org/libc v1.58.0
