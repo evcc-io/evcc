@@ -11,7 +11,6 @@ const BINARY = "./evcc";
 const waitOpts = {
   timeout: 20000,
   log: true,
-  verbose: true,
 };
 
 function workerPort() {
@@ -109,8 +108,8 @@ async function _stop(instance) {
   if (instance) {
     log("shutting down evcc hard", { port });
     // hard kill, only use of normal shutdown doesn't work
-    instance.kill("SIGTERM");
-    await waitOn({ resources: [`tcp:${port}`], reverse: true, ...waitOpts });
+    instance.kill("SIGKILL");
+    await waitOn({ resources: [`tcp:${port}`], reverse: true, ...waitOpts, timeout: 60 * 1000 });
     log("evcc is down", { port });
     return;
   }
