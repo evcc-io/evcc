@@ -13,6 +13,10 @@ function workerPort() {
   return 11000 + index;
 }
 
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 function logPrefix() {
   return `[worker:${process.env.TEST_WORKER_INDEX}]`;
 }
