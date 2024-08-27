@@ -273,6 +273,8 @@ func NewOCPP(id string, connector int, idtag string,
 
 	// see who's there
 	if c.hasRemoteTriggerFeature {
+		conn.TriggerMessageRequest(core.StatusNotificationFeatureName)
+
 		if err := ocpp.Instance().TriggerMessageRequest(cp.ID(), core.BootNotificationFeatureName); err == nil {
 			select {
 			case <-time.After(timeout):

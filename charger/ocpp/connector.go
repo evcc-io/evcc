@@ -107,7 +107,7 @@ func (conn *Connector) Initialized() error {
 		case <-conn.statusC:
 			return nil
 
-		case <-trigger:
+		case <-trigger: // try to trigger StatusNotification again as last resort
 			conn.TriggerMessageRequest(core.StatusNotificationFeatureName)
 
 		case <-timeout:
