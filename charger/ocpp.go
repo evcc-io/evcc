@@ -273,7 +273,9 @@ func NewOCPP(id string, connector int, idtag string,
 
 	// see who's there
 	if c.hasRemoteTriggerFeature {
-		conn.TriggerMessageRequest(core.StatusNotificationFeatureName)
+		if err := conn.TriggerMessageRequest(core.StatusNotificationFeatureName); err != nil {
+			c.log.DEBUG.Printf("failed triggering StatusNotification: %v", err)
+		}
 
 		if err := ocpp.Instance().TriggerMessageRequest(cp.ID(), core.BootNotificationFeatureName); err == nil {
 			select {
@@ -284,6 +286,8 @@ func NewOCPP(id string, connector int, idtag string,
 					c.bootNotification = res
 				}
 			}
+		} else {
+			c.log.DEBUG.Printf("failed triggering BootNotification: %v", err)
 		}
 	}
 
