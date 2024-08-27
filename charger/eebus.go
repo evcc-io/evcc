@@ -54,7 +54,7 @@ func init() {
 func NewEEBusFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
 		Ski           string
-		Ip_           string `mapstructure:"ip"` // deprecated
+		Ip            string
 		Meter         bool
 		ChargedEnergy bool
 		VasVW         bool
@@ -66,13 +66,13 @@ func NewEEBusFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	return NewEEBus(cc.Ski, cc.Meter, cc.ChargedEnergy, cc.VasVW)
+	return NewEEBus(cc.Ski, cc.Ip, cc.Meter, cc.ChargedEnergy, cc.VasVW)
 }
 
 //go:generate go run ../cmd/tools/decorate.go -f decorateEEBus -b *EEBus -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.ChargeRater,ChargedEnergy,func() (float64, error)"
 
 // NewEEBus creates EEBus charger
-func NewEEBus(ski string, hasMeter, hasChargedEnergy, vasVW bool) (api.Charger, error) {
+func NewEEBus(ski, ip string, hasMeter, hasChargedEnergy, vasVW bool) (api.Charger, error) {
 	if eebus.Instance == nil {
 		return nil, errors.New("eebus not configured")
 	}
@@ -87,7 +87,7 @@ func NewEEBus(ski string, hasMeter, hasChargedEnergy, vasVW bool) (api.Charger, 
 	c.Connector = eebus.NewConnector()
 	c.minMaxG = provider.Cached(c.minMax, time.Second)
 
-	if err := eebus.Instance.RegisterDevice(ski, c); err != nil {
+	if err := eebus.Instance.RegisterDevice(ski, ip, c); err != nil {
 		return nil, err
 	}
 
