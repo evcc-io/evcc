@@ -47,6 +47,7 @@ test.describe("features", async () => {
   test("content", async ({ page }) => {
     await page.goto("/#/log");
     await login(page);
+    await page.getByTestId("log-search").fill("listening at");
     await expect(page.getByTestId("log-content")).toContainText("listening at");
   });
 });
