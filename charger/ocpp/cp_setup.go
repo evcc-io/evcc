@@ -24,7 +24,6 @@ func (cp *CP) Setup(meterValues string, meterInterval time.Duration, timeout tim
 
 	rc := make(chan error, 1)
 
-	// CP
 	err := Instance().GetConfiguration(cp.ID(), func(resp *core.GetConfigurationConfirmation, err error) {
 		if err == nil {
 			for _, opt := range resp.ConfigurationKey {
@@ -109,7 +108,6 @@ func (cp *CP) Setup(meterValues string, meterInterval time.Duration, timeout tim
 
 	// see who's there
 	if cp.HasRemoteTriggerFeature {
-		// CP
 		if err := Instance().TriggerMessageRequest(cp.ID(), core.BootNotificationFeatureName); err != nil {
 			cp.log.DEBUG.Printf("failed triggering BootNotification: %v", err)
 		}
@@ -131,7 +129,6 @@ func (cp *CP) Setup(meterValues string, meterInterval time.Duration, timeout tim
 
 	// configure measurands
 	if meterValues != "" {
-		// CP
 		if err := cp.configure(KeyMeterValuesSampledData, meterValues); err == nil {
 			meterValuesSampledData = meterValues
 		}
@@ -141,7 +138,6 @@ func (cp *CP) Setup(meterValues string, meterInterval time.Duration, timeout tim
 
 	// trigger initial meter values
 	if cp.HasRemoteTriggerFeature {
-		// CP
 		if err := Instance().TriggerMessageRequest(cp.ID(), core.MeterValuesFeatureName); err == nil {
 			// wait for meter values
 			select {
@@ -155,15 +151,13 @@ func (cp *CP) Setup(meterValues string, meterInterval time.Duration, timeout tim
 
 	// configure sample rate
 	if meterInterval > 0 {
-		// CP
 		if err := cp.configure(KeyMeterValueSampleInterval, strconv.Itoa(int(meterInterval.Seconds()))); err != nil {
 			cp.log.WARN.Printf("failed configuring MeterValueSampleInterval: %v", err)
 		}
 	}
 
 	// configure ping interval
-	// CP
-	cp.configure(KeyWebSocketPingInterval, "30")
+	return cp.configure(KeyWebSocketPingInterval, "30")
 }
 
 // HasMeasurement checks if meterValuesSample contains given measurement
