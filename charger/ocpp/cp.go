@@ -6,7 +6,6 @@ import (
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
-	"github.com/lorenzodonini/ocpp-go/ocpp1.6/types"
 )
 
 // TODO support multiple connectors
@@ -25,17 +24,10 @@ type CP struct {
 	connected bool
 	connectC  chan struct{}
 
-	// configuration properties
-	PhaseSwitching          bool
-	HasRemoteTriggerFeature bool
-	ChargingRateUnit        types.ChargingRateUnitType
-	ChargingProfileId       int
-	StackLevel              int
-
 	connectors map[int]*Connector
 }
 
-func NewChargePoint(log *util.Logger, id string, chargingRateUnit types.ChargingRateUnitType) *CP {
+func NewChargePoint(log *util.Logger, id string) *CP {
 	return &CP{
 		log: log,
 		id:  id,
@@ -44,9 +36,6 @@ func NewChargePoint(log *util.Logger, id string, chargingRateUnit types.Charging
 		connectors: make(map[int]*Connector),
 
 		bootNotificationRequestC: make(chan *core.BootNotificationRequest, 1),
-
-		ChargingRateUnit:        chargingRateUnit,
-		HasRemoteTriggerFeature: true, // assume remote trigger feature is available
 	}
 }
 
