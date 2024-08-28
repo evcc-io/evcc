@@ -35,8 +35,8 @@ func sortByAge(values []types.MeterValue) []types.MeterValue {
 	})
 }
 
-// hasProperty checks if comma-separated string contains given string ignoring whitespaces
-func hasProperty(props string, prop string) bool {
+// hasProperty checks if comma-separated string contains given string ignoring white spaces
+func hasProperty(props, prop string) bool {
 	return slices.ContainsFunc(strings.Split(props, ","), func(s string) bool {
 		return strings.HasPrefix(strings.ReplaceAll(s, " ", ""), prop)
 	})
