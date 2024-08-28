@@ -35,7 +35,6 @@ type OCPP struct {
 	hasRemoteTriggerFeature bool
 	chargingRateUnit        types.ChargingRateUnitType
 	chargingProfileId       int
-	stackLevel              int
 	lp                      loadpoint.API
 	bootNotification        *core.BootNotificationRequest
 }
@@ -198,11 +197,6 @@ func NewOCPP(id string, connector int, idtag string,
 				}
 
 				switch opt.Key {
-				case ocpp.KeyChargeProfileMaxStackLevel:
-					if val, err := strconv.Atoi(*opt.Value); err == nil {
-						c.stackLevel = val
-					}
-
 				case ocpp.KeyChargingScheduleAllowedChargingRateUnit:
 					if *opt.Value == "Power" || *opt.Value == "W" { // "W" is not allowed by spec but used by some CPs
 						c.chargingRateUnit = types.ChargingRateUnitWatts
@@ -593,7 +587,6 @@ func (c *OCPP) createTxDefaultChargingProfile(current float64) *types.ChargingPr
 
 	return &types.ChargingProfile{
 		ChargingProfileId:      c.chargingProfileId,
-		StackLevel:             c.stackLevel,
 		ChargingProfilePurpose: types.ChargingProfilePurposeTxDefaultProfile,
 		ChargingProfileKind:    types.ChargingProfileKindAbsolute,
 		ChargingSchedule: &types.ChargingSchedule{
