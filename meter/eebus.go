@@ -31,6 +31,7 @@ func init() {
 func NewEEBusFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
 		Ski     string
+		Ip      string
 		Timeout time.Duration
 	}{
 		Timeout: 10 * time.Second,
@@ -40,11 +41,11 @@ func NewEEBusFromConfig(other map[string]interface{}) (api.Meter, error) {
 		return nil, err
 	}
 
-	return NewEEBus(cc.Ski, cc.Timeout)
+	return NewEEBus(cc.Ski, cc.Ip, cc.Timeout)
 }
 
 // NewEEBus creates EEBus charger
-func NewEEBus(ski string, timeout time.Duration) (*EEBus, error) {
+func NewEEBus(ski, ip string, timeout time.Duration) (*EEBus, error) {
 	if eebus.Instance == nil {
 		return nil, errors.New("eebus not configured")
 	}
@@ -59,7 +60,7 @@ func NewEEBus(ski string, timeout time.Duration) (*EEBus, error) {
 		currents:  provider.NewValue[[]float64](timeout),
 	}
 
-	if err := eebus.Instance.RegisterDevice(ski, c); err != nil {
+	if err := eebus.Instance.RegisterDevice(ski, ip, c); err != nil {
 		return nil, err
 	}
 

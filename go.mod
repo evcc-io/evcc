@@ -121,7 +121,7 @@ require (
 	github.com/cstockton/go-conv v1.0.0 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
-	github.com/enbility/zeroconf/v2 v2.0.0-20240210101930-d0004078577b // indirect
+	github.com/enbility/zeroconf/v2 v2.0.0-20240827101515-f3956627c450 // indirect
 	github.com/fatih/color v1.17.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
@@ -205,3 +205,7 @@ replace github.com/grid-x/modbus => github.com/evcc-io/modbus v0.0.0-20240503125
 replace github.com/lorenzodonini/ocpp-go => github.com/evcc-io/ocpp-go v0.0.0-20240730071053-d69e53b0fce9
 
 replace modernc.org/libc => modernc.org/libc v1.58.0
+
+replace github.com/enbility/ship-go => github.com/enbility/ship-go v0.0.0-20240827103353-35c86c3ba136
+
+replace github.com/enbility/eebus-go => github.com/enbility/eebus-go v0.0.0-20240827111001-330aad85c442
