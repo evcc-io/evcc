@@ -328,7 +328,6 @@ presets:
           de: SKI (Subject Key Identifier)
           en: SKI (Subject Key Identifier)
       - name: ip
-        deprecated: true
   switchsocket:
     params:
       - name: standbypower
