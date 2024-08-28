@@ -10,6 +10,7 @@ import (
 	eebusapi "github.com/enbility/eebus-go/api"
 	ucapi "github.com/enbility/eebus-go/usecases/api"
 	"github.com/enbility/eebus-go/usecases/cem/evcc"
+	"github.com/enbility/eebus-go/usecases/cem/evcem"
 	spineapi "github.com/enbility/spine-go/api"
 	"github.com/enbility/spine-go/model"
 	"github.com/evcc-io/evcc/api"
@@ -37,6 +38,9 @@ type EEBus struct {
 	log     *util.Logger
 	lp      loadpoint.API
 	minMaxG func() (minMax, error)
+
+	limitChange     time.Time // time of last limit change
+	lastMeasurement time.Time // time of last measurement
 
 	vasVW     bool // wether the EVSE supports VW VAS with ISO15118-2
 	enabled   bool
@@ -121,6 +125,10 @@ func (c *EEBus) UseCaseEvent(device spineapi.DeviceRemoteInterface, entity spine
 
 	case evcc.EvDisconnected:
 		c.ev = nil
+
+	case evcem.DataUpdateCurrentPerPhase:
+		// do not use the timestamp of the measurement itself, as some devices don't provide it
+		c.lastMeasurement = time.Now()
 	}
 }
 
@@ -339,6 +347,7 @@ func (c *EEBus) writeCurrentLimitData(evEntity spineapi.EntityRemoteInterface, c
 	}
 
 	// set overload protection limits
+	c.limitChange = time.Now()
 	_, err = c.uc.OpEV.WriteLoadControlLimits(evEntity, limits, nil)
 
 	return err
@@ -423,6 +432,7 @@ func (c *EEBus) writeLoadControlLimitsVASVW(evEntity spineapi.EntityRemoteInterf
 	}
 
 	// set recommendation limits
+	c.limitChange = time.Now()
 	if _, err := c.uc.OscEV.WriteLoadControlLimits(evEntity, limits, nil); err != nil {
 		c.log.ERROR.Println("!! OscEV.WriteLoadControlLimits:", err)
 		return false
@@ -548,6 +558,12 @@ func (c *EEBus) currents() (float64, float64, float64, error) {
 
 	// check if the EVSE supports currents
 	if !c.uc.EvCem.IsScenarioAvailableAtEntity(evEntity, 1) {
+		return 0, 0, 0, api.ErrNotAvailable
+	}
+
+	// if there is no measurment data available within 15 seconds after the last limit change, return an error
+	if c.limitChange.After(c.lastMeasurement) && c.limitChange.Before(c.lastMeasurement.Add(15*time.Second)) {
+		c.log.WARN.Println("no updated measurement data available for at least 15s after limit change")
 		return 0, 0, 0, api.ErrNotAvailable
 	}
 
