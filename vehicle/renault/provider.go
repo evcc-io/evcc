@@ -1,10 +1,14 @@
 package renault
 
 import (
+	"net/http"
+	"slices"
+	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/provider"
+	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/vehicle/renault/kamereon"
 )
 
@@ -12,6 +16,7 @@ import (
 type Provider struct {
 	batteryG func() (kamereon.Response, error)
 	cockpitG func() (kamereon.Response, error)
+	hvacG    func() (kamereon.Response, error)
 	wakeup   func() (kamereon.Response, error)
 	position func() (kamereon.Response, error)
 	action   func(action string) (kamereon.Response, error)
@@ -25,6 +30,9 @@ func NewProvider(api *kamereon.API, accountID, vin string, alternativeWakeup boo
 		}, cache),
 		cockpitG: provider.Cached(func() (kamereon.Response, error) {
 			return api.Cockpit(accountID, vin)
+		}, cache),
+		hvacG: provider.Cached(func() (kamereon.Response, error) {
+			return api.Hvac(accountID, vin)
 		}, cache),
 		wakeup: func() (kamereon.Response, error) {
 			if alternativeWakeup {
@@ -123,6 +131,30 @@ func (v *Provider) FinishTime() (time.Time, error) {
 	}
 
 	return time.Time{}, err
+}
+
+var _ api.VehicleClimater = (*Provider)(nil)
+
+// Climater implements the api.VehicleClimater interface
+func (v *Provider) Climater() (bool, error) {
+	res, err := v.hvacG()
+
+	// Zoe Ph2, Megane e-tech
+	if err, ok := err.(request.StatusError); ok && err.HasStatus(http.StatusForbidden, http.StatusNotFound, http.StatusBadGateway) {
+		return false, api.ErrNotAvailable
+	}
+
+	if err == nil {
+		state := strings.ToLower(res.Data.Attributes.HvacStatus)
+		if state == "" {
+			return false, api.ErrNotAvailable
+		}
+
+		active := !slices.Contains([]string{"off", "false", "invalid", "error"}, state)
+		return active, nil
+	}
+
+	return false, err
 }
 
 var _ api.Resurrector = (*Provider)(nil)

@@ -177,7 +177,6 @@ func NewOCPP(id string, connector int, idtag string,
 		timeout: timeout,
 	}
 
-	// CONN
 	if cp.HasRemoteTriggerFeature {
 		if err := conn.TriggerMessageRequest(core.StatusNotificationFeatureName); err != nil {
 			c.log.DEBUG.Printf("failed triggering StatusNotification: %v", err)
