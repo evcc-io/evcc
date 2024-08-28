@@ -37,7 +37,7 @@ type CP struct {
 	connectors map[int]*Connector
 }
 
-func NewChargePoint(log *util.Logger, id string, chargingRateUnit types.ChargingRateUnitType) *CP {
+func NewChargePoint(log *util.Logger, id string) *CP {
 	return &CP{
 		log: log,
 		id:  id,
@@ -47,7 +47,7 @@ func NewChargePoint(log *util.Logger, id string, chargingRateUnit types.Charging
 
 		bootNotificationRequestC: make(chan *core.BootNotificationRequest, 1),
 
-		ChargingRateUnit:        chargingRateUnit,
+		ChargingRateUnit:        "A",
 		HasRemoteTriggerFeature: true, // assume remote trigger feature is available
 	}
 }

@@ -57,12 +57,11 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 
 		RemoteStart bool
 	}{
-		Connector:        1,
-		IdTag:            defaultIdTag,
-		MeterInterval:    10 * time.Second,
-		ConnectTimeout:   ocppConnectTimeout,
-		Timeout:          ocppTimeout,
-		ChargingRateUnit: "A",
+		Connector:      1,
+		IdTag:          defaultIdTag,
+		MeterInterval:  10 * time.Second,
+		ConnectTimeout: ocppConnectTimeout,
+		Timeout:        ocppTimeout,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -75,7 +74,7 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 	c, err := NewOCPP(cc.StationId, cc.Connector, cc.IdTag,
 		cc.MeterValues, cc.MeterInterval,
 		boot, noConfig, cc.RemoteStart,
-		cc.ConnectTimeout, cc.Timeout, cc.ChargingRateUnit)
+		cc.ConnectTimeout, cc.Timeout)
 	if err != nil {
 		return c, err
 	}
@@ -125,7 +124,6 @@ func NewOCPP(id string, connector int, idtag string,
 	meterValues string, meterInterval time.Duration,
 	boot, noConfig, remoteStart bool,
 	connectTimeout, timeout time.Duration,
-	chargingRateUnit types.ChargingRateUnitType,
 ) (*OCPP, error) {
 	unit := "ocpp"
 	if id != "" {
@@ -137,7 +135,7 @@ func NewOCPP(id string, connector int, idtag string,
 
 	cp, err := ocpp.Instance().ChargepointByID(id)
 	if err != nil {
-		cp = ocpp.NewChargePoint(log, id, chargingRateUnit)
+		cp = ocpp.NewChargePoint(log, id)
 
 		// should not error
 		if err := ocpp.Instance().Register(id, cp); err != nil {
