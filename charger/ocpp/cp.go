@@ -22,6 +22,7 @@ type CP struct {
 
 	connected bool
 	connectC  chan struct{}
+	meterC    chan struct{}
 
 	// configuration properties
 	PhaseSwitching          bool
@@ -42,9 +43,10 @@ func NewChargePoint(log *util.Logger, id string) *CP {
 		log: log,
 		id:  id,
 
-		connectC:   make(chan struct{}),
 		connectors: make(map[int]*Connector),
 
+		connectC:                 make(chan struct{}, 1),
+		meterC:                   make(chan struct{}, 1),
 		bootNotificationRequestC: make(chan *core.BootNotificationRequest, 1),
 
 		ChargingRateUnit:        "A",

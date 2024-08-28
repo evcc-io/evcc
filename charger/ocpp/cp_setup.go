@@ -143,8 +143,7 @@ func (cp *CP) Setup(meterValues string, meterInterval time.Duration, timeout tim
 			select {
 			case <-time.After(timeout):
 				cp.log.WARN.Println("meter timeout")
-			case <-cp.MeterSampled():
-				// TODO do we know what to expect?
+			case <-cp.meterC:
 			}
 		}
 	}
