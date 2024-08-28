@@ -190,7 +190,6 @@ func NewOCPP(id string, connector int, idtag string,
 
 	rc := make(chan error, 1)
 
-	// CP
 	err = ocpp.Instance().GetConfiguration(cp.ID(), func(resp *core.GetConfigurationConfirmation, err error) {
 		if err == nil {
 			for _, opt := range resp.ConfigurationKey {
@@ -274,18 +273,21 @@ func NewOCPP(id string, connector int, idtag string,
 
 	// see who's there
 	if c.hasRemoteTriggerFeature {
-		// CP
-		if err := ocpp.Instance().TriggerMessageRequest(cp.ID(), core.BootNotificationFeatureName); err != nil {
-			c.log.DEBUG.Printf("failed triggering BootNotification: %v", err)
+		if err := conn.TriggerMessageRequest(core.StatusNotificationFeatureName); err != nil {
+			c.log.DEBUG.Printf("failed triggering StatusNotification: %v", err)
 		}
 
-		select {
-		case <-time.After(timeout):
-			c.log.DEBUG.Printf("BootNotification timeout")
-		case res := <-cp.BootNotificationRequest():
-			if res != nil {
-				c.bootNotification = res
+		if err := ocpp.Instance().TriggerMessageRequest(cp.ID(), core.BootNotificationFeatureName); err == nil {
+			select {
+			case <-time.After(timeout):
+				c.log.DEBUG.Printf("BootNotification timeout")
+			case res := <-cp.BootNotificationRequest():
+				if res != nil {
+					c.bootNotification = res
+				}
 			}
+		} else {
+			c.log.DEBUG.Printf("failed triggering BootNotification: %v", err)
 		}
 	}
 
@@ -297,7 +299,6 @@ func NewOCPP(id string, connector int, idtag string,
 
 	// configure measurands
 	if meterValues != "" {
-		// CP
 		if err := c.configure(ocpp.KeyMeterValuesSampledData, meterValues); err == nil {
 			meterValuesSampledData = meterValues
 		}
@@ -307,7 +308,6 @@ func NewOCPP(id string, connector int, idtag string,
 
 	// trigger initial meter values
 	if c.hasRemoteTriggerFeature {
-		// CP
 		if err := conn.TriggerMessageRequest(core.MeterValuesFeatureName); err == nil {
 			// wait for meter values
 			select {
@@ -320,27 +320,17 @@ func NewOCPP(id string, connector int, idtag string,
 
 	// configure sample rate
 	if meterInterval > 0 {
-		// CP
 		if err := c.configure(ocpp.KeyMeterValueSampleInterval, strconv.Itoa(int(meterInterval.Seconds()))); err != nil {
 			c.log.WARN.Printf("failed configuring MeterValueSampleInterval: %v", err)
 		}
 	}
 
 	if c.hasRemoteTriggerFeature {
-		// CP
 		go conn.WatchDog(10 * time.Second)
 	}
 
 	// configure ping interval
-	// CP
 	c.configure(ocpp.KeyWebSocketPingInterval, "30")
-
-	// CONN
-	if c.hasRemoteTriggerFeature {
-		if err := conn.TriggerMessageRequest(core.StatusNotificationFeatureName); err != nil {
-			c.log.DEBUG.Printf("failed triggering StatusNotification: %v", err)
-		}
-	}
 
 	return c, conn.Initialized()
 }
