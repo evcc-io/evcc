@@ -132,7 +132,7 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 // NewOCPP creates OCPP charger
 func NewOCPP(id string, connector int, idtag string,
 	meterValues string, meterInterval time.Duration,
-	stackLevelZero bool, remoteStart bool,
+	stackLevelZero, remoteStart bool,
 	connectTimeout, timeout time.Duration,
 ) (*OCPP, error) {
 	unit := "ocpp"
