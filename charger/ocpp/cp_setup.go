@@ -82,10 +82,8 @@ func (cp *CP) Setup(meterValues string, meterInterval time.Duration, timeout tim
 
 				// vendor-specific keys
 				case KeyAlfenPlugAndChargeIdentifier:
-					if cp.idtag == defaultIdTag {
-						cp.idtag = *opt.Value
-						cp.log.DEBUG.Printf("overriding default `idTag` with Alfen-specific value: %s", cp.idtag)
-					}
+					cp.IdTag = *opt.Value
+					cp.log.DEBUG.Printf("overriding default `idTag` with Alfen-specific value: %s", cp.IdTag)
 
 				case KeyEvBoxSupportedMeasurands:
 					if meterValues == "" {
@@ -123,13 +121,13 @@ func (cp *CP) Setup(meterValues string, meterInterval time.Duration, timeout tim
 
 	// autodetect measurands
 	if meterValues == "" && meterValuesSampledDataMaxLength > 0 {
-		sampledMeasurands := cp.tryMeasurands(desiredMeasurands, KeyMeterValuesSampledData)
+		sampledMeasurands := cp.tryMeasurands(desiredMeasurands, KeyMeterValuesSampledData, timeout)
 		meterValues = strings.Join(sampledMeasurands[:min(len(sampledMeasurands), meterValuesSampledDataMaxLength)], ",")
 	}
 
 	// configure measurands
 	if meterValues != "" {
-		if err := cp.configure(KeyMeterValuesSampledData, meterValues); err == nil {
+		if err := cp.configure(KeyMeterValuesSampledData, meterValues, timeout); err == nil {
 			meterValuesSampledData = meterValues
 		}
 	}
@@ -150,13 +148,13 @@ func (cp *CP) Setup(meterValues string, meterInterval time.Duration, timeout tim
 
 	// configure sample rate
 	if meterInterval > 0 {
-		if err := cp.configure(KeyMeterValueSampleInterval, strconv.Itoa(int(meterInterval.Seconds()))); err != nil {
+		if err := cp.configure(KeyMeterValueSampleInterval, strconv.Itoa(int(meterInterval.Seconds())), timeout); err != nil {
 			cp.log.WARN.Printf("failed configuring MeterValueSampleInterval: %v", err)
 		}
 	}
 
 	// configure ping interval
-	return cp.configure(KeyWebSocketPingInterval, "30")
+	return cp.configure(KeyWebSocketPingInterval, "30", timeout)
 }
 
 // HasMeasurement checks if meterValuesSample contains given measurement
@@ -164,10 +162,10 @@ func (cp *CP) HasMeasurement(val types.Measurand) bool {
 	return hasProperty(cp.meterValuesSample, string(val))
 }
 
-func (cp *CP) tryMeasurands(measurands string, key string) []string {
+func (cp *CP) tryMeasurands(measurands string, key string, timeout time.Duration) []string {
 	var accepted []string
 	for _, m := range strings.Split(measurands, ",") {
-		if err := cp.configure(key, m); err == nil {
+		if err := cp.configure(key, m, timeout); err == nil {
 			accepted = append(accepted, m)
 		}
 	}
@@ -175,7 +173,7 @@ func (cp *CP) tryMeasurands(measurands string, key string) []string {
 }
 
 // configure updates CP configuration
-func (cp *CP) configure(key, val string) error {
+func (cp *CP) configure(key, val string, timeout time.Duration) error {
 	rc := make(chan error, 1)
 
 	err := Instance().ChangeConfiguration(cp.id, func(resp *core.ChangeConfigurationConfirmation, err error) {
@@ -186,5 +184,5 @@ func (cp *CP) configure(key, val string) error {
 		rc <- err
 	}, key, val)
 
-	return c.wait(err, rc)
+	return Wait(err, rc, timeout)
 }

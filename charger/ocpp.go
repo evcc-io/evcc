@@ -163,16 +163,17 @@ func NewOCPP(id string, connector int, idtag string,
 		return nil, err
 	}
 
+	if idtag == defaultIdTag && cp.IdTag != "" {
+		idtag = cp.IdTag
+	}
+
 	c := &OCPP{
 		log:         log,
 		cp:          cp,
 		conn:        conn,
 		idtag:       idtag,
 		remoteStart: remoteStart,
-
-		// chargingRateUnit:        types.ChargingRateUnitType(chargingRateUnit),
-		// hasRemoteTriggerFeature: true, // assume remote trigger feature is available
-		timeout: timeout,
+		timeout:     timeout,
 	}
 
 	if cp.HasRemoteTriggerFeature {

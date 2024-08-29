@@ -30,6 +30,7 @@ type CP struct {
 	ChargingRateUnit        types.ChargingRateUnitType
 	ChargingProfileId       int
 	StackLevel              int
+	IdTag                   string
 
 	meterValuesSample        string
 	bootNotificationRequestC chan *core.BootNotificationRequest
