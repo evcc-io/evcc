@@ -1,0 +1,14 @@
+template: ocpp-abb
+products:
+  - brand: ABB
+    description:
+      generic: TerraAC
+requirements:
+  evcc: ["sponsorship"]
+params:
+  - preset: ocpp
+  - name: stacklevelzero
+    default: true
+    hidden: true
+render: |
+  {{ include "ocpp" . }}
