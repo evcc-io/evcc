@@ -87,7 +87,7 @@ func (v *API) request(method, path string, params url.Values, body io.Reader) (*
 
 func (v *API) Vehicles() ([]string, error) {
 	var res struct {
-		Code    ResponseCode
+		Code    Int
 		Message string
 		Error   Error
 		Data    struct {
@@ -146,7 +146,7 @@ func (v *API) UpdateSession(vin string) error {
 	}
 
 	var res struct {
-		Code    ResponseCode
+		Code    Int
 		Message string
 		Error   Error
 	}
@@ -161,7 +161,7 @@ func (v *API) Status(vin string) (VehicleStatus, error) {
 	}
 
 	var res struct {
-		Code    ResponseCode
+		Code    Int
 		Message string
 		Error   Error
 		Data    struct {
