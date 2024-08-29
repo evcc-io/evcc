@@ -7,8 +7,6 @@ requirements:
   evcc: ["sponsorship"]
 params:
   - preset: ocpp
-  - name: stacklevelzero
-    default: true
-    hidden: true
 render: |
   {{ include "ocpp" . }}
+  stacklevelzero: true
