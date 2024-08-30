@@ -16,6 +16,7 @@ requirements:
       Requires [`Software 2.x`](https://github.com/openWB/core).
       The following changes are necessary under the 'Einstellungen' tab:
       * Steuerungsmodus: `secondary`
+      
       * Steuerung über Modbus als secondary: `An`
 params:
   - name: modbus
