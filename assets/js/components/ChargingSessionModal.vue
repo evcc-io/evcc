@@ -68,7 +68,7 @@
 										{{ $t("sessions.energy") }}
 									</th>
 									<td>
-										{{ fmtWh(chargedEnergy, chargedEnergy >= 1e3) }}
+										{{ fmtWh(chargedEnergy, chargedEnergy >= 1e3 ? WATT_FORMAT.KW : WATT_FORMAT.AUTO) }}
 										<div v-if="session.chargeDuration">
 											{{ fmtDurationNs(session.chargeDuration) }}
 											(~{{ fmtW(avgPower) }})

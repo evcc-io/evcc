@@ -342,7 +342,7 @@ export default {
 		},
 		fmtEnergy(value) {
 			const inKw = value == 0 || value >= 1000;
-			return this.fmtWh(value, inKw);
+			return this.fmtWh(value, inKw ? WATT_FORMAT.KW : WATT_FORMAT.AUTO);
 		},
 		openSettingsModal() {
 			const modal = Modal.getOrCreateInstance(
