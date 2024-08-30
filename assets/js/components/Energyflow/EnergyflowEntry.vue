@@ -38,7 +38,7 @@ import "@h2d2/shopicons/es/regular/sun";
 import "@h2d2/shopicons/es/regular/home";
 import Tooltip from "bootstrap/js/dist/tooltip";
 import BatteryIcon from "./BatteryIcon.vue";
-import formatter, { WATT_FORMAT } from "../../mixins/formatter";
+import formatter from "../../mixins/formatter";
 import AnimatedNumber from "../AnimatedNumber.vue";
 import VehicleIcon from "../VehicleIcon";
 
