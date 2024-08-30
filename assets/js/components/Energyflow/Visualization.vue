@@ -168,7 +168,7 @@ export default {
 				return "";
 			}
 			const withUnit = this.enoughSpaceForUnit(watt);
-			return this.fmtW(watt, this.powerUnit);
+			return this.fmtW(watt, this.powerUnit, withUnit);
 		},
 		powerLabelAvailableSpace(power) {
 			if (this.totalAdjusted === 0) return 0;

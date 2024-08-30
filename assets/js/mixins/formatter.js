@@ -64,7 +64,7 @@ export default {
         unit = " mW";
       }
       if (digits === undefined) {
-        digits = (WATT_FORMAT.KW == format || WATT_FORMAT.MW == format) ? 1 : 0;
+        digits = WATT_FORMAT.KW == format || WATT_FORMAT.MW == format ? 1 : 0;
       }
       return `${new Intl.NumberFormat(this.$i18n?.locale, {
         style: "decimal",
