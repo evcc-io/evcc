@@ -9,4 +9,5 @@ params:
   - preset: ocpp
 render: |
   {{ include "ocpp" . }}
+  connecttimeout: 30m
   stacklevelzero: true
