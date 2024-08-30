@@ -44,7 +44,7 @@ export default {
     fmtW: function (watt = 0, format = WATT_FORMAT.AUTO, withUnit = true, digits) {
       let unit = "";
       let value = -1;
-      if (WATT_FORMAT.AUTO == format) {
+      if (WATT_FORMAT.AUTO === format) {
         if (watt >= 1_000_000) {
           format = WATT_FORMAT.MW;
         } else if (watt >= 1000) {
@@ -53,10 +53,10 @@ export default {
           format = WATT_FORMAT.WATT;
         }
       }
-      if (WATT_FORMAT.WATT == format) {
+      if (WATT_FORMAT.WATT === format) {
         value = watt;
         unit = " W";
-      } else if (WATT_FORMAT.KW == format) {
+      } else if (WATT_FORMAT.KW === format) {
         value = watt / 1000;
         unit = " kW";
       } else {
@@ -64,7 +64,7 @@ export default {
         unit = " mW";
       }
       if (digits === undefined) {
-        digits = WATT_FORMAT.KW == format || WATT_FORMAT.MW == format ? 1 : 0;
+        digits = WATT_FORMAT.KW === format || WATT_FORMAT.MW === format ? 1 : 0;
       }
       return `${new Intl.NumberFormat(this.$i18n?.locale, {
         style: "decimal",
@@ -73,6 +73,7 @@ export default {
       }).format(value)}${withUnit ? unit : ""}`;
     },
     fmtWh: function (watt, format = WATT_FORMAT.AUTO, withUnit = true, digits) {
+      console.log("format " + format);
       return this.fmtW(watt, format, withUnit, digits) + (withUnit ? "h" : "");
     },
     fmtNumber: function (number, decimals, unit) {
