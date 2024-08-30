@@ -294,9 +294,9 @@ export default {
 		},
 		powerUnit: function () {
 			const watt = Math.max(this.gridImport, this.selfPv, this.selfBattery, this.pvExport);
-			if (watt > 1_000_000) {
+			if (watt >= 1_000_000) {
 				return WATT_FORMAT.MW;
-			} else if (watt > 1000) {
+			} else if (watt >= 1000) {
 				return WATT_FORMAT.KW;
 			} else {
 				return WATT_FORMAT.WATT;
