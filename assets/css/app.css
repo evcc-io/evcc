@@ -110,6 +110,7 @@ html.no-transitions * {
 body {
 	background-color: var(--evcc-background);
 	color: var(--evcc-default-text);
+	overflow-y: scroll;
 }
 
 h1,
