@@ -112,7 +112,7 @@ export default {
 		pvProduction: { type: Number, default: 0 },
 		homePower: { type: Number, default: 0 },
 		batterySoc: { type: Number, default: 0 },
-		powerInKw: { type: Boolean, default: false },
+		powerUnit: { type: WATT_FORMAT, default: WATT_FORMAT.KW },
 	},
 	data: function () {
 		return { width: 0 };
@@ -168,7 +168,7 @@ export default {
 				return "";
 			}
 			const withUnit = this.enoughSpaceForUnit(watt);
-			return this.fmtW(watt, this.powerInKw ? WATT_FORMAT.KW : WATT_FORMAT.AUTO, withUnit);
+			return this.fmtW(watt, this.powerUnit);
 		},
 		powerLabelAvailableSpace(power) {
 			if (this.totalAdjusted === 0) return 0;

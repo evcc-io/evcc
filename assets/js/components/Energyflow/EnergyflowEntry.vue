@@ -52,7 +52,7 @@ export default {
 		vehicleIcons: { type: Array },
 		power: { type: Number },
 		powerTooltip: { type: Array },
-		powerInKw: { type: Boolean },
+		powerUnit: { type: WATT_FORMAT },
 		soc: { type: Number },
 		details: { type: Number },
 		detailsFmt: { type: Function },
@@ -98,7 +98,7 @@ export default {
 	},
 	methods: {
 		kw: function (watt) {
-			return this.fmtW(watt, this.powerInKw ? WATT_FORMAT.KW : WATT_FORMAT.AUTO);
+			return this.fmtW(watt, this.powerUnit);
 		},
 		updatePowerTooltip() {
 			this.powerTooltipInstance = this.updateTooltip(
