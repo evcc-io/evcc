@@ -112,7 +112,7 @@ export default {
 		pvProduction: { type: Number, default: 0 },
 		homePower: { type: Number, default: 0 },
 		batterySoc: { type: Number, default: 0 },
-		powerUnit: { type: WATT_FORMAT, default: WATT_FORMAT.WATT },
+		powerUnit: { type: String, default: WATT_FORMAT.KW },
 	},
 	data: function () {
 		return { width: 0 };

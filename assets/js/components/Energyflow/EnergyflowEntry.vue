@@ -52,7 +52,7 @@ export default {
 		vehicleIcons: { type: Array },
 		power: { type: Number },
 		powerTooltip: { type: Array },
-		powerUnit: { type: WATT_FORMAT },
+		powerUnit: { type: String },
 		soc: { type: Number },
 		details: { type: Number },
 		detailsFmt: { type: Function },
