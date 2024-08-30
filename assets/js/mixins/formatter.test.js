@@ -41,9 +41,9 @@ describe("fmtW", () => {
     expect(fmt.fmtW(12345, WATT_FORMAT.KW, true, 0)).eq("12 kW");
     expect(fmt.fmtW(12345, WATT_FORMAT.KW, true, 1)).eq("12,3 kW");
     expect(fmt.fmtW(12345, WATT_FORMAT.KW, true, 2)).eq("12,35 kW");
-    expect(fmt.fmtW(12345, WATT_FORMAT.WATT, true, 0)).eq("12.345 kW");
-    expect(fmt.fmtW(12345, WATT_FORMAT.WATT, true, 1)).eq("12.345,0 kW");
-    expect(fmt.fmtW(12345, WATT_FORMAT.WATT, true, 2)).eq("12.345,00 kW");
+    expect(fmt.fmtW(12345, WATT_FORMAT.WATT, true, 0)).eq("12.345 W");
+    expect(fmt.fmtW(12345, WATT_FORMAT.WATT, true, 1)).eq("12.345,0 W");
+    expect(fmt.fmtW(12345, WATT_FORMAT.WATT, true, 2)).eq("12.345,00 W");
   });
 });
 
@@ -78,9 +78,9 @@ describe("fmtWh", () => {
     expect(fmt.fmtWh(12345, WATT_FORMAT.KW, true, 0)).eq("12 kWh");
     expect(fmt.fmtWh(12345, WATT_FORMAT.KW, true, 1)).eq("12,3 kWh");
     expect(fmt.fmtWh(12345, WATT_FORMAT.KW, true, 2)).eq("12,35 kWh");
-    expect(fmt.fmtWh(12345, WATT_FORMAT.WATT, true, 0)).eq("12.345 kWh");
-    expect(fmt.fmtWh(12345, WATT_FORMAT.WATT, true, 1)).eq("12.345,0 kWh");
-    expect(fmt.fmtWh(12345, WATT_FORMAT.WATT, true, 2)).eq("12.345,00 kWh");
+    expect(fmt.fmtWh(12345, WATT_FORMAT.WATT, true, 0)).eq("12.345 Wh");
+    expect(fmt.fmtWh(12345, WATT_FORMAT.WATT, true, 1)).eq("12.345,0 Wh");
+    expect(fmt.fmtWh(12345, WATT_FORMAT.WATT, true, 2)).eq("12.345,00 Wh");
   });
 });
 
