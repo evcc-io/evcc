@@ -9,14 +9,14 @@ requirements:
     de: |
       Erfordert [`Software 2.x`](https://github.com/openWB/core).
       Folgende Änderungen sind unter dem `Einstellungen`-Reiter erforderlich:
-      * Steuerungsmodus: `secondary`
 
+      * Steuerungsmodus: `secondary`
       * Steuerung über Modbus als secondary: `An`
     en: |
       Requires [`Software 2.x`](https://github.com/openWB/core).
       The following changes are necessary under the 'Einstellungen' tab:
+
       * Steuerungsmodus: `secondary`
-      
       * Steuerung über Modbus als secondary: `An`
 params:
   - name: modbus
