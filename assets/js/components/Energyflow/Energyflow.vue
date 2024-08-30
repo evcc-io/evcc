@@ -194,7 +194,7 @@ import "@h2d2/shopicons/es/filled/square";
 import Modal from "bootstrap/js/dist/modal";
 import Visualization from "./Visualization.vue";
 import EnergyflowEntry from "./EnergyflowEntry.vue";
-import formatter from "../../mixins/formatter";
+import formatter, { WATT_FORMAT } from "../../mixins/formatter";
 import AnimatedNumber from "../AnimatedNumber.vue";
 import settings from "../../settings";
 import { CO2_TYPE } from "../../units";
@@ -308,7 +308,7 @@ export default {
 			if (!Array.isArray(this.pv) || this.pv.length <= 1) {
 				return;
 			}
-			return this.pv.map(({ power }) => this.fmtKw(power, this.powerInKw));
+			return this.pv.map(({ power }) => this.fmtW(power, this.powerInKw ? WATT_FORMAT.KW : WATT_FORMAT.AUTO));
 		},
 		batteryFmt() {
 			return (soc) => this.fmtPercentage(soc, 0);
@@ -386,7 +386,7 @@ export default {
 			return this.fmtPricePerKWh(value, this.currency, true);
 		},
 		kw: function (watt) {
-			return this.fmtKw(watt, this.powerInKw);
+			return this.fmtW(watt, this.powerInKw ? WATT_FORMAT.KW : WATT_FORMAT.AUTO);
 		},
 		toggleDetails: function () {
 			this.updateHeight();

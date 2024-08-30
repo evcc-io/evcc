@@ -73,12 +73,12 @@
 										unit="%"
 										:sub1="
 											$t('footer.savings.percentSelf', {
-												self: fmtKw(solarCharged * 1000, true, false, 0),
+												self: fmtW(solarCharged * 1000, WATT_FORMAT.KW, false, 0),
 											})
 										"
 										:sub2="
 											$t('footer.savings.percentGrid', {
-												grid: fmtKw(gridCharged * 1000, true, false, 0),
+												grid: fmtW(gridCharged * 1000, WATT_FORMAT.KW, false, 0),
 											})
 										"
 									/>
@@ -193,7 +193,7 @@
 
 <script>
 import Modal from "bootstrap/js/dist/modal";
-import formatter from "../mixins/formatter";
+import formatter, { WATT_FORMAT } from "../mixins/formatter";
 import Sponsor from "./Sponsor.vue";
 import SavingsTile from "./SavingsTile.vue";
 import LiveCommunity from "./LiveCommunity.vue";
