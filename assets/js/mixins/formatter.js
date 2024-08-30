@@ -73,7 +73,6 @@ export default {
       }).format(value)}${withUnit ? unit : ""}`;
     },
     fmtWh: function (watt, format = WATT_FORMAT.AUTO, withUnit = true, digits) {
-      console.log("format " + format);
       return this.fmtW(watt, format, withUnit, digits) + (withUnit ? "h" : "");
     },
     fmtNumber: function (number, decimals, unit) {
