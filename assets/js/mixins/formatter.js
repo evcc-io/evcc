@@ -41,7 +41,7 @@ export default {
       val = Math.abs(val);
       return val >= this.fmtLimit ? this.round(val / 1e3, this.fmtDigits) : this.round(val, 0);
     },
-    fmtW: function (watt = 0, format = WATT_FORMAT.AUTO, withUnit = true, digits) {
+    fmtW: function (watt = 0, format = WATT_FORMAT.KW, withUnit = true, digits) {
       let unit = "";
       let value = -1;
       if (WATT_FORMAT.AUTO === format) {
@@ -72,7 +72,7 @@ export default {
         maximumFractionDigits: digits,
       }).format(value)}${withUnit ? unit : ""}`;
     },
-    fmtWh: function (watt, format = WATT_FORMAT.AUTO, withUnit = true, digits) {
+    fmtWh: function (watt, format = WATT_FORMAT.KW, withUnit = true, digits) {
       return this.fmtW(watt, format, withUnit, digits) + (withUnit ? "h" : "");
     },
     fmtNumber: function (number, decimals, unit) {
