@@ -171,7 +171,7 @@ func NewServer(other Config) (*EEBus, error) {
 	return c, nil
 }
 
-func (c *EEBus) RegisterDevice(ski string, device Device) error {
+func (c *EEBus) RegisterDevice(ski, ip string, device Device) error {
 	ski = shiputil.NormalizeSKI(ski)
 	c.log.TRACE.Printf("registering ski: %s", ski)
 
@@ -179,6 +179,9 @@ func (c *EEBus) RegisterDevice(ski string, device Device) error {
 		return errors.New("device ski can not be identical to host ski")
 	}
 
+	if len(ip) > 0 {
+		c.service.RemoteServiceForSKI(ski).SetIPv4(ip)
+	}
 	c.service.RegisterRemoteSKI(ski)
 
 	c.mux.Lock()

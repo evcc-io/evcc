@@ -27,9 +27,10 @@ type OCPP struct {
 	enabled bool
 	current float64
 
-	timeout     time.Duration
-	remoteStart bool
-	lp          loadpoint.API
+	timeout        time.Duration
+	remoteStart    bool
+	stackLevelZero bool
+	lp             loadpoint.API
 }
 
 const defaultIdTag = "evcc" // RemoteStartTransaction only
@@ -55,7 +56,8 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 		AutoStart        bool                       // TODO deprecated
 		NoStop           bool                       // TODO deprecated
 
-		RemoteStart bool
+		StackLevelZero *bool
+		RemoteStart    bool
 	}{
 		Connector:      1,
 		IdTag:          defaultIdTag,
@@ -68,12 +70,11 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	boot := cc.BootNotification != nil && *cc.BootNotification
-	noConfig := cc.GetConfiguration != nil && !*cc.GetConfiguration
+	stackLevelZero := cc.StackLevelZero != nil && *cc.StackLevelZero
 
 	c, err := NewOCPP(cc.StationId, cc.Connector, cc.IdTag,
 		cc.MeterValues, cc.MeterInterval,
-		boot, noConfig, cc.RemoteStart,
+		stackLevelZero, cc.RemoteStart,
 		cc.ConnectTimeout, cc.Timeout)
 	if err != nil {
 		return c, err
@@ -122,7 +123,7 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 // NewOCPP creates OCPP charger
 func NewOCPP(id string, connector int, idtag string,
 	meterValues string, meterInterval time.Duration,
-	boot, noConfig, remoteStart bool,
+	stackLevelZero, remoteStart bool,
 	connectTimeout, timeout time.Duration,
 ) (*OCPP, error) {
 	unit := "ocpp"
@@ -168,12 +169,13 @@ func NewOCPP(id string, connector int, idtag string,
 	}
 
 	c := &OCPP{
-		log:         log,
-		cp:          cp,
-		conn:        conn,
-		idtag:       idtag,
-		remoteStart: remoteStart,
-		timeout:     timeout,
+		log:            log,
+		cp:             cp,
+		conn:           conn,
+		idtag:          idtag,
+		remoteStart:    remoteStart,
+		stackLevelZero: stackLevelZero,
+		timeout:        timeout,
 	}
 
 	if cp.HasRemoteTriggerFeature {
@@ -406,9 +408,8 @@ func (c *OCPP) createTxDefaultChargingProfile(current float64) *types.ChargingPr
 		period.NumberPhases = &phases
 	}
 
-	return &types.ChargingProfile{
+	res := &types.ChargingProfile{
 		ChargingProfileId:      c.cp.ChargingProfileId,
-		StackLevel:             c.cp.StackLevel,
 		ChargingProfilePurpose: types.ChargingProfilePurposeTxDefaultProfile,
 		ChargingProfileKind:    types.ChargingProfileKindAbsolute,
 		ChargingSchedule: &types.ChargingSchedule{
@@ -417,6 +418,12 @@ func (c *OCPP) createTxDefaultChargingProfile(current float64) *types.ChargingPr
 			ChargingSchedulePeriod: []types.ChargingSchedulePeriod{period},
 		},
 	}
+
+	if !c.stackLevelZero {
+		res.StackLevel = c.cp.StackLevel
+	}
+
+	return res
 }
 
 // MaxCurrent implements the api.Charger interface

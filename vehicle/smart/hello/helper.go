@@ -52,7 +52,7 @@ x-api-signature-version:1.0
 	return nonce, ts, sign, nil
 }
 
-func responseError(err error, code ResponseCode, msg string, errS Error) error {
+func responseError(err error, code Int, msg string, errS Error) error {
 	var body error
 
 	if code != 0 && code != ResponseOK {
