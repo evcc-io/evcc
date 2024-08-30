@@ -143,9 +143,6 @@ func NewOCPP(id string, connector int, idtag string,
 			return nil, err
 		}
 
-		// fix timing issue in EVBox when switching OCPP protocol version
-		time.Sleep(time.Second)
-
 		log.DEBUG.Printf("waiting for chargepoint: %v", connectTimeout)
 
 		select {
