@@ -15,13 +15,13 @@ make lint-ui
 
 #### Changing device templates
 
-evcc supports a massive amount of different devices. To keep our documentation and website in sync with the latest software the core project (this repo) generates meta-data that's pushed to the `docs` and `evcc.io` repository. Make sure to update this meta-data every time you make changes to a templates.
+evcc supports a massive amount of different devices. To keep our documentation and website in sync with the latest software the core project (this repo) generates meta-data that's pushed to the `docs` and `evcc.io` repository.
+
+You can verify the generated meta-data by running:
 
 ```sh
 make docs
 ```
-
-If you miss one of the above steps Gitub Actions will likely trigger a **Porcelain** error.
 
 ### Building from source
 
