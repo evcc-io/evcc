@@ -54,10 +54,6 @@ func (conn *Connector) TestClock(clock clock.Clock) {
 	conn.clock = clock
 }
 
-func (conn *Connector) ChargePoint() *CP {
-	return conn.cp
-}
-
 func (conn *Connector) ID() int {
 	return conn.id
 }

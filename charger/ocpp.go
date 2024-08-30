@@ -319,7 +319,7 @@ func (c *OCPP) Enable(enable bool) error {
 
 func (c *OCPP) initTransaction() error {
 	rc := make(chan error, 1)
-	err := ocpp.Instance().RemoteStartTransaction(c.conn.ChargePoint().ID(), func(resp *core.RemoteStartTransactionConfirmation, err error) {
+	err := ocpp.Instance().RemoteStartTransaction(c.cp.ID(), func(resp *core.RemoteStartTransactionConfirmation, err error) {
 		if err == nil && resp != nil && resp.Status != types.RemoteStartStopStatusAccepted {
 			err = errors.New(string(resp.Status))
 		}
@@ -335,7 +335,7 @@ func (c *OCPP) initTransaction() error {
 
 func (c *OCPP) setChargingProfile(profile *types.ChargingProfile) error {
 	rc := make(chan error, 1)
-	err := ocpp.Instance().SetChargingProfile(c.conn.ChargePoint().ID(), func(resp *smartcharging.SetChargingProfileConfirmation, err error) {
+	err := ocpp.Instance().SetChargingProfile(c.cp.ID(), func(resp *smartcharging.SetChargingProfileConfirmation, err error) {
 		if err == nil && resp != nil && resp.Status != smartcharging.ChargingProfileStatusAccepted {
 			err = errors.New(string(resp.Status))
 		}
@@ -363,7 +363,7 @@ func (c *OCPP) getScheduleLimit() (float64, error) {
 	var limit float64
 
 	rc := make(chan error, 1)
-	err := ocpp.Instance().GetCompositeSchedule(c.conn.ChargePoint().ID(), func(resp *smartcharging.GetCompositeScheduleConfirmation, err error) {
+	err := ocpp.Instance().GetCompositeSchedule(c.cp.ID(), func(resp *smartcharging.GetCompositeScheduleConfirmation, err error) {
 		if err == nil && resp != nil && resp.Status != smartcharging.GetCompositeScheduleStatusAccepted {
 			err = errors.New(string(resp.Status))
 		}
@@ -457,7 +457,7 @@ var _ api.Diagnosis = (*OCPP)(nil)
 
 // Diagnose implements the api.Diagnosis interface
 func (c *OCPP) Diagnose() {
-	fmt.Printf("\tCharge Point ID: %s\n", c.conn.ChargePoint().ID())
+	fmt.Printf("\tCharge Point ID: %s\n", c.cp.ID())
 
 	if c.cp.BootNotificationResult != nil {
 		fmt.Printf("\tBoot Notification:\n")
@@ -469,7 +469,7 @@ func (c *OCPP) Diagnose() {
 
 	fmt.Printf("\tConfiguration:\n")
 	rc := make(chan error, 1)
-	err := ocpp.Instance().GetConfiguration(c.conn.ChargePoint().ID(), func(resp *core.GetConfigurationConfirmation, err error) {
+	err := ocpp.Instance().GetConfiguration(c.cp.ID(), func(resp *core.GetConfigurationConfirmation, err error) {
 		if err == nil {
 			// sort configuration keys for printing
 			slices.SortFunc(resp.ConfigurationKey, func(i, j core.ConfigurationKey) int {
