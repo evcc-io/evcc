@@ -17,7 +17,7 @@ const ENERGY_PRICE_IN_SUBUNIT = {
 export const WATT_FORMAT = Object.freeze({
   WATT: "W",
   KW: "kW",
-  MW: "mW",
+  MW: "MW",
   AUTO: "",
 });
 
@@ -42,8 +42,6 @@ export default {
       return val >= this.fmtLimit ? this.round(val / 1e3, this.fmtDigits) : this.round(val, 0);
     },
     fmtW: function (watt = 0, format = WATT_FORMAT.KW, withUnit = true, digits) {
-      let unit = "";
-      let value = -1;
       if (WATT_FORMAT.AUTO === format) {
         if (watt >= 1_000_000) {
           format = WATT_FORMAT.MW;
@@ -53,15 +51,10 @@ export default {
           format = WATT_FORMAT.WATT;
         }
       }
-      if (WATT_FORMAT.WATT === format) {
-        value = watt;
-        unit = " W";
-      } else if (WATT_FORMAT.KW === format) {
-        value = watt / 1000;
-        unit = " kW";
-      } else {
-        value = watt / 1_000_000;
-        unit = " mW";
+      if (WATT_FORMAT.KW === format) {
+        watt = watt / 1000;
+      } else if (WATT_FORMAT.MW === format) {
+        watt = watt / 1_000_000;
       }
       if (digits === undefined) {
         digits = WATT_FORMAT.KW === format || WATT_FORMAT.MW === format ? 1 : 0;
@@ -70,7 +63,7 @@ export default {
         style: "decimal",
         minimumFractionDigits: digits,
         maximumFractionDigits: digits,
-      }).format(value)}${withUnit ? unit : ""}`;
+      }).format(watt)}${withUnit ? ` ${format}` : ""}`;
     },
     fmtWh: function (watt, format = WATT_FORMAT.KW, withUnit = true, digits) {
       return this.fmtW(watt, format, withUnit, digits) + (withUnit ? "h" : "");
