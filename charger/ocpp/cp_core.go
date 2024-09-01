@@ -91,6 +91,12 @@ func (cp *CP) MeterValues(request *core.MeterValuesRequest) (*core.MeterValuesCo
 		return nil, ErrInvalidRequest
 	}
 
+	// signal received
+	select {
+	case cp.meterC <- struct{}{}:
+	default:
+	}
+
 	conn := cp.connectorByID(request.ConnectorId)
 	if conn == nil {
 		return nil, ErrInvalidConnector
