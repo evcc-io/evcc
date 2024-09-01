@@ -1,6 +1,10 @@
 package ocpp
 
+import "time"
+
 const (
+	Timeout = 30 * time.Second
+
 	// Core profile keys
 	KeyMeterValueSampleInterval        = "MeterValueSampleInterval"
 	KeyMeterValuesSampledData          = "MeterValuesSampledData"
