@@ -285,8 +285,7 @@ export default {
 		},
 		loadpointsPower: function () {
 			return this.loadpointsCompact.reduce((sum, lp) => {
-				sum += lp.power || 0;
-				return sum;
+				return sum + (lp.power || 0);
 			}, 0);
 		},
 		pvExport: function () {
