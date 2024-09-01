@@ -211,8 +211,16 @@ func (c *Circuit) updateMeters() error {
 	}
 
 	if phaseMeter, ok := c.meter.(api.PhaseCurrents); ok {
-		if l1, l2, l3, err := phaseMeter.Currents(); err == nil {
-			c.current = max(l1, l2, l3)
+		var p1, p2, p3 float64
+		if phaseMeter, ok := c.meter.(api.PhasePowers); ok {
+			var err error // phases needed for signed currents
+			if p1, p2, p3, err = phaseMeter.Powers(); err != nil {
+				return fmt.Errorf("circuit powers: %w", err)
+			}
+		}
+
+		if i1, i2, i3, err := phaseMeter.Currents(); err == nil {
+			c.current = max(util.SignFromPower(i1, p1), util.SignFromPower(i2, p2), util.SignFromPower(i3, p3))
 			c.currentUpdated = time.Now()
 		} else {
 			c.overloadOnError(c.currentUpdated, &c.current)

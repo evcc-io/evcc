@@ -12,11 +12,11 @@ let state = {
 
 const stateApiMiddleware = (req, res, next) => {
   if (req.method === "POST" && req.originalUrl === "/api/state") {
-    console.log("[simulator] POST /api/state", req.body);
+    console.log("[simulator] POST /api/state");
     state = req.body;
     res.end();
   } else if (req.method === "POST" && req.originalUrl === "/api/shutdown") {
-    console.log("[simulator] POST /api/shutdown", req.body);
+    console.log("[simulator] POST /api/shutdown");
     res.end();
     process.exit();
   } else if (req.originalUrl === "/api/state") {
@@ -35,7 +35,7 @@ const openemsMiddleware = (req, res, next) => {
   };
   const endpoint = endpoints[req.originalUrl];
   if (req.method === "GET" && endpoint) {
-    console.log("[simulator] GET", req.originalUrl, endpoint);
+    console.log("[simulator] GET", req.originalUrl);
     res.end(JSON.stringify(endpoint));
   } else {
     next();

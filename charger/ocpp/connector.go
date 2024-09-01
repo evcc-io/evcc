@@ -24,7 +24,6 @@ type Connector struct {
 
 	status  *core.StatusNotificationRequest
 	statusC chan struct{}
-	meterC  chan struct{}
 
 	meterUpdated time.Time
 	measurements map[types.Measurand]types.SampledValue
@@ -42,7 +41,6 @@ func NewConnector(log *util.Logger, id int, cp *CP, timeout time.Duration) (*Con
 		id:           id,
 		clock:        clock.New(),
 		statusC:      make(chan struct{}, 1),
-		meterC:       make(chan struct{}, 1),
 		measurements: make(map[types.Measurand]types.SampledValue),
 		timeout:      timeout,
 	}
@@ -54,14 +52,6 @@ func NewConnector(log *util.Logger, id int, cp *CP, timeout time.Duration) (*Con
 
 func (conn *Connector) TestClock(clock clock.Clock) {
 	conn.clock = clock
-}
-
-func (conn *Connector) MeterSampled() <-chan struct{} {
-	return conn.meterC
-}
-
-func (conn *Connector) ChargePoint() *CP {
-	return conn.cp
 }
 
 func (conn *Connector) ID() int {
@@ -100,11 +90,15 @@ func (conn *Connector) WatchDog(timeout time.Duration) {
 
 // Initialized waits for initial charge point status notification
 func (conn *Connector) Initialized() error {
+	trigger := time.After(conn.timeout / 2)
 	timeout := time.After(conn.timeout)
 	for {
 		select {
 		case <-conn.statusC:
 			return nil
+
+		case <-trigger: // try to trigger StatusNotification again as last resort
+			conn.TriggerMessageRequest(core.StatusNotificationFeatureName)
 
 		case <-timeout:
 			return api.ErrTimeout
