@@ -39,8 +39,8 @@ type EEBus struct {
 	lp      loadpoint.API
 	minMaxG func() (minMax, error)
 
-	limitChange     time.Time // time of last limit change
-	lastMeasurement time.Time // time of last measurement
+	limitUpdated    time.Time // time of last limit change
+	currentsUpdated time.Time // time of last measurement
 
 	vasVW     bool // wether the EVSE supports VW VAS with ISO15118-2
 	enabled   bool
@@ -128,7 +128,7 @@ func (c *EEBus) UseCaseEvent(device spineapi.DeviceRemoteInterface, entity spine
 
 	case evcem.DataUpdateCurrentPerPhase:
 		// do not use the timestamp of the measurement itself, as some devices don't provide it
-		c.lastMeasurement = time.Now()
+		c.currentsUpdated = time.Now()
 	}
 }
 
@@ -338,6 +338,7 @@ func (c *EEBus) writeCurrentLimitData(evEntity spineapi.EntityRemoteInterface, c
 	// if VAS VW is available, limits are completely covered by it
 	// this way evcc can fully control the charging behaviour
 	if c.writeLoadControlLimitsVASVW(evEntity, limits) {
+		c.limitUpdated = time.Now()
 		return nil
 	}
 
@@ -347,8 +348,10 @@ func (c *EEBus) writeCurrentLimitData(evEntity spineapi.EntityRemoteInterface, c
 	}
 
 	// set overload protection limits
-	c.limitChange = time.Now()
 	_, err = c.uc.OpEV.WriteLoadControlLimits(evEntity, limits, nil)
+	if err == nil {
+		c.limitUpdated = time.Now()
+	}
 
 	return err
 }
@@ -432,7 +435,6 @@ func (c *EEBus) writeLoadControlLimitsVASVW(evEntity spineapi.EntityRemoteInterf
 	}
 
 	// set recommendation limits
-	c.limitChange = time.Now()
 	if _, err := c.uc.OscEV.WriteLoadControlLimits(evEntity, limits, nil); err != nil {
 		c.log.ERROR.Println("!! OscEV.WriteLoadControlLimits:", err)
 		return false
@@ -561,18 +563,18 @@ func (c *EEBus) currents() (float64, float64, float64, error) {
 		return 0, 0, 0, api.ErrNotAvailable
 	}
 
-	// if there is no measurment data available within 15 seconds after the last limit change, return an error
-	if c.limitChange.After(c.lastMeasurement) && c.limitChange.Before(c.lastMeasurement.Add(15*time.Second)) {
-		c.log.WARN.Println("no updated measurement data available for at least 15s after limit change")
+	c.mux.Lock()
+	ts := c.currentsUpdated
+	c.mux.Unlock()
+
+	// if there is no measurement data available within 15 seconds after the last limit change, return an error
+	if d := ts.Sub(c.limitUpdated); d < 0 || d > 15*time.Second {
 		return 0, 0, 0, api.ErrNotAvailable
 	}
 
 	res, err := c.uc.EvCem.CurrentPerPhase(evEntity)
 	if err != nil {
-		if err == eebusapi.ErrDataNotAvailable {
-			err = api.ErrNotAvailable
-		}
-		return 0, 0, 0, err
+		return 0, 0, 0, eebus.WrapError(err)
 	}
 
 	// fill phases
@@ -634,10 +636,7 @@ func (c *EEBus) minMax() (minMax, error) {
 
 	minLimits, maxLimits, _, err := c.uc.OpEV.CurrentLimits(evEntity)
 	if err != nil {
-		if err == eebusapi.ErrDataNotAvailable {
-			err = api.ErrNotAvailable
-		}
-		return zero, err
+		return zero, eebus.WrapError(err)
 	}
 
 	if len(minLimits) == 0 || len(maxLimits) == 0 {
