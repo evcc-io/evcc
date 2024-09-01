@@ -338,11 +338,11 @@ export default {
 		},
 		fmtPower(value) {
 			const inKw = value == 0 || value >= 1000;
-			return this.fmtW(value, inKw ? POWER_UNIT.POWER_KW : POWER_UNIT.POWER_AUTO);
+			return this.fmtW(value, inKw ? POWER_UNIT.KW : POWER_UNIT.AUTO);
 		},
 		fmtEnergy(value) {
 			const inKw = value == 0 || value >= 1000;
-			return this.fmtWh(value, inKw ? POWER_UNIT.POWER_KW : POWER_UNIT.POWER_AUTO);
+			return this.fmtWh(value, inKw ? POWER_UNIT.KW : POWER_UNIT.AUTO);
 		},
 		openSettingsModal() {
 			const modal = Modal.getOrCreateInstance(

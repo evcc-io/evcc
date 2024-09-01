@@ -299,7 +299,7 @@ export default {
 					unit: "kWh",
 					total: this.chargedEnergy,
 					value: (session) => session.chargedEnergy,
-					format: (value) => this.fmtWh(value * 1e3, POWER_UNIT.POWER_KW, false),
+					format: (value) => this.fmtWh(value * 1e3, POWER_UNIT.KW, false),
 				},
 				{
 					name: "solar",
@@ -347,7 +347,7 @@ export default {
 						return null;
 					},
 					format: (value) =>
-						value ? this.fmtW(value * 1e3, POWER_UNIT.POWER_KW, false, 1) : undefined,
+						value ? this.fmtW(value * 1e3, POWER_UNIT.KW, false, 1) : undefined,
 				},
 			];
 			// only columns with values are shown

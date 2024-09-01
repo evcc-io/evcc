@@ -365,11 +365,11 @@ export default {
 					const multipleBatteries = this.battery.length > 1;
 					const energy = this.fmtWh(
 						(capacity / 100) * soc * 1e3,
-						POWER_UNIT.POWER_KW,
+						POWER_UNIT.KW,
 						!multipleBatteries,
 						1
 					);
-					const total = this.fmtWh(capacity * 1e3, POWER_UNIT.POWER_KW, true, 1);
+					const total = this.fmtWh(capacity * 1e3, POWER_UNIT.KW, true, 1);
 					const name = multipleBatteries ? "↳ " : "";
 					const formattedSoc = multipleBatteries ? ` (${this.fmtSoc(soc)})` : "";
 					const formattedEnergy = this.$t("batterySettings.capacity", {

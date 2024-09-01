@@ -75,7 +75,7 @@
 											$t('footer.savings.percentSelf', {
 												self: fmtW(
 													solarCharged * 1000,
-													POWER_UNIT.POWER_KW,
+													POWER_UNIT.KW,
 													false,
 													0
 												),
@@ -85,7 +85,7 @@
 											$t('footer.savings.percentGrid', {
 												grid: fmtW(
 													gridCharged * 1000,
-													POWER_UNIT.POWER_KW,
+													POWER_UNIT.KW,
 													false,
 													0
 												),

@@ -15,10 +15,10 @@ const ENERGY_PRICE_IN_SUBUNIT = {
 };
 
 export const POWER_UNIT = Object.freeze({
-  POWER_W: "W",
-  POWER_KW: "kW",
-  POWER_MW: "MW",
-  POWER_AUTO: "",
+  W: "W",
+  KW: "kW",
+  MW: "MW",
+  AUTO: "",
 });
 
 export default {
@@ -41,26 +41,26 @@ export default {
       val = Math.abs(val);
       return val >= this.fmtLimit ? this.round(val / 1e3, this.fmtDigits) : this.round(val, 0);
     },
-    fmtW: function (watt = 0, format = POWER_UNIT.POWER_KW, withUnit = true, digits) {
-      let unit = POWER_UNIT.POWER_KW;
-      if (POWER_UNIT.POWER_AUTO === format) {
+    fmtW: function (watt = 0, format = POWER_UNIT.KW, withUnit = true, digits) {
+      let unit = POWER_UNIT.KW;
+      if (POWER_UNIT.AUTO === format) {
         if (watt >= 1_000_000) {
-          unit = POWER_UNIT.POWER_MW;
+          unit = POWER_UNIT.MW;
         } else if (watt >= 1000) {
-          unit = POWER_UNIT.POWER_KW;
+          unit = POWER_UNIT.KW;
         } else {
-          unit = POWER_UNIT.POWER_W;
+          unit = POWER_UNIT.W;
         }
       }
       let value = watt;
-      if (POWER_UNIT.POWER_KW === unit) {
+      if (POWER_UNIT.KW === unit) {
         value = watt / 1000;
-      } else if (POWER_UNIT.POWER_MW === unit) {
+      } else if (POWER_UNIT.MW === unit) {
         value = watt / 1_000_000;
       }
       let d = digits;
       if (digits === undefined) {
-        d = POWER_UNIT.POWER_KW === unit || POWER_UNIT.POWER_MW === unit ? 1 : 0;
+        d = POWER_UNIT.KW === unit || POWER_UNIT.MW === unit ? 1 : 0;
       }
       return `${new Intl.NumberFormat(this.$i18n?.locale, {
         style: "decimal",
@@ -68,7 +68,7 @@ export default {
         maximumFractionDigits: d,
       }).format(value)}${withUnit ? ` ${unit}` : ""}`;
     },
-    fmtWh: function (watt, format = POWER_UNIT.POWER_KW, withUnit = true, digits) {
+    fmtWh: function (watt, format = POWER_UNIT.KW, withUnit = true, digits) {
       return this.fmtW(watt, format, withUnit, digits) + (withUnit ? "h" : "");
     },
     fmtNumber: function (number, decimals, unit) {

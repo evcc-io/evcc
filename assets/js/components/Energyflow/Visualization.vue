@@ -61,7 +61,7 @@
 				/>
 			</div>
 			<div v-if="totalAdjusted <= 0" class="site-progress-bar w-100 grid-import">
-				<span>{{ fmtW(0, POWER_UNIT.POWER_AUTO, true) }}</span>
+				<span>{{ fmtW(0, POWER_UNIT.AUTO, true) }}</span>
 			</div>
 		</div>
 		<div class="label-scale d-flex">
@@ -112,7 +112,7 @@ export default {
 		pvProduction: { type: Number, default: 0 },
 		homePower: { type: Number, default: 0 },
 		batterySoc: { type: Number, default: 0 },
-		powerUnit: { type: String, default: POWER_UNIT.POWER_KW },
+		powerUnit: { type: String, default: POWER_UNIT.KW },
 	},
 	data: function () {
 		return { width: 0 };

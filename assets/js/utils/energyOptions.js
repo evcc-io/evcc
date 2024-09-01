@@ -16,7 +16,7 @@ export function fmtEnergy(energy, step, fmtWh, zeroText) {
   }
   const inKWh = step >= 0.1;
   const digits = inKWh && step < 1 ? 1 : 0;
-  return fmtWh(energy * 1e3, inKWh ? POWER_UNIT.POWER_KW : POWER_UNIT.POWER_W, true, digits);
+  return fmtWh(energy * 1e3, inKWh ? POWER_UNIT.KW : POWER_UNIT.W, true, digits);
 }
 
 export function estimatedSoc(energy, socPerKwh) {

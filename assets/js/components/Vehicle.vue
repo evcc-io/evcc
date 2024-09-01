@@ -247,7 +247,7 @@ export default {
 			this.$emit("remove-vehicle");
 		},
 		fmtEnergy(value) {
-			return this.fmtWh(value, value == 0 ? POWER_UNIT.POWER_KW : POWER_UNIT.POWER_AUTO);
+			return this.fmtWh(value, value == 0 ? POWER_UNIT.KW : POWER_UNIT.AUTO);
 		},
 		openPlanModal() {
 			this.$refs.chargingPlan.openPlanModal();
