@@ -3,7 +3,7 @@ package ocpp
 import "time"
 
 const (
-	Timeout = 30 * time.Second
+	Timeout = 30 * time.Second // default request / response timeout on protocol level
 
 	// Core profile keys
 	KeyMeterValueSampleInterval        = "MeterValueSampleInterval"
