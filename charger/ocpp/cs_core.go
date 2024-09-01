@@ -75,9 +75,9 @@ func (cs *CS) GetCompositeScheduleRequest(id string, connector int, duration int
 	err := cs.GetCompositeSchedule(id, func(request *smartcharging.GetCompositeScheduleConfirmation, err error) {
 		if err == nil && request != nil && request.Status != smartcharging.GetCompositeScheduleStatusAccepted {
 			err = errors.New(string(request.Status))
-		} else {
-			schedule = request.ChargingSchedule
 		}
+
+		schedule = request.ChargingSchedule
 
 		rc <- err
 	}, connector, duration)
