@@ -343,8 +343,13 @@ func (c *EEBus) writeCurrentLimitData(evEntity spineapi.EntityRemoteInterface, c
 	}
 
 	// make sure the recommendations are inactive, otherwise the EV won't go to sleep
-	if err := c.disableLimits(evEntity, c.uc.OscEV); err != nil {
-		return err
+	// but only if it supports OSCEV and has required data!
+	if c.uc.OscEV.IsScenarioAvailableAtEntity(evEntity, 1) {
+		if _, err := c.uc.OscEV.LoadControlLimits(evEntity); err == nil {
+			if err := c.disableLimits(evEntity, c.uc.OscEV); err != nil {
+				return err
+			}
+		}
 	}
 
 	// set overload protection limits
@@ -416,6 +421,11 @@ func (c *EEBus) writeLoadControlLimitsVASVW(evEntity spineapi.EntityRemoteInterf
 
 	// check if the EVSE supports optimization of self consumption limits
 	if !c.uc.OscEV.IsScenarioAvailableAtEntity(evEntity, 1) {
+		return false
+	}
+
+	// OSCEV requires recommendation limits to be available
+	if _, err := c.uc.OscEV.LoadControlLimits(evEntity); err != nil {
 		return false
 	}
 
