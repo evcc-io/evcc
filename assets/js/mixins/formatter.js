@@ -42,28 +42,31 @@ export default {
       return val >= this.fmtLimit ? this.round(val / 1e3, this.fmtDigits) : this.round(val, 0);
     },
     fmtW: function (watt = 0, format = POWER_UNIT.POWER_KW, withUnit = true, digits) {
+      let unit = POWER_UNIT.POWER_KW;
       if (POWER_UNIT.POWER_AUTO === format) {
         if (watt >= 1_000_000) {
-          format = POWER_UNIT.POWER_MW;
+          unit = POWER_UNIT.POWER_MW;
         } else if (watt >= 1000) {
-          format = POWER_UNIT.POWER_KW;
+          unit = POWER_UNIT.POWER_KW;
         } else {
-          format = POWER_UNIT.POWER_W;
+          unit = POWER_UNIT.POWER_W;
         }
       }
-      if (POWER_UNIT.POWER_KW === format) {
-        watt = watt / 1000;
-      } else if (POWER_UNIT.POWER_MW === format) {
-        watt = watt / 1_000_000;
+      let value = watt;
+      if (POWER_UNIT.POWER_KW === unit) {
+        value = watt / 1000;
+      } else if (POWER_UNIT.POWER_MW === unit) {
+        value = watt / 1_000_000;
       }
+      let d = digits;
       if (digits === undefined) {
-        digits = POWER_UNIT.POWER_KW === format || POWER_UNIT.POWER_MW === format ? 1 : 0;
+        d = POWER_UNIT.POWER_KW === unit || POWER_UNIT.POWER_MW === unit ? 1 : 0;
       }
       return `${new Intl.NumberFormat(this.$i18n?.locale, {
         style: "decimal",
-        minimumFractionDigits: digits,
-        maximumFractionDigits: digits,
-      }).format(watt)}${withUnit ? ` ${format}` : ""}`;
+        minimumFractionDigits: d,
+        maximumFractionDigits: d,
+      }).format(value)}${withUnit ? ` ${unit}` : ""}`;
     },
     fmtWh: function (watt, format = POWER_UNIT.POWER_KW, withUnit = true, digits) {
       return this.fmtW(watt, format, withUnit, digits) + (withUnit ? "h" : "");
