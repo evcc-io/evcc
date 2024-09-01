@@ -2,7 +2,7 @@
 
 ## Folders
 
-- defintion: hold all device templates definitons in yaml files
+- definition: hold all device templates definitions in yaml files
   - charger: all charger templates
   - meter: all meter templates
   - vehicle: all vehicle templates

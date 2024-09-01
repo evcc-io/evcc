@@ -36,3 +36,5 @@ params:
   - name: ip
 render: |
   {{ include "eebus" . }}
+  meter: true
+  chargedEnergy: false
