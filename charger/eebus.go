@@ -10,6 +10,7 @@ import (
 	eebusapi "github.com/enbility/eebus-go/api"
 	ucapi "github.com/enbility/eebus-go/usecases/api"
 	"github.com/enbility/eebus-go/usecases/cem/evcc"
+	"github.com/enbility/eebus-go/usecases/cem/evcem"
 	spineapi "github.com/enbility/spine-go/api"
 	"github.com/enbility/spine-go/model"
 	"github.com/evcc-io/evcc/api"
@@ -37,6 +38,9 @@ type EEBus struct {
 	log     *util.Logger
 	lp      loadpoint.API
 	minMaxG func() (minMax, error)
+
+	limitUpdated    time.Time // time of last limit change
+	currentsUpdated time.Time // time of last measurement
 
 	vasVW     bool // wether the EVSE supports VW VAS with ISO15118-2
 	enabled   bool
@@ -121,6 +125,10 @@ func (c *EEBus) UseCaseEvent(device spineapi.DeviceRemoteInterface, entity spine
 
 	case evcc.EvDisconnected:
 		c.ev = nil
+
+	case evcem.DataUpdateCurrentPerPhase:
+		// do not use the timestamp of the measurement itself, as some devices don't provide it
+		c.currentsUpdated = time.Now()
 	}
 }
 
@@ -330,6 +338,7 @@ func (c *EEBus) writeCurrentLimitData(evEntity spineapi.EntityRemoteInterface, c
 	// if VAS VW is available, limits are completely covered by it
 	// this way evcc can fully control the charging behaviour
 	if c.writeLoadControlLimitsVASVW(evEntity, limits) {
+		c.limitUpdated = time.Now()
 		return nil
 	}
 
@@ -340,6 +349,9 @@ func (c *EEBus) writeCurrentLimitData(evEntity spineapi.EntityRemoteInterface, c
 
 	// set overload protection limits
 	_, err = c.uc.OpEV.WriteLoadControlLimits(evEntity, limits, nil)
+	if err == nil {
+		c.limitUpdated = time.Now()
+	}
 
 	return err
 }
@@ -551,12 +563,18 @@ func (c *EEBus) currents() (float64, float64, float64, error) {
 		return 0, 0, 0, api.ErrNotAvailable
 	}
 
+	c.mux.Lock()
+	ts := c.currentsUpdated
+	c.mux.Unlock()
+
+	// if there is no measurement data available within 15 seconds after the last limit change, return an error
+	if d := ts.Sub(c.limitUpdated); d < 0 || d > 15*time.Second {
+		return 0, 0, 0, api.ErrNotAvailable
+	}
+
 	res, err := c.uc.EvCem.CurrentPerPhase(evEntity)
 	if err != nil {
-		if err == eebusapi.ErrDataNotAvailable {
-			err = api.ErrNotAvailable
-		}
-		return 0, 0, 0, err
+		return 0, 0, 0, eebus.WrapError(err)
 	}
 
 	// fill phases
@@ -618,10 +636,7 @@ func (c *EEBus) minMax() (minMax, error) {
 
 	minLimits, maxLimits, _, err := c.uc.OpEV.CurrentLimits(evEntity)
 	if err != nil {
-		if err == eebusapi.ErrDataNotAvailable {
-			err = api.ErrNotAvailable
-		}
-		return zero, err
+		return zero, eebus.WrapError(err)
 	}
 
 	if len(minLimits) == 0 || len(maxLimits) == 0 {
