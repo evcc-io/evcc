@@ -247,8 +247,7 @@ export default {
 			this.$emit("remove-vehicle");
 		},
 		fmtEnergy(value) {
-			const inKw = value == 0 || value >= 1000;
-			return this.fmtWh(value, inKw ? WATT_FORMAT.KW : WATT_FORMAT.AUTO);
+			return this.fmtWh(value, value == 0 ? WATT_FORMAT.KW : WATT_FORMAT.AUTO);
 		},
 		openPlanModal() {
 			this.$refs.chargingPlan.openPlanModal();
