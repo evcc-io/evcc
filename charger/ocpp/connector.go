@@ -84,13 +84,13 @@ func (conn *Connector) TriggerMessageRequest(feature remotetrigger.MessageTrigge
 }
 
 func (conn *Connector) SetChargingProfile(profile *types.ChargingProfile) error {
-	return Instance().SetChargingProfileRequest(conn.cp.ID(), conn.ID(), profile)
+	return Instance().SetChargingProfileRequest(conn.cp.ID(), conn.id, profile)
 }
 
 // getScheduleLimit queries the current or power limit the charge point is currently set to offer
 func (conn *Connector) GetScheduleLimit(duration int) (float64, error) {
 	var limit float64
-	schedule, err := Instance().GetCompositeScheduleRequest(conn.cp.ID(), conn.ID(), duration)
+	schedule, err := Instance().GetCompositeScheduleRequest(conn.cp.ID(), conn.id, duration)
 
 	if err == nil {
 		if schedule != nil && len(schedule.ChargingSchedulePeriod) > 0 {
