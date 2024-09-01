@@ -42,7 +42,7 @@ export default {
       return val >= this.fmtLimit ? this.round(val / 1e3, this.fmtDigits) : this.round(val, 0);
     },
     fmtW: function (watt = 0, format = POWER_UNIT.KW, withUnit = true, digits) {
-      let unit = POWER_UNIT.KW;
+      let unit = format;
       if (POWER_UNIT.AUTO === format) {
         if (watt >= 1_000_000) {
           unit = POWER_UNIT.MW;
