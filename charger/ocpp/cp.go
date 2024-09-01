@@ -9,7 +9,6 @@ import (
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/types"
 )
 
-// TODO support multiple connectors
 // Since ocpp-go interfaces at charge point level, we need to manage multiple connector separately
 
 type CP struct {
