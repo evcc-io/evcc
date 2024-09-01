@@ -156,6 +156,10 @@ func NewOCPP(id string, connector int, idtag string,
 		}
 	}
 
+	if cp.NumberOfConnectors > 0 && connector > cp.NumberOfConnectors {
+		return nil, fmt.Errorf("invalid connector: %d", connector)
+	}
+
 	conn, err := ocpp.NewConnector(log, connector, cp, timeout)
 	if err != nil {
 		return nil, err

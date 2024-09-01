@@ -64,12 +64,10 @@ func (cp *CP) Setup(meterValues string, meterInterval time.Duration, timeout tim
 						meterValuesSampledDataMaxLength = val
 					}
 
-				// TODO
-				// case KeyNumberOfConnectors:
-				// 	var val int
-				// 	if val, err = strconv.Atoi(*opt.Value); err == nil && connector > val {
-				// 		err = fmt.Errorf("connector %d exceeds max available connectors: %d", connector, val)
-				// 	}
+				case KeyNumberOfConnectors:
+					if val, err := strconv.Atoi(*opt.Value); err == nil {
+						cp.NumberOfConnectors = val
+					}
 
 				case KeySupportedFeatureProfiles:
 					if !hasProperty(*opt.Value, smartcharging.ProfileName) {

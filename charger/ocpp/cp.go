@@ -29,6 +29,7 @@ type CP struct {
 	ChargingRateUnit        types.ChargingRateUnitType
 	ChargingProfileId       int
 	StackLevel              int
+	NumberOfConnectors      int
 	IdTag                   string
 
 	meterValuesSample        string
