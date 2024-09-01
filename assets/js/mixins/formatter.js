@@ -14,17 +14,17 @@ const ENERGY_PRICE_IN_SUBUNIT = {
   USD: "¢", // US cent
 };
 
-export const WATT_FORMAT = Object.freeze({
-  WATT: "W",
-  KW: "kW",
-  MW: "MW",
-  AUTO: "",
+export const POWER_UNIT = Object.freeze({
+  POWER_W: "W",
+  POWER_KW: "kW",
+  POWER_MW: "MW",
+  POWER_AUTO: "",
 });
 
 export default {
   data: function () {
     return {
-      WATT_FORMAT: WATT_FORMAT,
+      POWER_UNIT: POWER_UNIT,
       fmtLimit: 100,
       fmtDigits: 1,
     };
@@ -41,23 +41,23 @@ export default {
       val = Math.abs(val);
       return val >= this.fmtLimit ? this.round(val / 1e3, this.fmtDigits) : this.round(val, 0);
     },
-    fmtW: function (watt = 0, format = WATT_FORMAT.KW, withUnit = true, digits) {
-      if (WATT_FORMAT.AUTO === format) {
+    fmtW: function (watt = 0, format = POWER_UNIT.POWER_KW, withUnit = true, digits) {
+      if (POWER_UNIT.POWER_AUTO === format) {
         if (watt >= 1_000_000) {
-          format = WATT_FORMAT.MW;
+          format = POWER_UNIT.POWER_MW;
         } else if (watt >= 1000) {
-          format = WATT_FORMAT.KW;
+          format = POWER_UNIT.POWER_KW;
         } else {
-          format = WATT_FORMAT.WATT;
+          format = POWER_UNIT.POWER_W;
         }
       }
-      if (WATT_FORMAT.KW === format) {
+      if (POWER_UNIT.POWER_KW === format) {
         watt = watt / 1000;
-      } else if (WATT_FORMAT.MW === format) {
+      } else if (POWER_UNIT.POWER_MW === format) {
         watt = watt / 1_000_000;
       }
       if (digits === undefined) {
-        digits = WATT_FORMAT.KW === format || WATT_FORMAT.MW === format ? 1 : 0;
+        digits = POWER_UNIT.POWER_KW === format || POWER_UNIT.POWER_MW === format ? 1 : 0;
       }
       return `${new Intl.NumberFormat(this.$i18n?.locale, {
         style: "decimal",
@@ -65,7 +65,7 @@ export default {
         maximumFractionDigits: digits,
       }).format(watt)}${withUnit ? ` ${format}` : ""}`;
     },
-    fmtWh: function (watt, format = WATT_FORMAT.KW, withUnit = true, digits) {
+    fmtWh: function (watt, format = POWER_UNIT.POWER_KW, withUnit = true, digits) {
       return this.fmtW(watt, format, withUnit, digits) + (withUnit ? "h" : "");
     },
     fmtNumber: function (number, decimals, unit) {

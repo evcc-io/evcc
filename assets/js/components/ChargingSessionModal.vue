@@ -72,8 +72,8 @@
 											fmtWh(
 												chargedEnergy,
 												chargedEnergy >= 1e3
-													? WATT_FORMAT.KW
-													: WATT_FORMAT.AUTO
+													? POWER_UNIT.POWER_KW
+													: POWER_UNIT.POWER_AUTO
 											)
 										}}
 										<div v-if="session.chargeDuration">
@@ -88,7 +88,7 @@
 									</th>
 									<td>
 										{{ fmtPercentage(session.solarPercentage, 1) }}
-										({{ fmtWh(solarEnergy, WATT_FORMAT.AUTO) }})
+										({{ fmtWh(solarEnergy, POWER_UNIT.POWER_AUTO) }})
 									</td>
 								</tr>
 								<tr v-if="session.price != null">

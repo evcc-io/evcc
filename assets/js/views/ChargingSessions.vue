@@ -230,7 +230,7 @@
 import Modal from "bootstrap/js/dist/modal";
 import "@h2d2/shopicons/es/regular/angledoubleleftsmall";
 import "@h2d2/shopicons/es/regular/angledoublerightsmall";
-import formatter, { WATT_FORMAT } from "../mixins/formatter";
+import formatter, { POWER_UNIT } from "../mixins/formatter";
 import api from "../api";
 import store from "../store";
 import CustomSelect from "../components/CustomSelect.vue";
@@ -299,7 +299,7 @@ export default {
 					unit: "kWh",
 					total: this.chargedEnergy,
 					value: (session) => session.chargedEnergy,
-					format: (value) => this.fmtWh(value * 1e3, WATT_FORMAT.KW, false),
+					format: (value) => this.fmtWh(value * 1e3, POWER_UNIT.POWER_KW, false),
 				},
 				{
 					name: "solar",
@@ -347,7 +347,7 @@ export default {
 						return null;
 					},
 					format: (value) =>
-						value ? this.fmtW(value * 1e3, WATT_FORMAT.KW, false, 1) : undefined,
+						value ? this.fmtW(value * 1e3, POWER_UNIT.POWER_KW, false, 1) : undefined,
 				},
 			];
 			// only columns with values are shown

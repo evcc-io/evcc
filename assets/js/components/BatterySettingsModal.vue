@@ -256,7 +256,7 @@ import "@h2d2/shopicons/es/regular/home";
 import SmartCostLimit from "./SmartCostLimit.vue";
 import CustomSelect from "./CustomSelect.vue";
 import GenericModal from "./GenericModal.vue";
-import formatter, { WATT_FORMAT } from "../mixins/formatter";
+import formatter, { POWER_UNIT } from "../mixins/formatter";
 import collector from "../mixins/collector";
 import api from "../api";
 import smartCostAvailable from "../utils/smartCostAvailable";
@@ -365,11 +365,11 @@ export default {
 					const multipleBatteries = this.battery.length > 1;
 					const energy = this.fmtWh(
 						(capacity / 100) * soc * 1e3,
-						WATT_FORMAT.KW,
+						POWER_UNIT.POWER_KW,
 						!multipleBatteries,
 						1
 					);
-					const total = this.fmtWh(capacity * 1e3, WATT_FORMAT.KW, true, 1);
+					const total = this.fmtWh(capacity * 1e3, POWER_UNIT.POWER_KW, true, 1);
 					const name = multipleBatteries ? "↳ " : "";
 					const formattedSoc = multipleBatteries ? ` (${this.fmtSoc(soc)})` : "";
 					const formattedEnergy = this.$t("batterySettings.capacity", {

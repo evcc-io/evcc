@@ -194,7 +194,7 @@ import "@h2d2/shopicons/es/filled/square";
 import Modal from "bootstrap/js/dist/modal";
 import Visualization from "./Visualization.vue";
 import EnergyflowEntry from "./EnergyflowEntry.vue";
-import formatter, { WATT_FORMAT } from "../../mixins/formatter";
+import formatter, { POWER_UNIT } from "../../mixins/formatter";
 import AnimatedNumber from "../AnimatedNumber.vue";
 import settings from "../../settings";
 import { CO2_TYPE } from "../../units";
@@ -295,11 +295,11 @@ export default {
 		powerUnit: function () {
 			const watt = Math.max(this.gridImport, this.selfPv, this.selfBattery, this.pvExport);
 			if (watt >= 1_000_000) {
-				return WATT_FORMAT.MW;
+				return POWER_UNIT.POWER_MW;
 			} else if (watt >= 1000) {
-				return WATT_FORMAT.KW;
+				return POWER_UNIT.POWER_KW;
 			} else {
-				return WATT_FORMAT.WATT;
+				return POWER_UNIT.POWER_W;
 			}
 		},
 		inPower: function () {

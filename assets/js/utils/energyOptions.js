@@ -1,4 +1,4 @@
-import { WATT_FORMAT } from "../mixins/formatter";
+import { POWER_UNIT } from "../mixins/formatter";
 
 export function optionStep(maxEnergy) {
   if (maxEnergy < 1) return 0.05;
@@ -16,7 +16,7 @@ export function fmtEnergy(energy, step, fmtWh, zeroText) {
   }
   const inKWh = step >= 0.1;
   const digits = inKWh && step < 1 ? 1 : 0;
-  return fmtWh(energy * 1e3, inKWh ? WATT_FORMAT.KW : WATT_FORMAT.AUTO, true, digits);
+  return fmtWh(energy * 1e3, inKWh ? POWER_UNIT.POWER_KW : POWER_UNIT.POWER_AUTO, true, digits);
 }
 
 export function estimatedSoc(energy, socPerKwh) {

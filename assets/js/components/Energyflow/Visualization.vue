@@ -61,7 +61,7 @@
 				/>
 			</div>
 			<div v-if="totalAdjusted <= 0" class="site-progress-bar w-100 grid-import">
-				<span>{{ fmtW(0, WATT_FORMAT.AUTO, true) }}</span>
+				<span>{{ fmtW(0, POWER_UNIT.POWER_AUTO, true) }}</span>
 			</div>
 		</div>
 		<div class="label-scale d-flex">
@@ -89,7 +89,7 @@
 </template>
 
 <script>
-import formatter, { WATT_FORMAT } from "../../mixins/formatter";
+import formatter, { POWER_UNIT } from "../../mixins/formatter";
 import BatteryIcon from "./BatteryIcon.vue";
 import LabelBar from "./LabelBar.vue";
 import AnimatedNumber from "../AnimatedNumber.vue";
@@ -112,7 +112,7 @@ export default {
 		pvProduction: { type: Number, default: 0 },
 		homePower: { type: Number, default: 0 },
 		batterySoc: { type: Number, default: 0 },
-		powerUnit: { type: String, default: WATT_FORMAT.KW },
+		powerUnit: { type: String, default: POWER_UNIT.POWER_KW },
 	},
 	data: function () {
 		return { width: 0 };

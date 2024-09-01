@@ -97,7 +97,7 @@ import Mode from "./Mode.vue";
 import Vehicle from "./Vehicle.vue";
 import Phases from "./Phases.vue";
 import LabelAndValue from "./LabelAndValue.vue";
-import formatter, { WATT_FORMAT } from "../mixins/formatter";
+import formatter, { POWER_UNIT } from "../mixins/formatter";
 import collector from "../mixins/collector";
 import LoadpointSettingsButton from "./LoadpointSettingsButton.vue";
 import LoadpointSettingsModal from "./LoadpointSettingsModal.vue";
@@ -338,11 +338,11 @@ export default {
 		},
 		fmtPower(value) {
 			const inKw = value == 0 || value >= 1000;
-			return this.fmtW(value, inKw ? WATT_FORMAT.KW : WATT_FORMAT.AUTO);
+			return this.fmtW(value, inKw ? POWER_UNIT.POWER_KW : POWER_UNIT.POWER_AUTO);
 		},
 		fmtEnergy(value) {
 			const inKw = value == 0 || value >= 1000;
-			return this.fmtWh(value, inKw ? WATT_FORMAT.KW : WATT_FORMAT.AUTO);
+			return this.fmtWh(value, inKw ? POWER_UNIT.POWER_KW : POWER_UNIT.POWER_AUTO);
 		},
 		openSettingsModal() {
 			const modal = Modal.getOrCreateInstance(

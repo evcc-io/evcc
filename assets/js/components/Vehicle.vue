@@ -69,7 +69,7 @@
 
 <script>
 import collector from "../mixins/collector";
-import formatter, { WATT_FORMAT } from "../mixins/formatter";
+import formatter, { POWER_UNIT } from "../mixins/formatter";
 import LabelAndValue from "./LabelAndValue.vue";
 import VehicleTitle from "./VehicleTitle.vue";
 import VehicleSoc from "./VehicleSoc.vue";
@@ -247,7 +247,7 @@ export default {
 			this.$emit("remove-vehicle");
 		},
 		fmtEnergy(value) {
-			return this.fmtWh(value, value == 0 ? WATT_FORMAT.KW : WATT_FORMAT.AUTO);
+			return this.fmtWh(value, value == 0 ? POWER_UNIT.POWER_KW : POWER_UNIT.POWER_AUTO);
 		},
 		openPlanModal() {
 			this.$refs.chargingPlan.openPlanModal();
