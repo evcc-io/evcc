@@ -108,7 +108,6 @@ func (cp *CP) Setup(meterValues string, meterInterval time.Duration) error {
 			cp.log.DEBUG.Printf("failed triggering BootNotification: %v", err)
 		}
 
-		// TODO use fixed timeout
 		select {
 		case <-time.After(Timeout):
 			cp.log.DEBUG.Printf("BootNotification timeout")
