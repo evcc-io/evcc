@@ -92,7 +92,7 @@ export default {
 			return hourSum ? priceSum / hourSum : undefined;
 		},
 		fmtAvgPrice() {
-			if (!this.targetTime) {
+			if (!this.targetTime || this.duration === 0) {
 				return "—";
 			}
 			let price = this.activeSlot ? this.activeSlot.price : this.avgPrice;

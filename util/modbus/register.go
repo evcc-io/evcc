@@ -113,6 +113,8 @@ func (r Register) DecodeFunc() (func([]byte) float64, error) {
 		return asFloat64(encoding.Float32), nil
 	case "float32s", "ieee754s":
 		return asFloat64(encoding.Float32LswFirst), nil
+	case "float32nans":
+		return decodeNaN32(asFloat64(encoding.Float32LswFirst), 0xffffff7f), nil
 
 	// 64 bit
 	case "int64":

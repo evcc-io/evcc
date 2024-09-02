@@ -4,7 +4,7 @@
 
 #### Development environment
 
-Developing evcc requires [Go][1] 1.22 and [Node][2] 18. We recommend VSCode with the [Go](https://marketplace.visualstudio.com/items?itemName=golang.Go), [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) and [Vetur](https://marketplace.visualstudio.com/items?itemName=octref.vetur) extensions.
+Developing evcc requires [Go][1] 1.23 and [Node][2] 22. We recommend VSCode with the [Go](https://marketplace.visualstudio.com/items?itemName=golang.Go), [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) and [Vetur](https://marketplace.visualstudio.com/items?itemName=octref.vetur) extensions.
 
 Alternatively the extension [dev-containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) together with [Docker](https://www.docker.com/) can be used. To open your dev-container Press CTRL + Shift + P and type "Open folder in container" and choose the folder of the repository. The recommended extensions are already installed and the container is ready to debug.
 
@@ -17,13 +17,13 @@ make lint-ui
 
 #### Changing device templates
 
-evcc supports a massive amount of different devices. To keep our documentation and website in sync with the latest software the core project (this repo) generates meta-data that's pushed to the `docs` and `evcc.io` repository. Make sure to update this meta-data every time you make changes to a templates.
+evcc supports a massive amount of different devices. To keep our documentation and website in sync with the latest software the core project (this repo) generates meta-data that's pushed to the `docs` and `evcc.io` repository.
+
+You can verify the generated meta-data by running:
 
 ```sh
 make docs
 ```
-
-If you miss one of the above steps Gitub Actions will likely trigger a **Porcelain** error.
 
 ### Building from source
 

@@ -27,8 +27,8 @@ never = "tik su pakankamu pertekliumi."
 [config]
 
 [config.battery]
-titleAdd = "Pridėti kaupiklio skaitiklį"
-titleEdit = "Redaguoti kaupiklio skaitiklį"
+titleAdd = "Pridėti kaupiklį"
+titleEdit = "Redaguoti kaupiklį"
 
 [config.circuits]
 description = "Užtikrina, kad naudojant visus į grandinę sujungtus įkroviklius, neviršytumėte sukonfigūruotų galios ir srovės ribų. Grandines galima sudėlioti, kad būtų sukurta hierarchija."
@@ -57,6 +57,7 @@ chargeStatusF = "klaida"
 chargedEnergy = "Įkrauta"
 co2 = "Tinklo CO₂"
 configured = "Sukonfigūruota"
+controllable = "Valdomas"
 currency = "Valiuta"
 current = "Srovė"
 currentRange = "Srovė"
@@ -292,6 +293,7 @@ tabTitle = "Mano"
 [footer.savings.period]
 30d = "paskutinės 30 dienų"
 365d = "paskutinės 365 dienos"
+thisYear = "šiais metais"
 total = "Iš viso"
 
 [footer.sponsor]
@@ -369,8 +371,10 @@ areaLabel = "Filtruoti pagal sritis"
 areas = "Visos sritys"
 download = "Atsisiųsti visą žurnalą"
 levelLabel = "Filtruoti pagal žurnalo lygį"
+nAreas = "{count} sritys"
 noResults = "Nėra atitinkančių žurnalo įrašų"
 search = "Ieškoti"
+selectAll = "pasirinkti visus"
 showAll = "Rodyti visus įrašus"
 title = "Žurnalai"
 update = "Automatinis atnaujinimas"
@@ -550,6 +554,7 @@ ready = "leidžiama įkrauti"
 vehicleLimit = "Automobilyje nustatytas limitas: {soc}"
 
 [main.vehicleStatus]
+awaitingAuthorization = "Laukiama autorizacijos."
 charging = "Įkraunama..."
 cheapEnergyCharging = "Šiuo metu energija yra pigi."
 cheapEnergyNextStart = "Pigi energija už {duration}."

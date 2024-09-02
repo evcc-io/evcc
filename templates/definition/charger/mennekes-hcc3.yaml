@@ -3,7 +3,10 @@ covers: ["amtron", "menneckes-hcc3"]
 products:
   - brand: Mennekes
     description:
-      generic: AMTRON XTRA, AMTRON PREMIUM
+      generic: AMTRON Xtra
+  - brand: Mennekes
+    description:
+      generic: AMTRON Premium
 requirements:
   evcc: ["sponsorship"]
 params:

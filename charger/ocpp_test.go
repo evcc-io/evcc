@@ -59,12 +59,8 @@ func (suite *ocppTestSuite) startChargePoint(id string, connectorId int) ocpp16.
 
 func (suite *ocppTestSuite) handleTrigger(cp ocpp16.ChargePoint, connectorId int, msg remotetrigger.MessageTrigger) {
 	switch msg {
-	case core.BootNotificationFeatureName:
-		if res, err := cp.BootNotification("demo", "evcc"); err != nil {
-			suite.T().Log("BootNotification:", err)
-		} else {
-			suite.T().Log("BootNotification:", res)
-		}
+	case core.ChangeAvailabilityFeatureName:
+		fallthrough
 
 	case core.StatusNotificationFeatureName:
 		if res, err := cp.StatusNotification(connectorId, core.NoError, core.ChargePointStatusCharging); err != nil {
@@ -100,7 +96,7 @@ func (suite *ocppTestSuite) TestConnect() {
 	suite.Require().True(cp1.IsConnected())
 
 	// 1st charge point- local
-	c1, err := NewOCPP("test-1", 1, "", "", 0, false, false, true, ocppTestConnectTimeout, ocppTestTimeout, "A")
+	c1, err := NewOCPP("test-1", 1, "", "", 0, false, true, ocppTestConnectTimeout, ocppTestTimeout)
 	suite.Require().NoError(err)
 
 	// status and meter values
@@ -149,7 +145,7 @@ func (suite *ocppTestSuite) TestConnect() {
 	suite.Require().True(cp2.IsConnected())
 
 	// 2nd charge point - local
-	c2, err := NewOCPP("test-2", 1, "", "", 0, false, false, true, ocppTestConnectTimeout, ocppTestTimeout, "A")
+	c2, err := NewOCPP("test-2", 1, "", "", 0, false, true, ocppTestConnectTimeout, ocppTestTimeout)
 	suite.Require().NoError(err)
 
 	{
@@ -191,7 +187,7 @@ func (suite *ocppTestSuite) TestAutoStart() {
 	suite.Require().True(cp1.IsConnected())
 
 	// 1st charge point- local
-	c1, err := NewOCPP("test-3", 1, "", "", 0, false, false, false, ocppTestConnectTimeout, ocppTestTimeout, "A")
+	c1, err := NewOCPP("test-3", 1, "", "", 0, false, false, ocppTestConnectTimeout, ocppTestTimeout)
 	suite.Require().NoError(err)
 
 	// status and meter values

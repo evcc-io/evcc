@@ -24,8 +24,8 @@ never = "nur mit genug PV-Überschuss."
 [config]
 
 [config.battery]
-titleAdd = "Batterie Zähler hinzufügen"
-titleEdit = "Batterie Zähler bearbeiten"
+titleAdd = "Batterie hinzufügen"
+titleEdit = "Batterie bearbeiten"
 
 [config.circuits]
 description = "Stellt sicher, dass die Summe aller Ladepunkte, die an einen Stromkreis angeschlossen sind, die konfigurierten Leistungs- und Stromgrenzen nicht überschreitet. Stromkreise können verschachtelt werden, um eine Hierarchie aufzubauen."
@@ -54,10 +54,11 @@ chargeStatusF = "Fehler"
 chargedEnergy = "Geladen"
 co2 = "Netz-CO₂"
 configured = "Konfiguriert"
+controllable = "Steuerbar"
 currency = "Währung"
 current = "Strom"
 currentRange = "Strom"
-enabled = "Aktiviert"
+enabled = "Ladebereit"
 energy = "Energie"
 feedinPrice = "Einspeisevergütung"
 gridPrice = "Netzpreis"
@@ -281,6 +282,7 @@ tabTitle = "Meine Daten"
 [footer.savings.period]
 30d = "letzte 30 Tage"
 365d = "letzte 365 Tage"
+thisYear = "dieses Jahr"
 total = "gesamt"
 
 [footer.sponsor]
@@ -529,6 +531,7 @@ ready = "bereit"
 vehicleLimit = "Fahrzeuglimit: {soc}"
 
 [main.vehicleStatus]
+awaitingAuthorization = "Warte auf Autorisierung."
 charging = "Ladevorgang aktiv …"
 cheapEnergyCharging = "Günstige Energie verfügbar."
 cheapEnergyNextStart = "Günstige Energie in {duration}."
@@ -538,6 +541,7 @@ cleanEnergyNextStart = "Saubere Energie in {duration}."
 cleanEnergySet = "CO₂-Limit gesetzt."
 climating = "Vorklimatisierung erkannt."
 connected = "Verbunden."
+disconnectRequired = "Vorgang abgebrochen. Erneut verbinden."
 disconnected = "Nicht verbunden."
 finished = "Abgeschlossen."
 minCharge = "Mindestladung bis {soc}."
