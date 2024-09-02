@@ -153,7 +153,7 @@ func (cp *CP) Setup(meterValues string, meterInterval time.Duration, timeout tim
 
 	// configure websocket ping interval
 	if err := cp.configure(KeyWebSocketPingInterval, "30", timeout); err != nil {
-		cp.log.WARN.Printf("failed configuring WebSocketPingInterval: %v", err)
+		cp.log.DEBUG.Printf("failed configuring WebSocketPingInterval: %v", err)
 	}
 
 	return nil
