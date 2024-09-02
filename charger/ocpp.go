@@ -22,13 +22,11 @@ type OCPP struct {
 	log     *util.Logger
 	cp      *ocpp.CP
 	conn    *ocpp.Connector
-	idtag   string
 	phases  int
 	enabled bool
 	current float64
 
 	timeout        time.Duration
-	remoteStart    bool
 	stackLevelZero bool
 	lp             loadpoint.API
 }
