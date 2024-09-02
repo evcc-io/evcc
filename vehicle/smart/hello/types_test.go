@@ -286,6 +286,13 @@ const data = `{
 }`
 
 func TestUnmarshal(t *testing.T) {
-	var res VehicleStatus
+	var res struct {
+		Code    Int
+		Message string
+		Error   Error
+		Data    struct {
+			VehicleStatus VehicleStatus
+		}
+	}
 	require.NoError(t, json.Unmarshal([]byte(data), &res))
 }

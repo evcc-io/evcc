@@ -7,18 +7,38 @@ import (
 
 const ResponseOK = 1000
 
-type ResponseCode int
+type Int int
 
-func (rc *ResponseCode) UnmarshalJSON(data []byte) error {
-	i, err := strconv.Atoi(strings.Trim(string(data), `"`))
+func (rc *Int) UnmarshalJSON(data []byte) error {
+	plain := strings.Trim(string(data), `"`)
+	if plain == "" {
+		*rc = Int(0)
+		return nil
+	}
+	v, err := strconv.Atoi(plain)
 	if err == nil {
-		*rc = ResponseCode(i)
+		*rc = Int(v)
+	}
+	return err
+}
+
+type Bool bool
+
+func (rc *Bool) UnmarshalJSON(data []byte) error {
+	plain := strings.Trim(string(data), `"`)
+	if plain == "" {
+		*rc = Bool(false)
+		return nil
+	}
+	v, err := strconv.ParseBool(plain)
+	if err == nil {
+		*rc = Bool(v)
 	}
 	return err
 }
 
 type Error struct {
-	Code    ResponseCode
+	Code    Int
 	Message string
 }
 
@@ -38,11 +58,11 @@ type VehicleStatus struct {
 		UsageMode    int    `json:"usageMode,string"` // "0",
 		EngineStatus string `json:"engineStatus"`     // "engine_off",
 		Position     struct {
-			Altitude               int  `json:"altitude,string"`               // "117",
-			PosCanBeTrusted        bool `json:"posCanBeTrusted,string"`        // "true",
-			Latitude               int  `json:"latitude,string"`               // "18...",
-			CarLocatorStatUploadEn bool `json:"carLocatorStatUploadEn,string"` // "true",
-			Longitude              int  `json:"longitude,string"`              // "28..."
+			Altitude               Int  `json:"altitude"`               // "117",
+			PosCanBeTrusted        Bool `json:"posCanBeTrusted"`        // "true",
+			Latitude               Int  `json:"latitude"`               // "18...",
+			CarLocatorStatUploadEn Bool `json:"carLocatorStatUploadEn"` // "true",
+			Longitude              Int  `json:"longitude"`              // "28..."
 		}
 		DistanceToEmpty int     `json:"distanceToEmpty,string"` // "0",
 		CarMode         int     `json:"carMode,string"`         // "0",

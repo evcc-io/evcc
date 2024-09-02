@@ -9,6 +9,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
+	"github.com/evcc-io/evcc/util/sponsor"
 )
 
 const (
@@ -55,6 +56,10 @@ func NewDadapower(uri string, id uint8) (*Dadapower, error) {
 	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, id)
 	if err != nil {
 		return nil, err
+	}
+
+	if !sponsor.IsAuthorized() {
+		return nil, api.ErrSponsorRequired
 	}
 
 	log := util.NewLogger("dadapower")
@@ -117,7 +122,7 @@ var _ api.StatusReasoner = (*Dadapower)(nil)
 func (wb *Dadapower) StatusReason() (api.Reason, error) {
 	res := api.ReasonUnknown
 
-	b, err := wb.conn.ReadHoldingRegisters(dadapowerRegChargingPortState, 2)
+	b, err := wb.conn.ReadInputRegisters(dadapowerRegChargingPortState+wb.regOffset, 1)
 	if err == nil && binary.BigEndian.Uint16(b) == 3 {
 		res = api.ReasonWaitingForAuthorization
 	}

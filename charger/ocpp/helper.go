@@ -2,6 +2,7 @@ package ocpp
 
 import (
 	"slices"
+	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -31,5 +32,12 @@ func sortByAge(values []types.MeterValue) []types.MeterValue {
 			bt = b.Timestamp.Time
 		}
 		return at.Compare(bt)
+	})
+}
+
+// hasProperty checks if comma-separated string contains given string ignoring white spaces
+func hasProperty(props, prop string) bool {
+	return slices.ContainsFunc(strings.Split(props, ","), func(s string) bool {
+		return strings.HasPrefix(strings.ReplaceAll(s, " ", ""), prop)
 	})
 }

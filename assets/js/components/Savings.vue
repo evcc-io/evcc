@@ -23,6 +23,7 @@
 				tabindex="-1"
 				role="dialog"
 				aria-hidden="true"
+				data-testid="savings-modal"
 			>
 				<div class="modal-dialog modal-lg modal-dialog-centered" role="document">
 					<div class="modal-content">

@@ -2,6 +2,7 @@ import { test, expect } from "@playwright/test";
 import { start, stop, baseUrl } from "./evcc";
 
 test.use({ baseURL: baseUrl() });
+test.describe.configure({ mode: "parallel" });
 
 const CONFIG = "plan.evcc.yaml";
 

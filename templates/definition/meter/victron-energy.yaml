@@ -3,6 +3,10 @@ products:
   - brand: Victron
     description:
       generic: Energy
+requirements:
+  description:
+    de: Für Grid-Nutzung ist eine VRM-Instanz notwendig wenn Lastmanagement genutzt werden soll.
+    en: For grid usage, a grid meter VRM instance is require to enabled load management.
 capabilities: ["battery-control"]
 params:
   - name: usage
@@ -14,11 +18,11 @@ params:
   - name: capacity
     advanced: true
   - name: meterid # grid meter VRM instance
+    type: number
     usages: ["grid"]
-    default: 30
     help:
       de: "Grid-Energiezähler VRM instance- kann im VRM Portal oder im RemoteUI ausgelesen werden."
-      en: "Grid-Meter VRM instance- can be read out in VRM portal or via remoteUI."
+      en: "Grid meter VRM instance- can be read out in VRM portal or via remoteUI."
   # battery control
   - name: minsoc
     type: number
@@ -53,6 +57,7 @@ render: |
         address: 822 # L3 grid power
         type: input
         decode: int16
+  {{ if .meterid }}
   currents:
     - source: modbus
       uri: {{ .host }}:{{ .port }}
@@ -78,6 +83,7 @@ render: |
         type: input
         decode: int16
       scale: 0.1
+  {{- end }}
   {{- end }}
   {{- if eq .usage "pv" }}
   power:
