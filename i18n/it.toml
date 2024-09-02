@@ -6,33 +6,97 @@ discharge = "Prevenire la scarica della batteria in modalità veloce oppure quan
 disclaimerHint = "“Nota:”"
 disclaimerText = "“Queste impostazioni riguardano solamente la modalità solare. Il comportamento di ricarica è adattato di conseguenza.”"
 gridChargeTab = "Carica un corso dalla rete."
-legendBottomName = "Priorità  alla carica della batteria di casa”"
-legendBottomSubline = "“Non usato per ricarica”"
+legendBottomName = "Priorità alla carica della batteria di casa”"
+legendBottomSubline = "Fino al raggiungimento del {soc}."
 legendMiddleName = "“Priorità alla carica del veicolo”"
-legendMiddleSubline = "“Casa seconda”"
+legendMiddleSubline = "Quando la batteria supera il {soc}."
 legendTitle = "“Come dovrebbe essere utilizzata l’energia solare?”"
-legendTopAutostart = "“Parte automaticamente”"
-legendTopName = "“Ricarica supportata dalla batteria”"
-legendTopSubline = "“Senza interruzioni”"
+legendTopAutostart = "Parte automaticamente"
+legendTopName = "Ricarica del veicolo assistita dalla batteria"
+legendTopSubline = "quando la batteria supera il {soc}."
 modalTitle = "“Batteria di casa”"
-usageTab = "Uso della  batteria."
+usageTab = "Uso della batteria"
 
 [batterySettings.bufferStart]
-above = "“Quando supera {soc}”"
-full = "“Quando è a {soc}”"
-never = "“Solo con abbastanza surplus”"
+above = "Quando supera il {soc}."
+full = "Quando è al {soc}."
+never = "Solo con abbastanza surplus."
 
 [config]
 
 [config.battery]
+titleAdd = "Aggiungi Batteria"
+titleEdit = "Modifica Batteria"
+
+[config.circuits]
+title = "Gestione del Carico"
+
+[config.control]
+description = "Normalmente le impostazioni di base vanno bene. Modifica solo se sai cosa stai facendo."
+descriptionInterval = "Intervallo ciclo di aggiornamento in secondi. Definisce quanto spesso evcc rileva i dati, modifica la potenza di carica e aggiorna l'interfaccia utente. Intervalli ridotti (<30s) possono causare oscillazioni e comportamenti indesiderati."
+labelInterval = "intervallo di aggiornamento"
+labelResidualPower = "Potenza residua"
 
 [config.deviceValue]
+chargeStatusA = "non connesso"
+chargeStatusB = "connesso"
+chargeStatusC = "in carica"
+chargeStatusF = "errore"
+chargedEnergy = "Carico"
+currency = "Valuta"
+current = "Corrente"
+currentRange = "Corrente"
+enabled = "Abilitato"
+no = "no"
+odometer = "Odometro"
+phaseCurrents = "Corrente L1..L3"
+phasePowers = "Potenza L1..L3"
+phaseVoltages = "Voltaggio L1..L3"
+power = "Potenza"
+powerRange = "Potenza"
+range = "Intervallo"
+soc = "Stato di Carica"
+socLimit = "Limite"
+temp = "Temperatura"
+url = "URL"
+yes = "si"
+
+[config.eebus]
+description = "Configurazione che permette a evcc di comunicare con altri dispositivi EEBus"
+title = "EEBus"
 
 [config.form]
+example = "Esempio"
+optional = "facoltativo"
 
 [config.general]
+cancel = "Cancella"
+docsLink = "Vedi la documentazione."
+experimental = "Sperimentale"
+off = "spento"
+on = "acceso"
+password = "Password"
+remove = "Rimuovi"
+save = "Salva"
+telemetry = "Telemetria"
+title = "Titolo"
 
 [config.grid]
+
+[config.hems]
+description = "Connetti evcc ad un altro sistema di gestione della corrente di casa"
+title = "HEMS"
+
+[config.influx]
+description = "Scrive i dati di ricarica e le altre metriche su InfluxDB. Usa Grafana o altri strumenti per visualizzare i dati."
+descriptionToken = "Controlla la documentazione di InfluxDB per imparare a crearne uno. https://docs.influxdata.com/influxdb/v2/admin/"
+labelDatabase = "Database"
+labelPassword = "Password"
+labelToken = "Token API"
+labelUrl = "URL"
+labelUser = "Nome utente"
+title = "InfluxDB"
+v1Support = "Serve supporto per InfluxDB 1.x?"
 
 [config.main]
 

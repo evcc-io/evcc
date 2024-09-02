@@ -255,11 +255,11 @@ greenEnergy = "Sončna energija"
 greenEnergySub1 = "napolnjeno z evcc"
 greenEnergySub2 = "od Oktobra 2022"
 greenShare = "Sončni delež"
-greenShareSub1 = "napajanje zagotavlja"
-greenShareSub2 = "sončno in baterijsko shranjevanje"
+greenShareSub1 = "napajanja zagotavlja"
+greenShareSub2 = "sončna in baterijska energija"
 power = "Moč polnjenja"
 powerSub1 = "{activeClients} od {totalClients} udeležencev"
-powerSub2 = "polnjenje…"
+powerSub2 = "trenutno polni…"
 tabTitle = "Skupnost v živo"
 
 [footer.savings]
@@ -307,7 +307,7 @@ victron = "Uporabljate evcc na strojni opremi Victron Energy in imate dostop do 
 
 [footer.telemetry]
 optIn = "Želim prispevati svoje podatke."
-optInMoreDetails = "Več informacij na {0}."
+optInMoreDetails = "Več informacij {0}."
 optInMoreDetailsLink = "tukaj"
 optInSponsorship = "Potrebno je sponzoriranje."
 
@@ -675,7 +675,7 @@ label = "Telemetrija"
 [settings.theme]
 auto = "sistem"
 dark = "temno"
-label = "Design"
+label = "Izgled"
 light = "svetlo"
 
 [settings.unit]
