@@ -160,21 +160,19 @@ func NewOCPP(id string, connector int, idtag string,
 		return nil, fmt.Errorf("invalid connector: %d", connector)
 	}
 
-	conn, err := ocpp.NewConnector(log, connector, cp, timeout)
-	if err != nil {
-		return nil, err
-	}
-
 	if idtag == defaultIdTag && cp.IdTag != "" {
 		idtag = cp.IdTag
+	}
+
+	conn, err := ocpp.NewConnector(log, connector, cp, timeout, remoteStart, idtag)
+	if err != nil {
+		return nil, err
 	}
 
 	c := &OCPP{
 		log:            log,
 		cp:             cp,
 		conn:           conn,
-		idtag:          idtag,
-		remoteStart:    remoteStart,
 		stackLevelZero: stackLevelZero,
 		timeout:        timeout,
 	}
@@ -195,13 +193,6 @@ func (c *OCPP) Connector() *ocpp.Connector {
 	return c.conn
 }
 
-func (c *OCPP) effectiveIdTag() string {
-	if idtag := c.conn.IdTag(); idtag != "" {
-		return idtag
-	}
-	return c.idtag
-}
-
 // wait waits for a CP roundtrip with timeout
 func (c *OCPP) wait(err error, rc chan error) error {
 	return ocpp.Wait(err, rc, c.timeout)
@@ -212,18 +203,6 @@ func (c *OCPP) Status() (api.ChargeStatus, error) {
 	status, err := c.conn.Status()
 	if err != nil {
 		return api.StatusNone, err
-	}
-
-	if c.conn.NeedsAuthentication() {
-		if c.remoteStart {
-			// lock the cable by starting remote transaction after vehicle connected
-			if err := c.initTransaction(); err != nil {
-				c.log.WARN.Printf("failed to start remote transaction: %v", err)
-			}
-		} else {
-			// TODO: bring this status to UI
-			c.log.WARN.Printf("waiting for local authentication")
-		}
 	}
 
 	switch status {
@@ -319,22 +298,6 @@ func (c *OCPP) Enable(enable bool) error {
 	}
 
 	return err
-}
-
-func (c *OCPP) initTransaction() error {
-	rc := make(chan error, 1)
-	err := ocpp.Instance().RemoteStartTransaction(c.cp.ID(), func(resp *core.RemoteStartTransactionConfirmation, err error) {
-		if err == nil && resp != nil && resp.Status != types.RemoteStartStopStatusAccepted {
-			err = errors.New(string(resp.Status))
-		}
-
-		rc <- err
-	}, c.effectiveIdTag(), func(request *core.RemoteStartTransactionRequest) {
-		connector := c.conn.ID()
-		request.ConnectorId = &connector
-	})
-
-	return c.wait(err, rc)
 }
 
 func (c *OCPP) setChargingProfile(profile *types.ChargingProfile) error {

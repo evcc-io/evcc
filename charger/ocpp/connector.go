@@ -1,6 +1,7 @@
 package ocpp
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -32,9 +33,12 @@ type Connector struct {
 	txnCount int // change initial value to the last known global transaction. Needs persistence
 	txnId    int
 	idTag    string
+
+	remoteStart bool
+	remoteIdTag string
 }
 
-func NewConnector(log *util.Logger, id int, cp *CP, timeout time.Duration) (*Connector, error) {
+func NewConnector(log *util.Logger, id int, cp *CP, timeout time.Duration, remoteStart bool, remoteIdTag string) (*Connector, error) {
 	conn := &Connector{
 		log:          log,
 		cp:           cp,
@@ -43,6 +47,8 @@ func NewConnector(log *util.Logger, id int, cp *CP, timeout time.Duration) (*Con
 		statusC:      make(chan struct{}, 1),
 		measurements: make(map[types.Measurand]types.SampledValue),
 		timeout:      timeout,
+		remoteStart:  remoteStart,
+		remoteIdTag:  remoteIdTag,
 	}
 
 	err := cp.registerConnector(id, conn)
@@ -148,6 +154,22 @@ func (conn *Connector) NeedsAuthentication() bool {
 	defer conn.mu.Unlock()
 
 	return conn.status != nil && conn.txnId == 0 && conn.status.Status == core.ChargePointStatusPreparing
+}
+
+func (conn *Connector) initTransaction() error {
+	rc := make(chan error, 1)
+	err := Instance().RemoteStartTransaction(conn.cp.ID(), func(resp *core.RemoteStartTransactionConfirmation, err error) {
+		if err == nil && resp != nil && resp.Status != types.RemoteStartStopStatusAccepted {
+			err = errors.New(string(resp.Status))
+		}
+
+		rc <- err
+	}, conn.remoteIdTag, func(request *core.RemoteStartTransactionRequest) {
+		connector := conn.id
+		request.ConnectorId = &connector
+	})
+
+	return Wait(err, rc, conn.timeout)
 }
 
 // isMeterTimeout checks if meter values are outdated.

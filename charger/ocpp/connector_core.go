@@ -37,6 +37,17 @@ func (conn *Connector) StatusNotification(request *core.StatusNotificationReques
 		conn.log.TRACE.Printf("ignoring status: %s < %s", request.Timestamp.Time, conn.status.Timestamp)
 	}
 
+	if conn.NeedsAuthentication() {
+		if conn.remoteStart {
+			// lock the cable by starting remote transaction after vehicle connected
+			if err := conn.initTransaction(); err != nil {
+				conn.log.WARN.Printf("failed to start remote transaction: %v", err)
+			}
+		} else {
+			conn.log.DEBUG.Printf("waiting for local authentication")
+		}
+	}
+
 	return new(core.StatusNotificationConfirmation), nil
 }
 
