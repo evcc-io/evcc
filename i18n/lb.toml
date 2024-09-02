@@ -286,8 +286,8 @@ tabTitle = "Meng Daten"
 [footer.savings.period]
 30d = "déi lescht 30 Deeg"
 365d = "lescht 365 Deeg"
-total = "gesamt"
 thisYear = "dëst Joer"
+total = "gesamt"
 
 [footer.sponsor]
 becomeSponsor = "Gitt ee Sponsor"
@@ -456,7 +456,7 @@ label = "Max. Stroum"
 label = "Min. Stroum"
 
 [main.loadpointSettings.minSoc]
-description = "D'Gefier gëtt "séier" op {0} am Solarmodus opgelueden. Da geet et weider mat Solariwwerschëss. Dëst ass nëtzlech fir eng Minimum-Reechwäit och wärend méi däischter Deeg ze garantéieren."
+description = "D'Gefier gëtt \"séier\" op {0} am Solarmodus opgelueden. Da geet et weider mat Solariwwerschëss. Dëst ass nëtzlech fir eng Minimum-Reechwäit och wärend méi däischter Deeg ze garantéieren."
 label = "Min. oplueden %"
 
 [main.loadpointSettings.phasesConfigured]
@@ -542,6 +542,7 @@ ready = "bereet"
 vehicleLimit = "Limitt vum Gefier: {soc}"
 
 [main.vehicleStatus]
+awaitingAuthorization = "Waarden op d'Autorisatioun."
 charging = "Luet ..."
 cheapEnergyCharging = "Gënschteg Energie verfügbar."
 cheapEnergyNextStart = "Gënschteg Energie an {duration}."
@@ -551,6 +552,7 @@ cleanEnergyNextStart = "Gréng Energie an {duration}."
 cleanEnergySet = "CO₂-Limitt gesetzt."
 climating = "Virklimatiséierung erkannt."
 connected = "Verbonne."
+disconnectRequired = "Virgang ofgebrach. Nach eng Kéier verbannen."
 disconnected = "Deconnectéiert."
 finished = "Ofgeschloss."
 minCharge = "Minimum oplueden bis {soc}."
@@ -566,8 +568,6 @@ vehicleLimit = "Limitt vum Gefier."
 vehicleLimitReached = "Limitt vum Gefier erreecht."
 waitForVehicle = "Prett. Waarden op d'Gefier ..."
 welcome = "Kuerz Lueden fir d'Verbindung ze confirméieren."
-awaitingAuthorization = "Waarden op d'Autorisatioun."
-disconnectRequired = "Virgang ofgebrach. Nach eng Kéier verbannen."
 
 [notifications]
 dismissAll = "Notifikatiounen ewechuelen"

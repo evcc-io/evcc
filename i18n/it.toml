@@ -25,50 +25,78 @@ never = "Solo con abbastanza surplus."
 [config]
 
 [config.battery]
-titleAdd = Aggiungi Batteria
+titleAdd = "Aggiungi Batteria"
 titleEdit = "Modifica Batteria"
 
+[config.circuits]
+title = "Gestione del Carico"
+
+[config.control]
+description = "Normalmente le impostazioni di base vanno bene. Modifica solo se sai cosa stai facendo."
+descriptionInterval = "Intervallo ciclo di aggiornamento in secondi. Definisce quanto spesso evcc rileva i dati, modifica la potenza di carica e aggiorna l'interfaccia utente. Intervalli ridotti (<30s) possono causare oscillazioni e comportamenti indesiderati."
+labelInterval = "intervallo di aggiornamento"
+labelResidualPower = "Potenza residua"
+
 [config.deviceValue]
-phaseCurrents = "Corrente L1..L3"
-current = "Corrente"
-phasePowers = "Potenza L1..L3"
 chargeStatusA = "non connesso"
 chargeStatusB = "connesso"
 chargeStatusC = "in carica"
 chargeStatusF = "errore"
 chargedEnergy = "Carico"
 currency = "Valuta"
+current = "Corrente"
+currentRange = "Corrente"
+enabled = "Abilitato"
 no = "no"
 odometer = "Odometro"
-temp = "Temperatura"
-url = "URL"
-yes = "si"
+phaseCurrents = "Corrente L1..L3"
+phasePowers = "Potenza L1..L3"
 phaseVoltages = "Voltaggio L1..L3"
 power = "Potenza"
+powerRange = "Potenza"
 range = "Intervallo"
 soc = "Stato di Carica"
 socLimit = "Limite"
-currentRange = "Corrente"
-powerRange = "Potenza"
-enabled = "Abilitato"
+temp = "Temperatura"
+url = "URL"
+yes = "si"
+
+[config.eebus]
+description = "Configurazione che permette a evcc di comunicare con altri dispositivi EEBus"
+title = "EEBus"
 
 [config.form]
-optional = "facoltativo"
 example = "Esempio"
+optional = "facoltativo"
 
 [config.general]
 cancel = "Cancella"
-save = "Salva"
 docsLink = "Vedi la documentazione."
 experimental = "Sperimentale"
+off = "spento"
 on = "acceso"
+password = "Password"
+remove = "Rimuovi"
+save = "Salva"
 telemetry = "Telemetria"
 title = "Titolo"
-password = "Password"
-off = "spento"
-remove = "Rimuovi"
 
 [config.grid]
+
+[config.hems]
+description = "Connetti evcc ad un altro sistema di gestione della corrente di casa"
+title = "HEMS"
+
+[config.influx]
+description = "Scrive i dati di ricarica e le altre metriche su InfluxDB. Usa Grafana o altri strumenti per visualizzare i dati."
+descriptionToken = "Controlla la documentazione di InfluxDB per imparare a crearne uno. https://docs.influxdata.com/influxdb/v2/admin/"
+labelDatabase = "Database"
+labelPassword = "Password"
+labelToken = "Token API"
+labelUrl = "URL"
+labelUser = "Nome utente"
+title = "InfluxDB"
+v1Support = "Serve supporto per InfluxDB 1.x?"
 
 [config.main]
 
@@ -396,32 +424,3 @@ title = "Errore di avvio"
 cancel = "Cancella"
 template = "Produttore"
 test = "Test"
-
-
-[config.circuits]
-title = "Gestione del Carico"
-
-[config.control]
-labelResidualPower = "Potenza residua"
-labelInterval = "intervallo di aggiornamento"
-descriptionInterval = "Intervallo ciclo di aggiornamento in secondi. Definisce quanto spesso evcc rileva i dati, modifica la potenza di carica e aggiorna l'interfaccia utente. Intervalli ridotti (<30s) possono causare oscillazioni e comportamenti indesiderati."
-description = "Normalmente le impostazioni di base vanno bene. Modifica solo se sai cosa stai facendo."
-
-[config.eebus]
-description = "Configurazione che permette a evcc di comunicare con altri dispositivi EEBus"
-title = "EEBus"
-
-[config.hems]
-description = "Connetti evcc ad un altro sistema di gestione della corrente di casa"
-title = "HEMS"
-
-[config.influx]
-description = "Scrive i dati di ricarica e le altre metriche su InfluxDB. Usa Grafana o altri strumenti per visualizzare i dati."
-descriptionToken = "Controlla la documentazione di InfluxDB per imparare a crearne uno. https://docs.influxdata.com/influxdb/v2/admin/"
-labelPassword = "Password"
-labelDatabase = "Database"
-labelToken = "Token API"
-v1Support = "Serve supporto per InfluxDB 1.x?"
-labelUser = "Nome utente"
-labelUrl = "URL"
-title = "InfluxDB"

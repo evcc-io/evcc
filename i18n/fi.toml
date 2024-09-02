@@ -289,8 +289,8 @@ tabTitle = "Tietoni"
 [footer.savings.period]
 30d = "viimeiset 30 päivää"
 365d = "viimeiset 365 päivää"
-total = "kaikki"
 thisYear = "tämä vuosi"
+total = "kaikki"
 
 [footer.sponsor]
 becomeSponsor = "Ryhdy sponsoriksi"
@@ -542,6 +542,7 @@ ready = "valmis"
 vehicleLimit = "Ajoneuvon raja {soc}"
 
 [main.vehicleStatus]
+awaitingAuthorization = "Odotetaan valtuutusta."
 charging = "Lataa…"
 cheapEnergyCharging = "Edullista energiaa saatavilla"
 cheapEnergyNextStart = "Energia on edullista {duration} ajan."
@@ -551,6 +552,7 @@ cleanEnergyNextStart = "Puhdasta energiaa {duration} kuluessa."
 cleanEnergySet = "CO₂-raja asetettu."
 climating = "Esilämmitys/-viilennys havaittu."
 connected = "Yhdistetty."
+disconnectRequired = "Istunto lopetettu. Yhdistä uudelleen."
 disconnected = "Irroitettu."
 finished = "Valmis."
 minCharge = "Ladataan minimissään {soc}."
@@ -566,8 +568,6 @@ vehicleLimit = "Ajoneuvon latausraja"
 vehicleLimitReached = "Ajoneuvon raja saavutettu."
 waitForVehicle = "Valmiina. Odotetaan ajoneuvoa…"
 welcome = "Lyhyt aloitus lataus yhteyden vahvistamiseksi."
-awaitingAuthorization = "Odotetaan valtuutusta."
-disconnectRequired = "Istunto lopetettu. Yhdistä uudelleen."
 
 [notifications]
 dismissAll = "Hylkää kaikki"
