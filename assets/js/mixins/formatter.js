@@ -46,7 +46,7 @@ export default {
       if (POWER_UNIT.AUTO === format) {
         if (watt >= 1_000_000) {
           unit = POWER_UNIT.MW;
-        } else if (watt >= 1000) {
+        } else if (watt >= 1000 || watt === 0) {
           unit = POWER_UNIT.KW;
         } else {
           unit = POWER_UNIT.W;

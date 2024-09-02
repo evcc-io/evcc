@@ -337,12 +337,10 @@ export default {
 			api.delete(this.apiPath("vehicle"));
 		},
 		fmtPower(value) {
-			const inKw = value == 0 || value >= 1000;
-			return this.fmtW(value, inKw ? POWER_UNIT.KW : POWER_UNIT.AUTO);
+			return this.fmtW(value, POWER_UNIT.AUTO);
 		},
 		fmtEnergy(value) {
-			const inKw = value == 0 || value >= 1000;
-			return this.fmtWh(value, inKw ? POWER_UNIT.KW : POWER_UNIT.AUTO);
+			return this.fmtWh(value, POWER_UNIT.AUTO);
 		},
 		openSettingsModal() {
 			const modal = Modal.getOrCreateInstance(
