@@ -36,7 +36,7 @@ title = "Kuormanhallinta"
 
 [config.control]
 description = "Yleensä oletusarvot ovat sopivat. Muuta vain jos tiedät mitä olet tekemässä."
-descriptionInterval = "Ohjaussilmukan päivitysjakso sekunneissa. Määrittää, kuinka usein evcc lukee mittaritietoja, säätää lataustehoa ja päivittää käyttöliittymän. Lyhyet välit alle (30 s) voivat aiheuttaa oskillaatiota ja ei-toivotua toimintaa"
+descriptionInterval = "Ohjaussilmukan päivitysjakso sekunneissa. Määrittää, kuinka usein evcc lukee mittaritietoja, säätää lataustehoa ja päivittää käyttöliittymän. Lyhyet välit alle (30 s) voivat aiheuttaa oskillaatiota ja ei-toivottua toimintaa"
 descriptionMaxGridSupply = "Sopii vain hybridi-inverttereille, jotka eivät pysty tuottamaan täyttä tasavirtaa kotiin AC:n kautta. Tämä skenaario voi johtaa ei toivottuun verkon käyttöön, koska evcc olettaa koko tasavirran olevan käytettävissä. Käytä vähintään 50 W:n arvoa tämän estämiseksi."
 descriptionResidualPower = "Siirtää ohjaussilmukan toimintapistettä. Jos sinulla on kodissa akku on suositeltavaa asettaa arvo 100 W. Näin akku on hieman etusijalla sähköverkon käyttöön nähden."
 labelInterval = "Päivitystiheys"
@@ -290,6 +290,7 @@ tabTitle = "Tietoni"
 30d = "viimeiset 30 päivää"
 365d = "viimeiset 365 päivää"
 total = "kaikki"
+thisYear = "tämä vuosi"
 
 [footer.sponsor]
 becomeSponsor = "Ryhdy sponsoriksi"
@@ -565,6 +566,8 @@ vehicleLimit = "Ajoneuvon latausraja"
 vehicleLimitReached = "Ajoneuvon raja saavutettu."
 waitForVehicle = "Valmiina. Odotetaan ajoneuvoa…"
 welcome = "Lyhyt aloitus lataus yhteyden vahvistamiseksi."
+awaitingAuthorization = "Odotetaan valtuutusta."
+disconnectRequired = "Istunto lopetettu. Yhdistä uudelleen."
 
 [notifications]
 dismissAll = "Hylkää kaikki"
