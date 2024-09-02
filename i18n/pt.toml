@@ -27,8 +27,8 @@ never = "apenas com excesso suficiente."
 [config]
 
 [config.battery]
-titleAdd = "Adicionar contador de bateria"
-titleEdit = "Editar contador de bateria"
+titleAdd = "Adicionar bateria"
+titleEdit = "Editar bateria"
 
 [config.circuits]
 description = "Assegura que a soma de todos os pontos de carga conectados a um circuito não exceda os limites de potência e corrente configurados. Circuitos podem ser aninhados para construir uma hierarquia."
@@ -36,7 +36,7 @@ title = "Gerenciamento de carga"
 
 [config.control]
 description = "No geral, os valores padrão estão bem. Apenas mude-os se você sabe o que está fazendo."
-descriptionInterval = "Ciclo de atualização de loop de controle em segundos. Define com que frequência o evcc lê dados do medidor, ajusta o poder de carregamento e atualiza a interface do usuário. Intervalos curtos (< 30s) podem causar aszilações e comportamento indesejado."
+descriptionInterval = "Ciclo de atualização de loop de controle em segundos. Define com que frequência o evcc lê dados do medidor, ajusta o poder de carregamento e atualiza a interface do usuário. Intervalos curtos (< 30s) podem causar oscilações e comportamentos indesejados."
 descriptionMaxGridSupply = "Só relevante para inversores híbridos que não são capazes de produzir o poder de geração DC completo para a casa via AC. Este szenario pode levar ao uso indesejado da grade, uma vez que o evcc assume que a potência total DC está disponível. Use um valor de pelo menos 50 W para evitar isso."
 descriptionResidualPower = "Evita o ponto de operação do circuito de controle. Se você tem uma bateria em casa, é recomendável definir um valor de 100 W. Desta forma, a bateria terá uma leve prioridade sobre o uso da rede."
 labelInterval = "Intervalo actualizado"
@@ -79,6 +79,7 @@ temp = "Temperatura"
 topic = "Tema"
 url = "URL"
 yes = "sim"
+controllable = "Controlável"
 
 [config.eebus]
 description = "Configuração que permite o evcc se comunicar com outros dispositivos EEBus."
@@ -289,6 +290,7 @@ tabTitle = "Meus dados"
 30d = "últimos 30 dias"
 365d = "últimos 365 dias"
 total = "total"
+thisYear = "este ano"
 
 [footer.sponsor]
 becomeSponsor = "Torne-se um patrocinador"
@@ -571,6 +573,8 @@ vehicleLimit = "“Limite dos veículos.”"
 vehicleLimitReached = "Limite de veículo atingido."
 waitForVehicle = "Pronto. Esperando pelo veículo..."
 welcome = "Carga inicial curta para confirmar a ligação."
+awaitingAuthorization = "À espera de autorização."
+disconnectRequired = "Sessão terminada. Por favor, volte a ligar-se."
 
 [notifications]
 dismissAll = "Recusar tudos"
