@@ -17,6 +17,7 @@ require (
 	github.com/benbjohnson/clock v1.3.5
 	github.com/bogosj/tesla v1.3.1
 	github.com/cenkalti/backoff/v4 v4.3.0
+	github.com/cli/browser v1.3.0
 	github.com/cloudfoundry/jibber_jabber v0.0.0-20151120183258-bcc4c8345a21
 	github.com/coder/websocket v1.8.12
 	github.com/containrrr/shoutrrr v0.8.0
@@ -71,7 +72,6 @@ require (
 	github.com/nicksnyder/go-i18n/v2 v2.4.0
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/philippseith/signalr v0.6.3
-	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
 	github.com/prometheus-community/pro-bing v0.4.1
 	github.com/prometheus/client_golang v1.20.2
 	github.com/prometheus/common v0.57.0
