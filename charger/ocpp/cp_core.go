@@ -57,16 +57,11 @@ func (cp *CP) StatusNotification(request *core.StatusNotificationRequest) (*core
 		return nil, ErrInvalidRequest
 	}
 
-	if request.ConnectorId == 0 {
-		return new(core.StatusNotificationConfirmation), nil
+	if conn := cp.connectorByID(request.ConnectorId); conn != nil {
+		return conn.StatusNotification(request)
 	}
 
-	conn := cp.connectorByID(request.ConnectorId)
-	if conn == nil {
-		return nil, ErrInvalidConnector
-	}
-
-	return conn.StatusNotification(request)
+	return new(core.StatusNotificationConfirmation), nil
 }
 
 func (cp *CP) DataTransfer(request *core.DataTransferRequest) (*core.DataTransferConfirmation, error) {
