@@ -24,7 +24,7 @@ export const POWER_UNIT = Object.freeze({
 export default {
   data: function () {
     return {
-      POWER_UNIT: POWER_UNIT,
+      POWER_UNIT,
       fmtLimit: 100,
       fmtDigits: 1,
     };
