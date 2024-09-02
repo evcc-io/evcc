@@ -294,6 +294,7 @@ tabTitle = "Mina uppgifter"
 30d = "senaste 30 dagar"
 365d = "senaste 365 dagarna"
 total = "totalt"
+thisYear = "detta år"
 
 [footer.sponsor]
 becomeSponsor = "Bli sponsor"
@@ -572,6 +573,8 @@ vehicleLimit = "Fordonsgräns."
 vehicleLimitReached = "Fordonets gräns nådd."
 waitForVehicle = "Redo. Väntar på fordon..."
 welcome = "Kort inledande laddning för att kontrollera förbindelsen."
+awaitingAuthorization = "Väntar på godkännande."
+disconnectRequired = "Session avbruten. Prova att återansluta."
 
 [notifications]
 dismissAll = "Avvisa alla"
