@@ -153,10 +153,16 @@ func (conn *Connector) NeedsAuthentication() bool {
 	conn.mu.Lock()
 	defer conn.mu.Unlock()
 
+	return conn.isWaitingForAuth()
+}
+
+// isWaitingForAuth checks if meter values are outdated.
+// Must only be called while holding lock.
+func (conn *Connector) isWaitingForAuth() bool {
 	return conn.status != nil && conn.txnId == 0 && conn.status.Status == core.ChargePointStatusPreparing
 }
 
-func (conn *Connector) initTransaction() error {
+func (conn *Connector) initTransaction() {
 	rc := make(chan error, 1)
 	err := Instance().RemoteStartTransaction(conn.cp.ID(), func(resp *core.RemoteStartTransactionConfirmation, err error) {
 		if err == nil && resp != nil && resp.Status != types.RemoteStartStopStatusAccepted {
@@ -169,7 +175,9 @@ func (conn *Connector) initTransaction() error {
 		request.ConnectorId = &connector
 	})
 
-	return Wait(err, rc, conn.timeout)
+	if err := Wait(err, rc, conn.timeout); err != nil {
+		conn.log.WARN.Printf("failed to start remote transaction: %v", err)
+	}
 }
 
 // isMeterTimeout checks if meter values are outdated.
