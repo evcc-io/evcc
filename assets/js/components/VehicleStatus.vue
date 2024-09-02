@@ -626,12 +626,13 @@ export default {
 				}
 				return;
 			}
-			if (!instance) {
+			let newInstance = instance;
+			if (!newInstance) {
 				const trigger = hoverOnly ? "hover" : "hover focus";
-				instance = new Tooltip(ref, { title: " ", trigger });
+				newInstance = new Tooltip(ref, { title: " ", trigger });
 			}
-			instance.setContent({ ".tooltip-inner": content });
-			return instance;
+			newInstance.setContent({ ".tooltip-inner": content });
+			return newInstance;
 		},
 	},
 };
