@@ -21,7 +21,6 @@ var (
 )
 
 func (cp *CP) Authorize(request *core.AuthorizeRequest) (*core.AuthorizeConfirmation, error) {
-	// TODO check if this authorizes foreign RFID tags
 	res := &core.AuthorizeConfirmation{
 		IdTagInfo: &types.IdTagInfo{
 			Status: types.AuthorizationStatusAccepted,
@@ -34,7 +33,7 @@ func (cp *CP) Authorize(request *core.AuthorizeRequest) (*core.AuthorizeConfirma
 func (cp *CP) BootNotification(request *core.BootNotificationRequest) (*core.BootNotificationConfirmation, error) {
 	res := &core.BootNotificationConfirmation{
 		CurrentTime: types.Now(),
-		Interval:    60, // TODO
+		Interval:    60,
 		Status:      core.RegistrationStatusAccepted,
 	}
 
