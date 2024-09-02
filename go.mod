@@ -17,6 +17,7 @@ require (
 	github.com/benbjohnson/clock v1.3.5
 	github.com/bogosj/tesla v1.3.1
 	github.com/cenkalti/backoff/v4 v4.3.0
+	github.com/cli/browser v1.3.0
 	github.com/cloudfoundry/jibber_jabber v0.0.0-20151120183258-bcc4c8345a21
 	github.com/coder/websocket v1.8.12
 	github.com/containrrr/shoutrrr v0.8.0
@@ -67,14 +68,13 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mlnoga/rct v0.1.2-0.20240421173556-1c5b75037e2f
 	github.com/muka/go-bluetooth v0.0.0-20240701044517-04c4f09c514e
-	github.com/mxschmitt/golang-combinations v1.1.0
+	github.com/mxschmitt/golang-combinations v1.2.0
 	github.com/nicksnyder/go-i18n/v2 v2.4.0
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/philippseith/signalr v0.6.3
-	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
 	github.com/prometheus-community/pro-bing v0.4.1
 	github.com/prometheus/client_golang v1.20.2
-	github.com/prometheus/common v0.55.0
+	github.com/prometheus/common v0.57.0
 	github.com/robertkrimen/otto v0.4.0
 	github.com/samber/lo v1.47.0
 	github.com/sirupsen/logrus v1.9.3
@@ -102,7 +102,7 @@ require (
 	golang.org/x/sync v0.8.0
 	golang.org/x/text v0.17.0
 	golang.org/x/tools v0.24.0
-	google.golang.org/grpc v1.65.0
+	google.golang.org/grpc v1.66.0
 	google.golang.org/protobuf v1.34.2
 	gopkg.in/yaml.v3 v3.0.1
 	gorm.io/gorm v1.25.11
@@ -191,7 +191,7 @@ require (
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240823204242-4ba0660f739c // indirect
 	gopkg.in/go-playground/validator.v9 v9.31.0 // indirect
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect
-	modernc.org/libc v1.59.9 // indirect
+	modernc.org/libc v1.55.3 // indirect
 	modernc.org/mathutil v1.6.0 // indirect
 	modernc.org/memory v1.8.0 // indirect
 	modernc.org/sqlite v1.32.0 // indirect
@@ -203,8 +203,6 @@ replace gopkg.in/yaml.v3 => github.com/andig/yaml v0.0.0-20240531135838-1ff5761a
 replace github.com/grid-x/modbus => github.com/evcc-io/modbus v0.0.0-20240503125516-9fd99fe0e438
 
 replace github.com/lorenzodonini/ocpp-go => github.com/evcc-io/ocpp-go v0.0.0-20240730071053-d69e53b0fce9
-
-replace modernc.org/libc => modernc.org/libc v1.58.0
 
 replace github.com/enbility/ship-go => github.com/enbility/ship-go v0.0.0-20240827103353-35c86c3ba136
 
