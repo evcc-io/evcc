@@ -44,14 +44,10 @@ export default {
     fmtW: function (watt = 0, format = POWER_UNIT.KW, withUnit = true, digits) {
       let unit = format;
       let d = digits;
-      if (watt === 0) {
-        unit = POWER_UNIT.KW;
-        d = 1;
-      }
       if (POWER_UNIT.AUTO === unit) {
         if (watt >= 1_000_000) {
           unit = POWER_UNIT.MW;
-        } else if (watt >= 1000) {
+        } else if (watt >= 1000 || 0 === watt) {
           unit = POWER_UNIT.KW;
         } else {
           unit = POWER_UNIT.W;
@@ -64,7 +60,7 @@ export default {
         value = watt / 1_000_000;
       }
       if (d === undefined) {
-        d = POWER_UNIT.KW === unit || POWER_UNIT.MW === unit ? 1 : 0;
+        d = POWER_UNIT.KW === unit || POWER_UNIT.MW === unit || 0 === watt ? 1 : 0;
       }
       return `${new Intl.NumberFormat(this.$i18n?.locale, {
         style: "decimal",
