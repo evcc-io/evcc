@@ -82,6 +82,7 @@ func (cp *CP) Setup(meterValues string, meterInterval time.Duration, timeout tim
 				case KeyAlfenPlugAndChargeIdentifier:
 					cp.IdTag = *opt.Value
 					cp.log.DEBUG.Printf("overriding default `idTag` with Alfen-specific value: %s", cp.IdTag)
+				}
 
 				if err != nil {
 					break
