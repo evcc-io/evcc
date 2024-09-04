@@ -32,7 +32,8 @@
 						></shopicon-regular-angledoublerightsmall>
 					</router-link>
 				</div>
-				<ChargingSessionTable
+				<Chart :sessions="currentSessions" />
+				<SessionTable
 					:sessions="currentSessions"
 					:vehicleFilter="vehicleFilter"
 					:loadpointFilter="loadpointFilter"
@@ -58,7 +59,7 @@
 					</a>
 				</div>
 			</main>
-			<ChargingSessionModal
+			<SessionDetailsModal
 				:session="selectedSession"
 				:vehicles="vehicleList"
 				:currency="currency"
@@ -75,14 +76,14 @@ import "@h2d2/shopicons/es/regular/angledoublerightsmall";
 import formatter from "../mixins/formatter";
 import api from "../api";
 import store from "../store";
-import ChargingSessionModal from "../components/ChargingSessionModal.vue";
-import ChargingSessionTable from "../components/ChargingSessionTable.vue";
-import settings from "../settings";
+import SessionDetailsModal from "../components/Sessions/SessionDetailsModal.vue";
+import SessionTable from "../components/Sessions/SessionTable.vue";
+import Chart from "../components/Sessions/Chart.vue";
 import TopHeader from "../components/TopHeader.vue";
 
 export default {
-	name: "ChargingSessions",
-	components: { ChargingSessionModal, ChargingSessionTable, TopHeader },
+	name: "Sessions",
+	components: { SessionDetailsModal, SessionTable, TopHeader, Chart },
 	mixins: [formatter],
 	props: {
 		notifications: Array,

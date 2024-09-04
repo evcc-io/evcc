@@ -41,7 +41,7 @@ export default function setupRouter(i18n) {
       },
       {
         path: "/sessions",
-        component: () => import("./views/ChargingSessions.vue"),
+        component: () => import("./views/Sessions.vue"),
         props: (route) => {
           const { month, year, loadpoint, vehicle } = route.query;
           return {

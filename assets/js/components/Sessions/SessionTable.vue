@@ -155,10 +155,10 @@
 </template>
 
 <script>
-import formatter from "../mixins/formatter";
-import CustomSelect from "../components/CustomSelect.vue";
-import breakpoint from "../mixins/breakpoint";
-import settings from "../settings";
+import CustomSelect from "../CustomSelect.vue";
+import formatter from "../../mixins/formatter";
+import breakpoint from "../../mixins/breakpoint";
+import settings from "../../settings";
 
 const COLUMNS_PER_BREAKPOINT = {
 	xs: 1,
@@ -170,7 +170,7 @@ const COLUMNS_PER_BREAKPOINT = {
 };
 
 export default {
-	name: "ChargingSessions",
+	name: "SessionTable",
 	components: { CustomSelect },
 	mixins: [formatter, breakpoint],
 	props: {
@@ -184,6 +184,7 @@ export default {
 			selectedColumns: settings.sessionColumns,
 		};
 	},
+	emits: ["show-session"],
 	computed: {
 		filteredSessions() {
 			return this.sessions.filter(this.filterByLoadpoint).filter(this.filterByVehicle);
