@@ -59,16 +59,10 @@ func NewWattpilot(uri, password string, cache time.Duration) (api.Charger, error
 
 func (c *Wattpilot) Log(level string, data string) {
 	switch strings.ToUpper(level) {
-	case "ERROR":
-		c.log.ERROR.Println(data)
-	case "WARN":
-		c.log.WARN.Println(data)
-	case "INFO":
-		c.log.INFO.Println(data)
-	case "DEBUG":
-		c.log.DEBUG.Println(data)
-	default:
+	case "TRACE":
 		c.log.TRACE.Println(data)
+	default:
+		c.log.DEBUG.Println(data)
 	}
 }
 
