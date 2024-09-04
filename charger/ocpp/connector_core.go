@@ -41,7 +41,7 @@ func (conn *Connector) StatusNotification(request *core.StatusNotificationReques
 		if conn.remoteStart {
 			defer conn.initTransaction()
 		} else {
-			defer conn.log.DEBUG.Printf("waiting for local authentication")
+			conn.log.DEBUG.Printf("waiting for local authentication")
 		}
 	}
 
