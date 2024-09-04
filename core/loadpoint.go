@@ -1674,7 +1674,7 @@ func (lp *Loadpoint) Update(sitePower float64, rates api.Rates, batteryBuffered,
 	lp.publish(keys.Connected, lp.connected())
 	lp.publish(keys.Charging, lp.charging())
 
-	if sr, ok := lp.charger.(api.StatusReasoner); ok && lp.GetStatus() == api.StatusB {
+	if sr, ok := lp.charger.(api.StatusReasoner); ok {
 		if r, err := sr.StatusReason(); err == nil {
 			lp.publish(keys.ChargerStatusReason, r)
 		} else {
