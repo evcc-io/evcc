@@ -13,6 +13,7 @@ import (
 // Wattpilot charger implementation
 type Wattpilot struct {
 	api *wattpilot.Wattpilot
+	log *util.Logger
 }
 
 func init() {
@@ -40,8 +41,15 @@ func NewWattpilotFromConfig(other map[string]interface{}) (api.Charger, error) {
 
 // NewWattpilot creates Wattpilot charger
 func NewWattpilot(uri, password string, cache time.Duration) (api.Charger, error) {
+	log := util.NewLogger("wattpilot").Redact(password)
+
 	c := &Wattpilot{
 		api: wattpilot.New(uri, password),
+		log: log,
+	}
+	c.api.SetLogger(log.TRACE)
+	if err := c.api.ParseLogLevel("TRACE"); err != nil {
+		log.WARN.Println("Could not set log level in wattpilot to trace: ", err)
 	}
 
 	if err := c.api.Connect(); err != nil {

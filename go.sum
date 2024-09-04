@@ -398,8 +398,8 @@ github.com/lightstep/lightstep-tracer-go v0.18.1/go.mod h1:jlF1pusYV4pidLvZ+XD0U
 github.com/lunixbochs/struc v0.0.0-20200707160740-784aaebc1d40 h1:EnfXoSqDfSNJv0VBNqY/88RNnhSGYkrHaO0mmFGbVsc=
 github.com/lunixbochs/struc v0.0.0-20200707160740-784aaebc1d40/go.mod h1:vy1vK6wD6j7xX6O6hXe621WabdtNkou2h7uRtTfRMyg=
 github.com/lyft/protoc-gen-validate v0.0.13/go.mod h1:XbGvPuh87YZc5TdIa2/I4pLk0QoUACkjt2znoq26NVQ=
-github.com/mabunixda/wattpilot v1.8.1 h1:XP+Udu1HrSTjBd4Odl0SNpSr12uvnGndoDg2vSNqcdI=
-github.com/mabunixda/wattpilot v1.8.1/go.mod h1:oXWlvKInaVt8FFSdEoNObEP5N8+4m6cbiF11M+8DAHY=
+github.com/mabunixda/wattpilot v1.8.2 h1:bYtlngd7vKXTEnpH1Ny8cJFmBXPjZ/e2xkWYkm7QVcc=
+github.com/mabunixda/wattpilot v1.8.2/go.mod h1:oXWlvKInaVt8FFSdEoNObEP5N8+4m6cbiF11M+8DAHY=
 github.com/mattn/go-colorable v0.0.9/go.mod h1:9vuHe8Xs5qXnSaW/c/ABM9alt+Vo+STaOChaDxuIBZU=
 github.com/mattn/go-colorable v0.1.2/go.mod h1:U0ppj6V5qS13XJ6of8GYAs25YV2eR4EVcfRqFIhoBtE=
 github.com/mattn/go-colorable v0.1.13 h1:fFA4WZxdEF4tXPZVKMLwD8oUnCTTo08duU7wxecdEvA=
