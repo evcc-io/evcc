@@ -327,8 +327,7 @@ export default {
 				const { rates } = res.data.result;
 				this.referenceGrid =
 					rates.reduce((acc, slot) => {
-						acc += slot.price;
-						return acc;
+						return acc + slot.price;
 					}, 0) / rates.length;
 			} catch (e) {
 				this.referenceGrid = undefined;

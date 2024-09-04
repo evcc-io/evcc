@@ -38,8 +38,10 @@ export default {
       if (val === undefined || val === null) {
         return 0;
       }
-      val = Math.abs(val);
-      return val >= this.fmtLimit ? this.round(val / 1e3, this.fmtDigits) : this.round(val, 0);
+      let absVal = Math.abs(val);
+      return absVal >= this.fmtLimit
+        ? this.round(absVal / 1e3, this.fmtDigits)
+        : this.round(absVal, 0);
     },
     fmtW: function (watt = 0, format = POWER_UNIT.KW, withUnit = true, digits) {
       let unit = format;
@@ -106,10 +108,10 @@ export default {
       if (duration <= 0) {
         return "—";
       }
-      duration = Math.round(duration);
-      var seconds = duration % 60;
-      var minutes = Math.floor(duration / 60) % 60;
-      var hours = Math.floor(duration / 3600);
+      let roundedDuration = Math.round(duration);
+      var seconds = roundedDuration % 60;
+      var minutes = Math.floor(roundedDuration / 60) % 60;
+      var hours = Math.floor(roundedDuration / 3600);
       var result = "";
       let unit = "";
       if (hours >= 1 || minUnit === "h") {
