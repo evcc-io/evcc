@@ -19,11 +19,10 @@ import (
 type Amber struct {
 	*embed
 	*request.Helper
-	log              *util.Logger
-	uri              string
-	channel          string
-	data             *util.Monitor[api.Rates]
-	useAdvancedPrice bool
+	log     *util.Logger
+	uri     string
+	channel string
+	data    *util.Monitor[api.Rates]
 }
 
 var _ api.Tariff = (*Amber)(nil)
@@ -34,11 +33,10 @@ func init() {
 
 func NewAmberFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	var cc struct {
-		embed            `mapstructure:",squash"`
-		Token            string
-		SiteID           string
-		Channel          string
-		UseAdvancedPrice bool
+		embed   `mapstructure:",squash"`
+		Token   string
+		SiteID  string
+		Channel string
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -60,13 +58,12 @@ func NewAmberFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	log := util.NewLogger("amber").Redact(cc.Token)
 
 	t := &Amber{
-		embed:            &cc.embed,
-		log:              log,
-		Helper:           request.NewHelper(log),
-		uri:              fmt.Sprintf(amber.URI, strings.ToUpper(cc.SiteID)),
-		channel:          strings.ToLower(cc.Channel),
-		data:             util.NewMonitor[api.Rates](2 * time.Hour),
-		useAdvancedPrice: cc.UseAdvancedPrice,
+		embed:   &cc.embed,
+		log:     log,
+		Helper:  request.NewHelper(log),
+		uri:     fmt.Sprintf(amber.URI, strings.ToUpper(cc.SiteID)),
+		channel: strings.ToLower(cc.Channel),
+		data:    util.NewMonitor[api.Rates](2 * time.Hour),
 	}
 
 	t.Client.Transport = &transport.Decorator{
@@ -111,7 +108,7 @@ func (t *Amber) run(done chan error) {
 					End:   endTime.Local(),
 					Price: r.PerKwh / 1e2,
 				}
-				if t.useAdvancedPrice && r.AdvancedPrice != nil {
+				if r.AdvancedPrice != nil {
 					ar.Price = r.AdvancedPrice.Predicted / 1e2
 				}
 				data = append(data, ar)
