@@ -3,6 +3,7 @@ package charger
 import (
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -47,16 +48,28 @@ func NewWattpilot(uri, password string, cache time.Duration) (api.Charger, error
 		api: wattpilot.New(uri, password),
 		log: log,
 	}
-	c.api.SetLogger(log.TRACE)
-	if err := c.api.ParseLogLevel("TRACE"); err != nil {
-		log.WARN.Println("Could not set log level in wattpilot to trace: ", err)
-	}
-
+	c.api.SetLogger(c.Log)
+	log.INFO.Println("Wattpilot connecting...")
 	if err := c.api.Connect(); err != nil {
 		return nil, err
 	}
 
 	return c, nil
+}
+
+func (c *Wattpilot) Log(level string, data string) {
+	switch strings.ToUpper(level) {
+	case "ERROR":
+		c.log.ERROR.Println(data)
+	case "WARN":
+		c.log.WARN.Println(data)
+	case "INFO":
+		c.log.INFO.Println(data)
+	case "DEBUG":
+		c.log.DEBUG.Println(data)
+	default:
+		c.log.TRACE.Println(data)
+	}
 }
 
 // Status implements the api.Charger interface
