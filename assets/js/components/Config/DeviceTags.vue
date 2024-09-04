@@ -48,11 +48,11 @@ export default {
 			}
 			switch (name) {
 				case "power":
-					return this.fmtKw(value);
+					return this.fmtW(value);
 				case "energy":
 				case "capacity":
 				case "chargedEnergy":
-					return this.fmtKWh(value * 1e3);
+					return this.fmtWh(value * 1e3);
 				case "soc":
 				case "socLimit":
 					return this.fmtPercentage(value, 1);
@@ -66,7 +66,7 @@ export default {
 				case "phaseVoltages":
 					return value.map((v) => this.fmtNumber(v, 0)).join(" ") + " V";
 				case "phasePowers":
-					return value.map((v) => this.fmtKw(v)).join(", ");
+					return value.map((v) => this.fmtW(v)).join(", ");
 				case "chargeStatus":
 					return this.$t(`config.deviceValue.chargeStatus${value}`);
 				case "gridPrice":
@@ -75,7 +75,7 @@ export default {
 				case "co2":
 					return this.fmtCo2Short(value);
 				case "powerRange":
-					return `${this.fmtKw(value[0])} / ${this.fmtKw(value[1])}`;
+					return `${this.fmtW(value[0])} / ${this.fmtW(value[1])}`;
 				case "currentRange":
 					return `${this.fmtNumber(value[0], 1)} A / ${this.fmtNumber(value[1], 1)} A`;
 				case "controllable":

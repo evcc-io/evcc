@@ -14,9 +14,17 @@ const ENERGY_PRICE_IN_SUBUNIT = {
   USD: "¢", // US cent
 };
 
+export const POWER_UNIT = Object.freeze({
+  W: "W",
+  KW: "kW",
+  MW: "MW",
+  AUTO: "",
+});
+
 export default {
   data: function () {
     return {
+      POWER_UNIT,
       fmtLimit: 100,
       fmtDigits: 1,
     };
@@ -33,23 +41,35 @@ export default {
       val = Math.abs(val);
       return val >= this.fmtLimit ? this.round(val / 1e3, this.fmtDigits) : this.round(val, 0);
     },
-    fmtKw: function (watt = 0, kw = true, withUnit = true, digits) {
-      if (digits === undefined) {
-        digits = kw ? 1 : 0;
+    fmtW: function (watt = 0, format = POWER_UNIT.KW, withUnit = true, digits) {
+      let unit = format;
+      let d = digits;
+      if (POWER_UNIT.AUTO === unit) {
+        if (watt >= 1_000_000) {
+          unit = POWER_UNIT.MW;
+        } else if (watt >= 1000 || 0 === watt) {
+          unit = POWER_UNIT.KW;
+        } else {
+          unit = POWER_UNIT.W;
+        }
       }
-      const value = kw ? watt / 1000 : watt;
-      let unit = "";
-      if (withUnit) {
-        unit = kw ? " kW" : " W";
+      let value = watt;
+      if (POWER_UNIT.KW === unit) {
+        value = watt / 1000;
+      } else if (POWER_UNIT.MW === unit) {
+        value = watt / 1_000_000;
+      }
+      if (d === undefined) {
+        d = POWER_UNIT.KW === unit || POWER_UNIT.MW === unit || 0 === watt ? 1 : 0;
       }
       return `${new Intl.NumberFormat(this.$i18n?.locale, {
         style: "decimal",
-        minimumFractionDigits: digits,
-        maximumFractionDigits: digits,
-      }).format(value)}${unit}`;
+        minimumFractionDigits: d,
+        maximumFractionDigits: d,
+      }).format(value)}${withUnit ? ` ${unit}` : ""}`;
     },
-    fmtKWh: function (watt, kw = true, withUnit = true, digits) {
-      return this.fmtKw(watt, kw, withUnit, digits) + (withUnit ? "h" : "");
+    fmtWh: function (watt, format = POWER_UNIT.KW, withUnit = true, digits) {
+      return this.fmtW(watt, format, withUnit, digits) + (withUnit ? "h" : "");
     },
     fmtNumber: function (number, decimals, unit) {
       const style = unit ? "unit" : "decimal";

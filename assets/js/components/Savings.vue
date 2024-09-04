@@ -73,12 +73,22 @@
 										unit="%"
 										:sub1="
 											$t('footer.savings.percentSelf', {
-												self: fmtKw(solarCharged * 1000, true, false, 0),
+												self: fmtW(
+													solarCharged * 1000,
+													POWER_UNIT.KW,
+													false,
+													0
+												),
 											})
 										"
 										:sub2="
 											$t('footer.savings.percentGrid', {
-												grid: fmtKw(gridCharged * 1000, true, false, 0),
+												grid: fmtW(
+													gridCharged * 1000,
+													POWER_UNIT.KW,
+													false,
+													0
+												),
 											})
 										"
 									/>
