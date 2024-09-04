@@ -10,10 +10,12 @@ params:
   - name: token
   - name: siteid
   - name: channel
+  - name: useAdvancedPrice
   - preset: tariff-base
 render: |
   type: amber
   token: {{ .token }}
   siteid: {{ .siteid }}
   channel: {{ .channel }}
+  useAdvancedPrice: {{ .useAdvancedPrice }}
   {{ include "tariff-base" . }}
