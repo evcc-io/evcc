@@ -36,7 +36,7 @@ type Connector struct {
 	remoteIdTag string
 }
 
-func NewConnector(log *util.Logger, id int, cp *CP) (*Connector, error) {
+func NewConnector(log *util.Logger, id int, cp *CP, idTag string) (*Connector, error) {
 	conn := &Connector{
 		log:          log,
 		cp:           cp,
@@ -45,7 +45,7 @@ func NewConnector(log *util.Logger, id int, cp *CP) (*Connector, error) {
 		statusC:      make(chan struct{}, 1),
 		measurements: make(map[types.Measurand]types.SampledValue),
 
-		remoteIdTag:  idTag,
+		remoteIdTag: idTag,
 	}
 
 	err := cp.registerConnector(id, conn)
@@ -89,7 +89,7 @@ func (conn *Connector) remoteStartTransactionRequest() {
 		request.ConnectorId = &connector
 	})
 
-	if err := Wait(err, rc, conn.timeout); err != nil {
+	if err := Wait(err, rc); err != nil {
 		conn.log.ERROR.Printf("failed to start remote transaction: %v", err)
 	}
 }

@@ -13,6 +13,7 @@ import (
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/util"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
+	"github.com/lorenzodonini/ocpp-go/ocpp1.6/smartcharging"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/types"
 	"github.com/samber/lo"
 )
@@ -116,7 +117,7 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 //go:generate go run ../cmd/tools/decorate.go -f decorateOCPP -b *OCPP -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.Battery,Soc,func() (float64, error)"
 
 // NewOCPP creates OCPP charger
-func NewOCPP(id string, connector int, idtag string,
+func NewOCPP(id string, connector int, idTag string,
 	meterValues string, meterInterval time.Duration,
 	stackLevelZero, remoteStart bool,
 	connectTimeout time.Duration,
@@ -156,10 +157,10 @@ func NewOCPP(id string, connector int, idtag string,
 	}
 
 	if remoteStart {
-		idtag = lo.CoalesceOrEmpty(idtag, cp.IdTag, defaultIdTag)
+		idTag = lo.CoalesceOrEmpty(idTag, cp.IdTag, defaultIdTag)
 	}
 
-	conn, err := ocpp.NewConnector(log, connector, cp, idtag)
+	conn, err := ocpp.NewConnector(log, connector, cp, idTag)
 	if err != nil {
 		return nil, err
 	}
