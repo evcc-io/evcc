@@ -34,11 +34,10 @@ type Connector struct {
 	txnId    int
 	idTag    string
 
-	remoteStart bool
 	remoteIdTag string
 }
 
-func NewConnector(log *util.Logger, id int, cp *CP, timeout time.Duration, remoteStart bool, remoteIdTag string) (*Connector, error) {
+func NewConnector(log *util.Logger, id int, cp *CP, idTag string, timeout time.Duration) (*Connector, error) {
 	conn := &Connector{
 		log:          log,
 		cp:           cp,
@@ -47,8 +46,7 @@ func NewConnector(log *util.Logger, id int, cp *CP, timeout time.Duration, remot
 		statusC:      make(chan struct{}, 1),
 		measurements: make(map[types.Measurand]types.SampledValue),
 		timeout:      timeout,
-		remoteStart:  remoteStart,
-		remoteIdTag:  remoteIdTag,
+		remoteIdTag:  idTag,
 	}
 
 	err := cp.registerConnector(id, conn)
@@ -77,6 +75,24 @@ func (conn *Connector) TriggerMessageRequest(feature remotetrigger.MessageTrigge
 			f(request)
 		}
 	})
+}
+
+func (conn *Connector) remoteStartTransactionRequest(idtag string) {
+	rc := make(chan error, 1)
+	err := Instance().RemoteStartTransaction(conn.cp.ID(), func(resp *core.RemoteStartTransactionConfirmation, err error) {
+		if err == nil && resp != nil && resp.Status != types.RemoteStartStopStatusAccepted {
+			err = errors.New(string(resp.Status))
+		}
+
+		rc <- err
+	}, idtag, func(request *core.RemoteStartTransactionRequest) {
+		connector := conn.id
+		request.ConnectorId = &connector
+	})
+
+	if err := Wait(err, rc, conn.timeout); err != nil {
+		conn.log.ERROR.Printf("failed to start remote transaction: %v", err)
+	}
 }
 
 // WatchDog triggers meter values messages if older than timeout.
@@ -160,24 +176,6 @@ func (conn *Connector) NeedsAuthentication() bool {
 // Must only be called while holding lock.
 func (conn *Connector) isWaitingForAuth() bool {
 	return conn.status != nil && conn.txnId == 0 && conn.status.Status == core.ChargePointStatusPreparing
-}
-
-func (conn *Connector) initTransaction() {
-	rc := make(chan error, 1)
-	err := Instance().RemoteStartTransaction(conn.cp.ID(), func(resp *core.RemoteStartTransactionConfirmation, err error) {
-		if err == nil && resp != nil && resp.Status != types.RemoteStartStopStatusAccepted {
-			err = errors.New(string(resp.Status))
-		}
-
-		rc <- err
-	}, conn.remoteIdTag, func(request *core.RemoteStartTransactionRequest) {
-		connector := conn.id
-		request.ConnectorId = &connector
-	})
-
-	if err := Wait(err, rc, conn.timeout); err != nil {
-		conn.log.WARN.Printf("failed to start remote transaction: %v", err)
-	}
 }
 
 // isMeterTimeout checks if meter values are outdated.

@@ -58,7 +58,6 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 		RemoteStart    bool
 	}{
 		Connector:      1,
-		IdTag:          defaultIdTag,
 		MeterInterval:  10 * time.Second,
 		ConnectTimeout: ocppConnectTimeout,
 		Timeout:        ocppTimeout,
@@ -158,11 +157,15 @@ func NewOCPP(id string, connector int, idtag string,
 		return nil, fmt.Errorf("invalid connector: %d", connector)
 	}
 
-	if idtag == defaultIdTag && cp.IdTag != "" {
+	if remoteStart && idtag == "" {
 		idtag = cp.IdTag
+
+		if cp.IdTag == "" {
+			idtag = defaultIdTag
+		}
 	}
 
-	conn, err := ocpp.NewConnector(log, connector, cp, timeout, remoteStart, idtag)
+	conn, err := ocpp.NewConnector(log, connector, cp, idtag, timeout)
 	if err != nil {
 		return nil, err
 	}

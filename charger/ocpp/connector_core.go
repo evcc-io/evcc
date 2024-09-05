@@ -38,8 +38,8 @@ func (conn *Connector) StatusNotification(request *core.StatusNotificationReques
 	}
 
 	if conn.isWaitingForAuth() {
-		if conn.remoteStart {
-			defer conn.initTransaction()
+		if conn.remoteIdTag != "" {
+			defer conn.remoteStartTransactionRequest(conn.remoteIdTag)
 		} else {
 			conn.log.DEBUG.Printf("waiting for local authentication")
 		}
