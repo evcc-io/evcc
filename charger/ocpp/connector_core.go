@@ -84,7 +84,7 @@ func (conn *Connector) StartTransaction(request *core.StartTransactionRequest) (
 	defer conn.mu.Unlock()
 
 	// expired request
-	if request.Timestamp != nil && conn.clock.Since(request.Timestamp.Time) > transactionExpiry {
+	if request.Timestamp != nil && conn.clock.Since(request.Timestamp.Time) > Timeout {
 		res := &core.StartTransactionConfirmation{
 			IdTagInfo: &types.IdTagInfo{
 				Status: types.AuthorizationStatusExpired, // reject
@@ -133,7 +133,7 @@ func (conn *Connector) StopTransaction(request *core.StopTransactionRequest) (*c
 	defer conn.mu.Unlock()
 
 	// expired request
-	if request.Timestamp != nil && conn.clock.Since(request.Timestamp.Time) > transactionExpiry {
+	if request.Timestamp != nil && conn.clock.Since(request.Timestamp.Time) > Timeout {
 		res := &core.StopTransactionConfirmation{
 			IdTagInfo: &types.IdTagInfo{
 				Status: types.AuthorizationStatusExpired, // reject

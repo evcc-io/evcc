@@ -2,14 +2,11 @@ package ocpp
 
 import (
 	"errors"
-	"time"
 
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/firmware"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/types"
 )
-
-const transactionExpiry = time.Hour
 
 var (
 	ErrInvalidRequest     = errors.New("invalid request")
