@@ -73,13 +73,13 @@ func NewIdentity(log *util.Logger, user, password, domain string) *Identity {
 func (v *Identity) Login() error {
 	token, err := v.login()
 	if err == nil {
-		v.TokenSource = oauth.RefreshTokenSource((*oauth2.Token)(token), v)
+		v.TokenSource = oauth.RefreshTokenSource(token, v)
 	}
 	return err
 }
 
 // login authenticates with username/password to get new token
-func (v *Identity) login() (*oauth.Token, error) {
+func (v *Identity) login() (*oauth2.Token, error) {
 	oc := NewOauth2Config(v.domain)
 
 	cv := oauth2.GenerateVerifier()
@@ -226,5 +226,5 @@ func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 		res, err = v.login()
 	}
 
-	return util.TokenWithExpiry(res), err
+	return util.TokenWithExpiry(&res), err
 }
