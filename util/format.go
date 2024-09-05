@@ -4,13 +4,14 @@ import (
 	"bytes"
 	"fmt"
 	"html/template"
+	"maps"
 	"regexp"
+	"slices"
 	"strings"
 	"time"
 
-	"github.com/go-sprout/sprout"
+	"github.com/go-sprout/sprout/sprigin"
 	"github.com/samber/lo"
-	"golang.org/x/exp/maps"
 )
 
 var re = regexp.MustCompile(`(?i)\${(\w+)(:([a-zA-Z0-9%.]+))?}`)
@@ -54,7 +55,7 @@ func FormatValue(format string, val interface{}) string {
 func ReplaceFormatted(s string, kv map[string]interface{}) (string, error) {
 	// Enhanced golang template logic
 	tpl, err := template.New("base").
-		Funcs(sprout.FuncMap()).
+		Funcs(sprigin.FuncMap()).
 		Funcs(map[string]any{
 			"timeRound": timeRound,
 		}).Parse(s)
@@ -96,7 +97,7 @@ func ReplaceFormatted(s string, kv map[string]interface{}) (string, error) {
 
 	// return missing keys
 	if len(wanted) > 0 {
-		return "", fmt.Errorf("wanted: %v, got: %v", wanted, maps.Keys(kv))
+		return "", fmt.Errorf("wanted: %v, got: %v", slices.Sorted(slices.Values(wanted)), slices.Sorted(maps.Keys(kv)))
 	}
 
 	return s, nil

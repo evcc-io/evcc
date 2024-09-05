@@ -52,7 +52,7 @@ export default {
 		vehicleIcons: { type: Array },
 		power: { type: Number },
 		powerTooltip: { type: Array },
-		powerInKw: { type: Boolean },
+		powerUnit: { type: String },
 		soc: { type: Number },
 		details: { type: Number },
 		detailsFmt: { type: Function },
@@ -98,7 +98,7 @@ export default {
 	},
 	methods: {
 		kw: function (watt) {
-			return this.fmtKw(watt, this.powerInKw);
+			return this.fmtW(watt, this.powerUnit);
 		},
 		updatePowerTooltip() {
 			this.powerTooltipInstance = this.updateTooltip(
@@ -124,12 +124,13 @@ export default {
 				}
 				return;
 			}
-			if (!instance) {
-				instance = new Tooltip(ref, { html: true, title: " " });
+			let newInstance = instance;
+			if (!newInstance) {
+				newInstance = new Tooltip(ref, { html: true, title: " " });
 			}
 			const html = `<div class="text-end">${content.join("<br/>")}</div>`;
-			instance.setContent({ ".tooltip-inner": html });
-			return instance;
+			newInstance.setContent({ ".tooltip-inner": html });
+			return newInstance;
 		},
 		powerClicked: function ($event) {
 			if (this.powerTooltip) {

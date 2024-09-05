@@ -142,6 +142,19 @@ func (t *TextLanguage) MarshalJSON() (out []byte, err error) {
 	return json.Marshal(s)
 }
 
+func (r Requirements) MarshalJSON() ([]byte, error) {
+	mu.Lock()
+	custom := struct {
+		EVCC        []string `json:",omitempty"`
+		Description string   `json:",omitempty"`
+	}{
+		EVCC:        r.EVCC,
+		Description: r.Description.String(encoderLanguage),
+	}
+	mu.Unlock()
+	return json.Marshal(custom)
+}
+
 // Requirements
 type Requirements struct {
 	EVCC        []string     // EVCC requirements, e.g. sponsorship
@@ -259,7 +272,7 @@ type TemplateDefinition struct {
 	Products     []Product        `json:",omitempty"` // list of products this template is compatible with
 	Protocol     string           `json:",omitempty"` // communication protocol used in this template. used do differentiate templates for the same device
 	Capabilities []string         `json:",omitempty"`
-	Requirements Requirements     `json:"-"`
+	Requirements Requirements     `json:",omitempty"`
 	Linked       []LinkedTemplate `json:",omitempty"` // a list of templates that should be processed as part of the guided setup
 	Params       []Param          `json:",omitempty"`
 	Render       string           `json:"-"` // rendering template

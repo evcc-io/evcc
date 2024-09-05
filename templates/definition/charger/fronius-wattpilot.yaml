@@ -1,6 +1,5 @@
 template: fronius-wattpilot
 protocol: localapi
-deprecated: true
 products:
   - brand: Fronius
     description:

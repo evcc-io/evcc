@@ -42,6 +42,7 @@
 							class="form-control search"
 							:placeholder="$t('log.search')"
 							v-model="search"
+							data-testid="log-search"
 						/>
 					</div>
 					<div class="filterLevel col-6 col-lg-2">

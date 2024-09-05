@@ -138,12 +138,12 @@ func (v *Identity) retrieveToken(data url.Values) (*oauth2.Token, error) {
 		"Authorization": v.region.Token.Authorization,
 	})
 
-	var tok oauth.Token
+	var tok oauth2.Token
 	if err == nil {
 		err = v.DoJSON(req, &tok)
 	}
 
-	return (*oauth2.Token)(&tok), err
+	return util.TokenWithExpiry(&tok), err
 }
 
 func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
