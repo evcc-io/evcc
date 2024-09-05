@@ -2,7 +2,6 @@ package charger
 
 import (
 	"cmp"
-	"errors"
 	"fmt"
 	"math"
 	"slices"
@@ -13,7 +12,6 @@ import (
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/util"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
-	"github.com/lorenzodonini/ocpp-go/ocpp1.6/smartcharging"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/types"
 	"github.com/samber/lo"
 )
@@ -288,19 +286,6 @@ func (c *OCPP) Enable(enable bool) error {
 	}
 
 	return err
-}
-
-func (c *OCPP) setChargingProfile(profile *types.ChargingProfile) error {
-	rc := make(chan error, 1)
-	err := ocpp.Instance().SetChargingProfile(c.cp.ID(), func(resp *smartcharging.SetChargingProfileConfirmation, err error) {
-		if err == nil && resp != nil && resp.Status != smartcharging.ChargingProfileStatusAccepted {
-			err = errors.New(string(resp.Status))
-		}
-
-		rc <- err
-	}, c.conn.ID(), profile)
-
-	return ocpp.Wait(err, rc)
 }
 
 // setCurrent sets the TxDefaultChargingProfile with given current
