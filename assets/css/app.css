@@ -110,6 +110,9 @@ html.no-transitions * {
 body {
 	background-color: var(--evcc-background);
 	color: var(--evcc-default-text);
+}
+
+body:not(.modal-open) {
 	overflow-y: scroll;
 }
 
