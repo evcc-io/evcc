@@ -9,10 +9,7 @@ import (
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/types"
 )
 
-const (
-	messageExpiry     = 30 * time.Second
-	transactionExpiry = time.Hour
-)
+const transactionExpiry = time.Hour
 
 var (
 	ErrInvalidRequest     = errors.New("invalid request")

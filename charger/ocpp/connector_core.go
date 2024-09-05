@@ -11,7 +11,7 @@ import (
 // timestampValid returns false if status timestamps are outdated
 func (conn *Connector) timestampValid(t time.Time) bool {
 	// reject if expired
-	if conn.clock.Since(t) > messageExpiry {
+	if conn.clock.Since(t) > Timeout {
 		return false
 	}
 
