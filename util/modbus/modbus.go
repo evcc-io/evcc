@@ -141,23 +141,18 @@ func physicalConnection(proto Protocol, cfg Settings) (*meterConnection, error) 
 		}
 	}
 
-	if cfg.URI != "" {
-		cfg.URI = util.DefaultPort(cfg.URI, 502)
+	cfg.URI = util.DefaultPort(cfg.URI, 502)
 
-		switch proto {
-		case Udp:
-			return registeredConnection(cfg.URI, Udp, meters.NewRTUOverUDP(cfg.URI))
-		case Rtu:
-			return registeredConnection(cfg.URI, Rtu, meters.NewRTUOverTCP(cfg.URI))
-		case Ascii:
-			return registeredConnection(cfg.URI, Ascii, meters.NewASCIIOverTCP(cfg.URI))
-		default:
-			return registeredConnection(cfg.URI, Tcp, meters.NewTCP(cfg.URI))
-		}
+	switch proto {
+	case Udp:
+		return registeredConnection(cfg.URI, Udp, meters.NewRTUOverUDP(cfg.URI))
+	case Rtu:
+		return registeredConnection(cfg.URI, Rtu, meters.NewRTUOverTCP(cfg.URI))
+	case Ascii:
+		return registeredConnection(cfg.URI, Ascii, meters.NewASCIIOverTCP(cfg.URI))
+	default:
+		return registeredConnection(cfg.URI, Tcp, meters.NewTCP(cfg.URI))
 	}
-
-	// can't happen
-	return nil, nil
 }
 
 // NewDevice creates physical modbus device from config
