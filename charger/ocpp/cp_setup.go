@@ -22,84 +22,74 @@ func (cp *CP) Setup(meterValues string, meterInterval time.Duration) error {
 	var meterValuesSampledData string
 	meterValuesSampledDataMaxLength := len(strings.Split(desiredMeasurands, ","))
 
-	rc := make(chan error, 1)
+	resp, err := cp.GetConfiguration()
+	if err != nil {
+		return err
+	}
 
-	err := Instance().GetConfiguration(cp.ID(), func(resp *core.GetConfigurationConfirmation, err error) {
-		if err == nil {
-			for _, opt := range resp.ConfigurationKey {
-				if opt.Value == nil {
-					continue
-				}
+	for _, opt := range resp.ConfigurationKey {
+		if opt.Value == nil {
+			continue
+		}
 
-				switch opt.Key {
-				case KeyChargeProfileMaxStackLevel:
-					if val, err := strconv.Atoi(*opt.Value); err == nil {
-						cp.StackLevel = val
-					}
+		switch opt.Key {
+		case KeyChargeProfileMaxStackLevel:
+			if val, err := strconv.Atoi(*opt.Value); err == nil {
+				cp.StackLevel = val
+			}
 
-				case KeyChargingScheduleAllowedChargingRateUnit:
-					if *opt.Value == "Power" || *opt.Value == "W" { // "W" is not allowed by spec but used by some CPs
-						cp.ChargingRateUnit = types.ChargingRateUnitWatts
-					}
+		case KeyChargingScheduleAllowedChargingRateUnit:
+			if *opt.Value == "Power" || *opt.Value == "W" { // "W" is not allowed by spec but used by some CPs
+				cp.ChargingRateUnit = types.ChargingRateUnitWatts
+			}
 
-				case KeyConnectorSwitch3to1PhaseSupported:
-					var val bool
-					if val, err = strconv.ParseBool(*opt.Value); err == nil {
-						cp.PhaseSwitching = val
-					}
+		case KeyConnectorSwitch3to1PhaseSupported:
+			var val bool
+			if val, err = strconv.ParseBool(*opt.Value); err == nil {
+				cp.PhaseSwitching = val
+			}
 
-				case KeyMaxChargingProfilesInstalled:
-					if val, err := strconv.Atoi(*opt.Value); err == nil {
-						cp.ChargingProfileId = val
-					}
+		case KeyMaxChargingProfilesInstalled:
+			if val, err := strconv.Atoi(*opt.Value); err == nil {
+				cp.ChargingProfileId = val
+			}
 
-				case KeyMeterValuesSampledData:
-					if opt.Readonly {
-						meterValuesSampledDataMaxLength = 0
-					}
-					meterValuesSampledData = *opt.Value
+		case KeyMeterValuesSampledData:
+			if opt.Readonly {
+				meterValuesSampledDataMaxLength = 0
+			}
+			meterValuesSampledData = *opt.Value
 
-				case KeyMeterValuesSampledDataMaxLength:
-					if val, err := strconv.Atoi(*opt.Value); err == nil {
-						meterValuesSampledDataMaxLength = val
-					}
+		case KeyMeterValuesSampledDataMaxLength:
+			if val, err := strconv.Atoi(*opt.Value); err == nil {
+				meterValuesSampledDataMaxLength = val
+			}
 
-				case KeyNumberOfConnectors:
-					if val, err := strconv.Atoi(*opt.Value); err == nil {
-						cp.NumberOfConnectors = val
-					}
+		case KeyNumberOfConnectors:
+			if val, err := strconv.Atoi(*opt.Value); err == nil {
+				cp.NumberOfConnectors = val
+			}
 
-				case KeySupportedFeatureProfiles:
-					if !hasProperty(*opt.Value, smartcharging.ProfileName) {
-						cp.log.WARN.Printf("the required SmartCharging feature profile is not indicated as supported")
-					}
-					// correct the availability assumption of RemoteTrigger only in case of a valid looking FeatureProfile list
-					if hasProperty(*opt.Value, core.ProfileName) {
-						cp.HasRemoteTriggerFeature = hasProperty(*opt.Value, remotetrigger.ProfileName)
-					}
+		case KeySupportedFeatureProfiles:
+			if !hasProperty(*opt.Value, smartcharging.ProfileName) {
+				cp.log.WARN.Printf("the required SmartCharging feature profile is not indicated as supported")
+			}
+			// correct the availability assumption of RemoteTrigger only in case of a valid looking FeatureProfile list
+			if hasProperty(*opt.Value, core.ProfileName) {
+				cp.HasRemoteTriggerFeature = hasProperty(*opt.Value, remotetrigger.ProfileName)
+			}
 
-				// vendor-specific keys
-				case KeyAlfenPlugAndChargeIdentifier:
-					cp.IdTag = *opt.Value
-					cp.log.DEBUG.Printf("overriding default `idTag` with Alfen-specific value: %s", cp.IdTag)
+		// vendor-specific keys
+		case KeyAlfenPlugAndChargeIdentifier:
+			cp.IdTag = *opt.Value
+			cp.log.DEBUG.Printf("overriding default `idTag` with Alfen-specific value: %s", cp.IdTag)
 
-				case KeyEvBoxSupportedMeasurands:
-					if meterValues == "" {
-						meterValues = *opt.Value
-					}
-				}
-
-				if err != nil {
-					break
-				}
+		case KeyEvBoxSupportedMeasurands:
+			if meterValues == "" {
+				meterValues = *opt.Value
 			}
 		}
 
-		rc <- err
-	}, nil)
-
-	if err := Wait(err, rc); err != nil {
-		return err
 	}
 
 	// see who's there
@@ -156,6 +146,19 @@ func (cp *CP) Setup(meterValues string, meterInterval time.Duration) error {
 	}
 
 	return nil
+}
+
+// GetConfiguration
+func (cp *CP) GetConfiguration() (*core.GetConfigurationConfirmation, error) {
+	rc := make(chan error, 1)
+
+	var res *core.GetConfigurationConfirmation
+	err := Instance().GetConfiguration(cp.ID(), func(resp *core.GetConfigurationConfirmation, err error) {
+		res = resp
+		rc <- err
+	}, nil)
+
+	return res, Wait(err, rc)
 }
 
 // HasMeasurement checks if meterValuesSample contains given measurement
