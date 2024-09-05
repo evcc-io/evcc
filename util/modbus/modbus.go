@@ -63,6 +63,7 @@ func (s *Settings) String() string {
 
 type meterConnection struct {
 	meters.Connection
+	proto Protocol
 	*logger
 }
 
@@ -71,23 +72,28 @@ var (
 	mu          sync.Mutex
 )
 
-func registeredConnection(key string, newConn meters.Connection) *meterConnection {
+func registeredConnection(key string, proto Protocol, newConn meters.Connection) (*meterConnection, error) {
 	mu.Lock()
 	defer mu.Unlock()
 
 	if conn, ok := connections[key]; ok {
-		return conn
+		if conn.proto != proto {
+			return nil, fmt.Errorf("connection already registered with different protocol: %s", key)
+		}
+
+		return conn, nil
 	}
 
 	connection := &meterConnection{
 		Connection: newConn,
+		proto:      proto,
 		logger:     new(logger),
 	}
 
 	newConn.Logger(connection.logger)
 	connections[key] = connection
 
-	return connection
+	return connection, nil
 }
 
 // NewConnection creates physical modbus device from config
@@ -111,12 +117,6 @@ func NewConnection(uri, device, comset string, baudrate int, proto Protocol, sla
 }
 
 func physicalConnection(proto Protocol, cfg Settings) (*meterConnection, error) {
-	var conn *meterConnection
-
-	if (cfg.Device != "") == (cfg.URI != "") {
-		return nil, errors.New("invalid modbus configuration: must have either uri or device")
-	}
-
 	if cfg.Device != "" {
 		switch strings.ToUpper(cfg.Comset) {
 		case "8N1", "8E1", "8N2":
@@ -131,9 +131,9 @@ func physicalConnection(proto Protocol, cfg Settings) (*meterConnection, error) 
 		}
 
 		if proto == Ascii {
-			conn = registeredConnection(cfg.Device, meters.NewASCII(cfg.Device, cfg.Baudrate, cfg.Comset))
+			return registeredConnection(cfg.Device, Ascii, meters.NewASCII(cfg.Device, cfg.Baudrate, cfg.Comset))
 		} else {
-			conn = registeredConnection(cfg.Device, meters.NewRTU(cfg.Device, cfg.Baudrate, cfg.Comset))
+			return registeredConnection(cfg.Device, Rtu, meters.NewRTU(cfg.Device, cfg.Baudrate, cfg.Comset))
 		}
 	}
 
@@ -142,17 +142,17 @@ func physicalConnection(proto Protocol, cfg Settings) (*meterConnection, error) 
 
 		switch proto {
 		case Udp:
-			conn = registeredConnection(cfg.URI, meters.NewRTUOverUDP(cfg.URI))
+			return registeredConnection(cfg.URI, Udp, meters.NewRTUOverUDP(cfg.URI))
 		case Rtu:
-			conn = registeredConnection(cfg.URI, meters.NewRTUOverTCP(cfg.URI))
+			return registeredConnection(cfg.URI, Rtu, meters.NewRTUOverTCP(cfg.URI))
 		case Ascii:
-			conn = registeredConnection(cfg.URI, meters.NewASCIIOverTCP(cfg.URI))
+			return registeredConnection(cfg.URI, Ascii, meters.NewASCIIOverTCP(cfg.URI))
 		default:
-			conn = registeredConnection(cfg.URI, meters.NewTCP(cfg.URI))
+			return registeredConnection(cfg.URI, Tcp, meters.NewTCP(cfg.URI))
 		}
 	}
 
-	return conn, nil
+	return nil, errors.New("invalid modbus configuration: need either uri or device")
 }
 
 // NewDevice creates physical modbus device from config
