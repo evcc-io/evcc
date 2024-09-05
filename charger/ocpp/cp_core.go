@@ -2,16 +2,10 @@ package ocpp
 
 import (
 	"errors"
-	"time"
 
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/firmware"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/types"
-)
-
-const (
-	messageExpiry     = 30 * time.Second
-	transactionExpiry = time.Hour
 )
 
 var (

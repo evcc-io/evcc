@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"sync"
-	"time"
 
 	"github.com/evcc-io/evcc/util"
 	ocpp16 "github.com/lorenzodonini/ocpp-go/ocpp1.6"
@@ -14,8 +13,7 @@ type CS struct {
 	mu  sync.Mutex
 	log *util.Logger
 	ocpp16.CentralSystem
-	cps     map[string]*CP
-	timeout time.Duration
+	cps map[string]*CP
 }
 
 // Register registers a charge point with the central system.
