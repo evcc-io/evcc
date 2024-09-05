@@ -427,6 +427,9 @@ func (lp *Loadpoint) evChargeStartHandler() {
 	lp.log.INFO.Println("start charging ->")
 	lp.pushEvent(evChargeStart)
 
+	// charge status
+	lp.publish(keys.ChargerStatusReason, api.ReasonUnknown)
+
 	lp.stopWakeUpTimer()
 
 	// soc update reset
