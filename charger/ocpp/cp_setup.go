@@ -14,7 +14,7 @@ import (
 
 const desiredMeasurands = "Power.Active.Import,Energy.Active.Import.Register,Current.Import,Voltage,Current.Offered,Power.Offered,SoC"
 
-func (cp *CP) Setup(meterValues string, meterInterval time.Duration, timeout time.Duration) error {
+func (cp *CP) Setup(meterValues string, meterInterval time.Duration) error {
 	if err := Instance().ChangeAvailabilityRequest(cp.ID(), 0, core.AvailabilityTypeOperative); err != nil {
 		cp.log.DEBUG.Printf("failed configuring availability: %v", err)
 	}
@@ -98,7 +98,7 @@ func (cp *CP) Setup(meterValues string, meterInterval time.Duration, timeout tim
 		rc <- err
 	}, nil)
 
-	if err := Wait(err, rc, timeout); err != nil {
+	if err := Wait(err, rc); err != nil {
 		return err
 	}
 
@@ -108,9 +108,8 @@ func (cp *CP) Setup(meterValues string, meterInterval time.Duration, timeout tim
 			cp.log.DEBUG.Printf("failed triggering BootNotification: %v", err)
 		}
 
-		// TODO use fixed timeout
 		select {
-		case <-time.After(timeout):
+		case <-time.After(Timeout):
 			cp.log.DEBUG.Printf("BootNotification timeout")
 		case res := <-cp.bootNotificationRequestC:
 			cp.BootNotificationResult = res
@@ -119,13 +118,13 @@ func (cp *CP) Setup(meterValues string, meterInterval time.Duration, timeout tim
 
 	// autodetect measurands
 	if meterValues == "" && meterValuesSampledDataMaxLength > 0 {
-		sampledMeasurands := cp.tryMeasurands(desiredMeasurands, KeyMeterValuesSampledData, timeout)
+		sampledMeasurands := cp.tryMeasurands(desiredMeasurands, KeyMeterValuesSampledData)
 		meterValues = strings.Join(sampledMeasurands[:min(len(sampledMeasurands), meterValuesSampledDataMaxLength)], ",")
 	}
 
 	// configure measurands
 	if meterValues != "" {
-		if err := cp.configure(KeyMeterValuesSampledData, meterValues, timeout); err == nil {
+		if err := cp.configure(KeyMeterValuesSampledData, meterValues); err == nil {
 			meterValuesSampledData = meterValues
 		}
 	}
@@ -137,7 +136,7 @@ func (cp *CP) Setup(meterValues string, meterInterval time.Duration, timeout tim
 		if err := Instance().TriggerMessageRequest(cp.ID(), core.MeterValuesFeatureName); err == nil {
 			// wait for meter values
 			select {
-			case <-time.After(timeout):
+			case <-time.After(Timeout):
 				cp.log.WARN.Println("meter timeout")
 			case <-cp.meterC:
 			}
@@ -146,13 +145,13 @@ func (cp *CP) Setup(meterValues string, meterInterval time.Duration, timeout tim
 
 	// configure sample rate
 	if meterInterval > 0 {
-		if err := cp.configure(KeyMeterValueSampleInterval, strconv.Itoa(int(meterInterval.Seconds())), timeout); err != nil {
+		if err := cp.configure(KeyMeterValueSampleInterval, strconv.Itoa(int(meterInterval.Seconds()))); err != nil {
 			cp.log.WARN.Printf("failed configuring MeterValueSampleInterval: %v", err)
 		}
 	}
 
 	// configure websocket ping interval
-	if err := cp.configure(KeyWebSocketPingInterval, "30", timeout); err != nil {
+	if err := cp.configure(KeyWebSocketPingInterval, "30"); err != nil {
 		cp.log.DEBUG.Printf("failed configuring WebSocketPingInterval: %v", err)
 	}
 
@@ -164,10 +163,10 @@ func (cp *CP) HasMeasurement(val types.Measurand) bool {
 	return hasProperty(cp.meterValuesSample, string(val))
 }
 
-func (cp *CP) tryMeasurands(measurands string, key string, timeout time.Duration) []string {
+func (cp *CP) tryMeasurands(measurands string, key string) []string {
 	var accepted []string
 	for _, m := range strings.Split(measurands, ",") {
-		if err := cp.configure(key, m, timeout); err == nil {
+		if err := cp.configure(key, m); err == nil {
 			accepted = append(accepted, m)
 		}
 	}
@@ -175,7 +174,7 @@ func (cp *CP) tryMeasurands(measurands string, key string, timeout time.Duration
 }
 
 // configure updates CP configuration
-func (cp *CP) configure(key, val string, timeout time.Duration) error {
+func (cp *CP) configure(key, val string) error {
 	rc := make(chan error, 1)
 
 	err := Instance().ChangeConfiguration(cp.id, func(resp *core.ChangeConfigurationConfirmation, err error) {
@@ -186,5 +185,5 @@ func (cp *CP) configure(key, val string, timeout time.Duration) error {
 		rc <- err
 	}, key, val)
 
-	return Wait(err, rc, timeout)
+	return Wait(err, rc)
 }
