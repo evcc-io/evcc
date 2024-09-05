@@ -185,7 +185,7 @@ func (v *Identity) login() (*oauth.Token, error) {
 	tok, err := oc.Exchange(ctx, code, oauth2.VerifierOption(cv))
 
 	// exchange code for api token
-	var token oauth.Token
+	var token oauth2.Token
 	if err == nil {
 		data := map[string]string{
 			"idpToken": tok.AccessToken,
@@ -204,7 +204,7 @@ func (v *Identity) login() (*oauth.Token, error) {
 		}
 	}
 
-	return &token, err
+	return util.TokenWithExpiry(&token), err
 }
 
 // RefreshToken implements oauth.TokenRefresher
@@ -214,19 +214,17 @@ func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 	}
 
 	uri := fmt.Sprintf("%s/api/token/v2/cat-with-refresh-token", TokenURI)
-	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data), map[string]string{
+	req, _ := request.New(http.MethodPost, uri, request.MarshalJSON(data), map[string]string{
 		"Content-type":   request.JSONContent,
 		"Application-Id": ApplicationID,
 	})
 
-	var res *oauth.Token
-	if err == nil {
-		err = v.DoJSON(req, &res)
-	}
-
+	// TODO unclear
+	var res oauth2.Token
+	err := v.DoJSON(req, &res)
 	if err != nil {
 		res, err = v.login()
 	}
 
-	return (*oauth2.Token)(res), err
+	return util.TokenWithExpiry(res), err
 }
