@@ -27,14 +27,13 @@ type Connector struct {
 
 	meterUpdated time.Time
 	measurements map[types.Measurand]types.SampledValue
-	meterTimeout time.Duration
 
 	txnCount int // change initial value to the last known global transaction. Needs persistence
 	txnId    int
 	idTag    string
 }
 
-func NewConnector(log *util.Logger, id int, cp *CP, meterTimeout time.Duration) (*Connector, error) {
+func NewConnector(log *util.Logger, id int, cp *CP) (*Connector, error) {
 	conn := &Connector{
 		log:          log,
 		cp:           cp,
@@ -42,7 +41,6 @@ func NewConnector(log *util.Logger, id int, cp *CP, meterTimeout time.Duration) 
 		clock:        clock.New(),
 		statusC:      make(chan struct{}, 1),
 		measurements: make(map[types.Measurand]types.SampledValue),
-		meterTimeout: meterTimeout,
 	}
 
 	err := cp.registerConnector(id, conn)
@@ -153,7 +151,7 @@ func (conn *Connector) NeedsAuthentication() bool {
 // isMeterTimeout checks if meter values are outdated.
 // Must only be called while holding lock.
 func (conn *Connector) isMeterTimeout() bool {
-	return conn.meterTimeout > 0 && conn.clock.Since(conn.meterUpdated) > conn.meterTimeout
+	return conn.clock.Since(conn.meterUpdated) > Timeout
 }
 
 var _ api.CurrentGetter = (*Connector)(nil)

@@ -158,7 +158,7 @@ func NewOCPP(id string, connector int, idtag string,
 		return nil, fmt.Errorf("invalid connector: %d", connector)
 	}
 
-	conn, err := ocpp.NewConnector(log, connector, cp, ocpp.Timeout)
+	conn, err := ocpp.NewConnector(log, connector, cp)
 	if err != nil {
 		return nil, err
 	}
