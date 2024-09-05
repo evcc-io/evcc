@@ -509,6 +509,9 @@ func (lp *Loadpoint) evVehicleDisconnectHandler() {
 	lp.publish(keys.ChargedEnergy, lp.getChargedEnergy())
 	lp.publish(keys.ConnectedDuration, lp.clock.Since(lp.connectedTime).Round(time.Second))
 
+	// charge status
+	lp.publish(keys.ChargerStatusReason, api.ReasonUnknown)
+
 	// forget startup energy offset
 	lp.chargedAtStartup = 0
 
