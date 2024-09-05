@@ -117,6 +117,10 @@ func NewConnection(uri, device, comset string, baudrate int, proto Protocol, sla
 }
 
 func physicalConnection(proto Protocol, cfg Settings) (*meterConnection, error) {
+	if (cfg.Device != "") == (cfg.URI != "") {
+		return nil, errors.New("invalid modbus configuration: must have either uri or device")
+	}
+
 	if cfg.Device != "" {
 		switch strings.ToUpper(cfg.Comset) {
 		case "8N1", "8E1", "8N2":
@@ -152,7 +156,8 @@ func physicalConnection(proto Protocol, cfg Settings) (*meterConnection, error) 
 		}
 	}
 
-	return nil, errors.New("invalid modbus configuration: need either uri or device")
+	// can't happen
+	return nil, nil
 }
 
 // NewDevice creates physical modbus device from config
