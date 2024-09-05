@@ -89,7 +89,6 @@ func (cp *CP) Setup(meterValues string, meterInterval time.Duration) error {
 				meterValues = *opt.Value
 			}
 		}
-
 	}
 
 	// see who's there
