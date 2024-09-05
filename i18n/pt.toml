@@ -27,8 +27,8 @@ never = "apenas com excesso suficiente."
 [config]
 
 [config.battery]
-titleAdd = "Adicionar contador de bateria"
-titleEdit = "Editar contador de bateria"
+titleAdd = "Adicionar bateria"
+titleEdit = "Editar bateria"
 
 [config.circuits]
 description = "Assegura que a soma de todos os pontos de carga conectados a um circuito não exceda os limites de potência e corrente configurados. Circuitos podem ser aninhados para construir uma hierarquia."
@@ -36,7 +36,7 @@ title = "Gerenciamento de carga"
 
 [config.control]
 description = "No geral, os valores padrão estão bem. Apenas mude-os se você sabe o que está fazendo."
-descriptionInterval = "Ciclo de atualização de loop de controle em segundos. Define com que frequência o evcc lê dados do medidor, ajusta o poder de carregamento e atualiza a interface do usuário. Intervalos curtos (< 30s) podem causar aszilações e comportamento indesejado."
+descriptionInterval = "Ciclo de atualização de loop de controle em segundos. Define com que frequência o evcc lê dados do medidor, ajusta o poder de carregamento e atualiza a interface do usuário. Intervalos curtos (< 30s) podem causar oscilações e comportamentos indesejados."
 descriptionMaxGridSupply = "Só relevante para inversores híbridos que não são capazes de produzir o poder de geração DC completo para a casa via AC. Este szenario pode levar ao uso indesejado da grade, uma vez que o evcc assume que a potência total DC está disponível. Use um valor de pelo menos 50 W para evitar isso."
 descriptionResidualPower = "Evita o ponto de operação do circuito de controle. Se você tem uma bateria em casa, é recomendável definir um valor de 100 W. Desta forma, a bateria terá uma leve prioridade sobre o uso da rede."
 labelInterval = "Intervalo actualizado"
@@ -57,6 +57,7 @@ chargeStatusF = "erro"
 chargedEnergy = "Carregado"
 co2 = "Rede CO₂"
 configured = "Configurado"
+controllable = "Controlável"
 currency = "Curência"
 current = "Corrente"
 currentRange = "Corrente"
@@ -288,6 +289,7 @@ tabTitle = "Meus dados"
 [footer.savings.period]
 30d = "últimos 30 dias"
 365d = "últimos 365 dias"
+thisYear = "este ano"
 total = "total"
 
 [footer.sponsor]
@@ -547,6 +549,7 @@ ready = "esperando"
 vehicleLimit = "Limite de veículo: {soc}"
 
 [main.vehicleStatus]
+awaitingAuthorization = "À espera de autorização."
 charging = "Carregando..."
 cheapEnergyCharging = "Energia barata disponível."
 cheapEnergyNextStart = "Energia barata em {duration}."
@@ -556,6 +559,7 @@ cleanEnergyNextStart = "Energia verde em {duration}."
 cleanEnergySet = "Limite de CO₂ definido."
 climating = "Pré-condicionamento detectado."
 connected = "Ligado."
+disconnectRequired = "Sessão terminada. Por favor, volte a ligar-se."
 disconnected = "Não conectado."
 finished = "Concluído."
 minCharge = "Carga mínima até {soc}"

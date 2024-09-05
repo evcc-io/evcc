@@ -56,7 +56,7 @@ export default {
 				this.chargedEnergy,
 				this.capacity || 100,
 				this.socPerKwh,
-				this.fmtKWh,
+				this.fmtWh,
 				this.fmtPercentage,
 				this.$t("main.targetEnergy.noLimit")
 			);
@@ -73,7 +73,7 @@ export default {
 			return this.$emit("limit-energy-updated", parseFloat(e.target.value));
 		},
 		fmtEnergy: function (value) {
-			return fmtEnergy(value, this.step, this.fmtKWh, this.$t("main.targetEnergy.noLimit"));
+			return fmtEnergy(value, this.step, this.fmtWh, this.$t("main.targetEnergy.noLimit"));
 		},
 		fmtSoc: function (value) {
 			return `+${this.fmtPercentage(value)}`;

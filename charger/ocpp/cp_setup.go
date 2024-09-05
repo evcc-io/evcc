@@ -150,8 +150,12 @@ func (cp *CP) Setup(meterValues string, meterInterval time.Duration) error {
 		}
 	}
 
-	// configure ping interval
-	return cp.configure(KeyWebSocketPingInterval, "30")
+	// configure websocket ping interval
+	if err := cp.configure(KeyWebSocketPingInterval, "30"); err != nil {
+		cp.log.DEBUG.Printf("failed configuring WebSocketPingInterval: %v", err)
+	}
+
+	return nil
 }
 
 // HasMeasurement checks if meterValuesSample contains given measurement

@@ -68,10 +68,17 @@
 										{{ $t("sessions.energy") }}
 									</th>
 									<td>
-										{{ fmtKWh(chargedEnergy, chargedEnergy >= 1e3) }}
+										{{
+											fmtWh(
+												chargedEnergy,
+												chargedEnergy >= 1e3
+													? POWER_UNIT.KW
+													: POWER_UNIT.AUTO
+											)
+										}}
 										<div v-if="session.chargeDuration">
 											{{ fmtDurationNs(session.chargeDuration) }}
-											(~{{ fmtKw(avgPower) }})
+											(~{{ fmtW(avgPower) }})
 										</div>
 									</td>
 								</tr>
@@ -81,7 +88,7 @@
 									</th>
 									<td>
 										{{ fmtPercentage(session.solarPercentage, 1) }}
-										({{ fmtKWh(solarEnergy, solarEnergy >= 1e3) }})
+										({{ fmtWh(solarEnergy, POWER_UNIT.AUTO) }})
 									</td>
 								</tr>
 								<tr v-if="session.price != null">
@@ -115,8 +122,8 @@
 										{{ $t("session.meter") }}
 									</th>
 									<td>
-										{{ fmtKWh(session.meterStart * 1e3) }}<br />
-										{{ fmtKWh(session.meterStop * 1e3) }}
+										{{ fmtWh(session.meterStart * 1e3) }}<br />
+										{{ fmtWh(session.meterStop * 1e3) }}
 									</td>
 								</tr>
 							</tbody>
