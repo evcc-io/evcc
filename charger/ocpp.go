@@ -15,6 +15,7 @@ import (
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/smartcharging"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/types"
+	"github.com/samber/lo"
 )
 
 // OCPP charger implementation
@@ -157,12 +158,8 @@ func NewOCPP(id string, connector int, idtag string,
 		return nil, fmt.Errorf("invalid connector: %d", connector)
 	}
 
-	if remoteStart && idtag == "" {
-		idtag = cp.IdTag
-
-		if idtag == "" {
-			idtag = defaultIdTag
-		}
+	if remoteStart {
+		idtag = lo.CoalesceOrEmpty(idtag, cp.IdTag, defaultIdTag)
 	}
 
 	conn, err := ocpp.NewConnector(log, connector, cp, idtag, timeout)

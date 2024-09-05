@@ -77,7 +77,7 @@ func (conn *Connector) TriggerMessageRequest(feature remotetrigger.MessageTrigge
 	})
 }
 
-func (conn *Connector) remoteStartTransactionRequest(idtag string) {
+func (conn *Connector) remoteStartTransactionRequest() {
 	rc := make(chan error, 1)
 	err := Instance().RemoteStartTransaction(conn.cp.ID(), func(resp *core.RemoteStartTransactionConfirmation, err error) {
 		if err == nil && resp != nil && resp.Status != types.RemoteStartStopStatusAccepted {
@@ -85,7 +85,7 @@ func (conn *Connector) remoteStartTransactionRequest(idtag string) {
 		}
 
 		rc <- err
-	}, idtag, func(request *core.RemoteStartTransactionRequest) {
+	}, conn.remoteIdTag, func(request *core.RemoteStartTransactionRequest) {
 		connector := conn.id
 		request.ConnectorId = &connector
 	})
