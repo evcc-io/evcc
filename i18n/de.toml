@@ -33,7 +33,7 @@ title = "Lastmanagement"
 
 [config.control]
 description = "Normalerweise sind die Standardwerte in Ordnung. Ändere nur etwas, wenn du weißt, was du tust."
-descriptionInterval = "Regelkreis Aktualisierungszyklus in Sekunden. Definiert, wie oft evcc Messdaten liest, die Ladeleistung anpasst und die Benutzeroberfläche aktualisiert. Kurze Intervalle (< 30s) können zu Schwingungen und unerwünschtem Verhalten führen."
+descriptionInterval = "Regelkreis Aktualisierungszyklus in Sekunden. Definiert, wie oft evcc Messdaten liest, die Ladeleistung anpasst und die Benutzeroberfläche aktualisiert. Kurze Intervalle (< 30s) können zu Oszillationen und unerwünschtem Verhalten führen."
 descriptionMaxGridSupply = "Nur relevant für Hybrid-Wechselrichter, die nicht in der Lage sind, die volle DC-Erzeugungsleistung über AC an das Haus auszugeben. Dieses Szenario kann zu unerwünschtem Netzbezug führen, da evcc davon ausgeht, dass die volle DC-Leistung verfügbar ist. Verwende einen Wert von mindestens 50 W, um dies zu verhindern."
 descriptionResidualPower = "Verschiebt den Betriebspunkt des Regelkreises. Wenn du eine Hausbatterie hast, wird empfohlen, einen Wert von 100 W einzustellen. Auf diese Weise erhält die Batterie eine leichte Priorität gegenüber dem Netzbezug."
 labelInterval = "Aktualisierungsintervall"

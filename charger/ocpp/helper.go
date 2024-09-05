@@ -10,12 +10,12 @@ import (
 )
 
 // Wait waits for a CP roundtrip with timeout
-func Wait(err error, rc chan error, timeout time.Duration) error {
+func Wait(err error, rc chan error) error {
 	if err == nil {
 		select {
 		case err = <-rc:
 			close(rc)
-		case <-time.After(timeout):
+		case <-time.After(Timeout):
 			err = api.ErrTimeout
 		}
 	}

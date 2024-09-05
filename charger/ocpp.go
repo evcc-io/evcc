@@ -13,7 +13,6 @@ import (
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/util"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
-	"github.com/lorenzodonini/ocpp-go/ocpp1.6/smartcharging"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/types"
 	"github.com/samber/lo"
 )
@@ -27,7 +26,6 @@ type OCPP struct {
 	enabled bool
 	current float64
 
-	timeout        time.Duration
 	stackLevelZero bool
 	lp             loadpoint.API
 }
@@ -47,8 +45,8 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 		MeterInterval  time.Duration
 		MeterValues    string
 		ConnectTimeout time.Duration // Initial Timeout
-		Timeout        time.Duration // Message Timeout
 
+		Timeout          time.Duration              // TODO deprecated
 		BootNotification *bool                      // TODO deprecated
 		GetConfiguration *bool                      // TODO deprecated
 		ChargingRateUnit types.ChargingRateUnitType // TODO deprecated
@@ -60,8 +58,7 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 	}{
 		Connector:      1,
 		MeterInterval:  10 * time.Second,
-		ConnectTimeout: ocppConnectTimeout,
-		Timeout:        ocppTimeout,
+		ConnectTimeout: 5 * time.Minute,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -73,7 +70,7 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 	c, err := NewOCPP(cc.StationId, cc.Connector, cc.IdTag,
 		cc.MeterValues, cc.MeterInterval,
 		stackLevelZero, cc.RemoteStart,
-		cc.ConnectTimeout, cc.Timeout)
+		cc.ConnectTimeout)
 	if err != nil {
 		return c, err
 	}
@@ -122,7 +119,7 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 func NewOCPP(id string, connector int, idtag string,
 	meterValues string, meterInterval time.Duration,
 	stackLevelZero, remoteStart bool,
-	connectTimeout, timeout time.Duration,
+	connectTimeout time.Duration,
 ) (*OCPP, error) {
 	unit := "ocpp"
 	if id != "" {
@@ -149,7 +146,7 @@ func NewOCPP(id string, connector int, idtag string,
 		case <-cp.HasConnected():
 		}
 
-		if err := cp.Setup(meterValues, meterInterval, timeout); err != nil {
+		if err := cp.Setup(meterValues, meterInterval); err != nil {
 			return nil, err
 		}
 	}
@@ -162,7 +159,7 @@ func NewOCPP(id string, connector int, idtag string,
 		idtag = lo.CoalesceOrEmpty(idtag, cp.IdTag, defaultIdTag)
 	}
 
-	conn, err := ocpp.NewConnector(log, connector, cp, idtag, timeout)
+	conn, err := ocpp.NewConnector(log, connector, cp, idtag)
 	if err != nil {
 		return nil, err
 	}
@@ -172,7 +169,6 @@ func NewOCPP(id string, connector int, idtag string,
 		cp:             cp,
 		conn:           conn,
 		stackLevelZero: stackLevelZero,
-		timeout:        timeout,
 	}
 
 	if cp.HasRemoteTriggerFeature {
@@ -189,11 +185,6 @@ func NewOCPP(id string, connector int, idtag string,
 // Connector returns the connector instance
 func (c *OCPP) Connector() *ocpp.Connector {
 	return c.conn
-}
-
-// wait waits for a CP roundtrip with timeout
-func (c *OCPP) wait(err error, rc chan error) error {
-	return ocpp.Wait(err, rc, c.timeout)
 }
 
 // Status implements the api.Charger interface
@@ -274,7 +265,7 @@ func (c *OCPP) Enabled() (bool, error) {
 	}
 
 	// fallback to querying the active charging profile schedule limit
-	if v, err := c.getScheduleLimit(); err == nil {
+	if v, err := c.conn.GetScheduleLimit(60); err == nil {
 		return v > 0, nil
 	}
 
@@ -308,46 +299,17 @@ func (c *OCPP) setChargingProfile(profile *types.ChargingProfile) error {
 		rc <- err
 	}, c.conn.ID(), profile)
 
-	return c.wait(err, rc)
+	return ocpp.Wait(err, rc)
 }
 
 // setCurrent sets the TxDefaultChargingProfile with given current
 func (c *OCPP) setCurrent(current float64) error {
-	err := c.setChargingProfile(c.createTxDefaultChargingProfile(math.Trunc(10*current) / 10))
+	err := c.conn.SetChargingProfile(c.createTxDefaultChargingProfile(math.Trunc(10*current) / 10))
 	if err != nil {
 		err = fmt.Errorf("set charging profile: %w", err)
 	}
 
 	return err
-}
-
-// getScheduleLimit queries the current or power limit the charge point is currently set to offer
-func (c *OCPP) getScheduleLimit() (float64, error) {
-	const duration = 60 // duration of requested schedule in seconds
-
-	var limit float64
-
-	rc := make(chan error, 1)
-	err := ocpp.Instance().GetCompositeSchedule(c.cp.ID(), func(resp *smartcharging.GetCompositeScheduleConfirmation, err error) {
-		if err == nil && resp != nil && resp.Status != smartcharging.GetCompositeScheduleStatusAccepted {
-			err = errors.New(string(resp.Status))
-		}
-
-		if err == nil {
-			if resp.ChargingSchedule != nil && len(resp.ChargingSchedule.ChargingSchedulePeriod) > 0 {
-				// return first (current) period limit
-				limit = resp.ChargingSchedule.ChargingSchedulePeriod[0].Limit
-			} else {
-				err = fmt.Errorf("invalid ChargingSchedule")
-			}
-		}
-
-		rc <- err
-	}, c.conn.ID(), duration)
-
-	err = c.wait(err, rc)
-
-	return limit, err
 }
 
 // createTxDefaultChargingProfile returns a TxDefaultChargingProfile with given current
@@ -454,7 +416,7 @@ func (c *OCPP) Diagnose() {
 
 		rc <- err
 	}, nil)
-	c.wait(err, rc)
+	ocpp.Wait(err, rc)
 }
 
 var _ loadpoint.Controller = (*OCPP)(nil)
