@@ -1,14 +1,16 @@
 <template>
-	<div>
+	<div class="text-truncate">
 		<a
 			v-if="commit"
 			:href="githubHashUrl"
 			target="_blank"
 			class="btn btn-link ps-0 text-decoration-none evcc-default-text text-nowrap d-flex align-items-end"
 		>
-			<Logo class="logo me-2" />
-			<span class="text-decoration-underline">v{{ installed }}</span>
-			<shopicon-regular-moonstars class="ms-2 text-gray-light"></shopicon-regular-moonstars>
+			<Logo class="logo me-2 flex-shrink-0" />
+			<span class="text-decoration-underline text-truncate">v{{ installed }}</span>
+			<shopicon-regular-moonstars
+				class="ms-2 text-gray-light flex-shrink-0"
+			></shopicon-regular-moonstars>
 		</a>
 		<button
 			v-else-if="newVersionAvailable"
@@ -17,7 +19,7 @@
 			@click="openModal"
 		>
 			<shopicon-regular-gift class="me-2"></shopicon-regular-gift>
-			<span class="text-decoration-underline">v{{ installed }}</span>
+			<span class="text-decoration-underline text-truncate">v{{ installed }}</span>
 			<span class="ms-2 d-none d-sm-block text-gray-medium text-decoration-underline">
 				{{ $t("footer.version.availableLong") }}
 			</span>
@@ -28,8 +30,8 @@
 			target="_blank"
 			class="btn btn-link evcc-default-text ps-0 text-decoration-none text-nowrap d-flex align-items-end"
 		>
-			<Logo class="logo me-2" />
-			<span class="text-decoration-underline">v{{ installed }}</span>
+			<Logo class="logo me-2 flex-shrink-0" />
+			<span class="text-decoration-underline text-truncate">v{{ installed }}</span>
 		</a>
 
 		<Teleport to="body">
