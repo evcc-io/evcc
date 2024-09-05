@@ -65,7 +65,7 @@ func (cs *CS) SetChargingProfileRequest(id string, connector int, profile *types
 		rc <- err
 	}, connector, profile)
 
-	return Wait(err, rc, cs.timeout)
+	return Wait(err, rc)
 }
 
 func (cs *CS) GetCompositeScheduleRequest(id string, connector int, duration int) (*types.ChargingSchedule, error) {
@@ -82,7 +82,7 @@ func (cs *CS) GetCompositeScheduleRequest(id string, connector int, duration int
 		rc <- err
 	}, connector, duration)
 
-	err = Wait(err, rc, cs.timeout)
+	err = Wait(err, rc)
 
 	return schedule, err
 }
