@@ -160,7 +160,7 @@ func NewOCPP(id string, connector int, idtag string,
 	if remoteStart && idtag == "" {
 		idtag = cp.IdTag
 
-		if cp.IdTag == "" {
+		if idtag == "" {
 			idtag = defaultIdTag
 		}
 	}
