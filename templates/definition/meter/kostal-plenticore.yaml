@@ -44,6 +44,13 @@ params:
     type: duration
     default: 60s
     advanced: true
+  - name: control
+    description:
+      de: Implementierung (limitsoc/batterymode)
+      en: Implementation (limitsoc/batterymode)
+    validvalues: ["limitsoc", "batterymode"]
+    default: limitsoc
+    advanced: true
 render: |
   {{- if eq .usage "pv" }}
   type: custom
@@ -75,6 +82,7 @@ render: |
     source: sunspec
     {{- include "modbus" . | indent 2 }}
     value: 802:SoC # 802 battery control
+  {{- if eq .control "batterymode" }}
   batterymode:
     source: watchdog
     timeout: {{ .watchdog }} # re-write at timeout/2
@@ -85,7 +93,7 @@ render: |
       - case: 1 # normal
         set: 
           source: const
-          value: 0 # % to reset grid loading
+          value: 0 # % once, to reset gridcharge and enable internal control
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
@@ -96,7 +104,7 @@ render: |
       - case: 2 # hold
         set:
           source: const
-          value: 0 # % lock battery
+          value: 0 # % to reset gridcharge and lock battery, actually a lock for charge and discharge
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
@@ -107,7 +115,7 @@ render: |
       - case: 3 # charge
         set:
           source: const
-          value: -100 # % charge battery with maximum allowed power
+          value: -100 # % to charge battery with maximum allowed power
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
@@ -115,7 +123,19 @@ render: |
               address: 1028 # battery charge current (DC) setpoint, relative
               type: writemultiple
               encoding: {{ if (eq .endianness "big") }}float32{{ else }}float32s{{ end }}
-  capacity: {{ .capacity }} # kWh
+  {{- else }}
+  limitsoc:
+    source: watchdog
+    timeout: {{ .watchdog }} # re-write at timeout/2
+    set:
+      source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 1042 # limit soc
+        type: writemultiple
+        encoding: {{ if (eq .endianness "big") }}float32{{ else }}float32s{{ end }}
   minsoc: {{ .minsoc }} # %
   maxsoc: {{ .maxsoc }} # %
+  {{- end }}
+  capacity: {{ .capacity }} # kWh
   {{- end }}
