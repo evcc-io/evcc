@@ -293,6 +293,7 @@ tabTitle = "Mina uppgifter"
 [footer.savings.period]
 30d = "senaste 30 dagar"
 365d = "senaste 365 dagarna"
+thisYear = "detta år"
 total = "totalt"
 
 [footer.sponsor]
@@ -548,6 +549,7 @@ ready = "redo"
 vehicleLimit = "Fordonsgräns: {soc}"
 
 [main.vehicleStatus]
+awaitingAuthorization = "Väntar på godkännande."
 charging = "Laddar..."
 cheapEnergyCharging = "Billig energi är tillgänglig."
 cheapEnergyNextStart = "Billig energi om {duration}."
@@ -557,6 +559,7 @@ cleanEnergyNextStart = "Grön energi om {duration}."
 cleanEnergySet = "CO₂ gräns sparad."
 climating = "Förvärmning identifierad."
 connected = "Inkopplad."
+disconnectRequired = "Session avbruten. Prova att återansluta."
 disconnected = "Frånkopplad."
 finished = "Färdig."
 minCharge = "Minimiladdning till {soc}."

@@ -23,7 +23,7 @@ func (cs *CS) TriggerResetRequest(id string, resetType core.ResetType) error {
 		rc <- err
 	}, resetType)
 
-	return Wait(err, rc, cs.timeout)
+	return Wait(err, rc)
 }
 
 func (cs *CS) TriggerMessageRequest(id string, requestedMessage remotetrigger.MessageTrigger, props ...func(request *remotetrigger.TriggerMessageRequest)) error {
@@ -37,7 +37,7 @@ func (cs *CS) TriggerMessageRequest(id string, requestedMessage remotetrigger.Me
 		rc <- err
 	}, requestedMessage, props...)
 
-	return Wait(err, rc, cs.timeout)
+	return Wait(err, rc)
 }
 
 func (cs *CS) ChangeAvailabilityRequest(id string, connector int, availabilityType core.AvailabilityType) error {
@@ -51,7 +51,7 @@ func (cs *CS) ChangeAvailabilityRequest(id string, connector int, availabilityTy
 		rc <- err
 	}, connector, availabilityType)
 
-	return Wait(err, rc, cs.timeout)
+	return Wait(err, rc)
 }
 
 func (cs *CS) SetChargingProfileRequest(id string, connector int, profile *types.ChargingProfile) error {
