@@ -93,11 +93,11 @@ func (t *EdfTempo) RefreshToken(_ *oauth2.Token) (*oauth2.Token, error) {
 		"Accept":        request.JSONContent,
 	})
 
-	var res oauth.Token
+	var res oauth2.Token
 	client := request.NewHelper(t.log)
 	err := client.DoJSON(req, &res)
 
-	return (*oauth2.Token)(&res), err
+	return util.TokenWithExpiry(&res), err
 }
 
 func (t *EdfTempo) run(done chan error) {

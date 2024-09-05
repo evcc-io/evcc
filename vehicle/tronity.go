@@ -154,10 +154,10 @@ func (v *Tronity) RefreshToken(_ *oauth2.Token) (*oauth2.Token, error) {
 
 	req, _ := request.New(http.MethodPost, v.oc.Endpoint.TokenURL, request.MarshalJSON(data), request.JSONEncoding)
 
-	var token oauth.Token
+	var token oauth2.Token
 	err := request.NewHelper(v.log).DoJSON(req, &token)
 
-	return (*oauth2.Token)(&token), err
+	return util.TokenWithExpiry(&token), err
 }
 
 // vehicles implements the vehicles api
