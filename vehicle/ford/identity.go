@@ -219,12 +219,11 @@ func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 		"Application-Id": ApplicationID,
 	})
 
-	// TODO unclear
-	var res oauth2.Token
+	var res *oauth2.Token
 	err := v.DoJSON(req, &res)
 	if err != nil {
 		res, err = v.login()
 	}
 
-	return util.TokenWithExpiry(&res), err
+	return util.TokenWithExpiry(res), err
 }
