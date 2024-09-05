@@ -6,6 +6,8 @@ import (
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/firmware"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/remotetrigger"
+	"github.com/lorenzodonini/ocpp-go/ocpp1.6/smartcharging"
+	"github.com/lorenzodonini/ocpp-go/ocpp1.6/types"
 )
 
 // cs actions
@@ -50,6 +52,39 @@ func (cs *CS) ChangeAvailabilityRequest(id string, connector int, availabilityTy
 	}, connector, availabilityType)
 
 	return Wait(err, rc)
+}
+
+func (cs *CS) SetChargingProfileRequest(id string, connector int, profile *types.ChargingProfile) error {
+	rc := make(chan error, 1)
+
+	err := cs.SetChargingProfile(id, func(request *smartcharging.SetChargingProfileConfirmation, err error) {
+		if err == nil && request != nil && request.Status != smartcharging.ChargingProfileStatusAccepted {
+			err = errors.New(string(request.Status))
+		}
+
+		rc <- err
+	}, connector, profile)
+
+	return Wait(err, rc)
+}
+
+func (cs *CS) GetCompositeScheduleRequest(id string, connector int, duration int) (*types.ChargingSchedule, error) {
+	var schedule *types.ChargingSchedule
+	rc := make(chan error, 1)
+
+	err := cs.GetCompositeSchedule(id, func(request *smartcharging.GetCompositeScheduleConfirmation, err error) {
+		if err == nil && request != nil && request.Status != smartcharging.GetCompositeScheduleStatusAccepted {
+			err = errors.New(string(request.Status))
+		}
+
+		schedule = request.ChargingSchedule
+
+		rc <- err
+	}, connector, duration)
+
+	err = Wait(err, rc)
+
+	return schedule, err
 }
 
 // cp actions
