@@ -2,7 +2,6 @@ package charger
 
 import (
 	"cmp"
-	"errors"
 	"fmt"
 	"math"
 	"slices"
@@ -14,6 +13,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/types"
+	"github.com/samber/lo"
 )
 
 // OCPP charger implementation
@@ -21,12 +21,10 @@ type OCPP struct {
 	log     *util.Logger
 	cp      *ocpp.CP
 	conn    *ocpp.Connector
-	idtag   string
 	phases  int
 	enabled bool
 	current float64
 
-	remoteStart    bool
 	stackLevelZero bool
 	lp             loadpoint.API
 }
@@ -58,7 +56,6 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 		RemoteStart    bool
 	}{
 		Connector:      1,
-		IdTag:          defaultIdTag,
 		MeterInterval:  10 * time.Second,
 		ConnectTimeout: 5 * time.Minute,
 	}
@@ -118,7 +115,7 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 //go:generate go run ../cmd/tools/decorate.go -f decorateOCPP -b *OCPP -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.Battery,Soc,func() (float64, error)"
 
 // NewOCPP creates OCPP charger
-func NewOCPP(id string, connector int, idtag string,
+func NewOCPP(id string, connector int, idTag string,
 	meterValues string, meterInterval time.Duration,
 	stackLevelZero, remoteStart bool,
 	connectTimeout time.Duration,
@@ -157,21 +154,19 @@ func NewOCPP(id string, connector int, idtag string,
 		return nil, fmt.Errorf("invalid connector: %d", connector)
 	}
 
-	conn, err := ocpp.NewConnector(log, connector, cp)
-	if err != nil {
-		return nil, err
+	if remoteStart {
+		idTag = lo.CoalesceOrEmpty(idTag, cp.IdTag, defaultIdTag)
 	}
 
-	if idtag == defaultIdTag && cp.IdTag != "" {
-		idtag = cp.IdTag
+	conn, err := ocpp.NewConnector(log, connector, cp, idTag)
+	if err != nil {
+		return nil, err
 	}
 
 	c := &OCPP{
 		log:            log,
 		cp:             cp,
 		conn:           conn,
-		idtag:          idtag,
-		remoteStart:    remoteStart,
 		stackLevelZero: stackLevelZero,
 	}
 
@@ -191,30 +186,11 @@ func (c *OCPP) Connector() *ocpp.Connector {
 	return c.conn
 }
 
-func (c *OCPP) effectiveIdTag() string {
-	if idtag := c.conn.IdTag(); idtag != "" {
-		return idtag
-	}
-	return c.idtag
-}
-
 // Status implements the api.Charger interface
 func (c *OCPP) Status() (api.ChargeStatus, error) {
 	status, err := c.conn.Status()
 	if err != nil {
 		return api.StatusNone, err
-	}
-
-	if c.conn.NeedsAuthentication() {
-		if c.remoteStart {
-			// lock the cable by starting remote transaction after vehicle connected
-			if err := c.initTransaction(); err != nil {
-				c.log.WARN.Printf("failed to start remote transaction: %v", err)
-			}
-		} else {
-			// TODO: bring this status to UI
-			c.log.WARN.Printf("waiting for local authentication")
-		}
 	}
 
 	switch status {
@@ -310,22 +286,6 @@ func (c *OCPP) Enable(enable bool) error {
 	}
 
 	return err
-}
-
-func (c *OCPP) initTransaction() error {
-	rc := make(chan error, 1)
-	err := ocpp.Instance().RemoteStartTransaction(c.cp.ID(), func(resp *core.RemoteStartTransactionConfirmation, err error) {
-		if err == nil && resp != nil && resp.Status != types.RemoteStartStopStatusAccepted {
-			err = errors.New(string(resp.Status))
-		}
-
-		rc <- err
-	}, c.effectiveIdTag(), func(request *core.RemoteStartTransactionRequest) {
-		connector := c.conn.ID()
-		request.ConnectorId = &connector
-	})
-
-	return ocpp.Wait(err, rc)
 }
 
 // setCurrent sets the TxDefaultChargingProfile with given current

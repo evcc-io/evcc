@@ -37,6 +37,14 @@ func (conn *Connector) StatusNotification(request *core.StatusNotificationReques
 		conn.log.TRACE.Printf("ignoring status: %s < %s", request.Timestamp.Time, conn.status.Timestamp)
 	}
 
+	if conn.isWaitingForAuth() {
+		if conn.remoteIdTag != "" {
+			defer conn.remoteStartTransactionRequest()
+		} else {
+			conn.log.DEBUG.Printf("waiting for local authentication")
+		}
+	}
+
 	return new(core.StatusNotificationConfirmation), nil
 }
 
