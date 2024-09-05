@@ -24,12 +24,3 @@ export default {
 	},
 };
 </script>
-
-<style scoped>
-@media (max-width: 30em) {
-	.footer .container > div:first-child {
-		justify-content: center !important;
-		flex-wrap: wrap;
-	}
-}
-</style>
