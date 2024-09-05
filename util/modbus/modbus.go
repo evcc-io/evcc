@@ -141,17 +141,17 @@ func physicalConnection(proto Protocol, cfg Settings) (*meterConnection, error) 
 		}
 	}
 
-	cfg.URI = util.DefaultPort(cfg.URI, 502)
+	uri := util.DefaultPort(cfg.URI, 502)
 
 	switch proto {
 	case Udp:
-		return registeredConnection(cfg.URI, Udp, meters.NewRTUOverUDP(cfg.URI))
+		return registeredConnection(uri, Udp, meters.NewRTUOverUDP(uri))
 	case Rtu:
-		return registeredConnection(cfg.URI, Rtu, meters.NewRTUOverTCP(cfg.URI))
+		return registeredConnection(uri, Rtu, meters.NewRTUOverTCP(uri))
 	case Ascii:
-		return registeredConnection(cfg.URI, Ascii, meters.NewASCIIOverTCP(cfg.URI))
+		return registeredConnection(uri, Ascii, meters.NewASCIIOverTCP(uri))
 	default:
-		return registeredConnection(cfg.URI, Tcp, meters.NewTCP(cfg.URI))
+		return registeredConnection(uri, Tcp, meters.NewTCP(uri))
 	}
 }
 
