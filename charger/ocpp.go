@@ -61,7 +61,7 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 		Connector:      1,
 		IdTag:          defaultIdTag,
 		MeterInterval:  10 * time.Second,
-		ConnectTimeout: ocppConnectTimeout,
+		ConnectTimeout: 5 * time.Minute,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
