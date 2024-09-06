@@ -12,6 +12,12 @@ idtag: {{ .idtag }}
 {{- if ne .remotestart "false"}}
 remotestart: {{ .remotestart }}
 {{- end }}
+{{- if .metervalues }}
+metervalues: {{ .metervalues }}
+{{- end }}
+{{- if and .meterinterval (ne .meterinterval "10s") }}
+meterinterval: {{ .meterinterval }}
+{{- end }}
 {{- if ne .connecttimeout "5m" }}
 connecttimeout: {{ .connecttimeout }}
 {{- end }}

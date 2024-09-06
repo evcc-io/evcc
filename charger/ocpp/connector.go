@@ -89,7 +89,7 @@ func (conn *Connector) remoteStartTransactionRequest() {
 		request.ConnectorId = &connector
 	})
 
-	if err := Wait(err, rc); err != nil {
+	if err := wait(err, rc); err != nil {
 		conn.log.ERROR.Printf("failed to start remote transaction: %v", err)
 	}
 }
