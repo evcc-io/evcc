@@ -9,8 +9,8 @@ import (
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/types"
 )
 
-// Wait waits for a CP roundtrip with timeout
-func Wait(err error, rc chan error) error {
+// wait waits for a CP roundtrip with timeout
+func wait(err error, rc chan error) error {
 	if err == nil {
 		select {
 		case err = <-rc:

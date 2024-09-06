@@ -157,7 +157,7 @@ func (cp *CP) GetConfiguration() (*core.GetConfigurationConfirmation, error) {
 		rc <- err
 	}, nil)
 
-	return res, Wait(err, rc)
+	return res, wait(err, rc)
 }
 
 // HasMeasurement checks if meterValuesSample contains given measurement
@@ -187,5 +187,5 @@ func (cp *CP) configure(key, val string) error {
 		rc <- err
 	}, key, val)
 
-	return Wait(err, rc)
+	return wait(err, rc)
 }
