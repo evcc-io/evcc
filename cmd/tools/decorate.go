@@ -127,6 +127,7 @@ func generate(out io.Writer, packageName, functionName, baseType string, dynamic
 	}
 
 	validCombos := make([][]string, 0)
+	partialCombos := make([][]string, 0)
 COMBO:
 	for _, c := range combinations.All(combos) {
 		for master, details := range dependents {
@@ -135,11 +136,21 @@ COMBO:
 			// - master is not part of the currently evaluated combination
 			// - details are part of the currently evaluated combination
 			if slices.Contains(combos, master) && !slices.Contains(c, master) && hasIntersection(c, details) {
+				partialCombos = append(partialCombos, c)
 				continue COMBO
 			}
 		}
 		validCombos = append(validCombos, c)
 	}
+
+	for _, c := range validCombos {
+		fmt.Println(c)
+	}
+	fmt.Println()
+	for _, c := range partialCombos {
+		fmt.Println(c)
+	}
+	os.Exit(0)
 
 	vars := struct {
 		API                 string
