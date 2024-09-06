@@ -2,6 +2,7 @@ package provider
 
 import (
 	"context"
+	"slices"
 	"strconv"
 	"sync"
 	"time"
@@ -12,7 +13,7 @@ import (
 type watchdogProvider struct {
 	mu      sync.Mutex
 	log     *util.Logger
-	reset   *string
+	reset   []string
 	set     Config
 	timeout time.Duration
 	cancel  func()
@@ -25,7 +26,7 @@ func init() {
 // NewWatchDogFromConfig creates watchDog provider
 func NewWatchDogFromConfig(other map[string]interface{}) (Provider, error) {
 	var cc struct {
-		Reset   *string
+		Reset   []string
 		Set     Config
 		Timeout time.Duration
 	}
@@ -61,7 +62,7 @@ func (o *watchdogProvider) wdt(ctx context.Context, set func() error) {
 
 // setter is the generic setter function for watchdogProvider
 // it is currently not possible to write this as a method
-func setter[T comparable](o *watchdogProvider, set func(T) error, reset *T) func(T) error {
+func setter[T comparable](o *watchdogProvider, set func(T) error, reset []T) func(T) error {
 	return func(val T) error {
 		o.mu.Lock()
 
@@ -72,7 +73,7 @@ func setter[T comparable](o *watchdogProvider, set func(T) error, reset *T) func
 		}
 
 		// start wdt on non-reset value
-		if reset == nil || val != *reset {
+		if !slices.Contains(reset, val) {
 			var ctx context.Context
 			ctx, o.cancel = context.WithCancel(context.Background())
 
@@ -87,6 +88,20 @@ func setter[T comparable](o *watchdogProvider, set func(T) error, reset *T) func
 	}
 }
 
+func parseValues[T any](values []string, fun func(string) (T, error)) ([]T, error) {
+	res := make([]T, 0, len(values))
+
+	for _, v := range values {
+		val, err := fun(v)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, val)
+	}
+
+	return res, nil
+}
+
 var _ SetIntProvider = (*watchdogProvider)(nil)
 
 func (o *watchdogProvider) IntSetter(param string) (func(int64) error, error) {
@@ -95,16 +110,11 @@ func (o *watchdogProvider) IntSetter(param string) (func(int64) error, error) {
 		return nil, err
 	}
 
-	var reset *int64
-	if o.reset != nil {
-		val, err := strconv.ParseInt(*o.reset, 10, 64)
-		if err != nil {
-			return nil, err
-		}
-		reset = &val
-	}
+	reset, err := parseValues(o.reset, func(s string) (int64, error) {
+		return strconv.ParseInt(s, 10, 64)
+	})
 
-	return setter(o, set, reset), nil
+	return setter(o, set, reset), err
 }
 
 var _ SetFloatProvider = (*watchdogProvider)(nil)
@@ -115,16 +125,11 @@ func (o *watchdogProvider) FloatSetter(param string) (func(float64) error, error
 		return nil, err
 	}
 
-	var reset *float64
-	if o.reset != nil {
-		val, err := strconv.ParseFloat(*o.reset, 64)
-		if err != nil {
-			return nil, err
-		}
-		reset = &val
-	}
+	reset, err := parseValues(o.reset, func(s string) (float64, error) {
+		return strconv.ParseFloat(s, 64)
+	})
 
-	return setter(o, set, reset), nil
+	return setter(o, set, reset), err
 }
 
 var _ SetBoolProvider = (*watchdogProvider)(nil)
@@ -135,14 +140,7 @@ func (o *watchdogProvider) BoolSetter(param string) (func(bool) error, error) {
 		return nil, err
 	}
 
-	var reset *bool
-	if o.reset != nil {
-		val, err := strconv.ParseBool(*o.reset)
-		if err != nil {
-			return nil, err
-		}
-		reset = &val
-	}
+	reset, err := parseValues(o.reset, strconv.ParseBool)
 
-	return setter(o, set, reset), nil
+	return setter(o, set, reset), err
 }
