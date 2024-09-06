@@ -381,28 +381,22 @@ func (c *OCPP) Diagnose() {
 	}
 
 	fmt.Printf("\tConfiguration:\n")
-	rc := make(chan error, 1)
-	err := ocpp.Instance().GetConfiguration(c.cp.ID(), func(resp *core.GetConfigurationConfirmation, err error) {
-		if err == nil {
-			// sort configuration keys for printing
-			slices.SortFunc(resp.ConfigurationKey, func(i, j core.ConfigurationKey) int {
-				return cmp.Compare(i.Key, j.Key)
-			})
+	if resp, err := c.cp.GetConfiguration(); err == nil {
+		// sort configuration keys for printing
+		slices.SortFunc(resp.ConfigurationKey, func(i, j core.ConfigurationKey) int {
+			return cmp.Compare(i.Key, j.Key)
+		})
 
-			rw := map[bool]string{false: "r/w", true: "r/o"}
+		rw := map[bool]string{false: "r/w", true: "r/o"}
 
-			for _, opt := range resp.ConfigurationKey {
-				if opt.Value == nil {
-					continue
-				}
-
-				fmt.Printf("\t\t%s (%s): %s\n", opt.Key, rw[opt.Readonly], *opt.Value)
+		for _, opt := range resp.ConfigurationKey {
+			if opt.Value == nil {
+				continue
 			}
-		}
 
-		rc <- err
-	}, nil)
-	ocpp.Wait(err, rc)
+			fmt.Printf("\t\t%s (%s): %s\n", opt.Key, rw[opt.Readonly], *opt.Value)
+		}
+	}
 }
 
 var _ loadpoint.Controller = (*OCPP)(nil)
