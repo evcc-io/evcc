@@ -9,4 +9,4 @@ params:
   - preset: ocpp
 render: |
   {{ include "ocpp" . }}
-  metervalues: foo
+  metervalues: Current.Offered
