@@ -1,0 +1,12 @@
+template: ocpp-meterless
+products:
+  - brand: EVBox
+    description:
+      generic: Elvi (no meter)
+requirements:
+  evcc: ["sponsorship"]
+params:
+  - preset: ocpp
+render: |
+  {{ include "ocpp" . }}
+  metervalues: blafoowusel
