@@ -15,7 +15,7 @@ remotestart: {{ .remotestart }}
 {{- if ne .connecttimeout "5m" }}
 connecttimeout: {{ .connecttimeout }}
 {{- end }}
-{{- if ne .timeout "30s" }}
+{{- if and .timeout (ne .timeout "30s") }}
 timeout: {{ .timeout }}
 {{- end }}
 {{- end }}
