@@ -36,7 +36,7 @@ params:
   # battery control
   - name: watchdog
     type: duration
-    default: 60s
+    default: 30s
     advanced: true
 render: |
   {{- if eq .usage "pv" }}
@@ -79,34 +79,34 @@ render: |
       - case: 1 # normal
         set: 
           source: const
-          value: 0 # % once, to reset gridcharge and enable internal control
+          value: 0 # % (relative power, set once to reset from forced charge)
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
             register:
-              address: 1028 # battery charge current (DC) setpoint, relative
+              address: 1028 # battery charge current (DC) setpoint, relative [%]
               type: writemultiple
               encoding: {{ if (eq .endianness "big") }}float32{{ else }}float32s{{ end }}
       - case: 2 # hold
         set:
           source: const
-          value: 0 # % to reset gridcharge and lock battery, actually a lock for charge and discharge
+          value: 0 # W (discharge limit)
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
             register:
-              address: 1028 # battery charge current (DC) setpoint, relative
+              address: 1040 # Battery max. discharge power limit, absolute [W]
               type: writemultiple
               encoding: {{ if (eq .endianness "big") }}float32{{ else }}float32s{{ end }}
       - case: 3 # charge
         set:
           source: const
-          value: -100 # % to charge battery with maximum allowed power
+          value: -100 # % (relative power)
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
             register:
-              address: 1028 # battery charge current (DC) setpoint, relative
+              address: 1028 # battery charge current (DC) setpoint, relative [%]
               type: writemultiple
               encoding: {{ if (eq .endianness "big") }}float32{{ else }}float32s{{ end }}
   capacity: {{ .capacity }} # kWh
