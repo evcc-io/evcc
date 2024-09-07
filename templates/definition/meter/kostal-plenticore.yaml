@@ -36,7 +36,7 @@ params:
   # battery control
   - name: watchdog
     type: duration
-    default: 30s
+    default: 60s
     advanced: true
 render: |
   {{- if eq .usage "pv" }}
