@@ -92,6 +92,7 @@ func (conn *Connector) StartTransaction(request *core.StartTransactionRequest) (
 	defer conn.mu.Unlock()
 
 	// expired request
+	// TODO: check if this is the correct way to handle expired requests. AuthorirzationStatusExpired is related to the idTag, not the request itself
 	if request.Timestamp != nil && conn.clock.Since(request.Timestamp.Time) > Timeout {
 		res := &core.StartTransactionConfirmation{
 			IdTagInfo: &types.IdTagInfo{
