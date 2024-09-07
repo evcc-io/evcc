@@ -46,6 +46,18 @@ func (cp *CP) FirmwareStatusNotification(request *firmware.FirmwareStatusNotific
 	return new(firmware.FirmwareStatusNotificationConfirmation), nil
 }
 
+func (cp *CP) StatusNotification(request *core.StatusNotificationRequest) (*core.StatusNotificationConfirmation, error) {
+	if request == nil {
+		return nil, ErrInvalidRequest
+	}
+
+	if conn := cp.connectorByID(request.ConnectorId); conn != nil {
+		return conn.StatusNotification(request)
+	}
+
+	return new(core.StatusNotificationConfirmation), nil
+}
+
 func (cp *CP) DataTransfer(request *core.DataTransferRequest) (*core.DataTransferConfirmation, error) {
 	res := &core.DataTransferConfirmation{
 		Status: core.DataTransferStatusAccepted,
@@ -60,18 +72,6 @@ func (cp *CP) Heartbeat(request *core.HeartbeatRequest) (*core.HeartbeatConfirma
 	}
 
 	return res, nil
-}
-
-func (cp *CP) StatusNotification(request *core.StatusNotificationRequest) (*core.StatusNotificationConfirmation, error) {
-	if request == nil {
-		return nil, ErrInvalidRequest
-	}
-
-	if conn := cp.connectorByID(request.ConnectorId); conn != nil {
-		return conn.StatusNotification(request)
-	}
-
-	return new(core.StatusNotificationConfirmation), nil
 }
 
 func (cp *CP) MeterValues(request *core.MeterValuesRequest) (*core.MeterValuesConfirmation, error) {
