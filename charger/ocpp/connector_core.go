@@ -64,7 +64,7 @@ func (conn *Connector) MeterValues(request *core.MeterValuesRequest) (*core.Mete
 		(conn.status.Status == core.ChargePointStatusCharging ||
 			conn.status.Status == core.ChargePointStatusSuspendedEV ||
 			conn.status.Status == core.ChargePointStatusSuspendedEVSE) {
-		conn.log.DEBUG.Printf("hijacking transaction: %d", *request.TransactionId)
+		conn.log.DEBUG.Printf("recovered transaction: %d", *request.TransactionId)
 		conn.txnId = *request.TransactionId
 	}
 
