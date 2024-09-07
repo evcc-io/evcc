@@ -20,7 +20,7 @@ params:
     choice: ["grid"]
   - name: scale
     example: 1 | 10 | 100 | 1000
-    default: "1000"
+    default: 1000
     required: true
     advanced: true
     description:
