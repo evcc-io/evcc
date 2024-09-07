@@ -74,7 +74,7 @@ render: |
     {{- if .scale }}
     scale: {{ .scale }}
     {{- end }}
-  {{ if .l1currentuuid -}}
+  {{ if and .l1currentuuid .l2currentuuid .l3currentuuid -}}
   currents:
   - source: http
     uri: http://{{ .host }}:{{ .port }}/
@@ -86,7 +86,7 @@ render: |
     uri: http://{{ .host }}:{{ .port }}/
     jq: .data[] | select(.uuid=={{ quote (trimAll "'" .l3currentuuid) }}) | .tuples[0][1]
   {{ end -}}
-  {{ if .l1poweruuid -}}
+  {{ if and .l1poweruuid .l2poweruuid .l3poweruuid -}}
   powers:
   - source: http
     uri: http://{{ .host }}:{{ .port }}/
@@ -98,7 +98,7 @@ render: |
     uri: http://{{ .host }}:{{ .port }}/
     jq: .data[] | select(.uuid=={{ quote (trimAll "'" .l3poweruuid) }}) | .tuples[0][1]
   {{ end -}}
-  {{ if .l1voltageuuid -}}
+  {{ if and .l1voltageuuid .l2voltageuuid .l3voltageuuid -}}
   voltages:
   - source: http
     uri: http://{{ .host }}:{{ .port }}/
