@@ -40,3 +40,4 @@ asset-stats.html
 /playwright-report/
 /playwright/.cache/
 .gitpod.yml
+/evcc.db
