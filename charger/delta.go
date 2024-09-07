@@ -195,8 +195,10 @@ func (wb *Delta) Status() (api.ChargeStatus, error) {
 
 }
 
+var _ api.StatusReasoner = (*Delta)(nil)
+
 // statusReason implements the api.StatusReasoner interface
-func (wb *Delta) statusReason() (api.Reason, error) {
+func (wb *Delta) StatusReason() (api.Reason, error) {
 	res := api.ReasonUnknown
 
 	if wb.legacy {
