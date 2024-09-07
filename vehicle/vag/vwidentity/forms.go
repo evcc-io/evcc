@@ -48,11 +48,11 @@ func FormValues(reader io.Reader, id string) (FormVars, error) {
 		}
 		vars.Action = action
 
-		form.Find("input").Each(func(_ int, el *goquery.Selection) {
+		for _, el := range form.Find("input").EachIter() {
 			if name, ok := el.Attr("name"); ok {
 				vars.Inputs[name], _ = el.Attr("value")
 			}
-		})
+		}
 	}
 
 	return vars, err

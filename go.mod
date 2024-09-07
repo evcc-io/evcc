@@ -6,7 +6,7 @@ require (
 	dario.cat/mergo v1.0.1
 	github.com/AlecAivazis/survey/v2 v2.3.7
 	github.com/BurntSushi/toml v1.4.0
-	github.com/PuerkitoBio/goquery v1.9.2
+	github.com/PuerkitoBio/goquery v1.10.0
 	github.com/andig/go-powerwall v0.2.1-0.20230808194509-dd70cdb6e140
 	github.com/andig/gosunspec v0.0.0-20231205122018-1daccfa17912
 	github.com/andig/mbserver v0.0.0-20230310211055-1d29cbb5820e
@@ -73,8 +73,8 @@ require (
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/philippseith/signalr v0.6.3
 	github.com/prometheus-community/pro-bing v0.4.1
-	github.com/prometheus/client_golang v1.20.2
-	github.com/prometheus/common v0.57.0
+	github.com/prometheus/client_golang v1.20.3
+	github.com/prometheus/common v0.59.1
 	github.com/robertkrimen/otto v0.4.0
 	github.com/samber/lo v1.47.0
 	github.com/sirupsen/logrus v1.9.3
@@ -94,13 +94,13 @@ require (
 	github.com/writeas/go-strip-markdown/v2 v2.1.1
 	gitlab.com/bboehmke/sunny v0.16.0
 	go.uber.org/mock v0.4.0
-	golang.org/x/crypto v0.26.0
-	golang.org/x/crypto/x509roots/fallback v0.0.0-20240806160748-b2d3a6a4b4d3
-	golang.org/x/exp v0.0.0-20240823005443-9b4947da3948
-	golang.org/x/net v0.28.0
+	golang.org/x/crypto v0.27.0
+	golang.org/x/crypto/x509roots/fallback v0.0.0-20240904212608-c9da6b9a4008
+	golang.org/x/exp v0.0.0-20240904232852-e7e105dedf7e
+	golang.org/x/net v0.29.0
 	golang.org/x/oauth2 v0.23.0
 	golang.org/x/sync v0.8.0
-	golang.org/x/text v0.17.0
+	golang.org/x/text v0.18.0
 	golang.org/x/tools v0.24.0
 	google.golang.org/grpc v1.66.0
 	google.golang.org/protobuf v1.34.2
@@ -187,7 +187,7 @@ require (
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/mod v0.20.0 // indirect
 	golang.org/x/sys v0.25.0 // indirect
-	golang.org/x/term v0.23.0 // indirect
+	golang.org/x/term v0.24.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240823204242-4ba0660f739c // indirect
 	gopkg.in/go-playground/validator.v9 v9.31.0 // indirect
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect
