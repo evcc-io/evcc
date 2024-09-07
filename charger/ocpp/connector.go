@@ -29,8 +29,9 @@ type Connector struct {
 	meterUpdated time.Time
 	measurements map[types.Measurand]types.SampledValue
 
-	txnId int
-	idTag string
+	txnCount int // change initial value to the last known global transaction. Needs persistence
+	txnId    int
+	idTag    string
 
 	remoteIdTag string
 }
