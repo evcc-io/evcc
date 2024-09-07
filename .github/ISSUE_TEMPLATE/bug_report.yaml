@@ -63,6 +63,15 @@ body:
         - Docker container
         - HomeAssistant Add-on
 
+  - type: checkboxes
+    id: nightly
+    attributes:
+      label: Nightly build
+      description: Check if issue as already been fixed in the latest nightly build
+      options:
+        - label: I have verified that the issue is reproducible with the latest nightly build
+          required: true
+
   - type: input
     attributes:
       label: Version
