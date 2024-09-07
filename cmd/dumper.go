@@ -116,6 +116,14 @@ func (d *dumper) Dump(name string, v interface{}) {
 		}
 	}
 
+	if v, ok := v.(api.StatusReasoner); ok {
+		if status, err := v.StatusReason(); err != nil {
+			fmt.Fprintf(w, "Status reason:\t%v\n", err)
+		} else {
+			fmt.Fprintf(w, "Status reason:\t%v\n", status)
+		}
+	}
+
 	// controllable battery
 	if _, ok := v.(api.BatteryController); ok {
 		fmt.Fprintf(w, "Controllable:\ttrue\n")
