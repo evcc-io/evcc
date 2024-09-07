@@ -9,12 +9,6 @@ products:
   - brand: mhendriks
     description:
       generic: P1 dongle
-requirements:
-  description:
-    de: |
-      DSMR-Lesegerätvorlage. Nützlich für DSMR-Leser, Zuidwijk Slimmelezer(+) und mhendriks P1-Dongle
-    en: | 
-      DSMR reader template. Usefull for DSMR reader, Zuidwijk Slimmelezer(+) and mhendriks P1 dongle
 params:
   - name: usage
     choice: ["grid"]
