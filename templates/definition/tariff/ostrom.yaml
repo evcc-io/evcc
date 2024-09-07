@@ -7,20 +7,21 @@ requirements:
     de: "Erzeuge einen 'Production Client' in dem Tibber-Entwicklerportal: https://developer.ostrom-api.io/"
 group: price
 params:
-  - name: ClientID
+  - name: clientid
     example: 476c477d8a039529478ebd690d35ddd80e3308ffc49b59c65b142321aee963a4
     required: true
-  - name: ClientSecret
+  - name: clientsecret
     example: 476c477d8a039529478ebd690d35ddd80e3308ffc49b59c65b142321aee963a4476c477d8a039529478ebd690d35ddd80e3308ffc49b59c65b142321aee963a4a
-  - name : Contract
+  - name: contract
     example: 100523456
     help:
-      de: Dies ist nur nötig, wenn mehrere Verträge unter einem Benutzer existieren
+      de: Nur erforderlich, wenn mehrere Verträge unter einem Benutzer existieren
       en: Only required if multiple contracts belong to the same user
-  - preset: tariff-base
 render: |
   type: ostrom
-  ClientID: {{ .ClientID }}
-  ClientSecret: {{ .ClientSecret }}
-  Contract: {{ .Contract }}
-  {{ include "tariff-base" . }}
+  clientid: {{ .clientid }}
+  ClientSecret: {{ .clientsecret }}
+  {{- if .contract }}
+  contract: {{ .contract }}
+  {{- end }}
+  
