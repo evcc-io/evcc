@@ -15,7 +15,7 @@ const data = `{
                 "error": null,
                 "operationResult": 1
             },
-            "sessionId": "PS0485700000000290629****"
+            "sessionId": "PS048570000000020217505726155407"
         },
         "vehicleStatus": {
             "basicVehicleStatus": {
@@ -32,7 +32,7 @@ const data = `{
                 "carMode": "0",
                 "speed": "0.0",
                 "speedValidity": "false",
-                "direction": "0"
+                "direction": ""
             },
             "notification": {
                 "notifForEmgyCallStatus": "0"
@@ -45,7 +45,7 @@ const data = `{
                 "panicStatus": "false"
             },
             "parkTime": {
-                "status": "1723920451549"
+                "status": "1725697061555"
             },
             "theftNotification": {
                 "time": "1716550899",
@@ -54,38 +54,38 @@ const data = `{
             "configuration": {
                 "propulsionType": "4",
                 "fuelType": "4",
-                "vin": "HESX****"
+                "vin": "HESXA2C41PS048570"
             },
-            "updateTime": "1723990612062",
+            "updateTime": "1725702166883",
             "additionalVehicleStatus": {
                 "maintenanceStatus": {
                     "tyreTempWarningPassengerRear": "0",
-                    "daysToService": "191",
+                    "daysToService": "171",
                     "engineHrsToService": "500",
-                    "odometer": "4973.000",
+                    "odometer": "5232.000",
                     "brakeFluidLevelStatus": "3",
-                    "tyreTempDriverRear": "22.000",
+                    "tyreTempDriverRear": "23.000",
                     "tyreTempWarningPassenger": "0",
                     "tyreTempWarningDriverRear": "0",
                     "mainBatteryStatus": {
                         "stateOfCharge": "1",
-                        "chargeLevel": "96.2",
+                        "chargeLevel": "95.8",
                         "energyLevel": "0",
                         "stateOfHealth": "0",
                         "powerLevel": "0",
                         "voltage": "14.275"
                     },
-                    "tyreTempDriver": "22.000",
+                    "tyreTempDriver": "23.000",
                     "tyreTempPassengerRear": "22.000",
                     "tyrePreWarningDriver": "0",
-                    "distanceToService": "25027",
+                    "distanceToService": "24768",
                     "tyrePreWarningPassengerRear": "0",
                     "tyreTempWarningDriver": "0",
-                    "tyreStatusPassengerRear": "244.394",
-                    "tyreStatusPassenger": "241.648",
+                    "tyreStatusPassengerRear": "241.648",
+                    "tyreStatusPassenger": "237.529",
                     "tyreStatusDriverRear": "241.648",
                     "serviceWarningStatus": "0",
-                    "tyreStatusDriver": "248.513",
+                    "tyreStatusDriver": "247.140",
                     "tyreTempPassenger": "23.000",
                     "tyrePreWarningDriverRear": "0",
                     "tyrePreWarningPassenger": "0",
@@ -96,28 +96,28 @@ const data = `{
                     "disChargeSts": "0",
                     "wptFineAlignt": "0",
                     "chargeLidAcStatus": "2",
-                    "distanceToEmptyOnBatteryOnly": "201",
-                    "distanceToEmptyOnBattery100Soc": "402",
+                    "distanceToEmptyOnBatteryOnly": "135",
+                    "distanceToEmptyOnBattery100Soc": "429",
                     "chargeSts": "0",
-                    "averPowerConsumption": "-102.3",
-                    "chargerState": "4",
+                    "averPowerConsumption": "-86.3",
+                    "chargerState": "2",
                     "timeToTargetDisCharged": "2047",
-                    "distanceToEmptyOnBattery20Soc": "80",
-                    "disChargeConnectStatus": "2",
+                    "distanceToEmptyOnBattery20Soc": "84",
+                    "disChargeConnectStatus": "3",
                     "chargeLidDcAcStatus": "1",
                     "dcChargeSts": "0",
                     "ptReady": "0",
-                    "chargeLevel": "50",
-                    "statusOfChargerConnection": "2",
+                    "chargeLevel": "32",
+                    "statusOfChargerConnection": "3",
                     "dcDcActvd": "1",
                     "indPowerConsumption": "0.0",
                     "dcDcConnectStatus": "0",
                     "disChargeIAct": "0.0",
-                    "dcChargeIAct": "0.5",
-                    "chargeUAct": "0.0",
+                    "dcChargeIAct": "-11.6",
+                    "chargeUAct": "402.0",
                     "bookChargeSts": "0",
-                    "chargeIAct": "0.000",
-                    "timeToFullyCharged": "2047"
+                    "chargeIAct": "8.200",
+                    "timeToFullyCharged": "390"
                 },
                 "chargeHvSts": "1",
                 "drivingBehaviourStatus": {
@@ -132,7 +132,7 @@ const data = `{
                     "cornrgLi": "0",
                     "frntFog": "0",
                     "stopLi": "0",
-                    "tripMeter1": "4118.8",
+                    "tripMeter1": "4378.6",
                     "approach": "0",
                     "tripMeter2": "0.0",
                     "indFuelConsumption": "0",
@@ -173,7 +173,7 @@ const data = `{
                     "rrVentDetail": "0",
                     "rlVentSts": "0",
                     "passVentSts": "0",
-                    "interiorTemp": "24.900",
+                    "interiorTemp": "26.800",
                     "passVentDetail": "0",
                     "sunroofPos": "101",
                     "cdsClimateActive": "false",
@@ -198,7 +198,7 @@ const data = `{
                     "steerWhlHeatingSts": "2",
                     "drvVentDetail": "0",
                     "winPosDriverRear": "0",
-                    "exteriorTemp": "23.500",
+                    "exteriorTemp": "22.500",
                     "rlHeatingSts": "0",
                     "winStatusDriverRear": "2",
                     "defrost": "false",
@@ -241,7 +241,7 @@ const data = `{
                     "trunkOpenStatus": "0"
                 },
                 "pollutionStatus": {
-                    "interiorPM25": "1",
+                    "interiorPM25": "11",
                     "interiorSecondPM25Level": "0",
                     "interiorPM25Level": "0",
                     "relHumSts": "80",
@@ -281,7 +281,7 @@ const data = `{
     "success": true,
     "hint": null,
     "httpStatus": "OK",
-    "sessionId": "6fab3f23b494976b2101eaff1f2c87cf",
+    "sessionId": "40aedbf4c3bfb0bd05e37fa5deda1095",
     "message": "operation succeed"
 }`
 
