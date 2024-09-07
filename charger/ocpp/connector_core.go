@@ -102,8 +102,7 @@ func (conn *Connector) StartTransaction(request *core.StartTransactionRequest) (
 		return res, nil
 	}
 
-	conn.txnCount++
-	conn.txnId = conn.txnCount
+	conn.txnId = instance.NewTransactionID()
 	conn.idTag = request.IdTag
 
 	res := &core.StartTransactionConfirmation{
