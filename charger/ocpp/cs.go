@@ -109,11 +109,12 @@ func (cs *CS) ChargePointDisconnected(chargePoint ocpp16.ChargePointConnection) 
 	}
 }
 
-// NewTransactionID returns a new unique transaction id
+// NewTransactionID returns a globally unique transaction id
 func (cs *CS) NewTransactionID() int {
 	cs.mu.Lock()
 	defer cs.mu.Unlock()
 
+	// initialize new transactionId epoch
 	if cs.txnId == 0 {
 		cs.txnId = int(time.Now().UTC().Unix())
 	}
