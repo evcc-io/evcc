@@ -36,7 +36,7 @@ var _ api.ChargeState = (*Provider)(nil)
 func (v *Provider) Status() (api.ChargeStatus, error) {
 	res, err := v.statusG()
 	switch res.AdditionalVehicleStatus.ElectricVehicleStatus.ChargerState {
-	case 1:
+	case 1, 3:
 		return api.StatusB, err
 	case 2:
 		return api.StatusC, err
