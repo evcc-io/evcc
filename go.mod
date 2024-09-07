@@ -121,6 +121,7 @@ require (
 	github.com/cstockton/go-conv v1.0.0 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
+	github.com/enbility/go-avahi v0.0.0-20240829083637-9ae2ef5f5ed2 // indirect
 	github.com/enbility/zeroconf/v2 v2.0.0-20240827101515-f3956627c450 // indirect
 	github.com/fatih/color v1.17.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
@@ -138,7 +139,6 @@ require (
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/gorilla/websocket v1.5.3 // indirect
 	github.com/grid-x/serial v0.0.0-20211107191517-583c7356b3aa // indirect
-	github.com/holoplot/go-avahi v0.0.0-20240210093433-b8dc0fc11e7e // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/influxdata/line-protocol v0.0.0-20210922203350-b1ad95c89adf // indirect
 	github.com/insomniacslk/xjson v0.0.0-20240821125711-1236daaf6808 // indirect
@@ -204,6 +204,8 @@ replace github.com/grid-x/modbus => github.com/evcc-io/modbus v0.0.0-20240503125
 
 replace github.com/lorenzodonini/ocpp-go => github.com/evcc-io/ocpp-go v0.0.0-20240730071053-d69e53b0fce9
 
-replace github.com/enbility/ship-go => github.com/enbility/ship-go v0.0.0-20240827103353-35c86c3ba136
+replace github.com/enbility/ship-go => github.com/enbility/ship-go v0.0.0-20240904104254-04d944c4f825
 
-replace github.com/enbility/eebus-go => github.com/enbility/eebus-go v0.0.0-20240827111001-330aad85c442
+replace github.com/enbility/spine-go => github.com/enbility/spine-go v0.0.0-20240907194637-0024041a4f36
+
+replace github.com/enbility/eebus-go => github.com/enbility/eebus-go v0.0.0-20240907200357-cd3e59d01934
