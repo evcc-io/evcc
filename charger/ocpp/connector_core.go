@@ -91,17 +91,6 @@ func (conn *Connector) StartTransaction(request *core.StartTransactionRequest) (
 	conn.mu.Lock()
 	defer conn.mu.Unlock()
 
-	// expired request
-	if request.Timestamp != nil && conn.clock.Since(request.Timestamp.Time) > Timeout {
-		res := &core.StartTransactionConfirmation{
-			IdTagInfo: &types.IdTagInfo{
-				Status: types.AuthorizationStatusExpired, // reject
-			},
-		}
-
-		return res, nil
-	}
-
 	conn.txnId = instance.NewTransactionID()
 	conn.idTag = request.IdTag
 
@@ -138,17 +127,6 @@ func (conn *Connector) assumeMeterStopped() {
 func (conn *Connector) StopTransaction(request *core.StopTransactionRequest) (*core.StopTransactionConfirmation, error) {
 	conn.mu.Lock()
 	defer conn.mu.Unlock()
-
-	// expired request
-	if request.Timestamp != nil && conn.clock.Since(request.Timestamp.Time) > Timeout {
-		res := &core.StopTransactionConfirmation{
-			IdTagInfo: &types.IdTagInfo{
-				Status: types.AuthorizationStatusExpired, // reject
-			},
-		}
-
-		return res, nil
-	}
 
 	conn.txnId = 0
 	conn.idTag = ""
