@@ -46,6 +46,18 @@ func (cp *CP) FirmwareStatusNotification(request *firmware.FirmwareStatusNotific
 	return new(firmware.FirmwareStatusNotificationConfirmation), nil
 }
 
+func (cp *CP) StatusNotification(request *core.StatusNotificationRequest) (*core.StatusNotificationConfirmation, error) {
+	if request == nil {
+		return nil, ErrInvalidRequest
+	}
+
+	if conn := cp.connectorByID(request.ConnectorId); conn != nil {
+		return conn.StatusNotification(request)
+	}
+
+	return new(core.StatusNotificationConfirmation), nil
+}
+
 func (cp *CP) DataTransfer(request *core.DataTransferRequest) (*core.DataTransferConfirmation, error) {
 	res := &core.DataTransferConfirmation{
 		Status: core.DataTransferStatusAccepted,
@@ -62,18 +74,6 @@ func (cp *CP) Heartbeat(request *core.HeartbeatRequest) (*core.HeartbeatConfirma
 	return res, nil
 }
 
-func (cp *CP) StatusNotification(request *core.StatusNotificationRequest) (*core.StatusNotificationConfirmation, error) {
-	if request == nil {
-		return nil, ErrInvalidRequest
-	}
-
-	if conn := cp.connectorByID(request.ConnectorId); conn != nil {
-		return conn.StatusNotification(request)
-	}
-
-	return new(core.StatusNotificationConfirmation), nil
-}
-
 func (cp *CP) MeterValues(request *core.MeterValuesRequest) (*core.MeterValuesConfirmation, error) {
 	if request == nil {
 		return nil, ErrInvalidRequest
@@ -85,11 +85,12 @@ func (cp *CP) MeterValues(request *core.MeterValuesRequest) (*core.MeterValuesCo
 	default:
 	}
 
-	if conn := cp.connectorByID(request.ConnectorId); conn != nil {
-		conn.MeterValues(request)
+	conn := cp.connectorByID(request.ConnectorId)
+	if conn == nil {
+		return nil, ErrInvalidConnector
 	}
 
-	return new(core.MeterValuesConfirmation), nil
+	return conn.MeterValues(request)
 }
 
 func (cp *CP) StartTransaction(request *core.StartTransactionRequest) (*core.StartTransactionConfirmation, error) {
@@ -97,11 +98,12 @@ func (cp *CP) StartTransaction(request *core.StartTransactionRequest) (*core.Sta
 		return nil, ErrInvalidRequest
 	}
 
-	if conn := cp.connectorByID(request.ConnectorId); conn != nil {
-		return conn.StartTransaction(request)
+	conn := cp.connectorByID(request.ConnectorId)
+	if conn == nil {
+		return nil, ErrInvalidConnector
 	}
 
-	return new(core.StartTransactionConfirmation), nil
+	return conn.StartTransaction(request)
 }
 
 func (cp *CP) StopTransaction(request *core.StopTransactionRequest) (*core.StopTransactionConfirmation, error) {
@@ -109,15 +111,16 @@ func (cp *CP) StopTransaction(request *core.StopTransactionRequest) (*core.StopT
 		return nil, ErrInvalidRequest
 	}
 
-	if conn := cp.connectorByTransactionID(request.TransactionId); conn != nil {
-		return conn.StopTransaction(request)
+	conn := cp.connectorByTransactionID(request.TransactionId)
+	if conn == nil {
+		res := &core.StopTransactionConfirmation{
+			IdTagInfo: &types.IdTagInfo{
+				Status: types.AuthorizationStatusAccepted, // accept old pending stop message during startup
+			},
+		}
+
+		return res, nil
 	}
 
-	res := &core.StopTransactionConfirmation{
-		IdTagInfo: &types.IdTagInfo{
-			Status: types.AuthorizationStatusAccepted, // accept old pending stop message during startup
-		},
-	}
-
-	return res, nil
+	return conn.StopTransaction(request)
 }
