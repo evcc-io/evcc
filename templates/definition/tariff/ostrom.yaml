@@ -12,6 +12,7 @@ params:
     required: true
   - name: clientsecret
     example: 476c477d8a039529478ebd690d35ddd80e3308ffc49b59c65b142321aee963a4476c477d8a039529478ebd690d35ddd80e3308ffc49b59c65b142321aee963a4a
+    required: true
   - name: contract
     example: 100523456
     help:
@@ -19,9 +20,7 @@ params:
       en: Only required if multiple contracts belong to the same user
 render: |
   type: ostrom
-  clientid: {{ .clientid }}
+  ClientId: {{ .clientid }}
   ClientSecret: {{ .clientsecret }}
-  {{- if .contract }}
-  contract: {{ .contract }}
-  {{- end }}
+  Contract: {{ .contract }}
   

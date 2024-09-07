@@ -39,25 +39,23 @@ func init() {
 
 func NewOstromFromConfig(other map[string]interface{}) (api.Tariff, error) {
 	var cc struct {
-		embed        `mapstructure:",squash"`
-		clientid     string
-		clientsecret string
-		contract     string
+		ClientId     string
+		ClientSecret string
+		Contract     string
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	if cc.clientid == "" || cc.clientsecret == "" {
+	if cc.ClientId == "" || cc.ClientSecret == "" {
 		return nil, errors.New("missing credentials")
 	}
 
-	basic := transport.BasicAuthHeader(cc.clientid, cc.clientsecret)
+	basic := transport.BasicAuthHeader(cc.ClientId, cc.ClientSecret)
 	log := util.NewLogger("ostrom").Redact(basic)
 
 	t := &Ostrom{
-		embed:        &cc.embed,
 		log:          log,
 		basic:        basic,
 		contractType: ostrom.PRODUCT_DYNAMIC,
@@ -71,7 +69,7 @@ func NewOstromFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		Source: oauth.RefreshTokenSource(new(oauth2.Token), t),
 	}
 
-	contract, err := util.EnsureElementEx(cc.contract, t.GetContracts,
+	contract, err := util.EnsureElementEx(cc.Contract, t.GetContracts,
 		func(c ostrom.Contract) (string, error) {
 			return c.Id, nil
 		},
