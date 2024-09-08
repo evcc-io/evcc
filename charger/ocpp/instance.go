@@ -46,6 +46,7 @@ func Instance() *CS {
 			log:           log,
 			cps:           make(map[string]*CP),
 			CentralSystem: cs,
+			txnId:         int(time.Now().UTC().Unix()),
 		}
 
 		ocppj.SetLogger(instance)

@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"sync"
-	"time"
 
 	"github.com/evcc-io/evcc/util"
 	ocpp16 "github.com/lorenzodonini/ocpp-go/ocpp1.6"
@@ -113,11 +112,6 @@ func (cs *CS) ChargePointDisconnected(chargePoint ocpp16.ChargePointConnection) 
 func (cs *CS) NewTransactionID() int {
 	cs.mu.Lock()
 	defer cs.mu.Unlock()
-
-	// initialize new epoch
-	if cs.txnId == 0 {
-		cs.txnId = int(time.Now().UTC().Unix())
-	}
 
 	cs.txnId++
 	return cs.txnId
