@@ -1,7 +1,6 @@
 package ocpp
 
 import (
-	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -67,41 +66,22 @@ func (conn *Connector) IdTag() string {
 	return conn.idTag
 }
 
-func (conn *Connector) TriggerMessageRequest(feature remotetrigger.MessageTrigger, f ...func(request *remotetrigger.TriggerMessageRequest)) error {
-	return Instance().TriggerMessageRequest(conn.cp.ID(), feature, func(request *remotetrigger.TriggerMessageRequest) {
-		request.ConnectorId = &conn.id
-		for _, f := range f {
-			f(request)
-		}
-	})
+func (conn *Connector) TriggerMessageRequest(requestedMessage remotetrigger.MessageTrigger) error {
+	return conn.cp.TriggerMessageRequest(conn.id, requestedMessage)
 }
 
-func (conn *Connector) remoteStartTransactionRequest() {
-	rc := make(chan error, 1)
-	err := Instance().RemoteStartTransaction(conn.cp.ID(), func(resp *core.RemoteStartTransactionConfirmation, err error) {
-		if err == nil && resp != nil && resp.Status != types.RemoteStartStopStatusAccepted {
-			err = errors.New(string(resp.Status))
-		}
-
-		rc <- err
-	}, conn.remoteIdTag, func(request *core.RemoteStartTransactionRequest) {
-		connector := conn.id
-		request.ConnectorId = &connector
-	})
-
-	if err := wait(err, rc); err != nil {
-		conn.log.ERROR.Printf("failed to start remote transaction: %v", err)
-	}
+func (conn *Connector) RemoteStartTransactionRequest(idTag string) error {
+	return conn.cp.RemoteStartTransactionRequest(conn.id, idTag)
 }
 
 func (conn *Connector) SetChargingProfile(profile *types.ChargingProfile) error {
-	return Instance().SetChargingProfileRequest(conn.cp.ID(), conn.id, profile)
+	return conn.cp.SetChargingProfileRequest(conn.id, profile)
 }
 
 // getScheduleLimit queries the current or power limit the charge point is currently set to offer
 func (conn *Connector) GetScheduleLimit(duration int) (float64, error) {
 	var limit float64
-	schedule, err := Instance().GetCompositeScheduleRequest(conn.cp.ID(), conn.id, duration)
+	schedule, err := conn.cp.GetCompositeScheduleRequest(conn.id, duration)
 
 	if err == nil {
 		if schedule != nil && len(schedule.ChargingSchedulePeriod) > 0 {

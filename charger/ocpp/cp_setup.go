@@ -15,7 +15,7 @@ import (
 const desiredMeasurands = "Power.Active.Import,Energy.Active.Import.Register,Current.Import,Voltage,Current.Offered,Power.Offered,SoC"
 
 func (cp *CP) Setup(meterValues string, meterInterval time.Duration) error {
-	if err := Instance().ChangeAvailabilityRequest(cp.ID(), 0, core.AvailabilityTypeOperative); err != nil {
+	if err := cp.ChangeAvailabilityRequest(0, core.AvailabilityTypeOperative); err != nil {
 		cp.log.DEBUG.Printf("failed configuring availability: %v", err)
 	}
 
@@ -92,7 +92,7 @@ func (cp *CP) Setup(meterValues string, meterInterval time.Duration) error {
 
 	// see who's there
 	if cp.HasRemoteTriggerFeature {
-		if err := Instance().TriggerMessageRequest(cp.ID(), core.BootNotificationFeatureName); err != nil {
+		if err := cp.TriggerMessageRequest(0, core.BootNotificationFeatureName); err != nil {
 			cp.log.DEBUG.Printf("failed triggering BootNotification: %v", err)
 		}
 
@@ -121,7 +121,7 @@ func (cp *CP) Setup(meterValues string, meterInterval time.Duration) error {
 
 	// trigger initial meter values
 	if cp.HasRemoteTriggerFeature {
-		if err := Instance().TriggerMessageRequest(cp.ID(), core.MeterValuesFeatureName); err == nil {
+		if err := cp.TriggerMessageRequest(0, core.MeterValuesFeatureName); err == nil {
 			// wait for meter values
 			select {
 			case <-time.After(Timeout):
