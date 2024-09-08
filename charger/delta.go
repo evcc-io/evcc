@@ -23,6 +23,7 @@ type Delta struct {
 	curr    float64
 	base    uint16
 	enabled bool
+	isSmart bool // true = for Smart version, false = for Basic version
 }
 
 const (
@@ -116,6 +117,17 @@ func NewDelta(uri, device, comset string, baudrate int, proto modbus.Protocol, s
 		}
 	}
 
+	// Differentiate between Smart and Basic version (or Modbus TCP and RS485 respectively)
+	// Register 1001 is presented to RS485, but not implemented in Modbus TCP
+	_, err = wb.conn.ReadInputRegisters(wb.base+deltaRegEvseChargerState, 1)
+	if err == nil {
+		// If the value in deltaRegEvseChargerState can be read successfully,
+		// it indicates a RS485 connection, otherwise a legacy Modbus TCP connection
+		wb.isSmart = false
+	} else {
+		wb.isSmart = true
+	}
+	
 	return wb, nil
 }
 
@@ -153,7 +165,13 @@ func (wb *Delta) Status() (api.ChargeStatus, error) {
 	switch s := encoding.Uint16(b); s {
 	case 0, 1, 2:
 		return api.StatusA, nil
-	case 3, 5, 6, 7, 9:
+	case 3:
+		if wb.isSmart {
+			return api.StatusB, nil
+		} else {
+			return api.StatusA, nil
+		}
+	case 5, 6, 7, 9:
 		return api.StatusB, nil
 	case 4:
 		return api.StatusC, nil
