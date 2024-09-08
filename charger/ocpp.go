@@ -290,7 +290,7 @@ func (c *OCPP) Enable(enable bool) error {
 
 // setCurrent sets the TxDefaultChargingProfile with given current
 func (c *OCPP) setCurrent(current float64) error {
-	err := c.conn.SetChargingProfile(c.createTxDefaultChargingProfile(math.Trunc(10*current) / 10))
+	err := c.conn.SetChargingProfileRequest(c.createTxDefaultChargingProfile(math.Trunc(10*current) / 10))
 	if err != nil {
 		err = fmt.Errorf("set charging profile: %w", err)
 	}
@@ -381,7 +381,7 @@ func (c *OCPP) Diagnose() {
 	}
 
 	fmt.Printf("\tConfiguration:\n")
-	if resp, err := c.cp.GetConfiguration(); err == nil {
+	if resp, err := c.cp.GetConfigurationRequest(); err == nil {
 		// sort configuration keys for printing
 		slices.SortFunc(resp.ConfigurationKey, func(i, j core.ConfigurationKey) int {
 			return cmp.Compare(i.Key, j.Key)

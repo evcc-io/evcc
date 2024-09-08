@@ -1,7 +1,6 @@
 package ocpp
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -21,7 +20,7 @@ func (cp *CP) Setup(meterValues string, meterInterval time.Duration) error {
 
 	meterValuesSampledDataMaxLength := len(strings.Split(desiredMeasurands, ","))
 
-	resp, err := cp.GetConfiguration()
+	resp, err := cp.GetConfigurationRequest()
 	if err != nil {
 		return err
 	}
@@ -112,7 +111,7 @@ func (cp *CP) Setup(meterValues string, meterInterval time.Duration) error {
 
 	// configure measurands
 	if meterValues != "" {
-		if err := cp.configure(KeyMeterValuesSampledData, meterValues); err == nil || meterValues == "disable" {
+		if err := cp.ChangeConfigurationRequest(KeyMeterValuesSampledData, meterValues); err == nil || meterValues == "disable" {
 			cp.meterValuesSample = meterValues
 		} else {
 			cp.log.WARN.Printf("failed configuring %s: %v", KeyMeterValuesSampledData, err)
@@ -133,30 +132,17 @@ func (cp *CP) Setup(meterValues string, meterInterval time.Duration) error {
 
 	// configure sample rate
 	if meterInterval > 0 {
-		if err := cp.configure(KeyMeterValueSampleInterval, strconv.Itoa(int(meterInterval.Seconds()))); err != nil {
+		if err := cp.ChangeConfigurationRequest(KeyMeterValueSampleInterval, strconv.Itoa(int(meterInterval.Seconds()))); err != nil {
 			cp.log.WARN.Printf("failed configuring %s: %v", KeyMeterValueSampleInterval, err)
 		}
 	}
 
 	// configure websocket ping interval
-	if err := cp.configure(KeyWebSocketPingInterval, "30"); err != nil {
+	if err := cp.ChangeConfigurationRequest(KeyWebSocketPingInterval, "30"); err != nil {
 		cp.log.DEBUG.Printf("failed configuring %s: %v", KeyWebSocketPingInterval, err)
 	}
 
 	return nil
-}
-
-// GetConfiguration
-func (cp *CP) GetConfiguration() (*core.GetConfigurationConfirmation, error) {
-	rc := make(chan error, 1)
-
-	var res *core.GetConfigurationConfirmation
-	err := Instance().GetConfiguration(cp.ID(), func(resp *core.GetConfigurationConfirmation, err error) {
-		res = resp
-		rc <- err
-	}, nil)
-
-	return res, wait(err, rc)
 }
 
 // HasMeasurement checks if meterValuesSample contains given measurement
@@ -167,24 +153,9 @@ func (cp *CP) HasMeasurement(val types.Measurand) bool {
 func (cp *CP) tryMeasurands(measurands string, key string) []string {
 	var accepted []string
 	for _, m := range strings.Split(measurands, ",") {
-		if err := cp.configure(key, m); err == nil {
+		if err := cp.ChangeConfigurationRequest(key, m); err == nil {
 			accepted = append(accepted, m)
 		}
 	}
 	return accepted
-}
-
-// configure updates CP configuration
-func (cp *CP) configure(key, val string) error {
-	rc := make(chan error, 1)
-
-	err := Instance().ChangeConfiguration(cp.id, func(resp *core.ChangeConfigurationConfirmation, err error) {
-		if err == nil && resp != nil && resp.Status != core.ConfigurationStatusAccepted {
-			rc <- fmt.Errorf("ChangeConfiguration failed: %s", resp.Status)
-		}
-
-		rc <- err
-	}, key, val)
-
-	return wait(err, rc)
 }

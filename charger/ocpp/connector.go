@@ -11,7 +11,6 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
-	"github.com/lorenzodonini/ocpp-go/ocpp1.6/remotetrigger"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/types"
 )
 
@@ -64,18 +63,6 @@ func (conn *Connector) IdTag() string {
 	conn.mu.Lock()
 	defer conn.mu.Unlock()
 	return conn.idTag
-}
-
-func (conn *Connector) TriggerMessageRequest(requestedMessage remotetrigger.MessageTrigger) error {
-	return conn.cp.TriggerMessageRequest(conn.id, requestedMessage)
-}
-
-func (conn *Connector) RemoteStartTransactionRequest(idTag string) error {
-	return conn.cp.RemoteStartTransactionRequest(conn.id, idTag)
-}
-
-func (conn *Connector) SetChargingProfile(profile *types.ChargingProfile) error {
-	return conn.cp.SetChargingProfileRequest(conn.id, profile)
 }
 
 // getScheduleLimit queries the current or power limit the charge point is currently set to offer

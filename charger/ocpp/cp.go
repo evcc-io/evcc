@@ -1,14 +1,11 @@
 package ocpp
 
 import (
-	"errors"
 	"fmt"
 	"sync"
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
-	"github.com/lorenzodonini/ocpp-go/ocpp1.6/remotetrigger"
-	"github.com/lorenzodonini/ocpp-go/ocpp1.6/smartcharging"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/types"
 )
 
@@ -130,84 +127,4 @@ func (cp *CP) Connected() bool {
 
 func (cp *CP) HasConnected() <-chan struct{} {
 	return cp.connectC
-}
-
-// cp actions
-
-func (cp *CP) TriggerMessageRequest(connectorId int, requestedMessage remotetrigger.MessageTrigger) error {
-	rc := make(chan error, 1)
-
-	err := Instance().TriggerMessage(cp.id, func(request *remotetrigger.TriggerMessageConfirmation, err error) {
-		if err == nil && request != nil && request.Status != remotetrigger.TriggerMessageStatusAccepted {
-			err = errors.New(string(request.Status))
-		}
-
-		rc <- err
-	}, requestedMessage, func(request *remotetrigger.TriggerMessageRequest) {
-		if connectorId > 0 {
-			request.ConnectorId = &connectorId
-		}
-	})
-
-	return wait(err, rc)
-}
-
-func (cp *CP) RemoteStartTransactionRequest(connectorId int, idTag string) error {
-	rc := make(chan error, 1)
-	err := Instance().RemoteStartTransaction(cp.id, func(resp *core.RemoteStartTransactionConfirmation, err error) {
-		if err == nil && resp != nil && resp.Status != types.RemoteStartStopStatusAccepted {
-			err = errors.New(string(resp.Status))
-		}
-
-		rc <- err
-	}, idTag, func(request *core.RemoteStartTransactionRequest) {
-		request.ConnectorId = &connectorId
-	})
-
-	return wait(err, rc)
-}
-
-func (cp *CP) ChangeAvailabilityRequest(connectorId int, availabilityType core.AvailabilityType) error {
-	rc := make(chan error, 1)
-
-	err := Instance().ChangeAvailability(cp.id, func(request *core.ChangeAvailabilityConfirmation, err error) {
-		if err == nil && request != nil && request.Status != core.AvailabilityStatusAccepted {
-			err = errors.New(string(request.Status))
-		}
-
-		rc <- err
-	}, connectorId, availabilityType)
-
-	return wait(err, rc)
-}
-
-func (cp *CP) SetChargingProfileRequest(connectorId int, profile *types.ChargingProfile) error {
-	rc := make(chan error, 1)
-
-	err := Instance().SetChargingProfile(cp.id, func(request *smartcharging.SetChargingProfileConfirmation, err error) {
-		if err == nil && request != nil && request.Status != smartcharging.ChargingProfileStatusAccepted {
-			err = errors.New(string(request.Status))
-		}
-
-		rc <- err
-	}, connectorId, profile)
-
-	return wait(err, rc)
-}
-
-func (cp *CP) GetCompositeScheduleRequest(connectorId int, duration int) (*types.ChargingSchedule, error) {
-	var schedule *types.ChargingSchedule
-	rc := make(chan error, 1)
-
-	err := Instance().GetCompositeSchedule(cp.id, func(request *smartcharging.GetCompositeScheduleConfirmation, err error) {
-		if err == nil && request != nil && request.Status != smartcharging.GetCompositeScheduleStatusAccepted {
-			err = errors.New(string(request.Status))
-		}
-
-		schedule = request.ChargingSchedule
-
-		rc <- err
-	}, connectorId, duration)
-
-	return schedule, wait(err, rc)
 }
