@@ -173,6 +173,27 @@ func (wb *Delta) Status() (api.ChargeStatus, error) {
 	}
 }
 
+var _ api.StatusReasoner = (*Delta)(nil)
+
+// statusReason implements the api.StatusReasoner interface
+func (wb *Delta) StatusReason() (api.Reason, error) {
+	if !wb.isBasic {
+		b, err := wb.conn.ReadInputRegisters(wb.base+deltaRegEvseState, 1)
+		if err != nil {
+			return api.ReasonUnknown, err
+		}
+
+		switch s := encoding.Uint16(b); s {
+		case 3:
+			return api.ReasonWaitingForAuthorization, nil
+		case 5:
+			return api.ReasonDisconnectRequired, nil
+		}
+	}
+
+	return api.ReasonUnknown, nil
+}
+
 // Enabled implements the api.Charger interface
 func (wb *Delta) Enabled() (bool, error) {
 	b, err := wb.conn.ReadHoldingRegisters(wb.base+deltaRegEvseChargingPowerLimit, 2)
