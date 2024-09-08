@@ -134,20 +134,6 @@ func (cp *CP) HasConnected() <-chan struct{} {
 
 // cp actions
 
-func (cp *CP) TriggerResetRequest(resetType core.ResetType) error {
-	rc := make(chan error, 1)
-
-	err := Instance().Reset(cp.id, func(request *core.ResetConfirmation, err error) {
-		if err == nil && request != nil && request.Status != core.ResetStatusAccepted {
-			err = errors.New(string(request.Status))
-		}
-
-		rc <- err
-	}, resetType)
-
-	return wait(err, rc)
-}
-
 func (cp *CP) TriggerMessageRequest(connectorId int, requestedMessage remotetrigger.MessageTrigger) error {
 	rc := make(chan error, 1)
 
