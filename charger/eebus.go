@@ -580,8 +580,7 @@ func (c *EEBus) currents() (float64, float64, float64, error) {
 	// if there is no measurement data available within 15 seconds after the last limit change, return an error
 	// only consider it an error, if there is no measurement data since 15 seconds after the last limit change
 	// a measurement only being available before the last limit change is not an error, because that can happen often
-	d := ts.Sub(c.limitUpdated)
-	if !c.limitUpdated.IsZero() && (d > 15*time.Second) {
+	if d := ts.Sub(c.limitUpdated); d > 15*time.Second && !c.limitUpdated.IsZero() {
 		return 0, 0, 0, api.ErrNotAvailable
 	}
 
