@@ -1,6 +1,6 @@
 import { mount, config } from "@vue/test-utils";
 import { describe, expect, test } from "vitest";
-import formatter from "./formatter";
+import formatter, { POWER_UNIT } from "./formatter";
 
 config.global.mocks["$i18n"] = { locale: "de-DE" };
 config.global.mocks["$t"] = (a) => a;
@@ -10,40 +10,77 @@ const fmt = mount({
   mixins: [formatter],
 }).componentVM;
 
-describe("fmtkW", () => {
-  test("should format kW and W", () => {
-    expect(fmt.fmtKw(0, true)).eq("0,0 kW");
-    expect(fmt.fmtKw(1200, true)).eq("1,2 kW");
-    expect(fmt.fmtKw(0, false)).eq("0 W");
-    expect(fmt.fmtKw(1200, false)).eq("1.200 W");
+describe("fmtW", () => {
+  test("should format with units", () => {
+    expect(fmt.fmtW(0, POWER_UNIT.AUTO)).eq("0,0 kW");
+    expect(fmt.fmtW(1200000, POWER_UNIT.AUTO)).eq("1,2 MW");
+    expect(fmt.fmtW(0, POWER_UNIT.MW)).eq("0,0 MW");
+    expect(fmt.fmtW(1200000, POWER_UNIT.MW)).eq("1,2 MW");
+    expect(fmt.fmtW(0, POWER_UNIT.KW)).eq("0,0 kW");
+    expect(fmt.fmtW(1200000, POWER_UNIT.KW)).eq("1.200,0 kW");
+    expect(fmt.fmtW(0, POWER_UNIT.W)).eq("0,0 W");
+    expect(fmt.fmtW(1200000, POWER_UNIT.W)).eq("1.200.000 W");
   });
-  test("should format without unit", () => {
-    expect(fmt.fmtKw(0, true, false)).eq("0,0");
-    expect(fmt.fmtKw(1200, true, false)).eq("1,2");
-    expect(fmt.fmtKw(0, false, false)).eq("0");
-    expect(fmt.fmtKw(1200, false, false)).eq("1.200");
+  test("should format without units", () => {
+    expect(fmt.fmtW(0, POWER_UNIT.AUTO, false)).eq("0,0");
+    expect(fmt.fmtW(1200000, POWER_UNIT.AUTO, false)).eq("1,2");
+    expect(fmt.fmtW(0, POWER_UNIT.MW, false)).eq("0,0");
+    expect(fmt.fmtW(1200000, POWER_UNIT.MW, false)).eq("1,2");
+    expect(fmt.fmtW(0, POWER_UNIT.KW, false)).eq("0,0");
+    expect(fmt.fmtW(1200000, POWER_UNIT.KW, false)).eq("1.200,0");
+    expect(fmt.fmtW(0, POWER_UNIT.W, false)).eq("0,0");
+    expect(fmt.fmtW(1200000, POWER_UNIT.W, false)).eq("1.200.000");
   });
   test("should format a given number of digits", () => {
-    expect(fmt.fmtKw(12345, true, true, 0)).eq("12 kW");
-    expect(fmt.fmtKw(12345, true, true, 1)).eq("12,3 kW");
-    expect(fmt.fmtKw(12345, true, true, 2)).eq("12,35 kW");
+    expect(fmt.fmtW(12345, POWER_UNIT.AUTO, true, 0)).eq("12 kW");
+    expect(fmt.fmtW(12345, POWER_UNIT.AUTO, true, 1)).eq("12,3 kW");
+    expect(fmt.fmtW(12345, POWER_UNIT.AUTO, true, 2)).eq("12,35 kW");
+    expect(fmt.fmtW(12345, POWER_UNIT.MW, true, 0)).eq("0 MW");
+    expect(fmt.fmtW(12345, POWER_UNIT.MW, true, 1)).eq("0,0 MW");
+    expect(fmt.fmtW(12345, POWER_UNIT.MW, true, 2)).eq("0,01 MW");
+    expect(fmt.fmtW(12345, POWER_UNIT.KW, true, 0)).eq("12 kW");
+    expect(fmt.fmtW(12345, POWER_UNIT.KW, true, 1)).eq("12,3 kW");
+    expect(fmt.fmtW(12345, POWER_UNIT.KW, true, 2)).eq("12,35 kW");
+    expect(fmt.fmtW(12345, POWER_UNIT.W, true, 0)).eq("12.345 W");
+    expect(fmt.fmtW(12345, POWER_UNIT.W, true, 1)).eq("12.345,0 W");
+    expect(fmt.fmtW(12345, POWER_UNIT.W, true, 2)).eq("12.345,00 W");
   });
 });
 
-describe("fmtKWh", () => {
+describe("fmtWh", () => {
   test("should format with units", () => {
-    expect(fmt.fmtKWh(1200)).eq("1,2 kWh");
-    expect(fmt.fmtKWh(1200, true)).eq("1,2 kWh");
-    expect(fmt.fmtKWh(1200, false)).eq("1.200 Wh");
-    expect(fmt.fmtKWh(1200, false, false)).eq("1.200");
+    expect(fmt.fmtWh(0, POWER_UNIT.AUTO)).eq("0,0 kWh");
+    expect(fmt.fmtWh(1200000, POWER_UNIT.AUTO)).eq("1,2 MWh");
+    expect(fmt.fmtWh(0, POWER_UNIT.MW)).eq("0,0 MWh");
+    expect(fmt.fmtWh(1200000, POWER_UNIT.MW)).eq("1,2 MWh");
+    expect(fmt.fmtWh(0, POWER_UNIT.KW)).eq("0,0 kWh");
+    expect(fmt.fmtWh(1200000, POWER_UNIT.KW)).eq("1.200,0 kWh");
+    expect(fmt.fmtWh(0, POWER_UNIT.W)).eq("0,0 Wh");
+    expect(fmt.fmtWh(1200000, POWER_UNIT.W)).eq("1.200.000 Wh");
   });
-  test("should format with digits", () => {
-    expect(fmt.fmtKWh(56789)).eq("56,8 kWh");
-    expect(fmt.fmtKWh(56789, true, true, 0)).eq("57 kWh");
-    expect(fmt.fmtKWh(56789, true, true, 1)).eq("56,8 kWh");
-    expect(fmt.fmtKWh(56789, true, true, 2)).eq("56,79 kWh");
-    expect(fmt.fmtKWh(56789.123, false, true)).eq("56.789 Wh");
-    expect(fmt.fmtKWh(56789.123, false, true, 2)).eq("56.789,12 Wh");
+  test("should format without units", () => {
+    expect(fmt.fmtWh(0, POWER_UNIT.AUTO, false)).eq("0,0");
+    expect(fmt.fmtWh(1200000, POWER_UNIT.AUTO, false)).eq("1,2");
+    expect(fmt.fmtWh(0, POWER_UNIT.MW, false)).eq("0,0");
+    expect(fmt.fmtWh(1200000, POWER_UNIT.MW, false)).eq("1,2");
+    expect(fmt.fmtWh(0, POWER_UNIT.KW, false)).eq("0,0");
+    expect(fmt.fmtWh(1200000, POWER_UNIT.KW, false)).eq("1.200,0");
+    expect(fmt.fmtWh(0, POWER_UNIT.W, false)).eq("0,0");
+    expect(fmt.fmtWh(1200000, POWER_UNIT.W, false)).eq("1.200.000");
+  });
+  test("should format a given number of digits", () => {
+    expect(fmt.fmtWh(12345, POWER_UNIT.AUTO, true, 0)).eq("12 kWh");
+    expect(fmt.fmtWh(12345, POWER_UNIT.AUTO, true, 1)).eq("12,3 kWh");
+    expect(fmt.fmtWh(12345, POWER_UNIT.AUTO, true, 2)).eq("12,35 kWh");
+    expect(fmt.fmtWh(12345, POWER_UNIT.MW, true, 0)).eq("0 MWh");
+    expect(fmt.fmtWh(12345, POWER_UNIT.MW, true, 1)).eq("0,0 MWh");
+    expect(fmt.fmtWh(12345, POWER_UNIT.MW, true, 2)).eq("0,01 MWh");
+    expect(fmt.fmtWh(12345, POWER_UNIT.KW, true, 0)).eq("12 kWh");
+    expect(fmt.fmtWh(12345, POWER_UNIT.KW, true, 1)).eq("12,3 kWh");
+    expect(fmt.fmtWh(12345, POWER_UNIT.KW, true, 2)).eq("12,35 kWh");
+    expect(fmt.fmtWh(12345, POWER_UNIT.W, true, 0)).eq("12.345 Wh");
+    expect(fmt.fmtWh(12345, POWER_UNIT.W, true, 1)).eq("12.345,0 Wh");
+    expect(fmt.fmtWh(12345, POWER_UNIT.W, true, 2)).eq("12.345,00 Wh");
   });
 });
 

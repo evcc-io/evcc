@@ -140,7 +140,7 @@ func (v *Provider) Climater() (bool, error) {
 	res, err := v.hvacG()
 
 	// Zoe Ph2, Megane e-tech
-	if err, ok := err.(request.StatusError); ok && err.HasStatus(http.StatusForbidden, http.StatusBadGateway) {
+	if err, ok := err.(request.StatusError); ok && err.HasStatus(http.StatusForbidden, http.StatusNotFound, http.StatusBadGateway) {
 		return false, api.ErrNotAvailable
 	}
 

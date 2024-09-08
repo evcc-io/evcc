@@ -196,7 +196,7 @@ export default {
 			return fmtEnergy(
 				this.planEnergy,
 				optionStep(this.capacity || 100),
-				this.fmtKWh,
+				this.fmtWh,
 				this.$t("main.targetEnergy.noLimit")
 			);
 		},

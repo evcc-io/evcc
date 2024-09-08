@@ -6,9 +6,9 @@ import (
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
+	"github.com/lorenzodonini/ocpp-go/ocpp1.6/types"
 )
 
-// TODO support multiple connectors
 // Since ocpp-go interfaces at charge point level, we need to manage multiple connector separately
 
 type CP struct {
@@ -17,12 +17,24 @@ type CP struct {
 	onceConnect sync.Once
 	onceBoot    sync.Once
 
-	bootNotificationRequestC chan *core.BootNotificationRequest
-
 	id string
 
 	connected bool
 	connectC  chan struct{}
+	meterC    chan struct{}
+
+	// configuration properties
+	PhaseSwitching          bool
+	HasRemoteTriggerFeature bool
+	ChargingRateUnit        types.ChargingRateUnitType
+	ChargingProfileId       int
+	StackLevel              int
+	NumberOfConnectors      int
+	IdTag                   string
+
+	meterValuesSample        string
+	bootNotificationRequestC chan *core.BootNotificationRequest
+	BootNotificationResult   *core.BootNotificationRequest
 
 	connectors map[int]*Connector
 }
@@ -32,10 +44,14 @@ func NewChargePoint(log *util.Logger, id string) *CP {
 		log: log,
 		id:  id,
 
-		connectC:   make(chan struct{}),
 		connectors: make(map[int]*Connector),
 
+		connectC:                 make(chan struct{}, 1),
+		meterC:                   make(chan struct{}, 1),
 		bootNotificationRequestC: make(chan *core.BootNotificationRequest, 1),
+
+		ChargingRateUnit:        "A",
+		HasRemoteTriggerFeature: true, // assume remote trigger feature is available
 	}
 }
 
@@ -69,10 +85,6 @@ func (cp *CP) connectorByTransactionID(id int) *Connector {
 	}
 
 	return nil
-}
-
-func (cp *CP) BootNotificationRequest() <-chan *core.BootNotificationRequest {
-	return cp.bootNotificationRequestC
 }
 
 func (cp *CP) ID() string {

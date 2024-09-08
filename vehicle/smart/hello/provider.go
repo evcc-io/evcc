@@ -60,5 +60,5 @@ var _ api.VehicleClimater = (*Provider)(nil)
 // Climater implements the api.VehicleClimater interface
 func (v *Provider) Climater() (bool, error) {
 	res, err := v.statusG()
-	return res.AdditionalVehicleStatus.ClimateStatus.PreClimateActive || res.AdditionalVehicleStatus.ClimateStatus.Defrost, err
+	return bool(res.AdditionalVehicleStatus.ClimateStatus.PreClimateActive || res.AdditionalVehicleStatus.ClimateStatus.Defrost), err
 }

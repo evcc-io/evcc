@@ -65,6 +65,7 @@
 								</select>
 							</FormRow>
 							<p v-if="loadingTemplate">Loading ...</p>
+							<Markdown v-if="description" :markdown="description" class="my-4" />
 							<Modbus
 								v-if="modbus"
 								v-model:modbus="values.modbus"
@@ -164,6 +165,7 @@ import api from "../../api";
 import test from "./mixins/test";
 import AddDeviceButton from "./AddDeviceButton.vue";
 import Modbus from "./Modbus.vue";
+import Markdown from "./Markdown.vue";
 
 const initialValues = { type: "template" };
 
@@ -182,6 +184,7 @@ export default {
 		TestResult,
 		AddDeviceButton,
 		PropertyCollapsible,
+		Markdown,
 	},
 	mixins: [test],
 	props: {
@@ -254,6 +257,9 @@ export default {
 				baudrate: Baudrate,
 				port: Port,
 			};
+		},
+		description() {
+			return this.template?.Requirements?.Description;
 		},
 		apiData() {
 			return {

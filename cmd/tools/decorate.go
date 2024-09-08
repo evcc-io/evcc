@@ -13,7 +13,7 @@ import (
 	"text/template"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/go-sprout/sprout"
+	"github.com/go-sprout/sprout/sprigin"
 	combinations "github.com/mxschmitt/golang-combinations"
 	"github.com/samber/lo"
 	"github.com/spf13/pflag"
@@ -74,7 +74,7 @@ func generate(out io.Writer, packageName, functionName, baseType string, dynamic
 	types := make(map[string]typeStruct, len(dynamicTypes))
 	combos := make([]string, 0)
 
-	tmpl, err := template.New("gen").Funcs(sprout.FuncMap()).Funcs(template.FuncMap{
+	tmpl, err := template.New("gen").Funcs(sprigin.FuncMap()).Funcs(template.FuncMap{
 		// contains checks if slice contains string
 		"contains": slices.Contains[[]string, string],
 		// ordered returns a slice of typeStructs ordered by dynamicType

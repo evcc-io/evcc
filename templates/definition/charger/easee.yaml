@@ -3,6 +3,15 @@ products:
   - brand: Easee
     description:
       generic: Home
+  - brand: Easee
+    description:
+      generic: Charge
+  - brand: Easee
+    description:
+      generic: Charge Lite
+  - brand: Easee
+    description:
+      generic: Charge Core
 capabilities: ["1p3p", "rfid"]
 requirements:
   evcc: ["sponsorship"]

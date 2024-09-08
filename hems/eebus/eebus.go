@@ -101,7 +101,7 @@ func NewEEBus(ski string, limits Limits, root api.Circuit) (*EEBus, error) {
 		failsafeDuration: limits.FailsafeDurationMinimum,
 	}
 
-	if err := eebus.Instance.RegisterDevice(ski, c); err != nil {
+	if err := eebus.Instance.RegisterDevice(ski, "", c); err != nil {
 		return nil, err
 	}
 

@@ -49,6 +49,10 @@ type ChargeState interface {
 	Status() (ChargeStatus, error)
 }
 
+type StatusReasoner interface {
+	StatusReason() (Reason, error)
+}
+
 // CurrentController provides settings charging maximum charging current
 type CurrentController interface {
 	MaxCurrent(current int64) error

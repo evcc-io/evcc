@@ -112,12 +112,12 @@ func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 	uri := fmt.Sprintf("%s/as/token.oauth2", IdUri)
 	req, _ := request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), mbheaders(true, v.region))
 
-	var res oauth.Token
+	var res oauth2.Token
 	if err := v.DoJSON(req, &res); err != nil {
 		return nil, err
 	}
 
-	tok := (*oauth2.Token)(&res)
+	tok := util.TokenWithExpiry(&res)
 	v.TokenSource = oauth.RefreshTokenSource(tok, v)
 
 	err := settings.SetJson(v.settingsKey(), tok)

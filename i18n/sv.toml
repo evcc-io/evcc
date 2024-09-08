@@ -27,8 +27,8 @@ never = "bara med tillräckligt sol-överskott."
 [config]
 
 [config.battery]
-titleAdd = "Lägg till batterimätare"
-titleEdit = "Ändra batterimätare"
+titleAdd = "Lägg till batteri"
+titleEdit = "Ändra batteri"
 
 [config.circuits]
 description = "Säkrar, att summan av laddpunkter kopplad till en krets inte överskrider den konfigurerade effektgränsen. Kretsar kan nästlas för att bygga en hierarki."
@@ -57,6 +57,7 @@ chargeStatusF = "fel"
 chargedEnergy = "Laddad"
 co2 = "Elnät CO₂"
 configured = "Konfigurerad"
+controllable = "Kontrollerbar"
 currency = "Valuta"
 current = "Ström"
 currentRange = "Ström"
@@ -292,6 +293,7 @@ tabTitle = "Mina uppgifter"
 [footer.savings.period]
 30d = "senaste 30 dagar"
 365d = "senaste 365 dagarna"
+thisYear = "detta år"
 total = "totalt"
 
 [footer.sponsor]
@@ -547,6 +549,7 @@ ready = "redo"
 vehicleLimit = "Fordonsgräns: {soc}"
 
 [main.vehicleStatus]
+awaitingAuthorization = "Väntar på godkännande."
 charging = "Laddar..."
 cheapEnergyCharging = "Billig energi är tillgänglig."
 cheapEnergyNextStart = "Billig energi om {duration}."
@@ -556,6 +559,7 @@ cleanEnergyNextStart = "Grön energi om {duration}."
 cleanEnergySet = "CO₂ gräns sparad."
 climating = "Förvärmning identifierad."
 connected = "Inkopplad."
+disconnectRequired = "Session avbruten. Prova att återansluta."
 disconnected = "Frånkopplad."
 finished = "Färdig."
 minCharge = "Minimiladdning till {soc}."
