@@ -23,7 +23,7 @@ type Delta struct {
 	curr    float64
 	base    uint16
 	enabled bool
-	isBasic bool
+	statusG func(uint16) (api.ChargeStatus, error)
 }
 
 const (
@@ -102,9 +102,14 @@ func NewDelta(uri, device, comset string, baudrate int, proto modbus.Protocol, s
 
 	wb.base = connector * 1000
 
-	// check for basic or smart register set
-	if _, err := wb.conn.ReadInputRegisters(wb.base+deltaRegEvseChargerState, 1); err != nil {
-		wb.isBasic = true
+	var statusReasonG func() (api.Reason, error)
+
+	wb.statusG = wb.statusBasic
+
+	// check for smart register set
+	if _, err := wb.conn.ReadInputRegisters(wb.base+deltaRegEvseChargerState, 1); err == nil {
+		wb.statusG = wb.statusSmart
+		statusReasonG = wb.statusReason
 	}
 
 	b, err := wb.conn.ReadHoldingRegisters(deltaRegCommunicationTimeoutEnabled, 1)
@@ -122,8 +127,10 @@ func NewDelta(uri, device, comset string, baudrate int, proto modbus.Protocol, s
 		}
 	}
 
-	return wb, nil
+	return decorateDelta(wb, statusReasonG), nil
 }
+
+//go:generate go run ../cmd/tools/decorate.go -f decorateDelta -b *Delta -r api.Charger -t "api.StatusReasoner,StatusReason,func() (api.Reason, error)"
 
 func (wb *Delta) heartbeat(timeout time.Duration) {
 	for range time.Tick(timeout) {
@@ -156,14 +163,13 @@ func (wb *Delta) Status() (api.ChargeStatus, error) {
 	// 7: Suspended EVSE
 	// 8: Not ready
 	// 9: Faulted
-	switch s := encoding.Uint16(b); s {
-	case 0, 1, 2:
+	return wb.statusG(encoding.Uint16(b))
+}
+
+func (wb *Delta) statusBasic(s uint16) (api.ChargeStatus, error) {
+	switch s {
+	case 0, 1, 2, 3:
 		return api.StatusA, nil
-	case 3:
-		if wb.isBasic {
-			return api.StatusA, nil
-		}
-		return api.StatusB, nil
 	case 5, 6, 7, 9:
 		return api.StatusB, nil
 	case 4:
@@ -173,22 +179,31 @@ func (wb *Delta) Status() (api.ChargeStatus, error) {
 	}
 }
 
-var _ api.StatusReasoner = (*Delta)(nil)
+func (wb *Delta) statusSmart(s uint16) (api.ChargeStatus, error) {
+	switch s {
+	case 0, 1, 2:
+		return api.StatusA, nil
+	case 3, 5, 6, 7, 9:
+		return api.StatusB, nil
+	case 4:
+		return api.StatusC, nil
+	default:
+		return api.StatusNone, fmt.Errorf("invalid status: %0x", s)
+	}
+}
 
 // statusReason implements the api.StatusReasoner interface
-func (wb *Delta) StatusReason() (api.Reason, error) {
-	if !wb.isBasic {
-		b, err := wb.conn.ReadInputRegisters(wb.base+deltaRegEvseState, 1)
-		if err != nil {
-			return api.ReasonUnknown, err
-		}
+func (wb *Delta) statusReason() (api.Reason, error) {
+	b, err := wb.conn.ReadInputRegisters(wb.base+deltaRegEvseState, 1)
+	if err != nil {
+		return api.ReasonUnknown, err
+	}
 
-		switch s := encoding.Uint16(b); s {
-		case 3:
-			return api.ReasonWaitingForAuthorization, nil
-		case 5:
-			return api.ReasonDisconnectRequired, nil
-		}
+	switch s := encoding.Uint16(b); s {
+	case 3:
+		return api.ReasonWaitingForAuthorization, nil
+	case 5:
+		return api.ReasonDisconnectRequired, nil
 	}
 
 	return api.ReasonUnknown, nil
