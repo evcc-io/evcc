@@ -578,9 +578,15 @@ func (c *EEBus) currents() (float64, float64, float64, error) {
 	c.mux.Unlock()
 
 	// if there is no measurement data available within 15 seconds after the last limit change, return an error
-	if d := ts.Sub(c.limitUpdated); d < 0 || d > 15*time.Second {
+	// only consider it an error, if there is no measurement data since 15 seconds after the last limit change
+	// a measurement only being available before the last limit change is not an error, because that can happen often
+	if d := ts.Sub(c.limitUpdated); d > 15*time.Second && !c.limitUpdated.IsZero() {
 		return 0, 0, 0, api.ErrNotAvailable
 	}
+
+	// we got a valid measurement, reset the limitUpdate to zero
+	// otherwise frequent measurement updates will trigger an unwanted error as the time between those is > 15 seconds
+	c.limitUpdated = time.Time{}
 
 	res, err := c.uc.EvCem.CurrentPerPhase(evEntity)
 	if err != nil {

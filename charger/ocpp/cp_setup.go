@@ -19,7 +19,6 @@ func (cp *CP) Setup(meterValues string, meterInterval time.Duration) error {
 		cp.log.DEBUG.Printf("failed configuring availability: %v", err)
 	}
 
-	var meterValuesSampledData string
 	meterValuesSampledDataMaxLength := len(strings.Split(desiredMeasurands, ","))
 
 	resp, err := cp.GetConfiguration()
@@ -58,7 +57,7 @@ func (cp *CP) Setup(meterValues string, meterInterval time.Duration) error {
 			if opt.Readonly {
 				meterValuesSampledDataMaxLength = 0
 			}
-			meterValuesSampledData = *opt.Value
+			cp.meterValuesSample = *opt.Value
 
 		case KeyMeterValuesSampledDataMaxLength:
 			if val, err := strconv.Atoi(*opt.Value); err == nil {
@@ -113,12 +112,12 @@ func (cp *CP) Setup(meterValues string, meterInterval time.Duration) error {
 
 	// configure measurands
 	if meterValues != "" {
-		if err := cp.configure(KeyMeterValuesSampledData, meterValues); err == nil {
-			meterValuesSampledData = meterValues
+		if err := cp.configure(KeyMeterValuesSampledData, meterValues); err == nil || meterValues == "disable" {
+			cp.meterValuesSample = meterValues
+		} else {
+			cp.log.WARN.Printf("failed configuring %s: %v", KeyMeterValuesSampledData, err)
 		}
 	}
-
-	cp.meterValuesSample = meterValuesSampledData
 
 	// trigger initial meter values
 	if cp.HasRemoteTriggerFeature {
@@ -135,13 +134,13 @@ func (cp *CP) Setup(meterValues string, meterInterval time.Duration) error {
 	// configure sample rate
 	if meterInterval > 0 {
 		if err := cp.configure(KeyMeterValueSampleInterval, strconv.Itoa(int(meterInterval.Seconds()))); err != nil {
-			cp.log.WARN.Printf("failed configuring MeterValueSampleInterval: %v", err)
+			cp.log.WARN.Printf("failed configuring %s: %v", KeyMeterValueSampleInterval, err)
 		}
 	}
 
 	// configure websocket ping interval
 	if err := cp.configure(KeyWebSocketPingInterval, "30"); err != nil {
-		cp.log.DEBUG.Printf("failed configuring WebSocketPingInterval: %v", err)
+		cp.log.DEBUG.Printf("failed configuring %s: %v", KeyWebSocketPingInterval, err)
 	}
 
 	return nil
