@@ -8,10 +8,10 @@ import (
 
 func decorateTest(base api.Charger, meterEnergy func() (float64, error), phaseSwitcher func(int) error, phaseGetter func() (int, error)) api.Charger {
 	switch {
-	case meterEnergy == nil && phaseGetter == nil && phaseSwitcher == nil:
+	case meterEnergy == nil && phaseSwitcher == nil:
 		return base
 
-	case meterEnergy != nil && phaseGetter == nil && phaseSwitcher == nil:
+	case meterEnergy != nil && phaseSwitcher == nil:
 		return &struct {
 			api.Charger
 			api.MeterEnergy

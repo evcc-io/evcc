@@ -8,10 +8,10 @@ import (
 
 func decoratePowerWall(base *PowerWall, meterEnergy func() (float64, error), battery func() (float64, error), batteryCapacity func() float64, batteryController func(api.BatteryMode) error) api.Meter {
 	switch {
-	case battery == nil && batteryCapacity == nil && batteryController == nil && meterEnergy == nil:
+	case battery == nil && meterEnergy == nil:
 		return base
 
-	case battery == nil && batteryCapacity == nil && batteryController == nil && meterEnergy != nil:
+	case battery == nil && meterEnergy != nil:
 		return &struct {
 			*PowerWall
 			api.MeterEnergy

@@ -8,7 +8,7 @@ import (
 
 func decorateCfos(base *CfosPowerBrain, meter func() (float64, error), meterEnergy func() (float64, error), phaseCurrents func() (float64, float64, float64, error), phaseSwitcher func(int) error) api.Charger {
 	switch {
-	case meter == nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil:
+	case meter == nil && phaseSwitcher == nil:
 		return base
 
 	case meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil:
@@ -71,7 +71,7 @@ func decorateCfos(base *CfosPowerBrain, meter func() (float64, error), meterEner
 			},
 		}
 
-	case meter == nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher != nil:
+	case meter == nil && phaseSwitcher != nil:
 		return &struct {
 			*CfosPowerBrain
 			api.PhaseSwitcher

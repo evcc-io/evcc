@@ -8,7 +8,7 @@ import (
 
 func decorateEVSE(base *EVSEWifi, meter func() (float64, error), meterEnergy func() (float64, error), phaseCurrents func() (float64, float64, float64, error), phaseVoltages func() (float64, float64, float64, error), chargerEx func(float64) error, identifier func() (string, error)) api.Charger {
 	switch {
-	case chargerEx == nil && identifier == nil && meter == nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages == nil:
+	case chargerEx == nil && identifier == nil && meter == nil:
 		return base
 
 	case chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages == nil:
@@ -147,7 +147,7 @@ func decorateEVSE(base *EVSEWifi, meter func() (float64, error), meterEnergy fun
 			},
 		}
 
-	case chargerEx != nil && identifier == nil && meter == nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages == nil:
+	case chargerEx != nil && identifier == nil && meter == nil:
 		return &struct {
 			*EVSEWifi
 			api.ChargerEx
@@ -326,7 +326,7 @@ func decorateEVSE(base *EVSEWifi, meter func() (float64, error), meterEnergy fun
 			},
 		}
 
-	case chargerEx == nil && identifier != nil && meter == nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages == nil:
+	case chargerEx == nil && identifier != nil && meter == nil:
 		return &struct {
 			*EVSEWifi
 			api.Identifier
@@ -505,7 +505,7 @@ func decorateEVSE(base *EVSEWifi, meter func() (float64, error), meterEnergy fun
 			},
 		}
 
-	case chargerEx != nil && identifier != nil && meter == nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages == nil:
+	case chargerEx != nil && identifier != nil && meter == nil:
 		return &struct {
 			*EVSEWifi
 			api.ChargerEx

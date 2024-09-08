@@ -8,7 +8,7 @@ import (
 
 func decoratePhoenixEMEth(base *PhoenixEMEth, meter func() (float64, error), meterEnergy func() (float64, error), phaseCurrents func() (float64, float64, float64, error), phaseVoltages func() (float64, float64, float64, error)) api.Charger {
 	switch {
-	case meter == nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages == nil:
+	case meter == nil:
 		return base
 
 	case meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages == nil:

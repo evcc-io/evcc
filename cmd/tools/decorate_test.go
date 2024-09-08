@@ -19,12 +19,12 @@ func TestDecorator(t *testing.T) {
 	_ = phS
 	_ = phG
 
-	// assert.NotNil(t, decorateTest(c, nil, nil, nil))
+	assert.NotNil(t, decorateTest(c, nil, nil, nil))
 	assert.NotNil(t, decorateTest(c, nil, nil, phG))
-	// assert.NotNil(t, decorateTest(c, nil, phS, nil))
-	// assert.NotNil(t, decorateTest(c, nil, phS, phG))
-	// assert.NotNil(t, decorateTest(c, enG, nil, nil))
-	// assert.NotNil(t, decorateTest(c, enG, nil, phG))
-	// assert.NotNil(t, decorateTest(c, enG, phS, nil))
-	// assert.NotNil(t, decorateTest(c, enG, phS, phG))
+	assert.NotNil(t, decorateTest(c, nil, phS, nil))
+	assert.NotNil(t, decorateTest(c, nil, phS, phG))
+	assert.NotNil(t, decorateTest(c, enG, nil, nil))
+	assert.NotNil(t, decorateTest(c, enG, nil, phG))
+	assert.NotNil(t, decorateTest(c, enG, phS, nil))
+	assert.NotNil(t, decorateTest(c, enG, phS, phG))
 }

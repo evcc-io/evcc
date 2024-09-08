@@ -9,10 +9,12 @@ import (
 {{define "case"}}
 	{{- $combo := .Combo}}
 	{{- $prefix := .Prefix}}
-	{{- $idx := 0}}
+	{{- $and := false}}
 
 	{{- range $typ, $def := .Types}}
-		{{- if gt $idx 0}} &&{{else}}{{$idx = 1}}{{end}} {{$def.VarName}} {{if contains $combo $typ}}!={{else}}=={{end}} nil
+		{{- if requiredType $combo $typ}}
+			{{- if $and}} &&{{else}}{{$and = true}}{{end}} {{$def.VarName}} {{if contains $combo $typ}}!={{else}}=={{end}} nil
+		{{- end}}
 	{{- end}}:
 		return &struct {
 			{{.BaseType}}
@@ -38,10 +40,12 @@ func {{.Function}}(base {{.BaseType}}{{range ordered}}, {{.VarName}} {{.Signatur
 {{- $shortbase := .ShortBase}}
 {{- $prefix := .Function}}
 {{- $types := .Types}}
-{{- $idx := 0}}
+{{- $and := false}}
 	switch {
 	case {{- range $typ, $def := .Types}}
-		{{- if gt $idx 0}} &&{{else}}{{$idx = 1}}{{end}} {{$def.VarName}} == nil
+		{{- if requiredType empty $typ}}
+			{{- if $and}} &&{{else}}{{$and = true}}{{end}} {{$def.VarName}} == nil
+		{{- end}}
 	{{- end}}:
 		return base
 {{range $combo := .Combinations}}

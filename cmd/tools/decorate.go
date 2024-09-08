@@ -15,6 +15,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/go-sprout/sprout"
 	combinations "github.com/mxschmitt/golang-combinations"
+	"github.com/samber/lo"
 	"github.com/spf13/pflag"
 	"golang.org/x/tools/imports"
 )
@@ -85,6 +86,21 @@ func generate(out io.Writer, packageName, functionName, baseType string, dynamic
 
 			return ordered
 		},
+		"requiredType": func(c []string, typ string) bool {
+			for master, details := range dependents {
+				// exclude combinations where ...
+				// - master is part of the decorators
+				// - master is not part of the currently evaluated combination
+				// - details are part of the currently evaluated combination
+				if slices.Contains(combos, master) && !slices.Contains(c, master) && slices.Contains(details, typ) {
+					return false
+				}
+			}
+			return true
+		},
+		"empty": func() []string {
+			return nil
+		},
 	}).Parse(srcTmpl)
 	if err != nil {
 		return err
@@ -116,6 +132,9 @@ func generate(out io.Writer, packageName, functionName, baseType string, dynamic
 		combos = append(combos, dt.typ)
 	}
 
+	// fmt.Println(lo.Map(dynamicTypes, func(dt dynamicType, _ int) string {
+	// 	return dt.typ
+	// }))
 	returnType := *ret
 	if returnType == "" {
 		returnType = baseType
@@ -127,30 +146,32 @@ func generate(out io.Writer, packageName, functionName, baseType string, dynamic
 	}
 
 	validCombos := make([][]string, 0)
-	partialCombos := make([][]string, 0)
 COMBO:
 	for _, c := range combinations.All(combos) {
 		for master, details := range dependents {
-			// exclude combinations where ...
+			// prune combinations where ...
 			// - master is part of the decorators
 			// - master is not part of the currently evaluated combination
 			// - details are part of the currently evaluated combination
+			// ... and remove details from the combination
 			if slices.Contains(combos, master) && !slices.Contains(c, master) && hasIntersection(c, details) {
-				partialCombos = append(partialCombos, c)
+				c = lo.Without(c, details...)
+
+				if len(c) == 0 {
+					continue COMBO
+				}
+			}
+		}
+
+		// prune duplicates
+		for _, v := range validCombos {
+			if slices.Equal(v, c) {
 				continue COMBO
 			}
 		}
+
 		validCombos = append(validCombos, c)
 	}
-
-	for _, c := range validCombos {
-		fmt.Println(c)
-	}
-	fmt.Println()
-	for _, c := range partialCombos {
-		fmt.Println(c)
-	}
-	os.Exit(0)
 
 	vars := struct {
 		API                 string

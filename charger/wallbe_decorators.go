@@ -8,7 +8,7 @@ import (
 
 func decorateWallbe(base *Wallbe, meter func() (float64, error), meterEnergy func() (float64, error), phaseCurrents func() (float64, float64, float64, error), chargerEx func(float64) error) api.Charger {
 	switch {
-	case chargerEx == nil && meter == nil && meterEnergy == nil && phaseCurrents == nil:
+	case chargerEx == nil && meter == nil:
 		return base
 
 	case chargerEx == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil:
@@ -71,7 +71,7 @@ func decorateWallbe(base *Wallbe, meter func() (float64, error), meterEnergy fun
 			},
 		}
 
-	case chargerEx != nil && meter == nil && meterEnergy == nil && phaseCurrents == nil:
+	case chargerEx != nil && meter == nil:
 		return &struct {
 			*Wallbe
 			api.ChargerEx

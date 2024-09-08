@@ -8,7 +8,7 @@ import (
 
 func decorateBenderCC(base *BenderCC, meter func() (float64, error), phaseCurrents func() (float64, float64, float64, error), phaseVoltages func() (float64, float64, float64, error), meterEnergy func() (float64, error), battery func() (float64, error), identifier func() (string, error)) api.Charger {
 	switch {
-	case battery == nil && identifier == nil && meter == nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages == nil:
+	case battery == nil && identifier == nil && meter == nil:
 		return base
 
 	case battery == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages == nil:
@@ -147,7 +147,7 @@ func decorateBenderCC(base *BenderCC, meter func() (float64, error), phaseCurren
 			},
 		}
 
-	case battery != nil && identifier == nil && meter == nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages == nil:
+	case battery != nil && identifier == nil && meter == nil:
 		return &struct {
 			*BenderCC
 			api.Battery
@@ -326,7 +326,7 @@ func decorateBenderCC(base *BenderCC, meter func() (float64, error), phaseCurren
 			},
 		}
 
-	case battery == nil && identifier != nil && meter == nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages == nil:
+	case battery == nil && identifier != nil && meter == nil:
 		return &struct {
 			*BenderCC
 			api.Identifier
@@ -505,7 +505,7 @@ func decorateBenderCC(base *BenderCC, meter func() (float64, error), phaseCurren
 			},
 		}
 
-	case battery != nil && identifier != nil && meter == nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages == nil:
+	case battery != nil && identifier != nil && meter == nil:
 		return &struct {
 			*BenderCC
 			api.Battery

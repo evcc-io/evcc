@@ -8,7 +8,7 @@ import (
 
 func decorateEEBus(base *EEBus, meter func() (float64, error), phaseCurrents func() (float64, float64, float64, error), chargeRater func() (float64, error)) api.Charger {
 	switch {
-	case chargeRater == nil && meter == nil && phaseCurrents == nil:
+	case chargeRater == nil && meter == nil:
 		return base
 
 	case chargeRater == nil && meter != nil && phaseCurrents == nil:
@@ -37,7 +37,7 @@ func decorateEEBus(base *EEBus, meter func() (float64, error), phaseCurrents fun
 			},
 		}
 
-	case chargeRater != nil && meter == nil && phaseCurrents == nil:
+	case chargeRater != nil && meter == nil:
 		return &struct {
 			*EEBus
 			api.ChargeRater

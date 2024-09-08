@@ -8,7 +8,7 @@ import (
 
 func decorateOCPP(base *OCPP, meter func() (float64, error), meterEnergy func() (float64, error), phaseCurrents func() (float64, float64, float64, error), phaseVoltages func() (float64, float64, float64, error), phaseSwitcher func(int) error, battery func() (float64, error)) api.Charger {
 	switch {
-	case battery == nil && meter == nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil:
+	case battery == nil && meter == nil && phaseSwitcher == nil:
 		return base
 
 	case battery == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil:
@@ -147,7 +147,7 @@ func decorateOCPP(base *OCPP, meter func() (float64, error), meterEnergy func() 
 			},
 		}
 
-	case battery == nil && meter == nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil:
+	case battery == nil && meter == nil && phaseSwitcher != nil:
 		return &struct {
 			*OCPP
 			api.PhaseSwitcher
@@ -326,7 +326,7 @@ func decorateOCPP(base *OCPP, meter func() (float64, error), meterEnergy func() 
 			},
 		}
 
-	case battery != nil && meter == nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher == nil && phaseVoltages == nil:
+	case battery != nil && meter == nil && phaseSwitcher == nil:
 		return &struct {
 			*OCPP
 			api.Battery
@@ -505,7 +505,7 @@ func decorateOCPP(base *OCPP, meter func() (float64, error), meterEnergy func() 
 			},
 		}
 
-	case battery != nil && meter == nil && meterEnergy == nil && phaseCurrents == nil && phaseSwitcher != nil && phaseVoltages == nil:
+	case battery != nil && meter == nil && phaseSwitcher != nil:
 		return &struct {
 			*OCPP
 			api.Battery

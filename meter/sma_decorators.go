@@ -8,7 +8,7 @@ import (
 
 func decorateSMA(base *SMA, battery func() (float64, error), batteryCapacity func() float64) api.Meter {
 	switch {
-	case battery == nil && batteryCapacity == nil:
+	case battery == nil:
 		return base
 
 	case battery != nil && batteryCapacity == nil:

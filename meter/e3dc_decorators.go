@@ -8,7 +8,7 @@ import (
 
 func decorateE3dc(base *E3dc, batteryCapacity func() float64, battery func() (float64, error), batteryController func(api.BatteryMode) error) api.Meter {
 	switch {
-	case battery == nil && batteryCapacity == nil && batteryController == nil:
+	case battery == nil:
 		return base
 
 	case battery != nil && batteryCapacity == nil && batteryController == nil:
