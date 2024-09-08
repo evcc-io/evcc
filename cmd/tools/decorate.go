@@ -132,9 +132,6 @@ func generate(out io.Writer, packageName, functionName, baseType string, dynamic
 		combos = append(combos, dt.typ)
 	}
 
-	// fmt.Println(lo.Map(dynamicTypes, func(dt dynamicType, _ int) string {
-	// 	return dt.typ
-	// }))
 	returnType := *ret
 	if returnType == "" {
 		returnType = baseType

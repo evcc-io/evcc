@@ -52,7 +52,7 @@ func {{.Function}}(base {{.BaseType}}{{range ordered}}, {{.VarName}} {{.Signatur
 	case {{- template "case" dict "BaseType" $basetype "Prefix" $prefix "ShortBase" $shortbase "Types" $types "Combo" $combo}}
 {{end}}	}
 
-	panic("invalid combination of decorators")
+	return nil
 }
 
 {{range .Types -}}

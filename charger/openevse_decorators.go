@@ -23,7 +23,7 @@ func decorateOpenEVSE(base *OpenEVSE, phaseSwitcher func(int) error) api.Charger
 		}
 	}
 
-	panic("invalid combination of decorators")
+	return nil
 }
 
 type decorateOpenEVSEPhaseSwitcherImpl struct {

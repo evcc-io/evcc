@@ -23,7 +23,7 @@ func decorateGoodWeWifi(base *goodWeWiFi, battery func() (float64, error)) api.M
 		}
 	}
 
-	panic("invalid combination of decorators")
+	return nil
 }
 
 type decorateGoodWeWifiBatteryImpl struct {

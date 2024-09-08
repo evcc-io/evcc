@@ -27655,7 +27655,7 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 		}
 	}
 
-	panic("invalid combination of decorators")
+	return nil
 }
 
 type decorateVehicleChargeControllerImpl struct {

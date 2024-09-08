@@ -159,7 +159,7 @@ func decoratePowerWall(base *PowerWall, meterEnergy func() (float64, error), bat
 		}
 	}
 
-	panic("invalid combination of decorators")
+	return nil
 }
 
 type decoratePowerWallBatteryImpl struct {

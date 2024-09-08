@@ -49,7 +49,7 @@ func decorateInnogy(base *Innogy, meterEnergy func() (float64, error), phaseVolt
 		}
 	}
 
-	panic("invalid combination of decorators")
+	return nil
 }
 
 type decorateInnogyMeterEnergyImpl struct {

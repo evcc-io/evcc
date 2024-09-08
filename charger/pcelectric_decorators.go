@@ -72,7 +72,7 @@ func decoratePCE(base *PCElectric, meter func() (float64, error), meterEnergy fu
 		}
 	}
 
-	panic("invalid combination of decorators")
+	return nil
 }
 
 type decoratePCEMeterImpl struct {

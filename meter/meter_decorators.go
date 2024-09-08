@@ -1289,7 +1289,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 		}
 	}
 
-	panic("invalid combination of decorators")
+	return nil
 }
 
 type decorateMeterBatteryImpl struct {

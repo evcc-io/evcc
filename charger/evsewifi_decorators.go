@@ -721,7 +721,7 @@ func decorateEVSE(base *EVSEWifi, meter func() (float64, error), meterEnergy fun
 		}
 	}
 
-	panic("invalid combination of decorators")
+	return nil
 }
 
 type decorateEVSEChargerExImpl struct {

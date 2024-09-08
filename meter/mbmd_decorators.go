@@ -689,7 +689,7 @@ func decorateModbusMbmd(base api.Meter, meterEnergy func() (float64, error), pha
 		}
 	}
 
-	panic("invalid combination of decorators")
+	return nil
 }
 
 type decorateModbusMbmdBatteryImpl struct {

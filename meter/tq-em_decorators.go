@@ -23,7 +23,7 @@ func decorateTqEm(base api.Meter, phaseCurrents func() (float64, float64, float6
 		}
 	}
 
-	panic("invalid combination of decorators")
+	return nil
 }
 
 type decorateTqEmPhaseCurrentsImpl struct {

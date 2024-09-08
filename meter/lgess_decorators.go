@@ -83,7 +83,7 @@ func decorateLgEss(base *LgEss, meterEnergy func() (float64, error), battery fun
 		}
 	}
 
-	panic("invalid combination of decorators")
+	return nil
 }
 
 type decorateLgEssBatteryImpl struct {

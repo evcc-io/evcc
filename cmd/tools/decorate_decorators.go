@@ -83,7 +83,7 @@ func decorateTest(base api.Charger, meterEnergy func() (float64, error), phaseSw
 		}
 	}
 
-	panic("invalid combination of decorators")
+	return nil
 }
 
 type decorateTestMeterEnergyImpl struct {

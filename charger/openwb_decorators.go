@@ -49,7 +49,7 @@ func decorateOpenWB(base *OpenWB, phaseSwitcher func(int) error, battery func() 
 		}
 	}
 
-	panic("invalid combination of decorators")
+	return nil
 }
 
 type decorateOpenWBBatteryImpl struct {
