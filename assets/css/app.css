@@ -90,7 +90,7 @@
 	--evcc-grid: var(--bs-gray-medium);
 	--evcc-background: var(--bs-gray-deep);
 	--evcc-box: var(--bs-gray-dark);
-	--evcc-box-border: var(--vs-gray-darker);
+	--evcc-box-border: var(--bs-gray-darker);
 	--evcc-default-text: var(--bs-white);
 	--evcc-gray: var(--bs-gray-light);
 	--evcc-accent1: var(--evcc-yellow);

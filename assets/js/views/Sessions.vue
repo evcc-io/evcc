@@ -3,36 +3,85 @@
 		<TopHeader :title="$t('sessions.title')" />
 		<div class="row">
 			<main class="col-12">
-				<div
-					class="d-flex align-items-baseline justify-content-between my-3 my-md-5 month-header"
-				>
-					<router-link
-						class="d-flex text-decoration-none align-items-center"
-						:class="{ 'pe-none': !hasPrev, 'text-muted': !hasPrev }"
-						:to="{ query: { ...$route.query, ...prevYearMonth } }"
-					>
-						<shopicon-regular-angledoubleleftsmall
-							size="s"
-							class="me-1"
-						></shopicon-regular-angledoubleleftsmall>
-						<span class="d-none d-sm-block">{{ prevMonthName }}</span>
-						<span class="d-block d-sm-none">{{ prevMonthNameShort }}</span>
-					</router-link>
-					<h2 class="text-center">{{ headline }}</h2>
-					<router-link
-						class="d-flex text-decoration-none align-items-center"
-						:class="{ 'pe-none': !hasNext, 'text-muted': !hasNext }"
-						:to="{ query: { ...$route.query, ...nextYearMonth } }"
-					>
-						<span class="d-none d-sm-block">{{ nextMonthName }}</span>
-						<span class="d-block d-sm-none">{{ nextMonthNameShort }}</span>
-						<shopicon-regular-angledoublerightsmall
-							size="s"
-							class="ms-1"
-						></shopicon-regular-angledoublerightsmall>
-					</router-link>
+				<div class="row my-3 my-md-5 mb-4 month-header">
+					<div class="col-4 d-flex justify-content-start align-items-center">
+						<router-link
+							class="d-flex text-decoration-none align-items-center"
+							:class="{ 'pe-none': !hasPrev, 'text-muted': !hasPrev }"
+							:to="{ query: { ...$route.query, ...prevYearMonth } }"
+						>
+							<shopicon-regular-angledoubleleftsmall
+								size="s"
+								class="me-1"
+							></shopicon-regular-angledoubleleftsmall>
+							<span class="d-none d-sm-block">{{ prevMonthName }}</span>
+							<span class="d-block d-sm-none">{{ prevMonthNameShort }}</span>
+						</router-link>
+					</div>
+					<h2 class="col-4 text-center">{{ headline }}</h2>
+					<div class="col-4 d-flex justify-content-end align-items-center">
+						<router-link
+							class="d-flex text-decoration-none"
+							:class="{ 'pe-none': !hasNext, 'text-muted': !hasNext }"
+							:to="{ query: { ...$route.query, ...nextYearMonth } }"
+						>
+							<span class="d-none d-sm-block">{{ nextMonthName }}</span>
+							<span class="d-block d-sm-none">{{ nextMonthNameShort }}</span>
+							<shopicon-regular-angledoublerightsmall
+								size="s"
+								class="ms-1"
+							></shopicon-regular-angledoublerightsmall>
+						</router-link>
+					</div>
 				</div>
-				<Chart :sessions="currentSessions" />
+				<div class="d-flex justify-content-between align-items-center">
+					<h3 class="fw-normal my-0">{{ energyTitle }}</h3>
+
+					<IconSelectGroup>
+						<IconSelectItem
+							:active="selectedGroup === 'loadpoint'"
+							@click="selectedGroup = 'loadpoint'"
+						>
+							<shopicon-regular-cablecharge></shopicon-regular-cablecharge>
+						</IconSelectItem>
+						<IconSelectItem
+							:active="selectedGroup === 'vehicle'"
+							@click="selectedGroup = 'vehicle'"
+						>
+							<shopicon-regular-car3></shopicon-regular-car3>
+						</IconSelectItem>
+					</IconSelectGroup>
+				</div>
+				<EnergyBarChart
+					:sessions="currentSessions"
+					class="mb-5"
+					:group-by="selectedGroup"
+				/>
+
+				<div class="d-flex justify-content-between align-items-center">
+					<h3 class="fw-normal my-0">Anteil Sonnenenergie</h3>
+
+					<IconSelectGroup>
+						<IconSelectItem
+							:active="selectedGroup === 'loadpoint'"
+							@click="selectedGroup = 'loadpoint'"
+						>
+							<shopicon-regular-cablecharge></shopicon-regular-cablecharge>
+						</IconSelectItem>
+						<IconSelectItem
+							:active="selectedGroup === 'vehicle'"
+							@click="selectedGroup = 'vehicle'"
+						>
+							<shopicon-regular-car3></shopicon-regular-car3>
+						</IconSelectItem>
+					</IconSelectGroup>
+				</div>
+				<SolarPolarChart
+					:sessions="currentSessions"
+					class="mb-5"
+					:group-by="selectedGroup"
+				/>
+				<h3>Übersicht</h3>
 				<SessionTable
 					:sessions="currentSessions"
 					:vehicleFilter="vehicleFilter"
@@ -73,17 +122,30 @@
 import Modal from "bootstrap/js/dist/modal";
 import "@h2d2/shopicons/es/regular/angledoubleleftsmall";
 import "@h2d2/shopicons/es/regular/angledoublerightsmall";
+import "@h2d2/shopicons/es/regular/cablecharge";
+import "@h2d2/shopicons/es/regular/car3";
 import formatter from "../mixins/formatter";
 import api from "../api";
 import store from "../store";
 import SessionDetailsModal from "../components/Sessions/SessionDetailsModal.vue";
 import SessionTable from "../components/Sessions/SessionTable.vue";
-import Chart from "../components/Sessions/Chart.vue";
+import EnergyBarChart from "../components/Sessions/EnergyBarChart.vue";
+import SolarPolarChart from "../components/Sessions/SolarPolarChart.vue";
 import TopHeader from "../components/TopHeader.vue";
+import IconSelectGroup from "../components/IconSelectGroup.vue";
+import IconSelectItem from "../components/IconSelectItem.vue";
 
 export default {
 	name: "Sessions",
-	components: { SessionDetailsModal, SessionTable, TopHeader, Chart },
+	components: {
+		SessionDetailsModal,
+		SessionTable,
+		TopHeader,
+		EnergyBarChart,
+		SolarPolarChart,
+		IconSelectGroup,
+		IconSelectItem,
+	},
 	mixins: [formatter],
 	props: {
 		notifications: Array,
@@ -95,6 +157,7 @@ export default {
 	data() {
 		return {
 			sessions: [],
+			selectedGroup: "loadpoint",
 			selectedSessionId: undefined,
 		};
 	},
@@ -102,6 +165,11 @@ export default {
 		return { title: `${this.$t("sessions.title")} | evcc` };
 	},
 	computed: {
+		energyTitle() {
+			const energy =
+				this.currentSessions.reduce((acc, session) => acc + session.chargedEnergy, 0) * 1e3;
+			return `Geladene Energie: ${this.fmtKWh(energy)}`;
+		},
 		topNavigation: function () {
 			const vehicleLogins = store.state.auth ? store.state.auth.vehicles : {};
 			return { vehicleLogins, ...this.collectProps(TopNavigation, store.state) };

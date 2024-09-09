@@ -1,8 +1,8 @@
 <template>
-	<div v-if="sessions.length === 0" data-testid="sessions-nodata" class="my-5">
+	<div v-if="sessions.length === 0" data-testid="sessions-nodata" class="mt-3 mb-5">
 		<p>{{ $t("sessions.noData") }}</p>
 	</div>
-	<div v-else class="my-3 my-md-5 table-outer">
+	<div v-else class="my-5 table-outer">
 		<table class="table text-nowrap">
 			<thead class="sticky-top">
 				<tr data-testid="sessions-head">
