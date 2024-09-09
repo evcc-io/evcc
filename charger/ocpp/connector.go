@@ -103,13 +103,11 @@ func (conn *Connector) GetScheduleLimit(duration int) (float64, error) {
 	var limit float64
 	schedule, err := Instance().GetCompositeScheduleRequest(conn.cp.ID(), conn.id, duration)
 
-	if err == nil {
-		if schedule != nil && len(schedule.ChargingSchedulePeriod) > 0 {
-			// return first (current) period limit
-			limit = schedule.ChargingSchedulePeriod[0].Limit
-		} else {
-			err = fmt.Errorf("invalid ChargingSchedule")
-		}
+	if err == nil && schedule != nil && schedule.ChargingSchedule != nil && len(schedule.ChargingSchedule.ChargingSchedulePeriod) > 0 {
+		// return first (current) period limit
+		limit = schedule.ChargingSchedule.ChargingSchedulePeriod[0].Limit
+	} else {
+		err = fmt.Errorf("invalid ChargingSchedule")
 	}
 
 	return limit, err

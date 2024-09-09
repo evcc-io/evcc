@@ -68,8 +68,8 @@ func (cs *CS) SetChargingProfileRequest(id string, connector int, profile *types
 	return wait(err, rc)
 }
 
-func (cs *CS) GetCompositeScheduleRequest(id string, connector int, duration int) (*types.ChargingSchedule, error) {
-	var schedule *types.ChargingSchedule
+func (cs *CS) GetCompositeScheduleRequest(id string, connector int, duration int) (*smartcharging.GetCompositeScheduleConfirmation, error) {
+	var schedule *smartcharging.GetCompositeScheduleConfirmation
 	rc := make(chan error, 1)
 
 	err := cs.GetCompositeSchedule(id, func(request *smartcharging.GetCompositeScheduleConfirmation, err error) {
@@ -77,7 +77,7 @@ func (cs *CS) GetCompositeScheduleRequest(id string, connector int, duration int
 			err = errors.New(string(request.Status))
 		}
 
-		schedule = request.ChargingSchedule
+		schedule = request
 
 		rc <- err
 	}, connector, duration)
