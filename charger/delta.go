@@ -23,7 +23,7 @@ type Delta struct {
 	curr    float64
 	base    uint16
 	enabled bool
-	statusG func(uint16) (api.ChargeStatus, error)
+	isSmart bool
 }
 
 const (
@@ -104,11 +104,9 @@ func NewDelta(uri, device, comset string, baudrate int, proto modbus.Protocol, s
 
 	var statusReasonG func() (api.Reason, error)
 
-	wb.statusG = wb.statusBasic
-
 	// check for smart register set
 	if _, err := wb.conn.ReadInputRegisters(wb.base+deltaRegEvseChargerState, 1); err == nil {
-		wb.statusG = wb.statusSmart
+		wb.isSmart = true
 		statusReasonG = wb.statusReason
 	}
 
@@ -163,7 +161,12 @@ func (wb *Delta) Status() (api.ChargeStatus, error) {
 	// 7: Suspended EVSE
 	// 8: Not ready
 	// 9: Faulted
-	return wb.statusG(encoding.Uint16(b))
+
+	if wb.isSmart {
+		return wb.statusSmart(encoding.Uint16(b))
+	}
+
+	return wb.statusBasic(encoding.Uint16(b))
 }
 
 func (wb *Delta) statusBasic(s uint16) (api.ChargeStatus, error) {
