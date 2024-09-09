@@ -205,19 +205,19 @@ func runRoot(cmd *cobra.Command, args []string) {
 	// publish initial settings
 	valueChan <- util.Param{Key: keys.Interval, Val: conf.Interval}
 	valueChan <- util.Param{Key: keys.Network, Val: conf.Network}
-	valueChan <- util.Param{Key: keys.Mqtt, Val: conf.Mqtt}
+	// valueChan <- util.Param{Key: keys.Mqtt, Val: conf.Mqtt}
 	valueChan <- util.Param{Key: keys.Influx, Val: conf.Influx}
 	// TODO
 	valueChan <- util.Param{Key: keys.Sponsor, Val: sponsor.Status()}
 
 	// setup mqtt publisher
-	if err == nil && conf.Mqtt.Broker != "" {
-		var mqtt *server.MQTT
-		mqtt, err = server.NewMQTT(strings.Trim(conf.Mqtt.Topic, "/"), site)
-		if err == nil {
-			go mqtt.Run(site, pipe.NewDropper(append(ignoreMqtt, ignoreEmpty)...).Pipe(tee.Attach()))
-		}
-	}
+	// if err == nil && conf.Mqtt.Broker != "" {
+	// 	var mqtt *server.MQTT
+	// 	mqtt, err = server.NewMQTT(strings.Trim(conf.Mqtt.Topic, "/"), site)
+	// 	if err == nil {
+	// 		go mqtt.Run(site, pipe.NewDropper(append(ignoreMqtt, ignoreEmpty)...).Pipe(tee.Attach()))
+	// 	}
+	// }
 
 	// announce on mDNS
 	if err == nil && strings.HasSuffix(conf.Network.Host, ".local") {

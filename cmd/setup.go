@@ -14,7 +14,6 @@ import (
 	"sync"
 	"time"
 
-	paho "github.com/eclipse/paho.mqtt.golang"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/globalconfig"
 	"github.com/evcc-io/evcc/charger"
@@ -26,7 +25,6 @@ import (
 	"github.com/evcc-io/evcc/meter"
 	"github.com/evcc-io/evcc/provider/golang"
 	"github.com/evcc-io/evcc/provider/javascript"
-	"github.com/evcc-io/evcc/provider/mqtt"
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/server/db"
@@ -60,9 +58,9 @@ var conf = globalconfig.All{
 		Host:   "evcc.local",
 		Port:   7070,
 	},
-	Mqtt: globalconfig.Mqtt{
-		Topic: "evcc",
-	},
+	// Mqtt: globalconfig.Mqtt{
+	// 	Topic: "evcc",
+	// },
 	EEBus: eebus.Config{
 		URI: ":4712",
 	},
@@ -481,9 +479,9 @@ func configureEnvironment(cmd *cobra.Command, conf *globalconfig.All) (err error
 	}
 
 	// setup mqtt client listener
-	if err == nil {
-		err = wrapErrorWithClass(ClassMqtt, configureMqtt(&conf.Mqtt))
-	}
+	// if err == nil {
+	// 	err = wrapErrorWithClass(ClassMqtt, configureMqtt(&conf.Mqtt))
+	// }
 
 	// setup EEBus server
 	if err == nil {
@@ -573,46 +571,6 @@ func configureInflux(conf *globalconfig.Influx) (*server.Influx, error) {
 	)
 
 	return influx, nil
-}
-
-// setup mqtt
-func configureMqtt(conf *globalconfig.Mqtt) error {
-	// migrate settings
-	if settings.Exists(keys.Mqtt) {
-		if err := settings.Json(keys.Mqtt, &conf); err != nil {
-			return err
-		}
-
-		// TODO remove yaml file
-		// } else {
-		// 	// migrate settings & write defaults
-		// 	if err := settings.SetJson(keys.Mqtt, conf); err != nil {
-		// 		return err
-		// 	}
-	}
-
-	if conf.Broker == "" {
-		return nil
-	}
-
-	log := util.NewLogger("mqtt")
-
-	instance, err := mqtt.RegisteredClient(log, conf.Broker, conf.User, conf.Password, conf.ClientID, 1, conf.Insecure, func(options *paho.ClientOptions) {
-		topic := fmt.Sprintf("%s/status", strings.Trim(conf.Topic, "/"))
-		options.SetWill(topic, "offline", 1, true)
-
-		oc := options.OnConnect
-		options.SetOnConnectHandler(func(client paho.Client) {
-			oc(client)                                   // original handler
-			_ = client.Publish(topic, 1, true, "online") // alive - not logged
-		})
-	})
-	if err != nil {
-		return fmt.Errorf("failed configuring mqtt: %w", err)
-	}
-
-	mqtt.Instance = instance
-	return nil
 }
 
 // setup javascript

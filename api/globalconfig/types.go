@@ -6,7 +6,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/evcc-io/evcc/provider/mqtt"
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/evcc-io/evcc/util/config"
@@ -24,21 +23,21 @@ type All struct {
 	Levels       map[string]string
 	Interval     time.Duration
 	Database     DB
-	Mqtt         Mqtt
-	ModbusProxy  []ModbusProxy
-	Javascript   []Javascript
-	Go           []Go
-	Influx       Influx
-	EEBus        eebus.Config
-	HEMS         config.Typed
-	Messaging    Messaging
-	Meters       []config.Named
-	Chargers     []config.Named
-	Vehicles     []config.Named
-	Tariffs      Tariffs
-	Site         map[string]interface{}
-	Loadpoints   []map[string]interface{}
-	Circuits     []config.Named
+	// Mqtt         Mqtt
+	ModbusProxy []ModbusProxy
+	Javascript  []Javascript
+	Go          []Go
+	Influx      Influx
+	EEBus       eebus.Config
+	HEMS        config.Typed
+	Messaging   Messaging
+	Meters      []config.Named
+	Chargers    []config.Named
+	Vehicles    []config.Named
+	Tariffs     Tariffs
+	Site        map[string]interface{}
+	Loadpoints  []map[string]interface{}
+	Circuits    []config.Named
 }
 
 type Javascript struct {
@@ -57,28 +56,28 @@ type ModbusProxy struct {
 	modbus.Settings `mapstructure:",squash"`
 }
 
-type Mqtt struct {
-	mqtt.Config `mapstructure:",squash"`
-	Topic       string `json:"topic"`
-}
+// type Mqtt struct {
+// 	mqtt.Config `mapstructure:",squash"`
+// 	Topic       string `json:"topic"`
+// }
 
-// Redacted implements the redactor interface used by the tee publisher
-func (m Mqtt) Redacted() any {
-	// TODO add masked password
-	return struct {
-		Broker   string `json:"broker"`
-		Topic    string `json:"topic"`
-		User     string `json:"user"`
-		ClientID string `json:"clientID"`
-		Insecure bool   `json:"insecure"`
-	}{
-		Broker:   m.Broker,
-		Topic:    m.Topic,
-		User:     m.User,
-		ClientID: m.ClientID,
-		Insecure: m.Insecure,
-	}
-}
+// // Redacted implements the redactor interface used by the tee publisher
+// func (m Mqtt) Redacted() any {
+// 	// TODO add masked password
+// 	return struct {
+// 		Broker   string `json:"broker"`
+// 		Topic    string `json:"topic"`
+// 		User     string `json:"user"`
+// 		ClientID string `json:"clientID"`
+// 		Insecure bool   `json:"insecure"`
+// 	}{
+// 		Broker:   m.Broker,
+// 		Topic:    m.Topic,
+// 		User:     m.User,
+// 		ClientID: m.ClientID,
+// 		Insecure: m.Insecure,
+// 	}
+// }
 
 // Influx is the influx db configuration
 type Influx struct {

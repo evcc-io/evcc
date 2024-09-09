@@ -1,3 +1,5 @@
+//go:build mqtt
+
 package meter
 
 import (

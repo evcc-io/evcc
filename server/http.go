@@ -265,8 +265,8 @@ func (s *HTTPd) RegisterSystemHandler(valueChan chan<- util.Param, cache *util.C
 		// json handlers
 		for key, fun := range map[string]func() any{
 			keys.Network: func() any { return new(globalconfig.Network) }, // has default
-			keys.Mqtt:    func() any { return new(globalconfig.Mqtt) },    // has default
-			keys.Influx:  func() any { return new(globalconfig.Influx) },
+			// keys.Mqtt:    func() any { return new(globalconfig.Mqtt) },    // has default
+			keys.Influx: func() any { return new(globalconfig.Influx) },
 		} {
 			// routes[key] = route{Method: "GET", Pattern: "/" + key, HandlerFunc: settingsGetJsonHandler(key, fun())}
 			routes["update"+key] = route{Method: "POST", Pattern: "/" + key, HandlerFunc: settingsSetJsonHandler(key, valueChan, fun())}
