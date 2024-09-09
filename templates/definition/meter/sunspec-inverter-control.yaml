@@ -103,7 +103,5 @@ render: |
             source: sunspec
             {{- include "modbus" . | indent 10 }}
             value: 124:0:OutWRte
-  {{- if .capacity }}
   capacity: {{ .capacity }} # kWh
-  {{- end }}
   {{- end }}

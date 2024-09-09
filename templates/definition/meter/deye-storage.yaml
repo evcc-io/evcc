@@ -77,9 +77,7 @@ render: |
       address: 184 # "battery capacity"
       type: holding
       decode: uint16
-  {{- if .capacity }}
   capacity: {{ .capacity }} # kWh
-  {{- end }}
   {{- end }}
   {{- if eq .usage "grid" }}
   power:

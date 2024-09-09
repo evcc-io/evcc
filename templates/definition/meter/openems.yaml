@@ -40,7 +40,5 @@ render: |
       user: x
       password: {{ .password }}
     jq: (.value // 0)
-  {{- if .capacity }}
   capacity: {{ .capacity }} # kWh
-  {{- end }}
   {{- end }}

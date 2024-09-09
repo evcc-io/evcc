@@ -22,6 +22,4 @@ render: |
   {{- if .password }}
   password: {{ .password }} # optional
   {{- end }}
-  {{- if .capacity }}
   capacity: {{ .capacity }} # kWh
-  {{- end }}
