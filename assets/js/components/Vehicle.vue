@@ -68,7 +68,7 @@
 
 <script>
 import collector from "../mixins/collector";
-import formatter from "../mixins/formatter";
+import formatter, { POWER_UNIT } from "../mixins/formatter";
 import LabelAndValue from "./LabelAndValue.vue";
 import VehicleTitle from "./VehicleTitle.vue";
 import VehicleSoc from "./VehicleSoc.vue";
@@ -106,6 +106,7 @@ export default {
 		integratedDevice: Boolean,
 		limitEnergy: Number,
 		mode: String,
+		chargerStatusReason: String,
 		phaseAction: String,
 		phaseRemainingInterpolated: Number,
 		planActive: Boolean,
@@ -245,8 +246,7 @@ export default {
 			this.$emit("remove-vehicle");
 		},
 		fmtEnergy(value) {
-			const inKw = value == 0 || value >= 1000;
-			return this.fmtKWh(value, inKw);
+			return this.fmtWh(value, value == 0 ? POWER_UNIT.KW : POWER_UNIT.AUTO);
 		},
 		openPlanModal() {
 			this.$refs.chargingPlan.openPlanModal();

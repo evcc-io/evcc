@@ -75,6 +75,24 @@
 			>
 				<WelcomeIcon />
 			</div>
+			<div
+				v-if="awaitingAuthorizationVisible"
+				ref="awaitingAuthorization"
+				data-bs-toggle="tooltip"
+				class="entry"
+				data-testid="vehicle-status-awaiting-authorization"
+			>
+				<RfidWaitIcon />
+			</div>
+			<div
+				v-if="disconnectRequiredVisible"
+				ref="disconnectRequired"
+				class="entry text-warning"
+				data-bs-toggle="tooltip"
+				data-testid="vehicle-status-disconnect-required"
+			>
+				<ReconnectIcon />
+			</div>
 
 			<!-- smart cost -->
 			<button
@@ -139,29 +157,36 @@ import DynamicPriceIcon from "./MaterialIcon/DynamicPrice.vue";
 import { DEFAULT_LOCALE } from "../i18n";
 import formatter from "../mixins/formatter";
 import { CO2_TYPE } from "../units";
-import PlanStartIcon from "./MaterialIcon/PlanStart.vue";
-import PlanEndIcon from "./MaterialIcon/PlanEnd.vue";
 import ClimaterIcon from "./MaterialIcon/Climater.vue";
-import VehicleLimitReachedIcon from "./MaterialIcon/VehicleLimitReached.vue";
-import VehicleLimitWarningIcon from "./MaterialIcon/VehicleLimitWarning.vue";
-import VehicleLimitIcon from "./MaterialIcon/VehicleLimit.vue";
-import VehicleMinSocIcon from "./MaterialIcon/VehicleMinSoc.vue";
+import PlanEndIcon from "./MaterialIcon/PlanEnd.vue";
+import PlanStartIcon from "./MaterialIcon/PlanStart.vue";
+import ReconnectIcon from "./MaterialIcon/Reconnect.vue";
+import RfidWaitIcon from "./MaterialIcon/RfidWait.vue";
 import SunDownIcon from "./MaterialIcon/SunDown.vue";
 import SunUpIcon from "./MaterialIcon/SunUp.vue";
 import Tooltip from "bootstrap/js/dist/tooltip";
+import VehicleLimitIcon from "./MaterialIcon/VehicleLimit.vue";
+import VehicleLimitReachedIcon from "./MaterialIcon/VehicleLimitReached.vue";
+import VehicleLimitWarningIcon from "./MaterialIcon/VehicleLimitWarning.vue";
+import VehicleMinSocIcon from "./MaterialIcon/VehicleMinSoc.vue";
 import WelcomeIcon from "./MaterialIcon/Welcome.vue";
+
+const REASON_AUTH = "waitingforauthorization";
+const REASON_DISCONNECT = "disconnectrequired";
 
 export default {
 	name: "VehicleStatus",
 	components: {
-		DynamicPriceIcon,
-		PlanStartIcon,
-		PlanEndIcon,
 		ClimaterIcon,
-		VehicleLimitIcon,
-		VehicleMinSocIcon,
+		DynamicPriceIcon,
+		PlanEndIcon,
+		PlanStartIcon,
+		ReconnectIcon,
+		RfidWaitIcon,
 		SunDownIcon,
 		SunUpIcon,
+		VehicleLimitIcon,
+		VehicleMinSocIcon,
 		WelcomeIcon,
 	},
 	mixins: [formatter],
@@ -169,6 +194,7 @@ export default {
 		vehicleSoc: Number,
 		charging: Boolean,
 		chargingPlanDisabled: Boolean,
+		chargerStatusReason: String,
 		connected: Boolean,
 		currency: String,
 		effectiveLimitSoc: Number,
@@ -209,6 +235,8 @@ export default {
 			vehicleWelcomeTooltip: null,
 			smartCostTooltip: null,
 			vehicleLimitTooltip: null,
+			awaitingAuthorizationTooltip: null,
+			disconnectRequiredTooltip: null,
 		};
 	},
 	mounted() {
@@ -221,6 +249,8 @@ export default {
 		this.updateVehicleWelcomeTooltip();
 		this.updateSmartCostTooltip();
 		this.updateVehicleLimitTooltip();
+		this.updateAwaitingAuthorizationTooltip();
+		this.updateDisconnectRequiredTooltip();
 	},
 	watch: {
 		planActiveTooltipContent() {
@@ -249,6 +279,12 @@ export default {
 		},
 		vehicleLimitTooltipContent() {
 			this.$nextTick(this.updateVehicleLimitTooltip);
+		},
+		awaitingAuthorizationTooltipContent() {
+			this.$nextTick(this.updateAwaitingAuthorizationTooltip);
+		},
+		disconnectRequiredTooltipContent() {
+			this.$nextTick(this.updateDisconnectRequiredTooltip);
 		},
 	},
 	computed: {
@@ -288,6 +324,24 @@ export default {
 		vehicleLimitVisible() {
 			const limit = this.effectiveLimitSoc || 100;
 			return this.connected && this.vehicleLimitSoc > 0 && this.vehicleLimitSoc < limit;
+		},
+		awaitingAuthorizationVisible() {
+			return this.chargerStatusReason === REASON_AUTH;
+		},
+		awaitingAuthorizationTooltipContent() {
+			if (!this.awaitingAuthorizationVisible) {
+				return "";
+			}
+			return this.$t("main.vehicleStatus.awaitingAuthorization");
+		},
+		disconnectRequiredVisible() {
+			return this.chargerStatusReason === REASON_DISCONNECT;
+		},
+		disconnectRequiredTooltipContent() {
+			if (!this.disconnectRequiredVisible) {
+				return "";
+			}
+			return this.$t("main.vehicleStatus.disconnectRequired");
 		},
 		vehicleLimitTooltipContent() {
 			if (!this.vehicleLimitVisible) {
@@ -551,6 +605,20 @@ export default {
 				true
 			);
 		},
+		updateAwaitingAuthorizationTooltip() {
+			this.awaitingAuthorizationTooltip = this.updateTooltip(
+				this.awaitingAuthorizationTooltip,
+				this.awaitingAuthorizationTooltipContent,
+				this.$refs.awaitingAuthorization
+			);
+		},
+		updateDisconnectRequiredTooltip() {
+			this.updateTooltip(
+				this.disconnectRequiredTooltip,
+				this.disconnectRequiredTooltipContent,
+				this.$refs.disconnectRequired
+			);
+		},
 		updateTooltip: function (instance, content, ref, hoverOnly = false) {
 			if (!content || !ref) {
 				if (instance) {
@@ -558,12 +626,13 @@ export default {
 				}
 				return;
 			}
-			if (!instance) {
+			let newInstance = instance;
+			if (!newInstance) {
 				const trigger = hoverOnly ? "hover" : "hover focus";
-				instance = new Tooltip(ref, { title: " ", trigger });
+				newInstance = new Tooltip(ref, { title: " ", trigger });
 			}
-			instance.setContent({ ".tooltip-inner": content });
-			return instance;
+			newInstance.setContent({ ".tooltip-inner": content });
+			return newInstance;
 		},
 	},
 };

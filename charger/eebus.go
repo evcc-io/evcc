@@ -10,6 +10,7 @@ import (
 	eebusapi "github.com/enbility/eebus-go/api"
 	ucapi "github.com/enbility/eebus-go/usecases/api"
 	"github.com/enbility/eebus-go/usecases/cem/evcc"
+	"github.com/enbility/eebus-go/usecases/cem/evcem"
 	spineapi "github.com/enbility/spine-go/api"
 	"github.com/enbility/spine-go/model"
 	"github.com/evcc-io/evcc/api"
@@ -38,6 +39,9 @@ type EEBus struct {
 	lp      loadpoint.API
 	minMaxG func() (minMax, error)
 
+	limitUpdated    time.Time // time of last limit change
+	currentsUpdated time.Time // time of last measurement
+
 	vasVW     bool // wether the EVSE supports VW VAS with ISO15118-2
 	enabled   bool
 	reconnect bool
@@ -54,7 +58,7 @@ func init() {
 func NewEEBusFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
 		Ski           string
-		Ip_           string `mapstructure:"ip"` // deprecated
+		Ip            string
 		Meter         bool
 		ChargedEnergy bool
 		VasVW         bool
@@ -66,13 +70,13 @@ func NewEEBusFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	return NewEEBus(cc.Ski, cc.Meter, cc.ChargedEnergy, cc.VasVW)
+	return NewEEBus(cc.Ski, cc.Ip, cc.Meter, cc.ChargedEnergy, cc.VasVW)
 }
 
 //go:generate go run ../cmd/tools/decorate.go -f decorateEEBus -b *EEBus -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.ChargeRater,ChargedEnergy,func() (float64, error)"
 
 // NewEEBus creates EEBus charger
-func NewEEBus(ski string, hasMeter, hasChargedEnergy, vasVW bool) (api.Charger, error) {
+func NewEEBus(ski, ip string, hasMeter, hasChargedEnergy, vasVW bool) (api.Charger, error) {
 	if eebus.Instance == nil {
 		return nil, errors.New("eebus not configured")
 	}
@@ -87,7 +91,7 @@ func NewEEBus(ski string, hasMeter, hasChargedEnergy, vasVW bool) (api.Charger, 
 	c.Connector = eebus.NewConnector()
 	c.minMaxG = provider.Cached(c.minMax, time.Second)
 
-	if err := eebus.Instance.RegisterDevice(ski, c); err != nil {
+	if err := eebus.Instance.RegisterDevice(ski, ip, c); err != nil {
 		return nil, err
 	}
 
@@ -121,6 +125,10 @@ func (c *EEBus) UseCaseEvent(device spineapi.DeviceRemoteInterface, entity spine
 
 	case evcc.EvDisconnected:
 		c.ev = nil
+
+	case evcem.DataUpdateCurrentPerPhase:
+		// do not use the timestamp of the measurement itself, as some devices don't provide it
+		c.currentsUpdated = time.Now()
 	}
 }
 
@@ -136,32 +144,33 @@ func (c *EEBus) isCharging(evEntity spineapi.EntityRemoteInterface) bool {
 	// check if an external physical meter is assigned
 	// we only want this for configured meters and not for internal meters!
 	// right now it works as expected
-	if c.lp != nil && c.lp.HasChargeMeter() {
-		if c.lp.GetChargePower() > c.lp.EffectiveMinPower()*idleFactor {
-			return true
+	var minPower float64
+	if c.lp != nil {
+		minPower = c.lp.EffectiveMinPower()
+
+		if c.lp.HasChargeMeter() {
+			return c.lp.GetChargePower() > minPower*idleFactor
 		}
 	}
 
 	// The above doesn't (yet) work for built in meters, so check the EEBUS measurements also
-	currents, err := c.uc.EvCem.CurrentPerPhase(evEntity)
+
+	// use power data if available, otherwise the method will calculate the power from the current data
+	power, err := c.currentPower()
 	if err != nil {
 		return false
 	}
 
-	limitsMin, _, _, err := c.uc.OpEV.CurrentLimits(evEntity)
-	if err != nil || len(limitsMin) == 0 {
-		// sometimes a min limit is not provided by the EVSE, so take the limit defined for the loadpoint
-		if c.lp == nil {
+	if c.lp == nil {
+		limitsMin, _, _, err := c.uc.OpEV.CurrentLimits(evEntity)
+		if err != nil || len(limitsMin) == 0 {
+			// sometimes a min limit is not provided by the EVSE, and we can't take it from the loadpoint
 			return false
 		}
-		limitsMin = []float64{c.lp.GetMinCurrent()}
+		minPower = limitsMin[0] * voltage
 	}
 
-	// require sum of all phase currents to be > 0.6 * a single phase minimum
-	// in some scenarios, e.g. Cayenne Hybrid, sometimes the meter of a PMCC device
-	// reported 600W, even tough the car was not charging
-	limitMin := limitsMin[0]
-	return lo.Sum(currents) > limitMin*idleFactor
+	return power > minPower*idleFactor
 }
 
 // Status implements the api.Charger interface
@@ -329,16 +338,25 @@ func (c *EEBus) writeCurrentLimitData(evEntity spineapi.EntityRemoteInterface, c
 	// if VAS VW is available, limits are completely covered by it
 	// this way evcc can fully control the charging behaviour
 	if c.writeLoadControlLimitsVASVW(evEntity, limits) {
+		c.limitUpdated = time.Now()
 		return nil
 	}
 
 	// make sure the recommendations are inactive, otherwise the EV won't go to sleep
-	if err := c.disableLimits(evEntity, c.uc.OscEV); err != nil {
-		return err
+	// but only if it supports OSCEV and has required data!
+	if c.uc.OscEV.IsScenarioAvailableAtEntity(evEntity, 1) {
+		if _, err := c.uc.OscEV.LoadControlLimits(evEntity); err == nil {
+			if err := c.disableLimits(evEntity, c.uc.OscEV); err != nil {
+				return err
+			}
+		}
 	}
 
 	// set overload protection limits
 	_, err = c.uc.OpEV.WriteLoadControlLimits(evEntity, limits, nil)
+	if err == nil {
+		c.limitUpdated = time.Now()
+	}
 
 	return err
 }
@@ -357,7 +375,8 @@ func (c *EEBus) hasActiveVASVW(evEntity spineapi.EntityRemoteInterface) bool {
 	}
 
 	// SoC has to be available, otherwise it is plain ISO15118-2
-	if _, err := c.Soc(); err != nil {
+	// SoC has to be >= 25%, because the Taycan can't be setup with a Min SoC below 25%, oherwise obligations have to be used
+	if soc, err := c.Soc(); err != nil || soc < 25 {
 		return false
 	}
 
@@ -405,6 +424,11 @@ func (c *EEBus) writeLoadControlLimitsVASVW(evEntity spineapi.EntityRemoteInterf
 		return false
 	}
 
+	// OSCEV requires recommendation limits to be available
+	if _, err := c.uc.OscEV.LoadControlLimits(evEntity); err != nil {
+		return false
+	}
+
 	// on OSCEV all limits have to be active except they are set to the default value
 	minLimits, _, _, err := c.uc.OscEV.CurrentLimits(evEntity)
 	if err != nil {
@@ -413,10 +437,14 @@ func (c *EEBus) writeLoadControlLimitsVASVW(evEntity spineapi.EntityRemoteInterf
 	}
 
 	for index, item := range limits {
-		limits[index].IsActive = item.Value >= minLimits[index]
+		// if the limit is equal or bigger than the min allowed, then the recommendation limit is active, otherwise it is not
+		limits[index].IsActive = false
+		if index < len(minLimits) {
+			limits[index].IsActive = item.Value >= minLimits[index]
+		}
 	}
 
-	// set overload protection limits
+	// set recommendation limits
 	if _, err := c.uc.OscEV.WriteLoadControlLimits(evEntity, limits, nil); err != nil {
 		c.log.ERROR.Println("!! OscEV.WriteLoadControlLimits:", err)
 		return false
@@ -545,12 +573,24 @@ func (c *EEBus) currents() (float64, float64, float64, error) {
 		return 0, 0, 0, api.ErrNotAvailable
 	}
 
+	c.mux.Lock()
+	ts := c.currentsUpdated
+	c.mux.Unlock()
+
+	// if there is no measurement data available within 15 seconds after the last limit change, return an error
+	// only consider it an error, if there is no measurement data since 15 seconds after the last limit change
+	// a measurement only being available before the last limit change is not an error, because that can happen often
+	if d := ts.Sub(c.limitUpdated); d > 15*time.Second && !c.limitUpdated.IsZero() {
+		return 0, 0, 0, api.ErrNotAvailable
+	}
+
+	// we got a valid measurement, reset the limitUpdate to zero
+	// otherwise frequent measurement updates will trigger an unwanted error as the time between those is > 15 seconds
+	c.limitUpdated = time.Time{}
+
 	res, err := c.uc.EvCem.CurrentPerPhase(evEntity)
 	if err != nil {
-		if err == eebusapi.ErrDataNotAvailable {
-			err = api.ErrNotAvailable
-		}
-		return 0, 0, 0, err
+		return 0, 0, 0, eebus.WrapError(err)
 	}
 
 	// fill phases
@@ -581,11 +621,11 @@ func (c *EEBus) Identify() (string, error) {
 
 var _ api.Battery = (*EEBus)(nil)
 
-// Soc implements the api.Vehicle interface
+// Soc implements the api.Battery interface
 func (c *EEBus) Soc() (float64, error) {
 	evEntity, ok := c.isEvConnected()
 	if !ok {
-		return 0, nil
+		return 0, api.ErrNotAvailable
 	}
 
 	if !c.uc.EvSoc.IsScenarioAvailableAtEntity(evEntity, 1) {
@@ -612,10 +652,7 @@ func (c *EEBus) minMax() (minMax, error) {
 
 	minLimits, maxLimits, _, err := c.uc.OpEV.CurrentLimits(evEntity)
 	if err != nil {
-		if err == eebusapi.ErrDataNotAvailable {
-			err = api.ErrNotAvailable
-		}
-		return zero, err
+		return zero, eebus.WrapError(err)
 	}
 
 	if len(minLimits) == 0 || len(maxLimits) == 0 {

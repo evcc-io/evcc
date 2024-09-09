@@ -1,6 +1,7 @@
 package ocpp
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -24,27 +25,27 @@ type Connector struct {
 
 	status  *core.StatusNotificationRequest
 	statusC chan struct{}
-	meterC  chan map[types.Measurand]types.SampledValue
 
 	meterUpdated time.Time
 	measurements map[types.Measurand]types.SampledValue
-	timeout      time.Duration
 
 	txnCount int // change initial value to the last known global transaction. Needs persistence
 	txnId    int
 	idTag    string
+
+	remoteIdTag string
 }
 
-func NewConnector(log *util.Logger, id int, cp *CP, timeout time.Duration) (*Connector, error) {
+func NewConnector(log *util.Logger, id int, cp *CP, idTag string) (*Connector, error) {
 	conn := &Connector{
 		log:          log,
 		cp:           cp,
 		id:           id,
 		clock:        clock.New(),
-		statusC:      make(chan struct{}),
+		statusC:      make(chan struct{}, 1),
 		measurements: make(map[types.Measurand]types.SampledValue),
-		meterC:       make(chan map[types.Measurand]types.SampledValue),
-		timeout:      timeout,
+
+		remoteIdTag: idTag,
 	}
 
 	err := cp.registerConnector(id, conn)
@@ -54,14 +55,6 @@ func NewConnector(log *util.Logger, id int, cp *CP, timeout time.Duration) (*Con
 
 func (conn *Connector) TestClock(clock clock.Clock) {
 	conn.clock = clock
-}
-
-func (conn *Connector) MeterSampled() <-chan map[types.Measurand]types.SampledValue {
-	return conn.meterC
-}
-
-func (conn *Connector) ChargePoint() *CP {
-	return conn.cp
 }
 
 func (conn *Connector) ID() int {
@@ -83,13 +76,52 @@ func (conn *Connector) TriggerMessageRequest(feature remotetrigger.MessageTrigge
 	})
 }
 
+func (conn *Connector) remoteStartTransactionRequest() {
+	rc := make(chan error, 1)
+	err := Instance().RemoteStartTransaction(conn.cp.ID(), func(resp *core.RemoteStartTransactionConfirmation, err error) {
+		if err == nil && resp != nil && resp.Status != types.RemoteStartStopStatusAccepted {
+			err = errors.New(string(resp.Status))
+		}
+
+		rc <- err
+	}, conn.remoteIdTag, func(request *core.RemoteStartTransactionRequest) {
+		connector := conn.id
+		request.ConnectorId = &connector
+	})
+
+	if err := wait(err, rc); err != nil {
+		conn.log.ERROR.Printf("failed to start remote transaction: %v", err)
+	}
+}
+
+func (conn *Connector) SetChargingProfile(profile *types.ChargingProfile) error {
+	return Instance().SetChargingProfileRequest(conn.cp.ID(), conn.id, profile)
+}
+
+// getScheduleLimit queries the current or power limit the charge point is currently set to offer
+func (conn *Connector) GetScheduleLimit(duration int) (float64, error) {
+	var limit float64
+	schedule, err := Instance().GetCompositeScheduleRequest(conn.cp.ID(), conn.id, duration)
+
+	if err == nil {
+		if schedule != nil && len(schedule.ChargingSchedulePeriod) > 0 {
+			// return first (current) period limit
+			limit = schedule.ChargingSchedulePeriod[0].Limit
+		} else {
+			err = fmt.Errorf("invalid ChargingSchedule")
+		}
+	}
+
+	return limit, err
+}
+
 // WatchDog triggers meter values messages if older than timeout.
 // Must be wrapped in a goroutine.
 func (conn *Connector) WatchDog(timeout time.Duration) {
 	tick := time.NewTicker(2 * time.Second)
 	for ; true; <-tick.C {
 		conn.mu.Lock()
-		update := conn.txnId != 0 && conn.clock.Since(conn.meterUpdated) > timeout
+		update := conn.clock.Since(conn.meterUpdated) > timeout
 		conn.mu.Unlock()
 
 		if update {
@@ -100,14 +132,14 @@ func (conn *Connector) WatchDog(timeout time.Duration) {
 
 // Initialized waits for initial charge point status notification
 func (conn *Connector) Initialized() error {
-	trigger := time.After(conn.timeout / 2)
-	timeout := time.After(conn.timeout)
+	trigger := time.After(Timeout / 2)
+	timeout := time.After(Timeout)
 	for {
 		select {
 		case <-conn.statusC:
 			return nil
 
-		case <-trigger:
+		case <-trigger: // try to trigger StatusNotification again as last resort
 			conn.TriggerMessageRequest(core.StatusNotificationFeatureName)
 
 		case <-timeout:
@@ -157,13 +189,19 @@ func (conn *Connector) NeedsAuthentication() bool {
 	conn.mu.Lock()
 	defer conn.mu.Unlock()
 
+	return conn.isWaitingForAuth()
+}
+
+// isWaitingForAuth checks if meter values are outdated.
+// Must only be called while holding lock.
+func (conn *Connector) isWaitingForAuth() bool {
 	return conn.status != nil && conn.txnId == 0 && conn.status.Status == core.ChargePointStatusPreparing
 }
 
 // isMeterTimeout checks if meter values are outdated.
 // Must only be called while holding lock.
 func (conn *Connector) isMeterTimeout() bool {
-	return conn.timeout > 0 && conn.clock.Since(conn.meterUpdated) > conn.timeout
+	return conn.clock.Since(conn.meterUpdated) > Timeout
 }
 
 var _ api.CurrentGetter = (*Connector)(nil)
@@ -178,7 +216,7 @@ func (conn *Connector) GetMaxCurrent() (float64, error) {
 	defer conn.mu.Unlock()
 
 	// fallthrough for last value on timeout when no transaction is running
-	if conn.txnId != 0 && conn.isMeterTimeout() {
+	if conn.isMeterTimeout() {
 		return 0, api.ErrTimeout
 	}
 
@@ -212,6 +250,32 @@ func (conn *Connector) GetMaxPower() (float64, error) {
 	return 0, api.ErrNotAvailable
 }
 
+func (conn *Connector) phaseMeasurements(measurement, suffix types.Measurand) ([3]float64, bool, error) {
+	var (
+		res   [3]float64
+		found bool
+	)
+
+	for i := range res {
+		key := getPhaseKey(measurement, i+1) + suffix
+
+		m, ok := conn.measurements[key]
+		if !ok {
+			continue
+		}
+		found = true
+
+		f, err := strconv.ParseFloat(m.Value, 64)
+		if err != nil {
+			return res, found, fmt.Errorf("invalid phase value %s: %w", key, err)
+		}
+
+		res[i] = scale(f, m.Unit)
+	}
+
+	return res, found, nil
+}
+
 var _ api.Meter = (*Connector)(nil)
 
 func (conn *Connector) CurrentPower() (float64, error) {
@@ -234,6 +298,13 @@ func (conn *Connector) CurrentPower() (float64, error) {
 	if m, ok := conn.measurements[types.MeasurandPowerActiveImport]; ok {
 		f, err := strconv.ParseFloat(m.Value, 64)
 		return scale(f, m.Unit), err
+	}
+
+	// fallback for missing total power
+
+	res, found, err := conn.phaseMeasurements(types.MeasurandPowerActiveImport, "")
+	if found {
+		return res[0] + res[1] + res[2], err
 	}
 
 	return 0, api.ErrNotAvailable
@@ -312,23 +383,12 @@ func (conn *Connector) Currents() (float64, float64, float64, error) {
 		return 0, 0, 0, nil
 	}
 
-	currents := make([]float64, 0, 3)
-
-	for phase := 1; phase <= 3; phase++ {
-		m, ok := conn.measurements[getPhaseKey(types.MeasurandCurrentImport, phase)]
-		if !ok {
-			return 0, 0, 0, api.ErrNotAvailable
-		}
-
-		f, err := strconv.ParseFloat(m.Value, 64)
-		if err != nil {
-			return 0, 0, 0, fmt.Errorf("invalid current for phase %d: %w", phase, err)
-		}
-
-		currents = append(currents, scale(f, m.Unit))
+	res, found, err := conn.phaseMeasurements(types.MeasurandCurrentImport, "")
+	if found {
+		return res[0], res[1], res[2], err
 	}
 
-	return currents[0], currents[1], currents[2], nil
+	return 0, 0, 0, api.ErrNotAvailable
 }
 
 func (conn *Connector) Voltages() (float64, float64, float64, error) {
@@ -344,25 +404,15 @@ func (conn *Connector) Voltages() (float64, float64, float64, error) {
 		return 0, 0, 0, api.ErrTimeout
 	}
 
-	voltages := make([]float64, 0, 3)
-
-	for phase := 1; phase <= 3; phase++ {
-		m, ok := conn.measurements[getPhaseKey(types.MeasurandVoltage, phase)+"-N"]
-		if !ok {
-			// fallback for wrong voltage phase labeling
-			m, ok = conn.measurements[getPhaseKey(types.MeasurandVoltage, phase)]
-			if !ok {
-				return 0, 0, 0, api.ErrNotAvailable
-			}
-		}
-
-		f, err := strconv.ParseFloat(m.Value, 64)
-		if err != nil {
-			return 0, 0, 0, fmt.Errorf("invalid voltage for phase %d: %w", phase, err)
-		}
-
-		voltages = append(voltages, scale(f, m.Unit))
+	res, found, err := conn.phaseMeasurements(types.MeasurandVoltage, "-N")
+	if found {
+		return res[0], res[1], res[2], err
 	}
 
-	return voltages[0], voltages[1], voltages[2], nil
+	res, found, err = conn.phaseMeasurements(types.MeasurandVoltage, "")
+	if found {
+		return res[0], res[1], res[2], err
+	}
+
+	return 0, 0, 0, api.ErrNotAvailable
 }

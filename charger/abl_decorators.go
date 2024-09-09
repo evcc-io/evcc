@@ -22,6 +22,17 @@ func decorateABLeMH(base *ABLeMH, meter func() (float64, error), phaseCurrents f
 			},
 		}
 
+	case meter == nil && phaseCurrents != nil:
+		return &struct {
+			*ABLeMH
+			api.PhaseCurrents
+		}{
+			ABLeMH: base,
+			PhaseCurrents: &decorateABLeMHPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+		}
+
 	case meter != nil && phaseCurrents != nil:
 		return &struct {
 			*ABLeMH
