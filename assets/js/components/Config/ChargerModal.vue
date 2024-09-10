@@ -16,24 +16,52 @@
 					:disabled="!isNew"
 					class="form-select w-100"
 				>
-					<option
-						v-for="option in genericOptions"
-						:key="option.name"
-						:value="option.template"
-					>
-						{{ option.name }}
-					</option>
-					<option v-if="genericOptions.length" disabled>──────────</option>
-					<option
-						v-for="option in templateOptions"
-						:key="option.name"
-						:value="option.template"
-					>
-						{{ option.name }}
-					</option>
+					<option value="">---</option>
+					<optgroup :label="$t('config.charger.generic')">
+						<option
+							v-for="option in genericOptions"
+							:key="option.name"
+							:value="option.template"
+						>
+							{{ option.name }}
+						</option>
+					</optgroup>
+					<optgroup :label="$t('config.charger.chargers')">
+						<option
+							v-for="option in chargerOptions"
+							:key="option.name"
+							:value="option.template"
+						>
+							{{ option.name }}
+						</option>
+					</optgroup>
+					<optgroup :label="$t('config.charger.switchsocket')">
+						<option
+							v-for="option in switchSocketOptions"
+							:key="option.name"
+							:value="option.template"
+						>
+							{{ option.name }}
+						</option>
+					</optgroup>
 				</select>
 			</FormRow>
 			<p v-if="loadingTemplate">Loading ...</p>
+			<Markdown v-if="description" :markdown="description" class="my-4" />
+			<FormRow
+				v-if="ocppUrl"
+				id="chargerOcppUrl"
+				label="OCPP-Server URL"
+				help="Copy this address into your chargers configuration."
+			>
+				<input
+					type="text"
+					class="form-control border border-success bg-transparent"
+					:value="ocppUrl"
+					readonly
+				/>
+			</FormRow>
+
 			<Modbus
 				v-if="modbus"
 				v-model:modbus="values.modbus"
@@ -127,6 +155,7 @@ import api from "../../api";
 import test from "./mixins/test";
 import Modbus from "./Modbus.vue";
 import GenericModal from "../GenericModal.vue";
+import Markdown from "./Markdown.vue";
 
 const initialValues = { type: "template" };
 
@@ -138,7 +167,15 @@ const CUSTOM_FIELDS = ["modbus"];
 
 export default {
 	name: "ChargerModal",
-	components: { FormRow, PropertyEntry, PropertyCollapsible, Modbus, TestResult, GenericModal },
+	components: {
+		FormRow,
+		PropertyEntry,
+		GenericModal,
+		Modbus,
+		TestResult,
+		PropertyCollapsible,
+		Markdown,
+	},
 	mixins: [test],
 	props: {
 		id: Number,
@@ -166,11 +203,14 @@ export default {
 			}
 			return this.$t(`config.charger.titleEdit`);
 		},
-		templateOptions() {
-			return this.products.filter((p) => p.group !== "generic");
+		chargerOptions() {
+			return this.products.filter((p) => !p.group);
 		},
 		genericOptions() {
 			return this.products.filter((p) => p.group === "generic");
+		},
+		switchSocketOptions() {
+			return this.products.filter((p) => p.group === "switchsockets");
 		},
 		templateParams() {
 			const params = this.template?.Params || [];
@@ -189,6 +229,15 @@ export default {
 		modbusCapabilities() {
 			return this.modbus?.Choice || [];
 		},
+		ocppUrl() {
+			const isOcpp =
+				this.templateParams.some((p) => p.Name === "connector") &&
+				this.templateParams.some((p) => p.Name === "stationid");
+			if (isOcpp) {
+				return `ws://${window.location.hostname}:8887`;
+			}
+			return null;
+		},
 		modbusDefaults() {
 			const { ID, Comset, Baudrate, Port } = this.modbus || {};
 			return {
@@ -197,6 +246,9 @@ export default {
 				baudrate: Baudrate,
 				port: Port,
 			};
+		},
+		description() {
+			return this.template?.Requirements?.Description;
 		},
 		apiData() {
 			return {

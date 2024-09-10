@@ -32,6 +32,9 @@ titleAdd = "Add Charge Meter"
 titleEdit = "Edit Charge Meter"
 
 [config.charger]
+chargers = "EV chargers"
+generic = "Generic integrations"
+switchsockets = "Switchable sockets"
 template = "Manufacturer"
 titleAdd = "Add Charger"
 titleEdit = "Edit Charger"
@@ -212,6 +215,14 @@ little = "little-endian"
 [config.options.schema]
 http = "HTTP (unencrypted)"
 https = "HTTPS (encrypted)"
+
+[config.options.status]
+A = "A (not connected)"
+B = "B (connected)"
+C = "C (charging)"
+D = "D (charging with ventilation)"
+E = "E (no power)"
+F = "F (error)"
 
 [config.pv]
 titleAdd = "Add Solar Meter"

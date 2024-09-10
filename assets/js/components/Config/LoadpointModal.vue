@@ -18,11 +18,11 @@
 					required
 				/>
 			</FormRow>
-			<FormRow id="loadpointParamCharger" label="Charger">
+			<FormRow v-if="values.charger" id="loadpointParamCharger" label="Charger">
 				<div class="d-flex">
 					<PropertyField
 						id="loadpointParamCharger"
-						:value="chargerTitle"
+						:modelValue="chargerTitle"
 						type="String"
 						class="me-2 flex-grow-1"
 						readonly
@@ -34,11 +34,20 @@
 						type="button"
 						@click.prevent="editCharger"
 					>
-						<EditIcon v-if="values.charger" />
-						<AddIcon v-else />
+						<EditIcon />
 					</button>
 				</div>
 			</FormRow>
+			<div v-else class="d-flex justify-content-end">
+				<button
+					class="btn btn-outline-primary"
+					type="button"
+					:disabled="values.title?.length === 0"
+					@click.prevent="editCharger"
+				>
+					Add charger
+				</button>
+			</div>
 			<div v-if="values.charger || !isNew">
 				<FormRow
 					v-if="values.meter"
@@ -50,7 +59,7 @@
 					<div class="d-flex">
 						<PropertyField
 							id="loadpointParamMeter"
-							:value="meterTitle"
+							:modelValue="meterTitle"
 							type="String"
 							class="me-2 flex-grow-1"
 							required
@@ -443,7 +452,7 @@
 				</div>
 			</div>
 
-			<div class="mb-4 d-flex justify-content-between">
+			<div class="mb-4 d-flex justify-content-between" v-if="values.charger">
 				<button
 					v-if="isDeletable"
 					type="button"
