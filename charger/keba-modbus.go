@@ -194,37 +194,31 @@ func (wb *Keba) getChargingState() (uint32, error) {
 
 // Status implements the api.Charger interface
 func (wb *Keba) Status() (api.ChargeStatus, error) {
-	if connected, err := wb.isConnected(); err != nil {
-		return api.StatusNone, err
-	} else if connected {
-		s, err := wb.getChargingState()
-		if err != nil {
-			return api.StatusNone, err
-		}
-		if s == 3 {
-			return api.StatusC, nil
-		}
-		return api.StatusB, nil
+	if connected, err := wb.isConnected(); err != nil || !connected {
+		return api.StatusA, err
 	}
 
-	return api.StatusA, nil
+	s, err := wb.getChargingState()
+	if err != nil {
+		return api.StatusA, err
+	}
+	if s == 3 {
+		return api.StatusC, nil
+	}
+	return api.StatusB, nil
 }
 
 // statusReason implements the api.StatusReasoner interface
 func (wb *Keba) statusReason() (api.Reason, error) {
-	if connected, err := wb.isConnected(); err != nil {
+	if connected, err := wb.isConnected(); err != nil || !connected {
 		return api.ReasonUnknown, err
-	} else if connected {
-		s, err := wb.getChargingState()
-		if err != nil {
-			return api.ReasonUnknown, err
-		}
-		if s == 1 {
-			return api.ReasonWaitingForAuthorization, nil
-		}
 	}
 
-	return api.ReasonUnknown, nil
+	if s, err := wb.getChargingState(); err != nil || s != 1 {
+		return api.ReasonUnknown, err
+	}
+
+	return api.ReasonWaitingForAuthorization, nil
 }
 
 // Enabled implements the api.Charger interface
