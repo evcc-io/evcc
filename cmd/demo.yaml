@@ -2,6 +2,8 @@ network:
   port: 7070
 
 log: debug
+levels:
+  db: trace
 
 interval: 3s
 
@@ -267,6 +269,6 @@ tariffs:
   feedin:
     type: fixed
     price: 0.08 # EUR/kWh
-  co2:
-    type: grünstromindex
-    zip: 12349
+  #co2:
+  #  type: grünstromindex
+  #  zip: 12349

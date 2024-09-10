@@ -658,6 +658,7 @@ export default {
 			this.selectedLoadpointId = undefined;
 			await this.loadLoadpoints();
 			this.loadpointModal().hide();
+			this.loadDirty();
 		},
 		editVehicle(id) {
 			this.selectedVehicleId = id;
