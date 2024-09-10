@@ -493,7 +493,6 @@ import deepClone from "../../utils/deepClone";
 import deepEqual from "../../utils/deepEqual";
 import formatter from "../../mixins/formatter";
 import EditIcon from "../MaterialIcon/Edit.vue";
-import AddIcon from "../MaterialIcon/Add.vue";
 
 const nsPerMin = 60 * 1e9;
 const wPerKw = 1e3;
@@ -530,7 +529,7 @@ const winterThresholds = {
 
 export default {
 	name: "LoadpointModal",
-	components: { FormRow, PropertyField, GenericModal, SelectGroup, AddIcon, EditIcon },
+	components: { FormRow, PropertyField, GenericModal, SelectGroup, EditIcon },
 	props: {
 		id: Number,
 		name: String,
