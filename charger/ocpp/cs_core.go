@@ -6,6 +6,8 @@ import (
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/firmware"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/remotetrigger"
+	"github.com/lorenzodonini/ocpp-go/ocpp1.6/smartcharging"
+	"github.com/lorenzodonini/ocpp-go/ocpp1.6/types"
 )
 
 // cs actions
@@ -21,7 +23,7 @@ func (cs *CS) TriggerResetRequest(id string, resetType core.ResetType) error {
 		rc <- err
 	}, resetType)
 
-	return Wait(err, rc, cs.timeout)
+	return wait(err, rc)
 }
 
 func (cs *CS) TriggerMessageRequest(id string, requestedMessage remotetrigger.MessageTrigger, props ...func(request *remotetrigger.TriggerMessageRequest)) error {
@@ -35,7 +37,52 @@ func (cs *CS) TriggerMessageRequest(id string, requestedMessage remotetrigger.Me
 		rc <- err
 	}, requestedMessage, props...)
 
-	return Wait(err, rc, cs.timeout)
+	return wait(err, rc)
+}
+
+func (cs *CS) ChangeAvailabilityRequest(id string, connector int, availabilityType core.AvailabilityType) error {
+	rc := make(chan error, 1)
+
+	err := cs.ChangeAvailability(id, func(request *core.ChangeAvailabilityConfirmation, err error) {
+		if err == nil && request != nil && request.Status != core.AvailabilityStatusAccepted {
+			err = errors.New(string(request.Status))
+		}
+
+		rc <- err
+	}, connector, availabilityType)
+
+	return wait(err, rc)
+}
+
+func (cs *CS) SetChargingProfileRequest(id string, connector int, profile *types.ChargingProfile) error {
+	rc := make(chan error, 1)
+
+	err := cs.SetChargingProfile(id, func(request *smartcharging.SetChargingProfileConfirmation, err error) {
+		if err == nil && request != nil && request.Status != smartcharging.ChargingProfileStatusAccepted {
+			err = errors.New(string(request.Status))
+		}
+
+		rc <- err
+	}, connector, profile)
+
+	return wait(err, rc)
+}
+
+func (cs *CS) GetCompositeScheduleRequest(id string, connector int, duration int) (*smartcharging.GetCompositeScheduleConfirmation, error) {
+	var schedule *smartcharging.GetCompositeScheduleConfirmation
+	rc := make(chan error, 1)
+
+	err := cs.GetCompositeSchedule(id, func(request *smartcharging.GetCompositeScheduleConfirmation, err error) {
+		if err == nil && request != nil && request.Status != smartcharging.GetCompositeScheduleStatusAccepted {
+			err = errors.New(string(request.Status))
+		}
+
+		schedule = request
+
+		rc <- err
+	}, connector, duration)
+
+	return schedule, wait(err, rc)
 }
 
 // cp actions

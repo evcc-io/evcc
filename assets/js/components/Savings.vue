@@ -23,6 +23,7 @@
 				tabindex="-1"
 				role="dialog"
 				aria-hidden="true"
+				data-testid="savings-modal"
 			>
 				<div class="modal-dialog modal-lg modal-dialog-centered" role="document">
 					<div class="modal-content">
@@ -72,12 +73,22 @@
 										unit="%"
 										:sub1="
 											$t('footer.savings.percentSelf', {
-												self: fmtKw(solarCharged * 1000, true, false, 0),
+												self: fmtW(
+													solarCharged * 1000,
+													POWER_UNIT.KW,
+													false,
+													0
+												),
 											})
 										"
 										:sub2="
 											$t('footer.savings.percentGrid', {
-												grid: fmtKw(gridCharged * 1000, true, false, 0),
+												grid: fmtW(
+													gridCharged * 1000,
+													POWER_UNIT.KW,
+													false,
+													0
+												),
 											})
 										"
 									/>
@@ -248,7 +259,7 @@ export default {
 			return co2Reference.regions[0];
 		},
 		periodOptions() {
-			return ["30d", "365d", "total"].map((p) => ({
+			return ["30d", "365d", "thisYear", "total"].map((p) => ({
 				value: p,
 				name: this.$t(`footer.savings.period.${p}`),
 			}));
@@ -316,8 +327,7 @@ export default {
 				const { rates } = res.data.result;
 				this.referenceGrid =
 					rates.reduce((acc, slot) => {
-						acc += slot.price;
-						return acc;
+						return acc + slot.price;
 					}, 0) / rates.length;
 			} catch (e) {
 				this.referenceGrid = undefined;

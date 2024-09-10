@@ -8,7 +8,7 @@ import (
 
 func decorateAlfen(base *Alfen, phaseSwitcher func(int) error, phaseGetter func() (int, error)) api.Charger {
 	switch {
-	case phaseGetter == nil && phaseSwitcher == nil:
+	case phaseSwitcher == nil:
 		return base
 
 	case phaseGetter == nil && phaseSwitcher != nil:
@@ -19,17 +19,6 @@ func decorateAlfen(base *Alfen, phaseSwitcher func(int) error, phaseGetter func(
 			Alfen: base,
 			PhaseSwitcher: &decorateAlfenPhaseSwitcherImpl{
 				phaseSwitcher: phaseSwitcher,
-			},
-		}
-
-	case phaseGetter != nil && phaseSwitcher == nil:
-		return &struct {
-			*Alfen
-			api.PhaseGetter
-		}{
-			Alfen: base,
-			PhaseGetter: &decorateAlfenPhaseGetterImpl{
-				phaseGetter: phaseGetter,
 			},
 		}
 

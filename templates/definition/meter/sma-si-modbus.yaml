@@ -92,7 +92,7 @@ render: |
           source: sequence
           set:
           - source: const
-            value: -2147483648 # Wirkleistungsvorgabe
+            value: -2147483647 # Wirkleistungsvorgabe
             set:
               source: modbus
               {{- include "modbus" . | indent 12 }}

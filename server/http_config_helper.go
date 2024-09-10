@@ -141,6 +141,10 @@ func testInstance(instance any) map[string]testResult {
 		res[key] = makeResult(val, err)
 	}
 
+	if _, ok := instance.(api.BatteryController); ok {
+		res["controllable"] = makeResult(true, nil)
+	}
+
 	if dev, ok := instance.(api.VehicleOdometer); ok {
 		val, err := dev.Odometer()
 		res["odometer"] = makeResult(val, err)

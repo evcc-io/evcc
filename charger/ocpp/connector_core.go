@@ -11,7 +11,7 @@ import (
 // timestampValid returns false if status timestamps are outdated
 func (conn *Connector) timestampValid(t time.Time) bool {
 	// reject if expired
-	if conn.clock.Since(t) > messageExpiry {
+	if conn.clock.Since(t) > Timeout {
 		return false
 	}
 
@@ -37,6 +37,14 @@ func (conn *Connector) StatusNotification(request *core.StatusNotificationReques
 		conn.log.TRACE.Printf("ignoring status: %s < %s", request.Timestamp.Time, conn.status.Timestamp)
 	}
 
+	if conn.isWaitingForAuth() {
+		if conn.remoteIdTag != "" {
+			conn.remoteStartTransactionRequest()
+		} else {
+			conn.log.DEBUG.Printf("waiting for local authentication")
+		}
+	}
+
 	return new(core.StatusNotificationConfirmation), nil
 }
 
@@ -60,20 +68,20 @@ func (conn *Connector) MeterValues(request *core.MeterValuesRequest) (*core.Mete
 		conn.txnId = *request.TransactionId
 	}
 
-	for _, meterValue := range request.MeterValue {
+	for _, meterValue := range sortByAge(request.MeterValue) {
+		if meterValue.Timestamp == nil {
+			// this should be done before the sorting, but lets assume either all or no sample has a timestamp
+			meterValue.Timestamp = types.NewDateTime(conn.clock.Now())
+		}
+
 		// ignore old meter value requests
-		if meterValue.Timestamp.Time.After(conn.meterUpdated) {
+		if !meterValue.Timestamp.Time.Before(conn.meterUpdated) {
 			for _, sample := range meterValue.SampledValue {
 				sample.Value = strings.TrimSpace(sample.Value)
 				conn.measurements[getSampleKey(sample)] = sample
-				conn.meterUpdated = conn.clock.Now()
+				conn.meterUpdated = meterValue.Timestamp.Time
 			}
 		}
-	}
-
-	select {
-	case conn.meterC <- conn.measurements:
-	default:
 	}
 
 	return new(core.MeterValuesConfirmation), nil
@@ -84,7 +92,7 @@ func (conn *Connector) StartTransaction(request *core.StartTransactionRequest) (
 	defer conn.mu.Unlock()
 
 	// expired request
-	if request.Timestamp != nil && conn.clock.Since(request.Timestamp.Time) > transactionExpiry {
+	if request.Timestamp != nil && conn.clock.Since(request.Timestamp.Time) > Timeout {
 		res := &core.StartTransactionConfirmation{
 			IdTagInfo: &types.IdTagInfo{
 				Status: types.AuthorizationStatusExpired, // reject
@@ -133,7 +141,7 @@ func (conn *Connector) StopTransaction(request *core.StopTransactionRequest) (*c
 	defer conn.mu.Unlock()
 
 	// expired request
-	if request.Timestamp != nil && conn.clock.Since(request.Timestamp.Time) > transactionExpiry {
+	if request.Timestamp != nil && conn.clock.Since(request.Timestamp.Time) > Timeout {
 		res := &core.StopTransactionConfirmation{
 			IdTagInfo: &types.IdTagInfo{
 				Status: types.AuthorizationStatusExpired, // reject

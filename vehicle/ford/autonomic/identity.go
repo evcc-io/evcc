@@ -58,13 +58,13 @@ func (v *Identity) exchange(token *oauth2.Token) (*oauth2.Token, error) {
 		"subject_token_type": {"urn:ietf:params:oauth:token-type:jwt"},
 	}
 
-	var auto *oauth.Token
+	var res *oauth2.Token
 	req, err := request.New(http.MethodPost, OAuth2Config.Endpoint.TokenURL, strings.NewReader(data.Encode()), request.URLEncoding)
 	if err == nil {
-		err = v.DoJSON(req, &auto)
+		err = v.DoJSON(req, &res)
 	}
 
-	return (*oauth2.Token)(auto), err
+	return util.TokenWithExpiry(res), err
 }
 
 // RefreshToken implements oauth.TokenRefresher
