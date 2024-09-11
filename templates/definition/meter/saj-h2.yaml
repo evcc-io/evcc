@@ -134,7 +134,6 @@ render: |
               address: 13905 # BatSocLimitkeep 
               type: writeholding
               decode: int16
-
     - case: 2 # hold
       set:
         source: sequence
@@ -157,7 +156,6 @@ render: |
               address: 13905 # BatSocLimitkeep 
               type: writeholding
               decode: int16
-              
     - case: 3 # charge
       set:
         source: sequence
