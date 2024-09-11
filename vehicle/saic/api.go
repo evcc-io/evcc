@@ -140,7 +140,7 @@ func (v *API) DoRequest(req *http.Request, result *requests.Answer) (string, err
 				v.Logger.DEBUG.Printf("%d: %s", result.Code, result.Message)
 			}
 		} else {
-			v.Logger.DEBUG.Printf("Decrypt: %s", err.Error())
+			v.Logger.DEBUG.Printf("decrypt: %s", err.Error())
 		}
 	}
 
