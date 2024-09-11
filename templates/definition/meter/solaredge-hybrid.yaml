@@ -205,7 +205,5 @@ render: |
                 address: 0xE010 # StorageRemoteCtrl_DischargeLimit
                 type: writemultiple
                 encoding: float32s
-  {{- if .capacity }}
   capacity: {{ .capacity }} # kWh
-  {{- end }}
   {{- end }}

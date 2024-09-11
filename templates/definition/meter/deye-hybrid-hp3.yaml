@@ -254,7 +254,5 @@ render: |
               decode: int32s  
   minsoc: {{.minsoc}}
   maxsoc: {{.maxsoc}}
-  {{- if .capacity }}
   capacity: {{ .capacity }} # kWh
-  {{- end }}
   {{- end }}

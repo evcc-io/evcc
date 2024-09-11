@@ -47,7 +47,5 @@ render: |
       address: 122 # Batterie Soc
       type: input
       decode: int16
-  {{- if .capacity }}
   capacity: {{ .capacity }} # kWh
-  {{- end }}
   {{- end }}
