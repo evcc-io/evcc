@@ -181,15 +181,6 @@ render: |
               type: writeholding
               decode: int16
         - source: const
-          value: 1 # disable
-          set: 
-            source: modbus
-            {{- include "modbus" . | indent 10 }}        
-            register:
-              address: 13829 # Discharge_time_enable_control 
-              type: writeholding
-              decode: int16
-        - source: const
           value: 0 # start (00:00)
           set: 
             source: modbus
