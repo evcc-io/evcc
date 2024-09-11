@@ -88,6 +88,7 @@ type Influx struct {
 	Org      string `json:"org"`
 	User     string `json:"user"`
 	Password string `json:"password"`
+	Insecure bool   `json:"insecure"`
 }
 
 // Redacted implements the redactor interface used by the tee publisher

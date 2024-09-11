@@ -570,6 +570,7 @@ func configureInflux(conf *globalconfig.Influx) (*server.Influx, error) {
 		conf.User,
 		conf.Password,
 		conf.Database,
+		conf.Insecure,
 	)
 
 	return influx, nil

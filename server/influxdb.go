@@ -27,7 +27,7 @@ type Influx struct {
 }
 
 // NewInfluxClient creates new publisher for influx
-func NewInfluxClient(url, token, org, user, password, database string) *Influx {
+func NewInfluxClient(url, token, org, user, password, database string, insecure bool) *Influx {
 	log := util.NewLogger("influx")
 
 	// InfluxDB v1 compatibility
@@ -35,7 +35,13 @@ func NewInfluxClient(url, token, org, user, password, database string) *Influx {
 		token = fmt.Sprintf("%s:%s", user, password)
 	}
 
-	options := influxdb2.DefaultOptions().SetPrecision(time.Second)
+	options := influxdb2.DefaultOptions()
+
+	tlsConfig := options.TLSConfig()
+	tlsConfig.InsecureSkipVerify = true
+	options.SetTLSConfig(tlsConfig)
+	options.SetPrecision(time.Second)
+
 	client := influxdb2.NewClientWithOptions(url, token, options)
 
 	// handle error logging in writer
