@@ -21,12 +21,8 @@ params:
       de: Skalierungsfaktor
       en: Scale factor
     help:
-      de: |
-        Verwenden Skala von 1000 für Zuidwijk Slimmelezer. 
-        Verwenden Skala 1 für ESPHome DSMR und mhendriks P1 Dongle
-      en: |
-        Use scale of 1000 for Zuidwijk Slimmelezer. 
-        Use scale 1 for ESPHome DSMR and mhendriks P1 Dongle
+      de: Verwenden Skala von 1000 für Zuidwijk Slimmelezer. Verwenden Skala 1 für ESPHome DSMR und mhendriks P1 Dongle
+      en: Use scale of 1000 for Zuidwijk Slimmelezer. Use scale 1 for ESPHome DSMR and mhendriks P1 Dongle
   - name: host
 render: |
   type: custom

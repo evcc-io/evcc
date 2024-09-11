@@ -128,7 +128,5 @@ render: |
       address: 33139 # Battery capacity SOC
       type: input
       decode: uint16
-  {{- if .capacity }}
   capacity: {{ .capacity }} # kWh
-  {{- end }}
   {{- end }}

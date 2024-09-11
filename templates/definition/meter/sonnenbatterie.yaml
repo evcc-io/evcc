@@ -120,7 +120,5 @@ render: |
           - content-type: application/json
           - Auth-Token: {{ .token }}
   {{- end }}
-  {{- if .capacity }}
   capacity: {{ .capacity }} # kWh
-  {{- end }}
   {{- end }}
