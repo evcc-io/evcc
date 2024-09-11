@@ -200,7 +200,7 @@ require (
 
 replace gopkg.in/yaml.v3 => github.com/andig/yaml v0.0.0-20240531135838-1ff5761ab467
 
-replace github.com/grid-x/modbus => github.com/evcc-io/modbus v0.0.0-20240503125516-9fd99fe0e438
+replace github.com/grid-x/modbus => github.com/evcc-io/modbus v0.0.0-20240911180928-7b1464a53285
 
 replace github.com/lorenzodonini/ocpp-go => github.com/evcc-io/ocpp-go v0.0.0-20240730071053-d69e53b0fce9
 
