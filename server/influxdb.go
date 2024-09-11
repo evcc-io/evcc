@@ -38,7 +38,7 @@ func NewInfluxClient(url, token, org, user, password, database string, insecure 
 	options := influxdb2.DefaultOptions()
 
 	tlsConfig := options.TLSConfig()
-	tlsConfig.InsecureSkipVerify = true
+	tlsConfig.InsecureSkipVerify = insecure
 	options.SetTLSConfig(tlsConfig)
 	options.SetPrecision(time.Second)
 
