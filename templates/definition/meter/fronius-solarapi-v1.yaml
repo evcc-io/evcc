@@ -89,7 +89,5 @@ render: |
           password: {{ .password }}
         body: '{"timeofuse":[]}'
   {{- end }}
-  {{- if .capacity }}
   capacity: {{ .capacity }} # kWh
-  {{- end }}
   {{- end }}
