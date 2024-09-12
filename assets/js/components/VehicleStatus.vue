@@ -422,7 +422,7 @@ export default {
 			});
 		},
 		smartCostVisible() {
-			return !!this.smartCostLimit;
+			return typeof this.smartCostLimit === "number" && !isNaN(this.smartCostLimit);
 		},
 		smartCostTooltipContent() {
 			if (!this.smartCostVisible) {
