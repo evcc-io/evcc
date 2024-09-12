@@ -69,6 +69,49 @@ func planHandler(lp loadpoint.API) http.HandlerFunc {
 	}
 }
 
+// getRepetitivePlanHandler returns all repetitive plans
+func getRepetitivePlansHandler(lp loadpoint.API) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var plans []struct {
+			WeekDays []int8 `json:"weekDays"`
+			Hour     int8   `json:"hour"`
+			Minute   int8   `json:"minute"`
+			Soc      int8   `json:"soc"`
+			Active   bool   `json:"active"`
+		}
+
+		plans = append(plans, struct {
+			WeekDays []int8 `json:"weekDays"`
+			Hour     int8   `json:"hour"`
+			Minute   int8   `json:"minute"`
+			Soc      int8   `json:"soc"`
+			Active   bool   `json:"active"`
+		}{
+			WeekDays: []int8{1, 3},
+			Hour:     10,
+			Minute:   12,
+			Soc:      80,
+			Active:   true,
+		})
+
+		plans = append(plans, struct {
+			WeekDays []int8 `json:"weekDays"`
+			Hour     int8   `json:"hour"`
+			Minute   int8   `json:"minute"`
+			Soc      int8   `json:"soc"`
+			Active   bool   `json:"active"`
+		}{
+			WeekDays: []int8{2},
+			Hour:     17,
+			Minute:   42,
+			Soc:      45,
+			Active:   false,
+		})
+
+		jsonResult(w, plans)
+	}
+}
+
 // planPreviewHandler returns a plan preview for given parameters
 func planPreviewHandler(lp loadpoint.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {

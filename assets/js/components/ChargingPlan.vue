@@ -77,8 +77,8 @@
 								<ChargingPlanSettings
 									v-if="departureTabActive"
 									v-bind="chargingPlanSettingsProps"
-									@plan-updated="updatePlan"
-									@plan-removed="removePlan"
+									@static-plan-updated="updatePlan"
+									@static-plan-removed="removePlan"
 								/>
 								<ChargingPlanArrival
 									v-if="arrivalTabActive"

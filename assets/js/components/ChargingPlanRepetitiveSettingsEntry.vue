@@ -1,9 +1,10 @@
 <template>
 	<div>
+		{{ weekdaysValues }}
 		<div class="row d-none d-lg-flex mb-2">
 			<div class="col-6 col-lg-4">
 				<label :for="formId('day')">
-					{{ $t("main.chargingPlan.day") }}
+					{{ $t("main.chargingPlan.weekdays") }}
 				</label>
 			</div>
 			<div class="col-6 col-lg-2">
@@ -19,25 +20,22 @@
 			<div class="col-6 col-lg-1">
 				<label :for="formId('active')"> {{ $t("main.chargingPlan.active") }} </label>
 			</div>
+			<div class="col-6 col-lg-1" />
 		</div>
 		<div class="row">
 			<div class="col-5 d-lg-none col-form-label">
 				<label :for="formId('day')">
-					{{ $t("main.chargingPlan.day") }}
+					{{ $t("main.chargingPlan.weekdays") }}
 				</label>
 			</div>
 			<div class="col-7 col-lg-4 mb-2 mb-lg-0">
-				<select
-					:id="formId('day')"
-					v-model="selectedDay"
-					class="form-select me-2"
-					data-testid="plan-day"
-					@change="preview"
+				<MultiSelect
+					id="chargingPlanWeekdaySelect"
+					:options="dayOptions()"
+					:selectAllLabel="$t('main.chargingPlan.selectAll')"
 				>
-					<option v-for="opt in dayOptions()" :key="opt.value" :value="opt.value">
-						{{ opt.name }}
-					</option>
-				</select>
+					{{ weekdaysLabel }}
+				</MultiSelect>
 			</div>
 			<div class="col-5 d-lg-none col-form-label">
 				<label :for="formId('day')">
@@ -63,7 +61,6 @@
 			</div>
 			<div class="col-7 col-lg-3 mb-2 mb-lg-0">
 				<select
-					v-if="socBasedPlanning"
 					:id="formId('goal')"
 					v-model="selectedSoc"
 					class="form-select mx-0"
@@ -74,25 +71,13 @@
 						{{ opt.name }}
 					</option>
 				</select>
-				<select
-					v-else
-					:id="formId('goal')"
-					v-model="selectedEnergy"
-					class="form-select mx-0"
-					data-testid="plan-energy"
-					@change="preview"
-				>
-					<option v-for="opt in energyOptions" :key="opt.energy" :value="opt.energy">
-						{{ opt.text }}
-					</option>
-				</select>
 			</div>
 			<div class="col-5 d-lg-none col-form-label">
 				<label :for="formId('active')">
 					{{ $t("main.chargingPlan.active") }}
 				</label>
 			</div>
-			<div class="col-2 d-flex align-items-center justify-content-start">
+			<div class="col-1 d-flex align-items-center justify-content-start">
 				<div class="form-check form-switch">
 					<input
 						:id="formId('active')"
@@ -100,67 +85,74 @@
 						type="checkbox"
 						role="switch"
 						data-testid="plan-active"
-						:checked="!isNew"
-						:disabled="timeInThePast"
+						:checked="isActive"
 						@change="toggle"
 					/>
 				</div>
+			</div>
+			<div class="col-1 mx-auto d-flex align-items-center justify-content-start">
 				<button
-					v-if="dataChanged && !isNew"
 					type="button"
-					class="btn btn-sm btn-outline-primary ms-3 border-0 text-decoration-underline"
-					data-testid="plan-apply"
-					:disabled="timeInThePast"
+					class="btn btn-sm btn-outline-secondary border-0"
+					data-testid="plan-delete"
 					@click="update"
 				>
-					{{ $t("main.chargingPlan.update") }}
+					<shopicon-regular-trash size="s" class="flex-shrink-0"></shopicon-regular-trash>
 				</button>
 			</div>
 		</div>
-		<p class="mb-0" data-testid="plan-entry-warnings">
-			<span v-if="timeInThePast" class="d-block text-danger my-2">
-				{{ $t("main.targetCharge.targetIsInThePast") }}
-			</span>
-		</p>
 	</div>
 </template>
 
 <script>
-import "@h2d2/shopicons/es/regular/checkmark";
+import "@h2d2/shopicons/es/regular/trash";
 import { distanceUnit } from "../units";
+import MultiSelect from "./MultiSelect.vue";
 
 import formatter from "../mixins/formatter";
-import { energyOptions } from "../utils/energyOptions";
 
-const LAST_TARGET_TIME_KEY = "last_target_time";
-const LAST_SOC_GOAL_KEY = "last_soc_goal";
-const LAST_ENERGY_GOAL_KEY = "last_energy_goal";
-const DEFAULT_TARGET_TIME = "7:00";
+const WEEKDAYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
 
 export default {
-	name: "ChargingPlanSettingsEntry",
+	name: "ChargingPlanRepetitiveSettingsEntry",
+	components: {
+		MultiSelect,
+	},
 	mixins: [formatter],
 	props: {
 		id: String,
-		soc: Number,
-		energy: Number,
+		weekdays: Array,
 		time: String,
-		rangePerSoc: Number,
-		socPerKwh: Number,
-		capacity: Number,
+		soc: Number,
+		active: Boolean,
 		socBasedPlanning: Boolean,
 	},
-	emits: ["plan-updated", "plan-removed", "plan-preview"],
+	emits: ["static-plan-updated", "static-plan-removed", "plan-preview"],
 	data: function () {
 		return {
-			selectedDay: null,
-			selectedTime: null,
+			selectedWeekdays: this.weekdays,
+			selectedTime: this.time,
 			selectedSoc: this.soc,
-			selectedEnergy: this.energy,
-			enabled: false,
+			isActive: this.active,
 		};
 	},
 	computed: {
+		weekdaysLabel: function () {
+			let label = "";
+			this.selectedWeekdays.sort(function (a, b) {
+				return a - b;
+			});
+
+			for (let index = 0; index < this.selectedWeekdays.length; index++) {
+				label +=
+					this.$t(`main.chargingPlan.${WEEKDAYS[this.selectedWeekdays[index]]}`).slice(
+						0,
+						2
+					) + ", ";
+			}
+
+			return label;
+		},
 		selectedDate: function () {
 			return new Date(`${this.selectedDay}T${this.selectedTime || "00:00"}`);
 		},
@@ -169,18 +161,6 @@ export default {
 			return Array.from(Array(20).keys())
 				.map((i) => 5 + i * 5)
 				.map(this.socOption);
-		},
-		energyOptions: function () {
-			const options = energyOptions(
-				0,
-				this.capacity || 100,
-				this.socPerKwh,
-				this.fmtWh,
-				this.fmtPercentage,
-				"-"
-			);
-			// remove the first entry (0)
-			return options.slice(1);
 		},
 		originalData: function () {
 			if (this.isNew) {
@@ -204,10 +184,6 @@ export default {
 		},
 		isNew: function () {
 			return !this.time && (!this.soc || !this.energy);
-		},
-		timeInThePast: function () {
-			const now = new Date();
-			return now >= this.selectedDate;
 		},
 	},
 	watch: {
@@ -236,53 +212,13 @@ export default {
 			const name = this.fmtSocOption(value, this.rangePerSoc, distanceUnit());
 			return { value, name };
 		},
-		initInputFields: function () {
-			if (!this.selectedSoc) {
-				this.selectedSoc = window.localStorage[LAST_SOC_GOAL_KEY] || 100;
-			}
-			if (!this.selectedEnergy) {
-				this.selectedEnergy =
-					window.localStorage[LAST_ENERGY_GOAL_KEY] || this.capacity || 10;
-			}
-
-			let time = this.time;
-			if (!time) {
-				// no time but existing selection, keep it
-				if (this.selectedDay && this.selectedTime) {
-					this.preview();
-					return;
-				}
-				time = this.defaultTime();
-			}
-			const date = new Date(time);
-			this.selectedDay = this.fmtDayString(date);
-			this.selectedTime = this.fmtTimeString(date);
-
-			if (this.isNew || this.dataChanged) {
-				this.preview();
-			}
-		},
 		dayOptions: function () {
-			const options = [];
-			const date = new Date();
-			const labels = [
-				this.$t("main.targetCharge.today"),
-				this.$t("main.targetCharge.tomorrow"),
-			];
-			for (let i = 0; i < 7; i++) {
-				const dayNumber = date.toLocaleDateString(this.$i18n?.locale, {
-					month: "short",
-					day: "numeric",
-				});
-				const dayName =
-					labels[i] || date.toLocaleDateString(this.$i18n?.locale, { weekday: "long" });
-				options.push({
-					value: this.fmtDayString(date),
-					name: `${dayNumber} (${dayName})`,
-				});
-				date.setDate(date.getDate() + 1);
-			}
-			return options;
+			return WEEKDAYS.map((weekday, index) => {
+				return {
+					value: index,
+					name: this.$t(`main.chargingPlan.${weekday}`),
+				};
+			});
 		},
 		update: function () {
 			try {
@@ -298,7 +234,7 @@ export default {
 			} catch (e) {
 				console.warn(e);
 			}
-			this.$emit("plan-updated", {
+			this.$emit("static-plan-updated", {
 				time: this.selectedDate,
 				soc: this.selectedSoc,
 				energy: this.selectedEnergy,
@@ -316,7 +252,7 @@ export default {
 			if (checked) {
 				this.update();
 			} else {
-				this.$emit("plan-removed");
+				this.$emit("static-plan-removed");
 			}
 			this.enabled = checked;
 		},
