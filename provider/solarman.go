@@ -53,7 +53,6 @@ func NewSolarmanFromConfig(other map[string]interface{}) (Provider, error) {
 	}
 
 	return sm, nil
-
 }
 
 func (sm *Solarman) readBytes(op modbus.RegisterOperation) ([]byte, error) {
@@ -91,7 +90,6 @@ func (sm *Solarman) FloatGetter() (func() (f float64, err error), error) {
 		}
 		return sm.scale * decode(bytes), nil
 	}, nil
-
 }
 
 var _ IntProvider = (*Solarman)(nil)
@@ -121,7 +119,6 @@ func (sm *Solarman) StringGetter() (func() (string, error), error) {
 
 		return strings.TrimSpace(string(bytes.TrimLeft(b, "\x00"))), nil
 	}, nil
-
 }
 
 var _ BoolProvider = (*Modbus)(nil)

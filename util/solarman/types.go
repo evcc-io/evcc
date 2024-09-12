@@ -72,7 +72,7 @@ func (srb *SolarmanRequestBuilder) createSingleValueRequest(funcCode byte, addre
 
 func (srb *SolarmanRequestBuilder) createMultipleValuesRequest(funcCode byte, address uint16, quantity uint16, values []byte) []byte {
 	length := len(srb.Request.header) + len(srb.Request.payload)
-	pdu_length := 7 + int(len(values)*2) + 2
+	pdu_length := 7 + len(values)*2 + 2
 
 	pdu := make([]byte, pdu_length)
 	pdu[0] = srb.Request.SlaveID

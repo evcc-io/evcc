@@ -63,7 +63,6 @@ func GetConnection(URI string) SolarmanConnection {
 		connections[URI] = v
 	}
 	return v
-
 }
 
 func (c *LSW3Connection) reconnect() error {
@@ -97,7 +96,6 @@ func (c *LSW3Connection) readFromSocket() ([]byte, error) {
 		return nil, err
 	}
 	return raw_response[0:n], nil
-
 }
 
 func (c *LSW3Connection) Send(request []byte) ([]byte, error) {
@@ -116,7 +114,6 @@ func (c *LSW3Connection) Send(request []byte) ([]byte, error) {
 			return nil, err
 		}
 		c.logger.INFO.Printf("successfully re-connected and re-send data")
-
 	}
 	c.logger.TRACE.Printf("SENT %s", hex.EncodeToString(request))
 

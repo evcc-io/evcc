@@ -98,7 +98,6 @@ func TestSend(t *testing.T) {
 }
 
 func TestReconnectOnBrokenPipeRead(t *testing.T) {
-
 	mockConnection := &MockNetConn{
 		readFunction: func(mnc *MockNetConn, b []byte) (int, error) {
 			if mnc.readCalled == 0 {
@@ -131,10 +130,8 @@ func TestReconnectOnBrokenPipeRead(t *testing.T) {
 }
 
 func TestReconnectOnBrokenPipeWrite(t *testing.T) {
-
 	mockConnection := &MockNetConn{
 		readFunction: func(mnc *MockNetConn, b []byte) (int, error) {
-
 			copy(b[0:], mnc.data)
 			return len(mnc.data), nil
 		},
