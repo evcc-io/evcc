@@ -121,7 +121,7 @@ func (sm *Solarman) StringGetter() (func() (string, error), error) {
 	}, nil
 }
 
-var _ BoolProvider = (*Modbus)(nil)
+var _ BoolProvider = (*Solarman)(nil)
 
 func (sm *Solarman) BoolGetter() (func() (bool, error), error) {
 	g, err := sm.FloatGetter()
@@ -178,7 +178,7 @@ func (m *Solarman) FloatSetter(_ string) (func(float64) error, error) {
 	return m.writeFunc()
 }
 
-var _ SetIntProvider = (*Modbus)(nil)
+var _ SetIntProvider = (*Solarman)(nil)
 
 func (m *Solarman) IntSetter(_ string) (func(int64) error, error) {
 	fun, err := m.writeFunc()
@@ -191,7 +191,7 @@ func (m *Solarman) IntSetter(_ string) (func(int64) error, error) {
 	}, nil
 }
 
-var _ SetBoolProvider = (*Modbus)(nil)
+var _ SetBoolProvider = (*Solarman)(nil)
 
 func (m *Solarman) BoolSetter(param string) (func(bool) error, error) {
 	set, err := m.IntSetter(param)
