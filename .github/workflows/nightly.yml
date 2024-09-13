@@ -1,3 +1,4 @@
+---
 name: Nightly Build
 
 env:
@@ -72,46 +73,4 @@ jobs:
             TESLA_CLIENT_ID=${{ secrets.TESLA_CLIENT_ID }}
           tags: |
             evcc/evcc:nightly
-
-  apt:
-    name: Publish APT nightly
-    needs:
-      - call-build-workflow
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - uses: actions/setup-go@v5
-        with:
-          go-version: ${{ env.GO_VERSION }}
-        id: go
-
-      - name: Install Cloudsmith CLI
-        run: pip install --upgrade cloudsmith-cli
-
-      - name: Patch ASN1
-        run: make patch-asn1-sudo
-
-      - name: Get dist from cache
-        uses: actions/cache/restore@v4
-        id: cache-dist
-        with:
-          path: dist
-          key: ${{ runner.os }}-${{ github.sha }}-dist
-
-      - name: Create nightly build
-        uses: goreleaser/goreleaser-action@v6
-        with:
-          version: latest
-          args: --snapshot -f .goreleaser-nightly.yml --clean
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TESLA_CLIENT_ID: ${{ secrets.TESLA_CLIENT_ID }}
-
-      - name: Publish .deb to Cloudsmith
-        env:
-          CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
-        run: make apt-nightly
+...
