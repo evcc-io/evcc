@@ -80,8 +80,13 @@ func (cp *CP) Setup(meterValues string, meterInterval time.Duration) error {
 
 		// vendor-specific keys
 		case KeyAlfenPlugAndChargeIdentifier:
-			cp.IdTag = *opt.Value
-			cp.log.DEBUG.Printf("overriding default `idTag` with Alfen-specific value: %s", cp.IdTag)
+			authMethod, exists := getConfigurationValue(resp, KeyAlfenAuthorizationMethod)
+
+			// Override `idTag` with plug-and-charge id if PLUG_AND_CHARGE is configured
+			if exists && authMethod != "RFID" {
+				cp.IdTag = *opt.Value
+				cp.log.DEBUG.Printf("Alfen-specific: overriding `idTag` with PLUG_AND_CHARGE value: %s", cp.IdTag)
+			}
 
 		case KeyEvBoxSupportedMeasurands:
 			if meterValues == "" {
@@ -144,6 +149,16 @@ func (cp *CP) Setup(meterValues string, meterInterval time.Duration) error {
 	}
 
 	return nil
+}
+
+// getConfigurationValue returns the value of a configuration key
+func getConfigurationValue(resp *core.GetConfigurationConfirmation, key string) (string, bool) {
+	for _, opt := range resp.ConfigurationKey {
+		if opt.Key == key && opt.Value != nil {
+			return *opt.Value, true
+		}
+	}
+	return "", false
 }
 
 // GetConfiguration
