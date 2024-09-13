@@ -134,7 +134,5 @@ render: |
               address: 0x001F # SolarChargeUseMode
               type: writesingle
               decode: uint16
-  {{- if .capacity }}
   capacity: {{ .capacity }} # kWh
-  {{- end }}
   {{- end }}

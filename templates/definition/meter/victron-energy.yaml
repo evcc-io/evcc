@@ -57,7 +57,7 @@ render: |
         address: 822 # L3 grid power
         type: input
         decode: int16
-  {{ if .meterid }}
+  {{- if .meterid }}
   currents:
     - source: modbus
       uri: {{ .host }}:{{ .port }}
