@@ -73,11 +73,11 @@
 					</option>
 				</select>
 			</div>
-				<div class="col-5 d-lg-none col-form-label">
-					<label :for="formId('active')">
-						{{ $t("main.chargingPlan.active") }}
-					</label>
-				</div>
+			<div class="col-5 d-lg-none col-form-label">
+				<label :for="formId('active')">
+					{{ $t("main.chargingPlan.active") }}
+				</label>
+			</div>
 			<div class="col-1 d-flex align-items-center justify-content-start">
 				<div class="form-check form-switch">
 					<input
