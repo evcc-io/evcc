@@ -1,6 +1,5 @@
 <template>
 	<div>
-		{{ weekdaysValues }}
 		<div class="row d-none d-lg-flex mb-2">
 			<div class="col-6 col-lg-4">
 				<label :for="formId('day')">
@@ -31,8 +30,10 @@
 			<div class="col-7 col-lg-4 mb-2 mb-lg-0">
 				<MultiSelect
 					id="chargingPlanWeekdaySelect"
+					:value="selectedWeekdays"
 					:options="dayOptions()"
 					:selectAllLabel="$t('main.chargingPlan.selectAll')"
+					@update:modelValue="changeSelectedWeekdays"
 				>
 					{{ weekdaysLabel }}
 				</MultiSelect>
@@ -95,7 +96,7 @@
 					type="button"
 					class="btn btn-sm btn-outline-secondary border-0"
 					data-testid="plan-delete"
-					@click="update"
+					@click="$emit('repetitive-plan-removed', id)"
 				>
 					<shopicon-regular-trash size="s" class="flex-shrink-0"></shopicon-regular-trash>
 				</button>
@@ -111,8 +112,6 @@ import MultiSelect from "./MultiSelect.vue";
 
 import formatter from "../mixins/formatter";
 
-const WEEKDAYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
-
 export default {
 	name: "ChargingPlanRepetitiveSettingsEntry",
 	components: {
@@ -120,14 +119,15 @@ export default {
 	},
 	mixins: [formatter],
 	props: {
-		id: String,
-		weekdays: Array,
+		id: Number,
+		weekdays: { type: Array, default: () => [] },
 		time: String,
 		soc: Number,
 		active: Boolean,
 		socBasedPlanning: Boolean,
+		rangePerSoc: Number,
 	},
-	emits: ["static-plan-updated", "static-plan-removed", "plan-preview"],
+	emits: ["repetitive-plan-removed"],
 	data: function () {
 		return {
 			selectedWeekdays: this.weekdays,
@@ -138,20 +138,7 @@ export default {
 	},
 	computed: {
 		weekdaysLabel: function () {
-			let label = "";
-			this.selectedWeekdays.sort(function (a, b) {
-				return a - b;
-			});
-
-			for (let index = 0; index < this.selectedWeekdays.length; index++) {
-				label +=
-					this.$t(`main.chargingPlan.${WEEKDAYS[this.selectedWeekdays[index]]}`).slice(
-						0,
-						2
-					) + ", ";
-			}
-
-			return label;
+			return this.getShortenedWeekdaysLabel(this.selectedWeekdays);
 		},
 		selectedDate: function () {
 			return new Date(`${this.selectedDay}T${this.selectedTime || "00:00"}`);
@@ -201,10 +188,10 @@ export default {
 			}
 		},
 	},
-	mounted() {
-		this.initInputFields();
-	},
 	methods: {
+		changeSelectedWeekdays: function (weekdays) {
+			this.selectedWeekdays = weekdays;
+		},
 		formId: function (name) {
 			return `chargingplan-${this.id}-${name}`;
 		},
@@ -213,10 +200,10 @@ export default {
 			return { value, name };
 		},
 		dayOptions: function () {
-			return WEEKDAYS.map((weekday, index) => {
+			return this.WEEKDAYS.map((weekday, index) => {
 				return {
-					value: index,
 					name: this.$t(`main.chargingPlan.${weekday}`),
+					value: index,
 				};
 			});
 		},

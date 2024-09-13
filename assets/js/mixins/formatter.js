@@ -21,10 +21,21 @@ export const POWER_UNIT = Object.freeze({
   AUTO: "",
 });
 
+export const WEEKDAYS = Object.freeze([
+  "monday",
+  "tuesday",
+  "wednesday",
+  "thursday",
+  "friday",
+  "saturday",
+  "sunday",
+]);
+
 export default {
   data: function () {
     return {
       POWER_UNIT,
+      WEEKDAYS,
       fmtLimit: 100,
       fmtDigits: 1,
     };
@@ -284,6 +295,37 @@ export default {
     fmtTemperature: function (value) {
       // TODO: handle fahrenheit
       return this.fmtNumber(value, 1, "celsius");
+    },
+    getShortenedWeekdaysLabel: function (weekdays) {
+      if (0 === weekdays.length) {
+        return this.$t("main.chargingPlan.noWeekdaysSelected");
+      }
+      let label = "";
+
+      for (let weekdayRowStart = 0; weekdayRowStart < WEEKDAYS.length; weekdayRowStart++) {
+        if (weekdays.includes(weekdayRowStart)) {
+          label += this.$t(`main.chargingPlan.${WEEKDAYS[weekdayRowStart]}`).slice(0, 2);
+          for (
+            let weekdayRowEnd = weekdayRowStart + 1;
+            weekdayRowEnd <= WEEKDAYS.length;
+            weekdayRowEnd++
+          ) {
+            if (weekdays.includes(weekdayRowEnd)) {
+              continue;
+            } else {
+              if (!(weekdayRowStart === weekdayRowEnd - 1)) {
+                label +=
+                  " - " + this.$t(`main.chargingPlan.${WEEKDAYS[weekdayRowEnd - 1]}`).slice(0, 2);
+              } else if (weekdays.length !== weekdayRowStart - 1) {
+                label += ", ";
+              }
+              weekdayRowStart = weekdayRowEnd;
+              break;
+            }
+          }
+        }
+      }
+      return label;
     },
   },
 };

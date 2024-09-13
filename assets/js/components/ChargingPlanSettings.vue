@@ -21,18 +21,10 @@
 							{{ $t("main.chargingPlan.repetitivePlan") }}
 						</div>
 					</h5>
-					<ChargingPlanRepetitiveSettingsEntries :id="`${id}_0`" class="mb-4" />
-					<button
-						type="button"
-						class="d-flex align-items-baseline btn btn-sm btn-outline-primary border-0 ps-0"
-						data-testid="repetitive-plan-add"
-					>
-						<shopicon-regular-plus
-							size="s"
-							class="flex-shrink-0 me-2"
-						></shopicon-regular-plus>
-						<p class="mb-0">{{ $t("main.chargingPlan.addRepetitivePlan") }}</p>
-					</button>
+					<ChargingPlanRepetitiveSettingsEntries
+						:id="id"
+						:rangePerSoc="rangePerSoc"
+					/>
 				</div>
 			</div>
 		</div>

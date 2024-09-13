@@ -3,17 +3,30 @@
 		<ChargingPlanRepetitiveSettingsEntry
 			class="mb-4"
 			:id="index"
-			:weekdays="plan.weekdays"
-			:time="plan.time"
-			:soc="plan.soc"
-			:active="plan.active"
+			v-bind="plan"
 			:socBasedPlanning="socBasedPlanning"
+			:rangePerSoc="rangePerSoc"
+			@repetitive-plan-removed="removeRepetitivePlan"
 		/>
 	</div>
+	<button
+		type="button"
+		class="d-flex btn btn-sm btn-outline-primary border-0 ps-0"
+		data-testid="repetitive-plan-add"
+		@click="addRepetitivePlan"
+	>
+		<shopicon-regular-plus size="s" class="flex-shrink-0 me-2"></shopicon-regular-plus>
+		<p class="mb-0">{{ $t("main.chargingPlan.addRepetitivePlan") }}</p>
+	</button>
 </template>
 
 <script>
+import api from "../api";
 import ChargingPlanRepetitiveSettingsEntry from "./ChargingPlanRepetitiveSettingsEntry.vue";
+
+const DEFAULT_WEEKDAYS = [0];
+const DEFAULT_TARGET_TIME = "12:00";
+const DEFAULT_TARGET_SOC = 80;
 
 export default {
 	name: "ChargingPlanRepetitiveSettingsEntries",
@@ -21,16 +34,34 @@ export default {
 		ChargingPlanRepetitiveSettingsEntry,
 	},
 	props: {
-		id: String,
+		id: Number,
 		socBasedPlanning: Boolean,
+		rangePerSoc: Number,
 	},
 	data: function () {
 		return {
-			plans: [
-				{ weekdays: [0, 3, 4], time: "10:15", soc: 80, active: true },
-				{ weekdays: [4], time: "10:15", soc: 40, active: false },
-			],
+			plans: [],
 		};
+	},
+	mounted() {
+		this.fetchRepetitivePlans();
+	},
+	methods: {
+		fetchRepetitivePlans: async function () {
+			let response = await api.get(`/loadpoints/${this.id}/plan/repetitive`);
+			this.plans = response.data.result;
+		},
+		addRepetitivePlan: function () {
+			this.plans.push({
+				weekdays: DEFAULT_WEEKDAYS,
+				time: DEFAULT_TARGET_TIME,
+				soc: DEFAULT_TARGET_SOC,
+				active: false,
+			});
+		},
+		removeRepetitivePlan: function (index) {
+			this.plans.splice(index, 1);
+		},
 	},
 };
 </script>
