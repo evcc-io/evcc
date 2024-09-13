@@ -258,8 +258,11 @@ render: |
         - source: const
           value: 0 
           set: 
-            source: modbus
-            {{- include "modbus" . | indent 10 }}
+            source: solarman
+            host: {{.host}}
+            port: {{.port}}
+            loggerserial: {{.loggerserial}}
+            slaveid: {{.slaveid}}
             register:
               address: 172 
               type: writemultiple
