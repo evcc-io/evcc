@@ -70,68 +70,61 @@ func planHandler(lp loadpoint.API) http.HandlerFunc {
 }
 
 // getRepetitivePlanHandler returns all repetitive plans
-func 	getRepetitivePlansHandler(lp loadpoint.API) http.HandlerFunc {
+func getRepetitivePlansHandler(lp loadpoint.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		// dummy data
+		// TODO: return real data
 		var plans []struct {
 			Weekdays []int8 `json:"weekdays"`
-			Hour     int8   `json:"hour"`
-			Minute   int8   `json:"minute"`
+			Time     string `json:"time"`
 			Soc      int8   `json:"soc"`
 			Active   bool   `json:"active"`
 		}
 
 		plans = append(plans, struct {
 			Weekdays []int8 `json:"weekdays"`
-			Hour     int8   `json:"hour"`
-			Minute   int8   `json:"minute"`
+			Time     string `json:"time"`
 			Soc      int8   `json:"soc"`
 			Active   bool   `json:"active"`
 		}{
 			Weekdays: []int8{1, 3},
-			Hour:     10,
-			Minute:   12,
+			Time:     "10:12",
 			Soc:      80,
 			Active:   true,
 		})
 
 		plans = append(plans, struct {
 			Weekdays []int8 `json:"weekdays"`
-			Hour     int8   `json:"hour"`
-			Minute   int8   `json:"minute"`
+			Time     string `json:"time"`
 			Soc      int8   `json:"soc"`
 			Active   bool   `json:"active"`
 		}{
 			Weekdays: []int8{2},
-			Hour:     17,
-			Minute:   42,
+			Time:     "12:12",
 			Soc:      45,
 			Active:   false,
 		})
 
 		plans = append(plans, struct {
 			Weekdays []int8 `json:"weekdays"`
-			Hour     int8   `json:"hour"`
-			Minute   int8   `json:"minute"`
+			Time     string `json:"time"`
 			Soc      int8   `json:"soc"`
 			Active   bool   `json:"active"`
 		}{
 			Weekdays: []int8{0, 1, 4, 6},
-			Hour:     17,
-			Minute:   42,
+			Time:     "17:42",
 			Soc:      45,
 			Active:   false,
 		})
 
 		plans = append(plans, struct {
 			Weekdays []int8 `json:"weekdays"`
-			Hour     int8   `json:"hour"`
-			Minute   int8   `json:"minute"`
+			Time     string `json:"time"`
 			Soc      int8   `json:"soc"`
 			Active   bool   `json:"active"`
 		}{
 			Weekdays: []int8{0, 1, 2, 3, 4, 5, 6},
-			Hour:     17,
-			Minute:   42,
+			Time:     "00:01",
 			Soc:      45,
 			Active:   false,
 		})

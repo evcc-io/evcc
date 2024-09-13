@@ -52,7 +52,7 @@
 					:step="60 * 5"
 					data-testid="plan-time"
 					required
-					@change="preview"
+					@change="update"
 				/>
 			</div>
 			<div class="col-5 d-lg-none col-form-label">
@@ -66,28 +66,29 @@
 					v-model="selectedSoc"
 					class="form-select mx-0"
 					data-testid="plan-soc"
-					@change="preview"
+					@change="update"
 				>
 					<option v-for="opt in socOptions" :key="opt.value" :value="opt.value">
 						{{ opt.name }}
 					</option>
 				</select>
 			</div>
-			<div class="col-5 d-lg-none col-form-label">
-				<label :for="formId('active')">
-					{{ $t("main.chargingPlan.active") }}
-				</label>
-			</div>
+				<div class="col-5 d-lg-none col-form-label">
+					<label :for="formId('active')">
+						{{ $t("main.chargingPlan.active") }}
+					</label>
+				</div>
 			<div class="col-1 d-flex align-items-center justify-content-start">
 				<div class="form-check form-switch">
 					<input
 						:id="formId('active')"
 						class="form-check-input"
+						v-model="selectedActive"
 						type="checkbox"
 						role="switch"
 						data-testid="plan-active"
-						:checked="isActive"
-						@change="toggle"
+						:checked="selectedActive"
+						@change="update"
 					/>
 				</div>
 			</div>
@@ -127,21 +128,18 @@ export default {
 		socBasedPlanning: Boolean,
 		rangePerSoc: Number,
 	},
-	emits: ["repetitive-plan-removed"],
+	emits: ["repetitive-plan-updated", "repetitive-plan-removed"],
 	data: function () {
 		return {
 			selectedWeekdays: this.weekdays,
 			selectedTime: this.time,
 			selectedSoc: this.soc,
-			isActive: this.active,
+			selectedActive: this.active,
 		};
 	},
 	computed: {
 		weekdaysLabel: function () {
 			return this.getShortenedWeekdaysLabel(this.selectedWeekdays);
-		},
-		selectedDate: function () {
-			return new Date(`${this.selectedDay}T${this.selectedTime || "00:00"}`);
 		},
 		socOptions: function () {
 			// a list of entries from 5 to 100 with a step of 5
@@ -149,48 +147,11 @@ export default {
 				.map((i) => 5 + i * 5)
 				.map(this.socOption);
 		},
-		originalData: function () {
-			if (this.isNew) {
-				return {};
-			}
-			return {
-				soc: this.soc,
-				energy: this.energy,
-				day: this.fmtDayString(new Date(this.time)),
-				time: this.fmtTimeString(new Date(this.time)),
-			};
-		},
-		dataChanged: function () {
-			const dateChanged =
-				this.originalData.day != this.selectedDay ||
-				this.originalData.time != this.selectedTime;
-			const goalChanged = this.socBasedPlanning
-				? this.originalData.soc != this.selectedSoc
-				: this.originalData.energy != this.selectedEnergy;
-			return dateChanged || goalChanged;
-		},
-		isNew: function () {
-			return !this.time && (!this.soc || !this.energy);
-		},
-	},
-	watch: {
-		time() {
-			this.initInputFields();
-		},
-		soc() {
-			if (this.soc) {
-				this.selectedSoc = this.soc;
-			}
-		},
-		energy() {
-			if (this.energy) {
-				this.selectedEnergy = this.energy;
-			}
-		},
 	},
 	methods: {
 		changeSelectedWeekdays: function (weekdays) {
-			this.selectedWeekdays = weekdays;
+			// this.selectedWeekdays = weekdays;
+			this.update();
 		},
 		formId: function (name) {
 			return `chargingplan-${this.id}-${name}`;
@@ -208,56 +169,13 @@ export default {
 			});
 		},
 		update: function () {
-			try {
-				const hours = this.selectedDate.getHours();
-				const minutes = this.selectedDate.getMinutes();
-				window.localStorage[LAST_TARGET_TIME_KEY] = `${hours}:${minutes}`;
-				if (this.selectedSoc) {
-					window.localStorage[LAST_SOC_GOAL_KEY] = this.selectedSoc;
-				}
-				if (this.selectedEnergy) {
-					window.localStorage[LAST_ENERGY_GOAL_KEY] = this.selectedEnergy;
-				}
-			} catch (e) {
-				console.warn(e);
-			}
-			this.$emit("static-plan-updated", {
-				time: this.selectedDate,
+			this.$emit("repetitive-plan-updated", {
+				id: this.id,
+				weekdays: this.selectedWeekdays,
+				time: this.selectedTime,
 				soc: this.selectedSoc,
-				energy: this.selectedEnergy,
+				active: this.selectedActive,
 			});
-		},
-		preview: function () {
-			this.$emit("plan-preview", {
-				time: this.selectedDate,
-				soc: this.selectedSoc,
-				energy: this.selectedEnergy,
-			});
-		},
-		toggle: function (e) {
-			const { checked } = e.target;
-			if (checked) {
-				this.update();
-			} else {
-				this.$emit("static-plan-removed");
-			}
-			this.enabled = checked;
-		},
-		defaultTime: function () {
-			const [hours, minutes] = (
-				window.localStorage[LAST_TARGET_TIME_KEY] || DEFAULT_TARGET_TIME
-			).split(":");
-
-			const target = new Date();
-			target.setSeconds(0);
-			target.setMinutes(minutes);
-			target.setHours(hours);
-			// today or tomorrow?
-			const isInPast = target < new Date();
-			if (isInPast) {
-				target.setDate(target.getDate() + 1);
-			}
-			return target;
 		},
 	},
 };
