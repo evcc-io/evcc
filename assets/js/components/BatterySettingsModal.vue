@@ -272,7 +272,7 @@ export default {
 		bufferStartSoc: Number,
 		batteryDischargeControl: Boolean,
 		battery: { type: Array, default: () => [] },
-		batteryGridChargeLimit: Number,
+		batteryGridChargeLimit: { type: Number, default: null },
 		smartCostType: String,
 		tariffGrid: Number,
 		currency: String,
