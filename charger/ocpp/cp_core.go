@@ -21,6 +21,14 @@ func (cp *CP) Authorize(request *core.AuthorizeRequest) (*core.AuthorizeConfirma
 		},
 	}
 
+	// Set idTag for all connectors in available state
+	for _, conn := range cp.connectors {
+		if conn.status.Status == core.ChargePointStatusAvailable {
+			conn.log.INFO.Printf("Set idTag %v from Authorization request", request.IdTag)
+			conn.idTag = request.IdTag
+		}
+	}
+
 	return res, nil
 }
 
