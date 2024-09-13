@@ -337,7 +337,7 @@ export default {
 			return this.fmtPricePerKWh(this.tariffGrid, this.currency, true);
 		},
 		batteryGridChargeLimitFmt() {
-			if (this.batteryGridChargeLimit === null || this.batteryGridChargeLimit === undefined) {
+			if (this.batteryGridChargeLimit === null) {
 				return;
 			}
 			if (this.co2Available) {

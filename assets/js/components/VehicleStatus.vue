@@ -214,7 +214,7 @@ export default {
 		pvRemainingInterpolated: Number,
 		smartCostActive: Boolean,
 		smartCostDisabled: Boolean,
-		smartCostLimit: Number,
+		smartCostLimit: { type: Number, default: null },
 		smartCostNextStart: String,
 		smartCostType: String,
 		tariffCo2: Number,
@@ -422,7 +422,7 @@ export default {
 			});
 		},
 		smartCostVisible() {
-			return !!this.smartCostLimit;
+			return this.smartCostLimit !== null;
 		},
 		smartCostTooltipContent() {
 			if (!this.smartCostVisible) {
