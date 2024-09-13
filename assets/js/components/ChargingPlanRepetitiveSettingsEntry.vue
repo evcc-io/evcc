@@ -150,7 +150,7 @@ export default {
 	},
 	methods: {
 		changeSelectedWeekdays: function (weekdays) {
-			// this.selectedWeekdays = weekdays;
+			this.selectedWeekdays = weekdays;
 			this.update();
 		},
 		formId: function (name) {
