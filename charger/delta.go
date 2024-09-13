@@ -16,14 +16,15 @@ import (
 
 // Delta charger implementation
 type Delta struct {
-	log     *util.Logger
-	conn    *modbus.Connection
-	lp      loadpoint.API
-	mu      sync.Mutex
-	curr    float64
-	base    uint16
-	enabled bool
-	isBasic bool
+	log           *util.Logger
+	conn          *modbus.Connection
+	lp            loadpoint.API
+	mu            sync.Mutex
+	curr          float64
+	base          uint16
+	enabled       bool
+	statusG       func() (api.ChargeStatus, error)
+	statusReasonG func() (api.Reason, error)
 }
 
 const (
@@ -41,6 +42,7 @@ const (
 
 	// EVSE - The following Register tables are defined as repeating blocks for each single EVSE
 	// Read Input Registers (0x04)
+	// Register deltaRegEvseChargerState NOT availabe on native modbus TCP - only on converted RTU connections
 	deltaRegEvseState                 = 0   // EVSE State - UINT16 0: Unavailable, 1: Available, 2: Occupied, 3: Preparing, 4: Charging, 5: Finishing, 6: Suspended EV, 7: Suspended EVSE, 8: Not ready, 9: Faulted
 	deltaRegEvseChargerState          = 1   // EVSE Charger State* - UINT16 0: Charging process not started (no vehicle connected), 1: Connected, waiting for release (by RFID or local), 2: Charging process starts, 3: Charging, 4: Suspended (paused), 5: Charging process successfully completed (vehicle still plugged in), 6: Charging process completed by user (vehicle still plugged in), 7: Charging ended with error (vehicle still connected)
 	deltaRegEvseActualOutputVoltage   = 3   // EVSE Actual Output Voltage* - FLOAT32 [V]
@@ -102,9 +104,16 @@ func NewDelta(uri, device, comset string, baudrate int, proto modbus.Protocol, s
 
 	wb.base = connector * 1000
 
-	// check for basic or smart register set
-	if _, err := wb.conn.ReadInputRegisters(wb.base+deltaRegEvseChargerState, 1); err != nil {
-		wb.isBasic = true
+	// used limited (native modbus TCP) status register
+	wb.statusG = wb.statusOCPP
+	wb.statusReasonG = wb.statusReasonOCPP
+	
+
+	// check if deltaRegEvseChargerState is available (= RTU)
+	if _, err := wb.conn.ReadInputRegisters(wb.base+deltaRegEvseChargerState, 1); err == nil {
+		// use enhanced (RTU logic) status register
+		wb.statusG = wb.statusDelta
+		wb.statusReasonG = wb.statusReasonDelta
 	}
 
 	b, err := wb.conn.ReadHoldingRegisters(deltaRegCommunicationTimeoutEnabled, 1)
@@ -140,7 +149,52 @@ func (wb *Delta) heartbeat(timeout time.Duration) {
 }
 
 // Status implements the api.Charger interface
-func (wb *Delta) Status() (api.ChargeStatus, error) {
+func (wb *Delta) statusDelta() (api.ChargeStatus, error) {
+	b, err := wb.conn.ReadInputRegisters(wb.base+deltaRegEvseChargerState, 1)
+	if err != nil {
+		return api.StatusNone, err
+	}
+
+	// 0: Charging process not started (no vehicle connected)
+	// 1: Connected, waiting for release (by RFID or local)
+	// 2: Charging process starts
+	// 3: Charging
+	// 4: Suspended (loading paused)
+	// 5: Charging process successfully completed (vehicle still plugged in)
+	// 6: Charging process completed by user (vehicle still plugged in)
+	// 7: Charging ended with error (vehicle still connected)
+
+	switch s := encoding.Uint16(b); s {
+	case 0, 1, 2:
+		return api.StatusA, nil
+	case 3:
+		return api.StatusC, nil
+	case 4, 5, 6, 7:
+		return api.StatusB, nil
+	default:
+		return api.StatusNone, fmt.Errorf("invalid status: %0x", s)
+	}
+}
+
+// statusReason implements the api.StatusReasoner interface
+func (wb *Delta) statusReasonDelta() (api.Reason, error) {
+	b, err := wb.conn.ReadInputRegisters(wb.base+deltaRegEvseChargerState, 1)
+	if err != nil {
+		return api.ReasonUnknown, err
+	}
+
+	switch encoding.Uint16(b) {
+	case 1:
+		return api.ReasonWaitingForAuthorization, nil
+	case 7:
+		return api.ReasonDisconnectRequired, nil
+	}
+
+	return api.ReasonUnknown, nil
+}
+
+// Status implements the api.Charger interface
+func (wb *Delta) statusOCPP() (api.ChargeStatus, error) {
 	b, err := wb.conn.ReadInputRegisters(wb.base+deltaRegEvseState, 1)
 	if err != nil {
 		return api.StatusNone, err
@@ -156,15 +210,11 @@ func (wb *Delta) Status() (api.ChargeStatus, error) {
 	// 7: Suspended EVSE
 	// 8: Not ready
 	// 9: Faulted
+
 	switch s := encoding.Uint16(b); s {
-	case 0, 1, 2:
+	case 0, 1:
 		return api.StatusA, nil
-	case 3:
-		if wb.isBasic {
-			return api.StatusA, nil
-		}
-		return api.StatusB, nil
-	case 5, 6, 7, 9:
+	case 2, 3, 5, 6, 7: // not used correctly by protocol conversion
 		return api.StatusB, nil
 	case 4:
 		return api.StatusC, nil
@@ -173,25 +223,31 @@ func (wb *Delta) Status() (api.ChargeStatus, error) {
 	}
 }
 
-var _ api.StatusReasoner = (*Delta)(nil)
-
 // statusReason implements the api.StatusReasoner interface
-func (wb *Delta) StatusReason() (api.Reason, error) {
-	if !wb.isBasic {
-		b, err := wb.conn.ReadInputRegisters(wb.base+deltaRegEvseState, 1)
-		if err != nil {
-			return api.ReasonUnknown, err
-		}
+func (wb *Delta) statusReasonOCPP() (api.Reason, error) {
+	b, err := wb.conn.ReadInputRegisters(wb.base+deltaRegEvseState, 1)
+	if err != nil {
+		return api.ReasonUnknown, err
+	}
 
-		switch s := encoding.Uint16(b); s {
-		case 3:
-			return api.ReasonWaitingForAuthorization, nil
-		case 5:
-			return api.ReasonDisconnectRequired, nil
-		}
+	switch encoding.Uint16(b) {
+	case 3:
+		return api.ReasonWaitingForAuthorization, nil
+	case 5, 9:
+		return api.ReasonDisconnectRequired, nil
 	}
 
 	return api.ReasonUnknown, nil
+}
+
+func (wb *Delta) Status() (api.ChargeStatus, error) {
+	return wb.statusG()
+}
+
+var _ api.StatusReasoner = (*Delta)(nil)
+
+func (wb *Delta) StatusReason() (api.Reason, error) {
+	return wb.statusReasonG()
 }
 
 // Enabled implements the api.Charger interface
