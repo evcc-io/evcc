@@ -21,10 +21,7 @@
 							{{ $t("main.chargingPlan.repetitivePlan") }}
 						</div>
 					</h5>
-					<ChargingPlanRepetitiveSettingsEntries
-						:id="id"
-						:rangePerSoc="rangePerSoc"
-					/>
+					<ChargingPlanRepetitiveSettingsEntries :id="id" :rangePerSoc="rangePerSoc" />
 				</div>
 			</div>
 		</div>
