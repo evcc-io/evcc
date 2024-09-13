@@ -134,10 +134,11 @@ func physicalConnection(proto Protocol, cfg Settings) (*meterConnection, error) 
 			return nil, errors.New("invalid modbus configuration: need baudrate and comset")
 		}
 
-		if proto == Ascii {
-			return registeredConnection(cfg.Device, Ascii, meters.NewASCII(cfg.Device, cfg.Baudrate, cfg.Comset))
-		} else {
-			return registeredConnection(cfg.Device, Rtu, meters.NewRTU(cfg.Device, cfg.Baudrate, cfg.Comset))
+		switch proto {
+		case Ascii:
+			return registeredConnection(cfg.Device, proto, meters.NewASCII(cfg.Device, cfg.Baudrate, cfg.Comset))
+		default:
+			return registeredConnection(cfg.Device, proto, meters.NewRTU(cfg.Device, cfg.Baudrate, cfg.Comset))
 		}
 	}
 
@@ -145,13 +146,13 @@ func physicalConnection(proto Protocol, cfg Settings) (*meterConnection, error) 
 
 	switch proto {
 	case Udp:
-		return registeredConnection(uri, Udp, meters.NewRTUOverUDP(uri))
+		return registeredConnection(uri, proto, meters.NewRTUOverUDP(uri))
 	case Rtu:
-		return registeredConnection(uri, Rtu, meters.NewRTUOverTCP(uri))
+		return registeredConnection(uri, proto, meters.NewRTUOverTCP(uri))
 	case Ascii:
-		return registeredConnection(uri, Ascii, meters.NewASCIIOverTCP(uri))
+		return registeredConnection(uri, proto, meters.NewASCIIOverTCP(uri))
 	default:
-		return registeredConnection(uri, Tcp, meters.NewTCP(uri))
+		return registeredConnection(uri, proto, meters.NewTCP(uri))
 	}
 }
 
