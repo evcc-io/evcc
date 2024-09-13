@@ -130,7 +130,7 @@
 						/>
 						<EnergyflowEntry
 							:name="
-								$tc('main.energyflow.loadpoints', activeLoadpointsCount, {
+								$t('main.energyflow.loadpoints', activeLoadpointsCount, {
 									count: activeLoadpointsCount,
 								})
 							"
