@@ -1,4 +1,3 @@
----
 name: Nightly Build
 
 env:
@@ -73,4 +72,4 @@ jobs:
             TESLA_CLIENT_ID=${{ secrets.TESLA_CLIENT_ID }}
           tags: |
             evcc/evcc:nightly
-...
+
