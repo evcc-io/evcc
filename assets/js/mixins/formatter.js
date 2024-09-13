@@ -302,30 +302,29 @@ export default {
       }
       let label = "";
 
-      for (let weekdayRowStart = 0; weekdayRowStart < WEEKDAYS.length; weekdayRowStart++) {
-        if (weekdays.includes(weekdayRowStart)) {
-          label += this.$t(`main.chargingPlan.${WEEKDAYS[weekdayRowStart]}`).slice(0, 2);
-          for (
-            let weekdayRowEnd = weekdayRowStart + 1;
-            weekdayRowEnd <= WEEKDAYS.length;
-            weekdayRowEnd++
-          ) {
-            if (weekdays.includes(weekdayRowEnd)) {
-              continue;
-            } else {
-              if (!(weekdayRowStart === weekdayRowEnd - 1)) {
-                label +=
-                  " - " + this.$t(`main.chargingPlan.${WEEKDAYS[weekdayRowEnd - 1]}`).slice(0, 2);
-              } else if (weekdays.length !== weekdayRowStart - 1) {
-                label += ", ";
-              }
-              weekdayRowStart = weekdayRowEnd;
-              break;
-            }
+      for (let weekdayRangeStart = 0; weekdayRangeStart < WEEKDAYS.length; weekdayRangeStart++) {
+        if (weekdays.includes(weekdayRangeStart)) {
+          label += this.getShortenedWeekdayLabel(weekdayRangeStart).slice(0, 2);
+
+          let weekdayRangeEnd = weekdayRangeStart;
+          while (weekdays.includes(weekdayRangeEnd + 1)) {
+            weekdayRangeEnd++;
+          }
+
+          if (weekdayRangeStart !== weekdayRangeEnd) {
+            label += "-" + this.getShortenedWeekdayLabel(weekdayRangeEnd).slice(0, 2);
+            weekdayRangeStart = weekdayRangeEnd;
+          }
+          if (Math.max(...weekdays) !== weekdayRangeEnd) {
+            label += ", ";
           }
         }
       }
+
       return label;
+    },
+    getShortenedWeekdayLabel: function (index) {
+      return this.$t(`main.chargingPlan.${WEEKDAYS[index]}`);
     },
   },
 };

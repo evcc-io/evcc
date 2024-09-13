@@ -70,7 +70,7 @@ func planHandler(lp loadpoint.API) http.HandlerFunc {
 }
 
 // getRepetitivePlanHandler returns all repetitive plans
-func getRepetitivePlansHandler(lp loadpoint.API) http.HandlerFunc {
+func 	getRepetitivePlansHandler(lp loadpoint.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var plans []struct {
 			Weekdays []int8 `json:"weekdays"`
@@ -115,7 +115,7 @@ func getRepetitivePlansHandler(lp loadpoint.API) http.HandlerFunc {
 			Soc      int8   `json:"soc"`
 			Active   bool   `json:"active"`
 		}{
-			Weekdays: []int8{0, 2, 5, 6},
+			Weekdays: []int8{0, 1, 4, 6},
 			Hour:     17,
 			Minute:   42,
 			Soc:      45,
