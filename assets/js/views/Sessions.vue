@@ -3,7 +3,7 @@
 		<TopHeader :title="$t('sessions.title')" />
 		<div class="row">
 			<main class="col-12">
-				<div class="row my-3 my-md-5 mb-4 month-header">
+				<div class="row mt-2 mt-md-3 mb-5 month-header pt-3 pb-2 sticky-top">
 					<div class="col-4 d-flex justify-content-start align-items-center">
 						<router-link
 							class="d-flex text-decoration-none align-items-center"
@@ -52,35 +52,26 @@
 						</IconSelectItem>
 					</IconSelectGroup>
 				</div>
-				<EnergyBarChart
-					:sessions="currentSessions"
+				<EnergyHistoryChart
 					class="mb-5"
+					:sessions="currentSessions"
+					:color-mappings="colorMappings"
 					:group-by="selectedGroup"
 				/>
-
-				<div class="d-flex justify-content-between align-items-center">
-					<h3 class="fw-normal my-0">Anteil Sonnenenergie</h3>
-
-					<IconSelectGroup>
-						<IconSelectItem
-							:active="selectedGroup === 'loadpoint'"
-							@click="selectedGroup = 'loadpoint'"
-						>
-							<shopicon-regular-cablecharge></shopicon-regular-cablecharge>
-						</IconSelectItem>
-						<IconSelectItem
-							:active="selectedGroup === 'vehicle'"
-							@click="selectedGroup = 'vehicle'"
-						>
-							<shopicon-regular-car3></shopicon-regular-car3>
-						</IconSelectItem>
-					</IconSelectGroup>
+				<div class="row align-items-start">
+					<EnergyAggregateEntries
+						class="col-12 col-md-8 mb-5"
+						:sessions="currentSessions"
+						:color-mappings="colorMappings"
+						:group-by="selectedGroup"
+					/>
+					<EnergyAggregateChart
+						class="col-12 col-md-4 mb-5"
+						:sessions="currentSessions"
+						:color-mappings="colorMappings"
+						:group-by="selectedGroup"
+					/>
 				</div>
-				<SolarPolarChart
-					:sessions="currentSessions"
-					class="mb-5"
-					:group-by="selectedGroup"
-				/>
 				<h3>Übersicht</h3>
 				<SessionTable
 					:sessions="currentSessions"
@@ -129,11 +120,29 @@ import api from "../api";
 import store from "../store";
 import SessionDetailsModal from "../components/Sessions/SessionDetailsModal.vue";
 import SessionTable from "../components/Sessions/SessionTable.vue";
-import EnergyBarChart from "../components/Sessions/EnergyBarChart.vue";
-import SolarPolarChart from "../components/Sessions/SolarPolarChart.vue";
+import EnergyHistoryChart from "../components/Sessions/EnergyHistoryChart.vue";
+import EnergyAggregateChart from "../components/Sessions/EnergyAggregateChart.vue";
+import EnergyAggregateEntries from "../components/Sessions/EnergyAggregateEntries.vue";
 import TopHeader from "../components/TopHeader.vue";
 import IconSelectGroup from "../components/IconSelectGroup.vue";
 import IconSelectItem from "../components/IconSelectItem.vue";
+
+// const COLORS = [ "#40916C", "#52B788", "#74C69D", "#95D5B2", "#B7E4C7", "#D8F3DC", "#081C15", "#1B4332", "#2D6A4F"];
+// const COLORS = ["#577590", "#43AA8B", "#90BE6D", "#F9C74F", "#F8961E", "#F3722C", "#F94144"];
+// const COLORS = ["#0077b6", "#00b4d8", "#90e0ef", "#caf0f8", "#03045e"];
+// const COLORS = [ "#0077B6FF", "#0096C7FF", "#00B4D8FF", "#48CAE4FF", "#90E0EFFF", "#ADE8F4FF", "#CAF0F8FF", "#03045EFF", "#023E8AFF",
+
+const COLORS = [
+	"#0077B6FF",
+	"#00B4D8FF",
+	"#90E0EFFF",
+	"#006769FF",
+	"#40A578FF",
+	"#9DDE8BFF",
+	"#F8961EFF",
+	"#F9C74FFF",
+	"#E6FF94FF",
+];
 
 export default {
 	name: "Sessions",
@@ -141,8 +150,9 @@ export default {
 		SessionDetailsModal,
 		SessionTable,
 		TopHeader,
-		EnergyBarChart,
-		SolarPolarChart,
+		EnergyHistoryChart,
+		EnergyAggregateChart,
+		EnergyAggregateEntries,
 		IconSelectGroup,
 		IconSelectItem,
 	},
@@ -174,14 +184,15 @@ export default {
 			const vehicleLogins = store.state.auth ? store.state.auth.vehicles : {};
 			return { vehicleLogins, ...this.collectProps(TopNavigation, store.state) };
 		},
-		currentSessions() {
-			const sessionsWithDefaults = this.sessions.map((session) => {
+		sessionsWithDefaults() {
+			return this.sessions.map((session) => {
 				const loadpoint = session.loadpoint || this.$t("main.loadpoint.fallbackName");
 				const vehicle = session.vehicle || this.$t("main.vehicle.unknown");
 				return { ...session, loadpoint, vehicle };
 			});
-
-			return sessionsWithDefaults.filter((session) => {
+		},
+		currentSessions() {
+			return this.sessionsWithDefaults.filter((session) => {
 				const date = new Date(session.created);
 				return date.getFullYear() === this.year && date.getMonth() + 1 === this.month;
 			});
@@ -250,6 +261,55 @@ export default {
 			const first = new Date(this.sessions[length - 1].created);
 			return this.year > first.getFullYear() || this.month > first.getMonth() + 1;
 		},
+		colorMappings() {
+			const lastThreeMonths = new Date();
+			lastThreeMonths.setMonth(lastThreeMonths.getMonth() - 3);
+
+			// Aggregate energy to get sorted list of loadpoints/vehicles for coloring
+			const aggregateEnergy = (group) => {
+				return this.sessionsWithDefaults.reduce((acc, session) => {
+					if (new Date(session.created) >= lastThreeMonths) {
+						const key = session[group];
+						acc[key] = (acc[key] || 0) + session.chargedEnergy;
+					}
+					return acc;
+				}, {});
+			};
+
+			// Assign colors based on energy usage
+			const assignColors = (energyAggregation, colorType) => {
+				const result = {};
+				let colorIndex = 0;
+
+				// Assign colors by used energy in the last three months
+				const sortedEntries = Object.entries(energyAggregation).sort((a, b) => b[1] - a[1]);
+				sortedEntries.forEach(([key]) => {
+					if (!result[key]) {
+						result[key] = COLORS[colorIndex % COLORS.length];
+						colorIndex++;
+					}
+				});
+
+				// Assign colors to remaining entries
+				this.sessionsWithDefaults.forEach((session) => {
+					const key = session[colorType];
+					if (!result[key]) {
+						result[key] = COLORS[colorIndex % COLORS.length];
+						colorIndex++;
+					}
+				});
+
+				return result;
+			};
+
+			const loadpointEnergy = aggregateEnergy("loadpoint");
+			const loadpointColors = assignColors(loadpointEnergy, "loadpoint");
+
+			const vehicleEnergy = aggregateEnergy("vehicle");
+			const vehicleColors = assignColors(vehicleEnergy, "vehicle");
+
+			return { loadpoint: loadpointColors, vehicle: vehicleColors };
+		},
 	},
 	mounted() {
 		this.loadSessions();
@@ -278,3 +338,9 @@ export default {
 	},
 };
 </script>
+
+<style scoped>
+.month-header {
+	background-color: var(--evcc-background);
+}
+</style>

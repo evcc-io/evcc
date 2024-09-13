@@ -4,7 +4,7 @@
 	</div>
 	<div v-else class="my-5 table-outer">
 		<table class="table text-nowrap">
-			<thead class="sticky-top">
+			<thead class="sticky-top" style="top: 3rem">
 				<tr data-testid="sessions-head">
 					<th scope="col" class="align-top ps-0">
 						{{ $t("sessions.date") }}

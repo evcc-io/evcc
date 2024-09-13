@@ -188,6 +188,12 @@ export default {
         year: "numeric",
       }).format(date);
     },
+    fmtDayMonth: function (date) {
+      return new Intl.DateTimeFormat(this.$i18n?.locale, {
+        day: "numeric",
+        month: "short",
+      }).format(date);
+    },
     fmtMoney: function (amout = 0, currency = "EUR", decimals = true) {
       return new Intl.NumberFormat(this.$i18n?.locale, {
         style: "currency",

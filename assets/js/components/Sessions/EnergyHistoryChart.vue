@@ -1,15 +1,23 @@
 <template>
 	<div style="position: relative; height: 300px">
-		<PolarArea :data="chartData" :options="options" />
+		<Bar :data="chartData" :options="options" />
 	</div>
 </template>
 
 <script>
-import { PolarArea } from "vue-chartjs";
-import { Chart, PolarAreaController, CategoryScale, LinearScale, Legend, Tooltip } from "chart.js";
+import { Bar } from "vue-chartjs";
+import {
+	Chart,
+	BarController,
+	BarElement,
+	CategoryScale,
+	LinearScale,
+	Legend,
+	Tooltip,
+} from "chart.js";
 import formatter from "../../mixins/formatter";
 
-Chart.register(PolarAreaController, CategoryScale, LinearScale, Legend, Tooltip);
+Chart.register(BarController, BarElement, CategoryScale, LinearScale, Legend, Tooltip);
 Chart.defaults.font.family = window
 	.getComputedStyle(document.documentElement)
 	.getPropertyValue("--bs-font-sans-serif");
@@ -18,24 +26,13 @@ Chart.defaults.font.size = 14;
 Chart.defaults.layout.padding = 0;
 Chart.defaults.animation = false;
 
-const loadpointColors = [
-	"#0077B6FF",
-	"#00B4D8FF",
-	"#90E0EFFF",
-	"#006769FF",
-	"#40A578FF",
-	"#9DDE8BFF",
-	"#F8961EFF",
-	"#F9C74FFF",
-	"#E6FF94FF",
-];
-
 export default {
-	name: "SolarPolarChart",
-	components: { PolarArea },
+	name: "EnergyHistoryChart",
+	components: { Bar },
 	props: {
 		sessions: { type: Array, default: () => [] },
 		groupBy: { type: String, default: "loadpoint" },
+		colorMappings: { type: Object, default: () => ({ loadpoint: {}, vehicle: {} }) },
 	},
 	data() {
 		return {
@@ -65,30 +62,35 @@ export default {
 		},
 	},
 	computed: {
+		firstDay() {
+			if (this.sessions.length === 0) {
+				return null;
+			}
+			return new Date(this.sessions[0].created);
+		},
+		month() {
+			return this.firstDay?.getMonth() + 1;
+		},
+		year() {
+			return this.firstDay?.getFullYear();
+		},
 		chartData() {
 			console.log("update chart data");
 			const result = {};
 			const groups = new Set();
 
 			if (this.sessions.length > 0) {
-				const firstDay = new Date(this.sessions[0].created);
-				const lastDay = new Date(firstDay.getFullYear(), firstDay.getMonth() + 1, 0);
+				const lastDay = new Date(this.year, this.month, 0);
 				const daysInMonth = lastDay.getDate();
 
 				for (let i = 1; i <= daysInMonth; i++) {
 					result[i] = {};
 				}
-
 				// Populate with actual data
 				this.sessions.forEach((session) => {
-					const date = new Date(session.created);
-					const day = date.getDate();
-					const groupKey =
-						this.groupBy === "vehicle"
-							? session.vehicle || "Unknown"
-							: session.loadpoint || "Unknown";
+					const day = new Date(session.created).getDate();
+					const groupKey = session[this.groupBy];
 					groups.add(groupKey);
-
 					if (!result[day][groupKey]) {
 						result[day][groupKey] = 0;
 					}
@@ -96,8 +98,8 @@ export default {
 				});
 			}
 
-			const datasets = Array.from(groups).map((group, i) => ({
-				backgroundColor: loadpointColors[i],
+			const datasets = Array.from(groups).map((group) => ({
+				backgroundColor: this.colorMappings[this.groupBy][group],
 				label: group,
 				data: Object.values(result).map((day) => day[group] || 0),
 			}));
@@ -113,7 +115,7 @@ export default {
 				locale: this.$i18n?.locale,
 				responsive: true,
 				maintainAspectRatio: false,
-				borderRadius: 5,
+				borderRadius: 6,
 				color: this.textColor,
 				plugins: {
 					legend: {
@@ -159,6 +161,10 @@ export default {
 						mode: "index",
 						intersect: false,
 						callbacks: {
+							title: (tooltipItem) => {
+								const date = new Date(this.year, this.month, tooltipItem[0].label);
+								return this.fmtDayMonth(date);
+							},
 							label: (tooltipItem) => {
 								const datasetLabel = tooltipItem.dataset.label || "";
 								const value = tooltipItem.raw;
