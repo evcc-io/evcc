@@ -213,9 +213,7 @@ func (wb *Delta) statusOCPP() (api.ChargeStatus, error) {
 		return api.StatusA, nil
 	case 4:
 		return api.StatusC, nil
-	case 3, 5, 6, 7:
-		return api.StatusB, nil
-	case 9: // not used correctly by protocol conversion
+	case 3, 5, 6, 7, 9:
 		return api.StatusB, nil
 	default:
 		return api.StatusNone, fmt.Errorf("invalid status: %0x", s)
