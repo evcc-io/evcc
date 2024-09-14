@@ -80,10 +80,10 @@ func (cp *CP) Setup(meterValues string, meterInterval time.Duration) error {
 
 		// vendor-specific keys
 		case KeyAlfenPlugAndChargeIdentifier:
-			authMethod, exists := getConfigurationValue(resp, KeyAlfenAuthorizationMethod)
+			authMethod, ok := getConfigurationValue(resp, KeyAlfenAuthorizationMethod)
 
 			// Override `idTag` with plug-and-charge id if PLUG_AND_CHARGE is configured
-			if exists && authMethod != "RFID" {
+			if ok && authMethod != "RFID" {
 				cp.IdTag = *opt.Value
 				cp.log.DEBUG.Printf("Alfen-specific: overriding `idTag` with PLUG_AND_CHARGE value: %s", cp.IdTag)
 			}
