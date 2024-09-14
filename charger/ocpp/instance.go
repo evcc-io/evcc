@@ -32,7 +32,7 @@ func Instance() *CS {
 		server.SetCheckOriginHandler(func(r *http.Request) bool { return true })
 
 		dispatcher := ocppj.NewDefaultServerDispatcher(ocppj.NewFIFOQueueMap(0))
-		dispatcher.SetTimeout(time.Minute)
+		dispatcher.SetTimeout(Timeout)
 
 		endpoint := ocppj.NewServer(server, dispatcher, nil, core.Profile, remotetrigger.Profile, smartcharging.Profile)
 		endpoint.SetInvalidMessageHook(func(client ws.Channel, err *ocpp.Error, rawMessage string, parsedFields []interface{}) *ocpp.Error {

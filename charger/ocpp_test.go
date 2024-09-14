@@ -31,11 +31,11 @@ type ocppTestSuite struct {
 }
 
 func (suite *ocppTestSuite) SetupSuite() {
+	ocpp.Timeout = 5 * time.Second
+
 	// setup cs so we can overwrite logger afterwards
 	_ = ocpp.Instance()
 	ocppj.SetLogger(&ocppLogger{suite.T()})
-
-	ocpp.Timeout = 5 * time.Second
 
 	suite.clock = clock.NewMock()
 	suite.NotNil(ocpp.Instance())
