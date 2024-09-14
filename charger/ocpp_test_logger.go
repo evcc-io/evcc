@@ -2,7 +2,6 @@ package charger
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 	"time"
 )
@@ -12,17 +11,17 @@ type ocppLogger struct {
 }
 
 func print(t *testing.T, s string) {
-	var ok bool
-	if s, ok = strings.CutPrefix(s, "sent JSON message to"); ok {
-		s = "send" + s
-	} else if s, ok = strings.CutPrefix(s, "received JSON message from"); ok {
-		s = "recv" + s
-	} else {
-		ok = true
-	}
-	if ok {
-		t.Log((time.Now().Format(time.DateTime)), s)
-	}
+	// var ok bool
+	// if s, ok = strings.CutPrefix(s, "sent JSON message to"); ok {
+	// 	s = "send" + s
+	// } else if s, ok = strings.CutPrefix(s, "received JSON message from"); ok {
+	// 	s = "recv" + s
+	// } else {
+	// 	ok = true
+	// }
+	// if ok {
+	t.Log((time.Now().Format(time.DateTime)), s)
+	// }
 }
 
 func (l *ocppLogger) Debug(args ...interface{}) { print(l.t, fmt.Sprint(args...)) }

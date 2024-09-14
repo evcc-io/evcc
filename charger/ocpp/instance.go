@@ -24,11 +24,7 @@ func Instance() *CS {
 	once.Do(func() {
 		log := util.NewLogger("ocpp")
 
-		timeoutConfig := ws.NewServerTimeoutConfig()
-		timeoutConfig.PingWait = 90 * time.Second
-
 		server := ws.NewServer()
-		server.SetTimeoutConfig(timeoutConfig)
 		server.SetCheckOriginHandler(func(r *http.Request) bool { return true })
 
 		dispatcher := ocppj.NewDefaultServerDispatcher(ocppj.NewFIFOQueueMap(0))
