@@ -12,6 +12,7 @@ import (
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/remotetrigger"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/types"
+	"github.com/lorenzodonini/ocpp-go/ocppj"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -30,6 +31,12 @@ type ocppTestSuite struct {
 }
 
 func (suite *ocppTestSuite) SetupSuite() {
+	// setup cs so we can overwrite logger afterwards
+	_ = ocpp.Instance()
+	ocppj.SetLogger(&ocppLogger{suite.T()})
+
+	ocpp.Timeout = 5 * time.Second
+
 	suite.clock = clock.NewMock()
 	suite.NotNil(ocpp.Instance())
 }
@@ -59,24 +66,20 @@ func (suite *ocppTestSuite) startChargePoint(id string, connectorId int) ocpp16.
 func (suite *ocppTestSuite) handleTrigger(cp ocpp16.ChargePoint, connectorId int, msg remotetrigger.MessageTrigger) {
 	switch msg {
 	case core.BootNotificationFeatureName:
-		if res, err := cp.BootNotification("model", "vendor"); err != nil {
+		if _, err := cp.BootNotification("model", "vendor"); err != nil {
 			suite.T().Log("BootNotification:", err)
-		} else {
-			suite.T().Log("BootNotification:", res)
 		}
 
 	case core.ChangeAvailabilityFeatureName:
 		fallthrough
 
 	case core.StatusNotificationFeatureName:
-		if res, err := cp.StatusNotification(connectorId, core.NoError, core.ChargePointStatusCharging); err != nil {
+		if _, err := cp.StatusNotification(connectorId, core.NoError, core.ChargePointStatusCharging); err != nil {
 			suite.T().Log("StatusNotification:", err)
-		} else {
-			suite.T().Log("StatusNotification:", res)
 		}
 
 	case core.MeterValuesFeatureName:
-		if res, err := cp.MeterValues(connectorId, []types.MeterValue{
+		if _, err := cp.MeterValues(connectorId, []types.MeterValue{
 			{
 				Timestamp: types.NewDateTime(suite.clock.Now()),
 				SampledValue: []types.SampledValue{
@@ -86,12 +89,7 @@ func (suite *ocppTestSuite) handleTrigger(cp ocpp16.ChargePoint, connectorId int
 			},
 		}); err != nil {
 			suite.T().Log("MeterValues:", err)
-		} else {
-			suite.T().Log("MeterValues:", res)
 		}
-
-	default:
-		suite.T().Log(msg)
 	}
 }
 
