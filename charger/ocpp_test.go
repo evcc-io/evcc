@@ -235,7 +235,8 @@ func (suite *ocppTestSuite) TestTimeout() {
 	suite.Require().NoError(cp1.Start(ocppTestUrl))
 	suite.Require().True(cp1.IsConnected())
 
-	ocppDelays[core.ChangeAvailabilityFeatureName] = time.Hour
+	// timeout change availability request
+	ocppDelays[core.ChangeAvailabilityFeatureName] = time.Minute
 
 	// 1st charge point- local
 	_, err := NewOCPP("test-4", 1, "", "", 0, false, false, ocppTestConnectTimeout)
