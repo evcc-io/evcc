@@ -110,8 +110,6 @@ render: |
       set:
         source: sequence
         set:
-        source: sequence
-        set:
         - source: const
           value: 3 # passive
           set:
@@ -151,6 +149,6 @@ render: |
     - case: 3 # charge (not implemented)
       set:
         source: error
-        error: ErrNotImplemented
+        error: ErrNotAvailable
   capacity: {{ .capacity }} # kWh
   {{- end }}
