@@ -202,7 +202,7 @@ replace gopkg.in/yaml.v3 => github.com/andig/yaml v0.0.0-20240531135838-1ff5761a
 
 replace github.com/grid-x/modbus => github.com/evcc-io/modbus v0.0.0-20240911180928-7b1464a53285
 
-replace github.com/lorenzodonini/ocpp-go => github.com/evcc-io/ocpp-go v0.0.0-20240730071053-d69e53b0fce9
+replace github.com/lorenzodonini/ocpp-go => github.com/evcc-io/ocpp-go v0.0.0-20240914122959-0d109e403130
 
 replace github.com/enbility/ship-go => github.com/enbility/ship-go v0.0.0-20240909200111-0d37cebbfc21
 

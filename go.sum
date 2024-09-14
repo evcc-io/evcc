@@ -142,8 +142,8 @@ github.com/envoyproxy/go-control-plane v0.9.1-0.20191026205805-5f8ba28d4473/go.m
 github.com/envoyproxy/protoc-gen-validate v0.1.0/go.mod h1:iSmxcyjqTsJpI2R4NaDN7+kN2VEUnK/pcBlmesArF7c=
 github.com/evcc-io/modbus v0.0.0-20240911180928-7b1464a53285 h1:+zUVVXpybAsLXRY4KuTiMye/v5jCOxKG0heTSTHLW2Y=
 github.com/evcc-io/modbus v0.0.0-20240911180928-7b1464a53285/go.mod h1:WpbUAyptAAi0VAriSRopZa6uhiJOJCTz7KFvgGtNRXc=
-github.com/evcc-io/ocpp-go v0.0.0-20240730071053-d69e53b0fce9 h1:FLv1vmLnfc8DanI5U1qOTe1Zr0OgZ/tuOvHALtZ2sOI=
-github.com/evcc-io/ocpp-go v0.0.0-20240730071053-d69e53b0fce9/go.mod h1:ZynYDWGw6CslG3vyPuucLsy6AyE+h3XXYlr39jhNiQY=
+github.com/evcc-io/ocpp-go v0.0.0-20240914122959-0d109e403130 h1:U4xSZBknKsMDFQtLU3gdkDUylfN9kRUj01offtqs8lY=
+github.com/evcc-io/ocpp-go v0.0.0-20240914122959-0d109e403130/go.mod h1:ZynYDWGw6CslG3vyPuucLsy6AyE+h3XXYlr39jhNiQY=
 github.com/evcc-io/tesla-proxy-client v0.0.0-20240221194046-4168b3759701 h1:3JplY3KS6KMDVDNAU+3+KWmSWmoHIU34qwuIpW6SiHk=
 github.com/evcc-io/tesla-proxy-client v0.0.0-20240221194046-4168b3759701/go.mod h1:zWtAweBqXJTk3HSrPSecz3Q3a2hAUQ4vOE6paJfn03I=
 github.com/fatih/camelcase v1.0.0/go.mod h1:yN2Sb0lFhZJUdVvtELVWefmrXpuZESvPmqwoZc+/fpc=
