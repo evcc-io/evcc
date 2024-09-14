@@ -162,11 +162,11 @@ func (wb *Delta) statusDelta() (api.ChargeStatus, error) {
 	// 7: Charging ended with error (vehicle still connected)
 
 	switch s := encoding.Uint16(b); s {
-	case 0, 1, 2:
+	case 0:
 		return api.StatusA, nil
 	case 3:
 		return api.StatusC, nil
-	case 4, 5, 6, 7:
+	case 1, 2, 4, 5, 6, 7:
 		return api.StatusB, nil
 	default:
 		return api.StatusNone, fmt.Errorf("invalid status: %0x", s)
