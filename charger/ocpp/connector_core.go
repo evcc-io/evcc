@@ -64,7 +64,7 @@ func (conn *Connector) MeterValues(request *core.MeterValuesRequest) (*core.Mete
 		(conn.status.Status == core.ChargePointStatusCharging ||
 			conn.status.Status == core.ChargePointStatusSuspendedEV ||
 			conn.status.Status == core.ChargePointStatusSuspendedEVSE) {
-		conn.log.DEBUG.Printf("hijacking transaction: %d", *request.TransactionId)
+		conn.log.DEBUG.Printf("recovered transaction: %d", *request.TransactionId)
 		conn.txnId = *request.TransactionId
 	}
 
@@ -91,19 +91,7 @@ func (conn *Connector) StartTransaction(request *core.StartTransactionRequest) (
 	conn.mu.Lock()
 	defer conn.mu.Unlock()
 
-	// expired request
-	if request.Timestamp != nil && conn.clock.Since(request.Timestamp.Time) > Timeout {
-		res := &core.StartTransactionConfirmation{
-			IdTagInfo: &types.IdTagInfo{
-				Status: types.AuthorizationStatusExpired, // reject
-			},
-		}
-
-		return res, nil
-	}
-
-	conn.txnCount++
-	conn.txnId = conn.txnCount
+	conn.txnId = instance.NewTransactionID()
 	conn.idTag = request.IdTag
 
 	res := &core.StartTransactionConfirmation{
@@ -139,17 +127,6 @@ func (conn *Connector) assumeMeterStopped() {
 func (conn *Connector) StopTransaction(request *core.StopTransactionRequest) (*core.StopTransactionConfirmation, error) {
 	conn.mu.Lock()
 	defer conn.mu.Unlock()
-
-	// expired request
-	if request.Timestamp != nil && conn.clock.Since(request.Timestamp.Time) > Timeout {
-		res := &core.StopTransactionConfirmation{
-			IdTagInfo: &types.IdTagInfo{
-				Status: types.AuthorizationStatusExpired, // reject
-			},
-		}
-
-		return res, nil
-	}
 
 	conn.txnId = 0
 	conn.idTag = ""
