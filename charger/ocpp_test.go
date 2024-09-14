@@ -41,6 +41,11 @@ func (suite *ocppTestSuite) SetupSuite() {
 	suite.NotNil(ocpp.Instance())
 }
 
+func (suite *ocppTestSuite) SetupTest() {
+	// default delays
+	ocppDelays = make(map[string]time.Duration)
+}
+
 func (suite *ocppTestSuite) startChargePoint(id string, connectorId int) ocpp16.ChargePoint {
 	// set a handler for all callback functions
 	handler := &ChargePointHandler{
@@ -221,5 +226,18 @@ func (suite *ocppTestSuite) TestAutoStart() {
 	suite.Require().NoError(err)
 
 	err = c1.Enable(false)
+	suite.Require().NoError(err)
+}
+
+func (suite *ocppTestSuite) TestTimeout() {
+	// 1st charge point- remote
+	cp1 := suite.startChargePoint("test-4", 1)
+	suite.Require().NoError(cp1.Start(ocppTestUrl))
+	suite.Require().True(cp1.IsConnected())
+
+	ocppDelays[core.ChangeAvailabilityFeatureName] = time.Hour
+
+	// 1st charge point- local
+	_, err := NewOCPP("test-4", 1, "", "", 0, false, false, ocppTestConnectTimeout)
 	suite.Require().NoError(err)
 }
