@@ -211,11 +211,9 @@ func (wb *Delta) statusOCPP() (api.ChargeStatus, error) {
 	switch s := encoding.Uint16(b); s {
 	case 0, 1, 2:
 		return api.StatusA, nil
-	case 3: // not used correctly by protocol conversion
-		return api.StatusA, nil
 	case 4:
 		return api.StatusC, nil
-	case 5, 6, 7:
+	case 3, 5, 6, 7:
 		return api.StatusB, nil
 	case 9: // not used correctly by protocol conversion
 		return api.StatusB, nil
