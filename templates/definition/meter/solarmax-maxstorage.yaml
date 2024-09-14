@@ -3,6 +3,7 @@ products:
   - brand: SolarMax
     description:
       generic: MAX.STORAGE / MAX.STORAGE Ultimate
+capabilities: ["battery-control"]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
