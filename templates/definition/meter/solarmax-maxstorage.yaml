@@ -115,7 +115,7 @@ render: |
                 address: 142
                 type: writemultiple
                 decode: int16
-      - case: 3 # normal (not implemented)
+      - case: 3 # charge (not implemented)
         set:
           source: error
           error: ErrNotImplemented
