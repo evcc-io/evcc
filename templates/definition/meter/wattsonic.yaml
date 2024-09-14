@@ -32,7 +32,7 @@ render: |
     scale: -1
   currents:
     - source: modbus
-      {{- include "modbus" . | indent 2 }}
+      {{- include "modbus" . | indent 4 }}
       delay: {{ .delay }}
       register:
         address: 11010  # Grid Phase A Current
@@ -40,7 +40,7 @@ render: |
         decode: uint16
       scale: 0.1
     - source: modbus
-      {{- include "modbus" . | indent 2 }}
+      {{- include "modbus" . | indent 4 }}
       delay: {{ .delay }}
       register:
         address: 11012  # Grid Phase B Current
@@ -48,7 +48,7 @@ render: |
         decode: uint16
       scale: 0.1
     - source: modbus
-      {{- include "modbus" . | indent 2 }}
+      {{- include "modbus" . | indent 4 }}
       delay: {{ .delay }}
       register:
         address: 11014  # Grid Phase C Current
@@ -57,7 +57,7 @@ render: |
       scale: 0.1
   powers:
     - source: modbus
-      {{- include "modbus" . | indent 2 }}
+      {{- include "modbus" . | indent 4 }}
       delay: {{ .delay }}
       register:
         address: 10994  # Phase A Power on Meter
@@ -65,7 +65,7 @@ render: |
         decode: int32
       scale: -1
     - source: modbus
-      {{- include "modbus" . | indent 2 }}
+      {{- include "modbus" . | indent 4 }}
       delay: {{ .delay }}
       register:
         address: 10996  # Phase B Power on Meter
@@ -73,7 +73,7 @@ render: |
         decode: int32
       scale: -1
     - source: modbus
-      {{- include "modbus" . | indent 2 }}
+      {{- include "modbus" . | indent 4 }}
       delay: {{ .delay }}
       register:
         address: 10998  # Phase C Power on Meter
