@@ -117,34 +117,7 @@ render: |
                 decode: int16
       - case: 3 # normal (not implemented)
         set:
-          source: sequence
-          set:
-          - source: const
-            value: 7000
-            set:
-              source: modbus
-              {{- include "modbus" . | indent 12 }}
-              register:
-                address: 140
-                type: writemultiple
-                decode: int16
-          - source: const
-            value: 7000
-            set:
-              source: modbus
-              {{- include "modbus" . | indent 12 }}
-              register:
-                address: 141
-                type: writemultiple
-                decode: int16
-          - source: const
-            value: 0
-            set:
-              source: modbus
-              {{- include "modbus" . | indent 12 }}
-              register:
-                address: 142
-                type: writemultiple
-                decode: int16
+          source: error
+          error: ErrNotImplemented
   capacity: {{ .capacity }} # kWh
   {{- end }}
