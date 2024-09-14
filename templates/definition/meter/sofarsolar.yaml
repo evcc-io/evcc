@@ -25,7 +25,7 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 0x0210 # Feed in/out power
+      address: 0x0212 # Feed in/out power
       type: holding
       decode: int32
     scale: -0.01
