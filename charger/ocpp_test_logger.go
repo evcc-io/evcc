@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+	"time"
 )
 
 type ocppLogger struct {
@@ -20,7 +21,7 @@ func print(t *testing.T, s string) {
 		ok = true
 	}
 	if ok {
-		t.Log(s)
+		t.Log((time.Now().Format(time.DateTime)), s)
 	}
 }
 
