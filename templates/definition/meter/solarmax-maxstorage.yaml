@@ -119,6 +119,6 @@ render: |
       - case: 3 # charge (not implemented)
         set:
           source: error
-          error: ErrNotImplemented
+          error: ErrNotAvailable
   capacity: {{ .capacity }} # kWh
   {{- end }}
