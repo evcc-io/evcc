@@ -24,7 +24,7 @@ render: |
   power: # power (W)
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    delay: {{ . delay}}
+    delay: {{ .delay }}
     register:
       address: 11000  # Total Power on Meter
       type: holding   
@@ -33,7 +33,7 @@ render: |
   currents:
     - source: modbus
       {{- include "modbus" . | indent 2 }}
-      delay: {{ . delay}}
+      delay: {{ .delay }}
       register:
         address: 11010  # Grid Phase A Current
         type: holding
@@ -41,7 +41,7 @@ render: |
       scale: 0.1
     - source: modbus
       {{- include "modbus" . | indent 2 }}
-      delay: {{ . delay}}
+      delay: {{ .delay }}
       register:
         address: 11012  # Grid Phase B Current
         type: holding
@@ -49,7 +49,7 @@ render: |
       scale: 0.1
     - source: modbus
       {{- include "modbus" . | indent 2 }}
-      delay: {{ . delay}}
+      delay: {{ .delay }}
       register:
         address: 11014  # Grid Phase C Current
         type: holding
@@ -58,7 +58,7 @@ render: |
   powers:
     - source: modbus
       {{- include "modbus" . | indent 2 }}
-      delay: {{ . delay}}
+      delay: {{ .delay }}
       register:
         address: 10994  # Phase A Power on Meter
         type: holding
@@ -66,7 +66,7 @@ render: |
       scale: -1
     - source: modbus
       {{- include "modbus" . | indent 2 }}
-      delay: {{ . delay}}
+      delay: {{ .delay }}
       register:
         address: 10996  # Phase B Power on Meter
         type: holding
@@ -74,7 +74,7 @@ render: |
       scale: -1
     - source: modbus
       {{- include "modbus" . | indent 2 }}
-      delay: {{ . delay}}
+      delay: {{ .delay }}
       register:
         address: 10998  # Phase C Power on Meter
         type: holding
@@ -85,7 +85,7 @@ render: |
   power: # power (W)
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    delay: {{ . delay}}
+    delay: {{ .delay }}
     register:
       address: 11028    # PV Input Total Power
       type: holding
@@ -95,7 +95,7 @@ render: |
   power: # power (W)
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    delay: {{ . delay}}
+    delay: {{ .delay }}
     register:
       address: 40258    # Total_Backup_P
       type: holding
@@ -103,7 +103,7 @@ render: |
   soc:
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    delay: {{ . delay}}
+    delay: {{ .delay }}
     register:                         
       address: 43000    # SOC
       type: holding
