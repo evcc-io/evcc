@@ -1,12 +1,15 @@
 package ocpp
 
 import (
+	"errors"
 	"slices"
 	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/lorenzodonini/ocpp-go/ocpp"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/types"
+	"github.com/lorenzodonini/ocpp-go/ocppj"
 )
 
 // wait waits for a CP roundtrip with timeout
@@ -15,7 +18,10 @@ func wait(err error, rc chan error) error {
 		select {
 		case err = <-rc:
 			close(rc)
-		case <-time.After(Timeout):
+		}
+
+		oe := new(ocpp.Error)
+		if errors.As(err, &oe) && oe.Code == ocppj.GenericError {
 			err = api.ErrTimeout
 		}
 	}

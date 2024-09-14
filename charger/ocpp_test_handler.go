@@ -1,6 +1,8 @@
 package charger
 
 import (
+	"time"
+
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/remotetrigger"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/smartcharging"
@@ -11,10 +13,15 @@ type ChargePointHandler struct {
 	triggerC chan remotetrigger.MessageTrigger
 }
 
+var ocppDelays = make(map[string]time.Duration)
+
 // core
 
 func (handler *ChargePointHandler) OnChangeAvailability(request *core.ChangeAvailabilityRequest) (confirmation *core.ChangeAvailabilityConfirmation, err error) {
 	defer func() { handler.triggerC <- core.ChangeAvailabilityFeatureName }()
+	if d, ok := ocppDelays[core.ChangeAvailabilityFeatureName]; ok {
+		time.Sleep(d)
+	}
 	return core.NewChangeAvailabilityConfirmation(core.AvailabilityStatusAccepted), nil
 }
 
