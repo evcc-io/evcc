@@ -7,7 +7,6 @@ import (
 )
 
 type errorProvider struct {
-	log *util.Logger
 	err error
 }
 
@@ -31,7 +30,6 @@ func NewErrorFromConfig(other map[string]interface{}) (Provider, error) {
 	}
 
 	o := &errorProvider{
-		log: util.NewLogger("error"),
 		err: err,
 	}
 

@@ -3,19 +3,12 @@ package provider
 import (
 	"math"
 	"math/rand/v2"
-	"sync"
-	"time"
 
 	"github.com/evcc-io/evcc/util"
 )
 
 type randomProvider struct {
-	mu      sync.Mutex
-	log     *util.Logger
-	reset   *string
-	set     Config
-	timeout time.Duration
-	cancel  func()
+	set Config
 }
 
 func init() {
@@ -33,7 +26,6 @@ func NewRandomFromConfig(other map[string]interface{}) (Provider, error) {
 	}
 
 	o := &randomProvider{
-		log: util.NewLogger("random"),
 		set: cc.Set,
 	}
 
