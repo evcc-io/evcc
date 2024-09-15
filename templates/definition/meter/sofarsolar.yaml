@@ -146,9 +146,20 @@ render: |
               address: 0x118B
               type: writemultiple
               decode: int32
-    - case: 3 # charge (not implemented)
+    - case: 3 # charge (not implemented -> normal)
       set:
-        source: error
-        error: ErrNotAvailable
+        source: const
+        value: 0 # self-use
+        set:
+          sequence:
+          set:
+          - source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 0x1110
+              type: writemultiple
+              decode: int16
+          - source: error
+            error: ErrNotAvailable
   capacity: {{ .capacity }} # kWh
   {{- end }}
