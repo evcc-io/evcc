@@ -47,7 +47,7 @@ func (s Settings) Protocol() Protocol {
 	switch {
 	case s.UDP:
 		return Udp
-	case s.RTU != nil && *s.RTU:
+	case s.Device != "" || s.RTU != nil && *s.RTU:
 		return Rtu
 	default:
 		return Tcp
