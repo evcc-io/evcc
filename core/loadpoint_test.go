@@ -8,6 +8,7 @@ import (
 	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
+	"github.com/evcc-io/evcc/core/settings"
 	"github.com/evcc-io/evcc/core/soc"
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/util"
@@ -152,14 +153,14 @@ func TestUpdatePowerZero(t *testing.T) {
 	for _, tc := range tc {
 		t.Log(tc)
 
-		clck := clock.NewMock()
+		clock := clock.NewMock()
 		ctrl := gomock.NewController(t)
 		charger := api.NewMockCharger(ctrl)
 
 		lp := &Loadpoint{
 			log:           util.NewLogger("foo"),
 			bus:           evbus.New(),
-			clock:         clck,
+			clock:         clock,
 			charger:       charger,
 			chargeMeter:   &Null{}, // silence nil panics
 			chargeRater:   &Null{}, // silence nil panics
@@ -304,14 +305,14 @@ func TestPVHysteresis(t *testing.T) {
 		for _, tc := range tc {
 			t.Log(tc)
 
-			clck := clock.NewMock()
+			clock := clock.NewMock()
 			ctrl := gomock.NewController(t)
 			charger := api.NewMockCharger(ctrl)
 
 			Voltage = 100
 			lp := &Loadpoint{
 				log:            util.NewLogger("foo"),
-				clock:          clck,
+				clock:          clock,
 				charger:        charger,
 				minCurrent:     minA,
 				maxCurrent:     maxA,
@@ -330,10 +331,10 @@ func TestPVHysteresis(t *testing.T) {
 			// charging, otherwise PV mode logic is short-circuited
 			lp.status = status
 
-			start := clck.Now()
+			start := clock.Now()
 
 			for step, se := range tc.series {
-				clck.Set(start.Add(se.delay))
+				clock.Set(start.Add(se.delay))
 
 				// maxCurrent will read actual current and enabled state in PV mode
 				// charger.EXPECT().Enabled().Return(tc.enabled, nil)
@@ -354,13 +355,13 @@ func TestPVHysteresis(t *testing.T) {
 func TestPVHysteresisForStatusOtherThanC(t *testing.T) {
 	const phases = 3
 
-	clck := clock.NewMock()
+	clock := clock.NewMock()
 	ctrl := gomock.NewController(t)
 
 	Voltage = 100
 	lp := &Loadpoint{
 		log:            util.NewLogger("foo"),
-		clock:          clck,
+		clock:          clock,
 		minCurrent:     minA,
 		maxCurrent:     maxA,
 		phases:         phases,
@@ -476,6 +477,7 @@ func TestSetModeAndSocAtDisconnect(t *testing.T) {
 		log:           util.NewLogger("foo"),
 		bus:           evbus.New(),
 		clock:         clock,
+		settings:      settings.NewDatabaseSettingsAdapter("foo"),
 		charger:       charger,
 		chargeMeter:   &Null{}, // silence nil panics
 		chargeRater:   &Null{}, // silence nil panics
@@ -728,7 +730,7 @@ func TestPVHysteresisAfterPhaseSwitch(t *testing.T) {
 	for _, tc := range tc {
 		t.Log(tc)
 
-		clck := clock.NewMock()
+		clock := clock.NewMock()
 		ctrl := gomock.NewController(t)
 
 		switcher := api.NewMockPhaseSwitcher(ctrl)
@@ -744,7 +746,7 @@ func TestPVHysteresisAfterPhaseSwitch(t *testing.T) {
 		Voltage = 100
 		lp := &Loadpoint{
 			log:        util.NewLogger("foo"),
-			clock:      clck,
+			clock:      clock,
 			charger:    charger,
 			minCurrent: minA,
 			maxCurrent: maxA,
@@ -755,10 +757,10 @@ func TestPVHysteresisAfterPhaseSwitch(t *testing.T) {
 			enabled: true,
 		}
 
-		start := clck.Now()
+		start := clock.Now()
 
 		for step, se := range tc.series {
-			clck.Set(start.Add(se.delay))
+			clock.Set(start.Add(se.delay))
 			assert.Equal(t, se.current, lp.pvMaxCurrent(api.ModePV, se.site, false, false), step)
 		}
 
