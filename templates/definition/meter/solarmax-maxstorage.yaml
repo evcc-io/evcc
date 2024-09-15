@@ -2,8 +2,13 @@ template: solarmax-maxstorage
 products:
   - brand: SolarMax
     description:
-      generic: MAX.STORAGE / MAX.STORAGE Ultimate
+      generic: MAX.STORAGE / MAX.STORAGE Ultimate    
 capabilities: ["battery-control"]
+requirements:
+  description:
+     de: |
+       Zur Nutzung der Funktion Batterie Discharge Control muss über den Solarmax Support die Funktion "Connectivity+" freigeschaltet werden.
+       Verfügbar ab Software 3.4.4.. Wenn dies nicht freigeschaltet ist bleibt die Funktion ohne Wirkung. In diesem Fall empfiehlt es sich den Schalter im Batteriemenü nicht auf aktiv zu setzen.
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
