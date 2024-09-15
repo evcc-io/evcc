@@ -410,7 +410,7 @@ func (lp *Loadpoint) IsFastChargingActive() bool {
 	lp.RLock()
 	defer lp.RUnlock()
 
-	return lp.mode == api.ModeNow || lp.planActive || lp.minSocNotReached()
+	return (lp.mode == api.ModeNow || lp.planActive || lp.minSocNotReached()) && !lp.chargerHasFeature(api.SmallDevice)
 }
 
 // GetRemainingDuration is the estimated remaining charging duration

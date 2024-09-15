@@ -7,11 +7,11 @@ import (
 	"strings"
 )
 
-const _FeatureName = "OfflineCoarseCurrentIntegratedDeviceHeatingRetryableWelcomeCharge"
+const _FeatureName = "OfflineCoarseCurrentIntegratedDeviceHeatingSmallDeviceRetryableWelcomeCharge"
 
-var _FeatureIndex = [...]uint8{0, 7, 20, 36, 43, 52, 65}
+var _FeatureIndex = [...]uint8{0, 7, 20, 36, 43, 54, 63, 76}
 
-const _FeatureLowerName = "offlinecoarsecurrentintegrateddeviceheatingretryablewelcomecharge"
+const _FeatureLowerName = "offlinecoarsecurrentintegrateddeviceheatingsmalldeviceretryablewelcomecharge"
 
 func (i Feature) String() string {
 	i -= 1
@@ -29,11 +29,12 @@ func _FeatureNoOp() {
 	_ = x[CoarseCurrent-(2)]
 	_ = x[IntegratedDevice-(3)]
 	_ = x[Heating-(4)]
-	_ = x[Retryable-(5)]
-	_ = x[WelcomeCharge-(6)]
+	_ = x[SmallDevice-(5)]
+	_ = x[Retryable-(6)]
+	_ = x[WelcomeCharge-(7)]
 }
 
-var _FeatureValues = []Feature{Offline, CoarseCurrent, IntegratedDevice, Heating, Retryable, WelcomeCharge}
+var _FeatureValues = []Feature{Offline, CoarseCurrent, IntegratedDevice, Heating, SmallDevice, Retryable, WelcomeCharge}
 
 var _FeatureNameToValueMap = map[string]Feature{
 	_FeatureName[0:7]:        Offline,
@@ -44,10 +45,12 @@ var _FeatureNameToValueMap = map[string]Feature{
 	_FeatureLowerName[20:36]: IntegratedDevice,
 	_FeatureName[36:43]:      Heating,
 	_FeatureLowerName[36:43]: Heating,
-	_FeatureName[43:52]:      Retryable,
-	_FeatureLowerName[43:52]: Retryable,
-	_FeatureName[52:65]:      WelcomeCharge,
-	_FeatureLowerName[52:65]: WelcomeCharge,
+	_FeatureName[43:54]:      SmallDevice,
+	_FeatureLowerName[43:54]: SmallDevice,
+	_FeatureName[54:63]:      Retryable,
+	_FeatureLowerName[54:63]: Retryable,
+	_FeatureName[63:76]:      WelcomeCharge,
+	_FeatureLowerName[63:76]: WelcomeCharge,
 }
 
 var _FeatureNames = []string{
@@ -55,8 +58,9 @@ var _FeatureNames = []string{
 	_FeatureName[7:20],
 	_FeatureName[20:36],
 	_FeatureName[36:43],
-	_FeatureName[43:52],
-	_FeatureName[52:65],
+	_FeatureName[43:54],
+	_FeatureName[54:63],
+	_FeatureName[63:76],
 }
 
 // FeatureString retrieves an enum value from the enum constants string name.

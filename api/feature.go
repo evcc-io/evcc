@@ -9,6 +9,7 @@ const (
 	CoarseCurrent
 	IntegratedDevice
 	Heating
+	SmallDevice
 	Retryable
 	WelcomeCharge
 )
