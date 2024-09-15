@@ -109,16 +109,15 @@ func (cp *CP) StopTransaction(request *core.StopTransactionRequest) (*core.StopT
 		return nil, ErrInvalidRequest
 	}
 
-	conn := cp.connectorByTransactionID(request.TransactionId)
-	if conn == nil {
-		res := &core.StopTransactionConfirmation{
-			IdTagInfo: &types.IdTagInfo{
-				Status: types.AuthorizationStatusAccepted, // accept old pending stop message during startup
-			},
-		}
-
-		return res, nil
+	if conn := cp.connectorByTransactionID(request.TransactionId); conn != nil {
+		return conn.StopTransaction(request)
 	}
 
-	return conn.StopTransaction(request)
+	res := &core.StopTransactionConfirmation{
+		IdTagInfo: &types.IdTagInfo{
+			Status: types.AuthorizationStatusAccepted, // accept old pending stop message during startup
+		},
+	}
+
+	return res, nil
 }
