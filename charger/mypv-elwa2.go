@@ -103,7 +103,11 @@ func (wb *MyPvElwa2) Features() []api.Feature {
 func (wb *MyPvElwa2) heartbeat(timeout time.Duration) {
 	for range time.Tick(timeout) {
 		if power := uint16(atomic.LoadUint32(&wb.power)); power > 0 {
-			if err := wb.setPower(power); err != nil {
+			enabled, err := wb.Enabled()
+			if err == nil && enabled {
+				err = wb.setPower(power)
+			}
+			if err != nil {
 				wb.log.ERROR.Println("heartbeat:", err)
 			}
 		}
@@ -165,10 +169,7 @@ var _ api.ChargerEx = (*MyPvElwa2)(nil)
 func (wb *MyPvElwa2) MaxCurrentMillis(current float64) error {
 	power := uint16(230 * current)
 
-	b := make([]byte, 2)
-	binary.BigEndian.PutUint16(b, power)
-
-	_, err := wb.conn.WriteMultipleRegisters(elwaRegSetPower, 1, b)
+	err := wb.setPower(power)
 	if err == nil {
 		atomic.StoreUint32(&wb.power, uint32(power))
 	}
