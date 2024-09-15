@@ -169,6 +169,9 @@ func (wb *Keba) heartbeat(timeout time.Duration) {
 
 func (wb *Keba) isConnected() (bool, error) {
 	b, err := wb.conn.ReadHoldingRegisters(kebaRegCableState, 2)
+	if err != nil {
+		return false, err
+	}
 
 	// 0: No cable is plugged.
 	// 1: Cable is connected to the charging station (not to the electric vehicle).
@@ -176,11 +179,14 @@ func (wb *Keba) isConnected() (bool, error) {
 	// 5: Cable is connected to the charging station and the electric vehicle (not locked).
 	// 7: Cable is connected to the charging station and the electric vehicle and locked (charging).
 
-	return binary.BigEndian.Uint32(b)&5 != 0, err
+	return binary.BigEndian.Uint32(b)&(1<<2) != 0, err
 }
 
 func (wb *Keba) getChargingState() (uint32, error) {
 	b, err := wb.conn.ReadHoldingRegisters(kebaRegChargingState, 2)
+	if err != nil {
+		return 0, err
+	}
 
 	// 0: Start-up of the charging station
 	// 1: The charging station is not ready for charging. The charging station is not connected to an electric vehicle, it is locked by the authorization function or another mechanism.
@@ -189,7 +195,7 @@ func (wb *Keba) getChargingState() (uint32, error) {
 	// 4: An error has occurred.
 	// 5: The charging process is temporarily interrupted because the temperature is too high or the wallbox is in suspended mode.
 
-	return binary.BigEndian.Uint32(b), err
+	return binary.BigEndian.Uint32(b), nil
 }
 
 // Status implements the api.Charger interface
