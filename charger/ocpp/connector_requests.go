@@ -3,6 +3,7 @@ package ocpp
 import (
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/remotetrigger"
+	"github.com/lorenzodonini/ocpp-go/ocpp1.6/smartcharging"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/types"
 )
 
@@ -10,7 +11,7 @@ func (conn *Connector) ChangeAvailabilityRequest(availabilityType core.Availabil
 	return conn.cp.ChangeAvailabilityRequest(conn.id, availabilityType)
 }
 
-func (conn *Connector) GetCompositeScheduleRequest(duration int) (*types.ChargingSchedule, error) {
+func (conn *Connector) GetCompositeScheduleRequest(duration int) (*smartcharging.GetCompositeScheduleConfirmation, error) {
 	return conn.cp.GetCompositeScheduleRequest(conn.id, duration)
 }
 

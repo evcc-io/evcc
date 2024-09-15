@@ -23,8 +23,8 @@ func (cp *CP) ChangeAvailabilityRequest(connectorId int, availabilityType core.A
 	return wait(err, rc)
 }
 
-func (cp *CP) GetCompositeScheduleRequest(connectorId int, duration int) (*types.ChargingSchedule, error) {
-	var res *types.ChargingSchedule
+func (cp *CP) GetCompositeScheduleRequest(connectorId int, duration int) (*smartcharging.GetCompositeScheduleConfirmation, error) {
+	var res *smartcharging.GetCompositeScheduleConfirmation
 	rc := make(chan error, 1)
 
 	err := Instance().GetCompositeSchedule(cp.id, func(request *smartcharging.GetCompositeScheduleConfirmation, err error) {
@@ -32,7 +32,7 @@ func (cp *CP) GetCompositeScheduleRequest(connectorId int, duration int) (*types
 			err = errors.New(string(request.Status))
 		}
 
-		res = request.ChargingSchedule
+		res = request
 
 		rc <- err
 	}, connectorId, duration)
