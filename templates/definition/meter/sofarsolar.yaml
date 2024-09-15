@@ -151,7 +151,7 @@ render: |
         source: const
         value: 0 # self-use
         set:
-          sequence:
+          source: sequence
           set:
           - source: modbus
             {{- include "modbus" . | indent 10 }}
