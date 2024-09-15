@@ -192,7 +192,7 @@ export default {
 		phaseRemaining: Number,
 		pvRemaining: Number,
 		pvAction: String,
-		smartCostLimit: { type: Number, default: 0 },
+		smartCostLimit: { type: Number, default: null },
 		smartCostType: String,
 		smartCostActive: Boolean,
 		smartCostNextStart: String,

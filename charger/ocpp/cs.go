@@ -13,7 +13,8 @@ type CS struct {
 	mu  sync.Mutex
 	log *util.Logger
 	ocpp16.CentralSystem
-	cps map[string]*CP
+	cps   map[string]*CP
+	txnId int
 }
 
 // Register registers a charge point with the central system.
@@ -105,4 +106,13 @@ func (cs *CS) ChargePointDisconnected(chargePoint ocpp16.ChargePointConnection) 
 	if cp, err := cs.ChargepointByID(chargePoint.ID()); err == nil {
 		cp.connect(false)
 	}
+}
+
+// NewTransactionID returns a CS-wide unique transactionId
+func (cs *CS) NewTransactionID() int {
+	cs.mu.Lock()
+	defer cs.mu.Unlock()
+
+	cs.txnId++
+	return cs.txnId
 }
