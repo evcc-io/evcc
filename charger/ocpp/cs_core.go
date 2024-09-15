@@ -13,7 +13,7 @@ func (cs *CS) OnAuthorize(id string, request *core.AuthorizeRequest) (*core.Auth
 		return nil, err
 	}
 
-	return cp.Authorize(request)
+	return cp.OnAuthorize(request)
 }
 
 func (cs *CS) OnBootNotification(id string, request *core.BootNotificationRequest) (*core.BootNotificationConfirmation, error) {
@@ -22,7 +22,7 @@ func (cs *CS) OnBootNotification(id string, request *core.BootNotificationReques
 		return nil, err
 	}
 
-	return cp.BootNotification(request)
+	return cp.OnBootNotification(request)
 }
 
 func (cs *CS) OnDataTransfer(id string, request *core.DataTransferRequest) (*core.DataTransferConfirmation, error) {
@@ -31,7 +31,7 @@ func (cs *CS) OnDataTransfer(id string, request *core.DataTransferRequest) (*cor
 		return nil, err
 	}
 
-	return cp.DataTransfer(request)
+	return cp.OnDataTransfer(request)
 }
 
 func (cs *CS) OnHeartbeat(id string, request *core.HeartbeatRequest) (*core.HeartbeatConfirmation, error) {
@@ -40,7 +40,7 @@ func (cs *CS) OnHeartbeat(id string, request *core.HeartbeatRequest) (*core.Hear
 		return nil, err
 	}
 
-	return cp.Heartbeat(request)
+	return cp.OnHeartbeat(request)
 }
 
 func (cs *CS) OnMeterValues(id string, request *core.MeterValuesRequest) (*core.MeterValuesConfirmation, error) {
@@ -49,7 +49,7 @@ func (cs *CS) OnMeterValues(id string, request *core.MeterValuesRequest) (*core.
 		return nil, err
 	}
 
-	return cp.MeterValues(request)
+	return cp.OnMeterValues(request)
 }
 
 func (cs *CS) OnStatusNotification(id string, request *core.StatusNotificationRequest) (*core.StatusNotificationConfirmation, error) {
@@ -58,7 +58,7 @@ func (cs *CS) OnStatusNotification(id string, request *core.StatusNotificationRe
 		return nil, err
 	}
 
-	return cp.StatusNotification(request)
+	return cp.OnStatusNotification(request)
 }
 
 func (cs *CS) OnStartTransaction(id string, request *core.StartTransactionRequest) (*core.StartTransactionConfirmation, error) {
@@ -67,7 +67,7 @@ func (cs *CS) OnStartTransaction(id string, request *core.StartTransactionReques
 		return nil, err
 	}
 
-	return cp.StartTransaction(request)
+	return cp.OnStartTransaction(request)
 }
 
 func (cs *CS) OnStopTransaction(id string, request *core.StopTransactionRequest) (*core.StopTransactionConfirmation, error) {
@@ -76,7 +76,7 @@ func (cs *CS) OnStopTransaction(id string, request *core.StopTransactionRequest)
 		return nil, err
 	}
 
-	return cp.StopTransaction(request)
+	return cp.OnStopTransaction(request)
 }
 
 func (cs *CS) OnDiagnosticsStatusNotification(id string, request *firmware.DiagnosticsStatusNotificationRequest) (confirmation *firmware.DiagnosticsStatusNotificationConfirmation, err error) {
@@ -85,7 +85,7 @@ func (cs *CS) OnDiagnosticsStatusNotification(id string, request *firmware.Diagn
 		return nil, err
 	}
 
-	return cp.DiagnosticStatusNotification(request)
+	return cp.OnDiagnosticStatusNotification(request)
 }
 
 func (cs *CS) OnFirmwareStatusNotification(id string, request *firmware.FirmwareStatusNotificationRequest) (confirmation *firmware.FirmwareStatusNotificationConfirmation, err error) {
@@ -94,5 +94,5 @@ func (cs *CS) OnFirmwareStatusNotification(id string, request *firmware.Firmware
 		return nil, err
 	}
 
-	return cp.FirmwareStatusNotification(request)
+	return cp.OnFirmwareStatusNotification(request)
 }

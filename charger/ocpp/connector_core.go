@@ -24,7 +24,7 @@ func (conn *Connector) timestampValid(t time.Time) bool {
 	return !t.Before(conn.status.Timestamp.Time)
 }
 
-func (conn *Connector) StatusNotification(request *core.StatusNotificationRequest) (*core.StatusNotificationConfirmation, error) {
+func (conn *Connector) OnStatusNotification(request *core.StatusNotificationRequest) (*core.StatusNotificationConfirmation, error) {
 	conn.mu.Lock()
 	defer conn.mu.Unlock()
 
@@ -56,7 +56,7 @@ func getSampleKey(s types.SampledValue) types.Measurand {
 	return s.Measurand
 }
 
-func (conn *Connector) MeterValues(request *core.MeterValuesRequest) (*core.MeterValuesConfirmation, error) {
+func (conn *Connector) OnMeterValues(request *core.MeterValuesRequest) (*core.MeterValuesConfirmation, error) {
 	conn.mu.Lock()
 	defer conn.mu.Unlock()
 
@@ -87,7 +87,7 @@ func (conn *Connector) MeterValues(request *core.MeterValuesRequest) (*core.Mete
 	return new(core.MeterValuesConfirmation), nil
 }
 
-func (conn *Connector) StartTransaction(request *core.StartTransactionRequest) (*core.StartTransactionConfirmation, error) {
+func (conn *Connector) OnStartTransaction(request *core.StartTransactionRequest) (*core.StartTransactionConfirmation, error) {
 	conn.mu.Lock()
 	defer conn.mu.Unlock()
 
@@ -124,7 +124,7 @@ func (conn *Connector) assumeMeterStopped() {
 	}
 }
 
-func (conn *Connector) StopTransaction(request *core.StopTransactionRequest) (*core.StopTransactionConfirmation, error) {
+func (conn *Connector) OnStopTransaction(request *core.StopTransactionRequest) (*core.StopTransactionConfirmation, error) {
 	conn.mu.Lock()
 	defer conn.mu.Unlock()
 
