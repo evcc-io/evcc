@@ -67,7 +67,7 @@ func (conn *Connector) IdTag() string {
 // getScheduleLimit queries the current or power limit the charge point is currently set to offer
 func (conn *Connector) GetScheduleLimit(duration int) (float64, error) {
 	schedule, err := conn.cp.GetCompositeScheduleRequest(conn.id, duration)
-  if err != nil {
+	if err != nil {
 		return 0, err
 	}
 
