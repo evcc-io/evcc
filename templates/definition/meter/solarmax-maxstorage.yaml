@@ -13,6 +13,11 @@ params:
     id: 1
   - name: capacity
     advanced: true
+  # battery control
+  - name: watchdog
+    type: duration
+    default: 60s
+    advanced: true
 render: |
   type: custom
   power:
