@@ -130,8 +130,8 @@ func planSocRemoveHandler(site site.API) http.HandlerFunc {
 	}
 }
 
-// addRepetitivePlansHandler handles any information regarding weekday, hour, minute, soc and isActive
-func addRepetitivePlansHandler(site site.API) http.HandlerFunc {
+// addRepeatingPlansHandler handles any information regarding weekday, hour, minute, soc and isActive
+func addRepeatingPlansHandler(site site.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// TODO: add code
 	}

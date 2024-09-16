@@ -18,10 +18,10 @@
 					<hr class="w-75 mx-auto mt-5" />
 					<h5>
 						<div class="inner" data-testid="plan-preview-title">
-							{{ $t("main.chargingPlan.repetitivePlan") }}
+							{{ $t("main.chargingPlan.repeatingPlan") }}
 						</div>
 					</h5>
-					<ChargingPlanRepetitiveSettingsEntries :id="id" :rangePerSoc="rangePerSoc" />
+					<ChargingPlanRepeatingSettingsEntries :id="id" :rangePerSoc="rangePerSoc" />
 				</div>
 			</div>
 		</div>
@@ -40,7 +40,7 @@
 import "@h2d2/shopicons/es/regular/plus";
 import ChargingPlanPreview from "./ChargingPlanPreview.vue";
 import ChargingPlanStaticSettingsEntry from "./ChargingPlanStaticSettingsEntry.vue";
-import ChargingPlanRepetitiveSettingsEntries from "./ChargingPlanRepetitiveSettingsEntries.vue";
+import ChargingPlanRepeatingSettingsEntries from "./ChargingPlanRepeatingSettingsEntries.vue";
 import ChargingPlanWarnings from "./ChargingPlanWarnings.vue";
 import formatter from "../mixins/formatter";
 import collector from "../mixins/collector";
@@ -55,7 +55,7 @@ export default {
 	components: {
 		ChargingPlanPreview,
 		ChargingPlanStaticSettingsEntry,
-		ChargingPlanRepetitiveSettingsEntries,
+		ChargingPlanRepeatingSettingsEntries,
 		ChargingPlanWarnings,
 	},
 	mixins: [formatter, collector],

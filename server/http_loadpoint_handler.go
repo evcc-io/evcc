@@ -69,8 +69,8 @@ func planHandler(lp loadpoint.API) http.HandlerFunc {
 	}
 }
 
-// getRepetitivePlanHandler returns all repetitive plans
-func getRepetitivePlansHandler(lp loadpoint.API) http.HandlerFunc {
+// getRepeatingPlanHandler returns all repeating plans
+func getRepeatingPlansHandler(lp loadpoint.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// dummy data
 		// TODO: return real data
