@@ -7,4 +7,5 @@ params:
   - name: modbus
     choice: ["tcpip"]
 render: |
+  type: ac-elwa-2
   {{- include "modbus" . }}
