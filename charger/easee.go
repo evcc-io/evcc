@@ -112,16 +112,15 @@ func NewEasee(user, password, charger string, timeout time.Duration, authorize b
 	done := make(chan struct{})
 
 	c := &Easee{
-		Helper:            request.NewHelper(log),
-		charger:           charger,
-		authorize:         authorize,
-		log:               log,
-		maxChargerCurrent: 6, // save default, will be overwritten by cloud config once fetched
-		current:           6, // default current
-		startDone:         sync.OnceFunc(func() { close(done) }),
-		cmdC:              make(chan easee.SignalRCommandResponse),
-		obsC:              make(chan easee.Observation),
-		obsTime:           make(map[easee.ObservationID]time.Time),
+		Helper:    request.NewHelper(log),
+		charger:   charger,
+		authorize: authorize,
+		log:       log,
+		current:   6, // default current
+		startDone: sync.OnceFunc(func() { close(done) }),
+		cmdC:      make(chan easee.SignalRCommandResponse),
+		obsC:      make(chan easee.Observation),
+		obsTime:   make(map[easee.ObservationID]time.Time),
 	}
 
 	c.Client.Timeout = timeout
@@ -652,7 +651,10 @@ func (c *Easee) waitForDynamicChargerCurrent(targetCurrent float64) error {
 
 // MaxCurrent implements the api.Charger interface
 func (c *Easee) MaxCurrent(current int64) error {
-	cur := min(float64(current), c.maxChargerCurrent)
+	cur := float64(current)
+	if c.maxChargerCurrent != 0 {
+		cur = min(cur, c.maxChargerCurrent)
+	}
 	data := easee.ChargerSettings{
 		DynamicChargerCurrent: &cur,
 	}
