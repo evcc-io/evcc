@@ -137,3 +137,21 @@ describe("fmtDuration", () => {
     config.global.mocks["$i18n"].locale = "de-DE";
   });
 });
+
+describe("getShortenedWeekdaysLabel", () => {
+  test("should format single days", () => {
+    expect(fmt.getShortenedWeekdaysLabel([0]).eq("Mo"));
+    expect(fmt.getShortenedWeekdaysLabel([0, 2, 4, 6]).eq("Mo, Mi, Fr, So"));
+    expect(fmt.getShortenedWeekdaysLabel([0]).eq("Mo"));
+    expect(fmt.getShortenedWeekdaysLabel([3, 6]).eq("Fr, So"));
+  });
+  test("should format ranges", () => {
+    expect(fmt.getShortenedWeekdaysLabel([0, 1]).eq("Mo-Di"));
+    expect(fmt.getShortenedWeekdaysLabel([0, 1, 2, 3, 4, 5, 6]).eq("Mo-So"));
+    expect(fmt.getShortenedWeekdaysLabel([0, 1, 3, 4, 5]).eq("Mo-Di, Do-Sa"));
+  });
+  test("should format single days and ranges", () => {
+    expect(fmt.getShortenedWeekdaysLabel([0, 1, 3, 5, 6]).eq("Mo-Di, Do, Sa-So"));
+    expect(fmt.getShortenedWeekdaysLabel([0, 2, 3, 5, 6]).eq("Mo, Mi-Do, Sa-So"));
+  });
+});
