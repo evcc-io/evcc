@@ -29,7 +29,7 @@
 			</div>
 			<div class="col-7 col-lg-4 mb-2 mb-lg-0">
 				<MultiSelect
-					id="chargingPlanWeekdaySelect"
+					:id="formId('weekdays')"
 					:value="selectedWeekdays"
 					:options="dayOptions()"
 					:selectAllLabel="$t('main.chargingPlan.selectAll')"
