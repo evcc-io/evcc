@@ -50,7 +50,7 @@
 					type="time"
 					class="form-control mx-0"
 					:step="60 * 5"
-					data-testid="plan-time"
+					data-testid="repeating-plan-time"
 					required
 					@change="update"
 				/>
@@ -65,7 +65,7 @@
 					:id="formId('goal')"
 					v-model="selectedSoc"
 					class="form-select mx-0"
-					data-testid="plan-soc"
+					data-testid="repeating-plan-soc"
 					@change="update"
 				>
 					<option v-for="opt in socOptions" :key="opt.value" :value="opt.value">
@@ -86,7 +86,7 @@
 						v-model="selectedActive"
 						type="checkbox"
 						role="switch"
-						data-testid="plan-active"
+						data-testid="repeating-plan-active"
 						:checked="selectedActive"
 						@change="update"
 					/>

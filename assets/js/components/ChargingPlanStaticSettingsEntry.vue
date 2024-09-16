@@ -31,7 +31,7 @@
 					:id="formId('day')"
 					v-model="selectedDay"
 					class="form-select me-2"
-					data-testid="plan-day"
+					data-testid="static-plan-day"
 					@change="preview"
 				>
 					<option v-for="opt in dayOptions()" :key="opt.value" :value="opt.value">
@@ -51,7 +51,7 @@
 					type="time"
 					class="form-control mx-0"
 					:step="60 * 5"
-					data-testid="plan-time"
+					data-testid="static-plan-time"
 					required
 					@change="preview"
 				/>
@@ -67,7 +67,7 @@
 					:id="formId('goal')"
 					v-model="selectedSoc"
 					class="form-select mx-0"
-					data-testid="plan-soc"
+					data-testid="staticplan-soc"
 					@change="preview"
 				>
 					<option v-for="opt in socOptions" :key="opt.value" :value="opt.value">
@@ -99,7 +99,7 @@
 						class="form-check-input"
 						type="checkbox"
 						role="switch"
-						data-testid="plan-active"
+						data-testid="static-plan-active"
 						:checked="!isNew"
 						:disabled="timeInThePast"
 						@change="toggle"
