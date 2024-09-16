@@ -31,7 +31,7 @@ var (
 )
 
 // RegisteredClient reuses an registered Mqtt publisher or creates a new one
-func RegisteredClient(log *util.Logger, broker, user, password, clientID string, qos byte, insecure bool, caCert string, clientCert string, clientKey string, opts ...Option) (*Client, error) {
+func RegisteredClient(log *util.Logger, broker, user, password, clientID string, qos byte, insecure bool, caCert, clientCert, clientKey string, opts ...Option) (*Client, error) {
 	key := fmt.Sprintf("%s.%s:%s", broker, user, password)
 
 	mu.Lock()
