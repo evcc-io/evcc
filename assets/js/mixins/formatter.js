@@ -286,7 +286,7 @@ export default {
       return this.fmtNumber(value, 1, "celsius");
     },
     getWeekdaysList: function (weekdayFormat) {
-      const { format } = new Intl.DateTimeFormat(undefined, { weekday: weekdayFormat });
+      const { format } = new Intl.DateTimeFormat(this.$i18n?.locale, { weekday: weekdayFormat });
       return [...Array(7).keys()].map((day) => format(new Date(Date.UTC(2021, 5, day))));
     },
     getShortenedWeekdaysLabel: function (selectedWeekdays) {
