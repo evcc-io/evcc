@@ -50,6 +50,7 @@ type Easee struct {
 	log                     *util.Logger
 	mux                     sync.RWMutex
 	lastEnergyPollMux       sync.Mutex
+	maxChargerCurrent       float64
 	dynamicChargerCurrent   float64
 	current                 float64
 	chargerEnabled          bool
@@ -314,6 +315,8 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 		c.phaseMode = value.(int)
 	case easee.OUTPUT_PHASE:
 		c.outputPhase = value.(int) / 10 // API gives 0,10,30 for 0,1,3p
+	case easee.MAX_CHARGER_CURRENT:
+		c.maxChargerCurrent = value.(float64)
 	case easee.DYNAMIC_CHARGER_CURRENT:
 		c.dynamicChargerCurrent = value.(float64)
 
@@ -649,6 +652,9 @@ func (c *Easee) waitForDynamicChargerCurrent(targetCurrent float64) error {
 // MaxCurrent implements the api.Charger interface
 func (c *Easee) MaxCurrent(current int64) error {
 	cur := float64(current)
+	if c.maxChargerCurrent != 0 {
+		cur = min(cur, c.maxChargerCurrent)
+	}
 	data := easee.ChargerSettings{
 		DynamicChargerCurrent: &cur,
 	}
