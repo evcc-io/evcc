@@ -23,13 +23,13 @@
 		</div>
 		<div class="row">
 			<div class="col-5 d-lg-none col-form-label">
-				<label :for="formId('day')">
+				<label :for="formId('weekdays')">
 					{{ $t("main.chargingPlan.weekdays") }}
 				</label>
 			</div>
 			<div class="col-7 col-lg-4 mb-2 mb-lg-0">
 				<MultiSelect
-					id="chargingPlanWeekdaySelect"
+					:id="formId('weekdays')"
 					:value="selectedWeekdays"
 					:options="dayOptions()"
 					:selectAllLabel="$t('main.chargingPlan.selectAll')"
