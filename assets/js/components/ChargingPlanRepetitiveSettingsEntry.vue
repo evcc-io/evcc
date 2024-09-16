@@ -23,7 +23,7 @@
 		</div>
 		<div class="row">
 			<div class="col-5 d-lg-none col-form-label">
-				<label :for="formId('day')">
+				<label :for="formId('weekdays')">
 					{{ $t("main.chargingPlan.weekdays") }}
 				</label>
 			</div>
