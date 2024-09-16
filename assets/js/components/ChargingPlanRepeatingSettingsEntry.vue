@@ -125,7 +125,6 @@ export default {
 		time: String,
 		soc: Number,
 		active: Boolean,
-		socBasedPlanning: Boolean,
 		rangePerSoc: Number,
 	},
 	emits: ["repeating-plan-updated", "repeating-plan-removed"],
