@@ -160,7 +160,7 @@ export default {
 			return { value, name };
 		},
 		dayOptions: function () {
-			return this.WEEKDAYS.map((weekday, index) => {
+			return this.getWeekdaysList("long").map((weekday, index) => {
 				return {
 					name: this.$t(`main.chargingPlan.${weekday}`),
 					value: index,

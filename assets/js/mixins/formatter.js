@@ -21,21 +21,10 @@ export const POWER_UNIT = Object.freeze({
   AUTO: "",
 });
 
-export const WEEKDAYS = Object.freeze([
-  "monday",
-  "tuesday",
-  "wednesday",
-  "thursday",
-  "friday",
-  "saturday",
-  "sunday",
-]);
-
 export default {
   data: function () {
     return {
       POWER_UNIT,
-      WEEKDAYS,
       fmtLimit: 100,
       fmtDigits: 1,
     };
@@ -296,35 +285,38 @@ export default {
       // TODO: handle fahrenheit
       return this.fmtNumber(value, 1, "celsius");
     },
-    getShortenedWeekdaysLabel: function (weekdays) {
-      if (0 === weekdays.length) {
+    getWeekdaysList: function (weekdayFormat) {
+      const { format } = new Intl.DateTimeFormat(undefined, { weekday: weekdayFormat });
+      return [...Array(7).keys()].map((day) => format(new Date(Date.UTC(2021, 5, day))));
+    },
+    getShortenedWeekdaysLabel: function (selectedWeekdays) {
+      if (0 === selectedWeekdays.length) {
         return this.$t("main.chargingPlan.noWeekdaysSelected");
       }
-      let label = "";
 
-      for (let weekdayRangeStart = 0; weekdayRangeStart < WEEKDAYS.length; weekdayRangeStart++) {
-        if (weekdays.includes(weekdayRangeStart)) {
-          label += this.getShortenedWeekdayLabel(weekdayRangeStart).slice(0, 2);
+      let label = "";
+      let weekdays = this.getWeekdaysList("short");
+
+      for (let weekdayRangeStart = 0; weekdayRangeStart < weekdays.length; weekdayRangeStart++) {
+        if (selectedWeekdays.includes(weekdayRangeStart)) {
+          label += weekdays[weekdayRangeStart];
 
           let weekdayRangeEnd = weekdayRangeStart;
-          while (weekdays.includes(weekdayRangeEnd + 1)) {
+          while (selectedWeekdays.includes(weekdayRangeEnd + 1)) {
             weekdayRangeEnd++;
           }
 
           if (weekdayRangeStart !== weekdayRangeEnd) {
-            label += "-" + this.getShortenedWeekdayLabel(weekdayRangeEnd).slice(0, 2);
+            label += "-" + weekdays[weekdayRangeEnd];
             weekdayRangeStart = weekdayRangeEnd;
           }
-          if (Math.max(...weekdays) !== weekdayRangeEnd) {
+          if (Math.max(...selectedWeekdays) !== weekdayRangeEnd) {
             label += ", ";
           }
         }
       }
 
       return label;
-    },
-    getShortenedWeekdayLabel: function (index) {
-      return this.$t(`main.chargingPlan.${WEEKDAYS[index]}`);
     },
   },
 };
