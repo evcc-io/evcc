@@ -143,7 +143,7 @@ describe("getShortenedWeekdaysLabel", () => {
     expect(fmt.getShortenedWeekdaysLabel([0])).eq("Mo");
     expect(fmt.getShortenedWeekdaysLabel([0, 2, 4, 6])).eq("Mo, Mi, Fr, So");
     expect(fmt.getShortenedWeekdaysLabel([0])).eq("Mo");
-    expect(fmt.getShortenedWeekdaysLabel([3, 6])).eq("Fr, So");
+    expect(fmt.getShortenedWeekdaysLabel([3, 6])).eq("Do, So");
   });
   test("should format ranges", () => {
     expect(fmt.getShortenedWeekdaysLabel([0, 1])).eq("Mo-Di");
