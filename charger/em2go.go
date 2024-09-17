@@ -132,7 +132,6 @@ func NewEm2Go(uri string, slaveID uint8, milli bool) (api.Charger, error) {
 
 	if chargerCurrent == 6 {
 		wb.workaround = true
-
 	} else {
 		wb.workaround = false
 		maxCurrent = wb.maxCurrentMillis
@@ -196,7 +195,6 @@ func (wb *Em2Go) Enable(enable bool) error {
 		c := make([]byte, 2)
 		binary.BigEndian.PutUint16(c, uint16(phases))
 		if _, err := wb.conn.WriteMultipleRegisters(em2GoRegPhases, 1, c); err != nil {
-
 			return err
 		}
 
@@ -204,7 +202,6 @@ func (wb *Em2Go) Enable(enable bool) error {
 		var current int64
 		current = wb.current
 		wb.MaxCurrent(current)
-
 	}
 	return nil
 }
