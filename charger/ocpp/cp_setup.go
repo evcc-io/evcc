@@ -60,9 +60,7 @@ func (cp *CP) Setup(meterValues string, meterInterval time.Duration) error {
 			}
 			if remove, ok := strings.CutPrefix(meterValues, "-"); ok {
 				// remove a single offending measurand
-				cp.meterValuesSample = strings.Join(lo.Reject(strings.Split(*opt.Value, ","), func(v string, _ int) bool {
-					return v == remove
-				}), ",")
+				cp.meterValuesSample = strings.Join(lo.Without(strings.Split(*opt.Value, ","), strings.Split(remove, ",")...), ",")
 				meterValues = ""
 			} else {
 				cp.meterValuesSample = *opt.Value
