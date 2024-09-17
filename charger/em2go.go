@@ -33,10 +33,11 @@ import (
 
 // Em2Go charger implementation
 type Em2Go struct {
-	log     *util.Logger
-	conn    *modbus.Connection
-	current int64
-	lp      loadpoint.API
+	log        *util.Logger
+	conn       *modbus.Connection
+	current    int64
+	lp         loadpoint.API
+	workaround bool
 }
 
 const (
@@ -101,15 +102,17 @@ func NewEm2Go(uri string, slaveID uint8, milli bool) (api.Charger, error) {
 	conn.Logger(log.TRACE)
 
 	wb := &Em2Go{
-		log:     log,
-		conn:    conn,
-		current: 6, // assume min current
+		log:        log,
+		conn:       conn,
+		current:    6,
+		workaround: false,
 	}
 
 	var (
-		maxCurrent func(float64) error
-		phases1p3p func(int) error
-		phasesG    func() (int, error)
+		maxCurrent     func(float64) error
+		phases1p3p     func(int) error
+		phasesG        func() (int, error)
+		chargerCurrent float64
 	)
 
 	if milli {
@@ -119,6 +122,20 @@ func NewEm2Go(uri string, slaveID uint8, milli bool) (api.Charger, error) {
 	if _, err := wb.conn.ReadHoldingRegisters(em2GoRegPhases, 1); err == nil {
 		phases1p3p = wb.phases1p3p
 		phasesG = wb.getPhases
+	}
+
+	// Test if workaround is needed (fw <1.3)
+	if wb.maxCurrentMillis(6.1) != nil {
+		return nil, err
+	}
+	chargerCurrent, err = wb.GetMaxCurrent()
+
+	if chargerCurrent == 6 {
+		wb.workaround = true
+
+	} else {
+		wb.workaround = false
+		maxCurrent = wb.maxCurrentMillis
 	}
 
 	return decorateEm2Go(wb, maxCurrent, phases1p3p, phasesG), err
@@ -166,25 +183,29 @@ func (wb *Em2Go) Enable(enable bool) error {
 		return err
 	}
 
-	// Workaround get phases set in evcc and send to charger
-	var phases int
-	if wb.lp != nil {
-		phases = wb.lp.GetPhases()
-	}
-	if phases == 0 {
-		phases = 3
-	}
-	c := make([]byte, 2)
-	binary.BigEndian.PutUint16(c, uint16(phases))
-	if _, err := wb.conn.WriteMultipleRegisters(em2GoRegPhases, 1, c); err != nil {
-		return err
-	}
+	// Workaround
+	if wb.workaround {
+		//Get wanted phases set in lp and send to charger
+		var phases int
+		if wb.lp != nil {
+			phases = wb.lp.GetPhases()
+		}
+		if phases == 0 {
+			phases = 3
+		}
+		c := make([]byte, 2)
+		binary.BigEndian.PutUint16(c, uint16(phases))
+		if _, err := wb.conn.WriteMultipleRegisters(em2GoRegPhases, 1, c); err != nil {
 
-	//Workaround send default current to charger
-	var current int64
-	current = wb.current
-	wb.MaxCurrent(current)
+			return err
+		}
 
+		//Send default current to charger
+		var current int64
+		current = wb.current
+		wb.MaxCurrent(current)
+
+	}
 	return nil
 }
 
@@ -297,25 +318,28 @@ func (wb *Em2Go) phases1p3p(phases int) error {
 	b := make([]byte, 2)
 	binary.BigEndian.PutUint16(b, uint16(phases))
 
-	// Workaround when enabled, stop charging wait 10 seconds, enable and set phases
-	enabled, err := wb.Enabled()
-	if err != nil {
-		return err
+	//Workaround
+	if wb.workaround {
+		// When enabled, disable, wait 10 seconds, enable and set phases
+		enabled, err := wb.Enabled()
+		if err != nil {
+			return err
+		}
+
+		if enabled {
+			if err := wb.Enable(false); err != nil {
+				return err
+			}
+			time.Sleep(10 * time.Second)
+
+			if err := wb.Enable(true); err != nil {
+				return err
+			}
+		}
 	}
 
-	if enabled {
-		if err := wb.Enable(false); err != nil {
-			return err
-		}
-		time.Sleep(10 * time.Second)
-
-		if err := wb.Enable(true); err != nil {
-			return err
-		}
-
-		if _, err := wb.conn.WriteMultipleRegisters(em2GoRegPhases, 1, b); err != nil {
-			return err
-		}
+	if _, err := wb.conn.WriteMultipleRegisters(em2GoRegPhases, 1, b); err != nil {
+		return err
 	}
 
 	return nil
