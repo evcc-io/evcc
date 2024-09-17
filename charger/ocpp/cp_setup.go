@@ -10,6 +10,7 @@ import (
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/remotetrigger"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/smartcharging"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/types"
+	"github.com/samber/lo"
 )
 
 const desiredMeasurands = "Power.Active.Import,Energy.Active.Import.Register,Current.Import,Voltage,Current.Offered,Power.Offered,SoC"
@@ -86,6 +87,11 @@ func (cp *CP) Setup(meterValues string, meterInterval time.Duration) error {
 		case KeyEvBoxSupportedMeasurands:
 			if meterValues == "" {
 				meterValues = *opt.Value
+			} else if remove, ok := strings.CutPrefix(meterValues, "-"); ok {
+				// remove a single offending measurand
+				meterValues = strings.Join(lo.Reject(strings.Split(*opt.Value, ","), func(v string, _ int) bool {
+					return v == remove
+				}), ",")
 			}
 		}
 	}
