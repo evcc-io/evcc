@@ -13,3 +13,7 @@ render: |
     source: http
     uri: http://{{ .host }}/api/livedata/status
     jq: .total.Power.v
+  energy:
+    source: http
+    uri: http://{{ .host }}/api/livedata/status
+    jq: .total.YieldTotal.v

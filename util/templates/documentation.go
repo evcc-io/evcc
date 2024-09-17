@@ -3,11 +3,12 @@ package templates
 import (
 	"bytes"
 	_ "embed"
+	"slices"
 	"strconv"
 	"strings"
 	"text/template"
 
-	"github.com/go-sprout/sprout"
+	"github.com/go-sprout/sprout/sprigin"
 )
 
 //go:embed documentation.tpl
@@ -44,7 +45,7 @@ func (t *Template) RenderDocumentation(product Product, lang string) ([]byte, er
 	var modbusRender string
 	if modbusChoices := t.ModbusChoices(); len(modbusChoices) > 0 {
 		if i, _ := t.ParamByName(ParamModbus); i > -1 {
-			modbusTmpl, err := template.New("yaml").Funcs(sprout.FuncMap()).Parse(documentationModbusTmpl)
+			modbusTmpl, err := template.New("yaml").Funcs(sprigin.FuncMap()).Parse(documentationModbusTmpl)
 			if err != nil {
 				panic(err)
 			}
@@ -76,6 +77,17 @@ func (t *Template) RenderDocumentation(product Product, lang string) ([]byte, er
 
 		filteredParams = append(filteredParams, param)
 	}
+
+	// all advanced params should be sorted to the end
+	slices.SortStableFunc(filteredParams, func(i, j Param) int {
+		if i.IsAdvanced() && !j.IsAdvanced() {
+			return 1
+		}
+		if !i.IsAdvanced() && j.IsAdvanced() {
+			return -1
+		}
+		return 0
+	})
 
 	data := map[string]interface{}{
 		"Template":               t.Template,

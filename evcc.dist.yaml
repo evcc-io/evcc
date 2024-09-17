@@ -114,7 +114,7 @@ site:
 loadpoints:
   - title: Garage # display name for UI
     charger: wallbe # charger
-    meter: charge # charge meter
+    meter: charge # external charge meter (if charger has no meter included). NOT grid or pv meter.
     mode: "off" # default charge mode to apply when vehicle is disconnected; use "off" to disable by default if charger is publicly available
 
     # remaining settings are experts-only and best left at default values

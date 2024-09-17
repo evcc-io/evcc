@@ -5,11 +5,9 @@ const CONFIG_GRID_ONLY = "config-grid-only.evcc.yaml";
 const CONFIG_WITH_VEHICLE = "config-with-vehicle.evcc.yaml";
 
 test.use({ baseURL: baseUrl() });
+test.describe.configure({ mode: "parallel" });
 
-test.beforeAll(async () => {
-  await start(CONFIG_GRID_ONLY, "password.sql");
-});
-test.afterAll(async () => {
+test.afterEach(async () => {
   await stop();
 });
 
@@ -30,6 +28,8 @@ async function enableExperimental(page) {
 
 test.describe("vehicles", async () => {
   test("create, edit and delete vehicles", async ({ page }) => {
+    await start(CONFIG_GRID_ONLY, "password.sql");
+
     await page.goto("/#/config");
     await login(page);
     await enableExperimental(page);
@@ -79,6 +79,8 @@ test.describe("vehicles", async () => {
   });
 
   test("config should survive restart", async ({ page }) => {
+    await start(CONFIG_GRID_ONLY, "password.sql");
+
     await page.goto("/#/config");
     await login(page);
     await enableExperimental(page);
@@ -111,7 +113,7 @@ test.describe("vehicles", async () => {
   });
 
   test("mixed config (yaml + db)", async ({ page }) => {
-    await cleanRestart(CONFIG_WITH_VEHICLE, "password.sql");
+    await start(CONFIG_WITH_VEHICLE, "password.sql");
 
     await page.goto("/#/config");
     await login(page);
@@ -120,7 +122,7 @@ test.describe("vehicles", async () => {
     await expect(page.getByTestId("vehicle")).toHaveCount(1);
     const vehicleModal = page.getByTestId("vehicle-modal");
 
-    // create #1
+    // create #2
     await page.getByTestId("add-vehicle").click();
     await vehicleModal.getByLabel("Manufacturer").selectOption("Generic vehicle");
     await vehicleModal.getByLabel("Title").fill("Green Car");
@@ -132,6 +134,8 @@ test.describe("vehicles", async () => {
   });
 
   test("advanced fields", async ({ page }) => {
+    await start(CONFIG_GRID_ONLY, "password.sql");
+
     await page.goto("/#/config");
     await login(page);
     await enableExperimental(page);
@@ -166,5 +170,35 @@ test.describe("vehicles", async () => {
     await page.getByRole("button", { name: "Show advanced settings" }).click();
     await expect(vehicleModal.getByLabel("Cache optional")).toBeVisible();
     await expect(vehicleModal.getByLabel("Default mode")).toBeVisible();
+  });
+
+  test("save and restore rfid identifiers", async ({ page }) => {
+    await start(CONFIG_GRID_ONLY, "password.sql");
+
+    await page.goto("/#/config");
+    await login(page);
+    await enableExperimental(page);
+
+    await page.getByTestId("add-vehicle").click();
+    const vehicleModal = page.getByTestId("vehicle-modal");
+
+    // generic
+    await vehicleModal.getByLabel("Manufacturer").selectOption("Generic vehicle");
+    await vehicleModal.getByLabel("Title").fill("RFID Car");
+    await page.getByRole("button", { name: "Show advanced settings" }).click();
+    await vehicleModal.getByLabel("RFID identifiers").fill("aaa\nbbb \n ccc\n\nddd\n");
+    await vehicleModal.getByRole("button", { name: "Validate & save" }).click();
+    await expect(page.getByTestId("restart-needed")).toBeVisible();
+
+    // restart evcc
+    await restart(CONFIG_GRID_ONLY);
+    await page.reload();
+
+    await expect(page.getByTestId("vehicle")).toHaveCount(1);
+    await page.getByTestId("vehicle").getByRole("button", { name: "edit" }).click();
+    await vehicleModal.getByRole("button", { name: "Show advanced settings" }).click();
+    await expect(vehicleModal.getByLabel("RFID identifiers")).toHaveValue("aaa\nbbb\nccc\nddd");
+    await vehicleModal.getByLabel("Close").click();
+    await expect(page.getByTestId("fatal-error")).not.toBeVisible();
   });
 });

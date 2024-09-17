@@ -77,7 +77,7 @@ func NewsmartEVSEFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	return NewsmartEVSE(cc.URI, cc.Device, cc.Comset, cc.Baudrate, modbus.ProtocolFromRTU(cc.RTU), cc.ID)
+	return NewsmartEVSE(cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Protocol(), cc.ID)
 }
 
 // NewsmartEVSE creates a new charger

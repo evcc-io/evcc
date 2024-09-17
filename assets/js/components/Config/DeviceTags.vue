@@ -11,7 +11,11 @@
 			</div>
 			<div
 				class="value overflow-hidden text-truncate"
-				:class="{ 'value--error': hasError(entry), 'value--muted': entry.value === false }"
+				:class="{
+					'value--error': !!entry.error,
+					'value--warning': entry.warning,
+					'value--muted': entry.muted || entry.value === false,
+				}"
 			>
 				{{ fmtDeviceValue(entry) }}
 			</div>
@@ -29,15 +33,14 @@ export default {
 	mixins: [formatter],
 	computed: {
 		entries() {
-			return Object.entries(this.tags).map(([name, { value, error, options }]) => {
-				return { name, value, error, options };
-			});
+			return Object.entries(this.tags).map(
+				([name, { value, error, warning, muted, options }]) => {
+					return { name, value, error, warning, muted, options };
+				}
+			);
 		},
 	},
 	methods: {
-		hasError(entry) {
-			return !!entry.error;
-		},
 		fmtDeviceValue(entry) {
 			const { name, value, options = {} } = entry;
 			if (value === null || value === undefined) {
@@ -45,11 +48,11 @@ export default {
 			}
 			switch (name) {
 				case "power":
-					return this.fmtKw(value);
+					return this.fmtW(value);
 				case "energy":
 				case "capacity":
 				case "chargedEnergy":
-					return this.fmtKWh(value * 1e3);
+					return this.fmtWh(value * 1e3);
 				case "soc":
 				case "socLimit":
 					return this.fmtPercentage(value, 1);
@@ -63,7 +66,7 @@ export default {
 				case "phaseVoltages":
 					return value.map((v) => this.fmtNumber(v, 0)).join(" ") + " V";
 				case "phasePowers":
-					return value.map((v) => this.fmtKw(v)).join(", ");
+					return value.map((v) => this.fmtW(v)).join(", ");
 				case "chargeStatus":
 					return this.$t(`config.deviceValue.chargeStatus${value}`);
 				case "gridPrice":
@@ -71,6 +74,11 @@ export default {
 					return this.fmtPricePerKWh(value, options.currency, true);
 				case "co2":
 					return this.fmtCo2Short(value);
+				case "powerRange":
+					return `${this.fmtW(value[0])} / ${this.fmtW(value[1])}`;
+				case "currentRange":
+					return `${this.fmtNumber(value[0], 1)} A / ${this.fmtNumber(value[1], 1)} A`;
+				case "controllable":
 				case "configured":
 					return value
 						? this.$t("config.deviceValue.yes")
@@ -100,6 +108,9 @@ export default {
 }
 .value--error {
 	color: var(--bs-danger);
+}
+.value--warning {
+	color: var(--bs-warning);
 }
 .value--muted {
 	color: var(--evcc-gray) !important;

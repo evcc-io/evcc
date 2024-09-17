@@ -172,6 +172,10 @@ title = "Mreža"
 
 [config.options]
 
+[config.options.boolean]
+no = "ne"
+yes = "da"
+
 [config.options.endianness]
 big = "big-endian"
 little = "little-endian"
@@ -251,11 +255,11 @@ greenEnergy = "Sončna energija"
 greenEnergySub1 = "napolnjeno z evcc"
 greenEnergySub2 = "od Oktobra 2022"
 greenShare = "Sončni delež"
-greenShareSub1 = "napajanje zagotavlja"
-greenShareSub2 = "sončno in baterijsko shranjevanje"
+greenShareSub1 = "napajanja zagotavlja"
+greenShareSub2 = "sončna in baterijska energija"
 power = "Moč polnjenja"
 powerSub1 = "{activeClients} od {totalClients} udeležencev"
-powerSub2 = "polnjenje…"
+powerSub2 = "trenutno polni…"
 tabTitle = "Skupnost v živo"
 
 [footer.savings]
@@ -303,7 +307,7 @@ victron = "Uporabljate evcc na strojni opremi Victron Energy in imate dostop do 
 
 [footer.telemetry]
 optIn = "Želim prispevati svoje podatke."
-optInMoreDetails = "Več informacij na {0}."
+optInMoreDetails = "Več informacij {0}."
 optInMoreDetailsLink = "tukaj"
 optInSponsorship = "Potrebno je sponzoriranje."
 
@@ -547,14 +551,16 @@ guard = "Zaščita preklopa je aktivna za {remaining}."
 minCharge = "Minimalno polnjenje na {soc}."
 pvDisable = "Premalo presežka. Prekinitev polnjenja se bo izvedla kmalu."
 pvEnable = "Na voljo so presežki. Začetek polnjenja se bo izvedel kmalu."
-scale1p = "Zmanjšanje na 1-fazno napajanje čez {remaining} ..."
-scale3p = "Povečanje na 3-fazno napajanje čez {remaining}..."
-targetChargeActive = "Ciljno polnjenje je aktivno..."
+scale1p = "Zmanjšanje na 1-fazno napajanje kmalu..."
+scale3p = "Povečanje na 3-fazno napajanje kmalu..."
+targetChargeActive = "Ciljno polnjenje je aktivno, predviden konec {duration}."
 targetChargePlanned = "Ciljno polnjenje se začne ob {time}."
 targetChargeWaitForVehicle = "Ciljno polnjenje je pripravljeno. Čakam na vozilo ..."
 unknown = ""
-vehicleLimitReached = "Omejitev vozila {soc} dosežena."
+vehicleLimit = "Omejitev vozila."
+vehicleLimitReached = "Omejitev vozila dosežena."
 waitForVehicle = "Pripravljen. Čakam na vozilo..."
+welcome = "Kratko začetno polnjenje za potrditev povezave."
 
 [notifications]
 dismissAll = "Opusti vse"
@@ -562,6 +568,7 @@ logs = "Prikaži celotne loge"
 modalTitle = "Obvestila"
 
 [offline]
+configurationError = "Napaka med zagonom. Preverite konfiguracijo in znova zaženite."
 message = "Ni povezave s strežnikom."
 reload = "Ponovno naloži?"
 restart = "Ponovni zagon"
@@ -668,7 +675,7 @@ label = "Telemetrija"
 [settings.theme]
 auto = "sistem"
 dark = "temno"
-label = "Design"
+label = "Izgled"
 light = "svetlo"
 
 [settings.unit]

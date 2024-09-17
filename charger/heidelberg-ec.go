@@ -70,7 +70,7 @@ func NewHeidelbergECFromConfig(other map[string]interface{}) (api.Charger, error
 		return nil, err
 	}
 
-	return NewHeidelbergEC(cc.URI, cc.Device, cc.Comset, cc.Baudrate, modbus.ProtocolFromRTU(cc.RTU), cc.ID)
+	return NewHeidelbergEC(cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Protocol(), cc.ID)
 }
 
 // NewHeidelbergEC creates HeidelbergEC charger
@@ -92,6 +92,9 @@ func NewHeidelbergEC(uri, device, comset string, baudrate int, proto modbus.Prot
 		conn:    conn,
 		current: 60, // assume min current
 	}
+
+	// https://github.com/evcc-io/evcc/issues/15437
+	conn.Delay(100 * time.Millisecond)
 
 	// disable standby to prevent comm loss
 	if err := wb.set(hecRegStandbyConfig, hecStandbyDisabled); err != nil {

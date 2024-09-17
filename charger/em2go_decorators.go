@@ -8,10 +8,10 @@ import (
 
 func decorateEm2Go(base *Em2Go, chargerEx func(float64) error, phaseSwitcher func(int) error, phaseGetter func() (int, error)) api.Charger {
 	switch {
-	case chargerEx == nil && phaseGetter == nil && phaseSwitcher == nil:
+	case chargerEx == nil && phaseSwitcher == nil:
 		return base
 
-	case chargerEx != nil && phaseGetter == nil && phaseSwitcher == nil:
+	case chargerEx != nil && phaseSwitcher == nil:
 		return &struct {
 			*Em2Go
 			api.ChargerEx
@@ -45,32 +45,6 @@ func decorateEm2Go(base *Em2Go, chargerEx func(float64) error, phaseSwitcher fun
 			},
 			PhaseSwitcher: &decorateEm2GoPhaseSwitcherImpl{
 				phaseSwitcher: phaseSwitcher,
-			},
-		}
-
-	case chargerEx == nil && phaseGetter != nil && phaseSwitcher == nil:
-		return &struct {
-			*Em2Go
-			api.PhaseGetter
-		}{
-			Em2Go: base,
-			PhaseGetter: &decorateEm2GoPhaseGetterImpl{
-				phaseGetter: phaseGetter,
-			},
-		}
-
-	case chargerEx != nil && phaseGetter != nil && phaseSwitcher == nil:
-		return &struct {
-			*Em2Go
-			api.ChargerEx
-			api.PhaseGetter
-		}{
-			Em2Go: base,
-			ChargerEx: &decorateEm2GoChargerExImpl{
-				chargerEx: chargerEx,
-			},
-			PhaseGetter: &decorateEm2GoPhaseGetterImpl{
-				phaseGetter: phaseGetter,
 			},
 		}
 

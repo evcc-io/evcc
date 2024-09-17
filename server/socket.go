@@ -2,14 +2,13 @@ package server
 
 import (
 	"context"
-	"errors"
 	"net/http"
 	"strings"
 	"sync"
 	"time"
 
+	"github.com/coder/websocket"
 	"github.com/evcc-io/evcc/util"
-	"nhooyr.io/websocket"
 )
 
 const (
@@ -65,17 +64,8 @@ func (h *SocketHub) ServeWebsocket(w http.ResponseWriter, r *http.Request) {
 	}
 	defer conn.Close(websocket.StatusInternalError, "")
 
-	err = h.subscribe(r.Context(), conn)
-
-	if errors.Is(err, context.Canceled) {
-		return
-	}
-	if cs := websocket.CloseStatus(err); cs == websocket.StatusNormalClosure || cs == websocket.StatusGoingAway {
-		return
-	}
-	if err != nil {
-		log.ERROR.Println(err)
-		return
+	if err := h.subscribe(r.Context(), conn); err != nil {
+		log.TRACE.Println("web socket upgrade:", err)
 	}
 }
 

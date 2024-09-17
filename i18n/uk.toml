@@ -28,10 +28,14 @@ never = "тільки з достатнім надлишком"
 titleAdd = "Додати лічильник батареї"
 titleEdit = "Редагувати лічильник батареї"
 
+[config.control]
+labelInterval = "Інтервал оновлення"
+
 [config.deviceValue]
 capacity = "Ємність"
 chargeStatus = "Статус"
 chargedEnergy = "Заряджений"
+currency = "Валюта"
 current = "Cтрум"
 enabled = "Ввімкнено"
 energy = "Енергія"
@@ -43,6 +47,11 @@ power = "Потужність"
 range = "Дальність"
 soc = "SoC"
 socLimit = "Ліміт"
+url = "URL"
+yes = "так"
+
+[config.eebus]
+title = "EEBus"
 
 [config.form]
 example = "Наприклад"
@@ -50,11 +59,23 @@ optional = "необов'язково"
 
 [config.general]
 cancel = "Скасувати"
+experimental = "Експериментальний"
+off = "вимкнено"
 save = "зберегти"
+telemetry = "Телеметрія"
 
 [config.grid]
 titleAdd = "Додати лічильник електромережі"
 titleEdit = "Редагувати лічильник електромережі"
+
+[config.hems]
+title = "HEMS"
+
+[config.influx]
+labelDatabase = "База даних"
+labelToken = "API Token"
+labelUrl = "URL"
+title = "InfluxDB"
 
 [config.main]
 addLoadpoint = "Додати точку зарядки"
@@ -436,9 +457,11 @@ allVehicles = "всі транспортні засоби"
 filter = "Фільтр"
 
 [settings]
-title = "Загальні налаштування"
+title = "Інтерфейс користувача"
 
 [settings.fullscreen]
+exit = "Вийти з повноекранного режиму"
+label = "Повноекранний"
 
 [settings.gridDetails]
 co2 = "CO₂"
@@ -455,7 +478,7 @@ auto = "Автоматично"
 label = "Мова"
 
 [settings.sponsorToken]
-expires = "Термін дії вашого спонсорського токена закінчується {вXDays}. {getNewToken} та оновіть свій конфігураційний файл."
+expires = "Термін дії вашого спонсорського токена закінчується {inXDays}. {getNewToken} і оновіть його тут."
 getNew = "Візьми свіжий"
 hint = "Примітка: Ми автоматизуємо це в майбутньому."
 

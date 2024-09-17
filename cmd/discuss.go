@@ -8,8 +8,8 @@ import (
 	"path/filepath"
 	"text/template"
 
+	"github.com/cli/browser"
 	"github.com/evcc-io/evcc/server"
-	"github.com/pkg/browser"
 	"github.com/spf13/cobra"
 )
 

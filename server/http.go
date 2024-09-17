@@ -105,10 +105,13 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, valueChan chan<- util.Param)
 		"buffersoc":               {"POST", "/buffersoc/{value:[0-9.]+}", floatHandler(site.SetBufferSoc, site.GetBufferSoc)},
 		"bufferstartsoc":          {"POST", "/bufferstartsoc/{value:[0-9.]+}", floatHandler(site.SetBufferStartSoc, site.GetBufferStartSoc)},
 		"batterydischargecontrol": {"POST", "/batterydischargecontrol/{value:[a-z]+}", boolHandler(site.SetBatteryDischargeControl, site.GetBatteryDischargeControl)},
+		"batterygridcharge":       {"POST", "/batterygridchargelimit/{value:-?[0-9.]+}", floatPtrHandler(pass(site.SetBatteryGridChargeLimit), site.GetBatteryGridChargeLimit)},
+		"batterygridchargedelete": {"DELETE", "/batterygridchargelimit", floatPtrHandler(pass(site.SetBatteryGridChargeLimit), site.GetBatteryGridChargeLimit)},
 		"maxgridsupply":           {"POST", "/maxgridsupply/{value:[0-9.]+}", floatHandler(site.SetMaxGridSupplyWhileBatteryCharging, site.GetMaxGridSupplyWhileBatteryCharging)},
 		"prioritysoc":             {"POST", "/prioritysoc/{value:[0-9.]+}", floatHandler(site.SetPrioritySoc, site.GetPrioritySoc)},
 		"residualpower":           {"POST", "/residualpower/{value:-?[0-9.]+}", floatHandler(site.SetResidualPower, site.GetResidualPower)},
 		"smartcost":               {"POST", "/smartcostlimit/{value:-?[0-9.]+}", updateSmartCostLimit(site)},
+		"smartcostdelete":         {"DELETE", "/smartcostlimit", updateSmartCostLimit(site)},
 		"tariff":                  {"GET", "/tariff/{tariff:[a-z]+}", tariffHandler(site)},
 		"sessions":                {"GET", "/sessions", sessionHandler},
 		"updatesession":           {"PUT", "/session/{id:[0-9]+}", updateSessionHandler},
@@ -173,7 +176,8 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, valueChan chan<- util.Param)
 			"remotedemand":     {"POST", "/remotedemand/{demand:[a-z]+}/{source:[0-9a-zA-Z_-]+}", remoteDemandHandler(lp)},
 			"enableThreshold":  {"POST", "/enable/threshold/{value:-?[0-9.]+}", floatHandler(pass(lp.SetEnableThreshold), lp.GetEnableThreshold)},
 			"disableThreshold": {"POST", "/disable/threshold/{value:-?[0-9.]+}", floatHandler(pass(lp.SetDisableThreshold), lp.GetDisableThreshold)},
-			"smartCostLimit":   {"POST", "/smartcostlimit/{value:-?[0-9.]+}", floatHandler(pass(lp.SetSmartCostLimit), lp.GetSmartCostLimit)},
+			"smartCost":        {"POST", "/smartcostlimit/{value:-?[0-9.]+}", floatPtrHandler(pass(lp.SetSmartCostLimit), lp.GetSmartCostLimit)},
+			"smartCostDelete":  {"DELETE", "/smartcostlimit", floatPtrHandler(pass(lp.SetSmartCostLimit), lp.GetSmartCostLimit)},
 			// "priority":         {"POST", "/priority/{value:[0-9.]+}", floatHandler(pass(lp.SetPriority), lp.GetPriority)},
 		}
 

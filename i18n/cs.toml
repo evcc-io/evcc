@@ -32,6 +32,8 @@ titleEdit = "Upravit měřič baterie"
 capacity = "Kapacita"
 chargeStatus = "Stav"
 chargedEnergy = "Nabito"
+configured = "Nastaveno"
+currency = "Měna"
 current = "Proud"
 enabled = "Zapnuto"
 energy = "Energie"
@@ -44,11 +46,17 @@ range = "Rozsah"
 soc = "SoC"
 socLimit = "Strop"
 
+[config.eebus]
+description = "Nastavení, které umožňuje evcc komunikovat s dalšími EEBus zařízeními."
+
 [config.form]
 example = "Příklad"
 optional = "volitelné"
 
 [config.general]
+password = "Heslo"
+remove = "Odebrat"
+save = "Uložit"
 
 [config.grid]
 titleAdd = "Přidat měřič spotřeby ze sítě"
@@ -58,6 +66,7 @@ titleEdit = "Editovat měřič spotřeby ze sítě"
 addLoadpoint = "Přidat nabíjecí bod"
 addPvBattery = "Přidat solar nebo baterii"
 addVehicle = "Přidat vozidlo"
+configured = "nastaveno"
 edit = "editace"
 title = "Konfigurace"
 unconfigured = "není konfigurováno"

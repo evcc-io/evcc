@@ -17,9 +17,11 @@ const (
 
 	ModbusChoiceRS485    = "rs485"
 	ModbusChoiceTCPIP    = "tcpip"
+	ModbusChoiceUDP      = "udp"
 	ModbusKeyRS485Serial = "rs485serial"
 	ModbusKeyRS485TCPIP  = "rs485tcpip"
 	ModbusKeyTCPIP       = "tcpip"
+	ModbusKeyUDP         = "udp"
 
 	ModbusParamNameId       = "id"
 	ModbusParamNameDevice   = "device"
@@ -37,7 +39,7 @@ const (
 	RenderModeInstance
 )
 
-var ValidModbusChoices = []string{ModbusChoiceRS485, ModbusChoiceTCPIP}
+var ValidModbusChoices = []string{ModbusChoiceRS485, ModbusChoiceTCPIP, ModbusChoiceUDP}
 
 const (
 	CapabilityISO151182      = "iso151182"       // ISO 15118-2 support
@@ -62,7 +64,7 @@ var predefinedTemplateProperties = []string{
 	"type", "template", "name",
 	ModbusParamNameId, ModbusParamNameDevice, ModbusParamNameBaudrate, ModbusParamNameComset,
 	ModbusParamNameURI, ModbusParamNameHost, ModbusParamNamePort, ModbusParamNameRTU,
-	ModbusKeyTCPIP, ModbusKeyRS485Serial, ModbusKeyRS485TCPIP,
+	ModbusKeyTCPIP, ModbusKeyUDP, ModbusKeyRS485Serial, ModbusKeyRS485TCPIP,
 }
 
 // TextLanguage contains language-specific texts
@@ -127,6 +129,19 @@ func (t *TextLanguage) MarshalJSON() (out []byte, err error) {
 	s := t.String(encoderLanguage)
 	mu.Unlock()
 	return json.Marshal(s)
+}
+
+func (r Requirements) MarshalJSON() ([]byte, error) {
+	mu.Lock()
+	custom := struct {
+		EVCC        []string `json:",omitempty"`
+		Description string   `json:",omitempty"`
+	}{
+		EVCC:        r.EVCC,
+		Description: r.Description.String(encoderLanguage),
+	}
+	mu.Unlock()
+	return json.Marshal(custom)
 }
 
 // Requirements
@@ -245,7 +260,7 @@ type TemplateDefinition struct {
 	Covers       []string         `json:",omitempty"` // list of covered outdated template names
 	Products     []Product        `json:",omitempty"` // list of products this template is compatible with
 	Capabilities []string         `json:",omitempty"`
-	Requirements Requirements     `json:"-"`
+	Requirements Requirements     `json:",omitempty"`
 	Linked       []LinkedTemplate `json:",omitempty"` // a list of templates that should be processed as part of the guided setup
 	Params       []Param          `json:",omitempty"`
 	Render       string           `json:"-"` // rendering template

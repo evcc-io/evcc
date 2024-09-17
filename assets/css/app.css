@@ -112,6 +112,10 @@ body {
 	color: var(--evcc-default-text);
 }
 
+body:not(.modal-open) {
+	overflow-y: scroll;
+}
+
 h1,
 h2,
 h3,
@@ -182,6 +186,13 @@ a:hover {
 
 .btn {
 	--bs-btn-border-width: 2px;
+}
+
+.btn-reset {
+	border: none;
+	background: none;
+	padding: 0;
+	color: inherit;
 }
 
 .btn-primary,

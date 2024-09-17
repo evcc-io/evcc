@@ -3,6 +3,7 @@ package charger
 import (
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -13,6 +14,7 @@ import (
 // Wattpilot charger implementation
 type Wattpilot struct {
 	api *wattpilot.Wattpilot
+	log *util.Logger
 }
 
 func init() {
@@ -40,15 +42,28 @@ func NewWattpilotFromConfig(other map[string]interface{}) (api.Charger, error) {
 
 // NewWattpilot creates Wattpilot charger
 func NewWattpilot(uri, password string, cache time.Duration) (api.Charger, error) {
+	log := util.NewLogger("wattpilot").Redact(password)
+
 	c := &Wattpilot{
 		api: wattpilot.New(uri, password),
+		log: log,
 	}
-
+	c.api.SetLogger(c.Log)
+	log.INFO.Println("Wattpilot connecting...")
 	if err := c.api.Connect(); err != nil {
 		return nil, err
 	}
 
 	return c, nil
+}
+
+func (c *Wattpilot) Log(level string, data string) {
+	switch strings.ToUpper(level) {
+	case "TRACE":
+		c.log.TRACE.Println(data)
+	default:
+		c.log.DEBUG.Println(data)
+	}
 }
 
 // Status implements the api.Charger interface

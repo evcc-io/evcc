@@ -9,6 +9,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
+	"github.com/evcc-io/evcc/util/sponsor"
 )
 
 const (
@@ -21,6 +22,7 @@ const (
 	dadapowerRegActivePhases        = 1002
 	dadapowerRegCurrents            = 1006
 	dadapowerRegActiveEnergy        = 1009
+	dadapowerRegChargingPortState   = 1015
 	dadapowerRegPlugState           = 1016
 	dadapowerRegEnergyImportSession = 1017
 	dadapowerRegEnergyImportTotal   = 1025
@@ -54,6 +56,10 @@ func NewDadapower(uri string, id uint8) (*Dadapower, error) {
 	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.Tcp, id)
 	if err != nil {
 		return nil, err
+	}
+
+	if !sponsor.IsAuthorized() {
+		return nil, api.ErrSponsorRequired
 	}
 
 	log := util.NewLogger("dadapower")
@@ -108,6 +114,20 @@ func (wb *Dadapower) Status() (api.ChargeStatus, error) {
 	default:
 		return api.StatusNone, errors.New("invalid response")
 	}
+}
+
+var _ api.StatusReasoner = (*Dadapower)(nil)
+
+// StatusReason implements the api.StatusReasoner interface
+func (wb *Dadapower) StatusReason() (api.Reason, error) {
+	res := api.ReasonUnknown
+
+	b, err := wb.conn.ReadInputRegisters(dadapowerRegChargingPortState+wb.regOffset, 1)
+	if err == nil && binary.BigEndian.Uint16(b) == 3 {
+		res = api.ReasonWaitingForAuthorization
+	}
+
+	return res, err
 }
 
 // Enabled implements the api.Charger interface

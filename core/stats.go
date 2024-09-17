@@ -1,6 +1,7 @@
 package core
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/evcc-io/evcc/core/keys"
@@ -32,9 +33,10 @@ func (s *Stats) Update(p publisher) {
 	}
 
 	stats := map[string]map[string]float64{
-		"30d":   s.calculate(30),
-		"365d":  s.calculate(365),
-		"total": s.calculate(365 * 100), // 100 years
+		"30d":      s.calculate(30),
+		"365d":     s.calculate(365),
+		"thisYear": s.calculate(time.Now().YearDay()),
+		"total":    s.calculate(365 * 100), // 100 years
 	}
 	p.publish(keys.Statistics, stats)
 
@@ -45,52 +47,30 @@ func (s *Stats) Update(p publisher) {
 func (s *Stats) calculate(days int) map[string]float64 {
 	result := make(map[string]float64)
 
-	// Calculate the date from numberOfDays ago
-	fromDate := time.Now().AddDate(0, 0, -days)
-
-	// Struct to hold the results
-	var dbResult struct {
-		SolarPercentage float64
-		ChargedKWh      float64
-		AvgPrice        float64
-		AvgCo2          float64
-	}
-
-	// Calculate solar_percentage and total_kwh
-	if err := db.Instance.Raw(`
-		SELECT SUM(charged_kwh * solar_percentage) / SUM(charged_kwh) AS SolarPercentage, 
-			SUM(charged_kwh) as ChargedKWh 
-		FROM sessions 
-		WHERE finished >= ? 
-		AND charged_kwh > 0 
-		AND solar_percentage IS NOT NULL`, fromDate).Scan(&dbResult).Error; err != nil {
-		s.log.ERROR.Printf("error executing solar stats query: %v", err)
-	}
-
-	// Calculate avg_price
-	if err := db.Instance.Raw(`
-		SELECT SUM(charged_kwh * price_per_kwh) / SUM(charged_kwh) AS AvgPrice 
-		FROM sessions 
-		WHERE finished >= ? 
-		AND charged_kwh > 0 
-		AND price_per_kwh IS NOT NULL`, fromDate).Scan(&dbResult).Error; err != nil {
-		s.log.ERROR.Printf("error executing price stats query: %v", err)
-	}
-
-	// Calculate avg_co2
-	if err := db.Instance.Raw(`
-		SELECT SUM(charged_kwh * co2_per_kwh) / SUM(charged_kwh) AS AvgCo2
+	executeQuery := func(selectClause string, whereClause string, fromDate time.Time, dest interface{}) {
+		query := fmt.Sprintf(`
+		SELECT COALESCE(%s, 0)
 		FROM sessions
-		WHERE finished >= ?
-		AND charged_kwh > 0
-		AND co2_per_kwh IS NOT NULL`, fromDate).Scan(&dbResult).Error; err != nil {
-		s.log.ERROR.Printf("error executing co2 stats query: %v", err)
+		WHERE finished >= ? 
+		AND charged_kwh > 0 
+		%s`, selectClause, whereClause)
+
+		if err := db.Instance.Raw(query, fromDate).Scan(dest).Error; err != nil {
+			s.log.ERROR.Printf("error executing query: %v", err)
+		}
 	}
 
-	result["solarPercentage"] = dbResult.SolarPercentage
-	result["chargedKWh"] = dbResult.ChargedKWh
-	result["avgPrice"] = dbResult.AvgPrice
-	result["avgCo2"] = dbResult.AvgCo2
+	fromDate := time.Now().AddDate(0, 0, -days)
+	var solarPercentage, chargedKWh, avgPrice, avgCo2 float64
+	executeQuery("SUM(charged_kwh * solar_percentage) / SUM(charged_kwh)", "AND solar_percentage IS NOT NULL", fromDate, &solarPercentage)
+	executeQuery("SUM(charged_kwh)", "AND solar_percentage IS NOT NULL", fromDate, &chargedKWh)
+	executeQuery("SUM(charged_kwh * price_per_kwh) / SUM(charged_kwh)", "AND price_per_kwh IS NOT NULL", fromDate, &avgPrice)
+	executeQuery("SUM(charged_kwh * co2_per_kwh) / SUM(charged_kwh)", "AND co2_per_kwh IS NOT NULL", fromDate, &avgCo2)
+
+	result["solarPercentage"] = solarPercentage
+	result["chargedKWh"] = chargedKWh
+	result["avgPrice"] = avgPrice
+	result["avgCo2"] = avgCo2
 
 	return result
 }

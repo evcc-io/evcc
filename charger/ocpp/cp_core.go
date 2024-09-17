@@ -2,16 +2,10 @@ package ocpp
 
 import (
 	"errors"
-	"time"
 
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/firmware"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/types"
-)
-
-const (
-	messageExpiry     = 30 * time.Second
-	transactionExpiry = time.Hour
 )
 
 var (
@@ -21,7 +15,6 @@ var (
 )
 
 func (cp *CP) Authorize(request *core.AuthorizeRequest) (*core.AuthorizeConfirmation, error) {
-	// TODO check if this authorizes foreign RFID tags
 	res := &core.AuthorizeConfirmation{
 		IdTagInfo: &types.IdTagInfo{
 			Status: types.AuthorizationStatusAccepted,
@@ -34,9 +27,13 @@ func (cp *CP) Authorize(request *core.AuthorizeRequest) (*core.AuthorizeConfirma
 func (cp *CP) BootNotification(request *core.BootNotificationRequest) (*core.BootNotificationConfirmation, error) {
 	res := &core.BootNotificationConfirmation{
 		CurrentTime: types.Now(),
-		Interval:    60, // TODO
+		Interval:    60,
 		Status:      core.RegistrationStatusAccepted,
 	}
+
+	cp.onceBoot.Do(func() {
+		cp.bootNotificationRequestC <- request
+	})
 
 	return res, nil
 }
@@ -54,12 +51,11 @@ func (cp *CP) StatusNotification(request *core.StatusNotificationRequest) (*core
 		return nil, ErrInvalidRequest
 	}
 
-	conn := cp.connectorByID(request.ConnectorId)
-	if conn == nil {
-		return nil, ErrInvalidConnector
+	if conn := cp.connectorByID(request.ConnectorId); conn != nil {
+		return conn.StatusNotification(request)
 	}
 
-	return conn.StatusNotification(request)
+	return new(core.StatusNotificationConfirmation), nil
 }
 
 func (cp *CP) DataTransfer(request *core.DataTransferRequest) (*core.DataTransferConfirmation, error) {
@@ -83,12 +79,17 @@ func (cp *CP) MeterValues(request *core.MeterValuesRequest) (*core.MeterValuesCo
 		return nil, ErrInvalidRequest
 	}
 
-	conn := cp.connectorByID(request.ConnectorId)
-	if conn == nil {
-		return nil, ErrInvalidConnector
+	// signal received
+	select {
+	case cp.meterC <- struct{}{}:
+	default:
 	}
 
-	return conn.MeterValues(request)
+	if conn := cp.connectorByID(request.ConnectorId); conn != nil {
+		conn.MeterValues(request)
+	}
+
+	return new(core.MeterValuesConfirmation), nil
 }
 
 func (cp *CP) StartTransaction(request *core.StartTransactionRequest) (*core.StartTransactionConfirmation, error) {
@@ -96,12 +97,11 @@ func (cp *CP) StartTransaction(request *core.StartTransactionRequest) (*core.Sta
 		return nil, ErrInvalidRequest
 	}
 
-	conn := cp.connectorByID(request.ConnectorId)
-	if conn == nil {
-		return nil, ErrInvalidConnector
+	if conn := cp.connectorByID(request.ConnectorId); conn != nil {
+		return conn.StartTransaction(request)
 	}
 
-	return conn.StartTransaction(request)
+	return new(core.StartTransactionConfirmation), nil
 }
 
 func (cp *CP) StopTransaction(request *core.StopTransactionRequest) (*core.StopTransactionConfirmation, error) {
@@ -109,16 +109,15 @@ func (cp *CP) StopTransaction(request *core.StopTransactionRequest) (*core.StopT
 		return nil, ErrInvalidRequest
 	}
 
-	conn := cp.connectorByTransactionID(request.TransactionId)
-	if conn == nil {
-		res := &core.StopTransactionConfirmation{
-			IdTagInfo: &types.IdTagInfo{
-				Status: types.AuthorizationStatusAccepted, // accept old pending stop message during startup
-			},
-		}
-
-		return res, nil
+	if conn := cp.connectorByTransactionID(request.TransactionId); conn != nil {
+		return conn.StopTransaction(request)
 	}
 
-	return conn.StopTransaction(request)
+	res := &core.StopTransactionConfirmation{
+		IdTagInfo: &types.IdTagInfo{
+			Status: types.AuthorizationStatusAccepted, // accept old pending stop message during startup
+		},
+	}
+
+	return res, nil
 }

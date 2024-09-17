@@ -1,20 +1,25 @@
 package ocpp
 
+import "time"
+
+var Timeout = 30 * time.Second // default request / response timeout on protocol level
+
 const (
 	// Core profile keys
-	KeyNumberOfConnectors = "NumberOfConnectors"
+	KeyMeterValueSampleInterval        = "MeterValueSampleInterval"
+	KeyMeterValuesSampledData          = "MeterValuesSampledData"
+	KeyMeterValuesSampledDataMaxLength = "MeterValuesSampledDataMaxLength"
+	KeyNumberOfConnectors              = "NumberOfConnectors"
+	KeySupportedFeatureProfiles        = "SupportedFeatureProfiles"
+	KeyWebSocketPingInterval           = "WebSocketPingInterval"
 
-	// Meter profile keys
-	KeyMeterValuesSampledData   = "MeterValuesSampledData"
-	KeyMeterValueSampleInterval = "MeterValueSampleInterval"
-
-	// Smart Charging profile keys
+	// SmartCharging profile keys
 	KeyChargeProfileMaxStackLevel              = "ChargeProfileMaxStackLevel"
 	KeyChargingScheduleAllowedChargingRateUnit = "ChargingScheduleAllowedChargingRateUnit"
-	KeyChargingScheduleMaxPeriods              = "ChargingScheduleMaxPeriods"
 	KeyConnectorSwitch3to1PhaseSupported       = "ConnectorSwitch3to1PhaseSupported"
 	KeyMaxChargingProfilesInstalled            = "MaxChargingProfilesInstalled"
 
-	// Alfen specific keys
+	// Vendor specific keys
 	KeyAlfenPlugAndChargeIdentifier = "PlugAndChargeIdentifier"
+	KeyEvBoxSupportedMeasurands     = "evb_SupportedMeasurands"
 )

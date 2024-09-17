@@ -6,6 +6,7 @@ products:
   - brand: Fronius
     description:
       generic: Primo GEN24 Plus
+capabilities: ["battery-control"]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -59,12 +60,94 @@ render: |
       uri: {{ .host }}:{{ .port }}
       id: 1
       value: 160:4:DCW # mppt 4 discharge
+  energy:
+    source: sunspec
+    uri: {{ .host }}:{{ .port }}
+    id: 1
+    value: 160:4:DCWH # mppt 4 (discharge)
+    scale: 0.001
   soc:
     source: sunspec
     uri: {{ .host }}:{{ .port }}
     id: 1
-    value: 124:ChaState
-  {{- if .capacity }}
+    value: 124:0:ChaState
+  batterymode: # model 124
+    source: switch
+    switch:
+    - case: 1 # normal
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 0 # off
+          set:
+            source: sunspec
+            uri: {{ .host }}:{{ .port }}
+            id: 1
+            value: 124:0:ChaGriSet
+        - source: const
+          value: 0
+          set:
+            source: sunspec
+            uri: {{ .host }}:{{ .port }}
+            id: 1
+            value: 124:0:StorCtl_Mod
+        - source: const
+          value: 100 # %
+          set:
+            source: sunspec
+            uri: {{ .host }}:{{ .port }}
+            id: 1
+            value: 124:0:OutWRte
+    - case: 2 # hold
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 0 # off
+          set:
+            source: sunspec
+            uri: {{ .host }}:{{ .port }}
+            id: 1
+            value: 124:0:ChaGriSet
+        - source: const
+          value: 2
+          set:
+            source: sunspec
+            uri: {{ .host }}:{{ .port }}
+            id: 1
+            value: 124:0:StorCtl_Mod
+        - source: const
+          value: 0 # %
+          set:
+            source: sunspec
+            uri: {{ .host }}:{{ .port }}
+            id: 1
+            value: 124:0:OutWRte
+    - case: 3 # charge
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 1 # off
+          set:
+            source: sunspec
+            uri: {{ .host }}:{{ .port }}
+            id: 1
+            value: 124:0:ChaGriSet
+        - source: const
+          value: 2
+          set:
+            source: sunspec
+            uri: {{ .host }}:{{ .port }}
+            id: 1
+            value: 124:0:StorCtl_Mod
+        - source: const
+          value: -100 # %
+          set:
+            source: sunspec
+            uri: {{ .host }}:{{ .port }}
+            id: 1
+            value: 124:0:OutWRte
   capacity: {{ .capacity }} # kWh
-  {{- end }}
   {{- end }}

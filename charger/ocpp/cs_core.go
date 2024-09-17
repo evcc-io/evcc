@@ -1,31 +1,88 @@
 package ocpp
 
 import (
+	"errors"
+
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/firmware"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/remotetrigger"
+	"github.com/lorenzodonini/ocpp-go/ocpp1.6/smartcharging"
+	"github.com/lorenzodonini/ocpp-go/ocpp1.6/types"
 )
 
 // cs actions
 
-func (cs *CS) TriggerResetRequest(id string, resetType core.ResetType) {
-	if err := cs.Reset(id, func(request *core.ResetConfirmation, err error) {
+func (cs *CS) TriggerResetRequest(id string, resetType core.ResetType) error {
+	rc := make(chan error, 1)
+
+	err := cs.Reset(id, func(request *core.ResetConfirmation, err error) {
 		if err == nil && request != nil && request.Status != core.ResetStatusAccepted {
-			cs.log.ERROR.Printf("TriggerReset for %s: %+v", id, request.Status)
+			err = errors.New(string(request.Status))
 		}
-	}, resetType); err != nil {
-		cs.log.ERROR.Printf("send TriggerReset for %s failed: %v", id, err)
-	}
+
+		rc <- err
+	}, resetType)
+
+	return wait(err, rc)
 }
 
-func (cs *CS) TriggerMessageRequest(id string, requestedMessage remotetrigger.MessageTrigger, props ...func(request *remotetrigger.TriggerMessageRequest)) {
-	if err := cs.TriggerMessage(id, func(request *remotetrigger.TriggerMessageConfirmation, err error) {
+func (cs *CS) TriggerMessageRequest(id string, requestedMessage remotetrigger.MessageTrigger, props ...func(request *remotetrigger.TriggerMessageRequest)) error {
+	rc := make(chan error, 1)
+
+	err := cs.TriggerMessage(id, func(request *remotetrigger.TriggerMessageConfirmation, err error) {
 		if err == nil && request != nil && request.Status != remotetrigger.TriggerMessageStatusAccepted {
-			cs.log.ERROR.Printf("TriggerMessage %s for %s: %+v", requestedMessage, id, request.Status)
+			err = errors.New(string(request.Status))
 		}
-	}, requestedMessage, props...); err != nil {
-		cs.log.ERROR.Printf("send TriggerMessage %s for %s failed: %v", requestedMessage, id, err)
-	}
+
+		rc <- err
+	}, requestedMessage, props...)
+
+	return wait(err, rc)
+}
+
+func (cs *CS) ChangeAvailabilityRequest(id string, connector int, availabilityType core.AvailabilityType) error {
+	rc := make(chan error, 1)
+
+	err := cs.ChangeAvailability(id, func(request *core.ChangeAvailabilityConfirmation, err error) {
+		if err == nil && request != nil && request.Status != core.AvailabilityStatusAccepted {
+			err = errors.New(string(request.Status))
+		}
+
+		rc <- err
+	}, connector, availabilityType)
+
+	return wait(err, rc)
+}
+
+func (cs *CS) SetChargingProfileRequest(id string, connector int, profile *types.ChargingProfile) error {
+	rc := make(chan error, 1)
+
+	err := cs.SetChargingProfile(id, func(request *smartcharging.SetChargingProfileConfirmation, err error) {
+		if err == nil && request != nil && request.Status != smartcharging.ChargingProfileStatusAccepted {
+			err = errors.New(string(request.Status))
+		}
+
+		rc <- err
+	}, connector, profile)
+
+	return wait(err, rc)
+}
+
+func (cs *CS) GetCompositeScheduleRequest(id string, connector int, duration int) (*smartcharging.GetCompositeScheduleConfirmation, error) {
+	var schedule *smartcharging.GetCompositeScheduleConfirmation
+	rc := make(chan error, 1)
+
+	err := cs.GetCompositeSchedule(id, func(request *smartcharging.GetCompositeScheduleConfirmation, err error) {
+		if err == nil && request != nil && request.Status != smartcharging.GetCompositeScheduleStatusAccepted {
+			err = errors.New(string(request.Status))
+		}
+
+		schedule = request
+
+		rc <- err
+	}, connector, duration)
+
+	return schedule, wait(err, rc)
 }
 
 // cp actions
