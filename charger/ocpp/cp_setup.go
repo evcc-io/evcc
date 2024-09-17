@@ -58,7 +58,15 @@ func (cp *CP) Setup(meterValues string, meterInterval time.Duration) error {
 			if opt.Readonly {
 				meterValuesSampledDataMaxLength = 0
 			}
-			cp.meterValuesSample = *opt.Value
+			if remove, ok := strings.CutPrefix(meterValues, "-"); ok {
+				// remove a single offending measurand
+				cp.meterValuesSample = strings.Join(lo.Reject(strings.Split(*opt.Value, ","), func(v string, _ int) bool {
+					return v == remove
+				}), ",")
+				meterValues = ""
+			} else {
+				cp.meterValuesSample = *opt.Value
+			}
 
 		case KeyMeterValuesSampledDataMaxLength:
 			if val, err := strconv.Atoi(*opt.Value); err == nil {
@@ -87,11 +95,6 @@ func (cp *CP) Setup(meterValues string, meterInterval time.Duration) error {
 		case KeyEvBoxSupportedMeasurands:
 			if meterValues == "" {
 				meterValues = *opt.Value
-			} else if remove, ok := strings.CutPrefix(meterValues, "-"); ok {
-				// remove a single offending measurand
-				meterValues = strings.Join(lo.Reject(strings.Split(*opt.Value, ","), func(v string, _ int) bool {
-					return v == remove
-				}), ",")
 			}
 		}
 	}
