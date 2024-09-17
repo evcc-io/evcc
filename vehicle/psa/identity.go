@@ -71,6 +71,9 @@ func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 
 	tok, err := v.oc.TokenSource(ctx, token).Token()
 	if err != nil {
+		if strings.Contains(err.Error(), "invalid_grant") {
+			settings.Delete(v.subject)
+		}
 		return nil, err
 	}
 
