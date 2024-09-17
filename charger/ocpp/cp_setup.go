@@ -31,45 +31,45 @@ func (cp *CP) Setup(meterValues string, meterInterval time.Duration) error {
 			continue
 		}
 
-		switch opt.Key {
-		case KeyChargeProfileMaxStackLevel:
+		switch {
+		case strings.EqualFold(opt.Key, KeyChargeProfileMaxStackLevel):
 			if val, err := strconv.Atoi(*opt.Value); err == nil {
 				cp.StackLevel = val
 			}
 
-		case KeyChargingScheduleAllowedChargingRateUnit:
+		case strings.EqualFold(opt.Key, KeyChargingScheduleAllowedChargingRateUnit):
 			if *opt.Value == "Power" || *opt.Value == "W" { // "W" is not allowed by spec but used by some CPs
 				cp.ChargingRateUnit = types.ChargingRateUnitWatts
 			}
 
-		case KeyConnectorSwitch3to1PhaseSupported:
+		case strings.EqualFold(opt.Key, KeyConnectorSwitch3to1PhaseSupported):
 			var val bool
 			if val, err = strconv.ParseBool(*opt.Value); err == nil {
 				cp.PhaseSwitching = val
 			}
 
-		case KeyMaxChargingProfilesInstalled:
+		case strings.EqualFold(opt.Key, KeyMaxChargingProfilesInstalled):
 			if val, err := strconv.Atoi(*opt.Value); err == nil {
 				cp.ChargingProfileId = val
 			}
 
-		case KeyMeterValuesSampledData:
+		case strings.EqualFold(opt.Key, KeyMeterValuesSampledData):
 			if opt.Readonly {
 				meterValuesSampledDataMaxLength = 0
 			}
 			cp.meterValuesSample = *opt.Value
 
-		case KeyMeterValuesSampledDataMaxLength:
+		case strings.EqualFold(opt.Key, KeyMeterValuesSampledDataMaxLength):
 			if val, err := strconv.Atoi(*opt.Value); err == nil {
 				meterValuesSampledDataMaxLength = val
 			}
 
-		case KeyNumberOfConnectors:
+		case strings.EqualFold(opt.Key, KeyNumberOfConnectors):
 			if val, err := strconv.Atoi(*opt.Value); err == nil {
 				cp.NumberOfConnectors = val
 			}
 
-		case KeySupportedFeatureProfiles:
+		case strings.EqualFold(opt.Key, KeySupportedFeatureProfiles):
 			if !hasProperty(*opt.Value, smartcharging.ProfileName) {
 				cp.log.WARN.Printf("the required SmartCharging feature profile is not indicated as supported")
 			}
@@ -79,11 +79,11 @@ func (cp *CP) Setup(meterValues string, meterInterval time.Duration) error {
 			}
 
 		// vendor-specific keys
-		case KeyAlfenPlugAndChargeIdentifier:
+		case strings.EqualFold(opt.Key, KeyAlfenPlugAndChargeIdentifier):
 			cp.IdTag = *opt.Value
 			cp.log.DEBUG.Printf("overriding default `idTag` with Alfen-specific value: %s", cp.IdTag)
 
-		case KeyEvBoxSupportedMeasurands:
+		case strings.EqualFold(opt.Key, KeyEvBoxSupportedMeasurands):
 			if meterValues == "" {
 				meterValues = *opt.Value
 			}
