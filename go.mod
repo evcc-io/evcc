@@ -8,7 +8,7 @@ require (
 	github.com/BurntSushi/toml v1.4.0
 	github.com/PuerkitoBio/goquery v1.9.2
 	github.com/andig/go-powerwall v0.2.1-0.20230808194509-dd70cdb6e140
-	github.com/andig/gosunspec v0.0.0-20231205122018-1daccfa17912
+	github.com/andig/gosunspec v0.0.0-20240918203654-860ce51d602b
 	github.com/andig/mbserver v0.0.0-20230310211055-1d29cbb5820e
 	github.com/asaskevich/EventBus v0.0.0-20200907212545-49d423059eef
 	github.com/aws/aws-sdk-go v1.55.5
