@@ -1,0 +1,93 @@
+// MIT License
+//
+// Copyright (c) 2024 Björn Lundström - https://github.com/BLun78
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+
+package meter
+
+import (
+	"time"
+
+	"github.com/BLun78/hoymiles_wifi"
+	"github.com/BLun78/hoymiles_wifi/hoymiles/models"
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/util"
+)
+
+func init() {
+	registry.Add("hoymiles-wifi", NewHoymilesWifiMeterFromConfig)
+}
+
+type HoymilesWifi struct {
+	client *hoymiles_wifi.ClientData
+	log    *util.Logger
+	cc     struct{ Host string }
+}
+
+func NewHoymilesWifiMeterFromConfig(other map[string]interface{}) (api.Meter, error) {
+	cc := struct {
+		Host string
+	}{}
+
+	if err := util.DecodeOther(other, &cc); err != nil {
+		return nil, err
+	}
+
+	log := util.NewLogger("hoymiles-wifi")
+	log.DEBUG.Printf("Start HoymilesWifi setup: %s", cc.Host)
+
+	client := hoymiles_wifi.NewClientDefault(cc.Host)
+
+	return &HoymilesWifi{
+		client: client,
+		log:    log,
+		cc:     cc,
+	}, nil
+}
+
+// CurrentPower implements the api.Meter interface
+func (hmWifi *HoymilesWifi) CurrentPower() (float64, error) {
+	hmWifi.log.TRACE.Printf("Start HoymilesWifi fetch for Host: %s", hmWifi.cc.Host)
+
+	var value float64 = 0
+	defer func(client *hoymiles_wifi.ClientData) {
+		_ = client.CloseConnection()
+	}(hmWifi.client)
+
+	request := &models.RealDataNewReqDTO{}
+	// int32 would not be Year 2038 safe
+	// See https://en.wikipedia.org/wiki/Year_2038_problem
+	// Not 100% sure if the models are self-defined or provided by hoymiles
+	request.Time = int32(time.Now().Unix())
+	request.TimeYmdHms = time.Now().Format("2006-01-02 15:04:05")
+
+	result, err := hmWifi.client.GetRealDataNew(request)
+	if err != nil {
+		return value, err
+	}
+	if result.DtuPower > 0 {
+		value = float64(float64(result.DtuPower) / 10)
+	}
+
+	hmWifi.log.TRACE.Printf("Get HoymilesWifi CurrentPower: %10.2f watt for Host: %s", value, hmWifi.cc.Host)
+	hmWifi.log.TRACE.Printf("End HoymilesWifi fetch for Host: %s", hmWifi.cc.Host)
+
+	return value, nil
+}
