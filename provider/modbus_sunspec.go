@@ -161,8 +161,6 @@ func (m *ModbusSunspec) blockPoint() (block sunspec.Block, point sunspec.Point, 
 	return block, point, err
 }
 
-// TODO scale factors
-
 var _ SetFloatProvider = (*Modbus)(nil)
 
 // FloatSetter executes configured modbus write operation and implements SetFloatProvider
