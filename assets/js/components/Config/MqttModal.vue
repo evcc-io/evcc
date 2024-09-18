@@ -63,6 +63,23 @@
 					</label>
 				</div>
 			</FormRow>
+			<PropertyCollapsible>
+				<template #advanced>
+					<FormRow id="mqttCaCert" :label="$t('config.mqtt.labelCaCert')" optional>
+						<PropertyCertField id="mqttCaCert" v-model="values.caCert" />
+					</FormRow>
+					<FormRow
+						id="mqttClientCert"
+						:label="$t('config.mqtt.labelClientCert')"
+						optional
+					>
+						<PropertyCertField id="mqttClientCert" v-model="values.clientCert" />
+					</FormRow>
+					<FormRow id="mqttClientKey" :label="$t('config.mqtt.labelClientKey')" optional>
+						<PropertyCertField id="mqttClientKey" v-model="values.clientKey" />
+					</FormRow>
+				</template>
+			</PropertyCollapsible>
 		</template>
 	</JsonModal>
 </template>
@@ -70,10 +87,12 @@
 <script>
 import JsonModal from "./JsonModal.vue";
 import FormRow from "./FormRow.vue";
+import PropertyCollapsible from "./PropertyCollapsible.vue";
+import PropertyCertField from "./PropertyCertField.vue";
 
 export default {
 	name: "MqttModal",
-	components: { FormRow, JsonModal },
+	components: { FormRow, JsonModal, PropertyCollapsible, PropertyCertField },
 	emits: ["changed"],
 };
 </script>
