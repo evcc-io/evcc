@@ -638,6 +638,10 @@ allLoadpoints = "Alle Ladepunkte"
 allVehicles = "Alle Fahrzeuge"
 filter = "Filtern"
 
+[sessions.group]
+grid = "Netz"
+self = "Sonne"
+
 [settings]
 title = "Darstellung"
 

@@ -1,5 +1,5 @@
 <template>
-	<div class="root">
+	<div class="root" v-if="entries.length > 1">
 		<div
 			v-for="entry in entries"
 			:key="entry.name"

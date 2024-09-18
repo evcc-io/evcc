@@ -3,6 +3,17 @@
 		<TopHeader :title="$t('sessions.title')" />
 		<div class="row">
 			<main class="col-12">
+				<div class="d-flex justify-content-center">
+					<SelectGroup
+						id="period"
+						:options="[
+							{ name: 'Monat', value: 'month' },
+							{ name: 'Jahr', value: 'year' },
+							{ name: 'Gesamt', value: 'total' },
+						]"
+						v-model="selectedPeriod"
+					/>
+				</div>
 				<div class="row mt-2 mt-md-3 mb-5 month-header pt-3 pb-2 sticky-top">
 					<div class="col-4 d-flex justify-content-start align-items-center">
 						<router-link
@@ -36,19 +47,14 @@
 				</div>
 				<div class="d-flex justify-content-between align-items-center">
 					<h3 class="fw-normal my-0">{{ energyTitle }}</h3>
-
 					<IconSelectGroup>
 						<IconSelectItem
-							:active="selectedGroup === 'loadpoint'"
-							@click="selectedGroup = 'loadpoint'"
+							v-for="group in Object.values(groups)"
+							:key="group"
+							:active="selectedGroup === group"
+							@click="updateGroup(group)"
 						>
-							<shopicon-regular-cablecharge></shopicon-regular-cablecharge>
-						</IconSelectItem>
-						<IconSelectItem
-							:active="selectedGroup === 'vehicle'"
-							@click="selectedGroup = 'vehicle'"
-						>
-							<shopicon-regular-car3></shopicon-regular-car3>
+							<component :is="groupIcons[group]"></component>
 						</IconSelectItem>
 					</IconSelectGroup>
 				</div>
@@ -57,46 +63,53 @@
 					:sessions="currentSessions"
 					:color-mappings="colorMappings"
 					:group-by="selectedGroup"
+					:period="selectedPeriod"
 				/>
-				<div class="row align-items-start">
-					<EnergyAggregateEntries
-						class="col-12 col-md-8 mb-5"
-						:sessions="currentSessions"
-						:color-mappings="colorMappings"
-						:group-by="selectedGroup"
-					/>
-					<EnergyAggregateChart
-						class="col-12 col-md-4 mb-5"
-						:sessions="currentSessions"
-						:color-mappings="colorMappings"
-						:group-by="selectedGroup"
-					/>
+				<div class="row align-items-start" v-if="selectedGroup !== groups.SOLAR">
+					<div class="col-12 col-md-6 mb-5">
+						<h3 class="fw-normal my-4">Sonnenanteil</h3>
+						<SolarChart
+							:sessions="currentSessions"
+							:color-mappings="colorMappings"
+							:group-by="selectedGroup"
+						/>
+					</div>
+					<div class="col-12 col-md-6 mb-5">
+						<h3 class="fw-normal my-4">Energiemenge</h3>
+						<EnergyAggregateChart
+							:sessions="currentSessions"
+							:color-mappings="colorMappings"
+							:group-by="selectedGroup"
+						/>
+					</div>
 				</div>
-				<h3>Übersicht</h3>
-				<SessionTable
-					:sessions="currentSessions"
-					:vehicleFilter="vehicleFilter"
-					:loadpointFilter="loadpointFilter"
-					:currency="currency"
-					@show-session="showDetails"
-				/>
-				<div class="d-grid gap-2 d-md-block mt-3 mb-5">
-					<a
-						v-if="currentSessions.length"
-						class="btn btn-outline-secondary text-nowrap me-md-2"
-						:href="csvLink"
-						download
-					>
-						{{ $t("sessions.csvMonth", { month: headline }) }}
-					</a>
-					<a
-						v-if="sessions.length"
-						class="btn btn-outline-secondary text-nowrap"
-						:href="csvTotalLink"
-						download
-					>
-						{{ $t("sessions.csvTotal") }}
-					</a>
+				<div v-if="selectedPeriod === 'month'">
+					<h3>Übersicht</h3>
+					<SessionTable
+						:sessions="currentSessions"
+						:vehicleFilter="vehicleFilter"
+						:loadpointFilter="loadpointFilter"
+						:currency="currency"
+						@show-session="showDetails"
+					/>
+					<div class="d-grid gap-2 d-md-block mt-3 mb-5">
+						<a
+							v-if="currentSessions.length"
+							class="btn btn-outline-secondary text-nowrap me-md-2"
+							:href="csvLink"
+							download
+						>
+							{{ $t("sessions.csvMonth", { month: headline }) }}
+						</a>
+						<a
+							v-if="sessions.length"
+							class="btn btn-outline-secondary text-nowrap"
+							:href="csvTotalLink"
+							download
+						>
+							{{ $t("sessions.csvTotal") }}
+						</a>
+					</div>
 				</div>
 			</main>
 			<SessionDetailsModal
@@ -115,6 +128,7 @@ import "@h2d2/shopicons/es/regular/angledoubleleftsmall";
 import "@h2d2/shopicons/es/regular/angledoublerightsmall";
 import "@h2d2/shopicons/es/regular/cablecharge";
 import "@h2d2/shopicons/es/regular/car3";
+import "@h2d2/shopicons/es/regular/sun";
 import formatter from "../mixins/formatter";
 import api from "../api";
 import store from "../store";
@@ -123,26 +137,19 @@ import SessionTable from "../components/Sessions/SessionTable.vue";
 import EnergyHistoryChart from "../components/Sessions/EnergyHistoryChart.vue";
 import EnergyAggregateChart from "../components/Sessions/EnergyAggregateChart.vue";
 import EnergyAggregateEntries from "../components/Sessions/EnergyAggregateEntries.vue";
+import SolarChart from "../components/Sessions/SolarChart.vue";
 import TopHeader from "../components/TopHeader.vue";
 import IconSelectGroup from "../components/IconSelectGroup.vue";
 import IconSelectItem from "../components/IconSelectItem.vue";
+import SelectGroup from "../components/SelectGroup.vue";
+import colors from "../colors";
+import settings from "../settings";
 
-// const COLORS = [ "#40916C", "#52B788", "#74C69D", "#95D5B2", "#B7E4C7", "#D8F3DC", "#081C15", "#1B4332", "#2D6A4F"];
-// const COLORS = ["#577590", "#43AA8B", "#90BE6D", "#F9C74F", "#F8961E", "#F3722C", "#F94144"];
-// const COLORS = ["#0077b6", "#00b4d8", "#90e0ef", "#caf0f8", "#03045e"];
-// const COLORS = [ "#0077B6FF", "#0096C7FF", "#00B4D8FF", "#48CAE4FF", "#90E0EFFF", "#ADE8F4FF", "#CAF0F8FF", "#03045EFF", "#023E8AFF",
-
-const COLORS = [
-	"#0077B6FF",
-	"#00B4D8FF",
-	"#90E0EFFF",
-	"#006769FF",
-	"#40A578FF",
-	"#9DDE8BFF",
-	"#F8961EFF",
-	"#F9C74FFF",
-	"#E6FF94FF",
-];
+const GROUPS = {
+	SOLAR: "solar",
+	LOADPOINT: "loadpoint",
+	VEHICLE: "vehicle",
+};
 
 export default {
 	name: "Sessions",
@@ -155,6 +162,8 @@ export default {
 		EnergyAggregateEntries,
 		IconSelectGroup,
 		IconSelectItem,
+		SelectGroup,
+		SolarChart,
 	},
 	mixins: [formatter],
 	props: {
@@ -163,12 +172,15 @@ export default {
 		year: { type: Number, default: () => new Date().getFullYear() },
 		loadpointFilter: { type: String, default: "" },
 		vehicleFilter: { type: String, default: "" },
+		offline: Boolean,
 	},
 	data() {
 		return {
 			sessions: [],
-			selectedGroup: "loadpoint",
+			selectedGroup: settings.sessionsGroup || GROUPS.SOLAR,
 			selectedSessionId: undefined,
+			selectedPeriod: "month",
+			groups: GROUPS,
 		};
 	},
 	head() {
@@ -176,9 +188,20 @@ export default {
 	},
 	computed: {
 		energyTitle() {
-			const energy =
-				this.currentSessions.reduce((acc, session) => acc + session.chargedEnergy, 0) * 1e3;
-			return `Geladene Energie: ${this.fmtKWh(energy)}`;
+			if (this.currentSessions.length === 0) {
+				return "";
+			}
+			const totalEnergy = this.currentSessions.reduce(
+				(acc, session) => acc + session.chargedEnergy,
+				0
+			);
+			const selfEnergy = this.currentSessions.reduce(
+				(acc, session) => acc + (session.chargedEnergy / 100) * session.solarPercentage,
+				0
+			);
+			const solarPercentage = (100 / totalEnergy) * selfEnergy;
+			console.log({ totalEnergy, selfEnergy, solarPercentage });
+			return `${this.fmtKWh(totalEnergy * 1e3)} geladen · ${this.fmtPercentage(solarPercentage)} Sonne`;
 		},
 		topNavigation: function () {
 			const vehicleLogins = store.state.auth ? store.state.auth.vehicles : {};
@@ -194,7 +217,18 @@ export default {
 		currentSessions() {
 			return this.sessionsWithDefaults.filter((session) => {
 				const date = new Date(session.created);
-				return date.getFullYear() === this.year && date.getMonth() + 1 === this.month;
+				switch (this.selectedPeriod) {
+					case "month":
+						return (
+							date.getFullYear() === this.year && date.getMonth() + 1 === this.month
+						);
+					case "year":
+						return date.getFullYear() === this.year;
+					case "total":
+						return true;
+					default:
+						return false;
+				}
 			});
 		},
 		vehicleList() {
@@ -258,7 +292,7 @@ export default {
 			if (length === 0) {
 				return false;
 			}
-			const first = new Date(this.sessions[length - 1].created);
+			const first = new Date(this.sessions[0].created);
 			return this.year > first.getFullYear() || this.month > first.getMonth() + 1;
 		},
 		colorMappings() {
@@ -285,7 +319,7 @@ export default {
 				const sortedEntries = Object.entries(energyAggregation).sort((a, b) => b[1] - a[1]);
 				sortedEntries.forEach(([key]) => {
 					if (!result[key]) {
-						result[key] = COLORS[colorIndex % COLORS.length];
+						result[key] = colors.palette[colorIndex % colors.palette.length];
 						colorIndex++;
 					}
 				});
@@ -294,7 +328,7 @@ export default {
 				this.sessionsWithDefaults.forEach((session) => {
 					const key = session[colorType];
 					if (!result[key]) {
-						result[key] = COLORS[colorIndex % COLORS.length];
+						result[key] = colors.palette[colorIndex % colors.palette.length];
 						colorIndex++;
 					}
 				});
@@ -310,6 +344,18 @@ export default {
 
 			return { loadpoint: loadpointColors, vehicle: vehicleColors };
 		},
+		groupIcons() {
+			return {
+				[GROUPS.SOLAR]: "shopicon-regular-sun",
+				[GROUPS.LOADPOINT]: "shopicon-regular-cablecharge",
+				[GROUPS.VEHICLE]: "shopicon-regular-car3",
+			};
+		},
+	},
+	watch: {
+		offline: function () {
+			this.loadSessions();
+		},
 	},
 	mounted() {
 		this.loadSessions();
@@ -317,7 +363,11 @@ export default {
 	methods: {
 		async loadSessions() {
 			const response = await api.get("sessions");
-			this.sessions = response.data?.result;
+			// ensure sessions are sorted by created date
+			const sortedSessions = response.data?.result.sort((a, b) => {
+				return new Date(a.created) - new Date(b.created);
+			});
+			this.sessions = sortedSessions;
 		},
 		showDetails(sessionId) {
 			this.selectedSessionId = sessionId;
@@ -334,6 +384,10 @@ export default {
 				params.append("month", month);
 			}
 			return `./api/sessions?${params.toString()}`;
+		},
+		updateGroup(group) {
+			this.selectedGroup = group;
+			settings.sessionsGroup = group;
 		},
 	},
 };

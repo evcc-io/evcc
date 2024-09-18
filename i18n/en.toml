@@ -635,6 +635,10 @@ allLoadpoints = "all charging points"
 allVehicles = "all vehicles"
 filter = "Filter"
 
+[sessions.group]
+grid = "Grid"
+self = "Solar"
+
 [settings]
 title = "User Interface"
 

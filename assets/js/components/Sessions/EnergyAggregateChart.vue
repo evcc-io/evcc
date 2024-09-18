@@ -1,5 +1,5 @@
 <template>
-	<div style="position: relative; height: 200px">
+	<div v-if="chartData.labels.length > 1">
 		<Doughnut :data="chartData" :options="options" />
 	</div>
 </template>
@@ -8,6 +8,7 @@
 import { Doughnut } from "vue-chartjs";
 import { Chart, DoughnutController, ArcElement, LinearScale, Legend, Tooltip } from "chart.js";
 import formatter from "../../mixins/formatter";
+import colors from "../../colors";
 
 Chart.register(DoughnutController, ArcElement, LinearScale, Legend, Tooltip);
 Chart.defaults.font.family = window
@@ -16,7 +17,8 @@ Chart.defaults.font.family = window
 
 Chart.defaults.font.size = 14;
 Chart.defaults.layout.padding = 0;
-Chart.defaults.animation = false;
+
+const { generateLabels } = Chart.overrides.pie.plugins.legend.labels;
 
 export default {
 	name: "EnergyAggregateChart",
@@ -26,29 +28,7 @@ export default {
 		groupBy: { type: String, default: "loadpoint" },
 		colorMappings: { type: Object, default: () => ({ loadpoint: {}, vehicle: {} }) },
 	},
-	data() {
-		return {
-			borderColor: null,
-		};
-	},
 	mixins: [formatter],
-	mounted() {
-		window
-			.matchMedia("(prefers-color-scheme: dark)")
-			.addEventListener("change", this.updateColors);
-		this.updateColors();
-	},
-	beforeUnmount() {
-		window
-			.matchMedia("(prefers-color-scheme: dark)")
-			.removeEventListener("change", this.updateColors);
-	},
-	methods: {
-		updateColors() {
-			const style = window.getComputedStyle(document.documentElement);
-			this.borderColor = style.getPropertyValue("--evcc-background");
-		},
-	},
 	computed: {
 		chartData() {
 			console.log("update energy aggregate data");
@@ -76,32 +56,54 @@ export default {
 		},
 		options() {
 			return {
-				animations: true,
 				locale: this.$i18n?.locale,
 				responsive: true,
 				maintainAspectRatio: false,
 				borderRadius: 6,
+				color: colors.text,
 				plugins: {
-					legend: { display: false },
+					legend: {
+						position: "right",
+						align: "start",
+						labels: {
+							usePointStyle: true,
+							pointStyle: "circle",
+							padding: 20,
+							generateLabels: (chart) => {
+								const labels = generateLabels(chart);
+								const total = chart.data.datasets[0].data.reduce(
+									(acc, curr) => acc + curr,
+									0
+								);
+								labels.forEach((label, dataIndex) => {
+									const value = chart.data.datasets[0].data[dataIndex];
+									const percentage = (100 / total) * value;
+									label.text = `${label.text} ${this.fmtPercentage(percentage, 1)}`;
+								});
+								return labels;
+							},
+						},
+						onClick: () => {},
+					},
 					tooltip: {
 						mode: "index",
 						intersect: false,
 						callbacks: {
 							label: (tooltipItem) => {
-								const datasetLabel = tooltipItem.dataset.label || "";
-								const value = tooltipItem.raw;
-								return value
-									? datasetLabel + ": " + this.fmtKWh(value * 1e3)
-									: null;
+								const value = tooltipItem.raw || 0;
+								return this.fmtKWh(value * 1e3);
 							},
 						},
 						backgroundColor: "#000",
 					},
 				},
 				borderWidth: 3,
-				borderColor: this.borderColor,
+				borderColor: colors.background,
 				cutout: "70%",
 				radius: "100%",
+				animation: {
+					duration: 250,
+				},
 			};
 		},
 	},

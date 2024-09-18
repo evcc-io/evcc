@@ -9,6 +9,7 @@ const SESSION_INFO = "session_info";
 const SESSION_COLUMNS = "session_columns";
 const SAVINGS_PERIOD = "savings_period";
 const SAVINGS_REGION = "savings_region";
+const SESSIONS_GROUP = "sessions_group";
 
 function read(key) {
   return window.localStorage[key];
@@ -60,6 +61,7 @@ const settings = reactive({
   sessionColumns: readArray(SESSION_COLUMNS),
   savingsPeriod: read(SAVINGS_PERIOD),
   savingsRegion: read(SAVINGS_REGION),
+  sessionsGroup: read(SESSIONS_GROUP),
 });
 
 watch(() => settings.locale, save(SETTINGS_LOCALE));
@@ -71,5 +73,5 @@ watch(() => settings.sessionInfo, saveArray(SESSION_INFO));
 watch(() => settings.sessionColumns, saveArray(SESSION_COLUMNS));
 watch(() => settings.savingsPeriod, save(SAVINGS_PERIOD));
 watch(() => settings.savingsRegion, save(SAVINGS_REGION));
-
+watch(() => settings.sessionsGroup, save(SESSIONS_GROUP));
 export default settings;

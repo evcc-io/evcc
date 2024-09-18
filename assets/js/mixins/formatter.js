@@ -190,6 +190,7 @@ export default {
     },
     fmtDayMonth: function (date) {
       return new Intl.DateTimeFormat(this.$i18n?.locale, {
+        weekday: "short",
         day: "numeric",
         month: "short",
       }).format(date);
