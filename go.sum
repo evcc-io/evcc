@@ -29,8 +29,8 @@ github.com/alecthomas/units v0.0.0-20190717042225-c3de453c63f4/go.mod h1:ybxpYRF
 github.com/alecthomas/units v0.0.0-20190924025748-f65c72e2690d/go.mod h1:rBZYJk541a8SKzHPHnH3zbiI+7dagKZ0cgpgrD7Fyho=
 github.com/andig/go-powerwall v0.2.1-0.20230808194509-dd70cdb6e140 h1:C93T8vg7CN4Q4BBDbBMOvBoTYBA+CaBEvlY2SZF8aa0=
 github.com/andig/go-powerwall v0.2.1-0.20230808194509-dd70cdb6e140/go.mod h1:Xk09mD+7RTCuuHMX5RxlqgEUeh9oZdIX0rL0qiY6l/4=
-github.com/andig/gosunspec v0.0.0-20231205122018-1daccfa17912 h1:pphS+WUa9zK0ZH/Rt2JMEaOx0qz8dDzOzbr/W7BMiXQ=
-github.com/andig/gosunspec v0.0.0-20231205122018-1daccfa17912/go.mod h1:c6P6szcR+ROkqZruOR4f6qbDKFjZX6OitPpj+yJ/r8k=
+github.com/andig/gosunspec v0.0.0-20240918203654-860ce51d602b h1:81UMfM949I7StrRay7YDUZazY8M1u/JHkzwcFEjiilQ=
+github.com/andig/gosunspec v0.0.0-20240918203654-860ce51d602b/go.mod h1:c6P6szcR+ROkqZruOR4f6qbDKFjZX6OitPpj+yJ/r8k=
 github.com/andig/mbserver v0.0.0-20230310211055-1d29cbb5820e h1:m/NTP3JWpR7M0ljLxiQU4fzR25jjhe1LDtxLMNcoNJQ=
 github.com/andig/mbserver v0.0.0-20230310211055-1d29cbb5820e/go.mod h1:4VtYzTm//oUipwvO3yh0g/udTE7pYJM+U/kyAuFDsgM=
 github.com/andig/yaml v0.0.0-20240531135838-1ff5761ab467 h1:JqIoHxsQSV39xaemvVRu3HOkSf5AbhQ1YEENJa2cL3Q=
