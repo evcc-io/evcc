@@ -101,7 +101,13 @@ func (cp *CP) StartTransaction(request *core.StartTransactionRequest) (*core.Sta
 		return conn.StartTransaction(request)
 	}
 
-	return new(core.StartTransactionConfirmation), nil
+	res := &core.StartTransactionConfirmation{
+		IdTagInfo: &types.IdTagInfo{
+			Status: types.AuthorizationStatusAccepted,
+		},
+	}
+
+	return res, nil
 }
 
 func (cp *CP) StopTransaction(request *core.StopTransactionRequest) (*core.StopTransactionConfirmation, error) {
