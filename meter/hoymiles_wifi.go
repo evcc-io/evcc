@@ -39,10 +39,11 @@ func init() {
 }
 
 type HoymilesWifi struct {
-	client    *hoymiles_wifi.ClientData
-	log       *util.Logger
-	cc        struct{ Host string }
-	lastValue float64
+	client           *hoymiles_wifi.ClientData
+	log              *util.Logger
+	cc               struct{ Host string }
+	lastValue        float64
+	lastValueUpdated time.Time
 }
 
 func NewHoymilesWifiMeterFromConfig(other map[string]interface{}) (api.Meter, error) {
@@ -55,7 +56,7 @@ func NewHoymilesWifiMeterFromConfig(other map[string]interface{}) (api.Meter, er
 	}
 
 	log := util.NewLogger("hoymiles-wifi")
-	log.DEBUG.Printf("Start HoymilesWifi setup: %s", cc.Host)
+	log.TRACE.Printf("Start HoymilesWifi setup: %s", cc.Host)
 
 	client := hoymiles_wifi.NewClientDefault(cc.Host)
 	client.ConnectionTimeout = 5 * time.Second
@@ -82,6 +83,9 @@ func (hmWifi *HoymilesWifi) CurrentPower() (float64, error) {
 
 	result, err := hmWifi.client.GetRealDataNew(request)
 	if err != nil {
+		if hmWifi.lastValue != 0 && !hmWifi.lastValueUpdated.Add(time.Minute*15).Before(time.Now()) {
+			hmWifi.lastValue = 0
+		}
 		if err.Error() == "client connection is closed" {
 			hmWifi.log.DEBUG.Printf("HoymilesWifi the Host is offline: %s", hmWifi.cc.Host)
 			return hmWifi.lastValue, nil
@@ -106,6 +110,7 @@ func (hmWifi *HoymilesWifi) CurrentPower() (float64, error) {
 	}
 
 	hmWifi.lastValue = value
+	hmWifi.lastValueUpdated = time.Now()
 
 	hmWifi.log.TRACE.Printf("Get HoymilesWifi CurrentPower: %10.2f watt for Host: %s", value, hmWifi.cc.Host)
 	hmWifi.log.TRACE.Printf("End HoymilesWifi fetch for Host: %s", hmWifi.cc.Host)
