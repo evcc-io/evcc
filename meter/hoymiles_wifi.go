@@ -102,7 +102,7 @@ func (hmWifi *HoymilesWifi) CurrentPower() (float64, error) {
 	}(hmWifi.client)
 
 	if result.DtuPower > 0 {
-		value = float64(float64(result.DtuPower) / 10)
+		value = float64(result.DtuPower) / 10
 	}
 
 	hmWifi.lastValue = value
