@@ -130,7 +130,7 @@
 						/>
 						<EnergyflowEntry
 							:name="
-								$tc('main.energyflow.loadpoints', activeLoadpointsCount, {
+								$t('main.energyflow.loadpoints', activeLoadpointsCount, {
 									count: activeLoadpointsCount,
 								})
 							"
@@ -337,7 +337,7 @@ export default {
 			return this.fmtPricePerKWh(this.tariffGrid, this.currency, true);
 		},
 		batteryGridChargeLimitFmt() {
-			if (this.batteryGridChargeLimit === null || this.batteryGridChargeLimit === undefined) {
+			if (this.batteryGridChargeLimit === null) {
 				return;
 			}
 			if (this.co2Available) {

@@ -121,7 +121,7 @@ require (
 	github.com/cstockton/go-conv v1.0.0 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
-	github.com/enbility/go-avahi v0.0.0-20240829083637-9ae2ef5f5ed2 // indirect
+	github.com/enbility/go-avahi v0.0.0-20240909195612-d5de6b280d7a // indirect
 	github.com/enbility/zeroconf/v2 v2.0.0-20240827101515-f3956627c450 // indirect
 	github.com/fatih/color v1.17.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
@@ -200,12 +200,12 @@ require (
 
 replace gopkg.in/yaml.v3 => github.com/andig/yaml v0.0.0-20240531135838-1ff5761ab467
 
-replace github.com/grid-x/modbus => github.com/evcc-io/modbus v0.0.0-20240503125516-9fd99fe0e438
+replace github.com/grid-x/modbus => github.com/evcc-io/modbus v0.0.0-20240911180928-7b1464a53285
 
-replace github.com/lorenzodonini/ocpp-go => github.com/evcc-io/ocpp-go v0.0.0-20240730071053-d69e53b0fce9
+replace github.com/lorenzodonini/ocpp-go => github.com/evcc-io/ocpp-go v0.0.0-20240914122959-0d109e403130
 
-replace github.com/enbility/ship-go => github.com/enbility/ship-go v0.0.0-20240904104254-04d944c4f825
+replace github.com/enbility/ship-go => github.com/enbility/ship-go v0.0.0-20240909200111-0d37cebbfc21
 
-replace github.com/enbility/spine-go => github.com/enbility/spine-go v0.0.0-20240907194637-0024041a4f36
+replace github.com/enbility/spine-go => github.com/enbility/spine-go v0.0.0-20240911140055-b637b5392906
 
-replace github.com/enbility/eebus-go => github.com/enbility/eebus-go v0.0.0-20240907200357-cd3e59d01934
+replace github.com/enbility/eebus-go => github.com/enbility/eebus-go v0.0.0-20240911140240-9cc1fcff7307

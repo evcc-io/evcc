@@ -29,9 +29,8 @@ type Connector struct {
 	meterUpdated time.Time
 	measurements map[types.Measurand]types.SampledValue
 
-	txnCount int // change initial value to the last known global transaction. Needs persistence
-	txnId    int
-	idTag    string
+	txnId int
+	idTag string
 
 	remoteIdTag string
 }
@@ -100,19 +99,17 @@ func (conn *Connector) SetChargingProfile(profile *types.ChargingProfile) error 
 
 // getScheduleLimit queries the current or power limit the charge point is currently set to offer
 func (conn *Connector) GetScheduleLimit(duration int) (float64, error) {
-	var limit float64
 	schedule, err := Instance().GetCompositeScheduleRequest(conn.cp.ID(), conn.id, duration)
-
-	if err == nil {
-		if schedule != nil && len(schedule.ChargingSchedulePeriod) > 0 {
-			// return first (current) period limit
-			limit = schedule.ChargingSchedulePeriod[0].Limit
-		} else {
-			err = fmt.Errorf("invalid ChargingSchedule")
-		}
+	if err != nil {
+		return 0, err
 	}
 
-	return limit, err
+	// return first (current) period limit
+	if schedule != nil && schedule.ChargingSchedule != nil && len(schedule.ChargingSchedule.ChargingSchedulePeriod) > 0 {
+		return schedule.ChargingSchedule.ChargingSchedulePeriod[0].Limit, nil
+	}
+
+	return 0, fmt.Errorf("invalid ChargingSchedule")
 }
 
 // WatchDog triggers meter values messages if older than timeout.

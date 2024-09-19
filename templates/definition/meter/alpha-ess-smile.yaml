@@ -133,7 +133,5 @@ render: |
       type: holding
       decode: uint16
     scale: 0.1
-  {{- if .capacity }}
   capacity: {{ .capacity }} # kWh
-  {{- end }}
   {{- end }}
