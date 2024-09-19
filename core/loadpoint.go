@@ -1547,7 +1547,7 @@ func (lp *Loadpoint) publishSocAndRange() {
 		}
 
 		lp.vehicleSoc = f
-		lp.log.DEBUG.Printf("vehicle soc: %.0f%%", lp.vehicleSoc)
+		lp.log.DEBUG.Printf("vehicle soc: %.1f%%", lp.vehicleSoc)
 		lp.publish(keys.VehicleSoc, lp.vehicleSoc)
 
 		// vehicle target soc
