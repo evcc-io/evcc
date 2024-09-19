@@ -46,9 +46,9 @@ type HoymilesWifi struct {
 }
 
 func NewHoymilesWifiMeterFromConfig(other map[string]interface{}) (api.Meter, error) {
-	cc := struct {
+	var cc struct {
 		Host string
-	}{}
+	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
