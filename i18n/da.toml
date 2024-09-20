@@ -100,6 +100,7 @@ remove = "Fjern"
 save = "Gem"
 telemetry = "Telemetri"
 title = "Titel"
+readFromFile = "Læs fra fil"
 
 [config.grid]
 title = "Elnet-måler"
@@ -165,6 +166,9 @@ labelTopic = "Emne"
 labelUser = "Brugernavn"
 publishing = "Udgivelser"
 title = "MQTT"
+labelCaCert = "Server certifikat (CA)"
+labelClientCert = "Klient certifikat"
+labelClientKey = "Klientnøgle"
 
 [config.network]
 descriptionHost = "Brug .local suffiks for at aktivere mDNS. Relevant for opdagelse af mobilappen og nogle OCPP-opladere."
