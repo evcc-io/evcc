@@ -219,7 +219,7 @@ func (conn *Connector) GetMaxCurrent() (float64, error) {
 
 	if m, ok := conn.measurements[types.MeasurandCurrentOffered]; ok {
 		f, err := strconv.ParseFloat(m.Value, 64)
-		return scale(f, m.Unit) / 1e3, err
+		return scale(f, m.Unit), err
 	}
 
 	return 0, api.ErrNotAvailable
