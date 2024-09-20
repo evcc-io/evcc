@@ -43,6 +43,9 @@ func (cp *CP) Setup(meterValues string, meterInterval time.Duration) error {
 				cp.ChargingRateUnit = types.ChargingRateUnitWatts
 			}
 
+		case strings.EqualFold(opt.Key, KeyChargeAmpsPhaseSwitchingSupported):
+			fallthrough
+
 		case strings.EqualFold(opt.Key, KeyConnectorSwitch3to1PhaseSupported):
 			var val bool
 			if val, err = strconv.ParseBool(*opt.Value); err == nil {
