@@ -5,28 +5,30 @@ control = "Nadzor baterije"
 discharge = "Preprečite praznjenje v hitrem načinu in načrtovano polnjenje."
 disclaimerHint = "Opomba:"
 disclaimerText = "Te nastavitve vplivajo samo na solarni način. Obnašanje pri polnjenju je ustrezno prilagojeno."
-legendBottomName = "domača prednost"
-legendBottomSubline = "se ne uporablja za polnjenje"
-legendMiddleName = "najprej vozilo"
-legendMiddleSubline = "Dom je drugi"
+legendBottomName = "Prednostno polnjenje domače baterije"
+legendBottomSubline = "dokler ne doseže {soc}."
+legendMiddleName = "Prioritetno polnjenje vozil"
+legendMiddleSubline = "ko je domača baterija nad {soc}."
 legendTitle = "Kako naj se uporablja sončna energija?"
-legendTopAutostart = "samodejno se zažene"
-legendTopName = "polnjenje, ki ga podpira baterija"
-legendTopSubline = "brez prekinitev"
+legendTopAutostart = "Samodejni zagon"
+legendTopName = "Polnjenje vozila, ki ga podpira baterija"
+legendTopSubline = "ko je domača baterija nad {soc}."
 modalTitle = "Domača baterija"
+gridChargeTab = "Polnjenje iz omrežja"
+usageTab = "Poraba baterije"
 
 [batterySettings.bufferStart]
-above = "ko je nad {soc}"
-full = "ko je na {soc}"
+above = "ko je nad {soc}."
+full = "ko je na {soc}."
 low = "ko je nekoliko poln"
 medium = "ko je napol poln"
-never = "le z dovolj presežka"
+never = "samo z dovolj presežka."
 
 [config]
 
 [config.battery]
-titleAdd = "Dodaj merilnik baterije"
-titleEdit = "Uredi merilnik baterije"
+titleAdd = "Dodaj baterijo"
+titleEdit = "Uredi baterijo"
 
 [config.circuits]
 description = "Zagotavlja, da vsota vseh obremenitvenih točk, povezanih z vezjem, ne preseže konfiguriranih omejitev moči in toka. Vezja je mogoče ugnezditi za izgradnjo hierarhije."
@@ -75,6 +77,9 @@ temp = "Temperatura"
 topic = "Topic"
 url = "URL"
 yes = "da"
+controllable = "Nadzorljiv"
+powerRange = "Moč"
+currentRange = "Tok"
 
 [config.eebus]
 description = "Konfiguracija, ki evcc omogoča komunikacijo z drugimi napravami EEBus."
@@ -289,6 +294,7 @@ tabTitle = "Moji podatki"
 30d = "zadnjih 30 dni"
 365d = "zadnjih 365 dni"
 total = "ves čas"
+thisYear = "letos"
 
 [footer.sponsor]
 becomeSponsor = "Postanite sponzor"
@@ -365,6 +371,8 @@ search = "Iskanje"
 showAll = "Pokaži vse vnose"
 title = "Logi"
 update = "Samodejno posodabljanje"
+nAreas = "{count} območij"
+selectAll = "izberi vse"
 
 [loginModal]
 cancel = "Prekliči"
@@ -409,6 +417,8 @@ noEnergy = "Ni podatkov o merilniku"
 pvExport = "Izvoz v omrežje"
 pvProduction = "Proizvodnja"
 selfConsumption = "Samoporaba"
+cleanBatteryGridCharge = "energija iz čistega omrežja"
+cheapBatteryGridCharge = "poceni omrežna energija"
 
 [main.heatingStatus]
 charging = "Gretje…"
@@ -561,6 +571,8 @@ vehicleLimit = "Omejitev vozila."
 vehicleLimitReached = "Omejitev vozila dosežena."
 waitForVehicle = "Pripravljen. Čakam na vozilo..."
 welcome = "Kratko začetno polnjenje za potrditev povezave."
+awaitingAuthorization = "Čakanje na avtorizacijo."
+disconnectRequired = "Seja prekinjena. Ponovno se povežite."
 
 [notifications]
 dismissAll = "Opusti vse"
