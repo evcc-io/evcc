@@ -100,6 +100,7 @@ remove = "Supprimer"
 save = "Enregistrer"
 telemetry = "Télémétrie"
 title = "Titre"
+readFromFile = "Lu depuis le fichier"
 
 [config.grid]
 title = "Compteur du réseau"
@@ -165,6 +166,9 @@ labelTopic = "Sujet"
 labelUser = "Nom d’utilisateur"
 publishing = "Publication"
 title = "MQTT"
+labelCaCert = "Certificat serveur (CA)"
+labelClientCert = "Certificat client"
+labelClientKey = "Clé client"
 
 [config.network]
 descriptionHost = "Utilisez le suffixe .local pour activer mDNS. Pertinent pour la découverte de l'application mobile et de certains chargeurs OCPP."
