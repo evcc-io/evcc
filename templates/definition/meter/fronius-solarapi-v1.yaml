@@ -37,13 +37,13 @@ render: |
   currents:
     - source: http
       uri: http://{{ .host }}/solar_api/v1/GetMeterRealtimeData.cgi?Scope=Device&DeviceId=0&DataCollection=MeterRealtimeData
-      jq: .Body.Data.Current_AC_Phase_1 # L1 grid current
+      jq: if .Body.Data.Current_AC_Phase_1 == null then 0 else .Body.Data.Current_AC_Phase_1 end # L1 grid current
     - source: http
       uri: http://{{ .host }}/solar_api/v1/GetMeterRealtimeData.cgi?Scope=Device&DeviceId=0&DataCollection=MeterRealtimeData
-      jq: .Body.Data.Current_AC_Phase_2 # L2 grid current
+      jq: if .Body.Data.Current_AC_Phase_2 == null then 0 else .Body.Data.Current_AC_Phase_2 end # L2 grid current
     - source: http
       uri: http://{{ .host }}/solar_api/v1/GetMeterRealtimeData.cgi?Scope=Device&DeviceId=0&DataCollection=MeterRealtimeData
-      jq: .Body.Data.Current_AC_Phase_3 # L3 grid current
+      jq: if .Body.Data.Current_AC_Phase_3 == null then 0 else .Body.Data.Current_AC_Phase_3 end # L3 grid current
   {{- end }}
   power:
     source: http
