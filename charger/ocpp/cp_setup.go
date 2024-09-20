@@ -10,6 +10,7 @@ import (
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/remotetrigger"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/smartcharging"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/types"
+	"github.com/samber/lo"
 )
 
 const desiredMeasurands = "Power.Active.Import,Energy.Active.Import.Register,Current.Import,Voltage,Current.Offered,Power.Offered,SoC"
@@ -57,7 +58,13 @@ func (cp *CP) Setup(meterValues string, meterInterval time.Duration) error {
 			if opt.Readonly {
 				meterValuesSampledDataMaxLength = 0
 			}
-			cp.meterValuesSample = *opt.Value
+			if remove, ok := strings.CutPrefix(meterValues, "-"); ok {
+				// remove offending measurands
+				cp.meterValuesSample = strings.Join(lo.Without(strings.Split(*opt.Value, ","), strings.Split(remove, ",")...), ",")
+				meterValues = ""
+			} else {
+				cp.meterValuesSample = *opt.Value
+			}
 
 		case strings.EqualFold(opt.Key, KeyMeterValuesSampledDataMaxLength):
 			if val, err := strconv.Atoi(*opt.Value); err == nil {
