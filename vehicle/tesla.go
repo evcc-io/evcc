@@ -82,7 +82,13 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	// validate base url
 	region, err := tc.UserRegion()
 	if err != nil {
-		return nil, err
+		// Set the base URL to the European region and try again
+		// China region still not supported
+		tc.SetBaseUrl(teslaclient.FleetAudienceEU)
+		region, err = tc.UserRegion()
+		if err != nil {
+			return nil, err
+		}
 	}
 	tc.SetBaseUrl(region.FleetApiBaseUrl)
 
