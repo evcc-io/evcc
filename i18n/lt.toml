@@ -100,6 +100,7 @@ remove = "Pašalinti"
 save = "Išsaugoti"
 telemetry = "Telemetrija"
 title = "Pavadinimas"
+readFromFile = "Skaityti iš failo"
 
 [config.grid]
 title = "Tinklo skaitiklis"
@@ -165,6 +166,9 @@ labelTopic = "Tema"
 labelUser = "Vartotojo vardas"
 publishing = "Publikavimas"
 title = "MQTT"
+labelClientCert = "Kliento sertifikatas"
+labelClientKey = "Kliento raktas"
+labelCaCert = "Serverio sertifikatas (CA)"
 
 [config.network]
 descriptionHost = "Naudokite .local priesagą, kad įgalintumėte mDNS. Tai svarbu norint aptikti progrmėlę mobiliesiems ir kai kuriuos OCPP įkroviklius."

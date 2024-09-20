@@ -5,19 +5,21 @@ control = "Контроль батареї"
 discharge = "Запобігти розрядці в швидкому режимі та плановій зарядці"
 disclaimerHint = "Примітка:"
 disclaimerText = "Ці налаштування впливають лише на сонячний режим. Поведінка зарядки регулюється відповідно."
-legendBottomName = "домашній пріоритет"
-legendBottomSubline = "не використовується для зарядки"
-legendMiddleName = "спочатку транспортний засіб"
-legendMiddleSubline = "другий дім"
+legendBottomName = "Надайте пріоритет зарядці батареї домашнього накопичувача"
+legendBottomSubline = "поки не досягне {soc}."
+legendMiddleName = "Пріоритет заряджання автомобіля"
+legendMiddleSubline = "коли домашня батарея вище {soc}."
 legendTitle = "Як використовувати сонячну енергію?"
-legendTopAutostart = "запускається автоматично"
-legendTopName = "заряджання з підтримкою батареї"
-legendTopSubline = "без перебоїв"
+legendTopAutostart = "Запустити автоматично"
+legendTopName = "Заряджання автомобіля за допомогою акумулятора"
+legendTopSubline = "коли домашня батарея вище {soc}."
 modalTitle = "Домашня батарея"
+gridChargeTab = "Зарядка від електромережі"
+usageTab = "Використання батареї"
 
 [batterySettings.bufferStart]
-above = "коли вище {soc}"
-full = "коли при {soc}"
+above = "коли вище {soc}."
+full = "коли при {soc}."
 low = "коли трохи повний"
 medium = "коли наполовину повна"
 never = "тільки з достатнім надлишком"
@@ -25,11 +27,15 @@ never = "тільки з достатнім надлишком"
 [config]
 
 [config.battery]
-titleAdd = "Додати лічильник батареї"
-titleEdit = "Редагувати лічильник батареї"
+titleAdd = "Додати батарею"
+titleEdit = "Редагувати батарею"
 
 [config.control]
 labelInterval = "Інтервал оновлення"
+descriptionInterval = "Цикл оновлення контуру керування в секундах. Визначає, як часто evcc зчитує дані лічильника, регулює потужність заряджання та оновлює інтерфейс користувача. Короткі інтервали (< 30 с) можуть спричинити коливання та небажану поведінку."
+description = "Зазвичай стандартні значення підходять. Змінюйте їх, лише якщо знаєте, що робите."
+title = "Контрольна поведінка"
+labelResidualPower = "Залишкова потужність"
 
 [config.deviceValue]
 capacity = "Ємність"
@@ -49,6 +55,16 @@ soc = "SoC"
 socLimit = "Ліміт"
 url = "URL"
 yes = "так"
+controllable = "Контрольована"
+broker = "Брокер"
+bucket = "Bucket"
+chargeStatusA = "не підключено"
+chargeStatusB = "підключений"
+chargeStatusC = "зарядка"
+chargeStatusF = "помилка"
+configured = "Налаштовано"
+currentRange = "Струм"
+no = "ні"
 
 [config.eebus]
 title = "EEBus"
@@ -63,6 +79,7 @@ experimental = "Експериментальний"
 off = "вимкнено"
 save = "зберегти"
 telemetry = "Телеметрія"
+docsLink = "Переглянути документацію."
 
 [config.grid]
 titleAdd = "Додати лічильник електромережі"
@@ -524,3 +541,7 @@ title = "Помилка запуску"
 cancel = "Скасувати"
 template = "Виробник"
 test = "Тест"
+
+
+[config.circuits]
+title = "Керування навантаженням"
