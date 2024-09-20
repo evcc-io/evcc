@@ -100,6 +100,7 @@ remove = "Ta bort"
 save = "Spara"
 telemetry = "Telemetri"
 title = "Titel"
+readFromFile = "Läs från fil"
 
 [config.grid]
 title = "Elmätare"
@@ -165,6 +166,9 @@ labelTopic = "Ämne"
 labelUser = "Användarnamn"
 publishing = "Publicerar"
 title = "MQTT"
+labelCaCert = "Server certifikat (CA)"
+labelClientCert = "Klient certifikat"
+labelClientKey = "Klientnyckel"
 
 [config.network]
 descriptionHost = "Använd .local suffix för att aktivera mDNS. Relevant för upptäckt av mobilappen och vissa OCPP-laddare."
