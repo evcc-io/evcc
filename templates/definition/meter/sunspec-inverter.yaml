@@ -38,8 +38,6 @@ render: |
       value:
         - 201:AphA
         - 211:AphA
-        - 202:AphA
-        - 212:AphA
         - 203:AphA
         - 213:AphA
     - source: sunspec
