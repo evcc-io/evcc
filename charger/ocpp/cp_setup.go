@@ -12,11 +12,18 @@ import (
 	"github.com/samber/lo"
 )
 
-const desiredMeasurands = "Power.Active.Import,Energy.Active.Import.Register,Current.Import,Voltage,Current.Offered,Power.Offered,SoC"
-
 func (cp *CP) Setup(meterValues string, meterInterval time.Duration) error {
 	if err := cp.ChangeAvailabilityRequest(0, core.AvailabilityTypeOperative); err != nil {
 		cp.log.DEBUG.Printf("failed configuring availability: %v", err)
+	}
+
+	// auto configuration
+	desiredMeasurands := "Power.Active.Import,Energy.Active.Import.Register,Current.Import,Voltage,Current.Offered,Power.Offered,SoC"
+
+	// remove offending measurands from desired values
+	if remove, ok := strings.CutPrefix(meterValues, "-"); ok {
+		desiredMeasurands = strings.Join(lo.Without(strings.Split(desiredMeasurands, ","), strings.Split(remove, ",")...), ",")
+		meterValues = ""
 	}
 
 	meterValuesSampledDataMaxLength := len(strings.Split(desiredMeasurands, ","))
@@ -61,13 +68,7 @@ func (cp *CP) Setup(meterValues string, meterInterval time.Duration) error {
 			if opt.Readonly {
 				meterValuesSampledDataMaxLength = 0
 			}
-			if remove, ok := strings.CutPrefix(meterValues, "-"); ok {
-				// remove offending measurands
-				cp.meterValuesSample = strings.Join(lo.Without(strings.Split(*opt.Value, ","), strings.Split(remove, ",")...), ",")
-				meterValues = ""
-			} else {
-				cp.meterValuesSample = *opt.Value
-			}
+			cp.meterValuesSample = *opt.Value
 
 		case match(KeyMeterValuesSampledDataMaxLength):
 			if val, err := strconv.Atoi(*opt.Value); err == nil {
