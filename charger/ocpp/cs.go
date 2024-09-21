@@ -19,20 +19,27 @@ type CS struct {
 
 // Register registers a charge point with the central system.
 // The charge point identified by id may already be connected in which case initial connection is triggered.
-func (cs *CS) Register(id string, cp *CP) error {
+func (cs *CS) Register(id string, new *CP) error {
 	cs.mu.Lock()
 	defer cs.mu.Unlock()
 
-	if _, ok := cs.cps[id]; ok && id == "" {
+	cp, ok := cs.cps[id]
+
+	// case 1: charge point neither registered nor connected
+	if !ok {
+		cs.cps[id] = new
+		return nil
+	}
+
+	// case 2: charge point already registered, id empty- cannot have 2 of those
+	if id == "" {
 		return errors.New("cannot have >1 charge point with empty station id")
 	}
 
-	// trigger unknown charge point connected
-	if unknown, ok := cs.cps[id]; ok && unknown == nil {
+	// case 3: charge point already registered and connected
+	if cp != nil {
 		cp.connect(true)
 	}
-
-	cs.cps[id] = cp
 
 	return nil
 }
