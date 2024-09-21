@@ -20,6 +20,11 @@ func (cp *CP) Setup(meterValues string, meterInterval time.Duration) error {
 		cp.log.DEBUG.Printf("failed configuring availability: %v", err)
 	}
 
+	// remove offending measurands from desired values
+	if remove, ok := strings.CutPrefix(meterValues, "-"); ok {
+		meterValues = strings.Join(lo.Without(strings.Split(meterValues, ","), strings.Split(remove, ",")...), ",")
+	}
+
 	meterValuesSampledDataMaxLength := len(strings.Split(desiredMeasurands, ","))
 
 	resp, err := cp.GetConfiguration()
@@ -62,13 +67,7 @@ func (cp *CP) Setup(meterValues string, meterInterval time.Duration) error {
 			if opt.Readonly {
 				meterValuesSampledDataMaxLength = 0
 			}
-			if remove, ok := strings.CutPrefix(meterValues, "-"); ok {
-				// remove offending measurands
-				cp.meterValuesSample = strings.Join(lo.Without(strings.Split(*opt.Value, ","), strings.Split(remove, ",")...), ",")
-				meterValues = ""
-			} else {
-				cp.meterValuesSample = *opt.Value
-			}
+			cp.meterValuesSample = *opt.Value
 
 		case match(KeyMeterValuesSampledDataMaxLength):
 			if val, err := strconv.Atoi(*opt.Value); err == nil {
