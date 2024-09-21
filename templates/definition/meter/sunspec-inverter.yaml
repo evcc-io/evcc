@@ -29,8 +29,6 @@ render: |
     value:
       - 201:TotWhImp
       - 211:TotWhImp
-      - 202:TotWhImp
-      - 212:TotWhImp
       - 203:TotWhImp
       - 213:TotWhImp
     scale: 0.001
