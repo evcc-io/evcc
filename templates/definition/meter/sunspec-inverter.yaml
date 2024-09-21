@@ -21,8 +21,6 @@ render: |
     value:
       - 201:W
       - 211:W
-      - 202:W
-      - 212:W
       - 203:W
       - 213:W
   energy:
