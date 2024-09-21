@@ -13,6 +13,7 @@ import (
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/smartcharging"
 	"github.com/lorenzodonini/ocpp-go/ocppj"
 	"github.com/lorenzodonini/ocpp-go/ws"
+	"golang.org/x/sync/semaphore"
 )
 
 var (
@@ -41,6 +42,7 @@ func Instance() *CS {
 		instance = &CS{
 			log:           log,
 			cps:           make(map[string]*CP),
+			init:make(map[string]*semaphore.Weighted),
 			CentralSystem: cs,
 			txnId:         int(time.Now().UTC().Unix()),
 		}

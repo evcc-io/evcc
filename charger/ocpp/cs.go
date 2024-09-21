@@ -1,17 +1,20 @@
 package ocpp
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"sync"
 
 	"github.com/evcc-io/evcc/util"
 	ocpp16 "github.com/lorenzodonini/ocpp-go/ocpp1.6"
+	"golang.org/x/sync/semaphore"
 )
 
 type CS struct {
-	mu, init sync.Mutex
-	log      *util.Logger
+	mu   sync.Mutex
+	init map[string]*semaphore.Weighted
+	log  *util.Logger
 	ocpp16.CentralSystem
 	cps   map[string]*CP
 	txnId int
@@ -25,18 +28,18 @@ func (cs *CS) register(id string, new *CP) error {
 
 	cp, ok := cs.cps[id]
 
-	// case 1: charge point neither registered nor connected
+	// case 1: charge point neither registered nor physically connected
 	if !ok {
 		cs.cps[id] = new
 		return nil
 	}
 
-	// case 2: charge point already registered, id empty- cannot have 2 of those
+	// case 2: duplicate registration of id empty
 	if id == "" {
 		return errors.New("cannot have >1 charge point with empty station id")
 	}
 
-	// case 3: charge point not registered but already connected
+	// case 3: charge point not registered but physically already connected
 	if cp == nil {
 		cs.cps[id] = new
 		new.connect(true)
@@ -67,8 +70,17 @@ func (cs *CS) ChargepointByID(id string) (*CP, error) {
 }
 
 func (cs *CS) WithChargepoint(id string, new func() *CP, init func(*CP) error) (*CP, error) {
-	cs.init.Lock()
-	defer cs.init.Unlock()
+	cs.mu.Lock()
+	sem, ok := cs.init[id]
+	if !ok {
+		sem = semaphore.NewWeighted(1)
+		cs.init[id] = sem
+	}
+	cs.mu.Unlock()
+
+	// serialise on chargepoint id
+	sem.Acquire(context.TODO(), 1)
+	defer sem.Release(1)
 
 	cp, err := cs.ChargepointByID(id)
 	if err != nil {
