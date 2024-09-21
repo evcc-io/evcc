@@ -1,89 +1,9 @@
 package ocpp
 
 import (
-	"errors"
-
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/firmware"
-	"github.com/lorenzodonini/ocpp-go/ocpp1.6/remotetrigger"
-	"github.com/lorenzodonini/ocpp-go/ocpp1.6/smartcharging"
-	"github.com/lorenzodonini/ocpp-go/ocpp1.6/types"
 )
-
-// cs actions
-
-func (cs *CS) TriggerResetRequest(id string, resetType core.ResetType) error {
-	rc := make(chan error, 1)
-
-	err := cs.Reset(id, func(request *core.ResetConfirmation, err error) {
-		if err == nil && request != nil && request.Status != core.ResetStatusAccepted {
-			err = errors.New(string(request.Status))
-		}
-
-		rc <- err
-	}, resetType)
-
-	return wait(err, rc)
-}
-
-func (cs *CS) TriggerMessageRequest(id string, requestedMessage remotetrigger.MessageTrigger, props ...func(request *remotetrigger.TriggerMessageRequest)) error {
-	rc := make(chan error, 1)
-
-	err := cs.TriggerMessage(id, func(request *remotetrigger.TriggerMessageConfirmation, err error) {
-		if err == nil && request != nil && request.Status != remotetrigger.TriggerMessageStatusAccepted {
-			err = errors.New(string(request.Status))
-		}
-
-		rc <- err
-	}, requestedMessage, props...)
-
-	return wait(err, rc)
-}
-
-func (cs *CS) ChangeAvailabilityRequest(id string, connector int, availabilityType core.AvailabilityType) error {
-	rc := make(chan error, 1)
-
-	err := cs.ChangeAvailability(id, func(request *core.ChangeAvailabilityConfirmation, err error) {
-		if err == nil && request != nil && request.Status != core.AvailabilityStatusAccepted {
-			err = errors.New(string(request.Status))
-		}
-
-		rc <- err
-	}, connector, availabilityType)
-
-	return wait(err, rc)
-}
-
-func (cs *CS) SetChargingProfileRequest(id string, connector int, profile *types.ChargingProfile) error {
-	rc := make(chan error, 1)
-
-	err := cs.SetChargingProfile(id, func(request *smartcharging.SetChargingProfileConfirmation, err error) {
-		if err == nil && request != nil && request.Status != smartcharging.ChargingProfileStatusAccepted {
-			err = errors.New(string(request.Status))
-		}
-
-		rc <- err
-	}, connector, profile)
-
-	return wait(err, rc)
-}
-
-func (cs *CS) GetCompositeScheduleRequest(id string, connector int, duration int) (*smartcharging.GetCompositeScheduleConfirmation, error) {
-	var schedule *smartcharging.GetCompositeScheduleConfirmation
-	rc := make(chan error, 1)
-
-	err := cs.GetCompositeSchedule(id, func(request *smartcharging.GetCompositeScheduleConfirmation, err error) {
-		if err == nil && request != nil && request.Status != smartcharging.GetCompositeScheduleStatusAccepted {
-			err = errors.New(string(request.Status))
-		}
-
-		schedule = request
-
-		rc <- err
-	}, connector, duration)
-
-	return schedule, wait(err, rc)
-}
 
 // cp actions
 
@@ -93,7 +13,7 @@ func (cs *CS) OnAuthorize(id string, request *core.AuthorizeRequest) (*core.Auth
 		return nil, err
 	}
 
-	return cp.Authorize(request)
+	return cp.OnAuthorize(request)
 }
 
 func (cs *CS) OnBootNotification(id string, request *core.BootNotificationRequest) (*core.BootNotificationConfirmation, error) {
@@ -102,7 +22,7 @@ func (cs *CS) OnBootNotification(id string, request *core.BootNotificationReques
 		return nil, err
 	}
 
-	return cp.BootNotification(request)
+	return cp.OnBootNotification(request)
 }
 
 func (cs *CS) OnDataTransfer(id string, request *core.DataTransferRequest) (*core.DataTransferConfirmation, error) {
@@ -111,7 +31,7 @@ func (cs *CS) OnDataTransfer(id string, request *core.DataTransferRequest) (*cor
 		return nil, err
 	}
 
-	return cp.DataTransfer(request)
+	return cp.OnDataTransfer(request)
 }
 
 func (cs *CS) OnHeartbeat(id string, request *core.HeartbeatRequest) (*core.HeartbeatConfirmation, error) {
@@ -120,7 +40,7 @@ func (cs *CS) OnHeartbeat(id string, request *core.HeartbeatRequest) (*core.Hear
 		return nil, err
 	}
 
-	return cp.Heartbeat(request)
+	return cp.OnHeartbeat(request)
 }
 
 func (cs *CS) OnMeterValues(id string, request *core.MeterValuesRequest) (*core.MeterValuesConfirmation, error) {
@@ -129,7 +49,7 @@ func (cs *CS) OnMeterValues(id string, request *core.MeterValuesRequest) (*core.
 		return nil, err
 	}
 
-	return cp.MeterValues(request)
+	return cp.OnMeterValues(request)
 }
 
 func (cs *CS) OnStatusNotification(id string, request *core.StatusNotificationRequest) (*core.StatusNotificationConfirmation, error) {
@@ -138,7 +58,7 @@ func (cs *CS) OnStatusNotification(id string, request *core.StatusNotificationRe
 		return nil, err
 	}
 
-	return cp.StatusNotification(request)
+	return cp.OnStatusNotification(request)
 }
 
 func (cs *CS) OnStartTransaction(id string, request *core.StartTransactionRequest) (*core.StartTransactionConfirmation, error) {
@@ -147,7 +67,7 @@ func (cs *CS) OnStartTransaction(id string, request *core.StartTransactionReques
 		return nil, err
 	}
 
-	return cp.StartTransaction(request)
+	return cp.OnStartTransaction(request)
 }
 
 func (cs *CS) OnStopTransaction(id string, request *core.StopTransactionRequest) (*core.StopTransactionConfirmation, error) {
@@ -156,7 +76,7 @@ func (cs *CS) OnStopTransaction(id string, request *core.StopTransactionRequest)
 		return nil, err
 	}
 
-	return cp.StopTransaction(request)
+	return cp.OnStopTransaction(request)
 }
 
 func (cs *CS) OnDiagnosticsStatusNotification(id string, request *firmware.DiagnosticsStatusNotificationRequest) (confirmation *firmware.DiagnosticsStatusNotificationConfirmation, err error) {
@@ -165,7 +85,7 @@ func (cs *CS) OnDiagnosticsStatusNotification(id string, request *firmware.Diagn
 		return nil, err
 	}
 
-	return cp.DiagnosticStatusNotification(request)
+	return cp.OnDiagnosticStatusNotification(request)
 }
 
 func (cs *CS) OnFirmwareStatusNotification(id string, request *firmware.FirmwareStatusNotificationRequest) (confirmation *firmware.FirmwareStatusNotificationConfirmation, err error) {
@@ -174,5 +94,5 @@ func (cs *CS) OnFirmwareStatusNotification(id string, request *firmware.Firmware
 		return nil, err
 	}
 
-	return cp.FirmwareStatusNotification(request)
+	return cp.OnFirmwareStatusNotification(request)
 }
