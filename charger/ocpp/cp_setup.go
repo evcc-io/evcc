@@ -68,7 +68,9 @@ func (cp *CP) Setup(meterValues string, meterInterval time.Duration) error {
 			if opt.Readonly {
 				meterValuesSampledDataMaxLength = 0
 			}
-			cp.meterValuesSample = *opt.Value
+			cp.meterValuesSample = strings.Join(lo.Map(strings.Split(*opt.Value, ","), func(s string, _ int) string {
+				return strings.Trim(s, "' ")
+			}), ",")
 
 		case match(KeyMeterValuesSampledDataMaxLength):
 			if val, err := strconv.Atoi(*opt.Value); err == nil {
