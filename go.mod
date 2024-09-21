@@ -26,9 +26,9 @@ require (
 	github.com/dmarkham/enumer v1.5.10
 	github.com/dylanmei/iso8601 v0.1.0
 	github.com/eclipse/paho.mqtt.golang v1.5.0
-	github.com/enbility/eebus-go v0.6.2
-	github.com/enbility/ship-go v0.5.3
-	github.com/enbility/spine-go v0.6.2
+	github.com/enbility/eebus-go v0.7.0
+	github.com/enbility/ship-go v0.6.0
+	github.com/enbility/spine-go v0.7.0
 	github.com/evcc-io/tesla-proxy-client v0.0.0-20240221194046-4168b3759701
 	github.com/fatih/structs v1.1.0
 	github.com/glebarez/sqlite v1.11.0
@@ -122,7 +122,7 @@ require (
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/enbility/go-avahi v0.0.0-20240909195612-d5de6b280d7a // indirect
-	github.com/enbility/zeroconf/v2 v2.0.0-20240827101515-f3956627c450 // indirect
+	github.com/enbility/zeroconf/v2 v2.0.0-20240920094356-be1cae74fda6 // indirect
 	github.com/fatih/color v1.17.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
@@ -203,9 +203,3 @@ replace gopkg.in/yaml.v3 => github.com/andig/yaml v0.0.0-20240531135838-1ff5761a
 replace github.com/grid-x/modbus => github.com/evcc-io/modbus v0.0.0-20240911180928-7b1464a53285
 
 replace github.com/lorenzodonini/ocpp-go => github.com/evcc-io/ocpp-go v0.0.0-20240914122959-0d109e403130
-
-replace github.com/enbility/ship-go => github.com/enbility/ship-go v0.0.0-20240909200111-0d37cebbfc21
-
-replace github.com/enbility/spine-go => github.com/enbility/spine-go v0.0.0-20240911140055-b637b5392906
-
-replace github.com/enbility/eebus-go => github.com/enbility/eebus-go v0.0.0-20240911140240-9cc1fcff7307
