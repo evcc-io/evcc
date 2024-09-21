@@ -42,7 +42,7 @@ func Instance() *CS {
 		instance = &CS{
 			log:           log,
 			cps:           make(map[string]*CP),
-			init:make(map[string]*semaphore.Weighted),
+			init:          make(map[string]*semaphore.Weighted),
 			CentralSystem: cs,
 			txnId:         int(time.Now().UTC().Unix()),
 		}
