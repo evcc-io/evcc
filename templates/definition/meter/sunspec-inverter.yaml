@@ -43,8 +43,6 @@ render: |
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
       value:
-        - 202:AphB
-        - 212:AphB
         - 203:AphB
         - 213:AphB
     - source: sunspec
