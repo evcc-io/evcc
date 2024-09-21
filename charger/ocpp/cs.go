@@ -10,8 +10,8 @@ import (
 )
 
 type CS struct {
-	mu  sync.Mutex
-	log *util.Logger
+	mu, init sync.Mutex
+	log      *util.Logger
 	ocpp16.CentralSystem
 	cps   map[string]*CP
 	txnId int
@@ -56,6 +56,23 @@ func (cs *CS) ChargepointByID(id string) (*CP, error) {
 		return nil, fmt.Errorf("charge point not configured: %s", id)
 	}
 	return cp, nil
+}
+
+func (cs *CS) WithChargepoint(id string, new func() *CP, callback func(*CP) error) (*CP, error) {
+	cs.init.Lock()
+	defer cs.init.Unlock()
+
+	cp, err := cs.ChargepointByID(id)
+	if err != nil {
+		cp = new()
+	}
+
+	// should not error
+	if err := cs.Register(id, cp); err != nil {
+		return nil, err
+	}
+
+	return cp, callback(cp)
 }
 
 // NewChargePoint implements ocpp16.ChargePointConnectionHandler
