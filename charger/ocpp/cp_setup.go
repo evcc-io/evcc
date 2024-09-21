@@ -13,7 +13,7 @@ import (
 	"github.com/samber/lo"
 )
 
-const desiredMeasurands = "Power.Active.Import,Energy.Active.Import.Register,Current.Import,Voltage,Current.Offered,Power.Offered,SoC"
+const defaultDesiredMeasurands = "Power.Active.Import,Energy.Active.Import.Register,Current.Import,Voltage,Current.Offered,Power.Offered,SoC"
 
 func (cp *CP) Setup(meterValues string, meterInterval time.Duration) error {
 	if err := Instance().ChangeAvailabilityRequest(cp.ID(), 0, core.AvailabilityTypeOperative); err != nil {
@@ -21,8 +21,10 @@ func (cp *CP) Setup(meterValues string, meterInterval time.Duration) error {
 	}
 
 	// remove offending measurands from desired values
+	desiredMeasurands := defaultDesiredMeasurands
 	if remove, ok := strings.CutPrefix(meterValues, "-"); ok {
-		meterValues = strings.Join(lo.Without(strings.Split(meterValues, ","), strings.Split(remove, ",")...), ",")
+		desiredMeasurands = strings.Join(lo.Without(strings.Split(desiredMeasurands, ","), strings.Split(remove, ",")...), ",")
+		meterValues = ""
 	}
 
 	meterValuesSampledDataMaxLength := len(strings.Split(desiredMeasurands, ","))
