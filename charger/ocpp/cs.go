@@ -12,11 +12,11 @@ import (
 )
 
 type CS struct {
-	mu   sync.Mutex
-	init map[string]*semaphore.Weighted
-	log  *util.Logger
+	mu  sync.Mutex
+	log *util.Logger
 	ocpp16.CentralSystem
 	cps   map[string]*CP
+	init  map[string]*semaphore.Weighted
 	txnId int
 }
 
