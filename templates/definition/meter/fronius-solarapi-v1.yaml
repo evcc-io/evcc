@@ -1,4 +1,5 @@
 template: fronius-solarapi-v1
+deprecated: true
 products:
   - brand: Fronius
     description:
