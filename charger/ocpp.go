@@ -122,7 +122,7 @@ func NewOCPP(id string, connector int, idTag string,
 ) (*OCPP, error) {
 	log := util.NewLogger(fmt.Sprintf("%s-%d", lo.CoalesceOrEmpty(id, "ocpp"), connector))
 
-	cp, err := ocpp.Instance().WithChargepoint(id,
+	cp, err := ocpp.Instance().RegisterChargepoint(id,
 		func() *ocpp.CP {
 			return ocpp.NewChargePoint(log, id)
 		},

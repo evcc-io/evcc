@@ -69,7 +69,7 @@ func (cs *CS) ChargepointByID(id string) (*CP, error) {
 	return cp, nil
 }
 
-func (cs *CS) WithChargepoint(id string, new func() *CP, init func(*CP) error) (*CP, error) {
+func (cs *CS) RegisterChargepoint(id string, new func() *CP, init func(*CP) error) (*CP, error) {
 	cs.mu.Lock()
 	sem, ok := cs.init[id]
 	if !ok {
