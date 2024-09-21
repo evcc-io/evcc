@@ -24,10 +24,17 @@ func NewWrapper(typ string, other map[string]interface{}, err error) api.Tariff 
 	return v
 }
 
+// WrappedConfig indicates a device with wrapped configuration
+func (v *Wrapper) WrappedConfig() (string, map[string]interface{}) {
+	return v.typ, v.config
+}
+
+// Rates implements the api.Tariff interface
 func (t *Wrapper) Rates() (api.Rates, error) {
 	return nil, t.err
 }
 
+// Type implements the api.Tariff interface
 func (t *Wrapper) Type() api.TariffType {
 	return 0
 }

@@ -44,6 +44,11 @@ func NewWrapper(name, typ string, other map[string]interface{}, err error) api.V
 	return v
 }
 
+// WrappedConfig indicates a device with wrapped configuration
+func (v *Wrapper) WrappedConfig() (string, map[string]interface{}) {
+	return v.typ, v.config
+}
+
 // SetTitle implements the api.TitleSetter interface
 func (v *Wrapper) SetTitle(title string) {
 	v.Title_ = title
