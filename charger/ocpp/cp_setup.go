@@ -13,15 +13,15 @@ import (
 	"github.com/samber/lo"
 )
 
-const defaultDesiredMeasurands = "Power.Active.Import,Energy.Active.Import.Register,Current.Import,Voltage,Current.Offered,Power.Offered,SoC"
-
 func (cp *CP) Setup(meterValues string, meterInterval time.Duration) error {
 	if err := Instance().ChangeAvailabilityRequest(cp.ID(), 0, core.AvailabilityTypeOperative); err != nil {
 		cp.log.DEBUG.Printf("failed configuring availability: %v", err)
 	}
 
+	// auto configuration
+	desiredMeasurands := "Power.Active.Import,Energy.Active.Import.Register,Current.Import,Voltage,Current.Offered,Power.Offered,SoC"
+
 	// remove offending measurands from desired values
-	desiredMeasurands := defaultDesiredMeasurands
 	if remove, ok := strings.CutPrefix(meterValues, "-"); ok {
 		desiredMeasurands = strings.Join(lo.Without(strings.Split(desiredMeasurands, ","), strings.Split(remove, ",")...), ",")
 		meterValues = ""
