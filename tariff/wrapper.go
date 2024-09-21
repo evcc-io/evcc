@@ -24,16 +24,6 @@ func NewWrapper(typ string, other map[string]interface{}, err error) api.Tariff 
 	return v
 }
 
-// // Error returns the initialization error
-// func (v *Wrapper) Error() string {
-// 	return v.err.Error()
-// }
-
-// // Error returns the initialization error
-// func (v *Wrapper) Config() (string, map[string]interface{}) {
-// 	return v.typ, v.config
-// }
-
 func (t *Wrapper) Rates() (api.Rates, error) {
 	return nil, t.err
 }
