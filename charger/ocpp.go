@@ -138,6 +138,9 @@ func NewOCPP(id string, connector int, idTag string,
 			return cp.Setup(meterValues, meterInterval)
 		},
 	)
+	if err != nil {
+		return nil, err
+	}
 
 	if cp.NumberOfConnectors > 0 && connector > cp.NumberOfConnectors {
 		return nil, fmt.Errorf("invalid connector: %d", connector)

@@ -19,7 +19,7 @@ type CS struct {
 
 // Register registers a charge point with the central system.
 // The charge point identified by id may already be connected in which case initial connection is triggered.
-func (cs *CS) Register(id string, new *CP) error {
+func (cs *CS) register(id string, new *CP) error {
 	cs.mu.Lock()
 	defer cs.mu.Unlock()
 
@@ -36,9 +36,10 @@ func (cs *CS) Register(id string, new *CP) error {
 		return errors.New("cannot have >1 charge point with empty station id")
 	}
 
-	// case 3: charge point already registered and connected
-	if cp != nil {
-		cp.connect(true)
+	// case 3: charge point not registered but already connected
+	if cp == nil {
+		cs.cps[id] = new
+		new.connect(true)
 	}
 
 	return nil
@@ -65,7 +66,7 @@ func (cs *CS) ChargepointByID(id string) (*CP, error) {
 	return cp, nil
 }
 
-func (cs *CS) WithChargepoint(id string, new func() *CP, callback func(*CP) error) (*CP, error) {
+func (cs *CS) WithChargepoint(id string, new func() *CP, init func(*CP) error) (*CP, error) {
 	cs.init.Lock()
 	defer cs.init.Unlock()
 
@@ -75,11 +76,11 @@ func (cs *CS) WithChargepoint(id string, new func() *CP, callback func(*CP) erro
 	}
 
 	// should not error
-	if err := cs.Register(id, cp); err != nil {
+	if err := cs.register(id, cp); err != nil {
 		return nil, err
 	}
 
-	return cp, callback(cp)
+	return cp, init(cp)
 }
 
 // NewChargePoint implements ocpp16.ChargePointConnectionHandler
