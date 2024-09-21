@@ -56,15 +56,11 @@ render: |
       value:
         - 201:PhVphA
         - 211:PhVphA
-        - 202:PhVphA
-        - 212:PhVphA
         - 203:PhVphA
         - 213:PhVphA
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
       value:
-        - 202:PhVphB
-        - 212:PhVphB
         - 203:PhVphB
         - 213:PhVphB
     - source: sunspec
@@ -78,15 +74,11 @@ render: |
       value:
         - 201:WphA
         - 211:WphA
-        - 202:WphA
-        - 212:WphA
         - 203:WphA
         - 213:WphA
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
       value:
-        - 202:WphB
-        - 212:WphB
         - 203:WphB
         - 213:WphB
     - source: sunspec
@@ -129,8 +121,6 @@ render: |
       - 103:W
       - 111:W
       - 113:W
-      - 102:W
-      - 112:W
   soc:
     source: sunspec
     {{- include "modbus" . | indent 2 }}
