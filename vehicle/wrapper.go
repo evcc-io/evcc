@@ -17,7 +17,7 @@ type Wrapper struct {
 }
 
 // NewWrapper creates an offline Vehicle wrapper
-func NewWrapper(name string, typ string, other map[string]interface{}, err error) api.Vehicle {
+func NewWrapper(name, typ string, other map[string]interface{}, err error) api.Vehicle {
 	var cc struct {
 		embed `mapstructure:",squash"`
 		Other map[string]interface{} `mapstructure:",remain"`
@@ -43,18 +43,6 @@ func NewWrapper(name string, typ string, other map[string]interface{}, err error
 
 	return v
 }
-
-// Error returns the initialization error
-func (v *Wrapper) Error() string {
-	return v.err.Error()
-}
-
-// Error returns the initialization error
-func (v *Wrapper) Config() (string, map[string]interface{}) {
-	return v.typ, v.config
-}
-
-var _ api.Vehicle = (*Wrapper)(nil)
 
 // SetTitle implements the api.TitleSetter interface
 func (v *Wrapper) SetTitle(title string) {
