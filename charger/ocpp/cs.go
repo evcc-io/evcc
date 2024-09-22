@@ -1,14 +1,12 @@
 package ocpp
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"sync"
 
 	"github.com/evcc-io/evcc/util"
 	ocpp16 "github.com/lorenzodonini/ocpp-go/ocpp1.6"
-	"golang.org/x/sync/semaphore"
 )
 
 type CS struct {
@@ -16,7 +14,7 @@ type CS struct {
 	log *util.Logger
 	ocpp16.CentralSystem
 	cps   map[string]*CP
-	init  map[string]*semaphore.Weighted
+	init  map[string]*sync.Mutex
 	txnId int
 }
 
@@ -69,22 +67,22 @@ func (cs *CS) ChargepointByID(id string) (*CP, error) {
 	return cp, nil
 }
 
-func (cs *CS) RegisterChargepoint(id string, new func() *CP, init func(*CP) error) (*CP, error) {
+func (cs *CS) RegisterChargepoint(id string, newfun func() *CP, init func(*CP) error) (*CP, error) {
 	cs.mu.Lock()
-	sem, ok := cs.init[id]
+	cpmu, ok := cs.init[id]
 	if !ok {
-		sem = semaphore.NewWeighted(1)
-		cs.init[id] = sem
+		cpmu = new(sync.Mutex)
+		cs.init[id] = cpmu
 	}
 	cs.mu.Unlock()
 
 	// serialise on chargepoint id
-	sem.Acquire(context.TODO(), 1)
-	defer sem.Release(1)
+	cpmu.Lock()
+	defer cpmu.Unlock()
 
 	cp, err := cs.ChargepointByID(id)
 	if err != nil {
-		cp = new()
+		cp = newfun()
 	}
 
 	// should not error
