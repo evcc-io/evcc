@@ -120,34 +120,26 @@ func NewOCPP(id string, connector int, idTag string,
 	stackLevelZero, remoteStart bool,
 	connectTimeout time.Duration,
 ) (*OCPP, error) {
-	unit := "ocpp"
-	if id != "" {
-		unit = id
-	}
-	unit = fmt.Sprintf("%s-%d", unit, connector)
+	log := util.NewLogger(fmt.Sprintf("%s-%d", lo.CoalesceOrEmpty(id, "ocpp"), connector))
 
-	log := util.NewLogger(unit)
+	cp, err := ocpp.Instance().RegisterChargepoint(id,
+		func() *ocpp.CP {
+			return ocpp.NewChargePoint(log, id)
+		},
+		func(cp *ocpp.CP) error {
+			log.DEBUG.Printf("waiting for chargepoint: %v", connectTimeout)
 
-	cp, err := ocpp.Instance().ChargepointByID(id)
+			select {
+			case <-time.After(connectTimeout):
+				return api.ErrTimeout
+			case <-cp.HasConnected():
+			}
+
+			return cp.Setup(meterValues, meterInterval)
+		},
+	)
 	if err != nil {
-		cp = ocpp.NewChargePoint(log, id)
-
-		// should not error
-		if err := ocpp.Instance().Register(id, cp); err != nil {
-			return nil, err
-		}
-
-		log.DEBUG.Printf("waiting for chargepoint: %v", connectTimeout)
-
-		select {
-		case <-time.After(connectTimeout):
-			return nil, api.ErrTimeout
-		case <-cp.HasConnected():
-		}
-
-		if err := cp.Setup(meterValues, meterInterval); err != nil {
-			return nil, err
-		}
+		return nil, err
 	}
 
 	if cp.NumberOfConnectors > 0 && connector > cp.NumberOfConnectors {

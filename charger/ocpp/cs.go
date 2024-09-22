@@ -14,25 +14,34 @@ type CS struct {
 	log *util.Logger
 	ocpp16.CentralSystem
 	cps   map[string]*CP
+	init  map[string]*sync.Mutex
 	txnId int
 }
 
 // Register registers a charge point with the central system.
 // The charge point identified by id may already be connected in which case initial connection is triggered.
-func (cs *CS) Register(id string, cp *CP) error {
+func (cs *CS) register(id string, new *CP) error {
 	cs.mu.Lock()
 	defer cs.mu.Unlock()
 
-	if _, ok := cs.cps[id]; ok && id == "" {
+	cp, ok := cs.cps[id]
+
+	// case 1: charge point neither registered nor physically connected
+	if !ok {
+		cs.cps[id] = new
+		return nil
+	}
+
+	// case 2: duplicate registration of id empty
+	if id == "" {
 		return errors.New("cannot have >1 charge point with empty station id")
 	}
 
-	// trigger unknown charge point connected
-	if unknown, ok := cs.cps[id]; ok && unknown == nil {
-		cp.connect(true)
+	// case 3: charge point not registered but physically already connected
+	if cp == nil {
+		cs.cps[id] = new
+		new.connect(true)
 	}
-
-	cs.cps[id] = cp
 
 	return nil
 }
@@ -56,6 +65,32 @@ func (cs *CS) ChargepointByID(id string) (*CP, error) {
 		return nil, fmt.Errorf("charge point not configured: %s", id)
 	}
 	return cp, nil
+}
+
+func (cs *CS) RegisterChargepoint(id string, newfun func() *CP, init func(*CP) error) (*CP, error) {
+	cs.mu.Lock()
+	cpmu, ok := cs.init[id]
+	if !ok {
+		cpmu = new(sync.Mutex)
+		cs.init[id] = cpmu
+	}
+	cs.mu.Unlock()
+
+	// serialise on chargepoint id
+	cpmu.Lock()
+	defer cpmu.Unlock()
+
+	cp, err := cs.ChargepointByID(id)
+	if err != nil {
+		cp = newfun()
+	}
+
+	// should not error
+	if err := cs.register(id, cp); err != nil {
+		return nil, err
+	}
+
+	return cp, init(cp)
 }
 
 // NewChargePoint implements ocpp16.ChargePointConnectionHandler
