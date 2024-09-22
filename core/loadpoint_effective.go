@@ -126,13 +126,7 @@ func (lp *Loadpoint) effectiveLimitSoc() int {
 
 // EffectiveMinPower returns the effective min power for a single phase
 func (lp *Loadpoint) EffectiveMinPower() float64 {
-	minPower := Voltage * lp.effectiveMinCurrent()
-
-	if activePhases := lp.ActivePhases(); activePhases > 1 && !lp.hasPhaseSwitching() {
-		minPower *= float64(activePhases)
-	}
-
-	return minPower
+	return Voltage * lp.effectiveMinCurrent() * float64(lp.minActivePhases())
 }
 
 // EffectiveMaxPower returns the effective max power taking vehicle capabilities and phase scaling into account
