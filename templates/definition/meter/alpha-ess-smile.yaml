@@ -19,7 +19,7 @@ requirements:
       Charging time 2 23:00-00:00). However, deactivate the "Grid charging" switch. The actual control takes place via evcc. 
       The discharge stop is realized via a scheduled grid charge with a target SoC of 10%. 
       Alternatively, it can also be configured via Modbus. To do this, set the registers `2134,2142,2135,2136,2144,2137,2175` to the values
-      0,0,23,0,23,0,0,0,0`.
+      `0,0,23,0,23,0,0,0,0`.
 params:
   - name: usage
     choice:
