@@ -124,7 +124,7 @@ func (lp *Loadpoint) effectiveLimitSoc() int {
 	return 100
 }
 
-// EffectiveMinPower returns the effective min power for a single phase
+// EffectiveMinPower returns the effective min power for the minimum active phases
 func (lp *Loadpoint) EffectiveMinPower() float64 {
 	return Voltage * lp.effectiveMinCurrent() * float64(lp.minActivePhases())
 }
