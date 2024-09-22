@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"sync"
+	"sync/atomic"
 
 	"github.com/evcc-io/evcc/util"
 	ocpp16 "github.com/lorenzodonini/ocpp-go/ocpp1.6"
@@ -15,7 +16,7 @@ type CS struct {
 	ocpp16.CentralSystem
 	cps   map[string]*CP
 	init  map[string]*sync.Mutex
-	txnId int
+	txnId atomic.Int64
 }
 
 // Register registers a charge point with the central system.
@@ -141,13 +142,4 @@ func (cs *CS) ChargePointDisconnected(chargePoint ocpp16.ChargePointConnection) 
 	if cp, err := cs.ChargepointByID(chargePoint.ID()); err == nil {
 		cp.connect(false)
 	}
-}
-
-// NewTransactionID returns a CS-wide unique transactionId
-func (cs *CS) NewTransactionID() int {
-	cs.mu.Lock()
-	defer cs.mu.Unlock()
-
-	cs.txnId++
-	return cs.txnId
 }
