@@ -18,12 +18,17 @@ func (cs *CS) OnAuthorize(id string, request *core.AuthorizeRequest) (*core.Auth
 }
 
 func (cs *CS) OnBootNotification(id string, request *core.BootNotificationRequest) (*core.BootNotificationConfirmation, error) {
-	cp, err := cs.ChargepointByID(id)
-	if err != nil {
-		return nil, err
+	if cp, err := cs.ChargepointByID(id); err == nil {
+		return cp.OnBootNotification(request)
 	}
 
-	return cp.OnBootNotification(request)
+	res := &core.BootNotificationConfirmation{
+		CurrentTime: types.Now(),
+		Interval:    60,
+		Status:      core.RegistrationStatusPending, // not accepted during startup
+	}
+
+	return res, nil
 }
 
 func (cs *CS) OnDataTransfer(id string, request *core.DataTransferRequest) (*core.DataTransferConfirmation, error) {
