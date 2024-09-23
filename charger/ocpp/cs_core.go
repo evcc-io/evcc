@@ -2,7 +2,6 @@ package ocpp
 
 import (
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
-	"github.com/lorenzodonini/ocpp-go/ocpp1.6/firmware"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/types"
 )
 
@@ -32,14 +31,6 @@ func (cs *CS) OnHeartbeat(id string, request *core.HeartbeatRequest) (*core.Hear
 	}
 
 	return res, nil
-}
-
-func (cs *CS) OnDiagnosticsStatusNotification(id string, request *firmware.DiagnosticsStatusNotificationRequest) (confirmation *firmware.DiagnosticsStatusNotificationConfirmation, err error) {
-	return new(firmware.DiagnosticsStatusNotificationConfirmation), nil
-}
-
-func (cs *CS) OnFirmwareStatusNotification(id string, request *firmware.FirmwareStatusNotificationRequest) (confirmation *firmware.FirmwareStatusNotificationConfirmation, err error) {
-	return new(firmware.FirmwareStatusNotificationConfirmation), nil
 }
 
 // cp actions - local handlers
