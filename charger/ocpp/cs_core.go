@@ -2,97 +2,97 @@ package ocpp
 
 import (
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
-	"github.com/lorenzodonini/ocpp-go/ocpp1.6/firmware"
+	"github.com/lorenzodonini/ocpp-go/ocpp1.6/types"
 )
 
 // cp actions
 
 func (cs *CS) OnAuthorize(id string, request *core.AuthorizeRequest) (*core.AuthorizeConfirmation, error) {
-	cp, err := cs.ChargepointByID(id)
-	if err != nil {
-		return nil, err
+	// no cp handler
+
+	res := &core.AuthorizeConfirmation{
+		IdTagInfo: &types.IdTagInfo{
+			Status: types.AuthorizationStatusAccepted,
+		},
 	}
 
-	return cp.OnAuthorize(request)
+	return res, nil
 }
 
 func (cs *CS) OnBootNotification(id string, request *core.BootNotificationRequest) (*core.BootNotificationConfirmation, error) {
-	cp, err := cs.ChargepointByID(id)
-	if err != nil {
-		return nil, err
+	if cp, err := cs.ChargepointByID(id); err == nil {
+		return cp.OnBootNotification(request)
 	}
 
-	return cp.OnBootNotification(request)
+	res := &core.BootNotificationConfirmation{
+		CurrentTime: types.Now(),
+		Interval:    int(Timeout.Seconds()),
+		Status:      core.RegistrationStatusPending, // not accepted during startup
+	}
+
+	return res, nil
 }
 
 func (cs *CS) OnDataTransfer(id string, request *core.DataTransferRequest) (*core.DataTransferConfirmation, error) {
-	cp, err := cs.ChargepointByID(id)
-	if err != nil {
-		return nil, err
+	// no cp handler
+
+	res := &core.DataTransferConfirmation{
+		Status: core.DataTransferStatusAccepted,
 	}
 
-	return cp.OnDataTransfer(request)
+	return res, nil
 }
 
 func (cs *CS) OnHeartbeat(id string, request *core.HeartbeatRequest) (*core.HeartbeatConfirmation, error) {
-	cp, err := cs.ChargepointByID(id)
-	if err != nil {
-		return nil, err
+	// no cp handler
+
+	res := &core.HeartbeatConfirmation{
+		CurrentTime: types.Now(),
 	}
 
-	return cp.OnHeartbeat(request)
+	return res, nil
 }
 
 func (cs *CS) OnMeterValues(id string, request *core.MeterValuesRequest) (*core.MeterValuesConfirmation, error) {
-	cp, err := cs.ChargepointByID(id)
-	if err != nil {
-		return nil, err
+	if cp, err := cs.ChargepointByID(id); err == nil {
+		return cp.OnMeterValues(request)
 	}
 
-	return cp.OnMeterValues(request)
+	return new(core.MeterValuesConfirmation), nil
 }
 
 func (cs *CS) OnStatusNotification(id string, request *core.StatusNotificationRequest) (*core.StatusNotificationConfirmation, error) {
-	cp, err := cs.ChargepointByID(id)
-	if err != nil {
-		return nil, err
+	if cp, err := cs.ChargepointByID(id); err == nil {
+		return cp.OnStatusNotification(request)
 	}
 
-	return cp.OnStatusNotification(request)
+	return new(core.StatusNotificationConfirmation), nil
 }
 
 func (cs *CS) OnStartTransaction(id string, request *core.StartTransactionRequest) (*core.StartTransactionConfirmation, error) {
-	cp, err := cs.ChargepointByID(id)
-	if err != nil {
-		return nil, err
+	if cp, err := cs.ChargepointByID(id); err == nil {
+		return cp.OnStartTransaction(request)
 	}
 
-	return cp.OnStartTransaction(request)
+	res := &core.StartTransactionConfirmation{
+		IdTagInfo: &types.IdTagInfo{
+			Status: types.AuthorizationStatusAccepted,
+		},
+	}
+
+	return res, nil
 }
 
 func (cs *CS) OnStopTransaction(id string, request *core.StopTransactionRequest) (*core.StopTransactionConfirmation, error) {
-	cp, err := cs.ChargepointByID(id)
-	if err != nil {
-		return nil, err
+	if cp, err := cs.ChargepointByID(id); err == nil {
+		cp.OnStopTransaction(request)
 	}
 
-	return cp.OnStopTransaction(request)
-}
-
-func (cs *CS) OnDiagnosticsStatusNotification(id string, request *firmware.DiagnosticsStatusNotificationRequest) (confirmation *firmware.DiagnosticsStatusNotificationConfirmation, err error) {
-	cp, err := cs.ChargepointByID(id)
-	if err != nil {
-		return nil, err
+	res := &core.StopTransactionConfirmation{
+		IdTagInfo: &types.IdTagInfo{
+			Status: types.AuthorizationStatusAccepted, // accept old pending stop message during startup
+		},
 	}
 
-	return cp.OnDiagnosticStatusNotification(request)
-}
-
-func (cs *CS) OnFirmwareStatusNotification(id string, request *firmware.FirmwareStatusNotificationRequest) (confirmation *firmware.FirmwareStatusNotificationConfirmation, err error) {
-	cp, err := cs.ChargepointByID(id)
-	if err != nil {
-		return nil, err
-	}
-
-	return cp.OnFirmwareStatusNotification(request)
+	return res, nil
 }

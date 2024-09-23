@@ -91,7 +91,7 @@ func (conn *Connector) OnStartTransaction(request *core.StartTransactionRequest)
 	conn.mu.Lock()
 	defer conn.mu.Unlock()
 
-	conn.txnId = instance.NewTransactionID()
+	conn.txnId = int(instance.txnId.Add(1))
 	conn.idTag = request.IdTag
 
 	res := &core.StartTransactionConfirmation{
