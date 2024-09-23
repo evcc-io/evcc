@@ -5,7 +5,7 @@
 			:id="i === 0 ? id : null"
 			:key="option.value"
 			type="button"
-			class="btn btn-lg flex-grow-1 flex-shrink-1"
+			class="btn btn-sm flex-grow-1 flex-shrink-1"
 			:class="{ active: option.value === modelValue, 'btn--equal': equalWidth }"
 			:disabled="option.disabled"
 			@click="$emit('update:modelValue', option.value)"

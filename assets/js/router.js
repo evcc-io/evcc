@@ -43,10 +43,11 @@ export default function setupRouter(i18n) {
         path: "/sessions",
         component: () => import("./views/Sessions.vue"),
         props: (route) => {
-          const { month, year, loadpoint, vehicle } = route.query;
+          const { month, year, loadpoint, vehicle, period } = route.query;
           return {
             month: month ? parseInt(month, 10) : undefined,
             year: year ? parseInt(year, 10) : undefined,
+            period,
             loadpointFilter: loadpoint,
             vehicleFilter: vehicle,
           };
