@@ -1,6 +1,7 @@
 package server
 
 import (
+	"crypto/tls"
 	"fmt"
 	"reflect"
 	"strconv"
@@ -37,9 +38,7 @@ func NewInfluxClient(url, token, org, user, password, database string, insecure 
 
 	options := influxdb2.DefaultOptions()
 
-	tlsConfig := options.TLSConfig()
-	tlsConfig.InsecureSkipVerify = insecure
-	options.SetTLSConfig(tlsConfig)
+	options.SetTLSConfig(&tls.Config{InsecureSkipVerify: insecure})
 	options.SetPrecision(time.Second)
 
 	client := influxdb2.NewClientWithOptions(url, token, options)
