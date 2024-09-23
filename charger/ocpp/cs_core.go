@@ -45,46 +45,59 @@ func (cs *CS) OnFirmwareStatusNotification(id string, request *firmware.Firmware
 // cp actions - local handlers
 
 func (cs *CS) OnBootNotification(id string, request *core.BootNotificationRequest) (*core.BootNotificationConfirmation, error) {
-	cp, err := cs.ChargepointByID(id)
-	if err != nil {
-		return nil, err
+	if cp, err := cs.ChargepointByID(id); err == nil {
+		return cp.OnBootNotification(request)
 	}
 
-	return cp.OnBootNotification(request)
+	res := &core.BootNotificationConfirmation{
+		CurrentTime: types.Now(),
+		Interval:    60,
+		Status:      core.RegistrationStatusPending, // not accepted during startup
+	}
+
+	return res, nil
 }
 
 func (cs *CS) OnMeterValues(id string, request *core.MeterValuesRequest) (*core.MeterValuesConfirmation, error) {
-	cp, err := cs.ChargepointByID(id)
-	if err != nil {
-		return nil, err
+	if cp, err := cs.ChargepointByID(id); err == nil {
+		return cp.OnMeterValues(request)
 	}
 
-	return cp.OnMeterValues(request)
+	return new(core.MeterValuesConfirmation), nil
 }
 
 func (cs *CS) OnStatusNotification(id string, request *core.StatusNotificationRequest) (*core.StatusNotificationConfirmation, error) {
-	cp, err := cs.ChargepointByID(id)
-	if err != nil {
-		return nil, err
+	if cp, err := cs.ChargepointByID(id); err == nil {
+		return cp.OnStatusNotification(request)
 	}
 
-	return cp.OnStatusNotification(request)
+	return new(core.StatusNotificationConfirmation), nil
 }
 
 func (cs *CS) OnStartTransaction(id string, request *core.StartTransactionRequest) (*core.StartTransactionConfirmation, error) {
-	cp, err := cs.ChargepointByID(id)
-	if err != nil {
-		return nil, err
+	if cp, err := cs.ChargepointByID(id); err == nil {
+		return cp.OnStartTransaction(request)
 	}
 
-	return cp.OnStartTransaction(request)
+	res := &core.StartTransactionConfirmation{
+		IdTagInfo: &types.IdTagInfo{
+			Status: types.AuthorizationStatusAccepted,
+		},
+	}
+
+	return res, nil
 }
 
 func (cs *CS) OnStopTransaction(id string, request *core.StopTransactionRequest) (*core.StopTransactionConfirmation, error) {
-	cp, err := cs.ChargepointByID(id)
-	if err != nil {
-		return nil, err
+	if cp, err := cs.ChargepointByID(id); err == nil {
+		cp.OnStopTransaction(request)
 	}
 
-	return cp.OnStopTransaction(request)
+	res := &core.StopTransactionConfirmation{
+		IdTagInfo: &types.IdTagInfo{
+			Status: types.AuthorizationStatusAccepted, // accept old pending stop message during startup
+		},
+	}
+
+	return res, nil
 }
