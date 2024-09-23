@@ -26,7 +26,7 @@ func (cs *CS) OnBootNotification(id string, request *core.BootNotificationReques
 
 	res := &core.BootNotificationConfirmation{
 		CurrentTime: types.Now(),
-		Interval:    60,
+		Interval:    int(Timeout.Seconds()),
 		Status:      core.RegistrationStatusPending, // not accepted during startup
 	}
 
