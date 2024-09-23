@@ -760,12 +760,28 @@ func configureMessengers(conf globalconfig.Messaging, vehicles push.Vehicles, va
 	return messageChan, nil
 }
 
+func tariffInstance(name string, conf config.Typed) (api.Tariff, error) {
+	instance, err := tariff.NewFromConfig(conf.Type, conf.Other)
+	if err != nil {
+		var ce *util.ConfigError
+		if errors.As(err, &ce) {
+			return nil, err
+		}
+
+		// wrap non-config tariff errors to prevent fatals
+		log.ERROR.Printf("creating tariff %s failed: %v", name, err)
+		instance = tariff.NewWrapper(conf.Type, conf.Other, err)
+	}
+
+	return instance, nil
+}
+
 func configureTariff(name string, conf config.Typed, t *api.Tariff) error {
 	if conf.Type == "" {
 		return nil
 	}
 
-	res, err := tariff.NewFromConfig(conf.Type, conf.Other)
+	res, err := tariffInstance(name, conf)
 	if err != nil {
 		return &DeviceError{name, err}
 	}
