@@ -81,12 +81,13 @@ func (cs *CS) RegisterChargepoint(id string, newfun func() *CP, init func(*CP) e
 	cpmu.Lock()
 	defer cpmu.Unlock()
 
-	cp, err := cs.ChargepointByID(id)
-	if err != nil {
-		cp = newfun()
+	// already registered?
+	if cp, err := cs.ChargepointByID(id); err == nil {
+		return cp, nil
 	}
 
-	// should not error
+	// first time- registration should not error
+	cp := newfun()
 	if err := cs.register(id, cp); err != nil {
 		return nil, err
 	}
